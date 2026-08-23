@@ -51,7 +51,21 @@ static int s_flavor_env_read = 0;
 re15_ai_flavor_t re15_ai_flavor(void)
 {
     /* RE15_AI_FLAVOR waehlt das Brain ohne Menue — noetig fuer Harness UND fuer die
-     * byte-true-Messung, seit der Default RE2 ist. `re15`/`0`/`1.5` erzwingt RE1.5. */
+     * byte-true-Messung, seit der Default RE2 ist. `re15`/`0`/`1.5` erzwingt RE1.5.
+     *
+     * ---- BELEGUNG NACH DER MIXED-ERWEITERUNG (2026-08-23) ------------------------------------
+     * ⚠️ DIE `2` BLEIBT RE2. Der Auftrag schlug vor, MIXED zusaetzlich als "2" zu verstehen; das
+     * kollidiert und ist deshalb ABGELEHNT: `RE15_AI_FLAVOR=2` ist die etablierte RE2-Schreibweise
+     * (dokumentiert u.a. in enemy_ai_re2_spider.c:2846, test_1090_fire_pin.c:536,
+     * test_re2_room1140_ab.c:7, test_re2_room1190_ab.c:7). Waere "2" ploetzlich MIXED, wuerde
+     * JEDER dieser Laeufe still von RE2 auf MIXED kippen und faelschlich als RE2 verbucht.
+     * Die Zahlen sind hier ohnehin SPIEL-Nummern, keine Enum-Ordinalzahlen ("1.5" -> RE1.5).
+     * MIXED hat keine Spielnummer und bekommt deshalb NUR Wortformen:
+     *     "0" | "1" | "1.5" | "re15"        -> RE15_AI_FLAVOR_RE15
+     *     "2" | "r…" | "re2"                -> RE15_AI_FLAVOR_RE2
+     *     "m" | "M" | "mix" | "mixed"       -> RE15_AI_FLAVOR_MIXED
+     * (Die ORDINALZAHL 0/1/2 gibt es weiterhin — aber in RE15_CONFIG_AI, dem Menue-Index-Env,
+     * s. platform/pc/main.c pc_ai_mode_set.) */
     if (!s_flavor_env_read) {
         const char *v = getenv("RE15_AI_FLAVOR");
         s_flavor_env_read = 1;
@@ -60,13 +74,37 @@ re15_ai_flavor_t re15_ai_flavor(void)
             if (v[0] == '0' || v[0] == '1') s_flavor = RE15_AI_FLAVOR_RE15;   /* "0", "1.5" */
             if ((v[0] == 'r' || v[0] == 'R') && (v[1] == 'e' || v[1] == 'E')
                 && v[2] == '1') s_flavor = RE15_AI_FLAVOR_RE15;               /* "re15" */
+            if (v[0] == 'm' || v[0] == 'M') s_flavor = RE15_AI_FLAVOR_MIXED;  /* "m", "mixed" */
         }
     }
     return s_flavor;
 }
-void             re15_ai_flavor_set(re15_ai_flavor_t f) { s_flavor = (f == RE15_AI_FLAVOR_RE2)
-                                                                     ? RE15_AI_FLAVOR_RE2
-                                                                     : RE15_AI_FLAVOR_RE15; }
+void re15_ai_flavor_set(re15_ai_flavor_t f)
+{
+    /* KLEMME: jeder Fremdwert (alter persistierter Stand, atoi eines Env, kuenftige vierte Stufe)
+     * faellt auf RE1.5 — der byte-true Zustand, nicht auf einen Port-Modus. Die drei gueltigen
+     * Werte gehen 1:1 durch. */
+    switch (f) {
+        case RE15_AI_FLAVOR_RE2:   s_flavor = RE15_AI_FLAVOR_RE2;   break;
+        case RE15_AI_FLAVOR_MIXED: s_flavor = RE15_AI_FLAVOR_MIXED; break;
+        default:                   s_flavor = RE15_AI_FLAVOR_RE15;  break;
+    }
+}
+
+/* ---- die TYP-BEZOGENE Aufloesung (vollstaendige Begruendung in re15_ai_flavor.h) ------------
+ * Ersetzt jeden frueheren globalen `re15_ai_flavor() == RE15_AI_FLAVOR_RE2`-Vergleich.
+ * MIXED = "alles RE1.5 ausser dem Hund" -> genau Kind 0x20 (Cerberus, enemy_ai_re2_dog.c,
+ * EMD0G_MOD0.BIN Root @0x80100004). Bewusst NICHT re15_re2_owns_type gefiltert: diese Funktion
+ * beantwortet "WELCHES SPIEL treibt diesen Typ", die Besitzfrage ("hat der Port dafuer ueberhaupt
+ * ein RE2-Brain/eine RE2-Zeile") bleibt an den vorhandenen owns-Toren daneben. */
+int re15_ai_re2_for_type(unsigned type)
+{
+    switch (re15_ai_flavor()) {
+        case RE15_AI_FLAVOR_RE2:   return 1;
+        case RE15_AI_FLAVOR_MIXED: return type == 0x20u;
+        default:                   return 0;
+    }
+}
 
 /* WELLE G — Modellherkunft (orthogonal zum Brain, siehe re15_ai_flavor.h). Default RE2, damit
  * der bisherige RE2-Modus UND jedes Harness mit `RE15_AI_FLAVOR=re2` byte-identisch bleiben;
@@ -139,7 +177,13 @@ void re15_re15_re2z_import_set(int on)
 
 int re15_re15_re2z_import_owns(unsigned type)
 {
-    return re15_ai_flavor() == RE15_AI_FLAVOR_RE15
+    /* ⚠️ MIXED (2026-08-23): das Tor hiess frueher `flavor == RE15`. Der MIXED-Modus soll fuer
+     * ALLES ausser dem Hund exakt das RE1.5-Verhalten liefern — und dazu gehoert diese
+     * Port-Option (Default AN), die der Zombie-Familie im RE1.5-Modus RE2-Zerleger + RE2-Schaden
+     * gibt. Der Test ist deshalb "dieser Typ laeuft NICHT auf einem RE2-Brain": fuer die
+     * Zombie-Familie ist das in RE15 UND in MIXED wahr, in RE2 falsch — RE15 und RE2 bleiben
+     * damit Bit fuer Bit wie vorher, MIXED erbt die RE1.5-Seite. */
+    return !re15_ai_re2_for_type(type)
         && re15_re15_re2z_import()
         && re15_re2z_owns_type(type);
 }
@@ -3363,7 +3407,7 @@ int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
     if (!re15_re2z_owns_type(e->type)) return 0;
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 &&
+    if (!re15_ai_re2_for_type(e->type) &&
         !re15_re15_re2z_import_owns(e->type)) return 0;
     return (e->re2z_part_flags[0] & 1u) != 0;                  /* INIT-Seed (part_reset) gelaufen */
 }

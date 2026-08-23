@@ -1410,10 +1410,16 @@ void re15_game_step(const re15_game_ctx_t *c)
      * RE2-Zombie ist betroffen — ROOM1200 slot03 typ=0x10 grid=0xA1 (+ der Gorilla-Boss 0x27 in
      * ROOM11C0, der ein anderes Brain faehrt). re15_re2z_hit_filter_apply ist idempotent und
      * rechnet dasselbe wie der Tick-Epilog, nur unabhaengig davon, ob der Tick gelaufen ist. */
-    if (c->rdt_ok && re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+    /* MIXED (2026-08-23): der Filter gehoert der ZOMBIE-FAMILIE (re15_re2z_owns_type), also ist
+     * er typ-bezogen — im MIXED-Modus laeuft dort das RE1.5-Brain und der Nachlauf entfaellt
+     * korrekt. Der HUND braucht ihn nicht: er raeumt seinen +0x93-Latch selbst
+     * (`e->hit_react &= ~1` @enemy_ai_re2_dog.c:1577/1601), und sein Tick faellt nicht aus —
+     * das Freeze-Gate ueberspringt bei ihm den gesamten Aktor, nicht nur den Filter. */
+    if (c->rdt_ok) {
         extern void re15_re2z_hit_filter_apply(int slot);
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
-            if (g_actors[s].active && re15_re2z_owns_type(g_actors[s].type))
+            if (g_actors[s].active && re15_ai_re2_for_type(g_actors[s].type)
+                && re15_re2z_owns_type(g_actors[s].type))
                 re15_re2z_hit_filter_apply(s);
     }
 

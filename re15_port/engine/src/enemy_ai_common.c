@@ -727,7 +727,11 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
 {
     uint8_t v = g_player_victim_variant;
     if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
-        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+        /* MIXED (2026-08-23): typ-bezogen — der GREIFER ist hier der Hund, und im MIXED-Modus
+         * faehrt genau er das RE2-Brain. Greift der Hund Leon, laeuft also auch die
+         * RE2-Opfer-Animation; ein globaler Flavor-Test haette Leon hier die RE1.5-Clips gegen
+         * die geladene RE2-Bank gegeben (5-Clip-Layout gegen 1-Clip-Bank = Fress-Tod unsichtbar). */
+        if (re15_ai_re2_for_type(g_player_victim_type)) {
             /* WELLE C: die RE2-Victim-Bank des Hunds (EM_TYPE20.EMD dir[5]/[6], byte-geparst)
              * trägt EINEN Clip: 145 Frames, 15-Bone-Spieler-Pool — die Struggle-Choreo synchron
              * zum Hunde-Latch-Clip 23 (ebenfalls 145 F, EDD self-read). Alle Phasen zeigen auf
@@ -749,7 +753,9 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
         *c_intro = 0; *c_hold = 1; *c_release = 2; *c_collapse = 2;
     } else {                                            /* ZOMBIE (default) */
         uint8_t base = (uint8_t)(v * 3);
-        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(g_player_victim_type)) {
+        /* MIXED: typ-bezogen auf den GREIFER — Zombie != 0x20, also RE1.5-Belegung. */
+        if (re15_ai_re2_for_type(g_player_victim_type)
+            && re15_re2z_owns_type(g_player_victim_type)) {
             /* ⛔ NUTZER-REPORT 2026-08-21 ("Bei RE2 AI, wenn Leon gefressen wird, steht er noch
              * komisch"): der Port fuhr hier die RE1.5-Belegung `collapse = v + 6` auch gegen die
              * RE2-Victim-Bank. GEMESSEN (probe_re2_victim_pose, PL00-Rig + Keyframe-Pool der
@@ -975,7 +981,8 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
  * word0 &= ~0x1004 — KEIN Yaw-Write). */
 static int re15_victim_is_re2_zombie(void)
 {
-    return (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) &&
+    /* MIXED: typ-bezogen auf den GREIFER (g_player_victim_type). */
+    return re15_ai_re2_for_type(g_player_victim_type) &&
            re15_re2z_owns_type(g_player_victim_type);
 }
 
@@ -1097,7 +1104,7 @@ void re15_player_victim_tick(void)
                 if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING (kein Original-Write) */
                 player->state = 7;                      /* cmd 7 @0x80111ea0 */
             }
-        } else if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 &&
+        } else if (re15_ai_re2_for_type(g_player_victim_type) &&   /* MIXED: typ-bezogen (Greifer) */
                    re15_re2z_owns_type(g_player_victim_type)) {
             /* ==== RE2-FRESS-KOLLAPS — Maschine 0x8010B464 (Hook B 0x8010B3C0, vom Zombie-Overlay
              * selbst installiert @0x80101108-120; Phasen @0x8010022C). Der Clip ist 13/15
@@ -1814,7 +1821,7 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
      * aber eigene, separat RE'te Opfer-Maschinen (Kraehe: KEIN a8f8-Snap, crow_victim_anim.md F1).
      * 0x80015558 mit Klemme 2048 == der Snap, den der Port fuer den Zombie selbst schon fuehrt
      * (re2z_exec_grab P0, enemy_ai_re2_zombie.c: atan2 - 0x400). */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(zombie->type)) {
+    if (re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type)) {
         int bear = ((int)re15_atan2_q12(zombie->z - player->z,
                                         zombie->x - player->x) - 0x400) & 0x0fff;
         if (behind) {                                   /* `andi v0,v0,0x1` @0x8010AA98 */
@@ -1841,7 +1848,7 @@ void re15_re2z_victim_devour(re15_actor_t *zombie, int behind)
      * Variante — `addiu v0,zero,2048` / `sh v0,344(s2)` @0x8010B4DC-E0 und BEHIND
      * `sh zero,344(s2)` @0x8010B4F8. Einen Yaw-Snap gibt es dort NICHT (0x8010B4C4-0x8010B570
      * enthaelt keinen 0x80015558-Aufruf) — der Yaw bleibt der des Griff-Latches. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(zombie->type))
+    if (re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type))
         g_actors[RE15_ACTOR_SLOT_PLAYER].re2z_t158 = (int16_t)(behind ? 0 : 0x800);
 }
 
@@ -4241,7 +4248,7 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
      * Loco-Bank (dir[1]/[2], re2_ems.c). Byte-gelesen: Pair-1-Clips 0..7 tragen die
      * +X-Vorwaertsbewegung (Clip 0: sx 2/47/121/209...), Pair-2-Clip 0 ist das wurzelfeste
      * Idle. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(a->type)) {
+    if (re15_ai_re2_for_type(a->type) && re15_re2z_owns_type(a->type)) {
         /* Pair-1-Spieler: WALK (a1=+0x108/a2=+0x17C @0x80101CB0-BC) und BUMP (dieselben Loads
          * @0x801022F0-F4, Clips 4/6 = 0xF0004+walkclip @0x80102290-AC) — beide byte-belegt.
          * ⛔ NUR AUFRECHT: die Substates 1/2 heissen im KRIECHER (+0x10E Bit 0, Tabelle
@@ -4569,7 +4576,7 @@ int re15_enemy_ai_live_tick(int slot)
      * (re15_re2z_tick, enemy_ai_re2_zombie.c) — root prolog + decision-then-executor exactly as
      * the RE2 overlay runs it (@0x801011A8-EC). The RE1.5 default below stays byte-identical.
      * run_all's shared tail (body pushes + SCA wall clamp) still applies to the RE2 zombie. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+    if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
         re15_re2z_tick(slot);
         return 1;
     }
@@ -5537,7 +5544,8 @@ static void re15_crow_ai_tick(int slot)
      * ai_dist speist der Hook wie beim Hund (+0x1F0-Analog, EXE-seitig vor dem Dispatch).
      * Pause-Gate: der RE2-Root prueft 0x800CFBDC&0x20000000 OHNE die RE1.5-grid&0x20-Ausnahme
      * (@0x80100148-158) -> hier s_ai_paused pur. Der RE1.5-Default darunter bleibt byte-identisch. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x21) {
+    /* MIXED (2026-08-23): typ-bezogen — 0x21 != 0x20, die Kraehe bleibt dort auf RE1.5. */
+    if (re15_ai_re2_for_type(e->type) && e->type == 0x21) {
         if (!s_ai_paused) {
             e->ai_dist = (uint32_t)re15_enemy_player_dist(e, player);
             re15_re2crow_tick(slot);
@@ -6357,7 +6365,9 @@ static void re15_dog_ai_tick(int slot)
      * ai_dist speist der RE2-Hund wie das Original vor dem Dispatch (+0x1F0-Analog). Der
      * RE1.5-Default darunter bleibt byte-identisch; run_alls Tail (Body-Push + SCA-Wall-Clamp
      * + ai_contact) läuft für beide Flavors unverändert. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x20) {
+    /* MIXED (2026-08-23): typ-bezogen — 0x20 IST der Typ, den MIXED auf RE2 legt. Das ist der
+     * eine Zweig, der im MIXED-Modus greift (PIN: tests/unit/test_ai_flavor_mixed.c). */
+    if (re15_ai_re2_for_type(e->type) && e->type == 0x20) {
         e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
         re15_re2dog_tick(slot);
         return;
@@ -6988,7 +6998,8 @@ static void re15_spider_ai_tick(int slot)
      * (Die alte +0x10E-Nachsaat aus dem grid_id ist mit weggefallen: sie existierte nur, um den
      * RDT-Aktoren ein Spawn-Wort fuer das Baby-Brain unterzuschieben. Echte Babys bekommen
      * +0x10E vom Spawner @0x80105E0C.) */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2spider_owns(e)) {
+    /* MIXED: typ-bezogen (0x26 != 0x20) -> Baby/Feuer-Emitter bleiben dort auf RE1.5. */
+    if (re15_ai_re2_for_type(e->type) && re15_re2spider_owns(e)) {
         if (!s_ai_paused) re15_re2spider_baby_tick(slot);
         return;
     }
@@ -8553,7 +8564,7 @@ static void re15_zgirl_ai_tick(int slot)
 
     /* PORT OPTION (WELLE B): RE2 folds kind 0x13 onto the SAME zombie overlay (loader clamp
      * 0x10..0x1F -> 0x10, @0x8001B738-48), so the girl runs the full RE2 brain too. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+    if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
         re15_re2z_tick(slot);
         return;
     }
@@ -8765,7 +8776,8 @@ static void re15_adult_spider_ai_tick(int slot)
      * Pause-Gate: der RE2-Root prueft 0x800CFBDC & 0x20000000 @0x801000D4-E4 -> s_ai_paused pur.
      * Der RE1.5-Default darunter bleibt byte-identisch; run_alls Tail (Body-Push +
      * SCA-Wand-Klemme) laeuft fuer beide Flavors unveraendert. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x25 && re15_re2spider_owns(e)) {
+    /* MIXED: typ-bezogen (0x25 != 0x20) -> Adult-Spinne bleibt dort auf RE1.5. */
+    if (re15_ai_re2_for_type(e->type) && e->type == 0x25 && re15_re2spider_owns(e)) {
         if (!s_ai_paused) {
             e->re2z_f10e = (uint16_t)e->grid_id;   /* +0x10E <- RE1.5-Spawn-Byte (MAPPING) */
             e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
@@ -10688,7 +10700,7 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
      * 0x08000000 gesetzt UND (Wort>>28) < 2 -> ENEMSE-SE (Wort>>28) via 0x8005bd6c — NICHT
      * die RE1.5-Room-SE-Maske. EM010-Pair-1-Belegung byte-gelesen: Clip 0 Frames 20/62 =
      * SE 1/0 (die zwei Schritte). */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+    if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
         /* ⛔ CALL-SITE-GATE (Nutzer-Report "Phantom-Schritt-SEs beim Hinfallen/Liegen/Aufstehen"):
          * das Original ruft 0x801016c8 NICHT aus dem Root und NICHT in jedem Zustand. Eigener
          * jal-Scan ueber die GANZE EMOVL10_S0.BIN liefert EXAKT ZWEI Treffer:

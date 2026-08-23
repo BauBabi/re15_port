@@ -2574,3 +2574,16 @@ target_compile_definitions(test_re2z_bump_walk PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2z_bump_walk COMMAND test_re2z_bump_walk)
 set_tests_properties(unit_re2z_bump_walk PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# --- PIN (Nutzer-Auftrag 2026-08-23): die DRITTE KI-Stufe "AI MIXED" — alles RE1.5 AUSSER dem
+#     Hund 0x20, der komplett auf dem RE2-Brain laeuft. Pinnt den Typ-Resolver
+#     re15_ai_re2_for_type (der EINZIGE Entscheider seit dem Umbau, 3 Flavors x 11 Typen), die
+#     Flavor-Klemme, und live: ROOM1190 (Hund: MIXED == RE2, != RE1.5, re2d_stuck230 > 0) sowie
+#     ROOM1140 (Zombie: MIXED == RE1.5, != RE2). ---
+add_executable(test_ai_flavor_mixed test_ai_flavor_mixed.c)
+target_link_libraries(test_ai_flavor_mixed PRIVATE re15_engine re15_test_support)
+target_include_directories(test_ai_flavor_mixed PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_ai_flavor_mixed PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_ai_flavor_mixed COMMAND test_ai_flavor_mixed)
+set_tests_properties(unit_ai_flavor_mixed PROPERTIES TIMEOUT 120)

@@ -561,10 +561,13 @@ void re15_re2_damage_model_set(int on)
     s_re2_model = on ? 1 : 0;
     s_re2_model_env_read = 1;    /* explizit gesetzt schlaegt die Umgebungsvariable */
 }
-/* Gilt fuer diesen Typ das RE2-Modell? (Flavor + Schalter + RE2-Besitz — alles typ-fest.) */
+/* Gilt fuer diesen Typ das RE2-Modell? (Flavor + Schalter + RE2-Besitz — alles typ-fest.)
+ * MIXED (2026-08-23): der Flavor-Teil ist jetzt typ-bezogen, damit im MIXED-Modus GENAU der
+ * Hund 0x20 die RE2-Schadenszeile (0x800A4424) und die RE2-INIT-HP bekommt und alles andere
+ * seine RE1.5-Zeile @0x8006e0d0 behaelt. */
 static int re15_re2_model_owns(uint8_t type)
 {
-    return re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_damage_model()
+    return re15_ai_re2_for_type((unsigned)type) && re15_re2_damage_model()
         && re15_re2_owns_type((unsigned)type);
 }
 
@@ -609,8 +612,8 @@ static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
      * Deren byte-true Zeile ist die NULLZEILE @0x8006EDE0 (s_wpn_dmg_immune unten): hp wird in
      * 0x80116288-0x80116DB4 nirgends gelesen, sie sind waffen-immun. Jetzt entscheidet die
      * HERKUNFT (re15_re2spider_baby_owns, enemy_ai_re2_spider.c). */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2spider_baby_owns(e))
-        return s_re2_wpn_dmg_spiderbaby;
+    if (re15_ai_re2_for_type((unsigned)type) && re15_re2spider_baby_owns(e))
+        return s_re2_wpn_dmg_spiderbaby;   /* MIXED: 0x26 != 0x20 -> RE1.5-Nullzeile bleibt */
     /* ⛔ PORT-OPTION (Block oben): im RE1.5-Modus bekommt die ZOMBIE-FAMILIE dieselbe
      * RE2-Schadenszeile. re15_re15_import_owns() ist zombie-fest, der switch kann fuer diesen
      * Zweig also gar keine Hund-/Kraehen-/Spinnen-Zeile treffen. */
@@ -850,17 +853,37 @@ int16_t re15_re2_init_hp(const re15_actor_t *e)
  * und nur fuer die Zombie-Familie (Block ueber re15_re15_import_owns). Ohne die Option ist er
  * im RE1.5-Modus weiterhin ein VOLLSTAENDIGES No-op — inklusive des Port-Feldes
  * re2_hp_stamped, worauf test_re2_hp_model.c Abschnitt 5/6 pinnt. */
+/* ⚠️ MIXED (2026-08-23): DIE EINZIGE der 30 Vergleichsstellen, die NICHT rein typ-fest war —
+ * sie berechnete zwei GLOBALE Modi vorweg und waehlte danach die Besitzmenge. Im MIXED-Modus
+ * sind BEIDE Seiten gleichzeitig wahr (Hund ueber die RE2-Seite, Zombie-Familie ueber die
+ * RE1.5-Import-Seite), ein globaler Modus haette also zwangslaeufig eine der beiden verloren.
+ * Aufgeloest, indem der Besitz PRO AKTOR entschieden wird (re15_hp_sync_owns) — RE15 und RE2
+ * liefern dabei exakt dieselbe Menge wie vorher:
+ *   RE15 : re15_ai_re2_for_type == 0 fuer alles -> nur der Import-Zweig (== `flavor == RE15`)
+ *   RE2  : re15_ai_re2_for_type == 1 fuer alles -> nur der RE2-Zweig
+ *   MIXED: 0x20 -> RE2-Zweig, Rest -> Import-Zweig */
+static int re15_hp_sync_owns(uint8_t type)
+{
+    if (re15_ai_re2_for_type((unsigned)type))
+        return re15_re2_damage_model() && re15_re2_owns_type((unsigned)type);
+    return re15_re15_import_owns(type);   /* RE1.5-Seite: nur die Zombie-Familie (typ-fest) */
+}
+
 void re15_re2_hp_sync(void)
 {
-    int re2_mode   = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_damage_model());
-    int re15_mode  = (re15_ai_flavor() == RE15_AI_FLAVOR_RE15 && re15_re15_re2z_import());
-    if (!re2_mode && !re15_mode) return;
+    /* Frueh-Ausstieg wie bisher (er ueberspringt AUCH das re2_hp_stamped-Ruecksetzen — darauf
+     * pinnt test_re2_hp_model.c Abschnitt 5/6), nur flavor-verallgemeinert: raus, wenn WEDER die
+     * RE2-Seite NOCH die RE1.5-Import-Seite ueberhaupt einen Typ stempeln koennte. */
+    re15_ai_flavor_t fl = re15_ai_flavor();
+    int re2_side   = (fl != RE15_AI_FLAVOR_RE15) && re15_re2_damage_model();
+    int re15_side  = (fl != RE15_AI_FLAVOR_RE2)  && re15_re15_re2z_import();
+    if (!re2_side && !re15_side) return;
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) { e->re2_hp_stamped = 0; continue; }
         /* RE2-Modus: die ganze RE2-Besitzmenge. RE1.5-Modus: NUR die Zombie-Familie — Hund,
-         * Kraehe und Spinne behalten dort ihre RE1.5-INIT-HP. */
-        if (!(re2_mode ? re15_re2_owns_type(e->type) : re15_re15_import_owns(e->type))) continue;
+         * Kraehe und Spinne behalten dort ihre RE1.5-INIT-HP. MIXED: beides nebeneinander. */
+        if (!re15_hp_sync_owns(e->type)) continue;
         if (e->state == 0) { e->re2_hp_stamped = 0; continue; }   /* INIT steht noch aus */
         if (e->re2_hp_stamped) continue;
         e->re2_hp_stamped = 1;
@@ -1172,7 +1195,8 @@ retry_after_latch:
          * grid 0x00): sie ging beim ERSTEN Schuss auf `+0x4 = 3` (Tod) statt unberuehrt zu bleiben.
          * Eng gefasst auf genau diesen Fall (RE2-Flavor + Typ 0x26) — die RE1.5-Semantik von
          * HP < 0 bei allen anderen Typen bleibt unveraendert. */
-        if (e->type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->hp < 0) continue;
+        /* MIXED: typ-bezogen (0x26 != 0x20) -> RE1.5-Semantik von HP<0 bleibt dort. */
+        if (e->type == 0x26u && re15_ai_re2_for_type(e->type) && e->hp < 0) continue;
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
@@ -1465,7 +1489,11 @@ retry_after_latch:
  * dem `+0x4 = 2/3` — `survived` kann damit aus e->state gelesen werden. */
 static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
 {
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return;
+    /* MIXED (2026-08-23): typ-bezogen. Im MIXED-Modus passiert GENAU der Hund dieses Tor und
+     * bekommt damit denselben Stempel wie im RE2-Modus (+0x1D2 Basis-Zone, +0x6 = 0). Die
+     * ZEILE +0x5 unten bleibt der Zombie-Familie vorbehalten — der Hund benutzt +0x5 als
+     * ACTIVE-Substate (Block oben), das ist in MIXED wie in RE2 gleich. */
+    if (!re15_ai_re2_for_type(e->type)) return;
     /* ⛔ 0x26 nach HERKUNFT (2026-08-22): der Stempel nullt +0x6 (sub_state_2). Bei den sieben
      * RDT-gesetzten 0x26ern von ROOM1090 — den FEUER-EMITTERN, 0x80072bac[0x26] = 0x80116288 —
      * ist +0x6 der ACTIVE-Substate des Emitters (@0x80116784/@0x8011689C), ein Treffer haette

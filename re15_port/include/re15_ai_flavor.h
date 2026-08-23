@@ -18,12 +18,34 @@
 #define RE15_AI_FLAVOR_H
 
 typedef enum {
-    RE15_AI_FLAVOR_RE15 = 0,   /* byte-true RE1.5 (DEFAULT) */
-    RE15_AI_FLAVOR_RE2  = 1    /* RE2 retail zombie brain   */
+    RE15_AI_FLAVOR_RE15  = 0,  /* byte-true RE1.5                                */
+    RE15_AI_FLAVOR_RE2   = 1,  /* RE2 retail brains (DEFAULT seit 2026-08-22)     */
+    RE15_AI_FLAVOR_MIXED = 2   /* RE1.5 ueberall, RE2 NUR fuer den HUND 0x20      */
 } re15_ai_flavor_t;
 
 re15_ai_flavor_t re15_ai_flavor(void);
 void             re15_ai_flavor_set(re15_ai_flavor_t f);
+
+/* ---- MIXED (2026-08-23, Nutzer-Auftrag) -----------------------------------------------------
+ * Woertlich: „Und ich hätte gerne eine weitere Option im Optionsmenue **RE AI Mixed**, die
+ * beinhaltet im Prinzip **alles von RE 1.5 AI ausser die Hunde, die sollen komplett von RE 2 AI
+ * stammen**."  ⛔ KEIN byte-true Zustand — eine reine Port-Option (wie der RE2-Modus selbst).
+ *
+ * ⛔ DIE EINE REGEL: der Flavor wird NICHT MEHR GLOBAL VERGLICHEN. Jede Stelle, die frueher
+ * `re15_ai_flavor() == RE15_AI_FLAVOR_RE2` schrieb, fragt jetzt TYP-BEZOGEN
+ *   re15_ai_re2_for_type(<der Typ, um den es an DIESER Stelle geht>)
+ * und bekommt damit im MIXED-Modus fuer 0x20 eine 1 und fuer alles andere eine 0. Ein globaler
+ * Vergleich waere im MIXED-Modus zwangslaeufig fuer die eine oder die andere Haelfte falsch
+ * (Asset-Loader, Schadenszeile, Anim-Advance-Ausnahmen, Opfer-FSM haengen ALLE am Typ).
+ *
+ * ⚠️ WER EINEN NEUEN TYP AUF EIN RE2-BRAIN LEGT, aendert NUR die Liste hier — nicht 30
+ * Vergleichsstellen. Umgekehrt gilt weiterhin die Welle-C/D-Warnung: eine geteilte Stelle, die
+ * NICHT typ-bezogen ist, muss einzeln entschieden werden (es gibt derzeit keine mehr).
+ *
+ * RE15  -> immer 0. RE2 -> immer 1. MIXED -> genau 0x20.
+ * ⚠️ `type` ist der GEGNER-Typ (Kind), nicht der Slot: an den Opfer-Stellen ist das der Typ des
+ * GREIFERS (g_player_victim_type), nicht der des Spielers. */
+int re15_ai_re2_for_type(unsigned type);
 
 /* ---- MODELLHERKUNFT — ⛔ NUR NOCH TEST-HAKEN, KEIN MENUE-ZUSTAND MEHR ----------------------
  * WELLE G (2026-08-19) hatte den OPTIONS→AI-Schalter auf DREI Stufen erweitert:
