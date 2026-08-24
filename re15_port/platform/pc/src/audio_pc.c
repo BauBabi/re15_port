@@ -794,6 +794,19 @@ static void se_voice_pump(void)
  *    Produzent dieses Bits ist Sce_em_set mit pc[5] != 0 -> entity+0x0 = 0x2001
  *    (@0x8004229c-b0); in ROOM10D0 (Datei 0x126a / 0x12a4) und ROOM1140 (0x000bbe ff.)
  *    ist pc[5] == 0 -> der Versatz ist fuer diese Spawns nachweislich inaktiv.
+ *    ⛔ NACHTRAG 2026-08-25 — DIE VORIGE DEUTUNG IST ZURUECKGEZOGEN. Hier stand, die zweite
+ *    Tabellenhaelfte sei "DASSELBE Sample auf einer ANDEREN SPU-Stimme" und damit ein
+ *    Mechanismus gegen Stimmen-Diebstahl. WIDERLEGT (Beleg-Audit 2026-08-25): die Stimmen-
+ *    und Prio-Zahlen stimmen (se3 v4/prio3 <-> se15 v6/prio3; se4 v5 <-> se16 v7;
+ *    se0 v4 <-> se12 v6), das SAMPLE nicht. Mit der Feld-Semantik aus FUN_800453d0 selbst
+ *    (prog = byte1&0x7f @0x80045490-98; TONE = byte2>>4 @0x80045474; Stimme =
+ *    (byte3&0x1f)-16 @0x80045478-7C; prio = byte2&0xf @0x800454B0) gilt in ROOM1140 snd1:
+ *    se3 = 00 00 43 14 -> Tone 4, se15 = 00 00 e3 16 -> Tone 14; se0 -> Tone 1, se12 ->
+ *    Tone 11. Die snd1-VH (RDT+0x18, "VABp") hat ps=1/ts=11 — Programm 0 besitzt die Tones
+ *    0..10, die Slots 11..15 sind durchgehend NULL (vol=0, vag=0). Die zweite Haelfte zeigt
+ *    also auf NICHT EXISTIERENDE Tones. WOFUER der Versatz gut ist, bleibt damit ⛔ OFFEN.
+ *    Unveraendert gilt nur der Portierungs-Grund: der Produzent (pc[5]) ist in den
+ *    gemessenen Raeumen 0; der Zensus fuer die uebrigen Raeume steht als O2 offen.
  *  - VAB-Override byte0 bit7 -> vabId = byte0 & 0x7f (@0x8004545c-68): waehlt eine ANDERE
  *    residente VAB-Handle-Nummer fuer den Key-On, waehrend die Tone-Attribute weiter aus
  *    der Bank-3-VH kommen. Census ueber alle 412 Raum-EDT-Tabellen: 680 von 6140 Records

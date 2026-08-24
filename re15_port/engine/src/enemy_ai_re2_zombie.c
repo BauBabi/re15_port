@@ -1434,6 +1434,16 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
                                                                     * Biss-Check DURCH (Review #6) */
             e->sub_state_2 = 4;                                    /* both sides @0x8010288C-94 */
         if (re2z_frame_slot(e) == (int)e->re2z_bitefr) {           /* +0x14D == pair[0] @0x801028A0-AC */
+            /* ⛔ BELEG — DIESER Biss-SE IST DA und ist NICHT die Luecke des Nutzer-Reports
+             * 2026-08-24 (Dossier biss-se.md §3 L3, WIDERLEGT). Gemessen im echten game_step
+             * mit dem Plattform-Mapper pc_re2z_se_re15 (`case 3: m = 3` -> RE1.5-snd1 SE 3):
+             * Steh-Griff ROOM1140 2x pro Griff auf Clip-Slot 16 (38 Frames Abstand, Clip 12),
+             * Kriecher ROOM1030 3x pro Griff auf Slot 1 (Clip 15) — byte-deckungsgleich mit
+             * dem Gate @0x801028A0-AC und der Parametertabelle @0x80100014
+             * {16,20 | 1,5 | 16,30 | 1,10}. Der Record ist belegt (ROOM1140/1030 snd1[3] =
+             * 00 00 43 14, Stimme 4, Prio-Nibble 3) und gewinnt das Prio-Gate FUN_80045a18
+             * auch gegen sich selbst (Nibble 3 < 8, @0x80045A50-58). Was fehlte, war LEONS
+             * Griff-Laut im RE2-STEH-Fall (s. re15_victim_grab_core_se) — nicht dieser hier. */
             re2z_se(3);                                            /* bite SE @0x801028E8-F0 */
             int r = re2z_player_damage(pl, (int)e->re2z_bitedmg);  /* FUN_800401d4 @0x801028F4-FC */
             if (r & 1) e->sub_state_2 = 4;                         /* one-save -> throw @0x80102904-1C */
@@ -2034,6 +2044,48 @@ static void re2z_exec_six(re15_actor_t *e, re15_actor_t *pl)
                                                                     * Platzierung aus dem eigenen
                                                                     * Anker + Wurzel-Offset des
                                                                     * laufenden Frames von Clip 0x18 */
+        /* ===== FINISHER-BISS (Nutzer-Report 2026-08-24: "der finisher biss sound des zombies
+         * fehlt"; Dossier analysis/nutzer_batch_2026-08-25/finisher-biss.md §2/§5) =====
+         *
+         * RE2 spielt in EXEC[6] NUR einen Moan und keinen Biss — vollstaendiger jal-Scan
+         * 0x0C016F5B (= `jal 0x8005bd6c`) ueber EMOVL10_S0.BIN: der einzige Treffer der
+         * Funktion ist @0x801039F0 mit `addiu a0,zero,11` @0x801039E8 / `addiu a0,zero,10`
+         * @0x801039EC (oben als re2z_se(10/11) portiert); die RE2-Spieler-Kollaps-Maschine
+         * 0x8010B464-0x8010B7D0 enthaelt NULL ENEMSE-Aufrufe. Unter dem SOUND-MANDAT
+         * (Entscheidungen RE2, Praesentation RE1.5) gewinnt darum der RE1.5-Zwilling.
+         *
+         * RE1.5 FUN_80102bd8 (DEVOUR-FINISH-Animate, Dispatch @0x8011F890[+0x5=5/6]),
+         * Pro-Tick-Block — selbst disassembliert aus info/Re1.5/PSX/BIN/STAGE1.BIN:
+         *     80102c94: lui   v0,0x800b
+         *     80102c98: lw    v0,-14460(v0)   ; v0 = g_entity(cur) = DER ZOMBIE
+         *     80102ca0: lbu   v1,149(v0)      ; v1 = entity+0x95 = ZOMBIE-Anim-Frame
+         *     80102ca4: ori   v0,zero,0x28    ; <== FRAME-GATE 40, die einzige Konstante
+         *     80102ca8: bne   v1,v0,0x80102cb8
+         *     80102cb0: jal   0x800453d0      ; ** snd1 (Bank 3) SE 3 = DER BISS **
+         *     80102cb4: ori   a0,zero,0x3     ; (Delay-Slot)
+         * Identisches Gate im Leichen-Fress-Executor: `ori v0,zero,0x28` @0x801045F0 /
+         * `jal 0x800453d0` @0x801045FC / `ori a0,zero,0x3` @0x80104600.
+         * SE 3 == "Biss" ist datenseitig belegt: der Frame-Wort-SFX-Dekoder FUN_8001b38c
+         * (`srl s0,v0,22` @0x8001b3b4 -> `jal 0x800453d0` @0x8001b3cc) liest aus der
+         * RE1.5-Zombiebank (EMD/CDEMD0.EMS, EM10) genau auf den BISS-ANGRIFFS-Clips
+         * 0x27 f18/f47 und 0x28 f21 das Bit SE 3; die Devour-Clips 9/0x0A tragen selbst
+         * KEINE SFX-Bits — der einzige Ton des Finishers ist dieser explizite jal.
+         * Das Gate 0x28 = 40 ist auf dem RE2-Clip 0x18 erreichbar (123 Frames, gemessen).
+         *
+         * GEMESSEN vor dem Fix (echter game_step, ROOM1140, RE2-Baenke): zwischen
+         * Kollaps-Eintritt und dem ersten SND1-SE lagen 148 Frames (~5 s) voellige Stille;
+         * der erste SE 3 fiel erst im Fress-Loop EXEC[8].
+         *
+         * RETRIGGER: das Original feuert ein Gleichheits-Tor auf einem monoton wachsenden
+         * Zaehler => genau einmal. Der Port-Advancer kann einen Slot ueber mehrere Ticks
+         * halten, darum dasselbe Ein-Schuss-Latch wie re2z_frame_flag_se (re2z_sfx_slot;
+         * von re2z_clip beim Clipwechsel auf -1 zurueckgesetzt, und exec_feeding setzt in
+         * seinem P0 selbst wieder einen Clip). */
+        if (re2z_frame_slot(e) == 0x28 && (int)e->re2z_sfx_slot != 0x28) {
+            e->re2z_sfx_slot = 0x28;                               /* Ein-Schuss-Latch */
+            extern void re15_audio_room_se(int idx);
+            re15_audio_room_se(3);                                 /* @0x80102cb0 / a0=3 @0x80102cb4 */
+        }
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
                                                                    /* +0x6 += ret @0x80103A30-40 */
         return;

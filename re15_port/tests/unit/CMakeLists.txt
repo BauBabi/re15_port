@@ -2648,6 +2648,15 @@ target_compile_definitions(probe_10d0_situp_re2 PRIVATE
 add_test(NAME probe_10d0_situp_handoff COMMAND probe_10d0_situp_re2 8)
 set_tests_properties(probe_10d0_situp_handoff PROPERTIES TIMEOUT 60)
 
+# DIAGNOSE-SONDE (kein ctest): FINDING 2 (2026-08-25) "der zombie in 10d0 schwebt nach dem
+# aufstehen leicht in der Luft" — misst die WELT-Y-Hoehe (Aktor-Wurzel, Sohlen-Bone, Hueft-/
+# Brustbone) Tick fuer Tick, mit dem WELLE-G-HYBRID-Rig (das die andere Sonde nicht anwendet).
+add_executable(probe_10d0_float_y probe_10d0_float_y.c)
+target_link_libraries(probe_10d0_float_y PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_10d0_float_y PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_10d0_float_y PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # FINDING 5 (Wiederholungs-Report 2026-08-24): "Verletzt-Animation beim Hineinlaufen ins Feuer
 # fehlt". Misst NICHT den Zustand (der war seit v0.3.18 richtig), sondern die GERENDERTE Pose
 # im echten ROOM1090-Durchlauf inkl. RDT-Animationsblock: die cmd-2/cmd-3-Reaktions-Clips
@@ -2671,3 +2680,42 @@ target_compile_definitions(probe_re2z_stomp PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME probe_re2z_stomp COMMAND probe_re2z_stomp 1800 2)
 set_tests_properties(probe_re2z_stomp PROPERTIES TIMEOUT 120)
+
+# --- PIN: der EINTRITTS-SE der RE2-Opfer-/Struggle-Maschine (Nutzer-Report 2026-08-24,
+#     RE2-KI: "die Biss-Sounds des Zombies fehlen").
+#     Der Biss-SE des Zombies selbst war NICHT die Luecke (ENEMSE 3 @0x801028EC feuert
+#     byte-cadence-korrekt) — es fehlte LEONS Griff-Laut im RE2-STEH-Fall, den der Port mit
+#     einer durch die Disassemblierung widerlegten Begruendung unterdrueckte.
+#     SOLL: RE2-STEH-Maschine 0x8010A9B8 P0 @0x8010AA50 wuerfelt
+#           `jal 0x80015fe8` @0x8010AAE0 / `andi v0,v0,0x1` @0x8010AAF0 /
+#           `sll v0,v0,17` @0x8010AAF4 / `or a0,v0,a0` @0x8010AAF8 /
+#           `jal 0x8005ba28` @0x8010AAFC  => CORE 0 ODER CORE 2;
+#           RE2-KRIECH 0x8010AF58 P0 @0x8010B060 und RE1.5 0x8010A2CC P0 @0x8010A3E4 je FEST
+#           CORE 0. Bank/Record via Se_on-Zwillinge (@0x80045028/@0x80045078-7C bzw.
+#           @0x8005BA30/@0x8005BA7C-80): 0x04000001 = CORE 0, 0x04020001 = CORE 2. ---
+add_executable(test_re2z_grab_core_se test_re2z_grab_core_se.c)
+target_link_libraries(test_re2z_grab_core_se PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_grab_core_se PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_grab_core_se PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_grab_core_se COMMAND test_re2z_grab_core_se)
+set_tests_properties(unit_re2z_grab_core_se PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+
+# --- PIN: der FINISHER-BISS des RE2-Zombies (Nutzer-Report 2026-08-24: "... als auch der
+#     finisher biss sound des zombies fehlt").
+#     SOLL: RE1.5 FUN_80102bd8 (Devour-Animate) spielt snd1 SE 3 auf dem ZOMBIE-Frame 0x28 —
+#           `lbu v1,149(v0)` @0x80102CA0 / `ori v0,zero,0x28` @0x80102CA4 /
+#           `bne v1,v0` @0x80102CA8 / `jal 0x800453d0` @0x80102CB0 / `ori a0,zero,0x3`
+#           @0x80102CB4; identisches Gate im Leichen-Fressen @0x801045F0-0x80104600.
+#           SE 3 == Biss belegt ueber die Frame-Wort-SFX-Bits der Biss-Clips 0x27 f18/f47 und
+#           0x28 f21 (Dekoder `srl s0,v0,22` @0x8001B3B4 -> `jal 0x800453d0` @0x8001B3CC).
+#           RE2 selbst hat dort KEINEN Biss (EXEC[6] @0x801039F0 = ENEMSE 10/11 MOAN;
+#           Kollaps-Maschine 0x8010B464-0x8010B7D0 ohne jeden ENEMSE) -> Sound-Mandat.
+#     IST vor dem Fix: 148 Frames (~5 s) Stille zwischen Kollaps-Eintritt und erstem Ton. ---
+add_executable(test_re2z_finisher_bite test_re2z_finisher_bite.c)
+target_link_libraries(test_re2z_finisher_bite PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_finisher_bite PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_finisher_bite PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_finisher_bite COMMAND test_re2z_finisher_bite)
+set_tests_properties(unit_re2z_finisher_bite PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)

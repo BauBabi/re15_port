@@ -115,6 +115,24 @@ check_glibc() {          # $1 = Linux-Binary
     fi
 }
 
+check_lf() {             # $1 = fertiger Paketordner — nur fuer Linux-Pakete sinnvoll
+    # Ein Shell-Skript mit CRLF ist auf dem Deck TOT: die Shell liest das \r als Teil des
+    # Interpreter-Pfads ("/usr/bin/env bash\r: nicht gefunden") bzw. haengt es an jedes
+    # Kommando. Gemeldet 2026-08-25 vom Nutzer, nachdem run.sh genau so ausgeliefert wurde.
+    # Der Paketbau kopiert aus dem ARBEITSBAUM, wo `.gitattributes` (eol=lf) nicht greift —
+    # deshalb hier am FERTIGEN Paket pruefen, nicht an der Quelle.
+    local out="$1" bad=0 f
+    while IFS= read -r f; do
+        if LC_ALL=C grep -qU $'\r' "$f"; then
+            echo "   CRLF in $f" >&2
+            bad=1
+        fi
+    done < <(find "$out" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.desktop' \))
+    [[ $bad -eq 0 ]] || die "Shell-/Desktop-Datei mit CRLF im Linux-Paket — auf dem Deck
+        scheitert das schon am Shebang. Quelle normalisieren (tr -d '\\r') und neu packen."
+    echo "   Zeilenenden-Gate: alle Skripte im Paket sind LF"
+}
+
 check_tree() {           # $1 = fertiger Paketordner
     local out="$1"
     [[ -d "$out/shared_assets/PSX/STAGE1" ]] || die "Asset-Baum unvollstaendig in $out"
@@ -355,11 +373,20 @@ if [[ "$ONLY" == "both" || "$ONLY" == "linux" ]]; then
     if [[ $ZIP_ONLY -eq 0 ]]; then
         rm -rf "$HERE/pkg-linux"; mkdir -p "$OUT"
         install -m 755 "$LINUX_BIN"            "$OUT/re15_pc"
-        install -m 755 "$HERE/pkg_files/linux/run.sh" "$OUT/run.sh"
+        # ⛔ ZEILENENDEN NORMALISIEREN (2026-08-25, Nutzer-Report "du baust das shell Skript
+        # run.sh in crlf statt in lf"): .gitattributes hat zwar `*.sh text eol=lf`, das
+        # normalisiert aber nur, was git SPEICHERT — eine vom Editor/Werkzeug mit CRLF
+        # geschriebene Datei bleibt im ARBEITSBAUM CRLF, und genau von dort kopiert dieses
+        # Skript. Auf dem Deck scheitert so ein run.sh schon am Shebang
+        # ("/usr/bin/env bash\r: Datei oder Verzeichnis nicht gefunden"). Deshalb hier beim
+        # Kopieren hart auf LF ziehen statt sich auf den Arbeitsbaum zu verlassen.
+        tr -d '\r' < "$HERE/pkg_files/linux/run.sh" > "$OUT/run.sh"
+        chmod 755 "$OUT/run.sh"
         render_readme "$HERE/pkg_files/linux/README.txt.in" "$OUT/README_${VERSION#v}.txt"
         copy_common "$OUT"
     fi
     check_tree  "$OUT"
+    check_lf    "$OUT"
     check_runtime_assets "$OUT" "re15_pc"
     LINUX_FILES=$(find "$OUT" -type f | wc -l)
     echo "   OK: $(du -sh "$OUT" | cut -f1), $LINUX_FILES Dateien"

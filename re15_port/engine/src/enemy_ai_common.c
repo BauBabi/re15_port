@@ -684,6 +684,54 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     a->z += (int32_t)((-(int64_t)sn * dx + (int64_t)cs * dz) >> 12);
 }
 
+/* ============================================================================================
+ * EINTRITTS-SE DER OPFER-/STRUGGLE-MASCHINE (Phase 0) — CORE-Bank 4.
+ *
+ * ⛔ WIDERRUF 2026-08-24 (Dossier analysis/nutzer_batch_2026-08-25/biss-se.md §1.7 + §3 L1/L2).
+ * Die bisherige Fassung unterdrueckte diesen SE im RE2-STEH-Griff mit der Begruendung, die
+ * RE2-Steh-Maschine spiele ihn nicht. Selbst nachdisassembliert (info/re2leon/COMMON/BIN/
+ * EMOVL10_S0.BIN, RAW @0x80100000) — sie spielt ihn, 23 Instruktionen unter dem bisher
+ * zitierten Phasen-Einstieg:
+ *
+ *   RE2 STEH-Maschine 0x8010A9B8 (Auswahl @0x8010CF2C[0]/[1]), P0 @0x8010AA50:
+ *       8010aae0: jal   0x80015fe8     ; rand
+ *       8010aae8: lui   a0,0x400
+ *       8010aaec: ori   a0,a0,0x1      ; a0 = 0x04000001
+ *       8010aaf0: andi  v0,v0,0x1
+ *       8010aaf4: sll   v0,v0,17       ; 0 oder 0x20000
+ *       8010aaf8: or    a0,v0,a0       ; -> 0x04000001 ODER 0x04020001
+ *       8010aafc: jal   0x8005ba28     ; Se_on  => CORE 0 ODER CORE 2 (MUENZWURF)
+ *       8010ab00: addiu a1,s1,56       ; (Delay-Slot) Emitter = Spieler-Position
+ *   RE2 KRIECH-Maschine 0x8010AF58 (@0x8010CF34[0]/[1]), P0:
+ *       8010b05c: ori   a0,a0,0x1      ; a0 = 0x04000001 (FEST, kein Wurf)
+ *       8010b060: jal   0x8005ba28
+ *   RE1.5 Opfer-Maschine 0x8010A2CC, P0:
+ *       8010a3bc: lui   a0,0x400
+ *       8010a3e0: ori   a0,a0,0x1      ; a0 = 0x04000001 (FEST, kein Wurf)
+ *       8010a3e4: jal   0x80045024
+ *
+ * Argumentformat beider Se_on-Zwillinge identisch (RE1.5 FUN_80045024: Bank `srl v1,a0,24`
+ * @0x80045028, Record `srl v0,a0,16`/`andi 0xff` @0x80045078-7c; RE2 FUN_8005ba28: Bank
+ * @0x8005ba30, Record @0x8005ba7c-80) => 0x04000001 = CORE 0, 0x04020001 = CORE 2.
+ *
+ * GEMESSEN vor dem Fix (echter game_step, ROOM1140/ROOM1030, echte Baenke): im gesamten
+ * RE2-STEH-Griff 0 CORE-Aufrufe, waehrend RE1.5-Griff und RE2-Kriech-Griff je CORE 0 spielen.
+ *
+ * PORT-MAPPING (bewusst, dokumentiert): der Wurf @0x8010aae0 laeuft im Original ueber den
+ * gemeinsamen EXE-rand 0x80015fe8 der SPIELER-seitigen Struggle-Maschine, nicht ueber den
+ * Zombie-Brain-Strom. Der Port nimmt dafuer re15_engine_rand8() (dieselbe Wahl und
+ * Begruendung wie beim RE1.5-Feeder-Moan in re2z_exec_feeding), damit die RE2-Brain-
+ * Entscheidungen (re2z_rand) bitgleich bleiben. Das SAMPLE bleibt in jedem Fall RE1.5-CORE
+ * (Sound-Mandat: Entscheidungen RE2, Klang RE1.5); CORE 2 ist im Port bereits belegt
+ * (Knockback-Schrei, game_step_common.c re15_player_stagger_cmd2, Se_on(0x04020001)
+ * @0x80035f90/@0x80036004). */
+static int re15_victim_grab_core_se(int re2, int variant)
+{
+    if (!re2)         return 0;   /* RE1.5 Opfer-P0: FEST CORE 0 @0x8010a3e4 */
+    if (variant >= 2) return 0;   /* RE2-KRIECH-P0:  FEST CORE 0 @0x8010b060 */
+    return (re15_engine_rand8() & 1u) ? 2 : 0;   /* RE2-STEH-P0: Wurf @0x8010aae0-aafc */
+}
+
 /* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
  * state (which zombie's bank, face/behind) + enter the STRUGGLE. (The COLLAPSE is NOT keyed off hp
  * here — byte-true it is the DEVOUR state's sub0 latching player cmd 6, re15_player_victim_devour.) */
@@ -701,17 +749,14 @@ static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t
         ? 0   /* CROW: the normal-room grab writes aca59 = 0 (front FSM) @0x80113e30 — the
                * rear FSM (aca59=1 @0x801152ac) exists only in the ROOM1171 event scene */
         : (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
-    /* OPFER-FSM-EINTRITTS-GRUNT (Nutzer-Report 2026-08-23 Runde 2, "Kriech-Biss Sound"):
-     * Se_on(0x4000001) = CORE-Bank-4 Rec 0. RE1.5 spielt ihn in Phase 0 der Zombie-Opfer-
-     * Maschine fuer ALLE Varianten (`lui a0,0x400` @0x8010a3bc / `ori a0,a0,0x1` @0x8010a3e0 /
-     * `jal 0x80045024` @0x8010a3e4); die RE2-Struggle-Maschinen spielen ihn NUR im Kriech-Fall
-     * (0x8010AF58 P0 `jal 0x8005ba28` @0x8010b060 — die Steh-Maschine P0 @0x8010aa50 nicht).
+    /* OPFER-FSM-EINTRITTS-GRUNT (Nutzer-Report 2026-08-23 Runde 2 "Kriech-Biss Sound",
+     * 2026-08-24 "Biss-Sounds des Zombies fehlen" = der RE2-STEH-Fall). Vollstaendige
+     * Adress-Belege + der Widerruf der alten RE2-Unterdrueckung: s. re15_victim_grab_core_se.
      * Nur Zombie-Familie (Krähe/Hund haben eigene Hooks ohne diesen SE). */
     if (zombie->type != 0x21 && zombie->type != 0x20 &&
         (g_player_victim == 0 || g_player_victim == 3)) {
         int re2 = re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type);
-        if (!re2 || g_player_victim_variant >= 2)
-            re15_audio_core_se(0);
+        re15_audio_core_se(re15_victim_grab_core_se(re2, (int)g_player_victim_variant));
     }
     if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
@@ -993,7 +1038,43 @@ static void re15_player_victim_bone_pos(int bone, int32_t out[3])
  *
  * ⛔ NICHT umgesetzt (O5, adressbelegt offen): das Original ruft beide Stellen POSITIONAL
  *   mit a1 = g_entity(cur)+0x34 = der Position des GREIFERS (@0x8010a868 / @0x80111df8).
- *   re15_audio_core_se() ist mono; die Luecke ist in audio_pc.c:962-965 mit Adresse benannt. */
+ *   re15_audio_core_se() ist mono; die Luecke ist in audio_pc.c:962-965 mit Adresse benannt.
+ *
+ * ⛔ KORREKTUR 2026-08-24 zu O1 oben (Dossier analysis/nutzer_batch_2026-08-25/finisher-biss.md
+ *   §3.3): die Behauptung "es gibt KEINE RE2-Adresse fuer einen Todes-Sprach-Frame" ist
+ *   WIDERLEGT. Die RE2-Spieler-Kollaps-Maschine 0x8010B464 spielt in ihrem P0 sehr wohl
+ *   Se_on(0x04030001) = CORE 3:
+ *       8010b4fc: lui   a0,0x403
+ *       8010b500: ori   a0,a0,0x1        ; a0 = 0x04030001
+ *       8010b508: addiu a1,s2,56         ; Emitter = Spieler-Position
+ *       8010b510: jal   0x8005ba28       ; RE2-Se_on (Bank `srl t1,a0,24` @0x8005ba30,
+ *                                        ;  Record `srl v0,a0,16`/`andi 0xff` @0x8005ba7c-80)
+ *   Der Unterschied ist nur das TIMING: RE2 spielt ihn am Kollaps-EINTRITT (P0, ungegatet),
+ *   RE1.5 auf Frame 0x37 (@0x8010a820-24) — gemessen 54 Frames spaeter. Unter dem SOUND-MANDAT
+ *   ("Praesentation aus RE1.5") bleibt der Port bewusst auf dem RE1.5-Gate 0x37; die
+ *   Abweichung ist damit belegt und ABSICHT, nicht Unwissen.
+ *
+ * ⛔ BEWUSST NICHT UMGESETZT — Se_on(0x02070001) @0x8010a804 (der "heisse Kandidat" des
+ *   Auftrags fuer den Finisher-Biss; Dossier finisher-biss.md §1). Real vorhanden im
+ *   Spieler-Fress-Kollaps FUN_8010a6f8:
+ *       8010a7e4: lbu   v1,-13591(v1)   ; player+0x95 = SPIELER-Anim-Frame
+ *       8010a7e8: ori   v0,zero,0x23    ; Gate 35
+ *       8010a7f4: lui   a0,0x207        ; a0 = 0x02070001 -> Bank 2 = RDT-snd0, Record 7
+ *       8010a804: jal   0x80045024
+ *   Er ist NICHT der gemeldete Finisher-Biss (der ist snd1 SE 3 auf dem ZOMBIE-Frame 0x28
+ *   @0x80102ca0-cb4, jetzt im RE2-Zweig portiert, s. enemy_ai_re2_zombie.c re2z_exec_six).
+ *   Bank 2 ist die Schritt-/Materialbank, und in GENAU den Raeumen, in denen Leon gefressen
+ *   wird, ist snd0-Record 7 unbefuellt: eigener Zensus ueber alle 240 RDT (34 ohne
+ *   snd0-Tabelle, 206 mit; rec7 belegt in 43, leer in 163) — ROOM1030/1031, 1140/1141,
+ *   10D0/10D1, 1190/1191, 1200, 1230, 10C0 tragen durchgehend `00 00 00 00`. Belegt ist rec7
+ *   nur in ROOM1090/10F0/1170/11A0/1260 sowie ALLEN 22 STAGE2-RDT und Teilen von STAGE3.
+ *   `00 00 00 00` ist im Original NICHT still (Se_on hat keinen Leer-Test — die lineare
+ *   Dekodierung @0x80045140-0x800451B8 hat nur den Bank-Override-Zweig @0x80045150-54; der
+ *   einzige Abbruch ist der Bank-Handle `lb`/`beq -1` @0x80045064-6c), es loest auf
+ *   prog0/tone0 -> VAG 1 der Schritt-Bank auf = ein unautorisierter Fehlgriff des
+ *   Original-Codes. Ihn nachzubauen wuerde zusaetzlich die (uncitierte) Leer-Record-Heuristik
+ *   in vab_common.c:188/217/263 erzwingen. Ein Nachzug fuer STAGE2/STAGE3 (dort autorisiert)
+ *   braucht eine eigene Messung. */
 static uint8_t s_victim_groan_done = 0;   /* O3: Einmal-Latch pro Kollaps */
 static void re15_victim_death_groan(void)
 {
@@ -1887,6 +1968,20 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * circles the corpse). The old port did ONE -5 then released ->
                                                * ground the kill over re-grab cycles (~15s vs the true ~7.6s). */
             {
+                /* ⛔ BELEG — HIER GEHOERT KEIN BISS-SE HIN (gegen einen kuenftigen "der gehaltene
+                 * RE1.5-Biss ist stumm"-Fix). Der RE1.5-Griff ist waehrend des Haltens im ORIGINAL
+                 * stumm, doppelt belegt (Dossier analysis/nutzer_batch_2026-08-25/biss-se.md
+                 * §1.2/§1.4):
+                 *  (a) CODE: die Biss-Schleife @0x801027DC-0x801028C8 enthaelt KEINEN Se-Aufruf —
+                 *      die einzigen jal sind `jal 0x80019700` (Blut) @0x80102818 und
+                 *      `jal 0x80037024` (Mash) @0x80102820. Der Griff hat genau zwei Toene:
+                 *      Commit `FUN_800453d0(4)` @0x8010268C und Abwurf `FUN_800453d0(7)`
+                 *      @0x80102920 + @0x80102960.
+                 *  (b) DATEN: der Frame-Wort-SFX-Dekoder FUN_8001b38c (`srl s0,v0,22` @0x8001b3b4)
+                 *      laeuft zwar jeden Tick, aber die RE1.5-Griff-Clips 3 (Einzug), 4 (Biss-
+                 *      Schleife) und 5 (Abwurf) der Bank EM10 tragen KEINE SE-Bits (EMD-Dump).
+                 * Der gemeldete fehlende Laut liegt im RE2-STEH-Zweig (CORE-Eintritts-SE,
+                 * s. re15_victim_grab_core_se), nicht hier. */
                 /* RENDER-LOOP the bite (user report: "the bite animation plays once then FREEZES;
                  * in the original it plays the whole time"). The live zombie's clips loop via the
                  * clip's TERMINAL MARKER (FUN_8001f314 wraps at clip-end — there is NO +0x1c4 loop-flag
@@ -2063,11 +2158,26 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
 
                                       /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
                                        * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58 */
-        if (g_player_victim_variant >= 2 &&
-            (g_player_victim == 0 || g_player_victim == 3))
-            /* Kriech-Opfer-Eintritts-Grunt: NUR die Kriech-Maschine spielt Se_on(0x4000001)
-             * (`jal 0x8005ba28` @0x8010b060; die Steh-Maschine P0 @0x8010aa50 nicht). */
-            re15_audio_core_se(0);
+        if ((g_player_victim == 0 || g_player_victim == 3) &&
+            re15_re2z_owns_type(zombie->type))
+            /* Opfer-Eintritts-Grunt BEIDER RE2-ZOMBIE-Maschinen:
+             *   Kriech 0x8010AF58 P0  -> FEST   CORE 0            (`jal 0x8005ba28` @0x8010b060)
+             *   Steh   0x8010A9B8 P0  -> WURF   CORE 0 / CORE 2   (`jal 0x80015fe8` @0x8010aae0,
+             *                            `sll v0,v0,17` @0x8010aaf4, `jal 0x8005ba28` @0x8010aafc)
+             * ⛔ WIDERRUF: die alte Zeile gatete auf variant>=2 und liess den STEH-Griff stumm
+             *    (gemessen: 0 CORE-SEs im ganzen RE2-Steh-Griff). Belege s.
+             *    re15_victim_grab_core_se.
+             * ⛔ owns_type-GUARD (Skeptiker-Befund 2026-08-25): dieser Shim ist NICHT
+             *    zombie-exklusiv — enemy_ai_re2_dog.c und enemy_ai_re2_crow.c rufen ihn
+             *    ebenfalls, beide mit behind=0 und damit im Wurf-Zweig. Ohne Guard grunzte
+             *    Leon ab jetzt auch bei Hunde- und Kraehen-Griffen (gemessen: vorher 32/32
+             *    stumm, danach 32/32 mit CORE0=11/CORE2=21) — gedeckt durch NICHTS: die
+             *    zitierte Maschine liegt im RE2-ZOMBIE-Overlay EMOVL10_S0.BIN (53068 B), und
+             *    Adresse 0x8010AAD8 existiert im Hunde-Overlay EMD0G_MOD0.BIN (22266 B)
+             *    ueberhaupt nicht. Der RE1.5-Zwilling schliesst 0x20/0x21 ebenso aus
+             *    (s. Kommentar bei re15_player_victim_latch_ex: "Kraehe/Hund haben eigene
+             *    Hooks ohne diesen SE"). Hund und Kraehe bleiben also stumm wie zuvor. */
+            re15_audio_core_se(re15_victim_grab_core_se(1, (int)g_player_victim_variant));
         if (g_player_victim == 0 || g_player_victim == 3) {
             g_player_victim = 1;
             s_victim_phase  = 0;

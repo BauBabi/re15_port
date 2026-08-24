@@ -1,3 +1,38 @@
+# RE1.5 Port — v0.3.22 (Early Preview)
+
+## RE2-Modus: Leon gibt beim Gepacktwerden wieder einen Laut von sich
+
+Gemeldet: *"Bei RE 2 AI - Sowohl die biss sounds als auch der finisher biss sound des zombies
+fehlt."*
+
+Der Biss des Zombies selbst war in Ordnung — nachgemessen feuert er sauber im Takt der
+Animation. Gefehlt hat **Leons** Laut: wenn ein stehender Zombie zupackt, stoehnt Leon im
+Original beim Zugriff, wobei das Spiel per Zufall zwischen zwei Aufnahmen waehlt. Der Port
+hatte diesen Laut fuer den stehenden Griff ausdruecklich unterdrueckt — mit einer Begruendung,
+die sich beim Nachsehen als falsch herausstellte: die zustaendige Stelle spielt ihn sehr wohl,
+nur dreiundzwanzig Befehle weiter. Jetzt ist er da, samt der Zufallswahl.
+
+## RE2-Modus: der Biss waehrend des Gefressenwerdens
+
+Zwischen dem Zusammenbrechen und dem ersten Laut lagen im Port fast fuenf Sekunden voellige
+Stille — der erste Biss kam erst mit der Fress-Schleife. Im Original faellt er viel frueher,
+auf einem festen Bild der Animation. Genau dieser Biss fehlte und ist jetzt an der richtigen
+Stelle.
+
+## Linux/Steam Deck: das Startskript war unbrauchbar
+
+`run.sh` wurde mit Windows-Zeilenenden ins Paket gelegt — auf dem Deck scheitert so ein Skript
+schon an der ersten Zeile. Der Paketbau zieht die Datei jetzt beim Kopieren auf Unix-Enden und
+prueft das fertige Paket zusaetzlich; ein Paket mit falschen Zeilenenden kann nicht mehr
+entstehen.
+
+## Noch offen
+
+Der schwebende Zombie in 10D0 ist **nicht** behoben. Die Ursache ist gefunden — sie liegt
+nicht an diesem Raum, sondern am gemeinsamen Skelett-Umbau des RE2-Modus, und der Versatz
+faellt in anderen Raeumen genauso gross aus. Das gehe ich als eigenen Punkt an, statt hier
+etwas zurechtzubiegen, das an anderer Stelle kippt.
+
 # RE1.5 Port — v0.3.21 (Early Preview)
 
 ## Leons letzter Laut beim Gefressenwerden — im RE2-Modus fehlte er ganz
