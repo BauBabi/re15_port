@@ -1,3 +1,39 @@
+# RE1.5 Port — v0.3.20 (Early Preview)
+
+## Das Spiel findet seine Dateien jetzt selbst — einfach re15_pc.exe starten
+
+Gemeldet: *"Der 0.3.19 package Build ist definitiv kaputt. Es fehlen die Optionen in config,
+die subtitles usw. Da ist vieles kaputt dran, wenn ich ihn direkt ueber die Exe starte wie
+immer."*
+
+Der Bericht war komplett richtig, und die Ursache ist aelter als v0.3.19. Das Spiel suchte
+seine Dateien an einem Ort, der beim BAUEN festgelegt wurde — auf dem Entwicklungsrechner
+zeigte der zufaellig ins Projektverzeichnis, weshalb dort alles lief. Auf jedem anderen
+Rechner zeigt er ins Leere. Aufgefangen hat das nur die mitgelieferte Start-Datei, die dem
+Spiel die Pfade von aussen mitteilt; wer stattdessen die .exe direkt startete, bekam ein
+Spiel ohne Schrift.
+
+Und ohne Schrift faellt sehr viel aus: die Beschriftungen im CONFIG-Bildschirm, die
+Untertitel, Dialoge und Gegenstandsnamen — alles unsichtbar. Dazu fehlten Blut, Muendungs-
+feuer, Rauch und Huelsen sowie Inventar- und Status-Grafiken.
+
+Jetzt sucht das Spiel seine Dateien **neben der eigenen .exe**: Doppelklick auf
+`re15_pc.exe` genuegt, aus jedem beliebigen Verzeichnis, auch ueber eine Verknuepfung.
+Die Start-Datei bleibt liegen, wird aber nicht mehr gebraucht.
+
+Zwei Feinheiten sind gleich mit erledigt: Wird das Spiel aus einem fremden Verzeichnis
+gestartet, das selbst Spieldateien enthaelt, gewinnen jetzt immer die aus dem eigenen
+Ordner (vorher konnten sich zwei Datenbestaende unbemerkt vermischen). Und Ordnernamen mit
+Sonderzeichen werden korrekt gelesen.
+
+## Damit das nicht noch einmal passiert
+
+Der Paketbau startet das fertige Paket ab jetzt selbst — zweimal, aus verschiedenen
+Verzeichnissen — und prueft fuer 26 wichtige Dateien, WOHER sie tatsaechlich geladen
+wurden. Stammt auch nur eine davon aus dem Projektverzeichnis statt aus dem Paket, bricht
+der Paketbau ab. Die bisherige Pruefung sah nur nach, ob die Dateien im Paket *liegen* —
+und genau daran ist v0.3.19 vorbeigerutscht.
+
 # RE1.5 Port — v0.3.19 (Early Preview)
 
 ## RE2-Modus: der Kriech-Biss ist komplett — mit Aufsteh-Phase und treffbarem Kriecher
