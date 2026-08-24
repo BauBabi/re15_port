@@ -1,3 +1,86 @@
+# RE1.5 Port — v0.3.18 (Early Preview)
+
+## RE2-Modus: die Zombies haben wieder Fall- und Aufsteh-Geraeusche
+
+Gemeldet: *"Bei RE 2 AI fehlen die fall sounds der Zombies"*.
+
+Der RE1.5-Aufprall ist kein Klang-Sample, sondern ein Mechanismus: die Sturz-Animationen
+tragen an ihren Boden-Kontakt-Bildern eigene Klang-Marker. Der Aufprall-Thud feuert jetzt
+am Aufschlag-Uebergang jedes Sturzes (auch beim Todes-Sturz), und das Aufstehen spielt —
+wie im RE1.5-Original immer — das Aufsteh-Stoehnen (der RE2-eigene Wuerfelwurf war praktisch
+immer stumm).
+
+## RE2-Modus: der Zombie im Empfangsflur SITZT jetzt
+
+Gemeldet: *"der Zombie sitzt immer noch nicht da wie im original. Er liegt."*
+
+Der Hinweis war der Schluessel: die Original-Pose ist ein Wandsitz (Oberkoerper aufrecht),
+und die RE2-Animationsbank hat schlicht keinen Sitz-Clip. Der Schlaefer spielt jetzt auch im
+RE2-Modus die komplette RE1.5-Sitz-Sequenz (Sitzen, Aufwachen bei Naehe, Aufstehen mit
+Stoehnen) und uebergibt erst danach an das RE2-Gehirn.
+
+## Kriechende Zombies: der Bein-Biss sieht und klingt jetzt richtig (RE1.5)
+
+Gemeldet: *"wenn mir die kriechenden Zombies in das Bein beissen stimmt Animation und
+Sound noch nicht so ganz."*
+
+Leon spielte beim Kriech-Biss die Steh-Ringkampf-Animation. Im RE1.5-Modus laeuft jetzt der
+originale Bein-Biss-Satz (eigene Packen-/Schuetteln-/Abwurf-Clips), dazu der bislang fehlende
+Griff-Grunzer, das Bein-Wund-Decal und der Blutspritzer am Bein beim Abschuetteln; der
+RE2-Kriecher stirbt nach dem Abwurf (wie im RE2-Original). Die RE2-eigene Bein-Biss-
+Opferanimation braucht noch ihre Aufsteh-Phase und folgt in einer spaeteren Version.
+
+## RE2-Modus: Treffer auf liegende Zombies zeigen wieder Blut
+
+Gemeldet: *"wenn ich zombies am boden anschiesse fehlt das blut und somit das treffer
+feedback."*
+
+Der Treffer wurde registriert (Schaden lief), aber der Blut-Spawn sitzt im Original im
+wieder betretenen Liege-Zustand — genau diese eine Stelle fehlte. Jetzt blutet der liegende
+Zombie bei jedem Treffer.
+
+## Feuer im Ostfluegel-Korridor: Leons Reaktion sitzt
+
+Gemeldet: *"Leons getroffen Animation beim Feuer room 1090 stimmt noch nicht ganz."*
+
+Zwei Fehler: die Getroffen-Animation wurde 22 Bilder lang weichgeblendet statt hart zu
+schnappen (das Original schneidet hart), und der Ausloeser lief ueber einen Umweg, der bei
+sehr niedriger Energie gar nicht mehr feuerte und nach einem geloeschten Feuer die falsche
+Reaktion waehlte. Das Feuer staggert Leon jetzt direkt, wie im Original.
+
+## RE2-Modus: tote Hunde liegen in Seitenlage
+
+Gemeldet: *"Die Todes Pose der Hunde ist immer noch falsch."*
+
+Beim Uebergang in den Leichen-Zustand sprang die Pose auf das erste Bild der Kollaps-
+Animation zurueck — ein fast aufrecht eingefrorener toter Hund. Die Leiche haelt jetzt das
+letzte Bild (flache Seitenlage), wie es das Original ueber seine eingefrorenen Matrizen tut.
+
+## Hund-Finisher: Leon bleibt am Hund
+
+Gemeldet: *"wenn der Hund Leon toetet ist der finisher versetzt"*.
+
+Der Spieler-Handler des Hunde-Griffs ist jetzt vollstaendig nachgebaut: die Opfer-Animation
+spielt genau einmal und friert dann in der Endpose ein. Vorher startete sie neu und Leon
+sprang dabei ~1,7 Meter zum Ankerpunkt zurueck.
+
+## Nach dem Laden hat die Handfeuerwaffe wieder ihre Textur
+
+Gemeldet: *"nach neu laden fehlt der equipped Handfeuerwaffe die Textur."*
+
+Nach Tod -> Titel -> Laden wurde die Waffen-Textur aus der Koerper-Textur gewaschen, aber
+der Neuaufbau-Waechter hielt sich fuer aktuell. Kurios: ein Spielstand MIT Blutflecken
+heilte den Fehler selbst — darum trat er so unregelmaessig auf. Jetzt wird der Waffen-
+Aufdruck nach jedem Neuladen wieder aufgebaut.
+
+## Unter der Haube
+
+- Der Windows-Build entsteht ab dieser Version reproduzierbar im Docker-Cross-Build
+  (release/docker_win_build.sh) — unabhaengig vom Zustand der Entwickler-Maschine.
+- Gesamt-Audit des Ports als AUDIT_GESAMT_2026-08-23.md im Repo; 13 RE-Dossiers zu den
+  verbleibenden Konstruktions-Punkten unter analysis/konstruktion_2026-08-23/.
+- Java-Extraktor: ./gradlew build/test laufen wieder.
+
 # RE1.5 Port — v0.3.17 (Early Preview)
 
 ## Linux: das Voiceover ist jetzt im Paket
