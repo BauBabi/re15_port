@@ -1615,16 +1615,17 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * unter dem Sound-Mandat (RE1.5-Praesentation) feuert der Thud deshalb am
          * Aufschlag-Uebergang (P1 clip_done -> P2 = derselbe Boden-Kontakt). */
         re15_audio_room_se(0);
-        /* ⛔ OPEN (2026-08-24, gemessen): der Kriecher-Abwurf betritt EXEC[5] DIREKT in
+        /* GELOEST 2026-08-24 (war ⛔ OPEN): der Kriecher-Abwurf betritt EXEC[5] DIREKT in
          * Phase 2 (0x00020501 @0x801045D4) und ueberspringt P0 — der geflopte Kriecher
-         * traegt damit weder grid&0x80 (Port-Downed-Mapping, Review #18) noch sicher
-         * +0x21A&2 und ist fuer den flavor-blinden Resolver NICHT als liegend
-         * klassifiziert (w20-Trace: 0 Treffer nach dem Abwurf-Flop, auch mit DOWN-Aim).
+         * trug damit kein grid&0x80 (Port-Downed-Mapping) und war fuer den Resolver
+         * nicht als liegend klassifiziert (w20-Trace: 0 Treffer nach dem Abwurf-Flop).
          * Ein hiesiges `grid|=0x80` kippte im Gegenzug die Zeilen-Stempel der
-         * teardeath-Pins (w12-Kaskade) — die saubere Loesung ist die RE2-eigene
-         * Liegend-Klassifikation (+0x21A&2, Liege-HURT-Route @0x80105168-70) im
-         * Resolver fuer RE2-owned Zombies, inkl. Bit-2-Produzenten-Census des
-         * 0x20501-Pfads. Bis dahin bleibt der Befund dokumentiert statt halb gefixt. */
+         * teardeath-Pins (w12-Kaskade). Die Loesung sitzt im Resolver (re15_damage.c,
+         * Zombie-Familien-Stempel): fuer RE2-owned Zombies zaehlt ZUSAETZLICH das
+         * RE2-eigene Liege-Bit +0x21A & 0x2 (Liege-HURT-Route `lhu v1,538 / andi 0x2`
+         * @0x80105168-70; Produzenten EXEC[5]-P0 |0x202 und EXEC[11]-P0 |0x2 — der
+         * 0x20501-Pfad kommt aus EXEC[11], traegt das Bit also; Clear EXEC[5]-P7
+         * @0x801036C8-CC). Verifiziert: teardeath PIN7 alle 5 Waffen Zelle 1, 224/224. */
         e->sub_state_2 = 3;                                        /* sb 3,6 @0x8010340C */
         /* Prone-Clip aus sp+18+(+0x16A) = param@0x80100046+side = {0x17,0x16}, Rate 0xF
          * (`lbu v0,18(v0)` @0x80103414, `lui v1,0xf` @0x80103418, `sw v0,332` @0x80103424). */

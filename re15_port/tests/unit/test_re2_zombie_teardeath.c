@@ -215,6 +215,49 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
         uint16_t cur = RE15_PAD_BIT_R1, edge = 0;
+        /* KRIECHER-PHASE (10E-Bit0) — zwei Harness-Realismen, beide NUR hier, damit die
+         * Steh-Kaempfe der uebrigen Pins byte-identisch bleiben:
+         * (1) NEU AUSRICHTEN im freien Aim: die byte-true Grab-/Abwurf-Mechanik verdreht
+         *     den Spieler (Grab-Align = Zombie-Yaw+0x800, P6-Aufstehen ±0x800
+         *     @0x8010B2E0-F0) und versetzt ihn — ohne Nachdrehen feuert der Harness
+         *     dauerhaft ~90° am liegenden Kriecher vorbei (w20-Trace 2026-08-24:
+         *     r209 statt ~1232, hp 540 Frames konstant). Ein echter Spieler dreht sich.
+         * (2) TIEF ZIELEN, solange der Kriecher LIEGT (RE2-Liege-Bit +0x21A&2):
+         *     Bodentreffer brauchen das DOWN-Band (dist<0x1388). */
+        if (e->re2z_f10e & 1u) {
+            /* Gate = NICHT gegriffen (aim_ready ist bei gehaltenem SQUARE nach dem ersten
+             * Schuss NIE wieder wahr — die FSM pendelt READY+Recoil/HOLD, ap=12 im Trace). */
+            if (!re15_player_is_grabbed()) {
+                int32_t ddx = e->x - pl->x, ddz = e->z - pl->z;
+                pl->rot_y = (int16_t)(re15_atan2_q12(ddz, ddx) & 0x0fff);
+                /* HERANGEHEN am liegenden Kriecher: der P7-Abwurf platziert Leon ~2100
+                 * Einheiten weg — ausserhalb der Kegel-Tester-Reichweite (w20 traf 540 F
+                 * lang nie, w20-Trace 2026-08-24). Ein echter Spieler geht ran; hier
+                 * geradlinig 30 Einheiten/Frame bis ~1200 (Steh-Pins: Bit0 aus -> nie). */
+                if (e->re2z_flags21a & 0x2u) {
+                    int64_t d2 = (int64_t)ddx * ddx + (int64_t)ddz * ddz;
+                    if (d2 > (int64_t)1200 * 1200) {
+                        int32_t ad = (ddx < 0 ? -ddx : ddx) + (ddz < 0 ? -ddz : ddz);
+                        if (ad > 0) {
+                            pl->x = (int32_t)(pl->x + (int64_t)ddx * 30 / ad);
+                            pl->z = (int32_t)(pl->z + (int64_t)ddz * 30 / ad);
+                        }
+                    }
+                }
+            }
+            if (e->re2z_flags21a & 0x2u) cur |= RE15_PAD_BIT_DOWN;
+        }
+        if (getenv("RE15_T20") && (weapon == 20 || weapon == 12) && (f % 20) == 0) {
+            extern int re15_player_aim_phase_debug(void);
+            fprintf(stderr, "[t20] w%d f%-3d ap=%02x gr=%d ", weapon, f,
+                    re15_player_aim_phase_debug(), re15_player_is_grabbed());
+            fprintf(stderr, "pl(%d,%d r%d m%d) z(%d,%d r%d st%d s%d/%d hp%d 10E=%04x 21A=%04x 1D3=%02x 93=%02x g=%02x d=%u) down=%d\n",
+                    pl->x, pl->z, pl->rot_y, pl->motion,
+                    e->x, e->z, e->rot_y, e->state, e->sub_state_1,
+                    e->sub_state_2, e->hp, e->re2z_f10e, e->re2z_flags21a,
+                    e->re2z_self1d3, e->hit_react, e->grid_id,
+                    e->ai_dist, (cur & RE15_PAD_BIT_DOWN) ? 1 : 0);
+        }
         if (!dead) { cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE; }
         if (force_col0 && e->state == 3) e->re2z_hits1d2 = 0;
         frame(cur, edge);
@@ -529,7 +572,10 @@ int main(void)
     /* ===== PIN 7 — REGRESSIONSWACHE: die schon byte-truen Waffen ========================== */
     {   const int wpn[] = { 3, 4, 12, 19, 20 };   /* Browning HP, Beretta, Ingram, MC51, Colt */
         for (unsigned i = 0; i < sizeof wpn / sizeof wpn[0]; i++) {
-            run_kill(slot, wpn[i], 0, 0, 900, &t);
+            /* Budget 2600 (vorher 900): seit die Kriech-Varianten 2/3 scharf sind, nimmt der
+             * Kampf bei w12/w20 den Kriecher-Umweg (Grab->Abwurf->Liegen-Zyklen ~100-140 F
+             * je Runde, w20-Trace 2026-08-24). Steh-Kills enden weiter frueh (f237-733). */
+            run_kill(slot, wpn[i], 0, 0, 2600, &t);
             printf("  PIN7 Waffe %-2d -> ", wpn[i]); dump("", &t);
             CHECK(t.ok, "PIN7: Waffe %d hat den Zombie nicht getoetet", wpn[i]);
             /* Die Zeilen dieser Waffen (2/3/13/15/18) tragen in JEDER Spalte die Zelle 1

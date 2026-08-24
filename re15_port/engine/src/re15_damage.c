@@ -1254,9 +1254,25 @@ retry_after_latch:
                     /* Der byte-true ACTIVE-Tail-Stempel: aa4(0xbb8) IMMER (@0x80101600-04) — auch
                      * fuer einen niedergeschlagenen Gegner —, danach der Downed-Nachlauf. */
                     eband = re15_band_stamp_aa4(pl, e, bdist, 0xbb8);
-                    if (e->grid_id & 0x80) {                  /* @0x80101614-20 lbu +0x9; andi 0x80 */
-                        eband &= ~0x40000000u;                /* @0x80101624-3c LEVEL weg */
-                        if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388) @0x800129cc-f0 */
+                    /* LIEGEND-KLASSIFIKATION: RE1.5-Zwilling = grid&0x80 (@0x80101614-20).
+                     * Fuer RE2-OWNED Zombies zaehlt ZUSAETZLICH das RE2-eigene Liege-Bit
+                     * +0x21A & 0x2 — exakt das Bit, auf dem RE2s eigene Treffer-Routung
+                     * "liegend" entscheidet (`lhu v1,538 / andi v0,v1,0x2` @0x80105168-70;
+                     * Produzenten: EXEC[5]-P0 |0x202, EXEC[11]-P0 |0x2; Clear EXEC[5]-P7
+                     * `andi ~0x2` @0x801036C8-CC). Noetig fuer den 0x20501-Pfad (Kriecher-
+                     * Abwurf-Flop @0x801045D4 betritt EXEC[5] OHNE P0): der geflopte
+                     * Kriecher trug kein grid&0x80 und war nicht als liegend klassifiziert
+                     * = untreffbar (w20-Trace 2026-08-24). Monotone Erweiterung (ODER):
+                     * alle bisherigen Liege-Fenster klassifizieren unveraendert. */
+                    {   int lying = (e->grid_id & 0x80) ||
+                                    (re15_ai_re2_for_type(e->type) &&
+                                     re15_re2z_owns_type(e->type) &&
+                                     (e->re2z_flags21a & 0x2u));
+                        if (lying) {
+                            eband &= ~0x40000000u;            /* @0x80101624-3c LEVEL weg */
+                            if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388)
+                                                               * @0x800129cc-f0 */
+                        }
                     }
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die

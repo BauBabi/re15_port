@@ -812,8 +812,8 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
                 /* RE2-KRIECH-OPFER-Maschine 0x8010AF58 (Tabelle @0x8010CF2C[2..3]): Basis-Paar
                  * {6,10} (`sb 6,24(sp)` @0x8010af7c / `sb 10,25(sp)` @0x8010af88), Hold/Release
                  * = +1/+2; Kollaps zieht der Kill-Tick OHNE +2 (@0x80102928-50) -> Steh-Paar
-                 * 13/15 (@0x8010B484-90). Der Aufsteh-Nachlauf Clip 9 (P6 @0x8010b2c4) ist
-                 * OFFEN dokumentiert (eigene Nachlauf-Phase, nicht halb nachgebaut). */
+                 * 13/15 (@0x8010B484-90). Der Aufsteh-Nachlauf Clip 9 (P6 @0x8010b2c4)
+                 * laeuft als eigene Nachlauf-Phase im Release-Finish (s_victim_standup). */
                 base = (uint8_t)(f ? 10u : 6u);
                 *c_intro = base; *c_hold = (uint8_t)(base + 1);
                 *c_release = (uint8_t)(base + 2);
@@ -1960,18 +1960,15 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
     if (vb && vb->victim_ok) {
         g_player_victim_type    = zombie->type;
         g_player_victim_zombie  = (int)(zombie - g_actors);
-        g_player_victim_variant = (uint8_t)((unsigned)behind & 1u);
-                                      /* ⛔ OPEN (Stand 2026-08-24): Kriech-Varianten 2/3 weiter
-                                       * auf die Steh-Maschine geklemmt. Die P6-AUFSTEH-Phase
-                                       * (Clip 9 @0x8010B2C4) ist inzwischen PORTIERT (s.
-                                       * Release-Finish unten, s_victim_standup) — beim
-                                       * Scharfschalten (&3) blieb aber der teardeath-w20-Pin
-                                       * rot: der Kriecher haengt nach dem Abwurf byte-true in
-                                       * der 0x20501-Bodenschleife und ist dort im Port nicht
-                                       * als liegend klassifiziert (Befund + Loesungsweg im
-                                       * OPEN-Kommentar in re2z_exec_knockdown P2). Reihenfolge
-                                       * fuers Scharfschalten: (1) RE2-Liegend-Klassifikation
-                                       * +0x21A&2 im Resolver, (2) &3 hier, (3) Docker-Pin. */
+        g_player_victim_variant = (uint8_t)((unsigned)behind & 3u);
+                                      /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
+                                       * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58
+                                       * inkl. P6-Aufsteh-Phase (Clip 9 @0x8010B2C4, s.
+                                       * Release-Finish). SCHARF seit 2026-08-24: die
+                                       * RE2-Liegend-Klassifikation (+0x21A&2) steckt jetzt im
+                                       * Resolver (re15_damage.c) — der Abwurf-Flop-Kriecher
+                                       * (0x20501) ist damit regulaer treffbar. */
+
 
                                       /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
                                        * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58 */
