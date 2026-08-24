@@ -82,7 +82,8 @@ Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschr
 
 ### C-Port (`re15_port/`) — primär, verifiziert 2026-08-24 (224/224 Tests grün, lokal + Docker)
 
-Toolchain auf dieser Maschine: **mingw64 GCC 15.2** (`C:\msys64\mingw64\bin`) + **Ninja** + **CMake ≥3.21**. Kein MSVC/Clang.
+Toolchain auf dieser Maschine: **mingw64 GCC 16.2** (`C:\msys64\mingw64\bin`) + **Ninja** + **CMake ≥3.21**. Kein MSVC/Clang.
+(MSYS2 wurde am 2026-08-24 neu aufgesetzt — Basis-Tarball + `pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb zip unzip make`. `zip` liegt in `C:\msys64\usr\bin`, nicht in `mingw64/bin`.)
 
 #### ⛔ Aus Git-Bash IMMER über `local_build.sh` bauen
 
