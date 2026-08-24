@@ -208,6 +208,12 @@ void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on roo
  * loader fills (clip indices are RE2-native) + the ENEMSE SE bank via the audio hook below. */
 int  re15_re2z_tick(int slot);                    /* 1 = handled (RE2 brain owns this actor)    */
 
+/* Nur die EXECUTOR-Haelfte des ACTIVE-Roots (der zweite jalr @0x801011EC, der +0x5 @0x801011D0
+ * NEU liest). Fuer Uebergaenge, deren DECISION-Haelfte ein importierter RE1.5-Zustand ist — der
+ * 10D0-Sitzer verlaesst den RE1.5-Aufsteher [0x0D] mit 0x101 und braucht EXEC[1] P0 im SELBEN
+ * Tick, sonst rendert ein Bild lang der RE1.5-Clip 0x29 gegen die 31-Clip-RE2-Bank. */
+void re15_re2z_exec_only(int slot);
+
 /* ---- WELLE 5: der RE2-KRIECHER -------------------------------------------------------------
  * Setzt +0x10E Bit 0 (`andi 0xffc0 / ori 1 / sh 270` @0x80104590-98) und das Zustandswort, das
  * den Kriecher-Substate waehlt: `sub` 1 = Kampf-Eintritt = GRIFF (`sw 0x101` @0x8010458C),

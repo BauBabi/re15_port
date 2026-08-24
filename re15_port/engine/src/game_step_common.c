@@ -63,6 +63,186 @@ int g_death_glow    = 0;   /* the spotlight-backdrop brightness (starts saturate
 static int s_go_sub = 0, s_go_ctr = 0, s_go_lap = 0, s_go_on = 0;
 static int32_t s_go_lvl = 0, s_go_rate = 0;
 
+/* ================= SPIELER-KOMMANDO 3 = DER GENERISCHE TOD (Todes-ANIMATION) =================
+ * Nutzer-Report 2026-08-24: "Die Finisher-Animation, wenn man von Kraehen getoetet wird, stimmt
+ * noch nicht."  Dossier: analysis/nutzer_batch_2026-08-24/kraehen-finisher.md.
+ *
+ * BEFUND: es gibt KEINEN kraehen-eigenen Finisher. Alle drei Kraehen-Kill-Sites schreiben
+ * instruktionsgleich das GENERISCHE Spieler-Todes-Kommando cmd 3 (`ori v0,zero,0x3` /
+ * `sb v0,-13736(at)` = Bytes 03 00 02 34 / 58 ca 22 a0):
+ *     0x80113B48  Dive lethal   (aca59:=0 @0x80113B6C, aca5a:=0 @0x80113B74)
+ *     0x80113F20  Grab lethal   (aca59:=0 @0x80113F44, aca5a:=0 @0x80113F4C)
+ *     0x80114518  Strike lethal (aca59:=0 @0x8011453C)
+ * Eigener Byte-Zensus aller sb/sh/sw mit imm 0xca58 ueber STAGE1.BIN: im Kraehen-Bereich
+ * 0x80111A4C-0x80116400 kommt WEDER Wert 6 NOCH 7 vor (zum Kontrast schreibt der Hund 6
+ * @0x80110138 und 7 @0x80111EA0 = echter eigener Finisher). Hook B [0x21] (0x80115D2C,
+ * Tabelle [0] = jr-ra-Stub @0x80115D6C) ist damit unerreichbarer toter Code.
+ * Derselbe cmd 3 kommt aus dem generischen Schaden-Resolver FUN_80012D60, wenn ein Treffer
+ * toedlich war:  80012ee0: sb zero,6(s1) / 80012ee8: bgez v1,0x80012f00   ; v1 = player+0x9a HP
+ *                80012ef0: ori v0,zero,0x3 / 80012ef4: sb v0,4(s1)        ; **cmd 3**
+ *                80012ef8: sb zero,5(s1)   / 80012efc: sb zero,6(s1)
+ *
+ * cmd 3 = PTR_LAB_80073F90[3] = 0x800366BC. Praeambel (nur aca5a==0):
+ *   800366dc: sh zero,-13564(at)   ; 0x800ACB04 (player+0xb0) := 0
+ *   800366fc: sh v0,-13298(at)     ; 0x800ACC0E := -(floor*1800)
+ * FSM 0x80036718 (Router auf aca5a @0x80036728-54):
+ *   Ph0 @0x80036764: 80036778: ori v1,zero,0x7 / 80036780: sb v1,-13592(at) ; +0x94 := CLIP 7
+ *                    80036788: sb zero,-13591(at)                           ; +0x95 := 0
+ *                    80036790: sb v1,-13597(at)                             ; +0x8f := 7
+ *                    80036798: sh zero,-13600(at)                           ; +0x8c := 0
+ *                    800367a4: sb v0|1,-13593(at)                           ; hit_react |= 1
+ *                    800367a8: jal 0x80045024  Se_on(0x04030001, a1 = 0x800ACA88 = player+0x34)
+ *                    800367bc/c4: 0x800ACA3C |= 0xC0
+ *                    -> FAELLT OHNE BREAK in Ph1 (derselbe Tick advanct schon)
+ *   Ph1 @0x800367c8: 800367c8: addu a2,zero,zero  (kein Frame-Skip = 1 Frame/Tick)
+ *                    800367d0/d8: a0 = [0x800ACAD8], a1 = [0x800ACBC0]  = PAAR A
+ *                    800367dc: jal 0x8001f314 / 800367e0: ori a3,zero,0x200
+ *                    800367f0/f8: aca5a += Rueckgabe  (Clip-Wrap -> Ph2)
+ *   Ph2 @0x80036804: jal 0x80045630(a0=2,a1=0) = boden-MATERIAL-abhaengiger Aufschlag-SE
+ *                    80036814: sh 7,-13736(at)  ; cmd 7 = die BLUTLACHE (0x8003694C)
+ *   jeder Tick: jal 0x800369f8(0,1) @0x8003681c-20 = Wurzel/Fusslock Kanal 1  -> D6, s.u. OPEN
+ *
+ * BANK "PAAR A" (belegt, nicht angenommen): FUN_800314B0 setzt DAT_800ACBC0 = PLD-Basis+dir[0]
+ * und DAT_800ACAD8 = dir[1]. Byte-Gegenprobe an shared_assets/PSX/PLD/PL00.PLD (Dir-Tabelle
+ * @word0 = 0x2E2A4): dir[0]=0x8 beginnt mit `22 00 60 00 22 00 e8 00` = exakt die Clip-Tabelle
+ * von PL00.EDD, dir[1]=0xC60 = PL00.EMR. => Spieler-BASISBANK, NICHT die PLW-Waffenbank
+ * (+0x170/+0x174) und NICHT die Opfer-Bank Paar C — der Todes-Clip ist waffen-unabhaengig.
+ * Im Port ist das ctx->pl00_anim / ctx->pl00_skel.
+ *
+ * CLIP 7 = 113 Frames (PL00.EDD-Clip-Tabelle u16(frame_count,offset)@i*4, Daten @1032) — der
+ * laengste Clip der Bank. Inhaltsbeleg rein datengetrieben (Root-Translation-Y der
+ * referenzierten PL00.EMR-Keyframes, PSX-Y nach oben negativ): -1807 (Huefthoehe) -> -901/-915
+ * (Mitte) -> -245..-256 (Boden) = der Zusammenbruch; Clip 0/8/22 bleiben bei -1740..-1807.
+ * Die 113 wird NICHT hartkodiert, sondern aus pl00_anim->clips[7].frame_count gelesen.
+ *
+ * PORT-IST VORHER (gemessen, probe_crow_kill, voller re15_game_step, ROOM1170-Re-Entry):
+ *   Dive-Kill : t=9 KILL hp=-1 motion=0xc8(200) frame=16 ... bis t=199 unveraendert
+ *               => Leon stirbt AUFRECHT STEHEND, 0 motion-Wechsel, motion==7 nie gesehen.
+ *   Grab-Kill : t=0 motion=0x02 (Kraehen-RELEASE-Clip 2!) ... t=30 motion=0xc8 wieder aufrecht.
+ * Das sind die Divergenzen D1 (kein Todes-Clip) und D2 (falscher Release-Clip: im Original
+ * ERSETZT cmd 3 das laufende cmd 5 @0x80113F20, die Opfer-FSM bricht sofort ab und der
+ * Release-Clip 2 wird NIE gespielt).
+ *
+ * ⛔ NICHT umgesetzt, ehrlich offen:
+ *  D6 — FUN_800369F8(0,1) Kanal 1 (@0x8003681C-20) laeuft im Original in JEDEM cmd-3-Tick.
+ *       DASS er laeuft ist belegt, WIE WEIT Leon dadurch beim Zusammenbruch verschoben wird
+ *       ist NICHT gemessen (der Port hat nur Kanal 0, push_root_step; Kanal 1 ist seit
+ *       enemy_ai_common.c als deferred markiert). Kein geratener Ersatz — Leon behaelt seine XZ.
+ *  D7 — Praeambel +0xb0 := 0 (@0x800366DC) und 0x800ACC0E := -(floor*1800) (@0x800366FC):
+ *       die Semantik von +0xb0/acc0c ist weiter offen (crow_victim_anim.md §7.6), deshalb
+ *       nicht nachgebaut.
+ *  §5.5 — Hardware-Gegenprobe (Kraehe toetet Leon in DuckStation) steht aus; die Original-Seite
+ *       hier ist rein statisch belegt (Disasm + EDD/EMR-Bytes). */
+/* F5-Latch (Definition weiter unten): der Reaktions-Clip posiert aus der COMMON-Bank, und der
+ * Frame-Zeiger +0x168 (f314 @0x8001f36c) bleibt dort, bis ein anderer Setzer +0x94 neu schreibt. */
+static void re15_player_react_pose_arm(uint8_t clip);
+
+static uint8_t s_death3_on    = 0;   /* 1 = der cmd-3-Handler besitzt den Spieler */
+static uint8_t s_death3_phase = 0;   /* == DAT_800aca5a: 0 Seed / 1 Clip laeuft / 2 = cmd 7 */
+
+/* Die BLUTLACHE gehoert cmd 7 (@0x8003694C: +0xbc/+0xbe += 12 @0x800369C4/D8), und cmd 7 wird
+ * im generischen Tod erst nach dem Clip-Wrap gesetzt (`sh 7,-13736(at)` @0x80036814). Solange
+ * die Todes-Animation laeuft, gibt es im Original also KEINE Lache (Divergenz D5: der Port liess
+ * sie ab dem ersten hp<0-Tick wachsen, ~113 Frames zu frueh UNTER dem noch stehenden Leon).
+ * Die cmd-6-Kollaps-Pfade (Zombie/Hund/RE2) laufen NICHT ueber cmd 3 und bleiben unveraendert. */
+static int re15_death_pool_grows(void)
+{
+    if (s_death3_on) return s_death3_phase >= 2;     /* erst ab dem cmd-7-Latch @0x80036814 */
+    return 1;
+}
+
+/* 1, solange der cmd-3-Handler den Spieler animiert (Ph0/Ph1) — cmd 3 hat cmd 5 ERSETZT, also
+ * darf die Opfer-FSM nicht mehr laufen (@0x80113F20). */
+int re15_player_death_anim_active(void)
+{
+    return s_death3_on && s_death3_phase < 2;
+}
+
+/* 1, solange das KOMMANDO 3 den Spieler besitzt — auch nach dem cmd-7-Latch (@0x80036814).
+ * Der cmd-7-Handler @0x8003694C ruft KEIN anim_set: +0x94 bleibt auf Clip 7 und der
+ * Frame-Zeiger +0x168 zeigt weiter in die COMMON-Bank, aus der Ph1 @0x800367d0 posiert hat.
+ * Das ist das Gate, an dem der Render-Pfad die PL00-Bank waehlen muss (F5). */
+int re15_player_death_cmd3_active(void) { return s_death3_on; }
+
+/* ARM = der cmd-3-Store selbst (@0x80012EF0-EFC generisch / @0x80113B48 / @0x80113F20 /
+ * @0x80114518 Kraehe): aca58:=3, aca59:=0, aca5a:=0. Die Ph0-Seed-Arbeit macht der Tick. */
+void re15_player_death_cmd3(void)
+{
+    if (s_death3_on) return;                        /* aca5a != 0 -> die FSM laeuft schon
+                                                      * (@0x800366C8 `bne v0,zero` ueberspringt
+                                                      * die Praeambel) */
+    s_death3_on = 1;
+    s_death3_phase = 0;                              /* aca5a := 0 */
+    g_death_pool = 0;                                /* D5: vor cmd 7 gibt es keine Lache */
+    re15_player_victim_reset();                      /* D2: cmd 3 ERSETZT cmd 5 -> die Opfer-FSM
+                                                      * (und damit der Release-Clip) ist weg */
+}
+
+static void re15_player_death_cmd3_reset(void) { s_death3_on = 0; s_death3_phase = 0; }
+
+/* Ein cmd-3-Tick = FSM 0x80036718. Wird an derselben Stelle gefahren wie die cmd-5/6-Handler
+ * (re15_player_victim_tick), weil beide in derselben Dispatch-Tabelle @0x80073F90 stehen. */
+static void re15_player_death_cmd3_tick(const re15_game_ctx_t *c)
+{
+    if (!s_death3_on) return;
+    if (re15_player_victim_state() != 0) {           /* ein spaeterer cmd-5/6-Store hat cmd 3
+                                                      * ueberschrieben (Leichen-Grab/Devour) —
+                                                      * letzter Store gewinnt, wie im Original */
+        re15_player_death_cmd3_reset();
+        return;
+    }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_death3_phase == 0) {                       /* Ph0 @0x80036764 */
+        pl->motion          = 7;                     /* +0x94 := 7   @0x80036778/80 (PL00.EDD) */
+        pl->anim_frame      = 0;                     /* +0x95 := 0   @0x80036788 */
+        pl->anim_frac       = 7;                     /* +0x8f := 7   @0x80036790 */
+        pl->anim_blend_rate = 0x200;                 /* a3 = 0x200   @0x800367e0 */
+        /* +0x8c := 0 (@0x80036798) hat auf der SPIELER-Seite keine Port-Repraesentation
+         * (re15_actor_t fuehrt +0x8c nur als crow_speed fuer Gegner) — bewusst weggelassen
+         * statt auf ein fremdes Feld gelegt. */
+        pl->hit_react      |= 1u;                    /* +0x93 |= 1   @0x800367a4 */
+        re15_player_react_pose_arm(7);               /* Ph1 posiert @0x800367d0/@0x800367d8 aus
+                                                      * DAT_800acad8/DAT_800acbc0 = COMMON */
+        re15_audio_core_se(3);                       /* Se_on(0x04030001) @0x800367a8 — CORE
+                                                      * Record 3, derselbe Todes-SE wie im
+                                                      * Fress-Kollaps (Bank-Dekodierung
+                                                      * @0x80045028/@0x8004507c, Dispatch
+                                                      * @0x80010e70[4] -> 0x801fbd00).
+                                                      * a1 = player+0x34 (@0x800367a8 a2+46) —
+                                                      * positional; re15_audio_core_se ist mono
+                                                      * (Luecke mit Adresse in audio_pc.c:962). */
+        s_death3_phase = 1;                          /* aca5a := 1 @0x8003676c-6c, FALLTHROUGH */
+    }
+    if (s_death3_phase == 1) {                       /* Ph1 @0x800367c8 — 1 Frame/Tick (a2 = 0) */
+        int fc = 1;
+        if (c->pl00_anim && 7 < c->pl00_anim->clip_count)
+            fc = c->pl00_anim->clips[7].frame_count; /* 113 aus PL00.EDD, nicht hartkodiert */
+        if (fc < 1) fc = 1;
+        if (pl->anim_frac > 0) pl->anim_frac--;      /* f314 dekrementiert +0x8f pro Aufruf
+                                                      * (FUN_8001f3bc Z.78) */
+        if ((int)pl->anim_frame + 1 >= fc) {         /* Clip-Wrap -> Rueckgabe 1 -> aca5a += 1 */
+            pl->anim_frame = (uint8_t)(fc - 1);      /* Endpose haelt (der Port re-posiert jeden
+                                                      * Render-Frame; f314 wird nie wieder gerufen) */
+            s_death3_phase = 2;
+        } else {
+            pl->anim_frame++;
+        }
+        return;
+    }
+    if (s_death3_phase == 2) {                       /* Ph2 @0x80036804 — genau EIN Tick */
+        if (c->rdt_ok)
+            re15_audio_footstep(2, re15_rdt_floor_sound(c->rdt, pl->x, pl->z));
+                                                     /* FUN_80045630(2,0) @0x80036804: der
+                                                      * boden-MATERIAL-abhaengige Aufschlag-SE
+                                                      * (derselbe Helfer, den der Hunde-Finisher
+                                                      * auf Frame 0x4f ruft, @0x80111DA4) */
+        pl->state = 7;                               /* `sh 7,-13736(at)` @0x80036814 = cmd 7
+                                                      * (Blutlache 0x8003694C) — im Port keyt die
+                                                      * Death-/Gameover-Kette auf hp<0/state 7 */
+        s_death3_phase = 3;                          /* Ph2 ist einmalig; ab hier haelt cmd 7 */
+    }
+}
+
 /* PLAYER HIT-FLINCH state (hoisted to file scope so the status-screen open gate below
  * can read it — see the flinch block in re15_game_step for the full byte-true story). */
 static int     s_hit_flinch = 0;
@@ -87,6 +267,44 @@ static int16_t s_kd_t       = 0;             /* [5]-Decel-Zaehler t */
 
 int  re15_player_knockdown_active(void) { return s_knockdown; }
 
+/* 1, solange die cmd-2-Flinch-Klasse ([0]-[3], Clips 0x0a/8/9) den Spieler besitzt.
+ * Zweites Gate des PL00-Render-Zweigs (F5) — s. re15_actor_anim_select. */
+int  re15_player_hit_flinch_active(void) { return s_hit_flinch > 0; }
+
+/* ===== F5, ZWEITE HAELFTE: der AUSTRITTS-FRAME =====
+ * Gemessen (probe_1090_flinch_anim, erste Fassung des Fixes): 39 von 40 Flinch-Bildern kamen
+ * aus PL00, das 40. (anim_frame 21 = der LETZTE Frame des 22-Bilder-Clips) fiel auf die
+ * RAUM-RBJ-Bank zurueck — dasselbe fuer das letzte Knockdown-Bild. Ursache: die Gates oben
+ * sind Zustands-Zaehler, und der Zaehler faellt in DEMSELBEN Tick auf 0, in dem der Aktor
+ * noch mit Clip 8/9 gerendert wird.
+ *
+ * DAS ORIGINAL HAT DIESES PROBLEM NICHT, weil es die Bank gar nicht pro Bild neu WAEHLT:
+ * anim_set FUN_8001f314 speichert EINMAL den Zeiger auf den Frame-Eintrag der uebergebenen
+ * Bank in die Entity:
+ *     8001f330: addu a2,a1,v0        ; a1 = die Clip-Tabelle (a1 = DAT_800acbc0 = PL00.EDD)
+ *     8001f368: addu a2,v1,v0
+ *     8001f36c: sw   a2,360(t0)      ; +0x168 = DER Frame-Zeiger
+ * und der EXIT der cmd-2-Handler schreibt AUSSCHLIESSLICH das Kommandowort — kein anim_set,
+ * kein +0x94, kein +0x168:
+ *     [0]/[1] 80035c80: sw a0,-13736(at)   ; 0x800aca58 := 1   (davor nur +0x93 und aca3c)
+ *     [1]     80035db8: sw a0,-13736(at)
+ *     [2]/[3] 80035ee0-ec: +0x93 &= 0xfe / 80035f00: sw a0,-13736(at) / 80035f14: aca3c &= ~0xC0
+ * => Der Zeiger +0x168 zeigt nach dem Exit WEITER in die COMMON-Bank, bis der naechste
+ * anim_set-Aufruf (der cmd-1-Tick des FOLGE-Bildes) ihn umsetzt.
+ *
+ * PORT-AEQUIVALENT: ein Latch, der mit dem Reaktions-Clip armiert wird und genau so lange
+ * haelt, wie der Aktor diesen Clip noch traegt (= solange kein anderer Setzer +0x94 neu
+ * geschrieben hat). Keine neue Konstante, keine Frame-Zahl. */
+static uint8_t s_react_pose = 0;   /* 1 = +0x168 zeigt noch in die COMMON-Bank */
+static uint8_t s_react_clip = 0;   /* der Clip, den der Reaktions-Handler in +0x94 schrieb */
+
+static void re15_player_react_pose_arm(uint8_t clip) { s_react_pose = 1; s_react_clip = clip; }
+
+int re15_player_react_pose_pl00(void)
+{
+    return s_react_pose && g_actors[RE15_ACTOR_SLOT_PLAYER].motion == s_react_clip;
+}
+
 /* cmd-2-STAGGER-Arm (Phase 0 der Handler [2]/[3], byte-true Stores):
  *   Clip 8 @0x80035e38-40 / Clip 9 @0x80035fbc-c4; Speed 0xc8 @0x80035e44-4c; Frame 0
  *   @0x80035e5c-60; +0x8f = 0 @0x80035e64-68 bzw. @0x80035fe8-ec (*** HARTER POSE-SNAP —
@@ -110,6 +328,9 @@ void re15_player_stagger_cmd2(uint8_t clip)
     pl->motion_init_delay = 1;               /* seed tick renders frame 0 (pose-then-advance) */
     pl->hit_react |= 1;                      /* +0x93 |= 1 @0x80035e74-7c (Latch ZU; der
                                               * NORMAL-Prolog re-armt ihn @0x80031964) */
+    re15_player_react_pose_arm(clip);        /* +0x168 zeigt ab jetzt in die COMMON-Bank
+                                              * (@0x80035ea8/@0x80035eb0 bzw. @0x8003602c/
+                                              * @0x80036034 -> f314 @0x8001f36c) */
 }
 /* ===== Plc_dest Mode 6 = EVENT-REACH auf dem SPIELER =====
  * Byte-true 0x800517f0 (Player-Sub-Tabelle 0x80073e30[6] — identisch zur NPC-Tabelle
@@ -165,6 +386,8 @@ void re15_player_cmd_reset(void)
     extern void re15_player_idle_reset(void);      /* player_common.c — Idle-Phase/-Timer */
     s_knockdown = 0; s_kd_dir = 0; s_kd_phase = 0; s_kd_speed = 0; s_kd_t = 0;
     s_hit_flinch = 0; s_hit_kb = 0;
+    s_react_pose = 0; s_react_clip = 0;   /* Raumwechsel/Reset: der Spieler-Loader FUN_800314b0
+                                           * setzt die Bank ohnehin neu */
     s_ev_reach = 0;
     s_prev_hp = -1;
     re15_player_aim_interrupt();
@@ -210,6 +433,9 @@ static void kd_clip(re15_actor_t *pl, uint8_t clip, int rev)
     pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
     pl->motion_init_delay = 1;
     if (rev) pl->anim_flags |= 0x80; else pl->anim_flags &= (uint16_t)~0x80u;
+    re15_player_react_pose_arm(clip);   /* jede Knockdown-Clip-Site posiert aus der COMMON-Bank
+                                         * (@0x800361b8/@0x80036284/@0x800363d0 bzw.
+                                         * @0x80036518/@0x80036640) */
 }
 
 /* Bewegung entlang facing+0x800 (back=1, 245d8(0x800) @0x80036200) bzw. facing (back=0,
@@ -325,7 +551,9 @@ static void re15_gameover_fsm_reset(void)
 static void re15_gameover_fsm_tick(void)
 {
     if (!s_go_on) { re15_gameover_fsm_reset(); s_go_on = 1; }
-    if (g_death_pool < 122) g_death_pool++;               /* cmd-7 pool +0xc/frame, live cap 122 */
+    if (re15_death_pool_grows() && g_death_pool < 122)
+        g_death_pool++;                                   /* cmd-7 pool +0xc/frame, live cap 122
+                                                           * (D5: cmd 3 haelt sie bis @0x80036814) */
     s_go_lvl += s_go_rate;                                /* FUN_80021880: level += rate */
     if (s_go_lvl < 0) s_go_lvl = 0;
     int b = (int)(s_go_lvl >> 7);                         /* brightness = level>>7 */
@@ -578,6 +806,10 @@ void re15_game_step(const re15_game_ctx_t *c)
 
     if (s_go_on && !re15_player_is_dead())
         re15_gameover_fsm_reset();                       /* continue-reload revived the player */
+    if (!re15_player_is_dead())
+        re15_player_death_cmd3_reset();                  /* cmd 3 gehoert dem Toten (hp<0, das Gate
+                                                          * des Handlers @0x80012EE8) — lebt er
+                                                          * wieder, ist die FSM aus */
 
     /* Action-button press edge (Square). Drives BOTH the stair trigger and the
      * door AOT scan below. */
@@ -724,6 +956,21 @@ void re15_game_step(const re15_game_ctx_t *c)
                             ? 0x09 : 0x08;
         re15_player_stagger_cmd2(clip);
     }
+    /* ...und DERSELBE Resolver schreibt cmd 3 statt cmd 2, wenn der Treffer toedlich war:
+     *   80012ee8: bgez v1,0x80012f00   ; v1 = lh player+0x9a (HP)  -> HP >= 0: nichts
+     *   80012ef0: ori v0,zero,0x3
+     *   80012ef4: sb v0,4(s1)          ; **cmd 3** (s1 = 0x800ACA54 = der Spielerblock,
+     *   80012ef8: sb zero,5(s1)        ;  belegt durch `addiu s0,s0,-13740` @0x80012E04 +
+     *   80012efc: sb zero,6(s1)        ;  `addu s1,s0,zero` @0x80012E34)
+     * Der cmd-2-Zweig darueber traegt bereits die Vorbedingungen dieses Resolvers (kein Grab,
+     * keine Treppe, +0x93-Gate @0x80012E2C-30); hier faellt nur die `hp >= 0`-Haelfte weg.
+     * Der GRIFF-Tod laeuft NICHT hierueber: Zombie und Hund draenieren die HP in ihren eigenen
+     * Handlern und latchen cmd 6 (`sb 6` @0x80110138) — deshalb bleibt die Grab-Bedingung
+     * ausgeschlossen. Die KRAEHE latcht cmd 3 dagegen selbst, aus ihrem Brain heraus
+     * (@0x80113B48 / @0x80113F20 / @0x80114518, s. enemy_ai_common.c). */
+    if (c->rdt_ok && pl->hp < 0 && s_prev_hp >= 0 &&
+        !re15_player_is_grabbed() && !re15_stair_active())
+        re15_player_death_cmd3();
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
     /* ===== GAME-OVER-FSM — PARALLELER TOP-LEVEL-TREIBER, NICHT Teil der Zweig-Kette =====
@@ -1464,6 +1711,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+
+    /* cmd 3 = der GENERISCHE Spieler-Tod (Todes-Animation, PL00.EDD Clip 7) — derselbe
+     * Dispatch-Tisch @0x80073F90 wie die cmd-5/6-Handler oben, deshalb derselbe Tick-Platz.
+     * Die Kraehe latcht ihn in ihrem Brain (@0x80113B48 / @0x80113F20 / @0x80114518), das im
+     * Port unmittelbar davor in re15_enemy_ai_run_all gelaufen ist. */
+    re15_player_death_cmd3_tick(c);
 
     /* PLC_DEST-MODE-6 EVENT-REACH auf dem Spieler (byte-true 0x800517f0 via 0x80073e30[6]) —
      * tickt unabhaengig vom Branch, solange das Script den Halt haelt (Exit = naechster

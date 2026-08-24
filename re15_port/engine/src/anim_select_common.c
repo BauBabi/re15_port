@@ -314,6 +314,74 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
             return;
         }
     }
+    /* TREFFER-/KNOCKDOWN-/TODES-REAKTION (cmd 2 und cmd 3) — dieselbe COMMON-Bank-Regel wie das
+     * Kistenschieben darueber. FINDING 5 (Nutzer-Report 2026-08-24, WIEDERHOLUNG: "fehlt noch die
+     * Verletzt Animation wenn man in das Feuer reinlaeuft", ROOM1090, beide KI-Flavors).
+     *
+     * WARUM DER ALTE FIX NICHT HIELT: v0.3.18 hat die ENGINE-Seite repariert (Feuer-Kontakt
+     * @0x80116388-ac schreibt cmd 2 -> re15_player_stagger_cmd2 -> pl->motion = 8/9,
+     * s_hit_flinch = 22, CORE-SE 1/2). Der ZUSTAND war danach richtig — die alte Sonde
+     * (probe_1090_flame_touch) prueft `pl->motion == 8 || 9` und meldete OK. Der RENDER-Pfad war
+     * nie beteiligt: motion 8/9/0x0a/0x0b-0x10/7 haben KEINEN Sentinel-Zweig, fallen also auf
+     * banks->def_* durch — und def_* ist in jedem Raum mit RDT-Animationsblock (@0x5C) die
+     * RAUM-CINEMATIC-Bank, die re15_apply_room_cinematic dort hineinlegt. In ROOM1090 hat deren
+     * Clip 8/9/0x0a je 1 BILD: der 22-Bilder-Flinch rendert als EIN eingefrorener Cutscene-
+     * Keyframe. GEMESSEN am echten Durchlauf (probe_1090_flinch_anim, echter Feuer-Kontakt ueber
+     * re15_game_step): 40 Flinch-Bilder, 40x Bank RBJ, 40x fc_render 1 statt 22, EIN einziger
+     * Keyframe (9) ueber die volle Dauer. Kontrolle ROOM1140 (kein Anim-Block): fc 22, korrekt.
+     *
+     * DAS ORIGINAL KANN DAS NICHT: die Reaktions-Handler posieren AUSNAHMSLOS aus den beiden
+     * COMMON-Globals DAT_800ACAD8 (PL00.EMR) / DAT_800ACBC0 (PL00.EDD) — je Paar selbst
+     * disassembliert:
+     *   cmd-2 [0] Clip 0x0a : @0x80035c28 `lw a0,-13608(a0)` / @0x80035c30 `lw a1,-13376(a1)`
+     *   cmd-2 [1] Clip 0x0a : @0x80035d60 / @0x80035d68
+     *   cmd-2 [2] Clip 8    : @0x80035ea8 / @0x80035eb0   (Clip-Store `ori v0,zero,0x8`
+     *                         @0x80035e38 / `sb v0,-13592(at)` @0x80035e40)
+     *   cmd-2 [3] Clip 9    : @0x8003602c / @0x80036034
+     *   cmd-2 [4] Knockdown : @0x800361b8/@0x800361c0, @0x80036284/@0x8003628c,
+     *                         @0x800363d0/@0x800363d8
+     *   cmd-2 [5] Knockdown : @0x80036518/@0x80036520, @0x80036640/@0x80036648
+     *   cmd-3   TOD Clip 7  : @0x800367d0 / @0x800367d8
+     * und diese beiden Zeiger haben im GANZEN PSX.EXE genau zwei Schreiber, beide im
+     * Spieler-Loader FUN_800314b0: @0x8003154c `sw v0,-13376(at)` (PL00.EDD) und @0x80031578
+     * `sw v0,-13608(at)` (PL00.EMR). Der RBJ-Binder FUN_8001b3f8 repointet nur ENTITY-Felder
+     * (+0x16c/+0x170/...), nie diese Globals => ein Raum-RBJ kann die Reaktions-Clips nicht
+     * umbiegen.
+     *
+     * DAS GATE HAENGT AM KOMMANDO, NICHT AN DER CLIP-NUMMER: ein Cutscene-`Plc_motion 8` posiert
+     * weiterhin aus der Raum-Bank (im Original ist das der cmd-0/Script-Pfad, der die COMMON-
+     * Globals gar nicht anfasst). Port-Aequivalente des Kommandoworts DAT_800ACA58:
+     *   cmd 2 [0]-[3] = re15_player_hit_flinch_active()   (game_step_common.c s_hit_flinch)
+     *   cmd 2 [4]/[5] = re15_player_knockdown_active()    (s_knockdown)
+     *   cmd 3         = re15_player_death_cmd3_active()   (s_death3_on; haelt auch ueber den
+     *                   cmd-7-Latch @0x80036814 hinweg, weil @0x8003694C kein anim_set ruft)
+     * +0x94 ist im Original der DIREKTE Clip-Index (FUN_8001f314 indiziert ungeprueft motion*4),
+     * also clip_override = m.
+     *
+     * ...UND DER AUSTRITTS-FRAME: die drei Gates oben sind Zustands-Zaehler und fallen in
+     * DEMSELBEN Tick, in dem der Aktor noch mit dem Reaktions-Clip gerendert wird (gemessen:
+     * 39/40 Flinch-Bilder PL00, das 40. — anim_frame 21 — RBJ; dito das letzte Knockdown-Bild).
+     * Das Original waehlt die Bank nicht pro Bild: f314 legt den Frame-Zeiger EINMAL ab
+     * (@0x8001f330 `addu a2,a1,v0` mit a1 = DAT_800acbc0, @0x8001f36c `sw a2,360(t0)` = +0x168),
+     * und die cmd-2-Exits schreiben NUR das Kommandowort (@0x80035c80 / @0x80035db8 /
+     * @0x80035f00, davor lediglich +0x93 &= 0xfe @0x80035eec und aca3c &= ~0xC0 @0x80035f14) —
+     * kein anim_set, kein +0x94. Der Zeiger bleibt also in der COMMON-Bank, bis der naechste
+     * anim_set-Aufruf ihn umsetzt. re15_player_react_pose_pl00() ist genau dieser Latch: armiert
+     * mit dem geschriebenen Clip, gueltig solange der Aktor ihn noch traegt. */
+    {
+        extern int re15_player_hit_flinch_active(void);
+        extern int re15_player_knockdown_active(void);
+        extern int re15_player_death_cmd3_active(void);
+        extern int re15_player_react_pose_pl00(void);
+        if (is_player && banks->pl00_ok &&
+            (re15_player_hit_flinch_active() || re15_player_knockdown_active() ||
+             re15_player_death_cmd3_active() || re15_player_react_pose_pl00())) {
+            out->skel = banks->pl00_skel;
+            out->anim = banks->pl00_anim;
+            out->clip_override = m;
+            return;
+        }
+    }
     if (banks->w01_ok && (m == 105 || m == 100)) {
         /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). BYTE-TRUE, definitively RE'd
          * (wf_9970157f): the real-time move cmd (cmd 1, 0x80031de8) two-pass-dispatches on submode byte

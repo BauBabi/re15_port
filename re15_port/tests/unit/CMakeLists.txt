@@ -666,6 +666,15 @@ add_executable(probe_crow_flinch probe_crow_flinch.c)
 target_link_libraries(probe_crow_flinch PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_crow_flinch PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# Spieler-TOD durch die Kraehe (Finisher-Anim, generisches cmd 3 @0x800366bc).
+# ⛔ ALS CTEST REGISTRIERT (2026-08-24, Skeptiker-Befund): das war die EINZIGE Messung des
+# Kraehen-Finisher-Fixes und lief nur von Hand — "227/227 gruen" enthielt null Abdeckung
+# fuer die Todes-Animation. Eine Sonde, die einen Nutzer-Fix belegt, gehoert in die Suite.
+add_executable(probe_crow_kill probe_crow_kill.c)
+target_link_libraries(probe_crow_kill PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_crow_kill PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME probe_crow_kill COMMAND probe_crow_kill)
+
 # Regression: Kraehen-Corpse Anim-Halt (Freeze Frame 12) + Blutlache +10/Tick x51 + GIB-Wipe
 # (analysis/crow_death_pool.md, Corpse-Maschine 0x801157e8/@0x80121234)
 add_executable(probe_crow_death probe_crow_death.c)
@@ -2625,3 +2634,40 @@ target_compile_definitions(probe_1090_flame_touch PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME probe_1090_flame_touch COMMAND probe_1090_flame_touch)
 set_tests_properties(probe_1090_flame_touch PROPERTIES TIMEOUT 60)
+
+# DIAGNOSE-SONDE (kein ctest): ROOM10D0-Sitzer im RE2-Flavor — Aufsteh-Clip-/Frame-Folge und
+# Bodentreffer-Blut (Nutzer-Report 2026-08-24, analysis/nutzer_batch_2026-08-24/10d0-aufstehen.md)
+add_executable(probe_10d0_situp_re2 probe_10d0_situp_re2.c)
+target_link_libraries(probe_10d0_situp_re2 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_10d0_situp_re2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_10d0_situp_re2 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+# Modus 8 = REGRESSION (FINDING 3a): der Uebergabe-Tick RE1.5-Aufsteher -> RE2-Gehirn muss das
+# RE2-Clip-Wort schon TRAGEN (@0x80101a8c im selben Tick wie @0x801011ec), und keine gerenderte
+# Pose danach darf unter die Sitz-Pose fallen (= der gemeldete zweite Zusammenbruch).
+add_test(NAME probe_10d0_situp_handoff COMMAND probe_10d0_situp_re2 8)
+set_tests_properties(probe_10d0_situp_handoff PROPERTIES TIMEOUT 60)
+
+# FINDING 5 (Wiederholungs-Report 2026-08-24): "Verletzt-Animation beim Hineinlaufen ins Feuer
+# fehlt". Misst NICHT den Zustand (der war seit v0.3.18 richtig), sondern die GERENDERTE Pose
+# im echten ROOM1090-Durchlauf inkl. RDT-Animationsblock: die cmd-2/cmd-3-Reaktions-Clips
+# muessen aus der COMMON-Bank PL00 kommen (@0x80035ea8/@0x8003602c/@0x800367d0), nicht aus dem
+# Raum-RBJ (dessen Clip 8/9/0xa nur 1 Bild haben).
+add_executable(probe_1090_flinch_anim probe_1090_flinch_anim.c)
+target_link_libraries(probe_1090_flinch_anim PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_flinch_anim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_flinch_anim PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME probe_1090_flinch_anim COMMAND probe_1090_flinch_anim)
+set_tests_properties(probe_1090_flinch_anim PROPERTIES TIMEOUT 60)
+
+# FINDING 4 (Nutzer-Report 2026-08-24): "Kopf zertreten" am abgeworfenen RE2-Kriecher —
+# P5-Kriecher-Zweig @0x80102A78-0x80102BC0 (Kopf ab Frame 22, SE 2 @0x80102B2C/B58,
+# Hals-Stumpf 23..41) + das Frame-7-Tor @0x80102BC4-C8 + P6 @0x80102BE8 (Tod).
+add_executable(probe_re2z_stomp probe_re2z_stomp.c)
+target_link_libraries(probe_re2z_stomp PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_stomp PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_stomp PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME probe_re2z_stomp COMMAND probe_re2z_stomp 1800 2)
+set_tests_properties(probe_re2z_stomp PROPERTIES TIMEOUT 120)

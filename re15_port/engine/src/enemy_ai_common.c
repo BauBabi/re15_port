@@ -942,6 +942,66 @@ static void re15_player_victim_bone_pos(int bone, int32_t out[3])
                             player->x, player->y, player->z, out);
 }
 
+/* ============ LEONS FINALES TODES-STOEHNEN IM FRESS-KOLLAPS — Se_on(0x04030001) ============
+ * Nutzer-Report 2026-08-24 (RE2-KI): "finales todes Stoehnen von Leon fehlt beim Zombie Finisher,
+ * wenn sie ihn fressen. Bei den Hunden genauso."  Dossier: analysis/nutzer_batch_2026-08-24/
+ * todes-stoehnen.md (RE + Messung).
+ *
+ * WAS der SE ist (byte-belegt, nicht geraten):
+ *   Se_on = FUN_80045024. Argument-Dekodierung, instruktionsweise:
+ *     80045028: srl v1,a0,24                 ; v1 = BANK
+ *     80045078: srl v0,a0,16 / 8004507c: andi s4,v0,0xff   ; s4 = RECORD
+ *     80045080: andi a0,a0,0xff              ; p = positional-Flag (p!=0 -> jal 0x80045a64
+ *                                            ;  mit der Emitter-Position, @0x800451c0-cc)
+ *   Bank-Dispatch @0x80010e70: [4] = 0x8004511c -> EDT @0x801fbd00 = die RESIDENTE CORE-Bank.
+ *   => 0x04030001 = Bank 4 (CORE) / Record 3 / positional.
+ *   CORE00.EDH-Record 3 = `00 00 44 17` -> Programm 0 / Tone 4 -> VAG 12592 B ~ 0,50 s,
+ *   SPU-Stimme 7 (= derselbe reservierte Leon-Sprachkanal wie CORE 0/1/2 = Griff-/Flinch-/
+ *   Knockback-Schrei), Prio 4. Spielweiter Zensus: 15 Aufrufstellen, ALLE in Spieler-Kill-/
+ *   Kollaps-Maschinen, 0 in der EXE.
+ *
+ * WO ihn das Original spielt:
+ *   ZOMBIE FUN_8010a6f8 Phase [1]:  8010a820: ori v0,zero,0x37 / 8010a824: bne v1,v0,...
+ *                                   8010a864: jal 0x80045024   (a0 = 0x04030001 @0x8010a854/60)
+ *   HUND   Maschine B @0x80111cf0 Phase [1]: 80111db4: ori v0,zero,0x3a / 80111db8: bne ...
+ *                                   80111df4: jal 0x80045024   (a0 @0x80111de4/f0)
+ *   Beides ein GLEICHHEITS-Gate auf dem monoton wachsenden Frame-Zaehler player+0x95
+ *   (DAT_800acae9) => genau EIN Ausloeser pro Kollaps.
+ *
+ * ⛔ WARUM die RE2-Zweige ihn trotzdem bekommen — und woher der Frame kommt:
+ *   Die RE2-Kollaps-Maschine 0x8010B464 (Phasen @0x8010022C) spielt in P0/P1 KEINEN Sprach-SE
+ *   (P0: nur jal 0x8005ba28 = RE2-Blutlache + 0x800395b8; P1 @0x8010B5CC: 0x80015cb8 /
+ *   0x8002959c / 0x80015fe8 / 0x8001bf10), und der RE2-Hund hat ueberhaupt keine Kollaps-
+ *   Maschine (cmd-6-Hook 0x80104ACC, P2 @0x80104b04 -> 0x80104b7c = NICHTS). Es gibt also
+ *   KEINE RE2-Adresse fuer einen Todes-Sprach-Frame — das Dossier fuehrt das als O1/O2 offen.
+ *   Aufgeloest wird das NICHT durch Raten, sondern durch das SOUND-MANDAT des Nutzers
+ *   (2026-08-23): "im RE2-KI-Modus kommen die ENTSCHEIDUNGEN aus RE2, aber Sounds/
+ *   Praesentation aus RE1.5". Die RE1.5-Praesentation IST adressbelegt — also gelten hier
+ *   exakt die RE1.5-Konstanten 0x37 (@0x8010a820-24) bzw. 0x3a (@0x80111db4-b8). Beide sind
+ *   auf den RE2-Clips erreichbar (RE2-Zombie-Kollaps 116 f, RE2-Hund-Clip 0 145 f).
+ *
+ * O3 (Retrigger-Schutz): das Original feuert per Gleichheits-Gate auf einem monoton
+ *   wachsenden Zaehler genau einmal. Der Port kann sein Gate auf den HALTE-Frame klemmen
+ *   (fc-1), und dann feuert es jeden Tick neu (gemessen: 30+ Aufrufe in Folge). Deshalb der
+ *   Einmal-Latch hier — er ersetzt kein Gate, er schuetzt nur dessen Einmaligkeit.
+ *
+ * PLATTFORM-GRENZE: re15_audio_core_se() IST der Plattform-Hook (Implementierung
+ * platform/pc/src/audio_pc.c:944 -> se_play_layers(s_core_edt, ..., 3)). Die Engine benennt
+ * nur den RE1.5-CORE-Record; gespielt wird er auf der Plattform. Der RE2->RE1.5-Mapper
+ * pc_re2z_se_re15 greift hier NICHT, weil die RE2-Maschine gar keine SE-Id emittiert, die
+ * gemappt werden koennte (s.o.) — es gibt nichts zu uebersetzen, nur den RE1.5-Aufruf.
+ *
+ * ⛔ NICHT umgesetzt (O5, adressbelegt offen): das Original ruft beide Stellen POSITIONAL
+ *   mit a1 = g_entity(cur)+0x34 = der Position des GREIFERS (@0x8010a868 / @0x80111df8).
+ *   re15_audio_core_se() ist mono; die Luecke ist in audio_pc.c:962-965 mit Adresse benannt. */
+static uint8_t s_victim_groan_done = 0;   /* O3: Einmal-Latch pro Kollaps */
+static void re15_victim_death_groan(void)
+{
+    if (s_victim_groan_done) return;
+    s_victim_groan_done = 1;
+    re15_audio_core_se(3);                /* Se_on(0x04030001) @0x8010a864 / @0x80111df4 */
+}
+
 /* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
  * escape path writes DAT_800aca5a = 4 = the struggle FSM's release phase; clip base+2). */
 void re15_player_victim_throwoff(void)
@@ -984,6 +1044,7 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
                * -> aca59 = 2/3; Kollaps-Clip = acaf3+6 = 6/7 (FUN_8010a6f8) */
         : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE (Steh): (+0x5)-5 */
     g_player_victim = 2;
+    s_victim_groan_done = 0;                            /* O3: neuer Kollaps -> Todes-SE wieder scharf */
     if (!re15_victim_is_re2_dog())
         player->anim_frame = 0;                         /* @0x8010a75c frame reset on collapse entry
                                                          * (RE1.5-Dog: +0x95:=0 @0x80111d4c).
@@ -1189,7 +1250,15 @@ void re15_player_victim_tick(void)
              * Leon haelt die Endpose (Frame fc-1, ohne Reset — s. re15_player_victim_devour).
              * Die RE1.5-Maschine-B-Events (Frames 0x29/0x3a/0x4f + Wundstempel) sind
              * STAGE1-Overlay-Adressen und laufen hier NICHT. Der Tod fiel schon am Biss
-             * (FUN_800401d4 r=2); Port-Plumbing hp/state fuer die Death-FSM am Halte-Tick. */
+             * (FUN_800401d4 r=2); Port-Plumbing hp/state fuer die Death-FSM am Halte-Tick.
+             *
+             * TODES-STOEHNEN (Nutzer-Report 2026-08-24): SOUND-MANDAT — Entscheidungen aus RE2,
+             * Sound/Praesentation aus RE1.5. Der RE1.5-Hund spielt CORE 3 auf Clip-Frame 0x3a
+             * (`ori v0,zero,0x3a` @0x80111db4 / `bne v1,v0` @0x80111db8 -> `jal 0x80045024`
+             * @0x80111df4). Der Frame ist auf dem RE2-Clip 0 (145 f) erreichbar. Gemessen war
+             * dieser Zweig vom Griff bis zum Tod komplett stumm (probe_se_dog, RE2-Flavor:
+             * keine einzige SE-Zeile). */
+            if (player->anim_frame == 0x3a) re15_victim_death_groan();
             if (at_end_prev && player->state != 7) {
                 if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING */
                 player->state = 7;
@@ -1206,7 +1275,7 @@ void re15_player_victim_tick(void)
                 int32_t bb8[3]; re15_player_victim_bone_pos(8, bb8);
                 re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
                                      bb8[0], bb8[1], bb8[2], (int16_t)player->rot_y);
-                if (player->anim_frame == 0x3a) re15_audio_core_se(3);   /* @0x80111df4 */
+                if (player->anim_frame == 0x3a) re15_victim_death_groan();  /* CORE 3 @0x80111df4 */
             }
             if (player->anim_frame == 0x4f && g_room_rdt_ok)             /* @0x80111da4: 45630(2,0) */
                 re15_audio_footstep(2, re15_rdt_floor_sound(&g_room_rdt, player->x, player->z));
@@ -1253,8 +1322,20 @@ void re15_player_victim_tick(void)
              * @0x8010B678-7C) mit a0 = 6096 (@0x8010B69C) bzw. 7120 (@0x8010B6C4).
              * 0x8001bf10 ist die RE2-GORE-Familie — sie hat im Port KEIN Gegenstueck (dieselbe
              * Haltung wie bei Hund/Kraehe: RE2-FX-Kinds ohne RE1.5-Pendant bleiben stumm-OFFEN).
-             * Der RE1.5-Einzelspritzer (Frame 0x37 + CORE-SE 3, FUN_8010a6f8 @0x8010a82c/84c)
-             * gilt hier NICHT — er wuerde eine RE1.5-Adresse fuer einen RE2-Clip zitieren. */
+             * Der RE1.5-Einzelspritzer BLUT (Frame 0x37, a0=0x2000 @0x8010a82c/84c) gilt hier
+             * NICHT — er wuerde eine RE1.5-Adresse fuer einen RE2-FX-Kind zitieren; die RE2-Seite
+             * ist die oben benannte 0x8001bf10-Gore-Familie ohne Port-Gegenstueck.
+             *
+             * ⛔ ANDERS BEIM SOUND (Nutzer-Report 2026-08-24 + SOUND-MANDAT): Sounds und
+             * Praesentation kommen im RE2-KI-Modus aus RE1.5, nur die ENTSCHEIDUNGEN aus RE2.
+             * Der RE1.5-Zwilling spielt Leons finales Todes-Stoehnen als Se_on(0x04030001) =
+             * CORE Record 3 auf Clip-Frame 0x37 (`ori v0,zero,0x37` @0x8010a820 / `bne v1,v0`
+             * @0x8010a824 -> `jal 0x80045024` @0x8010a864). Die RE2-Maschine 0x8010B464 hat
+             * dafuer KEINE eigene Adresse (P0/P1 spielen keinen Sprach-SE) — der Frame-Anker ist
+             * deshalb bewusst die RE1.5-Konstante 0x37, erreichbar im 116-Frame-RE2-Clip.
+             * Gemessen war dieser Zweig stumm (probe_se_devour, RE2-Flavor: 2 Seeds x 900
+             * Frames, CORE se=3 kam NIE). */
+            if (player->anim_frame == 0x37) re15_victim_death_groan();
             if (at_end_prev && player->state != 7) {    /* NICHT auf hp>=0 gaten: der Biss-Kill
                                                          * (re2z_player_damage, FUN_800401d4-
                                                          * Zwilling) laesst hp schon am Kill-Tick
@@ -1290,7 +1371,9 @@ void re15_player_victim_tick(void)
             int32_t bb8[3]; re15_player_victim_bone_pos(8, bb8);
             re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
                                  bb8[0], bb8[1], bb8[2], (int16_t)player->rot_y);
-            re15_audio_core_se(3);
+            re15_victim_death_groan();   /* CORE 3 @0x8010a864 — Einmal-Latch statt Klemm-Gate
+                                          * (O3: `blood_fr` oben ist auf fc-1 geklemmt und wuerde
+                                          * mit einer Fremd-Bank jeden Tick neu feuern) */
         }
         }
     } else {                                           /* RELEASE finish (state 3): release clip once -> free.
@@ -1390,7 +1473,7 @@ void re15_player_victim_tick(void)
 void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
                                       s_victim_standup = 0;
                                       g_player_victim_variant = 0; s_victim_phase = 0;
-                                      s_victim_fresh = 0;
+                                      s_victim_fresh = 0; s_victim_groan_done = 0;
                                       g_player_victim_zombie = -1; s_grab_mercy_timer = 0; }
 
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
@@ -1573,6 +1656,14 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
  * engage) @0x80104b24. This is the byte-true state-machine home of the "stehen sauber auf" clip. */
 /* ONE-SHOT clip HOLD: clamp anim_frame at the clip's last frame so the monotonic counter + the
  * render's %fc wrap can never REPLAY a one-shot from its start (byte-true f8b4 terminal clamp). */
+/* ⛔ OPEN (FINDING 3a, 2026-08-24): diese Klemme fragt IMMER die Aktions-Bank des Typs
+ * (re15_enemy_find), waehrend die Uhr re15_actor_clip_len bei re2z_re15_pose != 0 die
+ * RE1.5-POSE-Bank nimmt. Beim 10D0-Sitz-Import (RE1.5-Clip-Indizes 0x29/0x2A gegen eine
+ * 31-Clip-RE2-Bank) steigt sie deshalb bei `motion >= clip_count` sofort aus und klemmt gar
+ * nicht. Heute faellt das nicht mehr auf: der Uebergabe-Tick traegt seit dem exec_only-Fix
+ * schon das RE2-Clip-Wort (@0x80101a8c), es gibt also keinen Frame mehr mit RE1.5-Clip in der
+ * RE2-Bank. Die Bankregel bleibt trotzdem uneinheitlich — nicht "auf Verdacht" angeglichen,
+ * weil kein Lauf existiert, der die Divergenz zeigt (Messung waere die Voraussetzung). */
 static void re15_enemy_hold_last_frame(re15_actor_t *e)
 {
     re15_enemy_bank_t *hb = re15_enemy_find(e->type);
@@ -4811,6 +4902,29 @@ int re15_enemy_ai_live_tick(int slot)
                      * @0x80103900-0C). */
                     re15_ai_set_state_word(e, 0x101);
                     e->re2z_re15_pose = 0;
+                    /* ⛔ FINDING 3(a) — DER UEBERGABE-TICK (Nutzer-Report 2026-08-24: "beim
+                     * aufstehen wiederholt sich die Eine Animation noch einmal kurz").
+                     * Hier stand ein `return 1`, das den RE2-EXECUTOR erst im FOLGE-Tick laufen
+                     * liess. Genau diesen Tick gibt es im Original nicht: der ACTIVE-Root liest
+                     * +0x5 nach der DECISION NEU und ruft den Executor des NEUEN Substates sofort:
+                     *   801011c4: jalr v0          ; DECISION 0x8010C88C[+0x5]
+                     *   801011d0: lbu  v0,5(s0)    ; +0x5 ERNEUT
+                     *   801011e4: lw   v0,-14132(at) ; EXECUTOR 0x8010C8CC[+0x5]
+                     *   801011ec: jalr v0
+                     * und EXEC[1] P0 schreibt sein Clip-Wort in DEMSELBEN Tick:
+                     *   80101a74-78: addiu v0,zero,1 / sb v0,6(s1)     ; +0x6 = 1
+                     *   80101a7c   : lbu  v0,536(s1)                   ; +0x218 = Walk-Clip
+                     *   80101a80-84: lui v1,0xf / addu v0,v0,v1        ; | 0x000F0000 (FRAC 0xF)
+                     *   80101a8c   : sw   v0,332(s1)                   ; +0x14C
+                     * GEMESSEN VORHER (probe_10d0_situp_re2, Renderer-Semantik): der Aktor trug
+                     * im Uebergabe-Tick noch den RE1.5-Clip 41 (0x29), der gegen die 31-Clip-
+                     * RE2-Bank auf 41 % 31 = 10 = eine LIEGE-Pose auflief (Brust 2266 -> 179),
+                     * und der 0xF/0x100-Crossfade des Folge-Ticks zog sie noch 11 Bilder lang
+                     * mit (~0,4 s "zweites Aufstehen"). Im RE1.5-Flavor existiert der Frame
+                     * nicht (Clip 41 ist in der 43-Clip-Bank gueltig: 2266 -> 2266 -> 2272).
+                     * NUR der Executor laeuft — die DECISION-Haelfte dieses Ticks war der
+                     * RE1.5-Aufsteher selbst (er ersetzt DECISION+EXECUTOR von [0x0D]). */
+                    re15_re2z_exec_only(slot);
                 }
                 return 1;
             }
@@ -5031,13 +5145,32 @@ static void re15_crow_hit_player(re15_actor_t *e, re15_actor_t *player, int dmg)
  * Original, waehrend der Port sie ueber den hit_react-Gate verschluckte. Der hit_react-Latch
  * bleibt hier als PORT-PROXY fuer die (unportierte) Player-Cmd-FSM-Knockdown-Seite (Flinch-
  * Detektor in game_step_common.c keyt darauf) — er unterdrueckt aber keinen Schaden mehr. */
-static void re15_crow_hit_player_ungated(re15_actor_t *e, re15_actor_t *player, int dmg)
+/* ⛔ KORREKTUR 2026-08-24 (Nutzer-Report "Kraehen-Finisher-Animation"): der KILL-BROADCAST
+ * (aca50 |= 0x2000) gehoert NICHT in den GRAPPLE-Kontaktpfad. Eigene Roh-Disassemblierung des
+ * kompletten Pfads 0x80113DD4-0x80113E58 (STAGE1.BIN):
+ *   80113ddc: sb v0(=1),472(v1)      ; Kraehe +0x1d8 := 1
+ *   80113df4/fc: aca50 = (aca50 & 0xfff) | 0x8000   ; NUR das GRAB-Bit
+ *   80113e04: sw v1,-13316(at)       ; 0x800ACBFC := &Kraehe   (Greifer)
+ *   80113e14/50: 0x800ACBCC/D0 := Kraehe+0x178/+0x17C          (Opfer-Bank Paar C)
+ *   80113e28/30: aca5a := 0 / aca59 := 0
+ *   80113e34/3c: player.hp -= 8
+ *   80113e48: sb v0(=5),-13736(at)   ; cmd 5
+ * -> KEIN hp-Test, KEIN `ori 0x2000`. Das 0x2000 steht ausschliesslich im DIVE (@0x80113b50/58)
+ * und im STRIKE (@0x80114520/28) — und im Grab-Zweig erst in sub 13 Schritt 0 (@0x80113f24-30).
+ * WIRKUNG DES ALTEN FEHLERS (gemessen, probe_crow_kill Lauf A): der Grapple broadcastete 0x2000
+ * schon beim Kontakt; im NAECHSTEN Tick raeumte der Flock-Dispatcher erst das 0x8000-Bit ab und
+ * setzte dabei +0x1d8 := 0 (@0x801160e0-Zweig), so dass der unmittelbar folgende
+ * 0x2000-Zweig (@0x8011616c) die eigene Kraehe in sub 17 riss — sub 13 Schritt 0 mit seinem
+ * toedlichen Recheck lief damit NIE. Genau deshalb kam der Todes-Clip beim Grab-Tod nicht. */
+static void re15_crow_hit_player_ungated(re15_actor_t *e, re15_actor_t *player, int dmg,
+                                         int lethal_bcast)
 {
     player->hp = (int16_t)(player->hp - dmg);
     player->hit_react |= 1;                          /* PORT-PROXY (Original verwaltet +0x93 in den
                                                       * Player-Cmd-Handlern, nicht hier) */
-    if (player->hp < 0) {                            /* lethal -> KILL broadcast            */
-        s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);   /* @0x80113b58 */
+    if (lethal_bcast && player->hp < 0) {            /* NUR Strike: @0x80114504 `bgez` -> Broadcast
+                                                      * @0x80114520/28 + +0x1d8 := 1 @0x80114534 */
+        s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);
         e->crow_hs = 1;
     }
 }
@@ -5342,6 +5475,12 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
                                                               * cmd 2 @0x80113b00 + dir @0x80113b28 +
                                                               * aca5a=0 @0x80113b30 -> Port-Flinch-
                                                               * Detector (game_step_common.c) */
+                if (player->hp < 0)
+                    /* LETHAL: dieselbe Funktion UEBERSCHREIBT das eben geschriebene cmd 2 mit
+                     * cmd 3 (`ori v0,zero,0x3` @0x80113b44 / `sb v0,-13736(at)` @0x80113b48,
+                     * aca59:=0 @0x80113b6c, aca5a:=0 @0x80113b74) — beim toedlichen Dive gibt
+                     * es also KEINEN Flinch, sondern sofort die Todes-Animation (PL00 Clip 7). */
+                    re15_player_death_cmd3();
                 re15_crow_attack_wounds(e);                  /* 0x801161e8 @0x80113b7c — die
                                                               * VOLLSTAENDIGEN vert-Band-Wundstempel
                                                               * (die alte Inline-Teilkopie fehlte
@@ -5390,7 +5529,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->crow_contact) {                               /* +0x1d0 contact -> GRAB (@0x80113dd4) */
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
-            re15_crow_hit_player_ungated(e, player, 8);      /* GRAB: -8 HP @0x80113e34 UNGATED (kein
+            re15_crow_hit_player_ungated(e, player, 8, 0);   /* GRAB: -8 HP @0x80113e34 UNGATED (kein
                                                               * +0x93 im Kontaktpfad — Dossier D4) */
             re15_player_victim_latch(e, player);             /* player cmd 5 @0x80113e48 + aca59=0
                                                               * @0x80113e30 + Paar-C-Link acbcc/acbd0 =
@@ -5424,11 +5563,16 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
                 re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
                                      pb2[0], pb2[1], pb2[2], (int16_t)e->rot_y);
             }
-            if (player->hp < 0) {                            /* lethal recheck @0x80113f08: cmd 3
-                                                              * @0x80113f20 (death FSM = OPEN) + KILL
-                                                              * broadcast @0x80113f24-30 + +0x1d8=1 */
+            if (player->hp < 0) {                            /* lethal recheck @0x80113f08 (`lh
+                                                              * v0,-13586(v0)` @0x80113f00 /
+                                                              * `bgez v0` @0x80113f08) */
                 s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);
                 e->crow_hs = 1;                              /* @0x80113f50 */
+                /* cmd 3 ERSETZT das laufende cmd 5 (`ori v0,zero,0x3` @0x80113f18 /
+                 * `sb v0,-13736(at)` @0x80113f20, aca59:=0 @0x80113f44, aca5a:=0 @0x80113f4c):
+                 * die Kraehen-Opfer-FSM bricht sofort ab, der Release-Clip 2 wird NIE gespielt
+                 * (gemessen war genau der der Port-Fehler: motion=0x02 fuer 20 Frames). */
+                re15_player_death_cmd3();
             }
             re15_audio_room_se(2);                           /* Se(2) @0x80113f74-78 */
             e->crow_timer = 30;                              /* +0x1d5=0x1e @0x80113f84-88 */
@@ -5515,8 +5659,12 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
                 re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1000,
                                      sb2[0], sb2[1], sb2[2], (int16_t)e->rot_y);
             }
-            re15_crow_hit_player_ungated(e, player, 4);      /* STRIKE: -4 HP @0x801144f0-fc UNGATED
+            re15_crow_hit_player_ungated(e, player, 4, 1);   /* STRIKE: -4 HP @0x801144f0-fc UNGATED
                                                               * (kein +0x93 im Pfad — Dossier D4) */
+            if (player->hp < 0)
+                re15_player_death_cmd3();                    /* lethal -> cmd 3 (`ori v0,zero,0x3`
+                                                              * @0x80114514 / `sb v0,-13736(at)`
+                                                              * @0x80114518, aca59:=0 @0x8011453c) */
             e->sub_state_2 = 1;
         }
         re15_crow_anim(e);
@@ -6133,6 +6281,42 @@ static int re15_dog_anim_hold_last(re15_actor_t *e)
     }
     return done;
 }
+/* ===== HUNDE-PLATZIERUNG IM GRIFF/FRESSEN — FUN_8001AD68 auf der HUNDE-EIGENEN Bank ==========
+ * Nutzer-Report 2026-08-24 (RE1.5-KI): "stimmt die positionierung des Hundes noch nicht ganz
+ * beim finisher."  Dossier: analysis/nutzer_batch_2026-08-24/hunde-finisher.md Teil (a).
+ *
+ * ZENSUS aller `jal 0x8001AD68` in der Hunde-Region von STAGE1.BIN (0x8010D000-0x80112400):
+ *   0x8010F998  sub 9  Schritt 1 (Latch-Anim  @0x8010F980) : a0 = HUND, a1 = +0x84, a2 = +0x16C
+ *   0x8010FA34  sub 9  Schritt 3 (Fress-Loop  @0x8010FA1C) : a0 = HUND
+ *   0x8010FB80  sub 9  Schritt 5 (Release-Anim@0x8010FB68) : a0 = HUND
+ *   0x8010FDEC / 0x8010FE88 / 0x8010FFD4   sub-10-Zwillinge derselben drei Schritte
+ *   0x8011018C  sub 0xB Phase 1 (@0x80110174) = DER FINISHER                 : a0 = HUND
+ *   0x80111A88 / 0x80111AD8 / 0x80111B84 / 0x80111D84  = die SPIELER-Seite (schon portiert,
+ *                                                        re15_victim_place)
+ * GEGENBELEG, dass das kein Muster-Artefakt ist: FUN_801101E4 (sub 0xC, Recover) hat KEIN ad68,
+ * nur `jal 0x8001f314` @0x80110288 — dort darf also nichts hin.
+ *
+ * a1/a2 sind die HUNDE-EIGENEN Zeiger +0x84 (Skelett) / +0x16C (Anim) = Bank 0, NICHT die
+ * Opfer-Bank 2 (die liegt in 0x800ACBCC/0x800ACBD0 und gehoert dem Spieler).
+ * FUN_8001AD68 selbst (@0x8001add8 RotMatrixY(+0x6a), @0x8001adf4 lh +0xA0, @0x8001ae00-04
+ * `addu`/`sw 52`, @0x8001ae08-18 Z) == re15_clip_root_motion_abs.
+ *
+ * REIHENFOLGE: ad68 VOR f314 (Finisher: @0x8011018C vs. @0x801101A8) — platziert wird mit dem
+ * NOCH NICHT fortgeschriebenen +0x95.
+ *
+ * AMPLITUDEN, die der Port bisher gar nicht fuhr (EM020 Bank 0, keyframe[+6/+8/+10] selbst
+ * geparst): Clip 0x17 Latch vorn 29 f sx -1479 -> +200 = 1679 Einheiten Zustoss; 0x1A Latch
+ * hinten 30 f -1507 -> +200 = 1707; 0x18 Fress-Loop 18 f +-44 Wippen; 0x19 Release 40 f
+ * sz 39 -> 1865 = 1826 Rueckzug; 0x1B Finisher 99 f sx 241 -> 304(f27) -> -903(f79) -> -128(f98)
+ * = 1207 Einheiten Zerr-Bewegung. Gemessen (test_dog_grab_anchor): Port-Ueberschuss +913 (vorn)
+ * bzw. +718 (hinten) gegenueber dem byte-truen SOLL-Maximum 1520/1519. */
+static void re15_dog_place(re15_actor_t *e)
+{
+    re15_enemy_bank_t *gb = re15_enemy_find(e->type);
+    if (gb && gb->ok)
+        re15_clip_root_motion_abs(e, &gb->skel, &gb->anim,   /* a1 = +0x84, a2 = +0x16C */
+                                  (int)e->motion, (int)e->anim_frame);
+}
 /* FUN_80111870(0, sel) — the dog PAW-PIN root motion (raw disasm 0x80111870-0x801118c8 /
  * decompile FUN_80111870.c): CompMatrix chain ent(+0x20) x part0-local(pool+0x18) x the leg
  * chain locals; iVar1 = pool + sel*0x204 + 0x764:
@@ -6406,6 +6590,7 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
         /* fall through */
     case 1:                                             /* run latch anim 0x8010f980 */
         s_player_grabbed = 1;
+        re15_dog_place(e);                              /* ad68 @0x8010F998 (sub 10: @0x8010FDEC) */
         if (re15_dog_anim(e)) e->sub_state_2 = 2;       /* clip done -> step 2 @0x8010f9d0 */
         break;
     case 2:                                             /* init eat loop 0x8010f9dc */
@@ -6417,6 +6602,7 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
         /* fall through */
     case 3:                                             /* EAT loop 0x8010fa1c */
         s_player_grabbed = 1;
+        re15_dog_place(e);                              /* ad68 @0x8010FA34 (sub 10: @0x8010FE88) */
         re15_dog_anim(e);                               /* eat clip 0x18 (drag root-motion) */
         if (e->grab_kill_ctr == 0) { re15_dog_sub(e, 0xb); break; }   /* feed timeout -> died @0x8010fa70 */
         e->grab_kill_ctr--;                             /* +0x9e-- @0x8010fa6c */
@@ -6444,6 +6630,7 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
         /* fall through */
     case 5:                                             /* run release anim 0x8010fb68 */
         s_player_grabbed = 1;
+        re15_dog_place(e);                              /* ad68 @0x8010FB80 (sub 10: @0x8010FFD4) */
         if (re15_dog_anim(e)) { re15_audio_room_se(7); e->sub_state_2 = 6; }  /* clip done -> Se(7) @0x8010fbd4 */
         break;
     default:                                            /* cleanup 0x8010fbec (step 6) */
@@ -6987,6 +7174,38 @@ static void re15_dog_ai_tick(int slot)
             re15_dog_grabhold(e, pl);
             break;
 
+        /* ⛔ "DER HUND REISST HIER DEN KOPF NICHT AB, IM GEGENSATZ ZU RE2 AI" — KEIN PORT-DEFEKT,
+         * NICHTS ZU BAUEN. (Nutzer-Report 2026-08-24 Teil b; Dossier hunde-finisher.md §b.)
+         * Nutzer-Regel: im Original so + im Port nicht = falsch; im Original NICHT so = richtig,
+         * nicht angleichen. Belegt in beide Richtungen:
+         *  (1) RE1.5 KANN dem Spieler Teile abreissen — die Zerlege-Maschine in STAGE4/STAGE5
+         *      (Dispatcher 0x8011621C, Phasen @0x801003AC) armiert auf Frame 0x3C sogar
+         *      RECORD 8 = DEN KOPF: `lw v0,1376(pool)` @0x80116448 (1376 = 8*172) /
+         *      `xori v0,v0,0x1062` @0x80116450 / `sw` @0x80116454, dazu +0x75=0x14 @0x80116464,
+         *      +0x82=-128 @0x80116474, +0x76=8 @0x80116484 und die Wurf-Velocity 0/-100/0
+         *      @0x80116494/0x801164A4/0x801164B4 (STAGE5-Zwilling @0x801164B8 ff.).
+         *      Record 8 = Kopf ist unabhaengig belegt (pool+0x5A0 = der game-weite Kopf-Blut-Anker,
+         *      re15_player_victim_bone_pos(8,...)).
+         *  (2) Die HUNDE-Kette fasst den Spieler-Part-Pool NIE an. Game-weiter Zensus aller
+         *      Instruktionen mit Immediate 0xCBDC (= 0x800ACBDC, der einzige Zugang zum
+         *      Spieler-Part-Pool): in STAGE1 genau 9 Treffer, ALLE `lw a2,-13348(a2)`, also
+         *      Argument a2 = FX-ANKER, nie ein Ziel — beim Hund @0x80111B38 (Maschine A Ph4),
+         *      @0x80111DD4 und @0x80111E28 (Maschine B Ph1, Blut auf 0x3A/0x29). In der
+         *      kompletten Roh-Disassemblierung 0x8010F80C-0x801102D0 (Hundeseite) und
+         *      0x80111944-0x80111F08 (Spielerseite) steht KEIN Store auf ein Part-Record,
+         *      kein `word0 |= / ^=`, kein Mesh-/Modelltausch. Beide Maschinen haben dieselbe
+         *      Bauform (5-Phasen-Maschine B, Frame-Gate auf 0x800ACAE9, Blut + Se_on) — die
+         *      Abwesenheit beim Hund ist also eine AUTOREN-Entscheidung, kein uebersehener Zweig.
+         *  (3) Auch RE2 reisst keinen Kopf ab: Zensus aller Zugriffe auf +408 in
+         *      EMD0G_MOD0.BIN = 11 Treffer, 10 auf den HUND selbst, GENAU EINER auf den Spieler
+         *      (@0x80101F8C-FF8, Frame 102, Liste 0x80105508 = {8,0,9,12}) und der setzt
+         *      `word0 |= 0x80` = FARB-BLEND (Ziel 96 / 0x00101010), nicht 0x8 Scatter, nicht
+         *      0x40 Detach, nicht 0x1062. Was im RE2-Modus anders AUSSIEHT, ist die
+         *      Choreografie (RE2-Opfer-Bank: EIN Clip mit 145 f, synchron zum Hunde-Latch-Clip
+         *      23) — nicht eine Enthauptung.
+         *  => Der einzige adressbelegte RE2-Rueckstand ist der Part-BLEND, und der ist bereits
+         *     als OPEN markiert (enemy_ai_re2_dog.c, Frame 98 Hund-Record 4 / Frame 102
+         *     Spieler-Records {8,0,9,12}). */
         case 0x0b:   /* DIED-IN-GRAB 0x801100b4 (clip 0x1b): the player died -> the dog feeds (freeze) */
             if (e->sub_state_2 == 0) {
                 re15_dog_clip(e, 0x1b);                       /* corpse-feed clip @0x801100f0 */
@@ -6995,7 +7214,24 @@ static void re15_dog_ai_tick(int slot)
                 e->sub_state_2 = 1;
             } else if (e->sub_state_2 == 1) {
                 s_player_grabbed = 1;
-                if (re15_dog_anim(e)) e->sub_state_2 = 2;      /* clip done -> feed hold */
+                /* ⛔ DER FINISHER-PLATZIERUNGSFEHLER (Nutzer-Report 2026-08-24, Teil a):
+                 * Phase 1 des Originals (@0x80110174) laedt die HUNDE-EIGENEN Zeiger und
+                 * platziert VOR dem Advance:
+                 *   80110184/88: lw a1,132(v0) / lw a2,364(v0)   ; +0x84 Skel / +0x16C Anim
+                 *   8011018c:    jal 0x8001ad68                  ; PLATZIERUNG aus Anker+Wurzel
+                 *   801101a8:    jal 0x8001f314 (a3=0x200)       ; DANACH der Frame-Advance
+                 * Der Port fuhr davon NICHTS — der Hund stand bewegungslos dort, wo ihn der
+                 * Bissprung abgestellt hatte, waehrend Clip 0x1B 1207 Einheiten Zerr-Bewegung
+                 * traegt (sx 241 -> 304@f27 -> -903@f79 -> -128@f98). */
+                re15_dog_place(e);                             /* ad68 @0x8011018C */
+                /* Pose-Halt am Clip-Ende: Phase 1 zaehlt `+0x6 += f314` (@0x801101C4-C8), ab
+                 * Phase 2 kehrt der Dispatcher sofort zurueck (`slti v0,v1,2 / beq`
+                 * @0x801100D4-D8) — f314 wird NIE wieder gerufen, der Part-Pool behaelt also
+                 * Keyframe 98. Der Port re-posiert jeden Render-Frame aus +0x95, und
+                 * re15_dog_anim wrappt auf 0 => der Hund stand nach dem Fressen wieder
+                 * aufrecht in Clip-27-Frame-0. Derselbe Fehler wie bei der Hunde-Leiche,
+                 * dieselbe Loesung (re15_dog_anim_hold_last, s. dort). */
+                if (re15_dog_anim_hold_last(e)) e->sub_state_2 = 2;   /* clip done -> feed hold */
             }
             /* byte-true: NO exit — the dog stays feeding on the corpse (+0x6>=2 -> return @0x801100cc) */
             break;

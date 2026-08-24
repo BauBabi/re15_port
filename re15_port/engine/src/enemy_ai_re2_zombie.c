@@ -51,6 +51,7 @@ const re15_emd_skeleton_t  *re15_re2z_re15_pose_skel(void) { return s_re2z_re15_
 const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_anim; }
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
+#include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
 
 /* ---- the flavor switch itself ------------------------------------------------------------- */
 
@@ -928,7 +929,8 @@ void re15_re2z_last_fx_pos(int32_t out[3])
 
 static int re2z_part_to_bone(const re15_actor_t *e, int part);   /* fwd: Part -> Bank-Bone-Slot */
 
-static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
+static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_t scale16,
+                                 int splatter_n)
 {
     int32_t p[3];
     /* `part` ist eine RE2-PART-Nummer, re15_enemy_bone_world_pos will einen BONE-SLOT der
@@ -938,7 +940,20 @@ static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
                                              /* == die Translation der Part-Matrix +0x198+n*172+72 */
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, p[0], p[1], p[2], yaw);
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, scale16, p[0], p[1], p[2], yaw);
+    if (splatter_n > 0)
+        re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, splatter_n,
+                             p[0], p[1], p[2], e->y);   /* floor = Aktor-Bodenhoehe */
+}
+
+/* ⛔ OPEN — die 0x1500 traegt KEINE @0x…-Adresse. Das Original uebergibt an jeder Emitter-
+ * Stelle eine eigene gepackte Id (z.B. 6096 = 0x17D0 @0x8010567C im Haupt-Handler, 8000
+ * @0x801093C0, 8096 @0x801096E8, 0x0A001000 @0x80104DE0-F4), der Port-Stand-in benutzt hier
+ * pauschal 0x1500. Das ist ein ALTBESTAND und wird in dieser Welle NICHT geraten-repariert —
+ * nur der TREFFER-Pfad (re2z_blood_fx_dir, s.u.) bekommt seinen belegten Wert. */
+static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
+{
+    re2z_blood_fx_scaled(e, part, yaw, 0x1500, 0);
 }
 
 /* Die ANKER-WAHL der drei Treffer-Emitter (Wurzel-Flinch @0x801050B0-158, Haupt-Handler-P0
@@ -955,9 +970,53 @@ static int re2z_blood_anchor(const re15_actor_t *e)
     return (((unsigned)e->re2z_hits1d2 % 3u) == 0u) ? 1 : 0;
 }
 
+/* ===== DER SPIELER-TREFFER-BLUTAUFTRITT (FINDING 3b) ==========================================
+ * Nutzer-Report 2026-08-24 (ROOM10D0, RE2-KI): "Ausserdem wurde mein Schuss bei ihn auf den
+ * Boden wieder nicht mit Blut quittiert."
+ *
+ * MESSUNG (probe_10d0_situp_re2 Modus 1 vs. 5, GLEICHER Schuss, GLEICHER Zombie):
+ *   RE2  : hp 90 -> 74, fx-Spawns = 1, Anker part=0 pos=(5785,-1995,25725)
+ *   RE1.5: hp 80 -> 64, fx-Spawns = 9, Anker Gore-Bone pos=(5767,-2318,25731)
+ * Es fehlt also KEIN Sheet (die Effekt-Id 0 kommt aus der globalen CORE00.ESP-Bank und ist
+ * aufloesbar) — es fehlt die MENGE: ein einzelner kleiner Sprite an der Huefte gegen
+ * Burst + 8 Splatter an der Brust.
+ *
+ * WARUM DER LIEGE-BLUTPFAD DEN REPORT NICHT ERKLAEREN KANN: der 10D0-Sitzer traegt beim
+ * Treffer grid = 0x00 (`sb zero,9` @0x80100FD4) und +0x21A = 0x0000 — beide Haelften der
+ * Liege-Klassifikation (RE1.5 @0x80101614-20, RE2-Bit @0x80105168-70) sind 0. Der schon
+ * nachgezogene EXEC[5]-case-6-Spawn (@0x801035B0-DC, Gate +0x16B == 1) ist hier strukturell
+ * unerreichbar. Zustaendig ist AUSSCHLIESSLICH dieser Emitter-Pfad.
+ *
+ * WAS SICH AENDERT — und wie es belegt ist:
+ *  (1) Die Id: das Original uebergibt in a0 low16 den Wert 6096 = 0x17D0, im DELAY-SLOT der
+ *      Zonen-Weiche, also in BEIDEN Zweigen:
+ *        80105678: beq   v1,zero,0x801056dc     ; Zone 0 -> Anker Part 1 (+244)
+ *        8010567c: addiu a0,zero,6096           ; <<< Delay-Slot, gilt fuer beide
+ *        801056d8: addiu a2,s2,72               ; Zone != 0 -> Anker Part 0 (+72)
+ *        80105704: addiu a2,a2,244
+ *        80105708: jal   0x8001bf10
+ *      Die bisherige 0x1500 an dieser Stelle hatte keinen Beleg.
+ *  (2) Der AUFTRITT kommt nach dem Nutzer-Mandat aus RE1.5 (Entscheidungen aus RE2,
+ *      Praesentation aus RE1.5): dort ist derselbe Treffer ein BURST + 8 Splatter-Trigger —
+ *        80105c54 / 80105cbc: ori a0,zero,0x2000      ; Burst-Id
+ *        80105c74 / 80105ccc: lh  a1,106(...)         ; a1 = rot_y
+ *        80105ca0:            addiu a2,s0,64          ; Anker = Gore-Bone-Part-Matrix
+ *      Port-Zwilling ist re15_enemy_hurt_blood (re15_damage.c) mit
+ *      re15_esp_fx_splatter(bank, 0, 8, …). Die RE2-ENTSCHEIDUNG bleibt unangetastet: WANN
+ *      gespawnt wird und WELCHER Anker (Zone aus +0x1D2 % 3, @0x80105650-78) kommt weiter aus
+ *      dem RE2-Gehirn — nur die Darstellung ist die RE1.5-Darstellung.
+ * ⛔ OPEN: die Trigger-ZAHL 8 des RE1.5-Splatters traegt auch in re15_damage.c:1743 kein
+ *      @0x…; sie wird hier nur gespiegelt, damit beide Flavors denselben Auftritt haben —
+ *      NICHT neu erfunden. Wer sie belegt, belegt beide Stellen zugleich.
+ * ⛔ OPEN: die Original-Geschwindigkeit a3 (Zone 0 = {0,800,0} @0x801056E0-F4; sonst aus der
+ *      Part-8-Matrix mit x -= 100*+0x15A und y += 300 @0x80105680-B4) hat im positionslosen
+ *      Port-Stand-in keinen Konsumenten. */
 static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
 {
-    re2z_blood_fx_at(e, re2z_blood_anchor(e), yaw);
+    /* scale16 = 0x2000 (@0x80105c54 / @0x80105cbc, RE1.5-Praesentation) statt der RE2-eigenen
+     * 6096 = 0x17D0 (@0x8010567C) — Mandats-Entscheidung, beide Werte oben zitiert.
+     * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78). */
+    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, 8);
 }
 
 static void re2z_blood_fx(re15_actor_t *e)
@@ -1412,23 +1471,128 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
             }
         }
         re15_re2z_grab_rootmotion(e);                              /* pose+advance(512) @0x80102A50-68 */
-        if (re2z_frame_slot(e) == 7) { e->sub_state_2 = 7; break; }/* upright cut @0x80102BD0-E4 */
+        /* ⛔ REIHENFOLGE (L7): das Original advancet +0x6 VOR der Kriecher/Aufrecht-Weiche und
+         * speichert den advancten Wert im DELAY-SLOT des Weichen-Branches, also in BEIDEN
+         * Zweigen:
+         *   80102a6c: lbu  v1,6(s1)
+         *   80102a74: addu v1,v1,v0        ; v0 = Rueckgabe des Advance @0x80102A64
+         *   80102a78: andi v0,s5,0x1
+         *   80102a7c: beq  v0,zero,0x80102bd0
+         *   80102a80: sb   v1,6(s1)        ; <<< Delay-Slot
+         * Der Port machte es umgekehrt (erst Frame-7-Schnitt, dann Advance). */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e)); /* @0x80102A6C-80 */
-        if (e->sub_state_2 == 6) {
-            if (s5 & 1) {                                          /* KRIECHER: P6 @0x80102BE8 —
-                                                                    * der RE2-Kriecher STIRBT nach
-                                                                    * dem Abwurf: `sw 7,4(s1)` +
-                                                                    * `sh -1,342(s1)` (Fix
-                                                                    * 2026-08-23 Runde 2; vorher
-                                                                    * OPEN -> Upright-Rueckfall) */
-                e->hp = -1;
-                re15_ai_set_state_word(e, 7);
-                break;
+        if (s5 & 1) {
+            /* ==================================================================================
+             * KRIECHER-ZWEIG @0x80102A84-0x80102BC8 — FINDING 4 (Nutzer-Report 2026-08-24:
+             * "fehlt der 'smash' sound, wenn ich einen am boden herankriechenden Zombie der
+             * mich beisst der Kopf zertrete. Ausserdem wird der Kopf nicht zertreten und der
+             * Zombie kriecht weiter.").
+             *
+             * ES GIBT KEIN SPIELER-KOMMANDO "TRETEN" — die vollstaendige Aufzaehlung der 28
+             * DAT_800ACA58-Schreiber ergibt {0,1,2,3,5,6,7} x Sub {0..13}, und Sub 7
+             * (Zielen/Angriff) ist ohne Waffe explizit gesperrt (`lbu v0,-13731(v0)` /
+             * `beq v0,zero,0x80032024` @0x80032008-14). Was der Nutzer sieht, ist die
+             * BEFREIUNG aus dem Bein-Biss: eine reine GEGNER-Choreografie, die den Kriecher
+             * toetet und ihm dabei den KOPF abtrennt.
+             *
+             * WARUM DER PORT DAS NIE ZEIGTE (gemessen, probe_re2z_stomp, ROOM1030, 1800
+             * Frames, echte RE2-Baenke): der Frame-7-Schnitt lief OHNE das Original-Tor
+             * `andi v0,s5,0x1 / bne v0,zero,0x80102EBC` (@0x80102BC4-C8) auch auf dem
+             * Kriecher — er verliess P5 schon bei Frame 7, also VOR Frame 22 (Kopf ab),
+             * VOR den Frames 23..41 (Hals-Stumpf) und VOR P6 (Tod), und landete im
+             * Aufrecht-Erholpfad P7/P8 -> Sturz 0x501 -> kriecht weiter:
+             *   f353 +0x6=5 frame=6 | f354 +0x6=7 frame=7 | f355..f368 +0x6=8 | f554 greift neu an
+             *   1800 Frames: +0x6 == 6 kam 0x mal vor, state 7 kam 0x mal vor, hp blieb 97.
+             * ================================================================================== */
+            int fr = re2z_frame_slot(e);                           /* lbu v1,333(s1) = +0x14D */
+            /* CHARAKTER-WEICHE @0x80102A84-AB8 auf SPIELER+0x8 (s3 = 0x800CFBF8 @0x80102668,
+             * `lbu v1,8(s3)` @0x80102A84): ungerade ODER < 11 ODER 12/13 -> ZWEIG A, genau 11
+             * -> ZWEIG A, sonst ZWEIG B. Welche RE2-Ids das im Einzelnen sind, ist ⛔ OPEN
+             * (die RE2-Spieler-FSM liegt registerbasiert in re2leon/PSX.EXE). Der Port nimmt
+             * den RE1.5-ZWILLING dieser Weiche, der byte-belegt ist: `lbu v0,-13732(v0)` =
+             * DAT_800ACA5C / `andi v0,v0,0x4` / `bne` @0x80104000-0C — Leon (&4 == 0) faehrt
+             * den Abriss-Zweig, Elza den anderen. Dasselbe Feld benutzt der RE1.5-Kriech-Grab
+             * im Port bereits (enemy_ai_common.c, g_gameflow.character & 4). */
+            if ((g_gameflow.character & 4) == 0) {
+                if (fr == 22) {                                    /* @0x80102AC0-C4 */
+                    /* DER KOPF AB — Part 8 (8*172 = 1376), derselbe Feldsatz wie die
+                     * Liege-Todes-Zerlegung, aber mit den KRIECHER-Parametern:
+                     *   80102ad8-e4: lw v0,1376(v1) / ori v0,v0,0x4a / sw v0,1376(v1)
+                     *   80102ae8   : lhu v0,118(s1)          ; rot_y
+                     *   80102af0   : sh zero,1536(v1)        ; +0xA0 = 0
+                     *   80102af4   : sh zero,1532(v1)        ; +0x9C = 0  (KEIN Vortrieb —
+                     *   80102af8   : sh zero,1530(v1)        ; +0x9A = 0   anders als der
+                     *   80102afc   : sh zero,1534(v1)        ; +0x9E = 0   fliegende
+                     *   80102b00   : sh zero,1540(v1)        ; +0xA4 = 0   Magnum-Kopf)
+                     *   80102b04   : sw a1,1488(v1)          ; +0x70 Tint = 0x00101040
+                     *                                        ;   (a1 @0x80102AC8-CC)
+                     *   80102b08   : sh v0,1528(v1)          ; +0x98 Kurs = rot_y (NICHT
+                     *                                        ;   Peilung+2048 wie bei Magnum) */
+                    e->re2z_part_flags[8] |= 0x4Au;
+                    e->re2z_part_life [8]  = 0;
+                    e->re2z_part_w9c  [8]  = 0;
+                    e->re2z_part_w9a  [8]  = 0;
+                    e->re2z_part_w9e  [8]  = 0;
+                    e->re2z_part_wa4  [8]  = 0;
+                    e->re2z_part_tint [8]  = 0x00101040u;
+                    e->re2z_part_yaw98[8]  = (int16_t)(e->rot_y & 0x0fff);
+                    /* BLUT am Abriss: Id 0x00801000 (`lui a0,0x800 / ori a0,a0,0x1000`
+                     * @0x80102AD4-DC), Anker Part 0 (`addiu a2,a2,72` @0x80102B28),
+                     * ofs (0,-600,0) @0x80102B10-1C, a1 = rot_y @0x80102B20. */
+                    re2z_blood_fx_at(e, 0, (int16_t)e->rot_y);
+                    /* >>> DAS GESUCHTE "SMASH": a0 = 2 @0x80102B2C, jal 0x8005BD6C
+                     * @0x80102B58 <<< */
+                    re2z_se(2);
+                    /* Rumble 0x80039514(4,250,0) @0x80102B60-68 — der Port hat keinen
+                     * Rumble-Kanal (⛔ OPEN, wie ueberall in diesem Modul). */
+                }
+            } else if (fr == 27) {                                 /* ZWEIG B @0x80102B38-54 */
+                e->re2z_flags21a |= 0x80u;                         /* ori 0x80 / sh 538
+                                                                    * @0x80102B50-54 */
+                re2z_se(8);                                        /* a0 = 8 @0x80102B44 */
             }
-            e->sub_state_2 = 7;                                    /* Upright ueberspringt P6 */
+            /* HALS-STUMPF-SPRUEHEN @0x80102B70-BC0: Frames 23..41 (`addiu v0,v1,-23` /
+             * `sltiu v0,v0,0x13` @0x80102B78-7C) und nur UNGERADE (`andi v0,v1,0x1` /
+             * `beq v0,zero,0x80102BC4` @0x80102B84-88); Id 4096 @0x80102BA4, ofs (0,+100,0)
+             * @0x80102B8C-A0, Anker Part 8 (`addiu a2,s0,1448` = 8*172+72 @0x80102BC0),
+             * Winkel = rot_y + rand*4 - 512 (`jal 0x80015fe8` @0x80102B9C,
+             * `sll v0,v0,2 / addu a1,a1,v0 / addiu a1,a1,-512` @0x80102BB0-B8). */
+            if (fr >= 23 && fr <= 41 && (fr & 1)) {
+                int16_t ang = (int16_t)((int)e->rot_y + (int)(re2z_rand() << 2) - 512);
+                re2z_blood_fx_at(e, 8, ang);
+            }
+            break;                                                 /* @0x80102BC4-C8: der
+                                                                    * KRIECHER verlaesst P5
+                                                                    * OHNE Frame-7-Schnitt */
         }
+        if (re2z_frame_slot(e) == 7) { e->sub_state_2 = 7; break; }/* upright cut @0x80102BD0-E4 */
+        if (e->sub_state_2 == 6)
+            e->sub_state_2 = 7;                                    /* Upright ueberspringt P6 —
+                                                                    * er kommt dort im Original
+                                                                    * nie an (Frame-7-Schnitt) */
         break;
     }
+    case 6:                                                        /* P6 @0x80102BE8 — DER
+                                                                    * KRIECHER STIRBT. Erreichbar
+                                                                    * NUR, weil P5 ihn oben nicht
+                                                                    * mehr bei Frame 7 wegschneidet
+                                                                    * und +0x6 per Clip-Ende von
+                                                                    * 5 auf 6 laeuft. */
+        re15_ai_set_state_word(e, 7);                              /* sw 7,4(s1) @0x80102BF4 */
+        e->hp = -1;                                                /* sh -1,342(s1) @0x80102BFC */
+        e->re2z_flags21a &= (uint16_t)~4u;                         /* andi 0xfffb / sh 538
+                                                                    * @0x80102C08/@0x80102C14 */
+        /* ⛔ OPEN — die word0-Gruppe `(word0 & 0xF3FFFFFF) | 0x04000000` (`lui a0,0xf3ff /
+         * ori 0xffff` @0x80102BE8-EC, `and v1,v1,a0` @0x80102C0C, `lui a0,0x400 / or / sw`
+         * @0x80102C10-20) betrifft die BITS 24..27. Das Port-Feld re15_actor_t.flags ist ein
+         * uint8_t und modelliert ausdruecklich nur das NIEDRIGSTE Byte von word0
+         * (re15_actor.h:43) — ein Store dieser Maske wuerde stillschweigend auf 0 truncaten
+         * und "erledigt" vortaeuschen. Bewusst NICHT geschrieben, solange das High-Byte kein
+         * Feld hat; im Port haengt nichts daran (der CORPSE-Zustand wird ueber state 7 und
+         * hp < 0 gefuehrt). */
+        e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 / sb 467
+                                                                    * @0x80102C24-2C */
+        break;
     case 7:                                                        /* P7 @0x80102C30: double root */
         re15_re2z_move_root(e);                                    /* 2x 0x80015e7c @0x80102C3C/50
                                                                     * (delta form: one application
@@ -2886,6 +3050,8 @@ static void re2z_decide_bump(re15_actor_t *e, re15_actor_t *pl)
 }
 
 /* ---- ACTIVE dispatcher: decision-then-executor on the SAME tick (@0x801011A8-EC) ----------- */
+static void re2z_exec_dispatch(int slot, re15_actor_t *e, re15_actor_t *pl);
+
 static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     switch (e->sub_state_1) {                                      /* DECISION @0x8010C88C */
@@ -2894,6 +3060,28 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 2:  re2z_decide_bump(e, pl); break;                       /* 0x80101F7C */
     default: break;                                                /* stubs / not RE'd */
     }
+    re2z_exec_dispatch(slot, e, pl);
+}
+
+/* Die EXECUTOR-Haelfte allein. Im Original ist das der zweite jalr des ACTIVE-Roots — und er
+ * liest +0x5 NEU, nachdem die DECISION es womoeglich umgeschrieben hat:
+ *   801011c4: jalr v0            ; DECISION-Tabelle 0x8010C88C[+0x5]
+ *   801011d0: lbu  v0,5(s0)      ; <<< +0x5 ERNEUT gelesen
+ *   801011e4: lw   v0,-14132(at) ; EXECUTOR-Tabelle 0x8010C8CC[+0x5]
+ *   801011ec: jalr v0            ; <<< der Executor des NEUEN Substates laeuft SOFORT
+ * Es gibt im Original also keinen Tick "neuer Zustand, alter Clip". Der 10D0-Sitz-Import
+ * (enemy_ai_common.c) ersetzt DECISION+EXECUTOR des Substates 0x0D durch die RE1.5-Aufsteh-
+ * maschine; wenn die 0x101 committet, muss der RE2-EXECUTOR des neuen Substates 1 noch in
+ * DIESEM Tick laufen — sonst traegt der Aktor ein Bild lang den RE1.5-Clip 0x29 (41) in einer
+ * 31-Clip-RE2-Bank. */
+void re15_re2z_exec_only(int slot)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
+    re2z_exec_dispatch(slot, &g_actors[slot], &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+}
+
+static void re2z_exec_dispatch(int slot, re15_actor_t *e, re15_actor_t *pl)
+{
     switch (e->sub_state_1) {                                      /* EXECUTOR @0x8010C8CC */
     case 0:  re2z_exec_stand(e); break;                            /* 0x801013F4 */
     case 1:  re2z_exec_walk(slot, e, pl); break;                   /* 0x80101A40 */

@@ -592,7 +592,19 @@ static void pc_re2z_se_re15(int se_id, int flag2000)
     int m;
     switch (se_id) {
     case 0: case 1: m = 1; break;
+    /* NEU (FINDING 4, 2026-08-24): der KOPF-ABRISS am abgeworfenen Kriecher. Die RE2-Seite
+     * ruft `addiu a0,zero,2` @0x80102B2C + `jal 0x8005BD6C` @0x80102B58 (Zweig A, Frame 22)
+     * bzw. `addiu a0,zero,8` @0x80102B44 (Zweig B, Frame 27). Beide Ids waren hier NICHT
+     * gemappt und fielen auf das RE2-Sample zurueck — im RE1.5-Sound-Modus also der falsche
+     * Klang fuer genau das Geraeusch, das der Nutzer vermisst.
+     * RE1.5-Zwillinge, byte-belegt in derselben Choreografie (STAGE1.BIN, Kriech-Grab P5):
+     *   Zweig A (Leon, DAT_800ACA5C & 4 == 0): `ori a0,zero,0x9` @0x80104088 +
+     *      `jal 0x800453d0` @0x800400B4  -> RAUM-SE 9 = das Abriss-Geraeusch
+     *   Zweig B (Elza): SE 9 @0x801040DC/EC, danach rng&1 ? SE 5 @0x8010410C : SE 8
+     *      @0x8010411C -> die 8 ist der Zwilling der RE2-Id 8 */
+    case 2:  m = 9; break;
     case 3:  m = 3; break;
+    case 8:  m = 8; break;
     case 4:  m = 4; break;
     case 5:  m = 5; break;
     case 9:  m = 9; break;

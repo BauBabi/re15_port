@@ -128,6 +128,16 @@ static void bringup(void)
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset(); re15_player_aim_reset();
+    /* ⛔ EFFEKT-POOL MIT ZURUECKSETZEN (2026-08-24, Skeptiker-Befund): dieser Test faehrt
+     * MEHRERE Flavors nacheinander im SELBEN Prozess. Die Blut-Partikel des vorherigen Laufs
+     * ticken sonst in den naechsten hinein und ziehen weiter aus `re15_engine_rand8()` — dem
+     * GETEILTEN Strom, aus dem auch KI-Entscheidungen schoepfen (re15_damage.c:216). Folge:
+     * der RE1.5-Zombie endete mit +0x93 = 0x81 statt 0x01 (Front/Back-Todessturz-Latch kippt,
+     * Standtod faellt vorwaerts statt rueckwaerts) — ein Messartefakt des Harness, das wie ein
+     * Flavor-Leck der Engine aussah. Bisektiert: mit diesem Reset sind alle Zeilen wieder
+     * identisch zur Baseline. Ohne den Reset misst der Test die Vorgeschichte mit. */
+    extern void re15_esp_fx_reset(void);
+    re15_esp_fx_reset();
     re15_damage_seed_rng(0x0badf00du);
     g_current_room_id = (uint16_t)s_room_id;
     if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);

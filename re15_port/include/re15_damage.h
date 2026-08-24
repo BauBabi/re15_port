@@ -86,6 +86,19 @@ int  re15_player_is_dead(void);      /* 1 iff the player HP < 0 (death). */
 void re15_player_death_reset(void);  /* clear the death-sequence timer (new game / continue / test). */
 int  re15_player_death_tick(void);   /* advance the death sequence one frame; returns frames left
                                       * (120..0; 0 = sequence done -> game over deferred; -1 = alive). */
+/* SPIELER-KOMMANDO 3 = der GENERISCHE Tod mit Todes-ANIMATION (PL00.EDD Clip 7, 113 Frames).
+ * Handler 0x800366BC / FSM 0x80036718; gelatcht vom Schaden-Resolver FUN_80012D60 @0x80012EF0
+ * (`ori v0,zero,0x3` / `sb v0,4(s1)`) und von den Gegner-Kill-Sites, die den Spieler direkt
+ * toeten — bei der KRAEHE @0x80113B48 (Dive), @0x80113F20 (Grab), @0x80114518 (Strike).
+ * Der Fress-Tod (cmd 6, Zombie/Hund) laeuft NICHT hierueber. Die volle RE-Herleitung samt
+ * Bank-/Clip-Belegen steht an der Implementierung in game_step_common.c.
+ * re15_player_death_anim_active(): 1, solange die Todes-Animation laeuft (cmd 3 hat cmd 5
+ * ersetzt -> die Opfer-FSM ist abgewuergt, @0x80113F20). */
+void re15_player_death_cmd3(void);
+int  re15_player_death_anim_active(void);
+int  re15_player_death_cmd3_active(void);   /* cmd 3 besitzt den Spieler (auch nach dem
+                                             * cmd-7-Latch @0x80036814 — +0x94 bleibt 7) */
+
 void re15_player_continue_reload(void);  /* death sequence complete (timer hit 0) -> RE "continue":
                                           * queue a reload of the CURRENT room (player HP restored by
                                           * re15_actor_init, zombies respawn) so the player is no longer

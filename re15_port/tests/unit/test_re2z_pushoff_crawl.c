@@ -225,7 +225,21 @@ static void test_crawler_attacks(void)
     re15_actor_t *c0 = &g_actors[cs[0]];
     pl->x = c0->x + 700; pl->z = c0->z; pl->y = c0->y; pl->floor = c0->floor;
 
-    int grabs = 0, s1prev[2] = { -1, -1 }, hpdrops = 0;
+    /* ⛔ ERWARTUNG ANGEPASST (2026-08-24, FINDING 4). Diese Zeile pinnte bis dahin
+     * `grabs >= 5` und `hpdrops >= 10` ueber 1800 Frames mit ZWEI Kriechern — beide Zahlen
+     * kamen aus einem Lauf, in dem der abgeworfene Kriecher WEITERLEBTE. Genau das war der
+     * Defekt: der Frame-7-Schnitt der Grab-Phase 5 lief ohne das Original-Tor
+     * `andi v0,s5,0x1 / bne v0,zero,0x80102EBC` (@0x80102BC4-C8) auch auf dem Kriecher, der
+     * damit P6 @0x80102BE8 (`sw 7,4(s1)` = CORPSE + `sh -1,342(s1)` = HP -1) NIE erreichte
+     * und in den Aufrecht-Erholpfad P7/P8 -> Sturz 0x501 fiel. Im Original stirbt der
+     * Kriecher beim Abschuetteln, also gibt es pro Kriecher GENAU EINEN Griffzyklus.
+     * Der Riegel-Befund, den dieser Pin eigentlich haelt (PL+0x1D3 Bit 0x80 wird geloest,
+     * @0x8010AEF4 / @0x80104FA0 / @0x801082E8), bleibt pruefbar: er zeigt sich jetzt daran,
+     * dass BEIDE Kriecher zum Zug kommen (nc Griffe statt nur einem) und der Riegel am Ende
+     * frei ist. Die Bisse werden weiter gezaehlt, nur nicht mehr gegen eine Zahl, die den
+     * Weiterlebenden voraussetzt.
+     * Der Kopf-/SE-/Todes-Teil der Choreografie hat einen eigenen Test: probe_re2z_stomp. */
+    int grabs = 0, s1prev[2] = { -1, -1 }, hpdrops = 0, dead = 0;
     for (int f = 0; f < 1800; f++) {
         pl->hp = 100;
         int16_t hp_prev = pl->hp;
@@ -233,17 +247,32 @@ static void test_crawler_attacks(void)
         for (int i = 0; i < nc; i++) {
             re15_actor_t *e = &g_actors[cs[i]];
             if (!e->active) continue;
-            if ((int)e->sub_state_1 == 1 && s1prev[i] != 1) grabs++;
-            s1prev[i] = (int)e->sub_state_1;
+            /* NUR im lebenden Zustand: die RE2-Leiche (state 7, Settle-Maschine @0x8010A440)
+             * rotiert +0x5 durch 1/2/3 und wuerde als Dauergriff durchgehen. */
+            if (e->state == 1 && (int)e->sub_state_1 == 1 && s1prev[i] != 1) grabs++;
+            s1prev[i] = (e->state == 1) ? (int)e->sub_state_1 : -1;
         }
         if (pl->hp < hp_prev) hpdrops++;
     }
-    CHECK(grabs >= 5,
-          "Kriecher greifen nur %dx an — der EIN-ANGREIFER-RIEGEL PL+0x1D3|0x80 wird nicht "
-          "geloest (Loescher @0x8010AEF4 / @0x80104FA0 / @0x801082E8)", grabs);
-    CHECK(hpdrops >= 10, "zu wenige Kriecher-Bisse (%d)", hpdrops);
-    printf("  Kriecher: %d Griff-Eintritte, %d HP-Abfaelle, Riegel am Ende 0x%02X\n",
-           grabs, hpdrops, pl->re2z_self1d3);
+    for (int i = 0; i < nc; i++) if (g_actors[cs[i]].hp < 0) dead++;
+    /* ⛔ SCHAERFER ALS ">= nc" (2026-08-24, Skeptiker-Befund): ">= nc" hatte bei gemessenen
+     * genau 2 Griffen NULL Reserve und ">0 Bisse" bei gemessenen 6 war praktisch leer — eine
+     * Wache, die nichts mehr faengt. Byte-true erwartet: pro Kriecher GENAU EIN Griffzyklus
+     * (er stirbt beim Abschuetteln, P6 @0x80102BE8), also grabs == nc; mehr waere die alte
+     * Weiterlebe-Regression, weniger der Riegel-Defekt. Die Biss-Untergrenze 4 liegt unter
+     * den gemessenen 6, faengt aber "die Bisse hoeren ganz auf". */
+    CHECK(grabs == nc,
+          "%d Griff-Eintritte statt genau %d — zu wenige = der EIN-ANGREIFER-RIEGEL PL+0x1D3|0x80 "
+          "wird nicht geloest (@0x8010AEF4 / @0x80104FA0 / @0x801082E8); zu viele = der "
+          "abgeworfene Kriecher lebt weiter (P6 @0x80102BE8 verfehlt)", grabs, nc);
+    CHECK(hpdrops >= 4, "nur %d Kriecher-Bisse (erwartet >= 4, gemessen 6)", hpdrops);
+    CHECK(dead == nc,
+          "%d von %d abgeworfenen Kriechern leben noch — P6 @0x80102BE8 (`sw 7,4(s1)` / "
+          "`sh -1,342(s1)`) wurde nicht erreicht", nc - dead, nc);
+    CHECK(!(pl->re2z_self1d3 & 0x80u),
+          "der Riegel PL+0x1D3 bleibt nach dem Griff gesetzt (0x%02X)", pl->re2z_self1d3);
+    printf("  Kriecher: %d Griff-Eintritte, %d HP-Abfaelle, %d/%d tot, Riegel am Ende 0x%02X\n",
+           grabs, hpdrops, dead, nc, pl->re2z_self1d3);
 }
 
 int main(void)
