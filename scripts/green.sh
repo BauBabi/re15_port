@@ -20,6 +20,9 @@ BUILD="$ROOT/re15_port/build"
 taskkill //F //IM re15_pc.exe >/dev/null 2>&1 || true
 
 # 2) configure once (tests default OFF in CMake -> force them ON)
+# ⚠️ Wenn $BUILD schon existiert, aber OHNE RE15_BUILD_TESTS konfiguriert wurde,
+#    wird hier NICHT neu konfiguriert — ctest meldet dann "No tests were found!!!"
+#    und beendet mit EXIT 0. Deshalb prueft Schritt 4 unten die Summenzeile.
 if [ ! -f "$BUILD/build.ninja" ]; then
     echo ">> configuring (PC + TESTS)…"
     cmake -S "$ROOT/re15_port" -B "$BUILD" -G Ninja \
@@ -38,7 +41,11 @@ fi
 echo ">> testing…"
 if ctest --test-dir "$BUILD" --timeout 60 --output-on-failure | tee /tmp/re15_ctest.log | tail -1; then
     line="$(grep -E '[0-9]+% tests passed' /tmp/re15_ctest.log | tail -1 || true)"
-    echo ">> GREEN BASELINE: ${line:-unknown}"
+    # KEINE Summenzeile = ctest hat gar keine Tests gefunden und trotzdem 0
+    # geliefert. Das frueher hier gedruckte ">> GREEN BASELINE: unknown" war ein
+    # falsches Gruen mit Exit 0 (gemessen 2026-08-24) -> jetzt ROT.
+    [ -n "$line" ] || { echo ">> RED — ctest lieferte KEINE Summenzeile (0 Tests konfiguriert? RE15_BUILD_TESTS=ON fehlt im vorhandenen $BUILD)"; exit 1; }
+    echo ">> GREEN BASELINE: $line"
 else
     echo ">> RED — see failures above"; exit 1
 fi

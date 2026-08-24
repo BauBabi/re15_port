@@ -84,11 +84,20 @@ rm -rf build_psx && cmake -B build_psx -DRE15_BUILD_PSX=ON -DCMAKE_TOOLCHAIN_FIL
 
 > ⚠️ **ZUERST prüfen bei `ninja: build stopped` OHNE jede `error:`-Zeile** (2026-07-07, teuer):
 > gcc/cc1 gibt **exit 1 mit NULL Diagnostik** (kein stderr, keine `.obj`, auch bei `--version`/
-> trivialem `int main(){}`), wenn **`C:\msys64\mingw64\bin` NICHT im `PATH`** ist — dann findet
-> `cc1.exe` seine abhängigen DLLs (libisl/libmpc/libwinpthread…) nicht und stirbt still. Das ist
-> KEIN Code-Fehler. Fix in der Shell (Bash-Tool): `export PATH="/c/msys64/mingw64/bin:$PATH"` vor
-> `cmake --build …` (CLAUDE.md: „mingw64 muss im PATH sein"). Symptom-Test: `gcc -fsyntax-only`
-> auf einer trivialen Datei gibt exit 1 → PATH-Problem, nicht dein Code.
+> trivialem `int main(){}`), wenn `cc1.exe` seine abhängigen DLLs nicht findet und still stirbt.
+> Das ist KEIN Code-Fehler. Auslöser sind **zwei** Fälle — der zweite hat am 2026-08-23 eine
+> tagelange Fehldiagnose („Host-mingw defekt, nur noch Docker") verursacht:
+> 1. `C:\msys64\mingw64\bin` ist **gar nicht** im `PATH`.
+> 2. ⛔ Es ist im `PATH`, aber **nicht VORNE**: Git-Bash injiziert `/mingw64/bin` =
+>    `C:\Program Files\Git\mingw64\bin` selbst auf Position 2, msys64 steht erst bei ~40.
+>    Gits `libwinpthread-1.dll` (2024-07-29) exportiert `clock_gettime64` **nicht**, GCC 15.2
+>    `cc1` importiert es → `0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND`, in Bash sichtbar als
+>    **exit 127**. `ld`/`as`/`gdb` überleben, weil sie IN `mingw64/bin` liegen.
+>
+> Fix: **`bash re15_port/tools/local_build.sh`** (setzt einen sauberen PATH, misst `cc1` im
+> Preflight). Interaktiv genügt das Prepend: `export PATH="/c/msys64/mingw64/bin:$PATH"`.
+> Symptom-Test: `gcc -fsyntax-only` auf einer trivialen Datei gibt exit 1 → PATH-Problem, nicht
+> dein Code. Voller Mechanismus + Kausalexperiment: `HANDOVER_2026-08-23.md` §0a5.
 
 Wenn ein Build fehlschlägt, analysiere den Fehler-Output wie folgt:
 
@@ -96,7 +105,7 @@ Wenn ein Build fehlschlägt, analysiere den Fehler-Output wie folgt:
 
 | Fehlertyp | Erkennungsmuster | Typische Ursache |
 |-----------|-----------------|------------------|
-| **Stiller gcc-Crash** | `FAILED`/`build stopped` OHNE `error:`, keine .obj | **mingw64/bin nicht im PATH** (cc1 lädt DLLs nicht) — s.o. |
+| **Stiller gcc-Crash** | `FAILED`/`build stopped` OHNE `error:`, keine .obj; cc1 exit 127 | **msys64/mingw64/bin nicht im PATH ODER nicht VORNE** (Gits DLLs schatten) — s.o. |
 | Compiler-Fehler | `error:` mit Datei:Zeile | Syntaxfehler, fehlende Includes, Typfehler |
 | Linker-Fehler | `undefined reference to` | Fehlende Implementierung, nicht gelinkte Library |
 | CMake-Fehler | `CMake Error` | Fehlende Abhängigkeit, ungültiger Pfad |

@@ -80,21 +80,46 @@ Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschr
 
 ## Build & Run
 
-### C-Port (`re15_port/`) — primär, verifiziert 2026-06-27 (26/26 Tests grün)
+### C-Port (`re15_port/`) — primär, verifiziert 2026-08-24 (224/224 Tests grün, lokal + Docker)
 
-Toolchain auf dieser Maschine: **mingw64 GCC 15.2** (`C:\msys64\mingw64\bin`) + **Ninja** + **CMake ≥3.21**. Kein MSVC/Clang. mingw64 muss im `PATH` sein (`CC=gcc`).
+Toolchain auf dieser Maschine: **mingw64 GCC 15.2** (`C:\msys64\mingw64\bin`) + **Ninja** + **CMake ≥3.21**. Kein MSVC/Clang.
+
+#### ⛔ Aus Git-Bash IMMER über `local_build.sh` bauen
 
 ```bash
+bash re15_port/tools/local_build.sh            # configure + build + test (Default: all)
+bash re15_port/tools/local_build.sh configure  # | build | test | clean | env
+```
+Verifiziert 2026-08-24: **224/224 Tests grün**, ~128 s, Abschlusszeile `=== LOCAL-BUILD-OK (all) — Tests 224/224`.
+
+**Warum ein blankes `cmake --build` aus Git-Bash scheitert** (gemessen, nicht vermutet):
+Git-Bash injiziert `/mingw64/bin` = `C:/Program Files/Git/mingw64/bin` selbst an PATH-Position 2,
+`C:/msys64/mingw64/bin` steht erst an ~40. `cc1.exe` liegt **nicht** in `mingw64/bin` (sondern in
+`lib/gcc/x86_64-w64-mingw32/15.2.0/`) und findet seine DLLs deshalb nur über den PATH — anders als
+`ld`/`as`/`gdb`, die durch ihr eigenes Verzeichnis geschützt sind. Gits
+`libwinpthread-1.dll` (2024-07-29) exportiert **`clock_gettime64` nicht**, GCC 15.2 `cc1` importiert
+es → `0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND`. Symptom: `gcc` beendet mit **exit 1 und 0 Byte stderr**,
+also ein **stiller** Tod ohne Fehlermeldung. `local_build.sh` setzt einen minimalen PATH mit msys64
+zuerst und misst cc1 im Preflight. (Historie: Das wurde am 2026-08-23 als „Host-Compiler defekt →
+nur noch Docker" fehlgedeutet; Reboot und pacman-Reinstall halfen nicht, weil die Toolchain nie
+kaputt war. Siehe `HANDOVER_2026-08-23.md` §0a5.)
+
+⚠️ `option(RE15_BUILD_TESTS … OFF)` ist der Default (`re15_port/CMakeLists.txt:100`). Ohne
+`-DRE15_BUILD_TESTS=ON` meldet ctest „No tests were found!!!" und beendet mit **EXIT 0** — falsches
+Grün. `local_build.sh` setzt die Option und bricht ab, wenn ctest keine Summenzeile liefert.
+
+**PowerShell ist NICHT betroffen** (gemessen: dessen PATH enthält `C:\Program Files\Git\cmd`, aber
+nicht `…\Git\mingw64\bin`). Dort gehen die rohen Befehle direkt:
+
+```powershell
 # Konfigurieren (PC-Target). RE15_ASSETS_PATH ist optional:
 # Default = re15_port/shared_assets/PSX (in-repo, dort liegen ALLE Assets).
-cmake -S re15_port -B re15_port/build -G Ninja -DRE15_BUILD_PC=ON
-
-# Bauen
+cmake -S re15_port -B re15_port/build -G Ninja -DRE15_BUILD_PC=ON -DRE15_BUILD_TESTS=ON
 cmake --build re15_port/build
-
-# Tests
 ctest --test-dir re15_port/build --timeout 30
+```
 
+```bash
 # Headless-Smoke (lädt Startraum ROOM1240, gibt JSON-Status auf stdout)
 re15_port/build/platform/pc/re15_pc.exe --headless
 ```

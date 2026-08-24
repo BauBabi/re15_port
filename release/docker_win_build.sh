@@ -2,10 +2,13 @@
 # =============================================================================
 # RE1.5 Port — Windows-Release-Build als DOCKER-CROSS-BUILD (laeuft IM Container)
 # =============================================================================
-# ANLASS (2026-08-24): der lokale mingw-Compiler der Dev-Maschine stirbt beim
-# Prozess-Start (cc1.exe 0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND — Dateien
-# intakt, ld/as laufen, Neuinstallation Rev9 und UCRT64 sterben identisch,
-# Reboot-fest). Dieser Cross-Build macht das Windows-Binary maschinenunabhaengig
+# ANLASS (2026-08-24): der lokale Build starb mit cc1.exe 0xC0000139
+# STATUS_ENTRYPOINT_NOT_FOUND. ⚠️ NACHTRAG SELBEN TAGES — die damalige Diagnose
+# "Host-Compiler tot" ist WIDERLEGT: die Toolchain war intakt, Ursache war
+# PATH-Shadowing (Gits libwinpthread-1.dll ohne clock_gettime64 stand vor
+# msys64s). Fix: re15_port/tools/local_build.sh; Details HANDOVER §0a5.
+# Dieser Cross-Build bleibt trotzdem der richtige Weg fuer Release-Artefakte:
+# er macht das Windows-Binary maschinenunabhaengig
 # reproduzierbar: Debian 11 + gcc-mingw-w64 (GCC 10) + SDL2 statisch aus dem
 # FetchContent-Quellbaum — dieselbe Konfiguration wie der native mingw64-Build
 # (-static, GUI-Subsystem via CMake/MINGW-Pfad).
@@ -15,8 +18,7 @@
 #       debian:11 bash /src/release/docker_win_build.sh
 # Ergebnis: release/win_out/re15_pc.exe (der make_package.sh-Eingang).
 # Die Engine-Verifikation laeuft weiter ueber docker_linux_build.sh (ctest);
-# die Windows-exe wird auf dem HOST verifiziert (Symbol-/Verhaltensprobe +
-# Smoke — vorhandene exes LAUFEN dort, nur der Host-Compiler ist tot).
+# die Windows-exe wird auf dem HOST verifiziert (Symbol-/Verhaltensprobe + Smoke).
 # =============================================================================
 set -euo pipefail
 
