@@ -30,6 +30,7 @@
 #include "re15_room.h"
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
+#include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -517,14 +518,9 @@ static int load_bundled_vab_pc(void)
      * retired — die alten re15_reborn-Pfade sind entfernt. Diese Kandidaten zeigen nur noch auf
      * die EINE Wurzel shared_assets/PSX; die Dateien existieren dort nicht (Loader bleibt inert),
      * das echte Spiel-Audio läuft über den SOUND/-Pfad weiter unten. */
-    static const char *vh_candidates[] = {
-        "shared_assets/PSX/DATA/TEST.VH", "../shared_assets/PSX/DATA/TEST.VH",
-        NULL
-    };
-    static const char *vb_candidates[] = {
-        "shared_assets/PSX/DATA/TEST.VB", "../shared_assets/PSX/DATA/TEST.VB",
-        NULL
-    };
+    /* 2026-08-24: eigene Wurzelliste -> gemeinsame CD-Wurzelliste (asset_root_pc.c). */
+    static const char *vh_candidates[] = { "DATA/TEST.VH", NULL };
+    static const char *vb_candidates[] = { "DATA/TEST.VB", NULL };
 
     uint8_t *vh = NULL;
     uint8_t *vb = NULL;
@@ -834,17 +830,17 @@ static int load_weapon_se_vab_pc(int weapon_id)
     }
     free(s_weap_edt); s_weap_edt = NULL; s_weap_edt_count = 0; s_weap_loaded = 0; s_weap_id = -1;
 
-    static const char *dirs[] = { "shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/",
-                                  "../shared_assets/PSX/SOUND/", NULL };
+    /* 2026-08-24: eigene cwd-Verzeichnisliste -> gemeinsame CD-Wurzelliste (asset_root_pc.c). */
+    static const char *dirs[] = { "SOUND/", NULL };
     char path[256];
     uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
     for (int i = 0; dirs[i] && !edh; i++) {
         snprintf(path, sizeof path, "%sARMS%02X.EDH", dirs[i], weapon_id);
-        edh = re15_asset_read_file(path, &edh_sz);
+        edh = re15_pc_read_cd(path, &edh_sz);
     }
     for (int i = 0; dirs[i] && !vb; i++) {
         snprintf(path, sizeof path, "%sARMS%02X.VB", dirs[i], weapon_id);
-        vb = re15_asset_read_file(path, &vb_sz);
+        vb = re15_pc_read_cd(path, &vb_sz);
     }
     if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return -1; }
     /* pBAV (VH) offset = the trailer u32 at edh[size-8] (= the EDT-prefix byte size). */
@@ -887,17 +883,17 @@ static uint8_t *s_core_old_edt = NULL;
 static int load_core_se_vab_pc(int idx)
 {
     if (s_core_loaded && s_core_idx == idx) return 0;
-    static const char *dirs[] = { "shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/",
-                                  "../shared_assets/PSX/SOUND/", NULL };
+    /* 2026-08-24: eigene cwd-Verzeichnisliste -> gemeinsame CD-Wurzelliste (asset_root_pc.c). */
+    static const char *dirs[] = { "SOUND/", NULL };
     char path[256];
     uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
     for (int i = 0; dirs[i] && !edh; i++) {
         snprintf(path, sizeof path, "%sCORE%02X.EDH", dirs[i], idx);
-        edh = re15_asset_read_file(path, &edh_sz);
+        edh = re15_pc_read_cd(path, &edh_sz);
     }
     for (int i = 0; dirs[i] && !vb; i++) {
         snprintf(path, sizeof path, "%sCORE%02X.VB", dirs[i], idx);
-        vb = re15_asset_read_file(path, &vb_sz);
+        vb = re15_pc_read_cd(path, &vb_sz);
     }
     if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return -1; }
     uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
@@ -1001,28 +997,9 @@ static int        s_re2se_bank_cur  = -1;   /* tatsaechlich geladene Bank       
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
 static uint8_t *read_re2_enemse_vbs(int *out_sz)
 {
-    char path[300];
-    uint8_t *b = NULL;
-    const char *envroot = getenv("RE15_RE2_ASSET_ROOT");
-    if (envroot && envroot[0]) {
-        snprintf(path, sizeof path, "%s/ENEMSE.VBS", envroot);
-        b = re15_asset_read_file(path, out_sz);
-    }
-#ifdef RE15_ASSET_ROOT_DEFAULT
-    if (!b) {
-        snprintf(path, sizeof path, "%s/../RE2/ENEMSE.VBS", RE15_ASSET_ROOT_DEFAULT);
-        b = re15_asset_read_file(path, out_sz);
-    }
-#endif
-    if (!b) {
-        static const char *roots[] = { "shared_assets/RE2/", "../shared_assets/RE2/",
-                                       "../../shared_assets/RE2/", "../../../shared_assets/RE2/", NULL };
-        for (int i = 0; roots[i] && !b; i++) {
-            snprintf(path, sizeof path, "%sENEMSE.VBS", roots[i]);
-            b = re15_asset_read_file(path, out_sz);
-        }
-    }
-    return b;
+    /* 2026-08-24: env RE15_RE2_ASSET_ROOT behaelt Vorrang, danach <shared>/RE2/ ueber die
+     * gemeinsame Wurzelliste (asset_root_pc.c) — die kennt das exe-Verzeichnis. */
+    return re15_pc_read_re2("ENEMSE.VBS", out_sz);
 }
 
 static int load_re2_enemy_se_pc(int bank)
@@ -1523,21 +1500,19 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     char reldir[64];
     snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04X/",
              (unsigned)(room >> 12), (unsigned)room);
-    static const char *prefix[] = { "../../../../", "../../../", "../../", "", NULL };
+    /* 2026-08-24: die cwd-Praefix-Leiter ist ersetzt durch die gemeinsame BASIS-Wurzelliste
+     * (asset_root_pc.c). synchro/ liegt im Paket neben der exe, im Repo an der Repo-Wurzel —
+     * beides deckt die Liste ab, ohne vom Arbeitsverzeichnis abzuhaengen. */
     uint8_t *wav = NULL; int wsz = 0; char path[200];
-    for (int i = 0; prefix[i] && !wav; i++) {
-        snprintf(path, sizeof path, "%s%smain%02d.wav", prefix[i], reldir, voice_id);
-        wav = re15_asset_read_file(path, &wsz);
-    }
+    snprintf(path, sizeof path, "%smain%02d.wav", reldir, voice_id);
+    wav = re15_pc_read_base(path, &wsz);
     /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
      * upper-hex probe missed (case-sensitive mounts). */
     if (!wav) {
         snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04x/",
                  (unsigned)(room >> 12), (unsigned)room);
-        for (int i = 0; prefix[i] && !wav; i++) {
-            snprintf(path, sizeof path, "%s%smain%02d.wav", prefix[i], reldir, voice_id);
-            wav = re15_asset_read_file(path, &wsz);
-        }
+        snprintf(path, sizeof path, "%smain%02d.wav", reldir, voice_id);
+        wav = re15_pc_read_base(path, &wsz);
     }
     int rate, ch, bits, dbytes;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes);
@@ -2142,8 +2117,12 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
      * (z.B. MAIN3C.BGM = 4 Byte) — daher die sz-Wache unten. */
     char path[256];
     int sz = 0;
+    /* 2026-08-24 (Nutzer-Report 0.3.19 "Musik stumm"): das war ein literaler relativer Pfad.
+     * Im Paket gibt es cwd-relativ kein SOUND/ (die Datei liegt unter shared_assets/PSX/SOUND/),
+     * und der einkompilierte Wurzel-Default zeigte auf den Docker-Container-Pfad. Jetzt ueber
+     * die gemeinsame CD-Wurzelliste (asset_root_pc.c). */
     snprintf(path, sizeof path, "SOUND/%s%02X.BGM", name, slot);
-    uint8_t *blob = re15_asset_read_file(path, &sz);
+    uint8_t *blob = re15_pc_read_cd(path, &sz);
     if (!blob || sz < 0x40) { free(blob); fprintf(stderr, "[bgm] %s%02X.BGM nicht lesbar\n", name, slot); return -1; }
 
     const int is_sub = (name[0] == 'S');
@@ -2255,10 +2234,16 @@ static void re15_amb_load_rotor(int stage, int room) {
      * default (no wrong sound); A/B any WAV via RE15_ROTOR_WAV. */
     const char *rel = getenv("RE15_ROTOR_WAV");
     if (!rel) { s_amb.pcm = NULL; s_amb.active = 0; return; }
+    /* Nur A/B-Werkzeug (RE15_ROTOR_WAV). Die alte extracted/-Leiter BLEIBT — sie ist die
+     * dokumentierte Ablage dieses Schalters — bekommt aber 2026-08-24 die gemeinsame
+     * Basis-Wurzelliste davor, damit ein WAV auch neben der exe gefunden wird. */
     static const char *roots[] = {
         "../../../../extracted/", "../../../extracted/", "../../extracted/", "extracted/", NULL
     };
     uint8_t *wav = NULL; int wsz = 0; char p[256];
+    snprintf(p, sizeof p, "extracted/%s", rel);
+    wav = re15_pc_read_base(p, &wsz);
+    if (!wav) wav = re15_pc_read_base(rel, &wsz);
     for (int i = 0; roots[i] && !wav; i++) {
         snprintf(p, sizeof p, "%s%s", roots[i], rel);
         wav = re15_asset_read_file(p, &wsz);

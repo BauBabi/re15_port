@@ -1,12 +1,18 @@
 RE1.5 Port — Version @VERSION@ (Windows x64)
 =======================================
 Eigenstaendiger PC-Port des Resident-Evil-1.5-Prototyps (MZD-Build).
-Alles Noetige liegt in diesem Ordner — Start_RE15_Port.bat doppelklicken
+Alles Noetige liegt in diesem Ordner — einfach re15_pc.exe doppelklicken
 (SDL2 ist statisch eingebaut, keine Installation/DLLs noetig).
-Assets: shared_assets\PSX (CD-Baum) und shared_assets\extracted_fx
-(Effekt-Texturen). Die .bat zeigt den Port per RE15_ASSET_ROOT/RE15_CD_ROOT
-auf beide — deshalb die .bat starten und nicht re15_pc.exe direkt.
-Savegames: re15_card.mcr (PSX-Memory-Card-Image, entsteht neben der exe).
+Assets: shared_assets\PSX (CD-Baum), shared_assets\extracted_fx
+(Effekt-Texturen), shared_assets\RE2 (RE2-KI) und synchro (Sprachausgabe).
+Die exe findet das alles NEBEN SICH, egal aus welchem Arbeitsverzeichnis
+sie gestartet wird — Start_RE15_Port.bat ist seit v0.3.20 nur noch ein
+bequemer Starter und nicht mehr erforderlich. (Bis v0.3.19 war sie es:
+ohne sie fehlten Schrift, Untertitel, Menue-Beschriftungen und Musik.)
+Wo die Assets gefunden wurden, steht in den ersten zwei Zeilen der
+debug.log ("[asset] exe-dir:" / "[asset] cd-root:").
+Savegames: re15_card.mcr — wird im AKTUELLEN Arbeitsverzeichnis angelegt,
+beim Doppelklick also neben der exe.
 
 Steuerung (Tastatur, DuckStation-Layout):
   Pfeile / WASD   Laufen (Tank-Steuerung)

@@ -42,6 +42,7 @@
                               * blob; the loader 0x8004c328 @0x8004c344-50) */
 #include "re15_inventory.h"
 #include "re15_tim.h"
+#include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 #define INV_XRES 320
 #define INV_YRES 240
@@ -107,16 +108,14 @@ static uint8_t *s_itps = NULL;      /* ITEM/ITPS.ITP raw — wide-weapon 80x30 i
                                      * block(id*0x3000)+0x21A0 (wave 2)               */
 static int      s_itps_size = 0;
 
+/* 2026-08-24: dieser Lader kannte GENAU EINE Wurzel (env RE15_CD_ROOT bzw. den einkompilierten
+ * Default) und gab danach NULL zurueck — kein einziger Fallback. Im ausgelieferten Paket zeigt
+ * der Default ins Leere, damit scheiterte schon DATA/TEX.TIM, und inv_assets_init() bricht beim
+ * ersten Fehlschlag ab: der KOMPLETTE Status-/Inventar-Bildschirm (ST_00, STPIC_00, ITEMALL.PIX,
+ * MIXITEM.PIX, ITPS.ITP, MAP%02X.PIX) fiel mit aus. Jetzt ueber die gemeinsame CD-Wurzelliste. */
 static uint8_t *load_cd(const char *rel, int *size)
 {
-    const char *cdroot = getenv("RE15_CD_ROOT");
-    char path[300];
-#ifdef RE15_CD_ROOT_DEFAULT
-    if (!cdroot || !cdroot[0]) cdroot = RE15_CD_ROOT_DEFAULT;
-#endif
-    if (!cdroot || !cdroot[0]) return NULL;
-    snprintf(path, sizeof path, "%s/%s", cdroot, rel);
-    return re15_asset_read_file(path, size);
+    return re15_pc_read_cd(rel, size);
 }
 
 static int inv_assets_init(void)

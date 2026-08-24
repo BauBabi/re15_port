@@ -123,24 +123,175 @@ check_tree() {           # $1 = fertiger Paketordner
             || die "Effekt-Textur fehlt im Paket: shared_assets/extracted_fx/$f"
     done
     # Seit v0.2: OPTIONS->AI=RE2 laedt Gegner-Modelle/-Sounds aus shared_assets/RE2/
-    # (platform/pc/main.c pc_re2_cdemd, audio_pc.c read_re2_enemse_vbs — cwd-Fallback
-    # "shared_assets/RE2/" bzw. Launcher-Export RE15_RE2_ASSET_ROOT). Fehlen die
+    # (platform/pc/main.c pc_re2_cdemd, audio_pc.c read_re2_enemse_vbs — beide ueber
+    # re15_pc_read_re2(): env RE15_RE2_ASSET_ROOT, sonst <shared>/RE2/). Fehlen die
     # Dateien, faellt die Option still auf RE1.5 zurueck -> Gate statt Stille.
     for f in CDEMD0.EMS ENEMSE.VBS; do
         [[ -s "$out/shared_assets/RE2/$f" ]] \
             || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$f (RE2-AI-Option waere still tot)"
     done
     # Voiceover: der Port laedt NICHT aus shared_assets/PSX/VOICE, sondern aus
-    # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip,
-    # Prefix-Kette "../../.." usw. + RE15_ASSET_ROOT/../..). Bis v0.3.16 fehlte
-    # synchro/ in JEDEM Paket — auf dem Dev-Rechner traf die ../../..-Probe das
-    # Repo, im ausgelieferten Paket (Deck) blieb das Voiceover stumm.
+    # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip).
+    # Seit 2026-08-24 ueber die BASIS-Wurzelliste (asset_root_pc.c): synchro/ muss
+    # neben der exe liegen. Bis v0.3.16 fehlte synchro/ in JEDEM Paket — auf dem
+    # Dev-Rechner traf die alte ../../..-Probe das Repo, im ausgelieferten Paket
+    # (Deck) blieb das Voiceover stumm.
     [[ -s "$out/synchro/STAGE1/room1170/main00.wav" ]] \
         || die "Voiceover fehlt im Paket: synchro/STAGE1/room1170/main00.wav"
     local want got
     want="$(find "$SYNCHRO/STAGE1" -name '*.wav' | wc -l)"
     got="$(find "$out/synchro/STAGE1" -name '*.wav' 2>/dev/null | wc -l)"
     (( got == want )) || die "Voiceover unvollstaendig im Paket: $got/$want WAVs unter synchro/STAGE1"
+}
+
+# =============================================================================
+# check_runtime_assets — DAS LAUFZEIT-GATE (2026-08-24)
+# =============================================================================
+# $1 = fertiger Paketordner, $2 = Name der Binary darin ("re15_pc.exe"/"re15_pc")
+#
+# WARUM ES DAS GIBT — der 0.3.19-Fehler ging an ALLEN bisherigen Gates vorbei:
+# check_tree prueft, ob Dateien im Paketordner LIEGEN. Sie lagen alle korrekt da.
+# Der Fehler war, dass die exe sie zur LAUFZEIT nicht FAND: sie suchte am
+# einkompilierten Pfad, der im Docker-Cross-Build auf den Container zeigt
+# ("/src/re15_port/shared_assets/PSX") und beim Nutzer nicht existiert. Ergebnis
+# beim Doppelklick: keine Spielschrift -> keine CONFIG-Labels, keine Untertitel,
+# keine Dialoge, keine Item-Namen; dazu stumme Musik und fehlende Effekte.
+# "Liegt da" und "wird gefunden" sind also ZWEI verschiedene Fragen — bisher hat
+# das Gate nur die erste gestellt. Dieses hier stellt die zweite.
+#
+# ES REICHT NICHT, NUR "GEFUNDEN?" ZU FRAGEN. Auf der Entwickler-Maschine zeigt
+# der einkompilierte Default INS REPO und rettet jedes noch so kaputte Paket.
+# GEMESSEN 2026-08-24: Paketordner komplett ohne shared_assets/ -> die exe meldet
+# trotzdem "RESULT ok=26 missing=0", weil alle 26 Treffer aus
+# C:/workspace/git/reAi_v2/re15_port/shared_assets/ kamen. Ein Gate, das nur den
+# Rueckgabewert prueft, waere dabei GRUEN gewesen.
+# DESHALB ist die HERKUNFT die eigentliche Pruefung: jeder Treffer muss aus dem
+# PAKETORDNER stammen. Genau das meldet der Selbsttest hinter "<-".
+#
+# ZWEI LAEUFE, weil es zwei verschiedene Nutzer-Situationen sind:
+#   (1) cwd = Paketordner   -> der Doppelklick im Explorer
+#   (2) cwd = fremdes Verzeichnis -> Verknuepfung, Steam, "Ausfuehren in ..."
+# (2) ist der schaerfere Test: nur eine exe-relative Aufloesung besteht ihn.
+#
+# Die Umgebung wird GELEERT (env -u ...): das Paket muss aus eigener Kraft
+# laufen. Sonst wuerde ausgerechnet die Variable, die den Fehler verdeckt hat,
+# den Test bestehen lassen.
+#
+# Linux-Pakete werden nur geprueft, wenn das Binary hier ueberhaupt laufen kann
+# (der Paketbau laeuft unter Windows/Git-Bash) — sonst uebersprungen mit Hinweis.
+# =============================================================================
+check_runtime_assets() {
+    local out="$1" bin="$2"
+    local exe="$out/$bin"
+    [[ -x "$exe" || -f "$exe" ]] || die "Binary fehlt im Paket: $exe"
+
+    # Kann diese Maschine das Binary starten? .exe nur unter Windows/MSYS/Cygwin,
+    # ELF nur unter Linux. Kein Wunschdenken: lieber ehrlich ueberspringen.
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) [[ "$bin" == *.exe ]] || {
+            echo "   (Laufzeit-Gate uebersprungen: $bin ist kein Windows-Binary)"; return; } ;;
+        Linux)                [[ "$bin" != *.exe ]] || {
+            echo "   (Laufzeit-Gate uebersprungen: $bin laeuft nicht unter Linux)"; return; } ;;
+        *) echo "   (Laufzeit-Gate uebersprungen: unbekanntes Host-System)"; return ;;
+    esac
+
+    # Der Paketordner als absoluter, normalisierter Pfad — damit ist er mit den
+    # Pfaden vergleichbar, die der Selbsttest meldet (der schreibt immer '/').
+    local pkg_abs
+    pkg_abs="$(cd "$out" && pwd)"
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) pkg_abs="$(cd "$out" && pwd -W 2>/dev/null || echo "$pkg_abs")" ;;
+    esac
+    pkg_abs="${pkg_abs%/}"
+
+    local scratch run_dir log rc
+    scratch="$(mktemp -d)"
+    trap 'rm -rf "$scratch"' RETURN
+
+    local pass
+    for pass in in_pkg foreign_cwd; do
+        if [[ "$pass" == in_pkg ]]; then
+            run_dir="$out"                       # (1) Doppelklick: cwd = Paketordner
+        else
+            run_dir="$scratch/cwd"; mkdir -p "$run_dir"   # (2) Verknuepfung/Steam
+        fi
+        log="$run_dir/debug.log"
+        rm -f "$log"
+
+        # Der Selbsttest schreibt seinen Bericht nach stderr; stderr geht im Port
+        # in debug.log im AKTUELLEN Arbeitsverzeichnis. Deshalb wird der Bericht
+        # von dort gelesen und nicht von stdout (eine GUI-exe hat unter Git-Bash
+        # oft gar keine Konsole, an die sie sich haengen koennte).
+        #
+        # MIT ZEITGRENZE UND AUFRAEUMEN, und zwar aus Erfahrung: kennt das Binary
+        # den Schalter NICHT (alter Build), startet es statt des Selbsttests das
+        # ganze SPIEL — ein Fenster, das nie von allein zurueckkehrt. GEMESSEN
+        # 2026-08-24 mit dem 0.3.19-Binary: der Aufruf kehrte zurueck, der Prozess
+        # lief WEITER. Ein haengender re15_pc blockiert danach den Linker.
+        # Deshalb: im Hintergrund starten, auf den Selbsttest warten (er braucht
+        # ~50 ms), und die PID am Ende in jedem Fall abraeumen.
+        rc=0
+        ( cd "$run_dir" && env -u RE15_ASSET_ROOT -u RE15_CD_ROOT -u RE15_RE2_ASSET_ROOT \
+              RE15_ASSET_SELFTEST=1 "$(cd "$out" && pwd)/$bin" ) >/dev/null 2>&1 &
+        local probe_pid=$! waited=0
+        while (( waited < 300 )); do                       # 300 x 0.1 s = 30 s Deckel
+            kill -0 "$probe_pid" 2>/dev/null || break
+            grep -q '^\[selftest\] RESULT' "$log" 2>/dev/null && break
+            sleep 0.1; waited=$((waited + 1))
+        done
+        if kill -0 "$probe_pid" 2>/dev/null; then
+            kill -9 "$probe_pid" 2>/dev/null || true
+            rc=124
+        else
+            wait "$probe_pid" 2>/dev/null || rc=$?
+        fi
+        # Sicherheitsnetz: der GUI-Prozess kann den Shell-Job ueberleben (genau so
+        # geschehen). Was dieser Lauf gestartet hat, wird hier zuverlaessig beendet.
+        case "$(uname -s)" in
+            MINGW*|MSYS*|CYGWIN*) taskkill //F //IM "$bin" >/dev/null 2>&1 || true ;;
+        esac
+
+        [[ -f "$log" ]] || die "Laufzeit-Gate ($pass): das Binary hat keine debug.log
+        geschrieben. Entweder ist es sofort abgestuerzt, oder es kennt
+        RE15_ASSET_SELFTEST nicht — dann stammt es aus einem Build VOR dem
+        2026-08-24-Fix und gehoert nicht in dieses Paket."
+
+        local result
+        result="$(grep -m1 '^\[selftest\] RESULT' "$log" || true)"
+        [[ -n "$result" ]] || die "Laufzeit-Gate ($pass): keine '[selftest] RESULT'-Zeile in
+        $log. Das Binary kennt RE15_ASSET_SELFTEST nicht -> es ist ein alter Build."
+
+        # (a) Wurde alles gefunden?
+        if [[ "$result" != *"missing=0"* ]]; then
+            echo "--- fehlende Assets ($pass) ---" >&2
+            grep '^\[selftest\] MISSING' "$log" >&2 || true
+            die "Laufzeit-Gate ($pass): $result
+        Das Paket startet beim Nutzer, findet aber die oben gelisteten Assets
+        NICHT. Genau das war der 0.3.19-Fehler."
+        fi
+
+        # (b) DIE EIGENTLICHE PRUEFUNG: kam auch alles aus dem PAKET?
+        #     Ein Treffer aus dem Repo bedeutet, dass das Paket beim Nutzer —
+        #     der dieses Repo nicht hat — an derselben Stelle scheitern wird.
+        local strays
+        strays="$(grep '^\[selftest\] OK' "$log" | sed 's/.*<- //' \
+                  | grep -v -F "$pkg_abs/" || true)"
+        if [[ -n "$strays" ]]; then
+            echo "--- Treffer AUSSERHALB des Pakets ($pass) ---" >&2
+            echo "$strays" | sort -u >&2
+            die "Laufzeit-Gate ($pass): das Paket laedt Assets von ausserhalb
+        ($pkg_abs). Auf DIESER Maschine faellt das nicht auf — beim Nutzer
+        gibt es diese Pfade nicht. Das ist exakt die Taeuschung, die den
+        0.3.19-Fehler bis zur Auslieferung durchgelassen hat."
+        fi
+
+        (( rc == 0 )) || die "Laufzeit-Gate ($pass): Selbsttest-Exitcode $rc trotz $result"
+
+        local n
+        n="$(grep -c '^\[selftest\] OK' "$log")"
+        echo "   Laufzeit-Gate $pass: $n/$n Assets, alle aus dem Paket (cwd=$(basename "$run_dir"))"
+        rm -f "$log"
+    done
 }
 
 # --- Gemeinsames Einsammeln --------------------------------------------------
@@ -159,8 +310,8 @@ copy_common() {          # $1 = Paketordner
     echo "   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ..."
     cp -r "$RE2" "$out/shared_assets/RE2"
     echo "   Voiceover kopieren (synchro/STAGE1, ~17 MB) ..."
-    # Paket-Wurzel, NICHT unter shared_assets: audio_pc.c probiert
-    # "$RE15_ASSET_ROOT/../../synchro/..." -> <pkg>/synchro/... (asset_pc.c).
+    # Paket-Wurzel, NICHT unter shared_assets: re15_pc_read_base() sucht
+    # "<Basis-Wurzel>/synchro/..." und die Basis-Wurzel ist das exe-Verzeichnis.
     # synchro/unused/ (24 MB) bleibt draussen — kein Codepfad liest es.
     mkdir -p "$out/synchro"
     cp -r "$SYNCHRO/STAGE1" "$out/synchro/STAGE1"
@@ -209,6 +360,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "linux" ]]; then
         copy_common "$OUT"
     fi
     check_tree  "$OUT"
+    check_runtime_assets "$OUT" "re15_pc"
     LINUX_FILES=$(find "$OUT" -type f | wc -l)
     echo "   OK: $(du -sh "$OUT" | cut -f1), $LINUX_FILES Dateien"
 fi
@@ -233,6 +385,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
         copy_common "$OUT"
     fi
     check_tree  "$OUT"
+    check_runtime_assets "$OUT" "re15_pc.exe"
     WIN_FILES=$(find "$OUT" -type f | wc -l)
     echo "   OK: $(du -sh "$OUT" | cut -f1), $WIN_FILES Dateien"
 fi

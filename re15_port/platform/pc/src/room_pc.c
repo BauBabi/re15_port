@@ -14,6 +14,7 @@
 #include "re15_msg.h"     /* re15_msg_clear_room_block  — Teardown (3) */
 #include "re15_light.h"   /* g_re15_room_lights_ok      — Teardown (2) */
 #include "re15_esp.h"     /* re15_esp_fx_reset / _set_room_bank — Teardown (4) */
+#include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 /* Overdraw-Layer des PC-Renderers (definiert in render_pc.c) — Teardown (1). */
 extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
@@ -41,24 +42,12 @@ int re15_room_load(unsigned room_id)
     int size = 0;
     unsigned stage = (room_id >> 12) & 0xF;
 
-    const char *roots[3]; int nroots = 0;
-    const char *er = getenv("RE15_ASSET_ROOT"); if (er && er[0]) roots[nroots++] = er;
-    const char *cr = getenv("RE15_CD_ROOT");    if (cr && cr[0]) roots[nroots++] = cr;
-#ifdef RE15_ASSET_ROOT_DEFAULT
-    roots[nroots++] = RE15_ASSET_ROOT_DEFAULT;
-#endif
-    for (int i = 0; i < nroots && !buf && stage >= 1 && stage <= 6; i++) {
-        snprintf(path, sizeof path, "%s/STAGE%u/ROOM%04X.RDT", roots[i], stage, room_id);
-        buf = re15_asset_read_file(path, &size);
-    }
-    /* cwd-relative Fallbacks (CTest/headless aus unterschiedlichen Arbeitsverzeichnissen). */
-    if (!buf && stage >= 1 && stage <= 6) {
-        static const char *rel[] = { "shared_assets/PSX/", "../shared_assets/PSX/",
-                                     "../../shared_assets/PSX/", "../../../shared_assets/PSX/", NULL };
-        for (int i = 0; rel[i] && !buf; i++) {
-            snprintf(path, sizeof path, "%sSTAGE%u/ROOM%04X.RDT", rel[i], stage, room_id);
-            buf = re15_asset_read_file(path, &size);
-        }
+    /* 2026-08-24: eigene Wurzelliste ersetzt durch die gemeinsame (asset_root_pc.c) — die kennt
+     * zusaetzlich das VERZEICHNIS DER LAUFENDEN EXE, damit findet ein Paket seine RDTs auch,
+     * wenn die exe direkt und aus einem beliebigen Arbeitsverzeichnis gestartet wird. */
+    if (stage >= 1 && stage <= 6) {
+        snprintf(path, sizeof path, "STAGE%u/ROOM%04X.RDT", stage, room_id);
+        buf = re15_pc_read_cd(path, &size);
     }
     if (!buf) {
         fprintf(stderr, "[room] PC load FAILED: room%04x.rdt not found\n", room_id);

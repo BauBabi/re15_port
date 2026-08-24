@@ -3,16 +3,17 @@
 # RE1.5 Port — Startskript (Linux x64 / Steam Deck)
 # =============================================================================
 # DIESE Datei wird gestartet (bzw. auf dem Deck als Nicht-Steam-Spiel
-# eingetragen) — NICHT das Binary direkt. Sie erledigt vier Dinge, ohne die
-# das Paket auf einem Linux-System nachweislich falsch laeuft:
+# eingetragen). Sie erledigt vier Dinge; die Punkte 2-4 laufen auf einem
+# Linux-System nachweislich falsch, wenn man das Binary direkt startet:
 #
 #   1. ASSET-WURZEL setzen (RE15_ASSET_ROOT / RE15_CD_ROOT).
-#      Ohne diese beiden greift im Port nur die cwd-relative Notkette
-#      (platform/pc/main.c, pc_read_shared) — die findet zwar
-#      shared_assets/PSX, aber NICHT die Geschwister-Texturen unter
-#      shared_assets/extracted_fx (dort gesucht als "$RE15_CD_ROOT/../
-#      extracted_fx/..."). Folge ohne Export: Blut, Muendungsfeuer, Rauch
-#      und Huelsen rendern gar nicht.
+#      SEIT 2026-08-24 NUR NOCH NOTUEBERSCHREIBUNG: das Binary ermittelt sein
+#      eigenes Verzeichnis (/proc/self/exe) und leitet daraus shared_assets/PSX,
+#      shared_assets/extracted_fx, shared_assets/RE2 und synchro/ ab
+#      (platform/pc/src/asset_root_pc.c). Vorher gab es das nicht — dann griff
+#      nur eine cwd-relative Notkette, die shared_assets/PSX fand, aber NICHT
+#      die Geschwister-Texturen unter shared_assets/extracted_fx; Folge ohne
+#      Export: Blut, Muendungsfeuer, Rauch und Huelsen rendern gar nicht.
 #   2. SDL-Render-Backend auf opengles2 zwingen.
 #      Der Port zeichnet Fades-to-black, Cutscene-Balken und Schatten mit
 #      einem SUBTRAKTIVEN Custom-Blend (SDL_BLENDOPERATION_REV_SUBTRACT).
@@ -58,8 +59,9 @@ FX="$HERE/shared_assets/extracted_fx"
 export RE15_ASSET_ROOT="$ASSETS"
 export RE15_CD_ROOT="$ASSETS"
 # Seit v0.2: OPTIONS->AI=RE2 laedt die RE2-Gegner-Assets (CDEMD0.EMS/ENEMSE.VBS)
-# von hier; ohne den Export griffe nur der cwd-relative Fallback, der nach dem
-# cd ins (ggf. ausgewichene) Arbeitsverzeichnis ins Leere laufen kann.
+# von hier. Seit 2026-08-24 findet das Binary sie auch ohne den Export neben sich
+# — der Export bleibt als explizite Notueberschreibung stehen (er zaehlt wichtig
+# nach dem cd ins ggf. ausgewichene Arbeitsverzeichnis).
 export RE15_RE2_ASSET_ROOT="$HERE/shared_assets/RE2"
 export SDL_RENDER_DRIVER="${SDL_RENDER_DRIVER:-opengles2}"
 

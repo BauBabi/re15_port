@@ -32,6 +32,7 @@
 #include "re15_room.h"   /* g_current_room_id — room-aware BG selection */
 #include "re15_bg.h"
 #include "re15_tim.h"    /* re15_tim_parse — per-cut foreground atlas decode */
+#include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 /* PC asset helpers — declared in asset_pc.c */
 extern uint8_t  *re15_asset_read_file(const char *path, int *out_size);
@@ -54,16 +55,10 @@ static uint32_t s_pri_atlas_rgba[256 * 256];
 /* Asset-Pfad-Konsolidierung (2026-07-02): die per-cut Hintergründe (BSS/ROOM####/BG##.BSS)
  * und Vordergrund-Atlanten (BSS/ROOM####/PRI##.TIM) liegen jetzt in der EINEN Asset-Wurzel
  * shared_assets/PSX. Die alten psx_dev/assets_shared- + re15_reborn-Ketten sind entfernt.
- * RE15_ASSET_ROOT_DEFAULT zeigt (CMake) auf shared_assets/PSX; die cwd-relativen Einträge
- * decken CTest/headless aus verschiedenen Arbeitsverzeichnissen ab. */
-static const char *const s_pc_bg_roots[] = {
-#ifdef RE15_ASSET_ROOT_DEFAULT
-    RE15_ASSET_ROOT_DEFAULT "/",
-#endif
-    "shared_assets/PSX/", "../shared_assets/PSX/",
-    "../../shared_assets/PSX/", "../../../shared_assets/PSX/",
-    NULL
-};
+ *
+ * 2026-08-24: die eigene Wurzelliste ist weg — alle drei Lader hier gehen jetzt ueber die
+ * gemeinsame CD-Wurzelliste (asset_root_pc.c), die zusaetzlich das Verzeichnis der laufenden
+ * exe kennt. Reihenfolge-Semantik unveraendert: erste Wurzel, die die Datei hat, gewinnt. */
 
 int re15_pri_load_cut_atlas(int cut_idx)
 {
@@ -72,13 +67,11 @@ int re15_pri_load_cut_atlas(int cut_idx)
      * re15_reborn/assets/room####_pri##.tim. */
     char rel[96];
     uint8_t *buf = NULL; int sz = 0;
-    for (int i = 0; s_pc_bg_roots[i] && !buf; i++) {
-        snprintf(rel, sizeof rel, "%sBSS/ROOM%04X/PRI%02d.TIM", s_pc_bg_roots[i], g_current_room_id, cut_idx);
-        buf = re15_asset_read_file(rel, &sz);
-    }
-    for (int i = 0; s_pc_bg_roots[i] && !buf; i++) {
-        snprintf(rel, sizeof rel, "%sroom%04x_pri%02d.tim", s_pc_bg_roots[i], g_current_room_id, cut_idx);
-        buf = re15_asset_read_file(rel, &sz);
+    snprintf(rel, sizeof rel, "BSS/ROOM%04X/PRI%02d.TIM", g_current_room_id, cut_idx);
+    buf = re15_pc_read_cd(rel, &sz);
+    if (!buf) {
+        snprintf(rel, sizeof rel, "room%04x_pri%02d.tim", g_current_room_id, cut_idx);
+        buf = re15_pc_read_cd(rel, &sz);
     }
     if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
     re15_tim_t tim;
@@ -186,25 +179,12 @@ int re15_bg_load_test_asset(void)
     /* Asset-Pfad-Konsolidierung (2026-07-02): der Boot-Platzhalter-BSS liegt jetzt in der EINEN
      * Wurzel shared_assets/PSX (DATA/TEST.BSS). Die alten re15_reborn-Pfade sind entfernt; der
      * absolute Compile-Default deckt cwd-unabhängig, die Relativen decken CTest/headless ab. */
-    static const char *candidates[] = {
-#ifdef RE15_ASSET_ROOT_DEFAULT
-        RE15_ASSET_ROOT_DEFAULT "/DATA/TEST.BSS",
-#endif
-        "shared_assets/PSX/DATA/TEST.BSS",
-        "../shared_assets/PSX/DATA/TEST.BSS",
-        "../../shared_assets/PSX/DATA/TEST.BSS",
-        "../../../shared_assets/PSX/DATA/TEST.BSS",
-        NULL
-    };
-
-    for (int i = 0; candidates[i]; i++) {
-        int sz = 0;
-        uint8_t *buf = re15_asset_read_file(candidates[i], &sz);
-        if (buf) {
-            int rv = re15_bg_load_from_bss(buf, (size_t)sz);
-            free(buf);
-            if (rv == 0) return 0;
-        }
+    int sz = 0;
+    uint8_t *buf = re15_pc_read_cd("DATA/TEST.BSS", &sz);
+    if (buf) {
+        int rv = re15_bg_load_from_bss(buf, (size_t)sz);
+        free(buf);
+        if (rv == 0) return 0;
     }
     return -100;  /* couldn't find asset */
 }
@@ -225,16 +205,16 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
      * disc layout (assets_shared/BSS/<ROOM>/BG%02d.BSS) instead of the old flat
      * re15_reborn/assets/<room>_bg##.bss. room_prefix ("room%04x") names the subdir;
      * Windows file lookup is case-insensitive so it matches the tree's ROOM%04X. */
-    for (int i = 0; s_pc_bg_roots[i]; i++) {
+    {
         /* Linux/Steam-Deck-Fix (2026-08-05): der Verzeichnisname im Asset-Baum ist ROOM%04X
          * (GROSS), room_prefix liefert aber "room%04x" (klein, bg_pc.c re15_bg_room_prefix).
          * Auf case-INsensitiven FS (Windows) egal — der bestehende Kommentar unten baute genau
          * darauf. Auf case-SENSITIVEN FS (SteamOS/ext4) fand der Lader den BG NIE, der Raum-
          * Hintergrund blieb schwarz. Jetzt GROSS geschrieben, exakt wie der PRI-Lader oben
          * (Zeile 76, "%sBSS/ROOM%04X/PRI%02d.TIM") — byte-gleiche Datei, nur Pfad-Case. */
-        snprintf(rel, sizeof rel, "%sBSS/ROOM%04X/BG%02d.BSS", s_pc_bg_roots[i], g_current_room_id, cut_idx);
+        snprintf(rel, sizeof rel, "BSS/ROOM%04X/BG%02d.BSS", g_current_room_id, cut_idx);
         int sz = 0;
-        uint8_t *buf = re15_asset_read_file(rel, &sz);
+        uint8_t *buf = re15_pc_read_cd(rel, &sz);
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
             free(buf);
@@ -250,10 +230,10 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
             return rv;
         }
     }
-    for (int i = 0; s_pc_bg_roots[i]; i++) {
-        snprintf(rel, sizeof rel, "%s%s_bg%02d.bss", s_pc_bg_roots[i], room_prefix, cut_idx);
+    {
+        snprintf(rel, sizeof rel, "%s_bg%02d.bss", room_prefix, cut_idx);
         int sz = 0;
-        uint8_t *buf = re15_asset_read_file(rel, &sz);
+        uint8_t *buf = re15_pc_read_cd(rel, &sz);
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
             free(buf);

@@ -4,9 +4,15 @@ Eigenstaendiger PC-Port des Resident-Evil-1.5-Prototyps (MZD-Build).
 Dieses Paket: Linux x64 (Steam Deck-kompatibel). Start: ./run.sh
 Alles Noetige liegt in diesem Ordner — einfach ./run.sh starten
 (SDL2 ist statisch eingebaut, keine Installation/Bibliotheken noetig).
-Assets: shared_assets/PSX (CD-Baum) und shared_assets/extracted_fx
-(Effekt-Texturen). run.sh zeigt den Port per RE15_ASSET_ROOT/RE15_CD_ROOT
-auf beide — deshalb run.sh starten und nicht re15_pc direkt.
+Assets: shared_assets/PSX (CD-Baum), shared_assets/extracted_fx
+(Effekt-Texturen), shared_assets/RE2 (RE2-KI) und synchro (Sprachausgabe).
+Die Binary findet das alles seit v0.3.20 NEBEN SICH (/proc/self/exe), egal
+aus welchem Arbeitsverzeichnis sie gestartet wird — dafuer braucht es run.sh
+nicht mehr. run.sh bleibt auf Linux/Deck trotzdem der empfohlene Start: es
+erzwingt das SDL-Backend opengles2 (sonst erscheinen Fades und Cutscene-
+Balken WEISS) und weicht bei schreibgeschuetztem Ordner mit Spielstand und
+Log nach ~/.local/share/re15 aus. Wo die Assets gefunden wurden, steht in
+den ersten zwei Zeilen der debug.log ("[asset] exe-dir:" / "[asset] cd-root:").
 Savegames: re15_card.mcr (PSX-Memory-Card-Image, entsteht neben run.sh;
 liegt das Paket schreibgeschuetzt, weicht run.sh nach
 ~/.local/share/re15 aus).

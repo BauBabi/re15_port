@@ -67,6 +67,8 @@ static inline int RNDI(float f) {
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
+#include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
+#include "asset_selftest_pc.h" /* RE15_ASSET_SELFTEST=1 — Paket-Gate, reine Diagnose */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
@@ -387,68 +389,20 @@ extern void     re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
  * shared_assets/PSX/<rel>. Dieser Baum enthält jetzt ALLES — den rohen CD-Baum (RDT unter
  * STAGE{N}/, DATA, gepackte Container) PLUS die vor-extrahierten Assets (PLD-Split, RBJ/,
  * per-cut BSS/). Die alte psx_dev/assets_shared- + re15_reborn-Abhängigkeit ist entfernt.
- * Auflösungsreihenfolge: env RE15_ASSET_ROOT → RE15_ASSET_ROOT_DEFAULT → env RE15_CD_ROOT →
- * RE15_CD_ROOT_DEFAULT (alle = shared_assets/PSX; die Defaults sind identisch) → cwd-relative
- * Fallbacks. Returns a malloc'd buffer (caller frees/keeps); *size set; NULL if not found. */
+ * Auflösungsreihenfolge (seit 2026-08-24 in asset_root_pc.c, siehe dort): env-Overrides →
+ * exe-Verzeichnis + Vorfahren → cwd + Vorfahren → Compile-Default; je Wurzel erst der
+ * CD-Baum, dann der Geschwisterbaum (extracted_fx/, RE2/), dann die Paketwurzel (synchro/).
+ * Returns a malloc'd buffer (caller frees/keeps); *size set; NULL if not found. */
 static uint8_t *pc_read_shared(const char *rel, int *size)
 {
-    /* Höchste Priorität: expliziter Asset-Wurzel-Pfad aus der Umgebung (RE15_ASSET_ROOT),
-     * macht den Build cwd-unabhängig — er findet shared_assets/PSX unabhängig davon, von wo
-     * aus die .exe gestartet wird. */
-    {
-        const char *envroot = getenv("RE15_ASSET_ROOT");
-        if (envroot && envroot[0]) {
-            char epath[256];
-            size_t L = strlen(envroot);
-            int has_sep = (L > 0 && (envroot[L-1] == '/' || envroot[L-1] == '\\'));
-            snprintf(epath, sizeof epath, "%s%s%s", envroot, has_sep ? "" : "/", rel);
-            uint8_t *eb = re15_asset_read_file(epath, size);
-            if (eb) return eb;
-        }
-    }
-#ifdef RE15_ASSET_ROOT_DEFAULT
-    {
-        char dpath[256];
-        snprintf(dpath, sizeof dpath, "%s/%s", RE15_ASSET_ROOT_DEFAULT, rel);
-        uint8_t *db = re15_asset_read_file(dpath, size);
-        if (db) return db;
-    }
-#endif
-    /* Dieselbe Wurzel über RE15_CD_ROOT (env) bzw. RE15_CD_ROOT_DEFAULT — deckt zusätzlich die
-     * Geschwister-Texturen unter extracted_fx/ ab (…/PSX/../extracted_fx/). Der Default ist mit
-     * RE15_ASSET_ROOT_DEFAULT identisch (beide = shared_assets/PSX); getrennt gehalten nur wegen
-     * der env-Override-Semantik und des ../-Geschwister-Pfads. */
-    {
-        const char *cdroot = getenv("RE15_CD_ROOT");
-#ifdef RE15_CD_ROOT_DEFAULT
-        if (!cdroot || !cdroot[0]) cdroot = RE15_CD_ROOT_DEFAULT;
-#endif
-        if (cdroot && cdroot[0]) {
-            char cpath[300];
-            snprintf(cpath, sizeof cpath, "%s/%s", cdroot, rel);        /* CD-Datei: DATA/... */
-            uint8_t *cb = re15_asset_read_file(cpath, size);
-            if (cb) return cb;
-            snprintf(cpath, sizeof cpath, "%s/../%s", cdroot, rel);     /* Geschwister: extracted_fx/... */
-            cb = re15_asset_read_file(cpath, size);
-            if (cb) return cb;
-        }
-    }
-    /* Asset-Pfad-Konsolidierung (2026-07-02): die alten assets_shared- + re15_reborn-Ketten
-     * und Legacy-Namens-Aliase sind ENTFERNT. Alles kommt aus der EINEN Wurzel shared_assets/PSX
-     * (oben via env RE15_ASSET_ROOT/RE15_CD_ROOT bzw. den Compile-Default abgedeckt). Diese
-     * cwd-relativen Einträge sind nur der Fallback für CTest/headless aus wechselnden
-     * Arbeitsverzeichnissen. */
-    {
-        static const char *rel_roots[] = { "shared_assets/PSX/", "../shared_assets/PSX/",
-                                           "../../shared_assets/PSX/", "../../../shared_assets/PSX/", NULL };
-        char path[300];
-        for (int i = 0; rel_roots[i]; i++) {
-            snprintf(path, sizeof path, "%s%s", rel_roots[i], rel);
-            uint8_t *b = re15_asset_read_file(path, size);
-            if (b) return b;
-        }
-    }
-    return NULL;
+    /* 2026-08-24 (Nutzer-Report 0.3.19): die vier hier fest verdrahteten Wurzel-Bloecke
+     * (env RE15_ASSET_ROOT -> Compile-Default -> env/Default RE15_CD_ROOT samt "/../"-
+     * Geschwisterpfad -> cwd-Leiter) sind ersetzt durch die gemeinsame Wurzelliste in
+     * asset_root_pc.c. Die deckt dieselben Faelle ab — inklusive des Geschwisterbaums
+     * (extracted_fx/ liegt NEBEN PSX/, nicht darin: genau daran ist "extracted_fx/*.tim"
+     * im Paket gescheitert) — und kennt zusaetzlich das VERZEICHNIS DER LAUFENDEN EXE.
+     * Reihenfolge: env-Overrides zuerst, exe-Verzeichnis vor cwd, Compile-Default zuletzt. */
+    return re15_pc_read_any(rel, size);
 }
 
 /* Scratch for re15_apply_room_cinematic (the shared overlay parses into this before copying
@@ -475,32 +429,15 @@ static const uint8_t *pc_cdemd(size_t *out_sz)
  * Liegt per Nutzer-Entscheidung unter shared_assets/RE2/ (NICHT im PSX-Baum — der RE1.5-
  * Single-Asset-Root bleibt unangetastet). ~10.6 MB, einmal gelesen, resident (die RE2-Bank
  * aliast hinein wie die RE1.5-Bank in ihren malloc-Blob). env RE15_RE2_ASSET_ROOT
- * uebersteuert; Default = Geschwister von RE15_ASSET_ROOT_DEFAULT (= shared_assets/PSX). */
+ * uebersteuert; sonst <shared>/RE2/ ueber die gemeinsame Wurzelliste (asset_root_pc.c). */
 static const uint8_t *pc_re2_cdemd(size_t *out_sz)
 {
     static uint8_t *s_ems = NULL; static int s_sz = 0; static int s_tried = 0;
     if (!s_tried) {
+        /* 2026-08-24: env RE15_RE2_ASSET_ROOT behaelt Vorrang, danach <shared>/RE2/ ueber die
+         * gemeinsame Wurzelliste (asset_root_pc.c) statt der eigenen cwd-Leiter. */
         s_tried = 1;
-        char path[300];
-        const char *envroot = getenv("RE15_RE2_ASSET_ROOT");
-        if (envroot && envroot[0]) {
-            snprintf(path, sizeof path, "%s/CDEMD0.EMS", envroot);
-            s_ems = re15_asset_read_file(path, &s_sz);
-        }
-#ifdef RE15_ASSET_ROOT_DEFAULT
-        if (!s_ems) {
-            snprintf(path, sizeof path, "%s/../RE2/CDEMD0.EMS", RE15_ASSET_ROOT_DEFAULT);
-            s_ems = re15_asset_read_file(path, &s_sz);
-        }
-#endif
-        if (!s_ems) {
-            static const char *roots[] = { "shared_assets/RE2/", "../shared_assets/RE2/",
-                                           "../../shared_assets/RE2/", "../../../shared_assets/RE2/", NULL };
-            for (int i = 0; roots[i] && !s_ems; i++) {
-                snprintf(path, sizeof path, "%sCDEMD0.EMS", roots[i]);
-                s_ems = re15_asset_read_file(path, &s_sz);
-            }
-        }
+        s_ems = re15_pc_read_re2("CDEMD0.EMS", &s_sz);
     }
     if (out_sz) *out_sz = (size_t)s_sz;
     return s_ems;
@@ -2177,6 +2114,18 @@ int main(int argc, char *argv[])
      * exact numerical state. */
     freopen("debug.log", "w", stderr);
     setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for live tail */
+
+    /* Erste Zeile im Log: WO die Assets herkommen. Genau diese Auskunft fehlte beim
+     * 0.3.19-Report — das Paket suchte still an einem Pfad, den es nicht gibt. */
+    re15_pc_asset_roots_report();
+
+    /* PAKET-GATE (nur Diagnose, 2026-08-24): RE15_ASSET_SELFTEST=1 prueft, ob DIESE exe aus
+     * DIESEM Arbeitsverzeichnis ihre kritischen Assets findet, meldet zu jedem Treffer den
+     * gewinnenden Vollpfad und beendet sich (0 = alles da, 2 = etwas fehlt). Steht hier, VOR
+     * render/input/audio: kein Fenster, kein Ton, ~50 ms. Ohne die Variable wirkungslos.
+     * release/make_package.sh fuehrt das gegen den fertigen Paketordner aus — genau der Test,
+     * der beim 0.3.19-Report gefehlt hat (das Gate prueft sonst nur, ob Dateien DALIEGEN). */
+    re15_pc_asset_selftest_maybe_run();
 
     re15_render_init();
     re15_input_init();

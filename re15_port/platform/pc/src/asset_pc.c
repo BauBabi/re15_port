@@ -10,6 +10,7 @@
 #include <string.h>   /* strlen — Asset-Wurzel-Fallback */
 #include "re15_engine.h"
 #include "re15_tim.h"
+#include "asset_root_pc.h"
 
 /* Defined in render_pc.c — exposed via extern for now (Phase 4.4 will refactor) */
 extern uint32_t *re15_pc_framebuffer(void);
@@ -18,8 +19,15 @@ extern void      re15_pc_put_pixel(int x, int y, uint32_t rgba);
 /* Read entire file into a malloc'd buffer. Returns NULL on failure. */
 uint8_t *re15_asset_read_file(const char *path, int *out_size)
 {
-    FILE *f = fopen(path, "rb");
-    if (!f && path && path[0] && path[1] != ':' && path[0] != '/' && path[0] != '\\') {
+    /* ⛔ REIHENFOLGE (korrigiert 2026-08-24, Skeptiker-Befund): frueher lief ZUERST das blanke
+     * fopen(path) — bei einem RELATIVEN Pfad also gegen das ARBEITSVERZEICHNIS — und die
+     * verankerten Wurzeln kamen erst danach. Gemessen: startet man die exe per Verknuepfung mit
+     * einem fremden Arbeitsverzeichnis, das SELBST einen shared_assets-Baum traegt, gewann
+     * dieser fremde Baum gegen das Paket neben der exe (nachgewiesen an DATA/ITEMALL.PIX und
+     * ITEM/ITPS.ITP) — eine stille Vermischung zweier Asset-Baeume, die niemand bemerkt.
+     * Jetzt gilt fuer relative Pfade: erst die Wurzelkette (exe-Verzeichnis zuerst), das
+     * Arbeitsverzeichnis nur noch als letzte Zuflucht. Absolute Pfade bleiben unberuehrt. */
+    if (path && path[0] && path[1] != ':' && path[0] != '/' && path[0] != '\\') {
         /* CWD-UNABHAENGIGKEIT (2026-08-01, Nutzer-Report "BGM und Soundeffekte funktionieren nicht,
          * lediglich die Voiceover"). Diese Funktion war ein blankes fopen — relative Pfade wurden
          * also gegen das ARBEITSVERZEICHNIS aufgeloest, nicht gegen die Asset-Wurzel. Der Rest des
@@ -32,20 +40,22 @@ uint8_t *re15_asset_read_file(const char *path, int *out_size)
          *
          * Fix: schlaegt der literale Pfad fehl, ein zweiter Versuch unter der Asset-Wurzel. Der
          * erste Versuch bleibt unveraendert, es kann also nichts kaputtgehen, was heute geht. */
-        const char *roots[2]; int nr = 0;
-        const char *envroot = getenv("RE15_ASSET_ROOT");
-        if (envroot && envroot[0]) roots[nr++] = envroot;
-#ifdef RE15_ASSET_ROOT_DEFAULT
-        roots[nr++] = RE15_ASSET_ROOT_DEFAULT;
-#endif
-        for (int i = 0; i < nr && !f; i++) {
-            char p[512];
-            size_t L = strlen(roots[i]);
-            int sep = (L > 0 && (roots[i][L-1] == '/' || roots[i][L-1] == '\\'));
-            snprintf(p, sizeof p, "%s%s%s", roots[i], sep ? "" : "/", path);
-            f = fopen(p, "rb");
+        /* 2026-08-24: der Fallback ging frueher NUR gegen RE15_ASSET_ROOT bzw. den
+         * EINKOMPILIERTEN Default. Im ausgelieferten Paket zeigt dieser Default auf einen
+         * Pfad, den es auf der Nutzer-Maschine nicht gibt (Docker: "/src/re15_port/..."),
+         * also blieb als einzige Chance der literale cwd-Versuch oben — und "SOUND/MAIN28.BGM"
+         * gibt es cwd-relativ nicht (die Datei liegt unter shared_assets/PSX/SOUND/). Jetzt
+         * uebernimmt der gemeinsame Wurzel-Helfer: er kennt das exe-Verzeichnis, deckt CD-,
+         * Shared- und Basis-Wurzel ab und faengt damit ALLE relativen Pfad-Bauarten
+         * ("DATA/…", "extracted_fx/…", "shared_assets/PSX/…", "synchro/…") in einem Aufruf. */
+        int rsz = 0;
+        uint8_t *rb = re15_pc_read_any(path, &rsz);
+        if (rb) {
+            if (out_size) *out_size = rsz;
+            return rb;
         }
     }
+    FILE *f = fopen(path, "rb");
     if (!f) {
         fprintf(stderr, "[asset] cannot open %s\n", path);
         return NULL;

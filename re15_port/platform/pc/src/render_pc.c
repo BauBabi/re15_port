@@ -25,6 +25,7 @@
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
+#include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 #define WINDOW_SCALE 4
 
@@ -2288,31 +2289,22 @@ static void re15_msgfont_ensure(void)
     if (s_msgfont_ready) return;
     s_msgfont_ready = 1;   /* attempt once; on failure callers fall back to 6x8 */
 
-    extern uint8_t *re15_asset_read_file(const char *, int *);
-    /* Asset-Pfad-Konsolidierung (2026-07-02): TEX.TIM kommt aus der EINEN Wurzel
-     * shared_assets/PSX (CD-Baum, unten CD-root-first). Die alten re15_reborn-Fallbacks
-     * sind entfernt; die extracted/PSX-Relativen bleiben nur als cwd-Fallback. */
-    static const char *cand[3] = {
-        "../../../../extracted/PSX/DATA/TEX.TIM",
-        "../../../extracted/PSX/DATA/TEX.TIM",
-        "extracted/PSX/DATA/TEX.TIM",
-    };
+    /* DIE SPIELSCHRIFT (Nutzer-Report 0.3.19). Bis 2026-08-24 suchte dieser Block NUR unter
+     * env RE15_CD_ROOT bzw. dem EINKOMPILIERTEN Default plus drei "extracted/PSX/…"-Relativen
+     * aus einem Baum, den es im Repo NIRGENDS mehr gibt. Im ausgelieferten Paket zeigt der
+     * Compile-Default ins Leere ("/src/re15_port/shared_assets/PSX"), also fanden alle fuenf
+     * Kandidaten nichts, s_msgfont_ok blieb 0 — und JEDER Text-Einstiegspunkt weiter unten
+     * kehrt dann sofort zurueck: keine CONFIG-Labels, keine Untertitel, keine Dialoge, keine
+     * Item-Namen. (Der 6x8-Ersatzfont ist auf Nutzerwunsch entfernt, es gibt also keinen
+     * sichtbaren Rest.) Jetzt ueber die gemeinsame CD-Wurzelliste, die das exe-Verzeichnis
+     * kennt; die toten extracted/-Kandidaten sind ersatzlos weg. */
     uint8_t *buf = NULL; int sz = 0;
-    /* Original-CD-Baum zuerst: TEX.TIM liegt dort unter DATA/ (re15_port
-     * shared_assets/PSX). RE15_CD_ROOT (env) übersteuert den Compile-Default. */
-    {
-        const char *cdroot = getenv("RE15_CD_ROOT");
-#ifdef RE15_CD_ROOT_DEFAULT
-        if (!cdroot || !cdroot[0]) cdroot = RE15_CD_ROOT_DEFAULT;
-#endif
-        if (cdroot && cdroot[0]) {
-            char p[256];
-            snprintf(p, sizeof p, "%s/DATA/TEX.TIM", cdroot);
-            buf = re15_asset_read_file(p, &sz);
-        }
+    buf = re15_pc_read_cd("DATA/TEX.TIM", &sz);
+    if (!buf) {
+        fprintf(stderr, "[font] DATA/TEX.TIM in keiner Asset-Wurzel gefunden — kein Spieltext!\n");
+        re15_pc_asset_roots_report();
+        return;
     }
-    for (int i = 0; i < 3 && !buf; i++) buf = re15_asset_read_file(cand[i], &sz);
-    if (!buf) return;
 
     re15_tim_t tim;
     if (re15_tim_parse(buf, sz, &tim) != 0 || tim.bpp != 4 || !tim.has_clut) { free(buf); return; }
@@ -2356,25 +2348,10 @@ static void re15_msgfont_ensure(void)
      * init value). avg 8.2px vs our old maxc+2 ~10px → fixes the ~17% over-wide
      * text. We load the real bytes here; maxc+2 only as a last-resort fallback. */
     {
-        static const char *dcand[3] = {
-            "../../../../extracted/PSX/BIN/DEBUG.BIN",
-            "../../../extracted/PSX/BIN/DEBUG.BIN",
-            "extracted/PSX/BIN/DEBUG.BIN",
-        };
-        uint8_t *dbg = NULL; int dsz = 0;
-        /* Original-CD-Baum zuerst: DEBUG.BIN liegt dort unter BIN/ (shared_assets/PSX). */
-        {
-            const char *cdroot = getenv("RE15_CD_ROOT");
-#ifdef RE15_CD_ROOT_DEFAULT
-            if (!cdroot || !cdroot[0]) cdroot = RE15_CD_ROOT_DEFAULT;
-#endif
-            if (cdroot && cdroot[0]) {
-                char p[256];
-                snprintf(p, sizeof p, "%s/BIN/DEBUG.BIN", cdroot);
-                dbg = re15_asset_read_file(p, &dsz);
-            }
-        }
-        for (int i = 0; i < 3 && !dbg; i++) dbg = re15_asset_read_file(dcand[i], &dsz);
+        /* 2026-08-24: dieselbe Umstellung wie bei TEX.TIM oben — gemeinsame CD-Wurzelliste
+         * statt Compile-Default + toter extracted/-Kette. */
+        int dsz = 0;
+        uint8_t *dbg = re15_pc_read_cd("BIN/DEBUG.BIN", &dsz);
         if (dbg && dsz >= 0x4416 + 256) {
             for (int code = 0; code < 256; code++)
                 s_msgfont_w[code] = dbg[0x4416 + code];   /* RAM 0x800c4416[code] */

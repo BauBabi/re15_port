@@ -1172,7 +1172,10 @@ set_tests_properties(unit_re2_sfx_cadence PROPERTIES TIMEOUT 90)
 if(TARGET SDL2::SDL2-static)
     add_executable(test_rotor_bgm_pin
         test_rotor_bgm_pin.c
-        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c)
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        # 2026-08-24: audio_pc.c loest seine Banken jetzt ueber den gemeinsamen
+        # Wurzel-Helfer auf (asset_root_pc.c) statt ueber eigene cwd-Listen.
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
     target_link_libraries(test_rotor_bgm_pin PRIVATE re15_engine SDL2::SDL2-static)
     target_include_directories(test_rotor_bgm_pin PRIVATE
         ${CMAKE_SOURCE_DIR}/include
