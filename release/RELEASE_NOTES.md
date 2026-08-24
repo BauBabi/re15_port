@@ -1,3 +1,72 @@
+# RE1.5 Port — v0.3.21 (Early Preview)
+
+## Leons letzter Laut beim Gefressenwerden — im RE2-Modus fehlte er ganz
+
+Gemeldet: *"Bei RE 2 AI - finales todes Stoehnen von Leon fehlt beim Zombie Finisher, wenn sie
+ihn fressen. Bei den Hunden genauso."*
+
+Der Laut ist im Original ein eigener Eintrag der Kern-Klangbank — mit einer halben Sekunde die
+laengste Probe darin, und im ganzen Spiel ausschliesslich in Toetungs-Sequenzen benutzt. Er
+haengt an einem festen Bild der Kollaps-Animation. Die beiden RE2-Zweige hatten schlicht
+ueberhaupt keine Klangausgabe; jetzt stoehnt Leon in allen vier Faellen (Zombie und Hund,
+beide Modi) an genau der Stelle des Originals.
+
+## Tod durch Kraehen: die richtige Animation
+
+Gemeldet: *"Die Finisher Animation wenn man von Kraehen getoetet wird stimmt noch nicht."*
+
+Die Kraehe hat gar keine eigene Toetungs-Sequenz — alle drei Angriffsarten loesen im Original
+dieselbe allgemeine Spieler-Todes-Animation aus. Genau diesen Weg kannte der Port nicht.
+Er ist jetzt nachgebaut, samt der Feinheit, dass sich die Blutlache erst am Ende der
+Animation bildet und nicht sofort.
+
+## Der Zombie im Empfangsflur steht jetzt sauber auf
+
+Gemeldet: *"beim aufstehen wiederholt sich die Eine Animation noch einmal kurz, bis er dann
+letzlich steht. Ausserdem wurde mein Schuss bei ihn auf den Boden wieder nicht mit Blut
+quittiert."*
+
+Beim Wechsel von der Sitz- in die RE2-Bewegung sackte er noch einmal kurz zusammen, bevor er
+endgueltig stand. Der Uebergang traegt jetzt sofort die richtige Animation. Und Treffer auf
+ihn am Boden bluten wieder sichtbar.
+
+## Feuer im Ostfluegel: jetzt zuckt Leon wirklich
+
+Gemeldet: *"Bei beiden fehlt noch die Verletzt Animation wenn man in das Feuer reinlaeuft bei
+ROOM 1090."* — und das zu Recht, denn der Fix aus v0.3.18 war die falsche Haelfte.
+
+Der Ausloeser hat schon damals funktioniert. Die Verletzt-Haltung wurde aber aus dem falschen
+Animations-Vorrat geholt (dem des Raumes statt dem allgemeinen des Spielers) und blieb deshalb
+auf einem einzigen eingefrorenen Bild stehen — sichtbar passierte nichts. Ueber vierzig Bilder
+gemessen: vorher ein einziges Standbild, jetzt neununddreissig verschiedene. Das betrifft auch
+Niederschlag und Sterben in jedem Raum.
+
+## Hund-Finisher: Leon liegt jetzt richtig
+
+Gemeldet: *"Bei RE 1.5 AI, stimmt die positionierung des Hundes noch nicht ganz beim finisher."*
+
+Im Original werden beim Zupacken beide Figuren auf denselben Punkt gesetzt; im Port drifteten
+sie auseinander. Der gemessene Maximalabstand faellt von 2433 auf 1583 Einheiten.
+
+## Der Kopf des kriechenden Zombies wird wieder zertreten (RE2-Modus)
+
+Gemeldet: *"Bei RE 2 AI, bspw. ROOM 1030 lobby fehlt der 'smash' sound, wenn ich einen am
+boden herankriechenden Zombie der mich beisst der Kopf zertrete. Ausserdem wird der Kopf
+nicht zertreten und der Zombie kriecht weiter."*
+
+Der Tritt ist keine eigene Spieler-Aktion, sondern gehoert zur Befreiung aus dem Bein-Biss:
+sobald Leon sich losreisst, laeuft eine feste Sequenz ab, in der der Kopf abgetrennt wird.
+Der Port hat diese Sequenz viel zu frueh verlassen — nach einem Siebtel ihrer Laufzeit — und
+sprang damit ueber den Moment des Zertretens, ueber den Halsstumpf und ueber den Tod des
+Kriechers hinweg; er richtete sich wieder auf und kroch weiter. Jetzt laeuft sie vollstaendig:
+Kopf ab, Blut, der Aufprall-Klang, und der Kriecher bleibt liegen.
+
+## Ein Punkt, der kein Fehler war
+
+*"Ausserdem reisst er hier den Kopf nicht ab im Gegensatz zu RE 2 AI"* (Hund, RE1.5-Modus) —
+richtig beobachtet, aber RE1.5 hat diesen Kopfabriss im Original schlicht nicht; nur die
+RE2-Fassung kennt ihn. Er bleibt deshalb dem RE2-Modus vorbehalten, statt ihn dazuzuerfinden.
+
 # RE1.5 Port — v0.3.20 (Early Preview)
 
 ## Das Spiel findet seine Dateien jetzt selbst — einfach re15_pc.exe starten
