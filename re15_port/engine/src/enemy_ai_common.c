@@ -564,6 +564,8 @@ static int     g_player_victim = 0;           /* 0 none / 1 struggle / 2 collaps
 static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
 static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
 static uint8_t s_victim_phase = 0;            /* struggle phase (DAT_800aca5a model: 0 intro, >=1 hold) */
+static uint8_t s_victim_standup = 0;          /* RE2-Kriech-Release: 0 = Release-Clip (P4/P5),
+                                               * 1 = Aufsteh-Clip 9 (P6/P7 @0x8010B2C4) */
 static uint8_t s_victim_fresh = 0;            /* clip (re)set THIS tick -> pose frame 0 before advancing
                                                * (byte-true f314 POST-increment: phase 0 poses +0x95=0 on
                                                * the latch tick @0x8010a398/a438; the old ++-first port
@@ -947,6 +949,7 @@ void re15_player_victim_throwoff(void)
     if (g_player_victim != 1) return;
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     g_player_victim = 3;
+    s_victim_standup = 0;
     uint8_t vi, vh, vr, vc; re15_victim_clip_map(&vi, &vh, &vr, &vc);
     player->motion = vr;                                /* release clip (zombie base+2 / dog 2) */
     player->anim_frame = 0;
@@ -1120,6 +1123,7 @@ void re15_player_victim_tick(void)
         if (!s_player_grabbed) {                        /* grab ended alive -> RELEASE finish (phases 4/5:
                                                          * clip release ONCE, then restore the free player) */
             g_player_victim = 3;
+            s_victim_standup = 0;
             player->motion = c_release;
             player->anim_frame = 0;
             s_victim_fresh = 1;
@@ -1293,12 +1297,38 @@ void re15_player_victim_tick(void)
                                                         * (Entered via re15_player_victim_throwoff — the
                                                         * zombie holds sub-steps [4..7] while this plays,
                                                         * so s_player_grabbed stays latched; no re-enter.) */
-        uint8_t clip = c_release;
+        int re2_crawl = (g_player_victim_variant >= 2) && re15_victim_is_re2_zombie();
+        uint8_t clip = (re2_crawl && s_victim_standup) ? 9 : c_release;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
+        if (re2_crawl && !s_victim_standup && !s_victim_fresh &&
+            (int)player->anim_frame + 1 >= fc) {
+            /* P6 der RE2-KRIECH-OPFER-Maschine 0x8010AF58 (@0x8010B2C4, selbst disassembliert
+             * 2026-08-24): nach dem Release-Clip folgt der AUFSTEH-Clip 9 —
+             *   `addiu v0,zero,9 / sw v0,332(s1)`  = Clip-Wort 9 (Frame 0, Rate 0 = HARTER
+             *                                        SCHNITT), `sb 7,6` Phase := 7 (immer);
+             *   behind (`andi v0,5(s1),0x1` @0x8010B2D4): `sh 2048,344(s1)` (+0x158 := 0x800,
+             *   Pose-Yaw-Offset) + `+0x76 += 0x800` (@0x8010B2E0-F0).
+             * P7 = der geteilte Advance @0x8010B2F4: Platzierung 15cb8 mit yaw+0x158, dann
+             * 959c a3=512. OHNE diese Phase blieb Leon nach dem Kriech-Release deplatziert
+             * (Regression-Bisect 2026-08-23) — deshalb waren die Varianten 2/3 geklemmt. */
+            s_victim_standup = 1;
+            player->motion = 9; player->anim_frame = 0;
+            player->anim_frac = 0;                     /* Rate 0 im Clip-Wort = harter Schnitt */
+            player->anim_blend_rate = 0x200;           /* a3 = 512 des P7-Advance @0x8010B32C */
+            if (g_player_victim_variant & 1) {         /* andi 0x1 @0x8010B2D4 */
+                player->re2z_t158 = 0x800;             /* sh 2048,344 @0x8010B2E8 */
+                player->rot_y = (int16_t)(((int)player->rot_y + 0x800) & 0x0fff);
+                                                       /* +0x76 += 0x800 @0x8010B2E0-F0 */
+            }
+            re15_victim_place(player, vb, 9, 0);       /* Frame 0 sofort platzieren (P7 laeuft
+                                                        * im Original noch im selben Tick) */
+            return;
+        }
         if (!s_victim_fresh &&
             ++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
             g_player_victim = 0;
+            s_victim_standup = 0;
             player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
                                                         * grab may commit again from here */
             /* ⛔ RE2: der EXIT loest auch den EIN-ANGREIFER-RIEGEL Spieler+0x1D3 Bit 0x80.
@@ -1358,6 +1388,7 @@ void re15_player_victim_tick(void)
 
 /* Reset on room change / death-continue reload (called from re15_enemy_reset). */
 void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
+                                      s_victim_standup = 0;
                                       g_player_victim_variant = 0; s_victim_phase = 0;
                                       s_victim_fresh = 0;
                                       g_player_victim_zombie = -1; s_grab_mercy_timer = 0; }
@@ -1930,16 +1961,18 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
         g_player_victim_type    = zombie->type;
         g_player_victim_zombie  = (int)(zombie - g_actors);
         g_player_victim_variant = (uint8_t)((unsigned)behind & 1u);
-                                      /* ⛔ OPEN (Regression-Bisect 2026-08-23): der Kriech-+2
-                                       * (@0x8010272C-44 -> Varianten 2/3 = Kriech-Opfer-Maschine
-                                       * 0x8010AF58, Bein-Biss-Clips {6..12}) ist hier BEWUSST auf
-                                       * die Steh-Maschine geklemmt (&1): ohne die P6-AUFSTEH-Phase
-                                       * (Clip 9, 48f @0x8010b2c4) laesst der Kriech-Release den
-                                       * Spieler deplatziert zurueck — gemessen (Docker-Bisect,
-                                       * teardeath PIN7 w20): nach dem Kriech-Grab trafen die
-                                       * Folgeschuesse nie wieder. Erst P6 portieren (Dossier
-                                       * triage2/crawl-bite-leon OFFEN), dann &3 scharf schalten;
-                                       * der +2-Producer im Zombie-Grab bleibt (durch &1 inert). */
+                                      /* ⛔ OPEN (Stand 2026-08-24): Kriech-Varianten 2/3 weiter
+                                       * auf die Steh-Maschine geklemmt. Die P6-AUFSTEH-Phase
+                                       * (Clip 9 @0x8010B2C4) ist inzwischen PORTIERT (s.
+                                       * Release-Finish unten, s_victim_standup) — beim
+                                       * Scharfschalten (&3) blieb aber der teardeath-w20-Pin
+                                       * rot: der Kriecher haengt nach dem Abwurf byte-true in
+                                       * der 0x20501-Bodenschleife und ist dort im Port nicht
+                                       * als liegend klassifiziert (Befund + Loesungsweg im
+                                       * OPEN-Kommentar in re2z_exec_knockdown P2). Reihenfolge
+                                       * fuers Scharfschalten: (1) RE2-Liegend-Klassifikation
+                                       * +0x21A&2 im Resolver, (2) &3 hier, (3) Docker-Pin. */
+
                                       /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
                                        * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58 */
         if (g_player_victim_variant >= 2 &&
