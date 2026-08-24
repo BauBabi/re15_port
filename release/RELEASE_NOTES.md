@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.3.19 (Early Preview)
+
+## RE2-Modus: der Kriech-Biss ist komplett — mit Aufsteh-Phase und treffbarem Kriecher
+
+In v0.3.18 stand noch: *"Die RE2-eigene Bein-Biss-Opferanimation braucht noch ihre
+Aufsteh-Phase und folgt in einer spaeteren Version."* — das ist diese Version.
+
+Packt ein RE2-Kriecher Leons Bein, laeuft jetzt die komplette RE2-eigene Opfer-Sequenz:
+die Kriech-Biss-Ringkampf-Clips (vorn und hinten), der Abwurf, und danach Leons
+Aufsteh-Animation mit der originalgetreuen Drehung. Dazu ist ein unsichtbarer Fehler
+behoben, der erst beim Scharfschalten sichtbar wurde: der vom Bein geschuettelte
+Kriecher landet im Original direkt in seiner Liege-Phase — im Port galt er dort nicht
+als "liegend" und war nach dem Abwurf **unbeschiessbar**. Der Treffer-Aufloeser kennt
+jetzt auch die RE2-eigene Liegend-Markierung; der abgeworfene Kriecher laesst sich
+wie im Original am Boden erledigen.
+
+## Unter der Haube
+
+- Beide Plattform-Binaries entstehen jetzt vollstaendig im Docker-Cross-Build
+  (docker_win_build.sh / docker_linux_build.sh); Testlauf 224/224.
+
 # RE1.5 Port — v0.3.18 (Early Preview)
 
 ## RE2-Modus: die Zombies haben wieder Fall- und Aufsteh-Geraeusche
