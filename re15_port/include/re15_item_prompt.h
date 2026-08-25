@@ -28,4 +28,12 @@ typedef void (*re15_prompt_glyph_cb)(void *ctx, unsigned char code, int attr, in
 int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
                           re15_prompt_glyph_cb cb, void *ctx);
 
+/* Ausdehnung der vendorten Original-Tabellen — fuer die Wache
+ * (tests/integration/test_item_name_census.c), damit eine erneute Kuerzung auffaellt.
+ * Namen: 102 = (0x800c4a28-0x800c495c)/2, die Offsettabelle endet physisch am Blob
+ * (Reader FUN_80028840 @0x80028840 hat KEINE Bereichspruefung).
+ * Skripte: 8 = u16[0]/2 @0x800c4fc6 (Selektor FUN_80027e68 @0x80027f30-f44). */
+int re15_item_prompt_name_count(void);
+int re15_item_prompt_script_count(void);
+
 #endif /* RE15_ITEM_PROMPT_H */

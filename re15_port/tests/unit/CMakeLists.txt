@@ -2750,6 +2750,17 @@ target_include_directories(probe_1010_kriecher PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_compile_definitions(probe_1010_kriecher PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE (Nutzer-Report 2026-08-27, FINDING E): "Im ROOM1220 sollten die Zombies
+#     eigentlich kriechen. Auch bei RE2-AI." ROOM1220 sub00 Case 0 (Datei 0x0F24) spawnt
+#     zwei Sce_em_set type=0x16 beh=0x81 (Deskriptor-Bytes @Datei 0x0F2D / 0x0F41);
+#     Cases 2/4/6/8 spawnen beh=0x02 (aufrecht). Eintritts-Cut 0 kommt aus
+#     ROOM1210 main00 @0x1CE6 (Door slot 1, Ziel (-22400,0,-6500)). Reine Messung. ---
+add_executable(probe_1220_kriecher probe_1220_kriecher.c)
+target_link_libraries(probe_1220_kriecher PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1220_kriecher PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1220_kriecher PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- MESSSONDE (Nutzer-Report 2026-08-26, FINDING 3): "Item aufgenommen -> Weltmodell muss weg".
 #     Misst in ROOM1020/ROOM1000, ob der zum Item_aot_set gehoerende Obj_model_set-Prop
 #     nach der Aufnahme (und nach Raumwechsel) noch aktiv ist. Reine Diagnose, kein add_test. ---
@@ -2758,3 +2769,42 @@ target_link_libraries(probe_item_model_1020 PRIVATE re15_engine re15_test_suppor
 target_include_directories(probe_item_model_1020 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_item_model_1020 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Nutzer-Report 2026-08-27, FINDING C): "Bei RE2-AI sind die Zombies immer noch
+#     manchmal unverwundbar, bis sie mich einmal gebissen haben." Misst die ZWEITE Sperre
+#     (Elevations-Band ueber grid&0x80 / +0x21A&2), die probe_re2z_abc Detektor (C) nicht sieht.
+#     Reine Messsonde ohne add_test. ---
+add_executable(probe_re2z_bandlock probe_re2z_bandlock.c)
+target_link_libraries(probe_re2z_bandlock PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_bandlock PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_bandlock PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# PIN (aus derselben Quelle): der Kriech-Root muss mit LEVEL-Zielen treffbar sein.
+# Vor dem Fix 2026-08-27 war LEVEL = 0 in 6/6 gemessenen Faellen. RE2s eigener
+# Kandidatenfilter FUN_800470C0 @0x80047124-64 hat kein Hoehen-Band.
+add_test(NAME unit_re2z_bandlock_pin COMMAND probe_re2z_bandlock pin)
+set_tests_properties(unit_re2z_bandlock_pin PROPERTIES TIMEOUT 180)
+
+# --- PIN (Nutzer-Befund 2026-08-27): der RE2-Boden-Aufsteher muss treffbar sein.
+#     RE2s Kandidatenfilter FUN_800470C0 @0x80047124-64 hat kein Band-Gate; Marker der
+#     Aufsteh-Phase ist +0x21A & 0x10 (@0x80103588-8c / @0x80103d08-10). ---
+add_executable(test_re2z_rise_hittable test_re2z_rise_hittable.c)
+target_link_libraries(test_re2z_rise_hittable PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_rise_hittable PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_rise_hittable PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_rise_hittable COMMAND test_re2z_rise_hittable)
+set_tests_properties(unit_re2z_rise_hittable PROPERTIES TIMEOUT 180)
+
+# --- PIN (Nutzer-Befund 2026-08-27, ROOM1220-Kriecher): der WRITHER (Typ 0x1A)
+#     persistiert im Original KEIN em-Status-Kill-Flag (kein `jal 0x8004ef90` in
+#     0x8010C1EC..0x8010D770, Zustandstabelle @0x8012093C). Seine Flag-Indizes
+#     kollidieren mit ROOM1220s Zombies (beide 0x8A/0x8B). ---
+add_executable(test_writher_kill_flag test_writher_kill_flag.c)
+target_link_libraries(test_writher_kill_flag PRIVATE re15_engine re15_test_support)
+target_include_directories(test_writher_kill_flag PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_writher_kill_flag PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_writher_kill_flag COMMAND test_writher_kill_flag)
+set_tests_properties(unit_writher_kill_flag PROPERTIES TIMEOUT 90)

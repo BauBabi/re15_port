@@ -258,7 +258,22 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
                     e->re2z_self1d3, e->hit_react, e->grid_id,
                     e->ai_dist, (cur & RE15_PAD_BIT_DOWN) ? 1 : 0);
         }
-        if (!dead) { cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE; }
+        /* ⛔ 2026-08-27: waehrend Niederschlag/Aufstehen NICHT feuern.
+         * Seit der RE2-Boden-Aufsteher treffbar ist (re15_damage.c, Rise-Marker +0x21A & 0x10,
+         * gesetzt @0x80103588-8c / @0x80103d08-10), fiel der TODESSCHUSS bei Dauerfeuer
+         * regelmaessig waehrend des Aufstehens — und dann waehlt die DEATH-Wurzel byte-true
+         * den BODEN-Zweig statt der hier gepinnten Stand-Zelle: @0x801083e4 `lhu v1,538(s0)` /
+         * @0x801083ec `andi v0,v1,0x10` / @0x801083f0 `beq` -> @0x801083f8 `jal 0x801099e4`
+         * (im Port die Zelle -2). Das Verhalten ist richtig, es ist nur eine ANDERE Kette als
+         * die, die dieser Pin beschreibt. Also wird die Kill-Sequenz so gefahren, dass der
+         * Todesschuss aufrecht faellt. Reparatur der Fixture, keine Abschwaechung: die
+         * gepinnten Zellen, Flagworte und Driftfelder bleiben unveraendert. */
+        if (!dead) {
+            /* Nur die AUFSTEH-Phase aussparen (Marker +0x21A & 0x10), nicht das Liegen —
+             * sonst aendert sich die ganze Kampf-Dynamik. */
+            int rising = (e->re2z_flags21a & 0x10u) != 0;
+            if (!rising) { cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE; }
+        }
         if (force_col0 && e->state == 3) e->re2z_hits1d2 = 0;
         frame(cur, edge);
         t->frames = f;

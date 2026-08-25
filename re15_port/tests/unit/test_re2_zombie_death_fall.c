@@ -198,9 +198,23 @@ static void run_death(int slot, int budget, death_trace_t *t, int force_crawler_
     int dead_seen = 0;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
-        uint16_t cur = RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE;
+        /* ⛔ 2026-08-27 FIXTURE-REPARATUR (keine Abschwaechung der Zusicherung).
+         * Dieser Pin misst die STAND-Todeskette (DEATH-Zelle [3][1] = FUN_80108530). Seit der
+         * RE2-Boden-Aufsteher treffbar ist (re15_damage.c, Rise-Marker +0x21A & 0x10
+         * @0x80103588-8c / @0x80103d08-10), fiel der Todesschuss bei Dauerfeuer regelmaessig
+         * WAEHREND des Aufstehens — und dann waehlt die DEATH-Wurzel byte-true den
+         * Boden-Zweig: @0x801083e4 `lhu v1,538(s0)` / @0x801083ec `andi v0,v1,0x10` /
+         * @0x801083f0 `beq` -> @0x801083f8 `jal 0x801099e4`. Das ist RICHTIG, aber es ist
+         * eine ANDERE Kette als die hier gepinnte. Also wird waehrend Niederschlag und
+         * Aufstehen (Marker +0x21A & 0x10) das Feuer eingestellt, damit der Todesschuss
+         * wieder aufrecht faellt —
+         * genau der Fall, den dieser Pin beschreibt. Der Kriecher-Gegentest
+         * (force_crawler_branch) feuert unveraendert durch. */
+        int rising = !force_crawler_branch && (e->re2z_flags21a & 0x10u) != 0;
+        uint16_t cur = rising ? RE15_PAD_BIT_R1
+                              : (uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE);
         if (!dead_seen) { t->dy_before = prev[1] - e->y; }
-        frame(cur, RE15_PAD_BIT_SQUARE);
+        frame(cur, rising ? 0 : RE15_PAD_BIT_SQUARE);
         int32_t bp[3]; re15_enemy_bone_world_pos(e, 8, bp);
 
         if (e->state == 3) {

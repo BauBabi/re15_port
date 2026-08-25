@@ -387,6 +387,19 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
          * der Flinch @0x801050A4 nicht mehr feuern. 120 HP geben der Resistenz-Kette (das, was
          * dieser Block misst) die noetigen Treffer; der Test ist damit in BEIDEN Modi gruen. */
         e->hp = 120; e->re2z_res223 = 20; e->re2z_flag222 = 0;
+        /* ⛔ 2026-08-27 FIXTURE-ISOLATION (keine Abschwaechung der Zusicherung).
+         * Dieser Block behauptet "Schnellfeuer auf DIESEN Zombie loest den Niederschlag aus".
+         * Er feuerte aber in einen Raum mit fuenf Zombies und verliess sich darauf, dass der
+         * Aufloeser immer denselben trifft. Seit der RE2-Boden-Aufsteher treffbar ist
+         * (re15_damage.c, Rise-Marker +0x21A & 0x10 @0x80103588-8c), ist ein niedergeschlagener
+         * Nachbar ab seiner Aufsteh-Phase ebenfalls Kandidat und gewinnt die Auswahl.
+         * GEMESSEN: ab Schuss 6 ging der Schaden an Slot 4 (st=1.5, 21A=8012 = Aufsteher,
+         * hp 71->55->39->23->7), waehrend das Testziel bei hp=40 stehen blieb.
+         * Das ist byte-true richtig (RE2s Aufloeser FUN_800470C0 @0x80047124-64 kennt kein
+         * Band-Gate) — also muss der Test sein Ziel isolieren, statt die Auswahl zu raten. */
+        for (int q = 1; q < RE15_ACTOR_MAX; q++)
+            if (&g_actors[q] != e && g_actors[q].type >= 0x10 && g_actors[q].type <= 0x18)
+                g_actors[q].active = 0;
         int knocked = 0;
         for (int shot = 0; shot < 10 && !knocked; shot++) {
             e->hit_react = 0;

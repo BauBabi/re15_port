@@ -11494,12 +11494,43 @@ void re15_enemy_ai_run_all(int combat_active)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
-        /* EM-STATUS KILL PERSISTENCE (byte-true FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c set
-         * flag[entity+0x1C6] on the death-commit): once an enemy is a CORPSE (state 7), set its em-status
-         * kill flag so re-entering the room does NOT respawn it (the Sce_em_set gate GETs this flag). The
-         * set is idempotent (re15_game_flag_set writes the same bit) so doing it each corpse tick == the
-         * PSX's set-once-on-commit for the spawn gate's purposes; em_flag_id==0xFF means "never persist". */
-        if (e->state == (uint8_t)RE15_AI_STATE_CORPSE && e->em_flag_id != 0xFF)
+        /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
+         * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
+         * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt
+         * (das Sce_em_set-Gate liest dieses Flag). Der Set ist idempotent, das Ticken je
+         * Corpse-Frame ist fuer den Spawn-Gate-Zweck also gleichwertig zum Set-once-on-commit;
+         * em_flag_id == 0xFF heisst "nie persistieren".
+         *
+         * ⛔ DIE REGEL IST TYP-GEBUNDEN, NICHT UNIVERSELL — Nutzer-Befund 2026-08-27:
+         * "im ROOM1220 sollten die Zombies eigentlich kriechen. Auch bei RE2-AI."
+         * Die Kriech-Kette selbst ist in Ordnung (v0.3.23, gemessen fuer Typ 0x16 in
+         * probe_1220_kriecher Fall A). Der Raum war schlicht LEER: die zwei Kriecher aus
+         * ROOM1220 sub00 Case 0 tragen die em-Status-Indizes 0x8A/0x8B — und dieselben zwei
+         * Indizes tragen die WRITHER (Typ 0x1A) in ROOM1210. Byte-Beleg:
+         *     ROOM1220.RDT @0x0F2A  44 00 16 81 00 00 00 8a   (slot0, Typ 0x16, beh 0x81, Flag 8A)
+         *     ROOM1210.RDT @0x1D86  44 00 1a 00 00 00 00 8a   (slot0, Typ 0x1A, beh 0x00, Flag 8A)
+         * Wer in ROOM1210 die Writher erschoss, loeschte damit die Kriecher aus ROOM1220
+         * (gemessen: Case 0 spawnt dann NULL Aktoren, in beiden Flavors).
+         *
+         * Im ORIGINAL persistiert der Writher-Tod NICHT. Eigener Byte-Scan der ganzen
+         * STAGE1.BIN nach `jal 0x8004ef90` (Wort 0x0C013BE4) findet 17 Treffer —
+         *   Zombie-Familie 0x80106E0C 0x8010716C 0x801074B0 0x801076EC 0x80107DC4
+         *                  0x801082A4 0x801082C4 0x80109100 0x801096FC
+         *   Hund           0x80110FBC 0x801111D4
+         *   Kraehe         0x801146EC 0x801152C4
+         *   Typ 0x26       0x80116AC8
+         *   Gorilla 0x27   0x8011B8F4 0x8011BAFC 0x8011BD24
+         * und KEINEN im Writher-Bereich 0x8010C1EC..0x8010D770 (Wurzel 0x8010C1EC,
+         * Zustandstabelle @0x8012093C = {0x8010C33C, 0x8010C488, 0x8010D0F8, 0x8010D474,
+         * 0x8010D768, 0, 0, 0x8010D770} — selbst gedumpt). Sein Todes-Commit schreibt nur
+         * `sw v0,4(a0)` @0x8010d5bc, ohne Flag-Setzer.
+         *
+         * ⚠ OFFEN: eine vollstaendige POSITIV-Liste der persistierenden Typen ist damit noch
+         * nicht hergeleitet — die 17 Adressen sind gefunden, aber nur der Writher-Bereich ist
+         * ueber seine Zustandstabelle sauber abgegrenzt. Typ 0x1A kommt game-weit nur in
+         * ROOM1210/1211 vor (RDT-Zensus), der Ausschluss ist also fuer sich regressionsfrei. */
+        if (e->state == (uint8_t)RE15_AI_STATE_CORPSE && e->em_flag_id != 0xFF &&
+            e->type != 0x1Au)
             re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);
         uint8_t t = e->type;
         if (t == 0x10 || t == 0x11 || t == 0x16 || t == 0x12 || t == 0x18) { /* the STAGE1-5 zombie

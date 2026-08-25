@@ -417,6 +417,36 @@ static inline int re15_prop_culled(int obj_type, int32_t x, int32_t z,
     return x < -25000;   /* no region (cinematic): hide only the SCD-sunk box */
 }
 
+/* Region-Cull fuer ESP-EFFEKT-Sprites (Strom, Feuer, Blut, Muendungsfeuer, ...).
+ *
+ * Nutzer-Befund 2026-08-27: "alle Effekte wie Strom, Feuer etc. ueberdecken nicht sichtbare
+ * Bereiche. Zum Beispiel wenn sie noch um die Ecke hinter der Kamera sind." Der Port hatte
+ * den Test fuer Effekte nicht — nur fuer Spieler, NPCs und Props.
+ *
+ * Das Original fuehrt ihn in der ESP-Slot-Schleife FUN_80053240 aus, direkt nach den beiden
+ * flags-Gates und VOR jeder Projektion (Disasm aus PSX.EXE):
+ *     800532fc: andi v0,v1,0x1           ; aktiv?
+ *     80053308: andi v0,v1,0x2           ; sichtbar?
+ *     80053314: lh   v0,-68(s0)          ; s0 = slot+0x6C -> slot+0x28 = World-X
+ *     8005331c: lw   a1,-14448(a1)       ; a1 = DAT_800ac790 = Region-Quad des aktiven Cuts
+ *     80053330: lh   v0,-64(s0)          ;                     slot+0x2C = World-Z
+ *     80053334: jal  0x80014368          ; Punkt-im-Viereck (X/Z) == re15_aot_point_in_quad
+ *     8005333c: beq  v0,zero,0x80053474  ; AUSSERHALB -> Slot komplett uebersprungen
+ * Getestet wird slot+0x28, also genau die Position, die FUN_800534c4 danach per RTPS
+ * projiziert (@0x800534ec `addiu v0,a1,40`) — im Port x+xlat_x / z+xlat_z.
+ *
+ * Im Gegensatz zu re15_prop_culled gibt es hier KEIN Sink-Gate als Rueckfall: das Original
+ * kennt fuer Effekte nur den Quad-Test, und ohne Region-Daten (cam_has_region == 0) kann er
+ * nicht laufen -> dann wird gezeichnet. Rueckgabe 1 = CULL, 0 = zeichnen. */
+static inline int re15_esp_fx_culled(int32_t x, int32_t z,
+                                     int cam_has_region,
+                                     const int16_t region_xs[4],
+                                     const int16_t region_zs[4])
+{
+    if (!cam_has_region) return 0;
+    return !re15_aot_point_in_quad(x, z, region_xs, region_zs);
+}
+
 /* RENDER-Y eines Obj_model_set-Props — byte-true FUN_8002c18c (Objekt-Draw-Loop).
  *
  * Nutzer-Report v0.3.5 ROOM1090: "Kiste im Raum ist irgendwie zu tief."

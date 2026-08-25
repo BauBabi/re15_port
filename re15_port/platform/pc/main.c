@@ -201,7 +201,10 @@ FILE *pc_fx_log_handle(void)
     return s_fxlog;
 }
 
-static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
+/* `has_region`/`rxs`/`rzs` = das Region-Quad des AKTIVEN Cuts (DAT_800ac790). Effekte werden
+ * damit genauso gecullt wie Spieler/NPCs/Props — siehe den Beleg am Test unten. */
+static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
+                            int has_region, const int16_t rxs[4], const int16_t rzs[4])
 {
     extern int  re15_render_pc_dbg_slot_loaded(int slot);
     extern void re15_render_pc_bind_tim_slot(int slot);
@@ -210,6 +213,31 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         const re15_esp_fx_t *f = re15_esp_fx_get(i);
         if (!f) continue;
         if (!re15_esp_fx_visible(f)) continue;   /* byte-true flags bit1 gate (frozen/staggered = hidden) */
+        /* ⛔ REGION-SICHTBARKEIT — Nutzer-Befund 2026-08-27: "alle Effekte wie Strom, Feuer etc.
+         * ueberdecken nicht sichtbare Bereiche. Zum Beispiel wenn sie noch um die Ecke hinter der
+         * Kamera sind." Der Port hatte diesen Test fuer Effekte NICHT (nur fuer Spieler/NPC/Prop).
+         *
+         * Das Original testet ihn in der ESP-Slot-Schleife FUN_80053240 unmittelbar nach den
+         * beiden flags-Gates und VOR jeder Projektion (eigene Disasm, PSX.EXE):
+         *     800532fc: andi v0,v1,0x1          ; aktiv?
+         *     80053300: beq  v0,zero,0x80053474
+         *     80053308: andi v0,v1,0x2          ; sichtbar?
+         *     8005330c: beq  v0,zero,0x80053474
+         *     80053310: addiu a0,sp,24          ; a0 = &{x,y,z}
+         *     80053314: lh   v0,-68(s0)         ; s0 = slot+0x6C -> slot+0x28 = World-X
+         *     8005331c: lw   a1,-14448(a1)      ; a1 = DAT_800ac790 = Region-Quad des akt. Cuts
+         *     80053324: lh   v0,-66(s0)         ;                     slot+0x2A = World-Y
+         *     80053330: lh   v0,-64(s0)         ;                     slot+0x2C = World-Z
+         *     80053334: jal  0x80014368         ; Punkt-im-Viereck (X/Z)
+         *     8005333c: beq  v0,zero,0x80053474 ; AUSSERHALB -> Slot komplett uebersprungen
+         * DAT_800ac790 wird beim Cut-Wechsel gesetzt: @0x80021c00 `jal 0x80014324` /
+         * @0x80021c0c `sw v0,-14448(at)`; FUN_80014324 liefert den ersten RVD-Satz (20 Byte,
+         * Tabelle = RDT+0x28) mit rec[+2] == Cut-Id.
+         * Getestet wird slot+0x28 — genau das Feld, aus dem FUN_800534c4 danach per RTPS
+         * projiziert (@0x800534ec `addiu v0,a1,40`), im Port also x+xlat_x / z+xlat_z.
+         * has_region == 0 -> nicht cullen (dieselbe Rueckfallregel wie bei Prop/NPC/Spieler). */
+        if (re15_esp_fx_culled(f->x + f->xlat_x, f->z + f->xlat_z, has_region, rxs, rzs))
+            continue;
         /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
          * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
@@ -254,7 +282,16 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
                 fflush(fl);
             }
         }
-        if (vz < 64) continue;                        /* H28 near-clip (also guards gte_divide) */
+        /* Near-Gate byte-true: das Original verwirft das Sprite, wenn SZ3>>2 == 0, also SZ3 < 4
+         * (FUN_800534c4, eigene Disasm: @0x80053570 `lw a0,4(sp)` = SZ3, @0x80053578
+         * `sra v0,a0,2`, @0x8005357c `beq v0,zero,0x800537b4` = Epilog). SZ3 ist der von der GTE
+         * auf [0,0xFFFF] gesaettigte View-Z -> hinter der Kamera = 0 = verworfen. Der Port hatte
+         * hier `vz < 64` und liess damit Effekte mit View-Z 4..63 aus. Ein FAR-Gate hat das
+         * Original nicht (SZ3 saettigt, OT-Index SZ3>>6 <= 1023 = OT-Groesse). */
+        {
+            uint32_t sz3_gate = (uint32_t)(vz < 0 ? 0 : (vz > 0xFFFF ? 0xFFFF : vz));
+            if ((sz3_gate >> 2) == 0) continue;       /* auch der Schutz fuer gte_divide unten */
+        }
         /* byte-true GTE RTPS centre: IR1/IR2 sat s16, SZ3 sat u16, UNR reciprocal, IR·n>>16
          * (truncation, not RNDI). Matches the mesh/shadow projection exactly. */
         int32_t _ir1 = vx > 0x7FFF ? 0x7FFF : (vx < -0x8000 ? -0x8000 : vx);
@@ -316,7 +353,19 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
             abe = (bank == global_bank && (f->effect_id == 2 || f->effect_id == 3));
             abr = 0;
         }
-        int z = (int)vz >> 4;
+        /* OT-Skala: Effekt-Sprite und sprite.pri-Maske haengen im Original in DERSELBEN OT
+         * (Basis 0x800AA6D8 + cut<<12 — ESP: @0x80053270 `addiu a3,a3,-13772` = 0x800aca34,
+         * @0x8005329c `addiu a3,a3,-9052` = 0x800AA6D8, @0x800532d0 `sll a2,a2,12`; Maske:
+         * @0x800395e0 `addiu s5,s5,-13772` / @0x800395e4 `addiu s6,s5,-9052` = dieselbe Basis).
+         * Die Buckets: Effekt = SZ3>>6 (@0x80053620 `sra v0,a0,6`), Maske = depth
+         * (@0x80039658 `sll a0,a0,2` = Wort-Index). Der PC sortiert nach View-Z und bildet
+         * Masken auf depth*64 ab (re15_pri.h:107); damit die RELATIVE Ordnung stimmt, muss
+         * key(Effekt)/64 == SZ3>>6 gelten, also key = vz. Mesh-Dreiecke benutzen bereits
+         * avgz = vz (main.c PROJECT_VERT `(out_wz) = (float)_vz`).
+         * Vorher stand hier `vz >> 4` = Faktor 16 zu klein: jeder Effekt landete damit vor
+         * praktisch jeder Maske und jedem Charakter-Mesh — die sprite.pri-Verdeckung ("hinter
+         * der Wand") war fuer Effekte faktisch abgeschaltet. */
+        int z = (int)vz;
         {
             extern FILE *pc_fx_log_handle(void);
             FILE *fl = pc_fx_log_handle();
@@ -7480,7 +7529,8 @@ re_title:;
 
             /* Phase ESP-C: draw the op-0x3a effect particles (after actors, in cam_view scope). */
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, (int)g_scd.cam_id);
-            pc_draw_effects(&cam_view, cx, cy);
+            pc_draw_effects(&cam_view, cx, cy,
+                            cam_has_region, cam_region_xs, cam_region_zs);
         }
 
         /* INVENTORY on top (Phase 8.26 / wave 1): the screen is drawn into the framebuffer, but

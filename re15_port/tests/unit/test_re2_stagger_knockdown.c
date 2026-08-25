@@ -175,7 +175,7 @@ static void run(const char *tag, int budget, result_t *out)
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
     for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
 
-    int hp_last = e->hp, fx_last = -1, stag_prev = 0, kd_prev = 0;
+    int hp_last = e->hp, fx_last = -1, stag_prev = 0, kd_prev = 0, stuck_since = -1;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
         int was_stagger = (e->state == 2 && e->re2z_flag222 == 1);
@@ -187,9 +187,23 @@ static void run(const char *tag, int budget, result_t *out)
         if (stag) out->stagger_frames++;
         int kd = (e->state == 1 && e->sub_state_1 == 5);
         if (kd) { out->knockdown = 1; if (!kd_prev && stag_prev) out->kd_after_stagger = 1; }
-        /* Bricking-Wache: nach dem Sturz (zurueck in den Gang) MUSS +0x1D3 wieder 0 sein —
-         * sonst waere der Zombie mit dem Original-Filter fuer immer untreffbar. */
-        if (kd_prev && !kd && e->re2z_self1d3 != 0) out->self1d3_stuck = 1;
+        /* Bricking-Wache: nach dem Sturz (zurueck in den Gang) MUSS +0x1D3 wieder 0 werden —
+         * sonst waere der Zombie mit dem Original-Filter fuer immer untreffbar.
+         *
+         * ⛔ 2026-08-27 PRAEZISIERT, NICHT ABGESCHWAECHT. Vorher wurde +0x1D3 im EINEN Frame
+         * des Uebergangs kd->!kd geprueft. Seit der Boden-Aufsteher treffbar ist
+         * (re15_damage.c, Rise-Marker +0x21A & 0x10 @0x80103588-8c / @0x801036b8-bc) trifft
+         * der Dauerbeschuss den Zombie WAEHREND des Aufstehens, und dann laeuft in genau
+         * diesem Frame legitim eine NEUE Treffer-Reaktion mit +0x1D3 |= 0x80
+         * (@0x801069a4-b0). Das ist kein Bricking, sondern der neue Treffer.
+         * Die eigentliche Behauptung ist "+0x1D3 bleibt nicht haengen" — also wird jetzt
+         * gemessen, ob es innerhalb von STUCK_FRAMES wieder 0 wird. Gegenprobe, dass die
+         * Wache dadurch nicht blind wird: probe_re2z_abc Detektor (C) "untreffbar >= 200
+         * Frames bei hp>=0" meldet 0 Vorfaelle in 0/64 Seeds. */
+        #define STUCK_FRAMES 120
+        if (kd_prev && !kd && e->re2z_self1d3 != 0 && stuck_since < 0) stuck_since = f;
+        if (e->re2z_self1d3 == 0) stuck_since = -1;
+        if (stuck_since >= 0 && (f - stuck_since) >= STUCK_FRAMES) out->self1d3_stuck = 1;
         stag_prev = stag; kd_prev = kd;
 
         /* Blut-Position: wurde in diesem Frame gespawnt, wenn sich Part/Position aendert oder
@@ -279,10 +293,23 @@ int main(void)
           "(Wurzel/Knochen = %d/%d) — die Wurzel ist der Boden, das war 'Blut am Fuss'",
           r.fx_at_root, r.fx_at_bone);
 
-    /* (B2) die Anker-REGEL direkt am Zustand, unabhaengig davon, welche Zone der Schuss trifft. */
-    {   int slot = standing_zombie();
-        if (slot > 0) anchor_rule(&g_actors[slot], slot);
-        else { printf("FAIL: (B2) kein Zombie fuer die Anker-Regel\n"); fails++; }
+    /* (B2) die Anker-REGEL direkt am Zustand, unabhaengig davon, welche Zone der Schuss trifft.
+     *
+     * ⛔ 2026-08-27: Die Fixture-Auswahl war `standing_zombie()`. Seit der Boden-Aufsteher
+     * treffbar ist (re15_damage.c, Rise-Marker +0x21A & 0x10 @0x80103588-8c), ueberlebt der
+     * Dauerbeschuss oben keinen STEHENDEN Zombie mehr — die Auswahl lieferte -1 und die
+     * Anker-Regel wurde gar nicht mehr geprueft. `anchor_rule` setzt Zustand, Zone und
+     * Reserven ohnehin selbst; sie braucht nur IRGENDEINEN Zombie-Slot. Das grid-Bit wird
+     * dabei geloescht, weil die Regel den aufrechten Fall meint. Das ist eine Reparatur der
+     * Fixture, keine Abschwaechung der Zusicherung — die fuenf Zonen-Faelle laufen unveraendert. */
+    {   int slot = -1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].type >= 0x10 && g_actors[s].type <= 0x18) { slot = s; break; }
+        if (slot > 0) {
+            g_actors[slot].active  = 1;
+            g_actors[slot].grid_id = (uint8_t)(g_actors[slot].grid_id & 0x7fu);
+            anchor_rule(&g_actors[slot], slot);
+        } else { printf("FAIL: (B2) kein Zombie-Slot fuer die Anker-Regel\n"); fails++; }
     }
 
     free(buf);

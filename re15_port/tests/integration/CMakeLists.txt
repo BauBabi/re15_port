@@ -61,6 +61,24 @@ target_include_directories(test_flag_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_flag_census COMMAND test_flag_census)
 set_tests_properties(integration_flag_census PROPERTIES TIMEOUT 30)
 
+# --- Item-Namen-Zensus: jede ausgelieferte Item-ID hat einen Prompt-Namen ---
+# (Nutzer-Befund 2026-08-27 "will you take ?" beim Feuerloescher = Tabelle bei 48
+#  Eintraegen abgeschnitten; das Original hat 102, FUN_80028840 @0x80028840.)
+add_executable(test_item_name_census test_item_name_census.c)
+target_link_libraries(test_item_name_census PRIVATE re15_engine re15_test_support)
+target_include_directories(test_item_name_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_item_name_census COMMAND test_item_name_census)
+set_tests_properties(integration_item_name_census PROPERTIES TIMEOUT 60)
+
+# --- ESP-Effekt-Region-Cull (Nutzer-Befund 2026-08-27 "Effekte ueberdecken nicht
+#     sichtbare Bereiche"): FUN_80053240 @0x80053334 jal FUN_80014368 gegen
+#     DAT_800ac790 = Region-Quad des aktiven Cuts. ---
+add_executable(test_fx_region_cull test_fx_region_cull.c)
+target_link_libraries(test_fx_region_cull PRIVATE re15_engine re15_test_support)
+target_include_directories(test_fx_region_cull PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_fx_region_cull COMMAND test_fx_region_cull)
+set_tests_properties(integration_fx_region_cull PROPERTIES TIMEOUT 60)
+
 # --- STAGE1 keycard door flip (roadmap S1-4 / PROG-4) ---
 add_executable(test_keydoor test_keydoor.c)
 target_link_libraries(test_keydoor PRIVATE re15_engine re15_test_support)

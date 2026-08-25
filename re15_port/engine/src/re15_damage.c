@@ -1264,10 +1264,81 @@ retry_after_latch:
                      * Kriecher trug kein grid&0x80 und war nicht als liegend klassifiziert
                      * = untreffbar (w20-Trace 2026-08-24). Monotone Erweiterung (ODER):
                      * alle bisherigen Liege-Fenster klassifizieren unveraendert. */
-                    {   int lying = (e->grid_id & 0x80) ||
-                                    (re15_ai_re2_for_type(e->type) &&
-                                     re15_re2z_owns_type(e->type) &&
-                                     (e->re2z_flags21a & 0x2u));
+                    /* ⛔ AUSNAHME KRIECH-ROOT — Nutzer-Befund 2026-08-27: "bei RE2-AI sind die
+                     * Zombies immer noch manchmal unverwundbar, bis sie mich einmal gebissen
+                     * haben." Gemessen (probe_re2z_bandlock, 64 Seeds x 900 Frames, echter
+                     * game_step): 679 Frames, in denen ein LEBENDER, AUFRECHT laufender Zombie
+                     * das Liege-Bit trug — 679/679 davon mit +0x10E == 0x2001, also im
+                     * RE2-KRIECH-ROOT; KEIN einziger Fall aus grid&0x80. Orakel: 0/30 Treffer
+                     * mit LEVEL-Zielen, 30/30 ohne das Bit. Dauer ~113 Frames, beendet vom
+                     * Kriech-Griff = dem BISS. Das deckt sich mit dem Nutzer-Wortlaut.
+                     *
+                     * Warum das Bit dort haengt: EXEC[11] P0 setzt +0x21A |= 2
+                     * (@0x8010443c `ori v0,v0,0x2` / @0x80104448 `sh v0,538(s0)`), und der
+                     * Kriech-Zweig P1 verlaesst EXEC[11] direkt danach
+                     * (@0x80104590-98 `andi 0xffc0` / `ori 0x1` / `sh v0,270(s0)` = +0x10E
+                     * Kriech-Root). Die Loescher von Bit 1 liegen alle im Steh-/Aufsteh-Pfad
+                     * (eigener Vollscan aller 75 Stores auf +0x21A in EMOVL10_S0.BIN: nur
+                     * @0x801036cc `andi 0xfffd`, @0x80103750 und @0x80107ea4 `andi 0xffed`
+                     * sowie die beiden Init-Vollaustraege @0x8010087c/@0x801049dc loeschen es)
+                     * — der laufende Kriecher erreicht keinen davon.
+                     *
+                     * Warum die Ausnahme byte-true ist: RE2s EIGENER Kandidatenfilter hat
+                     * ueberhaupt kein Hoehen-Band (eigene Disasm info/re2leon/PSX.EXE,
+                     * FUN_800470C0 — genau vier Gates: @0x8004712c `andi v0,v0,0x1` aktiv,
+                     * @0x80047138 `lbu v0,467(s0)` +0x1D3, @0x80047148 `lh v0,342(s0)` HP,
+                     * @0x80047160 `andi v0,v0,0xc000` +0x10E; @0x8004716c geht es direkt zur
+                     * Trefferpruefung). Ein RE2-Kriecher ist dort IMMER Kandidat.
+                     * Der RE1.5-Kriecher bleibt unberuehrt: der laeuft ueber grid_id = 0x81
+                     * (@0x801050d0 `ori v0,zero,0x81` / @0x801050d4 `sb v0,9(v1)`), also ueber
+                     * den ERSTEN Term.
+                     * Der Abwurf-Flop (@0x801045d4 `ori v0,v0,0x501`, betritt EXEC[5] ohne P0)
+                     * behaelt seine Liege-Klassifikation, solange er den Kriech-Root verlassen
+                     * hat — die Wachen test_re2z_pushoff_crawl / probe_re2z_pushoff messen das. */
+                    /* ⛔ AUSNAHME BODEN-AUFSTEHER — Nutzer-Befund 2026-08-27: "bei der
+                     * Aufsteh-Animation vom Zombie ist er unverwundbar. Im Original kann man da
+                     * bereits anschiessen. Auch bei RE2."
+                     * RE2 markiert genau diesen Zustand selbst: +0x21A |= 0x10 am Beginn beider
+                     * Boden-Aufsteher — EXEC[5] P6 (@0x80103588 `ori v0,v0,0x10` /
+                     * @0x8010358c `sh v0,538(s2)`) und EXEC[8] P3 (@0x80103d08 / @0x80103d10) —
+                     * und loescht es an deren Ende (@0x801036b8 `andi v0,v0,0xffef` /
+                     * @0x801036bc bzw. @0x80103d84 / @0x80103d8c). Der Liege-Spawn EXEC[7] setzt
+                     * es NIE: in dessen ganzer Region 0x80103780..0x80103c00 steht kein einziger
+                     * Store auf +0x21A (eigener Vollscan) — er bleibt damit gesperrt, byte-true
+                     * ueber Gate (2) des portierten Filters (+0x1D3 = 0x80 @0x80103804-14,
+                     * Clear erst P4 @0x80103914-18).
+                     * Warum die Sperre ueberhaupt griff: `grid_id |= 0x80` in EXEC[5] P0
+                     * (enemy_ai_re2_zombie.c:1760) ist ein PORT-MAPPING ("Review #18") ohne
+                     * Original-Store — RE2 kennt kein +0x9-Downed-Bit —, und es faellt erst in
+                     * P8 (:1931). Waehrend P6/P7 sagt der portierte RE2-Trefferfilter laengst
+                     * TREFFBAR (+0x1D3 in P2 freigegeben, @0x80103484-90, und P6/P7 belegen 467
+                     * nicht neu), aber das Band verwarf den Kandidaten davor. */
+                    {   int re2_owned  = re15_ai_re2_for_type(e->type) &&
+                                         re15_re2z_owns_type(e->type);
+                        /* ⚠ NICHT das Bit +0x21A & 0x10 selbst abfragen: es ist KLEBRIG.
+                         * Geloescht wird es nur, wenn die Aufsteh-Phase regulaer auslaeuft
+                         * (P7 `re2z_clip_done` -> @0x801036b8-bc bzw. EXEC[8] P4
+                         * @0x80103d84-8c). Wird der Zombie im Aufstehen getroffen, verlaesst
+                         * er die Phase ueber HURT und das Bit bleibt stehen — gemessen: nach
+                         * einem einzigen Aufstehen trug der Aktor 0x10 den Rest des Laufs
+                         * (Trace 2026-08-27, st=2.3 mit 21A=0010 ueber 900 Frames). Ein
+                         * Bit-Test wuerde die Liege-Abwertung damit DAUERHAFT abschalten und
+                         * das Zielen nach unten auf einen spaeter erneut Niedergeschlagenen
+                         * kaputtmachen.
+                         * Abgefragt wird deshalb die LEBENDE Phase — genau die beiden Fenster,
+                         * in denen das Original das Bit haelt:
+                         *   EXEC[5] P6 @0x80103568 (setzt) .. P7 @0x80103628 (loescht)
+                         *   EXEC[8] P3 @0x80103d00 (setzt) .. P4 @0x80103d60 (loescht) */
+                        int re2_rising = re2_owned && e->state == 1 &&
+                            ((e->sub_state_1 == 5 &&
+                              (e->sub_state_2 == 6 || e->sub_state_2 == 7)) ||
+                             (e->sub_state_1 == 8 &&
+                              (e->sub_state_2 == 3 || e->sub_state_2 == 4)));
+                        int lying = !re2_rising &&
+                                    ((e->grid_id & 0x80) ||
+                                     (re2_owned &&
+                                      (e->re2z_flags21a & 0x2u) &&
+                                      !(e->re2z_f10e & 1u)));
                         if (lying) {
                             eband &= ~0x40000000u;            /* @0x80101624-3c LEVEL weg */
                             if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388)
