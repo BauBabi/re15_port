@@ -294,6 +294,15 @@ int main(void)
     printf("\n  Bilder im Opfer-Zustand: %d von 400; Bisse: %d; tiefster HP-Stand: %d\n",
            held, bites, min_hp);
 
+    /* ---- MESSUNG D: hat die Raum-Bank snd1 einen Record 3 (RE2s Biss-SE)? -------------- */
+    {   const uint8_t *edt = s_rdt.snd_edt[1];
+        int n = s_rdt.snd_edt_size[1];
+        printf("\n  -- ROOM1210 snd1-EDT: %d Byte --\n", n);
+        for (int id = 0; id < 8 && (id + 1) * 4 <= n; id++)
+            printf("     SE %d: %02x %02x %02x %02x\n", id,
+                   edt[id*4], edt[id*4+1], edt[id*4+2], edt[id*4+3]);
+    }
+
     free(buf);
     printf("\nprobe_1210_griff: MESSUNG FERTIG\n");
     return 0;

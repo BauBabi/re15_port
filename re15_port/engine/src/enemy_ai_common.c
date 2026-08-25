@@ -10921,7 +10921,11 @@ static void re15_writher_ai_tick(int slot)
                 e->re2z_t158 = (int16_t)(e->re2z_t158 - (2 + 5 * mash));/* @0x80102868-7C */
                 if (e->re2z_t158 < 0) e->sub_state_1 = 5;               /* @0x8010288C-94 */
                 if ((int)e->anim_frame == RE15_WRITHER_BITE_FRAME) {    /* @0x801028a0-ac */
-                    re15_audio_room_se(3);                              /* SE 3 @0x801028e8-f0 */
+                    re15_audio_room_se(3);   /* Biss-SE @0x801028e8-f0 (`addiu a0,zero,3 /
+                                              * jal 0x8005bd6c`). Der Record IST in diesem
+                                              * Raum belegt: ROOM1210 snd1[3] = 00 00 43 14,
+                                              * byte-gleich mit ROOM1140/1030 (selbst aus dem
+                                              * RDT gelesen, probe_1210_griff Messung D). */
                     int r = re15_re2_player_damage_mode(pl, RE15_WRITHER_BITE_DMG, 0);
                                                                         /* FUN_800401d4 @0x801028f4-fc */
                     if (r & 3) e->sub_state_1 = 5;                      /* Bit 0 = Abwurf
