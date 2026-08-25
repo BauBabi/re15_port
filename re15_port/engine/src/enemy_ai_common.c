@@ -11080,8 +11080,11 @@ static void re15_writher_ai_tick(int slot)
          *                  z -15000..-13300 und damit 1700 TIEF INSGESAMT — die halbe Tiefe
          *                  um seine Mitte ist 850. Genau diese Mitte (-19500,-14150) liegt
          *                  47 Einheiten neben Arm 8 (-14000,-14197) und ihre x-Spanne
-         *                  enthaelt den erreichbaren Flur vollstaendig: der Raum sagt selbst,
-         *                  wie nah der Spieler sein muss, bevor die Arme reagieren.
+         *                  enthaelt den erreichbaren Flur vollstaendig: das ist der Bezug,
+         *                  aus dem die 850 kommen. (Dass der Raum damit "selbst sagt", wie nah der
+         *                  Spieler sein muss, waere zu viel behauptet: das Original
+         *                  schaltet ueber dieses Rechteck ALLE ZEHN auf einmal, das
+         *                  Pro-Arm-Tor bleibt eine Nachruestung ohne Vorbild.)
          *                  GEMESSEN mit 1700: jeder Arm oeffnete bei |dz| 1630..1697, also
          *                  22-23 Bilder vor dem Gleichstand — und weil die Lunge ihre 2420
          *                  Einheiten in DREI Bildern zurueckliegt (4159 -> 3357 -> 2560 ->
@@ -11116,13 +11119,19 @@ static void re15_writher_ai_tick(int slot)
          * Schlag" (Member_set(12,1) @Datei 0x001EDA), nicht die Bewegung. Der Port behaelt
          * also sein Einzel-Naeherungs-Gate und fuehrt darin die byte-true Lunge aus.
          *
-         * ⛔ WAS DIE RAUM-GEOMETRIE ERLAUBT (gemessen, probe_1210_griff, 2D-Abtastung des
-         * begehbaren Bodens im 50er-Raster): acht der zehn Kreaturen stehen 1348..2839
-         * Einheiten AUSSERHALB des begehbaren Bodens — hinter dem Gitter. Nur zwei (Arm 3 auf
-         * (-14000,-5897) mit Abstand 0 und Arm 6 auf (-25000,-17130) mit 849) liegen im
-         * Griff-Tor. Das Modell holt das nicht auf: EM01A misst im Ausfahr-Clip 442 Einheiten
-         * Radius (680 im laengsten Clip). Ein Griff ist also die Ausnahme, das Ausfahren +
-         * Stoehnen die Regel — genau das Bild, das der Nutzer beschrieben hat. */
+         * ⛔ WIDERRUF (2026-08-29): hier stand eine Aufstellung "acht der zehn Kreaturen
+         * stehen 1348..2839 Einheiten AUSSERHALB des begehbaren Bodens, nur Arm 3 mit
+         * Abstand 0 und Arm 6 mit 849 liegen im Griff-Tor". Diese Zahlen sind FALSCH: sie
+         * stammen aus einer Abtastung mit re15_collision_on_floor, und diese Funktion liefert
+         * in ROOM1210 eine 1 INNERHALB einer Zelle — die bandgleichen Zellen dieses Raums
+         * sind aber die WAENDE, der Spieler laeuft im Komplement. Die Abtastung hat also die
+         * Wandflaechen fuer den Laufraum gehalten.
+         * Ebenso falsch war die Reichweiten-Angabe "442 Einheiten Radius": das sind die
+         * BONE-URSPRUENGE. Das MESH ragt im Ausfahr-Clip 1671 Einheiten nach vorn (Ruhe-Clip
+         * 1530) — deshalb misst das Griff-Tor unten die HAND und nicht den Ursprung.
+         * Der richtige Massstab fuer die Erreichbarkeit ist der Constrain-Lauf
+         * (re15_collision_constrain), nicht on_floor; so misst es jetzt auch die Wache
+         * unit_1210_gitterhaende. */
         enum { RE15_WRITHER_REACH_Z = 850, RE15_WRITHER_REACH_X = 11000,
                RE15_WRITHER_MOAN_CD = 150,
                RE15_WRITHER_GRAB_DIST = 0x4b0,   /* sltiu v0,s2,0x4b0        @0x801018f4 */
@@ -11240,9 +11249,12 @@ static void re15_writher_ai_tick(int slot)
              *     @0x8010c318). Dazwischen steht die SCA-Wand — 1060 dick (West) bzw. 1020
              *     (Ost).
              *   - Der kleinstmoegliche URSPRUNGS-Abstand ist damit hart
-             *     450 + 1060 + 300 + 2*18 = 1828 (West) bzw. 1789 (Ost); die 18 sind die
-             *     Klemm-Haut aus FUN_8003bca8. Gemessen, indem der Arm mit UNBEGRENZTER
-             *     Vorwaertsbewegung gegen seinen eigenen Klemmer gefahren wurde.
+             *     450 + 1060 + 300 + 18 = 1828 (West) bzw. 1789 (Ost); die 18 sind die
+             *     Klemm-Haut aus FUN_8003bca8, und sie zaehlt EINMAL (der Spieler steht exakt
+             *     auf Wandflaeche+450, ohne eigenen Zuschlag). Gemessen, indem der Arm mit
+             *     UNBEGRENZTER Vorwaertsbewegung gegen seinen eigenen Klemmer gefahren wurde;
+             *     das ist der ANSCHLAG. Die byte-true Lunge bleibt im Westen 112 Einheiten
+             *     davor stehen (-22580 statt -22468), im Osten faellt beides zusammen.
              *   - 1828 liegt ueber RE2s Tor 1200 und weit ueber RE1.5s Kontakt-Radius 750
              *     (450+300, FUN_8002aec4). KEIN Zuwachs an Translation aendert das:
              *     B[2] @0x8010c938 ist netto 0, B[3] @0x8010cb34 bewegt gar nicht.
