@@ -8988,6 +8988,208 @@ static void re15_npc_executor(re15_actor_t *e)
     }
 }
 
+/* ============================ NPC-ESKORTE (State 1, 0x8011ce54) ============================== *
+ *
+ * NUTZER-BEFUND (Uebergabe 2026-08-25, Punkt 1.3): "ausserdem folgt mir ada nicht nach der
+ * cutscene". Der Port behandelte NPC-State 1 in `case 1: default:` als "Idle-Pose halten" — der
+ * Zweig war schlicht leer. Der Fehler ist GLOBAL, nicht ROOM1090-spezifisch: 12 Plc_ret auf
+ * NPC-Work-Slots in 8 Raeumen landen in demselben State (ROOM1090/2001/3000/3001/3071/30E0/
+ * 30E1/6000), und jeder NPC mit Deskriptor != 0x40 erreicht State 1 direkt aus dem INIT
+ * (`sb 1,4(v1)` @0x8011ccc0).
+ *
+ * Das Original hat dort eine vollstaendige Eskorte-Maschine. Wurzel 0x8011ce54, selbst
+ * disassembliert (STAGE1.BIN):
+ *     8011ce5c: ori   a0,zero,0x3a98    ; 15000 = Suchradius fuer lebende Gegner
+ *     8011ce64: ori   a2,zero,0x800     ; 0x800 = 180 Grad Default-Winkel
+ *     8011ce68: jal   0x800509e4        ; naechster LEBENDER Gegner in Reichweite?
+ *     8011ce74: beq   v0,zero,0x8011ceac
+ *     8011ce78: ori   a0,zero,0x5dc     ; DELAY-SLOT, BEIDE Zweige: 1500 = Folge-Radius
+ *     8011ce80: jal   0x8005070c        ; Folge-Punkt rechnen -> +0x1dc/+0x1de
+ *     8011ce94: sw    v0,464(v1)        ; +0x1d0 = Distanz zum Folge-Punkt
+ *     8011cea8: sb    v0,9(v1)          ; +0x9 = 1   (Gegner in der Naehe)
+ *     8011ced4: sb    zero,9(v0)        ; +0x9 = 0   (keiner)
+ *     8011cee4: lbu   v0,9(v0) / andi 0xf / Tabelle 0x8012167c
+ *                 [0] = 0x8011cf20   [1] = 0x8004f100
+ *
+ * 0x800509e4 = "naechster lebender Gegner": nur AKTIVE Entities (@0x80050a4c), nur TYP < 0x40
+ * (@0x80050a78 `sltiu v0,v0,0x40` — also Gegner, keine NPCs), HP >= 0 (@0x80050ac0 `bltz`,
+ * NPCs tragen -1), Minimum ueber die Distanz halten (@0x80050ad0).
+ *
+ * 0x8005070c = der FOLGE-PUNKT-Rechner: zwei Winkel-Kandidaten relativ zum SPIELER-Yaw
+ * (0x800acabe @0x80050728), Radius in a0, Kandidat A = +a1, Kandidat B = +a2; der NAEHERE
+ * gewinnt (@0x800508a4 `sltu`), Ergebnis nach +0x1dc/+0x1de (@0x80050880/@0x8005088c bzw.
+ * @0x800508cc/@0x800508e8), Rueckgabe = die gewaehlte Distanz. Ohne Gegner ist der Aufruf
+ * (1500, 0x800, -0x800) = direkt HINTER dem Spieler.
+ *
+ * Die Lauf-Schleife ist die EXE-geteilte Vier-Sub-Maschine (alle Schwellen selbst
+ * nachdisassembliert):
+ *     Sub 0 stehen   DECIDE 0x8004f100: @0x8004f118 `sltiu v0,v0,0x5dd` -> Distanz >= 1501
+ *                                       => +0x5 = 1 (@0x8004f124), +0x6 = 0 (@0x8004f134)
+ *                    @0x8004f148 arc_test(Spieler, 0x4b0) -> ausserhalb => +0x5 = 2
+ *                    @0x8004f1c4 player.hit_react != 0    => +0x5 = 6
+ *     Sub 1 gehen    DECIDE 0x8004f3a4: @0x8004f3bc `sltiu v0,v0,0x1f4` -> Distanz < 500
+ *                                       => +0x5 = 3 (@0x8004f3c8), +0x6 = 1 (@0x8004f3d8)
+ *                    EXEC   0x8004f4e0: +0x94 = 5 (@0x8004f524), +0x95 = 0 (@0x8004f534),
+ *                                       +0x8f = 7 (@0x8004f544),
+ *                                       +0x8c = Tabelle 0x80076c00[(typ-0x40)*2] (@0x8004f568),
+ *                                       Dreh-Rate = 0x80076c01[...] (@0x8004f5a0),
+ *                                       Ziel +0x1bc/+0x1be (@0x8004f588), pos_advance (@0x8004f5d0)
+ *     Sub 3 warten   DECIDE 0x8004f7dc: @0x8004f818 `sltiu v0,v0,0x3e9` -> Distanz >= 1001
+ *                                       => +0x5 = 1 (@0x8004f824)
+ * Tabelle 0x80076c00 (u8, selbst gelesen): 75,48,75,48,75,48,75,48,70,48,70,48,70,48,70,48
+ * -> Typ 0x42 = Offset (0x42-0x40)*2 = 4 -> Geschwindigkeit 75, Dreh-Rate 48.
+ *
+ * Damit ist die Schleife geschlossen: Ziel 1500 hinter dem Spieler -> losgehen bei >= 1501 ->
+ * stehenbleiben bei < 500 -> wieder los bei >= 1001.
+ *
+ * OFFEN (aus dem Dossier uebernommen, hier NICHT geraten): der +0x9 == 1-Zweig (Gegner < 15000)
+ * dispatcht auf 0x8004f100, also die DECIDE-Funktion ALLEIN, ohne EXEC — die NPC entscheidet
+ * dort weiter, bewegt sich aber nicht. Aus dem Code gelesen (`jr ra` @0x8004f1fc), fuer ROOM1090
+ * gegenstandslos (die brennenden Truemmer sind beim Rettungs-Zeitpunkt schon weg, sub06 setzt
+ * Set(3,0x81,1) @0x271E), aber fuer ROOM3070/30E0/6000 an einem Savestate gegenzupruefen.
+ * Genau so ist es unten umgesetzt: bei +0x9 == 1 laeuft NUR die Sub-0-DECIDE. */
+
+/* 0x800509e4 — naechster LEBENDER Gegner im Radius. Rueckgabe: Slot+1, oder 0 = keiner.
+ * `out_ang` bekommt die Peilung Gegner->Spieler relativ zum SPIELER-Yaw (@0x80050b4c-68). */
+static int re15_npc_nearest_enemy(const re15_actor_t *self, int32_t range, int16_t *out_ang)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int      best_slot = 0;
+    int32_t  best      = range;                       /* s4 startet = a0 @0x80050ad0 */
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *o = &g_actors[s];
+        if (o == self) continue;
+        if (!o->active) continue;                     /* andi 1 @0x80050a4c */
+        if (o->type >= 0x40u) continue;               /* sltiu v0,v0,0x40 @0x80050a78 */
+        if (o->hp < 0) continue;                      /* bltz @0x80050ac0 (NPCs tragen -1) */
+        int32_t dx = o->x - self->x, dz = o->z - self->z;
+        int32_t d  = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+        if (d < best) { best = d; best_slot = s; }
+    }
+    if (out_ang) {
+        *out_ang = 0;
+        if (best_slot) {
+            const re15_actor_t *o = &g_actors[best_slot];
+            int b = (int)re15_atan2_q12(o->z - pl->z, o->x - pl->x);
+            *out_ang = (int16_t)((b - (int)pl->rot_y) & 0x0fff);
+        }
+    }
+    return best_slot ? best_slot + 1 : 0;
+}
+
+/* 0x8005070c — Folge-Punkt: zwei Kandidaten `radius` um den Spieler, gedreht um
+ * (Spieler-Yaw + angA) bzw. (Spieler-Yaw + angB); der NAEHERE gewinnt. Schreibt das Ziel nach
+ * +0x1dc/+0x1de und liefert die gewaehlte Distanz. */
+static int32_t re15_npc_follow_point(re15_actor_t *e, int32_t radius, int angA, int angB)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int32_t bx = 0, bz = 0, bd = 0;
+    for (int k = 0; k < 2; k++) {
+        int a  = ((int)pl->rot_y + (k ? angB : angA)) & 0x0fff;
+        /* RotMatrixY(a) * (radius,0,0) — dieselbe Konvention wie re15_dog_advance
+         * (cos auf X, -sin auf Z). */
+        int32_t ox = (int32_t)(((int32_t)re15_cos_q12((int16_t)a) * radius) >> 12);
+        int32_t oz = (int32_t)(-(((int32_t)re15_sin_q12((int16_t)a) * radius) >> 12));
+        int32_t tx = pl->x + ox, tz = pl->z + oz;
+        int32_t dx = tx - e->x, dz = tz - e->z;
+        int32_t d  = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+        if (k == 0 || d < bd) { bd = d; bx = tx; bz = tz; }
+    }
+    e->ai_target_x = (int16_t)bx;                     /* +0x1dc @0x80050880/@0x800508cc */
+    e->ai_target_z = (int16_t)bz;                     /* +0x1de @0x8005088c/@0x800508e8 */
+    return bd;
+}
+
+/* Sub-1-EXEC 0x8004f4e0 — die tatsaechliche Fortbewegung. */
+static void re15_npc_escort_walk(re15_actor_t *e)
+{
+    /* Tabelle 0x80076c00, u8-Paare (Geschwindigkeit, Dreh-Rate), Index (typ-0x40)*2.
+     * Selbst gelesen: 75,48,75,48,75,48,75,48,70,48,70,48,70,48,70,48. */
+    static const unsigned char k_npc_gait[16] = {
+        75, 48, 75, 48, 75, 48, 75, 48, 70, 48, 70, 48, 70, 48, 70, 48
+    };
+    int gi = ((int)e->type - 0x40) * 2;
+    int spd = 75, slew = 48;
+    if (gi >= 0 && gi + 1 < (int)sizeof k_npc_gait) { spd = k_npc_gait[gi]; slew = k_npc_gait[gi + 1]; }
+
+    e->sub_state_2 = 1;                               /* Phase 1 @0x8004f514 */
+    re15_npc_clip(e, 5);                              /* +0x94 = 5 @0x8004f524, +0x95 = 0 @0x8004f534 */
+    e->anim_frac  = 7;                                /* +0x8f = 7 @0x8004f544 */
+    e->speed_h    = (int16_t)spd;                     /* +0x8c @0x8004f578 */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, slew);  /* yaw-face @0x8004f5ac auf +0x1bc/+0x1be */
+    re15_npc_anim(e);                                 /* anim_set @0x8004f5c8 */
+    /* pos_advance @0x8004f5d0 (FUN_800245d8, a0 = 0 = vorwaerts, Tempo aus +0x8c) */
+    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
+}
+
+/* State 1 = die Eskorte. */
+static void re15_npc_escort_tick(re15_actor_t *e, re15_actor_t *pl)
+{
+    (void)pl;
+    int16_t ang = 0;
+    int found = re15_npc_nearest_enemy(e, 0x3a98, &ang);        /* 15000 @0x8011ce5c */
+    int32_t d;
+    if (found) {
+        /* Kandidaten +ang / -ang @0x8011ce80-84 */
+        d = re15_npc_follow_point(e, 0x5dc, (int)ang, -(int)ang);
+        /* ⚠ Das Original schreibt das GANZE Byte, kein Nibble: @0x8011cea0 `ori v0,zero,0x1`
+         * / @0x8011cea8 `sb v0,9(v1)`. Der Deskriptor und das Freeze-Bit 0x20 werden dabei
+         * mit ueberschrieben — folgenlos, weil das Freeze-Gate VOR dem Dispatch greift. */
+        e->grid_id = 1u;                                        /* +0x9 = 1 @0x8011cea8 */
+    } else {
+        /* ohne Gegner: +0x800 / -0x800 = direkt hinter dem Spieler @0x8011ceb0 */
+        d = re15_npc_follow_point(e, 0x5dc, 0x800, -0x800);
+        e->grid_id = 0u;                                        /* +0x9 = 0 @0x8011ced4
+                                                                 * (`sb zero,9(v0)`, ganzes Byte) */
+    }
+    e->ai_dist = (uint32_t)d;                                   /* +0x1d0 @0x8011ce94/@0x8011cec4 */
+
+    /* Der Root schiebt +0x1dc/+0x1de jeden Frame in den Pathfinder 0x80039e7c -> +0x1bc/+0x1be
+     * (@0x8011cbd0-e8). Im Port ist das re15_nav_update_steer; es fehlte den NPCs nur das Ziel. */
+    re15_nav_update_steer(e, e->ai_target_x, e->ai_target_z,
+                          e->ai_wp_node, (int)(e->ai_flags & 8u));
+    e->ai_flags &= (uint16_t)~8u;
+
+    if (e->grid_id & 0x0fu) {                                   /* andi 0xf @0x8011ceec */
+        /* +0x9 == 1 -> Tabelle 0x8012167c[1] = 0x8004f100 = die DECIDE ALLEIN, ohne EXEC.
+         * Sie entscheidet weiter, bewegt sich aber nicht (`jr ra` @0x8004f1fc). */
+        if (e->ai_dist >= 0x5ddu) { e->sub_state_1 = 1; e->sub_state_2 = 0; }
+        re15_npc_anim(e);
+        return;
+    }
+
+    /* +0x9 == 0 -> Tabelle 0x8012167c[0] = 0x8011cf20 = die volle Vier-Sub-Maschine. */
+    switch (e->sub_state_1) {
+    case 1:                                     /* gehen */
+        if (e->ai_dist < 0x1f4u) {              /* sltiu 0x1f4 @0x8004f3bc */
+            e->sub_state_1 = 3;                 /* @0x8004f3c8 */
+            e->sub_state_2 = 1;                 /* @0x8004f3d8 */
+            re15_npc_clip(e, 2);
+            re15_npc_anim(e);
+        } else {
+            re15_npc_escort_walk(e);
+        }
+        break;
+    case 3:                                     /* angekommen / warten */
+        if (e->ai_dist >= 0x3e9u) {             /* sltiu 0x3e9 @0x8004f818 */
+            e->sub_state_1 = 1;                 /* @0x8004f824 */
+            e->sub_state_2 = 0;
+        }
+        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
+        re15_npc_anim(e);
+        break;
+    default:                                    /* Sub 0 stehen — DECIDE 0x8004f100 */
+        if (e->ai_dist >= 0x5ddu) {             /* sltiu 0x5dd @0x8004f118 */
+            e->sub_state_1 = 1;                 /* @0x8004f124 */
+            e->sub_state_2 = 0;                 /* @0x8004f134 */
+        }
+        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
+        re15_npc_anim(e);
+        break;
+    }
+}
+
 static void re15_npc_ai_tick(int slot)
 {
     re15_actor_t *e = &g_actors[slot];
@@ -9091,7 +9293,10 @@ static void re15_npc_ai_tick(int slot)
         re15_npc_executor(e);
         break;
 
-    case 1:   /* Irons overlay state 1 = idle/scripted (wave 2) -> hold the idle pose */
+    case 1:   /* ESKORTE 0x8011ce54 — die NPC folgt dem Spieler. Siehe re15_npc_escort_tick. */
+        re15_npc_escort_tick(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+        break;
+
     default:  /* all other NPC states (watchers / overlay) = wave 2 -> hold the idle pose */
         if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);  /* keep a real looping idle clip */
         re15_npc_anim(e);
