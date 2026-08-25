@@ -26,7 +26,12 @@ int main(void)
     memset(g_actors, 0, sizeof g_actors);
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 900; pl->hp = 100;
+    /* z = 400: INNERHALB der Ausloese-Tiefe (REACH_Z 850 = halbe Tiefe des
+     * Original-Rechtecks @0x1EAE) und zugleich rund 90 Grad SEITLICH der Blickrichtung
+     * (der Arm schaut bei rot_y 0 nach +X), also ausserhalb des 45-Grad-Griff-Kegels
+     * (@0x8010193c-4c). Damit misst (2) die Lunge und (3) bleibt gueltig.
+     * Vorher stand hier 900 - das lag knapp AUSSERHALB von 850 und die Lunge feuerte nie. */
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 400; pl->hp = 100;
 
     const int WS = 1;
     re15_actor_t *e = &g_actors[WS];

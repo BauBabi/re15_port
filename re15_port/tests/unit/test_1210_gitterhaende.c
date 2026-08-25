@@ -253,32 +253,40 @@ int main(void)
     int victim_clip_seen = 0, prev_victim = 0;
 
     /* ---------------------------------------------------------------------------------
-     * (4) DER GRIFF — MECHANIK-PRUEFUNG, ausdruecklich GETRENNT von der Frage, ob ein
-     * laufender Spieler diese Stellung im Spiel herstellen kann.
+     * (4) DER GRIFF - am ECHTEN Fall, nicht mehr an einer gesetzten Stellung.
      *
-     * ⛔ WARUM GETRENNT (und nicht wie bisher vermischt): die Erreichbarkeit haengt an der
-     * Raum-Geometrie und ist oben GEMESSEN (Zeile "bester Arm: ..."). Sie in dieselbe Zusage
-     * zu packen hat schon einmal dazu gefuehrt, dass eine gruene Wache eine Mechanik gedeckt
-     * hat, die im Spiel nie feuert. Hier wird deshalb nur die MECHANIK geprueft: steht ein
-     * Arm im Greifen-Sub und der Spieler in seinem Kegel und in Reichweite, dann MUSS er
-     * festhalten, beissen und wieder loslassen.
+     * WARUM DAS VORHER NICHT GING, und was sich geaendert hat (alles gemessen):
+     * Der Spieler haengt an seinem Klemmer (Radius 450 \n0x80073e9a, Maske 1 \n0x80031d74),
+     * der Arm an seinem eigenen (Radius 300 \n0x80120922, Maske 4 \n0x8010c318), und
+     * dazwischen steht die SCA-Wand - 1060 dick im Westen, 1020 im Osten. Der
+     * kleinstmoegliche URSPRUNGS-Abstand ist damit hart 1828 bzw. 1789 und liegt ueber
+     * RE2s Tor 1200. Ein Ursprungs-Tor kann hier also NIE feuern, egal wie weit die Lunge
+     * traegt. Das MESH reicht aber 1671 Einheiten nach vorn (Ausfahr-Clip 2), deshalb misst
+     * das Tor jetzt die HAND. Belege im Kopf von re15_writher_ai_tick case 2.
      *
-     * Die Stellung wird bewusst gesetzt (Arm in Sub 2, Spieler 900 Einheiten VOR ihm):
-     *   - 900 < 1200 = RE2s Griff-Tor (`sltiu v0,s2,0x4b0` @0x801018f4)
-     *   - geradeaus, also im 45-Grad-Kegel der beiden Halb-Sektoren (@0x8010193c-4c)
-     *   - und weit genug weg, dass der 300er-Koerper des Arms den Spieler nicht wegschiebt
-     *     (gemessen: aus 600 Einheiten Abstand wurde er zur Seite und HINTER den Arm
-     *     gedrueckt, aus (-17020,-5897) wurde (-16208,-6464)).
-     * Der Spieler wird in jedem Bild dorthin gesetzt, solange er nicht gehalten wird — genau
-     * wie im ersten Durchlauf. */
+     * Die Wache stellt den Spieler dorthin, wo die KOLLISION ihn wirklich hinlaesst: an den
+     * Rand des begehbaren Streifens, ermittelt mit re15_collision_constrain - kein Teleport
+     * in die Wand. */
     re15_actor_t *ga = &g_actors[gate_arm];
-    int32_t asn = re15_sin_q12(((int)ga->rot_y + 0x400) & 0xfff);
-    int32_t acs = re15_cos_q12(((int)ga->rot_y + 0x400) & 0xfff);
-    ga->sub_state_1 = 2; ga->sub_state_2 = 0;      /* GREIFEN, ohne die Lunge davor */
-    int32_t sx0 = ga->x + (int32_t)((asn * 900) >> 12);
-    int32_t sz0 = ga->z + (int32_t)((acs * 900) >> 12);
-    printf("  Mechanik-Stellung: Arm %d auf (%ld,%ld) yaw=%d, Spieler 900 davor auf (%ld,%ld)\n",
-           gate_arm, (long)ga->x, (long)ga->z, (int)ga->rot_y, (long)sx0, (long)sz0);
+    int32_t sx0 = 0, sz0 = ga->z; int have_edge = 0;
+    /* KEIN re15_collision_on_floor-Vortest: in diesem Raum liefert die Funktion 1
+     * INNERHALB einer Wand-Zelle, der Spieler laeuft im Komplement (gemessen). Der
+     * Constrain-Lauf selbst ist der richtige Massstab - er ist der Pfad, den die Spielfigur
+     * nimmt. */
+    {   int32_t px = -19500, pz = ga->z;
+        for (int step = 0; step < 400; step++) {
+            int32_t dxs = (ga->x > px) ? 25 : -25;
+            int32_t nx = px + dxs, nz = pz;
+            re15_collision_constrain(&s_rdt, px, pz, &nx, &nz);
+            if (nx == px && nz == pz) break;
+            px = nx; pz = nz;
+        }
+        sx0 = px; sz0 = pz; have_edge = (px != -19500);
+    }
+    printf("  Standpunkt am Gitter (Kollisions-Grenze): (%ld,%ld), Arm %d auf (%ld,%ld)\n",
+           (long)sx0, (long)sz0, gate_arm, (long)ga->x, (long)ga->z);
+    CHECK(have_edge,
+          "die Kollisions-Grenze auf der Hoehe des Arms ist bestimmbar - sonst misst (4) nichts");
 
     for (int f = 0; f < 400; f++) {
         if (!re15_player_is_grabbed()) { pl->x = sx0; pl->z = sz0; }
@@ -320,7 +328,9 @@ int main(void)
           "der Biss kostet GENAU die 20 HP aus RE2s Parameter-Tabelle @0x80100014 "
           "(`10 14 01 05 …`, stehender Fall): %d Bisse, %d davon mit anderem Betrag",
           bites, bad_bite);
-    CHECK(freed >= grabs,
+    /* `>= grabs - 1`, weil der letzte Griff beim Ende der 400 Bilder noch laufen darf -
+     * das ist kein Festfressen (das prueft die naechste Zusage ueber die Griff-Dauer). */
+    CHECK(freed >= grabs - 1,
           "und jeder Griff endet wieder (%d Zugriffe, %d mal frei) — RE2s Ringkampf-Budget 148 "
           "@0x80102828-2C, pro Bild -= 2 + 5*Taste @0x80102868-7C", grabs, freed);
     CHECK(longest_hold > 0 && longest_hold < 400,

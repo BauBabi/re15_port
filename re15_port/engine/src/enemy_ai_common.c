@@ -11058,19 +11058,35 @@ static void re15_writher_ai_tick(int slot)
          *     toedliche, und die normale Todes-FSM des Ports uebernimmt.
          *
          * DIE BEIDEN REICHWEITEN kommen aus den Daten, nicht aus dem Gefuehl:
-         *   REACH_Z 1700 = die TIEFE des Original-Ausloeser-Rechtecks. ROOM1210.RDT @0x1EAE
+         *   REACH_Z 850 = die HALBE Tiefe des Original-Ausloeser-Rechtecks. ROOM1210.RDT @0x1EAE
          *                  `2c 06 03 41 00 00 ac a9 68 c5 50 14 a4 06 ...` = Aot_set aot=6
          *                  sce=3, x=-22100 z=-15000 w=5200 d=1700.
-         *                  ⛔ KORREKTUR (gemessen, nicht nachgebessert): bis v0.3.26 stand hier
-         *                  1700/2 = 850. Bei 850 kann ein GEHENDER Spieler nie gegriffen werden:
-         *                  er ist 2*850/75 = rund 22 Bilder in Reichweite (Gehtempo 0x4B pro
-         *                  Bild, Modus-Tabellen 0x80076cXX / FUN_80041BE4), der Ausfahr-Clip 2
-         *                  dauert aber 30 Bilder (EM01A-EDD, selbst gelesen). Der Arm war also
-         *                  IMMER zu spaet — der Greif-Zustand begann erst, als der Spieler
-         *                  schon aus der Reichweite war. Mit der vollen Tiefe sind es rund 45
-         *                  Bilder: 30 zum Ausfahren, danach bleibt das Greifen-Fenster.
-         *                  Die volle Tiefe ist ausserdem die Zahl, die WOERTLICH im Raum steht;
-         *                  die Halbierung war meine Zutat.
+         *                  ⛔ ZWEI KORREKTUREN AN DERSELBEN ZAHL, beide gemessen:
+         *                  v0.3.26 hatte 850 (halbe Tiefe) — richtig, aber wirkungslos, weil
+         *                  die Vorwaerts-Bewegung fehlte. In v0.3.28 habe ich daraufhin auf
+         *                  1700 erhoeht; das war der falsche Schluss und hat den Nutzer-Report
+         *                  2026-08-29 "die Zombies strecken die Arme schon raus, bevor Leon
+         *                  komplett da ist" erzeugt.
+         *                  ⛔ x/z sind die ECKE, w/d die AUSDEHNUNG — bewiesen am Rechteck-Test
+         *                  selbst (FUN_80042b64):
+         *                      80042b68: lh  v0,0(a1)    ; rect.x
+         *                      80042b6c: lw  v1,0(a2)    ; punkt.x  (entity+0x34)
+         *                      80042b70: lhu a0,4(a1)    ; rect.w   (u16!)
+         *                      80042b74: subu v1,v1,v0
+         *                      80042b78: sltu a0,a0,v1   ; UNSIGNED: px < rect.x faellt durch
+         *                      80042b7c: bne  a0,zero,…  ; den Wrap heraus
+         *                  (z-Zwilling: lh v0,2(a1) / lw v1,8(a2) / lhu a0,6(a1)).
+         *                  Das Rechteck ist also [x, x+w] x [z, z+d] = x -22100..-16900,
+         *                  z -15000..-13300 und damit 1700 TIEF INSGESAMT — die halbe Tiefe
+         *                  um seine Mitte ist 850. Genau diese Mitte (-19500,-14150) liegt
+         *                  47 Einheiten neben Arm 8 (-14000,-14197) und ihre x-Spanne
+         *                  enthaelt den erreichbaren Flur vollstaendig: der Raum sagt selbst,
+         *                  wie nah der Spieler sein muss, bevor die Arme reagieren.
+         *                  GEMESSEN mit 1700: jeder Arm oeffnete bei |dz| 1630..1697, also
+         *                  22-23 Bilder vor dem Gleichstand — und weil die Lunge ihre 2420
+         *                  Einheiten in DREI Bildern zurueckliegt (4159 -> 3357 -> 2560 ->
+         *                  1759), stand er rund 0,65 s fertig ausgefahren da, bevor Leon auf
+         *                  seiner Hoehe war. Mit 850 halbiert sich der Vorlauf.
          *   REACH_X 11000 = die gemessene Flurbreite (Arme stehen auf x = -25000 und -14000).
          *                  Sie haelt nur andere Raumteile draussen; die Hoehe entlang des
          *                  Flurs entscheidet REACH_Z.
@@ -11107,13 +11123,16 @@ static void re15_writher_ai_tick(int slot)
          * Griff-Tor. Das Modell holt das nicht auf: EM01A misst im Ausfahr-Clip 442 Einheiten
          * Radius (680 im laengsten Clip). Ein Griff ist also die Ausnahme, das Ausfahren +
          * Stoehnen die Regel — genau das Bild, das der Nutzer beschrieben hat. */
-        enum { RE15_WRITHER_REACH_Z = 1700, RE15_WRITHER_REACH_X = 11000,
+        enum { RE15_WRITHER_REACH_Z = 850, RE15_WRITHER_REACH_X = 11000,
                RE15_WRITHER_MOAN_CD = 150,
                RE15_WRITHER_GRAB_DIST = 0x4b0,   /* sltiu v0,s2,0x4b0        @0x801018f4 */
                RE15_WRITHER_GRAB_HALF = 256,     /* a3 = 256 / a2 = +0x76±256 @0x8010193c-4c */
                RE15_WRITHER_HOLD_BUDGET = 148,   /* +0x158 = 148            @0x80102828-2C */
                RE15_WRITHER_BITE_FRAME = 0x10,   /* Tabelle @0x80100014[0]  (stehender Fall) */
-               RE15_WRITHER_BITE_DMG = 20 };     /* Tabelle @0x80100014[1]                  */
+               RE15_WRITHER_BITE_DMG = 20,       /* Tabelle @0x80100014[1]                  */
+               RE15_WRITHER_MESH_REACH = 1671 }; /* groesste Vorwaerts-Auslenkung des EM01A-
+                                                  * MESH (Clip 2), gemessen ueber den
+                                                  * Render-Transform; s. Griff-Tor unten */
         int32_t dz = pl->z - e->z; if (dz < 0) dz = -dz;
         int32_t dx = pl->x - e->x; if (dx < 0) dx = -dx;
         int reach = (dz < RE15_WRITHER_REACH_Z) && (dx < RE15_WRITHER_REACH_X);
@@ -11196,6 +11215,12 @@ static void re15_writher_ai_tick(int slot)
             if (e->motion != 1) { e->motion = 1; e->anim_frame = 0; e->anim_frac = 7; }
             if (re15_enemy_clip_done(e)) e->anim_frame = 0; else e->anim_frame++;
             /* Stoehnen */
+            /* ⛔ Der Cooldown wird HIER gelesen und im Rumpf gesetzt — er darf nicht in
+             * demselben Bild von zwei Armen gleichzeitig genommen werden. Gemessen feuerte
+             * der Port SE(5) doppelt (Bild 140 zweimal, 290/291); die zweite Ausloesung ist
+             * im echten Audio-Pfad ohnehin stumm, weil beide auf Stimme 5 liegen und das
+             * Prio-Tor FUN_80045a18 (@0x80045a34-58) bei Nibble 9 >= 8 auch gegen sich
+             * selbst verwirft. */
             if (e->re2z_cd239 == 0 && (re15_engine_rand8() & 3u) == 0u) {
                 re15_audio_room_se(5);                   /* @0x80104ae0 func_0x800453d0(5) */
                 e->re2z_cd239 = RE15_WRITHER_MOAN_CD;    /* 150 Bilder, RE2 @0x801038d0-d4 */
@@ -11207,12 +11232,63 @@ static void re15_writher_ai_tick(int slot)
              * NICHT: sein Lebenszyklus (Setzer @0x80102754-60, Loescher @0x8010AEF4/@0x80104FA0/
              * @0x801082E8) gehoert der RE2-Zombie-Maschine; der Pin des Ports leistet dasselbe
              * und wird von der Opfer-FSM sauber wieder freigegeben. */
+            /* ⛔ DAS TOR MISST DIE HAND, NICHT DEN URSPRUNG (Nutzer-Report 2026-08-29
+             * "die Arme der Zombies erreichen nirgendwo Leon"). GEMESSEN, warum ein
+             * Ursprungs-Tor hier NIE feuern kann:
+             *   - Der Spieler haengt an seinem Klemmer (Radius 450 @0x80073e9a, Maske 1
+             *     @0x80031d74), der Arm an seinem eigenen (Radius 300 @0x80120922, Maske 4
+             *     @0x8010c318). Dazwischen steht die SCA-Wand — 1060 dick (West) bzw. 1020
+             *     (Ost).
+             *   - Der kleinstmoegliche URSPRUNGS-Abstand ist damit hart
+             *     450 + 1060 + 300 + 2*18 = 1828 (West) bzw. 1789 (Ost); die 18 sind die
+             *     Klemm-Haut aus FUN_8003bca8. Gemessen, indem der Arm mit UNBEGRENZTER
+             *     Vorwaertsbewegung gegen seinen eigenen Klemmer gefahren wurde.
+             *   - 1828 liegt ueber RE2s Tor 1200 und weit ueber RE1.5s Kontakt-Radius 750
+             *     (450+300, FUN_8002aec4). KEIN Zuwachs an Translation aendert das:
+             *     B[2] @0x8010c938 ist netto 0, B[3] @0x8010cb34 bewegt gar nicht.
+             *   - Aber das MESH reicht viel weiter als die Bone-Urspruenge: 1671 Einheiten
+             *     nach vorn im Ausfahr-Clip 2 (Ruhe-Clip 0 schon 1530), gemessen ueber
+             *     denselben Transform, den der Renderer fuehrt. Die Hand steht also sehr wohl
+             *     im Flur — nur der Koerper nicht.
+             * Beide Zahlen sind belegt; NEU ist ausschliesslich, WELCHEN Punkt das Tor misst.
+             * Das ist auch sachlich der Unterschied zu RE2: dort steht der greifende Zombie
+             * frei im Fensterausschnitt, hier misst ein Ursprungs-Tor die Wanddicke mit.
+             * GEMESSEN mit dem Hand-Punkt: Spieler an der Wand -> Spitzen-Abstand 157 (West)
+             * bzw. 118 (Ost), Tor feuert; Spieler in der Flurmitte -> 1404/1364, Tor feuert
+             * NICHT. Genau das vom Nutzer beschriebene RE2-Bild.
+             * ⛔ AUSDRUECKLICH NICHT getan: die Schwelle 1200 anheben. Das waere eine
+             * erfundene Zahl fuer genau dieses Problem. */
+            int32_t hand_x = e->x + (int32_t)(((int32_t)re15_cos_q12(e->rot_y)
+                                               * RE15_WRITHER_MESH_REACH) >> 12);
+            int32_t hand_z = e->z - (int32_t)(((int32_t)re15_sin_q12(e->rot_y)
+                                               * RE15_WRITHER_MESH_REACH) >> 12);
+            int32_t hdx = pl->x - hand_x, hdz = pl->z - hand_z;
+            uint32_t hand_dist = re15_squareroot0((uint32_t)((int64_t)hdx * hdx +
+                                                             (int64_t)hdz * hdz));
             if (!re15_player_is_grabbed() && !(pl->re2z_self1d3 & 0x80u)
-                && re15_enemy_player_dist(e, pl) < RE15_WRITHER_GRAB_DIST /* @0x801018f4 */
+                && hand_dist < RE15_WRITHER_GRAB_DIST                   /* @0x801018f4 */
                 && (re15_writher_sector(e, pl, ((int)e->rot_y + RE15_WRITHER_GRAB_HALF) & 0xfff,
                                         RE15_WRITHER_GRAB_HALF) == 0       /* @0x8010193c-4c */
                  || re15_writher_sector(e, pl, ((int)e->rot_y - RE15_WRITHER_GRAB_HALF) & 0xfff,
                                         RE15_WRITHER_GRAB_HALF) == 0)) {   /* Zwilling darunter */
+                /* ⛔ DER ZUPACK-LAUT (Nutzer-Report 2026-08-29 "es fehlt das laute
+                 * Geraeusch wie bei RE 2"). Beide Vorlagen spielen ihn im Moment des
+                 * Zupackens, der Port bisher gar nicht:
+                 *   RE1.5-Zombie, Griff-Einstieg: `ori a0,zero,0x4` @0x80102684 +
+                 *     `jal 0x800453d0` @0x8010268c  -> Se(4), UNBEDINGT.
+                 *   RE2-Zombie,   Griff-Einstieg: `jal 0x8005bd6c` @0x801027b4 mit Id 10
+                 *     oder 11 (Wurf `rand & 1` @0x801027a4-b0, Cooldown-Tor @0x8010278c/94,
+                 *     +0x239 = 150 @0x801027bc-c0). Der Port-Mapper bildet 10 -> RE1.5-SE4
+                 *     und 11 -> SE5 ab.
+                 * Genommen wird der RE1.5-Zweig, weil dieser Raum eine RE1.5-Bank hat: SE4.
+                 * Und SE4 ist auch der LAUTE der beiden — in ROOM1210s snd1 liegen SE4 und
+                 * SE5 auf DERSELBEN Stimme 5, SE4 mit Prio-Nibble 0xb, SE5 mit 0x9; das
+                 * Prio-Tor FUN_80045a18 (@0x80045a34-58) verwirft SE5, sobald SE4 laeuft.
+                 * Der bisherige einzige Laut des Arms war ausgerechnet SE5.
+                 * ⛔ NACHRUESTUNG, klar benannt: der ORIGINAL-Writher-Baum
+                 * (0x8010c1ec..0x8010d4bc) enthaelt KEINEN einzigen `jal 0x800453d0` — an
+                 * diesen Armen ist jeder Laut eine Zutat. */
+                re15_audio_room_se(4);
                 e->sub_state_1 = 4; e->sub_state_2 = 0;   /* sw 769,4(s0) = 0x301 @0x80101954-58 */
                 break;
             }
