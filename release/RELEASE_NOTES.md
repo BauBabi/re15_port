@@ -1,3 +1,96 @@
+# RE1.5 Port — v0.3.30 (Early Preview)
+
+Vier Meldungen, alle vier aus dem letzten Paket. Zwei davon hatte ich in v0.3.29 schon
+„behoben" gemeldet — sie waren es nicht, und zwar aus zwei ganz verschiedenen Gründen.
+
+## Die schwarzen Dreiecke über dem Feuer — jetzt an der richtigen Stelle
+
+> „Die Schwarzen Dreiecke sind noch immer über den Feuer"
+
+In v0.3.29 hatte ich die Bank-Wahl aufgeräumt und angenommen, das sei die Ursache. Es war die
+falsche Baustelle. Die richtige steht im Original an einer Stelle, an der ich vorher nicht
+gesucht hatte: das Spiel entscheidet **pro Körperteil**, ob es überhaupt gezeichnet wird —
+Bit 0 der Part-Flags. Der Zeichner steigt ohne dieses Bit aus, *bevor* er ein einziges Dreieck
+ausgibt (`andi v0,v1,0x1` / `beq v0,zero,…` @0x8001ecc4-c8), und der Feuer-Emitter löscht sich
+das Bit in seinem eigenen INIT (@0x801165d0-e4).
+
+Die sieben Feuer in ROOM1090 sind also **unsichtbare Träger** für ihre Flammen-Effekte. Ihr
+eigenes Modell ist ein einzelnes Dreieck — ein Bone, drei Punkte, eine Fläche. Genau das hat
+der Port gezeichnet. Jetzt trägt jeder dieser Emitter die Maske und wird übersprungen; die
+Flammen selbst bleiben unberührt, weil sie an anderen Aufrufen hängen.
+
+Damit das nicht ein drittes Mal passiert, prüft eine Wache jetzt beides: dass alle sieben
+Emitter die Maske tragen — und dass ein normaler Zombie sie **nicht** bekommt.
+
+## Ada und die Kiste
+
+> „Ada kann noch durch die Kiste laufen"
+
+In v0.3.29 hatte ich die **Wand** repariert und gemeldet „Ada kollidiert wieder". Die Kiste ist
+ein anderes System, und davon hatte der Port nur die Hälfte.
+
+Der Objekt-Durchlauf des Originals schiebt nämlich nicht nur den Spieler aus den Kisten,
+sondern **jeden aktiven Aktor** — die Schleife steht direkt hinter dem Typ-Handler
+(@0x8002be0c-4c) und hat keinen Typ-Filter. Ausgenommen ist nur, wer ein bestimmtes Flag-Bit
+trägt; die NPC-Familie trägt es nicht. Der Port hatte von dieser Funktion nur den
+Spieler-Abschnitt portiert, deshalb lief jeder Gegner und jede Begleiterin durch jede Kiste.
+
+Der Durchgang läuft jetzt mit — und zwar unmittelbar hinter der Gegner-Schleife, weil er im
+Original ebenfalls **nach** der Bewegung im selben Bild liegt. Hätte ich ihn an seine
+port-interne Stelle gesetzt, wäre er Adas Zug immer ein Bild hinterher gewesen.
+
+## Die Arme im Gitter — Distanz und Verhalten wie in RE2
+
+> „Die Arme kommen raus, wenn man noch zu weit weg ist, das sollte von Distanz und Verhalten
+> her wirklich so sein wie bei Resident Evil 2."
+
+Hier ist der Befund unangenehm ehrlich: **das Original hat pro Arm gar kein Abstands-Tor.** Ich
+habe die ganze Kette gelesen. Ein raumfestes Rechteck am Flureingang schaltet über
+`Member_set(12, 1)` in *einem* Bild alle zehn Arme scharf; der Arm liest diesen einen Wert
+(@0x8010c614-28), und seine Logik-Tabelle für den Ausfahr-Zustand ist ein leeres `jr ra`
+(@0x8010c70c) — die Ausfahr-Bewegung läuft danach ohne jede Bedingung ab. Der Wurzel-Tick
+rechnet den Spielerabstand sogar aus und wirft ihn weg (@0x8010c27c).
+
+Das Tor im Port ist also eine Zutat — es existiert nur, weil Du das Original-Verhalten (alle
+zehn auf einen Schlag) verworfen hast. Und **auch RE2 hat kein Ausfahr-Tor**: sein verankerter
+Greifer hat genau eine Abstandsprüfung, und die ist der *Zugriff* — Radius 1300
+(`sltiu s0,s0,0x514` @0x80102f3c), dazu ein Sektor und der Ein-Angreifer-Riegel.
+
+Was ich daraus gemacht habe: die beiden alten Zahlen fliegen raus. Sie trugen als einzige
+Konstanten dieses Blocks keine Fundstelle — 850 war die halbe Tiefe des Raum-Rechtecks, auf
+jeden einzelnen Arm umgehängt, und **11000 war schlicht die Flurbreite**. Deshalb reagierte
+jeder Arm, egal wie weit Du von *seiner* Wand entfernt warst. Genau das hast Du gesehen.
+
+An ihre Stelle tritt RE2s Zahl in RE2s Form: **ein Radius von 1300**, nicht ein flurbreites
+Rechteck. Weil die Arme mit ihrem Ursprung in der Wand sitzen und der begehbare Flur rund 4200
+Einheiten daneben liegt, zeigt der Radius auf die **ausgefahrene Hand** statt auf den Ursprung
+— sonst ginge er nie auf. Das ist der eine Punkt, an dem ich von der Vorlage abweiche, und er
+steht so im Code.
+
+Gemessen an der Wand entlang: der kleinste Abstand zwischen Spieler und Hand liegt bei 72 bis
+288 Einheiten, höchstens **zwei** Arme sind gleichzeitig ausgefahren (vorher drei) — und die
+Reihe auf der **gegenüberliegenden** Flurseite bleibt jetzt still. Das war mit dem alten Tor
+gar nicht möglich.
+
+## Wenn die Arme Leon treffen
+
+> „Wenn Leon von den Armen getroffen wird, verschwindet er und es gibt keine Greif Animation
+> oder sowas."
+
+Gemessen: Leon sprang im Moment des Zugriffs von (-18164,-5897) auf (-892,0) — 16508 Einheiten
+weit. Ursache war ein fehlender gemeinsamer Ankerpunkt. Die Opfer-Animation wird **absolut**
+platziert, ausgehend von einem Anker, den der Greifer setzt und den das Original auf den
+Spieler kopiert. Beim Arm wurde er nie gesetzt, also lief die Animation ab Koordinate Null.
+Jetzt bekommen Arm und Spieler beim Zugriff denselben Anker; der größte gemessene Abstand
+während des Griffs liegt bei 3710 statt 16508 Einheiten.
+
+---
+
+**Tests:** 241/241 grün (lokal und im Docker-Linux-Build), 2 neue Wachen.
+
+
+---
+
 # RE1.5 Port — v0.3.29 (Early Preview)
 
 Vier Meldungen. Bei einer war der Fehler frisch von mir, bei zweien lag er tiefer, als ich
