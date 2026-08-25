@@ -17,15 +17,37 @@
  *     ⛔ KORREKTUR 2026-08-27: hier stand "whose 14 entries alternate on bit0 only -> exactly two
  *     variants (0x8010118C upright / 0x80101210 crawling)". Das ist FALSCH und hat sich bereits in
  *     ein Dossier fortgepflanzt, das daraus ein "belegtes Negativ-Ergebnis" gemacht hat.
- *     Die Maske ist 0x3f (@0x8010115C `andi v0,v0,0x3f`), die Tabelle also bis zu 64 Eintraege
- *     lang. Eigener Dump von @0x8010C854 gegen EMZ0.BIN (Code bis 0x8010CF4C): die ersten
- *     52 Eintraege sind gueltige Code-Zeiger, darunter 38 VERSCHIEDENE Funktionen; erst ab
- *     Index 52 stehen Daten (0x803200BE, 0x80400096, ...). Nur die Indizes 0..13 alternieren
- *     zwischen 0x8010118C (aufrecht) und 0x80101210 (kriechend) — das ist der Teil, den die alte
- *     Notiz gesehen hat. Ab Index 14 kommen u.a. 0x80101294, 0x80101714, 0x80101F7C, 0x801025E4,
- *     0x80103170, 0x8010394C, 0x80104174, 0x80104920, 0x80102EE4, 0x80103A70.
- *     Was diese 38 Zweige tun, ist im Port NICHT untersucht — die Behauptung "exactly two
- *     variants" darf NICHT weiterverwendet werden, um etwas auszuschliessen.
+ *     Die Maske ist 0x3f (@0x8010115C `andi v0,v0,0x3f`), NICHT 0xf. Die alte Notiz zaehlte
+ *     die Eintraege falsch — aber der Schluss "exactly two variants" ist trotzdem
+ *     unbrauchbar, weil er benutzt wurde, um ETWAS AUSZUSCHLIESSEN.
+ *     Richtige Struktur (2026-08-27 selbst disassembliert, EMZ0.BIN — das mit EMOVL10_S0.BIN
+ *     und EMZ0_d1.BIN sha1-identisch ist, es gibt nur EIN Zombie-Overlay):
+ *     Hinter 0x8010C854 liegen DREI Tabellen lueckenlos hintereinander, was im flachen Dump
+ *     wie 52 ACTIVE-Handler aussieht:
+ *       0x8010C854  14 Eintraege = die ACTIVE-Tabelle. Gerade Indizes -> 0x8010118C (aufrecht),
+ *                   ungerade -> 0x80101210 (kriechend). Insoweit stimmte die alte Notiz.
+ *       0x8010C88C  16 Eintraege = Substate-Tabelle "Phase A" (entscheiden)
+ *       0x8010C8CC  16 Eintraege = Substate-Tabelle "Phase B" (ausfuehren)
+ *     0x8010118C ist naemlich selbst ein Sub-Dispatcher und ruft BEIDE pro Frame, mit +0x5
+ *     dazwischen neu gelesen (selbst nachdisassembliert):
+ *         801011a8: lbu v0,5(s0)      ; Substate
+ *         801011bc: lw  v0,-14196(at) ; Tabelle A = 0x8010c88c
+ *         801011c4: jalr v0
+ *         801011d0: lbu v0,5(s0)      ; +0x5 erneut — Phase A darf es geaendert haben
+ *         801011e4: lw  v0,-14132(at) ; Tabelle B = 0x8010c8cc
+ *         801011ec: jalr v0
+ *     (Der Kriech-Zweig 0x80101210 hat sein eigenes Paar @0x8010C90C/@0x8010C918, je 3 Eintraege.)
+ *     Von den 36 Substate-Eintraegen sind 13 reine `jr ra`-Stubs; es bleiben 23 echte
+ *     Verhaltensfunktionen.
+ *     ⭐ DARUNTER SIND ZWEI ORTSFESTE: Substate 7 (0x80103780, stehend) und Substate 8
+ *     (0x80103B74, kniend). Sie bewegen sich nicht, stoehnen per rand (se_play 10/11/12,
+ *     `jal 0x8005bd6c` @0x801038c8, Cooldown 150 Frames in +0x239 @0x801038d0-d4) und
+ *     verlassen ihren Zustand NIE, solange +0x10E & 0x4000 gesetzt ist
+ *     (@0x80103824 `andi v0,v0,0x4000` / @0x80103828 `bne`); ihre Phase-A-Eintraege sind Stubs.
+ *     Sie GREIFEN aber nicht: im ganzen Overlay gibt es genau EINEN player_damage-Aufruf
+ *     (`jal 0x800401d4` @0x801028F8, eigener Voll-Scan), und der sitzt in Substate 3, der nur
+ *     aus den Fortbewegungs-Substates 1/2/12 erreichbar ist.
+ *     Dossier: analysis/nutzer_batch_2026-08-27/re2-fenstergreifer-active.md
  *   - The neighbour word +0x1F4 is READ by the zombie (@0x801017A4) but never WRITTEN by it; the
  *     producer is FUN_80065518 in the NPC family -> a dead branch in zombie-only rooms.
  * The real difference is LOCOMOTION, attack arbitration and hit reaction. This file starts with the
