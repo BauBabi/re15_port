@@ -2745,8 +2745,13 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
                 : (slot == 2) ? &s_ss_sub2 : NULL;
     if (!s) return;
     int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
-    fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d) capTick=%ld\n",
-            slot, op, part, vol, pan, s_cap_ticks);
+    /* Gegatet 2026-08-27: das hier feuert bei JEDEM Skript-BGM-Op im laufenden Spiel und lief
+     * ungebremst nach stderr — auch im ausgelieferten Build. Die uebrigen Traces dieser Datei
+     * sind Lade-Einmalmeldungen; diese war die einzige im Spielverlauf. Gleiches Muster wie
+     * RE15_BGM_FADE_DEBUG. */
+    if (getenv("RE15_BGM_CTL_DEBUG"))
+        fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d) capTick=%ld\n",
+                slot, op, part, vol, pan, s_cap_ticks);
     /* Status-Latch (DAT_800b52ac/b4/bc-Zwilling, LAB_80044ed0: op1/3 -> 1, op2 -> 2, op4 -> 4)
      * — traegt den Skript-Status ueber den aufgeschobenen Bank-Commit (s. s_bgm_slot_status). */
     if (op == 1 || op == 3)      s_bgm_slot_status[slot] = 1;

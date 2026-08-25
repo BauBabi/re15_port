@@ -44,19 +44,20 @@
  *   ✔ Schadenszone weg: sie sitzt IM Emitter (@0x80116320 `lbu v0,464(a0)` /
  *     @0x80116328 `sltiu v0,v0,0xd` -> @0x80116368 Kontakt-Test -> 2 HP/Bild), faellt also
  *     mit dem Spawn.
- *   ⛔ OFFEN — das FEUER-BGM. ROOM1090 @0x22EA `21 03 81 00` = Ck(3,0x81,0), danach @0x22EE
- *     `54 00 00 01 78 33` = Sce_bgm_control: das ist KEIN eigener Loop, sondern eine
- *     TEIL-LAUTSTAERKE auf dem Raum-BGM (Handler @0x800429b4-e8 packt pc[1..5];
- *     pc[3]=1 = Programm-Teil, pc[4]=0x78 = vol+1, pc[5]=0x33 = pan+1, geschrieben in die
- *     VAB-mvol/mpan des Slots). Nach dem Loeschen fuehrt der Neu-Aufbau die Zeile nicht mehr
- *     aus — im Original setzt aber das Raumladen die VAB/Sequenz neu auf, im Port nicht
- *     (der Selbst-Tuer-Wiedereintritt laedt keine Assets). Die Feuer-Tonspur laeuft dadurch
- *     mit der zuletzt geschriebenen Lautstaerke weiter.
- *     NICHT GERATEN, sondern gemessen und hier offen gelassen: ein Stopper existiert im
- *     Original nicht (er braucht keinen), also braucht der Port eine eigene Re-Initialisierung
- *     der Raum-Audio beim Selbst-Wiedereintritt. Naechster Weg: was der Cross-Room-Pfad an
- *     Audio-Init macht (room_common.c / audio_pc.c) auf scd_room_reenter ziehen und die
- *     VAB-Default-mvol/mpan aus dem Raum-VH neu setzen.
+ *   ✔ FEUER-BGM stumm — und zwar OHNE Zutun des Ports.
+ *     ⛔ KORREKTUR einer eigenen Fehlannahme (2026-08-27): erst stand hier, das sei offen, weil
+ *     "das Raumladen im Original die VAB neu aufsetzt, der Port aber nicht". Das war falsch.
+ *     Der Raumlader setzt hier gar nichts zurueck: FUN_80044210 (@0x800399b0 im Lader) springt
+ *     bei UNVERAENDERTEM Track nach @0x800443B0 und tut NICHTS — kein Stop, kein Reload. Bei
+ *     einer Selbst-Tuer ist der Track per Definition unveraendert, im Original wie im Port.
+ *     Der Abschalter steht statt dessen im SKRIPT, in der Rettungs-Cutscene sub03:
+ *         0x0024DA  54 00 00 01 01 41   Sce_bgm_control(slot 0, op 0, part 1, vol 0x01, pan 0x41)
+ *                                       -> prog[0].mvol = vol-1 = 0  = Feuer-Spur STUMM
+ *         0x0024E0  54 00 02 00 00 00   Sce_bgm_control(slot 0, op 2) = SsSeqStop
+ *     und sub03 wird vom Neu-Aufbau selbst gestartet (sub00 @0x22A6 Ck(3,0x84,1) ->
+ *     @0x22E0 Evt_exec(0x1803)), also genau nach dem Loeschen.
+ *     GEMESSEN (unten mitgeschnitten): der Port setzt beide Ops ab. Es gibt hier nichts zu
+ *     reparieren — wer es "fixt", baut eine Erfindung ein.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -99,6 +100,25 @@ static uint8_t *slurp(const char *p, size_t *n)
     fclose(f); if (b) *n = (size_t)sz; return b;
 }
 
+/* Die Sce_bgm_control-Ops mitschneiden: der Port legt sie als SCD_AUDIO_SEQ_CTL in die
+ * SCD-Audio-Warteschlange, die Plattform holt sie dort ab. Im Test ist die Plattform ein
+ * No-op, also leeren wir sie hier selbst und zaehlen mit. */
+static int s_bgm_mute_part1 = 0;   /* op 0, part 1, vol-1 == 0  -> Feuer-Spur stumm */
+static int s_bgm_seq_stop   = 0;   /* op 2 = SsSeqStop                                */
+static int s_bgm_total      = 0;
+
+static void drain_audio(void)
+{
+    scd_audio_event_t e;
+    while (scd_audio_queue_pop(&e)) {
+        if (e.kind != SCD_AUDIO_SEQ_CTL) continue;
+        s_bgm_total++;
+        if (e.volume == 2) s_bgm_seq_stop++;                       /* op 2 */
+        if (e.volume == 0 && e.sample_id == 1 && e.raw_w0 == 1)    /* part 1, vol-1 = 0 */
+            s_bgm_mute_part1++;
+    }
+}
+
 static void frame_step(void)
 {
     const unsigned char *raw; int len, id;
@@ -106,6 +126,7 @@ static void frame_step(void)
     s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
     scd_vm_tick();
     re15_game_step(&s_ctx);
+    drain_audio();
 }
 
 static int count_emitters(void)
@@ -191,6 +212,18 @@ int main(void)
             }
         printf("   [diag] aktive Props: %d | NPCs (Typ >= 0x40): %d | flag(3,0x84) = %d\n",
                props, npc, re15_game_flag_get(3, 0x84));
+        printf("   Sce_bgm_control seit dem Loeschen: %d gesamt, davon Feuer-Spur stumm "
+               "(op0 part1 vol0) %d, SsSeqStop (op2) %d\n",
+               s_bgm_total, s_bgm_mute_part1, s_bgm_seq_stop);
+    }
+
+    /* --- (4) Das FEUER-BGM muss ebenfalls verstummen ---------------------------------- */
+    {   CHECK(s_bgm_mute_part1 > 0,
+              "die Feuer-Tonspur wird stummgeschaltet (%d x op0/part1/vol0) — sub03 @0x24DA "
+              "`54 00 00 01 01 41` schreibt prog[0].mvol = 0", s_bgm_mute_part1);
+        CHECK(s_bgm_seq_stop > 0,
+              "und die MAIN-Sequenz wird gestoppt (%d x op2) — sub03 @0x24E0 "
+              "`54 00 02 00 00 00` = SsSeqStop", s_bgm_seq_stop);
     }
 
     free(buf);
