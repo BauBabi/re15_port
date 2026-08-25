@@ -251,6 +251,7 @@ int main(void)
     int held_frames = 0, grabs = 0, longest_hold = 0, run = 0, freed = 0;
     int bites = 0, bad_bite = 0, bite_dmg_seen = 0;
     int victim_clip_seen = 0, prev_victim = 0;
+    int32_t far_from_arm = 0;
 
     /* ---------------------------------------------------------------------------------
      * (4) DER GRIFF - am ECHTEN Fall, nicht mehr an einer gesetzten Stellung.
@@ -300,6 +301,19 @@ int main(void)
              * re15_victim_clip_map). Ein Griff, in dem Leon seine Steh-Clips behielte, waere
              * kein Festhalten, sondern nur ein eingefrorener Spieler. */
             if (pl->motion <= 2) victim_clip_seen = 1;
+            /* Leon darf beim Griff NICHT wegspringen (Nutzer-Report 2026-08-29: "wenn Leon
+             * von den Armen getroffen wird, verschwindet er"). Die Opfer-Platzierung ist
+             * ABSOLUT (re15_clip_root_motion_abs = Anker +0xa0/+0xa2 plus gedrehter
+             * Clip-Offset, byte-true func_0x8001ad68); ohne den gemeinsamen Anker, den der
+             * Zombie-Griff im Eintritts-Bild setzt und auf den Spieler kopiert
+             * (FUN_8001ac38 @0x801025f0, Kopie @0x8001ad28-48), landete er an einem alten
+             * Anker plus Clip-Offset. GEMESSEN vorher: Sprung von (-18164,-5897) auf
+             * (-892,0) = 16508 Einheiten. */
+            {   int32_t vdx = pl->x - g_actors[gate_arm].x;
+                int32_t vdz = pl->z - g_actors[gate_arm].z;
+                int32_t vd = (vdx < 0 ? -vdx : vdx) + (vdz < 0 ? -vdz : vdz);
+                if (vd > far_from_arm) far_from_arm = vd;
+            }
         } else {
             if (prev_victim) { if (run > longest_hold) longest_hold = run; freed++; }
             run = 0;
@@ -333,6 +347,11 @@ int main(void)
     CHECK(freed >= grabs - 1,
           "und jeder Griff endet wieder (%d Zugriffe, %d mal frei) — RE2s Ringkampf-Budget 148 "
           "@0x80102828-2C, pro Bild -= 2 + 5*Taste @0x80102868-7C", grabs, freed);
+    CHECK(far_from_arm > 0 && far_from_arm < 4000,
+          "und Leon bleibt beim Griff AM ARM (groesster Abstand %ld) - vor dem Anker-Fix "
+          "sprang er 16508 Einheiten weit weg (re15_clip_root_motion_abs platziert ABSOLUT "
+          "vom Anker +0xa0/+0xa2, den der Zombie-Griff @0x801025f0 setzt und @0x8001ad28-48 "
+          "auf den Spieler kopiert)", (long)far_from_arm);
     CHECK(longest_hold > 0 && longest_hold < 400,
           "kein Festfressen: der laengste Griff dauert %d Bilder (Budget 148 / 2 pro Bild = 74 "
           "Halte-Bilder plus Loese-Clip)", longest_hold);

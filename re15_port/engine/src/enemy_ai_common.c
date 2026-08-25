@@ -11309,6 +11309,24 @@ static void re15_writher_ai_tick(int slot)
 
         case 4:                                          /* FESTHALTEN — RE2 P2/P3 @0x80102814ff */
             if (e->sub_state_2 == 0) {                   /* Eintritt = P2 @0x80102814 */
+                /* ⛔ DER GEMEINSAME ANKER (Nutzer-Report 2026-08-29: "wenn Leon von den Armen
+                 * getroffen wird, verschwindet er"). GEMESSEN: im Griff-Bild sprang Leon von
+                 * (-18164,-5897) auf (-892,0) — 16508 Einheiten weit.
+                 * Grund: die Opfer-Platzierung ist ABSOLUT. re15_victim_place ruft
+                 * re15_clip_root_motion_abs, und das setzt x/z = ANKER (+0xa0/+0xa2) plus den
+                 * gedrehten Wurzel-Offset des Clips — byte-true func_0x8001ad68. Der
+                 * Zombie-Griff legt diesen Anker deshalb im Eintritts-Bild fest und KOPIERT
+                 * ihn auf den Spieler (`FUN_8001ac38` @0x801025f0, Kopie @0x8001ad28-48);
+                 * beide Koerper stehen danach relativ zu EINEM Punkt und greifen ineinander.
+                 * Der Arm hat das nie getan — Leon behielt einen Anker aus einem frueheren
+                 * Leben und wurde an dessen Stelle plus Clip-Offset gesetzt.
+                 * Genommen wird der Zweig, den auch der Zombie nimmt, wenn keine passende
+                 * Bank da ist (enemy_ai_common.c bei @0x801025f0: `else { e->anchor_x = e->x;
+                 * e->anchor_z = e->z; }`): der Anker IST die Position des Greifers. Fuer den
+                 * Arm ist das ohnehin der einzig sinnvolle Punkt — er hat keine Loco-Bank mit
+                 * einem Griff-Basisclip, aus dem sich ein Versatz lesen liesse. */
+                e->anchor_x = e->x;  e->anchor_z = e->z;
+                pl->anchor_x = e->anchor_x;  pl->anchor_z = e->anchor_z;
                 re15_player_victim_latch_ex(e, pl, 0);   /* Spieler-Kommando 5, RE1.5-Zwilling
                                                           * @0x80102630-40; Variante 0 = Front */
                 if (g_player_victim == 0) {

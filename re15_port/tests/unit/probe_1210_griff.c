@@ -274,8 +274,15 @@ int main(void)
     }
 
     int held = 0, bites = 0, min_hp = 100;
-    int32_t stand_x = arm->x + (int32_t)((sn * 3420) >> 12);
-    int32_t stand_z = arm->z + (int32_t)((cs * 3420) >> 12);
+    /* An den ECHTEN Kollisionsrand stellen (wie die Wache), nicht 3420 vor den Arm. */
+    int32_t stand_x = -19500, stand_z = arm->z;
+    for (int step = 0; step < 400; step++) {
+        int32_t dxs = (arm->x > stand_x) ? 25 : -25;
+        int32_t nx = stand_x + dxs, nz = stand_z;
+        re15_collision_constrain(&s_rdt, stand_x, stand_z, &nx, &nz);
+        if (nx == stand_x && nz == stand_z) break;
+        stand_x = nx; stand_z = nz;
+    }
     printf("  Standpunkt fuer den Griff-Lauf: (%ld,%ld), Arm auf (%ld,%ld) yaw=%d\n",
            (long)stand_x, (long)stand_z, (long)arm->x, (long)arm->z, (int)arm->rot_y);
     int16_t prev_hp = pl->hp;
@@ -306,10 +313,11 @@ int main(void)
         if (pl->hp < min_hp) min_hp = pl->hp;
         if (f < 90 || (f % 25) == 0)
             printf("    f%3d arm[sub=%u/%u clip=%u fr=%u] victim=%d dist=%u grabbed=%d "
-                   "PL[clip=%u fr=%u hp=%d] typ=0x%02X\n",
+                   "PL[clip=%u fr=%u hp=%d pos=(%ld,%ld) rot=%d] typ=0x%02X\n",
                    f, arm->sub_state_1, arm->sub_state_2, arm->motion, arm->anim_frame,
                    vs, (unsigned)re15_enemy_player_dist(arm, pl), re15_player_is_grabbed(),
-                   pl->motion, pl->anim_frame, (int)pl->hp, re15_player_victim_type(),
+                   pl->motion, pl->anim_frame, (int)pl->hp, (long)pl->x, (long)pl->z,
+                   (int)pl->rot_y, re15_player_victim_type(),
                    (long)arm->x, (long)arm->z);
         if (pl->hp < 0) { printf("    f%3d Spieler tot\n", f); break; }
         pl->hp = 100; prev_hp = 100;   /* am Leben halten, damit mehrere Griffe messbar sind */
