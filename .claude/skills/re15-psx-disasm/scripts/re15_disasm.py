@@ -34,6 +34,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 EXE_PATH     = os.path.join(REPO, "info", "Re1.5", "PSX.EXE")
 OVERLAY_DIR  = os.path.join(REPO, "info", "Re1.5", "PSX", "BIN")
+# Ueberschreibbar, damit dieselben Kommandos auch auf ausgeschnittenen
+# Chunks laufen (z.B. build/extracted/re2_ems aus re2_ems_cut.py).
+OVERLAY_DIR  = os.environ.get("RE_OVERLAY_DIR") or OVERLAY_DIR
 OVERLAY_LOAD = 0x80100000
 
 REGS = ["zero","at","v0","v1","a0","a1","a2","a3","t0","t1","t2","t3","t4","t5","t6","t7",
