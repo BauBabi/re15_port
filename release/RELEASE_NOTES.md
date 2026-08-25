@@ -1,3 +1,55 @@
+# RE1.5 Port — v0.3.31 (Early Preview)
+
+Ein Fix, und der war eine Regression von mir aus v0.3.30.
+
+## Der Griff zieht Leon nicht mehr in die Wand
+
+> "Die Zombies in 1210 ziehen Leon immer noch durch die Wand wenn sie ihn grabben. [...]
+> Leon darf, wenn er gegrabbed wird, nicht in die Wand gezogen werden, sonst kann man ihn
+> im normalen Raum nicht mehr bewegen."
+
+In v0.3.30 hatte ich das Verschwinden beim Griff behoben, indem ich Leon an den Arm ankerte —
+so, wie es RE2s Zombie tut. Nur steht RE2s Zombie frei im Raum, und der Arm steckt in der Wand.
+Der Anker war damit ein Punkt hinter dem Mauerwerk.
+
+Gemessen: die Lunge endet bei x = -16420, die begehbare Flurkante liegt auf derselben Zeile bei
+x = -18164. Der Anker lag also 1744 Einheiten hinter der Wand. Leon landete auf -17312 und
+wanderte ueber die naechsten Bilder auf -17731 weiter hinein — jedes Bild auf einem Punkt, den
+die Kollision gar nicht erlaubt. Nach dem Loesen stand er dort fest.
+
+Der Anker ist jetzt die **Hand** statt des Rumpfes — derselbe Punkt, an dem das Griff-Tor
+ohnehin schon misst. Dort passiert der Griff ja auch: der Arm reicht durch die Gitterstaebe,
+sein Koerper bleibt dahinter. Zusaetzlich laeuft die Platzierung fuer diesen einen Gegner-Typ
+durch dieselbe Wandklemme wie die Spielfigur selbst, damit sie ihn unter keinen Umstaenden
+hinter die Kollisionsgrenze setzen kann.
+
+Nachher gemessen: Leon auf -18983 bis -19402, jedes Bild im begehbaren Flur.
+
+Eine Wache haelt das jetzt fest: von 290 gemessenen Griff-Bildern steht Leon in **null** in der
+Wand. Und die aeltere Abstands-Wache, die dabei ansprang, habe ich nicht etwa gelockert — sie
+mass gegen den Rumpf, und der Unterschied war exakt der Hand-Versatz (3710 + 1671 = 5381). Sie
+misst jetzt gegen die Hand, mit unveraenderter Schranke, plus einer zweiten gegen den Rumpf.
+
+## Was noch NICHT behoben ist
+
+> "Ausserdem clippen sie teilweise vollstaendig durch die Wand [...] es soll lediglich der
+> obere Teil bei den Gitterstaeben durchsichtig sein."
+
+Das ist offen. Was ich messen konnte: die Arme verlassen die Wand **geometrisch nie** — ihr
+groesster Ueberstand ueber die begehbare Flurkante ist 0, der Rumpf endet 1744 Einheiten davor
+und nur das Mesh ragt weiter. Es ist also kein Positions-, sondern ein Verdeckungsproblem.
+Die Daten dafuer sind vollstaendig vorhanden: ROOM1210 fuehrt 399 Vordergrund-Masken in 8 von
+9 Kamera-Schnitten, und alle acht zugehoerigen Atlanten liegen im Paket.
+
+Warum die Wand den Rumpf trotzdem nicht ueberdeckt, konnte ich in dieser Sitzung nicht
+feststellen — dafuer muesste ich das Bild sehen, und die Bildschirmaufnahme liefert hier nur
+schwarze Frames. Der naechste Schritt steht fest: die Mask-Rechtecke der betroffenen Schnitte
+gegen die Bildschirmflaeche der Arme rechnen.
+
+**Tests:** 241/241 gruen (lokal und im Docker-Linux-Build).
+
+---
+
 # RE1.5 Port — v0.3.30 (Early Preview)
 
 Vier Meldungen, alle vier aus dem letzten Paket. Zwei davon hatte ich in v0.3.29 schon
