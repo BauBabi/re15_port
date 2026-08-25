@@ -6871,10 +6871,17 @@ re_title:;
                         npc_skel = &lb->skel_victim; npc_anim = &lb->anim_victim;
                         av.clip_override = (int)npc->motion;
                     }
-                } else if (npc->walk_active ||
+                } else if (npc->walk_active || npc->state == 1 ||
                            (npc->state == 4 && (npc->sub_state_1 == 2 || npc->sub_state_1 == 4 ||
                                                 npc->sub_state_1 == 5 || npc->sub_state_1 == 6 ||
                                                 npc->sub_state_1 == 9))) {
+                    /* `npc->state == 1` = die ESKORTE (Nutzer-Report 2026-08-28). Alle fuenf
+                     * portierten Exec-Subs posieren dort aus +0x170/+0x174 = Bank 1:
+                     * Stehen @0x8004f384-88, Gehen @0x8004f5c0-c4, Drehen @0x8004f7bc-c0,
+                     * Nah @0x8004fb14, Laufen @0x8004ff68 (jeweils `lw a0,368(v0)` /
+                     * `lw a1,372(v0)` unmittelbar vor `jal 0x8001f314`). Vorher fiel der
+                     * Renderer hier auf die Container-Bank durch - dort ist Adas Clip 5 eine
+                     * andere 20-Bilder-Animation und Clip 2 ein 50-Bilder-Sturz. */
                     /* Subs {2,4,5,6,9} + Plc_dest-Walk -> die EIGENE BANK 1 (+0x170/+0x174 =
                      * dir[4]/dir[3]; Kanal-Loader FUN_80022300 @0x800224b8/c8, Sub-Loads
                      * 2 @0x80050f88/90, Walk @0x800512bc/c0, 6 @0x80051884/88, Turn @0x80051e9c).

@@ -4926,7 +4926,14 @@ int re15_actor_clip_len(const re15_actor_t *a)
     if (a->type >= 0x40 && a->type <= 0x4d && b->own_ok) {
         int s1 = a->sub_state_1;
         int own = a->walk_active ||
-                  (a->state == 4 && (s1 == 2 || s1 == 4 || s1 == 5 || s1 == 6 || s1 == 9));
+                  (a->state == 4 && (s1 == 2 || s1 == 4 || s1 == 5 || s1 == 6 || s1 == 9)) ||
+                  /* ESKORTE (state 1): JEDER ihrer Exec-Subs posiert aus +0x170/+0x174 =
+                   * BANK 1 - `lw a0,368(v0)` / `lw a1,372(v0)` vor dem anim_set, belegt bei
+                   * Stehen @0x8004f384-88, Gehen @0x8004f5c0-c4, Drehen @0x8004f7bc-c0,
+                   * Nah @0x8004fb14, Laufen @0x8004ff68. Ohne diesen Zweig taktete und
+                   * zeichnete der Port die Container-Bank (Nutzer-Report 2026-08-28
+                   * "Adas Lauf- und Idle Animation beim Folgen sind noch falsch"). */
+                  (a->state == 1);
         if (own && (int)a->motion < b->anim_own.clip_count)
             return b->anim_own.clips[a->motion].frame_count;
     }
@@ -9152,26 +9159,187 @@ static int32_t re15_npc_follow_point(re15_actor_t *e, int32_t radius, int angA, 
 }
 
 /* Sub-1-EXEC 0x8004f4e0 — die tatsaechliche Fortbewegung. */
-static void re15_npc_escort_walk(re15_actor_t *e)
-{
-    /* Tabelle 0x80076c00, u8-Paare (Geschwindigkeit, Dreh-Rate), Index (typ-0x40)*2.
-     * Selbst gelesen: 75,48,75,48,75,48,75,48,70,48,70,48,70,48,70,48. */
-    static const unsigned char k_npc_gait[16] = {
-        75, 48, 75, 48, 75, 48, 75, 48, 70, 48, 70, 48, 70, 48, 70, 48
-    };
-    int gi = ((int)e->type - 0x40) * 2;
-    int spd = 75, slew = 48;
-    if (gi >= 0 && gi + 1 < (int)sizeof k_npc_gait) { spd = k_npc_gait[gi]; slew = k_npc_gait[gi + 1]; }
+/* ---- ESKORTE (State 1) - die byte-true Sub-Maschine -------------------------------
+ *
+ * NUTZER-REPORT 2026-08-28: "Adas Lauf- und Idle Animation beim Folgen sind noch falsch".
+ * Ada ist Entity-Typ 0x42 (Dispatch-Eintrag @0x80072cb4 -> Root 0x8011cb70, gesetzt
+ * @0x8011e924-2c `addiu v0,v0,-13456` / `sw v0,11444(at)`).
+ *
+ * Die Eskorte laeuft ueber 0x8011cf20: DECIDE[+0x5] aus @0x80121680, dann EXEC[+0x5] aus
+ * @0x801216a0. JEDER Exec-Sub posiert aus dem Kanal-PAAR +0x170/+0x174 = BANK 1
+ * (dir[4]/dir[3], positionsfest geladen von FUN_80022300 @0x800224b8/@0x800224c8):
+ *     Stehen  Sub 0 EXEC 0x8004f310: `lw a0,368(v0)` / `lw a1,372(v0)` @0x8004f384-88
+ *     Gehen   Sub 1 EXEC 0x8004f4e0: dieselben Loads @0x8004f5c0-c4
+ *     Drehen  Sub 2 EXEC 0x8004f6f0: dieselben Loads @0x8004f7bc-c0
+ *     Nah     Sub 3 EXEC 0x8004f9ec: dieselben Loads @0x8004fb14
+ *     Laufen  Sub 5 EXEC 0x8004fe44: dieselben Loads @0x8004ff68
+ * NICHT die Container-Bank. Adas Bank 1 traegt 6 Clips {22,16,52,1,105,30}:
+ * Clip 0 = Laufen (22), Clip 2 = Stehen (52), Clip 5 = Gehen (30).
+ *
+ * ⛔ WAS DER PORT FALSCH MACHTE (alle vier gemessen):
+ *  1. Der RENDERER band Bank 1 nur an `state == 4 || walk_active` - die Eskorte laeuft aber
+ *     in state 1. Gezeichnet wurde die Container-Bank (24 Clips), wo Clip 5 eine voellig
+ *     andere 20-Bilder-Animation ist und Clip 2 ein 50-Bilder-Sturz.
+ *  2. Der Geh-Sub setzte Clip/Bild/Blend in JEDEM Bild neu und ignorierte das Phasen-Tor
+ *     +0x6 (`lbu v1,6(a0)` @0x8004f4f0, `beq v1,zero` @0x8004f4f8 -> nur Phase 0 seedet,
+ *     `sb v0,6(a0)` @0x8004f514 schaltet auf Phase 1). Gemessen blieb anim_frame konstant 1
+ *     und anim_frac konstant 6: die Pose stand still (Amplitude 0 in allen 15 Bones), waehrend
+ *     der Original-Fussknochen 897 Einheiten schwingt.
+ *  3. Sub 3 bekam Clip 2. Das Original schreibt dort Clip 5 (`ori v0,zero,0x5` /
+ *     `sb v0,148(v1)` @0x8004fa2c-30) und HALBIERT nur das Tempo (`srl v0,v0,1` /
+ *     `sh v0,140(v1)` @0x8004fa84-88 -> 75>>1 = 37). Ausserdem betritt der Uebergang aus
+ *     Sub 1 den Sub 3 in PHASE 1 (`ori v0,zero,0x1` / `sb v0,6(v1)` @0x8004f3d4-d8) und
+ *     ueberspringt die Clip-Zuweisung damit bewusst - der Geh-Clip laeuft durch.
+ *  4. Die Subs 2 (Drehen) und 5 (LAUFEN) fehlten ganz, ebenso die zugehoerigen
+ *     DECIDE-Zweige. Ada blieb deshalb auch bei grossem Abstand im Geh-Clip.
+ *
+ * NICHT PORTIERT und hier ausdruecklich OFFEN: die Subs 4/6/7 und die drei DECIDE-Zweige,
+ * die dorthin fuehren (`g_flag52 & 1` + Typ 0x4b -> Sub 6 @0x8004f184-1bc, Spieler+0x93 != 0
+ * -> Sub 6 @0x8004f1cc-f0). Ihre EXEC-Seiten sind nicht disassembliert; ein Zweig ohne
+ * Ziel-Sub wuerde die NPC einfrieren. */
 
-    e->sub_state_2 = 1;                               /* Phase 1 @0x8004f514 */
-    re15_npc_clip(e, 5);                              /* +0x94 = 5 @0x8004f524, +0x95 = 0 @0x8004f534 */
-    e->anim_frac  = 7;                                /* +0x8f = 7 @0x8004f544 */
-    e->speed_h    = (int16_t)spd;                     /* +0x8c @0x8004f578 */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, slew);  /* yaw-face @0x8004f5ac auf +0x1bc/+0x1be */
-    re15_npc_anim(e);                                 /* anim_set @0x8004f5c8 */
-    /* pos_advance @0x8004f5d0 (FUN_800245d8, a0 = 0 = vorwaerts, Tempo aus +0x8c) */
+/* Tempo-/Raten-Tabellen, alle drei selbst gelesen (u8-Paare, Index (Typ-0x40)*2). */
+static const unsigned char k_npc_gait_walk[16] = {   /* 0x80076c00 @0x8004f560 / @0x8004fa7c */
+    75, 48, 75, 48, 75, 48, 75, 48, 70, 48, 70, 48, 70, 48, 70, 48
+};
+static const unsigned char k_npc_gait_turn[16] = {   /* 0x80076c41 @0x8004f780 */
+    96, 0, 96, 0, 96, 0, 96, 0, 96, 0, 96, 0, 96, 0, 96, 0
+};
+static const unsigned char k_npc_gait_run[16] = {    /* 0x80076c80 @0x8004fecc */
+    200, 72, 200, 72, 200, 72, 200, 72, 210, 72, 210, 72, 210, 72, 210, 72
+};
+static int re15_npc_gait(const re15_actor_t *e, const unsigned char *tab)
+{
+    int gi = ((int)e->type - 0x40) * 2;              /* `addiu v0,v0,-64` / `sll v0,v0,1` */
+    return (gi >= 0 && gi < 16) ? (int)tab[gi] : (int)tab[0];
+}
+
+/* pos_advance = FUN_800245d8(a0 = 0), Tempo aus +0x8c entlang +0x6a (@0x8004f5d0). */
+static void re15_npc_pos_advance(re15_actor_t *e)
+{
     e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
+}
+
+/* Sub 0 DECIDE 0x8004f100. Nur der erste Zweig fuehrt in einen portierten Sub; die
+ * uebrigen sind oben als OFFEN benannt. */
+static void re15_npc_escort_decide0(re15_actor_t *e)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (e->ai_dist >= 0x5ddu) {                      /* sltiu 0x5dd @0x8004f118 */
+        e->sub_state_1 = 1; e->sub_state_2 = 0;      /* @0x8004f124 / @0x8004f134 */
+        return;
+    }
+    /* arc_test(playerX, playerZ, 0x4b0) != 0 -> zum Spieler drehen (@0x8004f148-74). */
+    if (re15_ai_arc_test(e, pl->x, pl->z, 0x4b0) != 0) {
+        e->sub_state_1 = 2; e->sub_state_2 = 0;      /* @0x8004f164 / @0x8004f174 */
+    }
+}
+
+static void re15_npc_escort_decide(re15_actor_t *e)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    switch (e->sub_state_1) {
+    case 1:                                          /* 0x8004f3a4 */
+        if (e->ai_dist < 0x1f4u) {                   /* sltiu 0x1f4 @0x8004f3bc */
+            e->sub_state_1 = 3;                      /* @0x8004f3c8 */
+            e->sub_state_2 = 1;                      /* +0x6 = 1 @0x8004f3d8 (Phase 0 wird
+                                                      * uebersprungen -> Clip 5 laeuft weiter) */
+            return;
+        }
+        if (e->ai_dist >= 0xbb9u) {                  /* sltiu 0xbb9 @0x8004f434 */
+            e->sub_state_1 = 5; e->sub_state_2 = 0;  /* @0x8004f440 / @0x8004f450 */
+        }
+        break;
+    case 2:                                          /* 0x8004f5e8 */
+        if (re15_ai_arc_test(e, pl->x, pl->z, 0x40) == 0) {   /* @0x8004f600-08 */
+            e->sub_state_1 = 0; e->sub_state_2 = 0;  /* @0x8004f61c / @0x8004f62c */
+            return;
+        }
+        if (e->ai_dist >= 0x7d1u) {                  /* sltiu 0x7d1 @0x8004f644 */
+            e->sub_state_1 = 1; e->sub_state_2 = 0;  /* @0x8004f650 */
+        }
+        break;
+    case 3:                                          /* 0x8004f7dc */
+        if (e->ai_dist >= 0x3e9u) {                  /* sltiu 0x3e9 @0x8004f818 */
+            e->sub_state_1 = 1;                      /* @0x8004f824 */
+            e->sub_state_2 = 1;                      /* +0x6 = 1 @0x8004f834 (`sb v1,6(v0)`,
+                                                      * v1 = 1 - NICHT 0) */
+        }
+        break;
+    case 5:                                          /* 0x8004fd3c */
+        if (e->ai_dist < 0x3e8u) {                   /* sltiu 0x3e8 @0x8004fd54 */
+            e->sub_state_1 = 3; e->sub_state_2 = 0;  /* @0x8004fd60 / @0x8004fd70 */
+        }
+        break;
+    default:
+        re15_npc_escort_decide0(e);
+        break;
+    }
+}
+
+static void re15_npc_escort_exec(re15_actor_t *e)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int seed = (e->sub_state_2 == 0);                /* Phasen-Tor `lbu v1,6(a0)` je Sub */
+    switch (e->sub_state_1) {
+    case 1:                                          /* GEHEN 0x8004f4e0 */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004f514 */
+            e->motion = 5; e->anim_frame = 0;        /* +0x94 = 5 @0x8004f524, +0x95 = 0 @0x8004f534 */
+            e->anim_frac = 7;                        /* +0x8f = 7 @0x8004f544 */
+        }
+        e->speed_h = (int16_t)re15_npc_gait(e, k_npc_gait_walk);          /* @0x8004f578 */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z,
+                               re15_npc_gait(e, k_npc_gait_walk + 1));    /* @0x8004f5ac */
+        re15_npc_anim(e);                            /* anim_set @0x8004f5c8 */
+        re15_npc_pos_advance(e);                     /* @0x8004f5d0 */
+        break;
+    case 2:                                          /* DREHEN 0x8004f6f0 - KEIN pos_advance */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004f724 */
+            e->motion = 5; e->anim_frame = 0;        /* +0x94 = 5 @0x8004f734, +0x95 = 0 @0x8004f744 */
+            e->anim_frac = 7;                        /* +0x8f = 7 @0x8004f754 */
+        }
+        e->rot_y = (int16_t)(((int)e->rot_y +
+                    re15_ai_arc_test(e, pl->x, pl->z,
+                                     re15_npc_gait(e, k_npc_gait_turn))) & 0x0fff);
+                                                     /* `addu v1,v1,v0` / `sh v1,106(a0)` @0x8004f7a8-ac */
+        re15_npc_anim(e);                            /* anim_set @0x8004f7c4 */
+        break;
+    case 3:                                          /* NAH DABEI 0x8004f9ec */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004fa20 */
+            e->motion = 5; e->anim_frame = 0;        /* +0x94 = 5 @0x8004fa30, +0x95 = 0 @0x8004fa40 */
+            e->anim_frac = 7;                        /* +0x8f = 7 @0x8004fa50 */
+        }
+        e->speed_h = (int16_t)(re15_npc_gait(e, k_npc_gait_walk) >> 1);   /* `srl v0,v0,1` @0x8004fa84 */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z,
+                               re15_npc_gait(e, k_npc_gait_walk + 1));
+        re15_npc_anim(e);                            /* anim_set @0x8004fb14 */
+        re15_npc_pos_advance(e);                     /* @0x8004fb24 */
+        break;
+    case 5:                                          /* LAUFEN 0x8004fe44 */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004fe78 */
+            e->motion = 0; e->anim_frame = 0;        /* +0x94 = 0 @0x8004fe88, +0x95 = 0 @0x8004fe98 */
+            e->anim_frac = 7;                        /* +0x8f = 7 @0x8004fea8 */
+        }
+        e->speed_h = (int16_t)re15_npc_gait(e, k_npc_gait_run);           /* @0x8004fed4-dc */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z,
+                               re15_npc_gait(e, k_npc_gait_run + 1));
+        re15_npc_anim(e);                            /* anim_set @0x8004ff68 */
+        re15_npc_pos_advance(e);                     /* @0x8004ff78 */
+        break;
+    default:                                         /* STEHEN 0x8004f310 */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004f344 */
+            e->motion = 2; e->anim_frame = 0;        /* +0x94 = 2 @0x8004f354, +0x95 = 0 @0x8004f364 */
+            e->anim_frac = 7;                        /* +0x8f = 7 @0x8004f374 */
+        }
+        re15_npc_anim(e);                            /* anim_set @0x8004f38c */
+        break;
+    }
 }
 
 /* State 1 = die Eskorte. */
@@ -9203,42 +9371,27 @@ static void re15_npc_escort_tick(re15_actor_t *e, re15_actor_t *pl)
     e->ai_flags &= (uint16_t)~8u;
 
     if (e->grid_id & 0x0fu) {                                   /* andi 0xf @0x8011ceec */
-        /* +0x9 == 1 -> Tabelle 0x8012167c[1] = 0x8004f100 = die DECIDE ALLEIN, ohne EXEC.
-         * Sie entscheidet weiter, bewegt sich aber nicht (`jr ra` @0x8004f1fc). */
-        if (e->ai_dist >= 0x5ddu) { e->sub_state_1 = 1; e->sub_state_2 = 0; }
-        re15_npc_anim(e);
+        /* +0x9 == 1 -> Tabelle 0x8012167c[1] = 0x8004f100 = die DECIDE von Sub 0, ALLEIN.
+         * Sie entscheidet weiter, spielt aber KEINE Animation: in 0x8004f100 steht kein
+         * einziger `jal 0x8001f314`, die Funktion endet mit `jr ra` @0x8004f1fc. Der Port
+         * hat hier bis 2026-08-28 zusaetzlich re15_npc_anim(e) gerufen und damit die Pose
+         * weitergetaktet, die im Original steht. */
+        re15_npc_escort_decide0(e);
         return;
     }
 
-    /* +0x9 == 0 -> Tabelle 0x8012167c[0] = 0x8011cf20 = die volle Vier-Sub-Maschine. */
-    switch (e->sub_state_1) {
-    case 1:                                     /* gehen */
-        if (e->ai_dist < 0x1f4u) {              /* sltiu 0x1f4 @0x8004f3bc */
-            e->sub_state_1 = 3;                 /* @0x8004f3c8 */
-            e->sub_state_2 = 1;                 /* @0x8004f3d8 */
-            re15_npc_clip(e, 2);
-            re15_npc_anim(e);
-        } else {
-            re15_npc_escort_walk(e);
-        }
-        break;
-    case 3:                                     /* angekommen / warten */
-        if (e->ai_dist >= 0x3e9u) {             /* sltiu 0x3e9 @0x8004f818 */
-            e->sub_state_1 = 1;                 /* @0x8004f824 */
-            e->sub_state_2 = 0;
-        }
-        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
-        re15_npc_anim(e);
-        break;
-    default:                                    /* Sub 0 stehen — DECIDE 0x8004f100 */
-        if (e->ai_dist >= 0x5ddu) {             /* sltiu 0x5dd @0x8004f118 */
-            e->sub_state_1 = 1;                 /* @0x8004f124 */
-            e->sub_state_2 = 0;                 /* @0x8004f134 */
-        }
-        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
-        re15_npc_anim(e);
-        break;
-    }
+    /* +0x9 == 0 -> Tabelle 0x8012167c[0] = 0x8011cf20: erst DECIDE[+0x5] aus der Tabelle
+     * @0x80121680 (`addiu at,at,5760` @0x8011cf40), dann EXEC[+0x5] aus @0x801216a0
+     * (`addiu at,at,5792` @0x8011cf74). Beide Tabellen selbst gelesen:
+     *   +0x5 | DECIDE     | EXEC
+     *     0  | 0x8004f100 | 0x8004f310   stehen
+     *     1  | 0x8004f3a4 | 0x8004f4e0   gehen
+     *     2  | 0x8004f5e8 | 0x8004f6f0   zum Spieler drehen
+     *     3  | 0x8004f7dc | 0x8004f9ec   nah dabei (halbes Tempo)
+     *     5  | 0x8004fd3c | 0x8004fe44   laufen
+     * (4/6/7 sind nicht portiert, s. Kommentar bei re15_npc_escort_decide0.) */
+    re15_npc_escort_decide(e);
+    re15_npc_escort_exec(e);
 }
 
 static void re15_npc_ai_tick(int slot)
@@ -10741,6 +10894,38 @@ static int re15_writher_sector(const re15_actor_t *a, const re15_actor_t *b, int
     return !(t < (unsigned)(half << 1));          /* 0 == innerhalb */
 }
 
+/* HEIMAT-POSITION der ROOM1210-Arme. Das ORIGINAL kennt keine Rueckkehr: sein Ausgang
+ * @0x8010c8e4 schaltet auf +0x5 = 2 oder 3 und kommt nie wieder auf 1 (einziger Setzer von
+ * +0x5 = 1 ist A[0] @0x8010c628, und der laeuft nur bei +0x5 == 0). Weil der Port das
+ * Ausfahren pro Arm WIEDERHOLT ausloest (Nutzer-Auftrag statt Member_set(12,1) @0x001EDA),
+ * muss er die Kreatur beim Rueckzug an ihren Platz zurueckstellen - sonst wandert sie bei
+ * jedem Vorbeilaufen 2420 Einheiten weiter in den Flur. Klar als NACHRUESTUNG markiert. */
+static int32_t s_writher_home_x[RE15_ACTOR_MAX];
+static int32_t s_writher_home_z[RE15_ACTOR_MAX];
+static uint8_t s_writher_home_ok[RE15_ACTOR_MAX];
+
+/* FUN_800245d8(a0) - der Schritt um +0x8c entlang (Yaw + a0), byte-gelesen:
+ *   800245f0: lhu v0,140(v0)   ; +0x8c wird als Z-Komponente des Vektors abgelegt
+ *   80024658: lh  v0,106(v0)   ; +0x6a = Yaw
+ *   80024664: addu a0,v0,a0    ; RotMatrixY(Yaw + a0)  -> a0 = 0x800 = 180 Grad rueckwaerts
+ * Die Zerlegung ist dieselbe, die actor_locomotion.c und climb_common.c fuer denselben
+ * Aufruf fuehren: x += (cos * v) >> 12, z -= (sin * v) >> 12.
+ * Danach der Wand-Klemmer des Wurzel-Ticks: func_0x8003b0a4(+0x34, *(+0x78)+6, 4)
+ * @0x8010c324 - Radius aus der Hitbox (300 @0x8012091c), Solid-Maske 4. */
+static void re15_writher_step(re15_actor_t *e, int yaw_off)
+{
+    int32_t v = (int32_t)e->speed_h;
+    int     h = (int)(((int)e->rot_y + yaw_off) & 0x0fff);
+    int32_t nx = e->x + (int32_t)(((int32_t)re15_cos_q12(h) * v) >> 12);
+    int32_t nz = e->z - (int32_t)(((int32_t)re15_sin_q12(h) * v) >> 12);
+    re15_collision_constrain_enemy(&g_room_rdt, e->x, e->z, &nx, &nz,
+                                   (int32_t)e->hit_radius_min, e->y, 4u);
+    e->x = nx; e->z = nz;
+    /* anim_set @0x8010c90c: Pose + POST-Inkrement des Bildzaehlers an der Clip-Laenge. */
+    if (re15_enemy_clip_done(e)) e->anim_frame = 0; else e->anim_frame++;
+    if (e->anim_frac > 0) e->anim_frac--;   /* f314-Crossfade-Decay @0x8001f5a8-b4 */
+}
+
 static void re15_writher_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -10753,6 +10938,12 @@ static void re15_writher_ai_tick(int slot)
         e->ai_timer = 0x14;                                        /* +0x9c = 0x14 @0x8010c3ac */
         e->motion = 0; e->anim_frame = 0;                         /* clip 0 idle (B[0] +0x94=0 @0x8010c6bc) */
         e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;/* grid 0 -> A[0] keeps sub 0 @0x8010c608 */
+        {   /* Heimat-Position sichern (Port-Nachruestung, s. s_writher_home_x). */
+            if (slot >= 0 && slot < RE15_ACTOR_MAX) {
+                s_writher_home_x[slot] = e->x; s_writher_home_z[slot] = e->z;
+                s_writher_home_ok[slot] = 1;
+            }
+        }
         /* The 300-radius +0x78 box (@0x8010c3c4), flags|=0x40000000, +0x1b8/+0x1b9, the +0x1d0/+0x1d2
          * rng seeds, the +0x188 part-block and the shadow (0x8001af5c) are engine bookkeeping; the port
          * installs the box via re15_enemy_apply_hitbox(0x1a) at spawn and models the reachable idle +
@@ -10841,6 +11032,31 @@ static void re15_writher_ai_tick(int slot)
          *                  Sie haelt nur andere Raumteile draussen; die Hoehe entlang des
          *                  Flurs entscheidet REACH_Z.
          *
+         * ⛔⛔ DER ENTSCHEIDENDE BEFUND (Nutzer-Report 2026-08-28 "Arme kommen nicht raus
+         * beim Vorbeilaufen") — UND DIE KORREKTUR MEINER EIGENEN AUSLASSUNG:
+         * Ich hatte die VORWAERTS-BEWEGUNG der Original-Maschine weggelassen, mit der
+         * Begruendung "ein im Gitter steckender Arm kann das nicht". Das war falsch: genau
+         * diese Bewegung IST das Aus-dem-Gitter-Kommen. Gemessen (probe_1210_reach /
+         * probe_1210_cutcheck):
+         *   - Die zehn Arme liegen an ihren SPAWN-Positionen in NULL von NEUN
+         *     Kamera-Region-Vierecken des Raums. Sowohl der Port (platform/pc/main.c:
+         *     `if (cam_has_region && !re15_aot_point_in_quad(...)) continue;`) als auch das
+         *     Original (Zeichner-Weiche FUN_8001e8c8: `jal 0x80014368` @0x8001e974,
+         *     `beq v0,zero` @0x8001e97c; die Mesh-Emitter 0x800254a0/0x800256b0 stehen NUR im
+         *     Ja-Zweig FUN_8001e9ec) verwerfen sie damit VOR jeder Mesh-Ausgabe.
+         *     Der Port hat also nicht "unauffaellig" animiert — er hat GAR NICHTS gezeichnet.
+         *   - Nach der Original-Translation von netto 2420 Einheiten liegt jeder Arm in
+         *     1 bis 3 Vierecken; Endpunkte -22580 (West-Reihe, rot_y 0) und -16420 (Ost-Reihe,
+         *     rot_y 2048), also 430 bzw. 280 Einheiten VOR der begehbaren Flurkante statt
+         *     2700-2850 dahinter.
+         *   - Die EM01A-Keyframes tragen KEINE Root-Translation (SPEED-Bytes und
+         *     Root-Pose-Delta in Clip 0/1/2 exakt 0); die Bewegung kommt ausschliesslich aus
+         *     +0x8c. Und das Modell ist winzig: groesste Bone-Auslenkung nach vorn 142,
+         *     groesster Radius 442 Einheiten. Ohne Translation kann da nichts herausreichen.
+         * Der Nutzer-Punkt bleibt trotzdem gewahrt: verworfen hatte er "ALLE ZEHN auf einen
+         * Schlag" (Member_set(12,1) @Datei 0x001EDA), nicht die Bewegung. Der Port behaelt
+         * also sein Einzel-Naeherungs-Gate und fuehrt darin die byte-true Lunge aus.
+         *
          * ⛔ WAS DIE RAUM-GEOMETRIE ERLAUBT (gemessen, probe_1210_griff, 2D-Abtastung des
          * begehbaren Bodens im 50er-Raster): acht der zehn Kreaturen stehen 1348..2839
          * Einheiten AUSSERHALB des begehbaren Bodens — hinter dem Gitter. Nur zwei (Arm 3 auf
@@ -10859,22 +11075,87 @@ static void re15_writher_ai_tick(int slot)
         int32_t dx = pl->x - e->x; if (dx < 0) dx = -dx;
         int reach = (dz < RE15_WRITHER_REACH_Z) && (dx < RE15_WRITHER_REACH_X);
 
-        if (e->ai_timer > 0) e->ai_timer--;              /* Stoehn-Cooldown (+0x9c) */
+        /* Stoehn-Cooldown: liegt jetzt auf +0x239 (re2z_cd239) - genau dem Feld, aus dem
+         * der Wert stammt (RE2s verankerter Zombie setzt +0x239 = 150 @0x801038d0-d4).
+         * BIS 2026-08-28 lag er auf ai_timer und belegte damit +0x9c - das Feld, das die
+         * Original-Lunge als Phasen-Zaehler braucht (+0x9c = 3 @0x8010c7a8, 30
+         * @0x8010c808, 3 @0x8010c870). Beides auf einem Feld haette die Lunge zerlegt. */
+        if (e->re2z_cd239 > 0) e->re2z_cd239--;
 
         switch (e->sub_state_1) {
-        case 1:                                          /* AUSFAHREN — Clip 2, einmal */
-            if (e->motion != 2) { e->motion = 2; e->anim_frame = 0; e->anim_frac = 7; }
-            if (re15_enemy_clip_done(e)) { e->sub_state_1 = 2; e->anim_frame = 0; }
-            else e->anim_frame++;
+        case 1:                                          /* AUSFAHREN = die byte-true LUNGE B[1] */
+            /* ⛔ 1:1 die Original-Maschine FUN_8010c714 (ANIM-Tabelle @0x80120984[1]), Phasen
+             * ueber +0x6 (hier sub_state_2). Sie ist der Mechanismus, der die Kreatur aus dem
+             * Gitter in den Flur schiebt — Beleg-Block im Kopf dieser case-1-Klammer.
+             * Der Schritt selbst ist FUN_800245d8: `lhu v0,140(v0)` @0x800245f0 legt +0x8c als
+             * Z-Komponente ab, `lh v0,106(v0)` @0x80024658 holt den Yaw und
+             * `addu a0,v0,a0` @0x80024664 addiert den Parameter — a0 = 0 vorwaerts,
+             * a0 = 0x800 (180 Grad) rueckwaerts.
+             * Der Klemm-Aufruf danach ist der des Wurzel-Ticks: func_0x8003b0a4(+0x34,
+             * *(+0x78)+6, 4) @0x8010c324, also Radius aus der Hitbox (300, @0x8012091c),
+             * Solid-Maske 4. Gemessen kostet er die West-Reihe 0 und die Ost-Reihe rund 60
+             * Einheiten — die Cut-Vierecke werden in beiden Faellen erreicht. */
+            switch (e->sub_state_2) {
+            case 0:                                      /* INIT @0x8010c768 */
+                e->motion = 0;                           /* +0x94 = 0   @0x8010c778 */
+                e->anim_frame = 0;                       /* +0x95 = 0   @0x8010c788 */
+                e->anim_frac = 7;                        /* +0x8f = 7   @0x8010c798 */
+                e->ai_timer = 3;                         /* +0x9c = 3   @0x8010c7a8 */
+                e->speed_h = 0x320;                      /* +0x8c = 800 @0x8010c7b8 */
+                e->sub_state_2 = 1;                      /* +0x6  = 1   @0x8010c768 */
+                /* Das Original FAELLT hier durch in den Zaehl-Zweig @0x8010c7bc — das
+                 * Setz-Bild bewegt also schon. */
+                /* fall through */
+            case 1: {                                    /* @0x8010c7bc: 3 Bilder a 800 vor */
+                int16_t pre = e->ai_timer;
+                e->ai_timer = (int16_t)(pre - 1);        /* `sh v1,156(v0)` @0x8010c7d8: IMMER */
+                if (pre == 0) {                          /* `bne a0,zero` @0x8010c7d4 */
+                    e->sub_state_2 = 2;                  /* +0x6  = 2    @0x8010c7e8 */
+                    e->speed_h    = 0x14;                /* +0x8c = 20   @0x8010c7f8 */
+                    e->ai_timer   = 0x1e;                /* +0x9c = 30   @0x8010c808 */
+                    e->motion     = 2;                   /* +0x94 = 2    @0x8010c818 */
+                    e->anim_frac  = 7;                   /* +0x8f = 7    @0x8010c82c */
+                }
+                re15_writher_step(e, 0);                 /* Tail @0x8010c8f8-918, a0 = 0 */
+                break;
+            }
+            case 2: {                                    /* @0x8010c830: 30 Bilder a 20 zurueck */
+                int16_t pre = e->ai_timer;
+                e->ai_timer = (int16_t)(pre - 1);        /* `sh v0,156(a0)` @0x8010c840 */
+                if (pre == 0) {                          /* `bne v1,zero` @0x8010c83c */
+                    e->sub_state_2 = 3;                  /* +0x6  = 3    @0x8010c850 */
+                    e->speed_h    = 0xc8;                /* +0x8c = 200  @0x8010c860 */
+                    e->ai_timer   = 3;                   /* +0x9c = 3    @0x8010c870 */
+                    e->motion     = 0;                   /* +0x94 = 0    @0x8010c880 */
+                    e->anim_frac  = 7;                   /* +0x8f = 7    @0x8010c890 */
+                }
+                re15_writher_step(e, 0x800);             /* `ori a0,zero,0x800` @0x8010c8b4 */
+                break;
+            }
+            default: {                                   /* @0x8010c8b8: 4 Bilder a 200 vor */
+                int16_t pre = e->ai_timer;
+                e->ai_timer = (int16_t)(pre - 1);        /* `sh v0,156(a0)` @0x8010c8c8 */
+                if (pre == 0) {
+                    /* Original: `+0x5 = (rand & 1) + 2` @0x8010c8e4, +0x6 = 0 @0x8010c8f4 —
+                     * also weiter in die Zuck-Schleife B[2]/B[3]. Der Port geht statt dessen
+                     * in seinen GREIFEN-Sub (RE2-Fenstergriff); klar als Nachruestung
+                     * markiert, s. Kopf. */
+                    e->sub_state_1 = 2; e->sub_state_2 = 0;
+                    e->anim_frame = 0;
+                }
+                re15_writher_step(e, 0);                 /* Durchfall nach @0x8010c8f8, a0 = 0 */
+                break;
+            }
+            }
             break;
 
         case 2:                                          /* GREIFEN — Clip 1, Schleife */
             if (e->motion != 1) { e->motion = 1; e->anim_frame = 0; e->anim_frac = 7; }
             if (re15_enemy_clip_done(e)) e->anim_frame = 0; else e->anim_frame++;
             /* Stoehnen */
-            if (e->ai_timer <= 0 && (re15_engine_rand8() & 3u) == 0u) {
+            if (e->re2z_cd239 == 0 && (re15_engine_rand8() & 3u) == 0u) {
                 re15_audio_room_se(5);                   /* @0x80104ae0 func_0x800453d0(5) */
-                e->ai_timer = RE15_WRITHER_MOAN_CD;      /* 150 Bilder, RE2 @0x801038d0-d4 */
+                e->re2z_cd239 = RE15_WRITHER_MOAN_CD;    /* 150 Bilder, RE2 @0x801038d0-d4 */
             }
             /* GRIFF-TOR — RE2 @0x801018e8-68, Baustein "TOR" im Kopf.
              * Der Ein-Angreifer-Riegel ist hier BEIDES: RE2s Spieler+0x1D3 Bit 0x80 (den ein
@@ -10948,7 +11229,16 @@ static void re15_writher_ai_tick(int slot)
 
         case 3:                                          /* ZURUECK — zurueck in die Ruhe */
             e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
-            e->sub_state_1 = 0;
+            e->speed_h = 0; e->ai_timer = 0;
+            /* ⛔ NACHRUESTUNG (das Original hat kein Zurueck, s. s_writher_home_x): die Lunge
+             * hat den Arm 2420 Einheiten in den Flur geschoben. Ohne Rueckstellung waere er
+             * beim naechsten Vorbeilaufen nochmal 2420 weiter — nach drei Durchgaengen mitten
+             * im Flur. Zurueck ins Gitter. */
+            if (slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_home_ok[slot]) {
+                e->x = s_writher_home_x[slot];
+                e->z = s_writher_home_z[slot];
+            }
+            e->sub_state_1 = 0; e->sub_state_2 = 0;
             break;
 
         default:                                         /* RUHE — B[0] @0x8010c678 */

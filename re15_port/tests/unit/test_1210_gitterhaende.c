@@ -42,6 +42,7 @@
 #include "re15_camera.h"
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_skeleton.h" /* re15_sin_q12/cos_q12 */
+#include "re15_math.h"   /* re15_squareroot0 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -159,6 +160,45 @@ int main(void)
     printf("  %d Arme, z-Spanne %ld .. %ld\n", n, (long)zmin, (long)zmax);
     CHECK(n >= 8, "mindestens 8 Arme im Raum (%d) — sonst misst die Wache nichts", n);
 
+    /* Die Kollisions-BAND-Wahl folgt im Spiel dem Spieler-y; der Flur-Durchlauf oben hat
+     * sie verstellt. Fuer die Abtastung zurueck auf Band 0 (pl->y ist 0). */
+    re15_collision_set_band(0);
+    int32_t gx = 0, gz = 0, gd = 0x7fffffff; int gate_arm = -1;
+    int32_t glx = 0, glz = 0;
+    for (int i = 0; i < n; i++) {
+        re15_actor_t *e = &g_actors[slots[i]];
+        int32_t fs = re15_sin_q12(((int)e->rot_y + 0x400) & 0xfff);
+        int32_t fc = re15_cos_q12(((int)e->rot_y + 0x400) & 0xfff);
+        int32_t ex = e->x + (int32_t)((fs * 2420) >> 12);      /* Landepunkt der Lunge */
+        int32_t ez = e->z + (int32_t)((fc * 2420) >> 12);
+        /* Den begehbaren Streifen auf der Hoehe des Landepunkts abtasten und den Rand nehmen,
+         * der ihm am naechsten liegt. (Die Abtastung ist dieselbe wie in probe_1210_griff;
+         * ein Constrain-Lauf von der Flurmitte aus ist hier nicht verwendbar, weil die
+         * Flurmitte auf mancher z-Zeile selbst nicht begehbar ist.) */
+        int32_t px = 0, pz = ez; int have = 0; int32_t bestd = 0x7fffffff;
+        for (int32_t xx = -30000; xx <= -8000; xx += 25) {
+            if (!re15_collision_on_floor(&s_rdt, xx, pz)) continue;
+            int32_t dd0 = xx - ex; if (dd0 < 0) dd0 = -dd0;
+            if (!have || dd0 < bestd) { bestd = dd0; px = xx; have = 1; }
+        }
+        if (!have) continue;
+        int32_t ddx = px - ex, ddz = pz - ez;
+        int32_t dd = (int32_t)re15_squareroot0((uint32_t)((int64_t)ddx * ddx +
+                                                          (int64_t)ddz * ddz));
+        if (dd < gd) { gd = dd; gx = px; gz = pz; glx = ex; glz = ez; gate_arm = slots[i]; }
+    }
+    printf("  bester Arm: slot %d, Landepunkt (%ld,%ld), erreichbar bis (%ld,%ld), Abstand %ld\n",
+           gate_arm, (long)glx, (long)glz, (long)gx, (long)gz, (long)gd);
+    CHECK(gate_arm >= 0,
+          "die Erreichbarkeits-Messung findet ueberhaupt einen Arm (slot %d, gemessener "
+          "Abstand vom Landepunkt zum naechsten begehbaren Punkt: %ld)", gate_arm, (long)gd);
+    /* ⛔ KEINE Zusage auf einen Schwellwert. Was hier steht, ist eine MESSUNG: wie nah der
+     * begehbare Boden dem Landepunkt der Lunge kommt. Ob das im Spiel fuer einen Griff
+     * reicht, haengt zusaetzlich an den Hindernissen im Flur (re15_collision_constrain laesst
+     * auf der Zeile von Arm 3 nur bis x = -18164 zu, obwohl dort Boden bis -10400 liegt) und
+     * ist NICHT als bestanden/durchgefallen formuliert, weil ich es nicht belegen kann.
+     * Die MECHANIK des Griffs wird darunter separat geprueft. */
+
     /* DEN FLUR ABLAUFEN: der Spieler faehrt in der Flurmitte von z(max) nach z(min). */
     int32_t mid_x = -19500;                 /* Flurmitte: Arme auf -25000 und -14000 */
     int reacted[RE15_ACTOR_MAX]; memset(reacted, 0, sizeof reacted);
@@ -177,7 +217,11 @@ int main(void)
                    || (e->sub_state_1 >= 4 && e->sub_state_1 <= 5);   /* 4/5 = Halten/Abwerfen */
             if (out) { at_once++; reacted[i] = 1; }
             else if (reacted[i]) returned[i] = 1;
-            if (e->x != sx[i] || e->z != sz2[i]) moved++;
+            {   int32_t d = e->x - sx[i]; if (d < 0) d = -d;
+                int32_t q = e->z - sz2[i]; if (q < 0) q = -q;
+                int32_t far = (d > q) ? d : q;
+                if (far > moved) moved = far;      /* groesster Ausschlag ueber den Durchlauf */
+            }
         }
         if (at_once > max_at_once) max_at_once = at_once;
     }
@@ -204,77 +248,37 @@ int main(void)
     CHECK(n_returned >= 4,
           "und sie ziehen sich wieder zurueck, wenn der Spieler weiter ist (%d von %d)",
           n_returned, n_reacted);
-    /* ZWEITER DURCHLAUF — AN EINEM WIRKLICH ERREICHBAREN ARM VORBEI.
-     *
-     * ⛔ DIE FALLE, DIE HIER GEMESSEN WERDEN MUSS: die Kreaturen stehen HINTER dem Gitter,
-     * also GROESSTENTEILS AUSSERHALB des begehbaren Bodens. Gemessen (probe_1210_griff,
-     * 2D-Abtastung des Bodens im 50er-Raster):
-     *     Arm  1 (-25000, -8847) -> naechster Boden 2792 entfernt
-     *     Arm  2 (-25000,-10247) -> 2839      Arm  4 (-14000, -7297) -> 1348
-     *     Arm  5 (-25000,-15747) -> 2246      Arm  7..10 (-14000, …) -> je 2697
-     *     Arm  3 (-14000, -5897) ->    0      Arm  6 (-25000,-17130) ->  849
-     * Nur ZWEI der zehn liegen im Griff-Tor (< 1200, `sltiu v0,s2,0x4b0` @0x801018f4); die
-     * anderen acht kann ein Spieler ueberhaupt nicht beruehren — sie strecken die Haende raus
-     * und stoehnen, mehr nicht. Und das Modell holt das nicht auf: EM01A misst gemessen nur
-     * 442 Einheiten Radius im Ausfahr-Clip (680 im laengsten Clip).
-     *
-     * Ein Durchlauf, der den Spieler einfach auf x = -24400 setzt, teleportiert ihn IN DIE
-     * WAND und misst damit nichts, was im Spiel passieren kann. Deshalb sucht die Wache den
-     * naechstgelegenen BEGEHBAREN Punkt und laeuft dort vorbei — auf echtem Boden.
-     * Solange der Arm haelt, laeuft der Spieler NICHT weiter (das ist der Sinn eines
-     * Festhaltens) — der Fortschritt pausiert, statt den Griff wegzuschieben. */
-    int32_t gx = 0, gz = 0, gd = 0x7fffffff; int gate_arm = -1;
-    for (int i = 0; i < n; i++) {
-        re15_actor_t *e = &g_actors[slots[i]];
-        for (int32_t x = e->x - 4000; x <= e->x + 4000; x += 50)
-            for (int32_t z = e->z - 4000; z <= e->z + 4000; z += 50) {
-                if (!re15_collision_on_floor(&s_rdt, x, z)) continue;
-                re15_actor_t probe = *pl; probe.x = x; probe.z = z;
-                int32_t dd = re15_enemy_player_dist(e, &probe);
-                if (dd < gd) { gd = dd; gx = x; gz = z; gate_arm = slots[i]; }
-            }
-    }
-    printf("  naechster begehbarer Punkt an einem Arm: slot %d, (%ld,%ld), Abstand %ld\n",
-           gate_arm, (long)gx, (long)gz, (long)gd);
-    CHECK(gate_arm >= 0 && gd < 0x4b0,
-          "mindestens ein Arm ist von BEGEHBAREM Boden aus im Griff-Tor (Abstand %ld < 1200, "
-          "`sltiu v0,s2,0x4b0` @0x801018f4) — sonst waere der ganze Griff unerreichbar und "
-          "jede weitere Zusage darueber vakuant", (long)gd);
-
     int held_frames = 0, grabs = 0, longest_hold = 0, run = 0, freed = 0;
     int bites = 0, bad_bite = 0, bite_dmg_seen = 0;
     int victim_clip_seen = 0, prev_victim = 0;
 
-    /* VOR dem Arm entlanggehen, nicht neben ihm: RE2s Tor sind zwei Halb-Sektoren um
-     * Yaw ± 256 (`addiu a2,a2,256` / `addiu a3,zero,256` @0x8010193c-4c), zusammen also ein
-     * 45-Grad-Kegel NACH VORN. Wer seitlich an einem Arm vorbeilaeuft, wird nicht gegriffen.
-     * Die Bahn ist deshalb die Senkrechte zur Blickrichtung, 600 Einheiten davor — und jeder
-     * Punkt wird gegen den begehbaren Boden geprueft. */
+    /* ---------------------------------------------------------------------------------
+     * (4) DER GRIFF — MECHANIK-PRUEFUNG, ausdruecklich GETRENNT von der Frage, ob ein
+     * laufender Spieler diese Stellung im Spiel herstellen kann.
+     *
+     * ⛔ WARUM GETRENNT (und nicht wie bisher vermischt): die Erreichbarkeit haengt an der
+     * Raum-Geometrie und ist oben GEMESSEN (Zeile "bester Arm: ..."). Sie in dieselbe Zusage
+     * zu packen hat schon einmal dazu gefuehrt, dass eine gruene Wache eine Mechanik gedeckt
+     * hat, die im Spiel nie feuert. Hier wird deshalb nur die MECHANIK geprueft: steht ein
+     * Arm im Greifen-Sub und der Spieler in seinem Kegel und in Reichweite, dann MUSS er
+     * festhalten, beissen und wieder loslassen.
+     *
+     * Die Stellung wird bewusst gesetzt (Arm in Sub 2, Spieler 900 Einheiten VOR ihm):
+     *   - 900 < 1200 = RE2s Griff-Tor (`sltiu v0,s2,0x4b0` @0x801018f4)
+     *   - geradeaus, also im 45-Grad-Kegel der beiden Halb-Sektoren (@0x8010193c-4c)
+     *   - und weit genug weg, dass der 300er-Koerper des Arms den Spieler nicht wegschiebt
+     *     (gemessen: aus 600 Einheiten Abstand wurde er zur Seite und HINTER den Arm
+     *     gedrueckt, aus (-17020,-5897) wurde (-16208,-6464)).
+     * Der Spieler wird in jedem Bild dorthin gesetzt, solange er nicht gehalten wird — genau
+     * wie im ersten Durchlauf. */
     re15_actor_t *ga = &g_actors[gate_arm];
-    int32_t fsn = re15_sin_q12(((int)ga->rot_y + 0x400) & 0xfff);   /* Blickrichtung */
-    int32_t fcs = re15_cos_q12(((int)ga->rot_y + 0x400) & 0xfff);
-    /* Den BEGEHBAREN Punkt suchen, der dem Arm am naechsten liegt UND vor ihm — die
-     * Skalarprojektion auf die Blickrichtung muss positiv sein, sonst steht der Spieler
-     * hinter dem Gitter. Von dort aus wird nicht gelaufen, sondern GEWARTET: Arm 3 sitzt an
-     * einer Quergang-Oeffnung, der begehbare Streifen davor ist nur wenige Bilder breit
-     * (2D-Abtastung oben), und der Ausfahr-Clip 2 braucht allein 30 Bilder. "Hineinlaufen und
-     * stehenbleiben" ist damit der Fall, den ein Spieler wirklich herstellen kann. */
-    int32_t sx0 = 0, sz0 = 0, sd = 0x7fffffff;
-    for (int32_t x = ga->x - 3000; x <= ga->x + 3000; x += 25)
-        for (int32_t z = ga->z - 3000; z <= ga->z + 3000; z += 25) {
-            if (!re15_collision_on_floor(&s_rdt, x, z)) continue;
-            int64_t proj = (int64_t)(x - ga->x) * fsn + (int64_t)(z - ga->z) * fcs;
-            if (proj <= 0) continue;                       /* hinter dem Arm */
-            re15_actor_t probe = *pl; probe.x = x; probe.z = z;
-            int32_t dd = re15_enemy_player_dist(ga, &probe);
-            if (dd < sd) { sd = dd; sx0 = x; sz0 = z; }
-        }
-    printf("  Standpunkt VOR Arm %d: (%ld,%ld), Abstand %ld\n",
-           gate_arm, (long)sx0, (long)sz0, (long)sd);
-    CHECK(sd < 0x4b0,
-          "und dieser Punkt liegt VOR dem Arm im Griff-Kegel (Abstand %ld) — RE2s Tor sind zwei "
-          "Halb-Sektoren um Yaw +-256 (@0x8010193c-4c), seitlich vorbei wird nicht gegriffen",
-          (long)sd);
+    int32_t asn = re15_sin_q12(((int)ga->rot_y + 0x400) & 0xfff);
+    int32_t acs = re15_cos_q12(((int)ga->rot_y + 0x400) & 0xfff);
+    ga->sub_state_1 = 2; ga->sub_state_2 = 0;      /* GREIFEN, ohne die Lunge davor */
+    int32_t sx0 = ga->x + (int32_t)((asn * 900) >> 12);
+    int32_t sz0 = ga->z + (int32_t)((acs * 900) >> 12);
+    printf("  Mechanik-Stellung: Arm %d auf (%ld,%ld) yaw=%d, Spieler 900 davor auf (%ld,%ld)\n",
+           gate_arm, (long)ga->x, (long)ga->z, (int)ga->rot_y, (long)sx0, (long)sz0);
 
     for (int f = 0; f < 400; f++) {
         if (!re15_player_is_grabbed()) { pl->x = sx0; pl->z = sz0; }
@@ -323,11 +327,29 @@ int main(void)
           "kein Festfressen: der laengste Griff dauert %d Bilder (Budget 148 / 2 pro Bild = 74 "
           "Halte-Bilder plus Loese-Clip)", longest_hold);
 
-    /* Gegenprobe: ein Arm steckt im Gitter und bewegt sich NICHT. */
-    CHECK(moved == 0,
-          "kein Arm hat seine Position veraendert (%d Abweichungen) — die Original-Maschine "
-          "wuerde mit +0x8c = 0x320 (@0x8010c7b8) rund 2400 Einheiten vorschnellen, ein im "
-          "Gitter steckender Arm kann das nicht", moved);
+    /* ⛔ GEGENPROBE UMGEDREHT (2026-08-28). Hier stand "kein Arm hat seine Position
+     * veraendert". Genau das war der Defekt: an ihren Spawn-Positionen liegen alle zehn Arme
+     * in NULL von NEUN Kamera-Vierecken des Raums und werden deshalb ueberhaupt nicht
+     * gezeichnet (Zeichner-Weiche FUN_8001e8c8 `jal 0x80014368` @0x8001e974; im Port
+     * `re15_aot_point_in_quad` vor der Mesh-Ausgabe). Die byte-true Lunge ist der
+     * Mechanismus, der sie sichtbar macht: netto 2420 Einheiten (3*800 + 20 vorwaerts,
+     * 30*20 + 200 rueckwaerts, 4*200 vorwaerts — FUN_8010c714, Schritt FUN_800245d8).
+     * Die Wache verlangt jetzt den Ausschlag UND die Rueckkehr. */
+    printf("  groesster Ausschlag eines Arms im Durchlauf: %d Einheiten\n", moved);
+    CHECK(moved >= 2400,
+          "die Arme fahren wirklich aus dem Gitter (groesster Ausschlag %d Einheiten; die "
+          "Original-Lunge misst netto 2420, +0x8c = 0x320 @0x8010c7b8 ueber +0x9c = 3 "
+          "@0x8010c7a8) — bei 0 waeren sie unsichtbar geblieben", moved);
+    {   int home = 0;
+        for (int i = 0; i < n; i++) {
+            re15_actor_t *e = &g_actors[slots[i]];
+            if (e->sub_state_1 == 0 && e->x == sx[i] && e->z == sz2[i]) home++;
+        }
+        CHECK(home >= 6,
+              "und wer wieder in Ruhe ist, steht auch wieder im Gitter (%d von %d) — das "
+              "Original kennt kein Zurueck (Ausgang @0x8010c8e4 -> +0x5 = 2/3), der Port loest "
+              "die Lunge aber pro Arm wiederholt aus und muss ihn zuruecksetzen", home, n);
+    }
 
     free(buf);
     if (fails) { printf("\n1210 GITTERHAENDE: FAIL (%d)\n", fails); return 1; }

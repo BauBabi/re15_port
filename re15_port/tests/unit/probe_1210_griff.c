@@ -123,17 +123,18 @@ int main(void)
     /* Einen Arm suchen und den Spieler direkt davor stellen (in seiner Blickrichtung). */
     int target = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (g_actors[s].active && g_actors[s].type == 0x1A) { target = s; break; }
+        if (g_actors[s].active && g_actors[s].type == 0x1A && g_actors[s].x == -14000
+            && g_actors[s].z == -5897) { target = s; break; }
     if (target < 0) { printf("FAIL: kein Arm im Raum\n"); return 1; }
     re15_actor_t *arm = &g_actors[target];
     printf("  Ziel: slot %d pos=(%ld,%ld) yaw=%d\n",
            target, (long)arm->x, (long)arm->z, (int)arm->rot_y);
 
-    /* 400 Einheiten vor dem Arm, in seiner Blickrichtung (Mesh-Yaw-Konvention +0x400). */
+    /* 3020 Einheiten vor dem Arm = Lunge-Ziel (2420) + 600, in seiner Blickrichtung. */
     int32_t sn = re15_sin_q12(((int)arm->rot_y + 0x400) & 0xfff);
     int32_t cs = re15_cos_q12(((int)arm->rot_y + 0x400) & 0xfff);
-    pl->x = arm->x + (int32_t)((sn * 400) >> 12);
-    pl->z = arm->z + (int32_t)((cs * 400) >> 12);
+    pl->x = arm->x + (int32_t)((sn * 3420) >> 12);
+    pl->z = arm->z + (int32_t)((cs * 3420) >> 12);
     printf("  Spieler auf (%ld,%ld)\n", (long)pl->x, (long)pl->z);
 
     /* ---- MESSUNG A: der Wand-Durchlauf im Gehtempo (75/Bild, FUN_80041BE4 @0x80076cXX) ----
@@ -273,9 +274,30 @@ int main(void)
     }
 
     int held = 0, bites = 0, min_hp = 100;
+    int32_t stand_x = arm->x + (int32_t)((sn * 3420) >> 12);
+    int32_t stand_z = arm->z + (int32_t)((cs * 3420) >> 12);
+    printf("  Standpunkt fuer den Griff-Lauf: (%ld,%ld), Arm auf (%ld,%ld) yaw=%d\n",
+           (long)stand_x, (long)stand_z, (long)arm->x, (long)arm->z, (int)arm->rot_y);
     int16_t prev_hp = pl->hp;
+    int diag_done = 0;
     for (int f = 0; f < 400; f++) {
+        if (!re15_player_is_grabbed()) { pl->x = stand_x; pl->z = stand_z; }
         frame_step();
+        if (arm->sub_state_1 == 2 && !diag_done) {
+            diag_done = 1;
+            int bearing = ((int)re15_atan2_q12(pl->z - arm->z, pl->x - arm->x) - 0x400) & 0xfff;
+            int c1 = ((int)arm->rot_y + 256) & 0xfff, c2 = ((int)arm->rot_y - 256) & 0xfff;
+            unsigned t1 = (unsigned)((bearing - c1 + 256) & 0xfff);
+            unsigned t2 = (unsigned)((bearing - c2 + 256) & 0xfff);
+            printf("    >> TOR f%d: arm=(%ld,%ld) yaw=%d pl=(%ld,%ld) d=(%ld,%ld) atan2=%d "
+                   "dist=%u grabbed=%d claim=0x%02x bearing=%d "
+                   "c1=%d t1=%u(in=%d) c2=%d t2=%u(in=%d)\n",
+                   f, (long)arm->x, (long)arm->z, (int)arm->rot_y, (long)pl->x, (long)pl->z,
+                   (long)(pl->x - arm->x), (long)(pl->z - arm->z),
+                   (int)re15_atan2_q12(pl->z - arm->z, pl->x - arm->x),
+                   (unsigned)re15_enemy_player_dist(arm, pl), re15_player_is_grabbed(),
+                   pl->re2z_self1d3, bearing, c1, t1, (t1 < 512), c2, t2, (t2 < 512));
+        }
         int vs = re15_player_victim_state();
         if (vs) held++;
         if (pl->hp < prev_hp) { bites++; printf("    f%3d BISS: hp %d -> %d\n",
@@ -283,11 +305,12 @@ int main(void)
         prev_hp = pl->hp;
         if (pl->hp < min_hp) min_hp = pl->hp;
         if (f < 90 || (f % 25) == 0)
-            printf("    f%3d arm[sub=%u/%u clip=%u fr=%u] victim=%d var=%u grabbed=%d "
+            printf("    f%3d arm[sub=%u/%u clip=%u fr=%u] victim=%d dist=%u grabbed=%d "
                    "PL[clip=%u fr=%u hp=%d] typ=0x%02X\n",
                    f, arm->sub_state_1, arm->sub_state_2, arm->motion, arm->anim_frame,
-                   vs, (unsigned)0, re15_player_is_grabbed(),
-                   pl->motion, pl->anim_frame, (int)pl->hp, re15_player_victim_type());
+                   vs, (unsigned)re15_enemy_player_dist(arm, pl), re15_player_is_grabbed(),
+                   pl->motion, pl->anim_frame, (int)pl->hp, re15_player_victim_type(),
+                   (long)arm->x, (long)arm->z);
         if (pl->hp < 0) { printf("    f%3d Spieler tot\n", f); break; }
         pl->hp = 100; prev_hp = 100;   /* am Leben halten, damit mehrere Griffe messbar sind */
     }

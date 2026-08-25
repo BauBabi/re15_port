@@ -128,6 +128,8 @@ set_tests_properties(unit_cockroach_ai PROPERTIES TIMEOUT 30)
 add_executable(test_npc_ai test_npc_ai.c)
 target_link_libraries(test_npc_ai PRIVATE re15_engine re15_test_support)
 target_include_directories(test_npc_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_npc_ai PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_npc_ai COMMAND test_npc_ai)
 set_tests_properties(unit_npc_ai PROPERTIES TIMEOUT 30)
 
@@ -2856,6 +2858,12 @@ target_compile_definitions(probe_1210_material PRIVATE
 # --- MESSSONDE (Nutzer-Auftrag ROOM1210 "stell das um ... hole die Animation aus RE2"):
 #     haelt der Arm den Spieler mit der geliehenen Opfer-Bank wirklich fest?
 #     Reine Diagnose, KEIN add_test. ---
+add_executable(probe_1210_reach probe_1210_reach.c)
+target_link_libraries(probe_1210_reach PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_reach PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_reach PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_1210_griff probe_1210_griff.c)
 target_link_libraries(probe_1210_griff PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_griff PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -2871,3 +2879,29 @@ target_compile_definitions(test_1210_gitterhaende PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1210_gitterhaende COMMAND test_1210_gitterhaende)
 set_tests_properties(unit_1210_gitterhaende PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (Nutzer-Befund 2026-08-28): Adas Lauf-/Idle-Animation beim Folgen ---
+add_executable(probe_ada_escort_anim probe_ada_escort_anim.c)
+target_link_libraries(probe_ada_escort_anim PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ada_escort_anim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_ada_escort_anim PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_ada_counter probe_ada_counter.c)
+target_link_libraries(probe_ada_counter PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ada_counter PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_ada_counter PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_ada_reach probe_ada_reach.c)
+target_link_libraries(probe_ada_reach PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ada_reach PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_ada_reach PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG (adversarial, kein add_test) ---
+add_executable(probe_1210_cutcheck probe_1210_cutcheck.c)
+target_link_libraries(probe_1210_cutcheck PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_cutcheck PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_cutcheck PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

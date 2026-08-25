@@ -106,6 +106,7 @@ static uint8_t *slurp(const char *p, size_t *n)
 static int s_bgm_mute_part1 = 0;   /* op 0, part 1, vol-1 == 0  -> Feuer-Spur stumm */
 static int s_bgm_seq_stop   = 0;   /* op 2 = SsSeqStop                                */
 static int s_bgm_total      = 0;
+static int s_bgm_fire_on    = 0;   /* op 0, part 1, vol 0x78, pan 0x33 -> Feuer AN     */
 
 static void drain_audio(void)
 {
@@ -116,6 +117,8 @@ static void drain_audio(void)
         if (e.volume == 2) s_bgm_seq_stop++;                       /* op 2 */
         if (e.volume == 0 && e.sample_id == 1 && e.raw_w0 == 1)    /* part 1, vol-1 = 0 */
             s_bgm_mute_part1++;
+        if (e.volume == 0 && e.sample_id == 1 && e.raw_w0 == 0x78 && e.pan == 0x33)
+            s_bgm_fire_on++;                                       /* der EINSCHALTER */
     }
 }
 
@@ -218,7 +221,34 @@ int main(void)
     }
 
     /* --- (4) Das FEUER-BGM muss ebenfalls verstummen ---------------------------------- */
-    {   CHECK(s_bgm_mute_part1 > 0,
+    {   /* ⛔ DER EINSCHALTER (Nutzer-Report 2026-08-28 "Feuer Sound in 1090 fehlt immer noch").
+         * Bis dahin war hier nur der AUSSCHALTER gepinnt — und genau deshalb ist mir entgangen,
+         * dass die Spur ueberhaupt nie klang. ROOM1090 sub00 @0x22EE:
+         *     54 00 00 01 78 33   = Sce_bgm_control slot 0 (MAIN), ctl 0, part 1,
+         *                           vol 0x78 -> ProgAtr[0].mvol = 119, pan 0x33 -> 50
+         * gegatet vom Feuer-Flag @0x22EA `21 03 81 00` (Ck bank 3 / bit 0x81 == 0).
+         * Handler-Beleg: Opcode-0x54-Dispatch @0x800429b4-e8 packt alle fuenf Operandenbytes,
+         * die ctl-Sprungtabelle @0x80010e58[0] = 0x80044f28 schreibt bei part != 0
+         * `addiu v1,s2,255` / `sb v1,-15(v0)` @0x80044f6c-70 = ProgAtr[part-1].mvol = vol-1.
+         * WAS DIESER WERT AUFDREHT: MAIN15.BGM Programm 0 (Datei-mvol @0xF35 = 0, als einziges
+         * Programm stumm) mit genau drei Tones min=max = Note 60/61/62 (VAG 15/16/17,
+         * @0x1734/0x1754/0x1774) — die Knister-Samples. Gespielt werden sie von SUB_03.BGM
+         * SEQ#2, das sich per Bank-Select `00 b0 00 05` (Datei 0x97) auf VAB 5 = MAIN15
+         * umhaengt (_SsSetControlChange Fall 0 `sh s6,0x4c(s5)` @0x8005dbd4; _SsNoteOn liest
+         * das Feld `lh a1,76(s0)` @0x8005da50). Live gegengeprueft im Original-Savestate
+         * stage_saves/room1090_orig.sav: ProgAtr[0].mvol = 0x77 = 119, SEQ#2-Objekt +0x4c = 5.
+         *
+         * ⛔ DIE PLATTFORM-SEITE steht NICHT hier, sondern in audio_pc.c ss_mix: dort
+         * verwarf `if (!s->vab_ok) return;` jede Sequenz ohne EIGENE VAB — also genau SEQ#2.
+         * GEMESSEN (echte exe, deterministische Aufnahme, Sprung nach ROOM1090):
+         *   VORHER: zwei Laeufe, einmal mit und einmal ohne diesen Einschalter
+         *           (RE15_SET_FLAG=3:0x81), waren BIT-IDENTISCH ueber 1.911.000 Stereo-Bilder.
+         *   NACHHER: dieselben zwei Laeufe unterscheiden sich in 38,9 % aller Samples,
+         *           groesste Differenz 6574. */
+        CHECK(s_bgm_fire_on > 0,
+              "die Feuer-Tonspur wird ueberhaupt EINGESCHALTET (%d x op0/part1/vol0x78/pan0x33) "
+              "— sub00 @0x22EE `54 00 00 01 78 33`, ProgAtr[0].mvol = 119", s_bgm_fire_on);
+        CHECK(s_bgm_mute_part1 > 0,
               "die Feuer-Tonspur wird stummgeschaltet (%d x op0/part1/vol0) — sub03 @0x24DA "
               "`54 00 00 01 01 41` schreibt prog[0].mvol = 0", s_bgm_mute_part1);
         CHECK(s_bgm_seq_stop > 0,

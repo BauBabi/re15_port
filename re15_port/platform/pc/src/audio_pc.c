@@ -1868,7 +1868,36 @@ static void ss_advance(ss_seq_t *s, int frames) {
 }
 
 static void ss_mix(ss_seq_t *s, int16_t *out, int frames) {
-    if (!s->vab_ok) return;
+    /* ⛔ NUTZER-REPORT "Feuer Sound in 1090 fehlt" (2026-08-28, zum zweiten Mal gemeldet).
+     * Hier stand `if (!s->vab_ok) return;` — und das hat die SEQ#2-Ebene GAME-WEIT
+     * stillgelegt. `vab_ok` sagt nur, ob DIESE Instanz eine EIGENE VAB geparst hat; eine
+     * Sequenz ohne eigene Bank ist im Original aber voellig normal: FUN_80044774 oeffnet
+     * BEIDE Sub-Sequenzen mit derselben Bank-Id (`lb a1,0(s1)` @0x80044948, SsSeqOpen
+     * @0x8004494c und @0x8004498c), und die Sequenz haengt sich danach per Bank-Select
+     * selbst um (_SsSetControlChange Fall 0: `sh s6,0x4c(s5)` @0x8005dbd4; _SsNoteOn liest
+     * genau dieses Feld als VAB-Id, `lh a1,76(s0)` @0x8005da50).
+     * ss_start (unten) traegt die richtige Wache seit jeher — ss_mix nicht, und
+     * ss_advance hat GENAU EINEN Aufrufer: die Zeile darunter. SEQ#2 wurde also nie
+     * getickt, nie gekeyt, nie gemischt.
+     *
+     * DAS FEUER IN ROOM1090 IST GENAU DIESE EBENE (byte-belegt):
+     *   SUB_03.BGM SEQ#2 (Datei 0x88..0x213, Offset aus dem Trailer u32@size-8) beginnt mit
+     *   `00 b0 00 05` = Bank-Select 5 und spielt danach 58 Note-Ons, ausschliesslich die
+     *   Noten 60/61/62. Bank 5 ist MAIN15.BGM; dessen Programm 0 traegt genau drei Tones
+     *   mit min=max=0x3c/0x3d/0x3e (VAG 15/16/17, Datei 0x1734/0x1754/0x1774) — die
+     *   Knister-Samples. MAIN15s EIGENE Sequenz waehlt Programm 0 nie an (ihre
+     *   ProgramChanges sind (ch0,1)…(ch6,7)), die Tones brauchen also diesen Fremdspieler.
+     *   Programm 0 ist in der Datei stumm (mvol-Byte @0xF35 = 0) und wird nur vom
+     *   Raumskript aufgedreht: ROOM1090 sub00 @0x22EE `54 00 00 01 78 33` -> ProgAtr[0].mvol
+     *   = 0x78-1 = 119 (Handler @0x80044f28 -> `addiu v1,s2,255` / `sb v1,-15(v0)`
+     *   @0x80044f6c-70), Ausschalter in sub03 @0x24DA (`54 00 00 01 01 41` -> 0).
+     *   LIVE-GEGENPROBE im Original (stage_saves/room1090_orig.sav): MAIN-VAB
+     *   @0x800b3f88 = MAIN15 mit ProgAtr[0].mvol = 0x77 = 119, und das SEQ#2-Objekt
+     *   @0x800b88cc traegt +0x4c = 5 (auf MAIN umgehaengt) und +0x90 = 1 (laeuft).
+     *   GEMESSEN im Port VOR dem Fix: zwei Aufnahmen, einmal mit und einmal ohne den
+     *   Einschalter (RE15_SET_FLAG=3:0x81), waren ueber alle 1.911.000 Stereo-Bilder
+     *   BIT-IDENTISCH — die Ebene war nachweislich tot. */
+    if ((!s->vab_ok && !s->tone_src) || !s->seq) return;   /* == ss_start-Wache */
     ss_advance(s, frames);
     for (int i = 0; i < SS_MAX_VOICES; i++) {
         ss_voice_t *v = &s->voice[i];

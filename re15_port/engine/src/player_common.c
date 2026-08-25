@@ -973,7 +973,16 @@ void re15_actors_anim_advance(void)
          * (op_plc_dest, scd_vm.c), deren Walk-Subs jeden Tick f314 rufen (Sub 5 @0x80051630/@0x8005171c)
          * — der Skip hier ist damit auch fuer Elliot korrekt (Sub-VM = einziger Advancer). */
         { uint8_t t = a->type;
-          if (a->state == 4 && (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
+          int npc_fam = (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d);
+          /* ⛔ STATE 1 = die ESKORTE (Nutzer-Report 2026-08-28 "Adas Lauf- und Idle Animation
+           * beim Folgen sind noch falsch"). Sie ist genau wie der State-4-Executor eine
+           * Sub-VM, die ihren Bildzaehler SELBST fuehrt: jeder ihrer Exec-Subs endet mit
+           * `jal 0x8001f314` (Stehen @0x8004f38c, Gehen @0x8004f5c8, Drehen @0x8004f7c4,
+           * Nah @0x8004fb14, Laufen @0x8004ff68), und anim_set ist im Original der EINZIGE
+           * Stepper (`lbu v0,149(v1)` / `addiu v0,v0,1` / `sb v0,149(v1)` @0x8001f60c-1c).
+           * Ohne diesen Skip taktete der Port zweimal pro Bild - gemessen +2 Bilder je Bild
+           * im Idle. */
+          if ((a->state == 4 || a->state == 1) && npc_fam) continue; }
         /* ROOM1030 Kriechtor: der Sub-0x10-TOGGLE (f890[0x10]/f920[6] = FUN_80104f80) und die
          * Grid-1-Kriechmaschine (FUN_801036dc) rufen f314 SELBST in jedem Tick (@0x8010506c
          * bzw. @0x80103790-9c) — der globale Advancer muss diese Zustaende auslassen (sonst

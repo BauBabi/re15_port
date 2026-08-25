@@ -52,10 +52,34 @@ int main(void)
      * Yaw +-256 (@0x8010193c-4c) = ein 45-Grad-Kegel NACH VORN; seitlich wird nicht gegriffen.
      * Genau das ist die Aussage: der Arm ist als Hindernis hart, aber er greift nicht um sich. */
     int32_t ex0 = e->x, ez0 = e->z; int16_t hp0 = pl->hp;
-    for (int f = 0; f < 200; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
-    if (e->x != ex0 || e->z != ez0) { fprintf(stderr, "FAIL(2): rooted hazard must NOT move, (%d,%d)->(%d,%d)\n", ex0, ez0, e->x, e->z); fail = 1; }
+    int32_t xmax = ex0;
+    for (int f = 0; f < 200; f++) {
+        pl->hit_react = 0; re15_enemy_ai_run_all(0);
+        if (e->x > xmax) xmax = e->x;
+    }
+    /* ⛔ KORREKTUR 2026-08-28: hier stand "rooted hazard must NOT move". Das war FALSCH und
+     * hat den Nutzer-Report "Arme kommen nicht raus beim Vorbeilaufen" mitverursacht.
+     * Byte-true fuehrt der ausgeloeste Arm eine LUNGE aus (ANIM-Sub B[1] = FUN_8010c714,
+     * Schritt = FUN_800245d8 aus +0x8c entlang +0x6a):
+     *     3 Bilder * 800 vorwaerts   (+0x9c = 3 @0x8010c7a8, +0x8c = 0x320 @0x8010c7b8)
+     *   + 1 Uebergangsbild * 20      (+0x8c = 0x14 @0x8010c7f8, Tail a0 = 0 @0x8010c914)
+     *   - 30 Bilder * 20 rueckwaerts (+0x9c = 0x1e @0x8010c808, a0 = 0x800 @0x8010c8b4)
+     *   - 1 Uebergangsbild * 200     (+0x8c = 0xc8 @0x8010c860, weiter mit a0 = 0x800)
+     *   + 4 Bilder * 200 vorwaerts   (+0x9c = 3 @0x8010c870, Tail a0 = 0)
+     *   = netto 2420 Einheiten nach VORN.
+     * Ohne sie steht die Kreatur an ihrem Spawn in NULL von NEUN Kamera-Vierecken des Raums
+     * und wird deshalb ueberhaupt nicht gezeichnet (Zeichner-Weiche FUN_8001e8c8
+     * `jal 0x80014368` @0x8001e974). Genau das ist die 2420: sie schiebt den Arm aus dem
+     * Gitter in den Flur. Die Wache prueft jetzt den Betrag. */
+    if (xmax - ex0 != 2420) {
+        fprintf(stderr, "FAIL(2): die Lunge muss exakt 2420 Einheiten weit reichen "
+                        "(FUN_8010c714 + FUN_800245d8), gemessen %ld\n", (long)(xmax - ex0));
+        fail = 1;
+    }
+    if (e->z != ez0) { fprintf(stderr, "FAIL(2): die Lunge laeuft entlang +0x6a (hier Yaw 0 = +X), "
+                                       "z darf sich nicht aendern: %d -> %d\n", ez0, e->z); fail = 1; }
     if (pl->hp != hp0)              { fprintf(stderr, "FAIL(3): tick must write no player hp, hp %d->%d\n", hp0, pl->hp); fail = 1; }
-    printf("  (2) ROOTED: stayed at (%d,%d) over 200 frames\n", e->x, e->z);
+    printf("  (2) LUNGE: %ld Einheiten nach vorn, z unveraendert (%d)\n", (long)(xmax - ex0), e->z);
     printf("  (3) HARMLESS: player hp %d (unchanged)\n", pl->hp);
 
     /* (4) IDLE = clip 0 only: an unhit writher never changes clip (byte-true A[0]/B[0], grid 0).
@@ -71,6 +95,15 @@ int main(void)
     for (int f = 0; f < 120; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
     if (e->motion != 0) { fprintf(stderr, "FAIL(4): unhit writher must loop clip 0, got clip %d\n", e->motion); fail = 1; }
     if (e->sub_state_1 != 0) { fprintf(stderr, "FAIL(4): writher must return to idle sub 0, got %d\n", e->sub_state_1); fail = 1; }
+    /* Und er muss dabei WIEDER IM GITTER stehen. Das Original kennt kein Zurueck (sein
+     * Ausgang @0x8010c8e4 geht auf +0x5 = 2/3 und nie wieder auf 1); der Port loest das
+     * Ausfahren pro Arm wiederholt aus und muss die Kreatur deshalb zuruecksetzen, sonst
+     * wandert sie bei jedem Vorbeilaufen 2420 Einheiten weiter in den Flur. */
+    if (e->x != ex0 || e->z != ez0) {
+        fprintf(stderr, "FAIL(4): nach dem Rueckzug muss der Arm wieder auf seinem Platz "
+                        "stehen, (%d,%d) statt (%d,%d)\n", e->x, e->z, ex0, ez0);
+        fail = 1;
+    }
     printf("  (4) IDLE: clip stayed 0 (no invented 0->1->2 cycling), sub=%d\n", e->sub_state_1);
 
     /* (6) KILLABLE: the HP-0 spawn dies in one damaging hit -> DEATH(3) -> CORPSE(7) */
