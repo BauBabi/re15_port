@@ -13,8 +13,19 @@
  *   - There is NO line-of-sight / raycast for zombies. A full jal-scan over all 13267 overlay words
  *     finds ZERO calls to 0x80050858 / 0x80065518 / 0x80065890 — those belong to the em/NPC family.
  *   - There is NO crowd/swarm intelligence in the zombie: ACTIVE dispatches ONCE through
- *     (+0x10E & 0x3F) into 0x8010C854, whose 14 entries alternate on bit0 only -> exactly two
- *     variants (0x8010118C upright / 0x80101210 crawling), not eleven "modes".
+ *     (+0x10E & 0x3F) into 0x8010C854.
+ *     ⛔ KORREKTUR 2026-08-27: hier stand "whose 14 entries alternate on bit0 only -> exactly two
+ *     variants (0x8010118C upright / 0x80101210 crawling)". Das ist FALSCH und hat sich bereits in
+ *     ein Dossier fortgepflanzt, das daraus ein "belegtes Negativ-Ergebnis" gemacht hat.
+ *     Die Maske ist 0x3f (@0x8010115C `andi v0,v0,0x3f`), die Tabelle also bis zu 64 Eintraege
+ *     lang. Eigener Dump von @0x8010C854 gegen EMZ0.BIN (Code bis 0x8010CF4C): die ersten
+ *     52 Eintraege sind gueltige Code-Zeiger, darunter 38 VERSCHIEDENE Funktionen; erst ab
+ *     Index 52 stehen Daten (0x803200BE, 0x80400096, ...). Nur die Indizes 0..13 alternieren
+ *     zwischen 0x8010118C (aufrecht) und 0x80101210 (kriechend) — das ist der Teil, den die alte
+ *     Notiz gesehen hat. Ab Index 14 kommen u.a. 0x80101294, 0x80101714, 0x80101F7C, 0x801025E4,
+ *     0x80103170, 0x8010394C, 0x80104174, 0x80104920, 0x80102EE4, 0x80103A70.
+ *     Was diese 38 Zweige tun, ist im Port NICHT untersucht — die Behauptung "exactly two
+ *     variants" darf NICHT weiterverwendet werden, um etwas auszuschliessen.
  *   - The neighbour word +0x1F4 is READ by the zombie (@0x801017A4) but never WRITTEN by it; the
  *     producer is FUN_80065518 in the NPC family -> a dead branch in zombie-only rooms.
  * The real difference is LOCOMOTION, attack arbitration and hit reaction. This file starts with the

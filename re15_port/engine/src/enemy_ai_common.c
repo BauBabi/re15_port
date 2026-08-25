@@ -10426,8 +10426,41 @@ static void re15_birkin_ai_tick(int slot)
  * @0x8010c3fc, +0x1d2=(rng&3)+1 @0x8010c41c, part-block @0x8010c434-454 + shadow 0x8001af5c @0x8010c470.
  * +0x8f=7 is a CLIP-START write (sub-brain / death @0x8010d540), NOT an INIT write.
  *
- * OPEN (latent — UNREACHABLE with the shipped grid-0x00 + HP-0 spawns; both ROOM1210/1211 = 10
- * Sce_em_set(0x1a) records, grid byte 0x00): the 7-sub dual-brain writhe/submerge choreography —
+ * ⛔ KORREKTUR 2026-08-27 (Nutzer-Befund ROOM1210): die folgende Notiz behauptete die
+ * Choreographie sei "UNREACHABLE with the shipped grid-0x00 spawns". Das ist WIDERLEGT.
+ * Der SPAWN-grid ist zwar 0x00, aber ROOM1210 sub02 setzt alle zehn Aktoren zur LAUFZEIT auf
+ * grid 1 — Bytes selbst gelesen, ROOM1210.RDT @Datei 0x001EDA: `34 0c 01 00` = Member_set(12, 1)
+ * (Opcode 0x34 = SCD_OP_MEMBER_SET, Member 12 = +0x09 = grid_id, actor_common.c case 12),
+ * je Aktor eingerahmt von `2e 02 NN 00` = Work_set(2, NN); scharf geschaltet vom AOT
+ * @Datei 0x001EAE. Der ACTIVE-Dispatch liest genau dieses Byte:
+ *     8010c4d4: lbu  v0,9(v0)          ; grid_id
+ *     8010c4dc: andi v0,v0,0xf
+ *     8010c4e8: addiu at,at,2396       ; Tabelle 0x8012095c
+ *     8010c4f8: jalr v0
+ *   @0x8012095c = {0x8010c510, 0x8010c58c, 0x8010c58c, ...}; 0x8010c510 und 0x8010c58c sind
+ *   byte-identische DUAL-Dispatcher: erst A-Tabelle @0x80120968[+0x5], dann B-Tabelle
+ *   @0x80120984[+0x5]. A = {0x8010c608, 0x8010c70c, 0x8010c930},
+ *   B = {0x8010c678, 0x8010c714, 0x8010c938, 0x8010cb34}.
+ *   A[0] @0x8010c608: `andi v0,v0,0x1f` -> ==1 => +0x5 = 1, +0x6 = 0 (@0x8010c628/@0x8010c638);
+ *                                          ==2 => +0x5 = 2, +0x6 = 0 (@0x8010c65c/@0x8010c66c).
+ * DER PORT WERTET grid_id IN case 1 NICHT AUS und erzwingt stattdessen Clip 0 — die zehn
+ * Kreaturen stehen deshalb dauerhaft still, wo das Original sie ausfahren und zucken laesst.
+ * Das ist ein OFFENER Port-Defekt, kein "latent". Die byte-true Maschine ist vollstaendig
+ * disassembliert und in analysis/nutzer_batch_2026-08-27/room1210-gitter-haende.md notiert
+ * (B[1] @0x8010c714 Ausfahren mit +0x9c=3 @0x8010c7a8 / +0x8c=0x320 @0x8010c7b8 / +0x6=2
+ * @0x8010c7e8 / +0x8c=0x14 @0x8010c7f8 / +0x9c=0x1e @0x8010c808 / +0x94=2 @0x8010c818 /
+ * +0x6=3 @0x8010c850 / +0x8c=0xc8 @0x8010c860 / rng&1+2 -> +0x5 @0x8010c8e4;
+ * B[2] @0x8010c938 Zuck-Schleife mit +0x9f=(rng&3)+1 @0x8010c9a4 und +0x9e = DERSELBE Wert
+ * aus dem Verzweigungs-Verzoegerungsschlitz @0x8010c9b0 — NICHT ein zweiter rng-Wurf —,
+ * +0x8c=(rng&0x7f)+50 @0x8010c9c0, +0x94=1 @0x8010ca14, +0x5=3 @0x8010cacc,
+ * +0x1d0=(rng&0x1f)+30 @0x8010cae0-@0x8010caf0).
+ * NICHT UMGESETZT, weil die Felder +0x8c/+0x9e/+0x9f/+0x1d0 im Port typ-spezifisch anders
+ * belegt sind (crow_speed/grab_kill_ctr/ai_dist) und eine Zuordnung ohne Messung ein Rate-Risiko
+ * waere. Wer es einbaut: eigene Writher-Felder anlegen, nicht fremde mitbenutzen.
+ *
+ * (Alte, teilweise falsche Notiz — Rest bleibt gueltig:)
+ * OPEN (latent — der HP-0-Teil stimmt: beide ROOM1210/1211 = 10 Sce_em_set(0x1a) mit HP 0):
+ * the 7-sub dual-brain writhe/submerge choreography —
  * subs 1/2 translate via 0x800245d8 with +0x8c = 0x320/0x14/0xc8 @0x8010c7b4/7f4/85c; sub 3 Y-bobs
  * +0x38=+0x9c±(int8)+0x9e @0x8010cc88; HURT flinch 0x8010d188 (clip 2 @0x8010d200, knockback
  * pos_advance(0x800) @0x8010d2f8) decrements the +0x1d2 hit-counter, at <0 -> submerge sub 4 (clip 3

@@ -1058,18 +1058,65 @@ static int exchange_exec(int action)
  *     return (== the action, tail @0x8004e8d8) gates: !=0 -> jal 0x8004dadc (compaction)
  *     @0x8004b3cc, 25c4:=0 @0x8004b3dc, 25c3:=1 @0x8004b3e4 (result anim); ==0 (no
  *     pair / same-slot / empty) -> sb 6 -> 25c2 @0x8004b3c4-c8 + 0x8004b3f0-f4. */
+/* ⛔ BEWUSSTE NACHRUESTUNG NACH RE2-VORBILD — KEINE byte-true RE1.5-Wiederherstellung.
+ *
+ * Nutzer-Auftrag 2026-08-27: "beim Combine von items fehlen Sound und Effekte. das liegt
+ * daran das 1.5 noch eine beta ist. schaue wie das echte re2 das macht und rueste Sound und
+ * Effekt nach."
+ *
+ * BEFUND, damit niemand das fuer eine Regression haelt:
+ *   (a) RE1.5 ist hier WIRKLICH stumm. Der komplette Erfolgspfad @0x8004b37c..@0x8004b404
+ *       enthaelt genau vier `jal` — 0x80048904 (Cursor), 0x8004e900 (Matcher),
+ *       0x8004e054 (Ausfuehrung), 0x8004dadc (Kompaktierung) — und KEINEN Aufruf von
+ *       Se_on (FUN_80045024). Auch der Ergebnis-Walker @0x8004b408 hat null `jal`.
+ *   (b) Der EFFEKT fehlt dagegen NICHT: RE1.5 hat einen eigenen 17-Frame-Puls
+ *       (`sltiu v0,v1,0x11` @0x8004b414, Sprungtabelle @0x80010ff4 = 8x 0x8004b43c
+ *       GROW / 8x 0x8004b4a8 SHRINK / 1x 0x8004b524 TERMINAL). Der ist im Port
+ *       vollstaendig da (state7_result_anim unten, Jitter-Register in re15_inv_screen.c).
+ *       RE2 hat an derselben Stelle stattdessen einen 10-Frame-Slide — ein ANDERER Effekt,
+ *       kein zusaetzlicher. Es wird deshalb NUR der Sound nachgeruestet.
+ *
+ * RE2-VORBILD (info/re2leon/PSX.EXE, FUN_8006b358 = der Zwilling von 0x8004b33c;
+ * selbst disassembliert):
+ *     8006b57c: beq  a2,v0,0x8006b58c   ; Cursor unveraendert -> kein SE
+ *     8006b580: lui  a0,0x404           ; DELAY-SLOT: Record 4 = Cursor
+ *     8006b584: jal  0x8005ba28         ; Se_on
+ *     8006b588: addu a1,zero,zero
+ *     8006b5a0: jal  0x800695b0         ; Combine ausfuehren -> v0 = Ergebnis
+ *     8006b5ac: andi v0,v0,0xff
+ *     8006b5b0: beq  v0,zero,0x8006b5bc
+ *     8006b5b4: lui  a0,0x407           ; DELAY-SLOT, immer: Record 7 = FEHLGESCHLAGEN
+ *     8006b5b8: lui  a0,0x406           ; nur wenn != 0:     Record 6 = ERFOLG
+ *     8006b5bc: jal  0x8005ba28
+ *     8006b5cc: beq  v0,zero,0x8006b5ec ; CANCEL-Bit
+ *     8006b5d0: lui  a0,0x405           ; Record 5 = Abbruch
+ *     8006b5d4: jal  0x8005ba28
+ *
+ * WARUM DAS OHNE FREMD-ASSET GEHT: es sind RE1.5s EIGENE Bank-4-Records. Das Inventar
+ * spielt sie an anderer Stelle laengst — Cursor 4 (@0x8004a478/4a0/4c8/4f0), Abbruch 5
+ * (@0x8004a660), Bestaetigung 6 (@0x80033e54/@0x8004a51c). Record 7 ist in RE1.5s EXE
+ * NIRGENDS referenziert (eigener Voll-Scan nach `lui a0,0x0407`: null Treffer), existiert
+ * aber als gueltiger Eintrag in der eigenen Bank: SOUND/CORE00.EDH Byte 0x1c = 00 00 83 00
+ * (der erste LEER-Record ist 11 @0x2c = ff ff ff ff). Es wird also nichts importiert. */
 static void state7_select(uint16_t pressed, uint16_t held)
 {
+    uint8_t cur_before = g_inv_screen.second_cursor;
     second_cursor_move(held);                    /* jal 0x80048904 @0x8004b384 */
+    if (g_inv_screen.second_cursor != cur_before)
+        se4(4);                                  /* NACHGERUESTET: RE2 @0x8006b57c-88 */
     if (re15_pad_virtual_word(pressed) & 0x8000) {   /* VIRTUAL cancel BEFORE confirm
                                                       * @0x8004b398 <- RAW CROSS */
-        g_inv_screen.item_state = 6;             /* @0x8004b3f0-f4 (silent) */
+        se4(5);                                  /* NACHGERUESTET: RE2 @0x8006b5cc-d8 */
+        g_inv_screen.item_state = 6;             /* @0x8004b3f0-f4 (im Original stumm) */
         return;
     }
     if (re15_pad_virtual_word(pressed) & 0x4000) {   /* VIRTUAL confirm @0x8004b3a4
                                                       * <- RAW SQUARE (@0x80073dbc[14]) */
         int action = exchange_match();           /* jal 0x8004e900 @0x8004b3b0 */
         int ret = exchange_exec(action);         /* jal 0x8004e054 @0x8004b3b8 */
+        /* NACHGERUESTET, Reihenfolge wie RE2 (ausfuehren -> Ergebnis pruefen -> SE):
+         * @0x8006b5b0 `beq v0,zero` -> Record 7, sonst Record 6. */
+        se4(ret != 0 ? 6 : 7);
         if (ret != 0) {                          /* bne @0x8004b3c4 */
             re15_inv_compact();                  /* jal 0x8004dadc @0x8004b3cc (also
                                                   * shifts/blanks the icon cells)        */

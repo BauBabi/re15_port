@@ -31,6 +31,8 @@
 #include "re15_fade.h"
 #include "re15_room.h"       /* g_current_room_id — the MAP entry init reads stage/room */
 
+extern int g_test_core_se_last, g_test_core_se_count;   /* tests/support/test_support.c */
+
 /* wave-5 blob readers (little-endian, PSX-address keyed) */
 static uint8_t  tu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
 static uint32_t tu32(uint32_t addr)
@@ -189,6 +191,103 @@ static void wave5_tests(void)
     CHECK(g_inv.slots[1].id == 0x01 && g_inv.slots[2].id == 0,
           "(24b) slot 2 cleared; knife stays at slot 1 (hole was after it)");
     w5_finish_and_close();
+
+    /* (24c) COMBINE-SOUND — NACHGERUESTET nach RE2-Vorbild (Nutzer-Auftrag 2026-08-27:
+     * "beim Combine von items fehlen Sound und Effekte ... schaue wie das echte re2 das
+     * macht und ruestet Sound und Effekt nach").
+     *
+     * RE1.5 ist hier byte-true STUMM: der ganze Erfolgspfad @0x8004b37c..@0x8004b404 hat
+     * genau vier `jal` (0x80048904 Cursor, 0x8004e900 Matcher, 0x8004e054 Ausfuehrung,
+     * 0x8004dadc Kompaktierung) und KEINEN Se_on-Aufruf (FUN_80045024); der Ergebnis-Walker
+     * @0x8004b408 hat null `jal`. Der EFFEKT fehlt dagegen nicht — RE1.5 hat seinen eigenen
+     * 17-Frame-Puls (`sltiu v0,v1,0x11` @0x8004b414, Tabelle @0x80010ff4), gepinnt in (25).
+     *
+     * RE2-Vorbild (info/re2leon/PSX.EXE, FUN_8006b358):
+     *   @0x8006b57c beq (Cursor unveraendert) / @0x8006b580 lui a0,0x404 -> Record 4
+     *   @0x8006b5b0 beq v0,zero / @0x8006b5b4 lui a0,0x407 (FEHLER, Delay-Slot)
+     *                            / @0x8006b5b8 lui a0,0x406 (ERFOLG) / @0x8006b5bc jal Se_on
+     *   @0x8006b5cc beq (CANCEL) / @0x8006b5d0 lui a0,0x405 -> Record 5
+     * Alles RE1.5-EIGENE Bank-4-Records: 4/5/6 spielt das Inventar anderswo bereits
+     * (@0x8004a478.., @0x8004a660, @0x8004a51c); Record 7 ist in RE1.5s EXE nie referenziert
+     * (Voll-Scan `lui a0,0x0407`: 0 Treffer), existiert aber gueltig in SOUND/CORE00.EDH
+     * @0x1c = 00 00 83 00 (erster Leer-Record ist 11 @0x2c = ff ff ff ff). */
+    {   int se0, se1;
+        /* (a) GELUNGENER Combine -> Record 6 */
+        re15_inv_init();
+        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* Green  */
+        g_inv.slots[1].id = 0x25; g_inv.slots[1].qty = 1;   /* Red    */
+        g_inv.slots[2].id = 0x01; g_inv.slots[2].qty = 0;   /* knife  */
+        w5_open_to_grid();
+        w5_enter_exchange();
+        w5_second_move(RE15_PAD_BIT_RIGHT);
+        se0 = g_test_core_se_count;
+        frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);    /* confirm = mix */
+        se1 = g_test_core_se_count;
+        CHECK(se1 > se0 && g_test_core_se_last == 6,
+              "(24c) gelungener Combine spielt CORE-Record 6 (RE2 @0x8006b5b8 lui a0,0x406), "
+              "gemessen %d Aufrufe / zuletzt %d", se1 - se0, g_test_core_se_last);
+        CHECK(g_inv.slots[0].id == 0x27,
+              "(24c) der Combine muss auch WIRKLICH gelingen (G+R -> 0x27), sonst prueft (a) "
+              "den falschen Zweig — slot0 = %02x", g_inv.slots[0].id);
+        w5_finish_and_close();
+
+        /* (b) FEHLGESCHLAGENER Combine (kein Paar) -> Record 7 */
+        re15_inv_init();
+        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* Green  */
+        g_inv.slots[1].id = 0x01; g_inv.slots[1].qty = 0;   /* knife: kein Partner */
+        w5_open_to_grid();
+        w5_enter_exchange();
+        w5_second_move(RE15_PAD_BIT_RIGHT);
+        se0 = g_test_core_se_count;
+        frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+        se1 = g_test_core_se_count;
+        CHECK(se1 > se0 && g_test_core_se_last == 7,
+              "(24c) fehlgeschlagener Combine spielt CORE-Record 7 (RE2 @0x8006b5b4 "
+              "lui a0,0x407 im Delay-Slot), gemessen %d Aufrufe / zuletzt %d",
+              se1 - se0, g_test_core_se_last);
+        CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x24,
+              "(24c) und der Combine muss WIRKLICH scheitern (25c2=6 @0x8004b3f0-f4, "
+              "Bestand unveraendert) — state=%d slot0=%02x",
+              g_inv_screen.item_state, g_inv.slots[0].id);
+        idle(8); re15_menu_toggle();
+
+        /* (c) ABBRUCH im Exchange -> Record 5 */
+        re15_inv_init();
+        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
+        g_inv.slots[1].id = 0x25; g_inv.slots[1].qty = 1;
+        w5_open_to_grid();
+        w5_enter_exchange();
+        se0 = g_test_core_se_count;
+        frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);      /* virtueller Cancel */
+        se1 = g_test_core_se_count;
+        CHECK(se1 > se0 && g_test_core_se_last == 5,
+              "(24c) Abbruch im Exchange spielt CORE-Record 5 (RE2 @0x8006b5d0 lui a0,0x405), "
+              "gemessen %d Aufrufe / zuletzt %d", se1 - se0, g_test_core_se_last);
+        CHECK(g_inv_screen.item_state == 6,
+              "(24c) und der Abbruch muss WIRKLICH greifen (25c2=6) — state=%d",
+              g_inv_screen.item_state);
+        idle(8); re15_menu_toggle();
+
+        /* (d) CURSOR-Bewegung im Exchange -> Record 4 */
+        re15_inv_init();
+        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
+        g_inv.slots[1].id = 0x25; g_inv.slots[1].qty = 1;
+        w5_open_to_grid();
+        w5_enter_exchange();
+        {   uint8_t before = g_inv_screen.second_cursor;
+            se0 = g_test_core_se_count;
+            w5_second_move(RE15_PAD_BIT_RIGHT);
+            se1 = g_test_core_se_count;
+            CHECK(g_inv_screen.second_cursor != before,
+                  "(24c) der zweite Cursor muss sich WIRKLICH bewegen, sonst prueft (d) nichts "
+                  "(%u -> %u)", before, g_inv_screen.second_cursor);
+            CHECK(se1 > se0 && g_test_core_se_last == 4,
+                  "(24c) Cursor-Bewegung im Exchange spielt CORE-Record 4 "
+                  "(RE2 @0x8006b580 lui a0,0x404), gemessen %d Aufrufe / zuletzt %d",
+                  se1 - se0, g_test_core_se_last);
+        }
+        idle(8); re15_menu_toggle();
+    }
 
     /* (25) the 17-step result-anim walker @0x80010ff4 register-exact (fresh disasm):
      * steps 0-7 = 0x8004b43c GROW (d0/d1 +1, d2/d3 -1, c4++ @0x8004b468-49c); steps
