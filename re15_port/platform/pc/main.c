@@ -4974,6 +4974,36 @@ re_title:;
                             pc_enemy_load_ex(0x26, 1);     /* echte RE2-Babys -> RE2-Bank */
                             break;
                         }
+                /* OPFER-BANK-LEIHGABE fuer die ROOM1210-Arme (Typ 0x1A, Nutzer-Auftrag "hole die
+                 * Animation aus Resident Evil 2"). EM01A hat kein Paar 3 (gemessen: 4 Meshes,
+                 * 4 Bones, 4 Clips, nur HAUPT + LOCO), also leiht der Arm die Opfer-Bank des
+                 * ZOMBIES — Paar 3 posiert LEON und ist PL00-kompatibel, ist also dasselbe
+                 * Datenmaterial, das Leon in jedem anderen Griff schon traegt (Beleg-Block bei
+                 * re15_victim_donor_set). Der Ladeweg ist der normale: pc_enemy_load waehlt
+                 * nach AI-Geschmack, unter RE2 kommt damit RE2s Ringkampf, unter RE1.5 der
+                 * eigene — beide Belegungen stehen byte-true in re15_victim_clip_map.
+                 * Steht pro Bild neu, damit die Anmeldung mit dem Raum kommt UND geht. */
+                {   int _wr = 0;
+                    for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
+                        if (g_actors[_pi].active && g_actors[_pi].type == 0x1Au) { _wr = 1; break; }
+                    static int _wr_logged = 0;
+                    if (_wr) {
+                        pc_enemy_load(0x10);               /* idempotent */
+                        re15_enemy_bank_t *_db = re15_enemy_find(0x10);
+                        if (_db && _db->victim_ok) re15_victim_donor_set(0x1Au, 0x10u);
+                        else                       re15_victim_donor_set(0, 0);
+                        if (!_wr_logged) {
+                            _wr_logged = 1;
+                            fprintf(stderr, "[enemy] EM01A-Griff: Opferbank von EM010 geliehen "
+                                            "(victim_ok=%d, %d Clips)\n",
+                                    _db ? (int)_db->victim_ok : -1,
+                                    (_db && _db->victim_ok) ? _db->anim_victim.clip_count : -1);
+                        }
+                    } else {
+                        re15_victim_donor_set(0, 0);
+                        _wr_logged = 0;
+                    }
+                }
                 re15_game_step(&gctx);
             }
             /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live

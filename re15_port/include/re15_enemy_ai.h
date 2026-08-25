@@ -279,6 +279,12 @@ void re15_enemy_ai_set_combat_active(int v);
  * grabbed pose/anim, the exact XZ/Y pin, and the struggle-escape are deferred (cited in the .c). */
 int re15_player_is_grabbed(void);
 
+/* OPFER-BANK-SPENDER: einem Greifer-Typ OHNE eigene Opfer-Bank (Paar 3, dir[5]/dir[6]) die
+ * Bank eines anderen Typs leihen. Gebraucht fuer die ROOM1210-Arme (EM01A: 4 Meshes, 4 Bones,
+ * 4 Clips, nur HAUPT + LOCO). Paar 3 posiert LEON und ist PL00-kompatibel — vollstaendiger
+ * Beleg-Block bei re15_victim_donor_set in enemy_ai_common.c. for_type == 0 hebt auf. */
+void re15_victim_donor_set(uint8_t for_type, uint8_t donor_type);
+
 /* Spieler-KNOCKDOWN-Klasse (cmd-2 [4]/[5] = 0x800360e8/0x8003644c; analysis/player_knockdown.md):
  * begin(dir) startet den Umfall (0 = von vorn [4], 1 = von hinten [5]); Ausloeser = der
  * 0x27-Boss-Heavy-Biss (aca59 = facing+4 @0x801187e8/f0). FSM lebt in game_step_common.c. */

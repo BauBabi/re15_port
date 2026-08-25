@@ -2853,6 +2853,15 @@ target_include_directories(probe_1210_material PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_compile_definitions(probe_1210_material PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE (Nutzer-Auftrag ROOM1210 "stell das um ... hole die Animation aus RE2"):
+#     haelt der Arm den Spieler mit der geliehenen Opfer-Bank wirklich fest?
+#     Reine Diagnose, KEIN add_test. ---
+add_executable(probe_1210_griff probe_1210_griff.c)
+target_link_libraries(probe_1210_griff PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_griff PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_griff PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- PIN (Nutzer-Auftrag ROOM1210): die Gitterhaende reagieren EINZELN beim Vorbeigehen,
 #     nicht alle auf einmal wie im Original (Member_set(12,1) @0x001EDA). ---
 add_executable(test_1210_gitterhaende test_1210_gitterhaende.c)

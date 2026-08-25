@@ -735,12 +735,63 @@ static int re15_victim_grab_core_se(int re2, int variant)
 /* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
  * state (which zombie's bank, face/behind) + enter the STRUGGLE. (The COLLAPSE is NOT keyed off hp
  * here — byte-true it is the DEVOUR state's sub0 latching player cmd 6, re15_player_victim_devour.) */
+/* ---- OPFER-BANK-SPENDER (Nutzer-Auftrag ROOM1210) -----------------------------------------
+ * "Ja, stell das um, wenn dir da was fehlt, hole die Animation aus Resident Evil 2."
+ *
+ * Ein Greifer braucht eine OPFER-Bank (Paar 3, dir[5]/dir[6]) — die posiert LEON, nicht den
+ * Gegner. EM01A (die Arme in ROOM1210) hat keine: gemessen 4 Meshes, 4 Bones, 4 Clips, nur
+ * HAUPT + LOCO (probe_1210_material). Deshalb stieg re15_player_victim_latch_ex dort bisher
+ * aus, und der Zugriff blieb ein Zupacken mit Schaden statt eines Festhaltens.
+ *
+ * ⛔ WARUM DAS KEINE ERFUNDENE ANIMATION IST: die Opfer-Bank ist SPIELER-Rig-Material.
+ * re2_ems.c (re2_hybrid_apply) haelt den gemessenen Befund fest: "skel_victim (Paar 3) posiert
+ * LEON, nicht den Gegner — sein Rig ist PL00-kompatibel (RE1.5 PL00.PLD parent[] == RE2 EM010
+ * parent[], selbst gemessen)", und der Hybrid baut sie deshalb bewusst NICHT um. Der Renderer
+ * stellt den Part-Pool ohnehin aus LEONS eigenem Skelett (@0x80111dd4-e0: der Effekt-Anker
+ * liest *(Spieler+0x188)); die Opfer-Bank liefert nur Clip-Tabelle + Keyframes (@0x8010a28c/
+ * @0x8010a6f8 animieren den SPIELER aus DAT_800acbcc/acbd0 = Greifer-Bank 2). Ein geliehenes
+ * Paar 3 ist damit dasselbe Datenmaterial, das Leon in jedem anderen Griff schon traegt.
+ *
+ * Der Spender ist der ZOMBIE des laufenden AI-Geschmacks (Typ 0x10): unter RE1.5-KI leiht der
+ * Arm RE1.5s eigene Ringkampf-Clips, unter RE2-KI die von RE2 — beide Belegungen stehen
+ * byte-true in re15_victim_clip_map, es kommt keine neue Zuordnung dazu. Die Plattform laedt
+ * die Bank (pc_victim_donor_load) und meldet sie hier an. */
+static uint8_t g_victim_donor_for  = 0;   /* Greifer-Typ ohne eigene Opfer-Bank */
+static uint8_t g_victim_donor_type = 0;   /* Typ, dessen Opfer-Bank geliehen wird */
+
+void re15_victim_donor_set(uint8_t for_type, uint8_t donor_type)
+{
+    g_victim_donor_for  = for_type;
+    g_victim_donor_type = donor_type;
+}
+
+/* Die Opfer-Bank fuer `type` aufloesen — eigene zuerst, sonst die angemeldete Leihgabe.
+ * `*out_type` traegt danach den Typ, unter dem die Bank in der Registry steht (= was
+ * g_player_victim_type bekommt, damit Renderer (main.c re15_enemy_find(re15_player_victim_type())),
+ * Clip-Belegung und Bone-Abfrage dieselbe Bank finden). */
+static re15_enemy_bank_t *re15_victim_bank_resolve(uint8_t type, uint8_t *out_type)
+{
+    re15_enemy_bank_t *vb = re15_enemy_find(type);
+    if (out_type) *out_type = type;
+    if (vb && vb->victim_ok) return vb;
+    if (g_victim_donor_for && type == g_victim_donor_for) {
+        re15_enemy_bank_t *db = re15_enemy_find(g_victim_donor_type);
+        if (db && db->victim_ok) {
+            if (out_type) *out_type = g_victim_donor_type;
+            return db;
+        }
+    }
+    return vb;                                  /* kann NULL / ohne Paar 3 sein — Aufrufer prueft */
+}
+
 static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t *player,
                                         int variant /* -1 = aus dem Greifer-Sub ableiten */)
 {
-    re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
+    uint8_t vbank_type = zombie->type;
+    re15_enemy_bank_t *vb = re15_victim_bank_resolve(zombie->type, &vbank_type);
     if (!vb || !vb->victim_ok) return;                  /* no victim bank -> keep old frozen behaviour */
-    g_player_victim_type    = zombie->type;
+    g_player_victim_type    = vbank_type;               /* = zombie->type, ausser bei einer Leihgabe
+                                                         * (ROOM1210-Arme, s. re15_victim_donor_set) */
     g_player_victim_zombie  = (int)(zombie - g_actors);  /* remember the grabber for the turn-to-face */
     g_player_victim_variant = (variant >= 0)
         ? (uint8_t)variant  /* explizit: KRIECHER-Grab schreibt aca59 = (+0x5)+1 = 2/3
@@ -10673,6 +10724,23 @@ static void re15_birkin_ai_tick(int slot)
  * Every one of those needs SURVIVING a hit (a 0-damage weapon row vs a HP-0 enemy) or a grid&0x1f in
  * {1,2} spawn — neither occurs in the real rooms, so the reachable behavior is: clip-0 idle + body-push
  * obstacle + one-hit death. The submerge cycle is documented, not invented. */
+/* FUN_80015758(a0=ptrA, a1=ptrB, a2=ang, a3=half) — RE2s Sektor-Test um einen BELIEBIGEN
+ * Winkel (nicht um den eigenen Yaw). Selbst disassembliert, Kopie der Herleitung aus
+ * enemy_ai_re2_zombie.c re2z_sector:
+ *   80015788: jal 0x800154ac ; bearing(A -> B)
+ *   8001579c: subu v0,v0,s1  ; bearing - ang
+ *   800157a8: addu v0,v0,s0  ;         + half
+ *   800157ac: andi v0,v0,0xfff
+ *   800157b4: sltu v0,v0,s0  ; s0 = 2*half   (sll s0,s0,1 @0x800157b0)
+ *   800157b8: xori v0,v0,0x1 ; RETURN !(t < 2*half) -> 0 == INNERHALB
+ * Der Port traegt in der Mesh-Yaw-Konvention den +0x400-Versatz (s. re15_ai_arc_test). */
+static int re15_writher_sector(const re15_actor_t *a, const re15_actor_t *b, int ang, int half)
+{
+    int bearing = ((int)re15_atan2_q12(b->z - a->z, b->x - a->x) - 0x400) & 0xfff;
+    unsigned t  = (unsigned)((bearing - ang + half) & 0xfff);
+    return !(t < (unsigned)(half << 1));          /* 0 == innerhalb */
+}
+
 static void re15_writher_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -10721,26 +10789,72 @@ static void re15_writher_ai_tick(int slot)
          *     (@0x80104ae0 `func_0x800453d0(5)`), mit demselben Zufalls-Gate `(rand & 3) == 0`
          *     (@0x80104ad4-e0). Der Cooldown 150 Bilder ist RE2s Wert fuer genau diesen Fall
          *     (verankerter Zombie, +0x239 @0x801038d0-d4).
-         *   - Der GRIFF ist der Kontakt-Pfad von Typ 0x26 (den brennenden Truemmern), weil der
-         *     OHNE Opfer-Animation auskommt: `re15_body_push(...)` als Kontakt-Bedingung
-         *     (@0x80116368-70), Stagger-Mailbox `aca58 = 2` mit Ausrichtung (@0x8011638c-a4)
-         *     und -2 HP je Beruehrungs-Bild ab HP >= 4 (@0x801163c0-d0).
-         *     ⛔ WARUM NICHT DIE OPFER-FSM: EM01A hat KEINE Victim-Bank (gemessen: nur HAUPT
-         *     und LOCO, beide dieselben 4 Clips), und ROOM1210 laedt keine andere Gegner-Bank,
-         *     aus der man eine leihen koennte. `re15_player_victim_latch_ex` steigt bei
-         *     `!vb->victim_ok` aus — ein Pin-Griff waere hier eine erfundene Animation.
+         *   - Der GRIFF ist RE2s Fenster-/Griff-Mechanik, Zeile fuer Zeile aus EMOVL10_S0.BIN
+         *     (Nutzer-Auftrag "Ja, stell das um, wenn dir da was fehlt, hole die Animation aus
+         *     Resident Evil 2"). Vier Bausteine, alle selbst disassembliert:
+         *       TOR       @0x801018e8-68:  `sltiu v0,s2,0x4b0` (Abstand < 1200) + Ein-Angreifer-
+         *                 Riegel Spieler+0x1D3 & 0x80 (@0x80101900-0c) + ZWEI Halb-Sektoren
+         *                 `FUN_80015758(self+0x38, PL+0x38, +0x76 ± 256, 256)` (@0x8010193c-4c
+         *                 und der Zwilling darunter), jeder ueber +0x21A & 0x20 / & 0x40
+         *                 abschaltbar. Beim Treffer: `sw 769,4(s0)` = Zustandswort 0x301.
+         *       HALTEN    @0x80102710-28:  `sw s1,436(s3)` (Spieler+0x1B4 = Greifer) und
+         *                 `sll v0,v0,8 / ori v0,v0,0x5 / sw v0,4(s3)` = Spieler-Kommando 5.
+         *                 RE1.5 traegt denselben Schreiber @0x80102630-40 (`addiu v0,v0,-3 /
+         *                 sll v0,v0,8 / ori v0,v0,0x5 / sw v0,0x800aca58`) — genau das, was
+         *                 re15_player_victim_latch_ex im Port abbildet.
+         *       RINGKAMPF @0x80102828-2C:  Budget 148, pro Bild `-= 2 + 5*Taste`
+         *                 (@0x80102860-7C, Taste = FUN_8001598C); < 0 -> Abwurf-Phase 4
+         *                 (@0x8010288C-94).
+         *       BISS      @0x801028a0-fc:  ausgeloest, wenn der Anim-Frame == Tabellen-Byte
+         *                 (`lbu v1,333(s1)` gegen `lbu v0,0(s0)`), dann SE 3 (`addiu a0,zero,3
+         *                 / jal 0x8005bd6c`) und `lbu a0,1(s0) / jal 0x800401d4` = Schaden.
+         *                 Parameter-Tabelle @0x80100014: `10 14 01 05 10 1e 01 0a` = (Bild 0x10,
+         *                 20 HP) stehend / (Bild 0x01, 5 HP) kriechend; Index s5 (@0x80102888
+         *                 `sll v1,s5,1`, @0x8010289c `addu s0,v0,v1`). Der Arm ist der stehende
+         *                 Fall -> Bild 16, 20 HP.
+         *     ⛔ DIE OPFER-ANIMATION IST GELIEHEN, NICHT ERFUNDEN: EM01A hat keine Victim-Bank
+         *     (gemessen: nur HAUPT und LOCO, dieselben 4 Clips). Paar 3 posiert aber LEON, nicht
+         *     den Gegner, und sein Rig ist PL00-kompatibel — deshalb leiht der Arm die des
+         *     Zombies (Typ 0x10) des laufenden AI-Geschmacks. Vollstaendiger Beleg-Block bei
+         *     re15_victim_donor_set.
+         *     ⛔ NICHT UEBERNOMMEN ist RE2s toedlicher Ausgang: `andi v0,v1,0x2 / … / addiu
+         *     v0,zero,1537 / sw v0,4(a0)` (@0x80102920-50) schickt den Zombie ins FRESSEN
+         *     (Zustand 0x601, Spieler-Kommando 6). Ein Arm im Gitter kann Leon nicht zu Boden
+         *     ziehen und fressen — der toedliche Biss wirft hier deshalb ab wie der nicht-
+         *     toedliche, und die normale Todes-FSM des Ports uebernimmt.
          *
          * DIE BEIDEN REICHWEITEN kommen aus den Daten, nicht aus dem Gefuehl:
-         *   REACH_Z 850  = halbe Tiefe des Original-Ausloeser-Rechtecks. ROOM1210.RDT @0x1EAE
+         *   REACH_Z 1700 = die TIEFE des Original-Ausloeser-Rechtecks. ROOM1210.RDT @0x1EAE
          *                  `2c 06 03 41 00 00 ac a9 68 c5 50 14 a4 06 ...` = Aot_set aot=6
-         *                  sce=3, x=-22100 z=-15000 w=5200 d=1700 -> 1700/2. Der gemessene
-         *                  Abstand benachbarter Arme ist 1200..1396, es reagiert also im
-         *                  Regelfall ein Paar zur Zeit.
+         *                  sce=3, x=-22100 z=-15000 w=5200 d=1700.
+         *                  ⛔ KORREKTUR (gemessen, nicht nachgebessert): bis v0.3.26 stand hier
+         *                  1700/2 = 850. Bei 850 kann ein GEHENDER Spieler nie gegriffen werden:
+         *                  er ist 2*850/75 = rund 22 Bilder in Reichweite (Gehtempo 0x4B pro
+         *                  Bild, Modus-Tabellen 0x80076cXX / FUN_80041BE4), der Ausfahr-Clip 2
+         *                  dauert aber 30 Bilder (EM01A-EDD, selbst gelesen). Der Arm war also
+         *                  IMMER zu spaet — der Greif-Zustand begann erst, als der Spieler
+         *                  schon aus der Reichweite war. Mit der vollen Tiefe sind es rund 45
+         *                  Bilder: 30 zum Ausfahren, danach bleibt das Greifen-Fenster.
+         *                  Die volle Tiefe ist ausserdem die Zahl, die WOERTLICH im Raum steht;
+         *                  die Halbierung war meine Zutat.
          *   REACH_X 11000 = die gemessene Flurbreite (Arme stehen auf x = -25000 und -14000).
          *                  Sie haelt nur andere Raumteile draussen; die Hoehe entlang des
-         *                  Flurs entscheidet REACH_Z. */
-        enum { RE15_WRITHER_REACH_Z = 850, RE15_WRITHER_REACH_X = 11000,
-               RE15_WRITHER_MOAN_CD = 150 };
+         *                  Flurs entscheidet REACH_Z.
+         *
+         * ⛔ WAS DIE RAUM-GEOMETRIE ERLAUBT (gemessen, probe_1210_griff, 2D-Abtastung des
+         * begehbaren Bodens im 50er-Raster): acht der zehn Kreaturen stehen 1348..2839
+         * Einheiten AUSSERHALB des begehbaren Bodens — hinter dem Gitter. Nur zwei (Arm 3 auf
+         * (-14000,-5897) mit Abstand 0 und Arm 6 auf (-25000,-17130) mit 849) liegen im
+         * Griff-Tor. Das Modell holt das nicht auf: EM01A misst im Ausfahr-Clip 442 Einheiten
+         * Radius (680 im laengsten Clip). Ein Griff ist also die Ausnahme, das Ausfahren +
+         * Stoehnen die Regel — genau das Bild, das der Nutzer beschrieben hat. */
+        enum { RE15_WRITHER_REACH_Z = 1700, RE15_WRITHER_REACH_X = 11000,
+               RE15_WRITHER_MOAN_CD = 150,
+               RE15_WRITHER_GRAB_DIST = 0x4b0,   /* sltiu v0,s2,0x4b0        @0x801018f4 */
+               RE15_WRITHER_GRAB_HALF = 256,     /* a3 = 256 / a2 = +0x76±256 @0x8010193c-4c */
+               RE15_WRITHER_HOLD_BUDGET = 148,   /* +0x158 = 148            @0x80102828-2C */
+               RE15_WRITHER_BITE_FRAME = 0x10,   /* Tabelle @0x80100014[0]  (stehender Fall) */
+               RE15_WRITHER_BITE_DMG = 20 };     /* Tabelle @0x80100014[1]                  */
         int32_t dz = pl->z - e->z; if (dz < 0) dz = -dz;
         int32_t dx = pl->x - e->x; if (dx < 0) dx = -dx;
         int reach = (dz < RE15_WRITHER_REACH_Z) && (dx < RE15_WRITHER_REACH_X);
@@ -10762,15 +10876,70 @@ static void re15_writher_ai_tick(int slot)
                 re15_audio_room_se(5);                   /* @0x80104ae0 func_0x800453d0(5) */
                 e->ai_timer = RE15_WRITHER_MOAN_CD;      /* 150 Bilder, RE2 @0x801038d0-d4 */
             }
-            /* Zugriff: Kontakt-Muster von Typ 0x26 (@0x80116368-d0) */
-            if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min)) {
-                if (pl->hit_react == 0) {
-                    int aligned = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
-                    re15_player_stagger_cmd2(aligned ? 0x09 : 0x08);
-                }
-                if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);
+            /* GRIFF-TOR — RE2 @0x801018e8-68, Baustein "TOR" im Kopf.
+             * Der Ein-Angreifer-Riegel ist hier BEIDES: RE2s Spieler+0x1D3 Bit 0x80 (den ein
+             * RE2-Zombie im selben Raum setzen wuerde) UND der Port-Pin — sonst wuerde der
+             * naechste Arm in den laufenden Griff hineingreifen. Der Arm SCHREIBT den Riegel
+             * NICHT: sein Lebenszyklus (Setzer @0x80102754-60, Loescher @0x8010AEF4/@0x80104FA0/
+             * @0x801082E8) gehoert der RE2-Zombie-Maschine; der Pin des Ports leistet dasselbe
+             * und wird von der Opfer-FSM sauber wieder freigegeben. */
+            if (!re15_player_is_grabbed() && !(pl->re2z_self1d3 & 0x80u)
+                && re15_enemy_player_dist(e, pl) < RE15_WRITHER_GRAB_DIST /* @0x801018f4 */
+                && (re15_writher_sector(e, pl, ((int)e->rot_y + RE15_WRITHER_GRAB_HALF) & 0xfff,
+                                        RE15_WRITHER_GRAB_HALF) == 0       /* @0x8010193c-4c */
+                 || re15_writher_sector(e, pl, ((int)e->rot_y - RE15_WRITHER_GRAB_HALF) & 0xfff,
+                                        RE15_WRITHER_GRAB_HALF) == 0)) {   /* Zwilling darunter */
+                e->sub_state_1 = 4; e->sub_state_2 = 0;   /* sw 769,4(s0) = 0x301 @0x80101954-58 */
+                break;
             }
             if (!reach) { e->sub_state_1 = 3; e->anim_frame = 0; }
+            break;
+
+        case 4:                                          /* FESTHALTEN — RE2 P2/P3 @0x80102814ff */
+            if (e->sub_state_2 == 0) {                   /* Eintritt = P2 @0x80102814 */
+                re15_player_victim_latch_ex(e, pl, 0);   /* Spieler-Kommando 5, RE1.5-Zwilling
+                                                          * @0x80102630-40; Variante 0 = Front */
+                if (g_player_victim == 0) {
+                    /* Keine Opfer-Bank erreichbar (Leihgabe nicht angemeldet, Bank nicht
+                     * geladen): zurueck in die Ruhe, statt den Spieler ohne Animation
+                     * festzunageln. Der Pin wird deshalb ERST nach dem geglueckten Latch
+                     * gesetzt — vorher gepinnt haette diese Kante nie greifen koennen, weil
+                     * re15_player_is_grabbed() dann schon 1 meldet. */
+                    e->sub_state_1 = 3;
+                    break;
+                }
+                e->motion = 1; e->anim_frame = 0; e->anim_frac = 7;
+                e->re2z_t158 = RE15_WRITHER_HOLD_BUDGET; /* +0x158 = 148 @0x80102828-2C */
+                e->sub_state_2 = 1;                      /* -> P3 @0x80102820-24 */
+                re15_re2z_player_pin();
+                break;
+            }
+            re15_re2z_player_pin();                      /* Halte-Phasen pinnen den Spieler jedes
+                                                          * Bild (@0x801026B4, P <= 3) */
+            {   /* P3 @0x80102838: Ringkampf-Budget, dann der Biss-Check. */
+                int mash = re15_re2z_mash();                            /* FUN_8001598C @0x80102860 */
+                e->re2z_t158 = (int16_t)(e->re2z_t158 - (2 + 5 * mash));/* @0x80102868-7C */
+                if (e->re2z_t158 < 0) e->sub_state_1 = 5;               /* @0x8010288C-94 */
+                if ((int)e->anim_frame == RE15_WRITHER_BITE_FRAME) {    /* @0x801028a0-ac */
+                    re15_audio_room_se(3);                              /* SE 3 @0x801028e8-f0 */
+                    int r = re15_re2_player_damage_mode(pl, RE15_WRITHER_BITE_DMG, 0);
+                                                                        /* FUN_800401d4 @0x801028f4-fc */
+                    if (r & 3) e->sub_state_1 = 5;                      /* Bit 0 = Abwurf
+                                                                         * @0x80102904-1c; Bit 1 waere
+                                                                         * RE2s Fressen @0x80102920-50
+                                                                         * — s. Kopf, hier ebenfalls
+                                                                         * Abwurf */
+                }
+                if (re15_enemy_clip_done(e)) e->anim_frame = 0; else e->anim_frame++;
+            }
+            break;
+
+        case 5:                                          /* ABWERFEN — RE2 P4 @0x80102968 */
+            re15_player_victim_throwoff();               /* Spieler+0x6 = 4 @0x8010288C-94 */
+            e->re2z_t158 = 0;                            /* sh zero,344 @0x80102990 */
+            e->motion = 1; e->anim_frame = 0;            /* EM01A hat keinen Abwurf-Clip (4 Clips)
+                                                          * -> zurueck ueber die Ruhe-Kante */
+            e->sub_state_1 = 3; e->sub_state_2 = 0;
             break;
 
         case 3:                                          /* ZURUECK — zurueck in die Ruhe */

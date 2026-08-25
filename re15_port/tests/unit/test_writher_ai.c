@@ -45,7 +45,12 @@ int main(void)
     if (e->hp != 0)    { fprintf(stderr, "FAIL(1): INIT must not set HP (byte-true spawn 0), got %d\n", e->hp); fail = 1; }
     printf("  (1) INIT: state->%d (writhe), hp=%d (unset), motion=%d\n", e->state, e->hp, e->motion);
 
-    /* (2) ROOTED + (3) HARMLESS: player adjacent, run 200 frames, enemy must not move / not hurt */
+    /* (2) ROOTED + (3) HARMLESS: Spieler daneben (nicht davor), 200 Bilder, der Gegner darf
+     * sich nicht bewegen und selbst keinen Spieler-Schaden schreiben.
+     * DANEBEN ist hier wesentlich: der Arm blickt bei rot_y=0 nach +X, der Spieler steht auf
+     * (0,900) und damit rund 90 Grad seitlich. RE2s Griff-Tor sind zwei Halb-Sektoren um
+     * Yaw +-256 (@0x8010193c-4c) = ein 45-Grad-Kegel NACH VORN; seitlich wird nicht gegriffen.
+     * Genau das ist die Aussage: der Arm ist als Hindernis hart, aber er greift nicht um sich. */
     int32_t ex0 = e->x, ez0 = e->z; int16_t hp0 = pl->hp;
     for (int f = 0; f < 200; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
     if (e->x != ex0 || e->z != ez0) { fprintf(stderr, "FAIL(2): rooted hazard must NOT move, (%d,%d)->(%d,%d)\n", ex0, ez0, e->x, e->z); fail = 1; }
@@ -53,9 +58,20 @@ int main(void)
     printf("  (2) ROOTED: stayed at (%d,%d) over 200 frames\n", e->x, e->z);
     printf("  (3) HARMLESS: player hp %d (unchanged)\n", pl->hp);
 
-    /* (4) IDLE = clip 0 only: an unhit writher never changes clip (byte-true A[0]/B[0], grid 0) */
+    /* (4) IDLE = clip 0 only: an unhit writher never changes clip (byte-true A[0]/B[0], grid 0).
+     *
+     * ⛔ MIT ABSTAND MESSEN, NICHT NEBENBEI: der Port fuehrt in ROOM1210 die bewusste
+     * NACHRUESTUNG "Gitterhaende" (re15_writher_ai_tick case 1) — ein Arm faehrt aus, wenn der
+     * Spieler auf seiner Hoehe ist (REACH_Z = Tiefe des Ausloeser-Rechtecks 1700 @0x1EAE).
+     * Diese Zusage hier gilt dem BYTE-TRUEN Ruhezustand, also dem Fall OHNE Spieler in
+     * Reichweite. Bis 2026-08-27 stand der Spieler auf z=900 und lag damit rein zufaellig
+     * knapp ausserhalb der damaligen Reichweite 850 — die Zusage hielt aus Glueck, nicht aus
+     * Absicht. Jetzt wird der Abstand hergestellt und der Arm zurueckfahren gelassen. */
+    pl->x = 0; pl->z = 30000;
+    for (int f = 0; f < 120; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
     if (e->motion != 0) { fprintf(stderr, "FAIL(4): unhit writher must loop clip 0, got clip %d\n", e->motion); fail = 1; }
-    printf("  (4) IDLE: clip stayed 0 (no invented 0->1->2 cycling)\n");
+    if (e->sub_state_1 != 0) { fprintf(stderr, "FAIL(4): writher must return to idle sub 0, got %d\n", e->sub_state_1); fail = 1; }
+    printf("  (4) IDLE: clip stayed 0 (no invented 0->1->2 cycling), sub=%d\n", e->sub_state_1);
 
     /* (6) KILLABLE: the HP-0 spawn dies in one damaging hit -> DEATH(3) -> CORPSE(7) */
     e->hit_react = 0;
