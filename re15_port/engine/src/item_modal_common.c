@@ -33,6 +33,8 @@ static uint8_t s_type     = 0;      /* DAT_800afbb6 (grant id)              */
 static uint8_t s_amount   = 0;
 static uint8_t s_taken    = 0;      /* zone-9 taken-bit payload             */
 static int     s_aot_slot = -1;     /* g_aot slot to deactivate on confirm  */
+static uint8_t s_taken_prop = 0xFF; /* Obj-Pool-Index des WELT-MODELLS (pc[20]/pc[28]).
+                                     * 0xFF = kein Modell. Siehe Loeschung im Confirm. */
 static int     s_grant    = -1;     /* DAT_8008f62c (free slot, -1 = full)  */
 
 /* state-5/6 MESSAGE BOX (byte-true FUN_80027e68 a1=0x100 + FUN_80028134 VM): the pickup is NOT silent —
@@ -128,7 +130,8 @@ static void quad_flip(void)
     s_face = (s_f630 < 4) ? 1 : 0;   /* back-face until the mid-flip texture-row swap @0x8001de24 */
 }
 
-void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit, int aot_slot)
+void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
+                           int aot_slot, uint8_t taken_prop)
 {
     if (s_state != 0) return;        /* byte-true guard @0x80043334 (don't restart while running) */
     s_state    = 1;                  /* sb 1,DAT_80072d3b @0x8004334c */
@@ -136,6 +139,7 @@ void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
     s_amount   = amount;
     s_taken    = taken_bit;
     s_aot_slot = aot_slot;
+    s_taken_prop = taken_prop;
     s_grant    = -1;
     s_f630     = 0;
     s_f634     = 0;
@@ -275,7 +279,22 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
             }
             if (s_taken) re15_game_flag_set(9, s_taken, 1);   /* FUN_8004ef90 (zone-9 taken flag) */
             if (s_aot_slot >= 0 && s_aot_slot < RE15_AOT_MAX)
-                g_aot.slots[s_aot_slot].active = 0;            /* the item leaves the world */
+                g_aot.slots[s_aot_slot].active = 0;            /* nur die ZONE verlaesst die Welt */
+            /* ⛔ DAS WELT-MODELL (Nutzer-Report 2026-08-25: "wenn ich das item aufgenommen habe
+             * muss das model fuer das item verschwinden", ROOM1020 u.a.).
+             * Bisher raeumte der Port NUR die AOT-Zone weg — das Modell blieb stehen und
+             * verschwand erst beim WIEDERBETRETEN des Raums (dort greift der Installer-Pfad
+             * scd_vm.c, `props[tk_prop].active = 0` unter dem taken-Bit-Gate).
+             * Das Original loescht es SOFORT beim Bestaetigen: der Prompt-Callback
+             * (FUN_8002877c -> Message-Escape 0xf9 00 -> LAB_80021f6c) schreibt
+             * `sw zero,0(at)` @0x80021fc8 auf das Flag-Wort des Objekts im Pool DAT_800b3f98
+             * (Stride 0x94); Bit 0 dieses Wortes ist das Zeichen-Gate. Der Port modelliert
+             * genau dieses Bit als props[].active.
+             * (Der Installer schreibt an derselben Stelle 0x80000000 statt 0 — beide loeschen
+             * Bit 0; der Unterschied ist im Port-Modell nicht abbildbar und folgenlos.)
+             * prop >= prop_count (insbesondere 0xFF = "kein Modell") bleibt folgenlos. */
+            if (s_taken_prop < g_scd.prop_count)
+                g_scd.props[s_taken_prop].active = 0;          /* sw zero,0(at) @0x80021fc8 */
             s_visible = 0;
             s_state   = 0;           /* sb zero,DAT_80072d3b @0x8001e0e0 = DONE */
             return;

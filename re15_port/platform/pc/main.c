@@ -3697,7 +3697,7 @@ re_title:;
              * visually verify the zoom/spin/flip presentation. Overlays don't show in the autoshot BMP
              * (SDL_RenderReadPixels captures only RenderCopy'd textures) — verify via an ffmpeg video. */
             if (getenv("RE15_ITEM_MODAL_TEST") && g_engine.frame_count == 40)
-                re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (ITPS picture id 0x15) */
+                re15_item_modal_start(0x15, 50, 0, -1, 0xFF);   /* H.GUN BULLETS (ITPS picture id 0x15) */
             /* RE15_ITEM_USE_TEST: debug — seed a Green Medicine as the only item + open the inventory
              * at frame 40 to visually verify the DIRECT heal (wave 3: confirm -> USE -> green ECG wipe
              * -> consume; NO prompt — spec inv_wave3_spec.md heal flow @0x8004adcc). */

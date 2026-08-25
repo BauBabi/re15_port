@@ -164,6 +164,12 @@ typedef struct {
                            * (flag zone 9 = ptr-table 0x80074664[9] @0x80074688). Set on pickup
                            * (FUN_8004ef90); re-checked at INSTALL (@0x800406d4) so taken items
                            * do not respawn on room re-entry. [wf_f536e1ee #14-step-1] */
+    uint8_t  taken_prop;  /* payload (pc[20]/pc[28]) — INDEX des WELT-MODELLS im Obj-Pool.
+                           * Beim Bestaetigen der Aufnahme loescht das Original das Zeichen-Bit
+                           * dieses Objekts (`sw zero,0(at)` @0x80021fc8) — ohne diesen Index
+                           * kann der Port das Modell nicht wegraeumen und es blieb bis zum
+                           * naechsten Raum-Eintritt sichtbar (Nutzer-Report 2026-08-25,
+                           * "room 1020 u.a."). 0xFF = kein Modell (Rand-Fall §1d). */
 } re15_aot_item_params_t;
 
 /* STAIR per-record direction data (byte-true sce-12/13 handlers LAB_80043500/LAB_800435cc —
@@ -236,6 +242,10 @@ int  re15_aot_set_item(int slot, int32_t cx, int32_t cz,
                         int32_t half_w, int32_t half_h,
                         uint8_t item_type, uint8_t amount);
 /* + the taken-bit index (payload[2]); re15_aot_set_item keeps 0 = no persistence. */
+int re15_aot_set_item_tk_prop(int slot, int32_t cx, int32_t cz,
+                             int32_t half_w, int32_t half_h,
+                             uint8_t item_type, uint8_t amount, uint8_t taken_bit,
+                             uint8_t taken_prop);
 int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
                          int32_t half_w, int32_t half_h,
                          uint8_t item_type, uint8_t amount, uint8_t taken_bit);

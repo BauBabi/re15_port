@@ -7022,7 +7022,24 @@ static void re2z_init(int slot, re15_actor_t *e)
      * schreiben +0x10E = 0x4004 (Feeder @0x80100A88-8C) / 0x4002 (Lyer @0x80100A34-38) —
      * das Limpet-Latch 0x4000 haelt die Executor-Ketten, bis der (gemappte) Wecker es loescht. */
     e->re2z_f10e = 0;
-    if (sel == 6) {                                                /* feeding -> ACTIVE sub 8 */
+    if ((sel == 1 || sel == 3) && (beh & 0x80u)) {
+        /* ⛔ KRIECHER-DESKRIPTOR 0x81/0x83 (Nutzer-Report 2026-08-25: "room 1010 die Zombies
+         * kriechen im original").
+         * Nibble 1/3 unter dem 0x80-Gate ist im RE1.5-Original woertlich "Kriecher": derselbe
+         * Wert, den der ROOM1030-Kriech-Commit zur Laufzeit schreibt (`ori v0,zero,0x81` /
+         * `sb v0,9(v1)` @0x801050D0-D4), und Nibble 1 ist die Grid-Wurzel 1 = die Kriech-
+         * Maschine (@0x8011f80c[1] = FUN_80101708).
+         * VORHER lief er hier ueber die lying_family in den LIEGE-Executor EXEC[7]
+         * (+0x10E = 0x4002): der Naeherungs-Wecker (`(grid&0xF) != 7 && != 8 && (f10e&0x4000)
+         * && dist < 0xbb8`) laesst Nibble 1 durch — der Kriecher STAND AUF und lief aufrecht
+         * an (gemessen ROOM1010 Suedtuer: f120 grid=0x00, aufrecht, f700 Angriff).
+         * Die lying_family-Zuordnung war ausdruecklich als PORT-OPTION markiert, nicht als
+         * RE2-Byte-Befund — hier gewinnt der RDT-Deskriptor.
+         * re15_re2z_enter_crawler ist der bereits byte-belegte Einstieg (+0x10E Bit 0,
+         * `sw 1,4` @0x80107A54-58, sca_mask 8) und wurde bisher nur von der ROOM1030-
+         * Skript-Bruecke benutzt. Dossier: analysis/nutzer_batch_2026-08-26/room1010-kriecher.md */
+        re15_re2z_enter_crawler(e, NULL, 0);
+    } else if (sel == 6) {                                         /* feeding -> ACTIVE sub 8 */
         e->re2z_f10e = 0x4004u;                                    /* sh 0x4004,270 @0x80100A88-8C */
         re15_ai_set_state_word(e, 0x801);                          /* @0x80100AD4 */
         re2z_clip(e, 0x12, 0, 0, 0x100, 0);                        /* INIT-Seed Clip 18 PLAIN

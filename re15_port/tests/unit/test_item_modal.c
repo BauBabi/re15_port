@@ -53,7 +53,7 @@ int main(void)
     /* ---- (1) NORMAL: zoom/flip -> take-prompt HOLDS for input -> confirm(Yes) grants at the end ---- */
     {
         re15_inv_init();
-        re15_item_modal_start(0x15, 50, 0, -1);       /* H.GUN BULLETS x50 */
+        re15_item_modal_start(0x15, 50, 0, -1, 0xFF);       /* H.GUN BULLETS x50 */
         CHECK("start -> state 1 / active", re15_item_modal_state() == 1 && re15_item_modal_active());
         CHECK("grant DEFERRED (not in inventory yet)", !inv_has(0x15));
 
@@ -84,7 +84,7 @@ int main(void)
     /* ---- (2) "No": toggle to No then confirm -> item NOT taken, box shrinks away ---- */
     {
         re15_inv_init();
-        re15_item_modal_start(0x15, 50, 0, -1);
+        re15_item_modal_start(0x15, 50, 0, -1, 0xFF);
         run_to_prompt(NULL, NULL);
         CHECK("No-path: take-prompt up", re15_item_modal_prompt(NULL, NULL) == 1);
         run_reveal();                                 /* type the text out first */
@@ -102,7 +102,7 @@ int main(void)
     {
         re15_inv_init();
         for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) { g_inv.slots[i].id = 0x22; g_inv.slots[i].qty = 1; }
-        re15_item_modal_start(0x24, 1, 0, -1);
+        re15_item_modal_start(0x24, 1, 0, -1, 0xFF);
         run_to_prompt(NULL, NULL);
         CHECK("full: can't-carry prompt (2)", re15_item_modal_prompt(NULL, NULL) == 2);
         run_reveal();                                 /* type the text out first */
@@ -119,10 +119,10 @@ int main(void)
     /* ---- (4) re-entry GUARD: a second start while running is ignored ---- */
     {
         re15_inv_init();
-        re15_item_modal_start(0x15, 10, 0, -1);
+        re15_item_modal_start(0x15, 10, 0, -1, 0xFF);
         re15_item_modal_tick(0, 0);                       /* into state 2 */
         uint8_t before = re15_item_modal_state();
-        re15_item_modal_start(0x03, 1, 0, -1);         /* must be ignored */
+        re15_item_modal_start(0x03, 1, 0, -1, 0xFF);         /* must be ignored */
         CHECK("guard: second start ignored", re15_item_modal_state() == before);
         int guard = 0;
         while (re15_item_modal_active() && guard++ < 200) re15_item_modal_tick(0x4000, 0);  /* Yes to finish */
@@ -132,7 +132,7 @@ int main(void)
     /* ---- (5) the item PICTURE quad is drawn during zoom, with the right item type ---- */
     {
         re15_inv_init();
-        re15_item_modal_start(0x15, 50, 0, -1);
+        re15_item_modal_start(0x15, 50, 0, -1, 0xFF);
         int qx[4], qy[4], face; uint8_t type;
         CHECK("init frame: no quad yet", re15_item_modal_quad(qx, qy, &type, &face) == 0);
         re15_item_modal_tick(0, 0);                       /* state 1 -> 2 */
@@ -157,7 +157,7 @@ int main(void)
     {
         int n_norm = 0, n_held = 0, n_edge = 0, glyphs = 0, guard;
 
-        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1, 0xFF); run_to_prompt(NULL, NULL);
         glyphs = re15_item_modal_reveal_total();
         guard = 0;
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
@@ -165,14 +165,14 @@ int main(void)
         }
         while (re15_item_modal_active() && guard++ < 600) re15_item_modal_tick(0x4000, 0);
 
-        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1, 0xFF); run_to_prompt(NULL, NULL);
         guard = 0;
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
             re15_item_modal_tick(0, 0x4000); n_held++;      /* HELD virtual 0x4000 -> fast-forward */
         }
         while (re15_item_modal_active() && guard++ < 600) re15_item_modal_tick(0x4000, 0);
 
-        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1, 0xFF); run_to_prompt(NULL, NULL);
         guard = 0;
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
             re15_item_modal_tick(0x4000, 0); n_edge++;      /* EDGE only -> must stay at base speed */

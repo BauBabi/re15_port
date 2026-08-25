@@ -30,7 +30,8 @@
  * DEFERS the grant to the modal's end. Ignored if a modal is already running (byte-true guard
  * @0x80043334: `if (DAT_80072d3b != 0) return`). `aot_slot` = the g_aot slot to deactivate on
  * confirm; `taken_bit` = the zone-9 flag payload to set on confirm (0 = none). */
-void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit, int aot_slot);
+void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
+                           int aot_slot, uint8_t taken_prop);
 
 /* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). `pad_edge` = the newly-pressed
  * VIRTUAL pad word this tick (DAT_800ac76c — build with re15_pad_virtual_word(), wave-6 finding 4)

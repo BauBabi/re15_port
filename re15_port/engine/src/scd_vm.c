@@ -397,9 +397,21 @@ int scd_audio_queue_pop(scd_audio_event_t *out)
 /* VM control                                                                 */
 /* ========================================================================= */
 
+/* ⛔ AUFGENOMMENE ITEMS: Welt-Modelle, die der Installer als "schon genommen" ausblenden muss.
+ * Warum eine Maske und kein direktes props[i].active = 0: Obj_model_set HAENGT die Props in
+ * Skript-Reihenfolge an (g_scd.prop_count++). Laeuft Item_aot_set VOR dem Obj_model_set des
+ * zugehoerigen Modells — und das ist in ROOM1020 der Fall —, existiert der Index tk_prop zum
+ * Zeitpunkt des Install-Hides noch gar nicht, der Hide verpufft, und das Modell wird danach
+ * frisch mit active=1 erzeugt. Gemessen 2026-08-25 (probe_item_model_1020, Abschnitt C):
+ * AOT-Slot tot, Prop obj_id 4 aber weiterhin sichtbar. Die Maske merkt sich die Absicht und
+ * Obj_model_set wendet sie beim Anlegen an — das Ergebnis entspricht dem Original, in dem der
+ * Installer das Zeichen-Bit des Pool-Eintrags loescht (@0x800406f8-718). */
+static uint16_t s_prop_taken_hidden = 0;
+
 void scd_vm_init(void)
 {
     memset(&g_scd, 0, sizeof(g_scd));   /* clears tick_count + all *_pending flags */
+    s_prop_taken_hidden = 0;
     /* Der memset wischt auch message_active/message_fsm_active — damit verschwindet der einzige
      * Weg, einen offenen Text zu schliessen. Ein noch gesetztes g_pauseflags wuerde die VM danach
      * fuer immer anhalten (Gate @0x8003f04c). Deshalb hier derselbe Voll-Clear wie in der
@@ -3475,7 +3487,8 @@ static int op_item_aot_set(scd_thread_t *t)
      *     (@0x800406f4 `sb zero,0(v0)`) + hides the prop (pool flag |= 0x80000000
      *     @0x800406f8-718). The record STAYS registered/retypeable — the old port code
      *     left the slot uninstalled, which broke a later re-arm of a taken item. */
-    re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
+    re15_aot_set_item_tk_prop((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit,
+                              (uint8_t)tk_prop);
     if (slot < RE15_AOT_MAX) {
         g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre — alle 164
                                                    * ausgelieferten Item_aot_set sind ACTION-
@@ -3486,6 +3499,10 @@ static int op_item_aot_set(scd_thread_t *t)
         g_aot.slots[slot].band      = t->pc[4];
         int inert = (t->pc[2] == 0);
         if (tk_bit && re15_game_flag_get(9, tk_bit)) {
+            if (tk_prop < 16u)
+                s_prop_taken_hidden |= (uint16_t)(1u << tk_prop);  /* merken: gilt auch, wenn
+                                                                    * das Modell erst SPAETER
+                                                                    * angelegt wird */
             if (tk_prop < g_scd.prop_count)
                 g_scd.props[tk_prop].active = 0;           /* hide the pickup prop */
             inert = 1;                                     /* @0x800406f4 rec[0]=0 */
@@ -3556,7 +3573,9 @@ static int op_obj_model_set(scd_thread_t *t)
     int16_t bhz = scd_read_le_s16(&t->pc[32]);
     if (g_scd.prop_count < 16) {
         int i = g_scd.prop_count++;
-        g_scd.props[i].active = 1;
+        g_scd.props[i].active = (s_prop_taken_hidden & (1u << i)) ? 0 : 1;
+                                            /* schon genommen -> gar nicht erst sichtbar
+                                             * anlegen (s. s_prop_taken_hidden) */
         g_scd.props[i].obj_id = obj_id;
         g_scd.props[i].obj_type = obj_type;
         g_scd.props[i].band   = t->pc[4];   /* FLOOR band -> pool+0x82 (byte-true

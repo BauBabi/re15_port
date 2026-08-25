@@ -4177,10 +4177,46 @@ int re15_enemy_ai_live_active(int slot)
                         break;
                     case 3: case 4:  /* [3,4]=0x80104540 = `jr ra; nop` (roh @0x80104540-44) */
                         break;
-                    case 5: case 15:
-                        /* OFFEN: [5]=0x8010466C, [15]=0x80109E44 — nicht portiert (0x80109E44
-                         * zieht RNG @0x8010a188 -> Einbau wuerde den deterministischen
-                         * RNG-Strom verschieben, Dossier §6). Sicherster No-op. */
+                    case 5:
+                        /* GRID-1 DECIDE[5] = FUN_8010466C (selbst disassembliert 2026-08-25).
+                         * Der RDT-Spawn-Deskriptor 0x81 (Bit 0x80 + Nibble 1) setzt Zombies von
+                         * GEBURT AN als Kriecher — ROOM1010/1011, 1220/1221, 3010/3011,
+                         * 4050/4051, 5060/5061 (14 Aktoren). Ohne diesen Eintrag stand der
+                         * Kriecher als STANDBILD im Raum: +0x06 blieb 0, +0x95 blieb 0, keine
+                         * Bewegung (gemessen ueber 700 Frames, Dossier
+                         * analysis/nutzer_batch_2026-08-26/room1010-kriecher.md §4).
+                         *
+                         * ⚠ BLOCK A IST TOTER CODE — literal mitportiert, damit der naechste
+                         * Leser nicht "vereinfacht" vermutet: @0x80104700 schreibt den
+                         * Grab-Commit, und der FALLTHROUGH nach @0x80104704 (kein Branch)
+                         * ueberschreibt ihn unmittelbar mit dem Wort 1, weil dessen Tor
+                         * (dist < 0xbb8) bei dist < 0x4b0 IMMER ebenfalls haelt und BEIDE
+                         * arc_test-Aufrufe dieselbe Adresse 0x800ACA88 benutzen
+                         * (a0 = s0-95 @0x801046B0 == a0 = -13688 @0x80104728). */
+                        if (player->hit_react == 0 &&                        /* @0x80104680-88 */
+                            e->ai_dist < 0x4b0u &&                           /* sltiu 0x4b0
+                                                                              * @0x801046A4-A8 */
+                            re15_ai_arc_test(e, player->x, player->z, 0x200) == 0 &&
+                                                                             /* @0x801046B4-BC */
+                            e->floor == player->floor) {                     /* @0x801046D0-DC */
+                            int aligned = re15_ai_facing_aligned(e, player);  /* a780 @0x801046E4 */
+                            re15_ai_set_state_word(e,
+                                ((uint32_t)(aligned + 1) << 8) | 1u);        /* @0x801046EC-0x80104700 */
+                        }
+                        /* BLOCK B @0x80104704 — der wirksame Zweig: in Sicht und naeher als
+                         * 3000 -> Wort 1 = Zustand 1 / Sub 0 = die Kriech-Lokomotion
+                         * (ANIMATE[0] = FUN_801036DC). */
+                        if (e->ai_dist < 0xbb8u &&                           /* sltiu 0xbb8
+                                                                              * @0x80104718 */
+                            re15_ai_arc_test(e, player->x, player->z, 0x200) == 0)
+                                                                             /* @0x8010472C-34 */
+                            re15_ai_set_state_word(e, 1u);                   /* ori v0,1 @0x80104738
+                                                                              * / sw @0x80104748 */
+                        break;
+                    case 15:
+                        /* OFFEN: [15]=0x80109E44 — nicht portiert (0x80109E44 zieht RNG
+                         * @0x8010a188 -> Einbau wuerde den deterministischen RNG-Strom
+                         * verschieben, Dossier §6). Sicherster No-op. */
                         re15_grid1_open_log("DECIDE", e->sub_state_1);
                         break;
                     default: /* 7..14 = NULL-Pointer im Original -> Absturz. NIE erreichen. */
@@ -4202,8 +4238,24 @@ int re15_enemy_ai_live_active(int slot)
                     case 3: case 4:  /* [3,4]=0x80104548 = KRIECH-DEVOUR (Clip (+0x5)+6 = 9/0xA) */
                         re15_zcrawl_devour_animate(e, player);
                         break;
-                    case 5: case 15:
-                        /* OFFEN: [5]=0x80104808, [15]=0x80109E4C — nicht portiert. No-op. */
+                    case 5:
+                        /* GRID-1 ANIMATE[5] = FUN_80104808 (selbst disassembliert 2026-08-25):
+                         * die Warte-/Weck-Pose des RDT-Kriechers. Erstframe setzt den Clip,
+                         * danach jeden Tick das Annaeherungs-Bit loeschen und die Bank posieren. */
+                        if (e->sub_state_2 == 0) {              /* lbu v0,6 / bne @0x80104818-20 */
+                            e->sub_state_2 = 1;                 /* sb 1,6    @0x8010482C */
+                            e->motion      = 0x0C;              /* sb 0xc,148 @0x8010483C */
+                            e->anim_frame  = 0;                 /* sb 0,149  @0x8010484C */
+                            e->anim_frac   = 7;                 /* sb 7,143  @0x8010485C */
+                        }
+                        e->ai_flags = (uint16_t)(e->ai_flags & 0xffefu);
+                                                                /* lhu 472 / andi 0xffef / sh
+                                                                 * @0x8010486C-78 */
+                        e->anim_blend_rate = 0x200;             /* anim_set(+0x170,+0x174,0,0x200)
+                                                                 * @0x80104888-94 (a3 = 0x200) */
+                        break;
+                    case 15:
+                        /* OFFEN: [15]=0x80109E4C — nicht portiert. No-op. */
                         re15_grid1_open_log("ANIMATE", e->sub_state_1);
                         break;
                     default:

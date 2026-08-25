@@ -81,9 +81,10 @@ int re15_aot_set_item(int slot, int32_t cx, int32_t cz,
     return re15_aot_set_item_tk(slot, cx, cz, half_w, half_h, item_type, amount, 0);
 }
 
-int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
-                         int32_t half_w, int32_t half_h,
-                         uint8_t item_type, uint8_t amount, uint8_t taken_bit)
+int re15_aot_set_item_tk_prop(int slot, int32_t cx, int32_t cz,
+                              int32_t half_w, int32_t half_h,
+                              uint8_t item_type, uint8_t amount, uint8_t taken_bit,
+                              uint8_t taken_prop)
 {
     int rc = re15_aot_set(slot, RE15_AOT_TYPE_ITEM, 0, cx, cz, half_w, half_h);
     if (rc != 0) return rc;
@@ -91,7 +92,18 @@ int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
     p->item_type = item_type;
     p->amount    = amount;
     p->taken_bit = taken_bit;
+    p->taken_prop = taken_prop;   /* Index des Welt-Modells — ohne ihn kann die Aufnahme das
+                                   * Modell nicht loeschen (Gegenstueck zu `sw zero,0(at)`
+                                   * @0x80021fc8). 0xFF = kein Modell. */
     return 0;
+}
+
+int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
+                         int32_t half_w, int32_t half_h,
+                         uint8_t item_type, uint8_t amount, uint8_t taken_bit)
+{
+    return re15_aot_set_item_tk_prop(slot, cx, cz, half_w, half_h,
+                                     item_type, amount, taken_bit, 0xFFu);
 }
 
 int re15_aot_set_stair(int slot, int32_t cx, int32_t cz,
@@ -617,7 +629,7 @@ void re15_aot_fire_slot(int slot)
         /* handler[9] @0x80043328 arms the pickup FSM (latch 0x80072d3b, rec →
          * 0x800aca30) = the port's item modal. Forced pickup, no geometry. */
         const re15_aot_item_params_t *p = &g_aot.item_params[slot];
-        re15_item_modal_start(p->item_type, p->amount, p->taken_bit, slot);
+        re15_item_modal_start(p->item_type, p->amount, p->taken_bit, slot, p->taken_prop);
         break;
     }
     case RE15_AOT_TYPE_GENERIC:
@@ -1272,7 +1284,7 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  * divergence this closes (U11). The pickup SE is the room's own SCD Se_on (already
                  * SCD-driven), never a fabricated value (door/item hack audit BO-round 2026-05-29). */
                 const re15_aot_item_params_t *p = &g_aot.item_params[i];
-                re15_item_modal_start(p->item_type, p->amount, p->taken_bit, i);
+                re15_item_modal_start(p->item_type, p->amount, p->taken_bit, i, p->taken_prop);
                 break;
             }
             case RE15_AOT_TYPE_CAM_SWITCH: {

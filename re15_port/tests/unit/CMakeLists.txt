@@ -2657,6 +2657,26 @@ target_include_directories(probe_10d0_float_y PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(probe_10d0_float_y PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# DIAGNOSE-SONDE (kein ctest): FINDING 1 (2026-08-26) — MESSREIHE zur Wurzelhoehe des
+# WELLE-G-Hybrid-Rigs. Prueft, ob der Hybrid-Fehler POSE-UNABHAENGIG konstant ist (dann waere
+# ein additiver Wurzel-Versatz richtig) oder mit der Pose skaliert. Modi: 0/1/3 Pose-Sweep je
+# Typ ueber alle Clips aller Baenke, 2 = echter Raumlauf (Raum x Flavor).
+add_executable(probe_rig_root_y probe_rig_root_y.c)
+target_link_libraries(probe_rig_root_y PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_rig_root_y PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_rig_root_y PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# DIAGNOSE-SONDE (kein ctest), FINDING 1 (2026-08-26), Zwilling zu probe_rig_root_y:
+# misst nicht den tiefsten BONE, sondern die ECHTE SOHLE (tiefster MESH-Vertex in Welt-Y,
+# Renderer-Kette main.c:6957-7050 inkl. mesh_remap) — fuer RE1.5-nativ / RE2-nativ / Hybrid,
+# Clip fuer Clip, plus die EXAKTE Pro-Keyframe-Korrektur aus den zwei Bind-Tabellen.
+add_executable(probe_rig_sohle probe_rig_sohle.c)
+target_link_libraries(probe_rig_sohle PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_rig_sohle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_rig_sohle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # FINDING 5 (Wiederholungs-Report 2026-08-24): "Verletzt-Animation beim Hineinlaufen ins Feuer
 # fehlt". Misst NICHT den Zustand (der war seit v0.3.18 richtig), sondern die GERENDERTE Pose
 # im echten ROOM1090-Durchlauf inkl. RDT-Animationsblock: die cmd-2/cmd-3-Reaktions-Clips
@@ -2719,3 +2739,22 @@ target_compile_definitions(test_re2z_finisher_bite PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2z_finisher_bite COMMAND test_re2z_finisher_bite)
 set_tests_properties(unit_re2z_finisher_bite PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE (Nutzer-Report 2026-08-26): "room 1010 die Zombies kriechen im original".
+#     Misst den echten ROOM1010-Spawn (Case 0 / Case 4 des sub00-Switch) in beiden KI-Flavors.
+#     Beleg: Sce_em_set behavior 0x81 -> Decoder 0x80100d3c-68 (+0x94=0x0C, +0x05=5),
+#     Grid-Wurzel 0x8011f80c[1]=0x80101708, Grid-1 Sub 5 = 0x8010466C / 0x80104808. ---
+add_executable(probe_1010_kriecher probe_1010_kriecher.c)
+target_link_libraries(probe_1010_kriecher PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1010_kriecher PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1010_kriecher PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Nutzer-Report 2026-08-26, FINDING 3): "Item aufgenommen -> Weltmodell muss weg".
+#     Misst in ROOM1020/ROOM1000, ob der zum Item_aot_set gehoerende Obj_model_set-Prop
+#     nach der Aufnahme (und nach Raumwechsel) noch aktiv ist. Reine Diagnose, kein add_test. ---
+add_executable(probe_item_model_1020 probe_item_model_1020.c)
+target_link_libraries(probe_item_model_1020 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_item_model_1020 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_item_model_1020 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
