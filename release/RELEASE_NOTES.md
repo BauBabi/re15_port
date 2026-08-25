@@ -1,81 +1,77 @@
-# RE1.5 Port — v0.3.28 (Early Preview)
+# RE1.5 Port — v0.3.29 (Early Preview)
 
-Drei Meldungen, drei Ursachen — und bei zweien war der Fehler meiner.
+Vier Meldungen. Bei einer war der Fehler frisch von mir, bei zweien lag er tiefer, als ich
+zuletzt gemessen hatte.
 
-## Das Feuer in ROOM1090 knistert wieder
+## Die schwarzen Dreiecke über dem Feuer — meine Regression aus v0.3.28
 
-Du hattest das zum zweiten Mal gemeldet, und beim ersten Mal habe ich falsch geprueft: ich
-hatte nur nachgesehen, ob die Feuer-Spur korrekt VERSTUMMT, und daraus geschlossen, sie sei
-in Ordnung. Sie hat nie geklungen.
+Um Ada beim Folgen die richtige Animation zu geben, hatte ich im Renderer eine Bedingung
+erweitert: „Zustand 1 → nimm die eigene Animationsbank". Zustand 1 ist aber der ganz normale
+*aktiv*-Zustand fast jedes Gegners. Also haben ab v0.3.28 auch Zombies, Spinnen und die
+Feuer-Emitter aus einer Bank posiert, die gar nicht zu ihrem Skelett gehört — und genau das
+sind die schwarzen Dreiecke.
 
-Das Feuer ist im Original keine normale Musikspur, sondern ein Sonderfall: eine zweite
-Sequenz in der Neben-Musikdatei, die sich per Bank-Wechsel auf die Haupt-Musikdatei
-umhaengt und dort drei Knister-Samples anspielt. Das zugehoerige Instrument ist ab Werk
-stumm und wird erst vom Raum-Skript aufgedreht.
+Der eigentliche Grund war, dass dieselbe Regel doppelt im Code stand, einmal für die
+Animations-Uhr und einmal für den Renderer, und ich nur eine der beiden Kopien erweitert
+habe. Die Regel steht jetzt **genau einmal**, beide Seiten fragen dieselbe Funktion, und
+zwei neue Wachen prüfen sie von beiden Seiten: ein Nicht-NPC in Zustand 1 darf die eigene
+Bank *nie* bekommen, eine folgende NPC *muss* sie bekommen.
 
-Im Port hat eine einzige Zeile diese ganze Ebene stillgelegt: der Mischer sprang bei jeder
-Sequenz ab, die keine EIGENE Klangbank mitbringt — und genau das ist bei dieser Sequenz
-normal, sie leiht sich die des Nachbarn. Die Startfunktion daneben hatte die richtige
-Pruefung seit jeher; der Mischer nicht.
+## Ada läuft nicht mehr durch Wände
 
-Belegen laesst sich das ohne Hoertest: ich habe zweimal aufgenommen, einmal mit brennendem
-Raum und einmal mit bereits geloeschtem Feuer. **Vorher waren beide Aufnahmen ueber 1,9
-Millionen Bilder bitgleich** — der Schalter hat also nachweislich nichts bewirkt. Nachher
-unterscheiden sie sich in 38,9 % aller Samples.
+Zwei Ursachen, beide im Original nachgelesen.
 
-Nebenbei betrifft das nicht nur ROOM1090: drei weitere Raeume haben eine solche zweite
-Sequenz mit Noten, und sie waren aus demselben Grund stumm.
+Erstens fehlte die Wand-Klemme komplett. Die NPC-Wurzel klemmt jeden NPC direkt nach dem
+Zustands-Aufruf gegen die Raumkollision — der Port hatte diesen Aufruf für die NPC-Familie
+nirgends, und die neu portierte Eskorte schob die Figur einfach ungebremst weiter.
 
-## ROOM1210: die Haende kommen jetzt wirklich raus
+Zweitens hätte die Klemme allein auch nichts gebracht: sie liest ihren Radius aus der
+Trefferbox des Gegners, und für die NPC-Typen war im Port gar keine Box eingetragen — Radius
+0. Aus dem Original nachgezogen: 450 Radius, 1530 Höhe.
 
-Hier habe ich in der letzten Version einen echten Fehler gebaut. Die Original-Mechanik
-laesst die Kreatur beim Ausloesen **nach vorn schnellen** — ich hatte das weggelassen, mit
-der Begruendung, ein im Gitter steckender Arm koenne das nicht.
+Eine neue Wache stellt Ada vor eine Wand und verlangt dreierlei — sie bewegt sich, sie kommt
+nicht durch, und ihr Fortschritt zur Wand versiegt — plus die Gegenprobe mit einem
+erreichbaren Ziel, damit „eingemauert" nicht als Erfolg durchgeht.
 
-Genau diese Bewegung IST aber das Aus-dem-Gitter-Kommen. Nachgemessen: an ihren
-Ausgangspositionen liegen alle zehn Kreaturen **ausserhalb jedes einzelnen der neun
-Kamera-Bereiche** des Raums — und beide Fassungen, Original wie Port, zeichnen einen Gegner
-gar nicht erst, wenn er dort nicht drinliegt. Es war also nicht "unauffaellig animiert",
-es war ueberhaupt nichts zu sehen. Das Modell selbst haette es auch nicht gerettet: der
-Arm misst gerade einmal gut 400 Einheiten, das Gitter ist rund 2700 entfernt.
+## ROOM1210: zu früh, zu leise, zu kurz — alle drei
 
-Jetzt fahren sie die Original-Bewegung: drei Bilder schnell vor, dreissig langsam zurueck,
-vier wieder vor — unterm Strich 2420 Einheiten nach vorn. Damit landen sie im Flur, im Bild
-und in Griffweite. Die Zahlen stehen alle so im Original; im Port sind exakt dieselben 2420
-nachgemessen.
+**Zu früh.** Der Auslöse-Bereich des Raums ist 1700 Einheiten *tief insgesamt*, nicht
+±1700 — die beiden Zahlen im Raum sind Ecke und Ausdehnung, was der Rechteck-Test des
+Originals eindeutig zeigt. Ich hatte in v0.3.28 auf die volle Tiefe erhöht; das war der
+falsche Schluss. Gemessen ging damit jeder Arm rund 22 Bilder zu früh auf und stand
+zwei Drittel einer Sekunde fertig ausgefahren da, bevor du auf seiner Höhe warst. Jetzt ist
+es wieder die halbe Tiefe.
 
-Dein urspruenglicher Kritikpunkt bleibt gewahrt: verworfen hattest du, dass **alle zehn auf
-einen Schlag** losgehen. Das entscheidet weiterhin jeder Arm fuer sich. Und weil der Port
-das Ausfahren wiederholt ausloest (das Original tut es genau einmal), stellt er die Kreatur
-beim Rueckzug wieder an ihren Platz — sonst waere sie nach drei Durchgaengen mitten im Flur.
+**Zu leise.** Beim eigentlichen Zupacken hat der Arm bisher gar nichts gespielt; sein
+einziger Laut lief in der Ausfahr-Schleife — und ausgerechnet der *leisere* der beiden
+Zombie-Laute des Raums. Beide Vorlagen, RE1.5 wie RE2, spielen im Moment des Zugriffs einen
+Laut; RE1.5 sogar unbedingt. Der ist jetzt drin, und es ist der mit der höheren Priorität:
+beide liegen auf derselben Stimme, und der leise wurde vom lauten ohnehin verdrängt.
 
-## Ada bewegt sich beim Folgen richtig
+Ehrlich dazugesagt: RE2s Wucht an dieser Stelle besteht zu einem guten Teil aus
+**Vibration** — eine Rampe auf volle Motorstärke plus vier Stöße beim Biss. Dafür hat der
+Port kein Gegenstück; das ist eine benannte Lücke, kein Versehen.
 
-Vier Fehler auf einmal, alle in derselben Ecke:
+**Zu kurz.** Das war der interessanteste Befund. Die Arme *können* dich mit ihrem Körper
+gar nicht erreichen: ihr wird von einer eigenen Kollision im Gitter gehalten, du von deiner
+im Flur, und dazwischen steht gut ein Meter Wand. Der kleinstmögliche Abstand zwischen den
+beiden Mittelpunkten ist damit hart über 1800 Einheiten — mehr als das Griff-Fenster von
+1200 zulässt. Keine zusätzliche Bewegung ändert daran etwas.
 
-**Falsche Animations-Bank.** Waehrend des Folgens nimmt das Original ein eigenes
-Animations-Paar, das der Port nur fuer einen anderen Zustand kannte. Gezeichnet wurde die
-Haupt-Bank — dort ist der Geh-Clip eine voellig andere, kuerzere Bewegung und der
-Steh-Clip ein Sturz.
+Das Modell reicht aber viel weiter als sein Mittelpunkt: die Hand ragt im Ausfahr-Clip 1671
+Einheiten nach vorn. Sie steht also sehr wohl im Flur, nur der Körper nicht. Deshalb misst
+das Griff-Fenster jetzt **die Hand statt des Mittelpunkts**. Die Schwelle selbst bleibt
+unverändert bei 1200 — sie anzuheben wäre eine erfundene Zahl für genau dieses Problem
+gewesen.
 
-**Eingefrorene Pose.** Der Geh-Zustand hat Clip, Bild und Ueberblendung in *jedem* Bild neu
-gesetzt statt nur beim Eintritt. Gemessen stand der Bildzaehler konstant auf 1 — die Beine
-bewegten sich nicht, waehrend die Figur durch den Raum glitt.
+Gemessen an der Stelle, an die dich die Kollision wirklich lässt: drei Zugriffe, 275 Bilder
+im Griff, sechs Bisse zu je 20 Lebenspunkten. In der Flurmitte greift nichts. Das ist genau
+das Bild aus RE2, das du beschrieben hattest.
 
-**Doppelter Takt.** Zusaetzlich hat der allgemeine Animations-Takter mitgezaehlt, also zwei
-Bilder pro Bild.
+## Was dabei noch aufgefallen ist
 
-**Fehlende Zustaende.** Zum Folgen gehoeren im Original fuenf Zustaende: stehen, gehen, sich
-zum Spieler drehen, nah dabei mit halbem Tempo — und **laufen**, mit eigenem Clip und
-eigenem Tempo, ab rund 3000 Einheiten Abstand. Der Port kannte drei davon. Ada blieb deshalb
-selbst bei grossem Rueckstand im Geh-Clip.
-
-Drei Zustaende, die nur ueber Story-Flags oder einen gepackten Spieler erreichbar sind, habe
-ich bewusst offen gelassen und im Quelltext als offen benannt — ihre Animationsseite ist
-noch nicht ausgelesen, und ein Zweig ohne Ziel wuerde die Figur einfrieren.
-
-## Wie das gefunden wurde
-
-Alle drei Punkte sind aus dem Original disassembliert, nicht geraten; jede Zahl in den
-Fixes traegt ihre Adresse im Quelltext. Der Feuer-Befund ist zusaetzlich gegen einen
-Original-Spielstand geprueft, der ROOM1210-Befund gegen die Kamera-Bereiche des Raums.
+Beim Nachmessen hat sich gezeigt, dass meine früheren Angaben zum „begehbaren Boden" in
+ROOM1210 **invertiert** waren: die Kollisionsabfrage meldet in diesem Raum *innerhalb* einer
+Wandzelle eine 1, gelaufen wird im Gegenstück. Die Wache benutzt jetzt nur noch den echten
+Laufweg. Das erklärt auch, warum meine Erreichbarkeits-Zahlen der letzten Runde nicht
+zusammenpassten.

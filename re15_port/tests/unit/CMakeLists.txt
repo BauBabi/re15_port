@@ -2882,6 +2882,13 @@ target_include_directories(probe_1210_geo PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_geo PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- GEGENSONDE (adversariale Pruefung 1210-reichweite, Linse vakuanz). KEIN add_test. ---
+add_executable(probe_1210_vakuanz probe_1210_vakuanz.c)
+target_link_libraries(probe_1210_vakuanz PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_vakuanz PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_vakuanz PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_1210_trigger probe_1210_trigger.c)
 target_link_libraries(probe_1210_trigger PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_trigger PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -2898,6 +2905,14 @@ add_executable(probe_1210_sound probe_1210_sound.c)
 target_link_libraries(probe_1210_sound PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_sound PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_sound PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENSONDE (adversariale Pruefung des Sound-Befunds): ist der Greif-Zustand ueberhaupt
+#     im natuerlichen Ablauf (Kollision an, kein Teleport, kein gesetzter Sub) erreichbar? ---
+add_executable(probe_1210_natur probe_1210_natur.c)
+target_link_libraries(probe_1210_natur PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_natur PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_natur PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # --- PIN (Nutzer-Auftrag ROOM1210): die Gitterhaende reagieren EINZELN beim Vorbeigehen,
@@ -2934,4 +2949,10 @@ add_executable(probe_1210_cutcheck probe_1210_cutcheck.c)
 target_link_libraries(probe_1210_cutcheck PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_cutcheck PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_cutcheck PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1210_vak probe_1210_vak.c)
+target_link_libraries(probe_1210_vak PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_vak PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_vak PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
