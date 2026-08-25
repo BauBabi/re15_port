@@ -10691,11 +10691,102 @@ static void re15_writher_ai_tick(int slot)
          * death only (the submerge seeds feed the OPEN latent cycle documented above). NO +0x9a set. */
         break;
 
-    case 1:   /* ACTIVE 0x8010c488 -> A[0]/B[0]: grid-0 rooted idle. X/Z (+0x34/+0x3c) NEVER advanced;
-               * clip 0 looped by anim_set. No clip cycling, no emerge — those were invented (#2/#3). */
-        e->motion = 0;                                            /* B[0] +0x94=0 @0x8010c6bc */
-        e->anim_frame++;                                         /* clip-0 anim advances, looped @0x8010c6f4 */
+    case 1: {  /* ACTIVE 0x8010c488 — im Port: die GITTERHAENDE von ROOM1210.
+         *
+         * ⛔ BEWUSSTE NACHRUESTUNG (Nutzer-Auftrag), klar getrennt von byte-true:
+         * "im room 1210 strecken ab einem gewissen punkt alle Zombies die Haende aus dem
+         *  gitter. das ist sau schlecht gemacht ... in Resident Evil 2 gibt es einen Flur, wo
+         *  man durchlaeuft, und kommt man am Fenster vorbei, kommen die Haende der Zombies mit
+         *  stoehnen und greifen einen. das wuerde ich gerne auch hier so umgesetzt haben wollen."
+         *
+         * WAS DAS ORIGINAL HIER TUT — und warum es NICHT 1:1 uebernommen wird:
+         * A[0] @0x8010c608 liest `grid & 0x1f` und schaltet auf sub 1/2; ROOM1210 sub02 setzt
+         * per `Member_set(12,1)` (@Datei 0x001EDA, Bytes `34 0c 01 00`) ALLE ZEHN gleichzeitig.
+         * Genau dieses "alle auf einmal" ist der Punkt, den der Nutzer verworfen hat. Die
+         * Original-Maschine faehrt danach ausserdem eine Vorwaerts-Bewegung mit +0x8c = 0x320
+         * (= 800 pro Bild, @0x8010c7b8) ueber drei Bilder und danach 0x14 rueckwaerts — ein
+         * Ruck von rund 2400 Einheiten, den ein im Gitter steckender Arm nicht machen kann.
+         * Der Arm bleibt hier deshalb ORTSFEST (wie RE2s verankerte Substates 7/8, die
+         * ebenfalls keine Fortbewegung haben und in Substate 8 die Root-Translation sogar
+         * aktiv zurueckrechnen, @0x80103c48).
+         *
+         * WAS UEBERNOMMEN IST, mit Beleg:
+         *   - Die CLIP-ROLLEN stammen aus der Original-Maschine:
+         *       Clip 0 = Ruhe        (B[0] `+0x94 = 0` @0x8010c6bc)
+         *       Clip 2 = Ausfahren   (B[1] `+0x94 = 2` @0x8010c818)
+         *       Clip 1 = Greifen     (B[2] `+0x94 = 1` @0x8010ca14)
+         *     Gemessen hat EM01A genau vier Clips (0:30, 1:39, 2:30, 3:54 Bilder) bei 4 Meshes
+         *     und 4 Bones — es IST nur ein Arm, kein ganzer Koerper (probe_1210_material).
+         *   - Das STOEHNEN ist der Zombie-Moan der Raum-Bank snd1: `re15_audio_room_se(5)`
+         *     (@0x80104ae0 `func_0x800453d0(5)`), mit demselben Zufalls-Gate `(rand & 3) == 0`
+         *     (@0x80104ad4-e0). Der Cooldown 150 Bilder ist RE2s Wert fuer genau diesen Fall
+         *     (verankerter Zombie, +0x239 @0x801038d0-d4).
+         *   - Der GRIFF ist der Kontakt-Pfad von Typ 0x26 (den brennenden Truemmern), weil der
+         *     OHNE Opfer-Animation auskommt: `re15_body_push(...)` als Kontakt-Bedingung
+         *     (@0x80116368-70), Stagger-Mailbox `aca58 = 2` mit Ausrichtung (@0x8011638c-a4)
+         *     und -2 HP je Beruehrungs-Bild ab HP >= 4 (@0x801163c0-d0).
+         *     ⛔ WARUM NICHT DIE OPFER-FSM: EM01A hat KEINE Victim-Bank (gemessen: nur HAUPT
+         *     und LOCO, beide dieselben 4 Clips), und ROOM1210 laedt keine andere Gegner-Bank,
+         *     aus der man eine leihen koennte. `re15_player_victim_latch_ex` steigt bei
+         *     `!vb->victim_ok` aus — ein Pin-Griff waere hier eine erfundene Animation.
+         *
+         * DIE BEIDEN REICHWEITEN kommen aus den Daten, nicht aus dem Gefuehl:
+         *   REACH_Z 850  = halbe Tiefe des Original-Ausloeser-Rechtecks. ROOM1210.RDT @0x1EAE
+         *                  `2c 06 03 41 00 00 ac a9 68 c5 50 14 a4 06 ...` = Aot_set aot=6
+         *                  sce=3, x=-22100 z=-15000 w=5200 d=1700 -> 1700/2. Der gemessene
+         *                  Abstand benachbarter Arme ist 1200..1396, es reagiert also im
+         *                  Regelfall ein Paar zur Zeit.
+         *   REACH_X 11000 = die gemessene Flurbreite (Arme stehen auf x = -25000 und -14000).
+         *                  Sie haelt nur andere Raumteile draussen; die Hoehe entlang des
+         *                  Flurs entscheidet REACH_Z. */
+        enum { RE15_WRITHER_REACH_Z = 850, RE15_WRITHER_REACH_X = 11000,
+               RE15_WRITHER_MOAN_CD = 150 };
+        int32_t dz = pl->z - e->z; if (dz < 0) dz = -dz;
+        int32_t dx = pl->x - e->x; if (dx < 0) dx = -dx;
+        int reach = (dz < RE15_WRITHER_REACH_Z) && (dx < RE15_WRITHER_REACH_X);
+
+        if (e->ai_timer > 0) e->ai_timer--;              /* Stoehn-Cooldown (+0x9c) */
+
+        switch (e->sub_state_1) {
+        case 1:                                          /* AUSFAHREN — Clip 2, einmal */
+            if (e->motion != 2) { e->motion = 2; e->anim_frame = 0; e->anim_frac = 7; }
+            if (re15_enemy_clip_done(e)) { e->sub_state_1 = 2; e->anim_frame = 0; }
+            else e->anim_frame++;
+            break;
+
+        case 2:                                          /* GREIFEN — Clip 1, Schleife */
+            if (e->motion != 1) { e->motion = 1; e->anim_frame = 0; e->anim_frac = 7; }
+            if (re15_enemy_clip_done(e)) e->anim_frame = 0; else e->anim_frame++;
+            /* Stoehnen */
+            if (e->ai_timer <= 0 && (re15_engine_rand8() & 3u) == 0u) {
+                re15_audio_room_se(5);                   /* @0x80104ae0 func_0x800453d0(5) */
+                e->ai_timer = RE15_WRITHER_MOAN_CD;      /* 150 Bilder, RE2 @0x801038d0-d4 */
+            }
+            /* Zugriff: Kontakt-Muster von Typ 0x26 (@0x80116368-d0) */
+            if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min)) {
+                if (pl->hit_react == 0) {
+                    int aligned = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
+                    re15_player_stagger_cmd2(aligned ? 0x09 : 0x08);
+                }
+                if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);
+            }
+            if (!reach) { e->sub_state_1 = 3; e->anim_frame = 0; }
+            break;
+
+        case 3:                                          /* ZURUECK — zurueck in die Ruhe */
+            e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
+            e->sub_state_1 = 0;
+            break;
+
+        default:                                         /* RUHE — B[0] @0x8010c678 */
+            e->motion = 0;                               /* +0x94 = 0 @0x8010c6bc */
+            e->anim_frame++;                             /* Clip 0 laeuft in Schleife @0x8010c6f4 */
+            if (reach) { e->sub_state_1 = 1; e->anim_frame = 0; }
+            break;
+        }
+        /* ORTSFEST: die Position wird in KEINEM Zweig veraendert (siehe Kopf). */
         break;
+    }
 
     case 2:   /* HURT 0x8010d0f8 (LATENT: only reachable via a 0-damage weapon vs the HP-0 spawn). Flinch
                * clip 2 @0x8010d200; the +0x1d2 hit-counter -> submerge sub 4 @0x8010d144 is OPEN (above).

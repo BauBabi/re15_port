@@ -2843,3 +2843,22 @@ target_compile_definitions(test_1090_flame_out_pin PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1090_flame_out_pin COMMAND test_1090_flame_out_pin)
 set_tests_properties(unit_1090_flame_out_pin PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (Nutzer-Wunsch ROOM1210 "Haende aus dem Gitter"): was an Material da ist —
+#     Anim-Bank von Typ 0x1A, die zehn Kreaturen mit Abstaenden, die Sound-Baenke.
+#     Reine Diagnose, KEIN add_test. ---
+add_executable(probe_1210_material probe_1210_material.c)
+target_link_libraries(probe_1210_material PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_material PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_material PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Auftrag ROOM1210): die Gitterhaende reagieren EINZELN beim Vorbeigehen,
+#     nicht alle auf einmal wie im Original (Member_set(12,1) @0x001EDA). ---
+add_executable(test_1210_gitterhaende test_1210_gitterhaende.c)
+target_link_libraries(test_1210_gitterhaende PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1210_gitterhaende PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1210_gitterhaende PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1210_gitterhaende COMMAND test_1210_gitterhaende)
+set_tests_properties(unit_1210_gitterhaende PROPERTIES TIMEOUT 60)
