@@ -438,3 +438,191 @@ erneut als fix liest — genau dieser Fehler hat den Loesch-Trigger bisher unsic
   Was Work-Kind 3 / Member 0x00 in diesem Raum konkret verschiebt, ist nicht ermittelt.
   Fuer den Loesch-Vorgang irrelevant, weil sub00 den Slot vorher mit dem Door-Record
   ueberschreibt.
+
+---
+
+## Verifikation (unabhaengig nachgeprueft)
+
+Pruefer: zweiter Agent, 2026-08-25. Jede Adresse selbst disassembliert (`re15_disasm.py` auf
+`info/Re1.5/PSX.EXE` bzw. `info/Re1.5/PSX/BIN/STAGE1.BIN`), jeder Datei-Offset selbst aus
+`re15_port/shared_assets/PSX/STAGE1/ROOM*.RDT` gelesen, der SCD-Walk mit einem EIGENEN
+Walker nachgefahren, der Port-Befund GEMESSEN statt gelesen.
+
+**Ergebnis: TEILWEISE. Der RE-Teil (Abschnitte 0-5, 8) traegt — fast luecken- und fehlerlos.
+Der PORT-Teil (Abschnitt 6 + Fix-Rezept F1) ist WIDERLEGT, und zwar empirisch.**
+
+### A. Bestaetigt (selbst nachgemessen)
+
+* **§0 Der Feuerloescher.** MSG-Zeiger-Tabelle @0x2748 hat 10 Eintraege; msg07 = 0x28E6,
+  msg08 = 0x2934, msg09 = 0x2961 — exakt. Mit der Glyph-Tabelle des Ports
+  (`msg_common.c:180-199`, 0x1D -> 'A', 0x3D -> 'a') dekodieren die Rohbytes zu
+  "I must hurry up and get something to put out this fire to save that woman!" /
+  "Will you use the Fire Extinguisher?" / "You've used the Fire Extinguisher."
+* **STAERKER als im Dossier belegt:** Item 0x31 heisst wirklich so. Namens-Offsettabelle
+  @0x800c495c[0x31] = 0x2B4, Blob @0x800c4a28 + 0x2B4 =
+  `22 45 4e 41 00 21 54 50 45 4a 43 51 45 4f 44 41 4e 07` -> **"Fire Extinguisher"**
+  (Reader FUN_80028840, `andi a0,a0,0xff` / `sll a0,a0,1`; vendort in
+  `re15_port/engine/src/gen/item_prompt_data.inc`). Das Dossier laesst diese Quelle aus und
+  argumentiert nur ueber die Flag-Bruecke — die Behauptung stimmt trotzdem.
+* **§1 Variable Opcode-Laengen.** Selbst disassembliert:
+  0x2C @0x800405a8 `addiu v0,v1,28` / @0x800405ac `addiu v0,v1,20`;
+  0x3B @0x80040630 `addiu v0,v1,40` / @0x80040634 `addiu v0,v1,32`;
+  0x50 @0x8004066c `addiu v0,a2,30` / @0x80040688 `addiu v0,a2,22`. Alle drei stimmen.
+  Gegenprobe mit FESTER Laenge 20 fuer 0x2C: der Walk von sub00 landet auf 0x2322 statt
+  0x23F4 — er desynchronisiert genau am Loesch-Trigger, wie behauptet.
+* **Dispatch-Tabelle @0x800744a8** selbst dekodiert: 95 Eintraege (0x00..0x5E),
+  [0x21]=0x8003fcf4, [0x2C]=0x80040534, [0x2D]=0x80040914, [0x3B]=0x800405bc,
+  [0x44]=0x800420a0, [0x47]=0x800407bc, [0x50]=0x80040644, [0x54]=0x80042998 — alle wie zitiert.
+* **Ck-Handler @0x8003fcf4** Instruktion fuer Instruktion wie zitiert; **Bank-Tabelle
+  @0x80074664** selbst gedumpt: [3]=0x800b0ff8, [9]=0x800b1078, [12]=0x800b8520 — exakt.
+* **Bit 0x1F = Bit 0 von 0x800b8520 = YES/NO-Cursor** — das Dossier belegt das nur ueber einen
+  Port-Kommentar; im Original steht es auch: @0x800285b8 `andi v0,v1,0x3000` (Pad-Toggle) ->
+  @0x800285d8 `xori v0,v0,0x1` -> @0x800285dc `sb v0,0(v1)` mit v1 = 0x800b8520.
+* **§2a/§2b/§2c** byte-genau nachgezaehlt: ROOM1000 @0x0C24
+  `50 03 09 31 ... | 31 00 | 01 00 | 86 00` (22 B, Kurzform), @0x0CFC-0x0D12 die Bruecke
+  Ck(9,0x86,1) -> Set(3,0x85,1); ROOM1090 @0x2306 Ifel_ck 36 -> 0x232E, @0x230E Aot_set (28 B)
+  -> 0x232A Else_ck 76, @0x2336 Aot_set sce=3 (28 B, Payload pc+22 = 0x234C
+  `ff 00 18 06 00 00`), @0x2352 Door_aot_set (32 B, Payload rec+12 = 0x2360) -> 0x2372 Endif.
+  sub06 @0x2702-0x272B Byte fuer Byte wie im Dossier gelistet.
+* **§3 Aot_on / sce-2 / Warp.** LAB_800407bc: Record = DAT_800ac9b0[slot] (= pc+2, gesetzt
+  @0x80040584), Payload rec+20 / rec+12, `jalr` @0x8004082c. sce-2 @0x800430bc setzt
+  DAT_800ac9a8 / DAT_800b5359 = 1 / DAT_800aca40 |= 0xFF000000. **Der Kernbeweis stimmt:**
+  @0x8001d968 `beq v1,v0` vergleicht ausschliesslich die STAGE, @0x8001d988
+  `jal 0x800396fc` laeuft unbedingt. Ergaenzend selbst geprueft: FUN_8001d600 hat genau
+  EINEN Aufrufer (0x8001ca54), erreichbar ueber die Sprungtabelle @0x8001069c, die
+  @0x8001c994 mit DAT_800b5359 indiziert wird — die Kette ist also nicht tot.
+  Und FUN_800396fc @0x80039a00 ruft FUN_8003ef6c, das @0x8003efa0 `lw v0,64(v0)` (RDT+0x40)
+  und @0x8003efc4 `lw v0,68(v0)` (RDT+0x44) an FUN_8003ee3c uebergibt: **main00 + sub00
+  laufen wirklich erneut.** Flag-Bank 3 (0x800b0ff8) hat im ganzen Ghidra-Dump genau EINEN
+  Xref — die Bank-Tabelle selbst; keine der drei Reset-Funktionen (0x8003ea3c / ebf4 / ecec)
+  fasst sie an. Die Praemisse "Flags ueberleben das Laden" haelt.
+* **Eigener Voll-Walk von ROOM1090** (main00 + sub00..sub07) mit eigener Laengentabelle:
+  **alle 9 Skripte schliessen exakt** auf der Startadresse des naechsten (main00 -> 0x21B4,
+  sub07 -> 0x2748). Damit bestaetigt: 3x Aot_set, 3x Door_aot_set, 12x Sce_em_set,
+  **genau 1x Aot_on (@0x2726)**, 5x Sce_bgm_control — und **kein** 0x36 Se_on, **kein**
+  0x3A Sce_espr_on, **kein** 0x45 Col_chg_set, **kein** 0x48 Super_set, **kein**
+  0x4C Sce_espr_kill. §4c/§4d halten.
+* **§4a** Registrierung @0x8011e8f4 -> 0x80116288 -> `sw v0,11332(at)` = 0x80072c44 =
+  Dispatch[0x26] (0x80072bac + 0x26*4). Zustandstabelle @0x80121268 selbst gelesen.
+  **Eigener Instruktions-Scan** ueber 0x80116288-0x80116E60 (lui/Offset-Paare aufgeloest):
+  **kein einziger Zugriff in 0x800b0ff8..0x800b1017** — das Gehirn kann Bank 3 nicht lesen.
+* **§4b** Obj_model_set-Handler: Stride 148 ab 0x800b3f98 (@0x80040944-58), PC-Vorschub
+  **34** auf allen vier Pfaden (0x80040a1c / a44 / aa4). Die Zeilen @0x21F2 und @0x22AA sind
+  byte-identisch bis auf das Slot-Byte, Transform (0x0BF4, 0xF53E, 0xF9E8) = (3060, -2754, -1560).
+* **§4c** Schadensblock 1:1 nachdisassembliert, inkl. `s0 = 0x800aca40 + 20 = 0x800aca54`
+  als a0 des Kontakt-Tests. 2 HP pro Kontaktbild, Gate entity+0x1D0 >= 13, Untergrenze HP < 4.
+* **§4d** Sprungtabelle @0x80100364 = [0x80116D44, 0x80116D5C, 0x80116D5C, 0x80116D44,
+  0x80116D5C]; `lui v1,0x803` (Id 0x08) fuer Varianten 0/3, `lui v1,0x1003` (Id 0x10) fuer
+  1/2/4; a0 = (phase<<8)|(id<<24)|(3<<16) @0x80116d7c-80; Emerge-Funke a0 = 0x09031800
+  (@0x801166cc/d0). Alles exakt.
+* **§4e** Sce_bgm_control-Handler und FUN_80044da4 inkl. Sprungtabelle @0x80010e58
+  (6 Eintraege) exakt wie zitiert.
+* **§4f** RVD @0x0280: **41 Eintraege, Terminator @0x05B4**, camFrom 0..15, und ueber
+  alle 41 Zeilen **null** Uebergaenge zwischen den Haelften. Cut_chg schreibt
+  @0x800402fc `sh a0,4068(at)` = 0x800b0fe4; Switch-Handler liest 0x800b0fd0 + idx*2
+  (@0x8003facc-d8); die Case-Arithmetik (a3 + 6 + skip) landet exakt auf 0x21D6 / 0x21E0.
+* **§8** sub07 @0x272C selbst gewalkt: Aot_reset 3 (10 B) / Work_set 3,0 / Member_set
+  0x00 = 0xD994 = -9836.
+
+### B. WIDERLEGT — §6 "Der EINE Port-Blocker" und §7 F1
+
+Das Dossier behauptet, der Port kuerze die Selbst-Tuer in `aot_common.c:518` zu einem
+Kamera-/Positions-Teleport ab, weshalb "sub00 nie erneut laeuft" und deshalb die sieben
+Emitter, Obj-Slot 3, die Schadenszone, das Feuer-BGM und sub03 haengen bleiben.
+
+**Das ist falsch, und zwar schon fuer den Stand, gegen den das Dossier geschrieben wurde.**
+
+Der Else-Zweig endet nicht bei Kamera + Position. `re15_port/engine/src/aot_common.c:572-573`:
+
+    if (d->dest_room != 0 &&
+        (0x1000u | ((unsigned)d->dest_room << 4)) == g_current_room_id)
+        g_scd_pending_scenario = (int)d->target_cut;
+
+und `game_step_common.c:1535-1542` konsumiert das IM SELBEN BILD:
+
+    if (g_scd_pending_scenario >= 0 && c->rdt_ok) { ... scd_room_reenter(c->rdt, pl->x, pl->z, sc); ... }
+
+`scd_room_reenter` faehrt genau die Original-Kette nach (der Kommentarkopf
+`scd_room_setup.c:98-112` zitiert selbst FUN_8001d600 -> FUN_800396fc -> FUN_8003ef6c).
+Fuer ROOM1090 ist `dest_room = 9`, `0x1000|0x90 = 0x1090 == g_current_room_id` ->
+**die Bedingung greift**. Die Zeile steht seit **aa346af1, 2026-06-28** im Baum, also zwei
+Monate vor diesem Dossier.
+
+**Gemessen, nicht gelesen.** Ich habe den einzigen Teil, der am 2026-08-25 tatsaechlich fehlte
+(den ESP-Pool-Wisch in `scd_room_reenter`, nachgereicht in 43feb33f) lokal wieder
+herausgenommen — das ist exakt der Zustand, den das Dossier beschreibt — und
+`test_1090_flame_out_pin` gebaut und laufen lassen:
+
+    ohne den ESP-Wisch (= Stand zur Dossier-Zeit):
+      vor dem Loeschen:  7 Emitter (Typ 0x26), 14 Effekt-Partikel
+      nach dem Loeschen: 0 Emitter, 14 Effekt-Partikel, flag(3,0x81) = 1
+
+    mit dem ESP-Wisch (HEAD):
+      nach dem Loeschen: 0 Emitter, 0 Effekt-Partikel
+
+und im Log des Laufs steht der Neu-Lauf woertlich:
+
+    [aot] DOOR FIRE slot=3 rect=(0,0,hw=0,hh=0) target_cut=6 spawn=(1252,-1800,-2529)
+    [scd] thread start slot=0 first_op=0x3B        <- main00 laeuft ERNEUT
+    [scd] thread start slot=1 first_op=0x06        <- sub00 laeuft ERNEUT
+    [scd] Obj_model_set[2] id=0x02 ...             <- Slot 2 statt Slot 3
+    [scd F0] Cut_chg(5) ... Cut_chg(6) ... Plc_dest ...   <- sub03 laeuft
+
+Damit sind fuenf der sechs Aufzaehlungspunkte in §6 widerlegt: die sieben Aktoren leben
+**nicht** weiter (7 -> 0), Obj-Slot 3 bleibt **nicht** stehen (Slot 2 kommt), die Schadenszone
+bleibt **nicht** aktiv (sie haengt an den Aktoren), sub03 startet **doch**, und flag(3,0x84)
+wird von sub03 @0x24CE geloescht. **Wahr war genau ein Punkt: die ESP-Partikel.** Und der
+sass nicht in `aot_common.c:518`, sondern im fehlenden `re15_esp_fx_reset()` am Anfang von
+`scd_room_reenter`. **Fix-Rezept F1 haette die falsche Zeile angefasst** und den bewusst
+gebauten Selbst-Tuer-Pfad (ROOM1170-Szenario-Dispatch ueber `g_scd_pending_scenario`)
+zerschossen.
+
+### C. Neuer Befund (faellt bei der Pruefung ab, gehoert ins Backlog)
+
+Die Selbst-Tuer-Wiedereintritts-Wache in `aot_common.c:572` ist auf **Stage 1 und
+Szenario A festverdrahtet** (`0x1000u | (dest_room << 4)`, ohne die Varianten-Nibble).
+Eigener Zensus ueber alle 240 RDTs: von den 67 Selbst-Tueren erreichen nur **11** diesen
+Pfad (1090 x1, 1110 x4, 1170 x3, 1190 x1, 11A0 x2). Die uebrigen **56** — alle
+"...1"-Szenario-B-Raeume (1031, 1111 x4, 1171 x2, 1191, 11A1 x2) und alles ausserhalb STAGE1
+(2040/2041 je 2, 20A0/20A1 je 1, 30E0, 4000, 4050/4051 je 12, 40A0/40A1 je 1, 5090/5091 je 4,
+6030/6031 je 2) — fallen in den reinen Teleport und laden den Raum nie neu. Das Original
+laedt bei allen 67 (@0x8001d988 unbedingt). **Das** ist die offene Zeile, nicht 518.
+
+### D. Kleinere Fehler im Dossier (Behauptung faellt, Schlussfolgerung meist nicht)
+
+1. **§4g / Adressliste: "Sce_em_set Typ 0x40 (NPC) @0x22CC" ist falsch — der Typ ist 0x42.**
+   Rohzeile `44 00 42 40 ...`. Der Handler liest den Typ aus **pc[2]**
+   (@0x80042248 `lbu a0,0(s2)` -> `jal 0x8003e9d4`); pc[3] geht nach entity+0x9
+   (@0x80042164 `sb v0,9(s0)`) — genau die Zuordnung, die das Dossier in §4a selbst
+   aufschreibt und hier gegen sich selbst verletzt. NPC bleibt es (0x42 steht in der
+   STAGE1-NPC-Liste), die Nummer stimmt nicht.
+2. **"649 Door_aot_set-Records" ist die falsche Zahl.** Eigener Zensus mit demselben
+   Laengenmodell: **653** Records in 240 RDTs (1579 Skripte, 0 Desyncs). 649 ist die Zahl der
+   Records, die auf einen EXISTIERENDEN Raum *aufloesen* — so steht es auch im Port-Kommentar
+   `aot_common.c:509`. Die 67 Selbst-Tueren stimmen exakt, sie liegen aber in **24** Raeumen,
+   nicht 22 (die Liste im Dossier zaehlt selbst 24 Raum-IDs auf).
+3. **msg08: `1b` gehoert nicht zum Y/N-Terminator.** 0x1B ist das Glyph **"?"**
+   (`msg_common.c:189`); der Terminator ist `03 02 01`. Der dekodierte Text lautet
+   "Will you use the Fire Extinguisher?" ohne Leerzeichen vor dem Fragezeichen.
+4. **Zeilennummern leicht daneben:** `op_aot_on` ruft `re15_aot_fire_slot` in
+   `scd_vm.c:3674` (nicht 3669); `re15_aot_fire_slot` beginnt bei `aot_common.c:619`;
+   der dest_id-Block ist 515-541.
+5. **§4f Paar-Liste unvollstaendig/asymmetrisch:** die RVD hat (1 -> 5) **ohne** gespiegeltes
+   (9 -> 13) und (14 -> 13) **ohne** gespiegeltes (6 -> 5). Die Disjunktheit der Haelften
+   stimmt trotzdem (0 kreuzende Uebergaenge ueber alle 41 Zeilen) — die "+8-Spiegelung" ist
+   aber keine Regel, sondern ein Muster mit Ausnahmen.
+6. **§4a Zustandstabelle** ist praeziser als notiert: [0]=0x801164b0, [1]=0x801166fc,
+   **[2..4]=0x8011697c, [5..7]=0x80116758**.
+7. **§4a "0x800B1028 (Bank 5, nur Adressrechnung)":** es gibt sehr wohl einen echten
+   Store, @0x801163F0 auf **0x800b102c** (Bank 5, Wort 1 = der Ein-Frame-Handshake). Aendert
+   nichts am Bank-3-Ergebnis.
+8. **§4e Luecke, kein Fehler:** "ein expliziter Stopper existiert nicht" gilt fuer das SCD.
+   Das Dossier nennt aber den echten Teardown nicht: der Raumlader ruft
+   @0x80039790 `jal 0x800443ec`, und FUN_800443ec stoppt @0x800443f4-0x8004442c acht
+   Kanaele (0x10..0x17) ueber FUN_8005a0d8. Damit stimmt die Schlussfolgerung erst richtig.
+
+### E. Zustand am Ende der Pruefung
+
+`re15_port/engine/src/scd_room_setup.c` wurde nach dem Experiment mit `git checkout`
+wiederhergestellt, neu gebaut, `unit_1090_flame_out_pin` ist gruen
+(`0 Emitter, 0 Effekt-Partikel`). Keine Datei ausser diesem Dossier ist veraendert.

@@ -35,6 +35,28 @@
  *
  * DIE WACHE IST NICHT VAKUANT: sie verlangt, dass VORHER wirklich etwas brennt (Emitter UND
  * Partikel > 0) — sonst misst sie nichts — und dass NACHHER beides null ist.
+ *
+ * MITGEMESSEN, aber (noch) ohne Zusicherung — die uebrigen Folgen des Loeschens:
+ *   ✔ Objektmodell getauscht: nach dem Ereignis ist Prop obj_id=2 aktiv (der geloeschte Stand);
+ *     die Obj_model_set-Zeilen @0x21F2 (Slot 3, brennend) und @0x22AA (Slot 2) sind byte-identisch
+ *     bis auf das Slot-Byte, gleiche Transform.
+ *   ✔ Rettungs-Szene scharf: der NPC Typ 0x42 (Sce_em_set @0x22CC) spawnt.
+ *   ✔ Schadenszone weg: sie sitzt IM Emitter (@0x80116320 `lbu v0,464(a0)` /
+ *     @0x80116328 `sltiu v0,v0,0xd` -> @0x80116368 Kontakt-Test -> 2 HP/Bild), faellt also
+ *     mit dem Spawn.
+ *   ⛔ OFFEN — das FEUER-BGM. ROOM1090 @0x22EA `21 03 81 00` = Ck(3,0x81,0), danach @0x22EE
+ *     `54 00 00 01 78 33` = Sce_bgm_control: das ist KEIN eigener Loop, sondern eine
+ *     TEIL-LAUTSTAERKE auf dem Raum-BGM (Handler @0x800429b4-e8 packt pc[1..5];
+ *     pc[3]=1 = Programm-Teil, pc[4]=0x78 = vol+1, pc[5]=0x33 = pan+1, geschrieben in die
+ *     VAB-mvol/mpan des Slots). Nach dem Loeschen fuehrt der Neu-Aufbau die Zeile nicht mehr
+ *     aus — im Original setzt aber das Raumladen die VAB/Sequenz neu auf, im Port nicht
+ *     (der Selbst-Tuer-Wiedereintritt laedt keine Assets). Die Feuer-Tonspur laeuft dadurch
+ *     mit der zuletzt geschriebenen Lautstaerke weiter.
+ *     NICHT GERATEN, sondern gemessen und hier offen gelassen: ein Stopper existiert im
+ *     Original nicht (er braucht keinen), also braucht der Port eine eigene Re-Initialisierung
+ *     der Raum-Audio beim Selbst-Wiedereintritt. Naechster Weg: was der Cross-Room-Pfad an
+ *     Audio-Init macht (room_common.c / audio_pc.c) auf scd_room_reenter ziehen und die
+ *     VAB-Default-mvol/mpan aus dem Raum-VH neu setzen.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -153,6 +175,23 @@ int main(void)
           "und die FLAMMEN-PARTIKEL sind weg (%d) — das ist der eigentliche Nutzer-Befund. "
           "Im Original wischt jedes Raumladen den 96-Slot-Effekt-Pool (FUN_80019354, einziger "
           "Aufrufer 0x8003996C im Raumlader FUN_800396fc)", fx1);
+
+    /* Diagnose der uebrigen vier Folgen aus dem Dossier (Messung, noch ohne Zusicherung) */
+    {   int props = 0, npc = 0;
+        for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++)
+            if (g_scd.props[i].active) { props++;
+                printf("   [diag] prop %d aktiv: obj_id=%u type=%u pos=(%ld,%ld,%ld)\n",
+                       i, (unsigned)g_scd.props[i].obj_id, (unsigned)g_scd.props[i].obj_type,
+                       (long)g_scd.props[i].x, (long)g_scd.props[i].y, (long)g_scd.props[i].z); }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type >= 0x40) {
+                npc++;
+                printf("   [diag] NPC slot %d typ=0x%02X pos=(%ld,%ld)\n",
+                       s, g_actors[s].type, (long)g_actors[s].x, (long)g_actors[s].z);
+            }
+        printf("   [diag] aktive Props: %d | NPCs (Typ >= 0x40): %d | flag(3,0x84) = %d\n",
+               props, npc, re15_game_flag_get(3, 0x84));
+    }
 
     free(buf);
     if (fails) { printf("\n1090 FLAME OUT: FAIL (%d)\n", fails); return 1; }

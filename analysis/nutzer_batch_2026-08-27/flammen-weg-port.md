@@ -494,3 +494,150 @@ Port bisher nicht.
 4. **Visuelle Bestaetigung fehlt noch**: alles oben ist ueber `re15_game_step` auf der
    echten RDT gemessen, nicht im Fenster. Die Nachweiskette im Fenster ist dieselbe, die
    v0.3.21 offen liess ("vom Debug-Sprung kommt Leon nicht an die Flamme (Dach-Spawn)").
+
+---
+
+## Verifikation (unabhaengig nachgeprueft)
+
+Adversariale Gegenpruefung, 2026-08-25. Jede Adresse selbst disassembliert
+(`re15_disasm.py` auf `info/Re1.5/PSX.EXE` bzw. `info/Re1.5/PSX/BIN/STAGE1.BIN`),
+jeder Datei-Offset selbst per `xxd` gelesen, die Sonde selbst gebaut und gefahren.
+
+**Gesamturteil: TEILWEISE.** Der Mechanismus traegt vollstaendig und ich habe jede
+Messung reproduziert. Sieben Einzel-Behauptungen sind falsch, unbelegt oder nicht mehr gueltig.
+
+### BESTAETIGT (selbst nachgemessen)
+
+* **RDT-Bytes.** `RDT+0x44 = 0x000021b4`; Sub-Tabelle `[0x21C4,0x23F4,0x2414,0x24CE,0x26E6,
+  0x26F4,0x2702,0x272C]` — identisch. `@0x21EE 21 03 81 00`; die sieben
+  `44 Sce_em_set` @0x2214/0x2228/0x223C/0x2250/0x2264/0x2278/0x228C mit Typ `26` und
+  grid 0,1,2,4,3,3,4 — Byte fuer Byte bestaetigt. sub06 @0x2702..0x272A komplett
+  bestaetigt, inkl. `@0x271E 22 03 81 01`, `@0x2722 22 03 84 01`, `@0x2726 47 03`.
+* **RDT-Zensus.** 240 RDTs. `21 03 81` = **genau 5** Treffer (ROOM1090 0x21C8/0x21EE/
+  0x22EA/0x2332 mit Erwartungswert 0; ROOM10B1 0x17C6 mit 1). `22 03 81` = **genau 3**
+  (ROOM1090 0x271E=1; ROOM10B1 0x1832=1, 0x1954=0). Der Ein-Setzer-Befund stimmt.
+* **`FUN_80019354`.** `8001935c ori a0,zero,0x60` / `80019364 addiu v0,v0,-132` /
+  `80019370 addiu at,at,29732` / `80019378 sb zero,0(at)` / `8001937c bne a0,zero,
+  0x80019368` — exakt wie zitiert. Ghidra `86198`: `XREF[1] FUN_800396fc:8003996c(c)`;
+  `137732`: `8003996c d5 64 00 0c jal FUN_80019354` — exakt. `FUN_800396fc`
+  (`RE_15_Quellcode_V2/FUN_800396fc.c`) ist tatsaechlich der RDT-Lader (Pointer-Fixups,
+  dann `FUN_80019354(); FUN_80043eac(); FUN_80043fb0(); ... FUN_8003ef6c()`).
+* **Pool-Identitaet — staerker belegbar als im Dossier.** Der Spawner `FUN_80019700` nutzt
+  dieselbe Struktur: Basis `@0x80019720-24 lui s3,0x800a; addiu s3,s3,29624` = **0x800A73B8**,
+  Stride 132 (`@0x80019794-9c sll v0,t3,5; addu v0,v0,t3; sll v0,v0,2`), Kappung
+  `@0x8001978c sltiu v0,t3,0x60` (96), Aktiv-Byte `@0x800197a8 lbu v0,108(t0)` = **+0x6C**.
+  Und dieselben ID-Maps `0x800B22D4` (@0x80019748) / `0x800B2248` (@0x80019764), die
+  `FUN_80019354` @0x80019388-F0 auf -1 setzt. Damit ist zweifelsfrei: der von
+  `FUN_80019354` gewischte Speicher IST der ESP-Effekt-Pool.
+* **Typ-0x26-Slice.** Voll-Slice 720 Instruktionen ab `0x80116288` (STAGE1.BIN): die
+  jal-Ziel-Multimenge ist **identisch** mit der zitierten. `jal 0x8004ef90 @0x80116ac8`
+  ist der einzige Flag-Aufruf, `jal 0x8004efe4` kommt nicht vor. Und die Rollen stimmen:
+  `0x8004ef90` = SETZER (`8004efac or v0,v0,a0` / `8004efb4 sw v0,0(v1)`),
+  `0x8004efe4` = LESER (`8004f004 and v0,v0,v1` / `8004f000 jr ra`).
+* **Varianten-Tabelle `@0x80100364`.** 5 Zeiger `{0x80116d44, 0x80116d5c, 0x80116d5c,
+  0x80116d44, 0x80116d5c}`, Schranke `@0x80116d1c sltiu v0,v1,0x5`, Maske
+  `@0x80116d18 andi v1,v0,0x7f`. Ziel A `@0x80116d58 lui v1,0x803` -> Id **0x08**;
+  Ziel B `@0x80116d6c lui v1,0x1003` -> Id **0x10**; Spawn `jal 0x80019700 @0x80116d84`.
+  Bei grid 0,1,2,4,3,3,4 also 4x 0x10 + 3x 0x08 — deckt sich mit Messung A.
+  Funken-Gate ebenfalls bestaetigt: `@0x801166c4 andi v0,v0,0x80` / `@0x801166c8 bne`,
+  `a0 = 0x09031800` (`lui a0,0x903` / `ori a0,a0,0x1800`), `jal 0x80019700 @0x801166e4`.
+* **`0x80074694`.** ghidra `243217: 80074694 20 85 0b 80 addr DAT_800b8520`;
+  Index = (0x80074694-0x80074664)/4 = **12**. Die drei Schreiber fassen wirklich nur
+  Bit 0x80 an (`80027e9c sb t1,0(v1)` mit `t1=0x80`; `800286c0/800286c4 andi 0x7f; sb`;
+  `8002870c/80028714 andi 0x7f; sb`). Das "OFFEN" in §7.1 ist korrekt gesetzt.
+* **Alle Port-Zeilenverweise** stimmen: `aot_common.c:518` (`dest_id != g_current_room_id`)
+  und `:573`, `game_step_common.c:1535-1543`, `scd_vm.c:3669`/`:3864-3868`,
+  `re15_esp.c:299/321/409/420/690/754/759`, `enemy_ai_common.c:7628/7682/7696/7787`,
+  `room_pc.c:130`, `main.c:5235`, `game_state.c:68/78-82`,
+  `msg_common.c` `CONFIRM_BIT = 0x4000` physisch SQUARE, `test_1090_fire_pin.c:300-326`
+  (`max_frame == 9`, `wraps == 6`, `anim[10].param&0xff == 0xFF`, `desc&0xff == 0`).
+* **§5 v0.3.21.** `508e71d0` — F5-Text woertlich bestaetigt; die Datei-Liste des Commits
+  enthaelt **keine** von `re15_esp.c`, `room_pc.c`, `aot_common.c`, `scd_room_setup.c`.
+  `test_re2_hit_repeat.c` steht mit +10 Zeilen drin. Beide Aussagen tragen.
+* **Die MESSUNGEN — selbst gebaut und gefahren.** `probe_1090_flame_out.exe`:
+  A, B, C und E reproduzieren **Ziffer fuer Ziffer**. D reproduziert ebenfalls Ziffer fuer
+  Ziffer, sobald man den inzwischen eingebauten Fix wieder abschaltet (ich habe
+  `scd_room_setup.c:143` temporaer auskommentiert, neu gebaut, gemessen, restauriert):
+  `+200/+399 Bilder: n0x26=0 tang=0 fx10=4 fx08=3 f(3,0x81)=1 ... pending=0`,
+  `[aot] DOOR FIRE slot=3 target_cut=6 spawn=(1252,-1800,-2529)`. Mit dem Fix: `fx10=0 fx08=0`.
+  Der Kern-Befund ist damit unabhaengig reproduziert.
+* **Negativ-Zensus §1b** — nach Korrektur des Werkzeugs (siehe W3) nachgerechnet:
+  in `0x21C4..0x2748` **kein** 0x4C, **kein** 0x57, **kein** 0x5B, **kein** 0x5D. Traegt.
+
+### WIDERLEGT / ZU KORRIGIEREN
+
+**W1 — "FEHLT KOMPLETT" / "genau EIN Produktions-Aufrufer" ist nicht mehr wahr.**
+Der Fix ist eingebaut und inzwischen als **`43feb33f`** committet ("fix: ROOM1090 — nach dem
+Feuerloescher verschwindet auch der Flammen-EFFEKT"). `re15_esp_fx_reset()` hat heute
+**zwei** Produktions-Aufrufer: `scd_room_setup.c:143` (ganz oben in `scd_room_reenter`)
+und `room_pc.c:130`. Damit sind §0.3, §3b, die Zeile "Effekt-Pool-Wisch beim Wiedereintritt
+= FEHLT KOMPLETT" in §4 und §6 ueberholt. Zusaetzlich: §6 empfiehlt den Aufruf in
+`game_step_common.c:1535` — eingebaut wurde er woanders (in `scd_room_reenter` selbst),
+was auch den zweiten Selbst-Tuer-Raum ROOM1170 mit abdeckt. (Das Dossier wurde 10:35
+geschrieben, der Fix 10:39 eingebaut — der Befund war zum Schreibzeitpunkt richtig.)
+
+**W2 — Pool-Basis und geschriebenes Feld sind falsch etikettiert.**
+`FUN_80019354` schreibt **nicht** "Feld +0x00 eines Pools mit Basis 0x800A7424".
+Der Spawner `FUN_80019700` legt die Pool-Basis auf **0x800A73B8**
+(`@0x80019720-24 lui s3,0x800a; addiu s3,s3,29624`) und liest das Aktiv-Byte bei
+**+0x6C** (`@0x800197a8 lbu v0,108(t0)`). 0x800A7424 = 0x800A73B8 + 0x6C. `FUN_80019354`
+loescht also **das Aktiv-Flag +0x6C jedes der 96 Slots**, nicht Feld +0x00 einer bei
+0x800A7424 beginnenden Struktur. Die Schlussfolgerung wird davon nur staerker; die
+Etikettierung ist aber falsch — und sie steht inzwischen **so auch im committeten Code**
+(`scd_room_setup.c:129-131`, `room_pc.c:127`). Dort nachziehen.
+(Nebenbefund, keine Dossier-Behauptung: `re15_esp_fx_reset()` nullt per `memset` den
+ganzen Slot, das Original nur das eine Byte — funktional gleich, nicht byte-gleich.)
+
+**W3 — Die §1a-Auflistung ist NICHT die Ausgabe des eigenen Werkzeugs, und das Werkzeug
+desynct.** `re15_scd_dis.py` nimmt `s_opcode_sizes[0x2C] = 20` als feste Laenge.
+`Aot_set` ist aber laengen-VARIABEL: `op_aot_set` schiebt
+`t->pc += (t->pc[3] & 0x80) ? 28 : 20` (`scd_vm.c:2668`, byte-true `LAB_80040534`
+@0x80040590 `lbu v0,0x3(v1)` / @0x80040598 `andi 0x80` / @0x8004059c `beq` -> +0x1c/+0x14).
+Beide ROOM1090-`Aot_set` tragen `pc[3] = 0xB1`, also Langform (28). Das Werkzeug wie
+ausgeliefert produziert deshalb zwischen 0x2322 und 0x232A Muell
+(`10 Ewhile F5 / 07 Else_ck 00 FF FF / 00 Nop / 00 Nop`) und nochmal 0x234A..0x2351
+(`10 Ewhile F5 / FF ? / 18 Gosub 06 / 00 / 00`) — es faengt sich nur zufaellig wieder.
+Das Dossier zeigt eine saubere, offensichtlich handkorrigierte Auflistung, ohne das zu
+sagen. Die Auflistung selbst ist richtig (ich habe sie unabhaengig nachgerechnet), aber:
+**das Werkzeug ist defekt und sein Negativ-Zensus ist ungepruefte Ausgabe.** Ich musste
+§1b mit einem korrigierten Walker neu rechnen (Ergebnis haelt, s.o.). Und die Zahl
+"297 Opcodes" in `0x21C4..0x2748` ist mit korrigiertem Walker **287**.
+Fix im Werkzeug: `0x2C` genauso konditional behandeln wie `0x2D`.
+
+**W4 — Zwei zitierte Byte-Folgen sind je um ein Byte zu kurz** (verstoesst gegen die
+Regel "mit den tatsaechlichen Bytes"):
+* `@0x2352 Door_aot_set`: das Dossier zitiert **neun** `00` zwischen `31` und `E4`;
+  die Datei hat **zehn** (0x2356..0x235F).
+* `@0x2336 Aot_set`: das Dossier zitiert `... 10 F5 FF 00 06`; die Datei hat
+  `... 10 F5 FF 00 18 06` — das `18` (@0x234E) fehlt.
+Beide Lesarten (dest_stage=0 / dest_room=9 / cut=6 / spawn 1252,-1800,-2529 bzw. ev-Byte
+`pc[25] = 0x06` @0x234F) sind trotzdem korrekt — ich habe sie gegen die Feld-Karte in
+`op_aot_set` geprueft.
+
+**W5 — §1c "98 Treffer, ALLE mit Erwartungswert 0".** Der Roh-Scan `21 0C 1F` ueber die
+240 RDTs liefert **104** Treffer, davon 98 mit Erwartungs-Byte 0 (die restlichen 6 tragen
+0x0B bzw. 0x34). Die zweite Haelfte stimmt exakt: `22 0C 1F` = **0** Treffer.
+
+**W6 — Die tragende Original-Aussage ist im Dossier unbelegt.** §0.3/§3c behaupten "Das
+Original kennt keinen 'gleicher Raum'-Sonderweg" ohne eine einzige Adresse. Das ist genau
+die Stelle, an der die harte Regel greift. Die Aussage ist WAHR — ich habe sie selbst
+disassembliert:
+
+```
+  8001d94c: lbu v0,9(a0)     ; Ziel-ROOM  -> 0x800b0fe2
+  8001d930: lbu v1,10(a0)    ; Ziel-CUT   -> 0x800b0fe4
+  8001d960: lbu v0,8(a0)     ; Ziel-STAGE
+  8001d968: beq v1,v0,0x8001d988   ; NUR die STAGE wird verglichen (v1 = 0x800b0fe0)
+  8001d980: jal 0x80039a30          ; nur der Stage-Wechsel-Zweig
+  8001d988: jal 0x800396fc          ; RAUMLADER — von BEIDEN Zweigen erreicht
+```
+
+`FUN_8001d600` ist der Tuer-Warp (ghidra `95647`: `XREF[1] 8001ca54(c)`, aus der
+Transitions-FSM). Der Raum wird also unbedingt neu geladen, und damit der Pool gewischt.
+Diese Zitate stehen im Port-Kommentar `scd_room_setup.c:120-127`, aber nicht im Dossier —
+das Dossier hat den Beleg aus dem Quelltext uebernommen, statt ihn zu posten.
+
+**W7 — Kleinigkeit, Etikett.** §1c nennt `0x8003fe04` den `Ck`-Handler
+("LAB_8003fdd0 @0x8003fe04"); der Port-Quelltext (`scd_room_setup.c`, `game_state.c`)
+nennt dieselbe Adresse den `Set`-Handler. Eines der beiden Etiketten ist falsch. Fuer die
+Bank-Index-Rechnung (Tabelle `PTR_DAT_80074664[12] = DAT_800b8520`) folgenlos.
