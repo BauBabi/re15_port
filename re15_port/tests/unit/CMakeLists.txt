@@ -2897,6 +2897,19 @@ target_compile_definitions(probe_1210_reach PRIVATE
 
 # --- MESSSONDE (Auftrag 2026-08-29 Arme-erreichen-Leon-nirgendwo): Spieler-Grenze
 #     (Boden vs Klemmer vs Erreichbarkeit), Mesh-Reichweite, Restluecke. KEIN add_test. ---
+# MESSUNG (Nutzer-Report 2026-08-31): Griff zieht Leon in die Wand, Arme clippen durch.
+add_executable(probe_1210_masken probe_1210_masken.c)
+target_link_libraries(probe_1210_masken PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_masken PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_masken PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1210_wandgriff probe_1210_wandgriff.c)
+target_link_libraries(probe_1210_wandgriff PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_wandgriff PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_wandgriff PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_1210_geo probe_1210_geo.c)
 target_link_libraries(probe_1210_geo PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_geo PRIVATE ${CMAKE_SOURCE_DIR}/include)

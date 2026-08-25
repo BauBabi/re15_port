@@ -329,6 +329,8 @@ int main(void)
     int bites = 0, bad_bite = 0, bite_dmg_seen = 0;
     int victim_clip_seen = 0, prev_victim = 0;
     int32_t far_from_arm = 0;
+    int32_t far_from_body = 0;
+    int griff_in_wand = 0;   /* Bilder im Griff auf NICHT begehbarem Punkt */
 
     /* ---------------------------------------------------------------------------------
      * (4) DER GRIFF - am ECHTEN Fall, nicht mehr an einer gesetzten Stellung.
@@ -370,6 +372,13 @@ int main(void)
         if (!re15_player_is_grabbed()) { pl->x = sx0; pl->z = sz0; }
         int16_t hp_before = pl->hp;
         frame_step();
+        if (re15_player_is_grabbed()) {
+            /* Begehbar = der Constrain-Lauf verschiebt den Punkt nicht. Das ist derselbe
+             * Massstab, den die Spielfigur nimmt (FUN_8003b0a4). */
+            int32_t cx = pl->x, cz = pl->z;
+            re15_collision_constrain(&s_rdt, pl->x, pl->z, &cx, &cz);
+            if (cx != pl->x || cz != pl->z) griff_in_wand++;
+        }
         int vs = re15_player_victim_state();
         if (vs) {
             held_frames++; run++;
@@ -386,10 +395,26 @@ int main(void)
              * (FUN_8001ac38 @0x801025f0, Kopie @0x8001ad28-48), landete er an einem alten
              * Anker plus Clip-Offset. GEMESSEN vorher: Sprung von (-18164,-5897) auf
              * (-892,0) = 16508 Einheiten. */
-            {   int32_t vdx = pl->x - g_actors[gate_arm].x;
-                int32_t vdz = pl->z - g_actors[gate_arm].z;
+            {   /* ⛔ BEZUGSPUNKT KORRIGIERT 2026-08-31, nicht Schranke gesenkt.
+                 * Gemessen wurde bisher der Abstand zum ARM-KOERPER. Seit der Anker die HAND
+                 * ist (e->pos + MESH_REACH 1671 entlang +0x6a) waechst dieser Abstand um genau
+                 * diesen Versatz: der Lauf meldete 3710 vorher und 5381 nachher, Differenz
+                 * 1671. Das ist kein Wegspringen, sondern der Wechsel des Bezugspunkts — der
+                 * Arm HAELT Leon ja an der Hand, nicht am Rumpf, der in der Wand steckt.
+                 * Gemessen wird deshalb gegen die Hand, mit UNVERAENDERTER Schranke; zusaetzlich
+                 * bleibt eine (weitere) Obergrenze gegen den Rumpf stehen, damit die Wache den
+                 * urspruenglichen Fehler (Sprung um 16508) weiterhin faengt. */
+                const re15_actor_t *ga2 = &g_actors[gate_arm];
+                int32_t hxp = ga2->x + (int32_t)(((int32_t)re15_cos_q12(ga2->rot_y) * 1671) >> 12);
+                int32_t hzp = ga2->z - (int32_t)(((int32_t)re15_sin_q12(ga2->rot_y) * 1671) >> 12);
+                int32_t vdx = pl->x - hxp;
+                int32_t vdz = pl->z - hzp;
                 int32_t vd = (vdx < 0 ? -vdx : vdx) + (vdz < 0 ? -vdz : vdz);
                 if (vd > far_from_arm) far_from_arm = vd;
+                {   int32_t bdx = pl->x - ga2->x, bdz = pl->z - ga2->z;
+                    int32_t bd = (bdx < 0 ? -bdx : bdx) + (bdz < 0 ? -bdz : bdz);
+                    if (bd > far_from_body) far_from_body = bd;
+                }
             }
         } else {
             if (prev_victim) { if (run > longest_hold) longest_hold = run; freed++; }
@@ -424,6 +449,10 @@ int main(void)
     CHECK(freed >= grabs - 1,
           "und jeder Griff endet wieder (%d Zugriffe, %d mal frei) — RE2s Ringkampf-Budget 148 "
           "@0x80102828-2C, pro Bild -= 2 + 5*Taste @0x80102868-7C", grabs, freed);
+    printf("  groesster Abstand Leon->Rumpf im Griff: %ld\n", (long)far_from_body);
+    CHECK(far_from_body > 0 && far_from_body < 8000,
+          "und er springt nicht davon (Rumpf-Abstand %ld) - der urspruengliche Fehler war ein "
+          "Sprung um 16508 Einheiten", (long)far_from_body);
     CHECK(far_from_arm > 0 && far_from_arm < 4000,
           "und Leon bleibt beim Griff AM ARM (groesster Abstand %ld) - vor dem Anker-Fix "
           "sprang er 16508 Einheiten weit weg (re15_clip_root_motion_abs platziert ABSOLUT "
@@ -456,6 +485,24 @@ int main(void)
               "Original kennt kein Zurueck (Ausgang @0x8010c8e4 -> +0x5 = 2/3), der Port loest "
               "die Lunge aber pro Arm wiederholt aus und muss ihn zuruecksetzen", home, n);
     }
+
+    /* --- (4d) DER GRIFF DARF LEON NICHT IN DIE WAND ZIEHEN ------------------------------
+     * Nutzer-Report 2026-08-31: "Die Zombies ziehen Leon immer noch durch die Wand wenn sie
+     * ihn grabben ... sonst kann man ihn im normalen Raum nicht mehr bewegen."
+     * GEMESSEN (probe_1210_wandgriff) vor dem Fix: Anker = Arm-Koerper auf x = -16420, der
+     * 1744 Einheiten hinter der begehbaren Flurkante -18164 liegt; Leon landete auf -17312
+     * und wanderte ueber sechs Bilder auf -17731, JEDES Bild mit begehbar = 0.
+     * Der Fix setzt den Anker auf die HAND (e->pos + MESH_REACH 1671 entlang +0x6a) und
+     * laesst die Opfer-Platzierung fuer Typ 0x1A durch re15_collision_constrain laufen.
+     * Diese Wache ist NICHT vakuant: sie zaehlt nur Bilder, in denen wirklich gegriffen
+     * wurde, und (4) oben belegt separat, dass ueberhaupt gegriffen wird. */
+    printf("  Griff-Bilder auf nicht begehbarem Punkt: %d von %d\n", griff_in_wand, held_frames);
+    CHECK(held_frames > 0,
+          "es gab ueberhaupt Griff-Bilder (%d) - sonst misst (4d) nichts", held_frames);
+    CHECK(griff_in_wand == 0,
+          "und in KEINEM davon steht Leon in der Wand (%d von %d) - vorher waren es alle, "
+          "weil der Anker der Arm-KOERPER war (x = -16420) statt der Hand (-18091)",
+          griff_in_wand, held_frames);
 
     free(buf);
     if (fails) { printf("\n1210 GITTERHAENDE: FAIL (%d)\n", fails); return 1; }

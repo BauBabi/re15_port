@@ -1284,7 +1284,26 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
          * sh 118` @0x80104b34-44, Restore @0x80104b60-64) — UNBEDINGT, beide Varianten.
          * PL-Yaw = Hund+2048 (@0x80101e04-14) => effektiver Platzierungs-Yaw = Hund-Yaw. */
         pl->rot_y = (int16_t)(((int)save + 0x800) & 0x0fff);
+    int32_t px0 = pl->x, pz0 = pl->z;
     re15_clip_root_motion_abs(pl, &vb->skel_victim, &vb->anim_victim, clip, frame);
+    /* ⛔ WANDKLEMME FUER DEN GITTER-GREIFER (Nutzer-Report 2026-08-31).
+     * Die Opfer-Platzierung ist absolut und kennt die Raumgeometrie nicht. Bei jedem
+     * Greifer, der frei im Raum steht, ist das richtig — bei den ROOM1210-Armen nicht:
+     * ihr Rumpf steckt in der Wand, und schon ein kleiner Wurzel-Versatz des Clips schiebt
+     * Leon hinter die Kollisionsgrenze. GEMESSEN wanderte er dort ueber sechs Bilder von
+     * -17312 auf -17731, alle mit begehbar = 0; nach dem Loesen stand er in der Wand fest,
+     * und genau das meldet der Nutzer ("sonst kann man ihn im normalen Raum nicht mehr
+     * bewegen"). Deshalb laeuft die Platzierung fuer DIESEN Greifer-Typ durch denselben
+     * Klemmer, den auch die Spielfigur jeden Frame nimmt (re15_collision_constrain,
+     * byte-true FUN_8003b0a4).
+     * ⛔ ENG BEGRENZT auf Typ 0x1A: fuer jeden anderen Greifer bleibt die Platzierung
+     * unangetastet. Eine Klemme fuer alle waere eine Verhaltensaenderung ohne Beleg — die
+     * RE2-Greifer brauchen sie nicht, weil sie im Begehbaren stehen. */
+    if (g_player_victim_type == 0x1Au && g_room_rdt_ok) {
+        int32_t nx = pl->x, nz = pl->z;
+        re15_collision_constrain(&g_room_rdt, px0, pz0, &nx, &nz);
+        pl->x = nx; pl->z = nz;
+    }
     pl->rot_y = save;                                                       /* subu @0x8010AB50 */
 }
 
@@ -11414,7 +11433,30 @@ static void re15_writher_ai_tick(int slot)
                  * e->anchor_z = e->z; }`): der Anker IST die Position des Greifers. Fuer den
                  * Arm ist das ohnehin der einzig sinnvolle Punkt — er hat keine Loco-Bank mit
                  * einem Griff-Basisclip, aus dem sich ein Versatz lesen liesse. */
-                e->anchor_x = e->x;  e->anchor_z = e->z;
+                /* ⛔ KORREKTUR 2026-08-31 (Nutzer-Report: "die Zombies ziehen Leon immer
+                 * noch durch die Wand wenn sie ihn grabben ... sonst kann man ihn im normalen
+                 * Raum nicht mehr bewegen").
+                 * Hier stand `anchor = e->x/e->z` — die Position des ARM-KOERPERS. Der steht
+                 * aber IM MAUERWERK: GEMESSEN (probe_1210_wandgriff) endet die Lunge bei
+                 * x = -16420, waehrend die begehbare Flurkante auf derselben z-Zeile bei
+                 * x = -18164 liegt, also 1744 Einheiten davor. Weil die Opfer-Platzierung
+                 * ABSOLUT vom Anker rechnet (re15_clip_root_motion_abs), landete Leon im
+                 * Griff-Bild auf x = -17312 mit begehbar = 0 — 852 Einheiten in der Wand —
+                 * und wanderte ueber die Folgebilder auf -17731 weiter hinein.
+                 * Der Anker ist deshalb jetzt die HAND, nicht der Koerper: derselbe Punkt,
+                 * den auch das Griff-Tor unten misst (e->pos + MESH_REACH entlang +0x6a).
+                 * Dort FINDET der Griff statt — der Arm reicht durch die Gitterstaebe, sein
+                 * Rumpf bleibt dahinter. Neue Zahlen entstehen dabei keine: MESH_REACH 1671
+                 * ist bereits belegt und wird vom Tor schon benutzt.
+                 * ⛔ NACHRUESTUNG, klar benannt: RE1.5s Writher hat ueberhaupt keinen Griff
+                 * (Ausgang @0x8010c8e4 geht auf +0x5 = 2/3), und RE2s verankerter Greifer
+                 * steht frei im Raum, weshalb dort `anchor = Greiferposition` (@0x801025f0
+                 * else-Zweig) richtig ist. Fuer einen Greifer, dessen Rumpf in einer Wand
+                 * steckt, gibt es kein Vorbild. */
+                e->anchor_x = e->x + (int32_t)(((int32_t)re15_cos_q12(e->rot_y)
+                                                * RE15_WRITHER_MESH_REACH) >> 12);
+                e->anchor_z = e->z - (int32_t)(((int32_t)re15_sin_q12(e->rot_y)
+                                                * RE15_WRITHER_MESH_REACH) >> 12);
                 pl->anchor_x = e->anchor_x;  pl->anchor_z = e->anchor_z;
                 re15_player_victim_latch_ex(e, pl, 0);   /* Spieler-Kommando 5, RE1.5-Zwilling
                                                           * @0x80102630-40; Variante 0 = Front */
