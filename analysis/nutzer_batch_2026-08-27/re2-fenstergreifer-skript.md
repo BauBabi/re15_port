@@ -504,3 +504,192 @@ sub53 raeumt ab.
 * **Laenge von 0x19 `greturn`**: nur 6 Vorkommen game-weit, alle mit Folgebyte 0x00; 1 und 2
   sind aus den Daten nicht unterscheidbar, und der Handler @0x80054210 liest keinen
   Operanden. Fuer den Walker irrelevant, weil 0x18 `gosub` null mal vorkommt.
+
+---
+
+## Verifikation (unabhaengig nachdisassembliert)
+
+Gegengepruefte Sitzung 2026-08-25. Alles unten wurde **selbst** disassembliert
+(`info/re2leon/PSX.EXE`, t_addr=0x80010000 aus Header @0x18, text @Datei 0x800) bzw. mit einem
+**eigenen** Walker + eigenem Block-Ziel-Orakel nachgerechnet (kein Import der Dossier-Tools;
+eigene symbolische Handler-Analyse mit 0x1000-Fenster statt 0x800).
+
+**Gesamturteil: TEILWEISE.** Der methodische Kern (keine Laengentabelle; die neun Laengen waren
+nicht der Fehler; die 129 Desyncs sind ausnahmslos letzte Subs) und der zentrale RE-Befund
+(die vier RMW-Bloecke schreiben Member 1 = Entity+0x02, **nicht** +0x10E) reproduzieren
+**exakt**. Mehrere *Deutungen* in Teil 2/3 sind dagegen invertiert oder unbelegt.
+
+### A. Bestaetigt (selbst nachdisassembliert / nachgerechnet)
+
+1. **Dispatch-Tabelle @0x800a74c8**, Datei 0x97cc8, genau **143 Eintraege** (0x00..0x8E; Index 143
+   @0x800a7704 ist `0x10111010` = Daten). Alle neun Auftrags-Handler liegen auf den behaupteten
+   Indizes. `memcpy` @0x80053598 (`lui a1,0x800a` / `addiu a1,a1,29896` / `jal 0x80010778` /
+   `addiu a2,zero,1024`) bestaetigt.
+2. **FUN_800536c4 hat keine Laengentabelle** - Instruktionen exakt wie zitiert
+   (`800536fc lw v0,28(s0)` / `80053704 lbu v0,0(v0)` / `8005370c sll v0,v0,2` /
+   `80053714 lw v0,0(v0)` / `8005371c jalr v0` / `8005372c beq` / `80053734 beq`). Zwischen
+   `jalr` und dem Neuladen steht keine Addition und kein Lookup.
+3. **Die neun Kontrollfluss-Opcodes sind genau die neun ohne statischen pc-Advance.** Eigener
+   symbolischer Scan ueber alle 143 Handler (Fenster 0x1000): Handler ohne erkannten Advance =
+   {0x01,0x03,0x07,0x10,0x13,0x17,0x18,0x19,0x1A} - deckungsgleich. **Kein einziger** Handler hat
+   zwei verschiedene pc-Advances; die abgeleitete Tabelle ist also eindeutig.
+4. `0x18 gosub` = 2 **direkt** belegt (`800541b0 lbu a2,1(v1)` / `800541b4 addiu v1,v1,2` /
+   `800541c4 sw v1,324(v0)`). `0x17 goto` = 6 (`80054178 lh t0,4(a1)` / `80054190 addu a1,a1,t0` /
+   `800541a4 sw a1,28(a0)`). `0x13 switch` Kopf 4 (`80054038/3c/40`), `t4=21`/`t3=22` @0x80054024/28.
+5. **Staerker als im Dossier:** 0x14/0x15/0x16 brauchen den Case-Scanner gar nicht - sie haben
+   eigene Handler, die die Laenge direkt speichern: `0x800540f8: lw v0,28(a0) / addiu v0,v0,6 /
+   sw v0,28(a0)` (case=6), `0x80054110: addiu v0,v0,2` (default=2), `0x80054128` (eswitch=2).
+6. `0x44` = 22 @0x800576e4, `0x8E` = 24 @0x80057d78 - beide reproduziert; mit 0x1000-Fenster
+   faellt beides automatisch heraus, der manuelle Override im Dossier-Tool ist nur Fensterartefakt.
+   **0x8E ist ein zweites `sce_em_set` mit identischem Feldlayout** (`800579c8 lbu v0,3(v1)` ->
+   `800579d0 sb v0,8(s0)`; `800579e0 lhu v0,4(v1)` -> `800579e8 sh v0,270(s0)`), 340 Vorkommen.
+7. **Walker-Zahlen exakt reproduziert:** 2568 Subs, 2068 nicht-letzte, **0** Desyncs bei den
+   nicht-letzten, **129** bei den letzten (strenge Regel) bzw. **0** mit der evt_end-Regel.
+8. **Block-Ziel-Orakel exakt reproduziert: 6009 Ziele, 0 Fehltreffer.** Die acht Zielformeln habe
+   ich selbst aus den Handlern gezogen; sie sind **nicht** einheitlich, was das Dossier verschweigt:
+   `if_ck/while/do` = pc+4+s16@+2 (`80053924/8005394c`, `80053d94/80053dac`, `80053e84/80053ea8`),
+   `for` = pc+6+s16@+2 (`80053b50/80053b84`, Nullzweig `80053bb8..80053bc4`),
+   `else_ck` = **pc+u16@+2** (ohne +4! `80053974/8005397c`), `goto` = pc+s16@+4,
+   `switch` = pc+4+u16@+2, `case` = pc+6+u16@+2.
+   Der einzige Fehltreffer bei strengem Lauf (ROOMA120 MAIN sub10 `while` @0x2e96 -> 0x305e) ist
+   ein Phantom: an 0x2E94 steht `01 00` (evt_end), dahinter Daten. Die evt_end-Regel entfernt ihn -
+   das erklaert exakt die Differenz 6010/1 (streng) vs. 6009/0 (repariert).
+9. Die RE1.5-Port-Bytefolge `01 02 01 04 04 02 04 04 02 04 03 01 01 06 02 04`
+   (`re15_port/_legacy_minimal/engine_src/scd_vm.c:389`) kommt in **keiner** der beiden EXEn vor -
+   selbst nachgesucht, 0 Treffer in `info/re2leon/PSX.EXE` und `info/Re1.5/PSX.EXE`. Und: alle neun
+   Werte des Ports stimmen mit den neun hier benutzten ueberein - die Praemissen-Korrektur (1c) traegt.
+10. Padding-Beispiele byte-genau: ROOM1020 INIT (offs[16]=0x1800, offs[17]=0x18C4) endet mit
+    `01 00` @0x18C0..0x18C1, dahinter `ed 47` @0x18C2..0x18C3. ROOMA010 offs[17]=0x17FC, ab 0x1804
+    32-Bit-Daten (`64 01 00 00 | 00 00 00 00 | 02 00 00 00 | 38 00 00 00 ...`).
+11. **Member-Tabellen:** Setter @0x80011228, 44 Eintraege (`80055cb0 sltiu v0,a1,0x2c`);
+    `[1]=0x80055cdc -> sh a2,2(a0)`, `[7]=0x80055d0c -> sh a2,270(a0)`. Getter-Gegenstueck
+    @0x800112f8 spiegelt es (`80055f84 lhu v0,2(a0)`).
+    `0x35 member_set2` @0x80055c50: Member-Index @+1, Var @+2, Laenge 3.
+    `0x3D member_copy` @0x80055e38: Var @+1, Member @+2, Laenge 3.
+    `0x26 calc` @0x8005458c: Laenge 6, u16@+2 = (Var<<8)|Operator, s16@+4 = Wert -
+    `26 00 05 10 08 00` ist also Operator 5, Var 0x10, Wert 8. Bestaetigt.
+12. **Calc-Operatoren:** `[5]=0x80054700 lhu v0,0(a1) / or v0,v0,a2`, `[6]=0x8005470c ... and`.
+13. **Work_set** @0x80055904: Laenge 3 (`80055928 addiu v0,v0,3`), `80055930 addiu v1,v1,-1`
+    (kind-1!), `80055934 sltiu v0,v1,0x5`, Tabelle @0x800111f0 -> kind3 = Eintrag[2] = 0x8005597c =
+    `lw v0, 0x800cfe1c + idx*4`. Die Dossier-Aussage stimmt; das `-1` fehlt dort, die Schlussfolgerung
+    ist trotzdem richtig. **Zusatzbeleg, den das Dossier nicht hat:** `sce_em_set` legt den neuen
+    Entity-Zeiger selbst in genau dieses Array - `80057214 sll a0,a1,2` mit `a1 = (s8)Byte@+2 + 2`,
+    `80057234 sw v1,15404(v0)` mit `v0 = a0 + 0x800cc1e8` => `0x800cfe14 + (idx+2)*4 =
+    0x800cfe1c + idx*4`. Damit ist der Ring work_set(3,n) <-> sce_em_set-Slot n geschlossen.
+14. **sce_em_set-Felder** vollstaendig: Typ `+3` -> `+8` (`80057334/8005733c`), Flag `+4` -> `+0x10E`
+    (`8005734c/80057354`), X `+10` -> `sh 68 / sw 56` (`800572c8/d0/dc`), Y `+12` -> `sh 70 / sw 60`,
+    Z `+14` -> `sh 72 / sw 64`, Richtung `+16` -> `sh 118` (`80057328/80057330`).
+    `0x32 pos_set` @0x80055ba0 schreibt dieselben `sw 56/60/64`, Laenge 8.
+15. **ROOM1120 MAIN sub25 byte-exakt** (0x2928 + subs[25]=0x10b4 = 0x39DC, 54 Subs):
+    `2d 0d/0e/0f` mit +14/+16/+18 = `60 b9` / `00 83` / `6a c7`,`b4 dc`,`62 f2`
+    = (-18080, -32000, -14486/-9036/-3486); 4x `44 .. 1f 0a 40` mit X=0x7d00=32000 und
+    Z=32000/31000/30000/29000; 4x `2e 03 0n / 3d 10 01 / 26 00 05 10 08 00 / 35 01 10`.
+    Die `obj_model_set`-Positionsfelder habe ich am Handler nachgeholt (das Dossier zitiert dafuer
+    **keine** Adresse): `80055308 lh v0,18(s2)` -> `sw v0,64(s1)`, `8005530c lh a1,12(s2)`,
+    `80055310 lh a2,14(s2)` -> `sw a2,56(s1)`, `80055314 lh a3,16(s2)` -> `sw a3,60(s1)`;
+    Basis `s1 = 0x800cc1e8 + 16700 + idx*504 = 0x800d0324 + idx*504`.
+16. **Der zentrale Befund stimmt und ist wichtig:** die vier RMW-Bloecke schreiben Member 1 =
+    Entity+0x02 (u16), nicht +0x10E. Und das Bit ist real: der Per-Entity-Durchlauf ueber
+    `0x800d0324` (Schrittweite 504) prueft `80036444 lw v1,0(s1)` / `8003644c andi v0,v1,0x1` /
+    `beq -> naechster` / `80036458 lui v0,0x8` / `8003645c and v0,v1,v0` /
+    `80036460 bne -> naechster`, danach folgen Matrix-/GTE-Aufrufe (0x8008e1f4, 0x8002ce94,
+    0x8008dd94, 0x8008d6c4) = Zeichenschleife.
+17. **aot_set-Feldlayout unabhaengig belegt** (im Dossier unzitiert): `aot_set` @0x80054af4 legt
+    `task->pc+2` in `0x800ce558[id]` ab, Laenge 20; `aot_set_4p` @0x80054b60 ebenso, Laenge 28, und
+    setzt zusaetzlich `80054bc4 ori v0,v0,0x80` in Byte `+3`. Der Konsument `FUN_800527b4`
+    (`RE2_Quellcode_V2/FUN_800527b4.c`) liest `rec[0]`=sce, `rec[1]&0x80`=4-Punkt-Flag,
+    `rec+4` = 4 shorts (x,z,w,d) fuer den Rechteck-Test bzw. 8 shorts fuer 4-Punkt. Damit ist
+    `aot=14 @0x02A9A x=-17245 z=-12445 w=12100 d=1800` und `aot=17 @0x02AD6 x=-20355 z=-12040
+    w=7700 d=1800` byte-genau bestaetigt (`2c 0e 04 31 00 00 a3 bc 63 cf 44 2f 08 07 ...`).
+18. **Zaehlungen:** "163 RMW-Bloecke game-weit" ist **exakt** richtig - 163
+    (146x OR 8, 12x AND 0xFFF7, 4x OR 0x20, 1x XOR 8). "340 Vorkommen von 0x8E" exakt.
+    "6 Vorkommen von 0x19" exakt.
+19. Die 7 Subs des weichen Musters reproduzieren 1:1 (Datei, Sub, Offset, Typ, Flag, Koordinaten),
+    ebenso ROOM1010 MAIN sub4 (die vier 0x1F @0x01ABC/0x01AD2/0x01AE8/0x01AFE) und sub7
+    (@0x01B90/0x01BA6/0x01BBC/0x01BD2). Anmerkung: an 0x01A94 selbst steht ein
+    **Typ-0x48**-`sce_em_set`, nicht 0x1F - die vier 0x1F beginnen erst 0x28 Byte spaeter.
+20. Das strenge Muster ("genau ein Raum, ROOM1120, x=-16360") reproduziert **nur** unter der
+    Zusatzbedingung *paarweise verschiedene Gegner-Indices* und mit Toleranz >= 1720
+    (naechstes `obj_model_set` liegt bei x=-18080). Dann: 1 Treffer, ROOM1120 MAIN sub30.
+    Ohne die Index-Bedingung faellt ROOM1130 MAIN sub13 (@0x01968, 5x pos_set auf x=-25580, aber
+    immer derselbe Gegner-Slot 1) mit hinein, bei Toleranz <= 1000 sogar als **einziger** Treffer.
+    Das Kriterium ist also empfindlich; die Schlussfolgerung haelt, die Formulierung "GENAU EIN
+    Raum" ist ohne Nennung dieser beiden Parameter nicht nachvollziehbar.
+
+### B. Widerlegt: sub34/sub53 sind **invertiert** gedeutet
+
+Das Dossier schreibt "sub34 ... Member1 |= 8 -> zwei Objekte **einblenden**" und
+"sub53 ... Member1 &= 0xFFF7 ... Objekte 5/11 **ausblenden**". Beides ist genau verkehrt herum:
+
+* `member1 |= 8` setzt Bit 0x00080000 im Wort bei Entity+0x00, und die Zeichenschleife
+  **ueberspringt** genau dann (`80036458 lui v0,0x8` / `8003645c and v0,v1,v0` /
+  `80036460 bne v0,zero,0x800366d8`). `|= 8` = **verstecken**, `&= 0xFFF7` = **zeigen**.
+* Zweiter, unabhaengiger Beleg aus demselben Raum: ROOM1120 MAIN **sub39** (@0x041AE
+  `3d 10 01 / 26 00 06 10 f7 ff / 35 01 10`) wird per `gosub` am Ende von sub35/36/37/38
+  aufgerufen (Aufrufer @0x04128, 0x04144, 0x04160, 0x0417C) - also **direkt nachdem** der Zombie
+  ans Fenster gesetzt wurde. Analog **sub44** (@0x042AE) aus sub40..43 (@0x04228, 0x04244,
+  0x04260, 0x0427C). Das Skript versteckt die vier in sub25 (`|= 8`) und blendet sie beim
+  Platzieren ein (`&= 0xFFF7`) - die Deutung "Sichtbarkeitsschalter" stimmt, die **Richtung** nicht.
+
+### C. Widerlegt: die Y-Deutung ("unter der Welt" / "ANGEHOBEN")
+
+Fuer die Y-Achsenrichtung nennt das Dossier **keine** Adresse, und die beiden Aussagen
+widersprechen sich gegenseitig: `y=-32000` wird als "unter der Welt" gelesen, `y=180/360` als
+"ANGEHOBEN" - beides zugleich kann nicht sein.
+
+Negatives Y ist **oben**:
+* Byte-true im Port: `re15_collision_band_from_y(y) = -(y / 0x708)`
+  (`re15_port/engine/src/re15_collision.c:173`) - hoehere Etage = negativeres Y.
+* RE2-eigener Beleg aus genau diesem Raum: dieselben drei "Fenster"-Modelle stehen im Einsatz bei
+  **y=-1260** (sub32 @0x03F8C/0x03F9C/0x03FAC) bzw. **y=-1440** (sub33 @0x04046/0x04056/0x04066),
+  waehrend der Boden y=0 ist (sub30). Ein Fenster in einer Wand liegt ueber dem Boden => negativ = oben.
+
+Folge: `y=-32000` = weit **ueber** der Szene geparkt (wie die sechs Objekte 7..12 in sub2, die bei
+y=-25400 geparkt und dann per pos_set auf y=180 geholt werden), und die Zombies bei `y=180/360`
+sind gegenueber dem Boden **abgesenkt**, nicht angehoben.
+
+### D. Widerlegt / nicht reproduzierbar (Zahlen und Nebenaussagen)
+
+* **"EM-Typ 0x1F ... kommt in 35 Raeumen vor"** - nicht reproduzierbar. Mit Opcode 0x44 allein
+  zaehle ich **34** Raeume. Nimmt man das vom Dossier selbst gefundene zweite em_set 0x8E dazu
+  (identisches Typ-Feld @+3, s.o.; 140 weitere 0x1F-Spawns), sind es **56** Raeume. Die
+  *qualitative* Aussage ("0x1F ist ein gewoehnlicher Zombie, kein Sonder-Fenstergreifer") traegt.
+* **"Die uebrigen fuenf ... kein Obj_model_set"** - falsch fuer **ROOM2050 MAIN sub0**: dort stehen
+  **8** `obj_model_set` und 7 `aot_set`. Das steht sogar in der Ausgabe des mitgelieferten
+  `re2_find_window.py` ("obj_model_set: 8").
+* **Die Sweep-Zahlen in Teil 1d sind nicht reproduzierbar.** Beispiel 0x07: Dossier
+  1->9818 2->9818 3->706 4->0 5->19691 6->16897; mein Lauf 1->499 2->499 3->22 4->0 5->1091 6->1023.
+  Die **Form** (eindeutiges Minimum 0 beim gewaehlten Wert) reproduziert fuer 0x07/0x13/0x17/0x18,
+  die absoluten Zahlen nicht - sie duerfen nicht als Messwerte zitiert werden.
+* **0x03: "Orakel schliesst 5/6 aus -> 4"** ist zu stark formuliert. Mein Sweep (Desyncs/Fehltreffer):
+  1->0/0, 2->0/0, 3->3/15, 4->0/0, 5->0/6, 6->0/8. Das Orakel schliesst also nur 3, 5, 6 aus;
+  **1 und 2 bleiben offen** und werden allein durch `80053888 lbu a1,3(v0)` (Operand bei +3)
+  ausgeschlossen. Zusaetzlich: der Handler @0x80053878 faellt **nie** durch - `FUN_800530ec`
+  ueberschreibt `task->pc` bedingungslos (`80053130 jr ra / 80053134 sw a2,28(a0)`). "Laenge 4" ist
+  hier eine Walker-Konvention, kein ausgefuehrter Advance. Das sagt das Dossier nicht.
+* **"3845 von 3847 Vorkommen"** - bei mir 3851 von 3853 (2 Ausreisser: Folgebyte 0x13 und 0x29).
+  Substanz richtig, Zahl falsch.
+* **"DREI FENSTER/GITTER"** ist unbelegt - in den zitierten `obj_model_set`-Bytes steckt keine
+  Modell-ID, und es wird keine Adresse fuer eine Modell-/Textur-Zuordnung genannt.
+* **`sce_espr_kill(4,0x000A)`**: die Bytes `4c 04 0a 00 00` stimmen, aber Name und
+  Parameterbedeutung sind nicht belegt (Handler @0x80056884 wurde nicht zitiert).
+* **`0x400A & 0x3F = 0x0A -> ACTIVE-Zweig 0x8010118C`** - reiner Verweis aufs Schwester-Dossier,
+  hier nicht nachgeprueft.
+* **Werkzeug-Defekt:** die RMW-Erkennung in `re2_find_window.py` feuert nie, weil sie vier
+  *unmittelbar* aufeinanderfolgende Ops verlangt, zwischen `2E/3D/26/35` aber `00`-Nops stehen.
+  Deshalb meldet das Werkzeug fuer ROOM1120 sub25 "RMW-Bloecke: -" und widerspricht Teil 2 des Dossiers.
+
+### E. Luecken, die die Erzaehlung tragen wuerden (nicht falsch, aber fehlend)
+
+* **sub32 und sub33 fehlen komplett** - dort werden die drei Modelle 13/14/15 ueberhaupt erst in
+  die Szene gesetzt: sub32 @0x03F88 `work_set(4,13/14/15)` + `pos_set(-18080,-1260,-14486/-9036/-3486)`,
+  sub33 @0x04042 `pos_set(-16182,-1440,-8100/-13338/-17550)`. Die Behauptung, sub25 parke die
+  Modelle und das sei alles, ist unvollstaendig; erst sub32/33 belegen "Fenster auf der Wandlinie".
+* **Die Reihenfolge sub25 -> 30 -> 34 -> 35..38 -> 40..43 -> 53 ist behauptet, nicht gezeigt.**
+  Gemessen (gosub 0x18 in ROOM1120): sub25 wird aus MAIN sub2 gerufen (@0x02E04, @0x02E4C);
+  sub34 und sub53 aus sub28/29/30/32/33; sub39 aus sub35..38; sub44 aus sub40..43. Fuer
+  sub30/32/33/35..38/40..43 gibt es **keinen** gosub-Aufrufer - sie werden ueber einen anderen
+  Weg (Event/AOT/`evt_exec` 0x04) gestartet, der nicht untersucht wurde.
+* sub53 setzt `+0x10E |= 0x8000` (Member 7) - das stimmt; dass daraus 0xC00A wird, gilt nur
+  script-seitig: ausser sub25 fasst kein Sub in ROOM1120 Member 7 an (selbst geprueft), was die
+  Laufzeit-KI aber nicht ausschliesst.

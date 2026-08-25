@@ -1,0 +1,63 @@
+file=re15_port/shared_assets/PSX/STAGE1/ROOM1000.RDT size=0x2B388
+nSprite=0 nCut=9 nOmodel=2 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+  tbl[0x20] = 0x00000514
+  tbl[0x24] = 0x00000060
+  tbl[0x28] = 0x00000190
+  tbl[0x2C] = 0x00000360
+  tbl[0x30] = 0x00000180
+  tbl[0x34] = 0x00000BAC
+  tbl[0x38] = 0x00000B84
+  tbl[0x3C] = 0x00000D20
+  tbl[0x40] = 0x00000BBC
+  tbl[0x44] = 0x00000C20
+  tbl[0x48] = 0x00000D18
+  tbl[0x4C] = 0x00001C00
+  tbl[0x50] = 0x0000209C
+  tbl[0x54] = 0x0001FCC8
+  tbl[0x58] = 0x00023168
+  tbl[0x5C] = 0x00000000
+  tbl[0x60] = 0x683C0000
+  tbl[0x64] = 0x0000496E
+  tbl[0x68] = 0xFFFFF376
+  tbl[0x6C] = 0xFFFFE623
+  tbl[0x70] = 0x00004F62
+  tbl[0x74] = 0xFFFFF9BA
+  tbl[0x78] = 0xFFFFCFAA
+  tbl[0x7C] = 0x000004C8
+
+===== main SCD @0xBBC  (1 subs) =====
+--- main00 @0xBBE (0xBBE..0xC20) ---
+0x000BBE  Door_aot_set      aot=0 flr=49 x=0 z=22350 w=-14400 h=1000 nx=2000 ny=14700 nz=0 ndir=-13500 stage=0 room=0 cut=0 | 3b 00 02 31 00 00 4e 57 c0 c7 e8 03 d0 07 6c 39 00 00 44 cb 00 00 00 05 04 00 00 00 00 00 00 00
+0x000BDE  Door_aot_set      aot=1 flr=49 x=0 z=1200 w=-900 h=1000 nx=2000 ny=14700 nz=0 ndir=6100 stage=0 room=0 cut=0 | 3b 01 02 31 00 00 b0 04 7c fc e8 03 d0 07 6c 39 00 00 d4 17 00 00 00 05 01 00 00 00 00 00 00 00
+0x000BFE  Door_aot_set      aot=2 flr=49 x=0 z=1200 w=2200 h=1000 nx=2000 ny=14700 nz=0 ndir=9150 stage=0 room=0 cut=0 | 3b 02 02 31 00 00 b0 04 98 08 e8 03 d0 07 6c 39 00 00 be 23 00 00 00 05 01 00 00 00 00 00 00 00
+0x000C1E  Evt_end           | 01 00
+
+===== sub SCD @0xC20  (2 subs) =====
+--- sub00 @0xC24 (0xC24..0xCFC) ---
+0x000C24  Item_aot_set      aot=3 flr=49 x=0 z=20500 w=-800 h=800 item=0x320 amt=49 md=0x0001 flg=0x0086 | 50 03 09 31 00 00 14 50 e0 fc 20 03 20 03 31 00 01 00 86 00 ff 00
+0x000C3A  Item_aot_set      aot=4 flr=49 x=0 z=-4850 w=-800 h=1000 item=0x3e8 amt=36 md=0x0001 flg=0x00a6 | 50 04 09 31 00 00 0e ed e0 fc e8 03 e8 03 24 00 01 00 a6 00 00 00
+0x000C50  Item_aot_set      aot=5 flr=49 x=0 z=-4800 w=4050 h=1000 item=0x3e8 amt=37 md=0x0001 flg=0x00a7 | 50 05 09 31 00 00 40 ed d2 0f e8 03 e8 03 25 00 01 00 a7 00 01 00
+0x000C66  Obj_model_set     id=0 | 2d 00 00 00 01 00 0a 00 00 00 d0 ee 00 00 bb fe 00 00 d1 09 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x000C88  Obj_model_set     id=1 | 2d 01 00 00 01 00 0a 00 00 00 34 ef 00 00 df 11 00 00 06 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x000CAA  Aot_set           aot=6 type=0x01 flr=49 x=0 z=-2200 w=-4500 h=1000 d=03e8 0000 ffff | 2c 06 01 31 00 00 68 f7 6c ee e8 03 e8 03 00 00 ff ff 00 00
+0x000CBE  Aot_set           aot=7 type=0x01 flr=49 x=0 z=-4450 w=-4500 h=1000 d=03e8 0000 ffff | 2c 07 01 31 00 00 9e ee 6c ee e8 03 e8 03 00 00 ff ff 00 00
+0x000CD2  Aot_set           aot=8 type=0x01 flr=49 x=0 z=-2250 w=6750 h=1000 d=03e8 0000 ffff | 2c 08 01 31 00 00 36 f7 5e 1a e8 03 e8 03 00 00 ff ff 00 00
+0x000CE6  Aot_set           aot=9 type=0x01 flr=49 x=0 z=0 w=6750 h=1000 d=03e8 0000 ffff | 2c 09 01 31 00 00 00 00 5e 1a e8 03 e8 03 00 00 ff ff 00 00
+0x000CFA  Evt_end           | 01 00
+--- sub01 @0xCFC (0xCFC..0xD18) ---
+0x000CFC  Ifel_ck           skip=20 | 06 00 14 00
+0x000D00  Ck                bank=9 bit=0x86 val=1 | 21 09 86 01
+0x000D04  Ifel_ck           skip=10 | 06 00 0a 00
+0x000D08  Ck                bank=3 bit=0x85 val=0 | 21 03 85 00
+0x000D0C  Set               bank=3 bit=0x85 val=1 | 22 03 85 01
+0x000D10  Endif             | 08 00
+0x000D12  Endif             | 08 00
+0x000D14  Evt_end           | 01 00
+0x000D16  Nop               | 00
+0x000D17  Nop               | 00
+
+===== extra SCD @0xD18  (2 subs) =====
+--- extra00 @0xD1C (0xD1C..0xD1E) ---
+0x000D1C  Evt_end           | 01 00
+--- extra01 @0xD1E (0xD1E..0xD20) ---
+0x000D1E  Evt_end           | 01 00

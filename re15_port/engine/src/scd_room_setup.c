@@ -16,6 +16,7 @@
 #include "re15_rdt.h"
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* re15_re2z_rng_reset — Reenter-Clear des 0x800CFBF4-Analogs */
+#include "re15_esp.h"   /* re15_esp_fx_reset — Effekt-Pool beim Raumladen wischen */
 
 extern scd_vm_t g_scd;
 
@@ -110,6 +111,37 @@ void scd_register_room_events(const re15_rdt_t *rdt)
 void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                       uint8_t entry_scenario)
 {
+    /* ⛔ EFFEKT-POOL WISCHEN — Nutzer-Befund: "nachdem man mit dem [Feuerloescher] die Flammen
+     * ausgemacht hat, muss der Flammen-Effekt weg sein."
+     *
+     * Der Loesch-Vorgang in ROOM1090 ist eine SELBST-TUER: sub06 setzt flag(3,0x81) und feuert
+     * `Aot_on 3`; Slot 3 traegt einen Door_aot_set, dessen Ziel DERSELBE Raum ist
+     * (ROOM1090.RDT @0x2352, Payload ROOM = 0x09, CUT = 0x06). Der Original-Warp kennt dabei
+     * KEINEN "gleicher Raum"-Sonderfall — selbst nachdisassembliert, FUN_8001d600:
+     *     8001d94c: lbu v0,9(a0)      ; Ziel-ROOM  -> work_vars[0x09]
+     *     8001d930: lbu v1,10(a0)     ; Ziel-CUT   -> work_vars[0x0A]
+     *     8001d960: lbu v0,8(a0)      ; Ziel-STAGE
+     *     8001d968: beq v1,v0,...     ; NUR die STAGE wird verglichen
+     *     8001d988: jal 0x800396fc    ; RAUMLADER — laeuft UNBEDINGT
+     * und die Ladekette wischt den Effekt-Pool:
+     *     80019354: ori   a0,zero,0x60      ; 96 Slots
+     *     80019364: addiu v0,v0,-132        ; Stride 132
+     *     80019370: addiu at,at,29732       ; Basis 0x800A7424
+     *     80019378: sb    zero,0(at)        ; Slot-Flags := 0 (inaktiv)
+     * Eigener Voll-Scan der PSX.EXE nach `jal 0x80019354`: GENAU EIN Aufrufer, 0x8003996C —
+     * und der sitzt im Raumlader FUN_800396fc. Also wischt JEDES Raumladen den Pool.
+     *
+     * Der Port raeumte an dieser Stelle bereits den AKTOREN-Pool (die sieben Typ-0x26-Emitter
+     * und ihre Schadenszone verschwinden korrekt, gemessen 7 -> 0), aber der Effekt-Pool wurde
+     * nur im RAUMWECHSEL-Pfad gewischt (re15_room_reset_render_pc -> room_pc.c). Die
+     * Flammen-PARTIKEL (Effekt-Id 0x10 x4 und 0x08 x3) liefen deshalb nach dem Loeschen
+     * endlos weiter — genau das, was der Nutzer sieht.
+     *
+     * Der Wisch gehoert VOR den Skript-Start, wie im Original (Loader vor SCD-Room-Init
+     * FUN_8003ef6c). Er ist idempotent, der Raumwechsel-Pfad darf ihn also weiter zusaetzlich
+     * machen. */
+    re15_esp_fx_reset();
+
     memset(&g_scd, 0, sizeof(g_scd));   /* reset threads/props/cam/modes/audio-queue */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
     g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-

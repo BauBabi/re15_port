@@ -1,0 +1,335 @@
+file=re15_port/shared_assets/PSX/STAGE1/ROOM1090.RDT size=0x52238
+nSprite=0 nCut=16 nOmodel=4 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+  tbl[0x20] = 0x00001DD0
+  tbl[0x24] = 0x00000060
+  tbl[0x28] = 0x00000280
+  tbl[0x2C] = 0x000005B8
+  tbl[0x30] = 0x00000260
+  tbl[0x34] = 0x00002108
+  tbl[0x38] = 0x000020C8
+  tbl[0x3C] = 0x00002748
+  tbl[0x40] = 0x00002118
+  tbl[0x44] = 0x000021B4
+  tbl[0x48] = 0x00002740
+  tbl[0x4C] = 0x00011010
+  tbl[0x50] = 0x000118CC
+  tbl[0x54] = 0x0002EEB8
+  tbl[0x58] = 0x00039BD8
+  tbl[0x5C] = 0x0000298C
+  tbl[0x60] = 0x683C0000
+  tbl[0x64] = 0xFFFFC658
+  tbl[0x68] = 0xFFFFCE02
+  tbl[0x6C] = 0x000021E4
+  tbl[0x70] = 0xFFFFE1C4
+  tbl[0x74] = 0xFFFFD7EC
+  tbl[0x78] = 0xFFFFF9AC
+  tbl[0x7C] = 0x00000838
+
+===== main SCD @0x2118  (1 subs) =====
+--- main00 @0x211A (0x211A..0x21B4) ---
+0x00211A  Door_aot_set      aot=0 flr=49 x=1 z=-12430 w=2260 h=4700 nx=1600 ny=19850 nz=0 ndir=-22300 stage=0 room=12 cut=0 | 3b 00 02 31 01 00 72 cf d4 08 5c 12 40 06 8a 4d 00 00 e4 a8 00 0c 00 05 06 00 00 00 00 00 00 00
+0x00213A  Door_aot_set      aot=1 flr=49 x=6 z=-7920 w=-21440 h=4200 nx=5500 ny=-20900 nz=0 ndir=-10336 stage=0 room=4 cut=0 | 3b 01 02 31 06 00 10 e1 40 ac 68 10 7c 15 5c ae 00 00 a0 d7 00 04 00 10 05 00 00 00 00 00 00 00
+0x00215A  Aot_set           aot=3 type=0x03 flr=65 x=5 z=-15500 w=-17124 h=19072 d=5455 00ff 0718 | 2c 03 03 41 05 00 74 c3 1c bd 80 4a 55 54 ff 00 18 07 00 00
+0x00216E  Obj_model_set     id=0 | 2d 00 04 00 01 00 00 01 00 00 38 e0 f8 f8 91 12 00 00 00 00 00 00 00 00 7c fc 00 00 84 03 84 03 84 03
+0x002190  Obj_model_set     id=1 | 2d 01 04 00 05 00 00 01 00 00 b8 e8 d8 dc 86 c3 00 00 00 00 00 00 00 00 7c fc 00 00 84 03 84 03 84 03
+0x0021B2  Evt_end           | 01 00
+
+===== sub SCD @0x21B4  (8 subs) =====
+--- sub00 @0x21C4 (0x21C4..0x23F4) ---
+0x0021C4  Ifel_ck           skip=34 | 06 00 22 00
+0x0021C8  Ck                bank=3 bit=0x81 val=0 | 21 03 81 00
+0x0021CC  Switch            var=10 | 13 0a 16 00
+0x0021D0  Case              val=0 skip=4 | 14 00 04 00 00 00
+0x0021D6  Cut_chg           cut=8 | 29 08
+0x0021D8  Break             | 1a 00
+0x0021DA  Case              val=3 skip=4 | 14 00 04 00 03 00
+0x0021E0  Cut_chg           cut=11 | 29 0b
+0x0021E2  Break             | 1a 00
+0x0021E4  Eswitch           | 16 00
+0x0021E6  Cut_auto          | 3c 01
+0x0021E8  Endif             | 08 00
+0x0021EA  Ifel_ck           skip=180 | 06 00 b4 00
+0x0021EE  Ck                bank=3 bit=0x81 val=0 | 21 03 81 00
+0x0021F2  Obj_model_set     id=3 | 2d 03 00 00 02 00 08 00 10 00 f4 0b 3e f5 e8 f9 50 00 56 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x002214  Sce_em_set        slot=38 type=0x00 pose=1 flr=0 x=-256 y=2052 z=-1800 rot=-1334 ai=0x0000 snd=0x0400 | 44 00 26 00 01 00 00 ff 04 08 f8 f8 ca fa 00 00 00 04 00 00
+0x002228  Sce_em_set        slot=38 type=0x01 pose=1 flr=0 x=-256 y=2375 z=-1800 rot=-2333 ai=0x0000 snd=0x0400 | 44 01 26 01 01 00 00 ff 47 09 f8 f8 e3 f6 00 00 00 04 00 00
+0x00223C  Sce_em_set        slot=38 type=0x02 pose=1 flr=0 x=-256 y=3104 z=-1800 rot=-3498 ai=0x0000 snd=0x0400 | 44 02 26 02 01 00 00 ff 20 0c f8 f8 56 f2 00 00 00 04 00 00
+0x002250  Sce_em_set        slot=38 type=0x04 pose=1 flr=0 x=-256 y=2974 z=-1800 rot=-860 ai=0x0000 snd=0x0400 | 44 03 26 04 01 00 00 ff 9e 0b f8 f8 a4 fc 00 00 00 04 00 00
+0x002264  Sce_em_set        slot=38 type=0x03 pose=1 flr=0 x=-256 y=2874 z=-1800 rot=440 ai=0x0000 snd=0x0400 | 44 04 26 03 01 00 00 ff 3a 0b f8 f8 b8 01 00 00 00 04 00 00
+0x002278  Sce_em_set        slot=38 type=0x03 pose=1 flr=0 x=-256 y=2774 z=-1800 rot=2040 ai=0x0000 snd=0x0400 | 44 05 26 03 01 00 00 ff d6 0a f8 f8 f8 07 00 00 00 04 00 00
+0x00228C  Sce_em_set        slot=38 type=0x04 pose=1 flr=0 x=-256 y=1374 z=-1800 rot=1340 ai=0x0000 snd=0x0400 | 44 06 26 04 01 00 00 ff 5e 05 f8 f8 3c 05 00 00 00 04 00 00
+0x0022A0  Endif             | 08 00
+0x0022A2  Ifel_ck           skip=64 | 06 00 40 00
+0x0022A6  Ck                bank=3 bit=0x84 val=1 | 21 03 84 01
+0x0022AA  Obj_model_set     id=2 | 2d 02 00 00 02 00 08 00 10 00 f4 0b 3e f5 e8 f9 50 00 56 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0022CC  Sce_em_set        slot=66 type=0x40 pose=1 flr=0 x=-256 y=-30000 z=0 rot=-30000 ai=0x0000 snd=0x9bf8 | 44 00 42 40 01 00 00 ff d0 8a 00 00 d0 8a 00 00 f8 9b 00 00
+0x0022E0  Evt_exec          ev=0xff a=0x18 b=0x03 | 04 ff 18 03
+0x0022E4  Endif             | 08 00
+0x0022E6  Ifel_ck           skip=28 | 06 00 1c 00
+0x0022EA  Ck                bank=3 bit=0x81 val=0 | 21 03 81 00
+0x0022EE  Sce_bgm_control   00 00 01 78 33 | 54 00 00 01 78 33
+0x0022F4  Ifel_ck           skip=12 | 06 00 0c 00
+0x0022F8  Ck                bank=3 bit=0x80 val=1 | 21 03 80 01
+0x0022FC  Sce_bgm_control   00 01 00 00 00 | 54 00 01 00 00 00
+0x002302  Endif             | 08 00
+0x002304  Endif             | 08 00
+0x002306  Ifel_ck           skip=36 | 06 00 24 00
+0x00230A  Ck                bank=3 bit=0x85 val=0 | 21 03 85 00
+0x00230E  Aot_set           aot=2 type=0x01 flr=177 x=1 z=100 w=1300 h=1850 d=0866 0dde f830 | 2c 02 01 b1 01 00 64 00 14 05 3a 07 66 08 de 0d 30 f8 08 07 10 f5 07 00 ff ff 00 00
+0x00232A  Else_ck           skip=76 | 07 00 4c 00
+0x00232E  Ifel_ck           skip=66 | 06 00 42 00
+0x002332  Ck                bank=3 bit=0x81 val=0 | 21 03 81 00
+0x002336  Aot_set           aot=2 type=0x03 flr=177 x=1 z=100 w=1300 h=1850 d=0866 0dde f830 | 2c 02 03 b1 01 00 64 00 14 05 3a 07 66 08 de 0d 30 f8 08 07 10 f5 ff 00 18 06 00 00
+0x002352  Door_aot_set      aot=3 flr=49 x=0 z=0 w=0 h=0 nx=0 ny=1252 nz=-1800 ndir=-2529 stage=181 room=15 cut=0 | 3b 03 02 31 00 00 00 00 00 00 00 00 00 00 e4 04 f8 f8 1f f6 b5 0f 00 09 06 01 00 00 00 00 00 00
+0x002372  Endif             | 08 00
+0x002374  Nop               | 00
+0x002375  Nop               | 00
+0x002376  Ifel_ck           skip=120 | 06 00 78 00
+0x00237A  Ck                bank=3 bit=0xbb val=1 | 21 03 bb 01
+0x00237E  Obj_model_set     id=2 | 2d 02 00 00 02 00 08 00 10 00 6a 09 a3 f5 2e ff 40 00 40 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0x0023A0  Sce_em_set        slot=16 type=0x02 pose=1 flr=0 x=-2048 y=-4000 z=-1800 rot=6400 ai=0x0000 snd=0x0190 | 44 00 10 02 01 00 00 f8 60 f0 f8 f8 00 19 00 00 90 01 00 00
+0x0023B4  Sce_em_set        slot=16 type=0x02 pose=1 flr=0 x=-1791 y=-3200 z=-1800 rot=4000 ai=0x0000 snd=0x07d0 | 44 01 10 02 01 00 01 f9 80 f3 f8 f8 a0 0f 00 00 d0 07 00 00
+0x0023C8  Sce_em_set        slot=17 type=0x02 pose=1 flr=0 x=-1535 y=-800 z=-1800 rot=1600 ai=0x0000 snd=0x0bb8 | 44 02 11 02 01 00 01 fa e0 fc f8 f8 40 06 00 00 b8 0b 00 00
+0x0023DC  Sce_em_set        slot=17 type=0x02 pose=1 flr=0 x=-1279 y=850 z=-1800 rot=-2350 ai=0x0000 snd=0x0e10 | 44 03 11 02 01 00 01 fb 52 03 f8 f8 d2 f6 00 00 10 0e 00 00
+0x0023F0  Endif             | 08 00
+0x0023F2  Evt_end           | 01 00
+--- sub01 @0x23F4 (0x23F4..0x2414) ---
+0x0023F4  Ifel_ck           skip=26 | 06 00 1a 00
+0x0023F8  Ck                bank=3 bit=0x80 val=0 | 21 03 80 00
+0x0023FC  Ifel_ck           skip=16 | 06 00 10 00
+0x002400  Cmp               var=10 op=0 val=13 | 23 00 0a 00 0d 00
+0x002406  Evt_exec          ev=0xff a=0x18 b=0x02 | 04 ff 18 02
+0x00240A  Set               bank=3 bit=0x80 val=1 | 22 03 80 01
+0x00240E  Endif             | 08 00
+0x002410  Endif             | 08 00
+0x002412  Evt_end           | 01 00
+--- sub02 @0x2414 (0x2414..0x24CE) ---
+0x002414  Set               bank=2 bit=0x07 val=1 | 22 02 07 01
+0x002418  Set               bank=1 bit=0x1b val=1 | 22 01 1b 01
+0x00241C  Work_set          kind=1 idx=0 | 2e 01 00
+0x00241F  Nop               | 00
+0x002420  Member_set        member=0x00 val=-3011 | 34 00 3d f4
+0x002424  Member_set        member=0x02 val=4397 | 34 02 2d 11
+0x002428  Member_set        member=0x04 val=4546 | 34 04 c2 11
+0x00242C  Plc_dest          | 40 00 06 3f 00 00 00 00
+0x002434  Sleep             | 09 0a 14 00
+0x002438  Message_on        msg=0x00 p2=0x00 p3=0x00 | 2b 00 00 00
+0x00243C  Sleep             | 09 0a 64 00
+0x002440  Sce_bgm_control   00 01 00 00 00 | 54 00 01 00 00 00
+0x002446  Work_set          kind=1 idx=0 | 2e 01 00
+0x002449  Nop               | 00
+0x00244A  Plc_dest          | 40 00 05 20 3b f9 ad 06
+0x002452  Gosub             sub=4 | 18 04
+0x002454  Plc_dest          | 40 00 05 20 5c ff da 00
+0x00245C  Gosub             sub=4 | 18 04
+0x00245E  Plc_dest          | 40 00 05 20 92 02 2a f7
+0x002466  Gosub             sub=4 | 18 04
+0x002468  Cut_chg           cut=15 | 29 0f
+0x00246A  Cut_auto          | 3c 01
+0x00246C  Member_set        member=0x00 val=613 | 34 00 65 02
+0x002470  Member_set        member=0x02 val=-2123 | 34 02 b5 f7
+0x002474  Member_set        member=0x04 val=145 | 34 04 91 00
+0x002478  Sleep             | 09 0a 0a 00
+0x00247C  Plc_dest          | 40 00 08 20 7e ff 3c f8
+0x002484  Gosub             sub=4 | 18 04
+0x002486  Sleep             | 09 0a 14 00
+0x00248A  Message_on        msg=0x01 p2=0x00 p3=0x00 | 2b 01 00 00
+0x00248E  Plc_motion        | 3f 00 0f 00
+0x002492  Sleep             | 09 0a 19 00
+0x002496  Plc_motion        | 3f 00 0f 00
+0x00249A  Plc_flg           | 43 00 80 00
+0x00249E  Sleep             | 09 0a 19 00
+0x0024A2  Plc_motion        | 3f 00 14 00
+0x0024A6  Sleep             | 09 0a 19 00
+0x0024AA  Plc_motion        | 3f 00 14 00
+0x0024AE  Plc_flg           | 43 00 80 00
+0x0024B2  Sleep             | 09 0a 1a 00
+0x0024B6  Message_on        msg=0x02 p2=0x00 p3=0x00 | 2b 02 00 00
+0x0024BA  Sleep             | 09 0a 64 00
+0x0024BE  Set               bank=2 bit=0x07 val=0 | 22 02 07 00
+0x0024C2  Set               bank=1 bit=0x1b val=0 | 22 01 1b 00
+0x0024C6  Work_set          kind=1 idx=0 | 2e 01 00
+0x0024C9  Nop               | 00
+0x0024CA  Plc_ret           | 42
+0x0024CB  Nop               | 00
+0x0024CC  Evt_end           | 01 00
+--- sub03 @0x24CE (0x24CE..0x26E6) ---
+0x0024CE  Set               bank=3 bit=0x84 val=0 | 22 03 84 00
+0x0024D2  Set               bank=3 bit=0xbb val=1 | 22 03 bb 01
+0x0024D6  Set               bank=3 bit=0x6e val=1 | 22 03 6e 01
+0x0024DA  Sce_bgm_control   00 00 01 01 41 | 54 00 00 01 01 41
+0x0024E0  Sce_bgm_control   00 02 00 00 00 | 54 00 02 00 00 00
+0x0024E6  Cut_chg           cut=5 | 29 05
+0x0024E8  Work_set          kind=1 idx=0 | 2e 01 00
+0x0024EB  Nop               | 00
+0x0024EC  Plc_dest          | 40 00 06 3f 00 00 00 00
+0x0024F4  Plc_neck          | 41 01 2a 0a 00 00 47 f7 64 00
+0x0024FE  Sleep             | 09 0a 02 00
+0x002502  Message_on        msg=0x09 p2=0xff p3=0xff | 2b 09 ff ff
+0x002506  Evt_next          | 02
+0x002507  Nop               | 00
+0x002508  Set               bank=2 bit=0x07 val=1 | 22 02 07 01
+0x00250C  Set               bank=1 bit=0x1b val=1 | 22 01 1b 01
+0x002510  Cut_chg           cut=6 | 29 06
+0x002512  Work_set          kind=3 idx=2 | 2e 03 02
+0x002515  Nop               | 00
+0x002516  Speed_set         | 2f 00 ce ff
+0x00251A  For               | 0d 00 04 00 02 00
+0x002520  Add_speed         | 30
+0x002521  Evt_next          | 02
+0x002522  Next              | 0e 00
+0x002524  Speed_set         | 2f 00 f6 ff
+0x002528  Speed_set         | 2f 01 fe ff
+0x00252C  Speed_set         | 2f 02 0a 00
+0x002530  For               | 0d 00 04 00 02 00
+0x002536  Add_speed         | 30
+0x002537  Evt_next          | 02
+0x002538  Next              | 0e 00
+0x00253A  Speed_set         | 2f 00 00 00
+0x00253E  Speed_set         | 2f 01 fe ff
+0x002542  Speed_set         | 2f 02 32 00
+0x002546  For               | 0d 00 04 00 17 00
+0x00254C  Add_speed         | 30
+0x00254D  Evt_next          | 02
+0x00254E  Next              | 0e 00
+0x002550  Work_set          kind=2 idx=0 | 2e 02 00
+0x002553  Nop               | 00
+0x002554  Member_set        member=0x00 val=2602 | 34 00 2a 0a
+0x002558  Member_set        member=0x01 val=-1800 | 34 01 f8 f8
+0x00255C  Member_set        member=0x02 val=-2233 | 34 02 47 f7
+0x002560  Member_set        member=0x04 val=-2054 | 34 04 fa f7
+0x002564  Plc_dest          | 40 00 06 3f 00 00 00 00
+0x00256C  Plc_neck          | 41 01 e4 04 00 00 1f f6 64 00
+0x002576  Sleep             | 09 0a 02 00
+0x00257A  Plc_motion        | 3f 01 17 00
+0x00257E  Plc_flg           | 43 00 04 00
+0x002582  Sleep             | 09 0a 05 00
+0x002586  Message_on        msg=0x03 p2=0x00 p3=0x00 | 2b 03 00 00
+0x00258A  Work_set          kind=1 idx=0 | 2e 01 00
+0x00258D  Nop               | 00
+0x00258E  Plc_motion        | 3f 00 0f 00
+0x002592  Sleep             | 09 0a 32 00
+0x002596  Plc_motion        | 3f 00 0f 00
+0x00259A  Plc_flg           | 43 00 80 00
+0x00259E  Sleep             | 09 0a 33 00
+0x0025A2  Cut_chg           cut=7 | 29 07
+0x0025A4  Work_set          kind=1 idx=0 | 2e 01 00
+0x0025A7  Nop               | 00
+0x0025A8  Member_set        member=0x00 val=1252 | 34 00 e4 04
+0x0025AC  Member_set        member=0x02 val=-2529 | 34 02 1f f6
+0x0025B0  Member_set        member=0x04 val=5341 | 34 04 dd 14
+0x0025B4  Plc_dest          | 40 00 06 3f 00 00 00 00
+0x0025BC  Plc_neck          | 41 01 7b 02 f8 f8 08 f2 64 64
+0x0025C6  Work_set          kind=2 idx=0 | 2e 02 00
+0x0025C9  Nop               | 00
+0x0025CA  Plc_neck          | 41 00 00 00 00 00 00 00 64 00
+0x0025D4  Member_set        member=0x00 val=635 | 34 00 7b 02
+0x0025D8  Member_set        member=0x02 val=-3576 | 34 02 08 f2
+0x0025DC  Member_set        member=0x04 val=6157 | 34 04 0d 18
+0x0025E0  Plc_motion        | 3f 01 0b 00
+0x0025E4  Sleep             | 09 0a 3c 00
+0x0025E8  Message_on        msg=0x04 p2=0x00 p3=0x00 | 2b 04 00 00
+0x0025EC  Plc_neck          | 41 04 04 00 00 00 00 00 5e 5e
+0x0025F6  Sleep             | 09 0a 64 00
+0x0025FA  Plc_motion        | 3f 01 0b 00
+0x0025FE  Plc_flg           | 43 00 80 00
+0x002602  Sleep             | 09 0a 1e 00
+0x002606  Work_set          kind=1 idx=0 | 2e 01 00
+0x002609  Nop               | 00
+0x00260A  Plc_neck          | 41 01 7b 02 00 00 08 f2 64 00
+0x002614  Sleep             | 09 0a 02 00
+0x002618  Work_set          kind=2 idx=0 | 2e 02 00
+0x00261B  Nop               | 00
+0x00261C  Plc_dest          | 40 00 09 21 e4 04 1f f6
+0x002624  Gosub             sub=5 | 18 05
+0x002626  Plc_neck          | 41 01 e4 04 00 00 1f f6 64 00
+0x002630  Sleep             | 09 0a 02 00
+0x002634  Plc_motion        | 3f 01 17 00
+0x002638  Plc_flg           | 43 00 04 00
+0x00263C  Sleep             | 09 0a 14 00
+0x002640  Message_on        msg=0x05 p2=0x00 p3=0x00 | 2b 05 00 00
+0x002644  Work_set          kind=1 idx=0 | 2e 01 00
+0x002647  Nop               | 00
+0x002648  Plc_motion        | 3f 00 12 00
+0x00264C  Sleep             | 09 0a 19 00
+0x002650  Plc_motion        | 3f 00 12 00
+0x002654  Plc_flg           | 43 00 80 00
+0x002658  Sleep             | 09 0a 19 00
+0x00265C  Plc_motion        | 3f 00 13 00
+0x002660  Sleep             | 09 0a 19 00
+0x002664  Plc_motion        | 3f 00 13 00
+0x002668  Plc_flg           | 43 00 80 00
+0x00266C  Sleep             | 09 0a 1a 00
+0x002670  Message_on        msg=0x06 p2=0x00 p3=0x00 | 2b 06 00 00
+0x002674  Plc_motion        | 3f 00 0f 00
+0x002678  Sleep             | 09 0a 19 00
+0x00267C  Plc_motion        | 3f 00 0f 00
+0x002680  Plc_flg           | 43 00 80 00
+0x002684  Sleep             | 09 0a 19 00
+0x002688  Plc_motion        | 3f 00 10 00
+0x00268C  Sleep             | 09 0a 19 00
+0x002690  Plc_motion        | 3f 00 10 00
+0x002694  Plc_flg           | 43 00 80 00
+0x002698  Sleep             | 09 0a 19 00
+0x00269C  Plc_motion        | 3f 00 17 00
+0x0026A0  Sleep             | 09 0a 14 00
+0x0026A4  Work_set          kind=2 idx=0 | 2e 02 00
+0x0026A7  Nop               | 00
+0x0026A8  Plc_neck          | 41 00 00 00 00 00 00 00 64 00
+0x0026B2  Sleep             | 09 0a 02 00
+0x0026B6  Plc_neck          | 41 03 01 00 00 00 00 00 00 3c
+0x0026C0  Sleep             | 09 0a 1e 00
+0x0026C4  Plc_ret           | 42
+0x0026C5  Nop               | 00
+0x0026C6  Work_set          kind=1 idx=0 | 2e 01 00
+0x0026C9  Nop               | 00
+0x0026CA  Plc_neck          | 41 00 00 00 00 00 00 00 64 00
+0x0026D4  Sleep             | 09 0a 02 00
+0x0026D8  Plc_ret           | 42
+0x0026D9  Nop               | 00
+0x0026DA  Set               bank=2 bit=0x07 val=0 | 22 02 07 00
+0x0026DE  Set               bank=1 bit=0x1b val=0 | 22 01 1b 00
+0x0026E2  Cut_auto          | 3c 01
+0x0026E4  Evt_end           | 01 00
+--- sub04 @0x26E6 (0x26E6..0x26F4) ---
+0x0026E6  Do                | 11 00 08 00
+0x0026EA  Evt_next          | 02
+0x0026EB  Nop               | 00
+0x0026EC  Edwhile           | 12 04
+0x0026EE  Ck                bank=5 bit=0x20 val=0 | 21 05 20 00
+0x0026F2  Evt_end           | 01 00
+--- sub05 @0x26F4 (0x26F4..0x2702) ---
+0x0026F4  Do                | 11 00 08 00
+0x0026F8  Evt_next          | 02
+0x0026F9  Nop               | 00
+0x0026FA  Edwhile           | 12 04
+0x0026FC  Ck                bank=5 bit=0x21 val=0 | 21 05 21 00
+0x002700  Evt_end           | 01 00
+--- sub06 @0x2702 (0x2702..0x272C) ---
+0x002702  Message_on        msg=0x07 p2=0xff p3=0xff | 2b 07 ff ff
+0x002706  Evt_next          | 02
+0x002707  Nop               | 00
+0x002708  Message_on        msg=0x08 p2=0xff p3=0xff | 2b 08 ff ff
+0x00270C  Evt_next          | 02
+0x00270D  Nop               | 00
+0x00270E  Ifel_ck           skip=24 | 06 00 18 00
+0x002712  Ck                bank=12 bit=0x1f val=0 | 21 0c 1f 00
+0x002716  Set               bank=2 bit=0x07 val=1 | 22 02 07 01
+0x00271A  Sleep             | 09 0a 0a 00
+0x00271E  Set               bank=3 bit=0x81 val=1 | 22 03 81 01
+0x002722  Set               bank=3 bit=0x84 val=1 | 22 03 84 01
+0x002726  Aot_on            aot=3 | 47 03
+0x002728  Endif             | 08 00
+0x00272A  Evt_end           | 01 00
+--- sub07 @0x272C (0x272C..0x2740) ---
+0x00272C  Aot_reset         aot=3 | 46 03 00 00 00 00 00 00 00 00
+0x002736  Work_set          kind=3 idx=0 | 2e 03 00
+0x002739  Nop               | 00
+0x00273A  Member_set        member=0x00 val=-9836 | 34 00 94 d9
+0x00273E  Evt_end           | 01 00
+
+===== extra SCD @0x2740  (2 subs) =====
+--- extra00 @0x2744 (0x2744..0x2746) ---
+0x002744  Evt_end           | 01 00
+--- extra01 @0x2746 (0x2746..0x2748) ---
+0x002746  Evt_end           | 01 00

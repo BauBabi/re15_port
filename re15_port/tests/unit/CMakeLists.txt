@@ -2819,3 +2819,27 @@ target_compile_definitions(test_rig_root_fix PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_rig_root_fix COMMAND test_rig_root_fix)
 set_tests_properties(unit_rig_root_fix PROPERTIES TIMEOUT 120)
+
+# --- MESSSONDE (Nutzer-Report 2026-08-27): "die Flammen in ROOM1090 verschwinden nach dem
+#     Loeschen nicht". Misst ueber die echte SCD-VM, ob es im Port UEBERHAUPT einen Weg gibt,
+#     die sieben Typ-0x26-Feuer-Emitter (ROOM1090 sub00 @0x2214..0x228C, gegated von
+#     Ck(3,0x81,0) @0x21EE) und ihre ESP-Flammen (Id 0x10/0x08) zu beenden — Flag vor dem
+#     Boot, Flag zur Laufzeit, sub06-Event (Set(3,0x81,1) @0x271E), Neu-Boot.
+#     REINE DIAGNOSE, KEIN add_test (die ctest-Zahl bleibt unveraendert). ---
+add_executable(probe_1090_flame_out probe_1090_flame_out.c)
+target_link_libraries(probe_1090_flame_out PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_flame_out PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_flame_out PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Befund 2026-08-25 Punkt 1.2): nach dem Feuerloescher muss der
+#     Flammen-Effekt in ROOM1090 weg sein — Emitter UND Partikel. Der Loeschvorgang ist
+#     eine SELBST-TUER (ROOM1090.RDT @0x2352); jedes Raumladen wischt im Original den
+#     Effekt-Pool (FUN_80019354, einziger Aufrufer 0x8003996C). ---
+add_executable(test_1090_flame_out_pin test_1090_flame_out_pin.c)
+target_link_libraries(test_1090_flame_out_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_flame_out_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_flame_out_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_flame_out_pin COMMAND test_1090_flame_out_pin)
+set_tests_properties(unit_1090_flame_out_pin PROPERTIES TIMEOUT 60)

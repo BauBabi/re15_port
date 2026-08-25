@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """RE1.5-SCD-Disassembler (minimal).
+
+ACHTUNG Namen: die Tabelle unten traegt ueberwiegend RE2-Labels. RE1.5 weicht bei
+0x50/0x51/0x53/0x54/0x56/0x58 ab — dort steht der RE1.5-Name mit "(RE15)", abgeleitet
+aus den Handler-Registrierungen in re15_port/engine/src/scd_vm.c:290-365.
 Laengen aus re15_port/engine/src/scd_vm.c s_opcode_sizes[] (dort je Eintrag
 gegen den Handler-PC-Advance auditiert).
 RDT: main_scd_start = u32 @0x40, sub_scd_start = u32 @0x44 (rdt_common.c:238-239).
@@ -32,9 +36,9 @@ NAMES={0x00:'Nop',0x01:'Evt_end',0x02:'Evt_next',0x03:'Evt_chain',0x04:'Evt_exec
  0x3F:'Plc_motion',0x40:'Plc_dest',0x41:'Plc_neck',0x42:'Plc_ret',0x43:'Plc_flg',
  0x44:'Sce_em_set',0x45:'Col_chg_set',0x46:'Aot_reset',0x47:'Aot_on',0x48:'Super_set',
  0x49:'Super_reset',0x4A:'Plc_gun',0x4B:'Cut_replace',0x4C:'Sce_espr_kill',0x4D:'Door_model_set',
- 0x4E:'Item_aot_set',0x4F:'Sce_key_ck',0x50:'Sce_trg_ck',0x51:'Sce_bgm_control',
- 0x52:'Sce_espr_control',0x53:'Sce_fade_set',0x54:'Sce_espr3d_on',0x55:'Member_calc',
- 0x56:'Mizu_div_set',0x57:'Keep_Item_ck',0x58:'Xa_on',0x59:'Weapon_chg',0x5A:'Member_calc2',
+ 0x4E:'Item_aot_set',0x4F:'Sce_key_ck',0x50:'Item_aot_set(RE15)',0x51:'Sce_key_ck(RE15)',
+ 0x52:'Sce_espr_control',0x53:'Work_set_indirekt(RE15)',0x54:'Sce_bgm_control(RE15)',0x55:'Member_calc',
+ 0x56:'Fade_config(RE15)',0x57:'Keep_Item_ck',0x58:'Flag_ck2(RE15)',0x59:'Weapon_chg',0x5A:'Member_calc2',
  0x5B:'Item_lost',0x5C:'Sce_scr_move',0x5D:'Sce_item_get',0x5E:'Sce_line_start'}
 
 def dis(path, which='sub', idx=None, out=sys.stdout):

@@ -661,3 +661,188 @@ python $D table 0x800a74c8 143                   # SCD-Opcode-Dispatch (0x44 = S
 `re2_disasm.py` beherrscht `lwl/lwr/swl/swr` (op 0x22/0x26/0x2a/0x2e) noch nicht — die tauchen in
 `0x801025EC` und `0x80103B74` als `.word …(op22)` auf; es sind die 8-Byte-Kopien der Clip-/
 Schadenstabellen von `0x8010000C` / `0x80100014` / `0x801000A8` auf den Stack.
+
+---
+
+## Verifikation (unabhaengig nachdisassembliert)
+
+Datum: 2026-08-25. Alle Adressen mit einem eigenen Mini-Decoder (importiert `dis_one()` aus
+`.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`) direkt aus
+`info/re2leon/COMMON/BIN/EMZ0.BIN` (RAW @`0x80100000`, 0xCF4C Bytes) und
+`info/re2leon/PSX.EXE` (`t_addr`=`0x80010000`, text @Datei `0x800`) nachdisassembliert.
+Gesamturteil: **TEILWEISE** — Ergebnis (1) traegt vollstaendig, Ergebnis (2) traegt im Kern
+(Verankerung + Stoehnen), aber die zentrale **Negativ**-Behauptung ("kein Pfad zum Greifen")
+ist **widerlegt**.
+
+### A. BESTAETIGT (byte-genau nachgeprueft)
+
+* **Tabellen-Layout 14/16/16/3/3 = 52.** `8010116c: lw v0,-14252(at)` mit `lui at,0x8011`
+  -> `0x8010C854`; `801011bc: -14196` -> `0x8010C88C`; `801011e4: -14132` -> `0x8010C8CC`;
+  `80101240: -14068` -> `0x8010C90C`; `80101268: -14056` -> `0x8010C918`. Tab1 alterniert
+  exakt 14x `8010118c/80101210`, ab Wort 14 beginnt Tab2. Ab `0x8010C924` (Wort 52) steht
+  Nicht-Code (`803200be 80400096 ...`).
+* **13 Stubs / 23 echte Funktionen.** Die 38 Tab2..Tab5-Eintraege ergeben 36 eindeutige
+  Adressen (`0x801025e4`/`0x801025ec` doppelt); genau 13 davon beginnen mit `03e00008 jr ra`:
+  `801025e4, 80103170, 80103178, 80103180, 80103778, 8010394c, 80103b6c, 80103e40, 80104174,
+  80104394, 80104920, 80104d6c, 80104e4c`. Rest = 23. Insbesondere sind die Phase-A-Eintraege
+  von Substate 7 (`0x80103778`) und 8 (`0x80103b6c`) tatsaechlich Stubs.
+* **Uebergeordnete Ebene (vom Dossier nicht erwaehnt, stuetzt es aber):**
+  `801004e0: lw v0,-14288(at)` -> Tabelle `0x8010C830[9]`, Index = entity`+0x4`:
+  `[0]=8010065c INIT, [1]=8010114c ACTIVE, [2]=80104f40, [3]=80108250, [4]=80065c88 (EXE),
+  [7]=8010a440, [8]=80109cfc`. `0x8010C854` schliesst luekenlos daran an.
+* **Substate 7 = `0x80103780`**: 5-Fall-Sprungtabelle `0x80100094`
+  (`801037bc: lw v0,148(at)`) = `801037cc, 8010381c, 80103838, 801038d8, 80103900`.
+  Clip 23 (`801037dc`) bzw. 22 (`801037e4`) je `+0x21A&4`; Clip `0x000F0008|((rand&0xf)<<8)`
+  (`80103840-60`) bzw. `...0009` (`8010386c-80`); `se_play`-Args 12/10/11 an
+  `801038ac/801038c0/801038c4` (**nicht** `801038a8/b0/c4` wie zitiert — dort stehen
+  `j` bzw. `jal`); Cooldown `addiu v0,zero,150 / sb v0,569(s0)` `801038d0/d4`. Der Cooldown
+  `+0x239` wird pro Frame im Entity-Treiber dekrementiert (`8010045c-8010046c`).
+* **`0x80103824` Verankerung.** Fall 1 der Sub-Tabelle ist `0x8010381c`, und der Fall besteht
+  NUR aus `lhu +0x10E / andi 0x4000 / bne -> Epilog` bzw. `+0x6:=2`. Bei gesetztem Bit bleibt
+  `+0x6` also tatsaechlich **fuer immer 1** — fuer Substate 7 exakt wie behauptet.
+* **Substate 8 = `0x80103B74`**: 9-Fall-Tabelle `0x801000B4` (`80103bd8: lw v0,180(at)`)
+  = `80103be8, 80103c18, 80103cb0, 80103cd8, 80103d60, 80103d90, 80103db4, 80103dd8, 80103e20`.
+  `0x80103B98-BB4` sind `lwl/lwr/swl/swr` (op 0x22/0x26/0x2a/0x2e) — die 8-Byte-Kopie von
+  `0x801000A8` (`12 13 14 12 13 14 12 13`) auf `sp+0x10`. `80103c48: jal 0x80016200` mit
+  `a1=0`, `a2=1` — und `FUN_80016200` subtrahiert bei `param_2==0` tatsaechlich von `+0x38/+0x40`.
+  (Nebenbedingung, im Dossier nicht genannt: die Verankerung laeuft nur bei `+0x14E == 0`,
+  `80103c30/38: lbu a0,334(s1) / bne a0,zero,0x80103c50`.)
+* **Keine Fortbewegung in 7/8.** Vollstaendiger `jal`-Scan beider Adressbereiche: nur
+  `80015fe8 (rand), 8002959c (anim), 8005bd6c (se), 80016200 (anchor), 80015558 (turn),
+  8001bf10 (fx)`. `0x800152C8` (= `+0x38/+0x40 += rot(+0x144)`) und `0x80015E7C`
+  (= Root-Delta nach `+0x144`) kommen nicht vor; `FUN_80029614` (via `8002959c`) schreibt
+  weder `+0x38` noch `+0x40`, sondern nur die Bone-Matrizen und `+0x14D`.
+* **`jal 0x800401d4` genau 1x.** Exhaustiver Scan `0x80100000..0x8010CF4C`: einziger Treffer
+  `801028f8`. `FUN_800401d4 @0x80040248: lhu v0,342(a2)` mit `a2=0x800CFBF8` -> `0x800CFD4E`.
+* **Grab-Tabellen byte-genau.** Rohbytes: `0x8010000C: 0b 0b 0e 0e 0b 0b 0e 0e`;
+  `0x80100014: 10 14 01 05 10 1e 01 0a`; `0x801000A8: 12 13 14 12 13 14 12 13`.
+  Index `2*s5` (`80102888: sll v1,s5,1`), `s5 = +0x10E&1 (+2 falls Typ 0x17/0x11)`
+  (`8010266c-90`), Trigger-Frame `lbu 0(s0)` vs `+0x14D`, Schaden `lbu 1(s0)` (`801028f4`).
+  Sprungtabelle des Grabs `0x8010001C` mit 10 Eintraegen (`801026b0: lw v0,28(at)`) bestaetigt.
+  Spieler-Bindung `80102710: sw s1,436(s3)`, `80102728: sw v0,4(s3)`,
+  `80102760: sb v0,467(s3)` mit `s3 = 0x800CFBF8` (`80102664-68`) bestaetigt.
+* **Kegeltest `0x80015758`** exakt wie zitiert (Dossier-Tippfehler: `8005779c` -> `8001579c`);
+  Rueckgabe 0 = innerhalb +/-tol, `tol=256/4096 = 22,5 Grad`.
+* **Sce_em_set.** `80057170-78` legt den SCD-pc in `0x800D5BE8` ab; `80057344/4c/54` liest
+  `pc[4..5]` und schreibt `sh v0,270(s0)`; `800576e4: addiu v1,v1,22`. Dispatch-Tabelle
+  `0x800A74C8` (`80053f84: lw v0,29896(at)`), Eintrag `0x800A75D8 = 0x8005714C` -> Opcode
+  **0x44**. Tabelle hat 0x8F Eintraege (0x00..0x8E), ab `0x8F` Daten.
+* **Spawn-Varianten.** `801009e8` (Var 2 -> `0x0701`), `80100a0c` (Var 4), `80100a2c/34/38/3c/40`
+  (Var 5: `0x0701`, `+0x10E:=16386`, `+0x156:=-1`), `80100a80/88/8c/90/94` (Var 7: `16388`, HP=-1),
+  `80100ad4/d8/dc` (Var 8: Clip 18, `+0x4:=2049=0x0801`). Alles exakt.
+* **Distanz `+0x1F0`.** `800265a4-d8` (dx=`+0x38`, dz=`+0x40`, `jal 0x8008d2f4`),
+  `800265e0: sw v0,496(s0)`. Exakt.
+* **RDT-Bytes.** `ROOM1130.RDT@0x001212` und `ROOM1190.RDT@0x000dae` / `@0x000c5e` stimmen
+  Byte fuer Byte mit den zitierten 22 Bytes ueberein (`0x4008`, `0x4048`, `0x4002`).
+* **STAGE1..7.BIN (RE2): 0 Zugriffe auf `+0x10E`** — eigener Immediate-Scan
+  (op 0x20/21/23/24/25/28/29/2b, imm 270/271) bestaetigt 0 in allen sieben; EMZ0 hat 81.
+* **`EMZ0.BIN` = `EMOVL10_S0.BIN` = `EMZ0_d1.BIN`**, sha1 `2d8885fc05e5729d9beb9e8bf8be9c2a3c32a891`,
+  je 53068 Bytes. (`EMOVL10_S1.BIN` ist eine ANDERE Datei, sha1 `71d0db3c...`.)
+
+### B. WIDERLEGT
+
+**B1 — `Sce_em_set` (0x44) ist NICHT der einzige Schreiber von `+0x10E` ausserhalb des Overlays.**
+Zwei weitere Schreiber in `PSX.EXE`, beide ueber die SCD-Opcode-Tabelle erreichbar:
+
+* **SCD-Opcode `0x8E` @`0x80057714`** (Tabelleneintrag `0x800A7700`, Index
+  `(0x800A7700-0x800A74C8)/4 = 0x8E`) — ein Klon von `Sce_em_set`, Satzlaenge **24** Byte
+  (`80057d78: addiu v1,v1,24`), schreibt dieselben `pc[4..5]`:
+  `800579d8: lw v1,23528(v1) / 800579e0: lhu v0,4(v1) / 800579e8: sh v0,270(s0)`.
+  (In den 250 RE2-RDTs findet ein Scan keinen `0x8E`-Satz mit `0x4xxx` — der Pfad ist
+  vorhanden, aber ungenutzt. Die Behauptung "der EINZIGE Schreiber" bleibt trotzdem falsch.)
+* **SCD-Opcode `0x42` @`0x80056F9C`** (`0x800A75D0`) — `lw a1,340(a0)` holt die Entity, dann
+  `80056fb8: lhu v0,270(a1) / 80056fc0: andi v0,v0,0xfff / 80056fc4: sh v0,270(a1)` und
+  `80056fc8: lhu v0,270(a1) / 80056fd0: andi v0,v0,0xafff / 80056fd4: sh v0,270(a1)` —
+  `0xafff` **loescht Bit 0x4000**. Zusaetzlich `80056fb4: sw v1(=1),4(a1)` -> Zustand ACTIVE,
+  Substate 0. Opcode 0x42 ist also der **Ent**anker-Befehl.
+* Im Overlay selbst wird das Bit ebenfalls geloescht: `80104f0c: andi v1,v1,0xbfff /
+  80104f10: sh v1,270(s0)` (Substate-15-Phase-B `0x80104E54`, das direkt danach
+  `80104f24: jal 0x800152c8` = Fortbewegung aufruft).
+
+**B2 — Substate 3 wird an ACHT Stellen gesetzt, nicht an sechs.**
+Exhaustiver Scan aller `sw rt,4(rs)` mit vorangehendem `addiu rt,zero,0x0301`:
+`80101958, 8010199c, 80102178, 801021bc, 801046d8, 8010471c` (die sechs des Dossiers)
+**plus `80105a10` und `80105a4c`**. Letztere liegen in `0x80105438` — und das ist kein
+Fortbewegungs-Substate, sondern ein **Schadens-Reaktions**-Handler.
+
+**B3 — Der ortsgebundene Zweig HAT einen Pfad zum Greifen: ueber den Schadenszustand.**
+Der `0x4000`-Test existiert im gesamten Overlay an genau drei Stellen (`andi ...,0x4000`-Scan):
+`80100514` (Treiber, setzt nur `+0x1C0|=2`), `80103824` (Sub 7), `80103c9c` (Sub 8).
+**In keinem Schadens-Handler.** Der Schadenszustand (`+0x4 = 2` -> `0x80104F40`) dispatcht ueber
+eine 2-D-Tabelle:
+
+```
+801053e0: lbu v1,5(a0)              ; Substate
+801053e4: lui  a2,0x8011
+801053e8: addiu a2,a2,-14016        ; = 0x8010C940
+801053ec: sll  v0,v1,3
+801053f0: addu v0,v0,v1             ; v0 = 9*Substate
+801053f4: sll  v0,v0,2
+801053f8: lbu  v1,466(a0)           ; +0x1D2 (Trefferart)
+801053fc: addu v0,v0,a2
+80105400: sll  v1,v1,2
+80105404: addu v1,v1,v0
+80105408: lw   v0,0(v1)
+80105410: jalr v0
+```
+
+-> `handler = *(0x8010C940 + 36*substate + 4*(+0x1D2))`. Damit:
+
+* **Substate 7** (Zeile `0x8010CA3C`): `80107438, 801066fc, 0, 80107438, 80105bc0, 0,
+  80107438, 80105438, 0` — bei `+0x1D2 == 7` also **`0x80105438`**, die Funktion mit den
+  Grab-Sprungstellen `80105a10`/`80105a4c`.
+* **Substate 8** (Zeile `0x8010CA60`): `80107438, 801066fc, 0, 80107438, 80105bc0, 0,
+  80107438, 80105bc0, 0`.
+
+Und alle diese Handler schreiben `+0x4` mit einem **neuen Substate**:
+`801060f8: sw 0x0201` (in `0x80105bc0`), `8010784c: sw 0x0201` und `801077e4: sw 0x7`
+(in `0x80107438`), `80107408/80107418: sw 0x0101/0x0201` (`0x8010703c`),
+`801081c0/80108228: sw 0x0201/0x0b01` (`0x80107ef0`), sowie in `0x80105438`
+`80105a10/80105a4c: sw 0x0301` (GRAB), `80105ad4: 0x0b01`, `80105b10: 0x0c01`,
+`80105b2c: 0x0201`, `80105b40/80105b50: 0x0101`.
+Ein beschossener verankerter Zombie landet also in Substate 1/2/11/12 — und Substate 1/2/12
+tragen die vom Dossier selbst dokumentierten Greif-Gates. Die Aussage "sie koennen ihren
+Zustand gar nicht wechseln, sobald `+0x10E & 0x4000` gesetzt ist" gilt **nur innerhalb des
+ACTIVE-Automaten**. Nur die Varianten 5 und 7 (HP = -1) sind davon ausgenommen — ROOM1130
+(`0x4008`) und ROOM1190 (`0x4048`) sind Variante 8 mit **normalen HP**.
+Zusatz: `0x80105438` enthaelt ein **drittes/viertes Greif-Gate** — `80105980: sltiu v0,s3,0x514`
+(1300), Kegel `80105a00: jal 0x80015758` mit `a3 = 288` (**nicht 256**, also +/-25,3 Grad) und
+`80105a38` mit `a2 = yaw-256`. Auch das fehlt im Dossier.
+
+**B4 — "Sub 8 dreht sich mit 16/4096 pro Frame zum Spieler" gilt im verankerten Zustand NICHT.**
+`80103dec: jal 0x80015558 / 80103df0: addiu a3,zero,16` liegt in Sub-Substate **7**
+(`0x801000B4[7] = 0x80103DD8`), erreicht nur ueber Sub-Substate 6 (`0x80103DB4`, setzt
+`+0x6:=7` an `80103dbc`). Ein Scan aller `sb rt,6(rs)` im Bereich `0x80103B74..0x80103E40`
+findet die Werte `1, 3, 1, 4, 5, 7, 0` und `+0x6 += ret` — **niemals 6**. Der verankerte
+Einstieg ist `+0x4 = 0x0801` -> `+0x6 = 0` -> Fall 0 setzt `+0x6 = 1`; danach haelt der
+`0x4000`-Test bei `80103c9c`. Das im Fazit versprochene "Anschauen" ist damit **nicht belegt**.
+
+**B5 — "bleibt fuer immer bei `+0x6=1`" ist fuer Substate 8 ungenau.**
+Fall 1 (`0x80103C18`) rechnet `80103c2c-3c: lbu v1,6(s1) / addu v1,v1,v0 / sb v1,6(s1)` mit
+`v0` = Rueckgabe von `0x8002959c` (`FUN_80029614` liefert `1` am Clip-Ende). Fall 2
+(`0x80103CB0`) setzt `+0x6` wieder auf 1 und den Clip auf `Tab+0x300`. Der verankerte Zombie
+zykelt also **1 <-> 2**, er steht nicht auf 1 fest. (Fuer Substate 7 stimmt die Aussage.)
+
+**B6 — "ROOM1130 5x `0x4008`" widerspricht der eigenen Beleglage.**
+Das Dossier listet in seinem eigenen Adress-Eintrag **acht** Offsets
+(`0x001212, 0x001228, 0x00123e, 0x00139a, 0x0013b0, 0x0013c6, 0x0013dc, 0x0013f2`); ein
+unabhaengiger Scan aller 250 RDTs findet **neun** `0x44`-Saetze mit `0x4008` in ROOM1130.
+Die Prosa ("fuenf verankerten Zombies") ist durch nichts gedeckt.
+
+### C. UNBELEGT / ZU WEIT INTERPRETIERT (nicht widerlegt, aber nicht bewiesen)
+
+* **`0x801055E4` = "kein Koerperteil-/Kopf-Schaden, Zerstueckelung wird uebersprungen".**
+  Die Instruktionen stimmen (`801055dc lhu +0x10E / 801055e4 andi 0x40 / 801055e8 bne
+  -> 0x80105624`), aber uebersprungen wird nachweislich nur der **Nachlade-Zweig** des
+  Trefferzaehlers: `801055f0 bgtz` (Zaehler noch > 0?), `801055fc/80105604 lh +0x156 / slti 81`
+  (HP >= 81?), `80105610-20 rand&0xf + 16 -> +0x223`. Der Zaehler-Abzug `sb a0,547(s1)` steht
+  im **Delay-Slot** von `801055e8` und laeuft immer. Das Etikett "Zerstueckelung" ist eine
+  Deutung ohne Beleg.
+* **Greif-Gate unvollstaendig spezifiziert.** Gate 1 verlangt zusaetzlich `+0x21A & 0x20 == 0`
+  (`80101928-34`); Gate 2 verlangt zusaetzlich `+0x6 == 3` (`8010462c`) und Spielertyp
+  `!= 0x0F` (`8010468c-9c: lbu 0x800CFC00 / xori 0xf`). Wer daraus eine Nachruestung baut,
+  bekommt sonst ein zu grosszuegiges Gate.
+* **"Tab1 hat 14 Eintraege"** ist eine Layout-Ableitung, keine Code-Schranke: `8010115c:
+  andi v0,v0,0x3f` hat **keinen** Bound-Check, Index 14..51 laeuft in Tab2..Tab5 hinein.
+  Fuer alle in RE2-RDTs belegten `+0x10E`-Werte (`&0x3f` = 2/4/8/10) ist das folgenlos.
+
