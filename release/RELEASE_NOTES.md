@@ -1,3 +1,45 @@
+# RE1.5 Port — v0.3.23 (Early Preview)
+
+## ROOM1010: die Zombies kriechen jetzt — in beiden KI-Modi
+
+Gemeldet: *"re 2 ai room 1010 die Zombies kriechen im original"*.
+
+Stimmt, und zwar laut Raumdaten: die beiden Zombies dort sind von Geburt an als Kriecher
+eingetragen. Der Port hat diesen Eintrag in beiden Modi verfehlt, mit unterschiedlichen
+Folgen. Im RE1.5-Modus fehlte die zugehoerige Verhaltens-Tabelle komplett — die Kriecher
+waren ueber Minuten ein reines Standbild, ohne Animation und ohne Gefahr. Im RE2-Modus
+wurden sie als "liegend" eingestuft; sobald der Spieler naeher kam, standen sie auf und
+griffen aufrecht an.
+
+Jetzt kriechen sie: im RE2-Modus vom Spawn weg auf den Spieler zu, im RE1.5-Modus warten
+sie und setzen sich in Bewegung, sobald der Spieler vor ihnen ist. Steht man seitlich
+neben ihnen, bleiben sie liegen — das ist der Blickwinkel des Originals, kein Fehler.
+Derselbe Eintrag betrifft noch vier weitere Raumpaare, die damit ebenfalls stimmen.
+
+## Aufgenommene Gegenstaende verschwinden endlich aus der Welt
+
+Gemeldet: *"room 1020 u. a. Wenn ich das item aufgenommen habe muss das model fuer das
+item verschwinden."*
+
+Der Port hat beim Aufnehmen nur die unsichtbare Aufsammel-Zone entfernt — das sichtbare
+Modell blieb liegen und verschwand erst, wenn man den Raum neu betrat. Der Grund: der
+Verweis auf das Modell wurde beim Einlesen des Raums zwar gelesen, aber weggeworfen, so
+dass die Aufnahme gar nicht wusste, welches Objekt sie ausblenden soll. Das Original
+loescht es im selben Moment, in dem man die Aufnahme bestaetigt.
+
+Beim Nachmessen kam ein zweiter, aelterer Fehler zum Vorschein: selbst beim Wiederbetreten
+blieb das Modell in Raeumen stehen, in denen die Aufsammel-Zone VOR dem Modell eingerichtet
+wird — ROOM1020 ist genau so ein Raum. Auch das ist behoben. Ein aufgenommener Gegenstand
+ist jetzt sofort weg und bleibt weg.
+
+## Noch offen aus dieser Runde
+
+Drei Punkte sind untersucht, aber bewusst noch nicht umgebaut: der leicht schwebende
+Zombie im RE2-Modus (die Ursache liegt im gemeinsamen Skelett-Umbau und wirkt auf alle
+Gegner — die Korrektur ist inzwischen hergeleitet und nachgerechnet, der Einbau steht
+aus), das Entfernen der Flammen in ROOM1090 nach dem Loeschen, und Adas Folge-Verhalten
+nach der Cutscene. Zu allen dreien liegen die Untersuchungen vor.
+
 # RE1.5 Port — v0.3.22 (Early Preview)
 
 ## RE2-Modus: Leon gibt beim Gepacktwerden wieder einen Laut von sich
