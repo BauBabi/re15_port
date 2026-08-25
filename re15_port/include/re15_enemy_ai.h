@@ -387,4 +387,9 @@ void     re15_body_push_player(void);
  * This is the single entry game_step calls — the integration point Phase 8.6 wires. */
 void re15_enemy_ai_run_all(int combat_active);
 
+/* FUN_8002bd44 @0x8002be0c-4c — der Aktor-Durchgang des Objekt-Ticks: schiebt jeden aktiven
+ * Aktor aus den Obj_model_set-Kisten (`jal 0x8002cabc` mit a2 = 0). Muss NACH der
+ * Entitaeten-Schleife im selben Bild laufen (@0x8001ce04 -> @0x8001ce14). */
+void re15_actor_prop_pushout(void);
+
 #endif /* RE15_ENEMY_AI_H */

@@ -57,6 +57,11 @@ int  re15_collision_constrain_contact(const re15_rdt_t *rdt,
  * player-move pass (walls first, then objects). Reads g_scd.props directly. */
 void re15_collision_objects(int32_t *x, int32_t *z);
 
+/* Derselbe Push-Out fuer einen NICHT-Spieler-Aktor: FUN_8002bd44 @0x8002be0c-4c ruft
+ * FUN_8002cabc mit a2 = 0 fuer jeden aktiven Aktor auf, ohne Typ-Filter und ohne die
+ * Steh-Objekt-Ausnahme des Spieler-Pfades. */
+void re15_collision_objects_actor(int32_t *x, int32_t *z);
+
 /* FUN_8002cfd4 @0x8002cfd4 — die EINGRENZUNG des Spielers auf den (um sein halbes
  * Eigenmass geschrumpften) XZ-Kasten eines Objekts. Das ist der Mechanismus, der ihn
  * OBEN auf der Kiste haelt: statt der Ausschiebung laeuft er fuer DAS Objekt, auf dem

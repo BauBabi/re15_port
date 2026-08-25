@@ -207,43 +207,120 @@ int main(void)
     int32_t step = 75;   /* GEHTEMPO, byte-true: WALK = 0x4B pro Bild aus den
                           * Modus-Tabellen 0x80076cXX (FUN_80041BE4) — nicht geschaetzt. */
 
-    for (int32_t z = zmax + 3000; z > zmin - 3000; z -= step) {
-        pl->x = mid_x; pl->z = z; pl->hp = 100;
-        frame_step();
-        int at_once = 0;
+    /* ⛔ DER DURCHLAUF LAEUFT AN DER WAND, NICHT AUF DER MITTELLINIE (geaendert 2026-08-30).
+     * Bis hierher fuhr die Wache stur auf x = -19500 = der Mitte ZWISCHEN den Armreihen. Das
+     * war unter dem alten Tor (`|dx| < 11000`) gleichgueltig — es liess jeden Arm im ganzen
+     * Flur reagieren, und genau das hat der Nutzer gemeldet ("die Arme kommen raus, wenn man
+     * noch zu weit weg ist"). Mit RE2s Radius 1300 (\n0x80102f3c) ist die Querlage ploetzlich
+     * entscheidend, und die Mittellinie ist der EINE Pfad, auf dem beide Reihen ausserhalb
+     * liegen: GEMESSEN sind es von x = -19500 zu beiden Handpunkten je 1409 Einheiten
+     * (Reihen auf -25000 und -14000, Handversatz 2420 + 1671 = 4091). Ein Spieler laeuft
+     * nicht auf dieser Linie; die Spielfigur wird von der Kollision ohnehin an die Seite
+     * gedrueckt. Der Durchlauf laeuft deshalb ZWEIMAL: einmal an der Ost-, einmal an der
+     * Westwand, jeweils auf dem Pfad, den re15_collision_constrain wirklich zulaesst.
+     * Das ist keine abgesenkte Schranke, sondern eine schaerfere: die Wache verlangt jetzt
+     * ZUSAETZLICH, dass die GEGENUEBERLIEGENDE Reihe schweigt — die Zusage, die das alte Tor
+     * gar nicht machen konnte. */
+    /* Seite 0 laeuft die OST-Reihe (-14000) an, die GEGENREIHE ist dann die West-Reihe. */
+    int32_t far_row_x[2] = { -25000, -14000 };
+    int far_hit[RE15_ACTOR_MAX];
+    int32_t minhand[RE15_ACTOR_MAX]; for (int i=0;i<n;i++) minhand[i]=0x7fffffff;
+    int32_t minx_seen = 0x7fffffff, maxx_seen = -0x7fffffff;
+    int opposite_reacted = 0;
+
+    for (int side = 0; side < 2; side++) {
+        /* Arme zuruecksetzen, damit der zweite Durchlauf nicht den ersten erbt. */
         for (int i = 0; i < n; i++) {
             re15_actor_t *e = &g_actors[slots[i]];
-            int out = (e->sub_state_1 >= 1 && e->sub_state_1 <= 2)
-                   || (e->sub_state_1 >= 4 && e->sub_state_1 <= 5);   /* 4/5 = Halten/Abwerfen */
-            if (out) { at_once++; reacted[i] = 1; }
-            else if (reacted[i]) returned[i] = 1;
-            {   int32_t d = e->x - sx[i]; if (d < 0) d = -d;
-                int32_t q = e->z - sz2[i]; if (q < 0) q = -q;
-                int32_t far = (d > q) ? d : q;
-                if (far > moved) moved = far;      /* groesster Ausschlag ueber den Durchlauf */
-            }
+            e->x = sx[i]; e->z = sz2[i];
+            far_hit[i] = 0;
         }
-        if (at_once > max_at_once) max_at_once = at_once;
+        for (int32_t z = zmax + 3000; z > zmin - 3000; z -= step) {
+            int32_t px = mid_x;
+            /* An die Wand der gewaehlten Seite gehen — so weit, wie die Kollision laesst,
+             * hoechstens aber bis auf Koerperabstand an die Armreihe heran. Die Grenze ist
+             * KEINE geschaetzte Zahl: Spieler-Klemmradius 450 (@0x80073e9a) + Arm-Klemmradius
+             * 300 (Hitbox @0x80120922, vom Wurzel-Tick @0x8010c318 mit Maske 4 gefahren)
+             * = 750 — naeher koennen die beiden Zylinder einander nicht kommen.
+             * Ohne diese Schranke marschiert der Lauf nach Osten aus dem Raum heraus: auf den
+             * z-Zeilen ohne Wandzelle laesst re15_collision_constrain jeden Schritt zu
+             * (gemessen: px lief bis +51394). */
+            {
+                const int32_t row  = (side == 0) ? -14000 : -25000;
+                const int32_t goal = (side == 0) ? (row - 750) : (row + 750);
+                for (int k = 0; k < 200; k++) {
+                    if ((side == 0 && px >= goal) || (side == 1 && px <= goal)) break;
+                    int32_t nx = px + ((side == 0) ? 25 : -25), nz = z;
+                    re15_collision_constrain(&s_rdt, px, z, &nx, &nz);
+                    if (nx == px) break;                  /* Wand: hier ist Schluss */
+                    px = nx;
+                }
+            }
+            if (px < minx_seen) minx_seen = px;
+            if (px > maxx_seen) maxx_seen = px;
+            for (int i = 0; i < n; i++) {
+                re15_actor_t *e = &g_actors[slots[i]];
+                int hd = (int)(e->rot_y & 0x0fff);
+                int32_t hxp = sx[i]  + (int32_t)(((int32_t)re15_cos_q12(hd) * 4091) >> 12);
+                int32_t hzp = sz2[i] - (int32_t)(((int32_t)re15_sin_q12(hd) * 4091) >> 12);
+                int32_t ax = px - hxp, az = z - hzp;
+                int32_t d = (int32_t)re15_squareroot0((uint32_t)((int64_t)ax*ax + (int64_t)az*az));
+                if (d < minhand[i]) minhand[i] = d;
+            }
+            pl->x = px; pl->z = z; pl->hp = 100;
+            frame_step();
+            int at_once = 0;
+            for (int i = 0; i < n; i++) {
+                re15_actor_t *e = &g_actors[slots[i]];
+                int out = (e->sub_state_1 >= 1 && e->sub_state_1 <= 2)
+                       || (e->sub_state_1 >= 4 && e->sub_state_1 <= 5);
+                if (out) {
+                    at_once++; reacted[i] = 1;
+                    /* Reagiert ein Arm der GEGENUEBERLIEGENDEN Reihe? (je Arm einmal) */
+                    int32_t d0 = sx[i] - far_row_x[side]; if (d0 < 0) d0 = -d0;
+                    if (d0 < 600 && !far_hit[i]) { far_hit[i] = 1; opposite_reacted++; }
+                } else if (reacted[i]) returned[i] = 1;
+                {   int32_t d = e->x - sx[i]; if (d < 0) d = -d;
+                    int32_t q = e->z - sz2[i]; if (q < 0) q = -q;
+                    int32_t far = (d > q) ? d : q;
+                    if (far > moved) moved = far;
+                }
+            }
+            if (at_once > max_at_once) max_at_once = at_once;
+        }
     }
 
+    printf("  MESS: px-Spanne %ld..%ld\n", (long)minx_seen, (long)maxx_seen);
+    for (int i = 0; i < n; i++)
+        printf("  MESS: Arm %d bei (%ld,%ld) yaw=%u -> kleinster Abstand zur Hand %ld\n",
+               i, (long)sx[i], (long)sz2[i], (unsigned)g_actors[slots[i]].rot_y,
+               (long)minhand[i]);
     int n_reacted = 0, n_returned = 0;
     for (int i = 0; i < n; i++) { n_reacted += reacted[i]; n_returned += returned[i]; }
-    printf("  Durchlauf: %d von %d Armen haben reagiert, %d davon sind wieder zur Ruhe gekommen; "
-           "hoechstens %d gleichzeitig ausgefahren\n", n_reacted, n, n_returned, max_at_once);
+    printf("  Durchlauf (Ost- und Westwand): %d von %d Armen haben reagiert, %d davon sind "
+           "wieder zur Ruhe gekommen; hoechstens %d gleichzeitig ausgefahren; "
+           "Reaktionen der Gegenreihe: %d\n", n_reacted, n, n_returned, max_at_once,
+           opposite_reacted);
 
     /* (1) Es reagiert ueberhaupt etwas. */
     CHECK(n_reacted >= 6,
-          "die Arme reagieren beim Vorbeigehen (%d von %d) — vorher stand hier Clip 0 fuer immer",
-          n_reacted, n);
+          "die Arme reagieren beim Vorbeigehen an der Wand (%d von %d) — vorher stand hier "
+          "Clip 0 fuer immer", n_reacted, n);
     /* (2) Der eigentliche Nutzer-Punkt: NICHT alle auf einmal. */
     CHECK(max_at_once < n,
           "und sie fahren NICHT alle gleichzeitig aus (hoechstens %d von %d gleichzeitig) — "
-          "genau das war der Kritikpunkt am Original, das per Member_set(12,1) @0x001EDA alle "
+          "genau das war der Kritikpunkt am Original, das per Member_set(12,1) \n0x001EDA alle "
           "zehn auf einen Schlag schaltet", max_at_once, n);
     CHECK(max_at_once <= 4,
-          "es reagiert jeweils nur die unmittelbare Nachbarschaft (%d gleichzeitig; "
-          "REACH_Z 1700 = Tiefe des Original-Rechtecks @0x1EAE, Arm-Abstand 1200..1396)",
+          "es reagiert jeweils nur die unmittelbare Nachbarschaft (%d gleichzeitig)",
           max_at_once);
+    /* (2b) NEU und der Kern des Nutzer-Reports 2026-08-30: die Reihe auf der ANDEREN
+     *      Flurseite bleibt still. Unter dem alten `|dx| < 11000` war das unmoeglich. */
+    CHECK(opposite_reacted == 0,
+          "und die GEGENUEBERLIEGENDE Armreihe bleibt still (%d Reaktionen) — RE2s "
+          "verankerter Greifer misst EINEN Radius um sich (`sltiu s0,s0,0x514` \n0x80102f3c), "
+          "kein flurbreites Rechteck; das alte Tor liess mit `dx < 11000` beide Reihen "
+          "reagieren, egal wie weit der Spieler von ihrer Wand weg war", opposite_reacted);
     /* (3) Sie kommen wieder zur Ruhe. */
     CHECK(n_returned >= 4,
           "und sie ziehen sich wieder zurueck, wenn der Spieler weiter ist (%d von %d)",

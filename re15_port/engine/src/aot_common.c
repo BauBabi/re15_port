@@ -1456,6 +1456,7 @@ void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     s_prop_push_contact = 0;                       /* @0x8002bd94-a4 (jedes Frame) */
+
     const int pband = re15_collision_debug_band(); /* DAT_800acad6 */
     const int in_sub8 = re15_player_push_substate();
 

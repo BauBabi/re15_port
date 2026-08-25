@@ -2855,6 +2855,27 @@ target_include_directories(probe_1210_material PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_compile_definitions(probe_1210_material PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- PIN (Nutzer-Report 2026-08-22 + 2026-08-30 "schwarze Dreiecke ueber dem Feuer"):
+#     die ROOM1090-Feuer-Emitter loeschen im INIT ihr Part-Zeichen-Bit (@0x801165d0-e4)
+#     und werden deshalb nicht gezeichnet (@0x8001ecc4-c8). ---
+add_executable(test_1090_nodraw_pin test_1090_nodraw_pin.c)
+target_link_libraries(test_1090_nodraw_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_nodraw_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_nodraw_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_nodraw_pin COMMAND test_1090_nodraw_pin)
+set_tests_properties(unit_1090_nodraw_pin PROPERTIES TIMEOUT 60)
+
+# --- PIN (Nutzer-Report 2026-08-30 "Ada kann noch durch die Kiste laufen"):
+#     FUN_8002bd44 schiebt JEDEN aktiven Aktor aus den Objekten (@0x8002be0c-4c). ---
+add_executable(test_1090_npc_prop_push test_1090_npc_prop_push.c)
+target_link_libraries(test_1090_npc_prop_push PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_npc_prop_push PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_npc_prop_push PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_npc_prop_push COMMAND test_1090_npc_prop_push)
+set_tests_properties(unit_1090_npc_prop_push PROPERTIES TIMEOUT 60)
+
 # --- PIN (Nutzer-Report 2026-08-29): eine folgende NPC laeuft NICHT durch Waende.
 #     Wurzel-Klemme @0x8011cc58-68 (jal 0x8003b0a4, Maske 4, Radius aus +0x78). ---
 add_executable(test_npc_wall_clamp test_npc_wall_clamp.c)
@@ -2932,6 +2953,12 @@ target_include_directories(probe_ada_escort_anim PRIVATE ${CMAKE_SOURCE_DIR}/inc
 target_compile_definitions(probe_ada_escort_anim PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+add_executable(probe_ada_kiste probe_ada_kiste.c)
+target_link_libraries(probe_ada_kiste PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ada_kiste PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_ada_kiste PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_ada_counter probe_ada_counter.c)
 target_link_libraries(probe_ada_counter PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_ada_counter PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -2955,4 +2982,34 @@ add_executable(probe_1210_vak probe_1210_vak.c)
 target_link_libraries(probe_1210_vak PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_vak PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_vak PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1210_re2takt probe_1210_re2takt.c)
+target_link_libraries(probe_1210_re2takt PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_re2takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_re2takt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_ada_kiste_gegen probe_ada_kiste_gegen.c)
+target_link_libraries(probe_ada_kiste_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ada_kiste_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_ada_kiste_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PROBE (kein add_test): ROOM1090 BG13-Hintergrund byte-true dekodieren ---
+add_executable(probe_1090_bgdiff probe_1090_bgdiff.c)
+target_link_libraries(probe_1090_bgdiff PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_bgdiff PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_1210_vakgegen probe_1210_vakgegen.c)
+target_link_libraries(probe_1210_vakgegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_vakgegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_vakgegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENSONDE (adversariale Pruefung "schwarze-dreiecke", Linse vakuanz). KEIN add_test. ---
+add_executable(probe_1090_vakgegen probe_1090_vakgegen.c)
+target_link_libraries(probe_1090_vakgegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_vakgegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_vakgegen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

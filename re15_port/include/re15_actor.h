@@ -524,6 +524,21 @@ typedef struct {
     uint8_t  re2s_c23d;         /* +0x23D Root-Countdown (@0x80100104-114)                       */
     uint8_t  re2s_f106;         /* +0x106 Etagen-Index = -Y / 1800 (Root @0x80100144-70)         */
     uint8_t  re2s_seeded;       /* PORT-Feld: INIT-HP schon gezogen? (RE1.5-Spawns setzen hp)    */
+    /* ⛔ PART-ZEICHENMASKE (Bit 0 der Part-Flags, Part-Array entity+0x188, Stride 0xAC).
+     * Das Original entscheidet PRO KOERPERTEIL, ob er gezeichnet wird:
+     *   Binder setzt das Bit:   `ori v0,zero,0x1` @0x8001e74c / `sw v0,0(s2)` @0x8001e758
+     *   Zeichner prueft es:     `andi v0,v1,0x1` @0x8001ecc4 / `beq v0,zero,0x8001ee48`
+     *                           @0x8001ecc8  -> ohne Bit direkt in den Epilog, KEINE
+     *                           Mesh-Ausgabe
+     *   Typ 0x26 loescht es:    `lw a0,392(v0)` / `lw v0,0(a0)` / `addiu v1,zero,-2` /
+     *                           `and v0,v0,v1` / `sw v0,0(a0)` @0x801165d0-e4
+     * Der Port kennt kein Part-Array; er fuehrt die Maske als EIN Aktor-Flag. 0 = zeichnen
+     * (Vorgabe wie der Binder), 1 = nicht zeichnen. Schatten und Kollision bleiben davon
+     * unberuehrt — im Original haengen die an anderen Aufrufen (@0x80116740 / @0x80116368).
+     * (Nutzer-Report "schwarze Dreiecke ueber dem Feuer", zweimal gemeldet: die sieben
+     * ROOM1090-Feuer-Emitter sind unsichtbare Traeger fuer ihre Flammen-Effekte; ihr Mesh
+     * ist ein einziges Dreieck, und genau das hat der Port gezeichnet.) */
+    uint8_t  no_draw;
     uint8_t  re2s_baby_spawned; /* PORT-Feld (HERKUNFT, kein Original-Offset): dieser Typ-0x26-
                                  * Aktor wurde vom RE2-Adult-Spawner FUN_80105D38 erzeugt
                                  * (`jal 0x8001ad3c` / `addiu a0,zero,38` @0x80105DE4-E8) und ist

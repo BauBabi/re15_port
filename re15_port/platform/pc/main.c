@@ -7001,6 +7001,23 @@ re_title:;
                     memset(&lctx_npc, 0, sizeof(lctx_npc));
                 }
 
+                /* ⛔ PART-ZEICHENMASKE (Nutzer-Report "schwarze Dreiecke ueber dem Feuer",
+                 * zweimal gemeldet). Das Original entscheidet PRO KOERPERTEIL ueber Bit 0 der
+                 * Part-Flags (Part-Array entity+0x188), und der Zeichner steigt ohne dieses
+                 * Bit VOR jeder Mesh-Ausgabe aus:
+                 *     8001ecc4: andi v0,v1,0x1
+                 *     8001ecc8: beq  v0,zero,0x8001ee48     ; -> Epilog, kein Mesh
+                 * Der Binder setzt es normal auf 1 (`ori v0,zero,0x1` @0x8001e74c /
+                 * `sw v0,0(s2)` @0x8001e758); der Typ-0x26-INIT LOESCHT es
+                 * (`lw a0,392(v0)` / `and` mit -2 / `sw v0,0(a0)` @0x801165d0-e4).
+                 * Die sieben ROOM1090-Feuer-Emitter sind damit UNSICHTBARE Traeger fuer ihre
+                 * Flammen-Effekte. Ihr Mesh ist ein einziges Dreieck (EM26: 1 Bone, 3 Verts,
+                 * 1 Face) — und genau das hat der Port gezeichnet.
+                 * Die Maske sitzt hier, NACH Schatten und Lichtkontext: im Original haengen
+                 * Schatten (@0x80116740) und Kollision (@0x80116368) an eigenen Aufrufen und
+                 * bleiben unberuehrt. */
+                if (npc->no_draw) continue;
+
                 int npc_bones = npc_skel->bone_count;
                 /* Ohne Remap ist Mesh-Index == Bone-Index (emd_common.c:190), also darf die
                  * Schleife nie ueber die Mesh-Zahl hinaus. MIT Remap (WELLE-G-Hybrid) gilt das

@@ -1673,6 +1673,14 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
         re15_enemy_ai_run_all(g_scd.combat_active);
 
+    /* OBJEKT-AUSSCHIEBUNG DER AKTOREN — die zweite Haelfte von FUN_8002bd44 (@0x8002be0c-4c).
+     * Im Original steht sie im Objekt-Tick @0x8001ce14, also NACH der Entitaeten-Schleife
+     * @0x8001ce04 desselben Bildes. Da die Entitaeten im Port hier oben laufen (und nicht wie
+     * im Original vor dem Spieler-FSM), steht der Durchgang genau hinter ihnen — sonst waere
+     * er der Bewegung um ein Bild hinterher. Begruendung + Bytes: re15_actor_prop_pushout. */
+    if (c->rdt_ok)
+        re15_actor_prop_pushout();
+
     /* ⛔ RE2-TREFFERFILTER AUCH FUER GEGNER, DEREN KI-TICK AUSFAELLT.
      * Im Original steht der Vier-Gate-Filter in der Kandidatenschleife des Angriffs-Aufloesers
      * FUN_800470C0 (@0x80047124-30 / 38-40 / 48-50 / 58-64) und haengt an KEINEM Gegner-Tick.

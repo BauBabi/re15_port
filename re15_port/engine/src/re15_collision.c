@@ -869,6 +869,38 @@ void re15_collision_prop_contain(int prop_idx, int32_t *x, int32_t *z)
     prop_contain(prop_idx, x, z);
 }
 
+/* FUN_8002cabc mit a2 = 0 fuer EIN Objekt: der Aktor weicht, das Objekt bleibt stehen.
+ * Achsenwahl |dx*sumZ| gegen |dz*sumX| @0x8002cce8-d10, Schreiben @0x8002cd20-44 (X) bzw.
+ * @0x8002cd88-ac (Z). Eine Box mit lauter Null-Halbmassen ist nicht kollidierend (Heli/Rotor
+ * in ROOM1170 tragen genau das). */
+static void push_out_of(int i, int32_t *x, int32_t *z)
+{
+    int32_t bhx = (int32_t)(uint16_t)g_scd.props[i].box_hx;
+    int32_t bhy = (int32_t)(uint16_t)g_scd.props[i].box_hy;
+    int32_t bhz = (int32_t)(uint16_t)g_scd.props[i].box_hz;
+    if (bhx == 0 && bhy == 0 && bhz == 0) return;   /* non-collidable */
+
+    int32_t bx = (int32_t)g_scd.props[i].box_cx + g_scd.props[i].x;
+    int32_t bz = (int32_t)g_scd.props[i].box_cz + g_scd.props[i].z;
+    int32_t dx = bx - *x;
+    int32_t dz = bz - *z;
+    int32_t sumX = bhx + PR;
+    int32_t sumZ = bhz + PR;
+    int32_t adx = dx < 0 ? -dx : dx;
+    int32_t adz = dz < 0 ? -dz : dz;
+    if (adx > sumX) return;
+    if (adz > sumZ) return;
+
+    int64_t cz = (int64_t)dx * sumZ; if (cz < 0) cz = -cz;
+    int64_t cx = (int64_t)dz * sumX; if (cx < 0) cx = -cx;
+    if (cz <= cx) {
+        int32_t s = (dz >= 0) ? -sumZ : sumZ;
+        *z = bz + s;
+    } else {
+        *x = (dx < 0) ? bx + sumX : bx - sumX;
+    }
+}
+
 void re15_collision_objects(int32_t *x, int32_t *z)
 {
     /* FUN_8002bd44 @0x8002beec-0x8002bf0c: ist das gerade bearbeitete Objekt DAS Objekt, auf dem
@@ -886,30 +918,39 @@ void re15_collision_objects(int32_t *x, int32_t *z)
     for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++) {
         if (!g_scd.props[i].active) continue;
         if (i == stand) { prop_contain(i, x, z); continue; }     /* @0x8002bef8/@0x8002bf0c */
-        int32_t bhx = (int32_t)(uint16_t)g_scd.props[i].box_hx;
-        int32_t bhy = (int32_t)(uint16_t)g_scd.props[i].box_hy;
-        int32_t bhz = (int32_t)(uint16_t)g_scd.props[i].box_hz;
-        if (bhx == 0 && bhy == 0 && bhz == 0) continue;   /* non-collidable */
+        push_out_of(i, x, z);
+    }
+}
 
-        int32_t bx = (int32_t)g_scd.props[i].box_cx + g_scd.props[i].x;
-        int32_t bz = (int32_t)g_scd.props[i].box_cz + g_scd.props[i].z;
-        int32_t dx = bx - *x;
-        int32_t dz = bz - *z;
-        int32_t sumX = bhx + PR;
-        int32_t sumZ = bhz + PR;
-        int32_t adx = dx < 0 ? -dx : dx;
-        int32_t adz = dz < 0 ? -dz : dz;
-        if (adx > sumX) continue;
-        if (adz > sumZ) continue;
-
-        int64_t cz = (int64_t)dx * sumZ; if (cz < 0) cz = -cz;
-        int64_t cx = (int64_t)dz * sumX; if (cx < 0) cx = -cx;
-        if (cz <= cx) {
-            int32_t s = (dz >= 0) ? -sumZ : sumZ;
-            *z = bz + s;
-        } else {
-            *x = (dx < 0) ? bx + sumX : bx - sumX;
-        }
+/* ---- FUN_8002bd44 @0x8002be0c-4c — DERSELBE Push-Out fuer JEDEN aktiven AKTOR ---------------
+ * Der Objekt-Tick schiebt nicht nur den Spieler aus den Kisten. Direkt hinter dem
+ * Typ-Handler-`jalr` @0x8002be04 laeuft er ueber das gesamte Aktor-Feld:
+ *     8002be0c/10: lui/addiu v0 -> g_active_count
+ *     8002be14:    lbu   s1,0(v0)        ; Zahl der Aktoren
+ *     8002be20:    addiu s0,v0,478       ; erster Aktor
+ *     8002be24-2c: lw v0,0(s0) / andi v0,v0,0x1
+ *     8002be30:    beq   v0,zero,0x8002be48   ; nur aktive
+ *     8002be34:    addu  a0,s0,zero      ; a0 = Aktor
+ *     8002be3c:    addu  a1,s2,zero      ; a1 = Objekt
+ *     8002be40:    jal   0x8002cabc
+ *     8002be44:    addu  a2,zero,zero    ; a2 = 0 = AKTOR ausschieben
+ *     8002be4c:    addiu s0,s0,500       ; Stride 0x1F4
+ * KEIN Typ-Filter und — anders als der Spieler-Pfad @0x8002bef0 — KEINE Ausnahme fuer das
+ * Objekt, auf dem gestanden wird (das ist DAT_800ac788, ein reiner Spieler-Zustand).
+ * AUSNAHME, byte-gelesen im Callee: `lw v0,0(a3)` / `andi v0,v0,0x40` /
+ * `bne v0,zero,0x8002cbc4` @0x8002cad0-dc — ein Aktor mit Wort-0-Bit 0x40 wird
+ * uebersprungen. Die NPC-Familie traegt es NICHT: ihr INIT ODERt 0x40000000
+ * (`lui v1,0x4000` / `or v0,v0,v1` / `sw v0,0(a0)` @0x8011ccd4-dc), also das HIGH-Bit.
+ * RADIUS: das Original summiert Objekt-Box + Aktor-Box[+6] (`lhu v0,6(t2)` @0x8002cb3c-4c).
+ * Fuer die NPC-Familie ist diese Box @0x80121658 = {0,-1530,0,450,1530,450} — hx = 450, also
+ * exakt das PR, mit dem der Port hier rechnet. Der Aufruf ist fuer 0x40..0x4d zahlengleich.
+ * Nutzer-Report 2026-08-30: "Ada kann noch durch die Kiste laufen" — der Port hatte von
+ * FUN_8002bd44 nur den Spieler-Rumpf ab @0x8002bf14 und damit diese Schleife nie. */
+void re15_collision_objects_actor(int32_t *x, int32_t *z)
+{
+    for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++) {
+        if (!g_scd.props[i].active) continue;
+        push_out_of(i, x, z);
     }
 }
 

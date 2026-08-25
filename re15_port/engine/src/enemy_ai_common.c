@@ -7742,6 +7742,17 @@ static void re15_spider_ai_tick(int slot)
         e->spider_home_x = (int16_t)e->x;                 /* +0x1d8 = x (lhu +0x34; sh) @0x801165fc */
         e->spider_home_z = (int16_t)e->z;                 /* +0x1da = z (lhu +0x3c; sh) @0x80116614 */
         e->spider_home_y = (int16_t)e->y;                 /* +0x1d6 = y (lhu +0x38; sh) @0x8011662c */
+        /* ⛔ DAS ZEICHEN-BIT LOESCHEN — byte-true @0x801165d0-e4:
+         *     801165d0: lw    a0,392(v0)   ; a0 = entity+0x188 = das Part-Array
+         *     801165d8: lw    v0,0(a0)     ; part[0].flags
+         *     801165dc: addiu v1,zero,-2   ; ~1
+         *     801165e0: and   v0,v0,v1
+         *     801165e4: sw    v0,0(a0)     ; Bit 0 geloescht
+         * Der Zeichner steigt daraufhin ohne Mesh-Ausgabe aus (`andi v0,v1,0x1` @0x8001ecc4,
+         * `beq v0,zero,0x8001ee48` @0x8001ecc8). Diese Aktoren sind also UNSICHTBARE Traeger
+         * fuer ihre Flammen-Effekte; ihr Mesh ist ein einziges Dreieck (EM26: 1 Bone,
+         * 3 Verts, 1 Face) — genau die "schwarzen Dreiecke ueber dem Feuer". */
+        e->no_draw = 1;
         e->state = 1; e->sub_state_1 = variant;           /* +0x4=1 @0x80116690, +0x5 = +0x9 & 0x7f @0x801166ac */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         /* spawn/emergence fx 0x09031800, gated on !(grid&0x80): `andi v0,0x80; bne -> skip;
@@ -11132,19 +11143,97 @@ static void re15_writher_ai_tick(int slot)
          * Der richtige Massstab fuer die Erreichbarkeit ist der Constrain-Lauf
          * (re15_collision_constrain), nicht on_floor; so misst es jetzt auch die Wache
          * unit_1210_gitterhaende. */
-        enum { RE15_WRITHER_REACH_Z = 850, RE15_WRITHER_REACH_X = 11000,
+        enum { RE15_WRITHER_REACH_R = 0x514,  /* sltiu s0,s0,0x514       @0x80102f3c */
                RE15_WRITHER_MOAN_CD = 150,
                RE15_WRITHER_GRAB_DIST = 0x4b0,   /* sltiu v0,s2,0x4b0        @0x801018f4 */
                RE15_WRITHER_GRAB_HALF = 256,     /* a3 = 256 / a2 = +0x76±256 @0x8010193c-4c */
                RE15_WRITHER_HOLD_BUDGET = 148,   /* +0x158 = 148            @0x80102828-2C */
                RE15_WRITHER_BITE_FRAME = 0x10,   /* Tabelle @0x80100014[0]  (stehender Fall) */
                RE15_WRITHER_BITE_DMG = 20,       /* Tabelle @0x80100014[1]                  */
+               RE15_WRITHER_LUNGE_NET = 2420,    /* 3x800 @0x8010c7b8 (+0x9c=3 @0x8010c7a8)
+                                                  * + 20 im Uebergangsbild @0x8010c7f8;
+                                                  * Phase 2/3 heben sich auf              */
                RE15_WRITHER_MESH_REACH = 1671 }; /* groesste Vorwaerts-Auslenkung des EM01A-
                                                   * MESH (Clip 2), gemessen ueber den
                                                   * Render-Transform; s. Griff-Tor unten */
-        int32_t dz = pl->z - e->z; if (dz < 0) dz = -dz;
-        int32_t dx = pl->x - e->x; if (dx < 0) dx = -dx;
-        int reach = (dz < RE15_WRITHER_REACH_Z) && (dx < RE15_WRITHER_REACH_X);
+        /* ⛔ DAS AUSFAHR-TOR — RE2s Abstand, an der HAND gemessen.
+         * Nutzer-Auftrag 2026-08-30: "Die Arme kommen raus, wenn man noch zu weit weg ist,
+         * das sollte von Distanz und Verhalten her wirklich so sein wie bei Resident Evil 2."
+         *
+         * WAS VORHER HIER STAND UND WARUM ES RAUS MUSSTE: `dz < 850 && dx < 11000`. Beide
+         * Zahlen trugen — als einzige dieses Enums — KEIN `@0x…`. 850 war die halbe Tiefe des
+         * Raum-Rechtecks, auf jeden einzelnen Arm umgehaengt; 11000 war schlicht die
+         * Flurbreite und liess damit JEDEN Arm reagieren, egal wie weit der Spieler von
+         * SEINER Wand entfernt stand. Genau das ist das gemeldete Bild.
+         *
+         * ⛔ DER ORIGINAL-MECHANISMUS, vollstaendig disassembliert — und warum hier ueberhaupt
+         * ein Tor steht:
+         *   ROOM1210.RDT @0x1EAE  `2c 06 03 41 00 00 ac a9 68 c5 50 14 a4 06 …` = Aot_set
+         *     aot=6 sce=3, x=-22100 z=-15000 w=5200 d=1700 (Ecke + Ausdehnung, unsigned
+         *     getestet in FUN_80042b64 @0x80042b68-7c).
+         *   sub02 @0x1EC8: Flag(3,0x2c):=1, `46 06 …` = Aot_reset Slot 6 (der Ausloeser
+         *     toetet sich selbst), dann ZEHNMAL `2e 02 0N 00` + `34 0c 01 00` =
+         *     Work_set(Gegner N) + Member_set(12, 1).
+         *   Member 12 -> `sb a2,9(a0)` @0x800411f8, also entity+0x9 = 1 fuer ALLE ZEHN.
+         *   Der Arm-Zustand 0 liest genau das:
+         *     8010c614: lbu   v0,9(a0)
+         *     8010c61c: andi  v0,v0,0x1f
+         *     8010c620: bne   v0,v1(=1),0x8010c644
+         *     8010c628: sb    v0(=1),5(a0)      ; +0x5 = 1 = AUSFAHREN
+         *   und Zustand 1 hat in der LOGIK-Tabelle @0x80120968[1] den Eintrag 0x8010c70c —
+         *   das ist ein blankes `jr ra` (@0x8010c70c-10). Die ganze Arbeit macht die
+         *   ANIM-Tabelle @0x80120984[1] = FUN_8010c714, und die laeuft OHNE jede Bedingung
+         *   ab. Der Wurzel-Tick rechnet den Spielerabstand zwar (`jal 0x80065f60`
+         *   @0x8010c27c), legt ihn aber NIRGENDS ab — anders als Zombie (@0x801004c0),
+         *   ZGirl (@0x8010a964) oder Hund (@0x8010dc8c).
+         * ⇒ Das Original kennt PRO ARM ueberhaupt kein Abstands-Tor. Jedes Tor an dieser
+         *   Stelle ist eine NACHRUESTUNG — sie existiert nur, weil der Nutzer das
+         *   Original-Verhalten (alle zehn in EINEM Bild) verworfen hat.
+         *
+         * ⛔ UND RE2 HAT AUCH KEINS: sein verankerter Greifer (EMZ0.BIN @0x80102ee4) hat
+         * genau EIN Abstands-Tor, und das ist das GRIFF-Tor:
+         *     80102f0c: lw    s0,496(s1)        ; entity+0x1F0 = Abstand Ursprung/Ursprung
+         *     80102f3c: sltiu s0,s0,0x514       ; < 1300
+         *     80102f40: beq   s0,zero,0x80103008
+         *     80102f4c: lbu   v0,-565(v0)       ; Spieler+0x1D3
+         *     80102f54: andi  v0,v0,0x80        ; EIN-ANGREIFER-RIEGEL
+         *     80102f60: lbu   v1,262(s1)        ; Etagen-Gleichheit
+         *     80102f98: jal   0x80015758        ; Sektor, Halbwinkel 256 @0x80102f94
+         *     80102fa8: sw    v0(=257),4(s1)    ; Griff im selben Bild
+         * Der freie Zombie nutzt dieselbe Form mit 0x4b0 = 1200 @0x801018f4.
+         * ⇒ "Von Distanz und Verhalten her wie RE2" heisst also: EIN Radius um die Kreatur,
+         *   nicht ein Flur-breites Rechteck. Genommen wird RE2s Zahl fuer den VERANKERTEN
+         *   Greifer, weil der Arm im Gitter genau das ist: 0x514 = 1300 @0x80102f3c.
+         *
+         * ⛔ WORAUF DER RADIUS ZEIGT — und warum das eine benannte Abweichung ist:
+         * RE2 misst Ursprung gegen Ursprung (+0x1F0, gefuellt @0x800265a4-e0). Hier kann er
+         * das nicht: die Arme sitzen mit ihrem Ursprung IN der Wand, der begehbare Flur liegt
+         * rund 4200 Einheiten daneben (Arm-Reihen x = -25000 / -14000, Laufraum
+         * x -20622..-18164). Ein 1300er-Radius um den Ursprung wuerde NIE aufgehen — der Arm
+         * kaeme nie heraus, also genau der Fehler vom 2026-08-28.
+         * Der Radius zeigt deshalb auf die HAND im voll ausgefahrenen Zustand, gerechnet ab
+         * der HEIMAT-Position (nicht ab e->x — die wandert waehrend der Lunge, und `reach`
+         * ist zugleich das Rueckzugs-Tor; an e->x gehaengt kippt der Ausdruck mitten in der
+         * Bewegung um). Der Versatz ist die Summe zweier bereits belegter Groessen:
+         *   LUNGE_NET 2420 = 3x800 (+0x8c=0x320 @0x8010c7b8, +0x9c=3 @0x8010c7a8) + 1x20
+         *                    (Uebergangsbild mit dem neuen +0x8c=0x14 @0x8010c7f8);
+         *                    die Phasen 2 und 3 heben sich auf (30x20+200 zurueck
+         *                    @0x8010c840/0x8010c860 gegen 3x200+200 vor @0x8010c8c8).
+         *   MESH_REACH 1671 = groesste Vorwaerts-Auslenkung des EM01A-Mesh im Ausfahr-Clip.
+         * Zusammen 4091. Das ist die Nachruestung, und sie heisst so: RE2 liefert die ZAHL
+         * und die FORM (ein Radius), der Bezugspunkt ist portseitig. */
+        const int32_t hx = (slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_home_ok[slot])
+                         ? s_writher_home_x[slot] : e->x;
+        const int32_t hz = (slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_home_ok[slot])
+                         ? s_writher_home_z[slot] : e->z;
+        const int32_t out = RE15_WRITHER_LUNGE_NET + RE15_WRITHER_MESH_REACH;   /* 4091 */
+        const int     hd  = (int)(e->rot_y & 0x0fff);
+        /* Dieselbe Zerlegung wie re15_writher_step (FUN_800245d8 @0x800245f0/58/64). */
+        const int32_t handx = hx + (int32_t)(((int32_t)re15_cos_q12(hd) * out) >> 12);
+        const int32_t handz = hz - (int32_t)(((int32_t)re15_sin_q12(hd) * out) >> 12);
+        int32_t rdx = pl->x - handx, rdz = pl->z - handz;
+        int64_t r2  = (int64_t)rdx * rdx + (int64_t)rdz * rdz;
+        int reach = (r2 < (int64_t)RE15_WRITHER_REACH_R * RE15_WRITHER_REACH_R);
 
         /* Stoehn-Cooldown: liegt jetzt auf +0x239 (re2z_cd239) - genau dem Feld, aus dem
          * der Wert stammt (RE2s verankerter Zombie setzt +0x239 = 150 @0x801038d0-d4).
@@ -12419,6 +12508,55 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
     uint32_t sfx = A->frames[c->first_frame + se_slot] >> 22;  /* top 10 = SFX mask */
     for (int bit = 0; sfx; bit++, sfx >>= 1)
         if (sfx & 1u) re15_audio_room_se(bit);              /* FUN_800453d0(bit): SE id == bit index */
+}
+
+/* ⛔ DER AKTOR-DURCHGANG DES OBJEKT-TICKS (Nutzer-Report 2026-08-30: "Ada kann noch durch
+ * die Kiste laufen"). FUN_8002bd44 schiebt nicht nur den SPIELER aus den Objekten, sondern
+ * JEDEN aktiven Aktor — direkt hinter dem Typ-Handler-`jalr` @0x8002be04:
+ *     8002be0c/10: lui/addiu v0 -> g_active_count
+ *     8002be14:    lbu   s1,0(v0)          ; Zahl der Aktoren
+ *     8002be20:    addiu s0,v0,478         ; erster Aktor
+ *     8002be24-2c: lw v0,0(s0) / andi v0,v0,0x1
+ *     8002be30:    beq   v0,zero,0x8002be48
+ *     8002be34:    addu  a0,s0,zero        ; a0 = Aktor
+ *     8002be3c:    addu  a1,s2,zero        ; a1 = Objekt
+ *     8002be40:    jal   0x8002cabc
+ *     8002be44:    addu  a2,zero,zero      ; a2 = 0 = den AKTOR ausschieben
+ *     8002be4c:    addiu s0,s0,500         ; Stride 0x1F4
+ * KEIN Typ-Filter. Ausgenommen ist nur, wer Wort-0-Bit 0x40 traegt (`lw v0,0(a3)` /
+ * `andi v0,v0,0x40` / `bne v0,zero,0x8002cbc4` @0x8002cad0-dc); die NPC-Familie traegt es
+ * NICHT (ihr INIT ODERt 0x40000000, `lui v1,0x4000` / `or` / `sw v0,0(a0)` @0x8011ccd4-dc).
+ *
+ * ⛔ WARUM DER AUFRUF HIER STEHT UND NICHT IN re15_prop_push_tick. Die Original-Reihenfolge
+ * eines Spiel-Bildes ist (@0x8001cdec-1c):
+ *     8001cdec: jal 0x8003f038   ; SCD-Seed
+ *     8001ce04: jal 0x8001a50c   ; ALLE ENTITAETEN — Gegner/NPCs denken und BEWEGEN sich
+ *     8001ce0c: jal 0x80031c44   ; Spieler-FSM
+ *     8001ce14: jal 0x8002bd44   ; Objekt-Tick: Kisten schieben + JEDEN Aktor ausschieben
+ *     8001ce1c: jal 0x800436a8   ; AOT-Scan
+ * Der Aktor-Durchgang liegt also NACH der Entitaeten-Bewegung im SELBEN Bild. Im Port laeuft
+ * die Entitaeten-Schleife (re15_enemy_ai_run_all) am Schritt-ENDE, der Objekt-Tick dagegen im
+ * Spieler-Block davor. Haette ich den Durchgang dort gelassen, waere er dem Zug der NPC um
+ * ein volles Bild HINTERHER gewesen und haette genau das Bild gezeigt, das der Nutzer meldet.
+ * Deshalb steht er hier, unmittelbar hinter der Entitaeten-Schleife — dieselbe Nachbarschaft
+ * wie @0x8001ce04 -> @0x8001ce14.
+ *
+ * ⛔ BEGRENZT auf die NPC-Familie 0x40..0x4d: das Original summiert Objekt-Box + AKTOR-Box[+6]
+ * (`lhu v0,6(t2)` @0x8002cb3c-4c). Fuer die NPC-Familie ist diese Box @0x80121658 =
+ * {0,-1530,0,450,1530,450}, hx = 450 — exakt das PR, mit dem re15_collision_objects_actor
+ * rechnet, der Aufruf ist also zahlengleich. Fuer die uebrigen Gegner-Typen ist die +0x78-Box
+ * eine andere (Hund 500, Kraehe 200, …); sie hier mit PR mitzuschieben waere ein falscher
+ * Radius. Das bleibt OFFEN und ist so im Bericht benannt. */
+void re15_actor_prop_pushout(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *ac = &g_actors[i];
+        if (!ac->active) continue;                        /* @0x8002be2c Wort-0 & 1 */
+        if (ac->type < 0x40 || ac->type > 0x4d) continue; /* s. Begrenzung oben */
+        int32_t ax = ac->x, az = ac->z;
+        re15_collision_objects_actor(&ax, &az);           /* jal 0x8002cabc, a2 = 0 */
+        ac->x = ax; ac->z = az;
+    }
 }
 
 void re15_enemy_ai_run_all(int combat_active)

@@ -26,12 +26,20 @@ int main(void)
     memset(g_actors, 0, sizeof g_actors);
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    /* z = 400: INNERHALB der Ausloese-Tiefe (REACH_Z 850 = halbe Tiefe des
-     * Original-Rechtecks @0x1EAE) und zugleich rund 90 Grad SEITLICH der Blickrichtung
-     * (der Arm schaut bei rot_y 0 nach +X), also ausserhalb des 45-Grad-Griff-Kegels
-     * (@0x8010193c-4c). Damit misst (2) die Lunge und (3) bleibt gueltig.
-     * Vorher stand hier 900 - das lag knapp AUSSERHALB von 850 und die Lunge feuerte nie. */
-    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 400; pl->hp = 100;
+    /* ⛔ STANDORT DES SPIELERS — zweimal geaendert, beide Male aus demselben Grund: das
+     * Ausfahr-Tor hat die Messgroesse gewechselt, also muss die Wache mitwechseln, sonst
+     * misst sie einen Zustand, den es nicht mehr gibt.
+     *   bis 2026-08-27: z = 900 - lag zufaellig knapp AUSSERHALB der damaligen 850.
+     *   bis 2026-08-30: z = 400 - innerhalb von 850, seitlich zur Blickrichtung.
+     *   jetzt: DIREKT VOR DER HAND. Das Tor ist RE2s Radius 1300 (`sltiu s0,s0,0x514`
+     *     @0x80102f3c) um den Punkt, an dem die ausgefahrene Hand steht: Heimat +
+     *     LUNGE_NET 2420 (@0x8010c7b8/@0x8010c7a8) + MESH_REACH 1671 = 4091 entlang +0x6a.
+     *     Bei Yaw 0 zeigt der Arm nach +X, die Hand steht also auf (4091,0).
+     * ⛔ DAS IST KEINE ABGESENKTE SCHRANKE, SONDERN EINE ZWEITE: der Fall "Spieler steht
+     * SEITLICH" wandert nach unten in (3s) und verlangt dort, dass der Arm sich GAR NICHT
+     * bewegt - eine Zusage, die die alte Fassung nicht machen konnte, weil ihr flurbreites
+     * Tor (`dx < 11000`) seitlich genauso aufging. */
+    pl->active = 1; pl->type = 0; pl->x = 4091; pl->y = 0; pl->z = 900; pl->hp = 100;
 
     const int WS = 1;
     re15_actor_t *e = &g_actors[WS];
@@ -83,9 +91,30 @@ int main(void)
     }
     if (e->z != ez0) { fprintf(stderr, "FAIL(2): die Lunge laeuft entlang +0x6a (hier Yaw 0 = +X), "
                                        "z darf sich nicht aendern: %d -> %d\n", ez0, e->z); fail = 1; }
-    if (pl->hp != hp0)              { fprintf(stderr, "FAIL(3): tick must write no player hp, hp %d->%d\n", hp0, pl->hp); fail = 1; }
     printf("  (2) LUNGE: %ld Einheiten nach vorn, z unveraendert (%d)\n", (long)(xmax - ex0), e->z);
+
+    /* (3s) SEITLICH = GAR KEINE REAKTION. Der Arm wird zurueckgestellt und der Spieler auf
+     * dieselbe DISTANZ, aber quer zur Blickrichtung gesetzt: (0,4091) statt (4091,900).
+     * Unter dem alten flurbreiten Tor (`|dz| < 850 && |dx| < 11000`) waere das egal gewesen;
+     * RE2s Radius um die Hand (@0x80102f3c) laesst hier nichts aufgehen. Genau das ist der
+     * Nutzer-Punkt vom 2026-08-30 ("die Arme kommen raus, wenn man noch zu weit weg ist"). */
+    e->sub_state_1 = 0; e->sub_state_2 = 0; e->x = ex0; e->z = ez0; e->motion = 0;
+    pl->x = 0; pl->z = 4091; pl->hp = 100;
+    int16_t hp_side = pl->hp;
+    for (int f = 0; f < 200; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
+    if (e->x != ex0 || e->z != ez0) {
+        fprintf(stderr, "FAIL(3s): seitlich (gleiche Distanz, quer zur Blickrichtung) darf der "
+                        "Arm sich NICHT bewegen, steht aber auf (%d,%d) statt (%d,%d)\n",
+                e->x, e->z, ex0, ez0);
+        fail = 1;
+    }
+    if (pl->hp != hp_side) { fprintf(stderr, "FAIL(3s): und er darf dabei keinen Schaden schreiben, hp %d->%d\n", hp_side, pl->hp); fail = 1; }
+    printf("  (3s) SEITLICH: Arm bleibt auf (%d,%d), Spieler-hp %d\n", e->x, e->z, pl->hp);
+
+    /* (3) HARMLESS bleibt: der Tick selbst schreibt keinen Spieler-Schaden. */
+    if (pl->hp != hp0)              { fprintf(stderr, "FAIL(3): tick must write no player hp, hp %d->%d\n", hp0, pl->hp); fail = 1; }
     printf("  (3) HARMLESS: player hp %d (unchanged)\n", pl->hp);
+    e->sub_state_1 = 0; e->sub_state_2 = 0; e->x = ex0; e->z = ez0; e->state = 1;
 
     /* (3b) BANK-TOR (Nutzer-Report 2026-08-29 "schwarze Dreiecke ueber dem Feuer").
      * State 1 ist der normale AKTIV-Zustand fast jedes Gegners. In v0.3.28 hat der RENDERER
@@ -113,7 +142,9 @@ int main(void)
      * Diese Zusage hier gilt dem BYTE-TRUEN Ruhezustand, also dem Fall OHNE Spieler in
      * Reichweite. Bis 2026-08-27 stand der Spieler auf z=900 und lag damit rein zufaellig
      * knapp ausserhalb der damaligen Reichweite 850 — die Zusage hielt aus Glueck, nicht aus
-     * Absicht. Jetzt wird der Abstand hergestellt und der Arm zurueckfahren gelassen. */
+     * Absicht. Jetzt wird der Abstand hergestellt und der Arm zurueckfahren gelassen.
+     * (Das Tor ist seit 2026-08-30 RE2s Radius 1300 @0x80102f3c um die ausgefahrene Hand,
+     * nicht mehr das flurbreite Rechteck — 30000 liegt in jeder Lesart weit ausserhalb.) */
     pl->x = 0; pl->z = 30000;
     for (int f = 0; f < 120; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
     if (e->motion != 0) { fprintf(stderr, "FAIL(4): unhit writher must loop clip 0, got clip %d\n", e->motion); fail = 1; }
