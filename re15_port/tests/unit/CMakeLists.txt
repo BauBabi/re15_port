@@ -2855,6 +2855,16 @@ target_include_directories(probe_1210_material PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_compile_definitions(probe_1210_material PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- PIN (Nutzer-Report 2026-08-29): eine folgende NPC laeuft NICHT durch Waende.
+#     Wurzel-Klemme @0x8011cc58-68 (jal 0x8003b0a4, Maske 4, Radius aus +0x78). ---
+add_executable(test_npc_wall_clamp test_npc_wall_clamp.c)
+target_link_libraries(test_npc_wall_clamp PRIVATE re15_engine re15_test_support)
+target_include_directories(test_npc_wall_clamp PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_npc_wall_clamp PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_npc_wall_clamp COMMAND test_npc_wall_clamp)
+set_tests_properties(unit_npc_wall_clamp PROPERTIES TIMEOUT 60)
+
 # --- MESSSONDE (Nutzer-Auftrag ROOM1210 "stell das um ... hole die Animation aus RE2"):
 #     haelt der Arm den Spieler mit der geliehenen Opfer-Bank wirklich fest?
 #     Reine Diagnose, KEIN add_test. ---
@@ -2864,10 +2874,30 @@ target_include_directories(probe_1210_reach PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_reach PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE (Auftrag 2026-08-29 Arme-erreichen-Leon-nirgendwo): Spieler-Grenze
+#     (Boden vs Klemmer vs Erreichbarkeit), Mesh-Reichweite, Restluecke. KEIN add_test. ---
+add_executable(probe_1210_geo probe_1210_geo.c)
+target_link_libraries(probe_1210_geo PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_geo PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_geo PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1210_trigger probe_1210_trigger.c)
+target_link_libraries(probe_1210_trigger PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_trigger PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_trigger PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_1210_griff probe_1210_griff.c)
 target_link_libraries(probe_1210_griff PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_griff PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_griff PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1210_sound probe_1210_sound.c)
+target_link_libraries(probe_1210_sound PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1210_sound PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1210_sound PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # --- PIN (Nutzer-Auftrag ROOM1210): die Gitterhaende reagieren EINZELN beim Vorbeigehen,

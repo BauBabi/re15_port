@@ -2121,7 +2121,24 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
     if (!a) return;
     uint16_t r, h;
     switch (type) {
-        case 0x47: r = 450;  h = 1530; break;  /* STAGE1 humanoid/zombie (HASH-..._1.sav)   */
+        /* ⛔ DIE GANZE NPC-FAMILIE, nicht nur 0x47 (Nutzer-Report 2026-08-29: "Ada kann
+         * durch alles durchlaufen"). Die Wand-Klemme der NPC-Wurzel liest den Radius aus
+         * genau diesem Kasten (`lhu a1,6(v0)` @0x8011cc60 auf entity+0x78), und ohne Kasten
+         * ist der Radius 0 = die Klemme ist zahnlos. Ada (Typ 0x42) fiel bis hierher in
+         * `default: return`.
+         * BYTE-TRUE fuer 0x42, selbst gelesen: INIT 0x8011ccac laedt den Zeiger
+         *     8011ccec: lw v0,5732(v0)   ; = *(0x80121664) = 0x80121658
+         *     8011ccf4: sw v0,120(v1)    ; entity+0x78 = &Kasten
+         * und der Kasten @0x80121658 ist `00 00 06 fa 00 00 c2 01 fa 05 c2 01`
+         *     = { 0, -1530, 0, 450, 1530, 450 }  ->  box+6 = 450 = der Klemm-Radius,
+         *       Hoehe 1530.
+         * Dieselben Masse traegt der 0x40-Zweig ueber einen anderen Zeiger (INIT 0x80116d20,
+         * `lw [0x8011a2d4] -> +0x78` @0x80116d60-68 — s. den IVY-Kommentar weiter unten, der
+         * genau diese {450,1530}-Daten dem NPC zuordnet). 0x47 stand hier schon mit
+         * denselben Werten aus einem Savestate. */
+        case 0x40: case 0x42: case 0x45:
+        case 0x47: case 0x49: case 0x4b:
+        case 0x4d: r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
         /* The LIVE STAGE1 briefing zombies (0x10/0x11/0x16) all read 400/1440 — byte-true
          * from the live combat RAM (stage_saves/mzd_stage1_combat_death.sav, Phase 8.7: every
          * active 0x10/0x11 entity's *(+0x78) hitbox struct = radius 400 / height 1440, the

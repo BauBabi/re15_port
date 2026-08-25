@@ -323,6 +323,11 @@ int re15_actor_toggle_reverse(const re15_actor_t *a);
  * animation frame clock so they cannot drift (see enemy_ai_common.c). */
 int re15_actor_uses_loco_bank(const re15_actor_t *a);
 
+/* Die EINE Regel fuer die eigene BANK 1 (+0x170/+0x174) — von der AI-Uhr
+ * (re15_actor_clip_len) UND vom Renderer (platform/pc/main.c) benutzt. Vollstaendiger
+ * Beleg-Block bei der Definition in enemy_ai_common.c. Nur NPC-Familie 0x40..0x4d. */
+int re15_actor_uses_own_bank(const re15_actor_t *a);
+
 /* RE2-ZOMBIE: die VOLLSTAENDIGE, aus EMOVL10_S0.BIN disassemblierte Pose-Bank-Karte (Paar 1 =
  * Loco). Das Original hat keine per-Frame-Regel — die Bank ist das (EMR,EDD)-Argument der
  * Advance-Aufrufstelle (`sw a2,376(a0)` @0x800295F8 legt den posierten Frame-Eintrag in

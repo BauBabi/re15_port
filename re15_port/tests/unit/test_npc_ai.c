@@ -189,6 +189,12 @@ int main(void)
                 steps_ok = 0; fail = 1; break;
             }
         }
+        /* Gegenprobe zur Writher-Wache: die NPC-Familie MUSS in der Eskorte die eigene
+         * Bank 1 nehmen - dieselbe Regel, dasselbe Praedikat. */
+        if (!re15_actor_uses_own_bank(n)) {
+            fprintf(stderr, "FAIL(3): die Eskorte MUSS aus BANK 1 posieren (+0x170/+0x174, f314-Loads \n0x8004f5c0-c4 u.a.), Praedikat sagt nein\n");
+            fail = 1;
+        }
         if (steps_ok)
             printf("  (3) LAUF-ANIM: Sub %u, Clip %u, anim_frame steigt um genau 1 pro Bild "
                    "(Clip-Laenge %d aus BANK 1)\n",

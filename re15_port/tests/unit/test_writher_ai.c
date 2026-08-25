@@ -82,6 +82,24 @@ int main(void)
     printf("  (2) LUNGE: %ld Einheiten nach vorn, z unveraendert (%d)\n", (long)(xmax - ex0), e->z);
     printf("  (3) HARMLESS: player hp %d (unchanged)\n", pl->hp);
 
+    /* (3b) BANK-TOR (Nutzer-Report 2026-08-29 "schwarze Dreiecke ueber dem Feuer").
+     * State 1 ist der normale AKTIV-Zustand fast jedes Gegners. In v0.3.28 hat der RENDERER
+     * daraufhin die EIGENE Bank 1 gewaehlt - auch fuer Zombies, Spinnen und die
+     * Feuer-Emitter (0x26), also mit dem falschen Skelett. Die Regel gilt ausschliesslich
+     * fuer die NPC-Familie 0x40..0x4d (deren Eskorte posiert aus +0x170/+0x174; f314-Loads
+     * \n0x8004f384-88 / \n0x8004f5c0-c4 / \n0x8004f7bc-c0 / \n0x8004fb14 / \n0x8004ff68).
+     * Diese Wache haelt fest: ein Typ-0x1A-Aktor in State 1 darf NIE die eigene Bank
+     * bekommen. Engine und Renderer benutzen dafuer jetzt dasselbe Praedikat. */
+    if (e->state != 1) {
+        fprintf(stderr, "FAIL(3b): der Writher muss fuer die Messung in State 1 stehen, ist %d\n", e->state);
+        fail = 1;
+    }
+    if (re15_actor_uses_own_bank(e)) {
+        fprintf(stderr, "FAIL(3b): Typ 0x1A ist KEIN NPC (0x40..0x4d) und darf in State 1 nicht die eigene Bank 1 posieren - genau das waren die schwarzen Dreiecke\n");
+        fail = 1;
+    }
+    printf("  (3b) BANK-TOR: Typ 0x%02X in State %d nimmt NICHT die eigene Bank\n", e->type, e->state);
+
     /* (4) IDLE = clip 0 only: an unhit writher never changes clip (byte-true A[0]/B[0], grid 0).
      *
      * ⛔ MIT ABSTAND MESSEN, NICHT NEBENBEI: der Port fuehrt in ROOM1210 die bewusste

@@ -6871,12 +6871,20 @@ re_title:;
                         npc_skel = &lb->skel_victim; npc_anim = &lb->anim_victim;
                         av.clip_override = (int)npc->motion;
                     }
-                } else if (npc->walk_active || npc->state == 1 ||
-                           (npc->state == 4 && (npc->sub_state_1 == 2 || npc->sub_state_1 == 4 ||
-                                                npc->sub_state_1 == 5 || npc->sub_state_1 == 6 ||
-                                                npc->sub_state_1 == 9))) {
-                    /* `npc->state == 1` = die ESKORTE (Nutzer-Report 2026-08-28). Alle fuenf
-                     * portierten Exec-Subs posieren dort aus +0x170/+0x174 = Bank 1:
+                } else if (re15_actor_uses_own_bank(npc)) {
+                    /* ⛔ TYP-TOR (Nutzer-Report 2026-08-29 "schwarze Dreiecke ueber dem Feuer"):
+                     * dieser ganze Block laeuft fuer JEDEN gezeichneten Aktor, nicht nur fuer die
+                     * NPC-Familie. In v0.3.28 stand hier ein nacktes `npc->state == 1` — und
+                     * State 1 ist der normale AKTIV-Zustand fast jedes Gegners. Jeder Zombie,
+                     * jede Spinne und jeder Feuer-Emitter (0x26) mit eigener Bank 1 posierte
+                     * damit aus dem FALSCHEN Skelett; das ist die Geometrie, die als schwarze
+                     * Dreiecke erscheint. Die Eskorte betrifft ausschliesslich 0x40..0x4d
+                     * (Dispatch-Tabelle 0x80072bac, NPC-Wurzeln 0x8011c5a0/0x8011cb70/...),
+                     * also gehoert das Tor auch hierher. Die Engine-Seite
+                     * (re15_actor_clip_len) war von Anfang an so gegatet.
+                     *
+                     * `state == 1` = die ESKORTE. Alle fuenf portierten Exec-Subs posieren dort
+                     * aus +0x170/+0x174 = Bank 1:
                      * Stehen @0x8004f384-88, Gehen @0x8004f5c0-c4, Drehen @0x8004f7bc-c0,
                      * Nah @0x8004fb14, Laufen @0x8004ff68 (jeweils `lw a0,368(v0)` /
                      * `lw a1,372(v0)` unmittelbar vor `jal 0x8001f314`). Vorher fiel der

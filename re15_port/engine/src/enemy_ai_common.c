@@ -4743,6 +4743,36 @@ router_gate:
  * and the STANDING stagger (state 2 with +0x9 & 0x80 clear) pose the LOCOMOTION bank (entity+0x84,
  * `lw a0,132(v0)` @0x80105d3c / @0x80105de0); every other state poses the 43-clip action bank
  * (+0x170/+0x174). Downed/lying hits keep the action bank — those handlers set their own clips. */
+/* ⛔ EINE Regel fuer die EIGENE BANK 1 (+0x170/+0x174 = dir[4]/dir[3]) — Engine UND Renderer.
+ *
+ * ENTSTEHUNGSGRUND (Nutzer-Report 2026-08-29 "schwarze Dreiecke ueber dem Feuer"): der
+ * Renderer (platform/pc/main.c) und die AI-Uhr (re15_actor_clip_len) trugen dieselbe Regel
+ * ZWEIMAL, und in v0.3.28 habe ich sie nur an einer Stelle erweitert — dort ohne das
+ * Typ-Tor. Ein nacktes `state == 1` trifft aber fast JEDEN Gegner (State 1 = AKTIV), und
+ * jeder mit eigener Bank 1 posierte danach aus dem falschen Skelett. Genau das sind die
+ * schwarzen Dreiecke. Deshalb steht die Regel ab sofort genau EINMAL, hier.
+ *
+ * Was die Regel abbildet (jeweils die f314-Loads unmittelbar vor `jal 0x8001f314`):
+ *   Plc_dest-Walk  (walk_active)        -> Walk-Clip 5 aus Bank 1 (@0x800512bc/c0)
+ *   Executor-Subs  {2,4,5,6,9}          -> @0x80050f88/90, @0x80051884/88, @0x80051e9c
+ *   ESKORTE state 1, ALLE Subs          -> @0x8004f384-88 (Stehen), @0x8004f5c0-c4 (Gehen),
+ *                                          @0x8004f7bc-c0 (Drehen), @0x8004fb14 (Nah),
+ *                                          @0x8004ff68 (Laufen)
+ * Und sie gilt ausschliesslich fuer die NPC-Familie 0x40..0x4d (Dispatch-Tabelle
+ * @0x80072bac; die Wurzeln 0x8011c5a0 / 0x8011cb70 / … teilen sich die EXE-Bibliothek
+ * 0x8004f100ff, aus der alle obigen Adressen stammen). */
+int re15_actor_uses_own_bank(const re15_actor_t *a)
+{
+    if (!a || a->type < 0x40 || a->type > 0x4d) return 0;
+    if (a->walk_active) return 1;
+    if (a->state == 1) return 1;                       /* ESKORTE, alle Subs */
+    if (a->state == 4) {
+        int s1 = a->sub_state_1;
+        return (s1 == 2 || s1 == 4 || s1 == 5 || s1 == 6 || s1 == 9);
+    }
+    return 0;
+}
+
 int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
@@ -4923,17 +4953,8 @@ int re15_actor_clip_len(const re15_actor_t *a)
      * EIGENE BANK 1 (+0x170/+0x174 = dir[4]/dir[3], FUN_80022300 @0x800224b8/c8) — der Walker
      * (actor_locomotion.c) taktet Clip 5 an DIESER Laenge (30f fuer EM040), nicht an der
      * Container-Bank (dir[1], Clip 5 = 20f). marvin_spawn_anim.md F1 (CONFIRMED). */
-    if (a->type >= 0x40 && a->type <= 0x4d && b->own_ok) {
-        int s1 = a->sub_state_1;
-        int own = a->walk_active ||
-                  (a->state == 4 && (s1 == 2 || s1 == 4 || s1 == 5 || s1 == 6 || s1 == 9)) ||
-                  /* ESKORTE (state 1): JEDER ihrer Exec-Subs posiert aus +0x170/+0x174 =
-                   * BANK 1 - `lw a0,368(v0)` / `lw a1,372(v0)` vor dem anim_set, belegt bei
-                   * Stehen @0x8004f384-88, Gehen @0x8004f5c0-c4, Drehen @0x8004f7bc-c0,
-                   * Nah @0x8004fb14, Laufen @0x8004ff68. Ohne diesen Zweig taktete und
-                   * zeichnete der Port die Container-Bank (Nutzer-Report 2026-08-28
-                   * "Adas Lauf- und Idle Animation beim Folgen sind noch falsch"). */
-                  (a->state == 1);
+    if (b->own_ok) {
+        int own = re15_actor_uses_own_bank(a);   /* die EINE Regel, s. dort */
         if (own && (int)a->motion < b->anim_own.clip_count)
             return b->anim_own.clips[a->motion].frame_count;
     }
@@ -9221,6 +9242,25 @@ static void re15_npc_pos_advance(re15_actor_t *e)
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * (int32_t)e->speed_h) >> 12);
 }
 
+/* ⛔ WAND-KLEMME DER NPC-WURZEL (Nutzer-Report 2026-08-29: "Ada kann durch alles
+ * durchlaufen - das macht sie im Original nicht").
+ * Die Wurzel 0x8011cb70 klemmt JEDEN NPC nach dem Zustands-Dispatch gegen die Raum-Kollision
+ * - byte-gelesen unmittelbar hinter dem `jalr` auf die Zustandstabelle:
+ *     8011cc58: lw   v0,120(a0)   ; v0 = entity+0x78 = die Hitbox
+ *     8011cc5c: ori  a2,zero,0x4  ; a2 = Solid-Maske 4
+ *     8011cc60: lhu  a1,6(v0)     ; a1 = box+6 = Radius
+ *     8011cc64: jal  0x8003b0a4   ; der Klemmer
+ *     8011cc68: addiu a0,a0,52    ; a0 = entity+0x34 = Position
+ * Der Port hatte diesen Aufruf fuer die NPC-Familie nirgends - die Eskorte schob die Figur
+ * frei durch Waende. Radius im Port = hit_radius_min (dasselbe +0x78-Feld). */
+static void re15_npc_wall_clamp(re15_actor_t *e, int32_t ox, int32_t oz)
+{
+    int32_t nx = e->x, nz = e->z;
+    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                   (int32_t)e->hit_radius_min, e->y, 4u);
+    e->x = nx; e->z = nz;
+}
+
 /* Sub 0 DECIDE 0x8004f100. Nur der erste Zweig fuehrt in einen portierten Sub; die
  * uebrigen sind oben als OFFEN benannt. */
 static void re15_npc_escort_decide0(re15_actor_t *e)
@@ -9390,8 +9430,11 @@ static void re15_npc_escort_tick(re15_actor_t *e, re15_actor_t *pl)
      *     3  | 0x8004f7dc | 0x8004f9ec   nah dabei (halbes Tempo)
      *     5  | 0x8004fd3c | 0x8004fe44   laufen
      * (4/6/7 sind nicht portiert, s. Kommentar bei re15_npc_escort_decide0.) */
-    re15_npc_escort_decide(e);
-    re15_npc_escort_exec(e);
+    {   int32_t ox = e->x, oz = e->z;
+        re15_npc_escort_decide(e);
+        re15_npc_escort_exec(e);
+        re15_npc_wall_clamp(e, ox, oz);      /* Wurzel-Klemme @0x8011cc58-68 */
+    }
 }
 
 static void re15_npc_ai_tick(int slot)
