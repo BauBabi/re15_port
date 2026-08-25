@@ -2700,8 +2700,21 @@ static int op_aot_reset(scd_thread_t *t)
  * Member_cmp (0x3E) — 6 B: [op, slot, member_id, cmp_op, value_lo, value_hi]
  *   cmp_op: 0 = ==, 1 = !=, 2 = <, 3 = >. Writes boolean to locals[0]
  *   so a follow-up If can branch on it (same convention as Ck).
- * Sce_em_set (0x44) — 22 B: [op, slot, type, behavior, hp_lo, hp_hi,
- *   pos_x×4, pos_y×4, pos_z×4, rot_y_lo, rot_y_hi, flags_lo, flags_hi]. */
+ * Sce_em_set (0x44) — 20 B: [op, slot, type, behavior, hp_lo, hp_hi,
+ *   pos_x×4, pos_y×4, pos_z×4, rot_y_lo, rot_y_hi, flags_lo, flags_hi].
+ *
+ * ⛔ KORREKTUR 2026-08-30: hier stand "22 B". Das ist die RE2-Laenge, nicht die von
+ * RE1.5. Der RE1.5-Handler ist 0x800420A0 (Sprungtabelle 0x800744a8, Eintrag 0x44) und
+ * schiebt den Thread-PC (thread+0x1C) am Ende um ZWANZIG:
+ *     80042620: lw    v1,28(s5)
+ *     8004262c: addiu v1,v1,20
+ *     80042630: sw    v1,28(s5)
+ * RE2 dagegen: Handler 0x8005714C, `addiu v1,v1,22` @0x800576E4 — und mit anderer
+ * Feldlage (dort steht der TYP auf Byte +3, `lbu v0,3(v1)` @0x80057334 -> `sb v0,8(s0)`
+ * @0x8005733C, waehrend RE1.5 ihn auf +2 fuehrt).
+ * Die Laengentabelle s_op_table[0x44] = 20 und `t->pc += 20` im Handler waren also
+ * schon richtig; nur dieser Kommentar log. ⛔ Wichtig fuer den geplanten RE2-Endboss-
+ * Import: die beiden Spawn-Records sind NICHT dasselbe Format. */
 /* Phase 4.5.9-E: SCD script slots reference the ENEMY pool. Slot 0 in
  * a script = first enemy = actor pool slot 1. The player (actor 0) is
  * addressed via Plc_* opcodes, never via Member_set / Sce_em_set. */
@@ -3331,7 +3344,9 @@ static int op_sce_em_set(scd_thread_t *t)
         if ((uint8_t)(actor_slot + 1) > g_actor_count)
             g_actor_count = (uint8_t)(actor_slot + 1);
     }
-    t->pc += 20;                   /* per Java disassembler size table */
+    t->pc += 20;                   /* byte-true: `addiu v1,v1,20` @0x8004262c
+                                    * (Handler 0x800420A0). RE2 hat hier 22 —
+                                    * s. Kommentarblock bei Sce_em_set. */
     return 1;
 }
 
