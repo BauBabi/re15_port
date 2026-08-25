@@ -1,57 +1,81 @@
-# RE1.5 Port — v0.3.27 (Early Preview)
+# RE1.5 Port — v0.3.28 (Early Preview)
 
-## ROOM1210: aus dem Zupacken ist ein echtes Festhalten geworden
+Drei Meldungen, drei Ursachen — und bei zweien war der Fehler meiner.
 
-Zur letzten Version hatte ich eine Einschraenkung eingeraeumt: die Haende im Gitter *packten
-zu und machten Schaden*, aber sie hielten nicht fest. Der Grund lag in den Daten — das
-Arm-Modell EM01A bringt keine Opfer-Animation mit, und ohne die gibt es niemanden, der Leon
-waehrend eines Griffs bewegt.
+## Das Feuer in ROOM1090 knistert wieder
 
-Auf die Ansage *"Ja, stell das um, wenn dir da was fehlt, hole die Animation aus Resident
-Evil 2"* ist das jetzt umgestellt.
+Du hattest das zum zweiten Mal gemeldet, und beim ersten Mal habe ich falsch geprueft: ich
+hatte nur nachgesehen, ob die Feuer-Spur korrekt VERSTUMMT, und daraus geschlossen, sie sei
+in Ordnung. Sie hat nie geklungen.
 
-Wer in eine der Haende hineinlaeuft, wird gepackt und **festgehalten**: Leon spielt den
-Ringkampf, wehrt sich durch Tastendruecke los, wird dabei gebissen — und kommt wieder frei.
-Gemessen dauert ein Griff 96 Bilder, wenn man nichts tut; wer mitdrueckt, ist deutlich
-schneller draussen. Der Biss kostet 20 Lebenspunkte.
+Das Feuer ist im Original keine normale Musikspur, sondern ein Sonderfall: eine zweite
+Sequenz in der Neben-Musikdatei, die sich per Bank-Wechsel auf die Haupt-Musikdatei
+umhaengt und dort drei Knister-Samples anspielt. Das zugehoerige Instrument ist ab Werk
+stumm und wird erst vom Raum-Skript aufgedreht.
 
-Die Zahlen sind keine Erfindung. Der Griff ist RE2s Fenster-Mechanik, Zeile fuer Zeile aus
-dem Zombie-Overlay uebernommen: die Reichweite (1200 Einheiten), der Greif-Winkel (ein
-45-Grad-Kegel nach vorn, aus zwei Halb-Sektoren), das Ringkampf-Budget (148, pro Bild minus 2,
-ein Tastendruck zieht 5 zusaetzlich ab) und der Biss (Bild 16 des Greif-Clips, 20 Punkte)
-stehen so im Original. Die Adressen dazu stehen im Quelltext an jeder einzelnen Konstante.
+Im Port hat eine einzige Zeile diese ganze Ebene stillgelegt: der Mischer sprang bei jeder
+Sequenz ab, die keine EIGENE Klangbank mitbringt — und genau das ist bei dieser Sequenz
+normal, sie leiht sich die des Nachbarn. Die Startfunktion daneben hatte die richtige
+Pruefung seit jeher; der Mischer nicht.
 
-**Und die Animation ist geliehen, nicht erfunden.** Das ist der Punkt, an dem es haette
-schiefgehen koennen, deshalb kurz das Warum: die Opfer-Animation eines Gegners bewegt nicht
-den Gegner, sondern **Leon** — sie steckt in einem eigenen Datenpaar und laeuft auf Leons
-eigenem Skelett, nicht auf dem des Angreifers. Ein Arm mit vier Knochen kann sich so etwas
-also durchaus von einem Zombie leihen, ohne dass irgendetwas gebogen werden muesste. Genau
-das passiert: der Arm borgt sich den Ringkampf des Zombies — im RE1.5-Modus RE1.5s eigenen,
-im RE2-Modus den von RE2. Es kommt keine einzige neu erfundene Bewegung dazu.
+Belegen laesst sich das ohne Hoertest: ich habe zweimal aufgenommen, einmal mit brennendem
+Raum und einmal mit bereits geloeschtem Feuer. **Vorher waren beide Aufnahmen ueber 1,9
+Millionen Bilder bitgleich** — der Schalter hat also nachweislich nichts bewirkt. Nachher
+unterscheiden sie sich in 38,9 % aller Samples.
 
-### Zwei Dinge, die ich beim Nachmessen gefunden habe
+Nebenbei betrifft das nicht nur ROOM1090: drei weitere Raeume haben eine solche zweite
+Sequenz mit Noten, und sie waren aus demselben Grund stumm.
 
-**Die Arme kamen bisher immer zu spaet.** Die Reichweite, ab der ein Arm ausfaehrt, stand auf
-der halben Tiefe des Ausloese-Rechtecks des Raums. Nachgerechnet reicht das nicht: der
-Ausfahr-Clip dauert 30 Bilder, ein gehender Spieler ist bei halber Tiefe aber nur rund 22
-Bilder in Reichweite — der Arm war fertig, als der Spieler schon vorbei war. Jetzt steht dort
-die volle Tiefe, also die Zahl, die woertlich im Raum steht; die Halbierung war meine Zutat.
+## ROOM1210: die Haende kommen jetzt wirklich raus
 
-**Und die meisten Kreaturen kann man gar nicht erreichen.** Ich habe den begehbaren Boden
-abgetastet: acht der zehn stehen zwischen 1300 und 2800 Einheiten *hinter* dem Gitter,
-ausserhalb von allem, was man betreten kann — und das Arm-Modell ist mit gut 440 Einheiten
-viel zu kurz, um das aufzuholen. Nur zwei Stellen liegen so, dass ein Spieler wirklich
-gegriffen werden kann. Fuer die anderen acht bleibt es beim Ausfahren und Stoehnen.
+Hier habe ich in der letzten Version einen echten Fehler gebaut. Die Original-Mechanik
+laesst die Kreatur beim Ausloesen **nach vorn schnellen** — ich hatte das weggelassen, mit
+der Begruendung, ein im Gitter steckender Arm koenne das nicht.
 
-Das ist keine Einschraenkung, die ich weggeredet haben will, sondern schlicht die Geometrie
-des Raums — und ehrlich gesagt passt es zu dem Bild, das du beschrieben hast: die Haende
-kommen ueberall raus, erwischen tut einen nur, wer zu nah kommt.
+Genau diese Bewegung IST aber das Aus-dem-Gitter-Kommen. Nachgemessen: an ihren
+Ausgangspositionen liegen alle zehn Kreaturen **ausserhalb jedes einzelnen der neun
+Kamera-Bereiche** des Raums — und beide Fassungen, Original wie Port, zeichnen einen Gegner
+gar nicht erst, wenn er dort nicht drinliegt. Es war also nicht "unauffaellig animiert",
+es war ueberhaupt nichts zu sehen. Das Modell selbst haette es auch nicht gerettet: der
+Arm misst gerade einmal gut 400 Einheiten, das Gitter ist rund 2700 entfernt.
 
-Was weiterhin bewusst **nicht** uebernommen ist: die Vorwaerts-Bewegung der Original-Mechanik.
-Ein Arm, der im Gitter steckt, kann nicht 2400 Einheiten vorschnellen. Und RE2s toedlicher
-Ausgang (der Zombie zieht einen zu Boden und frisst) fehlt aus demselben Grund — der toedliche
-Biss wirft hier ab wie jeder andere, und der normale Tod uebernimmt.
+Jetzt fahren sie die Original-Bewegung: drei Bilder schnell vor, dreissig langsam zurueck,
+vier wieder vor — unterm Strich 2420 Einheiten nach vorn. Damit landen sie im Flur, im Bild
+und in Griffweite. Die Zahlen stehen alle so im Original; im Port sind exakt dieselben 2420
+nachgemessen.
 
-## Noch offen
+Dein urspruenglicher Kritikpunkt bleibt gewahrt: verworfen hattest du, dass **alle zehn auf
+einen Schlag** losgehen. Das entscheidet weiterhin jeder Arm fuer sich. Und weil der Port
+das Ausfahren wiederholt ausloest (das Original tut es genau einmal), stellt er die Kreatur
+beim Rueckzug wieder an ihren Platz — sonst waere sie nach drei Durchgaengen mitten im Flur.
 
-Aus den Vorrunden bleibt nichts liegen.
+## Ada bewegt sich beim Folgen richtig
+
+Vier Fehler auf einmal, alle in derselben Ecke:
+
+**Falsche Animations-Bank.** Waehrend des Folgens nimmt das Original ein eigenes
+Animations-Paar, das der Port nur fuer einen anderen Zustand kannte. Gezeichnet wurde die
+Haupt-Bank — dort ist der Geh-Clip eine voellig andere, kuerzere Bewegung und der
+Steh-Clip ein Sturz.
+
+**Eingefrorene Pose.** Der Geh-Zustand hat Clip, Bild und Ueberblendung in *jedem* Bild neu
+gesetzt statt nur beim Eintritt. Gemessen stand der Bildzaehler konstant auf 1 — die Beine
+bewegten sich nicht, waehrend die Figur durch den Raum glitt.
+
+**Doppelter Takt.** Zusaetzlich hat der allgemeine Animations-Takter mitgezaehlt, also zwei
+Bilder pro Bild.
+
+**Fehlende Zustaende.** Zum Folgen gehoeren im Original fuenf Zustaende: stehen, gehen, sich
+zum Spieler drehen, nah dabei mit halbem Tempo — und **laufen**, mit eigenem Clip und
+eigenem Tempo, ab rund 3000 Einheiten Abstand. Der Port kannte drei davon. Ada blieb deshalb
+selbst bei grossem Rueckstand im Geh-Clip.
+
+Drei Zustaende, die nur ueber Story-Flags oder einen gepackten Spieler erreichbar sind, habe
+ich bewusst offen gelassen und im Quelltext als offen benannt — ihre Animationsseite ist
+noch nicht ausgelesen, und ein Zweig ohne Ziel wuerde die Figur einfrieren.
+
+## Wie das gefunden wurde
+
+Alle drei Punkte sind aus dem Original disassembliert, nicht geraten; jede Zahl in den
+Fixes traegt ihre Adresse im Quelltext. Der Feuer-Befund ist zusaetzlich gegen einen
+Original-Spielstand geprueft, der ROOM1210-Befund gegen die Kamera-Bereiche des Raums.
