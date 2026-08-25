@@ -130,6 +130,13 @@ int re2_hybrid_perm(int kind, const int8_t **out_perm);
  * Rueckgabe 0 ok, negativ = kein Hybrid fuer den kind / Bone-Zahl passt nicht.
  * `out_unmapped` (optional) = Zahl der Kanten ohne RE1.5-Entsprechung — PIN-Wert der Tests
  * (Soll: 0 fuer alle Typen; die beiden Hunde-Extra-Slots sind KEINE Kanten mit m>=0). */
+/* Wurzelhoehen-Korrektur des Hybrid-Rigs (siehe re15_emd.h `root_y_fix`).
+ * reset() gibt den Tabellen-Pool frei (beim Bank-Reset aufrufen); stats() liefert Belegung
+ * und Kapazitaet und gibt != 0 zurueck, wenn eine Tabelle wegen Platzmangel AUSGEFALLEN ist
+ * (dann schwebt der betroffene Typ wieder — die Wache pinnt das). */
+void re2_hybrid_rootfix_reset(void);
+int  re2_hybrid_rootfix_stats(int *out_used, int *out_capacity);
+
 int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
                      const re15_md1_t *md15, const re15_emd_skeleton_t *skel15,
                      int *out_unmapped);

@@ -78,6 +78,41 @@ typedef struct {
     int              keyframe_count;
     const uint8_t   *keyframe_data;        /* points into EMR buffer (caller-owned) */
     size_t           keyframe_data_size;
+#ifdef RE15_PLATFORM_PC
+    /* HYBRID-WURZELHOEHE (nur PC, nur die drei umgebauten RE2-Hybrid-Kopien).
+     *
+     * Nutzer-Befund: "der Zombie in 10D0 schwebt nach dem Aufstehen leicht in der Luft" —
+     * gemessen global, nicht 10D0-spezifisch (ROOM1030: RE1.5-Flavor Sohle +6..+127 = auf dem
+     * Boden, RE2-Flavor -133..-219 = schwebt).
+     *
+     * Ursache: der WELLE-G-Hybrid ersetzt in re2_hybrid_rig_skel NUR die Bind-Offsets durch die
+     * RE1.5-Werte und laesst die Wurzel-Translation der RE2-Keyframes stehen. Die Weltposition
+     * eines Punktes ist aber
+     *     y = e->y + Wurzel_Y(Keyframe) + SUM ueber die Kette ( R_Eltern * Bind_Offset ).y
+     * — beide Summanden stammen im Original IMMER aus derselben EMR-Sektion. Der Port mischt sie.
+     *
+     * Im Original gibt es KEINE Boden-Verankerung fuer Y, die man portieren koennte: die
+     * Wurzel-Translation wird 1:1 aus dem Keyframe uebernommen (Zuweisung, keine Addition,
+     * FUN_8001f3bc @0x8001f434-40), und die einzige Wurzel-Nachfuehrung des Spiels
+     * (FUN_8001ac38 / FUN_8001ad68) arbeitet ausschliesslich in X und Z. Das Original BRAUCHT
+     * keine Verankerung, weil es die Rigs nie mischt. Der Hybrid ist ein reines Port-Konstrukt,
+     * also ist die Frage nicht "welche Original-Konstante", sondern "welche Invariante garantiert
+     * das Original, und wie stellt der Port sie wieder her".
+     *
+     * Da die Rotationen in beiden Faellen dieselben sind (sie kommen aus dem RE2-Keyframe), ist
+     * die Differenz algebraisch exakt:
+     *     K(kf) = SUM ueber die Kette ( R_Eltern(kf) * (Bind_RE2 - Bind_RE15) ).y
+     * Ein KONSTANTER Versatz ist widerlegt: der Fehler haengt an der Pose und laeuft ueber alle
+     * Clips von -7 bis -219 (Sohle). Die vorgeschlagene Konstante +168 haette jeden liegenden,
+     * kriechenden und fressenden Zombie um bis zu 160 Einheiten IN den Boden gedrueckt.
+     *
+     * Deshalb: eine Tabelle mit einem int16 PRO KEYFRAME, zur Ladezeit in re2_hybrid_apply aus
+     * den zwei gelesenen Bind-Tabellen berechnet (siehe dort). NULL = keine Korrektur — das gilt
+     * fuer alles ausser den drei Hybrid-Kopien, also RE1.5-Flavor, Spieler, Nicht-Hybrid-Typen
+     * und die Victim-Bank (die posiert LEON und wird vom Hybrid bewusst nicht umgebaut). */
+    const int16_t   *root_y_fix;
+    int              root_y_fix_count;
+#endif
 } re15_emd_skeleton_t;
 
 /* Parse the EDD animation table.

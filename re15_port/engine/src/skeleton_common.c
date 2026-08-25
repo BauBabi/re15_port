@@ -176,6 +176,18 @@ static int16_t re15_blend_angle12(int prev, int cur, int wp)
     return (int16_t)((prev * wp + cur * wc) >> 12);
 }
 
+int re15_skel_root_y_fix(const re15_emd_skeleton_t *skel, int keyframe_index)
+{
+#ifdef RE15_PLATFORM_PC
+    if (!skel || !skel->root_y_fix) return 0;
+    if (keyframe_index < 0 || keyframe_index >= skel->root_y_fix_count) return 0;
+    return (int)skel->root_y_fix[keyframe_index];
+#else
+    (void)skel; (void)keyframe_index;
+    return 0;              /* PSX-Target kennt den Hybrid nicht */
+#endif
+}
+
 int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                             int                       keyframe_index,
                             re15_skel_pose_t          poses[RE15_EMD_MAX_BONES])
@@ -240,10 +252,15 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
      * eating zombies and room1150 floating Irons. Read the per-frame root. */
     int16_t kf_px = 0, kf_py = 0, kf_pz = 0;
     re15_emd_get_keyframe_position(skel, keyframe_index, &kf_px, &kf_py, &kf_pz);
+    kf_py = (int16_t)(kf_py + re15_skel_root_y_fix(skel, keyframe_index));
     if (tween.active) {
         /* marker ROOT lerp (GTE GPF12/GPL12 @0x8001fa78-fae0): root = ((0x1000-w)*A + w*B) >> 12 */
         int16_t fx = 0, fy = 0, fz = 0;
         re15_emd_get_keyframe_position(skel, tween.kf_from, &fx, &fy, &fz);
+        /* Die Hybrid-Korrektur haengt am KEYFRAME, also wird sie VOR dem Lerp auf BEIDE Seiten
+         * gelegt und damit genauso mitgelerpt wie die Wurzel selbst. Wuerde man sie erst danach
+         * addieren, spraenge sie an jeder Marker-Grenze um die Differenz der beiden Korrekturen. */
+        fy = (int16_t)(fy + re15_skel_root_y_fix(skel, tween.kf_from));
         kf_px = (int16_t)(((int)fx * (0x1000 - tw) + (int)kf_px * tw) >> 12);
         kf_py = (int16_t)(((int)fy * (0x1000 - tw) + (int)kf_py * tw) >> 12);
         kf_pz = (int16_t)(((int)fz * (0x1000 - tw) + (int)kf_pz * tw) >> 12);

@@ -2808,3 +2808,14 @@ target_compile_definitions(test_writher_kill_flag PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_writher_kill_flag COMMAND test_writher_kill_flag)
 set_tests_properties(unit_writher_kill_flag PROPERTIES TIMEOUT 90)
+
+# --- PIN (Nutzer-Befund "der Zombie in 10D0 schwebt"): die Hybrid-Wurzelhoehe.
+#     Die Korrektur ist PRO KEYFRAME und misst BONE-Ursprünge, nicht Vertices —
+#     eine Konstante ist widerlegt, eine mesh-basierte Fassung verschiebt den Hund. ---
+add_executable(test_rig_root_fix test_rig_root_fix.c)
+target_link_libraries(test_rig_root_fix PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rig_root_fix PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_rig_root_fix PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_rig_root_fix COMMAND test_rig_root_fix)
+set_tests_properties(unit_rig_root_fix PROPERTIES TIMEOUT 120)

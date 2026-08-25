@@ -12,6 +12,7 @@
 #include "re2_ems.h"
 #include "re15_emd.h"
 #include "re15_md1.h"
+#include "re15_skeleton.h"   /* re15_skel_compute_pose + g_anim_pose_actor (Wurzelhoehen-Messung) */
 
 #include "gen/re2_ems_toc.inc"   /* s_re2_cdemd0_toc[600] + s_re2_enemse_toc[292] */
 
@@ -210,6 +211,115 @@ static int re2_hybrid_rig_skel(re15_emd_skeleton_t *dst, const int8_t *perm, int
     return unmapped;
 }
 
+/* ===== HYBRID-WURZELHOEHE ================================================================
+ *
+ * Nutzer-Befund: "der Zombie in 10D0 schwebt nach dem Aufstehen leicht in der Luft" — gemessen
+ * global (ROOM1030: RE1.5-Flavor Sohle +6..+127 = auf dem Boden, RE2-Flavor -133..-219).
+ * Herleitung und Beleg-Kette stehen am Feld `root_y_fix` in re15_emd.h; kurz:
+ *   y = e->y + Wurzel_Y(Keyframe) + SUM ueber die Kette ( R_Eltern * Bind_Offset ).y
+ * Der Hybrid tauscht nur den zweiten Summanden. Da die Rotationen identisch sind (sie kommen
+ * aus dem RE2-Keyframe), ist die Differenz algebraisch exakt
+ *   K(kf) = SUM ueber die Kette ( R_Eltern(kf) * (Bind_RE2 - Bind_RE15) ).y
+ * und pro Keyframe messbar, indem dieselbe Pose zweimal aufgebaut wird. Genau das tut der
+ * Block hier — er laeuft an der einzigen Stelle, an der BEIDE Bind-Tabellen und BEIDE MD1
+ * gleichzeitig vorliegen: vor dem Ueberschreiben in re2_hybrid_apply.
+ *
+ * Bezugspunkt ist der tiefste VERTEX, nicht der tiefste Bone ("K_mesh"): der Nutzer sieht
+ * Geometrie, nicht Gelenke. Das setzt Mesh-Index == Bone-Index fuer die RE2-Zombie-MD1
+ * voraus — belegt, weil EM010 17 Meshes bei 15 Bones hat und die beiden ueberzaehligen die
+ * GORE-Reserven sind (Slots 0..14 sind 1:1). Gegengemessen reproduziert HYB+K_mesh die
+ * RE2-Bodenlage Zeile fuer Zeile (Clip 0: RE2 -21..+47, HYB heute -206..-129, HYB+K -21..+47).
+ *
+ * KEINE In-Place-Korrektur der Asset-Bytes: die Bank aliast das residente EMS, der
+ * Keyframe-Pool wird von mehreren Kopien geteilt. Deshalb eine Seiten-Tabelle. */
+#define RE2_ROOTFIX_POOL   40960u          /* int16-Eintraege; gemessener Bedarf s.u. */
+static int16_t  s_rootfix_pool[RE2_ROOTFIX_POOL];
+static uint32_t s_rootfix_used = 0;
+static int      s_rootfix_overflow = 0;
+
+void re2_hybrid_rootfix_reset(void)
+{
+    s_rootfix_used = 0;
+    s_rootfix_overflow = 0;
+}
+
+int re2_hybrid_rootfix_stats(int *out_used, int *out_capacity)
+{
+    if (out_used)     *out_used     = (int)s_rootfix_used;
+    if (out_capacity) *out_capacity = (int)RE2_ROOTFIX_POOL;
+    return s_rootfix_overflow;
+}
+
+/* Tiefster Welt-Vertex einer Pose. PSX-Y zeigt nach UNTEN, groesser = tiefer.
+ * Exakt die Renderer-Kette aus platform/pc/main.c (Bone-Klammer inkl. der mesh_count-Klemme
+ * fuer den Nicht-Remap-Fall), damit gemessen wird, was auch gezeichnet wird. */
+/* Tiefster BONE-URSPRUNG einer Pose. PSX-Y zeigt nach UNTEN, groesser = tiefer.
+ *
+ * ⛔ BONE, NICHT VERTEX — gemessen 2026-08-27, und das ist der Unterschied zwischen einem
+ * Fix und einer neuen Regression:
+ * Die Korrektur darf AUSSCHLIESSLICH den Bindlaengen-Tausch ausgleichen. Der Bone-Ursprung
+ * haengt nur an Hierarchie + Bindlaengen + Rotationen — genau die drei Groessen, von denen
+ * der Hybrid eine tauscht. Der tiefste VERTEX haengt zusaetzlich an der Mesh-Geometrie, und
+ * die ist zwischen RE1.5 und RE2 nicht dieselbe.
+ * Beim ZOMBIE faellt das kaum auf (Meshes 1:1, RE1.5-Sohle ~20 flacher). Beim HUND 0x20 ist es
+ * fatal: Sonden-Sweep `probe_rig_sohle sweep 20` zeigt
+ *     K_bone  +0..+3      (die Kette ist praktisch identisch)
+ *     K_mesh  -93..+181   (die Pfoten-Meshes entsprechen sich nicht)
+ * und sein HYB liegt schon OHNE Korrektur auf der RE2-Bodenlage (Clip 0: RE2 14..15,
+ * HYB 13..15). Eine Mesh-basierte Korrektur haette den Hund um bis zu 238 Einheiten
+ * verschoben, obwohl er nichts braucht — gemessen, nicht befuerchtet.
+ * Restfehler von K_bone beim Zombie: die genuine Mesh-Tiefendifferenz (~20 Einheiten =
+ * 0,7 % der Koerperhoehe). Das Ergebnis liegt damit innerhalb des Bandes, das der
+ * RE1.5-Flavor mit seinen eigenen Clips selbst einnimmt (ROOM1030: +6..+127). */
+static int32_t re2_lowest_bone_y(const re15_emd_skeleton_t *sk, const re15_md1_t *md,
+                                 int has_remap, int kf, int *ok)
+{
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                       /* kein Crossfade waehrend der Messung */
+    int rv = re15_skel_compute_pose(sk, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) { *ok = 0; return 0; }
+    int nb = sk->bone_count;
+    if (!has_remap && md && nb > md->mesh_count) nb = md->mesh_count;   /* main.c:6916-Klemme */
+    if (nb > RE15_EMD_MAX_BONES) nb = RE15_EMD_MAX_BONES;
+    if (nb <= 0) { *ok = 0; return 0; }
+    int32_t best = -0x7fffffff;
+    for (int b = 0; b < nb; b++)
+        if (poses[b].trans[1] > best) best = poses[b].trans[1];
+    *ok = 1;
+    return best;
+}
+
+/* Eine Skelett-Kopie mit ihrer Korrektur-Tabelle versehen.
+ * `hyb` traegt bereits die RE1.5-Bindlaengen, `re2bind` ist die gesicherte RE2-Fassung
+ * DESSELBEN Skeletts (gleiche Hierarchie, gleicher Keyframe-Pool). */
+static void re2_build_rootfix(re15_emd_skeleton_t *hyb, const re15_emd_skeleton_t *re2bind,
+                              const re15_md1_t *md2, const re15_md1_t *md15,
+                              const int8_t *remap)
+{
+    hyb->root_y_fix = NULL;
+    hyb->root_y_fix_count = 0;
+    int n = hyb->keyframe_count;
+    if (n <= 0) return;
+    if (s_rootfix_used + (uint32_t)n > RE2_ROOTFIX_POOL) { s_rootfix_overflow = 1; return; }
+    int16_t *tab = &s_rootfix_pool[s_rootfix_used];
+    for (int kf = 0; kf < n; kf++) {
+        int oka = 0, okb = 0;
+        /* Identische Rotationen, identische Hierarchie, identische Bone-Klammer — der
+         * einzige Unterschied ist die Bindlaengen-Tabelle. Genau das soll K messen. */
+        int32_t a = re2_lowest_bone_y(re2bind, md2,  0, kf, &oka);   /* RE2-Bindlaengen   */
+        int32_t b = re2_lowest_bone_y(hyb,     md15, 1, kf, &okb);   /* RE1.5-Bindlaengen */
+        int32_t k = (oka && okb) ? (a - b) : 0;
+        if (k >  32767) k =  32767;
+        if (k < -32768) k = -32768;
+        tab[kf] = (int16_t)k;
+    }
+    s_rootfix_used += (uint32_t)n;
+    hyb->root_y_fix = tab;
+    hyb->root_y_fix_count = n;
+}
+
 int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
                      const re15_md1_t *md15, const re15_emd_skeleton_t *skel15,
                      int *out_unmapped)
@@ -227,10 +337,31 @@ int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
         if (m >= md15->mesh_count)             return -6;
     }
 
+    /* Die RE2-Fassung der drei Skelette sichern, BEVOR die Bindlaengen ueberschrieben werden —
+     * und das RE2-MD1, bevor es unten durch `eb->md1 = *md15` ersetzt wird. Beides ist die
+     * Bezugsseite der Wurzelhoehen-Korrektur. Die Kopien halten nur Werte plus die Zeiger auf
+     * den gemeinsamen Keyframe-Pool; es wird nichts dupliziert, was der Bank gehoert. */
+    re15_emd_skeleton_t re2_skel      = eb->skel;
+    re15_emd_skeleton_t re2_skel_loco = eb->skel_loco;
+    re15_emd_skeleton_t re2_skel_own  = eb->skel_own;
+    const re15_md1_t    re2_md1       = eb->md1;
+    re2_skel.root_y_fix = NULL;      re2_skel.root_y_fix_count = 0;
+    re2_skel_loco.root_y_fix = NULL; re2_skel_loco.root_y_fix_count = 0;
+    re2_skel_own.root_y_fix = NULL;  re2_skel_own.root_y_fix_count = 0;
+
     int um = 0;
     um += re2_hybrid_rig_skel(&eb->skel,        perm, n, skel15);
     if (eb->loco_ok)   um += re2_hybrid_rig_skel(&eb->skel_loco,   perm, n, skel15);
     if (eb->own_ok)    um += re2_hybrid_rig_skel(&eb->skel_own,    perm, n, skel15);
+
+    /* Erst JETZT die Korrektur-Tabellen bauen: `eb->skel*` traegt die RE1.5-Bindlaengen,
+     * `re2_skel*` die RE2-Fassung — beide mit denselben Keyframes. skel_victim bleibt aussen
+     * vor, der posiert LEON und wurde vom Hybrid bewusst nicht umgebaut. */
+    {   const int8_t *rm = perm;
+        re2_build_rootfix(&eb->skel, &re2_skel, &re2_md1, md15, rm);
+        if (eb->loco_ok) re2_build_rootfix(&eb->skel_loco, &re2_skel_loco, &re2_md1, md15, rm);
+        if (eb->own_ok)  re2_build_rootfix(&eb->skel_own,  &re2_skel_own,  &re2_md1, md15, rm);
+    }
     /* skel_victim (Paar 3) posiert LEON, nicht den Gegner — sein Rig ist PL00-kompatibel
      * (RE1.5 PL00.PLD parent[] == RE2 EM010 parent[], selbst gemessen). Er bleibt daher
      * UNVERAENDERT: Leons Modell ist in beiden Modi dasselbe RE1.5-PL00. */

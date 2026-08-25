@@ -49,6 +49,12 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                             int                       keyframe_index,
                             re15_skel_pose_t          poses[RE15_EMD_MAX_BONES]);
 
+/* Wurzel-Y-Korrektur fuer die RE2-Hybrid-Skelette (siehe re15_emd.h, root_y_fix).
+ * Liefert 0 fuer JEDES Skelett, das keine Tabelle traegt — also fuer den RE1.5-Flavor, den
+ * Spieler, alle Nicht-Hybrid-Typen und die Victim-Bank. Damit ist der Fix ueber den
+ * Skelett-ZEIGER verschluesselt, nicht ueber den Gegner-Typ. */
+int re15_skel_root_y_fix(const re15_emd_skeleton_t *skel, int keyframe_index);
+
 /* Transform one bone's MODEL-LOCAL pose translation (poses[b].trans, as produced by
  * re15_skel_compute_pose) into WORLD space for an actor at (ox,oy,oz) facing `yaw`:
  *
