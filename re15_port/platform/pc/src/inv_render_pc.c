@@ -49,6 +49,7 @@
 
 extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
+#include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -703,6 +704,58 @@ static void fb_dump_bmp(const char *path)
             fwrite(px, 1, 3, f);
         }
     fclose(f);
+}
+
+/* ---- BILD-EBENE DES FILE-SCHIRMS (RE2-Dokumentseiten) ---------------------------------
+ * RE1.5s FILE-Leser ist reiner Text (Blob @0x800ccd34 in DEBUG.BIN); eine Bild-Ebene gibt
+ * es dort nicht. RE2 zeichnet je Seite ZWEI Sprites, und genau die zeichnet diese Funktion.
+ * BYTE-BELEGT aus dem RE2-Leser FUN_80075fd0 (selbst disassembliert):
+ *     8007603c  lhu   s3,-24250(at)   ; y_off aus dem Dokument-Record @0x800AA144
+ *     80076040  addiu s1,zero,256
+ *     80076044  subu  s5,s1,s3        ; H = 256 - y_off
+ *   TEXTSEITE (4bpp, CLUT 0,490 @0x8007604c):
+ *     80076068  sb zero,-2(s0)  u = 0
+ *     8007606c  sb zero,-1(s0)  v = 0
+ *     80076070  sh s1,2(s0)     w = 256
+ *     80076078  sh s5,4(s0)     h = H
+ *   ILLUSTRATION (8bpp, CLUT 0,489 @0x800760ac):
+ *     800760b8  subu v0,zero,s3 ; v = (-y_off) & 0xFF = H
+ *     800760d4  sh s1,2(s0)     w = 128
+ *     800760dc  sh s3,4(s0)     h = y_off = 256 - H
+ * Also: Text oben (volle Breite 256, Zeilen 0..H-1), darunter die 128 breite
+ * Illustration (Zeilen H..255), zusammen eine 256x256-Flaeche.
+ *
+ * ⛔ PORT-ERWEITERUNG, klar benannt: RE1.5 kennt diese Ebene nicht. Sie zeichnet NUR,
+ * wenn ein Dokument gewaehlt ist (re15_re2doc_select); ohne Auswahl bleibt der FILE-Schirm
+ * unveraendert der byte-true Textleser. Die Bildlage im Schirm ist eine Port-Entscheidung -
+ * RE2s eigene Sprite-Position gehoert zu RE2s Schirm-Layout, nicht zu RE1.5s.
+ *
+ * Die Masse kommen aus den TIM-Koepfen, nicht aus einer Tabelle - so kann ein selbst
+ * gebautes Dokument eine eigene Seitenhoehe haben, ohne dass hier etwas nachgezogen wird. */
+void re15_inv_render_pc_file_image(int doc, int page, int ox, int oy)
+{
+    if (doc < 0) return;
+    int tw = 0, th = 0;
+    if (!re15_re2doc_size(doc, page, RE15_RE2DOC_PAGE, &tw, &th)) return;
+    const int H = th;
+
+    uint8_t r, g, b;
+    /* Sprite 1: Textseite, Zeilen 0..H-1 */
+    for (int v = 0; v < H; v++)
+        for (int u = 0; u < tw; u++)
+            if (re15_re2doc_pixel(doc, page, RE15_RE2DOC_PAGE, u, v, &r, &g, &b))
+                re15_pc_put_pixel(ox + u, oy + v,
+                                  ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | 0xFFu);
+
+    /* Sprite 2: Illustration, abgetastet ab Zeile H, 128 breit, Hoehe 256-H */
+    int pw = 0, ph = 0;
+    if (!re15_re2doc_size(doc, page, RE15_RE2DOC_PAPER, &pw, &ph)) return;
+    const int hh = ph - H;                     /* = y_off, `sh s3,4(s0)` @0x800760dc */
+    for (int v = 0; v < hh; v++)
+        for (int u = 0; u < pw; u++)
+            if (re15_re2doc_pixel(doc, page, RE15_RE2DOC_PAPER, u, H + v, &r, &g, &b))
+                re15_pc_put_pixel(ox + u, oy + H + v,
+                                  ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | 0xFFu);
 }
 
 /* Draw one frame of the status screen into the software framebuffer.

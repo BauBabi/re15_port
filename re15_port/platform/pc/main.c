@@ -74,6 +74,7 @@ static inline int RNDI(float f) {
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
  * re15_inv_screen.c (engine) rasterized by inv_render_pc.c; see re15_inv_screen.h.) */
 #include "re15_inv_screen.h"  /* byte-true status-screen display list (wave 1) */
+#include "re15_re2doc.h"      /* FILE-Bildebene: RE2-Dokumentseiten */
 #include "re15_room.h"
 #include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
@@ -3941,6 +3942,33 @@ re_title:;
                 extern int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n);
                 int inv_n = re15_inv_screen_build(&g_inv_screen, s_inv_ops, RE15_INV_MAX_OPS);
                 re15_inv_render_pc_draw(s_inv_ops, inv_n);
+
+                /* BILD-EBENE DES FILE-SCHIRMS (Port-Erweiterung, Beleg-Block bei
+                 * re15_inv_render_pc_file_image): zeichnet die zwei RE2-Sprites ueber den
+                 * Leser, sobald ein Dokument gewaehlt ist. Ohne Auswahl passiert nichts und
+                 * der Schirm bleibt der byte-true Textleser von RE1.5.
+                 * RE15_DOC="<nr>" waehlt zum Ansehen ein Dokument (0..24). */
+                {
+                    extern void re15_inv_render_pc_file_image(int doc, int page, int ox, int oy);
+                    static int s_doc_env = -2;
+                    if (s_doc_env == -2) {
+                        const char *dv = getenv("RE15_DOC");
+                        s_doc_env = (dv && *dv) ? atoi(dv) : -1;
+                        if (s_doc_env >= 0) re15_re2doc_select(s_doc_env);
+                    }
+                    int doc = re15_re2doc_selected();
+                    /* Leser offen = FILE-Welle (substate 2) im Zustand 3 bzw. 4..7 (Seitenwechsel) —
+                     * dieselbe Bedingung, unter der re15_inv_screen.c emit_file_reader ruft
+                     * (@0x800c6f94 / @0x800c6fc8-d0). */
+                    if (doc >= 0 && g_inv_screen.substate == 2 &&
+                        (g_inv_screen.item_state == 3 ||
+                         (g_inv_screen.item_state >= 4 && g_inv_screen.item_state <= 7))) {
+                        /* Seite: der Leser zaehlt ab 0; die Titelseite ist Seite -1. */
+                        int pg = (int)g_inv_screen.file_reader_page - 1;
+                        /* Bildlage: die 256x256-Flaeche mittig im 320x240-Schirm. */
+                        re15_inv_render_pc_file_image(doc, pg, 32, -8);
+                    }
+                }
             }
 
             /* WAVE 3: the invented "Will you use the X?" Yes/No prompt overlay was REMOVED —

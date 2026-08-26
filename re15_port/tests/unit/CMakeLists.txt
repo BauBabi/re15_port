@@ -2898,6 +2898,17 @@ target_compile_definitions(probe_1210_reach PRIVATE
 # --- MESSSONDE (Auftrag 2026-08-29 Arme-erreichen-Leon-nirgendwo): Spieler-Grenze
 #     (Boden vs Klemmer vs Erreichbarkeit), Mesh-Reichweite, Restluecke. KEIN add_test. ---
 # MESSUNG (Nutzer-Report 2026-08-31): Griff zieht Leon in die Wand, Arme clippen durch.
+# --- PIN (Nutzer-Auftrag 2026-08-26 "portiere mir die bild ebene"): die
+#     RE2-Dokumentseiten werden in der byte-belegten Geometrie gelesen. ---
+add_executable(test_re2doc_bildebene test_re2doc_bildebene.c)
+target_link_libraries(test_re2doc_bildebene PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2doc_bildebene PRIVATE
+    ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src)
+target_compile_definitions(test_re2doc_bildebene PRIVATE
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_re2doc_bildebene COMMAND test_re2doc_bildebene)
+set_tests_properties(unit_re2doc_bildebene PROPERTIES TIMEOUT 60)
+
 add_executable(probe_1210_masken probe_1210_masken.c)
 target_link_libraries(probe_1210_masken PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_masken PRIVATE ${CMAKE_SOURCE_DIR}/include)
