@@ -2900,6 +2900,16 @@ target_compile_definitions(probe_1210_reach PRIVATE
 # MESSUNG (Nutzer-Report 2026-08-31): Griff zieht Leon in die Wand, Arme clippen durch.
 # --- PIN (Nutzer-Auftrag 2026-08-26 "portiere mir die bild ebene"): die
 #     RE2-Dokumentseiten werden in der byte-belegten Geometrie gelesen. ---
+# --- PIN (Nutzer-Report 2026-08-26 "Stage 6 laedt Raum und Hintergrund nicht"):
+#     jeder Raum jeder Stage muss eine Hintergrund-Quelle haben. ---
+add_executable(test_stage6_hintergrund test_stage6_hintergrund.c)
+target_link_libraries(test_stage6_hintergrund PRIVATE re15_engine re15_test_support)
+target_include_directories(test_stage6_hintergrund PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_stage6_hintergrund PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_stage6_hintergrund COMMAND test_stage6_hintergrund)
+set_tests_properties(unit_stage6_hintergrund PROPERTIES TIMEOUT 120)
+
 add_executable(test_re2doc_bildebene test_re2doc_bildebene.c)
 target_link_libraries(test_re2doc_bildebene PRIVATE re15_engine re15_test_support)
 target_include_directories(test_re2doc_bildebene PRIVATE

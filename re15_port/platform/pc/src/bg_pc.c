@@ -230,6 +230,58 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
             return rv;
         }
     }
+    /* ⛔ RUECKFALL AUF DIE ORIGINAL-BSS (Nutzer-Report 2026-08-26: "Die Stage 6 Sachen
+     * laedt er irgendwie Raum und Hintergrund nicht, wenn ich den im Debug Mode anwaehle").
+     *
+     * GEMESSEN: der vorgeschnittene Baum BSS/ROOM####/BG##.BSS ist UNVOLLSTAENDIG.
+     * Verzeichnisse je Stage: 1 -> 78, 2 -> 24, 3 -> 30, 4 -> 22, 5 -> 2, 6 -> NULL.
+     * Fuer STAGE6 existiert also kein einziger vorgeschnittener Hintergrund, und der Lader
+     * kannte bis hier nur diesen Pfad und die alte Flachform. Ergebnis: schwarzer Raum.
+     *
+     * Die ORIGINALE liegen dagegen fuer ALLE Stages vollstaendig da, eine Datei je
+     * Raum-PAAR, im Stage-Verzeichnis: STAGE%u/ROOM%03X.BSS (der Name traegt die Raum-Id
+     * OHNE die Varianten-Ziffer, ROOM1210 und ROOM1211 teilen sich ROOM121.BSS).
+     * Zaehlung: 40+16+16+16+24+8 = 120 Dateien fuer 240 RDTs.
+     *
+     * DIE SCHNITTREGEL IST GEMESSEN, NICHT GERATEN: Schnitt n = Original[n * 0x10000],
+     * Laenge 0x10000. Gegenprobe ueber den GESAMTEN vorhandenen Baum — 1688 Schnitte,
+     * ALLE byte-identisch mit der so gerechneten Scheibe, null Abweichungen. Beispiel
+     * ROOM121.BSS: 589824 B = 9 x 65536, und BG00..BG08 liegen exakt auf
+     * 0x00000/0x10000/.../0x80000.
+     *
+     * Das behebt in einem Zug STAGE6 (0 Verzeichnisse), STAGE5 (2 von 48) und die Luecken
+     * in 2/3/4 — ohne neue Asset-Daten, weil die Originale ohnehin im Paket liegen. */
+    {
+        unsigned stage = (g_current_room_id >> 12) & 0xF;
+        if (stage >= 1 && stage <= 6) {
+            snprintf(rel, sizeof rel, "STAGE%u/ROOM%03X.BSS", stage, g_current_room_id >> 4);
+            int sz = 0;
+            uint8_t *buf = re15_pc_read_cd(rel, &sz);
+            if (buf) {
+                const size_t stride = 0x10000u;          /* gemessen, s. Block oben */
+                size_t off = (size_t)cut_idx * stride;
+                if (off + stride <= (size_t)sz) {
+                    int rv = re15_bg_load_from_bss(buf + off, stride);
+                    free(buf);
+                    if (rv == 0) {
+                        snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);
+                        if (re15_fade_log_on())
+                            fprintf(stderr, "[bg-log] F%u load %s ok (Original-Scheibe %s +0x%zx)\n",
+                                    g_engine.frame_count, s_bg_tag, rel, off);
+                        return 0;
+                    }
+                    if (re15_fade_log_on())
+                        fprintf(stderr, "[bg-log] F%u %s Scheibe %d FAIL rv=%d\n",
+                                g_engine.frame_count, rel, cut_idx, rv);
+                } else {
+                    free(buf);
+                    if (re15_fade_log_on())
+                        fprintf(stderr, "[bg-log] F%u %s hat nur %d B, Schnitt %d braucht 0x%zx\n",
+                                g_engine.frame_count, rel, sz, cut_idx, off + stride);
+                }
+            }
+        }
+    }
     {
         snprintf(rel, sizeof rel, "%s_bg%02d.bss", room_prefix, cut_idx);
         int sz = 0;
