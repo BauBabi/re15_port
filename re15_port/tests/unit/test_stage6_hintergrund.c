@@ -131,10 +131,14 @@ int main(void)
           rooms);
     printf("  4-Byte-Stummel insgesamt: %d (STAGE6: %d)\n", stubs, stage_stubs[6]);
     CHECK(stage_rooms[6] == 10 && stage_stubs[6] == 6,
-          "STAGE6 hat GENAU 10 echte Raeume und 6 Stummel (gemessen %d / %d) - die drei "
-          "Stummel-Paare ROOM6050/6060/6070 sind der zweite Teil des Nutzer-Reports: das "
-          "Debug-Menue bietet ACHT STAGE6-Eintraege an, aber drei davon zeigen auf Raeume, "
-          "die es im Auslieferungsstand nicht gibt",
+          "STAGE6 hat GENAU 10 echte Raeume und 6 Stummel (gemessen %d / %d). "
+          "⛔ KORREKTUR 2026-08-26: hier stand, das Debug-Menue biete ACHT STAGE6-"
+          "Eintraege an. Falsch - ich hatte die NAMEN im erzeugten Header gezaehlt statt "
+          "der BELEGT-Flagge in DEBUG.BIN. Anwaehlbar ist ein Satz nur bei Flagge != 0 "
+          "(`lhu v0,0(at)` @0x800147A8 / `beq v0,zero,0x800146E8` @0x800147B0 -> Index++). "
+          "Fuer STAGE6 sind das GENAU VIER: GATE PLATFORM, MAIN PLATFORM, SHELTER 01-02, "
+          "TRAIN MAIN CAR. ENDING (Satz 4) traegt Flagge 0 und die Fuellkoordinaten "
+          "-26214/-3861 - dieselben wie OPENING - und ist im ORIGINAL ebenso unerreichbar.",
           stage_rooms[6], stage_stubs[6]);
     CHECK(stubs == 34,
           "und game-weit sind es 34 Stummel (%d) - faellt die Zahl, ist ein RDT verloren "
