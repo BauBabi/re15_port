@@ -2929,7 +2929,8 @@ add_executable(probe_1210_wandgriff probe_1210_wandgriff.c)
 target_link_libraries(probe_1210_wandgriff PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1210_wandgriff PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1210_wandgriff PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 
 add_executable(probe_1210_geo probe_1210_geo.c)
 target_link_libraries(probe_1210_geo PRIVATE re15_engine re15_test_support)

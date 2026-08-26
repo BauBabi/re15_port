@@ -29,6 +29,7 @@
 #include "re15_skeleton.h"
 #include "re15_math.h"
 #include "re15_damage.h"
+#include "re2_ems.h"   /* RE2-Opferbank als Leihgeber */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -88,6 +89,33 @@ static int load_bank(unsigned char type, unsigned char *blob, size_t blobcap)
     return ok;
 }
 
+static unsigned char *s_re2_ems;      /* muss resident bleiben: die Bank aliast hinein */
+
+/* Den Leihgeber 0x10 aus der RE2-Bank laden statt aus der RE1.5-Bank.
+ * ⛔ DAS IST DER UNTERSCHIED, den der Nutzer meldet: der Port leiht dem Arm (Typ 0x1A)
+ * immer die Opfer-Bank des Zombies 0x10 (main.c:5021) — aber WELCHE Fassung, entscheidet
+ * der KI-Geschmack. Unter "RE2 AI" kommt RE2s EM010 mit RE2s Ringkampf-Clips, und deren
+ * Wurzel-Versaetze sind andere als die der RE1.5-Clips. */
+static int load_donor_re2(void)
+{
+    size_t n = 0;
+    s_re2_ems = slurp(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", &n);
+    if (!s_re2_ems) { printf("  RE2-EMS fehlt\n"); return 0; }
+    re15_enemy_bank_t *eb = re15_enemy_find(0x10);
+    if (!eb) eb = re15_enemy_alloc(0x10);
+    if (!eb) return 0;
+    re15_tim_t tim;
+    memset(&tim, 0, sizeof tim);
+    if (re2_ems_load_bank(s_re2_ems, n, 0x10, eb, &tim) != 0) {
+        printf("  RE2-Bank 0x10 nicht ladbar\n");
+        return 0;
+    }
+    eb->ok = 1; eb->buf = NULL;
+    printf("  RE2-Leihgeber 0x10: victim_ok=%d, %d Opfer-Clips\n",
+           eb->victim_ok, eb->victim_ok ? eb->anim_victim.clip_count : -1);
+    return eb->victim_ok;
+}
+
 static void frame_step(void)
 {
     const unsigned char *raw; int len, id;
@@ -119,6 +147,9 @@ static int32_t kante(int32_t x, int32_t z, int32_t dx)
     return px;
 }
 
+static int g_frames, g_wand;
+static int32_t g_tiefste = -99999;
+
 int main(void)
 {
     char path[600];
@@ -141,7 +172,16 @@ int main(void)
     scd_room_reenter(&s_rdt, 0, 0, 0);
     {
         int arm = load_bank(0x1A, s_blob, sizeof s_blob);
-        int don = load_bank(0x10, s_blob_donor, sizeof s_blob_donor);
+        const char *m = getenv("RE15_PROBE_AI");
+        int re2 = (m && *m == '2');
+        int don;
+        if (re2) {
+            don = load_donor_re2();
+            printf("  MODUS: RE2-AI (Leihgeber aus shared_assets/RE2/CDEMD0.EMS)\n");
+        } else {
+            don = load_bank(0x10, s_blob_donor, sizeof s_blob_donor);
+            printf("  MODUS: RE1.5 (Leihgeber aus shared_assets/PSX/EMD/CDEMD0.EMS)\n");
+        }
         re15_enemy_bank_t *db = re15_enemy_find(0x10);
         printf("  Baenke: Arm 0x1A=%d, Leihgeber 0x10=%d victim_ok=%d\n",
                arm, don, db ? db->victim_ok : -1);
@@ -206,7 +246,17 @@ int main(void)
             int32_t over = ost ? (k - ga->x) : (ga->x - k);
             if (over > worst_out) worst_out = over;
         }
-        if (f < 400 && (f < 45 || re15_player_is_grabbed() || ga->sub_state_1 >= 4))
+        if (re15_player_is_grabbed()) {
+            g_frames++;
+            if (!begehbar(pl->x, pl->z)) {
+                g_wand++;
+                if (g_wand <= 3)
+                    printf("    WAND-BILD f%-3d Spieler (%7ld,%7ld)  Kante -18164\n",
+                           f, (long)pl->x, (long)pl->z);
+                if (pl->x > g_tiefste) g_tiefste = pl->x;   /* je groesser, desto tiefer in der Ostwand */
+            }
+        }
+        if (0)
             printf("    f%-3d Arm sub=%d/%d clip=%u x=%7ld | Spieler (%7ld,%7ld) grabbed=%d\n",
                    f, ga->sub_state_1, ga->sub_state_2, (unsigned)ga->motion,
                    (long)ga->x, (long)pl->x, (long)pl->z, re15_player_is_grabbed());
@@ -223,6 +273,9 @@ int main(void)
     printf("  groesster Ueberstand eines Arms ueber die Flurkante: %ld Einheiten\n",
            (long)worst_out);
 
+    printf("\n\n=== ERGEBNIS: %d Griff-Bilder, davon %d IN DER WAND ===\n",
+           g_frames, g_wand);
+    if (g_wand) printf("    tiefster Punkt in der Ostwand: x = %ld (Kante -18164)\n", (long)g_tiefste);
     free(buf);
     printf("\nMESSUNG FERTIG\n");
     return 0;
