@@ -18,6 +18,10 @@ release/linux_out/
 # (26448 Dateien, davon 3967 aus _deps/SDL). Agenten legen eigene Build-Baeume an
 # (build_a, vbuild, build-relwin, …), deshalb ein Praefix-Muster statt einzelner Namen.
 re15_port/build*/
+# CMake-Arbeitsverzeichnisse ausserhalb von build*/ — ein `git add -A re15_port/`
+# hat hier am 2026-08-26 22457 Artefakt-Dateien in einen Commit gezogen.
+re15_port/cmake/build/
+re15_port/targets/*/build/
 re15_port/vbuild*/
 **/_deps/
 re15_port/debug.log

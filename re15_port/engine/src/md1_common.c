@@ -120,3 +120,28 @@ int re15_md1_parse(const uint8_t *data, int size, re15_md1_t *out)
 
     return 0;
 }
+
+
+/* PLD-Komponente herausschneiden — Herleitung + Gegenprobe s. re15_md1.h. */
+int re15_pld_part(const uint8_t *data, long size, int idx,
+                  unsigned long *out_off, unsigned long *out_len)
+{
+    if (!data || size < 20 || idx < 0 || idx > 3 || !out_off || !out_len) return 0;
+    unsigned long tb = (unsigned long)data[0]        | ((unsigned long)data[1] << 8) |
+                       ((unsigned long)data[2] << 16) | ((unsigned long)data[3] << 24);
+    if (tb + 16 > (unsigned long)size) return 0;
+    unsigned long dir[4];
+    for (int i = 0; i < 4; i++) {
+        const uint8_t *p = data + tb + (unsigned long)i * 4;
+        dir[i] = (unsigned long)p[0]        | ((unsigned long)p[1] << 8) |
+                 ((unsigned long)p[2] << 16) | ((unsigned long)p[3] << 24);
+    }
+    unsigned long o = dir[idx];
+    if (o >= (unsigned long)size) return 0;
+    unsigned long e = (unsigned long)size;
+    unsigned long bound[6] = { dir[0], dir[1], dir[2], dir[3], tb, (unsigned long)size };
+    for (int k = 0; k < 6; k++) if (bound[k] > o && bound[k] < e) e = bound[k];
+    *out_off = o;
+    *out_len = e - o;
+    return 1;
+}

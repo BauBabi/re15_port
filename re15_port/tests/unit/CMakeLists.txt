@@ -3072,3 +3072,25 @@ target_include_directories(test_1190_weste PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_1190_weste PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1190_weste COMMAND test_1190_weste)
+
+# --- MESSSONDE 1190-Texte (Westen-Auslöser sub15). KEIN add_test. ---
+add_executable(probe_1190_texte probe_1190_texte.c)
+target_link_libraries(probe_1190_texte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1190_texte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1190_texte PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE 1190-Ruestung (R.P.D. armor equip). KEIN add_test. ---
+add_executable(probe_1190_ruestung probe_1190_ruestung.c)
+target_link_libraries(probe_1190_ruestung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1190_ruestung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1190_ruestung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN 1190-Ruestung (R.P.D. armor equip/unequip) ---
+add_executable(test_1190_ruestung test_1190_ruestung.c)
+target_link_libraries(test_1190_ruestung PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1190_ruestung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1190_ruestung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1190_ruestung COMMAND test_1190_ruestung)

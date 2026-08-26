@@ -818,6 +818,117 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
 
+/* ─────────────────────────────────────────────────────────────────────────────────────
+ * R.P.D.-RUESTUNG / SPIELERMODELL-WECHSEL — byte-true.
+ *
+ * NUTZER-BEFUND 2026-08-26: "Nach anziehen der Weste im ROOM 1190 aendert sich Leons
+ * outfit nicht und wahrscheinlich hat er auch die Vorteile der Weste nicht."
+ *
+ * DIE KETTE, GANZ GEMESSEN (ROOM1190.RDT, Datei-Offsets; PSX.EXE-Adressen):
+ *  1. Prop 16 = die Weste auf einem Staender. Obj_model_set @0x002D4C (sub14),
+ *     pos (20480,-1500,-21168) — sie fehlte bis 2026-08-26 wegen der Prop-Kappung
+ *     (s. RE15_RDT_MAX_PROPS in re15_rdt.h; der Nutzer sah ein gelbes Viereck).
+ *  2. Aot_set @0x002D90 (sub14): slot 16, sce 3, Rechteck (19700,-22000)+(1000,1500) —
+ *     enthaelt die Weste. Nutzlast pc[14..19] = ff 00 18 0f 00 00, also (u16@+2)>>8 = 15.
+ *     sce-3-Handler @0x800430F0 ruft FUN_8003ee3c(cond, sub) = "fuehre sub15 aus".
+ *  3. sub15 @0x002DA6 ist ein UMSCHALTER auf Flag(3,0x75):
+ *        21 03 75 00   Flag(3,0x75) pruefen
+ *        2b 04 80 ff   Meldung 0x04  "There is one R.P.D. armor that should fit you.
+ *                                     Will you equip it?"
+ *        2b 05 80 ff   Meldung 0x05  "Will you unequip the armor?"
+ *        22 03 75 01 / 22 03 75 00   Flag setzen / loeschen
+ *        24 10 01 00 / 24 10 00 00   work_vars[0x10] = 1 / 0
+ *        47 0f                       Aot_on(15)
+ *     (Die Meldungstexte sind mit dem Dekoder DES PORTS aus der Message-Tabelle des
+ *      Raums gelesen, nicht uebersetzt — probe_1190_texte.)
+ *  4. AOT-Slot 15 = Door_aot_set @0x002D70, Rechteck (0,0,0,0) = reiner Skript-Ausloeser;
+ *     next_pos (19100,0,-21250), Zielraum 0x19 = ROOM1190 SELBST, Cut 13. Das Anlegen
+ *     ist also ein Raum-Neuladen an derselben Stelle.
+ *  5. Und HIER greift, was dieser Block nachbaut — der Raumlader FUN_800396fc:
+ *        80039760  lbu  a0,0x0(s0)=>DAT_800aca5c   ; Modell/Waffen-Byte
+ *        80039768  lh   v1,DAT_800b0ff0            ; work_vars[0x10]
+ *        8003976c  andi v0,a0,0xf                  ; untere Nibble = MODELL-Index
+ *        80039770  beq  v0,v1,LAB_80039790         ; unveraendert -> nichts tun
+ *        80039774  _andi v0,a0,0xf0                ; sonst obere Nibble (Waffe) behalten
+ *        8003977c  lbu  v1,DAT_800b0ff0
+ *        80039784  or   v0,v0,v1
+ *        80039788  jal  FUN_800314b0               ; Spielermodell NEU LADEN
+ *        8003978c  _sb  v0,0x0(s0)
+ *     FUN_800314b0 @0x800314d4-1c: `lbu v0,DAT_800aca5c; sll v0,v0,1;
+ *     lhu a0,DAT_80073f70[v0]; jal FUN_80013b60` — Datei-Id-Tabelle @0x80073f70 ist
+ *     16 u16: 0x3C,0x3D,…,0x4B. Also schlicht Datei-Id = 0x3C + Index = PL0<Index>.PLD.
+ *
+ * WAS GETAUSCHT WIRD — GEMESSEN, NICHT ANGENOMMEN. PL00.PLD gegen PL01.PLD, Komponenten
+ * ueber die Verzeichnistabelle (u32 @0 = Tabellenanfang, dann 4 u32: EDD, EMR, MD1, TIM):
+ *     EDD (Anim)    beide 3160 B  — sha 26198800428ae2ec == 26198800428ae2ec  GLEICH
+ *     EMR (Skelett) beide 57136 B — sha 38ae9ec1f0a7f134 == 38ae9ec1f0a7f134  GLEICH
+ *     MD1 (Mesh)    28916 B vs 30708 B                                        VERSCHIEDEN
+ *     TIM (Textur)  beide 99872 B — sha 3bd14dc6… vs 99a7994a…                VERSCHIEDEN
+ * Animation und Skelett sind byte-identisch, es wechseln also NUR Mesh und Textur. Der
+ * Schnitt ist gegengeprueft: die vier aus PL00.PLD geschnittenen Bloecke sind byte-gleich
+ * mit den separat ausgelieferten PL00.EDD/.EMR/.MD1/.TIM.
+ * PL01s Textur zeigt eine ROTE Weste mit "POLICE"-Schriftzug und RPD-Wappen ueber
+ * derselben Uniform (selbst dekodiert und angesehen) = die R.P.D.-Ruestung.
+ *
+ * KEINE SCHADENSMINDERUNG IM ORIGINAL: Flag(3,0x75) hat game-weit 14 Fundstellen —
+ * gesetzt/geloescht nur in ROOM1190/1191 sub15, gelesen in deren sub14 und in ROOM3060
+ * sub03, ROOM3091 sub07, ROOM40A0/40A1 sub06. Die EXE liest das Flag-Wort 0x800b1004
+ * NIRGENDS (keine Code-Referenz im Ghidra-Dump). Der Bit-0x4-Test im Schadenspfad
+ * (@0x80012088 `andi v1,v1,0x4`) trifft die Modell-Nibbles 4..7 = die ZWEITE Figur, nicht
+ * die Ruestung (Modell 1). Der Vorteil der Weste ist also Skript-seitig, nicht in der
+ * Schadensrechnung — das ist hier bewusst NICHT erfunden. */
+static int  s_player_model_idx = 0;      /* untere Nibble von DAT_800aca5c */
+static uint8_t *s_player_pld_buf = NULL; /* bleibt am Leben: md1/tim aliasen ihn */
+
+/* Liefert 1, wenn Mesh/Textur getauscht wurden. */
+static int pc_sync_player_model(re15_md1_t *pl_md1)
+{
+    int want = (int)g_scd.work_vars[0x10];
+    if (want < 0 || want > 15) return 0;          /* Tabelle @0x80073f70 hat 16 Eintraege */
+    if (want == s_player_model_idx) return 0;     /* @0x80039770 `beq v0,v1` */
+
+    char path[64];
+    snprintf(path, sizeof path, "PLD/PL%02X.PLD", (unsigned)want);
+    int sz = 0;
+    uint8_t *buf = pc_read_shared(path, &sz);
+    if (!buf || sz < 16) {
+        fprintf(stderr, "[pld] %s nicht ladbar - Modellwechsel uebersprungen\n", path);
+        return 0;
+    }
+    /* Schnitt ueber die EINE Regel der Engine (re15_pld_part) — nicht hier nachgebaut,
+     * damit der Pin test_1190_ruestung P4f genau diese Regel gegen die separat
+     * ausgelieferten PL00.EDD/.EMR/.MD1/.TIM gegenpruefen kann. */
+    unsigned long md1_off = 0, md1_len = 0, tim_off = 0, tim_len = 0;
+    if (!re15_pld_part(buf, (long)sz, RE15_PLD_MD1, &md1_off, &md1_len) ||
+        !re15_pld_part(buf, (long)sz, RE15_PLD_TIM, &tim_off, &tim_len)) {
+        fprintf(stderr, "[pld] %s: Verzeichnis unbrauchbar - Modellwechsel uebersprungen\n",
+                path);
+        free(buf);
+        return 0;
+    }
+
+    re15_md1_t nm = {0};
+    re15_tim_t nt;
+    int okm = re15_md1_parse(buf + md1_off, (int)md1_len, &nm) == 0;
+    int okt = re15_tim_parse(buf + tim_off, (int)tim_len, &nt) == 0;
+    if (!okm || !okt) {
+        fprintf(stderr, "[pld] %s: MD1 %s / TIM %s - Modellwechsel uebersprungen\n",
+                path, okm ? "ok" : "FEHLER", okt ? "ok" : "FEHLER");
+        free(buf);
+        return 0;
+    }
+    /* Erst jetzt den alten Puffer freigeben — das neue Mesh aliast den NEUEN. */
+    free(s_player_pld_buf);
+    s_player_pld_buf   = buf;
+    *pl_md1            = nm;
+    s_player_model_idx = want;
+    re15_render_pc_upload_tim_slot(&nt, 0);       /* Slot 0 = Spielerhaut */
+    fprintf(stderr, "[pld] Spielermodell -> %s (Mesh %d Teile, Textur %dx%d)%s\n",
+            path, nm.mesh_count, nt.width, nt.height,
+            want == 1 ? "  [R.P.D.-Ruestung an]" : "");
+    return 1;
+}
+
 static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                                   re15_md1_t md1[RE15_RDT_MAX_PROPS],
                                   int ok[RE15_RDT_MAX_PROPS])
@@ -5410,6 +5521,13 @@ re_title:;
                      * reload the destination room's Obj_model_set prop set so room1140
                      * shows ITS prop, not room1170's box. */
                     pc_load_room_prop_set(&rdt, s_room_prop_md1, s_room_prop_ok);   /* &rdt is synced to the dest room here */
+                    /* SPIELERMODELL nach work_vars[0x10] — byte-true an der Stelle, an der
+                     * es das Original tut: im RAUMLADER (FUN_800396fc @0x80039760-8c), nicht
+                     * im Skript. Das Anlegen der R.P.D.-Ruestung in ROOM1190 laeuft ueber
+                     * genau diesen Weg: sub15 setzt work_vars[0x10]=1 und feuert einen
+                     * Null-Rechteck-Tuer-AOT zurueck in DENSELBEN Raum. Herleitung und
+                     * Messwerte stehen bei pc_sync_player_model. */
+                    pc_sync_player_model(&md1);
 
                     /* 2026-06-17 FIX — ROOM-AWARE CINEMATIC BANK. The boot RBJ overlay
                      * (ROOM1170 by default) was kept RESIDENT across rooms (old

@@ -118,4 +118,31 @@ typedef struct {
  * sanity error. Fields in `out` reference into `data`. */
 int re15_md1_parse(const uint8_t *data, int size, re15_md1_t *out);
 
+/* ─────────────────────────────────────────────────────────────────────────────────────
+ * PLD-CONTAINER: eine Komponente herausschneiden.
+ *
+ * Layout (selbst gemessen an PL00..PL0F.PLD): u32 @0 = Offset der Verzeichnistabelle,
+ * dort 4 u32 = die Komponenten EDD (Animation), EMR (Skelett), MD1 (Mesh), TIM (Textur).
+ * Jede Komponente laeuft bis zur naechsten Grenze — das ist die kleinste der uebrigen
+ * Verzeichnis-Eintraege, der Tabellenanfang und das Dateiende. Dieselbe Grenzen-Regel wie
+ * rdt_next_boundary bei den RDT-Props.
+ *
+ * GEGENGEPRUEFT, nicht behauptet: die vier so aus PL00.PLD geschnittenen Bloecke sind
+ * byte-gleich mit den separat ausgelieferten PL00.EDD/.EMR/.MD1/.TIM (Pin
+ * test_1190_ruestung P4f).
+ *
+ * WOFUER: der Spielermodell-Wechsel. Der Raumlader FUN_800396fc @0x80039760-8c vergleicht
+ * die untere Nibble von DAT_800aca5c mit work_vars[0x10] und laesst bei Abweichung
+ * FUN_800314b0 das Modell neu laden; dessen Datei-Id-Tabelle @0x80073f70 ist 16 u16
+ * 0x3C..0x4B, also Datei-Id = 0x3C + Index = PL0<Index>.PLD. Index 1 = die R.P.D.-
+ * Ruestung aus ROOM1190.
+ *
+ * idx: 0=EDD 1=EMR 2=MD1 3=TIM. Liefert 1 bei Erfolg, 0 wenn das Verzeichnis nicht passt. */
+#define RE15_PLD_EDD 0
+#define RE15_PLD_EMR 1
+#define RE15_PLD_MD1 2
+#define RE15_PLD_TIM 3
+int re15_pld_part(const uint8_t *data, long size, int idx,
+                  unsigned long *out_off, unsigned long *out_len);
+
 #endif
