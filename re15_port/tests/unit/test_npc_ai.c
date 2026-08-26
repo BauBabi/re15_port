@@ -116,18 +116,53 @@ int main(void)
                         "blieb aber bei (%d,%d) stehen\n", n->x, n->z);
         fail = 1;
     }
-    /* Sie muss die Schleife auch SCHLIESSEN: nach dem Anlaufen steht sie im Halte-Band.
-     * Sub 1 -> Sub 3 bei Distanz < 500 (@0x8004f3c8), Sub 3 -> Sub 1 erst wieder ab 1001. */
-    if (n->sub_state_1 != 3) {
-        fprintf(stderr, "FAIL(2): die Eskorte kommt nicht zur Ruhe — Sub %u statt 3 "
-                        "(Ankunft @0x8004f3c8), Distanz %u\n", n->sub_state_1, n->ai_dist);
+    /* ⛔ SCHAERFER GEFASST 2026-08-26 (Nutzer: "die folgenden NPCs bewegen sich immer, sie
+     * bleiben nie stehen und idlen damit nie").
+     * Hier stand `sub_state_1 != 3` — die Zusage, dass sie im GEH-Zustand 3 landet. Das war
+     * die Beschreibung einer unvollstaendigen Maschine: dem Port fehlte Sub 4 (AUSRICHTEN,
+     * 0x8004fb3c / 0x8004fc2c), und Sub 4 ist der EINZIGE Rueckweg nach Sub 0. Ohne ihn ist
+     * {1,3,5} eine geschlossene Menge, und genau deshalb lief sie ewig.
+     * Mit dem Halte-Trigger (@0x8004f84c fuer Typ 0x4B / @0x8004f890 sonst) erreicht sie
+     * jetzt Sub 0. Die Wache verlangt deshalb das STEHENBLEIBEN selbst — und zwar an drei
+     * unabhaengigen Groessen, damit sie nicht an einer einzelnen Zahl haengt:
+     *   (a) Unterzustand 0 (Ruhe),
+     *   (b) Ruhe-Clip 2 (@0x8004f354),
+     *   (c) und sie bewegt sich ueber 30 Bilder KEINE Einheit mehr.
+     * (c) ist der eigentliche Punkt des Nutzers; (a)/(b) sagen, dass es der richtige
+     * Zustand ist und nicht nur ein Klemmer. ⛔ NICHT auf speed_h pruefen: Sub 4 schreibt
+     * das Feld nicht (kein Store in @0x8004fc2c-fd20), der Wert aus Sub 3 bleibt stehen —
+     * eine solche Wache waere vakuant. */
+    if (n->sub_state_1 != 0) {
+        fprintf(stderr, "FAIL(2): die Eskorte kommt nicht zur RUHE — Sub %u statt 0 "
+                        "(Halte-Trigger @0x8004f890 -> Sub 4 -> Sub 0 @0x8004fb8c), "
+                        "Distanz %u\n", n->sub_state_1, n->ai_dist);
         fail = 1;
+    }
+    if (n->motion != 2) {
+        fprintf(stderr, "FAIL(2): im Ruhezustand muss der Ruhe-Clip 2 laufen (@0x8004f354), "
+                        "laeuft aber %u\n", n->motion);
+        fail = 1;
+    }
+    {   int32_t rx = n->x, rz = n->z;
+        for (int f = 0; f < 30; f++) re15_enemy_ai_run_all(0);
+        int32_t d = (n->x - rx) * (n->x - rx) + (n->z - rz) * (n->z - rz);
+        printf("  (2b) RUHE: Sub %u, Clip %u, Ortsdelta ueber 30 Bilder = %ld\n",
+               n->sub_state_1, n->motion, (long)d);
+        if (d != 0) {
+            fprintf(stderr, "FAIL(2b): sie steht nicht wirklich still — Ortsdelta %ld ueber "
+                            "30 Bilder. Genau das war der Nutzer-Report.\n", (long)d);
+            fail = 1;
+        }
     }
     /* ⛔ KORREKTUR 2026-08-28: hier stand `>= 0x1f4` (Halte-PUNKT). Das war eine Folge des
      * alten Port-Sub-3, der STEHEN BLIEB. Byte-true ist Sub 3 aber ein Gehen mit HALBEM
      * Tempo (`lbu v0,0(at)` aus 0x80076c00 / `srl v0,v0,1` / `sh v0,140(v1)` @0x8004fa7c-88),
      * und verlassen wird er erst wieder ab 1001 (`sltiu v0,v0,0x3e9` @0x8004f818). Die NPC
      * pendelt also im BAND 500..1000, statt auf 500 stehen zu bleiben. Gemessen 884. */
+    /* Der Abstand im Ruhezustand: der Halte-Trigger feuert unter 300 (@0x8004f890,
+     * `sltiu v0,v0,0x12c`), Typ 0x4B unter 100 (@0x8004f84c). Typ 0x40 gehoert zur ersten
+     * Gruppe. Die Schranke bleibt die alte 1001 — sie ist weiterhin richtig und wird jetzt
+     * mit deutlichem Abstand unterschritten (gemessen 298). */
     if (n->ai_dist >= 0x3e9u) {
         fprintf(stderr, "FAIL(2): Halte-BAND nicht erreicht - +0x1d0 = %u, erwartet < 1001 "
                         "(@0x8004f3bc)\n", n->ai_dist);

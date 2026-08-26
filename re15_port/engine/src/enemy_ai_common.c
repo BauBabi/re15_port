@@ -9291,6 +9291,26 @@ static void re15_npc_wall_clamp(re15_actor_t *e, int32_t ox, int32_t oz)
     e->x = nx; e->z = nz;
 }
 
+/* FUN_8001aa68 — der Yaw-Schritt MIT TOTBAND. Er schreibt +0x6a NICHT, er liefert nur den
+ * Schritt; der Aufrufer addiert. Selbst disassembliert @0x8001aa68-0x8001aac0:
+ *     8001aa74  lhu  v0,106(v0)     ; eigener Yaw
+ *     8001aa7c  subu a0,a0,v0       ; Ziel - Yaw
+ *     8001aa80  addu a0,a1,a0       ; + Rate
+ *     8001aa84  andi a0,a0,0xfff
+ *     8001aa90  sll  v0,a1,1        ; Rate * 2
+ *     8001aa94  slt  v0,a0,v0
+ *     8001aa98  bne  v0,zero,...    ; rel < 2*Rate  -> 0 (TOTBAND, "steht richtig")
+ *     8001aaa0  sltiu v0,a0,0x801   ; rel <= 0x800  -> +Rate  (@0x8001aab8)
+ *     8001aaa8  subu v0,zero,a1     ; sonst        -> -Rate
+ * ⛔ NICHT re15_slew_to_angle benutzen: das ist ein anderer Helfer mit eigenen Aufrufern,
+ * der +0x6a selbst schreibt. */
+static int re15_npc_yaw_step(const re15_actor_t *e, int target, int rate)
+{
+    int rel = ((target - (int)e->rot_y) + rate) & 0x0fff;
+    if (rel < (rate << 1)) return 0;
+    return (rel <= 0x800) ? rate : -rate;
+}
+
 /* Sub 0 DECIDE 0x8004f100. Nur der erste Zweig fuehrt in einen portierten Sub; die
  * uebrigen sind oben als OFFEN benannt. */
 static void re15_npc_escort_decide0(re15_actor_t *e)
@@ -9298,7 +9318,9 @@ static void re15_npc_escort_decide0(re15_actor_t *e)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (e->ai_dist >= 0x5ddu) {                      /* sltiu 0x5dd @0x8004f118 */
         e->sub_state_1 = 1; e->sub_state_2 = 0;      /* @0x8004f124 / @0x8004f134 */
-        return;
+        /* ⛔ KEIN return: `bne` @0x8004f11c ueberspringt nur den Setz-Block, danach laeuft
+         * das Original auf den arc_test-Zweig @0x8004f148-74 weiter und darf +0x5 auf 2
+         * ueberschreiben. Betrifft das Bild mit dist >= 1501 UND Spieler ausserhalb ±0x4b0. */
     }
     /* arc_test(playerX, playerZ, 0x4b0) != 0 -> zum Spieler drehen (@0x8004f148-74). */
     if (re15_ai_arc_test(e, pl->x, pl->z, 0x4b0) != 0) {
@@ -9315,7 +9337,11 @@ static void re15_npc_escort_decide(re15_actor_t *e)
             e->sub_state_1 = 3;                      /* @0x8004f3c8 */
             e->sub_state_2 = 1;                      /* +0x6 = 1 @0x8004f3d8 (Phase 0 wird
                                                       * uebersprungen -> Clip 5 laeuft weiter) */
-            return;
+        }
+        /* Zweiter Zweig desselben Blattes: steht das ZIEL ausserhalb des 0x400-Sektors,
+         * geht es ebenfalls nach Sub 3 (@0x8004f3e8-f8 -> @0x8004f40c / @0x8004f41c). */
+        if (re15_ai_arc_test(e, e->ai_target_x, e->ai_target_z, 0x400) != 0) {
+            e->sub_state_1 = 3; e->sub_state_2 = 1;
         }
         if (e->ai_dist >= 0xbb9u) {                  /* sltiu 0xbb9 @0x8004f434 */
             e->sub_state_1 = 5; e->sub_state_2 = 0;  /* @0x8004f440 / @0x8004f450 */
@@ -9331,10 +9357,42 @@ static void re15_npc_escort_decide(re15_actor_t *e)
         }
         break;
     case 3:                                          /* 0x8004f7dc */
-        if (e->ai_dist >= 0x3e9u) {                  /* sltiu 0x3e9 @0x8004f818 */
+        if (re15_ai_arc_test(e, e->ai_target_x, e->ai_target_z, 0x200) == 0   /* @0x8004f7ec-fc */
+            && e->ai_dist >= 0x3e9u) {               /* sltiu 0x3e9 @0x8004f818 */
             e->sub_state_1 = 1;                      /* @0x8004f824 */
             e->sub_state_2 = 1;                      /* +0x6 = 1 @0x8004f834 (`sb v1,6(v0)`,
                                                       * v1 = 1 - NICHT 0) */
+        }
+        /* ⛔ DER HALTE-TRIGGER — das fehlende Stueck (Nutzer 2026-08-26: "die folgenden NPCs
+         * bewegen sich immer, sie bleiben nie stehen und idlen damit nie").
+         * Byte-belegt, zwei Zweige desselben Blattes, KEIN return dazwischen:
+         *     8004f844  lw    v0,464(a0)      ; +0x1D0 = Abstand
+         *     8004f84c  sltiu v0,v0,0x64      ; < 100
+         *     8004f858  lbu   v1,8(a0)        ; Typ
+         *     8004f860  bne   v1,0x4b         ; nur Typ 0x4B
+         *     8004f868  sb    v0(=4),5(a0)    ; -> Sub 4
+         *   und fuer alle uebrigen Typen:
+         *     8004f890  sltiu v0,v0,0x12c     ; < 300
+         *     8004f8a4  beq   v1,0x4b         ; ausser Typ 0x4B
+         *     8004f8ac  sb    v0(=4),5(a0)    ; -> Sub 4
+         * Sub 4 ist im Port bisher GAR NICHT vorhanden, und er ist der einzige Rueckweg
+         * nach Sub 0 (Ruhe). Ohne ihn ist {1,3,5} eine geschlossene Menge — genau deshalb
+         * blieb Ada nie stehen. */
+        if ((e->type == 0x4bu) ? (e->ai_dist < 0x64u) : (e->ai_dist < 0x12cu)) {
+            e->sub_state_1 = 4; e->sub_state_2 = 1;
+        }
+        break;
+    case 4:                                          /* AUSRICHTEN 0x8004fb3c */
+        /* Steht sie zum Spieler-Yaw ausgerichtet (Totband), zurueck in die RUHE.
+         *     8004fb54  lh    a0,-13634(a0)   ; Spieler-Yaw 0x800acabe
+         *     8004fb6c  lbu   a1,0(at)        ; Rate = Dreh-Gang-Tabelle 0x80076c41 + gi
+         *     8004fb70  jal   0x8001aa68      ; NICHT verdoppelt
+         *     8004fb78  bne   v0,zero,...     ; Schritt != 0 -> weiterdrehen
+         *     8004fb8c  sb    zero,5(v0)      ; sonst Sub 0
+         *     8004fb9c  sb    zero,6(v0)      ; und Phase 0 */
+        if (re15_npc_yaw_step(e, (int)pl->rot_y,
+                              re15_npc_gait(e, k_npc_gait_turn)) == 0) {
+            e->sub_state_1 = 0; e->sub_state_2 = 0;
         }
         break;
     case 5:                                          /* 0x8004fd3c */
@@ -9400,6 +9458,35 @@ static void re15_npc_escort_exec(re15_actor_t *e)
                                re15_npc_gait(e, k_npc_gait_run + 1));
         re15_npc_anim(e);                            /* anim_set @0x8004ff68 */
         re15_npc_pos_advance(e);                     /* @0x8004ff78 */
+        break;
+    case 4:                                          /* AUSRICHTEN 0x8004fc2c */
+        /* Sie dreht sich auf den Spieler-Yaw ein und geht dabei NICHT von der Stelle —
+         * dieser Zweig ruft kein pos_advance. Byte-belegt:
+         *     8004fc64  sb v0(=1),6(a0)     ; Phase
+         *     8004fc74  sb 5,148(a0)        ; Clip 5
+         *     8004fc84  sb zero,149(a0)     ; Frame 0
+         *     8004fc94  sb 7,143(a0)        ; +0x8f = 7
+         *     8004fcd0  sll a1,a1,1         ; ⛔ HIER ist die Rate VERDOPPELT (im
+         *                                   ;   decide-Zweig @0x8004fb6c ist sie es NICHT)
+         *     8004fce8  addu v1,v0,v1
+         *     8004fcf4  sh   v1,106(a0)     ; +0x6a, UNMASKIERT (kein andi 0xfff dazwischen)
+         *     8004fd00  ...                 ; Schritt == 0 -> exakt auf den Spieler-Yaw
+         *     8004fd20  anim_set
+         * ⛔ Die fehlende Maskierung ist ABSICHT und byte-true: rot_y darf transient ueber
+         * 0xfff laufen; re15_cos_q12/re15_sin_q12 maskieren selbst.
+         * ⛔ speed_h wird hier NICHT geschrieben — der Wert aus Sub 3 bleibt stehen. Eine
+         * Wache auf speed_h == 0 waere deshalb vakuant; gemessen wird die POSITION. */
+        if (seed) {
+            e->sub_state_2 = 1;                      /* @0x8004fc64 */
+            e->motion = 5; e->anim_frame = 0;        /* @0x8004fc74 / @0x8004fc84 */
+            e->anim_frac = 7;                        /* @0x8004fc94 */
+        }
+        {   int d = re15_npc_yaw_step(e, (int)pl->rot_y,
+                                      re15_npc_gait(e, k_npc_gait_turn) << 1);
+            if (d == 0) e->rot_y = pl->rot_y;        /* Schnapp @0x8004fd00-08 */
+            else        e->rot_y = (int16_t)((int)e->rot_y + d);   /* @0x8004fce8/f4 */
+        }
+        re15_npc_anim(e);                            /* @0x8004fd20 */
         break;
     default:                                         /* STEHEN 0x8004f310 */
         if (seed) {
