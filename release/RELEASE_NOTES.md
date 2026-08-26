@@ -1,3 +1,51 @@
+# RE1.5 Port — v0.3.35 (Early Preview)
+
+## Der Griff zieht Leon nicht mehr in die Wand
+
+> "wenn ich zu oft hintereinander gegriffen werde, werde ich trotzdem noch in die Wand
+> gezogen"
+
+Behoben — und dahinter steckten zwei Fehler von mir.
+
+Der erste: die Wandklemme, die ich in v0.3.31 eingebaut hatte, war an den falschen Gegner
+gebunden. Die Arme leihen sich ihre Ringkampf-Animation vom Zombie, und der Port merkte sich
+dabei den **Leihgeber** statt den **Greifer**. Meine Klemme fragte nach dem Arm — und bekam
+den Zombie. Sie lief also in keinem einzigen Bild.
+
+Der zweite war ein Messfehler, den ich Ihnen als Tatsache verkauft habe: ich meldete, die
+Klemme feuere "nie, 0 von 12131 Bildern". Diese Zahl sagte in Wahrheit gar nichts ueber das
+Spiel — meine Messsonde hatte der Klemme die Raumdaten nie gegeben, also konnte sie dort
+nicht arbeiten. Sonde und Wache pruefen das jetzt ausdruecklich mit.
+
+Die Ursache selbst: der Ankerpunkt stimmt jedes Mal. Die Abdrift entsteht **waehrend** des
+Haltens, weil die geliehene RE2-Animation eine eigene Bewegung mitbringt. Die Klemme haelt
+Leon jetzt an seinem letzten nachweislich begehbaren Standpunkt fest.
+
+Gemessen, an derselben Wandkante:
+
+```
+vorher   306 Griff-Bilder, 231 in der Wand, bis zu 1095 Einheiten dahinter
+nachher  306 Griff-Bilder,   0 in der Wand
+```
+
+Im RE1.5-Modus greift die Klemme kein einziges Mal ein — dort war nie etwas kaputt, und es
+bleibt so.
+
+## Kein Biss-Geraeusch mehr
+
+> "Wir haben ein Biss sound. Im Original das passt hier nicht. Im Original RE 2 ist es auch
+> kein Biss Sound. Uebernehme den Sound vom Original RE 2 beim greifen dort."
+
+Stimmt — ein Arm im Gitter beisst nicht. Dort lief bisher der Biss-Laut des Zombies.
+
+RE2s verankerter Greifer spielt beim Zupacken statt dessen einen von **zwei** Lauten, per
+Zufall gewaehlt, mit einer Sperre von 150 Bildern dazwischen. Genau das ist jetzt uebernommen,
+inklusive der Sperre und ueber dasselbe Feld, das das Original dafuer benutzt.
+
+**Tests:** 244/244 gruen (lokal und im Docker-Linux-Build).
+
+---
+
 # RE1.5 Port — v0.3.34 (Early Preview)
 
 Drei Meldungen behoben, eine davon war ein Fehler, den Sie andersherum gesehen haben.
