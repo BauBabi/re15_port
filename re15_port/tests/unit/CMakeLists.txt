@@ -3094,3 +3094,24 @@ target_include_directories(test_1190_ruestung PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_1190_ruestung PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1190_ruestung COMMAND test_1190_ruestung)
+
+# --- MESSSONDE Hunde-Bellen (Nutzer-Befund). KEIN add_test. ---
+add_executable(probe_hund_bellen probe_hund_bellen.c)
+target_link_libraries(probe_hund_bellen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hund_bellen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- PIN synchro-Sprachausgabe (Konvention + Ausloeser ohne Raumliste) ---
+add_executable(test_synchro_stimme test_synchro_stimme.c)
+target_link_libraries(test_synchro_stimme PRIVATE re15_engine re15_test_support)
+target_include_directories(test_synchro_stimme PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_synchro_stimme PRIVATE
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
+add_test(NAME unit_synchro_stimme COMMAND test_synchro_stimme)
+
+# --- ARBEITSLISTE Sprachaufnahmen (welche Message hat noch keine WAV). KEIN add_test. ---
+add_executable(probe_synchro_status probe_synchro_status.c)
+target_link_libraries(probe_synchro_status PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_synchro_status PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_synchro_status PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")

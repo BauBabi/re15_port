@@ -1400,12 +1400,43 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
  * add a voiced room = one table row. (A future per-room (message_id → voice_id) remap, for
  * rooms that reuse message ids with different voice clips, would live here too.) */
 extern unsigned g_current_room_id;
-static int re15_room_has_voice(unsigned room_id)
+/* ─────────────────────────────────────────────────────────────────────────────────────
+ * SPRACHAUSGABE — DATENGETRIEBEN, NICHT UEBER EINE RAUMLISTE.
+ *
+ * HIER STAND EINE HARTKODIERTE LISTE `re15_room_has_voice = { 0x1170 }`, und die Stimme
+ * wurde ausserdem nur im FULL-TEXT-Zweig gequeued. Wirkung, gemessen am Bestand von
+ * synchro/ (2026-08-26): 37 aufgenommene WAVs, davon **11 erreichbar** — die 26 Dateien
+ * fuer room10D0 (9), room1150 (11) und room1240 (6) waren stumm, obwohl sie korrekt
+ * benannt auf der Platte lagen.
+ *
+ * DIE BEGRUENDUNG DER LISTE IST ENTFALLEN. Der alte Kommentar sagte, ein Queuing in
+ * anderen Raeumen "wuerde mit 1170s voice bank kollidieren". Das galt, solange der
+ * Abspieler den Raum HARTKODIERT hatte; heute nimmt er den laufenden Raum
+ * (audio_pc.c `re15_voice_play((uint16_t)g_current_room_id, evt.sample_id)`), und
+ * `re15_voice_load_clip` verwirft seinen Cache bei jedem Raumwechsel und schluesselt
+ * ueber (Raum, Message-Id). Eine Kollision ist damit nicht mehr moeglich.
+ *
+ * UND DIE LISTE IST UEBERFLUESSIG: `re15_voice_play` kehrt still zurueck, wenn es fuer
+ * (Raum, Id) keine Datei gibt (`if (!re15_voice_load_clip(...)) return;`). Der Loader IST
+ * das Tor. Eine zweite, gepflegte Liste daneben konnte nur eines: neu abgelegte Aufnahmen
+ * stumm schalten, bis jemand sie eintraegt.
+ *
+ * ⛔ KEINE BYTE-TRUE-FRAGE. RE1.5 hat gar keine englische Sprachausgabe — synchro/ ist
+ * eigene Produktion des Projekts (so auch in audio_pc.c vermerkt). Byte-true bleibt allein
+ * die DARSTELLUNG der Untertitel (Full-Text gegen Schreibmaschine, re15_room_full_text);
+ * die wird hier NICHT angefasst.
+ *
+ * ABLAGE-REGEL, die daraus folgt (das ist die ganze Konvention):
+ *     synchro/STAGE<n>/room<RAUM-ID 4 Hex>/main<MESSAGE-ID 2 Dezimal>.wav
+ * z.B. ROOM1150, Message 7  ->  synchro/STAGE1/room1150/main07.wav
+ * Datei da = sie spielt, an genau der Message. Nichts einzutragen. */
+static void scd_queue_voice(uint8_t msg_id)
 {
-    static const unsigned voiced[] = { 0x1170 };   /* helipad intro (the only voiced room so far) */
-    for (unsigned k = 0; k < sizeof(voiced)/sizeof(voiced[0]); k++)
-        if (voiced[k] == room_id) return 1;
-    return 0;
+    scd_audio_event_t vev;
+    memset(&vev, 0, sizeof vev);
+    vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;
+    vev.sample_id = msg_id;
+    scd_audio_queue_push(&vev);
 }
 
 /* #1A (2026-07-02): rooms whose Message_on captions render FULL-TEXT (all-at-once), NOT the
@@ -1416,7 +1447,9 @@ static int re15_room_has_voice(unsigned room_id)
  * byte-true TYPEWRITER-ONLY with no full-text branch, so the original's full-text captions come
  * from a path absent from ghidra1_V2.txt (DEBUG.BIN @0x800C0000, savestate-only). Byte-true closure
  * needs a live ROOM1240 pre-intro savestate to read DAT_800b8521/8524/852c — see RE15_ROOM_FIXES.md #1A.
- * Separate from re15_room_has_voice: 1240's narrator has NO VOICE##.VAG, so it must NOT queue voice. */
+ * Diese Funktion entscheidet NUR die Darstellung (Full-Text gegen Schreibmaschine). Sie hat
+ * mit der Sprachausgabe nichts mehr zu tun: die haengt seit 2026-08-26 allein daran, ob
+ * unter synchro/ eine Datei fuer (Raum, Message-Id) liegt (s. scd_queue_voice). */
 int re15_room_full_text(unsigned room_id)
 {
     static const unsigned ft[] = { 0x1170, 0x1240 };
@@ -1498,6 +1531,8 @@ static int op_message_on(scd_thread_t *t)
      * switch below [▼] Will you push it? Yes/No" is the canonical case. */
     if (re15_msg_is_choice(t->pc[1])) {
         if (g_scd.message_query == 0 && !g_scd.message_fsm_active) {
+            scd_queue_voice(t->pc[1]);   /* nur beim ERSTEN Oeffnen — dieser Zweig parkt und
+                                          * wird jedes Bild neu betreten (return 2 unten) */
             re15_dialog_open_mask((int)t->pc[1], 1, pause_mask);   /* blocking: query=1, fsm_active=1 */
             g_scd.message_arg2 = t->pc[2];
             g_scd.message_arg3 = t->pc[3];
@@ -1514,9 +1549,10 @@ static int op_message_on(scd_thread_t *t)
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
      * uses the byte-true per-glyph typewriter FSM, NON-blocking (the thread continues; the FSM types
-     * it out + dismisses on the action button / its own hold). VOICE is queued only for rooms that
-     * actually have authored VOICE##.VAG (re15_room_has_voice = {0x1170}) — NOT 1240's narrator (msg
-     * ids 0..5 have no voice clip; queuing would collide with 1170's voice bank). See #1A above. */
+     * it out + dismisses on the action button / its own hold).
+     * VOICE haengt NICHT mehr an dieser Unterscheidung und an keiner Raumliste — sie wird auf
+     * JEDEM Oeffnungsweg gequeued und laeuft ins Leere, wenn fuer (Raum, Message-Id) keine
+     * Datei unter synchro/ liegt. Herleitung s. scd_queue_voice weiter oben. */
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
          * die beiden Full-Text-Raeume tragen in ALLEN ihren Message_on die Maske 0x0000
@@ -1527,14 +1563,11 @@ static int op_message_on(scd_thread_t *t)
          * Captions laufen im Original wie im Port mit weiterlaufender Welt. */
         msg_show(t);                               /* full-text all-at-once (message_fsm_active=0) */
         g_scd.message_fsm_active = 0;
-        if (re15_room_has_voice(g_current_room_id)) {
-            scd_audio_event_t vev;
-            memset(&vev, 0, sizeof vev);
-            vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;
-            vev.sample_id = t->pc[1];
-            scd_audio_queue_push(&vev);
-        }
+        scd_queue_voice(t->pc[1]);
     } else {
+        scd_queue_voice(t->pc[1]);   /* AUCH im Schreibmaschinen-Zweig — das ist der normale
+                                      * Fall (room10D0/1150 sind keine Full-Text-Raeume und
+                                      * waren deshalb stumm) */
         re15_dialog_open_mask((int)t->pc[1], 0, pause_mask);   /* non-blocking typewriter */
         g_scd.message_arg2 = t->pc[2];
         g_scd.message_arg3 = t->pc[3];

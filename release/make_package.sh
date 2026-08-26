@@ -156,10 +156,12 @@ check_tree() {           # $1 = fertiger Paketordner
     # (Deck) blieb das Voiceover stumm.
     [[ -s "$out/synchro/STAGE1/room1170/main00.wav" ]] \
         || die "Voiceover fehlt im Paket: synchro/STAGE1/room1170/main00.wav"
+    # Ueber ALLE Stages zaehlen (nicht nur STAGE1) — sonst faellt eine neu angelegte
+    # STAGE2..6-Aufnahme stillschweigend aus dem Paket, ohne dass das Gate anschlaegt.
     local want got
-    want="$(find "$SYNCHRO/STAGE1" -name '*.wav' | wc -l)"
-    got="$(find "$out/synchro/STAGE1" -name '*.wav' 2>/dev/null | wc -l)"
-    (( got == want )) || die "Voiceover unvollstaendig im Paket: $got/$want WAVs unter synchro/STAGE1"
+    want="$(find "$SYNCHRO"/STAGE* -name '*.wav' 2>/dev/null | wc -l)"
+    got="$(find "$out/synchro" -name '*.wav' 2>/dev/null | wc -l)"
+    (( got == want )) || die "Voiceover unvollstaendig im Paket: $got/$want WAVs unter synchro/"
 }
 
 # =============================================================================
@@ -327,12 +329,20 @@ copy_common() {          # $1 = Paketordner
     cp -r "$FX" "$out/shared_assets/extracted_fx"
     echo "   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ..."
     cp -r "$RE2" "$out/shared_assets/RE2"
-    echo "   Voiceover kopieren (synchro/STAGE1, ~17 MB) ..."
+    echo "   Voiceover kopieren (synchro/STAGE*, ohne unused/) ..."
     # Paket-Wurzel, NICHT unter shared_assets: re15_pc_read_base() sucht
     # "<Basis-Wurzel>/synchro/..." und die Basis-Wurzel ist das exe-Verzeichnis.
-    # synchro/unused/ (24 MB) bleibt draussen — kein Codepfad liest es.
+    # synchro/unused/ bleibt draussen — kein Codepfad liest es.
+    # ALLE Stages, nicht nur STAGE1: der Loader baut den Pfad aus dem Raum
+    # (audio_pc.c re15_voice_load_clip: "synchro/STAGE%u/room%04X/main%02d.wav",
+    # Stage = room>>12). Mit der alten STAGE1-Kopie waere jede Aufnahme fuer
+    # STAGE2..6 im Repo gelandet und im Paket verschwunden — genau die Falle, die
+    # bis v0.3.16 schon einmal das GANZE synchro-Verzeichnis gekostet hat.
     mkdir -p "$out/synchro"
-    cp -r "$SYNCHRO/STAGE1" "$out/synchro/STAGE1"
+    for stagedir in "$SYNCHRO"/STAGE*; do
+        [[ -d "$stagedir" ]] || continue
+        cp -r "$stagedir" "$out/synchro/$(basename "$stagedir")"
+    done
 }
 
 render_readme() {        # $1 = Vorlage, $2 = Ziel

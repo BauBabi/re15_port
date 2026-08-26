@@ -1458,10 +1458,13 @@ double re15_fmv_audio_time(void)
  * `data`. NOT a fixed 44-byte skip — the synchro WAVs vary: main00-04 are
  * 32000 Hz with an extended header (data well past byte 44), main05-16 are
  * 22050 Hz / 44-byte. Returns the data pointer + fills rate/ch/bits/bytes. */
+/* fmt_tag: 1 = PCM (ganzzahlig), 3 = IEEE-Float, 0xFFFE = EXTENSIBLE (das echte Tag steht
+ * dann in den ersten zwei Bytes der SubFormat-GUID, body[24..25]). */
 static const uint8_t *wav_find_data(const uint8_t *b, int sz,
-                                    int *rate, int *ch, int *bits, int *data_bytes)
+                                    int *rate, int *ch, int *bits, int *data_bytes,
+                                    int *fmt_tag)
 {
-    *rate = 22050; *ch = 1; *bits = 16; *data_bytes = 0;
+    *rate = 22050; *ch = 1; *bits = 16; *data_bytes = 0; *fmt_tag = 1;
     if (sz < 44 || memcmp(b, "RIFF", 4) != 0 || memcmp(b + 8, "WAVE", 4) != 0) return NULL;
     int p = 12;
     const uint8_t *data = NULL;
@@ -1470,9 +1473,13 @@ static const uint8_t *wav_find_data(const uint8_t *b, int sz,
                        ((uint32_t)b[p+6]<<16) | ((uint32_t)b[p+7]<<24);
         const uint8_t *body = b + p + 8;
         if (memcmp(b + p, "fmt ", 4) == 0 && p + 8 + 16 <= sz) {
+            *fmt_tag = body[0] | (body[1] << 8);
             *ch   = body[2] | (body[3] << 8);
             *rate = body[4] | (body[5]<<8) | (body[6]<<16) | (body[7]<<24);
             *bits = body[14] | (body[15] << 8);
+            /* WAVE_FORMAT_EXTENSIBLE: das wirkliche Tag steckt in der SubFormat-GUID. */
+            if (*fmt_tag == 0xFFFE && (int)csz >= 40 && p + 8 + 26 <= sz)
+                *fmt_tag = body[24] | (body[25] << 8);
         } else if (memcmp(b + p, "data", 4) == 0) {
             data = body;
             /* UNSIGNED clamp: main01.wav has a corrupt data size 0xFFFFFFFF
@@ -1527,19 +1534,78 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         snprintf(path, sizeof path, "%smain%02d.wav", reldir, voice_id);
         wav = re15_pc_read_base(path, &wsz);
     }
-    int rate, ch, bits, dbytes;
-    const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes);
-    if (!data || dbytes < 2 || bits != 16 || ch < 1) { free(wav); return 0; }
+    int rate, ch, bits, dbytes, fmt_tag;
+    const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
+    if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }
 
     if (rate <= 0) rate = 22050;
-    int src_n = (dbytes / 2) / ch;                       /* source frames (mono-ize) */
-    const int16_t *src = (const int16_t *)data;
+
+    /* ─────────────────────────────────────────────────────────────────────────────────
+     * BIT-TIEFEN-NORMALISIERUNG — hier stand `bits != 16` und hat alles andere STILL
+     * verworfen. Gemessen am Bestand von synchro (2026-08-26): 6 der 37 Aufnahmen sind
+     * 24-bit-Stereo (der ganze Ordner room1240) und waren allein deshalb stumm, obwohl
+     * Name und Ablage stimmten. Ein stiller Rueckweiser ist die schlechteste aller
+     * Antworten: der Sprecher sieht die Datei liegen und hoert nichts.
+     * Statt die Aufnahmen des Nutzers umzukodieren, nimmt der Loader jetzt an, was ein
+     * Schnittprogramm ueblicherweise ausgibt, und rechnet selbst nach int16 um:
+     *     PCM  8 bit  (unsigned, Nulllinie 128)
+     *     PCM 16 bit  (unveraendert, der bisherige Fall)
+     *     PCM 24 bit  (little-endian, vorzeichenbehaftet)
+     *     PCM 32 bit  (vorzeichenbehaftet)
+     *     IEEE-Float 32 bit (Tag 3, ebenso ueber WAVE_FORMAT_EXTENSIBLE)
+     * Alles andere (ADPCM, mp3-in-wav, …) wird weiterhin abgelehnt — dann aber mit
+     * einer Meldung auf stderr statt schweigend. */
+    int16_t *conv = NULL;
+    int src_n;
+    const int16_t *src;
+    if (fmt_tag == 1 && bits == 16) {
+        src_n = (dbytes / 2) / ch;                       /* source frames (mono-ize) */
+        src   = (const int16_t *)data;
+    } else {
+        int bps = bits / 8;
+        int frames = (bps > 0 && ch > 0) ? dbytes / (bps * ch) : 0;
+        int ok = frames > 0 &&
+                 ((fmt_tag == 1 && (bits == 8 || bits == 24 || bits == 32)) ||
+                  (fmt_tag == 3 && bits == 32));
+        if (!ok) {
+            fprintf(stderr, "[voice] %s: WAV-Format %d, %d bit, %d Kanaele wird nicht "
+                            "unterstuetzt - Clip bleibt stumm\n", path, fmt_tag, bits, ch);
+            free(wav); return 0;
+        }
+        conv = (int16_t *)malloc((size_t)frames * (size_t)ch * sizeof(int16_t));
+        if (!conv) { free(wav); return 0; }
+        for (int i = 0; i < frames * ch; i++) {
+            const uint8_t *p8 = data + (size_t)i * (size_t)bps;
+            int32_t v;
+            if (fmt_tag == 3) {                          /* IEEE-Float 32 */
+                uint32_t u = (uint32_t)p8[0] | ((uint32_t)p8[1] << 8) |
+                             ((uint32_t)p8[2] << 16) | ((uint32_t)p8[3] << 24);
+                float f; memcpy(&f, &u, sizeof f);
+                float x = f * 32767.0f;
+                v = (int32_t)(x < -32768.0f ? -32768.0f : (x > 32767.0f ? 32767.0f : x));
+            } else if (bits == 8) {                      /* PCM 8, unsigned */
+                v = ((int32_t)p8[0] - 128) << 8;
+            } else if (bits == 24) {                     /* PCM 24, LE, vorzeichenbehaftet */
+                int32_t w = (int32_t)((uint32_t)p8[0] | ((uint32_t)p8[1] << 8) |
+                                      ((uint32_t)p8[2] << 16));
+                if (w & 0x800000) w -= 0x1000000;        /* Vorzeichen erweitern */
+                v = w >> 8;
+            } else {                                     /* PCM 32, vorzeichenbehaftet */
+                int32_t w = (int32_t)((uint32_t)p8[0] | ((uint32_t)p8[1] << 8) |
+                                      ((uint32_t)p8[2] << 16) | ((uint32_t)p8[3] << 24));
+                v = w >> 16;
+            }
+            conv[i] = (int16_t)v;
+        }
+        src_n = frames;
+        src   = conv;
+    }
     /* linear resample src_rate → 44100 (and downmix to mono if stereo).
      * int64_t throughout: on Windows `long` is 32-bit and src_n*44100 overflows. */
     int64_t out_n = (int64_t)src_n * RE15_AUDIO_RATE / rate;
     if (out_n < 1) out_n = 1;
     int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
-    if (!pcm) { free(wav); return 0; }
+    if (!pcm) { free(conv); free(wav); return 0; }
     for (int64_t i = 0; i < out_n; i++) {
         int64_t sp = i * (int64_t)rate * 65536 / RE15_AUDIO_RATE;   /* Q16 src pos */
         int64_t si = sp >> 16; int frac = (int)(sp & 0xffff);
@@ -1549,6 +1615,7 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         else { a = (src[s0i] + src[s0i+1]) / 2; b2 = (src[s1i] + src[s1i+1]) / 2; }
         pcm[i] = (int16_t)(a + (((b2 - a) * frac) >> 16));
     }
+    free(conv);      /* die normalisierte Zwischenstufe wird nach dem Resampling nicht mehr gebraucht */
     free(wav);
 
     /* Level-floor: the synchro VO is our own AI-TTS production (RE1.5 has no
@@ -2292,9 +2359,12 @@ static void re15_amb_load_rotor(int stage, int room) {
     }
     if (!wav) { fprintf(stderr, "[amb] rotor wav not found (%s)\n", rel); return; }
 
-    int rate, ch, bits, dbytes;
-    const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes);
-    if (!data || dbytes < 2 || bits != 16 || ch < 1) { free(wav); return; }
+    int rate, ch, bits, dbytes, fmt_tag;
+    const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
+    /* Die Rotor-Ambience ist eine mitgelieferte Datei in bekanntem Format — hier bleibt es
+     * bei der strengen 16-bit-Pruefung. Die Bit-Tiefen-Umrechnung gibt es nur im
+     * Voiceover-Pfad, wo die Dateien VOM NUTZER kommen. */
+    if (!data || dbytes < 2 || fmt_tag != 1 || bits != 16 || ch < 1) { free(wav); return; }
     if ((e = getenv("RE15_ROTOR_RATE"))) rate = atoi(e);
     if (rate <= 0) rate = 22050;
     int src_n = (dbytes / 2) / ch;
