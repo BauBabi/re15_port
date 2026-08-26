@@ -2875,7 +2875,7 @@ static int op_add_speed(scd_thread_t *t)
         a->rot_x = (int16_t)(a->rot_x + t->vel[3]);
         a->rot_y = (int16_t)(a->rot_y + t->vel[4]);
         a->rot_z = (int16_t)(a->rot_z + t->vel[5]);
-    } else if (pi >= 0 && pi < 16 && g_scd.props[pi].active) {
+    } else if (pi >= 0 && pi < (int)g_scd.prop_count && g_scd.props[pi].active) {
         g_scd.props[pi].x += (int32_t)t->vel[0];
         g_scd.props[pi].y += (int32_t)t->vel[1];
         g_scd.props[pi].z += (int32_t)t->vel[2];
@@ -3518,7 +3518,7 @@ static int op_item_aot_set(scd_thread_t *t)
         g_aot.slots[slot].band      = t->pc[4];
         int inert = (t->pc[2] == 0);
         if (tk_bit && re15_game_flag_get(9, tk_bit)) {
-            if (tk_prop < 16u)
+            if (tk_prop < (unsigned)RE15_SCD_MAX_PROPS)
                 s_prop_taken_hidden |= (uint32_t)(1u << tk_prop);  /* merken: gilt auch, wenn
                                                                     * das Modell erst SPAETER
                                                                     * angelegt wird */
@@ -3615,8 +3615,22 @@ static int op_obj_model_set(scd_thread_t *t)
     const int reinstall = (i >= 0);
     if (!reinstall && g_scd.prop_count < RE15_SCD_MAX_PROPS) i = (int)g_scd.prop_count++;
     if (i >= 0) {
+        /* ⛔ DIE MASKE WIRD MIT DER obj_id INDIZIERT, NICHT MIT DEM SLOT. Gesetzt wird sie
+         * aus dem Item_aot_set-Nutzlastbyte tk_prop, und das IST eine obj_id: das Original
+         * versteckt den Prop ueber denselben stride-148-Index wie der Installer —
+         *     800406f8  sll  v0,s1,3       ; s1 = tk_prop
+         *     800406fc  addu v0,v0,s1      ; *9
+         *     80040700  sll  v0,v0,2       ; *36
+         *     80040704  addu v0,v0,s1      ; *37
+         *     80040708  sll  v0,v0,2       ; *148
+         *     80040710  addiu at,at,16280  ; 0x800b3f98
+         *     80040718  sw   v1,0(at)      ; Flags des Pool-Eintrags
+         * Hier stand `1u << i` mit dem PORT-EIGENEN Slot-Index. Solange ein Raum seine
+         * Objekte in obj_id-Reihenfolge ab 0 installiert, faellt das zusammen — in
+         * ROOM1190 sub14 aber NICHT: dort laufen die obj_ids 7..16 auf die Slots 0..9.
+         * Ein aufgenommenes Item haette dort den falschen Prop versteckt. */
         g_scd.props[i].active = (reinstall ||
-                                 (s_prop_taken_hidden & (1u << i))) ? 0 : 1;
+                                 (s_prop_taken_hidden & (1u << obj_id))) ? 0 : 1;
                                             /* schon genommen -> gar nicht erst sichtbar
                                              * anlegen (s. s_prop_taken_hidden);
                                              * zweite Installation -> AUS (@0x8004098c) */

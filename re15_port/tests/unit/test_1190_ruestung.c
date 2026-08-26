@@ -105,6 +105,11 @@ static int pld_part(const uint8_t *b, long sz, int idx, uint32_t *off, uint32_t 
     *off = (uint32_t)o; *len = (uint32_t)l; return 1;
 }
 
+/* Zaehler fuer den Spielermodell-Rueckruf: der Pin registriert ihn selbst, damit er den
+ * AUSGELIEFERTEN Ladeweg misst und nicht bloss die Skript-Variable. */
+static int s_sync_calls = 0;
+static void zaehl_sync(void) { s_sync_calls++; }
+
 static re15_rdt_t s_rdt;
 
 int main(void)
@@ -171,6 +176,39 @@ int main(void)
           "P2d ABLEGEN setzt work_vars[0x10] zurueck auf 0 = PL00 "
           "(ein Umschalter, kein Einschalter)");
     CHECK(re15_game_flag_get(3, 0x75) == 0, "P2e und loescht Flag(3,0x75)");
+
+    /* ---- P2f/P2g: ⛔ FEUERT DER LADEWEG UEBERHAUPT? --------------------------------
+     * Hier ist die Ruestung schon einmal GESCHEITERT, obwohl P2b/P2d gruen waren: das
+     * Anlegen loest eine SELBST-TUER aus (Record @Datei 0x2d70 zielt auf ROOM1190), und
+     * der Port gatete seinen Ladeweg mit `if (dest_id != g_current_room_id)`. Damit lief
+     * kein Modellwechsel — die Skript-Variable stimmte, das Bild nicht.
+     * Das Original kennt diesen Kurzschluss nicht; sein Tuer-Warp vergleicht NUR die
+     * Stage und ruft den Raumlader unbedingt:
+     *     8001d960  lbu  v0,8(a0)            ; Ziel-STAGE
+     *     8001d968  beq  v1,v0,0x8001d988    ; gleiche Stage -> Stage-Lader ueberspringen
+     *     8001d980  jal  0x80039a30          ; (nur bei Stage-Wechsel)
+     *     8001d988  jal  0x800396fc          ; RAUMLADER — UNBEDINGT
+     * Und der Raumlader traegt den Modell-Test (@0x80039760-88).
+     *
+     * Zweitens: work_vars[0x10] MUSS den Raum-Reset ueberleben. Das Original wischt bei
+     * der Raum-Init punktuell (FUN_8003ecec: 0x800b0ff4, 0x800b1028, 0x800b0ff2,
+     * 0x800aca50, 0x800b281e) — 0x800b0ff0 ist NICHT dabei. Der pauschale memset des
+     * Ports haette Leon die Weste beim naechsten Raum wieder ausgezogen. */
+    {
+        g_scd.work_vars[0x10] = 1;              /* Ruestung an */
+        s_sync_calls = 0;
+        re15_scd_set_player_model_sync(zaehl_sync);
+        scd_room_reenter(&s_rdt, 0, 0, 0);      /* = der Selbst-Raum-Ladeweg */
+        re15_scd_set_player_model_sync(NULL);
+        printf("  nach scd_room_reenter: Rueckrufe=%d work_vars[0x10]=%d\n",
+               s_sync_calls, (int)g_scd.work_vars[0x10]);
+        CHECK(s_sync_calls == 1,
+              "P2f der Raumlade-Weg ruft den Modell-Rueckruf GENAU EINMAL "
+              "(sonst feuert der Wechsel im Spiel nie)");
+        CHECK(g_scd.work_vars[0x10] == 1,
+              "P2g work_vars[0x10] ueberlebt den Raum-Reset (0x800b0ff0 wird im "
+              "Original nicht gewischt)");
+    }
 
     /* ---- P3: die Texte des Raums --------------------------------------------------- */
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);

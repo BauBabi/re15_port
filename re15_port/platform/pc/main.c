@@ -877,8 +877,15 @@ static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
  * (@0x80012088 `andi v1,v1,0x4`) trifft die Modell-Nibbles 4..7 = die ZWEITE Figur, nicht
  * die Ruestung (Modell 1). Der Vorteil der Weste ist also Skript-seitig, nicht in der
  * Schadensrechnung — das ist hier bewusst NICHT erfunden. */
+static re15_md1_t *s_player_md1_ref = NULL;   /* auf main()s `md1` gesetzt, s. Registrierung */
 static int  s_player_model_idx = 0;      /* untere Nibble von DAT_800aca5c */
 static uint8_t *s_player_pld_buf = NULL; /* bleibt am Leben: md1/tim aliasen ihn */
+
+/* Rueckruf-Form fuer die Engine (re15_scd_set_player_model_sync): der Raumlader ruft
+ * ohne Argumente, das Ziel-Mesh steht in s_player_md1_ref. */
+static int pc_sync_player_model(re15_md1_t *pl_md1);
+static void pc_player_model_sync_cb(void)
+{ if (s_player_md1_ref) (void)pc_sync_player_model(s_player_md1_ref); }
 
 /* Liefert 1, wenn Mesh/Textur getauscht wurden. */
 static int pc_sync_player_model(re15_md1_t *pl_md1)
@@ -2822,6 +2829,11 @@ re_title:;
      * renderer reads later (mesh_count, meshes[]) are then well-defined. */
     re15_md1_t md1 = {0};
     int md1_ok = (md1_buf && re15_md1_parse(md1_buf, md1_size, &md1) == 0);
+    /* Das Spieler-Mesh der Engine bekanntgeben und den Modell-Rueckruf einhaengen: ab
+     * jetzt zieht JEDER Raumlade-Weg das Modell nach work_vars[0x10] nach — auch die
+     * SELBST-Tuer der R.P.D.-Ruestung in ROOM1190, die keinen Raumwechsel ausloest. */
+    s_player_md1_ref = &md1;
+    re15_scd_set_player_model_sync(pc_player_model_sync_cb);
     if (md1_ok) {
         fprintf(stderr, "[md1] loaded test.md1: %d meshes\n", md1.mesh_count);
     }
@@ -7458,7 +7470,12 @@ re_title:;
              * OWN MD1 + TIM (slots 4..9 for obj_id 0..5). Helicopter body
              * (0x02), rotor (0x03), light disc (0x04), pilot (0x05), and
              * the helipad fixtures (0x00, 0x01) all get authentic textures.   */
-            for (int pi = 0; pi < g_scd.prop_count && pi < 16; pi++) {
+            /* ⛔ NICHT 16: das Original klemmt den Objekt-Durchlauf nirgends, es laeuft
+             * bis nOmodel (FUN_800436a8 @0x80043758/@0x800437ac) ueber einen per obj_id
+             * indizierten Pool (@0x8004093c-58, Schrittweite 148). ROOM1190/1191 haben 17.
+             * Mit dem alten Literal waere Prop 16 — die POLIZEIWESTE — zwar geparst, aber
+             * nie GEZEICHNET worden. */
+            for (int pi = 0; pi < g_scd.prop_count && pi < RE15_SCD_MAX_PROPS; pi++) {
                 if (!g_scd.props[pi].active) continue;
                 /* Byte-true per-prop cull, SHARED with the PSX port (re15_prop_culled
                  * in re15_aot.h). Every room1170 prop is type 0 (real type byte pc[2],
@@ -7513,7 +7530,11 @@ re_title:;
                      * shrink to sub-pixel naturally, matching PSX (the teleport-
                      * hidden fixtures become a ~2-3px dot, as on PSX). */
                     /* I3-round diag: log each prop's render pos once. */
-                    static int s_prop_logged[16] = {0};
+                    static int s_prop_logged[RE15_SCD_MAX_PROPS] = {0};   /* MUSS mit der
+                                                                           * Schleife oben
+                                                                           * wachsen, sonst
+                                                                           * Schreiber hinter
+                                                                           * das Feld */
                     if (!s_prop_logged[pi]) {
                         s_prop_logged[pi] = 1;
                         fprintf(stderr, "[prop-render] pi=%d oid=0x%02X pos=(%d,%d,%d) rot=(%d,%d,%d) meshes=%d\n",

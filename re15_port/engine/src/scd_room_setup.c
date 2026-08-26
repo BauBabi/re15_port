@@ -108,6 +108,10 @@ void scd_register_room_events(const re15_rdt_t *rdt)
  * the player) MINUS register_opcodes (table persists). Same room → RDT/scripts/
  * models stay resident, so NO asset reload (a cross-room door would also need
  * re15_room_load + a VRAM reset — the separate multi-room work). */
+static re15_player_model_sync_fn s_player_model_sync = NULL;
+void re15_scd_set_player_model_sync(re15_player_model_sync_fn fn)
+{ s_player_model_sync = fn; }
+
 void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                       uint8_t entry_scenario)
 {
@@ -142,7 +146,22 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * machen. */
     re15_esp_fx_reset();
 
+    /* ⛔ work_vars[0x10] UEBERLEBT DEN RAUM-RESET. Es ist die SPIELERMODELL-VARIANTE
+     * (DAT_800b0ff0), aus der der Raumlader das Modell zieht (FUN_800396fc @0x80039768).
+     * Das Original wischt bei der Raum-Init NICHT flaechig, sondern punktuell —
+     * FUN_8003ecec, selbst disassembliert:
+     *     8003ed60  sh   v0,4084(at)    -> 0x800b0ff4 = 0xff
+     *     8003ed74  sw   zero,4136(at)  -> 0x800b1028
+     *     8003ed7c  sh   zero,4082(at)  -> 0x800b0ff2
+     *     8003ed84  sh   zero,-13744(at)-> 0x800aca50
+     *     8003ed94  sb   zero,10270(at) -> 0x800b281e
+     * 0x800b0ff0 ist NICHT dabei; es liegt im Save-Record (0x800b0fbc + 0x34) und
+     * ueberdauert Raumwechsel wie Speicherstand. Der pauschale memset des Ports hat es
+     * mitgenommen — Leon haette die R.P.D.-Ruestung beim naechsten Raum wieder abgelegt. */
+    int16_t keep_player_model = g_scd.work_vars[0x10];
+
     memset(&g_scd, 0, sizeof(g_scd));   /* reset threads/props/cam/modes/audio-queue */
+    g_scd.work_vars[0x10] = keep_player_model;   /* s.o. — 0x800b0ff0 wird nicht gewischt */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
     g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-
                                          * (re)load chain FUN_800396fc masks DAT_800aca3c's low 16
@@ -236,6 +255,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
          * kneel" bug). 200 is bank-independent. (Same fix as actor_locomotion.c arrival.) */
         if (pl->motion == 100 || pl->motion == 105) re15_actor_set_motion(pl, 200);
     }
+    /* SPIELERMODELL nachziehen — byte-true an der Stelle, an der es das Original tut:
+     * im Raumlader FUN_800396fc @0x80039760-88, VOR der SCD-Raum-Init (FUN_8003ef6c,
+     * gerufen @0x80039a00). Herleitung s. re15_scd_set_player_model_sync in re15_scd.h. */
+    if (s_player_model_sync) s_player_model_sync();
+
     re15_aot_init();                    /* clear AOT slots … */
     scd_register_room_events(rdt);      /* … then reinstall RVD@16 + register rdt */
     if (rdt && rdt->main_scd)   scd_thread_start(0, rdt->main_scd);    /* init  = main00 */

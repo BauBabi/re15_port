@@ -321,7 +321,11 @@ case "$CMD" in
     clean)      do_clean ;;
     configure)  do_configure ;;
     build)      do_build ;;
-    test)       do_test ;;
+    # BAUEN VOR DEM PRUEFEN. `test` rief frueher NUR ctest — damit konnte die Suite
+    # gegen VERALTETE Binaries gruen melden. Gemessen 2026-08-26: ein wiederhergestellter
+    # Engine-Quelltext war noch nicht uebersetzt, ctest meldete den Stand DAVOR (erst rot,
+    # nach dem Neubau gruen). Dieselbe Falle wie beim Paketbau, der auch nur kopierte.
+    test)       do_build && do_test ;;
     all)        do_configure && do_build && do_test ;;
     *)          die "unbekannter Unterbefehl '$CMD' (configure|build|test|all|clean|env)" ;;
 esac

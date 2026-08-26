@@ -544,6 +544,33 @@ void           scd_register_room_events(const re15_rdt_t *rdt);
  * re-inits the SCD VM + re-runs init(main00)+main(sub00) with the GAME FLAGS and
  * PLAYER actor PRESERVED — mirrors the original FUN_8001d600→FUN_8003ef6c room
  * reload (whose flag banks survive). Same room → no asset reload. */
+/* ─────────────────────────────────────────────────────────────────────────────────────
+ * SPIELERMODELL-RUECKRUF — und warum er GENAU HIER haengt.
+ *
+ * Das Original haengt den Modellwechsel an den RAUMLADER, nicht an die Tuer und nicht
+ * ans Skript: FUN_800396fc @0x80039760-8c vergleicht die untere Nibble von DAT_800aca5c
+ * mit work_vars[0x10] (DAT_800b0ff0) und laesst bei Abweichung FUN_800314b0 laden.
+ *
+ * ⛔ UND DER RAUMLADER LAEUFT AUCH BEI EINER SELBST-TUER. Byte-belegt im Tuer-Warp
+ * FUN_8001d600:
+ *     8001d960  lbu  v0,8(a0)             ; Ziel-STAGE
+ *     8001d968  beq  v1,v0,0x8001d988     ; gleiche Stage -> Stage-Lader ueberspringen
+ *     8001d980  jal  0x80039a30           ; (nur bei Stage-Wechsel)
+ *     8001d988  jal  0x800396fc           ; RAUMLADER — UNBEDINGT
+ * Verglichen wird NUR die Stage. Der Raum selbst wird nie gegen den aktuellen geprueft.
+ *
+ * Der Port tat genau das aber: aot_common.c gatet den Ladeweg mit
+ * `if (dest_id != g_current_room_id)`, und die Ruestungs-Tuer in ROOM1190 (Record
+ * @Datei 0x2d70) zielt auf ROOM1190 SELBST. Ergebnis: der Anlege-Vorgang lief, setzte
+ * work_vars[0x10] = 1 — und kein Ladeweg zog das Modell nach. Der Rueckruf haengt darum
+ * an scd_room_reenter, durch das ALLE drei Ladewege des Ports laufen (Selbst-Raum
+ * game_step_common.c, Raumwechsel room_common.c, Boot main.c).
+ *
+ * Plattform-Sache, weil das Laden der PLD plattformseitig ist; ohne Registrierung
+ * (z.B. PSX-Target, Unit-Tests) bleibt das Verhalten unveraendert. */
+typedef void (*re15_player_model_sync_fn)(void);
+void           re15_scd_set_player_model_sync(re15_player_model_sync_fn fn);
+
 void           scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                                 uint8_t entry_scenario);
 /* Signal from the door AOT scan: a same-room door whose entry scenario triggers a
