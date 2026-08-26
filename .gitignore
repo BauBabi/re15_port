@@ -32,3 +32,7 @@ re15_port/tools/__pycache__/
 # Werkzeug-Nebenprodukte
 tools/redux/.sentry-native/
 tools/redux/*_out.txt
+
+# Docker-Cross-Build-Arbeitsverzeichnisse (Windows/Linux Release)
+release/wxbuild/
+release/lbuild/

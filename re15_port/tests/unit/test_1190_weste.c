@@ -228,11 +228,17 @@ int main(void)
          * Layout (LAB_80040914): pc[0]=0x2D, pc[1]=obj_id, pc[2]=type, pc[4]=band,
          * pc[6..7]=flags-Rohwert, pc[10..15]=pos, pc[16..21]=rot, pc[22..33]=box.
          * Opcode-Laenge fest 34 (@0x80040aa4 `addiu v0,a2,0x22`). */
-        static uint8_t bc[34 + 34 + 1];
+        /* ⛔ MIT Evt_end ABSCHLIESSEN, NICHT MIT Nop. Ein Nop laesst den Thread
+         * WEITERLAUFEN — er liest dann hinter das Array in fremden Speicher und fuehrt
+         * aus, was dort zufaellig steht. GEMESSEN: mit Nop lief dieser Pin unter Windows
+         * gruen und im Linux-Container ROT (P5e sah flags=0x0000 statt 0x000B, weil der
+         * durchgelaufene Thread den Record ein zweites Mal installierte). Evt_end (0x01,
+         * 2 Bytes) beendet den Thread sauber. */
+        static uint8_t bc[34 + 34 + 2];
         memset(bc, 0, sizeof bc);
         bc[0]  = 0x2D; bc[1] = 3; bc[2] = 0; bc[4] = 1; bc[6] = 0x0A; bc[7] = 0x00;
         bc[34] = 0x2D; bc[35] = 3; bc[36] = 0; bc[38] = 1; bc[40] = 0x0A; bc[41] = 0x00;
-        bc[68] = 0x00;   /* Nop -> Thread laeuft weiter, Test liest danach den Pool */
+        bc[68] = 0x01; bc[69] = 0x00;   /* Evt_end */
 
         scd_vm_init();
         scd_thread_start(0, bc);
@@ -254,9 +260,10 @@ int main(void)
 
         /* Gegenprobe: EINE Installation muss weiterhin AN sein — sonst waere P5c
          * vakuant (alles aus = trivial bestanden). */
-        static uint8_t bc1[34 + 1];
+        static uint8_t bc1[34 + 2];
         memset(bc1, 0, sizeof bc1);
         bc1[0] = 0x2D; bc1[1] = 3; bc1[2] = 0; bc1[4] = 1; bc1[6] = 0x0A; bc1[7] = 0x00;
+        bc1[34] = 0x01; bc1[35] = 0x00;   /* Evt_end — s.o. */
         scd_vm_init();
         scd_thread_start(0, bc1);
         scd_vm_tick();
