@@ -1,3 +1,54 @@
+# RE1.5 Port — v0.3.34 (Early Preview)
+
+Drei Meldungen behoben, eine davon war ein Fehler, den Sie andersherum gesehen haben.
+
+## Ada bleibt wieder stehen
+
+> "Die folgenden NPCs, wie Ada, bewegen sich immer, sie bleiben nie stehen und idlen damit
+> nie. Das ist im Original anders."
+
+Dem Port fehlte ein ganzer Unterzustand der Eskorte — der, in dem sich die Begleiterin auf
+den Spieler eindreht. Und ausgerechnet der ist der einzige Rueckweg in den Ruhezustand.
+Ohne ihn kreist sie ewig zwischen Gehen und Halbtempo-Gehen; stehenbleiben konnte sie gar
+nicht. Der Halte-Ausloeser (unter 300 Einheiten Abstand, bei einer Figur unter 100) fehlte
+ebenfalls.
+
+Beides ist jetzt drin, samt dem Dreh-Schritt mit Totband, den das Original dafuer benutzt.
+Gemessen: sie kommt an, dreht sich ein, geht in den Ruhe-Clip und bewegt sich ueber 30
+Bilder um keine Einheit mehr.
+
+## Die Haende im Gitter
+
+**Sie fahren jetzt sichtbar zurueck.** Bisher sprangen sie in einem einzigen Bild an ihren
+Platz — man sah es schlicht nicht. Jetzt fahren sie die Ausfahr-Bewegung rueckwaerts ab, mit
+deren eigenen Schrittweiten: vier Bilder, exakt dieselbe Strecke zurueck wie hin.
+
+**Man kann sie abschiessen.** Nach zwei bis fuenf Pistolentreffern taucht eine Hand ab und
+kommt nicht wieder. Der Grenzwert ist keine erfundene Zahl: das Spiel fuehrt fuer diesen
+Gegner ein Trefferbudget von eins bis vier, und jede Waffe zieht ihren eigenen Betrag davon
+ab. Die Lebenspunkte spielen dabei keine Rolle — der Zaehler gewinnt vorher, genau wie im
+Original.
+
+**Und man trifft sie jetzt ueberhaupt.** Das war der eigentliche Fehler hinter Ihrer
+Meldung "die Arme treffen nicht immer" — es war andersherum: nach dem ersten Treffer war
+eine Hand fuer alle weiteren Schuesse unsichtbar. Von 19 Pistolenschuessen landete gemessen
+genau einer. Das Spiel loescht am Ende der Zuck-Animation eine Markierung, die der Port
+stehen liess. Mit dieser einen Zeile: fuenf von fuenf.
+
+## Was noch offen ist
+
+Der Griff zieht Leon im **RE2-KI-Modus** weiterhin in die Wand. Das ist jetzt immerhin
+deterministisch reproduzierbar und die Ursache steht fest: die dafuer geliehene
+RE2-Ringkampf-Animation traegt eine eigene Bewegung, die ihn ueber mehrere Bilder hinter die
+Kante zieht (gemessen: 236 von 308 Griff-Bildern in der Wand, tiefster Punkt 1095 Einheiten
+dahinter). Im RE1.5-Modus passiert das nicht — dort landet er statt dessen rund 1900
+Einheiten vom Fenster weg, was das schiefe Trefferbild erklaert. Zwei Reparaturversuche
+haben nicht gegriffen; ich baue keinen Code ein, der nachweislich nichts tut.
+
+**Tests:** 244/244 gruen (lokal und im Docker-Linux-Build), zwei neue Wachen.
+
+---
+
 # RE1.5 Port — v0.3.33 (Early Preview)
 
 ## Stage 6: der Hintergrund war schwarz — und zwar in jedem Raum
