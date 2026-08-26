@@ -228,6 +228,14 @@ typedef struct {
     uint8_t  re2z_self1d3;      /* self+0x1D3 (Set 15 @0x8010276C-70; low-7-Dec im Root @0x80100484-98)     */
     uint8_t  re2z_flag222;      /* +0x222 "schon getroffen"-Marke (Flinch-Arbitrierung @0x80105080-9C)      */
     int8_t   re2z_res223;       /* +0x223 Flinch-Resistenz, signed (Seed 16+(rand&15) @0x80100888-9C)       */
+    /* ⛔ GITTER-ARM (Typ 0x1A): eigenes Trefferbudget auf demselben Original-Feld +0x1D2,
+     * aber mit ANDERER Bedeutung als re2z_hits1d2 darunter (das traegt die RE2-Zombie-
+     * Semantik Zone + 3*Bracket). Deshalb ein eigenes Feld statt Mitbenutzung.
+     * INIT: (rng & 3) + 1 -> 1..4   (`jal rng` @0x8010c3f8, `andi 0x3` @0x8010c400,
+     *                                `addiu 1` @0x8010c404, `sb v0,466(v1)` @0x8010c41c)
+     * Je Treffer zieht die Waffen-Kostentabelle @0x80120c40 ab; faellt der Wert unter 0
+     * (`lb v0,466(v1)` @0x8010d144 SIGNED, `bgez` @0x8010d14c), taucht der Arm ab. */
+    uint8_t  writher_hits;
     uint8_t  re2z_hits1d2;      /* +0x1D2 = zone + 3*bracket, PRO TREFFER GESETZT
                                  * (`sb v1,466` @0x80041A9C bzw. @0x80047330).
                                  * BRACKET (2026-08-18 zu Ende disassembliert): im Kontakt-Applier

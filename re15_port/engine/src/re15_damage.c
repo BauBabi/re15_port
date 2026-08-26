@@ -1411,6 +1411,20 @@ retry_after_latch:
     re15_actor_t *e = &g_actors[best];
     int dmg = re15_enemy_dmg_row(e)[weapon_id];     /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
+    /* ⛔ TREFFERBUDGET DES GITTER-ARMS (Nutzer 2026-08-26: "Ich wuerde die Haende auch gerne
+     * anschiessen koennen, dass die danach nicht mehr rauskommen nach 2 Schuessen oder so").
+     * Das Original zieht im Flinch-Blatt des Arms ab und indiziert dabei mit +0x5, das dort
+     * genau diese Waffen-Id traegt: `lbu v0,5(v0)` / `sll v0,v0,2` / `addiu at,at,3136`
+     * (= 0x80120c40) / `lw` / `jalr` @0x8010d2a4-bc.
+     * ⛔ PORT-ABWEICHUNG, bewusst: der Abzug steht hier beim SCHREIBER von +0x5, nicht im
+     * Zuck-Zweig. Grund: der Port hat einen ZWEITEN Schadens-Anwender
+     * (re15_enemy_take_damage), der in +0x5 einen REAKTIONS-CLIP ablegt statt der Waffen-Id
+     * — dort wuerde dieselbe Tabelle falsch indiziert. Treffer ueber jenen Pfad fuettern das
+     * Budget deshalb GAR NICHT; das Original kennt diesen Pfad am Arm nicht. */
+    if (e->type == 0x1au && weapon_id >= 0 && weapon_id < 22) {
+        extern const signed char re15_writher_hit_cost[22];
+        e->writher_hits = (uint8_t)((int)e->writher_hits + re15_writher_hit_cost[weapon_id]);
+    }
     e->hp          = (int16_t)(e->hp - dmg);        /* +0x9a -= dmg */
     e->hit_react  |= 0x1;                           /* +0x93 |= 1 (one-hit guard) */
     /* FRONT/BACK latch (FUN_80011f50: FUN_8001a780(entity) -> +0x93 |= 0x80, cluster F2): shot

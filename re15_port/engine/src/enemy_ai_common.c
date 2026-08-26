@@ -11086,6 +11086,38 @@ static void re15_writher_step(re15_actor_t *e, int yaw_off)
     if (e->anim_frac > 0) e->anim_frac--;   /* f314-Crossfade-Decay @0x8001f5a8-b4 */
 }
 
+/* ⛔ WAFFEN-KOSTEN AM TREFFERBUDGET DES ARMS (+0x1D2).
+ * Zeigertabelle @0x80120c40, aufgerufen mit der Waffen-Id x4 (`sll v0,v0,2` @0x8010d2a4,
+ * `addiu at,at,3136` @0x8010d2ac, `jalr` @0x8010d2bc). Die drei Blaetter, selbst gelesen:
+ *   0x8010d0b0  jr ra                                  -> 0
+ *   0x8010d0b8  lbu +0x1D2 / addiu -1 / sb  @0x8010d0cc -> -1
+ *   0x8010d0d8  lbu +0x1D2 / addiu -2 / sb  @0x8010d0ec -> -2
+ * Aufgeloest ueber alle 21 belegten Eintraege. Index 21 ist im Original 0x00000000
+ * (unbelegt) und hier als 0 gefuehrt — PORT-POLSTERUNG gegen den Wertebereich
+ * weapon_id < 22, kein Original-Eintrag. */
+const signed char re15_writher_hit_cost[22] = {
+     0, -2, -2, -1, -1, -2, -2,  0,  0,  0,  0,
+     0,  0,  0,  0,  0,  0,  0,  0, -1,  0,  0
+};
+
+/* Die HP-Zeile des Arms. ⛔ DER WERT IST NICHT ERFUNDEN: die generische Gegner-INIT seedet
+ * +0x9a aus einer typ-indizierten Tabelle —
+ *   8010dadc  jal   0x8001af20     ; rng
+ *   8010dae8  addiu a0,a0,-4044    ; Basis 0x8011f034
+ *   8010daf4  andi  v0,v0,0xf      ; Spalte
+ *   8010daf8  lbu   v1,8(a1)       ; Typ
+ *   8010db00  sll   v1,v1,5        ; Zeile = Typ * 0x20
+ *   8010db0c  lhu   v0,0(v0)
+ *   8010db14  sh    v0,154(a1)     ; +0x9a
+ * Zeile Typ 0x1A = 0x8011f034 + 0x1a*0x20 = @0x8011f374, selbst gelesen.
+ * Gegenprobe der Deutung: Zeile 0x20 (Hund) = 65..111, Zeile 0x10 (Zombie) = 61..101 —
+ * beide decken sich mit den bekannten Spannen.
+ * ⛔ NACHRUESTUNG ist nur, DASS der Arm-INIT diese Routine ueberhaupt ruft: im
+ * Original-Arm-Baum (0x8010c1ec..0x8010d774) gibt es keinen einzigen Store auf +0x9a. */
+static const int16_t k_writher_hp[16] = {
+    72, 82, 96, 82, 83, 96, 74, 84, 99, 76, 88, 86, 87, 82, 80, 90
+};
+
 static void re15_writher_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -11104,6 +11136,15 @@ static void re15_writher_ai_tick(int slot)
                 s_writher_home_ok[slot] = 1;
             }
         }
+        /* HP und Trefferbudget seeden (Nutzer-Auftrag 2026-08-26: "Ich wuerde die Haende
+         * auch gerne anschiessen koennen, dass die danach nicht mehr rauskommen nach 2
+         * Schuessen oder so"). Belege bei k_writher_hp und s_writher_hit_cost.
+         * GEMESSEN, was daraus folgt: Budget 1..4, Pistole (Waffen-Id 3) kostet -1 je
+         * Treffer -> der Arm taucht nach 2..5 Pistolenschuessen ab, lange bevor die 72..99
+         * HP aufgebraucht waeren. Magnum (7) und Nah-Schrot (8) kosten 0 Budget, bleiben
+         * aber byte-true Einschuss-Toeter ueber den Krit-Pfad. */
+        if (e->hp <= 0) e->hp = k_writher_hp[re15_engine_rand8() & 0x0fu];
+        e->writher_hits = (uint8_t)((re15_engine_rand8() & 3u) + 1u);
         /* The 300-radius +0x78 box (@0x8010c3c4), flags|=0x40000000, +0x1b8/+0x1b9, the +0x1d0/+0x1d2
          * rng seeds, the +0x188 part-block and the shadow (0x8001af5c) are engine bookkeeping; the port
          * installs the box via re15_enemy_apply_hitbox(0x1a) at spawn and models the reachable idle +
@@ -11594,20 +11635,84 @@ static void re15_writher_ai_tick(int slot)
             e->sub_state_1 = 3; e->sub_state_2 = 0;
             break;
 
-        case 3:                                          /* ZURUECK — zurueck in die Ruhe */
-            e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
-            e->speed_h = 0; e->ai_timer = 0;
-            /* ⛔ NACHRUESTUNG (das Original hat kein Zurueck, s. s_writher_home_x): die Lunge
-             * hat den Arm 2420 Einheiten in den Flur geschoben. Ohne Rueckstellung waere er
-             * beim naechsten Vorbeilaufen nochmal 2420 weiter — nach drei Durchgaengen mitten
-             * im Flur. Zurueck ins Gitter. */
-            if (slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_home_ok[slot]) {
-                e->x = s_writher_home_x[slot];
-                e->z = s_writher_home_z[slot];
+        case 3:                                          /* ZURUECK = die UMGEKEHRTE Lunge */
+            /* Nutzer 2026-08-26: "Beim Wegdruecken der Haende wuerde ich erwarten, dass diese
+             * nach hinten gehen." Bisher sprang der Arm in EINEM Bild auf seinen Platz —
+             * unsichtbar. Jetzt faehrt er die Lunge rueckwaerts ab, mit deren eigenen
+             * Schrittweiten und deren eigener Phasenlogik:
+             *     Aufsetzen : +0x94=0 @0x8010c880, +0x95=0 @0x8010c788, +0x8f=7 @0x8010c890,
+             *                 +0x9c=3 @0x8010c7a8, +0x8c=0x320 @0x8010c7b8
+             *     Zaehlen   : `sh v1,156(v0)` @0x8010c7d8 laeuft IMMER, der Phasenwechsel
+             *                 liegt im letzten bewegten Bild (`bne a0,zero` @0x8010c7d4 ->
+             *                 +0x8c=0x14 @0x8010c7f8 -> Tail-Schritt)
+             *     Richtung  : `ori a0,zero,0x800` @0x8010c8b4 = 180 Grad, also rueckwaerts
+             *                 (FUN_800245d8: `lh v0,106(v0)` @0x80024658, `addu a0,v0,a0`
+             *                  @0x80024664)
+             * Damit sind es 4 Bilder = 3x800 + 1x20 = 2420 zurueck — exakt die Strecke, die
+             * die Lunge vorwaerts macht. KEINE neue Zahl.
+             * ⛔ NACHRUESTUNG bleibt, DASS er ueberhaupt heimkehrt: das Original kennt kein
+             * Zurueck (sein Ausgang @0x8010c8e4 wechselt nur noch zwischen +0x5 = 2 und 3,
+             * einziger Setzer von +0x5 = 1 ist A[0] @0x8010c628 bei +0x5 == 0). Uebernommen
+             * sind nur FORM und Schrittweiten. Die Heimat-Klemme am Ende faengt die Drift,
+             * die der Wand-Klemmer in re15_writher_step unterwegs verursachen kann. */
+            switch (e->sub_state_2) {
+            case 0:
+                e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
+                e->ai_timer = 3;                         /* +0x9c = 3    @0x8010c7a8 */
+                e->speed_h  = 0x320;                     /* +0x8c = 800  @0x8010c7b8 */
+                e->sub_state_2 = 1;
+                /* fall through — das Setz-Bild bewegt schon (@0x8010c7bc) */
+                /* FALLTHRU */
+            default: {
+                int16_t pre = e->ai_timer;
+                e->ai_timer = (int16_t)(pre - 1);        /* @0x8010c7d8: IMMER */
+                if (pre == 0) {
+                    e->speed_h = 0x14;                   /* +0x8c = 20 @0x8010c7f8 */
+                    re15_writher_step(e, 0x800);         /* letztes Bild, dann Abschluss */
+                    e->speed_h = 0; e->ai_timer = 0;
+                    if (slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_home_ok[slot]) {
+                        e->x = s_writher_home_x[slot];   /* Drift-Klemme, s. Kopf */
+                        e->z = s_writher_home_z[slot];
+                    }
+                    e->sub_state_1 = 0; e->sub_state_2 = 0;
+                    break;
+                }
+                re15_writher_step(e, 0x800);             /* @0x8010c8b4 = rueckwaerts */
+                break;
             }
-            e->sub_state_1 = 0; e->sub_state_2 = 0;
+            }
             break;
 
+        case 6:                                          /* ABTAUCHEN — B[4] @0x8010ce54 */
+            /* Der Arm spielt Clip 3 einmal ab und ist danach weg.
+             *     8010cea0  +0x6 = 1        8010ceb0  +0x94 = 3
+             *     8010cec0  +0x95 = 0       8010ced0  +0x8f = 7
+             *     8010cf38  anim_set        8010cf60  +0x5 -> naechster Zustand
+             * Kein Positionsschritt: der Port-Arm ist ortsfest. */
+            if (e->sub_state_2 == 0) {
+                e->sub_state_2 = 1;
+                e->motion = 3; e->anim_frame = 0;
+                e->anim_frac = 7;
+            }
+            e->hit_react |= 1u;
+            if (re15_enemy_clip_done(e)) { e->sub_state_1 = 7; e->sub_state_2 = 0; }
+            else e->anim_frame++;
+            break;
+        case 7:                                          /* VERGRABEN — B[5] @0x8010cfe0 */
+            /* Haelt das letzte Bild von Clip 3. B[5] ruft in keiner Phase ein anim_set.
+             *     8010d040  +0x8f = 7
+             * ⛔ hit_react |= 1 laeuft JEDEN Tick, nicht einmal: der Treffer-Aufloeser
+             * stempelt +0x93 bei jedem Nachbar-Treffer neu. Mit gesetztem Bit faellt der
+             * vergrabene Arm aus der Zielauswahl — er ist kein Ziel mehr. Vorbild ist die
+             * Jeden-Tick-Zeile des passiv liegenden Zombies (@0x80103aac-ab8).
+             * ⛔ NACHRUESTUNG ist AUSSCHLIESSLICH DAS WEGLASSEN des Wiederauftauchens:
+             * das Original wartet (rng&0xff)+30 Bilder (@0x8010d044-54), zaehlt herunter
+             * (@0x8010d064-74) und geht dann zurueck auf Sub 2 (@0x8010d088-8c). Genau
+             * dieser Uebergang entfaellt — Nutzer-Wunsch "dass die danach nicht mehr
+             * rauskommen". Es wird nichts erfunden, nur ein belegter Uebergang nicht gebaut. */
+            e->anim_frac = 7;
+            e->hit_react |= 1u;
+            break;
         default:                                         /* RUHE — B[0] @0x8010c678 */
             e->motion = 0;                               /* +0x94 = 0 @0x8010c6bc */
             e->anim_frame++;                             /* Clip 0 laeuft in Schleife @0x8010c6f4 */
@@ -11618,11 +11723,45 @@ static void re15_writher_ai_tick(int slot)
         break;
     }
 
-    case 2:   /* HURT 0x8010d0f8 (LATENT: only reachable via a 0-damage weapon vs the HP-0 spawn). Flinch
-               * clip 2 @0x8010d200; the +0x1d2 hit-counter -> submerge sub 4 @0x8010d144 is OPEN (above).
-               * Resume the idle rather than invent the unmodeled submerge transition. */
+    case 2:   /* HURT 0x8010d0f8 -> Flinch 0x8010d188. Der Arm zuckt, und WENN das Trefferbudget
+               * dabei negativ geworden ist, taucht er ab:
+               *     8010d144  lb   v0,466(v1)     ; +0x1D2 SIGNED
+               *     8010d14c  bgez v0,0x8010d178  ; noch >= 0 -> normal weiter
+               *     8010d154  sb   1,4(v1)        ; state = 1
+               *     8010d164  sb   4,5(v1)        ; Unterzustand ABTAUCHEN
+               *     8010d174  sb   zero,6(v1)     ; Phase 0
+               * ⛔ ZWEI BENANNTE ABWEICHUNGEN:
+               * (a) Der Port nummeriert den Abtauch-Sub als 6 statt 4, weil Port-Sub 4 das
+               *     FESTHALTEN und Sub 5 das ABWERFEN ist. Reine Umnummerierung.
+               * (b) Das Original setzt am Flinch-Ende `sw 0x201` = Sub 2 @0x8010d440. Im Port
+               *     ist Sub 2 das GREIFEN — 1:1 uebernommen schickte das den getroffenen Arm
+               *     in den Griff. Genommen wird die RUHE (Sub 0).
+               * Ausgelassen: Rueckstoss `pos_advance(0x800)` @0x8010d2f8 und der +0x8c-Zerfall
+               * @0x8010d334 — der Port-Arm ist ortsfest, sein Ursprung steckt im Mauerwerk. */
+        /* ⛔ PFLICHT: wird der Arm getroffen, waehrend er den Spieler HAELT, muss der Griff
+         * gelöst werden — sonst bleibt der Spieler gepinnt, waehrend der Arm abtaucht.
+         * Nachruestung ohne Vorbild (das Original hat an diesem Gegner keinen Griff). */
+        if (e->sub_state_1 == 4 || e->sub_state_1 == 5) {
+            re15_player_victim_throwoff();
+            e->re2z_t158 = 0;
+        }
         e->motion = 2; e->anim_frac = 7;                         /* +0x94=2 flinch, +0x8f=7 clip-start blend */
-        if (re15_enemy_clip_done(e)) { e->state = 1; e->sub_state_1 = 0; }
+        if (re15_enemy_clip_done(e)) {
+            /* ⛔ DAS TREFFER-BIT LOESCHEN — sonst ist der Arm nach EINEM Treffer nie wieder
+             * ein Ziel. Byte-belegt am Zuck-Ende:
+             *     8010d454  lbu  v0,147(v1)   ; +0x93
+             *     8010d45c  andi v0,v0,0xfe
+             *     8010d460  sb   v0,147(v1)
+             * GEMESSEN ohne diese Zeile: von 19 Pistolenschuessen landete GENAU EINER, danach
+             * schloss der Treffer-Aufloeser den Arm aus (hit_react 0x03). Das ist die
+             * Nutzer-Meldung "ausserdem treffen die Arme nicht immer" — nur andersherum: MAN
+             * traf SIE nicht mehr. Dieselbe Fehlerklasse wie der RE2-Zombie-Ein-Treffer-Latch.
+             * ⛔ NUR Bit 0: Bit 1 setzt der Aufloeser selbst als Rekursions-Marke. */
+            e->hit_react &= (uint8_t)~1u;
+            e->state = 1;
+            e->sub_state_2 = 0;
+            e->sub_state_1 = ((int8_t)e->writher_hits < 0) ? 6 : 0;   /* @0x8010d14c/@0x8010d164 */
+        }
         else e->anim_frame++;
         break;
 

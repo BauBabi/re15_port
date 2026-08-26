@@ -55,8 +55,33 @@ int main(void)
     /* (1) INIT: state -> 1, HP stays 0 (INIT writes no +0x9a) */
     re15_enemy_ai_run_all(0);
     if (e->state != 1) { fprintf(stderr, "FAIL(1): INIT->ACTIVE expected state 1, got %d\n", e->state); fail = 1; }
-    if (e->hp != 0)    { fprintf(stderr, "FAIL(1): INIT must not set HP (byte-true spawn 0), got %d\n", e->hp); fail = 1; }
-    printf("  (1) INIT: state->%d (writhe), hp=%d (unset), motion=%d\n", e->state, e->hp, e->motion);
+    /* ⛔ HIER STAND: "INIT must not set HP (byte-true spawn 0)". Diese Aussage ist WEITER
+     * RICHTIG fuer das ORIGINAL — im Arm-Baum 0x8010c1ec..0x8010d774 gibt es keinen
+     * einzigen Store auf +0x9a. Der Port seedet trotzdem, als BENANNTE NACHRUESTUNG
+     * (Nutzer-Auftrag 2026-08-26: die Arme sollen anschiessbar sein).
+     * Die Wache prueft deshalb jetzt das, was am Seed nachpruefbar ist: der Wert stammt aus
+     * der ECHTEN Tabellenzeile des Typs — Basis 0x8011f034, Zeile Typ*0x20 = @0x8011f374,
+     * Spalte (rng & 0xf) (@0x8010daf4/@0x8010dafc), Store @0x8010db14. Ein erfundener Wert
+     * faellt damit auf. */
+    {
+        static const int16_t k_hp[16] = {72,82,96,82,83,96,74,84,99,76,88,86,87,82,80,90};
+        int in_table = 0;
+        for (int i = 0; i < 16; i++) if (e->hp == k_hp[i]) { in_table = 1; break; }
+        if (!in_table) {
+            fprintf(stderr, "FAIL(1): HP %d steht NICHT in der Tabellenzeile @0x8011f374 "
+                            "{72,82,96,82,83,96,74,84,99,76,88,86,87,82,80,90} - der Seed "
+                            "waere dann erfunden\n", e->hp);
+            fail = 1;
+        }
+    }
+    if (e->writher_hits < 1 || e->writher_hits > 4) {
+        fprintf(stderr, "FAIL(1): Trefferbudget %u ausserhalb 1..4 - byte-true ist "
+                        "(rng & 3) + 1 (@0x8010c400/@0x8010c404, Store @0x8010c41c)\n",
+                e->writher_hits);
+        fail = 1;
+    }
+    printf("  (1) INIT: state->%d (writhe), hp=%d (aus Zeile @0x8011f374), Budget=%u, motion=%d\n",
+           e->state, e->hp, e->writher_hits, e->motion);
 
     /* (2) ROOTED + (3) HARMLESS: Spieler daneben (nicht davor), 200 Bilder, der Gegner darf
      * sich nicht bewegen und selbst keinen Spieler-Schaden schreiben.

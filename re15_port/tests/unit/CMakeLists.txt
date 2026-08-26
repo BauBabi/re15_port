@@ -2902,6 +2902,15 @@ target_compile_definitions(probe_1210_reach PRIVATE
 #     RE2-Dokumentseiten werden in der byte-belegten Geometrie gelesen. ---
 # --- PIN (Nutzer-Report 2026-08-26 "Stage 6 laedt Raum und Hintergrund nicht"):
 #     jeder Raum jeder Stage muss eine Hintergrund-Quelle haben. ---
+# --- PIN (Nutzer 2026-08-26): Gitter-Arme anschiessen -> abtauchen, kommen nicht wieder. ---
+add_executable(test_writher_abtauchen test_writher_abtauchen.c)
+target_link_libraries(test_writher_abtauchen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_writher_abtauchen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_writher_abtauchen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_writher_abtauchen COMMAND test_writher_abtauchen)
+set_tests_properties(unit_writher_abtauchen PROPERTIES TIMEOUT 60)
+
 add_executable(test_stage6_hintergrund test_stage6_hintergrund.c)
 target_link_libraries(test_stage6_hintergrund PRIVATE re15_engine re15_test_support)
 target_include_directories(test_stage6_hintergrund PRIVATE ${CMAKE_SOURCE_DIR}/include)
