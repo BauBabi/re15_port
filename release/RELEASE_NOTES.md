@@ -1,3 +1,42 @@
+# RE1.5 Port — v0.3.33 (Early Preview)
+
+## Stage 6: der Hintergrund war schwarz — und zwar in jedem Raum
+
+> "Die Stage 6 Sachen laedt er irgendwie Raum und Hintergrund nicht, wenn ich den im Debug
+> Mode anwaehle."
+
+Dahinter stecken zwei voellig verschiedene Dinge.
+
+### Der Hintergrund — behoben
+
+Der Port lud Raum-Hintergruende nur aus einem vorgeschnittenen Verzeichnisbaum. Der ist
+unvollstaendig, und zwar drastisch: Stage 1 hat 78 Verzeichnisse, Stage 2 hat 24, Stage 3
+hat 30, Stage 4 hat 22, Stage 5 hat **zwei** — und Stage 6 **gar keins**. Fuer Stage 6 gab
+es schlicht nichts zu laden.
+
+Die Originaldateien liegen dagegen fuer alle Stages vollstaendig im Paket, eine je
+Raumpaar. Der Lader nimmt sie jetzt als Rueckfall und schneidet den passenden Kamera-Blick
+selbst heraus. Das behebt Stage 6, Stage 5 und die Luecken in 2, 3 und 4 auf einen Schlag —
+ohne eine einzige neue Datei.
+
+Die Schnittregel ist nicht geraten: ich habe sie gegen den **gesamten** vorhandenen Baum
+geprueft. 1688 Schnitte, alle byte-identisch mit dem selbst gerechneten Ausschnitt, null
+Abweichungen. Der Rueckfall zeigt also nachweislich dasselbe Bild wie vorher der Baum.
+
+### Der Raum — kein Fehler, sondern der Auslieferungsstand
+
+34 der 240 Raumdateien sind 4-Byte-Platzhalter: Raeume, die es im Prototyp nicht gibt. In
+Stage 6 sind das drei der acht Eintraege, die das Debug-Menue anbietet. Wer die anwaehlt,
+bekommt zu Recht nichts — dort ist nichts. Der Port meldet das sauber und stuerzt nicht ab.
+
+Eine Wache haelt jetzt beides fest: dass **jeder** der 2188 Kamera-Schnitte aller Stages
+eine Quelle hat, und dass es genau 34 Platzhalter sind. Faellt die Zahl, ist eine Raumdatei
+verloren gegangen; steigt sie, wurde ein echter Raum ueberschrieben.
+
+**Tests:** 243/243 gruen (lokal und im Docker-Linux-Build).
+
+---
+
 # RE1.5 Port — v0.3.32 (Early Preview)
 
 ## Die Dokumente haben jetzt Bilder
