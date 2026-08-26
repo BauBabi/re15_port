@@ -60,7 +60,7 @@
 #   RE15_FRESH=1    Configure erzwingt frischen Cache
 #   RE15_TESTS      Standard: ON  (-DRE15_BUILD_TESTS)
 #   RE15_TOOLS      Standard: OFF (-DRE15_BUILD_TOOLS, alte API)
-#   RE15_MIN_TESTS  Standard: 244 (untere Schranke gegen eine KOLLABIERTE Suite,
+#   RE15_MIN_TESTS  Standard: 245 (untere Schranke gegen eine KOLLABIERTE Suite,
 #                   nicht nur gegen 0 Tests. Stand 2026-08-27 = 238 Tests (+8:
 #                   integration_item_name_census, integration_fx_region_cull,
 #                   unit_re2z_bandlock_pin, unit_re2z_rise_hittable, unit_writher_kill_flag, unit_rig_root_fix, unit_1090_flame_out_pin, unit_1210_gitterhaende); wird
@@ -305,8 +305,8 @@ do_test() {
     # Nicht nur "0 Tests" abfangen: auch eine auf wenige Tests KOLLABIERTE Suite
     # ist ein falsches Gruen (genau die Klasse, die hier schon einmal ein
     # erfundenes "224/224" erzeugt hat). Untergrenze deshalb = volle Suite.
-    [ "$total" -ge "${RE15_MIN_TESTS:-244}" ] \
-      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-244} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
+    [ "$total" -ge "${RE15_MIN_TESTS:-245}" ] \
+      || die "nur $total Tests gefunden, erwartet >= ${RE15_MIN_TESTS:-245} — Suite kollabiert? (RE15_MIN_TESTS setzen, wenn das ABSICHT ist)"
     [ "$failed" -eq 0 ] || die "$failed von $total Tests ROT. Log: $log"
     info "test OK — $passed/$total bestanden"
     TEST_SUMMARY="$passed/$total"

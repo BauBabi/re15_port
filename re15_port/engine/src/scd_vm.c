@@ -406,7 +406,11 @@ int scd_audio_queue_pop(scd_audio_event_t *out)
  * AOT-Slot tot, Prop obj_id 4 aber weiterhin sichtbar. Die Maske merkt sich die Absicht und
  * Obj_model_set wendet sie beim Anlegen an — das Ergebnis entspricht dem Original, in dem der
  * Installer das Zeichen-Bit des Pool-Eintrags loescht (@0x800406f8-718). */
-static uint16_t s_prop_taken_hidden = 0;
+/* ⛔ 32 Bit, nicht 16: die Maske traegt ein Bit je Prop, und der Pool fasst jetzt 17
+ * (RE15_SCD_MAX_PROPS). Mit uint16_t waere Prop 16 nicht mehr adressierbar gewesen —
+ * `1u << 16` in ein 16-Bit-Feld ergibt stillschweigend 0, die Weste liesse sich also
+ * nie als "genommen" markieren. */
+static uint32_t s_prop_taken_hidden = 0;
 
 void scd_vm_init(void)
 {
@@ -3515,7 +3519,7 @@ static int op_item_aot_set(scd_thread_t *t)
         int inert = (t->pc[2] == 0);
         if (tk_bit && re15_game_flag_get(9, tk_bit)) {
             if (tk_prop < 16u)
-                s_prop_taken_hidden |= (uint16_t)(1u << tk_prop);  /* merken: gilt auch, wenn
+                s_prop_taken_hidden |= (uint32_t)(1u << tk_prop);  /* merken: gilt auch, wenn
                                                                     * das Modell erst SPAETER
                                                                     * angelegt wird */
             if (tk_prop < g_scd.prop_count)
@@ -3586,11 +3590,36 @@ static int op_obj_model_set(scd_thread_t *t)
     int16_t bhx = scd_read_le_s16(&t->pc[28]);
     int16_t bhy = scd_read_le_s16(&t->pc[30]);
     int16_t bhz = scd_read_le_s16(&t->pc[32]);
-    if (g_scd.prop_count < 16) {
-        int i = g_scd.prop_count++;
-        g_scd.props[i].active = (s_prop_taken_hidden & (1u << i)) ? 0 : 1;
+    /* ⛔ ZWEIT-INSTALLATION SCHALTET AB, sie legt KEINEN zweiten Slot an.
+     * Byte-true LAB_80040914: der Pool @0x800b3f98 wird ueber die obj_id INDIZIERT
+     * (@0x8004093c-58, Schrittweite 148) — dieselbe obj_id trifft also zwangslaeufig
+     * denselben Slot. Was dann passiert:
+     *     80040978  lw   v0,0x0(a1)              ; Flags des Slots
+     *     80040980  beq  v0,zero,LAB_80040990    ; leer  -> Flags = pc[6..7]|1
+     *     80040988  j    LAB_800409a8
+     *     8004098c  _sw  zero,0x0(a1)            ; belegt -> Flags = 0 = AUS
+     * Wichtig: der belegte Zweig SPRINGT NICHT UEBER den Rest — er landet auf
+     * LAB_800409a8 und schreibt Position (@0x800409b0/bc/c8), Rotation (@0x800409e0/ec)
+     * und Box ganz normal weiter. Nur das Flags-Wort wird 0.
+     * WARUM DAS HIER STEHT: ROOM1190 hat 19 Obj_model_set-Stellen bei 17 obj_ids — obj 5
+     * und obj 6 kommen je zweimal vor (game-weites Maximum, nur ROOM1190/1191). Der Port
+     * fuehrt den Pool in Installations-Reihenfolge und haette daraus zwei Duplikat-Slots
+     * gemacht statt der einen Abschaltung. Die Suche nach der obj_id stellt genau die
+     * Identitaet her, die das Original ueber den Index bekommt.
+     * (Gemessen mit probe_1190_props: im Boot-Szenario laufen 7 Installationen, obj_id
+     *  0..6, Reihenfolge == obj_id.) */
+    int i = -1;
+    for (int k = 0; k < (int)g_scd.prop_count; k++) {
+        if (g_scd.props[k].obj_id == obj_id) { i = k; break; }
+    }
+    const int reinstall = (i >= 0);
+    if (!reinstall && g_scd.prop_count < RE15_SCD_MAX_PROPS) i = (int)g_scd.prop_count++;
+    if (i >= 0) {
+        g_scd.props[i].active = (reinstall ||
+                                 (s_prop_taken_hidden & (1u << i))) ? 0 : 1;
                                             /* schon genommen -> gar nicht erst sichtbar
-                                             * anlegen (s. s_prop_taken_hidden) */
+                                             * anlegen (s. s_prop_taken_hidden);
+                                             * zweite Installation -> AUS (@0x8004098c) */
         g_scd.props[i].obj_id = obj_id;
         g_scd.props[i].obj_type = obj_type;
         g_scd.props[i].band   = t->pc[4];   /* FLOOR band -> pool+0x82 (byte-true
@@ -3617,11 +3646,14 @@ static int op_obj_model_set(scd_thread_t *t)
         /* FLAGS = pool+0x00 (byte-true LAB_80040914 @0x80040990-a4:
          * `lhu v0,6(a2)` / `ori v0,v0,0x1` / `sw v0,0(a1)`). Bit 0x100 ist das
          * "kletterbar"-Bit, das FUN_8002d2c0 @0x8002d358 mit `& 0x101` abfragt. */
-        g_scd.props[i].flags  = (uint16_t)(((uint16_t)t->pc[6] |
-                                            ((uint16_t)t->pc[7] << 8)) | 1u);
+        g_scd.props[i].flags  = reinstall
+                                ? 0u   /* @0x8004098c `sw zero,0x0(a1)` */
+                                : (uint16_t)(((uint16_t)t->pc[6] |
+                                              ((uint16_t)t->pc[7] << 8)) | 1u);
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[scd] Obj_model_set[%d] id=0x%02X type=%u pos=(%d,%d,%d) rot=(%d,%d,%d)\n",
-                i, obj_id, obj_type, px, py, pz, rx, ry, rz);
+        fprintf(stderr, "[scd] Obj_model_set[%d] id=0x%02X type=%u pos=(%d,%d,%d) rot=(%d,%d,%d)%s\n",
+                i, obj_id, obj_type, px, py, pz, rx, ry, rz,
+                reinstall ? "  [ZWEITINSTALLATION -> AUS]" : "");
 #endif
     }
 

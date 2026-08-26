@@ -156,7 +156,59 @@ typedef struct {
      * the next header section). Pointers alias the resident RDT buffer → byte-true,
      * no copy. prop_count == nOmodel. Lets the engine load props straight from the
      * RDT instead of incbin/CD per room. */
-#define RE15_RDT_MAX_PROPS 16
+/* ⛔ KAPAZITAET GEMESSEN, NICHT GESCHAETZT.
+ * Nutzer-Befund 2026-08-26: "Im Room 1190 ist statt der Weste von Leon ein gelbes
+ * viereck zu sehen."
+ *
+ * WAS DAS ORIGINAL TUT — es hat GAR KEINE feste Prop-Grenze:
+ *   Der Objekt-Pool liegt @0x800b3f98, Schrittweite 148 (0x94), und wird ueber die
+ *   obj_id INDIZIERT, nicht ueber einen Installations-Zaehler. Obj_model_set-Handler
+ *   LAB_80040914:
+ *       8004093c  lbu   a3,0x1(a2)   ; a3 = obj_id = pc[1]
+ *       80040944  sll   v0,a3,0x3    ; id*8
+ *       80040948  addu  v0,v0,a3     ; id*9
+ *       8004094c  sll   v0,v0,0x2    ; id*36
+ *       80040950  addu  v0,v0,a3     ; id*37
+ *       80040954  sll   v0,v0,0x2    ; id*148
+ *       80040958  addu  a1,v0,v1     ; a1 = 0x800b3f98 + obj_id*148
+ *   (Wird dieselbe obj_id ein zweites Mal installiert, schreibt @0x8004098c
+ *    `sw zero,0x0(a1)` = Flags 0 = Objekt AUS — und faehrt danach bei LAB_800409a8
+ *    mit Position/Rotation/Box ganz normal fort. Das ist ein SCHALTER, kein
+ *    Fehlerfall. ROOM1190 hat deshalb 19 Record-Stellen bei 17 obj_ids: obj 5 und
+ *    obj 6 kommen je zweimal vor.
+ *    ⛔ KORREKTUR AN MEINER EIGENEN MESSUNG: eine fruehere Zaehlung nannte hier 276
+ *    Vorkommen. Das war ein WERKZEUG-Artefakt — der Walker hatte keine Sub-Endgrenze
+ *    und lief aus jedem der 15 Subs durch den gesamten Rest der Datei, zaehlte also
+ *    dieselben Stellen wieder und wieder. Mit Endgrenze je Sub (naechster Eintrag der
+ *    Sub-Tabelle) sind es 19, game-weites Maximum ebenfalls 19 und nur in diesen
+ *    beiden Raeumen.)
+ *   Die Schleifen-Schranke ueber den Pool ist in BEIDEN Konsumenten der RDT-Kopfwert
+ *   nOmodel (RDT+0x02), gelesen ueber den residenten RDT-Zeiger DAT_800ac778:
+ *       8002be5c  lbu v0,0x2(v0)   (FUN_8002bd44, Prop-Ausschub; Schrittweite
+ *                                   @0x8002be78 `addiu s0,s0,0x94`)
+ *       80043758  lbu v0,0x2(v0)   (FUN_800436a8, AOT-Objektdurchlauf)
+ *   Der Pool ist also exakt nOmodel Eintraege gross — was immer der Raum mitbringt.
+ *
+ * WAS DER PORT MITBRINGEN MUSS — Zensus ueber alle 206 ausgelieferten RDTs
+ * (Kopfbyte RDT+0x02):
+ *     nOmodel = {0:49, 1:38, 2:30, 3:23, 4:32, 5:8, 6:3, 7:7, 8:4, 9:6, 12:4, 17:2}
+ *   Maximum 17, und zwar in GENAU zwei Raeumen: ROOM1190 und ROOM1191. Alle uebrigen
+ *   liegen bei 0..12. Der Port fasste 16 — also fiel ausgerechnet dort Prop 16 weg.
+ *
+ * WAS PROP 16 IST: Tabellenbasis = u32 @RDT+0x30 = 0x000240; Eintrag 16 =
+ *   TIM @Datei 0x048904 (33312 B, 8bpp 128x256, CLUT 256x1 @(0,480)),
+ *   MD1 @Datei 0x0054C0 (4396 B). Die TIM dekodiert sichtbar als die POLIZEIWESTE
+ *   (Vorderseite mit "POLICE"-Schriftzug, Rueckseite mit RPD-Wappen, Seitenteil).
+ *
+ * ZWEITES, STILLES SYMPTOM der Kappung: parse_props setzt `entries = npr * 2` MIT dem
+ *   gekappten npr. Die Grenzensuche rdt_next_boundary sah dadurch die beiden letzten
+ *   Tabelleneintraege nicht, also lief die Modell-Scheibe von Prop 15 ueber Prop 16
+ *   hinweg: gemessen 7816 B statt der richtigen 3420 B (0x0054C0 - 0x004764). Nicht nur
+ *   ein fehlendes Modell — auch ein falsch geschnittenes Nachbarmodell.
+ *
+ * 17 = das gemessene Maximum, nicht mehr und nicht weniger. Waechst je ein Raum
+ * darueber hinaus, faengt es der Pin test_1190_weste (Zensus-Wache). */
+#define RE15_RDT_MAX_PROPS 17
     const uint8_t           *prop_md1[RE15_RDT_MAX_PROPS];
     int                      prop_md1_size[RE15_RDT_MAX_PROPS];
     const uint8_t           *prop_tim[RE15_RDT_MAX_PROPS];

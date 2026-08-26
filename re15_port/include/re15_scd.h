@@ -25,6 +25,16 @@
 #ifndef RE15_SCD_H
 #define RE15_SCD_H
 
+/* Prop-Pool. Das Original hat hier KEINE feste Grenze — sein Pool @0x800b3f98
+ * (Schrittweite 148) wird ueber obj_id indiziert und bis nOmodel durchlaufen
+ * (@0x8004093c-58 / @0x8002be5c / @0x80043758). Game-weit gemessenes Maximum:
+ * nOmodel = 17 und groesste obj_id = 16, beides nur in ROOM1190/1191.
+ * ⛔ GEMESSEN am laufenden Port (probe_1190_props, ROOM1190): 7 Installationen im
+ * Boot-Szenario, Reihenfolge == obj_id. Der Pool war also NICHT der Engpass fuer die
+ * fehlende Weste — das war die RDT-Kappung (s. RE15_RDT_MAX_PROPS in re15_rdt.h) —
+ * aber er zieht mit, damit beide Grenzen dieselbe gemessene Zahl tragen. */
+#define RE15_SCD_MAX_PROPS 17
+
 #include <stdint.h>
 
 /* Phase 4.5.11: RE2 has 2 parallel VMs: Player/AOT (slots 0..9, 10 threads)
@@ -350,7 +360,7 @@ typedef struct {
          * FUN_8002d474 @0x8002d59c/@0x8002d680 und FUN_8002d100 @0x8002d170
          * (`& 1` = aktiv). */
         uint16_t flags;
-    } props[16];
+    } props[RE15_SCD_MAX_PROPS];
     uint8_t  prop_count;
     /* When Work_set kind=3 selects a script slot that has NO active
      * actor, route Speed_set/Add_speed to the prop at this index. */

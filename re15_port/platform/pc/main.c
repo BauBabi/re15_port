@@ -131,7 +131,13 @@ static const int k_global_fx_slot[RE15_ESP_GLOBAL_SHEETS] = {
  * (`a3*0x94 + DAT_800b3f98` @0x8004093c-58) und bindet das Modell pro obj_id aus der
  * RDT+0x30-Tabelle (@0x80040ab4-adc -> FUN_8002b898). ROOM11F0/11F1 (Generator-Raum)
  * traegt nOmodel=12 — mit dem alten 6er-Cap fehlten die Schalter obj 0x06..0x0B. */
-#define RE15_TIM_SLOT_PROP(op) ((op) < 6 ? 4 + (op) : 26 + ((op) - 6))
+/* ⛔ PROP 16 DARF NICHT AUF 36 FALLEN. Die alte Formel lieferte fuer op=16 den
+ * Wert 26+10 = 36 — und 36..43 sind RE15_TIM_SLOT_EFFECT_ROOM(0..7), die Raum-ESP-
+ * Texturen. Ein blosses Anheben von RE15_RDT_MAX_PROPS haette die Weste ueber die
+ * Effekt-Textur gelegt statt sie zu zeigen. Prop 16 bekommt deshalb den bis dahin
+ * unbenutzten Slot 45 (RE15_TIM_SLOT_MAX dafuer 45 -> 46). Belegung s. render_pc.c. */
+#define RE15_TIM_SLOT_PROP(op) ((op) < 6  ? 4 + (op)        : \
+                                (op) < 16 ? 26 + ((op) - 6) : 45)
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -827,9 +833,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * das Original laedt ALLE nOmodel Modelle — Schleifen-Schranke `lbu v0,2(v0)` =
      * RDT+0x02 nOmodel @0x80043758 / `sltu s0,nOmodel` @0x800437ac (FUN_800436a8);
      * Modell-Bind pro obj_id @0x80040ab4-adc (LAB_80040914 -> FUN_8002b898).
-     * ROOM11F0/11F1 nOmodel=12. Game-weites Maximum: nOmodel=17 (ROOM1190/1191) —
-     * liegt UEBER RE15_RDT_MAX_PROPS=16 (Engine-Pool props[16]); dort clippt weiterhin
-     * das Engine-Cap (dokumentiert OFFEN, separates Thema). */
+     * ROOM11F0/11F1 nOmodel=12. Game-weites Maximum: nOmodel=17 (ROOM1190/1191).
+     * ERLEDIGT 2026-08-26 (stand hier als "OFFEN, separates Thema"): RE15_RDT_MAX_PROPS
+     * ist auf 17 = das gemessene Maximum angehoben, Prop-Pool und Textur-Slots ziehen
+     * mit. Es war die POLIZEIWESTE in ROOM1190, die dadurch wegfiel — der Nutzer sah
+     * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
+     * RE15_RDT_MAX_PROPS in re15_rdt.h. */
     for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count

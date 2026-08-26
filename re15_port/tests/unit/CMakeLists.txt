@@ -3057,3 +3057,18 @@ target_link_libraries(probe_1090_vakgegen PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1090_vakgegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1090_vakgegen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE 1190-Props (Weste). KEIN add_test. ---
+add_executable(probe_1190_props probe_1190_props.c)
+target_link_libraries(probe_1190_props PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1190_props PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1190_props PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN 1190-Weste (Prop-Kapazitaet; Nutzer-Befund "gelbes Viereck") ---
+add_executable(test_1190_weste test_1190_weste.c)
+target_link_libraries(test_1190_weste PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1190_weste PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1190_weste PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1190_weste COMMAND test_1190_weste)
