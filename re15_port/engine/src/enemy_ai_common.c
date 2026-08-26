@@ -1273,6 +1273,30 @@ static int re15_victim_is_re2_dog(void)
     return g_player_victim_type == 0x20 && re15_ai_re2_for_type(0x20);
 }
 
+/* ⛔ WER GREIFT GERADE? — nicht zu verwechseln mit g_player_victim_type.
+ * g_player_victim_type traegt die BANK, aus der posiert wird, und das ist bei einer
+ * Leihgabe der LEIHGEBER: fuer die ROOM1210-Arme steht dort 0x10 (der Zombie), nicht 0x1A
+ * (`g_player_victim_type = vbank_type` in re15_player_victim_latch_ex).
+ * GEMESSEN, wie teuer diese Verwechslung war: drei Reparaturversuche am Wand-Griff waren
+ * auf `g_player_victim_type == 0x1A` gegated und liefen deshalb NIE — 306 Aufrufe von
+ * re15_victim_place, davon 0 mit Typ 0x1A. Der Greifer steht seit jeher in
+ * g_player_victim_zombie; das hier ist nur die fehlende Auskunft darueber. */
+/* Der letzte nachweislich begehbare Standpunkt DIESES Griffs. */
+static int32_t s_victim_ok_x, s_victim_ok_z;
+
+void re15_victim_anchor_calibrate(int32_t stand_x, int32_t stand_z)
+{
+    s_victim_ok_x = stand_x;
+    s_victim_ok_z = stand_z;
+}
+
+static uint8_t re15_player_victim_grabber_type(void)
+{
+    int z = g_player_victim_zombie;
+    if (z <= 0 || z >= RE15_ACTOR_MAX) return 0;
+    return g_actors[z].type;
+}
+
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
 {
@@ -1299,9 +1323,35 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
      * ⛔ ENG BEGRENZT auf Typ 0x1A: fuer jeden anderen Greifer bleibt die Platzierung
      * unangetastet. Eine Klemme fuer alle waere eine Verhaltensaenderung ohne Beleg — die
      * RE2-Greifer brauchen sie nicht, weil sie im Begehbaren stehen. */
-    if (g_player_victim_type == 0x1Au && g_room_rdt_ok) {
+    if (re15_player_victim_grabber_type() == 0x1Au && g_room_rdt_ok) {
+        /* ⛔ DIE WANDKLEMME DES GITTER-GREIFERS (Nutzer 2026-08-26: "wenn ich zu oft
+         * hintereinander gegriffen werde, werde ich trotzdem noch in die Wand gezogen").
+         *
+         * GEMESSEN, ROOM1210 Ostzeile, Kollisionskante -18164:
+         *     mit RE1.5-Opferbank: 290 Griff-Bilder,   0 in der Wand
+         *     mit RE2-Opferbank  : 306 Griff-Bilder, 231 IN DER WAND, tiefster Punkt -17069
+         * Der ANKER ist dabei jedes Mal richtig (gemessen ueber drei Griffe: -18091 = Soll).
+         * Die Abdrift entsteht WAEHREND des Haltens: die geliehenen RE2-Ringkampf-Clips
+         * tragen eine eigene Wurzelbewegung, und die Platzierung ist absolut.
+         *
+         * ⛔ WARUM DREI FRUEHERE VERSUCHE NICHTS TATEN: sie waren auf
+         * `g_player_victim_type == 0x1A` gegated. Dort steht bei einer Leihgabe aber der
+         * LEIHGEBER (0x10). Gemessen: 306 Aufrufe, 0 davon mit 0x1A. Jetzt gated die Klemme
+         * auf den GREIFER (re15_player_victim_grabber_type).
+         *
+         * DER BEZUGSPUNKT ist der letzte nachweislich begehbare Standpunkt dieses Griffs,
+         * nicht die Position des Vorbildes: sobald ein Bild einmal in der Wand liegt, hat
+         * ein Constrain VON DORT nichts mehr zu klemmen. Startwert ist der Standpunkt im
+         * Moment des Zupackens, und der ist per Konstruktion begehbar.
+         * ⛔ NACHRUESTUNG, klar benannt: RE1.5s Writher hat keinen Griff, und RE2s
+         * verankerter Greifer braucht das nicht, weil er im Begehbaren steht. */
+        re15_collision_ensure_band(pl->y);
         int32_t nx = pl->x, nz = pl->z;
-        re15_collision_constrain(&g_room_rdt, px0, pz0, &nx, &nz);
+        re15_collision_constrain(&g_room_rdt, s_victim_ok_x, s_victim_ok_z, &nx, &nz);
+        int32_t cx = nx, cz = nz;
+        re15_collision_constrain(&g_room_rdt, nx, nz, &cx, &cz);
+        if (cx == nx && cz == nz) { s_victim_ok_x = nx; s_victim_ok_z = nz; }
+        else                      { nx = s_victim_ok_x; nz = s_victim_ok_z; }
         pl->x = nx; pl->z = nz;
     }
     pl->rot_y = save;                                                       /* subu @0x8010AB50 */
@@ -11586,6 +11636,9 @@ static void re15_writher_ai_tick(int slot)
                 e->anchor_z = e->z - (int32_t)(((int32_t)re15_sin_q12(e->rot_y)
                                                 * RE15_WRITHER_MESH_REACH) >> 12);
                 pl->anchor_x = e->anchor_x;  pl->anchor_z = e->anchor_z;
+                /* Startwert der Wandklemme: hier steht er gerade noch begehbar. */
+                {   extern void re15_victim_anchor_calibrate(int32_t, int32_t);
+                    re15_victim_anchor_calibrate(pl->x, pl->z); }
                 re15_player_victim_latch_ex(e, pl, 0);   /* Spieler-Kommando 5, RE1.5-Zwilling
                                                           * @0x80102630-40; Variante 0 = Front */
                 if (g_player_victim == 0) {
@@ -11610,11 +11663,35 @@ static void re15_writher_ai_tick(int slot)
                 e->re2z_t158 = (int16_t)(e->re2z_t158 - (2 + 5 * mash));/* @0x80102868-7C */
                 if (e->re2z_t158 < 0) e->sub_state_1 = 5;               /* @0x8010288C-94 */
                 if ((int)e->anim_frame == RE15_WRITHER_BITE_FRAME) {    /* @0x801028a0-ac */
-                    re15_audio_room_se(3);   /* Biss-SE @0x801028e8-f0 (`addiu a0,zero,3 /
-                                              * jal 0x8005bd6c`). Der Record IST in diesem
-                                              * Raum belegt: ROOM1210 snd1[3] = 00 00 43 14,
-                                              * byte-gleich mit ROOM1140/1030 (selbst aus dem
-                                              * RDT gelesen, probe_1210_griff Messung D). */
+                    /* ⛔ KEIN BISS-LAUT (Nutzer 2026-08-26: "Wir haben ein Biss sound. Im
+                     * Original das passt hier nicht. Im Original RE 2 ist es auch kein Biss
+                     * Sound. Uebernehme den Sound vom Original RE 2 beim greifen dort.").
+                     * Hier stand `re15_audio_room_se(3)` = der Biss-SE des RE1.5-Zombies
+                     * (@0x801028e8-f0). Ein Arm im Gitter beisst nicht.
+                     * RE2s verankerter Greifer spielt statt dessen beim ZUPACKEN einen von
+                     * ZWEI Lauten, per Zufall, mit Sperre — byte-belegt (EMZ0.BIN):
+                     *     8010278c  lbu   v0,569(s1)     ; +0x239 = Sperre
+                     *     80102794  bne   v0,zero,...    ; laeuft noch -> kein Laut
+                     *     8010279c  jal   0x80015fe8     ; rng
+                     *     801027a4  andi  v0,v0,0x1
+                     *     801027a8  beq   v0,zero,0x801027b4
+                     *     801027ac  addiu a0,zero,11     ; Verzoegerungsschlitz: rng&1 -> Id 11
+                     *     801027b0  addiu a0,zero,10     ; sonst Id 10
+                     *     801027b4  jal   0x8005bd6c
+                     *     801027bc  addiu v0,zero,150
+                     *     801027c0  sb    v0,569(s1)     ; Sperre = 150 Bilder
+                     * Der Port-Mapper bildet RE2-Id 10 auf RE1.5-SE4 und 11 auf SE5 ab; beide
+                     * Records sind in ROOM1210s snd1 belegt (SE4 mit Prio-Nibble 0xb, SE5 mit
+                     * 0x9 — dasselbe Paar, das schon der Zupack-Laut benutzt).
+                     * ⛔ STELLE, nicht Zeitpunkt: RE2 spielt ihn im Griff-EINTRITT. Der Port
+                     * hat dort bereits SE4 (s. Zupack-Laut weiter oben); hier, im Bild des
+                     * frueheren Bisses, kommt der ZWEITE Laut des Paares, damit das Halten
+                     * hoerbar bleibt, ohne zu beissen. Die 150er-Sperre laeuft ueber dasselbe
+                     * Feld +0x239 (re2z_cd239), das der Port schon fuehrt. */
+                    if (e->re2z_cd239 == 0) {
+                        re15_audio_room_se((re15_engine_rand8() & 1u) ? 5 : 4);
+                        e->re2z_cd239 = RE15_WRITHER_MOAN_CD;   /* 150 @0x801027bc-c0 */
+                    }
                     int r = re15_re2_player_damage_mode(pl, RE15_WRITHER_BITE_DMG, 0);
                                                                         /* FUN_800401d4 @0x801028f4-fc */
                     if (r & 3) e->sub_state_1 = 5;                      /* Bit 0 = Abwurf

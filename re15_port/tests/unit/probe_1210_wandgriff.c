@@ -168,6 +168,11 @@ int main(void)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->y = 0;
     re15_collision_set_band(0);
+    /* ⛔ DIE ENGINE-KLEMME ARBEITET AUF g_room_rdt, NICHT auf s_rdt. Ohne diese zwei
+     * Zeilen ist g_room_rdt_ok == 0, die Klemme in re15_victim_place laeuft gar nicht,
+     * und JEDE Messung an ihr ist ein Harness-Artefakt statt einer Aussage ueber das
+     * Spiel. Genau daran sind hier drei Diagnosen gescheitert. */
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
     scd_register_room_events(&s_rdt);
     scd_room_reenter(&s_rdt, 0, 0, 0);
     {

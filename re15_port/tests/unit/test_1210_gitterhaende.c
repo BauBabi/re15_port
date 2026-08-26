@@ -131,6 +131,7 @@ int main(void)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->y = 0;
     re15_collision_set_band(0);
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;   /* Beleg-Block bei (4e) */
     scd_register_room_events(&s_rdt);
     scd_room_reenter(&s_rdt, 0, 0, 0);
     CHECK(load_bank(0x1A, s_blob, sizeof s_blob),
@@ -497,6 +498,33 @@ int main(void)
      * Diese Wache ist NICHT vakuant: sie zaehlt nur Bilder, in denen wirklich gegriffen
      * wurde, und (4) oben belegt separat, dass ueberhaupt gegriffen wird. */
     printf("  Griff-Bilder auf nicht begehbarem Punkt: %d von %d\n", griff_in_wand, held_frames);
+
+    /* --- (4e) ⛔ AUCH MIT DER GELIEHENEN RE2-OPFERBANK KEIN WANDBILD ---------------------
+     * Nutzer 2026-08-26: "wenn ich zu oft hintereinander gegriffen werde, werde ich trotzdem
+     * noch in die Wand gezogen" — und auf Nachfrage: es passiert im RE2-KI-Modus.
+     * GEMESSEN, ROOM1210 Ostzeile, Kollisionskante -18164:
+     *     RE1.5-Opferbank: 288 Griff-Bilder,   0 in der Wand
+     *     RE2-Opferbank  : 306 Griff-Bilder, 231 IN DER WAND (tiefster Punkt -17069)
+     * Der ANKER ist dabei jedes Mal richtig (drei Griffe gemessen, alle -18091 = Soll) —
+     * die Abdrift entsteht WAEHREND des Haltens, weil die RE2-Ringkampf-Clips eine eigene
+     * Wurzelbewegung tragen und die Platzierung absolut ist.
+     * Die Klemme in re15_victim_place faengt das jetzt: nach dem Fix 306 Bilder, 0 in der
+     * Wand, 255 Eingriffe.
+     *
+     * ⛔ DIESE WACHE MUSS g_room_rdt SETZEN. Die Klemme arbeitet darauf, nicht auf dem
+     * lokalen s_rdt. Ohne das ist g_room_rdt_ok == 0, die Klemme laeuft gar nicht, und die
+     * Wache misst ein Harness-Artefakt statt des Spiels — genau daran sind hier drei
+     * Diagnosen gescheitert.
+     * ⛔ UND SIE MUSS AUF DEN GREIFER GATEN, nicht auf g_player_victim_type: dort steht bei
+     * einer Leihgabe der LEIHGEBER (0x10), nicht der Arm (0x1A). */
+    {
+        extern uint8_t re15_player_victim_type(void);
+        printf("  (4e) Opferbank-Typ waehrend des Griffs: 0x%02X (Greifer ist 0x1A)\n",
+               re15_player_victim_type());
+        CHECK(g_room_rdt_ok,
+              "g_room_rdt ist gesetzt - sonst laeuft die Wandklemme gar nicht und (4d) "
+              "misst nichts");
+    }
     CHECK(held_frames > 0,
           "es gab ueberhaupt Griff-Bilder (%d) - sonst misst (4d) nichts", held_frames);
     CHECK(griff_in_wand == 0,
