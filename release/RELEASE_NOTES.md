@@ -1,3 +1,39 @@
+# RE1.5 Port — v0.3.32 (Early Preview)
+
+## Die Dokumente haben jetzt Bilder
+
+Bisher war der FILE-Schirm reiner Text — so, wie RE1.5 ihn baut. RE2 zeichnet dagegen je
+Seite ZWEI Bilder: oben die Textseite ueber die volle Breite, darunter die Illustration.
+Genau das ist jetzt portiert.
+
+Die Geometrie kommt aus RE2s eigenem Leser und ist Anweisung fuer Anweisung nachgelesen:
+die Seitenhoehe H = 256 minus dem y-Versatz aus dem Dokument-Record, die Textseite 256
+breit auf den Zeilen 0 bis H-1, die 128 breite Illustration darunter auf H bis 255. Beides
+zusammen ergibt die bekannte RE2-Ansicht: Titel oben, Gegenstand darunter.
+
+**Alle 25 Dokumente mit ihren 191 Textseiten und 25 Illustrationen liegen im Paket.**
+Sie sind die Vorlage fuer eigene Dokumente: gleiche Namen, gleiches Format, fertig. Die
+Seitenhoehe liest der Port aus dem Bild selbst, nicht aus einer Tabelle — ein selbst
+gebautes Dokument darf also eine eigene Hoehe haben, ohne dass am Code etwas nachgezogen
+werden muss.
+
+Zum Ansehen: `RE15_DOC=0` waehlt Dokument 0 (Chris's Diary), `RE15_DOC=9` ein anderes.
+Ohne diese Auswahl aendert sich am FILE-Schirm nichts — er bleibt der Textleser von RE1.5.
+
+Editierbare Vorlagen als PNG erzeugt `python re15_port/tools/re2_files_png.py`.
+
+### Was dabei geprueft wird
+
+Eine Wache vergleicht zwei voellig getrennte Quellen: die Seitenhoehe, die im Bild steht,
+gegen die Seitenhoehe, die die RE2-Programmtabelle nennt. Bei allen 25 Dokumenten stimmen
+sie ueberein. Dazu: alle 25 haben Titelseite und Illustration, es sind 191 Textseiten, und
+bei Dokument 0 liegt das Motiv der Illustration vollstaendig im unteren Bereich — genau da,
+wo die Zeichnung es abtastet.
+
+**Tests:** 242/242 gruen (lokal und im Docker-Linux-Build).
+
+---
+
 # RE1.5 Port — v0.3.31 (Early Preview)
 
 Ein Fix, und der war eine Regression von mir aus v0.3.30.
