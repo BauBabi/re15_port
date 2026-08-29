@@ -500,6 +500,17 @@ target_include_directories(test_dog_aim_band PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_test(NAME unit_dog_aim_band COMMAND test_dog_aim_band)
 set_tests_properties(unit_dog_aim_band PROPERTIES TIMEOUT 30)
 
+# --- Sherry-Wand-Pin (Nutzer-Report 2026-08-29): NPC-Wurzel-Klemme laeuft im Root-Tail
+#     fuer ALLE States (jal 0x8003b0a4 @0x8011e318 u.a.) — die geparkte Sherry (0x4B,
+#     ROOM11B0) darf nicht durch die Suedwand zurueck in den Raum laufen. ---
+add_executable(test_sherry_wall_pin test_sherry_wall_pin.c)
+target_link_libraries(test_sherry_wall_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_sherry_wall_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_sherry_wall_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_sherry_wall_pin COMMAND test_sherry_wall_pin)
+set_tests_properties(unit_sherry_wall_pin PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

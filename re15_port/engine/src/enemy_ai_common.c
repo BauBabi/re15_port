@@ -9621,11 +9621,10 @@ static void re15_npc_escort_tick(re15_actor_t *e, re15_actor_t *pl)
      *     3  | 0x8004f7dc | 0x8004f9ec   nah dabei (halbes Tempo)
      *     5  | 0x8004fd3c | 0x8004fe44   laufen
      * (4/6/7 sind nicht portiert, s. Kommentar bei re15_npc_escort_decide0.) */
-    {   int32_t ox = e->x, oz = e->z;
-        re15_npc_escort_decide(e);
-        re15_npc_escort_exec(e);
-        re15_npc_wall_clamp(e, ox, oz);      /* Wurzel-Klemme @0x8011cc58-68 */
-    }
+    re15_npc_escort_decide(e);
+    re15_npc_escort_exec(e);
+    /* (Die Wurzel-Klemme @0x8011cc58-68 laeuft seit 2026-08-29 im Root-Tail von
+     * re15_npc_ai_tick — fuer ALLE States, nicht mehr nur in diesem Blatt.) */
 }
 
 static void re15_npc_ai_tick(int slot)
@@ -9697,6 +9696,22 @@ static void re15_npc_ai_tick(int slot)
     }
     if (in_motion_pose) e->hp = -1;   /* stay invulnerable while posing (the yield used to enforce this) */
 
+    /* WURZEL-KLEMME (Nutzer-Report 2026-08-29 "Sherry laeuft nach der Cutscene noch rum";
+     * analysis/nutzer_batch_2026-08-29/sherry-despawn.md): die SCA-Wand-Klemme ist im Original
+     * Teil des UNKONDITIONALEN Root-Tails NACH dem State-Dispatch — in ALLEN sechs NPC-Roots
+     * (jal 0x8003b0a4 @0x8011c694/@0x8011cc64/@0x8011d270/@0x8011d804/@0x8011dd50/@0x8011e318,
+     * eigener Callsite-Scan). 0x4B-Root selbst nachdisassembliert: Dispatch `jalr` @0x8011e2d0
+     * (Tabelle @0x801218d8[+0x4]), danach Tail `lw v0,120(a0); ori a2,4; lhu a1,6(v0);
+     * jal 0x8003b0a4; addiu a0,a0,52` @0x8011e30c-1c. Der Port klemmte bisher NUR das
+     * Eskorte-Blatt (+0x9==0): Sherry (Typ 0x4B, ROOM11B0) wird von sub09 auf
+     * (-30000,0,-30000) geparkt (Pos_set @RDT 0x13AC) — traf sie der Park mitten im
+     * Weglauf-Walk, lief sie im state-4-Executor UNGEKLEMMT durch die Suedwand (SCA @0xDE4)
+     * zurueck in den Raum. Mit der Klemme bleibt sie wie im Original ausserhalb haengen.
+     * Die pause-/skip-Gates oben sind byte-true klemmfrei (bne -> 0x8011e330 ueberspringt im
+     * Original den ganzen Tail); die SCD-Yield-Returns bewegen den Aktor nicht selbst
+     * (Bewegung liegt beim Walker), fuer sie ist die Klemme ein No-op. */
+    int32_t npc_ox = e->x, npc_oz = e->z;
+
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
         e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
@@ -9740,6 +9755,8 @@ static void re15_npc_ai_tick(int slot)
         re15_npc_anim(e);
         break;
     }
+
+    re15_npc_wall_clamp(e, npc_ox, npc_oz);   /* Root-Tail @0x8011e318 (alle States, s.o.) */
 }
 
 /* ============================ ZOMBIE GIRL (type 0x13, EM013 = ZOMBIE_GIRL) ==================== *
