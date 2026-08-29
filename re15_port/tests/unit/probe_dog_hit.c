@@ -109,6 +109,20 @@ int main(void)
     CHECK(d->state == 1, "(setup) INIT->ACTIVE, state=%d", d->state);
     d->hp = 100;                              /* deterministisch fuer die Messung */
 
+    /* FIXTURE-REPARATUR 2026-08-29 (Hoehenband-Fix): nach EINEM Tick steht der Hund als
+     * IDLE (Clip 1) — den trifft das Original NUR mit Dpad-DOWN (Tail @0x8010dd28
+     * ueberspringt LEVEL fuer Clip 1; DOWN via 0x80012974(0xfa0), dist hier 2000 < 4000).
+     * Der alte LEVEL-Schuss auf den IDLE-Hund war die Port-Divergenz, kein gueltiges
+     * Szenario. Also zielt die Sonde wie ein echter Spieler nach UNTEN. */
+    {
+        extern void re15_player_set_aim_elevation_for_test(int elev);
+        re15_player_set_aim_elevation_for_test(-1);
+    }
+    re15_enemy_ai_run_all(1);                 /* 1 ACTIVE-Tick: erst der state-1-Tail stempelt
+                                               * das Band (@0x8010dd00-4c) — der INIT-Tick tut
+                                               * es auch im Original nicht */
+    d->hp = 100;
+
     /* ---------- (1)+(2) Handgun-Treffer (weapon 3, Row 3 = grounded @0x80121018[3]) ---------- */
     int fx0 = re15_esp_fx_count();
     int hit = re15_player_weapon_fire(3);
@@ -218,6 +232,7 @@ int main(void)
         re15_enemy_apply_hitbox(d2, 0x20);
         d->active = 0;                                   /* der tote Hund 1 raus aus dem Auto-Aim */
         re15_enemy_ai_run_all(1);                        /* INIT */
+        re15_enemy_ai_run_all(1);                        /* 1 ACTIVE-Tick -> Band-Stempel @0x8010dd00-4c */
         d2->hp = 50; d2->hit_react = 0;
         face(pl, d2);
         int fxb = re15_esp_fx_count();

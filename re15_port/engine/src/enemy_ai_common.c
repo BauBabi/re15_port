@@ -7564,8 +7564,32 @@ static void re15_dog_ai_tick(int slot)
             break;
         }
 
-        /* ---- root tail FUN_8010dbcc @0x8010dd48-ddb0 (runs AFTER the dispatch) ---- */
-        /* jal 0x80012974(4000) @0x8010dd48: entity word0 |= 0x20000000 when dist<4000 — OPEN (header) */
+        /* ---- root tail FUN_8010dbcc @0x8010dd00-ddb0 (runs AFTER the dispatch) ---- */
+        /* BAND-STEMPEL (Nutzer-Report 2026-08-29 "erster Hund-Treffer stark verzoegert";
+         * selbst nachdisassembliert, STAGE1.BIN):
+         *   @0x8010dd00-10  word0 &= 0x1fffffff             (Zielbaender loeschen)
+         *   @0x8010dd20-30  Clip +0x94 == 1 (IDLE) oder == 0x13 (Low-HP-Hop)
+         *                   -> LEVEL-Stempel UEBERSPRINGEN
+         *   @0x8010dd38-44  word0 |= 0x40000000             (LEVEL)
+         *   @0x8010dd48-4c  jal 0x80012974, a0 = 0xfa0      (R = 4000)
+         *   FUN_80012974:   volle 32-bit-Deltas (lw playerX/Z @0x8001298c/@0x800129a8
+         *                   gegen entity+0x34/+0x3c @0x80012994/@0x800129ac, SquareRoot0);
+         *                   dist < R -> word0 |= 0x20000000 (DOWN; `sltu s0,a1,s0`
+         *                   @0x800129cc + `or/sw` @0x800129ec-f0, KEIN Clear-Zweig)
+         * Kodierung wie die Kraehe (re15_actor.h aim_band): Bit 1=DOWN, 2=LEVEL, 4=UP.
+         * NUR dieser state-1-Tail schreibt den Stempel; in HURT/DEATH bleibt der letzte
+         * Wert stehen (ausserhalb des Tails existiert kein Clear). Spawn-Wert ist 0:
+         * Sce_em_set schreibt word0 = 1 @0x8004228c/98 bzw. 0x2001 @0x800422ac/b0 —
+         * Band-Bits 29-31 = 0, bis der Tail erstmals laeuft. Verbraucher: Resolver-
+         * Band-Gate re15_damage.c (@0x800120d0-ec), NUR fuer den RE1.5-owned Hund. */
+        {
+            uint8_t band = 0;
+            if (e->motion != 1 && e->motion != 0x13) band |= 2;      /* LEVEL @0x8010dd20-44 */
+            int32_t bdx = pl->x - e->x, bdz = pl->z - e->z;
+            if (re15_body_isqrt((int64_t)bdx * bdx + (int64_t)bdz * bdz) < 0xfa0)
+                band |= 1;                                           /* DOWN @0x8010dd48-4c */
+            e->aim_band = band;
+        }
         if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6 tick @0x8010dd5c-70 */
         if (!re15_dog_blocked(e)) e->dog_blocked_ctr = 0;     /* +0x1da==0 -> +0x1dc=0 @0x8010dd80-8c */
         else e->dog_blocked_ctr++;                            /* else +0x1dc++ @0x8010dd94-da4 (audit #15) */

@@ -491,6 +491,15 @@ target_compile_definitions(test_item_stack_press PRIVATE
 add_test(NAME unit_item_stack_press COMMAND test_item_stack_press)
 set_tests_properties(unit_item_stack_press PROPERTIES TIMEOUT 30)
 
+# --- Hund-Hoehenband-Pin (Nutzer-Report 2026-08-29 "erster Treffer verzoegert"):
+#     Tail-Stempel @0x8010dd00-4c + FUN_80012974(0xfa0) -> e->aim_band; Resolver-Gate
+#     @0x800120d0-ec. IDLE-Hund nur DOWN; naher Hund auch DOWN; ferner IDLE untreffbar. ---
+add_executable(test_dog_aim_band test_dog_aim_band.c)
+target_link_libraries(test_dog_aim_band PRIVATE re15_engine re15_test_support)
+target_include_directories(test_dog_aim_band PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_dog_aim_band COMMAND test_dog_aim_band)
+set_tests_properties(unit_dog_aim_band PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

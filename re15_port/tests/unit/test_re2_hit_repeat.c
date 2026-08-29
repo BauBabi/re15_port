@@ -196,6 +196,20 @@ static void run(const char *tag, re15_ai_flavor_t flavor, int weapon, int budget
      * ein und der Test misst Geometrie statt der Trefferkette. */
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
 
+    /* FIXTURE-REPARATUR 2026-08-29 (Hoehenband-Fix): der sub13-Wellen-Hund spawnt als
+     * SKRIPT-Hund — INIT geht bei grid 0x40 DIREKT nach state 4 (`sw 4,4(a0)` @0x8010db98,
+     * grid 0x41 -> `sw 0x104` @0x8010dbb8), nie durch state 1. Der Band-Stempel liegt aber
+     * ausschliesslich im state-1-Tail (@0x8010dd00-4c; der 456-Handler 0x80111350-0x80111770
+     * enthaelt keinen — eigener Scan), und Sce_em_set laesst die word0-Band-Bits 0
+     * (@0x8004228c-b0). Ein WARTENDER Zwinger-Hund ist im Original also KEIN Resolver-
+     * Kandidat (Band-Gate @0x800120d0-ec) — auf ihn zu schiessen war ein original-
+     * unmoegliches Szenario. Freigabe wie im echten Lauf: das Skript setzt +0x9 = 0x43
+     * (Member-12-Write `sb a2,9(a0)` @0x800411f8), der Hund springt (waehrenddessen
+     * byte-true +0x93|=3 @0x801113f8 = unverwundbar), landet und wechselt mit `sw 0x201`
+     * @0x8011162c nach state 1 — ab da stempelt der Tail und die Trefferkette laeuft. */
+    if (s_want_type == 0x20 && g_actors[slot].state == 4 && g_actors[slot].grid_id == 0x40)
+        g_actors[slot].grid_id = 0x43;
+
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *e  = &g_actors[slot];
     pl->x = e->x - ((weapon < 3) ? 1200 : 2600);   /* Messer braucht Naehe (reach 1100 + r 400) */

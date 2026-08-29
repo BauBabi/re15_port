@@ -135,12 +135,16 @@ typedef struct {
     uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block);
                              * bit0x1 = "actively grabbing" (set grab-[0] FUN_80102548.c Z.28,
                              * cleared throw-off-[4] Z.75; read by the domino-shove gate Z.87) */
-    uint8_t  aim_band;      /* word0-Bits 29-31 (Kraehen-ACTIVE-Tail @0x80112560-c8): Elevation-
-                             * Band fuer den Schuss-Resolver. 4 = UP (0x80000000 via 0x80012a0c
-                             * (0x1770), vert>=4001 && dist<6000), 1 = DOWN (0x20000000 via
-                             * 0x80012974(0x1770), vert<800), 2 = LEVEL (0x40000000), 0 = kein
-                             * Band (unschiessbar). Nur der Kraehen-Tail stempelt es in STAGE1
-                             * (crow_shot_attack.md F5). */
+    uint8_t  aim_band;      /* word0-Bits 29-31: Elevation-Band fuer den Schuss-Resolver.
+                             * Bit-Menge: 4 = UP (0x80000000), 2 = LEVEL (0x40000000),
+                             * 1 = DOWN (0x20000000), 0 = kein Band (unschiessbar).
+                             * Stempler: KRAEHEN-ACTIVE-Tail @0x80112560-c8 (0x80012a0c(0x1770)
+                             * vert>=4001 && dist<6000 -> UP; 0x80012974(0x1770) vert<800 ->
+                             * DOWN; sonst LEVEL — crow_shot_attack.md F5, exklusive Werte) und
+                             * HUND-ACTIVE-Tail @0x8010dd00-4c (LEVEL ausser Clip 1/0x13
+                             * @0x8010dd20-44; DOWN bei dist<0xfa0 via 0x80012974 @0x800129cc-f0
+                             * — kombinierbar, 2026-08-29). Spawn-Wert 0 (Sce_em_set word0 = 1/
+                             * 0x2001 @0x8004228c-b0, Band-Bits leer). */
     uint8_t  grab_choreo;   /* word0 (+0x0) bit 0x1000 — grab-choreography latch: set in grab-[0]
                              * (FUN_80102548.c Z.21-22; the original also sets the PLAYER's word0 —
                              * no modeled consumer, not mirrored), cleared ONLY in grab-exit [8]

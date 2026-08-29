@@ -1345,13 +1345,29 @@ retry_after_latch:
                                                                * @0x800129cc-f0 */
                         }
                     }
+                } else if (e->type == 0x20 && !re15_ai_re2_for_type(0x20)) {
+                    /* HUND (RE1.5-owned): Band aus dem ACTIVE-Tail-Stempel — enemy_ai_common.c
+                     * schreibt e->aim_band im state-1-Tail (@0x8010dd00-10 clear, @0x8010dd20-44
+                     * LEVEL ausser Clip 1/0x13, @0x8010dd48-4c + FUN_80012974 @0x800129cc-f0
+                     * DOWN bei dist < 0xfa0). Hier NUR lesen: in HURT/DEATH bleibt wie im
+                     * Original der letzte Stempel stehen. Kodierung Bit 1=DOWN / 2=LEVEL.
+                     * VORHER stand der Hund pauschal auf LEVEL (der alte OFFEN-Block):
+                     * wer nach UNTEN zielte, traf den Hund NIE (Nutzer-Report 2026-08-29
+                     * "erster Treffer stark verzoegert" — der Schuss war ein stiller Whiff),
+                     * und IDLE (Clip 1) / Low-HP-Hop (Clip 0x13) waren mit LEVEL treffbar,
+                     * im Original nicht (@0x8010dd28/@0x8010dd30 ueberspringen LEVEL).
+                     * NICHT fuer RE2-owned Hunde: die laufen nie durch den RE1.5-Tail
+                     * (enemy_ai_re2_dog.c stempelt kein aim_band) und RE2s eigener
+                     * Kandidatenfilter FUN_800470C0 hat gar kein Hoehen-Band (Vollzitat im
+                     * Kriech-Root-Block oben) — fuer sie bleibt der bisherige LEVEL-Stand. */
+                    eband = ((e->aim_band & 2) ? 0x40000000u : 0u) |
+                            ((e->aim_band & 1) ? 0x20000000u : 0u);
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
-                     * uebrigen Familien stempeln mit anderen Helfern/Radien — Hund @0x8010dd38-4c
-                     * (`|= 0x40000000` + 0x80012974(0xfa0)), Maggot @0x801173a8-b8, die generischen
-                     * 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form wie oben). Bis
-                     * jede davon einzeln disassembliert ist, bleibt fuer sie das bisherige Verhalten
-                     * unveraendert stehen. */
+                     * uebrigen Familien stempeln mit anderen Helfern/Radien — Maggot @0x801173a8-b8,
+                     * die generischen 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form
+                     * wie oben). Bis jede davon einzeln disassembliert ist, bleibt fuer sie das
+                     * bisherige Verhalten unveraendert stehen. (Hund seit 2026-08-29 oben geloest.) */
                     if (e->grid_id & 0x80)
                         eband = (bdist < 0x1388u) ? 0x20000000u : 0u;  /* @0x80101630-38 -> @0x800129cc-f0 */
                     else
