@@ -1,3 +1,40 @@
+# RE1.5 Port — v0.3.41 (Early Preview)
+
+Nachbesserung nach deinem Gegentest: die Karte ist jetzt aus den ECHTEN Raumdaten
+gebaut, und die Gorilla-Bosse sind gross, treffbar und werfen wieder.
+
+## Karte — aus den Raumdaten repariert
+
+- **Neue Zuordnung aus der Kollisions-Geometrie:** Jeder Raum wird jetzt ueber seinen
+  echten Kollisions-Grundriss (dieselben Daten, gegen die du beim Laufen klemmst) und
+  den Tuer-Graphen (beide Tuerseiten tragen Positionen) seinem Kartenstueck zugeordnet
+  — **63 von 120 Raeumen** sind jetzt verifiziert gefaerbt (vorher 28), jedes einzeln
+  visuell am gerenderten Karten-Composite geprueft. Was nicht sicher belegbar war,
+  bleibt bewusst neutral und faerbt sich NIE falsch (die Liste steht im Dossier —
+  sag gern Bescheid, welche Raeume dir zuerst fehlen).
+- **Positionsmarker repariert:** Die Beta liefert fuer 65 Raeume nur eine
+  Platzhalter-Kalibrierung aus — der Stock-Marker zeigt dort stur in die Ecke. Fuer
+  zugeordnete Raeume rechnet der Port jetzt reparierte Parameter derselben
+  Original-Formel (32 Zeilen). `RE15_MAP_STOCK=1` zeigt weiter den byte-true
+  Auslieferungszustand.
+
+## Gorilla-Bosse (ROOM11C0) — vier Original-Mechanismen nachgeruestet
+
+- **1,7x-Groesse:** Das Original rendert die Bosse mit Entity-Scale 1,7 (im Savestate
+  nachgemessen) — der Port kannte den Mechanismus nicht. Jetzt skalieren Modell,
+  **Angriffs-Reichweite** und **Krabbel-/Sprung-Tempo** wie im Original: gross,
+  schnell, weite Schlaege.
+- **Treffbarkeit:** Nach unten zielen trifft die Bosse jetzt (Hoehenband wie im
+  Original: am Boden LEVEL+DOWN, im Sprung NUR UP — vorher war nach-unten ein
+  stilles Vorbeischiessen, dieselbe Bug-Klasse wie beim Hund).
+- **Koerper-Schub:** Der Boss wird jetzt pro Tick aus Leon herausgeschoben (vorher
+  flog Leon — Mit-Ursache fuer das Clippen in unerreichbare Bereiche).
+- **Der Wurf:** Der Griff spielt jetzt die Original-Choreo — EIN Wurf-Clip, Leon
+  fliegt ab, steht mit SEINEN eigenen Aufsteh-Animationen auf und ist frei
+  (vorher: endloser Halte-Loop am Boss).
+
+---
+
 # RE1.5 Port — v0.3.40 (Early Preview)
 
 Das RE2-Kartensystem, uebertragen auf unsere Map (Nutzer-Wunsch 2026-08-30).
