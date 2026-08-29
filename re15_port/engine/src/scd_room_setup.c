@@ -17,6 +17,7 @@
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* re15_re2z_rng_reset — Reenter-Clear des 0x800CFBF4-Analogs */
 #include "re15_esp.h"   /* re15_esp_fx_reset — Effekt-Pool beim Raumladen wischen */
+#include "re15_room.h"  /* g_current_room_id — Schlafender-Content-Trigger je Raum */
 
 extern scd_vm_t g_scd;
 
@@ -138,13 +139,25 @@ static int16_t s_vest_model_seen = 0;   /* Engine-Spiegel des geladenen Modell-I
 void re15_vest_model_mark(int16_t m) { s_vest_model_seen = m; }
 
 /* Am Analogpunkt von FUN_800314b0: nur wenn der Modell-Index WECHSELT (= das Original
- * laedt neu), Vollheilung 100 (@0x80031710/18) + Weste-Bonus. */
+ * laedt neu). ⛔ NUTZER-ENTSCHEIDUNG 2026-08-30: die Weste soll NICHT heilen — die
+ * Original-Vollheilung des Modell-Reloads (`ori v0,0x64` @0x80031710 + `sh v0,player.hp`
+ * @0x80031718) wird BEWUSST nicht uebernommen. Stattdessen wandert nur der Bonus:
+ * Anlegen +5, Ablegen -5 (Boden 0 — Tod ist erst HP < 0, bgez @0x80012ee8; das Ablegen
+ * darf nicht toeten). Der "+1 Biss"-Deckel bleibt ueber das Vollheilungs-Ziel
+ * 100 + Bonus (item_use_common.c). */
 void re15_vest_hp_on_model_reload(void)
 {
     int16_t mnow = g_scd.work_vars[0x10];
     if (mnow == s_vest_model_seen) return;            /* @0x80039770: kein Reload */
+    int16_t was = s_vest_model_seen;
     s_vest_model_seen = mnow;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].hp = (int16_t)(100 + re15_vest_hp_bonus());
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (mnow == 1 && was != 1) {
+        pl->hp = (int16_t)(pl->hp + 5);               /* ANLEGEN: nur der Bonus */
+    } else if (was == 1 && mnow != 1) {
+        pl->hp = (int16_t)(pl->hp - 5);               /* ABLEGEN: Bonus zurueck */
+        if (pl->hp < 0) pl->hp = 0;                   /* nie toedlich */
+    }
 }
 
 void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
@@ -300,6 +313,28 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     scd_register_room_events(rdt);      /* … then reinstall RVD@16 + register rdt */
     if (rdt && rdt->main_scd)   scd_thread_start(0, rdt->main_scd);    /* init  = main00 */
     if (rdt && rdt->sub_scd[0]) scd_thread_start(1, rdt->sub_scd[0]);  /* main  = sub00  */
+
+    /* ⛔ SCHLAFENDER CONTENT — AKTIVIERUNGEN (Nutzer-Auftrag 2026-08-30: "Wenn schlafender
+     * Content einfach und sinnvoll zu aktivieren ist, aktiviere ihn"). KEIN Asset-Patch —
+     * die RDTs bleiben byte-true; der Port installiert nur ZUSAETZLICHE Trigger fuer
+     * Szenen, die im Auslieferungsstand vollstaendig vorliegen, aber nie gerufen werden
+     * (Kartierung + Offsets: analysis/nutzer_batch_2026-08-29/schlafender-content.md):
+     *  - ROOM1150/1151 sub04 (@0x0F96-0x10B6, in beiden Szenarien identisch verwaist):
+     *    das in main00 @0x0E00 unter der Welt geparkte Objekt 0 faehrt mit Motor-Sounds
+     *    (Se_on Bank2 0x0a/0x0c/0x0d) auf y=-305 herab, arbeitet und parkt sich selbst
+     *    zurueck — in sich geschlossen (setzt/loest die Cutscene-Klammern selbst).
+     *    Trigger: ACTION-EXAMINE am Geraeteort (Pos_set-Ziel @0x0FB4: -20700,-17460),
+     *    Slot 60 (Raum belegt 0-6 + RVD@16ff), Event 4. Wiederholbar per Konstruktion.
+     *  - ROOM20A0/20A1 sub02 (@0x1BF0-0x1CB0): deaktivierte Ambient-Effektschleife
+     *    (11x Sce_espr_on Effekt-Id 6, Sleep 5, Endlos-Goto) im Adult-Spider-Kanalraum —
+     *    beim Betreten gestartet (Thread endet mit dem Raum). */
+    {
+        uint16_t rid = (uint16_t)g_current_room_id;
+        if (rid == 0x1150 || rid == 0x1151)
+            re15_aot_set(60, RE15_AOT_TYPE_GENERIC, 4, -20700, -17460, 900, 900);
+        if (rid == 0x20A0 || rid == 0x20A1)
+            scd_event_fire(2);
+    }
     /* sub00 dispatches on the GLOBAL work-var DAT_800b0fd0[10] = the ENTRY SCENARIO
      * (which sub00 `switch(10)` case to run): 0 = boot/helipad (→ sub15 → sub02
      * cinematic), 11 = outdoor entrance via door 0 (→ sub14, the courtyard dialog

@@ -539,6 +539,16 @@ target_include_directories(test_maggot_bone_square PRIVATE ${CMAKE_SOURCE_DIR}/i
 add_test(NAME unit_maggot_bone_square COMMAND test_maggot_bone_square)
 set_tests_properties(unit_maggot_bone_square PROPERTIES TIMEOUT 30)
 
+# --- Schlafender-Content-Aktivierungen (Nutzer-Auftrag 2026-08-30): 1150 sub04 Examine-
+#     Trigger + 20A0 sub02 Ambient-Schleife (schlafender-content.md). ---
+add_executable(test_dormant_activation test_dormant_activation.c)
+target_link_libraries(test_dormant_activation PRIVATE re15_engine re15_test_support)
+target_include_directories(test_dormant_activation PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_dormant_activation PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_dormant_activation COMMAND test_dormant_activation)
+set_tests_properties(unit_dormant_activation PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

@@ -65,32 +65,31 @@ int main(void)
     re15_msg_load_room_block(rdt.messages, rdt.messages_size);
     re15_vest_model_mark(0);
 
-    /* Ohne Weste: Reenter ohne Modellwechsel darf NICHT heilen. */
+    /* Ohne Weste: Reenter ohne Modellwechsel darf NICHTS tun. */
     scd_room_reenter(&rdt, pl->x, pl->z, 13);
-    CHECK("Reenter ohne Modellwechsel heilt NICHT (@0x80039770 beq)", pl->hp == 40);
+    CHECK("Reenter ohne Modellwechsel aendert HP nicht (@0x80039770 beq)", pl->hp == 40);
 
-    /* ANLEGEN (sub15-Wirkung: Flag(3,0x75)=1 + work_vars[0x10]=1, dann Selbst-Tuer-Reload). */
+    /* ANLEGEN (sub15-Wirkung: Flag(3,0x75)=1 + work_vars[0x10]=1, dann Selbst-Tuer-Reload).
+     * ⛔ NUTZER-ENTSCHEIDUNG 2026-08-30: KEINE Heilung — die Original-Vollheilung des
+     * Modell-Reloads (@0x80031710/18) ist bewusst nicht uebernommen. Nur +5 Bonus. */
     re15_game_flag_set(3, 0x75, 1);
     g_scd.work_vars[0x10] = 1;
     scd_room_reenter(&rdt, pl->x, pl->z, 13);
-    CHECK("Anlegen heilt voll + Bonus: HP == 105 (100 @0x80031710/18 + 5)", pl->hp == 105);
+    CHECK("Anlegen heilt NICHT, gibt nur +5 (40 -> 45)", pl->hp == 45);
     CHECK("Bonus-Getter liefert 5", re15_vest_hp_bonus() == 5);
 
-    /* 21 Standard-Bisse (-5 @0x801027dc): 105 - 21*5 = 0, Tod erst bei HP < 0. */
+    /* 21 Standard-Bisse (-5 @0x801027dc) ab VOLL (Spray): 105 - 21*5 = 0, Tod erst < 0. */
     {
+        re15_item_use_apply(0x22);                    /* Vollheilung mit Weste -> 105 */
+        CHECK("Vollheilung mit Weste -> 105 (der +1-Biss-Deckel)", pl->hp == 105);
         int16_t hp = pl->hp;
         for (int i = 0; i < 21; i++) hp = (int16_t)(hp - 5);
         CHECK("21 Bisse ueberlebbar (HP 0, Tod erst < 0 @0x80012ee8)", hp == 0);
         CHECK("ohne Weste waeren nur 20 drin (100 - 21*5 < 0)", (100 - 21 * 5) < 0);
     }
 
-    /* Vollheilung (First Aid 0x22, set=1) darf den Bonus NICHT loeschen. */
-    pl->hp = 30;
-    re15_item_use_apply(0x22);
-    CHECK("Vollheilung mit Weste -> 105 (statt 100)", pl->hp == 105);
-
     /* Save -> Load: HP bleibt, Modell-Index wird aus dem Flag rekonstruiert,
-     * und der Folge-Reenter heilt NICHT erneut. */
+     * und der Folge-Reenter aendert die HP nicht. */
     {
         re15_savedata_t sd;
         pl->hp = 63;
@@ -101,15 +100,21 @@ int main(void)
         CHECK("HP aus dem Save (63)", pl->hp == 63);
         CHECK("work_vars[0x10] aus Flag(3,0x75) rekonstruiert", g_scd.work_vars[0x10] == 1);
         scd_room_reenter(&rdt, pl->x, pl->z, 13);
-        CHECK("Reenter nach Load heilt NICHT (Spiegel markiert)", pl->hp == 63);
+        CHECK("Reenter nach Load aendert HP nicht (Spiegel markiert)", pl->hp == 63);
     }
 
-    /* ABLEGEN: Reload heilt byte-true auf 100 (ohne Bonus). */
+    /* ABLEGEN: nur -5, keine Heilung; nie toedlich. */
     re15_game_flag_set(3, 0x75, 0);
     g_scd.work_vars[0x10] = 0;
     pl->hp = 63;
     scd_room_reenter(&rdt, pl->x, pl->z, 13);
-    CHECK("Ablegen heilt auf 100 (@0x80031710/18, kein Bonus)", pl->hp == 100);
+    CHECK("Ablegen nimmt nur den Bonus (63 -> 58)", pl->hp == 58);
+    re15_game_flag_set(3, 0x75, 1); g_scd.work_vars[0x10] = 1;
+    scd_room_reenter(&rdt, pl->x, pl->z, 13);       /* wieder an (58 -> 63) */
+    pl->hp = 3;
+    re15_game_flag_set(3, 0x75, 0); g_scd.work_vars[0x10] = 0;
+    scd_room_reenter(&rdt, pl->x, pl->z, 13);
+    CHECK("Ablegen bei HP 3 toetet nicht (Boden 0)", pl->hp == 0);
 
     free(rawbuf);
     if (g_fail) { printf("FAIL\n"); return 1; }
