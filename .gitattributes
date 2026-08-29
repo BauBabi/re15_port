@@ -6,3 +6,8 @@
 info/** -text
 stage_saves/** -text
 original/** -text
+# Sprachaufnahmen: NIE als Text behandeln. core.autocrlf ist hier true, und synchro/
+# nimmt laufend vom Nutzer gelieferte WAVs auf. Heute rettet nur Gits Binaer-Heuristik
+# (NUL-Bytes in den ersten 8000 Byte) — bei einer Aufnahme, die zufaellig ohne fruehe
+# NULs beginnt, wuerde autocrlf sie beim Ein-/Auschecken VERAENDERN und damit zerstoeren.
+synchro/** -text
