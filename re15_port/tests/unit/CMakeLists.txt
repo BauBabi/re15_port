@@ -549,6 +549,16 @@ target_compile_definitions(test_dormant_activation PRIVATE
 add_test(NAME unit_dormant_activation COMMAND test_dormant_activation)
 set_tests_properties(unit_dormant_activation PROPERTIES TIMEOUT 30)
 
+# --- RE2-Kartensystem (Nutzer-Auftrag 2026-08-30): Besucht-Bits am Raum-Lade-Choke-Point,
+#     Rect-Zustaende (rot/gruen/schwarz nach RE2 FUN_8006e120 @0x8006e4c4-72c) + Save v6 ---
+add_executable(test_map_re2_system test_map_re2_system.c)
+target_link_libraries(test_map_re2_system PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_re2_system PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_re2_system PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_map_re2_system COMMAND test_map_re2_system)
+set_tests_properties(unit_map_re2_system PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

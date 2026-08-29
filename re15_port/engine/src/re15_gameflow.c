@@ -46,6 +46,10 @@ void re15_gameflow_new_game(int character)
          * Einstieg der Plattform; ein separater Load-Pfad muss diesen Reset mitrufen. */
         extern void re15_wound_reset(void);
         re15_wound_reset();
+        {   /* RE2-Kartensystem: neues Spiel = Karte leer (re15_map_visited.c) */
+            extern void re15_map_visited_reset(void);
+            re15_map_visited_reset();
+        }
     }
 }
 

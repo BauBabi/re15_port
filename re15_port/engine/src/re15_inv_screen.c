@@ -20,6 +20,7 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
+#include "re15_room.h"           /* RE2-Kartensystem: re15_map_rect_state (Port-Erweiterung) */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
@@ -1250,16 +1251,35 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              0x10e, 0x28, 0x20, 0x30, 0x60, 0, 128, 128, 128, 1);
         /* room rects: pair table @0x80076840[page] {count, list ptr} (@0x80047048-70),
          * stride-12 entries {x,y,w,h,u@+8,v@+10} (@0x8004731c-60), SPRT code 0x64|2
-         * (@0x800472fc-318), clut 0x7d50 (@0x800473cc), sampling the MAP page. */
+         * (@0x800472fc-318), clut 0x7d50 (@0x800473cc), sampling the MAP page.
+         *
+         * RE2-KARTENSYSTEM (Port-Erweiterung, Nutzer-Auftrag 2026-08-30): Zustands-
+         * Einfaerbung nach dem RE2-Retail-MECHANISMUS (Zeichner FUN_8006e120
+         * @0x8006e4c4-72c, RE2-Leon-EXE — analysis/nutzer_batch_2026-08-30b/
+         * map-re2-system.md §3.1): unbesucht -> Prim wird NICHT gezeichnet (schwarz =
+         * Screen-Hintergrund), besucht -> Basis-Palette (gruen), aktueller Raum ->
+         * Basis+1-Highlight (addiu @0x8006e60c), STETIG — im Map-Tab blinkt nur der
+         * Spieler-Pfeil (RGB 0x28..0x78 @0x8006e2a0; Raum-Blinken existiert nur in der
+         * CHECK-Variante FUN_8006f1c4). Unser Stock-Marker pulsiert bereits (ecg_glow).
+         * RE2 schaltet fuer die Zustaende CLUT-Zeilen um (0x1f2/0x1f5/0x1f6/…); deren
+         * RGB-Inhalt liegt in RE2-CD-Datei 170 (lokal nicht vorhanden) — die Tint-WERTE
+         * hier sind deshalb dokumentierte PORT-WAHL (rot/gruen nach Nutzer-Spezifikation),
+         * NUR die Logik ist RE2-byte-belegt. Rects ohne Raum-Zuordnung
+         * (re15_map_rooms.h) bleiben im Stock-Neutralton. */
         {
             int cnt = (int)mu16(0x80076840u + (uint32_t)st->map_page * 8u);
             uint32_t lp = mu32(0x80076844u + (uint32_t)st->map_page * 8u);
             for (i = 0; i < cnt; i++) {
                 uint32_t a = lp + (uint32_t)i * 12u;
+                int rs = re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
+                int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
+                if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
+                if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }
+                else if (rs == RE15_MAP_RECT_CURRENT) { cr = 192; cg = 24;  cb = 24; }
                 sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                      (int16_t)mu16(a), (int16_t)mu16(a + 2u),
                      (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
-                     mu8(a + 8u), mu8(a + 10u), 128, 128, 128, 1);
+                     mu8(a + 8u), mu8(a + 10u), cr, cg, cb, 1);
             }
         }
     }

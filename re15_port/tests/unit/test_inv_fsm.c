@@ -1239,9 +1239,15 @@ int main(void)
           "(5) marker for slot-20 row {0,0,1,1} at world (0,0) = (0,0), is (%d,%d)",
           g_inv_screen.map_marker_x, g_inv_screen.map_marker_y);
     /* display list while the gate is on: the MAP set (marker on TEX4 + 2 fixed
-     * sprites + page-4 rect count 7 on the MAP page) + the 4 g11 screws. */
+     * sprites + page-4 rects on the MAP page) + the 4 g11 screws.
+     * RE2-KARTENSYSTEM (Port-Erweiterung 2026-08-30): zugeordnete, UNBESUCHTE Rects
+     * werden nicht mehr gezeichnet (RE2 FUN_8006e120 @0x8006e4c4-72c: unbesucht ohne
+     * Karte -> kein Prim). Auf Seite 4 ist genau Rect 2 zugeordnet (0x1150/51,
+     * re15_map_rooms.h) -> mit leerem Besucht-Speicher 2+6 Ops, nach Besuch 2+7. */
     {
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        re15_map_visited_reset();
+        g_current_room_id = 0x9999;    /* kein zugeordneter Raum aktuell */
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
         int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0;
         for (i = 0; i < n; i++) {
@@ -1262,8 +1268,25 @@ int main(void)
                 ops[i].u == 112)
                 nscrew++;
         }
-        CHECK(nmap == 2 + 7, "(5) MAP-page ops = 2 sprites + 7 page-4 rects "
-              "(count @0x80076840+4*8), is %d", nmap);
+        CHECK(nmap == 2 + 6, "(5) MAP-page ops = 2 sprites + 6 page-4 rects "
+              "(count 7 @0x80076840+4*8, minus Rect 2 = 0x1150 unbesucht/RE2-System), "
+              "is %d", nmap);
+        /* Besuch markieren -> Rect 2 erscheint wieder (gruen), voller Stock-Count */
+        {
+            int n2, i2, nmap2 = 0;
+            re15_map_visited_mark(0x1150);
+            n2 = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+            for (i2 = 0; i2 < n2; i2++)
+                if (ops[i2].kind == RE15_INV_OP_SPRT &&
+                    ops[i2].page == RE15_INV_PAGE_MAP4) nmap2++;
+            CHECK(nmap2 == 2 + 7, "(5) nach Besuch von 0x1150: 2 sprites + alle 7 "
+                  "page-4 rects, is %d", nmap2);
+            re15_map_visited_reset();
+            n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+            for (i = 0, nmap = 0; i < n; i++)
+                if (ops[i].kind == RE15_INV_OP_SPRT &&
+                    ops[i].page == RE15_INV_PAGE_MAP4) nmap++;
+        }
         CHECK(have_s1 && have_s2, "(5) fixed sprites (30,30)88x32 uv(0,0) + "
               "(270,40)32x48 uv(96,0) (@0x80047204-2c0)");
         CHECK(have_marker, "(5) marker quad 8x8 uv(224,128) clut 6 on the TEX page "

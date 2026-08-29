@@ -21,6 +21,25 @@ extern re15_rdt_t g_room_rdt;
 extern int        g_room_rdt_ok;
 extern unsigned   g_current_room_id;   /* room resident in g_room_rdt (per-room asset paths) */
 
+/* RE2-KARTENSYSTEM (Port-Erweiterung, Nutzer-Auftrag 2026-08-30 — re15_map_visited.c):
+ * 1 Besucht-Bit je re15_room_ids[]-Eintrag; markiert am Raum-Lade-Choke-Point
+ * (scd_room_reenter), serialisiert als Save-v6-Block. */
+void re15_map_visited_reset(void);
+void re15_map_visited_mark(unsigned room_id);
+int  re15_map_visited(unsigned room_id);
+void re15_map_visited_export(uint8_t out[32]);
+void re15_map_visited_import(const uint8_t in[32]);
+
+/* Zustand eines Karten-Rects (Seite + Rect-Index der EXE-Rect-Liste @0x80076840):
+ * staerkster Zustand aller dem Rect zugeordneten Raeume. */
+enum {
+    RE15_MAP_RECT_UNMAPPED  = 0,   /* keine Zuordnung -> Stock-Neutralton */
+    RE15_MAP_RECT_UNVISITED = 1,   /* zugeordnet, keiner der Raeume besucht -> schwarz */
+    RE15_MAP_RECT_VISITED   = 2,   /* mindestens ein Raum besucht -> gruen */
+    RE15_MAP_RECT_CURRENT   = 3    /* enthaelt den aktuellen Raum -> rot */
+};
+int re15_map_rect_state(unsigned page, unsigned rect_idx);
+
 /* Death/game-over presentation (game_step_common.c). g_death_fade = 0..255 fade-to-black over the
  * byte-true 0x78 death timer; g_gameover_active = 1 once it expires -> the PC loop shows YOU DIED. */
 extern int g_death_fade;      /* BLACK exit fade 0..255 (game-over sub 6) */

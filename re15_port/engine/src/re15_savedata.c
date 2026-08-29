@@ -28,8 +28,23 @@ int re15_savedata_validate(re15_savedata_t *sd)
 {
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
-    if (sd->version >= 5) {
+    if (sd->version >= 6) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
+    }
+    if (sd->version == 5) {
+        /* v5 layout = v6 OHNE visited[]: das v5-Checksum-Wort sitzt bei
+         * offsetof(visited). Validieren, dann upgraden: visited leer (der Restore
+         * markiert den geladenen Raum), Version 6, frische Checksum. */
+        const uint8_t *p = (const uint8_t *)sd;
+        size_t old_ck_off = offsetof(re15_savedata_t, visited);
+        uint32_t sum = 0, old_ck;
+        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
+        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
+        if (sum != old_ck) return -1;
+        memset(sd->visited, 0, sizeof sd->visited);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
     }
     if (sd->version == 4) {
         /* v4 layout = the v5 struct WITHOUT wounds[]: its checksum word sits at
@@ -42,6 +57,7 @@ int re15_savedata_validate(re15_savedata_t *sd)
         memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
         if (sum != old_ck) return -1;
         memset(sd->wounds, 0, sizeof sd->wounds);
+        memset(sd->visited, 0, sizeof sd->visited);   /* v6 */
         sd->version  = RE15_SAVE_VERSION;
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
@@ -58,6 +74,7 @@ int re15_savedata_validate(re15_savedata_t *sd)
         if (sum != old_ck) return -1;
         memset(sd->box, 0, sizeof sd->box);
         memset(sd->wounds, 0, sizeof sd->wounds);
+        memset(sd->visited, 0, sizeof sd->visited);   /* v6 */
         sd->version  = RE15_SAVE_VERSION;
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
@@ -94,6 +111,8 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     re15_itembox_export(out->box);       /* v4 ITEM BOX contents (page*8+i) */
     re15_wound_save(out->wounds);        /* v5 Blut-Decal-Wunden (GSB+0x130-Analog @0x800b10ec —
                                           * im Original-Save-memcpy @0x800261c4-d8 enthalten) */
+
+    re15_map_visited_export(out->visited);   /* v6 RE2-Kartensystem (re15_map_visited.c) */
 
     out->checksum = re15_savedata_checksum(out);
 }
@@ -154,6 +173,9 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
      * wieder her (SI-1; der Generation-Bump laesst den Platform-Wound-Sync nach dem
      * naechsten TIM-Upload automatisch re-stempeln). */
     re15_wound_load(in->wounds);
+    /* v6 RE2-Kartensystem: Besucht-Bits laden; der geladene Raum wird beim folgenden
+     * scd_room_reenter ohnehin markiert (Choke-Point), das Import genuegt hier. */
+    re15_map_visited_import(in->visited);
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

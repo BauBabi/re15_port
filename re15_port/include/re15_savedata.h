@@ -26,7 +26,7 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  5             /* v2: + weapon_id; v3: + camera cut (restore the
+#define RE15_SAVE_VERSION  6             /* v2: + weapon_id; v3: + camera cut (restore the
                                           * save-time framing/background — reuses a reserved
                                           * byte, so v2 saves stay layout+checksum compatible
                                           * and load with cut 0 = the room's default);
@@ -88,6 +88,10 @@ typedef struct {
                                 * GSB+0x130-Analog (@0x800b10ec, Stride 0x1c, im Save-
                                 * memcpy enthalten). Vor der checksum eingefuegt; das
                                 * v4-Checksum-Wort sitzt bei offsetof(wounds).       */
+    uint8_t  visited[32];      /* v6: RE2-Kartensystem — 1 Besucht-Bit je
+                                * re15_room_ids[]-Eintrag (240 Bits; Port-Erweiterung,
+                                * re15_map_visited.c). Vor der checksum eingefuegt;
+                                * das v5-Checksum-Wort sitzt bei offsetof(visited). */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 

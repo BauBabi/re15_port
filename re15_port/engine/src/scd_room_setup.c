@@ -314,6 +314,10 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     if (rdt && rdt->main_scd)   scd_thread_start(0, rdt->main_scd);    /* init  = main00 */
     if (rdt && rdt->sub_scd[0]) scd_thread_start(1, rdt->sub_scd[0]);  /* main  = sub00  */
 
+    /* RE2-KARTENSYSTEM: den geladenen Raum als BESUCHT markieren (Port-Erweiterung,
+     * re15_map_visited.c) — dieser Choke-Point deckt Boot, Tuer, Selbst-Tuer und Load. */
+    re15_map_visited_mark(g_current_room_id);
+
     /* ⛔ SCHLAFENDER CONTENT — AKTIVIERUNGEN (Nutzer-Auftrag 2026-08-30: "Wenn schlafender
      * Content einfach und sinnvoll zu aktivieren ist, aktiviere ihn"). KEIN Asset-Patch —
      * die RDTs bleiben byte-true; der Port installiert nur ZUSAETZLICHE Trigger fuer
