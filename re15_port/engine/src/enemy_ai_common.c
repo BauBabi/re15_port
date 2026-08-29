@@ -11676,6 +11676,25 @@ static void re15_writher_ai_tick(int slot)
                                                 * RE15_WRITHER_MESH_REACH) >> 12);
                 e->anchor_z = e->z - (int32_t)(((int32_t)re15_sin_q12(e->rot_y)
                                                 * RE15_WRITHER_MESH_REACH) >> 12);
+                /* ⛔ NACHRUESTUNGS-WACHE 2026-08-29 (Nutzer: "die Arme ziehen Leon auf der
+                 * linken Seite immer noch in die Wand"): der Hand-Anker liegt in ROOM1210
+                 * auf BEIDEN Seiten jenseits der begehbaren Kante — GEMESSEN
+                 * (probe_1210_wandgriff (A)): West Heimat -25000 + Lunge 2420 + MESH_REACH
+                 * 1671 = Anker -20909 bei Kante -20622 (287 in der Wand); Ost Anker -18091
+                 * bei Kante -18164 (73 in der Wand). Die Positions-Klemme haelt nur den
+                 * Spieler-MITTELPUNKT im Flur — ein unbegehbarer Anker zieht die Halte-
+                 * Choreo die ganze Griffdauer gegen die Wand, auf der 4x tieferen West-
+                 * Seite sichtbar ("in die Wand gezogen"). Der Anker wird deshalb mit dem
+                 * SELBEN Constrain auf die begehbare Flaeche gesetzt, den der Spieler
+                 * nimmt (Startpunkt = sein Standpunkt im Zupack-Bild — dort steht er
+                 * nachweislich begehbar). Kein Original-Vorbild noetig: der ganze Griff
+                 * ist Nachruestung (s.o.), und RE2s freistehender Greifer hat das Problem
+                 * konstruktionsbedingt nicht. */
+                if (g_room_rdt_ok) {
+                    int32_t ax = e->anchor_x, az = e->anchor_z;
+                    re15_collision_constrain(&g_room_rdt, pl->x, pl->z, &ax, &az);
+                    e->anchor_x = ax; e->anchor_z = az;
+                }
                 pl->anchor_x = e->anchor_x;  pl->anchor_z = e->anchor_z;
                 /* Startwert der Wandklemme: hier steht er gerade noch begehbar. */
                 {   extern void re15_victim_anchor_calibrate(int32_t, int32_t);

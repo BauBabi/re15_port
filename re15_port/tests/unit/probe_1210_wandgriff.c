@@ -29,12 +29,14 @@
 #include "re15_skeleton.h"
 #include "re15_math.h"
 #include "re15_damage.h"
+#include "re15_player.h"
 #include "re2_ems.h"   /* RE2-Opferbank als Leihgeber */
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -121,6 +123,16 @@ static void frame_step(void)
     const unsigned char *raw; int len, id;
     re15_msg_tick(&raw, &len, &id);
     s_ctx.pad_current = 0; s_ctx.pad_pressed = 0;
+    scd_vm_tick();
+    re15_game_step(&s_ctx);
+}
+
+/* Wie frame_step, aber mit Pad-Bits — fuer den LAUFENDEN Spieler (Modus C). */
+static void frame_pad(uint16_t held)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = held; s_ctx.pad_pressed = 0;
     scd_vm_tick();
     re15_game_step(&s_ctx);
 }
@@ -225,15 +237,22 @@ int main(void)
 
     /* (B) Den Griff wirklich ausloesen: Spieler an die Kollisionsgrenze auf der Zeile
      *     des am besten erreichbaren Arms, dann laufen lassen und JEDES Bild messen. */
+    /* RE15_WANDGRIFF_SIDE=west|ost: nur Arme der gewuenschten Seite kandidieren
+     * (Nutzer-Report 2026-08-29 "linke Seite zieht immer noch in die Wand" —
+     * die v0.3.35-Messung lief nur auf der Ost-Zeile). */
+    const char *side_env = getenv("RE15_WANDGRIFF_SIDE");
+    int want_ost = side_env ? (side_env[0] == 'o' || side_env[0] == 'O') : -1;
     int best = -1; int32_t bestgap = 0x7fffffff, bx = 0, bz = 0;
     for (int i = 0; i < n; i++) {
         re15_actor_t *e = &g_actors[slots[i]];
         int ost = (e->rot_y & 0x0fff) != 0;
+        if (want_ost >= 0 && ost != want_ost) continue;
         int32_t k = kante(-19500, hz[i], ost ? +25 : -25);
         int32_t hand = ost ? (hx[i] - 4091) : (hx[i] + 4091);
         int32_t gap = hand - k; if (gap < 0) gap = -gap;
         if (gap < bestgap) { bestgap = gap; best = i; bx = k; bz = hz[i]; }
     }
+    if (best < 0) { printf("FAIL: kein Arm auf der gewuenschten Seite\n"); return 1; }
     printf("\n--- (B) Griff am erreichbarsten Arm: %d, Spieler auf (%ld,%ld) ---\n",
            best, (long)bx, (long)bz);
     printf("  Standpunkt begehbar = %d\n", begehbar(bx, bz));
@@ -281,6 +300,83 @@ int main(void)
     printf("\n\n=== ERGEBNIS: %d Griff-Bilder, davon %d IN DER WAND ===\n",
            g_frames, g_wand);
     if (g_wand) printf("    tiefster Punkt in der Ostwand: x = %ld (Kante -18164)\n", (long)g_tiefste);
+
+    /* --- (C) LAUFENDER Spieler (Nutzer-Report 2026-08-29 "linke Seite zieht immer noch in
+     *     die Wand"): statt Teleport-Stand laeuft der Spieler die Spur der gewaehlten Seite
+     *     mit echten Pad-Bits ab (Tank-Steuerung wie probe_1090s drive_to). Griffe passieren
+     *     MITTEN im Lauf — genau die Lage, die (B) nicht abdeckt (der Klemm-Anker ist dort
+     *     der Standpunkt im Moment des Zupackens; kommt der schon grenzwertig, klemmt nichts
+     *     mehr). Gemessen wird jedes Griff-Bild gegen begehbar(). --- */
+    {
+        /* Frischer Zustand: (B) hat Riegel/Arm-Latches verbraucht (Ein-Angreifer-Riegel,
+         * Trefferbit, Arm-Substates). Banks bleiben in der Registry. */
+        extern void re15_player_victim_reset(void);
+        re15_actor_init(); re15_aot_init(); scd_vm_init();
+        re15_player_victim_reset();
+        re15_player_cmd_reset();
+        pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->hp = 100; pl->y = 0;
+        re15_collision_set_band(0);
+        scd_register_room_events(&s_rdt);
+        scd_room_reenter(&s_rdt, 0, 0, 0);
+        {   re15_enemy_bank_t *db = re15_enemy_find(0x10);
+            if (db && db->victim_ok) re15_victim_donor_set(0x1Au, 0x10u);
+        }
+        for (int f = 0; f < 8; f++) frame_step();
+
+        int wframes = 0, wwand = 0, wgrabs = 0, prev_grab = 0;
+        int32_t wtief_w = 0, wtief_o = 0;
+        /* Spur: x der Seitenmitte, z pendelt ueber die Arm-Reihen. */
+        int32_t lane_x = (want_ost == 1) ? -18214 : -20572;   /* an der Kante entlang (Reichweiten-Tor oeffnet nur dort) */
+        int32_t tzs[2] = { -21000, -6300 };
+        int ti = 0, stuck = 0;
+        re15_actor_t *plc = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        plc->x = lane_x; plc->z = tzs[1]; plc->hp = 100;
+        for (int f = 0; f < 2600; f++) {
+            plc->hp = 100;
+            uint16_t bits = 0;
+            if (!re15_player_is_grabbed()) {
+                int32_t dx = lane_x - plc->x, dz = tzs[ti] - plc->z;
+                if ((long long)dx*dx + (long long)dz*dz < 640000LL) { ti ^= 1; continue; }
+                double ang = atan2((double)(-dz), (double)dx) * 4096.0 / 6.283185307179586;
+                int want = ((int)(ang + 0.5)) & 0x0FFF;
+                plc->rot_y = (int16_t)want;      /* Richtung direkt — nur der SCHRITT laeuft
+                                                  * durch die echte Lokomotion+Kollision */
+                bits = RE15_PAD_BIT_UP;
+                int32_t bx0 = plc->x, bz0 = plc->z;
+                frame_pad(bits);
+                if (plc->x == bx0 && plc->z == bz0) { if (++stuck > 60) { ti ^= 1; stuck = 0; } }
+                else stuck = 0;
+            } else {
+                frame_pad(0);
+            }
+            if (re15_player_is_grabbed()) {
+                wframes++;
+                if (!prev_grab) wgrabs++;
+                if (!begehbar(plc->x, plc->z)) {
+                    wwand++;
+                    if (wwand <= 6)
+                        printf("  (C) WAND-BILD f%-4d Spieler (%7ld,%7ld)\n",
+                               f, (long)plc->x, (long)plc->z);
+                    if (plc->x < -20622 && plc->x < wtief_w) wtief_w = plc->x;
+                    if (plc->x > -18164 && plc->x > wtief_o) wtief_o = plc->x;
+                }
+            }
+            prev_grab = re15_player_is_grabbed();
+            if ((f % 400) == 0) {
+                printf("  (C) f%-4d PL(%ld,%ld) grid/sub:", f, (long)plc->x, (long)plc->z);
+                for (int s2 = 1; s2 < RE15_ACTOR_MAX; s2++)
+                    if (g_actors[s2].active && g_actors[s2].type == 0x1a)
+                        printf(" %d/%d", (int)g_actors[s2].grid_id, (int)g_actors[s2].sub_state_1);
+                printf("\n");
+            }
+        }
+        printf("\n=== (C) LAUF-ERGEBNIS: %d Griffe, %d Griff-Bilder, davon %d IN DER WAND ===\n",
+               wgrabs, wframes, wwand);
+        if (wtief_w) printf("    tiefster Punkt WESTWAND: x = %ld (Kante -20622)\n", (long)wtief_w);
+        if (wtief_o) printf("    tiefster Punkt OSTWAND:  x = %ld (Kante -18164)\n", (long)wtief_o);
+    }
+
     free(buf);
     printf("\nMESSUNG FERTIG\n");
     return 0;
