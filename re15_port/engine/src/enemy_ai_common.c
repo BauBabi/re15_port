@@ -1320,10 +1320,20 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
      * bewegen"). Deshalb laeuft die Platzierung fuer DIESEN Greifer-Typ durch denselben
      * Klemmer, den auch die Spielfigur jeden Frame nimmt (re15_collision_constrain,
      * byte-true FUN_8003b0a4).
-     * ⛔ ENG BEGRENZT auf Typ 0x1A: fuer jeden anderen Greifer bleibt die Platzierung
-     * unangetastet. Eine Klemme fuer alle waere eine Verhaltensaenderung ohne Beleg — die
-     * RE2-Greifer brauchen sie nicht, weil sie im Begehbaren stehen. */
-    if (re15_player_victim_grabber_type() == 0x1Au && g_room_rdt_ok) {
+     * ⛔ ENG BEGRENZT auf Typ 0x1A und 0x27: fuer jeden anderen Greifer bleibt die
+     * Platzierung unangetastet. Eine Klemme fuer alle waere eine Verhaltensaenderung ohne
+     * Beleg — die RE2-Greifer brauchen sie nicht, weil sie im Begehbaren stehen.
+     * 0x27 SEIT 2026-08-29 (Nutzer: "Leon clippt bei den Affen oft in unerreichbare
+     * Bereiche"; analysis/nutzer_batch_2026-08-29/affen-treffer-clip.md): der Port routet
+     * den Affen-Pin durch die generische Opfer-Maschine, deren Wurf-Clip 4364 Einheiten
+     * Root-Auslenkung traegt und ABSOLUT platziert — im Original klemmt der cmd-5-
+     * Spieler-Tick JEDE Platzierung gegen die Waende (Ordnung Platzierung->Push->Waende,
+     * game_step_common.c:1734-1740), der dedizierte 0x27-Handler 0x8011c118 platziert
+     * zudem nur Frames < 0x25 (@0x8011c278). Bis der Handler nachgebaut ist, haelt
+     * dieselbe Klemme wie beim Gitter-Greifer Leon im Begehbaren. */
+    {
+    uint8_t vg_ty = (uint8_t)re15_player_victim_grabber_type();
+    if ((vg_ty == 0x1Au || vg_ty == 0x27u) && g_room_rdt_ok) {
         /* ⛔ DIE WANDKLEMME DES GITTER-GREIFERS (Nutzer 2026-08-26: "wenn ich zu oft
          * hintereinander gegriffen werde, werde ich trotzdem noch in die Wand gezogen").
          *
@@ -1353,6 +1363,7 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
         if (cx == nx && cz == nz) { s_victim_ok_x = nx; s_victim_ok_z = nz; }
         else                      { nx = s_victim_ok_x; nz = s_victim_ok_z; }
         pl->x = nx; pl->z = nz;
+    }
     }
     pl->rot_y = save;                                                       /* subu @0x8010AB50 */
 }
@@ -8063,6 +8074,28 @@ static int re15_maggot_a780(const re15_actor_t *e, const re15_actor_t *pl)
 {
     return ((((int)e->rot_y - (int)pl->rot_y) + 0x400) & 0xfff) < 0x800;
 }
+/* FUN_8001bff8 — der ORIGINAL-Trefferpruefer der Affen-Angriffe (Nutzer-Report 2026-08-29
+ * "Die Affen treffen Leon so gut wie nie"; analysis/nutzer_batch_2026-08-29/
+ * affen-treffer-clip.md, selbst nachdisassembliert): ein achsenparalleles QUADRAT um einen
+ * ANGRIFFS-BONE — Offset durch die Bone-Matrix (@0x8001c078 jal 0x80022da0), dann
+ *     8001c080  lhu Welt-X / 8001c084 lhu Spieler-X
+ *     8001c088  (plX - ptX + r) & 0xffff ; 8001c09c slt 2r -> MISS
+ *     (Achse Z identisch @0x8001c0a8-c0c0)
+ * => Treffer <=> |plX-BoneX| <= r UND |plZ-BoneZ| <= r. KEIN Winkeltest, KEIN
+ * Zentrums-Radius. Der fruehere Port-Proxy (Zentrums-Distanz 2051 + Arc) erzeugte ein
+ * garantiertes Whiff-Band 2051..3000 (Biss-Commit byte-true bei dist<3000 @0x80117a60-74)
+ * und verwarf seitliche Kontakt-Treffer. Bone-Weltposition wie beim Hunde-Blut ueber
+ * re15_enemy_bone_world_pos (Fallback = Aktor-Wurzel, wenn keine Bank geladen ist —
+ * der lokale Offset-Vektor a1 des Originals ist nicht modelliert, dokumentierter Rest). */
+static int re15_maggot_bone_square(const re15_actor_t *e, const re15_actor_t *pl,
+                                   int bone, int32_t r)
+{
+    int32_t g[3];
+    re15_enemy_bone_world_pos((re15_actor_t *)e, bone, g);
+    uint16_t dx = (uint16_t)((uint16_t)(uint32_t)pl->x - (uint16_t)(uint32_t)g[0] + (uint16_t)r);
+    uint16_t dz = (uint16_t)((uint16_t)(uint32_t)pl->z - (uint16_t)(uint32_t)g[2] + (uint16_t)r);
+    return dx <= (uint16_t)(2 * r) && dz <= (uint16_t)(2 * r);   /* @0x8001c088-c0c0 */
+}
 /* FUN_8011bf50(0, a1) / FUN_8011c024(0, a1) — the maggot's LOCATOR FOOT-PLANT root motion.
  * Byte-true mechanism (raw disasm @0x8011bf50-8011c020 / @0x8011c024-8011c114): recompute the
  * tracked locator bone's WORLD transform by chaining the entity matrix (+0x20) with the pool's
@@ -8304,7 +8337,7 @@ static void re15_maggot_ai_tick(int slot)
                 if (e->anim_frame == 0x0b) re15_audio_room_se(9);   /* whoosh Se(9) @0x80118394-a8 (audit #17) */
                 if (pl->hit_react == 0
                     && e->anim_frame >= 0x0c && e->anim_frame <= 0x0f   /* window = ANY of table {0c,0d,0e,0f} @0x8012146c, loop @0x80118400-28 (audit #17: no per-attack latch — hit_react gates) */
-                    && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384)) {   /* bff8 part+0x64c r=0x3e8 @0x801183c4-d0; port mapping audit wf_555f18eb Part B */
+                    && re15_maggot_bone_square(e, pl, 9, 0x3e8)) {   /* bff8 BONE 9 (Kiefer, Pool+0x64c) r=0x3e8 @0x801183c0-cc — Quadrat, KEIN Arc (Fix 2026-08-29) */
                     pl->hp = (int16_t)(pl->hp - 6);              /* @0x80118460-6c */
                     e->dog_blocked_ctr = 0x2d;                   /* +0x1dc=45 @0x80118470-78 */
                     re15_audio_room_se(6);                       /* Se(6) @0x80118474 (a0=6 @0x80118454) */
@@ -8335,7 +8368,8 @@ static void re15_maggot_ai_tick(int slot)
                 if (pl->hit_react == 0) {
                     int fr = (int)e->anim_frame;
                     int inwin = (fr >= 0x15 && fr <= 0x18) || fr == 0x21 || fr == 0x22;   /* window table @0x80121470 = {15,16,17,18,21,22} (audit #9) — incl. the 2nd chomp; NO connect-once latch */
-                    if (inwin && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) { /* dual bff8 +0x448/+0x6f8 r=0x320 @0x801186f0-714; port mapping wf_555f18eb */
+                    if (inwin && (re15_maggot_bone_square(e, pl, 6, 0x320)
+                                  || re15_maggot_bone_square(e, pl, 10, 0x320))) { /* dual bff8 BONE 6 (+0x448) / BONE 10 (+0x6f8) r=0x320 @0x801186f0-714 — Quadrate, KEIN Arc */
                         pl->hp = (int16_t)(pl->hp - 12);         /* @0x801187b4-c0 */
                         e->dog_blocked_ctr = 0x2d;               /* @0x801187c4-cc */
                         re15_audio_room_se(5);                   /* Se(5) @0x801187c8 (a0=5 @0x80118798) */
@@ -8464,7 +8498,8 @@ static void re15_maggot_ai_tick(int slot)
                 if (e->anim_frame == 7) re15_audio_room_se(9);   /* Se(9) @0x80119064-78 */
                 if (pl->hit_react == 0
                     && (e->anim_frame == 8 || e->anim_frame == 9 || e->anim_frame == 0x0a)   /* window table @0x80121478 = {08,09,0a}, loop @0x80119120-5c */
-                    && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) {   /* dual bff8 +0x448/+0x6f8 r=0x320 @0x801190dc-9100 */
+                    && (re15_maggot_bone_square(e, pl, 6, 0x320)
+                        || re15_maggot_bone_square(e, pl, 10, 0x320))) {   /* dual bff8 BONE 6/10 r=0x320 @0x801190dc-9100 — Quadrate, KEIN Arc */
                     pl->hp = (int16_t)(pl->hp - 600);         /* player.hp -= 600 @0x80119198-ac */
                     e->dog_blocked_ctr = 0x12c;               /* +0x1dc=300 @0x801191b0-b8 */
                     re15_audio_room_se(1);                    /* Se(1) @0x801191b4 (a0=1 @0x80119184) */
@@ -8512,7 +8547,7 @@ static void re15_maggot_ai_tick(int slot)
                 } else if (e->anim_frame == 0x0f) {           /* @0x8011aafc-b04 */
                     if (re15_maggot_a780(e, pl) != 0          /* a780!=0 gate @0x8011ab14-1c */
                         && pl->hit_react == 0                 /* @0x8011ab7c-88 */
-                        && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384))   /* bff8 part+0x39c r=0x320 @0x8011ab24-78; port mapping wf_555f18eb */
+                        && re15_maggot_bone_square(e, pl, 5, 0x320))   /* bff8 BONE 5 (Pool+0x39c) r=0x320 @0x8011ab24-78 — Quadrat, KEIN Arc */
                         connected = 1;
                     if (!connected) {                         /* MISS -> phase 7 reverse-play @0x8011abb4-e4 */
                         e->sub_state_2 = 7; e->anim_frame = 0x23;

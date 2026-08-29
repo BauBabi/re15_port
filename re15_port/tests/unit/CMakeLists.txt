@@ -531,6 +531,14 @@ target_compile_definitions(test_weste_effekt PRIVATE
 add_test(NAME unit_weste_effekt COMMAND test_weste_effekt)
 set_tests_properties(unit_weste_effekt PROPERTIES TIMEOUT 30)
 
+# --- Affen-Biss = Bone-Quadrat ohne Arc (Nutzer-Report 2026-08-29 "treffen fast nie"):
+#     FUN_8001bff8 @0x8001c080-c0c0, Biss Bone 9 r=0x3e8 @0x801183c0-cc. ---
+add_executable(test_maggot_bone_square test_maggot_bone_square.c)
+target_link_libraries(test_maggot_bone_square PRIVATE re15_engine re15_test_support)
+target_include_directories(test_maggot_bone_square PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_maggot_bone_square COMMAND test_maggot_bone_square)
+set_tests_properties(unit_maggot_bone_square PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)
