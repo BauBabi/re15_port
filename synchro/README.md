@@ -53,7 +53,7 @@ Sie zeigt je Raum, wie viele Messages er hat, welche schon vertont sind und welc
 mit `--texte` im Wortlaut, damit klar ist, was zu sprechen ist. `--alle` listet zusätzlich
 die Räume ohne jede Aufnahme.
 
-Stand 2026-08-26: **1229 Messages in 170 Räumen mit Text, 37 vertont.**
+Stand 2026-08-29: **1229 Messages in 170 Räumen mit Text, 84 vertont** (ROOM11C0 und ROOM1240 vollständig).
 
 ## `unused/`
 
@@ -64,8 +64,12 @@ Wird vom Port **nicht** gelesen und **nicht** ins Paket kopiert — Ablage für 
 
 * `unit_synchro_stimme` (ctest) prüft die Regel gegen den Bestand: Namen, Stage-Zuordnung,
   Format — und dass eine Message in einem beliebigen Raum die Sprachausgabe auslöst.
-  Eine falsch benannte oder falsch formatierte Datei lässt den Test **rot** werden, statt
-  im Spiel stumm zu bleiben.
+  Eine Datei, die `main…` heißt und die Regel trotzdem verfehlt, lässt den Test **rot**
+  werden, statt im Spiel stumm zu bleiben.
+  Ein noch **nicht zugeordneter** Roh-Export (z. B. `MiniMax_2026-08-27_23_50_03_Ada.wav`)
+  wird nur **gemeldet**, nicht als Fehler gewertet — Arbeit im Fluss soll den Paketbau
+  nicht blockieren. Er spielt aber auch nicht: erst das Umbenennen auf `main<NN>.wav`
+  bindet ihn ein.
 * `release/make_package.sh` kopiert **alle** `STAGE*`-Ordner ins Paket und bricht ab, wenn
   die Anzahl der WAVs im Paket nicht der im Repo entspricht.
 

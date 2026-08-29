@@ -96,6 +96,7 @@ int main(void)
     /* ---- P3 / P4: die Dateien auf der Platte ---------------------------------------- */
     {
         int dateien = 0, namensfehler = 0, formatfehler = 0, stagefehler = 0;
+        int unzugeordnet = 0;
         char sdir[512];
         for (unsigned st = 1; st <= 6; st++) {
             snprintf(sdir, sizeof sdir, "%s/STAGE%u", RE15_SYNCHRO_DIR, st);
@@ -121,11 +122,31 @@ int main(void)
                     if (n < 5 || strcmp(f->d_name + n - 4, ".wav") != 0) continue;
                     dateien++;
                     int id = -1;
+                    /* Zwei Faelle, die NICHT gleich behandelt werden duerfen:
+                     *  - Eine Datei, die gar nicht wie "main..." heisst, ist ein noch NICHT
+                     *    ZUGEORDNETER Roh-Export (z.B. "MiniMax_2026-08-27_23_50_03_Ada.wav").
+                     *    Arbeit im Fluss, kein Ablage-Fehler — sie wird gemeldet, macht den
+                     *    Test aber NICHT rot. Sonst blockiert jede unfertige Aufnahme den
+                     *    Paketbau. Ablage dafuer ist synchro/unused/.
+                     *  - Eine Datei, die "main..." heisst und die Regel trotzdem verfehlt
+                     *    (einstellig, > 63, Zusatz im Namen), ist ein echter Ablage-Fehler:
+                     *    sie SIEHT richtig aus und bleibt im Spiel trotzdem stumm. Genau das
+                     *    soll diese Wache fangen. */
+                    if (strncmp(f->d_name, "main", 4) != 0) {
+                        printf("  ~ %s/%s\n"
+                               "      noch nicht zugeordnet - wird nicht abgespielt. In "
+                               "main<NN>.wav umbenennen (NN = Message-Id)\n"
+                               "      oder nach synchro/unused/ legen.\n",
+                               rdir, f->d_name);
+                        unzugeordnet++;
+                        continue;
+                    }
                     /* n == 10 = strlen("mainNN.wav"): der Loader formatiert %02d, eine
                      * einstellige "main5.wav" wuerde er also NIE finden. */
                     if (sscanf(f->d_name, "main%d.wav", &id) != 1 ||
                         id < 0 || id >= 64 || n != 10) {
-                        printf("  ! %s/%s: Name passt nicht zu main<NN>.wav (NN dezimal, < 64)\n",
+                        printf("  ! %s/%s: heisst main..., verfehlt aber die Regel "
+                               "(NN dezimal, zweistellig, < 64) -> bleibt stumm\n",
                                rdir, f->d_name);
                         namensfehler++;
                         continue;
@@ -165,12 +186,12 @@ int main(void)
             }
             closedir(d);
         }
-        printf("  Zensus: %d WAVs geprueft, %d Namensfehler, %d Formatfehler, %d Stage-Fehler\n",
-               dateien, namensfehler, formatfehler, stagefehler);
+        printf("  Zensus: %d WAVs, %d Namensfehler, %d Formatfehler, %d Stage-Fehler, %d noch nicht zugeordnet\n",
+               dateien, namensfehler, formatfehler, stagefehler, unzugeordnet);
         CHECK(dateien >= 30, "P3a der Zensus hat die synchro-WAVs wirklich gesehen");
         CHECK(namensfehler == 0,
-              "P3b jede WAV heisst main<NN>.wav mit NN dezimal < 64 (sonst findet der "
-              "Loader sie nie)");
+              "P3b jede main-Datei folgt der Regel main<NN>.wav (NN dezimal, zweistellig, "
+              "< 64) - sonst findet der Loader sie nie");
         CHECK(stagefehler == 0,
               "P3c jeder room-Ordner liegt im STAGE-Ordner, den seine Raum-Id verlangt");
         CHECK(formatfehler == 0,
