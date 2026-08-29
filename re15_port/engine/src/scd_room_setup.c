@@ -334,6 +334,16 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
             re15_aot_set(60, RE15_AOT_TYPE_GENERIC, 4, -20700, -17460, 900, 900);
         if (rid == 0x20A0 || rid == 0x20A1)
             scd_event_fire(2);
+        /* ROOM6020/6021 (STAGE6-Save-Raum): der EINZIGE der 8 Box-Raum-Paare, dessen
+         * "Itembox …"-Sub (sub02 @0x0BC4) im Auslieferungsstand KEINEN Trigger hat
+         * (main00 = nur 2 Tueren @0x0B46/0x0B66; analysis/nutzer_batch_2026-08-30b/
+         * itembox-original.md §1). Da der Port die Box aktiv hat (Intercept auf
+         * (0x6020/0x6021, msg 0) in re15_itembox.c), bekommt der Raum denselben
+         * Examine-Trigger wie die 14 verdrahteten Punkte — Event 2 = sub02.
+         * ⚠️ POSITION IST PORT-WAHL (das Original liefert keine): Westseite auf halber
+         * Raumlaenge (Tueren N @z=1350 / S @z=-17700); bei Nutzer-Feedback verschieben. */
+        if (rid == 0x6020 || rid == 0x6021)
+            re15_aot_set(60, RE15_AOT_TYPE_GENERIC, 2, -6000, -8500, 900, 900);
     }
     /* sub00 dispatches on the GLOBAL work-var DAT_800b0fd0[10] = the ENTRY SCENARIO
      * (which sub00 `switch(10)` case to run): 0 = boot/helipad (→ sub15 → sub02

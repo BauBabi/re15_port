@@ -89,6 +89,29 @@ int main(void)
     CHECK("und parkt es am Ende selbst zurueck (@0x109E: y=-20224)",
           g_scd.prop_count > 0 && g_scd.props[0].y == -20224);
 
+    /* --- (1b) ROOM6020: Box-Trigger installiert; sub02-Fire oeffnet die BOX (Intercept
+     *     auf msg 0) statt der Preview-Meldung, und die Mockup-Kamera (Cut 8 = das
+     *     vorgerenderte "Item Storage"-Bild) wird auf den Gameplay-Cut zurueckgestellt --- */
+    if (!enter("STAGE6/ROOM6020.RDT", 0x6020)) { printf("SKIP: 6020 fehlt\n"); return 77; }
+    for (int f = 0; f < 10; f++) scd_vm_tick();
+    CHECK("6020: Box-Trigger Slot 60 installiert (GENERIC, Event 2)",
+          g_aot.slots[60].active && g_aot.slots[60].event_id == 2);
+    {
+        extern void re15_savepoint_set_cut(int cut);
+        extern void re15_itembox_reset(void);
+        extern int  re15_itembox_pending(void);
+        re15_itembox_reset();
+        re15_savepoint_set_cut(3);                       /* Gameplay-Cut im Fire-Moment */
+        g_scd.cam_id = 3;
+        scd_event_fire(2);                               /* = der Examine-Fire */
+        for (int f = 0; f < 10 && !re15_itembox_pending(); f++) scd_vm_tick();
+        CHECK("6020: sub02 oeffnet die BOX (Intercept, keine Preview-Meldung)",
+              re15_itembox_pending());
+        CHECK("6020: Mockup-Cut unterdrueckt — Kamera zurueck auf dem Gameplay-Cut",
+              g_scd.cam_id == 3);
+        re15_itembox_reset();
+    }
+
     /* --- (2) ROOM20A0: Ambient-Schleife laeuft ab Eintritt --- */
     if (!enter("STAGE2/ROOM20A0.RDT", 0x20A0)) { printf("SKIP: 20A0 fehlt\n"); return 77; }
     for (int f = 0; f < 40; f++) scd_vm_tick();

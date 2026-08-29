@@ -210,8 +210,14 @@ int main(void)
             fprintf(stderr, "FAIL(2): DEFAULT must SUPPRESS the flavor message (got id %d)\n",
                     g_scd.message_id); fail = 1;
         }
-        if (!saw_cut8 || g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
-            fprintf(stderr, "FAIL(2): the sub07 camera ops must still run byte-true "
+        /* ⛔ SEIT 2026-08-30 (Nutzer: "die placeholder Tims koennen raus"): der Box-
+         * Intercept stellt die Kamera IM SELBEN VM-Tick auf den gelatchten Gameplay-Cut
+         * zurueck — der Mockup-Cut 8 (das vorgerenderte "Item Storage"-Bild im BSS,
+         * itembox-original.md §2) darf an KEINER Tick-Grenze mehr stehen. saw_cut8 muss
+         * deshalb 0 sein (vorher 1: der Cut war einen Wimpernschlag sichtbar). Unter
+         * RE15_BOX_PREVIEW_MSG=1 laeuft weiterhin alles byte-true inkl. Cut 8. */
+        if (saw_cut8 || g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
+            fprintf(stderr, "FAIL(2): Mockup-Cut unterdrueckt + Kamera auf dem Gameplay-Cut "
                     "(cut8=%d cam=%d auto=%d)\n", saw_cut8, g_scd.cam_id,
                     g_scd.cut_auto_enabled); fail = 1;
         }

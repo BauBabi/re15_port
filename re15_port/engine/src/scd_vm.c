@@ -1504,6 +1504,20 @@ static int op_message_on(scd_thread_t *t)
      * phone above. RE15_BOX_PREVIEW_MSG=1 = the byte-true shipped message instead. */
     if (!getenv("RE15_BOX_PREVIEW_MSG") && re15_itembox_is(g_current_room_id, t->pc[1])) {
         re15_itembox_set_pending(1);
+        /* ⛔ MOCKUP-KAMERA UNTERDRUECKEN (Nutzer-Auftrag 2026-08-30 "die placeholder Tims
+         * koennen raus"): die Box-Subs schalten VOR dem Message_on per Cut_chg auf einen
+         * Stock-Cut, dessen BSS-Hintergrund das vorgerenderte Itembox-Screen-MOCKUP ist
+         * ("Item Storage"/"Item list", in allen 8 Box-Raeumen byte-identisch — z.B.
+         * ROOM602.BSS Frame 8; analysis/nutzer_batch_2026-08-30b/itembox-original.md §2).
+         * Da der Port stattdessen den ECHTEN Box-Screen oeffnet, wird die Kamera hier im
+         * selben VM-Tick auf den beim Examine-Fire gelatchten Gameplay-Cut zurueckgestellt
+         * (aot_common.c stampt re15_savepoint_set_cut VOR dem Sub-Start) — das Mockup wird
+         * nie dargestellt. Unter RE15_BOX_PREVIEW_MSG=1 bleibt alles byte-true (Cut_chg +
+         * Meldung + Mockup wie ausgeliefert). */
+        {
+            int gc = re15_savepoint_saved_cut();
+            if (gc >= 0) { g_scd.cam_id = (uint8_t)gc; g_scd.cam_change_pending = 1; }
+        }
         if (getenv("RE15_MSG_LOG"))
             fprintf(stderr, "[msg] room=%04x id=%d ITEMBOX (box screen, message suppressed)\n",
                     g_current_room_id, t->pc[1]);
