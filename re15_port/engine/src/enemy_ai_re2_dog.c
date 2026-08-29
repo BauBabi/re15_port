@@ -1918,28 +1918,53 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
 static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                             /* frischer Kill → Kern/Variante */
-        uint8_t row = e->re2z_prev_sub;
-        /* Grab-Abbruch, falls der Hund im Latch stirbt (Port-Infrastruktur; RE2-DEATH [7]/[8]
-         * = 0x801042B0 fährt die Phasen mit Gore-FX-Tail @0x801042E4-31C): */
-        if (row == 7 && re15_player_victim_state() == 1) re15_player_victim_throwoff();
-        int gore = (row == 0 || row == 5 || row == 6 || row == 9);   /* Tabelle @0x801055CC →
-                                                                      * 0x80104610 */
-        if (gore && !(row == 9 && e->re2z_hits1d2 < 3)) {  /* 0x80104694-Gate @0x801046A8-C4:
-                                                            * `<3` = BRACKET 0 (Nah-Treffer) →
-                                                            * Zeile-9-Gore nur bei Fern-Brackets.
-                                                            * Produzent re15_re2_stamp_1d2 setzt
-                                                            * zone+3*0 (Bracket OPEN) → wie im
-                                                            * RE2-Nah-Fall bleibt die Gore-
-                                                            * Variante hier unterdrueckt; Fern-
-                                                            * Bracket = offene Folge-Lane. */
+        /* ⛔ ZEILEN-SEMANTIK (Nutzer-Report 2026-08-29 "finales Quieken fehlt beim RE2-Hund-Tod";
+         * dieselbe Fehlerklasse wie der Krähen-Fix 2026-08-23, enemy_ai_re2_crow.c:1423ff):
+         * die Todes-"Zeile" +0x5 ist beim Dispatch die WAFFEN-/ATTACK-ROW, NICHT der Herkunfts-
+         * Substate. Der RE2-Applier FUN_800470C0 schreibt beim Treffer erst das GANZE State-Wort
+         * (`sw 2/3,4(s1)` @0x80047288/90 — nullt +0x5..7) und stempelt DANN `sb s5,5(s1)`
+         * @0x80047324 = (char)param_4 = Row der Schadens-Tabelle PTR_DAT_800a6a88[kind]; der
+         * alte Substate liegt nur noch archiviert in +0x1FC (@0x80047278). Der Port-Stempel
+         * steht beim Todeseintritt in sub_state_1 (re15_damage.c: `+0x5 = weapon_id`
+         * @0x800124bc); Übersetzung RE1.5-Waffe → RE2-Row wie Krähe/Spinne.
+         * Vorher wählte der Port die Variante nach re2z_prev_sub: ein Kill während IDLE(0)/
+         * FRESSEN(5)/RETREAT(6)/LOST(9) nahm die stumme Gore-Lane → kein SE 7 = das fehlende
+         * Quieken; das Row-9-Gate war zusätzlich INVERTIERT. */
+        static const uint8_t s_re2d_row_from_weapon[22] = {    /* Werte == re2z_row_from_weapon */
+            1, 1, 1, 3, 2, 4, 4, 5, 7, 9, 11, 10, 15, 8, 16, 9, 11, 10, 17, 18, 13, 1
+        };
+        uint8_t row = (e->sub_state_1 < 22u) ? s_re2d_row_from_weapon[e->sub_state_1] : 1u;
+        /* Grab-Abbruch am LATCH festmachen, nicht an der Row (Row 7 ist jetzt eine Waffe):
+         * stirbt der GREIFENDE Hund (letzter ACTIVE-Sub 7 = Biss-Latch / 12 = Auslauf),
+         * kommt der Spieler frei (Port-Infrastruktur gegen den Soft-Lock). */
+        if (re15_player_victim_state() == 1 &&
+            (e->re2z_prev_sub == 7 || e->re2z_prev_sub == 12))
+            re15_player_victim_throwoff();
+        /* Todes-Tabelle @0x80105618 (selbst decodiert 2026-08-29):
+         *   {1,2,3,4,12,13,14,15,18} → Kern 0x80104178 = SE-7-Schrei @0x801041C8-CC
+         *   {0,5,6,9,17,19}          → Gore 0x80104610/94: `sb s1,561` im Delay-Slot
+         *                              @0x801046E8 setzt +0x231 VOR dem Kern = STUMM.
+         *                              Zeile 9: NUR bei +0x1D2 < 3 Gore (@0x801046A8-C4
+         *                              `bne v1,9` + `sltiu v0,3`), sonst Kern MIT Schrei
+         *                              (@0x801046CC).
+         *   {7,8} → 0x801042B0 (eigener Phasen-Dispatch @0x80105678 + Gore-FX-Tail
+         *           @0x801042E4-31C), {10,16} → 0x80104774, {11} → 0x8010481C — alle
+         *           UNPORTIERT: dokumentiert auf den KERN (Schrei) gefallen, nicht stumm. */
+        int gore = (row == 0 || row == 5 || row == 6 || row == 17 || row == 19 ||
+                    (row == 9 && e->re2z_hits1d2 < 3));
+        if (gore) {
             e->re2d_se231 = 1;                             /* sb 1,561 @0x801046E8 (kein SE 7) */
             /* Part-Scatter 0x80104440 (7 Parts @0x80105680 {2,3,4,7,8,9,10}, Flags|0x4A,
              * Vel 800/−150/10/−100) = GIB-Dismember — Render-seitig OPEN, dokumentiert. */
-            if (row == 9) {                                /* @0x801046F4-758 */
-                e->re2d_budget21f = 1;
-                re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 7);   /* Gore FX 7 @0x80104748-50 */
-                e->re2d_budget21f = 18;                    /* sb 18,543 @0x80104754-58 */
+            if (row == 9) {                                /* @0x801046F4-754 (nur Zeile 9) */
+                e->re2d_budget21f = 1;                     /* sb 1,543 @0x80104708 (transient) */
+                re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 7);   /* Gore FX 7 @0x80104748-50
+                                                            * (Part-Flag-&0x4A-Gate @0x8010473C
+                                                            * nicht modelliert — Scatter OPEN) */
             }
+            e->re2d_budget21f = 18;                        /* sb v0=18,543 @0x80104758 — läuft
+                                                            * für JEDE Gore-Zeile (Join; der
+                                                            * alte Port schrieb es nur bei 9) */
         }
         if (e->re2d_se231 == 0) { re2d_se(7); }            /* SE 7 Todesschrei @0x801041C8-CC */
         e->re2d_se231 = 1;                                 /* Latch */

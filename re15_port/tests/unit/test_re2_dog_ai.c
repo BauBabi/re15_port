@@ -377,6 +377,44 @@ static void test_hurt_knockdown_death(void)
           "CORPSE-Init (sb 1,5 @0x80104A08; Port-HP=-1), hp=%d sub=%d", DOG->hp, DOG->sub_state_1);
 }
 
+/* PIN (Nutzer-Report 2026-08-29 "finales Quieken fehlt"): die Todes-Zeile +0x5 ist die
+ * WAFFEN-Row (Applier `sw 2/3,4(s1)` @0x80047288/90 nullt +0x5..7, dann `sb s5,5(s1)`
+ * @0x80047324), NICHT der Herkunfts-Substate. Ein Pistolen-Kill (w3 -> Row 3, Tabelle
+ * @0x80105618[3] = Kern 0x80104178) schreit IMMER — auch wenn der Hund zuletzt in
+ * RETREAT(6)/IDLE(0)/FRESSEN(5)/LOST(9) war (vorher: stumme Gore-Lane = der Report).
+ * Magnum (w7 -> Row 5 = Gore-Lane 0x80104610) bleibt stumm, +0x21F=18 @0x80104758. */
+static void test_death_weapon_rows(void)
+{
+    /* Pistolen-Kill aus RETREAT (prev_sub=6): SE 7 muss spielen. */
+    fresh_dog(3000, 0);
+    tick();
+    DOG->state = 1; DOG->sub_state_1 = 6; DOG->sub_state_2 = 0; DOG->sub_state_3 = 0;
+    tick();                                                 /* prev_sub := 6 */
+    se_n = 0;
+    DOG->hp = -20; DOG->state = 3;
+    DOG->sub_state_1 = 3;                                   /* Waffen-Stempel w3 (@0x800124bc) */
+    DOG->sub_state_2 = 0; DOG->sub_state_3 = 0;
+    tick();
+    CHECK(se_count(7) == 1,
+          "Pistolen-Kill aus RETREAT(6) schreit (Row 3 -> Kern @0x80104178), n=%d", se_count(7));
+
+    /* Magnum-Kill (w7 -> Row 5): Gore-Lane, STUMM, +0x21F = 18. */
+    fresh_dog(3000, 0);
+    tick();
+    DOG->state = 1; DOG->sub_state_1 = 2; DOG->sub_state_2 = 0; DOG->sub_state_3 = 0;
+    tick();
+    se_n = 0;
+    DOG->hp = -20; DOG->state = 3;
+    DOG->sub_state_1 = 7;                                   /* Waffen-Stempel w7 (Magnum) */
+    DOG->sub_state_2 = 0; DOG->sub_state_3 = 0;
+    tick();
+    CHECK(se_count(7) == 0,
+          "Magnum-Kill = Gore-Lane (Row 5 -> 0x80104610, +0x231 vor dem Kern @0x801046E8), n=%d",
+          se_count(7));
+    /* (+0x21F=18 @0x80104758 wird hier NICHT gepinnt: der FX-Treiber @0x80105090-98/
+     * @0x8010518C-98 verbraucht den Countdown noch im selben Todes-Tick.) */
+}
+
 static void test_howl_claim(void)
 {
     /* Heul-Claim 0xFBF4&0x80: nur EIN Hund heult, der zweite wartet tbl@0x80105430 Frames
@@ -444,6 +482,7 @@ int main(void)
     test_attack_launch();
     test_bite_damage_and_latch();
     test_hurt_knockdown_death();
+    test_death_weapon_rows();
     test_howl_claim();
     test_1d2_zone_stamp();
 
