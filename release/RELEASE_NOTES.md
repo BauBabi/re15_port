@@ -1,3 +1,53 @@
+# RE1.5 Port — v0.3.39 (Early Preview)
+
+Der Nachfolge-Batch vom 2026-08-30: Weste ohne Heilung, schlafender Content aktiviert,
+Item-Box ueberall erreichbar, und zwei Archaeologie-Antworten.
+
+## Geaendert auf Wunsch
+
+- **R.P.D.-Weste heilt nicht mehr.** Anlegen gibt nur noch +5 Energie, Ablegen nimmt +5
+  (kann nie toeten). Die Vollheilung, die das Original beim Modell-Wechsel schreibt
+  (HP:=100), ist bewusst nicht mehr uebernommen. Der "+1 Biss"-Deckel bleibt: mit Weste
+  heilen Sprays auf 105.
+
+## Schlafender Content — jetzt aktiv
+
+- **ROOM1150 (Briefing-Raum): die verlorene Geraete-Szene.** An der Westwand gibt es
+  jetzt einen Untersuchen-Punkt: ein verstecktes, voll choreographiertes Requisit faehrt
+  mit Motor-Geraeuschen herab, arbeitet und faehrt wieder weg — die komplette Szene lag
+  fertig im Skript, wurde aber von nichts im Spiel je aufgerufen. (Was das Geraet
+  darstellt, wissen wir noch nicht sicher — schau es dir an!)
+- **ROOM20A0 (Kanalraum der grossen Spinne): die deaktivierte Ambient-Effektschleife**
+  (11 Emitter) laeuft jetzt ab Betreten des Raums.
+- Bewusst NICHT aktiviert: Waisen-Texte, die einen Eingriff in die Skript-Bytes
+  braeuchten (z.B. der geschnittene Muell-Pickup in 1030) — die RDTs bleiben byte-true.
+
+## Item-Box
+
+- **Untersucht: Hatte das Original eine deaktivierte Item-Box?** Als CODE: nein (Menue-
+  System, sce-Handler und Save-Format komplett geprueft — kein Box-Code). Als CONTENT:
+  ja, dreifach — die "not available in this preview"-Punkte sind in 14 von 16 Raeumen
+  echte verdrahtete Interaktionspunkte, der Save-Block traegt vier ungenutzte
+  Box-foermige Arrays, und (Neufund) **die Box-Bildschirm-GRAFIK ist ausgeliefert**:
+  ein vorgerendertes "Item Storage / Item list"-Mockup liegt als Kamera-Hintergrund in
+  allen 8 Box-Raeumen. Unsere RE2-portierte Box bleibt damit der richtige Weg.
+- **ROOM6020 (Save-Raum STAGE6) hat jetzt auch eine erreichbare Box** — es war das
+  einzige der 8 Box-Raum-Paare, dessen Box-Skript im Original ohne Trigger blieb.
+  (Position des Untersuchen-Punkts ist eine Port-Wahl — Feedback willkommen.)
+- **Das Mockup-Standbild ist raus:** beim Oeffnen der Box blitzte bisher fuer einen
+  Wimpernschlag das vorgerenderte Platzhalter-Bild auf; die Kamera bleibt jetzt auf der
+  Spielansicht. (Mit RE15_BOX_PREVIEW_MSG=1 gibt es weiterhin den byte-true
+  Auslieferungszustand samt Meldung und Mockup.)
+
+## Beantwortet
+
+- **"Fehlt eine Marvin+Ada-Szene VOR der Gorilla-Szene?" — Nein.** Hart belegt: die
+  Gorilla-Kammer ist eine Sackgasse, die nur ueber den Manhole-Raum erreichbar ist,
+  dessen gemeinsame Szene wiederum am Sieg ueber BEIDE Gorillas haengt (einziger
+  Flag-Schreiber). Leons "Wasn't he with you?" ist Off-Screen-Erzaehlung — und Ada
+  beantwortet sie in derselben Szene: "He turned around all of a sudden to go look
+  for you."
+
 # RE1.5 Port — v0.3.38 (Early Preview)
 
 Der komplette Nutzer-Batch vom 2026-08-29: neun Fixes, eine gewuenschte Erweiterung,
