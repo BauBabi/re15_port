@@ -1,3 +1,76 @@
+# RE1.5 Port — v0.3.38 (Early Preview)
+
+Der komplette Nutzer-Batch vom 2026-08-29: neun Fixes, eine gewuenschte Erweiterung,
+vier beantwortete Untersuchungen. Details je Punkt in
+`analysis/nutzer_batch_2026-08-29/ERGEBNIS_v0.3.38.md`.
+
+## Behoben
+
+- **Item-Stapel**: Liegen mehrere Items uebereinander, braucht das zweite wieder einen
+  EIGENEN Quadrat-Druck. Der Bestaetigungs-Druck des ersten Items lief bisher im selben
+  Bild noch in die Aufhebe-Pruefung — die Modal-Maschine tickt jetzt wie im Original NACH
+  dem Spieler-Schritt.
+- **Hund, erster Treffer**: Der Hund traegt jetzt das Ziel-Hoehenband des Originals.
+  Wer auf den niedrigen Hund NACH UNTEN zielt, trifft jetzt (vorher: stiller Fehlschuss —
+  das war die gefuehlte Verzoegerung). Original-getreu dazu: ein sitzender (IDLE-)Hund ist
+  NUR noch mit Nach-unten-Zielen treffbar, und jenseits von 4000 Einheiten gar nicht.
+- **RE2-KI, Hunde-Tod**: Das finale laute Quieken (SE 7) spielt wieder bei jedem
+  Schusswaffen-Kill. Die Todes-Variante wurde faelschlich nach der Verhaltensphase statt
+  nach der Waffe gewaehlt — ein Kill waehrend Ruhe/Fressen/Kreisen war stumm.
+- **Sherry**: Laeuft nach ihrer Verschwinde-Szene nicht mehr durch den Raum. Die
+  NPC-Wand-Klemme des Originals sitzt jetzt an der Wurzel (fuer ALLE NPC-Zustaende) —
+  die geparkte Sherry bleibt wie im Original hinter der Wand, unsichtbar.
+- **ROOM1210, Arme anschiessen**: Treffer registrieren jetzt auch beim Nach-unten-Zielen
+  auf die bodennahen Arme, und der Arm reagiert mit dem Original-Zucken samt Blut
+  (der Flinch-Code existiert im Original vollstaendig — er war dort mangels Arm-HP nur
+  nie erreichbar).
+- **ROOM1210, Griff links**: Der Halte-Anker der West-Reihe lag 287 Einheiten IM
+  Mauerwerk (Ost: 73) — der Griff zog Leon dorthin. Der Anker wird jetzt auf die
+  begehbare Kante geklemmt; der Halt findet wie bei RE2s Fenster-Griff an der Wand statt.
+  Bitte gegentesten — die Messsonde konnte das Live-Bild nicht vollstaendig nachstellen.
+- **ROOM1090, letzte Kamera**: Das "Zeug ueber den Feuern" waren die Feuer-Effekte
+  selbst: opak statt ADDITIV gezeichnet (deckende dunkle Glut-Fetzen), am Boden
+  festgefroren statt auf den brennenden Truemmern reitend, und ohne das
+  Groessen-Flackern. Alle drei Punkte laufen jetzt ueber die Original-Effektroutinen.
+- **Affen (ROOM11C0/1141)**: Treffen wieder. Der Trefferpruefer ist jetzt das
+  Original-Quadrat um den Angriffs-Knochen (Biss: Kiefer ±1000) — der alte Naeherungstest
+  hatte ein garantiertes Fehlschuss-Band und einen erfundenen Winkel. Zusaetzlich wird
+  der Pin-Wurf jetzt gegen die Waende geklemmt: Leon landet nicht mehr in unerreichbaren
+  Bereichen.
+
+## Neu (auf Wunsch)
+
+- **R.P.D.-Weste wirkt**: Anlegen heilt voll (das tut sie im Original wirklich — der
+  Modell-Reload schreibt HP:=100) und gibt +5 Max-HP = exakt EIN Standard-Zombie-Biss
+  (5 Schaden) mehr. Vollheilungs-Sprays erhalten den Bonus; Save/Load merkt sich die
+  Weste jetzt auch am Modell.
+
+## Beantwortet (keine Code-Aenderung)
+
+- **Timer-Bomb (ROOM1110)**: Hat einen Verwendungsort — ROOM2040/2041 in der
+  Kanalisation: an der verrosteten Tuer ("Unless we use explosives or something")
+  sprengt sie den Weg frei. Reine Skript-Mechanik, das Item landet nie im Inventar.
+- **ROOM10F0, kleine Tuer**: Laesst sich NICHT oeffnen — es ist gar keine Tuer, nur ein
+  Text-Punkt. Kein Zielraum, kein Schluessel, kein Flag existiert dafuer.
+- **Ada + Marvin zusammen**: Die Szene EXISTIERT und ist aktiv — ROOM11B0 (Manhole),
+  sobald BEIDE Gorilla-Bosse in ROOM11C0 tot sind. Danach treten die beiden auch in
+  ROOM1260/2000 u.a. gemeinsam auf. Eine Chief-Todesszene existiert dagegen nirgends;
+  die 1050-Zeilen ("I need a break"/"medical room") sind verwaiste Texte ohne Trigger —
+  die Rahmen-Szene dort haengt an der Ada-Rettung aus dem brennenden Lager (ROOM1090,
+  Feuerloescher aus ROOM1000).
+- **Weiterer schlafender Content**: Ja, einiges — u.a. eine komplette verlorene Szene in
+  ROOM1150 (sub04, sofort per RE15_FORCE_EVENT=4 abspielbar), die Meldung "Itembox is
+  not available in this preview" (ROOM6020 sub02), ein geschnittener Muell-Duchsuch-
+  Pickup (ROOM1030) und die Texte einer gestrichenen T-Virus-Synthese-Maschine
+  (ROOM4090). Vollstaendige Liste: `analysis/nutzer_batch_2026-08-29/schlafender-content.md`.
+
+## Offen / brauche Rueckmeldung
+
+- **ROOM1210 "ganzer Koerper clippt durch die Wand"**: Nicht reproduzierbar verortet.
+  In RE1.5-KI existiert gar kein Koerper-Modell (der Arm hat 4 Meshes/4 Knochen), und
+  alle 9 Kameras des Raums tragen Masken. Bitte: welcher KI-Modus, und ein
+  Screenshot/kurzes Video der Stelle.
+
 # RE1.5 Port — v0.3.35 (Early Preview)
 
 ## Der Griff zieht Leon nicht mehr in die Wand
