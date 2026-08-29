@@ -1,3 +1,27 @@
+# RE1.5 Port — v0.3.40 (Early Preview)
+
+Das RE2-Kartensystem, uebertragen auf unsere Map (Nutzer-Wunsch 2026-08-30).
+
+## Karte (MAP-Tab im Status-Screen)
+
+- **Aktueller Raum ROT, besuchte Raeume GRUEN, unbesuchte SCHWARZ** — nach dem
+  Mechanismus des RE2-Retail-Kartenzeichners (unbesuchte Raum-Stuecke werden gar nicht
+  gezeichnet; der aktuelle Raum bekommt das stetige Highlight — bei RE2 blinkt im
+  Map-Tab nur der Spieler-Pfeil, nicht der Raum; unser pulsierender Positionsmarker
+  bleibt). Tueren/Durchgaenge sind bei RE1.5 in die Karten-Grafik der Raum-Stuecke
+  eingemalt und faerben mit.
+- **Besucht-Speicher wandert ins Savegame** (Save-Format v6; aeltere Staende laden
+  weiter und starten mit leerer Karte).
+- **Ehrliche Grenze:** Nur 28 der 120 Raeume liessen sich bisher belastbar ihren
+  Karten-Rechtecken zuordnen (die Zuordnung existiert im Original nirgends; 65 Raeume
+  haben dort nicht einmal eine funktionierende Marker-Kalibrierung — der Stock-
+  Positionsmarker ist in diesen Raeumen defekt und zeigt auf die Ecke). Nicht
+  zugeordnete Raum-Stuecke bleiben im bisherigen Neutral-Look und faerben sich nie
+  falsch. Melde gern Raeume, deren Faerbung dir wichtig ist — die lassen sich gezielt
+  nachziehen. Details: `analysis/nutzer_batch_2026-08-30b/map-zuordnung.md`.
+
+---
+
 # RE1.5 Port — v0.3.39 (Early Preview)
 
 Der Nachfolge-Batch vom 2026-08-30: Weste ohne Heilung, schlafender Content aktiviert,
