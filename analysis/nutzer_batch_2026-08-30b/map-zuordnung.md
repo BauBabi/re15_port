@@ -84,3 +84,52 @@ Modulation) — sichtbar „wie bisher", nie falsch gefärbt.
    Ziel-Koordinaten) erneut voten.
 3. Für Platzhalter-Räume: Rect-Geometrie gegen die Raum-Kollisionsbox statt gegen
    Marker-Projektion matchen (erfordert Seiten-Layout-Verständnis je Gebäude).
+
+
+---
+
+# NACHTRAG 2026-08-30 (v0.3.41): Geometrische Neu-Autorisierung + Marker-Reparatur
+
+Nutzer-Gegentest an v0.3.40: „erstes Kartenstueck richtig, zweites falsch" + der Hinweis,
+die Karte aus den RAUMDATEN zu reparieren (Kollision funktioniert ja). Genau das ist jetzt
+der Mechanismus — die alte AOT-Streupunkt-Methode ist ersetzt.
+
+## Neue Methode (tools/gen_map_tables.py + Session-Skripte)
+
+1. **Footprint-Anker:** Je Raum der SCA-Kollisions-Footprint (RDT +0x20, 24-B-Header +
+   12-B-Eintraege — dieselben Daten, gegen die die Spielfigur klemmt), projiziert durch
+   die EXE-EIGENE Marker-Zeile des Raums, bestes Rect per **IoU** (nicht Overlap —
+   grosse Hintergrund-Rects schluckten sonst alles). 30 Anker mit IoU>=0.30 und
+   1.4x-Abstand.
+2. **Tuer-Graph-Solver:** op-0x3B-Tuerdaten tragen BEIDE Seiten (lokale Tuer-Position +
+   Eintritts-Position im Zielraum). Kostenfunktion: |T_A(Tuer) - T_B(Eintritt)| ueber
+   alle On-Page-Kanten, T = Footprint-Bbox->Rect-Fit; Hill-Climbing mit Restarts,
+   Nicht-Zuordnung erlaubt.
+3. **Visuelle Verifikation (13-Agenten-Workflow wf_a59e80eb):** je Seite Composite
+   (zusammengesetzte Bildschirm-Karte + eingepasste Kollisionszellen + Tuerlinien
+   rot/gruen) + Zahlenwerk. Urteile: ok/falsch(+Korrektur)/unsicher; Vorschlaege fuer
+   offene Raeume. Seiten 2/6/8 (Agent-Stalls) selbst am Composite verifiziert.
+
+**Uebernahme-Politik: nie falsch faerben.** 'ok' bleibt, 'falsch' mit Korrektur wird
+korrigiert (1140->r6, 5090->r11), 'falsch' ohne Ersatz und ALLE 'unsicher' fallen auf
+neutral, begruendete Vorschlaege als 'visuell'. Seite-2-Tuerfuellungen komplett
+verworfen (Main Hall 1000 sass auf einem Mini-Rect — exakt die Nutzer-Beobachtung).
+
+## Ergebnis v0.3.41
+
+**63 Basis-Raeume (x2 Varianten = 126 Eintraege)** — vorher 28. Geteilte Rects (alle
+verifiziert): (9,7)=5030+5110, (9,4)=5040+5120, (9,10)=50A0+5140. Bewusst NEUTRAL
+(dokumentierte Kandidaten fuer eine Live-Iteration): 1000/1010/1050/1060/1080/1090/
+10A0/10B0 (Seite 2), 10C0, 1160, 1190, 11A0, 11D0, 1230, 1240, 1250, 2010/2030/2040/
+2050/2070/2090, 3050/30B0/30D0, 4020/4040/4050/4070/4080/40B0, 5020/5050/5130,
+6010/6020/6040 + die 13 Ohne-Seite- und 2 Seite-13-Raeume.
+
+## Marker-Reparatur (Nutzer: „die Karte reparieren")
+
+65 Basis-Raeume tragen im Auslieferungsstand nur die Platzhalter-Zeile {0,0,1,1} — der
+Stock-Positionsmarker zeigt dort in die Ecke. Fuer zugeordnete Raeume mit Platzhalter-
+oder Rect-verfehlender Zeile synthetisiert `gen_map_tables.py` reparierte Parameter
+DERSELBEN Formel (FUN_800473f8) aus dem Footprint->Rect-Fit: **32 Fix-Zeilen**
+(re15_map_row_fix.h), angewandt in re15_inv_map_marker. `RE15_MAP_STOCK=1` = byte-true
+Auslieferungsstand (Platzhalter-Marker + keine RE2-Faerbung). Pin: unit_inv_fsm M4
+(Stock (0,0) / repariert projiziert in die Seite).

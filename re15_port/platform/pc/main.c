@@ -5969,7 +5969,10 @@ re_title:;
              * FSM set). Byte-true: @0x8010a28c/@0x8010a6f8 animate the PLAYER from DAT_800acbcc/acbd0
              * = *(zombie+0x178)/+0x17c (bank 2), NOT his own PL00 set. This is what stops Leon from
              * freezing during the grab/death (the "no Leon reactions / death finish missing"). */
-            if (re15_player_victim_state() != 0 && pl00_ok) {
+            if (re15_player_victim_state() != 0 && !re15_player_victim_own_bank() && pl00_ok) {
+                /* re15_player_victim_own_bank(): GORILLA-Wurf P3-P6 (Hook 0x8011c118) —
+                 * Leon spielt seine EIGENEN Aufsteh-Clips 0x10/0xb (anim_set auf
+                 * [acad8]/[acbc0] @0x8011c34c-60), also KEIN Opfer-Bank-Override. */
                 re15_enemy_bank_t *vb = re15_enemy_find(re15_player_victim_type());
                 if (vb && vb->victim_ok && vb->anim_victim.clip_count > 0) {
                     /* Pose Leon with HIS OWN structure (PL00 bone hierarchy + bind = his proportions)
@@ -7184,6 +7187,17 @@ re_title:;
                 int32_t nfs = re15_sin_q12((int)npc->rot_y);
                 int32_t nfc = re15_cos_q12((int)npc->rot_y);
                 int32_t nyaw[9] = { nfc, 0, nfs, 0, 0x1000, 0, -nfs, 0, nfc };
+                /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
+                 * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
+                 * @0x8001e904 andi 0x800; lh +0x166 @0x8001e91c/28/38; jal ScaleMatrix
+                 * @0x8001e940) — Bone-Offsets UND Vertices skalieren mit, die Weltposition
+                 * nicht. Gorilla-Boss 0x27 = 0x1b33 (1.7x, Init @0x80117148-4c). Port:
+                 * render_scale_q12 != 0 == Flag gesetzt. */
+                if (npc->render_scale_q12) {
+                    int k;
+                    for (k = 0; k < 9; k++)
+                        nyaw[k] = (nyaw[k] * (int32_t)npc->render_scale_q12) >> 12;
+                }
 
                 /* Canonical (2026-05-29): eval_pos = the NPC's own world
                  * position, matching PSX FUN_80053fc0 / FUN_80039ca0

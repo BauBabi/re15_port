@@ -169,6 +169,15 @@ typedef struct {
                              * (Hund: `lw +0x1b4; lhu 10(v0); sh -> +0x1ea` @0x8010e294-2a4 / @0x8010e668-78). */
     uint8_t  contact_flags; /* +0x1c2: BODY-push contact bits (FUN_8002aec4: |=1 player pushed me,
                              * |=2 an enemy did); cleared per tick (FUN_8002b498). */
+    int16_t  render_scale_q12; /* +0x166 (s16, Q12) UNIFORMER Render-Scale, Gate = Entity-Flag-Bit
+                             * 0x800: Render-Root FUN_8001e8c8 @0x8001e904 (andi 0x800) laedt 3x
+                             * +0x166 @0x8001e91c/28/38 und ruft ScaleMatrix @0x8001e940 auf die
+                             * Root-Matrix VOR der Bone-Schleife. Port-Kodierung: 0 = Flag aus
+                             * (keine Skalierung), sonst der Q12-Wert (0x1000 = 1.0). Setzer:
+                             * GORILLA-Init @0x80117138/48-4c (0x800 an + 0x1b33 = 1.7x, Override
+                             * Spawn-Byte+0x9 Bit 0x40 @0x80117164-90). Weitere Original-Setzer
+                             * (Zombie-Region-Schrumpf @0x801097a8-bc 0x1000, -2/Tick @0x801098ec-fc/
+                             * @0x80109988-bc min 100) sind noch NICHT portiert (Folge-RE). */
     int8_t   contact_slot;  /* +0x1ac: the contacting ENEMY's actor slot (ptr in the original) —
                              * the grab [5] domino-shove target. */
     /* AI params FUN_8011d84c writes (PSX: into the model pool entity[0x62]+0x5fx). The

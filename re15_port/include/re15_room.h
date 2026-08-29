@@ -40,6 +40,16 @@ enum {
 };
 int re15_map_rect_state(unsigned page, unsigned rect_idx);
 
+/* MARKER-REPARATUR (Nutzer-Auftrag 2026-08-30): reparierte Parameter der Marker-
+ * Formel FUN_800473f8 fuer Slots, deren EXE-Zeile @0x800768B0 Platzhalter ist oder
+ * ihr Rect verfehlt (Tabelle: re15_map_row_fix.h, tools/gen_map_tables.py).
+ * re15_map_stock_mode(): 1 wenn RE15_MAP_STOCK=1 (byte-true Auslieferungsstand,
+ * Reparatur + RE2-Faerbung aus). */
+typedef struct { unsigned char slot; short xoff; unsigned short yoff, xscl, zscl; } re15_map_row_fix_t;
+const re15_map_row_fix_t *re15_map_row_fix_find(unsigned slot);
+int re15_map_stock_mode(void);
+void re15_map_stock_set(int v);   /* Tests: 0/1 erzwingen, -1 = Umgebung neu lesen */
+
 /* Death/game-over presentation (game_step_common.c). g_death_fade = 0..255 fade-to-black over the
  * byte-true 0x78 death timer; g_gameover_active = 1 once it expires -> the PC loop shows YOU DIED. */
 extern int g_death_fade;      /* BLACK exit fade 0..255 (game-over sub 6) */

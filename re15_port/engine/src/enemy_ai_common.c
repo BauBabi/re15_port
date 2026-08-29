@@ -28,6 +28,7 @@
 #include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
 #include "re15_scd.h"       /* re15_game_flag_get/set — the em-status kill-flag persistence */
 #include "re15_math.h"     /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
+#include "re15_player.h"   /* re15_player_pl00_clip_frames — Gorilla-Wurf-Aufsteher (0x10/0xb) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
@@ -1297,6 +1298,16 @@ static uint8_t re15_player_victim_grabber_type(void)
     return g_actors[z].type;
 }
 
+/* GORILLA-WURF (0x27, Hook 0x8011c118): 0 = P0-P2 Wurf (Opfer-Bank), 1/2 = P3-P6
+ * Aufsteher aus LEONS EIGENER Bank (Clip 0x10 dann 0xb) — der Renderer fragt
+ * re15_player_victim_own_bank() und laesst dann den Opfer-Bank-Override weg. */
+static uint8_t s_gthrow_phase = 0;
+int re15_player_victim_own_bank(void)
+{
+    return g_player_victim != 0 && re15_player_victim_grabber_type() == 0x27
+        && s_gthrow_phase != 0;
+}
+
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
 {
@@ -1384,6 +1395,71 @@ void re15_player_victim_tick(void)
      * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
      * cadence the zombie side shows (F84 frac=7 in the pose dump). */
     if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
+    /* ==== GORILLA-BOSS (0x27): dedizierter Pin-Opfer-Handler 0x8011c118 — EIGENE
+     * Leon-Timeline statt der generischen Zombie-Halte-Maschine (gorilla_11c0/
+     * verhalten.md D3; Hook-Registrierung [0x27]=0x800ac7f4<-0x8011c118 @0x8011ea2c-38).
+     * Original-Phasen (Tabelle @0x80100404):
+     *   P0 @0x8011c194: Opfer-Bank-CLIP 1 (der 83-Frame-WURF), Zwangs-Yaw = Gorilla;
+     *      RUECK-Variante (aca59!=0): Clip startet bei Frame 0xc (@0x8011c208-1c).
+     *   P1 @0x8011c228: anim_set; Frame 0xb -> P2 (Front-Intro 0..0xb OHNE ad68 —
+     *      der Latch-Anker haelt Leons Position).
+     *   P2 @0x8011c268: Root-PLATZIERUNG am Gorilla NUR solange Frame < 0x25
+     *      (sltiu @0x8011c278, ad68 @0x8011c294); Clip-ENDE -> P3 + UNPIN
+     *      (player.flags &= ~0x1000 @0x8011c2c0-dc) — der Release haengt an LEONS
+     *      Clip, NICHT an der Gorilla-Timeline (die B[15]-Maschine des Gorillas
+     *      laeuft unabhaengig weiter).
+     *   P3-P6: Leons EIGENE Bank ([acad8]/[acbc0]): Clip 0x10 (@0x8011c2e8, anim_set
+     *      0x200 @0x8011c34c-60), dann Clip 0xb (@0x8011c31c, anim_set @0x8011c348).
+     *   P7 @0x8011c384: aca58=2 (frei), player.+0x93=0 @0x8011c3a0, Freeze-Bits
+     *      aca3c &= ~0xc0 @0x8011c398-b4.
+     * VORHER loopte der Port den Wurf-Clip als "Hold" und released auf der GORILLA-
+     * Timeline (sub-15 Phase 4/5) — komplett andere Choreographie (Kern des Nutzer-
+     * Reports "verhalten sich ueberhaupt nicht original"). */
+    if (re15_player_victim_grabber_type() == 0x27) {
+        if (s_victim_fresh) {
+            s_gthrow_phase = 0;
+            player->motion = 1;                                   /* acae8=1 @0x8011c1c4 */
+            player->anim_frame = (uint8_t)(g_player_victim_variant ? 0x0c : 0);  /* @0x8011c208-1c */
+            player->anim_frac = 7; player->anim_blend_rate = 0x200;
+        }
+        if (s_gthrow_phase == 0) {                                /* P0-P2: der WURF */
+            int fc = (1 < vb->anim_victim.clip_count) ? vb->anim_victim.clips[1].frame_count : 1;
+            if (fc < 1) fc = 1;
+            if (!s_victim_fresh) {
+                if ((int)player->anim_frame + 1 < fc) player->anim_frame++;
+                else {                                            /* Clip-Ende -> P3: UNPIN */
+                    s_gthrow_phase = 1;
+                    player->motion = 0x10; player->anim_frame = 0;   /* acae8=0x10 @0x8011c2e8 */
+                    player->anim_frac = 7; player->anim_blend_rate = 0x200;  /* anim_set 0x200 @0x8011c34c-60 */
+                    return;
+                }
+            }
+            s_victim_fresh = 0;
+            player->motion = 1;
+            if (player->anim_frame >= 0x0c && player->anim_frame < 0x25)   /* P2-Fenster @0x8011c278 */
+                re15_victim_place(player, vb, 1, (int)player->anim_frame);
+            return;
+        }
+        /* P3-P6: Leons EIGENE Bank (PL00) — der Renderer schaltet ueber
+         * re15_player_victim_own_bank() auf den normalen Spieler-Pfad um. */
+        {
+            int rclip = (s_gthrow_phase == 1) ? 0x10 : 0x0b;
+            int fc = re15_player_pl00_clip_frames(rclip);
+            if (fc <= 0) fc = 1;                                  /* Bank fehlt (Unit-Kontext) */
+            if ((int)player->anim_frame + 1 < fc) { player->anim_frame++; return; }
+            if (s_gthrow_phase == 1) {
+                s_gthrow_phase = 2;
+                player->motion = 0x0b; player->anim_frame = 0;    /* acae8=0xb @0x8011c31c */
+                player->anim_frac = 7; player->anim_blend_rate = 0x200;
+                return;
+            }
+            /* P7: frei — aca58=2 @0x8011c38c, +0x93=0 @0x8011c3a0 */
+            g_player_victim = 0;
+            s_gthrow_phase = 0;
+            player->hit_react = 0;
+            return;
+        }
+    }
     /* VICTIM YAW: latched ONE-SHOT at grab commit (see re15_player_victim_latch) — D1 disasm: the
      * a8f8 call exists ONLY in phase 0 (@0x8010a3a4); no per-frame re-snap anywhere in the cmd-5
      * handler. Live-verified: pl_rot constant for the whole hold (behind 1547, face 2009/3083/...),
@@ -8092,6 +8168,15 @@ static int re15_maggot_bone_square(const re15_actor_t *e, const re15_actor_t *pl
 {
     int32_t g[3];
     re15_enemy_bone_world_pos((re15_actor_t *)e, bone, g);
+    /* ENTITY-SCALE (D4, gorilla_11c0/verhalten.md): das Original transformiert den
+     * Angriffs-Bone durch die POOL-Bone-Matrix (@0x8001c078), die ueber die skalierte
+     * Root-Matrix (+0x166, FUN_8001e8c8 @0x8001e940) kettet — der Angriffs-PUNKT liegt
+     * beim Gorilla (0x1b33) 1.7x weiter draussen. Der Radius r bleibt unskaliert
+     * (Literale 1000/800 im Overlay). Bone-Offset um die Aktor-Wurzel skalieren: */
+    if (e->render_scale_q12) {
+        g[0] = e->x + (((g[0] - e->x) * (int32_t)e->render_scale_q12) >> 12);
+        g[2] = e->z + (((g[2] - e->z) * (int32_t)e->render_scale_q12) >> 12);
+    }
     uint16_t dx = (uint16_t)((uint16_t)(uint32_t)pl->x - (uint16_t)(uint32_t)g[0] + (uint16_t)r);
     uint16_t dz = (uint16_t)((uint16_t)(uint32_t)pl->z - (uint16_t)(uint32_t)g[2] + (uint16_t)r);
     return dx <= (uint16_t)(2 * r) && dz <= (uint16_t)(2 * r);   /* @0x8001c088-c0c0 */
@@ -8141,8 +8226,19 @@ static void re15_maggot_footlock(re15_actor_t *e, int bone)
     if (re15_emd_get_keyframe_position(sk, kf_p, &rx, &ry, &rz)) { mp[0] += rx; mp[2] += rz; }
     re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
     re15_skel_bone_to_world(mp, e->rot_y, 0, 0, 0, wp);
-    e->x -= (wn[0] - wp[0]);                           /* @0x8011bfe4-e8 */
-    e->z -= (wn[2] - wp[2]);                           /* @0x8011c004-08 */
+    {
+        /* ENTITY-SCALE (D4): die POOL-Bone-Welt-Deltas des Originals (`+0x34 -= m.tx -
+         * rec[84]` @0x8011bfd4-e8) ketten durch die skalierte Root-Matrix (+0x166,
+         * FUN_8001e8c8 @0x8001e940) — die Locator-Bewegung ist beim Gorilla (0x1b33)
+         * 1.7x der rohen Clip-Rootbewegung = das Krabbel-/Lunge-TEMPO. */
+        int32_t dx = wn[0] - wp[0], dz = wn[2] - wp[2];
+        if (e->render_scale_q12) {
+            dx = (dx * (int32_t)e->render_scale_q12) >> 12;
+            dz = (dz * (int32_t)e->render_scale_q12) >> 12;
+        }
+        e->x -= dx;                                    /* @0x8011bfe4-e8 */
+        e->z -= dz;                                    /* @0x8011c004-08 */
+    }
 }
 static void re15_maggot_bf50(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 14 + 3 * a1); }
 static void re15_maggot_c024(re15_actor_t *e, int a1) { re15_maggot_footlock(e,  6 + 4 * a1); }
@@ -8184,6 +8280,15 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
         e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
+        /* RENDER-SCALE: Flag 0x800 an @0x80117138 (ori v0,v0,0x800) + +0x166 = 0x1b33
+         * (= 6963/4096 = 1.6999 ~ 1.7x) @0x80117148-4c; Override wenn Spawn-Byte +0x9
+         * Bit 0x40 (@0x80117164 andi 0x40): Scale = ((+0x9 & 0xf) + 10) * 0x1000 / 10
+         * (@0x80117170-90) = 1.0..2.5 in 0.1er-Schritten. Konsument: Render-Root
+         * FUN_8001e8c8 @0x8001e904/1e91c-40 (ScaleMatrix auf die Root-Matrix).
+         * Savestate-Beweis: mzd_stage1_maggot.sav, beide 0x27-Entities 0x166=0x1b33. */
+        e->render_scale_q12 = 0x1b33;                         /* @0x80117148-4c */
+        if (e->grid_id & 0x40)                                /* @0x80117164 */
+            e->render_scale_q12 = (int16_t)((((e->grid_id & 0xf) + 10) * 0x1000) / 10);  /* @0x80117170-90 */
         break;
 
     case 1: {  /* ACTIVE brain 0x80117254 */
@@ -8606,6 +8711,19 @@ static void re15_maggot_ai_tick(int slot)
             e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
             break;
         }
+        /* AIM-BAND-Stempel (Brain-Tail @0x80117380-e8, VOR den Timern): Baender loeschen
+         * (flags &= 0x1fffffff @0x80117380-98), dann Boden: LEVEL @0x801173a8-b8 +
+         * DOWN wenn dist<0xfa0=4000 (jal FUN_80012974(0xfa0) @0x801173a4 -> |=0x20000000
+         * @0x800129cc-f0); airborne (+0x1e0): NOCHMAL loeschen @0x801173c8 + NUR UP wenn
+         * dist<0x1388=5000 (jal FUN_80012a0c(0x1388) @0x801173d4 -> |=0x80000000
+         * @0x80012a70-88). Kodierung Bit 1=DOWN / 2=LEVEL / 4=UP; Verbraucher =
+         * Resolver-Band-Gate re15_damage.c (Hund-Muster). Vorher fiel 0x27 in den
+         * pauschalen LEVEL-Zweig: nach UNTEN zielen traf NIE, der springende Gorilla
+         * war faelschlich LEVEL-treffbar (gorilla_11c0/verhalten.md D1). */
+        if (e->mag_airborne)
+            e->aim_band = (uint8_t)((dist < 0x1388) ? 4 : 0);
+        else
+            e->aim_band = (uint8_t)(2 | ((dist < 0xfa0) ? 1 : 0));
         /* brain TAIL (audit #16): the timers count down EVERY brain tick AFTER the A/B dispatch —
          * +0x1dc @0x801173f8-40c, +0x1e1 @0x8011741c-38. (+0x1de blocked-frames counter
          * @0x80117448-6c has no consumer in the shipped subs.) */
@@ -8774,6 +8892,19 @@ static void re15_maggot_ai_tick(int slot)
                * @0x8011be34-4c) and 6 (0x8011c598) have no STAGE1 writer -> resume the brain */
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
         break;
+    }
+
+    /* ROOT-Post-Pass @0x80116e40-44: `jal 0x8002aec4(a0=SPIELER 0x800aca54, a1=Gorilla)` —
+     * der GORILLA wird JEDEN Tick aus der Spieler-Ellipse herausgeschoben (Rueckgabe
+     * +0x1d2 hat keinen Leser — Voll-Scan, nur der Positions-Effekt zaehlt). Der Spieler
+     * steht NICHT im b544-Array, darum der separate Aufruf; re15_enemy_body_push_tail
+     * beginnt bei SLOT_PLAYER+1 und ueberspringt ihn. Vorher fehlte der Pass: Leon wurde
+     * (nur) vom Spieler-Tick-Push geschoben statt der Boss abzugleiten — Mit-Verursacher
+     * "Leon clippt in unerreichbare Bereiche" (gorilla_11c0/verhalten.md D2; Muster =
+     * Kraehen-Root aec4 @0x801121d4). */
+    {
+        re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        re15_body_push(plr, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
     }
 }
 

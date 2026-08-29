@@ -130,5 +130,8 @@ void re15_player_push_reset(void);
  * EMR-Keyframes, aus der das Original in FUN_800369f8 Modus 0 den Schiebe-Schritt zieht). */
 void re15_player_set_pl00_banks(const re15_emd_skeleton_t *skel,
                                 const re15_emd_animation_t *anim);
+/* Frame-Anzahl eines PL00-Clips (0 = Bank fehlt/ausser Bereich) — Gorilla-Wurf-
+ * Aufsteher (Hook 0x8011c118 P3-P6: Leons Clips 0x10/0xb, enemy_ai_common.c). */
+int re15_player_pl00_clip_frames(int clip);
 
 #endif /* RE15_PLAYER_H */

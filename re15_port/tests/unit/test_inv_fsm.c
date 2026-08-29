@@ -766,9 +766,21 @@ static void wavemap_tests(void)
     re15_inv_map_marker(-40000, -40000, 2, &mx, &my);
     CHECK(mx == 83 && my == 153, "(M4) row2 world(-40000) -> (83,153) — floor-shift + "
           "trunc-div mix, is (%d,%d)", mx, my);
-    /* placeholder row 0 {0,0,1,1} (@0x800768B0): everything collapses to (0,0) */
+    /* placeholder row 0 {0,0,1,1} (@0x800768B0): im STOCK-Modus kollabiert alles auf
+     * (0,0) — das ist der Beta-Defekt. Mit MARKER-REPARATUR (Default, Nutzer-Auftrag
+     * 2026-08-30) liefert der Slot die reparierte Zeile aus re15_map_row_fix.h und
+     * landet NICHT mehr in der Ecke. */
+    re15_map_stock_set(1);
     re15_inv_map_marker(0, 0, 0, &mx, &my);
-    CHECK(mx == 0 && my == 0, "(M4) row0 placeholder -> (0,0), is (%d,%d)", mx, my);
+    CHECK(mx == 0 && my == 0, "(M4) STOCK: row0 placeholder -> (0,0), is (%d,%d)", mx, my);
+    /* Reparatur-Check am Slot 20 (0x1140 — Platzhalter-Zeile, Fix-Tabelle traegt ihn;
+     * Slot 0 = 0x1000 ist bewusst UNZUGEORDNET -> bleibt auch repariert bei (0,0)). */
+    re15_inv_map_marker(0, 0, 20, &mx, &my);
+    CHECK(mx == 0 && my == 0, "(M4) STOCK: Slot-20-Platzhalter -> (0,0), is (%d,%d)", mx, my);
+    re15_map_stock_set(0);
+    re15_inv_map_marker(0, 0, 20, &mx, &my);
+    CHECK(!(mx == 0 && my == 0) && mx > 0 && my > 0 && mx < 320 && my < 256,
+          "(M4) REPARIERT: Slot-20-Marker projiziert in die Seite, is (%d,%d)", mx, my);
 
     /* restore the session state (ROOM1140) for any later consumer */
     re15_inv_map_stage_init(0, 20);
@@ -1235,21 +1247,31 @@ int main(void)
     CHECK(g_inv_screen.item_state == 1 && re15_menu_item_c3() == 0,
           "(5) upload frame -> 25c2=1 + 25c3=0 (@0x8004c204-210/0x8004c1cc)");
     CHECK(g_inv_screen.substate == 1, "(5) substate mirror for the draw gate");
-    CHECK(g_inv_screen.map_marker_x == 0 && g_inv_screen.map_marker_y == 0,
-          "(5) marker for slot-20 row {0,0,1,1} at world (0,0) = (0,0), is (%d,%d)",
+    /* Slot 20 (0x1140) hat die Platzhalter-Zeile {0,0,1,1}: im Stock kollabierte der
+     * Marker auf (0,0) — mit der MARKER-REPARATUR (Default) projiziert er in die
+     * Seite (reparierte Zeile aus re15_map_row_fix.h, Footprint->Rect-Fit). */
+    CHECK(g_inv_screen.map_marker_x > 0 && g_inv_screen.map_marker_y > 0 &&
+          g_inv_screen.map_marker_x < 320 && g_inv_screen.map_marker_y < 256,
+          "(5) REPARIERT: Slot-20-Marker projiziert in die Seite, is (%d,%d)",
           g_inv_screen.map_marker_x, g_inv_screen.map_marker_y);
     /* display list while the gate is on: the MAP set (marker on TEX4 + 2 fixed
      * sprites + page-4 rects on the MAP page) + the 4 g11 screws.
      * RE2-KARTENSYSTEM (Port-Erweiterung 2026-08-30): zugeordnete, UNBESUCHTE Rects
      * werden nicht mehr gezeichnet (RE2 FUN_8006e120 @0x8006e4c4-72c: unbesucht ohne
-     * Karte -> kein Prim). Auf Seite 4 ist genau Rect 2 zugeordnet (0x1150/51,
-     * re15_map_rooms.h) -> mit leerem Besucht-Speicher 2+6 Ops, nach Besuch 2+7. */
+     * Karte -> kein Prim). Die Zuordnungs-Tabelle (re15_map_rooms.h) waechst noch —
+     * deshalb nicht den absoluten Count pinnen, sondern das STABILE Anker-Rect 2
+     * (= 0x1150, IoU 0.84 ueber die EXE-eigene Marker-Zeile): ohne Besuch fehlt
+     * GENAU dieses Rect, nach Besuch von 0x1150 kommt GENAU ein Op dazu. */
     {
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        /* Seite-4-Rect-2-Screen-Position: Liste @0x80076468 (pair @0x80076840+4*8),
+         * Eintrag 2 = {x=120, y=80, w=32, h=40} — EXE-Bytes, ausserhalb des inv_ui-
+         * Blob-Fensters [0x80074A8C,0x80076614), deshalb hier als Konstante. */
+        const int r2x = 120, r2y = 80;
         re15_map_visited_reset();
         g_current_room_id = 0x9999;    /* kein zugeordneter Raum aktuell */
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0;
+        int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0, have_r2 = 0;
         for (i = 0; i < n; i++) {
             if (ops[i].kind != RE15_INV_OP_SPRT) continue;
             if (ops[i].page == RE15_INV_PAGE_MAP4) {
@@ -1260,6 +1282,7 @@ int main(void)
                     ops[i].h == 0x20 && ops[i].u == 0 && ops[i].v == 0) have_s1 = 1;
                 if (ops[i].x == 0x10e && ops[i].y == 0x28 && ops[i].w == 0x20 &&
                     ops[i].h == 0x30 && ops[i].u == 0x60 && ops[i].v == 0) have_s2 = 1;
+                if (ops[i].x == r2x && ops[i].y == r2y) have_r2 = 1;
             }
             if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 8 && ops[i].h == 8 &&
                 ops[i].u == 224 && ops[i].v == 128 && ops[i].clut == 6)
@@ -1268,19 +1291,22 @@ int main(void)
                 ops[i].u == 112)
                 nscrew++;
         }
-        CHECK(nmap == 2 + 6, "(5) MAP-page ops = 2 sprites + 6 page-4 rects "
-              "(count 7 @0x80076840+4*8, minus Rect 2 = 0x1150 unbesucht/RE2-System), "
-              "is %d", nmap);
-        /* Besuch markieren -> Rect 2 erscheint wieder (gruen), voller Stock-Count */
+        CHECK(!have_r2, "(5) Rect 2 (= 0x1150, unbesucht) wird NICHT gezeichnet "
+              "(RE2-System: kein Prim fuer unbesuchte Raeume)");
+        /* Besuch markieren -> genau Rect 2 kommt dazu */
         {
-            int n2, i2, nmap2 = 0;
+            int n2, i2, nmap2 = 0, have_r2b = 0;
             re15_map_visited_mark(0x1150);
             n2 = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
             for (i2 = 0; i2 < n2; i2++)
                 if (ops[i2].kind == RE15_INV_OP_SPRT &&
-                    ops[i2].page == RE15_INV_PAGE_MAP4) nmap2++;
-            CHECK(nmap2 == 2 + 7, "(5) nach Besuch von 0x1150: 2 sprites + alle 7 "
-                  "page-4 rects, is %d", nmap2);
+                    ops[i2].page == RE15_INV_PAGE_MAP4) {
+                    nmap2++;
+                    if (ops[i2].x == r2x && ops[i2].y == r2y) have_r2b = 1;
+                }
+            CHECK(have_r2b && nmap2 == nmap + 1,
+                  "(5) nach Besuch von 0x1150: Rect 2 erscheint, genau +1 Op "
+                  "(vorher %d, jetzt %d)", nmap, nmap2);
             re15_map_visited_reset();
             n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
             for (i = 0, nmap = 0; i < n; i++)

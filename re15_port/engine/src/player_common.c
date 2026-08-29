@@ -375,6 +375,15 @@ void re15_player_set_pl00_banks(const re15_emd_skeleton_t *sk, const re15_emd_an
  * genau die Komposition, die auch der Renderer fuer den Grab-Override baut. NULL, solange
  * die Plattform die Bank noch nicht gespiegelt hat (dann greift der Rueckfall). */
 const re15_emd_skeleton_t *re15_player_pl00_skel(void) { return s_pl00_skel; }
+/* Frame-Anzahl eines PL00-Clips (0 wenn Bank nicht gespiegelt / Clip ausser Bereich) —
+ * Verbraucher: der Gorilla-Wurf-Opferhandler (Hook 0x8011c118 P3-P6 spielt Leons
+ * EIGENE Clips 0x10/0xb, enemy_ai_common.c). */
+int re15_player_pl00_clip_frames(int clip)
+{
+    if (s_pl00_anim && clip >= 0 && clip < s_pl00_anim->clip_count)
+        return s_pl00_anim->clips[clip].frame_count;
+    return 0;
+}
 static int push_clip_fc(int clip)
 {
     if (s_pl00_anim && clip >= 0 && clip < s_pl00_anim->clip_count &&

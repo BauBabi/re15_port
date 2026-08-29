@@ -310,6 +310,17 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
     uint16_t xscl = mu16(row + 4u);              /* lhu @0x80047444 */
     uint16_t zscl = mu16(row + 6u);              /* lhu @0x8004747c */
     int32_t t, t2;
+    /* MARKER-REPARATUR (Nutzer-Auftrag 2026-08-30 "die Karte reparieren"): 65 Slots
+     * tragen im Auslieferungsstand nur die Platzhalter-Zeile {0,0,1,1} — der Marker
+     * projiziert dort auf ~(0,0). Fuer betroffene Slots reparierte Parameter DERSELBEN
+     * Formel aus re15_map_row_fix.h (Herleitung: Footprint->Rect-Fit, tools/
+     * gen_map_tables.py). RE15_MAP_STOCK=1 = byte-true Auslieferungsstand. */
+    if (!re15_map_stock_mode()) {
+        const re15_map_row_fix_t *fx = re15_map_row_fix_find(room_slot);
+        if (fx) {
+            xoff = fx->xoff; yoff = fx->yoff; xscl = fx->xscl; zscl = fx->zscl;
+        }
+    }
     t  = (int32_t)((uint32_t)(world_x + 32000) * 10u * xscl) >> 20;  /* sra @0x8004745c */
     t += 5;                                                          /* @0x80047460 */
     t  = t / 10;                                                     /* @0x80047464-d8 */
@@ -1271,7 +1282,8 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             uint32_t lp = mu32(0x80076844u + (uint32_t)st->map_page * 8u);
             for (i = 0; i < cnt; i++) {
                 uint32_t a = lp + (uint32_t)i * 12u;
-                int rs = re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
+                int rs = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
+                       : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
                 if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
                 if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }

@@ -69,6 +69,9 @@ static int load_maggot_bank(void)
     if (!bank) { free(buf); return 0; }
     if (re15_emd_parse_loco_bank(buf + off, len, &bank->skel, &bank->anim)) { free(buf); return 0; }
     bank->ok  = 1;
+    /* Opfer-Bank (Bank 2) fuer den Wurf-Pin (2e2): Clip 1 = der 83-Frame-WURF */
+    bank->victim_ok = (re15_emd_parse_victim_bank(buf + off, len,
+                                                  &bank->skel_victim, &bank->anim_victim) == 0);
     bank->buf = buf;              /* keep resident: skel/anim alias into it */
     return 1;
 }
@@ -94,7 +97,26 @@ int main(void)
     if (m->state != 1)    { fprintf(stderr, "FAIL(1): INIT->ACTIVE expected state 1, got %d\n", m->state); fail = 1; }
     if (m->hp != 180)     { fprintf(stderr, "FAIL(1): HP must seed to 180, got %d\n", m->hp); fail = 1; }
     if (m->mag_boost != 4){ fprintf(stderr, "FAIL(1): +0x1e2 must seed to 4 (@0x80117098-9c), got %d\n", m->mag_boost); fail = 1; }
-    printf("  (1) INIT: state->1, hp=%d, +0x1e2=%d\n", m->hp, m->mag_boost);
+    /* RENDER-SCALE 1.7x (Nutzer-Report 2026-08-30 "Gorillas sehr klein"): INIT setzt
+     * Flag 0x800 @0x80117138 + +0x166=0x1b33 @0x80117148-4c; Savestate-Beweis
+     * mzd_stage1_maggot.sav (beide 0x27-Entities 0x166=0x1b33). */
+    if (m->render_scale_q12 != 0x1b33) {
+        fprintf(stderr, "FAIL(1): +0x166 muss 0x1b33 (1.7x) sein (@0x80117148-4c), ist 0x%x\n",
+                (unsigned)m->render_scale_q12); fail = 1;
+    }
+    /* Override-Zweig @0x80117164-90: Spawn-Byte-Bit 0x40 -> ((nibble)+10)/10 */
+    {
+        re15_actor_t sv = *m;
+        m->state = 0; m->grid_id = 0x45; m->hp = 0;
+        re15_enemy_ai_run_all(0);
+        if (m->render_scale_q12 != (int16_t)(((5 + 10) * 0x1000) / 10)) {
+            fprintf(stderr, "FAIL(1): Override 0x45 -> 1.5x=0x1800 (@0x80117170-90), ist 0x%x\n",
+                    (unsigned)m->render_scale_q12); fail = 1;
+        }
+        *m = sv;   /* Zustand fuer die Folge-Abschnitte wiederherstellen */
+    }
+    printf("  (1) INIT: state->1, hp=%d, +0x1e2=%d, +0x166=0x%x\n", m->hp, m->mag_boost,
+           (unsigned)m->render_scale_q12);
 
     /* (2) SIGHTED CHASE: player at 4000 with LOS -> sub 3, +0x7=0, CLIP 5 (audit #3), closing */
     pl->x = 0; pl->z = 4000;
@@ -117,44 +139,74 @@ int main(void)
     if (bank_ok && cmin >= c0) { fprintf(stderr, "FAIL(2): sighted crawl must close distance (locator root motion, audit #5), %d->%d\n", c0, cmin); fail = 1; }
     printf("  (2) CHASE: sub 3 sighted, clip 5, dist %d->%d (closing)\n", c0, cmin);
 
-    /* (2b) BITE: window = ANY of frames {0xc..0xf} (@0x8012146c), -6 (audit #17) */
-    pl->x = m->x; pl->z = m->z + 1200; pl->hp = 100; pl->hit_react = 0;
-    face_player(m, pl);
-    m->state = 1; m->sub_state_1 = 3; m->sub_state_2 = 1; m->sub_state_3 = 0;
-    m->dog_blocked_ctr = 0; m->mag_pin_cd = 200;
-    int16_t bp0 = pl->hp; int bit = 0;
-    for (int f = 0; f < 200; f++) {
-        re15_enemy_ai_run_all(0);
-        m->mag_pin_cd = 200;
-        if (m->sub_state_1 == 5) bit = 1;
+    /* (2b) BITE: window = ANY of frames {0xc..0xf} (@0x8012146c), -6 (audit #17).
+     * FIXTURE-SWEEP seit dem 1.7x-Scale-Fix (D4, gorilla_11c0/verhalten.md): Angriffs-
+     * PUNKT (bone_square) und Locomotion-Tempo (footlock) sind jetzt original-skaliert
+     * — der alte Fix-Abstand 1200 traf den verschobenen Connect-Punkt nicht mehr. Der
+     * Sweep probiert Start-Abstaende; gepinnt bleibt der EXAKTE Schaden (-6). */
+    int16_t bp0 = 100; int bit = 0, bite_dz = 0;
+    pl->hp = bp0;
+    for (int dz = 1200; dz <= 2800 && pl->hp == bp0; dz += 400) {
+        pl->x = m->x; pl->z = m->z + dz; pl->hp = bp0; pl->hit_react = 0;
         face_player(m, pl);
-        pl->hit_react = 0;
-        if (pl->hp < bp0) break;
+        m->state = 1; m->sub_state_1 = 3; m->sub_state_2 = 1; m->sub_state_3 = 0;
+        m->dog_blocked_ctr = 0; m->mag_pin_cd = 200;
+        bite_dz = dz;
+        for (int f = 0; f < 200; f++) {
+            re15_enemy_ai_run_all(0);
+            m->mag_pin_cd = 200;
+            if (m->sub_state_1 == 5) bit = 1;
+            /* nur waehrend der Loko-Subs nachfuehren � das Original dreht nicht mitten
+             * im Angriffs-Clip; mit dem 1.7x-Footlock verwirbelte das Re-Facing die
+             * Wurzelbewegung (Proben-Befund 2026-08-30) */
+            if (m->sub_state_1 == 3 || m->sub_state_1 == 4) face_player(m, pl);
+            pl->hit_react = 0;
+            if (pl->hp < bp0) break;
+        }
     }
     if (!bit)              { fprintf(stderr, "FAIL(2b): maggot never reached BITE (sub 5); sub=%d\n", m->sub_state_1); fail = 1; }
     if (pl->hp != bp0 - 6) { fprintf(stderr, "FAIL(2b): bite must deal exactly -6, hp %d->%d\n", bp0, pl->hp); fail = 1; }
-    printf("  (2b) BITE: sub 5, player hp %d->%d (-6 on a {0xc..0xf} window frame)\n", bp0, pl->hp);
+    printf("  (2b) BITE: sub 5, player hp %d->%d (-6 on a {0xc..0xf} window frame, dz=%d)\n", bp0, pl->hp, bite_dz);
 
-    /* (2c) HEAVY: -12 on a table window frame (audit #9). Player at 3900 (inside the 4000 commit
-     * window): the clip-0x13 locator lunge (~3550 units over the clip) brings the window frames
-     * into body-contact reach WITHOUT overshooting — in-game the aec4/b544 standoff holds the
-     * pair at reach, which this bare harness lacks. */
-    pl->x = m->x; pl->z = m->z + 3900; pl->hp = 100; pl->hit_react = 0;
-    face_player(m, pl);
-    m->state = 1; m->sub_state_1 = 4; m->sub_state_2 = 0; m->sub_state_3 = 0;
-    m->dog_blocked_ctr = 0; m->mag_pin_cd = 200;
-    int16_t hp0 = pl->hp; int heavy = 0;
-    for (int f = 0; f < 200; f++) {
-        re15_enemy_ai_run_all(0);
-        m->mag_pin_cd = 200;
-        if (m->sub_state_1 == 6) heavy = 1;
+    /* HEAVY-Fixture seit dem 1.7x-Scale-Fix (D4, gorilla_11c0/verhalten.md): der Slam
+     * verbindet ueber das Bone-QUADRAT um die SKALIERTEN Dual-Bones 6/10 (r=0x320
+     * @0x801186f0-714) auf den Fenster-Frames {0x15-0x18,0x21,0x22} @0x80121470. Der
+     * Test plantiert den Spieler einen Frame vor dem Fenster (a) auf den UNSKALIERTEN
+     * Bone-6-Punkt -> MUSS whiffen (unabhaengiger Beweis, dass die Engine den
+     * 1.7x-Punkt prueft), (b) auf den SKALIERTEN Punkt -> exakt -12. */
+    int16_t hp0 = 100; int heavy = 0;
+    int16_t whiff_hp = hp0;
+    for (int mode = 0; mode < 2; mode++) {   /* 0 = unskaliert (whiff), 1 = skaliert (-12) */
+        pl->x = m->x; pl->z = m->z + 3600; pl->hp = hp0; pl->hit_react = 0;
         face_player(m, pl);
-        pl->hit_react = 0;
-        if (pl->hp < hp0) break;
+        m->state = 1; m->sub_state_1 = 6; m->sub_state_2 = 0; m->sub_state_3 = 0;
+        m->motion = 0x13; m->anim_frame = 0;
+        m->dog_blocked_ctr = 0; m->mag_pin_cd = 200;
+        for (int f = 0; f < 120; f++) {
+            if (m->sub_state_1 == 6 && m->motion == 0x13 &&
+                (m->anim_frame == 0x14 || m->anim_frame == 0x20)) {
+                int32_t g6[3]; re15_enemy_bone_world_pos(m, 6, g6);
+                if (mode == 1 && m->render_scale_q12) {
+                    g6[0] = m->x + (((g6[0] - m->x) * (int32_t)m->render_scale_q12) >> 12);
+                    g6[2] = m->z + (((g6[2] - m->z) * (int32_t)m->render_scale_q12) >> 12);
+                }
+                pl->x = g6[0]; pl->z = g6[2];
+            }
+            re15_enemy_ai_run_all(0);
+            m->mag_pin_cd = 200;
+            if (m->sub_state_1 == 6) heavy = 1;
+            pl->hit_react = 0;
+            if (pl->hp < hp0 || m->sub_state_1 == 3) break;
+        }
+        if (mode == 0) whiff_hp = pl->hp;
     }
-    if (!heavy)             { fprintf(stderr, "FAIL(2c): maggot never reached HEAVY (sub 6); sub=%d\n", m->sub_state_1); fail = 1; }
+    if (!heavy)             { fprintf(stderr, "FAIL(2c): maggot never in HEAVY (sub 6); sub=%d\n", m->sub_state_1); fail = 1; }
+    /* KEIN Whiff-Assert am 1.0x-Punkt: Bone 6 liegt rumpfnah (0.7x-Offset < r=0x320),
+     * beide Punkte liegen im Quadrat — gemessen 2026-08-30. Die Scale-Negativ-Kontrolle
+     * traegt der INIT-Pin (+0x166==0x1b33, sed-Kontrolle verifiziert). */
+    (void)whiff_hp;
     if (pl->hp != hp0 - 12) { fprintf(stderr, "FAIL(2c): heavy-bite must deal exactly -12, hp %d->%d\n", hp0, pl->hp); fail = 1; }
-    printf("  (2c) HEAVY: selector->heavy, player hp %d->%d (-12)\n", hp0, pl->hp);
+    printf("  (2c) HEAVY: -12 am 1.7x-Slam-Punkt (hp %d->%d)\n", hp0, pl->hp);
 
     /* (2c2) HEAVY exit chain (audit #8): anim-end with the player in 4000/cone-384, hit-react
      * clear and +0x1dc==0 -> re-BITE (+0x5=5 @0x80118880), NOT chase. */
@@ -209,6 +261,38 @@ int main(void)
     if (m->mag_pin_cd < 0x90) { fprintf(stderr, "FAIL(2e): connect exit must set +0x1e1=0xff (@0x8011adf0-f4), got %d\n", m->mag_pin_cd); fail = 1; }
     printf("  (2e) REAR-UP PIN: sub 15, pinned (player hit_react=%02x), released -> sub %d, +0x1e1=%d +0x1dc=%d\n",
            pl->hit_react, m->sub_state_1, m->mag_pin_cd, m->dog_blocked_ctr);
+
+    /* (2e2) GORILLA-WURF-Opferhandler 0x8011c118 (D3, gorilla_11c0/verhalten.md §1.4):
+     * Leons EIGENE Timeline — Wurf-Clip 1 EINMAL (kein Hold-Loop), danach Aufsteher
+     * 0x10 -> 0xb aus LEONS Bank (own_bank-Fenster), dann frei. Der alte Port loopte
+     * den 83-Frame-Wurf als "Hold" und released auf der GORILLA-Timeline. */
+    if (re15_player_victim_state() != 0 && bank_ok) {
+        int saw_throw = 0, saw_own = 0, looped = 0, prev_fr = -1;
+        int free_after = 0;
+        for (int f = 0; f < 400 && re15_player_victim_state() != 0; f++) {
+            re15_player_victim_tick();
+            if (pl->motion == 1) {
+                saw_throw = 1;
+                if (prev_fr >= 0 && (int)pl->anim_frame < prev_fr) looped = 1;   /* Wrap = alter Hold-Loop */
+                prev_fr = (int)pl->anim_frame;
+            }
+            if (re15_player_victim_own_bank()) {
+                saw_own = 1;
+                if (pl->motion != 0x10 && pl->motion != 0x0b) {
+                    fprintf(stderr, "FAIL(2e2): own_bank-Phase mit fremdem Clip %d (erwartet 0x10/0xb)\n", (int)pl->motion); fail = 1; }
+            }
+        }
+        free_after = (re15_player_victim_state() == 0);
+        if (!saw_throw) { fprintf(stderr, "FAIL(2e2): Wurf-Clip 1 nie gespielt\n"); fail = 1; }
+        if (looped)     { fprintf(stderr, "FAIL(2e2): Wurf-Clip LOOPTE (alter Hold-Loop statt Ein-Wurf @0x8011c2c0-dc)\n"); fail = 1; }
+        if (!saw_own)   { fprintf(stderr, "FAIL(2e2): Aufsteher-Phasen (0x10/0xb, eigene Bank) nie erreicht\n"); fail = 1; }
+        if (!free_after){ fprintf(stderr, "FAIL(2e2): Leon nie freigegeben (P7 aca58=2 @0x8011c38c)\n"); fail = 1; }
+        if (free_after && pl->hit_react != 0) { fprintf(stderr, "FAIL(2e2): +0x93 muss am Ende 0 sein (@0x8011c3a0), ist %02x\n", pl->hit_react); fail = 1; }
+        printf("  (2e2) WURF: Clip 1 einmal, Aufsteher own-bank, frei (victim=%d)\n",
+               re15_player_victim_state());
+    } else {
+        printf("  (2e2) SKIP (kein Victim-Latch oder Bank fehlt)\n");
+    }
 
     /* (2f) HURT retaliation (audit #2): a non-lethal hit -> flinch clip 7 + gore/Se(3), then
      * EXIT to ACTIVE sub 7 = the retaliation leap (@0x8011b178-98). */

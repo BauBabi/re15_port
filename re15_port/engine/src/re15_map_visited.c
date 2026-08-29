@@ -53,7 +53,30 @@ void re15_map_visited_import(const uint8_t in[32]) { memcpy(s_visited, in, 32); 
  * Mehrere Raeume (auch Szenario-Varianten) duerfen dasselbe Rect teilen; es gewinnt
  * der staerkste Zustand: aktueller Raum > besucht > unbesucht. Rects ohne Zuordnung
  * melden 0 (der Zeichner laesst sie im Stock-Neutralton stehen). */
+#include <stdlib.h>
 #include "re15_map_rooms.h"
+#include "re15_map_row_fix.h"
+
+static int s_stock_mode = -1;   /* -1 = noch nicht aus der Umgebung gelesen */
+
+int re15_map_stock_mode(void)
+{
+    if (s_stock_mode < 0) {
+        const char *e = getenv("RE15_MAP_STOCK");
+        s_stock_mode = (e && e[0] == '1') ? 1 : 0;
+    }
+    return s_stock_mode;
+}
+
+/* Nur fuer Tests: Modus direkt setzen (-1 = beim naechsten Aufruf wieder Umgebung). */
+void re15_map_stock_set(int v) { s_stock_mode = v; }
+
+const re15_map_row_fix_t *re15_map_row_fix_find(unsigned slot)
+{
+    for (size_t k = 0; k < sizeof s_map_row_fixes / sizeof s_map_row_fixes[0]; k++)
+        if (s_map_row_fixes[k].slot == slot) return &s_map_row_fixes[k];
+    return 0;
+}
 
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
 {

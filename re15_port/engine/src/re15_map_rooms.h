@@ -1,71 +1,138 @@
-/* GENERIERT (Ableitung: analysis/nutzer_batch_2026-08-30b/map-zuordnung.md):
- * Raum-Id -> (Karten-Seite, Rect-Index der EXE-Rect-Liste @0x80076840).
- * HERKUNFT je Basis-Raum: 'seed' = Mehrheits-Voting aller AOT-Zentren des Raums,
- * projiziert durch die EXE-EIGENE Marker-Zeile des Raums (@0x800768B0 + 8*Slot,
- * Slot = Stage-Basis {0,38,50,65,77,98} + Raum-Index, Formel FUN_800473f8
- * @0x8004741c-528), kleinste-Rect-Containment; 'seed-med' = relative Mehrheit +
- * Median-Punkt-Bestaetigung. Szenario-Varianten (0xSRR1) erben die Basis-Zuordnung
- * (Seite/Slot haengen nur am Raum-Index: FUN_8004b568 liest 0x800b0fe2).
- * 65 von 120 Basis-Raeumen tragen im Auslieferungsstand nur die PLATZHALTER-Zeile
- * {0,0,1,1} (Stock-Marker dort defekt) und bleiben hier bewusst UNZUGEORDNET ->
- * ihr Rect behaelt den Stock-Neutralton. Mehrere Raeume je Rect sind legitim
- * (Flur-/Phasen-Teilung, z.B. 5040+5120). */
+/* GENERIERT von tools/gen_map_tables.py (Ableitung: analysis/nutzer_batch_
+ * 2026-08-30b/map-zuordnung.md): Raum-Id -> (Karten-Seite, Rect-Index der
+ * EXE-Rect-Liste @0x80076840). Quellen je Basis-Raum: 'anker' = Footprint-
+ * Projektion durch die EXE-eigene Marker-Zeile (@0x800768B0+8*Slot, Formel
+ * FUN_800473f8 @0x8004741c-528), bestes IoU-Rect; 'tuer' = Tuer-Graph-Solver
+ * (Transform-Fit Footprint->Rect, Tuer-Positions-Kosten beider Tuerseiten);
+ * 'visuell' = Pruef-Agent-Korrektur am gerenderten Composite. Szenario-
+ * Varianten erben die Basis-Zuordnung. Mehrere Raeume je Rect sind legitim.
+ * Nicht zugeordnete Raeume fehlen bewusst -> Rect bleibt im Stock-Neutralton. */
 typedef struct { unsigned short room; unsigned char page, rect; } re15_map_room_rect_t;
 static const re15_map_room_rect_t s_map_room_rects[] = {
-    { 0x1020,  2,  1 },  /* seed 19/27 med=1 */
-    { 0x1021,  2,  1 },  /* seed 19/27 med=1 */
-    { 0x1030,  2,  4 },  /* seed-med 22/40 med=4 */
-    { 0x1031,  2,  4 },  /* seed-med 22/40 med=4 */
-    { 0x1040,  2,  2 },  /* seed 12/17 med=2 */
-    { 0x1041,  2,  2 },  /* seed 12/17 med=2 */
-    { 0x1070,  2,  3 },  /* seed 28/30 med=3 */
-    { 0x1071,  2,  3 },  /* seed 28/30 med=3 */
-    { 0x1150,  4,  2 },  /* seed 13/13 med=2 */
-    { 0x1151,  4,  2 },  /* seed 13/13 med=2 */
-    { 0x1170,  5,  1 },  /* seed 7/7 med=None */
-    { 0x1171,  5,  1 },  /* seed 7/7 med=None */
-    { 0x1190,  0,  1 },  /* seed-med 24/46 med=1 */
-    { 0x1191,  0,  1 },  /* seed-med 24/46 med=1 */
-    { 0x11B0,  0,  3 },  /* seed 20/20 med=3 */
-    { 0x11B1,  0,  3 },  /* seed 20/20 med=3 */
-    { 0x1200,  1,  2 },  /* seed 6/8 med=2 */
-    { 0x1201,  1,  2 },  /* seed 6/8 med=2 */
-    { 0x2000,  6,  0 },  /* seed 10/16 med=0 */
-    { 0x2001,  6,  0 },  /* seed 10/16 med=0 */
-    { 0x3000,  7,  0 },  /* seed 4/4 med=0 */
-    { 0x3001,  7,  0 },  /* seed 4/4 med=0 */
-    { 0x3030,  7,  3 },  /* seed 6/6 med=3 */
-    { 0x3031,  7,  3 },  /* seed 6/6 med=3 */
-    { 0x3040,  7,  4 },  /* seed 20/26 med=4 */
-    { 0x3041,  7,  4 },  /* seed 20/26 med=4 */
-    { 0x3070,  7,  7 },  /* seed 6/8 med=7 */
-    { 0x3071,  7,  7 },  /* seed 6/8 med=7 */
-    { 0x3080,  7,  0 },  /* seed 2/2 med=0 */
-    { 0x3081,  7,  0 },  /* seed 2/2 med=0 */
-    { 0x4010,  8,  1 },  /* seed 24/24 med=1 */
-    { 0x4011,  8,  1 },  /* seed 24/24 med=1 */
-    { 0x4030,  8,  3 },  /* seed 12/14 med=3 */
-    { 0x4031,  8,  3 },  /* seed 12/14 med=3 */
-    { 0x4090,  8,  9 },  /* seed 8/8 med=9 */
-    { 0x4091,  8,  9 },  /* seed 8/8 med=9 */
-    { 0x40A0,  8, 10 },  /* seed 22/22 med=10 */
-    { 0x40A1,  8, 10 },  /* seed 22/22 med=10 */
-    { 0x5010,  9,  1 },  /* seed 21/21 med=1 */
-    { 0x5011,  9,  1 },  /* seed 21/21 med=1 */
-    { 0x5030,  9,  3 },  /* seed-med 7/13 med=3 */
-    { 0x5031,  9,  3 },  /* seed-med 7/13 med=3 */
-    { 0x5040,  9,  4 },  /* seed 12/12 med=4 */
-    { 0x5041,  9,  4 },  /* seed 12/12 med=4 */
-    { 0x5060,  9,  6 },  /* seed 40/40 med=6 */
-    { 0x5061,  9,  6 },  /* seed 40/40 med=6 */
-    { 0x50A0,  9, 10 },  /* seed 12/16 med=10 */
-    { 0x50A1,  9, 10 },  /* seed 12/16 med=10 */
-    { 0x50C0, 10,  0 },  /* seed-med 6/10 med=0 */
-    { 0x50C1, 10,  0 },  /* seed-med 6/10 med=0 */
-    { 0x5110,  9,  3 },  /* seed-med 4/8 med=3 */
-    { 0x5111,  9,  3 },  /* seed-med 4/8 med=3 */
-    { 0x5120,  9,  4 },  /* seed 10/12 med=4 */
-    { 0x5121,  9,  4 },  /* seed 10/12 med=4 */
-    { 0x6030, 12,  5 },  /* seed-med 5/8 med=5 */
-    { 0x6031, 12,  5 },  /* seed-med 5/8 med=5 */
+    { 0x1020,  2,  1 },  /* anker */
+    { 0x1021,  2,  1 },  /* anker */
+    { 0x1030,  2,  4 },  /* anker */
+    { 0x1031,  2,  4 },  /* anker */
+    { 0x1040,  2,  2 },  /* anker */
+    { 0x1041,  2,  2 },  /* anker */
+    { 0x1070,  2,  3 },  /* anker */
+    { 0x1071,  2,  3 },  /* anker */
+    { 0x10D0,  3,  3 },  /* visuell */
+    { 0x10D1,  3,  3 },  /* visuell */
+    { 0x10E0,  3,  4 },  /* visuell */
+    { 0x10E1,  3,  4 },  /* visuell */
+    { 0x10F0,  3,  1 },  /* visuell */
+    { 0x10F1,  3,  1 },  /* visuell */
+    { 0x1100,  3,  0 },  /* visuell */
+    { 0x1101,  3,  0 },  /* visuell */
+    { 0x1110,  3,  5 },  /* visuell */
+    { 0x1111,  3,  5 },  /* visuell */
+    { 0x1120,  4,  5 },  /* visuell */
+    { 0x1121,  4,  5 },  /* visuell */
+    { 0x1130,  4,  4 },  /* visuell */
+    { 0x1131,  4,  4 },  /* visuell */
+    { 0x1140,  4,  6 },  /* korrigiert */
+    { 0x1141,  4,  6 },  /* korrigiert */
+    { 0x1150,  4,  2 },  /* anker */
+    { 0x1151,  4,  2 },  /* anker */
+    { 0x1170,  5,  1 },  /* visuell */
+    { 0x1171,  5,  1 },  /* visuell */
+    { 0x1180,  0,  2 },  /* visuell */
+    { 0x1181,  0,  2 },  /* visuell */
+    { 0x11B0,  0,  3 },  /* anker */
+    { 0x11B1,  0,  3 },  /* anker */
+    { 0x11C0,  0,  4 },  /* visuell */
+    { 0x11C1,  0,  4 },  /* visuell */
+    { 0x11E0,  1,  0 },  /* anker */
+    { 0x11E1,  1,  0 },  /* anker */
+    { 0x11F0,  1,  1 },  /* visuell */
+    { 0x11F1,  1,  1 },  /* visuell */
+    { 0x1200,  1,  2 },  /* anker */
+    { 0x1201,  1,  2 },  /* anker */
+    { 0x1210,  1,  3 },  /* anker */
+    { 0x1211,  1,  3 },  /* anker */
+    { 0x1220,  1,  7 },  /* visuell */
+    { 0x1221,  1,  7 },  /* visuell */
+    { 0x2000,  6,  0 },  /* anker */
+    { 0x2001,  6,  0 },  /* anker */
+    { 0x2020,  6,  4 },  /* visuell */
+    { 0x2021,  6,  4 },  /* visuell */
+    { 0x2060,  6,  2 },  /* visuell */
+    { 0x2061,  6,  2 },  /* visuell */
+    { 0x2080,  6,  1 },  /* visuell */
+    { 0x2081,  6,  1 },  /* visuell */
+    { 0x3000,  7,  0 },  /* anker */
+    { 0x3001,  7,  0 },  /* anker */
+    { 0x3010,  7,  1 },  /* anker */
+    { 0x3011,  7,  1 },  /* anker */
+    { 0x3020,  7,  2 },  /* visuell */
+    { 0x3021,  7,  2 },  /* visuell */
+    { 0x3030,  7,  3 },  /* anker */
+    { 0x3031,  7,  3 },  /* anker */
+    { 0x3040,  7,  4 },  /* anker */
+    { 0x3041,  7,  4 },  /* anker */
+    { 0x3060,  7,  6 },  /* anker */
+    { 0x3061,  7,  6 },  /* anker */
+    { 0x3070,  7,  7 },  /* anker */
+    { 0x3071,  7,  7 },  /* anker */
+    { 0x3080,  7,  8 },  /* anker */
+    { 0x3081,  7,  8 },  /* anker */
+    { 0x3090,  7,  9 },  /* anker */
+    { 0x3091,  7,  9 },  /* anker */
+    { 0x30A0,  7, 10 },  /* visuell */
+    { 0x30A1,  7, 10 },  /* visuell */
+    { 0x30C0,  7, 12 },  /* visuell */
+    { 0x30C1,  7, 12 },  /* visuell */
+    { 0x30E0,  7,  5 },  /* visuell */
+    { 0x30E1,  7,  5 },  /* visuell */
+    { 0x4000,  8,  0 },  /* anker */
+    { 0x4001,  8,  0 },  /* anker */
+    { 0x4010,  8,  1 },  /* anker */
+    { 0x4011,  8,  1 },  /* anker */
+    { 0x4030,  8,  3 },  /* anker */
+    { 0x4031,  8,  3 },  /* anker */
+    { 0x4090,  8,  4 },  /* visuell */
+    { 0x4091,  8,  4 },  /* visuell */
+    { 0x40A0,  8, 10 },  /* anker */
+    { 0x40A1,  8, 10 },  /* anker */
+    { 0x5000,  9,  0 },  /* visuell */
+    { 0x5001,  9,  0 },  /* visuell */
+    { 0x5010,  9,  1 },  /* anker */
+    { 0x5011,  9,  1 },  /* anker */
+    { 0x5030,  9,  7 },  /* anker */
+    { 0x5031,  9,  7 },  /* anker */
+    { 0x5040,  9,  4 },  /* anker */
+    { 0x5041,  9,  4 },  /* anker */
+    { 0x5060,  9,  6 },  /* anker */
+    { 0x5061,  9,  6 },  /* anker */
+    { 0x5070,  9,  9 },  /* visuell */
+    { 0x5071,  9,  9 },  /* visuell */
+    { 0x5080,  9,  5 },  /* visuell */
+    { 0x5081,  9,  5 },  /* visuell */
+    { 0x5090,  9, 11 },  /* korrigiert */
+    { 0x5091,  9, 11 },  /* korrigiert */
+    { 0x50A0,  9, 10 },  /* anker */
+    { 0x50A1,  9, 10 },  /* anker */
+    { 0x50B0,  9, 14 },  /* visuell */
+    { 0x50B1,  9, 14 },  /* visuell */
+    { 0x50C0, 10,  0 },  /* anker */
+    { 0x50C1, 10,  0 },  /* anker */
+    { 0x50D0, 10,  1 },  /* visuell */
+    { 0x50D1, 10,  1 },  /* visuell */
+    { 0x50E0, 10,  2 },  /* visuell */
+    { 0x50E1, 10,  2 },  /* visuell */
+    { 0x50F0, 11,  2 },  /* visuell */
+    { 0x50F1, 11,  2 },  /* visuell */
+    { 0x5100, 11,  0 },  /* anker */
+    { 0x5101, 11,  0 },  /* anker */
+    { 0x5110,  9,  7 },  /* visuell */
+    { 0x5111,  9,  7 },  /* visuell */
+    { 0x5120,  9,  4 },  /* anker */
+    { 0x5121,  9,  4 },  /* anker */
+    { 0x5140,  9, 10 },  /* anker */
+    { 0x5141,  9, 10 },  /* anker */
+    { 0x6000, 12,  0 },  /* visuell */
+    { 0x6001, 12,  0 },  /* visuell */
+    { 0x6030, 12,  1 },  /* visuell */
+    { 0x6031, 12,  1 },  /* visuell */
 };

@@ -186,6 +186,9 @@ void mesh_psx_render_test(int z_bucket, int32_t angle_4096,
 #include "re15_camera.h"
 #include "re15_md1.h"   /* re15_md1_t for the skeletal + prop renderers */
 #include "re15_emd.h"   /* re15_emd_skeleton_t for the skeletal renderer */
+/* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800, FUN_8001e8c8 @0x8001e904/1e940
+ * ScaleMatrix; Gorilla 0x27 = 0x1b33 = 1.7x @0x80117148-4c). 0 = aus. */
+void mesh_psx_set_render_scale(int16_t q12);
 void mesh_psx_render_skeletal(int z_bucket,
                               const re15_camera_view_t *view,
                               const re15_md1_t *md1,

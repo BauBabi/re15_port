@@ -76,8 +76,8 @@ int main(void)
     CHECK("nach Reset: 0x1150 unbesucht", re15_map_visited(0x1150) == 0);
     CHECK("Rect (4,2) [0x1150] = UNVISITED (wird nicht gezeichnet)",
           re15_map_rect_state(4, 2) == RE15_MAP_RECT_UNVISITED);
-    CHECK("unzugeordnetes Rect (3,0) = UNMAPPED (Stock-Neutralton)",
-          re15_map_rect_state(3, 0) == RE15_MAP_RECT_UNMAPPED);
+    CHECK("unzugeordnetes Rect (Index 99 existiert in keiner Tabelle) = UNMAPPED",
+          re15_map_rect_state(3, 99) == RE15_MAP_RECT_UNMAPPED);
 
     /* --- (2) AUFRUFER-Wache: der echte Raum-Lade-Choke-Point markiert --- */
     if (!enter("STAGE1/ROOM1150.RDT", 0x1150)) { printf("SKIP: 1150 fehlt\n"); return 77; }

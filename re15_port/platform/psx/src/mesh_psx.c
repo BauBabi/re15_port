@@ -179,6 +179,10 @@ static void mesh_psx_load_bone_light_matrix(const re15_actor_lightctx_t *ctx,
 /* #2: per-render texture override. >=0 = use this tpage/clut for ALL polys
  * (props with their own relocated TIM); -1 = use the MD1's baked page via
  * remap_md1_tpage + baked clut (Leon, who spans 3 tpages so per-tri matters). */
+/* ENTITY-RENDER-SCALE (+0x166, Gate 0x800 — s. Q12-Anwendung im Draw): 0 = aus. */
+static int16_t s_render_scale_q12 = 0;
+void mesh_psx_set_render_scale(int16_t q12) { s_render_scale_q12 = q12; }
+
 static int s_tex_tpage_ovr = -1;
 static int s_tex_clut_ovr  = -1;
 /* #7 (RE'd from elliot.md1 bytes): a relocated character whose texture spans
@@ -802,6 +806,14 @@ void mesh_psx_render_skeletal(int z_bucket,
          0,      0x1000, 0,
         -face_s, 0,  face_c
     };
+    /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800, FUN_8001e8c8 @0x8001e904/1e940
+     * ScaleMatrix auf die Root-Matrix; Gorilla 0x27 = 0x1b33 = 1.7x @0x80117148-4c).
+     * Setter: mesh_psx_set_render_scale (0 = aus), gesetzt vom Actor-Zeichner. */
+    if (s_render_scale_q12) {
+        int sk;
+        for (sk = 0; sk < 9; sk++)
+            yaw_rot[sk] = (yaw_rot[sk] * (int32_t)s_render_scale_q12) >> 12;
+    }
 
     /* GTE HARDWARE NCCT (canonical, replaces the software per-vertex path):
      * build this actor's light context with eval_pos = the actor's OWN world

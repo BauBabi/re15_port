@@ -1373,12 +1373,25 @@ retry_after_latch:
                      * die niedrigen Arme nach UNTEN zielte, traf NIE (Nutzer-Report 2026-08-29
                      * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund). */
                     eband = 0x40000000u | 0x20000000u;
+                } else if (e->type == 0x27) {
+                    /* GORILLA-BOSS: Band aus dem Brain-Tail-Stempel (enemy_ai_common.c,
+                     * @0x80117380-e8): Boden = LEVEL + DOWN(dist<0xfa0=4000, FUN_80012974
+                     * @0x801173a4 -> @0x800129cc-f0); airborne (+0x1e0) = NUR UP
+                     * (dist<0x1388=5000, FUN_80012a0c @0x801173d4 -> @0x80012a70-88).
+                     * VORHER pauschal LEVEL: nach UNTEN zielen auf das niedrige Krabbelvieh
+                     * traf NIE (Nutzer-Report 2026-08-30 "Gorillas verhalten sich nicht
+                     * original"; gorilla_11c0/verhalten.md D1 — dieselbe Bug-Klasse wie der
+                     * Hund-Fix). Kodierung Bit 1=DOWN / 2=LEVEL / 4=UP. */
+                    eband = ((e->aim_band & 2) ? 0x40000000u : 0u) |
+                            ((e->aim_band & 1) ? 0x20000000u : 0u) |
+                            ((e->aim_band & 4) ? 0x80000000u : 0u);
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
-                     * uebrigen Familien stempeln mit anderen Helfern/Radien — Maggot @0x801173a8-b8,
-                     * die generischen 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form
-                     * wie oben). Bis jede davon einzeln disassembliert ist, bleibt fuer sie das
-                     * bisherige Verhalten unveraendert stehen. (Hund seit 2026-08-29 oben geloest.) */
+                     * uebrigen Familien stempeln mit anderen Helfern/Radien — die generischen
+                     * 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form wie oben).
+                     * Bis jede davon einzeln disassembliert ist, bleibt fuer sie das
+                     * bisherige Verhalten unveraendert stehen. (Hund 2026-08-29, Maggot
+                     * 2026-08-30 oben geloest.) */
                     if (e->grid_id & 0x80)
                         eband = (bdist < 0x1388u) ? 0x20000000u : 0u;  /* @0x80101630-38 -> @0x800129cc-f0 */
                     else

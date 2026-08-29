@@ -348,6 +348,10 @@ int re15_actor_clip_len_legacy(const re15_actor_t *a);
  * re15_player_victim_reset(): clear on room change / death-continue reload. */
 int      re15_player_victim_state(void);
 uint8_t  re15_player_victim_type(void);
+/* GORILLA-WURF (0x27, Hook 0x8011c118): 1 waehrend der Aufsteher-Phasen P3-P6 — Leon
+ * spielt dann Clips 0x10/0xb aus seiner EIGENEN Bank; der Renderer laesst den
+ * Opfer-Bank-Override weg (P4/P6 anim_set auf [acad8]/[acbc0] @0x8011c34c-60). */
+int      re15_player_victim_own_bank(void);
 void     re15_player_victim_tick(void);
 void     re15_player_victim_reset(void);
 /* The zombie THROW-OFF [4] starts Leon's release finish in lockstep (DAT_800aca5a=4 / clip base+2). */

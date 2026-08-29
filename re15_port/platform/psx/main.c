@@ -648,6 +648,9 @@ int main(int argc, const char **argv)
             /* Byte-true FRAC crossfade: tell re15_skel_compute_pose which actor this
              * body is so it can blend the new clip in from the actor's prior pose. */
             g_anim_pose_actor = a;
+            /* ENTITY-RENDER-SCALE +0x166 (Gate 0x800, FUN_8001e8c8 @0x8001e904/1e940;
+             * Gorilla 0x27 = 0x1b33 = 1.7x @0x80117148-4c). 0 = aus. */
+            mesh_psx_set_render_scale(a->render_scale_q12);
             mesh_psx_render_skeletal(/*z*/ 3,
                                      &cam_view, amd1, askel,
                                      a->x, a->y, a->z,
