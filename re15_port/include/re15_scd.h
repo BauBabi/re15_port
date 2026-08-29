@@ -571,6 +571,13 @@ void           scd_register_room_events(const re15_rdt_t *rdt);
 typedef void (*re15_player_model_sync_fn)(void);
 void           re15_scd_set_player_model_sync(re15_player_model_sync_fn fn);
 
+/* R.P.D.-Weste (Nutzer-Erweiterung 2026-08-29, Belege in scd_room_setup.c):
+ * Bonus (+5 bei Flag(3,0x75)), Modell-Reload-Heilung (Analog FUN_800314b0
+ * @0x80031710/18) und der Spiegel des geladenen Modell-Index fuer Save/Load. */
+int16_t re15_vest_hp_bonus(void);
+void    re15_vest_model_mark(int16_t m);
+void    re15_vest_hp_on_model_reload(void);
+
 void           scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                                 uint8_t entry_scenario);
 /* Signal from the door AOT scan: a same-room door whose entry scenario triggers a

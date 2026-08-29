@@ -520,6 +520,17 @@ target_include_directories(test_writher_hit_feedback PRIVATE ${CMAKE_SOURCE_DIR}
 add_test(NAME unit_writher_hit_feedback COMMAND test_writher_hit_feedback)
 set_tests_properties(unit_writher_hit_feedback PROPERTIES TIMEOUT 30)
 
+# --- R.P.D.-Weste (Nutzer-Erweiterung 2026-08-29): Anlegen heilt 100+5 (Reload-Analog
+#     FUN_800314b0 @0x80031710/18), 21 statt 20 Bisse (-5 @0x801027dc), Vollheilung
+#     erhaelt den Bonus, Save/Load rekonstruiert das Modell aus Flag(3,0x75). ---
+add_executable(test_weste_effekt test_weste_effekt.c)
+target_link_libraries(test_weste_effekt PRIVATE re15_engine re15_test_support)
+target_include_directories(test_weste_effekt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_weste_effekt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_weste_effekt COMMAND test_weste_effekt)
+set_tests_properties(unit_weste_effekt PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

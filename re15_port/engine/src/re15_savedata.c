@@ -10,6 +10,7 @@
 #include "re15_collision.h"   /* re15_collision_set_band / band_from_y — resume floor band */
 #include "re15_damage.h"      /* re15_player_equipped_weapon / _set_equipped_weapon (DAT_800aca5d) */
 #include "re15_savepoint.h"   /* re15_savepoint_loc — Ortsnamen-Index (Patch-Analog 0x800B0FBF) */
+#include "re15_scd.h"         /* Weste: Flag(3,0x75) -> work_vars[0x10]-Rekonstruktion */
 #include <string.h>
 #include <stddef.h>
 
@@ -134,6 +135,17 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
     re15_player_set_equipped_weapon(in->weapon_id);
     re15_inv_set_equipped_slot(in->equipped_slot);
     memcpy(g_game.flags, in->flags, sizeof(g_game.flags));
+    /* R.P.D.-WESTE: work_vars werden nicht serialisiert (das Original speichert
+     * 0x800b0ff0 im Save-Record-memcpy @0x800261c4-d8 mit) — den Modell-Index aus dem
+     * save-persistenten Flag(3,0x75) rekonstruieren, sonst laedt der naechste Raum
+     * Leon ohne Weste ("Modell-Desync nach Load"). Den Engine-Spiegel mitziehen,
+     * damit der Reload-Heiler (re15_vest_hp_on_model_reload) nach dem Load keinen
+     * falschen Wechsel sieht und die GESPEICHERTEN HP ueberschreibt. */
+    {
+        int16_t vm = re15_game_flag_get(3, 0x75) ? 1 : 0;
+        g_scd.work_vars[0x10] = vm;
+        re15_vest_model_mark(vm);
+    }
     re15_itembox_import(in->box);        /* v4 ITEM BOX contents survive load */
     /* v5 Wund-Restore — setzt IMMER alle 8 Panels (aeltere Saves laden Nullen aus dem
      * Upgrade-Pfad): behebt zugleich den Stale-Blut-Bug (analysis/save_injured_state.md

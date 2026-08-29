@@ -112,6 +112,41 @@ static re15_player_model_sync_fn s_player_model_sync = NULL;
 void re15_scd_set_player_model_sync(re15_player_model_sync_fn fn)
 { s_player_model_sync = fn; }
 
+/* ── R.P.D.-WESTE: HP-Wirkung (Nutzer-Auftrag 2026-08-29: "Die sollte Leons Energie
+ * insoweit erhoehen, dass er einen Zombie-Biss mehr aushaelt.") ───────────────────────
+ *
+ * ORIGINAL-BEFUND (analysis/nutzer_batch_2026-08-29/weste-effekt.md, Kern selbst
+ * nachdisassembliert): das Original hat KEINE Ruestungs-/Defense-Mechanik — weder in
+ * FUN_80012d60 (nur attack_type -> Tabelle @0x8006f418) noch im RE2-Applier; die EXE
+ * liest Flag(3,0x75) nirgends. ABER: der Modellwechsel-Load FUN_800314b0 endet mit
+ *     80031710  ori v0,zero,0x64
+ *     80031718  sh  v0,player.hp     ; HP := 100
+ * — im Original heilt das An-/Ablegen der Weste (= Selbst-Tuer-Reload) also VOLL.
+ *
+ * NACHRUESTUNG (klar benannt): Weste an = Max-HP-Bonus +5. Der Standard-Zombie-Biss
+ * kostet 5 (`addiu v0,v0,-5` @0x801027dc), Tod erst bei HP < 0 (bgez @0x80012ee8):
+ * ohne Weste 20 Bisse ueberlebbar (100/5), mit 105 genau 21 = EIN Biss mehr — die
+ * minimale Zahl, die den Auftrag erfuellt (B=10 gaebe schon zwei).
+ * Traeger des Zustands ist Flag(3,0x75) (save-persistent; work_vars[0x10] ist nur die
+ * Modell-Optik und wird beim Load daraus rekonstruiert, re15_savedata.c). */
+int16_t re15_vest_hp_bonus(void)
+{ return re15_game_flag_get(3, 0x75) ? 5 : 0; }
+
+static int16_t s_vest_model_seen = 0;   /* Engine-Spiegel des geladenen Modell-Index
+                                         * (@0x80039770 `beq v0,v1` vergleicht Nibble
+                                         * gegen work_vars[0x10]) */
+void re15_vest_model_mark(int16_t m) { s_vest_model_seen = m; }
+
+/* Am Analogpunkt von FUN_800314b0: nur wenn der Modell-Index WECHSELT (= das Original
+ * laedt neu), Vollheilung 100 (@0x80031710/18) + Weste-Bonus. */
+void re15_vest_hp_on_model_reload(void)
+{
+    int16_t mnow = g_scd.work_vars[0x10];
+    if (mnow == s_vest_model_seen) return;            /* @0x80039770: kein Reload */
+    s_vest_model_seen = mnow;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].hp = (int16_t)(100 + re15_vest_hp_bonus());
+}
+
 void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                       uint8_t entry_scenario)
 {
@@ -259,6 +294,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * im Raumlader FUN_800396fc @0x80039760-88, VOR der SCD-Raum-Init (FUN_8003ef6c,
      * gerufen @0x80039a00). Herleitung s. re15_scd_set_player_model_sync in re15_scd.h. */
     if (s_player_model_sync) s_player_model_sync();
+    re15_vest_hp_on_model_reload();
 
     re15_aot_init();                    /* clear AOT slots … */
     scd_register_room_events(rdt);      /* … then reinstall RVD@16 + register rdt */

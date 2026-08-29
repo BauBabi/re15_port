@@ -14,6 +14,7 @@
  */
 #include "re15_item_use.h"
 #include "re15_actor.h"         /* g_actors[PLAYER].hp / status_flags */
+#include "re15_scd.h"           /* re15_vest_hp_bonus — Weste-Nachruestung */
 
 /* Heal applier table @0x80010fbc (13 words), ids 0x22..0x2e, s0=100 (@0x8004ae14).
  * set=1 -> HP = 100 (absolute `sh s0`); else HP += add (raw, NO ceiling clamp
@@ -58,7 +59,11 @@ void re15_item_use_apply(uint8_t id)
     }
     {
         const re15_heal_t *h = &s_heal[id - 0x22];     /* jr [0x80010fbc+idx*4] @0x8004af50 */
-        if (h->set) pl->hp = 100;                      /* sh s0 (=0x64) — absolute full heal */
+        if (h->set) pl->hp = (int16_t)(100 + re15_vest_hp_bonus());
+                                                       /* sh s0 (=0x64) — absolute full heal;
+                                                        * +5 Weste-Nachruestung (sonst wuerde
+                                                        * jede Vollheilung den Bonus loeschen —
+                                                        * Belege scd_room_setup.c) */
         else        pl->hp = (int16_t)(pl->hp + h->add); /* raw add, NO clamp (@0x8004afa8-b0) */
         if (h->cure) pl->status_flags &= (uint16_t)~0x2u; /* clear poison @0x8004af8c */
     }
