@@ -167,8 +167,14 @@ int main(void)
 
     for (int f = 0; f < 400 && e->sub_state_1 != 7; f++) {
         if (e->state == 1 && (f % 20) == 0) {
-            re15_player_weapon_fire(3);            /* Waffen-Id 3 = Pistole, Kosten -1 */
-            schuesse++;
+            /* FIXTURE-KORREKTUR 2026-08-29: nur REGISTRIERTE Treffer zaehlen (Rueckgabe
+             * slot+1), nicht Versuche — seit der Flinch byte-true die volle Clip-2-Laenge
+             * spielt (+0x95=0 @0x8010d210) und +0x9c=0 (@0x8010d26c) die Lunge sofort
+             * re-armt, kann ein Versuch den gerade AUSGEFAHRENEN Arm (2420 an der
+             * Spieler-Position vorbei) verfehlen. Die Wache behauptet "Treffer" — jetzt
+             * misst sie sie. */
+            if (re15_player_weapon_fire(3) != 0)   /* Waffen-Id 3 = Pistole, Kosten -1 */
+                schuesse++;
         }
         re15_enemy_ai_run_all(0);
     }

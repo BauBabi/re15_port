@@ -511,6 +511,15 @@ target_compile_definitions(test_sherry_wall_pin PRIVATE
 add_test(NAME unit_sherry_wall_pin COMMAND test_sherry_wall_pin)
 set_tests_properties(unit_sherry_wall_pin PROPERTIES TIMEOUT 30)
 
+# --- Gitterhand-Treffer-Feedback (Nutzer-Report 2026-08-29): 0x1A ist LEVEL+DOWN-treffbar,
+#     Treffer betritt den byte-true Original-Flinch 0x8010d188 (Clip 2 + Blut @0x8010d268-8c),
+#     Budget < 0 -> Abtauchen (@0x8010d14c). ---
+add_executable(test_writher_hit_feedback test_writher_hit_feedback.c)
+target_link_libraries(test_writher_hit_feedback PRIVATE re15_engine re15_test_support)
+target_include_directories(test_writher_hit_feedback PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_writher_hit_feedback COMMAND test_writher_hit_feedback)
+set_tests_properties(unit_writher_hit_feedback PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

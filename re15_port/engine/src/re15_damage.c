@@ -1362,6 +1362,17 @@ retry_after_latch:
                      * Kriech-Root-Block oben) — fuer sie bleibt der bisherige LEVEL-Stand. */
                     eband = ((e->aim_band & 2) ? 0x40000000u : 0u) |
                             ((e->aim_band & 1) ? 0x20000000u : 0u);
+                } else if (e->type == 0x1a) {
+                    /* GITTERHAND (0x1A) — NACHRUESTUNGS-ZIEL: das Original liefert die Arme
+                     * OHNE HP aus (ROOM1210 Sce_em_set @0x1d86..0x1e4e, hp-Bytes 4-5 = 00 00;
+                     * der Arm-Baum 0x8010c1ec..0x8010d774 hat keinen +0x9a-Store) — sie sind
+                     * dort unschiessbar, das Anschiessen ist der Nutzer-Auftrag 2026-08-26.
+                     * Der Arm ragt auf Gitter-/Bodenhoehe heraus: LEVEL- UND DOWN-Schuesse
+                     * treffen (Bit-Konstanten = die Original-Baender 0x40000000/0x20000000);
+                     * UP geht vorbei. VORHER fiel er in den generischen LEVEL-Zweig — wer auf
+                     * die niedrigen Arme nach UNTEN zielte, traf NIE (Nutzer-Report 2026-08-29
+                     * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund). */
+                    eband = 0x40000000u | 0x20000000u;
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
                      * uebrigen Familien stempeln mit anderen Helfern/Radien — Maggot @0x801173a8-b8,

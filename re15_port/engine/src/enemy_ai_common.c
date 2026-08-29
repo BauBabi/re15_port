@@ -11863,7 +11863,31 @@ static void re15_writher_ai_tick(int slot)
             re15_player_victim_throwoff();
             e->re2z_t158 = 0;
         }
-        e->motion = 2; e->anim_frac = 7;                         /* +0x94=2 flinch, +0x8f=7 clip-start blend */
+        /* FLINCH-EINTRITT — byte-true aus dem Original-Flinch 0x8010d188 (der Code existiert
+         * im Auslieferungsstand, ist mangels HP nur nie erreichbar; selbst nachdisassembliert
+         * 2026-08-29, Nutzer-Report "keinerlei Treffer-Feedback"):
+         *   +0x7  = 1      @0x8010d1d4   (Phase; der Resolver nullt +0x7 bei jedem Treffer
+         *                                 @0x80012428 -> jeder Treffer betritt neu)
+         *   +0x94 = 2      @0x8010d200   (Flinch-Clip)
+         *   +0x95 = 0      @0x8010d210   (Clip-Neustart)
+         *   +0x8f = 3      @0x8010d220   (Blend 3 — die alte Port-7 war unbelegt)
+         *   +0x9c = 0      @0x8010d26c
+         *   BLUT: FUN_80019700(0x2000, +0x6a, part(+0x188)+0xEC = Bone 1, tbl @0x8011fe84)
+         *         @0x8010d268-8c — dasselbe Anker-Muster wie der Hund-Flinch.
+         * Ausgelassen (dokumentiert): +0x9f = +0x93>>7 Richtungs-Byte @0x8010d1e4-f0 und der
+         * Rueckstoss +0x8c=0xc8/pos_advance @0x8010d22c/@0x8010d2f8 — der Port-Arm ist
+         * ortsfest (Begruendung im Kopf dieses Falls). */
+        if (e->sub_state_3 == 0) {
+            e->sub_state_3 = 1;                              /* +0x7 = 1 @0x8010d1d4 */
+            e->motion = 2; e->anim_frame = 0;                /* +0x94=2 / +0x95=0 @0x8010d200/210 */
+            e->anim_frac = 3;                                /* +0x8f = 3 @0x8010d220 */
+            e->ai_timer = 0;                                 /* +0x9c = 0 @0x8010d26c */
+            {   int32_t g[3];
+                re15_enemy_bone_world_pos(e, 1, g);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                                     g[0], g[1], g[2], (int16_t)e->rot_y);   /* @0x8010d288 */
+            }
+        }
         if (re15_enemy_clip_done(e)) {
             /* ⛔ DAS TREFFER-BIT LOESCHEN — sonst ist der Arm nach EINEM Treffer nie wieder
              * ein Ziel. Byte-belegt am Zuck-Ende:
