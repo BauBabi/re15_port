@@ -479,6 +479,18 @@ target_include_directories(test_item_modal PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_item_modal COMMAND test_item_modal)
 set_tests_properties(unit_item_modal PROPERTIES TIMEOUT 30)
 
+# --- Item-Stapel-Pin (Nutzer-Report 2026-08-29): 1 SQUARE-Druck = 1 Grant; das zweite
+#     ueberlappende Item-AOT (ROOM1020 main00 @0x1d6a/@0x1d80) braucht einen NEUEN Druck.
+#     Pinnt die Plattform-Frame-Ordnung Modal-FSM NACH game_step (FUN_8001c6e8:
+#     @0x8001ce0c Dispatcher vor @0x8001ce34 Modal-FSM). ---
+add_executable(test_item_stack_press test_item_stack_press.c)
+target_link_libraries(test_item_stack_press PRIVATE re15_engine re15_test_support)
+target_include_directories(test_item_stack_press PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_item_stack_press PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_item_stack_press COMMAND test_item_stack_press)
+set_tests_properties(unit_item_stack_press PROPERTIES TIMEOUT 30)
+
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)
 target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)

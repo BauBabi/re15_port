@@ -3852,18 +3852,17 @@ re_title:;
          * 30fps target SCD ticks every frame. At 60fps target (env override),
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
         if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_item_modal_active()) {
-            /* ITEM-GET MODAL: while the pickup zoom/flip presentation runs, the byte-true freeze
-             * (g_pauseflags|=0xff000000) halts the SCD subsystem + walkers + fx here (and game_step
-             * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
-             * (incl. the modal quad) keeps running. The state-6 prompt reads the VIRTUAL edge word
-             * DAT_800ac76c (wave-6 finding 4): build it from the config-normalized physical edge
-             * (pc_pad_config -> re15_pad_virtual_word, table @0x80073dbc via FUN_80030444).
-             * The state-6 TYPEWRITER additionally needs the HELD word DAT_800ac768 for the byte-true
-             * text fast-forward (@0x8002820c `lw DAT_800ac768` + @0x80028214 `andi 0x4000`) — built the
-             * same way from pad_current. (g_scd_pad_held is NOT usable here: the SCD VM is frozen while
-             * the modal runs, so its held mirror is stale.) */
-            re15_item_modal_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)),
-                                 re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_current)));
+            /* ITEM-GET MODAL aktiv: byte-true Freeze — der SCD-Tick unterbleibt (das Original haelt
+             * mit g_pauseflags|=0xff000000 den SCD-Runner @0x8001cdec an; game_step early-returnt
+             * fuer Spieler/Gegner/Anim). Der MODAL-TICK selbst laeuft NICHT mehr hier, sondern NACH
+             * re15_game_step (siehe dort) — byte-true zur Frame-Ordnung des Original-Hauptloops
+             * FUN_8001c6e8: Spieler-Dispatcher @0x8001ce0c (jal 0x80031c44, einziger Weg zum
+             * ACTION-Scan @0x80031fe4) VOR der Modal-FSM @0x8001ce34 (jal 0x8001db28).
+             * An der alten Stelle (VOR dem Step) beendete der Bestaetigungs-SQUARE das Modal im
+             * selben Host-Frame (state 6->7->0), der Step lief danach weiter, las dieselbe
+             * Frame-Flanke (game_step_common.c g_aot_action_pressed) und der AOT-Scan feuerte das
+             * zweite, ueberlappende ITEM-AOT ohne neuen Druck (Nutzer-Report 2026-08-29
+             * "Item-Stapel"). */
         } else if ((target_fps == 30 || (g_engine.frame_count & 1) == 0)
                    && re15_menu_gameplay_frozen()) {
             /* STATUS SCREEN (wave 2): gameplay is FULLY SUSPENDED while the menu is open or
@@ -5165,6 +5164,31 @@ re_title:;
                     }
                 }
                 re15_game_step(&gctx);
+                /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des
+                 * Originals (Hauptloop FUN_8001c6e8: Dispatcher @0x8001ce0c `jal 0x80031c44` ->
+                 * ... -> Modal-FSM @0x8001ce34 `jal 0x8001db28`; selbst nachdisassembliert
+                 * 2026-08-29). Wirkung: (a) im Confirm-Frame sieht der Step das Modal noch AKTIV
+                 * (Early-Return game_step_common.c) -> kein ACTION-Scan mit der Confirm-Flanke;
+                 * im Folgeframe ist die Host-Flanke weg -> das zweite Item eines Stapels braucht
+                 * einen NEUEN SQUARE-Druck. Das Original sichert dasselbe zusaetzlich ueber den
+                 * Edge-Verbrauch des Confirms (`ori v0,zero,0xffff` @0x80028578 + `sw ->
+                 * DAT_800ac768` @0x80028588: Folgeframe-Flanke = (prev^held)&held = 0) und den
+                 * sce-9-Re-Arm-Guard auf den Modal-State (@0x8004332c/34). (b) der Modal-INIT
+                 * (state 1) tickt wieder im TRIGGER-Frame (der Scan armt s_state=1, die FSM tickt
+                 * danach) statt einen Host-Frame spaeter.
+                 * Pad-Woerter wie an der alten Stelle: VIRTUELLE Flanke/HELD (wave-6 finding 4,
+                 * Tabelle @0x80073dbc via FUN_80030444; Typewriter-FF liest DAT_800ac768
+                 * @0x8002820c/@0x80028214). Kadenz unveraendert 30 Hz.
+                 * OFFEN (eigene Paritaetsfrage, nicht dieser Report): das Original flutet beim
+                 * Message-Dismiss das virtuelle HELD-Wort (0xFFFF @0x80028588, auch page-advance
+                 * @0x80028468 / full-message @0x800286b0) — dadurch ist dort im Folgeframe JEDE
+                 * Taste flankenlos, nicht nur SQUARE. Der Port hat kein persistentes
+                 * prev/held/edge-Tripel; falls das je sichtbar wird, gehoert der Verbrauch in ein
+                 * eigenes virtuelles Pad-Modell. */
+                if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_item_modal_active()) {
+                    re15_item_modal_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)),
+                                         re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_current)));
+                }
             }
             /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live
              * enemy's AI state so the port run can be diffed NUMERICALLY against the DuckStation
