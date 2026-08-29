@@ -7863,7 +7863,7 @@ static void re15_spider_ai_tick(int slot)
          * Statt des Gore-Sprites (Effekt-Index 0) laeuft hier jetzt der byte-true Emitter
          * FUN_80116d00 mit der Varianten-Sprungtabelle @0x80100364. */
         re15_esp_type26_emerge(re15_esp_room_bank(), e->grid_id,
-                               e->x, e->y, e->z, (int16_t)e->rot_y);
+                               e->x, e->y, e->z, (int16_t)e->rot_y, slot);
         break;
 
     case 1: {  /* ACTIVE 0x801166fc: the stationary strike-arming brain (Behavior A/B on +0x6). */
@@ -7877,7 +7877,7 @@ static void re15_spider_ai_tick(int slot)
              * CORE00), a0 = (phase<<8)|(id<<24)|(3<<16) @0x80116d7c-80, dann jal 0x80019700
              * @0x80116d84. Varianten >= 5 spawnen NICHT (`sltiu v0,v1,0x5` @0x80116d1c). */
             re15_esp_type26_flame(re15_esp_room_bank(), e->grid_id, budget,
-                                  e->x, e->y, e->z, (int16_t)e->rot_y);
+                                  e->x, e->y, e->z, (int16_t)e->rot_y, slot);
             e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* +0x1d4 = rng&0x3f+16 [16,79] @0x80116da0 */
             e->sub_state_2 = 1;
             break;

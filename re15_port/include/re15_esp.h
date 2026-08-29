@@ -192,6 +192,13 @@ typedef struct {
      * slot, so only the ABR bits are consumed by the draw. */
     uint16_t tpage;             /* slot+0x30 */
     uint16_t clut;              /* slot+0x32 */
+    /* FOLLOW (Flags-Bit 0x04, 1090-Feuer 2026-08-29): der per-Frame-Slot-Tick kopiert die
+     * Eltern-PART-Matrix aus slot+0x74 (`lbu flags @0x80019f44; andi 0x4 @0x80019f54;
+     * lw +0x74 @0x80019f60; 8x lw/sw @0x80019f68-f94`; beim Spawn ist a2 = *(entity+0x188)
+     * +0x40 = die Part-Weltmatrix des Emitters). Port-Modell: Aktor-Slot-Index, dessen
+     * Position jeden Tick uebernommen wird (EM26 hat 1 Bone — Part-Position == Entity-
+     * Position). -1 = kein Eltern-Anker. */
+    int8_t   follow_slot;
 } re15_esp_fx_t;
 
 void           re15_esp_fx_reset(void);
@@ -216,9 +223,11 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
  * Beide geben NULL zurueck, wo das Original nicht spawnt (grid&0x80 bzw. variant >= 5). */
 int            re15_esp_type26_flame_id(uint8_t grid_id);   /* 0x08/0x10, -1 = kein Spawn */
 re15_esp_fx_t *re15_esp_type26_flame(const re15_esp_t *bank, uint8_t grid_id, uint8_t phase,
-                                     int32_t x, int32_t y, int32_t z, int16_t yaw);
+                                     int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                     int follow_slot);
 re15_esp_fx_t *re15_esp_type26_emerge(const re15_esp_t *bank, uint8_t grid_id,
-                                      int32_t x, int32_t y, int32_t z, int16_t yaw);
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                      int follow_slot);
 /** Spawn `n` byte-true SPLATTER child particles at (x,y,z) with floor at floor_y — the
  *  parent→routine-2→routine-11 blood/gore chain collapsed: each child = effect_id sprite +
  *  gravity accel.y=8 + routine-11 RNG drift (drift.x -= rand&0xa, drift.y -= rand&0x14,

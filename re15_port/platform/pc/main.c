@@ -335,10 +335,26 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
         }
         int sz = (int)vz; if (sz < 1) sz = 1;
         int64_t step16 = ((int64_t)S * (int64_t)f->scale16 * (int64_t)camf) / ((int64_t)sz << 4);
-        int64_t w16 = 0x1000 * step16;                /* w16 = defW * step16 (RAW mult, byte-true —
-                                                       * defW u16 0x1000; the 16.16 result absorbs
-                                                       * the Q12: px = w16>>16 @0x800535f0) */
-        int64_t h16 = w16;                            /* defH identical for the weapon fx */
+        /* defW/defH: der Original-Draw FUN_800534c4 liest slot+0x04/+0x06 — im Port bisher
+         * fest 0x1000. Der FEUER-Oszillator (Routine 18 = FUN_80017c8c, 2026-08-29) schreibt
+         * die Felder jeden Frame; NUR fuer solche Slots (aktuelle Row-Routine 17/18) werden
+         * sie live gelesen. KONSERVATIV: die uebrigen Row-Fx (Blut/Muendung/Huelse) behalten
+         * 0x1000, bis deren Row-Bytes +0x04/+0x06 einzeln nachgeprueft sind (OPEN — eine
+         * falsche 0 dort machte die Sprites unsichtbar). */
+        int64_t defw = 0x1000, defh = 0x1000;
+        if (f->rows_base) {
+            uint16_t selA = (uint16_t)(f->row[0x00] | (f->row[0x01] << 8));
+            if (selA == 17 || selA == 18) {
+                defw = (int64_t)(uint16_t)(f->row[0x04] | (f->row[0x05] << 8));
+                defh = (int64_t)(uint16_t)(f->row[0x06] | (f->row[0x07] << 8));
+                if (defw <= 0) defw = 0x1000;
+                if (defh <= 0) defh = defw;
+            }
+        }
+        int64_t w16 = defw * step16;                  /* w16 = defW * step16 (RAW mult, byte-true —
+                                                       * the 16.16 result absorbs the Q12:
+                                                       * px = w16>>16 @0x800535f0) */
+        int64_t h16 = (defh == defw) ? w16 : defh * step16;
         int64_t stepX = (S > 0) ? w16 / S : 0;
         int64_t stepY = (S > 0) ? h16 / S : 0;
         int ute = (stepX > 0x1ffff) ? 1 : 0;          /* >=2x magnification edge trim */

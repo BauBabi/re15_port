@@ -213,7 +213,7 @@ int main(void)
     re15_esp_set_global_bank(NULL);      /* Id 0x08 liegt in CORE00.ESP; hier nicht gebunden */
 
     /* Behavior A (Varianten 0..2): Budget 0x28 @0x80116784 -> scale16 0x2800. */
-    re15_esp_fx_t *f = re15_esp_type26_flame(&bank, /*grid*/1, /*phase*/0x28, 2375, -1800, -2333, 1024);
+    re15_esp_fx_t *f = re15_esp_type26_flame(&bank, /*grid*/1, /*phase*/0x28, 2375, -1800, -2333, 1024, -1);
     CHECK(f != NULL, "Flammen-Spawn (Variante 1) lieferte NULL");
     if (f) {
         printf("   Flamme: id=0x%02X sub=%u scale=0x%04X eff_idx=%d\n",
@@ -225,13 +225,13 @@ int main(void)
         CHECK(f->bank == &bank,     "Flamme haengt nicht an der Raum-Bank");
     }
     /* Behavior B (Varianten 3..4): Budget 0x2C @0x8011689c -> scale16 0x2C00. */
-    re15_esp_fx_t *fb = re15_esp_type26_flame(&bank, /*grid*/4, /*phase*/0x2c, 1374, -1800, 1340, 1024);
+    re15_esp_fx_t *fb = re15_esp_type26_flame(&bank, /*grid*/4, /*phase*/0x2c, 1374, -1800, 1340, 1024, -1);
     CHECK(fb && fb->scale16 == 0x2C00, "Behavior-B scale16=0x%04X (erwartet 0x2C00)",
           fb ? fb->scale16 : 0);
     CHECK(fb && fb->effect_id == 0x10, "Behavior-B id=0x%02X (erwartet 0x10)", fb ? fb->effect_id : 0);
 
     /* FUNKEN beim Erscheinen: a0 = 0x09031800. */
-    re15_esp_fx_t *fs = re15_esp_type26_emerge(&bank, /*grid*/1, 2375, -1800, -2333, 1024);
+    re15_esp_fx_t *fs = re15_esp_type26_emerge(&bank, /*grid*/1, 2375, -1800, -2333, 1024, -1);
     CHECK(fs != NULL, "Funken-Spawn lieferte NULL");
     if (fs) {
         printf("   Funken: id=0x%02X sub=%u scale=0x%04X eff_idx=%d\n",
@@ -242,11 +242,48 @@ int main(void)
         CHECK(fs->eff_idx == 2,      "Funken eff_idx=%d (erwartet 2 = Id 0x09)", fs->eff_idx);
     }
     /* NEGATIV: Gate `andi v0,v0,0x80` @0x801166c4 — grid-Bit 0x80 unterdrueckt die Funken. */
-    CHECK(re15_esp_type26_emerge(&bank, 0x81, 0, 0, 0, 0) == NULL,
+    CHECK(re15_esp_type26_emerge(&bank, 0x81, 0, 0, 0, 0, -1) == NULL,
           "grid 0x81 duerfte KEINE Funken spawnen (Gate grid&0x80)");
     /* NEGATIV: Variante >= 5 spawnt keine Flamme. */
-    CHECK(re15_esp_type26_flame(&bank, 5, 0x28, 0, 0, 0, 0) == NULL,
+    CHECK(re15_esp_type26_flame(&bank, 5, 0x28, 0, 0, 0, 0, -1) == NULL,
           "Variante 5 duerfte KEINE Flamme spawnen");
+
+    /* -------------------------------------------------------------------------------------
+     * C2) ROW-VM (Nutzer-Report 2026-08-29 "Zeug ueber den Feuern"): Routine 17
+     *     (FUN_80017c00 — flags:=row[0x0e]=0x17 @0x80017c10/18, tpage|=row[0x16]=0x20
+     *     @0x80017c28-3c = ABR1 ADDITIV) -> Routine 18 (FUN_80017c8c defW/defH-Oszillator),
+     *     Follow-Bit 0x04 reitet auf dem Emitter (@0x80019f44-f94).
+     * ----------------------------------------------------------------------------------- */
+    printf("C2) Row-VM: Routine 17/18 + Follow\n");
+    {
+        extern void re15_actor_init(void);
+        re15_actor_init();
+        re15_esp_fx_reset();
+        g_actors[1].active = 1;
+        g_actors[1].x = 2052; g_actors[1].y = -1800; g_actors[1].z = -1334;
+        re15_esp_fx_t *fr = re15_esp_type26_flame(&bank, 1, 0x28, 2052, -1800, -1334, 1024, 1);
+        CHECK(fr && fr->rows_base != NULL,
+              "Flamme laeuft ueber den Row-VM-Pfad (sub-3-Stream @RDT 0x1161c)");
+        if (fr && fr->rows_base) {
+            re15_esp_fx_tick(&bank);              /* Tick 1: Routine 17 armiert + advance */
+            CHECK(fr->flags == 0x17,
+                  "Routine 17: flags == 0x17 (aktiv|sichtbar|FOLLOW|ABE), ist 0x%02X", fr->flags);
+            CHECK((fr->tpage & 0x60) == 0x20,
+                  "Routine 17: TPAGE-ABR == 1 (ADDITIV, |=0x20 @0x80017c28-3c), tpage=0x%04X",
+                  fr->tpage);
+            uint16_t w0 = (uint16_t)(fr->row[0x04] | (fr->row[0x05] << 8));
+            g_actors[1].y = -2740;                /* Heim-Pin des Emitters faehrt hoch
+                                                   * (@0x80116444-98, Savestate: -2740) */
+            re15_esp_fx_tick(&bank);              /* Tick 2: Oszillator + Follow */
+            CHECK(fr->y == -2740,
+                  "FOLLOW: fx reitet auf dem Emitter (y=-2740), ist %ld", (long)fr->y);
+            uint16_t w1 = (uint16_t)(fr->row[0x04] | (fr->row[0x05] << 8));
+            CHECK(w1 != w0,
+                  "Routine 18: defW oszilliert (Schritt -20 @0x80017c6c), %u -> %u", w0, w1);
+        }
+        g_actors[1].active = 0;
+        re15_esp_fx_reset();
+    }
 
     /* -------------------------------------------------------------------------------------
      * D) NEGATIV-Kontrolle: ein Raum OHNE Feuer-Bank kann Id 0x10 nicht aufloesen.
@@ -300,7 +337,7 @@ int main(void)
     printf("F) Loop-Test der Flammen-Sequenz (60 Ticks)\n");
     re15_esp_fx_reset();
     re15_esp_set_room_bank(&bank);
-    re15_esp_fx_t *fl = re15_esp_type26_flame(&bank, 1, 0x28, 2375, -1800, -2333, 1024);
+    re15_esp_fx_t *fl = re15_esp_type26_flame(&bank, 1, 0x28, 2375, -1800, -2333, 1024, -1);
     CHECK(fl != NULL, "Loop-Test: Spawn lieferte NULL");
     if (fl) {
         int max_frame = 0, wraps = 0, prev = fl->frame;
@@ -483,7 +520,7 @@ int main(void)
         int resolved = 0, from_global = 0, from_room = 0;
         for (int i = 0; i < 7; i++) {
             re15_esp_fx_t *ff = re15_esp_type26_flame(&bank, variants[i], phases[i],
-                                                      1000 + i * 100, -1800, 500, 1024);
+                                                      1000 + i * 100, -1800, 500, 1024, -1);
             CHECK(ff != NULL, "Truemmer %d (Variante %u) spawnte nicht", i, variants[i]);
             if (!ff) continue;
             int sheet = (ff->bank == &gbank) ? re15_esp_global_sheet_index(ff->effect_id) : -1;

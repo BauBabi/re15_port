@@ -12,6 +12,7 @@
  */
 #include "re15_esp.h"
 #include "re15_scd.h"   /* g_re15_pauseflags + RE15_PAUSE_ACTION — Selbst-Gate @0x80019e40 */
+#include "re15_actor.h" /* g_actors — Follow-Anker (Flags-Bit 0x04, @0x80019f44-f94) */
 #include <string.h>
 
 extern uint8_t re15_engine_rand8(void);   /* the shared FUN_8001af20 draw (re15_damage.c) */
@@ -341,6 +342,7 @@ re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, u
         f->timer     = 0;     /* 0 -> the next tick advances to frame 0's duration (FUN_80019e20) */
         f->x = x; f->y = y; f->z = z;
         f->param     = param;
+        f->follow_slot = -1;  /* kein Eltern-Anker (Flags-Bit 0x04 wirkt nur mit Slot) */
         return f;
     }
     return NULL;   /* pool full */
@@ -406,22 +408,61 @@ int re15_esp_type26_flame_id(uint8_t grid_id)
     return (int)s_type26_flame_id[v];
 }
 
+static void esp_fx_row_load(re15_esp_fx_t *f, int idx);                 /* unten definiert */
+static void esp_fx_seed_header(re15_esp_fx_t *f, const re15_esp_t *rb, int ei, uint8_t sub);
+
+/* Ein Row-VM-Slot fuer GENAU EINEN Stream (Stream 0) — die Feuer-Effekte (sub 3) tragen
+ * je einen Stream mit 2 Rows (Raum-RDT @0x1161c/@0x11858, CORE00 @0x7cc: row0 selA=17,
+ * row1 selA=18). Fallback ohne Row-Block: der alte spawn_ex-Pfad (defensiv). */
+static re15_esp_fx_t *esp_fx_spawn_rows_one(const re15_esp_t *bank, uint8_t effect_id,
+                                            uint8_t sub, uint16_t scale16,
+                                            int32_t x, int32_t y, int32_t z, int16_t param)
+{
+    const re15_esp_t *rb = bank;
+    int ei = re15_esp_find_id(rb, effect_id);
+    if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
+    int nrows = 0;
+    const uint8_t *rows = (ei >= 0) ? re15_esp_row_stream(rb, ei, sub, 0, &nrows) : NULL;
+    re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, param);
+    if (!f) return NULL;
+    if (rows && nrows > 0) {
+        f->phys = 1; f->flags = 0x03;
+        esp_fx_seed_header(f, rb, ei, sub);           /* CLUT/TPAGE-Seed (FUN_80019700) */
+        f->rows_base = rows; f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
+        f->row_cursor = 0;
+        esp_fx_row_load(f, 0);
+        f->xlat_x = f->xlat_y = f->xlat_z = 0;
+        f->floor_y = y;
+    }
+    return f;
+}
+
 re15_esp_fx_t *re15_esp_type26_flame(const re15_esp_t *bank, uint8_t grid_id, uint8_t phase,
-                                     int32_t x, int32_t y, int32_t z, int16_t yaw)
+                                     int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                     int follow_slot)
 {
     int id = re15_esp_type26_flame_id(grid_id);
     if (id < 0) return NULL;
     /* a0 = (entity[0x1D0] << 8) | (id << 24) | (3 << 16): cat = a0>>24, sub = (a0>>16)&0xff,
-     * scale16 = a0 & 0xffff (Spawner FUN_80019700 @0x80019704-1c). */
-    return re15_esp_fx_spawn_ex(bank, (uint8_t)id, 3, (uint16_t)((uint16_t)phase << 8),
-                                x, y, z, yaw);
+     * scale16 = a0 & 0xffff (Spawner FUN_80019700 @0x80019704-1c). Row-VM-Pfad (2026-08-29,
+     * analysis/nutzer_batch_2026-08-29/1090-feuer-letzte-kamera.md): sub-3-Stream = Routine 17
+     * (Flags 0x17 = aktiv|sichtbar|FOLLOW|ABE + TPAGE|=0x20 ABR1 ADDITIV) -> Routine 18
+     * (defW/defH-Oszillator). a2 des Originals = *(entity+0x188)+0x40 = die Part-Weltmatrix
+     * des Emitters -> Port: follow_slot. */
+    re15_esp_fx_t *f = esp_fx_spawn_rows_one(bank, (uint8_t)id, 3,
+                                             (uint16_t)((uint16_t)phase << 8), x, y, z, yaw);
+    if (f) f->follow_slot = (int8_t)follow_slot;
+    return f;
 }
 
 re15_esp_fx_t *re15_esp_type26_emerge(const re15_esp_t *bank, uint8_t grid_id,
-                                      int32_t x, int32_t y, int32_t z, int16_t yaw)
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw,
+                                      int follow_slot)
 {
     if (grid_id & 0x80) return NULL;              /* `andi v0,v0,0x80; bne -> skip` @0x801166c4-cc */
-    return re15_esp_fx_spawn_ex(bank, 0x09, 3, 0x1800, x, y, z, yaw);   /* a0 = 0x09031800 */
+    re15_esp_fx_t *f = esp_fx_spawn_rows_one(bank, 0x09, 3, 0x1800, x, y, z, yaw);  /* a0 = 0x09031800 */
+    if (f) f->follow_slot = (int8_t)follow_slot;
+    return f;
 }
 
 /* ===== the ROW VM (stage 2, blood subset — trace wf_a18487d9) ==============================
@@ -550,6 +591,50 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             f->clut   = (uint16_t)(f->clut + (row_u16(f->row, 0x1e) << 6));
             f->frame = (int16_t)(f->row[0x26] - 1); f->timer = 0;
             esp_fx_row_advance(f);
+            break;
+        }
+        case 17: {  /* FUN_80017c00 (FEUER-Init, byte-exakt selbst nachdisassembliert 2026-08-29):
+                     *   flags := row[0x0e]              @0x80017c10/18   (0x17 = aktiv|sichtbar|
+                     *                                                     FOLLOW 0x04|ABE 0x10)
+                     *   tpage |= row[0x16]              @0x80017c28-3c   (0x20 = ABR1 ADDITIV)
+                     *   +0x6e := rng & 4                @0x80017c38-50   (Anim-Startframe 0/4)
+                     *   advance -> Routine 18           @0x80017c4c
+                     *   Oszillator-Seeds in die frische Row-KOPIE (sh, @0x80017c5c-78):
+                     *   row[0x0e]:=1, row[0x16]:=10, row[0x1e]:=-20, row[0x26]:=100 */
+            f->flags = f->row[0x0e];
+            f->tpage |= row_u16(f->row, 0x16);
+            f->frame = (int16_t)((int)(re15_engine_rand8() & 4u) - 1);   /* +0x6e (Konvention
+                                                                          * wie Routine 10) */
+            f->timer = 0;
+            esp_fx_row_advance(f);
+            f->row[0x0e] = 1;    f->row[0x0f] = 0;
+            f->row[0x16] = 10;   f->row[0x17] = 0;
+            f->row[0x1e] = 0xec; f->row[0x1f] = 0xff;    /* -20 (0xffec) */
+            f->row[0x26] = 100;  f->row[0x27] = 0;
+            break;
+        }
+        case 18: {  /* FUN_80017c8c (defW/defH-OSZILLATOR, byte-exakt selbst nachdisassembliert):
+                     *   row[0x16] != 0:  row[0x16]--; row[0x04] += row[0x1e];
+                     *                    row[0x06] += row[0x26]           @0x80017ca8-d4
+                     *   row[0x16] == 0:  row[0x16] := 10 (@0x80017ca4/cdc);
+                     *                    row[0x0e]/-[0x1e]/-[0x26] negieren @0x80017cd8-fc
+                     * = das Groessen-Flackern der Flamme (Draw liest defW/defH aus der Row). */
+            uint16_t cnt = row_u16(f->row, 0x16);
+            if (cnt != 0) {
+                cnt--; f->row[0x16] = (uint8_t)cnt; f->row[0x17] = (uint8_t)(cnt >> 8);
+                uint16_t w = (uint16_t)(row_u16(f->row, 0x04) + row_u16(f->row, 0x1e));
+                uint16_t h = (uint16_t)(row_u16(f->row, 0x06) + row_u16(f->row, 0x26));
+                f->row[0x04] = (uint8_t)w; f->row[0x05] = (uint8_t)(w >> 8);
+                f->row[0x06] = (uint8_t)h; f->row[0x07] = (uint8_t)(h >> 8);
+            } else {
+                f->row[0x16] = 10; f->row[0x17] = 0;
+                int16_t e14 = (int16_t)-(int16_t)row_u16(f->row, 0x0e);
+                int16_t e1e = (int16_t)-(int16_t)row_u16(f->row, 0x1e);
+                int16_t e26 = (int16_t)-(int16_t)row_u16(f->row, 0x26);
+                f->row[0x0e] = (uint8_t)e14; f->row[0x0f] = (uint8_t)((uint16_t)e14 >> 8);
+                f->row[0x1e] = (uint8_t)e1e; f->row[0x1f] = (uint8_t)((uint16_t)e1e >> 8);
+                f->row[0x26] = (uint8_t)e26; f->row[0x27] = (uint8_t)((uint16_t)e26 >> 8);
+            }
             break;
         }
         default: break;                                  /* stage-3c selectors: noop for now */
@@ -721,6 +806,16 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
             esp_fx_dispatch(f);                  /* loop-1 routineA */
             esp_fx_dispatch_b(f);                /* main-loop routineB (the shell bounce) */
             if (!f->active) continue;            /* B may despawn (2nd floor contact) */
+        }
+
+        /* FOLLOW (Flags-Bit 0x04, 1090-Feuer): der Original-Slot-Tick kopiert jeden Frame
+         * die Eltern-Part-Matrix aus slot+0x74 (`lbu flags @0x80019f44; andi 0x4; lw +0x74;
+         * 8x lw/sw` @0x80019f68-f94). Port: Position des Anker-Aktors uebernehmen — die
+         * Emitter fahren in ROOM1090 per Heim-Pin ~940 Einheiten hoch (@0x80116444-98),
+         * und die Feuer reiten mit (Savestate-Beleg im Dossier). */
+        if (f->follow_slot >= 0 && (f->flags & 0x04)) {
+            const re15_actor_t *pa = &g_actors[f->follow_slot];
+            if (pa->active) { f->x = pa->x; f->y = pa->y; f->z = pa->z; }
         }
 
         /* PHYSICS (byte-exact tick @0x8001a2f0, gated flags bit5==0): the position offset xlat
