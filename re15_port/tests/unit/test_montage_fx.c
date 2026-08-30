@@ -60,7 +60,7 @@ int main(void)
           && re15_montage_fx_level_prev() == 0);
 
     /* --- (3) Die BEWEGUNG (Nutzer-Beobachtung): 1 px je 11 Frames, Cut 5 = Pan-Bild --- */
-    re15_montage_fx_on_cut(5, 1);
+    re15_montage_fx_on_cut(1, 1);          /* Bild 1 = das EINE schwenkende (RE2 {2..5}) */
     CHECK("Pan-Bild startet ohne Versatz", re15_montage_fx_pan_y() == 0);
     CHECK("Pan-Bild traegt den RE2-Ueberhang als Sockel (80 px)",
           re15_montage_fx_base_zoom() == 80);
@@ -75,8 +75,9 @@ int main(void)
     CHECK("Wandern endet am Ueberhang (-80), laeuft nicht aus dem Bild",
           re15_montage_fx_pan_y() == -80);
 
-    /* --- (4) Zoom: 2 px je 4 Frames, zentriert (Cut 1 = Zoom-Bild) --- */
-    re15_montage_fx_on_cut(1, 1);
+    /* --- (4) Zoom: 2 px je 4 Frames, zentriert (Cut 8 = Umbrella-Logo, faehrt AUF —
+     *      RE2s Element {19} mit Zustand 39). --- */
+    re15_montage_fx_on_cut(8, 1);
     CHECK("Zoom startet bei 0", re15_montage_fx_zoom_px() == 0);
     CHECK("Zoom-Bild hat keinen Pan-Sockel", re15_montage_fx_base_zoom() == 0);
     ticks(3);
@@ -89,9 +90,17 @@ int main(void)
     CHECK("Pan bleibt beim Zoom-Bild aus", re15_montage_fx_pan_y() == 0);
 
     /* --- (5) Bilder ohne Bewegung (Logos): nur die Blende --- */
-    re15_montage_fx_on_cut(3, 1);                  /* S.T.A.R.S.-Abzeichen */
+    /* Das S.T.A.R.S.-Abzeichen ist die andere Haelfte der Zoom-Klammer: es faehrt ZU
+     * (RE2 Element {10}, Zustand 71) — also negativer Zoom. */
+    re15_montage_fx_on_cut(3, 1);
     ticks(60);
-    CHECK("Logo-Bild ohne Wandern/Zoom",
+    CHECK("S.T.A.R.S.-Logo faehrt ZU (negativer Zoom, RE2 {10}/71)",
+          re15_montage_fx_zoom_px() < 0 && re15_montage_fx_pan_y() == 0);
+    /* Ein Bild OHNE Bewegung (RE2: die beiden anderen Standbild-Gruppen laufen mit
+     * Zustand 7 = nur Blende). */
+    re15_montage_fx_on_cut(2, 1);
+    ticks(60);
+    CHECK("Bild ohne Bewegung: nur Blende",
           re15_montage_fx_pan_y() == 0 && re15_montage_fx_zoom_px() == 0);
     CHECK("blendet trotzdem auf", re15_montage_fx_level_new() == re15_montage_fx_level_max());
 

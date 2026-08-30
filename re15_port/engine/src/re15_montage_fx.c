@@ -56,20 +56,32 @@
  * denselben Ueberhang als Grund-Vergroesserung, sonst liefe schwarzer Rand ins Bild. */
 #define FX_PAN_OVERSCAN     80
 
-/* Bewegungs-Modus je Montage-Bild (PORT-WAHL — s. Kopf). Vorbild: RE2 setzt die Modi
- * sparsam, meist eine Bewegung je Kapitel (Nutzer sah sie „bei den einen Bild").
- * Cut 0 = Schwarzbild (kein Effekt), Logos statisch, Motive mit Tiefe bekommen Zoom,
- * das Panorama das vertikale Wandern. */
+/* Bewegungs-Modus je Montage-Bild — NACH RE2s TATSAECHLICHER CHOREOGRAPHIE.
+ *
+ * ⛔ KORREKTUR 2026-08-30 (Nutzer: "pre intro ist ganz falsch. Da hast du dich kreativ
+ * ausgetobt.... du solltest es aber machen exakt wie in re 2"): Die erste Fassung
+ * verteilte drei Zooms und einen Schwenk nach Gutduenken. RE2 ist deutlich sparsamer —
+ * die Phasen-Timeline (analysis/preintro_re2/re2-sequenzer.md §3.5) setzt in der GANZEN
+ * Sequenz nur DREI Bewegungen:
+ *   - GENAU EIN Standbild schwenkt: die Vierergruppe {2..5} bekommt Zustand 23/27
+ *     (Einblenden + Y-Schwenk) @0x801c0770 / @0x801c0888. Die beiden anderen
+ *     Standbild-Gruppen {11..14} und {20..23} laufen mit Zustand 7 = NUR Blende.
+ *   - ZWEI Logos zoomen, als symmetrische Klammer: Element {10} mit 71/75 faehrt
+ *     ZU (200 -> ~50 px) @0x801c08b4 / @0x801c0938, Element {19} mit 39/43 faehrt
+ *     AUF (20 -> ~198 px) @0x801c0b50 / @0x801c0bd8.
+ *   - Alles Uebrige: nur Ein- und Ausblenden.
+ * Genau so liegt es jetzt auf unseren neun Bildern: das erste grosse Motiv schwenkt,
+ * die beiden Logos bilden die Zoom-Klammer, der Rest blendet nur. */
 static const uint8_t s_cut_mode[RE15_MONTAGE_CUTS] = {
-    RE15_MFX_NONE,   /* 0 Schwarz (160 T Opening) */
-    RE15_MFX_ZOOM_IN,/* 1 Zombie-Kopf im Profil */
-    RE15_MFX_NONE,   /* 2 T-Virus-Mikroskopaufnahme */
-    RE15_MFX_NONE,   /* 3 S.T.A.R.S.-Abzeichen (Logo) */
-    RE15_MFX_ZOOM_IN,/* 4 S.T.A.R.S.-Team vor dem Villentor */
-    RE15_MFX_PAN,    /* 5 Helikopter ueber der Explosion */
-    RE15_MFX_NONE,   /* 6 S.T.A.R.S.-Gruppe vor dem Heli */
-    RE15_MFX_ZOOM_IN,/* 7 Umbrella-Laborinneres */
-    RE15_MFX_NONE,   /* 8 Umbrella-Logo */
+    RE15_MFX_NONE,     /* 0 Schwarz (160 T Opening)                              */
+    RE15_MFX_PAN,      /* 1 Zombie-Kopf — das eine schwenkende Standbild (RE2 {2..5}) */
+    RE15_MFX_NONE,     /* 2 T-Virus-Mikroskopaufnahme    (RE2 {11..14}: nur Blende) */
+    RE15_MFX_ZOOM_OUT, /* 3 S.T.A.R.S.-Abzeichen — Logo ZU  (RE2 {10}, Zustand 71) */
+    RE15_MFX_NONE,     /* 4 S.T.A.R.S.-Team vor dem Villentor                    */
+    RE15_MFX_NONE,     /* 5 Helikopter ueber der Explosion                       */
+    RE15_MFX_NONE,     /* 6 S.T.A.R.S.-Gruppe vor dem Heli                       */
+    RE15_MFX_NONE,     /* 7 Umbrella-Laborinneres        (RE2 {20..23}: nur Blende) */
+    RE15_MFX_ZOOM_IN,  /* 8 Umbrella-Logo — Logo AUF        (RE2 {19}, Zustand 39) */
 };
 
 static struct {

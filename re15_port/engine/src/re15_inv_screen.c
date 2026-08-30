@@ -300,15 +300,34 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
     if (!re15_map_stock_mode()) {
         const re15_map_zone_t *zn = re15_map_zone_current();
         if (!zn) zn = re15_map_zone_at(g_current_room_id, world_x, world_z);
-        if (zn) {
+        /* Die Zone muss zu dem Blatt gehoeren, das gerade GEZEIGT wird — sonst saesse
+         * der Marker auf einer fremden Etage (Nutzer-Report: "der spielmarker [muss]
+         * im kleinen rechteck sein, nicht ausserhalb"). */
+        if (zn && zn->page == re15_inv_map_page()) {
             uint32_t lp = mu32(0x80076844u + (uint32_t)zn->page * 8u);
             uint32_t a  = lp + (uint32_t)zn->rect * 12u;
             int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
             int rw = (int16_t)mu16(a + 4u), rh = (int16_t)mu16(a + 6u);
-            if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my))
+            if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my)) {
+                /* HART ins Rechteck klemmen: der Marker ist ein 8x8-Quad, das um
+                 * (mx,my) zentriert gezeichnet wird — ohne Rand-Reserve haengt er
+                 * sonst halb ueber der Kante. */
+                int lo_x = rx + 4, hi_x = rx + rw - 4;
+                int lo_y = ry + 4, hi_y = ry + rh - 4;
+                if (hi_x < lo_x) { lo_x = hi_x = rx + rw / 2; }
+                if (hi_y < lo_y) { lo_y = hi_y = ry + rh / 2; }
+                if (*mx < lo_x) *mx = (int16_t)lo_x;
+                if (*mx > hi_x) *mx = (int16_t)hi_x;
+                if (*my < lo_y) *my = (int16_t)lo_y;
+                if (*my > hi_y) *my = (int16_t)hi_y;
                 return;
+            }
         }
+        /* Keine passende Zone auf diesem Blatt: den Marker aus dem Bild nehmen,
+         * statt ihn irgendwo hin zu setzen. */
+        if (zn && zn->page != re15_inv_map_page()) { *mx = -64; *my = -64; return; }
     }
+
     /* STOCK: die Original-Formel FUN_800473f8 @0x8004741c-0x80047528.
      *   x: t = mflo((world_x+32000)*10 * x_scale) sra 20 (@0x80047428-5c), +5
      *      (@0x80047460), /10 (magic 0x66666667 @0x80047450-54 = C-Trunkierung),
@@ -1314,8 +1333,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * weder Tueren noch Treppen; RE2 setzt gelbe Tuerpunkte in die Grafik und eigene
      * 8x8-Marker fuer Uebergaenge. Da RE1.5 diese Icons nicht mitbringt, zeichnet der
      * Port sie aus kurzen Linien in RE2s Tuer-Gelb: Tuer = ein Strich quer, Treppe =
-     * Leiter (drei Sprossen). Nur fuer Zonen, die der Spieler schon gesehen hat. */
-    if (!re15_map_stock_mode()) {
+     * Leiter (drei Sprossen). Nur fuer Zonen, die der Spieler schon gesehen hat.
+     * ⛔ NUR AUF DEM KARTEN-SCHIRM: derselbe Zeichen-Riegel wie fuer die Karte selbst
+     * (word(25c0) & 0xffffff == 0x00010100, @0x80049bb4-cc — hier als
+     * substate==1 && item_state==1 gespiegelt). Ohne ihn blenden die Marken ins
+     * normale Inventar-Menue durch (Nutzer-Report 2026-08-30: "Außerdem blenden jetzt
+     * schon im normalen item menu kartenmarkierungen durch"). */
+    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
         int n = re15_map_mark_count(), k;
         for (k = 0; k < n; k++) {
             int mpage, mrect, mx, my, kind;
