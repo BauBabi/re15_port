@@ -1,3 +1,26 @@
+# RE1.5 Port — v0.3.45 (Early Preview)
+
+**Der Box-Bildschirm sieht jetzt aus wie in RE2** — das fehlte, damit die neue Bedienung
+überhaupt Sinn ergibt.
+
+Bisher steckte RE2s Ring-Mechanik (fester Auswahlrahmen, scrollender Inhalt) noch im
+alten Symbol-Gitter — man konnte gar nicht sehen, was das Scrollen tut. Jetzt ist es
+RE2s **Liste**:
+
+- **Fünf Zeilen**, die mittlere ist die feste Auswahl (genau der Platz, den die
+  Transfer-Logik nimmt), markiert durch ein helles Band.
+- **Name links, Symbol und Menge rechts** in jeder Zeile — statt namenloser Kacheln.
+- Die nicht gewählten Zeilen liegen auf dunklen Streifen, wie im Vorbild.
+- **Scrollbalken am rechten Rand**: eine Marke je sichtbarem Platz, zwei Pixel pro
+  Ring-Position — man sieht also, wo man sich in den 64 Plätzen befindet.
+- Beim Scrollen gleiten die Zeilen weiter (die Kadenz aus v0.3.43 bleibt).
+
+Die **Symbole bleiben unsere eigenen**: RE2s Icons zeigen RE2-Gegenstände — für die
+Dinge aus RE1.5 wären sie schlicht falsch. Übernommen ist das Layout, das die Bedienung
+lesbar macht.
+
+---
+
 # RE1.5 Port — v0.3.44 (Early Preview)
 
 Nachbesserung auf deine drei Befunde zu v0.3.43.
