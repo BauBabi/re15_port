@@ -1,3 +1,32 @@
+# RE1.5 Port — v0.3.42 (Early Preview)
+
+Das Pre-Intro sieht jetzt aus wie in Resident Evil 2.
+
+## Pre-Intro (die Standbild-Montage nach NEW GAME)
+
+RE2 spielt praktisch dieselbe Erzähl-Montage aus Standbildern — nur deutlich schöner
+inszeniert. Ich habe RE2s Präsentation auseinandergenommen (das Opening liegt dort als
+eigenes Programm-Modul vor) und ihre Mechanik auf unsere Bilder übertragen:
+
+- **Kein Hartschnitt mehr:** Die Bilder **glühen aus dem Schwarz auf** und wieder aus,
+  über eine additive Helligkeitsrampe — exakt RE2s Kadenz (1,6 Sekunden je Richtung).
+  Weil das alte Bild noch ausblendet, während das neue aufblendet, entsteht eine echte
+  **Überblendung** statt eines Sprungs.
+- **Die Bewegung, die du gesehen hast:** RE2 lässt einzelne Bilder ganz langsam
+  durchwandern (1 Pixel alle 11 Frames) — dafür ist das Bild dort absichtlich größer als
+  der Bildschirm. Unsere Bilder bekommen denselben Überhang und dieselbe Geschwindigkeit;
+  in der Montage wandert das Helikopter-/Explosions-Bild.
+- **Sanfter Zoom** auf drei Motiven mit Bildtiefe (Zombie-Kopf, Villa-Szene,
+  Umbrella-Labor): 2 Pixel alle 4 Frames, um die Bildmitte zentriert — auch das ist
+  RE2s Rate. Die Logos (S.T.A.R.S., Umbrella) stehen ruhig, wie im Vorbild.
+
+**Unverändert byte-true bleibt alles Inhaltliche:** Bildreihenfolge, Standzeiten,
+Erzähler-Texte samt Sprachausgabe, das Überspringen mit gehaltener ▢-Taste und der
+Übergang zum Hubschrauber-Deck. Wer den Original-Hartschnitt sehen will:
+`RE15_MONTAGE_STOCK=1`.
+
+---
+
 # RE1.5 Port — v0.3.41 (Early Preview)
 
 Nachbesserung nach deinem Gegentest: die Karte ist jetzt aus den ECHTEN Raumdaten
