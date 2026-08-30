@@ -524,6 +524,24 @@ static int name_next_code(const uint8_t **pp)
     }
 }
 
+/* Item-Name an FREIER Position — dieselbe Glyphen-Kette wie emit_name, aber mit
+ * waehlbarem Ursprung. Gebraucht fuer RE2s Box-LISTE, die den Namen in jede Zeile
+ * schreibt (FUN_800693d0(boxX+7, zeilenY+2, 6, id)). */
+static void emit_name_at(emit_t *e, int id, int x0, int y0)
+{
+    const uint8_t *p;
+    int x = x0, code, guard = 64;
+    if (id <= 0 || id >= RE15_INV_NAME_NIDS) return;
+    p = re15_inv_name_blob + re15_inv_name_off[id];
+    while ((code = name_next_code(&p)) != 7 && guard-- > 0) {
+        sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
+             x, y0, 16, 16, (code & 0xf) << 4, ((code >> 4) << 4) + 0x20,
+             128, 128, 128, 0);
+        x += re15_font_width[code & 0xff];
+        if (e->n >= e->max) break;
+    }
+}
+
 static void emit_name(emit_t *e, int id)
 {
     const uint8_t *p;
@@ -896,22 +914,38 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x, y, w, h, u, v, 128, 128, 128, 0);
     }
 
-    /* 4. the two panels: the g1 ITEM-LIST chrome at the BOX base (left) and at
-     * the LIST base (right) — the same capacity-10 template fixups as the main
-     * screen (case 1 @0x800477e8-0x8004796c). */
+    /* 4. Panels. RECHTS das Inventar-Gitter (unveraendert, g1-Chrome mit den
+     * capacity-10-Fixups wie im Hauptschirm, case 1 @0x800477e8-0x8004796c).
+     * LINKS steht seit der RE2-Umstellung eine LISTE — dort waere ein
+     * 10-Zellen-Gitterrahmen irrefuehrend, deshalb bekommt sie nur einen schlichten
+     * Umriss (RE2 rahmt sein Listen-Panel ebenfalls als Kasten, 16 Rahmen-Sprites
+     * @0x800a9c38 ueber x 7..218 / y 14..163 — Geometrie, keine Zellen). */
     master_row(1, &clut_idx, &count, &tmpl);
     {
-        int side, n8;
-        for (side = 0; side < 2; side++) {
-            int bx = side ? LIST_BX : BOX_BX;
-            n8 = 0;
-            for (i = 0; i < count; i++) {
-                tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
-                if (CAPACITY == 10 && i >= 7) { y += 8 * n8; n8++; }
-                if (CAPACITY == 10 && i == 1) { y += 56; v += 32; }
-                sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + bx, y + BOX_BY, w, h, u, v,
-                     128, 128, 128, 0);
+        int n8 = 0;
+        for (i = 0; i < count; i++) {
+            tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
+            if (CAPACITY == 10 && i >= 7) { y += 8 * n8; n8++; }
+            if (CAPACITY == 10 && i == 1) { y += 56; v += 32; }
+            sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + LIST_BX, y + BOX_BY, w, h, u, v,
+                 128, 128, 128, 0);
+        }
+    }
+    {   /* Umriss des Listen-Panels (vier Linien) */
+        const int PX0 = 8, PY0 = 34, PX1 = 162, PY1 = 146;
+        int t3;
+        for (t3 = 0; t3 < 4; t3++) {
+            re15_inv_op_t *o;
+            if (e.n >= e.max) break;
+            o = &e.ops[e.n++];
+            o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+            switch (t3) {
+            case 0: o->x = PX0; o->y = PY0; o->w = PX1; o->h = PY0; break;
+            case 1: o->x = PX0; o->y = PY1; o->w = PX1; o->h = PY1; break;
+            case 2: o->x = PX0; o->y = PY0; o->w = PX0; o->h = PY1; break;
+            default:o->x = PX1; o->y = PY0; o->w = PX1; o->h = PY1; break;
             }
+            o->r = 120; o->g = 140; o->b = 180;
         }
     }
 
@@ -931,51 +965,97 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u + 2u) + y + LIST_BY,
                  w, h, u, v, 128, 128, 128, 0);
         }
-        if (st->box_side == 1) {
-            master_row(8, &clut_idx, &count, &tmpl);
-            for (i = 0; i < count; i++) {
-                tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);   /* base 0 = 1-cell */
-                /* RE2: die Auswahl steht FEST (scroll+2) — der Cursor sitzt immer
-                 * auf derselben Zelle, gescrollt wird der Inhalt darunter. */
-                sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
-                     bs16(CELL_TBL + (uint32_t)RE15_BOX_PICK_ROW * 4u) + x + BOX_BX,
-                     bs16(CELL_TBL + (uint32_t)RE15_BOX_PICK_ROW * 4u + 2u) + y + BOX_BY,
-                     w, h, u, v, 128, 128, 128, 0);
-            }
-        }
     }
 
-    /* 6. qty digits: inventory grid (the byte-true emit_digits path) + box cells */
+    /* 6. Mengen-Ziffern des INVENTAR-Gitters (die byte-true emit_digits-Kette). */
     for (i = 0; i < 10; i++) emit_digits(&e, st, i, 0);
-    for (i = 0; i < RE15_BOX_WINDOW; i++) {
-        const re15_inv_slot_t *s =
-            &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
-        box_digits(&e,
-                   bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX,
-                   bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY + st->box_pixoff,
-                   s->id, s->qty);
-    }
 
-    /* 7. icon cells: inventory 0..9 (the composed ICON8 cache, byte-true art) +
-     * box page cells 0..7 (ITEMTILE direct) + blank navy for cells 8/9 of the
-     * box panel (the 10-cell panel art shows 5 rows; the box page has 4 [DESIGN]). */
+    /* 7. Symbol-Zellen des INVENTARS (rechte Seite, unveraendert). */
     for (i = 0; i < 10 && i < CAPACITY; i++)
         sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
              bs16(CELL_TBL + (uint32_t)i * 4u) + LIST_BX,
              bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + LIST_BY,
              40, 30, (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u),
              (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u + 2u), 128, 128, 128, 1);
-    /* Das Box-Panel ist das FENSTER in den 64-Platz-Ring: Zelle i zeigt
-     * (scroll + i) & 0x3f. Alle 10 Zellen tragen jetzt echte Ring-Plaetze
-     * (frueher waren 8 belegt und 2 blind). */
-    for (i = 0; i < RE15_BOX_WINDOW; i++) {
-        int cx = bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX;
-        /* Waehrend der Scroll-Animation gleiten die Zellen (RE2-Pixelversatz
-         * DAT_800d5c15, 3 px je Frame ueber 6 Frames) statt zu springen. */
-        int cy = bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY + st->box_pixoff;
-        const re15_inv_slot_t *s =
-            &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
-        box_cell_icon(&e, cx, cy, s->id, s->flags);
+
+    /* ---- 7b. DIE BOX ALS LISTE — RE2s Layout (Nutzer 2026-08-30: "bei der item
+     * boxen brauchen wir schon die Grafiken der item boxen aus re 2, sonst macht
+     * sie optisch keinen Sinn in der Bedienbarkeit").
+     *
+     * RE2 zeigt die Box NICHT als Symbolgitter, sondern als LISTE mit FUENF Zeilen
+     * (Zeichen-Schleife in FUN_800710dc, y-Start 0x7f, Schrittweite -0x14):
+     *   Zeile k zeigt Ring-Platz (scroll + k) & 0x3f, Raster 20 px, Quad 19 px hoch;
+     *   die MITTLERE Zeile (k = 2) ist die feste Auswahl — genau das (scroll+2)&0x3f
+     *   der Transfer-Engine. Name links (boxX+7), Symbol rechts, Mengen-Ziffern
+     *   daneben, am rechten Rand ein Scrollbalken mit einer Marke je sichtbarem
+     *   Platz (x = boxX+200, y = boxY+12 + slot*2 — 2 px je Ring-Platz).
+     *   Nicht gewaehlte Zeilen bekommen einen dunklen Streifen (RGB 48,48,48
+     *   @0x800a9c28), die gewaehlte stattdessen ein helles Band aus zwei Linien.
+     * Erst dadurch wird der Ring-Scroll ueberhaupt lesbar. Die Geometrie ist auf
+     * unsere linke Bildschirmhaelfte gelegt (RE2s Panel nimmt dort fast die ganze
+     * Breite ein, bei uns steht rechts das Inventar-Gitter). */
+    {
+        const int LIST_X0 = 10;                 /* linker Rand der Streifen        */
+        const int LIST_X1 = 150;                /* rechter Rand der Streifen       */
+        const int NAME_X  = 14;                 /* RE2: boxX + 7                   */
+        const int ICON_X  = 108;                /* Symbol rechts in der Zeile      */
+        const int BAR_X   = 156;                /* Scrollbalken                    */
+        const int ROW0_Y  = 41;                 /* RE2: erste Zeile y 41..60       */
+        const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
+        int k;
+        for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++) {
+            int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
+            const re15_inv_slot_t *bs = &g_itembox.slots[slot];
+            int ry = ROW0_Y + k * ROW_DY + st->box_pixoff;   /* Scroll-Gleiten */
+            re15_inv_op_t *o;
+            if (k != RE15_BOX_PICK_ROW) {
+                /* dunkler Streifen der nicht gewaehlten Zeilen (RE2 @0x800a9c28) */
+                if (e.n < e.max) {
+                    o = &e.ops[e.n++];
+                    o->kind = RE15_INV_OP_TILE; o->page = 0; o->clut = 0; o->abe = 1;
+                    o->x = (int16_t)LIST_X0; o->y = (int16_t)ry;
+                    o->w = (int16_t)(LIST_X1 - LIST_X0); o->h = (int16_t)(ROW_DY - 1);
+                    o->r = 48; o->g = 48; o->b = 48;
+                }
+            }
+            /* Name links; leerer Platz bleibt leer (RE2 schreibt dort seinen
+             * "leer"-Text, den RE1.5 nicht kennt). */
+            if (bs->id != 0) emit_name_at(&e, bs->id, NAME_X, ry + 2);
+            /* Symbol + Menge rechts in der Zeile */
+            if (bs->id != 0) {
+                box_cell_icon(&e, ICON_X, ry - 5, bs->id, bs->flags);
+                box_digits(&e, ICON_X, ry - 5, bs->id, bs->qty);
+            }
+        }
+        /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
+         * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
+        if (st->box_side == 1 || st->box_side == 0) {
+            int sy0 = ROW0_Y + RE15_BOX_PICK_ROW * ROW_DY - 1;
+            int sy1 = sy0 + ROW_DY;
+            int bright = (st->box_side == 1) ? 232 : 120;   /* aktive Seite heller */
+            int t2;
+            for (t2 = 0; t2 < 2; t2++) {
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)LIST_X0; o->y = (int16_t)(t2 ? sy1 : sy0);
+                o->w = (int16_t)LIST_X1; o->h = o->y;
+                o->r = (uint8_t)bright; o->g = (uint8_t)(bright - 24); o->b = 48;
+            }
+        }
+        /* Scrollbalken: eine Marke je sichtbarem Ring-Platz, 2 px Schritt
+         * (RE2: x = boxX+200, y = boxY+12 + slot*2 — 128 px fuer 64 Plaetze). */
+        for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++) {
+            int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
+            re15_inv_op_t *o;
+            if (e.n >= e.max) break;
+            o = &e.ops[e.n++];
+            o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+            o->x = (int16_t)BAR_X; o->y = (int16_t)(26 + slot * 2);
+            o->w = (int16_t)(BAR_X + 4); o->h = o->y;
+            o->r = 200; o->g = 200; o->b = 160;
+        }
     }
 
     /* 8. backdrop: the 48 navy tiles (FUN_80046a1c L199-236 geometry — same as
