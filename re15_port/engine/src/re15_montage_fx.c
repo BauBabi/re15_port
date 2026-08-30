@@ -34,20 +34,30 @@
  *   letztes Bild (Umbrella)   = zoomt HINEIN, ebenfalls ueber
  *                               den Bildwechsel hinaus      (RE2 {19},   39 -> 43)
  * RE2 setzt in der ganzen Sequenz genau DREI Bewegungen; alles Uebrige blendet nur. */
-/* KAPITEL-ANFANG: raeumt den Schirm HART, bevor dieses Bild einblendet.
- * RE2 macht das genau einmal — Phase 4 t==94 ruft `0x801c1f64(0, 1)`
- * (@0x801c09e4-f4: Maske 0, a0 = ZUSTAND 0 = sofort weg, a1 = 1 = alle anderen
- * ebenfalls loeschen). Danach laeuft das Logo-Kapitel: {19} erscheint bei t==580
- * mit Zustand 39 (@0x801c0a74-94) und blendet erst in Phase 5 bei t==261 aus.
- * ⇒ Das auf-zoomende Logo beginnt auf LEEREM Grund; es blendet NICHT in das
- * vorherige Standbild hinein (Nutzer 2026-08-30: "das umbrella logo zum Schluss
- * blendet in das Labor Standbild rein").
- * Das ZU-zoomende Logo (bei uns Bild 3) hat KEINEN Clear davor — RE2 setzt es in
- * Phase 2 t==905 gemeinsam mit dem Ausblenden des Vorgaengers ({2..5} -> 27 und
- * {10} -> 71 im selben Frame), dort ist die Ueberlagerung gewollt. */
-static const uint8_t s_cut_clear_prev[RE15_MONTAGE_CUTS] = {
+/* ⛔ DAS VORIGE STANDBILD BLEIBT STEHEN, das Logo zoomt DARUEBER.
+ *
+ * Nutzer 2026-08-30: "Das Standbild vom Labor blendet aus, dann blendet das
+ * heranzoomende Umbrella Logo ein. Das ist im Original Resident Evil 2 nicht so.
+ * Da hast du das Standbild des Labors und DARAUF zoomed das Umbrella logo ran."
+ *
+ * Am Code bestaetigt (Phase 5 @0x801c0aa0):
+ *   t== 96 : Maske 0x00f00000 = {20..23} (Standbild), Zustand 7 = EINBLENDEN,
+ *            a1 = 0 (@0x801c0ab4-c8) — hide_others ist NULL, das Standbild
+ *            verdraengt also NICHTS.
+ *   t==261 : Maske 0x00080000 = {19} (Logo), Zustand 43 = ausblenden + Zoom auf,
+ *            a1 = 0 (@0x801c0b68-7c).
+ * ⇒ Zwischen beiden liegen 165 Frames, in denen Standbild UND Logo gleichzeitig
+ * voll sichtbar sind; das Logo zoomt in dieser Zeit ueber dem stehenden Bild.
+ *
+ * (Der harte Clear `0x801c1f64(0, 1)` @0x801c09e4-f4 existiert zwar, sitzt aber
+ * am KAPITEL-Anfang in Phase 4 t==94 — nicht zwischen Standbild und Logo. Ihn
+ * hierher zu ziehen war der Fehler der Vorversion.)
+ *
+ * Umsetzung: fuer diese Bilder blendet die vorige Ebene NICHT aus, sondern haelt
+ * ihre Helligkeit, waehrend die neue darueber einblendet. */
+static const uint8_t s_cut_hold_prev[RE15_MONTAGE_CUTS] = {
     0, 0, 0, 0, 0, 0, 0, 0,
-    1,   /* 8 Umbrella-Logo — Kapitel-Anfang, vorher raeumen */
+    1,   /* 8 Umbrella-Logo — zoomt UEBER dem stehenden Labor-Standbild */
 };
 
 static const uint8_t s_cut_mode[RE15_MONTAGE_CUTS] = {
@@ -124,17 +134,15 @@ void re15_montage_fx_on_cut(int cut, int had_previous)
      * 71 -> 75 / 39 -> 43: nur das Blend-Bit kippt, das Bewegungs-Bit bleibt.
      * Ohne das sprang das Logo beim Bildwechsel auf seine Ausgangsgroesse
      * zurueck (Nutzer 2026-08-30: "Bei dir wird das Logo ploetzlich wieder gross"). */
-    {
-        int clears = (cut >= 0 && cut < RE15_MONTAGE_CUTS) ? s_cut_clear_prev[cut] : 0;
-        if (had_previous && s_fx.cur.used && !clears) {
-            s_fx.prev     = s_fx.cur;
-            s_fx.prev.dir = -1;
-        } else {
-            /* Kapitel-Anfang (oder erstes Bild): harter Clear wie RE2s
-             * `0x801c1f64(0, 1)` @0x801c09e4-f4 — der Vorgaenger ist SOFORT weg,
-             * das neue Bild blendet auf leerem Grund auf. */
-            memset(&s_fx.prev, 0, sizeof s_fx.prev);
-        }
+    if (had_previous && s_fx.cur.used) {
+        int holds = (cut >= 0 && cut < RE15_MONTAGE_CUTS) ? s_cut_hold_prev[cut] : 0;
+        s_fx.prev = s_fx.cur;
+        /* dir = 0 -> die vorige Ebene HAELT ihre Helligkeit (RE2: hide_others = 0,
+         * das Standbild bleibt stehen, waehrend das Logo darueber zoomt);
+         * dir = -1 -> normale Kreuzblende. */
+        s_fx.prev.dir = holds ? 0 : -1;
+    } else {
+        memset(&s_fx.prev, 0, sizeof s_fx.prev);
     }
     memset(&s_fx.cur, 0, sizeof s_fx.cur);
     s_fx.cur.used = 1;

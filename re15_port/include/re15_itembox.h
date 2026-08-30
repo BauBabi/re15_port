@@ -50,6 +50,10 @@
 #define RE15_BOX_SCROLL_FRAMES  6
 #define RE15_BOX_SCROLL_STEP_PX 3
 #define RE15_BOX_ROW_PX        20
+/* RE2s Zeilen-Symbol: 25x19 px (2-Feld-Waffen 49x19) — passt in das 20-px-Raster.
+ * Unsere 40x30-Kachel wird darauf gestaucht, sonst ueberlappen die Zeilen. */
+#define RE15_BOX_ICON_W        25
+#define RE15_BOX_ICON_H        19
 
 /* TASTEN-WIEDERHOLUNG des Item-Schirms (RE2 FUN_800689bc: Maske 0xf01c,
  * Parameter 0x060a @0x800689f4) = Anlauf 10 Frames, danach alle 6 Frames.

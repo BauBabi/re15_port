@@ -834,6 +834,15 @@ static void g7_label_reset(void) { s_g7_u = 0xff; s_g7_v = 0xff; }
 #define BOX_BY  26    /* [DESIGN] same base y as the ITEM LIST (LIST_BY)      */
 
 /* one box/inv icon cell via the ITEMTILE page (v = tile id; see the enum note) */
+/* Zeilen-Symbol in RE2s Zeilenmass (25x19; 2-Feld-Waffen doppelt breit). */
+static void box_cell_icon_sized(emit_t *e, int x, int y, int w, int h,
+                                uint8_t id, uint8_t kind)
+{
+    int ww = (kind == RE15_BOX_KIND_WIDE) ? (w * 2 - 1) : w;   /* RE2: 49x19 */
+    sprt(e, RE15_INV_PAGE_ITEMTILE, RE15_INV_CLUT_ST00_ROW0,
+         x, y, ww, h, 0, id, 128, 128, 128, 1);
+}
+
 static void box_cell_icon(emit_t *e, int x, int y, uint8_t id, uint8_t kind)
 {
     (void)kind;   /* boxed-wide (kind 3) draws its ITEMALL 40x30 tile in the ONE
@@ -931,79 +940,110 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  128, 128, 128, 0);
         }
     }
-    {   /* ---- RE2s BOX-PANEL-AUFBAU ----------------------------------------
-         * Nutzer 2026-08-30: "bei der item boxen fehlen praktisch all die item box
-         * Grafiken aus resident evil 2, deshalb sieht es scheisse aus."
+    {   /* ---- RE2s BOX-PANEL, mit den ORIGINAL-MASSEN ----------------------
+         * Nutzer 2026-08-30: "ich moechte gefaelligst das du das ORIGINAL von RE 2
+         * sauber reverse engineerst und portest".
          *
-         * RE2 baut sein Box-Panel aus 25 Sprites: Geometrie-Tabellen
-         * @0x800a9bc4 {u,v,w,h} und @0x800a9c38 {x,y} (beide selbst ausgelesen,
-         * Aufbau in FUN_80070e58). Panel-Ursprung (7,14), Ausdehnung 211x149:
-         *   (3,0) 128x4 + (131,0) 77x4     obere Leiste (zweiteilig)
-         *   (3,149) 128x4 + (131,149) 77x4 untere Leiste
-         *   (0,0) 3x153 + (208,0) 3x153    Seitenpfosten
-         *   (4,6) 2x142 + (196,6) 2x142    innere Senkrechte
-         *   (6,6)/(134,6) 128x20 / 62x20   Kopfband, (6,127)/(134,127) Fussband
-         *   (199,11) 8x130                 SCHIENE des Scrollbalkens
-         *   (199,4) / (199,142) 8x6        Pfeil hoch / runter
-         *   5x 6x2                         Marken im Scrollbalken
-         * Die BILDQUELLE der Sprites steckt im VRAM-Zustand des Menues (die SPRTs
-         * erben ihren Texturbereich, FUN_80070e58 setzt fuer sie keinen eigenen) —
-         * sie ist hier nicht aufgeloest. Uebernommen ist deshalb der AUFBAU: die
-         * Leisten, Pfosten, Baender, die Scrollbalken-Schiene und die Pfeile
-         * werden mit unseren Menue-Farben gezeichnet. Auf unsere linke
-         * Bildschirmhaelfte gelegt (RE2s Panel nimmt fast die ganze Breite ein,
-         * bei uns steht rechts das Inventar-Gitter). */
-        const int PX0 = 8, PY0 = 32, PX1 = 163, PY1 = 148;
-        const int BARX = 152;                 /* Scrollbalken-Schiene            */
-        struct { int x0, y0, x1, y1, r, g, b; } chrome[] = {
-            /* obere und untere Leiste (RE2-Sprites 0..3), 4 px dick */
-            { PX0,   PY0,   PX1,   PY0+3,  104, 128, 152 },
-            { PX0,   PY1-3, PX1,   PY1,    104, 128, 152 },
-            /* Seitenpfosten (Sprites 4/5), 3 px */
-            { PX0,   PY0,   PX0+2, PY1,     88, 108, 132 },
-            { PX1-2, PY0,   PX1,   PY1,     88, 108, 132 },
-            /* innere Senkrechte (Sprites 11/12), 2 px */
-            { PX0+5, PY0+6, PX0+6, PY1-6,   64,  80, 100 },
-            /* Kopf- und Fussband (Sprites 7..10) */
-            { PX0+6, PY0+4, PX1-6, PY0+7,   72,  92, 116 },
-            { PX0+6, PY1-7, PX1-6, PY1-4,   72,  92, 116 },
-            /* Schiene des Scrollbalkens (Sprite 13) */
-            { BARX,  PY0+8, BARX+7, PY1-8,  56,  72,  92 },
+         * Beide Geometrie-Tabellen selbst ausgelesen und ihre PAARUNG am Code
+         * belegt: der Template-Builder FUN_80070e58 laeuft die UV-Tabelle
+         * @0x800a9bc4 RUECKWAERTS (iVar6 = 0x60, Schritt -4), und der Zeichner
+         * FUN_800710dc laeuft die Positionstabelle @0x800a9c38 EBENFALLS rueckwaerts
+         * (iVar8 = 0x40, Schritt -4, `&DAT_800a9c34 + iVar8`) — beide Laeufe sind
+         * gleichsinnig, also gehoert UV[i] zu XY[i]. Daraus die 16 Rahmenteile:
+         *
+         *   XY            UV            Groesse   Rolle
+         *   (3,0)         (0,248)       128x4     obere Leiste, linker Teil
+         *   (131,0)       (0,240)        77x4     obere Leiste, rechter Teil
+         *   (3,149)       (0,252)       128x4     untere Leiste, links
+         *   (131,149)     (0,244)        77x4     untere Leiste, rechts
+         *   (0,0)         (12,60)         3x153   linker Pfosten
+         *   (208,0)       (15,60)         3x153   rechter Pfosten
+         *   (4,6)         (8,60)          2x142   innere Senkrechte links
+         *   (196,6)       (10,60)         2x142   innere Senkrechte rechts
+         *   (6,6)         (0,0)         128x20    Kopfband links
+         *   (134,6)       (0,40)         62x20    Kopfband rechts
+         *   (6,127)       (0,20)        128x20    Fussband links
+         *   (134,127)     (62,40)        62x20    Fussband rechts
+         *   (199,11)      (0,60)          8x130   Schiene des Scrollbalkens
+         *   (199,4)       (0,202)         8x6     Pfeilfeld oben
+         *   (199,142)     (0,214)         8x6     Pfeilfeld unten
+         *   (211,0)       (0,228)        39x12    Beschriftungsfeld rechts aussen
+         * Dazu (94,5)/(94,127) je 20x20 = die L1/R1-Anzeigen und 5 Marken 6x2.
+         * Panel-Ursprung (7,14), Ausdehnung 211x153.
+         *
+         * ⚠️ ZWEI ABWEICHUNGEN, klar benannt:
+         * (1) BREITE: RE2s Panel ist 211 px breit und nimmt fast den ganzen Schirm;
+         *     bei uns steht rechts das Inventar-Gitter, also ist es auf 155 px
+         *     gestaucht (Hoehe 1:1 uebernommen).
+         * (2) BILDQUELLE: die Rahmen-SPRTs erben in RE2 ihren Texturbereich aus dem
+         *     Speicherzustand des Menues (FUN_80070e58 setzt fuer sie keinen eigenen
+         *     TPage), und die naheliegenden Dateien sind es nachweislich nicht —
+         *     ST0/ST1 mit genau diesen UVs offline gerendert: dort liegen die
+         *     Item-Symbole. Ohne einen Speicherauszug aus laufendem RE2 ist die
+         *     Quelle nicht bestimmbar, deshalb sind die Teile hier FLAECHEN in
+         *     Menuefarben — die Form ist original, die Fuellung nicht. */
+        const int OX = 8, OY = 30;          /* unser Panel-Ursprung               */
+        const int SCALE_N = 155, SCALE_D = 211;   /* Breiten-Stauchung            */
+#define BXS(v)  (OX + ((v) * SCALE_N) / SCALE_D)
+#define BXW(v)  (((v) * SCALE_N) / SCALE_D)
+        struct { int x, y, w, h, r, g, b; } part[] = {
+            /* obere und untere Leiste (je zweiteilig) */
+            {   3,   0, 128,  4, 112, 136, 160 },
+            { 131,   0,  77,  4, 112, 136, 160 },
+            {   3, 149, 128,  4, 112, 136, 160 },
+            { 131, 149,  77,  4, 112, 136, 160 },
+            /* Pfosten */
+            {   0,   0,   3,153,  96, 116, 144 },
+            { 208,   0,   3,153,  96, 116, 144 },
+            /* innere Senkrechte */
+            {   4,   6,   2,142,  64,  80, 104 },
+            { 196,   6,   2,142,  64,  80, 104 },
+            /* Kopf- und Fussband */
+            {   6,   6, 128, 20,  40,  52,  72 },
+            { 134,   6,  62, 20,  40,  52,  72 },
+            {   6, 127, 128, 20,  40,  52,  72 },
+            { 134, 127,  62, 20,  40,  52,  72 },
+            /* Schiene des Scrollbalkens + Pfeilfelder */
+            { 199,  11,   8,130,  56,  72,  92 },
+            { 199,   4,   8,  6, 152, 176, 200 },
+            { 199, 142,   8,  6, 152, 176, 200 },
         };
-        int ci, yy;
-        for (ci = 0; ci < (int)(sizeof chrome / sizeof chrome[0]); ci++) {
-            for (yy = chrome[ci].y0; yy <= chrome[ci].y1; yy++) {
+        int pi, yy;
+        for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
+            int x0 = BXS(part[pi].x), x1 = BXS(part[pi].x) + BXW(part[pi].w) - 1;
+            if (x1 <= x0) x1 = x0;
+            for (yy = 0; yy < part[pi].h; yy++) {
                 re15_inv_op_t *o;
                 if (e.n >= e.max) break;
                 o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)chrome[ci].x0; o->y = (int16_t)yy;
-                o->w = (int16_t)chrome[ci].x1; o->h = (int16_t)yy;
-                o->r = (uint8_t)chrome[ci].r;
-                o->g = (uint8_t)chrome[ci].g;
-                o->b = (uint8_t)chrome[ci].b;
+                o->x = (int16_t)x0;  o->y = (int16_t)(OY + part[pi].y + yy);
+                o->w = (int16_t)x1;  o->h = o->y;
+                o->r = (uint8_t)part[pi].r;
+                o->g = (uint8_t)part[pi].g;
+                o->b = (uint8_t)part[pi].b;
             }
         }
-        /* Pfeile hoch/runter am Scrollbalken (RE2-Sprites 14/15 bei (199,4) und
-         * (199,142)): in RE2 leuchten sie auf, solange die zugehoerige Taste
-         * gehalten wird (@0x8006ff.. Helligkeit 0x78/0x64 bzw. 0x50/0x3c) — hier
-         * als kleines Dreieck aus drei Linien. */
+        /* L1/R1-Anzeigen (RE2: 20x20 bei (94,5)/(94,127); leuchten auf, solange die
+         * Taste gehalten wird — Helligkeit 0x50/0x3c bzw. 0x78/0x64 @0x8007.. ) */
         {
-            int ay, k2;
-            for (k2 = 0; k2 < 2; k2++) {
-                int base = k2 ? (PY1 - 7) : (PY0 + 4);
+            int k3, ay;
+            for (k3 = 0; k3 < 2; k3++) {
+                int by = OY + (k3 ? 127 : 5);
                 for (ay = 0; ay < 4; ay++) {
                     re15_inv_op_t *o;
-                    int wdt = k2 ? ay : (3 - ay);
+                    int wd = k3 ? ay : (3 - ay);
                     if (e.n >= e.max) break;
                     o = &e.ops[e.n++];
                     o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(BARX + 3 - wdt); o->y = (int16_t)(base + ay);
-                    o->w = (int16_t)(BARX + 3 + wdt); o->h = o->y;
-                    o->r = 168; o->g = 192; o->b = 216;
+                    o->x = (int16_t)(BXS(94) + 8 - wd); o->y = (int16_t)(by + ay + 6);
+                    o->w = (int16_t)(BXS(94) + 8 + wd); o->h = o->y;
+                    o->r = 120; o->g = 140; o->b = 168;
                 }
             }
         }
+#undef BXS
+#undef BXW
     }
 
     /* 5. cursors (g8 pulsing-frame template, the wave-1 model): the INVENTORY
@@ -1080,8 +1120,14 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             if (bs->id != 0) emit_name_at(&e, bs->id, NAME_X, ry + 2);
             /* Symbol + Menge rechts in der Zeile */
             if (bs->id != 0) {
-                box_cell_icon(&e, ICON_X, ry - 5, bs->id, bs->flags);
-                box_digits(&e, ICON_X, ry - 5, bs->id, bs->qty);
+                /* ⛔ RE2s Zeilen-Symbol ist 25x19 (2-Feld-Waffen 49x19) und passt damit
+                 * in das 20-px-Raster. Unsere Kachel ist 40x30 — bei 20 px Zeilenabstand
+                 * ueberlappten die Symbole benachbarter Zeilen (Nutzer 2026-08-30: "auch
+                 * die Item Images ueberlagern sich"). Deshalb wird sie hier auf RE2s
+                 * Zeilenhoehe gestaucht. */
+                box_cell_icon_sized(&e, ICON_X, ry, RE15_BOX_ICON_W, RE15_BOX_ICON_H,
+                                    bs->id, bs->flags);
+                box_digits(&e, ICON_X + RE15_BOX_ICON_W - 34, ry, bs->id, bs->qty);
             }
         }
         /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile

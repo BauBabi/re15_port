@@ -126,6 +126,29 @@ int main(void)
               re15_montage_fx_prev_pan_y() == p_before - 1);
     }
 
+    /* --- (6b) ⛔ Das Umbrella-Logo zoomt UEBER dem stehenden Standbild.
+     *      Nutzer: "Da hast du das Standbild des Labors und DARAUF zoomed das
+     *      Umbrella logo ran." RE2 Phase 5: Standbild -> Zustand 7 bei t==96 mit
+     *      hide_others=0, Logo blendet erst bei t==261 aus — 165 Frames Koexistenz. --- */
+    re15_montage_fx_set_active(0);
+    re15_montage_fx_set_active(1);
+    re15_montage_fx_on_cut(7, 0);                 /* Labor-Standbild */
+    ticks(48);                                    /* voll aufgeblendet */
+    CHECK("Labor steht voll", re15_montage_fx_level_new() == re15_montage_fx_level_max());
+    re15_montage_fx_on_cut(8, 1);                 /* Umbrella-Logo darueber */
+    CHECK("das Labor BLEIBT voll sichtbar (blendet NICHT aus)",
+          re15_montage_fx_level_prev() == re15_montage_fx_level_max());
+    CHECK("das Logo beginnt bei 0 und blendet darueber ein",
+          re15_montage_fx_level_new() == 0);
+    ticks(48);
+    CHECK("nach 48 Frames: Logo voll UND Labor immer noch voll",
+          re15_montage_fx_level_new() == re15_montage_fx_level_max()
+          && re15_montage_fx_level_prev() == re15_montage_fx_level_max());
+    CHECK("und das Logo hat dabei herangezoomt", re15_montage_fx_zoom_px() > 0);
+    ticks(120);
+    CHECK("auch lange danach steht das Labor noch",
+          re15_montage_fx_level_prev() == re15_montage_fx_level_max());
+
     /* --- (7) STOCK-Schalter: byte-true Hartschnitt --- */
     re15_montage_fx_stock_set(1);
     CHECK("RE15_MONTAGE_STOCK=1 schaltet die Schicht ab", re15_montage_fx_active() == 0);
