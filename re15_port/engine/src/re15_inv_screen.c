@@ -20,7 +20,7 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
-#include "re15_room.h"           /* RE2-Kartensystem: re15_map_rect_state (Port-Erweiterung) */
+#include "re15_room.h"           /* Karten-Zonen: Marker + Rect-Zustand */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
@@ -289,47 +289,49 @@ void re15_inv_map_stage_init(int stage, int room)
 void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                          int16_t *mx, int16_t *my)
 {
-    /* FUN_800473f8 @0x8004741c-0x80047528 (raw MIPS, settles the wave-3 flagged
-     * discrepancy): THIS formula is the displayed one — it rewrites the marker quad's
-     * xy every gated frame (stores @0x80047568/757c/7590/75a8 x, @0x80047584/7598/
-     * 75b0/75c4 y) BEFORE the AddPrim @0x800475d8, so the builder FUN_80046fd8's
-     * (world+25000)/scale DIV result (@0x80047010-14, parked in DAT_800b2604/2606
-     * @0x80047098/@0x80047124) is never displayed (2604 has zero readers outside the
-     * builder itself, ghidra xref list).
-     *   x: t = mflo((world_x+32000)*10 * x_scale) sra 20 (@0x80047428-5c: addiu 32000,
-     *      *5<<1, mult, mflo, sra 20 — 32-bit wrapping product, arithmetic shift);
-     *      t += 5 (@0x80047460); t /= 10 (magic 0x66666667 @0x80047450-54, mfhi sra 2
-     *      minus sign bit @0x80047488/0x800474d0-d8 = C truncation toward zero);
-     *      t += x_off (lh SIGNED @0x800474e8).
-     *   y: t2 likewise from world_z * z_scale (@0x8004746c-a8), t2 += 5 (@0x800474ac),
-     *      NEGATED (subu zero @0x800474b0), /10 (@0x800474b4/0x80047500-508),
-     *      += y_off (lhu @0x80047518); stored to DAT_800b2606 (@0x80047528). */
-    uint32_t row  = 0x800768B0u + (uint32_t)room_slot * 8u;
-    int16_t  xoff = (int16_t)mu16(row);          /* lh  @0x800474e8 */
-    uint16_t yoff = mu16(row + 2u);              /* lhu @0x80047518 */
-    uint16_t xscl = mu16(row + 4u);              /* lhu @0x80047444 */
-    uint16_t zscl = mu16(row + 6u);              /* lhu @0x8004747c */
-    int32_t t, t2;
-    /* MARKER-REPARATUR (Nutzer-Auftrag 2026-08-30 "die Karte reparieren"): 65 Slots
-     * tragen im Auslieferungsstand nur die Platzhalter-Zeile {0,0,1,1} — der Marker
-     * projiziert dort auf ~(0,0). Fuer betroffene Slots reparierte Parameter DERSELBEN
-     * Formel aus re15_map_row_fix.h (Herleitung: Footprint->Rect-Fit, tools/
-     * gen_map_tables.py). RE15_MAP_STOCK=1 = byte-true Auslieferungsstand. */
+    /* KARTEN-ZONEN (Nutzer-Report 2026-08-30 "der Marker ist im falschen Rechteck"):
+     * Die Position kommt jetzt aus der ZONE, in welcher der Spieler steht — jede Zone
+     * bildet ihre Welt-Bbox linear auf ihr Karten-Rechteck ab. Damit landet der Marker
+     * garantiert IN dem Rechteck, das auch hervorgehoben wird, und Raeume mit mehreren
+     * getrennten Bereichen (ROOM1170!) stimmen. Die Original-Formel FUN_800473f8
+     * @0x8004741c-528 (Tabellenzeile @0x800768B0 + 8*Slot) traegt fuer 65 der 103
+     * Raeume nur eine Platzhalter-Zeile {0,0,1,1} und projiziert dort ALLES auf die
+     * Bildecke — sie bleibt nur im Stock-Modus (RE15_MAP_STOCK=1) in Kraft. */
     if (!re15_map_stock_mode()) {
-        const re15_map_row_fix_t *fx = re15_map_row_fix_find(room_slot);
-        if (fx) {
-            xoff = fx->xoff; yoff = fx->yoff; xscl = fx->xscl; zscl = fx->zscl;
+        const re15_map_zone_t *zn = re15_map_zone_current();
+        if (!zn) zn = re15_map_zone_at(g_current_room_id, world_x, world_z);
+        if (zn) {
+            uint32_t lp = mu32(0x80076844u + (uint32_t)zn->page * 8u);
+            uint32_t a  = lp + (uint32_t)zn->rect * 12u;
+            int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
+            int rw = (int16_t)mu16(a + 4u), rh = (int16_t)mu16(a + 6u);
+            if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my))
+                return;
         }
     }
-    t  = (int32_t)((uint32_t)(world_x + 32000) * 10u * xscl) >> 20;  /* sra @0x8004745c */
-    t += 5;                                                          /* @0x80047460 */
-    t  = t / 10;                                                     /* @0x80047464-d8 */
-    *mx = (int16_t)(t + xoff);
-    t2  = (int32_t)((uint32_t)(world_z + 32000) * 10u * zscl) >> 20; /* sra @0x800474a8 */
-    t2 += 5;                                                         /* @0x800474ac */
-    t2  = -t2;                                                       /* @0x800474b0 */
-    t2  = t2 / 10;                                                   /* @0x800474b4-508 */
-    *my = (int16_t)(t2 + (int32_t)yoff);
+    /* STOCK: die Original-Formel FUN_800473f8 @0x8004741c-0x80047528.
+     *   x: t = mflo((world_x+32000)*10 * x_scale) sra 20 (@0x80047428-5c), +5
+     *      (@0x80047460), /10 (magic 0x66666667 @0x80047450-54 = C-Trunkierung),
+     *      + x_off (lh SIGNED @0x800474e8).
+     *   y: t2 analog aus world_z * z_scale (@0x8004746c-a8), +5 (@0x800474ac),
+     *      NEGIERT (subu zero @0x800474b0), /10, + y_off (lhu @0x80047518). */
+    {
+        uint32_t row  = 0x800768B0u + (uint32_t)room_slot * 8u;
+        int16_t  xoff = (int16_t)mu16(row);
+        uint16_t yoff = mu16(row + 2u);
+        uint16_t xscl = mu16(row + 4u);
+        uint16_t zscl = mu16(row + 6u);
+        int32_t t, t2;
+        t  = (int32_t)((uint32_t)(world_x + 32000) * 10u * xscl) >> 20;
+        t += 5;
+        t  = t / 10;
+        *mx = (int16_t)(t + xoff);
+        t2  = (int32_t)((uint32_t)(world_z + 32000) * 10u * zscl) >> 20;
+        t2 += 5;
+        t2  = -t2;
+        t2  = t2 / 10;
+        *my = (int16_t)(t2 + (int32_t)yoff);
+    }
 }
 
 /* ---- WAVE 5: icon-cache cell art override (see re15_inv_screen.h for the model +

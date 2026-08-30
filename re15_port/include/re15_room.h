@@ -40,13 +40,27 @@ enum {
 };
 int re15_map_rect_state(unsigned page, unsigned rect_idx);
 
-/* MARKER-REPARATUR (Nutzer-Auftrag 2026-08-30): reparierte Parameter der Marker-
- * Formel FUN_800473f8 fuer Slots, deren EXE-Zeile @0x800768B0 Platzhalter ist oder
- * ihr Rect verfehlt (Tabelle: re15_map_row_fix.h, tools/gen_map_tables.py).
- * re15_map_stock_mode(): 1 wenn RE15_MAP_STOCK=1 (byte-true Auslieferungsstand,
- * Reparatur + RE2-Faerbung aus). */
-typedef struct { unsigned char slot; short xoff; unsigned short yoff, xscl, zscl; } re15_map_row_fix_t;
-const re15_map_row_fix_t *re15_map_row_fix_find(unsigned slot);
+/* KARTEN-ZONEN (Nutzer-Report 2026-08-30 "Marker im falschen Rechteck / falsches
+ * Rechteck hervorgehoben"): Ein RDT-Raum kann MEHRERE raeumlich getrennte Bereiche
+ * enthalten (ROOM1170: zwei, verbunden durch eine Selbst-Tuer). Jede Zone traegt ihr
+ * eigenes Karten-Rechteck und ihre eigene Marker-Abbildung; die aktive Zone folgt der
+ * Spielerposition. Tabelle: engine/src/re15_map_zones.h (tools/gen_map_zones.py). */
+typedef struct {
+    unsigned short room;
+    short  wx0, wz0, wx1, wz1;
+    unsigned char page, rect, idx;
+    unsigned char zid;        /* globale Zonen-Nummer; beide Szenario-Varianten
+                               * teilen sie (= ein Besucht-Bit je ORT)          */
+} re15_map_zone_t;
+
+const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);
+const re15_map_zone_t *re15_map_zone_current(void);
+void re15_map_zone_update(unsigned room, int32_t x, int32_t z);  /* je Frame */
+int  re15_map_zone_visited(const re15_map_zone_t *zn);
+int  re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
+                          int rx, int ry, int rw, int rh, int16_t *mx, int16_t *my);
+void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
+
 int re15_map_stock_mode(void);
 void re15_map_stock_set(int v);   /* Tests: 0/1 erzwingen, -1 = Umgebung neu lesen */
 

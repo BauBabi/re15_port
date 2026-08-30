@@ -316,7 +316,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
 
     /* RE2-KARTENSYSTEM: den geladenen Raum als BESUCHT markieren (Port-Erweiterung,
      * re15_map_visited.c) — dieser Choke-Point deckt Boot, Tuer, Selbst-Tuer und Load. */
-    re15_map_visited_mark(g_current_room_id);
+    /* KARTEN-ZONE nachfuehren: markiert die Zone, in welcher der Spieler steht
+     * (ein Raum kann mehrere haben — ROOM1170), und setzt sie als "aktuell". */
+    re15_map_zone_update(g_current_room_id,
+                         g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                         g_actors[RE15_ACTOR_SLOT_PLAYER].z);
 
     /* ⛔ SCHLAFENDER CONTENT — AKTIVIERUNGEN (Nutzer-Auftrag 2026-08-30: "Wenn schlafender
      * Content einfach und sinnvoll zu aktivieren ist, aktiviere ihn"). KEIN Asset-Patch —

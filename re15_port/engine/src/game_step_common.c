@@ -790,6 +790,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
     re15_player_set_pl00_banks(c->pl00_skel, c->pl00_anim);
 
+    /* KARTEN-ZONE je Frame nachfuehren (Nutzer-Report 2026-08-30): ein Raum kann
+     * mehrere getrennte Bereiche haben, und die SELBST-TUEREN (dest == eigener Raum,
+     * z.B. ROOM1170) wechseln den Bereich OHNE Raumwechsel — der Raum-Lade-Choke-Point
+     * allein wuerde die Zone also nie aktualisieren. Markiert zugleich als besucht. */
+    re15_map_zone_update(g_current_room_id, pl->x, pl->z);
+
     /* ITEM-GET MODAL FREEZE (byte-true FUN_8001db28: g_pauseflags |= 0xff000000): while the pickup
      * zoom/flip presentation runs, the WHOLE game step is frozen — player move, collision, AOT scan,
      * enemy AI, model anim (re15_actors_anim_advance below), SCD-event dispatch all halt. Only the

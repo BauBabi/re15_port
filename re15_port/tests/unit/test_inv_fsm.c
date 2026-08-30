@@ -758,6 +758,10 @@ static void wavemap_tests(void)
      *   world (-40000,..):  (-80000*2287)>>20 = floor(-174.48) = -175 (arithmetic
      *                       shift), +5=-170, trunc(/10)=-17 -> mx=83;
      *                       y: -(-170)=170, /10=17 -> my=153. */
+    /* Die ORIGINAL-Formel (FUN_800473f8) gilt seit der Zonen-Reparatur nur noch im
+     * Stock-Modus; im Normalbetrieb liefert die ZONE die Position (sie landet
+     * garantiert im hervorgehobenen Rechteck). */
+    re15_map_stock_set(1);
     re15_inv_map_marker(0, 0, 2, &mx, &my);
     CHECK(mx == 170 && my == 66, "(M4) row2 world(0,0) -> (170,66), is (%d,%d)", mx, my);
     re15_inv_map_marker(-32000, -32000, 2, &mx, &my);
@@ -770,17 +774,23 @@ static void wavemap_tests(void)
      * (0,0) — das ist der Beta-Defekt. Mit MARKER-REPARATUR (Default, Nutzer-Auftrag
      * 2026-08-30) liefert der Slot die reparierte Zeile aus re15_map_row_fix.h und
      * landet NICHT mehr in der Ecke. */
-    re15_map_stock_set(1);
     re15_inv_map_marker(0, 0, 0, &mx, &my);
     CHECK(mx == 0 && my == 0, "(M4) STOCK: row0 placeholder -> (0,0), is (%d,%d)", mx, my);
-    /* Reparatur-Check am Slot 20 (0x1140 — Platzhalter-Zeile, Fix-Tabelle traegt ihn;
-     * Slot 0 = 0x1000 ist bewusst UNZUGEORDNET -> bleibt auch repariert bei (0,0)). */
     re15_inv_map_marker(0, 0, 20, &mx, &my);
     CHECK(mx == 0 && my == 0, "(M4) STOCK: Slot-20-Platzhalter -> (0,0), is (%d,%d)", mx, my);
+    /* REPARIERT (Zonen-Modell): der Marker kommt aus der Zone des aktuellen Raums und
+     * liegt IMMER innerhalb ihres Rechtecks — nie mehr in der Bildecke. */
     re15_map_stock_set(0);
-    re15_inv_map_marker(0, 0, 20, &mx, &my);
-    CHECK(!(mx == 0 && my == 0) && mx > 0 && my > 0 && mx < 320 && my < 256,
-          "(M4) REPARIERT: Slot-20-Marker projiziert in die Seite, is (%d,%d)", mx, my);
+    {
+        extern unsigned g_current_room_id;
+        unsigned save_room = g_current_room_id;
+        g_current_room_id = 0x1140;                 /* Raum mit eigener Zone */
+        re15_map_zone_update(0x1140, 0, -10000);
+        re15_inv_map_marker(0, -10000, 20, &mx, &my);
+        CHECK(!(mx == 0 && my == 0) && mx > 0 && my > 0 && mx < 320 && my < 256,
+              "(M4) REPARIERT: Zonen-Marker liegt in der Seite, is (%d,%d)", mx, my);
+        g_current_room_id = save_room;
+    }
 
     /* restore the session state (ROOM1140) for any later consumer */
     re15_inv_map_stage_init(0, 20);

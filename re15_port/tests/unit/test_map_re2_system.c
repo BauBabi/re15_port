@@ -86,23 +86,30 @@ int main(void)
     CHECK("Rect (4,2) = CURRENT solange der Spieler drin steht (rot)",
           re15_map_rect_state(4, 2) == RE15_MAP_RECT_CURRENT);
     g_current_room_id = 0x9999;
+    re15_map_zone_update(0x9999, 0, 0);             /* Raum ohne Zone -> keine aktuelle */
     CHECK("nach Verlassen: Rect (4,2) = VISITED (gruen)",
           re15_map_rect_state(4, 2) == RE15_MAP_RECT_VISITED);
     CHECK("Nachbar-Rect bleibt UNVISITED (kein Ueberschwappen)",
           re15_map_rect_state(2, 1) == RE15_MAP_RECT_UNVISITED);
 
-    /* --- (3) Rect-Teilung: CURRENT schlaegt VISITED (5040 + 5120 teilen (9,4)) --- */
-    re15_map_visited_mark(0x5040);
-    g_current_room_id = 0x5120;
-    CHECK("geteiltes Rect (9,4): aktueller Raum gewinnt gegen besuchten Mitbewohner",
-          re15_map_rect_state(9, 4) == RE15_MAP_RECT_CURRENT);
-    g_current_room_id = 0x9999;
-    CHECK("geteiltes Rect (9,4) faellt auf VISITED zurueck",
-          re15_map_rect_state(9, 4) == RE15_MAP_RECT_VISITED);
+    /* --- (3) ZONEN: ein Raum mit ZWEI Bereichen bekommt ZWEI Rechtecke.
+     *      ROOM1140 ist so ein Fall (Zone 0 -> (4,6), Zone 1 -> (4,3)) — genau die
+     *      Klasse, an der der Nutzer den Fehler gesehen hat (ROOM1170). --- */
+    g_current_room_id = 0x1140;                     /* (kein Reset: 0x1150 bleibt besucht) */
+    re15_map_zone_update(0x1140, 0, 0);             /* eindeutig im GROSSEN Bereich */
+    CHECK("Zone 0 des Raums ist aktuell (rot)",
+          re15_map_rect_state(4, 6) == RE15_MAP_RECT_CURRENT);
+    CHECK("Zone 1 desselben Raums ist NICHT aktuell",
+          re15_map_rect_state(4, 3) != RE15_MAP_RECT_CURRENT);
+    re15_map_zone_update(0x1140, 0, -14400);        /* eindeutig im ZWEITEN Bereich */
+    CHECK("nach dem Bereichswechsel ist Zone 1 aktuell (rot)",
+          re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
+    CHECK("und Zone 0 faellt auf besucht (gruen) zurueck",
+          re15_map_rect_state(4, 6) == RE15_MAP_RECT_VISITED);
 
-    /* --- (4) Szenario-Variante hat ein EIGENES Bit --- */
-    CHECK("0x1151 (Elza-Variante) ist von 0x1150 getrennt",
-          re15_map_visited(0x1151) == 0);
+    /* --- (4) Szenario-Varianten TEILEN sich die Zone (derselbe Ort) --- */
+    CHECK("0x1151 (Elza-Variante) teilt die Zone mit 0x1150",
+          re15_map_visited(0x1151) == 1);
 
     /* --- (5) Export/Import-Roundtrip --- */
     {
@@ -113,7 +120,7 @@ int main(void)
         re15_map_visited_import(blob);
         re15_map_visited_export(blob2);
         CHECK("Import stellt die Bits her", re15_map_visited(0x1150) == 1
-              && re15_map_visited(0x5040) == 1 && re15_map_visited(0x1020) == 0);
+              && re15_map_visited(0x1140) == 1);
         CHECK("Roundtrip byte-identisch", memcmp(blob, blob2, 32) == 0);
     }
 
