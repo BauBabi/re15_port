@@ -1,3 +1,27 @@
+# RE1.5 Port — v0.3.47 (Early Preview)
+
+**1. Umbrella-Logo blendet nicht mehr ins Labor-Bild.** In RE2 nachgesehen: Vor dem
+Logo-Kapitel steht ein **harter Clear** — das Bild davor wird nicht ausgeblendet, sondern
+ist schlagartig weg. Erst danach erscheint das Logo und zoomt hinein; das *folgende*
+Standbild legt sich dann bewusst darüber (diese Überlagerung bleibt). Beim
+S.T.A.R.S.-Abzeichen gibt es keinen Clear — dort setzt das Original Logo und Ausblenden
+des Vorgängers absichtlich in denselben Moment.
+
+**2. Box-Bildschirm: RE2s Panel-Aufbau.** Ich habe RE2s Box-Panel zerlegt — es besteht aus
+25 Einzelteilen mit exakt bekannter Lage und Größe: obere und untere Leiste (jeweils
+zweiteilig), Seitenpfosten, innere Senkrechte, Kopf- und Fußband, die **Schiene des
+Scrollbalkens**, Pfeile oben und unten, und fünf Marken. Der Port zeichnet jetzt diesen
+Aufbau statt des dünnen Umrisses von v0.3.45; die Scrollbalken-Marken sitzen in ihrer
+Schiene.
+
+**Was dabei ehrlich fehlt:** Die *Bildquelle* der RE2-Teile ist nicht übernommen. Die
+Panel-Sprites erben in RE2 ihren Texturbereich aus dem Speicherzustand des Menüs — die
+naheliegenden Dateien (ST0/ST1) sind es nachweislich nicht, ich habe sie mit den echten
+Koordinaten offline gerendert und nachgesehen: dort liegen die Item-Symbole. Gezeichnet
+wird der Aufbau daher in unseren Menü-Farben, nicht mit RE2-Texturen.
+
+---
+
 # RE1.5 Port — v0.3.46 (Early Preview)
 
 **Pre-Intro: der Mechanismus, den ich übersehen hatte.**
