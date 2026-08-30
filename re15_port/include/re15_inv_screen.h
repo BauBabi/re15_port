@@ -260,6 +260,8 @@ typedef struct {
     uint8_t box_mode;       /* 1 = der Box-Unterschirm ist offen (Menue-Substate 4) */
     uint8_t box_scroll;     /* Scroll-Stand 0..63 (RE2 DAT_800d5c14)                */
     uint8_t box_side;       /* 0 = Inventar-Seite, 1 = Box-Seite, 2 = EXIT-Zeile    */
+    int8_t  box_pixoff;     /* Scroll-Pixelversatz waehrend der Animation (RE2
+                             * DAT_800d5c15, +/-3 je Frame ueber 6 Frames)          */
     /* ---- wave 5 (EXCHANGE/combine) ---- */
     uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
                             /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written

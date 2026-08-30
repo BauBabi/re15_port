@@ -931,7 +931,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
         box_digits(&e,
                    bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX,
-                   bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY,
+                   bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY + st->box_pixoff,
                    s->id, s->qty);
     }
 
@@ -949,7 +949,9 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * (frueher waren 8 belegt und 2 blind). */
     for (i = 0; i < RE15_BOX_WINDOW; i++) {
         int cx = bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX;
-        int cy = bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY;
+        /* Waehrend der Scroll-Animation gleiten die Zellen (RE2-Pixelversatz
+         * DAT_800d5c15, 3 px je Frame ueber 6 Frames) statt zu springen. */
+        int cy = bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY + st->box_pixoff;
         const re15_inv_slot_t *s =
             &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
         box_cell_icon(&e, cx, cy, s->id, s->flags);

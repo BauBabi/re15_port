@@ -35,6 +35,14 @@ static void frame(uint16_t pressed, uint16_t held)
 }
 static void idle(int n) { while (n-- > 0) frame(0, 0); }
 static void press(uint16_t bits) { frame(bits, bits); }
+/* Eine SCROLL-ZEILE: Anstoss + 6 Animationsframes + Commit-Frame = 7 Frames
+ * (RE2 @0x8007000c/@0x8007019c). Die Taste wird nur im Anstoss-Frame gehalten,
+ * damit die Kette nicht selbsttaetig weiterlaeuft. */
+static void scroll_line(uint16_t bits)
+{
+    press(bits);
+    for (int k = 0; k < RE15_BOX_SCROLL_FRAMES + 1; k++) frame(0, 0);
+}
 
 static void close_if_open(void)
 {
@@ -100,26 +108,45 @@ int main(void)
     CHECK(re15_itembox_screen_pick() == RE15_BOX_PICK_ROW,
           "(4) Auswahl = scroll+2 (RE2 `DAT_800d5c14+2 & 0x3f`), ist %d",
           re15_itembox_screen_pick());
+    /* Eine Zeile scrollen = Animation ueber 7 Frames, nicht ein Sprung. */
     press(RE15_PAD_BIT_DOWN);
+    CHECK(re15_itembox_screen_state() == 3,
+          "(4) RUNTER startet die Scroll-Animation (RE2 Sub-Zustand 3), ist %d",
+          re15_itembox_screen_state());
+    CHECK(re15_itembox_screen_scroll() == 0,
+          "(4) waehrend der Animation steht der Scroll-Stand noch");
+    frame(0, 0);
+    CHECK(re15_itembox_screen_pixoff() == -RE15_BOX_SCROLL_STEP_PX,
+          "(4) Pixelversatz nach 1 Frame = -3 (RE2 @0x800702ac), ist %d",
+          re15_itembox_screen_pixoff());
+    for (int k = 0; k < RE15_BOX_SCROLL_FRAMES - 1; k++) frame(0, 0);
+    CHECK(re15_itembox_screen_pixoff() == -RE15_BOX_SCROLL_FRAMES * RE15_BOX_SCROLL_STEP_PX,
+          "(4) nach 6 Frames volle 18 px, ist %d", re15_itembox_screen_pixoff());
+    frame(0, 0);                                   /* Commit-Frame */
     CHECK(re15_itembox_screen_scroll() == 1 && re15_itembox_screen_pick() == 3,
-          "(4) RUNTER scrollt um 1 (Auswahl folgt), ist s%d p%d",
+          "(4) Commit schaltet um 1 weiter, ist s%d p%d",
           re15_itembox_screen_scroll(), re15_itembox_screen_pick());
-    press(RE15_PAD_BIT_UP);
+    CHECK(re15_itembox_screen_pixoff() == 0 && re15_itembox_screen_state() == 1,
+          "(4) Versatz genullt, zurueck auf der Box-Seite");
+    scroll_line(RE15_PAD_BIT_UP);
     CHECK(re15_itembox_screen_scroll() == 0, "(4) HOCH scrollt zurueck");
-    press(RE15_PAD_BIT_UP);
+    scroll_line(RE15_PAD_BIT_UP);
     CHECK(re15_itembox_screen_scroll() == RE15_BOX_SLOTS - 1,
           "(4) HOCH bei 0 laeuft im Ring um auf 63, ist %d", re15_itembox_screen_scroll());
-    press(RE15_PAD_BIT_DOWN);
+    scroll_line(RE15_PAD_BIT_DOWN);
     CHECK(re15_itembox_screen_scroll() == 0, "(4) und zurueck auf 0");
     press(RE15_PAD_BIT_R1);
-    CHECK(re15_itembox_screen_scroll() == 5, "(4) R1 springt +5 (RE2 Schulter-Sprung)");
+    CHECK(re15_itembox_screen_scroll() == 5 && re15_itembox_screen_state() == 1,
+          "(4) R1 springt +5 SOFORT (Commit ohne Animation @0x8007005c), ist %d",
+          re15_itembox_screen_scroll());
     press(RE15_PAD_BIT_L1);
     CHECK(re15_itembox_screen_scroll() == 0, "(4) L1 springt -5 zurueck");
-    {   /* voller Ring-Umlauf: 64 Schritte fuehren wieder auf 0 */
+    {   /* voller Ring-Umlauf ueber die Schulter-Sprunge (64 = 5*12 + 4) */
         int k;
-        for (k = 0; k < RE15_BOX_SLOTS; k++) press(RE15_PAD_BIT_DOWN);
+        for (k = 0; k < 12; k++) press(RE15_PAD_BIT_R1);
+        for (k = 0; k < 4; k++) scroll_line(RE15_PAD_BIT_DOWN);
         CHECK(re15_itembox_screen_scroll() == 0,
-              "(4) 64 Schritte = ein voller Ring-Umlauf, ist %d",
+              "(4) 12x5 + 4 = 64 = ein voller Ring-Umlauf, ist %d",
               re15_itembox_screen_scroll());
     }
 

@@ -325,6 +325,12 @@ static uint8_t s_bx_state  = 0;   /* RE2 DAT_800d5bf2: 0 inv / 1 box / 5 msg wai
  * IMMER (scroll + RE15_BOX_PICK_ROW) & 0x3f — der Cursor steht fest, der Inhalt
  * wandert (FUN_800703b8 Kopf). */
 static uint8_t s_bx_scroll = 0;
+/* Scroll-Animation (RE2 +0x03 Framezaehler, +0x25 Pixelversatz) */
+static uint8_t s_bx_anim   = 0;   /* 0..6: 0..5 animieren, 6 committet */
+static int8_t  s_bx_pixoff = 0;   /* vorzeichenbehaftet, Schritt +/-3   */
+/* Tasten-Wiederholung (RE2 Anlauf 10 / Takt 6, @0x800689f4) */
+static uint8_t s_bx_rep_ctr = 0;
+static uint16_t s_bx_rep_bit = 0;
 
 int re15_itembox_screen_state(void)  { return s_bx_state; }
 int re15_itembox_screen_panel(void)  { return s_bx_panel; }
@@ -332,6 +338,20 @@ int re15_itembox_screen_scroll(void) { return s_bx_scroll; }
 int re15_itembox_screen_pick(void)
 {
     return (s_bx_scroll + RE15_BOX_PICK_ROW) & (RE15_BOX_SLOTS - 1);
+}
+int re15_itembox_screen_pixoff(void) { return s_bx_pixoff; }
+
+/* Wiederholungs-Gate fuer eine Taste: erste Flanke sofort, dann Anlauf 10 Frames,
+ * danach alle 6 (RE2 FUN_800689bc/FUN_80039464, Parameter 0x060a). */
+static int bx_repeat(uint16_t pressed, uint16_t held, uint16_t bit)
+{
+    if (pressed & bit) { s_bx_rep_bit = bit; s_bx_rep_ctr = RE15_BOX_REPEAT_DELAY; return 1; }
+    if ((held & bit) && s_bx_rep_bit == bit) {
+        if (s_bx_rep_ctr > 0) { s_bx_rep_ctr--; return 0; }
+        s_bx_rep_ctr = RE15_BOX_REPEAT_RATE;
+        return 1;
+    }
+    return 0;
 }
 
 /* menu_common.c bridges (the shared message VM + SEs). */
@@ -350,6 +370,7 @@ void re15_itembox_screen_open(void)
      * Page 0 on entry [DESIGN — RE2 scroll persists in DAT_800d5c14 only within
      * the screen; init writes scroll:=0 @§2.2]. */
     s_bx_panel = 3; s_bx_state = 0; s_bx_scroll = 0;
+    s_bx_anim = 0; s_bx_pixoff = 0; s_bx_rep_ctr = 0; s_bx_rep_bit = 0;
     g_inv_screen.item_cursor = 0;
     g_inv_screen.box_mode = 1;
     g_inv_screen.box_scroll = 0;
@@ -417,17 +438,20 @@ static void bx_exit_row(uint16_t pressed)
  * replace RE2's fixed-middle-row 64-ring scroll (§2.4 states 1/2/3). The flip is
  * INSTANT like RE2's ±5 shoulder keys (commit tail @0x8007005c); the 6-frame
  * ±3px scroll anim (quirk 11) has no analog here. */
-static void bx_state1(uint16_t pressed)
+static void bx_state1(uint16_t pressed, uint16_t held)
 {
-    if (pressed & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN |
-                   RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) bse(4);
-    /* RING-NAVIGATION (RE2): der Cursor steht fest, der SCROLL-Stand wandert.
-     * Hoch/Runter = +/-1, die Schulter-Tasten springen +/-5 (Sofort-Commit
-     * @0x8007005c). Alles laeuft im 64er-Ring um (Maske 0x3f). */
-    if      (pressed & RE15_PAD_BIT_DOWN)  s_bx_scroll = (uint8_t)((s_bx_scroll + 1) & (RE15_BOX_SLOTS - 1));
-    else if (pressed & RE15_PAD_BIT_UP)    s_bx_scroll = (uint8_t)((s_bx_scroll + RE15_BOX_SLOTS - 1) & (RE15_BOX_SLOTS - 1));
-    if (pressed & RE15_PAD_BIT_R1) { bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + 5) & (RE15_BOX_SLOTS - 1)); }
-    if (pressed & RE15_PAD_BIT_L1) { bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + RE15_BOX_SLOTS - 5) & (RE15_BOX_SLOTS - 1)); }
+    /* RING-NAVIGATION (RE2 Case 1 @0x8006fed4): HOCH/RUNTER stossen die
+     * SCROLL-ANIMATION an (Sub-Zustaende 2/3), die Schulter-Tasten springen
+     * +/-5 OHNE Animation (Sofort-Commit @0x8007005c). Alles im 64er-Ring. */
+    if (pressed & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) bse(4);
+    if (pressed & RE15_PAD_BIT_UP)   { s_bx_state = 2; s_bx_anim = 0; s_bx_pixoff = 0; return; }
+    if (pressed & RE15_PAD_BIT_DOWN) { s_bx_state = 3; s_bx_anim = 0; s_bx_pixoff = 0; return; }
+    if (bx_repeat(pressed, held, RE15_PAD_BIT_R1)) {
+        bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + 5) & (RE15_BOX_SLOTS - 1));
+    }
+    if (bx_repeat(pressed, held, RE15_PAD_BIT_L1)) {
+        bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + RE15_BOX_SLOTS - 5) & (RE15_BOX_SLOTS - 1));
+    }
 
     if (re15_pad_virtual_word(pressed) & 0x8000) {           /* Abbrechen     */
         bse(5);
@@ -447,15 +471,41 @@ static void bx_state1(uint16_t pressed)
     }
 }
 
+/* Sub-Zustaende 2/3 — die SCROLL-ANIMATION (RE2 @0x8007000c / @0x8007019c):
+ * 6 Frames Pixelversatz zu je 3, dann der Commit-Frame, der den Scroll-Stand
+ * weiterschaltet und den Versatz nullt (die Rest-Pixel bis zum 20er-Raster macht
+ * der Commit als Sprung). Am Ende prueft RE2 den ROHEN Halte-Zustand erneut:
+ * bleibt die Taste gedrueckt, geht es OHNE Anlaufverzoegerung weiter
+ * (@0x80070024 / @0x800701b4) — gleichmaessig eine Zeile je 7 Frames. */
+static void bx_scroll_anim(uint16_t held, int dir)
+{
+    if (s_bx_anim < RE15_BOX_SCROLL_FRAMES) {
+        s_bx_anim++;
+        s_bx_pixoff = (int8_t)(s_bx_pixoff + dir * RE15_BOX_SCROLL_STEP_PX);
+        return;
+    }
+    /* Commit */
+    s_bx_pixoff = 0;
+    s_bx_anim   = 0;
+    s_bx_scroll = (uint8_t)((s_bx_scroll + (dir > 0 ? (RE15_BOX_SLOTS - 1) : 1))
+                            & (RE15_BOX_SLOTS - 1));
+    {
+        uint16_t again = (dir > 0) ? RE15_PAD_BIT_UP : RE15_PAD_BIT_DOWN;
+        if (held & again) { bse(4); return; }   /* im Scroll-Zustand bleiben */
+    }
+    s_bx_state = 1;
+}
+
 int re15_itembox_screen_tick(uint16_t pressed, uint16_t held)
 {
-    (void)held;
     if (s_bx_panel == 2) {
         bx_exit_row(pressed);
     } else if (s_bx_panel == 3) {
         switch (s_bx_state) {
         case 0: bx_state0(pressed); break;
-        case 1: bx_state1(pressed); break;
+        case 1: bx_state1(pressed, held); break;
+        case 2: bx_scroll_anim(held, +1); break;   /* RUECKWAERTS (scroll-1) */
+        case 3: bx_scroll_anim(held, -1); break;   /* VORWAERTS  (scroll+1) */
         case 5:
             /* RE2 state 5: wait until the message bit clears -> state 1
              * (DAT_800e873c bit 0x80 poll, §2.4 state 5). */
@@ -474,7 +524,7 @@ int re15_itembox_screen_tick(uint16_t pressed, uint16_t held)
      * [DESIGN]: box side = the hovered box slot's id. Drawn through the
      * campaign's byte-true name-bank pipeline (FUN_80028c1c glyphs — the same
      * id catalog re15_item_name mirrors in ASCII). */
-    if (s_bx_panel == 3 && s_bx_state == 1)
+    if (s_bx_panel == 3 && (s_bx_state == 1 || s_bx_state == 2 || s_bx_state == 3))
         g_inv_screen.name_item =
             (int16_t)g_itembox.slots[re15_itembox_screen_pick()].id;
     else
@@ -483,7 +533,9 @@ int re15_itembox_screen_tick(uint16_t pressed, uint16_t held)
     /* builder mirrors */
     g_inv_screen.box_scroll = s_bx_scroll;
     g_inv_screen.box_side   = (s_bx_panel == 2) ? 2
-                            : (s_bx_state == 1 || s_bx_state == 5) ? 1 : 0;
+                            : (s_bx_state == 1 || s_bx_state == 2 ||
+                               s_bx_state == 3 || s_bx_state == 5) ? 1 : 0;
+    g_inv_screen.box_pixoff = s_bx_pixoff;
 
     return (s_bx_panel == 0) ? 1 : 0;   /* panel 0 = exit start -> menu close */
 }

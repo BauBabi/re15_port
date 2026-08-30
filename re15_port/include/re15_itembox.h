@@ -41,6 +41,23 @@
 #define RE15_BOX_WINDOW     10
 #define RE15_BOX_PICK_ROW    2
 
+/* SCROLL-ANIMATION (RE2 Sub-Zustaende 2/3, @0x8007000c / @0x8007019c):
+ * 6 Animations-Frames zu je 3 Pixeln, danach 1 Commit-Frame, der den Scroll-Stand
+ * um 1 weiterschaltet und den Pixel-Versatz nullt = 7 Frames je Zeile. RE2s
+ * Zeilenraster ist 20 px, die Animation legt nur 18 px zurueck — die restlichen
+ * 2 px macht der Commit als Sprung (Beleg: analysis/itembox_re2/re2-box-screen.md).
+ * Die Schulter-Tasten springen OHNE Animation (Sofort-Commit @0x8007005c). */
+#define RE15_BOX_SCROLL_FRAMES  6
+#define RE15_BOX_SCROLL_STEP_PX 3
+#define RE15_BOX_ROW_PX        20
+
+/* TASTEN-WIEDERHOLUNG des Item-Schirms (RE2 FUN_800689bc: Maske 0xf01c,
+ * Parameter 0x060a @0x800689f4) = Anlauf 10 Frames, danach alle 6 Frames.
+ * Gehaltenes HOCH/RUNTER umgeht das Gate (Zustaende 2/3 pruefen den rohen
+ * Halte-Zustand selbst) und laeuft deshalb gleichmaessig 1 Zeile je 7 Frames. */
+#define RE15_BOX_REPEAT_DELAY  10
+#define RE15_BOX_REPEAT_RATE    6
+
 /* 2-Zellen-Waffe in der Box: size 3 (RE2 `sb 3 -> box.size` @0x80070ad0-dc / @0x80070c30-3c). */
 #define RE15_BOX_KIND_WIDE  3
 
@@ -96,6 +113,8 @@ int  re15_itembox_screen_state(void);   /* main state 0/1/5 (RE2 DAT_800d5bf2)  
 int  re15_itembox_screen_panel(void);   /* 3 = main, 2 = EXIT row (DAT_800d5bf1)*/
 int  re15_itembox_screen_scroll(void);  /* Scroll-Stand 0..63 (RE2 DAT_800d5c14) */
 int  re15_itembox_screen_pick(void);    /* gewaehlter Platz = (scroll+2)&0x3f    */
+int  re15_itembox_screen_pixoff(void);  /* Scroll-Pixelversatz (RE2 DAT_800d5c15,
+                                         * vorzeichenbehaftet: 0,3..18 bzw. 0,-3..-18) */
 
 /* flat accessors for persistence (savedata v4 box[32]: page*8+i order). */
 void re15_itembox_export(re15_inv_slot_t out[RE15_BOX_SLOTS]);
