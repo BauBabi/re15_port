@@ -1,3 +1,25 @@
+# RE1.5 Port — v0.3.44 (Early Preview)
+
+Nachbesserung auf deine drei Befunde zu v0.3.43.
+
+- **Kartenmarkierungen schlugen ins normale Inventar durch.** Das war ein echter Fehler:
+  Türen und Treppen wurden gezeichnet, ohne zu prüfen, ob überhaupt die Karte offen ist.
+  Sie hängen jetzt am selben Riegel wie die Karte — **sichtbar erst, wenn du MAP drückst**.
+- **Spielmarker im kleinen Raum (ROOM1170).** Der Marker wird jetzt **hart in sein
+  Rechteck geklemmt** (mit Rand, weil er als kleines Quadrat um seinen Mittelpunkt
+  gezeichnet wird), und er erscheint nur noch, wenn der Bereich, in dem du stehst, auch
+  zu dem Kartenblatt gehört, das gerade angezeigt wird — sonst gar nicht, statt
+  irgendwo.
+- **Pre-Intro: jetzt exakt RE2s Choreographie.** Du hattest recht, ich hatte mich da
+  ausgetobt. RE2 ist viel sparsamer: In der ganzen Sequenz gibt es **drei** Bewegungen —
+  **genau ein** Standbild schwenkt, und **zwei Logos** bilden eine Zoom-Klammer (eines
+  fährt zu, eines auf). Alle übrigen Bilder blenden nur. Genau so liegt es jetzt auf
+  unseren neun Bildern: der Zombie-Kopf schwenkt, das S.T.A.R.S.-Abzeichen fährt zu,
+  das Umbrella-Logo fährt auf, der Rest blendet. Die Geschwindigkeiten waren schon
+  vorher aus RE2 übernommen und bleiben unverändert.
+
+---
+
 # RE1.5 Port — v0.3.43 (Early Preview)
 
 Zwei große Baustellen: die **Item-Box läuft jetzt komplett nach Resident Evil 2**, und
