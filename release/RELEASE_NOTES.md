@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.3.48 (Early Preview)
+
+**1. Umbrella-Logo: jetzt zoomt es ÜBER dem stehenden Labor-Bild.** Du hattest recht, und
+mein Clear aus v0.3.47 war an der falschen Stelle. Im Original bleibt das Standbild
+**stehen** und das Logo zoomt darauf — belegt: Das Standbild wird auf „einblenden"
+gesetzt, ohne irgendetwas zu verdrängen, und das Logo blendet erst **165 Frames später**
+aus. Beide sind die ganze Zeit gleichzeitig zu sehen. Genau so läuft es jetzt.
+
+**2. Item-Box: die Symbole überlappen nicht mehr.** Das war ein klarer Fehler von mir —
+RE2 zeichnet je Zeile ein **25×19**-Symbol (breite Waffen 49×19), das in den
+20-Pixel-Zeilenabstand passt. Ich habe unsere 40×30-Kachel gemalt, also 30 Pixel hoch bei
+20 Pixel Abstand: die Zeilen mussten sich überlagern.
+
+**3. Item-Box: das Panel hat jetzt RE2s Original-Maße.** Ich habe die beiden
+Geometrie-Tabellen des Originals ausgelesen **und ihre Zuordnung am Code belegt** (beide
+Tabellen werden rückwärts durchlaufen, deshalb gehören die Einträge paarweise zusammen —
+in v0.3.47 hatte ich sie falsch gepaart). Daraus die 16 Rahmenteile mit exakten Maßen:
+obere und untere Leiste (je zweiteilig, 128×4 + 77×4), Pfosten 3×153, innere Senkrechte
+2×142, Kopf- und Fußband, **Scrollbalken-Schiene 8×130**, Pfeilfelder, die L1/R1-Anzeigen
+20×20 und die fünf Marken.
+
+**Was weiterhin fehlt — und ich sage es klar:** Die *Bildquelle* der Rahmenteile. Sie sind
+im Original Sprites **ohne eigenen Texturverweis** — sie erben ihn aus dem Speicherzustand
+des Menüs. ST0/ST1 sind es nachweislich nicht: Ich habe das Panel mit den echten
+Koordinaten aus ihnen gerendert und nachgesehen, dort liegen die Item-Symbole; außerdem
+bringen sie nicht einmal die passende Farbtabelle mit. Ohne einen **Speicherauszug aus
+laufendem RE2** ist die Quelle nicht bestimmbar. Bis dahin haben die Teile RE2s Form und
+Maße, aber unsere Menüfarben als Füllung.
+
+---
+
 # RE1.5 Port — v0.3.47 (Early Preview)
 
 **1. Umbrella-Logo blendet nicht mehr ins Labor-Bild.** In RE2 nachgesehen: Vor dem
