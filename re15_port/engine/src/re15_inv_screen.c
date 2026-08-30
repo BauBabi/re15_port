@@ -931,21 +931,78 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  128, 128, 128, 0);
         }
     }
-    {   /* Umriss des Listen-Panels (vier Linien) */
-        const int PX0 = 8, PY0 = 34, PX1 = 162, PY1 = 146;
-        int t3;
-        for (t3 = 0; t3 < 4; t3++) {
-            re15_inv_op_t *o;
-            if (e.n >= e.max) break;
-            o = &e.ops[e.n++];
-            o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-            switch (t3) {
-            case 0: o->x = PX0; o->y = PY0; o->w = PX1; o->h = PY0; break;
-            case 1: o->x = PX0; o->y = PY1; o->w = PX1; o->h = PY1; break;
-            case 2: o->x = PX0; o->y = PY0; o->w = PX0; o->h = PY1; break;
-            default:o->x = PX1; o->y = PY0; o->w = PX1; o->h = PY1; break;
+    {   /* ---- RE2s BOX-PANEL-AUFBAU ----------------------------------------
+         * Nutzer 2026-08-30: "bei der item boxen fehlen praktisch all die item box
+         * Grafiken aus resident evil 2, deshalb sieht es scheisse aus."
+         *
+         * RE2 baut sein Box-Panel aus 25 Sprites: Geometrie-Tabellen
+         * @0x800a9bc4 {u,v,w,h} und @0x800a9c38 {x,y} (beide selbst ausgelesen,
+         * Aufbau in FUN_80070e58). Panel-Ursprung (7,14), Ausdehnung 211x149:
+         *   (3,0) 128x4 + (131,0) 77x4     obere Leiste (zweiteilig)
+         *   (3,149) 128x4 + (131,149) 77x4 untere Leiste
+         *   (0,0) 3x153 + (208,0) 3x153    Seitenpfosten
+         *   (4,6) 2x142 + (196,6) 2x142    innere Senkrechte
+         *   (6,6)/(134,6) 128x20 / 62x20   Kopfband, (6,127)/(134,127) Fussband
+         *   (199,11) 8x130                 SCHIENE des Scrollbalkens
+         *   (199,4) / (199,142) 8x6        Pfeil hoch / runter
+         *   5x 6x2                         Marken im Scrollbalken
+         * Die BILDQUELLE der Sprites steckt im VRAM-Zustand des Menues (die SPRTs
+         * erben ihren Texturbereich, FUN_80070e58 setzt fuer sie keinen eigenen) —
+         * sie ist hier nicht aufgeloest. Uebernommen ist deshalb der AUFBAU: die
+         * Leisten, Pfosten, Baender, die Scrollbalken-Schiene und die Pfeile
+         * werden mit unseren Menue-Farben gezeichnet. Auf unsere linke
+         * Bildschirmhaelfte gelegt (RE2s Panel nimmt fast die ganze Breite ein,
+         * bei uns steht rechts das Inventar-Gitter). */
+        const int PX0 = 8, PY0 = 32, PX1 = 163, PY1 = 148;
+        const int BARX = 152;                 /* Scrollbalken-Schiene            */
+        struct { int x0, y0, x1, y1, r, g, b; } chrome[] = {
+            /* obere und untere Leiste (RE2-Sprites 0..3), 4 px dick */
+            { PX0,   PY0,   PX1,   PY0+3,  104, 128, 152 },
+            { PX0,   PY1-3, PX1,   PY1,    104, 128, 152 },
+            /* Seitenpfosten (Sprites 4/5), 3 px */
+            { PX0,   PY0,   PX0+2, PY1,     88, 108, 132 },
+            { PX1-2, PY0,   PX1,   PY1,     88, 108, 132 },
+            /* innere Senkrechte (Sprites 11/12), 2 px */
+            { PX0+5, PY0+6, PX0+6, PY1-6,   64,  80, 100 },
+            /* Kopf- und Fussband (Sprites 7..10) */
+            { PX0+6, PY0+4, PX1-6, PY0+7,   72,  92, 116 },
+            { PX0+6, PY1-7, PX1-6, PY1-4,   72,  92, 116 },
+            /* Schiene des Scrollbalkens (Sprite 13) */
+            { BARX,  PY0+8, BARX+7, PY1-8,  56,  72,  92 },
+        };
+        int ci, yy;
+        for (ci = 0; ci < (int)(sizeof chrome / sizeof chrome[0]); ci++) {
+            for (yy = chrome[ci].y0; yy <= chrome[ci].y1; yy++) {
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)chrome[ci].x0; o->y = (int16_t)yy;
+                o->w = (int16_t)chrome[ci].x1; o->h = (int16_t)yy;
+                o->r = (uint8_t)chrome[ci].r;
+                o->g = (uint8_t)chrome[ci].g;
+                o->b = (uint8_t)chrome[ci].b;
             }
-            o->r = 120; o->g = 140; o->b = 180;
+        }
+        /* Pfeile hoch/runter am Scrollbalken (RE2-Sprites 14/15 bei (199,4) und
+         * (199,142)): in RE2 leuchten sie auf, solange die zugehoerige Taste
+         * gehalten wird (@0x8006ff.. Helligkeit 0x78/0x64 bzw. 0x50/0x3c) — hier
+         * als kleines Dreieck aus drei Linien. */
+        {
+            int ay, k2;
+            for (k2 = 0; k2 < 2; k2++) {
+                int base = k2 ? (PY1 - 7) : (PY0 + 4);
+                for (ay = 0; ay < 4; ay++) {
+                    re15_inv_op_t *o;
+                    int wdt = k2 ? ay : (3 - ay);
+                    if (e.n >= e.max) break;
+                    o = &e.ops[e.n++];
+                    o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                    o->x = (int16_t)(BARX + 3 - wdt); o->y = (int16_t)(base + ay);
+                    o->w = (int16_t)(BARX + 3 + wdt); o->h = o->y;
+                    o->r = 168; o->g = 192; o->b = 216;
+                }
+            }
         }
     }
 
@@ -999,7 +1056,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int LIST_X1 = 150;                /* rechter Rand der Streifen       */
         const int NAME_X  = 14;                 /* RE2: boxX + 7                   */
         const int ICON_X  = 108;                /* Symbol rechts in der Zeile      */
-        const int BAR_X   = 156;                /* Scrollbalken                    */
+        const int BAR_X   = 153;                /* Marken IN der Scrollbalken-Schiene */
         const int ROW0_Y  = 41;                 /* RE2: erste Zeile y 41..60       */
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
         int k;
@@ -1052,8 +1109,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             if (e.n >= e.max) break;
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-            o->x = (int16_t)BAR_X; o->y = (int16_t)(26 + slot * 2);
-            o->w = (int16_t)(BAR_X + 4); o->h = o->y;
+            /* RE2: y = boxY + 12 + slot*2 (2 px je Ring-Platz, 128 px Schiene).
+             * Unsere Schiene ist 100 px hoch, die Marke wandert also mit
+             * 100/64 px je Platz — dieselbe Aussage auf unserer Panel-Hoehe. */
+            o->x = (int16_t)BAR_X; o->y = (int16_t)(42 + (slot * 96) / 64);
+            o->w = (int16_t)(BAR_X + 5); o->h = o->y;
             o->r = 200; o->g = 200; o->b = 160;
         }
     }
