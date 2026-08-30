@@ -106,3 +106,48 @@ Die vier RE2-Bausteine sind direkt übertragbar, weil unsere BG-Blit-Kette berei
 
 Alles sind PRÄSENTATIONS-Parameter mit RE2-Beleg; unsere Bild-Reihenfolge, Standzeiten,
 Texte und der Skip bleiben byte-true RE1.5 (Inventar: `re15-montage-inventar.md`).
+
+## 5. ⛔ Die Bewegung laeuft UEBER den Bildwechsel weiter (Korrektur 2026-08-30)
+
+Nutzer-Report: „3. Bild ist korrekt das es raus zoomed, aber es muss bis in das naechste
+Standbild zoomen. Bei dir wird das Logo ploetzlich wieder gross." — bestaetigt am Code.
+
+**Der Zustand ist ein BITFELD, und beim Uebergang kippt nur das BLEND-Bit:**
+
+| Uebergang | Bits vorher | Bits nachher | was bleibt |
+|---|---|---|---|
+| 71 -> 75 | 0x47 = aktiv+rampe+**einblenden**+Zoom-zu | 0x4B = aktiv+rampe+**ausblenden**+Zoom-zu | **Zoom-Bit 0x40** |
+| 39 -> 43 | 0x27 = …+**einblenden**+Zoom-auf | 0x2B = …+**ausblenden**+Zoom-auf | **Zoom-Bit 0x20** |
+| 23 -> 27 | 0x17 = …+**einblenden**+Wandern | 0x1B = …+**ausblenden**+Wandern | **Wander-Bit 0x10** |
+
+**Und die Timeline laesst das naechste Bild dazwischen erscheinen** (§3.5 in
+`re2-sequenzer.md`):
+
+```
+Phase 2, t=905 : {10} -> 71     Logo erscheint und zoomt ZU
+Phase 3, t=94  : {11..14} -> 7  DAS NAECHSTE STANDBILD ist da — das Logo zoomt weiter
+Phase 3, t=204 : {10} -> 75     erst JETZT blendet das Logo aus … und zoomt dabei WEITER
+```
+
+Zwischen dem Erscheinen des naechsten Standbildes und dem Ausblenden des Logos liegen
+**110 Frames**, in denen beide gleichzeitig sichtbar sind und das Logo durchgehend zoomt.
+Dasselbe Muster bei {19}: Phase 4 t=580 -> 39, Phase 5 t=96 naechstes Bild, t=261 -> 43.
+
+**Konsequenz fuer den Port:** Es reicht NICHT, „dem aktuellen Bild" eine Bewegung zu
+geben. Jede Bild-EBENE traegt ihre eigene Bewegung und fuehrt sie ueber den Bildwechsel
+hinaus fort; erst wenn sie ausgeblendet ist, verschwindet sie. Umgesetzt als
+Zwei-Ebenen-Modell in `re15_montage_fx.c` (`fx_layer_t cur, prev` — beide werden
+getickt, beide zeichnen mit ihrem eigenen Pan/Zoom).
+
+## 6. Die Zuordnung auf unsere neun Bilder
+
+| Cut | Motiv | Bewegung | RE2-Vorbild |
+|---|---|---|---|
+| 1 | Zombie-Kopf | **Standbild** | {0,1}/{6..9}, Zustand 7 |
+| 2 | T-Virus-Mikroskopbild | **wandert** von oben nach unten | {2..5}, 23 -> 27 |
+| 3 | S.T.A.R.S.-Abzeichen | **zoomt heraus**, laeuft weiter | {10}, 71 -> 75 |
+| 4 | S.T.A.R.S. vor dem Villentor | Standbild | {11..14}, 7 -> 11 |
+| 5 | Helikopter ueber der Explosion | Standbild | dito |
+| 6 | Gruppe vor dem Helikopter | Standbild | dito |
+| 7 | Umbrella-Laborinneres | Standbild | {20..23}, 7 -> 11 |
+| 8 | Umbrella-Logo | **zoomt hinein**, laeuft weiter | {19}, 39 -> 43 |

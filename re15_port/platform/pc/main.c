@@ -3838,7 +3838,10 @@ re_title:;
                 re15_bg_blit_montage(re15_montage_fx_level_new(),
                                      re15_montage_fx_level_prev(),
                                      re15_montage_fx_pan_y(),
-                                     re15_montage_fx_base_zoom() + re15_montage_fx_zoom_px());
+                                     re15_montage_fx_base_zoom() + re15_montage_fx_zoom_px(),
+                                     re15_montage_fx_prev_pan_y(),
+                                     re15_montage_fx_prev_base_zoom()
+                                         + re15_montage_fx_prev_zoom_px());
             } else {
                 re15_bg_blit(0, 0);
             }

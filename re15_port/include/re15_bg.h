@@ -65,7 +65,10 @@ int re15_bg_is_loaded(void);
 void re15_bg_snapshot_prev(void);
 int  re15_bg_prev_ready(void);
 void re15_bg_prev_invalidate(void);
-void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom);
+/* Montage-Blit: zwei Ebenen mit je EIGENER Bewegung — die ausblendende fuehrt ihre
+ * Bewegung ueber den Bildwechsel hinaus fort (RE2-Bitfeld, s. re15_montage_fx.h). */
+void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom,
+                          int prev_pan_y, int prev_zoom);
 
 /* AZ-round 2026-05-28: sprite.pri foreground-occluder patch.
  * Re-blit a rectangle of the cached BG image onto the framebuffer to

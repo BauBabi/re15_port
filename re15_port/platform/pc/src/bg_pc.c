@@ -439,7 +439,8 @@ static void bg_blend_layer(const uint32_t *src, int level, int pan_y, int zoom, 
     }
 }
 
-void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom)
+void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom,
+                          int prev_pan_y, int prev_zoom)
 {
     if (!s_bg_loaded) return;
     /* DIESELBE Instrumentierung wie re15_bg_blit — der Montage-Pfad ist ein zweiter
@@ -448,11 +449,13 @@ void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom)
     if (re15_fade_log_on())
         fprintf(stderr, "[bg-log] F%u blit %s (room=%04x)\n",
                 g_engine.frame_count, s_bg_tag, g_current_room_id);
-    /* Voriges Bild zuerst (es blendet aus), ohne Bewegung — RE2 laesst das ausblendende
-     * Element auf seinem Stand stehen und bewegt nur das neue weiter. */
+    /* Voriges Bild zuerst (es blendet aus) — MIT SEINER EIGENEN, WEITERLAUFENDEN
+     * Bewegung. RE2 kippt beim Uebergang nur das Blend-Bit und laesst das
+     * Bewegungs-Bit stehen (71 -> 75 / 39 -> 43 / 23 -> 27), das ausblendende
+     * Element zoomt bzw. wandert also ueber den Bildwechsel hinaus weiter. */
     int first = 1;
     if (s_bg_prev_ok && level_prev > 0) {
-        bg_blend_layer(s_bg_prev, level_prev, 0, 0, 1);
+        bg_blend_layer(s_bg_prev, level_prev, prev_pan_y, prev_zoom, 1);
         first = 0;
     }
     bg_blend_layer(s_bg_cache, level_new, pan_y, zoom, first);
