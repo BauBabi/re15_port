@@ -61,6 +61,11 @@ int  re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
                           int rx, int ry, int rw, int rh, int16_t *mx, int16_t *my);
 void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
 
+/* MARKEN auf der Karte: Tueren (kind 0) und Treppen (kind 1), in Karten-Pixeln.
+ * re15_map_mark_get liefert 1, wenn die Marke SICHTBAR ist (ihre Zone ist besucht). */
+int re15_map_mark_count(void);
+int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
+
 int re15_map_stock_mode(void);
 void re15_map_stock_set(int v);   /* Tests: 0/1 erzwingen, -1 = Umgebung neu lesen */
 

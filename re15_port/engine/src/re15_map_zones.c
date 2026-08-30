@@ -167,6 +167,34 @@ int re15_map_visited(unsigned room_id)
     return 0;
 }
 
+/* ---- MARKEN (Tueren/Treppen) ------------------------------------------------
+ * Nutzer-Report: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
+ * muesste links im kleinen rechteck die Treppe eingezeichnet sein. Wenn das Symbol/
+ * der marker fuer Treppen fehlt in re 1.5, musst du ihn halt aus resident Evil 2
+ * uebernehmen." RE1.5 zeichnet auf seinen Karten-Seiten weder Tueren noch Treppen
+ * (die Rect-Grafik ist eine reine Flaeche); RE2 dagegen setzt gelbe Tuerpunkte in
+ * die Grafik und eigene 8x8-Marker fuer Uebergaenge (Tabelle @0x800a9b1c, Icons ab
+ * v=0xf0 der Karten-Seite). Weil RE1.5 diese Icons nicht mitliefert, zeichnet der
+ * Port sie aus Linien — Tuer als kurzer Strich, Treppe als Leiter-Symbol, in RE2s
+ * Tuer-Gelb. Positionen sind vorberechnet (tools/gen_map_zones.py). */
+#define MARK_COUNT ((int)(sizeof s_map_marks / sizeof s_map_marks[0]))
+
+int re15_map_mark_count(void) { return MARK_COUNT; }
+
+int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
+{
+    if (i < 0 || i >= MARK_COUNT) return 0;
+    {
+        const re15_map_mark_t *m = &s_map_marks[i];
+        *page = m->page; *rect = m->rect;
+        *mx = m->mx; *my = m->my; *kind = m->kind;
+        /* Nur zeigen, was der Spieler schon gesehen hat: die Marke gehoert zur Zone
+         * mit dieser Nummer — ist sie unbesucht, wird auch das Rechteck nicht
+         * gezeichnet, dann waere die Marke ein Hinweis auf Unbekanntes. */
+        return (s_visited[m->zid >> 3] >> (m->zid & 7)) & 1;
+    }
+}
+
 static int s_stock_mode = -1;
 int re15_map_stock_mode(void)
 {

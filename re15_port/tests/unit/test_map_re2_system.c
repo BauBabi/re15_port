@@ -155,6 +155,40 @@ int main(void)
         CHECK("verfaelschter Alt-Block abgewiesen", re15_savedata_validate(&sd) != 0);
     }
 
+    /* --- (7) TUEREN und TREPPEN als Marken (Nutzer-Report: "die Tuer ist auf der
+     *      Karte nicht eingezeichnet ... links im kleinen Rechteck muesste die Treppe
+     *      eingezeichnet sein"). Konkreter Fall ROOM1170: Zone 1 (das KLEINE Rechteck
+     *      oben, Seite 5 Rect 0) muss Treppen-Marken tragen, und Marken duerfen erst
+     *      sichtbar sein, wenn ihre Zone besucht ist. --- */
+    {
+        int n = re15_map_mark_count(), k;
+        int doors_p5 = 0, stairs_p5r0 = 0, vorher = 0, nachher = 0;
+        CHECK("Marken-Tabelle ist nicht leer", n > 0);
+        re15_map_visited_reset();
+        g_current_room_id = 0x9999;
+        re15_map_zone_update(0x9999, 0, 0);
+        for (k = 0; k < n; k++) {
+            int pg, r, mx, my, kind;
+            if (re15_map_mark_get(k, &pg, &r, &mx, &my, &kind) && pg == 5) vorher++;
+        }
+        CHECK("unbesuchte Zonen zeigen KEINE Marken", vorher == 0);
+        g_current_room_id = 0x1170;
+        re15_map_zone_update(0x1170, -18000, -22000);   /* der kleine Bereich */
+        for (k = 0; k < n; k++) {
+            int pg, r, mx, my, kind;
+            if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
+            if (pg != 5) continue;
+            nachher++;
+            if (kind == 0) doors_p5++;
+            if (kind == 1 && r == 0) stairs_p5r0++;
+        }
+        CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
+        CHECK("ROOM1170 hat TUEREN auf der Karte", doors_p5 > 0);
+        CHECK("das kleine Rechteck (Seite 5 Rect 0) traegt TREPPEN-Marken", stairs_p5r0 > 0);
+        printf("  [Marken] Seite 5: %d sichtbar, %d Tueren, %d Treppen in Rect 0\n",
+               nachher, doors_p5, stairs_p5r0);
+    }
+
     if (g_fail) { printf("FAIL\n"); return 1; }
     printf("OK\n");
     return 0;

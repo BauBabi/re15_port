@@ -1308,6 +1308,44 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         }
     }
 
+    /* ---- 4c. TUEREN und TREPPEN einzeichnen (Nutzer-Report 2026-08-30: "die Tuer
+     * ist auf der Karte nicht eingezeichnet ... auserdem muesste links im kleinen
+     * Rechteck die Treppe eingezeichnet sein"). RE1.5 malt auf seinen Karten-Seiten
+     * weder Tueren noch Treppen; RE2 setzt gelbe Tuerpunkte in die Grafik und eigene
+     * 8x8-Marker fuer Uebergaenge. Da RE1.5 diese Icons nicht mitbringt, zeichnet der
+     * Port sie aus kurzen Linien in RE2s Tuer-Gelb: Tuer = ein Strich quer, Treppe =
+     * Leiter (drei Sprossen). Nur fuer Zonen, die der Spieler schon gesehen hat. */
+    if (!re15_map_stock_mode()) {
+        int n = re15_map_mark_count(), k;
+        for (k = 0; k < n; k++) {
+            int mpage, mrect, mx, my, kind;
+            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
+            if (mpage != (int)st->map_page) continue;
+            if (kind == 0) {
+                /* TUER: 3 px breiter Strich */
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)(mx - 1); o->y = (int16_t)my;
+                o->w = (int16_t)(mx + 1); o->h = (int16_t)my;
+                o->r = 224; o->g = 176; o->b = 32;      /* RE2-Tuergelb (0x12dc) */
+            } else {
+                /* TREPPE: drei waagerechte Sprossen uebereinander */
+                int row;
+                for (row = -2; row <= 2; row += 2) {
+                    re15_inv_op_t *o;
+                    if (e.n >= e.max) break;
+                    o = &e.ops[e.n++];
+                    o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                    o->x = (int16_t)(mx - 2); o->y = (int16_t)(my + row);
+                    o->w = (int16_t)(mx + 2); o->h = (int16_t)(my + row);
+                    o->r = 232; o->g = 232; o->b = 200;  /* helle Stufen */
+                }
+            }
+        }
+    }
+
     /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base
      * 25e0/25e2 LIVE (lhu @0x80048748/@0x8004876c), AddPrim while slot < capacity;
      * build-time geometry FUN_80046a1c: 40x30 code 0x66, uv = icon-uv table entry i,

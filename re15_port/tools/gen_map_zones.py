@@ -93,6 +93,7 @@ def read_rdt(rid):
                 w, dep, x, z = struct.unpack_from('<HHhh', d, s + 24 + 12*i)
                 sca.append((x, z, w, dep))
     doors = []
+    stairs = []
     for name in ('mainScd', 'subScd'):
         s = offs[name]
         ends = sorted(v for v in offs.values() if v > s) + [len(d)]
@@ -111,6 +112,13 @@ def read_rdt(rid):
                 op = d[s+pc] if s+pc < len(d) else None
                 sz = SZ.get(op)
                 if sz is None: break
+                if op == 0x2c and s+pc+sz <= len(d):
+                    b = d[s+pc:s+pc+sz]
+                    # Aot_set (Kurzform, 20 B): Typ 12/13 = TREPPEN-Zone
+                    # (scd_vm.c: 'SCD Aot_set types 12/13 = die STAIR-Band-Zonen')
+                    if b[2] in (12, 13):
+                        rx, rz, rw, rd = struct.unpack_from('<hhhh', b, 6)
+                        stairs.append({'x': rx + rw//2, 'z': rz + rd//2})
                 if op in (0x3b, 0x68) and s+pc+sz <= len(d):
                     b = d[s+pc:s+pc+sz]
                     if op == 0x3b:
@@ -125,7 +133,7 @@ def read_rdt(rid):
                                   'nx': nx, 'nz': nz,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
                 pc += sz
-    return sca, doors
+    return sca, doors, stairs
 
 def zones_of(sca):
     """Zusammenhaengende Bereiche der Kollisionsgeometrie."""
@@ -167,13 +175,15 @@ def main():
     # Zonen + Tueren je Basis-Raum
     zinfo = {}
     doors_all = {}
+    stairs_all = {}
     for b in bases:
         got = read_rdt(b) or read_rdt(b + 1)
         if not got: continue
-        sca, doors = got
+        sca, doors, stairs = got
         zs = zones_of(sca)
         if zs: zinfo[b] = zs
         doors_all[b] = doors
+        stairs_all[b] = stairs
 
     # Zonen je Seite sammeln
     by_page = collections.defaultdict(list)      # page -> [(room, zi, bbox)]
@@ -296,6 +306,63 @@ def main():
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d} }},")
+    o.append("};")
+    # ---- MARKEN: Tueren und Treppen, in Karten-Koordinaten vorberechnet -------
+    # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
+    # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
+    # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
+    zpos = {}                       # (room, zi) -> (bbox, page, rect)
+    for b, zs in sorted(zinfo.items()):
+        for i, bb in enumerate(zs):
+            pr = assign.get((b, i))
+            if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
+    def to_map(room, zi, wx, wz):
+        e = zpos.get((room, zi))
+        if not e: return None
+        (x0, x1, z0, z1), pg, r = e
+        R = rects(pg)[r]
+        if x1 <= x0 or z1 <= z0: return None
+        fx = min(max(wx - x0, 0), x1 - x0)
+        fz = min(max(wz - z0, 0), z1 - z0)
+        return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + fz * R[3] // (z1 - z0)
+    def zone_at(room, wx, wz):
+        best, best_a = None, 0
+        for i, (x0, x1, z0, z1) in enumerate(zinfo.get(room, [])):
+            if x0 - GAP <= wx <= x1 + GAP and z0 - GAP <= wz <= z1 + GAP:
+                a = (x1 - x0) * (z1 - z0)
+                if best is None or a < best_a: best, best_a = i, a
+        return best
+    marks = []                      # (page, rect, mx, my, kind, zid)
+    seen = set()
+    zid_of = {}
+    _z = 0
+    for b, zs in sorted(zinfo.items()):
+        for i in range(len(zs)):
+            if assign.get((b, i)) is not None:
+                zid_of[(b, i)] = _z; _z += 1
+    for b in sorted(zinfo):
+        for kind, lst in ((0, doors_all.get(b, [])), (1, stairs_all.get(b, []))):
+            for m in lst:
+                wx = m['lx'] if kind == 0 else m['x']
+                wz = m['lz'] if kind == 0 else m['z']
+                zi = zone_at(b, wx, wz)
+                if zi is None: continue
+                mp = to_map(b, zi, wx, wz)
+                if not mp: continue
+                pg, r, mx, my = mp
+                key = (pg, r, mx, my, kind)
+                if key in seen: continue
+                seen.add(key)
+                marks.append((pg, r, mx, my, kind, zid_of.get((b, zi), 0)))
+    o.append("")
+    o.append("/* MARKEN: Tueren (kind 0) und Treppen (kind 1), bereits in Karten-Pixeln.")
+    o.append(" * Treppen stammen aus den SCD-Zonen Aot_set Typ 12/13 (die Band-Wechsel-")
+    o.append(" * Zonen), Tueren aus den Tuer-Datensaetzen. Gezeichnet werden sie nur fuer")
+    o.append(" * Zonen, die der Spieler schon gesehen hat. */")
+    o.append("typedef struct { unsigned char page, rect; short mx, my; unsigned char kind, zid; } re15_map_mark_t;")
+    o.append("static const re15_map_mark_t s_map_marks[] = {")
+    for pg, r, mx, my, kind, zd in sorted(marks):
+        o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d} }},")
     o.append("};")
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))
