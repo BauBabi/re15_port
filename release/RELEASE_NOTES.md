@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.3.46 (Early Preview)
+
+**Pre-Intro: der Mechanismus, den ich übersehen hatte.**
+
+Du hattest recht — und der Fehler saß tiefer als die Zuordnung der Effekte. In RE2 ist der
+Zustand eines Bildes ein **Bitfeld**, und beim Übergang von „einblenden" auf „ausblenden"
+kippt **nur das Blend-Bit — das Bewegungs-Bit bleibt gesetzt**. Dazu erscheint das nächste
+Standbild schon *während* das Logo noch zoomt: zwischen dem Auftauchen des nächsten Bildes
+und dem Beginn des Ausblendens liegen **110 Frames**, in denen beide gleichzeitig zu sehen
+sind und das Logo durchgehend weiterzoomt.
+
+Bei mir wurde die Bewegung beim Bildwechsel zurückgesetzt — daher „das Logo wird plötzlich
+wieder groß". Jetzt trägt **jedes Bild seine eigene Bewegung und führt sie über den Wechsel
+hinaus fort**, bis es ausgeblendet ist.
+
+Die Zuordnung ist jetzt die, die du beschrieben hast:
+
+| Bild | Bewegung |
+|---|---|
+| Zombie | Standbild |
+| T-Virus | wandert von oben nach unten |
+| S.T.A.R.S.-Abzeichen | zoomt heraus — **bis ins nächste Standbild hinein** |
+| Villa, Helikopter, Gruppe, Labor | Standbilder |
+| Umbrella-Logo | zoomt hinein — ebenfalls über den Bildwechsel hinaus |
+
+---
+
 # RE1.5 Port — v0.3.45 (Early Preview)
 
 **Der Box-Bildschirm sieht jetzt aus wie in RE2** — das fehlte, damit die neue Bedienung
