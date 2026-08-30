@@ -59,6 +59,14 @@ void re15_bg_blit(int dst_x, int dst_y);
  * the gradient fallback. */
 int re15_bg_is_loaded(void);
 
+/* MONTAGE-PRAESENTATION (Pre-Intro, RE2-Vorbild — s. re15_montage_fx.h):
+ * snapshot_prev sichert das aktuelle Bild als AUSBLENDENDE Ebene, blit_montage malt
+ * beide Ebenen gewichtet (Helligkeit 0..0x60) mit Wandern/Zoom. */
+void re15_bg_snapshot_prev(void);
+int  re15_bg_prev_ready(void);
+void re15_bg_prev_invalidate(void);
+void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom);
+
 /* AZ-round 2026-05-28: sprite.pri foreground-occluder patch.
  * Re-blit a rectangle of the cached BG image onto the framebuffer to
  * overdraw characters where they should be hidden behind BG geometry

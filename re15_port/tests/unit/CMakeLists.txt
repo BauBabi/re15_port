@@ -549,6 +549,14 @@ target_compile_definitions(test_dormant_activation PRIVATE
 add_test(NAME unit_dormant_activation COMMAND test_dormant_activation)
 set_tests_properties(unit_dormant_activation PROPERTIES TIMEOUT 30)
 
+# --- Pre-Intro-Montage nach RE2-Vorbild (Nutzer-Auftrag 2026-08-30): Ein-/Ausblend-Rampen,
+#     vertikales Wandern, zentrierter Zoom (RE2 OPENING.BIN Renderer 0x801c1a0c) ---
+add_executable(test_montage_fx test_montage_fx.c)
+target_link_libraries(test_montage_fx PRIVATE re15_engine re15_test_support)
+target_include_directories(test_montage_fx PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_montage_fx COMMAND test_montage_fx)
+set_tests_properties(unit_montage_fx PROPERTIES TIMEOUT 30)
+
 # --- RE2-Kartensystem (Nutzer-Auftrag 2026-08-30): Besucht-Bits am Raum-Lade-Choke-Point,
 #     Rect-Zustaende (rot/gruen/schwarz nach RE2 FUN_8006e120 @0x8006e4c4-72c) + Save v6 ---
 add_executable(test_map_re2_system test_map_re2_system.c)

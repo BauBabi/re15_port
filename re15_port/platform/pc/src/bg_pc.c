@@ -360,6 +360,104 @@ int re15_bg_is_loaded(void)
     return s_bg_loaded;
 }
 
+/* ==================================================================================
+ * MONTAGE-PRAESENTATION (Nutzer-Auftrag 2026-08-30: RE2s Pre-Intro-Praesentation
+ * uebernehmen). Mechanismus + Raten: RE2 OPENING.BIN Element-Renderer 0x801c1a0c
+ * (analysis/preintro_re2/re2-bewegung.md), Zustandsmaschine: engine/re15_montage_fx.c.
+ * Hier nur das Malen: Schnappschuss des vorigen Bildes + gewichteter Blit beider
+ * Ebenen mit Helligkeit (RE2-Prim-Modulation 0..0x60), vertikalem Wandern und
+ * zentriertem Zoom.
+ * ================================================================================== */
+static uint32_t s_bg_prev[BG_PIXELS];
+static int      s_bg_prev_ok = 0;
+
+void re15_bg_snapshot_prev(void)
+{
+    if (!s_bg_loaded) { s_bg_prev_ok = 0; return; }
+    memcpy(s_bg_prev, s_bg_cache, sizeof s_bg_prev);
+    s_bg_prev_ok = 1;
+}
+int re15_bg_prev_ready(void) { return s_bg_prev_ok; }
+void re15_bg_prev_invalidate(void) { s_bg_prev_ok = 0; }
+
+/* Eine Ebene additiv in den Framebuffer legen.
+ *   level  = RE2-Prim-Modulation 0..0x60; 0x60 == unveraendertes Bild (RE2 klemmt dort,
+ *            @0x801c1bb8-c0), darunter linear dunkler -> die Ein-/Ausblend-Rampe.
+ *   pan_y  = vertikaler Versatz in Pixeln (RE2 Bit4: 1 px je 10 Frames).
+ *   zoom   = Groessenaenderung in Pixeln auf BREITE UND HOEHE, zentriert
+ *            (RE2 Bit5/6: 2 px je 3 Frames, Zentrierung (320-w)/2 / (240-h)/2
+ *            @0x801c1df8-e24). Abtastung: Nearest — das PSX-Quad skaliert ebenso
+ *            ohne Filter.
+ * Additiv, weil sich in der Kreuzblende zwei Ebenen ueberlagern (RE2: zwei
+ * semi-transparente Prims, Code 0x2E). */
+static void bg_blend_layer(const uint32_t *src, int level, int pan_y, int zoom, int first)
+{
+    uint32_t *fb = re15_pc_framebuffer();
+    if (!fb || level <= 0) return;
+    int lmax = 0x60;
+    if (level > lmax) level = lmax;
+
+    /* RE2 addiert denselben Betrag auf W und H (@0x801c1d94/@0x801c1dd8) — dort sind die
+     * Quads QUADRATISCH (160x160 / 200x200), das Seitenverhaeltnis bleibt also erhalten.
+     * Unsere BSS sind 320x240, deshalb wird der Zoom hier PROPORTIONAL aufgeteilt
+     * (Hoehe = Betrag, Breite = Betrag * 320/240), sonst verzerrte das Bild. */
+    int sh = BG_HEIGHT + zoom;
+    int sw = BG_WIDTH  + (zoom * BG_WIDTH) / BG_HEIGHT;
+    if (sw < 16) sw = 16;
+    if (sh < 12) sh = 12;
+    int ox = (BG_WIDTH  - sw) / 2;          /* (320-w)/2 @0x801c1dfc-e0c */
+    int oy = (BG_HEIGHT - sh) / 2 + pan_y;  /* (240-h)/2 @0x801c1e10-24 + Wandern */
+
+    for (int y = 0; y < SCREEN_YRES; y++) {
+        int sy = ((y - oy) * BG_HEIGHT) / sh;
+        if (sy < 0 || sy >= BG_HEIGHT) {
+            if (first) memset(&fb[y * SCREEN_XRES], 0, (size_t)SCREEN_XRES * sizeof(uint32_t));
+            continue;
+        }
+        const uint32_t *srow = &src[sy * BG_WIDTH];
+        uint32_t       *drow = &fb[y * SCREEN_XRES];
+        for (int x = 0; x < SCREEN_XRES; x++) {
+            int sx = ((x - ox) * BG_WIDTH) / sw;
+            uint32_t v = 0;
+            if (sx >= 0 && sx < BG_WIDTH) {
+                uint32_t s = srow[sx];
+                unsigned r = (s >> 24) & 0xff, g = (s >> 16) & 0xff, b = (s >> 8) & 0xff;
+                r = (r * (unsigned)level) / (unsigned)lmax;
+                g = (g * (unsigned)level) / (unsigned)lmax;
+                b = (b * (unsigned)level) / (unsigned)lmax;
+                v = (r << 24) | (g << 16) | (b << 8) | 0xffu;
+            }
+            if (first) { drow[x] = v; continue; }
+            /* additiv mit Saettigung (zwei ueberlagerte semi-transparente Prims) */
+            unsigned dr = (drow[x] >> 24) & 0xff, dg = (drow[x] >> 16) & 0xff, db = (drow[x] >> 8) & 0xff;
+            unsigned ar = (v >> 24) & 0xff, ag = (v >> 16) & 0xff, ab = (v >> 8) & 0xff;
+            dr += ar; if (dr > 255) dr = 255;
+            dg += ag; if (dg > 255) dg = 255;
+            db += ab; if (db > 255) db = 255;
+            drow[x] = (dr << 24) | (dg << 16) | (db << 8) | 0xffu;
+        }
+    }
+}
+
+void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom)
+{
+    if (!s_bg_loaded) return;
+    /* DIESELBE Instrumentierung wie re15_bg_blit — der Montage-Pfad ist ein zweiter
+     * Blit-Weg, und die Boot-Pins (tests/integration/test_boot_bg_pin.cmake) lesen
+     * genau diese Zeile, um zu belegen, WELCHES Bild wirklich auf den Schirm geht. */
+    if (re15_fade_log_on())
+        fprintf(stderr, "[bg-log] F%u blit %s (room=%04x)\n",
+                g_engine.frame_count, s_bg_tag, g_current_room_id);
+    /* Voriges Bild zuerst (es blendet aus), ohne Bewegung — RE2 laesst das ausblendende
+     * Element auf seinem Stand stehen und bewegt nur das neue weiter. */
+    int first = 1;
+    if (s_bg_prev_ok && level_prev > 0) {
+        bg_blend_layer(s_bg_prev, level_prev, 0, 0, 1);
+        first = 0;
+    }
+    bg_blend_layer(s_bg_cache, level_new, pan_y, zoom, first);
+}
+
 /* Cache verwerfen — der PC-Gegenpart zu bg_psx.c:222 (bislang NUR im PSX-Backend definiert, der
  * PC-Link brach an der ersten Verwendung). Nach dem Aufruf malt die Frame-Schleife SCHWARZ
  * (main.c: `re15_bg_is_loaded()` false -> `re15_render_background_gradient(0,0,0,0,0,0)`), was dem

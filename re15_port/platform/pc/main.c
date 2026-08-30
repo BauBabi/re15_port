@@ -43,6 +43,7 @@ static inline int RNDI(float f) {
 }
 
 #include "re15_bg.h"
+#include "re15_montage_fx.h"   /* Pre-Intro-Praesentation nach RE2-Vorbild (OPENING.BIN) */
 #include "re15_audio.h"
 #include "re15_emd.h"
 #include "re15_skeleton.h"
@@ -3825,7 +3826,22 @@ re_title:;
          * framebuffer (replaces the gradient when an asset loaded).
          * Match PSX flow: BG first, meshes/HUD layer on top. */
         if (re15_bg_is_loaded()) {
-            re15_bg_blit(0, 0);
+            /* MONTAGE-PRAESENTATION (Nutzer-Auftrag 2026-08-30: RE2s Pre-Intro uebernehmen).
+             * Nur im Standbild-Raum ROOM1240: statt des 1-Frame-Hartschnitts blendet das
+             * neue Bild additiv auf (RE2-Rampe +2/Frame bis 0x60 = 48 Frames, Prim 0x2E +
+             * TPAGE-ABR=1 @0x801c1b94-c24) waehrend das vorige ausblendet, mit vertikalem
+             * Wandern bzw. zentriertem Zoom je Bild (re15_montage_fx.c). RE15_MONTAGE_STOCK=1
+             * = byte-true Hartschnitt. Der Erzaehler-Raum 1170 bleibt unberuehrt. */
+            re15_montage_fx_set_active(g_current_room_id == 0x1240);
+            if (re15_montage_fx_active()) {
+                re15_montage_fx_tick();
+                re15_bg_blit_montage(re15_montage_fx_level_new(),
+                                     re15_montage_fx_level_prev(),
+                                     re15_montage_fx_pan_y(),
+                                     re15_montage_fx_base_zoom() + re15_montage_fx_zoom_px());
+            } else {
+                re15_bg_blit(0, 0);
+            }
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
              * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,
@@ -4262,6 +4278,13 @@ re_title:;
                     ? re15_rdt_get_region_quad(&rdt, active_cut_idx,
                                                cam_region_xs, cam_region_zs)
                     : 0;
+                /* MONTAGE: vor dem Laden das noch stehende Bild als AUSBLENDENDE Ebene
+                 * sichern (RE2 haelt beide Elemente gleichzeitig aktiv, hide_others=0 —
+                 * die Ueberlappung der 48-Frame-Rampen IST die Kreuzblende). */
+                if (g_current_room_id == 0x1240 && !re15_montage_fx_stock()) {
+                    re15_bg_snapshot_prev();
+                    re15_montage_fx_on_cut(active_cut_idx, re15_bg_prev_ready());
+                }
                 re15_bg_load_cut(active_cut_idx);
 
                 /* BE-round: switch lighting tint to the new cut. */
