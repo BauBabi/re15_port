@@ -10,8 +10,10 @@ Mechanismus umgestellt wird.
 ## Wie man zurückkommt
 
 - **Git-Tag:** `itembox-hybrid-v1` (auf dem Commit direkt vor der Umstellung)
-- **Git-Branch:** `itembox-hybrid-v1`
+- **Git-Branch:** `backup/itembox-hybrid-v1`
 - **Datei-Kopien:** dieses Verzeichnis (unabhängig von Git lesbar)
+
+Alle drei sind auch auf GitHub gepusht.
 
 Wiederherstellen einzelner Dateien:
 ```

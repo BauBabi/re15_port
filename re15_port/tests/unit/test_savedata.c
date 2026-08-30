@@ -40,7 +40,7 @@ int main(void)
     re15_game_flag_set(3, 17, 1);
     re15_game_flag_set(5, 200, 1);
     re15_itembox_init();                                 /* v4: box contents */
-    g_itembox.pages[1].slots[3].id = 0x24; g_itembox.pages[1].slots[3].qty = 2;
+    g_itembox.slots[11].id = 0x24; g_itembox.slots[11].qty = 2;
     int want_band = re15_collision_band_from_y(-3600);   /* = 2 */
 
     /* 2. capture + save to slot 2 */
@@ -82,9 +82,9 @@ int main(void)
         fprintf(stderr, "FAIL(equip-slot): got %d\n", re15_inv_equipped_slot()); fail = 1; }
     if (re15_collision_debug_band() != want_band) {
         fprintf(stderr, "FAIL(band): got %d, want %d\n", re15_collision_debug_band(), want_band); fail = 1; }
-    if (g_itembox.pages[1].slots[3].id != 0x24 || g_itembox.pages[1].slots[3].qty != 2) {
+    if (g_itembox.slots[11].id != 0x24 || g_itembox.slots[11].qty != 2) {
         fprintf(stderr, "FAIL(box): v4 ITEM BOX not restored (got %02x q%d)\n",
-                g_itembox.pages[1].slots[3].id, g_itembox.pages[1].slots[3].qty); fail = 1; }
+                g_itembox.slots[11].id, g_itembox.slots[11].qty); fail = 1; }
     if (!fail) printf("  round-trip: player/room/char/inv/flags/weapon/band/box all restored\n");
 
     /* 6. empty slot -> -1 */

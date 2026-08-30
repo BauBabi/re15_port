@@ -1,40 +1,29 @@
 /*
- * re15_itembox.h — the ITEM BOX (RE1.5-hybrid, per shots/itembox_spec.md §6).
+ * re15_itembox.h — die ITEM BOX, VOLLSTAENDIG nach RESIDENT EVIL 2.
  *
- * PROVENANCE (every part flagged — no silent invention):
- *   [RE2-ported]      Transfer mechanics = RE2-Leon FUN_800703b8 VERBATIM where
- *                     applicable (all @0x8007xxxx cites = RE2-Leon retail EXE),
- *                     incl. the 14-quirk catalog (spec §7): ammo qty-SWAP,
- *                     whole-stack redirect, min(cursor,first-free) landing,
- *                     2-cell reject/front-shift/Size-3 analog, double
- *                     compaction, silent auto-unequip, compaction-on-open.
- *   [RE1.5-dormant]   Storage SHAPE = the four dormant init-zeroed 8-slot × 4-byte
- *                     arrays @0x800b1444/0x800b1484/0x800b14a4/0x800b14c4 inside
- *                     the RE1.5 save block (zero loop @0x8003e52c-554, sole
- *                     caller @0x8001d570; shots/itembox_verdict.md). The 0x20
- *                     un-zeroed gap 0x800b1464-1484 means the arrays are NOT
- *                     contiguous — modeled as 4 DISCRETE pages of 8, not a
- *                     32-ring. Their original purpose is UNDECIDABLE (could be
- *                     flag banks); the use as box pages is RE1.5-plausible only.
- *   [DESIGN, non-canonical] 4 pages × 8 with L1/R1 page flip REPLACES RE2's
- *                     64-slot scroll ring (§2.4: selection fixed at (scroll+2)&0x3f)
- *                     — decision §6. The L1/R1 flip stands in for RE2's ±5 page
- *                     keys (raw 0x4/0x8 shoulder, instant commit @0x8007005c).
- *   [RE1.5-adapted]   RE2's Size byte ↔ RE1.5's kind byte (+2 of the 4-byte slot;
- *                     DEFINITIVE semantics shots/inv_wave2_spec.md fact (2):
- *                     0 = 1-cell, 1 = wide HEAD, 2 = wide TAIL). Boxed-wide =
- *                     ONE box slot with kind 3 (RE2's `li v0,3; sb → Size`
- *                     @0x80070ad0-dc). Ammo id range = RE1.5's 0x15..0x21
- *                     (`sltiu id,0x22` @0x80049124 + ARMS-head table @0x8007492c;
- *                     stands in for RE2's 0x14..0x1f gate @0x80070490-94).
- *                     Ammo caps = the RE1.5 prop table @0x80074DA8 +0 (stride 12;
- *                     the same +0 byte the reload merge FUN_8004ebdc/FUN_8004e054
- *                     read @0x8004e338) standing in for RE2's DAT_800a9e1c[id*8]
- *                     (@0x800704c4).
- *   [Trigger: invented, precedent = the save phone] The 16 safe-room box AOTs
- *                     (message-only in the shipped MZD build) open the box screen
- *                     default-on; the shipped flavor message stays byte-true
- *                     reachable under RE15_BOX_PREVIEW_MSG=1.
+ * NUTZER-AUFTRAG 2026-08-30: "sichere die aktuelle Item Box implementierung, aber
+ * eigentlich waere mir doch lieb, wenn du die Itembox mit dem KOMPLETTEN Mechanismus
+ * aus Resident Evil 2 uebernimmst und portierst."
+ * Der vorherige HYBRID-Stand (RE2-Transfer + selbst erfundene 4x8-Seiten mit L1/R1)
+ * ist gesichert unter analysis/itembox_re2/backup_hybrid_v1/ (Tag itembox-hybrid-v1,
+ * Branch backup/itembox-hybrid-v1). Was sich aendert, steht dort im README.
+ *
+ * DAS RE2-MODELL (alles aus RE2-Leon SLUS-00748 belegt — Ableitung:
+ * analysis/itembox_re2/re2-box-transfer.md):
+ *   - BOX-Array @DAT_800d4a68 + slot*4, Slot-Format {id@+0, qty@+1, size@+2} —
+ *     identisch zum Inventar-Format @DAT_800d4a3c (RE1.5 nutzt dieselbe 4-Byte-Form).
+ *   - KAPAZITAET 64 Plaetze: die Auswahl-Formel maskiert mit 0x3f
+ *     (`uVar15 = DAT_800d5c14 + 2 & 0x3f`, FUN_800703b8 Kopf).
+ *   - RING statt Seiten: DAT_800d5c14 ist ein SCROLL-Stand; der ausgewaehlte Platz
+ *     ist IMMER `(scroll + 2) & 0x3f` — der Cursor steht fest, der Inhalt wandert.
+ *   - size 3 = "2-Zellen-Waffe liegt in der Box" (`sb 3 -> box.size`, Faelle 2/3).
+ *   - Transfer = FUN_800703b8: EINE Operation (Tausch inv[cursor] <-> box[pick]) mit
+ *     Munitions-Sonderweg, 2-Zellen-Behandlung und Abweisung + Melde-Zustand 5.
+ *
+ * RE1.5-ANPASSUNGEN (unvermeidbar, jeweils benannt): Munitions-Id-Bereich und
+ * Kapazitaets-Tabelle stammen aus RE1.5 (0x15..0x21 / Prop-Tabelle @0x80074DA8)
+ * statt RE2s 0x14..0x1F / DAT_800a9e1c; das Inventar hat 10 Plaetze ohne RE2s
+ * Personal-Slot 10.
  */
 #ifndef RE15_ITEMBOX_H
 #define RE15_ITEMBOX_H
@@ -42,19 +31,23 @@
 #include <stdint.h>
 #include "re15_inventory.h"   /* re15_inv_slot_t {id,qty,flags(kind),pad} */
 
-#define RE15_BOX_PAGES      4   /* the 4 dormant arrays @0x800b1444/1484/14a4/14c4 */
-#define RE15_BOX_PAGE_SLOTS 8   /* 8 × 4-byte slots per array (zero loop bound
-                                 * sltiu v0,a0,0x8 @0x8003e54c, RE1.5 PSX.EXE)   */
-#define RE15_BOX_SLOTS      (RE15_BOX_PAGES * RE15_BOX_PAGE_SLOTS)   /* 32 (§6) */
+/* KAPAZITAET: 64 — die Auswahl-Maske 0x3f in FUN_800703b8 (`DAT_800d5c14 + 2 & 0x3f`)
+ * definiert den Ring; Box-Array @0x800d4a68..0x800d4b68 = 64 * 4 Byte. */
+#define RE15_BOX_SLOTS      64
+/* Sichtbares Fenster in den Ring und die FESTE Cursor-Position darin.
+ * RE2: der gewaehlte Platz ist immer `scroll + 2` — der Cursor bewegt sich NIE,
+ * der Inhalt wandert unter ihm durch. Unser Box-Panel fasst 10 Zellen, zeigt also
+ * die Ring-Plaetze scroll..scroll+9; die Auswahl sitzt fest auf Zelle 2. */
+#define RE15_BOX_WINDOW     10
+#define RE15_BOX_PICK_ROW    2
 
-/* Boxed 2-cell weapon kind analog (RE2 Size 3 @0x80070ad0-dc / @0x80070c30-3c). */
+/* 2-Zellen-Waffe in der Box: size 3 (RE2 `sb 3 -> box.size` @0x80070ad0-dc / @0x80070c30-3c). */
 #define RE15_BOX_KIND_WIDE  3
 
 typedef struct {
-    /* pages[p].slots[i] mirrors the dormant array @0x800b1444 + p-th array
-     * (0x800b1444/0x800b1484/0x800b14a4/0x800b14c4), slot stride 4
-     * {id,qty,kind,pad} — RE1.5's inventory slot format (DAT_800b10ac shape). */
-    struct { re15_inv_slot_t slots[RE15_BOX_PAGE_SLOTS]; } pages[RE15_BOX_PAGES];
+    /* FLACHER 64-Platz-Ring — 1:1 RE2s Box-Array @DAT_800d4a68 (Schrittweite 4,
+     * {id,qty,size,pad}). Kein Seiten-Modell mehr. */
+    re15_inv_slot_t slots[RE15_BOX_SLOTS];
 } re15_itembox_t;
 
 extern re15_itembox_t g_itembox;
@@ -73,7 +66,7 @@ enum {
                                 * (@0x800707dc-ec). No box-full reject exists
                                 * (fixed slots, 1:1 swap — spec §3 tail). */
 };
-int re15_itembox_transfer(int inv_cursor, int page, int slot);
+int re15_itembox_transfer(int inv_cursor, int box_slot);
 
 /* Compaction-on-open (RE2 box task: FUN_80069714 @0x80068c60 = quirk 9) is done
  * by the shared menu phase-0 init (re15_inv_compact @0x800464a0 — the RE1.5
@@ -101,8 +94,8 @@ int  re15_itembox_screen_tick(uint16_t pressed, uint16_t held); /* 1 = close req
 /* introspection (tests) */
 int  re15_itembox_screen_state(void);   /* main state 0/1/5 (RE2 DAT_800d5bf2)  */
 int  re15_itembox_screen_panel(void);   /* 3 = main, 2 = EXIT row (DAT_800d5bf1)*/
-int  re15_itembox_screen_page(void);    /* current page 0..3                    */
-int  re15_itembox_screen_cursor(void);  /* box-side cell cursor 0..7            */
+int  re15_itembox_screen_scroll(void);  /* Scroll-Stand 0..63 (RE2 DAT_800d5c14) */
+int  re15_itembox_screen_pick(void);    /* gewaehlter Platz = (scroll+2)&0x3f    */
 
 /* flat accessors for persistence (savedata v4 box[32]: page*8+i order). */
 void re15_itembox_export(re15_inv_slot_t out[RE15_BOX_SLOTS]);

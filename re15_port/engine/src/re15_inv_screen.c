@@ -852,15 +852,20 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         emit_text(&e, 0x90, 0xd8, k_exit, (st->box_side == 2) ? 0x00 : 0x30);
     }
 
-    /* 2. page indicator "N/4" [DESIGN §6] in the FILE-footer digit codes
-     * (digit = value+0xc, separator glyph 0x38 — the 0x800c7744 formatter). */
+    /* 2. Ring-Position "NN/64" (RE2s Ring hat keinen Seitenzaehler; die Anzeige
+     * sagt dem Spieler, wo im 64-Platz-Ring die feste Auswahl gerade steht).
+     * Ziffern-Codes wie die FILE-Fusszeile: Ziffer = Wert+0xc, Trenner 0x38. */
     {
-        uint8_t buf[5];
-        buf[0] = (uint8_t)(st->box_page + 1 + 0xc);
-        buf[1] = 0x38;
-        buf[2] = (uint8_t)(4 + 0xc);
-        buf[3] = 0x07;
-        emit_text(&e, BOX_BX + 30, 0xb6, buf, 0x20);
+        int pick = (st->box_scroll + RE15_BOX_PICK_ROW) & (RE15_BOX_SLOTS - 1);
+        int n = pick + 1;
+        uint8_t buf[8]; int k = 0;
+        if (n >= 10) buf[k++] = (uint8_t)((n / 10) + 0xc);
+        buf[k++] = (uint8_t)((n % 10) + 0xc);
+        buf[k++] = 0x38;
+        buf[k++] = (uint8_t)(6 + 0xc);
+        buf[k++] = (uint8_t)(4 + 0xc);
+        buf[k++] = 0x07;
+        emit_text(&e, BOX_BX + 26, 0xb6, buf, 0x20);
     }
 
     /* 3. chrome group 0 (FUN_80047648(0) — absolute, always drawn) */
@@ -909,9 +914,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             master_row(8, &clut_idx, &count, &tmpl);
             for (i = 0; i < count; i++) {
                 tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);   /* base 0 = 1-cell */
+                /* RE2: die Auswahl steht FEST (scroll+2) — der Cursor sitzt immer
+                 * auf derselben Zelle, gescrollt wird der Inhalt darunter. */
                 sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
-                     bs16(CELL_TBL + (uint32_t)st->box_cursor * 4u) + x + BOX_BX,
-                     bs16(CELL_TBL + (uint32_t)st->box_cursor * 4u + 2u) + y + BOX_BY,
+                     bs16(CELL_TBL + (uint32_t)RE15_BOX_PICK_ROW * 4u) + x + BOX_BX,
+                     bs16(CELL_TBL + (uint32_t)RE15_BOX_PICK_ROW * 4u + 2u) + y + BOX_BY,
                      w, h, u, v, 128, 128, 128, 0);
             }
         }
@@ -919,8 +926,9 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
 
     /* 6. qty digits: inventory grid (the byte-true emit_digits path) + box cells */
     for (i = 0; i < 10; i++) emit_digits(&e, st, i, 0);
-    for (i = 0; i < RE15_BOX_PAGE_SLOTS; i++) {
-        const re15_inv_slot_t *s = &g_itembox.pages[st->box_page].slots[i];
+    for (i = 0; i < RE15_BOX_WINDOW; i++) {
+        const re15_inv_slot_t *s =
+            &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
         box_digits(&e,
                    bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX,
                    bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY,
@@ -936,15 +944,15 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + LIST_BY,
              40, 30, (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u),
              (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u + 2u), 128, 128, 128, 1);
-    for (i = 0; i < 10; i++) {
+    /* Das Box-Panel ist das FENSTER in den 64-Platz-Ring: Zelle i zeigt
+     * (scroll + i) & 0x3f. Alle 10 Zellen tragen jetzt echte Ring-Plaetze
+     * (frueher waren 8 belegt und 2 blind). */
+    for (i = 0; i < RE15_BOX_WINDOW; i++) {
         int cx = bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX;
         int cy = bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY;
-        if (i < RE15_BOX_PAGE_SLOTS) {
-            const re15_inv_slot_t *s = &g_itembox.pages[st->box_page].slots[i];
-            box_cell_icon(&e, cx, cy, s->id, s->flags);
-        } else {
-            box_cell_icon(&e, cx, cy, 0, 0);   /* blank tile 0 */
-        }
+        const re15_inv_slot_t *s =
+            &g_itembox.slots[(st->box_scroll + i) & (RE15_BOX_SLOTS - 1)];
+        box_cell_icon(&e, cx, cy, s->id, s->flags);
     }
 
     /* 8. backdrop: the 48 navy tiles (FUN_80046a1c L199-236 geometry — same as

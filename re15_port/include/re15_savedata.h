@@ -26,7 +26,16 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  6             /* v2: + weapon_id; v3: + camera cut (restore the
+#define RE15_SAVE_VERSION  7             /* v7: die ITEM BOX waechst von 32 auf 64
+                                          * Plaetze — die Umstellung auf RESIDENT EVIL 2s
+                                          * vollstaendigen Box-Mechanismus (64-Platz-Ring,
+                                          * Maske 0x3f in FUN_800703b8; Nutzer-Auftrag
+                                          * 2026-08-30). box[] liegt MITTEN im Datensatz,
+                                          * deshalb verschiebt der Zuwachs alles dahinter:
+                                          * v6-Staende werden ueber die explizite Alt-Form
+                                          * re15_savedata_v6_t feldweise uebernommen
+                                          * (Plaetze 0..31 bleiben, 32..63 leer).
+                                          * v2: + weapon_id; v3: + camera cut (restore the
                                           * save-time framing/background — reuses a reserved
                                           * byte, so v2 saves stay layout+checksum compatible
                                           * and load with cut 0 = the room's default);
@@ -42,6 +51,11 @@
                                           * die Blut-Level nachweislich mit; analysis/
                                           * save_injured_state.md SI-1. Aeltere Blocks
                                           * laden mit Null-Wunden = sauber). */
+
+/* ---- ALT-FORM v6 (32 Box-Plaetze) — ausschliesslich fuer die Uebernahme alter
+ * Spielstaende. Muss BYTE-IDENTISCH zur damaligen Struktur bleiben: gleiche
+ * Feld-Reihenfolge, box[32] statt box[64]. */
+#define RE15_SAVE_V6_BOX_SLOTS 32
 
 /* The captured game-state. Fields are ordered u32 → u16 → u8 → arrays to avoid
  * implicit padding, so the layout (and thus the checksum) is deterministic. */
@@ -78,12 +92,10 @@ typedef struct {
     uint8_t  reserved1;        /* keep inv[]/flags[] 4-aligned (deterministic sum) */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
-    re15_inv_slot_t box[RE15_BOX_SLOTS];   /* v4 ITEM BOX, page*8+i order (the 4
-                                            * dormant arrays @0x800b1444/1484/14a4/
-                                            * 14c4 flattened; inserted BEFORE the
-                                            * checksum, so the v2/v3 checksum word
-                                            * sits at offsetof(box) — the upgrade
-                                            * path reads it there).              */
+    re15_inv_slot_t box[RE15_BOX_SLOTS];   /* v4 ITEM BOX; seit v7 = RE2s 64-Platz-RING
+                                            * (flach, Reihenfolge = Ring-Index; RE2-Array
+                                            * @DAT_800d4a68). Bis v6 waren es 32 Plaetze
+                                            * im 4x8-Seiten-Modell.               */
     uint8_t  wounds[8][2];     /* v5: die Wund-Tabelle (8 Panels x {level, acc}) — das
                                 * GSB+0x130-Analog (@0x800b10ec, Stride 0x1c, im Save-
                                 * memcpy enthalten). Vor der checksum eingefuegt; das
@@ -94,6 +106,36 @@ typedef struct {
                                 * das v5-Checksum-Wort sitzt bei offsetof(visited). */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
+
+/* BYTE-IDENTISCHER Spiegel der v6-Struktur (box[32]) — NUR fuer die Uebernahme
+ * alter Spielstaende in das v7-Layout (box[64]). Nicht veraendern; Kommentare
+ * stehen an der lebenden Struktur oben. */
+typedef struct {
+    uint32_t magic;            
+    uint32_t version;          
+    uint32_t playtime;         
+    int32_t  player_x;         
+    int32_t  player_y;         
+    int32_t  player_z;         
+    uint16_t room;             
+    uint16_t save_count;       
+    int16_t  player_rot;       
+    int16_t  player_hp;        
+    uint16_t player_status;    
+    uint8_t  character;        
+    uint8_t  equipped_slot;    
+    uint8_t  weapon_id;        
+    uint8_t  camera_cut;       
+    uint8_t  loc_idx;          
+    uint8_t  reserved1;        
+    re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     
+    uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       
+    re15_inv_slot_t box[RE15_SAVE_V6_BOX_SLOTS];   
+    uint8_t  wounds[8][2];     
+    uint8_t  visited[32];      
+    uint32_t checksum;         
+} re15_savedata_v6_t;
+
 
 /* Additive checksum over the whole struct except the trailing checksum word. */
 uint32_t re15_savedata_checksum(const re15_savedata_t *sd);

@@ -38,7 +38,7 @@ static void reset_all(void)
 
 static re15_inv_slot_t *box_at(int page, int slot)
 {
-    return &g_itembox.pages[page].slots[slot];
+    return &g_itembox.slots[(page * 8 + slot) & (RE15_BOX_SLOTS - 1)];
 }
 
 int main(void)
@@ -51,7 +51,7 @@ int main(void)
     reset_all();
     g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = cap15;
     box_at(0, 0)->id = 0x15; box_at(0, 0)->qty = 30;
-    CHECK(re15_itembox_transfer(0, 0, 0) == RE15_BOX_XFER_OK, "(q1) transfer ok");
+    CHECK(re15_itembox_transfer(0, 0) == RE15_BOX_XFER_OK, "(q1) transfer ok");
     CHECK(g_inv.slots[0].id == 0x15 && g_inv.slots[0].qty == 30,
           "(q1) inv qty := boxqty (30), got %d", g_inv.slots[0].qty);
     CHECK(box_at(0, 0)->id == 0x15 && box_at(0, 0)->qty == cap15,
@@ -61,7 +61,7 @@ int main(void)
     reset_all();
     g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = (uint8_t)(cap15 - 5);
     box_at(0, 0)->id = 0x15; box_at(0, 0)->qty = 20;
-    re15_itembox_transfer(0, 0, 0);
+    re15_itembox_transfer(0, 0);
     CHECK(g_inv.slots[0].qty == cap15, "(qb) inv := cap");
     CHECK(box_at(0, 0)->qty == (uint8_t)(cap15 - 5 + 20 - cap15),
           "(qb) box := sum-cap (%d), got %d", cap15 - 5 + 20 - cap15, box_at(0, 0)->qty);
@@ -72,7 +72,7 @@ int main(void)
     reset_all();
     g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 10;
     box_at(0, 0)->id = 0x15; box_at(0, 0)->qty = 5;
-    re15_itembox_transfer(0, 0, 0);
+    re15_itembox_transfer(0, 0);
     CHECK(g_inv.slots[0].qty == 15, "(qc) inv += box");
     CHECK(box_at(0, 0)->id == 0, "(qc) box slot zeroed");
 
@@ -82,7 +82,7 @@ int main(void)
     g_inv.slots[0].id = 0x01;                            /* knife            */
     g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 10;   /* existing ammo    */
     box_at(0, 0)->id = 0x15; box_at(0, 0)->qty = 5;      /* fits whole       */
-    re15_itembox_transfer(3, 0, 0);                      /* cursor on EMPTY 3 */
+    re15_itembox_transfer(3, 0);                      /* cursor on EMPTY 3 */
     CHECK(g_inv.slots[1].qty == 15, "(q3) redirect merged into slot 1");
     CHECK(box_at(0, 0)->id == 0, "(q3) box stack cleared");
     CHECK(g_inv.slots[3].id == 0, "(q3) the empty cursor slot stays empty");
@@ -91,7 +91,7 @@ int main(void)
     g_inv.slots[0].id = 0x01;
     g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = (uint8_t)(cap15 - 2);
     box_at(0, 0)->id = 0x15; box_at(0, 0)->qty = 5;      /* 5 > cap-(cap-2)  */
-    re15_itembox_transfer(3, 0, 0);
+    re15_itembox_transfer(3, 0);
     CHECK(g_inv.slots[1].qty == (uint8_t)(cap15 - 2), "(q3n) existing stack untouched");
     CHECK(g_inv.slots[2].id == 0x15 && g_inv.slots[2].qty == 5,
           "(q3n) whole stack lands at min(cursor=3, first-free=2)=2, got slot2 id %02x",
@@ -104,7 +104,7 @@ int main(void)
     g_inv.slots[3].id = 0x24; g_inv.slots[3].qty = 1;    /* herb at cursor 3
                                                           * (slots 1/2 empty) */
     box_at(1, 2)->id = 0x03; box_at(1, 2)->qty = 15;     /* handgun in box   */
-    re15_itembox_transfer(3, 1, 2);
+    re15_itembox_transfer(3, 10);
     CHECK(box_at(1, 2)->id == 0x24 && box_at(1, 2)->qty == 1,
           "(q4) herb deposited into the box slot");
     CHECK(g_inv.slots[1].id == 0x03 && g_inv.slots[1].qty == 15,
@@ -118,14 +118,14 @@ int main(void)
     for (int i = 0; i < 10; i++) { g_inv.slots[i].id = 0x24; g_inv.slots[i].qty = 1; }
     box_at(0, 0)->id = 0x0e; box_at(0, 0)->qty = 100;
     box_at(0, 0)->flags = RE15_BOX_KIND_WIDE;
-    CHECK(re15_itembox_transfer(0, 0, 0) == RE15_BOX_XFER_REJECT,
+    CHECK(re15_itembox_transfer(0, 0) == RE15_BOX_XFER_REJECT,
           "(q5) empties==0 -> reject");
     /* empties==1 && cursor EMPTY -> reject */
     reset_all();
     for (int i = 0; i < 9; i++) { g_inv.slots[i].id = 0x24; g_inv.slots[i].qty = 1; }
     box_at(0, 0)->id = 0x0e; box_at(0, 0)->qty = 100;
     box_at(0, 0)->flags = RE15_BOX_KIND_WIDE;
-    CHECK(re15_itembox_transfer(9, 0, 0) == RE15_BOX_XFER_REJECT,
+    CHECK(re15_itembox_transfer(9, 0) == RE15_BOX_XFER_REJECT,
           "(q5) empties==1 && cursor empty -> reject");
     /* empties==1 && cursor OCCUPIED -> succeeds (the deposit frees a slot) */
     reset_all();
@@ -133,7 +133,7 @@ int main(void)
     re15_inv_set_equipped_slot(4);                       /* equipped elsewhere */
     box_at(0, 0)->id = 0x0e; box_at(0, 0)->qty = 100;
     box_at(0, 0)->flags = RE15_BOX_KIND_WIDE;
-    CHECK(re15_itembox_transfer(0, 0, 0) == RE15_BOX_XFER_OK, "(q5) withdraw ok");
+    CHECK(re15_itembox_transfer(0, 0) == RE15_BOX_XFER_OK, "(q5) withdraw ok");
     CHECK(g_inv.slots[0].id == 0x0e && g_inv.slots[0].flags == 1 &&
           g_inv.slots[1].id == 0x0e && g_inv.slots[1].flags == 2,
           "(q5) weapon into slots 0+1 kinds 1/2 (RE2 Size 1/2), got %d/%d",
@@ -152,7 +152,7 @@ int main(void)
     g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 77; g_inv.slots[1].flags = 2;
     g_inv.slots[2].id = 0x24; g_inv.slots[2].qty = 1;
     g_inv.slots[3].id = 0x26; g_inv.slots[3].qty = 1;
-    re15_itembox_transfer(0, 2, 5);
+    re15_itembox_transfer(0, 21);
     CHECK(box_at(2, 5)->id == 0x0e && box_at(2, 5)->qty == 77 &&
           box_at(2, 5)->flags == RE15_BOX_KIND_WIDE,
           "(q6) boxed 2-cell = ONE slot, kind 3 (`li v0,3; sb` @0x80070ad0-dc), got kind %d",
@@ -165,7 +165,7 @@ int main(void)
     reset_all();
     g_inv.slots[0].id = 0x0e; g_inv.slots[0].qty = 3; g_inv.slots[0].flags = 1;
     g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 3; g_inv.slots[1].flags = 2;
-    re15_itembox_transfer(1, 0, 0);
+    re15_itembox_transfer(1, 0);
     CHECK(box_at(0, 0)->flags == RE15_BOX_KIND_WIDE && g_inv.slots[0].id == 0,
           "(q6b) tail-cell cursor normalized to the head (@0x8004e910-38 shape)");
 
@@ -175,7 +175,7 @@ int main(void)
     g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 9; g_inv.slots[1].flags = 2;
     g_inv.slots[2].id = 0x24; g_inv.slots[2].qty = 1;
     box_at(0, 3)->id = 0x03; box_at(0, 3)->qty = 15;
-    re15_itembox_transfer(0, 0, 3);
+    re15_itembox_transfer(0, 3);
     CHECK(box_at(0, 3)->id == 0x0e && box_at(0, 3)->flags == RE15_BOX_KIND_WIDE,
           "(c2) weapon boxed kind 3");
     CHECK(g_inv.slots[0].id == 0x24 && g_inv.slots[1].id == 0x03,
@@ -188,7 +188,7 @@ int main(void)
     g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 5; g_inv.slots[1].flags = 2;
     box_at(3, 7)->id = 0x13; box_at(3, 7)->qty = 40;
     box_at(3, 7)->flags = RE15_BOX_KIND_WIDE;
-    re15_itembox_transfer(0, 3, 7);
+    re15_itembox_transfer(0, 31);
     CHECK(g_inv.slots[0].id == 0x13 && g_inv.slots[0].flags == 1 &&
           g_inv.slots[1].id == 0x13 && g_inv.slots[1].flags == 2 &&
           g_inv.slots[0].qty == 40,
@@ -201,7 +201,7 @@ int main(void)
     reset_all();
     g_inv.slots[0].id = 0x03; g_inv.slots[0].qty = 15;
     re15_inv_set_equipped_slot(0);
-    re15_itembox_transfer(0, 0, 1);
+    re15_itembox_transfer(0, 1);
     CHECK(re15_inv_equipped_slot() == 0x80,
           "(q8) case-0 deposit of the equipped item -> equip 0x80, got %02x",
           re15_inv_equipped_slot());
@@ -209,12 +209,12 @@ int main(void)
     g_inv.slots[0].id = 0x0e; g_inv.slots[0].qty = 1; g_inv.slots[0].flags = 1;
     g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 1; g_inv.slots[1].flags = 2;
     re15_inv_set_equipped_slot(0);
-    re15_itembox_transfer(0, 0, 0);
+    re15_itembox_transfer(0, 0);
     CHECK(re15_inv_equipped_slot() == 0x80, "(q8) case-2 wide deposit unequips");
 
     /* ---- empty ⇄ empty is a no-op */
     reset_all();
-    CHECK(re15_itembox_transfer(0, 0, 0) == RE15_BOX_XFER_OK, "(nop) ok");
+    CHECK(re15_itembox_transfer(0, 0) == RE15_BOX_XFER_OK, "(nop) ok");
     CHECK(g_inv.slots[0].id == 0 && box_at(0, 0)->id == 0, "(nop) both stay empty");
 
     /* ================= savedata v4 persistence ================= */

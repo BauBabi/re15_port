@@ -93,30 +93,35 @@ int main(void)
     CHECK(re15_itembox_screen_state() == 0,
           "(3) cancel -> state 0 (inventory side), got %d", re15_itembox_screen_state());
 
-    /* ---- (4) page flip: L1/R1 wrap over 4 pages (§6, ≙ RE2 ±5 keys) ---- */
-    press(RE15_PAD_BIT_SQUARE);                    /* back to the box side   */
-    CHECK(re15_itembox_screen_page() == 0, "(4) page starts 0");
+    /* ---- (4) RING-NAVIGATION statt Seiten (RE2): der Cursor steht FEST, der
+     *      Scroll-Stand wandert im 64er-Ring; Schulter-Tasten springen +/-5. ---- */
+    press(RE15_PAD_BIT_SQUARE);                    /* zurueck auf die Box-Seite */
+    CHECK(re15_itembox_screen_scroll() == 0, "(4) Scroll startet bei 0");
+    CHECK(re15_itembox_screen_pick() == RE15_BOX_PICK_ROW,
+          "(4) Auswahl = scroll+2 (RE2 `DAT_800d5c14+2 & 0x3f`), ist %d",
+          re15_itembox_screen_pick());
+    press(RE15_PAD_BIT_DOWN);
+    CHECK(re15_itembox_screen_scroll() == 1 && re15_itembox_screen_pick() == 3,
+          "(4) RUNTER scrollt um 1 (Auswahl folgt), ist s%d p%d",
+          re15_itembox_screen_scroll(), re15_itembox_screen_pick());
+    press(RE15_PAD_BIT_UP);
+    CHECK(re15_itembox_screen_scroll() == 0, "(4) HOCH scrollt zurueck");
+    press(RE15_PAD_BIT_UP);
+    CHECK(re15_itembox_screen_scroll() == RE15_BOX_SLOTS - 1,
+          "(4) HOCH bei 0 laeuft im Ring um auf 63, ist %d", re15_itembox_screen_scroll());
+    press(RE15_PAD_BIT_DOWN);
+    CHECK(re15_itembox_screen_scroll() == 0, "(4) und zurueck auf 0");
     press(RE15_PAD_BIT_R1);
-    CHECK(re15_itembox_screen_page() == 1, "(4) R1 -> page 1");
-    press(RE15_PAD_BIT_R1); press(RE15_PAD_BIT_R1); press(RE15_PAD_BIT_R1);
-    CHECK(re15_itembox_screen_page() == 0, "(4) R1 x4 wraps to page 0");
+    CHECK(re15_itembox_screen_scroll() == 5, "(4) R1 springt +5 (RE2 Schulter-Sprung)");
     press(RE15_PAD_BIT_L1);
-    CHECK(re15_itembox_screen_page() == 3, "(4) L1 wraps back to page 3");
-    press(RE15_PAD_BIT_L1); press(RE15_PAD_BIT_L1); press(RE15_PAD_BIT_L1);
-    CHECK(re15_itembox_screen_page() == 0, "(4) L1 x4 wraps to page 0");
-
-    /* ---- (5) box-side cell nav bounds (2×4 grid, §6) ---- */
-    press(RE15_PAD_BIT_DOWN); press(RE15_PAD_BIT_DOWN);
-    press(RE15_PAD_BIT_DOWN); press(RE15_PAD_BIT_DOWN);
-    CHECK(re15_itembox_screen_cursor() == 6, "(5) down clamps at 6, got %d",
-          re15_itembox_screen_cursor());
-    press(RE15_PAD_BIT_RIGHT);
-    CHECK(re15_itembox_screen_cursor() == 7, "(5) right -> 7");
-    press(RE15_PAD_BIT_UP); press(RE15_PAD_BIT_UP); press(RE15_PAD_BIT_UP);
-    CHECK(re15_itembox_screen_cursor() == 1, "(5) up clamps at row 0 (cell 1), got %d",
-          re15_itembox_screen_cursor());
-    press(RE15_PAD_BIT_LEFT);
-    CHECK(re15_itembox_screen_cursor() == 0, "(5) left -> 0");
+    CHECK(re15_itembox_screen_scroll() == 0, "(4) L1 springt -5 zurueck");
+    {   /* voller Ring-Umlauf: 64 Schritte fuehren wieder auf 0 */
+        int k;
+        for (k = 0; k < RE15_BOX_SLOTS; k++) press(RE15_PAD_BIT_DOWN);
+        CHECK(re15_itembox_screen_scroll() == 0,
+              "(4) 64 Schritte = ein voller Ring-Umlauf, ist %d",
+              re15_itembox_screen_scroll());
+    }
 
     /* ---- (6) swap through the FSM: deposit the knife (cursor 1) ---- */
     /* cursor is at inventory slot 1 (the ammo after compaction); move to 0 */
@@ -128,9 +133,9 @@ int main(void)
                                                     * state 4: state:=0 + call) */
     CHECK(re15_itembox_screen_state() == 0,
           "(6) swap returns to state 0, got %d", re15_itembox_screen_state());
-    CHECK(g_itembox.pages[0].slots[0].id == 0x01,
-          "(6) knife deposited into box page 0 slot 0, got %02x",
-          g_itembox.pages[0].slots[0].id);
+    CHECK(g_itembox.slots[RE15_BOX_PICK_ROW].id == 0x01,
+          "(6) Messer liegt auf dem gewaehlten Ring-Platz (scroll+2), ist %02x",
+          g_itembox.slots[RE15_BOX_PICK_ROW].id);
     CHECK(g_inv.slots[0].id == 0x15,
           "(6) inventory compacted after the deposit (ammo to slot 0), got %02x",
           g_inv.slots[0].id);
@@ -141,9 +146,9 @@ int main(void)
     re15_itembox_init();
     re15_inv_set_equipped_slot(0x80);
     for (int i = 0; i < 10; i++) { g_inv.slots[i].id = 0x24; g_inv.slots[i].qty = 1; }
-    g_itembox.pages[0].slots[0].id = 0x0e;
-    g_itembox.pages[0].slots[0].qty = 100;
-    g_itembox.pages[0].slots[0].flags = RE15_BOX_KIND_WIDE;
+    g_itembox.slots[RE15_BOX_PICK_ROW].id = 0x0e;
+    g_itembox.slots[RE15_BOX_PICK_ROW].qty = 100;
+    g_itembox.slots[RE15_BOX_PICK_ROW].flags = RE15_BOX_KIND_WIDE;
     re15_menu_toggle_box();
     idle(1);
     press(RE15_PAD_BIT_SQUARE);                    /* -> box side            */
@@ -154,7 +159,7 @@ int main(void)
     CHECK(re15_menu_msg_active(),
           "(7) the reject message is up (RE1.5 cant-use infra for RE2's "
           "FUN_8002fe38 site)");
-    CHECK(g_inv.slots[0].id == 0x24 && g_itembox.pages[0].slots[0].id == 0x0e,
+    CHECK(g_inv.slots[0].id == 0x24 && g_itembox.slots[RE15_BOX_PICK_ROW].id == 0x0e,
           "(7) nothing moved on the reject");
     idle(200);                                     /* typewriter completes    */
     CHECK(re15_itembox_screen_state() == 5, "(7) still waiting while msg is up");

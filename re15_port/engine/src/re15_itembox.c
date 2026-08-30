@@ -1,5 +1,11 @@
 /*
- * re15_itembox.c — the ITEM BOX (RE1.5-hybrid). Build sheet: shots/itembox_spec.md;
+ * re15_itembox.c — die ITEM BOX, VOLLSTAENDIG nach RESIDENT EVIL 2 (Nutzer-Auftrag
+ * 2026-08-30). Speicher-/Bedien-Modell: 64-Platz-RING mit Scroll (RE2 DAT_800d4a68 +
+ * Auswahl `(DAT_800d5c14+2)&0x3f`) statt der frueheren 4x8-Seiten-Erfindung; die
+ * Transfer-Regeln (FUN_800703b8) waren bereits RE2 und bleiben. Ableitung:
+ * analysis/itembox_re2/re2-box-transfer.md. Vorheriger Stand gesichert:
+ * analysis/itembox_re2/backup_hybrid_v1/ (Tag itembox-hybrid-v1).
+ * Alt-Bauplan (teilweise ueberholt): shots/itembox_spec.md;
  * dormant-storage background: shots/itembox_verdict.md. Provenance flags per part in
  * re15_itembox.h — [RE2-ported] cites = RE2-Leon retail EXE (FUN_800703b8 family),
  * [RE1.5] cites = RE1.5 PSX.EXE, [DESIGN] = non-canonical hybrid decision (§6).
@@ -148,20 +154,21 @@ static void inv_front_shift2(void)
     re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
 }
 
-int re15_itembox_transfer(int inv_cursor, int page, int slot)
+int re15_itembox_transfer(int inv_cursor, int box_slot)
 {
     re15_inv_slot_t *ci, *bs;
     int cur = inv_cursor;
 
     if (cur < 0 || cur >= RE15_INV_MAX_SLOTS - 1) return RE15_BOX_XFER_OK;
-    if (page < 0 || page >= RE15_BOX_PAGES) return RE15_BOX_XFER_OK;
-    if (slot < 0 || slot >= RE15_BOX_PAGE_SLOTS) return RE15_BOX_XFER_OK;
+    /* Der Aufrufer liefert den Ring-Platz; RE2 maskiert ihn mit 0x3f
+     * (`DAT_800d5c14 + 2 & 0x3f` im Kopf von FUN_800703b8). */
+    box_slot &= (RE15_BOX_SLOTS - 1);
 
     /* cursor lands only on heads via the nav; normalize a tail defensively
      * (kind==2 -> slot-1, the RE1.5 normalization shape @0x8004e910-38). */
     if (g_inv.slots[cur].flags == 2 && cur > 0) cur--;
     ci = &g_inv.slots[cur];
-    bs = &g_itembox.pages[page].slots[slot];
+    bs = &g_itembox.slots[box_slot];
 
     /* ---- ammo pre-pass (RE2 @0x80070490-94 gate; spec §3 first block) ---- */
     if (bs->id != 0 && box_is_ammo(bs->id)) {
@@ -314,13 +321,18 @@ int re15_itembox_transfer(int inv_cursor, int page, int slot)
 /* ---------------------------------------------------------------------------- */
 static uint8_t s_bx_panel  = 3;   /* RE2 DAT_800d5bf1: 3 = main FSM, 2 = EXIT row */
 static uint8_t s_bx_state  = 0;   /* RE2 DAT_800d5bf2: 0 inv / 1 box / 5 msg wait */
-static uint8_t s_bx_page   = 0;   /* [DESIGN §6] page 0..3 (≙ RE2 scroll window)  */
-static uint8_t s_bx_cursor = 0;   /* [DESIGN §6] box cell 0..7 (≙ scroll+2 pick)  */
+/* RE2 DAT_800d5c14: der SCROLL-Stand des 64-Platz-Rings. Der gewaehlte Platz ist
+ * IMMER (scroll + RE15_BOX_PICK_ROW) & 0x3f — der Cursor steht fest, der Inhalt
+ * wandert (FUN_800703b8 Kopf). */
+static uint8_t s_bx_scroll = 0;
 
 int re15_itembox_screen_state(void)  { return s_bx_state; }
 int re15_itembox_screen_panel(void)  { return s_bx_panel; }
-int re15_itembox_screen_page(void)   { return s_bx_page; }
-int re15_itembox_screen_cursor(void) { return s_bx_cursor; }
+int re15_itembox_screen_scroll(void) { return s_bx_scroll; }
+int re15_itembox_screen_pick(void)
+{
+    return (s_bx_scroll + RE15_BOX_PICK_ROW) & (RE15_BOX_SLOTS - 1);
+}
 
 /* menu_common.c bridges (the shared message VM + SEs). */
 void re15_menu_box_reject_msg(void);   /* opens desc-bank entry 0 at (0x18,0xa8) —
@@ -337,11 +349,10 @@ void re15_itembox_screen_open(void)
      * DAT_800d5bfc/fd; "Inventory cursor starts 0" §2.2 = quirk 14 head).
      * Page 0 on entry [DESIGN — RE2 scroll persists in DAT_800d5c14 only within
      * the screen; init writes scroll:=0 @§2.2]. */
-    s_bx_panel = 3; s_bx_state = 0; s_bx_page = 0; s_bx_cursor = 0;
+    s_bx_panel = 3; s_bx_state = 0; s_bx_scroll = 0;
     g_inv_screen.item_cursor = 0;
     g_inv_screen.box_mode = 1;
-    g_inv_screen.box_page = 0;
-    g_inv_screen.box_cursor = 0;
+    g_inv_screen.box_scroll = 0;
     g_inv_screen.box_side = 0;
     g_inv_screen.highlight = 1;    /* draw the grid cursor (g8 gate, wave-1 model) */
 }
@@ -408,31 +419,30 @@ static void bx_exit_row(uint16_t pressed)
  * ±3px scroll anim (quirk 11) has no analog here. */
 static void bx_state1(uint16_t pressed)
 {
-    uint8_t *cur = &s_bx_cursor;
     if (pressed & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN |
                    RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) bse(4);
-    if      (pressed & RE15_PAD_BIT_RIGHT) { if (!(*cur & 1)) (*cur)++; }
-    else if (pressed & RE15_PAD_BIT_LEFT)  { if (*cur & 1) (*cur)--; }
-    else if (pressed & RE15_PAD_BIT_DOWN)  { if (*cur + 2 <= 7) *cur += 2; }
-    else if (pressed & RE15_PAD_BIT_UP)    { if (*cur >= 2) *cur -= 2; }
-    if (pressed & RE15_PAD_BIT_L1) { bse(4); s_bx_page = (uint8_t)((s_bx_page + 3) & 3); }
-    if (pressed & RE15_PAD_BIT_R1) { bse(4); s_bx_page = (uint8_t)((s_bx_page + 1) & 3); }
+    /* RING-NAVIGATION (RE2): der Cursor steht fest, der SCROLL-Stand wandert.
+     * Hoch/Runter = +/-1, die Schulter-Tasten springen +/-5 (Sofort-Commit
+     * @0x8007005c). Alles laeuft im 64er-Ring um (Maske 0x3f). */
+    if      (pressed & RE15_PAD_BIT_DOWN)  s_bx_scroll = (uint8_t)((s_bx_scroll + 1) & (RE15_BOX_SLOTS - 1));
+    else if (pressed & RE15_PAD_BIT_UP)    s_bx_scroll = (uint8_t)((s_bx_scroll + RE15_BOX_SLOTS - 1) & (RE15_BOX_SLOTS - 1));
+    if (pressed & RE15_PAD_BIT_R1) { bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + 5) & (RE15_BOX_SLOTS - 1)); }
+    if (pressed & RE15_PAD_BIT_L1) { bse(4); s_bx_scroll = (uint8_t)((s_bx_scroll + RE15_BOX_SLOTS - 5) & (RE15_BOX_SLOTS - 1)); }
 
-    if (re15_pad_virtual_word(pressed) & 0x8000) {           /* cancel role   */
+    if (re15_pad_virtual_word(pressed) & 0x8000) {           /* Abbrechen     */
         bse(5);
-        s_bx_state = 0;                                      /* RE2: -> state0 */
+        s_bx_state = 0;                                      /* RE2: -> Zustand 0 */
         return;
     }
-    if (re15_pad_virtual_word(pressed) & 0x4000) {           /* confirm role  */
-        /* RE2 state 4 (swap): state := 0, call FUN_800703b8 — the transfer may
-         * set state 5 on the reject (§2.4 state 4). */
+    if (re15_pad_virtual_word(pressed) & 0x4000) {           /* Bestaetigen   */
+        /* RE2 Zustand 4 (Tausch): Zustand := 0, dann FUN_800703b8; die Abweisung
+         * setzt Zustand 5 (@0x800707ec). */
         bse(6);
         s_bx_state = 0;
         if (re15_itembox_transfer(g_inv_screen.item_cursor,
-                                  s_bx_page, s_bx_cursor) == RE15_BOX_XFER_REJECT) {
-            re15_menu_box_reject_msg();                      /* the RE1.5 cant-use
-                                                              * message infra  */
-            s_bx_state = 5;                                  /* @0x800707ec    */
+                                  re15_itembox_screen_pick()) == RE15_BOX_XFER_REJECT) {
+            re15_menu_box_reject_msg();
+            s_bx_state = 5;
         }
     }
 }
@@ -466,13 +476,12 @@ int re15_itembox_screen_tick(uint16_t pressed, uint16_t held)
      * id catalog re15_item_name mirrors in ASCII). */
     if (s_bx_panel == 3 && s_bx_state == 1)
         g_inv_screen.name_item =
-            (int16_t)g_itembox.pages[s_bx_page].slots[s_bx_cursor].id;
+            (int16_t)g_itembox.slots[re15_itembox_screen_pick()].id;
     else
         g_inv_screen.name_item = (int16_t)g_inv.slots[g_inv_screen.item_cursor].id;
 
     /* builder mirrors */
-    g_inv_screen.box_page   = s_bx_page;
-    g_inv_screen.box_cursor = s_bx_cursor;
+    g_inv_screen.box_scroll = s_bx_scroll;
     g_inv_screen.box_side   = (s_bx_panel == 2) ? 2
                             : (s_bx_state == 1 || s_bx_state == 5) ? 1 : 0;
 

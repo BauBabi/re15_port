@@ -117,28 +117,35 @@ int main(void)
         CHECK("Roundtrip byte-identisch", memcmp(blob, blob2, 32) == 0);
     }
 
-    /* --- (6) Save v5 -> v6 Upgrade: altes Checksum-Extent validiert, visited leer --- */
+    /* --- (6) Alt-Stand-Uebernahme: ein v5-Block wird angenommen und auf die
+     *      aktuelle Fassung gehoben. Seit der Umstellung der ITEM BOX auf RE2s
+     *      64-Platz-Ring (Save v7) liegt das ALTE Layout in re15_savedata_v6_t —
+     *      der Test baut den Block deshalb dort und prueft die Uebernahme. --- */
     {
+        re15_savedata_v6_t old6;
         re15_savedata_t sd;
-        memset(&sd, 0x5a, sizeof sd);
-        sd.magic   = RE15_SAVE_MAGIC;
-        sd.version = 5;
-        /* v5-Checksumme = Summe bis offsetof(visited), dort abgelegt */
-        const uint8_t *p = (const uint8_t *)&sd;
-        size_t off = offsetof(re15_savedata_t, visited);
+        memset(&old6, 0x5a, sizeof old6);
+        old6.magic   = RE15_SAVE_MAGIC;
+        old6.version = 5;
+        /* v5-Checksumme = Summe bis offsetof(visited) IM ALTEN LAYOUT */
+        const uint8_t *p = (const uint8_t *)&old6;
+        size_t off = offsetof(re15_savedata_v6_t, visited);
         uint32_t sum = 0;
         for (size_t i = 0; i < off; i++) sum += p[i];
-        memcpy((uint8_t *)&sd + off, &sum, sizeof sum);
-        CHECK("v5-Block validiert + upgraded", re15_savedata_validate(&sd) == 0);
-        CHECK("Version nach Upgrade = 6", sd.version == RE15_SAVE_VERSION && sd.version >= 6);
+        memcpy((uint8_t *)&old6 + off, &sum, sizeof sum);
+        memset(&sd, 0, sizeof sd);
+        memcpy(&sd, &old6, sizeof old6);       /* Alt-Block in den v7-Puffer */
+        CHECK("v5-Block validiert + uebernommen", re15_savedata_validate(&sd) == 0);
+        CHECK("Version nach Uebernahme = aktuelle Fassung",
+              sd.version == RE15_SAVE_VERSION && sd.version >= 7);
         int allz = 1;
         for (int i = 0; i < 32; i++) if (sd.visited[i]) allz = 0;
-        CHECK("visited[] nach Upgrade leer", allz);
-        CHECK("frische v6-Checksumme stimmt", sd.checksum == re15_savedata_checksum(&sd));
-        /* Negativ-Kontrolle: verfaelschter v5-Block wird abgewiesen */
-        sd.version = 5; sd.playtime ^= 1;
-        memcpy((uint8_t *)&sd + off, &sum, sizeof sum);
-        CHECK("verfaelschter v5-Block abgewiesen", re15_savedata_validate(&sd) != 0);
+        CHECK("visited[] nach Uebernahme leer", allz);
+        CHECK("frische Checksumme stimmt", sd.checksum == re15_savedata_checksum(&sd));
+        /* Negativ-Kontrolle: verfaelschter Alt-Block wird abgewiesen */
+        old6.playtime ^= 1;
+        memcpy(&sd, &old6, sizeof old6);
+        CHECK("verfaelschter Alt-Block abgewiesen", re15_savedata_validate(&sd) != 0);
     }
 
     if (g_fail) { printf("FAIL\n"); return 1; }

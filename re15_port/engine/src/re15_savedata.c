@@ -24,58 +24,100 @@ uint32_t re15_savedata_checksum(const re15_savedata_t *sd)
     return sum;
 }
 
+/* ---- ALT-STAENDE (bis v6) -------------------------------------------------------
+ * Bis v6 hatte die ITEM BOX 32 Plaetze; mit der Umstellung auf RESIDENT EVIL 2s
+ * vollstaendigen Box-Mechanismus (64-Platz-Ring, Nutzer-Auftrag 2026-08-30) waechst
+ * box[] MITTEN im Datensatz. Alle aelteren Staende werden deshalb ZUERST im ALTEN
+ * Layout (re15_savedata_v6_t) validiert und auf v6 gehoben, und danach feldweise in
+ * das v7-Layout uebernommen (Plaetze 0..31 bleiben erhalten, 32..63 starten leer). */
+static uint32_t v6_sum(const re15_savedata_v6_t *sd, size_t n)
+{
+    const uint8_t *p = (const uint8_t *)sd;
+    uint32_t sum = 0;
+    for (size_t i = 0; i < n; i++) sum += p[i];
+    return sum;
+}
+
+static int v6_validate_and_lift(re15_savedata_v6_t *sd)
+{
+    /* Dieselbe Kette wie frueher, nur auf der ALT-Struktur: jede Vorversion traegt
+     * ihr Checksum-Wort dort, wo das jeweils NEUE Feld beginnt. */
+    if (sd->version == 6) {
+        uint32_t ck = v6_sum(sd, offsetof(re15_savedata_v6_t, checksum));
+        return (ck == sd->checksum) ? 0 : -1;
+    }
+    if (sd->version == 5) {                    /* v5 = v6 ohne visited[] */
+        size_t off = offsetof(re15_savedata_v6_t, visited);
+        uint32_t old_ck;
+        memcpy(&old_ck, (const uint8_t *)sd + off, sizeof old_ck);
+        if (v6_sum(sd, off) != old_ck) return -1;
+        memset(sd->visited, 0, sizeof sd->visited);
+        return 0;
+    }
+    if (sd->version == 4) {                    /* v4 = ohne wounds[] + visited[] */
+        size_t off = offsetof(re15_savedata_v6_t, wounds);
+        uint32_t old_ck;
+        memcpy(&old_ck, (const uint8_t *)sd + off, sizeof old_ck);
+        if (v6_sum(sd, off) != old_ck) return -1;
+        memset(sd->wounds, 0, sizeof sd->wounds);
+        memset(sd->visited, 0, sizeof sd->visited);
+        return 0;
+    }
+    if (sd->version == 2 || sd->version == 3) {  /* v2/v3 = zusaetzlich ohne box[] */
+        size_t off = offsetof(re15_savedata_v6_t, box);
+        uint32_t old_ck;
+        memcpy(&old_ck, (const uint8_t *)sd + off, sizeof old_ck);
+        if (v6_sum(sd, off) != old_ck) return -1;
+        memset(sd->box, 0, sizeof sd->box);
+        memset(sd->wounds, 0, sizeof sd->wounds);
+        memset(sd->visited, 0, sizeof sd->visited);
+        return 0;
+    }
+    return -1;
+}
+
 int re15_savedata_validate(re15_savedata_t *sd)
 {
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
-    if (sd->version >= 6) {
+
+    if (sd->version >= 7) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
     }
-    if (sd->version == 5) {
-        /* v5 layout = v6 OHNE visited[]: das v5-Checksum-Wort sitzt bei
-         * offsetof(visited). Validieren, dann upgraden: visited leer (der Restore
-         * markiert den geladenen Raum), Version 6, frische Checksum. */
-        const uint8_t *p = (const uint8_t *)sd;
-        size_t old_ck_off = offsetof(re15_savedata_t, visited);
-        uint32_t sum = 0, old_ck;
-        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
-        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
-        if (sum != old_ck) return -1;
-        memset(sd->visited, 0, sizeof sd->visited);
-        sd->version  = RE15_SAVE_VERSION;
-        sd->checksum = re15_savedata_checksum(sd);
-        return 0;
-    }
-    if (sd->version == 4) {
-        /* v4 layout = the v5 struct WITHOUT wounds[]: its checksum word sits at
-         * offsetof(wounds). Validate the old extent, upgrade: zero wounds (older
-         * saves load clean), version 5, fresh checksum. */
-        const uint8_t *p = (const uint8_t *)sd;
-        size_t old_ck_off = offsetof(re15_savedata_t, wounds);
-        uint32_t sum = 0, old_ck;
-        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
-        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
-        if (sum != old_ck) return -1;
-        memset(sd->wounds, 0, sizeof sd->wounds);
-        memset(sd->visited, 0, sizeof sd->visited);   /* v6 */
-        sd->version  = RE15_SAVE_VERSION;
-        sd->checksum = re15_savedata_checksum(sd);
-        return 0;
-    }
-    if (sd->version == 2 || sd->version == 3) {
-        /* v2/v3 layout = the struct WITHOUT box[] and wounds[]: its checksum word
-         * sits where box[] now starts. Validate the old extent, then upgrade in
-         * place: empty box + clean wounds, current version, fresh checksum. */
-        const uint8_t *p = (const uint8_t *)sd;
-        size_t old_ck_off = offsetof(re15_savedata_t, box);
-        uint32_t sum = 0, old_ck;
-        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
-        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
-        if (sum != old_ck) return -1;
-        memset(sd->box, 0, sizeof sd->box);
-        memset(sd->wounds, 0, sizeof sd->wounds);
-        memset(sd->visited, 0, sizeof sd->visited);   /* v6 */
-        sd->version  = RE15_SAVE_VERSION;
+    if (sd->version >= 2 && sd->version <= 6) {
+        /* Alt-Stand: im v6-Layout pruefen/heben, dann ins v7-Layout uebernehmen.
+         * Der uebergebene Puffer ist v7-gross (>= v6), das Lesen der Alt-Form ist
+         * also gedeckt; die Uebernahme laeuft ueber eine Kopie, weil sich alle
+         * Felder HINTER box[] verschieben. */
+        re15_savedata_v6_t old;
+        memcpy(&old, sd, sizeof old);
+        if (v6_validate_and_lift(&old) != 0) return -1;
+
+        memset(sd, 0, sizeof *sd);
+        sd->magic         = old.magic;
+        sd->version       = RE15_SAVE_VERSION;
+        sd->playtime      = old.playtime;
+        sd->player_x      = old.player_x;
+        sd->player_y      = old.player_y;
+        sd->player_z      = old.player_z;
+        sd->room          = old.room;
+        sd->save_count    = old.save_count;
+        sd->player_rot    = old.player_rot;
+        sd->player_hp     = old.player_hp;
+        sd->player_status = old.player_status;
+        sd->character     = old.character;
+        sd->equipped_slot = old.equipped_slot;
+        sd->weapon_id     = old.weapon_id;
+        sd->camera_cut    = old.camera_cut;
+        sd->loc_idx       = old.loc_idx;
+        sd->reserved1     = old.reserved1;
+        memcpy(sd->inv,     old.inv,     sizeof sd->inv);
+        memcpy(sd->flags,   old.flags,   sizeof sd->flags);
+        /* Die alten 32 Plaetze behalten ihre Reihenfolge (frueher Seite*8+i, jetzt
+         * Ring-Index) — der Inhalt bleibt damit erhalten; 32..63 sind leer. */
+        memcpy(sd->box,     old.box,     sizeof old.box);
+        memcpy(sd->wounds,  old.wounds,  sizeof sd->wounds);
+        memcpy(sd->visited, old.visited, sizeof sd->visited);
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
     }

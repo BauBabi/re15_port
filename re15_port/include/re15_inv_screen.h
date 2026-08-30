@@ -252,16 +252,14 @@ typedef struct {
                              * updates the 60-frame bob @0x800c75ac-e4: counter 0x1e ->
                              * off 4, 0x3c -> reset; reader open zeroes both via the
                              * word store @0x800c7070)                                 */
-    /* ---- ITEM BOX (RE1.5-hybrid subscreen, shots/itembox_spec.md §6 — all four
-     * fields are [DESIGN] mirrors of the re15_itembox.c FSM, ≙ RE2's box screen
-     * registers: box_page/box_cursor ≙ scroll DAT_800d5c14 + the fixed scroll+2
-     * pick (§2.4 state 1), box_side ≙ panel DAT_800d5bf1 / state DAT_800d5bf2) */
-    uint8_t box_mode;       /* 1 = the box subscreen is up (menu substate 4) — gates
-                             * the dedicated box display list in the builder        */
-    uint8_t box_page;       /* current box page 0..3 (the dormant-array index:
-                             * @0x800b1444/1484/14a4/14c4)                          */
-    uint8_t box_cursor;     /* box-side cell cursor 0..7                            */
-    uint8_t box_side;       /* 0 = inventory side, 1 = box side, 2 = EXIT row       */
+    /* ---- ITEM BOX (Unterschirm, VOLLSTAENDIG nach RE2 — Nutzer-Auftrag 2026-08-30;
+     * Ableitung analysis/itembox_re2/re2-box-transfer.md). Die Felder spiegeln die
+     * FSM in re15_itembox.c auf RE2s Register: box_scroll = DAT_800d5c14 (Scroll-
+     * Stand des 64-Platz-Rings; der gewaehlte Platz ist (scroll+2)&0x3f, der Cursor
+     * steht FEST), box_side = Panel DAT_800d5bf1 / Zustand DAT_800d5bf2. */
+    uint8_t box_mode;       /* 1 = der Box-Unterschirm ist offen (Menue-Substate 4) */
+    uint8_t box_scroll;     /* Scroll-Stand 0..63 (RE2 DAT_800d5c14)                */
+    uint8_t box_side;       /* 0 = Inventar-Seite, 1 = Box-Seite, 2 = EXIT-Zeile    */
     /* ---- wave 5 (EXCHANGE/combine) ---- */
     uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
                             /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written
