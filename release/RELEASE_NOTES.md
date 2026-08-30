@@ -1,3 +1,53 @@
+# RE1.5 Port — v0.3.43 (Early Preview)
+
+Zwei große Baustellen: die **Item-Box läuft jetzt komplett nach Resident Evil 2**, und
+die **Karte ist grundlegend repariert** (Türen, Treppen, Marker, Ebenen).
+
+## Item-Box — der komplette RE2-Mechanismus
+
+Bisher war unsere Box ein Zwitter: RE2s Transfer-Regeln, aber ein selbst erfundenes
+Ablagesystem mit vier Seiten à acht Plätzen. Jetzt ist es RE2s echtes Modell:
+
+- **64 Plätze statt 32** — doppelt so viel Stauraum.
+- **Ring statt Seiten:** Der Auswahlrahmen steht fest, der Inhalt scrollt darunter durch
+  (genau wie in RE2). Hoch/Runter bewegt um einen Platz, die **Schultertasten springen
+  um fünf**.
+- **Weiches Durchscrollen** statt Springen: Die Liste gleitet über sechs Bilder, dann
+  rastet sie ein — RE2s exakte Kadenz. Bei gehaltener Taste läuft es gleichmäßig weiter.
+- Statt „Seite 1/4" steht jetzt die Ringposition („12/64") am Feld.
+- Vorhandene Spielstände laufen weiter: Inventar, Fortschritt, Wunden, Karte und die
+  ersten 32 Box-Plätze werden übernommen.
+
+Der alte Stand ist gesichert (Tag `itembox-hybrid-v1`), falls etwas fehlt.
+
+## Karte — von Grund auf repariert
+
+Dein Bericht war goldrichtig, und die Ursache war grundsätzlicher als gedacht:
+**Ein Raum ist im Spiel nicht immer ein Ort.** ROOM1170 zum Beispiel besteht aus zwei
+räumlich getrennten Bereichen, die über eine Tür verbunden sind, die auf den eigenen
+Raum zeigt. Unsere Karte konnte das nicht abbilden — deshalb blieb der Marker unten im
+großen Rechteck und das kleine wurde nie hervorgehoben. **26 der 103 Räume** sind so
+gebaut.
+
+- **Zonen statt Räume:** Jeder zusammenhängende Bereich bekommt jetzt sein eigenes
+  Kartenstück und seine eigene Markerberechnung. Der Marker liegt damit **immer in dem
+  Rechteck, das auch hervorgehoben ist**.
+- **Der Wechsel wird sofort erkannt** — auch wenn man den Raum dabei gar nicht verlässt.
+- **Ebenen stimmen:** Weil Zonen auf verschiedenen Kartenseiten liegen dürfen, wechselt
+  die Karte beim Treppengang automatisch die Etage.
+- **Türen und Treppen sind eingezeichnet** — 181 Marken, davon 22 Treppen. RE1.5 malt so
+  etwas gar nicht, deshalb sind die Symbole nach RE2s Vorbild gebaut: Türen als kurzer
+  Strich in RE2s Türgelb, Treppen als kleine Leiter. Sie erscheinen nur dort, wo du
+  schon warst. Für ROOM1170 heißt das: **drei Türen und vier Treppen-Marken links im
+  kleinen Rechteck** — genau da, wo du sie erwartet hast.
+
+**Ehrlich dazu:** Welches Kartenstück zu welchem Bereich gehört, ist eine Optimierung
+aus Grundriss, Größenverhältnis und Tür-Verbindungen — das Original gibt diese Zuordnung
+nirgends her. Sie kann im Einzelfall danebenliegen; was nicht sicher zuzuordnen war,
+bleibt neutral und färbt sich nie falsch. Sag mir, wo es noch hakt.
+
+---
+
 # RE1.5 Port — v0.3.42 (Early Preview)
 
 Das Pre-Intro sieht jetzt aus wie in Resident Evil 2.
