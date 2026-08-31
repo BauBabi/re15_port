@@ -1,3 +1,19 @@
+# RE1.5 Port — v0.3.60 (Early Preview)
+
+**Box-Panel liegt jetzt auf der Höhe des Item-Gitters.** Ich habe nachgemessen statt
+geschätzt: Die Zellen des Gitters liegen bei Bildzeile 58–208, mein Panel stand bei
+16–172 — also deutlich darüber.
+
+Dabei kam ein Größenkonflikt heraus: Panel und Textbox brauchen zusammen 215 Pixel, der
+Bereich des Inventars ist kleiner. Gelöst, **ohne einen Rand zu opfern**: Die Textbox ist
+kürzer, aber nur ihr **leerer Innenraum** wurde schmaler — die Original-Ränder oben und
+unten sind vollständig erhalten, dazwischen bleibt Platz für die Textzeile.
+
+Ergebnis: Panel deckt denselben Bereich ab wie das Gitter, die Textbox schließt direkt
+darunter an, und beides steht im Bild.
+
+---
+
 # RE1.5 Port — v0.3.59 (Early Preview)
 
 - **Die Textbox-Ränder** waren im Bild vorhanden — ich habe nachgemessen — lagen aber
