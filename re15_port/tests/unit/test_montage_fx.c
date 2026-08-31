@@ -144,7 +144,9 @@ int main(void)
           && re15_montage_fx_level_prev() == 0);
     CHECK("und es hat dabei herangezoomt", re15_montage_fx_zoom_px() > 0);
     ticks(48);                                    /* zusammen 96 Frames */
-    CHECK("nach 96 Frames beginnt das Labor darunter einzublenden",
+    CHECK("bis Frame 96 bleibt der Grund schwarz", re15_montage_fx_level_prev() == 0);
+    ticks(2);                                     /* Wartezeit abgelaufen */
+    CHECK("danach beginnt das Labor darunter einzublenden",
           re15_montage_fx_level_prev() > 0);
     ticks(48);
     CHECK("Labor steht dann voll UND das Logo ebenfalls",
