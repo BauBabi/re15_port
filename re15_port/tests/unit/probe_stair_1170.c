@@ -48,6 +48,8 @@ typedef struct {
     int   rot_y;
     int   expect_target;
     const char *expect_dir;   /* "DOWN" / "UP" */
+    int   achse_z;            /* 1 = Z-Treppe, 0 = X-Treppe */
+    int   erwarte_vorzeichen; /* Laufrichtung laengs der Achse: -1/+1, 0 = egal */
 } scenario_t;
 
 static int s_fail = 0;
@@ -66,13 +68,22 @@ static void run_scenario(const re15_rdt_t *rdt, const scenario_t *s)
     printf("--- %s: band=%d pos=(%ld,%ld) rot=%d  erwarte %s -> Band %d\n",
            s->name, s->band, (long)pl->x, (long)pl->z, s->rot_y,
            s->expect_dir, s->expect_target);
+    int32_t x0 = pl->x, z0 = pl->z;
     int started = re15_stair_try_start(rdt, 1);
     if (!started) { printf("    FAIL: KEIN Start\n\n"); s_fail = 1; return; }
     const char *dir = (pl->motion == (int16_t)RE15_PLAYER_MOTION_STAIR_DOWN) ? "DOWN" : "UP";
     for (int f = 0; f < 900 && re15_stair_active(); f++)
         re15_stair_tick(rdt, NULL, NULL);
     int end_band = re15_collision_band_from_y(pl->y);
-    int ok = (end_band == s->expect_target) && (strcmp(dir, s->expect_dir) == 0);
+    int32_t d = s->achse_z ? (pl->z - z0) : (pl->x - x0);
+    int lauf_ok = 1;
+    if (s->erwarte_vorzeichen) {
+        lauf_ok = (s->erwarte_vorzeichen > 0) ? (d > 0) : (d < 0);
+        if (!lauf_ok)
+            printf("    FAIL: laeuft in die FALSCHE Richtung (Versatz %ld laengs %c)\n",
+                   (long)d, s->achse_z ? 'Z' : 'X');
+    }
+    int ok = (end_band == s->expect_target) && (strcmp(dir, s->expect_dir) == 0) && lauf_ok;
     if (!ok) s_fail = 1;
     printf("    PORT: %s -> Ende band=%d  [%s]\n\n", dir, end_band, ok ? "OK" : "FAIL");
 }
@@ -102,10 +113,20 @@ int main(void)
      *             slot9 t12 chain2 side0 cnt2 corner(x)=-24030 ext=1470 c=(-23295,-26155)
      *             slot10 t12 chain4 side0 cnt2 corner(x)=-21060 ext=740 c=(-20690,-25595) */
     scenario_t sc[] = {
-        { "X-Treppe 4->2 (slot10, high-X-Haelfte)",  4, -20505, -25595, 2048, 2, "DOWN" },
-        { "X-Treppe 2->4 (slot9, low-X-Haelfte)",    2, -23662, -26155,    0, 4, "UP"   },
-        { "Z-Treppe 2->0 (slot8, low-Z-Haelfte)",    2, -25640, -23777, 3072, 0, "DOWN" },
-        { "Z-Treppe 0->2 (slot7, high-Z-Haelfte)",   0, -25670, -20423, 1024, 2, "UP"   },
+        { "X-Treppe 4->2 (slot10, high-X-Haelfte)",  4, -20505, -25595, 2048, 2, "DOWN", 0, -1 },
+        { "X-Treppe 2->4 (slot9, low-X-Haelfte)",    2, -23662, -26155,    0, 4, "UP",   0, +1 },
+        { "Z-Treppe 2->0 (slot8, low-Z-Haelfte)",    2, -25640, -23777, 3072, 0, "DOWN", 1, +1 },
+        { "Z-Treppe 0->2 (slot7, high-Z-Haelfte)",   0, -25670, -20423, 1024, 2, "UP",   1, -1 },
+        /* ⛔ NUTZER-FALL 2026-08-31: unten an der Treppe stehen und MIT DEM RUECKEN
+         * zur Treppe die Aktionstaste druecken. Vorher schnappte die Blickrichtung auf
+         * die naechstliegende Achsen-Himmelsrichtung - also nach HINTEN - und der
+         * Charakter lief die Treppenanimation von der Treppe WEG ("auf die falsche
+         * Seite hoch"). Dieselben vier Punkte wie oben, nur um 180 Grad gedreht: Ziel,
+         * Richtung UND Laufweg muessen unveraendert bleiben. */
+        { "X 4->2 RUECKWAERTS angelaufen",           4, -20505, -25595,    0, 2, "DOWN", 0, -1 },
+        { "X 2->4 RUECKWAERTS angelaufen",           2, -23662, -26155, 2048, 4, "UP",   0, +1 },
+        { "Z 2->0 RUECKWAERTS angelaufen",           2, -25640, -23777, 1024, 0, "DOWN", 1, +1 },
+        { "Z 0->2 RUECKWAERTS angelaufen",           0, -25670, -20423, 3072, 2, "UP",   1, -1 },
     };
     for (size_t i = 0; i < sizeof sc / sizeof sc[0]; i++)
         run_scenario(&rdt, &sc[i]);

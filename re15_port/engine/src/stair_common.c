@@ -413,10 +413,36 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
      * pair was wrong (stair-dir-03). The visible clip-5 settle itself stays omitted
      * (hardware measurement 2026-07-24: no turn anim; a cardinal walk-in converges in
      * 0 frames — stair_10a0.md O2 keeps this open for re-measurement). */
-    uint16_t ry  = (uint16_t)p->rot_y & 0x0FFF;
-    uint16_t c0  = (sp->axis == 13) ? 0x400 : 0x000;
-    int      d0  = (int)((ry - c0 + 0x800) & 0x0FFF) - 0x800;   /* signed circular diff */
-    uint16_t tgt = (d0 >= -0x400 && d0 < 0x400) ? c0 : (uint16_t)((c0 + 0x800) & 0x0FFF);
+    /* ⛔ LAUFRICHTUNG AUS DEM TREPPEN-RECHTECK, NICHT AUS DER BLICKRICHTUNG.
+     * Nutzer-Report 2026-08-31: "wenn ich in ROOM1170 die Treppe runter laufe und
+     * unten in die Gegenrichtung der Treppe schaue und die Aktionstaste druecke,
+     * laeuft der Charakter die Treppenanimation auf die falsche Seite hoch."
+     *
+     * URSACHE: der Port schnappte die Blickrichtung auf die NAECHSTLIEGENDE
+     * Achsen-Himmelsrichtung. Steht man mit dem Ruecken zur Treppe, ist das die
+     * falsche von beiden - und weil der Gang byte-true "forward = speed 10 entlang
+     * der Blickrichtung" ist (FUN_800245d8), laeuft er dann von der Treppe WEG,
+     * waehrend Y steigt. Das Trigger-Rechteck ist breiter als die 620er Sonde
+     * (Slot 7 in ROOM1170: 2500 x 890), deshalb greift die Treppe in BEIDE
+     * Blickrichtungen - die Sonde kann das nicht abfangen.
+     *
+     * Eine Treppe QUERT ihr Rechteck: man geht von der Haelfte, in der man steht,
+     * in die andere. Welche Haelfte das ist, steht schon in `low_half` oben - es ist
+     * dasselbe Datum, aus dem der Original-Handler hoch/runter entscheidet
+     * (LAB_80043500 / LAB_800435cc, Vergleich delta < extent>>1 @0x80043520-24 /
+     * @0x800435ec-f0). Die Richtung ist damit aus dem Record erzwungen und nicht
+     * geraten. Achsen-Konvention des Ports: x += cos(rot), z -= sin(rot), also
+     *   Achse X (sce 12): nach +X = 0x000, nach -X = 0x800
+     *   Achse Z (sce 13): nach +Z = 0xc00, nach -Z = 0x400
+     *
+     * OFFEN (ehrlich): woher das ORIGINAL diese Wahl nimmt, ist nicht belegt. Der
+     * frueher hier zitierte Einschwinger @0x8003891c-0x800389ac ist der
+     * Residual-Glaetter fuer DAT_800acabe (selbst disassembliert: Schritt
+     * +-(res>>2)&0xff, Ausstieg (res&0x3e0)==0, Snap &0xff00) - er zieht den
+     * additiven Modell-Yaw gegen 0 und trifft KEINE Richtungsentscheidung.
+     * Bis das gefunden ist, gilt die geometrische Herleitung. */
+    uint16_t tgt = (sp->axis == 13) ? (low_half ? 0xc00 : 0x400)
+                                    : (low_half ? 0x000 : 0x800);
     s_motion  = up ? RE15_PLAYER_MOTION_STAIR_UP              /* 221 -> PL00 clip 20 */
                    : RE15_PLAYER_MOTION_STAIR_DOWN;           /* 220 -> PL00 clip 21 */
     /* NO clip-5 turn preamble in EITHER direction. USER-VERIFIED on real PSX
