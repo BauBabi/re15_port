@@ -1405,8 +1405,13 @@ static void map_mode(uint16_t pressed)
          * <- RAW CROSS (@0x80073dbc[15], wave-6 finding 4) OR raw L1 edge 0x4
          * (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
          * NO other input: no pan, no room step — a static viewer. */
-        if ((re15_pad_virtual_word(pressed) & 0x8000) || (pressed & RE15_PAD_BIT_L1))
+        if ((re15_pad_virtual_word(pressed) & 0x8000) || (pressed & RE15_PAD_BIT_L1)) {
+            se4(5);                             /* Abbruch-Ton SOFORT beim Tastendruck —
+                                                 * er stand vorher am Ende der 0x19 Frames
+                                                 * langen Ausblendung und kam dadurch
+                                                 * hoerbar zu spaet (Nutzer 2026-08-31). */
             g_inv_screen.item_state++;
+        }
         return;
     case 2:
         if (s_c3 < 0x19) {                      /* sltiu 0x19 @0x8004c21c */
@@ -1423,11 +1428,6 @@ static void map_mode(uint16_t pressed)
         /* Exit: LoadImage restore of the saved rect from 0x801a0000 (@0x8004c2c4-e4)
          * + DrawSync (state-free in the port texture model), then the verified exit
          * contract @0x8004c2f0-304: 25ca=0, 25c1=0, 25c2=0, 25c3=0 (tab kept). */
-        se4(5);                                 /* Abbruch-Ton beim Verlassen der Karte
-                                                 * (Nutzer 2026-08-31: "zurueckgehen von
-                                                 * der MAP hat nicht den Abbruch sound").
-                                                 * Ton = Original SE-Bank 4 Nr. 5, Stelle
-                                                 * ergaenzt wie die uebrigen Menuetoene. */
         g_inv_screen.highlight = 0;             /* sb zero 25ca @0x8004c2f4 */
         s_substate = 0;                         /* sb zero 25c1 @0x8004c2fc */
         g_inv_screen.item_state = 0;            /* sb zero 0(s1) @0x8004c300 */

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "re15_room.h"
+#include "re15_actor.h"   /* Spielerposition fuer die Ersatz-Zonenbestimmung */
 #include "re15_map_zones.h"
 
 #define ZONE_COUNT ((int)(sizeof s_map_zones / sizeof s_map_zones[0]))
@@ -122,6 +123,17 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
     extern unsigned g_current_room_id;
     int state = RE15_MAP_RECT_UNMAPPED;
     const re15_map_zone_t *cur = re15_map_zone_current();
+    /* ⛔ DIESELBE ERSATZ-BESTIMMUNG WIE DER MARKER (Nutzer 2026-08-31: "Der
+     * Spielermarker steht im nirgendwo auf der Karte", 2. Abschnitt von 1170).
+     * URSACHE: der Marker faellt auf re15_map_zone_at zurueck, wenn die laufend
+     * nachgefuehrte Zone noch nicht steht (z.B. direkt nach einem Bereichswechsel,
+     * bevor der naechste Spielschritt lief) — diese Funktion tat das NICHT. Dann
+     * wurde der Marker gezeichnet, sein Rechteck aber als unbesucht behandelt und
+     * gar nicht gemalt: der Marker schwebte im Schwarzen. Jetzt benutzen beide
+     * denselben Weg. */
+    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+                                     g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                     g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
         if (zn->page != page || zn->rect != rect_idx) continue;
