@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.3.54 (Early Preview)
+
+**Die Item-Box zeigt jetzt das echte RE2-Panel — nicht mehr meinen Nachbau.**
+
+Ich habe bisher Rahmen, Schriftzug, Pfeile und Schiene *nachgebaut* und dabei in jeder
+Runde ein Detail verfehlt. Das war der falsche Ansatz. Jetzt wird **das Original
+gezeichnet**: Ich habe es aus dem laufenden Spiel geschnitten (aus dem Speicherabzug,
+den du mir mit der geöffneten Box ermöglicht hast) und liefere es als Bild mit.
+
+Damit stehen im **Original-Aussehen**: Rahmen und Pfosten, der **„ITEM BOX"-Schriftzug
+mit den grauen Pfeilen**, Kopf- und Fußband, die **Scrollbalken-Schiene samt ihren
+orangen Pfeilen** und der Listengrund.
+
+Darüber liegt unser eigener Inhalt: Namen, Symbole, Mengen, der Auswahlbalken und der
+gelbe Scrollgriff, dessen Position anzeigt, wo man sich in den 64 Plätzen befindet.
+
+Das Panel-Bild ist als Asset im Paket, und der Paketbau prüft es mit — sonst wäre es
+still weg.
+
+---
+
 # RE1.5 Port — v0.3.53 (Early Preview)
 
 Deine vier Punkte zur Box — alle geklärt, drei davon hatten dieselbe Ursache.
