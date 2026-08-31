@@ -324,6 +324,36 @@ def main():
         print(f"Seite {pg:2d}: {n_ok}/{len(zl)} Zonen zugeordnet ({len(R)} Rects), Kosten {c:7.1f}")
 
     # ---- Ausgabe ----
+    # ---- BELEGTE ZUORDNUNGEN, die die Kostenheuristik nicht findet -------------
+    # ROOM1130 blieb unzugeordnet (Seite 4: 5 von 6 Zonen). Rect 4 (144,80) 32x80 ist
+    # unbelegt und gehoert ROOM1130 — unabhaengig doppelt belegt (2026-08-31):
+    #  * ROOM1130 gehoert auf Seite 4: Sprungtabelle @0x8001103c Eintrag 19 -> 0x8004b710,
+    #    Fall-Through bis `ori v0,zero,0x4` @0x8004b758 -> `sb v0,DAT_800b260e` @0x8004b88c.
+    #  * TUER-KOHAERENZ statt Groessen-Lineal: mit dem original-geeichten Anker
+    #    ROOM1150 -> Rect 2 (Skalenzeile 21 @0x80076958, Marker-Formel FUN_800473f8)
+    #    ergibt Rect 4 einen mittleren Tuerpositions-Fehler von 11,1 px, jedes andere
+    #    Rechteck 23,6..31,9 px; in der vollstaendigen Suche ueber alle 720 injektiven
+    #    Zuordnungen tragen die sechs besten Loesungen ALLE 1130 -> Rect 4.
+    #  * Seitenverhaeltnis (massstabsfrei): Rect 4 = 0,400, ROOM1130 = 0,384,
+    #    naechster Raum 0,782.
+    # ⛔ NICHT angefasst: ROOM1140 Zone 1 -> Rect 3. Die Zone ist nachweislich KEIN Ort,
+    # sondern der solide Moebelblock im Briefing-Raum (byte-true Kollisions-Sonde
+    # FUN_8003b0a4: 1,2 % der Rasterpunkte frei, gegen 66 % bei einer echten Zone; alle
+    # 19 SCA-Zellen Band 0, keine Tuer, keine Treppe). Genau deshalb wird Rect 3 nie
+    # BESUCHT und damit nie gezeichnet — die falsche Zuordnung haelt es unsichtbar.
+    # Nimmt man sie weg, faellt Rect 3 auf "ohne Zone" und wird DAUERHAFT GRAU gemalt,
+    # also sichtbar falsch. In Wahrheit zeigt Rect 3 ROOM1170s zweiten Bereich noch
+    # einmal auf dem 3F-Blatt (dieselbe Zeichnung wie Seite 5 Rect 0, 22 von 1152 Pixeln
+    # Unterschied, alle Index 4->1 = zwei Tuersymbole; deren Lage passt bei WAHREM
+    # Massstab mit 5,14 px Restfehler zu 1170s zwei 3F-Tueren nach 1130/1140). Das
+    # sauber abzubilden braucht eine Zone auf ZWEI Seiten — das kann das Datenmodell
+    # heute nicht, und ein Schnellschuss verschoebe die zid-Nummern (Save-Besucht-Bits).
+    ZONE_FIX = { (0x1130, 0): (4, 4) }
+    for key, val in ZONE_FIX.items():
+        room, zi = key
+        if room in zinfo and zi < len(zinfo[room]):
+            assign[key] = val
+
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     for b, zs in sorted(zinfo.items()):
@@ -354,10 +384,6 @@ def main():
     # die Umschaltung muss daran haengen, nicht an der Zone. Bis das gemessen ist,
     # bleibt die automatische Zuordnung stehen — sie war vom Nutzer als richtig
     # bestaetigt ("das sieht fuer das grosse und kleine Rechteck einwandfrei aus").
-    FLOOR_FIX = {}
-    for key, val in FLOOR_FIX.items():
-        if key in assign: assign[key] = val
-
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d} }},")

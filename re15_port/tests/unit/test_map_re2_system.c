@@ -219,11 +219,20 @@ int main(void)
         g_inv_screen.substate = 1; g_inv_screen.item_state = 1;   /* MAP-Schirm */
         nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
         for (i = 0; i < nops; i++) {
-            if (first_mark < 0 && ops[i].kind == RE15_INV_OP_LINE) first_mark = i;
+            /* ⛔ EINE MARKE IST EIN OP_FILL IN MARKEN-FARBE — nicht irgendeine Linie.
+             * Der Pin suchte zuerst nach RE15_INV_OP_LINE und war damit FALSCH-GRUEN:
+             * die Marken wurden am 2026-08-31 auf deckendes OP_FILL umgestellt (LINE ist
+             * ABE-additiv und auf dem dunklen Grundriss fast unsichtbar), auf dem
+             * Karten-Schirm gibt es aber ANDERE LINE-Ops, die frueher liegen — der Test
+             * hat also die ganze Zeit etwas anderes gemessen. */
+            if (first_mark < 0 && ops[i].kind == RE15_INV_OP_FILL &&
+                ((ops[i].r == 240 && ops[i].g == 200 && ops[i].b == 64) ||     /* TUER   */
+                 (ops[i].r == 240 && ops[i].g == 240 && ops[i].b == 216)))     /* TREPPE */
+                first_mark = i;
             if (first_rect < 0 && ops[i].kind == RE15_INV_OP_SPRT &&
                 ops[i].page == RE15_INV_PAGE_MAP4) first_rect = i;
         }
-        CHECK("der Karten-Schirm zeichnet Marken-Linien", first_mark >= 0);
+        CHECK("der Karten-Schirm zeichnet Marken (OP_FILL in Marken-Farbe)", first_mark >= 0);
         CHECK("der Karten-Schirm zeichnet Grundriss-Rechtecke", first_rect >= 0);
         CHECK("Marken liegen VOR den Rechtecken (= obenauf, sichtbar)",
               first_mark >= 0 && first_rect >= 0 && first_mark < first_rect);
