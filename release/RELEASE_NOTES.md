@@ -1,3 +1,21 @@
+# RE1.5 Port — v0.3.51 (Early Preview)
+
+**Die schwarze Box — echte Ursache gefunden, und diesmal habe ich nachgesehen statt
+geraten.** Ich habe mir einen Abzug unseres *eigenen* Box-Bildschirms erzeugt und ihn
+Pixel für Pixel geprüft: Der Auswahlbalken war gar nicht da — an seiner Stelle stand die
+Grundfarbe. Der Grund: Die Zeichenbefehle werden **von hinten nach vorne** abgearbeitet,
+ein früher Befehl liegt also **oben**. Mein Panel stand bei den Rahmen (früh), die Liste
+erst später — der Panel-Hintergrund hat damit **Namen, Symbole und Auswahlbalken
+zugedeckt**. Das Panel liegt jetzt hinter der Liste; in der Gegenprobe sind Balken,
+Scrollbalken und Zeileninhalte sichtbar.
+
+**Pre-Intro: das Labor-Bild kommt nicht mehr vorher.** Auch hier hattest du recht. Im
+Original räumt das Spiel den Schirm, dann erscheint **das Logo allein auf Schwarz** und
+zoomt, und **erst 96 Frames später** legt sich das Labor-Standbild darunter. Es tritt
+also nie für sich auf. Der Port hält es jetzt genauso zurück.
+
+---
+
 # RE1.5 Port — v0.3.50 (Early Preview)
 
 **1. Die dunklen Felder — Ursache gefunden.** Das war kein Farbfehler, sondern ein
