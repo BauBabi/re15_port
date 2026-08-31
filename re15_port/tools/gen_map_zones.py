@@ -46,7 +46,40 @@ def rects(page):
     return [(s16(ptr + i*12), s16(ptr + i*12+2), s16(ptr + i*12+4), s16(ptr + i*12+6))
             for i in range(cnt)]
 
+def rect_uv(page, i):
+    """Kachel-Ecke (u,v) des Rechtecks: Byte +8 und +10 des 12-Byte-Eintrags."""
+    ptr = u32(0x80076844 + page * 8)
+    return EXE[fo(ptr + i*12 + 8)], EXE[fo(ptr + i*12 + 10)]
+
 BASES = [0, 38, 50, 65, 77, 98]
+# ---- KARTEN-KACHEL EINER SEITE (DATA/MAP0x.PIX) ---------------------------------
+# Die Grundriss-Grafik ist die einzige verlaessliche Quelle fuer den Verlauf der WAENDE:
+# ein Karten-Rechteck ist nur die Bounding-Box, der gezeichnete Raum darin kann
+# L-foermig sein (ROOM1130 ist ein abgeknickter Flur). Wer eine Tuermarke auf die
+# Rechteck-KANTE rueckt, setzt sie dort ausserhalb des Raums ab.
+# id-Tabelle @0x80074c4c (u16 je Seite), id 12..24 -> MAP01..MAP0D; headerlos,
+# 256x256 4bpp, 128 Byte je Zeile, unteres Nibble = linkes Pixel.
+_PIX = {}
+def page_pix(page):
+    if page in _PIX: return _PIX[page]
+    pid = u16(0x80074c4c + page * 2)
+    img = None
+    if 12 <= pid <= 24:
+        fp = os.path.join(ROOT, 're15_port', 'shared_assets', 'PSX', 'DATA', 'MAP%02X.PIX' % (pid - 11))
+        if os.path.exists(fp):
+            raw = open(fp, 'rb').read()
+            img = [[0] * 256 for _ in range(256)]
+            for y in range(256):
+                base = y * 128
+                if base + 128 > len(raw): break
+                row = img[y]
+                for xb in range(128):
+                    bb = raw[base + xb]
+                    row[xb * 2] = bb & 0xF
+                    row[xb * 2 + 1] = bb >> 4
+    _PIX[page] = img
+    return img
+
 def page_of(rid):
     stage = (rid >> 12) - 1; room = (rid >> 4) & 0xFF
     if stage == 0:
@@ -128,7 +161,13 @@ def read_rdt(rid):
                     # (scd_vm.c: 'SCD Aot_set types 12/13 = die STAIR-Band-Zonen')
                     if b[2] in (12, 13):
                         rx, rz, rw, rd = struct.unpack_from('<hhhh', b, 6)
-                        stairs.append({'x': rx + rw//2, 'z': rz + rd//2})
+                        # sce SELBST ist die Achse: 12 = X, 13 = Z (re15_aot.h, Handler
+                        # LAB_80043500 liest x @0x80043510-14, LAB_800435cc liest z
+                        # @0x800435dc-e0). chain = pc[4] = das BAND dieses Treppenendes,
+                        # count = pc[16] = Zahl der ueberquerten Baender (lbu @0x800435b8
+                        # bzw. @0x8004367c).
+                        stairs.append({'x': rx + rw//2, 'z': rz + rd//2,
+                                       'axis': b[2], 'band': b[4], 'count': b[16]})
                 if op in (0x3b, 0x68) and s+pc+sz <= len(d):
                     b = d[s+pc:s+pc+sz]
                     if op == 0x3b:
@@ -169,6 +208,7 @@ def read_rdt(rid):
                         pc += sz
                         continue
                     doors.append({'lx': rx + rw//2, 'lz': rz + rd//2,
+                                  'rx': rx, 'rz': rz, 'rw': rw, 'rd': rd,
                                   'nx': nx, 'nz': nz,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
                 pc += sz
@@ -408,6 +448,56 @@ def main():
         # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
         # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
         return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)
+    def snap_wall(pg, r, mx, my, senk):
+        """Rueckt eine Tuermarke auf die GEZEICHNETE Wand und nennt die WANDSEITE.
+
+        Nutzer 2026-08-31: "die Tueren sollen immer an die Wand ausgerichtet sein" und
+        "ich haette gerne die Resident Evil 1.5 Tuer Symbole, wie sie in ROOM 1130 oben
+        zu sehen sind". Das Original-Symbol ist eine NISCHE, die nach INNEN zeigt - man
+        muss also nicht nur die Achse kennen, sondern die Seite.
+
+        Das Karten-Rechteck ist nur die Bounding-Box; der gezeichnete Raum darin kann
+        L-foermig sein (ROOM1130 ist ein abgeknickter Flur). Die Wand steht deshalb in
+        der Original-Grafik DATA/MAP0x.PIX: Palettenindex 0 = transparent (ausserhalb),
+        alles andere = gezeichneter Raum.
+
+        Rueckgabe: (mx, my, seite) mit seite 0=Nord, 1=Ost, 2=Sued, 3=West - benannt
+        nach der Wand, in der die Tuer sitzt (der Raum liegt jeweils gegenueber).
+        """
+        R = rects(pg)
+        if r >= len(R): return mx, my, (3 if senk else 0)
+        RX, RY, RW, RH = R[r]
+        pix = page_pix(pg)
+        if pix is None: return mx, my, (3 if senk else 0)
+        U, V = rect_uv(pg, r)
+
+        def drawn(i, j):
+            if not (0 <= i < RW and 0 <= j < RH): return False
+            yy, xx = V + j, U + i
+            if not (0 <= yy < 256 and 0 <= xx < 256): return False
+            return pix[yy][xx] != 0
+
+        if senk:
+            j = my - RY
+            if not (0 <= j < RH): return mx, my, 3
+            kanten = [i for i in range(RW) if drawn(i, j) and
+                      (i == 0 or not drawn(i - 1, j) or i == RW - 1 or not drawn(i + 1, j))]
+            if not kanten: return mx, my, 3
+            i0 = mx - RX
+            best = min(kanten, key=lambda i: abs(i - i0))
+            seite = 3 if drawn(best + 1, j) else 1        # 3 = Westwand, 1 = Ostwand
+            return RX + best, my, seite
+        else:
+            i = mx - RX
+            if not (0 <= i < RW): return mx, my, 0
+            kanten = [j for j in range(RH) if drawn(i, j) and
+                      (j == 0 or not drawn(i, j - 1) or j == RH - 1 or not drawn(i, j + 1))]
+            if not kanten: return mx, my, 0
+            j0 = my - RY
+            best = min(kanten, key=lambda j: abs(j - j0))
+            seite = 0 if drawn(i, best + 1) else 2        # 0 = Nordwand, 2 = Suedwand
+            return mx, RY + best, seite
+
     def zone_at(room, wx, wz):
         best, best_a = None, 0
         for i, (x0, x1, z0, z1) in enumerate(zinfo.get(room, [])):
@@ -462,20 +552,59 @@ def main():
                 pa = to_map(b, za, A['lx'], A['lz'])
                 pb = to_map(b, zb, B['lx'], B['lz'])
                 if not pa or not pb or pa[0] != pb[0]: continue
-                cx, cy = (pa[2] + pb[2]) // 2, (pa[3] + pb[3]) // 2
+                ax, ay, sa = snap_wall(pa[0], pa[1], pa[2], pa[3], A['rd'] > A['rw'])
+                bx, by, sb = snap_wall(pb[0], pb[1], pb[2], pb[3], B['rd'] > B['rw'])
+                cx, cy = (ax + bx) // 2, (ay + by) // 2
                 # Beide Seiten bekommen dieselbe Position: die Marke ist damit
                 # sichtbar, sobald EINER der beiden Bereiche besucht ist, und faellt
                 # optisch zu EINER zusammen.
-                merged[_i] = (pa[0], pa[1], cx, cy)
-                merged[_j] = (pb[0], pb[1], cx, cy)
-        for kind, lst in ((0, doors_b), (1, stairs_all.get(b, []))):
+                merged[_i] = (pa[0], pa[1], cx, cy, sa)
+                merged[_j] = (pb[0], pb[1], cx, cy, sb)
+        # ---- TREPPEN: EIN Aufgang, EINE Marke, Sprossen quer zur Laufrichtung ----
+        # Nutzer 2026-08-31: "auch da wird immer links und rechts ein Treppensymbol
+        # gezeichnet, fuer ein und dieselbe Treppe. Natuerlich soll auch hier ein und
+        # dieselbe Treppe als EINE eingezeichnet sein."
+        # Eine Treppe liegt als ZWEI Band-Wechsel-Zonen vor — eine je Ende. Das Paar ist
+        # aus den Daten erkennbar: gleiche Achse (sce 12 = X / 13 = Z), gleiche Stufenzahl
+        # count, und der Band-Abstand ist GENAU count (chain = das Band dieses Endes,
+        # count = Zahl der ueberquerten Baender, lbu @0x800435b8 / @0x8004367c).
+        # Gemessen in ROOM1170: Achse Z Band 0 <-> Band 2 (Abstand 2780 Einheiten) und
+        # Achse X Band 2 <-> Band 4 (2660) — also zwei Aufgaenge, vier Datensaetze.
+        # Zuordnung greedy ueber die kuerzeste Entfernung, damit bei zwei Enden auf
+        # demselben Band (hier zweimal Band 2) das richtige Paar entsteht.
+        st_list = stairs_all.get(b, [])
+        st_merge = {}
+        _used = set()
+        _cand = []
+        for _i in range(len(st_list)):
+            for _j in range(_i + 1, len(st_list)):
+                A, B = st_list[_i], st_list[_j]
+                if A['axis'] != B['axis'] or A['count'] != B['count']: continue
+                if abs(A['band'] - B['band']) != A['count']: continue
+                d = abs(A['x'] - B['x']) + abs(A['z'] - B['z'])
+                _cand.append((d, _i, _j))
+        for d, _i, _j in sorted(_cand):
+            if _i in _used or _j in _used: continue
+            A, B = st_list[_i], st_list[_j]
+            za, zb = zone_at(b, A['x'], A['z']), zone_at(b, B['x'], B['z'])
+            if za is None or zb is None: continue
+            pa, pb = to_map(b, za, A['x'], A['z']), to_map(b, zb, B['x'], B['z'])
+            if not pa or not pb or pa[0] != pb[0]: continue
+            cx, cy = (pa[2] + pb[2]) // 2, (pa[3] + pb[3]) // 2
+            st_merge[_i] = (pa[0], pa[1], cx, cy)
+            st_merge[_j] = (pb[0], pb[1], cx, cy)
+            _used.add(_i); _used.add(_j)
+
+        for kind, lst in ((0, doors_b), (1, st_list)):
             for _n, m in enumerate(lst):
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
                 zi = zone_at(b, wx, wz)
                 if zi is None: continue
                 if kind == 0 and _n in merged:
-                    pg, r, mx, my = merged[_n]
+                    pg, r, mx, my, _seite = merged[_n]
+                elif kind == 1 and _n in st_merge:
+                    pg, r, mx, my = st_merge[_n]
                 else:
                     mp = to_map(b, zi, wx, wz)
                     if not mp: continue
@@ -493,17 +622,50 @@ def main():
                 mkind = kind          # NICHT `kind` ueberschreiben: das ist die
                                       # Laufvariable der aeusseren Schleife.
                 if kind == 0:
-                    R = rects(pg)[r]
-                    d_waag = min(my - R[1], R[1] + R[3] - 1 - my)   # obere/untere Kante
-                    d_senk = min(mx - R[0], R[0] + R[2] - 1 - mx)   # linke/rechte Kante
-                    if d_senk < d_waag: mkind = 2
+                    # ---- WANDACHSE AUS DEM TUER-RECHTECK SELBST ----------------
+                    # ⛔ ERSETZT die frueherer Regel "welche Rechteck-Kante ist
+                    # naeher". Die war zu grob und lag in ROOM1130 bei zwei von vier
+                    # Tueren falsch (Nutzer 2026-08-31: "der Balken rechts ist falsch
+                    # gedreht ... die Tuer unten ist auch 90 Grad falsch gedreht").
+                    # Die Wandachse steht im Trigger-Rechteck der Tuer: es ist LAENGS
+                    # DER WAND gestreckt, weil man laengs der Wand auf die Tuer
+                    # zulaufen kann, quer dazu aber nur die Tuerlaibung tief ist.
+                    # Gemessen in ROOM1130 (alle vier Nutzer-Beobachtungen getroffen):
+                    #   -> ROOM1140  1000 x 4000  = Z gestreckt -> SENKRECHTE Wand
+                    #   -> ROOM1120  1000 x 2000  = Z            -> senkrecht
+                    #   -> ROOM1150  1000 x 2000  = Z            -> senkrecht
+                    #   -> ROOM1170  2000 x 1000  = X gestreckt  -> WAAGERECHTE Wand
+                    # und in ROOM1170 sind alle vier X-gestreckt = waagerecht, was
+                    # der Nutzer dort als richtig bestaetigt hat.
+                    # Das Rechteck ist Ecke+Ausdehnung (FUN_80042b64 @0x80042b68-7c),
+                    # rw/rd sind also die vollen Kantenlaengen.
+                    if m['rw'] != m['rd']:
+                        senk = m['rd'] > m['rw']             # laengs Z = senkrechte Wand
+                    else:
+                        # Quadratisches Trigger-Rechteck gibt keine Achse her: dann
+                        # die naechste Rechteck-Kante als Ersatz.
+                        R = rects(pg)[r]
+                        d_waag = min(my - R[1], R[1] + R[3] - 1 - my)
+                        d_senk = min(mx - R[0], R[0] + R[2] - 1 - mx)
+                        senk = d_senk < d_waag
+                    if _n in merged:
+                        mkind = _seite
+                    else:
+                        mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                else:
+                    # TREPPE: die Sprossen stehen QUER zur Laufrichtung. Die Achse
+                    # steht im sce-Byte: 12 = X (auf der Karte waagerecht gelaufen ->
+                    # SENKRECHTE Sprossen), 13 = Z (senkrecht gelaufen -> WAAGERECHTE
+                    # Sprossen). Karten-Achsen: map_x = welt_x, map_y = -welt_z.
+                    mkind = 5 if m.get('axis') == 12 else 4
                 key = (pg, r, mx, my, mkind)
                 if key in seen: continue
                 seen.add(key)
                 marks.append((pg, r, mx, my, mkind, zid_of.get((b, zi), 0)))
     o.append("")
-    o.append("/* MARKEN in Karten-Pixeln. kind: 0 = Tuer in waagerechter Wand,")
-    o.append(" * 2 = Tuer in senkrechter Wand (Balken um 90 Grad gedreht), 1 = Treppe.")
+    o.append("/* MARKEN in Karten-Pixeln. kind = TUER mit WANDSEITE 0=Nord 1=Ost")
+    o.append(" * 2=Sued 3=West (die Nische zeigt nach innen), 4/5 = Treppe mit")
+    o.append(" * waagerechten bzw. senkrechten Sprossen.")
     o.append(" * Treppen stammen aus den SCD-Zonen Aot_set Typ 12/13 (die Band-Wechsel-")
     o.append(" * Zonen), Tueren aus den Tuer-Datensaetzen. Gezeichnet werden sie nur fuer")
     o.append(" * Zonen, die der Spieler schon gesehen hat. */")

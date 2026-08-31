@@ -193,7 +193,8 @@ int main(void)
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
             if (pg != 5) continue;
             nachher++;
-            if (kind == 1) treppen++; else tueren++;   /* 0 = laengs, 2 = quer */
+            /* kind: 0..3 = Tuer mit Wandseite (N/O/S/W), 4/5 = Treppe (Sprossen waag/senk) */
+            if (kind >= 4) treppen++; else tueren++;
         }
         CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
         CHECK("TUEREN sind eingezeichnet (aus RE1.5s eigenen Tuer-Datensaetzen)",
@@ -219,16 +220,14 @@ int main(void)
         g_inv_screen.substate = 1; g_inv_screen.item_state = 1;   /* MAP-Schirm */
         nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
         for (i = 0; i < nops; i++) {
-            /* ⛔ EINE MARKE IST EIN OP_FILL IN MARKEN-FARBE — nicht irgendeine Linie.
-             * Der Pin suchte zuerst nach RE15_INV_OP_LINE und war damit FALSCH-GRUEN:
-             * die Marken wurden am 2026-08-31 auf deckendes OP_FILL umgestellt (LINE ist
-             * ABE-additiv und auf dem dunklen Grundriss fast unsichtbar), auf dem
-             * Karten-Schirm gibt es aber ANDERE LINE-Ops, die frueher liegen — der Test
-             * hat also die ganze Zeit etwas anderes gemessen. */
+            /* Eine MARKE ist ein kleiner OP_FILL (Tuersymbol: 1x1-Pixel in Wandfarbe;
+             * Treppe: 7x7-Grund plus Sprossen). Der Pin suchte urspruenglich nach
+             * RE15_INV_OP_LINE und war damit FALSCH-GRUEN: die Marken sind deckendes
+             * OP_FILL, auf dem Schirm liegen aber ANDERE LINE-Ops frueher. Und die feste
+             * Farbabfrage ging kaputt, als die Tueren die Wandfarbe uebernahmen. Groesse
+             * ist das stabile Merkmal: alles andere auf diesem Schirm fuellt groesser. */
             if (first_mark < 0 && ops[i].kind == RE15_INV_OP_FILL &&
-                ((ops[i].r == 240 && ops[i].g == 200 && ops[i].b == 64) ||     /* TUER   */
-                 (ops[i].r == 240 && ops[i].g == 240 && ops[i].b == 216)))     /* TREPPE */
-                first_mark = i;
+                ops[i].w <= 7 && ops[i].h <= 7) first_mark = i;
             /* Der SPIELER-MARKER ist der 8x8-Quad von der TEX-Seite bei uv(224,128).
              * Er muss GANZ OBEN liegen (Nutzer 2026-08-31: "der Marker muss IMMER ueber
              * den Symbolen sein") — sonst deckt ihn ein Tuerbalken oder eine

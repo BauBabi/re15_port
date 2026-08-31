@@ -1469,55 +1469,101 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
             if (mpage != (int)st->map_page) continue;
             {
-                /* Beide Marken werden DECKEND gezeichnet (RE15_INV_OP_FILL). Der erste
-                 * Versuch nahm RE15_INV_OP_LINE — die Linie ist aber ABE-additiv und in
-                 * 5 bit gerechnet (`(dst8+src8)>>4`), also hoechstens halbhell: auf dem
-                 * dunklen Grundriss war davon im Abzug (shots/map1170.bmp) fast nichts
-                 * zu erkennen. Gemessen, nicht geschaetzt. */
-                re15_inv_op_t *o;
-                if (e.n >= e.max) break;
-                o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0; o->u = 0; o->v = 0;
-                if (kind != 1) {          /* 0 = Tuer laengs, 2 = Tuer quer */
-                    /* TUER: kurzer Balken in RE2s Tuergelb, AUSGERICHTET AN DER WAND, in der
-                     * die Tuer sitzt (Nutzer 2026-08-31: "die Tueren muessen ausgerichtet an
-                     * der Kante des Raumes liegen. Also musst du sie teilweise 90 Grad
-                     * drehen"). Die Achse steckt in `kind`: 0 = waagerechte Wand (Nord/Sued),
-                     * 2 = senkrechte Wand (Ost/West). Der Generator liest sie aus der
-                     * Projektion — welche Kante des Karten-Rechtecks naeher liegt, ist die
-                     * Wand; das Rechteck IST die linear gestauchte Raum-Bbox, die Zuordnung
-                     * ist damit geometrisch erzwungen und keine Annahme.
-                     * Die Position selbst steht im Tuer-Datensatz des Raums (Mitte des
-                     * Tuer-Rechtecks). */
-                    if (kind == 2) { o->x = (int16_t)(mx - 1); o->y = (int16_t)(my - 2);
-                                     o->w = 2; o->h = 5; }
-                    else           { o->x = (int16_t)(mx - 2); o->y = (int16_t)(my - 1);
-                                     o->w = 5; o->h = 2; }
-                    o->r = 240; o->g = 200; o->b = 64;
+                /* ---- RE1.5-TUERSYMBOL statt eines eigenen Balkens -------------------
+                 * Nutzer 2026-08-31: "ich haette gerne die Resident Evil 1.5 Tuer
+                 * Symbole, wie sie in ROOM 1130 oben zu sehen sind, anstatt der gelben
+                 * Balken."
+                 *
+                 * Das Original fuehrt Tueren nicht als Daten, sondern MALT sie in die
+                 * Grundriss-Kachel: eine Nische in der Wand mit angewinkeltem Tuerblatt,
+                 * im Wand-Palettenindex 4. Abgemessen an DATA/MAP05.PIX, Seite 4 Rect 4
+                 * (ROOM1130, uv(0,32) 32x80), Kachelzeilen 2..6 in der Westwand:
+                 *        Spalte 012345
+                 *          j=2  444444    Laibung oben
+                 *          j=3  4....4
+                 *          j=4  4....4    Tuerblatt senkrecht ...
+                 *          j=5  4...4     ... knickt ab
+                 *          j=6  4444      Laibung unten
+                 * Gegenprobe Seite 4 Rect 3 (uv(192,16)): dieselbe Form zweimal, einmal
+                 * in der Nord-, einmal in der Suedwand.
+                 *
+                 * SYM[] unten ist genau dieser Pixelsatz fuer eine WESTWAND; die anderen
+                 * drei Seiten entstehen durch Spiegeln/Transponieren. Welche Wand es ist,
+                 * steht im kind-Byte (0=Nord 1=Ost 2=Sued 3=West); der Generator liest die
+                 * Seite aus der Kachel selbst - auf welcher Seite der Wand weitergezeichnet
+                 * ist.
+                 *
+                 * FARBE = die der Wand, damit das Symbol Teil der Zeichnung wird. Die
+                 * Wandlinie ist CLUT-Index 4 = 0x5ad6 = 5-Bit (22,22,22) und wird vom
+                 * Rechteck-Sprite mit dem Zustands-Ton moduliert (inv_render_pc.c mod5:
+                 * min(255,(t5*m)>>4)>>3). Das rechnen wir nach, damit die Nische im
+                 * unbesuchten Grau, im besuchten Gruen und im aktuellen Rot mitgeht. */
+                static const signed char SYM[13][2] = {   /* Westwand, Wand bei dx=0 */
+                    {0,-2},{1,-2},{2,-2},{3,-2},{4,-2},{5,-2},
+                    {5,-1},{5, 0},{4, 1},
+                    {0, 2},{1, 2},{2, 2},{3, 2}
+                };
+                int rs = re15_map_rect_state((unsigned)mpage, (unsigned)mrect);
+                int tr = 128, tg = 128, tb = 128, wr, wg, wb;
+                if (rs == RE15_MAP_RECT_VISITED)      { tr = 40;  tg = 144; tb = 40; }
+                else if (rs == RE15_MAP_RECT_CURRENT) { tr = 192; tg = 24;  tb = 24; }
+                wr = (22 * tr) >> 4; if (wr > 255) wr = 255; wr &= 0xF8;
+                wg = (22 * tg) >> 4; if (wg > 255) wg = 255; wg &= 0xF8;
+                wb = (22 * tb) >> 4; if (wb > 255) wb = 255; wb &= 0xF8;
+            
+                if (kind <= 3) {
+                    int si;
+                    for (si = 0; si < 13; si++) {
+                        int dx = SYM[si][0], dy = SYM[si][1], px, py;
+                        re15_inv_op_t *q;
+                        switch (kind) {
+                        case 3:  px =  dx; py =  dy; break;   /* Westwand */
+                        case 1:  px = -dx; py =  dy; break;   /* Ostwand  */
+                        case 0:  px =  dy; py =  dx; break;   /* Nordwand */
+                        default: px =  dy; py = -dx; break;   /* Suedwand */
+                        }
+                        if (e.n >= e.max) break;
+                        q = &e.ops[e.n++];
+                        q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
+                        q->u = 0; q->v = 0;
+                        q->x = (int16_t)(mx + px); q->y = (int16_t)(my + py);
+                        q->w = 1; q->h = 1;
+                        q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb;
+                    }
                 } else {
-                    /* TREPPE: ein Block mit drei hellen Sprossen (RE2 setzt fuer
-                     * Uebergaenge eigene 8x8-Icons; RE1.5 liefert keine mit). */
-                    o->x = (int16_t)(mx - 3); o->y = (int16_t)(my - 3);
-                    o->w = 7; o->h = 7;
-                    o->r = 64; o->g = 64; o->b = 56;
+                    /* TREPPE: drei Sprossen QUER zur Laufrichtung, auf dunklem Grund.
+                     * Die Achse steht im sce-Byte der Band-Wechsel-Zone: 12 = X, 13 = Z
+                     * (Handler LAB_80043500 liest x @0x80043510-14, LAB_800435cc liest z
+                     * @0x800435dc-e0). Karten-Achsen map_x = welt_x, map_y = -welt_z:
+                     * X-Treppe laeuft waagerecht -> SENKRECHTE Sprossen (kind 5),
+                     * Z-Treppe senkrecht -> waagerechte Sprossen (kind 4).
+                     * (RE2 haelt dafuer eigene 8x8-Icons vor, RE1.5 liefert keine mit.) */
+                    int quer = (kind == 5), first_op = e.n;
+                    re15_inv_op_t *bg;
+                    if (e.n >= e.max) break;
+                    bg = &e.ops[e.n++];
+                    bg->kind = RE15_INV_OP_FILL; bg->page = 0; bg->clut = 0; bg->abe = 0;
+                    bg->u = 0; bg->v = 0;
+                    bg->x = (int16_t)(mx - 3); bg->y = (int16_t)(my - 3);
+                    bg->w = 7; bg->h = 7;
+                    bg->r = 64; bg->g = 64; bg->b = 56;
                     for (row = -2; row <= 2; row += 2) {
                         re15_inv_op_t *q;
                         if (e.n >= e.max) break;
                         q = &e.ops[e.n++];
-                        *q = *o;
-                        q->x = (int16_t)(mx - 2); q->y = (int16_t)(my + row);
-                        q->w = 5; q->h = 1;
+                        *q = *bg;
+                        if (quer) { q->x = (int16_t)(mx + row); q->y = (int16_t)(my - 2);
+                                    q->w = 1; q->h = 5; }
+                        else      { q->x = (int16_t)(mx - 2);   q->y = (int16_t)(my + row);
+                                    q->w = 5; q->h = 1; }
                         q->r = 240; q->g = 240; q->b = 216;
                     }
-                    /* der graue Untergrund muss HINTER die Sprossen: die Liste wird von
-                     * hinten gezeichnet, also den Block ans Ende der eben erzeugten
-                     * Gruppe tauschen. */
+                    /* Der graue Grund muss HINTER die Sprossen: die Liste wird von hinten
+                     * gezeichnet, also den Grund ans Ende der Gruppe tauschen. */
                     {
-                        re15_inv_op_t tmp = *o;
-                        int last = e.n - 1;
-                        int first = (int)(o - e.ops);
-                        int j;
-                        for (j = first; j < last; j++) e.ops[j] = e.ops[j + 1];
+                        re15_inv_op_t tmp = e.ops[first_op];
+                        int j, last = e.n - 1;
+                        for (j = first_op; j < last; j++) e.ops[j] = e.ops[j + 1];
                         e.ops[last] = tmp;
                     }
                 }
