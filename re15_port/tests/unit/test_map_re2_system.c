@@ -12,6 +12,7 @@
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_inv_screen.h"
 #include "re15_msg.h"
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
@@ -157,12 +158,21 @@ int main(void)
 
     /* --- (7) TUEREN und TREPPEN als Marken (Nutzer-Report: "die Tuer ist auf der
      *      Karte nicht eingezeichnet ... links im kleinen Rechteck muesste die Treppe
-     *      eingezeichnet sein"). Konkreter Fall ROOM1170: Zone 1 (das KLEINE Rechteck
-     *      oben, Seite 5 Rect 0) muss Treppen-Marken tragen, und Marken duerfen erst
-     *      sichtbar sein, wenn ihre Zone besucht ist. --- */
+     *      eingezeichnet sein" + 2026-08-31 "du koenntest die Tuer Markierungen nehmen
+     *      die schon von RE 1.5 kommen - dort wo die Tueren sind").
+     *
+     *      ⛔ GEGEN DIE REGRESSION VON v0.3.69. Damals hatte ich ROOM1170s zweiten
+     *      Bereich per Hand auf Seite 4 Rect 3 gelegt ("die Ebene hinter der Treppe").
+     *      Das war doppelt falsch:
+     *        (a) Seite 4 Rect 3 GEHOERT ROOM1140 (Zone 1) — zwei Raeume auf einem
+     *            Rechteck;
+     *        (b) auf Seite 5 blieb Rect 0 ohne Zone zurueck und wurde deshalb als
+     *            "unbekannt" GRAU gezeichnet -> der Nutzer sah "beide Rechtecke
+     *            direkt angezeigt".
+     *      Der Pin haelt jetzt beides fest. --- */
     {
         int n = re15_map_mark_count(), k;
-        int doors_p5 = 0, stairs_p5r0 = 0, vorher = 0, nachher = 0;
+        int tueren = 0, treppen = 0, vorher = 0, nachher = 0;
         CHECK("Marken-Tabelle ist nicht leer", n > 0);
         re15_map_visited_reset();
         g_current_room_id = 0x9999;
@@ -174,26 +184,51 @@ int main(void)
         CHECK("unbesuchte Zonen zeigen KEINE Marken", vorher == 0);
         g_current_room_id = 0x1170;
         re15_map_zone_update(0x1170, -18000, -22000);   /* der kleine Bereich */
+        CHECK("der kleine Bereich liegt auf Seite 5 Rect 0 (NICHT auf Seite 4)",
+              re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
+        CHECK("Seite 4 Rect 3 gehoert weiter ROOM1140, nicht 1170",
+              re15_map_rect_state(4, 3) != RE15_MAP_RECT_CURRENT);
         for (k = 0; k < n; k++) {
             int pg, r, mx, my, kind;
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
-            /* ⛔ NEUER STAND (2026-08-31): auf der Karte stehen NUR NOCH TREPPEN.
-             * Die Tuer-Striche sind entfernt — sie standen an ungesicherten Stellen
-             * und wurden vom Nutzer beanstandet ("komische gelbe Striche die da nicht
-             * hin gehoeren"). Und ROOM1170s ZWEITER Bereich liegt hinter der Treppe
-             * auf der naechsten Ebene: Seite 4, Rect 3 (dieselbe Grundriss-Kachel
-             * uv(192,16) wie Seite 5 Rect 0 — die Karte zeigt Treppenhaeuser auf
-             * beiden Etagen). Der Pin haelt beides fest. */
-            if (pg == 5 || pg == 4) nachher++;
-            if (kind == 0) doors_p5++;
-            if (kind == 1 && pg == 4 && r == 3) stairs_p5r0++;
+            if (pg != 5) continue;
+            nachher++;
+            if (kind == 0) tueren++; else treppen++;
         }
         CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
-        CHECK("KEINE Tuer-Striche mehr auf der Karte (bewusst entfernt)", doors_p5 == 0);
-        CHECK("der Bereich hinter der Treppe liegt auf der naechsten Ebene "
-              "(Seite 4 Rect 3) und traegt Treppen-Marken", stairs_p5r0 > 0);
-        printf("  [Marken] Seite 5: %d sichtbar, %d Tueren, %d Treppen in Rect 0\n",
-               nachher, doors_p5, stairs_p5r0);
+        CHECK("TUEREN sind eingezeichnet (aus RE1.5s eigenen Tuer-Datensaetzen)",
+              tueren > 0);
+        CHECK("TREPPEN sind eingezeichnet (Aot_set Typ 12/13)", treppen > 0);
+        printf("  [Marken] Seite 5: %d sichtbar (%d Tueren, %d Treppen)\n",
+               nachher, tueren, treppen);
+    }
+
+    /* --- (8) ZEICHENREIHENFOLGE: die Marken muessen VOR den Grundriss-Rechtecken in
+     *      der Op-Liste stehen. Der Rasterizer arbeitet die Liste VON HINTEN ab, ein
+     *      frueherer Eintrag liegt also OBEN. In v0.3.69 standen die Marken dahinter
+     *      und waren vollstaendig verdeckt (Nutzer: "Treppen und Tueren werden garnicht
+     *      angezeigt") — obwohl die Tabelle sie enthielt. Ein Test auf die TABELLE
+     *      allein haette das NICHT gefangen. --- */
+    {
+        static re15_inv_op_t ops[768];
+        int nops, i, first_mark = -1, first_rect = -1;
+        g_current_room_id = 0x1170;
+        re15_map_zone_update(0x1170, -18000, -22000);
+        re15_inv_map_stage_init(0, 23);
+        re15_inv_screen_open();
+        g_inv_screen.substate = 1; g_inv_screen.item_state = 1;   /* MAP-Schirm */
+        nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
+        for (i = 0; i < nops; i++) {
+            if (first_mark < 0 && ops[i].kind == RE15_INV_OP_LINE) first_mark = i;
+            if (first_rect < 0 && ops[i].kind == RE15_INV_OP_SPRT &&
+                ops[i].page == RE15_INV_PAGE_MAP4) first_rect = i;
+        }
+        CHECK("der Karten-Schirm zeichnet Marken-Linien", first_mark >= 0);
+        CHECK("der Karten-Schirm zeichnet Grundriss-Rechtecke", first_rect >= 0);
+        CHECK("Marken liegen VOR den Rechtecken (= obenauf, sichtbar)",
+              first_mark >= 0 && first_rect >= 0 && first_mark < first_rect);
+        printf("  [Reihenfolge] erste Marke #%d, erstes Rechteck #%d\n",
+               first_mark, first_rect);
     }
 
     if (g_fail) { printf("FAIL\n"); return 1; }

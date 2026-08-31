@@ -376,6 +376,7 @@ int  re15_inv_screen_cache_mix_pic(int cell);       /* 0 = none, else MIXITEM pi
 void re15_inv_map_stage_init(int stage, int room);
 uint8_t re15_inv_map_room(void);   /* DAT_800b260d (persistent; BSS initial 0) */
 uint8_t re15_inv_map_page(void);   /* DAT_800b260e (persistent; BSS initial 0) */
+uint8_t re15_inv_map_page_shown(void); /* dito, aber dem BEREICH folgend (Zonen) */
 
 /* The per-frame marker formula of FUN_800473f8 (raw-verified @0x8004741c-0x80047528;
  * this — NOT the builder FUN_80046fd8's (world+25000)/scale div @0x80047010-14 — is

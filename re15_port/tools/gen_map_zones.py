@@ -303,21 +303,21 @@ def main():
     o.append(" * Herleitung + Verfahren: analysis/nutzer_batch_2026-08-30b/map-zonen.md */")
     o.append(" * Der Typ re15_map_zone_t steht in include/re15_room.h. */")
     o.pop()   # den provisorischen Kommentar-Abschluss der Kopfzeile ersetzen
-    # ---- ETAGEN-KORREKTUREN (belegt, von Hand) --------------------------------
-    # Ein RDT-Raum kann ueber ZWEI Etagen reichen; die automatische Zuordnung kennt
-    # nur die Raum-Nummer und legt dann beide Bereiche auf dieselbe Kartenseite.
-    # ROOM1170: der zweite Bereich liegt HINTER DER TREPPE und gehoert zur Ebene von
-    # ROOM1150 = Seite 4 (Nutzer 2026-08-31: "der Wechsel auf die naechste Ebene,
-    # nachdem man die letzte Treppe runter laeuft"). Dort traegt Rect 3 (152,89) 48x24
-    # DENSELBEN Grundriss-Ausschnitt wie Rect 0 der Seite 5 (beide uv(192,16)) —
-    # dieselbe Kachel auf zwei Etagen, wie es die Karte fuer Treppenhaeuser tut.
-    FLOOR_FIX = { (0x1170, 1): (4, 3) }
+    # ---- ETAGEN: KEINE Hand-Korrektur mehr ------------------------------------
+    # ⛔ ZURUECKGENOMMEN am 2026-08-31. Ich hatte ROOM1170s zweiten Bereich komplett
+    # auf Seite 4 gelegt ("die Ebene hinter der Treppe"). Das war falsch, weil dieser
+    # Bereich als EIN Kollisions-Zusammenhang vorliegt: kleiner Raum OBEN + Treppe +
+    # Absatz UNTEN. Die Umlegung schaltete die Karte schon beim Betreten des kleinen
+    # Raums auf die untere Etage. Folge (Nutzer-Report v0.3.69): das kleine Rechteck
+    # verschwand von Seite 5, und weil ein Rect OHNE Zone als "unbekannt" grau
+    # gezeichnet wird, standen dort "beide Rechtecke direkt" sichtbar.
+    # Die Ebene ist im Spiel das BAND (+0x82, ROOM1170 fuehrt 0/2/4 — re15_aot.h:104);
+    # die Umschaltung muss daran haengen, nicht an der Zone. Bis das gemessen ist,
+    # bleibt die automatische Zuordnung stehen — sie war vom Nutzer als richtig
+    # bestaetigt ("das sieht fuer das grosse und kleine Rechteck einwandfrei aus").
+    FLOOR_FIX = {}
     for key, val in FLOOR_FIX.items():
         if key in assign: assign[key] = val
-    rows = [ (room, bb,
-              FLOOR_FIX.get((room & 0xFFF0, zi), (pg, r))[0],
-              FLOOR_FIX.get((room & 0xFFF0, zi), (pg, r))[1], zi, zd)
-             for (room, bb, pg, r, zi, zd) in rows ]
 
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
@@ -359,11 +359,16 @@ def main():
             if assign.get((b, i)) is not None:
                 zid_of[(b, i)] = _z; _z += 1
     for b in sorted(zinfo):
-        # NUR TREPPEN: die Tuer-Striche hat der Nutzer als stoerend gemeldet
-        # ("komische gelbe Striche die da nicht hin gehoeren", 2026-08-31) — sie
-        # standen zudem an ungesicherten Positionen. Treppen dagegen stammen aus
-        # belegten SCD-Zonen (Aot_set Typ 12/13 = die Band-Wechsel-Zonen).
-        for kind, lst in ((1, stairs_all.get(b, [])),):
+        # TUEREN (kind 0) und TREPPEN (kind 1). Beide Positionen kommen aus
+        # RE1.5-Daten: Tueren aus den Tuer-Datensaetzen des Raums (SCD-Opcode
+        # 0x3b/0x68, Mitte des Tuer-Rechtecks), Treppen aus den Band-Wechsel-Zonen
+        # (Aot_set Typ 12/13). Die Tuer-Striche waren schon einmal drin und sassen
+        # falsch — Ursache war NICHT die Position, sondern die fehlende z-Spiegelung
+        # der Projektion (das Original negiert z, FUN_800473f8 @0x800474b0). Seit
+        # deren Korrektur landen sie dort, wo die Tueren wirklich sind (Nutzer
+        # 2026-08-31: "du koenntest die Tuer Markierungen nehmen die schon von
+        # RE 1.5 kommen - dort wo die Tueren sind, koennen sie eingezeichnet werden").
+        for kind, lst in ((0, doors_all.get(b, [])), (1, stairs_all.get(b, []))):
             for m in lst:
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']

@@ -163,10 +163,7 @@ void re15_inv_screen_open(void)
      * allein der Raum-Nummer. Ein RDT-Raum kann ueber zwei Etagen reichen (ROOM1170:
      * vor und hinter der Treppe); mit der Raum-Nummer allein blieb die Karte nach dem
      * Treppenlauf auf der alten Ebene stehen (Nutzer 2026-08-31). */
-    {
-        const re15_map_zone_t *zn = re15_map_zone_current();
-        g_inv_screen.map_page = zn ? (uint8_t)zn->page : s_map_page;
-    }
+    g_inv_screen.map_page = re15_inv_map_page_shown();
     g7_label_reset();                  /* prim arenas rebuilt at init -> template label */
     re15_inv_screen_sync_equip();
 }
@@ -222,6 +219,18 @@ int re15_inv_screen_condition(int hp, int poisoned)
 
 uint8_t re15_inv_map_room(void) { return s_map_room; }
 uint8_t re15_inv_map_page(void) { return s_map_page; }
+
+/* Die TATSAECHLICH gezeigte Kartenseite. Sie folgt dem BEREICH, in dem der Spieler
+ * steht — ein RDT-Raum kann mehrere getrennte Bereiche enthalten, und die Zonen-
+ * Zuordnung darf einen davon auf ein anderes Blatt legen. Alle Stellen, die die
+ * Karte zeichnen ODER den Marker/die Marken darauf pruefen, MUESSEN denselben Wert
+ * benutzen; standen sie auseinander, verschwand der Marker (Zone auf Blatt A,
+ * gezeigt wurde Blatt B). */
+uint8_t re15_inv_map_page_shown(void)
+{
+    const re15_map_zone_t *zn = re15_map_zone_current();
+    return zn ? (uint8_t)zn->page : s_map_page;
+}
 
 void re15_inv_map_stage_init(int stage, int room)
 {
@@ -322,7 +331,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         /* Die Zone muss zu dem Blatt gehoeren, das gerade GEZEIGT wird — sonst saesse
          * der Marker auf einer fremden Etage (Nutzer-Report: "der spielmarker [muss]
          * im kleinen rechteck sein, nicht ausserhalb"). */
-        if (zn && zn->page == re15_inv_map_page()) {
+        if (zn && zn->page == re15_inv_map_page_shown()) {
             uint32_t lp = mu32(0x80076844u + (uint32_t)zn->page * 8u);
             uint32_t a  = lp + (uint32_t)zn->rect * 12u;
             int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
@@ -344,7 +353,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         }
         /* Keine passende Zone auf diesem Blatt: den Marker aus dem Bild nehmen,
          * statt ihn irgendwo hin zu setzen. */
-        if (zn && zn->page != re15_inv_map_page()) { *mx = -64; *my = -64; return; }
+        if (zn && zn->page != re15_inv_map_page_shown()) { *mx = -64; *my = -64; return; }
     }
 
     /* STOCK: die Original-Formel FUN_800473f8 @0x8004741c-0x80047528.
@@ -1411,6 +1420,79 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     if (st->equipped_slot != 0x80)
         emit_digits(&e, st, st->equipped_slot & 0x0f, 1);
 
+    /* ⛔ REIHENFOLGE: Der Rasterizer arbeitet die Op-Liste VON HINTEN nach vorn ab
+     * (inv_render_pc.c: `for (i = n-1; i >= 0; i--)`) — ein FRUEHERER Eintrag liegt
+     * also OBEN. Die Marken muessen deshalb VOR den Grundriss-Rechtecken in die
+     * Liste, sonst deckt das (deckende) Rechteck-Sprite sie restlos zu. Genau das
+     * war der Fehler in v0.3.69 (Nutzer: "Treppen und Tueren werden garnicht
+     * angezeigt") — die Marken wurden erzeugt, lagen aber unter der Karte. */
+    /* ---- 4c. TREPPEN einzeichnen (Nutzer 2026-08-31: "Was noch fehlt sind die
+     * eingezeichneten Treppen"). Die Positionen sind BELEGT: sie stammen aus den
+     * SCD-Zonen Aot_set Typ 12/13 — den Band-Wechsel-Zonen, ueber die der Spieler die
+     * Etage wechselt (scd_vm.c) — und laufen durch dieselbe Bereichs-Projektion wie
+     * der Positionsmarker (inklusive der z-Spiegelung des Originals).
+     * TUEREN sind wieder dabei (Nutzer 2026-08-31: "du koenntest die Tuer
+     * Markierungen nehmen die schon von RE 1.5 kommen - dort wo die Tueren sind,
+     * koennen sie eingezeichnet werden"): ihre Position steht im Tuer-Datensatz des
+     * Raums (SCD-Opcode 0x3b/0x68, Mitte des Tuer-Rechtecks). Dass sie frueher falsch
+     * sassen, lag NICHT an der Position, sondern an der fehlenden z-Spiegelung der
+     * Projektion — die ist seit dem Marker-Fix behoben.
+     * Gezeichnet wird nur in Bereichen, die der Spieler schon gesehen hat, und nur
+     * auf dem Karten-Schirm (derselbe Riegel wie die Karte selbst). */
+    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
+        int n = re15_map_mark_count(), k;
+        for (k = 0; k < n; k++) {
+            int mpage, mrect, mx, my, kind, row;
+            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
+            if (mpage != (int)st->map_page) continue;
+            {
+                /* Beide Marken werden DECKEND gezeichnet (RE15_INV_OP_FILL). Der erste
+                 * Versuch nahm RE15_INV_OP_LINE — die Linie ist aber ABE-additiv und in
+                 * 5 bit gerechnet (`(dst8+src8)>>4`), also hoechstens halbhell: auf dem
+                 * dunklen Grundriss war davon im Abzug (shots/map1170.bmp) fast nichts
+                 * zu erkennen. Gemessen, nicht geschaetzt. */
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0; o->u = 0; o->v = 0;
+                if (kind == 0) {
+                    /* TUER: kurzer Querbalken in RE2s Tuergelb. Die Position steht im
+                     * Tuer-Datensatz des Raums selbst (Mitte des Tuer-Rechtecks) — also
+                     * aus RE1.5-Daten, wie vom Nutzer vorgeschlagen. */
+                    o->x = (int16_t)(mx - 2); o->y = (int16_t)(my - 1);
+                    o->w = 5; o->h = 2;
+                    o->r = 240; o->g = 200; o->b = 64;
+                } else {
+                    /* TREPPE: ein Block mit drei hellen Sprossen (RE2 setzt fuer
+                     * Uebergaenge eigene 8x8-Icons; RE1.5 liefert keine mit). */
+                    o->x = (int16_t)(mx - 3); o->y = (int16_t)(my - 3);
+                    o->w = 7; o->h = 7;
+                    o->r = 64; o->g = 64; o->b = 56;
+                    for (row = -2; row <= 2; row += 2) {
+                        re15_inv_op_t *q;
+                        if (e.n >= e.max) break;
+                        q = &e.ops[e.n++];
+                        *q = *o;
+                        q->x = (int16_t)(mx - 2); q->y = (int16_t)(my + row);
+                        q->w = 5; q->h = 1;
+                        q->r = 240; q->g = 240; q->b = 216;
+                    }
+                    /* der graue Untergrund muss HINTER die Sprossen: die Liste wird von
+                     * hinten gezeichnet, also den Block ans Ende der eben erzeugten
+                     * Gruppe tauschen. */
+                    {
+                        re15_inv_op_t tmp = *o;
+                        int last = e.n - 1;
+                        int first = (int)(o - e.ops);
+                        int j;
+                        for (j = first; j < last; j++) e.ops[j] = e.ops[j + 1];
+                        e.ops[last] = tmp;
+                    }
+                }
+            }
+        }
+    }
+
     /* ---- 4b. MAP content (FUN_80049a5c draw gate @0x80049bb4-cc: lw word(25c0) &
      * 0xffffff == 0x00010100 -> jal FUN_800473f8 @0x80049bcc + AddPrim of the DR_MODE
      * packet @0x800b2650 (tpage 0x17 = the 4bpp MAP page (448,256)) @0x80049bf4).
@@ -1467,35 +1549,6 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      (int16_t)mu16(a), (int16_t)mu16(a + 2u),
                      (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
                      mu8(a + 8u), mu8(a + 10u), cr, cg, cb, 1);
-            }
-        }
-    }
-
-    /* ---- 4c. TREPPEN einzeichnen (Nutzer 2026-08-31: "Was noch fehlt sind die
-     * eingezeichneten Treppen"). Die Positionen sind BELEGT: sie stammen aus den
-     * SCD-Zonen Aot_set Typ 12/13 — den Band-Wechsel-Zonen, ueber die der Spieler die
-     * Etage wechselt (scd_vm.c) — und laufen durch dieselbe Bereichs-Projektion wie
-     * der Positionsmarker (inklusive der z-Spiegelung des Originals).
-     * Die frueheren TUER-Striche bleiben draussen: sie standen an ungesicherten
-     * Stellen und wurden zu Recht beanstandet.
-     * Gezeichnet wird nur in Bereichen, die der Spieler schon gesehen hat, und nur
-     * auf dem Karten-Schirm (derselbe Riegel wie die Karte selbst). */
-    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
-        int n = re15_map_mark_count(), k;
-        for (k = 0; k < n; k++) {
-            int mpage, mrect, mx, my, kind, row;
-            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
-            if (mpage != (int)st->map_page || kind != 1) continue;
-            /* Treppen-Symbol: drei kurze Sprossen uebereinander (RE2 setzt fuer
-             * Uebergaenge eigene 8x8-Icons; RE1.5 liefert keine mit). */
-            for (row = -2; row <= 2; row += 2) {
-                re15_inv_op_t *o;
-                if (e.n >= e.max) break;
-                o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)(mx - 2); o->y = (int16_t)(my + row);
-                o->w = (int16_t)(mx + 2); o->h = (int16_t)(my + row);
-                o->r = 232; o->g = 232; o->b = 200;
             }
         }
     }

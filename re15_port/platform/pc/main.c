@@ -3804,6 +3804,23 @@ re_title:;
          * slide-out F32-56 (25 frames @0x8004c0bc), upload+arena F57 (c2=1), interactive
          * after; shot at F75 = the settled map viewer (page per the current room's
          * stage init; ROOM1140 -> page 4 = MAP05.PIX, marker at the slot-20 row). */
+        /* RE15_INV_OPEN_AT=<frame> — wie RE15_INV_SHOT/RE15_INV_MAP_SHOT, nur mit
+         * FREIEM Zeitpunkt: oeffnet den Statusbildschirm im genannten Frame und
+         * startet zwei Frames spaeter per L1 den MAP-Schirm. Gebraucht, um die Karte
+         * in einem Raum zu begutachten, den man erst per RE15_DEBUG_JUMP erreicht
+         * (die festen F30/F31 der Schienen oben liegen vor jedem Raumwechsel).
+         * Zusammen mit RE15_INV_FB_SHOT=<datei.bmp> + RE15_INV_FB_SHOT_AT=<frame>
+         * ergibt das ein pixelgenaues Bild dessen, was der Kartenschirm zeichnet. */
+        {
+            const char *oa = getenv("RE15_INV_OPEN_AT");
+            if (oa && *oa) {
+                int of = atoi(oa);
+                if ((int)g_engine.frame_count == of && !re15_menu_is_open())
+                    re15_menu_toggle();
+                if ((int)g_engine.frame_count == of + 2)
+                    g_engine.pad_pressed |= RE15_PAD_BIT_L1;
+            }
+        }
         if (getenv("RE15_INV_MAP_SHOT") && g_engine.frame_count == 31)
             g_engine.pad_pressed |= RE15_PAD_BIT_L1;
         /* RE15_INV_MIX_SHOT=1 (wave 5): seed Green 0x24 + Red 0x25 at F40 + open; SQUARE

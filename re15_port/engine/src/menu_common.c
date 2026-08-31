@@ -153,7 +153,7 @@ static void map_entry(void)
      * room id nibbles. */
     re15_inv_map_stage_init((int)((rid >> 12) & 0xfu) - 1, (int)((rid >> 4) & 0xffu));
     g_inv_screen.map_room = re15_inv_map_room();
-    g_inv_screen.map_page = re15_inv_map_page();
+    g_inv_screen.map_page = re15_inv_map_page_shown();
 }
 
 /* ---------------------------------------------------------------------------------- */
