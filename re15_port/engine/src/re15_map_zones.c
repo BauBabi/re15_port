@@ -51,14 +51,39 @@ static int zone_bit(int idx) { return s_map_zones[idx].zid; }
  * sind. Ohne diese Regel gewaenne immer der grosse Bereich und der Bereichswechsel
  * waere unsichtbar — genau der Fehler, den der Nutzer gemeldet hat.
  * Ohne jeden Treffer: die erste Zone des Raums (besser als gar keine Karte). */
+/* Abstand eines Punktes zur Zonen-Bbox (0 = drin). Quadriert, aber auf 1/64
+ * skaliert, damit int32 auch fuer die grossen Weltkoordinaten reicht. */
+static int32_t zone_dist2(const re15_map_zone_t *zn, int32_t x, int32_t z)
+{
+    int32_t dx = 0, dz = 0;
+    if (x < (int32_t)zn->wx0) dx = (int32_t)zn->wx0 - x;
+    else if (x > (int32_t)zn->wx1) dx = x - (int32_t)zn->wx1;
+    if (z < (int32_t)zn->wz0) dz = (int32_t)zn->wz0 - z;
+    else if (z > (int32_t)zn->wz1) dz = z - (int32_t)zn->wz1;
+    dx /= 64; dz /= 64;
+    return dx * dx + dz * dz;
+}
+
 static int zone_index_at(unsigned room, int32_t x, int32_t z)
 {
-    int first = -1, best = -1;
-    int32_t best_area = 0;
+    int best = -1, near = -1;
+    int32_t best_area = 0, near_d = 0;
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
         if (zn->room != (unsigned short)room) continue;
-        if (first < 0) first = i;
+        {   /* ⛔ NAECHSTGELEGENE statt der ERSTEN Zone als Rueckfall (Nutzer
+             * 2026-08-31: "Der positionsmarker ist immer noch falsch im kleinen
+             * Bereich ... wenn ich die Tuer wieder zurueck gehe ... auch wieder
+             * falsch im grossen Bereich").
+             * URSACHE: Die Bereichs-Bboxen decken die unregelmaessigen Grundrisse
+             * nicht luecklos ab — zwischen den beiden Bereichen von ROOM1170 liegt
+             * ein Streifen, der in KEINER Bbox liegt. Dort griff bisher pauschal die
+             * ERSTE Zone des Raums (bei 1170 der grosse Bereich), der Marker sprang
+             * also ins falsche Rechteck. Jetzt gewinnt der Bereich, dessen Bbox am
+             * naechsten liegt. */
+            int32_t d = zone_dist2(zn, x, z);
+            if (near < 0 || d < near_d) { near = i; near_d = d; }
+        }
         if (x >= (int32_t)zn->wx0 - ZONE_SLACK && x <= (int32_t)zn->wx1 + ZONE_SLACK &&
             z >= (int32_t)zn->wz0 - ZONE_SLACK && z <= (int32_t)zn->wz1 + ZONE_SLACK) {
             int32_t w = (int32_t)zn->wx1 - (int32_t)zn->wx0;
@@ -67,7 +92,7 @@ static int zone_index_at(unsigned room, int32_t x, int32_t z)
             if (best < 0 || a < best_area) { best = i; best_area = a; }
         }
     }
-    return (best >= 0) ? best : first;
+    return (best >= 0) ? best : near;
 }
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z)
