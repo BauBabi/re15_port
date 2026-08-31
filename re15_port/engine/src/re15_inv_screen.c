@@ -82,10 +82,11 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 #define ARMS_BX  126
 #define ARMS_BY  26
 #define LIST_BX  215
-/* Box-Schirm: das Listen-Panel sitzt auf der Hoehe des Inventar-Gitters (BOX_BY),
- * die Textbox eigenstaendig darunter. RE2-Innengeometrie (Zeilen ab y 41,
+/* Box-Schirm: das Listen-Panel sitzt auf der Hoehe des Inventar-Gitters — dessen
+ * Zellen liegen bei y 58..208 (gemessen), das Panel deckt mit 46..202 denselben
+ * Bereich ab; die Textbox schliesst direkt darunter an (202..237). RE2-Innengeometrie (Zeilen ab y 41,
  * Scrollschiene ab 42) wandert um denselben Versatz mit. */
-#define RE15_BOX_PANEL_Y   16
+#define RE15_BOX_PANEL_Y   46
 #define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
 #define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 156)  /* direkt unter dem Panel */
 /* Grundlinie des Namens IN der Textbox: im Original steht die Schrift bei y 181,
@@ -1090,7 +1091,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
             o->v = 1;                                    /* 1 = Textbox */
-            o->x = 6; o->y = RE15_BOX_TEXT_Y; o->w = 214; o->h = 59;
+            o->x = 6; o->y = RE15_BOX_TEXT_Y; o->w = 214; o->h = 35;
             o->r = 128; o->g = 128; o->b = 128;
         }
         if (e.n < e.max) {

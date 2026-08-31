@@ -871,7 +871,10 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
  * Datei: shared_assets/RE2/BOXPANEL.BIN — dieselbe Wurzel wie die uebrigen RE2-Assets. */
 #define RE15_BOXPANEL_W 214
 #define RE15_BOXLIST_H  156     /* Listen-Panel (Original y 13..168)   */
-#define RE15_BOXTEXT_H   59     /* Textbox komplett (Original y 169..227, mit unterem Rahmen) */
+#define RE15_BOXTEXT_H   35     /* Textbox: Original-Raender oben (169..175) und unten
+                                 * (221..227) plus 21 Zeilen Innenraum — der leere
+                                 * Innenraum ist gekuerzt, damit Panel + Textbox
+                                 * zusammen auf die Hoehe des Inventar-Gitters passen. */
 static uint16_t s_boxlist[RE15_BOXPANEL_W * RE15_BOXLIST_H];
 static uint16_t s_boxtext[RE15_BOXPANEL_W * RE15_BOXTEXT_H];
 static int      s_boxlist_state = 0, s_boxtext_state = 0;
