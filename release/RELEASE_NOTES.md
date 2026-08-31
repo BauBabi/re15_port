@@ -1,3 +1,23 @@
+# RE1.5 Port — v0.3.67 (Early Preview)
+
+**Positionsmarker springt nicht mehr ins falsche Rechteck.**
+
+Ursache gemessen: Die Bereichsgrenzen sind Rechtecke um unregelmäßige Grundrisse und
+decken sie nicht lückenlos ab — zwischen den beiden Bereichen von ROOM1170 liegt ein
+Streifen, der in keinem von beiden liegt. Dort fiel die Zuordnung pauschal auf den
+*ersten* Bereich des Raums zurück, bei 1170 also immer auf den großen. Beim Durchgehen
+sprang der Marker deshalb in beide Richtungen ins falsche Rechteck. Jetzt gewinnt der
+Bereich, dessen Grenze am **nächsten** liegt.
+
+**Ein Befund zum Mitnehmen:** Die Markerformel des Originals legt den *zweiten* Bereich
+von 1170 selbst außerhalb beider Rechtecke der Kartenseite ab — dort ist die Karte im
+Original kaputt, wie du vermutet hattest. Unsere Bereichsprojektion setzt ihn stattdessen
+in das obere Rechteck. Ob das die gemeinte Stelle ist, kann ich nicht belegen: Die Seite
+hat nur zwei Rechtecke, und beide zeigen auf echte Grundrisse. Wenn du siehst, wo er
+hingehört, sag es mir — dann ziehe ich es nach.
+
+---
+
 # RE1.5 Port — v0.3.66 (Early Preview)
 
 - **Abbruchton auf der Karte kommt jetzt sofort.** Er stand am Ende der Ausblendung und
