@@ -134,9 +134,14 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
         if (fx < 0) fx = 0; if (fx > w) fx = w;
         if (fz < 0) fz = 0; if (fz > d) fz = d;
         *mx = (int16_t)(rx + (fx * rw) / w);
-        /* z waechst nach Sueden -> unten im Bild; die Zonen-Bbox ist so orientiert,
-         * dass wz0 der noerdliche Rand ist, also KEINE zusaetzliche Spiegelung. */
-        *my = (int16_t)(ry + (fz * rh) / d);
+        /* ⛔ Z WIRD GESPIEGELT — belegt an der Original-Markerformel (FUN_800473f8):
+         * dort steht nach der Skalierung ein `t2 = -t2` (die y-Haelfte negiert das
+         * Ergebnis, die x-Haelfte nicht). Wachsendes z wandert also im Bild nach OBEN.
+         * Meine Projektion hatte das NICHT — der Kommentar hier behauptete sogar
+         * ausdruecklich das Gegenteil ("KEINE zusaetzliche Spiegelung"). Folge: der
+         * Marker lief senkrecht verkehrt herum (Nutzer 2026-08-31: "Jetzt laeuft er im
+         * grossen Rechteck gleich vom Anfang an in die falsche Richtung"). */
+        *my = (int16_t)(ry + rh - 1 - (fz * rh) / d);
     }
     return 1;
 }
