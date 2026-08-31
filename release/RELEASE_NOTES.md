@@ -1,3 +1,21 @@
+# RE1.5 Port — v0.3.69 (Early Preview)
+
+**Etagenwechsel hinter der Treppe.** Ein Raum kann über zwei Ebenen reichen — ROOM1170s
+zweiter Bereich liegt hinter der Treppe und gehört zur Ebene von ROOM1150. Die Karte
+folgt jetzt dem **Bereich**, in dem du stehst, statt der Raumnummer; nach dem Treppenlauf
+schaltet sie auf die richtige Etage um. Das passende Rechteck dort trägt denselben
+Grundriss-Ausschnitt wie auf der Etage darüber — genau so, wie die Karte Treppenhäuser
+auf beiden Ebenen zeigt.
+
+**Treppen sind wieder eingezeichnet — diesmal mit belegten Positionen.** Sie stammen aus
+den Zonen, über die der Spieler tatsächlich die Ebene wechselt, und laufen durch dieselbe
+Projektion wie der Positionsmarker, inklusive der gespiegelten z-Achse. Genau die fehlte
+vorher — deshalb saßen die alten Marken daneben.
+
+Die **Tür-Striche bleiben draußen**: Ihre Positionen sind weiterhin nicht belegbar.
+
+---
+
 # RE1.5 Port — v0.3.68 (Early Preview)
 
 **Der Marker lief senkrecht verkehrt herum — jetzt belegt und behoben.**
