@@ -871,12 +871,11 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
  * Datei: shared_assets/RE2/BOXPANEL.BIN — dieselbe Wurzel wie die uebrigen RE2-Assets. */
 #define RE15_BOXPANEL_W 214
 #define RE15_BOXLIST_H  156     /* Listen-Panel (Original y 13..168)   */
-#define RE15_BOXTEXT_H   32     /* Textbox: Original-Raender oben (169..175) und unten
-                                 * (221..227) plus 18 Zeilen Innenraum. Die Hoehe ergibt
-                                 * sich aus dem Platz: das ITEM-LIST-Panel reicht von
-                                 * y 27 bis 215 (aus dem Nutzer-Screenshot mit den roten
-                                 * Markierungen ausgemessen), das Listen-Panel belegt
-                                 * davon 156 — bleiben 32 fuer die Textbox. */
+#define RE15_BOXTEXT_H   36     /* Textbox: Original-Raender oben (169..175) und unten
+                                 * (221..227) plus 22 Zeilen Innenraum. Hoehe folgt aus
+                                 * dem Platz: das ITEM-LIST-Panel reicht von y 26 bis 218
+                                 * (im Nutzer-Screenshot an den Rahmenkanten gemessen),
+                                 * das Listen-Panel belegt davon 156. */
 static uint16_t s_boxlist[RE15_BOXPANEL_W * RE15_BOXLIST_H];
 static uint16_t s_boxtext[RE15_BOXPANEL_W * RE15_BOXTEXT_H];
 static int      s_boxlist_state = 0, s_boxtext_state = 0;
