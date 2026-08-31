@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.3.50 (Early Preview)
+
+**1. Die dunklen Felder — Ursache gefunden.** Das war kein Farbfehler, sondern ein
+Zeichenfehler von mir: Ich habe die Panel-Flächen über einen Operator gemalt, der
+**additiv in 5 Bit** arbeitet. Eine gemessene Farbe kommt darüber nur als Sechzehntel
+an — praktisch schwarz, und mehr als halbe Helligkeit ist damit überhaupt nicht
+erreichbar. Deshalb war auch der Auswahlbalken unsichtbar. Es gibt jetzt einen
+**deckenden** Operator; Panel, Auswahlbalken (in RE2s Rot), Scrollbalken-Marken (in
+RE2s Gelb) und Pfeile laufen darüber und stehen in den gemessenen Farben.
+
+**Das Item-Gitter rechts ist unangetastet** — es hat seine eigene Basis, seinen eigenen
+Rahmen und Cursor; dort wurde nichts geändert.
+
+**2. Umbrella-Logo: Reihenfolge korrigiert.** Du hattest recht — es zoomt **zuerst auf
+schwarzem Grund** hinein, und **erst danach** kommt das Labor-Standbild darunter, während
+das Logo weiterzoomt. Genau so steht es im Original: Das Logo wird gesetzt, und das
+Standbild folgt **96 Frames später**. Bei mir stand das Labor von Anfang an — die
+Reihenfolge war vertauscht.
+
+---
+
 # RE1.5 Port — v0.3.49 (Early Preview)
 
 **Der Box-Bildschirm ist jetzt aus dem laufenden RE2 gemessen.**
