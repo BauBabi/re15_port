@@ -981,7 +981,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int NAME_X  = 16;                 /* Name links (RE2: boxX + 7)      */
         const int ICON_X  = 158;                /* Symbol rechts (RE2: x 155)      */
         const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
-        const int ROW0_Y  = 54;                 /* RE2: y 41 + 13 px Panel-Versatz */
+        const int ROW0_Y  = 48;                 /* RE2: y 41 + 7 px Panel-Versatz  */
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
         /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
          * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
@@ -1042,7 +1042,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          *   y156..159 (240, 56, 24)  ORANGER Pfeil unten
          * Es ist EIN zusammenhaengender Griff, keine Einzelmarken. */
         {
-            const int TRACK_Y0 = 55, TRACK_H = 100;   /* RE2: 42 + 13 */
+            const int TRACK_Y0 = 49, TRACK_H = 100;   /* RE2: 42 + 7 */
             int grip_h = (TRACK_H * RE15_BOX_WINDOW) / RE15_BOX_SLOTS;   /* Fenster/Ring */
             int grip_y = TRACK_Y0 + (TRACK_H - grip_h) * st->box_scroll
                                      / (RE15_BOX_SLOTS - 1);
@@ -1080,9 +1080,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
             /* PANEL_Y: RE2 setzt das Panel bei y 13 an — dort liegt bei uns aber der
              * obere Kino-Balken darueber und schnitt die Oberkante samt orangem Pfeil
-             * ab (Nutzer 2026-08-31). Deshalb 13 px tiefer; die Inhalts-Geometrie
-             * unten wandert um denselben Betrag mit. */
-            o->x = 6; o->y = 26; o->w = 214; o->h = 190;
+             * ab (Nutzer 2026-08-31). 13 px tiefer war dann zu viel — der Text stand
+             * unten aus der Box heraus. Jetzt 7 px: die Oberkante samt orangem Pfeil
+             * bleibt frei, und der Inhalt sitzt wieder in der Box. Die Inhalts-
+             * Geometrie unten wandert um denselben Betrag mit. */
+            o->x = 6; o->y = 20; o->w = 214; o->h = 190;
             o->r = 128; o->g = 128; o->b = 128;
         }
     }
