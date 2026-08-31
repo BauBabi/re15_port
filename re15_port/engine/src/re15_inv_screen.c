@@ -900,21 +900,8 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         emit_text(&e, 0x90, 0xd8, k_exit, (st->box_side == 2) ? 0x00 : 0x30);
     }
 
-    /* 2. Ring-Position "NN/64" (RE2s Ring hat keinen Seitenzaehler; die Anzeige
-     * sagt dem Spieler, wo im 64-Platz-Ring die feste Auswahl gerade steht).
-     * Ziffern-Codes wie die FILE-Fusszeile: Ziffer = Wert+0xc, Trenner 0x38. */
-    {
-        int pick = (st->box_scroll + RE15_BOX_PICK_ROW) & (RE15_BOX_SLOTS - 1);
-        int n = pick + 1;
-        uint8_t buf[8]; int k = 0;
-        if (n >= 10) buf[k++] = (uint8_t)((n / 10) + 0xc);
-        buf[k++] = (uint8_t)((n % 10) + 0xc);
-        buf[k++] = 0x38;
-        buf[k++] = (uint8_t)(6 + 0xc);
-        buf[k++] = (uint8_t)(4 + 0xc);
-        buf[k++] = 0x07;
-        emit_text(&e, BOX_BX + 26, 0xb6, buf, 0x20);
-    }
+    /* (Die Ringpositions-Anzeige "NN/64" ist entfernt — der Scrollgriff zeigt die
+     * Position an, und im Original steht dort nichts. Nutzer 2026-08-31.) */
 
     /* 3. chrome group 0 (FUN_80047648(0) — absolute, always drawn) */
     master_row(0, &clut_idx, &count, &tmpl);
@@ -994,7 +981,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int NAME_X  = 16;                 /* Name links (RE2: boxX + 7)      */
         const int ICON_X  = 158;                /* Symbol rechts (RE2: x 155)      */
         const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
-        const int ROW0_Y  = 41;                 /* RE2: erste Zeile y 41..60       */
+        const int ROW0_Y  = 54;                 /* RE2: y 41 + 13 px Panel-Versatz */
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
         /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
          * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
@@ -1042,7 +1029,10 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 /* Mengen-Ziffern IN der Zeile: box_digits setzt seine Grundlinie auf
                  * cy + 20, was bei 20 px Zeilenabstand in die naechste Zeile ragte
                  * (Nutzer 2026-08-31). Deshalb 20 px hoeher ansetzen. */
-                box_digits(&e, ICON_X + RE15_BOX_ICON_W + 2, ry - 20, bs->id, bs->qty);
+                /* Die Ziffern sassen genau auf der Zeilenoberkante und wurden vom
+                 * Auswahlbalken angeschnitten (Nutzer 2026-08-31). Jetzt 5 px tiefer,
+                 * also mittig in der 20-px-Zeile. */
+                box_digits(&e, ICON_X + RE15_BOX_ICON_W + 2, ry - 15, bs->id, bs->qty);
             }
         }
         /* SCROLLBALKEN — Farben aus dem laufenden RE2 gemessen (Spalte x=208):
@@ -1052,7 +1042,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          *   y156..159 (240, 56, 24)  ORANGER Pfeil unten
          * Es ist EIN zusammenhaengender Griff, keine Einzelmarken. */
         {
-            const int TRACK_Y0 = 42, TRACK_H = 100;
+            const int TRACK_Y0 = 55, TRACK_H = 100;   /* RE2: 42 + 13 */
             int grip_h = (TRACK_H * RE15_BOX_WINDOW) / RE15_BOX_SLOTS;   /* Fenster/Ring */
             int grip_y = TRACK_Y0 + (TRACK_H - grip_h) * st->box_scroll
                                      / (RE15_BOX_SLOTS - 1);
@@ -1088,7 +1078,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         if (e.n < e.max) {
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
-            o->x = 6; o->y = 13; o->w = 214; o->h = 156;
+            /* PANEL_Y: RE2 setzt das Panel bei y 13 an — dort liegt bei uns aber der
+             * obere Kino-Balken darueber und schnitt die Oberkante samt orangem Pfeil
+             * ab (Nutzer 2026-08-31). Deshalb 13 px tiefer; die Inhalts-Geometrie
+             * unten wandert um denselben Betrag mit. */
+            o->x = 6; o->y = 26; o->w = 214; o->h = 190;
             o->r = 128; o->g = 128; o->b = 128;
         }
     }

@@ -865,11 +865,12 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
 
 /* ---- Originales RE2-Box-Panel -------------------------------------------------
  * 214x156 RGB555, aus dem laufenden Spiel geschnitten (Speicherabzug -> Bildspeicher,
- * Panel-Region x 6..219 / y 13..168; Listenbereich und der bewegliche Scrollgriff sind
- * dabei geleert worden, weil unser eigener Inhalt darueber kommt).
+ * Panel-Region x 6..219 / y 13..202 — MIT dem unteren Textrahmen; Listenfeld, der
+ * bewegliche Scrollgriff und das Textfeld sind darin geleert, weil unser eigener
+ * Inhalt darueber kommt).
  * Datei: shared_assets/RE2/BOXPANEL.BIN — dieselbe Wurzel wie die uebrigen RE2-Assets. */
 #define RE15_BOXPANEL_W 214
-#define RE15_BOXPANEL_H 156
+#define RE15_BOXPANEL_H 190
 static uint16_t  s_boxpanel[RE15_BOXPANEL_W * RE15_BOXPANEL_H];
 static int       s_boxpanel_state = 0;   /* 0 = nicht versucht, 1 = da, -1 = fehlt */
 
