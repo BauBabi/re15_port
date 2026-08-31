@@ -1,3 +1,11 @@
+# RE1.5 Port — v0.3.56 (Early Preview)
+
+**Panel wieder etwas höher.** Die 13 Pixel, mit denen ich es unter den oberen Kino-Balken
+geschoben hatte, waren zu viel — der Text rutschte unten aus der Box. Mit 7 Pixeln bleibt
+die Oberkante samt orangem Pfeil frei, und die Zeilen sitzen wieder im Listenfeld.
+
+---
+
 # RE1.5 Port — v0.3.55 (Early Preview)
 
 Deine vier Punkte zur Box:
