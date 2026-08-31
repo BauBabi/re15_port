@@ -1,3 +1,18 @@
+# RE1.5 Port — v0.3.62 (Early Preview)
+
+**Box-Seite jetzt exakt auf den Rahmenkanten des ITEM-LIST-Panels.**
+
+Ich habe in deinem neuen Bild beide Panels an ihren Kanten vermessen: Das ITEM-LIST-Panel
+reicht von Spielzeile **26,7 bis 218**, meine Box lag bei **27,7 bis 215** — also ein
+Pixel zu tief oben und drei zu kurz unten. Die roten Markierungen der letzten Runde lagen
+etwas *innerhalb* der Kanten, daher der Restversatz.
+
+Korrigiert: Panel eine Zeile höher, Textbox vier Pixel höher — wieder nur im Innenraum,
+die Ränder bleiben unangetastet. Nachgemessen: Panel 26–182, Textbox 182–218, zusammen
+**26–218**.
+
+---
+
 # RE1.5 Port — v0.3.61 (Early Preview)
 
 **Box-Panel und Textbox füllen jetzt exakt die Höhe des ITEM-LIST-Panels.**
