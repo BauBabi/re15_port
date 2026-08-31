@@ -1,3 +1,27 @@
+# RE1.5 Port — v0.3.64 (Early Preview)
+
+**Menütöne: eine Ursache für alle Stellen.**
+
+Die Sound-Pumpe — die Funktion, die angestoßene Töne weiterführt — lief **nur in der
+Spielschleife**. Titel, Optionen, Speicher- und Ladebildschirm haben eigene Schleifen und
+blieben deshalb stumm, obwohl dort teilweise schon Ton-Aufrufe standen (im Titelmenü etwa
+war der Bewegungston längst im Code, er wurde nur nie hörbar). Die Pumpe läuft jetzt in
+allen neun Menü-Schleifen.
+
+Ergänzt, wo tatsächlich kein Aufruf stand:
+
+- **Optionen**: Bewegung, Auswahl und Abbruch — für alle Unterbildschirme.
+- **Inventar-Reiter** (Karte / Gegenstände / Akten): Bewegung und Auswahl.
+- **Inventar öffnen**: Auswahlton.
+
+Die **Töne selbst sind die originalen** aus der Sound-Bank des Spiels — dieselben, die das
+Inventar an seinen übrigen Stellen längst spielt. Ergänzt habe ich nur die *Stellen*: An
+diesen Bildschirmen ist RE1.5 selbst stumm (ich habe die gesamte ausführbare Datei
+durchsucht — 41 Ton-Aufrufe, keiner davon im Titel, im Reiterwechsel oder in den
+Optionen). Das ist im Code und im Test ausdrücklich als Ergänzung gekennzeichnet.
+
+---
+
 # RE1.5 Port — v0.3.63 (Early Preview)
 
 **Je ein Pixel an beiden Kanten nachgezogen.** Box-Seite jetzt 25–219: Panel 25–181,
