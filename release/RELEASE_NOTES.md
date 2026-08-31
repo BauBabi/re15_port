@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.3.49 (Early Preview)
+
+**Der Box-Bildschirm ist jetzt aus dem laufenden RE2 gemessen.**
+
+Danke fürs Öffnen der Box im Emulator — damit hatte ich endlich das Original vor mir.
+Ich habe aus dem Speicherzustand den **Bildspeicher** ausgelesen und den fertig
+gezeichneten Bildschirm Pixel für Pixel vermessen. Das Referenzbild liegt im Projekt
+(`analysis/itembox_re2/referenz/`).
+
+Übernommen mit den echten Werten:
+
+- **Rahmenleisten** oben und unten mit ihrem Grauverlauf, **Kopf- und Fußband**, die
+  **Pfosten** an den Seiten.
+- **Listengrund** in RE2s Dunkelblau — und hier hat die Messung mich korrigiert: Ich
+  hatte je Zeile einen dunklen Streifen gezeichnet, das Original hat einen
+  **durchgehenden** Grund. Die Streifen sind raus.
+- **Auswahlbalken**: zwei Linien an Ober- und Unterkante der mittleren Zeile über die
+  volle Listenbreite, in RE2s Braun-Rot. Das bestätigt unabhängig, was ich aus dem
+  Code rekonstruiert hatte.
+- **Scrollbalken-Schiene** mit ihren Pfeilfeldern.
+- Zeilenraster und feste Auswahl in der Mitte: ebenfalls bestätigt.
+
+Die Höhen sind 1:1 übernommen; die Breite ist auf unsere linke Bildschirmhälfte
+gestaucht (145 statt 190 Pixel), weil rechts unser Inventar-Gitter steht.
+
+Nebenbei ist damit auch der Weg dokumentiert, wie ich künftig jede Frage zum
+RE2-Aussehen beantworten kann, ohne zu raten: Speicherzustand ziehen, Bildspeicher
+auslesen, nachmessen.
+
+---
+
 # RE1.5 Port — v0.3.48 (Early Preview)
 
 **1. Umbrella-Logo: jetzt zoomt es ÜBER dem stehenden Labor-Bild.** Du hattest recht, und
