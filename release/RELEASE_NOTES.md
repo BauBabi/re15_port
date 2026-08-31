@@ -1,3 +1,21 @@
+# RE1.5 Port — v0.3.61 (Early Preview)
+
+**Box-Panel und Textbox füllen jetzt exakt die Höhe des ITEM-LIST-Panels.**
+
+Dein Screenshot mit den roten Markierungen war der entscheidende Hinweis — ich habe sie
+ausgemessen: Sie liegen im Spielbild bei Zeile **27** und **215**, der Bereich ist also
+188 Pixel hoch. Mein Fehler davor: Ich hatte die **Gitterzellen** als Bezug genommen
+(58–208), aber der Rahmen des ITEM-LIST-Panels reicht deutlich weiter — deshalb saß
+meine Box immer zu tief.
+
+Aufgeteilt wie von dir vorgeschlagen: Das **Panel behält seine Originalhöhe** (27–183),
+die **Textbox wurde angepasst** (183–215) — und dort nur der leere Innenraum, die
+Original-Ränder oben und unten bleiben vollständig.
+
+Nachgemessen: Panel 27–183, Textbox 183–215. Bündig.
+
+---
+
 # RE1.5 Port — v0.3.60 (Early Preview)
 
 **Box-Panel liegt jetzt auf der Höhe des Item-Gitters.** Ich habe nachgemessen statt
