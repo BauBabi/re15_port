@@ -451,18 +451,24 @@ def main():
     def snap_wall(pg, r, mx, my, senk):
         """Rueckt eine Tuermarke auf die GEZEICHNETE Wand und nennt die WANDSEITE.
 
-        Nutzer 2026-08-31: "die Tueren sollen immer an die Wand ausgerichtet sein" und
-        "ich haette gerne die Resident Evil 1.5 Tuer Symbole, wie sie in ROOM 1130 oben
-        zu sehen sind". Das Original-Symbol ist eine NISCHE, die nach INNEN zeigt - man
-        muss also nicht nur die Achse kennen, sondern die Seite.
-
         Das Karten-Rechteck ist nur die Bounding-Box; der gezeichnete Raum darin kann
-        L-foermig sein (ROOM1130 ist ein abgeknickter Flur). Die Wand steht deshalb in
-        der Original-Grafik DATA/MAP0x.PIX: Palettenindex 0 = transparent (ausserhalb),
-        alles andere = gezeichneter Raum.
+        L-foermig sein (ROOM1130 ist ein abgeknickter Flur, ROOM1170s zweiter Bereich
+        eine L-Form). Die Wand steht deshalb in der Original-Grafik DATA/MAP0x.PIX:
+        Palettenindex 0 = transparent = ausserhalb.
 
-        Rueckgabe: (mx, my, seite) mit seite 0=Nord, 1=Ost, 2=Sued, 3=West - benannt
-        nach der Wand, in der die Tuer sitzt (der Raum liegt jeweils gegenueber).
+        ⛔ TOLERANZ QUER ZUR WAND. Ein erster Wurf suchte die Wand nur in der EINEN
+        Zeile/Spalte der Marke. Liegt die Projektion dort einen Pixel neben dem
+        richtigen Raumteil, springt die Marke in einen ganz anderen Arm der L-Form:
+        ROOM1170s Tuer nach ROOM1130 stand korrekt bei y=81 (Oberkante des linken
+        Blocks), landete aber bei y=94 (Oberkante des unteren Arms), weil ihre Spalte
+        18 gerade nicht mehr zum linken Block (Spalten 0..17) gehoert - der Nutzer sah
+        "die Tuer oben links im kleinen Rechteck fehlt". Deshalb wird jetzt ein
+        schmales Fenster quer zur Wand mitgesucht und die Kante mit dem kleinsten
+        Gesamtversatz genommen (quer zaehlt doppelt, damit die Wandachse fuehrend
+        bleibt).
+
+        Rueckgabe: (mx, my, seite), seite 0=Nord 1=Ost 2=Sued 3=West - die Wand, in der
+        die Tuer sitzt (der Raum liegt jeweils gegenueber).
         """
         R = rects(pg)
         if r >= len(R): return mx, my, (3 if senk else 0)
@@ -477,26 +483,37 @@ def main():
             if not (0 <= yy < 256 and 0 <= xx < 256): return False
             return pix[yy][xx] != 0
 
+        QUER = 3          # wie weit laengs der Wand gesucht wird
+        i0, j0 = mx - RX, my - RY
+        best = None       # (kosten, i, j, seite)
         if senk:
-            j = my - RY
-            if not (0 <= j < RH): return mx, my, 3
-            kanten = [i for i in range(RW) if drawn(i, j) and
-                      (i == 0 or not drawn(i - 1, j) or i == RW - 1 or not drawn(i + 1, j))]
-            if not kanten: return mx, my, 3
-            i0 = mx - RX
-            best = min(kanten, key=lambda i: abs(i - i0))
-            seite = 3 if drawn(best + 1, j) else 1        # 3 = Westwand, 1 = Ostwand
-            return RX + best, my, seite
+            for dj in range(-QUER, QUER + 1):
+                j = j0 + dj
+                if not (0 <= j < RH): continue
+                for i in range(RW):
+                    if not drawn(i, j): continue
+                    if not (i == 0 or not drawn(i - 1, j) or i == RW - 1 or not drawn(i + 1, j)):
+                        continue
+                    kosten = abs(i - i0) + 2 * abs(dj)
+                    seite = 3 if drawn(i + 1, j) else 1        # 3 = West, 1 = Ost
+                    if best is None or kosten < best[0]:
+                        best = (kosten, i, j, seite)
+            if best is None: return mx, my, 3
+            return RX + best[1], RY + best[2], best[3]
         else:
-            i = mx - RX
-            if not (0 <= i < RW): return mx, my, 0
-            kanten = [j for j in range(RH) if drawn(i, j) and
-                      (j == 0 or not drawn(i, j - 1) or j == RH - 1 or not drawn(i, j + 1))]
-            if not kanten: return mx, my, 0
-            j0 = my - RY
-            best = min(kanten, key=lambda j: abs(j - j0))
-            seite = 0 if drawn(i, best + 1) else 2        # 0 = Nordwand, 2 = Suedwand
-            return mx, RY + best, seite
+            for di in range(-QUER, QUER + 1):
+                i = i0 + di
+                if not (0 <= i < RW): continue
+                for j in range(RH):
+                    if not drawn(i, j): continue
+                    if not (j == 0 or not drawn(i, j - 1) or j == RH - 1 or not drawn(i, j + 1)):
+                        continue
+                    kosten = abs(j - j0) + 2 * abs(di)
+                    seite = 0 if drawn(i, j + 1) else 2        # 0 = Nord, 2 = Sued
+                    if best is None or kosten < best[0]:
+                        best = (kosten, i, j, seite)
+            if best is None: return mx, my, 0
+            return RX + best[1], RY + best[2], best[3]
 
     def zone_at(room, wx, wz):
         best, best_a = None, 0
@@ -506,83 +523,34 @@ def main():
                 if best is None or a < best_a: best, best_a = i, a
         return best
     marks = []                      # (page, rect, mx, my, kind, zid)
-    seen = set()
     zid_of = {}
     _z = 0
     for b, zs in sorted(zinfo.items()):
         for i in range(len(zs)):
             if assign.get((b, i)) is not None:
                 zid_of[(b, i)] = _z; _z += 1
+
+    # ================= DURCHGANG 1: jede Marke einzeln berechnen =================
+    vor = []      # dict je Marke, mit Herkunft fuer die Paarbildung
     for b in sorted(zinfo):
-        # TUEREN (kind 0) und TREPPEN (kind 1). Beide Positionen kommen aus
-        # RE1.5-Daten: Tueren aus den Tuer-Datensaetzen des Raums (SCD-Opcode
-        # 0x3b/0x68, Mitte des Tuer-Rechtecks), Treppen aus den Band-Wechsel-Zonen
-        # (Aot_set Typ 12/13). Die Tuer-Striche waren schon einmal drin und sassen
-        # falsch — Ursache war NICHT die Position, sondern die fehlende z-Spiegelung
-        # der Projektion (das Original negiert z, FUN_800473f8 @0x800474b0). Seit
-        # deren Korrektur landen sie dort, wo die Tueren wirklich sind (Nutzer
-        # 2026-08-31: "du koenntest die Tuer Markierungen nehmen die schon von
-        # RE 1.5 kommen - dort wo die Tueren sind, koennen sie eingezeichnet werden").
-        # ---- SELBST-TUEREN: EIN Durchgang, EINE Marke ------------------------
-        # Ein Raum, der ueber eine Tuer auf sich selbst zeigt (dest == eigener Raum),
-        # traegt dafuer ZWEI Datensaetze — einen je Seite des Durchgangs. Ohne
-        # Zusammenfassung zeichnet die Karte denselben Durchgang zweimal, versetzt,
-        # in beiden Rechtecken. Nutzer 2026-08-31: "die Tuer rechts ist die gleiche
-        # Tuer, wie die, die auch vom grossen Rechteck zum kleinen fuehrt. Damit
-        # sollte die Tuer auf der Karte auch EINE sein."
-        # Das Paar ist aus den Daten selbst erkennbar und braucht keine Annahme: der
-        # ZIEL-Punkt des einen Datensatzes (nx/nz = Spawn hinter der Tuer) liegt am
-        # ORT des anderen, und umgekehrt. Gemessen in ROOM1170: Slot 0 lokal
-        # (2550,15250) -> Ziel (-11710,-26500), Slot 6 lokal (-11065,-27850) ->
-        # Ziel (2300,14365); Manhattan-Abstand Ziel<->Ort 1995 bzw. 1135 Einheiten.
-        # Gezeichnet wird die Mitte der BEIDEN Kartenpositionen — die faellt damit auf
-        # die gemeinsame Kante der zwei Rechtecke, dorthin, wo der Durchgang liegt.
-        doors_b = doors_all.get(b, [])
-        merged = {}
-        for _i, A in enumerate(doors_b):
-            if A.get('dest') != b: continue
-            for _j in range(_i + 1, len(doors_b)):
-                B = doors_b[_j]
-                if B.get('dest') != b: continue
-                if abs(A['nx'] - B['lx']) + abs(A['nz'] - B['lz']) > 4000: continue
-                if abs(B['nx'] - A['lx']) + abs(B['nz'] - A['lz']) > 4000: continue
-                za = zone_at(b, A['lx'], A['lz'])
-                zb = zone_at(b, B['lx'], B['lz'])
-                if za is None or zb is None or za == zb: continue
-                pa = to_map(b, za, A['lx'], A['lz'])
-                pb = to_map(b, zb, B['lx'], B['lz'])
-                if not pa or not pb or pa[0] != pb[0]: continue
-                ax, ay, sa = snap_wall(pa[0], pa[1], pa[2], pa[3], A['rd'] > A['rw'])
-                bx, by, sb = snap_wall(pb[0], pb[1], pb[2], pb[3], B['rd'] > B['rw'])
-                cx, cy = (ax + bx) // 2, (ay + by) // 2
-                # Beide Seiten bekommen dieselbe Position: die Marke ist damit
-                # sichtbar, sobald EINER der beiden Bereiche besucht ist, und faellt
-                # optisch zu EINER zusammen.
-                merged[_i] = (pa[0], pa[1], cx, cy, sa)
-                merged[_j] = (pb[0], pb[1], cx, cy, sb)
-        # ---- TREPPEN: EIN Aufgang, EINE Marke, Sprossen quer zur Laufrichtung ----
-        # Nutzer 2026-08-31: "auch da wird immer links und rechts ein Treppensymbol
-        # gezeichnet, fuer ein und dieselbe Treppe. Natuerlich soll auch hier ein und
-        # dieselbe Treppe als EINE eingezeichnet sein."
-        # Eine Treppe liegt als ZWEI Band-Wechsel-Zonen vor — eine je Ende. Das Paar ist
-        # aus den Daten erkennbar: gleiche Achse (sce 12 = X / 13 = Z), gleiche Stufenzahl
-        # count, und der Band-Abstand ist GENAU count (chain = das Band dieses Endes,
-        # count = Zahl der ueberquerten Baender, lbu @0x800435b8 / @0x8004367c).
-        # Gemessen in ROOM1170: Achse Z Band 0 <-> Band 2 (Abstand 2780 Einheiten) und
-        # Achse X Band 2 <-> Band 4 (2660) — also zwei Aufgaenge, vier Datensaetze.
-        # Zuordnung greedy ueber die kuerzeste Entfernung, damit bei zwei Enden auf
-        # demselben Band (hier zweimal Band 2) das richtige Paar entsteht.
+        # ---- TREPPEN: EIN Aufgang, EINE Marke -------------------------------
+        # Eine Treppe liegt als ZWEI Band-Wechsel-Zonen vor, eine je Ende (Nutzer
+        # 2026-08-31: "auch da wird links und rechts ein Treppensymbol gezeichnet,
+        # fuer ein und dieselbe Treppe"). Das Paar ist aus den Daten erkennbar:
+        # gleiche Achse (sce 12 = X / 13 = Z), gleiche Stufenzahl count, und der
+        # Band-Abstand ist GENAU count (chain = Band dieses Endes, count = Zahl der
+        # ueberquerten Baender, lbu @0x800435b8 / @0x8004367c). Gemessen in ROOM1170:
+        # Achse Z Band 0 <-> 2 (2780 Einheiten) und Achse X Band 2 <-> 4 (2660),
+        # also zwei Aufgaenge aus vier Datensaetzen. Greedy ueber die kuerzeste
+        # Entfernung, damit bei zwei Enden auf demselben Band richtig gepaart wird.
         st_list = stairs_all.get(b, [])
-        st_merge = {}
-        _used = set()
-        _cand = []
+        st_merge, _used, _cand = {}, set(), []
         for _i in range(len(st_list)):
             for _j in range(_i + 1, len(st_list)):
                 A, B = st_list[_i], st_list[_j]
                 if A['axis'] != B['axis'] or A['count'] != B['count']: continue
                 if abs(A['band'] - B['band']) != A['count']: continue
-                d = abs(A['x'] - B['x']) + abs(A['z'] - B['z'])
-                _cand.append((d, _i, _j))
+                _cand.append((abs(A['x'] - B['x']) + abs(A['z'] - B['z']), _i, _j))
         for d, _i, _j in sorted(_cand):
             if _i in _used or _j in _used: continue
             A, B = st_list[_i], st_list[_j]
@@ -595,73 +563,111 @@ def main():
             st_merge[_j] = (pb[0], pb[1], cx, cy)
             _used.add(_i); _used.add(_j)
 
-        for kind, lst in ((0, doors_b), (1, st_list)):
+        for kind, lst in ((0, doors_all.get(b, [])), (1, st_list)):
             for _n, m in enumerate(lst):
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
                 zi = zone_at(b, wx, wz)
                 if zi is None: continue
-                if kind == 0 and _n in merged:
-                    pg, r, mx, my, _seite = merged[_n]
-                elif kind == 1 and _n in st_merge:
+                if kind == 1 and _n in st_merge:
                     pg, r, mx, my = st_merge[_n]
                 else:
                     mp = to_map(b, zi, wx, wz)
                     if not mp: continue
                     pg, r, mx, my = mp
-                # ---- AUSRICHTUNG DER TUERMARKE AN DER RAUMKANTE -------------
-                # Nutzer 2026-08-31: "die Tueren muessen ausgerichtet an der Kante
-                # des Raumes liegen. Also musst du sie teilweise 90 Grad drehen."
-                # Die Wand, in der eine Tuer sitzt, folgt direkt aus der Projektion:
-                # das Karten-Rechteck ist die linear gestauchte Raum-Bbox, eine Tuer
-                # in der Nord-/Suedwand landet also nahe der OBEREN/UNTEREN Kante,
-                # eine in der Ost-/Westwand nahe der LINKEN/RECHTEN. Wer naeher ist,
-                # gibt die Achse. Kein Zusatzdatum noetig, keine Annahme.
-                # kind: 0 = Tuer laengs (waagerechte Wand), 2 = Tuer quer
-                # (senkrechte Wand), 1 = Treppe.
-                mkind = kind          # NICHT `kind` ueberschreiben: das ist die
-                                      # Laufvariable der aeusseren Schleife.
                 if kind == 0:
-                    # ---- WANDACHSE AUS DEM TUER-RECHTECK SELBST ----------------
-                    # ⛔ ERSETZT die frueherer Regel "welche Rechteck-Kante ist
-                    # naeher". Die war zu grob und lag in ROOM1130 bei zwei von vier
-                    # Tueren falsch (Nutzer 2026-08-31: "der Balken rechts ist falsch
-                    # gedreht ... die Tuer unten ist auch 90 Grad falsch gedreht").
-                    # Die Wandachse steht im Trigger-Rechteck der Tuer: es ist LAENGS
-                    # DER WAND gestreckt, weil man laengs der Wand auf die Tuer
-                    # zulaufen kann, quer dazu aber nur die Tuerlaibung tief ist.
-                    # Gemessen in ROOM1130 (alle vier Nutzer-Beobachtungen getroffen):
-                    #   -> ROOM1140  1000 x 4000  = Z gestreckt -> SENKRECHTE Wand
-                    #   -> ROOM1120  1000 x 2000  = Z            -> senkrecht
-                    #   -> ROOM1150  1000 x 2000  = Z            -> senkrecht
-                    #   -> ROOM1170  2000 x 1000  = X gestreckt  -> WAAGERECHTE Wand
-                    # und in ROOM1170 sind alle vier X-gestreckt = waagerecht, was
-                    # der Nutzer dort als richtig bestaetigt hat.
-                    # Das Rechteck ist Ecke+Ausdehnung (FUN_80042b64 @0x80042b68-7c),
-                    # rw/rd sind also die vollen Kantenlaengen.
+                    # ---- WANDACHSE AUS DEM TUER-RECHTECK ---------------------
+                    # Das Trigger-Rechteck ist LAENGS DER WAND gestreckt: man laeuft
+                    # laengs der Wand auf die Tuer zu, quer dazu ist nur die Laibung
+                    # tief. Gemessen in ROOM1130 (alle vier Nutzer-Beobachtungen
+                    # getroffen): ->1140 1000x4000 und ->1120/1150 1000x2000 = Z
+                    # gestreckt = senkrechte Wand; ->1170 2000x1000 = X = waagerecht.
+                    # In ROOM1170 sind alle vier X-gestreckt, was der Nutzer dort als
+                    # richtig bestaetigt hat. Rechteck ist Ecke+Ausdehnung
+                    # (FUN_80042b64 @0x80042b68-7c), rw/rd sind volle Kantenlaengen.
                     if m['rw'] != m['rd']:
-                        senk = m['rd'] > m['rw']             # laengs Z = senkrechte Wand
+                        senk = m['rd'] > m['rw']
                     else:
-                        # Quadratisches Trigger-Rechteck gibt keine Achse her: dann
-                        # die naechste Rechteck-Kante als Ersatz.
                         R = rects(pg)[r]
-                        d_waag = min(my - R[1], R[1] + R[3] - 1 - my)
-                        d_senk = min(mx - R[0], R[0] + R[2] - 1 - mx)
-                        senk = d_senk < d_waag
-                    if _n in merged:
-                        mkind = _seite
-                    else:
-                        mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                        senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
+                                min(my - R[1], R[1] + R[3] - 1 - my))
+                    mx, my, mkind = snap_wall(pg, r, mx, my, senk)
                 else:
-                    # TREPPE: die Sprossen stehen QUER zur Laufrichtung. Die Achse
-                    # steht im sce-Byte: 12 = X (auf der Karte waagerecht gelaufen ->
-                    # SENKRECHTE Sprossen), 13 = Z (senkrecht gelaufen -> WAAGERECHTE
-                    # Sprossen). Karten-Achsen: map_x = welt_x, map_y = -welt_z.
+                    # TREPPE: Sprossen quer zur Laufrichtung. map_x = welt_x,
+                    # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
                     mkind = 5 if m.get('axis') == 12 else 4
-                key = (pg, r, mx, my, mkind)
-                if key in seen: continue
-                seen.add(key)
-                marks.append((pg, r, mx, my, mkind, zid_of.get((b, zi), 0)))
+                vor.append({'room': b, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
+                            'mx': mx, 'my': my, 'seite': mkind,
+                            'zid': zid_of.get((b, zi), 0), 'd': m})
+
+    # ============ DURCHGANG 2: EINE TUER = EINE MARKE (auch ueber Raumgrenzen) ====
+    # Nutzer 2026-08-31: "sobald ich einen Raum betreten habe, wird die Tuer noch ein
+    # 2. mal gezeichnet. Aber es ist die gleiche Tuer. Die darf nur einmal gezeichnet
+    # werden." Ein Durchgang zwischen zwei Raeumen traegt je Raum EINEN Datensatz;
+    # liegen beide Raeume auf derselben Kartenseite, zeichnete die Karte ihn zweimal.
+    # Gemessen auf Seite 4: ROOM1130 (152,125) und ROOM1120 (153,125) sind derselbe
+    # Durchgang, ebenso (144,87)/(145,84) [1130<->1150] und (160,150)/(160,149)
+    # [1130<->1140].
+    #
+    # Das Paar ist aus den Daten erkennbar und braucht keine Annahme: der ZIELPUNKT
+    # des einen Datensatzes (nx/nz = Spawn hinter der Tuer, im Zielraum) liegt am ORT
+    # des anderen, und umgekehrt. Gemessen ROOM1130<->ROOM1170: 1170s Tuer zielt auf
+    # (2650,15550), 1130s Tuer liegt bei (2700,14650) - 950 Einheiten; rueckwaerts
+    # 950. Dieselbe Regel deckt die SELBST-Tuer ab (Zielraum == eigener Raum).
+    tueren = [v for v in vor if v['kind'] == 0]
+    kand = []
+    for _i in range(len(tueren)):
+        A = tueren[_i]
+        for _j in range(_i + 1, len(tueren)):
+            B = tueren[_j]
+            if A['d']['dest'] != B['room'] or B['d']['dest'] != A['room']: continue
+            d1 = abs(A['d']['nx'] - B['d']['lx']) + abs(A['d']['nz'] - B['d']['lz'])
+            d2 = abs(B['d']['nx'] - A['d']['lx']) + abs(B['d']['nz'] - A['d']['lz'])
+            if d1 > 4000 or d2 > 4000: continue
+            kand.append((d1 + d2, _i, _j))
+    belegt = set()
+    for _d, _i, _j in sorted(kand):
+        if _i in belegt or _j in belegt: continue
+        A, B = tueren[_i], tueren[_j]
+        belegt.add(_i); belegt.add(_j)
+        if A['pg'] != B['pg']:
+            continue        # verschiedene Blaetter: jede Seite zeigt ihre eigene Tuer
+        # ⛔ NICHT MITTELN. Die beiden Rechtecke liegen auf dem Blatt so, wie der
+        # Kuenstler sie gesetzt hat; unsere zwei linearen Projektionen koennen weit
+        # auseinander fallen (gemessen ROOM1130 <-> ROOM1120: (152,125) gegen
+        # (120,149), 34 px). Der Mittelwert lag dann ausserhalb BEIDER Rechtecke.
+        # Genommen wird die Position, die am dichtesten am NACHBAR-Rechteck liegt -
+        # das ist die, die wirklich auf der gemeinsamen Kante sitzt.
+        def _abstand(X, Y):
+            RX, RY, RW, RH = rects(Y['pg'])[Y['r']]
+            dx = max(RX - X['mx'], 0, X['mx'] - (RX + RW - 1))
+            dy = max(RY - X['my'], 0, X['my'] - (RY + RH - 1))
+            return dx + dy
+        W = A if _abstand(A, B) <= _abstand(B, A) else B
+        cx, cy = W['mx'], W['my']
+        # Beide Datensaetze bekommen dieselbe Position UND dieselbe Wandseite, damit
+        # daraus optisch EIN Symbol wird. Die Seite des ersten gewinnt (deterministisch);
+        # weil sie auf derselben Wand sitzen, sind es ohnehin gespiegelte Nischen.
+        for X in (A, B):
+            X['mx'], X['my'], X['seite'] = cx, cy, W['seite']
+        # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
+        # zeichnen, jeder in der Farbe SEINES Rechtecks (einer gruen "besucht", einer
+        # rot "aktueller Raum") - optisch wieder eine Doppelung. Der zweite wird
+        # deshalb still gelegt, seine Zone aber als ZWEITE Sichtbarkeits-Zone im ersten
+        # vermerkt: die Marke erscheint, sobald EINER der beiden Raeume besucht ist.
+        W['zid2'] = (B if W is A else A)['zid']
+        (B if W is A else A)['weg'] = True
+
+    # ================= DURCHGANG 3: ausgeben ====================================
+    seen = set()
+    for v in vor:
+        if v.get('weg'): continue
+        key = (v['pg'], v['r'], v['mx'], v['my'], v['seite'])
+        if key in seen: continue
+        seen.add(key)
+        marks.append((v['pg'], v['r'], v['mx'], v['my'], v['seite'], v['zid'],
+                      v.get('zid2', 255)))
+
     o.append("")
     o.append("/* MARKEN in Karten-Pixeln. kind = TUER mit WANDSEITE 0=Nord 1=Ost")
     o.append(" * 2=Sued 3=West (die Nische zeigt nach innen), 4/5 = Treppe mit")
@@ -669,10 +675,11 @@ def main():
     o.append(" * Treppen stammen aus den SCD-Zonen Aot_set Typ 12/13 (die Band-Wechsel-")
     o.append(" * Zonen), Tueren aus den Tuer-Datensaetzen. Gezeichnet werden sie nur fuer")
     o.append(" * Zonen, die der Spieler schon gesehen hat. */")
-    o.append("typedef struct { unsigned char page, rect; short mx, my; unsigned char kind, zid; } re15_map_mark_t;")
+    o.append("typedef struct { unsigned char page, rect; short mx, my;")
+    o.append("                 unsigned char kind, zid, zid2; } re15_map_mark_t;")
     o.append("static const re15_map_mark_t s_map_marks[] = {")
-    for pg, r, mx, my, kind, zd in sorted(marks):
-        o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d} }},")
+    for pg, r, mx, my, kind, zd, zd2 in sorted(marks):
+        o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d}, {zd2:3d} }},")
     o.append("};")
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))

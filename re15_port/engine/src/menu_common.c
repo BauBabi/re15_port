@@ -1405,6 +1405,43 @@ static void map_mode(uint16_t pressed)
          * <- RAW CROSS (@0x80073dbc[15], wave-6 finding 4) OR raw L1 edge 0x4
          * (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
          * NO other input: no pan, no room step — a static viewer. */
+        /* ---- EBENEN-BLAETTERN mit HOCH/RUNTER ----------------------------------
+         * Nutzer-Auftrag 2026-08-31: "Ich kann auch nicht mit hoch/runter bei den maps
+         * mir die anderen Ebenen anschauen und die map wechseln, das fehlt noch."
+         *
+         * ⛔ PORT-ERGAENZUNG, kein byte-true Befund. RE1.5 kennt hier keinerlei Eingabe:
+         * FUN_8004c058 case 1 liest genau zwei Bits (virtueller Abbruch 0x8000
+         * @0x8004c1d0-e0 und rohes L1 @0x8004c1e8-f8), und die angezeigte Seite
+         * (DAT_800b260e) wird EXE-weit nur aus der Raumnummer gesetzt - Sprungtabelle
+         * @0x8001103c ueber den Setzer @0x8004b568, alle sieben Schreiber in dieser
+         * Raum-Switch-Familie. Ein Blaettern gibt es im Original also nicht.
+         *
+         * Vorbild ist RE2, das genau das kann: dort schaltet D-Pad HOCH/RUNTER die
+         * Etage, und waehlbar sind nur Nachbar-Etagen, die der Spieler schon besucht
+         * hat. Den Besucht-Riegel uebernehmen wir (re15_map_page_known).
+         *
+         * REIHENFOLGE: nach dem Titelbild der Seite (aus MAP0x.PIX gelesen) ist
+         * Seite 1 = B2, 0 = B1, 2 = 1F, 3 = 2F, 4 = 3F, 5 = das ROOM1170-Blatt ohne
+         * Etagenangabe; danach die uebrigen Komplexe in Tabellenreihenfolge
+         * (6 Drains B2, 7 Factory, 8-11 Laboratory B1-B4, 12 Subway). Nur 0 und 1
+         * stehen deshalb getauscht, alles andere ist die Tabellenreihenfolge.
+         * Seite 13 gibt es nicht (Tabellen-Ueberlauf, id 0). */
+        if (pressed & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) {
+            static const unsigned char ORDER[13] = { 1, 0, 2, 3, 4, 5,
+                                                     6, 7, 8, 9, 10, 11, 12 };
+            int dir = (pressed & RE15_PAD_BIT_UP) ? +1 : -1;
+            int hier = 0, i, k;
+            for (i = 0; i < 13; i++) if (ORDER[i] == g_inv_screen.map_page) hier = i;
+            for (k = 1; k <= 13; k++) {
+                int j = hier + dir * k;
+                if (j < 0 || j > 12) break;              /* kein Umlauf an den Enden */
+                if (!re15_map_page_known(ORDER[j])) continue;
+                se4(4);                                  /* Bewegungs-Ton wie sonst auch */
+                g_inv_screen.map_page = ORDER[j];
+                break;
+            }
+            return;                                      /* der Frame ist verbraucht */
+        }
         if ((re15_pad_virtual_word(pressed) & 0x8000) || (pressed & RE15_PAD_BIT_L1)) {
             se4(5);                             /* Abbruch-Ton SOFORT beim Tastendruck —
                                                  * er stand vorher am Ende der 0x19 Frames

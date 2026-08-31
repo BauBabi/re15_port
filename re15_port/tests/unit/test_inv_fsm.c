@@ -786,6 +786,13 @@ static void wavemap_tests(void)
         unsigned save_room = g_current_room_id;
         g_current_room_id = 0x1140;                 /* Raum mit eigener Zone */
         re15_map_zone_update(0x1140, 0, -10000);
+        /* FIXTURE: die ANGEZEIGTE Kartenseite muss gesetzt sein. Der Marker gehoert
+         * auf das gezeigte Blatt; seit man im Kartenschirm mit Hoch/Runter blaettern
+         * kann, ist das nicht mehr zwangslaeufig das Blatt der Zone, und auf einer
+         * fremden Etage wird der Marker absichtlich aus dem Bild genommen. Vorher
+         * verglich der Riegel gegen den Zonen-Getter selbst und war damit eine
+         * Tautologie - die Luecke in dieser Fixture ist deshalb nie aufgefallen. */
+        g_inv_screen.map_page = 4;                  /* ROOM1140 liegt auf Seite 4 */
         re15_inv_map_marker(0, -10000, 20, &mx, &my);
         CHECK(!(mx == 0 && my == 0) && mx > 0 && my > 0 && mx < 320 && my < 256,
               "(M4) REPARIERT: Zonen-Marker liegt in der Seite, is (%d,%d)", mx, my);

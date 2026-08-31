@@ -221,7 +221,19 @@ int re15_map_visited(unsigned room_id)
  * Tuer-Gelb. Positionen sind vorberechnet (tools/gen_map_zones.py). */
 #define MARK_COUNT ((int)(sizeof s_map_marks / sizeof s_map_marks[0]))
 
-int re15_map_mark_count(void) { return MARK_COUNT; }
+int re15_map_mark_count(void) { return MARK_COUNT; }
+
+/* 1, wenn der Spieler auf dieser Kartenseite schon mindestens eine Zone gesehen hat.
+ * Riegel fuer das Ebenen-Blaettern: man soll nur Blaetter durchsehen koennen, die man
+ * kennt - dieselbe Bedingung, die RE2 an seine Nachbar-Etagen legt. */
+int re15_map_page_known(unsigned page)
+{
+    int i;
+    for (i = 0; i < ZONE_COUNT; i++)
+        if (s_map_zones[i].page == page && re15_map_zone_visited(&s_map_zones[i]))
+            return 1;
+    return 0;
+}
 
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
 {
@@ -233,7 +245,14 @@ int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
         /* Nur zeigen, was der Spieler schon gesehen hat: die Marke gehoert zur Zone
          * mit dieser Nummer — ist sie unbesucht, wird auch das Rechteck nicht
          * gezeichnet, dann waere die Marke ein Hinweis auf Unbekanntes. */
-        return (s_visited[m->zid >> 3] >> (m->zid & 7)) & 1;
+        /* Sichtbar, sobald EINE der beiden Zonen besucht ist. Ein Durchgang
+         * zwischen zwei Raeumen wird als EIN Datensatz gefuehrt; zid2 haelt die
+         * Zone der anderen Seite (255 = keine). Sonst waere die Tuer unsichtbar,
+         * wenn der Spieler zuerst den anderen Raum betritt. */
+        if ((s_visited[m->zid >> 3] >> (m->zid & 7)) & 1) return 1;
+        if (m->zid2 != 255 &&
+            ((s_visited[m->zid2 >> 3] >> (m->zid2 & 7)) & 1)) return 1;
+        return 0;
     }
 }
 

@@ -65,6 +65,7 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
  * re15_map_mark_get liefert 1, wenn die Marke SICHTBAR ist (ihre Zone ist besucht). */
 int re15_map_mark_count(void);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
+int re15_map_page_known(unsigned page);   /* Blatt schon gesehen? */
 
 int re15_map_stock_mode(void);
 void re15_map_stock_set(int v);   /* Tests: 0/1 erzwingen, -1 = Umgebung neu lesen */

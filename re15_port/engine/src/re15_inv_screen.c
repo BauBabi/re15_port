@@ -331,7 +331,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         /* Die Zone muss zu dem Blatt gehoeren, das gerade GEZEIGT wird — sonst saesse
          * der Marker auf einer fremden Etage (Nutzer-Report: "der spielmarker [muss]
          * im kleinen rechteck sein, nicht ausserhalb"). */
-        if (zn && zn->page == re15_inv_map_page_shown()) {
+        if (zn && zn->page == (int)g_inv_screen.map_page) {
             uint32_t lp = mu32(0x80076844u + (uint32_t)zn->page * 8u);
             uint32_t a  = lp + (uint32_t)zn->rect * 12u;
             int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
@@ -353,7 +353,10 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         }
         /* Keine passende Zone auf diesem Blatt: den Marker aus dem Bild nehmen,
          * statt ihn irgendwo hin zu setzen. */
-        if (zn && zn->page != re15_inv_map_page_shown()) { *mx = -64; *my = -64; return; }
+        /* Der Marker gehoert auf das ANGEZEIGTE Blatt. Seit man mit Hoch/Runter
+         * blaettern kann, ist das nicht mehr zwangslaeufig das Blatt der Zone -
+         * auf einer fremden Etage wird der Marker deshalb aus dem Bild genommen. */
+        if (zn && zn->page != (int)g_inv_screen.map_page) { *mx = -64; *my = -64; return; }
     }
 
     /* STOCK: die Original-Formel FUN_800473f8 @0x8004741c-0x80047528.
