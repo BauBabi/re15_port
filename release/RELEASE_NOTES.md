@@ -1,3 +1,16 @@
+# RE1.5 Port — v0.3.65 (Early Preview)
+
+- **Abbruchton beim Verlassen der Karte** ergänzt — der Ausstieg war als einziger
+  Menüweg noch stumm.
+- **Die gelben Striche auf der Karte sind raus.** Das waren meine abgeleiteten Tür- und
+  Treppenmarken. Sie standen auf unsicherem Grund: aus dem Türgraphen hergeleitet und
+  über eine Formel auf die Kartenblätter projiziert, deren Raum-Zuordnung nur teilweise
+  belegt ist — und RE1.5 zeichnet auf seinen Blättern selbst weder Türen noch Treppen.
+  Es waren also erfundene Striche an ungesicherter Stelle. Lieber nichts zeichnen als
+  etwas Falsches; der Unterbau bleibt, falls die Zuordnung später belastbar wird.
+
+---
+
 # RE1.5 Port — v0.3.64 (Early Preview)
 
 **Menütöne: eine Ursache für alle Stellen.**
