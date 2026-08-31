@@ -159,7 +159,14 @@ void re15_inv_screen_open(void)
     /* MAP page/room-slot mirrors of the PERSISTENT globals 260d/260e (the menu init
      * writes neither — stale-previous across opens, byte-true) */
     g_inv_screen.map_room = s_map_room;
-    g_inv_screen.map_page = s_map_page;
+    /* ⛔ Die angezeigte Kartenseite folgt dem BEREICH, in dem der Spieler steht — nicht
+     * allein der Raum-Nummer. Ein RDT-Raum kann ueber zwei Etagen reichen (ROOM1170:
+     * vor und hinter der Treppe); mit der Raum-Nummer allein blieb die Karte nach dem
+     * Treppenlauf auf der alten Ebene stehen (Nutzer 2026-08-31). */
+    {
+        const re15_map_zone_t *zn = re15_map_zone_current();
+        g_inv_screen.map_page = zn ? (uint8_t)zn->page : s_map_page;
+    }
     g7_label_reset();                  /* prim arenas rebuilt at init -> template label */
     re15_inv_screen_sync_equip();
 }
@@ -1464,16 +1471,34 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         }
     }
 
-    /* ---- 4c. TUEREN und TREPPEN: ENTFERNT (Nutzer 2026-08-31: "Die Map hat komische
-     * gelbe Striche die da nicht hin gehoeren. Schon bei dem ersten Kartenpunkt von
-     * 1170.")
-     * Die Marken wurden aus dem Tuer-Graphen abgeleitet und ueber die Marker-Formel
-     * auf die Kartenblaetter projiziert. Beides steht auf unsicherem Grund: die
-     * Zuordnung Raum -> Rechteck ist nur teilweise belegt, und RE1.5 selbst zeichnet
-     * auf seinen Kartenblaettern weder Tueren noch Treppen — die Striche waren also
-     * eine Erfindung an ungesicherter Position. Lieber nichts zeichnen als etwas
-     * Falsches. Der Marken-Speicher (re15_map_mark_*) bleibt bestehen, falls die
-     * Zuordnung spaeter belastbar wird. */
+    /* ---- 4c. TREPPEN einzeichnen (Nutzer 2026-08-31: "Was noch fehlt sind die
+     * eingezeichneten Treppen"). Die Positionen sind BELEGT: sie stammen aus den
+     * SCD-Zonen Aot_set Typ 12/13 — den Band-Wechsel-Zonen, ueber die der Spieler die
+     * Etage wechselt (scd_vm.c) — und laufen durch dieselbe Bereichs-Projektion wie
+     * der Positionsmarker (inklusive der z-Spiegelung des Originals).
+     * Die frueheren TUER-Striche bleiben draussen: sie standen an ungesicherten
+     * Stellen und wurden zu Recht beanstandet.
+     * Gezeichnet wird nur in Bereichen, die der Spieler schon gesehen hat, und nur
+     * auf dem Karten-Schirm (derselbe Riegel wie die Karte selbst). */
+    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
+        int n = re15_map_mark_count(), k;
+        for (k = 0; k < n; k++) {
+            int mpage, mrect, mx, my, kind, row;
+            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
+            if (mpage != (int)st->map_page || kind != 1) continue;
+            /* Treppen-Symbol: drei kurze Sprossen uebereinander (RE2 setzt fuer
+             * Uebergaenge eigene 8x8-Icons; RE1.5 liefert keine mit). */
+            for (row = -2; row <= 2; row += 2) {
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)(mx - 2); o->y = (int16_t)(my + row);
+                o->w = (int16_t)(mx + 2); o->h = (int16_t)(my + row);
+                o->r = 232; o->g = 232; o->b = 200;
+            }
+        }
+    }
 
     /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base
      * 25e0/25e2 LIVE (lhu @0x80048748/@0x8004876c), AddPrim while slot < capacity;

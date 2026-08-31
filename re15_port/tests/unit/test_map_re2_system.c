@@ -177,14 +177,21 @@ int main(void)
         for (k = 0; k < n; k++) {
             int pg, r, mx, my, kind;
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
-            if (pg != 5) continue;
-            nachher++;
+            /* ⛔ NEUER STAND (2026-08-31): auf der Karte stehen NUR NOCH TREPPEN.
+             * Die Tuer-Striche sind entfernt — sie standen an ungesicherten Stellen
+             * und wurden vom Nutzer beanstandet ("komische gelbe Striche die da nicht
+             * hin gehoeren"). Und ROOM1170s ZWEITER Bereich liegt hinter der Treppe
+             * auf der naechsten Ebene: Seite 4, Rect 3 (dieselbe Grundriss-Kachel
+             * uv(192,16) wie Seite 5 Rect 0 — die Karte zeigt Treppenhaeuser auf
+             * beiden Etagen). Der Pin haelt beides fest. */
+            if (pg == 5 || pg == 4) nachher++;
             if (kind == 0) doors_p5++;
-            if (kind == 1 && r == 0) stairs_p5r0++;
+            if (kind == 1 && pg == 4 && r == 3) stairs_p5r0++;
         }
         CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
-        CHECK("ROOM1170 hat TUEREN auf der Karte", doors_p5 > 0);
-        CHECK("das kleine Rechteck (Seite 5 Rect 0) traegt TREPPEN-Marken", stairs_p5r0 > 0);
+        CHECK("KEINE Tuer-Striche mehr auf der Karte (bewusst entfernt)", doors_p5 == 0);
+        CHECK("der Bereich hinter der Treppe liegt auf der naechsten Ebene "
+              "(Seite 4 Rect 3) und traegt Treppen-Marken", stairs_p5r0 > 0);
         printf("  [Marken] Seite 5: %d sichtbar, %d Tueren, %d Treppen in Rect 0\n",
                nachher, doors_p5, stairs_p5r0);
     }

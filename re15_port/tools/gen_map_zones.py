@@ -303,11 +303,27 @@ def main():
     o.append(" * Herleitung + Verfahren: analysis/nutzer_batch_2026-08-30b/map-zonen.md */")
     o.append(" * Der Typ re15_map_zone_t steht in include/re15_room.h. */")
     o.pop()   # den provisorischen Kommentar-Abschluss der Kopfzeile ersetzen
+    # ---- ETAGEN-KORREKTUREN (belegt, von Hand) --------------------------------
+    # Ein RDT-Raum kann ueber ZWEI Etagen reichen; die automatische Zuordnung kennt
+    # nur die Raum-Nummer und legt dann beide Bereiche auf dieselbe Kartenseite.
+    # ROOM1170: der zweite Bereich liegt HINTER DER TREPPE und gehoert zur Ebene von
+    # ROOM1150 = Seite 4 (Nutzer 2026-08-31: "der Wechsel auf die naechste Ebene,
+    # nachdem man die letzte Treppe runter laeuft"). Dort traegt Rect 3 (152,89) 48x24
+    # DENSELBEN Grundriss-Ausschnitt wie Rect 0 der Seite 5 (beide uv(192,16)) —
+    # dieselbe Kachel auf zwei Etagen, wie es die Karte fuer Treppenhaeuser tut.
+    FLOOR_FIX = { (0x1170, 1): (4, 3) }
+    for key, val in FLOOR_FIX.items():
+        if key in assign: assign[key] = val
+    rows = [ (room, bb,
+              FLOOR_FIX.get((room & 0xFFF0, zi), (pg, r))[0],
+              FLOOR_FIX.get((room & 0xFFF0, zi), (pg, r))[1], zi, zd)
+             for (room, bb, pg, r, zi, zd) in rows ]
+
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d} }},")
     o.append("};")
-    # ---- MARKEN: Tueren und Treppen, in Karten-Koordinaten vorberechnet -------
+    # ---- MARKEN: Treppen, in Karten-Koordinaten vorberechnet ------------------
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
     # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
@@ -324,7 +340,9 @@ def main():
         if x1 <= x0 or z1 <= z0: return None
         fx = min(max(wx - x0, 0), x1 - x0)
         fz = min(max(wz - z0, 0), z1 - z0)
-        return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + fz * R[3] // (z1 - z0)
+        # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
+        # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
+        return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)
     def zone_at(room, wx, wz):
         best, best_a = None, 0
         for i, (x0, x1, z0, z1) in enumerate(zinfo.get(room, [])):
@@ -341,7 +359,11 @@ def main():
             if assign.get((b, i)) is not None:
                 zid_of[(b, i)] = _z; _z += 1
     for b in sorted(zinfo):
-        for kind, lst in ((0, doors_all.get(b, [])), (1, stairs_all.get(b, []))):
+        # NUR TREPPEN: die Tuer-Striche hat der Nutzer als stoerend gemeldet
+        # ("komische gelbe Striche die da nicht hin gehoeren", 2026-08-31) — sie
+        # standen zudem an ungesicherten Positionen. Treppen dagegen stammen aus
+        # belegten SCD-Zonen (Aot_set Typ 12/13 = die Band-Wechsel-Zonen).
+        for kind, lst in ((1, stairs_all.get(b, [])),):
             for m in lst:
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
