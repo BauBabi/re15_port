@@ -1,3 +1,19 @@
+# RE1.5 Port — v0.3.55 (Early Preview)
+
+Deine vier Punkte zur Box:
+
+- **„…/64" unten ist raus.** Der Scrollgriff zeigt die Position — im Original steht dort
+  nichts.
+- **Der Zeilenbalken schnitt die Mengenangabe an.** Die Ziffern saßen genau auf der
+  Zeilenoberkante; jetzt sitzen sie 5 Pixel tiefer, mittig in der Zeile.
+- **Die abgeschnittene Oberseite** lag daran, dass RE2 sein Panel bei Bildzeile 13
+  ansetzt — bei uns liegt dort der obere Kino-Balken darüber. Panel und Inhalt sind um
+  13 Pixel nach unten gerückt, damit Rahmen und oranger Pfeil frei stehen.
+- **Der Textrahmen unten ist jetzt dabei.** Ich habe das Panel neu aus dem Original
+  geschnitten — die Region reicht jetzt bis unter das Namensfeld.
+
+---
+
 # RE1.5 Port — v0.3.54 (Early Preview)
 
 **Die Item-Box zeigt jetzt das echte RE2-Panel — nicht mehr meinen Nachbau.**
