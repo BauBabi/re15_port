@@ -166,7 +166,16 @@ static void tab_select(uint16_t pressed)
 
     /* D-pad/L1/R1 edges, priority order, ABSOLUTE tab positions (no wrap/cycle);
      * each hit CONSUMES the frame (jumps to draw, skipping confirm/cancel). */
+    /* MENUE-TOENE (Nutzer-Auftrag 2026-08-31: "beim oeffnen des Player Inventory und
+     * bewegen beim Menu: Map, Item, file etc. fehlt der Bewegungs- und Auswahl Sound").
+     * ⛔ HERKUNFT SAUBER GETRENNT: die TOENE sind die originalen RE1.5-Menuetoene aus
+     * SE-Bank 4 (CORE00) — 4 = Cursor, 5 = Abbruch, 6 = Auswahl, dieselben, die das
+     * Inventar an seinen anderen Stellen laengst spielt. Die STELLEN hier sind
+     * ergaenzt: RE1.5 ist in dieser Tab-FSM stumm (EXE-weiter Scan: 41 Se_on-Aufrufe
+     * insgesamt, keiner in 0x8004974c-0x80049a58). Das ist damit eine bewusste
+     * Nutzer-Ergaenzung, kein byte-true Befund. */
     if (pressed & RE15_PAD_BIT_L1) {            /* raw 0x4 @0x8004980c-30 */
+        se4(4);
         g_inv_screen.tab = 1;
         s_substate = 1;                         /* instant MAP launch — SKIPS the
                                                  * confirm path's common resets
@@ -176,20 +185,22 @@ static void tab_select(uint16_t pressed)
         return;
     }
     if (pressed & RE15_PAD_BIT_R1) {            /* raw 0x8 @0x80049834-4c */
+        se4(4);
         g_inv_screen.tab = 3;
         s_substate = 2;                         /* FILE starts next frame */
         return;
     }
-    if (pressed & RE15_PAD_BIT_RIGHT) { g_inv_screen.tab = 3; return; }  /* @0x80049850-64 */
-    if (pressed & RE15_PAD_BIT_LEFT)  { g_inv_screen.tab = 1; return; }  /* @0x8004986c-80 */
-    if (pressed & RE15_PAD_BIT_DOWN)  { g_inv_screen.tab = 2; return; }  /* @0x80049888-9c */
-    if (pressed & RE15_PAD_BIT_UP)    { g_inv_screen.tab = 0; return; }  /* @0x800498a4-b8 */
+    if (pressed & RE15_PAD_BIT_RIGHT) { se4(4); g_inv_screen.tab = 3; return; }  /* @0x80049850-64 */
+    if (pressed & RE15_PAD_BIT_LEFT)  { se4(4); g_inv_screen.tab = 1; return; }  /* @0x8004986c-80 */
+    if (pressed & RE15_PAD_BIT_DOWN)  { se4(4); g_inv_screen.tab = 2; return; }  /* @0x80049888-9c */
+    if (pressed & RE15_PAD_BIT_UP)    { se4(4); g_inv_screen.tab = 0; return; }  /* @0x800498a4-b8 */
 
     /* CONFIRM = VIRTUAL 0x4000 (@0x800498c0-cc reads DAT_800ac76c) <- RAW SQUARE per
      * the preset-0 remap @0x80073dbc[14] (wave-6 finding 4: the previous physical-
      * CROSS bind came from the identity-feed misread). NO sound effect on any confirm
      * path (spec fact: zero FUN_80045024 sites in this FSM). */
     if (re15_pad_virtual_word(pressed) & 0x4000) {
+        se4(6);                                 /* Auswahl-Ton (s. Block oben) */
         if (g_inv_screen.tab != 4) {            /* guard @0x800498d4-dc (25bc shared with
                                                  * the standalone MAP screen's FSM) */
             /* 25ca dim flag: 1 iff tab==0, else 0 (@0x800498e4-f4 — the ONE set-to-1
@@ -1821,6 +1832,7 @@ void re15_menu_toggle_box(void)
 void re15_menu_toggle(void)
 {
     if (!s_alive && s_stage == 0) {
+        se4(6);                     /* Oeffnen-Ton (s. Menuetoene-Block in tab_select) */
         phase0_init();
         re15_fade_kill(0);          /* skip the fade-in (debug only) */
         s_alive = 1;

@@ -825,7 +825,15 @@ static void file_wave_tests(void)
     CHECK(g_inv_screen.tab == 3 && re15_menu_substate() == 2,
           "(F1) R1 -> tab=3 + 25c1=2 (@0x80049834-4c)");
     CHECK(g_inv_screen.item_state == 0, "(F1) 25c2=0 (enter slide)");
-    CHECK(g_test_core_se_count == se0, "(F1) tab launch is SILENT (no SE site)");
+    /* ⛔ ABSICHTLICHE ERGAENZUNG, kein byte-true Befund: RE1.5 ist in dieser Tab-FSM
+     * STUMM (EXE-weiter Zensus: 41 Se_on-Aufrufe insgesamt, keiner in
+     * 0x8004974c-0x80049a58). Auf Nutzer-Auftrag 2026-08-31 ("beim ... bewegen beim
+     * Menu: Map, Item, file etc. fehlt der Bewegungs- und Auswahl Sound") spielt der
+     * Port hier jetzt die ORIGINALEN Menuetoene aus SE-Bank 4 (4 = Cursor,
+     * 6 = Auswahl) — dieselben, die das Inventar an seinen uebrigen Stellen laengst
+     * nutzt. Der Pin haelt die neue Absicht fest UND den Original-Fakt im Text. */
+    CHECK(g_test_core_se_count > se0,
+          "(F1) Tab-Wechsel spielt den Menue-Ton (Ergaenzung; RE1.5 selbst ist stumm)");
 
     /* (F2) enter slide: 30 frames (sltiu 0x1e @0x800c6cdc), deltas @0x800c6d08-60:
      * 25e0-15, 25e6-9, 25d8-7, 25dc-7, 25ea+7, 25f2-8; every slide frame zeroes

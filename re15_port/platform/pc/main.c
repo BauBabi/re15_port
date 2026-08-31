@@ -1222,6 +1222,13 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, slot_loc, save_mode);
             re15_render_pc_set_fade(level >> 7);
             re15_render_end_frame();
+            /* ⛔ SOUND-PUMPE auch in den Menue-Schleifen (Nutzer-Auftrag 2026-08-31:
+             * "in den Optionen ... fehlt der Menu Bewegungssound ... Auch im Hauptmenu:
+             * New Game, Load etc."). URSACHE: re15_audio_tick() — die Pumpe, die die
+             * angestossenen Stimmen weiterfuehrt — lief NUR in der Spielschleife.
+             * Titel, Optionen, Speicher- und Ladeschirm haben eigene Schleifen und
+             * blieben deshalb stumm, obwohl die SE-Aufrufe dort teils schon standen. */
+            re15_audio_tick();
         }
         re15_render_pc_set_fade(0);
     }
@@ -1257,6 +1264,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         else if (st == ST_OVERWRITE) re15_render_pc_card_cursor(123, 196 + ow * 18, !(blink & 0x10));
         else                         re15_render_pc_card_cursor(0, 0, 0);
         re15_render_end_frame();
+        re15_audio_tick();
         blink++;
 
         uint16_t pp = g_engine.pad_pressed;
@@ -1363,6 +1371,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, slot_loc, save_mode);
             re15_render_pc_set_fade(level >> 7);                     /* byte-true brightness = level>>7 */
             re15_render_end_frame();
+            re15_audio_tick();
         }
         re15_render_pc_set_fade(255);   /* @0x800265ec: static 0x7fff hold -> full black until the room fades in */
     }
@@ -1804,6 +1813,7 @@ static int pc_run_player_select(void)
           if (cz_black > br) br = cz_black;   /* sub7 fade-to-black wins over the initial fade-in */
           re15_render_pc_set_title_fade(br); }
         re15_render_end_frame();
+        re15_audio_tick();
         { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
           if (ps_shot && frames == sf) re15_render_pc_screenshot(ps_shot); }
         { const char *ser = getenv("RE15_PSELECT_SERIES");   /* frame-series dump for the video compare */
@@ -2229,6 +2239,7 @@ static void pc_run_config(void)
 
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
+        re15_audio_tick();
 
         if (!fading_out) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }
         else { fade_level += 0x400; if (fade_level >= 0x7fff) break; }
@@ -2237,6 +2248,21 @@ static void pc_run_config(void)
             uint16_t pp = g_engine.pad_pressed;
             int confirm = (pp & (RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CIRCLE)) != 0;   /* raw 0xa0 */
             int cancel  = (pp & RE15_PAD_BIT_CROSS) != 0;                            /* raw 0x40 */
+            /* MENUE-TOENE im OPTIONS-Schirm (Nutzer-Auftrag 2026-08-31: "in den
+             * Optionen, wenn wir uns bewegen, fehlt der Menu Bewegungssound ... Wenn
+             * wir was auswaehlen ist das ebenfalls der gleiche Sound wie im Player
+             * Inventory. Brechen wir eine Aktion ab, ist es der Abbruch Sound").
+             * Es sind die originalen RE1.5-Menuetoene aus SE-Bank 4 (CORE00):
+             * 4 = Cursor, 5 = Abbruch, 6 = Auswahl. Die STELLEN sind ergaenzt —
+             * RE1.5 spielt im Config-Schirm selbst keine (EXE-weiter Scan: 41
+             * Se_on-Aufrufe, keiner davon hier). */
+            {
+                extern void re15_audio_core_se(int se_id);
+                if (pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT |
+                          RE15_PAD_BIT_UP   | RE15_PAD_BIT_DOWN)) re15_audio_core_se(4);
+                else if (confirm)                                 re15_audio_core_se(6);
+                else if (cancel)                                  re15_audio_core_se(5);
+            }
             if (screen == CFG_TOP) {
                 if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 3; }
                 if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 3) cur = 0; }
@@ -2410,6 +2436,7 @@ int main(int argc, char *argv[])
                 re15_input_tick();
                 re15_render_pc_show_fmv(frame_rgba, movie.width, movie.height);
                 re15_render_end_frame();
+                re15_audio_tick();
                 if (fmv_shot && f == shot_frame) {
                     re15_render_pc_screenshot(shot_path);
                     exit(0);                                /* one-shot verification probe */
@@ -2500,6 +2527,7 @@ re_title:;
                           re15_render_pc_config_clear();
                           re15_render_pc_config(&bg, 0); pc_config_draw_labels();
                           pc_config_draw_overlay(&tim, screen, cur); re15_render_end_frame(); }
+                          re15_audio_tick();
                       re15_render_pc_screenshot(cs); exit(0); }
             pc_run_config(); exit(0);
         }
@@ -2574,6 +2602,7 @@ re_title:;
                                 if (subph) re15_render_pc_title_fade_sub(B);
                                 else       re15_render_pc_title_fade_add(B);
                                 re15_render_end_frame();
+                                re15_audio_tick();
                                 { uint32_t now = SDL_GetTicks(); uint32_t el = now - tf_last;
                                   if (el < 16) SDL_Delay(16 - el); tf_last = SDL_GetTicks(); }
                             }
@@ -2640,6 +2669,7 @@ re_title:;
               int tk = (int)(tblink >> 1); int B = 255 - tk * 8; if (B < 0) B = 0;
               re15_render_pc_title_fade_sub(B); }
             re15_render_end_frame();
+            re15_audio_tick();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
             { unsigned t_af = 22; const char *afe = getenv("RE15_TITLE_SHOT_AF"); if (afe) t_af = (unsigned)atoi(afe);
               if (t_shot && tblink == t_af) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); } }
