@@ -2665,6 +2665,23 @@ re_title:;
              * @0x80102054-64 = SUBTRAKTIV, B = 255 -> 0 mit -8/Tick, 32 Ticks (Tick = 2 Vsyncs).
              * Bei 60-fps-Frames: Tick = tblink>>1. (Der alte `255 - tblink*13` ueber 20 Frames
              * war eine geratene Rate.) */
+            /* ⛔ NUR SOLANGE DIE TITEL-SCHLEIFE AUCH WEITERLAEUFT. Der Block lief bisher
+             * bedingungslos — auch in genau der Iteration, in der oben bestaetigt wurde und
+             * `mode` schon auf INGAME steht. Dann verliess die Schleife den Titel mit
+             * s_tfade_sub = 255 - (tblink>>1)*8 > 0, und weil den Wert AUSSERHALB der
+             * Titel-Schleife keine einzige Stelle mehr loescht (einziger Schreiber:
+             * re15_render_pc_title_fade_sub, alle 6 Aufrufer liegen in dieser Schleife),
+             * zeichnete re15_render_end_frame ihn im GANZEN restlichen Spiel als
+             * subtraktiven ABR2-Vollbildquad ueber 320x240 (render_pc.c:1197-1205).
+             * -> "drueckt man am Start zu schnell Enter, bleibt das ganze Spiel dunkel"
+             * (Nutzer 2026-08-31). Gemessen: Bildschirm-Maximum = 214 - B, also bei
+             * fruehem Druck (tblink klein, B gross) pechschwarz; ab 64 Titel-Frames
+             * (B = 0) sauber. Das Zeitfenster ist ~0,44 s bei 144 Hz / ~1,07 s bei 60 Hz,
+             * weil die Titel-Schleife mit Vsync laeuft — daher "stiess ich schon oefter
+             * darauf", aber nicht immer.
+             * Ausgeloest von JEDEM Confirm-Knopf (Maske CROSS|SQUARE|TRIANGLE|CIRCLE|START
+             * @main.c oben, Original 0x8f0 @0x800bc762), nicht nur Enter. */
+            if (re15_gameflow_mode() == RE15_MODE_TITLE)
             { extern void re15_render_pc_title_fade_sub(int b);
               int tk = (int)(tblink >> 1); int B = 255 - tk * 8; if (B < 0) B = 0;
               re15_render_pc_title_fade_sub(B); }
@@ -4671,7 +4688,30 @@ re_title:;
                  * Fade-Kanaele (g_fade_ch, re15_fade_tick im Renderer). */
                 {
                     extern void re15_render_pc_set_fade(int a);
+                    extern void re15_render_pc_title_fade_sub(int b);
+                    extern void re15_render_pc_title_fade_add(int b);
+                    extern int  re15_render_pc_title_fade_residual(void);
                     re15_render_pc_set_fade(0);
+                    /* ⛔ GUERTEL UND HOSENTRAEGER zum Titel-Fade-Gate oben: das Original
+                     * killt beim Game-Init den Frontend-Fade-Kanal BEDINGUNGSLOS
+                     * (FUN_800161e0: `jal FUN_80021764` @0x80016420 mit a0=0 im
+                     * Delay-Slot @0x80016424, danach Schwarz-Clear FUN_80021634(2,0)
+                     * @0x8001642c/@0x80016430). Der Port loeste bisher nur s_fade_alpha;
+                     * die beiden TITEL-Ebenen hatten ueberhaupt keinen Release und
+                     * konnten das ganze Spiel abdunkeln. */
+                    /* Pin-Instrumentierung (integration_dark_start_pin): einmal je Lauf den
+                     * Restwert VOR und NACH dem Release melden. Geprueft wird der WIRKSAME
+                     * Wert (nach dem Release) — den legt re15_render_end_frame gleich als
+                     * Vollbildquad ueber das Spielbild. Der Wert davor steht zur Diagnose
+                     * dabei: er zeigt, wieviel der Titel hinterlassen HAT. */
+                    { static int tf_logged = 0;
+                      int tf_before = re15_render_pc_title_fade_residual();
+                      re15_render_pc_title_fade_sub(0);
+                      re15_render_pc_title_fade_add(0);
+                      if (!tf_logged) { tf_logged = 1;
+                          int tf_now = re15_render_pc_title_fade_residual();
+                          fprintf(stderr, "[tfade] ingame sub=%d add=%d (Rest vom Titel: %d)\n",
+                                  tf_now >> 8, tf_now & 255, tf_before >> 8); } }
                 }
 
                 /* PRE-INTRO NARRATOR BLACK — the byte-true mechanism is a VOID CAMERA, not a fill.

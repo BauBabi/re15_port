@@ -1298,7 +1298,12 @@ void re15_render_end_frame(void)
  * Main loop ramps it 255→0 over the room-entry fade window. */
 void re15_render_pc_set_title_fade(int a) { s_title_fade = (a < 0) ? 0 : (a > 255) ? 255 : (uint8_t)a; }
 /* Title-Ebenen-Fades (Engine-Prim-Helligkeit B = level>>7; s.o.). */
-void re15_render_pc_title_fade_add(int b) { s_tfade_add = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
+void re15_render_pc_title_fade_add(int b) { s_tfade_add = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
+
+/* Restwert der beiden TITEL-Fade-Ebenen — fuer den Dark-Start-Pin (integration_dark_start_pin).
+ * Beide MUESSEN im Spiel 0 sein; s_tfade_sub wird sonst als subtraktiver Vollbildquad
+ * (oben, ABR2) ueber jedes Spielbild gelegt und dunkelt es dauerhaft ab. */
+int re15_render_pc_title_fade_residual(void) { return (int)s_tfade_sub * 256 + (int)s_tfade_add; }
 void re15_render_pc_title_fade_sub(int b) { s_tfade_sub = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
 void re15_render_pc_set_fade(int a)
 {

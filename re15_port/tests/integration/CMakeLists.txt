@@ -108,6 +108,19 @@ if(TARGET re15_pc)
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/test_boot_bg_pin.cmake)
     set_tests_properties(integration_boot_bg_pin PROPERTIES TIMEOUT 120)
 
+    # --- DARK-START-PIN (Nutzer-Report 2026-08-31 "zu schnell Enter -> Spiel bleibt
+    #     dunkel"): der Title-Fade-in lief auch in der Iteration, die die Titel-Schleife
+    #     verlaesst, und hinterliess einen subtraktiven Vollbildquad, den ausserhalb der
+    #     Schleife nichts mehr loescht. Faehrt den fruehestmoeglichen Titel-Ausstieg
+    #     (tblink=4 -> ohne Fix Restwert 239 = pechschwarz) und prueft die [tfade]-Zeile
+    #     des ersten Spielframes. ---
+    add_test(NAME integration_dark_start_pin
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/darkstart_wd
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/test_dark_start_pin.cmake)
+    set_tests_properties(integration_dark_start_pin PROPERTIES TIMEOUT 120)
+
     # --- Re-Latch-Pin (Nutzer-Reports 2026-08-17): prozess-lange `static`-Latches duerfen den
     #     In-Process-Reboot nach dem Tod (`goto re_title`) NICHT ueberleben. Faehrt zwei volle
     #     Boots (Title-Auto-Advance -> NEW GAME -> RE15_KILL_AT -> Titel -> NEW GAME) und prueft,

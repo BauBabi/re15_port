@@ -94,6 +94,16 @@ def read_rdt(rid):
                 sca.append((x, z, w, dep))
     doors = []
     stairs = []
+    # Slots, die irgendwo im Raum per Aot_reset (Opcode 0x46, 10 B: pc[1]=Slot, pc[2]=sce)
+    # NEU BEWAFFNET werden. Ein Record mit sce 0 ist nur dann dauerhaft tot, wenn sein Slot
+    # hier NICHT vorkommt (der AOT-Verteiler ueberspringt sce 0, @0x80042f48-50).
+    rearmed = set()
+    for name in ('mainScd', 'subScd'):
+        s0 = offs[name]
+        e0 = (sorted(v for v in offs.values() if v > s0) + [len(d)])[0]
+        for off in range(s0, min(e0, len(d)) - 10):
+            if d[off] == 0x46 and d[off + 2] != 0:
+                rearmed.add(d[off + 1])
     for name in ('mainScd', 'subScd'):
         s = offs[name]
         ends = sorted(v for v in offs.values() if v > s) + [len(d)]
@@ -129,6 +139,35 @@ def read_rdt(rid):
                         rx, rz, rw, rd = struct.unpack_from('<hhhh', b, 4)
                         nx, ny, nz = struct.unpack_from('<hhh', b, 22)
                         stg, rmd = b[30], b[31]
+                    # ⛔ ZWEI FILTER — sonst landen Marken auf Tueren, die es nicht gibt
+                    # (Nutzer 2026-08-31: "auf dem grossen Rechteck sind wieder 3 Tueren
+                    # eingezeichnet, wobei nur eine oben existiert"; ROOM1170-Hof).
+                    #
+                    # (1) RECHTECK 0x0 = SKRIPT-WARP, keine begehbare Tuer.
+                    #     Der Original-Trefftest FUN_80042b64 ist Ecke+Ausdehnung, nicht
+                    #     Mitte+Halbe: @0x80042b68 lh x0 / @0x80042b6c lw px /
+                    #     @0x80042b70 lhu w / @0x80042b74 subu / @0x80042b78 sltu — Treffer
+                    #     genau dann, wenn (u32)(px-x0) <= w, ebenso in z @0x80042b84-98.
+                    #     Bei w = d = 0 heisst das GLEICHHEIT auf beiden Achsen, also genau
+                    #     EIN Weltpunkt. Solche Records werden per Aot_on aus dem Skript
+                    #     gefeuert (in ROOM1170 Slot 2/3 @Datei 0x129C/0x12CC, beide auf
+                    #     Welt (0,0) = der Eintritts-Warp aus ROOM1240) — man laeuft nicht
+                    #     durch sie hindurch, sie gehoeren nicht auf die Karte.
+                    if rw == 0 and rd == 0:
+                        pc += sz
+                        continue
+                    # (2) sce-BYTE == 0 = INERTER Record. Der AOT-Verteiler springt ueber
+                    #     Eintraege mit sce 0 (@0x80042f48-50); ohne ein spaeteres Aot_reset,
+                    #     das denselben Slot mit sce != 0 neu bewaffnet, ist der Record im
+                    #     Leon-Szenario dauerhaft tot. In ROOM1170 ist das Slot 1
+                    #     (@Datei 0x001226, Welt (5660,-7940), Ziel ROOM10B0) — die Tuer
+                    #     existiert nur in Elzas RDT (ROOM1171), und der Generator liest
+                    #     ROOM1171 nie (main(): `read_rdt(b) or read_rdt(b+1)`, der erste
+                    #     Aufruf liefert immer ein Tupel). Gegenprobe im Port: der Live-Lauf
+                    #     von scd_room_reenter installiert Slot 1 als Typ NONE.
+                    if b[2] == 0 and b[1] not in rearmed:
+                        pc += sz
+                        continue
                     doors.append({'lx': rx + rw//2, 'lz': rz + rd//2,
                                   'nx': nx, 'nz': nz,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
