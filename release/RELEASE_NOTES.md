@@ -1,3 +1,21 @@
+# RE1.5 Port — v0.3.58 (Early Preview)
+
+Zwei Ursachen für den Text außerhalb der Textbox — beide gefunden:
+
+- **Ich hatte die falsche Stelle geändert.** Es gibt zwei Stellen, an denen der Item-Name
+  gezeichnet wird: eine im Box-Bildschirm, eine im normalen Statusbildschirm. Ich hatte
+  die *normale* auf die Textbox-Position gesetzt und die im Box-Bildschirm unverändert
+  gelassen — dort stand weiter die feste Grundlinie, also **oberhalb** der Box. Jetzt
+  genau umgekehrt.
+- **Die Textbox war zu kurz geschnitten.** Ihr unterer Rahmen liegt im Original tiefer,
+  als ich beim Ausschneiden angenommen hatte — deshalb fehlten die Ränder. Neu
+  geschnitten, jetzt komplett mit allen vier Rändern; das Panel rückt dafür vier Pixel
+  höher, damit die größere Box unten hineinpasst.
+
+Die Grundlinie des Namens habe ich ebenfalls im Original abgemessen statt geschätzt.
+
+---
+
 # RE1.5 Port — v0.3.57 (Early Preview)
 
 **Panel und Textbox sind jetzt getrennt** — das war die eigentliche Ursache.
