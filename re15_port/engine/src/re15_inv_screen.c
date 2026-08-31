@@ -82,6 +82,12 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 #define ARMS_BX  126
 #define ARMS_BY  26
 #define LIST_BX  215
+/* Box-Schirm: das Listen-Panel sitzt auf der Hoehe des Inventar-Gitters (BOX_BY),
+ * die Textbox eigenstaendig darunter. RE2-Innengeometrie (Zeilen ab y 41,
+ * Scrollschiene ab 42) wandert um denselben Versatz mit. */
+#define RE15_BOX_PANEL_Y   26
+#define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
+#define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 158)  /* direkt unter dem Panel */
 #define LIST_BY  26
 #define TAB_BX   126
 #define ACT_BX   142
@@ -981,7 +987,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int NAME_X  = 16;                 /* Name links (RE2: boxX + 7)      */
         const int ICON_X  = 158;                /* Symbol rechts (RE2: x 155)      */
         const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
-        const int ROW0_Y  = 48;                 /* RE2: y 41 + 7 px Panel-Versatz  */
+        const int ROW0_Y  = 41 + RE15_BOX_PANEL_DY;
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
         /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
          * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
@@ -1042,7 +1048,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          *   y156..159 (240, 56, 24)  ORANGER Pfeil unten
          * Es ist EIN zusammenhaengender Griff, keine Einzelmarken. */
         {
-            const int TRACK_Y0 = 49, TRACK_H = 100;   /* RE2: 42 + 7 */
+            const int TRACK_Y0 = 42 + RE15_BOX_PANEL_DY, TRACK_H = 100;
             int grip_h = (TRACK_H * RE15_BOX_WINDOW) / RE15_BOX_SLOTS;   /* Fenster/Ring */
             int grip_y = TRACK_Y0 + (TRACK_H - grip_h) * st->box_scroll
                                      / (RE15_BOX_SLOTS - 1);
@@ -1075,16 +1081,31 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          * "ITEM BOX"-Schriftzug mit den grauen Pfeilen, Kopf- und Fussband, die
          * Scrollbalken-Schiene samt orangen Pfeilen und den Listengrund. */
         re15_inv_op_t *o;
+        /* TEXTBOX unten — eigenstaendig, damit sie saubere Raender behaelt und der
+         * Name darin landet (Nutzer 2026-08-31: "Repariere die Textbox unten, das die
+         * Sauber die Raender ueberall hat und schaue das der Text da drin auch
+         * landet"). Original y 169..202 = 34 px hoch. */
         if (e.n < e.max) {
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
+            o->v = 1;                                    /* 1 = Textbox */
+            o->x = 6; o->y = RE15_BOX_TEXT_Y; o->w = 214; o->h = 34;
+            o->r = 128; o->g = 128; o->b = 128;
+        }
+        if (e.n < e.max) {
+            o = &e.ops[e.n++];
+            o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
+            o->v = 0;                                    /* 0 = Listen-Panel */
             /* PANEL_Y: RE2 setzt das Panel bei y 13 an — dort liegt bei uns aber der
              * obere Kino-Balken darueber und schnitt die Oberkante samt orangem Pfeil
              * ab (Nutzer 2026-08-31). 13 px tiefer war dann zu viel — der Text stand
              * unten aus der Box heraus. Jetzt 7 px: die Oberkante samt orangem Pfeil
              * bleibt frei, und der Inhalt sitzt wieder in der Box. Die Inhalts-
-             * Geometrie unten wandert um denselben Betrag mit. */
-            o->x = 6; o->y = 20; o->w = 214; o->h = 190;
+             * Geometrie wandert um denselben Betrag mit. Die Textbox liegt jetzt
+             * separat darunter, deshalb darf das Listen-Panel wieder auf die Hoehe
+             * des Inventar-Gitters (Nutzer: "mache die itembox panel doch auf hoehe
+             * des item list panels"). */
+            o->x = 6; o->y = RE15_BOX_PANEL_Y; o->w = 214; o->h = 156;
             o->r = 128; o->g = 128; o->b = 128;
         }
     }
@@ -1120,7 +1141,11 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * relative order is not observable; spec Task D open question). name_item is set
      * per frame by the grid handler tail only (@0x800c659c-65d8); id 0 = empty string
      * (offset 0 -> first byte 0x07) draws nothing. */
-    if (st->name_item >= 0) emit_name(&e, st->name_item);
+    /* Der Name gehoert IN die Textbox darunter (emit_name zeichnet an fester
+     * Stelle y 168, was im Box-Schirm mitten auf dem Rahmen lag). */
+    if (st->name_item >= 0)
+        emit_name_at(&e, st->name_item, 22, RE15_BOX_TEXT_Y + 9);
+
 
     /* ---- 0b. msg-slice text (wave 3 cant-use = entry 0; wave 4 CHECK desc = entry id):
      * text-ring glyphs, same topmost text layer as the name print (OT depth class chain

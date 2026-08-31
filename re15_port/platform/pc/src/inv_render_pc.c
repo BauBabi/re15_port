@@ -572,9 +572,9 @@ static void raster_op(const re15_inv_op_t *o)
         }
     } else if (o->kind == RE15_INV_OP_PANEL) {
         /* Das originale RE2-Box-Panel (214x156 RGB555) 1:1 blitten. */
-        extern const uint16_t *re15_inv_boxpanel(int *w, int *h);
+        extern const uint16_t *re15_inv_boxpanel(int which, int *w, int *h);
         int pw = 0, ph = 0;
-        const uint16_t *img = re15_inv_boxpanel(&pw, &ph);
+        const uint16_t *img = re15_inv_boxpanel(o->v, &pw, &ph);
         if (img) {
             for (int py = 0; py < ph; py++)
                 for (int pxx = 0; pxx < pw; pxx++) {
@@ -870,26 +870,39 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
  * Inhalt darueber kommt).
  * Datei: shared_assets/RE2/BOXPANEL.BIN — dieselbe Wurzel wie die uebrigen RE2-Assets. */
 #define RE15_BOXPANEL_W 214
-#define RE15_BOXPANEL_H 190
-static uint16_t  s_boxpanel[RE15_BOXPANEL_W * RE15_BOXPANEL_H];
-static int       s_boxpanel_state = 0;   /* 0 = nicht versucht, 1 = da, -1 = fehlt */
+#define RE15_BOXLIST_H  156     /* Listen-Panel (Original y 13..168)   */
+#define RE15_BOXTEXT_H   34     /* Textbox darunter (Original y 169..202) */
+static uint16_t s_boxlist[RE15_BOXPANEL_W * RE15_BOXLIST_H];
+static uint16_t s_boxtext[RE15_BOXPANEL_W * RE15_BOXTEXT_H];
+static int      s_boxlist_state = 0, s_boxtext_state = 0;
 
-const uint16_t *re15_inv_boxpanel(int *w, int *h)
+static int load_panel_part(const char *rel, uint16_t *dst, size_t bytes)
 {
-    if (s_boxpanel_state == 0) {
-        int sz = 0;
-        uint8_t *buf = re15_pc_read_re2("BOXPANEL.BIN", &sz);
-        s_boxpanel_state = -1;
-        if (buf) {
-            if (sz >= (int)sizeof s_boxpanel) {
-                memcpy(s_boxpanel, buf, sizeof s_boxpanel);
-                s_boxpanel_state = 1;
-            }
-            free(buf);
-        }
+    int sz = 0;
+    uint8_t *buf = re15_pc_read_re2(rel, &sz);
+    int ok = 0;
+    if (buf) {
+        if (sz >= (int)bytes) { memcpy(dst, buf, bytes); ok = 1; }
+        free(buf);
     }
-    if (s_boxpanel_state != 1) return NULL;
+    return ok ? 1 : -1;
+}
+
+/* which: 0 = Listen-Panel, 1 = Textbox darunter. */
+const uint16_t *re15_inv_boxpanel(int which, int *w, int *h)
+{
+    if (which == 1) {
+        if (s_boxtext_state == 0)
+            s_boxtext_state = load_panel_part("BOXTEXT.BIN", s_boxtext, sizeof s_boxtext);
+        if (s_boxtext_state != 1) return NULL;
+        if (w) *w = RE15_BOXPANEL_W;
+        if (h) *h = RE15_BOXTEXT_H;
+        return s_boxtext;
+    }
+    if (s_boxlist_state == 0)
+        s_boxlist_state = load_panel_part("BOXPANEL.BIN", s_boxlist, sizeof s_boxlist);
+    if (s_boxlist_state != 1) return NULL;
     if (w) *w = RE15_BOXPANEL_W;
-    if (h) *h = RE15_BOXPANEL_H;
-    return s_boxpanel;
+    if (h) *h = RE15_BOXLIST_H;
+    return s_boxlist;
 }
