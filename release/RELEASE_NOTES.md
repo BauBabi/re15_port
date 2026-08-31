@@ -1,3 +1,11 @@
+# RE1.5 Port — v0.3.63 (Early Preview)
+
+**Je ein Pixel an beiden Kanten nachgezogen.** Box-Seite jetzt 25–219: Panel 25–181,
+Textbox 181–219 — die zwei Pixel kommen wieder ausschließlich aus dem Innenraum der
+Textbox, die Ränder bleiben unangetastet.
+
+---
+
 # RE1.5 Port — v0.3.62 (Early Preview)
 
 **Box-Seite jetzt exakt auf den Rahmenkanten des ITEM-LIST-Panels.**
