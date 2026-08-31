@@ -1,3 +1,12 @@
+# RE1.5 Port — v0.3.59 (Early Preview)
+
+- **Die Textbox-Ränder** waren im Bild vorhanden — ich habe nachgemessen — lagen aber
+  unten aus dem sichtbaren Bereich heraus. Das Panel rückt sechs Pixel höher, damit die
+  Box komplett im Bild steht.
+- **Die EXIT-Zeile ist raus.** Der Ausstieg über Abbrechen funktioniert unverändert.
+
+---
+
 # RE1.5 Port — v0.3.58 (Early Preview)
 
 Zwei Ursachen für den Text außerhalb der Textbox — beide gefunden:
