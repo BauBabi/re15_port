@@ -570,6 +570,19 @@ static void raster_op(const re15_inv_op_t *o)
                                          | (blend_ch((d >> 10) & 31, o->b) << 10));
             }
         }
+    } else if (o->kind == RE15_INV_OP_PANEL) {
+        /* Das originale RE2-Box-Panel (214x156 RGB555) 1:1 blitten. */
+        extern const uint16_t *re15_inv_boxpanel(int *w, int *h);
+        int pw = 0, ph = 0;
+        const uint16_t *img = re15_inv_boxpanel(&pw, &ph);
+        if (img) {
+            for (int py = 0; py < ph; py++)
+                for (int pxx = 0; pxx < pw; pxx++) {
+                    int x = o->x + pxx, y = o->y + py;
+                    if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                    s_fb5[y][x] = img[py * pw + pxx];
+                }
+        }
     } else if (o->kind == RE15_INV_OP_FILL) {
         /* Deckendes Rechteck in exakter Farbe (kein ABE): fuer die aus dem
          * laufenden RE2 gemessenen Panel-Flaechen. RGB888 -> RGB555. */
@@ -848,4 +861,34 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
             re15_pc_put_pixel(x, y, (r << 24) | (g << 16) | (b << 8) | 0xFFu);
         }
     return 0;
+}
+
+/* ---- Originales RE2-Box-Panel -------------------------------------------------
+ * 214x156 RGB555, aus dem laufenden Spiel geschnitten (Speicherabzug -> Bildspeicher,
+ * Panel-Region x 6..219 / y 13..168; Listenbereich und der bewegliche Scrollgriff sind
+ * dabei geleert worden, weil unser eigener Inhalt darueber kommt).
+ * Datei: shared_assets/RE2/BOXPANEL.BIN — dieselbe Wurzel wie die uebrigen RE2-Assets. */
+#define RE15_BOXPANEL_W 214
+#define RE15_BOXPANEL_H 156
+static uint16_t  s_boxpanel[RE15_BOXPANEL_W * RE15_BOXPANEL_H];
+static int       s_boxpanel_state = 0;   /* 0 = nicht versucht, 1 = da, -1 = fehlt */
+
+const uint16_t *re15_inv_boxpanel(int *w, int *h)
+{
+    if (s_boxpanel_state == 0) {
+        int sz = 0;
+        uint8_t *buf = re15_pc_read_re2("BOXPANEL.BIN", &sz);
+        s_boxpanel_state = -1;
+        if (buf) {
+            if (sz >= (int)sizeof s_boxpanel) {
+                memcpy(s_boxpanel, buf, sizeof s_boxpanel);
+                s_boxpanel_state = 1;
+            }
+            free(buf);
+        }
+    }
+    if (s_boxpanel_state != 1) return NULL;
+    if (w) *w = RE15_BOXPANEL_W;
+    if (h) *h = RE15_BOXPANEL_H;
+    return s_boxpanel;
 }

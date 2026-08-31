@@ -30,6 +30,14 @@ enum {
                              * highlight, DEBUG.BIN 0x800c742c: packet words
                              * 0x04000000/0xe1000440/0x62202020) — rect (x,y)+(w,h),
                              * dst -= rgb per channel                          */
+    RE15_INV_OP_PANEL = 5,  /* Das ORIGINALE RE2-Box-Panel als Bild: 214x156
+                             * RGB555, aus dem laufenden Spiel geschnitten
+                             * (shared_assets/RE2/BOXPANEL.BIN). Traegt Rahmen,
+                             * "ITEM BOX"-Schriftzug, die grauen Pfeile, Kopf- und
+                             * Fussband, die Scrollbalken-Schiene mit ihren orangen
+                             * Pfeilen und den leeren Listengrund. (x,y) = obere
+                             * linke Ecke. Der Inhalt (Namen, Symbole, Mengen,
+                             * Auswahlbalken, gelber Griff) wird DARUEBER gezeichnet. */
     RE15_INV_OP_FILL = 4,   /* DECKENDES Rechteck (x,y)+(w,h) in exakter RGB-Farbe.
                              * Gebraucht fuer das aus RE2 gemessene Box-Panel: die
                              * LINE-Ops sind ABE-additiv ((dst+src)>>4) und kommen

@@ -1073,127 +1073,23 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * kommen, sonst deckt sein Grund Namen, Symbole und Auswahlbalken zu.
      * Genau das war der Fehler hinter "die Felder sind sau dunkel, ich sehe nicht
      * mal einen cursor" (Nutzer 2026-08-31): der Listengrund lag ueber allem. */
-    {   /* ---- RE2s BOX-PANEL — AUS DEM LAUFENDEN ORIGINAL GEMESSEN ---------
-         * Nutzer 2026-08-31: RE2-Abbild freigegeben, Item-Box im Emulator
-         * geoeffnet. Aus dem Speicherzustand wurde der Bildspeicher ausgelesen
-         * (Tag "GPU-VRAM", 1024x512 RGB555) und der fertig gezeichnete Schirm
-         * Pixel fuer Pixel vermessen. Referenzbild:
-         * analysis/itembox_re2/referenz/re2_itembox_original.png
-         *
-         * GEMESSENE GEOMETRIE (Bildschirmkoordinaten, senkrechter Schnitt x=60,
-         * waagerechte Schnitte y=15/60/80/90):
-         *   y 14..17    obere Rahmenleiste (Grauverlauf 56..88)
-         *   y 20..39    Kopfband ("ITEM BOX"), Verlauf 32 -> 96
-         *   y 40..140   Listenfeld, Grund (24,24,40)
-         *   Zeilen bei y 41/61/81/101/121  (Raster 20 px)
-         *   y 80 und y 100  AUSWAHLBALKEN, x 13..203 (Breite 190), Farbe (48,32,8)
-         *                   mit rotem Kern (128,32,32) — die mittlere Zeile
-         *   y 141..160  Fussband, y 163..166 untere Rahmenleiste
-         *   x 7..9      linker Pfosten (48,48,48)
-         *   x 13..203   Listenbreite
-         *   x 155..     Zeilen-Symbol
-         *   x 207..212  Schiene des Scrollbalkens (40,40,40)
-         *   Text normal (104,104,96), ausgewaehlt (168,168,152)
-         * Das deckt sich mit der Geometrie aus dem Zeichner (§2 des Dossiers) und
-         * bestaetigt insbesondere den ZWEI-LINIEN-Auswahlbalken ueber x 13..203.
-         *
-         * Auf unsere linke Bildschirmhaelfte gelegt: RE2s Liste ist 190 px breit,
-         * bei uns stehen rechts das Inventar-Gitter, daher 145 px. Hoehen 1:1. */
-        const int OX = 8;                    /* linker Rand unseres Panels        */
-        const int LW = 192;                  /* Listenbreite (RE2: 190) — reicht
-                                              * jetzt bis kurz vor das Inventar    */
-        const int BARX = 208;                /* Schiene (RE2: x 207)              */
-        struct { int x, y, w, h, r, g, b; } part[] = {
-            /* Rahmenleisten oben/unten (RE2 y 14..17 / 163..166, Grauverlauf) */
-            { OX,      14, LW + 10,  1,  56,  64,  56 },
-            { OX,      15, LW + 10,  1,  72,  72,  72 },
-            { OX,      16, LW + 10,  1,  80,  80,  80 },
-            { OX,      17, LW + 10,  1,  88,  88,  88 },
-            { OX,     163, LW + 10,  1,  88,  88,  88 },
-            { OX,     164, LW + 10,  1,  72,  72,  72 },
-            { OX,     165, LW + 10,  1,  72,  72,  72 },
-            { OX,     166, LW + 10,  1,  56,  64,  56 },
-            /* Pfosten links/rechts (RE2 x 7..9) */
-            { OX - 1,  18,  3, 145,  48,  48,  48 },
-            { OX + LW + 8, 18, 3, 145, 48, 48, 48 },
-            /* Kopfband (RE2 y 20..39, Verlauf) und Fussband (y 141..160) */
-            { OX + 5,  20, LW,  9,  40,  40,  40 },
-            { OX + 5,  29, LW, 10,  72,  72,  72 },
-            { OX + 5, 141, LW, 10,  72,  72,  72 },
-            { OX + 5, 151, LW,  9,  40,  40,  40 },
-            /* Listenfeld-Grund (RE2 (24,24,40)) */
-            { OX + 5,  40, LW, 101, 24,  24,  40 },
-            /* Schiene des Scrollbalkens (RE2 x 207..212, (40,40,40)) */
-            { BARX,    26,  6, 118, 40,  40,  40 },
-        };
-        /* "ITEM BOX"-Schriftzug im Kopfband, mit den beiden grauen Pfeilen daneben
-         * (Nutzer 2026-08-31: "Wo ist der ITEM BOX Schriftzug mit den grauen Pfeilen
-         * daneben?"). Die Glyphen kommen aus der Message-Schrift; die Kodierung ist
-         * dieselbe wie beim Item-Namen (Zeichen = code + 0x24, s. re15_itembox.c). */
-        {
-            static const uint8_t title[] = {
-                /* Zeichen-Kodierung aus der Namens-Bank verifiziert
-                 * ("COMBAT KNIFE" = 1f 4b 49 3e 3d 50 00 27 4a 45 42 41 07):
-                 * Grossbuchstabe = 0x1d + Index, LEERZEICHEN = 0x00, Ende = 0x07. */
-                0x1d+8, 0x1d+19, 0x1d+4, 0x1d+12,   /* I T E M */
-                0x00,                                /* Leerzeichen */
-                0x1d+1, 0x1d+14, 0x1d+23,            /* B O X */
-                0x07
-            };
-            emit_text(&e, OX + 6, 22, title, 0x00);   /* RE2: Schrift bei y 24..30 */
-        }
-        {   /* die beiden grauen Dreiecke rechts vom Schriftzug */
-            int side, ay;
-            for (side = 0; side < 2; side++) {
-                int bx = OX + 96 + side * 14;
-                for (ay = 0; ay < 4; ay++) {
-                    re15_inv_op_t *o;
-                    int wd = side ? ay : (3 - ay);
-                    if (e.n >= e.max) break;
-                    o = &e.ops[e.n++];
-                    o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(bx + 4 - wd); o->y = (int16_t)(22 + ay);
-                    o->w = (int16_t)(wd * 2 + 1); o->h = 1;
-                    o->r = 136; o->g = 136; o->b = 136;   /* gemessenes Grau */
-                }
-            }
-        }
-        int pi;
-        for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
-            re15_inv_op_t *o;
-            if (e.n >= e.max) break;
+    {   /* ---- DAS ORIGINALE RE2-BOX-PANEL, 1:1 ----------------------------
+         * Nutzer 2026-08-31: "du sollst es GENAUSO machen wie in Resident Evil 2".
+         * Statt Rahmen, Schriftzug, Pfeile und Schiene nachzubauen, wird jetzt das
+         * ECHTE Panel gezeichnet: aus dem laufenden Spiel geschnitten (Speicherabzug
+         * -> Bildspeicher, Region x 6..219 / y 13..168), Listenbereich und der
+         * bewegliche Scrollgriff darin geleert, weil unser Inhalt darueber kommt.
+         * Asset: shared_assets/RE2/BOXPANEL.BIN (214x156 RGB555).
+         * Referenz: analysis/itembox_re2/referenz/re2_boxpanel_leer.png
+         * Es traegt damit im Original-Aussehen: Rahmen und Pfosten, den
+         * "ITEM BOX"-Schriftzug mit den grauen Pfeilen, Kopf- und Fussband, die
+         * Scrollbalken-Schiene samt orangen Pfeilen und den Listengrund. */
+        re15_inv_op_t *o;
+        if (e.n < e.max) {
             o = &e.ops[e.n++];
-            /* DECKEND zeichnen — die gemessenen Farben sollen exakt so stehen.
-             * (Mit den ABE-Linien kaeme nur ein Sechzehntel davon an.) */
-            o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-            o->x = (int16_t)part[pi].x; o->y = (int16_t)part[pi].y;
-            o->w = (int16_t)part[pi].w; o->h = (int16_t)part[pi].h;
-            o->r = (uint8_t)part[pi].r;
-            o->g = (uint8_t)part[pi].g;
-            o->b = (uint8_t)part[pi].b;
-        }
-        /* Pfeilfelder am Scrollbalken (RE2 zeichnet sie ueber/unter der Schiene
-         * und hellt sie auf, solange die Taste gehalten wird). */
-        {
-            /* Aus dem Abzug abgelesen (x 200..216, y 19..23): ein KOMPAKTES
-             * Dreieck mit den Breiten 2 / 4 / 4 / 6 / 6 px — nicht die flache
-             * Schraege der Vorversion (Nutzer: "Orange Pfeile sind schraeg statt
-             * wie in RE 2 gerade"). */
-            static const int wid[5] = { 2, 4, 4, 6, 6 };
-            int k3, ay;
-            for (k3 = 0; k3 < 2; k3++) {
-                int base = k3 ? 150 : 19;
-                for (ay = 0; ay < 5; ay++) {
-                    re15_inv_op_t *o;
-                    int w = wid[k3 ? (4 - ay) : ay];
-                    if (e.n >= e.max) break;
-                    o = &e.ops[e.n++];
-                    o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(BARX + 3 - w / 2); o->y = (int16_t)(base + ay);
-                    o->w = (int16_t)w; o->h = 1;
-                    o->r = 240; o->g = 56; o->b = 24;    /* gemessenes Orange */
-                }
-            }
+            o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
+            o->x = 6; o->y = 13; o->w = 214; o->h = 156;
+            o->r = 128; o->g = 128; o->b = 128;
         }
     }
 
