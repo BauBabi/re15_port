@@ -193,7 +193,7 @@ int main(void)
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
             if (pg != 5) continue;
             nachher++;
-            if (kind == 0) tueren++; else treppen++;
+            if (kind == 1) treppen++; else tueren++;   /* 0 = laengs, 2 = quer */
         }
         CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
         CHECK("TUEREN sind eingezeichnet (aus RE1.5s eigenen Tuer-Datensaetzen)",
@@ -211,7 +211,7 @@ int main(void)
      *      allein haette das NICHT gefangen. --- */
     {
         static re15_inv_op_t ops[768];
-        int nops, i, first_mark = -1, first_rect = -1;
+        int nops, i, first_marker = -1, first_mark = -1, first_rect = -1;
         g_current_room_id = 0x1170;
         re15_map_zone_update(0x1170, -18000, -22000);
         re15_inv_map_stage_init(0, 23);
@@ -229,6 +229,13 @@ int main(void)
                 ((ops[i].r == 240 && ops[i].g == 200 && ops[i].b == 64) ||     /* TUER   */
                  (ops[i].r == 240 && ops[i].g == 240 && ops[i].b == 216)))     /* TREPPE */
                 first_mark = i;
+            /* Der SPIELER-MARKER ist der 8x8-Quad von der TEX-Seite bei uv(224,128).
+             * Er muss GANZ OBEN liegen (Nutzer 2026-08-31: "der Marker muss IMMER ueber
+             * den Symbolen sein") — sonst deckt ihn ein Tuerbalken oder eine
+             * Treppensprosse auf derselben Stelle zu. */
+            if (first_marker < 0 && ops[i].kind == RE15_INV_OP_SPRT &&
+                ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 8 && ops[i].h == 8 &&
+                ops[i].u == 224 && ops[i].v == 128) first_marker = i;
             if (first_rect < 0 && ops[i].kind == RE15_INV_OP_SPRT &&
                 ops[i].page == RE15_INV_PAGE_MAP4) first_rect = i;
         }
@@ -236,8 +243,11 @@ int main(void)
         CHECK("der Karten-Schirm zeichnet Grundriss-Rechtecke", first_rect >= 0);
         CHECK("Marken liegen VOR den Rechtecken (= obenauf, sichtbar)",
               first_mark >= 0 && first_rect >= 0 && first_mark < first_rect);
-        printf("  [Reihenfolge] erste Marke #%d, erstes Rechteck #%d\n",
-               first_mark, first_rect);
+        CHECK("der Karten-Schirm zeichnet den Spieler-Marker", first_marker >= 0);
+        CHECK("der Spieler-Marker liegt VOR den Marken (= ganz oben)",
+              first_marker >= 0 && first_mark >= 0 && first_marker < first_mark);
+        printf("  [Reihenfolge] Marker #%d, erste Marke #%d, erstes Rechteck #%d\n",
+               first_marker, first_mark, first_rect);
     }
 
     if (g_fail) { printf("FAIL\n"); return 1; }

@@ -1420,6 +1420,29 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     if (st->equipped_slot != 0x80)
         emit_digits(&e, st, st->equipped_slot & 0x0f, 1);
 
+    /* ---- 4a2. SPIELER-MARKER — MUSS GANZ OBEN LIEGEN (Nutzer 2026-08-31: "der
+     * Marker muss IMMER ueber den Symbolen sein"). Die Op-Liste wird von hinten
+     * gerastert, der frueheste Eintrag liegt also obenauf: Marker vor den Marken,
+     * Marken vor den Grundriss-Rechtecken. Vorher stand der Marker IN Abschnitt 4b
+     * und damit HINTER den Marken — ein Tuerbalken oder eine Treppensprosse auf
+     * derselben Stelle hat ihn ueberdeckt (in ROOM1170 liegen Marker (176,107) und
+     * Tuer (174,105) genau uebereinander).
+     * Das entspricht auch dem Original: FUN_800473f8 haengt den Marker-Quad ZUERST
+     * ein (@0x800475d8), erst danach die count+2 statischen Prims
+     * (@0x800475f8-61c). Die nicht gesetzten Texel des 8x8-Quads bleiben
+     * transparent (CLUT-Index 0), der Marker malt also keinen Kasten ueber die
+     * Symbole — nur seine eigenen Pixel. */
+    if (st->substate == 1 && st->item_state == 1) {
+        /* marker: POLY_FT4 code 0x2e (@0x80047130-34), 8x8 around the per-frame centre
+         * (+-4: builder @0x8004715c-71f0, per-frame rewrite @0x80047554-75c4), uv
+         * (224,128)-(232,136) with its own tpage 0x1b = the TEX page (sh 0x1b
+         * @0x8004714c) + clut DAT_800b261c = 0x7b90 = UI row 6 (@0x80047144-50);
+         * rgb = the 2602 pulse (@0x80047540-6c). */
+        sprt(&e, RE15_INV_PAGE_TEX4, 6,
+             st->map_marker_x - 4, st->map_marker_y - 4, 8, 8, 224, 128,
+             st->ecg_glow, st->ecg_glow, st->ecg_glow, 1);
+    }
+
     /* ⛔ REIHENFOLGE: Der Rasterizer arbeitet die Op-Liste VON HINTEN nach vorn ab
      * (inv_render_pc.c: `for (i = n-1; i >= 0; i--)`) — ein FRUEHERER Eintrag liegt
      * also OBEN. Die Marken muessen deshalb VOR den Grundriss-Rechtecken in die
@@ -1455,12 +1478,21 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 if (e.n >= e.max) break;
                 o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0; o->u = 0; o->v = 0;
-                if (kind == 0) {
-                    /* TUER: kurzer Querbalken in RE2s Tuergelb. Die Position steht im
-                     * Tuer-Datensatz des Raums selbst (Mitte des Tuer-Rechtecks) — also
-                     * aus RE1.5-Daten, wie vom Nutzer vorgeschlagen. */
-                    o->x = (int16_t)(mx - 2); o->y = (int16_t)(my - 1);
-                    o->w = 5; o->h = 2;
+                if (kind != 1) {          /* 0 = Tuer laengs, 2 = Tuer quer */
+                    /* TUER: kurzer Balken in RE2s Tuergelb, AUSGERICHTET AN DER WAND, in der
+                     * die Tuer sitzt (Nutzer 2026-08-31: "die Tueren muessen ausgerichtet an
+                     * der Kante des Raumes liegen. Also musst du sie teilweise 90 Grad
+                     * drehen"). Die Achse steckt in `kind`: 0 = waagerechte Wand (Nord/Sued),
+                     * 2 = senkrechte Wand (Ost/West). Der Generator liest sie aus der
+                     * Projektion — welche Kante des Karten-Rechtecks naeher liegt, ist die
+                     * Wand; das Rechteck IST die linear gestauchte Raum-Bbox, die Zuordnung
+                     * ist damit geometrisch erzwungen und keine Annahme.
+                     * Die Position selbst steht im Tuer-Datensatz des Raums (Mitte des
+                     * Tuer-Rechtecks). */
+                    if (kind == 2) { o->x = (int16_t)(mx - 1); o->y = (int16_t)(my - 2);
+                                     o->w = 2; o->h = 5; }
+                    else           { o->x = (int16_t)(mx - 2); o->y = (int16_t)(my - 1);
+                                     o->w = 5; o->h = 2; }
                     o->r = 240; o->g = 200; o->b = 64;
                 } else {
                     /* TREPPE: ein Block mit drei hellen Sprossen (RE2 setzt fuer
@@ -1501,14 +1533,6 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * AddPrim position (after the digit rows, before the icon cells @0x80049bfc+)
      * puts the map set BELOW digits/ECG/chrome and ABOVE icons/card/backdrop. */
     if (st->substate == 1 && st->item_state == 1) {
-        /* marker: POLY_FT4 code 0x2e (@0x80047130-34), 8x8 around the per-frame centre
-         * (+-4: builder @0x8004715c-71f0, per-frame rewrite @0x80047554-75c4), uv
-         * (224,128)-(232,136) with its own tpage 0x1b = the TEX page (sh 0x1b
-         * @0x8004714c) + clut DAT_800b261c = 0x7b90 = UI row 6 (@0x80047144-50);
-         * rgb = the 2602 pulse (@0x80047540-6c). */
-        sprt(&e, RE15_INV_PAGE_TEX4, 6,
-             st->map_marker_x - 4, st->map_marker_y - 4, 8, 8, 224, 128,
-             st->ecg_glow, st->ecg_glow, st->ecg_glow, 1);
         /* fixed sprite 1: SPRT code 0x66 at (30,30) 88x32 uv(0,0), clut 0x7d50
          * (@0x80047204-268: ori 0x1e/0x1e wh 0x58/0x20, sh t4 clut @0x80047250) */
         sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,

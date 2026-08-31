@@ -433,21 +433,77 @@ def main():
         # deren Korrektur landen sie dort, wo die Tueren wirklich sind (Nutzer
         # 2026-08-31: "du koenntest die Tuer Markierungen nehmen die schon von
         # RE 1.5 kommen - dort wo die Tueren sind, koennen sie eingezeichnet werden").
-        for kind, lst in ((0, doors_all.get(b, [])), (1, stairs_all.get(b, []))):
-            for m in lst:
+        # ---- SELBST-TUEREN: EIN Durchgang, EINE Marke ------------------------
+        # Ein Raum, der ueber eine Tuer auf sich selbst zeigt (dest == eigener Raum),
+        # traegt dafuer ZWEI Datensaetze — einen je Seite des Durchgangs. Ohne
+        # Zusammenfassung zeichnet die Karte denselben Durchgang zweimal, versetzt,
+        # in beiden Rechtecken. Nutzer 2026-08-31: "die Tuer rechts ist die gleiche
+        # Tuer, wie die, die auch vom grossen Rechteck zum kleinen fuehrt. Damit
+        # sollte die Tuer auf der Karte auch EINE sein."
+        # Das Paar ist aus den Daten selbst erkennbar und braucht keine Annahme: der
+        # ZIEL-Punkt des einen Datensatzes (nx/nz = Spawn hinter der Tuer) liegt am
+        # ORT des anderen, und umgekehrt. Gemessen in ROOM1170: Slot 0 lokal
+        # (2550,15250) -> Ziel (-11710,-26500), Slot 6 lokal (-11065,-27850) ->
+        # Ziel (2300,14365); Manhattan-Abstand Ziel<->Ort 1995 bzw. 1135 Einheiten.
+        # Gezeichnet wird die Mitte der BEIDEN Kartenpositionen — die faellt damit auf
+        # die gemeinsame Kante der zwei Rechtecke, dorthin, wo der Durchgang liegt.
+        doors_b = doors_all.get(b, [])
+        merged = {}
+        for _i, A in enumerate(doors_b):
+            if A.get('dest') != b: continue
+            for _j in range(_i + 1, len(doors_b)):
+                B = doors_b[_j]
+                if B.get('dest') != b: continue
+                if abs(A['nx'] - B['lx']) + abs(A['nz'] - B['lz']) > 4000: continue
+                if abs(B['nx'] - A['lx']) + abs(B['nz'] - A['lz']) > 4000: continue
+                za = zone_at(b, A['lx'], A['lz'])
+                zb = zone_at(b, B['lx'], B['lz'])
+                if za is None or zb is None or za == zb: continue
+                pa = to_map(b, za, A['lx'], A['lz'])
+                pb = to_map(b, zb, B['lx'], B['lz'])
+                if not pa or not pb or pa[0] != pb[0]: continue
+                cx, cy = (pa[2] + pb[2]) // 2, (pa[3] + pb[3]) // 2
+                # Beide Seiten bekommen dieselbe Position: die Marke ist damit
+                # sichtbar, sobald EINER der beiden Bereiche besucht ist, und faellt
+                # optisch zu EINER zusammen.
+                merged[_i] = (pa[0], pa[1], cx, cy)
+                merged[_j] = (pb[0], pb[1], cx, cy)
+        for kind, lst in ((0, doors_b), (1, stairs_all.get(b, []))):
+            for _n, m in enumerate(lst):
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
                 zi = zone_at(b, wx, wz)
                 if zi is None: continue
-                mp = to_map(b, zi, wx, wz)
-                if not mp: continue
-                pg, r, mx, my = mp
-                key = (pg, r, mx, my, kind)
+                if kind == 0 and _n in merged:
+                    pg, r, mx, my = merged[_n]
+                else:
+                    mp = to_map(b, zi, wx, wz)
+                    if not mp: continue
+                    pg, r, mx, my = mp
+                # ---- AUSRICHTUNG DER TUERMARKE AN DER RAUMKANTE -------------
+                # Nutzer 2026-08-31: "die Tueren muessen ausgerichtet an der Kante
+                # des Raumes liegen. Also musst du sie teilweise 90 Grad drehen."
+                # Die Wand, in der eine Tuer sitzt, folgt direkt aus der Projektion:
+                # das Karten-Rechteck ist die linear gestauchte Raum-Bbox, eine Tuer
+                # in der Nord-/Suedwand landet also nahe der OBEREN/UNTEREN Kante,
+                # eine in der Ost-/Westwand nahe der LINKEN/RECHTEN. Wer naeher ist,
+                # gibt die Achse. Kein Zusatzdatum noetig, keine Annahme.
+                # kind: 0 = Tuer laengs (waagerechte Wand), 2 = Tuer quer
+                # (senkrechte Wand), 1 = Treppe.
+                mkind = kind          # NICHT `kind` ueberschreiben: das ist die
+                                      # Laufvariable der aeusseren Schleife.
+                if kind == 0:
+                    R = rects(pg)[r]
+                    d_waag = min(my - R[1], R[1] + R[3] - 1 - my)   # obere/untere Kante
+                    d_senk = min(mx - R[0], R[0] + R[2] - 1 - mx)   # linke/rechte Kante
+                    if d_senk < d_waag: mkind = 2
+                key = (pg, r, mx, my, mkind)
                 if key in seen: continue
                 seen.add(key)
-                marks.append((pg, r, mx, my, kind, zid_of.get((b, zi), 0)))
+                marks.append((pg, r, mx, my, mkind, zid_of.get((b, zi), 0)))
     o.append("")
-    o.append("/* MARKEN: Tueren (kind 0) und Treppen (kind 1), bereits in Karten-Pixeln.")
+    o.append("/* MARKEN in Karten-Pixeln. kind: 0 = Tuer in waagerechter Wand,")
+    o.append(" * 2 = Tuer in senkrechter Wand (Balken um 90 Grad gedreht), 1 = Treppe.")
     o.append(" * Treppen stammen aus den SCD-Zonen Aot_set Typ 12/13 (die Band-Wechsel-")
     o.append(" * Zonen), Tueren aus den Tuer-Datensaetzen. Gezeichnet werden sie nur fuer")
     o.append(" * Zonen, die der Spieler schon gesehen hat. */")
