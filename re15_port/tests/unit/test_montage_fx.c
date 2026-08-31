@@ -135,19 +135,26 @@ int main(void)
     re15_montage_fx_on_cut(7, 0);                 /* Labor-Standbild */
     ticks(48);                                    /* voll aufgeblendet */
     CHECK("Labor steht voll", re15_montage_fx_level_new() == re15_montage_fx_level_max());
-    re15_montage_fx_on_cut(8, 1);                 /* Umbrella-Logo darueber */
-    CHECK("das Labor BLEIBT voll sichtbar (blendet NICHT aus)",
-          re15_montage_fx_level_prev() == re15_montage_fx_level_max());
-    CHECK("das Logo beginnt bei 0 und blendet darueber ein",
-          re15_montage_fx_level_new() == 0);
+    re15_montage_fx_on_cut(8, 1);                 /* Umbrella-Logo */
+    CHECK("das Logo beginnt auf SCHWARZEM Grund (Labor erst mal weg)",
+          re15_montage_fx_level_new() == 0 && re15_montage_fx_level_prev() == 0);
     ticks(48);
-    CHECK("nach 48 Frames: Logo voll UND Labor immer noch voll",
+    CHECK("Logo blendet auf und zoomt — Labor noch NICHT da",
           re15_montage_fx_level_new() == re15_montage_fx_level_max()
-          && re15_montage_fx_level_prev() == re15_montage_fx_level_max());
-    CHECK("und das Logo hat dabei herangezoomt", re15_montage_fx_zoom_px() > 0);
-    ticks(120);
-    CHECK("auch lange danach steht das Labor noch",
-          re15_montage_fx_level_prev() == re15_montage_fx_level_max());
+          && re15_montage_fx_level_prev() == 0);
+    CHECK("und es hat dabei herangezoomt", re15_montage_fx_zoom_px() > 0);
+    ticks(48);                                    /* zusammen 96 Frames */
+    CHECK("nach 96 Frames beginnt das Labor darunter einzublenden",
+          re15_montage_fx_level_prev() > 0);
+    ticks(48);
+    CHECK("Labor steht dann voll UND das Logo ebenfalls",
+          re15_montage_fx_level_prev() == re15_montage_fx_level_max()
+          && re15_montage_fx_level_new() == re15_montage_fx_level_max());
+    {
+        int z = re15_montage_fx_zoom_px();
+        ticks(8);
+        CHECK("und das Logo zoomt darueber WEITER", re15_montage_fx_zoom_px() > z);
+    }
 
     /* --- (7) STOCK-Schalter: byte-true Hartschnitt --- */
     re15_montage_fx_stock_set(1);

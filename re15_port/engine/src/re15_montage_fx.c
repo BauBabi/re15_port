@@ -34,6 +34,12 @@
  *   letztes Bild (Umbrella)   = zoomt HINEIN, ebenfalls ueber
  *                               den Bildwechsel hinaus      (RE2 {19},   39 -> 43)
  * RE2 setzt in der ganzen Sequenz genau DREI Bewegungen; alles Uebrige blendet nur. */
+/* Wartezeit, bis das Standbild UNTER dem zoomenden Logo erscheint.
+ * RE2: das Logo {19} wird in Phase 4 bei t==580 gesetzt (@0x801c0a74-94), das
+ * Standbild {20..23} erst in Phase 5 bei t==96 (@0x801c0ab4-c8) — dazwischen
+ * liegen die 96 Frames des Phasenanfangs. */
+#define FX_HOLD_DELAY  96
+
 /* ⛔ DAS VORIGE STANDBILD BLEIBT STEHEN, das Logo zoomt DARUEBER.
  *
  * Nutzer 2026-08-30: "Das Standbild vom Labor blendet aus, dann blendet das
@@ -82,6 +88,7 @@ typedef struct {
     int16_t pan_y;
     int16_t zoom_px;
     uint8_t used;
+    int16_t delay;     /* Frames, bis diese Ebene einblendet (0 = sofort)      */
 } fx_layer_t;
 
 static struct {
@@ -137,10 +144,19 @@ void re15_montage_fx_on_cut(int cut, int had_previous)
     if (had_previous && s_fx.cur.used) {
         int holds = (cut >= 0 && cut < RE15_MONTAGE_CUTS) ? s_cut_hold_prev[cut] : 0;
         s_fx.prev = s_fx.cur;
-        /* dir = 0 -> die vorige Ebene HAELT ihre Helligkeit (RE2: hide_others = 0,
-         * das Standbild bleibt stehen, waehrend das Logo darueber zoomt);
-         * dir = -1 -> normale Kreuzblende. */
-        s_fx.prev.dir = holds ? 0 : -1;
+        if (holds) {
+            /* Nutzer 2026-08-31: "Es zoomed am Anfang in auf schwarzen hintergrund,
+             * dann kommt das letzte Standbild im Labor und da zoomed es dann eben
+             * weiter in." — genau RE2s Reihenfolge: das Logo erscheint ALLEIN auf
+             * leerem Grund (Phase 4 t==580) und erst 96 Frames spaeter legt sich das
+             * Standbild darunter (Phase 5 t==96, Zustand 7, hide_others = 0).
+             * Also: die vorige Ebene wird ausgeblendet und kommt VERZOEGERT zurueck. */
+            s_fx.prev.level = 0;
+            s_fx.prev.dir   = 0;
+            s_fx.prev.delay = FX_HOLD_DELAY;
+        } else {
+            s_fx.prev.dir = -1;    /* normale Kreuzblende */
+        }
     } else {
         memset(&s_fx.prev, 0, sizeof s_fx.prev);
     }
@@ -153,7 +169,12 @@ void re15_montage_fx_on_cut(int cut, int had_previous)
 
 static void layer_fade(fx_layer_t *l)
 {
-    if (!l->used || l->dir == 0) return;
+    if (!l->used) return;
+    if (l->delay > 0) {              /* wartet noch auf seinen Auftritt */
+        if (--l->delay == 0) l->dir = 1;
+        return;
+    }
+    if (l->dir == 0) return;
     l->level = (int16_t)(l->level + l->dir * FX_FADE_STEP);
     if (l->level >= FX_LEVEL_MAX) { l->level = FX_LEVEL_MAX; l->dir = 0; }
     if (l->level <= 0) {

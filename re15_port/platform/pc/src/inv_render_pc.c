@@ -570,6 +570,18 @@ static void raster_op(const re15_inv_op_t *o)
                                          | (blend_ch((d >> 10) & 31, o->b) << 10));
             }
         }
+    } else if (o->kind == RE15_INV_OP_FILL) {
+        /* Deckendes Rechteck in exakter Farbe (kein ABE): fuer die aus dem
+         * laufenden RE2 gemessenen Panel-Flaechen. RGB888 -> RGB555. */
+        int py, pxx;
+        int r5 = o->r >> 3, g5 = o->g >> 3, b5 = o->b >> 3;
+        uint16_t src = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
+        for (py = 0; py < o->h; py++)
+            for (pxx = 0; pxx < o->w; pxx++) {
+                int x = o->x + pxx, y = o->y + py;
+                if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                s_fb5[y][x] = src;
+            }
     } else if (o->kind == RE15_INV_OP_GBOX) {
         /* wave 4 + wave-6 fix (finding 3): POLY_G4 gouraud quad (DEBUG.BIN builder
          * 0x800c6b84: tag len 9 @0x800c6bbc-c0, embedded DR_MODE word 0xE1000260

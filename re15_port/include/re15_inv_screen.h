@@ -30,6 +30,13 @@ enum {
                              * highlight, DEBUG.BIN 0x800c742c: packet words
                              * 0x04000000/0xe1000440/0x62202020) — rect (x,y)+(w,h),
                              * dst -= rgb per channel                          */
+    RE15_INV_OP_FILL = 4,   /* DECKENDES Rechteck (x,y)+(w,h) in exakter RGB-Farbe.
+                             * Gebraucht fuer das aus RE2 gemessene Box-Panel: die
+                             * LINE-Ops sind ABE-additiv ((dst+src)>>4) und kommen
+                             * damit hoechstens auf halbe Helligkeit — Flaechen in
+                             * gemessenen Farben lassen sich so nicht zeichnen
+                             * (Nutzer 2026-08-31: "die Felder sind sau dunkel, ich
+                             * sehe nicht mal einen cursor"). */
     RE15_INV_OP_GBOX = 3    /* wave 4: POLY_G4 navy gradient box (CHECK panel
                              * interior, DEBUG.BIN 0x800c6b84: prim code 0x38
                              * @0x800c6bd0 opaque gouraud quad behind DR_MODE

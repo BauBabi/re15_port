@@ -992,19 +992,19 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             /* Schiene des Scrollbalkens (RE2 x 207..212, (40,40,40)) */
             { BARX,    26,  6, 118, 40,  40,  40 },
         };
-        int pi, yy;
+        int pi;
         for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
-            for (yy = 0; yy < part[pi].h; yy++) {
-                re15_inv_op_t *o;
-                if (e.n >= e.max) break;
-                o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)part[pi].x;   o->y = (int16_t)(part[pi].y + yy);
-                o->w = (int16_t)(part[pi].x + part[pi].w - 1); o->h = o->y;
-                o->r = (uint8_t)part[pi].r;
-                o->g = (uint8_t)part[pi].g;
-                o->b = (uint8_t)part[pi].b;
-            }
+            re15_inv_op_t *o;
+            if (e.n >= e.max) break;
+            o = &e.ops[e.n++];
+            /* DECKEND zeichnen — die gemessenen Farben sollen exakt so stehen.
+             * (Mit den ABE-Linien kaeme nur ein Sechzehntel davon an.) */
+            o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
+            o->x = (int16_t)part[pi].x; o->y = (int16_t)part[pi].y;
+            o->w = (int16_t)part[pi].w; o->h = (int16_t)part[pi].h;
+            o->r = (uint8_t)part[pi].r;
+            o->g = (uint8_t)part[pi].g;
+            o->b = (uint8_t)part[pi].b;
         }
         /* Pfeilfelder am Scrollbalken (RE2 zeichnet sie ueber/unter der Schiene
          * und hellt sie auf, solange die Taste gehalten wird). */
@@ -1017,10 +1017,10 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     int wd = k3 ? ay : (3 - ay);
                     if (e.n >= e.max) break;
                     o = &e.ops[e.n++];
-                    o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                    o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
                     o->x = (int16_t)(BARX + 3 - wd); o->y = (int16_t)(base + ay);
-                    o->w = (int16_t)(BARX + 3 + wd); o->h = o->y;
-                    o->r = 168; o->g = 168; o->b = 152;
+                    o->w = (int16_t)(wd * 2 + 1); o->h = 1;
+                    o->r = 224; o->g = 224; o->b = 208;
                 }
             }
         }
@@ -1118,11 +1118,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 re15_inv_op_t *o;
                 if (e.n >= e.max) break;
                 o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
+                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
                 o->x = (int16_t)LIST_X0; o->y = (int16_t)(t2 ? sy1 : sy0);
-                o->w = (int16_t)LIST_X1; o->h = o->y;
-                if (act) { o->r = 128; o->g = 32; o->b = 32; }   /* roter Kern */
-                else     { o->r = 48;  o->g = 32; o->b = 8;  }
+                o->w = (int16_t)(LIST_X1 - LIST_X0); o->h = 2;
+                if (act) { o->r = 200; o->g = 48; o->b = 48; }   /* aktiv: rot */
+                else     { o->r = 96;  o->g = 64; o->b = 16; }   /* passiv: braun */
             }
         }
         /* Scrollbalken: eine Marke je sichtbarem Ring-Platz, 2 px Schritt
