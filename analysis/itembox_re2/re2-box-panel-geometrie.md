@@ -116,3 +116,49 @@ Tastenlauf wiederholt im Titel oder in der Speicherkarten-Abfrage endet.
 Sobald ein solcher Savestate vorliegt, ist die Rahmen-Textur in einem Schritt
 lesbar: VRAM dumpen, die Leisten-Formen (128x4 / 3x153 / 8x130) darin suchen und
 die echte Sampling-Stelle ablesen.
+
+## 6. ✅ GELOEST — aus dem laufenden Original gemessen (2026-08-31)
+
+Der Nutzer hat die Item-Box im Emulator geoeffnet. Aus dem Speicherzustand wurde
+der Bildspeicher gelesen (Tag `GPU-VRAM`) und der **fertig gezeichnete Schirm**
+vermessen. Referenzbild: `referenz/re2_itembox_original.png`.
+
+**Was der Schirm zeigt** (bestaetigt die Rekonstruktion aus dem Code):
+Liste mit **fuenf Zeilen**, Namen links, Symbole rechts, **Auswahl in der Mitte**,
+Scrollbalken mit Pfeilen rechts, Inventar-Feld rechts daneben, Namensfeld unten.
+
+**Gemessene Geometrie** (Bildschirmkoordinaten; senkrechter Schnitt x=60,
+waagerechte Schnitte y=15/60/80/90):
+
+| Bereich | Lage | Farbe |
+|---|---|---|
+| obere Rahmenleiste | y 14..17 | Grauverlauf 56 -> 88 |
+| Kopfband ("ITEM BOX") | y 20..39 | Verlauf 32 -> 96 |
+| Listenfeld | y 40..140, x 13..203 | **(24,24,40)** durchgehend |
+| Zeilen | y 41/61/81/101/121 | **Raster 20 px** |
+| **Auswahlbalken** | **y 80 und y 100, x 13..203 (190 breit)** | **(48,32,8) / Kern (128,32,32)** |
+| Fussband | y 141..160 | Verlauf |
+| untere Rahmenleiste | y 163..166 | Grauverlauf |
+| linker Pfosten | x 7..9 | (48,48,48) |
+| Zeilen-Symbol | ab x 155 | — |
+| Scrollbalken-Schiene | x 207..212 | (40,40,40) |
+| Text normal / ausgewaehlt | — | (104,104,96) / (168,168,152) |
+
+⇒ Der **Zwei-Linien-Auswahlbalken** ueber die volle Listenbreite ist damit
+unabhaengig bestaetigt (er stand so schon im Zeichner-Dossier), ebenso das
+20-px-Raster und die feste Auswahl auf der mittleren Zeile.
+⇒ RE2 hat **keine** Streifen je Zeile, sondern einen **durchgehenden** Listengrund.
+
+**Uebernommen in den Port:** Rahmenleisten, Baender, Pfosten, Listengrund,
+Auswahlbalken und Scrollbalken-Schiene mit genau diesen Farben und Hoehen; die
+Breite ist auf unsere linke Bildschirmhaelfte gestaucht (145 statt 190 px), weil
+rechts das Inventar-Gitter steht. Hoehen 1:1.
+
+**Der Ausleseweg fuer kuenftige Fragen** (funktioniert, dokumentiert):
+1. `[Hotkeys] SaveSelectedSaveState = SDL-0/LeftShoulder` in DuckStations
+   settings.ini — damit laesst sich mitten im Spiel ein Zustand sichern, ohne den
+   Emulator zu schliessen (der Screenshot-Hotkey feuerte unzuverlaessig).
+2. Zustand per virtuellem Pad ausloesen, `.sav` wegkopieren.
+3. `scratchpad/vram.py <sav> <png> [x y w h]` — dekomprimiert (zstd), sucht den
+   Tag `GPU-VRAM`, schneidet aus, schreibt PNG. Der sichtbare Schirm liegt bei
+   (0,0) 320x240 bzw. (0,256).

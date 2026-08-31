@@ -940,110 +940,90 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  128, 128, 128, 0);
         }
     }
-    {   /* ---- RE2s BOX-PANEL, mit den ORIGINAL-MASSEN ----------------------
-         * Nutzer 2026-08-30: "ich moechte gefaelligst das du das ORIGINAL von RE 2
-         * sauber reverse engineerst und portest".
+    {   /* ---- RE2s BOX-PANEL — AUS DEM LAUFENDEN ORIGINAL GEMESSEN ---------
+         * Nutzer 2026-08-31: RE2-Abbild freigegeben, Item-Box im Emulator
+         * geoeffnet. Aus dem Speicherzustand wurde der Bildspeicher ausgelesen
+         * (Tag "GPU-VRAM", 1024x512 RGB555) und der fertig gezeichnete Schirm
+         * Pixel fuer Pixel vermessen. Referenzbild:
+         * analysis/itembox_re2/referenz/re2_itembox_original.png
          *
-         * Beide Geometrie-Tabellen selbst ausgelesen und ihre PAARUNG am Code
-         * belegt: der Template-Builder FUN_80070e58 laeuft die UV-Tabelle
-         * @0x800a9bc4 RUECKWAERTS (iVar6 = 0x60, Schritt -4), und der Zeichner
-         * FUN_800710dc laeuft die Positionstabelle @0x800a9c38 EBENFALLS rueckwaerts
-         * (iVar8 = 0x40, Schritt -4, `&DAT_800a9c34 + iVar8`) — beide Laeufe sind
-         * gleichsinnig, also gehoert UV[i] zu XY[i]. Daraus die 16 Rahmenteile:
+         * GEMESSENE GEOMETRIE (Bildschirmkoordinaten, senkrechter Schnitt x=60,
+         * waagerechte Schnitte y=15/60/80/90):
+         *   y 14..17    obere Rahmenleiste (Grauverlauf 56..88)
+         *   y 20..39    Kopfband ("ITEM BOX"), Verlauf 32 -> 96
+         *   y 40..140   Listenfeld, Grund (24,24,40)
+         *   Zeilen bei y 41/61/81/101/121  (Raster 20 px)
+         *   y 80 und y 100  AUSWAHLBALKEN, x 13..203 (Breite 190), Farbe (48,32,8)
+         *                   mit rotem Kern (128,32,32) — die mittlere Zeile
+         *   y 141..160  Fussband, y 163..166 untere Rahmenleiste
+         *   x 7..9      linker Pfosten (48,48,48)
+         *   x 13..203   Listenbreite
+         *   x 155..     Zeilen-Symbol
+         *   x 207..212  Schiene des Scrollbalkens (40,40,40)
+         *   Text normal (104,104,96), ausgewaehlt (168,168,152)
+         * Das deckt sich mit der Geometrie aus dem Zeichner (§2 des Dossiers) und
+         * bestaetigt insbesondere den ZWEI-LINIEN-Auswahlbalken ueber x 13..203.
          *
-         *   XY            UV            Groesse   Rolle
-         *   (3,0)         (0,248)       128x4     obere Leiste, linker Teil
-         *   (131,0)       (0,240)        77x4     obere Leiste, rechter Teil
-         *   (3,149)       (0,252)       128x4     untere Leiste, links
-         *   (131,149)     (0,244)        77x4     untere Leiste, rechts
-         *   (0,0)         (12,60)         3x153   linker Pfosten
-         *   (208,0)       (15,60)         3x153   rechter Pfosten
-         *   (4,6)         (8,60)          2x142   innere Senkrechte links
-         *   (196,6)       (10,60)         2x142   innere Senkrechte rechts
-         *   (6,6)         (0,0)         128x20    Kopfband links
-         *   (134,6)       (0,40)         62x20    Kopfband rechts
-         *   (6,127)       (0,20)        128x20    Fussband links
-         *   (134,127)     (62,40)        62x20    Fussband rechts
-         *   (199,11)      (0,60)          8x130   Schiene des Scrollbalkens
-         *   (199,4)       (0,202)         8x6     Pfeilfeld oben
-         *   (199,142)     (0,214)         8x6     Pfeilfeld unten
-         *   (211,0)       (0,228)        39x12    Beschriftungsfeld rechts aussen
-         * Dazu (94,5)/(94,127) je 20x20 = die L1/R1-Anzeigen und 5 Marken 6x2.
-         * Panel-Ursprung (7,14), Ausdehnung 211x153.
-         *
-         * ⚠️ ZWEI ABWEICHUNGEN, klar benannt:
-         * (1) BREITE: RE2s Panel ist 211 px breit und nimmt fast den ganzen Schirm;
-         *     bei uns steht rechts das Inventar-Gitter, also ist es auf 155 px
-         *     gestaucht (Hoehe 1:1 uebernommen).
-         * (2) BILDQUELLE: die Rahmen-SPRTs erben in RE2 ihren Texturbereich aus dem
-         *     Speicherzustand des Menues (FUN_80070e58 setzt fuer sie keinen eigenen
-         *     TPage), und die naheliegenden Dateien sind es nachweislich nicht —
-         *     ST0/ST1 mit genau diesen UVs offline gerendert: dort liegen die
-         *     Item-Symbole. Ohne einen Speicherauszug aus laufendem RE2 ist die
-         *     Quelle nicht bestimmbar, deshalb sind die Teile hier FLAECHEN in
-         *     Menuefarben — die Form ist original, die Fuellung nicht. */
-        const int OX = 8, OY = 30;          /* unser Panel-Ursprung               */
-        const int SCALE_N = 155, SCALE_D = 211;   /* Breiten-Stauchung            */
-#define BXS(v)  (OX + ((v) * SCALE_N) / SCALE_D)
-#define BXW(v)  (((v) * SCALE_N) / SCALE_D)
+         * Auf unsere linke Bildschirmhaelfte gelegt: RE2s Liste ist 190 px breit,
+         * bei uns stehen rechts das Inventar-Gitter, daher 145 px. Hoehen 1:1. */
+        const int OX = 8;                    /* linker Rand unseres Panels        */
+        const int LW = 145;                  /* Listenbreite (RE2: 190)           */
+        const int BARX = OX + LW + 4;        /* Schiene (RE2: 4 px hinter Liste)  */
         struct { int x, y, w, h, r, g, b; } part[] = {
-            /* obere und untere Leiste (je zweiteilig) */
-            {   3,   0, 128,  4, 112, 136, 160 },
-            { 131,   0,  77,  4, 112, 136, 160 },
-            {   3, 149, 128,  4, 112, 136, 160 },
-            { 131, 149,  77,  4, 112, 136, 160 },
-            /* Pfosten */
-            {   0,   0,   3,153,  96, 116, 144 },
-            { 208,   0,   3,153,  96, 116, 144 },
-            /* innere Senkrechte */
-            {   4,   6,   2,142,  64,  80, 104 },
-            { 196,   6,   2,142,  64,  80, 104 },
-            /* Kopf- und Fussband */
-            {   6,   6, 128, 20,  40,  52,  72 },
-            { 134,   6,  62, 20,  40,  52,  72 },
-            {   6, 127, 128, 20,  40,  52,  72 },
-            { 134, 127,  62, 20,  40,  52,  72 },
-            /* Schiene des Scrollbalkens + Pfeilfelder */
-            { 199,  11,   8,130,  56,  72,  92 },
-            { 199,   4,   8,  6, 152, 176, 200 },
-            { 199, 142,   8,  6, 152, 176, 200 },
+            /* Rahmenleisten oben/unten (RE2 y 14..17 / 163..166, Grauverlauf) */
+            { OX,      14, LW + 10,  1,  56,  64,  56 },
+            { OX,      15, LW + 10,  1,  72,  72,  72 },
+            { OX,      16, LW + 10,  1,  80,  80,  80 },
+            { OX,      17, LW + 10,  1,  88,  88,  88 },
+            { OX,     163, LW + 10,  1,  88,  88,  88 },
+            { OX,     164, LW + 10,  1,  72,  72,  72 },
+            { OX,     165, LW + 10,  1,  72,  72,  72 },
+            { OX,     166, LW + 10,  1,  56,  64,  56 },
+            /* Pfosten links/rechts (RE2 x 7..9) */
+            { OX - 1,  18,  3, 145,  48,  48,  48 },
+            { OX + LW + 8, 18, 3, 145, 48, 48, 48 },
+            /* Kopfband (RE2 y 20..39, Verlauf) und Fussband (y 141..160) */
+            { OX + 5,  20, LW,  9,  40,  40,  40 },
+            { OX + 5,  29, LW, 10,  72,  72,  72 },
+            { OX + 5, 141, LW, 10,  72,  72,  72 },
+            { OX + 5, 151, LW,  9,  40,  40,  40 },
+            /* Listenfeld-Grund (RE2 (24,24,40)) */
+            { OX + 5,  40, LW, 101, 24,  24,  40 },
+            /* Schiene des Scrollbalkens (RE2 x 207..212, (40,40,40)) */
+            { BARX,    26,  6, 118, 40,  40,  40 },
         };
         int pi, yy;
         for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
-            int x0 = BXS(part[pi].x), x1 = BXS(part[pi].x) + BXW(part[pi].w) - 1;
-            if (x1 <= x0) x1 = x0;
             for (yy = 0; yy < part[pi].h; yy++) {
                 re15_inv_op_t *o;
                 if (e.n >= e.max) break;
                 o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)x0;  o->y = (int16_t)(OY + part[pi].y + yy);
-                o->w = (int16_t)x1;  o->h = o->y;
+                o->x = (int16_t)part[pi].x;   o->y = (int16_t)(part[pi].y + yy);
+                o->w = (int16_t)(part[pi].x + part[pi].w - 1); o->h = o->y;
                 o->r = (uint8_t)part[pi].r;
                 o->g = (uint8_t)part[pi].g;
                 o->b = (uint8_t)part[pi].b;
             }
         }
-        /* L1/R1-Anzeigen (RE2: 20x20 bei (94,5)/(94,127); leuchten auf, solange die
-         * Taste gehalten wird — Helligkeit 0x50/0x3c bzw. 0x78/0x64 @0x8007.. ) */
+        /* Pfeilfelder am Scrollbalken (RE2 zeichnet sie ueber/unter der Schiene
+         * und hellt sie auf, solange die Taste gehalten wird). */
         {
             int k3, ay;
             for (k3 = 0; k3 < 2; k3++) {
-                int by = OY + (k3 ? 127 : 5);
+                int base = k3 ? 146 : 20;
                 for (ay = 0; ay < 4; ay++) {
                     re15_inv_op_t *o;
                     int wd = k3 ? ay : (3 - ay);
                     if (e.n >= e.max) break;
                     o = &e.ops[e.n++];
                     o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(BXS(94) + 8 - wd); o->y = (int16_t)(by + ay + 6);
-                    o->w = (int16_t)(BXS(94) + 8 + wd); o->h = o->y;
-                    o->r = 120; o->g = 140; o->b = 168;
+                    o->x = (int16_t)(BARX + 3 - wd); o->y = (int16_t)(base + ay);
+                    o->w = (int16_t)(BARX + 3 + wd); o->h = o->y;
+                    o->r = 168; o->g = 168; o->b = 152;
                 }
             }
         }
-#undef BXS
-#undef BXW
     }
 
     /* 5. cursors (g8 pulsing-frame template, the wave-1 model): the INVENTORY
@@ -1105,16 +1085,9 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             const re15_inv_slot_t *bs = &g_itembox.slots[slot];
             int ry = ROW0_Y + k * ROW_DY + st->box_pixoff;   /* Scroll-Gleiten */
             re15_inv_op_t *o;
-            if (k != RE15_BOX_PICK_ROW) {
-                /* dunkler Streifen der nicht gewaehlten Zeilen (RE2 @0x800a9c28) */
-                if (e.n < e.max) {
-                    o = &e.ops[e.n++];
-                    o->kind = RE15_INV_OP_TILE; o->page = 0; o->clut = 0; o->abe = 1;
-                    o->x = (int16_t)LIST_X0; o->y = (int16_t)ry;
-                    o->w = (int16_t)(LIST_X1 - LIST_X0); o->h = (int16_t)(ROW_DY - 1);
-                    o->r = 48; o->g = 48; o->b = 48;
-                }
-            }
+            (void)o;   /* RE2 hat einen DURCHGEHENDEN Listengrund (24,24,40) —
+                        * gemessen im Original; die frueher gezeichneten Streifen
+                        * je Zeile gibt es dort nicht. */
             /* Name links; leerer Platz bleibt leer (RE2 schreibt dort seinen
              * "leer"-Text, den RE1.5 nicht kennt). */
             if (bs->id != 0) emit_name_at(&e, bs->id, NAME_X, ry + 2);
@@ -1135,7 +1108,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         if (st->box_side == 1 || st->box_side == 0) {
             int sy0 = ROW0_Y + RE15_BOX_PICK_ROW * ROW_DY - 1;
             int sy1 = sy0 + ROW_DY;
-            int bright = (st->box_side == 1) ? 232 : 120;   /* aktive Seite heller */
+            /* AUS DEM ORIGINAL GEMESSEN: der Auswahlbalken sind zwei Linien an
+             * Ober- und Unterkante der mittleren Zeile, Farbe (48,32,8) mit rotem
+             * Kern (128,32,32) (Bildschirmzeilen y=80 und y=100, x 13..203).
+             * Auf der Inventar-Seite ist er gedaempft. */
+            int act = (st->box_side == 1);
             int t2;
             for (t2 = 0; t2 < 2; t2++) {
                 re15_inv_op_t *o;
@@ -1144,7 +1121,8 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
                 o->x = (int16_t)LIST_X0; o->y = (int16_t)(t2 ? sy1 : sy0);
                 o->w = (int16_t)LIST_X1; o->h = o->y;
-                o->r = (uint8_t)bright; o->g = (uint8_t)(bright - 24); o->b = 48;
+                if (act) { o->r = 128; o->g = 32; o->b = 32; }   /* roter Kern */
+                else     { o->r = 48;  o->g = 32; o->b = 8;  }
             }
         }
         /* Scrollbalken: eine Marke je sichtbarem Ring-Platz, 2 px Schritt
