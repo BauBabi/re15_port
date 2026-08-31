@@ -1,3 +1,20 @@
+# RE1.5 Port — v0.3.66 (Early Preview)
+
+- **Abbruchton auf der Karte kommt jetzt sofort.** Er stand am Ende der Ausblendung und
+  kam dadurch hörbar zu spät — jetzt beim Tastendruck.
+- **Spielermarker im Nirgendwo (2. Abschnitt von 1170).** Ursache war eine
+  Ungleichbehandlung: Der Marker nutzt einen Ersatzweg, wenn der Bereich noch nicht
+  nachgeführt ist (direkt nach einem Bereichswechsel), die Einfärbung des Rechtecks aber
+  nicht. Der Marker wurde dann gezeichnet, sein Rechteck aber als unbesucht behandelt und
+  gar nicht gemalt — er schwebte über Schwarz. Beide nehmen jetzt denselben Weg.
+
+Zur Einordnung, was ich dabei überprüft habe: Die Bereiche von ROOM1170 stimmen mit der
+Raumgeometrie überein (die begehbaren Flächen zerfallen in genau zwei zusammenhängende
+Teile — exakt die eingetragenen Bereiche), beide Kartenrechtecke zeigen auf echte
+Grundrisse, und die Markerpositionen liegen rechnerisch alle in ihren Rechtecken.
+
+---
+
 # RE1.5 Port — v0.3.65 (Early Preview)
 
 - **Abbruchton beim Verlassen der Karte** ergänzt — der Ausstieg war als einziger
