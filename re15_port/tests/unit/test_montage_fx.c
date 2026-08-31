@@ -133,8 +133,9 @@ int main(void)
     re15_montage_fx_set_active(0);
     re15_montage_fx_set_active(1);
     re15_montage_fx_on_cut(7, 0);                 /* Labor-Standbild */
-    ticks(48);                                    /* voll aufgeblendet */
-    CHECK("Labor steht voll", re15_montage_fx_level_new() == re15_montage_fx_level_max());
+    ticks(48);
+    CHECK("das Labor tritt NICHT fuer sich auf (bleibt dunkel bis zum Logo)",
+          re15_montage_fx_level_new() == 0);
     re15_montage_fx_on_cut(8, 1);                 /* Umbrella-Logo */
     CHECK("das Logo beginnt auf SCHWARZEM Grund (Labor erst mal weg)",
           re15_montage_fx_level_new() == 0 && re15_montage_fx_level_prev() == 0);

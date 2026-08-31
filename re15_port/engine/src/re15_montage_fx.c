@@ -61,6 +61,21 @@
  *
  * Umsetzung: fuer diese Bilder blendet die vorige Ebene NICHT aus, sondern haelt
  * ihre Helligkeit, waehrend die neue darueber einblendet. */
+/* Bilder, die NICHT fuer sich stehen, sondern erst als Grund UNTER dem folgenden
+ * Logo erscheinen. Nutzer 2026-08-31: "Außerdem zeigst du schon einmal das Labor
+ * Standbild im Pre-Intro an, VOR dem Umbrella Logo. Das ist im Original nicht so.
+ * Im Original: Umbrella Logo auf schwarzen Hintergrund, dann reinzoomend und
+ * Laborbild hinter gelegt."
+ * RE2 belegt das: das Logo {19} wird in Phase 4 t==580 gesetzt (@0x801c0a74-94),
+ * das Standbild {20..23} ERST in Phase 5 t==96 (@0x801c0ab4-c8) — davor war der
+ * Schirm durch den Clear in Phase 4 t==94 leer (@0x801c09e4-f4). Das Standbild
+ * tritt also nie allein auf, sondern nur unter dem zoomenden Logo. */
+static const uint8_t s_cut_hidden[RE15_MONTAGE_CUTS] = {
+    0, 0, 0, 0, 0, 0, 0,
+    1,   /* 7 Umbrella-Labor — erscheint erst unter dem Logo (Bild 8) */
+    0,
+};
+
 static const uint8_t s_cut_hold_prev[RE15_MONTAGE_CUTS] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     1,   /* 8 Umbrella-Logo — zoomt UEBER dem stehenden Labor-Standbild */
@@ -162,9 +177,11 @@ void re15_montage_fx_on_cut(int cut, int had_previous)
     }
     memset(&s_fx.cur, 0, sizeof s_fx.cur);
     s_fx.cur.used = 1;
-    s_fx.cur.dir  = 1;
     s_fx.cur.mode = (cut >= 0 && cut < RE15_MONTAGE_CUTS)
                   ? s_cut_mode[cut] : (uint8_t)RE15_MFX_NONE;
+    /* Verdeckte Bilder bleiben dunkel, bis das folgende Logo sie als Grund
+     * hervorholt (s. s_cut_hidden). */
+    s_fx.cur.dir = (cut >= 0 && cut < RE15_MONTAGE_CUTS && s_cut_hidden[cut]) ? 0 : 1;
 }
 
 static void layer_fade(fx_layer_t *l)
