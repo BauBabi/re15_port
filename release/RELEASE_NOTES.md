@@ -1,3 +1,19 @@
+# RE1.5 Port — v0.3.53 (Early Preview)
+
+Deine vier Punkte zur Box — alle geklärt, drei davon hatten dieselbe Ursache.
+
+- **„ITEM BOX"-Schriftzug und die grauen Pfeile** standen im Zeichenablauf **hinter** den
+  Panel-Flächen — und weil ein früherer Befehl oben liegt, hat das Kopfband sie
+  zugedeckt. Jetzt stehen sie davor. Zusätzlich habe ich die **Zeichen-Kodierung am
+  Spiel selbst verifiziert** statt sie anzunehmen (aus „COMBAT KNIFE" abgelesen): Mein
+  Leerzeichen war falsch kodiert und erzeugte ein Müll-Zeichen.
+- **Orange Pfeile waren schräg.** Ich habe die Form im Original ausgezählt: ein
+  **kompaktes Dreieck** mit den Breiten 2/4/4/6/6 Pixel — vorher eine flache Schräge.
+- **Items und Mengen überdeckten die Zeilenmarkierung.** Der Auswahlbalken stand hinter
+  den Zeileninhalten und lag damit unter ihnen. Jetzt läuft er durchgehend darüber.
+
+---
+
 # RE1.5 Port — v0.3.52 (Early Preview)
 
 **Warum das Labor-Bild „schon wieder" da war — und es lag nicht an der Logik.**
