@@ -640,7 +640,17 @@ static void raster_op(const re15_inv_op_t *o)
                 } else {
                     if (!s_itemall || (tile + 1) * 1200 > s_itemall_size)
                         continue;
-                    t = s_itemall[tile * 1200 + py * 40 + pxx];
+                    {   /* SKALIEREN statt beschneiden: die Quellkachel ist 40x30,
+                         * das Ziel kann kleiner sein (RE2s Zeilensymbol ist 25x19).
+                         * Vorher wurde nur die linke obere Ecke gezeigt — daher
+                         * "die Item Bilder ragen heraus/sind abgeschnitten"
+                         * (Nutzer 2026-08-31). */
+                        int sxp = (o->w >= 40) ? pxx : (pxx * 40) / o->w;
+                        int syp = (o->h >= 30) ? py  : (py  * 30) / o->h;
+                        if (sxp > 39) sxp = 39;
+                        if (syp > 29) syp = 29;
+                        t = s_itemall[tile * 1200 + syp * 40 + sxp];
+                    }
                 }
                 c = clut[t];
                 if (c == 0) continue;                 /* CLUT 0 = transparent */

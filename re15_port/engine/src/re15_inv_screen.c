@@ -986,11 +986,14 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * unsere linke Bildschirmhaelfte gelegt (RE2s Panel nimmt dort fast die ganze
      * Breite ein, bei uns steht rechts das Inventar-Gitter). */
     {
-        const int LIST_X0 = 10;                 /* linker Rand der Streifen        */
-        const int LIST_X1 = 150;                /* rechter Rand der Streifen       */
-        const int NAME_X  = 14;                 /* RE2: boxX + 7                   */
-        const int ICON_X  = 108;                /* Symbol rechts in der Zeile      */
-        const int BAR_X   = 153;                /* Marken IN der Scrollbalken-Schiene */
+        /* Das Panel darf bis kurz vor das Inventar-Gitter (x 215) reichen —
+         * Nutzer 2026-08-31: "du hast gerne Platz bis zu der Item List Box rechts
+         * zum ausbreiten des Panels". RE2s Liste ist 190 px breit, wir nehmen 192. */
+        const int LIST_X0 = 12;                 /* linker Rand der Zeilen          */
+        const int LIST_X1 = 204;                /* rechter Rand der Zeilen         */
+        const int NAME_X  = 16;                 /* Name links (RE2: boxX + 7)      */
+        const int ICON_X  = 158;                /* Symbol rechts (RE2: x 155)      */
+        const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
         const int ROW0_Y  = 41;                 /* RE2: erste Zeile y 41..60       */
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
         int k;
@@ -1014,7 +1017,10 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * Zeilenhoehe gestaucht. */
                 box_cell_icon_sized(&e, ICON_X, ry, RE15_BOX_ICON_W, RE15_BOX_ICON_H,
                                     bs->id, bs->flags);
-                box_digits(&e, ICON_X + RE15_BOX_ICON_W - 34, ry, bs->id, bs->qty);
+                /* Mengen-Ziffern IN der Zeile: box_digits setzt seine Grundlinie auf
+                 * cy + 20, was bei 20 px Zeilenabstand in die naechste Zeile ragte
+                 * (Nutzer 2026-08-31). Deshalb 20 px hoeher ansetzen. */
+                box_digits(&e, ICON_X + RE15_BOX_ICON_W + 2, ry - 20, bs->id, bs->qty);
             }
         }
         /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
@@ -1039,20 +1045,26 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 else     { o->r = 96;  o->g = 64; o->b = 16; }   /* passiv: braun */
             }
         }
-        /* Scrollbalken: eine Marke je sichtbarem Ring-Platz, 2 px Schritt
-         * (RE2: x = boxX+200, y = boxY+12 + slot*2 — 128 px fuer 64 Plaetze). */
-        for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++) {
-            int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
+        /* SCROLLBALKEN — Farben aus dem laufenden RE2 gemessen (Spalte x=208):
+         *   y 20..23  (240, 56, 24)  ORANGER Pfeil oben
+         *   y 26..35  (232,248, 72)  GELBER Griff (die Ringposition)
+         *   y 36..153 ( 40, 40, 40)  Schiene
+         *   y156..159 (240, 56, 24)  ORANGER Pfeil unten
+         * Es ist EIN zusammenhaengender Griff, keine Einzelmarken. */
+        {
+            const int TRACK_Y0 = 42, TRACK_H = 100;
+            int grip_h = (TRACK_H * RE15_BOX_WINDOW) / RE15_BOX_SLOTS;   /* Fenster/Ring */
+            int grip_y = TRACK_Y0 + (TRACK_H - grip_h) * st->box_scroll
+                                     / (RE15_BOX_SLOTS - 1);
             re15_inv_op_t *o;
-            if (e.n >= e.max) break;
-            o = &e.ops[e.n++];
-            o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-            /* RE2: y = boxY + 12 + slot*2 (2 px je Ring-Platz, 128 px Schiene).
-             * Unsere Schiene ist 100 px hoch, die Marke wandert also mit
-             * 100/64 px je Platz — dieselbe Aussage auf unserer Panel-Hoehe. */
-            o->x = (int16_t)BAR_X; o->y = (int16_t)(42 + (slot * 96) / 64);
-            o->w = (int16_t)(BAR_X + 5); o->h = o->y;
-            o->r = 200; o->g = 200; o->b = 160;
+            if (grip_h < 4) grip_h = 4;
+            if (e.n < e.max) {
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)BAR_X; o->y = (int16_t)grip_y;
+                o->w = 6; o->h = (int16_t)grip_h;
+                o->r = 232; o->g = 248; o->b = 72;      /* gemessenes Gelb */
+            }
         }
     }
 
@@ -1088,8 +1100,9 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          * Auf unsere linke Bildschirmhaelfte gelegt: RE2s Liste ist 190 px breit,
          * bei uns stehen rechts das Inventar-Gitter, daher 145 px. Hoehen 1:1. */
         const int OX = 8;                    /* linker Rand unseres Panels        */
-        const int LW = 145;                  /* Listenbreite (RE2: 190)           */
-        const int BARX = OX + LW + 4;        /* Schiene (RE2: 4 px hinter Liste)  */
+        const int LW = 192;                  /* Listenbreite (RE2: 190) — reicht
+                                              * jetzt bis kurz vor das Inventar    */
+        const int BARX = 208;                /* Schiene (RE2: x 207)              */
         struct { int x, y, w, h, r, g, b; } part[] = {
             /* Rahmenleisten oben/unten (RE2 y 14..17 / 163..166, Grauverlauf) */
             { OX,      14, LW + 10,  1,  56,  64,  56 },
@@ -1127,6 +1140,33 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             o->g = (uint8_t)part[pi].g;
             o->b = (uint8_t)part[pi].b;
         }
+        /* "ITEM BOX"-Schriftzug im Kopfband, mit den beiden grauen Pfeilen daneben
+         * (Nutzer 2026-08-31: "Wo ist der ITEM BOX Schriftzug mit den grauen Pfeilen
+         * daneben?"). Die Glyphen kommen aus der Message-Schrift; die Kodierung ist
+         * dieselbe wie beim Item-Namen (Zeichen = code + 0x24, s. re15_itembox.c). */
+        {
+            static const uint8_t title[] = {
+                'I'-0x24, 'T'-0x24, 'E'-0x24, 'M'-0x24, 0xff,
+                'B'-0x24, 'O'-0x24, 'X'-0x24, 0x07
+            };
+            emit_text(&e, OX + 8, 20, title, 0x00);
+        }
+        {   /* die beiden grauen Dreiecke rechts vom Schriftzug */
+            int side, ay;
+            for (side = 0; side < 2; side++) {
+                int bx = OX + 96 + side * 14;
+                for (ay = 0; ay < 4; ay++) {
+                    re15_inv_op_t *o;
+                    int wd = side ? ay : (3 - ay);
+                    if (e.n >= e.max) break;
+                    o = &e.ops[e.n++];
+                    o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
+                    o->x = (int16_t)(bx + 4 - wd); o->y = (int16_t)(22 + ay);
+                    o->w = (int16_t)(wd * 2 + 1); o->h = 1;
+                    o->r = 136; o->g = 136; o->b = 136;   /* gemessenes Grau */
+                }
+            }
+        }
         /* Pfeilfelder am Scrollbalken (RE2 zeichnet sie ueber/unter der Schiene
          * und hellt sie auf, solange die Taste gehalten wird). */
         {
@@ -1141,7 +1181,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
                     o->x = (int16_t)(BARX + 3 - wd); o->y = (int16_t)(base + ay);
                     o->w = (int16_t)(wd * 2 + 1); o->h = 1;
-                    o->r = 224; o->g = 224; o->b = 208;
+                    o->r = 240; o->g = 56;  o->b = 24;   /* gemessenes Orange */
                 }
             }
         }
