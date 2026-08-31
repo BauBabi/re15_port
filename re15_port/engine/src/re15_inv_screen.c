@@ -85,9 +85,12 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 /* Box-Schirm: das Listen-Panel sitzt auf der Hoehe des Inventar-Gitters (BOX_BY),
  * die Textbox eigenstaendig darunter. RE2-Innengeometrie (Zeilen ab y 41,
  * Scrollschiene ab 42) wandert um denselben Versatz mit. */
-#define RE15_BOX_PANEL_Y   26
+#define RE15_BOX_PANEL_Y   22
 #define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
-#define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 158)  /* direkt unter dem Panel */
+#define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 156)  /* direkt unter dem Panel */
+/* Grundlinie des Namens IN der Textbox: im Original steht die Schrift bei y 181,
+ * die Box beginnt bei 169 — also 12 px unter ihrer Oberkante. */
+#define RE15_BOX_TEXT_BASE (RE15_BOX_TEXT_Y + 12)
 #define LIST_BY  26
 #define TAB_BX   126
 #define ACT_BX   142
@@ -890,7 +893,11 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
 
     /* 0. hovered-item name caption (topmost; the campaign's byte-true name-bank
      * print FUN_80028c1c at (0x18,0xa8) — set per tick by re15_itembox.c). */
-    if (st->name_item >= 0) emit_name(&e, st->name_item);
+    /* Der Name gehoert IN die Textbox darunter — emit_name zeichnet an fester Stelle
+     * y 168, was im Box-Schirm ueber der Box lag (Nutzer 2026-08-31: "Der Text ist
+     * immer noch ausserhalb der Textbox unten. Sie befinden sich darueber."). */
+    if (st->name_item >= 0)
+        emit_name_at(&e, st->name_item, 22, RE15_BOX_TEXT_BASE);
 
     /* 0b. the reject message slice (desc-bank entry 0 through the shared msg VM —
      * the RE1.5 cant-use infra standing in for RE2's box reject FUN_8002fe38). */
@@ -1089,7 +1096,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_PANEL; o->page = 0; o->clut = 0; o->abe = 0;
             o->v = 1;                                    /* 1 = Textbox */
-            o->x = 6; o->y = RE15_BOX_TEXT_Y; o->w = 214; o->h = 34;
+            o->x = 6; o->y = RE15_BOX_TEXT_Y; o->w = 214; o->h = 59;
             o->r = 128; o->g = 128; o->b = 128;
         }
         if (e.n < e.max) {
@@ -1141,10 +1148,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * relative order is not observable; spec Task D open question). name_item is set
      * per frame by the grid handler tail only (@0x800c659c-65d8); id 0 = empty string
      * (offset 0 -> first byte 0x07) draws nothing. */
-    /* Der Name gehoert IN die Textbox darunter (emit_name zeichnet an fester
-     * Stelle y 168, was im Box-Schirm mitten auf dem Rahmen lag). */
-    if (st->name_item >= 0)
-        emit_name_at(&e, st->name_item, 22, RE15_BOX_TEXT_Y + 9);
+    if (st->name_item >= 0) emit_name(&e, st->name_item);
 
 
     /* ---- 0b. msg-slice text (wave 3 cant-use = entry 0; wave 4 CHECK desc = entry id):
