@@ -1,3 +1,22 @@
+# RE1.5 Port — v0.3.57 (Early Preview)
+
+**Panel und Textbox sind jetzt getrennt** — das war die eigentliche Ursache.
+
+Bisher steckten beide in **einem** Bild. Damit war die Höhe starr: Schob ich das Panel
+nach unten, damit die Oberkante frei wird, rutschte die Textbox aus dem Bild — und der
+Item-Name landete auf dem Rahmen statt darin.
+
+Jetzt sind es zwei Teile, beide aus dem Original geschnitten:
+
+- **Listen-Panel** sitzt auf der **Höhe des Item-Gitters** rechts, wie von dir
+  vorgeschlagen.
+- **Textbox** liegt eigenständig darunter, mit ihren Original-Rändern rundum.
+- Der **Item-Name landet in der Textbox**.
+- Die Innengeometrie (Zeilen, Scrollschiene) wandert automatisch mit dem Panel mit —
+  keine handgezählten Abstände mehr, die beim nächsten Verschieben wieder brechen.
+
+---
+
 # RE1.5 Port — v0.3.56 (Early Preview)
 
 **Panel wieder etwas höher.** Die 13 Pixel, mit denen ich es unter den oberen Kino-Balken
