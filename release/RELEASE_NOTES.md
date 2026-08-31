@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.3.52 (Early Preview)
+
+**Warum das Labor-Bild „schon wieder" da war — und es lag nicht an der Logik.**
+
+Der Build der betroffenen Datei ist mehrfach **still fehlgeschlagen**: Meine eigenen
+Prüfprogramme hielten die Bibliothek offen, der Compiler kam nicht dran, und mein
+Fehlerfilter hat die Meldung nicht erkannt. Die **alte** Fassung lief also weiter — meine
+Korrektur war im Quelltext, aber nie im Programm. Ich prüfe den Build jetzt am
+Rückgabewert statt am Text, und ich habe ein **Messwerkzeug** eingecheckt, das die
+Bildfolge durchspielt und für jedes Bild sagt, ob es sichtbar wird. Vorher: Bild 7
+sichtbar. Jetzt: bleibt dunkel, das Logo erscheint zuerst, das Labor kommt darunter.
+
+**Item-Box — deine Punkte, alle mit Farben aus dem laufenden RE2 gemessen:**
+
+- **Scrollbalken** ist jetzt ein **gelber Griff**, der die Position im Ring zeigt, mit
+  **orangen Pfeilen** oben und unten (gemessen: Griff 232/248/72, Pfeile 240/56/24).
+- **„ITEM BOX"-Schriftzug** im Kopfband, mit den beiden grauen Dreiecken daneben.
+- **Abgeschnittene Item-Bilder:** Die Kacheln wurden **beschnitten statt skaliert** — bei
+  25×19 Zielgröße war nur die linke obere Ecke der 40×30-Kachel zu sehen. Jetzt wird
+  skaliert.
+- **Mengen-Zahlen** ragten in die nächste Zeile (ihre Grundlinie lag 20 Pixel tiefer, bei
+  20 Pixel Zeilenabstand). Jetzt stehen sie in ihrer eigenen Zeile neben dem Symbol.
+- **Panel nutzt den Platz:** 192 statt 145 Pixel breit — bis kurz vor das Item-Gitter,
+  praktisch die Originalbreite (190).
+
+---
+
 # RE1.5 Port — v0.3.51 (Early Preview)
 
 **Die schwarze Box — echte Ursache gefunden, und diesmal habe ich nachgesehen statt
