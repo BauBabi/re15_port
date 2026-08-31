@@ -996,6 +996,28 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         const int BAR_X   = 208;                /* Scrollbalken (RE2: x 207)       */
         const int ROW0_Y  = 41;                 /* RE2: erste Zeile y 41..60       */
         const int ROW_DY  = RE15_BOX_ROW_PX;    /* 20 px Raster                    */
+        /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
+         * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
+        if (st->box_side == 1 || st->box_side == 0) {
+            int sy0 = ROW0_Y + RE15_BOX_PICK_ROW * ROW_DY - 1;
+            int sy1 = sy0 + ROW_DY;
+            /* AUS DEM ORIGINAL GEMESSEN: der Auswahlbalken sind zwei Linien an
+             * Ober- und Unterkante der mittleren Zeile, Farbe (48,32,8) mit rotem
+             * Kern (128,32,32) (Bildschirmzeilen y=80 und y=100, x 13..203).
+             * Auf der Inventar-Seite ist er gedaempft. */
+            int act = (st->box_side == 1);
+            int t2;
+            for (t2 = 0; t2 < 2; t2++) {
+                re15_inv_op_t *o;
+                if (e.n >= e.max) break;
+                o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
+                o->x = (int16_t)LIST_X0; o->y = (int16_t)(t2 ? sy1 : sy0);
+                o->w = (int16_t)(LIST_X1 - LIST_X0); o->h = 2;
+                if (act) { o->r = 200; o->g = 48; o->b = 48; }   /* aktiv: rot */
+                else     { o->r = 96;  o->g = 64; o->b = 16; }   /* passiv: braun */
+            }
+        }
         int k;
         for (k = 0; k < RE15_BOX_WINDOW && k < 5; k++) {
             int slot = (st->box_scroll + k) & (RE15_BOX_SLOTS - 1);
@@ -1021,28 +1043,6 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * cy + 20, was bei 20 px Zeilenabstand in die naechste Zeile ragte
                  * (Nutzer 2026-08-31). Deshalb 20 px hoeher ansetzen. */
                 box_digits(&e, ICON_X + RE15_BOX_ICON_W + 2, ry - 20, bs->id, bs->qty);
-            }
-        }
-        /* Auswahl-Band: zwei helle Linien ober- und unterhalb der mittleren Zeile
-         * (RE2 zeichnet den Cursor genau so, y = Zeilenober-/unterkante). */
-        if (st->box_side == 1 || st->box_side == 0) {
-            int sy0 = ROW0_Y + RE15_BOX_PICK_ROW * ROW_DY - 1;
-            int sy1 = sy0 + ROW_DY;
-            /* AUS DEM ORIGINAL GEMESSEN: der Auswahlbalken sind zwei Linien an
-             * Ober- und Unterkante der mittleren Zeile, Farbe (48,32,8) mit rotem
-             * Kern (128,32,32) (Bildschirmzeilen y=80 und y=100, x 13..203).
-             * Auf der Inventar-Seite ist er gedaempft. */
-            int act = (st->box_side == 1);
-            int t2;
-            for (t2 = 0; t2 < 2; t2++) {
-                re15_inv_op_t *o;
-                if (e.n >= e.max) break;
-                o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)LIST_X0; o->y = (int16_t)(t2 ? sy1 : sy0);
-                o->w = (int16_t)(LIST_X1 - LIST_X0); o->h = 2;
-                if (act) { o->r = 200; o->g = 48; o->b = 48; }   /* aktiv: rot */
-                else     { o->r = 96;  o->g = 64; o->b = 16; }   /* passiv: braun */
             }
         }
         /* SCROLLBALKEN — Farben aus dem laufenden RE2 gemessen (Spalte x=208):
@@ -1126,30 +1126,21 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             /* Schiene des Scrollbalkens (RE2 x 207..212, (40,40,40)) */
             { BARX,    26,  6, 118, 40,  40,  40 },
         };
-        int pi;
-        for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
-            re15_inv_op_t *o;
-            if (e.n >= e.max) break;
-            o = &e.ops[e.n++];
-            /* DECKEND zeichnen — die gemessenen Farben sollen exakt so stehen.
-             * (Mit den ABE-Linien kaeme nur ein Sechzehntel davon an.) */
-            o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-            o->x = (int16_t)part[pi].x; o->y = (int16_t)part[pi].y;
-            o->w = (int16_t)part[pi].w; o->h = (int16_t)part[pi].h;
-            o->r = (uint8_t)part[pi].r;
-            o->g = (uint8_t)part[pi].g;
-            o->b = (uint8_t)part[pi].b;
-        }
         /* "ITEM BOX"-Schriftzug im Kopfband, mit den beiden grauen Pfeilen daneben
          * (Nutzer 2026-08-31: "Wo ist der ITEM BOX Schriftzug mit den grauen Pfeilen
          * daneben?"). Die Glyphen kommen aus der Message-Schrift; die Kodierung ist
          * dieselbe wie beim Item-Namen (Zeichen = code + 0x24, s. re15_itembox.c). */
         {
             static const uint8_t title[] = {
-                'I'-0x24, 'T'-0x24, 'E'-0x24, 'M'-0x24, 0xff,
-                'B'-0x24, 'O'-0x24, 'X'-0x24, 0x07
+                /* Zeichen-Kodierung aus der Namens-Bank verifiziert
+                 * ("COMBAT KNIFE" = 1f 4b 49 3e 3d 50 00 27 4a 45 42 41 07):
+                 * Grossbuchstabe = 0x1d + Index, LEERZEICHEN = 0x00, Ende = 0x07. */
+                0x1d+8, 0x1d+19, 0x1d+4, 0x1d+12,   /* I T E M */
+                0x00,                                /* Leerzeichen */
+                0x1d+1, 0x1d+14, 0x1d+23,            /* B O X */
+                0x07
             };
-            emit_text(&e, OX + 8, 20, title, 0x00);
+            emit_text(&e, OX + 6, 22, title, 0x00);   /* RE2: Schrift bei y 24..30 */
         }
         {   /* die beiden grauen Dreiecke rechts vom Schriftzug */
             int side, ay;
@@ -1167,21 +1158,40 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 }
             }
         }
+        int pi;
+        for (pi = 0; pi < (int)(sizeof part / sizeof part[0]); pi++) {
+            re15_inv_op_t *o;
+            if (e.n >= e.max) break;
+            o = &e.ops[e.n++];
+            /* DECKEND zeichnen — die gemessenen Farben sollen exakt so stehen.
+             * (Mit den ABE-Linien kaeme nur ein Sechzehntel davon an.) */
+            o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
+            o->x = (int16_t)part[pi].x; o->y = (int16_t)part[pi].y;
+            o->w = (int16_t)part[pi].w; o->h = (int16_t)part[pi].h;
+            o->r = (uint8_t)part[pi].r;
+            o->g = (uint8_t)part[pi].g;
+            o->b = (uint8_t)part[pi].b;
+        }
         /* Pfeilfelder am Scrollbalken (RE2 zeichnet sie ueber/unter der Schiene
          * und hellt sie auf, solange die Taste gehalten wird). */
         {
+            /* Aus dem Abzug abgelesen (x 200..216, y 19..23): ein KOMPAKTES
+             * Dreieck mit den Breiten 2 / 4 / 4 / 6 / 6 px — nicht die flache
+             * Schraege der Vorversion (Nutzer: "Orange Pfeile sind schraeg statt
+             * wie in RE 2 gerade"). */
+            static const int wid[5] = { 2, 4, 4, 6, 6 };
             int k3, ay;
             for (k3 = 0; k3 < 2; k3++) {
-                int base = k3 ? 146 : 20;
-                for (ay = 0; ay < 4; ay++) {
+                int base = k3 ? 150 : 19;
+                for (ay = 0; ay < 5; ay++) {
                     re15_inv_op_t *o;
-                    int wd = k3 ? ay : (3 - ay);
+                    int w = wid[k3 ? (4 - ay) : ay];
                     if (e.n >= e.max) break;
                     o = &e.ops[e.n++];
                     o->kind = RE15_INV_OP_FILL; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(BARX + 3 - wd); o->y = (int16_t)(base + ay);
-                    o->w = (int16_t)(wd * 2 + 1); o->h = 1;
-                    o->r = 240; o->g = 56;  o->b = 24;   /* gemessenes Orange */
+                    o->x = (int16_t)(BARX + 3 - w / 2); o->y = (int16_t)(base + ay);
+                    o->w = (int16_t)w; o->h = 1;
+                    o->r = 240; o->g = 56; o->b = 24;    /* gemessenes Orange */
                 }
             }
         }
