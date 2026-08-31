@@ -21,6 +21,7 @@
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
 #include "re15_room.h"           /* Karten-Zonen: Marker + Rect-Zustand */
+#include "re15_actor.h"          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
@@ -229,6 +230,16 @@ uint8_t re15_inv_map_page(void) { return s_map_page; }
 uint8_t re15_inv_map_page_shown(void)
 {
     const re15_map_zone_t *zn = re15_map_zone_current();
+    {
+        /* Ein Raum kann ueber mehrere Etagen reichen (Treppenhaus): dann gibt das
+         * BAND des Spielers das Blatt, nicht die Raumnummer. Die Zuordnung stammt
+         * aus den Tueren des Raums (Band der Tuer -> Seite des Zielraums), siehe
+         * re15_map_floor_lookup. */
+        int fp;
+        if (zn && re15_map_floor_lookup(zn->room,
+                                        g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, 0))
+            return (uint8_t)fp;
+    }
     return zn ? (uint8_t)zn->page : s_map_page;
 }
 
@@ -331,9 +342,14 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         /* Die Zone muss zu dem Blatt gehoeren, das gerade GEZEIGT wird — sonst saesse
          * der Marker auf einer fremden Etage (Nutzer-Report: "der spielmarker [muss]
          * im kleinen rechteck sein, nicht ausserhalb"). */
-        if (zn && zn->page == (int)g_inv_screen.map_page) {
-            uint32_t lp = mu32(0x80076844u + (uint32_t)zn->page * 8u);
-            uint32_t a  = lp + (uint32_t)zn->rect * 12u;
+        int zpg = zn ? zn->page : -1, zrc = zn ? zn->rect : -1, fp2, fr2;
+        /* Auf einer Etagen-Umschaltung wird in das Rechteck DIESER Etage projiziert. */
+        if (zn && re15_map_floor_lookup(zn->room,
+                                        g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp2, &fr2))
+            { zpg = fp2; zrc = fr2; }
+        if (zn && zpg == (int)g_inv_screen.map_page) {
+            uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
+            uint32_t a  = lp + (uint32_t)zrc * 12u;
             int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
             int rw = (int16_t)mu16(a + 4u), rh = (int16_t)mu16(a + 6u);
             if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my)) {
@@ -356,7 +372,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         /* Der Marker gehoert auf das ANGEZEIGTE Blatt. Seit man mit Hoch/Runter
          * blaettern kann, ist das nicht mehr zwangslaeufig das Blatt der Zone -
          * auf einer fremden Etage wird der Marker deshalb aus dem Bild genommen. */
-        if (zn && zn->page != (int)g_inv_screen.map_page) { *mx = -64; *my = -64; return; }
+        if (zn && zpg != (int)g_inv_screen.map_page) { *mx = -64; *my = -64; return; }
     }
 
     /* STOCK: die Original-Formel FUN_800473f8 @0x8004741c-0x80047528.

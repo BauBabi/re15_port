@@ -80,6 +80,47 @@ def page_pix(page):
     _PIX[page] = img
     return img
 
+# ---- EINGEZEICHNETE TUERSYMBOLE DER ORIGINAL-KACHELN --------------------------
+# Nutzer 2026-09-01: "praktisch fast ueberall befindet sich die Tuer auf beiden
+# Seiten der Map, obwohl es ein und dieselbe Tuer ist" und "in ROOM1130 ist oben
+# links die Tuerzeichnung 2x da".
+#
+# URSACHE: Das Original fuehrt Tueren NICHT als Daten - es MALT sie in die
+# Grundriss-Kachel. Der Port zeichnete zusaetzlich eigene Marken obendrauf.
+# Belegt (analysis/kartensymbole/): 92 Innenlinien-Gruppen ueber alle 119
+# Rechtecke, davon 90 Tuerblaetter, alle in Palettenindex 4 = rgb(176,176,176);
+# keine einzige Wandlinie hat je eine Luecke - eine Tuer ist immer ein 5x5-Stempel
+# nach innen. Projiziert man die RDT-Tuer-Datensaetze mit der ORIGINAL-Formel
+# FUN_800473f8 + Skalentabelle @0x800768b0, landen sie im Median 3,0 px auf einem
+# gezeichneten Symbol (STAGE1: 2,1 px) gegen 19,4 px im Nullmodell; ROOM1150s
+# einzige Tuer trifft das Symbol in ROOM1130s Rechteck mit 0,0 px.
+#
+# Also: wo die Kachel schon eine Tuer zeigt, zeichnet der Port GAR NICHTS.
+def _glyphs():
+    p = os.path.join(ROOT, 'analysis', 'kartensymbole', 'symbolkatalog.csv')
+    out = {}
+    if not os.path.exists(p): return out
+    with open(p, encoding='utf-8') as f:
+        kopf = f.readline().rstrip('\n').split(',')
+        ix = {n: i for i, n in enumerate(kopf)}
+        for zeile in f:
+            t = zeile.rstrip('\n').split(',')
+            if len(t) < len(kopf): continue
+            if t[ix['typ']] not in ('TUER', 'TUER2'): continue
+            pg = int(t[ix['seite']])
+            x  = int(t[ix['screen_x']]); y = int(t[ix['screen_y']])
+            w  = int(t[ix['px_w']]);     h = int(t[ix['px_h']])
+            out.setdefault(pg, []).append((x + w // 2, y + h // 2, w, h))
+    return out
+GLYPHEN = _glyphs()
+
+def kachel_zeigt_tuer(pg, mx, my, tol=5):
+    """Zeichnet die Kachel an dieser Stelle schon eine Tuer?"""
+    for gx, gy, gw, gh in GLYPHEN.get(pg, ()):
+        if abs(mx - gx) <= tol + gw // 2 and abs(my - gy) <= tol + gh // 2:
+            return True
+    return False
+
 def page_of(rid):
     stage = (rid >> 12) - 1; room = (rid >> 4) & 0xFF
     if stage == 0:
@@ -209,6 +250,10 @@ def read_rdt(rid):
                         continue
                     doors.append({'lx': rx + rw//2, 'lz': rz + rd//2,
                                   'rx': rx, 'rz': rz, 'rw': rw, 'rd': rd,
+                                  # Door_aot_set pc[4] = das BAND (Etage) der Tuer,
+                                  # obj[0x82]; das Original gattet die Interaktion
+                                  # darauf (FUN_8002bd44 @0x8002bf38).
+                                  'band': b[4],
                                   'nx': nx, 'nz': nz,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
                 pc += sz
@@ -592,6 +637,8 @@ def main():
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
                     mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                    if kachel_zeigt_tuer(pg, mx, my):
+                        continue          # die Kachel malt sie bereits
                 else:
                     # TREPPE: Sprossen quer zur Laufrichtung. map_x = welt_x,
                     # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
@@ -681,6 +728,72 @@ def main():
     for pg, r, mx, my, kind, zd, zd2 in sorted(marks):
         o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d}, {zd2:3d} }},")
     o.append("};")
+    # ================= ETAGEN-TABELLE ==========================================
+    # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
+    # Gehe ich die 2 Treppen runter, bin ich auf Ebene 2F, danach noch einmal runter
+    # auf 1F. Bei und im Treppenhaus bin ich IMMER auf Ebene 1F laut Karte."
+    #
+    # Der Treppenhaus-Raum ist ROOM1060 (bzw. ROOM10A0); beide liegen auf Kartenseite 2,
+    # und deren Titelbild heisst woertlich "POLICE STATION 1F" - daher die feste 1F.
+    # Das Original kennt keinen Etagenbegriff innerhalb eines Raums: der Seiten-Setzer
+    # @0x8004b568 liest nur die Raumnummer (Sprungtabelle @0x8001103c), und im ganzen
+    # Kartencode kommt das Spieler-Band DAT_800acad6 nicht vor. Die Umschaltung ist also
+    # eine PORT-ERGAENZUNG - aber sie ist vollstaendig aus den Daten ABGELEITET, nicht
+    # geraten:
+    #
+    #   (1) Jede Tuer traegt ihr BAND (Door_aot_set pc[4], re15_aot.h) und ihren
+    #       Zielraum. Der Zielraum hat eine bekannte Kartenseite, und die Seite traegt
+    #       im Titelbild ihre Etage. Fuer ROOM1060 gemessen:
+    #           Band 8 -> ROOM1120 (Seite 4 = "3F")
+    #           Band 4 -> ROOM10C0 (Seite 3 = "2F")
+    #           Band 0 -> ROOM1040 (Seite 2 = "1F")
+    #       Das deckt sich exakt mit der Beobachtung: je Treppenlauf werden 2 Baender
+    #       ueberquert (count), zwei Laeufe also 4 - 8 -> 4 -> 0.
+    #   (2) Der Raum ist auf JEDER dieser Etagen gezeichnet, mit DERSELBEN Kachel:
+    #       ROOM1060 belegt Seite 2 Rect 9 uv(168,40); Seite 3 Rect 9 und Seite 4 Rect 0
+    #       tragen dieselbe uv. Das Ziel-Rechteck wird deshalb ueber die Kachel-uv
+    #       gesucht - kein Raten, eine Gleichheitspruefung.
+    belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
+    floors = []          # (room, band, page, rect)
+    for b in sorted(zinfo):
+        eigene = assign.get((b, 0))
+        if eigene is None: continue
+        pg0, r0 = eigene
+        uv0 = rect_uv(pg0, r0)
+        baender = {}
+        for d in doors_all.get(b, []):
+            if d['rw'] == 0 and d['rd'] == 0: continue
+            zp = page_of(d['dest'])
+            if zp is None or zp == 0xd: continue
+            baender.setdefault(d['band'], set()).add(zp)
+        if len(baender) < 2: continue          # nur Raeume ueber mehrere Etagen
+        for band in sorted(baender):
+            ziel = sorted(baender[band])
+            if len(ziel) != 1: continue        # mehrdeutig -> auslassen
+            zp = ziel[0]
+            # ⛔ Die uv-Gleichheit allein reicht NICHT: Kachel-Wiederverwendung ist im
+            # Spiel die Regel (mehrere Seiten teilen pixelgleiche Rechtecke). Das
+            # Ziel-Rechteck muss deshalb zusaetzlich FREI sein - gehoert es schon einem
+            # anderen Raum, ist es nicht die Zweitzeichnung DIESES Raums. Ohne diese
+            # Bedingung landete ROOM1170s Band 0 auf Seite 4 Rect 4, und das ist
+            # ROOM1130.
+            treffer = [i for i, _ in enumerate(rects(zp))
+                       if rect_uv(zp, i) == uv0 and
+                          ((zp, i) == (pg0, r0) or (zp, i) not in belegte_rects)]
+            if len(treffer) != 1: continue     # Kachel dort nicht eindeutig
+            floors.append((b, band, zp, treffer[0]))
+    o.append("")
+    o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
+    o.append(" * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber")
+    o.append(" * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */")
+    o.append("typedef struct { unsigned short room; unsigned char band, page, rect; } re15_map_floor_t;")
+    o.append("static const re15_map_floor_t s_map_floors[] = {")
+    for room, band, pg, r in sorted(floors):
+        for var in (0, 1):
+            o.append(f"    {{ 0x{room + var:04X}, {band:2d}, {pg:2d}, {r:2d} }},")
+    o.append("};")
+    print(f"{len(floors)} Etagen-Eintraege")
+
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))
     print(f"\n{len(rows)} Zonen-Eintraege ({len(rows)//2} Zonen x 2 Varianten) -> {dst}")

@@ -912,10 +912,30 @@ void re15_game_step(const re15_game_ctx_t *c)
      * haengt daran — der Close/Transition laeuft in re15_menu_fsm_tick() darunter weiter
      * (byte-true: das Original setzt beim Open selbst 0xff000000 @0x8001cdd8-e8 und
      * restauriert es erst beim Menue-Ende), also kann dieses Gate kein Menue einsperren. */
-    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD))
+    /* ⛔ ZUSAETZLICH: nur oeffnen, wenn der Spieler WIRKLICH frei laeuft.
+     * Nutzer 2026-09-01: "ich kann das Player Inventory sowohl in Cutscenes als auch
+     * mitten im Treppenlauf oeffnen. Das soll nur gehen, wenn der Spieler sich
+     * wirklich unabhaengig frei bewegen darf."
+     *
+     * Der Original-Riegel darueber ist byte-true da, greift hier aber nicht: RE1.5
+     * setzt RE15_PAUSE_PAD ueber das SKRIPT (SCD Set(2,7,*)), und die Beta-Skripte tun
+     * das laengst nicht in jeder Szene; der Treppenlauf ist ueberhaupt kein Skript,
+     * sondern eine Spieler-Modus-Sequenz (mode 0xb/0xc), die kein Pausen-Bit setzt.
+     *
+     * Beide Zustaende sind im Port sauber abfragbar und werden hier an DENSELBEN
+     * Riegel gehaengt wie Flinch/Knockdown/Grab/Tod. Das ist bewusst der
+     * hit_react_ok-Parameter und nicht der PAUSE_PAD-Zweig darueber: die Anforderung
+     * bleibt dadurch STICKY (aca3c |= 0x8000 @0x8001cd48), das Inventar geht also auf,
+     * sobald der Spieler wieder frei ist — genau die Bauart des Originals.
+     * in_cinematic ist dieselbe Bedingung, die der AOT-Scan schon benutzt
+     * (aot_common.c:821: player_mode == 2 oder laufender Letterbox-Countdown). */
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD)) {
+        int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
         re15_menu_start_poll(c->pad_pressed,
-                             (s_hit_flinch == 0 && s_knockdown == 0 && !re15_player_is_grabbed() &&
-                              !re15_player_is_dead()) ? 1 : 0);
+                             (s_hit_flinch == 0 && s_knockdown == 0 &&
+                              !re15_player_is_grabbed() && !re15_player_is_dead() &&
+                              !in_cinematic && !re15_stair_active()) ? 1 : 0);
+    }
     if (re15_menu_gameplay_frozen()) {
         re15_menu_fsm_tick(c->pad_pressed, c->pad_current);
         return;

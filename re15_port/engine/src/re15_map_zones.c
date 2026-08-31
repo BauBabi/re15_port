@@ -167,8 +167,17 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
         if (zn->page != page || zn->rect != rect_idx) continue;
-        if (cur && zn->page == cur->page && zn->rect == cur->rect &&
-            zn->room == cur->room) return RE15_MAP_RECT_CURRENT;
+        if (cur && zn->room == cur->room) {
+            /* Auf einer Etagen-Umschaltung zaehlt das Etagen-Rechteck als aktuell,
+             * sonst das eigene. */
+            int fp, fr;
+            if (re15_map_floor_lookup(cur->room,
+                                      g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, &fr)) {
+                if ((int)page == fp && (int)rect_idx == fr) return RE15_MAP_RECT_CURRENT;
+            } else if (zn->page == cur->page && zn->rect == cur->rect) {
+                return RE15_MAP_RECT_CURRENT;
+            }
+        }
         if (state < RE15_MAP_RECT_VISITED && re15_map_zone_visited(zn))
             state = RE15_MAP_RECT_VISITED;
         else if (state < RE15_MAP_RECT_UNVISITED)
@@ -222,6 +231,33 @@ int re15_map_visited(unsigned room_id)
 #define MARK_COUNT ((int)(sizeof s_map_marks / sizeof s_map_marks[0]))
 
 int re15_map_mark_count(void) { return MARK_COUNT; }
+
+#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+
+/* ETAGE: liefert fuer (Raum, Band) das Blatt und das Rechteck, auf dem der Raum auf
+ * DIESER Etage gezeichnet ist. 1 = gefunden.
+ *
+ * Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F ...
+ * bei und im Treppenhaus bin ich IMMER auf Ebene 1F laut Karte." Das Treppenhaus ist
+ * ROOM1060; es liegt auf Seite 2, deren Titelbild woertlich "POLICE STATION 1F" heisst.
+ * Das Original hat keinen Etagenbegriff INNERHALB eines Raums (Seiten-Setzer
+ * @0x8004b568 liest nur die Raumnummer; das Spieler-Band DAT_800acad6 kommt im
+ * Kartencode nicht vor) - die Umschaltung ist eine PORT-ERGAENZUNG, aber aus den Daten
+ * abgeleitet: jede Tuer traegt ihr Band und ihren Zielraum, der Zielraum seine Seite.
+ * Fuer ROOM1060: Band 8 -> ROOM1120 (Seite 4 "3F"), Band 4 -> ROOM10C0 (Seite 3 "2F"),
+ * Band 0 -> ROOM1040 (Seite 2 "1F"). Tabelle: tools/gen_map_zones.py. */
+int re15_map_floor_lookup(unsigned room, int band, int *page, int *rect)
+{
+    int i;
+    for (i = 0; i < FLOOR_COUNT; i++) {
+        if (s_map_floors[i].room != room) continue;
+        if ((int)s_map_floors[i].band != band) continue;
+        if (page) *page = s_map_floors[i].page;
+        if (rect) *rect = s_map_floors[i].rect;
+        return 1;
+    }
+    return 0;
+}
 
 /* 1, wenn der Spieler auf dieser Kartenseite schon mindestens eine Zone gesehen hat.
  * Riegel fuer das Ebenen-Blaettern: man soll nur Blaetter durchsehen koennen, die man
