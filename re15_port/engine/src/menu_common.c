@@ -1423,6 +1423,11 @@ static void map_mode(uint16_t pressed)
         /* Exit: LoadImage restore of the saved rect from 0x801a0000 (@0x8004c2c4-e4)
          * + DrawSync (state-free in the port texture model), then the verified exit
          * contract @0x8004c2f0-304: 25ca=0, 25c1=0, 25c2=0, 25c3=0 (tab kept). */
+        se4(5);                                 /* Abbruch-Ton beim Verlassen der Karte
+                                                 * (Nutzer 2026-08-31: "zurueckgehen von
+                                                 * der MAP hat nicht den Abbruch sound").
+                                                 * Ton = Original SE-Bank 4 Nr. 5, Stelle
+                                                 * ergaenzt wie die uebrigen Menuetoene. */
         g_inv_screen.highlight = 0;             /* sb zero 25ca @0x8004c2f4 */
         s_substate = 0;                         /* sb zero 25c1 @0x8004c2fc */
         g_inv_screen.item_state = 0;            /* sb zero 0(s1) @0x8004c300 */

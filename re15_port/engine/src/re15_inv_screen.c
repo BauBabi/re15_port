@@ -1464,48 +1464,16 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         }
     }
 
-    /* ---- 4c. TUEREN und TREPPEN einzeichnen (Nutzer-Report 2026-08-30: "die Tuer
-     * ist auf der Karte nicht eingezeichnet ... auserdem muesste links im kleinen
-     * Rechteck die Treppe eingezeichnet sein"). RE1.5 malt auf seinen Karten-Seiten
-     * weder Tueren noch Treppen; RE2 setzt gelbe Tuerpunkte in die Grafik und eigene
-     * 8x8-Marker fuer Uebergaenge. Da RE1.5 diese Icons nicht mitbringt, zeichnet der
-     * Port sie aus kurzen Linien in RE2s Tuer-Gelb: Tuer = ein Strich quer, Treppe =
-     * Leiter (drei Sprossen). Nur fuer Zonen, die der Spieler schon gesehen hat.
-     * ⛔ NUR AUF DEM KARTEN-SCHIRM: derselbe Zeichen-Riegel wie fuer die Karte selbst
-     * (word(25c0) & 0xffffff == 0x00010100, @0x80049bb4-cc — hier als
-     * substate==1 && item_state==1 gespiegelt). Ohne ihn blenden die Marken ins
-     * normale Inventar-Menue durch (Nutzer-Report 2026-08-30: "Außerdem blenden jetzt
-     * schon im normalen item menu kartenmarkierungen durch"). */
-    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
-        int n = re15_map_mark_count(), k;
-        for (k = 0; k < n; k++) {
-            int mpage, mrect, mx, my, kind;
-            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
-            if (mpage != (int)st->map_page) continue;
-            if (kind == 0) {
-                /* TUER: 3 px breiter Strich */
-                re15_inv_op_t *o;
-                if (e.n >= e.max) break;
-                o = &e.ops[e.n++];
-                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                o->x = (int16_t)(mx - 1); o->y = (int16_t)my;
-                o->w = (int16_t)(mx + 1); o->h = (int16_t)my;
-                o->r = 224; o->g = 176; o->b = 32;      /* RE2-Tuergelb (0x12dc) */
-            } else {
-                /* TREPPE: drei waagerechte Sprossen uebereinander */
-                int row;
-                for (row = -2; row <= 2; row += 2) {
-                    re15_inv_op_t *o;
-                    if (e.n >= e.max) break;
-                    o = &e.ops[e.n++];
-                    o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 0;
-                    o->x = (int16_t)(mx - 2); o->y = (int16_t)(my + row);
-                    o->w = (int16_t)(mx + 2); o->h = (int16_t)(my + row);
-                    o->r = 232; o->g = 232; o->b = 200;  /* helle Stufen */
-                }
-            }
-        }
-    }
+    /* ---- 4c. TUEREN und TREPPEN: ENTFERNT (Nutzer 2026-08-31: "Die Map hat komische
+     * gelbe Striche die da nicht hin gehoeren. Schon bei dem ersten Kartenpunkt von
+     * 1170.")
+     * Die Marken wurden aus dem Tuer-Graphen abgeleitet und ueber die Marker-Formel
+     * auf die Kartenblaetter projiziert. Beides steht auf unsicherem Grund: die
+     * Zuordnung Raum -> Rechteck ist nur teilweise belegt, und RE1.5 selbst zeichnet
+     * auf seinen Kartenblaettern weder Tueren noch Treppen — die Striche waren also
+     * eine Erfindung an ungesicherter Position. Lieber nichts zeichnen als etwas
+     * Falsches. Der Marken-Speicher (re15_map_mark_*) bleibt bestehen, falls die
+     * Zuordnung spaeter belastbar wird. */
 
     /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base
      * 25e0/25e2 LIVE (lhu @0x80048748/@0x8004876c), AddPrim while slot < capacity;
