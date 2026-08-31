@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.3.68 (Early Preview)
+
+**Der Marker lief senkrecht verkehrt herum — jetzt belegt und behoben.**
+
+Die Markerformel des Originals **negiert die z-Achse**: Läuft man im Spiel nach hinten,
+wandert der Punkt auf der Karte nach oben. Meine Bereichsprojektion tat das nicht — im
+Code stand sogar ausdrücklich das Gegenteil. Genau das hast du gesehen.
+
+Gegenprobe gegen die Original-Formel, die für den großen Bereich funktioniert:
+
+| Punkt | Original | jetzt | vorher |
+|---|---|---|---|
+| Tür nach 1130 | (175,103) | (174,105) | (174,152) |
+| Richtung 1140 | (154,139) | (158,138) | (158,119) |
+
+Die alten Werte lagen an der Spiegelachse verkehrt — das erklärt die falsche
+Laufrichtung.
+
+**Zum kleinen Bereich:** Er bleibt unsere Korrektur eines Original-Fehlers (das Spiel
+selbst legt ihn außerhalb beider Rechtecke ab). Falls er dort weiterhin danebensteht,
+habe ich schon den nächsten Ansatzpunkt gemessen: Der gezeichnete Grundriss füllt sein
+Rechteck nur zur Hälfte aus, der Marker kann also innerhalb des Rechtecks auf einer
+leeren Stelle landen. Das ließe sich auf die tatsächlich gezeichnete Fläche einschränken.
+
+---
+
 # RE1.5 Port — v0.3.67 (Early Preview)
 
 **Positionsmarker springt nicht mehr ins falsche Rechteck.**
