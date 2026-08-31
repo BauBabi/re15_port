@@ -85,7 +85,7 @@ static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
 /* Box-Schirm: das Listen-Panel sitzt auf der Hoehe des Inventar-Gitters (BOX_BY),
  * die Textbox eigenstaendig darunter. RE2-Innengeometrie (Zeilen ab y 41,
  * Scrollschiene ab 42) wandert um denselben Versatz mit. */
-#define RE15_BOX_PANEL_Y   22
+#define RE15_BOX_PANEL_Y   16
 #define RE15_BOX_PANEL_DY  (RE15_BOX_PANEL_Y - 13)   /* Versatz gegen das Original */
 #define RE15_BOX_TEXT_Y    (RE15_BOX_PANEL_Y + 156)  /* direkt unter dem Panel */
 /* Grundlinie des Namens IN der Textbox: im Original steht die Schrift bei y 181,
@@ -903,15 +903,9 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * the RE1.5 cant-use infra standing in for RE2's box reject FUN_8002fe38). */
     if (st->msg_entry >= 0 && (st->msg_reveal > 0 || st->msg_arrow)) emit_msg(&e, st);
 
-    /* 1. EXIT affordance [DESIGN]: the word "EXIT" in the byte-true FUN_80028ec4
-     * glyph printer (codes = chr-0x24: E=0x21 X=0x34 I=0x25 T=0x30, end 0x07);
-     * bright TEX row 0 when the EXIT row is selected, the dim row-6 palette
-     * (0x30 flag — the FILE hidden-row palette) otherwise. ≙ RE2's EXIT row with
-     * highlight 0x80/0x40 @§2.5. */
-    {
-        static const uint8_t k_exit[5] = { 0x21, 0x34, 0x25, 0x30, 0x07 };
-        emit_text(&e, 0x90, 0xd8, k_exit, (st->box_side == 2) ? 0x00 : 0x30);
-    }
+    /* (Die EXIT-Zeile ist entfernt — Nutzer 2026-08-31: "das Exit unten kann raus,
+     * man kommt auch raus mit mehrfach X und Item Box verlassen. das reicht." Der
+     * Ausstieg ueber Abbrechen bleibt unveraendert.) */
 
     /* (Die Ringpositions-Anzeige "NN/64" ist entfernt — der Scrollgriff zeigt die
      * Position an, und im Original steht dort nichts. Nutzer 2026-08-31.) */
