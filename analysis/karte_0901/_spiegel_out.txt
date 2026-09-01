@@ -1,0 +1,44 @@
+Tuermarken: 102   gemalte Symbole: 75
+
+Fuer jede Marke das naechste gemalte Symbol auf derselben Seite (Mittelpunktabstand):
+   d > 16 px                           43
+   d 9..16 px                          25
+   d<=8 px: SPIEGELWAND                25
+   d<=8 px: quer                        6
+   d<=8 px: GLEICHE WAND                2
+   keine Symbole auf dieser Seite       1
+
+   Die Faelle d<=8 px im Detail (Marke | Symbol | Abstand | Wandlage):
+     S8  Marke r7 (142,164) Wand W  |  Symbol r4 (141,163) 4x4 Wand E   |  1.4 px | SPIEGELWAND (W gegen E)
+     S4  Marke r2 (145, 85) Wand E  |  Symbol r4 (147, 84) 5x5 Wand W   |  2.2 px | SPIEGELWAND (E gegen W)
+     S4  Marke r4 (152,125) Wand W  |  Symbol r5 (150,126) 5x5 Wand E   |  2.2 px | SPIEGELWAND (W gegen E)
+     S8  Marke r8 (177,164) Wand W  |  Symbol r11(175,163) 4x7 Wand E   |  2.2 px | SPIEGELWAND (W gegen E)
+     S11 Marke r0 (162,134) Wand W  |  Symbol r1 (160,133) 4x7 Wand E   |  2.2 px | SPIEGELWAND (W gegen E)
+     S11 Marke r3 (158,158) Wand W  |  Symbol r0 (156,157) 4x4 Wand E   |  2.2 px | SPIEGELWAND (W gegen E)
+     S7  Marke r1 (167,115) Wand E  |  Symbol r6 (170,115) 5x5 Wand W   |  3.0 px | SPIEGELWAND (E gegen W)
+     S8  Marke r1 (156, 64) Wand E  |  Symbol r0 (159, 64) 4x4 Wand W   |  3.0 px | SPIEGELWAND (E gegen W)
+     S1  Marke r3 (212, 92) Wand E  |  Symbol r6 (215, 91) 5x5 Wand W   |  3.2 px | SPIEGELWAND (E gegen W)
+     S4  Marke r4 (160,150) Wand E  |  Symbol r6 (163,151) 5x9 Wand W   |  3.2 px | SPIEGELWAND (E gegen W)
+     S0  Marke r5 (129,124) Wand N  |  Symbol r0 (127,121) 5x5 Wand S   |  3.6 px | SPIEGELWAND (N gegen S)
+     S1  Marke r3 (201, 84) Wand W  |  Symbol r4 (198, 82) 5x5 Wand E   |  3.6 px | SPIEGELWAND (W gegen E)
+     S1  Marke r3 (201,101) Wand W  |  Symbol r5 (198, 99) 5x5 Wand E   |  3.6 px | SPIEGELWAND (W gegen E)
+     S4  Marke r6 (166,110) Wand N  |  Symbol r3 (164,107) 5x5 Wand S   |  3.6 px | SPIEGELWAND (N gegen S)
+     S6  Marke r3 (107,144) Wand W  |  Symbol r0 (105,141) 4x10 Wand E   |  3.6 px | SPIEGELWAND (W gegen E)
+     S9  Marke r14(138,179) Wand W  |  Symbol r10(135,177) 4x5 Wand E   |  3.6 px | SPIEGELWAND (W gegen E)
+     S10 Marke r0 (126,114) Wand S  |  Symbol r1 (124,117) 7x4 Wand N   |  3.6 px | SPIEGELWAND (S gegen N)
+     S4  Marke r4 (168, 89) Wand S  |  Symbol r3 (165, 92) 5x5 Wand N   |  4.2 px | SPIEGELWAND (S gegen N)
+     S7  Marke r0 (128,117) Wand E  |  Symbol r1 (131,114) 5x5 Wand W   |  4.2 px | SPIEGELWAND (E gegen W)
+     S8  Marke r8 (205,149) Wand E  |  Symbol r10(208,152) 5x4 Wand -   |  4.2 px | quer (E gegen -)
+     S9  Marke r1 (168, 90) Wand W  |  Symbol r0 (165, 87) 5x5 Wand E   |  4.2 px | SPIEGELWAND (W gegen E)
+     S2  Marke r9 (113,134) Wand N  |  Symbol r2 (115,130) 5x5 Wand E   |  4.5 px | quer (N gegen E)
+     S0  Marke r1 (143, 76) Wand N  |  Symbol r0 (139, 73) 5x5 Wand S   |  5.0 px | SPIEGELWAND (N gegen S)
+     S1  Marke r4 (201, 95) Wand E  |  Symbol r5 (198, 99) 5x5 Wand E   |  5.0 px | GLEICHE WAND (E == E)
+     S1  Marke r8 (212,112) Wand N  |  Symbol r7 (215,108) 5x5 Wand W   |  5.0 px | quer (N gegen W)
+     S8  Marke r8 (207,147) Wand S  |  Symbol r10(208,152) 5x4 Wand -   |  5.1 px | quer (S gegen -)
+     S2  Marke r4 (119,134) Wand W  |  Symbol r2 (115,130) 5x5 Wand E   |  5.7 px | SPIEGELWAND (W gegen E)
+     S2  Marke r4 (186,153) Wand E  |  Symbol r0 (190,149) 5x5 Wand W   |  5.7 px | SPIEGELWAND (E gegen W)
+     S9  Marke r6 ( 95,141) Wand W  |  Symbol r4 ( 91,137) 5x9 Wand E   |  5.7 px | SPIEGELWAND (W gegen E)
+     S0  Marke r3 (168,100) Wand W  |  Symbol r4 (173,103) 5x5 Wand N   |  5.8 px | quer (W gegen N)
+     S8  Marke r8 (210,145) Wand S  |  Symbol r10(208,152) 5x4 Wand -   |  7.3 px | quer (S gegen -)
+     S1  Marke r4 (201, 92) Wand E  |  Symbol r5 (198, 99) 5x5 Wand E   |  7.6 px | GLEICHE WAND (E == E)
+     S12 Marke r5 (194,126) Wand W  |  Symbol r0 (191,133) 4x4 Wand E   |  7.6 px | SPIEGELWAND (W gegen E)

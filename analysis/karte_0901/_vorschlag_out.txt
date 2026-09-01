@@ -1,0 +1,67 @@
+==============================================================================
+VORSCHLAG - REGELN UND IHRE ZAHLEN
+==============================================================================
+Ausgangsmenge: 165 Tuer-Datensaetze mit Rechteck, 74 davon zu 37 Paaren gebunden.
+
+   (a) HEUTE: Kachel/eigenes Rect, DANN Paarung  [= Header]   102 Tuermarken
+   (b) nur Paarung vorziehen                                   89 Tuermarken
+   (c) Paarung vorziehen + Kachel-Test eig.+Partner-Rect       86 Tuermarken
+   (d) Paarung vorziehen + SPIEGELWAND-Test (8 px)             67 Tuermarken
+   (e) Paarung vorziehen + Partner-Rect + SPIEGELWAND          67 Tuermarken
+   (f) Paarung vorziehen + Kachel-Test ganze Seite (4 px)      64 Tuermarken
+
+Verlust gegenueber heute: (b) 13   (c) 16   (d) 35   (e) 35   (f) 38
+
+RESTDOPPELUNG NACH JEDER REGEL (Marke <=8 px vor einem Symbol der Spiegelwand):
+   (a) heute                                                   27 Restfaelle
+   (b)                                                         20 Restfaelle
+   (c)                                                         18 Restfaelle
+   (d)                                                          0 Restfaelle
+   (e)                                                          0 Restfaelle
+   (f)                                                          1 Restfaelle
+
+PORT-MARKE GEGEN PORT-MARKE (zwei Stempel derselben Seite, Mittelpunkt <=8 px):
+   (a) heute                                                   16 Paare
+   (b)                                                         16 Paare
+   (c)                                                         16 Paare
+   (d)                                                         13 Paare
+   (e)                                                         13 Paare
+
+WAS (e) GEGENUEBER HEUTE ZUSAETZLICH WEGLAESST:
+   S0  r0  (150,124) Wand S   Partner-Rect-Symbol / Paar-Verschmelzung
+   S0  r1  (143, 76) Wand N   Spiegelsymbol r0(139,73) Wand S, 5.0 px
+   S0  r3  (168,100) Wand W   Partner-Rect-Symbol / Paar-Verschmelzung
+   S0  r5  (129,124) Wand N   Spiegelsymbol r0(127,121) Wand S, 3.6 px
+   S1  r3  (201, 84) Wand W   Spiegelsymbol r4(198,82) Wand E, 3.6 px
+   S1  r3  (201,101) Wand W   Spiegelsymbol r5(198,99) Wand E, 3.6 px
+   S1  r3  (212, 92) Wand E   Spiegelsymbol r6(215,91) Wand W, 3.2 px
+   S1  r3  (212,108) Wand E   Spiegelsymbol r7(215,108) Wand W, 3.0 px
+   S1  r3  (212,126) Wand E   Spiegelsymbol r8(215,125) Wand W, 3.2 px
+   S2  r0  (197,136) Wand W   Partner-Rect-Symbol / Paar-Verschmelzung
+   S2  r4  (119,134) Wand W   Spiegelsymbol r2(115,130) Wand E, 5.7 px
+   S2  r4  (186,153) Wand E   Spiegelsymbol r0(190,149) Wand W, 5.7 px
+   S4  r0  (136,141) Wand E   Partner-Rect-Symbol / Paar-Verschmelzung
+   S4  r2  (145, 85) Wand E   Spiegelsymbol r4(147,84) Wand W, 2.2 px
+   S4  r4  (160,150) Wand E   Spiegelsymbol r6(163,151) Wand W, 3.2 px
+   S4  r4  (168, 89) Wand S   Spiegelsymbol r3(165,92) Wand N, 4.2 px
+   S4  r5  (120,149) Wand W   Partner-Rect-Symbol / Paar-Verschmelzung
+   S4  r6  (166,110) Wand N   Spiegelsymbol r3(164,107) Wand S, 3.6 px
+   S6  r0  ( 90,131) Wand W   Spiegelsymbol r1(88,131) Wand E, 2.0 px
+   S6  r3  (107,144) Wand W   Spiegelsymbol r0(105,141) Wand E, 3.6 px
+   S6  r4  (118,111) Wand W   Partner-Rect-Symbol / Paar-Verschmelzung
+   S7  r0  (128,117) Wand E   Spiegelsymbol r1(131,114) Wand W, 4.2 px
+   S7  r1  (167,115) Wand E   Spiegelsymbol r6(170,115) Wand W, 3.0 px
+   S7  r8  ( 65,168) Wand W   Partner-Rect-Symbol / Paar-Verschmelzung
+   S7  r10 (247,133) Wand E   Partner-Rect-Symbol / Paar-Verschmelzung
+   S8  r1  (156, 64) Wand E   Spiegelsymbol r0(159,64) Wand W, 3.0 px
+   S8  r7  (142,164) Wand W   Spiegelsymbol r4(141,163) Wand E, 1.4 px
+   S8  r8  (177,164) Wand W   Spiegelsymbol r11(175,163) Wand E, 2.2 px
+   S9  r1  (168, 90) Wand W   Spiegelsymbol r0(165,87) Wand E, 4.2 px
+   S9  r6  ( 95,141) Wand W   Spiegelsymbol r4(91,137) Wand E, 5.7 px
+   S9  r14 (138,179) Wand W   Spiegelsymbol r10(135,177) Wand E, 3.6 px
+   S10 r0  (126,114) Wand S   Spiegelsymbol r1(124,117) Wand N, 3.6 px
+   S11 r0  (162,134) Wand W   Spiegelsymbol r1(160,133) Wand E, 2.2 px
+   S11 r3  (158,158) Wand W   Spiegelsymbol r0(156,157) Wand E, 2.2 px
+   S12 r5  (194,126) Wand W   Spiegelsymbol r0(191,133) Wand E, 7.6 px
+
+WAS (e) NEU ZEIGT, das heute fehlt (Gegenrichtung, darf nicht leer bleiben):

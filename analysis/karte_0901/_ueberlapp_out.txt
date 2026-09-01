@@ -1,0 +1,32 @@
+==============================================================================
+TOLERANZFREIES MASS: PORT-STEMPEL GEGEN GEMALTES SYMBOL
+==============================================================================
+Der Port zeichnet je Tuermarke 13 Pixel in genau dem Wandton des Originals
+(re15_inv_screen.c, static const signed char SYM[13][2]) - er ist von einem
+gemalten Symbol optisch nicht zu unterscheiden.
+
+Tuermarken im Schnappschuss-Header: 102
+davon ueberlappt der Stempel ein gemaltes Symbol: 5  (5 %)
+   im EIGENEN Rechteck: 0      im NACHBAR-Rechteck: 5
+
+   Marke                     ueberlappte Pixel   gemaltes Symbol
+   S0  r3  (168,100) kind3       2 von 13     r4  (171,101) 5x5
+   S1  r4  (201, 95) kind1       3 von 13     r5  (196, 97) 5x5
+   S4  r2  (145, 85) kind1       1 von 13     r4  (145, 82) 5x5
+   S4  r4  (152,125) kind3       1 von 13     r5  (148,124) 5x5
+   S8  r7  (142,164) kind3       1 von 13     r4  (139,161) 4x4
+
+Gegenprobe - zwei PORT-Stempel, die sich gegenseitig ueberlappen:
+   S1  r4 (201, 92) kind1  <->  r4 (201, 95) kind1
+   S2  r7 (179,107) kind1  <->  r7 (179,109) kind1
+   S2  r9 (113,134) kind0  <->  r9 (118,138) kind1
+   S4  r1 (148,137) kind0  <->  r5 (144,137) kind2
+   S6  r10(277,149) kind3  <->  r10(284,149) kind2
+   S6  r10(284,149) kind2  <->  r10(287,143) kind1
+   S7  r10(240,128) kind0  <->  r10(247,133) kind1
+   S8  r8 (185,158) kind0  <->  r8 (188,165) kind2
+   S8  r8 (185,158) kind0  <->  r8 (189,164) kind1
+   S8  r8 (188,165) kind2  <->  r8 (189,164) kind1
+   S8  r8 (205,149) kind1  <->  r8 (207,147) kind2
+   S8  r8 (207,147) kind2  <->  r8 (210,145) kind2
+   Summe: 12 Paare

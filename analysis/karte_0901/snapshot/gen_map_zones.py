@@ -124,34 +124,6 @@ def _glyphs():
     return out
 GLYPHEN = _glyphs()
 
-_maskcache = {}
-def _maske(pg, r):
-    if (pg, r) in _maskcache: return _maskcache[(pg, r)]
-    pix = page_pix(pg)
-    if pix is None: _maskcache[(pg, r)] = set(); return _maskcache[(pg, r)]
-    RX, RY, RW, RH = rects(pg)[r]; U, V = rect_uv(pg, r); m = set()
-    for j in range(RH):
-        for i in range(RW):
-            if V + j < 256 and U + i < 256 and pix[V + j][U + i] != 0: m.add((RX + i, RY + j))
-    _maskcache[(pg, r)] = m
-    return m
-
-_bercache = {}
-def _beruehren(pg, a, b):
-    """Beruehren sich die GEZEICHNETEN Flaechen zweier Rechtecke? Zwei Raeume, die eine
-    Tuer verbindet, muessen das - der Kuenstler hat sie aneinander gesetzt. Das ist eine
-    Aussage der KACHEL und damit unabhaengig von unserer Projektion."""
-    if a == b: return True
-    k = (pg, min(a, b), max(a, b))
-    if k in _bercache: return _bercache[k]
-    ma = _maske(pg, a); mb = _maske(pg, b); hit = False
-    for (x, y) in ma:
-        if hit: break
-        for dx, dy in ((1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)):
-            if (x + dx, y + dy) in mb: hit = True; break
-    _bercache[k] = hit
-    return hit
-
 def kachel_zeigt_tuer(pg, r, mx, my, tol=4):
     """Zeichnet die Kachel DIESES Rechtecks an dieser Stelle schon eine Tuer?
 
@@ -436,11 +408,6 @@ def main():
                 ta = T(zl[ia][2], R[ra]); tb = T(zl[ib][2], R[rb])
                 if not ta or not tb: continue
                 pa_ = apply(ta, lx, lz); pb_ = apply(tb, nx, nz)
-                # ⛔ Der Deckel bei 40 px ist GEMESSEN unschaedlich. Ein Audit hatte
-                # vermutet, er lasse 189-px-Fehlzuordnungen gratis durch; A/B ueber die
-                # 32 aus der ausgelieferten Zeile bekannten Zuordnungen (Deckel 40/400/
-                # 1000, Kantengewicht 1/2, zusaetzliche Beruehrungsstrafe 0/60/120):
-                # ALLE Varianten liefern 21/32 - der Deckel ist nicht der Hebel.
                 c += min(math.hypot(pa_[0]-pb_[0], pa_[1]-pb_[1]), 40.0)
             return c
         best = None
@@ -951,11 +918,8 @@ def main():
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
                     mx, my, mkind = snap_wall(pg, r, mx, my, senk)
-                    # ⛔ HIER NOCH NICHT VERWERFEN. Bis v0.3.80 fiel eine Marke schon in
-                    # Durchgang 1 weg, wenn ihr eigenes Rechteck die Tuer malt - und ihr
-                    # Partner blieb als freie Einzelmarke stehen, weil die Paarung erst in
-                    # Durchgang 2 laeuft (15 Paare game-weit). Der Durchgang wird jetzt als
-                    # EINHEIT behandelt: erst paaren, dann filtern.
+                    if kachel_zeigt_tuer(pg, r, mx, my):
+                        continue          # die Kachel malt sie bereits
                 else:
                     # TREPPE: Sprossen quer zur Laufrichtung. map_x = welt_x,
                     # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
@@ -993,24 +957,9 @@ def main():
     for _d, _i, _j in sorted(kand):
         if _i in belegt or _j in belegt: continue
         A, B = tueren[_i], tueren[_j]
-        if A['pg'] != B['pg']:
-            # Verschiedene Blaetter: jede Seite zeigt ihre eigene Tuer. Die beiden
-            # Datensaetze duerfen dabei NICHT als verbraucht gelten - sonst nimmt ein
-            # folgenloses Paar einem dritten Datensatz den Partner weg.
-            continue
-        # ⛔ NUR VERSCHMELZEN, WENN SICH DIE RECHTECKE BERUEHREN.
-        # Die Verschmelzung setzt beide Enden auf EINE Position und stuetzt sich dabei
-        # auf "die beiden Rechtecke teilen sich eine Kante". Trifft das nicht zu, wandert
-        # die Marke in ein fremdes Rechteck: gemessen an ROOM10C0 <-> ROOM1060 auf dem
-        # 2F-Blatt - Rect 8 (164,77,24,24) und Rect 9 (109,134,16,16) liegen 84 bzw.
-        # 110 px auseinander, und die Verschmelzung schob ROOM10C0s Tuer in das
-        # 16x16-Kaestchen des Treppenhauses, wo das Original nichts malt (Katalog: 0
-        # Symbole auf Rect (3,8)). Die Beruehrung ist eine Aussage der KACHEL und
-        # braucht keine freie Zahl.
-        if not _beruehren(A['pg'], A['r'], B['r']):
-            belegt.add(_i); belegt.add(_j)
-            continue
         belegt.add(_i); belegt.add(_j)
+        if A['pg'] != B['pg']:
+            continue        # verschiedene Blaetter: jede Seite zeigt ihre eigene Tuer
         # ⛔ NICHT MITTELN. Die beiden Rechtecke liegen auf dem Blatt so, wie der
         # Kuenstler sie gesetzt hat; unsere zwei linearen Projektionen koennen weit
         # auseinander fallen (gemessen ROOM1130 <-> ROOM1120: (152,125) gegen
@@ -1036,67 +985,6 @@ def main():
         # vermerkt: die Marke erscheint, sobald EINER der beiden Raeume besucht ist.
         W['zid2'] = (B if W is A else A)['zid']
         (B if W is A else A)['weg'] = True
-
-    # ============ DURCHGANG 2b: KACHEL- UND SPIEGELWAND-FILTER ==================
-    # Nutzer 2026-09-01: "In so ziemlich allen Faellen sind die Tueren auf beiden Seiten
-    # eingezeichnet statt nur einmalig."
-    #
-    # GEMESSEN (Zensus ueber alle 302 Tuer-Datensaetze, 132 Durchgangs-Paare): Die
-    # Doppelung ist NICHT zweimal Port-Marke - das kommt nur bei 2 Paaren vor. Sie ist
-    # Port-Marke NEBEN GEMALTEM SYMBOL: 40 der 134 lebenden Marken sitzen <=4 px vor
-    # einem Symbol, das die Kachel in einem NACHBAR-Rechteck malt, und 25 davon auf der
-    # gegenueberliegenden Wandseite - also als zweite Nische an derselben Wandlinie.
-    # kachel_zeigt_tuer sah dort nicht hin, weil es nur GLYPHEN[(pg, eigenes rect)]
-    # prueft; die Rechtecke einer Seite ueberlappen sich aber auf dem Schirm.
-    #
-    # Auf 44 von 111 gezeichneten Durchgaengen (40 %) waren so >=2 Zeichnungen zu sehen,
-    # auf den Blaettern 1/2/4 sogar 18 von 27 (67 %) - das sind die "so ziemlich alle
-    # Faelle" des Reports.
-    #
-    # DAS ORIGINAL MALT EINEN DURCHGANG NIE ZWEIMAL: die Signatur "zwei Stempel auf
-    # derselben Wandlinie mit gegenueberliegender Wandseite" kommt in 0 von 2775
-    # Symbolpaaren vor. Der Nutzerwunsch stellt also Original-Verhalten wieder her.
-    #
-    # Regel (gemessen gegen vier Alternativen, siehe analysis/karte_0901/B_doppelte_tueren.md):
-    #   * Kachel-Test ueber das EIGENE und das PARTNER-Rechteck,
-    #   * plus SPIEGELWAND-Test: faellt weg, wenn auf derselben Seite ein gemaltes Symbol
-    #     <=8 px entfernt liegt, dessen Wandseite die gegenueberliegende ist.
-    # Restdoppelung danach: 0 (die Wandseite geht in den Kachel-Test nicht ein, ist also
-    # eine unabhaengige Pruefgroesse). Ein blanker seitenweiter Test ohne Wandseite ist
-    # VERWORFEN: er hatte am 2026-09-01 bereits alle vier ROOM1130-Tueren geschluckt.
-    GEGENWAND = {0: 'S', 1: 'W', 2: 'N', 3: 'E'}      # Port-Seite 0=N 1=O 2=S 3=W
-
-    def _spiegelsymbol(v):
-        """Gemaltes Symbol <=8 px auf der GEGENUEBERLIEGENDEN Wand, irgendwo auf der Seite."""
-        soll = GEGENWAND.get(v['seite'])
-        if soll is None: return False
-        for (gx, gy, gw, gh, wand) in GLYPHEN.get(v['pg'], ()):
-            if wand != soll: continue
-            if ((v['mx'] - gx) ** 2 + (v['my'] - gy) ** 2) ** 0.5 <= 8.0: return True
-        return False
-
-    partner = {}
-    for _d, _i, _j in kand:
-        if _i in belegt and _j in belegt:
-            partner[id(tueren[_i])] = tueren[_j]
-            partner[id(tueren[_j])] = tueren[_i]
-    n_kachel = n_spiegel = n_partner = 0
-    for v in vor:
-        if v['kind'] != 0 or v.get('weg'): continue
-        P = partner.get(id(v))
-        raus = None
-        if kachel_zeigt_tuer(v['pg'], v['r'], v['mx'], v['my']):
-            raus = 'kachel'; n_kachel += 1
-        elif P is not None and P['pg'] == v['pg'] and              kachel_zeigt_tuer(v['pg'], P['r'], v['mx'], v['my']):
-            raus = 'partner'; n_partner += 1
-        elif _spiegelsymbol(v):
-            raus = 'spiegel'; n_spiegel += 1
-        if raus:
-            v['weg'] = True
-            # Der Durchgang ist EINE Einheit: faellt ein Ende, faellt auch das andere.
-            if P is not None: P['weg'] = True
-    print(f"Tuermarken gefiltert: {n_kachel} eigene Kachel, {n_partner} Partner-Rechteck, "
-          f"{n_spiegel} Spiegelwand")
 
     # ================= DURCHGANG 3: ausgeben ====================================
     # ---- MARKEN AUF DIE ZWEIT-ZEICHNUNG MITNEHMEN -----------------------------

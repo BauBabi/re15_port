@@ -1,0 +1,62 @@
+==============================================================================
+SCHLUSSBILANZ - SICHTBARE TUER-ZEICHNUNGEN JE DURCHGANG (IST-Stand)
+==============================================================================
+Ein Durchgang = ein Paar reziproker Tuer-Datensaetze. Gezaehlt werden je BLATT:
+die getroffenen gemalten Symbole (nach Identitaet dedupliziert) + die Port-Marken.
+
+   1 Zeichnung(en) auf dem vollsten Blatt      67
+   2 Zeichnung(en) auf dem vollsten Blatt      40
+   3 Zeichnung(en) auf dem vollsten Blatt       4
+   nichts gezeichnet                           21
+
+Die Durchgaenge mit >=2 Zeichnungen auf EINEM Blatt:
+   Raum A  ->  Raum B          Blatt  gemalte Symbole  Port-Marken
+   1180 <-> 11D0                S0         1              1
+   1190 <-> 1230                S0         1              1
+   11B0 <-> 11C0                S0         1              1
+   11D0 <-> 1230                S0         1              1
+   11E0 <-> 11F0                S1         1              1
+   1210 <-> 1220                S1         2              1
+   1210 <-> 1220                S1         1              1
+   1210 <-> 1220                S1         2              1
+   1210 <-> 1220                S1         1              1
+   1210 <-> 1220                S1         1              1
+   1030 <-> 1040                S2         1              1
+   1030 <-> 1050                S2         1              1
+   1030 <-> 1070                S2         1              1
+   10A0 <-> 11E0                S2         1              1
+   10A0 <-> 1180                S2         1              1
+   10A0 <-> 1230                S2         1              1
+   1060 <-> 1120                S4         1              1
+   1120 <-> 1130                S4         1              1
+   1130 <-> 1170                S4         1              1
+   1130 <-> 1140                S4         1              1
+   1130 <-> 1150                S4         1              1
+   1140 <-> 1170                S4         1              1
+   11A0 <-> 2070                S6         1              1
+   2000 <-> 2010                S6         1              1
+   2000 <-> 2070                S6         1              1
+   3000 <-> 3010                S7         1              1
+   3010 <-> 3060                S7         1              1
+   3090 <-> 30C0                S7         1              1
+   3090 <-> 30B0                S7         1              1
+   3090 <-> 30A0                S7         2              0
+   4000 <-> 4010                S8         1              1
+   4040 <-> 4070                S8         1              1
+   4050 <-> 4050                S8         1              2
+   4050 <-> 4050                S8         1              1
+   4050 <-> 4050                S8         1              2
+   4050 <-> 4050                S8         0              2
+   4070 <-> 50A0                S9         1              1
+   5000 <-> 5010                S9         1              1
+   5040 <-> 5060                S9         1              1
+   50C0 <-> 50D0                S10        1              1
+   4070 <-> 5100                S11        1              1
+   50D0 <-> 5100                S11        1              1
+   5080 <-> 6010                S12        1              1
+   6030 <-> 6030                S12        0              2
+
+Zum Vergleich: was das ORIGINAL je Durchgang malt (nur gemalte Symbole):
+   0 gemaltes Symbol / Durchgang:  57 Durchgaenge
+   1 gemaltes Symbol / Durchgang:  51 Durchgaenge
+   2 gemaltes Symbol / Durchgang:   3 Durchgaenge

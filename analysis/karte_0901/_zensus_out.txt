@@ -1,0 +1,165 @@
+==============================================================================
+TEIL 1 - ZENSUS ALLER DURCHGANGS-PAARE
+==============================================================================
+Basis-Raeume in re15_room_list.h ........ 120
+  davon mit RDT ......................... 103
+  davon mit Karten-Zone im Header ....... 72
+Tuer-Datensaetze (Aot_set 0x3b/0x68, ohne 0x0-Warps, ohne sce==0) ... 302
+   ERZEUGT MARKE                      134
+   faellt aus: raum_ohne_zone         110
+   faellt aus: kachel_malt_schon       31
+   faellt aus: punkt_ausserhalb_aller_zonen  27
+
+Durchgangs-PAARE (A.dest==B.room und B.dest==A.room, greedy nach Weltabstand) 132
+   davon in der Generator-Toleranz (<=4000 Welteinheiten je Richtung) . 131
+   Toleranz gerissen ................................................. 1
+Ungepaarte Datensaetze ................................................ 38
+      Zielraum fuehrt keinen Rueckweg-Datensatz             22
+      Rueckweg vorhanden, aber greedy schon vergeben        13
+      Zielraum hat kein RDT / nicht in der Raumliste         2
+      SELBST-Tuer (dest == eigener Raum), ohne Partner       1
+
+Wo liegen die beiden Enden eines Paares?
+   beide Enden auf einem Karten-Rechteck ............ 38
+      davon DASSELBE Blatt .......................... 36
+      davon VERSCHIEDENE Blaetter ................... 2
+   nur ein Ende ueberhaupt gezeichnet ............... 73
+   kein Ende gezeichnet ............................. 21
+
+Was macht Durchgang 2 daraus?
+   VERSCHMOLZEN (eine Marke, zid2 gesetzt) .......... 18
+   Paar erzeugt 2 Port-Marken ....................... 2
+   Paar erzeugt 1 Port-Marke ........................ 96
+   Paar erzeugt 0 Port-Marken ....................... 34
+   Summe Port-Marken aus Paaren ..................... 100
+   Port-Marken aus ungepaarten Datensaetzen ......... 16
+   zid2-Eintraege im Header (Gegenprobe) ............ 18
+
+==============================================================================
+TEIL 2 - WARUM WURDE EIN PAAR NICHT VERSCHMOLZEN?
+==============================================================================
+   ein Ende faellt in Durchgang 1 aus: raum_ohne_zone              53
+   ein Ende faellt in Durchgang 1 aus: kachel_malt_schon           15
+   beide Enden schon in Durchgang 1 ausgefallen (raum_ohne_zone / raum_ohne_zone)  12
+   ein Ende faellt in Durchgang 1 aus: punkt_ausserhalb_aller_zonen  10
+   beide Enden schon in Durchgang 1 ausgefallen (raum_ohne_zone / punkt_ausserhalb_aller_zonen)   5
+   beide Enden schon in Durchgang 1 ausgefallen (raum_ohne_zone / kachel_malt_schon)   5
+   beide Enden schon in Durchgang 1 ausgefallen (kachel_malt_schon / punkt_ausserhalb_aller_zonen)   3
+   beide Enden schon in Durchgang 1 ausgefallen (kachel_malt_schon / kachel_malt_schon)   3
+   beide Enden schon in Durchgang 1 ausgefallen (punkt_ausserhalb_aller_zonen / raum_ohne_zone)   3
+   beide Enden schon in Durchgang 1 ausgefallen (kachel_malt_schon / raum_ohne_zone)   2
+   beide leben, aber VERSCHIEDENE BLAETTER (continue)               2
+   beide Enden schon in Durchgang 1 ausgefallen (punkt_ausserhalb_aller_zonen / punkt_ausserhalb_aller_zonen)   1
+
+==============================================================================
+TEIL 3 - GEGENTHESE: LIEGEN DIE ENDEN UEBERHAUPT AN DERSELBEN STELLE?
+==============================================================================
+Paare mit beiden Enden auf DEMSELBEN Blatt: 36
+Pixel-Abstand der beiden projizierten Tuerpositionen:
+   Median  16.2 px   Mittel  27.3 px   Min  0.0   Max 187.9
+   p10 =   1.0 px
+   p25 =   2.2 px
+   p50 =  14.0 px
+   p75 =  31.1 px
+   p90 =  49.4 px
+   <=2 px: 8    <=5 px: 11    <=10 px: 15    >20 px: 15
+Die zehn schlimmsten:
+   2000 z0 S6r0  ( 90,131)  <->  2010 z0 S6r10 (277,149)    187.9 px
+   3090 z0 S7r9  (220,189)  <->  30B0 z0 S7r8  ( 65,168)    156.4 px
+   1060 z0 S3r9  (118,138)  <->  10C0 z0 S3r8  (180, 80)     84.9 px
+   1030 z0 S2r4  (145,134)  <->  1070 z1 S2r0  (197,136)     52.0 px
+   3090 z0 S7r9  (244,155)  <->  30A0 z0 S7r3  (204,126)     49.4 px
+   2000 z0 S6r0  ( 95,103)  <->  2050 z0 S6r2  (130, 71)     47.4 px
+   1120 z0 S4r5  (120,149)  <->  1130 z0 S4r4  (152,125)     40.0 px
+   1210 z0 S1r3  (212,126)  <->  1220 z0 S1r4  (201, 95)     32.9 px
+   3090 z0 S7r9  (215,137)  <->  30C0 z0 S7r10 (247,133)     32.2 px
+   4050 z0 S8r8  (177,164)  <->  4050 z0 S8r8  (200,143)     31.1 px
+
+==============================================================================
+TEIL 4 - WAS MALT DAS ORIGINAL? (DATA/MAP0x.PIX)
+==============================================================================
+Symbolkatalog analysis/kartensymbole/symbolkatalog.csv, Typ TUER + TUER2:
+   Symbole gesamt ......... 75  auf 60 Rechtecken
+   Symbole je Rechteck .... 48x 1 Symbol(e), 9x 2 Symbol(e), 3x 3 Symbol(e)
+
+(4a) Zwei Stempel fuer EINEN Durchgang muessten beidseits derselben Wandlinie
+     liegen: 4..10 px auseinander, mit gegenueberliegender Wandseite.
+     d<= 4 px:  0 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 0
+     d<= 6 px:  0 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 0
+     d<= 8 px:  1 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 0
+     d<=10 px:  1 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 0
+     d<=14 px:  5 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 1
+     d<=20 px: 22 Symbolpaare auf einer Seite, davon gegenueberliegende Wand: 10
+
+(4b) Fuer jeden Durchgang mit beiden Enden auf einem Rechteck: wie viele GEMALTE
+     Symbole trifft er? (tol 4 px + halbe Symbolgroesse, Symbol irgendwo auf der Seite)
+     genau ein Ende trifft ein Symbol        15
+     zwei Enden -> DASSELBE Symbol           11
+     kein Ende trifft ein Symbol              9
+     zwei Enden -> zwei Symbole               3
+
+     Die Faelle 'zwei Symbole' im Detail:
+       1210 S1r3 (212, 92)->Sym r6 (215, 91) | 1220 S1r4 (201, 86)->Sym r4 (198, 82) | Symbolabstand 19.2 px
+       1210 S1r3 (212,126)->Sym r8 (215,125) | 1220 S1r4 (201, 95)->Sym r5 (198, 99) | Symbolabstand 31.1 px
+       3090 S7r9 (244,155)->Sym r9 (242,158) | 30A0 S7r3 (204,126)->Sym r3 (208,126) | Symbolabstand 46.7 px
+
+(4c) Gegenprobe ohne Projektion: Symbole je Rechteck gegen Tuer-Datensaetze der Zone
+     Tuer-Datensaetze in gezeichneten Zonen: 165   gemalte Symbole auf deren Rechtecken: 58
+     -> 0.35 Symbole je Tuer-Datensatz (bei 'zweimal gemalt' waeren >=2 zu erwarten)
+
+==============================================================================
+TEIL 5 - DIE TATSAECHLICHE DOPPELUNG: PORT-MARKE NEBEN GEMALTEM SYMBOL
+==============================================================================
+Lebende Tuer-Marken (vor Verschmelzung/Dedup): 134
+   tol=0 px:   9 Marken auf einem gemalten Symbol  (eigenes Rect 0, NACHBAR-Rect 9)
+   tol=2 px:  38 Marken auf einem gemalten Symbol  (eigenes Rect 0, NACHBAR-Rect 38)
+   tol=4 px:  40 Marken auf einem gemalten Symbol  (eigenes Rect 0, NACHBAR-Rect 40)
+   tol=6 px:  46 Marken auf einem gemalten Symbol  (eigenes Rect 0, NACHBAR-Rect 46)
+   tol=8 px:  55 Marken auf einem gemalten Symbol  (eigenes Rect 3, NACHBAR-Rect 52)
+
+Der Filter kachel_zeigt_tuer() prueft NUR GLYPHEN[(seite,rect)] des EIGENEN Rechtecks
+(gen_map_zones.py, Funktion kachel_zeigt_tuer). Die Rechtecke einer Seite ueberlappen
+sich auf dem Schirm, also faellt jedes Symbol des NACHBAR-Rechtecks durch den Filter.
+
+Liste (tol 4 px):
+   S0  Marke r1 (143, 76)  1190->1180   Symbol r0 (139, 73) 5x5  Rect gehoert ['11A0']  
+   S0  Marke r1 (143, 76)  1190->1230   Symbol r0 (139, 73) 5x5  Rect gehoert ['11A0']  
+   S0  Marke r3 (168,100)  11B0->11C0   Symbol r4 (173,103) 5x5  Rect gehoert ['11C0']  ZIELRAUM
+   S0  Marke r5 (129,124)  11D0->1180   Symbol r0 (127,121) 5x5  Rect gehoert ['11A0']  
+   S0  Marke r5 (129,124)  11D0->1230   Symbol r0 (127,121) 5x5  Rect gehoert ['11A0']  
+   S1  Marke r3 (201, 84)  1210->1220   Symbol r4 (198, 82) 5x5  Rect gehoert ['1220']  ZIELRAUM
+   S1  Marke r3 (212, 92)  1210->1220   Symbol r6 (215, 91) 5x5  Rect gehoert ['11F0']  
+   S1  Marke r3 (201,101)  1210->1220   Symbol r5 (198, 99) 5x5  Rect gehoert -  
+   S1  Marke r3 (212,108)  1210->1220   Symbol r7 (215,108) 5x5  Rect gehoert ['1240']  
+   S1  Marke r3 (212,126)  1210->1220   Symbol r8 (215,125) 5x5  Rect gehoert ['11F0']  
+   S1  Marke r4 (201, 95)  1220->1210   Symbol r5 (198, 99) 5x5  Rect gehoert -  
+   S1  Marke r8 (212,112)  11F0->11E0   Symbol r7 (215,108) 5x5  Rect gehoert ['1240']  
+   S2  Marke r4 (119,134)  1030->1040   Symbol r2 (115,130) 5x5  Rect gehoert ['1070']  
+   S2  Marke r4 (186,153)  1030->1050   Symbol r0 (190,149) 5x5  Rect gehoert ['1070']  
+   S2  Marke r9 (113,134)  10A0->1180   Symbol r2 (115,130) 5x5  Rect gehoert ['1070']  
+   S2  Marke r9 (113,134)  10A0->1230   Symbol r2 (115,130) 5x5  Rect gehoert ['1070']  
+   S2  Marke r9 (113,134)  10A0->11E0   Symbol r2 (115,130) 5x5  Rect gehoert ['1070']  
+   S4  Marke r2 (145, 85)  1150->1130   Symbol r4 (147, 84) 5x5  Rect gehoert ['1130']  ZIELRAUM
+   S4  Marke r4 (168, 89)  1130->1170   Symbol r3 (165, 92) 5x5  Rect gehoert -  
+   S4  Marke r4 (152,125)  1130->1120   Symbol r5 (150,126) 5x5  Rect gehoert ['1120']  ZIELRAUM
+   S4  Marke r4 (160,150)  1130->1140   Symbol r6 (163,151) 5x9  Rect gehoert ['1140']  ZIELRAUM
+   S4  Marke r6 (166,110)  1140->1170   Symbol r3 (164,107) 5x5  Rect gehoert -  
+   S4  Marke r6 (166,110)  1140->1170   Symbol r3 (164,107) 5x5  Rect gehoert -  
+   S6  Marke r0 ( 90,131)  2000->2010   Symbol r1 ( 88,131) 4x4  Rect gehoert ['2050']  
+   S6  Marke r3 (107,144)  2070->11A0   Symbol r0 (105,141) 4x10  Rect gehoert ['2000']  
+   S6  Marke r3 (107,144)  2070->11A0   Symbol r0 (105,141) 4x10  Rect gehoert ['2000']  
+   S7  Marke r0 (128,117)  3000->3010   Symbol r1 (131,114) 5x5  Rect gehoert ['3010']  ZIELRAUM
+   S7  Marke r1 (167,115)  3010->3060   Symbol r6 (170,115) 5x5  Rect gehoert ['3060']  ZIELRAUM
+   S8  Marke r1 (156, 64)  4010->4000   Symbol r0 (159, 64) 4x4  Rect gehoert ['4020']  
+   S8  Marke r7 (142,164)  4070->4040   Symbol r4 (141,163) 4x4  Rect gehoert -  
+   S8  Marke r8 (207,147)  4050->4050   Symbol r10(208,152) 5x4  Rect gehoert ['40A0']  
+   S8  Marke r8 (205,149)  4050->4050   Symbol r10(208,152) 5x4  Rect gehoert ['40A0']  
+   S8  Marke r8 (177,164)  4050->4050   Symbol r11(175,163) 4x7  Rect gehoert -  
+   S9  Marke r1 (168, 90)  5010->5000   Symbol r0 (165, 87) 5x5  Rect gehoert -  
+   S9  Marke r6 ( 95,141)  5060->5040   Symbol r4 ( 91,137) 5x9  Rect gehoert ['5040']  ZIELRAUM
+   S9  Marke r6 ( 95,141)  5060->5120   Symbol r4 ( 91,137) 5x9  Rect gehoert ['5040']  
+   S9  Marke r14(138,179)  4070->50A0   Symbol r10(135,177) 4x5  Rect gehoert ['50A0']  ZIELRAUM
+   S10 Marke r0 (126,114)  50C0->50D0   Symbol r1 (124,117) 7x4  Rect gehoert ['50E0']  
+   S11 Marke r0 (162,134)  5100->50D0   Symbol r1 (160,133) 4x7  Rect gehoert -  
+   S11 Marke r3 (158,158)  4070->5100   Symbol r0 (156,157) 4x4  Rect gehoert ['5100']  ZIELRAUM
+   -> davon nachweislich derselbe Durchgang (Symbol liegt im Rechteck des Zielraums): 10
