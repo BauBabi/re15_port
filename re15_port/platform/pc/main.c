@@ -3839,9 +3839,13 @@ re_title:;
              * anzeigen. Reine Messschiene fuer den Bild-Abzug - der Fortschritts-
              * Zustand selbst haengt am Pin test_map_floor_visited. */
             { static int s_msp = 0; const char *mp = getenv("RE15_MAP_SHOT_PAGE");
-              if (mp && *mp && !s_msp) {
+              if (mp && *mp) {
                   unsigned pg = (unsigned)strtoul(mp, NULL, 16);
-                  re15_map_debug_reveal_page(pg); s_msp = 1; } }
+                  if (!s_msp) { re15_map_debug_reveal_page(pg); s_msp = 1; }
+                  /* JEDEN Frame setzen: der Kartenschirm rechnet seine Seite beim
+                   * Oeffnen neu aus der Spielerzone, eine einmalige Zuweisung
+                   * waere sofort wieder ueberschrieben. */
+                  g_inv_screen.map_page = (uint8_t)pg; } }
             static int s_oa_init = 0, s_oa_n = -1; static unsigned s_oa_room = 0;
             static int s_oa_ticks = 0, s_oa_done = 0;
             const char *oa = getenv("RE15_INV_OPEN_AT");
@@ -3854,9 +3858,6 @@ re_title:;
                 }
             }
             if (s_oa_n >= 0 && !s_oa_done) {
-                if ((g_engine.frame_count % 120) == 0)
-                    fprintf(stderr, "[inv-at] raum=%04X erlaubt=%d ticks=%d\n",
-                            g_current_room_id, re15_inv_open_allowed(), s_oa_ticks);
                 int reif;
                 if (s_oa_room) {
                     /* Szenario-Variante mitnehmen: die Raumnummern kommen als Paar
@@ -3870,12 +3871,7 @@ re_title:;
                 }
                 if (reif) {
                     if (!re15_menu_is_open()) re15_menu_toggle();
-                    else { const char *mp2 = getenv("RE15_MAP_SHOT_PAGE");
-                           g_engine.pad_pressed |= RE15_PAD_BIT_L1;
-                           if (mp2 && *mp2)
-                               g_inv_screen.map_page =
-                                   (uint8_t)strtoul(mp2, NULL, 16);
-                           s_oa_done = 1; }
+                    else { g_engine.pad_pressed |= RE15_PAD_BIT_L1; s_oa_done = 1; }
                 }
             }
         }

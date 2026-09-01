@@ -399,9 +399,22 @@ void re15_map_debug_reveal_page(unsigned page)
         b = zone_bit(i);
         s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
     }
-    for (i = 0; i < FLOOR_COUNT; i++)
-        if ((unsigned)s_map_floors[i].page == page)
-            s_visited_floor[i >> 3] |= (uint8_t)(1u << (i & 7));
+    for (i = 0; i < FLOOR_COUNT; i++) {
+        int j;
+        if ((unsigned)s_map_floors[i].page != page) continue;
+        s_visited_floor[i >> 3] |= (uint8_t)(1u << (i & 7));
+        /* Auch das ZONEN-Bit setzen: die Marken haengen daran, und eine Zone, die
+         * hier nur als Etagen-Zweitzeichnung liegt, hat ihre eigene Seite woanders
+         * (ROOM1170s zweiter Bereich gehoert zu Seite 5). Ohne das blieben ihre
+         * Treppen- und Tuermarken auf dem Abzug unsichtbar. */
+        for (j = 0; j < ZONE_COUNT; j++) {
+            int b;
+            if (s_map_zones[j].room != s_map_floors[i].room) continue;
+            if (s_map_zones[j].idx != (int)s_map_floors[i].zone) continue;
+            b = zone_bit(j);
+            s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+        }
+    }
 }
 
 int re15_map_page_known(unsigned page)
