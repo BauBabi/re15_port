@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "re15_room.h"
+#include "re15_collision.h"
 #include "re15_actor.h"   /* Spielerposition fuer die Ersatz-Zonenbestimmung */
 #include "re15_map_zones.h"
 
@@ -170,6 +171,8 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
 
 /* Rechteck-Zustand fuer den Zeichner: aktuell (Spieler steht in dieser Zone) schlaegt
  * besucht schlaegt unbesucht. Mehrere Zonen duerfen sich ein Rechteck teilen. */
+static int re15_map_player_band(void);
+
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
 {
     extern unsigned g_current_room_id;
@@ -196,7 +199,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
          * KEINER eigenen Zone; ohne diesen Zweig blieb es "unbekannt" und wurde
          * dauerhaft grau gemalt, statt den Zustand seiner Zone zu erben. */
         hat_etage = re15_map_floor_lookup(zn->room, zn->idx,
-                                          g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, &fr);
+                                          re15_map_player_band(), &fp, &fr);
         passt = (zn->page == page && zn->rect == rect_idx) ||
                 (hat_etage && (int)page == fp && (int)rect_idx == fr);
         if (!passt) continue;
@@ -263,7 +266,22 @@ int re15_map_visited(unsigned room_id)
 
 int re15_map_mark_count(void) { return MARK_COUNT; }
 
-#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+
+/* ⛔ DIE ETAGE KOMMT AUS DER SPIELER-Y, NICHT AUS actor.floor.
+ * `g_actors[SLOT_PLAYER].floor` (das +0x82 des Originals) wird im Port NUR beim Laden
+ * eines Spielstands geschrieben (re15_savedata.c) - im Spiel pflegt der Treppenlauf
+ * statt dessen das GLOBALE Kollisionsband (stair_common.c: re15_collision_set_band aus
+ * der Spieler-Y). Wer die Etage an actor.floor haengt, bekommt einen Wert, der sich nie
+ * aendert: die Karte blieb deshalb beim Treppenlauf auf der Startetage stehen
+ * (Nutzer 2026-09-01: "beim Treppe runterlaufen schaltet er die Karte nicht nach 3F um"
+ * und "im Treppenhaus ganz oben bei 3F zeigt die Karte immer noch 1F").
+ * Die Y ist die verlaessliche Quelle - der Spielstand-Loader leitet das Band genauso ab
+ * (re15_collision_band_from_y). */
+static int re15_map_player_band(void)
+{
+    return re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y);
+}
 
 /* ETAGE: liefert fuer (Raum, Band) das Blatt und das Rechteck, auf dem der Raum auf
  * DIESER Etage gezeichnet ist. 1 = gefunden.

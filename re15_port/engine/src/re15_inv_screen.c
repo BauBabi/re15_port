@@ -21,7 +21,8 @@
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
 #include "re15_room.h"           /* Karten-Zonen: Marker + Rect-Zustand */
-#include "re15_actor.h"          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
+#include "re15_actor.h"
+#include "re15_collision.h"   /* Etage = Band aus der Spieler-Y */          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
 #include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
@@ -237,7 +238,7 @@ uint8_t re15_inv_map_page_shown(void)
          * re15_map_floor_lookup. */
         int fp;
         if (zn && re15_map_floor_lookup(zn->room, zn->idx,
-                                        g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, 0))
+                                        re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y), &fp, 0))
             return (uint8_t)fp;
     }
     return zn ? (uint8_t)zn->page : s_map_page;
@@ -345,7 +346,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         int zpg = zn ? zn->page : -1, zrc = zn ? zn->rect : -1, fp2, fr2;
         /* Auf einer Etagen-Umschaltung wird in das Rechteck DIESER Etage projiziert. */
         if (zn && re15_map_floor_lookup(zn->room, zn->idx,
-                                        g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp2, &fr2))
+                                        re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y), &fp2, &fr2))
             { zpg = fp2; zrc = fr2; }
         if (zn && zpg == (int)g_inv_screen.map_page) {
             uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
@@ -1620,7 +1621,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          * 42 41 07). */
         if (st->map_page == 5) {
             static const uint8_t ROOF[] = { 0x2e, 0x2b, 0x2b, 0x22, 0x07 };  /* ROOF */
-            emit_text(&e, 0x7a, 0x1e, ROOF, 0x00);   /* auf der Grundlinie des Titels */
+            /* UNTER den Titel, dorthin wo die anderen Blaetter ihre Etage tragen:
+     * die Titelkachel (uv(0,0) 88x32) zeigt "POLICE STATION" in den Zeilen 2..12
+     * und die Etage in den Zeilen 18..28, mittig um x ~ 47 (an Seite 2 "1F"
+     * ausgemessen). Das Sprite sitzt bei (30,30), die Etage also bei ~(67,48).
+     * Nutzer 2026-09-01: "ich haette das ROOF gerne an die Position, wo auch das
+     * 3F, 1F etc. steht, also unter Police Station". */
+    emit_text(&e, 0x36, 0x30, ROOF, 0x00);
         }
         /* room rects: pair table @0x80076840[page] {count, list ptr} (@0x80047048-70),
          * stride-12 entries {x,y,w,h,u@+8,v@+10} (@0x8004731c-60), SPRT code 0x64|2

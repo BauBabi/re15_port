@@ -119,19 +119,23 @@ int main(void)
     {
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         g_current_room_id = 0x1170;
-        pl->floor = 3;                              /* Hof/Dach */
+        /* ⛔ Die Etage kommt aus der Spieler-Y, NICHT aus actor.floor: dieses Feld
+         * wird im Port nur beim Laden eines Spielstands geschrieben, im Spiel pflegt
+         * der Treppenlauf die Y (stair_common.c). Die Fixture stellte bisher floor
+         * und traf damit nichts. */
+        pl->y = -3 * 0x708;                         /* Hof/Dach, Band 3 */
         re15_map_zone_update(0x1170, 0, 0);
         CHECK("ROOM1170 Hof ist aktuell auf dem Dach-Blatt (Seite 5 Rect 1)",
               re15_map_rect_state(5, 1) == RE15_MAP_RECT_CURRENT);
-        pl->floor = 4;                              /* zweiter Bereich, oberer Korridor */
+        pl->y = -4 * 0x708;                         /* zweiter Bereich, oberer Korridor */
         re15_map_zone_update(0x1170, -18000, -22000);
         CHECK("zweiter Bereich bei Band 4: Dach-Blatt, Seite 5 Rect 0",
               re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
-        pl->floor = 0;                              /* unterste Ebene */
+        pl->y = 0;                                  /* unterste Ebene, Band 0 */
         re15_map_zone_update(0x1170, -18000, -22000);
         CHECK("zweiter Bereich bei Band 0: 3F-Blatt, Seite 4 Rect 3",
               re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
-        pl->floor = 0;
+        pl->y = 0;
     }
 
     /* --- (4) Szenario-Varianten TEILEN sich die Zone (derselbe Ort) --- */
