@@ -145,12 +145,17 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
      * FUN_800473f8 @0x8004741c-0x80047528:
      *     mx =  ((((wx + 32000) * 10 * sx) >> 20) + 5) / 10 + ox
      *     my = -((((wz + 32000) * 10 * sy) >> 20) + 5) / 10 + oy
-     * Das Original fuehrt dafuer eine Zeile je Raum @0x800768b0, hat aber nur 13 der
-     * 38 Zeilen geeicht - der Rest ist der Stub {0,0,1,1}. Der Generator bestimmt die
-     * fehlenden Zeilen: MASSSTAB aus der gezeichneten Flaeche der Kachel (das
-     * Rechteck IST die Zeichnung des Raums), VERSATZ aus den GEMALTEN Tuersymbolen.
-     * Beides ist bestimmt, kein freier Vierparameter-Fit.
-     * Ohne Eichung (sx == 0) bleibt es bei der linearen Bbox-Streckung darunter. */
+     * Das Original fuehrt dafuer eine Zeile je Raum @0x800768b0, aber nur 33 der 72
+     * Karten-Raeume haben eine echte; die anderen 39 tragen den Stub {0,0,1,1}, mit dem
+     * die Formel JEDE Weltposition auf (0,0) abbildet - das Kartensystem des Prototyps
+     * ist unfertig.
+     * ⛔ DIE LUECKE IST NICHT GESCHLOSSEN. Der Generator setzt AUSSCHLIESSLICH
+     * ausgelieferte Zeilen ein; ein frueherer Versuch, die fehlenden aus der
+     * gezeichneten Flaeche und den Tuersymbolen zu "bestimmen", war ein Rate-Defekt im
+     * Messgewand und wurde am 2026-09-01 zurueckgenommen (37 von 37 geeichten Zonen
+     * klemmten, 46-100 % der begehbaren Punkte). Ohne Zeile (sx == 0) gilt die lineare
+     * Bbox-Streckung darunter - eine PORT-ERGAENZUNG ohne Original-Vorbild, die dafuer
+     * nie aus dem Rechteck laeuft. */
     if (zn->sx && zn->sy) {
         int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
         int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
@@ -171,6 +176,9 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
         int32_t fx = x - px, fz = z - pz;
         if (fx < 0) fx = 0; if (fx > w) fx = w;
         if (fz < 0) fz = 0; if (fz > d) fz = d;
+        /* Zeichnung gegenueber der Welt gedreht (siehe flip_x/flip_z). */
+        if (zn->flip_x) fx = w - fx;
+        if (zn->flip_z) fz = d - fz;
         *mx = (int16_t)(rx + (fx * rw) / w);
         /* ⛔ Z WIRD GESPIEGELT — belegt an der Original-Markerformel (FUN_800473f8):
          * dort steht nach der Skalierung ein `t2 = -t2` (die y-Haelfte negiert das

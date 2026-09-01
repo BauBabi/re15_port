@@ -647,6 +647,39 @@ def main():
     print(f"{n_orig} Zonen mit der ausgelieferten Massstabszeile @0x800768b0 "
           f"(Rechteck aus der Zeile abgeleitet)")
 
+    # ================= ORIENTIERUNG EINZELNER ZEICHNUNGEN =======================
+    # ⛔ Nutzer 2026-09-01: "Im Room 1120 lande ich wieder ganz komisch ploetzlich auf der
+    # falschen Seite, wenn ich vom ROOM 1130 aus rein komme."
+    #
+    # GEMESSEN: ROOM1120s Tuer nach ROOM1130 liegt in seiner eigenen Bbox bei Anteil
+    # (0.11, 0.23) - unten links. Die Kachel malt dieselbe Tuer bei (150,126) an der
+    # OSTwand, und ROOM1130 zeichnet denselben Durchgang bei (156,125). Zwei
+    # voneinander unabhaengige Quellen sagen also oben rechts; unsere Streckung sagte
+    # unten links. Um 180 Grad gedreht landet sie bei (155,128): 5 px vom gemalten
+    # Symbol, 3 px von ROOM1130s Position.
+    #
+    # Die Gegenhypothese "falsches Rechteck" ist geprueft und verworfen: kein Rechteck
+    # der Seite 4 kommt in normaler Lage naeher als 18 px an den Nachbarn (Rect 3),
+    # und dessen Symbolabstand ist 9 px. Rect 5 gedreht: 3 px / 5 px.
+    #
+    # Warum das ueberhaupt vorkommen kann: jeder RDT-Raum hat sein EIGENES lokales
+    # Koordinatensystem; nichts zwingt Welt-+X auf Karten-+x. Fuer die 33 Raeume mit
+    # ausgelieferter Zeile @0x800768b0 legt die Zeile die Abbildung fest (sx/sy per
+    # `lhu`, also positiv - jene Raeume sind ausgerichtet). Fuer die 39 Stub-Raeume
+    # legt sie NICHTS fest; dort sind die gemalten Symbole und die Nachbarn die
+    # einzigen Zeugen.
+    #
+    # WACHE: Es kommt nur ein Eintrag hinein, wenn (1) der Raum den Stub hat, (2)
+    # MINDESTENS ZWEI unabhaengige Beobachtungen dieselbe Drehung waehlen, (3) beide
+    # danach <= 8 px liegen und (4) die Gegenhypothese "anderes Rechteck, normale Lage"
+    # gemessen schlechter ist. ROOM5070 (zwei Symbole, aber X und 180 Grad gleichauf,
+    # kein Nachbar-Beleg) und ROOM5020 (nur eine Beobachtung) erfuellen das NICHT und
+    # bleiben deshalb ungedreht.
+    ZONE_ORIENT = {
+        (0x1120, 0): (1, 1),   # Symbol 8->5 px, Nachbar ROOM1130 40->3 px
+        (0x2050, 0): (1, 1),   # Symbol 33->4 px, Nachbar 56->6 px
+    }
+
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     for b, zs in sorted(zinfo.items()):
@@ -680,8 +713,9 @@ def main():
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
         ei = eichung.get((room & 0xFFF0, zi), (0, 0, 0, 0))
+        _o = ZONE_ORIENT.get((room & 0xFFF0, zi), (0, 0))
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d},"
-                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d} }},")
+                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]} }},")
     o.append("};")
     # ================= ETAGEN-TABELLE ==========================================
     # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
@@ -803,6 +837,10 @@ def main():
         if x1 <= x0 or z1 <= z0: return None
         fx = min(max(wx - x0, 0), x1 - x0)
         fz = min(max(wz - z0, 0), z1 - z0)
+        _or = ZONE_ORIENT.get((room, zi))
+        if _or:
+            if _or[0]: fx = (x1 - x0) - fx
+            if _or[1]: fz = (z1 - z0) - fz
         # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
         # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
         return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)

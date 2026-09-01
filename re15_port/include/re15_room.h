@@ -57,6 +57,16 @@ typedef struct {
                                * Flaeche der Kachel, Versatz ox/oy aus den GEMALTEN
                                * Tuersymbolen - beides bestimmt, kein freier Fit.      */
     unsigned short sx, sy;
+    /* ⛔ ORIENTIERUNG DER ZEICHNUNG (0/0 = wie die Welt). Jeder RDT-Raum hat sein
+     * EIGENES lokales Koordinatensystem; nichts zwingt Welt-+X auf Karten-+x. Fuer
+     * die 33 Raeume mit ausgelieferter Zeile @0x800768b0 legt die Zeile die Abbildung
+     * fest (sx/sy per `lhu`, also positiv). Fuer die 39 Stub-Raeume legt sie NICHTS
+     * fest - dort bezeugen nur die gemalten Tuersymbole und die Nachbarraeume, wie
+     * herum die Zeichnung liegt. Gesetzt wird das nur, wo zwei unabhaengige
+     * Beobachtungen dieselbe Drehung waehlen (tools/gen_map_zones.py, ZONE_ORIENT).
+     * ⛔ NEUE FELDER ANS ENDE: am 2026-09-01 hat ein Feld VOR zid alle folgenden
+     * still verschoben und saemtliche Besucht-Bits zerstoert. */
+    unsigned char flip_x, flip_z;
 } re15_map_zone_t;
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);
