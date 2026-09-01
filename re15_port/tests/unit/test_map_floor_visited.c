@@ -63,11 +63,14 @@ int main(void)
           re15_map_rect_state(4, 0) == RE15_MAP_RECT_VISITED);
 
     /* (5) Der Kartenschirm malt kein unzugeordnetes Rechteck. Geprueft auf dem
-     *     1F-Blatt (Seite 2): dessen Rect 6 (180,88,24,24) und Rect 10 (119,134,24,24)
+     *     1F-Blatt (Seite 2): dessen Rect 0 (180,69,32,96) und Rect 5 (180,59,48,32)
      *     haben in unserer Zonen-Tabelle KEINEN Besitzer. Bis v0.3.70 wurden sie im
-     *     Stock-Neutralton gemalt und standen damit ab dem ersten Kartenaufruf da -
-     *     Rect 10 liegt links neben ROOM1060s Zeichnung (109,134,16,16), also genau in
-     *     der Ecke, in der der Nutzer sie sah. */
+     *     Stock-Neutralton gemalt und standen damit ab dem ersten Kartenaufruf da.
+     *     ⛔ Die Vorrichtung nannte hier urspruenglich Rect 6 und Rect 10. Die haben
+     *     seit dem Schablonen-Filter (2026-09-01) einen Besitzer bekommen: der Filter
+     *     hat 12 leere Rahmen aussortiert, die den echten Grundrissen die Rechtecke
+     *     weggenommen hatten. Der Pin ist deshalb auf zwei Rechtecke umgestellt, die
+     *     JETZT herrenlos sind - die Schranke bleibt dieselbe. */
     {
         static re15_inv_op_t ops[768];
         int nops, i, gemalt = 0, erlaubt = 0, grau_grundriss = 0;
@@ -76,10 +79,10 @@ int main(void)
         re15_inv_screen_open();
         g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
         g_inv_screen.map_page = 2;
-        CHECK("Seite 2 Rect 6 hat keinen Besitzer",
-              re15_map_rect_state(2, 6) == RE15_MAP_RECT_UNMAPPED);
-        CHECK("Seite 2 Rect 10 hat keinen Besitzer",
-              re15_map_rect_state(2, 10) == RE15_MAP_RECT_UNMAPPED);
+        CHECK("Seite 2 Rect 0 hat keinen Besitzer",
+              re15_map_rect_state(2, 0) == RE15_MAP_RECT_UNMAPPED);
+        CHECK("Seite 2 Rect 5 hat keinen Besitzer",
+              re15_map_rect_state(2, 5) == RE15_MAP_RECT_UNMAPPED);
         for (i = 0; i < 11; i++) {
             int rs = re15_map_rect_state(2, (unsigned)i);
             if (rs == RE15_MAP_RECT_VISITED || rs == RE15_MAP_RECT_CURRENT) erlaubt++;
@@ -98,8 +101,8 @@ int main(void)
                 (r_ == 192 && g_ == 24 && b_ == 24))
                 gemalt++;
             else if (r_ == 128 && g_ == 128 && b_ == 128) {
-                if ((ops[i].x == 180 && ops[i].y ==  88 && ops[i].w == 24 && ops[i].h == 24) ||
-                    (ops[i].x == 119 && ops[i].y == 134 && ops[i].w == 24 && ops[i].h == 24))
+                if ((ops[i].x == 180 && ops[i].y == 69 && ops[i].w == 32 && ops[i].h == 96) ||
+                    (ops[i].x == 180 && ops[i].y == 59 && ops[i].w == 48 && ops[i].h == 32))
                     grau_grundriss++;
             }
         }

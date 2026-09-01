@@ -152,6 +152,22 @@ def _beruehren(pg, a, b):
     _bercache[k] = hit
     return hit
 
+# ⛔ WAS ES KOSTET, EINE ZONE GAR NICHT ZUZUORDNEN — BLEIBT BEI 30.
+# Ein A/B gegen die aus der ausgelieferten Zeile @0x800768b0 bekannten Zuordnungen sah
+# hoehere Werte besser aus:
+#     30 -> 22/30 richtig, 7,0 % der begehbaren Flaeche ohne Zone
+#     60 -> 22/31 richtig, 4,6 %
+#    120 -> 27/33 richtig, 3,9 %
+#    250 -> 26/33 richtig, 3,5 %
+# ⛔ ABER: dieses Guetemass kennt NUR Raeume MIT Zeile. Bei 120 warf der Zuordner die
+# ganze Seite 4 um und legte ROOM1120 auf Rect 3 - das ist ROOM1170s zweiter Bereich -,
+# womit die gemeinsame Tuer zu ROOM1130 49 px danebenlag (mit Rect 5 und der gemessenen
+# 180-Grad-Lage: 3 px). Genau die Stub-Raeume, um die es dem Nutzer geht, sieht das
+# Aggregat nicht. Ein Proxy, der die betroffene Menge nicht enthaelt, darf nicht
+# entscheiden - deshalb bleibt es bei 30, und die Luecke auf Seite 3 (ROOM10D0 ohne
+# Rechteck) wird offen benannt statt zugerechnet.
+KEINE_ZUORDNUNG = 30.0
+
 def kachel_zeigt_tuer(pg, r, mx, my, tol=4):
     """Zeichnet die Kachel DIESES Rechtecks an dieser Stelle schon eine Tuer?
 
@@ -349,15 +365,60 @@ def main():
     doors_all = {}
     stairs_all = {}
     sca_all = {}
+    roh_zonen = {}
     for b in bases:
         got = read_rdt(b) or read_rdt(b + 1)
         if not got: continue
         sca, doors, stairs = got
         sca_all[b] = sca
         zs = zones_of(sca)
-        if zs: zinfo[b] = zs
+        if zs: roh_zonen[b] = zs
         doors_all[b] = doors
         stairs_all[b] = stairs
+
+    # ---- SCHABLONEN-BEREICHE AUSSORTIEREN -------------------------------------
+    # ⛔ Nutzer 2026-09-01: "Generell sind die Darstellungen in 2F noch sehr kaputt."
+    #
+    # GEMESSEN: 12 Kollisions-Bereiche in 11 verschiedenen Raeumen (1080, 10D0, 1100,
+    # 11F0, 2050, 2060 zweimal, 30E0, 4020, 5030, 5050, 5110) bestehen aus DERSELBEN
+    # Anordnung von vier Zellen - 23950x1000 oben, 1000x17000 links, 1000x17000 rechts,
+    # 23950x1000 unten, also einem LEEREN RAHMEN von 23950 x 17000. Nur die vier Waende
+    # sind Kollisionszellen; im Inneren kann der Spieler gar nicht stehen. Das ist kein
+    # Ort, sondern eine Schablone im RDT.
+    #
+    # Der Zuordner nahm sie trotzdem und gab ihnen das Karten-Rechteck, waehrend der
+    # ECHTE Grundriss desselben Raums leer ausging. Folge: ROOM10D0 - der 2F-Flur, an
+    # dem auf dieser Etage alles haengt - verlor 88 % seiner begehbaren Flaeche,
+    # ROOM3050 96 %, ROOM1020 85 %. Steht der Spieler dort, findet zone_at KEINE Zone;
+    # die Karte faellt auf die Vorgabeseite zurueck und der Marker springt. Das ist
+    # Report 4 ("beim Gang vom Treppenhaus durch die Tuer springt er") und Report 5.
+    #
+    # KRITERIUM OHNE FREIE ZAHL: die Zellen einer Zone, auf ihre Bbox-Ecke bezogen,
+    # bilden eine FORM. Kommt dieselbe Form in ZWEI VERSCHIEDENEN RAEUMEN vor, ist sie
+    # kopiert und beschreibt keinen Raum. Translationsinvariant, also findet es auch die
+    # verschobenen Kopien (eine reine Bbox-Gleichheit fand nur 10 der 12).
+    # Ein Schwellwert auf den begehbaren Anteil waere FALSCH: die Schablonen liegen bei
+    # 23,4 %, aber die echten Raeume ROOM1160 (15,6 %) und ROOM50C0 (19,9 %) liegen
+    # darunter - gemessen, es gibt dort keine Luecke.
+    def _form(zellen, bb):
+        x0, x1, z0, z1 = bb
+        return frozenset((cx - x0, cz - z0, cw, cd) for (cx, cz, cw, cd) in zellen
+                         if x0 <= cx <= x1 and z0 <= cz <= z1)
+    _raeume = collections.defaultdict(set)
+    for _b, _zs in roh_zonen.items():
+        for _bb in _zs:
+            f = _form(sca_all.get(_b, ()), _bb)
+            if f: _raeume[f].add(_b)
+    _n_weg = 0
+    for _b, _zs in sorted(roh_zonen.items()):
+        keep = []
+        for _bb in _zs:
+            f = _form(sca_all.get(_b, ()), _bb)
+            if f and len(_raeume[f]) >= 2: _n_weg += 1; continue
+            keep.append(_bb)
+        if keep: zinfo[_b] = keep
+    print(f"{_n_weg} Schablonen-Bereiche aussortiert "
+          f"(Zellform in mehreren Raeumen identisch)")
 
     # Zonen je Seite sammeln
     by_page = collections.defaultdict(list)      # page -> [(room, zi, bbox)]
@@ -423,7 +484,7 @@ def main():
             used = collections.Counter(v for v in a.values() if v is not None)
             for i, z in enumerate(zl):
                 r = a.get(i)
-                if r is None: c += 30.0; continue
+                if r is None: c += KEINE_ZUORDNUNG; continue
                 c += 8.0 * aspect_pen(z[2], R[r])
                 c += 1.5 * abs(zrank[i] - rrank[r])
             for r, k in used.items():
