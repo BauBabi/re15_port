@@ -270,15 +270,29 @@ int re15_map_mark_count(void) { return MARK_COUNT; }
  * Band 0 -> ROOM1040 (Seite 2 "1F"). Tabelle: tools/gen_map_zones.py. */
 int re15_map_floor_lookup(unsigned room, int band, int *page, int *rect)
 {
-    int i;
+    int i, best = -1, bestd = 0, n = 0;
     for (i = 0; i < FLOOR_COUNT; i++) {
+        int d;
         if (s_map_floors[i].room != room) continue;
-        if ((int)s_map_floors[i].band != band) continue;
-        if (page) *page = s_map_floors[i].page;
-        if (rect) *rect = s_map_floors[i].rect;
-        return 1;
+        n++;
+        d = (int)s_map_floors[i].band - band;
+        if (d < 0) d = -d;
+        if (best < 0 || d < bestd) { best = i; bestd = d; }
     }
-    return 0;
+    /* ⛔ NAEHERN NUR BEI MEHREREN ETAGEN. Ein Raum mit nur EINEM Eintrag spannt keine
+     * Etagen - dort darf die Tabelle nicht als Auffangregel wirken, sonst zieht sie
+     * jedes Band auf dieselbe Seite/Rect. ROOM1170 hat genau einen Eintrag (Band 4);
+     * ohne diese Bedingung landete sein zweiter Bereich auf Seite 5 Rect 1 statt
+     * Rect 0 - der Pin test_map_re2_system hat das gefangen. */
+    if (best < 0 || (n < 2 && bestd != 0)) return 0;
+    /* Kein exaktes Band? Dann die NAECHSTE Etage. Auf einem Treppen-Zwischenpodest
+     * steht der Spieler auf einem Band, zu dem keine Tuer und damit keine Etage
+     * gehoert (ROOM1060 fuehrt 0/2/4/6/8, Etagen gibt es nur zu 0, 4 und 8). Ohne
+     * diese Naeherung faellt die Karte dort auf die Raum-Vorgabe zurueck und zeigt
+     * mitten im Treppenhaus wieder 1F. */
+    if (page) *page = s_map_floors[best].page;
+    if (rect) *rect = s_map_floors[best].rect;
+    return 1;
 }
 
 /* 1, wenn der Spieler auf dieser Kartenseite schon mindestens eine Zone gesehen hat.
