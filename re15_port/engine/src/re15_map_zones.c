@@ -387,6 +387,23 @@ int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rec
 /* 1, wenn der Spieler auf dieser Kartenseite schon mindestens eine Zone gesehen hat.
  * Riegel fuer das Ebenen-Blaettern: man soll nur Blaetter durchsehen koennen, die man
  * kennt - dieselbe Bedingung, die RE2 an seine Nachbar-Etagen legt. */
+/* MESSSCHIENE (RE15_MAP_SHOT_PAGE): jede Zone und jede Etagen-Zeile dieses Blattes
+ * als besucht setzen, damit ein Abzug das FERTIGE Blatt zeigt statt des Fortschritts
+ * eines halben Durchlaufs. Kein Spielverhalten - wird nur vom Debug-Haken gerufen. */
+void re15_map_debug_reveal_page(unsigned page)
+{
+    int i;
+    for (i = 0; i < ZONE_COUNT; i++) {
+        int b;
+        if (s_map_zones[i].page != page) continue;
+        b = zone_bit(i);
+        s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+    }
+    for (i = 0; i < FLOOR_COUNT; i++)
+        if ((unsigned)s_map_floors[i].page == page)
+            s_visited_floor[i >> 3] |= (uint8_t)(1u << (i & 7));
+}
+
 int re15_map_page_known(unsigned page)
 {
     int i;

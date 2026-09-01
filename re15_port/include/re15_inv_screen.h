@@ -310,6 +310,7 @@ extern re15_inv_screen_t g_inv_screen;
  * bc/bd/be=0, ca=0, 2600=0x20, 2602=0, 2603=0; LAB_80049524 @0x800495e8-0x8004969c:
  * 25cd/2608 + 25dc/25de from the equipped slot). Call on the menu-open edge. */
 void re15_inv_screen_open(void);
+int  re15_inv_open_allowed(void);   /* Messschiene: darf der Schirm gerade auf? */
 
 /* Advance the free-running ECG registers exactly like the head of FUN_80048a44
  * @0x80048a44 (sweep wrap >0x7f -> 0x20 @0x80048ab4-ac0; glow +-4 on the 0x40-period

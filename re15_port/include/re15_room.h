@@ -71,7 +71,9 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
  * re15_map_mark_get liefert 1, wenn die Marke SICHTBAR ist (ihre Zone ist besucht). */
 int re15_map_mark_count(void);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
-int re15_map_page_known(unsigned page);   /* Blatt schon gesehen? */
+int re15_map_page_known(unsigned page);
+void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */
+void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
 int re15_map_player_band(void);   /* Etage des Spielers: gepflegtes Band, sonst aus der Y */
 

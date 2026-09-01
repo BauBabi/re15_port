@@ -245,6 +245,12 @@ static void re15_player_death_cmd3_tick(const re15_game_ctx_t *c)
 
 /* PLAYER HIT-FLINCH state (hoisted to file scope so the status-screen open gate below
  * can read it — see the flinch block in re15_game_step for the full byte-true story). */
+/* Letzter Stand des Inventar-Riegels - nur fuer die Messschiene (main.c,
+ * RE15_INV_OPEN_AT="<n>#<hexraum>"), damit sie den Schirm nicht mitten in einer
+ * Cutscene aufzuziehen versucht. */
+static int     s_inv_open_allowed = 0;
+int  re15_inv_open_allowed(void) { return s_inv_open_allowed; }
+
 static int     s_hit_flinch = 0;
 static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
 static int16_t s_prev_hp    = 100;
@@ -931,10 +937,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * (aot_common.c:821: player_mode == 2 oder laufender Letterbox-Countdown). */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD)) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
-        re15_menu_start_poll(c->pad_pressed,
-                             (s_hit_flinch == 0 && s_knockdown == 0 &&
+        s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&
-                              !in_cinematic && !re15_stair_active()) ? 1 : 0);
+                              !in_cinematic && !re15_stair_active()) ? 1 : 0;
+        re15_menu_start_poll(c->pad_pressed, s_inv_open_allowed);
+    } else {
+        s_inv_open_allowed = 0;
     }
     if (re15_menu_gameplay_frozen()) {
         re15_menu_fsm_tick(c->pad_pressed, c->pad_current);

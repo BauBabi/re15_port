@@ -3829,13 +3829,54 @@ re_title:;
          * Zusammen mit RE15_INV_FB_SHOT=<datei.bmp> + RE15_INV_FB_SHOT_AT=<frame>
          * ergibt das ein pixelgenaues Bild dessen, was der Kartenschirm zeichnet. */
         {
+            /* Form "<n>" = absoluter Bildzaehler. Form "<n>#<hexraum>" = n Bilder,
+             * NACHDEM dieser Raum spielbar ist. Die zweite Form ist noetig, seit das
+             * Inventar in Cutscenes gesperrt ist (game_step_common.c): der Vorspann
+             * von ROOM1170 dauert mehrere tausend Bilder, ein fester Zeitpunkt trifft
+             * ihn und der Schirm ginge nie auf. Gezaehlt wird nur, was der Spieler
+             * auch selbst haette druecken koennen. */
+            /* RE15_MAP_SHOT_PAGE=<hexseite>: dieses Blatt vollstaendig aufdecken und
+             * anzeigen. Reine Messschiene fuer den Bild-Abzug - der Fortschritts-
+             * Zustand selbst haengt am Pin test_map_floor_visited. */
+            { static int s_msp = 0; const char *mp = getenv("RE15_MAP_SHOT_PAGE");
+              if (mp && *mp && !s_msp) {
+                  unsigned pg = (unsigned)strtoul(mp, NULL, 16);
+                  re15_map_debug_reveal_page(pg); s_msp = 1; } }
+            static int s_oa_init = 0, s_oa_n = -1; static unsigned s_oa_room = 0;
+            static int s_oa_ticks = 0, s_oa_done = 0;
             const char *oa = getenv("RE15_INV_OPEN_AT");
-            if (oa && *oa) {
-                int of = atoi(oa);
-                if ((int)g_engine.frame_count == of && !re15_menu_is_open())
-                    re15_menu_toggle();
-                if ((int)g_engine.frame_count == of + 2)
-                    g_engine.pad_pressed |= RE15_PAD_BIT_L1;
+            if (!s_oa_init) {
+                s_oa_init = 1;
+                if (oa && *oa) {
+                    const char *h = strchr(oa, '#');
+                    s_oa_n = atoi(oa);
+                    if (h) s_oa_room = (unsigned)strtoul(h + 1, NULL, 16);
+                }
+            }
+            if (s_oa_n >= 0 && !s_oa_done) {
+                if ((g_engine.frame_count % 120) == 0)
+                    fprintf(stderr, "[inv-at] raum=%04X erlaubt=%d ticks=%d\n",
+                            g_current_room_id, re15_inv_open_allowed(), s_oa_ticks);
+                int reif;
+                if (s_oa_room) {
+                    /* Szenario-Variante mitnehmen: die Raumnummern kommen als Paar
+                     * <n>/<n+1> (Leon/Elza), der Haken soll beide treffen. */
+                    if ((g_current_room_id & ~1u) == (s_oa_room & ~1u) &&
+                        re15_inv_open_allowed())
+                        s_oa_ticks++;
+                    reif = (s_oa_ticks >= s_oa_n);
+                } else {
+                    reif = ((int)g_engine.frame_count >= s_oa_n);
+                }
+                if (reif) {
+                    if (!re15_menu_is_open()) re15_menu_toggle();
+                    else { const char *mp2 = getenv("RE15_MAP_SHOT_PAGE");
+                           g_engine.pad_pressed |= RE15_PAD_BIT_L1;
+                           if (mp2 && *mp2)
+                               g_inv_screen.map_page =
+                                   (uint8_t)strtoul(mp2, NULL, 16);
+                           s_oa_done = 1; }
+                }
             }
         }
         if (getenv("RE15_INV_MAP_SHOT") && g_engine.frame_count == 31)
