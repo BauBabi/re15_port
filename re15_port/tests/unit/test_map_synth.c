@@ -12,11 +12,13 @@
  * ⛔ PORT-ERGAENZUNG: das Original zeichnet diese Raeume nicht. Die Zeichnung traegt
  * rect == 255 und einen Index in s_map_synth. */
 #include <stdio.h>
+#include "re15_inv_screen.h"
 #include "re15_room.h"
 #include "re15_actor.h"
 #include "re15_collision.h"
 
 extern unsigned g_current_room_id;
+extern re15_inv_screen_t g_inv_screen;
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -70,6 +72,53 @@ int main(void)
            n_synth, n_ueber);
     CHECK("es gibt Schema-Zeichnungen", n_synth > 0);
     CHECK("keine davon ueberdeckt ein gemaltes Rechteck", n_ueber == 0);
+
+    /* (3) Die gezeichneten Ops muessen OP_FILL sein und in ihrem Kasten liegen.
+     *     ⛔ Der erste Wurf nahm RE15_INV_OP_LINE - das deutet (w,h) als
+     *     ENDPUNKT, nicht als Groesse (inv_render_pc.c:547-566). Jede Zelle wurde
+     *     dadurch zu einem Strich von ihrer Ecke zu (w,h), quer ueber den Schirm.
+     *     Der Abzug des 2F-Blattes zeigte lange senkrechte Streifen; die TABELLE war
+     *     dabei einwandfrei. Ein Pin auf die Tabelle allein haette das nicht gefangen. */
+    {
+        static re15_inv_op_t ops[768];
+        int nops, k, a3, n_fill = 0, n_falsch = 0, n_raus = 0;
+        re15_map_visited_reset();
+        re15_map_debug_reveal_page(3);
+        re15_inv_map_stage_init(0, 13);
+        re15_inv_screen_open();
+        g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
+        g_inv_screen.map_page = 3;
+        nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
+        /* ⛔ GENAU die Zellen der Tabelle suchen, nicht alles im Kasten: auf Seite 0
+         * der Op-Liste liegen auch Chrome und Marken, die zufaellig hineinfallen -
+         * ein erster Anlauf zaehlte 8 solcher Fremd-Ops als Fehler. */
+        for (a3 = 0; a3 < re15_map_zone_count(); a3++) {
+            const re15_map_zone_t *zz = re15_map_zone_by_index(a3);
+            int bx, by, bw, bh, erste2, n2, c;
+            if (!zz || zz->page != 3) continue;
+            if (!re15_map_zone_synth(zz, &bx, &by, &bw, &bh, &erste2, &n2)) continue;
+            for (c = 0; c < n2; c++) {
+                int cx, cy, cw, ch, gefunden = 0;
+                if (!re15_map_synth_cell(erste2 + c, &cx, &cy, &cw, &ch)) continue;
+                for (k = 0; k < nops; k++) {
+                    if (ops[k].x != cx || ops[k].y != cy) continue;
+                    if (ops[k].w != cw || ops[k].h != ch) continue;
+                    gefunden = 1;
+                    n_fill++;
+                    if (ops[k].kind != RE15_INV_OP_FILL) n_falsch++;
+                    break;
+                }
+                if (!gefunden) n_raus++;
+                if (cx < bx || cy < by || cx + cw > bx + bw || cy + ch > by + bh)
+                    n_raus++;
+            }
+        }
+        printf("  [Zeichner] %d Zellen gezeichnet, %d nicht OP_FILL, %d fehlen/ragen heraus\n",
+               n_fill, n_falsch, n_raus);
+        CHECK("die Schema-Zellen werden gezeichnet", n_fill > 0);
+        CHECK("alle sind OP_FILL (OP_LINE deutet w/h als Endpunkt)", n_falsch == 0);
+        CHECK("keine fehlt und keine ragt aus ihrem Kasten", n_raus == 0);
+    }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;

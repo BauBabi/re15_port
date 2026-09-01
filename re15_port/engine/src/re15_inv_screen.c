@@ -1737,7 +1737,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     q2->u = 0; q2->v = 0;
                     q2->x = (int16_t)cx; q2->y = (int16_t)cy;
                     q2->w = (int16_t)cw; q2->h = (int16_t)ch;
-                    q2->r = (uint8_t)cr2; q2->g = (uint8_t)cg2; q2->b = (uint8_t)cb2;
+                    /* Gedaempft wie die FUELLUNG der gemalten Rechtecke: dort
+                     * traegt die Kachel innen den dunklen Palettenindex 1 und nur
+                     * die Wandlinie den vollen Zustandston. Ungedaempft standen die
+                     * Schema-Raeume als grelle Bloecke neben der Kunst. */
+                    q2->r = (uint8_t)(cr2 * 5 / 14);
+                    q2->g = (uint8_t)(cg2 * 5 / 14);
+                    q2->b = (uint8_t)(cb2 * 5 / 14);
                 }
             }
         }
