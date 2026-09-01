@@ -809,12 +809,14 @@ def main():
 
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
+    zid_von = {}
     for b, zs in sorted(zinfo.items()):
         for i, bb in enumerate(zs):
             pr = assign.get((b, i))
             if pr is None: continue
             for var in (0, 1):
                 rows.append((b + var, bb, pr[0], pr[1], i, zid))
+            zid_von[(b, i)] = zid
             zid += 1
     o = []
     o.append("/* GENERIERT von tools/gen_map_zones.py - KARTEN-ZONEN.")
@@ -837,12 +839,184 @@ def main():
     # die Umschaltung muss daran haengen, nicht an der Zone. Bis das gemessen ist,
     # bleibt die automatische Zuordnung stehen — sie war vom Nutzer als richtig
     # bestaetigt ("das sieht fuer das grosse und kleine Rechteck einwandfrei aus").
+    zpos = {}                       # (room, zi) -> (bbox, page, rect)
+    for b, zs in sorted(zinfo.items()):
+        for i, bb in enumerate(zs):
+            pr = assign.get((b, i))
+            if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
+    def to_map(room, zi, wx, wz):
+        e = zpos.get((room, zi))
+        if not e: return None
+        (x0, x1, z0, z1), pg, r = e
+        ei = eichung.get((room, zi))
+        if ei:
+            ox, oy, sx, sy = ei
+            mx, my = _proj(wx, wz, ox, oy, sx, sy)
+            R = rects(pg)[r]
+            if mx < R[0]: mx = R[0]
+            if mx > R[0] + R[2] - 1: mx = R[0] + R[2] - 1
+            if my < R[1]: my = R[1]
+            if my > R[1] + R[3] - 1: my = R[1] + R[3] - 1
+            return pg, r, mx, my
+        R = rects(pg)[r]
+        if x1 <= x0 or z1 <= z0: return None
+        fx = min(max(wx - x0, 0), x1 - x0)
+        fz = min(max(wz - z0, 0), z1 - z0)
+        _or = ZONE_ORIENT.get((room, zi))
+        if _or:
+            if _or[0]: fx = (x1 - x0) - fx
+            if _or[1]: fz = (z1 - z0) - fz
+        # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
+        # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
+        return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)
+    # ================= SCHEMA-ZEICHNUNG AUS DER KOLLISIONS-BOX =================
+    # Nutzer 2026-09-01: "Wo die Kartenlage fehlt oder unklar ist, die Collision-Box des
+    # Raums nutzen."
+    #
+    # 42 Zonen haben KEIN Karten-Rechteck - teils weil das Original fuer den Raum keins
+    # fuehrt, teils weil die Zuordnung nicht belegbar ist (ROOM10D0, der 2F-Flur, misst
+    # im ausgelieferten Massstab 70 x 89 px; das groesste Rechteck seiner Seite ist
+    # 72 x 64). Bisher blieben diese Raeume auf der Karte LEER, und der Spieler-Marker
+    # fand dort gar keine Zone.
+    #
+    # Statt dessen wird der Raum jetzt aus seinen eigenen KOLLISIONSZELLEN gezeichnet
+    # (RDT +0x20, dieselben Daten, aus denen die Zonen kommen). Das ist eine
+    # PORT-ERGAENZUNG und ausdruecklich keine Rekonstruktion: das Original zeichnet dort
+    # nichts, und seine Kunst ist auch nicht massstabsgetreu zur Kollision (ROOM1100
+    # misst echt 41 x 47 px, sein gemaltes Rechteck 24 x 24).
+    #
+    # MASSSTAB: der Median der ausgelieferten Zeilen @0x800768b0 derselben Stage -
+    # STAGE1 459/464, STAGE2 448/454, STAGE3 481/448, STAGE4 683/648, STAGE5 601/612,
+    # STAGE6 485/455 Welteinheiten je Pixel. Gemessen, nicht gewaehlt. Passt der Raum
+    # damit nicht in das Kartenfeld, wird gleichmaessig verkleinert, bis er hineinpasst.
+    # LAGE: ueber eine Tuer zu einem bereits gezeichneten Nachbarn derselben Seite - die
+    # Tuer muss dort liegen, wo der Nachbar denselben Durchgang zeichnet. Ohne solchen
+    # Nachbarn wird der Raum mittig ins Kartenfeld gesetzt.
+    SICHT = (100, 55, 132, 140)          # Kartenfeld: alle Rechtecke aller Seiten liegen darin
+    def _stage_massstab():
+        import statistics as _st
+        out = {}
+        for st in range(1, 7):
+            xs = []; ys = []
+            for rid in sorted(zinfo):
+                if (rid >> 12) != st: continue
+                _o, _p, _a, _b = _zeile(rid)
+                if _a > 1 and _b > 1: xs.append(_a); ys.append(_b)
+            if xs: out[st] = ((1 << 20) / _st.median(xs), (1 << 20) / _st.median(ys))
+        return out
+    MASS = _stage_massstab()
+
+    synth = {}        # (room, zi) -> (x, y, w, h, [zellen in Karten-Pixeln])
+    for b in sorted(zinfo):
+        pg = page_of(b)
+        if pg is None or pg == 0xd: continue
+        for zi, bb in enumerate(zinfo[b]):
+            if assign.get((b, zi)) is not None: continue
+            x0, x1, z0, z1 = bb
+            if x1 <= x0 or z1 <= z0: continue
+            ex, ey = MASS.get(b >> 12, (460.0, 460.0))
+            w = (x1 - x0) / ex; h = (z1 - z0) / ey
+            if w < 4 or h < 4: continue
+            # gleichmaessig verkleinern, bis der Raum ins Kartenfeld passt
+            f = min(1.0, SICHT[2] / w, SICHT[3] / h)
+            ex /= f; ey /= f
+            w = (x1 - x0) / ex; h = (z1 - z0) / ey
+            # Lage ueber einen gezeichneten Nachbarn
+            ox = oy = None
+            for d in doors_all.get(b, []):
+                if d['rw'] == 0 and d['rd'] == 0: continue
+                if zone_at(b, d['lx'], d['lz']) != zi: continue
+                nb = None
+                for zj in range(len(zinfo.get(d['dest'], []))):
+                    pr = assign.get((d['dest'], zj))
+                    if pr and pr[0] == pg: nb = (d['dest'], zj, pr); break
+                if not nb: continue
+                mp = to_map(nb[0], nb[1], d['nx'], d['nz'])
+                if not mp: continue
+                # die eigene Tuer soll dort liegen
+                fx = (d['lx'] - x0) / ex
+                fy = h - (d['lz'] - z0) / ey
+                ox = mp[2] - fx; oy = mp[3] - fy
+                break
+            if ox is None:
+                ox = SICHT[0] + (SICHT[2] - w) / 2.0
+                oy = SICHT[1] + (SICHT[3] - h) / 2.0
+            # ⛔ NICHT AUF DIE KUNST LEGEN. Die gemalten Rechtecke des Originals sind
+            # NICHT massstabsgetreu zur Kollision (ROOM1100 misst echt 41x47 px, sein
+            # Rechteck 24x24). Eine massstabsgetreue Kollisions-Zeichnung ueberdeckt
+            # deshalb die Nachbarn: ROOM10D0 anker-genau gesetzt lag ueber ROOM10C0,
+            # ROOM10E0, ROOM10F0 und ROOM1100 zugleich.
+            # Der Anker bleibt die bevorzugte Lage; ueberlappt sie gemalte Rechtecke
+            # DIESER Seite, wird die naechstgelegene freie Stelle im Kartenfeld genommen
+            # und, wenn keine frei ist, die Zeichnung verkleinert, bis eine frei wird.
+            kunst = [rects(pg)[rr] for (bb2, zz2) in [(0, 0)] for rr in range(len(rects(pg)))
+                     if any(v == (pg, rr) for v in assign.values())]
+            def _ueberlappt(px, py, pw, ph):
+                for (RX, RY, RW, RH) in kunst:
+                    if px < RX + RW and RX < px + pw and py < RY + RH and RY < py + ph:
+                        return True
+                return False
+            def _suche(pw, ph):
+                kand = []
+                for gy in range(SICHT[1], SICHT[1] + SICHT[3] - int(ph) + 1, 2):
+                    for gx in range(SICHT[0], SICHT[0] + SICHT[2] - int(pw) + 1, 2):
+                        if _ueberlappt(gx, gy, pw, ph): continue
+                        kand.append(((gx - ox) ** 2 + (gy - oy) ** 2, gx, gy))
+                return min(kand) if kand else None
+            ox = max(SICHT[0], min(ox, SICHT[0] + SICHT[2] - w))
+            oy = max(SICHT[1], min(oy, SICHT[1] + SICHT[3] - h))
+            if _ueberlappt(ox, oy, w, h):
+                treffer = _suche(w, h)
+                schrumpf = 1.0
+                while treffer is None and schrumpf > 0.34:
+                    schrumpf -= 0.08
+                    treffer = _suche(w * schrumpf, h * schrumpf)
+                if treffer is not None:
+                    ex /= schrumpf; ey /= schrumpf
+                    w = (x1 - x0) / ex; h = (z1 - z0) / ey
+                    ox, oy = treffer[1], treffer[2]
+                else:
+                    continue        # kein Platz: lieber nichts zeichnen als Matsch
+            # Zellen in Karten-Pixel (nur flaechige; duenne Waende ergeben keine Flaeche)
+            zellen = []
+            for (cx, cz, cw, cd) in sorted(set(sca_all.get(b, ()))):
+                if not (x0 <= cx <= x1 and z0 <= cz <= z1): continue
+                px0 = ox + (cx - x0) / ex; px1 = ox + (cx + cw - x0) / ex
+                py1 = oy + h - (cz - z0) / ey; py0 = oy + h - (cz + cd - z0) / ey
+                iw = int(round(px1 - px0)); ih = int(round(py1 - py0))
+                if iw < 1 or ih < 1: continue
+                zellen.append((int(round(px0)), int(round(py0)), iw, ih))
+            if not zellen: continue
+            synth[(b, zi)] = (int(round(ox)), int(round(oy)),
+                              max(1, int(round(w))), max(1, int(round(h))), zellen)
+    print(f"{len(synth)} Zonen ohne Rechteck bekommen eine Zeichnung aus ihrer Kollisions-Box")
+
+    # Synthetische Zonen bekommen eine eigene Zeilen-Nummer und einen Platz in der
+    # Zonen-Tabelle. Ihr "Rechteck" ist der Kasten der Schema-Zeichnung; als Kennung
+    # traegt die Zeile rect = 255.
+    synth_liste = []          # (x, y, w, h, erste_zelle, n_zellen)
+    synth_zellen = []
+    for (b, zi) in sorted(synth):
+        x, y, w, h, zellen = synth[(b, zi)]
+        si = len(synth_liste)
+        synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen)))
+        synth_zellen.extend(zellen)
+        pg = page_of(b)
+        bb = zinfo[b][zi]
+        for var in (0, 1):
+            rows.append((b + var, bb, pg, 255, zi, zid, si + 1))
+        zid_von[(b, zi)] = zid
+        zid += 1
+
+
     o.append("static const re15_map_zone_t s_map_zones[] = {")
-    for room, bb, pg, r, zi, zd in rows:
+    for _row in rows:
+        room, bb, pg, r, zi, zd = _row[:6]
+        _sy = _row[6] if len(_row) > 6 else 0
         ei = eichung.get((room & 0xFFF0, zi), (0, 0, 0, 0))
         _o = ZONE_ORIENT.get((room & 0xFFF0, zi), (0, 0))
-        o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d},"
-                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]} }},")
+        o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:3d}, {zi}, {zd:3d},"
+                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d} }},")
     o.append("};")
     # ================= ETAGEN-TABELLE ==========================================
     # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
@@ -941,36 +1115,6 @@ def main():
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
     # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
-    zpos = {}                       # (room, zi) -> (bbox, page, rect)
-    for b, zs in sorted(zinfo.items()):
-        for i, bb in enumerate(zs):
-            pr = assign.get((b, i))
-            if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
-    def to_map(room, zi, wx, wz):
-        e = zpos.get((room, zi))
-        if not e: return None
-        (x0, x1, z0, z1), pg, r = e
-        ei = eichung.get((room, zi))
-        if ei:
-            ox, oy, sx, sy = ei
-            mx, my = _proj(wx, wz, ox, oy, sx, sy)
-            R = rects(pg)[r]
-            if mx < R[0]: mx = R[0]
-            if mx > R[0] + R[2] - 1: mx = R[0] + R[2] - 1
-            if my < R[1]: my = R[1]
-            if my > R[1] + R[3] - 1: my = R[1] + R[3] - 1
-            return pg, r, mx, my
-        R = rects(pg)[r]
-        if x1 <= x0 or z1 <= z0: return None
-        fx = min(max(wx - x0, 0), x1 - x0)
-        fz = min(max(wz - z0, 0), z1 - z0)
-        _or = ZONE_ORIENT.get((room, zi))
-        if _or:
-            if _or[0]: fx = (x1 - x0) - fx
-            if _or[1]: fz = (z1 - z0) - fz
-        # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
-        # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
-        return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)
     def snap_wall(pg, r, mx, my, senk):
         """Rueckt eine Tuermarke auf die GEZEICHNETE Wand und nennt die WANDSEITE.
 
@@ -1313,6 +1457,26 @@ def main():
             o.append(f"    {{ 0x{room + var:04X}, {zi}, {band:2d}, {pg:2d}, {r:2d} }},")
     o.append("};")
     print(f"{len(floors)} Etagen-Eintraege")
+
+    o.append("")
+    o.append("/* SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX. Fuer Zonen, denen kein")
+    o.append(" * Karten-Rechteck des Originals zugeordnet werden konnte (rect == 255 in")
+    o.append(" * s_map_zones). Massstab = Median der ausgelieferten Zeilen @0x800768b0")
+    o.append(" * derselben Stage, Lage ueber eine Tuer zu einem gezeichneten Nachbarn.")
+    o.append(" * ACHTUNG PORT-ERGAENZUNG: das Original zeichnet diese Raeume gar nicht,")
+    o.append(" * und seine Kunst ist auch nicht massstabsgetreu zur Kollision. Siehe")
+    o.append(" * tools/gen_map_zones.py, Abschnitt SCHEMA-ZEICHNUNG. */")
+    o.append("typedef struct { short x, y, w, h; unsigned short erste, n; } re15_map_synth_t;")
+    o.append("static const re15_map_synth_t s_map_synth[] = {")
+    for (x, y, w, h, e, n) in synth_liste:
+        o.append(f"    {{ {x:4d}, {y:4d}, {w:4d}, {h:4d}, {e:4d}, {n:3d} }},")
+    o.append("};")
+    o.append("typedef struct { short x, y, w, h; } re15_map_synth_cell_t;")
+    o.append("static const re15_map_synth_cell_t s_map_synth_cells[] = {")
+    for (x, y, w, h) in synth_zellen:
+        o.append(f"    {{ {x:4d}, {y:4d}, {w:4d}, {h:4d} }},")
+    o.append("};")
+    print(f"{len(synth_liste)} Schema-Zeichnungen mit {len(synth_zellen)} Zellen")
 
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))

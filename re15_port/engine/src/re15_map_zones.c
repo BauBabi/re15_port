@@ -425,6 +425,35 @@ void re15_map_debug_reveal_page(unsigned page)
     }
 }
 
+/* SCHEMA-ZEICHNUNG einer Zone (Kollisions-Box) - 0, wenn sie ein echtes
+ * Karten-Rechteck des Originals hat. Liefert Kasten und Zellenbereich. */
+int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h,
+                        int *erste, int *n)
+{
+    const re15_map_synth_t *s;
+    if (!zn || !zn->synth) return 0;
+    s = &s_map_synth[zn->synth - 1];
+    if (x) *x = s->x; if (y) *y = s->y; if (w) *w = s->w; if (h) *h = s->h;
+    if (erste) *erste = s->erste; if (n) *n = s->n;
+    return 1;
+}
+
+int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h)
+{
+    if (i < 0 || i >= (int)(sizeof s_map_synth_cells / sizeof s_map_synth_cells[0]))
+        return 0;
+    if (x) *x = s_map_synth_cells[i].x; if (y) *y = s_map_synth_cells[i].y;
+    if (w) *w = s_map_synth_cells[i].w; if (h) *h = s_map_synth_cells[i].h;
+    return 1;
+}
+
+/* Anzahl der Zonen - fuer den Zeichner, der die Schema-Zonen einer Seite durchgeht. */
+int re15_map_zone_count(void) { return ZONE_COUNT; }
+const re15_map_zone_t *re15_map_zone_by_index(int i)
+{
+    return (i >= 0 && i < ZONE_COUNT) ? &s_map_zones[i] : 0;
+}
+
 int re15_map_page_known(unsigned page)
 {
     int i;

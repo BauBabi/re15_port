@@ -349,10 +349,18 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                                         re15_map_player_band(), &fp2, &fr2))
             { zpg = fp2; zrc = fr2; }
         if (zn && zpg == (int)g_inv_screen.map_page) {
-            uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
-            uint32_t a  = lp + (uint32_t)zrc * 12u;
-            int rx = (int16_t)mu16(a),      ry = (int16_t)mu16(a + 2u);
-            int rw = (int16_t)mu16(a + 4u), rh = (int16_t)mu16(a + 6u);
+            int rx, ry, rw, rh;
+            /* Zonen ohne Karten-Rechteck des Originals tragen eine SCHEMA-
+             * ZEICHNUNG aus ihrer Kollisions-Box (rect == 255). Ihr Kasten
+             * ersetzt das Rechteck; die Projektion darin ist dieselbe. */
+            if (zrc == 255 && re15_map_zone_synth(zn, &rx, &ry, &rw, &rh, 0, 0)) {
+                ;   /* der Kasten steht */
+            } else {
+                uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
+                uint32_t a  = lp + (uint32_t)zrc * 12u;
+                rx = (int16_t)mu16(a);      ry = (int16_t)mu16(a + 2u);
+                rw = (int16_t)mu16(a + 4u); rh = (int16_t)mu16(a + 6u);
+            }
             if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my)) {
                 /* HART ins Rechteck klemmen: der Marker ist ein 8x8-Quad, das um
                  * (mx,my) zentriert gezeichnet wird — ohne Rand-Reserve haengt er
@@ -1669,6 +1677,49 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
                      mu8(a + 8u), mu8(a + 10u), cr, cg, cb, 1);
             }
+
+        /* ---- SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX ----------------------
+         * Nutzer 2026-09-01: "wo die Kartenlage fehlt oder unklar ist, die
+         * Collision-Box des Raums nutzen". 35 Zonen haben kein Karten-Rechteck des
+         * Originals - teils fuehrt es fuer den Raum keins, teils ist die Zuordnung
+         * nicht belegbar (ROOM10D0, der 2F-Flur, misst im ausgelieferten Massstab
+         * 70x89 px, das groesste Rechteck seiner Seite 72x64). Bisher blieben sie
+         * LEER und der Marker fand dort keine Zone.
+         * Gezeichnet werden die Kollisionszellen des Raums (RDT +0x20), im selben
+         * Zustandston wie die Grundriss-Rechtecke. Das ist eine PORT-ERGAENZUNG:
+         * das Original zeichnet hier gar nichts. */
+        {
+            int zi2, nz = re15_map_zone_count();
+            for (zi2 = 0; zi2 < nz; zi2++) {
+                const re15_map_zone_t *zn2 = re15_map_zone_by_index(zi2);
+                int sx2, sy2, sw2, sh2, erste, nzell, k2, rs2;
+                int cr2 = 128, cg2 = 128, cb2 = 128;
+                if (!zn2 || zn2->page != st->map_page) continue;
+                if (!re15_map_zone_synth(zn2, &sx2, &sy2, &sw2, &sh2, &erste, &nzell))
+                    continue;
+                rs2 = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
+                    : (re15_map_zone_visited(zn2) ? RE15_MAP_RECT_VISITED
+                                                  : RE15_MAP_RECT_UNVISITED);
+                { const re15_map_zone_t *cur2 = re15_map_zone_current();
+                  if (cur2 && cur2->room == zn2->room && cur2->idx == zn2->idx)
+                      rs2 = RE15_MAP_RECT_CURRENT; }
+                if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
+                if (rs2 == RE15_MAP_RECT_VISITED)      { cr2 = 40;  cg2 = 144; cb2 = 40; }
+                else if (rs2 == RE15_MAP_RECT_CURRENT) { cr2 = 192; cg2 = 24;  cb2 = 24; }
+                for (k2 = 0; k2 < nzell; k2++) {
+                    int cx, cy, cw, ch;
+                    re15_inv_op_t *q2;
+                    if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;
+                    if (e.n >= e.max) break;
+                    q2 = &e.ops[e.n++];
+                    q2->kind = RE15_INV_OP_LINE; q2->page = 0; q2->clut = 0; q2->abe = 1;
+                    q2->u = 0; q2->v = 0;
+                    q2->x = (int16_t)cx; q2->y = (int16_t)cy;
+                    q2->w = (int16_t)cw; q2->h = (int16_t)ch;
+                    q2->r = (uint8_t)cr2; q2->g = (uint8_t)cg2; q2->b = (uint8_t)cb2;
+                }
+            }
+        }
         }
     }
 

@@ -67,6 +67,10 @@ typedef struct {
      * ⛔ NEUE FELDER ANS ENDE: am 2026-09-01 hat ein Feld VOR zid alle folgenden
      * still verschoben und saemtliche Besucht-Bits zerstoert. */
     unsigned char flip_x, flip_z;
+    /* SCHEMA-ZEICHNUNG aus der Kollisions-Box: 0 = keine, sonst Index+1 in
+     * s_map_synth. Solche Zonen tragen rect == 255 - das Original fuehrt fuer sie
+     * kein Karten-Rechteck. */
+    unsigned char synth;
 } re15_map_zone_t;
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);
@@ -82,6 +86,11 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
 int re15_map_mark_count(void);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
 int re15_map_page_known(unsigned page);
+int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h,
+                        int *erste, int *n);   /* Schema-Zeichnung, 0 = keine */
+int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
+int re15_map_zone_count(void);
+const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
