@@ -93,20 +93,46 @@ int main(void)
     CHECK("Nachbar-Rect bleibt UNVISITED (kein Ueberschwappen)",
           re15_map_rect_state(2, 1) == RE15_MAP_RECT_UNVISITED);
 
-    /* --- (3) ZONEN: ein Raum mit ZWEI Bereichen bekommt ZWEI Rechtecke.
-     *      ROOM1140 ist so ein Fall (Zone 0 -> (4,6), Zone 1 -> (4,3)) — genau die
-     *      Klasse, an der der Nutzer den Fehler gesehen hat (ROOM1170). --- */
-    g_current_room_id = 0x1140;                     /* (kein Reset: 0x1150 bleibt besucht) */
-    re15_map_zone_update(0x1140, 0, 0);             /* eindeutig im GROSSEN Bereich */
-    CHECK("Zone 0 des Raums ist aktuell (rot)",
+    /* --- (3) ZONEN + ETAGEN am echten Fall ROOM1170 ------------------------------
+     *      ⛔ FRUEHER stand hier ROOM1140 mit angeblich ZWEI Bereichen (Zone 0 ->
+     *      (4,6), Zone 1 -> (4,3)). Zone 1 ist aber KEIN Ort: die byte-true
+     *      Kollisions-Sonde (FUN_8003b0a4, PR=450) findet dort 1,2 % freie
+     *      Rasterpunkte gegen 66 % bei einer echten Zone; alle 19 SCA-Zellen liegen
+     *      auf Band 0, es gibt keine Tuer und keine Treppe, und die Bbox steckt
+     *      vollstaendig in Zone 0. Es ist der solide Moebelblock im Briefing-Raum.
+     *      Er belegte damit Rect 3 - das Rechteck, das in Wahrheit ROOM1170s zweiten
+     *      Bereich auf dem 3F-Blatt zeigt (Seite 4 Rect 3 und Seite 5 Rect 0 sind
+     *      DIESELBE Zeichnung, 22 von 1152 Pixeln Unterschied = zwei Tuersymbole).
+     *      Der Pin prueft jetzt den ECHTEN Zwei-Bereichs-Fall. --- */
+    g_current_room_id = 0x1140;
+    re15_map_zone_update(0x1140, 0, 0);
+    CHECK("ROOM1140 ist aktuell (rot) auf Rect 6",
           re15_map_rect_state(4, 6) == RE15_MAP_RECT_CURRENT);
-    CHECK("Zone 1 desselben Raums ist NICHT aktuell",
+    CHECK("ROOM1140 hat KEINE zweite Zone mehr (Rect 3 gehoert ihm nicht)",
           re15_map_rect_state(4, 3) != RE15_MAP_RECT_CURRENT);
-    re15_map_zone_update(0x1140, 0, -14400);        /* eindeutig im ZWEITEN Bereich */
-    CHECK("nach dem Bereichswechsel ist Zone 1 aktuell (rot)",
-          re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
-    CHECK("und Zone 0 faellt auf besucht (gruen) zurueck",
-          re15_map_rect_state(4, 6) == RE15_MAP_RECT_VISITED);
+
+    /* ROOM1170 hat zwei echte Bereiche, und der zweite reicht ueber Etagen:
+     * oben (Band 4) gehoert er auf das Dach-Blatt, unten (Band 0) auf das 3F-Blatt -
+     * dorthin fuehren auch seine beiden Tueren (ROOM1130 und ROOM1140, beide Seite 4).
+     * Nutzer-Auftrag 2026-09-01: "fuege den unteren Bereich der police station 3f map
+     * hinzu". */
+    {
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        g_current_room_id = 0x1170;
+        pl->floor = 3;                              /* Hof/Dach */
+        re15_map_zone_update(0x1170, 0, 0);
+        CHECK("ROOM1170 Hof ist aktuell auf dem Dach-Blatt (Seite 5 Rect 1)",
+              re15_map_rect_state(5, 1) == RE15_MAP_RECT_CURRENT);
+        pl->floor = 4;                              /* zweiter Bereich, oberer Korridor */
+        re15_map_zone_update(0x1170, -18000, -22000);
+        CHECK("zweiter Bereich bei Band 4: Dach-Blatt, Seite 5 Rect 0",
+              re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
+        pl->floor = 0;                              /* unterste Ebene */
+        re15_map_zone_update(0x1170, -18000, -22000);
+        CHECK("zweiter Bereich bei Band 0: 3F-Blatt, Seite 4 Rect 3",
+              re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
+        pl->floor = 0;
+    }
 
     /* --- (4) Szenario-Varianten TEILEN sich die Zone (derselbe Ort) --- */
     CHECK("0x1151 (Elza-Variante) teilt die Zone mit 0x1150",
@@ -184,10 +210,8 @@ int main(void)
         CHECK("unbesuchte Zonen zeigen KEINE Marken", vorher == 0);
         g_current_room_id = 0x1170;
         re15_map_zone_update(0x1170, -18000, -22000);   /* der kleine Bereich */
-        CHECK("der kleine Bereich liegt auf Seite 5 Rect 0 (NICHT auf Seite 4)",
-              re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
-        CHECK("Seite 4 Rect 3 gehoert weiter ROOM1140, nicht 1170",
-              re15_map_rect_state(4, 3) != RE15_MAP_RECT_CURRENT);
+        CHECK("der kleine Bereich liegt bei Band 0 auf dem 3F-Blatt (Seite 4 Rect 3)",
+              re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
         for (k = 0; k < n; k++) {
             int pg, r, mx, my, kind;
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;

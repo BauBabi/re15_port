@@ -461,7 +461,19 @@ def main():
     # 16x16; entschieden hat die Dreifach-Zeichnung. Ohne diese Zeile fehlt dem
     # Treppenhaus die Etage 2F (Nutzer 2026-09-01: "gehe ich die 2 Treppen runter, bin
     # ich auf Ebene 2F").
-    ZONE_DROP = { (0x1110, 1) }
+    ZONE_DROP = {
+        (0x1110, 1),
+        # ROOM1140 Zone 1 -> Seite 4 Rect 3: die Zone ist nachweislich KEIN Ort,
+        # sondern der solide Moebelblock im Briefing-Raum (byte-true Kollisions-Sonde
+        # FUN_8003b0a4, PR=450: 1,2 % der Rasterpunkte frei gegen 66 % bei einer echten
+        # Zone; alle 19 SCA-Zellen Band 0, keine Tuer, keine Treppe, Bbox vollstaendig
+        # in Zone 0). Sie belegte damit das Rechteck, das in Wahrheit ROOM1170s zweiten
+        # Bereich auf dem 3F-Blatt zeigt: Seite 4 Rect 3 und Seite 5 Rect 0 sind
+        # DIESELBE Zeichnung (22 von 1152 Pixeln Unterschied, alle Index 4->1 = zwei
+        # Tuersymbole), und die beiden Ausgaenge des zweiten Bereichs fuehren nach
+        # ROOM1130 und ROOM1140 - beide auf Seite 4 = 3F.
+        (0x1140, 1),
+    }
     for key in ZONE_DROP:
         assign.pop(key, None)
 
@@ -806,6 +818,60 @@ def main():
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d},"
                  f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d} }},")
     o.append("};")
+    # ================= ETAGEN-TABELLE ==========================================
+    # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
+    # Gehe ich die 2 Treppen runter, bin ich auf Ebene 2F, danach noch einmal runter
+    # auf 1F. Bei und im Treppenhaus bin ich IMMER auf Ebene 1F laut Karte."
+    #
+    # Der Treppenhaus-Raum ist ROOM1060 (bzw. ROOM10A0); beide liegen auf Kartenseite 2,
+    # und deren Titelbild heisst woertlich "POLICE STATION 1F" - daher die feste 1F.
+    # Das Original kennt keinen Etagenbegriff innerhalb eines Raums: der Seiten-Setzer
+    # @0x8004b568 liest nur die Raumnummer (Sprungtabelle @0x8001103c), und im ganzen
+    # Kartencode kommt das Spieler-Band DAT_800acad6 nicht vor. Die Umschaltung ist also
+    # eine PORT-ERGAENZUNG - aber sie ist vollstaendig aus den Daten ABGELEITET, nicht
+    # geraten:
+    #
+    #   (1) Jede Tuer traegt ihr BAND (Door_aot_set pc[4], re15_aot.h) und ihren
+    #       Zielraum. Der Zielraum hat eine bekannte Kartenseite, und die Seite traegt
+    #       im Titelbild ihre Etage. Fuer ROOM1060 gemessen:
+    #           Band 8 -> ROOM1120 (Seite 4 = "3F")
+    #           Band 4 -> ROOM10C0 (Seite 3 = "2F")
+    #           Band 0 -> ROOM1040 (Seite 2 = "1F")
+    #       Das deckt sich exakt mit der Beobachtung: je Treppenlauf werden 2 Baender
+    #       ueberquert (count), zwei Laeufe also 4 - 8 -> 4 -> 0.
+    #   (2) Der Raum ist auf JEDER dieser Etagen gezeichnet, mit DERSELBEN Kachel:
+    #       ROOM1060 belegt Seite 2 Rect 9 uv(168,40); Seite 3 Rect 9 und Seite 4 Rect 0
+    #       tragen dieselbe uv. Das Ziel-Rechteck wird deshalb ueber die Kachel-uv
+    #       gesucht - kein Raten, eine Gleichheitspruefung.
+    belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
+    floors = []          # (room, zone, band, page, rect)
+    for b in sorted(zinfo):
+        # ⛔ JE ZONE, nicht je Raum. ROOM1170 hat zwei Bereiche mit voellig
+        # verschiedenen Rechtecken; wer die Etagen am Rechteck der Zone 0 festmacht,
+        # sucht die Zweitzeichnung an der falschen Kachel (fruehes Ergebnis: Band 0
+        # landete auf Seite 4 Rect 4, und das ist ROOM1130).
+        for zi in range(len(zinfo[b])):
+            eigene = assign.get((b, zi))
+            if eigene is None: continue
+            pg0, r0 = eigene
+            uv0 = rect_uv(pg0, r0)
+            baender = {}
+            for d in doors_all.get(b, []):
+                if d['rw'] == 0 and d['rd'] == 0: continue
+                if zone_at(b, d['lx'], d['lz']) != zi: continue
+                zp = page_of(d['dest'])
+                if zp is None or zp == 0xd: continue
+                baender.setdefault(d['band'], set()).add(zp)
+            if len(baender) < 2: continue
+            for band in sorted(baender):
+                ziel = sorted(baender[band])
+                if len(ziel) != 1: continue
+                zp = ziel[0]
+                treffer = [i for i, _ in enumerate(rects(zp))
+                           if rect_uv(zp, i) == uv0 and
+                              ((zp, i) == (pg0, r0) or (zp, i) not in belegte_rects)]
+                if len(treffer) != 1: continue
+                floors.append((b, zi, band, zp, treffer[0]))
     # ---- MARKEN: Treppen, in Karten-Koordinaten vorberechnet ------------------
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
@@ -979,7 +1045,7 @@ def main():
                     # TREPPE: Sprossen quer zur Laufrichtung. map_x = welt_x,
                     # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
                     mkind = 5 if m.get('axis') == 12 else 4
-                vor.append({'room': b, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
+                vor.append({'room': b, 'zi': zi, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
                             'mx': mx, 'my': my, 'seite': mkind,
                             'zid': zid_of.get((b, zi), 0), 'd': m})
 
@@ -1042,6 +1108,25 @@ def main():
         (B if W is A else A)['weg'] = True
 
     # ================= DURCHGANG 3: ausgeben ====================================
+    # ---- MARKEN AUF DIE ZWEIT-ZEICHNUNG MITNEHMEN -----------------------------
+    # Eine Zone, die auf mehreren Etagenblaettern gezeichnet ist (Etagen-Tabelle),
+    # braucht ihre Marken auf JEDEM dieser Blaetter - sonst verschwinden Treppen und
+    # Tueren, sobald die Karte auf die andere Etage schaltet. Die Kacheln sind
+    # identisch (ROOM1170s zweiter Bereich: Seite 5 Rect 0 und Seite 4 Rect 3
+    # unterscheiden sich in 22 von 1152 Pixeln, alle Tuersymbole), der Versatz ist
+    # deshalb exakt die Differenz der Rechteck-Ecken.
+    zusatz = []
+    for v in vor:
+        if v.get('weg'): continue
+        for (froom, fzi, fband, fpg, fr) in floors:
+            if froom != v['room'] or fzi != v['zi']: continue
+            if (fpg, fr) == (v['pg'], v['r']): continue
+            R0 = rects(v['pg'])[v['r']]; R1 = rects(fpg)[fr]
+            zusatz.append(dict(v, pg=fpg, r=fr,
+                               mx=v['mx'] + (R1[0] - R0[0]),
+                               my=v['my'] + (R1[1] - R0[1])))
+    vor.extend(zusatz)
+
     seen = set()
     for v in vor:
         if v.get('weg'): continue
@@ -1064,69 +1149,15 @@ def main():
     for pg, r, mx, my, kind, zd, zd2 in sorted(marks):
         o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d}, {zd2:3d} }},")
     o.append("};")
-    # ================= ETAGEN-TABELLE ==========================================
-    # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
-    # Gehe ich die 2 Treppen runter, bin ich auf Ebene 2F, danach noch einmal runter
-    # auf 1F. Bei und im Treppenhaus bin ich IMMER auf Ebene 1F laut Karte."
-    #
-    # Der Treppenhaus-Raum ist ROOM1060 (bzw. ROOM10A0); beide liegen auf Kartenseite 2,
-    # und deren Titelbild heisst woertlich "POLICE STATION 1F" - daher die feste 1F.
-    # Das Original kennt keinen Etagenbegriff innerhalb eines Raums: der Seiten-Setzer
-    # @0x8004b568 liest nur die Raumnummer (Sprungtabelle @0x8001103c), und im ganzen
-    # Kartencode kommt das Spieler-Band DAT_800acad6 nicht vor. Die Umschaltung ist also
-    # eine PORT-ERGAENZUNG - aber sie ist vollstaendig aus den Daten ABGELEITET, nicht
-    # geraten:
-    #
-    #   (1) Jede Tuer traegt ihr BAND (Door_aot_set pc[4], re15_aot.h) und ihren
-    #       Zielraum. Der Zielraum hat eine bekannte Kartenseite, und die Seite traegt
-    #       im Titelbild ihre Etage. Fuer ROOM1060 gemessen:
-    #           Band 8 -> ROOM1120 (Seite 4 = "3F")
-    #           Band 4 -> ROOM10C0 (Seite 3 = "2F")
-    #           Band 0 -> ROOM1040 (Seite 2 = "1F")
-    #       Das deckt sich exakt mit der Beobachtung: je Treppenlauf werden 2 Baender
-    #       ueberquert (count), zwei Laeufe also 4 - 8 -> 4 -> 0.
-    #   (2) Der Raum ist auf JEDER dieser Etagen gezeichnet, mit DERSELBEN Kachel:
-    #       ROOM1060 belegt Seite 2 Rect 9 uv(168,40); Seite 3 Rect 9 und Seite 4 Rect 0
-    #       tragen dieselbe uv. Das Ziel-Rechteck wird deshalb ueber die Kachel-uv
-    #       gesucht - kein Raten, eine Gleichheitspruefung.
-    belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
-    floors = []          # (room, band, page, rect)
-    for b in sorted(zinfo):
-        eigene = assign.get((b, 0))
-        if eigene is None: continue
-        pg0, r0 = eigene
-        uv0 = rect_uv(pg0, r0)
-        baender = {}
-        for d in doors_all.get(b, []):
-            if d['rw'] == 0 and d['rd'] == 0: continue
-            zp = page_of(d['dest'])
-            if zp is None or zp == 0xd: continue
-            baender.setdefault(d['band'], set()).add(zp)
-        if len(baender) < 2: continue          # nur Raeume ueber mehrere Etagen
-        for band in sorted(baender):
-            ziel = sorted(baender[band])
-            if len(ziel) != 1: continue        # mehrdeutig -> auslassen
-            zp = ziel[0]
-            # ⛔ Die uv-Gleichheit allein reicht NICHT: Kachel-Wiederverwendung ist im
-            # Spiel die Regel (mehrere Seiten teilen pixelgleiche Rechtecke). Das
-            # Ziel-Rechteck muss deshalb zusaetzlich FREI sein - gehoert es schon einem
-            # anderen Raum, ist es nicht die Zweitzeichnung DIESES Raums. Ohne diese
-            # Bedingung landete ROOM1170s Band 0 auf Seite 4 Rect 4, und das ist
-            # ROOM1130.
-            treffer = [i for i, _ in enumerate(rects(zp))
-                       if rect_uv(zp, i) == uv0 and
-                          ((zp, i) == (pg0, r0) or (zp, i) not in belegte_rects)]
-            if len(treffer) != 1: continue     # Kachel dort nicht eindeutig
-            floors.append((b, band, zp, treffer[0]))
     o.append("")
     o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
     o.append(" * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber")
     o.append(" * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */")
-    o.append("typedef struct { unsigned short room; unsigned char band, page, rect; } re15_map_floor_t;")
+    o.append("typedef struct { unsigned short room; unsigned char zone, band, page, rect; } re15_map_floor_t;")
     o.append("static const re15_map_floor_t s_map_floors[] = {")
-    for room, band, pg, r in sorted(floors):
+    for room, zi, band, pg, r in sorted(floors):
         for var in (0, 1):
-            o.append(f"    {{ 0x{room + var:04X}, {band:2d}, {pg:2d}, {r:2d} }},")
+            o.append(f"    {{ 0x{room + var:04X}, {zi}, {band:2d}, {pg:2d}, {r:2d} }},")
     o.append("};")
     print(f"{len(floors)} Etagen-Eintraege")
 

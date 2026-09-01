@@ -188,13 +188,22 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
-        if (zn->page != page || zn->rect != rect_idx) continue;
-        if (cur && zn->room == cur->room) {
-            /* Auf einer Etagen-Umschaltung zaehlt das Etagen-Rechteck als aktuell,
-             * sonst das eigene. */
-            int fp, fr;
-            if (re15_map_floor_lookup(cur->room,
-                                      g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, &fr)) {
+        int fp, fr, hat_etage, passt;
+        /* ---- ZWEIT-ZEICHNUNG EINER ZONE AUF EINEM ANDEREN ETAGENBLATT ----------
+         * Eine Zone kann auf mehreren Blaettern gezeichnet sein (ROOM1170s zweiter
+         * Bereich: Dach-Blatt Seite 5 Rect 0 und 3F-Blatt Seite 4 Rect 3 - dieselbe
+         * Zeichnung, 22 von 1152 Pixeln Unterschied). Das Zweit-Rechteck gehoert
+         * KEINER eigenen Zone; ohne diesen Zweig blieb es "unbekannt" und wurde
+         * dauerhaft grau gemalt, statt den Zustand seiner Zone zu erben. */
+        hat_etage = re15_map_floor_lookup(zn->room, zn->idx,
+                                          g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, &fr);
+        passt = (zn->page == page && zn->rect == rect_idx) ||
+                (hat_etage && (int)page == fp && (int)rect_idx == fr);
+        if (!passt) continue;
+        if (cur && zn->room == cur->room && zn->idx == cur->idx) {
+            /* Auf einer Etagen-Umschaltung ist NUR das Rechteck dieser Etage
+             * aktuell - sonst leuchteten beide Zeichnungen zugleich rot. */
+            if (hat_etage) {
                 if ((int)page == fp && (int)rect_idx == fr) return RE15_MAP_RECT_CURRENT;
             } else if (zn->page == cur->page && zn->rect == cur->rect) {
                 return RE15_MAP_RECT_CURRENT;
@@ -268,12 +277,13 @@ int re15_map_mark_count(void) { return MARK_COUNT; }
  * abgeleitet: jede Tuer traegt ihr Band und ihren Zielraum, der Zielraum seine Seite.
  * Fuer ROOM1060: Band 8 -> ROOM1120 (Seite 4 "3F"), Band 4 -> ROOM10C0 (Seite 3 "2F"),
  * Band 0 -> ROOM1040 (Seite 2 "1F"). Tabelle: tools/gen_map_zones.py. */
-int re15_map_floor_lookup(unsigned room, int band, int *page, int *rect)
+int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)
 {
     int i, best = -1, bestd = 0, n = 0;
     for (i = 0; i < FLOOR_COUNT; i++) {
         int d;
         if (s_map_floors[i].room != room) continue;
+        if ((int)s_map_floors[i].zone != zone) continue;
         n++;
         d = (int)s_map_floors[i].band - band;
         if (d < 0) d = -d;

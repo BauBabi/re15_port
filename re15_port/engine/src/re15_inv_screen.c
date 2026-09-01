@@ -236,7 +236,7 @@ uint8_t re15_inv_map_page_shown(void)
          * aus den Tueren des Raums (Band der Tuer -> Seite des Zielraums), siehe
          * re15_map_floor_lookup. */
         int fp;
-        if (zn && re15_map_floor_lookup(zn->room,
+        if (zn && re15_map_floor_lookup(zn->room, zn->idx,
                                         g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp, 0))
             return (uint8_t)fp;
     }
@@ -344,7 +344,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
          * im kleinen rechteck sein, nicht ausserhalb"). */
         int zpg = zn ? zn->page : -1, zrc = zn ? zn->rect : -1, fp2, fr2;
         /* Auf einer Etagen-Umschaltung wird in das Rechteck DIESER Etage projiziert. */
-        if (zn && re15_map_floor_lookup(zn->room,
+        if (zn && re15_map_floor_lookup(zn->room, zn->idx,
                                         g_actors[RE15_ACTOR_SLOT_PLAYER].floor, &fp2, &fr2))
             { zpg = fp2; zrc = fr2; }
         if (zn && zpg == (int)g_inv_screen.map_page) {
@@ -1606,6 +1606,22 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          * wh 0x20/0x30, u 0x60, sh t4 clut @0x800472c0) */
         sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
              0x10e, 0x28, 0x20, 0x30, 0x60, 0, 128, 128, 128, 1);
+        /* ---- ETAGEN-BEISCHRIFT DER SEITE ---------------------------------------
+         * Nutzer 2026-09-01: "nenne den oberen Bereich police station roof".
+         * Die Titelbilder der Karten-Kacheln tragen die Etage im Bild: Seite 0 "B1",
+         * 1 "B2", 2 "1F", 3 "2F", 4 "3F" - nur Seite 5, das Blatt von ROOM1170, hat
+         * GAR KEINE Angabe (gemessen an den uv(0,0)-Titelkacheln aller 13 Seiten).
+         * Das ist das Helipad-Dach; die Beischrift wird deshalb hier gesetzt. Sie ist
+         * eine PORT-ERGAENZUNG - im Original steht dort nichts, und "ROOF" existiert
+         * in keiner Kachel als Bild.
+         * Gezeichnet mit dem 16x16-Textdrucker der FILE-Seite (emit_text, byte-true
+         * FUN_80028ec4 @0x80028ec4); Glyphencodes: Grossbuchstabe = 0x1d + Index,
+         * Ende = 0x07 (verifiziert an "Combat Knife" = 1f 4b 49 3e 3d 50 00 27 4a 45
+         * 42 41 07). */
+        if (st->map_page == 5) {
+            static const uint8_t ROOF[] = { 0x2e, 0x2b, 0x2b, 0x22, 0x07 };  /* ROOF */
+            emit_text(&e, 0x7a, 0x1e, ROOF, 0x00);   /* auf der Grundlinie des Titels */
+        }
         /* room rects: pair table @0x80076840[page] {count, list ptr} (@0x80047048-70),
          * stride-12 entries {x,y,w,h,u@+8,v@+10} (@0x8004731c-60), SPRT code 0x64|2
          * (@0x800472fc-318), clut 0x7d50 (@0x800473cc), sampling the MAP page.
