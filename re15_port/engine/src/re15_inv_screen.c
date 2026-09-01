@@ -1729,7 +1729,11 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;
                     if (e.n >= e.max) break;
                     q2 = &e.ops[e.n++];
-                    q2->kind = RE15_INV_OP_LINE; q2->page = 0; q2->clut = 0; q2->abe = 1;
+                    /* ⛔ OP_FILL, NICHT OP_LINE. RE15_INV_OP_LINE deutet (w,h) als
+                     * ENDPUNKT, nicht als Groesse (inv_render_pc.c:547-566) - die
+                     * Zellen wurden dadurch zu langen Strichen quer ueber den
+                     * Schirm, im Abzug des 2F-Blattes deutlich zu sehen. */
+                    q2->kind = RE15_INV_OP_FILL; q2->page = 0; q2->clut = 0; q2->abe = 0;
                     q2->u = 0; q2->v = 0;
                     q2->x = (int16_t)cx; q2->y = (int16_t)cy;
                     q2->w = (int16_t)cw; q2->h = (int16_t)ch;

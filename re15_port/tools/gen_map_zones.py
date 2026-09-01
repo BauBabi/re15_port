@@ -983,9 +983,21 @@ def main():
                 if not (x0 <= cx <= x1 and z0 <= cz <= z1): continue
                 px0 = ox + (cx - x0) / ex; px1 = ox + (cx + cw - x0) / ex
                 py1 = oy + h - (cz - z0) / ey; py0 = oy + h - (cz + cd - z0) / ey
-                iw = int(round(px1 - px0)); ih = int(round(py1 - py0))
+                # ⛔ AUF DEN KASTEN BESCHNEIDEN. Eine Zelle kann mit ihrer ECKE in der
+                # Zonen-Bbox liegen und weit darueber hinausragen (ROOM10D0 fuehrt eine
+                # 2000 x 26250 grosse Zelle). Ungeschnitten wurden daraus senkrechte
+                # Streifen, die ueber das ganze Kartenfeld liefen - im Abzug des
+                # 2F-Blattes deutlich zu sehen.
+                # ⛔ NACH dem Runden beschneiden, nicht davor: sonst schiebt die
+                # Rundung die rechte/untere Kante wieder einen Pixel hinaus (17 von 692
+                # Zellen taten das).
+                ix0 = max(int(round(ox)), int(round(max(px0, ox))))
+                iy0 = max(int(round(oy)), int(round(max(py0, oy))))
+                ix1 = min(int(round(ox + w)), int(round(min(px1, ox + w))))
+                iy1 = min(int(round(oy + h)), int(round(min(py1, oy + h))))
+                iw = ix1 - ix0; ih = iy1 - iy0
                 if iw < 1 or ih < 1: continue
-                zellen.append((int(round(px0)), int(round(py0)), iw, ih))
+                zellen.append((ix0, iy0, iw, ih))
             if not zellen: continue
             synth[(b, zi)] = (int(round(ox)), int(round(oy)),
                               max(1, int(round(w))), max(1, int(round(h))), zellen)
