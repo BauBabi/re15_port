@@ -1723,6 +1723,33 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
                 if (rs2 == RE15_MAP_RECT_VISITED)      { cr2 = 40;  cg2 = 144; cb2 = 40; }
                 else if (rs2 == RE15_MAP_RECT_CURRENT) { cr2 = 192; cg2 = 24;  cb2 = 24; }
+                /* ⛔ UMRANDUNG. Nutzer 2026-09-01: "ROOM 10D0 zeichnet noch nicht
+                 * mal eine richtige Markierung/Umrandung." Die gemalten Rechtecke des
+                 * Originals tragen eine helle Wandlinie um eine dunkle Fuellung; ohne
+                 * Rahmen war die Schema-Zeichnung nur ein gedaempfter Fleck und als
+                 * Raum kaum zu erkennen. Der Rahmen liegt auf dem Kasten und traegt den
+                 * vollen Zustandston, die Zellen darin bleiben gedaempft. */
+                {
+                    int s2;
+                    for (s2 = 0; s2 < 4; s2++) {
+                        re15_inv_op_t *q3;
+                        if (e.n >= e.max) break;
+                        q3 = &e.ops[e.n++];
+                        q3->kind = RE15_INV_OP_FILL; q3->page = 0; q3->clut = 0;
+                        q3->abe = 0; q3->u = 0; q3->v = 0;
+                        q3->r = (uint8_t)cr2; q3->g = (uint8_t)cg2; q3->b = (uint8_t)cb2;
+                        switch (s2) {
+                        case 0: q3->x = (int16_t)sx2; q3->y = (int16_t)sy2;
+                                q3->w = (int16_t)sw2; q3->h = 1; break;
+                        case 1: q3->x = (int16_t)sx2; q3->y = (int16_t)(sy2 + sh2 - 1);
+                                q3->w = (int16_t)sw2; q3->h = 1; break;
+                        case 2: q3->x = (int16_t)sx2; q3->y = (int16_t)sy2;
+                                q3->w = 1; q3->h = (int16_t)sh2; break;
+                        default: q3->x = (int16_t)(sx2 + sw2 - 1); q3->y = (int16_t)sy2;
+                                q3->w = 1; q3->h = (int16_t)sh2; break;
+                        }
+                    }
+                }
                 for (k2 = 0; k2 < nzell; k2++) {
                     int cx, cy, cw, ch;
                     re15_inv_op_t *q2;

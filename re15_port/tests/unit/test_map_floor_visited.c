@@ -39,28 +39,48 @@ int main(void)
     printf("=== Karte: Etagen-Besucht + unzugeordnete Rechtecke ===\n");
     re15_map_visited_reset();
 
-    /* (1) Nichts besucht: Seite 4 Rect 0 (ROOM1060 auf 3F) ist NICHT bekannt. */
-    CHECK("frisch: Seite 4 Rect 0 ist nicht besucht",
-          re15_map_rect_state(4, 0) != RE15_MAP_RECT_VISITED &&
-          re15_map_rect_state(4, 0) != RE15_MAP_RECT_CURRENT);
+    /* ⛔ TREPPENHAUS UND FAHRSTUHL WAREN VERTAUSCHT (2026-09-01). Seite 2 fuehrt zwei
+     * kleine Zeichnungen: Rect 8 (uv 128,40) ist ein 16x17-Kasten, Rect 9 (uv 168,40)
+     * ein 10x10-Kasten. Die Kostenheuristik legte ROOM1060 (Treppenhaus, 11100x12750
+     * Welteinheiten = 24x27 px) auf den KLEINEN und ROOM1080 (Fahrstuhlkabine,
+     * 6200x6100 = 14x13 px) auf den GROSSEN. Zwei unabhaengige Messungen sagen das
+     * Gegenteil: die Groessen, und ROOM1120s Tuer zur KABINE, die auf Seite 4 nach
+     * (135,146) faellt - 1 px von der Mitte des dortigen Rect 0, derselben Zeichnung
+     * wie Rect 9. Nutzer: "In ROOM 1120 haette ich das Treppenhaus rechts erwartet,
+     * nicht darueber. Da haette ich den Fahrstuhl erwartet."
+     * Der Kuenstler hat das Treppenhaus nur auf 1F und 2F gezeichnet, die Kabine auf
+     * 1F, 2F UND 3F. */
+    {
+        const re15_map_zone_t *z60 = re15_map_zone_at(0x1060, 27100, 25400);
+        const re15_map_zone_t *z80 = re15_map_zone_at(0x1080, 0, 0);
+        CHECK("ROOM1060 (Treppenhaus) liegt auf dem GROSSEN Kasten, Seite 2 Rect 8",
+              z60 && z60->page == 2 && z60->rect == 8);
+        CHECK("ROOM1080 (Fahrstuhl) liegt auf dem KLEINEN Kasten, Seite 2 Rect 9",
+              z80 && z80->page == 2 && z80->rect == 9);
+    }
 
-    /* (2) Treppenhaus ROOM1060 im ERDGESCHOSS betreten (Band 0 -> Seite 2 Rect 9). */
-    stelle(0x1060, 18000, 28000, 0);
+    /* (1) Nichts besucht: das Treppenhaus ist auf dem 2F-Blatt noch nicht bekannt. */
+    CHECK("frisch: Seite 3 Rect 8 ist nicht besucht",
+          re15_map_rect_state(3, 8) != RE15_MAP_RECT_VISITED &&
+          re15_map_rect_state(3, 8) != RE15_MAP_RECT_CURRENT);
+
+    /* (2) Treppenhaus im ERDGESCHOSS betreten (Band 0 -> Seite 2 Rect 8). */
+    stelle(0x1060, 27100, 25400, 0);
     CHECK("nach dem 1F-Besuch ist ROOM1060 auf dem 1F-Blatt aktuell",
-          re15_map_rect_state(2, 9) == RE15_MAP_RECT_CURRENT);
-    CHECK("die 3F-Zeichnung desselben Raums bleibt dunkel (das war der Bug)",
-          re15_map_rect_state(4, 0) != RE15_MAP_RECT_VISITED &&
-          re15_map_rect_state(4, 0) != RE15_MAP_RECT_CURRENT);
+          re15_map_rect_state(2, 8) == RE15_MAP_RECT_CURRENT);
+    CHECK("die 2F-Zeichnung desselben Raums bleibt dunkel (das war der Bug)",
+          re15_map_rect_state(3, 8) != RE15_MAP_RECT_VISITED &&
+          re15_map_rect_state(3, 8) != RE15_MAP_RECT_CURRENT);
 
-    /* (3) Erst der Gang nach oben (Band 8) macht die 3F-Zeichnung sichtbar. */
-    stelle(0x1060, 18000, 28000, 8);
-    CHECK("auf Band 8 ist ROOM1060 auf dem 3F-Blatt aktuell",
-          re15_map_rect_state(4, 0) == RE15_MAP_RECT_CURRENT);
+    /* (3) Erst der Gang nach oben (Band 4) macht die 2F-Zeichnung sichtbar. */
+    stelle(0x1060, 27100, 25400, 4);
+    CHECK("auf Band 4 ist ROOM1060 auf dem 2F-Blatt aktuell",
+          re15_map_rect_state(3, 8) == RE15_MAP_RECT_CURRENT);
 
     /* (4) Und sie BLEIBT sichtbar, wenn man den Raum verlaesst. */
     stelle(0x1130, -3000, 0, 0);
-    CHECK("nach dem Verlassen bleibt die begangene 3F-Zeichnung gruen",
-          re15_map_rect_state(4, 0) == RE15_MAP_RECT_VISITED);
+    CHECK("nach dem Verlassen bleibt die begangene 2F-Zeichnung gruen",
+          re15_map_rect_state(3, 8) == RE15_MAP_RECT_VISITED);
 
     /* (5) Der Kartenschirm malt kein unzugeordnetes Rechteck. Geprueft auf dem
      *     1F-Blatt (Seite 2): dessen Rect 0 (180,69,32,96) und Rect 5 (180,59,48,32)

@@ -123,6 +123,28 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
     /* zusaetzlich die Etage, auf der er gerade steht */
     f = floor_row(s_map_zones[i].room, s_map_zones[i].idx, re15_map_player_band());
     if (f >= 0) s_visited_floor[f >> 3] |= (uint8_t)(1u << (f & 7));
+    /* ⛔ EIN RAUM, DER AUF MEHREREN BLAETTERN DASSELBE IST, wird ueberall auf einmal
+     * bekannt. Die Fahrstuhlkabine ROOM1080 ist auf drei Blaettern gezeichnet, und
+     * alle drei Tueren zu ihr tragen Band 0 - ihre Etage steckt im Raum, aus dem man
+     * kommt, nicht im Band. Unterscheiden sich die Baender ihrer Zeilen NICHT, ist es
+     * kein Etagenwechsel, sondern derselbe Ort auf mehreren Blaettern: dann zaehlt ein
+     * Besuch fuer alle. Beim Treppenhaus (Baender 0 und 4) bleibt es dabei, dass nur
+     * die begangene Etage bekannt wird. */
+    {
+        int j, erst = -1, gleich = 1;
+        for (j = 0; j < FLOOR_COUNT; j++) {
+            if (s_map_floors[j].room != s_map_zones[i].room) continue;
+            if ((int)s_map_floors[j].zone != s_map_zones[i].idx) continue;
+            if (erst < 0) erst = s_map_floors[j].band;
+            else if (s_map_floors[j].band != erst) { gleich = 0; break; }
+        }
+        if (gleich && erst >= 0)
+            for (j = 0; j < FLOOR_COUNT; j++) {
+                if (s_map_floors[j].room != s_map_zones[i].room) continue;
+                if ((int)s_map_floors[j].zone != s_map_zones[i].idx) continue;
+                s_visited_floor[j >> 3] |= (uint8_t)(1u << (j & 7));
+            }
+    }
 }
 
 int re15_map_zone_visited(const re15_map_zone_t *zn)

@@ -448,10 +448,27 @@ def main():
     # auf 18/7 px. Ohne diese Vorgabe liess die lokale Suche ROOM1120 ganz weg, sobald
     # eine andere Vorgabe die Startlage verschob - die Zuordnung ist gegenueber solchen
     # Verschiebungen fragil (KEINE_ZUORDNUNG ist bewusst billig, siehe dort).
+    # ⛔ TREPPENHAUS UND FAHRSTUHL WAREN VERTAUSCHT.
+    # Nutzer 2026-09-01: "In ROOM 1120 haette ich erwartet, dass er das Treppenhaus
+    # rechts zeichnet, nicht darueber. Da haette ich den Fahrstuhl erwartet."
+    # Seite 2 fuehrt zwei kleine Zeichnungen: Rect 8 (uv 128,40) ist ein 16x17-Kasten,
+    # Rect 9 (uv 168,40) ein 10x10-Kasten. Die Kostenheuristik hatte ROOM1060 (das
+    # Treppenhaus) auf den KLEINEN und ROOM1080 (die Fahrstuhlkabine) auf den GROSSEN
+    # gelegt. Zwei unabhaengige Messungen sagen das Gegenteil:
+    #   GROESSE: ROOM1060 misst 11100x12750 Welteinheiten = 24x27 px im ausgelieferten
+    #     Massstab, ROOM1080 nur 6200x6100 = 14x13 px. Der 16x17-Kasten gehoert dem
+    #     Treppenhaus, der 10x10-Kasten der Kabine.
+    #   TUERLAGE: ROOM1120s Tuer zur KABINE projiziert auf Seite 4 nach (135,146); die
+    #     Mitte des dortigen Rect 0 - dieselbe Zeichnung wie Rect 9, uv (168,40) - liegt
+    #     bei (135,145). Ein Pixel. Die Tuer zum Treppenhaus liegt 7 px daneben.
+    # Damit stand auf dem 3F-Blatt die Kabine als "Treppenhaus" beschriftet an der
+    # Stelle, an der der Nutzer die Kabine erwartet hat.
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
         (0x10C0, 0): (3, 4),
+        (0x1060, 0): (2, 8),      # Treppenhaus -> der 16x17-Kasten
+        (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
     }
 
     # Zonen je Seite sammeln
@@ -1030,6 +1047,8 @@ def main():
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:3d}, {zi}, {zd:3d},"
                  f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d} }},")
     o.append("};")
+    belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
+
     # ================= ETAGEN-TABELLE ==========================================
     # Nutzer 2026-08-31/09-01: "wenn ich im Treppenhaus oben bin, bin ich auf Ebene 3F.
     # Gehe ich die 2 Treppen runter, bin ich auf Ebene 2F, danach noch einmal runter
@@ -1055,7 +1074,6 @@ def main():
     #       ROOM1060 belegt Seite 2 Rect 9 uv(168,40); Seite 3 Rect 9 und Seite 4 Rect 0
     #       tragen dieselbe uv. Das Ziel-Rechteck wird deshalb ueber die Kachel-uv
     #       gesucht - kein Raten, eine Gleichheitspruefung.
-    belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
     floors = []          # (room, zone, band, page, rect)
     for b in sorted(zinfo):
         # ⛔ JE ZONE, nicht je Raum. ROOM1170 hat zwei Bereiche mit voellig
@@ -1094,6 +1112,48 @@ def main():
     _grp = {}
     for e in floors: _grp.setdefault((e[0], e[1]), set()).add((e[3], e[4]))
     floors = [e for e in floors if len(_grp[(e[0], e[1])]) >= 2]
+
+    # ---- RAEUME OHNE EIGENE TUEREN: die Etage kommt vom BESUCHER ---------------
+    # ⛔ Nutzer 2026-09-01: "In ROOM 1120 ... da haette ich den Fahrstuhl erwartet."
+    # Die Fahrstuhlkabine ROOM1080 fuehrt NULL eigene Tuer-Datensaetze - sie wird
+    # betreten, nicht durchschritten. Die Ableitung oben braucht aber Tueren DES Raums
+    # und findet fuer sie deshalb nichts, obwohl der Kuenstler ihre Zeichnung auf drei
+    # Blaettern gesetzt hat: uv (168,40) liegt auf Seite 2 Rect 9, Seite 3 Rect 9 UND
+    # Seite 4 Rect 0. (Das Treppenhaus ROOM1060 traegt uv (128,40) und ist nur auf
+    # Seite 2 und 3 gezeichnet - auf dem 3F-Blatt gibt es es nicht.)
+    # Regel: fuehrt ein Raum Y mit Rechteck auf Seite P eine Tuer mit Band B zu Raum X,
+    # und traegt X' eigene Zeichnung dieselbe Kachel-uv wie ein Rechteck auf P, dann
+    # gehoert X auf Seite P mit Band B. Alles gemessen - Kachel-uv und Tuer-Band.
+    _vorhanden = {(e[0], e[1], e[3]) for e in floors}
+    _n_gast = 0
+    for b in sorted(zinfo):
+        for zi in range(len(zinfo[b])):
+            pr = assign.get((b, zi))
+            if pr is None: continue
+            uv0 = rect_uv(pr[0], pr[1])
+            for y in sorted(zinfo):
+                for d in doors_all.get(y, []):
+                    if d['rw'] == 0 and d['rd'] == 0: continue
+                    if d['dest'] != b: continue
+                    zy = zone_at(y, d['lx'], d['lz'])
+                    py = assign.get((y, zy))
+                    if py is None or py[0] == pr[0]: continue
+                    treffer = [i for i, _ in enumerate(rects(py[0]))
+                               if rect_uv(py[0], i) == uv0 and (py[0], i) not in belegte_rects]
+                    if len(treffer) != 1: continue
+                    # ⛔ Je SEITE eine Zeile, nicht je Band. Zur Fahrstuhlkabine
+                    # fuehren drei Tueren - ROOM1040 (1F), ROOM10C0 (2F), ROOM1120 (3F) -
+                    # und ALLE tragen Band 0: die Etage der Kabine steckt nicht im Band,
+                    # sondern in dem Raum, aus dem man kommt. Mit Band als Schluessel
+                    # kaeme nur die erste der drei Zeilen zustande, und auf den anderen
+                    # Blaettern bliebe ihr Kasten leer.
+                    if (b, zi, py[0]) in _vorhanden: continue
+                    floors.append((b, zi, d['band'], py[0], treffer[0]))
+                    _vorhanden.add((b, zi, py[0]))
+                    _n_gast += 1
+    if _n_gast:
+        print(f"{_n_gast} Etagen-Eintraege ueber den BESUCHER abgeleitet "
+              f"(Raeume ohne eigene Tueren, z.B. die Fahrstuhlkabine)")
 
     # ---- BLATT EINER MARKE FOLGT IHREM EIGENEN BAND ---------------------------
     # ⛔ Nutzer 2026-09-01: "Bei ROOM 1170 zeigt er die Tuer, die eigentlich fuer die
