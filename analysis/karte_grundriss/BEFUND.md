@@ -37,13 +37,39 @@ ausgelieferten Maßstabszeilen).
    selbständig 180°** — dasselbe Ergebnis, das vorher unabhängig aus dem gemalten
    Türsymbol und der Nachbarposition gemessen wurde.
 
-## 3. Was noch fehlt
+## 3. Gelöst — der Löser liefert jetzt einen brauchbaren Grundriss
 
-| Größe | Stand | Ziel |
-|---|---|---|
-| Türversatz | 0,0 px (Seiten 3/4) | bleibt |
-| Überlappung begehbarer Flächen | 8–12 % | < 1 % |
-| Passform ins Kartenfeld (132 × 140 px) | Seite 2: 160 × 264 px | passt |
+Zwei Schritte fehlten noch:
+
+**AUSRÜCKEN.** Der Türanker heftet zwei Punkte aufeinander, die *beide* im Inneren ihres
+Raums liegen (das Trigger-Rechteck deckt den Anlaufbereich ab, nicht nur die Laibung).
+Die Räume drangen dadurch entlang der Tür-Normalen ineinander — ein Band längs der
+gemeinsamen Wand (ROOM1120 ↔ ROOM1130: 241 px). Jeder Raum wird jetzt genau so weit
+zurückgeschoben, bis nichts mehr doppelt liegt; längs der Wand ändert das nichts.
+
+**EINPASSEN.** Ein Stockwerk misst im ausgelieferten Maßstab bis zu 203 × 299 px, das
+Kartenfeld ist 132 × 140. Der fertige Grundriss wird als Ganzes gleichmäßig um seinen
+Schwerpunkt verkleinert — die relative Lage und damit alle Nachbarschaften bleiben.
+
+| Blatt | Überlappung | Durchgänge berührend | Ausdehnung nach Einpassen |
+|---|---|---|---|
+| Seite 4 (3F) | 0,0 % | 3 von 3 | passt |
+| Seite 3 (2F) | 1,6 % | 6 von 6 | 133 × 106 |
+| Seite 2 (1F) | 2,2 % | 12 von 12 | 96 × 141 |
+
+Die verbleibenden 1,6–2,2 % entstehen erst beim Runden auf den kleineren Maßstab.
+
+⛔ Der zuvor gemeldete „Türversatz von 15–17 px" war ein **Messfehler**: er maß den
+Abstand der beiden TRIGGER-Mittelpunkte, und die sitzen bauartbedingt im Rauminneren.
+Das richtige Maß ist der Abstand der beiden Raumflächen — der ist 0–1,4 px, also
+berühren sich alle Durchgänge.
+
+## 4. Was noch fehlt
+
+* Räume ohne reziproken Türpartner werden nicht gesetzt (Seite 4: ROOM1160).
+* Die vollständige Suche über alle acht Posen je Raum geht nur bis ~6 Räume; darüber
+  entscheidet die greedy Reihenfolge.
+* Einbau in den Generator und den Zeichner, mit den Original-Tür- und Treppensymbolen.
 
 **Die Passform ist der eigentliche Befund:** ein ganzes Stockwerk misst im
 *ausgelieferten* Maßstab rund 160 × 264 px, das Kartenfeld ist 132 × 140. Das Gebäude

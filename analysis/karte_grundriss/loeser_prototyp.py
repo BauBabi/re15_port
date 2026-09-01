@@ -170,11 +170,47 @@ class Blatt:
                     for sp in (0,1):
                         d=tr(pb[0],pb[1],k,sp)
                         st=(p[0]-d[0]/self.ex, p[1]+d[1]/self.ey, k, sp)
+                        # ⛔ EINDRINGTIEFE HERAUSRECHNEN. Der Tueranker heftet zwei
+                        # Punkte aufeinander, die BEIDE im Inneren ihres Raums liegen -
+                        # die Raeume dringen dadurch entlang der Tuer-Normalen ineinander
+                        # (gemessen ROOM1120<->ROOM1130: 241 px, ein Band laengs der
+                        # gemeinsamen Wand). Der Raum wird deshalb genau so weit
+                        # zurueckgeschoben, bis die Ueberlappung verschwindet - die
+                        # kleinste Verschiebung, die das leistet, und LAENGS der Wand
+                        # aendert sie nichts.
+                        st=self.ausruecken(b,st,pix,k,sp,pb)
                         pb2=self.pixel(b,st)
                         ueb=sum(len(pb2 & v) for v in pix.values())
                         if best is None or ueb<best[0]: best=(ueb,st,pb2)
                 lage[b]=best[1]; pix[b]=best[2]; q.append(b)
         return lage
+    def ausruecken(self, b, st, pix, k, sp, pb):
+        """Schiebt den Raum laengs der Tuer-NORMALEN zurueck, bis er sich mit dem schon
+        gesetzten Bestand nicht mehr ueberlagert. Die Normale steht senkrecht auf der
+        Wand, in der die Tuer sitzt; laengs der Wand wird nichts veraendert, die Tuer
+        bleibt also auf ihrer Linie."""
+        if not pix: return st
+        ox, oy, kk, ss = st
+        # Wandachse der Tuer im gedrehten Rahmen: die Verbindung Tueranker -> Raummitte
+        zs = zellen(b)
+        mx = sum(c[0] + c[2] / 2.0 for c in zs) / len(zs)
+        mz = sum(c[1] + c[3] / 2.0 for c in zs) / len(zs)
+        dmx, dmz = tr(mx - pb[0], mz - pb[1], k, sp)
+        # Richtung "vom Anker in den Raum" in Kartenpixeln
+        vx = dmx / self.ex; vy = -dmz / self.ey
+        n = (vx * vx + vy * vy) ** 0.5
+        if n < 1e-6: return st
+        vx /= n; vy /= n
+        beste = st
+        for schritt in range(0, 41):
+            kand = (ox + vx * schritt * 0.5, oy + vy * schritt * 0.5, kk, ss)
+            pb2 = self.pixel(b, kand)
+            ueb = sum(len(pb2 & v) for v in pix.values())
+            if ueb == 0: return kand
+            if schritt == 0: bester_ueb = ueb; beste = kand
+            elif ueb < bester_ueb: bester_ueb = ueb; beste = kand
+        return beste
+
     def vollstaendig(self, grenze=6):
         """Alle Lage-Kombinationen durchprobieren. Die VERSCHIEBUNGEN liegen durch die
         Tueranker fest, sobald die Lage (Drehung/Spiegelung) je Raum gewaehlt ist - frei
@@ -252,6 +288,52 @@ class Blatt:
             if beweg < 0.5: break
         return lage
 
+    def zusammen(self, lage, runden=300):
+        """Zieht die Tueren zusammen, ohne je eine Ueberlappung zuzulassen.
+        Der Aufbau rueckt jeden Raum so weit aus, bis nichts mehr doppelt liegt - das ist
+        die kleinste Verschiebung, die das leistet, aber die Tueren stehen danach
+        auseinander. Hier wird jeder Raum schrittweise zurueckgezogen, solange KEINE
+        Ueberlappung entsteht. Harte Schranke, kein Gewicht: Ueberlappung ist verboten,
+        der Tuerversatz wird nur so klein wie moeglich."""
+        import math as _m
+        pix = {b: self.pixel(b, lage[b]) for b in lage}
+        for _ in range(runden):
+            bewegt = False
+            for (a, pa, b, pb) in self.kanten:
+                if a not in lage or b not in lage: continue
+                p1 = self.punkt(a, lage[a], *pa); p2 = self.punkt(b, lage[b], *pb)
+                dx = p1[0] - p2[0]; dy = p1[1] - p2[1]
+                d = _m.hypot(dx, dy)
+                if d < 0.6: continue
+                for wer, vz in ((b, 1.0), (a, -1.0)):
+                    ox, oy, k, sp = lage[wer]
+                    schritt = min(1.0, d) * 0.5 * vz
+                    kand = (ox + dx / d * schritt, oy + dy / d * schritt, k, sp)
+                    pk = self.pixel(wer, kand)
+                    if any(len(pk & pix[o]) > 0 for o in lage if o != wer): continue
+                    lage[wer] = kand; pix[wer] = pk; bewegt = True
+                    break
+            if not bewegt: break
+        return lage
+
+    def einpassen(self, lage, feld=(100, 55, 132, 140)):
+        """Den fertigen Grundriss als GANZES ins Kartenfeld skalieren.
+        Ein Stockwerk misst im ausgelieferten Massstab bis zu 203 x 299 px, das Feld ist
+        132 x 140 - das Gebaeude passt so nicht auf ein Blatt. Genau deshalb hat der
+        Kuenstler verkleinert. Skaliert wird GLEICHMAESSIG und um den Schwerpunkt, damit
+        die relative Lage - und damit die Nachbarschaften - erhalten bleibt."""
+        pix = {b: self.pixel(b, lage[b]) for b in lage}
+        alle = set().union(*pix.values()) if pix else set()
+        if not alle: return lage, 1.0
+        xs = [p[0] for p in alle]; ys = [p[1] for p in alle]
+        br = max(xs) - min(xs) + 1; ho = max(ys) - min(ys) + 1
+        f = min(1.0, feld[2] / float(br), feld[3] / float(ho))
+        self.ex /= f; self.ey /= f
+        neu = {}
+        for b, (ox, oy, k, sp) in lage.items():
+            neu[b] = (feld[0] + (ox - min(xs)) * f, feld[1] + (oy - min(ys)) * f, k, sp)
+        return neu, f
+
     def feile(self,lage,runden=400,seed=1):
         rng=random.Random(seed)
         pix={b:self.pixel(b,lage[b]) for b in lage}
@@ -277,19 +359,22 @@ for seite in (4,3,2):
     if not B.zimmer: continue
     l0=B.start()
     k0=B.kosten(l0)
-    voll=B.vollstaendig()
-    lr=B.relax(dict(l0)); kr=B.kosten(lr)
+    lz=B.zusammen(dict(l0))
+    lf,f=B.einpassen(lz); kz=B.kosten(lf)
     print('Seite %d: %d Raeume, %d Durchgaenge' % (seite,len(B.zimmer),len(B.kanten)))
     print('   nach Aufbau:     Ueberlappung %5.1f %%, Tuerversatz %5.1f px, Ausdehnung %dx%d'
           % (k0[0],k0[1],k0[2],k0[3]))
-    print('   nach Relaxation: Ueberlappung %5.1f %%, Tuerversatz %5.1f px, Ausdehnung %dx%d'
-          % (kr[0],kr[1],kr[2],kr[3]))
-    if voll:
-        kv,lv=voll
-        lv2=B.relax(dict(lv)); kv2=B.kosten(lv2)
-        print('   vollstaendige Suche: Ueberlappung %5.1f %%, Tuerversatz %5.1f px, Ausdehnung %dx%d'
-              % (kv[0],kv[1],kv[2],kv[3]))
-        print('     danach relaxiert:  Ueberlappung %5.1f %%, Tuerversatz %5.1f px, Ausdehnung %dx%d'
-              % (kv2[0],kv2[1],kv2[2],kv2[3]))
-    else:
-        print('   vollstaendige Suche: zu viele Raeume')
+    print('   eingepasst (%.2fx): Ueberlappung %5.1f %%, Ausdehnung %dx%d  (Feld 132x140)'
+          % (f,kz[0],kz[2],kz[3]))
+    if seite==4:
+        pix={b:B.pixel(b,lf[b]) for b in lf}
+        W,H=140,150; X0,Y0=95,50
+        g=[[' ']*W for _ in range(H)]
+        for idx,b in enumerate(sorted(pix)):
+            ch='#$%&@'[idx%5]
+            for (x,y) in pix[b]:
+                if X0<=x<X0+W and Y0<=y<Y0+H: g[y-Y0][x-X0]=ch
+        print('   3F-Grundriss (je Raum ein Zeichen):')
+        for j in range(0,H,3):
+            zl=''.join(g[j][i] for i in range(0,W,1))
+            if zl.strip(): print('   %4d %s' % (Y0+j,zl))
