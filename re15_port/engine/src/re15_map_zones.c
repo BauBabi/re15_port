@@ -125,6 +125,28 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
 {
     int32_t w, d;
     if (!zn) return 0;
+    /* ---- GEEICHTE PROJEKTION: die Formel des Originals ------------------------
+     * FUN_800473f8 @0x8004741c-0x80047528:
+     *     mx =  ((((wx + 32000) * 10 * sx) >> 20) + 5) / 10 + ox
+     *     my = -((((wz + 32000) * 10 * sy) >> 20) + 5) / 10 + oy
+     * Das Original fuehrt dafuer eine Zeile je Raum @0x800768b0, hat aber nur 13 der
+     * 38 Zeilen geeicht - der Rest ist der Stub {0,0,1,1}. Der Generator bestimmt die
+     * fehlenden Zeilen: MASSSTAB aus der gezeichneten Flaeche der Kachel (das
+     * Rechteck IST die Zeichnung des Raums), VERSATZ aus den GEMALTEN Tuersymbolen.
+     * Beides ist bestimmt, kein freier Vierparameter-Fit.
+     * Ohne Eichung (sx == 0) bleibt es bei der linearen Bbox-Streckung darunter. */
+    if (zn->sx && zn->sy) {
+        int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
+        int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
+        int32_t px = (t + 5) / 10 + zn->ox;
+        int32_t py = -((t2 + 5) / 10) + zn->oy;
+        if (px < rx) px = rx;
+        if (px > rx + rw - 1) px = rx + rw - 1;
+        if (py < ry) py = ry;
+        if (py > ry + rh - 1) py = ry + rh - 1;
+        *mx = (int16_t)px; *my = (int16_t)py;
+        return 1;
+    }
     w = (int32_t)zn->wx1 - (int32_t)zn->wx0;
     d = (int32_t)zn->wz1 - (int32_t)zn->wz0;
     if (w <= 0 || d <= 0) return 0;

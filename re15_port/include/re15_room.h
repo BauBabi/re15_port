@@ -51,6 +51,12 @@ typedef struct {
     unsigned char page, rect, idx;
     unsigned char zid;        /* globale Zonen-Nummer; beide Szenario-Varianten
                                * teilen sie (= ein Besucht-Bit je ORT)          */
+    short ox, oy;             /* GEEICHTE Projektion (0/0/0/0 = keine): Original-Formel
+                               * FUN_800473f8 @0x8004741c-0x80047528 statt linearer
+                               * Bbox-Streckung. Massstab sx/sy aus der gezeichneten
+                               * Flaeche der Kachel, Versatz ox/oy aus den GEMALTEN
+                               * Tuersymbolen - beides bestimmt, kein freier Fit.      */
+    unsigned short sx, sy;
 } re15_map_zone_t;
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);

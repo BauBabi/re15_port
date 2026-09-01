@@ -29,6 +29,7 @@ VERFAHREN
 
 Aufruf:  python re15_port/tools/gen_map_zones.py [--json <zonen.json>]
 """
+import itertools
 import struct, json, os, sys, math, collections, random
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
@@ -110,13 +111,14 @@ def _glyphs():
             pg = int(t[ix['seite']])
             x  = int(t[ix['screen_x']]); y = int(t[ix['screen_y']])
             w  = int(t[ix['px_w']]);     h = int(t[ix['px_h']])
-            out.setdefault(pg, []).append((x + w // 2, y + h // 2, w, h))
+            out.setdefault(pg, []).append((x + w // 2, y + h // 2, w, h,
+                                           t[ix['wand']].strip()))
     return out
 GLYPHEN = _glyphs()
 
 def kachel_zeigt_tuer(pg, mx, my, tol=5):
     """Zeichnet die Kachel an dieser Stelle schon eine Tuer?"""
-    for gx, gy, gw, gh in GLYPHEN.get(pg, ()):
+    for gx, gy, gw, gh, _wand in GLYPHEN.get(pg, ()):
         if abs(mx - gx) <= tol + gw // 2 and abs(my - gy) <= tol + gh // 2:
             return True
     return False
@@ -469,9 +471,111 @@ def main():
     # die Umschaltung muss daran haengen, nicht an der Zone. Bis das gemessen ist,
     # bleibt die automatische Zuordnung stehen — sie war vom Nutzer als richtig
     # bestaetigt ("das sieht fuer das grosse und kleine Rechteck einwandfrei aus").
+    # ================= EICHUNG DER PROJEKTION ==================================
+    # Bis hierher wurde die Zonen-Bbox linear ins Rechteck gestreckt. Das ist eine
+    # Annahme: das Rechteck ist die ZEICHNUNG des Raums, kein Massstabsraster - und
+    # der Nutzer hat die Folgen gesehen ("bei ROOM1120 komme ich laut Map auf der
+    # falschen Seite raus": der Eintritt aus ROOM1130 landete unten LINKS, waehrend
+    # die zugehoerige gemalte Tuer oben RECHTS sitzt).
+    #
+    # Das Original rechnet anders - FUN_800473f8 @0x8004741c-0x80047528:
+    #     mx =  ((((wx + 32000) * 10 * sx) >> 20) + 5) / 10 + ox
+    #     my = -((((wz + 32000) * 10 * sy) >> 20) + 5) / 10 + oy
+    # mit einer Zeile {ox, oy, sx, sy} je Raum-Index @0x800768b0. Nur 13 der 38
+    # Zeilen sind ueberhaupt geeicht, der Rest ist der Stub {0,0,1,1} - deshalb
+    # konnte der Port sie nicht einfach uebernehmen.
+    #
+    # Die fehlenden Zeilen lassen sich BESTIMMEN (kein freier Vierparameter-Fit):
+    #   MASSSTAB aus der gezeichneten Flaeche: das Rechteck IST die Zeichnung des
+    #     Raums, also bildet dessen Kollisions-Bbox auf die nicht-transparenten
+    #     Pixel der Kachel ab -> sx, sy liegen fest.
+    #   VERSATZ aus den GEMALTEN Tuersymbolen: die projizierten Tueren muessen
+    #     darauf liegen -> ox, oy liegen fest.
+    # Uebernommen wird die Eichung nur, wenn sie den mittleren Abstand zu den
+    # Symbolen gegenueber der Bbox-Streckung um mehr als 1,5 px verbessert.
+    def _gezeichnet(pg, r):
+        pix = page_pix(pg)
+        if pix is None: return None
+        RX, RY, RW, RH = rects(pg)[r]; U, V = rect_uv(pg, r)
+        xs = []; ys = []
+        for j in range(RH):
+            for i in range(RW):
+                if V + j < 256 and U + i < 256 and pix[V + j][U + i] != 0:
+                    xs.append(RX + i); ys.append(RY + j)
+        if not xs: return None
+        return min(xs), max(xs), min(ys), max(ys)
+
+    def _proj(wx, wz, ox, oy, sx, sy):
+        return (((((wx + 32000) * 10 * sx) >> 20) + 5) // 10 + ox,
+                -(((((wz + 32000) * 10 * sy) >> 20) + 5) // 10) + oy)
+
+    def _paarfehler(pts, gly):
+        n = len(pts); m = len(gly); k = min(n, m)
+        if k == 0: return None
+        best = None
+        for wahl in itertools.permutations(range(m), k):
+            for sub in itertools.combinations(range(n), k):
+                f = sum(((pts[sub[i]][0] - gly[wahl[i]][0]) ** 2 +
+                         (pts[sub[i]][1] - gly[wahl[i]][1]) ** 2) ** 0.5
+                        for i in range(k)) / k
+                if best is None or f < best: best = f
+        return best
+
+    eichung = {}          # (room, zi) -> (ox, oy, sx, sy)
+    for (b, i), pr in sorted(assign.items()):
+        pg, r = pr
+        gly = [(gx, gy, wd) for gx, gy, gw, gh, wd in GLYPHEN.get(pg, ())
+               if rects(pg)[r][0] <= gx <= rects(pg)[r][0] + rects(pg)[r][2] - 1 and
+                  rects(pg)[r][1] <= gy <= rects(pg)[r][1] + rects(pg)[r][3] - 1]
+        if not gly: continue
+        tueren = [d for d in doors_all.get(b, []) if not (d['rw'] == 0 and d['rd'] == 0)]
+        if not tueren: continue
+        bb = zinfo[b][i]
+        x0, x1, z0, z1 = bb
+        if x1 <= x0 or z1 <= z0: continue
+        gz = _gezeichnet(pg, r)
+        if not gz: continue
+        gx0, gx1, gy0, gy1 = gz
+        sx = int(round((gx1 - gx0 + 1) / (x1 - x0) * (1 << 20)))
+        sy = int(round((gy1 - gy0 + 1) / (z1 - z0) * (1 << 20)))
+        if not (400 <= sx <= 6000 and 400 <= sy <= 6000): continue
+        px = [((((d['lx'] + 32000) * 10 * sx) >> 20) + 5) // 10 for d in tueren]
+        py = [-(((((d['lz'] + 32000) * 10 * sy) >> 20) + 5) // 10) for d in tueren]
+        n = len(tueren); m = len(gly); k = min(n, m)
+        besteich = None
+        for wahl in itertools.permutations(range(m), k):
+            for sub in itertools.combinations(range(n), k):
+                # ⛔ ACHSEN-BEDINGUNG: ein Symbol in einer Ost-/Westwand kann nur zu
+                # einer Tuer gehoeren, deren Trigger-Rechteck laengs Z gestreckt ist
+                # (senkrechte Wand), und umgekehrt. Ohne diese Bedingung ist die
+                # Zuordnung bei einem Symbol und mehreren Tueren beliebig - in
+                # ROOM1120 legte sie die Tuer nach ROOM1060 auf das Symbol der
+                # ROOM1130-Tuer, und der Eintritt landete 28 px zu tief.
+                if any((gly[wahl[t]][2] in ('W', 'E')) !=
+                       (tueren[sub[t]]['rd'] > tueren[sub[t]]['rw']) for t in range(k)):
+                    continue
+                ox = int(round(sum(gly[wahl[t]][0] - px[sub[t]] for t in range(k)) / k))
+                oy = int(round(sum(gly[wahl[t]][1] - py[sub[t]] for t in range(k)) / k))
+                f = _paarfehler([_proj(d['lx'], d['lz'], ox, oy, sx, sy) for d in tueren], gly)
+                if f is not None and (besteich is None or f < besteich[0]):
+                    besteich = (f, ox, oy)
+        if besteich is None: continue
+        # Vergleich mit der bisherigen Bbox-Streckung
+        R = rects(pg)[r]
+        ptsB = []
+        for d in tueren:
+            fx = min(max(d['lx'] - x0, 0), x1 - x0); fz = min(max(d['lz'] - z0, 0), z1 - z0)
+            ptsB.append((R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)))
+        fB = _paarfehler(ptsB, gly)
+        if fB is None or besteich[0] + 1.5 >= fB: continue
+        eichung[(b, i)] = (besteich[1], besteich[2], sx, sy)
+    print(f"{len(eichung)} Zonen geeicht (Massstab aus der Zeichnung, Versatz aus den Tuersymbolen)")
+
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for room, bb, pg, r, zi, zd in rows:
-        o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d} }},")
+        ei = eichung.get((room & 0xFFF0, zi), (0, 0, 0, 0))
+        o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:2d}, {zi}, {zd:3d},"
+                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d} }},")
     o.append("};")
     # ---- MARKEN: Treppen, in Karten-Koordinaten vorberechnet ------------------
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
@@ -486,6 +590,16 @@ def main():
         e = zpos.get((room, zi))
         if not e: return None
         (x0, x1, z0, z1), pg, r = e
+        ei = eichung.get((room, zi))
+        if ei:
+            ox, oy, sx, sy = ei
+            mx, my = _proj(wx, wz, ox, oy, sx, sy)
+            R = rects(pg)[r]
+            if mx < R[0]: mx = R[0]
+            if mx > R[0] + R[2] - 1: mx = R[0] + R[2] - 1
+            if my < R[1]: my = R[1]
+            if my > R[1] + R[3] - 1: my = R[1] + R[3] - 1
+            return pg, r, mx, my
         R = rects(pg)[r]
         if x1 <= x0 or z1 <= z0: return None
         fx = min(max(wx - x0, 0), x1 - x0)
