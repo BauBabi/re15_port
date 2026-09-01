@@ -420,6 +420,40 @@ def main():
     print(f"{_n_weg} Schablonen-Bereiche aussortiert "
           f"(Zellform in mehreren Raeumen identisch)")
 
+    # ---- BELEGTE ZUORDNUNGEN, die die Kostenheuristik nicht findet ------------
+    # ⛔ ROOM10C0 -> Seite 3 Rect 4 ist ERZWUNGEN, nicht gewaehlt.
+    # Nutzer 2026-09-01: "Bei 2F, wenn ich vom Treppenhaus in die Tuer gehe, springt er
+    # komisch an eine andere Stelle in der Map" und "ab der 2. Etage ist die Darstellung
+    # nach dem Treppenhaus immer noch ueberall komplett falsch."
+    # Zwei gemessene Bedingungen legen es fest:
+    #   1. Das Treppenhaus ROOM1060 liegt auf Band 4 auf Seite 3 Rect 9 (Etagen-Tabelle,
+    #      aus den Tueren des Raums abgeleitet; Rect (3,9) und (2,9) sind dieselbe
+    #      Zeichnung - gleiche Geometrie (109,134,16,16) und gleiche Kachel-uv).
+    #   2. Zwei Raeume, die eine Tuer verbindet, muessen Rechtecke haben, deren
+    #      GEZEICHNETE Flaechen sich beruehren - der Kuenstler hat sie aneinander
+    #      gesetzt. An der Kachel messbar, unabhaengig von jeder Projektion.
+    # ROOM10C0 ist der einzige Raum mit einer Tuer zum Treppenhaus; nur Rect 2 und Rect 4
+    # beruehren Rect 9. Mit Rect 2 laesst sich der uebrige Tuergraph NICHT erfuellen
+    # (ROOM10D0 haengt an vier Nachbarn, Rect 2 hat nur zwei Beruehrungen).
+    # Vollstaendige Aufzaehlung: 36 Zuordnungen erfuellen alle Tuerkanten der Seite, und
+    # in 36 von 36 liegt ROOM10C0 auf Rect 4. Alle anderen Zonen der Seite sind mit
+    # 25-67 % unbestimmt und werden deshalb NICHT festgesetzt - die Kostenheuristik
+    # verteilt sie um diese eine Vorgabe herum.
+    # Der Generator hatte ROOM10C0 auf Rect 6, und Rect 6 beruehrt Rect 9 nicht: die Tuer
+    # aus dem Treppenhaus fuehrte in eine Zeichnung am anderen Ende des Blattes.
+    # ROOM1120 -> Seite 4 Rect 5 ist ebenfalls BELEGT (nicht gewaehlt): auf diesem
+    # Rechteck liegt die Tuer nach ROOM1130 mit der gemessenen 180-Grad-Lage 5 px vom
+    # gemalten Symbol (150,126) und 3 px von ROOM1130s eigener Position (156,125); alle
+    # sieben Rechtecke der Seite wurden in normaler Lage durchgerechnet, das beste kam
+    # auf 18/7 px. Ohne diese Vorgabe liess die lokale Suche ROOM1120 ganz weg, sobald
+    # eine andere Vorgabe die Startlage verschob - die Zuordnung ist gegenueber solchen
+    # Verschiebungen fragil (KEINE_ZUORDNUNG ist bewusst billig, siehe dort).
+    ZONE_FIX = {
+        (0x1130, 0): (4, 4),
+        (0x1120, 0): (4, 5),
+        (0x10C0, 0): (3, 4),
+    }
+
     # Zonen je Seite sammeln
     by_page = collections.defaultdict(list)      # page -> [(room, zi, bbox)]
     for b, zs in zinfo.items():
@@ -506,10 +540,17 @@ def main():
             return c
         best = None
         rng = random.Random(9000 + pg)
-        opts = list(range(len(R))) + [None]
+        # HARTE Vorgaben dieser Seite: fest zugewiesen, nie veraendert, ihr Rechteck ist
+        # fuer alle anderen gesperrt.
+        fest = {}
+        for _k, _v in ZONE_FIX.items():
+            if _v[0] != pg: continue
+            _i = key2idx.get(_k)
+            if _i is not None: fest[_i] = _v[1]
+        opts = [r for r in range(len(R)) if r not in fest.values()] + [None]
         for _ in range(80):
-            a = {}
-            order = list(range(len(zl))); rng.shuffle(order)
+            a = dict(fest)
+            order = [i for i in range(len(zl)) if i not in fest]; rng.shuffle(order)
             for i in order:
                 cand = []
                 for r in opts:
@@ -518,6 +559,7 @@ def main():
             for _ in range(60):
                 improved = False
                 for i in range(len(zl)):
+                    if i in fest: continue
                     cur = a[i]; base = cost(a)
                     for r in opts:
                         if r == cur: continue
@@ -594,10 +636,34 @@ def main():
     for key in ZONE_DROP:
         assign.pop(key, None)
 
-    ZONE_FIX = { (0x1130, 0): (4, 4) }
+    # ---- BELEGTE ZUORDNUNGEN, die die Kostenheuristik nicht findet ------------
+    # ⛔ ROOM10C0 -> Seite 3 Rect 4 ist ERZWUNGEN, nicht gewaehlt.
+    # Nutzer 2026-09-01: "Bei 2F, wenn ich vom Treppenhaus in die Tuer gehe, springt er
+    # komisch an eine andere Stelle in der Map" und "ab der 2. Etage ist die Darstellung
+    # nach dem Treppenhaus immer noch ueberall komplett falsch."
+    # Zwei gemessene Bedingungen legen es fest:
+    #   1. Das Treppenhaus ROOM1060 liegt auf Band 4 auf Seite 3 Rect 9 (Etagen-Tabelle,
+    #      aus den Tueren des Raums abgeleitet; Rect (3,9) und (2,9) sind dieselbe
+    #      Zeichnung - gleiche Geometrie (109,134,16,16) und gleiche Kachel-uv).
+    #   2. Zwei Raeume, die eine Tuer verbindet, muessen Rechtecke haben, deren
+    #      GEZEICHNETE Flaechen sich beruehren - der Kuenstler hat sie aneinander
+    #      gesetzt. Das ist an der Kachel messbar und unabhaengig von jeder Projektion.
+    # ROOM10C0 ist der einzige Raum mit einer Tuer zum Treppenhaus; nur Rect 2 und Rect 4
+    # beruehren Rect 9. Mit Rect 2 laesst sich der uebrige Tuergraph der Seite NICHT mehr
+    # erfuellen (ROOM10D0 haengt an vier Nachbarn, Rect 2 hat nur zwei Beruehrungen).
+    # Vollstaendige Aufzaehlung: 36 Zuordnungen erfuellen alle Tuerkanten, und in
+    # 36 von 36 liegt ROOM10C0 auf Rect 4 (alle anderen Zonen der Seite sind mit 25-67 %
+    # unbestimmt und werden deshalb NICHT festgesetzt - die Kostenheuristik verteilt sie
+    # um diese eine Vorgabe herum).
+    # Der Generator hatte ROOM10C0 auf Rect 6, und Rect 6 beruehrt Rect 9 nicht: die Tuer
+    # aus dem Treppenhaus fuehrte damit in eine Zeichnung am anderen Ende des Blattes.
+    # (ZONE_FIX steht weiter oben und geht als HARTE Vorgabe in die Suche ein; hier
+    # bleibt nur die Sicherung, falls eine Vorgabe erst nach der Suche gilt.)
     for key, val in ZONE_FIX.items():
         room, zi = key
-        if room in zinfo and zi < len(zinfo[room]):
+        if room in zinfo and zi < len(zinfo[room]) and assign.get(key) != val:
+            for k2, v2 in list(assign.items()):
+                if v2 == val and k2 != key: del assign[k2]
             assign[key] = val
 
     # ================= MASSSTAB AUS DER AUSGELIEFERTEN TABELLE ==================
