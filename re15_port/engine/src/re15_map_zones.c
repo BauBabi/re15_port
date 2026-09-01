@@ -35,8 +35,19 @@
 #define ZONE_SLACK 1500
 
 static uint8_t s_visited[32];    /* 1 Bit je ZONE (Index = Tabellen-Index / 2) */
+/* ⛔ UND 1 BIT JE ETAGEN-EINTRAG. Eine Zone, die auf zwei Blaettern gezeichnet ist
+ * (ROOM1060: 1F Seite 2 Rect 9, 2F Seite 3 Rect 9, 3F Seite 4 Rect 0), darf nicht
+ * auf ALLEN Blaettern erscheinen, weil man sie auf EINEM betreten hat. Mit nur dem
+ * Zonen-Bit stand ROOM1060s 3F-Zeichnung schon da, sobald man unten durchgelaufen
+ * war - links unterhalb von ROOM1130, also genau da, wo der Nutzer sie sah
+ * (2026-09-01: "unten links schon ein Rechteck nach dem Flur, obwohl ich noch im
+ * Eingangsbereich stehe"). Gemerkt wird deshalb die BEGANGENE Etage. */
+static uint8_t s_visited_floor[8];   /* 1 Bit je Zeile in s_map_floors */
+#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+static int floor_row(unsigned room, int zone, int band);
 
-void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited); }
+void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
+                                    memset(s_visited_floor, 0, sizeof s_visited_floor); }
 void re15_map_visited_export(uint8_t out[32]) { memcpy(out, s_visited, 32); }
 void re15_map_visited_import(const uint8_t in[32]) { memcpy(s_visited, in, 32); }
 
@@ -105,9 +116,13 @@ const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z)
 void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
 {
     int i = zone_index_at(room, x, z);
+    int b, f;
     if (i < 0) return;
-    int b = zone_bit(i);
+    b = zone_bit(i);
     s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+    /* zusaetzlich die Etage, auf der er gerade steht */
+    f = floor_row(s_map_zones[i].room, s_map_zones[i].idx, re15_map_player_band());
+    if (f >= 0) s_visited_floor[f >> 3] |= (uint8_t)(1u << (f & 7));
 }
 
 int re15_map_zone_visited(const re15_map_zone_t *zn)
@@ -171,7 +186,7 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
 
 /* Rechteck-Zustand fuer den Zeichner: aktuell (Spieler steht in dieser Zone) schlaegt
  * besucht schlaegt unbesucht. Mehrere Zonen duerfen sich ein Rechteck teilen. */
-static int re15_map_player_band(void);
+int re15_map_player_band(void);
 
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
 {
@@ -191,18 +206,32 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
-        int fp, fr, hat_etage, passt;
+        int fp, fr, hat_etage;
         /* ---- ZWEIT-ZEICHNUNG EINER ZONE AUF EINEM ANDEREN ETAGENBLATT ----------
          * Eine Zone kann auf mehreren Blaettern gezeichnet sein (ROOM1170s zweiter
          * Bereich: Dach-Blatt Seite 5 Rect 0 und 3F-Blatt Seite 4 Rect 3 - dieselbe
          * Zeichnung, 22 von 1152 Pixeln Unterschied). Das Zweit-Rechteck gehoert
          * KEINER eigenen Zone; ohne diesen Zweig blieb es "unbekannt" und wurde
          * dauerhaft grau gemalt, statt den Zustand seiner Zone zu erben. */
+        int eigen, etage_hier = 0, etage_besucht = 0, j;
         hat_etage = re15_map_floor_lookup(zn->room, zn->idx,
                                           re15_map_player_band(), &fp, &fr);
-        passt = (zn->page == page && zn->rect == rect_idx) ||
-                (hat_etage && (int)page == fp && (int)rect_idx == fr);
-        if (!passt) continue;
+        eigen = (zn->page == page && zn->rect == rect_idx);
+        /* ⛔ DIE ETAGEN-ZEICHNUNG ZAEHLT NUR, WENN MAN AUF DIESER ETAGE WAR.
+         * Frueher wurde hier nur die Etage des AKTUELLEN Bands geprueft und der
+         * Zustand vom Zonen-Bit geerbt. Folge: ROOM1060s 3F-Zeichnung (Seite 4
+         * Rect 0) galt als bekannt, sobald man das Treppenhaus IRGENDWO betreten
+         * hatte - sie stand links unterhalb von ROOM1130, wo der Nutzer sie sah.
+         * Jetzt traegt jede Zeile der Etagen-Tabelle ihr eigenes Besucht-Bit. */
+        for (j = 0; j < FLOOR_COUNT; j++) {
+            if (s_map_floors[j].room != zn->room) continue;
+            if ((int)s_map_floors[j].zone != zn->idx) continue;
+            if ((unsigned)s_map_floors[j].page != page ||
+                (unsigned)s_map_floors[j].rect != rect_idx) continue;
+            etage_hier = 1;
+            if ((s_visited_floor[j >> 3] >> (j & 7)) & 1) etage_besucht = 1;
+        }
+        if (!eigen && !etage_hier) continue;
         if (cur && zn->room == cur->room && zn->idx == cur->idx) {
             /* Auf einer Etagen-Umschaltung ist NUR das Rechteck dieser Etage
              * aktuell - sonst leuchteten beide Zeichnungen zugleich rot. */
@@ -212,7 +241,8 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
                 return RE15_MAP_RECT_CURRENT;
             }
         }
-        if (state < RE15_MAP_RECT_VISITED && re15_map_zone_visited(zn))
+        if (state < RE15_MAP_RECT_VISITED &&
+            ((eigen && re15_map_zone_visited(zn)) || etage_besucht))
             state = RE15_MAP_RECT_VISITED;
         else if (state < RE15_MAP_RECT_UNVISITED)
             state = RE15_MAP_RECT_UNVISITED;
@@ -264,10 +294,13 @@ int re15_map_visited(unsigned room_id)
  * Tuer-Gelb. Positionen sind vorberechnet (tools/gen_map_zones.py). */
 #define MARK_COUNT ((int)(sizeof s_map_marks / sizeof s_map_marks[0]))
 
-int re15_map_mark_count(void) { return MARK_COUNT; }
-
-#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
-
+int re15_map_mark_count(void) { return MARK_COUNT; }
+
+
+
+
+
+
 /* ⛔ DIE ETAGE KOMMT AUS DER SPIELER-Y, NICHT AUS actor.floor.
  * `g_actors[SLOT_PLAYER].floor` (das +0x82 des Originals) wird im Port NUR beim Laden
  * eines Spielstands geschrieben (re15_savedata.c) - im Spiel pflegt der Treppenlauf
@@ -278,9 +311,10 @@ int re15_map_mark_count(void) { return MARK_COUNT; }
  * und "im Treppenhaus ganz oben bei 3F zeigt die Karte immer noch 1F").
  * Die Y ist die verlaessliche Quelle - der Spielstand-Loader leitet das Band genauso ab
  * (re15_collision_band_from_y). */
-static int re15_map_player_band(void)
+int re15_map_player_band(void)
 {
-    return re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y);
+    int b = re15_collision_debug_band();          /* das gepflegte Band (== +0x82) */
+    return (b >= 0) ? b : re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y);
 }
 
 /* ETAGE: liefert fuer (Raum, Band) das Blatt und das Rechteck, auf dem der Raum auf
@@ -295,6 +329,31 @@ static int re15_map_player_band(void)
  * abgeleitet: jede Tuer traegt ihr Band und ihren Zielraum, der Zielraum seine Seite.
  * Fuer ROOM1060: Band 8 -> ROOM1120 (Seite 4 "3F"), Band 4 -> ROOM10C0 (Seite 3 "2F"),
  * Band 0 -> ROOM1040 (Seite 2 "1F"). Tabelle: tools/gen_map_zones.py. */
+/* Wie re15_map_floor_lookup, liefert aber die ZEILE - der Schluessel fuer das
+ * Etagen-Besucht-Bit. Beide teilen dieselbe Auswahl, damit Merken und Abfragen
+ * nicht auseinanderlaufen. */
+static int floor_row(unsigned room, int zone, int band)
+{
+    int i, best = -1, bestd = 0, n = 0;
+    for (i = 0; i < FLOOR_COUNT; i++) {
+        int d;
+        if (s_map_floors[i].room != room) continue;
+        if ((int)s_map_floors[i].zone != zone) continue;
+        n++;
+        d = (int)s_map_floors[i].band - band;
+        if (d < 0) d = -d;
+        if (best < 0 || d < bestd) { best = i; bestd = d; }
+    }
+    if (best < 0 || (n < 2 && bestd != 0)) return -1;
+    return best;
+}
+
+int re15_map_floor_row_visited(unsigned room, int zone, int band)
+{
+    int f = floor_row(room, zone, band);
+    return (f >= 0) ? ((s_visited_floor[f >> 3] >> (f & 7)) & 1) : 0;
+}
+
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)
 {
     int i, best = -1, bestd = 0, n = 0;
@@ -321,8 +380,10 @@ int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rec
     if (page) *page = s_map_floors[best].page;
     if (rect) *rect = s_map_floors[best].rect;
     return 1;
-}
-
+}
+
+
+
 /* 1, wenn der Spieler auf dieser Kartenseite schon mindestens eine Zone gesehen hat.
  * Riegel fuer das Ebenen-Blaettern: man soll nur Blaetter durchsehen koennen, die man
  * kennt - dieselbe Bedingung, die RE2 an seine Nachbar-Etagen legt. */
@@ -331,6 +392,14 @@ int re15_map_page_known(unsigned page)
     int i;
     for (i = 0; i < ZONE_COUNT; i++)
         if (s_map_zones[i].page == page && re15_map_zone_visited(&s_map_zones[i]))
+            return 1;
+    /* Ein Blatt ist auch dann bekannt, wenn man einen Raum darauf ueber seine ETAGE
+     * betreten hat - ROOM1060s 3F-Teil ist der einzige Grund, warum Seite 4 vor
+     * ROOM1120 ueberhaupt erreichbar wird. Ohne diesen Zweig bot das Hoch/Runter im
+     * Kartenschirm die Etage nicht an, obwohl der Spieler dort stand. */
+    for (i = 0; i < FLOOR_COUNT; i++)
+        if ((unsigned)s_map_floors[i].page == page &&
+            ((s_visited_floor[i >> 3] >> (i & 7)) & 1))
             return 1;
     return 0;
 }

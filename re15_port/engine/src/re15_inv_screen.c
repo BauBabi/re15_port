@@ -238,7 +238,7 @@ uint8_t re15_inv_map_page_shown(void)
          * re15_map_floor_lookup. */
         int fp;
         if (zn && re15_map_floor_lookup(zn->room, zn->idx,
-                                        re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y), &fp, 0))
+                                        re15_map_player_band(), &fp, 0))
             return (uint8_t)fp;
     }
     return zn ? (uint8_t)zn->page : s_map_page;
@@ -346,7 +346,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         int zpg = zn ? zn->page : -1, zrc = zn ? zn->rect : -1, fp2, fr2;
         /* Auf einer Etagen-Umschaltung wird in das Rechteck DIESER Etage projiziert. */
         if (zn && re15_map_floor_lookup(zn->room, zn->idx,
-                                        re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y), &fp2, &fr2))
+                                        re15_map_player_band(), &fp2, &fr2))
             { zpg = fp2; zrc = fr2; }
         if (zn && zpg == (int)g_inv_screen.map_page) {
             uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
@@ -1558,33 +1558,28 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      * X-Treppe laeuft waagerecht -> SENKRECHTE Sprossen (kind 5),
                      * Z-Treppe senkrecht -> waagerechte Sprossen (kind 4).
                      * (RE2 haelt dafuer eigene 8x8-Icons vor, RE1.5 liefert keine mit.) */
-                    int quer = (kind == 5), first_op = e.n;
-                    re15_inv_op_t *bg;
-                    if (e.n >= e.max) break;
-                    bg = &e.ops[e.n++];
-                    bg->kind = RE15_INV_OP_FILL; bg->page = 0; bg->clut = 0; bg->abe = 0;
-                    bg->u = 0; bg->v = 0;
-                    bg->x = (int16_t)(mx - 3); bg->y = (int16_t)(my - 3);
-                    bg->w = 7; bg->h = 7;
-                    bg->r = 64; bg->g = 64; bg->b = 56;
+                    /* ⛔ KEIN deckender Grund. Bis v0.3.70 lag unter den Sprossen ein
+                     * deckendes 7x7-Rechteck. Das uebermalte, was die Kachel an derselben
+                     * Stelle zeigt — in ROOM1170 ausgerechnet das GEMALTE Tuersymbol unter
+                     * der Treppe: Treppen-Marke (164,107) deckt x161..167/y104..110, das
+                     * Tuersymbol der Kachel liegt bei x162..166/y105..109, also 25 von 25
+                     * Pixeln verdeckt (Nutzer 2026-09-01: "es fehlt die eingezeichnete Tuer
+                     * unter der Treppe"). Gezeichnet werden nur noch die drei Sprossen. */
+                    int quer = (kind == 5);
+                    re15_inv_op_t tpl;
+                    tpl.kind = RE15_INV_OP_FILL; tpl.page = 0; tpl.clut = 0; tpl.abe = 0;
+                    tpl.u = 0; tpl.v = 0;
+                    tpl.x = 0; tpl.y = 0; tpl.w = 0; tpl.h = 0;
+                    tpl.r = 240; tpl.g = 240; tpl.b = 216;
                     for (row = -2; row <= 2; row += 2) {
                         re15_inv_op_t *q;
                         if (e.n >= e.max) break;
                         q = &e.ops[e.n++];
-                        *q = *bg;
+                        *q = tpl;
                         if (quer) { q->x = (int16_t)(mx + row); q->y = (int16_t)(my - 2);
                                     q->w = 1; q->h = 5; }
                         else      { q->x = (int16_t)(mx - 2);   q->y = (int16_t)(my + row);
                                     q->w = 5; q->h = 1; }
-                        q->r = 240; q->g = 240; q->b = 216;
-                    }
-                    /* Der graue Grund muss HINTER die Sprossen: die Liste wird von hinten
-                     * gezeichnet, also den Grund ans Ende der Gruppe tauschen. */
-                    {
-                        re15_inv_op_t tmp = e.ops[first_op];
-                        int j, last = e.n - 1;
-                        for (j = first_op; j < last; j++) e.ops[j] = e.ops[j + 1];
-                        e.ops[last] = tmp;
                     }
                 }
             }
@@ -1655,6 +1650,18 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
                 if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
+                /* ⛔ EIN RECHTECK OHNE ZUORDNUNG WIRD AUCH NICHT GEMALT. UNMAPPED ist
+                 * kein Zustand des Originals, sondern ein Loch in UNSERER Zonen-Tabelle:
+                 * das Original zeichnet ein Rechteck nur, wenn dessen Besucht-Bit steht
+                 * (FUN_800473f8, Schleife @0x800475f8-61c ueber die count Rechtecke des
+                 * Seiten-Paars @0x80076840). Bis v0.3.70 malte der Port unzugeordnete
+                 * Rechtecke grau - auf Seite 4 sind das Rect 0 (127,137,16,16) und Rect 3
+                 * (152,89,48,24). Rect 0 liegt links unterhalb von ROOM1130s Zeichnung und
+                 * stand deshalb vom ersten Kartenaufruf an da: "im Room 1130 gibt es unten
+                 * links schon ein Rechteck nach dem Flur, obwohl ich noch im Eingangsbereich
+                 * stehe" (Nutzer 2026-09-01). Der Stock-Modus (ganze Seite grau) bleibt
+                 * ausgenommen - dort ist genau das erwuenscht. */
+                if (rs == RE15_MAP_RECT_UNMAPPED && !re15_map_stock_mode()) continue;
                 if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }
                 else if (rs == RE15_MAP_RECT_CURRENT) { cr = 192; cg = 24;  cb = 24; }
                 sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,

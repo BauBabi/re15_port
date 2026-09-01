@@ -73,6 +73,7 @@ int re15_map_mark_count(void);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
 int re15_map_page_known(unsigned page);   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
+int re15_map_player_band(void);   /* Etage des Spielers: gepflegtes Band, sonst aus der Y */
 
 int re15_map_stock_mode(void);
 void re15_map_stock_set(int v);   /* Tests: 0/1 erzwingen, -1 = Umgebung neu lesen */

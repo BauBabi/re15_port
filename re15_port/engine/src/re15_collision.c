@@ -169,10 +169,23 @@ static int push_caps9(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
 /* --- floor band state (mirrors player+0x82; set from spawn/door Y, fixed otherwise) --- */
 static int s_coll_band = -1;
 void re15_collision_reset_band(void)            { s_coll_band = -1; }
-void re15_collision_set_band(int band)          { s_coll_band = band; }
+/* ⛔ EIN BYTE, NICHT ZWEI. Im Original sind das globale Kollisionsband DAT_800acad6
+ * und das +0x82 der Spieler-Entity DASSELBE Byte: die Spieler-Entity liegt
+ * @0x800ACA54, +0x82 = 0x800ACAD6 (Aufrufer-Beleg `addiu a0,s0,0x2ec` @0x80031fdc mit
+ * s0 = 0x800ac768, gegengeprueft @0x80012E04). Der Port hatte daraus zwei Felder
+ * gemacht und nur s_coll_band gepflegt - g_actors[SLOT_PLAYER].floor blieb in allen
+ * 38 STAGE1-Raeumen konstant 0. Das traf nicht nur die Karte (Etage schaltete nie um,
+ * Nutzer 2026-09-01), sondern auch JEDEN Band-Riegel der Gegner-KI, der
+ * `player->floor == e->floor` prueft (enemy_ai_common.c, re2_zombie, re2_dog) sowie
+ * die AOT-Stempel in aot_common.c. Beide Seiten werden jetzt zusammen gesetzt. */
+void re15_collision_set_band(int band)
+{
+    s_coll_band = band;
+    if (band >= 0) g_actors[RE15_ACTOR_SLOT_PLAYER].floor = (unsigned char)band;
+}
 int  re15_collision_band_from_y(int32_t y)      { return -(y / 0x708); }
 int  re15_collision_debug_band(void)            { return s_coll_band; }
-void re15_collision_ensure_band(int32_t y)      { if (s_coll_band < 0) s_coll_band = -(y / 0x708); }
+void re15_collision_ensure_band(int32_t y)      { if (s_coll_band < 0) re15_collision_set_band(-(y / 0x708)); }
 
 /* Scan the SCA cells for the lowest/highest band present (band = floor>>4).
  * The stair uses this to find the floor a descent/ascent lands on (mirrors the

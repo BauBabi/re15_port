@@ -12,6 +12,7 @@
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_collision.h"
 #include "re15_inv_screen.h"
 #include "re15_msg.h"
 #include "re15_enemy_ai.h"
@@ -123,19 +124,19 @@ int main(void)
          * wird im Port nur beim Laden eines Spielstands geschrieben, im Spiel pflegt
          * der Treppenlauf die Y (stair_common.c). Die Fixture stellte bisher floor
          * und traf damit nichts. */
-        pl->y = -3 * 0x708;                         /* Hof/Dach, Band 3 */
+        pl->y = -3 * 0x708; re15_collision_set_band(3);   /* Hof/Dach, Band 3 */
         re15_map_zone_update(0x1170, 0, 0);
         CHECK("ROOM1170 Hof ist aktuell auf dem Dach-Blatt (Seite 5 Rect 1)",
               re15_map_rect_state(5, 1) == RE15_MAP_RECT_CURRENT);
-        pl->y = -4 * 0x708;                         /* zweiter Bereich, oberer Korridor */
+        pl->y = -4 * 0x708; re15_collision_set_band(4);   /* zweiter Bereich, oberer Korridor */
         re15_map_zone_update(0x1170, -18000, -22000);
         CHECK("zweiter Bereich bei Band 4: Dach-Blatt, Seite 5 Rect 0",
               re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
-        pl->y = 0;                                  /* unterste Ebene, Band 0 */
+        pl->y = 0; re15_collision_set_band(0);            /* unterste Ebene, Band 0 */
         re15_map_zone_update(0x1170, -18000, -22000);
         CHECK("zweiter Bereich bei Band 0: 3F-Blatt, Seite 4 Rect 3",
               re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
-        pl->y = 0;
+        pl->y = 0; re15_collision_set_band(0);
     }
 
     /* --- (4) Szenario-Varianten TEILEN sich die Zone (derselbe Ort) --- */
