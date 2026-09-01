@@ -91,3 +91,57 @@ Tür- und Treppensymbole liegen bereits als Original-Stempel vor (der 13-Pixel-N
 Stempel aus `re15_inv_screen.c`, gewonnen aus `DATA/MAP0x.PIX`, plus die Treppensprossen).
 Sie hängen an Weltpositionen und wandern mit dem Raum mit — der Wechsel des Grundrisses
 ändert daran nichts.
+
+---
+
+## 5. Eingebaut — Stand 2026-09-02
+
+Der Löser sitzt jetzt im Generator (`tools/gen_map_zones.py`), die Engine zeichnet die
+Grundrisse (`re15_map_zones.c`, `re15_inv_screen.c`). 261 von 261 Pins grün.
+
+### Vier Befunde, die den Einbau erst brauchbar gemacht haben
+
+**(a) Die Kollisionszellen sind der begehbare WEG, nicht der Raum.** ROOM1120 besteht
+aus elf Streifen, der breiteste vier Kartenpixel (`[100,90,4,44]`, `[100,90,24,4]`, …) —
+der Ring um die Möbel. Ungefüllt gezeichnet sah ein Büro aus wie ein Labyrinth aus
+Fluren. Eingeschlossene Löcher werden jetzt auf dem Gitter der Zell-Kanten geschlossen
+(exakt, ohne Rasterwahl), zusätzlich die orthogonal-konvexe Hülle — sonst leckt die Flut
+durch die Türöffnung und die Möbelfläche bleibt ein Loch (ROOM1150: 18 Streifen → 4).
+
+**(b) Ein RDT-Raum ist nicht ein Ort.** Der Löser arbeitete je RAUM und zeichnete alle
+Zonen als einen Klumpen: ROOM1080s Fahrstuhlkabine misst 14×13 px, ihr Grundriss war
+34×22 px, und ROOM1140s beide Zonen trugen denselben Kasten. Er arbeitet jetzt je ORT
+(Raum, Zone) — Zellen aus der Zonen-Box, Türen aus der Zone, Ziel einer Tür ist der Ort,
+in dem ihr Spawn liegt.
+
+**(c) Ein Blatt zerfällt in mehrere Komponenten des Türgraphen.** Seite 8 in
+{4000,4010,4030}, {4080,4090,40A0,40B0}, den türlosen 4020 und die Wurzelkomponente. Die
+Breitensuche setzte nur die Wurzelkomponente: 3 von 11 Räumen. Die Brücken *sind* da, nur
+einseitig (4000→4020, 4080→4030 ohne reziproken Gegen-Datensatz); dazu ein Anbau-Zweig
+für Orte ganz ohne Türverbindung. **112 von 112 Orten liegen jetzt.**
+
+**(d) Überlappung allein ist das falsche Maß.** Ein Posen-Nachlauf, der nur sie
+minimierte, drückte Seite 1 von 7,3 % auf 3,0 % — und die berührenden Durchgänge von 9
+von 9 auf 3 von 9. Gerechnet werden jetzt beide Wege je Blatt und der nach dem Modell des
+Nutzers bessere genommen: mehr berührende Durchgänge zuerst, bei Gleichstand weniger
+Überlappung.
+
+### Ergebnis
+
+| | vorher (Kunst-Rechtecke) | jetzt (Grundrisse) |
+|---|---|---|
+| Orte mit Zeichnung | 33 von 112 | **112 von 112** |
+| berührende Durchgänge | — (Median 7,5 px auseinander) | **85 von 89** |
+| Überlappung je Blatt | — | 0,0 – 5,7 % |
+
+Gemessen an ROOM1120 ↔ ROOM1130, dem Fall aus dem Nutzer-Report *„im Room 1120 lande ich
+plötzlich auf der falschen Seite"*: der Punkt, an dem der Spieler erscheint, liegt **2 px**
+neben der Tür, durch die er kam (Gegenprobe: die andere Tür desselben Raums 21 px weg).
+Festgehalten in `test_map_orient.c`.
+
+### Was noch offen ist
+
+* Die Zweitzeichnung einer Etage wird in das Rechteck des Künstlers *eingepasst* (Platz
+  von ihm, Form aus der Kollision, Größe aus seinem Rechteck). Sauberer wäre, den Ort
+  auch auf dem Zielblatt vom Löser setzen zu lassen.
+* Seite 7 hat 15 von 18 Durchgängen berührend, Seite 6 12 von 13 — dort bleibt Arbeit.

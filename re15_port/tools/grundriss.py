@@ -39,6 +39,7 @@ SCHNITTSTELLE
     B.abbildung(lage[raum])           affine Abbildung Welt -> Kartenpixel
     B.pixel(raum, lage[raum])         belegte Kartenpixel des Raums
 """
+import bisect
 import collections
 import math
 
@@ -80,15 +81,127 @@ class Blatt(object):
                         self.kanten.append((b, (d['lx'], d['lz']),
                                             d['dest'], (e['lx'], e['lz'])))
                     break
+        # ⛔ NOTKANTEN. Ein Blatt zerfaellt in MEHRERE Komponenten des Tuergraphen -
+        # Seite 8 in {4000,4010,4030}, {4080,4090,40A0,40B0}, den turlosen 4020 und die
+        # Wurzelkomponente. Die Breitensuche setzte nur die Wurzelkomponente: 3 von 11
+        # Raeumen. Die Bruecken dazwischen SIND vorhanden, nur einseitig: 4000 -> 4020
+        # und 4080 -> 4030 tragen keinen reziproken Gegen-Datensatz.
+        # Anker ist dort der Spawn nx/nz. Der liegt schon ein Stueck im Zielraum (der
+        # Grund, warum er fuer die regulaeren Kanten falsch ist, gemessen 22-27 %
+        # Ueberlappung) - AUSRUECKEN und ZUSAMMENZIEHEN korrigieren das anschliessend,
+        # und ein um wenige Pixel versetzter Raum ist allemal besser als keiner.
+        fest = {(min(a, b), max(a, b)) for (a, _, b, _) in self.kanten}
+        self.notkanten = []
+        for b in self.zimmer:
+            for d in rdts[b][1]:
+                if (d['rw'] == 0 and d['rd'] == 0) or d['dest'] not in self.zimmer:
+                    continue
+                if d['dest'] == b:
+                    continue
+                if (min(b, d['dest']), max(b, d['dest'])) in fest:
+                    continue
+                self.notkanten.append((b, (d['lx'], d['lz']),
+                                       d['dest'], (d['nx'], d['nz'])))
+
+    @staticmethod
+    def schliessen(zellen):
+        """Eingeschlossene Loecher schliessen und zu Rechtecken zusammenfassen.
+
+        ⛔ Die Kollisionszellen (RDT +0x20) beschreiben den BEGEHBAREN WEG, nicht
+        den Raum. In einem moeblierten Raum ist das ein Ring um die Moebel: ROOM1120
+        besteht aus elf Streifen, der breiteste 4 Kartenpixel ([100,90,4,44],
+        [100,90,24,4], ...). Ungefuellt gezeichnet sieht ein Buero deshalb aus wie ein
+        Labyrinth aus Fluren - im Abzug des 3F-Blattes deutlich zu sehen. Ein
+        Kartenraum ist die FLAECHE; alles, was von aussen nicht erreichbar ist, gehoert
+        dazu.
+
+        Gerechnet auf dem Gitter der Zell-Kanten (Koordinaten-Kompression), also exakt
+        und ohne Wahl einer Rasterweite. Danach werden gleiche Zeilenlaeufe vertikal
+        verschmolzen, damit die Zellenliste des Zeichners klein bleibt."""
+        zellen = [c for c in zellen if c[2] > 0 and c[3] > 0]
+        if not zellen:
+            return []
+        XS = sorted({c[0] for c in zellen} | {c[0] + c[2] for c in zellen})
+        ZS = sorted({c[1] for c in zellen} | {c[1] + c[3] for c in zellen})
+        nx, nz = len(XS) - 1, len(ZS) - 1
+        if nx <= 0 or nz <= 0:
+            return list(zellen)
+        belegt = [[False] * nz for _ in range(nx)]
+        for (cx, cz, cw, cd) in zellen:
+            i0 = bisect.bisect_left(XS, cx)
+            i1 = bisect.bisect_left(XS, cx + cw)
+            j0 = bisect.bisect_left(ZS, cz)
+            j1 = bisect.bisect_left(ZS, cz + cd)
+            for i in range(i0, i1):
+                for j in range(j0, j1):
+                    belegt[i][j] = True
+        # Aussenraum vom Gitterrand her fluten; was nicht erreicht wird, ist innen.
+        aussen = [[False] * nz for _ in range(nx)]
+        stapel = []
+        for i in range(nx):
+            for j in (0, nz - 1):
+                if not belegt[i][j] and not aussen[i][j]:
+                    aussen[i][j] = True
+                    stapel.append((i, j))
+        for j in range(nz):
+            for i in (0, nx - 1):
+                if not belegt[i][j] and not aussen[i][j]:
+                    aussen[i][j] = True
+                    stapel.append((i, j))
+        while stapel:
+            i, j = stapel.pop()
+            for (di, dj) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                a, b = i + di, j + dj
+                if 0 <= a < nx and 0 <= b < nz and not belegt[a][b] and not aussen[a][b]:
+                    aussen[a][b] = True
+                    stapel.append((a, b))
+        # ⛔ DIE FLUT LECKT DURCH DIE TUEROEFFNUNG. ROOM1150s begehbarer Ring hat
+        # dort, wo die Tuer sitzt, eine Luecke - der Aussenraum erreicht die
+        # Moebelflaeche und sie bleibt ein Loch (Vorschau 3F: der Raum stand als
+        # Rahmen mit zwei Kaesten darin, 18 Streifen). Zusaetzlich wird deshalb die
+        # ORTHOGONAL-KONVEXE Huelle gefuellt: ein Feld gehoert dazu, wenn in seiner
+        # Zeile LINKS UND RECHTS und in seiner Spalte OBEN UND UNTEN belegte Felder
+        # liegen. Das schliesst den Ring, laesst eine L-Form aber L-foermig (in der
+        # Kerbe fehlt jeweils eine der vier Richtungen).
+        zl = []
+        for j in range(nz):
+            idx = [i for i in range(nx) if belegt[i][j]]
+            zl.append((idx[0], idx[-1]) if idx else None)
+        sp = []
+        for i in range(nx):
+            idx = [j for j in range(nz) if belegt[i][j]]
+            sp.append((idx[0], idx[-1]) if idx else None)
+        voll = [[belegt[i][j] or not aussen[i][j] or
+                 (zl[j] is not None and zl[j][0] <= i <= zl[j][1] and
+                  sp[i] is not None and sp[i][0] <= j <= sp[i][1])
+                 for j in range(nz)] for i in range(nx)]
+        # Zeilenlaeufe, gleiche Muster vertikal verschmelzen
+        raus = []
+        j = 0
+        while j < nz:
+            muster = [voll[i][j] for i in range(nx)]
+            k = j + 1
+            while k < nz and [voll[i][k] for i in range(nx)] == muster:
+                k += 1
+            i = 0
+            while i < nx:
+                if muster[i]:
+                    t = i
+                    while t < nx and muster[t]:
+                        t += 1
+                    raus.append((XS[i], ZS[j], XS[t] - XS[i], ZS[k] - ZS[j]))
+                    i = t
+                else:
+                    i += 1
+            j = k
+        return raus
 
     def zellen(self, rid):
-        """Begehbare Zellen. Duenne Waende (hoechstens 1000 Einheiten quer) fliegen
-        raus - sie beschreiben die Laibung, nicht die Flaeche."""
+        """Die FLAECHE des Raums: Kollisionszellen mit geschlossenen Loechern."""
         if rid in self._zellen:
             return self._zellen[rid]
-        alle = set(self.rdts[rid][0])
-        dick = [c for c in alle if min(c[2], c[3]) > 1000]
-        self._zellen[rid] = dick or list(alle)
+        alle = list(self.rdts[rid][0])
+        self._zellen[rid] = self.schliessen(alle) or alle
         return self._zellen[rid]
 
     def pixel(self, b, st):
@@ -200,28 +313,163 @@ class Blatt(object):
         for (a, pa, b, pb) in self.kanten:
             nb[a].append((b, pa, pb))
             nb[b].append((a, pb, pa))
+        nnb = collections.defaultdict(list)
+        for (a, pa, b, pb) in self.notkanten:
+            nnb[a].append((b, pa, pb))
+            nnb[b].append((a, pb, pa))
         lage = {wurzel: (0.0, 0.0, 0, 0)}
         pix = {wurzel: self.pixel(wurzel, lage[wurzel])}
         q = [wurzel]
-        while q:
-            a = q.pop(0)
-            for (b, pa, pb) in nb[a]:
-                if b in lage:
+
+        def anheften(a, b, pa, pb):
+            """b an die schon gesetzte Tuer von a haengen, beste der 8 Posen."""
+            p = self.punkt(a, lage[a], *pa)
+            best = None
+            for k in range(4):
+                for sp in (0, 1):
+                    d = dreh(pb[0], pb[1], k, sp)
+                    st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
+                    st = self._ausruecken(b, st, pix, k, sp, pb)
+                    pb2 = self.pixel(b, st)
+                    ueb = sum(len(pb2 & v) for v in pix.values())
+                    if best is None or ueb < best[0]:
+                        best = (ueb, st, pb2)
+            lage[b] = best[1]
+            pix[b] = best[2]
+            q.append(b)
+
+        while True:
+            while q:
+                a = q.pop(0)
+                for (b, pa, pb) in nb[a]:
+                    if b not in lage:
+                        anheften(a, b, pa, pb)
+            # Komponente erschoepft: ueber eine NOTKANTE weiter, sonst ANBAUEN.
+            weiter = None
+            for a in lage:
+                for (b, pa, pb) in nnb[a]:
+                    if b not in lage:
+                        weiter = (a, b, pa, pb)
+                        break
+                if weiter:
+                    break
+            if weiter:
+                anheften(*weiter)
+                continue
+            offen = [b for b in self.zimmer if b not in lage]
+            if not offen:
+                break
+            self._anbauen(max(offen, key=lambda b: (grad[b], -b)), lage, pix)
+            q.append(max(offen, key=lambda b: (grad[b], -b)))
+        return lage
+
+    def _anbauen(self, b, lage, pix):
+        """Einen Raum ohne jede Tuerverbindung auf dem Blatt anlegen: dicht an das
+        schon Gesetzte, aber ueberlappungsfrei. Betrifft z.B. ROOM4020 (Seite 8, gar
+        keine Tuer im RDT) und ROOM5090 (Seite 9, nur Selbst-Tueren und eine Tuer auf
+        ein anderes Blatt). Ohne diesen Zweig blieben sie ganz ohne Zeichnung."""
+        belegt = set()
+        for v in pix.values():
+            belegt |= v
+        if not belegt:
+            lage[b] = (0.0, 0.0, 0, 0)
+            pix[b] = self.pixel(b, lage[b])
+            return
+        xs = [p[0] for p in belegt]
+        ys = [p[1] for p in belegt]
+        mx = (min(xs) + max(xs)) / 2.0
+        my = (min(ys) + max(ys)) / 2.0
+        best = None
+        for k in range(4):
+            for sp in (0, 1):
+                roh = self.pixel(b, (0.0, 0.0, k, sp))
+                if not roh:
                     continue
+                rx = [p[0] for p in roh]
+                ry = [p[1] for p in roh]
+                br = max(rx) - min(rx) + 1
+                ho = max(ry) - min(ry) + 1
+                for (ox, oy) in ((max(xs) + 1 - min(rx), int(my - ho / 2) - min(ry)),
+                                 (min(xs) - br - min(rx), int(my - ho / 2) - min(ry)),
+                                 (int(mx - br / 2) - min(rx), max(ys) + 1 - min(ry)),
+                                 (int(mx - br / 2) - min(rx), min(ys) - ho - min(ry))):
+                    st = (float(ox), float(oy), k, sp)
+                    pb2 = self.pixel(b, st)
+                    ueb = len(pb2 & belegt)
+                    cx = sum(p[0] for p in pb2) / float(len(pb2))
+                    cy = sum(p[1] for p in pb2) / float(len(pb2))
+                    f = ueb * 1000.0 + math.hypot(cx - mx, cy - my)
+                    if best is None or f < best[0]:
+                        best = (f, st, pb2)
+        if best is None:
+            best = (0.0, (0.0, 0.0, 0, 0), self.pixel(b, (0.0, 0.0, 0, 0)))
+        lage[b] = best[1]
+        pix[b] = best[2]
+
+    def verbessern(self, lage, runden=8):
+        """Posen-Nachlauf. Die Breitensuche waehlt die Pose jedes Raums in dem
+        Moment, in dem er gesetzt wird - sie kennt die spaeteren Nachbarn also noch
+        nicht, und ab etwa sechs Raeumen je Blatt entscheidet damit die Reihenfolge
+        statt der Geometrie (die vollstaendige Suche ueber 8^n Posen ist ab da nicht
+        mehr rechenbar: Seite 7 haette 8^15 = 3,5e13 Lagen).
+        Stattdessen: jeder Raum wird der Reihe nach an seiner Ankertuer neu in alle
+        acht Posen gelegt und die mit der kleinsten Gesamt-Ueberlappung behalten,
+        solange sich noch etwas aendert. Das ist ein Bergsteiger, kein Optimum -
+        aber er sieht im Gegensatz zur Breitensuche das FERTIGE Blatt."""
+        nbb = collections.defaultdict(list)
+        for menge in (self.kanten, self.notkanten):
+            for (a, pa, b, pb) in menge:
+                nbb[b].append((a, pa, pb))     # (Nachbar, dessen Tuerpunkt, eigener)
+                nbb[a].append((b, pb, pa))
+        pix = {b: self.pixel(b, lage[b]) for b in lage}
+        for _ in range(runden):
+            bewegt = False
+            for b in list(lage):
+                anker = None
+                for (a, pa, pb) in nbb[b]:
+                    if a in lage and a != b:
+                        anker = (a, pa, pb)
+                        break
+                if anker is None:
+                    continue
+                a, pa, pb = anker
                 p = self.punkt(a, lage[a], *pa)
-                best = None
+                fremd = [v for o, v in pix.items() if o != b]
+
+                def guete(st, pb2):
+                    """⛔ UEBERLAPPUNG ALLEIN IST DAS FALSCHE MASS. Ein erster
+                    Nachlauf, der nur sie minimierte, drueckte Seite 1 von 7,3 % auf
+                    3,0 % - und die beruehrenden Durchgaenge von 9 von 9 auf 3 von 9.
+                    Das Ziel ist aber der Satz des Nutzers: "ein neues Kartenstueck
+                    schliesst genau da an, wo man den Raum davor durch die Tuer
+                    verlassen hat." Ueberlappung ist die SCHRANKE (Faktor 10000),
+                    der Tuerabstand das eigentliche Mass."""
+                    f = sum(len(pb2 & v) for v in fremd) * 10000.0
+                    for (o, po, pe) in nbb[b]:
+                        if o not in lage or o == b:
+                            continue
+                        q1 = self.punkt(o, lage[o], *po)
+                        q2 = self.punkt(b, st, *pe)
+                        f += math.hypot(q1[0] - q2[0], q1[1] - q2[1])
+                    return f
+
+                best = (guete(lage[b], pix[b]), lage[b], pix[b])
                 for k in range(4):
                     for sp in (0, 1):
                         d = dreh(pb[0], pb[1], k, sp)
                         st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
-                        st = self._ausruecken(b, st, pix, k, sp, pb)
+                        st = self._ausruecken(b, st, {o: v for o, v in pix.items()
+                                                      if o != b}, k, sp, pb)
                         pb2 = self.pixel(b, st)
-                        ueb = sum(len(pb2 & v) for v in pix.values())
-                        if best is None or ueb < best[0]:
-                            best = (ueb, st, pb2)
-                lage[b] = best[1]
-                pix[b] = best[2]
-                q.append(b)
+                        f = guete(st, pb2)
+                        if f < best[0] - 1e-9:
+                            best = (f, st, pb2)
+                if best[1] != lage[b]:
+                    lage[b] = best[1]
+                    pix[b] = best[2]
+                    bewegt = True
+            if not bewegt:
+                break
         return lage
 
     def zusammenziehen(self, lage, runden=200):
@@ -274,9 +522,24 @@ class Blatt(object):
         return neu, f
 
     def loesen(self, feld=FELD):
-        lage = self.aufbauen()
-        if not lage:
+        roh = self.aufbauen()
+        if not roh:
             return {}, 1.0, (0.0, 0, 0, 0)
-        lage = self.zusammenziehen(lage)
-        lage, f = self.einpassen(lage, feld)
-        return lage, f, self.kosten(lage)
+        # ⛔ BEIDE WEGE RECHNEN UND DEN BESSEREN NEHMEN. Der Posen-Nachlauf senkt die
+        # Ueberlappung deutlich (Seite 6: 11,9 % -> 3,7 %), kostet aber auf manchen
+        # Blaettern Durchgaenge (Seite 1: 9 von 9 -> 3 von 9). Welcher Weg gewinnt,
+        # haengt vom Blatt ab und ist nicht vorher zu wissen - also wird gemessen.
+        # Rangfolge nach dem Modell des Nutzers: MEHR beruehrende Durchgaenge zuerst
+        # ("ein neues Kartenstueck schliesst genau da an, wo man den Raum davor durch
+        # die Tuer verlassen hat"), bei Gleichstand weniger Ueberlappung.
+        besser = None
+        for lage in (dict(roh), self.verbessern(dict(roh))):
+            ex, ey = self.ex, self.ey
+            lg = self.zusammenziehen(lage)
+            lg, f = self.einpassen(lg, feld)
+            k = self.kosten(lg)
+            if besser is None or (-k[1], k[0]) < (-besser[2][1], besser[2][0]):
+                besser = (lg, f, k, self.ex, self.ey)
+            self.ex, self.ey = ex, ey      # einpassen hat den Massstab veraendert
+        self.ex, self.ey = besser[3], besser[4]
+        return besser[0], besser[1], besser[2]

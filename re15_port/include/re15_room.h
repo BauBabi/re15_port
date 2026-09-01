@@ -85,7 +85,10 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
  * re15_map_mark_get liefert 1, wenn die Marke SICHTBAR ist (ihre Zone ist besucht). */
 int re15_map_mark_count(void);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
+int re15_map_mark_zonen(int i, int *zid, int *zid2);
 int re15_map_page_known(unsigned page);
+int re15_map_zone_abbildung(const re15_map_zone_t *zn, int *a, int *b, int *c,
+                            int *d, int *e, int *f);   /* Grundriss, 0 = keiner */
 int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h,
                         int *erste, int *n);   /* Schema-Zeichnung, 0 = keine */
 int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
@@ -95,6 +98,7 @@ const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
+int re15_map_etagen_zone(unsigned page, unsigned rect);
 int re15_map_player_band(void);   /* Etage des Spielers: gepflegtes Band, sonst aus der Y */
 
 int re15_map_stock_mode(void);

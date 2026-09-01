@@ -43,7 +43,8 @@ static uint8_t s_visited[32];    /* 1 Bit je ZONE (Index = Tabellen-Index / 2) *
  * (2026-09-01: "unten links schon ein Rechteck nach dem Flur, obwohl ich noch im
  * Eingangsbereich stehe"). Gemerkt wird deshalb die BEGANGENE Etage. */
 static uint8_t s_visited_floor[8];   /* 1 Bit je Zeile in s_map_floors */
-#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+#define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
+
 static int floor_row(unsigned room, int zone, int band);
 
 void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
@@ -178,6 +179,22 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
      * klemmten, 46-100 % der begehbaren Punkte). Ohne Zeile (sx == 0) gilt die lineare
      * Bbox-Streckung darunter - eine PORT-ERGAENZUNG ohne Original-Vorbild, die dafuer
      * nie aus dem Rechteck laeuft. */
+    /* ⛔ GRUNDRISS ZUERST. Zonen, die der Grundriss-Loeser gesetzt hat, tragen eine
+     * affine Abbildung; sie ist genauer als jede Streckung, weil sie Drehung,
+     * Spiegelung und Massstab des Raums enthaelt (tools/grundriss.py). */
+    {
+        int A, B2, C, D, E, F;
+        if (re15_map_zone_abbildung(zn, &A, &B2, &C, &D, &E, &F)) {
+            int32_t px = (int32_t)(((int64_t)A * x + (int64_t)B2 * z) >> 16) + C;
+            int32_t py = (int32_t)(((int64_t)D * x + (int64_t)E * z) >> 16) + F;
+            if (px < rx) px = rx;
+            if (px > rx + rw - 1) px = rx + rw - 1;
+            if (py < ry) py = ry;
+            if (py > ry + rh - 1) py = ry + rh - 1;
+            *mx = (int16_t)px; *my = (int16_t)py;
+            return 1;
+        }
+    }
     if (zn->sx && zn->sy) {
         int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
         int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
@@ -384,6 +401,27 @@ int re15_map_floor_row_visited(unsigned room, int zone, int band)
     return (f >= 0) ? ((s_visited_floor[f >> 3] >> (f & 7)) & 1) : 0;
 }
 
+/* Die ZONE, die dieses Rechteck ueber eine ETAGEN-Zeile belegt (-1 = keine).
+ * Gebraucht vom Zeichner: seit jeder Raum als Grundriss gezeichnet wird, waere die
+ * gemalte Original-Kachel der Zweitzeichnung der einzige Fremdkoerper auf dem Blatt
+ * (Abzug 3F: ein heller Block quer ueber ROOM1130s Flur). Statt sie wegzulassen -
+ * sie traegt die Aussage "dieses Band gehoert auf diese Etage" - wird der Grundriss
+ * des Raums an die STELLE des Rechtecks gezeichnet. */
+int re15_map_etagen_zone(unsigned page, unsigned rect)
+{
+    int i, j;
+    for (i = 0; i < FLOOR_COUNT; i++) {
+        if ((unsigned)s_map_floors[i].page != page) continue;
+        if ((unsigned)s_map_floors[i].rect != rect) continue;
+        for (j = 0; j < ZONE_COUNT; j++) {
+            if (s_map_zones[j].room != s_map_floors[i].room) continue;
+            if (s_map_zones[j].idx != (int)s_map_floors[i].zone) continue;
+            return j;
+        }
+    }
+    return -1;
+}
+
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)
 {
     int i, best = -1, bestd = 0, n = 0;
@@ -449,6 +487,23 @@ void re15_map_debug_reveal_page(unsigned page)
 
 /* SCHEMA-ZEICHNUNG einer Zone (Kollisions-Box) - 0, wenn sie ein echtes
  * Karten-Rechteck des Originals hat. Liefert Kasten und Zellenbereich. */
+/* Affine Abbildung Welt -> Kartenpixel eines Grundrisses:
+ *     mx = (A*wx + B*wz) / 65536 + C ,  my = (D*wx + E*wz) / 65536 + F
+ * Drehung und Spiegelung des Raums stecken in den Vorzeichen, der Massstab im
+ * Betrag. Liefert 0, wenn die Zone keinen Grundriss hat (dann gilt der Rueckfall).
+ * Erzeugt von tools/grundriss.py, Blatt.abbildung(). */
+int re15_map_zone_abbildung(const re15_map_zone_t *zn, int *a, int *b, int *c,
+                            int *d, int *e, int *f)
+{
+    const re15_map_synth_t *s;
+    if (!zn || !zn->synth) return 0;
+    s = &s_map_synth[zn->synth - 1];
+    if (s->a == 0 && s->d == 0) return 0;
+    if (a) *a = s->a; if (b) *b = s->b; if (c) *c = s->c;
+    if (d) *d = s->d; if (e) *e = s->e; if (f) *f = s->f;
+    return 1;
+}
+
 int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h,
                         int *erste, int *n)
 {
@@ -491,6 +546,18 @@ int re15_map_page_known(unsigned page)
             ((s_visited_floor[i >> 3] >> (i & 7)) & 1))
             return 1;
     return 0;
+}
+
+/* Die beiden Sichtbarkeits-Zonen einer Marke (zid2 = 255: keine zweite). Ein
+ * Durchgang zwischen zwei Raeumen wird als EIN Datensatz gefuehrt; wer wissen will,
+ * WELCHE Orte er verbindet, braucht beide Nummern - der Pin test_map_mark_band
+ * unterscheidet daran die Selbst-Tuer von einer Tuer nach draussen. */
+int re15_map_mark_zonen(int i, int *zid, int *zid2)
+{
+    if (i < 0 || i >= MARK_COUNT) return 0;
+    if (zid)  *zid  = s_map_marks[i].zid;
+    if (zid2) *zid2 = s_map_marks[i].zid2;
+    return 1;
 }
 
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)

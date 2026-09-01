@@ -139,7 +139,13 @@ typedef struct {
 /* FILE wave: the reader pages are glyph-heavy (page 1 = ~250 SPRT_16 glyphs; the
  * row list = up to 9 x 21 underscore glyphs + names + the full main chain), so the
  * cap grew from 256. Arrays are static at every call site. */
-#define RE15_INV_MAX_OPS 768
+/* Der Puffer traegt seit den Schema-Zeichnungen (Kollisions-Grundrisse, eine
+ * PORT-ERGAENZUNG - das Original zeichnet dort nichts) deutlich mehr als die
+ * gemalten Kacheln: das dichteste Blatt (Seite 7) hat allein 234 Zellen, dazu
+ * kommen die Silhouetten-Laeufe. 768 lief ueber und schnitt das Blatt ab.
+ * Keine Original-Groesse - die PSX-Kapazitaet ist die OT-Liste (105 Eintraege,
+ * @0x8002565c), nicht dieser Bauplan-Puffer. */
+#define RE15_INV_MAX_OPS 2048
 
 /* Screen state — mirrors the original globals it is built from (all RE1.5-EXE). */
 typedef struct {

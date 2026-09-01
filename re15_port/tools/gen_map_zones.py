@@ -30,7 +30,8 @@ VERFAHREN
 Aufruf:  python re15_port/tools/gen_map_zones.py [--json <zonen.json>]
 """
 import itertools
-import struct, json, os, sys, math, collections, random
+import struct, json, os, sys, math, collections, random, statistics
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # fuer grundriss.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 EXE  = open(os.path.join(ROOT, 'info', 'Re1.5', 'PSX.EXE'), 'rb').read()
@@ -824,6 +825,100 @@ def main():
         (0x2050, 0): (1, 1),   # Symbol 33->4 px, Nachbar 56->6 px
     }
 
+    # ================= GRUNDRISS AUS KOLLISION UND TUERGRAPH ===================
+    # ⛔ Nutzer-Entscheidung 2026-09-01: "du darfst davon abweichen, wenn du die Original
+    # Symbole verwendest, und damit eine nahezu perfekte Karte kreieren kannst."
+    # Sein Modell: "ein neues Kartenstueck schliesst genau da an, wo man den Raum davor
+    # durch die Tuer verlassen hat."
+    #
+    # Warum ueberhaupt: die gemalte Karte des Originals ist unvollstaendig und nicht
+    # massstabsgetreu. Nur 33 der 72 Karten-Raeume tragen eine Massstabszeile
+    # @0x800768b0, 33 der 100 Raeume haben gar kein Rechteck, und ROOM1100 misst echt
+    # 41x47 px gegen ein gemaltes Rechteck von 24x24. Selbst MIT den ausgelieferten
+    # Zeilen liegen die beiden Enden eines Durchgangs im Median 7,5 px auseinander.
+    # Der Loeser (tools/grundriss.py) erreicht 0-2 % Ueberlappung bei beruehrenden
+    # Durchgaengen - dort passt ein Kartenstueck also wirklich ans andere.
+    import grundriss as _gr
+    _MED = {}
+    for _st in range(1, 7):
+        _xs = []; _ys = []
+        for _r in sorted(zinfo):
+            if (_r >> 12) != _st: continue
+            _o, _p, _a, _b2 = _zeile(_r)
+            if _a > 1 and _b2 > 1: _xs.append(_a); _ys.append(_b2)
+        if _xs:
+            _MED[_st] = ((1 << 20) / statistics.median(_xs),
+                         (1 << 20) / statistics.median(_ys))
+    # ⛔ JE ORT, NICHT JE RAUM. Ein RDT-Raum ist nicht immer EIN Ort: 26 der 103
+    # Basis-Raeume zerfallen in mehrere getrennte Zonen. Ein Loeser je RAUM zeichnete
+    # dann alle Zonen als einen Klumpen und haengte denselben an jede Zone - gemessen an
+    # ROOM1080, dessen Fahrstuhlkabine 14x13 px misst, dessen Grundriss aber 34x22 px
+    # gross war, und an ROOM1140, dessen beide Zonen denselben Kasten trugen.
+    # Ein ORT ist deshalb (Raum, Zone); seine Zellen sind die Kollisionszellen in der
+    # Zonen-Box, seine Tueren die Tueren, die darin liegen, und das Ziel einer Tuer ist
+    # der Ort, in dem ihr Spawn-Punkt liegt.
+    def _ort(rid, zi):
+        return (rid << 4) | zi
+
+    def _ort_von_punkt(rid, wx, wz):
+        zi = zone_at(rid, wx, wz)
+        if zi is None:
+            return None
+        return _ort(rid, zi)
+
+    grundrisse = {}          # (room, zi) -> (abbildung, kasten, zellen in Kartenpixeln)
+    for _pg in range(13):
+        _orte = []
+        _rd = {}
+        for _b in sorted(zinfo):
+            if page_of(_b) != _pg: continue
+            for _zi, _bb in enumerate(zinfo[_b]):
+                _x0, _x1, _z0, _z1 = _bb
+                _z = [c for c in sca_all.get(_b, ())
+                      if _x0 <= c[0] + c[2] // 2 <= _x1 and _z0 <= c[1] + c[3] // 2 <= _z1]
+                if not _z: continue
+                _tu = []
+                for _d in doors_all.get(_b, ()):
+                    if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
+                    _e = dict(_d)
+                    _zt = _ort_von_punkt(_d['dest'], _d['nx'], _d['nz'])
+                    if _zt is None:
+                        _zt = _ort(_d['dest'], 0)
+                    _e['dest'] = _zt
+                    _tu.append(_e)
+                _o = _ort(_b, _zi)
+                _orte.append(_o)
+                _rd[_o] = (_z, _tu, stairs_all.get(_b, ()))
+        if not _orte: continue
+        _ex, _ey = _MED.get((_orte[0] >> 4) >> 12, (460.0, 460.0))
+        _B = _gr.Blatt(_orte, _rd, _ex, _ey)
+        _lage, _f, _k = _B.loesen()
+        if not _lage: continue
+        print(f"Seite {_pg:2d}: Grundriss aus {len(_lage)}/{len(_orte)} Orten, "
+              f"{_k[0]:.1f} % Ueberlappung, {_k[1]}/{len(_B.kanten)} Durchgaenge "
+              f"beruehrend, {_k[2]}x{_k[3]} px")
+        for _o, _st in _lage.items():
+            _px = _B.pixel(_o, _st)
+            if not _px: continue
+            _xs = [q[0] for q in _px]; _ys = [q[1] for q in _px]
+            _kasten = (min(_xs), min(_ys), max(_xs) - min(_xs) + 1, max(_ys) - min(_ys) + 1)
+            _rects = []
+            for (cx, cz, cw, cd) in _B.zellen(_o):
+                _pts = [_gr.dreh(cx, cz, _st[2], _st[3]),
+                        _gr.dreh(cx + cw, cz, _st[2], _st[3]),
+                        _gr.dreh(cx, cz + cd, _st[2], _st[3]),
+                        _gr.dreh(cx + cw, cz + cd, _st[2], _st[3])]
+                _X = [q[0] for q in _pts]; _Z = [q[1] for q in _pts]
+                _x0 = int(round(_st[0] + min(_X) / _B.ex))
+                _x1 = int(round(_st[0] + max(_X) / _B.ex))
+                _y0 = int(round(_st[1] - max(_Z) / _B.ey))
+                _y1 = int(round(_st[1] - min(_Z) / _B.ey))
+                if _x1 - _x0 < 1 or _y1 - _y0 < 1: continue
+                _rects.append((_x0, _y0, _x1 - _x0, _y1 - _y0))
+            if not _rects: continue
+            grundrisse[(_o >> 4, _o & 15)] = (_B.abbildung(_st), _kasten, _rects)
+    print(f"{len(grundrisse)} Orte mit Grundriss aus der Kollisionsgeometrie")
+
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     zid_von = {}
@@ -831,6 +926,9 @@ def main():
         for i, bb in enumerate(zs):
             pr = assign.get((b, i))
             if pr is None: continue
+            # ⛔ Ein Ort, eine Zeichnung. Hat der Loeser fuer diese Zone einen Grundriss
+            # geliefert, gilt der - sonst stuenden beide Zeichnungen uebereinander.
+            if (b, i) in grundrisse: continue
             for var in (0, 1):
                 rows.append((b + var, bb, pr[0], pr[1], i, zid))
             zid_von[(b, i)] = zid
@@ -861,7 +959,34 @@ def main():
         for i, bb in enumerate(zs):
             pr = assign.get((b, i))
             if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
+    def _geo(pg, r, room=None, zi=None):
+        """Die Flaeche, in der eine Marke liegt: das gemalte Rechteck - oder, seit die
+        Raeume als Grundriss gezeichnet werden, dessen Kasten (Kennung rect = 255)."""
+        if r == 255:
+            g = grundrisse.get((room, zi))
+            if g: return g[1]
+            t = synth.get((room, zi))
+            if t: return (t[0], t[1], t[2], t[3])
+            return None
+        R = rects(pg)
+        return R[r] if r < len(R) else None
+
     def to_map(room, zi, wx, wz):
+        # ⛔ GRUNDRISS ZUERST. Seit der Loeser jeden Raum aus seiner Kollision setzt,
+        # ist SEINE Abbildung die gueltige - die Marken muessen derselben folgen, sonst
+        # rechnen sie gegen ein Rechteck, das gar nicht mehr gezeichnet wird, und die
+        # Tuersymbole liegen irgendwo (im Abzug des 3F-Blattes fehlten sie ganz).
+        # Formel wie in der Engine (re15_map_zone_abbildung):
+        #     mx = (A*wx + B*wz) >> 16 + C ,  my = (D*wx + E*wz) >> 16 + F
+        g = grundrisse.get((room, zi))
+        if g:
+            (A, B2, C, D, E, F), kasten, _z = g
+            mx = (A * wx + B2 * wz) // 65536 + C
+            my = (D * wx + E * wz) // 65536 + F
+            kx, ky, kw, kh = kasten
+            mx = min(max(mx, kx), kx + kw - 1)
+            my = min(max(my, ky), ky + kh - 1)
+            return page_of(room), 255, mx, my
         e = zpos.get((room, zi))
         if not e: return None
         (x0, x1, z0, z1), pg, r = e
@@ -886,6 +1011,7 @@ def main():
         # z GESPIEGELT — wie die Original-Markerformel (FUN_800473f8 negiert das
         # z-Ergebnis) und wie re15_map_zones.c seit der Korrektur vom 2026-08-31.
         return pg, r, R[0] + fx * R[2] // (x1 - x0), R[1] + R[3] - 1 - fz * R[3] // (z1 - z0)
+
     # ================= SCHEMA-ZEICHNUNG AUS DER KOLLISIONS-BOX =================
     # Nutzer 2026-09-01: "Wo die Kartenlage fehlt oder unklar ist, die Collision-Box des
     # Raums nutzen."
@@ -923,11 +1049,16 @@ def main():
         return out
     MASS = _stage_massstab()
 
-    synth = {}        # (room, zi) -> (x, y, w, h, [zellen in Karten-Pixeln])
+    synth = {}        # (room, zi) -> (x, y, w, h, [zellen], abbildung|None)
+    # Die Grundrisse aus dem Loeser haben Vorrang: sie sind zusammenhaengend, ihre
+    # Durchgaenge beruehren sich, und sie tragen eine affine Abbildung fuer den Marker.
+    for _k, (_ab, _kasten, _rects) in sorted(grundrisse.items()):
+        synth[_k] = (_kasten[0], _kasten[1], _kasten[2], _kasten[3], _rects, _ab)
     for b in sorted(zinfo):
         pg = page_of(b)
         if pg is None or pg == 0xd: continue
         for zi, bb in enumerate(zinfo[b]):
+            if (b, zi) in synth: continue          # hat schon einen Grundriss
             if assign.get((b, zi)) is not None: continue
             x0, x1, z0, z1 = bb
             if x1 <= x0 or z1 <= z0: continue
@@ -1017,18 +1148,19 @@ def main():
                 zellen.append((ix0, iy0, iw, ih))
             if not zellen: continue
             synth[(b, zi)] = (int(round(ox)), int(round(oy)),
-                              max(1, int(round(w))), max(1, int(round(h))), zellen)
+                              max(1, int(round(w))), max(1, int(round(h))), zellen, None)
     print(f"{len(synth)} Zonen ohne Rechteck bekommen eine Zeichnung aus ihrer Kollisions-Box")
 
     # Synthetische Zonen bekommen eine eigene Zeilen-Nummer und einen Platz in der
     # Zonen-Tabelle. Ihr "Rechteck" ist der Kasten der Schema-Zeichnung; als Kennung
     # traegt die Zeile rect = 255.
-    synth_liste = []          # (x, y, w, h, erste_zelle, n_zellen)
+    synth_liste = []          # (x, y, w, h, erste_zelle, n_zellen, abbildung)
     synth_zellen = []
     for (b, zi) in sorted(synth):
-        x, y, w, h, zellen = synth[(b, zi)]
+        x, y, w, h, zellen, ab = synth[(b, zi)]
         si = len(synth_liste)
-        synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen)))
+        synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen),
+                            ab or (0, 0, 0, 0, 0, 0)))
         synth_zellen.extend(zellen)
         pg = page_of(b)
         bb = zinfo[b][zi]
@@ -1187,6 +1319,44 @@ def main():
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
     # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
+    def snap_grundriss(room, zi, mx, my, senk):
+        """Wie snap_wall, aber auf der SILHOUETTE des Grundrisses statt auf der
+        Original-Kachel. snap_wall liest die gemalte Kachel (DATA/MAP0x.PIX,
+        Palettenindex 0 = ausserhalb) - fuer einen Grundriss gibt es keine Kachel,
+        dafuer die exakte Zellgeometrie, und die ist die bessere Quelle.
+        Gleiche Kostenregel wie snap_wall: quer zur Wand wird ein schmales Fenster
+        mitgesucht und doppelt gewichtet, damit die Wandachse fuehrend bleibt."""
+        g = grundrisse.get((room, zi))
+        if not g: return mx, my, (3 if senk else 0)
+        belegt = set()
+        for (x, y, w, h) in g[2]:
+            for j in range(y, y + h):
+                for i in range(x, x + w):
+                    belegt.add((i, j))
+        if not belegt: return mx, my, (3 if senk else 0)
+        QUER = 3
+        best = None
+        if senk:
+            for dj in range(-QUER, QUER + 1):
+                j = my + dj
+                for (i, jj) in belegt:
+                    if jj != j: continue
+                    if (i - 1, j) in belegt and (i + 1, j) in belegt: continue
+                    k = abs(i - mx) + 2 * abs(dj)
+                    seite = 3 if (i + 1, j) in belegt else 1     # 3 = West, 1 = Ost
+                    if best is None or k < best[0]: best = (k, i, j, seite)
+        else:
+            for di in range(-QUER, QUER + 1):
+                i = mx + di
+                for (ii, j) in belegt:
+                    if ii != i: continue
+                    if (i, j - 1) in belegt and (i, j + 1) in belegt: continue
+                    k = abs(j - my) + 2 * abs(di)
+                    seite = 0 if (i, j + 1) in belegt else 2     # 0 = Nord, 2 = Sued
+                    if best is None or k < best[0]: best = (k, i, j, seite)
+        if best is None: return mx, my, (3 if senk else 0)
+        return best[1], best[2], best[3]
+
     def snap_wall(pg, r, mx, my, senk):
         """Rueckt eine Tuermarke auf die GEZEICHNETE Wand und nennt die WANDSEITE.
 
@@ -1255,12 +1425,13 @@ def main():
             return RX + best[1], RY + best[2], best[3]
 
     marks = []                      # (page, rect, mx, my, kind, zid)
-    zid_of = {}
-    _z = 0
-    for b, zs in sorted(zinfo.items()):
-        for i in range(len(zs)):
-            if assign.get((b, i)) is not None:
-                zid_of[(b, i)] = _z; _z += 1
+    # ⛔ DIESELBE ZAEHLUNG WIE DIE ZONEN-TABELLE. Hier lief frueher eine ZWEITE,
+    # eigene Numerierung, die nur die Zonen mit gemaltem Rechteck zaehlte. Solange
+    # ausschliesslich solche Zonen eine Zeile bekamen, stimmte sie zufaellig ueberein;
+    # seit die Grundriss-Zonen eigene Zeilen tragen, zeigte sie auf fremde Zonen - und
+    # die Sichtbarkeit einer Marke haengt genau daran (re15_map_mark_get prueft
+    # s_visited[zid]).
+    zid_of = zid_von
 
     # ================= DURCHGANG 1: jede Marke einzeln berechnen =================
     vor = []      # dict je Marke, mit Herkunft fuer die Paarbildung
@@ -1312,9 +1483,27 @@ def main():
                 # Etagen, statt alle auf ihrer Vorgabeseite zu sammeln.
                 _bl = blatt_fuer_band(b, zi, m.get('band', 0))
                 if _bl and _bl != (pg, r):
-                    _R0 = rects(pg)[r]; _R1 = rects(_bl[0])[_bl[1]]
-                    mx += _R1[0] - _R0[0]; my += _R1[1] - _R0[1]
-                    pg, r = _bl
+                    _R0 = _geo(pg, r, b, zi); _R1 = _geo(_bl[0], _bl[1])
+                    if _R0 and _R1:
+                        if r == 255:
+                            # ⛔ GENAU SO EINPASSEN WIE DER ZEICHNER. Die Zweit-
+                            # zeichnung einer Etage wird gleichmaessig in ihr Rechteck
+                            # skaliert (re15_inv_screen.c); die Marke muss dieselbe
+                            # Abbildung nehmen, sonst steht das Tuersymbol neben dem
+                            # Raum. Ohne diesen Zweig fiel die Umlegung fuer Grundriss-
+                            # Zonen ganz aus - und damit Nutzer-Punkt 1 ("ROOM1170
+                            # zeigt die Tuer der unteren Etage schon auf ROOF").
+                            _gx, _gy, _gw, _gh = _R0
+                            _rx, _ry, _rw, _rh = _R1
+                            _f = min(_rw * 256 // max(_gw, 1), _rh * 256 // max(_gh, 1))
+                            if _f < 1: _f = 1
+                            _ox = _rx + (_rw - _gw * _f // 256) // 2
+                            _oy = _ry + (_rh - _gh * _f // 256) // 2
+                            mx = _ox + (mx - _gx) * _f // 256
+                            my = _oy + (my - _gy) * _f // 256
+                        else:
+                            mx += _R1[0] - _R0[0]; my += _R1[1] - _R0[1]
+                        pg, r = _bl
                 if kind == 0:
                     # ---- WANDACHSE AUS DEM TUER-RECHTECK ---------------------
                     # Das Trigger-Rechteck ist LAENGS DER WAND gestreckt: man laeuft
@@ -1328,10 +1517,14 @@ def main():
                     if m['rw'] != m['rd']:
                         senk = m['rd'] > m['rw']
                     else:
-                        R = rects(pg)[r]
+                        R = _geo(pg, r, b, zi)
+                        if R is None: continue
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
-                    mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                    if r == 255:
+                        mx, my, mkind = snap_grundriss(b, zi, mx, my, senk)
+                    else:
+                        mx, my, mkind = snap_wall(pg, r, mx, my, senk)
                     # ⛔ HIER NOCH NICHT VERWERFEN. Bis v0.3.80 fiel eine Marke schon in
                     # Durchgang 1 weg, wenn ihr eigenes Rechteck die Tuer malt - und ihr
                     # Partner blieb als freie Einzelmarke stehen, weil die Paarung erst in
@@ -1388,7 +1581,23 @@ def main():
         # 16x16-Kaestchen des Treppenhauses, wo das Original nichts malt (Katalog: 0
         # Symbole auf Rect (3,8)). Die Beruehrung ist eine Aussage der KACHEL und
         # braucht keine freie Zahl.
-        if not _beruehren(A['pg'], A['r'], B['r']):
+        # ⛔ BERUEHRUNGS-PROBE NUR FUER GEMALTE RECHTECKE. Sie liest die Kachel
+        # (DATA/MAP0x.PIX) - fuer einen Grundriss gibt es keine, und der Loeser hat die
+        # Beruehrung ohnehin selbst hergestellt (er heftet die Raeume an genau dieser
+        # Tuer aneinander). Fuer Grundrisse wird deshalb der Abstand der KAESTEN
+        # geprueft: was der Loeser gesetzt hat, liegt beieinander.
+        if A['r'] == 255 or B['r'] == 255:
+            _KA = _geo(A['pg'], A['r'], A['room'], A['zi'])
+            _KB = _geo(B['pg'], B['r'], B['room'], B['zi'])
+            _nah = False
+            if _KA and _KB:
+                _dx = max(_KB[0] - (_KA[0] + _KA[2]), _KA[0] - (_KB[0] + _KB[2]), 0)
+                _dy = max(_KB[1] - (_KA[1] + _KA[3]), _KA[1] - (_KB[1] + _KB[3]), 0)
+                _nah = (_dx + _dy) <= 2
+            if not _nah:
+                belegt.add(_i); belegt.add(_j)
+                continue
+        elif not _beruehren(A['pg'], A['r'], B['r']):
             belegt.add(_i); belegt.add(_j)
             continue
         belegt.add(_i); belegt.add(_j)
@@ -1399,7 +1608,9 @@ def main():
         # Genommen wird die Position, die am dichtesten am NACHBAR-Rechteck liegt -
         # das ist die, die wirklich auf der gemeinsamen Kante sitzt.
         def _abstand(X, Y):
-            RX, RY, RW, RH = rects(Y['pg'])[Y['r']]
+            _R = _geo(Y['pg'], Y['r'], Y['room'], Y['zi'])
+            if _R is None: return 0
+            RX, RY, RW, RH = _R
             dx = max(RX - X['mx'], 0, X['mx'] - (RX + RW - 1))
             dy = max(RY - X['my'], 0, X['my'] - (RY + RH - 1))
             return dx + dy
@@ -1538,10 +1749,17 @@ def main():
     o.append(" * ACHTUNG PORT-ERGAENZUNG: das Original zeichnet diese Raeume gar nicht,")
     o.append(" * und seine Kunst ist auch nicht massstabsgetreu zur Kollision. Siehe")
     o.append(" * tools/gen_map_zones.py, Abschnitt SCHEMA-ZEICHNUNG. */")
-    o.append("typedef struct { short x, y, w, h; unsigned short erste, n; } re15_map_synth_t;")
+    o.append("/* Die AFFINE ABBILDUNG bildet Weltkoordinaten auf Kartenpixel ab:")
+    o.append(" *     mx = (A*wx + B*wz) / 65536 + C ,  my = (D*wx + E*wz) / 65536 + F")
+    o.append(" * Drehung und Spiegelung des Raums stecken in den Vorzeichen, der")
+    o.append(" * Massstab im Betrag. A==0 && D==0 heisst: keine Abbildung (Rueckfall auf")
+    o.append(" * die Bbox-Streckung in den Kasten). */")
+    o.append("typedef struct { short x, y, w, h; unsigned short erste, n;")
+    o.append("                 int a, b, c, d, e, f; } re15_map_synth_t;")
     o.append("static const re15_map_synth_t s_map_synth[] = {")
-    for (x, y, w, h, e, n) in synth_liste:
-        o.append(f"    {{ {x:4d}, {y:4d}, {w:4d}, {h:4d}, {e:4d}, {n:3d} }},")
+    for (x, y, w, h, e, n, ab) in synth_liste:
+        o.append(f"    {{ {x:4d}, {y:4d}, {w:4d}, {h:4d}, {e:4d}, {n:3d},"
+                 f" {ab[0]:7d}, {ab[1]:7d}, {ab[2]:4d}, {ab[3]:7d}, {ab[4]:7d}, {ab[5]:4d} }},")
     o.append("};")
     o.append("typedef struct { short x, y, w, h; } re15_map_synth_cell_t;")
     o.append("static const re15_map_synth_cell_t s_map_synth_cells[] = {")

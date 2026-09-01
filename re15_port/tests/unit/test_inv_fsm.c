@@ -1296,7 +1296,7 @@ int main(void)
         re15_map_visited_reset();
         g_current_room_id = 0x9999;    /* kein zugeordneter Raum aktuell */
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0, have_r2 = 0;
+        int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0;
         for (i = 0; i < n; i++) {
             if (ops[i].kind != RE15_INV_OP_SPRT) continue;
             if (ops[i].page == RE15_INV_PAGE_MAP4) {
@@ -1307,7 +1307,7 @@ int main(void)
                     ops[i].h == 0x20 && ops[i].u == 0 && ops[i].v == 0) have_s1 = 1;
                 if (ops[i].x == 0x10e && ops[i].y == 0x28 && ops[i].w == 0x20 &&
                     ops[i].h == 0x30 && ops[i].u == 0x60 && ops[i].v == 0) have_s2 = 1;
-                if (ops[i].x == r2x && ops[i].y == r2y) have_r2 = 1;
+                (void)r2x; (void)r2y;
             }
             if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 8 && ops[i].h == 8 &&
                 ops[i].u == 224 && ops[i].v == 128 && ops[i].clut == 6)
@@ -1316,22 +1316,49 @@ int main(void)
                 ops[i].u == 112)
                 nscrew++;
         }
-        CHECK(!have_r2, "(5) Rect 2 (= 0x1150, unbesucht) wird NICHT gezeichnet "
-              "(RE2-System: kein Prim fuer unbesuchte Raeume)");
-        /* Besuch markieren -> genau Rect 2 kommt dazu */
+        /* ⛔ GEZAEHLT WIRD IM KASTEN DES ORTES, NICHT AM KACHEL-SPRITE (2026-09-02).
+         * ROOM1150 hat seit dem Umbau auf Grundrisse kein Karten-Rechteck des
+         * Originals mehr; seine Zeichnung sind Flaechen (OP_FILL) aus den
+         * Kollisionszellen. Die AUSSAGE des Falls bleibt genau dieselbe - unbesucht
+         * wird der Raum nicht gezeichnet, nach dem Besuch schon - und sie wird jetzt
+         * an seinem eigenen Kasten geprueft, was zugleich die Gegenprobe mitliefert:
+         * es darf NUR dort etwas dazukommen. */
         {
-            int n2, i2, nmap2 = 0, have_r2b = 0;
+            const re15_map_zone_t *z50 = re15_map_zone_at(0x1150, 0, 0);
+            int kx = 0, ky = 0, kw = 0, kh = 0, n2, i2, vorher = 0, nachher = 0;
+            int fremd_vor = 0, fremd_nach = 0;
+            int hat = z50 && re15_map_zone_synth(z50, &kx, &ky, &kw, &kh, 0, 0);
+            CHECK(hat, "(5) ROOM1150 hat eine Zeichnung auf dem Blatt");
+            for (i = 0; i < n; i++) {
+                if (ops[i].kind != RE15_INV_OP_FILL) continue;
+                if (ops[i].x >= kx && ops[i].x < kx + kw &&
+                    ops[i].y >= ky && ops[i].y < ky + kh) vorher++;
+                else fremd_vor++;
+            }
+            CHECK(vorher == 0, "(5) ROOM1150 unbesucht: in seinem Kasten wird nichts "
+                  "gezeichnet (RE2-System: kein Prim fuer unbesuchte Raeume), sind %d",
+                  vorher);
             re15_map_visited_mark(0x1150);
             n2 = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-            for (i2 = 0; i2 < n2; i2++)
-                if (ops[i2].kind == RE15_INV_OP_SPRT &&
-                    ops[i2].page == RE15_INV_PAGE_MAP4) {
-                    nmap2++;
-                    if (ops[i2].x == r2x && ops[i2].y == r2y) have_r2b = 1;
-                }
-            CHECK(have_r2b && nmap2 == nmap + 1,
-                  "(5) nach Besuch von 0x1150: Rect 2 erscheint, genau +1 Op "
-                  "(vorher %d, jetzt %d)", nmap, nmap2);
+            for (i2 = 0; i2 < n2; i2++) {
+                if (ops[i2].kind != RE15_INV_OP_FILL) continue;
+                if (ops[i2].x >= kx && ops[i2].x < kx + kw &&
+                    ops[i2].y >= ky && ops[i2].y < ky + kh) nachher++;
+                else fremd_nach++;
+            }
+            CHECK(nachher > 0,
+                  "(5) nach Besuch von 0x1150 wird sein Kasten gezeichnet (%d Ops)",
+                  nachher);
+            CHECK(fremd_nach == fremd_vor,
+                  "(5) und NUR seiner: ausserhalb aendert sich nichts (%d -> %d)",
+                  fremd_vor, fremd_nach);
+            { int nmap2 = 0;
+              for (i2 = 0; i2 < n2; i2++)
+                  if (ops[i2].kind == RE15_INV_OP_SPRT &&
+                      ops[i2].page == RE15_INV_PAGE_MAP4) nmap2++;
+              CHECK(nmap2 == nmap,
+                    "(5) an den gemalten Kacheln aendert der Besuch nichts (%d -> %d)",
+                    nmap, nmap2); }
             re15_map_visited_reset();
             n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
             for (i = 0, nmap = 0; i < n; i++)

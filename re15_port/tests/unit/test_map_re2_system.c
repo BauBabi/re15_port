@@ -68,6 +68,25 @@ static int enter(const char *room, uint16_t rid)
     return 1;
 }
 
+/* Der Zustand eines ORTES - genau die Rechnung, die der Zeichner fuer eine
+ * Grundriss-Zeichnung macht (re15_inv_screen.c, Schema-Durchgang).
+ * ⛔ Seit dem Umbau auf Grundrisse (2026-09-02) gibt es fuer die meisten Raeume kein
+ * Karten-Rechteck des Originals mehr, an dem sich ein Zustand ablesen liesse;
+ * re15_map_rect_state faende dort nichts. Die AUSSAGEN dieses Pins - unbesucht wird
+ * nicht gezeichnet, der aktuelle Raum ist rot, nach dem Verlassen gruen, und es
+ * schwappt nicht auf den Nachbarn ueber - sind davon unberuehrt und werden jetzt am
+ * Ort selbst geprueft. */
+static int ort_zustand(unsigned room, int32_t wx, int32_t wz)
+{
+    const re15_map_zone_t *z = re15_map_zone_at(room, wx, wz);
+    const re15_map_zone_t *cur;
+    if (!z) return RE15_MAP_RECT_UNMAPPED;
+    cur = re15_map_zone_current();
+    if (cur && cur->room == z->room && cur->idx == z->idx)
+        return RE15_MAP_RECT_CURRENT;
+    return re15_map_zone_visited(z) ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+}
+
 int main(void)
 {
     printf("=== RE2-Kartensystem: Besucht-Bits + Rect-Zustaende + Save v6 ===\n");
@@ -76,8 +95,8 @@ int main(void)
     re15_map_visited_reset();
     g_current_room_id = 0x9999;   /* kein realer Raum */
     CHECK("nach Reset: 0x1150 unbesucht", re15_map_visited(0x1150) == 0);
-    CHECK("Rect (4,2) [0x1150] = UNVISITED (wird nicht gezeichnet)",
-          re15_map_rect_state(4, 2) == RE15_MAP_RECT_UNVISITED);
+    CHECK("der Ort 0x1150 = UNVISITED (wird nicht gezeichnet)",
+          ort_zustand(0x1150, 0, 0) == RE15_MAP_RECT_UNVISITED);
     CHECK("unzugeordnetes Rect (Index 99 existiert in keiner Tabelle) = UNMAPPED",
           re15_map_rect_state(3, 99) == RE15_MAP_RECT_UNMAPPED);
 
@@ -85,14 +104,14 @@ int main(void)
     if (!enter("STAGE1/ROOM1150.RDT", 0x1150)) { printf("SKIP: 1150 fehlt\n"); return 77; }
     CHECK("scd_room_reenter markiert 0x1150 als besucht (Choke-Point)",
           re15_map_visited(0x1150) == 1);
-    CHECK("Rect (4,2) = CURRENT solange der Spieler drin steht (rot)",
-          re15_map_rect_state(4, 2) == RE15_MAP_RECT_CURRENT);
+    CHECK("der Ort 0x1150 = CURRENT solange der Spieler drin steht (rot)",
+          ort_zustand(0x1150, 0, 0) == RE15_MAP_RECT_CURRENT);
     g_current_room_id = 0x9999;
     re15_map_zone_update(0x9999, 0, 0);             /* Raum ohne Zone -> keine aktuelle */
-    CHECK("nach Verlassen: Rect (4,2) = VISITED (gruen)",
-          re15_map_rect_state(4, 2) == RE15_MAP_RECT_VISITED);
-    CHECK("Nachbar-Rect bleibt UNVISITED (kein Ueberschwappen)",
-          re15_map_rect_state(2, 1) == RE15_MAP_RECT_UNVISITED);
+    CHECK("nach Verlassen: der Ort 0x1150 = VISITED (gruen)",
+          ort_zustand(0x1150, 0, 0) == RE15_MAP_RECT_VISITED);
+    CHECK("der Nachbarraum bleibt UNVISITED (kein Ueberschwappen)",
+          ort_zustand(0x1130, -3000, 0) == RE15_MAP_RECT_UNVISITED);
 
     /* --- (3) ZONEN + ETAGEN am echten Fall ROOM1170 ------------------------------
      *      ⛔ FRUEHER stand hier ROOM1140 mit angeblich ZWEI Bereichen (Zone 0 ->
@@ -107,9 +126,9 @@ int main(void)
      *      Der Pin prueft jetzt den ECHTEN Zwei-Bereichs-Fall. --- */
     g_current_room_id = 0x1140;
     re15_map_zone_update(0x1140, 0, 0);
-    CHECK("ROOM1140 ist aktuell (rot) auf Rect 6",
-          re15_map_rect_state(4, 6) == RE15_MAP_RECT_CURRENT);
-    CHECK("ROOM1140 hat KEINE zweite Zone mehr (Rect 3 gehoert ihm nicht)",
+    CHECK("ROOM1140 ist aktuell (rot)",
+          ort_zustand(0x1140, 0, 0) == RE15_MAP_RECT_CURRENT);
+    CHECK("Rect 3 gehoert ROOM1140 nicht (das ist ROOM1170s Zweitzeichnung)",
           re15_map_rect_state(4, 3) != RE15_MAP_RECT_CURRENT);
 
     /* ROOM1170 hat zwei echte Bereiche, und der zweite reicht ueber Etagen:
@@ -126,12 +145,15 @@ int main(void)
          * und traf damit nichts. */
         pl->y = -3 * 0x708; re15_collision_set_band(3);   /* Hof/Dach, Band 3 */
         re15_map_zone_update(0x1170, 0, 0);
-        CHECK("ROOM1170 Hof ist aktuell auf dem Dach-Blatt (Seite 5 Rect 1)",
-              re15_map_rect_state(5, 1) == RE15_MAP_RECT_CURRENT);
+        CHECK("ROOM1170 Hof ist aktuell auf dem Dach-Blatt (Seite 5)",
+              ort_zustand(0x1170, 0, 0) == RE15_MAP_RECT_CURRENT &&
+              re15_map_zone_current() && re15_map_zone_current()->page == 5);
         pl->y = -4 * 0x708; re15_collision_set_band(4);   /* zweiter Bereich, oberer Korridor */
         re15_map_zone_update(0x1170, -18000, -22000);
-        CHECK("zweiter Bereich bei Band 4: Dach-Blatt, Seite 5 Rect 0",
-              re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
+        CHECK("zweiter Bereich bei Band 4: Dach-Blatt, Seite 5",
+              ort_zustand(0x1170, -18000, -22000) == RE15_MAP_RECT_CURRENT &&
+              re15_map_zone_current() && re15_map_zone_current()->page == 5 &&
+              re15_map_zone_current()->idx == 1);
         pl->y = 0; re15_collision_set_band(0);            /* unterste Ebene, Band 0 */
         re15_map_zone_update(0x1170, -18000, -22000);
         CHECK("zweiter Bereich bei Band 0: 3F-Blatt, Seite 4 Rect 3",
@@ -268,9 +290,36 @@ int main(void)
                 ops[i].page == RE15_INV_PAGE_MAP4) first_rect = i;
         }
         CHECK("der Karten-Schirm zeichnet Marken (OP_FILL in Marken-Farbe)", first_mark >= 0);
-        CHECK("der Karten-Schirm zeichnet Grundriss-Rechtecke", first_rect >= 0);
-        CHECK("Marken liegen VOR den Rechtecken (= obenauf, sichtbar)",
-              first_mark >= 0 && first_rect >= 0 && first_mark < first_rect);
+        /* ⛔ DIE ZEICHNUNG EINES RAUMS IST KEIN SPRITE MEHR (2026-09-02). Die Orte
+         * werden seit dem Umbau als Flaechen (OP_FILL) aus ihren Kollisionszellen
+         * gezeichnet, nicht mehr als Kachel-Sprite der MAP-Seite - die alte Suche nach
+         * einem SPRT fand auf einem reinen Grundriss-Blatt gar nichts und der Pin
+         * pruefte die Reihenfolge gegen -1.
+         * Die AUSSAGE bleibt: eine Marke muss OBEN liegen, also auf dem Raum, in dem
+         * sie sitzt. Die Op-Liste wird von HINTEN gerastert (inv_render_pc.c:
+         * for (i = n-1; i >= 0; i--)), frueher heisst also weiter oben. Geprueft wird
+         * deshalb, dass unter der ersten Marke eine SPAETERE Flaeche liegt, die ihre
+         * Stelle bedeckt. */
+        {
+            int unten = -1, j;
+            if (first_mark >= 0)
+                for (j = first_mark + 1; j < nops; j++) {
+                    if (ops[j].kind != RE15_INV_OP_FILL) continue;
+                    if (ops[j].w <= 7 && ops[j].h <= 7) continue;   /* selbst eine Marke */
+                    if (ops[first_mark].x < ops[j].x ||
+                        ops[first_mark].x >= ops[j].x + ops[j].w) continue;
+                    if (ops[first_mark].y < ops[j].y ||
+                        ops[first_mark].y >= ops[j].y + ops[j].h) continue;
+                    unten = j; break;
+                }
+            printf("  [Deckung] Marke #%d bei (%d,%d), darunter Flaeche #%d\n",
+                   first_mark, first_mark >= 0 ? ops[first_mark].x : -1,
+                   first_mark >= 0 ? ops[first_mark].y : -1, unten);
+            CHECK("der Karten-Schirm zeichnet Raumflaechen oder Rechtecke",
+                  unten >= 0 || first_rect >= 0);
+            CHECK("die Marke liegt VOR ihrer Raumflaeche (= obenauf, sichtbar)",
+                  unten > first_mark);
+        }
         CHECK("der Karten-Schirm zeichnet den Spieler-Marker", first_marker >= 0);
         CHECK("der Spieler-Marker liegt VOR den Marken (= ganz oben)",
               first_marker >= 0 && first_mark >= 0 && first_marker < first_mark);

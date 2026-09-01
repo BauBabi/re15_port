@@ -33,27 +33,43 @@ int main(void)
     re15_map_debug_reveal_page(5);
     re15_map_debug_reveal_page(4);
 
+    /* GEZAEHLT WIRD JETZT JE BLATT, NICHT JE RECHTECK (2026-09-02).
+     * Seit dem Umbau auf Grundrisse traegt die Marke ihres Ortes die Kennung
+     * rect = 255 - ein Filter auf "Seite 5 Rect 0" faende gar nichts mehr. Die
+     * Aussage des Pins ist davon unberuehrt, denn Seite 5 (ROOF) enthaelt genau
+     * ROOM1170s beide Orte und sonst nichts; das Blatt IST also der Bereich.
+     * Fuer die Zweitzeichnung auf 3F bleibt Rect 3 gueltig - dorthin legt
+     * blatt_fuer_band die Marken der unteren Baender, eingepasst in das Rechteck
+     * des Kuenstlers. */
     n = re15_map_mark_count();
     for (k = 0; k < n; k++) {
-        int pg, r, mx, my, kind;
+        int pg, r, mx, my, kind, zid = 0, zid2 = 255;
         if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
-        if (pg == 5 && r == 0) { if (kind >= 4) roof_treppen++; else roof_tueren++; }
-        if (pg == 4 && r == 3) { if (kind >= 4) f3_treppen++;  else f3_tueren++;  }
+        re15_map_mark_zonen(k, &zid, &zid2);
+        if (pg == 5) {
+            if (kind >= 4) roof_treppen++;
+            /* Eine Tuer, die BEIDE Orte von ROOM1170 verbindet, ist die Selbst-Tuer
+             * zwischen Hof und oberem Absatz - die gehoert aufs Dach. Gezaehlt wird
+             * nur, was nach DRAUSSEN fuehrt. */
+            else if (zid2 == 255) roof_tueren++;
+        }
+        if (pg == 4 && r == 3) { if (kind >= 4) f3_treppen++; else f3_tueren++; }
     }
-    printf("  [ROOF Seite 5 Rect 0] %d Tueren, %d Treppen\n", roof_tueren, roof_treppen);
-    printf("  [3F   Seite 4 Rect 3] %d Tueren, %d Treppen\n", f3_tueren, f3_treppen);
+    printf("  [ROOF Seite 5] %d Tueren nach draussen, %d Treppen\n",
+           roof_tueren, roof_treppen);
+    printf("  [3F Seite 4 Rect 3] %d Tueren, %d Treppen\n", f3_tueren, f3_treppen);
 
-    /* Die beiden Band-0-Tueren duerfen NICHT mehr auf dem Dach stehen. Auf dem Dach
-     * liegt von diesem Bereich nur die Band-4-Tuer — und die wird mit ROOM1170s erstem
-     * Bereich zu EINEM Symbol zusammengefuehrt und dort gezeichnet (Seite 5 Rect 1),
-     * also traegt Rect 0 gar keine Tuermarke mehr. */
     CHECK("das ROOF-Blatt traegt keine Tuer des unteren Bereichs mehr", roof_tueren == 0);
-    /* Die Treppe verbindet ROOF und 3F und muss auf BEIDEN erscheinen. */
     CHECK("die Treppe erscheint auf dem ROOF-Blatt", roof_treppen > 0);
     CHECK("die Treppe erscheint auch auf dem 3F-Blatt", f3_treppen > 0);
-    /* Gegenprobe, dass der Bereich auf 3F ueberhaupt gezeichnet wird. */
-    CHECK("Seite 4 Rect 3 ist bekannt (der Bereich wird auf 3F gezeichnet)",
-          re15_map_rect_state(4, 3) != RE15_MAP_RECT_UNMAPPED);
+    /* Gegenprobe: ohne sie waere "keine Tuer nach draussen" auch dann erfuellt,
+     * wenn Seite 5 ueberhaupt keine Marke traegt. */
+    CHECK("Seite 5 traegt ueberhaupt Marken", roof_treppen > 0);
+    {   /* Und dass ROOM1170s zweiter Ort auf 3F ueber eine Etagen-Zeile haengt. */
+        int fp = -1, fr = -1;
+        CHECK("ROOM1170s zweiter Ort ist auf 3F als Etagen-Zeichnung gefuehrt",
+              re15_map_floor_lookup(0x1170, 1, 0, &fp, &fr) && fp == 4);
+    }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;

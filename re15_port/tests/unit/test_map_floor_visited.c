@@ -51,13 +51,33 @@ int main(void)
      * Der Kuenstler hat das Treppenhaus nur auf 1F und 2F gezeichnet, die Kabine auf
      * 1F, 2F UND 3F. */
     {
+        /* GEPRUEFT WIRD JETZT DIE GROESSE, NICHT DIE RECHTECK-NUMMER (2026-09-02).
+         * Seit dem Umbau auf Grundrisse gibt es keine Zuordnung "ROOM1060 -> Seite 2
+         * Rect 8" mehr; jeder Ort wird aus seinen eigenen Kollisionszellen gezeichnet.
+         * Die MESSUNG, aus der die alte Zuordnung stammte, gilt unveraendert weiter und
+         * wird hier direkt geprueft: das Treppenhaus ROOM1060 misst 11100 x 12750
+         * Welteinheiten, die Fahrstuhlkabine ROOM1080 nur 6200 x 6100 - die Zeichnung
+         * des Treppenhauses MUSS also die groessere sein. Genau darum ging es dem
+         * Nutzer: "In ROOM 1120 haette ich das Treppenhaus rechts erwartet, nicht
+         * darueber. Da haette ich den Fahrstuhl erwartet." */
         const re15_map_zone_t *z60 = re15_map_zone_at(0x1060, 27100, 25400);
         const re15_map_zone_t *z80 = re15_map_zone_at(0x1080, 0, 0);
-        CHECK("ROOM1060 (Treppenhaus) liegt auf dem GROSSEN Kasten, Seite 2 Rect 8",
-              z60 && z60->page == 2 && z60->rect == 8);
-        CHECK("ROOM1080 (Fahrstuhl) liegt auf dem KLEINEN Kasten, Seite 2 Rect 9",
-              z80 && z80->page == 2 && z80->rect == 9);
+        int a60[4] = {0,0,0,0}, a80[4] = {0,0,0,0};
+        int ok60 = z60 && re15_map_zone_synth(z60, &a60[0], &a60[1], &a60[2], &a60[3], 0, 0);
+        int ok80 = z80 && re15_map_zone_synth(z80, &a80[0], &a80[1], &a80[2], &a80[3], 0, 0);
+        if (ok60 && ok80)
+            printf("  [Kaesten] ROOM1060 %dx%d, ROOM1080 %dx%d\n",
+                   a60[2], a60[3], a80[2], a80[3]);
+        CHECK("beide liegen auf dem 1F-Blatt (Seite 2)",
+              z60 && z80 && z60->page == 2 && z80->page == 2);
+        CHECK("beide haben eine eigene Zeichnung", ok60 && ok80);
+        CHECK("ROOM1060 (Treppenhaus) ist die GROESSERE Zeichnung",
+              ok60 && ok80 && a60[2] * a60[3] > a80[2] * a80[3]);
+        /* Gegenprobe: es sind wirklich zwei verschiedene Orte, nicht zweimal derselbe. */
+        CHECK("es sind zwei verschiedene Orte",
+              z60 && z80 && !(z60->room == z80->room && z60->idx == z80->idx));
     }
+
 
     /* (1) Nichts besucht: das Treppenhaus ist auf dem 2F-Blatt noch nicht bekannt. */
     CHECK("frisch: Seite 3 Rect 8 ist nicht besucht",
@@ -92,8 +112,9 @@ int main(void)
      *     weggenommen hatten. Der Pin ist deshalb auf zwei Rechtecke umgestellt, die
      *     JETZT herrenlos sind - die Schranke bleibt dieselbe. */
     {
-        static re15_inv_op_t ops[768];
-        int nops, i, gemalt = 0, erlaubt = 0, grau_grundriss = 0;
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int nops, i, k, nz, gemalt = 0, offen = 0, grau_grundriss = 0;
+        int falsch_gemalt = 0, nicht_gemalt = 0;
         stelle(0x1060, 18000, 28000, 0);            /* Treppenhaus, 1F */
         re15_inv_map_stage_init(0, 6);
         re15_inv_screen_open();
@@ -103,34 +124,71 @@ int main(void)
               re15_map_rect_state(2, 0) == RE15_MAP_RECT_UNMAPPED);
         CHECK("Seite 2 Rect 5 hat keinen Besitzer",
               re15_map_rect_state(2, 5) == RE15_MAP_RECT_UNMAPPED);
-        for (i = 0; i < 11; i++) {
-            int rs = re15_map_rect_state(2, (unsigned)i);
-            if (rs == RE15_MAP_RECT_VISITED || rs == RE15_MAP_RECT_CURRENT) erlaubt++;
-        }
-        nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
+        nops = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
         for (i = 0; i < nops; i++) {
-            int r_, g_, b_;
             if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_MAP4)
                 continue;
-            r_ = ops[i].r; g_ = ops[i].g; b_ = ops[i].b;
-            /* Nur besucht/aktuell zaehlen. Der Stock-Neutralton 128/128/128 taugt
-             * hier NICHT als Merkmal: Titelkachel (30,30,88,32) und Legende
-             * (270,40,32,48) liegen auf derselben Seite und tragen denselben Wert -
-             * deshalb werden die Grauen an ihrer GEOMETRIE geprueft. */
-            if ((r_ == 40 && g_ == 144 && b_ == 40) ||
-                (r_ == 192 && g_ == 24 && b_ == 24))
-                gemalt++;
-            else if (r_ == 128 && g_ == 128 && b_ == 128) {
+            if (ops[i].r == 128 && ops[i].g == 128 && ops[i].b == 128) {
                 if ((ops[i].x == 180 && ops[i].y == 69 && ops[i].w == 32 && ops[i].h == 96) ||
                     (ops[i].x == 180 && ops[i].y == 59 && ops[i].w == 48 && ops[i].h == 32))
                     grau_grundriss++;
             }
         }
-        printf("  [Seite 2] %d Rechtecke gemalt, %d zustands-erlaubt, %d grau\n",
-               gemalt, erlaubt, grau_grundriss);
-        CHECK("es wird genau so viel gemalt, wie besucht/aktuell ist", gemalt == erlaubt);
-        CHECK("und es wird ueberhaupt etwas gemalt", gemalt > 0);
+        /* GEZAEHLT WIRD JETZT JE ORT (2026-09-02). Frueher wurden die gemalten
+         * Kachel-Sprites gezaehlt; die Orte werden seit dem Umbau als Flaechen (FILL)
+         * gezeichnet, die Zahl der Ops sagt also nichts mehr ueber die Zahl der
+         * Raeume. Geprueft wird stattdessen fuer JEDEN Ort des Blattes einzeln, ob in
+         * seinem Kasten etwas liegt - und die Antwort muss seinem Besucht-Zustand
+         * entsprechen. Kaesten, die einen besuchten Nachbarn ueberschneiden, werden
+         * uebergangen: dort ist die Frage nicht entscheidbar (die Blaetter tragen
+         * 0-4 % Ueberlappung). */
+        nz = re15_map_zone_count();
+        for (k = 0; k < nz; k++) {
+            const re15_map_zone_t *zn = re15_map_zone_by_index(k);
+            int x, y, w, h, j, drin = 0, ueberdeckt = 0, sichtbar;
+            if (!zn || zn->page != 2) continue;
+            if (!re15_map_zone_synth(zn, &x, &y, &w, &h, 0, 0)) continue;
+            sichtbar = re15_map_zone_visited(zn);
+            for (j = 0; j < nz; j++) {
+                const re15_map_zone_t *zo = re15_map_zone_by_index(j);
+                int ox, oy, ow, oh;
+                if (!zo || zo == zn || zo->page != 2) continue;
+                if (zo->room == zn->room && zo->idx == zn->idx) continue;
+                if (!re15_map_zone_synth(zo, &ox, &oy, &ow, &oh, 0, 0)) continue;
+                if (!re15_map_zone_visited(zo)) continue;
+                if (ox < x + w && x < ox + ow && oy < y + h && y < oy + oh)
+                    ueberdeckt = 1;
+            }
+            /* GEPRUEFT WIRD DIE EIGENE ZELLE, NICHT DER KASTEN. Ein erster Wurf
+             * zaehlte jeden FILL im Kasten - und fand dort auch Tuermarken und die
+             * eingepasste Zweitzeichnung einer anderen Etage, also 2 angeblich
+             * faelschlich gezeichnete Orte. Eine Zelle des Ortes wird dagegen mit
+             * genau ihrer Geometrie ausgegeben (re15_inv_screen.c, Schema-Durchgang),
+             * ist also eindeutig seine. */
+            {
+                int erste = 0, nzell = 0, c;
+                re15_map_zone_synth(zn, &x, &y, &w, &h, &erste, &nzell);
+                for (c = 0; c < nzell && !drin; c++) {
+                    int cx, cy, cw, ch;
+                    if (!re15_map_synth_cell(erste + c, &cx, &cy, &cw, &ch)) continue;
+                    for (i = 0; i < nops; i++) {
+                        if (ops[i].kind != RE15_INV_OP_FILL) continue;
+                        if (ops[i].x == cx && ops[i].y == cy &&
+                            ops[i].w == cw && ops[i].h == ch) { drin = 1; break; }
+                    }
+                }
+            }
+            if (sichtbar) { offen++; if (drin) gemalt++; else nicht_gemalt++; }
+            else if (!ueberdeckt && drin) falsch_gemalt++;
+        }
+        printf("  [Seite 2] %d besuchte Orte, davon %d gezeichnet; "
+               "%d unbesuchte faelschlich gezeichnet; %d graue Rechtecke\n",
+               offen, gemalt, falsch_gemalt, grau_grundriss);
+        CHECK("jeder besuchte Ort wird gezeichnet", nicht_gemalt == 0);
+        CHECK("kein unbesuchter Ort wird gezeichnet", falsch_gemalt == 0);
+        CHECK("und es wird ueberhaupt etwas gezeichnet", gemalt > 0);
         CHECK("kein unzugeordnetes Rechteck wird grau gemalt", grau_grundriss == 0);
+
     }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
