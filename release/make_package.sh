@@ -458,12 +458,30 @@ fi
 # damit das nicht zurueckkehrt, macht dieses Skript den Austausch selbst.
 if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev/null 2>&1; then
     echo "== Git: alte Pakete austauschen =="
+    # ⛔ NUR DIE EIGENE PLATTFORM AUFRAEUMEN.
+    # Die Schleife loeschte bis v0.3.81 JEDE getrackte Datei release/re15_port_v0*, die
+    # nicht mit dem aktuellen NAME beginnt - und NAME traegt die Version, nicht die
+    # Plattform. Ein Lauf mit `--only win` hat damit jedes Mal auch das LINUX-/DECK-Paket
+    # aus dem Repo geworfen, obwohl es gar nicht neu gebaut wurde. Genau so verschwand
+    # re15_port_v0.3.69_linux_steamdeck_x64.* am 2026-08-31 in 47391207 (v0.3.70), und
+    # seitdem hat jede reine Windows-Auslieferung den Zustand fortgeschrieben.
+    # Jetzt raeumt ein Lauf nur die Pakete SEINER Plattformen weg; die andere bleibt
+    # unangetastet stehen, bis sie selbst neu gebaut wird.
+    plattformen=()
+    [[ "$ONLY" == "both" || "$ONLY" == "linux" ]] && plattformen+=("linux_steamdeck_x64")
+    [[ "$ONLY" == "both" || "$ONLY" == "win"   ]] && plattformen+=("win64")
+    behalten() {                       # 0 = darf bleiben
+        local b="$1" p
+        case "$b" in "${NAME}"_*) return 0 ;; esac    # die AKTUELLE Version bleibt
+        for p in "${plattformen[@]}"; do
+            case "$b" in *_"$p".z*) return 1 ;; esac  # eigene Plattform, alte Version
+        done
+        return 0                                      # fremde Plattform: NICHT anfassen
+    }
     alt=0
     while IFS= read -r f; do
         [[ -n "$f" ]] || continue
-        case "$(basename "$f")" in
-            "${NAME}"_*) continue ;;          # die AKTUELLE Version bleibt
-        esac
+        behalten "$(basename "$f")" && continue
         git -C "$HERE/.." rm --cached --quiet -- "$f" 2>/dev/null && alt=$((alt+1))
         rm -f "$HERE/../$f"                   # auch lokal weg, sonst waechst release/ endlos
     done < <(git -C "$HERE/.." ls-files -- 'release/re15_port_v0*')
@@ -471,9 +489,7 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
     # weiter (die Schleife oben sieht nur, was Git kennt).
     for f in "$HERE"/re15_port_v0*.z*; do
         [[ -f "$f" ]] || continue
-        case "$(basename "$f")" in
-            "${NAME}"_*) continue ;;
-        esac
+        behalten "$(basename "$f")" && continue
         rm -f "$f" && alt=$((alt+1))
     done
     neu=0

@@ -47,5 +47,16 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && RUNNER=docke
 }
 
 echo "== Bauen in $RUNNER ($IMAGE) =="
-exec "$RUNNER" run --rm -v "$REPO:/src" -w /src "$IMAGE" \
+# ⛔ GIT-BASH SCHREIBT UNIX-PFADE IN ARGUMENTEN UM. Aus `-w /src` wird dort
+# `C:/Program Files/Git/src`, und Docker bricht mit "working directory ... is invalid"
+# ab (gemessen 2026-09-01). MSYS_NO_PATHCONV=1 schaltet das ab; zusaetzlich braucht die
+# Volume-Quelle unter Windows einen Windows-Pfad. Auf Linux/Deck aendert beides nichts.
+MOUNT="$REPO"
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*)
+        command -v cygpath >/dev/null 2>&1 && MOUNT="$(cygpath -w "$REPO")"
+        export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'
+        ;;
+esac
+exec "$RUNNER" run --rm -v "${MOUNT}:/src" -w /src "$IMAGE" \
     bash /src/release/docker_linux_build.sh
