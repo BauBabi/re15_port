@@ -704,6 +704,16 @@ def main():
                               ((zp, i) == (pg0, r0) or (zp, i) not in belegte_rects)]
                 if len(treffer) != 1: continue
                 floors.append((b, zi, band, zp, treffer[0]))
+    # ⛔ EINE EINZELNE ETAGEN-ZEILE IST KEINE ETAGEN-UMSCHALTUNG. Bleibt fuer einen
+    # Bereich nur EINE Zeile uebrig (weil die anderen Baender an der Rechteck-Vergabe
+    # gescheitert sind), beschreibt sie keine zweite Zeichnung - sie beansprucht nur ein
+    # fremdes Rechteck. ROOM10A0 kam so zu einer Zeile auf Seite 2 Rect 9, und das ist
+    # ROOM1060s Zeichnung: das Treppenhaus waere aufgeleuchtet, sobald der Spieler in
+    # 10A0 auf Band 8 steht. Solche Einzelzeilen fliegen raus; die Zone hat ohnehin ihre
+    # eigene Seite/Rect.
+    _grp = {}
+    for e in floors: _grp.setdefault((e[0], e[1]), set()).add((e[3], e[4]))
+    floors = [e for e in floors if len(_grp[(e[0], e[1])]) >= 2]
     # ---- MARKEN: Treppen, in Karten-Koordinaten vorberechnet ------------------
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
