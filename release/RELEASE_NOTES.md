@@ -1,3 +1,45 @@
+# RE1.5 Port — v0.3.84 (Early Preview)
+
+**Die Karte ist neu gebaut — als Grundriss, nicht mehr als Kachel-Puzzle.**
+
+Du hattest recht mit deinem Modell: *"ein neues Kartenstück schließt in der Map genau
+da an, wo man den Raum davor durch die Tür verlassen hat."* Genau so wird die Karte
+jetzt gerechnet. Jeder Ort wird aus seinen echten Kollisionsdaten gezeichnet und über
+den Tür-Datensatz an seinen Nachbarn geheftet. Die **Original-Tür- und
+Treppensymbole** sitzen weiterhin auf den Wänden — nur liegen sie jetzt auf einer
+Zeichnung, die zum Raum passt.
+
+| | vorher | jetzt |
+|---|---|---|
+| Orte mit einer Zeichnung | 33 von 112 | **112 von 112** |
+| Durchgänge, die aneinander stoßen | — | **85 von 89** |
+
+Der Fall aus deinem Bericht — *"im Room 1120 lande ich plötzlich auf der falschen
+Seite, wenn ich vom ROOM 1130 aus reinkomme"*: der Punkt, an dem du in ROOM1120
+erscheinst, liegt jetzt **2 Pixel** neben der Tür, durch die du gekommen bist. Zur
+Gegenprobe: die andere Tür desselben Raums liegt 21 Pixel weg — es fällt also nicht
+einfach alles auf einen Punkt zusammen.
+
+**Was dabei sonst noch schiefstand und jetzt stimmt**
+
+* Die Kollisionsdaten beschreiben den **begehbaren Weg**, nicht den Raum. ROOM1120
+  besteht aus elf schmalen Streifen — dem Gang um die Möbel herum. Ungefüllt sah ein
+  Büro aus wie ein Labyrinth. Eingeschlossene Flächen werden jetzt geschlossen.
+* Ein Raum ist nicht immer **ein Ort**. Vorher wurden alle Bereiche eines Raums zu
+  einem Klumpen: die Fahrstuhlkabine war doppelt so groß wie in Wirklichkeit, und
+  ROOM1140s zwei Bereiche trugen dieselbe Zeichnung.
+* Ein Kartenblatt zerfällt oft in **mehrere getrennte Gruppen** von Räumen. Bisher
+  wurde nur die erste gesetzt — auf einem Blatt 3 von 11 Räumen. Jetzt liegen alle.
+* Die Umrandung folgt der **Raumform**, nicht mehr einem Kasten drumherum. Der Kasten
+  verdeckte die Form und ließ Nachbarräume übereinanderliegen, obwohl sie es nicht tun.
+
+Das ist ausdrücklich eine **Abweichung vom Original**, die du am 01.09. freigegeben hast:
+die handgemalte Karte des Prototyps ist unfertig (nur 33 von 72 Kartenräumen tragen
+überhaupt eine Maßstabszeile) und nicht maßstabsgetreu zur Spielwelt. Die
+**Symbole** sind original, die **Anordnung** ist gerechnet.
+
+---
+
 # RE1.5 Port — v0.3.69 (Early Preview)
 
 **Etagenwechsel hinter der Treppe.** Ein Raum kann über zwei Ebenen reichen — ROOM1170s
