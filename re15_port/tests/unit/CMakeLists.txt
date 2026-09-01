@@ -571,6 +571,11 @@ target_link_libraries(test_map_floor_visited PRIVATE re15_engine re15_test_suppo
 target_include_directories(test_map_floor_visited PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_map_floor_visited COMMAND test_map_floor_visited)
 
+add_executable(test_map_mark_band test_map_mark_band.c)
+target_link_libraries(test_map_mark_band PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_mark_band PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_map_mark_band COMMAND test_map_mark_band)
+
 
 # --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
 add_executable(test_room1150_itembox test_room1150_itembox.c)

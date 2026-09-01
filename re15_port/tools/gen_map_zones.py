@@ -714,6 +714,35 @@ def main():
     _grp = {}
     for e in floors: _grp.setdefault((e[0], e[1]), set()).add((e[3], e[4]))
     floors = [e for e in floors if len(_grp[(e[0], e[1])]) >= 2]
+
+    # ---- BLATT EINER MARKE FOLGT IHREM EIGENEN BAND ---------------------------
+    # ⛔ Nutzer 2026-09-01: "Bei ROOM 1170 zeigt er die Tuer, die eigentlich fuer die
+    # Etage unten gedacht ist, bereits bei der Roof-Etage an."
+    # Gemessen: ROOM1170s zweiter Bereich fuehrt DREI Tueren - zwei mit Band 0
+    # (-> ROOM1130 und ROOM1140, beide auf dem 3F-Blatt) und eine mit Band 4
+    # (-> ROOM1170 selbst, ROOF). Das Band steht im Aot_set-Datensatz der Tuer,
+    # pc[4] = obj[0x82]; das Original gattet die Tuer-Interaktion darauf
+    # (FUN_8002bd44 @0x8002bf38). Der Port hatte alle Marken auf die Seite der ZONE
+    # gelegt (ROOF) und sie von dort auf die Etagenblaetter kopiert - die beiden
+    # 3F-Tueren standen damit auf dem Dach.
+    # Jetzt bestimmt das Band der Marke ihr Blatt. Fuer eine Treppe faellt das von
+    # selbst richtig: sie liegt als ZWEI Datensaetze vor, einer je Ende, und jedes
+    # Ende traegt sein eigenes Band - also erscheint sie auf beiden Etagen, die sie
+    # verbindet, ohne Sonderregel.
+    etagen_der_zone = {}
+    for (froom, fzi, fband, fpg, fr) in floors:
+        etagen_der_zone.setdefault((froom, fzi), []).append((fband, fpg, fr))
+
+    def blatt_fuer_band(room, zi, band):
+        """(Seite, Rect) fuer dieses Band - oder None, wenn die Zone keine Etagen hat."""
+        e = etagen_der_zone.get((room, zi))
+        if not e or len(e) < 2: return None
+        best = None; bestd = None
+        for (fband, fpg, fr) in e:
+            d = abs(fband - band)
+            if bestd is None or d < bestd: best, bestd = (fpg, fr), d
+        return best
+
     # ---- MARKEN: Treppen, in Karten-Koordinaten vorberechnet ------------------
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
@@ -864,6 +893,14 @@ def main():
                     mp = to_map(b, zi, wx, wz)
                     if not mp: continue
                     pg, r, mx, my = mp
+                # Blatt nach dem BAND der Marke (siehe blatt_fuer_band): eine Zone, die
+                # ueber mehrere Etagen gezeichnet ist, verteilt ihre Marken auf die
+                # Etagen, statt alle auf ihrer Vorgabeseite zu sammeln.
+                _bl = blatt_fuer_band(b, zi, m.get('band', 0))
+                if _bl and _bl != (pg, r):
+                    _R0 = rects(pg)[r]; _R1 = rects(_bl[0])[_bl[1]]
+                    mx += _R1[0] - _R0[0]; my += _R1[1] - _R0[1]
+                    pg, r = _bl
                 if kind == 0:
                     # ---- WANDACHSE AUS DEM TUER-RECHTECK ---------------------
                     # Das Trigger-Rechteck ist LAENGS DER WAND gestreckt: man laeuft
@@ -957,27 +994,13 @@ def main():
     # identisch (ROOM1170s zweiter Bereich: Seite 5 Rect 0 und Seite 4 Rect 3
     # unterscheiden sich in 22 von 1152 Pixeln, alle Tuersymbole), der Versatz ist
     # deshalb exakt die Differenz der Rechteck-Ecken.
+    # ---- (ENTFALLEN) MARKEN AUF DIE ZWEIT-ZEICHNUNG MITNEHMEN -----------------
+    # Bis v0.3.80 wurden hier alle Marken einer Zone auf jedes Etagenblatt kopiert, auf
+    # dem die Zone gezeichnet ist. Das war die Ursache dafuer, dass ROOM1170s beide
+    # 3F-Tueren auf dem ROOF-Blatt standen (Nutzer 2026-09-01). Seit die Marke ueber ihr
+    # eigenes Band auf ihr Blatt geht (blatt_fuer_band), ist die Kopie nicht nur
+    # ueberfluessig, sondern wuerde die Doppelung wieder herstellen.
     zusatz = []
-    for v in vor:
-        if v.get('weg'): continue
-        for (froom, fzi, fband, fpg, fr) in floors:
-            if froom != v['room'] or fzi != v['zi']: continue
-            if (fpg, fr) == (v['pg'], v['r']): continue
-            R0 = rects(v['pg'])[v['r']]; R1 = rects(fpg)[fr]
-            nx = v['mx'] + (R1[0] - R0[0]); ny = v['my'] + (R1[1] - R0[1])
-            # ⛔ AUF DEM ZWEIT-BLATT ERNEUT GEGEN DIE KACHEL PRUEFEN. Die Kacheln zweier
-            # Blaetter sind NICHT identisch: MAP05 uv(192,16) traegt zwei Tuernischen,
-            # MAP06 uv(192,16) nicht (22 von 1152 Pixeln Unterschied). Wer die Marke
-            # blind mitkopiert, malt auf dem Zweit-Blatt eine zweite Tuer ueber die
-            # bereits gemalte - genau die Doppelungen, die der Nutzer in ROOM1130 und
-            # ROOM1140 gesehen hat (Kachel x163..167/y90..94 gegen Port x162..166/y89..94).
-            # (kind ist 0 = Tuer, 1 = Treppe - NICHT die Wandseite; die steht in
-            # 'seite'. Ein erster Anlauf pruefte 'kind <= 3' und traf damit auch
-            # jede Treppe, worauf ALLE 46 Kopien wegfielen und ROOM1170s zweiter
-            # Bereich auf dem 3F-Blatt voellig leer blieb.)
-            if v['kind'] == 0 and kachel_zeigt_tuer(fpg, fr, nx, ny):
-                continue
-            zusatz.append(dict(v, pg=fpg, r=fr, mx=nx, my=ny))
     vor.extend(zusatz)
 
     seen = set()
