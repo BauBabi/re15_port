@@ -89,6 +89,7 @@ int re15_map_page_known(unsigned page);
 int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h,
                         int *erste, int *n);   /* Schema-Zeichnung, 0 = keine */
 int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
+int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h);
 int re15_map_zone_count(void);
 const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */

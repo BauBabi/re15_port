@@ -220,6 +220,23 @@ int re15_inv_screen_condition(int hp, int poisoned)
 /* ==================================================================================== */
 
 uint8_t re15_inv_map_room(void) { return s_map_room; }
+/* Geometrie eines gemalten Karten-Rechtecks aus dem Seiten-Paar @0x80076840
+ * (count + Listenzeiger, 12 B je Eintrag {s16 x,y,w,h; u8 u,_,v,_}). Fuer Pruefungen
+ * und fuer den Zeichner der Schema-Zonen, die nicht aus dieser Tabelle stammen. */
+int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h)
+{
+    uint32_t lp, a;
+    if (page > 12) return 0;
+    if (rect >= (unsigned)mu16(0x80076840u + page * 8u)) return 0;
+    lp = mu32(0x80076844u + page * 8u);
+    a  = lp + rect * 12u;
+    if (x) *x = (int16_t)mu16(a);
+    if (y) *y = (int16_t)mu16(a + 2u);
+    if (w) *w = (int16_t)mu16(a + 4u);
+    if (h) *h = (int16_t)mu16(a + 6u);
+    return 1;
+}
+
 uint8_t re15_inv_map_page(void) { return s_map_page; }
 
 /* Die TATSAECHLICH gezeigte Kartenseite. Sie folgt dem BEREICH, in dem der Spieler
