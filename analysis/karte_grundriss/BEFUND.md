@@ -477,3 +477,86 @@ die Wand an, überlappt die Wand also."* Wo ein Rundweg im Türgraph nicht schli
 **Offen:** 18 von 102 Übergängen über 8 px — die Ringe, die auch die Nachbesserung nicht
 schließt. Ein Markenpaar liegt noch aufeinander (zwei Durchgänge in denselben Raum, für
 die längs der Wand kein Platz mehr war).
+
+## §10 — Nutzer-Report 2026-09-02: „Türen durch die Bank falsch platziert"
+
+> „Die Türen sind durch die Bank weg alle falsch platziert, und oftmals machst du so
+> große sprünge.... Nach dem Durchgehen der Tür ist man in der Mitte des Raumes in ein
+> Rechteck das nicht an das vorherige anschließt."
+
+### Ursache 1 — die Laufzeit wählte das Türsymbol nach NÄHE
+
+`tuer_anziehen()` zog den Marker auf „die nächstgelegene sichtbare Marke auf dem Blatt".
+Nähe ist keine Identität: ein Raum hat bis zu sieben Türen.
+
+Gemessen über alle 261 Türen im Zugbereich einer Marke:
+
+| Befund | Anzahl | Anteil |
+|---|---|---|
+| zog auf ein **fremdes** Symbol | 70 | 27 % |
+| hatte **gar keine** eigene Marke | 62 | 24 % |
+| **zusammen falsch** | **132** | **51 %** |
+
+Versatz zum richtigen Symbol: Median 13 px, schlimmster 81 px. Live sichtbar daran, dass
+drei **verschiedene** Räume (4080, 4090, 40A0) denselben Markerpixel (212,140) meldeten.
+
+Behoben: die Tür kennt ihr Ziel (`door_params` → `dest_stage`/`dest_room`), die Marke
+kennt ihre beiden Zonen (`re15_map_mark_zonen`). Gesucht wird die Marke, die **meine**
+Zone mit einer Zone des **Zielraums** verbindet — eindeutig, ohne jeden Abstand.
+77 % lösen so exakt auf, der Rest über die ungepaarte Marke der eigenen Zone.
+Dazu zwei Folgefehler: die Schleife nahm den *ersten* Tür-AOT im Zugbereich, und eine
+Fehlanzeige machte `return` statt `continue`.
+
+### Ursache 2 — die Marke entstand aus ZWEI getrennten Projektionen
+
+Jeder Raum projizierte seinen eigenen Türdatensatz und schnappte ihn an die *nächste*
+Wand **seines** Rechtecks. Gemessen: der Türpunkt liegt im Median 3 px von der nächsten
+Wand, aber nur 4 px vor der **zweitnächsten**; bei 23 % beträgt der Vorsprung ≤ 1 px.
+„Nächste Wand" ist dort ein Münzwurf. Folge: **58 %** der Symbole lagen auf einer anderen
+Wand als der, an der der Löser die beiden Räume verheftet hat.
+
+Behoben: die Marke wird aus der **Berührung der beiden Rechtecke** bestimmt. Längs der
+Wand gilt das Mittel der beiden **rohen** Projektionen — beide Räume projizieren dieselbe
+Tür unabhängig und stimmen auf 0–1 px überein (ROOM1000↔1050: 144/143, 164/164, 167/167).
+Ergebnis: **97 %** der gepaarten Marken sitzen auf der Überdeckung beider Rechtecke
+(Median 0 px, max 3 px).
+
+⛔ Nur eine **dünne** Überdeckung (≤ 4 px) ist eine Wand. Wo zwei Rechtecke großflächig
+überlappen (bis 31 %), gibt es keine gemeinsame Wandlinie; „Mitte der Überdeckung" legte
+das Symbol dort quer durch den Raum (ROOM4050: fünf Marken auf y=119 = exakt die
+Mittellinie). Dort gilt die rohe Projektion.
+
+### Ursache 3 — das Gütemaß des Lösers kannte „schließt nicht an" nicht
+
+Es zählte nur deckungsgleiche Türpunkte und den schlimmsten Rest. Vier Raumpaare standen
+3–45 px auseinander, und genau diese vier hatten **keine** gepaarte Türmarke — der Löser
+hatte ihre Tür nie zum Anlegen benutzt, und die Markenpaarung überspringt sie danach wegen
+der Entfernung. Ein Rundschluss. Jetzt ist „getrennte Nachbarn" das **erste** Kriterium.
+
+⚠️ Erster Wurf des Kriteriums war falsch geeicht (`<=` statt `<`) und zählte die
+*richtige* Lage — Kante exakt auf Kante — als Fehler; auf Seite 2 meldete es 10 getrennte
+von 11 Durchgängen bei 10 deckungsgleichen. Der Widerspruch hat das Maß verraten.
+
+### Stand — live gemessen (`integration_map_uebergang`, 102 Übergänge)
+
+| | v0.3.89 | jetzt |
+|---|---|---|
+| ≤ 2 px | 27 (26 %) | **37 (36 %)** |
+| ≤ 4 px | 66 (64 %) | **75 (73 %)** |
+| ≤ 8 px | 84 (82 %) | 84 (82 %) |
+| schlimmster | 34 px | **31 px** |
+| verdrehte Türsymbole | 39 | **0** |
+| Lücke 1120↔1130 / 1130↔1140 | 0 / 1 px | **0 / 0 px** |
+
+⛔ Die alten Zahlen waren **geschmeichelt**: wo beide Seiten auf dasselbe *falsche*
+Symbol gezogen wurden, ergab das einen kleinen „Sprung". Die neuen stehen auf strengerer
+Basis.
+
+### RE2-Kartenstil (Nutzer-Vorgabe `re2_map_style.png`)
+
+Wandlinie hell und **zustandsfrei** (208,208,200), Füllung trägt den Zustand
+(blau 28,60,140 besucht / dunkelrot 74,20,20 aktuell), Tür = kurzer gelber Balken
+(224,168,40) **in** der Wand. Der Balken kennt nur die **Achse** der Wand — und löst
+damit ein Problem der gerichteten RE1.5-Nische: ein Durchgang gehört zwei Räumen und
+liegt auf ihrer gemeinsamen Wand, dort zeigt jede Nische zwangsläufig zu einem hin und
+vom anderen weg. Der Spieler-Marker bleibt unverändert (Nutzer-Vorgabe).

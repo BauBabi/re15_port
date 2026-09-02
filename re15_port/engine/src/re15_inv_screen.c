@@ -360,6 +360,36 @@ void re15_inv_map_stage_init(int stage, int room)
  * dorthin - von BEIDEN Seiten auf dieselbe Stelle. Der Zug waechst stetig, je naeher man
  * der Tuer kommt, es gibt also keinen Sprung beim Betreten des Triggers.
  * PORT-ERGAENZUNG: das Original kennt weder Grundrisse noch diese Symbole. */
+/* ============ RE2-KARTENPALETTE =============================================
+ * Nutzer 2026-09-02: "Setze um im RE 2 Map style, wie im re2_map_style.png bsp.
+ * Gerne auch mit den RE 2 Symbolen, bis auf der Spieler Marker."
+ *
+ * Abgenommen an der Vorlage re2_map_style.png (Repo-Wurzel):
+ *   - besuchter Raum : blaue Fuellung, helle graue Wandlinie
+ *   - aktueller Raum : dunkelrote Fuellung, dieselbe helle Wandlinie
+ *   - Tuer           : kurzer gelber Balken IN der Wandlinie
+ * Die Wandlinie ist in RE2 NICHT zustandsgefaerbt - sie ist in jedem Raum gleich
+ * hell. Das ist der sichtbarste Unterschied zu unserer bisherigen Zeichnung, in der
+ * Wand und Fuellung denselben Ton trugen und die Raeume dadurch ineinanderliefen.
+ *
+ * ⛔ EIN BALKEN HAT KEINE BLICKRICHTUNG - und genau das loest ein Problem, das die
+ * gemalte RE1.5-Nische hatte: sie ist gerichtet, ein Durchgang gehoert aber ZWEI
+ * Raeumen. Auf der gemeinsamen Wand zeigt eine Nische zwangslaeufig zu einem der
+ * beiden hin und vom anderen weg. Der Balken kennt nur die ACHSE der Wand. */
+#define RE2_WAND_R   208
+#define RE2_WAND_G   208
+#define RE2_WAND_B   200
+#define RE2_TUER_R   224
+#define RE2_TUER_G   168
+#define RE2_TUER_B    40
+
+static void re2_ton(int rs, int *r, int *g, int *b)
+{
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r =  74; *g =  20; *b =  20; }
+    else if (rs == RE15_MAP_RECT_VISITED) { *r =  28; *g =  60; *b = 140; }
+    else                                  { *r =  34; *g =  34; *b =  38; }
+}
+
 static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
                           int seite, int16_t *mx, int16_t *my)
 {
@@ -382,16 +412,60 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
         dx = wx - a->x; if (dx < 0) dx = -dx;
         dz = wz - a->z; if (dz < 0) dz = -dz;
         if (dx > hw || dz > hh) continue;                  /* ausserhalb des Zugbereichs */
-        /* Das Symbol dieser Tuer: die naechstgelegene sichtbare Marke auf dem Blatt. */
+        /* ============ DAS SYMBOL DIESER TUER, UEBER IHRE IDENTITAET ==============
+         * ⛔ FRUEHER: "die naechstgelegene sichtbare Marke auf dem Blatt". Das war ein
+         * Rate-Defekt im Messgewand - Naehe ist keine Identitaet. Ein Raum hat bis zu
+         * sieben Tueren; steht der Spieler an einer davon, kann die naechste Marke die
+         * einer ANDEREN Tuer sein, und der Marker wurde dorthin gezogen.
+         *
+         * GEMESSEN am 2026-09-02 ueber alle 261 Tueren im Zugbereich einer Marke:
+         *   - 70 (27 %) zogen den Marker auf ein FREMDES Symbol, Median 13 px daneben,
+         *     schlimmster Fall 81 px;
+         *   - weitere 62 (24 %) hatten ueberhaupt keine eigene Marke und wurden damit
+         *     garantiert auf eine fremde gezogen.
+         * Zusammen 51 %. Live sichtbar daran, dass DREI verschiedene Raeume (4080,
+         * 4090, 40A0) denselben Markerpixel (212,140) meldeten.
+         * Nutzer 2026-09-02: "Die Tueren sind durch die Bank weg alle falsch platziert,
+         * und oftmals machst du so grosse spruenge.... Nach dem Durchgehen der Tuer ist
+         * man in der Mitte des Raumes."
+         *
+         * JETZT: die Tuer kennt ihr Ziel (door_params -> dest_stage/dest_room, Formel
+         * wie aot_common.c:891). Eine Marke traegt die beiden Zonen, die sie verbindet
+         * (re15_map_mark_zonen). Gesucht ist die Marke, die MEINE Zone mit einer Zone
+         * des ZIELRAUMS verbindet - das ist eindeutig, ohne jeden Abstand. 77 % der
+         * Tueren loesen so exakt auf; fuer den Rest bleibt die ungepaarte Marke der
+         * eigenen Zone (eine Tuer, deren Nachbar auf einem anderen Blatt liegt). */
         mn = re15_map_mark_count();
-        for (mk = 0; mk < mn; mk++) {
-            int mpg, mrc, smx, smy, kind, d;
-            if (!re15_map_mark_get(mk, &mpg, &mrc, &smx, &smy, &kind)) continue;
-            if (mpg != seite || kind >= 4) continue;       /* Treppen ziehen nicht */
-            d = (smx - *mx) * (smx - *mx) + (smy - *my) * (smy - *my);
-            if (beste < 0 || d < bestd) { beste = mk; bestd = d; }
+        {
+            unsigned ziel = (((unsigned)g_aot.door_params[k].dest_stage + 1u) << 12)
+                          | ((unsigned)g_aot.door_params[k].dest_room << 4)
+                          | (g_current_room_id & 0x000Fu);
+            int einzeln = -1;
+            for (mk = 0; mk < mn; mk++) {
+                int mpg, mrc, smx, smy, kind, za, zb, andere, gefunden = 0, ix;
+                if (!re15_map_mark_get(mk, &mpg, &mrc, &smx, &smy, &kind)) continue;
+                if (mpg != seite || kind >= 4) continue;   /* Treppen ziehen nicht */
+                if (!re15_map_mark_zonen(mk, &za, &zb)) continue;
+                if (za != zn->zid && zb != zn->zid) continue;   /* nicht meine Zone */
+                andere = (za == zn->zid) ? zb : za;
+                if (andere == 255) {                        /* ungepaart: Rueckfall */
+                    if (einzeln < 0) einzeln = mk;
+                    continue;
+                }
+                /* Gehoert die andere Zone zum ZIELRAUM dieser Tuer? */
+                for (ix = 0; ix < 8 && !gefunden; ix++) {
+                    const re15_map_zone_t *zt = re15_map_zone_fuer(ziel, ix, (unsigned)seite);
+                    if (!zt) continue;
+                    if (zt->zid == andere) gefunden = 1;
+                }
+                if (gefunden) { beste = mk; bestd = 0; break; }
+            }
+            if (beste < 0) beste = einzeln;
         }
-        if (beste < 0 || bestd > 24 * 24) return;          /* keine Tuer in Reichweite */
+        /* ⛔ continue, NICHT return. Der alte Code verliess bei einer Fehlanzeige die
+         * GANZE Schleife und liess damit die uebrigen Tuer-AOTs ungeprueft - bei
+         * dicht stehenden Tueren gewann so der erste, nicht der richtige. */
+        if (beste < 0) continue;
         {
             int mpg, mrc, smx, smy, kind;
             /* Gewicht: 0 am Rand des Triggers, 1 in seiner Mitte - stetig, damit der
@@ -1648,31 +1722,32 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     {5,-1},{5, 0},{4, 1},
                     {0, 2},{1, 2},{2, 2},{3, 2}
                 };
-                int rs = re15_map_rect_state((unsigned)mpage, (unsigned)mrect);
-                int tr = 128, tg = 128, tb = 128, wr, wg, wb;
-                if (rs == RE15_MAP_RECT_VISITED)      { tr = 40;  tg = 144; tb = 40; }
-                else if (rs == RE15_MAP_RECT_CURRENT) { tr = 192; tg = 24;  tb = 24; }
-                wr = (22 * tr) >> 4; if (wr > 255) wr = 255; wr &= 0xF8;
-                wg = (22 * tg) >> 4; if (wg > 255) wg = 255; wg &= 0xF8;
-                wb = (22 * tb) >> 4; if (wb > 255) wb = 255; wb &= 0xF8;
-            
+                int wr = RE2_TUER_R, wg = RE2_TUER_G, wb = RE2_TUER_B;
+                (void)SYM;
                 if (kind <= 3) {
-                    int si;
-                    for (si = 0; si < 13; si++) {
-                        int dx = SYM[si][0], dy = SYM[si][1], px, py;
-                        re15_inv_op_t *q;
-                        switch (kind) {
-                        case 3:  px =  dx; py =  dy; break;   /* Westwand */
-                        case 1:  px = -dx; py =  dy; break;   /* Ostwand  */
-                        case 0:  px =  dy; py =  dx; break;   /* Nordwand */
-                        default: px =  dy; py = -dx; break;   /* Suedwand */
-                        }
-                        if (e.n >= e.max) break;
+                    /* ---- RE2-TUERSYMBOL: ein kurzer gelber Balken IN der Wand ------
+                     * Nutzer 2026-09-02: "Setze um im RE 2 Map style ... Gerne auch mit
+                     * den RE 2 Symbolen, bis auf der Spieler Marker." Abgenommen an
+                     * re2_map_style.png: die Tuer ist ein 5x2-Balken im Wandton Gelb,
+                     * der LAENGS der Wand liegt und sie an dieser Stelle ersetzt.
+                     *
+                     * ⛔ DER BALKEN LOEST DAS RICHTUNGSPROBLEM DER NISCHE. Die gemalte
+                     * RE1.5-Nische ist gerichtet (kind 0=Nord..3=West), ein Durchgang
+                     * gehoert aber ZWEI Raeumen und liegt auf ihrer gemeinsamen Wand -
+                     * dort zeigt jede Nische zwangslaeufig zu einem hin und vom anderen
+                     * weg. Aus kind wird deshalb nur noch die ACHSE gelesen:
+                     * Nord/Sued = waagerechte Wand = Balken laeuft in x,
+                     * Ost/West  = senkrechte Wand  = Balken laeuft in y. */
+                    int laengs_x = (kind == 0 || kind == 2);
+                    re15_inv_op_t *q;
+                    if (e.n < e.max) {
                         q = &e.ops[e.n++];
                         q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
                         q->u = 0; q->v = 0;
-                        q->x = (int16_t)(mx + px); q->y = (int16_t)(my + py);
-                        q->w = 1; q->h = 1;
+                        q->x = (int16_t)(laengs_x ? mx - 2 : mx - 1);
+                        q->y = (int16_t)(laengs_x ? my - 1 : my - 2);
+                        q->w = (int16_t)(laengs_x ? 5 : 2);
+                        q->h = (int16_t)(laengs_x ? 2 : 5);
                         q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb;
                     }
                 } else {
@@ -1851,8 +1926,12 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 }
                 if (re15_map_stock_mode()) rs2 = RE15_MAP_RECT_UNMAPPED;
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
-                if (rs2 == RE15_MAP_RECT_VISITED)      { cr2 = 40;  cg2 = 144; cb2 = 40; }
-                else if (rs2 == RE15_MAP_RECT_CURRENT) { cr2 = 192; cg2 = 24;  cb2 = 24; }
+                /* RE2-STIL: die WANDLINIE ist in jedem Raum gleich hell; nur die
+                 * FUELLUNG traegt den Zustand (blau besucht, dunkelrot aktuell).
+                 * Vorher trugen beide denselben Ton, wodurch benachbarte Raeume
+                 * ineinanderliefen - in der Vorlage trennt genau diese helle Linie
+                 * die Abschnitte voneinander. */
+                cr2 = RE2_WAND_R; cg2 = RE2_WAND_G; cb2 = RE2_WAND_B;
                 /* ⛔ UMRANDUNG ENTLANG DER SILHOUETTE, NICHT UM DEN KASTEN.
                  * Solange die Schema-Zeichnung nur ein Notbehelf fuer ein fehlendes
                  * Rechteck war, war der Kasten-Rahmen richtig. Seit der Grundriss die
@@ -1917,16 +1996,38 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     q2->u = 0; q2->v = 0;
                     q2->x = (int16_t)cx; q2->y = (int16_t)cy;
                     q2->w = (int16_t)cw; q2->h = (int16_t)ch;
-                    /* Gedaempft wie die FUELLUNG der gemalten Rechtecke: dort
-                     * traegt die Kachel innen den dunklen Palettenindex 1 und nur
-                     * die Wandlinie den vollen Zustandston. Ungedaempft standen die
-                     * Schema-Raeume als grelle Bloecke neben der Kunst. */
-                    q2->r = (uint8_t)(cr2 * 5 / 14);
-                    q2->g = (uint8_t)(cg2 * 5 / 14);
-                    q2->b = (uint8_t)(cb2 * 5 / 14);
+                    /* RE2-STIL: die Fuellung traegt den Zustand, nicht die Wand.
+                     * Die frueher noetige Daempfung faellt weg - sie stammte daher,
+                     * dass Fuellung und Wandlinie denselben Ton hatten. */
+                    {
+                        int fr, fg, fb;
+                        re2_ton(rs2, &fr, &fg, &fb);
+                        q2->r = (uint8_t)fr; q2->g = (uint8_t)fg; q2->b = (uint8_t)fb;
+                    }
                 }
             }
         }
+        }
+
+        /* ---- RE2-KARTENGRUND ------------------------------------------------
+         * Nutzer 2026-09-02, Vorlage re2_map_style.png: der Kartengrund ist SCHWARZ,
+         * die Raeume liegen als blaue Flaechen darauf. Auf dem blauen RE1.5-Panel
+         * verschwand die blaue Fuellung fast - im Abzug r2_02.bmp/r2_07.bmp deutlich
+         * zu sehen. Gelegt wird ein dunkler Grund NUR ueber das Kartenfeld; Rahmen,
+         * Kompass, Blaetterpfeile und die Ortszeile bleiben die Original-Kunst.
+         *
+         * ⛔ ALS LETZTE OP DES BLOCKS. Die Op-Liste wird VON HINTEN gerastert
+         * (inv_render_pc.c: for (i = n-1; i >= 0; i--)) - eine spaeter eingetragene Op
+         * liegt UNTEN. Vorne eingetragen haette der Grund die ganze Karte uebermalt.
+         * (Siehe Memory reai-v2-zeichenreihenfolge-invers - genau diese Umkehr hat mich
+         * am 2026-08-31 schon einmal einen Bericht gekostet.) */
+        if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode() &&
+            e.n < e.max) {
+            re15_inv_op_t *qg = &e.ops[e.n++];
+            qg->kind = RE15_INV_OP_FILL; qg->page = 0; qg->clut = 0; qg->abe = 0;
+            qg->u = 0; qg->v = 0;
+            qg->x = 92; qg->y = 48; qg->w = 148; qg->h = 156;
+            qg->r = 8; qg->g = 8; qg->b = 12;
         }
     }
 

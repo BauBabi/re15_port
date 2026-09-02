@@ -147,6 +147,63 @@ int main(void)
         CHECK("hoechstens ein Paar verschiedener Tueren liegt aufeinander", dicht <= 1);
     }
 
+    /* ---- (5) JEDE GEPAARTE TUERMARKE SITZT AUF DER GEMEINSAMEN KANTE ---------
+     * Nutzer 2026-09-02: "Die Tueren sind durch die Bank weg alle falsch platziert."
+     *
+     * Bis dahin entstand die Position aus ZWEI getrennten Projektionen, jede an die
+     * "naechste Wand" ihres eigenen Rechtecks geschnappt. Gemessen war das ein
+     * Muenzwurf: der Tuerpunkt liegt im Median 3 px von der naechsten Wand, aber nur
+     * 4 px vor der zweitnaechsten, und bei 23 % der Tueren betraegt der Vorsprung
+     * <= 1 px. Folge: 58 % der Symbole lagen auf einer ANDEREN Wand als der, an der
+     * der Loeser die beiden Raeume verheftet hat.
+     *
+     * Die Marke wird jetzt aus der BERUEHRUNG der beiden Rechtecke bestimmt. Dieser
+     * Pin haelt genau das fest - an einer Groesse, die in der Konstruktion selbst
+     * NICHT vorkommt: dem Abstand der fertigen Marke zur Ueberdeckung der beiden
+     * Kaesten, gerechnet aus der ausgelieferten Tabelle. */
+    {
+        int aussen = 0, gepr = 0, schlimmst = 0;
+        n = re15_map_mark_count();
+        for (k = 0; k < n; k++) {
+            int pg, r, mx, my, kind, zid = 0, zid2 = 255, i, nz;
+            const re15_map_zone_t *za = 0, *zb = 0;
+            int ax, ay, aw, ah, bx, by, bw, bh;
+            int ux0, ux1, uy0, uy1, dx, dy;
+            if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
+            if (kind >= 4) continue;
+            re15_map_mark_zonen(k, &zid, &zid2);
+            if (zid2 == 255) continue;
+            nz = re15_map_zone_count();
+            for (i = 0; i < nz; i++) {
+                const re15_map_zone_t *z = re15_map_zone_by_index(i);
+                if (!z || z->page != pg || !z->synth) continue;
+                if (z->zid == zid  && !za) za = z;
+                if (z->zid == zid2 && !zb) zb = z;
+            }
+            if (!za || !zb) continue;
+            if (!re15_map_zone_synth(za, &ax, &ay, &aw, &ah, 0, 0)) continue;
+            if (!re15_map_zone_synth(zb, &bx, &by, &bw, &bh, 0, 0)) continue;
+            ux0 = ax > bx ? ax : bx;
+            ux1 = (ax + aw) < (bx + bw) ? (ax + aw) : (bx + bw);
+            uy0 = ay > by ? ay : by;
+            uy1 = (ay + ah) < (by + bh) ? (ay + ah) : (by + bh);
+            if (ux1 <= ux0 || uy1 <= uy0) continue;   /* kein gemeinsamer Bereich */
+            gepr++;
+            dx = 0; dy = 0;
+            if (mx < ux0) dx = ux0 - mx; else if (mx > ux1 - 1) dx = mx - (ux1 - 1);
+            if (my < uy0) dy = uy0 - my; else if (my > uy1 - 1) dy = my - (uy1 - 1);
+            if (dx + dy > 0) {
+                aussen++;
+                if (dx + dy > schlimmst) schlimmst = dx + dy;
+            }
+        }
+        printf("  [Kante] %d gepaarte Marken geprueft, %d ausserhalb der "
+               "Ueberdeckung, schlimmste %d px\n", gepr, aussen, schlimmst);
+        CHECK("es gibt genug gepaarte Marken zum Pruefen", gepr >= 60);
+        CHECK("hoechstens 4 gepaarte Marken liegen daneben", aussen <= 4);
+        CHECK("keine gepaarte Marke liegt weiter als 3 px daneben", schlimmst <= 3);
+    }
+
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;
 }

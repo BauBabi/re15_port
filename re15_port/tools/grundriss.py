@@ -418,7 +418,33 @@ class Blatt(object):
         # sprang der schlimmste Uebergang von 49 auf 109 px. Genau den sieht der Nutzer.
         r = self.rest(lage)
         schlimmst = max(r) if r else 0.0
-        return (doppelt / max(1, len(alle)) * 100.0, deckung, br, ho, schlimmst)
+        # ⛔ GETRENNTE NACHBARN SIND DER FEHLER, DEN DER NUTZER BENENNT.
+        # Nutzer 2026-09-02: "Nach dem Durchgehen der Tuer ist man in der Mitte des
+        # Raumes in ein Rechteck das nicht an das vorherige anschliesst."
+        # Bis hierher kannte das Guetemass nur "wie viele Tuerpunkte sind
+        # deckungsgleich" und "wie gross ist der schlimmste Rest". Beides schweigt
+        # darueber, ob zwei durch eine Tuer verbundene Rechtecke einander UEBERHAUPT
+        # beruehren. Gemessen: vier Raumpaare standen 3 bis 45 px auseinander, und
+        # genau diese vier hatten keine gepaarte Tuermarke - der Loeser hat ihre Tuer
+        # nie zum Anlegen benutzt, und die Marken-Paarung ueberspringt sie danach
+        # wegen der Entfernung. Ein Rundschluss, den nur ein eigenes Mass aufbricht.
+        getrennt = 0
+        for (a, pa, b, pb) in self.kanten:
+            if a not in lage or b not in lage:
+                continue
+            ka = self.kasten(a, lage[a])
+            kb = self.kasten(b, lage[b])
+            # ⛔ BERUEHRUNG IST KEINE TRENNUNG. Ein erster Wurf pruefte mit "<=" und
+            # zaehlte damit genau die RICHTIGE Lage als Fehler: anlegen() setzt das
+            # Nachbarrechteck exakt Kante auf Kante (a.rechts == b.links), was bei "<="
+            # als getrennt gilt. Auf Seite 2 meldete das Mass daraufhin 10 getrennte
+            # von 11 Durchgaengen, waehrend 10 deckungsgleich waren - ein Widerspruch,
+            # der das Mass verraten hat. Gezaehlt wird nur eine ECHTE Luecke.
+            if (min(ka[0] + ka[2], kb[0] + kb[2]) < max(ka[0], kb[0]) or
+                    min(ka[1] + ka[3], kb[1] + kb[3]) < max(ka[1], kb[1])):
+                getrennt += 1
+        return (doppelt / max(1, len(alle)) * 100.0, deckung, br, ho, schlimmst,
+                getrennt)
 
     def einpassen(self, lage, feld=FELD):
         pix = dict((b, self.pixel(b, lage[b])) for b in lage)
@@ -467,8 +493,8 @@ class Blatt(object):
                         lage[wer] = st
                         k = self.kosten(lage)
                         lage[wer] = alt_st
-                        if (-k[1], k[4], k[0]) < (-k0[1], k0[4], k0[0]) and                            (bester is None or (-k[1], k[4], k[0]) <
-                            (-bester[0][1], bester[0][4], bester[0][0])):
+                        if (k[5], -k[1], k[4], k[0]) < (k0[5], -k0[1], k0[4], k0[0]) and                            (bester is None or (k[5], -k[1], k[4], k[0]) <
+                            (bester[0][5], -bester[0][1], bester[0][4], bester[0][0])):
                             bester = (k, wer, st)
             if bester is None:
                 break
@@ -497,7 +523,8 @@ class Blatt(object):
             if not lage:
                 continue
             k = self.kosten(lage)
-            if best is None or (-k[1], k[4], k[0]) < (-best[1][1], best[1][4], best[1][0]):
+            if best is None or (k[5], -k[1], k[4], k[0]) < (best[1][5], -best[1][1],
+                                                             best[1][4], best[1][0]):
                 best = (lage, k)
         self._wurzel = None
         return best[0] if best else {}

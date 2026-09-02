@@ -1185,9 +1185,10 @@ def main():
                          _rr[-1]))
             _kn = _B.kosten(_neu_lage)
             print("Seite %2d: Grundriss aus %d/%d Orten, %.1f %% Ueberlappung, "
-                  "%d/%d Durchgaenge beruehrend, %dx%d px, %.0f Welteinheiten je Pixel"
+                  "%d/%d Durchgaenge deckungsgleich, %d GETRENNT, %dx%d px, "
+                  "%.0f Welteinheiten je Pixel"
                   % (_pg, len(_lg[_pg]), len(_eingabe[_pg][0]), _kn[0], _kn[1],
-                     len(_B.kanten), _kn[2], _kn[3], _B.ex))
+                     len(_B.kanten), _kn[5], _kn[2], _kn[3], _B.ex))
 
     print(f"{len(grundrisse)} Orte mit Grundriss aus der Kollisionsgeometrie")
 
@@ -1832,6 +1833,108 @@ def main():
             return dx + dy
         W = A if _abstand(A, B) <= _abstand(B, A) else B
         cx, cy = W['mx'], W['my']
+        # ============ DIE MARKE SITZT AUF DER GEMEINSAMEN KANTE ===================
+        # Nutzer 2026-09-02: "Die Tueren sind durch die Bank weg alle falsch platziert
+        # ... Nach dem Durchgehen der Tuer ist man in der Mitte des Raumes in ein
+        # Rechteck das nicht an das vorherige anschliesst."
+        #
+        # ⛔ URSACHE, LIVE GEMESSEN (nicht modelliert): die Position kam bis hierher aus
+        # ZWEI getrennten Projektionen - jeder Raum projizierte seinen eigenen
+        # Tuer-Datensatz und schnappte ihn an die naechste Wand SEINES Rechtecks. Beide
+        # Schritte sind unzuverlaessig:
+        #   - Der Tuerpunkt liegt im Median nur 3 px von der naechsten Wand, aber nur
+        #     4 px vor der ZWEITnaechsten; bei 23 % der Tueren betraegt der Vorsprung
+        #     <= 1 px. "Naechste Wand" ist dort ein Muenzwurf, kein Kriterium.
+        #   - Danach entschied ein Vergleich, welche der beiden Projektionen gewinnt.
+        #     Die Verliererseite behielt eine Wand, die mit der Gewinnerseite nichts zu
+        #     tun hat.
+        # Ergebnis auf dem Schirm: 58 % der Symbole lagen auf einer anderen Wand als
+        # der, an der der Loeser die beiden Raeume verheftet hat.
+        #
+        # Der Nutzer hat den einfachen Weg vorgegeben ("Er schliesst EXAKT an die Wand
+        # der Karte vom Raum davor an, ueberlappt die Wand also") und dazu den RE2-Stil
+        # angeboten, in dem eine Tuer ein kurzer Balken IN der Wandlinie ist. Beides
+        # zeigt auf dieselbe Loesung: die Marke wird nicht mehr projiziert und
+        # geschnappt, sondern aus der BERUEHRUNG DER BEIDEN RECHTECKE bestimmt. Damit
+        # ist sie per Konstruktion auf der Wand, die die zwei Raeume teilen - sie kann
+        # gegenueber den Raeumen gar nicht mehr falsch liegen.
+        _KA2 = _geo(A['pg'], A['r'], A['room'], A['zi'])
+        _KB2 = _geo(B['pg'], B['r'], B['room'], B['zi'])
+        _seite_kante = None
+        if _KA2 and _KB2:
+            _ax, _ay, _aw, _ah = _KA2
+            _bx, _by, _bw, _bh = _KB2
+            # Ueberdeckung der beiden Rechtecke (sie ueberlappen die Wand, siehe oben).
+            _ux0 = max(_ax, _bx); _ux1 = min(_ax + _aw, _bx + _bw)
+            _uy0 = max(_ay, _by); _uy1 = min(_ay + _ah, _by + _bh)
+            if _ux1 > _ux0 or _uy1 > _uy0:
+                # Die gemeinsame Wand laeuft LAENGS der laengeren Ueberdeckungsseite;
+                # die kuerzere ist die Wanddicke.
+                _br = _ux1 - _ux0
+                _ho = _uy1 - _uy0
+                # ⛔ DIE LAGE LAENGS DER WAND KOMMT AUS DER ROHEN PROJEKTION, NICHT
+                # AUS DEM GESCHNAPPTEN WERT. Ein erster Wurf klemmte W['mx'] in die
+                # Ueberdeckung - aber W['mx'] war in Durchgang 1 bereits an die
+                # "naechste Wand" des eigenen Rechtecks gezogen worden, und genau diese
+                # Wand ist der Muenzwurf, den dieser Umbau abschafft. Folge, gemessen:
+                # die drei Durchgaenge ROOM1000<->ROOM1050 projizieren sauber auf
+                # x=144/164/167 (Gegenseite 143/164/167 - eine Uebereinstimmung von
+                # 0-1 px!), landeten nach Schnappen+Klemmen aber auf x=132 und 173,
+                # den ECKEN der Ueberdeckung. Zwei der drei Marken fielen danach als
+                # Dublette weg, und alle drei Tueren zogen den Marker auf dieselbe Ecke.
+                # Genommen wird das Mittel der beiden ROHEN Projektionen: beide Raeume
+                # sagen unabhaengig voneinander, wo die Tuer auf der Wand sitzt.
+                _rohA = to_map(A['room'], A['zi'], A['d']['lx'], A['d']['lz'], A['pg'])
+                _rohB = to_map(B['room'], B['zi'], B['d']['lx'], B['d']['lz'], B['pg'])
+                # ⛔ NUR EINE DUENNE UEBERDECKUNG IST EINE WAND. Wo zwei Rechtecke
+                # sich grossflaechig ueberlappen (auf Seite 7/9/11 bis zu 31 %),
+                # existiert keine gemeinsame Wandlinie - und "Mitte der Ueberdeckung"
+                # legte das Symbol dann quer durch den Raum. Gemessen: zehn Symbole
+                # lagen exakt auf der MITTELLINIE ihres Nachbarn (ROOM4050: fuenf
+                # Marken auf y=119 = genau die Mitte von y[103..135]), was der Pin
+                # unit_map_durchgang als "zeigt vom Nachbarn weg" gemeldet hat.
+                # Dort gilt die rohe Projektion: beide Raeume projizieren dieselbe Tuer
+                # unabhaengig voneinander und stimmen auf 0-1 px ueberein (gemessen an
+                # ROOM1000<->ROOM1050: 144/143, 164/164, 167/167). Diese Uebereinstimmung
+                # ist das bessere Zeugnis als jede Konstruktion aus den Kaesten.
+                _duenn = min(_br, _ho) <= 4
+                if not _duenn:
+                    if _rohA and _rohB:
+                        cx = (_rohA[2] + _rohB[2]) // 2
+                        cy = (_rohA[3] + _rohB[3]) // 2
+                    # ⛔ AUCH OHNE WANDLINIE BLEIBT DIE MARKE IM GEMEINSAMEN BEREICH.
+                    # Ein erster Wurf liess die rohe Projektion hier ungeklemmt stehen -
+                    # der Pin unit_map_durchgang hat daraufhin zwei Marken gemeldet, die
+                    # 5 bzw. 10 px ausserhalb der Ueberdeckung lagen (ROOM3090<->ROOM30D0,
+                    # ROOM3060<->ROOM3010). Optisch ist das genau der Fehler, den der
+                    # Nutzer benannt hat: ein Tuersymbol schwebt im Rauminneren statt
+                    # dort zu sitzen, wo die zwei Raeume einander beruehren. Bei einer
+                    # grossen Ueberdeckung verschiebt die Klemmung kaum etwas, sie
+                    # verhindert nur das Ausbrechen.
+                    cx = min(max(cx, _ux0), max(_ux0, _ux1 - 1))
+                    cy = min(max(cy, _uy0), max(_uy0, _uy1 - 1))
+                    _seite_kante = None
+                elif _br >= _ho:
+                    # waagerechte Wand: Hoehe = Wanddicke, Laenge in x
+                    cy = (_uy0 + _uy1) // 2
+                    if _rohA and _rohB:
+                        cx = (_rohA[2] + _rohB[2]) // 2
+                    elif _rohA:
+                        cx = _rohA[2]
+                    elif _rohB:
+                        cx = _rohB[2]
+                    cx = min(max(cx, _ux0), max(_ux0, _ux1 - 1))
+                    _seite_kante = 2 if (_by + _bh / 2.0) > (_ay + _ah / 2.0) else 0
+                else:
+                    cx = (_ux0 + _ux1) // 2
+                    if _rohA and _rohB:
+                        cy = (_rohA[3] + _rohB[3]) // 2
+                    elif _rohA:
+                        cy = _rohA[3]
+                    elif _rohB:
+                        cy = _rohB[3]
+                    cy = min(max(cy, _uy0), max(_uy0, _uy1 - 1))
+                    _seite_kante = 1 if (_bx + _bw / 2.0) > (_ax + _aw / 2.0) else 3
         # Beide Datensaetze bekommen dieselbe Position UND dieselbe Wandseite, damit
         # daraus optisch EIN Symbol wird. Die Seite des ersten gewinnt (deterministisch);
         # weil sie auf derselben Wand sitzen, sind es ohnehin gespiegelte Nischen.
@@ -1859,6 +1962,20 @@ def main():
                 _seite = 1 if _zx > 0 else 3      # Ost / West
             else:
                 _seite = 2 if _zy > 0 else 0      # Sued / Nord
+        # ⛔ DIE BERUEHRUNG SCHLAEGT DIE SCHWERPUNKT-RICHTUNG. Der Vergleich der beiden
+        # Rechteck-Mitten sagt, wo der Nachbar UNGEFAEHR liegt; die Ueberdeckung sagt,
+        # wo die Wand WIRKLICH verlaeuft. Bei zwei langgestreckten Raeumen, die sich
+        # ueber Eck beruehren, zeigen die Mitten diagonal und die Achse wird zur
+        # Muenzwurf-Entscheidung - genau die Fehlerklasse, die diesen Umbau ausgeloest
+        # hat. Wo eine Ueberdeckung existiert, gilt sie.
+        if _seite_kante is not None:
+            # ⛔ DIE SEITE GEHOERT ZUM GEWINNER, NICHT ZU A. _seite_kante zeigt von A
+            # nach B; die Marke traegt aber zid = W['zid'] und zid2 = die des anderen,
+            # und die Nische muss zu zid2 zeigen. Ist W der Datensatz B, ist die
+            # Richtung damit genau umgekehrt. Der Pin unit_map_durchgang hat das
+            # gefunden (39 gepaarte Symbole zeigten vom Nachbarn weg) - er hatte recht,
+            # nicht der erste Wurf dieses Umbaus.
+            _seite = _seite_kante if W is A else (_seite_kante + 2) % 4
         for X in (A, B):
             X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
