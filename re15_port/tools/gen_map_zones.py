@@ -229,8 +229,13 @@ def read_rdt(rid):
         counts = struct.unpack_from('<5I', d, s + 4); n = sum(counts)
         if 0 < n < 2000 and s + 24 + 12*n <= len(d):
             for i in range(n):
+                # 12 B je Eintrag (lib_sca v1.5): u16 width, u16 density, s16 x, s16 z,
+                # u8 type, u8 u0, u8 u1, u8 floor. Das FLOOR-Byte kam bisher nicht mit -
+                # gebraucht wird es, seit die Karte "pro Raum pro ETAGE" gezeichnet wird
+                # (Nutzer 2026-09-02).
                 w, dep, x, z = struct.unpack_from('<HHhh', d, s + 24 + 12*i)
-                sca.append((x, z, w, dep))
+                typ, u0, u1, flr = struct.unpack_from('<BBBB', d, s + 24 + 12*i + 8)
+                sca.append((x, z, w, dep, flr))
     doors = []
     stairs = []
     # Slots, die irgendwo im Raum per Aot_reset (Opcode 0x46, 10 B: pc[1]=Slot, pc[2]=sce)
@@ -333,9 +338,9 @@ def zones_of(sca):
         while parent[a] != a: parent[a] = parent[parent[a]]; a = parent[a]
         return a
     for i in range(n):
-        xi, zi, wi, di = sca[i]
+        xi, zi, wi, di = sca[i][:4]
         for j in range(i+1, n):
-            xj, zj, wj, dj = sca[j]
+            xj, zj, wj, dj = sca[j][:4]
             if (xi < xj+wj+GAP and xj < xi+wi+GAP and zi < zj+dj+GAP and zj < zi+di+GAP):
                 ra, rb = find(i), find(j)
                 if ra != rb: parent[rb] = ra
@@ -403,8 +408,8 @@ def main():
     # darunter - gemessen, es gibt dort keine Luecke.
     def _form(zellen, bb):
         x0, x1, z0, z1 = bb
-        return frozenset((cx - x0, cz - z0, cw, cd) for (cx, cz, cw, cd) in zellen
-                         if x0 <= cx <= x1 and z0 <= cz <= z1)
+        return frozenset((c[0] - x0, c[1] - z0, c[2], c[3]) for c in zellen
+                         if x0 <= c[0] <= x1 and z0 <= c[1] <= z1)
     _raeume = collections.defaultdict(set)
     for _b, _zs in roh_zonen.items():
         for _bb in _zs:
@@ -727,7 +732,7 @@ def main():
 
     def _sca_punkte(rid):
         pts = []
-        for (x, zz, w, dep) in sca_all.get(rid, ()):
+        for (x, zz, w, dep) in (c[:4] for c in sca_all.get(rid, ())):
             for i in range(4):
                 for j in range(4):
                     pts.append((x + w * (2 * i + 1) // 8, zz + dep * (2 * j + 1) // 8))
@@ -1097,7 +1102,11 @@ def main():
                 _neu_lage = dict((_o, (FELDX + (_st[0] - _minx) * _f,
                                        FELDY + (_st[1] - _miny) * _f, _st[2], _st[3]))
                                  for _o, _st in _lg[_pg].items())
-                _neu_lage = _gr.entzerren_komp({_pg: _B}, {_pg: _neu_lage})[_pg]
+                # (Kein Entzerren mehr: Rechtecke werden Wand an Wand angelegt, es
+                # gibt nichts auseinanderzuschieben. Wo ein Rundweg im Tuergraph nicht
+                # schliesst, ueberlappen zwei Rechtecke - das ist gewollt, "der Raum
+                # ueberlappt die Wand" (Nutzer 2026-09-02), und allemal besser als eine
+                # Luecke.)
                 _end = set()
                 for _o, _st in _neu_lage.items():
                     _end |= _B.pixel(_o, _st)
@@ -1395,7 +1404,7 @@ def main():
                     continue        # kein Platz: lieber nichts zeichnen als Matsch
             # Zellen in Karten-Pixel (nur flaechige; duenne Waende ergeben keine Flaeche)
             zellen = []
-            for (cx, cz, cw, cd) in sorted(set(sca_all.get(b, ()))):
+            for (cx, cz, cw, cd) in sorted(set(c[:4] for c in sca_all.get(b, ()))):
                 if not (x0 <= cx <= x1 and z0 <= cz <= z1): continue
                 px0 = ox + (cx - x0) / ex; px1 = ox + (cx + cw - x0) / ex
                 py1 = oy + h - (cz - z0) / ey; py0 = oy + h - (cz + cd - z0) / ey
@@ -1948,31 +1957,56 @@ def main():
     # Sie werden LAENGS IHRER WAND auseinandergeschoben - quer waere die Marke von der
     # Wand weg, und dort gehoert sie nicht hin.
     _offen = [v for v in vor if not v.get('weg')]
-    for _a in range(len(_offen)):
-        for _b in range(_a + 1, len(_offen)):
-            A2, B2 = _offen[_a], _offen[_b]
-            if A2['pg'] != B2['pg']: continue
-            # ⛔ NUR TUEREN. Ein erster Wurf schob auch Treppenmarken auseinander -
-            # damit fielen Duplikate, die vorher an derselben Stelle zusammenfielen und
-            # von der Schluessel-Entdopplung geschluckt wurden, wieder auseinander und
-            # wurden ZWEIMAL gezeichnet: die Zahl der Treppensymbole stieg von 30 auf 52.
-            if A2['seite'] >= 4 or B2['seite'] >= 4: continue
-            if A2['room'] == B2['room'] and A2['zi'] == B2['zi'] and                A2.get('zid2', 255) == B2.get('zid2', 255):
-                continue                      # dieselbe Tuer, absichtlich gleich
-            if A2.get('zid2', 255) == B2['zid'] and B2.get('zid2', 255) == A2['zid']:
-                continue                      # derselbe Durchgang, absichtlich gleich
-            if abs(A2['mx'] - B2['mx']) + abs(A2['my'] - B2['my']) > 2: continue
-            # laengs der Wand: bei Ost/West-Wand senkrecht, sonst waagerecht
-            _laengs_y = B2['seite'] in (1, 3)
-            for _schub in (3, -3, 6, -6):
-                if _laengs_y:
-                    _nx, _ny = B2['mx'], B2['my'] + _schub
-                else:
-                    _nx, _ny = B2['mx'] + _schub, B2['my']
-                _g = _gr_zelle(B2['room'], B2['zi'], B2['pg'], _nx, _ny)
-                if _g:
-                    B2['mx'], B2['my'] = _nx, _ny
-                    break
+
+    def _frei(kand, ausser, seite):
+        """Ist diese Stelle weit genug von JEDER anderen Tuermarke des Blattes?"""
+        for _o in _offen:
+            if _o is ausser or _o['pg'] != seite or _o['seite'] >= 4:
+                continue
+            if abs(_o['mx'] - kand[0]) + abs(_o['my'] - kand[1]) <= 3:
+                return False
+        return True
+
+    for _durchlauf in range(4):
+        _bewegt = 0
+        for _a in range(len(_offen)):
+            for _b in range(_a + 1, len(_offen)):
+                A2, B2 = _offen[_a], _offen[_b]
+                if A2['pg'] != B2['pg']: continue
+                # ⛔ NUR TUEREN. Ein erster Wurf schob auch Treppenmarken auseinander -
+                # damit fielen Duplikate, die vorher an derselben Stelle zusammenfielen
+                # und von der Schluessel-Entdopplung geschluckt wurden, wieder
+                # auseinander und wurden ZWEIMAL gezeichnet (Treppensymbole 30 -> 52).
+                if A2['seite'] >= 4 or B2['seite'] >= 4: continue
+                if A2['room'] == B2['room'] and A2['zi'] == B2['zi'] and                    A2.get('zid2', 255) == B2.get('zid2', 255):
+                    continue                      # dieselbe Tuer, absichtlich gleich
+                if A2.get('zid2', 255) == B2['zid'] and B2.get('zid2', 255) == A2['zid']:
+                    continue                      # derselbe Durchgang, absichtlich gleich
+                if abs(A2['mx'] - B2['mx']) + abs(A2['my'] - B2['my']) > 3: continue
+                # ⛔ LAENGS DER WAND schieben - quer waere die Marke von der Wand weg.
+                # Und die neue Stelle muss (a) noch auf der Zeichnung liegen und (b) von
+                # JEDER anderen Marke weit genug weg sein. Ohne (b) schob ein erster Wurf
+                # die eine Marke nur auf die naechste (5 Paare blieben stehen).
+                _erledigt = False
+                for _wer in (B2, A2):
+                    _laengs_y = _wer['seite'] in (1, 3)
+                    for _schub in (3, -3, 5, -5, 7, -7, 9, -9, 12, -12):
+                        if _laengs_y:
+                            _nx, _ny = _wer['mx'], _wer['my'] + _schub
+                        else:
+                            _nx, _ny = _wer['mx'] + _schub, _wer['my']
+                        if not _gr_zelle(_wer['room'], _wer['zi'], _wer['pg'], _nx, _ny):
+                            continue
+                        if not _frei((_nx, _ny), _wer, _wer['pg']):
+                            continue
+                        _wer['mx'], _wer['my'] = _nx, _ny
+                        _bewegt += 1
+                        _erledigt = True
+                        break
+                    if _erledigt:
+                        break
+        if not _bewegt:
+            break
 
     seen = set()
     for v in vor:

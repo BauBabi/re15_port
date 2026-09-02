@@ -420,3 +420,60 @@ zurück gelenkt. Quer zur Wand bleibt das Gewicht dabei klein (es ist das Minimu
 Achsen), die Ablenkung also gering; voll wird der Zug nur, wenn man wirklich vor der Tür
 steht. Sollte sich der Marker beim Vorbeilaufen dennoch „klebrig" anfühlen, ist die
 Stellschraube das Maximalgewicht in `tuer_anziehen` (derzeit 256 = voll).
+
+---
+
+## 9. Neu gefasst nach der Vorgabe des Nutzers — 2026-09-02
+
+> *„Du brauchst nicht so viel verdammt. Du brauchst: Kollisionsboxen pro Raum pro Etage,
+> alle Türen und wo sie hinführen, alle Treppen. … Raum A hat die äußere Kollisionsbox
+> von Breite X bis Breite Y. Zack, hast du schon den Grundriss. … Dann gehst du durch
+> die Tür: der nächste Raum schließt EXAKT an die Wand an, überlappt die Wand also.
+> … Halte dich nicht an solchem Quatsch wie ‚aber die Tür spawnt mich 500 px weiter im
+> Raum'. Die Karte ist nur ein SCHEMA."*
+
+Der Löser ist danach **vollständig neu gefasst**. Was wegfällt: die ausgefüllten
+Silhouetten, die Federn über alle Kanten, die Ruhelängen aus der Wanddicke, das
+Entzerren, das Abkühlen — alles, was ich schrittweise draufgebaut hatte, um zwei
+ineinandergreifende L-Formen gleichzeitig zu verheften und überlappungsfrei zu stellen.
+Das geht nicht, und das war die ganze Zeit der Fehler im Ansatz, nicht in der Ausführung.
+
+**Was jetzt dasteht:**
+
+* Ein **Ort ist ein Rechteck** — die äußere Bbox seiner Kollisionszellen.
+* Ein **Durchgang** legt das nächste Rechteck mit seiner Wand exakt auf die Wand des
+  vorigen: die Gegen-Tür muss auf der gegenüberliegenden Wand sitzen, dann fallen die
+  Wandlinien zusammen und die Türpunkte liegen längs der Wand übereinander.
+* Gemessen wird auf der **Wand**, nicht im Rauminneren — der Tür-Datensatz sitzt in der
+  Mitte des Anlauf-Triggers, das Symbol aber auf der Wand. Wer die Rohpunkte vergleicht,
+  misst die Anlauftiefe mit und behauptet einen Fehler, den die Zeichnung nicht hat.
+* **Rechtecke kacheln immer.** Lücken und Verrutschen können gar nicht erst entstehen.
+
+Dazu zwei Ergänzungen, beide gemessen begründet:
+* **Wurzelsuche.** Die Breitensuche bedient eine Tür nur, solange der Zielraum noch nicht
+  liegt; welche Türen offen bleiben, hängt allein von der Reihenfolge ab. Es wird jede
+  Wurzel durchprobiert und die Karte mit den meisten deckungsgleichen Türen genommen.
+* **Nachbesserung.** Für jede offen gebliebene Tür wird probiert, einen der beiden Räume
+  stattdessen an *ihr* anzulegen; übernommen wird nur, was insgesamt besser wird. ⛔ Das
+  Ziel enthält den **Ausreißer**: ein erster Wurf zählte nur die deckungsgleichen Türen —
+  die Zahl stieg von 86 auf 91, und der schlimmste Übergang sprang von 49 auf 109 px.
+
+### Ergebnis
+
+| live gemessen (`integration_map_uebergang`) | v0.3.88 | jetzt |
+|---|---|---|
+| Übergänge unter 4 px | 45 von 102 | **66 von 102** |
+| Übergänge unter 8 px | 62 % | **82 %** |
+| mittlerer Sprung | 8 px | **5 px** |
+| schlimmster Sprung | 35 px | **34 px** |
+
+Im Generator fallen **91 von 101** Durchgängen exakt auf dasselbe Pixel (Median 0 px);
+ROOM1120↔ROOM1130 und ROOM1130↔ROOM1140 klaffen **0 px**.
+
+Die Überlappung ist höher (bis 31 %) — sie ist die gewollte Folge: *„er schließt exakt an
+die Wand an, überlappt die Wand also."* Wo ein Rundweg im Türgraph nicht schließt,
+überlappen zwei Rechtecke, statt eine Lücke zu lassen.
+
+**Offen:** 18 von 102 Übergängen über 8 px — die Ringe, die auch die Nachbesserung nicht
+schließt. Ein Markenpaar liegt noch aufeinander (zwei Durchgänge in denselben Raum, für
+die längs der Wand kein Platz mehr war).

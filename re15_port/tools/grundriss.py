@@ -1,47 +1,50 @@
 # -*- coding: utf-8 -*-
 """GRUNDRISS-LOESER: eine zusammenhaengende Karte je Blatt aus Kollision + Tuergraph.
 
-PORT-ERGAENZUNG, keine Rekonstruktion. Das Original zeichnet seine Karte von Hand:
-nur 33 der 72 Karten-Raeume tragen ueberhaupt eine Massstabszeile @0x800768b0, 33 der
-100 Raeume haben gar kein Rechteck, und die gemalte Kunst ist NICHT massstabsgetreu zur
-Kollision (ROOM1100 misst echt 41x47 px, sein gemaltes Rechteck 24x24). Der Nutzer hat
-am 2026-09-01 entschieden, dass die Karte davon abweichen darf, wenn sie die
-ORIGINAL-SYMBOLE verwendet und dafuer vollstaendig wird.
+⛔ VOLLSTAENDIG NEU GEFASST AM 2026-09-02 nach der Vorgabe des Nutzers.
 
-Sein Modell: "ein neues Kartenstueck schliesst genau da an, wo man den Raum davor durch
-die Tuer verlassen hat." Genau das rechnet dieser Loeser:
+Die vorherige Fassung setzte die AUSGEFUELLTEN SILHOUETTEN der Kollisionszellen und
+richtete sie ueber einen Ausgleich aus (Federn ueber alle Kanten + Trennung). Das konnte
+nicht sauber werden, und das ist gemessen, nicht vermutet: zwei ineinandergreifende
+L-Formen lassen sich nicht gleichzeitig an der Tuer verheften UND ueberlappungsfrei
+stellen, und wo ein Rundweg im Tuergraph geometrisch nicht schliesst, blieb ein Rest von
+bis zu 35 px stehen (integration_map_uebergang, live gegen die Engine gemessen).
 
-  AUFBAU     Breitensuche durch den Tuergraph. Anker ist der REZIPROKE Tuer-Datensatz
-             des Nachbarn, NICHT der Spawn nx/nz - der liegt schon im Zielraum und
-             schiebt die Raeume um diesen Abstand ineinander (gemessen 22-27 %).
-  LAGE       Drehung (4) und Spiegelung (2) je Raum: jeder RDT-Raum hat sein eigenes
-             lokales Koordinatensystem. Gewaehlt wird die Pose mit der kleinsten
-             Ueberlappung; fuer ROOM1120 faellt daraus 180 Grad - dasselbe, was vorher
-             unabhaengig aus dem gemalten Tuersymbol und der Nachbarposition gemessen
-             wurde.
-  AUSRUECKEN Das Trigger-Rechteck deckt den Anlaufbereich ab, nicht nur die Laibung;
-             beide Anker liegen also im Rauminneren. Jeder Raum wird laengs der
-             Tuer-Normalen zurueckgeschoben, bis nichts mehr doppelt liegt.
-  EINPASSEN  Ein Stockwerk misst im ausgelieferten Massstab bis 203x299 px, das
-             Kartenfeld ist 132x140. Der fertige Grundriss wird als Ganzes gleichmaessig
-             verkleinert - die relative Lage und damit alle Nachbarschaften bleiben.
+Der Nutzer hat den einfachen Weg vorgegeben:
+
+    "Raum A hat die aeussere Kollisionsbox von Breite X bis Breite Y. Zack, hast du schon
+     den Grundriss des Raumes fertig. An Position X,Y befindet sich eine Tuer - zack, hast
+     du alle Tueren eingezeichnet. Dann gehst du durch die Tuer: der naechste Raum
+     schliesst EXAKT an die Wand der Karte vom Raum davor an, ueberlappt die Wand also.
+     ... Ausnahme Treppe -> die fuehrt zu einer neuen Etage."
+
+Und der entscheidende Zusatz:
+
+    "Halte dich nicht an solchem Quatsch wie 'aber die Tuer spawnt mich 500 px weiter im
+     Raum'. Die Karte ist nur ein SCHEMA, das davon ausgeht, dass ein Raum an den anderen
+     haengt."
+
+Damit faellt alles weg, was die alte Fassung kompliziert gemacht hat: keine Wanddicke,
+kein Spawn-Versatz, keine Ruhelaenge, kein Ausgleich, keine Entzerrung.
+
+  ORT       = ein RECHTECK, die aeussere Bbox seiner Kollisionszellen.
+  DURCHGANG = legt das naechste Rechteck mit seiner Wand exakt auf die Wand des vorigen,
+              Tuerpunkt auf Tuerpunkt. Rechtecke kacheln immer - die Luecken und das
+              Verrutschen koennen dabei gar nicht erst entstehen.
+  TREPPE    = fuehrt auf ein anderes Blatt; dort wird neu angesetzt.
 
 Massstab = Median der ausgelieferten Zeilen @0x800768b0 derselben Stage (gemessen):
 STAGE1 459/464, STAGE2 448/454, STAGE3 481/448, STAGE4 683/648, STAGE5 601/612,
 STAGE6 485/455 Welteinheiten je Pixel.
 
-Ergebnis (2026-09-01): Seite 4 0,0 % Ueberlappung und 3 von 3 Durchgaengen beruehrend,
-Seite 3 1,6 % und 6 von 6, Seite 2 2,2 % und 12 von 12.
-
-SCHNITTSTELLE
-    B = Blatt(zimmer, rdts, ex, ey)   zimmer: [raum_id], rdts: {raum: (sca, tueren, ...)}
-    lage, f, kosten = B.loesen()      lage: {raum: (ox, oy, drehung 0..3, spiegel 0/1)}
-    B.abbildung(lage[raum])           affine Abbildung Welt -> Kartenpixel
-    B.pixel(raum, lage[raum])         belegte Kartenpixel des Raums
+SCHNITTSTELLE (unveraendert, damit der Generator gleich bleibt)
+    B = Blatt(zimmer, rdts, ex, ey)   zimmer: [ort], rdts: {ort: (zellen, tueren, treppen)}
+    lage, f, kosten = B.loesen()      lage: {ort: (ox, oy, drehung 0..3, spiegel 0/1)}
+    B.abbildung(lage[ort])            affine Abbildung Welt -> Kartenpixel
+    B.pixel(ort, lage[ort])           belegte Kartenpixel des Ortes
+    B.zellen(ort)                     die EINE Zelle: die aeussere Kollisionsbox
 """
-import bisect
 import collections
-import math
 
 FELD = (100, 55, 132, 140)      # Kartenfeld: dort liegen alle Rechtecke aller Seiten
 
@@ -59,120 +62,6 @@ def dreh(wx, wz, k, sp):
     return (wz, -wx)
 
 
-def entzerren_komp(bl, lg, runden=600, grenze=6):
-    """Entzerrt ALLE Blaetter eines Gebaeudes GEMEINSAM.
-
-    ⛔ EIN GETEILTER ORT DARF SICH BEWEGEN - ABER UEBERALL GLEICH. Ein erster Wurf
-    nagelte die geteilten Orte fest (sie halten ja das Stapeln der Stockwerke) und kam
-    auf Seite 3 nicht unter 20 % Ueberlappung: dort ueberlappten festgenagelte Orte
-    einander, und nichts durfte ausweichen. Wird dagegen JEDE Bewegung eines Ortes auf
-    allen seinen Blaettern zugleich ausgefuehrt, bleibt das Stapeln erhalten und der
-    Entzerrer behaelt seine Freiheit.
-
-    Ursache der Ueberlappung ist das Neurunden: die Polizeiwache faellt von 585 auf
-    ~1400 Welteinheiten je Pixel, wenn alle fuenf Blaetter denselben Massstab bekommen,
-    und jede Zelle rundet dabei neu.
-    """
-    pix = {}
-    for pg in lg:
-        for o, st in lg[pg].items():
-            pix[(pg, o)] = bl[pg].pixel(o, st)
-    # ⛔ EIN DURCHGANG DARF SICH UEBERLAPPEN - DAS IST DIE LAIBUNG. Wer zwei Raeume,
-    # die eine Tuer teilen, auseinanderschiebt, erzeugt genau die Luecke, die der Nutzer
-    # gemeldet hat ("die Kartenstuecke haben Abstaende zueinander, die muessen Kante an
-    # Kante sein"). Geschoben wird nur, was KEINE Tuer verbindet.
-    nbp = set()
-    for pg in lg:
-        nbp |= bl[pg].nachbarpaare()
-    ueb = {}
-    for pg in lg:
-        ns = sorted(lg[pg])
-        for i in range(len(ns)):
-            for j in range(i + 1, len(ns)):
-                n = len(pix[(pg, ns[i])] & pix[(pg, ns[j])])
-                if frozenset((ns[i], ns[j])) in nbp and n <= 10:
-                    continue
-                if n:
-                    ueb[(pg, ns[i], ns[j])] = n
-    weg = {}
-    for _ in range(runden):
-        if not ueb:
-            break
-        best = max(ueb.items(), key=lambda kv: kv[1])[0]
-        pg, a, b = best
-        wer = ander = None
-        for kand, geg in ((b, a), (a, b)):
-            if weg.get(kand, 0) < grenze:
-                wer, ander = kand, geg
-                break
-        if wer is None:
-            del ueb[best]
-            continue
-        cw = (sum(p[0] for p in pix[(pg, wer)]) / float(len(pix[(pg, wer)])),
-              sum(p[1] for p in pix[(pg, wer)]) / float(len(pix[(pg, wer)])))
-        ca = (sum(p[0] for p in pix[(pg, ander)]) / float(len(pix[(pg, ander)])),
-              sum(p[1] for p in pix[(pg, ander)]) / float(len(pix[(pg, ander)])))
-        dx, dy = cw[0] - ca[0], cw[1] - ca[1]
-        if abs(dx) >= abs(dy):
-            sx, sy = (1.0 if dx >= 0 else -1.0), 0.0
-        else:
-            sx, sy = 0.0, (1.0 if dy >= 0 else -1.0)
-        # ⛔ UEBERLAPPUNG IST DIE SCHRANKE, DER DURCHGANG DAS ZIEL. Ein erster Wurf
-        # schob nur nach Ueberlappung: Seite 3 fiel von 20,6 % auf 12,8 % - und die
-        # beruehrenden Durchgaenge von 6 von 7 auf 3 von 7. Dieselbe Falle wie beim
-        # Posen-Nachlauf. Ein Zug wird deshalb nur angenommen, wenn er KEINEN Durchgang
-        # kostet; sonst wird die andere Richtung und der andere Partner probiert.
-        vorher = dict((pg2, bl[pg2].kontakte(
-                          dict((o, pix[(pg2, o)]) for o in lg[pg2])))
-                      for pg2 in lg if wer in lg[pg2])
-        alt_lage = dict((pg2, lg[pg2][wer]) for pg2 in lg if wer in lg[pg2])
-        alt_pix = dict((pg2, pix[(pg2, wer)]) for pg2 in lg if wer in lg[pg2])
-
-        def anwenden(vx, vy):
-            for pg2 in list(alt_lage):
-                ox, oy, k, sp = alt_lage[pg2]
-                lg[pg2][wer] = (ox + vx, oy + vy, k, sp)
-                pix[(pg2, wer)] = bl[pg2].pixel(wer, lg[pg2][wer])
-
-        def zuruecknehmen():
-            for pg2 in list(alt_lage):
-                lg[pg2][wer] = alt_lage[pg2]
-                pix[(pg2, wer)] = alt_pix[pg2]
-
-        gut = False
-        for (vx, vy) in ((sx, sy), (sy, sx), (-sy, -sx)):
-            if vx == 0.0 and vy == 0.0:
-                continue
-            anwenden(vx, vy)
-            ok = True
-            for pg2 in vorher:
-                if bl[pg2].kontakte(dict((o, pix[(pg2, o)])
-                                         for o in lg[pg2])) < vorher[pg2]:
-                    ok = False
-                    break
-            if ok:
-                gut = True
-                break
-            zuruecknehmen()
-        if not gut:
-            del ueb[best]
-            continue
-        weg[wer] = weg.get(wer, 0) + 1
-        for pg2 in list(alt_lage):
-            for o in lg[pg2]:
-                if o == wer:
-                    continue
-                schl = (pg2, min(o, wer), max(o, wer))
-                n = len(pix[(pg2, wer)] & pix[(pg2, o)])
-                if frozenset((o, wer)) in nbp and n <= 10:
-                    n = 0
-                if n:
-                    ueb[schl] = n
-                elif schl in ueb:
-                    del ueb[schl]
-    return lg
-
-
 class Blatt(object):
     def __init__(self, zimmer, rdts, ex, ey):
         self.zimmer = [z for z in zimmer if z in rdts]
@@ -180,25 +69,14 @@ class Blatt(object):
         self.ex = float(ex)
         self.ey = float(ey)
         self._zellen = {}
-        # FESTE POSEN: Orte, deren Drehung/Spiegelung ein bereits geloestes Blatt
-        # DERSELBEN Komponente vorgibt. Ein Ort, der auf zwei Blaettern liegt
-        # (Treppenhaus, Fahrstuhl), muss dort gleich herum liegen - sonst stapeln die
-        # Stockwerke nicht.
         self.feste_posen = {}
-        # FESTE LAGEN: vollstaendige Zustaende (ox, oy, Drehung, Spiegelung) aus einem
-        # schon geloesten Blatt derselben Komponente. Damit waechst dieses Blatt um
-        # DIESELBEN Anker wie das vorige - sonst legt jeder Loeserlauf sein Stockwerk um
-        # eine andere Wurzel, und die Vereinigung aller Blaetter wird unnoetig gross
-        # (gemessen 372x342 px statt der 225x323 des groessten Einzelblattes, was den
-        # gemeinsamen Massstab von 705 auf 1404 Welteinheiten je Pixel verdoppelte).
         self.feste_lagen = {}
-        self._nbp = None
         self.kanten = []
-        # Zu jeder Kante die beiden TRIGGER-MASSE: ihre kurze Seite ist die Anlauftiefe,
-        # deren Haelfte der Abstand des Tuer-Datensatzes von der Wand. Der Ausgleich
-        # braucht sie als Ruhelaenge, sonst zieht er die Raeume ineinander.
         self.kantenmass = []
+        self.notkanten = []
         self.notkantenmass = []
+        self._nbp = None
+        self._wurzel = None
         for b in self.zimmer:
             for d in rdts[b][1]:
                 if (d['rw'] == 0 and d['rd'] == 0) or d['dest'] not in self.zimmer:
@@ -214,17 +92,10 @@ class Blatt(object):
                                             d['dest'], (e['lx'], e['lz'])))
                         self.kantenmass.append(((d['rw'], d['rd']), (e['rw'], e['rd'])))
                     break
-        # ⛔ NOTKANTEN. Ein Blatt zerfaellt in MEHRERE Komponenten des Tuergraphen -
-        # Seite 8 in {4000,4010,4030}, {4080,4090,40A0,40B0}, den turlosen 4020 und die
-        # Wurzelkomponente. Die Breitensuche setzte nur die Wurzelkomponente: 3 von 11
-        # Raeumen. Die Bruecken dazwischen SIND vorhanden, nur einseitig: 4000 -> 4020
-        # und 4080 -> 4030 tragen keinen reziproken Gegen-Datensatz.
-        # Anker ist dort der Spawn nx/nz. Der liegt schon ein Stueck im Zielraum (der
-        # Grund, warum er fuer die regulaeren Kanten falsch ist, gemessen 22-27 %
-        # Ueberlappung) - AUSRUECKEN und ZUSAMMENZIEHEN korrigieren das anschliessend,
-        # und ein um wenige Pixel versetzter Raum ist allemal besser als keiner.
-        fest = {(min(a, b), max(a, b)) for (a, _, b, _) in self.kanten}
-        self.notkanten = []
+        # NOTKANTEN: einseitige Tueren (kein reziproker Gegen-Datensatz). Ohne sie
+        # zerfaellt ein Blatt in mehrere Komponenten - Seite 8 in vier, davon wurde
+        # frueher nur eine gesetzt (3 von 11 Raeumen). Anker ist dort der Spawn nx/nz.
+        fest = set((min(a, b), max(a, b)) for (a, _p, b, _q) in self.kanten)
         for b in self.zimmer:
             for d in rdts[b][1]:
                 if (d['rw'] == 0 and d['rd'] == 0) or d['dest'] not in self.zimmer:
@@ -235,139 +106,58 @@ class Blatt(object):
                     continue
                 self.notkanten.append((b, (d['lx'], d['lz']),
                                        d['dest'], (d['nx'], d['nz'])))
-                # Die Trigger-Masse der QUELL-Tuer; das Ziel ist der Spawn, der schon
-                # im Zielraum an der Wand liegt - dort ist keine zweite Tiefe zu
-                # beruecksichtigen.
                 self.notkantenmass.append((d['rw'], d['rd']))
 
-    @staticmethod
-    def schliessen(zellen):
-        """Eingeschlossene Loecher schliessen und zu Rechtecken zusammenfassen.
-
-        ⛔ Die Kollisionszellen (RDT +0x20) beschreiben den BEGEHBAREN WEG, nicht
-        den Raum. In einem moeblierten Raum ist das ein Ring um die Moebel: ROOM1120
-        besteht aus elf Streifen, der breiteste 4 Kartenpixel ([100,90,4,44],
-        [100,90,24,4], ...). Ungefuellt gezeichnet sieht ein Buero deshalb aus wie ein
-        Labyrinth aus Fluren - im Abzug des 3F-Blattes deutlich zu sehen. Ein
-        Kartenraum ist die FLAECHE; alles, was von aussen nicht erreichbar ist, gehoert
-        dazu.
-
-        Gerechnet auf dem Gitter der Zell-Kanten (Koordinaten-Kompression), also exakt
-        und ohne Wahl einer Rasterweite. Danach werden gleiche Zeilenlaeufe vertikal
-        verschmolzen, damit die Zellenliste des Zeichners klein bleibt."""
-        zellen = [c for c in zellen if c[2] > 0 and c[3] > 0]
-        if not zellen:
-            return []
-        XS = sorted({c[0] for c in zellen} | {c[0] + c[2] for c in zellen})
-        ZS = sorted({c[1] for c in zellen} | {c[1] + c[3] for c in zellen})
-        nx, nz = len(XS) - 1, len(ZS) - 1
-        if nx <= 0 or nz <= 0:
-            return list(zellen)
-        belegt = [[False] * nz for _ in range(nx)]
-        for (cx, cz, cw, cd) in zellen:
-            i0 = bisect.bisect_left(XS, cx)
-            i1 = bisect.bisect_left(XS, cx + cw)
-            j0 = bisect.bisect_left(ZS, cz)
-            j1 = bisect.bisect_left(ZS, cz + cd)
-            for i in range(i0, i1):
-                for j in range(j0, j1):
-                    belegt[i][j] = True
-        # Aussenraum vom Gitterrand her fluten; was nicht erreicht wird, ist innen.
-        aussen = [[False] * nz for _ in range(nx)]
-        stapel = []
-        for i in range(nx):
-            for j in (0, nz - 1):
-                if not belegt[i][j] and not aussen[i][j]:
-                    aussen[i][j] = True
-                    stapel.append((i, j))
-        for j in range(nz):
-            for i in (0, nx - 1):
-                if not belegt[i][j] and not aussen[i][j]:
-                    aussen[i][j] = True
-                    stapel.append((i, j))
-        while stapel:
-            i, j = stapel.pop()
-            for (di, dj) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                a, b = i + di, j + dj
-                if 0 <= a < nx and 0 <= b < nz and not belegt[a][b] and not aussen[a][b]:
-                    aussen[a][b] = True
-                    stapel.append((a, b))
-        # ⛔ DIE FLUT LECKT DURCH DIE TUEROEFFNUNG. ROOM1150s begehbarer Ring hat
-        # dort, wo die Tuer sitzt, eine Luecke - der Aussenraum erreicht die
-        # Moebelflaeche und sie bleibt ein Loch (Vorschau 3F: der Raum stand als
-        # Rahmen mit zwei Kaesten darin, 18 Streifen). Zusaetzlich wird deshalb die
-        # ORTHOGONAL-KONVEXE Huelle gefuellt: ein Feld gehoert dazu, wenn in seiner
-        # Zeile LINKS UND RECHTS und in seiner Spalte OBEN UND UNTEN belegte Felder
-        # liegen. Das schliesst den Ring, laesst eine L-Form aber L-foermig (in der
-        # Kerbe fehlt jeweils eine der vier Richtungen).
-        zl = []
-        for j in range(nz):
-            idx = [i for i in range(nx) if belegt[i][j]]
-            zl.append((idx[0], idx[-1]) if idx else None)
-        sp = []
-        for i in range(nx):
-            idx = [j for j in range(nz) if belegt[i][j]]
-            sp.append((idx[0], idx[-1]) if idx else None)
-        voll = [[belegt[i][j] or not aussen[i][j] or
-                 (zl[j] is not None and zl[j][0] <= i <= zl[j][1] and
-                  sp[i] is not None and sp[i][0] <= j <= sp[i][1])
-                 for j in range(nz)] for i in range(nx)]
-        # Zeilenlaeufe, gleiche Muster vertikal verschmelzen
-        raus = []
-        j = 0
-        while j < nz:
-            muster = [voll[i][j] for i in range(nx)]
-            k = j + 1
-            while k < nz and [voll[i][k] for i in range(nx)] == muster:
-                k += 1
-            i = 0
-            while i < nx:
-                if muster[i]:
-                    t = i
-                    while t < nx and muster[t]:
-                        t += 1
-                    raus.append((XS[i], ZS[j], XS[t] - XS[i], ZS[k] - ZS[j]))
-                    i = t
-                else:
-                    i += 1
-            j = k
-        return raus
-
-    def _posen(self, b):
-        """Die zulaessigen Posen eines Ortes: alle acht - oder genau die eine, die ein
-        anderes Blatt derselben Komponente schon festgelegt hat."""
-        f = self.feste_lagen.get(b)
-        if f is not None:
-            return [(f[2], f[3])]
-        f = self.feste_posen.get(b)
-        if f is not None:
-            return [f]
-        return [(k, sp) for k in range(4) for sp in (0, 1)]
-
+    # ------------------------------------------------------------------ Geometrie
     def zellen(self, rid):
-        """Die FLAECHE des Raums: Kollisionszellen mit geschlossenen Loechern."""
+        """⛔ DIE AEUSSERE KOLLISIONSBOX - EINE Zelle, kein Zellhaufen.
+
+        Der Nutzer: "Raum A hat die aeussere Kollisionsbox von Breite X bis Breite Y.
+        Zack, hast du schon den Grundriss des Raumes fertig."
+
+        Die alte Fassung fuellte die einzelnen Zellen (Loecher schliessen,
+        orthogonal-konvexe Huelle) und erzeugte damit ineinandergreifende L-Formen, die
+        sich nicht gleichzeitig an der Tuer verheften und ueberlappungsfrei stellen
+        lassen. Ein Rechteck kachelt immer."""
         if rid in self._zellen:
             return self._zellen[rid]
-        alle = list(self.rdts[rid][0])
-        self._zellen[rid] = self.schliessen(alle) or alle
+        alle = [c for c in self.rdts[rid][0] if c[2] > 0 and c[3] > 0]
+        if not alle:
+            self._zellen[rid] = []
+            return self._zellen[rid]
+        x0 = min(c[0] for c in alle)
+        z0 = min(c[1] for c in alle)
+        x1 = max(c[0] + c[2] for c in alle)
+        z1 = max(c[1] + c[3] for c in alle)
+        self._zellen[rid] = [(x0, z0, x1 - x0, z1 - z0)]
         return self._zellen[rid]
 
-    def pixel(self, b, st):
+    def kasten(self, b, st):
+        """Das Rechteck des Ortes in Kartenpixeln: (x, y, w, h)."""
+        z = self.zellen(b)
+        if not z:
+            return None
+        (cx, cz, cw, cd) = z[0]
         ox, oy, k, sp = st
-        s = set()
-        for (cx, cz, cw, cd) in self.zellen(b):
-            pts = [dreh(cx, cz, k, sp), dreh(cx + cw, cz, k, sp),
-                   dreh(cx, cz + cd, k, sp), dreh(cx + cw, cz + cd, k, sp)]
-            X = [p[0] for p in pts]
-            Z = [p[1] for p in pts]
-            x0 = int(ox + min(X) / self.ex)
-            x1 = int(ox + max(X) / self.ex)
-            y0 = int(oy - max(Z) / self.ey)
-            y1 = int(oy - min(Z) / self.ey)
-            for y in range(y0, y1 + 1):
-                for x in range(x0, x1 + 1):
-                    s.add((x, y))
-        return s
+        pts = [dreh(cx, cz, k, sp), dreh(cx + cw, cz, k, sp),
+               dreh(cx, cz + cd, k, sp), dreh(cx + cw, cz + cd, k, sp)]
+        X = [p[0] for p in pts]
+        Z = [p[1] for p in pts]
+        x0 = ox + min(X) / self.ex
+        x1 = ox + max(X) / self.ex
+        y0 = oy - max(Z) / self.ey
+        y1 = oy - min(Z) / self.ey
+        return (x0, y0, x1 - x0, y1 - y0)
+
+    def pixel(self, b, st):
+        k = self.kasten(b, st)
+        if not k:
+            return set()
+        x0 = int(round(k[0]))
+        y0 = int(round(k[1]))
+        x1 = int(round(k[0] + k[2]))
+        y1 = int(round(k[1] + k[3]))
+        return set((x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1))
 
     def punkt(self, b, st, wx, wz):
         ox, oy, k, sp = st
@@ -377,8 +167,7 @@ class Blatt(object):
     def abbildung(self, st):
         """Affine Abbildung Welt -> Kartenpixel als (A, B, C, D, E, F) mit
               mx = (A*wx + B*wz) / 65536 + C
-              my = (D*wx + E*wz) / 65536 + F
-        Drehung und Spiegelung stecken in den Vorzeichen, der Massstab im Betrag."""
+              my = (D*wx + E*wz) / 65536 + F"""
         ox, oy, k, sp = st
         ax, az = dreh(1, 0, k, sp)
         bx, bz = dreh(0, 1, k, sp)
@@ -388,128 +177,129 @@ class Blatt(object):
         E = int(round(-bz * 65536.0 / self.ey))
         return (A, B, int(round(ox)), D, E, int(round(oy)))
 
-    def rest_genau(self, lage):
-        """Restfehler je Kante GEGEN DIE RUHELAENGE - also der echte Ausgleichsfehler.
-        rest() misst |pa-pb| und zaehlt damit die gewollte Wanddicke als Fehler mit."""
-        nbb = self._feder_nachbarn(lage)
+    # ------------------------------------------------------------------ Anlegen
+    @staticmethod
+    def wand(kasten, p):
+        """Welche Wand des Rechtecks liegt dem Punkt am naechsten?
+        0 = Nord, 1 = Ost, 2 = Sued, 3 = West."""
+        x, y, w, h = kasten
+        d = (p[1] - y, (x + w) - p[0], (y + h) - p[1], p[0] - x)
+        best = 0
+        for i in range(1, 4):
+            if d[i] < d[best]:
+                best = i
+        return best
+
+    def wandpunkt(self, b, st, p):
+        """Der Tuerpunkt AUF die naechste Wand des Rechtecks projiziert - dort wird das
+        Symbol gezeichnet, und dort muessen die beiden Enden eines Durchgangs
+        zusammenfallen.
+
+        ⛔ Der Tuer-Datensatz selbst liegt im INNEREN des Raums (das Trigger-Rechteck
+        deckt den Anlaufbereich ab). Ihn ungeprojiziert zu vergleichen misst die
+        Anlauftiefe mit und behauptet einen Fehler, den es auf der Zeichnung nicht gibt.
+        Der Nutzer dazu: "Die Karte ist nur ein Schema, das davon ausgeht, dass ein Raum
+        an den anderen haengt." """
+        ka = self.kasten(b, st)
+        if not ka:
+            return p
+        x, y, w, h = ka
+        wd = self.wand(ka, p)
+        if wd == 0:
+            return (p[0], y)
+        if wd == 1:
+            return (x + w, p[1])
+        if wd == 2:
+            return (p[0], y + h)
+        return (x, p[1])
+
+    def anlegen(self, a, st_a, pa, b, pb):
+        """Alle Lagen, in denen b mit seiner Tuerwand EXAKT auf a's Tuerwand liegt.
+
+        ⛔ DAS IST DER GANZE KERN. Die Tuer sitzt auf einer Wand von a; b muss seine
+        Gegen-Tuer auf der GEGENUEBERLIEGENDEN Wand haben, und dann wird b so geschoben,
+        dass (1) die beiden Wandlinien zusammenfallen und (2) die beiden Tuerpunkte
+        LAENGS der Wand uebereinander liegen. Mehr ist nicht noetig - und mehr darf auch
+        nicht sein, sonst entstehen wieder Luecken."""
+        ka = self.kasten(a, st_a)
+        if not ka:
+            return []
+        p_a = self.punkt(a, st_a, *pa)
+        wa = self.wand(ka, p_a)
         aus = []
-        for b in sorted(lage):
-            for (a, pe, pm, v) in nbb.get(b, ()):
-                if a not in lage or a >= b:
+        for k in range(4):
+            for sp in (0, 1):
+                kb = self.kasten(b, (0.0, 0.0, k, sp))
+                if not kb:
                     continue
-                q = self.punkt(a, lage[a], *pe)
-                r = self.punkt(b, lage[b], *pm)
-                aus.append(max(abs(r[0] - (q[0] + v[0])), abs(r[1] - (q[1] + v[1]))))
+                p_b = self.punkt(b, (0.0, 0.0, k, sp), *pb)
+                if self.wand(kb, p_b) != (wa + 2) % 4:
+                    continue
+                if wa == 1:            # Tuer in a's OSTwand -> b schliesst oestlich an
+                    ox = (ka[0] + ka[2]) - kb[0]
+                    oy = p_a[1] - p_b[1]
+                elif wa == 3:          # WESTwand
+                    ox = ka[0] - (kb[0] + kb[2])
+                    oy = p_a[1] - p_b[1]
+                elif wa == 0:          # NORDwand
+                    oy = ka[1] - (kb[1] + kb[3])
+                    ox = p_a[0] - p_b[0]
+                else:                  # SUEDwand
+                    oy = (ka[1] + ka[3]) - kb[1]
+                    ox = p_a[0] - p_b[0]
+                aus.append((ox, oy, k, sp))
         return aus
 
-    def rest(self, lage):
-        """Restfehler JE KANTE im eigenen Rahmen: wie weit liegen die beiden
-        Tuerpunkte eines Durchgangs auseinander? Das ist die Groesse, die der Nutzer
-        als "Uebertragung stimmt nicht" sieht - unabhaengig von Zonen-Zuordnung oder
-        Marken-Paarung, also die ehrlichste Kontrolle des Loesers."""
-        aus = []
-        for (a, pa, b, pb) in self.kanten:
-            if a not in lage or b not in lage:
-                continue
-            qa = self.punkt(a, lage[a], *pa)
-            qb = self.punkt(b, lage[b], *pb)
-            aus.append(max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])))
-        return aus
-
-    def kosten(self, lage, pix=None):
-        """(Ueberlappung in %, Zahl der beruehrenden Durchgaenge, Breite, Hoehe)"""
-        pix = pix or {b: self.pixel(b, lage[b]) for b in lage}
-        alle = set()
-        doppelt = 0
-        for b in lage:
-            doppelt += len(alle & pix[b])
-            alle |= pix[b]
-        beruehrt = 0
-        for (a, pa, b, pb) in self.kanten:
-            if a not in lage or b not in lage:
-                continue
-            nah = False
-            for (x, y) in pix[a]:
-                for dx in (-2, -1, 0, 1, 2):
-                    for dy in (-2, -1, 0, 1, 2):
-                        if (x + dx, y + dy) in pix[b]:
-                            nah = True
-                            break
-                    if nah:
-                        break
-                if nah:
-                    break
-            if nah:
-                beruehrt += 1
-        xs = [p[0] for p in alle]
-        ys = [p[1] for p in alle]
-        br = (max(xs) - min(xs) + 1) if xs else 0
-        ho = (max(ys) - min(ys) + 1) if ys else 0
-        return (doppelt / max(1, len(alle)) * 100.0, beruehrt, br, ho)
-
-    def kontakte(self, pix):
-        """Zahl der Durchgaenge, deren beide Enden sich beruehren - aus einem fertigen
-        Pixel-Cache. Gleiche Regel wie kosten(), nur ohne Neuberechnung."""
-        n = 0
-        for (a, pa, b, pb) in self.kanten:
-            if a not in pix or b not in pix:
-                continue
-            nah = False
-            for (x, y) in pix[a]:
-                for dx in (-2, -1, 0, 1, 2):
-                    for dy in (-2, -1, 0, 1, 2):
-                        if (x + dx, y + dy) in pix[b]:
-                            nah = True
-                            break
-                    if nah:
-                        break
-                if nah:
-                    break
-            if nah:
-                n += 1
-        return n
-
-    def _ausruecken(self, b, st, pix, k, sp, anker):
-        """Schiebt den Raum vom Anker weg, bis er sich mit dem Bestand nicht mehr
-        ueberlagert. Richtung: vom Tueranker zur Raummitte - das ist die Normale der
-        Wand, in der die Tuer sitzt. Laengs der Wand aendert sich nichts."""
-        if not pix:
-            return st
-        ox, oy, kk, ss = st
-        zs = self.zellen(b)
-        mx = sum(c[0] + c[2] / 2.0 for c in zs) / len(zs)
-        mz = sum(c[1] + c[3] / 2.0 for c in zs) / len(zs)
-        dmx, dmz = dreh(mx - anker[0], mz - anker[1], k, sp)
-        vx = dmx / self.ex
-        vy = -dmz / self.ey
-        n = math.hypot(vx, vy)
-        if n < 1e-6:
-            return st
-        vx /= n
-        vy /= n
-        beste = st
-        bester = None
-        for schritt in range(0, 41):
-            kand = (ox + vx * schritt * 0.5, oy + vy * schritt * 0.5, kk, ss)
-            ueb = sum(len(self.pixel(b, kand) & v) for v in pix.values())
-            if ueb == 0:
-                return kand
-            if bester is None or ueb < bester:
-                bester = ueb
-                beste = kand
-        return beste
+    def _anbauen(self, b, lage, pix):
+        """Ein Ort ohne jede Tuerverbindung auf diesem Blatt: dicht an das schon
+        Gesetzte, aber ueberlappungsfrei (z.B. die Fahrstuhlkabine, die gar keine eigene
+        Tuer fuehrt)."""
+        belegt = set()
+        for v in pix.values():
+            belegt |= v
+        if not belegt:
+            lage[b] = (0.0, 0.0, 0, 0)
+            pix[b] = self.pixel(b, lage[b])
+            return
+        xs = [p[0] for p in belegt]
+        ys = [p[1] for p in belegt]
+        mx = (min(xs) + max(xs)) / 2.0
+        my = (min(ys) + max(ys)) / 2.0
+        best = None
+        for k in range(4):
+            for sp in (0, 1):
+                kb = self.kasten(b, (0.0, 0.0, k, sp))
+                if not kb:
+                    continue
+                for (ox, oy) in ((max(xs) + 1 - kb[0], my - kb[1] - kb[3] / 2.0),
+                                 (min(xs) - kb[2] - kb[0], my - kb[1] - kb[3] / 2.0),
+                                 (mx - kb[0] - kb[2] / 2.0, max(ys) + 1 - kb[1]),
+                                 (mx - kb[0] - kb[2] / 2.0, min(ys) - kb[3] - kb[1])):
+                    st = (ox, oy, k, sp)
+                    pb = self.pixel(b, st)
+                    if not pb:
+                        continue
+                    ueb = len(pb & belegt)
+                    cx = sum(p[0] for p in pb) / float(len(pb))
+                    cy = sum(p[1] for p in pb) / float(len(pb))
+                    f = ueb * 1000.0 + abs(cx - mx) + abs(cy - my)
+                    if best is None or f < best[0]:
+                        best = (f, st, pb)
+        if best is None:
+            best = (0.0, (0.0, 0.0, 0, 0), self.pixel(b, (0.0, 0.0, 0, 0)))
+        lage[b] = best[1]
+        pix[b] = best[2]
 
     def aufbauen(self):
+        """Breitensuche durch den Tuergraph: jeder Ort wird an die Wand seines schon
+        gesetzten Nachbarn gelegt. Reziproke Tueren zuerst, dann einseitige, dann der
+        Anbau fuer Orte ganz ohne Verbindung."""
         if not self.zimmer:
             return {}
         grad = collections.Counter()
-        for (a, _, b, _) in self.kanten:
+        for (a, _pa, b, _pb) in self.kanten:
             grad[a] += 1
             grad[b] += 1
-        # Ein Ort mit FESTER Pose ist die beste Wurzel: an ihm haengt die Ausrichtung
-        # zum Nachbarblatt.
-        wurzel = max(self.zimmer,
-                     key=lambda b: (1 if b in self.feste_posen else 0, grad[b], -b))
         nb = collections.defaultdict(list)
         for (a, pa, b, pb) in self.kanten:
             nb[a].append((b, pa, pb))
@@ -518,27 +308,41 @@ class Blatt(object):
         for (a, pa, b, pb) in self.notkanten:
             nnb[a].append((b, pa, pb))
             nnb[b].append((a, pb, pa))
-        # Feste Lagen zuerst setzen - sie sind die Anker, an denen dieses Blatt zu den
-        # anderen Stockwerken passt.
+
         lage = {}
         for b in self.zimmer:
             if b in self.feste_lagen:
                 lage[b] = self.feste_lagen[b]
         if lage:
-            wurzel = sorted(lage)[0]
+            pass
         else:
+            wurzel = getattr(self, '_wurzel', None)
+            if wurzel is None or wurzel not in self.zimmer:
+                wurzel = max(self.zimmer, key=lambda b: (grad[b], -b))
             lage = {wurzel: (0.0, 0.0) + self.feste_posen.get(wurzel, (0, 0))}
         pix = dict((b, self.pixel(b, lage[b])) for b in lage)
         q = sorted(lage)
 
         def anheften(a, b, pa, pb):
-            """b an die schon gesetzte Tuer von a haengen, beste der 8 Posen."""
-            p = self.punkt(a, lage[a], *pa)
+            kand = self.anlegen(a, lage[a], pa, b, pb)
+            fest = self.feste_posen.get(b)
+            if fest is not None:
+                gefiltert = [c for c in kand if (c[2], c[3]) == fest]
+                if gefiltert:
+                    kand = gefiltert
+            if not kand:
+                # Keine Pose legt die Gegen-Tuer auf die gegenueberliegende Wand (kommt
+                # vor, wenn eine Tuer in einer Ecke sitzt und die naechste Wand die
+                # andere Achse ist). Dann wenigstens Tuerpunkt auf Tuerpunkt - eine
+                # Ueberlappung ist allemal besser als eine Luecke.
+                p = self.punkt(a, lage[a], *pa)
+                for k in range(4):
+                    for sp in (0, 1):
+                        d = dreh(pb[0], pb[1], k, sp)
+                        kand.append((p[0] - d[0] / self.ex,
+                                     p[1] + d[1] / self.ey, k, sp))
             best = None
-            for (k, sp) in self._posen(b):
-                d = dreh(pb[0], pb[1], k, sp)
-                st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
-                st = self._ausruecken(b, st, pix, k, sp, pb)
+            for st in kand:
                 pb2 = self.pixel(b, st)
                 ueb = sum(len(pb2 & v) for v in pix.values())
                 if best is None or ueb < best[0]:
@@ -553,9 +357,8 @@ class Blatt(object):
                 for (b, pa, pb) in nb[a]:
                     if b not in lage:
                         anheften(a, b, pa, pb)
-            # Komponente erschoepft: ueber eine NOTKANTE weiter, sonst ANBAUEN.
             weiter = None
-            for a in lage:
+            for a in sorted(lage):
                 for (b, pa, pb) in nnb[a]:
                     if b not in lage:
                         weiter = (a, b, pa, pb)
@@ -568,500 +371,60 @@ class Blatt(object):
             offen = [b for b in self.zimmer if b not in lage]
             if not offen:
                 break
-            self._anbauen(max(offen, key=lambda b: (grad[b], -b)), lage, pix)
-            q.append(max(offen, key=lambda b: (grad[b], -b)))
+            n = max(offen, key=lambda b: (grad[b], -b))
+            self._anbauen(n, lage, pix)
+            q.append(n)
         return lage
 
-    def _anbauen(self, b, lage, pix):
-        """Einen Raum ohne jede Tuerverbindung auf dem Blatt anlegen: dicht an das
-        schon Gesetzte, aber ueberlappungsfrei. Betrifft z.B. ROOM4020 (Seite 8, gar
-        keine Tuer im RDT) und ROOM5090 (Seite 9, nur Selbst-Tueren und eine Tuer auf
-        ein anderes Blatt). Ohne diesen Zweig blieben sie ganz ohne Zeichnung."""
-        belegt = set()
-        for v in pix.values():
-            belegt |= v
-        if not belegt:
-            lage[b] = (0.0, 0.0, 0, 0)
-            pix[b] = self.pixel(b, lage[b])
-            return
-        xs = [p[0] for p in belegt]
-        ys = [p[1] for p in belegt]
-        mx = (min(xs) + max(xs)) / 2.0
-        my = (min(ys) + max(ys)) / 2.0
-        best = None
-        for (k, sp) in self._posen(b):
-            if True:
-                roh = self.pixel(b, (0.0, 0.0, k, sp))
-                if not roh:
-                    continue
-                rx = [p[0] for p in roh]
-                ry = [p[1] for p in roh]
-                br = max(rx) - min(rx) + 1
-                ho = max(ry) - min(ry) + 1
-                for (ox, oy) in ((max(xs) + 1 - min(rx), int(my - ho / 2) - min(ry)),
-                                 (min(xs) - br - min(rx), int(my - ho / 2) - min(ry)),
-                                 (int(mx - br / 2) - min(rx), max(ys) + 1 - min(ry)),
-                                 (int(mx - br / 2) - min(rx), min(ys) - ho - min(ry))):
-                    st = (float(ox), float(oy), k, sp)
-                    pb2 = self.pixel(b, st)
-                    ueb = len(pb2 & belegt)
-                    cx = sum(p[0] for p in pb2) / float(len(pb2))
-                    cy = sum(p[1] for p in pb2) / float(len(pb2))
-                    f = ueb * 1000.0 + math.hypot(cx - mx, cy - my)
-                    if best is None or f < best[0]:
-                        best = (f, st, pb2)
-        if best is None:
-            best = (0.0, (0.0, 0.0, 0, 0), self.pixel(b, (0.0, 0.0, 0, 0)))
-        lage[b] = best[1]
-        pix[b] = best[2]
-
-    def verbessern(self, lage, runden=8):
-        """Posen-Nachlauf. Die Breitensuche waehlt die Pose jedes Raums in dem
-        Moment, in dem er gesetzt wird - sie kennt die spaeteren Nachbarn also noch
-        nicht, und ab etwa sechs Raeumen je Blatt entscheidet damit die Reihenfolge
-        statt der Geometrie (die vollstaendige Suche ueber 8^n Posen ist ab da nicht
-        mehr rechenbar: Seite 7 haette 8^15 = 3,5e13 Lagen).
-        Stattdessen: jeder Raum wird der Reihe nach an seiner Ankertuer neu in alle
-        acht Posen gelegt und die mit der kleinsten Gesamt-Ueberlappung behalten,
-        solange sich noch etwas aendert. Das ist ein Bergsteiger, kein Optimum -
-        aber er sieht im Gegensatz zur Breitensuche das FERTIGE Blatt."""
-        nbb = collections.defaultdict(list)
-        for menge in (self.kanten, self.notkanten):
-            for (a, pa, b, pb) in menge:
-                nbb[b].append((a, pa, pb))     # (Nachbar, dessen Tuerpunkt, eigener)
-                nbb[a].append((b, pb, pa))
-        pix = {b: self.pixel(b, lage[b]) for b in lage}
-        for _ in range(runden):
-            bewegt = False
-            for b in list(lage):
-                if b in self.feste_lagen:
-                    continue
-                anker = None
-                for (a, pa, pb) in nbb[b]:
-                    if a in lage and a != b:
-                        anker = (a, pa, pb)
-                        break
-                if anker is None:
-                    continue
-                a, pa, pb = anker
-                p = self.punkt(a, lage[a], *pa)
-                fremd = [v for o, v in pix.items() if o != b]
-
-                def guete(st, pb2):
-                    """⛔ UEBERLAPPUNG ALLEIN IST DAS FALSCHE MASS. Ein erster
-                    Nachlauf, der nur sie minimierte, drueckte Seite 1 von 7,3 % auf
-                    3,0 % - und die beruehrenden Durchgaenge von 9 von 9 auf 3 von 9.
-                    Das Ziel ist aber der Satz des Nutzers: "ein neues Kartenstueck
-                    schliesst genau da an, wo man den Raum davor durch die Tuer
-                    verlassen hat." Ueberlappung ist die SCHRANKE (Faktor 10000),
-                    der Tuerabstand das eigentliche Mass."""
-                    f = sum(len(pb2 & v) for v in fremd) * 10000.0
-                    for (o, po, pe) in nbb[b]:
-                        if o not in lage or o == b:
-                            continue
-                        q1 = self.punkt(o, lage[o], *po)
-                        q2 = self.punkt(b, st, *pe)
-                        f += math.hypot(q1[0] - q2[0], q1[1] - q2[1])
-                    return f
-
-                best = (guete(lage[b], pix[b]), lage[b], pix[b])
-                for (k, sp) in self._posen(b):
-                    if True:
-                        d = dreh(pb[0], pb[1], k, sp)
-                        st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
-                        st = self._ausruecken(b, st, {o: v for o, v in pix.items()
-                                                      if o != b}, k, sp, pb)
-                        pb2 = self.pixel(b, st)
-                        f = guete(st, pb2)
-                        if f < best[0] - 1e-9:
-                            best = (f, st, pb2)
-                if best[1] != lage[b]:
-                    lage[b] = best[1]
-                    pix[b] = best[2]
-                    bewegt = True
-            if not bewegt:
-                break
-        return lage
-
-    def nachbarpaare(self):
-        """Ortspaare, die eine Tuer verbindet - die duerfen sich an der Tuer beruehren
-        und ein wenig ueberlappen; das IST die Laibung."""
-        if getattr(self, '_nbp', None) is None:
-            self._nbp = set(frozenset((a, b)) for (a, _pa, b, _pb) in self.kanten)
-            self._nbp |= set(frozenset((a, b))
-                             for (a, _pa, b, _pb) in self.notkanten)
-        return self._nbp
-
-    def federn(self, lage, runden=600):
-        """ALLE Durchgaenge zugleich statt eines Spannbaums.
-
-        ⛔ DAS WAR DER EIGENTLICHE FEHLER. Die Breitensuche heftet jeden Ort an GENAU
-        EINEN Nachbarn; jede weitere Tuer - also jeder Ring im Tuergraph - blieb nur ein
-        weicher Zug, den zusammenziehen() beim ersten drohenden Ueberlapp aufgab. Bei 126
-        Orten und 205 Tueren sind rund 80 Tueren nie eingehalten worden. Gemessen am
-        2026-09-02: die beiden Enden eines Durchgangs lagen im Median 6 px quer und 5 px
-        laengs der Wand auseinander, im schlimmsten Fall 69 bzw. 72 px, mit 55 px
-        klaffender Luecke zwischen zwei Raeumen, die eine Tuer teilen. Der Nutzer sah
-        genau das: "die Kartenstuecke haben Abstaende zueinander" und "die Uebertragungen
-        von einem Raum zum anderen sind SAU oft falsch".
-
-        Hier wird der Fehler ueber ALLE Kanten zugleich klein gemacht: jeder Ort setzt
-        sich in den Mittelwert der Stellen, an denen seine Nachbarn seine Tueren malen
-        (Gauss-Seidel; das konvergiert gegen die kleinste Fehlerquadratsumme). Ringe, die
-        geometrisch nicht schliessen, verteilen ihren Rest dann gleichmaessig, statt ihn
-        auf eine Tuer zu haeufen."""
-        nbb = self._feder_nachbarn(lage)
-        if not nbb:
-            return lage
-        for _ in range(runden):
-            if self._feder_sweep(lage, nbb) < 0.02:
-                break
-        return lage
-
-    def _tiefe(self, a, pa, la):
-        """Wie weit liegt der Tuerpunkt vom RAND des Raums entfernt, nach aussen hin?
-        Das Trigger-Rechteck deckt den Anlaufbereich ab, sein Mittelpunkt liegt also im
-        Inneren; dieser Abstand ist die halbe Dicke des Durchgangs. Rueckgabe:
-        (Richtung nach aussen x, y, Abstand in Kartenpixeln)."""
-        st = (0.0, 0.0, la[2], la[3])
-        pix = self.pixel(a, st)
-        if not pix:
-            return (0, 0, 0)
-        p = self.punkt(a, st, *pa)
-        cx = sum(q[0] for q in pix) / float(len(pix))
-        cy = sum(q[1] for q in pix) / float(len(pix))
-        gx, gy = p[0] - cx, p[1] - cy
-        if abs(gx) >= abs(gy):
-            sx, sy = (1 if gx >= 0 else -1), 0
-        else:
-            sx, sy = 0, (1 if gy >= 0 else -1)
-        ix, iy = int(round(p[0])), int(round(p[1]))
-        for t in range(0, 48):
-            if (ix + sx * t, iy + sy * t) not in pix:
-                return (sx, sy, t)
-        return (sx, sy, 0)
-
-    def _wandnormale(self, dims, la):
-        """Richtung QUER zur Wand, in Kartenpixeln. Das Trigger-Rechteck ist LAENGS der
-        Wand gestreckt - man laeuft laengs der Wand auf die Tuer zu, quer dazu ist nur
-        die Laibung tief; die kurze Achse ist also die Normale. Gemessen in ROOM1130:
-        ->1140 1000x4000 und ->1120/1150 1000x2000 = Z gestreckt = senkrechte Wand;
-        ->1170 2000x1000 = X gestreckt = waagerechte Wand."""
-        rw, rd = dims
-        nw = (1, 0) if rd > rw else (0, 1)
-        d = dreh(nw[0], nw[1], la[2], la[3])
-        mx, my = d[0] / self.ex, -d[1] / self.ey
-        if abs(mx) >= abs(my):
-            return (1 if mx > 0 else -1, 0)
-        return (0, 1 if my > 0 else -1)
-
-    def _wandtiefe(self, a, pa, dims, la):
-        """Abstand des Tuerpunktes von der Wand in Kartenpixeln, plus die Richtung nach
-        DRAUSSEN. Gegangen wird in beide Richtungen quer zur Wand; hinaus geht es dorthin,
-        wo der Raum frueher endet. Robust auch bei L-Formen - ein frueherer Versuch ueber
-        den Schwerpunkt zeigte dort in die falsche Richtung und lieferte 10 bis 18 px
-        statt der Wanddicke."""
-        st = (0.0, 0.0, la[2], la[3])
-        pix = self.pixel(a, st)
-        if not pix:
-            return (0, 0, 0)
-        p = self.punkt(a, st, *pa)
-        nx, ny = self._wandnormale(dims, la)
-        # ⛔ DIE TIEFE STEHT IM TRIGGER, NICHT IM STRAHL. Ein erster Wurf lief vom
-        # Tuerpunkt nach aussen, bis er den Raum verliess - bei grossen Raeumen laeuft
-        # dieser Strahl aber tief hinein, bevor er austritt. Gemessene Ruhelaengen: 4 bis
-        # 22 px, also bis zu 22000 Welteinheiten "Wand". Der Loeser stellte die Raeume
-        # damit absichtlich so weit auseinander, und genau das sah der Nutzer als Sprung
-        # beim Durchschreiten (live gemessen: Median 9 px, kein Uebergang unter 2 px).
-        # Das Trigger-Rechteck ist LAENGS der Wand gestreckt; seine kurze Seite ist die
-        # Anlauftiefe, und der Tuer-Datensatz sitzt in deren Mitte. Der Abstand zur Wand
-        # ist also die HALBE kurze Seite - gemessen, nicht gelaufen.
-        rw, rd = dims
-        kurz = rw if rw <= rd else rd
-        mass = self.ex if nx else self.ey
-        t = (kurz / 2.0) / (mass if mass else 1.0)
-        # Der Strahl entscheidet nur noch das VORZEICHEN: nach aussen geht es dorthin,
-        # wo der Raum frueher endet. Ein falsches Vorzeichen kostet jetzt hoechstens
-        # diese wenigen Pixel statt zwanzig.
-        ix, iy = int(round(p[0])), int(round(p[1]))
-        weit = []
-        for vz in (1, -1):
-            k = 0
-            while k < 48 and (ix + nx * vz * k, iy + ny * vz * k) in pix:
-                k += 1
-            weit.append((k, vz))
-        weit.sort()
-        vz = weit[0][1]
-        return (nx * vz, ny * vz, t)
-
-    def _ruhe(self, a, pa, b, pb, la, lb):
-        """RUHEVEKTOR einer Kante: um wieviel muessen die beiden Tuerpunkte
-        auseinanderliegen, damit die Raeume KANTE AN KANTE stehen?
-
-        ⛔ OHNE DAS KOLLABIEREN DIE FEDERN. Beide Tuer-Datensaetze liegen im INNEREN
-        ihres Raums (das Trigger-Rechteck deckt den Anlaufbereich ab). Eine Feder mit
-        Ruhelaenge 0 zieht deshalb die beiden Raeume ineinander, und ein Raum mit drei
-        Tueren wandert in die Mitte seiner Nachbarn: gemessen 38-49 % Ueberlappung auf
-        den Blaettern 7 und 9. Der Vektor wird einmal je Kante aus der Geometrie der
-        beiden Orte in ihren gewaehlten Posen bestimmt - dieselbe Regel wie beim
-        Ausruecken, nur isoliert und exakt."""
-        ka, spa = la[2], la[3]
-        kb, spb = lb[2], lb[3]
-        pixa = self.pixel(a, (0.0, 0.0, ka, spa))
-        if not pixa:
-            return (0.0, 0.0)
-        pixb0 = self.pixel(b, (0.0, 0.0, kb, spb))
-        if not pixb0:
-            return (0.0, 0.0)
-        p = self.punkt(a, (0.0, 0.0, ka, spa), *pa)
-        d = dreh(pb[0], pb[1], kb, spb)
-        ox, oy = p[0] - d[0] / self.ex, p[1] + d[1] / self.ey
-        cx = sum(q[0] for q in pixa) / float(len(pixa))
-        cy = sum(q[1] for q in pixa) / float(len(pixa))
-        gx, gy = p[0] - cx, p[1] - cy
-        if abs(gx) >= abs(gy):
-            sx, sy = (1 if gx >= 0 else -1), 0
-        else:
-            sx, sy = 0, (1 if gy >= 0 else -1)
-        bx, by = int(round(ox)), int(round(oy))
-        for schritt in range(0, 96):
-            vx, vy = bx + sx * schritt, by + sy * schritt
-            if not any((x + vx, y + vy) in pixa for (x, y) in pixb0):
-                return (sx * schritt, sy * schritt)
-        return (sx * 96, sy * 96)
-
-    def _feder_nachbarn(self, lage):
-        """Nachbarschaft fuer den Ausgleich: (Nachbar, DESSEN Tuerpunkt, EIGENER
-        Tuerpunkt, Ruhevektor).
-
-        ⛔ ZWEI FEHLER STECKTEN HIER, BEIDE GEMESSEN:
-        (1) Die beiden Tuerpunkte standen VERTAUSCHT - der Sweep rechnete
-            punkt(Nachbar, EIGENER Punkt) und schob die Raeume an sinnlose Stellen.
-            Erkennbar daran, dass das Ausgleichen den Kanten-Rest VERGROESSERTE
-            (Seite 7: Median 14 -> 45 px), obwohl Gauss-Seidel ihn nur verkleinern kann.
-        (2) Die Ruhelaenge war 0. Beide Tuer-Datensaetze liegen aber im INNEREN ihres
-            Raums (das Trigger-Rechteck deckt den Anlaufbereich ab), also zog die Feder
-            die Raeume genau um diese Tiefen ineinander - bis 37 % Ueberlappung auf
-            Seite 7. Der Gegenversuch, als Ruhelaenge den Vektor bis zur vollstaendigen
-            Trennung zu nehmen, war ebenso falsch: bei ineinandergreifenden L-Formen sind
-            das 10 bis 20 px, und der Sprung stieg von 8 auf 20 px im Median.
-            Richtig ist die Summe der beiden WANDTIEFEN, quer zur Wand gemessen.
-        """
-        nbb = collections.defaultdict(list)
-        for _i, kante in enumerate(self.kanten):
-            a, pa, b, pb = kante
+    # ------------------------------------------------------------------ Bewertung
+    def rest(self, lage):
+        """Abstand der beiden Tuerpunkte je Durchgang - das Mass, das der Spieler beim
+        Durchschreiten sieht. Bei sauber angelegten Rechtecken ist er 0."""
+        aus = []
+        for (a, pa, b, pb) in self.kanten:
             if a not in lage or b not in lage:
                 continue
-            da, db = (self.kantenmass[_i] if _i < len(self.kantenmass)
-                      else ((1, 1), (1, 1)))
-            ta = self._wandtiefe(a, pa, da, lage[a])
-            tb = self._wandtiefe(b, pb, db, lage[b])
-            vl = ta[2] + tb[2]
-            import os as _o2
-            if _o2.environ.get('GRUNDRISS_RUHE'):
-                print("      RUHE ROOM%04X z%d <-> ROOM%04X z%d : %d + %d = %d px"
-                      % (a >> 4, a & 15, b >> 4, b & 15, ta[2], tb[2], vl))
-            v = (ta[0] * vl, ta[1] * vl)
-            nbb[a].append((b, pb, pa, (-v[0], -v[1])))
-            nbb[b].append((a, pa, pb, (v[0], v[1])))
-        # ⛔ EINSEITIGE TUEREN GEHOEREN DAZU. Sie standen bisher nur in notkanten und
-        # wurden vom Ausgleich GAR NICHT erfasst - der Loeser benutzte sie einmal beim
-        # Aufbau, danach war die Tuer frei. Live gemessen (test_map_uebergang) war genau
-        # so ein Fall der schlimmste ueberhaupt: ROOM2070 -> ROOM2000 sprang um 63 px.
-        # Anker ist hier der SPAWN im Zielraum; der liegt schon innen an der Wand, also
-        # zaehlt nur die Wandtiefe der Quellseite.
-        for _i, kante in enumerate(self.notkanten):
-            a, pa, b, pb = kante
+            qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
+            qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
+            aus.append(max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])))
+        return aus
+
+    def kosten(self, lage, pix=None):
+        """(Ueberlappung in %, Zahl der Durchgaenge mit deckungsgleicher Tuer, B, H)"""
+        pix = pix or dict((b, self.pixel(b, lage[b])) for b in lage)
+        alle = set()
+        doppelt = 0
+        for b in lage:
+            doppelt += len(alle & pix[b])
+            alle |= pix[b]
+        # ⛔ NICHT MEHR "FLAECHEN BERUEHREN SICH MIT 2 px TOLERANZ". Dieses Mass war zu
+        # schwach und hat echte Defekte verdeckt (Memory reai-v2-schwaches-mass).
+        # Gezaehlt wird jetzt, wofuer die Karte gebaut ist: liegen die beiden Tuerpunkte
+        # eines Durchgangs auf demselben Pixel?
+        deckung = 0
+        for (a, pa, b, pb) in self.kanten:
             if a not in lage or b not in lage:
                 continue
-            da = (self.notkantenmass[_i] if _i < len(self.notkantenmass) else (1, 1))
-            ta = self._wandtiefe(a, pa, da, lage[a])
-            v = (ta[0] * ta[2], ta[1] * ta[2])
-            nbb[a].append((b, pb, pa, (-v[0], -v[1])))
-            nbb[b].append((a, pa, pb, (v[0], v[1])))
-        return nbb
-
-    def _feder_sweep(self, lage, nbb, anteil=1.0):
-        """Ein Gauss-Seidel-Durchlauf. anteil < 1 daempft, damit sich Federn und
-        Trennung nicht gegenseitig aufschaukeln."""
-        aend = 0.0
-        for b in sorted(lage):
-            if b in self.feste_lagen or b not in nbb:
-                continue
-            ox, oy, k, sp = lage[b]
-            xs = []
-            ys = []
-            for (a, pe, pm, v) in nbb[b]:
-                if a not in lage:
-                    continue
-                q = self.punkt(a, lage[a], *pe)
-                d = dreh(pm[0], pm[1], k, sp)
-                xs.append(q[0] + v[0] - d[0] / self.ex)
-                ys.append(q[1] + v[1] + d[1] / self.ey)
-            if not xs:
-                continue
-            nx = ox + (sum(xs) / len(xs) - ox) * anteil
-            ny = oy + (sum(ys) / len(ys) - oy) * anteil
-            aend = max(aend, abs(nx - ox), abs(ny - oy))
-            lage[b] = (nx, ny, k, sp)
-        return aend
-
-    def _trenn_sweep(self, lage, schritt=0.5):
-        """Ein Trenn-Durchlauf. Orte OHNE gemeinsame Tuer duerfen sich gar nicht
-        ueberlappen; Orte MIT gemeinsamer Tuer duerfen sich um die Laibung beruehren -
-        genau dort will der Nutzer keine Luecke sehen. Zugelassen wird ein Zehntel der
-        kleineren Flaeche."""
-        nbp = self.nachbarpaare()
-        pix = dict((b, self.pixel(b, lage[b])) for b in lage)
-        namen = sorted(lage)
-        bewegt = 0
-        for i in range(len(namen)):
-            for j in range(i + 1, len(namen)):
-                a, b = namen[i], namen[j]
-                n = len(pix[a] & pix[b])
-                if not n:
-                    continue
-                if frozenset((a, b)) in nbp and n <= 10:
-                    continue        # eine Laibung ist ein Streifen, kein halber Raum
-                ca = (sum(p[0] for p in pix[a]) / float(len(pix[a])),
-                      sum(p[1] for p in pix[a]) / float(len(pix[a])))
-                cb = (sum(p[0] for p in pix[b]) / float(len(pix[b])),
-                      sum(p[1] for p in pix[b]) / float(len(pix[b])))
-                dx, dy = cb[0] - ca[0], cb[1] - ca[1]
-                # ⛔ SCHRITTWEITE: FEST. Ein Schritt, der mit der doppelt belegten
-                # Flaeche waechst, drueckt die Ueberlappung zwar auf hoechstens 10 %
-                # (statt 31 %), verschlechtert aber genau das, was der Nutzer gemeldet
-                # hat: der schlimmste Sprung beim Durchschreiten stieg von 29 auf 45 px
-                # und die anstossenden Durchgaenge fielen von 96 auf 88. Gemessen wurden
-                # fuenf Einstellungen (integration_map_uebergang + der Generator-Bericht);
-                # diese hier ist die beste bei den beiden Groessen, die der Spieler sieht.
-                if abs(dx) >= abs(dy):
-                    sx, sy = (schritt if dx >= 0 else -schritt), 0.0
-                else:
-                    sx, sy = 0.0, (schritt if dy >= 0 else -schritt)
-                for wer, vz in ((b, 1.0), (a, -1.0)):
-                    if wer in self.feste_lagen:
-                        continue
-                    ox, oy, k, sp = lage[wer]
-                    lage[wer] = (ox + sx * vz, oy + sy * vz, k, sp)
-                    pix[wer] = self.pixel(wer, lage[wer])
-                    bewegt += 1
-        return bewegt
-
-    def ausgleichen(self, lage, runden=160):
-        """Federn und Trennen ABWECHSELND, nicht nacheinander.
-
-        ⛔ Ein erster Wurf lief federn -> trennen -> federn: der letzte Federlauf zog
-        alles wieder ineinander, Seite 9 kam auf 49 % Ueberlappung. Beide Kraefte muessen
-        in jedem Durchlauf wirken, dann pendelt sich der Kompromiss ein."""
-        import os as _os
-        nbb = self._feder_nachbarn(lage)
-        nur = _os.environ.get('GRUNDRISS_NUR_FEDERN')
-        for i in range(runden):
-            # ABKUEHLEN: anfangs zieht die Feder stark (die Lage muss erst stimmen),
-            # gegen Ende gibt sie nach, damit die Trennung das letzte Wort hat. Ohne das
-            # zog die Feder in jedem Durchlauf zurueck, was die Trennung gerade geschoben
-            # hatte - die dichten Blaetter 1 und 7 blieben bei 15 bis 20 % Ueberlappung.
-            anteil = 1.0 if nur else max(0.08, 0.7 * (1.0 - float(i) / runden))
-            a = self._feder_sweep(lage, nbb, anteil=anteil)
-            # Gegen Ende zwei Trenn-Durchlaeufe je Feder-Durchlauf: die Feder ist dann
-            # fast aus, das Trennen soll das letzte Wort haben. Ohne das blieben die
-            # dichten Blaetter 3 und 7 bei 23 bis 31 % Ueberlappung.
-            b = 0 if nur else self._trenn_sweep(lage)
-            if a < 0.02 and b == 0:
-                break
-        return lage
-
-    def zusammenziehen(self, lage, runden=200):
-        """Zieht die Tueren zusammen, ohne je eine Ueberlappung zuzulassen. Harte
-        Schranke, kein Gewicht: Ueberlappung ist verboten, der Rest wird nur so klein
-        wie moeglich."""
-        pix = {b: self.pixel(b, lage[b]) for b in lage}
-        for _ in range(runden):
-            bewegt = False
-            for (a, pa, b, pb) in self.kanten:
-                if a not in lage or b not in lage:
-                    continue
-                p1 = self.punkt(a, lage[a], *pa)
-                p2 = self.punkt(b, lage[b], *pb)
-                dx = p1[0] - p2[0]
-                dy = p1[1] - p2[1]
-                d = math.hypot(dx, dy)
-                if d < 0.6:
-                    continue
-                for wer, vz in ((b, 1.0), (a, -1.0)):
-                    if wer in self.feste_lagen:
-                        continue
-                    ox, oy, k, sp = lage[wer]
-                    s = min(1.0, d) * 0.5 * vz
-                    kand = (ox + dx / d * s, oy + dy / d * s, k, sp)
-                    pk = self.pixel(wer, kand)
-                    if any(len(pk & pix[o]) > 0 for o in lage if o != wer):
-                        continue
-                    lage[wer] = kand
-                    pix[wer] = pk
-                    bewegt = True
-                    break
-            if not bewegt:
-                break
-        return lage
-
-    def entzerren(self, lage, fest=(), runden=60):
-        """Nach dem GEMEINSAMEN Einpassen mehrerer Blaetter ueberlappen Zeichnungen,
-        die vorher sauber nebeneinander lagen: das Raster ist groeber geworden (die
-        Polizeiwache faellt von 585 auf 1292 Welteinheiten je Pixel, wenn alle fuenf
-        Blaetter denselben Massstab bekommen), und jede Zelle rundet neu. Gemessen stieg
-        Seite 3 dadurch auf 30,7 % Ueberlappung.
-        Hier werden die Orte pixelweise auseinandergeschoben, bis nichts mehr doppelt
-        liegt - AUSSER den festgenagelten: das sind die Orte, die auch auf einem anderen
-        Blatt liegen. Wuerden die sich bewegen, stapelten die Stockwerke nicht mehr."""
-        fest = set(fest)
-        weg = dict((b, 0) for b in lage)      # wie weit ein Ort schon geschoben wurde
-        GRENZE = 4                            # Pixel; mehr zerreisst die Durchgaenge
-        for _ in range(runden):
-            pix = dict((b, self.pixel(b, lage[b])) for b in lage)
-            namen = sorted(lage)
-            paare = []
-            for i in range(len(namen)):
-                for j in range(i + 1, len(namen)):
-                    a, b = namen[i], namen[j]
-                    n = len(pix[a] & pix[b])
-                    if n:
-                        paare.append((n, a, b))
-            if not paare:
-                break
-            # ⛔ EIN PAAR, DAS SICH NICHT BEWEGEN DARF, BEENDET NICHT DIE ARBEIT.
-            # Ein erster Wurf brach beim schlimmsten Paar ab, wenn BEIDE festgenagelt
-            # waren - Seite 3 blieb dadurch bei 19,5 % stehen, obwohl die uebrigen Paare
-            # loesbar waren. Jetzt wird das naechste loesbare genommen.
-            paare.sort(key=lambda t: -t[0])
-            wer = ander = None
-            for (_n, a, b) in paare:
-                for kand, geg in ((b, a), (a, b)):
-                    if kand not in fest and weg[kand] < GRENZE:
-                        wer, ander = kand, geg
-                        break
-                if wer is not None:
-                    break
-            if wer is None:
-                break
-            weg[wer] += 1
-            cx = sum(p[0] for p in pix[wer]) / float(len(pix[wer]))
-            cy = sum(p[1] for p in pix[wer]) / float(len(pix[wer]))
-            ax = sum(p[0] for p in pix[ander]) / float(len(pix[ander]))
-            ay = sum(p[1] for p in pix[ander]) / float(len(pix[ander]))
-            dx, dy = cx - ax, cy - ay
-            if abs(dx) >= abs(dy):
-                schritt = (1.0 if dx >= 0 else -1.0, 0.0)
-            else:
-                schritt = (0.0, 1.0 if dy >= 0 else -1.0)
-            ox, oy, k, sp = lage[wer]
-            lage[wer] = (ox + schritt[0], oy + schritt[1], k, sp)
-        return lage
+            qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
+            qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
+            if max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])) <= 1.0:
+                deckung += 1
+        xs = [p[0] for p in alle]
+        ys = [p[1] for p in alle]
+        br = (max(xs) - min(xs) + 1) if xs else 0
+        ho = (max(ys) - min(ys) + 1) if ys else 0
+        # ⛔ DER AUSREISSER GEHOERT INS ZIEL. Ein erster Wurf zaehlte nur, WIE VIELE
+        # Tueren deckungsgleich sind - die Zahl stieg von 86 auf 91, und gleichzeitig
+        # sprang der schlimmste Uebergang von 49 auf 109 px. Genau den sieht der Nutzer.
+        r = self.rest(lage)
+        schlimmst = max(r) if r else 0.0
+        return (doppelt / max(1, len(alle)) * 100.0, deckung, br, ho, schlimmst)
 
     def einpassen(self, lage, feld=FELD):
-        pix = {b: self.pixel(b, lage[b]) for b in lage}
-        alle = set().union(*pix.values()) if pix else set()
+        pix = dict((b, self.pixel(b, lage[b])) for b in lage)
+        alle = set()
+        for v in pix.values():
+            alle |= v
         if not alle:
             return lage, 1.0
         xs = [p[0] for p in alle]
@@ -1076,58 +439,75 @@ class Blatt(object):
             neu[b] = (feld[0] + (ox - min(xs)) * f, feld[1] + (oy - min(ys)) * f, k, sp)
         return neu, f
 
-    def loesen_roh(self):
-        """Die Lage OHNE Einpassen - im Massstab ex/ey, Ursprung frei. Wird gebraucht,
-        wenn mehrere Blaetter eines Gebaeudes gemeinsam eingepasst werden sollen: erst
-        ausrichten, dann EIN Massstab fuer alle."""
-        roh = self.aufbauen()
-        if not roh:
+    def nachbessern(self, lage, runden=6):
+        """Offene Tueren nachbessern.
+
+        ⛔ DIE BREITENSUCHE BENUTZT JEDE TUER NUR EINMAL. Ist der Zielraum ueber einen
+        anderen Weg schon gesetzt, bleibt DIESE Tuer unbedient - und genau dort springt
+        der Marker. Hier wird fuer jede offene Tuer probiert, den einen oder anderen Raum
+        stattdessen an IHR anzulegen; uebernommen wird nur, wenn dadurch insgesamt MEHR
+        Tueren deckungsgleich werden (bei Gleichstand weniger Ueberlappung). Das ist ein
+        Bergsteiger auf der Baumstruktur, kein Optimum - aber er repariert genau die
+        Ringe, die die Reihenfolge offen gelassen hat."""
+        for _ in range(runden):
+            k0 = self.kosten(lage)
+            bester = None
+            for (a, pa, b, pb) in self.kanten:
+                if a not in lage or b not in lage:
+                    continue
+                qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
+                qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
+                if max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])) <= 1.0:
+                    continue                      # diese Tuer sitzt schon
+                for (wer, anker, p_anker, p_wer) in ((b, a, pa, pb), (a, b, pb, pa)):
+                    if wer in self.feste_lagen:
+                        continue
+                    for st in self.anlegen(anker, lage[anker], p_anker, wer, p_wer):
+                        alt_st = lage[wer]
+                        lage[wer] = st
+                        k = self.kosten(lage)
+                        lage[wer] = alt_st
+                        if (-k[1], k[4], k[0]) < (-k0[1], k0[4], k0[0]) and                            (bester is None or (-k[1], k[4], k[0]) <
+                            (-bester[0][1], bester[0][4], bester[0][0])):
+                            bester = (k, wer, st)
+            if bester is None:
+                break
+            lage[bester[1]] = bester[2]
+        return lage
+
+    def beste_lage(self):
+        """⛔ DIE WURZEL ENTSCHEIDET, WELCHE RINGE AUFGEHEN.
+
+        Die Breitensuche benutzt jede Tuer nur, solange der Zielraum noch nicht liegt.
+        Ist er ueber einen anderen Weg schon gesetzt, bleibt DIESE Tuer unbedient - und
+        genau dort springt der Marker. Welche Tueren das trifft, haengt allein von der
+        Reihenfolge ab, und die ist frei waehlbar. Gemessen an Seite 7: mit der
+        Standard-Wurzel blieben 3 von 18 Durchgaengen offen, der schlimmste 107 px.
+        Deshalb wird jede Wurzel durchprobiert und die Karte mit den meisten
+        deckungsgleichen Tueren genommen (bei Gleichstand die mit weniger
+        Ueberlappung)."""
+        if not self.zimmer:
             return {}
-        import os as _os
-        if _os.environ.get('GRUNDRISS_DIAG'):
-            r = sorted(self.rest(roh))
-            print("        [nach aufbauen]   Kanten %d, Median %.0f, max %.0f, "
-                  "feste Lagen %d, Orte %d"
-                  % (len(r), r[len(r)//2] if r else -1, r[-1] if r else -1,
-                     len(self.feste_lagen), len(roh)))
-        besser = None
-        for lage in (dict(roh), self.verbessern(dict(roh))):
-            # ⛔ ERST ALLE DURCHGAENGE, DANN TRENNEN, DANN NOCH EINMAL. Die
-            # Breitensuche liefert nur Posen und einen groben Anfang; die LAGE kommt aus
-            # dem Ausgleich ueber saemtliche Tueren. Zwei Runden reichen: die Trennung
-            # ruehrt nur Orte an, die keine Tuer verbindet.
-            lg = self.ausgleichen(lage)
-            if _os.environ.get('GRUNDRISS_DIAG'):
-                r = sorted(self.rest(lg))
-                g = sorted(self.rest_genau(lg))
-                print("        [nach ausgleichen] |pa-pb| Median %.0f max %.0f  |  "
-                      "gegen Ruhelaenge: Median %.1f max %.1f"
-                      % (r[len(r)//2] if r else -1, r[-1] if r else -1,
-                         g[len(g)//2] if g else -1, g[-1] if g else -1))
-            k = self.kosten(lg)
-            if besser is None or (-k[1], k[0]) < (-besser[1][1], besser[1][0]):
-                besser = (lg, k)
-        return besser[0]
+        if self.feste_lagen:
+            return self.nachbessern(self.aufbauen())
+        best = None
+        for w in self.zimmer:
+            self._wurzel = w
+            lage = self.nachbessern(self.aufbauen())
+            if not lage:
+                continue
+            k = self.kosten(lage)
+            if best is None or (-k[1], k[4], k[0]) < (-best[1][1], best[1][4], best[1][0]):
+                best = (lage, k)
+        self._wurzel = None
+        return best[0] if best else {}
+
+    def loesen_roh(self):
+        return self.beste_lage()
 
     def loesen(self, feld=FELD):
-        roh = self.aufbauen()
-        if not roh:
-            return {}, 1.0, (0.0, 0, 0, 0)
-        # ⛔ BEIDE WEGE RECHNEN UND DEN BESSEREN NEHMEN. Der Posen-Nachlauf senkt die
-        # Ueberlappung deutlich (Seite 6: 11,9 % -> 3,7 %), kostet aber auf manchen
-        # Blaettern Durchgaenge (Seite 1: 9 von 9 -> 3 von 9). Welcher Weg gewinnt,
-        # haengt vom Blatt ab und ist nicht vorher zu wissen - also wird gemessen.
-        # Rangfolge nach dem Modell des Nutzers: MEHR beruehrende Durchgaenge zuerst
-        # ("ein neues Kartenstueck schliesst genau da an, wo man den Raum davor durch
-        # die Tuer verlassen hat"), bei Gleichstand weniger Ueberlappung.
-        besser = None
-        for lage in (dict(roh), self.verbessern(dict(roh))):
-            ex, ey = self.ex, self.ey
-            lg = self.zusammenziehen(lage)
-            lg, f = self.einpassen(lg, feld)
-            k = self.kosten(lg)
-            if besser is None or (-k[1], k[0]) < (-besser[2][1], besser[2][0]):
-                besser = (lg, f, k, self.ex, self.ey)
-            self.ex, self.ey = ex, ey      # einpassen hat den Massstab veraendert
-        self.ex, self.ey = besser[3], besser[4]
-        return besser[0], besser[1], besser[2]
+        lage = self.beste_lage()
+        if not lage:
+            return {}, 1.0, (0.0, 0, 0, 0, 0.0)
+        lage, f = self.einpassen(lage, feld)
+        return lage, f, self.kosten(lage)
