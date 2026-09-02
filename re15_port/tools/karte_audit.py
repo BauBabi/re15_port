@@ -428,11 +428,103 @@ def p_ueberlappung():
     melde('K', 'Blaetter mit starker Ueberlappung', zeilen, 'HINWEIS')
 
 
+def p_doppelslot():
+    """L) Zwei Aot_set-Records auf DEMSELBEN Slot - nur einer kann aktiv sein.
+
+    Der Generator liest beide als Tuer und laesst sich von beiden einschraenken; im Spiel
+    ueberschreibt der zweite den ersten. Gefunden bei ROOM5050 und ROOM5060 (je Slot 0
+    zweimal: einmal -> ROOM5040, einmal -> ROOM5120)."""
+    schlecht = []
+    for r in sorted(RDT):
+        proSlot = collections.defaultdict(list)
+        for d in RDT[r][1]:
+            if d['rw'] == 0 and d['rd'] == 0:
+                continue
+            proSlot[d.get('slot')].append(d)
+        for sl, ds in sorted(proSlot.items(), key=lambda q: (q[0] is None, q[0])):
+            if len(ds) > 1 and len(set(x['dest'] for x in ds)) > 1:
+                schlecht.append("ROOM%04X Slot %s zweimal belegt: -> %s"
+                                % (r, sl, ", ".join("ROOM%04X" % x['dest'] for x in ds)))
+    melde('L', 'Zwei Tueren auf demselben Aot_set-Slot', schlecht, 'HINWEIS')
+
+
+def p_ankunft():
+    """M) Wo erscheint der Spieler nach dem Durchgang - im Zielrechteck, nah an der Wand?
+
+    Das ist die Groesse, die der Nutzer beim Raumwechsel SIEHT. Gemessen wird der Abstand
+    des Erscheinungspunkts zur gemeinsamen Kante der beiden Rechtecke."""
+    weit = []
+    for r in sorted(RDT):
+        for d in RDT[r][1]:
+            if d['rw'] == 0 and d['rd'] == 0 or d['dest'] not in RDT:
+                continue
+            za = zone_von(r, d['lx'], d['lz'])
+            zb = zone_von(d['dest'], d['nx'], d['nz'])
+            if not za or not zb or not za['synth'] or not zb['synth']:
+                continue
+            if za['page'] != zb['page']:
+                continue
+            A = kasten(za); B = kasten(zb)
+            ux0 = max(A[0], B[0]); ux1 = min(A[0] + A[2], B[0] + B[2])
+            uy0 = max(A[1], B[1]); uy1 = min(A[1] + A[3], B[1] + B[3])
+            if ux1 <= ux0 or uy1 <= uy0:
+                continue
+            p = auf_karte(zb, d['nx'], d['nz'])
+            dx = max(ux0 - p[0], 0, p[0] - (ux1 - 1))
+            dy = max(uy0 - p[1], 0, p[1] - (uy1 - 1))
+            if dx + dy > 12:
+                weit.append("ROOM%04X -> ROOM%04X: Erscheinungspunkt %d px von der "
+                            "gemeinsamen Kante" % (r, d['dest'], dx + dy))
+    melde('M', 'Erscheinungspunkt weit von der gemeinsamen Kante', weit, 'HINWEIS')
+
+
+def p_symbolabstand():
+    """N) Zwei Symbole VERSCHIEDENER Durchgaenge duerfen nicht aufeinander liegen."""
+    dicht = []
+    T = [m for m in MARKEN if m['kind'] < 4]
+    for i in range(len(T)):
+        for j in range(i + 1, len(T)):
+            a, b = T[i], T[j]
+            if a['page'] != b['page']:
+                continue
+            if {a['zid'], a['zid2']} == {b['zid'], b['zid2']}:
+                continue
+            if abs(a['mx'] - b['mx']) + abs(a['my'] - b['my']) <= 2:
+                dicht.append("Blatt %d (%d,%d): ROOM%s<->ROOM%s und ROOM%s<->ROOM%s"
+                             % (a['page'], a['mx'], a['my'],
+                                '%04X' % ZID2RAUM.get(a['zid'], 0),
+                                '%04X' % ZID2RAUM.get(a['zid2'], 0),
+                                '%04X' % ZID2RAUM.get(b['zid'], 0),
+                                '%04X' % ZID2RAUM.get(b['zid2'], 0)))
+    melde('N', 'Symbole verschiedener Durchgaenge liegen aufeinander', dicht)
+
+
+def p_gast():
+    """O) Eine GAST-Zeile muss ihre Hauptzeile als Zwilling haben (gleiche Weltbox)."""
+    schlecht = []
+    for z in ZONEN:
+        if z['variante'] or not z['etage']:
+            continue
+        haupt = [w for w in HAUPT if w['room'] == z['room'] and w['idx'] == z['idx']
+                 and not w['etage']]
+        if not haupt:
+            schlecht.append("ROOM%04X z%d ist NUR als Gast (Blatt %d) vorhanden"
+                            % (z['room'], z['idx'], z['page']))
+            continue
+        h = haupt[0]
+        if (h['wx0'], h['wz0'], h['wx1'], h['wz1']) != (z['wx0'], z['wz0'], z['wx1'], z['wz1']):
+            schlecht.append("ROOM%04X z%d: Gast (Blatt %d) und Hauptzeile (Blatt %d) "
+                            "haben verschiedene Weltboxen"
+                            % (z['room'], z['idx'], z['page'], h['page']))
+    melde('O', 'Gast-Zeilen ohne passende Hauptzeile', schlecht)
+
+
 def main():
     kurz = '--kurz' in sys.argv
     for f in (p_hervorhebung, p_zeichnung, p_verschachtelt, p_tuermarken,
               p_marke_auf_kante, p_nachbarn, p_marker_im_raum, p_massstab,
-              p_treppen, p_blattwechsel, p_ueberlappung):
+              p_treppen, p_blattwechsel, p_ueberlappung,
+              p_doppelslot, p_ankunft, p_symbolabstand, p_gast):
         f()
     print("=== KARTEN-AUDIT: %d Raeume, %d Zonen, %d Zeichnungen, %d Marken ==="
           % (len(RAEUME), len(HAUPT), len(SYNTH), len(MARKEN)))
