@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
-"""GESAMT-AUDIT der Karte ueber alle 13 Blaetter.
+"""KARTEN-AUDIT: prueft JEDEN Raum gegen jede Invariante der gerechneten Karte.
 
-Liest ausschliesslich die erzeugte Tabelle (engine/src/re15_map_zones.h) und die RDTs -
-also genau das, was der Zeichner auch sieht. Kein Spielstart noetig.
+Auftrag des Nutzers 2026-09-03: "ueberpruefe jeden einzelnen Raum auf Fehler und nimm noch
+korrekturen zur perfekten Verfeinerung vor."
 
-Geprueft wird:
-  1  entartete Zeichnungen (zu klein, eine Zelle)
-  2  Lage im Kartenfeld (100,55,132,140)
-  3  Ueberlappung ZELLE gegen ZELLE (nur die ist sichtbar), schlimmste Paare
-  4  Marken: auf der eigenen Flaeche? doppelt? fehlend? Wandseite gegen Nachbarrichtung
-  5  Treppen: auf beiden Blaettern, die sie verbindet?
-  6  Orte, deren Tueren nur auf ein anderes Blatt fuehren
+Gemessen wird ausschliesslich, was der Spieler SIEHT - nicht, was im Verfahren bequem ist
+(Memory reai-v2-schwaches-mass). Jede Pruefung nennt die betroffenen Raeume namentlich,
+damit kein Aggregat einen Einzelfall zudecken kann (reai-v2-proxy-ohne-zielmenge).
 
-Aufruf:  python re15_port/tools/karte_audit.py
+Aufruf:
+    python re15_port/tools/karte_audit.py            # Zusammenfassung + alle Befunde
+    python re15_port/tools/karte_audit.py --kurz     # nur die Zusammenfassung
+
+Die LIVE-Groessen (Marker-Sprung beim Durchschreiten, Hervorhebung des aktuellen Raums)
+misst der Test integration_map_uebergang bzw. unit_map_durchgang - dieses Werkzeug prueft
+die erzeugte Tabelle statisch und vollstaendig.
 """
 import collections
 import io
@@ -20,212 +22,442 @@ import os
 import re
 import sys
 
-WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WURZEL = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 KOPF = os.path.join(WURZEL, 're15_port', 'engine', 'src', 're15_map_zones.h')
-FELD = (100, 55, 132, 140)
-NAMEN = {0: 'PS B1', 1: 'PS B2', 2: 'PS 1F', 3: 'PS 2F', 4: 'PS 3F', 5: 'PS ROOF',
-         6: 'DRAINS B2', 7: 'FACTORY', 8: 'LAB B1', 9: 'LAB B2', 10: 'LAB B3',
-         11: 'LAB B4', 12: 'SUBWAY'}
+
+sys.path.insert(0, os.path.join(WURZEL, 're15_port', 'tools'))
+_src = io.open(os.path.join(WURZEL, 're15_port', 'tools', 'gen_map_zones.py'),
+               encoding='utf-8').read()
+_ns = {'__name__': 'audit', '__file__': os.path.join(WURZEL, 're15_port', 'tools',
+                                                     'gen_map_zones.py')}
+exec(compile(_src[:_src.index('def main(')], 'gen', 'exec'), _ns)
+read_rdt = _ns['read_rdt']
 
 
-def block(name):
-    raus = []
-    drin = False
-    for zeile in io.open(KOPF, encoding='utf-8'):
-        if name in zeile:
+# ---------------------------------------------------------------- Tabelle lesen
+def _block(name):
+    raus, drin = [], False
+    for z in io.open(KOPF, encoding='utf-8'):
+        if name in z:
             drin = True
             continue
-        if drin and zeile.strip() == '};':
+        if drin and z.strip() == '};':
             break
         if drin:
-            raus.append(zeile)
+            raus.append(z)
     return raus
 
 
-def lies():
-    zonen = []
-    for zeile in block('s_map_zones[] = {'):
-        m = re.search(r'\{\s*0x([0-9A-Fa-f]{4}),(.*)\}', zeile)
-        if not m:
+ZONEN, SYNTH, ZELLEN, MARKEN = [], [], [], []
+for z in _block('s_map_zones[] = {'):
+    m = re.search(r'\{\s*0x([0-9A-Fa-f]{4}),(.*)\}', z)
+    if not m:
+        continue
+    rid = int(m.group(1), 16)
+    t = [int(x.strip()) for x in m.group(2).split(',')]
+    ZONEN.append(dict(room=rid, variante=rid & 1, wx0=t[0], wz0=t[1], wx1=t[2], wz1=t[3],
+                      page=t[4], rect=t[5], idx=t[6], zid=t[7], synth=t[14], etage=t[15]))
+for z in _block('s_map_synth[] = {'):
+    m = re.search(r'\{\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),'
+                  r'\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\}', z)
+    if m:
+        v = [int(x) for x in m.groups()]
+        SYNTH.append(dict(x=v[0], y=v[1], w=v[2], h=v[3], erste=v[4], n=v[5],
+                          A=v[6], B=v[7], C=v[8], D=v[9], E=v[10], F=v[11]))
+for z in _block('s_map_marks[] = {'):
+    m = re.search(r'\{\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\}', z)
+    if m:
+        v = [int(x) for x in m.groups()]
+        MARKEN.append(dict(i=len(MARKEN), page=v[0], rect=v[1], mx=v[2], my=v[3],
+                           kind=v[4], zid=v[5], zid2=v[6]))
+
+HAUPT = [z for z in ZONEN if not z['variante']]
+ZID2RAUM = {}
+for z in HAUPT:
+    ZID2RAUM.setdefault(z['zid'], z['room'])
+
+
+def kasten(z):
+    if not z['synth']:
+        return None
+    s = SYNTH[z['synth'] - 1]
+    return (s['x'], s['y'], s['w'], s['h'])
+
+
+def auf_karte(z, wx, wz):
+    if not z['synth']:
+        return None
+    s = SYNTH[z['synth'] - 1]
+    mx = (s['A'] * wx + s['B'] * wz) // 65536 + s['C']
+    my = (s['D'] * wx + s['E'] * wz) // 65536 + s['F']
+    return (min(max(mx, s['x']), s['x'] + s['w'] - 1),
+            min(max(my, s['y']), s['y'] + s['h'] - 1))
+
+
+def luecke(A, B):
+    gx = max(0, max(A[0], B[0]) - min(A[0] + A[2], B[0] + B[2]))
+    gy = max(0, max(A[1], B[1]) - min(A[1] + A[3], B[1] + B[3]))
+    return max(gx, gy)
+
+
+RAEUME = sorted(set(z['room'] for z in HAUPT))
+RDT = {}
+for _r in RAEUME:
+    _g = read_rdt(_r) or read_rdt(_r + 1)
+    if _g:
+        RDT[_r] = _g
+
+ZONEN_PRO_RAUM = collections.defaultdict(list)
+for z in HAUPT:
+    ZONEN_PRO_RAUM[z['room']].append(z)
+
+
+def zone_von(room, wx, wz, page=None):
+    """Wie zone_index_at in der Engine: die KLEINSTE Zone, die den Punkt enthaelt;
+    sonst die naechstgelegene."""
+    best, bestA, nah, nahD = None, 0, None, None
+    for z in ZONEN_PRO_RAUM.get(room, ()):
+        if z['etage']:
             continue
-        rid = int(m.group(1), 16)
-        if rid & 1:
-            continue                      # nur die Leon-Variante
-        t = [int(x.strip()) for x in m.group(2).split(',')]
-        zonen.append(dict(room=rid, wx0=t[0], wz0=t[1], wx1=t[2], wz1=t[3],
-                          page=t[4], rect=t[5], idx=t[6], zid=t[7],
-                          synth=t[14], etage=t[15]))
-    synth = []
-    for zeile in block('s_map_synth[] = {'):
-        m = re.search(r'\{\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),'
-                      r'\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\}',
-                      zeile)
-        if m:
-            v = [int(x) for x in m.groups()]
-            synth.append(dict(x=v[0], y=v[1], w=v[2], h=v[3], erste=v[4], n=v[5],
-                              A=v[6], B=v[7], C=v[8], D=v[9], E=v[10], F=v[11]))
-    zellen = []
-    for zeile in block('s_map_synth_cells[] = {'):
-        m = re.search(r'\{\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\}', zeile)
-        if m:
-            zellen.append(tuple(int(x) for x in m.groups()))
-    marken = []
-    for zeile in block('s_map_marks[] = {'):
-        m = re.search(r'\{\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\}',
-                      zeile)
-        if m:
-            v = [int(x) for x in m.groups()]
-            marken.append(dict(page=v[0], rect=v[1], mx=v[2], my=v[3], kind=v[4],
-                               zid=v[5], zid2=v[6]))
-    etagen = []
-    for zeile in block('s_map_floors[] = {'):
-        m = re.search(r'\{\s*0x([0-9A-Fa-f]{4}),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\}',
-                      zeile)
-        if m and not (int(m.group(1), 16) & 1):
-            etagen.append(dict(room=int(m.group(1), 16), zone=int(m.group(2)),
-                               band=int(m.group(3)), page=int(m.group(4)),
-                               rect=int(m.group(5))))
-    return zonen, synth, zellen, marken, etagen
+        if page is not None and z['page'] != page:
+            continue
+        dx = max(z['wx0'] - wx, 0, wx - z['wx1'])
+        dz = max(z['wz0'] - wz, 0, wz - z['wz1'])
+        d = dx * dx + dz * dz
+        if nah is None or d < nahD:
+            nah, nahD = z, d
+        if z['wx0'] <= wx <= z['wx1'] and z['wz0'] <= wz <= z['wz1']:
+            a = ((z['wx1'] - z['wx0']) // 64) * ((z['wz1'] - z['wz0']) // 64)
+            if best is None or a < bestA:
+                best, bestA = z, a
+    return best or nah
 
 
-def flaeche(z, synth, zellen):
-    s = synth[z['synth'] - 1]
-    return [zellen[i] for i in range(s['erste'], s['erste'] + s['n'])], s
+# ---------------------------------------------------------------- Pruefungen
+BEFUNDE = collections.OrderedDict()
 
 
-def punkte(rects):
-    p = set()
-    for (x, y, w, h) in rects:
-        for j in range(y, y + h):
-            for i in range(x, x + w):
-                p.add((i, j))
-    return p
+def melde(schluessel, titel, zeilen, schwere='FEHLER'):
+    BEFUNDE[schluessel] = dict(titel=titel, zeilen=zeilen, schwere=schwere)
+
+
+def p_hervorhebung():
+    """A) Wird der aktuelle Raum SICHTBAR rot?
+
+    Die Engine faerbt genau die Zone rot, in welcher der Spieler steht. Liegt deren
+    Rechteck vollstaendig unter dem Rechteck einer ANDEREN Zone desselben Raums, die
+    frueher in der Tabelle steht (= weiter oben gezeichnet), sieht man das Rot nie.
+    Genau das war ROOM1070 (Nutzer 2026-09-03)."""
+    schlecht = []
+    for r, zl in sorted(ZONEN_PRO_RAUM.items()):
+        gez = [z for z in zl if z['synth'] and not z['etage']]
+        for i, z in enumerate(gez):
+            ka = kasten(z)
+            if not ka:
+                continue
+            for w in gez:
+                if w is z:
+                    continue
+                kb = kasten(w)
+                if not kb or w['page'] != z['page']:
+                    continue
+                deckt = (kb[0] <= ka[0] and ka[0] + ka[2] <= kb[0] + kb[2] and
+                         kb[1] <= ka[1] and ka[1] + ka[3] <= kb[1] + kb[3])
+                if deckt and gez.index(w) < i:
+                    schlecht.append("ROOM%04X z%d (%dx%d px) liegt komplett unter z%d "
+                                    "-> Rot unsichtbar"
+                                    % (r, z['idx'], ka[2], ka[3], w['idx']))
+    melde('A', 'Hervorhebung des aktuellen Raums', schlecht)
+
+
+def p_zeichnung():
+    """B) Hat jeder Raum ueberhaupt eine Zeichnung, und ist sie brauchbar gross?"""
+    ohne, winzig = [], []
+    for r, zl in sorted(ZONEN_PRO_RAUM.items()):
+        gez = [z for z in zl if z['synth'] and not z['etage']]
+        if not gez:
+            ohne.append("ROOM%04X hat KEINE Zeichnung auf irgendeinem Blatt" % r)
+            continue
+        for z in gez:
+            ka = kasten(z)
+            if ka and (ka[2] < 4 or ka[3] < 4):
+                winzig.append("ROOM%04X z%d nur %dx%d px (Blatt %d)"
+                              % (r, z['idx'], ka[2], ka[3], z['page']))
+    melde('B1', 'Raeume ohne Zeichnung', ohne)
+    melde('B2', 'Zeichnungen unter 4 px Kantenlaenge', winzig)
+
+
+def p_verschachtelt():
+    """C) Zonen desselben Raums duerfen einander nicht enthalten (Weltbox)."""
+    schlecht = []
+    for r, zl in sorted(ZONEN_PRO_RAUM.items()):
+        gez = [z for z in zl if not z['etage']]
+        seen = {}
+        for z in gez:
+            seen.setdefault(z['idx'], z)
+        for a in seen.values():
+            for b in seen.values():
+                if a is b:
+                    continue
+                if (a['wx0'] <= b['wx0'] and b['wx1'] <= a['wx1'] and
+                        a['wz0'] <= b['wz0'] and b['wz1'] <= a['wz1']):
+                    schlecht.append("ROOM%04X: Zone %d enthaelt Zone %d"
+                                    % (r, a['idx'], b['idx']))
+    melde('C', 'Verschachtelte Zonen', schlecht)
+
+
+def p_tuermarken():
+    """D) Jede Tuer braucht ein Symbol, und ein Durchgang genau EINES."""
+    ohne, doppelt = [], []
+    fuer_paar = collections.defaultdict(list)
+    for m in MARKEN:
+        if m['kind'] >= 4:
+            continue
+        a = ZID2RAUM.get(m['zid']); b = ZID2RAUM.get(m['zid2'])
+        if a is not None and b is not None:
+            fuer_paar[tuple(sorted((a, b)))].append(m)
+    for r in sorted(RDT):
+        for d in RDT[r][1]:
+            if d['rw'] == 0 and d['rd'] == 0 or d['dest'] not in RDT:
+                continue
+            za = zone_von(r, d['lx'], d['lz'])
+            if not za or not za['synth']:
+                continue
+            paar = tuple(sorted((r, d['dest'])))
+            eigen = [m for m in MARKEN if m['kind'] < 4 and
+                     (m['zid'] == za['zid'] or m['zid2'] == za['zid'])]
+            if not eigen:
+                ohne.append("ROOM%04X -> ROOM%04X hat KEIN Symbol" % (r, d['dest']))
+    # ⛔ MEHRERE SYMBOLE SIND NICHT AUTOMATISCH FALSCH. Zwei Raeume koennen mehrere
+    # ECHTE Tueren haben - ROOM1000 <-> ROOM1050 drei, ROOM4040 <-> ROOM4050 zwei -, und
+    # ein Raum kann Tueren zu sich selbst fuehren (ROOM4050). Ein erster Wurf dieses
+    # Pruefers warf alles in einen Topf und meldete sechs Fehlalarme. Verglichen wird
+    # jetzt mit der Zahl der DURCHGAENGE: je Durchgang genau ein Symbol.
+    for paar, ms in sorted(fuer_paar.items()):
+        a, b = paar
+        # Zahl der physisch verschiedenen Tueren zwischen a und b
+        tueren = set()
+        for (r, ziel) in ((a, b), (b, a)):
+            for d in RDT.get(r, ([], [], []))[1]:
+                if d['rw'] == 0 and d['rd'] == 0 or d['dest'] != ziel:
+                    continue
+                # Ein Durchgang wird von beiden Seiten beschrieben; als Schluessel dient
+                # der Mittelpunkt zwischen Trigger und Gegen-Spawn, gerundet.
+                tueren.add((min(d['lx'] // 2000, d['nx'] // 2000),
+                            max(d['lx'] // 2000, d['nx'] // 2000),
+                            min(d['lz'] // 2000, d['nz'] // 2000),
+                            max(d['lz'] // 2000, d['nz'] // 2000)))
+        soll = max(1, len(tueren))
+        if len(ms) > soll:
+            weit = max(max(abs(x['mx'] - y['mx']), abs(x['my'] - y['my']))
+                       for x in ms for y in ms)
+            doppelt.append("ROOM%04X <-> ROOM%04X: %d Symbole fuer %d Durchgaenge, "
+                           "bis %d px auseinander" % (a, b, len(ms), soll, weit))
+    melde('D1', 'Tueren ohne Symbol', ohne)
+    melde('D2', 'Ein Durchgang mit mehreren, weit entfernten Symbolen', doppelt)
+
+
+def p_marke_auf_kante():
+    """E) Ein gepaartes Symbol muss auf der Beruehrung der zwei Rechtecke sitzen."""
+    schlecht = []
+    zv = {}
+    for z in HAUPT:
+        if z['synth']:
+            zv.setdefault((z['zid'], z['page']), z)
+    for m in MARKEN:
+        if m['kind'] >= 4 or m['zid2'] == 255:
+            continue
+        za = zv.get((m['zid'], m['page'])); zb = zv.get((m['zid2'], m['page']))
+        if not za or not zb:
+            continue
+        A = kasten(za); B = kasten(zb)
+        ux0 = max(A[0], B[0]); ux1 = min(A[0] + A[2], B[0] + B[2])
+        uy0 = max(A[1], B[1]); uy1 = min(A[1] + A[3], B[1] + B[3])
+        if ux1 <= ux0 or uy1 <= uy0:
+            schlecht.append("ROOM%04X <-> ROOM%04X: Rechtecke beruehren sich NICHT "
+                            "(Symbol bei %d,%d)"
+                            % (ZID2RAUM.get(m['zid'], 0), ZID2RAUM.get(m['zid2'], 0),
+                               m['mx'], m['my']))
+            continue
+        dx = max(ux0 - m['mx'], 0, m['mx'] - (ux1 - 1))
+        dy = max(uy0 - m['my'], 0, m['my'] - (uy1 - 1))
+        if dx + dy > 2:
+            schlecht.append("ROOM%04X <-> ROOM%04X: Symbol %d px neben der gemeinsamen "
+                            "Kante" % (ZID2RAUM.get(m['zid'], 0),
+                                       ZID2RAUM.get(m['zid2'], 0), dx + dy))
+    melde('E', 'Tuersymbol nicht auf der gemeinsamen Kante', schlecht)
+
+
+def p_nachbarn():
+    """F) Durch eine Tuer verbundene Raeume muessen auf demselben Blatt anstossen."""
+    schlecht = []
+    gesehen = set()
+    for r in sorted(RDT):
+        for d in RDT[r][1]:
+            if d['rw'] == 0 and d['rd'] == 0 or d['dest'] not in RDT or d['dest'] == r:
+                continue
+            k = tuple(sorted((r, d['dest'])))
+            if k in gesehen:
+                continue
+            za = zone_von(r, d['lx'], d['lz'])
+            zb = zone_von(d['dest'], d['nx'], d['nz'])
+            if not za or not zb or not za['synth'] or not zb['synth']:
+                continue
+            if za['page'] != zb['page']:
+                continue
+            gesehen.add(k)
+            L = luecke(kasten(za), kasten(zb))
+            if L > 0:
+                schlecht.append("ROOM%04X <-> ROOM%04X: %d px Luecke (Blatt %d)"
+                                % (k[0], k[1], L, za['page']))
+    melde('F', 'Verbundene Raeume stossen nicht aneinander', schlecht)
+
+
+def p_marker_im_raum():
+    """G) Der Marker muss fuer JEDEN begehbaren Punkt im eigenen Rechteck landen."""
+    schlecht = []
+    for r in sorted(RDT):
+        zellen = [c for c in RDT[r][0] if c[2] > 0 and c[3] > 0]
+        if not zellen:
+            continue
+        raus = 0
+        proben = 0
+        for c in zellen:
+            for (fx, fz) in ((0.5, 0.5), (0.15, 0.15), (0.85, 0.85), (0.15, 0.85),
+                             (0.85, 0.15)):
+                wx = int(c[0] + c[2] * fx); wz = int(c[1] + c[3] * fz)
+                z = zone_von(r, wx, wz)
+                if not z or not z['synth']:
+                    continue
+                proben += 1
+                p = auf_karte(z, wx, wz)
+                ka = kasten(z)
+                if not (ka[0] <= p[0] < ka[0] + ka[2] and ka[1] <= p[1] < ka[1] + ka[3]):
+                    raus += 1
+        if proben and raus * 100 // proben > 0:
+            schlecht.append("ROOM%04X: %d von %d Proben ausserhalb des eigenen Rechtecks"
+                            % (r, raus, proben))
+    melde('G', 'Marker faellt aus dem eigenen Rechteck', schlecht)
+
+
+def p_massstab():
+    """H) Das Rechteck muss die Weltform treffen (Seitenverhaeltnis, mit Drehung)."""
+    schlecht = []
+    for z in HAUPT:
+        if not z['synth'] or z['etage']:
+            continue
+        ka = kasten(z)
+        bw = z['wx1'] - z['wx0']; bd = z['wz1'] - z['wz0']
+        if bw <= 0 or bd <= 0 or ka[2] <= 0 or ka[3] <= 0:
+            continue
+        welt = float(bw) / bd
+        gerade = float(ka[2]) / ka[3]
+        gedreht = float(ka[3]) / ka[2]
+        f = min(abs(welt / gerade - 1.0), abs(welt / gedreht - 1.0))
+        if f > 0.45:
+            schlecht.append("ROOM%04X z%d: Welt %d:%d, Rechteck %d:%d px -> %.0f %% "
+                            "Formfehler" % (z['room'], z['idx'], bw, bd, ka[2], ka[3],
+                                            f * 100))
+    melde('H', 'Rechteckform passt nicht zur Weltform', schlecht, 'HINWEIS')
+
+
+def p_treppen():
+    """I) Jede Treppen-Zone braucht ein Symbol."""
+    fehlt = []
+    for r in sorted(RDT):
+        n_t = len(RDT[r][2])
+        if not n_t:
+            continue
+        zl = [z for z in ZONEN_PRO_RAUM.get(r, ()) if z['synth'] and not z['etage']]
+        if not zl:
+            continue
+        zids = set(z['zid'] for z in zl)
+        n_m = sum(1 for m in MARKEN if m['kind'] >= 4 and
+                  (m['zid'] in zids or m['zid2'] in zids))
+        if n_m == 0:
+            fehlt.append("ROOM%04X hat %d Treppen-Zonen, aber KEIN Treppensymbol"
+                         % (r, n_t))
+    melde('I', 'Treppen ohne Symbol', fehlt)
+
+
+def p_blattwechsel():
+    """J) Eine gewoehnliche Tuer sollte innerhalb einer Stage das Blatt nicht wechseln."""
+    schlecht = []
+    for r in sorted(RDT):
+        for d in RDT[r][1]:
+            if d['rw'] == 0 and d['rd'] == 0 or d['dest'] not in RDT:
+                continue
+            if (r >> 8) != (d['dest'] >> 8):
+                continue          # andere Stage: legitim
+            za = zone_von(r, d['lx'], d['lz'])
+            zb = zone_von(d['dest'], d['nx'], d['nz'])
+            if not za or not zb or not za['synth'] or not zb['synth']:
+                continue
+            if za['page'] != zb['page']:
+                # Ist der Zielraum auf MEINEM Blatt als Gast gezeichnet?
+                gast = any(z['room'] == d['dest'] and z['page'] == za['page'] and z['synth']
+                           for z in ZONEN_PRO_RAUM.get(d['dest'], ()))
+                if not gast:
+                    schlecht.append("ROOM%04X (Blatt %d) -> ROOM%04X (Blatt %d), kein "
+                                    "Gast auf meinem Blatt"
+                                    % (r, za['page'], d['dest'], zb['page']))
+    melde('J', 'Tuer wechselt innerhalb einer Stage das Blatt', schlecht, 'HINWEIS')
+
+
+def p_ueberlappung():
+    """K) Wie stark ueberlappen sich die Zeichnungen je Blatt?"""
+    zeilen = []
+    proBlatt = collections.defaultdict(list)
+    for z in HAUPT:
+        if z['synth']:
+            proBlatt[z['page']].append(z)
+    for pg in sorted(proBlatt):
+        pix = collections.Counter()
+        for z in proBlatt[pg]:
+            ka = kasten(z)
+            for x in range(ka[0], ka[0] + ka[2]):
+                for y in range(ka[1], ka[1] + ka[3]):
+                    pix[(x, y)] += 1
+        if not pix:
+            continue
+        doppelt = sum(1 for v in pix.values() if v > 1)
+        q = doppelt * 100.0 / len(pix)
+        if q > 20:
+            zeilen.append("Blatt %2d: %.0f %% der Flaeche von mehreren Raeumen belegt "
+                          "(%d Orte)" % (pg, q, len(proBlatt[pg])))
+    melde('K', 'Blaetter mit starker Ueberlappung', zeilen, 'HINWEIS')
 
 
 def main():
-    zonen, synth, zellen, marken, etagen = lies()
-    gez = [z for z in zonen if z['synth']]
-    print("=== KARTEN-AUDIT ueber %d Blaetter, %d gezeichnete Orte ===\n"
-          % (len(set(z['page'] for z in gez)), len(gez)))
-
-    # ---- 1 + 2 : entartet / im Feld -------------------------------------------
-    klein = []
-    raus = []
-    for z in gez:
-        _, s = flaeche(z, synth, zellen)
-        # ⛔ "nur eine Zelle" ist seit dem Umbau auf RECHTECKE kein Merkmal mehr -
-        # jeder Ort hat genau eine (seine aeussere Kollisionsbox). Entartet ist ein Ort
-        # nur noch, wenn das Rechteck selbst zu klein zum Erkennen ist.
-        if s['w'] < 5 or s['h'] < 5:
-            klein.append((z, s))
-        if (s['x'] < FELD[0] or s['y'] < FELD[1] or
-                s['x'] + s['w'] > FELD[0] + FELD[2] or
-                s['y'] + s['h'] > FELD[1] + FELD[3]):
-            raus.append((z, s))
-    print("1) ENTARTETE ZEICHNUNGEN (unter 5 px in einer Richtung): %d"
-          % len(klein))
-    for z, s in sorted(klein, key=lambda t: t[1]['w'] * t[1]['h'])[:10]:
-        print("     ROOM%04X z%d Seite %2d  %dx%d px, %d Zellen"
-              % (z['room'], z['idx'], z['page'], s['w'], s['h'], s['n']))
-    print("2) AUSSERHALB DES KARTENFELDES %s: %d" % (str(FELD), len(raus)))
-    for z, s in raus[:10]:
-        print("     ROOM%04X z%d Seite %2d  Kasten (%d,%d) %dx%d"
-              % (z['room'], z['idx'], z['page'], s['x'], s['y'], s['w'], s['h']))
-
-    # ---- 3 : Zellen-Ueberlappung ----------------------------------------------
-    print("\n3) UEBERLAPPUNG (Zelle gegen Zelle - nur die ist sichtbar)")
-    proseite = collections.defaultdict(list)
-    for z in gez:
-        r, s = flaeche(z, synth, zellen)
-        proseite[z['page']].append((z, punkte(r)))
-    schlimm = []
-    for pg in sorted(proseite):
-        L = proseite[pg]
-        alle = set()
-        doppelt = set()
-        for _, p in L:
-            doppelt |= (alle & p)
-            alle |= p
-        anteil = 100.0 * len(doppelt) / max(1, len(alle))
-        n = 0
-        for i in range(len(L)):
-            for j in range(i + 1, len(L)):
-                k = len(L[i][1] & L[j][1])
-                if k:
-                    n += 1
-                    schlimm.append((k, pg, L[i][0]['room'], L[i][0]['idx'],
-                                    L[j][0]['room'], L[j][0]['idx']))
-        print("   Seite %2d %-10s %5.1f %% doppelt, %d ueberlappende Paare"
-              % (pg, NAMEN.get(pg, ''), anteil, n))
-    print("   schlimmste Paare:")
-    for (k, pg, ra, ia, rb, ib) in sorted(schlimm, reverse=True)[:10]:
-        print("     Seite %2d  ROOM%04X z%d <-> ROOM%04X z%d : %d px"
-              % (pg, ra, ia, rb, ib, k))
-
-    # ---- 4 : Marken -----------------------------------------------------------
-    print("\n4) MARKEN")
-    zid_zu = {}
-    for z in gez:
-        zid_zu.setdefault((z['zid'], z['page']), z)
-    ausser = 0
-    ohne_ort = 0
-    for m in marken:
-        z = zid_zu.get((m['zid'], m['page']))
-        if z is None and m['zid2'] != 255:
-            z = zid_zu.get((m['zid2'], m['page']))
-        if z is None:
-            ohne_ort += 1
+    kurz = '--kurz' in sys.argv
+    for f in (p_hervorhebung, p_zeichnung, p_verschachtelt, p_tuermarken,
+              p_marke_auf_kante, p_nachbarn, p_marker_im_raum, p_massstab,
+              p_treppen, p_blattwechsel, p_ueberlappung):
+        f()
+    print("=== KARTEN-AUDIT: %d Raeume, %d Zonen, %d Zeichnungen, %d Marken ==="
+          % (len(RAEUME), len(HAUPT), len(SYNTH), len(MARKEN)))
+    print()
+    fehler = 0
+    for k, b in BEFUNDE.items():
+        n = len(b['zeilen'])
+        if b['schwere'] == 'FEHLER':
+            fehler += n
+        marke = 'OK    ' if n == 0 else ('%-6s' % b['schwere'])
+        print("  [%s] %s %-52s %d" % (k, marke, b['titel'], n))
+    print()
+    print("  Summe echter Fehler: %d" % fehler)
+    if kurz:
+        return 0 if fehler == 0 else 1
+    for k, b in BEFUNDE.items():
+        if not b['zeilen']:
             continue
-        r, s = flaeche(z, synth, zellen)
-        p = punkte(r)
-        nah = any((m['mx'] + dx, m['my'] + dy) in p
-                  for dx in (-1, 0, 1) for dy in (-1, 0, 1))
-        if not nah:
-            ausser += 1
-    print("   %d Marken gesamt (%d Tueren, %d Treppen)"
-          % (len(marken), sum(1 for m in marken if m['kind'] < 4),
-             sum(1 for m in marken if m['kind'] >= 4)))
-    print("   %d liegen NICHT auf oder an der Flaeche ihres Ortes" % ausser)
-    print("   %d gehoeren zu keinem gezeichneten Ort auf ihrem Blatt" % ohne_ort)
-    # Doppelte: zwei Marken derselben Art dicht beieinander auf einem Blatt
-    dopp = 0
-    for i in range(len(marken)):
-        for j in range(i + 1, len(marken)):
-            a, b = marken[i], marken[j]
-            if a['page'] != b['page']:
-                continue
-            if (a['kind'] < 4) != (b['kind'] < 4):
-                continue
-            if abs(a['mx'] - b['mx']) + abs(a['my'] - b['my']) <= 2:
-                dopp += 1
-    print("   %d Marken-Paare stehen praktisch aufeinander (<= 2 px, gleiche Art)" % dopp)
-
-    # ---- 5 : Treppen ----------------------------------------------------------
-    print("\n5) TREPPEN")
-    trep = collections.defaultdict(set)
-    for m in marken:
-        if m['kind'] >= 4:
-            trep[m['zid']].add(m['page'])
-    mehr = sum(1 for v in trep.values() if len(v) > 1)
-    print("   %d Orte tragen Treppensymbole, davon %d auf mehr als einem Blatt"
-          % (len(trep), mehr))
-
-    # ---- 6 : Etagen -----------------------------------------------------------
-    print("\n6) ETAGEN")
-    gast = [z for z in gez if z['etage']]
-    print("   %d Etagen-Zeilen, %d Gast-Zeichnungen" % (len(etagen), len(gast)))
-    fehl = 0
-    for z in gast:
-        if not any(e['room'] == z['room'] and e['zone'] == z['idx'] and
-                   e['page'] == z['page'] for e in etagen):
-            fehl += 1
-            print("     OHNE ETAGEN-ZEILE: ROOM%04X z%d Seite %d (waere unsichtbar)"
-                  % (z['room'], z['idx'], z['page']))
-    if not fehl:
-        print("   jede Gast-Zeichnung hat ihre Etagen-Zeile (also ein Besucht-Bit)")
-
-    print("\n=== ENDE ===")
-    return 0
+        print()
+        print("--- [%s] %s (%s, %d) ---" % (k, b['titel'], b['schwere'], len(b['zeilen'])))
+        for z in b['zeilen'][:60]:
+            print("   " + z)
+        if len(b['zeilen']) > 60:
+            print("   ... und %d weitere" % (len(b['zeilen']) - 60))
+    return 0 if fehler == 0 else 1
 
 
 if __name__ == '__main__':

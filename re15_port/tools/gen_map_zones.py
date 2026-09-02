@@ -381,7 +381,31 @@ def zones_of(sca):
     tot = sum(o[1] for o in out) or 1
     out = [o for o in out if o[1] >= MIN_FRAC * tot]
     out.sort(key=lambda o: -o[1])
-    return [o[0] for o in out]
+    # ⛔ EINE INSEL IST KEIN BEREICH. Innere Zellen (Pfeiler, Moebel, Tresen) liegen
+    # oft weiter als GAP von der Umfassungswand entfernt und bilden dadurch eine eigene
+    # Zusammenhangskomponente - ihre Bbox steckt aber VOLLSTAENDIG in der des Raums.
+    # Als eigene Zone gefuehrt richtet sie Schaden an: zone_index_at() waehlt die
+    # KLEINSTE Zone, die den Spieler enthaelt, also die Insel; deren winziges Rechteck
+    # wird rot gefaerbt und liegt dabei komplett unter dem gruenen Rechteck der
+    # umgebenden Zone (die Op-Liste wird von hinten gerastert). Der Raum sah dadurch
+    # NIE rot aus - Nutzer 2026-09-03: "ROOM 1070 wird nicht rot hervorgehoben wenn ich
+    # drin stehe." Betroffen waren ROOM1020, ROOM1070, ROOM1110, ROOM1140, ROOM11F0
+    # und ROOM30C0.
+    behalten = []
+    for i, o in enumerate(out):
+        bb = o[0]
+        drin = False
+        for j, p in enumerate(out):
+            if i == j:
+                continue
+            qb = p[0]
+            if (qb[0] <= bb[0] and bb[1] <= qb[1] and qb[2] <= bb[2] and bb[3] <= qb[3]
+                    and p[1] > o[1]):
+                drin = True
+                break
+        if not drin:
+            behalten.append(o)
+    return [o[0] for o in behalten]
 
 def _lebende_paare():
     """Raumpaare, die die ENGINE beim Betreten in mindestens EINER Richtung aufstellt.
@@ -640,11 +664,24 @@ def main():
         Saals), und zustaendig ist die engere - sonst schreibt ein Durchgang seine Marke
         in die Zeichnung des Nachbarbereichs."""
         best = None; best_a = 0
+        nah = None; nah_d = None
         for i, (x0, x1, z0, z1) in enumerate(zinfo.get(room, [])):
+            dx = max(x0 - x, 0, x - x1)
+            dz = max(z0 - z, 0, z - z1)
+            d = dx * dx + dz * dz
+            if nah is None or d < nah_d:
+                nah, nah_d = i, d
             if x0 - GAP <= x <= x1 + GAP and z0 - GAP <= z <= z1 + GAP:
                 a = (x1 - x0) * (z1 - z0)
                 if best is None or a < best_a: best, best_a = i, a
-        return best
+        # ⛔ RUECKFALL AUF DIE NAECHSTE ZONE - wie die Engine (zone_index_at in
+        # re15_map_zones.c). Die Zonen-Bboxen decken einen unregelmaessigen Grundriss
+        # nicht luecklos ab; ein Punkt kann zwischen zwei Zonen liegen. Ohne Rueckfall
+        # fiel die Marke still weg - so hat ROOM2080 sein Treppensymbol verloren
+        # (Treppe bei x = -19550, Zone 0 ab -17650, Zone 1 bis -21450). Und: Generator
+        # und Laufzeit muessen dieselbe Zone waehlen, sonst zeichnen sie verschiedene
+        # Karten.
+        return best if best is not None else nah
 
     # Tuer-Kanten zwischen ZONEN derselben Seite
     edges = collections.defaultdict(list)
@@ -1898,8 +1935,14 @@ def main():
             for _n, m in enumerate(lst):
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
+                _sp = (os.environ.get('RE15_MARKEN_DUMP', '').lower()
+                       == ('%04x' % b))
                 zi = zone_at(b, wx, wz)
-                if zi is None: continue
+                if zi is None:
+                    if _sp:
+                        print("   [Marke] ROOM%04X %s #%d bei (%d,%d): KEINE ZONE"
+                              % (b, 'Tuer' if kind == 0 else 'Treppe', _n, wx, wz))
+                    continue
                 # ⛔ DAS BLATT KOMMT ZUERST, DANN DIE PROJEKTION. Frueher wurde die
                 # Marke auf dem EIGENEN Blatt projiziert und danach auf das Blatt ihres
                 # Bandes umgerechnet - erst per Rechteck-Versatz, spaeter per Einpassung
@@ -1912,7 +1955,16 @@ def main():
                     wx, wz = st_merge[_n]        # gemeinsamer WELT-Punkt beider Enden
                 mp = to_map(b, zi, wx, wz, _pgw)
                 if not mp: mp = to_map(b, zi, wx, wz)
-                if not mp: continue
+                if not mp:
+                    if _sp:
+                        print("   [Marke] ROOM%04X %s #%d Zone z%d: KEINE ABBILDUNG "
+                              "(Blattwunsch %s)"
+                              % (b, 'Tuer' if kind == 0 else 'Treppe', _n, zi, _pgw))
+                    continue
+                if _sp:
+                    print("   [Marke] ROOM%04X %s #%d Zone z%d -> Blatt %d (%d,%d)"
+                          % (b, 'Tuer' if kind == 0 else 'Treppe', _n, zi,
+                             mp[0], mp[2], mp[3]))
                 pg, r, mx, my = mp
                 if kind == 0:
                     # ---- WANDACHSE AUS DEM TUER-RECHTECK ---------------------
@@ -2318,14 +2370,26 @@ def main():
         if not _bewegt:
             break
 
-    seen = set()
+    # ⛔ EINE DUBLETTE DARF IHRE SICHTBARKEITS-ZONE NICHT MITNEHMEN.
+    # Zwei Raeume koennen an derselben Stelle dieselbe Treppe/Tuer eintragen (ROOM30C0
+    # und ROOM30D0 beide bei (160,112) auf Blatt 7). Ein erster Wurf behielt schlicht die
+    # erste und warf die zweite weg - das Symbol war dann da, haengte aber am falschen
+    # Raum: es erschien, sobald ROOM30C0 besucht war, und blieb aus, wenn der Spieler nur
+    # ROOM30D0 kannte. Das Audit meldete "ROOM30D0 hat Treppen, aber kein Symbol".
+    # Richtig ist dasselbe wie bei gepaarten Tueren: EINE Marke, ZWEI Zonen.
+    seen = {}
     for v in vor:
         if v.get('weg'): continue
         key = (v['pg'], v['r'], v['mx'], v['my'], v['seite'])
-        if key in seen: continue
-        seen.add(key)
-        marks.append((v['pg'], v['r'], v['mx'], v['my'], v['seite'], v['zid'],
-                      v.get('zid2', 255)))
+        if key in seen:
+            erste = seen[key]
+            if (v['zid'] != erste['zid'] and erste.get('zid2', 255) == 255):
+                erste['zid2'] = v['zid']
+            continue
+        seen[key] = v
+        marks.append(v)
+    marks = [(v['pg'], v['r'], v['mx'], v['my'], v['seite'], v['zid'],
+              v.get('zid2', 255)) for v in marks]
 
     o.append("")
     o.append("/* MARKEN in Karten-Pixeln. kind = TUER mit WANDSEITE 0=Nord 1=Ost")

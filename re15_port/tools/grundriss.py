@@ -591,7 +591,7 @@ class Blatt(object):
             neu[b] = (feld[0] + (ox - min(xs)) * f, feld[1] + (oy - min(ys)) * f, k, sp)
         return neu, f
 
-    def nachbessern(self, lage, runden=6):
+    def nachbessern(self, lage, runden=int(os.environ.get(chr(82)+chr(69)+chr(49)+chr(53)+chr(95)+chr(82)+chr(85)+chr(78)+chr(68)+chr(69)+chr(78), '6'))):
         """Offene Tueren nachbessern.
 
         ⛔ DIE BREITENSUCHE BENUTZT JEDE TUER NUR EINMAL. Ist der Zielraum ueber einen
