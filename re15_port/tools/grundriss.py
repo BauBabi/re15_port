@@ -62,6 +62,13 @@ import os
 # Widerspruch gilt die Live-Groesse.
 # RE15_SPIEGEL_ERLAUBT=1 schaltet sie zum Vergleichen wieder frei.
 SPIEGEL = (0, 1) if os.environ.get('RE15_SPIEGEL_ERLAUBT') else (0,)
+# Wieviel weiter als die naechste Wand darf eine Wand liegen und trotzdem als
+# Tuerwand gelten? 4 px = der GEMESSENE Median-Vorsprung der naechsten Wand vor
+# der zweitnaechsten. Groesser waere Beliebigkeit, kleiner waere wieder Raten.
+WAND_RAND = float(os.environ.get('RE15_WAND_RAND', '4'))
+# Welcher Anteil der BEGEHBAREN Flaeche muss im Rechteck bleiben?
+# 1.0 = die alte aeussere Bbox (nichts stutzen).
+ANTEIL = float(os.environ.get('RE15_KERN_ANTEIL', '1.0'))
 FELD = (100, 55, 132, 140)      # Kartenfeld: dort liegen alle Rechtecke aller Seiten
 
 
@@ -145,8 +152,76 @@ class Blatt(object):
         z0 = min(c[1] for c in alle)
         x1 = max(c[0] + c[2] for c in alle)
         z1 = max(c[1] + c[3] for c in alle)
+        x0, z0, x1, z1 = self._stutzen(rid, alle, x0, z0, x1, z1)
         self._zellen[rid] = [(x0, z0, x1 - x0, z1 - z0)]
         return self._zellen[rid]
+
+    def _stutzen(self, rid, alle, x0, z0, x1, z1):
+        """Die aeussere Bbox auf den BEGEHBAREN Kern stutzen.
+
+        ⛔ DIE BBOX LUEGT BEI JEDEM NICHT-RECHTECKIGEN RAUM. Gemessen ueber alle Orte:
+        nur 40-73 % (Median je Blatt) der Bbox-Flaeche ist ueberhaupt begehbar, im
+        Extremfall 12 % (ROOM1230). Ein L-foermiger Flur bekommt so ein Rechteck, das
+        fast doppelt so gross ist wie er - das drueckt die Nachbarn weg und erzeugt die
+        Ueberlappung, die der Nutzer auf 1F gemeldet hat.
+
+        Gestutzt wird streifenweise: immer die Seite, deren aeusserster Streifen am
+        WENIGSTEN begehbare Flaeche traegt. Abgebrochen wird, sobald weniger als ANTEIL
+        der begehbaren Flaeche uebrig bliebe oder ein Tuer-/Treppenpunkt herausfiele.
+        Ohne die zweite Bedingung koennte eine Tuer aus ihrem eigenen Raum fallen."""
+        if ANTEIL >= 1.0:
+            return x0, z0, x1, z1
+        S = 256                                  # Rasterschritt in Welteinheiten
+        belegt = set()
+        for (cx, cz, cw, cd) in [(c[0], c[1], c[2], c[3]) for c in alle]:
+            for gx in range(cx // S, (cx + cw) // S + 1):
+                for gz in range(cz // S, (cz + cd) // S + 1):
+                    belegt.add((gx, gz))
+        if not belegt:
+            return x0, z0, x1, z1
+        gesamt = len(belegt)
+        # Punkte, die drin bleiben MUESSEN
+        halten = []
+        rd = self.rdts.get(rid)
+        if rd:
+            for d in rd[1]:
+                halten.append((d['lx'], d['lz']))
+            for t in rd[2]:
+                halten.append((t.get('x', 0), t.get('z', 0)))
+        a0, b0, a1, b1 = x0 // S, z0 // S, -(-x1 // S), -(-z1 // S)
+        while True:
+            drin = [p for p in belegt if a0 <= p[0] < a1 and b0 <= p[1] < b1]
+            if len(drin) <= gesamt * ANTEIL:
+                break
+            kanten = []
+            if a1 - a0 > 2:
+                kanten.append(('l', sum(1 for p in drin if p[0] == a0)))
+                kanten.append(('r', sum(1 for p in drin if p[0] == a1 - 1)))
+            if b1 - b0 > 2:
+                kanten.append(('o', sum(1 for p in drin if p[1] == b0)))
+                kanten.append(('u', sum(1 for p in drin if p[1] == b1 - 1)))
+            if not kanten:
+                break
+            kanten.sort(key=lambda q: q[1])
+            geschafft = False
+            for seite, _n in kanten:
+                na0, nb0, na1, nb1 = a0, b0, a1, b1
+                if seite == 'l':   na0 += 1
+                elif seite == 'r': na1 -= 1
+                elif seite == 'o': nb0 += 1
+                else:              nb1 -= 1
+                neu = [p for p in belegt if na0 <= p[0] < na1 and nb0 <= p[1] < nb1]
+                if len(neu) < gesamt * ANTEIL:
+                    continue
+                if any(not (na0 * S <= hx < na1 * S and nb0 * S <= hz < nb1 * S)
+                       for (hx, hz) in halten):
+                    continue
+                a0, b0, a1, b1 = na0, nb0, na1, nb1
+                geschafft = True
+                break
+            if not geschafft:
+                break
+        return a0 * S, b0 * S, a1 * S, b1 * S
 
     def kasten(self, b, st):
         """Das Rechteck des Ortes in Kartenpixeln: (x, y, w, h)."""
@@ -206,6 +281,22 @@ class Blatt(object):
                 best = i
         return best
 
+    @staticmethod
+    def waende(kasten, p, rand=WAND_RAND):
+        """ALLE Waende, die als Tuerwand in Frage kommen - naechste zuerst.
+
+        ⛔ DIE NAECHSTE WAND IST EIN MUENZWURF. Gemessen ueber alle 282 Tueren: der
+        Tuerpunkt liegt im Median 3 px von der naechsten Wand, aber nur 4 px vor der
+        ZWEITnaechsten; bei 23 % betraegt der Vorsprung <= 1 px. Eine lokale Entscheidung
+        daraus zu machen hat den Loeser in Widersprueche gefuehrt, die keine Anordnung
+        aufloest (ROOM1130/ROOM1140/ROOM1170 auf Blatt 4). Deshalb wird die Wand nicht
+        mehr geraten, sondern als Moeglichkeit angeboten - der Loeser sucht sich die
+        global vertraegliche Zuweisung."""
+        x, y, w, h = kasten
+        d = (p[1] - y, (x + w) - p[0], (y + h) - p[1], p[0] - x)
+        nah = min(d)
+        return [i for i in sorted(range(4), key=lambda j: d[j]) if d[i] <= nah + rand]
+
     def wandpunkt(self, b, st, p):
         """Der Tuerpunkt AUF die naechste Wand des Rechtecks projiziert - dort wird das
         Symbol gezeichnet, und dort muessen die beiden Enden eines Durchgangs
@@ -241,15 +332,15 @@ class Blatt(object):
         if not ka:
             return []
         p_a = self.punkt(a, st_a, *pa)
-        wa = self.wand(ka, p_a)
         aus = []
-        for k in range(4):
+        for wa in self.waende(ka, p_a):
+          for k in range(4):
             for sp in SPIEGEL:
                 kb = self.kasten(b, (0.0, 0.0, k, sp))
                 if not kb:
                     continue
                 p_b = self.punkt(b, (0.0, 0.0, k, sp), *pb)
-                if self.wand(kb, p_b) != (wa + 2) % 4:
+                if (wa + 2) % 4 not in self.waende(kb, p_b):
                     continue
                 if wa == 1:            # Tuer in a's OSTwand -> b schliesst oestlich an
                     ox = (ka[0] + ka[2]) - kb[0]
@@ -393,16 +484,37 @@ class Blatt(object):
         return lage
 
     # ------------------------------------------------------------------ Bewertung
+    def kantenrest(self, lage, a, pa, b, pb):
+        """Rest EINER Tuerkante, gemessen an der BERUEHRUNG der beiden Rechtecke.
+
+        ⛔ NICHT GEGEN DIE GERATENE WAND. Seit die Wandwahl ein Freiheitsgrad ist
+        (waende()), waere ein Mass gegen die naechste Wand inkonsistent: der Loeser legt
+        ueber Wand X an, das Mass prueft gegen Wand Y. Gemessen wird deshalb dasselbe,
+        woraus auch die Tuermarke entsteht - die Ueberdeckung der beiden Kaesten:
+        entlang der gemeinsamen Wand muessen die zwei Tuerpunkte uebereinander liegen,
+        quer dazu zaehlt eine echte Luecke."""
+        ka = self.kasten(a, lage[a])
+        kb = self.kasten(b, lage[b])
+        if not ka or not kb:
+            return 999.0
+        p_a = self.punkt(a, lage[a], *pa)
+        p_b = self.punkt(b, lage[b], *pb)
+        ux0 = max(ka[0], kb[0]); ux1 = min(ka[0] + ka[2], kb[0] + kb[2])
+        uy0 = max(ka[1], kb[1]); uy1 = min(ka[1] + ka[3], kb[1] + kb[3])
+        luecke = max(0.0, ux0 - ux1, uy0 - uy1)
+        if ux1 - ux0 >= uy1 - uy0:
+            laengs = abs(p_a[0] - p_b[0])      # waagerechte Wand -> laengs = x
+        else:
+            laengs = abs(p_a[1] - p_b[1])      # senkrechte Wand  -> laengs = y
+        return laengs + luecke
+
     def rest(self, lage):
-        """Abstand der beiden Tuerpunkte je Durchgang - das Mass, das der Spieler beim
-        Durchschreiten sieht. Bei sauber angelegten Rechtecken ist er 0."""
+        """Rest je Durchgang - das Mass, das der Spieler beim Durchschreiten sieht."""
         aus = []
         for (a, pa, b, pb) in self.kanten:
             if a not in lage or b not in lage:
                 continue
-            qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
-            qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
-            aus.append(max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])))
+            aus.append(self.kantenrest(lage, a, pa, b, pb))
         return aus
 
     def kosten(self, lage, pix=None):
@@ -421,9 +533,7 @@ class Blatt(object):
         for (a, pa, b, pb) in self.kanten:
             if a not in lage or b not in lage:
                 continue
-            qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
-            qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
-            if max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])) <= 1.0:
+            if self.kantenrest(lage, a, pa, b, pb) <= 1.0:
                 deckung += 1
         xs = [p[0] for p in alle]
         ys = [p[1] for p in alle]
@@ -497,9 +607,7 @@ class Blatt(object):
             for (a, pa, b, pb) in self.kanten:
                 if a not in lage or b not in lage:
                     continue
-                qa = self.wandpunkt(a, lage[a], self.punkt(a, lage[a], *pa))
-                qb = self.wandpunkt(b, lage[b], self.punkt(b, lage[b], *pb))
-                if max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])) <= 1.0:
+                if self.kantenrest(lage, a, pa, b, pb) <= 1.0:
                     continue                      # diese Tuer sitzt schon
                 for (wer, anker, p_anker, p_wer) in ((b, a, pa, pb), (a, b, pb, pa)):
                     if wer in self.feste_lagen:

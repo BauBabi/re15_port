@@ -1113,7 +1113,7 @@ def main():
                 # ROOM1140<->ROOM1170 - genau die Kante, die Blatt 4 nachweislich
                 # unloesbar machte (RE15_VOLLSUCHE=4: hoechstens 5 von 6). Solche Paare
                 # duerfen die Anordnung nicht einschraenken.
-                if _lebend is not None and _d['dest'] != _b:
+                if False and _lebend is not None and _d['dest'] != _b:
                     _p1 = (_b & 0xFFF0, _d['dest'] & 0xFFF0)
                     _p2 = (_p1[1], _p1[0])
                     if _p1 not in _lebend and _p2 not in _lebend:
