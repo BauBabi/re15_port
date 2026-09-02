@@ -1,3 +1,49 @@
+# RE1.5 Port — v0.3.87 (Early Preview)
+
+**Live gegen die Engine debuggt, wie du es verlangt hast.**
+
+Dein Auftrag war richtig: meine bisherigen Prüfungen liefen auf der erzeugten Tabelle
+und bildeten die Marker-Rechnung nur *nach*. Neu ist ein Werkzeug, das den **echten
+Code-Pfad** fährt — jeder Raum wird geladen wie im Spiel, die Türen kommen aus den
+installierten Daten, und für beide Seiten läuft dieselbe Funktion, die auch den
+Spielermarker zeichnet.
+
+Erste Live-Messung: 116 Durchgänge, **schlimmster Sprung 63 Pixel, kein einziger unter
+zwei**. Vier Ursachen, die nur live sichtbar waren:
+
+| | vorher | jetzt |
+|---|---|---|
+| schlimmster Sprung beim Durchschreiten | **63 px** | **29 px** |
+| Türsymbole, die vom Nachbarn weg zeigen | 34 von 93 | **0 von 95** |
+| Durchgänge, die anstoßen | 92 von 100 | **96 von 101** |
+
+**Der Marker wurde von der Wand weggeschoben.** Er wird mit vier Pixeln Sicherheitsabstand
+ins Rechteck geklemmt. Bei den gemalten Rechtecken des Originals ist der Rand bloßer
+Rahmen; auf einem Grundriss ist er die **Wand** — und genau dort stehst du, wenn du durch
+eine Tür gehst. Das allein machte bis zu acht Pixel Sprung aus, völlig unabhängig davon,
+wie genau die Räume liegen.
+
+**Einseitige Türen wurden beim Ausrichten übergangen.** Der schlimmste Fall überhaupt
+(63 Pixel) war so einer.
+
+**Meine Wanddicke war zehnmal zu groß.** Ich hatte sie gemessen, indem ich vom Türpunkt
+nach außen lief — bei großen Räumen läuft dieser Strahl erst tief hinein. Die Tiefe steht
+aber in den Türdaten selbst.
+
+**Ehrlich: der mittlere Sprung bewegt sich nicht** (9 → 10 Pixel). Getrennt gemessen sind
+davon 0,9 Pixel unvermeidbare Geometrie und 9 Pixel Layout. Das Ausrichten konvergiert
+nachweislich — auf Blättern **ohne Rundwege** im Türgraph geht der Fehler auf exakt null.
+Auf Blättern mit Rundwegen bleibt er stehen: **die Räume von RE1.5 bilden keinen metrisch
+geschlossenen Grundriss.** Jeder Raum hat sein eigenes Koordinatensystem, und die
+Türdaten sagen, *wohin* eine Tür führt — nicht, dass die Räume kacheln. Wo ein Rundweg
+nicht schließt, lässt sich der Fehler nur verteilen, nicht beseitigen.
+
+Ich habe fünf Einstellungen gemessen und die mit den besten sichtbaren Werten genommen.
+Der Preis ist mehr Überlappung (bis 31 % auf 2F). Im Bild liest sich das anders als in
+der Zahl: überlappende Räume in derselben Farbe wirken *verbunden*, Lücken wirken kaputt.
+
+---
+
 # RE1.5 Port — v0.3.86 (Early Preview)
 
 **Die Kartenstücke stoßen aneinander, und die Türen zeigen in die richtige Richtung.**

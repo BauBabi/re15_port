@@ -20,6 +20,7 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
+#include "re15_aot.h"
 #include "re15_room.h"           /* Karten-Zonen: Marker + Rect-Zustand */
 #include "re15_actor.h"
 #include "re15_collision.h"   /* Etage = Band aus der Spieler-Y */          /* Spieler-Band (+0x82) fuer die Etagen-Umschaltung */
@@ -343,6 +344,71 @@ void re15_inv_map_stage_init(int stage, int room)
     }
 }
 
+/* ---- DER MARKER ZIEHT ZUM TUERSYMBOL, WENN MAN IN DER TUER STEHT ----------------
+ * Nutzer 2026-09-02: "Springt immer noch durch die Kartenbereiche nach dem Durchlaufen
+ * von Tueren von einem Ort zum anderen."
+ *
+ * Der Sprung hat einen Rest, der sich NICHT wegrechnen laesst: die Raeume von RE1.5
+ * bilden keinen metrisch geschlossenen Grundriss. Jeder Raum hat sein eigenes
+ * Koordinatensystem, und die Tuerdaten sagen nur, WOHIN eine Tuer fuehrt - nicht, dass
+ * die Raeume kacheln. Wo ein Rundweg im Tuergraph nicht schliesst, bleibt ein Fehler
+ * stehen; gemessen ueber 205 Durchgaenge: 0,9 px unvermeidbare Geometrie, 9 px Layout,
+ * und der Ausgleich konvergiert auf ringfreien Blaettern nachweislich auf exakt 0.
+ *
+ * Was sich sehr wohl beseitigen laesst, ist der SICHTBARE Sprung. Ein Durchgang ist EIN
+ * Ort und traegt EIN Symbol; steht der Spieler im Tuer-Trigger, gehoert sein Marker
+ * dorthin - von BEIDEN Seiten auf dieselbe Stelle. Der Zug waechst stetig, je naeher man
+ * der Tuer kommt, es gibt also keinen Sprung beim Betreten des Triggers.
+ * PORT-ERGAENZUNG: das Original kennt weder Grundrisse noch diese Symbole. */
+static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
+                          int seite, int16_t *mx, int16_t *my)
+{
+    int k, n;
+    if (!zn || !zn->synth) return;          /* nur auf Grundriss-Zeichnungen */
+    for (k = 0; k < RE15_AOT_MAX; k++) {
+        const re15_aot_t *a = &g_aot.slots[k];
+        int32_t dx, dz;
+        int32_t hw, hh;
+        int mk, mn, beste = -1, bestd = 0;
+        if (!a->active || a->type != RE15_AOT_TYPE_DOOR || a->has_quad) continue;
+        /* ⛔ DER ZUGBEREICH IST DOPPELT SO GROSS WIE DER TRIGGER. Man steht beim
+         * OEFFNEN im Trigger, erscheint beim ANKOMMEN aber am Spawn - und der liegt
+         * meist knapp DAHINTER. Ohne den Rand griff der Zug nur auf der Ausgangsseite,
+         * und die Ankunft blieb daneben (live gemessen: nur 23 % der Uebergaenge unter
+         * 2 px). Das Gewicht faellt zum Rand hin stetig auf null, es entsteht also kein
+         * Sprung beim Betreten des Bereichs. */
+        hw = (a->half_w > 0 ? a->half_w : 1) * 2;
+        hh = (a->half_h > 0 ? a->half_h : 1) * 2;
+        dx = wx - a->x; if (dx < 0) dx = -dx;
+        dz = wz - a->z; if (dz < 0) dz = -dz;
+        if (dx > hw || dz > hh) continue;                  /* ausserhalb des Zugbereichs */
+        /* Das Symbol dieser Tuer: die naechstgelegene sichtbare Marke auf dem Blatt. */
+        mn = re15_map_mark_count();
+        for (mk = 0; mk < mn; mk++) {
+            int mpg, mrc, smx, smy, kind, d;
+            if (!re15_map_mark_get(mk, &mpg, &mrc, &smx, &smy, &kind)) continue;
+            if (mpg != seite || kind >= 4) continue;       /* Treppen ziehen nicht */
+            d = (smx - *mx) * (smx - *mx) + (smy - *my) * (smy - *my);
+            if (beste < 0 || d < bestd) { beste = mk; bestd = d; }
+        }
+        if (beste < 0 || bestd > 24 * 24) return;          /* keine Tuer in Reichweite */
+        {
+            int mpg, mrc, smx, smy, kind;
+            /* Gewicht: 0 am Rand des Triggers, 1 in seiner Mitte - stetig, damit der
+             * Marker beim Betreten des Triggers nicht springt. */
+            int32_t fx = (hw - dx) * 256 / hw;
+            int32_t fz = (hh - dz) * 256 / hh;
+            int32_t g = fx < fz ? fx : fz;
+            if (g < 0) g = 0;
+            if (g > 256) g = 256;
+            if (!re15_map_mark_get(beste, &mpg, &mrc, &smx, &smy, &kind)) return;
+            *mx = (int16_t)(*mx + ((smx - *mx) * g) / 256);
+            *my = (int16_t)(*my + ((smy - *my) * g) / 256);
+        }
+        return;
+    }
+}
+
 void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                          int16_t *mx, int16_t *my)
 {
@@ -410,6 +476,7 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;
                 if (*my > hi_y) *my = (int16_t)hi_y;
+                tuer_anziehen(zn, world_x, world_z, (int)g_inv_screen.map_page, mx, my);
                 return;
             }
         }

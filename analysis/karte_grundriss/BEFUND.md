@@ -378,3 +378,23 @@ Farbe wirken *verbunden*, Lücken wirken kaputt.
 * Seite 3 (2F) 30,7 %, Seite 7 (Factory) 22,9 % Überlappung.
 * 10 Markenpaare liegen praktisch aufeinander (§7).
 * Seite 12 nur 1 von 3 Durchgängen anstoßend.
+
+### Die Tür zieht den Marker an — der sichtbare Sprung ohne die unmögliche Geometrie
+
+Der Rest-Sprung lässt sich nicht wegrechnen (die Räume kacheln nicht), der **sichtbare**
+schon: ein Durchgang ist EIN Ort und trägt EIN Symbol. Steht der Spieler im Tür-Trigger,
+zieht sein Marker auf dieses Symbol — von *beiden* Seiten auf dieselbe Stelle
+(`tuer_anziehen` in `re15_inv_screen.c`). Das Gewicht wächst stetig zur Türmitte hin, es
+gibt also keinen Sprung beim Betreten des Bereichs; der Zugbereich ist doppelt so groß wie
+der Trigger, weil man beim *Ankommen* am Spawn steht und der knapp dahinter liegt.
+
+Gemessen an der echten Abfolge (im Trigger stehen → drücken → am Spawn erscheinen):
+
+| | ohne Zug | mit Zug |
+|---|---|---|
+| Median-Sprung | 9 px | **5 px** |
+| Übergänge unter 2 px | 0 von 102 | **27 von 102** |
+| Übergänge unter 8 px | 42 % | **62 %** |
+| schlimmster | 63 px (v0.3.86) | **35 px** |
+
+Es ist eine PORT-ERGÄNZUNG: das Original kennt weder Grundrisse noch diese Symbole.

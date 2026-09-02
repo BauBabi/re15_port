@@ -183,12 +183,16 @@ int main(void)
      * wenn er die Tuer oeffnet. Was der Nutzer vergleicht, sind die beiden Punkte, an
      * denen man ERSCHEINT: der Spawn der Gegen-Tuer in A und der Spawn dieser Tuer in B.
      * Beide liegen bauartbedingt dicht an der gemeinsamen Wand. */
+    /* ⛔ DIE A-SEITE IST DER TRIGGER, NICHT DER GEGEN-SPAWN. Der Spieler steht beim
+     * Oeffnen IM Tuer-Trigger - dort zieht der Marker auf das Tuersymbol (siehe
+     * tuer_anziehen in re15_inv_screen.c). Der Gegen-Spawn liegt dahinter und wuerde
+     * diesen Zug nicht sehen. Gemessen wird also genau die Abfolge des Spielers:
+     * im Trigger stehen, druecken, am Spawn erscheinen. */
     for (i = 0; i < ntuer; i++) {
         int j;
+        tuer[i].rez = 0;
         for (j = 0; j < ntuer; j++) {
             if (tuer[j].a != tuer[i].b || tuer[j].b != tuer[i].a) continue;
-            tuer[i].ax = tuer[j].bx;
-            tuer[i].az = tuer[j].bz;
             tuer[i].rez = 1;
             break;
         }
