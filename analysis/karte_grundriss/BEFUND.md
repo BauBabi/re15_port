@@ -281,3 +281,18 @@ weiter bei 9 px im Median; davon ist der größte Teil die **echte Wanddicke** �
 beiden Tür-Datensätze liegen real so weit auseinander.
 
 Festgehalten in `test_map_durchgang.c` (Symbol-Richtung, Lücke, Gegenprobe).
+
+### Neu aufgefallen (nicht in v0.3.86 behoben)
+
+Das Audit zählt nach dem Umbau **10 Markenpaare, die praktisch aufeinander liegen**
+(≤ 2 px, gleiche Art) — vorher 0. Aufgeschlüsselt:
+
+* **1 Fall** ist derselbe Durchgang zweimal gezeichnet (Seite 2, zid 16/23 bei
+  (165,103) und (165,105)) — die Paarung hat ihn nicht zusammengeführt.
+* **9 Fälle** sind **zwei verschiedene Türen**, die auf denselben Wandpunkt schnappen.
+  Seit die Räume aneinanderstoßen, liegen ihre Projektionen dichter beieinander, und
+  `snap_grundriss` zieht beide auf dasselbe Randpixel.
+
+Beides ist sichtbar: eine Tür verdeckt die andere. Nötig ist ein Nachlauf, der Marken
+gleicher Art auf einem Blatt längs ihrer Wand auseinanderschiebt, bevor sie
+ausgeschrieben werden.
