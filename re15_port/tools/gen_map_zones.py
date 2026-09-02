@@ -37,6 +37,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # fuer grundriss
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 EXE  = open(os.path.join(ROOT, 'info', 'Re1.5', 'PSX.EXE'), 'rb').read()
 GAP  = 1500          # Beruehrungs-Toleranz beim Verschmelzen (Welt-Einheiten)
+# Bis zu wievielen Pixeln Abweichung darf man die beiden Projektionen einer
+# Tuer MITTELN? Darueber liegen die Zeichnungen gegenlaeufig, und das Mittel
+# legt die Marke dorthin, wo KEINE Seite eine Tuer hat (ROOM1210<->ROOM1220).
+MITTEL_MAX = 4
 MIN_FRAC = 0.03      # Splitter unter diesem Anteil der Raumflaeche verwerfen
 
 def fo(a): return a - 0x80010000 + 0x800
@@ -432,6 +436,69 @@ def _lebende_paare():
                 continue
             paare.add((a & 0xFFF0, b & 0xFFF0))
     return paare or None
+
+
+def _paar_detail(B, pg):
+    """Alle Anlege-Lagen des kantenreichsten Paares mit ihren Resten."""
+    paare = collections.defaultdict(list)
+    for idx, (a, pa, b, pb) in enumerate(B.kanten):
+        paare[tuple(sorted((a, b)))].append(idx)
+    if not paare:
+        return
+    schl = max(paare, key=lambda k: len(paare[k]))
+    idxs = paare[schl]
+    if len(idxs) < 2:
+        return
+    a0, b0 = schl
+    print("   [Detail Blatt %d] ROOM%04X z%d <-> ROOM%04X z%d, %d Kanten"
+          % (pg, a0 >> 4, a0 & 15, b0 >> 4, b0 & 15, len(idxs)))
+    gesehen = set()
+    for i in idxs:
+        (a, pa, b, pb) = B.kanten[i]
+        for st in B.anlegen(a, (0.0, 0.0, 0, 0), pa, b, pb):
+            k = (round(st[0], 1), round(st[1], 1), st[2], st[3])
+            if k in gesehen:
+                continue
+            gesehen.add(k)
+            lage = {a: (0.0, 0.0, 0, 0), b: st}
+            reste = []
+            for j in idxs:
+                (a2, pa2, b2, pb2) = B.kanten[j]
+                reste.append(B.kantenrest(lage, a2, pa2, b2, pb2))
+            print("      Anker Kante %d -> dx=%7.1f dy=%7.1f k=%d sp=%d  Reste %s"
+                  % (i, st[0], st[1], st[2], st[3],
+                     " ".join("%5.1f" % r for r in reste)))
+
+
+def _paar_probe(B, pg):
+    """Wie viele Kanten eines Raumpaares kann EINE Anlege-Lage gleichzeitig erfuellen?"""
+    paare = collections.defaultdict(list)
+    for idx, (a, pa, b, pb) in enumerate(B.kanten):
+        paare[tuple(sorted((a, b)))].append(idx)
+    for schl, idxs in sorted(paare.items()):
+        if len(idxs) < 2:
+            continue
+        a0, b0 = schl
+        bestn, bestst = 0, None
+        for i in idxs:
+            (a, pa, b, pb) = B.kanten[i]
+            for st in B.anlegen(a, (0.0, 0.0, 0, 0), pa, b, pb):
+                lage = {a: (0.0, 0.0, 0, 0), b: st}
+                n = 0
+                for j in idxs:
+                    (a2, pa2, b2, pb2) = B.kanten[j]
+                    if a2 not in lage or b2 not in lage:
+                        continue
+                    if B.kantenrest(lage, a2, pa2, b2, pb2) <= 1.0:
+                        n += 1
+                if n > bestn:
+                    bestn, bestst = n, (st, a, b)
+        # was erreicht die AKTUELLE Loesung?
+        print("   [Paar Blatt %d] ROOM%04X z%d <-> ROOM%04X z%d: %d Kanten, EINE Lage "
+              "schafft hoechstens %d%s"
+              % (pg, a0 >> 4, a0 & 15, b0 >> 4, b0 & 15, len(idxs), bestn,
+                 ("  (Drehung %d, Spiegel %d)" % (bestst[0][2], bestst[0][3]))
+                 if bestst else ""))
 
 
 def _vollsuche(B, pg):
@@ -1226,6 +1293,10 @@ def main():
         for _pg in _reihe:
             _orte, _rd = _eingabe[_pg]
             _B = _gr.Blatt(_orte, _rd, _ex0, _ey0)
+            if os.environ.get('RE15_PAAR_DETAIL') == str(_pg):
+                _paar_detail(_B, _pg)
+            if os.environ.get('RE15_PAAR_PROBE') == str(_pg):
+                _paar_probe(_B, _pg)
             if os.environ.get('RE15_VOLLSUCHE') == str(_pg):
                 _vollsuche(_B, _pg)
             if os.environ.get('RE15_KANTEN_DUMP') == str(_pg):
@@ -2143,10 +2214,22 @@ def main():
                 # ROOM1000<->ROOM1050: 144/143, 164/164, 167/167). Diese Uebereinstimmung
                 # ist das bessere Zeugnis als jede Konstruktion aus den Kaesten.
                 _duenn = min(_br, _ho) <= 4
+                # ⛔ NUR MITTELN, WENN BEIDE SEITEN UEBEREINSTIMMEN (siehe Kopf-
+                # kommentar zu ROOM1210 <-> ROOM1220): weichen sie um mehr als
+                # MITTEL_MAX Pixel ab, liegen die beiden Zeichnungen laengs der Wand
+                # gegenlaeufig, und das Mittel legt die Marke an eine Stelle, an der
+                # KEINE der beiden Seiten eine Tuer hat.
+                _rohW = _rohA if W is A else _rohB
+                def _laengs(i):
+                    if not (_rohA and _rohB):
+                        return None
+                    if abs(_rohA[i] - _rohB[i]) <= MITTEL_MAX:
+                        return (_rohA[i] + _rohB[i]) // 2
+                    return _rohW[i] if _rohW else None
                 if not _duenn:
-                    if _rohA and _rohB:
-                        cx = (_rohA[2] + _rohB[2]) // 2
-                        cy = (_rohA[3] + _rohB[3]) // 2
+                    _mx = _laengs(2); _my = _laengs(3)
+                    if _mx is not None: cx = _mx
+                    if _my is not None: cy = _my
                     # ⛔ AUCH OHNE WANDLINIE BLEIBT DIE MARKE IM GEMEINSAMEN BEREICH.
                     # Ein erster Wurf liess die rohe Projektion hier ungeklemmt stehen -
                     # der Pin unit_map_durchgang hat daraufhin zwei Marken gemeldet, die
@@ -2162,8 +2245,9 @@ def main():
                 elif _br >= _ho:
                     # waagerechte Wand: Hoehe = Wanddicke, Laenge in x
                     cy = (_uy0 + _uy1) // 2
-                    if _rohA and _rohB:
-                        cx = (_rohA[2] + _rohB[2]) // 2
+                    _mx = _laengs(2)
+                    if _mx is not None:
+                        cx = _mx
                     elif _rohA:
                         cx = _rohA[2]
                     elif _rohB:
@@ -2172,8 +2256,9 @@ def main():
                     _seite_kante = 2 if (_by + _bh / 2.0) > (_ay + _ah / 2.0) else 0
                 else:
                     cx = (_ux0 + _ux1) // 2
-                    if _rohA and _rohB:
-                        cy = (_rohA[3] + _rohB[3]) // 2
+                    _my = _laengs(3)
+                    if _my is not None:
+                        cy = _my
                     elif _rohA:
                         cy = _rohA[3]
                     elif _rohB:
@@ -2361,6 +2446,27 @@ def main():
                             continue
                         if not _frei((_nx, _ny), _wer, _wer['pg']):
                             continue
+                        # ⛔ EIN GEPAARTES SYMBOL BLEIBT AUF DER GEMEINSAMEN KANTE.
+                        # Es sitzt auf der Ueberdeckung der beiden Rechtecke; schiebt man
+                        # es darueber hinaus, steht es neben der Stelle, an der die zwei
+                        # Raeume sich beruehren (Audit E: ROOM2040 <-> ROOM2050 und
+                        # ROOM3090 <-> ROOM30D0, je 3 px daneben).
+                        _z2 = _wer.get('zid2', 255)
+                        if _z2 != 255:
+                            _ka = _geo(_wer['pg'], _wer['r'], _wer['room'], _wer['zi'])
+                            _kb = None
+                            for _q in vor:
+                                if _q.get('zid') == _z2 and _q['pg'] == _wer['pg']:
+                                    _kb = _geo(_q['pg'], _q['r'], _q['room'], _q['zi'])
+                                    break
+                            if _ka and _kb:
+                                _ax0 = max(_ka[0], _kb[0])
+                                _ax1 = min(_ka[0] + _ka[2], _kb[0] + _kb[2])
+                                _ay0 = max(_ka[1], _kb[1])
+                                _ay1 = min(_ka[1] + _ka[3], _kb[1] + _kb[3])
+                                if _ax1 > _ax0 and _ay1 > _ay0:
+                                    if not (_ax0 <= _nx < _ax1 and _ay0 <= _ny < _ay1):
+                                        continue
                         _wer['mx'], _wer['my'] = _nx, _ny
                         _bewegt += 1
                         _erledigt = True

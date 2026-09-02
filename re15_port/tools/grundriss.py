@@ -72,6 +72,19 @@ ANTEIL = float(os.environ.get('RE15_KERN_ANTEIL', '1.0'))
 FELD = (100, 55, 132, 140)      # Kartenfeld: dort liegen alle Rechtecke aller Seiten
 
 
+def ORDNUNG(k):
+    """Reihenfolge der Guetekriterien des Loesers.
+
+    k = (ueberlappung%, deckung, breite, hoehe, schlimmster_rest, getrennt).
+    Standard: erst KEINE getrennten Nachbarn (der Nutzer sieht ein Rechteck, das
+    nicht anschliesst, sofort), dann moeglichst viele deckungsgleiche Tueren,
+    dann der schlimmste Rest, dann die Ueberlappung.
+    RE15_ORDNUNG=deckung stellt die Tueren voran - zum Vergleichen."""
+    if os.environ.get('RE15_ORDNUNG') == 'deckung':
+        return (-k[1], k[5], k[4], k[0])
+    return (k[5], -k[1], k[4], k[0])
+
+
 def dreh(wx, wz, k, sp):
     """Drehung um k*90 Grad, optional vorher gespiegelt."""
     if sp:
@@ -431,7 +444,24 @@ class Blatt(object):
         q = sorted(lage)
 
         def anheften(a, b, pa, pb):
-            kand = self.anlegen(a, lage[a], pa, b, pb)
+            # ⛔ ALLE KANTEN ZWISCHEN a UND b ALS ANKER PROBIEREN. Ueber welche Tuer man
+            # anlegt, bestimmt die Lage; bei mehreren Tueren zwischen denselben zwei
+            # Orten trifft eine andere Ankerkante mehr davon gleichzeitig. Gemessen an
+            # ROOM1210 <-> ROOM1220 (fuenf Tueren): ueber die BFS-Kante traf der Loeser
+            # eine, ueber eine andere Ankerkante sind drei moeglich.
+            kand = []
+            gesehen_st = set()
+            for (nb_b, nb_pa, nb_pb) in nb[a]:
+                if nb_b != b:
+                    continue
+                for st in self.anlegen(a, lage[a], nb_pa, b, nb_pb):
+                    schl = (round(st[0], 2), round(st[1], 2), st[2], st[3])
+                    if schl in gesehen_st:
+                        continue
+                    gesehen_st.add(schl)
+                    kand.append(st)
+            if not kand:
+                kand = self.anlegen(a, lage[a], pa, b, pb)
             fest = self.feste_posen.get(b)
             if fest is not None:
                 gefiltert = [c for c in kand if (c[2], c[3]) == fest]
@@ -448,12 +478,49 @@ class Blatt(object):
                         d = dreh(pb[0], pb[1], k, sp)
                         kand.append((p[0] - d[0] / self.ex,
                                      p[1] + d[1] / self.ey, k, sp))
+            # ⛔ NICHT NUR NACH UEBERLAPPUNG WAEHLEN. Zwei Orte koennen durch MEHRERE
+            # Tueren verbunden sein (ROOM1210 <-> ROOM1220: fuenf). anlegen() liefert je
+            # Kante mehrere Lagen; welche man nimmt, entscheidet, ob die uebrigen Tueren
+            # desselben Paares auch treffen. Ein erster Wurf nahm die mit der geringsten
+            # Ueberlappung und traf dadurch nur EINE der fuenf - die Reste bildeten die
+            # lineare Reihe 50/37/29/22/0 px (gegenlaeufige Orientierung), und der Marker
+            # zog bei allen fuenf Tueren auf dieselbe Stelle.
+            # Gezaehlt wird deshalb zuerst, wie viele SCHON GESETZTE Kanten die Lage
+            # miterfuellt; die Ueberlappung entscheidet erst bei Gleichstand.
             best = None
             for st in kand:
                 pb2 = self.pixel(b, st)
                 ueb = sum(len(pb2 & v) for v in pix.values())
-                if best is None or ueb < best[0]:
-                    best = (ueb, st, pb2)
+                lage[b] = st
+                treffer = 0
+                for (a2, pa2, b2, pb2k) in self.kanten:
+                    if a2 not in lage or b2 not in lage:
+                        continue
+                    if b2 != b and a2 != b:
+                        continue
+                    if self.kantenrest(lage, a2, pa2, b2, pb2k) <= 1.0:
+                        treffer += 1
+                del lage[b]
+                schl = (-treffer, ueb)
+                if best is None or schl < best[0]:
+                    best = (schl, st, pb2)
+            if os.environ.get('RE15_ANHEFTEN_DBG', '').lower() == ('%x' % b):
+                print("   [anheften] ROOM%04X z%d an ROOM%04X z%d: %d Lagen"
+                      % (b >> 4, b & 15, a >> 4, a & 15, len(kand)))
+                for st in kand:
+                    lage[b] = st
+                    tr = 0
+                    for (a2, pa2, b2, pb2k) in self.kanten:
+                        if a2 not in lage or b2 not in lage:
+                            continue
+                        if b2 != b and a2 != b:
+                            continue
+                        if self.kantenrest(lage, a2, pa2, b2, pb2k) <= 1.0:
+                            tr += 1
+                    del lage[b]
+                    print("      dx=%8.1f dy=%8.1f k=%d sp=%d -> %d Treffer%s"
+                          % (st[0], st[1], st[2], st[3], tr,
+                             "  <== gewaehlt" if st == best[1] else ""))
             lage[b] = best[1]
             pix[b] = best[2]
             q.append(b)
@@ -555,7 +622,13 @@ class Blatt(object):
         # nie zum Anlegen benutzt, und die Marken-Paarung ueberspringt sie danach
         # wegen der Entfernung. Ein Rundschluss, den nur ein eigenes Mass aufbricht.
         getrennt = 0
-        for (a, pa, b, pb) in self.kanten:
+        # ⛔ EINSEITIGE TUEREN ZAEHLEN MIT. Eine Tuer ohne Gegen-Datensatz (ROOM5050 ->
+        # ROOM5120, ROOM5060 -> ROOM5120) landet in notkanten; die dienten bisher nur
+        # zum Anbauen und kamen im Guetemass nicht vor - also drueckte nichts die beiden
+        # Raeume zusammen, und das Audit meldete 2 px Luecke. "Deckungsgleich" ist fuer
+        # sie nicht sinnvoll (ihr Anker ist der Spawn, kein Gegen-Tuerpunkt), aber
+        # "beruehren sich" sehr wohl.
+        for (a, pa, b, pb) in list(self.kanten) + list(self.notkanten):
             if a not in lage or b not in lage:
                 continue
             ka = self.kasten(a, lage[a])
@@ -617,8 +690,7 @@ class Blatt(object):
                         lage[wer] = st
                         k = self.kosten(lage)
                         lage[wer] = alt_st
-                        if (k[5], -k[1], k[4], k[0]) < (k0[5], -k0[1], k0[4], k0[0]) and                            (bester is None or (k[5], -k[1], k[4], k[0]) <
-                            (bester[0][5], -bester[0][1], bester[0][4], bester[0][0])):
+                        if ORDNUNG(k) < ORDNUNG(k0) and                            (bester is None or ORDNUNG(k) < ORDNUNG(bester[0])):
                             bester = (k, wer, st)
             if bester is None:
                 break
@@ -647,8 +719,7 @@ class Blatt(object):
             if not lage:
                 continue
             k = self.kosten(lage)
-            if best is None or (k[5], -k[1], k[4], k[0]) < (best[1][5], -best[1][1],
-                                                             best[1][4], best[1][0]):
+            if best is None or ORDNUNG(k) < ORDNUNG(best[1]):
                 best = (lage, k)
         self._wurzel = None
         return best[0] if best else {}
