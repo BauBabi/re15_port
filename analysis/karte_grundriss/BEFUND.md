@@ -725,3 +725,79 @@ den Rändern sitzen** und das Rechteck festhalten:
 
 Der Code bleibt als `RE15_KERN_ANTEIL` erhalten (Default 1.0 = aus). Der eigentliche
 Hebel gegen die Überlappung war die Wandfreiheit, nicht die Rechteckgröße.
+
+## §13 — Nacht-Audit 2026-09-03: jeder Raum gegen fünfzehn Invarianten
+
+> „ROOM 1070 wird nicht rot hervorgehoben wenn ich drin stehe."
+> „Nimm dir die Nacht, überprüfe jeden einzelnen Raum auf Fehler und nimm noch Korrekturen
+> zur perfekten Verfeinerung vor."
+
+Neues Werkzeug `re15_port/tools/karte_audit.py` — prüft alle 96 Räume, nennt jeden Fall
+namentlich (kein Aggregat, das Einzelfälle zudeckt).
+
+### ROOM1070: verschachtelte Zonen
+
+`zones_of()` bildet Zusammenhangskomponenten der Kollisionszellen. Innere Zellen (Pfeiler,
+Möbel) liegen oft weiter als `GAP` von der Umfassungswand und werden dadurch zu **eigenen
+Zonen** — deren Weltbox steckt aber **vollständig** in der des Raums. `zone_index_at()`
+wählt die *kleinste* Zone, die den Spieler enthält, also die Insel; ihr Rechteck (ROOM1070
+z1: 11×5 px) wird rot gefärbt und liegt komplett **unter** dem grünen Rechteck der
+umgebenden Zone. Der Raum sah nie rot aus.
+Betroffen: ROOM1020, ROOM1070, ROOM1110, ROOM1140, ROOM11F0, ROOM30C0 → 126 auf 117 Orte.
+
+### Treppensymbole — zwei getrennte Ursachen
+
+* **ROOM2080**: die Treppe liegt in der **Lücke zwischen** zwei Zonen (x = −19550; Zone 0
+  ab −17650, Zone 1 bis −21450). `zone_at()` verlangte strikte Enthaltung → `None` → die
+  Marke fiel **still** weg. Die Engine hat dort einen Rückfall auf die nächste Zone; der
+  Generator bekommt denselben, sonst zeichnen beide verschiedene Karten.
+* **ROOM30D0**: das Symbol *existierte* (Blatt 7, 160,112) — aber ROOM30C0 trug an
+  derselben Stelle auch eines ein, und die Dublettenprüfung behielt ROOM30C0s Marke
+  **samt Sichtbarkeits-Zone**. Das Symbol hing am falschen Raum. Jetzt: eine Marke, zwei
+  Zonen (`zid`/`zid2`).
+
+### Fünf Türen, ein Symbol (ROOM1210 ↔ ROOM1220)
+
+Der Korridor hat **fünf** echte Türen. Ihre Weltkoordinaten sind auf beiden Seiten fast
+gleich ((−21450,−6100) gegen (−21750,−6400) …), die Projektionen liefen aber
+**gegenläufig** — mein Mittelwert je Paar ergab fünfmal denselben Wert, alle fünf Marken
+fielen auf **einen** Punkt (164,100). Live: sechs Übergänge mit 9–21 px Sprung.
+
+Gemittelt wird jetzt nur bei Übereinstimmung (≤ 4 px, gemessen an ROOM1000↔ROOM1050:
+144/143, 164/164, 167/167). Weicht es ab, ist das ein **Signal** für gegenläufige Lage.
+
+Dazu: `anheften()` wählte die Lage nur nach geringster Überlappung und sah nur die *eine*
+Kante, über die die Breitensuche kommt. Diagnosen `RE15_PAAR_PROBE` / `RE15_PAAR_DETAIL`
+zeigen: eine Lage schafft **drei** der fünf, gewählt wurde eine mit **einer**. Jetzt
+werden die Lagen aller Kanten des Paares gesammelt und nach miterfüllten Kanten sortiert.
+⚠️ Der Korridor ist damit **nicht** gelöst — `beste_lage` probiert jede Wurzel, und die
+Gesamtwertung wählt weiterhin eine Lage mit einem Treffer. Offen.
+
+### Einseitige Türen zählten nicht
+
+ROOM5050→ROOM5120 und ROOM5060→ROOM5120 haben **keinen Gegen-Datensatz** und landeten in
+`notkanten` — die dienten nur zum Anbauen und kamen im Gütemaß nicht vor. Nichts drückte
+die Räume zusammen. Jetzt zählen sie im **Getrennt**-Maß mit.
+
+### Stand
+
+| | vorher | jetzt |
+|---|---|---|
+| Audit-Fehler | 11 | **2** |
+| schlimmster Sprung | 31 px | **22 px** |
+| ≤ 2 px | 47 | **52 (35 %)** |
+| ≤ 4 px | 98 | **101 (69 %)** |
+| gepaarte Marken neben der Kante | 4 | **0** |
+| Blätter mit starker Überlappung | 3 | **2** |
+
+**Offen:** ROOM5060↔ROOM5120 (2 px), ein Symbolpaar auf Blatt 6, der Korridor
+ROOM1210↔ROOM1220, Überlappung auf Blatt 7 (31 %) und 9 (35 %).
+
+⚠️ Die Prüfung **D2 war zunächst ein Fehlalarm** — sie zählte alle Symbole zwischen zwei
+Räumen zusammen, obwohl ROOM1000↔ROOM1050 drei *echte* Türen hat. Ein Prüfer, der falsch
+anschlägt, ist wertlos; korrigiert auf Symbole je **Durchgang**.
+
+**Gemessen und nicht übernommen:** mehr Reparaturrunden (6/20/40 identisch — der
+Bergsteiger steht im lokalen Optimum), die Kriterien-Reihenfolge „Deckung zuerst"
+(91/97 statt 90/97, dafür 17 statt 16 getrennt — im Rauschen), und das Stutzen des
+Rechtecks auf den begehbaren Kern (§12).
