@@ -1,3 +1,43 @@
+# RE1.5 Port — v0.3.89 (Early Preview)
+
+**Die Karte ist nach deiner Vorgabe neu gebaut.**
+
+Du hattest recht, und der Fehler lag im Ansatz, nicht in der Ausführung. Weg ist alles,
+was ich schrittweise draufgebaut hatte, um zwei ineinandergreifende Raumformen
+gleichzeitig an der Tür zu verheften *und* überlappungsfrei zu stellen. Das geht nicht.
+
+Jetzt gilt genau, was du beschrieben hast:
+
+* Ein Raum ist ein **Rechteck** — seine äußere Kollisionsbox.
+* Ein Durchgang legt das nächste Rechteck mit seiner Wand **exakt auf die Wand** des
+  vorigen. Tür auf Tür.
+* Eine Treppe führt auf ein anderes Blatt, dort wird neu angesetzt.
+
+Rechtecke kacheln immer — Lücken und Verrutschen können gar nicht erst entstehen.
+
+| live gemessen an 102 Durchgängen | v0.3.88 | jetzt |
+|---|---|---|
+| Übergänge unter 4 px | 45 | **66** |
+| Übergänge unter 8 px | 62 % | **82 %** |
+| mittlerer Sprung | 8 px | **5 px** |
+
+Im Generator fallen **91 von 101** Durchgängen exakt auf dasselbe Pixel. ROOM1120↔ROOM1130
+und ROOM1130↔ROOM1140 klaffen **0 px**.
+
+Zwei Ergänzungen, die spürbar tragen: welche Türen offen bleiben, hängt allein von der
+Reihenfolge ab — es wird jetzt **jede Wurzel durchprobiert** und die beste Karte genommen;
+und für jede offen gebliebene Tür wird probiert, einen der beiden Räume stattdessen an
+*ihr* anzulegen.
+
+**Was du sehen wirst:** die Räume überlappen sich stellenweise. Das ist gewollt — *„er
+schließt exakt an die Wand an, überlappt die Wand also"*. Wo ein Rundweg im Türgraph
+nicht schließt, überlappen zwei Rechtecke, statt eine Lücke zu lassen.
+
+**Offen:** 18 von 102 Übergängen liegen über 8 px — die Ringe, die auch die Nachbesserung
+nicht schließt.
+
+---
+
 # RE1.5 Port — v0.3.88 (Early Preview)
 
 **Der Marker springt beim Durchgehen nicht mehr weg — und keine Tür verdeckt mehr eine

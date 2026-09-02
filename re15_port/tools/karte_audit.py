@@ -113,13 +113,16 @@ def main():
     raus = []
     for z in gez:
         _, s = flaeche(z, synth, zellen)
-        if s['w'] < 4 or s['h'] < 4 or s['n'] <= 1:
+        # ⛔ "nur eine Zelle" ist seit dem Umbau auf RECHTECKE kein Merkmal mehr -
+        # jeder Ort hat genau eine (seine aeussere Kollisionsbox). Entartet ist ein Ort
+        # nur noch, wenn das Rechteck selbst zu klein zum Erkennen ist.
+        if s['w'] < 5 or s['h'] < 5:
             klein.append((z, s))
         if (s['x'] < FELD[0] or s['y'] < FELD[1] or
                 s['x'] + s['w'] > FELD[0] + FELD[2] or
                 s['y'] + s['h'] > FELD[1] + FELD[3]):
             raus.append((z, s))
-    print("1) ENTARTETE ZEICHNUNGEN (< 4 px in einer Richtung oder nur eine Zelle): %d"
+    print("1) ENTARTETE ZEICHNUNGEN (unter 5 px in einer Richtung): %d"
           % len(klein))
     for z, s in sorted(klein, key=lambda t: t[1]['w'] * t[1]['h'])[:10]:
         print("     ROOM%04X z%d Seite %2d  %dx%d px, %d Zellen"
