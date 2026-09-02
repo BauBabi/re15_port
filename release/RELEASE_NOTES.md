@@ -1,3 +1,41 @@
+# RE1.5 Port — v0.3.86 (Early Preview)
+
+**Die Kartenstücke stoßen aneinander, und die Türen zeigen in die richtige Richtung.**
+
+Dein Bericht war in allen drei Punkten berechtigt. Gemessen an v0.3.85:
+
+| | vorher | jetzt |
+|---|---|---|
+| Türsymbole, die vom Nachbarn **weg** zeigen | 34 von 93 (37 %) | **0 von 95** |
+| größte Lücke zwischen Räumen mit gemeinsamer Tür | 55 px | **14 px** |
+| größtes Verrutschen längs der gemeinsamen Wand | 72 px | **41 px** |
+| Durchgänge, die anstoßen | 92 von 100 | **95 von 101** |
+
+**Warum die Stücke klafften.** Der Löser heftete jeden Raum an *genau einen* Nachbarn.
+Jede weitere Tür — jeder Rundweg im Türgraph — war nur ein weicher Zug, den er beim
+ersten drohenden Überlapp aufgab. Bei 126 Orten und 205 Türen sind rund 80 Türen nie
+eingehalten worden; genau die trugen die 30–70-Pixel-Lücken. Jetzt werden **alle
+Durchgänge zugleich** ausgeglichen.
+
+**Warum die Türen verdreht waren.** Die Wandseite kam daraus, wohin der Raum weitergeht.
+Das benennt die *Wand*, in der die Tür sitzt — nicht die *Seite*, die zum Nachbarn
+schaut. Bei einem Durchgang ist die Richtung bekannt und schlägt jetzt die Form.
+
+**⛔ Mein bisheriges Maß war zu schwach.** „92 von 100 Durchgängen berührend“ erlaubte
+2 Pixel Toleranz auf *Flächen* und sagte gar nichts über die Stelle, an der du im
+nächsten Raum erscheinst. Deshalb sahst du Fehler, die meine Zahlen nicht zeigten.
+
+**Ehrlich zum Preis:** die Überlappung ist gestiegen (0–4 % auf 0–16 % je Blatt). Räume,
+die eine Tür teilen, dürfen sich jetzt um einen Streifen überlappen — sonst entsteht
+genau die Lücke, die du gemeldet hast. Am dichtesten ist es auf dem Factory-Blatt.
+
+Und: der Marker springt beim Durchgang weiter um etwa neun Pixel. Davon ist der größte
+Teil die **echte Wanddicke** — die beiden Tür-Datensätze des Originals liegen real so
+weit auseinander, je einer auf seiner Seite der Wand. Das lässt sich nicht wegrechnen,
+ohne die Geometrie zu fälschen.
+
+---
+
 # RE1.5 Port — v0.3.85 (Early Preview)
 
 **Alle 13 Kartenblätter, alle Räume, jedes Blatt geprüft.**
