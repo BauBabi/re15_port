@@ -389,9 +389,21 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
             if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my)) {
                 /* HART ins Rechteck klemmen: der Marker ist ein 8x8-Quad, das um
                  * (mx,my) zentriert gezeichnet wird — ohne Rand-Reserve haengt er
-                 * sonst halb ueber der Kante. */
-                int lo_x = rx + 4, hi_x = rx + rw - 4;
-                int lo_y = ry + 4, hi_y = ry + rh - 4;
+                 * sonst halb ueber der Kante.
+                 * ⛔ AUF EINEM GRUNDRISS NUR EIN PIXEL RESERVE. Die vier Pixel stammen
+                 * aus dem Kunst-Rechteck, wo der Rand blosser Rahmen ist. Auf einer
+                 * Grundriss-Zeichnung ist der Rand die WAND - und dort steht der Spieler,
+                 * wenn er durch eine Tuer geht. Die Reserve schob ihn auf BEIDEN Seiten
+                 * vier Pixel von der Wand weg und machte damit allein bis zu acht Pixel
+                 * des gemeldeten Sprungs aus, voellig unabhaengig davon, wie genau die
+                 * Raeume liegen. Live gemessen (integration_map_uebergang): von 116
+                 * Uebergaengen lag KEIN EINZIGER unter 2 px, der Median bei 9 px -
+                 * genau die Groessenordnung der doppelten Reserve.
+                 * Nutzer 2026-09-02: "Springt immer noch durch die Kartenbereiche nach
+                 * dem Durchlaufen von Tueren." */
+                int reserve = (zrc == 255) ? 1 : 4;
+                int lo_x = rx + reserve, hi_x = rx + rw - reserve;
+                int lo_y = ry + reserve, hi_y = ry + rh - reserve;
                 if (hi_x < lo_x) { lo_x = hi_x = rx + rw / 2; }
                 if (hi_y < lo_y) { lo_y = hi_y = ry + rh / 2; }
                 if (*mx < lo_x) *mx = (int16_t)lo_x;

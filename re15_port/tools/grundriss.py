@@ -198,6 +198,7 @@ class Blatt(object):
         # deren Haelfte der Abstand des Tuer-Datensatzes von der Wand. Der Ausgleich
         # braucht sie als Ruhelaenge, sonst zieht er die Raeume ineinander.
         self.kantenmass = []
+        self.notkantenmass = []
         for b in self.zimmer:
             for d in rdts[b][1]:
                 if (d['rw'] == 0 and d['rd'] == 0) or d['dest'] not in self.zimmer:
@@ -234,6 +235,10 @@ class Blatt(object):
                     continue
                 self.notkanten.append((b, (d['lx'], d['lz']),
                                        d['dest'], (d['nx'], d['nz'])))
+                # Die Trigger-Masse der QUELL-Tuer; das Ziel ist der Spawn, der schon
+                # im Zielraum an der Wand liegt - dort ist keine zweite Tiefe zu
+                # beruecksichtigen.
+                self.notkantenmass.append((d['rw'], d['rd']))
 
     @staticmethod
     def schliessen(zellen):
@@ -382,6 +387,20 @@ class Blatt(object):
         D = int(round(-az * 65536.0 / self.ey))
         E = int(round(-bz * 65536.0 / self.ey))
         return (A, B, int(round(ox)), D, E, int(round(oy)))
+
+    def rest_genau(self, lage):
+        """Restfehler je Kante GEGEN DIE RUHELAENGE - also der echte Ausgleichsfehler.
+        rest() misst |pa-pb| und zaehlt damit die gewollte Wanddicke als Fehler mit."""
+        nbb = self._feder_nachbarn(lage)
+        aus = []
+        for b in sorted(lage):
+            for (a, pe, pm, v) in nbb.get(b, ()):
+                if a not in lage or a >= b:
+                    continue
+                q = self.punkt(a, lage[a], *pe)
+                r = self.punkt(b, lage[b], *pm)
+                aus.append(max(abs(r[0] - (q[0] + v[0])), abs(r[1] - (q[1] + v[1]))))
+        return aus
 
     def rest(self, lage):
         """Restfehler JE KANTE im eigenen Rahmen: wie weit liegen die beiden
@@ -669,6 +688,8 @@ class Blatt(object):
         und ein wenig ueberlappen; das IST die Laibung."""
         if getattr(self, '_nbp', None) is None:
             self._nbp = set(frozenset((a, b)) for (a, _pa, b, _pb) in self.kanten)
+            self._nbp |= set(frozenset((a, b))
+                             for (a, _pa, b, _pb) in self.notkanten)
         return self._nbp
 
     def federn(self, lage, runden=600):
@@ -746,15 +767,31 @@ class Blatt(object):
             return (0, 0, 0)
         p = self.punkt(a, st, *pa)
         nx, ny = self._wandnormale(dims, la)
+        # ⛔ DIE TIEFE STEHT IM TRIGGER, NICHT IM STRAHL. Ein erster Wurf lief vom
+        # Tuerpunkt nach aussen, bis er den Raum verliess - bei grossen Raeumen laeuft
+        # dieser Strahl aber tief hinein, bevor er austritt. Gemessene Ruhelaengen: 4 bis
+        # 22 px, also bis zu 22000 Welteinheiten "Wand". Der Loeser stellte die Raeume
+        # damit absichtlich so weit auseinander, und genau das sah der Nutzer als Sprung
+        # beim Durchschreiten (live gemessen: Median 9 px, kein Uebergang unter 2 px).
+        # Das Trigger-Rechteck ist LAENGS der Wand gestreckt; seine kurze Seite ist die
+        # Anlauftiefe, und der Tuer-Datensatz sitzt in deren Mitte. Der Abstand zur Wand
+        # ist also die HALBE kurze Seite - gemessen, nicht gelaufen.
+        rw, rd = dims
+        kurz = rw if rw <= rd else rd
+        mass = self.ex if nx else self.ey
+        t = (kurz / 2.0) / (mass if mass else 1.0)
+        # Der Strahl entscheidet nur noch das VORZEICHEN: nach aussen geht es dorthin,
+        # wo der Raum frueher endet. Ein falsches Vorzeichen kostet jetzt hoechstens
+        # diese wenigen Pixel statt zwanzig.
         ix, iy = int(round(p[0])), int(round(p[1]))
         weit = []
         for vz in (1, -1):
-            t = 0
-            while t < 48 and (ix + nx * vz * t, iy + ny * vz * t) in pix:
-                t += 1
-            weit.append((t, vz))
+            k = 0
+            while k < 48 and (ix + nx * vz * k, iy + ny * vz * k) in pix:
+                k += 1
+            weit.append((k, vz))
         weit.sort()
-        t, vz = weit[0]
+        vz = weit[0][1]
         return (nx * vz, ny * vz, t)
 
     def _ruhe(self, a, pa, b, pb, la, lb):
@@ -820,7 +857,26 @@ class Blatt(object):
             ta = self._wandtiefe(a, pa, da, lage[a])
             tb = self._wandtiefe(b, pb, db, lage[b])
             vl = ta[2] + tb[2]
+            import os as _o2
+            if _o2.environ.get('GRUNDRISS_RUHE'):
+                print("      RUHE ROOM%04X z%d <-> ROOM%04X z%d : %d + %d = %d px"
+                      % (a >> 4, a & 15, b >> 4, b & 15, ta[2], tb[2], vl))
             v = (ta[0] * vl, ta[1] * vl)
+            nbb[a].append((b, pb, pa, (-v[0], -v[1])))
+            nbb[b].append((a, pa, pb, (v[0], v[1])))
+        # ⛔ EINSEITIGE TUEREN GEHOEREN DAZU. Sie standen bisher nur in notkanten und
+        # wurden vom Ausgleich GAR NICHT erfasst - der Loeser benutzte sie einmal beim
+        # Aufbau, danach war die Tuer frei. Live gemessen (test_map_uebergang) war genau
+        # so ein Fall der schlimmste ueberhaupt: ROOM2070 -> ROOM2000 sprang um 63 px.
+        # Anker ist hier der SPAWN im Zielraum; der liegt schon innen an der Wand, also
+        # zaehlt nur die Wandtiefe der Quellseite.
+        for _i, kante in enumerate(self.notkanten):
+            a, pa, b, pb = kante
+            if a not in lage or b not in lage:
+                continue
+            da = (self.notkantenmass[_i] if _i < len(self.notkantenmass) else (1, 1))
+            ta = self._wandtiefe(a, pa, da, lage[a])
+            v = (ta[0] * ta[2], ta[1] * ta[2])
             nbb[a].append((b, pb, pa, (-v[0], -v[1])))
             nbb[b].append((a, pa, pb, (v[0], v[1])))
         return nbb
@@ -872,6 +928,13 @@ class Blatt(object):
                 cb = (sum(p[0] for p in pix[b]) / float(len(pix[b])),
                       sum(p[1] for p in pix[b]) / float(len(pix[b])))
                 dx, dy = cb[0] - ca[0], cb[1] - ca[1]
+                # ⛔ SCHRITTWEITE: FEST. Ein Schritt, der mit der doppelt belegten
+                # Flaeche waechst, drueckt die Ueberlappung zwar auf hoechstens 10 %
+                # (statt 31 %), verschlechtert aber genau das, was der Nutzer gemeldet
+                # hat: der schlimmste Sprung beim Durchschreiten stieg von 29 auf 45 px
+                # und die anstossenden Durchgaenge fielen von 96 auf 88. Gemessen wurden
+                # fuenf Einstellungen (integration_map_uebergang + der Generator-Bericht);
+                # diese hier ist die beste bei den beiden Groessen, die der Spieler sieht.
                 if abs(dx) >= abs(dy):
                     sx, sy = (schritt if dx >= 0 else -schritt), 0.0
                 else:
@@ -901,6 +964,9 @@ class Blatt(object):
             # hatte - die dichten Blaetter 1 und 7 blieben bei 15 bis 20 % Ueberlappung.
             anteil = 1.0 if nur else max(0.08, 0.7 * (1.0 - float(i) / runden))
             a = self._feder_sweep(lage, nbb, anteil=anteil)
+            # Gegen Ende zwei Trenn-Durchlaeufe je Feder-Durchlauf: die Feder ist dann
+            # fast aus, das Trennen soll das letzte Wort haben. Ohne das blieben die
+            # dichten Blaetter 3 und 7 bei 23 bis 31 % Ueberlappung.
             b = 0 if nur else self._trenn_sweep(lage)
             if a < 0.02 and b == 0:
                 break
@@ -1033,8 +1099,11 @@ class Blatt(object):
             lg = self.ausgleichen(lage)
             if _os.environ.get('GRUNDRISS_DIAG'):
                 r = sorted(self.rest(lg))
-                print("        [nach ausgleichen] Median %.0f, max %.0f"
-                      % (r[len(r)//2] if r else -1, r[-1] if r else -1))
+                g = sorted(self.rest_genau(lg))
+                print("        [nach ausgleichen] |pa-pb| Median %.0f max %.0f  |  "
+                      "gegen Ruhelaenge: Median %.1f max %.1f"
+                      % (r[len(r)//2] if r else -1, r[-1] if r else -1,
+                         g[len(g)//2] if g else -1, g[-1] if g else -1))
             k = self.kosten(lg)
             if besser is None or (-k[1], k[0]) < (-besser[1][1], besser[1][0]):
                 besser = (lg, k)

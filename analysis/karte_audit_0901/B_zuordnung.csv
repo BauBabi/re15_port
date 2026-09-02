@@ -1,0 +1,31 @@
+seite;rect;rect_px;gezeichnet_px;raum;zone;raum_groesse_px;vertrauen;beleg
+2;1;(109,77) 56x56;55x49;ROOM1020;0;60.7x53.5;belegt;Skalenzeile 2 @0x800768c0 {100,136,2287,2287}, Original-Formel FUN_800473f8 -> px(107..168,75..128), IoU 0.93 gegen die gezeichnete Flaeche
+2;4;(119,125) 72x64;68x57;ROOM1030;0;71.0x67.9;belegt;Skalenzeile 3 @0x800768c8 {108,194,2428,2229} -> px(120..191,124..192), IoU 0.90
+2;2;(102,77) 24x80;17x79;ROOM1040;0;37.5x96.1;belegt;Skalenzeile 4 @0x800768d0 {94,193,2080,2320} -> px(91..129,68..164), einziges hohes schmales Rechteck, Kollisions-Bbox 20px breiter als die Zeichnung
+2;3;(145,109) 56x40;52x36;ROOM1070;0;54.4x41.0;belegt;Skalenzeile 7 @0x800768e8 {79,205,2229,2088} -> px(143..197,106..147), IoU 0.94
+2;0;(180,69) 32x96;27x87;ROOM1050;0;29.2x87.6;stark;aus dem BYTE-TRUEN ROOM1030 ueber das Tuerpaar 1030(2250,-12700)<->1050(20600,12350), Rest 2.0px, Groesse 29.2x87.6 gegen gezeichnet 27x87 (naechstbester Kandidat r2 mit Faktor 1.9)
+2;10;(119,134) 24x24;18x22;ROOM1060 (Treppenhaus);0;24.2x27.8;stark;ROOM1040s byte-true Treppentuer landet auf px(120,151), 2.0px vom GEMALTEN Symbol (120,149,W), IoU 0.78, dieselbe Kachel uv(168,16) ist Seite4 r1, dort trifft ROOM1120s Treppentuer ihr Symbol auf 1.6px
+2;6;(180,88) 24x24;18x22;ROOM10A0 (Treppenhaus);0;24.5x27.8;stark;IoU 0.71 ueber das Tuerpaar 1050<->10A0 (Rest 2.0px), 10A0 und 1060 sind masslich identische Treppenhaeuser, r6 und r10 masslich identische 24x24-Kacheln
+2;9;(109,134) 16x16;10x10;ROOM1080 (Aufzug);1;13.5x13.3;stark;ROOM1040s byte-true Aufzugstuer landet auf px(115,145) INNERHALB r9 (109..125,134..150), 1040/10C0/1120 betreten 1080 alle am selben Ankunftspunkt (-13650,-900) = ein Schacht ueber 1F/2F/3F, und genau die Kachel uv(168,40) kommt auf den Seiten 2,3,4 vor
+2;5;(180,59) 48x32;43x30;ROOM1090 ODER ROOM1000.z0;-;60.6x66.2 / 22.8x40.3;schwach;Tuergraph platziert 1090 auf px(172..232,28..94) = 60x66 gegen gezeichnet 43x30, kein Kandidat passt. NICHT entschieden
+2;7;(164,93) 16x24;16x17;ROOM1010 (untere Haelfte);0;24.0x39.1;schwach;1010s Bbox px(158..182,74..113) deckt r8 (77..93) UND r7 (93..109) als Stapel, einzeln passt keines. NICHT entschieden
+2;8;(164,77) 24x24;16x17;ROOM1010 (obere Haelfte);0;24.0x39.1;schwach;siehe r7
+3;9;(109,134) 16x16;10x10;ROOM1080 (Aufzug);1;13.5x13.3;stark;pixelgleich zu Seite2 r9 und Seite4 r0, der Aufzug ist der einzige Ort, den 1F, 2F UND 3F am selben Ankunftspunkt betreten (1040/10C0/1120 -> ank(-13650,-900)), Groesse 10x10 gegen 8.5x8.3 (Treppenhaus waere 19x23)
+3;0;(180,69) 32x96;32x86;offen;-;-;schwach;Seite 3 hat KEINE geeichte Skalenzeile, der Tuergraph der Seite ist zwar exakt (alle 11 Paare <=2.2px), aber die Verschiebung gegen den Schirm laesst sich nicht schliessen: bester Fit erreicht nur IoU<=0.50 und KEINE projizierte Tuer kommt einem gemalten Symbol naeher als 16px
+3;2;(102,77) 24x80;20x42;offen;-;-;schwach;siehe r0
+3;3;(145,109) 56x40;51x40;offen;-;-;schwach;heute ROOM10D0.z1 = SCHABLONE, siehe Notiz
+3;4;(119,125) 72x64;67x64;offen;-;-;schwach;groesstes Rechteck der Seite, ROOM10D0.z0 (70.1x90.2) ist der einzige Raum dieser Groessenordnung, aber die Hoehe passt nicht
+3;5;(180,59) 48x32;44x22;offen;-;-;schwach;heute ROOM1100.z0 = SCHABLONE, siehe Notiz
+3;6;(180,88) 24x24;24x24;offen;-;-;schwach;
+3;7;(164,93) 16x24;10x19;offen;-;-;schwach;
+3;8;(164,77) 24x24;17x16;offen;-;-;schwach;
+3;1;(109,77) 56x56;16x9;offen;-;-;schwach;nur 144 von 3136 Pixeln gemalt (4.6%) - ein 16x9-Streifen, der Rest der 1F-Halle ist auf 2F nicht gezeichnet
+4;2;(120,80) 32x40;26x40;ROOM1150;0;31.2x40.0;belegt;Skalenzeile 21 @0x80076958 {111,130,2296,2312} -> px(118..150,81..121), IoU 0.85
+4;4;(144,80) 32x80;26x79;ROOM1130;0;32.0x83.2;stark;aus dem byte-truen ROOM1150 ueber das Tuerpaar (Rest 1.0px), IoU 0.94, ALLE VIER Tueren landen auf gemalten Symbolen: ->1150 (145,82,W) 3.8px, ->1170 (163,90,N) 2.1px, ->1120 (148,124,E) 3.8px, ->1140 (161,147,W,Doppeltuer) 5.7px
+4;6;(160,110) 56x56;55x55;ROOM1140;0;59.5x59.9;stark;Tuerpaar 1130<->1140 Rest 0.0px, IoU 0.78, die gemalte DOPPELTUER (161,147,W) ist die Briefing-Doppeltuer
+4;5;(120,119) 40x40;34x40;ROOM1120;0;41.9x45.8;stark;GESPIEGELT (Faktor -1 in x UND z): dann IoU 0.87 und ROOM1120s Treppentuer landet auf px(136,154) = 1.6px vom gemalten Symbol (137,152,W) auf r1, ungespiegelt landet sie 8.5px daneben und der Koerper des Raums 25px zu tief. Groesse: 41.9x45.8 gegen r5 34x40 (Faktor 1.10) vs r3 42x22 (Faktor 1.86)
+4;1;(136,137) 24x24;18x22;ROOM1060 (Treppenhaus);0;24.2x27.8;stark;dieselbe Kachel uv(168,16) wie Seite2 r10, ROOM1120s Treppentuer trifft ihr gemaltes Symbol (137,152,W) auf 1.6px, Groesse 19x23 gegen gezeichnet 18x22
+4;0;(127,137) 16x16;10x10;ROOM1080 (Aufzug);1;13.5x13.3;stark;dieselbe Kachel uv(168,40) wie Seite2 r9 / Seite3 r9, ROOM1120s Aufzugstuer landet auf px(130,146) INNERHALB r0 (127..142,137..152)
+4;3;(152,89) 48x24;42x22;ROOM1170;1;43.9x25.7;stark;ROOM1130s Tuer nach 1170 landet 2.1px vom Symbol (163,90,N), ROOM1140s Tuer nach 1170 8.9px vom Symbol (162,105,S), identische Kachel uv(192,16) 48x24 wie Seite5 r0
+4;-;-;-;ROOM1160;0;36.5x28.6;offen;keine seiten-interne Tuer (nur nach ROOM1180/ROOM1230 auf B1/B2), nach Vergabe aller sieben Rechtecke bleibt keines uebrig - ROOM1160 hat auf dem 3F-Blatt vermutlich KEINE Zeichnung
+2;-;-;-;ROOM10B0;0;98.0x67.1;offen;keine seiten-interne Tuer (nur nach ROOM1170/ROOM1260), mit 98x67 px groesser als jedes Rechteck der Seite 2 (groesstes gezeichnet 68x57)

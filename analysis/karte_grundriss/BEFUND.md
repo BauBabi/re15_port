@@ -296,3 +296,85 @@ Das Audit zählt nach dem Umbau **10 Markenpaare, die praktisch aufeinander lieg
 Beides ist sichtbar: eine Tür verdeckt die andere. Nötig ist ein Nachlauf, der Marken
 gleicher Art auf einem Blatt längs ihrer Wand auseinanderschiebt, bevor sie
 ausgeschrieben werden.
+
+---
+
+## 8. Live-Debugging, 2026-09-02 (dritter Anlauf)
+
+> *„Springt immer noch durch die Kartenbereiche … Debugge dich selber, indem du dich
+> durch die Räume portest mit dem Debug Menu und durch die Türen läufst."*
+
+Der Auftrag war richtig: meine Sonden liefen auf der erzeugten Tabelle und bildeten die
+Marker-Rechnung in Python **nach**. Neu ist deshalb
+`tests/integration/test_map_uebergang.c` — es lädt jeden Raum wie das Spiel
+(`re15_rdt_parse` + `scd_room_reenter`, also mit installierten AOTs), liest die Türen aus
+`g_aot` und ruft für beide Seiten die **echte** Engine-Funktion
+`re15_inv_map_marker()`. `RE15_UEBERGANG_LISTE=1` druckt jede Tür einzeln.
+
+Erste Live-Messung: **116 Übergänge, Median 9 px, schlimmster 63 px, kein einziger unter
+2 px.**
+
+### Vier Ursachen, alle nur live sichtbar
+
+**(a) Der Marker wird mit 4 px Rand-Reserve ins Rechteck geklemmt.** Auf einem
+Kunst-Rechteck ist der Rand bloßer Rahmen; auf einem Grundriss ist er die **Wand** — und
+dort steht der Spieler beim Durchschreiten. Die Reserve schob ihn auf *beiden* Seiten
+4 px von der Wand weg und machte allein bis zu 8 px des Sprungs aus, unabhängig von der
+Geometrie. Auf Grundrissen jetzt 1 px.
+
+**(b) Einseitige Türen wurden vom Ausgleich gar nicht erfasst.** Sie standen nur in
+`notkanten` und wurden einmal beim Aufbau benutzt. Der schlimmste Fall überhaupt
+(ROOM2070 → ROOM2000, 63 px) war so einer.
+
+**(c) Meine Ruhelänge war um eine Größenordnung zu groß.** Der Strahl vom Türpunkt nach
+außen läuft bei großen Räumen tief hinein, bevor er austritt — gemessene Ruhelängen
+4 bis 22 px, also bis zu 22 000 Welteinheiten „Wand". Die Tiefe steht aber im
+**Trigger-Rechteck**: dessen kurze Seite ist die Anlauftiefe, der Türdatensatz sitzt in
+deren Mitte. Damit sind es **0,9 px im Median**.
+
+**(d) Die Wandseite der Türsymbole kam aus der Silhouette** (welche *Wand*), nicht aus
+der Nachbarrichtung (welche *Seite*) — 34 von 93 zeigten weg. Behoben, Achse und
+Vorzeichen kommen jetzt vom Partner.
+
+### Was messbar bleibt — und warum
+
+| | vorher | jetzt |
+|---|---|---|
+| schlimmster Sprung beim Durchschreiten | **63 px** | **29 px** |
+| Türsymbole, die vom Nachbarn weg zeigen | 34 von 93 | **0 von 95** |
+| Durchgänge, die anstoßen | 92 von 100 | **96 von 101** |
+| Median-Sprung | 9 px | 10 px |
+
+Der **Median bewegt sich nicht** — und das hat einen belegbaren Grund. Getrennt gemessen
+über alle 205 reziproken Durchgänge:
+
+* **unvermeidbare Geometrie** (Summe der halben Trigger-Tiefen): Median **0,9 px**
+* **Layout-Fehler** (Abstand der beiden Türpunkte auf der Karte): Median **9,0 px**
+
+Der Ausgleich konvergiert nachweislich: auf Blättern ohne Ringe im Türgraph geht der
+Fehler gegen die Ruhelänge auf **exakt 0,0**. Auf Blättern mit Ringen bleibt er stehen —
+**die Räume von RE1.5 bilden keinen metrisch geschlossenen Grundriss.** Jeder Raum hat
+sein eigenes Koordinatensystem; die Türdaten sagen, *wohin* eine Tür führt, nicht dass
+die Räume kacheln. Wo ein Rundweg im Türgraph nicht schließt, muss der Fehler verteilt
+werden — er lässt sich nicht wegrechnen, nur umverteilen.
+
+### Fünf Einstellungen gemessen, eine gewählt
+
+| Einstellung | schlimmster Sprung | anstoßend | max. Überlappung |
+|---|---|---|---|
+| **gewählt** (feste Schrittweite, Federanteil ≥ 0,08) | **29 px** | **96/101** | 30,7 % |
+| Trennung 2× in der letzten Hälfte | 47 px | 88/101 | 14,8 % |
+| Schrittweite wächst mit der Überlappung | 45 px | 88/101 | 9,9 % |
+| Mittelweg | 31 px | 91/101 | 21,7 % |
+| v0.3.86 (Ausgangsstand) | 63 px | 95/101 | 16,3 % |
+
+Gewählt ist die Einstellung mit den besten **Nutzer-Größen**. Die Überlappung ist der
+Preis — im Abzug liest sie sich anders als in der Zahl: überlappende Räume in derselben
+Farbe wirken *verbunden*, Lücken wirken kaputt.
+
+### Offen
+
+* Median-Sprung 10 px, davon ~9 px Layout — begrenzt durch die nicht schließenden Ringe.
+* Seite 3 (2F) 30,7 %, Seite 7 (Factory) 22,9 % Überlappung.
+* 10 Markenpaare liegen praktisch aufeinander (§7).
+* Seite 12 nur 1 von 3 Durchgängen anstoßend.

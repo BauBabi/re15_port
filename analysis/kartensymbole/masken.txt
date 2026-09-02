@@ -1,0 +1,341 @@
+=== TUER / 5x5 Standard  (40 Vorkommen) ===
+  Orientierung (waagerecht, Wand S):
+     XXX..
+     X..X.
+     X...X
+     X...X
+     X...X
+  Orientierung (waagerecht, Wand S):
+     ..XXX
+     .X..X
+     X...X
+     X...X
+     X...X
+  Orientierung (waagerecht, Wand N):
+     X...X
+     X...X
+     X...X
+     .X..X
+     ..XXX
+  Orientierung (waagerecht, Wand N):
+     X...X
+     X...X
+     X...X
+     X..X.
+     XXX..
+  Orientierung (senkrecht, Wand W):
+     XXXXX
+     ....X
+     ....X
+     ...X.
+     XXX..
+  Orientierung (senkrecht, Wand E):
+     XXXXX
+     X....
+     X....
+     .X...
+     ..XXX
+  Orientierung (senkrecht, Wand W):
+     XXX..
+     ...X.
+     ....X
+     ....X
+     XXXXX
+  Orientierung (senkrecht, Wand E):
+     ..XXX
+     .X...
+     X....
+     X....
+     XXXXX
+  Vorkommen: p0r0@(17,11), p0r0@(35,48), p0r0@(5,59), p0r2@(8,1), p0r4@(3,1), p1r0@(72,26), p1r2@(23,32), p1r3@(1,2), p1r4@(9,2), p1r5@(9,2), p1r6@(1,11), p1r7@(1,11), p1r8@(1,11), p2r0@(8,78), p2r1@(49,3), p2r2@(11,51), p2r4@(21,3), p2r6@(12,2), p2r7@(1,9), p2r10@(1,15), p3r0@(16,3), p3r3@(27,34), p3r7@(4,5), p4r1@(1,15), p4r3@(11,1), p4r3@(10,16), p4r4@(1,2), p4r5@(28,5), p7r1@(8,8), p7r1@(1,82), p7r2@(29,1), p7r2@(1,12), p7r4@(1,8), p7r5@(51,52), p7r6@(1,9), p7r7@(29,39), p7r9@(25,28), p9r0@(33,15), p9r7@(48,3), p9r7@(48,67)
+
+=== TUER2 / 5x9 doppelt  (7 Vorkommen) ===
+  Orientierung (senkrecht, Wand W):
+     XXXXX
+     ....X
+     ....X
+     ...X.
+     XXX..
+     ...X.
+     ....X
+     ....X
+     XXXXX
+  Orientierung (waagerecht, Wand S):
+     XXX...XXX
+     X..X.X..X
+     X...X...X
+     X...X...X
+     X...X...X
+  Orientierung (waagerecht, Wand N):
+     X...X...X
+     X...X...X
+     X...X...X
+     X..X.X..X
+     XXX...XXX
+  Orientierung (senkrecht, Wand E):
+     XXXXX
+     X....
+     X....
+     .X...
+     ..XXX
+     .X...
+     X....
+     X....
+     XXXXX
+  Vorkommen: p0r3@(1,2), p2r5@(7,5), p3r4@(11,48), p4r6@(1,37), p7r6@(49,1), p9r4@(7,37), p9r12@(19,1)
+
+=== TUER2 / 7x5 doppelt  (1 Vorkommen) ===
+  Orientierung (waagerecht, Wand S):
+     XX...XX
+     X.X.X.X
+     X..X..X
+     X..X..X
+     X..X..X
+  Vorkommen: p1r0@(2,34)
+
+=== TUER / 4x5 (Tiefe 4)  (3 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XXXX
+     X...
+     X...
+     .X..
+     ..XX
+  Orientierung (senkrecht, Wand W):
+     XXXX
+     ...X
+     ...X
+     ..X.
+     XX..
+  Vorkommen: p2r2@(3,5), p7r9@(1,2), p9r10@(2,40)
+
+=== TREPPE / Stufenband 7x5  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand W):
+     ..X..X.
+     ..X..X.
+     ..X..X.
+     ..X..X.
+     XXXXXXX
+  Vorkommen: p6r0@(6,1)
+
+=== TUER2 / 4x10 doppelt  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XXXX
+     X...
+     X...
+     .X..
+     ..XX
+     ..XX
+     .X..
+     X...
+     X...
+     XXXX
+  Vorkommen: p6r0@(13,36)
+
+=== TREPPE / Stufenband 8x5  (2 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     ..X..X..
+     ..X..X..
+     ..X..X..
+     ..X..X..
+     XXXXXXXX
+  Orientierung (senkrecht, Wand W):
+     XXXXXXXX
+     ..X..X..
+     ..X..X..
+     ..X..X..
+     ..X..X..
+  Vorkommen: p6r0@(65,69), p6r9@(1,44)
+
+=== TREPPE / Stufenband 8x4  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand W):
+     XXXXXXXX
+     ..X..X..
+     ..X..X..
+     ..X..X..
+  Vorkommen: p6r0@(1,81)
+
+=== TUER / 4x4 klein  (12 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XXXX
+     X...
+     .X..
+     ..XX
+  Orientierung (waagerecht, Wand S):
+     ..XX
+     .X.X
+     X..X
+     X..X
+  Orientierung (waagerecht, Wand N):
+     X..X
+     X..X
+     X.X.
+     XX..
+  Orientierung (senkrecht, Wand W):
+     XX..
+     ..X.
+     ...X
+     XXXX
+  Orientierung (senkrecht, Wand W):
+     XXXX
+     ...X
+     ..X.
+     XX..
+  Orientierung (senkrecht, Wand E):
+     ..XX
+     .X..
+     X...
+     XXXX
+  Vorkommen: p6r1@(21,5), p6r2@(33,38), p6r6@(16,1), p6r7@(1,31), p8r0@(19,2), p8r4@(37,61), p8r5@(12,2), p8r6@(1,17), p11r0@(4,26), p12r0@(49,17), p12r0@(49,47), p12r6@(41,4)
+
+=== TUER2 / 5x8 doppelt duenn  (1 Vorkommen) ===
+  Orientierung (NSE, Wand NSE):
+     X....
+     X....
+     .X...
+     ..XXX
+     ..XXX
+     .X...
+     X....
+     X....
+  Vorkommen: p6r3@(52,1)
+
+=== TREPPE / Stufenband 8x5 halb  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XXXXXXXX
+     ..X..X..
+     ..X..X..
+     ..X..X..
+     XXX.....
+  Vorkommen: p6r6@(26,29)
+
+=== TUER / 4x4 gestutzt  (3 Vorkommen) ===
+  Orientierung (waagerecht, Wand N):
+     X..X
+     X..X
+     X..X
+     .XXX
+  Orientierung (waagerecht, Wand S):
+     XXX.
+     X..X
+     X..X
+     X..X
+  Vorkommen: p7r3@(2,1), p7r3@(2,20), p7r6@(51,20)
+
+=== TREPPE / Sprossen 4x5  (1 Vorkommen) ===
+  Orientierung (-, Wand -):
+     XXXX
+     X...
+     XXXX
+     X...
+     XXXX
+  Vorkommen: p7r8@(2,2)
+
+=== TUER / 3x4 kleinste  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     .XX
+     X..
+     X..
+     XXX
+  Vorkommen: p7r9@(2,61)
+
+=== TREPPENHAUS / 15x15 Schacht  (3 Vorkommen) ===
+  Orientierung (NSWE, Wand NSWE):
+     ....X.X.X.X....
+     ....X.X.X.X....
+     ....X.X.X.X....
+     ....X.X.X.X....
+     XXXXXXXXXXXXXXX
+     ....X.....X....
+     XXXXX.....XXXXX
+     ....X.....X....
+     XXXXX.....XXXXX
+     ....X.....X....
+     XXXXXXX.XXXXXXX
+     ....X.X.X.X....
+     ....X.X.X.X....
+     ....X.X.X.X....
+     ....X.X.X.X....
+  Vorkommen: p8r7@(1,1), p9r14@(1,1), p11r3@(1,1)
+
+=== TUER2 / 4x7 doppelt klein  (4 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XXXX
+     X...
+     .X..
+     ..XX
+     .X..
+     X...
+     XXXX
+  Orientierung (waagerecht, Wand N):
+     X..X..X
+     X..X..X
+     X.X.X.X
+     XX...XX
+  Vorkommen: p8r9@(9,17), p8r11@(8,1), p10r1@(1,1), p11r1@(38,36)
+
+=== TUER / 5x4 an Schraegwand  (1 Vorkommen) ===
+  Orientierung (-, Wand -):
+     ..XX.
+     ...X.
+     X...X
+     .XXXX
+  Vorkommen: p8r10@(2,3)
+
+=== TUER2 / 9x4 doppelt gestutzt  (1 Vorkommen) ===
+  Orientierung (waagerecht, Wand N):
+     X...X...X
+     X...X...X
+     X..X.X..X
+     XXX...XXX
+  Vorkommen: p9r0@(19,1)
+
+=== ARTEFAKT / Schraegwand-Rest  (4 Vorkommen) ===
+  Orientierung (NW, Wand NW):
+     X
+  Orientierung (waagerecht, Wand S):
+     X
+     X
+  Vorkommen: p9r8@(1,9), p9r8@(1,16), p9r9@(1,9), p9r9@(1,16)
+
+=== SONST / Trennlinie 1x12  (3 Vorkommen) ===
+  Orientierung (NS, Wand NS):
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+     X
+  Vorkommen: p12r1@(52,3), p12r2@(52,3), p12r3@(52,3)
+
+=== SONST / Sprossenband 2x22  (1 Vorkommen) ===
+  Orientierung (senkrecht, Wand E):
+     XX
+     XX
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     XX
+     XX
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     X.
+     XX
+     XX
+  Vorkommen: p12r5@(77,47)
+

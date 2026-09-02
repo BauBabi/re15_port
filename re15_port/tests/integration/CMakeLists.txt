@@ -41,6 +41,13 @@ add_test(NAME integration_rvd_coverage COMMAND test_rvd_coverage)
 set_tests_properties(integration_rvd_coverage PROPERTIES TIMEOUT 60)
 
 # --- Door traversal (roadmap S1-1 / RL-6): walk ROOM1140 -> >=3 rooms via real doors ---
+add_executable(test_map_uebergang test_map_uebergang.c)
+target_link_libraries(test_map_uebergang PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_uebergang PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_uebergang PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME integration_map_uebergang COMMAND test_map_uebergang)
+
 add_executable(test_door_traversal test_door_traversal.c)
 target_link_libraries(test_door_traversal PRIVATE re15_engine re15_test_support)
 target_include_directories(test_door_traversal PRIVATE ${CMAKE_SOURCE_DIR}/include)

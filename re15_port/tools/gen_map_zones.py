@@ -1145,6 +1145,29 @@ def main():
                     _rects.append((_x0, _y0, _x1 - _x0, _y1 - _y0))
                 if not _rects: continue
                 grundrisse[(_pg, _o >> 4, _o & 15)] = (_B.abbildung(_neu), _kasten, _rects)
+            if os.environ.get('GRUNDRISS_KANTEN'):
+                for _ki, (_ka, _kpa, _kb, _kpb) in enumerate(_B.kanten):
+                    if _ka not in _neu_lage or _kb not in _neu_lage: continue
+                    _q1 = _B.punkt(_ka, _neu_lage[_ka], *_kpa)
+                    _q2 = _B.punkt(_kb, _neu_lage[_kb], *_kpb)
+                    _dd = max(abs(_q1[0]-_q2[0]), abs(_q1[1]-_q2[1]))
+                    if _dd > 8:
+                        print("      KANTE Seite %2d ROOM%04X z%d <-> ROOM%04X z%d : %.0f px"
+                              % (_pg, _ka >> 4, _ka & 15, _kb >> 4, _kb & 15, _dd))
+                _dab = set()
+                for _o in _neu_lage:
+                    _dab.add(_o)
+                for (_ka, _kpa, _kb, _kpb) in _B.kanten:
+                    _dab.discard(-1)
+                _hat = set()
+                for (_ka, _kpa, _kb, _kpb) in _B.kanten:
+                    _hat.add((min(_ka,_kb), max(_ka,_kb)))
+                for (_ka, _kpa, _kb, _kpb) in _B.notkanten:
+                    _k2 = (min(_ka,_kb), max(_ka,_kb))
+                    if _k2 not in _hat:
+                        print("      NOTKANTE (nicht ausgeglichen) Seite %2d "
+                              "ROOM%04X z%d <-> ROOM%04X z%d"
+                              % (_pg, _ka >> 4, _ka & 15, _kb >> 4, _kb & 15))
             _rr = sorted(_B.rest(_neu_lage))
             if _rr:
                 print("        Kanten-Rest: Median %.0f px, <=2 px: %d von %d, "
