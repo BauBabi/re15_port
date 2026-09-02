@@ -581,6 +581,11 @@ target_link_libraries(test_map_orient PRIVATE re15_engine re15_test_support)
 target_include_directories(test_map_orient PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_map_orient COMMAND test_map_orient)
 
+add_executable(test_map_durchgang test_map_durchgang.c)
+target_link_libraries(test_map_durchgang PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_durchgang PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_map_durchgang COMMAND test_map_durchgang)
+
 add_executable(test_map_marker_innen test_map_marker_innen.c)
 target_link_libraries(test_map_marker_innen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_map_marker_innen PRIVATE ${CMAKE_SOURCE_DIR}/include)

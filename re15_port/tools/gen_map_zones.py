@@ -1023,7 +1023,13 @@ def main():
         for _pg in _reihe:
             _orte, _rd = _eingabe[_pg]
             _B = _gr.Blatt(_orte, _rd, _ex0, _ey0)
-            _B.feste_lagen = dict((o, _posen[o]) for o in _orte if o in _posen)
+            # ⛔ NUR DIE POSE WEITERGEBEN, NICHT DIE LAGE. Eine festgenagelte LAGE aus
+            # einem anderen Blatt macht die Kanten dieses Blattes unerfuellbar: gemessen
+            # blieb der Kanten-Rest auf den Seiten 3 und 4 bei 31 bzw. 20 px stehen,
+            # waehrend die Blaetter ohne feste Lagen auf 0 kamen. Die gemeinsame
+            # AUSRICHTUNG (ein geteilter Raum liegt ueberall gleich herum) reicht.
+            _B.feste_posen = dict((o, (_posen[o][2], _posen[o][3]))
+                                  for o in _orte if o in _posen)
             _lage = _B.loesen_roh()
             if not _lage: continue
             for _o, _st in _lage.items():
@@ -1139,6 +1145,12 @@ def main():
                     _rects.append((_x0, _y0, _x1 - _x0, _y1 - _y0))
                 if not _rects: continue
                 grundrisse[(_pg, _o >> 4, _o & 15)] = (_B.abbildung(_neu), _kasten, _rects)
+            _rr = sorted(_B.rest(_neu_lage))
+            if _rr:
+                print("        Kanten-Rest: Median %.0f px, <=2 px: %d von %d, "
+                      "schlimmster %.0f px"
+                      % (_rr[len(_rr) // 2], sum(1 for x in _rr if x <= 2), len(_rr),
+                         _rr[-1]))
             _kn = _B.kosten(_neu_lage)
             print("Seite %2d: Grundriss aus %d/%d Orten, %.1f %% Ueberlappung, "
                   "%d/%d Durchgaenge beruehrend, %dx%d px, %.0f Welteinheiten je Pixel"
@@ -1781,8 +1793,32 @@ def main():
         # Beide Datensaetze bekommen dieselbe Position UND dieselbe Wandseite, damit
         # daraus optisch EIN Symbol wird. Die Seite des ersten gewinnt (deterministisch);
         # weil sie auf derselben Wand sitzen, sind es ohnehin gespiegelte Nischen.
+        # ⛔ DIE WANDSEITE MUSS ZUM NACHBARN ZEIGEN. Bisher kam sie aus der lokalen
+        # Silhouette (auf welcher Seite der Raum weitergeht) - das benennt die Wand, in
+        # der die Tuer sitzt, aber nicht, welche der beiden Seiten dieser Wand zum
+        # Nachbarn schaut. Gemessen am 2026-09-02: 34 von 93 gepaarten Tuersymbolen
+        # (37 %) zeigten VOM Nachbarn WEG, und die Nische ist gerichtet - der Nutzer sah
+        # das als "Tueren oft falsch rotiert".
+        # Bei einem Paar ist die Richtung bekannt: sie zeigt zur Zeichnung des anderen
+        # Raums. Die WANDACHSE (senkrecht/waagerecht) bleibt, wie die Silhouette sie
+        # bestimmt hat; nur das Vorzeichen wird korrigiert.
+        _seite = W['seite']
+        _andere = B if W is A else A
+        _gk = _geo(_andere['pg'], _andere['r'], _andere['room'], _andere['zi'])
+        if _gk:
+            _zx = _gk[0] + _gk[2] / 2.0 - cx
+            _zy = _gk[1] + _gk[3] / 2.0 - cy
+            # ⛔ AUCH DIE ACHSE AUS DER NACHBARRICHTUNG. Ein erster Wurf behielt die
+            # Achse der Silhouette und drehte nur das Vorzeichen - bei drei Symbolen lag
+            # schon die ACHSE falsch (Seite 7: Symbol (156,136) als Sued-Wand, waehrend
+            # der Nachbar 9 px WESTLICH liegt), und dann hilft kein Vorzeichen.
+            # Bei einem PAAR ist die Richtung bekannt und schlaegt die Silhouette.
+            if abs(_zx) >= abs(_zy):
+                _seite = 1 if _zx > 0 else 3      # Ost / West
+            else:
+                _seite = 2 if _zy > 0 else 0      # Sued / Nord
         for X in (A, B):
-            X['mx'], X['my'], X['seite'] = cx, cy, W['seite']
+            X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
         # zeichnen, jeder in der Farbe SEINES Rechtecks (einer gruen "besucht", einer
         # rot "aktueller Raum") - optisch wieder eine Doppelung. Der zweite wird

@@ -1177,6 +1177,24 @@ static void file_wave_tests(void)
     CHECK(!re15_menu_is_open(), "(F12) closed");
 }
 
+/* 1, wenn dieser Fill genau eine Zelle eines ANDEREN Ortes ist (nicht der von zn). */
+static int fremde_zelle(const re15_inv_op_t *o, const re15_map_zone_t *zn)
+{
+    int i, nz = re15_map_zone_count();
+    for (i = 0; i < nz; i++) {
+        const re15_map_zone_t *z = re15_map_zone_by_index(i);
+        int x, y, w, h, erste, n, k;
+        if (!z || (zn && z->room == zn->room && z->idx == zn->idx)) continue;
+        if (!re15_map_zone_synth(z, &x, &y, &w, &h, &erste, &n)) continue;
+        for (k = 0; k < n; k++) {
+            int cx, cy, cw, ch;
+            if (!re15_map_synth_cell(erste + k, &cx, &cy, &cw, &ch)) continue;
+            if (o->x == cx && o->y == cy && o->w == cw && o->h == ch) return 1;
+        }
+    }
+    return 0;
+}
+
 int main(void)
 {
     printf("=== status-screen FSM (wave 2, spec shots/inv_wave2_spec.md) ===\n");
@@ -1329,11 +1347,17 @@ int main(void)
             int fremd_vor = 0, fremd_nach = 0;
             int hat = z50 && re15_map_zone_synth(z50, &kx, &ky, &kw, &kh, 0, 0);
             CHECK(hat, "(5) ROOM1150 hat eine Zeichnung auf dem Blatt");
+            /* ⛔ "AUSSERHALB" HEISST: EINE ZELLE EINES ANDEREN ORTES. Gezaehlt wurde
+             * hier jeder Fill ausserhalb des eigenen Kastens - seit die Raeume
+             * aneinanderstossen (Ausgleich ueber alle Durchgaenge, 2026-09-02) liegen
+             * aber die TUERMARKEN von 0x1150 auf den gemeinsamen Waenden und damit im
+             * Kasten des Nachbarn. Der Pin schlug dadurch an, obwohl nichts Fremdes
+             * gezeichnet wurde. Gemeint war immer: es taucht kein ANDERER Raum auf. */
             for (i = 0; i < n; i++) {
                 if (ops[i].kind != RE15_INV_OP_FILL) continue;
                 if (ops[i].x >= kx && ops[i].x < kx + kw &&
                     ops[i].y >= ky && ops[i].y < ky + kh) vorher++;
-                else fremd_vor++;
+                else if (fremde_zelle(&ops[i], z50)) fremd_vor++;
             }
             CHECK(vorher == 0, "(5) ROOM1150 unbesucht: in seinem Kasten wird nichts "
                   "gezeichnet (RE2-System: kein Prim fuer unbesuchte Raeume), sind %d",
@@ -1344,7 +1368,7 @@ int main(void)
                 if (ops[i2].kind != RE15_INV_OP_FILL) continue;
                 if (ops[i2].x >= kx && ops[i2].x < kx + kw &&
                     ops[i2].y >= ky && ops[i2].y < ky + kh) nachher++;
-                else fremd_nach++;
+                else if (fremde_zelle(&ops[i2], z50)) fremd_nach++;
             }
             CHECK(nachher > 0,
                   "(5) nach Besuch von 0x1150 wird sein Kasten gezeichnet (%d Ops)",

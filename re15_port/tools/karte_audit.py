@@ -150,13 +150,14 @@ def main():
                 k = len(L[i][1] & L[j][1])
                 if k:
                     n += 1
-                    schlimm.append((k, pg, L[i][0], L[j][0]))
+                    schlimm.append((k, pg, L[i][0]['room'], L[i][0]['idx'],
+                                    L[j][0]['room'], L[j][0]['idx']))
         print("   Seite %2d %-10s %5.1f %% doppelt, %d ueberlappende Paare"
               % (pg, NAMEN.get(pg, ''), anteil, n))
     print("   schlimmste Paare:")
-    for k, pg, a, b in sorted(schlimm, reverse=True)[:8]:
+    for (k, pg, ra, ia, rb, ib) in sorted(schlimm, reverse=True)[:10]:
         print("     Seite %2d  ROOM%04X z%d <-> ROOM%04X z%d : %d px"
-              % (pg, a['room'], a['idx'], b['room'], b['idx'], k))
+              % (pg, ra, ia, rb, ib, k))
 
     # ---- 4 : Marken -----------------------------------------------------------
     print("\n4) MARKEN")

@@ -212,3 +212,72 @@ Jedes Blatt füllt sein Feld (95–132 px von 132). 262/262 Pins grün.
   abseits (2F oben links, Labor B4).
 * Die Stockwerke stapeln nicht. Das ist eine bewusste Entscheidung, kein Versehen — siehe
   (c).
+
+---
+
+## 7. Nutzer-Report 2026-09-02: Lücken, Rotation, Übertragungen
+
+> *„Türen sind oft falsch positioniert und rotiert, die Kartenstücke haben Abstände
+> zueinander, was nicht sein kann, die müssen Kante an Kante sein … Und die
+> Übertragungen von einem Raum zum anderen sind SAU oft falsch."*
+
+Alle drei Punkte waren berechtigt. Gemessen an v0.3.85:
+
+| | v0.3.85 |
+|---|---|
+| Türsymbole, die vom Nachbarn **weg** zeigen | 34 von 93 (**37 %**) |
+| Flächen-Lücke zwischen Räumen mit gemeinsamer Tür | Median 6 px, **bis 55 px** |
+| Verrutschen längs der gemeinsamen Wand | Median 5 px, **bis 72 px** |
+| Marker-Sprung beim Durchgang | Median 8 px, bis 74 px |
+
+⛔ Mein bisheriges Maß „92 von 100 Durchgängen berührend" war **zu schwach**: es
+erlaubte ±2 px Toleranz auf *Flächen* und sagte nichts über die Stelle, an der man
+erscheint. Deshalb sah der Nutzer Fehler, die meine Zahlen nicht zeigten.
+
+### Ursache 1 — der Löser hielt nur einen Spannbaum ein
+
+Die Breitensuche heftet jeden Ort an **genau einen** Nachbarn. Jede weitere Tür — jeder
+Ring im Türgraph — war nur ein weicher Zug, den `zusammenziehen` beim ersten drohenden
+Überlapp aufgab. Bei 126 Orten und 205 Türen sind rund 80 Türen nie eingehalten worden;
+genau die trugen die 30–70-px-Lücken.
+
+Ersetzt durch einen **Ausgleich über alle Kanten zugleich** (Gauss-Seidel, `federn`),
+abwechselnd mit einer Trennung (`_trenn_sweep`), die mit den Runden abkühlt.
+
+Drei eigene Fehler auf dem Weg, alle durch Messung entlarvt:
+1. **Türpunkte vertauscht.** `_feder_nachbarn` speicherte (Nachbar, *eigener* Punkt)
+   statt (Nachbar, *dessen* Punkt). Erkennbar daran, dass der Ausgleich den Kanten-Rest
+   *vergrößerte* (Seite 7: Median 14 → 45 px), obwohl Gauss-Seidel ihn nur verkleinern
+   kann.
+2. **Ruhelänge 0.** Beide Tür-Datensätze liegen im *Inneren* ihres Raums (das
+   Trigger-Rechteck deckt den Anlaufbereich ab) — die Feder zog die Räume um genau diese
+   Tiefen ineinander, bis 37 % Überlappung.
+3. **Ruhelänge „bis die Räume disjunkt sind".** Bei ineinandergreifenden L-Formen sind
+   das 10–20 px; der Sprung stieg von 8 auf 20 px im Median.
+
+Richtig ist die Summe der beiden **Wandtiefen**, quer zur Wand gemessen — die Richtung
+kommt aus der kurzen Achse des Trigger-Rechtecks, das Vorzeichen aus der Zellgeometrie.
+
+### Ursache 2 — die Wandseite kam aus der Silhouette
+
+`snap_grundriss` bestimmte die Seite daran, wohin der Raum weitergeht. Das benennt die
+**Wand**, in der die Tür sitzt, nicht die **Seite**, die zum Nachbarn schaut. Bei einem
+Paar ist die Richtung bekannt und schlägt die Silhouette — Achse *und* Vorzeichen.
+
+### Stand
+
+| | v0.3.85 | jetzt |
+|---|---|---|
+| Türsymbole, die vom Nachbarn weg zeigen | 34 von 93 | **0 von 95** |
+| Flächen-Lücke, schlimmste | 55 px | **14 px** |
+| Verrutschen, schlimmstes | 72 px | **41 px** |
+| Durchgänge, die anstoßen | 92 von 100 | **95 von 101** |
+| Überlappung je Blatt | 0 – 4,0 % | 0 – 16,3 % |
+
+**Ehrlich dazu:** die Überlappung ist der Preis. Räume, die eine Tür teilen, dürfen sich
+jetzt um einen Streifen überlappen — sonst entsteht genau die Lücke, die gemeldet war.
+Auf dem dichten Factory-Blatt summiert sich das auf 16 %. Der Marker-Sprung liegt
+weiter bei 9 px im Median; davon ist der größte Teil die **echte Wanddicke** — die
+beiden Tür-Datensätze liegen real so weit auseinander.
+
+Festgehalten in `test_map_durchgang.c` (Symbol-Richtung, Lücke, Gegenprobe).
