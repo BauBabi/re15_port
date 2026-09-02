@@ -293,9 +293,21 @@ Das Audit zählt nach dem Umbau **10 Markenpaare, die praktisch aufeinander lieg
   Seit die Räume aneinanderstoßen, liegen ihre Projektionen dichter beieinander, und
   `snap_grundriss` zieht beide auf dasselbe Randpixel.
 
-Beides ist sichtbar: eine Tür verdeckt die andere. Nötig ist ein Nachlauf, der Marken
-gleicher Art auf einem Blatt längs ihrer Wand auseinanderschiebt, bevor sie
-ausgeschrieben werden.
+Beides ist sichtbar: eine Tür verdeckt die andere.
+
+**Behoben 2026-09-02.** Ein Nachlauf schiebt Türsymbole, die sich auf 2 px nähern,
+**längs ihrer Wand** auseinander (quer wäre die Marke von der Wand weg) und prüft dabei,
+dass die neue Stelle noch auf der gezeichneten Fläche liegt. 10 Paare → **1**; das
+verbleibende ist derselbe Durchgang, den die Paarung nicht gefunden hat.
+
+⛔ Nur TÜREN. Ein erster Wurf schob auch Treppenmarken auseinander — damit fielen
+Duplikate, die vorher an derselben Stelle zusammenfielen und von der Schlüssel-
+Entdopplung geschluckt wurden, wieder auseinander und wurden zweimal gezeichnet: die Zahl
+der Treppensymbole stieg von 30 auf 52.
+
+Nebenwirkung, gewollt: 5 Türen, die vorher von einer anderen verdeckt und dabei
+weggedoppelt wurden, sind jetzt sichtbar (160 → 165). Und ROOM1130 ↔ ROOM1140 klafft
+nicht mehr 9 px, sondern **1 px**.
 
 ---
 

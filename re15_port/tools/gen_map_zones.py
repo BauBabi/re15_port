@@ -1528,6 +1528,16 @@ def main():
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
     # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
+    def _gr_zelle(room, zi, pg, x, y):
+        """1, wenn (x,y) auf der gezeichneten Flaeche dieses Ortes liegt. Damit eine
+        verschobene Marke die Wand nicht verlaesst."""
+        g = _gr(room, zi, pg)
+        if not g: return False
+        for (cx, cy, cw, ch) in g[2]:
+            if cx <= x < cx + cw and cy <= y < cy + ch:
+                return True
+        return False
+
     def snap_grundriss(room, zi, mx, my, senk, pg=None):
         """Wie snap_wall, aber auf der SILHOUETTE des Grundrisses statt auf der
         Original-Kachel. snap_wall liest die gemalte Kachel (DATA/MAP0x.PIX,
@@ -1927,6 +1937,42 @@ def main():
     # ueberfluessig, sondern wuerde die Doppelung wieder herstellen.
     zusatz = []
     vor.extend(zusatz)
+
+    # ---- ZWEI VERSCHIEDENE TUEREN DUERFEN NICHT AUFEINANDER LIEGEN ------------
+    # ⛔ Nutzer 2026-09-02: "Tueren sind noch nicht sauber gesetzt."
+    # Gemessen nach dem Umbau: 10 Markenpaare lagen hoechstens 2 px auseinander - einer
+    # davon derselbe Durchgang zweimal (die Paarung hatte ihn nicht gefunden), NEUN
+    # dagegen zwei VERSCHIEDENE Tueren. Seit die Raeume aneinanderstossen, liegen ihre
+    # Projektionen dichter beieinander, und die Wandsuche zieht beide auf dasselbe
+    # Randpixel; eine Tuer verdeckt dann die andere.
+    # Sie werden LAENGS IHRER WAND auseinandergeschoben - quer waere die Marke von der
+    # Wand weg, und dort gehoert sie nicht hin.
+    _offen = [v for v in vor if not v.get('weg')]
+    for _a in range(len(_offen)):
+        for _b in range(_a + 1, len(_offen)):
+            A2, B2 = _offen[_a], _offen[_b]
+            if A2['pg'] != B2['pg']: continue
+            # ⛔ NUR TUEREN. Ein erster Wurf schob auch Treppenmarken auseinander -
+            # damit fielen Duplikate, die vorher an derselben Stelle zusammenfielen und
+            # von der Schluessel-Entdopplung geschluckt wurden, wieder auseinander und
+            # wurden ZWEIMAL gezeichnet: die Zahl der Treppensymbole stieg von 30 auf 52.
+            if A2['seite'] >= 4 or B2['seite'] >= 4: continue
+            if A2['room'] == B2['room'] and A2['zi'] == B2['zi'] and                A2.get('zid2', 255) == B2.get('zid2', 255):
+                continue                      # dieselbe Tuer, absichtlich gleich
+            if A2.get('zid2', 255) == B2['zid'] and B2.get('zid2', 255) == A2['zid']:
+                continue                      # derselbe Durchgang, absichtlich gleich
+            if abs(A2['mx'] - B2['mx']) + abs(A2['my'] - B2['my']) > 2: continue
+            # laengs der Wand: bei Ost/West-Wand senkrecht, sonst waagerecht
+            _laengs_y = B2['seite'] in (1, 3)
+            for _schub in (3, -3, 6, -6):
+                if _laengs_y:
+                    _nx, _ny = B2['mx'], B2['my'] + _schub
+                else:
+                    _nx, _ny = B2['mx'] + _schub, B2['my']
+                _g = _gr_zelle(B2['room'], B2['zi'], B2['pg'], _nx, _ny)
+                if _g:
+                    B2['mx'], B2['my'] = _nx, _ny
+                    break
 
     seen = set()
     for v in vor:

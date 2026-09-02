@@ -99,14 +99,12 @@ int main(void)
         int l2 = (z30 && z40) ? luecke(z30, z40) : -1;
         printf("  [Luecken] 1120<->1130: %d px, 1130<->1140: %d px\n", l1, l2);
         CHECK("ROOM1120 und ROOM1130 stossen aneinander", l1 == 0);
-        /* ⛔ NICHT AUF NULL FESTNAGELN, WO ES NOCH NICHT NULL IST. 1130<->1140 haelt
-         * zurzeit 9 px Abstand: ROOM1130 haengt an vier Tueren zugleich, und der Ring
-         * aus 1120-1130-1140 schliesst geometrisch nicht ganz. Gemessen ueber alle
-         * Blaetter (tools/karte_audit.py): die schlimmste Luecke ist von 55 px auf
-         * 14 px gefallen. Der Pin haelt diese Schranke fest, nicht eine Null, die wir
-         * nicht haben - sonst waere er von Anfang an rot und wuerde nichts schuetzen. */
-        CHECK("ROOM1130 und ROOM1140 liegen hoechstens 14 px auseinander",
-              l2 >= 0 && l2 <= 14);
+        /* Seit dem Ausgleich ueber ALLE Kanten (nicht nur einen Spannbaum) liegt auch
+         * dieses Paar an: gemessen 1 px. Die Schranke laesst etwas Luft, weil ROOM1130
+         * an vier Tueren zugleich haengt und der Ring 1120-1130-1140 geometrisch nicht
+         * exakt schliesst - aber sie haelt die 9 px fest, die vorher dort standen. */
+        CHECK("ROOM1130 und ROOM1140 stossen praktisch aneinander (<= 4 px)",
+              l2 >= 0 && l2 <= 4);
     }
 
     /* ---- (3) GEGENPROBE: zwei Raeume OHNE Tuer duerfen Abstand haben ---------
@@ -118,6 +116,35 @@ int main(void)
         printf("  [Gegenprobe] 1120<->1150 (keine gemeinsame Tuer): %d px\n", l3);
         CHECK("zwei Raeume ohne gemeinsame Tuer liegen nicht zwangslaeufig an",
               l3 != 0);
+    }
+
+    /* ---- (4) ZWEI VERSCHIEDENE TUEREN LIEGEN NICHT AUFEINANDER ---------------
+     * Nutzer 2026-09-02: "Tueren sind noch nicht sauber gesetzt."
+     * Gemessen nach dem Umbau auf anstossende Raeume: 10 Markenpaare lagen hoechstens
+     * 2 px auseinander - neun davon zwei VERSCHIEDENE Tueren, die auf dasselbe
+     * Wand-Randpixel schnappten; eine verdeckte die andere. Der Generator schiebt sie
+     * jetzt LAENGS ihrer Wand auseinander (quer waere die Marke von der Wand weg). */
+    {
+        int j, dicht = 0;
+        n = re15_map_mark_count();
+        for (k = 0; k < n; k++) {
+            int pa, ra, ax, ay, ka, za = 0, za2 = 255;
+            if (!re15_map_mark_get(k, &pa, &ra, &ax, &ay, &ka)) continue;
+            if (ka >= 4) continue;
+            re15_map_mark_zonen(k, &za, &za2);
+            for (j = k + 1; j < n; j++) {
+                int pb, rb, bx, by, kb, zb = 0, zb2 = 255;
+                if (!re15_map_mark_get(j, &pb, &rb, &bx, &by, &kb)) continue;
+                if (kb >= 4 || pb != pa) continue;
+                re15_map_mark_zonen(j, &zb, &zb2);
+                if (za == zb && za2 == zb2) continue;      /* dieselbe Tuer */
+                if (za2 == zb && zb2 == za) continue;      /* derselbe Durchgang */
+                if (abs(ax - bx) + abs(ay - by) <= 2) dicht++;
+            }
+        }
+        printf("  [Symbole] %d Paare verschiedener Tueren liegen praktisch aufeinander\n",
+               dicht);
+        CHECK("hoechstens ein Paar verschiedener Tueren liegt aufeinander", dicht <= 1);
     }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
