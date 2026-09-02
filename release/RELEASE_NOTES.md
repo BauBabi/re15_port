@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.3.88 (Early Preview)
+
+**Der Marker springt beim Durchgehen nicht mehr weg — und keine Tür verdeckt mehr eine
+andere.**
+
+Aufbauend auf v0.3.87 (live gegen die Engine debuggt) zwei weitere Sachen:
+
+**Die Tür zieht den Marker an.** Ein Durchgang ist EIN Ort und trägt EIN Symbol — stehst
+du in der Tür, sitzt dein Marker auf diesem Symbol, von beiden Seiten auf derselben
+Stelle. Der Zug wächst stetig, je näher du kommst, es ruckt also nichts.
+
+| gemessen an 102 Durchgängen | v0.3.86 | jetzt |
+|---|---|---|
+| mittlerer Sprung | 9 px | **5 px** |
+| Übergänge unter 2 px | 0 | **26** |
+| Übergänge unter 8 px | 41 % | **62 %** |
+| schlimmster Sprung | 63 px | **35 px** |
+
+**Zwei verschiedene Türen liegen nicht mehr aufeinander.** Seit die Räume
+aneinanderstoßen, schnappten benachbarte Türen auf dasselbe Wand-Pixel — eine verdeckte
+die andere. Sie werden jetzt längs ihrer Wand auseinandergeschoben: 10 Paare → 1, und
+**fünf Türen, die vorher verdeckt waren, sind wieder da**. ROOM1130 und ROOM1140 klaffen
+statt 9 px nur noch 1 px.
+
+**Offen bleibt:** 38 von 102 Übergängen liegen über 8 px. Der Grund ist gemessen und
+nicht behebbar: die Räume von RE1.5 bilden keinen metrisch geschlossenen Grundriss — wo
+ein Rundweg im Türgraph nicht schließt, lässt sich der Fehler nur verteilen. Auf
+Blättern ohne solche Rundwege geht er auf exakt null.
+
+---
+
 # RE1.5 Port — v0.3.87 (Early Preview)
 
 **Live gegen die Engine debuggt, wie du es verlangt hast.**
