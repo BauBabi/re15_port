@@ -637,3 +637,18 @@ keine Raumfläche unter sich. Neu und strenger: **keine** Marke darf hinter eine
 
 **Offen:** ROOM1140↔ROOM1170 bleibt auf Blatt 4 notwendigerweise offen (bewiesen
 unmöglich). Wer diesen Weg geht, sieht dort weiterhin einen Sprung.
+
+### ⚠️ Grenze der Vollsuche (`RE15_VOLLSUCHE`)
+
+Die Suche zählt eine Kante nur als erfüllt, wenn die beiden Wandpunkte **exakt** (≤ 1 px)
+zusammenfallen — und zwar **vor** der Einpassung ins Kartenfeld. Der Löser misst nach der
+Einpassung, also auf skalierten Koordinaten. Gegenprobe: für Blatt 12 meldet die Suche
+„höchstens 2 von 3", der Löser erreicht dort **3/3**.
+
+Die Suche ist damit eine **untere Schranke**, kein Unmöglichkeitsbeweis. Für Blatt 4 hat
+das keine Folgen, weil das Ergebnis dort **konstruktiv** ist: nach dem Entfernen der
+Phantom-Kante erreicht der Löser tatsächlich 5/5 mit 0,0 px — dafür braucht es keine
+Suche. Wo die Suche für eine Behauptung „unmöglich" herangezogen wird, gehört dieser
+Vorbehalt dazu.
+
+Blatt 1: Suche 6 von 10, Löser 6/10 — dort ist der Löser also am Optimum der Suche.
