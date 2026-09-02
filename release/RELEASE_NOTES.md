@@ -1,3 +1,43 @@
+# RE1.5 Port — v0.3.85 (Early Preview)
+
+**Alle 13 Kartenblätter, alle Räume, jedes Blatt geprüft.**
+
+Du wolltest im Ganzen sehen, ob der Ansatz taugt. Dazu sind die restlichen Punkte
+erledigt und jedes einzelne Blatt gemessen.
+
+| | v0.3.84 | jetzt |
+|---|---|---|
+| Orte mit einer Zeichnung | 112 | **126** |
+| Durchgänge, die aneinanderstoßen | 85 von 89 | **92 von 100** |
+| Überlappung je Blatt | 0 – 11,9 % | **0 – 4,0 %** |
+
+**Ein Raum wird jetzt auf jeder Etage gezeichnet, die er erreicht.** Treppenhaus,
+Fahrstuhl und der Bereich hinter ROOM1170s Treppe bekommen auf jedem ihrer Blätter eine
+eigene, richtig gesetzte Zeichnung — vorher wurde ihr Grundriss notdürftig in ein
+Rechteck des Original-Künstlers eingepasst. Nebenwirkung: die losen Inseln auf
+**Police Station B2** haben damit ihren Anker bekommen und hängen jetzt zusammen
+(9 von 9 auf **11 von 11** Durchgänge).
+
+**Blätter, die sich einen Raum teilen, werden gemeinsam gelöst.** Die Stockwerke der
+Polizeiwache wachsen um dieselben Anker, ein geteilter Raum liegt überall gleich herum.
+Police Station 2F ist dadurch von 20,6 % Überlappung auf **0,5 %** gefallen.
+
+**Was ich probiert und wieder verworfen habe:** ein gemeinsamer Maßstab für das ganze
+Gebäude. Damit stapeln die Stockwerke exakt übereinander — aber alles wird um Faktor 3
+kleiner, ROOM1120 fällt von 34×36 auf 14×15 Pixel und das Dach auf einen Kasten in einem
+leeren Blatt. Unsere Stockwerke sind nicht deckungsgleich, und danach hattest du auch nie
+gefragt. Eingepasst wird deshalb weiter je Blatt — die Blätter füllen ihr Feld.
+
+**Geprüft über alle 13 Blätter** (`tools/karte_audit.py`): kein Blatt verlässt das
+Kartenfeld, alle 186 Tür- und Treppensymbole liegen auf ihrem Raum, kein Symbol wird
+doppelt gezeichnet, und jede Etagen-Zweitzeichnung hat ihr eigenes Besucht-Bit.
+
+**Offen:** Factory zeigt 14 von 18 Durchgängen berührend, 3F 5 von 7 — dort schließen
+sich Ringe im Türgraph geometrisch nicht. Und einzelne Räume ohne Tür auf ihrem Zielblatt
+stehen abseits (2F oben links, Laboratory B4).
+
+---
+
 # RE1.5 Port — v0.3.84 (Early Preview)
 
 **Die Karte ist neu gebaut — als Grundriss, nicht mehr als Kachel-Puzzle.**
