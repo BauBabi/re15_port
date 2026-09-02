@@ -410,3 +410,13 @@ Gemessen an der echten Abfolge (im Trigger stehen → drücken → am Spawn ersc
 | schlimmster | 63 px (v0.3.86) | **35 px** |
 
 Es ist eine PORT-ERGÄNZUNG: das Original kennt weder Grundrisse noch diese Symbole.
+
+### Zum Türzug: was er kostet
+
+Der Zug ist überall **stetig** — das Gewicht fällt zum Rand des Zugbereichs auf null, es
+gibt also nirgends einen Sprung. Wer aber in einem Flur *an* einer Tür vorbeigeht,
+durchquert deren Zugbereich, und sein Marker wird dabei weich zur Tür hin und wieder
+zurück gelenkt. Quer zur Wand bleibt das Gewicht dabei klein (es ist das Minimum beider
+Achsen), die Ablenkung also gering; voll wird der Zug nur, wenn man wirklich vor der Tür
+steht. Sollte sich der Marker beim Vorbeilaufen dennoch „klebrig" anfühlen, ist die
+Stellschraube das Maximalgewicht in `tuer_anziehen` (derzeit 256 = voll).
