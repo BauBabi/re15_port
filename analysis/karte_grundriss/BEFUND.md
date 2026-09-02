@@ -560,3 +560,80 @@ Wandlinie hell und **zustandsfrei** (208,208,200), Füllung trägt den Zustand
 damit ein Problem der gerichteten RE1.5-Nische: ein Durchgang gehört zwei Räumen und
 liegt auf ihrer gemeinsamen Wand, dort zeigt jede Nische zwangsläufig zu einem hin und
 vom anderen weg. Der Spieler-Marker bleibt unverändert (Nutzer-Vorgabe).
+
+## §11 — Nutzer-Report 2026-09-02 (2): Sprung ROOM1170 → ROOM1130, schwarzes Quadrat
+
+> „ich springe beim wechsel von room 1170 zu room 1120 von dem Rechteck und der Tür oben
+> bis hin zum Rechteck ganz weit weg und der Tür unten. … Außerdem haben jetzt alle
+> Karten Hintergründe ein schwarzes square."
+
+### ⛔ Zuerst: die Messschiene hat den gemeldeten Fall nie gesehen
+
+`test_map_uebergang` sammelte Türen mit `for (r = 0; r < 0x100; r += 0x10)` und lud damit
+je Stage **nur ROOM?000…ROOM?0F0**. ROOM1130/1140/1170 waren nie dabei; die Blätter 4
+und 5 hatten **null** gemessene Übergänge. Dazu wählte die Schiene das Blatt als
+`zn->page` (Hauptzeile) — das Spiel wählt es über das **Band**
+(`re15_inv_map_page_shown` → `re15_map_floor_lookup`), wofür die GAST-Zeilen existieren.
+
+Beides behoben. Vorher 102 Übergänge / 0 auf Blatt 4 → jetzt **146 Übergänge / 8 auf
+Blatt 4**. Neuer Riegel im Test: ≥ 200 Türen, ≥ 8 Blätter, Blatt 4 enthalten.
+
+### Ursache des Sprungs: dieselbe Tür zweimal im Datensatz
+
+Neun Verbindungen führen denselben Durchgang in **zwei** Aot_set-Records (gleiches Ziel,
+gleicher Trigger, gleicher Spawn, gleicher Yaw):
+
+| Verbindung | Records |
+|---|---|
+| ROOM10D0→ROOM10F0, ROOM1140→ROOM1170, ROOM11B0→ROOM1260, ROOM11E0→ROOM1210, ROOM1230→ROOM1190, ROOM2020→ROOM2030, ROOM2070→ROOM11A0, ROOM3040→ROOM3060, ROOM6010→ROOM6000 | je 2 |
+
+Für das Spiel harmlos, für den Löser nicht: er zählte **zwei Kanten** und opferte deshalb
+systematisch jede Verbindung mit nur einem Record. So blieb ROOM1130↔ROOM1170 mit 62 px
+offen. Nach dem Entduplizieren fällt die Wahl zugunsten des tatsächlich begangenen Wegs.
+
+### Erschöpfende Suche: 5 von 6 ist auf Blatt 4 das Maximum
+
+Diagnose `RE15_VOLLSUCHE=<seite>` durchsucht alle Wurzeln, alle Drehungen und **alle
+Anlegekanten** (der erste Wurf verzweigte nur über die erste Kante und war damit
+unvollständig — das wäre ein Suchartefakt gewesen). Ergebnis: höchstens 5 von 6 Kanten
+gleichzeitig erfüllbar. **Keine Suchschwäche, sondern Geometrie:** ROOM1170s beide Türen
+liegen auf *gegenüberliegenden* Wänden (Z-min und Z-max seiner Box), während ROOM1130 und
+ROOM1140 selbst aneinandergrenzen. Ein Rechteck kann nicht auf beiden Seiten zweier
+benachbarter Räume liegen.
+
+### Keine Pro-Raum-Spiegelung mehr
+
+Die Projektion `map_x = wx, map_y = −wz` kippt die Händigkeit **einmal** für alle Räume.
+Eine zusätzliche Spiegelung *einzelner* Räume hat kein Gegenstück in der Welt — ein Raum
+ist nicht mal so und mal seitenverkehrt gebaut. Sie war ein freier Parameter, mit dem der
+Löser eine Tür lokal befriedigen und das Gefüge global zerstören konnte.
+
+Gemessen (ohne / mit Spiegelung): ≤ 2 px 39/34, ≤ 8 px 91/90, über 8 px 11/12.
+⚠️ Die **löser-eigenen** Zahlen wurden dabei schlechter (mehr getrennte Nachbarn, mehr
+Überlappung), die **Live-Größe** besser. Bei Widerspruch gilt die Live-Größe.
+
+### Kein schwarzer Kartengrund
+
+Zum RE2-Stil gehört ein schwarzer Grund, aber als fester Kasten über dem RE1.5-Panel
+liegt er auf *jedem* Blatt — auch über der Original-Kachelkunst — und liest sich als
+aufgeklebtes Quadrat. Der Kontrast kommt jetzt aus der Zeichnung selbst.
+
+Er hatte außerdem einen Pin **verdeckt**: `test_map_re2_system` prüfte „unter der ersten
+Marke liegt eine Fläche" und war nur deshalb grün, weil der Grund unter allem lag. Die
+Prüfung war zudem sachlich falsch — eine Tür in einen *unbetretenen* Raum hat zu Recht
+keine Raumfläche unter sich. Neu und strenger: **keine** Marke darf hinter einer sie
+überdeckenden Fläche liegen (6 Paare, 0 verdeckt).
+
+### Ergebnis
+
+| | vorher | jetzt |
+|---|---|---|
+| ROOM1170 → ROOM1130 | quer über das Blatt (62 px Rechteck-Lücke) | **6 px** |
+| ROOM1130 → ROOM1170 | — | **4 px** |
+| gemessene Übergänge | 102 (Blatt 4: 0) | **146 (Blatt 4: 8)** |
+| ≤ 4 px | — | 103 (70 %) |
+| ≤ 8 px | — | 127 (86 %) |
+| schlimmster | — | 30 px |
+
+**Offen:** ROOM1140↔ROOM1170 bleibt auf Blatt 4 notwendigerweise offen (bewiesen
+unmöglich). Wer diesen Weg geht, sieht dort weiterhin einen Sprung.

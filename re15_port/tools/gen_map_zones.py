@@ -31,6 +31,7 @@ Aufruf:  python re15_port/tools/gen_map_zones.py [--json <zonen.json>]
 """
 import itertools
 import struct, json, os, sys, math, collections, random, statistics
+import io
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # fuer grundriss.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
@@ -320,7 +321,8 @@ def read_rdt(rid):
                     if b[2] == 0 and b[1] not in rearmed:
                         pc += sz
                         continue
-                    doors.append({'lx': rx + rw//2, 'lz': rz + rd//2,
+                    doors.append({'slot': b[1], 'sce': b[2],
+                                  'lx': rx + rw//2, 'lz': rz + rd//2,
                                   'rx': rx, 'rz': rz, 'rw': rw, 'rd': rd,
                                   # Door_aot_set pc[4] = das BAND (Etage) der Tuer,
                                   # obj[0x82]; das Original gattet die Interaktion
@@ -380,6 +382,33 @@ def zones_of(sca):
     out = [o for o in out if o[1] >= MIN_FRAC * tot]
     out.sort(key=lambda o: -o[1])
     return [o[0] for o in out]
+
+def _lebende_paare():
+    """Raumpaare, die die ENGINE beim Betreten in mindestens EINER Richtung aufstellt.
+
+    Quelle: tools/engine_tueren.txt (erzeugt von integration_map_uebergang mit
+    RE15_TUER_DUMP). Fehlt die Datei, wird nicht gefiltert - der Generator laeuft dann
+    wie zuvor, nur ohne diese Verbesserung."""
+    pfad = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'engine_tueren.txt')
+    if not os.path.exists(pfad):
+        return None
+    paare = set()
+    with io.open(pfad, encoding='utf-8') as f:
+        for z in f:
+            z = z.strip()
+            if not z or z.startswith('#'):
+                continue
+            t = z.split()
+            if len(t) < 2:
+                continue
+            try:
+                a = int(t[0], 16)
+                b = int(t[1], 16)
+            except ValueError:
+                continue
+            paare.add((a & 0xFFF0, b & 0xFFF0))
+    return paare or None
+
 
 def _vollsuche(B, pg):
     """Erschoepfende Tiefensuche: wie viele Tuerkanten sind GLEICHZEITIG erfuellbar?
@@ -1058,6 +1087,9 @@ def main():
 
     # ---- (1) Eingabe je Blatt: welche Orte, mit welchen Zellen und Tueren ----------
     _eingabe = {}
+    _lebend = _lebende_paare()
+    if _lebend is None:
+        print("   (tools/engine_tueren.txt fehlt - Phantom-Tueren werden NICHT gefiltert)")
     for _pg in range(13):
         _orte = []
         _rd = {}
@@ -1073,6 +1105,19 @@ def main():
             _tu = []
             for _d in doors_all.get(_b, ()):
                 if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
+                # ⛔ PHANTOM-VERBINDUNGEN BINDEN DEN LOESER NICHT.
+                # Die RDT-Records enthalten Tueren, die das Spiel an dieser Stelle gar
+                # nicht aufstellt (inerte Aot_set mit sce == 0, skriptgeschuetzte).
+                # Gemessen 2026-09-02 gegen die Engine (tools/engine_tueren.txt): 10 von
+                # 123 Raumpaaren werden in KEINER Richtung installiert, darunter
+                # ROOM1140<->ROOM1170 - genau die Kante, die Blatt 4 nachweislich
+                # unloesbar machte (RE15_VOLLSUCHE=4: hoechstens 5 von 6). Solche Paare
+                # duerfen die Anordnung nicht einschraenken.
+                if _lebend is not None and _d['dest'] != _b:
+                    _p1 = (_b & 0xFFF0, _d['dest'] & 0xFFF0)
+                    _p2 = (_p1[1], _p1[0])
+                    if _p1 not in _lebend and _p2 not in _lebend:
+                        continue
                 _e = dict(_d)
                 _zt = _ort_von_punkt(_d['dest'], _d['nx'], _d['nz'])
                 if _zt is None:

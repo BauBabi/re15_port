@@ -188,6 +188,26 @@ int main(void)
         }
     }
     printf("  %d Tueren aus den installierten AOTs gelesen\n", ntuer);
+    /* RE15_TUER_DUMP=<datei>: die Tueren ausgeben, die die ENGINE beim Betreten
+     * installiert. Der Kartengenerator liest die RDT-Records statisch und sieht
+     * dabei auch Tueren, die das Spiel dort gar nicht aufstellt (inerte Records,
+     * sce == 0, oder skriptgeschuetzte Aot_set). Solche Tueren haben den
+     * Grundriss-Loeser eingeschraenkt, ohne dass man sie begehen kann. */
+    {
+        const char *dp = getenv("RE15_TUER_DUMP");
+        if (dp && *dp) {
+            FILE *f = fopen(dp, "w");
+            if (f) {
+                int q;
+                for (q = 0; q < ntuer; q++)
+                    fprintf(f, "%04X %04X %d %d %d %d %d\n",
+                            tuer[q].a, tuer[q].b, (int)tuer[q].ax, (int)tuer[q].az,
+                            (int)tuer[q].bx, (int)tuer[q].bz, tuer[q].band);
+                fclose(f);
+                printf("  Tueren nach %s geschrieben\n", dp);
+            }
+        }
+    }
     CHECK("es wurden ueberhaupt Tueren gefunden", ntuer >= 100);
 
     { int _z; for (_z = 0; _z < 13; _z++) proBlatt[_z] = 0; }
@@ -217,11 +237,11 @@ int main(void)
     /* ---- je Tuer: Marker in A, dann Marker in B auf DEMSELBEN Blatt ---- */
     for (i = 0; i < ntuer; i++) {
         int pa_x, pa_y, pb_x, pb_y, blatt, d, pb;
-        if (!betrete(tuer[i].a, tuer[i].ax, tuer[i].az, tuer[i].band)) { w_a++; continue; }
+        if (!betrete(tuer[i].a, tuer[i].ax, tuer[i].az, tuer[i].band)) { w_a++; if (liste) printf("     AUSFALL Raum A nicht ladbar: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }
         blatt = blatt_von(tuer[i].a, tuer[i].ax, tuer[i].az);
-        if (blatt < 0) { w_zone++; continue; }
-        if (!marker(tuer[i].a, tuer[i].ax, tuer[i].az, blatt, &pa_x, &pa_y)) { w_ma++; continue; }
-        if (!betrete(tuer[i].b, tuer[i].bx, tuer[i].bz, tuer[i].band)) { w_b++; continue; }
+        if (blatt < 0) { w_zone++; if (liste) printf("     AUSFALL keine Zone in A: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }
+        if (!marker(tuer[i].a, tuer[i].ax, tuer[i].az, blatt, &pa_x, &pa_y)) { w_ma++; if (liste) printf("     AUSFALL kein Marker in A: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }
+        if (!betrete(tuer[i].b, tuer[i].bx, tuer[i].bz, tuer[i].band)) { w_b++; if (liste) printf("     AUSFALL Raum B nicht ladbar: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }
         pb = blatt_von(tuer[i].b, tuer[i].bx, tuer[i].bz);
         if (pb != blatt) {
             w_blatt++;
@@ -230,8 +250,8 @@ int main(void)
                        tuer[i].a, blatt, tuer[i].b, pb);
             continue;
         }
-        if (!marker(tuer[i].b, tuer[i].bx, tuer[i].bz, blatt, &pb_x, &pb_y)) { w_mb++; continue; }
-        if (!tuer[i].rez) { w_einseitig++; continue; }   /* ohne Gegen-Tuer kein Vergleich */
+        if (!marker(tuer[i].b, tuer[i].bx, tuer[i].bz, blatt, &pb_x, &pb_y)) { w_mb++; if (liste) printf("     AUSFALL kein Marker in B: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }
+        if (!tuer[i].rez) { w_einseitig++; if (liste) printf("     AUSFALL ohne Gegen-Tuer: ROOM%04X -> ROOM%04X\n", tuer[i].a, tuer[i].b); continue; }   /* ohne Gegen-Tuer kein Vergleich */
         d = abs(pa_x - pb_x) > abs(pa_y - pb_y) ? abs(pa_x - pb_x) : abs(pa_y - pb_y);
         if (blatt >= 0 && blatt < 13) proBlatt[blatt]++;
         werte[gesamt++] = d;
