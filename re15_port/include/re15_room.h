@@ -71,7 +71,22 @@ typedef struct {
      * s_map_synth. Solche Zonen tragen rect == 255 - das Original fuehrt fuer sie
      * kein Karten-Rechteck. */
     unsigned char synth;
+    /* 1 = GAST-ZEILE: derselbe Ort auf einem FREMDEN Blatt, weil eines seiner Baender
+     * dorthin fuehrt (Treppenhaus, Fahrstuhl, ROOM1170s zweiter Bereich). Sie hat eine
+     * eigene Lage vom Loeser, teilt aber die Zonen-Nummer (zid) mit der Hauptzeile.
+     * ⛔ IHRE SICHTBARKEIT HAENGT AM ETAGEN-BIT, NICHT AM ZONEN-BIT. Sonst kehrt der
+     * Fehler zurueck, den der Nutzer am 2026-09-01 gemeldet hat: "im Room 1130 gibt es
+     * unten links schon ein Rechteck, obwohl ich noch im Eingangsbereich stehe" - dort
+     * galt eine 3F-Zeichnung als bekannt, sobald man das Treppenhaus irgendwo betreten
+     * hatte. */
+    unsigned char etage;
 } re15_map_zone_t;
+
+/* Die Zeile dieses Ortes auf DIESEM Blatt (0, wenn er dort nicht liegt). Ein Ort, der
+ * ueber Ebenen reicht, hat je Blatt eine eigene Lage und damit eine eigene Abbildung. */
+const re15_map_zone_t *re15_map_zone_fuer(unsigned room, int idx, unsigned page);
+/* 1, wenn diese GAST-Zeile schon besucht wurde (Etagen-Bit). */
+int re15_map_zone_etage_besucht(const re15_map_zone_t *zn);
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);
 const re15_map_zone_t *re15_map_zone_current(void);
@@ -98,7 +113,6 @@ const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
-int re15_map_etagen_zone(unsigned page, unsigned rect);
 int re15_map_player_band(void);   /* Etage des Spielers: gepflegtes Band, sonst aus der Y */
 
 int re15_map_stock_mode(void);

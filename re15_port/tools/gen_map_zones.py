@@ -857,6 +857,72 @@ def main():
     # Ein ORT ist deshalb (Raum, Zone); seine Zellen sind die Kollisionszellen in der
     # Zonen-Box, seine Tueren die Tueren, die darin liegen, und das Ziel einer Tuer ist
     # der Ort, in dem ihr Spawn-Punkt liegt.
+    # ================= ETAGEN-VORLAUF ==========================================
+    # Welche (Raum, Zone) gehoert auf WELCHES Blatt, je BAND? Ein Raum kann ueber
+    # mehrere Ebenen reichen; welche gilt, haengt am Band (+0x82, Aot_set pc[4]; das
+    # Original gattet die Tuer-Interaktion darauf, FUN_8002bd44 @0x8002bf38).
+    # Erkennbar an den Tueren: fuehren die Tueren des einen Bandes auf ein anderes
+    # Blatt als die des anderen, dann reicht der Ort ueber beide.
+    # ⛔ DAS MUSS VOR DEM LOESER STEHEN. Frueher lief diese Rechnung erst nach der
+    # Rechteck-Vergabe und setzte ein zugeteiltes Kunst-Rechteck voraus - damit kam sie
+    # auf 12 Zeilen und der Loeser wusste beim Setzen nichts davon. Jetzt bekommt der
+    # Ort auf JEDEM Blatt, das eines seiner Baender erreicht, eine eigene Lage vom
+    # Loeser; die Zweitzeichnung ist dann kein in ein fremdes Rechteck eingepasster
+    # Abklatsch mehr, sondern ein richtig gesetzter Grundriss.
+    ETAGEN = []          # (raum, zone, band, seite)
+    for _b in sorted(zinfo):
+        for _zi in range(len(zinfo[_b])):
+            _bd = {}
+            for _d in doors_all.get(_b, ()):
+                if _d['rw'] == 0 and _d['rd'] == 0: continue
+                if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
+                _zp = page_of(_d['dest'])
+                if _zp is None or _zp == 0xd: continue
+                _bd.setdefault(_d['band'], set()).add(_zp)
+            if len(_bd) < 2: continue
+            for _band in sorted(_bd):
+                _ziel = sorted(_bd[_band])
+                if len(_ziel) != 1: continue
+                ETAGEN.append((_b, _zi, _band, _ziel[0]))
+    # ⛔ EINE EINZELNE ZEILE IST KEINE ETAGEN-UMSCHALTUNG. Fuehren beide Baender auf
+    # DASSELBE Blatt, reicht der Ort nicht ueber Ebenen - er haette dann eine Gast-Lage
+    # ohne Etagen-Bit und waere fuer immer unsichtbar.
+    _et_grp = {}
+    for (_b, _zi, _band, _zp) in ETAGEN:
+        _et_grp.setdefault((_b, _zi), set()).add(_zp)
+    ETAGEN = [e for e in ETAGEN if len(_et_grp[(e[0], e[1])]) >= 2]
+
+    # ---- RAEUME OHNE EIGENE TUEREN: die Etage kommt vom BESUCHER ---------------
+    # Nutzer 2026-09-01: "In ROOM 1120 ... da haette ich den Fahrstuhl erwartet."
+    # Die Fahrstuhlkabine ROOM1080 fuehrt NULL eigene Tuer-Datensaetze - sie wird
+    # betreten, nicht durchschritten; die Regel oben findet fuer sie nichts. Ihre Etage
+    # steckt in dem Raum, AUS DEM man kommt: zu ihr fuehren drei Tueren, aus ROOM1040
+    # (1F), ROOM10C0 (2F) und ROOM1120 (3F) - alle mit Band 0.
+    _hat_tuer = {b for b in zinfo
+                 if any(not (d['rw'] == 0 and d['rd'] == 0) for d in doors_all.get(b, ()))}
+    _et_vorh = {(e[0], e[1], e[3]) for e in ETAGEN}
+    _n_bes = 0
+    for _b in sorted(zinfo):
+        if _b in _hat_tuer: continue
+        for _zi in range(len(zinfo[_b])):
+            for _y in sorted(zinfo):
+                for _d in doors_all.get(_y, ()):
+                    if _d['rw'] == 0 and _d['rd'] == 0: continue
+                    if _d['dest'] != _b: continue
+                    _py = page_of(_y)
+                    if _py is None or _py == 0xd: continue
+                    if (_b, _zi, _py) in _et_vorh: continue
+                    ETAGEN.append((_b, _zi, _d['band'], _py))
+                    _et_vorh.add((_b, _zi, _py))
+                    _n_bes += 1
+
+    GAST = {}            # seite -> {(raum, zone)}
+    for (_b, _zi, _band, _zp) in ETAGEN:
+        if _zp != page_of(_b):
+            GAST.setdefault(_zp, set()).add((_b, _zi))
+    print(f"{len(ETAGEN)} Etagen-Zeilen aus dem Tuergraph ({_n_bes} ueber den BESUCHER), "
+          f"{sum(len(v) for v in GAST.values())} Gast-Lagen auf fremden Blaettern")
+
     def _ort(rid, zi):
         return (rid << 4) | zi
 
@@ -866,57 +932,219 @@ def main():
             return None
         return _ort(rid, zi)
 
-    grundrisse = {}          # (room, zi) -> (abbildung, kasten, zellen in Kartenpixeln)
+    grundrisse = {}      # (seite, raum, zone) -> (abbildung, kasten, zellen)
+    FELDX, FELDY, FELDW, FELDH = _gr.FELD
+
+    # ---- (1) Eingabe je Blatt: welche Orte, mit welchen Zellen und Tueren ----------
+    _eingabe = {}
     for _pg in range(13):
         _orte = []
         _rd = {}
-        for _b in sorted(zinfo):
-            if page_of(_b) != _pg: continue
-            for _zi, _bb in enumerate(zinfo[_b]):
-                _x0, _x1, _z0, _z1 = _bb
-                _z = [c for c in sca_all.get(_b, ())
-                      if _x0 <= c[0] + c[2] // 2 <= _x1 and _z0 <= c[1] + c[3] // 2 <= _z1]
-                if not _z: continue
-                _tu = []
-                for _d in doors_all.get(_b, ()):
-                    if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
-                    _e = dict(_d)
-                    _zt = _ort_von_punkt(_d['dest'], _d['nx'], _d['nz'])
-                    if _zt is None:
-                        _zt = _ort(_d['dest'], 0)
-                    _e['dest'] = _zt
-                    _tu.append(_e)
-                _o = _ort(_b, _zi)
-                _orte.append(_o)
-                _rd[_o] = (_z, _tu, stairs_all.get(_b, ()))
-        if not _orte: continue
-        _ex, _ey = _MED.get((_orte[0] >> 4) >> 12, (460.0, 460.0))
-        _B = _gr.Blatt(_orte, _rd, _ex, _ey)
-        _lage, _f, _k = _B.loesen()
-        if not _lage: continue
-        print(f"Seite {_pg:2d}: Grundriss aus {len(_lage)}/{len(_orte)} Orten, "
-              f"{_k[0]:.1f} % Ueberlappung, {_k[1]}/{len(_B.kanten)} Durchgaenge "
-              f"beruehrend, {_k[2]}x{_k[3]} px")
-        for _o, _st in _lage.items():
-            _px = _B.pixel(_o, _st)
-            if not _px: continue
-            _xs = [q[0] for q in _px]; _ys = [q[1] for q in _px]
-            _kasten = (min(_xs), min(_ys), max(_xs) - min(_xs) + 1, max(_ys) - min(_ys) + 1)
-            _rects = []
-            for (cx, cz, cw, cd) in _B.zellen(_o):
-                _pts = [_gr.dreh(cx, cz, _st[2], _st[3]),
-                        _gr.dreh(cx + cw, cz, _st[2], _st[3]),
-                        _gr.dreh(cx, cz + cd, _st[2], _st[3]),
-                        _gr.dreh(cx + cw, cz + cd, _st[2], _st[3])]
-                _X = [q[0] for q in _pts]; _Z = [q[1] for q in _pts]
-                _x0 = int(round(_st[0] + min(_X) / _B.ex))
-                _x1 = int(round(_st[0] + max(_X) / _B.ex))
-                _y0 = int(round(_st[1] - max(_Z) / _B.ey))
-                _y1 = int(round(_st[1] - min(_Z) / _B.ey))
-                if _x1 - _x0 < 1 or _y1 - _y0 < 1: continue
-                _rects.append((_x0, _y0, _x1 - _x0, _y1 - _y0))
-            if not _rects: continue
-            grundrisse[(_o >> 4, _o & 15)] = (_B.abbildung(_st), _kasten, _rects)
+        _hier = [(b, zi) for b in sorted(zinfo) if page_of(b) == _pg
+                 for zi in range(len(zinfo[b]))]
+        _hier += sorted(GAST.get(_pg, ()))
+        for _b, _zi in _hier:
+            if _zi >= len(zinfo[_b]): continue
+            _x0, _x1, _z0, _z1 = zinfo[_b][_zi]
+            _z = [c for c in sca_all.get(_b, ())
+                  if _x0 <= c[0] + c[2] // 2 <= _x1 and _z0 <= c[1] + c[3] // 2 <= _z1]
+            if not _z: continue
+            _tu = []
+            for _d in doors_all.get(_b, ()):
+                if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
+                _e = dict(_d)
+                _zt = _ort_von_punkt(_d['dest'], _d['nx'], _d['nz'])
+                if _zt is None:
+                    _zt = _ort(_d['dest'], 0)
+                _e['dest'] = _zt
+                _tu.append(_e)
+            _o = _ort(_b, _zi)
+            _orte.append(_o)
+            _rd[_o] = (_z, _tu, stairs_all.get(_b, ()))
+        if _orte:
+            _eingabe[_pg] = (_orte, _rd)
+
+    # ---- (2) BLATTGRAPH: zwei Blaetter haengen zusammen, wenn ein ORT auf beiden liegt
+    # DAS IST DER SCHLUESSEL ZUM STAPELN. Bis hierher bekam jedes Blatt seinen EIGENEN
+    # Massstab aus dem Einpassen - gemessen 458 Welteinheiten je Pixel auf dem Dach gegen
+    # 1524 auf B2, also derselbe Bau in Faktor 3,3 verschiedenen Groessen, je nachdem,
+    # welche Seite man aufschlaegt. Und ein Treppenhaus, das auf drei Blaettern liegt,
+    # stand auf jedem woanders.
+    # Ein Ort, der ueber Ebenen reicht (Treppenhaus, Fahrstuhl, ROOM1170s zweiter
+    # Bereich), ist auf beiden Blaettern DERSELBE Ort - er muss dort gleich herum und an
+    # derselben Stelle liegen. Damit haengen die Blaetter zusammen; gemessen bilden
+    # 1-2-3-4-5 (Polizeiwache) und 8-9-10-11 (Labor) je eine Komponente.
+    _teilt = collections.defaultdict(set)
+    for _pg, (_orte, _rd) in _eingabe.items():
+        for _o in _orte:
+            _teilt[_o].add(_pg)
+    _nb_blatt = collections.defaultdict(set)
+    for _o, _ps in _teilt.items():
+        _ps = sorted(_ps)
+        for _i in range(len(_ps)):
+            for _j in range(_i + 1, len(_ps)):
+                _nb_blatt[_ps[_i]].add(_ps[_j])
+                _nb_blatt[_ps[_j]].add(_ps[_i])
+    _komp = []
+    _gesehen = set()
+    for _pg in sorted(_eingabe):
+        if _pg in _gesehen: continue
+        _kk = []
+        _q = [_pg]
+        _gesehen.add(_pg)
+        while _q:
+            _p = _q.pop(0)
+            _kk.append(_p)
+            for _n in sorted(_nb_blatt[_p]):
+                if _n not in _gesehen and _n in _eingabe:
+                    _gesehen.add(_n)
+                    _q.append(_n)
+        _komp.append(sorted(_kk))
+    print("Blatt-Komponenten (Blaetter, die Orte teilen): " +
+          ", ".join("{" + ",".join(str(x) for x in k) + "}" for k in _komp))
+
+    # ---- (3) je Komponente loesen: Posen weitergeben, ausrichten, EINMAL einpassen --
+    for _k in _komp:
+        _stage = min((_eingabe[p][0][0] >> 4) >> 12 for p in _k)
+        _ex0, _ey0 = _MED.get(_stage, (460.0, 460.0))
+        # Reihenfolge: das groesste Blatt zuerst, dann immer das mit den meisten
+        # gemeinsamen Orten - so gibt jedes Blatt seine Posen an das naechste weiter.
+        _reihe = []
+        _offen = sorted(_k, key=lambda p: -len(_eingabe[p][0]))
+        _reihe.append(_offen.pop(0))
+        while _offen:
+            _hab = set(o for q in _reihe for o in _eingabe[q][0])
+            _offen.sort(key=lambda p: (-len(set(_eingabe[p][0]) & _hab),
+                                       -len(_eingabe[p][0])))
+            _reihe.append(_offen.pop(0))
+        _posen = {}
+        _bl = {}
+        _lg = {}
+        for _pg in _reihe:
+            _orte, _rd = _eingabe[_pg]
+            _B = _gr.Blatt(_orte, _rd, _ex0, _ey0)
+            _B.feste_lagen = dict((o, _posen[o]) for o in _orte if o in _posen)
+            _lage = _B.loesen_roh()
+            if not _lage: continue
+            for _o, _st in _lage.items():
+                _posen.setdefault(_o, _st)
+            _bl[_pg] = _B
+            _lg[_pg] = _lage
+        if not _lg: continue
+        # AUSRICHTEN: jedes Blatt so verschieben, dass die geteilten Orte aufeinander
+        # fallen. Breitensuche ueber den Blattgraph.
+        _start = _reihe[0] if _reihe[0] in _lg else sorted(_lg)[0]
+        _fest = set([_start])
+        _q = [_start]
+        while _q:
+            _p = _q.pop(0)
+            for _n in sorted(_nb_blatt[_p]):
+                if _n in _fest or _n not in _lg: continue
+                _dx = []
+                _dy = []
+                for _o in set(_lg[_p]) & set(_lg[_n]):
+                    _dx.append(_lg[_p][_o][0] - _lg[_n][_o][0])
+                    _dy.append(_lg[_p][_o][1] - _lg[_n][_o][1])
+                if _dx:
+                    _mx = sum(_dx) / len(_dx)
+                    _my = sum(_dy) / len(_dy)
+                    for _o in list(_lg[_n]):
+                        _ox, _oy, _kx, _sp = _lg[_n][_o]
+                        _lg[_n][_o] = (_ox + _mx, _oy + _my, _kx, _sp)
+                _fest.add(_n)
+                _q.append(_n)
+        # ---- EINPASSEN: JE BLATT, NICHT JE GEBAEUDE -----------------------------
+        # ⛔ GEMESSEN UND VERWORFEN (2026-09-02): ein GEMEINSAMER Massstab fuer alle
+        # Blaetter eines Gebaeudes laesst die Stockwerke stapeln - dieselbe Groesse, ein
+        # Ursprung, ein geteilter Raum an derselben Stelle. Er kostet aber genau das,
+        # was die Karte lesbar macht: die Vereinigung aller Blaetter der Polizeiwache
+        # misst 376x324 px, das Kartenfeld 132x140, also Faktor 0,32 - ROOM1120 faellt
+        # von 34x36 auf 14x15 px, das Dach auf einen 20-px-Kasten in einem leeren Blatt,
+        # und jedes Blatt nutzt noch ein Viertel seiner Flaeche. Der Grund: unsere
+        # Stockwerke sind NICHT deckungsgleich. Der Loeser kennt nur Nachbarschaft durch
+        # Tueren; wohin ein Stockwerk als Ganzes zeigt, sagen die Daten nicht. Es zu
+        # erzwingen hiesse raten.
+        # Der Nutzer hat Stapeln auch nie verlangt - sein Mass war "ein neues
+        # Kartenstueck schliesst da an, wo man den Raum davor verlassen hat".
+        # GEBLIEBEN ist der gemeinsame RAHMEN beim Loesen (feste_lagen): die Blaetter
+        # einer Komponente wachsen um dieselben Anker, ein geteilter Raum liegt ueberall
+        # gleich HERUM, und die Nachbarschaften bleiben ueber die Etagen hinweg
+        # stimmig. Nur das Einpassen geschieht je Blatt.
+        for _pg in sorted(_lg):
+            _B = _bl[_pg]
+            _B.ex, _B.ey = _ex0, _ey0
+            _roh = set()
+            for _o, _st in _lg[_pg].items():
+                _roh |= _B.pixel(_o, _st)
+            if not _roh: continue
+            _xs = [q[0] for q in _roh]; _ys = [q[1] for q in _roh]
+            _br = max(_xs) - min(_xs) + 1; _ho = max(_ys) - min(_ys) + 1
+            # Sicherheitsrand: das Entzerren schiebt bis zu sechs Pixel nach aussen.
+            _f = min(1.0, FELDW / float(_br), FELDH / float(_ho)) * 0.94
+            _minx, _miny = min(_xs), min(_ys)
+            # Das Entzerren schiebt nach aussen; passt das Blatt danach nicht mehr ins
+            # Feld, wird es kleiner gerechnet und noch einmal probiert (Seite 4 ragte
+            # sonst 143 px hoch aus dem 140 px hohen Feld).
+            for _versuch in range(4):
+                _B.ex = _ex0 / _f
+                _B.ey = _ey0 / _f
+                _neu_lage = dict((_o, (FELDX + (_st[0] - _minx) * _f,
+                                       FELDY + (_st[1] - _miny) * _f, _st[2], _st[3]))
+                                 for _o, _st in _lg[_pg].items())
+                _neu_lage = _gr.entzerren_komp({_pg: _B}, {_pg: _neu_lage})[_pg]
+                _end = set()
+                for _o, _st in _neu_lage.items():
+                    _end |= _B.pixel(_o, _st)
+                if not _end: break
+                _ex_ = [q[0] for q in _end]; _ey_ = [q[1] for q in _end]
+                if (max(_ex_) - min(_ex_) + 1) <= FELDW and                    (max(_ey_) - min(_ey_) + 1) <= FELDH:
+                    break
+                _f *= 0.92
+            # Nach dem Entzerren zurueck ins Feld schieben: das Schieben laeuft nach
+            # aussen, Seite 4 ragte danach 143 px hoch aus dem 140 px hohen Feld.
+            # MITTIG ins Feld setzen. Ohne das klebt jedes Blatt an der linken oberen
+            # Ecke des Kartenfeldes, weil dort das Einpassen seinen Ursprung hat - auf
+            # dem Abzug aller 13 Blaetter deutlich zu sehen.
+            _end = set()
+            for _o, _st in _neu_lage.items():
+                _end |= _B.pixel(_o, _st)
+            if _end:
+                _ex_ = [q[0] for q in _end]; _ey_ = [q[1] for q in _end]
+                _sx = FELDX + (FELDW - (max(_ex_) - min(_ex_) + 1)) // 2 - min(_ex_)
+                _sy = FELDY + (FELDH - (max(_ey_) - min(_ey_) + 1)) // 2 - min(_ey_)
+                if _sx or _sy:
+                    _neu_lage = dict((_o, (_st[0] + _sx, _st[1] + _sy, _st[2], _st[3]))
+                                     for _o, _st in _neu_lage.items())
+            for _o in sorted(_neu_lage):
+                _neu = _neu_lage[_o]
+                _px = _B.pixel(_o, _neu)
+                if not _px: continue
+                _xs2 = [q[0] for q in _px]
+                _ys2 = [q[1] for q in _px]
+                _kasten = (min(_xs2), min(_ys2),
+                           max(_xs2) - min(_xs2) + 1, max(_ys2) - min(_ys2) + 1)
+                _rects = []
+                for (cx, cz, cw, cd) in _B.zellen(_o):
+                    _pts = [_gr.dreh(cx, cz, _neu[2], _neu[3]),
+                            _gr.dreh(cx + cw, cz, _neu[2], _neu[3]),
+                            _gr.dreh(cx, cz + cd, _neu[2], _neu[3]),
+                            _gr.dreh(cx + cw, cz + cd, _neu[2], _neu[3])]
+                    _X = [q[0] for q in _pts]
+                    _Z = [q[1] for q in _pts]
+                    _x0 = int(round(_neu[0] + min(_X) / _B.ex))
+                    _x1 = int(round(_neu[0] + max(_X) / _B.ex))
+                    _y0 = int(round(_neu[1] - max(_Z) / _B.ey))
+                    _y1 = int(round(_neu[1] - min(_Z) / _B.ey))
+                    if _x1 - _x0 < 1 or _y1 - _y0 < 1: continue
+                    _rects.append((_x0, _y0, _x1 - _x0, _y1 - _y0))
+                if not _rects: continue
+                grundrisse[(_pg, _o >> 4, _o & 15)] = (_B.abbildung(_neu), _kasten, _rects)
+            _kn = _B.kosten(_neu_lage)
+            print("Seite %2d: Grundriss aus %d/%d Orten, %.1f %% Ueberlappung, "
+                  "%d/%d Durchgaenge beruehrend, %dx%d px, %.0f Welteinheiten je Pixel"
+                  % (_pg, len(_lg[_pg]), len(_eingabe[_pg][0]), _kn[0], _kn[1],
+                     len(_B.kanten), _kn[2], _kn[3], _B.ex))
+
     print(f"{len(grundrisse)} Orte mit Grundriss aus der Kollisionsgeometrie")
 
     rows = []
@@ -928,7 +1156,7 @@ def main():
             if pr is None: continue
             # ⛔ Ein Ort, eine Zeichnung. Hat der Loeser fuer diese Zone einen Grundriss
             # geliefert, gilt der - sonst stuenden beide Zeichnungen uebereinander.
-            if (b, i) in grundrisse: continue
+            if (page_of(b), b, i) in grundrisse: continue
             for var in (0, 1):
                 rows.append((b + var, bb, pr[0], pr[1], i, zid))
             zid_von[(b, i)] = zid
@@ -959,11 +1187,16 @@ def main():
         for i, bb in enumerate(zs):
             pr = assign.get((b, i))
             if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
+    def _gr(room, zi, pg=None):
+        """Der Grundriss dieses Ortes auf DIESEM Blatt - ohne Angabe auf seinem
+        eigenen. Ein Ort kann auf mehreren Blaettern liegen (Etagen)."""
+        return grundrisse.get(((page_of(room) if pg is None else pg), room, zi))
+
     def _geo(pg, r, room=None, zi=None):
         """Die Flaeche, in der eine Marke liegt: das gemalte Rechteck - oder, seit die
         Raeume als Grundriss gezeichnet werden, dessen Kasten (Kennung rect = 255)."""
         if r == 255:
-            g = grundrisse.get((room, zi))
+            g = _gr(room, zi, pg)
             if g: return g[1]
             t = synth.get((room, zi))
             if t: return (t[0], t[1], t[2], t[3])
@@ -971,14 +1204,14 @@ def main():
         R = rects(pg)
         return R[r] if r < len(R) else None
 
-    def to_map(room, zi, wx, wz):
+    def to_map(room, zi, wx, wz, pg_wunsch=None):
         # ⛔ GRUNDRISS ZUERST. Seit der Loeser jeden Raum aus seiner Kollision setzt,
         # ist SEINE Abbildung die gueltige - die Marken muessen derselben folgen, sonst
         # rechnen sie gegen ein Rechteck, das gar nicht mehr gezeichnet wird, und die
         # Tuersymbole liegen irgendwo (im Abzug des 3F-Blattes fehlten sie ganz).
         # Formel wie in der Engine (re15_map_zone_abbildung):
         #     mx = (A*wx + B*wz) >> 16 + C ,  my = (D*wx + E*wz) >> 16 + F
-        g = grundrisse.get((room, zi))
+        g = _gr(room, zi, pg_wunsch)
         if g:
             (A, B2, C, D, E, F), kasten, _z = g
             mx = (A * wx + B2 * wz) // 65536 + C
@@ -986,7 +1219,7 @@ def main():
             kx, ky, kw, kh = kasten
             mx = min(max(mx, kx), kx + kw - 1)
             my = min(max(my, ky), ky + kh - 1)
-            return page_of(room), 255, mx, my
+            return (page_of(room) if pg_wunsch is None else pg_wunsch), 255, mx, my
         e = zpos.get((room, zi))
         if not e: return None
         (x0, x1, z0, z1), pg, r = e
@@ -1049,7 +1282,7 @@ def main():
         return out
     MASS = _stage_massstab()
 
-    synth = {}        # (room, zi) -> (x, y, w, h, [zellen], abbildung|None)
+    synth = {}        # (seite, raum, zone) -> (x, y, w, h, [zellen], abbildung|None)
     # Die Grundrisse aus dem Loeser haben Vorrang: sie sind zusammenhaengend, ihre
     # Durchgaenge beruehren sich, und sie tragen eine affine Abbildung fuer den Marker.
     for _k, (_ab, _kasten, _rects) in sorted(grundrisse.items()):
@@ -1058,7 +1291,7 @@ def main():
         pg = page_of(b)
         if pg is None or pg == 0xd: continue
         for zi, bb in enumerate(zinfo[b]):
-            if (b, zi) in synth: continue          # hat schon einen Grundriss
+            if (pg, b, zi) in synth: continue       # hat schon einen Grundriss
             if assign.get((b, zi)) is not None: continue
             x0, x1, z0, z1 = bb
             if x1 <= x0 or z1 <= z0: continue
@@ -1147,7 +1380,7 @@ def main():
                 if iw < 1 or ih < 1: continue
                 zellen.append((ix0, iy0, iw, ih))
             if not zellen: continue
-            synth[(b, zi)] = (int(round(ox)), int(round(oy)),
+            synth[(pg, b, zi)] = (int(round(ox)), int(round(oy)),
                               max(1, int(round(w))), max(1, int(round(h))), zellen, None)
     print(f"{len(synth)} Zonen ohne Rechteck bekommen eine Zeichnung aus ihrer Kollisions-Box")
 
@@ -1156,28 +1389,38 @@ def main():
     # traegt die Zeile rect = 255.
     synth_liste = []          # (x, y, w, h, erste_zelle, n_zellen, abbildung)
     synth_zellen = []
-    for (b, zi) in sorted(synth):
-        x, y, w, h, zellen, ab = synth[(b, zi)]
+    for (pg, b, zi) in sorted(synth):
+        x, y, w, h, zellen, ab = synth[(pg, b, zi)]
         si = len(synth_liste)
         synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen),
                             ab or (0, 0, 0, 0, 0, 0)))
         synth_zellen.extend(zellen)
-        pg = page_of(b)
         bb = zinfo[b][zi]
+        # ⛔ EINE ZEILE JE BLATT. Ein Ort, der ueber mehrere Ebenen reicht, hat auf
+        # jedem seiner Blaetter eine eigene Lage - aber DIESELBE Zonen-Nummer (zid), denn
+        # er ist derselbe Ort und die Marken haengen daran. Die Zweitzeile traegt
+        # etage = 1; ihre Sichtbarkeit haengt dann am ETAGEN-Bit, nicht am Zonen-Bit
+        # (sonst kommt der Fehler zurueck, den der Nutzer am 2026-09-01 gemeldet hat:
+        # "im Room 1130 gibt es unten links schon ein Rechteck, obwohl ich noch im
+        # Eingangsbereich stehe" - dort galt eine 3F-Zeichnung als bekannt, sobald man
+        # das Treppenhaus irgendwo betreten hatte).
+        gast = 1 if pg != page_of(b) else 0
+        if (b, zi) not in zid_von:
+            zid_von[(b, zi)] = zid
+            zid += 1
         for var in (0, 1):
-            rows.append((b + var, bb, pg, 255, zi, zid, si + 1))
-        zid_von[(b, zi)] = zid
-        zid += 1
+            rows.append((b + var, bb, pg, 255, zi, zid_von[(b, zi)], si + 1, gast))
 
 
     o.append("static const re15_map_zone_t s_map_zones[] = {")
     for _row in rows:
         room, bb, pg, r, zi, zd = _row[:6]
         _sy = _row[6] if len(_row) > 6 else 0
+        _et = _row[7] if len(_row) > 7 else 0
         ei = eichung.get((room & 0xFFF0, zi), (0, 0, 0, 0))
         _o = ZONE_ORIENT.get((room & 0xFFF0, zi), (0, 0))
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:3d}, {zi}, {zd:3d},"
-                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d} }},")
+                 f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d}, {_et} }},")
     o.append("};")
     belegte_rects = {(p_, r_) for (p_, r_) in assign.values()}
 
@@ -1206,86 +1449,17 @@ def main():
     #       ROOM1060 belegt Seite 2 Rect 9 uv(168,40); Seite 3 Rect 9 und Seite 4 Rect 0
     #       tragen dieselbe uv. Das Ziel-Rechteck wird deshalb ueber die Kachel-uv
     #       gesucht - kein Raten, eine Gleichheitspruefung.
-    floors = []          # (room, zone, band, page, rect)
-    for b in sorted(zinfo):
-        # ⛔ JE ZONE, nicht je Raum. ROOM1170 hat zwei Bereiche mit voellig
-        # verschiedenen Rechtecken; wer die Etagen am Rechteck der Zone 0 festmacht,
-        # sucht die Zweitzeichnung an der falschen Kachel (fruehes Ergebnis: Band 0
-        # landete auf Seite 4 Rect 4, und das ist ROOM1130).
-        for zi in range(len(zinfo[b])):
-            eigene = assign.get((b, zi))
-            if eigene is None: continue
-            pg0, r0 = eigene
-            uv0 = rect_uv(pg0, r0)
-            baender = {}
-            for d in doors_all.get(b, []):
-                if d['rw'] == 0 and d['rd'] == 0: continue
-                if zone_at(b, d['lx'], d['lz']) != zi: continue
-                zp = page_of(d['dest'])
-                if zp is None or zp == 0xd: continue
-                baender.setdefault(d['band'], set()).add(zp)
-            if len(baender) < 2: continue
-            for band in sorted(baender):
-                ziel = sorted(baender[band])
-                if len(ziel) != 1: continue
-                zp = ziel[0]
-                treffer = [i for i, _ in enumerate(rects(zp))
-                           if rect_uv(zp, i) == uv0 and
-                              ((zp, i) == (pg0, r0) or (zp, i) not in belegte_rects)]
-                if len(treffer) != 1: continue
-                floors.append((b, zi, band, zp, treffer[0]))
-    # ⛔ EINE EINZELNE ETAGEN-ZEILE IST KEINE ETAGEN-UMSCHALTUNG. Bleibt fuer einen
-    # Bereich nur EINE Zeile uebrig (weil die anderen Baender an der Rechteck-Vergabe
-    # gescheitert sind), beschreibt sie keine zweite Zeichnung - sie beansprucht nur ein
-    # fremdes Rechteck. ROOM10A0 kam so zu einer Zeile auf Seite 2 Rect 9, und das ist
-    # ROOM1060s Zeichnung: das Treppenhaus waere aufgeleuchtet, sobald der Spieler in
-    # 10A0 auf Band 8 steht. Solche Einzelzeilen fliegen raus; die Zone hat ohnehin ihre
-    # eigene Seite/Rect.
-    _grp = {}
-    for e in floors: _grp.setdefault((e[0], e[1]), set()).add((e[3], e[4]))
-    floors = [e for e in floors if len(_grp[(e[0], e[1])]) >= 2]
+    # ⛔ AUS DEM VORLAUF, NICHT MEHR UEBER DIE KACHEL-uv (2026-09-02). Frueher wurde
+    # die Zweitzeichnung als GEMALTES Rechteck des Originals gesucht, ueber die
+    # Gleichheit der Kachel-uv - das setzte voraus, dass der Ort ueberhaupt ein
+    # Kunst-Rechteck hat, und lieferte 12 Zeilen. Seit der Loeser den Ort auf JEDEM
+    # Blatt setzt, das eines seiner Baender erreicht (Vorlauf ETAGEN/GAST), ist die
+    # Zweitzeichnung ein richtiger Grundriss und die Zeile traegt rect = 255.
+    floors = [(b, zi, band, zp, 255) for (b, zi, band, zp) in ETAGEN]
 
-    # ---- RAEUME OHNE EIGENE TUEREN: die Etage kommt vom BESUCHER ---------------
-    # ⛔ Nutzer 2026-09-01: "In ROOM 1120 ... da haette ich den Fahrstuhl erwartet."
-    # Die Fahrstuhlkabine ROOM1080 fuehrt NULL eigene Tuer-Datensaetze - sie wird
-    # betreten, nicht durchschritten. Die Ableitung oben braucht aber Tueren DES Raums
-    # und findet fuer sie deshalb nichts, obwohl der Kuenstler ihre Zeichnung auf drei
-    # Blaettern gesetzt hat: uv (168,40) liegt auf Seite 2 Rect 9, Seite 3 Rect 9 UND
-    # Seite 4 Rect 0. (Das Treppenhaus ROOM1060 traegt uv (128,40) und ist nur auf
-    # Seite 2 und 3 gezeichnet - auf dem 3F-Blatt gibt es es nicht.)
-    # Regel: fuehrt ein Raum Y mit Rechteck auf Seite P eine Tuer mit Band B zu Raum X,
-    # und traegt X' eigene Zeichnung dieselbe Kachel-uv wie ein Rechteck auf P, dann
-    # gehoert X auf Seite P mit Band B. Alles gemessen - Kachel-uv und Tuer-Band.
-    _vorhanden = {(e[0], e[1], e[3]) for e in floors}
-    _n_gast = 0
-    for b in sorted(zinfo):
-        for zi in range(len(zinfo[b])):
-            pr = assign.get((b, zi))
-            if pr is None: continue
-            uv0 = rect_uv(pr[0], pr[1])
-            for y in sorted(zinfo):
-                for d in doors_all.get(y, []):
-                    if d['rw'] == 0 and d['rd'] == 0: continue
-                    if d['dest'] != b: continue
-                    zy = zone_at(y, d['lx'], d['lz'])
-                    py = assign.get((y, zy))
-                    if py is None or py[0] == pr[0]: continue
-                    treffer = [i for i, _ in enumerate(rects(py[0]))
-                               if rect_uv(py[0], i) == uv0 and (py[0], i) not in belegte_rects]
-                    if len(treffer) != 1: continue
-                    # ⛔ Je SEITE eine Zeile, nicht je Band. Zur Fahrstuhlkabine
-                    # fuehren drei Tueren - ROOM1040 (1F), ROOM10C0 (2F), ROOM1120 (3F) -
-                    # und ALLE tragen Band 0: die Etage der Kabine steckt nicht im Band,
-                    # sondern in dem Raum, aus dem man kommt. Mit Band als Schluessel
-                    # kaeme nur die erste der drei Zeilen zustande, und auf den anderen
-                    # Blaettern bliebe ihr Kasten leer.
-                    if (b, zi, py[0]) in _vorhanden: continue
-                    floors.append((b, zi, d['band'], py[0], treffer[0]))
-                    _vorhanden.add((b, zi, py[0]))
-                    _n_gast += 1
-    if _n_gast:
-        print(f"{_n_gast} Etagen-Eintraege ueber den BESUCHER abgeleitet "
-              f"(Raeume ohne eigene Tueren, z.B. die Fahrstuhlkabine)")
+    # Filter und Besucher-Regel stehen im VORLAUF (ETAGEN), damit der Loeser die
+    # Gast-Lagen schon beim Setzen kennt.
+
 
     # ---- BLATT EINER MARKE FOLGT IHREM EIGENEN BAND ---------------------------
     # ⛔ Nutzer 2026-09-01: "Bei ROOM 1170 zeigt er die Tuer, die eigentlich fuer die
@@ -1319,14 +1493,14 @@ def main():
     # Der Nutzer: "die [Tuer] ist auf der Karte nicht eingezeichnet ... auserdem
     # muesste links im kleinen rechteck die Treppe eingezeichnet sein."
     # Position: Welt -> Zone -> Rechteck (dieselbe lineare Abbildung wie der Marker).
-    def snap_grundriss(room, zi, mx, my, senk):
+    def snap_grundriss(room, zi, mx, my, senk, pg=None):
         """Wie snap_wall, aber auf der SILHOUETTE des Grundrisses statt auf der
         Original-Kachel. snap_wall liest die gemalte Kachel (DATA/MAP0x.PIX,
         Palettenindex 0 = ausserhalb) - fuer einen Grundriss gibt es keine Kachel,
         dafuer die exakte Zellgeometrie, und die ist die bessere Quelle.
         Gleiche Kostenregel wie snap_wall: quer zur Wand wird ein schmales Fenster
         mitgesucht und doppelt gewichtet, damit die Wandachse fuehrend bleibt."""
-        g = grundrisse.get((room, zi))
+        g = _gr(room, zi, pg)
         if not g: return mx, my, (3 if senk else 0)
         belegt = set()
         for (x, y, w, h) in g[2]:
@@ -1459,11 +1633,17 @@ def main():
             A, B = st_list[_i], st_list[_j]
             za, zb = zone_at(b, A['x'], A['z']), zone_at(b, B['x'], B['z'])
             if za is None or zb is None: continue
-            pa, pb = to_map(b, za, A['x'], A['z']), to_map(b, zb, B['x'], B['z'])
-            if not pa or not pb or pa[0] != pb[0]: continue
-            cx, cy = (pa[2] + pb[2]) // 2, (pa[3] + pb[3]) // 2
-            st_merge[_i] = (pa[0], pa[1], cx, cy)
-            st_merge[_j] = (pb[0], pb[1], cx, cy)
+            # ⛔ IN WELTKOORDINATEN MITTELN, NICHT IN KARTENPIXELN. Die beiden Enden
+            # einer Treppe tragen VERSCHIEDENE Baender (hier 0 und 2, bzw. 2 und 4) und
+            # gehoeren damit auf verschiedene BLAETTER - eine Treppe verbindet ja zwei
+            # Ebenen. Wer sie in Kartenpixeln mittelt, friert dabei EIN Blatt ein: nach
+            # dem Umbau auf Gast-Lagen landeten so alle vier Treppen-Datensaetze von
+            # ROOM1170 auf dem Dach-Blatt, und auf 3F fehlte die Treppe ganz
+            # (Pin test_map_mark_band). Gemittelt wird deshalb der WELT-Punkt; jedes Ende
+            # wird anschliessend mit der Abbildung SEINES Blattes projiziert.
+            if za is None or zb is None: continue
+            st_merge[_i] = ((A['x'] + B['x']) // 2, (A['z'] + B['z']) // 2)
+            st_merge[_j] = ((A['x'] + B['x']) // 2, (A['z'] + B['z']) // 2)
             _used.add(_i); _used.add(_j)
 
         for kind, lst in ((0, doors_all.get(b, [])), (1, st_list)):
@@ -1472,38 +1652,20 @@ def main():
                 wz = m['lz'] if kind == 0 else m['z']
                 zi = zone_at(b, wx, wz)
                 if zi is None: continue
-                if kind == 1 and _n in st_merge:
-                    pg, r, mx, my = st_merge[_n]
-                else:
-                    mp = to_map(b, zi, wx, wz)
-                    if not mp: continue
-                    pg, r, mx, my = mp
-                # Blatt nach dem BAND der Marke (siehe blatt_fuer_band): eine Zone, die
-                # ueber mehrere Etagen gezeichnet ist, verteilt ihre Marken auf die
-                # Etagen, statt alle auf ihrer Vorgabeseite zu sammeln.
+                # ⛔ DAS BLATT KOMMT ZUERST, DANN DIE PROJEKTION. Frueher wurde die
+                # Marke auf dem EIGENEN Blatt projiziert und danach auf das Blatt ihres
+                # Bandes umgerechnet - erst per Rechteck-Versatz, spaeter per Einpassung
+                # in ein fremdes Kunst-Rechteck. Seit der Ort auf jedem seiner Blaetter
+                # eine eigene Lage vom Loeser hat, ist das ueberfluessig: die Marke wird
+                # gleich mit der Abbildung IHRES Blattes gerechnet.
                 _bl = blatt_fuer_band(b, zi, m.get('band', 0))
-                if _bl and _bl != (pg, r):
-                    _R0 = _geo(pg, r, b, zi); _R1 = _geo(_bl[0], _bl[1])
-                    if _R0 and _R1:
-                        if r == 255:
-                            # ⛔ GENAU SO EINPASSEN WIE DER ZEICHNER. Die Zweit-
-                            # zeichnung einer Etage wird gleichmaessig in ihr Rechteck
-                            # skaliert (re15_inv_screen.c); die Marke muss dieselbe
-                            # Abbildung nehmen, sonst steht das Tuersymbol neben dem
-                            # Raum. Ohne diesen Zweig fiel die Umlegung fuer Grundriss-
-                            # Zonen ganz aus - und damit Nutzer-Punkt 1 ("ROOM1170
-                            # zeigt die Tuer der unteren Etage schon auf ROOF").
-                            _gx, _gy, _gw, _gh = _R0
-                            _rx, _ry, _rw, _rh = _R1
-                            _f = min(_rw * 256 // max(_gw, 1), _rh * 256 // max(_gh, 1))
-                            if _f < 1: _f = 1
-                            _ox = _rx + (_rw - _gw * _f // 256) // 2
-                            _oy = _ry + (_rh - _gh * _f // 256) // 2
-                            mx = _ox + (mx - _gx) * _f // 256
-                            my = _oy + (my - _gy) * _f // 256
-                        else:
-                            mx += _R1[0] - _R0[0]; my += _R1[1] - _R0[1]
-                        pg, r = _bl
+                _pgw = _bl[0] if _bl else None
+                if kind == 1 and _n in st_merge:
+                    wx, wz = st_merge[_n]        # gemeinsamer WELT-Punkt beider Enden
+                mp = to_map(b, zi, wx, wz, _pgw)
+                if not mp: mp = to_map(b, zi, wx, wz)
+                if not mp: continue
+                pg, r, mx, my = mp
                 if kind == 0:
                     # ---- WANDACHSE AUS DEM TUER-RECHTECK ---------------------
                     # Das Trigger-Rechteck ist LAENGS DER WAND gestreckt: man laeuft
@@ -1522,7 +1684,7 @@ def main():
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
                     if r == 255:
-                        mx, my, mkind = snap_grundriss(b, zi, mx, my, senk)
+                        mx, my, mkind = snap_grundriss(b, zi, mx, my, senk, pg)
                     else:
                         mx, my, mkind = snap_wall(pg, r, mx, my, senk)
                     # ⛔ HIER NOCH NICHT VERWERFEN. Bis v0.3.80 fiel eine Marke schon in

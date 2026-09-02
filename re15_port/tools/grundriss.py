@@ -59,6 +59,109 @@ def dreh(wx, wz, k, sp):
     return (wz, -wx)
 
 
+def entzerren_komp(bl, lg, runden=600, grenze=6):
+    """Entzerrt ALLE Blaetter eines Gebaeudes GEMEINSAM.
+
+    ⛔ EIN GETEILTER ORT DARF SICH BEWEGEN - ABER UEBERALL GLEICH. Ein erster Wurf
+    nagelte die geteilten Orte fest (sie halten ja das Stapeln der Stockwerke) und kam
+    auf Seite 3 nicht unter 20 % Ueberlappung: dort ueberlappten festgenagelte Orte
+    einander, und nichts durfte ausweichen. Wird dagegen JEDE Bewegung eines Ortes auf
+    allen seinen Blaettern zugleich ausgefuehrt, bleibt das Stapeln erhalten und der
+    Entzerrer behaelt seine Freiheit.
+
+    Ursache der Ueberlappung ist das Neurunden: die Polizeiwache faellt von 585 auf
+    ~1400 Welteinheiten je Pixel, wenn alle fuenf Blaetter denselben Massstab bekommen,
+    und jede Zelle rundet dabei neu.
+    """
+    pix = {}
+    for pg in lg:
+        for o, st in lg[pg].items():
+            pix[(pg, o)] = bl[pg].pixel(o, st)
+    ueb = {}
+    for pg in lg:
+        ns = sorted(lg[pg])
+        for i in range(len(ns)):
+            for j in range(i + 1, len(ns)):
+                n = len(pix[(pg, ns[i])] & pix[(pg, ns[j])])
+                if n:
+                    ueb[(pg, ns[i], ns[j])] = n
+    weg = {}
+    for _ in range(runden):
+        if not ueb:
+            break
+        best = max(ueb.items(), key=lambda kv: kv[1])[0]
+        pg, a, b = best
+        wer = ander = None
+        for kand, geg in ((b, a), (a, b)):
+            if weg.get(kand, 0) < grenze:
+                wer, ander = kand, geg
+                break
+        if wer is None:
+            del ueb[best]
+            continue
+        cw = (sum(p[0] for p in pix[(pg, wer)]) / float(len(pix[(pg, wer)])),
+              sum(p[1] for p in pix[(pg, wer)]) / float(len(pix[(pg, wer)])))
+        ca = (sum(p[0] for p in pix[(pg, ander)]) / float(len(pix[(pg, ander)])),
+              sum(p[1] for p in pix[(pg, ander)]) / float(len(pix[(pg, ander)])))
+        dx, dy = cw[0] - ca[0], cw[1] - ca[1]
+        if abs(dx) >= abs(dy):
+            sx, sy = (1.0 if dx >= 0 else -1.0), 0.0
+        else:
+            sx, sy = 0.0, (1.0 if dy >= 0 else -1.0)
+        # ⛔ UEBERLAPPUNG IST DIE SCHRANKE, DER DURCHGANG DAS ZIEL. Ein erster Wurf
+        # schob nur nach Ueberlappung: Seite 3 fiel von 20,6 % auf 12,8 % - und die
+        # beruehrenden Durchgaenge von 6 von 7 auf 3 von 7. Dieselbe Falle wie beim
+        # Posen-Nachlauf. Ein Zug wird deshalb nur angenommen, wenn er KEINEN Durchgang
+        # kostet; sonst wird die andere Richtung und der andere Partner probiert.
+        vorher = dict((pg2, bl[pg2].kontakte(
+                          dict((o, pix[(pg2, o)]) for o in lg[pg2])))
+                      for pg2 in lg if wer in lg[pg2])
+        alt_lage = dict((pg2, lg[pg2][wer]) for pg2 in lg if wer in lg[pg2])
+        alt_pix = dict((pg2, pix[(pg2, wer)]) for pg2 in lg if wer in lg[pg2])
+
+        def anwenden(vx, vy):
+            for pg2 in list(alt_lage):
+                ox, oy, k, sp = alt_lage[pg2]
+                lg[pg2][wer] = (ox + vx, oy + vy, k, sp)
+                pix[(pg2, wer)] = bl[pg2].pixel(wer, lg[pg2][wer])
+
+        def zuruecknehmen():
+            for pg2 in list(alt_lage):
+                lg[pg2][wer] = alt_lage[pg2]
+                pix[(pg2, wer)] = alt_pix[pg2]
+
+        gut = False
+        for (vx, vy) in ((sx, sy), (sy, sx), (-sy, -sx)):
+            if vx == 0.0 and vy == 0.0:
+                continue
+            anwenden(vx, vy)
+            ok = True
+            for pg2 in vorher:
+                if bl[pg2].kontakte(dict((o, pix[(pg2, o)])
+                                         for o in lg[pg2])) < vorher[pg2]:
+                    ok = False
+                    break
+            if ok:
+                gut = True
+                break
+            zuruecknehmen()
+        if not gut:
+            del ueb[best]
+            continue
+        weg[wer] = weg.get(wer, 0) + 1
+        for pg2 in list(alt_lage):
+            for o in lg[pg2]:
+                if o == wer:
+                    continue
+                schl = (pg2, min(o, wer), max(o, wer))
+                n = len(pix[(pg2, wer)] & pix[(pg2, o)])
+                if n:
+                    ueb[schl] = n
+                elif schl in ueb:
+                    del ueb[schl]
+    return lg
+
+
 class Blatt(object):
     def __init__(self, zimmer, rdts, ex, ey):
         self.zimmer = [z for z in zimmer if z in rdts]
@@ -66,6 +169,18 @@ class Blatt(object):
         self.ex = float(ex)
         self.ey = float(ey)
         self._zellen = {}
+        # FESTE POSEN: Orte, deren Drehung/Spiegelung ein bereits geloestes Blatt
+        # DERSELBEN Komponente vorgibt. Ein Ort, der auf zwei Blaettern liegt
+        # (Treppenhaus, Fahrstuhl), muss dort gleich herum liegen - sonst stapeln die
+        # Stockwerke nicht.
+        self.feste_posen = {}
+        # FESTE LAGEN: vollstaendige Zustaende (ox, oy, Drehung, Spiegelung) aus einem
+        # schon geloesten Blatt derselben Komponente. Damit waechst dieses Blatt um
+        # DIESELBEN Anker wie das vorige - sonst legt jeder Loeserlauf sein Stockwerk um
+        # eine andere Wurzel, und die Vereinigung aller Blaetter wird unnoetig gross
+        # (gemessen 372x342 px statt der 225x323 des groessten Einzelblattes, was den
+        # gemeinsamen Massstab von 705 auf 1404 Welteinheiten je Pixel verdoppelte).
+        self.feste_lagen = {}
         self.kanten = []
         for b in self.zimmer:
             for d in rdts[b][1]:
@@ -196,6 +311,17 @@ class Blatt(object):
             j = k
         return raus
 
+    def _posen(self, b):
+        """Die zulaessigen Posen eines Ortes: alle acht - oder genau die eine, die ein
+        anderes Blatt derselben Komponente schon festgelegt hat."""
+        f = self.feste_lagen.get(b)
+        if f is not None:
+            return [(f[2], f[3])]
+        f = self.feste_posen.get(b)
+        if f is not None:
+            return [f]
+        return [(k, sp) for k in range(4) for sp in (0, 1)]
+
     def zellen(self, rid):
         """Die FLAECHE des Raums: Kollisionszellen mit geschlossenen Loechern."""
         if rid in self._zellen:
@@ -271,6 +397,28 @@ class Blatt(object):
         ho = (max(ys) - min(ys) + 1) if ys else 0
         return (doppelt / max(1, len(alle)) * 100.0, beruehrt, br, ho)
 
+    def kontakte(self, pix):
+        """Zahl der Durchgaenge, deren beide Enden sich beruehren - aus einem fertigen
+        Pixel-Cache. Gleiche Regel wie kosten(), nur ohne Neuberechnung."""
+        n = 0
+        for (a, pa, b, pb) in self.kanten:
+            if a not in pix or b not in pix:
+                continue
+            nah = False
+            for (x, y) in pix[a]:
+                for dx in (-2, -1, 0, 1, 2):
+                    for dy in (-2, -1, 0, 1, 2):
+                        if (x + dx, y + dy) in pix[b]:
+                            nah = True
+                            break
+                    if nah:
+                        break
+                if nah:
+                    break
+            if nah:
+                n += 1
+        return n
+
     def _ausruecken(self, b, st, pix, k, sp, anker):
         """Schiebt den Raum vom Anker weg, bis er sich mit dem Bestand nicht mehr
         ueberlagert. Richtung: vom Tueranker zur Raummitte - das ist die Normale der
@@ -308,7 +456,10 @@ class Blatt(object):
         for (a, _, b, _) in self.kanten:
             grad[a] += 1
             grad[b] += 1
-        wurzel = max(self.zimmer, key=lambda b: (grad[b], -b))
+        # Ein Ort mit FESTER Pose ist die beste Wurzel: an ihm haengt die Ausrichtung
+        # zum Nachbarblatt.
+        wurzel = max(self.zimmer,
+                     key=lambda b: (1 if b in self.feste_posen else 0, grad[b], -b))
         nb = collections.defaultdict(list)
         for (a, pa, b, pb) in self.kanten:
             nb[a].append((b, pa, pb))
@@ -317,23 +468,31 @@ class Blatt(object):
         for (a, pa, b, pb) in self.notkanten:
             nnb[a].append((b, pa, pb))
             nnb[b].append((a, pb, pa))
-        lage = {wurzel: (0.0, 0.0, 0, 0)}
-        pix = {wurzel: self.pixel(wurzel, lage[wurzel])}
-        q = [wurzel]
+        # Feste Lagen zuerst setzen - sie sind die Anker, an denen dieses Blatt zu den
+        # anderen Stockwerken passt.
+        lage = {}
+        for b in self.zimmer:
+            if b in self.feste_lagen:
+                lage[b] = self.feste_lagen[b]
+        if lage:
+            wurzel = sorted(lage)[0]
+        else:
+            lage = {wurzel: (0.0, 0.0) + self.feste_posen.get(wurzel, (0, 0))}
+        pix = dict((b, self.pixel(b, lage[b])) for b in lage)
+        q = sorted(lage)
 
         def anheften(a, b, pa, pb):
             """b an die schon gesetzte Tuer von a haengen, beste der 8 Posen."""
             p = self.punkt(a, lage[a], *pa)
             best = None
-            for k in range(4):
-                for sp in (0, 1):
-                    d = dreh(pb[0], pb[1], k, sp)
-                    st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
-                    st = self._ausruecken(b, st, pix, k, sp, pb)
-                    pb2 = self.pixel(b, st)
-                    ueb = sum(len(pb2 & v) for v in pix.values())
-                    if best is None or ueb < best[0]:
-                        best = (ueb, st, pb2)
+            for (k, sp) in self._posen(b):
+                d = dreh(pb[0], pb[1], k, sp)
+                st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
+                st = self._ausruecken(b, st, pix, k, sp, pb)
+                pb2 = self.pixel(b, st)
+                ueb = sum(len(pb2 & v) for v in pix.values())
+                if best is None or ueb < best[0]:
+                    best = (ueb, st, pb2)
             lage[b] = best[1]
             pix[b] = best[2]
             q.append(b)
@@ -380,8 +539,8 @@ class Blatt(object):
         mx = (min(xs) + max(xs)) / 2.0
         my = (min(ys) + max(ys)) / 2.0
         best = None
-        for k in range(4):
-            for sp in (0, 1):
+        for (k, sp) in self._posen(b):
+            if True:
                 roh = self.pixel(b, (0.0, 0.0, k, sp))
                 if not roh:
                     continue
@@ -425,6 +584,8 @@ class Blatt(object):
         for _ in range(runden):
             bewegt = False
             for b in list(lage):
+                if b in self.feste_lagen:
+                    continue
                 anker = None
                 for (a, pa, pb) in nbb[b]:
                     if a in lage and a != b:
@@ -454,8 +615,8 @@ class Blatt(object):
                     return f
 
                 best = (guete(lage[b], pix[b]), lage[b], pix[b])
-                for k in range(4):
-                    for sp in (0, 1):
+                for (k, sp) in self._posen(b):
+                    if True:
                         d = dreh(pb[0], pb[1], k, sp)
                         st = (p[0] - d[0] / self.ex, p[1] + d[1] / self.ey, k, sp)
                         st = self._ausruecken(b, st, {o: v for o, v in pix.items()
@@ -490,6 +651,8 @@ class Blatt(object):
                 if d < 0.6:
                     continue
                 for wer, vz in ((b, 1.0), (a, -1.0)):
+                    if wer in self.feste_lagen:
+                        continue
                     ox, oy, k, sp = lage[wer]
                     s = min(1.0, d) * 0.5 * vz
                     kand = (ox + dx / d * s, oy + dy / d * s, k, sp)
@@ -502,6 +665,59 @@ class Blatt(object):
                     break
             if not bewegt:
                 break
+        return lage
+
+    def entzerren(self, lage, fest=(), runden=60):
+        """Nach dem GEMEINSAMEN Einpassen mehrerer Blaetter ueberlappen Zeichnungen,
+        die vorher sauber nebeneinander lagen: das Raster ist groeber geworden (die
+        Polizeiwache faellt von 585 auf 1292 Welteinheiten je Pixel, wenn alle fuenf
+        Blaetter denselben Massstab bekommen), und jede Zelle rundet neu. Gemessen stieg
+        Seite 3 dadurch auf 30,7 % Ueberlappung.
+        Hier werden die Orte pixelweise auseinandergeschoben, bis nichts mehr doppelt
+        liegt - AUSSER den festgenagelten: das sind die Orte, die auch auf einem anderen
+        Blatt liegen. Wuerden die sich bewegen, stapelten die Stockwerke nicht mehr."""
+        fest = set(fest)
+        weg = dict((b, 0) for b in lage)      # wie weit ein Ort schon geschoben wurde
+        GRENZE = 4                            # Pixel; mehr zerreisst die Durchgaenge
+        for _ in range(runden):
+            pix = dict((b, self.pixel(b, lage[b])) for b in lage)
+            namen = sorted(lage)
+            paare = []
+            for i in range(len(namen)):
+                for j in range(i + 1, len(namen)):
+                    a, b = namen[i], namen[j]
+                    n = len(pix[a] & pix[b])
+                    if n:
+                        paare.append((n, a, b))
+            if not paare:
+                break
+            # ⛔ EIN PAAR, DAS SICH NICHT BEWEGEN DARF, BEENDET NICHT DIE ARBEIT.
+            # Ein erster Wurf brach beim schlimmsten Paar ab, wenn BEIDE festgenagelt
+            # waren - Seite 3 blieb dadurch bei 19,5 % stehen, obwohl die uebrigen Paare
+            # loesbar waren. Jetzt wird das naechste loesbare genommen.
+            paare.sort(key=lambda t: -t[0])
+            wer = ander = None
+            for (_n, a, b) in paare:
+                for kand, geg in ((b, a), (a, b)):
+                    if kand not in fest and weg[kand] < GRENZE:
+                        wer, ander = kand, geg
+                        break
+                if wer is not None:
+                    break
+            if wer is None:
+                break
+            weg[wer] += 1
+            cx = sum(p[0] for p in pix[wer]) / float(len(pix[wer]))
+            cy = sum(p[1] for p in pix[wer]) / float(len(pix[wer]))
+            ax = sum(p[0] for p in pix[ander]) / float(len(pix[ander]))
+            ay = sum(p[1] for p in pix[ander]) / float(len(pix[ander]))
+            dx, dy = cx - ax, cy - ay
+            if abs(dx) >= abs(dy):
+                schritt = (1.0 if dx >= 0 else -1.0, 0.0)
+            else:
+                schritt = (0.0, 1.0 if dy >= 0 else -1.0)
+            ox, oy, k, sp = lage[wer]
+            lage[wer] = (ox + schritt[0], oy + schritt[1], k, sp)
         return lage
 
     def einpassen(self, lage, feld=FELD):
@@ -520,6 +736,21 @@ class Blatt(object):
         for b, (ox, oy, k, sp) in lage.items():
             neu[b] = (feld[0] + (ox - min(xs)) * f, feld[1] + (oy - min(ys)) * f, k, sp)
         return neu, f
+
+    def loesen_roh(self):
+        """Die Lage OHNE Einpassen - im Massstab ex/ey, Ursprung frei. Wird gebraucht,
+        wenn mehrere Blaetter eines Gebaeudes gemeinsam eingepasst werden sollen: erst
+        ausrichten, dann EIN Massstab fuer alle."""
+        roh = self.aufbauen()
+        if not roh:
+            return {}
+        besser = None
+        for lage in (dict(roh), self.verbessern(dict(roh))):
+            lg = self.zusammenziehen(lage)
+            k = self.kosten(lg)
+            if besser is None or (-k[1], k[0]) < (-besser[1][1], besser[1][0]):
+                besser = (lg, k)
+        return besser[0]
 
     def loesen(self, feld=FELD):
         roh = self.aufbauen()

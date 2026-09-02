@@ -79,28 +79,39 @@ int main(void)
     }
 
 
-    /* (1) Nichts besucht: das Treppenhaus ist auf dem 2F-Blatt noch nicht bekannt. */
-    CHECK("frisch: Seite 3 Rect 8 ist nicht besucht",
-          re15_map_rect_state(3, 8) != RE15_MAP_RECT_VISITED &&
-          re15_map_rect_state(3, 8) != RE15_MAP_RECT_CURRENT);
+    /* ⛔ GEPRUEFT WIRD DIE GAST-ZEILE, NICHT MEHR EIN KUNST-RECHTECK (2026-09-02).
+     * Bis dahin lief die Etagen-Zweitzeichnung ueber ein gemaltes Rechteck des
+     * Originals (Seite 3 Rect 8); der Loeser setzt den Ort jetzt auf JEDEM Blatt, das
+     * eines seiner Baender erreicht, und die Zweitzeichnung ist eine eigene Zeile mit
+     * etage = 1. Die AUSSAGEN des Pins sind unveraendert. */
+    {
+        const re15_map_zone_t *z1F = re15_map_zone_fuer(0x1060, 0, 2);
+        const re15_map_zone_t *z2F = re15_map_zone_fuer(0x1060, 0, 3);
+        if (!z1F || !z2F) { printf("  FAIL: ROOM1060 fehlt auf 1F oder 2F\n"); return 1; }
+        CHECK("ROOM1060s 2F-Zeichnung ist eine GAST-Zeile (etage=1)", z2F->etage == 1);
+        CHECK("ROOM1060s 1F-Zeichnung ist die Hauptzeile (etage=0)", z1F->etage == 0);
 
-    /* (2) Treppenhaus im ERDGESCHOSS betreten (Band 0 -> Seite 2 Rect 8). */
-    stelle(0x1060, 27100, 25400, 0);
-    CHECK("nach dem 1F-Besuch ist ROOM1060 auf dem 1F-Blatt aktuell",
-          re15_map_rect_state(2, 8) == RE15_MAP_RECT_CURRENT);
-    CHECK("die 2F-Zeichnung desselben Raums bleibt dunkel (das war der Bug)",
-          re15_map_rect_state(3, 8) != RE15_MAP_RECT_VISITED &&
-          re15_map_rect_state(3, 8) != RE15_MAP_RECT_CURRENT);
+        /* (1) Nichts besucht. */
+        CHECK("frisch: die 2F-Zeichnung ist nicht besucht",
+              !re15_map_zone_etage_besucht(z2F));
 
-    /* (3) Erst der Gang nach oben (Band 4) macht die 2F-Zeichnung sichtbar. */
-    stelle(0x1060, 27100, 25400, 4);
-    CHECK("auf Band 4 ist ROOM1060 auf dem 2F-Blatt aktuell",
-          re15_map_rect_state(3, 8) == RE15_MAP_RECT_CURRENT);
+        /* (2) Treppenhaus im ERDGESCHOSS betreten (Band 0 = 1F). */
+        stelle(0x1060, 27100, 25400, 0);
+        CHECK("nach dem 1F-Besuch ist ROOM1060 bekannt",
+              re15_map_zone_visited(z1F));
+        CHECK("die 2F-Zeichnung desselben Raums bleibt dunkel (das war der Bug)",
+              !re15_map_zone_etage_besucht(z2F));
 
-    /* (4) Und sie BLEIBT sichtbar, wenn man den Raum verlaesst. */
-    stelle(0x1130, -3000, 0, 0);
-    CHECK("nach dem Verlassen bleibt die begangene 2F-Zeichnung gruen",
-          re15_map_rect_state(3, 8) == RE15_MAP_RECT_VISITED);
+        /* (3) Erst der Gang nach oben (Band 4) macht die 2F-Zeichnung sichtbar. */
+        stelle(0x1060, 27100, 25400, 4);
+        CHECK("auf Band 4 wird die 2F-Zeichnung bekannt",
+              re15_map_zone_etage_besucht(z2F));
+
+        /* (4) Und sie BLEIBT sichtbar, wenn man den Raum verlaesst. */
+        stelle(0x1130, -3000, 0, 0);
+        CHECK("nach dem Verlassen bleibt die begangene 2F-Zeichnung bekannt",
+              re15_map_zone_etage_besucht(z2F));
+    }
 
     /* (5) Der Kartenschirm malt kein unzugeordnetes Rechteck. Geprueft auf dem
      *     1F-Blatt (Seite 2): dessen Rect 0 (180,69,32,96) und Rect 5 (180,59,48,32)

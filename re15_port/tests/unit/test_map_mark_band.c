@@ -27,6 +27,8 @@ static int g_fail;
 int main(void)
 {
     int n, k, roof_tueren = 0, roof_treppen = 0, f3_treppen = 0, f3_tueren = 0;
+    const re15_map_zone_t *z1170;
+    int zid1170;
 
     printf("=== Karte: Marke folgt ihrem Band (ROOM1170 ROOF gegen 3F) ===\n");
     re15_map_visited_reset();
@@ -41,6 +43,13 @@ int main(void)
      * Fuer die Zweitzeichnung auf 3F bleibt Rect 3 gueltig - dorthin legt
      * blatt_fuer_band die Marken der unteren Baender, eingepasst in das Rechteck
      * des Kuenstlers. */
+    z1170 = re15_map_zone_fuer(0x1170, 1, 4);
+    if (!z1170) { printf("  FAIL: ROOM1170s zweiter Bereich liegt nicht auf 3F\n"); return 1; }
+    zid1170 = z1170->zid;
+    printf("  [Gast-Lage] ROOM1170 z1 auf Seite 4, zid %d, Kennung etage=%d\n",
+           zid1170, (int)z1170->etage);
+    CHECK("ROOM1170s zweiter Bereich ist auf 3F eine GAST-Lage", z1170->etage == 1);
+
     n = re15_map_mark_count();
     for (k = 0; k < n; k++) {
         int pg, r, mx, my, kind, zid = 0, zid2 = 255;
@@ -53,7 +62,11 @@ int main(void)
              * nur, was nach DRAUSSEN fuehrt. */
             else if (zid2 == 255) roof_tueren++;
         }
-        if (pg == 4 && r == 3) { if (kind >= 4) f3_treppen++; else f3_tueren++; }
+        /* ⛔ AUCH AUF 3F GEHT ES JETZT JE BLATT, NICHT JE RECHTECK (2026-09-02).
+         * ROOM1170s zweiter Bereich hat auf dem 3F-Blatt eine EIGENE Lage vom Loeser
+         * (Gast-Zeile, rect = 255) statt eines eingepassten Kunst-Rechtecks. Erkannt
+         * wird er an seiner Zonen-Nummer. */
+        if (pg == 4 && zid == zid1170) { if (kind >= 4) f3_treppen++; else f3_tueren++; }
     }
     printf("  [ROOF Seite 5] %d Tueren nach draussen, %d Treppen\n",
            roof_tueren, roof_treppen);

@@ -156,8 +156,17 @@ int main(void)
               re15_map_zone_current()->idx == 1);
         pl->y = 0; re15_collision_set_band(0);            /* unterste Ebene, Band 0 */
         re15_map_zone_update(0x1170, -18000, -22000);
-        CHECK("zweiter Bereich bei Band 0: 3F-Blatt, Seite 4 Rect 3",
-              re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
+        {   /* ⛔ KEIN KUNST-RECHTECK MEHR (2026-09-02): der zweite Bereich hat auf 3F
+             * eine eigene Lage vom Loeser (Gast-Zeile). Geprueft wird, dass die
+             * Etagen-Tabelle bei Band 0 auf Seite 4 zeigt und dort eine Zeile liegt. */
+            int fp = -1, fr = -1;
+            const re15_map_zone_t *zg = re15_map_zone_fuer(0x1170, 1, 4);
+            CHECK("zweiter Bereich bei Band 0: Etagen-Zeile zeigt auf das 3F-Blatt",
+                  re15_map_floor_lookup(0x1170, 1, 0, &fp, &fr) && fp == 4);
+            CHECK("und dort liegt eine Gast-Zeichnung", zg && zg->etage == 1);
+            CHECK("die ist bekannt, sobald man auf diesem Band stand",
+                  zg && re15_map_zone_etage_besucht(zg));
+        }
         pl->y = 0; re15_collision_set_band(0);
     }
 
@@ -237,8 +246,9 @@ int main(void)
         CHECK("unbesuchte Zonen zeigen KEINE Marken", vorher == 0);
         g_current_room_id = 0x1170;
         re15_map_zone_update(0x1170, -18000, -22000);   /* der kleine Bereich */
-        CHECK("der kleine Bereich liegt bei Band 0 auf dem 3F-Blatt (Seite 4 Rect 3)",
-              re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT);
+{ int fp2 = -1, fr2 = -1;
+          CHECK("der kleine Bereich liegt bei Band 0 auf dem 3F-Blatt",
+                re15_map_floor_lookup(0x1170, 1, 0, &fp2, &fr2) && fp2 == 4); }
         for (k = 0; k < n; k++) {
             int pg, r, mx, my, kind;
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
@@ -277,8 +287,25 @@ int main(void)
              * OP_FILL, auf dem Schirm liegen aber ANDERE LINE-Ops frueher. Und die feste
              * Farbabfrage ging kaputt, als die Tueren die Wandfarbe uebernahmen. Groesse
              * ist das stabile Merkmal: alles andere auf diesem Schirm fuellt groesser. */
+            /* ⛔ "KLEINER FILL" IST SEIT DEM GRUNDRISS-UMBAU KEIN MERKMAL MEHR.
+             * Die Raumflaechen werden jetzt selbst aus OP_FILL gezeichnet, und eine
+             * einzelne Kollisionszelle oder ein Stueck Wandlinie ist ebenfalls klein -
+             * der erste "kleine FILL" auf Seite 5 war eine Zelle von ROOM1170 bei
+             * (174,88), keine Marke. Angesetzt wird deshalb an der MARKEN-TABELLE:
+             * gesucht wird der erste Fill, der die Stelle einer sichtbaren Marke
+             * ueberdeckt und klein genug fuer ein Symbol ist. */
             if (first_mark < 0 && ops[i].kind == RE15_INV_OP_FILL &&
-                ops[i].w <= 7 && ops[i].h <= 7) first_mark = i;
+                ops[i].w <= 7 && ops[i].h <= 7) {
+                int mk, mn = re15_map_mark_count();
+                for (mk = 0; mk < mn; mk++) {
+                    int mpg, mrc, mmx, mmy, mkd;
+                    if (!re15_map_mark_get(mk, &mpg, &mrc, &mmx, &mmy, &mkd)) continue;
+                    if (mpg != (int)g_inv_screen.map_page) continue;
+                    if (mmx < ops[i].x || mmx >= ops[i].x + ops[i].w) continue;
+                    if (mmy < ops[i].y || mmy >= ops[i].y + ops[i].h) continue;
+                    first_mark = i; break;
+                }
+            }
             /* Der SPIELER-MARKER ist der 8x8-Quad von der TEX-Seite bei uv(224,128).
              * Er muss GANZ OBEN liegen (Nutzer 2026-08-31: "der Marker muss IMMER ueber
              * den Symbolen sein") — sonst deckt ihn ein Tuerbalken oder eine

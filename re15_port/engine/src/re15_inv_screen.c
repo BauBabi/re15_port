@@ -363,8 +363,16 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         int zpg = zn ? zn->page : -1, zrc = zn ? zn->rect : -1, fp2, fr2;
         /* Auf einer Etagen-Umschaltung wird in das Rechteck DIESER Etage projiziert. */
         if (zn && re15_map_floor_lookup(zn->room, zn->idx,
-                                        re15_map_player_band(), &fp2, &fr2))
-            { zpg = fp2; zrc = fr2; }
+                                        re15_map_player_band(), &fp2, &fr2)) {
+            /* ⛔ AUF DEM ETAGEN-BLATT GILT DESSEN EIGENE LAGE. Seit der Loeser den Ort
+             * auf jedem Blatt setzt, das eines seiner Baender erreicht, hat er dort
+             * eine eigene Zeichnung mit eigener Abbildung - der Marker muss die
+             * nehmen, sonst rechnet er mit der Abbildung des anderen Stockwerks. */
+            const re15_map_zone_t *zg = re15_map_zone_fuer(zn->room, zn->idx,
+                                                           (unsigned)fp2);
+            zpg = fp2; zrc = fr2;
+            if (zg) { zn = zg; zrc = zg->rect; }
+        }
         if (zn && zpg == (int)g_inv_screen.map_page) {
             int rx, ry, rw, rh;
             /* Zonen ohne Karten-Rechteck des Originals tragen eine SCHEMA-
@@ -1702,99 +1710,11 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 if (rs == RE15_MAP_RECT_UNMAPPED && !re15_map_stock_mode()) continue;
                 if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }
                 else if (rs == RE15_MAP_RECT_CURRENT) { cr = 192; cg = 24;  cb = 24; }
-                /* ---- ZWEITZEICHNUNG EINER ETAGE ALS GRUNDRISS ------------------
-                 * Belegt dieses Rechteck eine ZONE ueber eine Etagen-Zeile und hat
-                 * die einen Grundriss, dann wird der gezeichnet - an die STELLE des
-                 * Rechtecks versetzt (der Kuenstler hat den Platz auf dem Blatt
-                 * gewaehlt, die Form kommt aus der Kollision). Sonst stuende die
-                 * gemalte Kachel als einziger Fremdkoerper auf einem Blatt aus
-                 * lauter Grundrissen. */
-                {
-                    int ez = re15_map_etagen_zone((unsigned)st->map_page, (unsigned)i);
-                    const re15_map_zone_t *zez = ez >= 0 ? re15_map_zone_by_index(ez) : 0;
-                    int gx, gy, gw, gh, g0, gn;
-                    if (zez && re15_map_zone_synth(zez, &gx, &gy, &gw, &gh, &g0, &gn)) {
-                        int rx0 = (int)(int16_t)mu16(a), ry0 = (int)(int16_t)mu16(a + 2u);
-                        int rw0 = (int)(int16_t)mu16(a + 4u), rh0 = (int)(int16_t)mu16(a + 6u);
-                        /* ⛔ IN DAS RECHTECK EINPASSEN, nicht nur verschieben. Ein
-                         * Grundriss ist im eigenen Massstab bis 133 px breit, das
-                         * Rechteck der Zweitzeichnung dagegen klein (Seite 4 Rect 0 ist
-                         * 16x16). Bloss versetzt lag ROOM1080s Zeichnung als riesiger
-                         * Block quer ueber dem halben 3F-Blatt. Der Kuenstler hat den
-                         * PLATZ gewaehlt - die Form kommt aus der Kollision, die GROESSE
-                         * aus seinem Rechteck. Gleichmaessig, damit die Form stimmt. */
-                        int fq = (rw0 * 256 / (gw > 0 ? gw : 1));
-                        int fq2 = (rh0 * 256 / (gh > 0 ? gh : 1));
-                        int f = fq < fq2 ? fq : fq2;
-                        int ox0, oy0, kk;
-                        if (f < 1) f = 1;
-                        ox0 = rx0 + (rw0 - gw * f / 256) / 2;
-                        oy0 = ry0 + (rh0 - gh * f / 256) / 2;
-                        #define GX(v) (ox0 + ((v) - gx) * f / 256)
-                        #define GY(v) (oy0 + ((v) - gy) * f / 256)
-                        for (kk = 0; kk < gn; kk++) {
-                            int cx, cy, cw2, ch2, ss;
-                            re15_inv_op_t *qz;
-                            if (!re15_map_synth_cell(g0 + kk, &cx, &cy, &cw2, &ch2)) continue;
-                            if (e.n >= e.max) break;
-                            qz = &e.ops[e.n++];
-                            qz->kind = RE15_INV_OP_FILL; qz->page = 0; qz->clut = 0;
-                            qz->abe = 0; qz->u = 0; qz->v = 0;
-                            qz->x = (int16_t)GX(cx); qz->y = (int16_t)GY(cy);
-                            qz->w = (int16_t)(GX(cx + cw2) - GX(cx) > 0
-                                              ? GX(cx + cw2) - GX(cx) : 1);
-                            qz->h = (int16_t)(GY(cy + ch2) - GY(cy) > 0
-                                              ? GY(cy + ch2) - GY(cy) : 1);
-                            qz->r = (uint8_t)(cr * 5 / 14);
-                            qz->g = (uint8_t)(cg * 5 / 14);
-                            qz->b = (uint8_t)(cb * 5 / 14);
-                            for (ss = 0; ss < 4; ss++) {
-                                int laenge = (ss < 2) ? cw2 : ch2, lauf = -1, t;
-                                for (t = 0; t <= laenge; t++) {
-                                    int frei = 0;
-                                    if (t < laenge) {
-                                        switch (ss) {
-                                        case 0:  frei = !synth_deckt(g0, gn, cx + t, cy - 1); break;
-                                        case 1:  frei = !synth_deckt(g0, gn, cx + t, cy + ch2); break;
-                                        case 2:  frei = !synth_deckt(g0, gn, cx - 1, cy + t); break;
-                                        default: frei = !synth_deckt(g0, gn, cx + cw2, cy + t); break;
-                                        }
-                                    }
-                                    if (frei) { if (lauf < 0) lauf = t; continue; }
-                                    if (lauf < 0) continue;
-                                    if (e.n < e.max) {
-                                        re15_inv_op_t *qw = &e.ops[e.n++];
-                                        qw->kind = RE15_INV_OP_FILL; qw->page = 0;
-                                        qw->clut = 0; qw->abe = 0; qw->u = 0; qw->v = 0;
-                                        qw->r = (uint8_t)cr; qw->g = (uint8_t)cg; qw->b = (uint8_t)cb;
-                                        switch (ss) {
-                                        case 0: qw->x = (int16_t)GX(cx + lauf); qw->y = (int16_t)GY(cy);
-                                                qw->w = (int16_t)(GX(cx + t) - GX(cx + lauf) > 0
-                                                                  ? GX(cx + t) - GX(cx + lauf) : 1);
-                                                qw->h = 1; break;
-                                        case 1: qw->x = (int16_t)GX(cx + lauf); qw->y = (int16_t)(GY(cy + ch2) - 1);
-                                                qw->w = (int16_t)(GX(cx + t) - GX(cx + lauf) > 0
-                                                                  ? GX(cx + t) - GX(cx + lauf) : 1);
-                                                qw->h = 1; break;
-                                        case 2: qw->x = (int16_t)GX(cx); qw->y = (int16_t)GY(cy + lauf);
-                                                qw->w = 1;
-                                                qw->h = (int16_t)(GY(cy + t) - GY(cy + lauf) > 0
-                                                                  ? GY(cy + t) - GY(cy + lauf) : 1); break;
-                                        default:qw->x = (int16_t)(GX(cx + cw2) - 1); qw->y = (int16_t)GY(cy + lauf);
-                                                qw->w = 1;
-                                                qw->h = (int16_t)(GY(cy + t) - GY(cy + lauf) > 0
-                                                                  ? GY(cy + t) - GY(cy + lauf) : 1); break;
-                                        }
-                                    }
-                                    lauf = -1;
-                                }
-                            }
-                        }
-                        #undef GX
-                        #undef GY
-                        continue;
-                    }
-                }
+                /* (Die Etagen-Zweitzeichnung war hier bis 2026-09-02 ein
+                 * Notbehelf: der Grundriss des Ortes, gleichmaessig in das Rechteck
+                 * des Kuenstlers eingepasst. Sie ist entfallen - der Loeser setzt den
+                 * Ort jetzt auf JEDEM Blatt, das eines seiner Baender erreicht, und
+                 * die Gast-Zeile zeichnet sich im Schema-Durchgang selbst.) */
                 sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                      (int16_t)mu16(a), (int16_t)mu16(a + 2u),
                      (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
@@ -1836,10 +1756,18 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     const re15_map_zone_t *cur2;
                     if (!zg || zg->page != st->map_page || zg->synth != zn2->synth)
                         continue;
-                    if (re15_map_zone_visited(zg) && rs2 == RE15_MAP_RECT_UNVISITED)
+                    /* ⛔ GAST-ZEILE AM ETAGEN-BIT. Eine Zeichnung auf einem fremden
+                     * Etagen-Blatt darf NICHT auftauchen, weil man den Ort auf einer
+                     * ANDEREN Ebene betreten hat (Nutzer 2026-09-01: "im Room 1130 gibt
+                     * es unten links schon ein Rechteck, obwohl ich noch im
+                     * Eingangsbereich stehe"). */
+                    if ((zg->etage ? re15_map_zone_etage_besucht(zg)
+                                   : re15_map_zone_visited(zg)) &&
+                        rs2 == RE15_MAP_RECT_UNVISITED)
                         rs2 = RE15_MAP_RECT_VISITED;
                     cur2 = re15_map_zone_current();
-                    if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx)
+                    if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx &&
+                        (!zg->etage || re15_map_zone_etage_besucht(zg)))
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
                 if (re15_map_stock_mode()) rs2 = RE15_MAP_RECT_UNMAPPED;

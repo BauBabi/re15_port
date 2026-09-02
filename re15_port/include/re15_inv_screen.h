@@ -316,6 +316,10 @@ extern re15_inv_screen_t g_inv_screen;
  * bc/bd/be=0, ca=0, 2600=0x20, 2602=0, 2603=0; LAB_80049524 @0x800495e8-0x8004969c:
  * 25cd/2608 + 25dc/25de from the equipped slot). Call on the menu-open edge. */
 void re15_inv_screen_open(void);
+
+/* MESSSCHIENE (Plattform PC): den naechsten gezeichneten Inventar-Frame als BMP
+ * abziehen. Traegt RE15_MAP_SHOT_SWEEP. Kein Spielverhalten. */
+void re15_inv_shot_now(const char *path);
 int  re15_inv_open_allowed(void);   /* Messschiene: darf der Schirm gerade auf? */
 
 /* Advance the free-running ECG registers exactly like the head of FUN_80048a44

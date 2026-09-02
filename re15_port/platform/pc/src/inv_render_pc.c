@@ -709,6 +709,16 @@ static void raster_op(const re15_inv_op_t *o)
     }
 }
 
+/* MESSSCHIENE: der naechste gezeichnete Inventar-Frame wird nach hier abgezogen. */
+static char s_shot_pending[512];
+void re15_inv_shot_now(const char *path)
+{
+    size_t n = strlen(path);
+    if (n >= sizeof s_shot_pending) n = sizeof s_shot_pending - 1;
+    memcpy(s_shot_pending, path, n);
+    s_shot_pending[n] = 0;
+}
+
 /* debug: RE15_INV_FB_SHOT=<path.bmp> + RE15_INV_FB_SHOT_AT=<inv-frame> — dump the pure
  * SOFTWARE framebuffer s_fb5 as a 24-bit BMP, bypassing the SDL present/readback path
  * entirely (a detached display session garbles SDL_RenderReadPixels — memory note
@@ -840,6 +850,15 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
     map_page_check();                 /* MAP wave: sync the MAP PIX page (0x8004c328) */
     memset(s_fb5, 0, sizeof s_fb5);   /* cleared draw buffer (screen fully covered) */
     for (i = n - 1; i >= 0; i--) raster_op(&ops[i]);   /* back-to-front */
+    {   /* MESSSCHIENE: Abzug auf Zuruf (re15_inv_shot_now). Traegt den Blatt-Durchlauf
+         * RE15_MAP_SHOT_SWEEP - alle 13 Kartenblaetter in EINEM Lauf statt in 13 Laeufen
+         * a vier Minuten. Reine Debug-Schiene, kein Spielverhalten. */
+        if (s_shot_pending[0]) {
+            fb_dump_bmp(s_shot_pending);
+            fprintf(stderr, "[inv] shot -> %s\n", s_shot_pending);
+            s_shot_pending[0] = 0;
+        }
+    }
     {   /* software-framebuffer BMP dump (display-session independent) */
         static int s_fb_shot_done = 0;
         const char *fp = s_fb_shot_done ? NULL : getenv("RE15_INV_FB_SHOT");

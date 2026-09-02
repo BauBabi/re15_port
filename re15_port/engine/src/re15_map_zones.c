@@ -42,7 +42,7 @@ static uint8_t s_visited[32];    /* 1 Bit je ZONE (Index = Tabellen-Index / 2) *
  * war - links unterhalb von ROOM1130, also genau da, wo der Nutzer sie sah
  * (2026-09-01: "unten links schon ein Rechteck nach dem Flur, obwohl ich noch im
  * Eingangsbereich stehe"). Gemerkt wird deshalb die BEGANGENE Etage. */
-static uint8_t s_visited_floor[8];   /* 1 Bit je Zeile in s_map_floors */
+static uint8_t s_visited_floor[16];  /* 1 Bit je Zeile in s_map_floors */
 #define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
 
 static int floor_row(unsigned room, int zone, int band);
@@ -84,6 +84,10 @@ static int zone_index_at(unsigned room, int32_t x, int32_t z)
     for (int i = 0; i < ZONE_COUNT; i++) {
         const re15_map_zone_t *zn = &s_map_zones[i];
         if (zn->room != (unsigned short)room) continue;
+        /* Gast-Zeilen (derselbe Ort auf einem fremden Etagen-Blatt) sind hier nicht
+         * gemeint: sie tragen dieselbe Zone und wuerden die Suche nur verdoppeln. Wer
+         * die Lage auf einem bestimmten Blatt braucht, nimmt re15_map_zone_fuer. */
+        if (zn->etage) continue;
         {   /* ⛔ NAECHSTGELEGENE statt der ERSTEN Zone als Rueckfall (Nutzer
              * 2026-08-31: "Der positionsmarker ist immer noch falsch im kleinen
              * Bereich ... wenn ich die Tuer wieder zurueck gehe ... auch wieder
@@ -112,6 +116,32 @@ const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z)
 {
     int i = zone_index_at(room, x, z);
     return (i >= 0) ? &s_map_zones[i] : 0;
+}
+
+const re15_map_zone_t *re15_map_zone_fuer(unsigned room, int idx, unsigned page)
+{
+    int i;
+    for (i = 0; i < ZONE_COUNT; i++)
+        if (s_map_zones[i].room == (unsigned short)room &&
+            s_map_zones[i].idx == idx && s_map_zones[i].page == page)
+            return &s_map_zones[i];
+    return 0;
+}
+
+int re15_map_zone_etage_besucht(const re15_map_zone_t *zn)
+{
+    int j;
+    if (!zn) return 0;
+    /* Ein Ort kann auf demselben Blatt mehrere Baender fuehren (die Fahrstuhlkabine
+     * wird von drei Raeumen aus betreten, alle mit Band 0). Bekannt ist die Zeichnung,
+     * sobald EINES dieser Baender begangen wurde. */
+    for (j = 0; j < FLOOR_COUNT; j++) {
+        if (s_map_floors[j].room != zn->room) continue;
+        if ((int)s_map_floors[j].zone != zn->idx) continue;
+        if ((unsigned)s_map_floors[j].page != zn->page) continue;
+        if ((s_visited_floor[j >> 3] >> (j & 7)) & 1) return 1;
+    }
+    return 0;
 }
 
 void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
@@ -399,27 +429,6 @@ int re15_map_floor_row_visited(unsigned room, int zone, int band)
 {
     int f = floor_row(room, zone, band);
     return (f >= 0) ? ((s_visited_floor[f >> 3] >> (f & 7)) & 1) : 0;
-}
-
-/* Die ZONE, die dieses Rechteck ueber eine ETAGEN-Zeile belegt (-1 = keine).
- * Gebraucht vom Zeichner: seit jeder Raum als Grundriss gezeichnet wird, waere die
- * gemalte Original-Kachel der Zweitzeichnung der einzige Fremdkoerper auf dem Blatt
- * (Abzug 3F: ein heller Block quer ueber ROOM1130s Flur). Statt sie wegzulassen -
- * sie traegt die Aussage "dieses Band gehoert auf diese Etage" - wird der Grundriss
- * des Raums an die STELLE des Rechtecks gezeichnet. */
-int re15_map_etagen_zone(unsigned page, unsigned rect)
-{
-    int i, j;
-    for (i = 0; i < FLOOR_COUNT; i++) {
-        if ((unsigned)s_map_floors[i].page != page) continue;
-        if ((unsigned)s_map_floors[i].rect != rect) continue;
-        for (j = 0; j < ZONE_COUNT; j++) {
-            if (s_map_zones[j].room != s_map_floors[i].room) continue;
-            if (s_map_zones[j].idx != (int)s_map_floors[i].zone) continue;
-            return j;
-        }
-    }
-    return -1;
 }
 
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)

@@ -3838,6 +3838,32 @@ re_title:;
             /* RE15_MAP_SHOT_PAGE=<hexseite>: dieses Blatt vollstaendig aufdecken und
              * anzeigen. Reine Messschiene fuer den Bild-Abzug - der Fortschritts-
              * Zustand selbst haengt am Pin test_map_floor_visited. */
+            /* RE15_MAP_SHOT_SWEEP=<praefix>: ALLE 13 Kartenblaetter in EINEM Lauf
+             * abziehen (<praefix>00.bmp .. <praefix>12.bmp). Reine Messschiene - der
+             * Gesamtblick auf die Karte kostete sonst 13 Laeufe a vier Minuten, weil
+             * jeder Lauf den Weg bis zum ersten offenen Inventar neu fahren muss.
+             * Es wird jeweils der Frame NACH dem Blattwechsel abgezogen, damit die
+             * Seite fertig aufgebaut ist. */
+            { static int s_sw_init = 0, s_sw_pg = 0, s_sw_tick = 0, s_sw_fertig = 0;
+              const char *sw = getenv("RE15_MAP_SHOT_SWEEP");
+              if (sw && *sw && !s_sw_fertig) {
+                  if (!s_sw_init) {
+                      int p; for (p = 0; p < 13; p++) re15_map_debug_reveal_page((unsigned)p);
+                      s_sw_init = 1;
+                  }
+                  if (re15_menu_is_open() && g_inv_screen.substate == 1 &&
+                      g_inv_screen.item_state == 1) {
+                      g_inv_screen.map_page = (uint8_t)s_sw_pg;
+                      s_sw_tick++;
+                      if (s_sw_tick >= 3) {
+                          char pfad[512];
+                          snprintf(pfad, sizeof pfad, "%s%02d.bmp", sw, s_sw_pg);
+                          re15_inv_shot_now(pfad);
+                          s_sw_tick = 0;
+                          if (++s_sw_pg >= 13) { s_sw_fertig = 1; running = 0; }
+                      }
+                  }
+              } }
             { static int s_msp = 0; const char *mp = getenv("RE15_MAP_SHOT_PAGE");
               if (mp && *mp) {
                   unsigned pg = (unsigned)strtoul(mp, NULL, 16);

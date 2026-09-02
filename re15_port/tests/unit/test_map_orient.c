@@ -77,10 +77,26 @@ int main(void)
         printf("  FAIL: ROOM1120 Tuer nach 1060 nicht projizierbar\n"); return 1;
     }
     d = abstand(tx, ty, gx, gy);
-    printf("  [Gegenprobe] Tuer -> 1060 auf (%d,%d), Abstand zur 1130-Tuer: %d px\n",
-           gx, gy, d);
-    CHECK("die andere Tuer desselben Raums liegt deutlich woanders (>= 15 px)",
-          d >= 15);
+    {
+        /* ⛔ DIE SCHRANKE MUSS AM RAUM HAENGEN, NICHT AN EINER PIXELZAHL. Sie stand
+         * bei 15 px - gemessen an einem ROOM1120, das damals 34x36 px gross war. Seit
+         * alle Blaetter eines Gebaeudes denselben Massstab teilen (damit die Stockwerke
+         * stapeln), misst derselbe Raum 14x15 px, und die 15 px waeren allein durch den
+         * Massstabswechsel gerissen - ohne dass sich an der Karte etwas verschlechtert
+         * haette. Verlangt wird deshalb: die andere Tuer liegt mindestens ein Viertel
+         * der Raumausdehnung entfernt. */
+        const re15_map_zone_t *zz = re15_map_zone_at(0x1120, -8450, -2900);
+        int qx, qy, qw, qh, schranke;
+        if (!zz || !re15_map_zone_synth(zz, &qx, &qy, &qw, &qh, 0, 0)) {
+            printf("  FAIL: ROOM1120 hat keinen Kasten\n"); return 1;
+        }
+        schranke = (qw + qh) / 4;
+        if (schranke < 5) schranke = 5;
+        printf("  [Gegenprobe] Tuer -> 1060 auf (%d,%d), Abstand zur 1130-Tuer: %d px "
+               "(Raum %dx%d, Schranke %d)\n", gx, gy, d, qw, qh, schranke);
+        CHECK("die andere Tuer desselben Raums liegt deutlich woanders",
+              d >= schranke);
+    }
 
     /* ---- (3) DASSELBE VON DER ANDEREN SEITE ---- */
     if (!auf_karte(0x1130, -3050, -2150, &tx, &ty) ||
