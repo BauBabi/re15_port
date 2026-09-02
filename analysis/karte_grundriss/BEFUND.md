@@ -652,3 +652,76 @@ Suche. Wo die Suche für eine Behauptung „unmöglich" herangezogen wird, gehö
 Vorbehalt dazu.
 
 Blatt 1: Suche 6 von 10, Löser 6/10 — dort ist der Löser also am Optimum der Suche.
+
+## §12 — Nutzer 2026-09-02 (3): ROOM1140↔ROOM1170 weit auseinander, 1F überlappt stark
+
+> „Im ROOM 1140 führt die eine Tür zurück zum ROOM 1170. Laut map ist die Tür von ROOM
+> 1170 hin zu ROOM 1140 ganz links oben. Und die Tür von ROOM 1140 hin zu ROOM 1170 ganz
+> rechts oben. Weit entfernt von miteinander verbunden."
+> „gerade auf Etage 1F fällt auf, das wir bei den Räumen unglaublich viel Überlappung
+> haben … vielleicht kommt das daher das die Räume teilweise breiter dargestellt werden
+> als sie sind, der Laufkorridor vom Charakter ist z.T. viel schmaler als das Viereck."
+
+### ⛔ Zuerst zurückgenommen: der Phantom-Tür-Filter aus §11
+
+Er stützte sich auf einen Engine-Abzug beim **Raumbetreten**. Eine Tür, die das Skript
+erst später scharf schaltet — ROOM1140s Record trägt `sce = 0x00`, sein Slot wird aber
+neu bewaffnet — fehlt dort. Der Nutzer **geht** durch diese Tür; seine Beobachtung
+schlägt meine Ableitung. Filter abgeschaltet, `tools/engine_tueren.txt` bleibt als
+Messwert erhalten.
+
+### Ursache: die Wandwahl war ein Münzwurf
+
+`anlegen()` zwang die Tür auf die **eine** nächste Wand ihres Rechtecks und verlangte die
+Gegen-Tür auf der exakt gegenüberliegenden. Gemessen über alle 282 Türen: der Türpunkt
+liegt im Median 3 px von der nächsten Wand, aber nur **4 px** vor der zweitnächsten; bei
+**23 %** beträgt der Vorsprung ≤ 1 px. Bei ROOM1130s Tür zu ROOM1140 sind es 1800
+Welteinheiten ≈ 3 px.
+
+Drei solche Münzwürfe ergaben auf Blatt 4 einen Widerspruch, den **keine** Anordnung
+auflöst:
+
+| Raum | sagt |
+|---|---|
+| ROOM1130 | 1140 ist oben, 1170 ist rechts |
+| ROOM1140 | 1130 ist links, 1170 ist unten |
+| ROOM1170 z1 | 1130 und 1140 liegen auf **gegenüberliegenden** Wänden |
+
+1130 und 1140 grenzen aber selbst aneinander — sie können nicht auf zwei Seiten von 1170
+liegen. Daher die weit auseinander liegenden Türsymbole.
+
+**Behoben:** `waende()` bietet jede Wand an, die höchstens `WAND_RAND` (4 px = der
+gemessene Median-Vorsprung) weiter weg liegt; der Löser sucht die global verträgliche
+Zuweisung. Das Gütemaß misst entsprechend nicht mehr gegen die geratene Wand, sondern
+gegen die **Berührung** der beiden Rechtecke (`kantenrest()`) — dieselbe Größe, aus der
+auch die Türmarke gesetzt wird.
+
+### Wirkung
+
+| Blatt | Überlappung vorher | jetzt |
+|---|---|---|
+| **2 (1F)** | 22,4 % | **7,5 %** |
+| 0 | 25,3 % | **3,5 %** |
+| 1 | 36,1 % | **14,8 %** |
+| 11 | 11,1 % | **1,2 %** |
+| 8 | 5,5 % | **2,5 %** |
+
+`ROOM1140 ↔ ROOM1170` hat jetzt **ein gemeinsames Symbol** auf Blatt 4 bei (166,133),
+Rest 0,0 px. Blatt 4: alle sechs Kanten Rest 0–9 px, **nichts getrennt**.
+Symbole game-weit: 0 verdreht, 0 Paare übereinander, 103 gepaarte Marken (vorher 99).
+
+### Negatives Ergebnis: das Rechteck auf den begehbaren Kern stutzen bringt fast nichts
+
+Die Vermutung des Nutzers ist als Messung **richtig** — der Füllgrad (begehbare Fläche /
+Rechteckfläche) liegt im Median je Blatt bei nur 40–73 %, ROOM1230 bei **12 %**,
+ROOM10B0 32 %, ROOM1030 34 %. Aber das Stutzen zahlt sich nicht aus, weil die **Türen an
+den Rändern sitzen** und das Rechteck festhalten:
+
+| `RE15_KERN_ANTEIL` | Überlappung | getrennte Nachbarn |
+|---|---|---|
+| 1.0 (aus) | 12,2 % | 12 |
+| 0.92 | 12,1 % | 18 |
+| 0.85 | 9,8 % | 20 |
+
+Der Code bleibt als `RE15_KERN_ANTEIL` erhalten (Default 1.0 = aus). Der eigentliche
+Hebel gegen die Überlappung war die Wandfreiheit, nicht die Rechteckgröße.
