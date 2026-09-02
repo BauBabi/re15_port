@@ -2009,26 +2009,15 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         }
         }
 
-        /* ---- RE2-KARTENGRUND ------------------------------------------------
-         * Nutzer 2026-09-02, Vorlage re2_map_style.png: der Kartengrund ist SCHWARZ,
-         * die Raeume liegen als blaue Flaechen darauf. Auf dem blauen RE1.5-Panel
-         * verschwand die blaue Fuellung fast - im Abzug r2_02.bmp/r2_07.bmp deutlich
-         * zu sehen. Gelegt wird ein dunkler Grund NUR ueber das Kartenfeld; Rahmen,
-         * Kompass, Blaetterpfeile und die Ortszeile bleiben die Original-Kunst.
-         *
-         * ⛔ ALS LETZTE OP DES BLOCKS. Die Op-Liste wird VON HINTEN gerastert
-         * (inv_render_pc.c: for (i = n-1; i >= 0; i--)) - eine spaeter eingetragene Op
-         * liegt UNTEN. Vorne eingetragen haette der Grund die ganze Karte uebermalt.
-         * (Siehe Memory reai-v2-zeichenreihenfolge-invers - genau diese Umkehr hat mich
-         * am 2026-08-31 schon einmal einen Bericht gekostet.) */
-        if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode() &&
-            e.n < e.max) {
-            re15_inv_op_t *qg = &e.ops[e.n++];
-            qg->kind = RE15_INV_OP_FILL; qg->page = 0; qg->clut = 0; qg->abe = 0;
-            qg->u = 0; qg->v = 0;
-            qg->x = 92; qg->y = 48; qg->w = 148; qg->h = 156;
-            qg->r = 8; qg->g = 8; qg->b = 12;
-        }
+        /* ⛔ KEIN EIGENER KARTENGRUND. Zum RE2-Stil gehoert ein schwarzer Grund -
+         * aber als fester Kasten ueber dem RE1.5-Panel ist er falsch: er liegt auf
+         * JEDEM Blatt, auch dort, wo die Original-Kachelkunst zu sehen sein soll,
+         * und seine harte Kante liest sich als aufgeklebtes Quadrat.
+         * Nutzer 2026-09-02: "Ausserdem haben jetzt alle Karten Hintergruende ein
+         * schwarzes square. Das ist auch kaese."
+         * Der Kontrast kommt statt dessen aus der Zeichnung selbst: helle
+         * zustandsfreie Wandlinie + gesaettigte Fuellung heben die Raeume auch vom
+         * blauen Panel ab. */
     }
 
     /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base

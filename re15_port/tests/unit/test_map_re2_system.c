@@ -328,24 +328,45 @@ int main(void)
          * deshalb, dass unter der ersten Marke eine SPAETERE Flaeche liegt, die ihre
          * Stelle bedeckt. */
         {
-            int unten = -1, j;
-            if (first_mark >= 0)
-                for (j = first_mark + 1; j < nops; j++) {
+            /* ⛔ NICHT "die ERSTE Marke braucht eine Flaeche darunter". Das haengt
+             * von der Reihenfolge der Marken-Tabelle ab und ist ausserdem sachlich
+             * falsch: eine Tuer in einen noch UNBETRETENEN Raum hat zu Recht keine
+             * Raumflaeche unter sich - man sieht die Tuer, den Raum dahinter noch
+             * nicht (genau wie in RE2). Die Pruefung fiel deshalb, sobald sich die
+             * Marken-Reihenfolge aenderte, und war zwischenzeitlich nur deshalb
+             * gruen, weil ein (inzwischen entfernter) schwarzer Kartengrund unter
+             * ALLEM lag.
+             * Geprueft wird jetzt die eigentliche Invariante, und zwar fuer JEDE
+             * Marke: gibt es eine Flaeche, die ihre Stelle bedeckt, dann muss sie
+             * SPAETER in der Op-Liste stehen. Die Liste wird von hinten gerastert
+             * (inv_render_pc.c: for (i = n-1; i >= 0; i--)), spaeter heisst also
+             * weiter unten. Das ist strenger als vorher, nicht schwaecher. */
+            int verdeckt = 0, geprueft = 0, mk, j;
+            int erste_mit_flaeche = -1, ihre_flaeche = -1;
+            for (mk = 0; mk < nops; mk++) {
+                if (ops[mk].kind != RE15_INV_OP_FILL) continue;
+                if (ops[mk].w > 7 || ops[mk].h > 7) continue;   /* keine Marke */
+                if (!(ops[mk].r == 224 && ops[mk].g == 168 && ops[mk].b == 40) &&
+                    !(ops[mk].r == 240 && ops[mk].g == 240 && ops[mk].b == 216))
+                    continue;                                   /* Tuer- oder Treppenton */
+                for (j = 0; j < nops; j++) {
+                    if (j == mk) continue;
                     if (ops[j].kind != RE15_INV_OP_FILL) continue;
                     if (ops[j].w <= 7 && ops[j].h <= 7) continue;   /* selbst eine Marke */
-                    if (ops[first_mark].x < ops[j].x ||
-                        ops[first_mark].x >= ops[j].x + ops[j].w) continue;
-                    if (ops[first_mark].y < ops[j].y ||
-                        ops[first_mark].y >= ops[j].y + ops[j].h) continue;
-                    unten = j; break;
+                    if (ops[mk].x < ops[j].x || ops[mk].x >= ops[j].x + ops[j].w) continue;
+                    if (ops[mk].y < ops[j].y || ops[mk].y >= ops[j].y + ops[j].h) continue;
+                    geprueft++;
+                    if (erste_mit_flaeche < 0) { erste_mit_flaeche = mk; ihre_flaeche = j; }
+                    if (j < mk) verdeckt++;      /* Flaeche liegt OBEN -> Marke weg */
                 }
-            printf("  [Deckung] Marke #%d bei (%d,%d), darunter Flaeche #%d\n",
-                   first_mark, first_mark >= 0 ? ops[first_mark].x : -1,
-                   first_mark >= 0 ? ops[first_mark].y : -1, unten);
-            CHECK("der Karten-Schirm zeichnet Raumflaechen oder Rechtecke",
-                  unten >= 0 || first_rect >= 0);
-            CHECK("die Marke liegt VOR ihrer Raumflaeche (= obenauf, sichtbar)",
-                  unten > first_mark);
+            }
+            printf("  [Deckung] %d Marke/Flaeche-Paare geprueft, %d Marken verdeckt"
+                   " (erste Marke mit Flaeche: #%d ueber #%d)\n",
+                   geprueft, verdeckt, erste_mit_flaeche, ihre_flaeche);
+            CHECK("es gibt ueberhaupt Marken auf Raumflaechen zum Pruefen",
+                  geprueft > 0);
+            CHECK("keine Marke liegt HINTER der Flaeche, die sie bedeckt",
+                  verdeckt == 0);
         }
         CHECK("der Karten-Schirm zeichnet den Spieler-Marker", first_marker >= 0);
         CHECK("der Spieler-Marker liegt VOR den Marken (= ganz oben)",

@@ -63,7 +63,7 @@ static uint8_t *slurp(const char *p, size_t *n)
 }
 
 /* Genau die Kette, die das Spiel beim Raumwechsel fährt. */
-static int betrete(unsigned rid, int32_t px, int32_t pz)
+static int betrete(unsigned rid, int32_t px, int32_t pz, int band)
 {
     char pfad[600];
     size_t n = 0;
@@ -86,6 +86,12 @@ static int betrete(unsigned rid, int32_t px, int32_t pz)
     pl->active = 1; pl->type = 0; pl->hp = 100;
     pl->x = px; pl->y = 0; pl->z = pz;
     re15_collision_reset_band();
+    /* ⛔ DAS BAND DER TUER SETZEN. Das Blatt der Karte haengt am Band des Spielers
+     * (re15_inv_map_page_shown -> re15_map_floor_lookup). Ohne das landet jeder
+     * Ort auf der Seite seiner HAUPTZEILE, und alle Uebergaenge auf Blaettern, die
+     * ueber GAST-Zeilen zusammenhaengen (4 und 5), fielen als "anderes Blatt" aus
+     * der Messung. Das Band steht im Door_aot_set-Record (pc[4]). */
+    if (band >= 0) re15_collision_set_band(band);
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
     return 1;
@@ -122,7 +128,10 @@ static int blatt_von(unsigned rid, int32_t x, int32_t z)
     g_current_room_id = rid;
     re15_map_zone_update(rid, x, z);
     zn = re15_map_zone_current();
-    return zn ? (int)zn->page : -1;
+    if (!zn) return -1;
+    /* Derselbe Aufruf, den der Kartenschirm macht - er beruecksichtigt das Band
+     * und damit die GAST-Zeilen. zn->page waere die Seite der Hauptzeile. */
+    return (int)re15_inv_map_page_shown();
 }
 
 typedef struct { unsigned a, b; int32_t ax, az, bx, bz; int band, rez; } tuer_t;
@@ -135,6 +144,7 @@ int main(void)
     int w_a = 0, w_b = 0, w_zone = 0, w_ma = 0, w_mb = 0, w_blatt = 0, w_einseitig = 0;
     int liste = getenv("RE15_UEBERGANG_LISTE") ? 1 : 0;
     int *werte;
+    int proBlatt[13];
 
     printf("=== Karten-Uebergang: springt der Marker beim Durchschreiten? ===\n");
     re15_map_visited_reset();
@@ -146,10 +156,15 @@ int main(void)
 
     /* ---- Tueren einsammeln: JEDER Raum wird geladen wie im Spiel ---- */
     for (st = 1; st <= 6; st++) {
-        for (r = 0; r < 0x100; r += 0x10) {
+        /* ⛔ BIS 0x400, NICHT BIS 0x100. Die Schleife lief nur ueber r = 0x00..0xF0,
+         * hat also je Stage NUR die Raeume ROOM?000..ROOM?0F0 geladen - ROOM1130,
+         * ROOM1140 und ROOM1170 (der vom Nutzer gemeldete Fall) waren nie dabei, und
+         * die Blaetter 4 und 5 hatten deshalb NULL gemessene Uebergaenge, waehrend ich
+         * Gesamtzahlen als Fortschritt berichtet habe. Stage 1 reicht bis ROOM1260. */
+        for (r = 0; r < 0x400; r += 0x10) {
             unsigned rid = (unsigned)(st << 12) | (unsigned)r;
             int k;
-            if (!betrete(rid, 0, 0)) continue;
+            if (!betrete(rid, 0, 0, -1)) continue;
             for (k = 0; k < RE15_AOT_MAX && ntuer < 900; k++) {
                 const re15_aot_t *s = &g_aot.slots[k];
                 const re15_aot_door_params_t *d = &g_aot.door_params[k];
@@ -175,6 +190,7 @@ int main(void)
     printf("  %d Tueren aus den installierten AOTs gelesen\n", ntuer);
     CHECK("es wurden ueberhaupt Tueren gefunden", ntuer >= 100);
 
+    { int _z; for (_z = 0; _z < 13; _z++) proBlatt[_z] = 0; }
     werte = (int *)calloc((size_t)(ntuer > 0 ? ntuer : 1), sizeof(int));
 
     /* ⛔ GEMESSEN WIRD VON SPAWN ZU SPAWN, NICHT VON DER TRIGGER-MITTE.
@@ -201,11 +217,11 @@ int main(void)
     /* ---- je Tuer: Marker in A, dann Marker in B auf DEMSELBEN Blatt ---- */
     for (i = 0; i < ntuer; i++) {
         int pa_x, pa_y, pb_x, pb_y, blatt, d, pb;
-        if (!betrete(tuer[i].a, tuer[i].ax, tuer[i].az)) { w_a++; continue; }
+        if (!betrete(tuer[i].a, tuer[i].ax, tuer[i].az, tuer[i].band)) { w_a++; continue; }
         blatt = blatt_von(tuer[i].a, tuer[i].ax, tuer[i].az);
         if (blatt < 0) { w_zone++; continue; }
         if (!marker(tuer[i].a, tuer[i].ax, tuer[i].az, blatt, &pa_x, &pa_y)) { w_ma++; continue; }
-        if (!betrete(tuer[i].b, tuer[i].bx, tuer[i].bz)) { w_b++; continue; }
+        if (!betrete(tuer[i].b, tuer[i].bx, tuer[i].bz, tuer[i].band)) { w_b++; continue; }
         pb = blatt_von(tuer[i].b, tuer[i].bx, tuer[i].bz);
         if (pb != blatt) {
             w_blatt++;
@@ -217,6 +233,7 @@ int main(void)
         if (!marker(tuer[i].b, tuer[i].bx, tuer[i].bz, blatt, &pb_x, &pb_y)) { w_mb++; continue; }
         if (!tuer[i].rez) { w_einseitig++; continue; }   /* ohne Gegen-Tuer kein Vergleich */
         d = abs(pa_x - pb_x) > abs(pa_y - pb_y) ? abs(pa_x - pb_x) : abs(pa_y - pb_y);
+        if (blatt >= 0 && blatt < 13) proBlatt[blatt]++;
         werte[gesamt++] = d;
         summe += d;
         if (d > schlimmster) schlimmster = d;
@@ -253,7 +270,25 @@ int main(void)
     printf("  [Ausfaelle] Raum A nicht ladbar %d, Raum B nicht ladbar %d, keine Zone %d,"
            " Marker A %d, Marker B %d, anderes Blatt %d, ohne Gegen-Tuer %d\n",
            w_a, w_b, w_zone, w_ma, w_mb, w_blatt, w_einseitig);
-    CHECK("es wurden Uebergaenge gemessen", gesamt >= 50);
+        /* ---- ABDECKUNG DER MESSUNG ------------------------------------------------
+     * ⛔ EINE MESSSCHIENE MUSS IHRE EIGENE ABDECKUNG PRUEFEN. Am 2026-09-02 lief die
+     * Sammelschleife nur ueber r = 0x00..0xF0 und lud damit je Stage nur die Raeume
+     * ROOM?000..ROOM?0F0. Die Blaetter 4 und 5 hatten NULL gemessene Uebergaenge,
+     * der vom Nutzer gemeldete Fall (ROOM1170 <-> ROOM1130) war nicht in der
+     * Pruefmenge - und die Gesamtzahlen sahen trotzdem gut aus.
+     * Geprueft wird deshalb: genug Tueren, genug Blaetter, und Blatt 4 dabei. */
+    {
+        int bl, nbl = 0;
+        for (bl = 0; bl < 13; bl++)
+            if (proBlatt[bl] > 0) nbl++;
+        printf("  [Abdeckung] %d Tueren, %d Uebergaenge auf %d verschiedenen"
+               " Blaettern, davon %d auf Blatt 4\n", ntuer, gesamt, nbl, proBlatt[4]);
+        CHECK("die Schiene liest mindestens 200 Tueren", ntuer >= 200);
+        CHECK("es werden mindestens 8 Blaetter gemessen", nbl >= 8);
+        CHECK("Blatt 4 ist in der Messung enthalten (ROOM1130/1140/1170)",
+              proBlatt[4] >= 5);
+    }
+CHECK("es wurden Uebergaenge gemessen", gesamt >= 50);
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     free(werte);

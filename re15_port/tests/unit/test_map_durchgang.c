@@ -107,17 +107,24 @@ int main(void)
               l2 >= 0 && l2 <= 4);
     }
 
-    /* ---- (3) GEGENPROBE: zwei Raeume OHNE Tuer duerfen Abstand haben ---------
-     * Ohne sie waere (2) auch dann erfuellt, wenn schlicht alles uebereinanderliegt. */
+    /* ---- (3) GEGENPROBE: zwei WEIT entfernte Raeume duerfen nicht anstossen ----
+     * Ohne sie waere (2) auch dann erfuellt, wenn schlicht alles uebereinanderliegt.
+     * ⛔ DAS PAAR MUSS WIRKLICH WEIT WEG SEIN. Bis 2026-09-02 standen hier ROOM1120
+     * und ROOM1150 - beide grenzen aber an ROOM1130, liegen im Tuergraph also nur
+     * ZWEI Schritte auseinander. Dass zwei Raeume mit gemeinsamem Nachbarn sich
+     * beruehren, ist normal und beweist gar nichts; die Probe fiel entsprechend,
+     * sobald sich die Anordnung leicht aenderte, ohne dass etwas kaputt war.
+     * Genommen wird jetzt ROOM1000 <-> ROOM1010: Tuergraph-Abstand 5 (gemessen ueber
+     * eine Breitensuche im Tuergraph), gezeichnet auf demselben Blatt 2. Fuenf Tueren
+     * Entfernung duerfen nicht aneinandergrenzen - stapelt der Loeser, faellt das hier
+     * sofort auf. */
     {
-        const re15_map_zone_t *z20 = ort(0x1120, -8450, -2900);
-        const re15_map_zone_t *z50 = ort(0x1150, 0, 0);
-        int l3 = (z20 && z50) ? luecke(z20, z50) : -1;
-        printf("  [Gegenprobe] 1120<->1150 (keine gemeinsame Tuer): %d px\n", l3);
-        CHECK("zwei Raeume ohne gemeinsame Tuer liegen nicht zwangslaeufig an",
-              l3 != 0);
+        const re15_map_zone_t *z00 = ort(0x1000, 19575, -7600);
+        const re15_map_zone_t *z10 = ort(0x1010, 1100, 1375);
+        int l3 = (z00 && z10) ? luecke(z00, z10) : -1;
+        printf("  [Gegenprobe] 1000<->1010 (Tuergraph-Abstand 5): %d px\n", l3);
+        CHECK("zwei weit entfernte Raeume stossen NICHT aneinander", l3 > 0);
     }
-
     /* ---- (4) ZWEI VERSCHIEDENE TUEREN LIEGEN NICHT AUFEINANDER ---------------
      * Nutzer 2026-09-02: "Tueren sind noch nicht sauber gesetzt."
      * Gemessen nach dem Umbau auf anstossende Raeume: 10 Markenpaare lagen hoechstens

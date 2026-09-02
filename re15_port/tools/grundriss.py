@@ -45,7 +45,23 @@ SCHNITTSTELLE (unveraendert, damit der Generator gleich bleibt)
     B.zellen(ort)                     die EINE Zelle: die aeussere Kollisionsbox
 """
 import collections
+import os
 
+# ⛔ KEINE SPIEGELUNG EINZELNER RAEUME.
+# Die Kartenprojektion ist map_x = wx, map_y = -wz (Original-Formel FUN_800473f8
+# @0x8004741c-0x80047528). Sie kippt die Haendigkeit EINMAL und fuer ALLE Raeume gleich.
+# Eine ZUSAETZLICHE Spiegelung einzelner Raeume hat kein Gegenstueck in der Welt - ein
+# Raum ist nicht mal so und mal seitenverkehrt gebaut. Sie war ein freier Parameter, mit
+# dem der Loeser eine einzelne Tuer lokal befriedigen und dabei das globale Gefuege
+# zerstoeren konnte.
+# GEMESSEN am 2026-09-02 (integration_map_uebergang, 102 Uebergaenge, ohne/mit):
+#     <= 2 px  39 gegen 34      <= 4 px  81 gegen 81
+#     <= 8 px  91 gegen 90      ueber 8 px  11 gegen 12   schlimmster 30 gegen 31
+# Die Loeser-EIGENEN Zahlen sahen dabei schlechter aus (mehr getrennte Nachbarn, mehr
+# Ueberlappung) - die Live-Groesse, die der Nutzer sieht, wurde besser. Bei einem
+# Widerspruch gilt die Live-Groesse.
+# RE15_SPIEGEL_ERLAUBT=1 schaltet sie zum Vergleichen wieder frei.
+SPIEGEL = (0, 1) if os.environ.get('RE15_SPIEGEL_ERLAUBT') else (0,)
 FELD = (100, 55, 132, 140)      # Kartenfeld: dort liegen alle Rechtecke aller Seiten
 
 
@@ -228,7 +244,7 @@ class Blatt(object):
         wa = self.wand(ka, p_a)
         aus = []
         for k in range(4):
-            for sp in (0, 1):
+            for sp in SPIEGEL:
                 kb = self.kasten(b, (0.0, 0.0, k, sp))
                 if not kb:
                     continue
@@ -267,7 +283,7 @@ class Blatt(object):
         my = (min(ys) + max(ys)) / 2.0
         best = None
         for k in range(4):
-            for sp in (0, 1):
+            for sp in SPIEGEL:
                 kb = self.kasten(b, (0.0, 0.0, k, sp))
                 if not kb:
                     continue
@@ -337,7 +353,7 @@ class Blatt(object):
                 # Ueberlappung ist allemal besser als eine Luecke.
                 p = self.punkt(a, lage[a], *pa)
                 for k in range(4):
-                    for sp in (0, 1):
+                    for sp in SPIEGEL:
                         d = dreh(pb[0], pb[1], k, sp)
                         kand.append((p[0] - d[0] / self.ex,
                                      p[1] + d[1] / self.ey, k, sp))

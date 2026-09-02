@@ -284,10 +284,12 @@ def read_rdt(rid):
                     if op == 0x3b:
                         rx, rz, rw, rd = struct.unpack_from('<hhhh', b, 6)
                         nx, ny, nz = struct.unpack_from('<hhh', b, 14)
+                        yaw = struct.unpack_from('<h', b, 20)[0]
                         stg, rmd = b[22], b[23]
                     else:
                         rx, rz, rw, rd = struct.unpack_from('<hhhh', b, 4)
                         nx, ny, nz = struct.unpack_from('<hhh', b, 22)
+                        yaw = struct.unpack_from('<h', b, 28)[0]
                         stg, rmd = b[30], b[31]
                     # ⛔ ZWEI FILTER — sonst landen Marken auf Tueren, die es nicht gibt
                     # (Nutzer 2026-08-31: "auf dem grossen Rechteck sind wieder 3 Tueren
@@ -324,9 +326,31 @@ def read_rdt(rid):
                                   # obj[0x82]; das Original gattet die Interaktion
                                   # darauf (FUN_8002bd44 @0x8002bf38).
                                   'band': b[4],
-                                  'nx': nx, 'nz': nz,
+                                  'nx': nx, 'nz': nz, 'yaw': yaw,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
                 pc += sz
+    # ⛔ DIESELBE TUER ZWEIMAL EINGETRAGEN = ZWEI STIMMEN IM LOESER.
+    # Neun Verbindungen im Spiel fuehren denselben Durchgang in ZWEI Aot_set-Records
+    # (gleiches Ziel, gleicher Trigger, gleicher Spawn, gleicher Yaw) - z.B.
+    # ROOM1140 -> ROOM1170 beide mit Trigger (-7250,-250) und Spawn (-21937,-25713).
+    # Fuer das Spiel ist das harmlos (zwei AOT-Slots auf derselben Flaeche), fuer den
+    # Grundriss-Loeser nicht: er zaehlt zwei Kanten und opfert deshalb systematisch
+    # jede Verbindung, die nur EINEN Record hat.
+    # Genau so ist der vom Nutzer gemeldete Fall entstanden: auf Blatt 4 haelt der
+    # Loeser die (doppelt gezaehlte) Verbindung ROOM1140<->ROOM1170 und laesst
+    # ROOM1130<->ROOM1170 mit 62 px offen - obwohl beide physisch EINE Tuer sind und
+    # die Wahl damit unentschieden waere.
+    # Nutzer 2026-09-02: "ich springe beim wechsel von room 1170 zu room 1120 von dem
+    # Rechteck und der Tuer oben bis hin zum Rechteck ganz weit weg."
+    _gesehen = set()
+    _eindeutig = []
+    for _d in doors:
+        _k = (_d['dest'], _d['lx'], _d['lz'], _d['nx'], _d['nz'])
+        if _k in _gesehen:
+            continue
+        _gesehen.add(_k)
+        _eindeutig.append(_d)
+    doors = _eindeutig
     return sca, doors, stairs
 
 def zones_of(sca):
@@ -356,6 +380,98 @@ def zones_of(sca):
     out = [o for o in out if o[1] >= MIN_FRAC * tot]
     out.sort(key=lambda o: -o[1])
     return [o[0] for o in out]
+
+def _vollsuche(B, pg):
+    """Erschoepfende Tiefensuche: wie viele Tuerkanten sind GLEICHZEITIG erfuellbar?
+
+    Jede Kante, an der ein noch nicht gesetzter Ort haengt, liefert ueber B.anlegen()
+    alle Lagen, in denen dieser Ort mit seiner Tuerwand exakt auf der Wand des schon
+    gesetzten Ortes liegt. Mehr Freiheit gibt es nicht - eine Kante ist entweder ueber
+    eine dieser Lagen erfuellt oder gar nicht. Damit ist die Suche endlich und
+    vollstaendig."""
+    import itertools
+    orte = list(B.zimmer)
+    nachbarn = collections.defaultdict(list)
+    for _i, (a, pa, b, pb) in enumerate(B.kanten):
+        nachbarn[a].append((_i, b, pa, pb))
+        nachbarn[b].append((_i, a, pb, pa))
+    bestes = {'n': -1, 'lage': None}
+    gesehen = set()
+
+    def erfuellt(lage):
+        n = 0
+        for (a, pa, b, pb) in B.kanten:
+            if a not in lage or b not in lage:
+                continue
+            qa = B.wandpunkt(a, lage[a], B.punkt(a, lage[a], *pa))
+            qb = B.wandpunkt(b, lage[b], B.punkt(b, lage[b], *pb))
+            if max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1])) <= 1.0:
+                n += 1
+        return n
+
+    def tiefer(lage, tiefe):
+        if len(lage) > tiefe:
+            pass
+        schluessel = tuple(sorted((o, tuple(round(v, 1) for v in lage[o])) for o in lage))
+        if schluessel in gesehen:
+            return
+        gesehen.add(schluessel)
+        if len(gesehen) > 400000:
+            return
+        n = erfuellt(lage)
+        if len(lage) == len(orte) and n > bestes['n']:
+            bestes['n'] = n
+            bestes['lage'] = dict(lage)
+        # ⛔ UEBER JEDE ANLEGEKANTE VERZWEIGEN. Ein erster Wurf nahm nur die erste
+        # gefundene Kante und war damit unvollstaendig: welche Kante man zum Anlegen
+        # benutzt, bestimmt die Lage des Ortes, und eine andere Kante haette eine Lage
+        # ergeben koennen, die MEHR Kanten erfuellt. Die Aussage "hoechstens N" waere
+        # dann ein Suchartefakt gewesen.
+        # Der zu setzende Ort wird deterministisch gewaehlt (der erste offene Nachbar
+        # ueberhaupt) - das ist erlaubt, weil die Reihenfolge der Orte das Ergebnis nicht
+        # aendert. Verzweigt wird ueber ALLE Kanten, die ihn an etwas schon Gesetztes
+        # binden koennen.
+        ziel = None
+        for o in list(lage):
+            for (_i, nb, po, pnb) in nachbarn[o]:
+                if nb not in lage:
+                    ziel = nb
+                    break
+            if ziel is not None:
+                break
+        if ziel is not None:
+            for o in list(lage):
+                for (_i, nb, po, pnb) in nachbarn[o]:
+                    if nb != ziel:
+                        continue
+                    for st in B.anlegen(o, lage[o], po, nb, pnb):
+                        lage[ziel] = st
+                        tiefer(lage, tiefe + 1)
+                        del lage[ziel]
+            return
+        # kein Nachbar mehr erreichbar: Rest frei danebenstellen
+        if len(lage) < len(orte) and n > bestes['n']:
+            bestes['n'] = n
+            bestes['lage'] = dict(lage)
+
+    for w in orte:
+        gesehen.clear()
+        tiefer({w: (0.0, 0.0, 0, 0)}, 0)
+    print("   [Vollsuche Blatt %d] %d Orte, %d Kanten -> hoechstens %d gleichzeitig "
+          "erfuellbar" % (pg, len(orte), len(B.kanten), bestes['n']))
+    if bestes['lage'] is not None:
+        for (a, pa, b, pb) in B.kanten:
+            lg = bestes['lage']
+            if a not in lg or b not in lg:
+                print("      ROOM%04X z%d <-> ROOM%04X z%d : Ort nicht gesetzt"
+                      % (a >> 4, a & 15, b >> 4, b & 15))
+                continue
+            qa = B.wandpunkt(a, lg[a], B.punkt(a, lg[a], *pa))
+            qb = B.wandpunkt(b, lg[b], B.punkt(b, lg[b], *pb))
+            r = max(abs(qa[0] - qb[0]), abs(qa[1] - qb[1]))
+            print("      ROOM%04X z%d <-> ROOM%04X z%d : Rest %.1f px"
+                  % (a >> 4, a & 15, b >> 4, b & 15, r))
+
 
 def main():
     room_ids = []
@@ -1028,6 +1144,24 @@ def main():
         for _pg in _reihe:
             _orte, _rd = _eingabe[_pg]
             _B = _gr.Blatt(_orte, _rd, _ex0, _ey0)
+            if os.environ.get('RE15_VOLLSUCHE') == str(_pg):
+                _vollsuche(_B, _pg)
+            if os.environ.get('RE15_KANTEN_DUMP') == str(_pg):
+                print("   [Kanten Blatt %d] %d Orte, %d Tuerkanten, %d Notkanten"
+                      % (_pg, len(_orte), len(_B.kanten), len(_B.notkanten)))
+                for (_a, _pa, _bb, _pb) in _B.kanten:
+                    print("      ROOM%04X z%d  <->  ROOM%04X z%d"
+                          % (_a >> 4, _a & 15, _bb >> 4, _bb & 15))
+                _fehlt = []
+                for _o in _orte:
+                    for _d in _rd[_o][1]:
+                        _z = _d['dest']
+                        if _z not in _orte:
+                            _fehlt.append((_o, _z))
+                print("      NICHT auf diesem Blatt aufloesbar: %d" % len(_fehlt))
+                for _o, _z in _fehlt:
+                    print("         ROOM%04X z%d -> ROOM%04X z%d (Ort fehlt auf dem Blatt)"
+                          % (_o >> 4, _o & 15, _z >> 4, _z & 15))
             # ⛔ NUR DIE POSE WEITERGEBEN, NICHT DIE LAGE. Eine festgenagelte LAGE aus
             # einem anderen Blatt macht die Kanten dieses Blattes unerfuellbar: gemessen
             # blieb der Kanten-Rest auf den Seiten 3 und 4 bei 31 bzw. 20 px stehen,
@@ -1183,6 +1317,20 @@ def main():
                       "schlimmster %.0f px"
                       % (_rr[len(_rr) // 2], sum(1 for x in _rr if x <= 2), len(_rr),
                          _rr[-1]))
+            if os.environ.get('RE15_LAGE_DUMP'):
+                for _o in sorted(_neu_lage):
+                    _st = _neu_lage[_o]
+                    print("   [Lage] Blatt %d ROOM%04X z%d  dx=%.1f dy=%.1f k=%d sp=%d"
+                          % (_pg, _o >> 4, _o & 15, _st[0], _st[1], _st[2], _st[3]))
+                for (_a, _pa, _bb, _pb) in _B.kanten:
+                    _qa = _B.wandpunkt(_a, _neu_lage[_a], _B.punkt(_a, _neu_lage[_a], *_pa))
+                    _qb = _B.wandpunkt(_bb, _neu_lage[_bb], _B.punkt(_bb, _neu_lage[_bb], *_pb))
+                    _rest = max(abs(_qa[0] - _qb[0]), abs(_qa[1] - _qb[1]))
+                    print("   [Kante] Blatt %d ROOM%04X z%d <-> ROOM%04X z%d  "
+                          "k=%d/%d sp=%d/%d  Rest %.1f px"
+                          % (_pg, _a >> 4, _a & 15, _bb >> 4, _bb & 15,
+                             _neu_lage[_a][2], _neu_lage[_bb][2],
+                             _neu_lage[_a][3], _neu_lage[_bb][3], _rest))
             _kn = _B.kosten(_neu_lage)
             print("Seite %2d: Grundriss aus %d/%d Orten, %.1f %% Ueberlappung, "
                   "%d/%d Durchgaenge deckungsgleich, %d GETRENNT, %dx%d px, "
