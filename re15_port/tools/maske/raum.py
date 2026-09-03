@@ -40,7 +40,20 @@ from geom import load_bg, load_rdt
 
 AUSWAHL = "analysis/esp_masken_2026-09-03/auswahl.json"
 CD = "re15_port/shared_assets/PSX"
-STD = {"segments": 220, "oben": 4, "grow": 1, "fuellen": "komponente",
+# ⛔ SPALTENFUELLUNG STANDARDMAESSIG AUS (Nutzer-Befund 2026-09-03, Screenshot 233104:
+# "immer noch sehr viel ueberdeckende Transparenz, bei beiden Fahnen und beim Pult").
+# Die Fuellung schliesst je Bildspalte alles zwischen oberstem und unterstem Punkt EINER
+# Komponente. Bei einem DUENNEN Gegenstand ist das verheerend: die US-Fahne ist rund 20
+# Bildpunkte breit, ihr Fussteller sitzt 110 Zeilen tiefer — gefuellt wurde daraus ein
+# Block von rund 55 x 117 Punkten, also das Vier- bis Fuenffache des Objekts, samt
+# Teppich, Sockelwand und Schrank. Alles, was dahinter steht, bekommt diese Pixel
+# uebergemalt; im Spiel sieht das aus wie ein halbdurchsichtiger Fleck.
+# Gemessen gegen die Kuenstler-Silhouetten (kalib.py, seg 220, oben 4, Saum 1):
+#     Fuellung aus         Praezision 72.1 %  Ausbeute 88.2 %
+#     Fuellung Komponente  Praezision 70.6 %  Ausbeute 89.8 %
+# Sie war also ohnehin die schlechtere Wahl bei der Praezision. Wer sie fuer einen
+# massiven Gegenstand mit Kerben braucht, setzt sie je Objekt.
+STD = {"segments": 220, "oben": 4, "grow": 1, "fuellen": "aus",
        "minus": "", "plus": "", "ids": []}
 
 
@@ -54,6 +67,58 @@ def eintrag(v):
     else:
         e.update(v)
     return e
+
+
+def kontrast_region(bg, spec):
+    """Silhouette eines DUENNEN Gegenstands aus dem Bild selbst schneiden.
+
+    ⛔ WARUM (Nutzer-Befund 2026-09-03, Screenshot 233104: "immer noch sehr viel
+    ueberdeckende Transparenz, bei beiden Fahnen und beim Pult"): Superpixel sind
+    FLAECHIG. Eine Flaeche von rund 700 Bildpunkten kann eine 20 Punkte breite Fahne
+    nicht umschliessen, ohne Fenster, Sockelwand und Teppich mitzunehmen — und genau
+    diese Fremdpixel werden im Spiel ueber alles gemalt, was dahinter steht. Feiner
+    segmentieren hilft nicht: bei 900 Flaechen zerfaellt SLIC auf diesem kontrastarmen
+    Bild in ein 4x4-Raster, das den Kanten gar nicht mehr folgt.
+
+    Stattdessen wird die Silhouette aus dem KONTRAST zum oertlichen Hintergrund
+    geschnitten: je Bildzeile ist der Hintergrund der Median der Punkte unmittelbar
+    LINKS und RECHTS des Kastens; behalten wird, was sich davon deutlich abhebt. Fuer
+    einen Gegenstand vor einer ruhigen Flaeche (Fahne vor Fenster und Teppich,
+    Mikrofon vor dunklem Holz) ist das die Objektkante selbst und kein Raster.
+
+    spec: {"box": "x0,y0,x1,y1", "rand": 6, "schwelle": 26, "schliessen": 1,
+           "mindest": 12}
+    """
+    from scipy import ndimage
+    x0, y0, x1, y1 = [int(v) for v in spec["box"].split(",")]
+    rand = int(spec.get("rand", 6))
+    schwelle = float(spec.get("schwelle", 26))
+    a = bg.astype(np.int32)
+    r = np.zeros((240, 320), bool)
+    for y in range(max(0, y0), min(240, y1)):
+        # Seite waehlbar: liegt auf EINER Seite des Kastens etwas anderes als der
+        # ruhige Hintergrund (bei der blauen Fahne rechts der helle Wandpfeiler), zieht
+        # dessen Farbe den Median weg und der Schnitt holt sich das Fenster mit.
+        seite = spec.get("seite", "beide")
+        links = a[y, max(0, x0 - rand):x0] if seite in ("beide", "links") else a[y, 0:0]
+        rechts = a[y, x1:min(320, x1 + rand)] if seite in ("beide", "rechts") else a[y, 0:0]
+        umfeld = np.concatenate([links, rechts], 0) if len(links) or len(rechts) else None
+        if umfeld is None or len(umfeld) == 0:
+            continue
+        hg = np.median(umfeld, 0)
+        d = np.abs(a[y, x0:x1] - hg).max(1)
+        r[y, x0:x1] = d > schwelle
+    k = int(spec.get("schliessen", 1))
+    if k > 0:
+        r = ndimage.binary_closing(r, np.ones((2 * k + 1, 2 * k + 1)))
+    m = int(spec.get("mindest", 12))
+    if m > 0:
+        lab, n = ndimage.label(r, np.ones((3, 3)))
+        for i in range(1, n + 1):
+            sel = lab == i
+            if sel.sum() < m:
+                r[sel] = False
+    return r
 
 
 def objekt_regionen(room, cut, e, ppm, blattdir):
@@ -70,8 +135,19 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     rid = int(room[4:], 16)
     aus = []
     for o in e.get("objekte") or []:
-        seg = anwenden.lade_seg(blattdir, room, cut, o.get("segments", e["segments"]), ppm, rid)
-        r = np.isin(seg, o["ids"])
+        if "kontrast" in o:
+            r = kontrast_region(load_bg(ppm, rid, cut), o["kontrast"])
+        elif "kaesten" in o:
+            # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als
+            # Kaesten angeben. Genauer als eine Superpixel-Auswahl, die zwangslaeufig
+            # Teppich an den Raendern mitnimmt, und ohne den Kontrastschnitt, der nur
+            # bei duennen Gegenstaenden vor ruhigem Hintergrund traegt.
+            r = np.zeros((240, 320), bool)
+            for k in anwenden.kaesten(o["kaesten"]):
+                r[k[1]:k[3], k[0]:k[2]] = True
+        else:
+            seg = anwenden.lade_seg(blattdir, room, cut, o.get("segments", e["segments"]), ppm, rid)
+            r = np.isin(seg, o["ids"])
         for k in anwenden.kaesten(o.get("plus", "")):
             r[k[1]:k[3], k[0]:k[2]] = True
         for k in anwenden.kaesten(o.get("minus", "")):
