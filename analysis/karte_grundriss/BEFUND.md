@@ -1346,3 +1346,57 @@ Treppen als eigene Ebene darüber, und von uns kommt allein die fehlende Abbildu
 67 Stub-Räume — aus der Kollisionsgeometrie gegen das gemalte Rechteck bestimmt. Die
 geeichten Zeilen sind dabei die Kontrolle: dort muss die Rechnung die Original-Zeile
 treffen.
+
+## §22 Die gemalten Rechtecke SIND die Kollisionsboxen — Verfahren bestätigt
+
+Gegenprobe an den 38 geeichten Räumen: ihre Kollisionsbox durch die Original-Formel
+(`FUN_800473f8` @0x8004741c-528) projiziert und gegen die gemalten Rechtecke ihrer Seite
+gehalten. **30 von 38 landen zu ≥ 50 % auf einem gemalten Rechteck**, mehrere exakt:
+
+| Raum | Kollisionsbox → Karte | gemaltes Rechteck | Deckung |
+|---|---|---|---|
+| ROOM3040 | x192..243 y45..108 | x191 y44 64×64 | **100 %** |
+| ROOM5010 | x166..181 y84..107 | x164 y83 24×24 | **100 %** |
+| ROOM5100 | x150..185 y129..178 | x150 y129 48×56 | **100 %** |
+| ROOM50C0 | x120..161 y82..115 | x120 y80 48×40 | **100 %** |
+| ROOM1150 | x118..150 y81..121 | x120 y80 32×40 | 91 % |
+
+Die acht Ausreißer sind Räume mit **mehreren Zonen** (ROOM1170, ROOM11E0, ROOM30E0 …) —
+dort deckt die äußere Bbox auch die Fläche *zwischen* den Bereichen ab. Kein Gegenbeleg;
+die Messung muss dort je Zone laufen.
+
+⇒ Die fehlenden 67 Zeilen lassen sich **umgekehrt bestimmen**: Kollisionsbox auf das
+gemalte Rechteck legen, Maßstab und Versatz ablesen.
+
+### 3F durchgerechnet
+
+Maßstab aus ROOM1150s ausgelieferter Zeile (2296/2312 ≈ 457 Welteinheiten je Pixel).
+Damit hat jeder Raum eine bekannte Größe in Kartenpixeln — die Zuordnung fällt aus der
+Größe und wird von der **Türnachbarschaft** unabhängig bestätigt:
+
+| Raum | Rechteck | Größe Raum → Kunst | Abstand |
+|---|---|---|---|
+| ROOM1150 | Nr2 | 31×40 → 32×40 | 1 (geeicht = Kontrolle) |
+| ROOM1130 | Nr4 | 32×84 → 32×80 | 4 |
+| ROOM1060 | Nr1 | 24×28 → 24×24 | 4 |
+| ROOM1120 | Nr5 | 42×46 → 40×40 | 8 |
+| ROOM1140 | Nr6 | 60×60 → 56×56 | 8 |
+
+**Jede Tür dieser Zuordnung hat ihre beiden Rechtecke berührend:** ROOM1130↔ROOM1150 →
+Nr4↔Nr2 (8×40), ROOM1130↔ROOM1120 → Nr4↔Nr5 (16×40), ROOM1120↔ROOM1060 → Nr5↔Nr1
+(24×22), ROOM1130↔ROOM1140 → Nr4↔Nr6 (16×50). Größe und Türgraph sagen unabhängig
+dasselbe — das ist der Beleg, nicht die Größe allein.
+
+**Ohne Zuordnung bleiben:** die Rechtecke Nr0 (16×16) und Nr3 (48×24), und die Räume
+ROOM1080, ROOM1160, ROOM1170. Die Original-Kunst von 3F malt also **nicht alle Räume** —
+das Kartensystem des Prototyps ist auch hier unfertig, genau wie die Maßstabstabelle.
+
+### Was daraus folgt
+
+Für 3F sind fünf der acht Räume auf der Original-Kunst verortbar, inklusive Maßstab und
+Versatz. Für die drei übrigen (und die zwei überzähligen Rechtecke) braucht es eine
+Entscheidung: entweder bleiben sie auf der Karte unverortet wie im Original, oder sie
+bekommen eine ergänzte Zeichnung. Das ist eine Nutzer-Entscheidung, keine RE-Frage.
+
+Das ROT für den aktuellen Raum (RE2-Übernahme, vom Nutzer als gut bestätigt) hängt an
+derselben Zuordnung: es färbt das gemalte Rechteck des Raums, in dem man steht.
