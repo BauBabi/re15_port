@@ -1,3 +1,45 @@
+# RE1.5 Port — v0.4.4 (Early Preview)
+
+**Deine drei Befunde aus v0.4.2 (error01/02/03) sind behoben — und die Abnahme, die sie
+durchgelassen hat, ist ersetzt.**
+
+| Dein Bild | Einstellung | Was da los war | Jetzt |
+|---|---|---|---|
+| error01 | 2 (Pult/Fenster) | Ein Streifen **Wand** lag ueber deiner Schulter | Wandband ueber der Sitzbank entfernt, Gemaelde frei |
+| error02 | 1 (Tisch von hinten) | Ein **schwarzer Kasten** lag ueber Brust und Oberschenkel im Gang | Der Gang zwischen den Stuehlen wird nicht mehr mitmarkiert |
+| error03 | 5 (Flur/Anschlagtafel) | Du wurdest **ueber die Anschlagtafel** gezeichnet | Tafel, Schrank und Schreibtisch verdecken jetzt |
+
+**Warum das passiert ist.** Zwei verschiedene Ursachen, beide inzwischen abgestellt:
+
+1. *Wand und Objekt lagen in derselben Flaeche.* Das Auswahlblatt arbeitete mit 90
+   Flaechen; bei dieser Groebe waren Wandbild, Wand, Sitzbank und Kamerastativ EIN
+   Stueck — entweder alles markieren oder nichts. Und weil die Tiefe einer Flaeche aus
+   ihrem untersten Punkt kommt, erbte die Wand die nahe Tiefe des Stativfusses. Eine
+   Wand mit der Tiefe eines Stativs verdeckt dich. Jetzt: 220 Flaechen, und Wand- oder
+   Bodenanteile lassen sich gezielt herausschneiden.
+2. *Die Nachbearbeitung mauerte Luecken zu.* Sie fuellte je Bildspalte alles zwischen
+   oberstem und unterstem markierten Punkt — bei einer Stuhlreihe also auch den Teppich
+   zwischen den Stuehlen, genau dort, wo du gehst. Jetzt wird nur noch INNERHALB eines
+   zusammenhaengenden Objekts gefuellt.
+
+**Und die eigentliche Lehre:** geprueft wurde bisher die *Auswahl*, nicht das *Ergebnis*.
+Alle drei Fehler entstehen erst nach der Auswahl oder sind eine schlichte Auslassung —
+im Deckungsbild sieht man sie sofort. Ab jetzt wird je Einstellung das Deckungsbild
+angesehen, also das, was der Renderer wirklich ueber dich legt.
+
+Beim Durchsehen sind drei weitere Stellen derselben Art aufgefallen und mitbehoben
+worden, bevor du sie melden musstest: Wandband in Einstellung 4, Fensterwand in 7,
+Wand ueber dem Bildschirm in 9.
+
+**ROOM1130 bleibt weiter ohne Masken** — er ist fast durchgehend Flur.
+
+**Worauf es ankommt:** liegt irgendwo noch ein Stueck Hintergrund ueber dir, wo du
+davor stehst? Das ist der schlimmere Fall; melde ihn bitte mit der Kamera-Einstellung.
+Fehlende Verdeckung (du stehst auf statt hinter etwas) ist der harmlosere und kommt
+danach dran.
+
+---
+
 # RE1.5 Port — v0.4.2 (Early Preview)
 
 **ROOM1140 (Briefing Room), zweiter Anlauf — diesmal nur freistehende Objekte.**
