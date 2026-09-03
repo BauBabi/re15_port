@@ -1,3 +1,31 @@
+# RE1.5 Port — v0.4.1 (Early Preview)
+
+**Sauberer Stand: die handgezeichneten Masken fuer ROOM1130 und ROOM1140 sind wieder
+draussen.**
+
+Du hattest gemeldet, dass es beim Vorbeilaufen an den Waenden ueberall ueberlagernde
+Grafikfehler gibt. Der Befund ist bestaetigt und die Ursache ist meine: ich hatte
+**Seitenwaende** markiert. Eine Wandflaeche grenzt entlang einer langen Diagonale direkt
+an den Boden — genau dort, wo du laeufst. Jeder Ueberstand der Nachbearbeitung landet
+also unmittelbar in deinem Laufweg. Dazu kam in mehreren Einstellungen, dass ich
+Teppichflaechen fuer Moebel gehalten habe; Boden zu markieren verdeckt die Figur
+ueberall, weil der Boden sich hinter sie zieht.
+
+Bei der Durchsicht von 5 der 9 Einstellungen in ROOM1140 fanden sich in **vier** davon
+Fehler. Statt dir das weiter zuzumuten, sind beide Raeume auf den Original-Stand
+zurueckgesetzt — dort gibt es keine Verdeckung, aber auch keine falsche.
+
+**Was drin bleibt:** die 232 automatisch erzeugten Einstellungen in 32 Raeumen. Die
+stammen aus der Vordergrund-GRAFIK der Original-Kuenstler und sind von dieser
+Fehlerklasse nicht betroffen — dort wurde nichts von Hand ausgewaehlt.
+Ebenso die Reparatur aus v0.3.98: 188 Einstellungen, deren Masken im Original vorliegen
+und im Port bis dahin gar nicht geladen wurden.
+
+Ich zeichne die beiden Raeume neu — dann ohne Waende, nur freistehende Objekte, wo die
+Fehlerquote nachweislich niedrig ist.
+
+---
+
 # RE1.5 Port — v0.4.0 (Early Preview)
 
 **Testpaket: ROOM1130 (Flur vor dem Briefing Room) ist nachgezeichnet.**
