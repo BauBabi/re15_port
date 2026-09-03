@@ -7,12 +7,19 @@ erkennt in einem unbekannten Raum keinen Vordergrund (gemessen 20-26 % Praezisio
 Blick darauf schon. Die Zerlegung in Flaechen macht weiterhin das Bild, nicht das Urteil:
 die Raender folgen den echten Objektkanten.
 
-BEWUSST GROBE ZERLEGUNG: bei 400 Flaechen sind die Nummern unlesbar. 60-90 Flaechen sind
-beschriftbar und folgen den Kanten immer noch gut genug; wo es feiner sein muss, kann ein
-Blatt mit hoeherer Zahl nachgereicht werden.
+FEINHEIT: 90 Flaechen waren ZU GROB (Nutzer-Befund 2026-09-03, error01.png): in
+ROOM1140 Cut 2 lagen Wandbild, Wand, Sofa und Stativ in EINER Flaeche. Sie liess sich
+also nur ganz oder gar nicht waehlen — gewaehlt hiess: die Wand verdeckt Leon.
+Standard ist deshalb 220. Damit die Nummern dabei lesbar bleiben, wird das Blatt in
+Kacheln ausgegeben (--kachel x0,y0,x1,y1), nicht als ein Bild.
+Gemessen gegen die Kuenstler-Silhouetten (build/kalib.py, ROOM1150 Cut 1/2/3):
+    seg  90  Praezision 67.2 %  Ausbeute 89.0 %
+    seg 220  Praezision 70.6 %  Ausbeute 89.8 %
+    seg 320  Praezision 70.8 %  Ausbeute 91.6 %   (Nummern nicht mehr handhabbar)
 
 Aufruf:
     python re15_port/tools/maske/blatt.py ROOM1140 0 --out build/blaetter
+    python re15_port/tools/maske/blatt.py ROOM1140 2 --kachel 160,0,320,240 --zoom 6
 """
 import argparse
 import os
@@ -40,7 +47,7 @@ def aufhellen(bg, gamma=0.55):
     return np.power(np.clip(x, 0, 1), gamma)
 
 
-def sheet(bg, seg, sel=None, zoom=None):
+def sheet(bg, seg, sel=None, zoom=None, kachel=(0, 0, 320, 240)):
     """-> PIL-Bild, ZWEI Felder nebeneinander.
 
     Links das reine (aufgehellte) Bild — dort wird die Szene beurteilt.
@@ -53,19 +60,24 @@ def sheet(bg, seg, sel=None, zoom=None):
         base = base.copy()
         base[sel] = base[sel] * 0.45 + np.array([1.0, 0.15, 0.8]) * 0.55
     Z = zoom or ZOOM
-    links = Image.fromarray((base * 255).astype(np.uint8))
+    x0, y0, x1, y1 = kachel
+    W, H = x1 - x0, y1 - y0
+    links = Image.fromarray((base * 255).astype(np.uint8)).crop(kachel)
     img = (mark_boundaries(base, seg, color=(1, 1, 0), mode="inner") * 255).astype(np.uint8)
-    rechts = Image.fromarray(img)
-    pil = Image.new("RGB", (320 * Z * 2 + 8, 240 * Z), (30, 30, 30))
-    pil.paste(links.resize((320 * Z, 240 * Z), Image.LANCZOS), (0, 0))
-    pil.paste(rechts.resize((320 * Z, 240 * Z), Image.NEAREST), (320 * Z + 8, 0))
+    rechts = Image.fromarray(img).crop(kachel)
+    pil = Image.new("RGB", (W * Z * 2 + 8, H * Z), (30, 30, 30))
+    pil.paste(links.resize((W * Z, H * Z), Image.LANCZOS), (0, 0))
+    pil.paste(rechts.resize((W * Z, H * Z), Image.NEAREST), (W * Z + 8, 0))
     d = ImageDraw.Draw(pil)
-    OFF = 320 * Z + 8
+    OFF = W * Z + 8
     for s in np.unique(seg):
         ys, xs = np.nonzero(seg == s)
-        if len(ys) < 25:                      # Winzflaechen nicht beschriften
+        if len(ys) < 12:                      # Winzflaechen nicht beschriften
             continue
-        cx, cy = int(xs.mean()) * Z + OFF, int(ys.mean()) * Z
+        mx, my = int(xs.mean()), int(ys.mean())
+        if not (x0 <= mx < x1 and y0 <= my < y1):
+            continue
+        cx, cy = (mx - x0) * Z + OFF, (my - y0) * Z
         txt = str(int(s))
         # Kontrastkasten, sonst verschwindet die Zahl im Bild
         d.rectangle([cx - 9, cy - 8, cx + 9 + 6 * (len(txt) - 1), cy + 8], fill=(0, 0, 0))
@@ -80,8 +92,9 @@ def main():
     ap.add_argument("--cd", default="re15_port/shared_assets/PSX")
     ap.add_argument("--ppm", default="build/bg_ppm")
     ap.add_argument("--out", default="build/blaetter")
-    ap.add_argument("--segments", type=int, default=80)
+    ap.add_argument("--segments", type=int, default=220)
     ap.add_argument("--zoom", type=int, default=3)
+    ap.add_argument("--kachel", default="", help="Ausschnitt x0,y0,x1,y1 (320x240)")
     a = ap.parse_args()
 
     room = a.room.upper()
@@ -100,9 +113,11 @@ def main():
             print("  %s Cut %d: Hintergrund fehlt" % (room, c))
             continue
         seg = segment(bg, a.segments)
-        p = os.path.join(a.out, "%s_%02d.png" % (room, c))
-        sheet(bg, seg, zoom=a.zoom).save(p)
-        np.save(os.path.join(a.out, "%s_%02d_seg.npy" % (room, c)), seg)
+        np.save(os.path.join(a.out, "%s_%02d_s%d_seg.npy" % (room, c, a.segments)), seg)
+        kach = tuple(int(v) for v in a.kachel.split(",")) if a.kachel else (0, 0, 320, 240)
+        p = os.path.join(a.out, "%s_%02d_s%d_%s.png"
+                         % (room, c, a.segments, a.kachel.replace(",", "_") or "voll"))
+        sheet(bg, seg, zoom=a.zoom, kachel=kach).save(p)
         print("  %s -> %d Flaechen" % (p, len(np.unique(seg))))
 
 

@@ -29,6 +29,53 @@ import geom
 from geom import load_bg, load_rdt
 
 
+def kaesten(text):
+    """"x0,y0,x1,y1;x0,y0,x1,y1" -> [(x0,y0,x1,y1)] in Bildkoordinaten."""
+    out = []
+    for teil in text.split(";"):
+        teil = teil.strip()
+        if not teil:
+            continue
+        v = [int(x) for x in teil.split(",")]
+        out.append((max(0, v[0]), max(0, v[1]), min(320, v[2]), min(240, v[3])))
+    return out
+
+
+def spalten_fuellen(region, art):
+    """Kerben je Bildspalte schliessen — je Zusammenhangskomponente (Standard) oder global."""
+    if art == "global":
+        for x in range(region.shape[1]):
+            ys = np.nonzero(region[:, x])[0]
+            if len(ys):
+                region[ys.min():ys.max() + 1, x] = True
+        return region
+    lab, n = ndimage.label(region, structure=np.ones((3, 3)))
+    out = region.copy()
+    for k in range(1, n + 1):
+        m = lab == k
+        for x in np.nonzero(m.any(0))[0]:
+            ys = np.nonzero(m[:, x])[0]
+            out[ys.min():ys.max() + 1, x] = True
+    return out
+
+
+def lade_seg(blattdir, room, cut, segments, ppm, rid):
+    """Segmentierung laden oder erzeugen. Der Dateiname traegt die Feinheit — eine
+    Auswahl ist nur zusammen mit IHRER Feinheit gueltig (die alten Dateien ohne
+    Feinheit im Namen liessen sich nicht mehr reproduzieren)."""
+    p = os.path.join(blattdir, "%s_%02d_s%d_seg.npy" % (room, cut, segments))
+    if os.path.exists(p):
+        return np.load(p)
+    alt = os.path.join(blattdir, "%s_%02d_seg.npy" % (room, cut))
+    if os.path.exists(alt):
+        return np.load(alt)
+    from blatt import segment
+    seg = segment(load_bg(ppm, rid, cut), segments)
+    os.makedirs(blattdir, exist_ok=True)
+    np.save(p, seg)
+    return seg
+
+
 def artist_region(rdt, cam, cut):
     """Vereinigung der Original-Maskenrechtecke, oder None."""
     po = struct.unpack_from("<I", rdt, cam + cut * 32 + 0x1C)[0]
@@ -134,17 +181,47 @@ def main():
     # jeder Bildspalte durchgehend), ohne die Aussenkante zu verschieben.
     ap.add_argument("--oben", type=int, default=6, help="Aufweitung nach oben (Standard 6)")
     ap.add_argument("--grow", type=int, default=1, help="Saum rundum (Standard 1)")
-    ap.add_argument("--keine-spalten", action="store_true", help="Spaltenfuellung aus")
+    # ⛔ WARUM JE KOMPONENTE (Nutzer-Befund 2026-09-03, error02.png): die globale
+    # Spaltenfuellung fuellte in ROOM1140 Cut 1 den Gang ZWISCHEN den Stuehlen mit
+    # Maske — sie fuellt je Bildspalte alles zwischen oberstem und unterstem
+    # markierten Pixel, und in einer Spalte liegen Stuhl (oben, fern) und Stuhl
+    # (unten, nah) mit Teppich dazwischen. Der Teppich bekam damit die NAHE Tiefe
+    # der unteren Kante und verdeckte Leon, der genau dort geht.
+    # Gemessen gegen die Kuenstler-Silhouetten (build/kalib.py, ROOM1150 Cut 1/2/3,
+    # Auswahl als perfekt angenommen, seg 220, oben 4, Saum 1):
+    #     Fuellung global      Praezision 65.9 %  Ausbeute 93.0 %
+    #     Fuellung Komponente  Praezision 70.6 %  Ausbeute 89.8 %
+    #     Fuellung aus         Praezision 72.1 %  Ausbeute 88.2 %
+    # Gewaehlt: Komponente — schliesst Kerben INNERHALB eines Objekts (dafuer war
+    # sie da) und kann keine zwei Objekte mehr ueberbruecken.
+    ap.add_argument("--fuellen", choices=("aus", "komponente", "global"),
+                    default="komponente", help="Spaltenfuellung (Standard: komponente)")
+    # Feinheit der Superpixel. 90 war zu grob: in ROOM1140 Cut 2 lag das Wandbild
+    # MIT der Wand in EINER Flaeche, die dadurch nicht abwaehlbar war (error01.png).
+    # Gemessen (dieselbe Reihe): seg 90 -> 67.2 % / 89.0 %, seg 220 -> 70.6 % / 89.8 %.
+    ap.add_argument("--segments", type=int, default=220)
+    # ⛔ WARUM ES KAESTEN GIBT (Nutzer-Befund 2026-09-03, error01.png): eine Superpixel-
+    # Flaeche laesst sich nur GANZ oder GAR NICHT waehlen. In ROOM1140 Cut 2 lag das
+    # Wandbild in derselben Flaeche wie Sofa und Stativ — gewaehlt hiess: die WAND
+    # verdeckt Leon (ein Wandstreifen lag ueber seiner Schulter). Mit --minus wird
+    # der Wandanteil weggeschnitten, ohne die Flaeche ganz aufzugeben.
+    # Kaesten sind Bildkoordinaten x0,y0,x1,y1 (320x240), mehrere mit ";" getrennt.
+    ap.add_argument("--minus", default="", help="Kaesten abziehen: x0,y0,x1,y1;...")
+    ap.add_argument("--plus", default="", help="Kaesten hinzufuegen: x0,y0,x1,y1;...")
     a = ap.parse_args()
 
     room = a.room.upper()
     rid = int(room[4:], 16)
     rdt, _ = load_rdt(a.cd, room)
     cam = struct.unpack_from("<I", rdt, 0x24)[0]
-    seg = np.load(os.path.join(a.blatt, "%s_%02d_seg.npy" % (room, a.cut)))
+    seg = lade_seg(a.blatt, room, a.cut, a.segments, a.ppm, rid)
     bg = load_bg(a.ppm, rid, a.cut)
     ids = [int(x) for x in a.ids.replace(" ", "").split(",") if x]
     region = np.isin(seg, ids)
+    for k in kaesten(a.plus):
+        region[k[1]:k[3], k[0]:k[2]] = True
+    for k in kaesten(a.minus):
+        region[k[1]:k[3], k[0]:k[2]] = False
     if a.oben > 0:
         oben = region.copy()
         for k in range(1, a.oben + 1):
@@ -152,13 +229,14 @@ def main():
         region = oben
     if a.grow > 0:
         region = ndimage.binary_dilation(region, iterations=a.grow)
-    if not a.keine_spalten:
-        for x in range(region.shape[1]):
-            ys = np.nonzero(region[:, x])[0]
-            if len(ys):
-                region[ys.min():ys.max() + 1, x] = True
-    print("  Auswahl: %d Flaechen (oben %d, Saum %d, Spaltenfuellung %s) -> %.1f %% des Bildes"
-          % (len(ids), a.oben, a.grow, "aus" if a.keine_spalten else "an", 100 * region.mean()))
+    if a.fuellen != "aus":
+        region = spalten_fuellen(region, a.fuellen)
+    # Nach der Nachbearbeitung erneut abziehen: Aufweitung und Fuellung schieben sonst
+    # genau das wieder hinein, was der Kasten entfernen sollte.
+    for k in kaesten(a.minus):
+        region[k[1]:k[3], k[0]:k[2]] = False
+    print("  Auswahl: %d Flaechen (oben %d, Saum %d, Fuellung %s) -> %.1f %% des Bildes"
+          % (len(ids), a.oben, a.grow, a.fuellen, 100 * region.mean()))
 
     # ⛔ EIN VERSUCH, DER NICHT TRUG: eine Warnung, die gewaehlte Flaechen mit der
     # Bodenfarbe am unteren Bildrand vergleicht. In ROOM1140 Cut 3 meldete sie 13 von

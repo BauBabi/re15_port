@@ -1,6 +1,11 @@
 {
-  "ROOM1140": {
-    "0": [
+ "_hinweis": "Auswahl je Raum und Cut. 'gruppen' erlaubt mehrere Segmentierungs-feinheiten nebeneinander — eine Auswahl gilt NUR zusammen mit ihrer Feinheit. 'minus'/'plus' sind Kaesten x0,y0,x1,y1 (Bildkoordinaten 320x240), mehrere mit ';'. Standard: oben 4, grow 1, fuellen komponente. Anwenden mit re15_port/tools/maske/raum.py.",
+ "ROOM1140": {
+  "0": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       44,
       47,
       49,
@@ -30,8 +35,15 @@
       75,
       76,
       77
-    ],
-    "1": [
+     ]
+    }
+   ]
+  },
+  "1": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       33,
       43,
       45,
@@ -45,8 +57,15 @@
       72,
       74,
       75
-    ],
-    "2": [
+     ]
+    }
+   ]
+  },
+  "2": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       30,
       38,
       40,
@@ -69,8 +88,17 @@
       68,
       69,
       71
-    ],
-    "3": [
+     ]
+    }
+   ],
+   "minus": "240,0,320,104",
+   "_warum": "Wandbild und Wandband ueber der Sitzbank lagen in derselben Superpixel-Flaeche wie Bank und Stativ; der Wandstreifen wurde ueber Leons Schulter gezeichnet (error01.png). Schnitt bei y=104 gemessen: dort beginnt sowohl die Rueckenlehne der Bank als auch der Kamerakopf des Stativs, darueber ist nur Wand."
+  },
+  "3": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       34,
       39,
       40,
@@ -80,8 +108,15 @@
       48,
       49,
       53
-    ],
-    "4": [
+     ]
+    }
+   ]
+  },
+  "4": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       28,
       31,
       33,
@@ -108,8 +143,17 @@
       61,
       62,
       65
-    ],
-    "5": [
+     ]
+    }
+   ],
+   "minus": "85,0,200,100;145,113,205,170",
+   "_warum": "Wandband ueber den Tischen und Teppich im Gang rechts des Seitentisches"
+  },
+  "5": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       37,
       39,
       42,
@@ -124,8 +168,36 @@
       69,
       71,
       79
-    ],
-    "7": [
+     ]
+    },
+    {
+     "segments": 220,
+     "ids": [
+      62,
+      64,
+      65,
+      79,
+      81,
+      82,
+      97,
+      98,
+      100,
+      80,
+      90,
+      92,
+      94,
+      101,
+      105
+     ]
+    }
+   ],
+   "_warum": "Leon wurde UEBER die Anschlagtafel gezeichnet — sie hatte gar keine Maske (error03.png)"
+  },
+  "7": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       35,
       37,
       38,
@@ -135,8 +207,17 @@
       57,
       59,
       73
-    ],
-    "9": [
+     ]
+    }
+   ],
+   "minus": "96,0,170,118",
+   "_warum": "Fensterwand hinter dem fernen Tischende war mitmarkiert"
+  },
+  "9": {
+   "gruppen": [
+    {
+     "segments": 90,
+     "ids": [
       26,
       32,
       35,
@@ -153,6 +234,11 @@
       59,
       66,
       67
-    ]
+     ]
+    }
+   ],
+   "minus": "95,0,160,73;246,88,268,186",
+   "_warum": "Wand ueber Rechnerturm und Bildschirm sowie Wandecke/Sockelleiste rechts des Stuhls waren mitmarkiert"
   }
+ }
 }

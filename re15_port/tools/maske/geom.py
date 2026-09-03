@@ -22,17 +22,24 @@ from scipy import ndimage
 # Spielweites Maximum der Maskenzahl je Cut (RDT-Header Byte[7]; ROOM3000/3001 Cut 3).
 MAX_MASKS_PER_CUT = 105
 
-# Tiefenfaktor auf den geschaetzten Bodenkontakt. END-ZU-ENDE kalibriert gegen 209
-# Kuenstler-Cuts (analysis/.../q12_faktor_schnell.py):
-#   Faktor   Uebereinstimmung   falsch_verdeckt   falsch_gezeigt
-#    0.75        75.4 %             8.8 %            15.7 %
-#    0.80        75.2 %             7.1 %            17.6 %
-#    0.90        73.7 %             4.6 %            21.8 %
-#    1.00        70.7 %             3.0 %            26.3 %
-# Gewaehlt 0.90: nicht die hoechste Trefferquote, aber die Zeile, die dem Grundsatz
-# folgt — eine FEHLENDE Maske laesst alles wie heute, eine FALSCHE malt Hintergrund
-# ueber die Figur. Der gemessene Versatz war 1.32; das Optimum bei etwa 1/1.32 zeigt,
-# dass die Groessenordnung aus der Messung faellt und nicht aus dem Bauch.
+# Tiefenfaktor auf den geschaetzten Bodenkontakt. DIREKT gegen die Kuenstler-Tiefen
+# gemessen (build/tiefenkalib.py): 5151 Original-Maskenrechtecke aus allen Cuts, die
+# sowohl Rechtecke als auch einen SLD-Atlas haben; als Region wird die ECHTE
+# Kuenstler-Silhouette benutzt, damit nur der Tiefenrechner gemessen wird.
+#   Faktor  Medianfehler  |Fehler|<8   zu NAH (verdeckt zu viel)   zu FERN (wirkungslos)
+#    0.80      -9.0          15.7 %            50.7 %                    30.9 %
+#    0.90      +2.0          20.7 %            35.5 %                    41.8 %
+#    1.00     +13.0          17.5 %            24.2 %                    55.8 %
+#    1.10     +24.0          12.9 %            16.3 %                    68.5 %
+#    1.20     +34.0           7.9 %            12.1 %                    78.9 %
+# 0.90 ist das Optimum der direkten Messung: kleinster Medianfehler (+2 von rund 80)
+# und hoechster Anteil praktisch richtiger Werte. Groessere Faktoren senken zwar die
+# schaedliche Richtung "zu nah", aber nur, indem sie die Maske insgesamt wirkungslos
+# machen (bei 1.10 sind schon zwei Drittel zu fern).
+# ⛔ Die frueher hier stehende Begruendung war in sich widerspruechlich: sie berief
+# sich auf "eine falsche Maske ist schlimmer als eine fehlende" und waehlte dann den
+# Wert mit MEHR falscher Verdeckung als 1.00. Der Zahlensatz stammte ausserdem aus
+# einem Ersatzmass (nachgebaute Verdeckung), nicht aus den Tiefen selbst.
 DEPTH_FACTOR = 0.90
 
 # Bodenhoehe fuer den Kontaktpunkt. y0 = 0 ist die Hauptebene; Raeume mit mehreren
