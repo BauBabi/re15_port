@@ -1540,3 +1540,65 @@ n:m umgebaut werden — jede Zone sammelt ihre Rechtecke, statt eines zu belegen
 Für Blatt 3 bleibt das Problem bestehen, aber mit anderer Ursache als gedacht: nicht der
 fehlende Anker allein, sondern dass dort mehrere Räume als Flur-Ketten gemalt sind und
 eine Größen-Anpassung deshalb gar nicht greifen kann.
+
+## §26 Die fehlenden Zeilen sind berechenbar — 80 von 96 Räumen
+
+### Erst der Befund, der alles erklärt: es gibt keinen gemeinsamen Weltraum
+
+Die Abbildungen der geeichten Räume eines Blattes stimmen **nicht** überein. Als affine
+Form `map_x = a·wx + b` geschrieben, streuen sie auf Blatt 7 über `a` = 0,00187…0,00238
+und `b` = 118…270:
+
+```
+ROOM3000  map_x = 0.00215*wx +139.8      ROOM3040  map_x = 0.00214*wx +251.4
+ROOM3030  map_x = 0.00187*wx +255.7      ROOM3090  map_x = 0.00197*wx +270.0
+```
+
+⛔ **Jeder Raum hat sein eigenes lokales Koordinatensystem** (RE1.5-Raumkoordinaten sind
+raumlokal, jede RDT hat ihren eigenen Ursprung). Die Zeile @0x800768b0 *ist* die
+Platzierung dieses einen Raums auf der Kunst — es gibt keine Blatt-weite Abbildung, in die
+man einen fehlenden Raum einfach hineinprojizieren könnte. Das erklärt auch, warum die
+Maßstab-Anpassung auf Blatt 3 flach blieb.
+
+**Nebenbefund, unabhängige Bestätigung von v0.3.96:** ROOM5030 und ROOM5110 tragen im
+Original **dieselbe** Zeile (0.00171, +179.7), ebenso ROOM5040/ROOM5120 und
+ROOM50A0/ROOM5140. Die drei Varianten-Paare, die ich aus Zellzahl und Türschlitzen
+hergeleitet hatte, stehen in der ausgelieferten Tabelle als identische Abbildung.
+
+### Die Tür ist der gemeinsame Punkt
+
+Eine Tür ist derselbe Ort in **zwei** lokalen Systemen: Raum A kennt sie bei (ax,az),
+Raum B bei (bx,bz). Ist A geeicht, ist der Kartenpunkt der Tür ausrechenbar — und Bs Zeile
+muss (bx,bz) genau dorthin abbilden. Damit fällt Bs Versatz aus der Gleichung.
+
+**Auslassprobe** an den 38 geeichten Räumen (so tun, als fehlte die Zeile, aus dem
+Nachbarn herleiten, mit der echten vergleichen) — nur wo das Verfahren gelten kann
+(gleiches Blatt, keine Selbst-Tür, beide Räume einzonig):
+
+| | |
+|---|---|
+| geprüfte Paare | 32 |
+| Median-Fehler | **6 px** |
+| ≤ 4 px | 13 |
+| ≤ 8 px | 21 |
+
+Die besten liegen bei **0–2 px** (ROOM1040→ROOM1030 exakt). Der Restfehler kommt daher,
+dass mit *einer* Tür nur der Versatz bestimmt ist und der Maßstab vom Nachbarn geliehen
+werden muss — und der schwankt je Raum um bis zu Faktor 2.
+
+### Mit zwei Türen ist auch der Maßstab bestimmt
+
+Zwei Türen zu bekannten Nachbarn = zwei Punkte, zwei Unbekannte je Achse. Über vier
+Ausbreitungsrunden:
+
+| Stufe | Räume |
+|---|---|
+| ausgeliefert geeicht | 38 |
+| **zwei** bekannte Nachbarn → Versatz **und** Maßstab exakt | +9 |
+| **eine** Tür → Versatz exakt, Maßstab geliehen (≈ 6 px Median) | +33 |
+| **nicht erreichbar** | **16** |
+
+**80 von 96 Räumen** lassen sich damit auf der Original-Kunst verorten. Die 16 Reste haben
+keinen bekannten Nachbarn auf ihrem Blatt — darunter **alle sechs Räume von Blatt 3**
+(ROOM10C0…ROOM1110), was den Anker-Befund aus §24 bestätigt, sowie die schon bekannten
+Einzelgänger ROOM1160, ROOM1250, ROOM10B0, ROOM5080, ROOM5090, ROOM6020.
