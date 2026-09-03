@@ -1,5 +1,33 @@
 # RE1.5 Port — v0.5.0 (Early Preview)
 
+**ROOM1140 ist komplett zurueckgezogen.** Es ist keine von mir gezogene oder automatisch
+geschnittene Maske mehr im Build. Die Masken der uebrigen Raeume bleiben — deren Umrisse
+stammen aus den Atlanten der Original-Kuenstler, nicht aus meiner Zeichnung.
+
+Warum: gerade, kontrastreiche Kanten wurden sauber (der Konferenztisch in Einstellung 0
+deckte 97 % seiner Kante, nichts auf dem Teppich), aber Pult mit Mikrofonen, die beiden
+Schraenke und die Stuehle behielten einen Saum Teppich bzw. Wand. Drei Verfahren, drei
+Grenzen: das Auswahlraster ist flaechig, der Bildschnitt nach Kontrast verliert Dunkles
+vor Dunklem, und ein getipptes Polygon trifft nur auf rund ±4 Bildpunkte. Die einzigen
+exakt sitzenden Stuecke im ganzen Raum waren deine beiden freigestellten Fahnen.
+
+**Fuer deine Freistellungen liegt alles bereit:**
+
+* `masken_vorschau/ROOM1140_hintergrund/` — alle zehn Hintergrundplatten als PNG, je
+  320x240 und 960x720 (derselbe Massstab wie deine Bildschirmfotos).
+* Du stellst frei, ich baue ein: **ausrichten musst du nichts.** Die freigestellten
+  Punkte sind Hintergrundpunkte, also gibt es genau eine Stelle, an der sie passen —
+  Lage und Massstab messe ich (bei deinen beiden Fahnen 86,7 % bzw. 99,6 %
+  Uebereinstimmung).
+* Ein PNG je Gegenstand, Dateiname egal. Was ich daraus mache: Lage, Tiefe aus dem
+  Bodenkontakt, Rechteckzerlegung, Atlas, Paket.
+* Zum Ansehen jederzeit: `re15_port/tools/maske/vorschau.py <RAUM>` schreibt die fertige
+  Maske als RGBA-PNG nach `masken_vorschau/`.
+
+---
+
+# RE1.5 Port — v0.5.0 (Early Preview)
+
 **Die Karte springt nicht mehr durch die Bereiche.**
 
 Du hattest das dreimal gemeldet. Meine eigene Messschiene sagte dazu „61 von 149
