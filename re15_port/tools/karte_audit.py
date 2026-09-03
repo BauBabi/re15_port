@@ -77,11 +77,39 @@ for z in HAUPT:
     ZID2RAUM.setdefault(z['zid'], z['room'])
 
 
+import kunst_zuordnung as _K                                # noqa: E402
+
+_RECHTECKE = {}
+
+
+def gemaltes_rechteck(page, rect):
+    """Ein Rechteck aus der ausgelieferten Seiten-Tabelle @0x80076840."""
+    if page not in _RECHTECKE:
+        try:
+            _RECHTECKE[page] = _K.rechtecke(page)
+        except Exception:
+            _RECHTECKE[page] = []
+    rs = _RECHTECKE[page]
+    if 0 <= rect < len(rs):
+        _k, x, y, w, h = rs[rect]
+        return (x, y, w, h)
+    return None
+
+
 def kasten(z):
-    if not z['synth']:
-        return None
-    s = SYNTH[z['synth'] - 1]
-    return (s['x'], s['y'], s['w'], s['h'])
+    """Das Rechteck einer Zone - gemaltes ORIGINAL oder Schema-Zeichnung.
+
+    ⛔ Bis 2026-09-04 lieferte diese Funktion NUR fuer Schema-Zeichnungen etwas. Das
+    ging gut, solange jede Zone eine trug (gemessen: 234 von 234); sobald Zonen ihr
+    gemaltes Rechteck benutzen, meldete Pruefung [B1] sie als "ohne Zeichnung" - 65
+    falsche Fehler, und [F]/[G]/[H] uebersprangen sie stillschweigend.
+    """
+    if z['synth']:
+        s = SYNTH[z['synth'] - 1]
+        return (s['x'], s['y'], s['w'], s['h'])
+    if z.get('rect', 255) != 255:
+        return gemaltes_rechteck(z['page'], z['rect'])
+    return None
 
 
 def auf_karte(z, wx, wz):

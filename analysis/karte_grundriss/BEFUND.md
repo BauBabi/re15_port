@@ -1934,3 +1934,89 @@ Der Fall ist bis auf den Löser durchdiagnostiziert: die Notkante `ROOM1090 → 
 ROOM1090 immer an **ROOM10F0** an (9 von 9 Versuchen, über dessen eigene Notkante) und
 prüft die Bindung an ROOM1100 danach nie wieder nach. Am Ende liegt ROOM1090 von **beiden**
 42 px entfernt.
+
+
+## §32 Original-Kartenmaterial statt gerechneter Grundrisse — Stand 2026-09-04
+
+Nutzer: *„Die Map hat noch immer die selbstgezeichneten Räume."* und *„wollten wir jetzt
+ja doch das Original Kartenmaterial nutzen und nur die Türen durch RE 2 Türen ersetzen
+und Treppensymbole hinzufügen."*
+
+### Der Befund
+
+**234 von 234 Zonen tragen `rect = 255`** — keine einzige benutzt ein gemaltes
+Original-Rechteck, auf keinem Blatt. Die Zuordnung auf die Kunst wird sehr wohl
+**berechnet** (`assign`, 75 von 103 Zonen), aber an **zwei** Stellen im Generator
+bedingungslos überschrieben:
+
+```python
+gen_map_zones.py:1763   if (page_of(b), b, i) in grundrisse: continue   # Zeile faellt weg
+gen_map_zones.py:~1893  synth[_k] = ...                                  # jeder Ort bekommt eine Zeichnung
+```
+
+Das geht auf v0.3.84 zurück (Nutzer-Freigabe 2026-09-01, [[reai-v2-karte-grundriss]]);
+die Richtung ist jetzt zurückgenommen.
+
+⛔ **Beide Stellen müssen gemeinsam schalten.** Nur eine gedreht lässt eine Zone durch
+beide Raster fallen und ganz aus der Tabelle verschwinden: gemessen 234 → 66 Zeilen, nur
+noch 31 von 96 Räumen im Live-Test.
+
+### Was funktioniert
+
+`RE15_KUNST=1` dreht beide Stellen um. Ergebnis: **144 von 210 Zonen mit gemaltem
+Original-Rechteck**, jedes Blatt zeigt Original-Material, Blatt 4 und 5 zu 100 %. Und die
+Karte wird dadurch strukturell besser — die Handarbeit ist stimmig:
+
+| Audit | Grundriss-Lösung | Original-Material |
+|---|---|---|
+| [F] Lücken | 0 (nach Fix) | **0** |
+| [K] Überlappung | Blatt 7: 30 % | **0** |
+| [M] Erscheinungspunkt weit | 14 | **0** |
+| [N] Symbole übereinander | 0 (nach Fix) | **0** |
+
+`RE15_KUNST=misch` behält zusätzlich die 33 Räume, die das Original gar nicht malt.
+
+### ⛔ Was es blockiert
+
+**Mit `RE15_KUNST=1` zeichnet der Port die gemalten Kacheln GAR NICHT.** Der Dump der
+Op-Liste für ROOM1130 (Blatt 4, dort zu 100 % Original) enthält **keine einzige
+Raumfläche** — weder `FILL` noch `SPRT`. Die Rechteck-Schleife überspringt sie also,
+das heißt `re15_map_rect_state()` meldet sie weder als besucht noch als aktuell. **Wo
+das hängt, habe ich nicht gefunden.**
+
+Zwei Dinge, die dabei zu klären sind:
+
+* Die gemalten Rechtecke sind **`SPRT`-Bildkacheln der Originalkarte**, im Zustandston
+  moduliert (grau unbesucht, grün besucht, rot aktuell 192/24/24) — **keine `FILL`s** wie
+  die Schema-Zeichnungen (74/20/20). Jede Prüfung, die nur `FILL` kennt, ist für die
+  Kunst blind.
+* Bei `RE15_KUNST=misch` überlappen die 33 Löser-Kästen die Kacheln, und weil die Kacheln
+  **zuerst** eingetragen werden (früher = oben, [[reai-v2-zeichenreihenfolge-invers]]),
+  verschwinden die Kästen darunter. Es gibt keinen gemeinsamen Weltraum (§26) — Mischen
+  ist der falsche Weg; entweder Kunst oder Grundriss.
+
+### ⛔ Ein Umbau der Messschiene, der zurückgenommen wurde
+
+Um die Kunst messen zu können, hatte ich `test_map_raum_live` beigebracht, auch
+`SPRT`-Kacheln als Raumfläche zu zählen. **Das hat die Schiene zerlegt:** der
+Kartenschirm zeichnet auch Rahmen und Panels als `SPRT`, die liegen früher in der Liste,
+und damit galt rechnerisch jeder Raum als verdeckt — 96 → **4 von 96** gemeldete
+Hervorhebungen, bei völlig unveränderter Karte. Ein Filter auf den Zustandston hat es
+nicht gerettet; die Ursache blieb offen, also ist der Umbau **zurückgenommen**. Die
+Schiene steht wieder bei 96/96.
+
+Behalten wurde nur die Audit-Seite: `karte_audit.kasten()` liefert jetzt auch das gemalte
+Rechteck, sonst meldet [B1] 65 Räume als „ohne Zeichnung", die in Wahrheit ihr
+Original-Rechteck benutzen.
+
+### Was für den Wechsel noch fehlt
+
+1. Finden, warum `re15_map_rect_state()` die zugeordneten Rechtecke nicht als
+   besucht/aktuell meldet.
+2. Eine Messschiene, die `SPRT`-Kacheln **richtig** von Rahmenwerk trennt.
+3. Entscheiden, was mit den 28 Räumen ohne Zuordnung geschieht — das Original malt sie
+   nicht; sie blieben auf der Karte leer, so wie dort.
+
+Türsymbole und Treppen sind davon unabhängig **fertig**: der RE1.5-Nischen-Code ist tot
+(`(void)SYM;`), gezeichnet wird der gelbe RE2-Balken, und Audit [D1]/[I] melden je 0
+fehlende.

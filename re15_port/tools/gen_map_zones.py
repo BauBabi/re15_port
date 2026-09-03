@@ -1757,8 +1757,16 @@ def main():
     # Der Vorrang steht an ZWEI Stellen (hier und beim Fuellen von `synth`); sie muessen
     # dieselbe Antwort geben, sonst faellt eine Zone durch beide Raster und verschwindet
     # ganz aus der Tabelle (gemessen: 234 -> 66 Zeilen, nur noch 31 von 96 Raeumen).
-    # RE15_KUNST=1: das gemalte Original-Rechteck gewinnt, wo eine Zuordnung existiert.
-    KUNST_VOR = os.environ.get('RE15_KUNST') == '1'
+    # ⛔ SEIT 2026-09-04 GEWINNT DIE KUNST (Nutzer: "wollten wir jetzt ja doch das
+    # Original Kartenmaterial nutzen und nur die Tueren durch RE2 Tueren ersetzen und
+    # Treppensymbole hinzufuegen"). Wo eine Zuordnung existiert, traegt die Zone das
+    # gemalte Rechteck des Originals; gezeichnet wird nur noch, was das Original gar
+    # nicht malt. RE15_KUNST=0 stellt die alte Grundriss-Loesung wieder her.
+    # ⛔ NOCH NICHT DEFAULT - der Zustandspfad traegt es nicht (siehe BEFUND §32):
+    # mit RE15_KUNST=1 zeichnet der Port die gemalten Kacheln GAR NICHT, weil
+    # re15_map_rect_state() sie weder als besucht noch als aktuell meldet. Bis das
+    # gefunden ist, bleibt die Grundriss-Loesung der Auslieferungsstand.
+    KUNST_VOR = os.environ.get('RE15_KUNST') in ('1', 'misch')
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     zid_von = {}
@@ -1905,7 +1913,19 @@ def main():
     # selbstgezeichneten Raeume."
     # RE15_KUNST=1 dreht den Vorrang um: wo eine Zuordnung existiert, gewinnt das
     # gemalte Rechteck des Originals; nur der Rest wird gezeichnet.
+    # ⛔ KEIN MISCHEN. Ein Loeser-Grundriss steht in SEINEM Koordinatensystem, die
+    # gemalte Kachel in dem des Kuenstlers - es gibt keinen gemeinsamen Weltraum
+    # (BEFUND §26). Beides auf ein Blatt zu legen erzeugt Ueberlappungen, und weil die
+    # Kacheln zuerst eingetragen werden (frueher = oben, Memory
+    # reai-v2-zeichenreihenfolge-invers), verschwinden die Kaesten darunter: gemessen
+    # 2026-09-04 zeigten dann nur noch 4 von 96 Raeumen ihre Hervorhebung.
+    # Mit RE15_KUNST (Default) zeichnet der Port deshalb NUR die Kunst - so wie das
+    # Original, das fuer diese Raeume ebenfalls nichts malt. RE15_KUNST=misch stellt die
+    # Mischung zum Nachmessen wieder her.
+    _MISCH = os.environ.get('RE15_KUNST') == 'misch'
     for _k, (_ab, _kasten, _rects) in sorted(grundrisse.items()):
+        if KUNST_VOR and not _MISCH:
+            continue
         if KUNST_VOR and assign.get((_k[1], _k[2])) is not None:
             continue
         synth[_k] = (_kasten[0], _kasten[1], _kasten[2], _kasten[3], _rects, _ab)
@@ -1915,6 +1935,7 @@ def main():
         for zi, bb in enumerate(zinfo[b]):
             if (pg, b, zi) in synth: continue       # hat schon einen Grundriss
             if assign.get((b, zi)) is not None: continue
+            if KUNST_VOR and not _MISCH: continue   # nur die Kunst, siehe oben
             x0, x1, z0, z1 = bb
             if x1 <= x0 or z1 <= z0: continue
             ex, ey = MASS.get(b >> 12, (460.0, 460.0))
