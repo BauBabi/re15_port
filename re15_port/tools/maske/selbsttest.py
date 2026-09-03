@@ -89,11 +89,17 @@ def main():
         m[150:200, 20:100] = True
         m[100:180, 260:315] = True          # jenseits der u8-Grenze
         m[60:90, 130:180] = True
+        # ⛔ DER FALL, DEN MEIN ERSTER SELBSTTEST NICHT HATTE: eine Flaeche, die
+        # BREITER ist als das 256 Pixel breite Atlasblatt. Genau daran fehlte in
+        # ROOM1140 die vordere Tischhaelfte (292x83, 77.5 % der Flaeche) — der Kasten
+        # wurde still abgewiesen. Der Test pruefte damals die u8-Grenze, aber nicht
+        # die Atlas-Breite.
+        m[205:235, 5:315] = True
         m[170:178, 40:60] = False           # Loch -> Transparenz muss greifen
 
         dep = geom.depth_map(rdt, cam, c, m)
         boxes = geom.rects_from_mask(m, geom.MAX_MASKS_PER_CUT)
-        tim, place = atlasmod.build(bg, m, boxes)
+        tim, place, boxes = atlasmod.build(bg, m, boxes)
         if tim is None or dep is None:
             print("  Cut %d: Atlas/Tiefe fehlgeschlagen" % c); bad += 1; continue
 

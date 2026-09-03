@@ -161,7 +161,7 @@ class Editor:
             boxes = geom.rects_from_mask(m, geom.MAX_MASKS_PER_CUT)
             if not boxes:
                 continue
-            tim, place = atlasmod.build(bg, m, boxes)
+            tim, place, boxes = atlasmod.build(bg, m, boxes)
             if tim is None:
                 continue
             # Eine Gruppe je Kasten: Anker = Bildposition - Atlasposition, dann ist

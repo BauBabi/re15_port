@@ -67,10 +67,21 @@ def build(rdt, cam, rid, cut, region, bg, out_dir, room):
     dep = geom.depth_map(rdt, cam, cut, region)
     if dep is None:
         return None
-    boxes = geom.rects_from_mask(region, geom.MAX_MASKS_PER_CUT)
-    if not boxes:
-        return None
-    tim, place = atlasmod.build(bg, region, boxes)
+    # Das Zerlegen uebergrosser Kaesten (atlas.split_oversize) kann die Zahl erhoehen —
+    # ein Bildschirmrechteck ist bis 320 breit, das Atlasblatt nur 256, also bis zu
+    # zwei Stuecke je Kasten. Deshalb wird die Anforderung so lange gesenkt, bis das
+    # ZERLEGTE Ergebnis in das Budget passt. NICHT abschneiden: ein weggelassener
+    # Kasten ist fehlende Verdeckung, und genau so entstand der Befund
+    # "die Fuesse stehen auf dem Tisch".
+    budget = geom.MAX_MASKS_PER_CUT
+    while budget >= 4:
+        boxes = geom.rects_from_mask(region, budget)
+        if not boxes:
+            return None
+        if len(atlasmod.split_oversize(boxes)[0]) <= geom.MAX_MASKS_PER_CUT:
+            break
+        budget -= 4
+    tim, place, boxes = atlasmod.build(bg, region, boxes)
     if tim is None:
         return None
     groups, masks = [], []
