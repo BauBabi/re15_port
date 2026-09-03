@@ -1909,16 +1909,24 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              * drin stehe." */
             int durchgang;
             const re15_map_zone_t *akt = re15_map_zone_current();
-            memset(getan, 0, sizeof getan);
-            for (durchgang = 0; durchgang < 2; durchgang++)
-            for (zi2 = 0; zi2 < nz; zi2++) {
+            /* ⛔ VIER DURCHGAENGE: ERST ALLE WANDLINIEN, DANN ALLE FUELLUNGEN.
+             * Je Raum erst Linie und dann Fuellung auszugeben genuegt NICHT: die
+             * Fuellung des zuerst gezeichneten Raums liegt ueber der LINIE aller
+             * spaeteren (frueher = oben), und wo sich Rechtecke ueberlappen
+             * (Blatt 7: 31 %, Blatt 9: 35 %) verschmolzen zwei Raeume dadurch
+             * optisch zu einer Flaeche. Reihenfolge von oben nach unten:
+             *   0 Linie des aktuellen Raums   1 Linien aller uebrigen
+             *   2 Fuellung des aktuellen Raums 3 Fuellungen aller uebrigen */
+            for (durchgang = 0; durchgang < 4; durchgang++)
+            for (memset(getan, 0, sizeof getan), zi2 = 0; zi2 < nz; zi2++) {
                 const re15_map_zone_t *zn2 = re15_map_zone_by_index(zi2);
                 int sx2, sy2, sw2, sh2, erste, nzell, k2, rs2, j2;
                 int cr2 = 128, cg2 = 128, cb2 = 128;
-                int ist_akt;
+                int ist_akt, nur_rand;
                 if (!zn2 || zn2->page != st->map_page) continue;
                 ist_akt = (akt && akt->room == zn2->room);
-                if ((durchgang == 0) != (ist_akt != 0)) continue;
+                if (((durchgang & 1) == 0) != (ist_akt != 0)) continue;
+                nur_rand = (durchgang < 2);
                 if (!re15_map_zone_synth(zn2, &sx2, &sy2, &sw2, &sh2, &erste, &nzell))
                     continue;
                 if (getan[zn2->synth]) continue;
@@ -1974,7 +1982,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * anschliesst. Die Linie liegt INNEN auf der Zelle - wie in den
                  * gemalten Kacheln, wo die helle Wandlinie zum Rechteck gehoert und
                  * die dunkle Fuellung innen liegt. */
-                for (k2 = 0; k2 < nzell; k2++) {
+                for (k2 = 0; nur_rand && k2 < nzell; k2++) {
                     int cx, cy, cw, ch, s2;
                     if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;
                     for (s2 = 0; s2 < 4; s2++) {
@@ -2012,7 +2020,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                         }
                     }
                 }
-                for (k2 = 0; k2 < nzell; k2++) {
+                for (k2 = 0; !nur_rand && k2 < nzell; k2++) {
                     int cx, cy, cw, ch;
                     re15_inv_op_t *q2;
                     if (!re15_map_synth_cell(erste + k2, &cx, &cy, &cw, &ch)) continue;

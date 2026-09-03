@@ -2070,7 +2070,17 @@ def main():
                 vor.append({'room': b, 'zi': zi, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
                             'mx': mx, 'my': my, 'seite': mkind,
                             'zid': zid_of.get((b, zi), 0), 'd': m})
-
+                # ⛔ KEINE ZWEITE MARKE AUF DEM EIGENEN BLATT DES ORTES.
+                # Versucht am 2026-09-03, weil 12 von 244 Tueren beim Davorstehen
+                # kein Symbol zeigten (die Marke liegt auf dem Blatt des BANDES,
+                # der Spieler sieht das Blatt seines Ortes). Die Tuer zusaetzlich
+                # auf dem eigenen Blatt zu zeichnen brachte +2 sichtbare Symbole -
+                # und verletzte eine ausdrueckliche Anforderung: der Pin
+                # unit_map_mark_band haelt fest, dass das ROOF-Blatt KEINE Tuer des
+                # unteren Bereichs von ROOM1170 traegt (aus einem Nutzer-Report
+                # abgeleitet). Dazu kam ein weiteres Paar Symbole uebereinander.
+                # Zurueckgenommen: zwei sichtbare Symbole wiegen eine gesetzte
+                # Anforderung nicht auf.
     # ============ DURCHGANG 2: EINE TUER = EINE MARKE (auch ueber Raumgrenzen) ====
     # Nutzer 2026-08-31: "sobald ich einen Raum betreten habe, wird die Tuer noch ein
     # 2. mal gezeichnet. Aber es ist die gleiche Tuer. Die darf nur einmal gezeichnet
