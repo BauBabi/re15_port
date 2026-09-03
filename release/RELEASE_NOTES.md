@@ -1,3 +1,20 @@
+# RE1.5 Port — v0.4.8 (Early Preview)
+
+Deine drei Punkte aus v0.4.7:
+
+* **Rechte Flagge.** Der Bildschnitt hat ihre untere Haelfte verloren — das Tuch ist dort
+  fast schwarz vor dunklem Teppich, es gibt schlicht keinen Kontrast zu schneiden. Sie
+  haengt gerade, also ist sie jetzt direkt als Kasten angegeben (Tuch, Stange, Fussteller).
+* **Die beiden Holzschraenke rechts und links** waren ueberhaupt nicht markiert. Auch sie
+  sind dunkel vor dunklem Teppich, aber nahezu rechteckig — jetzt als Kasten mit
+  **schraeger Unterkante**, weil ihre Vorderkante im Bild diagonal laeuft.
+* Das Metallgestell links ist ebenfalls dazugekommen.
+
+Die beiden Pflanzen auf den Schraenken bleiben absichtlich unmarkiert: fransiges Laub,
+jeder Kasten und jeder Bildschnitt nahm dort Wand mit. Zu wenig Nutzen fuer das Risiko.
+
+---
+
 # RE1.5 Port — v0.4.7 (Early Preview)
 
 **Die Maske ist jetzt die Silhouette des Gegenstands, nicht mehr ein Block darum herum.**
