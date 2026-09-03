@@ -1071,3 +1071,71 @@ Engine die Marke tatsächlich auflöst (`tuer_anziehen`, `re15_inv_screen.c`):
 
 ⛔ Ein Null-Rechteck-Filter wurde geprüft und **verworfen**: er macht die Fahrstühle an
 *beiden* Enden unmessbar, statt den Befund zu zeigen.
+
+## §19 Release-Prüfung v0.3.97 — drei Defekte, die erst am fertigen Paket auffielen
+
+Nach dem Neubau beider Plattformen wurden die Pakete in sechs unabhängigen Dimensionen
+geprüft und jeder Befund adversarisch gegengeprüft (23 bestätigt, 10 widerlegt). Drei
+Defekte waren echt und sind behoben.
+
+### 1. `short wz1` lief über — vier Weltboxen standen verkehrt herum
+
+`re15_map_zone_t` trug die Weltbox als `short`. ROOM1180 und ROOM1230 haben
+`wz1 = 32871`; im Binary stand **−32665**, also `wz1 < wz0` — die Box war invertiert.
+
+Folgenlos blieb das nur durch Zufall: beide Räume haben genau **eine** Zone, deshalb griff
+der Nächstgelegen-Rückfall (`re15_map_zones.c:101`) und lieferte dieselbe Zone. Bekäme
+einer dieser Räume je einen zweiten Bereich, verlöre der Marker dort seine Zone.
+
+Behoben durch `int32_t` (alle Verbraucher casteten ohnehin schon auf `int32_t`). Riegel:
+`unit_map_synth` prüft für jede der 234 Zeilen `wx1 > wx0 && wz1 > wz0`. ⛔ Der Riegel
+wurde **gegen die alte Feldbreite gegengeprüft** — mit `short` meldet er die vier Zeilen
+namentlich und fällt; ein Riegel, von dem ich nicht weiß, dass er auslöst, ist keiner.
+
+### 2. Das Linux-Archiv lieferte `re15_pc` ohne Ausführungsbit
+
+Im ZIP stand Modus **0644**. Wer auf dem Deck entpackt und das Binary direkt startet — oder
+es direkt als Nicht-Steam-Spiel einträgt, statt `run.sh` zu nehmen — bekam
+`Permission denied`.
+
+Die Ursache liegt im **Bauhost**, nicht im Paketbauer: das Arbeitsverzeichnis liegt auf
+einem Windows-Dateisystem, das MSYS ohne ACLs einbindet. Dort ist `chmod` wirkungslos, und
+MSYS leitet das Bit stattdessen aus Shebang bzw. Endung ab — `run.sh` kommt deshalb
+zufällig richtig heraus (`#!`), ein ELF-Binary nie. `install -m 755` lief still ins Leere.
+
+⛔ Genau diese Kombination macht den Fehler unsichtbar: die eine Datei, die man prüft
+(`run.sh`), stimmt, und erweckt den Eindruck, die Modi stimmten insgesamt.
+
+Behoben in `release/zip_exec_bit.py`: der Modus steht nicht im lokalen Kopf, sondern in den
+oberen 16 Bit von `external_attr` im **Zentralverzeichnis**, das bei Split-Archiven
+vollständig im letzten Volume (der `.zip`) liegt. Dort wird gesetzt — und anschließend
+**zurückgelesen**; ohne dieses Gate kehrt der Fehler beim nächsten Bau still wieder.
+
+### 3. Das Laufzeit-Gate lief für Linux nie
+
+`make_package.sh` überspringt die Asset-Herkunftsprüfung, wenn das Binary kein
+Windows-Binary ist — auf einem Windows-Host also **immer**. Das Linux-Paket war damit das
+einzige Artefakt ohne Herkunftsnachweis, genau die Klasse Fehler, die schon einmal
+durchgerutscht ist ([[reai-v2-asset-root-exe-anchor]]).
+
+Der Nachweis wurde im Container nachgeholt und ist **strenger** als der Windows-Lauf:
+Paket read-only gemountet, Repo nachweislich nicht erreichbar (`find / -xdev` findet weder
+`reAi_v2` noch `shared_assets` außerhalb `/pkg`), keine `RE15_*`-Variable gesetzt. Alle
+drei Läufe (cwd im Paket, cwd fremd, realer `run.sh`-Weg): `RESULT ok=26 missing=0`, alle
+26 Treffer aus `/pkg`.
+
+⛔ Und mit **Negativ-Kontrolle**, damit das Grün nicht leer ist: dasselbe Binary mit
+leerem Paket und erreichbarem Build-Pfad meldet ebenfalls `ok=26 missing=0` — aus
+`/src/re15_port`. Der einkompilierte Rückfall ist also lebendig; nur die Herkunftsspalte
+trennt echt von Täuschung. Eine reine „26/26 gefunden"-Meldung wäre wertlos gewesen.
+
+### Nicht behoben, aber gemessen
+
+* **50 der 90 ausgelieferten Sprachdateien sind unversioniert** — sie liegen nur im
+  Arbeitsbaum (u. a. alle Stimmen von ROOM11B0 und ROOM11C0). Das Paket ist aus dem Repo
+  nicht reproduzierbar. Code und `shared_assets` sind dagegen sauber (0 unversioniert).
+* **Der `.MSK`-Ladepfad hat null Testabdeckung** — keine der 266 Prüfungen lädt eine
+  Maske. Die 266/266 sagen über die neuen Vordergrund-Verdeckungen nichts aus.
+* **ROOM5070/ROOM5130** stehen in der ausgelieferten Zonentabelle gar nicht (beide werden
+  nicht gezeichnet). Von den vier zusammengelegten Paaren sind also nur **drei** auf der
+  Karte sichtbar; die vierte Zusammenlegung ist im Auslieferungsstand nicht messbar.

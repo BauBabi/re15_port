@@ -47,7 +47,14 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx);
  * Spielerposition. Tabelle: engine/src/re15_map_zones.h (tools/gen_map_zones.py). */
 typedef struct {
     unsigned short room;
-    short  wx0, wz0, wx1, wz1;
+    /* ⛔ WELTBOX IST 32 BIT. Als `short` liefen am 2026-09-03 vier Zeilen ueber:
+     * ROOM1180/ROOM1230 tragen wz1 = 32871, im Binary stand -32665 - die Box war damit
+     * VERKEHRT HERUM (wz1 < wz0). Folgenlos blieb das nur, weil beide Raeume genau EINE
+     * Zone haben und deshalb der Naechstgelegen-Rueckfall (re15_map_zones.c:101) sie
+     * trotzdem traf; ein zweiter Bereich in einem dieser Raeume haette den Marker
+     * verloren. Raumkoordinaten sind nicht auf 16 Bit begrenzt, und alle Verbraucher
+     * rechnen ohnehin in int32_t. Riegel: unit_map_synth, "Weltbox". */
+    int32_t wx0, wz0, wx1, wz1;
     unsigned char page, rect, idx;
     unsigned char zid;        /* globale Zonen-Nummer; beide Szenario-Varianten
                                * teilen sie (= ein Besucht-Bit je ORT)          */
@@ -111,7 +118,6 @@ int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w,
 int re15_map_zone_count(void);
 const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */
-void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */   /* Blatt schon gesehen? */
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect);
 int re15_map_player_band(void);   /* Etage des Spielers: gepflegtes Band, sonst aus der Y */
 

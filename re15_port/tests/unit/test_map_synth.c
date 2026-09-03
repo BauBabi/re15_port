@@ -120,6 +120,27 @@ int main(void)
         CHECK("keine fehlt und keine ragt aus ihrem Kasten", n_raus == 0);
     }
 
+    /* ⛔ DIE WELTBOX MUSS HERUM STIMMEN. Solange die vier Felder `short` waren, liefen
+     * ROOM1180 und ROOM1230 mit wz1 = 32871 ueber und standen im Binary als -32665 -
+     * die Box war verkehrt herum, und nur weil beide Raeume genau EINE Zone haben, fing
+     * der Naechstgelegen-Rueckfall (re15_map_zones.c:101) das auf. Ein Ueberlauf faellt
+     * hier auf, egal welcher Typ die Felder traegt. */
+    {
+        int n = re15_map_zone_count(), schief = 0;
+        for (i = 0; i < n; i++) {
+            const re15_map_zone_t *z = re15_map_zone_by_index(i);
+            if (!z) continue;
+            if (z->wx1 <= z->wx0 || z->wz1 <= z->wz0) {
+                schief++;
+                printf("     VERKEHRT: ROOM%04X z%d  x %ld..%ld  z %ld..%ld\n",
+                       z->room, (int)z->idx, (long)z->wx0, (long)z->wx1,
+                       (long)z->wz0, (long)z->wz1);
+            }
+        }
+        printf("  [Weltbox] %d Zonen geprueft, %d verkehrt herum\n", n, schief);
+        CHECK("jede Zonen-Weltbox hat positive Ausdehnung", schief == 0);
+    }
+
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;
 }

@@ -27,6 +27,23 @@ Steuerung (Tastatur, DuckStation-Layout):
 Gamepads: SDL-GameController wird automatisch erkannt
 (optional gamecontrollerdb.txt in den Ordner legen).
 
+NEU in v0.3.97 — Vordergrund-Verdeckungen und Karte:
+
+  * Vordergrund-Masken: In den Stages 3-6 verdecken Saeulen, Gelaender und
+    Moebel den Charakter jetzt auch dort, wo das Original keine Maske
+    mitbringt (nachgezeichnet, 209 zusaetzliche Kameraeinstellungen). Wo das
+    Original eine eigene Maske hat, hat die weiterhin Vorrang. Abschalten
+    zum Vergleichen: Umgebungsvariable RE15_NO_PRI=1.
+
+  * Karte: Auf dem Kanal-Blatt lagen drei Raumpaare uebereinander, weil
+    dieselben Raeume im Skript in zwei Zustaenden vorkommen (ROOM5030/5110,
+    ROOM5040/5120, ROOM50A0/5140). Sie werden jetzt als EIN Ort gezeichnet;
+    die Ueberlappung dort faellt von 38 % auf 3 %.
+
+  * Tuersymbole auf der Karte werden ueber die Identitaet des Zielraums
+    gewaehlt statt ueber die Naehe - ein Symbol gehoert damit sicher zu der
+    Tuer, durch die man wirklich geht.
+
 NEU in v0.2 — RE2-KI-Modus: Im OPTIONS-Menue laesst sich unter "AI" von
 RE1.5 auf RE2 umschalten. Zombies, Hunde und Kraehen laufen dann auf dem
 vollstaendigen, byte-genau nachgebauten Retail-RE2-Verhalten samt

@@ -436,6 +436,19 @@ if [[ $DO_ZIP -eq 1 ]]; then
         rm -f "${NAME}_linux_steamdeck_x64".z*
         ( cd pkg-linux && zip -q -s "$SPLIT" -r "../${NAME}_linux_steamdeck_x64.zip" "$NAME" )
         verify_split "${NAME}_linux_steamdeck_x64.zip" "$LINUX_FILES"
+        # ⛔ AUSFUEHRUNGSBIT — auf einem Windows-Bauhost kommt es NICHT von allein.
+        # Gemessen am 2026-09-03: re15_pc lag mit 0644 im Archiv, weil MSYS das Bit ohne
+        # ACLs aus Shebang/Endung ableitet (run.sh kommt darum zufaellig richtig heraus,
+        # ein ELF-Binary nie) und `chmod`/`install -m` still wirkungslos bleiben. Wer
+        # entpackt und das Binary direkt startet, bekam "Permission denied".
+        # Gesetzt wird im Zentralverzeichnis des letzten Volumes, danach wird
+        # zurueckgelesen: ohne das Gate kehrt der Fehler beim naechsten Bau still wieder.
+        python "$HERE/zip_exec_bit.py" setzen \
+            "${NAME}_linux_steamdeck_x64.zip" re15_pc run.sh \
+            || die "x-Bit konnte nicht gesetzt werden"
+        python "$HERE/zip_exec_bit.py" pruefen \
+            "${NAME}_linux_steamdeck_x64.zip" re15_pc run.sh \
+            || die "Gate: Linux-Archiv liefert eine Datei ohne Ausfuehrungsbit"
     fi
     if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
         echo "== Zippen: ${NAME}_win64 =="
