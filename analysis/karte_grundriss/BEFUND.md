@@ -1491,3 +1491,52 @@ nichts, woran etwas anschließen könnte. Für Blatt 3 müsste der Maßstab aus 
 Stage geliehen werden (die STAGE1-Zeilen streuen um ~15 %) und ein Startpaar anders
 gefunden werden — etwa über den Rechteck-Grad (das Rechteck mit den meisten Nachbarn ist
 der Raum mit den meisten Türen). Das ist noch nicht gemessen.
+
+## §25 ⛔ Ein Raum ist NICHT ein Rechteck — die Zuordnung ist n:m
+
+Blatt 3 sollte über den Rechteck-Grad geknackt werden. Der Versuch ist gescheitert, und
+zwar an einer falschen Annahme meinerseits — die Messung dahinter ist der eigentliche
+Gewinn.
+
+**Erster Hinweis:** der Maßstab für Blatt 3 lässt sich aus den Daten anpassen (er ist je
+Blatt einer, also eine eindimensionale Anpassung). Die Kurve ist aber **flach** — 1780,
+1800, 1840 liefern alle denselben mittleren Größenabstand von ~20 px. Eine flache Kurve
+mit großem Rest heißt: die Größen entsprechen einander gar nicht. Dazu passen die
+Rechtecke Nr0 (32×96) und Nr2 (24×80): lang und dünn, also **Flure** — und kein Zonen-
+Kasten auf dem Blatt hat dieses Seitenverhältnis.
+
+**Die Gegenprobe an den geeichten Räumen** (ihre Lage ist ausrechenbar, also zählbar, wie
+viele Rechtecke sie überdecken):
+
+| | Räume |
+|---|---|
+| decken **genau ein** Rechteck | **20** |
+| decken **mehrere** | **16** |
+| decken **keines** (sitzen IN einem größeren) | **4** |
+
+```
+ROOM1030  Nr4 (98 %), Nr10 (100 %)
+ROOM1190  Nr0 (67 %), Nr1 (84 %), Nr2 (92 %)
+ROOM1210  Nr4, Nr5, Nr6, Nr7 (je 100 %), Nr8 (88 %)
+ROOM5140  Nr10 (91 %), Nr11 (67 %), Nr12 (97 %), Nr14 (100 %)
+```
+
+⛔ **Das Original malt einen Raum aus MEHREREN Rechtecken, wenn er kein Rechteck ist** —
+L-förmige Flure, große Hallen. Und umgekehrt sitzen kleine Räume (ROOM5010 15×23,
+ROOM4030) **innerhalb** eines größeren Rechtecks. Die Beziehung ist **n:m**, nicht 1:1.
+
+`tools/kunst_zuordnung.py` erzwingt aber eine 1:1-Zuordnung (`belegt`-Menge). Damit sind
+die 82 verorteten Zonen zwar überwiegend richtig — die Türprobe mit 91 % belegt das —
+aber die 36 „freien" Rechtecke sind **kein Rest**: es sind die Zweit- und Drittstücke von
+Räumen, die schon zugeordnet sind.
+
+### Was daraus folgt
+
+Für das Ziel des Nutzers (Original-Kunst zeigen, RE2-Türen, Treppen, rotes Hervorheben)
+ist das **kein Hindernis, sondern eine Vereinfachung**: die rote Hervorhebung färbt
+einfach *alle* Rechtecke des Raums, in dem man steht. Der Zuordner muss dafür von 1:1 auf
+n:m umgebaut werden — jede Zone sammelt ihre Rechtecke, statt eines zu belegen.
+
+Für Blatt 3 bleibt das Problem bestehen, aber mit anderer Ursache als gedacht: nicht der
+fehlende Anker allein, sondern dass dort mehrere Räume als Flur-Ketten gemalt sind und
+eine Größen-Anpassung deshalb gar nicht greifen kann.
