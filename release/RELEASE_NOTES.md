@@ -1,3 +1,27 @@
+# RE1.5 Port — v0.4.6 (Early Preview)
+
+Nachtrag zu v0.4.5, zwei Sachen:
+
+**Das Pult verdeckt jetzt hoeher.** Du hattest recht — nachgemessen an deinem Screenshot:
+die Maske begann erst an der Oberkante des Pult-KORPUS (Bildzeile 132), die Pultplatte
+mit den Mikrofonen reicht aber bis Zeile 108 hinauf. Deine Arme und dein Bauch wurden
+deshalb ueber die Pultplatte gezeichnet, obwohl du dahinter stehst. Platte und Mikrofone
+gehoeren jetzt zur Maske; sie beginnt bei Zeile 103.
+
+**Die Maskenflaeche war systematisch etwas zu dunkel.** Die Maske malt Hintergrundpixel
+zurueck auf den Hintergrund; beim Umrechnen auf die PSX-Farbtiefe (5 Bit je Kanal) wurde
+immer abgerundet statt gerundet. Ueber alle 130 812 Maskenpunkte gemessen: mittlerer
+Kanalfehler -3,2 von 255 — ein leichter dunkler Fleck genau dort, wo eine Maske liegt.
+Jetzt sind es +0,5, also die Grenze dessen, was 5 Bit ueberhaupt koennen (und damit
+besser als die Original-Atlanten des Prototyps).
+
+Die uebrigen Bilder aus deinem Ordner habe ich einzeln nachgerechnet: bei den beiden
+Fahnen und am Tischrand steht die Figur tatsaechlich neben bzw. vor dem Gegenstand,
+die Zeichenreihenfolge stimmt dort. Wenn dir eine davon trotzdem falsch vorkommt, sag
+welche — dann sehe ich mir genau die an.
+
+---
+
 # RE1.5 Port — v0.4.5 (Early Preview)
 
 **Deine sieben Screenshots aus dem `fehler`-Ordner — durchgemessen, und ROOM1140 komplett
