@@ -1641,3 +1641,38 @@ sitzen in der Wand.
 * Die dortige **Doppeltür** wurde als ein Symbol gezählt und bekam nur einen Balken.
 
 Beides sind Schwellen-Fälle, keine Grenzen des Verfahrens.
+
+## §28 Zeilen-Erzeugung: `tools/gen_marker_zeilen.py`, 73 von 96 Räumen
+
+Die Herleitung über die Türkette ist jetzt Werkzeug, mit der **Auslassprobe als eingebautem
+Riegel**: für jeden Raum mit ausgelieferter Zeile wird so getan, als fehle sie, die Zeile
+wird hergeleitet und mit der echten verglichen.
+
+| | |
+|---|---|
+| Räume mit Zeile | **73 von 96** (38 ausgeliefert + 35 hergeleitet) |
+| Auslassprobe | 22 Fälle, **Median 7 px**, ≤ 4 px: 7, ≤ 8 px: 13 |
+| ohne Zeile | 23 — u. a. alle sechs Räume von Blatt 3 |
+
+**Achsen getrennt lösen.** Ein erster Wurf verlangte von *einem* Türpaar Abstand in
+*beiden* Achsen. Zwei Türen an derselben Wand unterscheiden sich aber nur in einer — damit
+fiel der Zwei-Türen-Weg fast immer aus (1 von 96 Räumen). x und z sind unabhängige
+Gleichungen und dürfen aus verschiedenen Paaren kommen.
+
+### ⛔ Feinschliff an den gemalten Rechtecken: gemessen und verworfen
+
+Naheliegend: die grob hergeleitete Zeile nachziehen, bis der Raumkasten möglichst gut auf
+den gemalten Rechtecken liegt — die Kunst ist ja die stärkere Fessel. **Das Ergebnis ist
+schlechter:**
+
+| | ohne Feinschliff | mit |
+|---|---|---|
+| Median | **7 px** | 15 px |
+| ≤ 8 px | **13** von 22 | 7 von 22 |
+
+Der Grund ist mein eigener alter Fehler ([[reai-v2-proxy-mass]]): maximiert wird die
+Deckung mit *irgendeinem* Rechteck des Blattes — also zieht der Raum auf den dichtesten
+Haufen statt auf **sein** Rechteck. Richtig wäre, nur die Deckung mit den ihm zugeordneten
+Rechtecken zu zählen; die Zuordnung braucht aber die Zeile, die hier erst entsteht. Wer
+das auflösen will, muss beide Schritte **gemeinsam** lösen, nicht nacheinander.
+Abschaltbar geblieben unter `RE15_FEINSCHLIFF=1`, damit die Messung nachvollziehbar ist.
