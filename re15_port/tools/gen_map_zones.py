@@ -332,7 +332,7 @@ def read_rdt(rid):
                                   # obj[0x82]; das Original gattet die Interaktion
                                   # darauf (FUN_8002bd44 @0x8002bf38).
                                   'band': b[4],
-                                  'nx': nx, 'nz': nz, 'yaw': yaw,
+                                  'nx': nx, 'ny': ny, 'nz': nz, 'yaw': yaw,
                                   'dest': ((stg+1) << 12) | (rmd << 4)})
                 pc += sz
     # ⛔ DIESELBE TUER ZWEIMAL EINGETRAGEN = ZWEI STIMMEN IM LOESER.

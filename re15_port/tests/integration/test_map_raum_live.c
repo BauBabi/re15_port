@@ -182,7 +182,9 @@ int main(void)
                         !s_ank[idx].gesetzt) {
                         s_ank[idx].x = d->spawn_x;
                         s_ank[idx].z = d->spawn_z;
-                        s_ank[idx].band = (int)a->band;
+                        /* Band der TUER (door_params), nicht das Slot-Feld -
+                         * letzteres ist bei Tueren 0. */
+                        s_ank[idx].band = (int)d->band;
                         s_ank[idx].gesetzt = 1;
                     }
                 }
@@ -321,7 +323,7 @@ int main(void)
                          | ((unsigned)d->dest_room << 4) | (rid & 0x000Fu);
                     if (ziel == rid) continue;
                     ax = a->x; az = a->z; bx = d->spawn_x; bz = d->spawn_z;
-                    band = (int)a->band;
+                    band = (int)g_aot.door_params[k].band;
                     if (!schau(rid, ax, az, band, ops2, 1024, &rotA, &max_, &may, &sA))
                         continue;
                     if (!schau(ziel, bx, bz, band, ops2, 1024, &rotB, &mbx, &mby, &sB))
@@ -379,7 +381,7 @@ int main(void)
                     int nops, q, band, gelb = 0;
                     int16_t mmx = 0, mmy = 0;
                     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
-                    band = (int)a->band;
+                    band = (int)g_aot.door_params[k].band;
                     if (!betrete(rid, a->x, a->z, band)) continue;
                     re15_map_visited_mark(rid);
                     re15_map_visited_mark_at(rid, a->x, a->z);

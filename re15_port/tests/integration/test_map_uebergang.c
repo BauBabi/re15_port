@@ -181,7 +181,13 @@ int main(void)
                 tuer[ntuer].a = rid;      tuer[ntuer].b = ziel;
                 tuer[ntuer].ax = s->x;    tuer[ntuer].az = s->z;
                 tuer[ntuer].bx = d->spawn_x; tuer[ntuer].bz = d->spawn_z;
-                tuer[ntuer].band = s->band;
+                /* ⛔ DAS BAND DER TUER STEHT IN door_params, NICHT IM SLOT.
+                 * re15_aot_t.band ist der Aot_set-Operand `chain` (bei TREPPEN
+                 * gefuellt, bei Tueren 0); das Band der Tuer - und damit das Blatt,
+                 * auf dem ihre Marke liegt - steht in door_params[k].band
+                 * (Door_aot_set pc[4]). Bis 2026-09-03 las diese Schiene das
+                 * Slot-Feld und mass deshalb IMMER mit Band 0. */
+                tuer[ntuer].band = (int)d->band;
                 tuer[ntuer].rez = 0;
                 ntuer++;
             }
