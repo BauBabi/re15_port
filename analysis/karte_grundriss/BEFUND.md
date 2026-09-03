@@ -1602,3 +1602,42 @@ Ausbreitungsrunden:
 keinen bekannten Nachbarn auf ihrem Blatt — darunter **alle sechs Räume von Blatt 3**
 (ROOM10C0…ROOM1110), was den Anker-Befund aus §24 bestätigt, sowie die schon bekannten
 Einzelgänger ROOM1160, ROOM1250, ROOM10B0, ROOM5080, ROOM5090, ROOM6020.
+
+## §27 RE1.5-Türsymbole entfernen: die Lauflänge trennt sie von der Wand
+
+Nutzer: *„Wenn du die RE 2 Türsymbole drauf abbildest musst du aber auch die RE 1.5
+Türsymbole vorher entfernen."* Richtig — sie stecken in der gemalten Kunst und schienen
+sonst unter den Balken durch.
+
+**Was dort steht:** die RE1.5-Türsymbole sind **Türschwenk-Bögen** wie im Architektenplan
+— ein kurzer Strich mit Viertelkreis, in die Wand gezeichnet und in den Raum ragend. Die
+Palette von MAP05 hat nur 13 Farben; Raum = `(0,72,0)`, Wand = `(176,176,176)`, und die
+Symbole sind in der Wandfarbe gezeichnet. Über die Farbe sind sie also nicht zu fassen.
+
+**Über die Lauflänge schon.** Wandlinien sind lange gerade Läufe, ein Schwenk-Bogen ist
+kurz und gekrümmt. Gemessen auf der 3F-Seite (747 helle Pixel):
+
+```
+Laengster gerader Lauf je hellem Pixel:
+    1: 7    3: 18   4: 12   5: 8    6: 25   7: 5
+    8: 6   10: 17  18: 32  19: 17   20+: 600
+```
+
+Klar zweigipflig. Schwelle „Lauf ≤ 4, dann an Nachbarn mit Lauf ≤ 10 gewachsen" liefert
+**6 Zusammenhangskomponenten** — genau die Zahl der Symbole im Bild. ⛔ Am gerasterten
+Bild geprüft (`tuersymbole_erkannt.png`, Fundstellen rot): **alle Symbole getroffen, kein
+einziges Wandpixel**.
+
+**Ersetzen** ist dann mechanisch: die Symbolpixel bekommen die Raumfarbe (sie liegen im
+Raum), und an ihre Stelle kommt ein gelber RE2-Balken `(224,168,40)` in der Wand, längs
+deren Achse (die Achse folgt aus der Lauflänge des nächsten Wandpixels).
+
+Ergebnis: `karte_3F_re2tueren.png` (4× vergrößert). Die Schwenke sind weg, die Balken
+sitzen in der Wand.
+
+**Zwei Reste, ehrlich benannt:**
+* Ein Bogen unten in der Mitte ist nur teilweise entfernt — ein Stück mit Lauflänge
+  zwischen 5 und 10, das nicht mehr an die Startmenge angrenzte.
+* Die dortige **Doppeltür** wurde als ein Symbol gezählt und bekam nur einen Balken.
+
+Beides sind Schwellen-Fälle, keine Grenzen des Verfahrens.
