@@ -4462,6 +4462,29 @@ re_title:;
                                                    active_cuts[active_cut_idx].pri_offset,
                                                    &pri);
                 }
+                /* NACHGEZEICHNETE MASKEN (s. re15_pri.h, Container "R15M").
+                 * Der Prototyp hat die Maskenarbeit nur zu ~1/3 fertiggestellt; wo die
+                 * Vordergrundgrafik vorliegt, aber die Geometrie fehlt, wird sie aus dem
+                 * Atlas zurueckgewonnen und als Seitendatei nachgereicht.
+                 * ⛔ NUR wenn das Original eine NULL-Sektion fuehrt — jeder Cut, den die
+                 * Kuenstler bearbeitet haben, bleibt unangetastet byte-true. */
+                if (pri_n == 0 && active_cut_idx >= 0) {
+                    static uint8_t *s_msk = NULL; static int s_msk_size = 0;
+                    static unsigned s_msk_room = 0xFFFFu;
+                    if (s_msk_room != g_current_room_id) {
+                        char mrel[64];
+                        free(s_msk); s_msk = NULL; s_msk_size = 0;
+                        s_msk_room = g_current_room_id;
+                        snprintf(mrel, sizeof mrel, "MASKS/ROOM%04X.MSK", g_current_room_id);
+                        s_msk = re15_pc_read_cd(mrel, &s_msk_size);
+                    }
+                    if (s_msk) {
+                        uint32_t moff = re15_pri_msk_section_offset(s_msk, (size_t)s_msk_size,
+                                                                    active_cut_idx);
+                        if (moff)
+                            pri_n = re15_pri_parse_section(s_msk, (size_t)s_msk_size, moff, &pri);
+                    }
+                }
                 /* sprite.pri FOREGROUND OCCLUSION (2026-06-09): the AZ-round bug
                  * (sampling the main BG cache → ghost sky patches) is fixed — we
                  * now load the cut's dedicated foreground ATLAS (decoded byte-true

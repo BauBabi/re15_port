@@ -3245,3 +3245,10 @@ target_compile_definitions(test_sld_atlas PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_sld_atlas COMMAND test_sld_atlas)
 set_tests_properties(unit_sld_atlas PROPERTIES TIMEOUT 120)
+
+# --- WERKZEUG bg_dump: MDEC-Raumhintergruende aus den Original-BSS dekodieren.
+#     Die Werkzeugkette fuer die nachgezeichneten Vordergrundmasken darf nicht am
+#     Java-Extraktionsbaum haengen — der deckt STAGE6 gar nicht ab. KEIN add_test. ---
+add_executable(probe_bg_dump probe_bg_dump.c)
+target_link_libraries(probe_bg_dump PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_bg_dump PRIVATE ${CMAKE_SOURCE_DIR}/include)

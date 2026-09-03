@@ -148,3 +148,27 @@ int re15_pri_parse_section(const uint8_t *data, size_t data_size,
     if (out->draw_count > out_count) out->draw_count = out_count;
     return out_count;
 }
+
+/* Seitendaten-Container "R15M" — s. re15_pri.h. Bewusst streng: ein beschaedigter
+ * Container liefert 0 (= kein Nachschlag) statt einen zufaelligen Offset in den
+ * Original-Parser zu geben. */
+uint32_t re15_pri_msk_section_offset(const uint8_t *blob, size_t size, int cut_idx)
+{
+    if (!blob || size < 12u) return 0u;
+    if (blob[0] != 'R' || blob[1] != '1' || blob[2] != '5' || blob[3] != 'M') return 0u;
+
+    uint32_t version = (uint32_t)blob[4] | ((uint32_t)blob[5] << 8)
+                     | ((uint32_t)blob[6] << 16) | ((uint32_t)blob[7] << 24);
+    if (version != 1u) return 0u;
+
+    uint32_t cuts = (uint32_t)blob[8] | ((uint32_t)blob[9] << 8)
+                  | ((uint32_t)blob[10] << 16) | ((uint32_t)blob[11] << 24);
+    if (cut_idx < 0 || (uint32_t)cut_idx >= cuts) return 0u;
+    if ((size_t)12u + (size_t)cuts * 4u > size) return 0u;
+
+    size_t e = 12u + (size_t)cut_idx * 4u;
+    uint32_t off = (uint32_t)blob[e] | ((uint32_t)blob[e+1] << 8)
+                 | ((uint32_t)blob[e+2] << 16) | ((uint32_t)blob[e+3] << 24);
+    if (off == 0u || (size_t)off + 4u > size) return 0u;
+    return off;
+}

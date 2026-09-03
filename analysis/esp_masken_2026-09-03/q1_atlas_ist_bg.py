@@ -58,7 +58,20 @@ def atlas_rgb(stage, rid, cut):
     pal = np.stack([r,g,b], 1)
     return pal[idx], idx
 
+PPMT = os.environ.get("RE15_BG_PPM", "build/bg_ppm")
+
 def bg_rgb(stage, rid, cut):
+    """Hintergrundbild eines Cuts.
+
+    ZUERST der eigene C-Dekoderabzug (probe_bg_dump, alle 1119 Cuts aller 6 Stages),
+    ERST DANN der Java-Extraktionsbaum. Grund: der Extraktionsbaum deckt STAGE6 gar
+    nicht und STAGE5 nur teilweise ab — ein Generator, der sich darauf stuetzt, waere
+    fuer ein Sechstel des Spiels blind. Der C-Abzug ist ausserdem die richtige
+    Referenz, weil er zeigt, was der Port tatsaechlich darstellt (die beiden weichen
+    um im Mittel ~4 von 255 ab, Chroma-Rundung)."""
+    q = "%s/ROOM%03X%02d.ppm" % (PPMT, rid>>4, cut)
+    if os.path.exists(q):
+        return np.asarray(Image.open(q).convert("RGB"), dtype=np.int16)
     p = "%s/STAGE%d/ROOM%03X/ROOM%03X%02d.bmp" % (BMPT, stage, rid>>4, rid>>4, cut)
     if not os.path.exists(p): return None
     return np.asarray(Image.open(p).convert("RGB"), dtype=np.int16)

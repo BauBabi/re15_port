@@ -112,6 +112,32 @@ static inline int re15_pri_mask_camera_z(int depth) {       /* PC painter's sort
 int re15_pri_parse_section(const uint8_t *data, size_t data_size,
                            uint32_t offset, re15_pri_cut_t *out);
 
+/* ------------------------------------------------------------------------
+ * NACHGEZEICHNETE MASKEN (Seitendaten-Container "R15M").
+ *
+ * Der Prototyp hat die Maskenarbeit nur zu rund einem Drittel fertiggestellt
+ * (RE1.5: 22 % der Cuts tragen Masken, RE2 Retail: 67 %). Fuer Cuts, in denen
+ * die Vordergrund-GRAFIK vorliegt, aber die Geometrie fehlt, wird sie aus dem
+ * Atlas zurueckgewonnen und hier als Seitendaten nachgereicht.
+ *
+ * ⛔ ABGRENZUNG: das ist NICHT Auslieferungsstand. Die Original-Sektion im RDT
+ * hat IMMER Vorrang; die Seitendaten kommen nur zum Zug, wo das Original eine
+ * NULL-Sektion (FF FF FF FF) fuehrt. Damit bleibt jeder Original-Cut byte-true
+ * und die Ergaenzung ist an einer Datei ablesbar statt im Code versteckt.
+ *
+ * Das Sektionsformat IM Container ist byte-gleich mit dem Original, sodass
+ * derselbe Parser und derselbe Zeichner laufen — Voraussetzung dafuer, dass die
+ * PSX-Seite nichts nachzuholen hat.
+ *
+ *   +0x00  char magic[4] = "R15M"
+ *   +0x04  u32  version  = 1
+ *   +0x08  u32  cut_count
+ *   +0x0C  u32  offset[cut_count]   (0 = fuer diesen Cut nichts nachgereicht)
+ *   ...    Sektionen im Original-Layout (Header 4 B, Gruppen 8 B, Masken 8/12 B)
+ *
+ * Rueckgabe: Offset der Sektion fuer cut_idx, oder 0 wenn keine vorliegt. */
+uint32_t re15_pri_msk_section_offset(const uint8_t *blob, size_t size, int cut_idx);
+
 #ifdef __cplusplus
 }
 #endif
