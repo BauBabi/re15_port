@@ -519,12 +519,51 @@ def p_gast():
     melde('O', 'Gast-Zeilen ohne passende Hauptzeile', schlecht)
 
 
+def p_unsichtbar():
+    """P) Raeume mit Kollisionsgeometrie, die auf KEINEM Blatt gezeichnet sind.
+
+    Gemessen 2026-09-03: sieben, alle zu Recht - vier sind byte-gleiche Platzhalter-
+    Schablonen (ROOM1240/ROOM6040 ein hohler Vier-Wand-Rahmen, ROOM5070/ROOM5130 dieselbe
+    75-Zellen-Form), ROOM1260 liegt im Original selbst ausserhalb der Seitentabelle
+    (sltiu 0x26 @0x8004b574), ROOM20A0/ROOM20B0 haben Seite 0xd, die keine echte
+    Kartenseite ist. Kommt ein ACHTER dazu, ist etwas kaputt."""
+    import os as _os
+    STAGE = _os.path.join(WURZEL, 're15_port', 'shared_assets', 'PSX')
+    inTab = set(z['room'] for z in ZONEN)
+    zeilen = []
+    for st in range(1, 7):
+        d = _os.path.join(STAGE, 'STAGE%d' % st)
+        if not _os.path.isdir(d):
+            continue
+        for f in sorted(_os.listdir(d)):
+            if not f.startswith('ROOM') or not f.endswith('.RDT'):
+                continue
+            rid = int(f[4:8], 16)
+            if (rid & 1) or rid in inTab:
+                continue
+            g = read_rdt(rid)
+            if not g:
+                continue
+            zellen = [c for c in g[0] if c[2] > 0 and c[3] > 0]
+            if not zellen:
+                continue
+            rein = sorted(set(q for q in RDT
+                              for e in RDT[q][1]
+                              if e['dest'] == rid and not (e['rw'] == 0 and e['rd'] == 0)))
+            zeilen.append("ROOM%04X: %d Zellen, erreichbar von %s"
+                          % (rid, len(zellen),
+                             ", ".join("ROOM%04X" % q for q in rein) if rein
+                             else "niemandem"))
+    melde('P', 'Raeume mit Geometrie, aber ohne Zeichnung', zeilen, 'HINWEIS')
+
+
 def main():
     kurz = '--kurz' in sys.argv
     for f in (p_hervorhebung, p_zeichnung, p_verschachtelt, p_tuermarken,
               p_marke_auf_kante, p_nachbarn, p_marker_im_raum, p_massstab,
               p_treppen, p_blattwechsel, p_ueberlappung,
-              p_doppelslot, p_ankunft, p_symbolabstand, p_gast):
+              p_doppelslot, p_ankunft, p_symbolabstand, p_gast,
+              p_unsichtbar):
         f()
     print("=== KARTEN-AUDIT: %d Raeume, %d Zonen, %d Zeichnungen, %d Marken ==="
           % (len(RAEUME), len(HAUPT), len(SYNTH), len(MARKEN)))
