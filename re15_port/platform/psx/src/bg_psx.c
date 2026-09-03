@@ -170,6 +170,10 @@ int re15_bg_load_test_asset(void)
 
 /* Per-room per-cut BG loader — room-AWARE via g_current_room_id (the "room1170" in the
  * old name was historical; it streams \BSS\ROOM%04X\BG%02d.BSS for ANY current room). */
+static const uint8_t *s_last_chunk      = 0;
+static int            s_last_chunk_size = 0;
+static int            s_last_chunk_cut  = -1;
+
 int re15_bg_load_cut(int cut_idx)
 {
     /* Per-cut BG streaming (2026-06-04: whitelist hack removed). ROOM1170 has 13
@@ -192,9 +196,31 @@ int re15_bg_load_cut(int cut_idx)
         if (n > 0) { data = re15_cd_staging; size = (size_t)n; }
     }
 
+    /* Den ECHTEN Chunk merken, damit der Vordergrundatlas ihn gleich weiterbenutzen
+     * kann (pri_psx.c). Er liegt in re15_cd_staging und wird bis zum naechsten
+     * CD-Zugriff nicht ueberschrieben; re15_pri_psx_load_cut() laeuft unmittelbar
+     * nach dieser Funktion (main.c). Der Testpuffer-Rueckfall zaehlt NICHT als Chunk. */
+    if (data == re15_cd_staging) {
+        s_last_chunk      = data;
+        s_last_chunk_size = (int)size;
+        s_last_chunk_cut  = cut_idx;
+    } else {
+        s_last_chunk      = 0;
+        s_last_chunk_size = 0;
+        s_last_chunk_cut  = -1;
+    }
+
     int rc = re15_bg_load_from_bss(data, size);
     if (rc == 0) s_last_cut = cut_idx;
     return rc;
+}
+
+/* Zuletzt geladener BSS-Cut-Chunk (oder 0). Nur gueltig bis zum naechsten CD-Zugriff. */
+const uint8_t *re15_bg_last_chunk(int *out_size, int *out_cut)
+{
+    if (out_size) *out_size = s_last_chunk_size;
+    if (out_cut)  *out_cut  = s_last_chunk_cut;
+    return s_last_chunk;
 }
 
 void re15_bg_blit(int dst_x, int dst_y)

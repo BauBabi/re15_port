@@ -20,6 +20,10 @@
 #include "re15_cdfs.h"
 #include "re15_room.h"
 #include "re15_tim.h"
+#include "re15_sld.h"
+
+/* bg_psx.c — der zuletzt geladene BSS-Cut-Chunk (Quelle des Vordergrundatlas). */
+extern const uint8_t *re15_bg_last_chunk(int *out_size, int *out_cut);
 
 /* The obj-prop bump allocator (asset_psx.c) packs TWO 256-tall slots per 64-wide
  * column from x384, so the 5 ROOM1170 props (obj 0/1/3/4/5; obj2=heli is separate)
@@ -31,7 +35,13 @@
  * caveat: a 6-prop room would claim (512,256) → reserve a dedicated atlas slot then.) */
 #define RE15_PRI_VRAM_X    512
 #define RE15_PRI_VRAM_Y    256
-#define RE15_PRI_VRAM_ROWS 128
+/* ⛔ WAR 128 mit der Begruendung "die ROOM1170-Masken sampeln nur srcY<=88, 128 Zeilen
+ * reichen". Das galt, solange nur ROOM1170 lief. Gemessen ueber ALLE Masken des Spiels
+ * (Original + nachgezeichnet): die groesste benutzte Atlas-Zeile ist 256, und 2080 der
+ * 16654 Masken sampeln jenseits von Zeile 128 — sie haetten auf der PSX Fremdinhalt aus
+ * dem VRAM gezogen. Der freie Block ist laut Kommentar oben (512..640, 256..512), also
+ * genau 256 Zeilen hoch; die Erhoehung bleibt darin. */
+#define RE15_PRI_VRAM_ROWS 256
 #define RE15_PRI_CLUT_X    0
 #define RE15_PRI_CLUT_Y    502
 
@@ -40,20 +50,29 @@ int      re15_pri_psx_ok    = 0;   /* 1 = current cut has a loaded foreground at
 uint16_t re15_pri_psx_tpage = 0;   /* 8-bit tpage handle for the atlas              */
 uint16_t re15_pri_psx_clut  = 0;   /* CLUT handle for the atlas                      */
 
-/* CD-load + upload the cut's foreground atlas (\BSS\ROOM####\PRI##.TIM). Returns 1
- * if the cut has a foreground atlas (overdraw on), 0 otherwise. Idempotent per cut. */
-int re15_pri_psx_load_cut(int cut_idx)
+/* Vordergrundatlas des Cuts in den VRAM bringen. Rueckgabe 1 = dieser Cut hat einen.
+ *
+ * ⛔ VORHER wurde ausschliesslich die vorextrahierte Datei \BSS\ROOM####\PRI##.TIM
+ * geladen. Die existiert nur fuer 209 der 359 Cuts, die im Original ueberhaupt einen
+ * Vordergrund tragen — fuer die uebrigen fiel die Verdeckung ersatzlos aus. Auf dem
+ * PC-Ziel ist genau dieser Defekt behoben (bg_pc.c), die PSX zog bis hier nach.
+ *
+ * Jetzt zuerst der byte-treue Weg des Originals: der Trailer am Ende der geladenen
+ * Cut-Daten zeigt auf den SLD-Block IM BSS-Chunk (s. re15_sld.h, FUN_80021bbc).
+ * Den Chunk hat re15_bg_load_cut() unmittelbar vorher geladen und veroeffentlicht —
+ * ein zweiter CD-Zugriff waere auf echter Hardware eine spuerbare Verzoegerung.
+ * Die Laenge L kommt aus der erzeugten Tabelle statt aus der 137 KB grossen
+ * Overlay-Datei (re15_sld_used_len_tab, gegen Drift durch unit_sld_atlas gesichert).
+ *
+ * ⚠️ UNGETESTET: das PSX-Ziel baut mit PSn00bSDK 0.24 derzeit nicht (FindPSn00bSDK
+ * erwartet das alte Layout). Der Code spiegelt den auf dem PC gemessenen Pfad, ist
+ * aber auf Hardware bislang nicht ausgefuehrt worden. */
+static uint8_t s_sld_tim[RE15_SLD_MAX_UNPACKED];
+
+static int pri_upload_tim(const uint8_t *data, int n)
 {
-    re15_pri_psx_ok = 0;
-    if (cut_idx < 0) return 0;
-
-    char name[40];
-    sprintf(name, "\\BSS\\ROOM%04X\\PRI%02d.TIM;1", g_current_room_id, cut_idx);
-    int n = re15_cd_load_file(name, re15_cd_staging, RE15_CD_STAGING_SIZE);
-    if (n <= 0) return 0;                       /* this cut has no foreground */
-
     re15_tim_t t;
-    if (re15_tim_parse(re15_cd_staging, n, &t) != 0 || t.bpp != 8 || !t.has_clut) return 0;
+    if (re15_tim_parse(data, n, &t) != 0 || t.bpp != 8 || !t.has_clut) return 0;
 
     int rows = (t.height < RE15_PRI_VRAM_ROWS) ? t.height : RE15_PRI_VRAM_ROWS;
     RECT pr = { RE15_PRI_VRAM_X, RE15_PRI_VRAM_Y, (short)(t.width / 2), (short)rows };
@@ -66,4 +85,37 @@ int re15_pri_psx_load_cut(int cut_idx)
     re15_pri_psx_clut  = getClut(RE15_PRI_CLUT_X, RE15_PRI_CLUT_Y);
     re15_pri_psx_ok    = 1;
     return 1;
+}
+
+int re15_pri_psx_load_cut(int cut_idx)
+{
+    re15_pri_psx_ok = 0;
+    if (cut_idx < 0) return 0;
+
+    /* 1. Laufzeit-Auszug aus dem BSS-Chunk (deckt alle 359 Cuts). */
+    {
+        int chunk_size = 0, chunk_cut = -1;
+        const uint8_t *chunk = re15_bg_last_chunk(&chunk_size, &chunk_cut);
+        if (chunk && chunk_size > 0 && chunk_cut == cut_idx) {
+            uint16_t L = 0;
+            int stage = (int)((g_current_room_id >> 12) & 0xF);
+            int room  = (int)((g_current_room_id >> 4)  & 0xFF);
+            if (re15_sld_used_len_tab(stage, room, cut_idx, &L) == RE15_SLD_OK) {
+                int len = 0;
+                if (re15_sld_atlas_from_chunk(chunk, chunk_size, L,
+                                              s_sld_tim, (int)sizeof s_sld_tim, &len)
+                        == RE15_SLD_OK && pri_upload_tim(s_sld_tim, len))
+                    return 1;
+            }
+        }
+    }
+
+    /* 2. Rueckfall: vorextrahierte Datei (Alt-Baum). */
+    {
+        char name[40];
+        sprintf(name, "\\BSS\\ROOM%04X\\PRI%02d.TIM;1", g_current_room_id, cut_idx);
+        int n = re15_cd_load_file(name, re15_cd_staging, RE15_CD_STAGING_SIZE);
+        if (n > 0 && pri_upload_tim(re15_cd_staging, n)) return 1;
+    }
+    return 0;
 }

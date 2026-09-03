@@ -475,6 +475,31 @@ int main(int argc, const char **argv)
                 re15_pri_parse_section(re15_test_rdt.raw, (size_t)re15_test_rdt.raw_size,
                                        active_cuts[cam_active_cut].pri_offset, &s_pri_cut);
             }
+            /* NACHGEZEICHNETE MASKEN (Container "R15M", s. re15_pri.h) — spiegelt den
+             * PC-Pfad. Der Prototyp hat die Maskenarbeit nur zu rund einem Drittel
+             * fertiggestellt; wo die Vordergrundgrafik vorliegt, aber die Geometrie
+             * fehlt, wird sie als Seitendatei nachgereicht.
+             * ⛔ NUR wenn das Original eine NULL-Sektion fuehrt — jeder von den
+             * Kuenstlern bearbeitete Cut bleibt unangetastet byte-true.
+             * ⚠️ UNGETESTET: das PSX-Ziel baut derzeit nicht (PSn00bSDK 0.24). */
+            if (s_pri_cut.mask_count == 0) {
+                static uint8_t s_msk[8192];        /* groesste erzeugte Datei: 7284 B */
+                static unsigned s_msk_room = 0xFFFFu;
+                static int      s_msk_size = 0;
+                if (s_msk_room != g_current_room_id) {
+                    char mn[32];
+                    s_msk_room = g_current_room_id;
+                    sprintf(mn, "\\MASKS\\ROOM%04X.MSK;1", g_current_room_id);
+                    s_msk_size = re15_cd_load_file(mn, s_msk, (int)sizeof s_msk);
+                    if (s_msk_size < 0) s_msk_size = 0;
+                }
+                if (s_msk_size > 0) {
+                    uint32_t mo = re15_pri_msk_section_offset(s_msk, (size_t)s_msk_size,
+                                                              cam_active_cut);
+                    if (mo)
+                        re15_pri_parse_section(s_msk, (size_t)s_msk_size, mo, &s_pri_cut);
+                }
+            }
             /* RE2 adaptive frame-skip: this frame just did the heavy MDEC decode →
              * skip the 3D render so the cut-change frame fits the budget. */
             skip_3d_frame = 1;
