@@ -973,3 +973,101 @@ die richtige Größe. `read_rdt` nimmt jetzt auch `ny` auf, damit es nachmessbar
 Die Zug-Diagnose war ein `getenv()` + `printf` **pro Bild** im Kartenpfad. Für die
 Fehlersuche richtig, im Auslieferungscode nicht — erst recht mit Blick auf den kommenden
 PSX-Port (siehe Memory `reai-v2-psx-laufzeitbudget`).
+
+---
+
+## §17 Varianten-Räume: zwei Skriptzustände, ein Ort (2026-09-03)
+
+Blatt 9 hatte **37,6 %** Überlappung — mit Abstand der schlechteste Wert nach Blatt 7.
+Die Ursache ist kein Löser-Fehler: **ROOM5030 und ROOM5110 sind derselbe Raum.**
+
+```
+ROOM5030: 75 Zellen   Tür (-26100,-15400) -> ROOM5040
+                      Tür (-15400, -4000) -> ROOM5000
+                      Tür (-15300,-26300) -> ROOM50A0
+                      Tür ( -4500,-15400) -> ROOM5070
+ROOM5110: 75 Zellen   Tür (-26100,-15400) -> ROOM5120
+                      Tür (-15400, -4000) -> ROOM5000
+                      Tür (-15300,-26300) -> ROOM5140
+                      Tür ( -4500,-15400) -> ROOM5130
+```
+
+Gleiche Zellzahl, **jede Tür auf derselben Weltkoordinate**, nur die Ziele unterscheiden
+sich paarweise. Der Löser legte beide Zustände getrennt an, und sie landeten übereinander.
+
+### Die Regel hängt am Beleg, nicht am Blatt
+
+1. **Keim** — zwei Räume, die an *einem* Türschlitz (gleicher Trigger *und* gleicher
+   Spawn) als zwei Ziele auftreten, **und** dieselbe Zellzahl haben, **und** alle Türen
+   auf identischen Weltkoordinaten tragen. Behalten wird der, dessen äußere
+   Kollisionsbox die andere enthält.
+2. **Fortsetzung** — an jedem geteilten Schlitz eines erkannten Paares sind auch die
+   beiden *Ziele* ein Paar. Aus ROOM5030/ROOM5110 folgen so ROOM5040/ROOM5120,
+   ROOM50A0/ROOM5140 und ROOM5070/ROOM5130.
+
+Game-weit greift das auf **vier** Räume — alle auf Blatt 9, ohne dass eine Blattnummer im
+Code steht.
+
+### Warum der schwächere Keim verworfen wurde
+
+Ohne die beiden Zusatzbedingungen findet dieselbe Suche fünf weitere Paare auf den
+Blättern 0/1/7. Der Löser-Proxy bewertet die als **besser** (Überlappung im Mittel 8,0 %
+statt 8,8 %) — live fällt die Karte auseinander:
+
+| Maß (live) | Basis | nur Beleg | schwacher Keim |
+|---|---|---|---|
+| schlimmster Sprung | 22 px | **23 px** | **164 px** |
+| Räume sichtbar rot | 96/96 | **96/96** | 94/95 |
+| Türdurchtritte korrekt | 199/199 | **199/199** | 191/194 |
+| Türsymbole sichtbar | 237/244 | **237/244** | 233/243 |
+
+Wieder derselbe Fall wie in `reai-v2-proxy-mass`: **die Zahl wurde besser, das Ziel
+schlechter.**
+
+### Ergebnis
+
+| Maß | vorher | nachher |
+|---|---|---|
+| Überlappung Blatt 9 | 37,6 % | **3,0 %** |
+| getrennte Nachbarn Blatt 9 | 3 | **1** |
+| Schema-Zeichnungen gesamt | 117 | **114** |
+| Audit-Fehler | 2 | **1** |
+| Übergänge ≤ 8 px | 129/153 | 129/153 |
+
+Beide Zustände teilen **Zonennummer und Zeichnung** (ein Besucht-Bit, ein Rechteck,
+drei Zeichen-Operationen weniger je Bild — relevant für den PSX-Port), behalten aber ihre
+eigene Weltabbildung, damit der Spieler-Marker in beiden Zuständen richtig sitzt.
+
+### Zwei Nebenwirkungen, die erst die Prüfungen zeigten
+
+* **Audit D2** meldete „2 Symbole für 1 Durchgang, bis 5 px auseinander": der
+  Marken-Durchlauf läuft über *alle* Räume, also auch über den zusammengelegten Zustand,
+  dessen eigene Weltabbildung die Marke danebensetzt. Ein Varianten-Raum steuert jetzt nur
+  noch die Durchgänge bei, die sein Zwilling **nicht** hat — ROOM50A0s Tür nach ROOM4070
+  bleibt, alle anderen fallen weg.
+* **Audit K** zählte Zeilen statt Zeichnungen und meldete für Blatt 9 weiter 44 %,
+  während der Generator 3,0 % rechnete und auf dem Schirm *ein* Rechteck liegt. K zählt
+  jetzt je Zeichnungs-Index einmal. ⛔ Zwei Maße, die auseinanderlaufen, sind ein Befund —
+  nicht ein Grund, sich das freundlichere auszusuchen.
+
+## §18 Türsymbole: Identität statt Nähe
+
+Phase 3 von `integration_map_raum_live` zählte eine Tür als geprüft, wenn *irgendein*
+gelber Balken im Umkreis von 4 px lag. Das bestätigt sich selbst — liegen zwei Durchgänge
+nah beieinander, zählt der Balken des Nachbarn genauso. Gemessen wird jetzt, wie die
+Engine die Marke tatsächlich auflöst (`tuer_anziehen`, `re15_inv_screen.c`):
+
+```
+244 Türen: Identität 189 | Rückfall 41 | Zufall 7 | ohne Marke 7
+```
+
+* **Identität 189** — es gibt eine Marke, die meine Zone mit einer Zone des *Zielraums*
+  verbindet, und ihr Balken ist im Bild. Die Schranke hängt an dieser Zahl (≥ 3/4).
+* **Rückfall 41** — keine solche Marke; es bleibt die ungepaarte Marke der eigenen Zone
+  (der Nachbar liegt auf einem anderen Blatt). Kein Defekt.
+* **Zufall 7** — genau die Fälle, die das alte Maß als Erfolg gezählt hat.
+* **ohne Marke 7** — u. a. beide Fahrstuhl-Enden (ROOM4020 z70, ROOM1080 z23) tragen
+  überhaupt keine Marke.
+
+⛔ Ein Null-Rechteck-Filter wurde geprüft und **verworfen**: er macht die Fahrstühle an
+*beiden* Enden unmessbar, statt den Befund zu zeigen.

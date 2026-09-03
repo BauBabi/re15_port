@@ -408,8 +408,12 @@ def p_ueberlappung():
     """K) Wie stark ueberlappen sich die Zeichnungen je Blatt?"""
     zeilen = []
     proBlatt = collections.defaultdict(list)
+    _gesehen = set()
     for z in HAUPT:
-        if z['synth']:
+        # Dieselbe Zeichnung nur EINMAL: Varianten-Raeume teilen sie sich, auf dem
+        # Schirm liegt dort ein einziges Rechteck.
+        if z['synth'] and (z['page'], z['synth']) not in _gesehen:
+            _gesehen.add((z['page'], z['synth']))
             proBlatt[z['page']].append(z)
     for pg in sorted(proBlatt):
         pix = collections.Counter()

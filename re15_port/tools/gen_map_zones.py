@@ -1210,6 +1210,95 @@ def main():
     FELDX, FELDY, FELDW, FELDH = _gr.FELD
 
     # ---- (1) Eingabe je Blatt: welche Orte, mit welchen Zellen und Tueren ----------
+    # ---- VARIANTEN-RAEUME: ZWEI SKRIPTZUSTAENDE, EIN ORT --------------------
+    # Ein Raumpaar, das an EINEM Tuerschlitz (gleicher Trigger UND gleicher Spawn) zwei
+    # verschiedene Ziele traegt, KANN derselbe Raum in zwei Skriptzustaenden sein. Belegt
+    # ist das erst, wenn beide dieselbe Zellzahl haben und JEDE Tuer auf derselben
+    # Weltkoordinate liegt - dann unterscheiden sie sich nur im Ziel. Gemessen an
+    # ROOM5030/ROOM5110: vier Schlitze, alle geteilt, 75/75 Zellen, Ziele paarweise
+    # verschieden (5040/5120, 50A0/5140, 5070/5130). Behalten wird der, dessen aeussere
+    # Kollisionsbox die andere ENTHAELT; der andere erbt dessen Rechteck.
+    # Ohne die Zusammenlegung liegen die Zustaende uebereinander: Blatt 9 hatte 37,6 %
+    # Ueberlappung, mit ihr 3,0 % - bei unveraenderten Live-Werten.
+    # Abschalten (Messung): RE15_ALIAS=0
+    _ALIAS = {}
+    if os.environ.get('RE15_ALIAS', '1') != '0':
+        def _bb(r):
+            _z = [c for c in sca_all.get(r, ()) if c[2] > 0 and c[3] > 0]
+            if not _z:
+                return None
+            return (min(c[0] for c in _z), min(c[1] for c in _z),
+                    max(c[0] + c[2] for c in _z), max(c[1] + c[3] for c in _z))
+        _kand = set()
+        for _r in sorted(doors_all):
+            _pS = collections.defaultdict(list)
+            for _d in doors_all[_r]:
+                if _d['rw'] == 0 and _d['rd'] == 0:
+                    continue
+                _pS[(_d['lx'], _d['lz'], _d['nx'], _d['nz'])].append(_d['dest'])
+            for _k, _ds in _pS.items():
+                _u = sorted(set(_ds))
+                if len(_u) == 2:
+                    _kand.add(tuple(_u))
+        def _zellzahl(r):
+            return len([c for c in sca_all.get(r, ()) if c[2] > 0 and c[3] > 0])
+
+        def _schlitze(r):
+            return set((d['lx'], d['lz']) for d in doors_all.get(r, ())
+                       if not (d['rw'] == 0 and d['rd'] == 0))
+
+        for (_a, _b) in sorted(_kand):
+            _ba, _bb2 = _bb(_a), _bb(_b)
+            if not _ba or not _bb2:
+                continue
+            # VOLLER BELEG oder gar nicht: dieselbe Zellzahl UND jede Tuer auf derselben
+            # Weltkoordinate. Ohne das ist "derselbe Raum" bloss vermutet - und die
+            # schwachen Kandidaten wurden live gemessen: schlimmster Sprung 22 -> 164 px.
+            _sa, _sb = _schlitze(_a), _schlitze(_b)
+            if _zellzahl(_a) != _zellzahl(_b) or not _sa or _sa != _sb:
+                continue
+            if _ba[0] <= _bb2[0] and _ba[1] <= _bb2[1] and _bb2[2] <= _ba[2] and _bb2[3] <= _ba[3]:
+                _behalt, _weg2 = _a, _b
+            elif _bb2[0] <= _ba[0] and _bb2[1] <= _ba[1] and _ba[2] <= _bb2[2] and _ba[3] <= _bb2[3]:
+                _behalt, _weg2 = _b, _a
+            else:
+                continue
+            _ALIAS[_weg2] = _behalt
+        # Transitiver Schritt ueber die GETEILTEN SCHLITZE eines Varianten-Paares.
+        # Zwei Skriptzustaende desselben Raums tragen ihre Tueren auf denselben
+        # Weltkoordinaten und unterscheiden sich nur im ZIEL - also ist jedes Zielpaar
+        # an einem geteilten Schlitz wieder ein Varianten-Paar. Gemessen an
+        # ROOM5030/ROOM5110 (alle vier Schlitze geteilt): das liefert
+        # ROOM5040/ROOM5120, ROOM50A0/ROOM5140 und ROOM5070/ROOM5130.
+        def _ziele(_r):
+            return dict(((d['lx'], d['lz']), d['dest']) for d in doors_all.get(_r, ())
+                        if not (d['rw'] == 0 and d['rd'] == 0))
+        _neu = True
+        while _neu:
+            _neu = False
+            for _weg, _beh in sorted(_ALIAS.items()):
+                _za, _zb = _ziele(_weg), _ziele(_beh)
+                for _sl in sorted(set(_za) & set(_zb)):
+                    _ta, _tb = _za[_sl], _zb[_sl]
+                    if _ta == _tb or _ta in _ALIAS or _tb in _ALIAS:
+                        continue
+                    _ba, _bb2 = _bb(_ta), _bb(_tb)
+                    if not _ba or not _bb2:
+                        continue
+                    if _ba[0] <= _bb2[0] and _ba[1] <= _bb2[1] and \
+                            _bb2[2] <= _ba[2] and _bb2[3] <= _ba[3]:
+                        _ALIAS[_tb] = _ta
+                    elif _bb2[0] <= _ba[0] and _bb2[1] <= _ba[1] and \
+                            _ba[2] <= _bb2[2] and _ba[3] <= _bb2[3]:
+                        _ALIAS[_ta] = _tb
+                    else:
+                        continue
+                    _neu = True
+        if _ALIAS:
+            print("   %d Varianten-Raeume zusammengelegt: %s"
+                  % (len(_ALIAS), ", ".join("ROOM%04X->ROOM%04X" % (k, v)
+                                            for k, v in sorted(_ALIAS.items()))))
+
     _eingabe = {}
     _lebend = _lebende_paare()
     if _lebend is None:
@@ -1221,13 +1310,19 @@ def main():
                  for zi in range(len(zinfo[b]))]
         _hier += sorted(GAST.get(_pg, ()))
         for _b, _zi in _hier:
+            if _ALIAS and _b in _ALIAS: continue     # Alias-Raum wird nicht gesetzt
             if _zi >= len(zinfo[_b]): continue
             _x0, _x1, _z0, _z1 = zinfo[_b][_zi]
             _z = [c for c in sca_all.get(_b, ())
                   if _x0 <= c[0] + c[2] // 2 <= _x1 and _z0 <= c[1] + c[3] // 2 <= _z1]
             if not _z: continue
             _tu = []
-            for _d in doors_all.get(_b, ()):
+            _gesehen = set()
+            _quellen = list(doors_all.get(_b, ()))
+            for _al, _beh2 in sorted(_ALIAS.items()):
+                if _beh2 == _b:
+                    _quellen += list(doors_all.get(_al, ()))
+            for _d in _quellen:
                 if zone_at(_b, _d['lx'], _d['lz']) != _zi: continue
                 # ⛔ PHANTOM-VERBINDUNGEN BINDEN DEN LOESER NICHT.
                 # Die RDT-Records enthalten Tueren, die das Spiel an dieser Stelle gar
@@ -1246,7 +1341,14 @@ def main():
                 _zt = _ort_von_punkt(_d['dest'], _d['nx'], _d['nz'])
                 if _zt is None:
                     _zt = _ort(_d['dest'], 0)
+                if _ALIAS and (_zt >> 4) in _ALIAS:
+                    _zt = (_ALIAS[_zt >> 4] << 4) | (_zt & 15)
                 _e['dest'] = _zt
+                if _ALIAS:
+                    _sig = (_d['lx'], _d['lz'], _zt)
+                    if _sig in _gesehen:
+                        continue
+                    _gesehen.add(_sig)
                 _tu.append(_e)
             _o = _ort(_b, _zi)
             _orte.append(_o)
@@ -1511,6 +1613,13 @@ def main():
                   % (_pg, len(_lg[_pg]), len(_eingabe[_pg][0]), _kn[0], _kn[1],
                      len(_B.kanten), _kn[5], _kn[2], _kn[3], _B.ex))
 
+    if _ALIAS:
+        # Der Alias-Raum bekommt Rechteck, Abbildung und damit auch die Hervorhebung
+        # des behaltenen - er ist derselbe Ort.
+        for (_pg2, _rm, _zi2), _v in list(grundrisse.items()):
+            for _al, _beh in _ALIAS.items():
+                if _rm == _beh:
+                    grundrisse[(_pg2, _al, _zi2)] = _v
     print(f"{len(grundrisse)} Orte mit Grundriss aus der Kollisionsgeometrie")
 
     rows = []
@@ -1755,12 +1864,20 @@ def main():
     # traegt die Zeile rect = 255.
     synth_liste = []          # (x, y, w, h, erste_zelle, n_zellen, abbildung)
     synth_zellen = []
-    for (pg, b, zi) in sorted(synth):
+    # Behaltene Raeume zuerst, damit der Varianten-Raum ihren Index schon vorfindet.
+    _si_von = {}
+    for (pg, b, zi) in sorted(synth, key=lambda k: (1 if k[1] in _ALIAS else 0, k)):
         x, y, w, h, zellen, ab = synth[(pg, b, zi)]
-        si = len(synth_liste)
-        synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen),
-                            ab or (0, 0, 0, 0, 0, 0)))
-        synth_zellen.extend(zellen)
+        _quelle = (pg, _ALIAS.get(b, b), zi)
+        if b in _ALIAS and _quelle in _si_von:
+            # DERSELBE ORT: Zeichnung teilen statt ein zweites Mal anlegen.
+            si = _si_von[_quelle]
+        else:
+            si = len(synth_liste)
+            synth_liste.append((x, y, w, h, len(synth_zellen), len(zellen),
+                                ab or (0, 0, 0, 0, 0, 0)))
+            synth_zellen.extend(zellen)
+        _si_von[(pg, b, zi)] = si
         bb = zinfo[b][zi]
         # ⛔ EINE ZEILE JE BLATT. Ein Ort, der ueber mehrere Ebenen reicht, hat auf
         # jedem seiner Blaetter eine eigene Lage - aber DIESELBE Zonen-Nummer (zid), denn
@@ -1771,7 +1888,11 @@ def main():
         # Eingangsbereich stehe" - dort galt eine 3F-Zeichnung als bekannt, sobald man
         # das Treppenhaus irgendwo betreten hatte).
         gast = 1 if pg != page_of(b) else 0
-        if (b, zi) not in zid_von:
+        _zq = (_ALIAS.get(b, b), zi)
+        if b in _ALIAS and _zq in zid_von:
+            # DERSELBE ORT: ein Besucht-Bit fuer beide Skriptzustaende.
+            zid_von[(b, zi)] = zid_von[_zq]
+        elif (b, zi) not in zid_von:
             zid_von[(b, zi)] = zid
             zid += 1
         for var in (0, 1):
@@ -2026,6 +2147,14 @@ def main():
             for _n, m in enumerate(lst):
                 wx = m['lx'] if kind == 0 else m['x']
                 wz = m['lz'] if kind == 0 else m['z']
+                if kind == 0 and b in _ALIAS:
+                    _doppelt = False
+                    for _k in doors_all.get(_ALIAS[b], ()):
+                        if abs(_k['lx'] - wx) <= max(_k['rw'], m['rw']) and                                 abs(_k['lz'] - wz) <= max(_k['rd'], m['rd']):
+                            _doppelt = True
+                            break
+                    if _doppelt:
+                        continue
                 _sp = (os.environ.get('RE15_MARKEN_DUMP', '').lower()
                        == ('%04x' % b))
                 zi = zone_at(b, wx, wz)

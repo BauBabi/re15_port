@@ -370,6 +370,7 @@ int main(void)
     {
         static re15_inv_op_t ops3[1024];
         int tueren = 0, sichtbar = 0;
+        int identitaet = 0, rueckfall = 0, zufall = 0, ohne_marke = 0;
         for (st = 1; st <= 6; st++) {
             for (r = 0; r < 0x400; r += 0x10) {
                 unsigned rid = (unsigned)(st << 12) | (unsigned)r;
@@ -379,6 +380,7 @@ int main(void)
                     const re15_aot_t *a = &g_aot.slots[k];
                     const re15_map_zone_t *zn;
                     int nops, q, band, gelb = 0;
+                    int ident_mk = -1, einzeln_mk = -1;
                     int16_t mmx = 0, mmy = 0;
                     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
                     band = (int)g_aot.door_params[k].band;
@@ -395,6 +397,37 @@ int main(void)
                     nops = re15_inv_screen_build(&g_inv_screen, ops3, 1024);
                     re15_inv_map_marker(a->x, a->z, 0, &mmx, &mmy);
                     tueren++;
+                    /* Welche Marke MEINT diese Tuer? Dieselbe Aufloesung wie
+                     * tuer_anziehen() in re15_inv_screen.c: die Marke, die meine Zone
+                     * mit einer Zone des Zielraums verbindet. */
+                    {
+                        int seite = (int)g_inv_screen.map_page;
+                        unsigned ziel =
+                            (((unsigned)g_aot.door_params[k].dest_stage + 1u) << 12)
+                            | ((unsigned)g_aot.door_params[k].dest_room << 4)
+                            | (rid & 0x000Fu);
+                        int mn = re15_map_mark_count(), mk;
+                        ident_mk = -1; einzeln_mk = -1;
+                        for (mk = 0; mk < mn; mk++) {
+                            int mpg, mrc, smx, smy, mkind, za, zb, andere, ix;
+                            if (!re15_map_mark_get(mk, &mpg, &mrc, &smx, &smy, &mkind))
+                                continue;
+                            if (mpg != seite || mkind >= 4) continue;
+                            if (!re15_map_mark_zonen(mk, &za, &zb)) continue;
+                            if (za != zn->zid && zb != zn->zid) continue;
+                            andere = (za == zn->zid) ? zb : za;
+                            if (andere == 255) {
+                                if (einzeln_mk < 0) einzeln_mk = mk;
+                                continue;
+                            }
+                            for (ix = 0; ix < 8; ix++) {
+                                const re15_map_zone_t *zt =
+                                    re15_map_zone_fuer(ziel, ix, (unsigned)seite);
+                                if (zt && zt->zid == andere) { ident_mk = mk; break; }
+                            }
+                            if (ident_mk >= 0) break;
+                        }
+                    }
                     /* Ein SICHTBARER gelber Balken im Umkreis von 4 px. Sichtbar =
                      * keine groessere Flaeche liegt davor (kleinerer Index). */
                     for (q = 0; q < nops; q++) {
@@ -421,6 +454,12 @@ int main(void)
                         }
                         if (w == q) { gelb = 1; break; }
                     }
+                    /* Vier benannte Zahlen statt einer Quote - die Summe kann gleich
+                     * bleiben, waehrend Identitaet faellt und Zufall steigt. */
+                    if (gelb && ident_mk >= 0) identitaet++;
+                    else if (gelb && einzeln_mk >= 0) rueckfall++;
+                    else if (gelb) zufall++;
+                    else ohne_marke++;
                     if (gelb) sichtbar++;
                     else if (getenv("RE15_SYMBOL_LISTE"))
                         printf("     KEIN SYMBOL: ROOM%04X Tuer bei Marker (%d,%d)\n",
@@ -430,9 +469,16 @@ int main(void)
         }
         printf("  [Symbole] %d Tueren, %d mit SICHTBAREM Symbol im Bild\n",
                tueren, sichtbar);
+        printf("  [Symbole] Identitaet %d | Rueckfall %d | Zufall %d | ohne Marke %d\n",
+               identitaet, rueckfall, zufall, ohne_marke);
         CHECK("es wurden genug Tueren geprueft", tueren >= 150);
         CHECK("mindestens 9 von 10 Tueren zeigen ihr Symbol im Bild",
               tueren == 0 || sichtbar * 10 >= tueren * 9);
+        /* ⛔ DIE SCHRANKE HAENGT AN DER IDENTITAET. "Ein Balken liegt daneben" ist ein
+         * Mass, das sich selbst bestaetigt; "die Marke verbindet genau diese beiden
+         * Orte" nicht. */
+        CHECK("mindestens 3 von 4 Tueren loesen ihre Marke ueber die IDENTITAET auf",
+              tueren == 0 || identitaet * 4 >= tueren * 3);
     }
     printf("  [Live] %d Raeume geprueft, %d zeigen SICHTBARES Rot, %d nicht\n",
            geprueft, rot_sichtbar, rot_fehlt);
