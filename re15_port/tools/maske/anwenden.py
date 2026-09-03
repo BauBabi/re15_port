@@ -21,6 +21,7 @@ import struct
 import sys
 
 import numpy as np
+from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import atlas as atlasmod
@@ -112,6 +113,28 @@ def main():
     ap.add_argument("--blatt", default="build/blaetter")
     ap.add_argument("--out", default="re15_port/shared_assets/PSX/MASKS")
     ap.add_argument("--vergleich", action="store_true")
+    # ⛔ WARUM NACHBEARBEITET WIRD (Nutzer-Befund 2026-09-03, zweimal gemeldet):
+    # erst "Leons Fuesse stehen auf dem Tisch", dann "ein kleines bisschen Zombie und
+    # ein kleines bisschen Leon-Fuss schaut noch durch". Gemessen an ROOM1140 Cut 0:
+    # die Superpixelkante liegt im Mittel 1.8 px (stellenweise 4 px) UNTER der echten
+    # Tischkante — ein Saum, der der Zerlegung inhaerent ist. Genau dort schaut der
+    # Schuh durch.
+    # Die Luecke sitzt OBEN (an der Objektoberkante), nicht unten oder seitlich.
+    # Deshalb wird gezielt nach oben aufgeweitet; rundum aufweiten kostet nur
+    # Praezision. Gemessen gegen die Kuenstler-Wahrheit (ROOM1150 Cut 1):
+    #     roh                          99.7 % Praezision / 67.8 % Ausbeute
+    #     Saum 2 rundum                99.3 % / 71.6 %
+    #     Saum 4 rundum                98.7 % / 74.4 %
+    #     oben 4 + Saum 1 + Spalten    98.8 % / 74.3 %
+    #     oben 6 + Saum 1 + Spalten    98.4 % / 75.4 %   <- gewaehlt
+    # 4 px reichten NICHT: der Nutzer meldete danach noch "fast minimal noch da", und
+    # die Nachmessung gab ihm recht — die schlechteste Bildspalte lag weiter 2 px unter
+    # der Tischkante. Mit 6 px ist die schlechteste Spalte bei +0 px, also lueckenlos.
+    # Die Spaltenfuellung schliesst Kerben INNERHALB des Objekts (ein Tisch ist in
+    # jeder Bildspalte durchgehend), ohne die Aussenkante zu verschieben.
+    ap.add_argument("--oben", type=int, default=6, help="Aufweitung nach oben (Standard 6)")
+    ap.add_argument("--grow", type=int, default=1, help="Saum rundum (Standard 1)")
+    ap.add_argument("--keine-spalten", action="store_true", help="Spaltenfuellung aus")
     a = ap.parse_args()
 
     room = a.room.upper()
@@ -122,7 +145,20 @@ def main():
     bg = load_bg(a.ppm, rid, a.cut)
     ids = [int(x) for x in a.ids.replace(" ", "").split(",") if x]
     region = np.isin(seg, ids)
-    print("  Auswahl: %d Flaechen -> %.1f %% des Bildes" % (len(ids), 100 * region.mean()))
+    if a.oben > 0:
+        oben = region.copy()
+        for k in range(1, a.oben + 1):
+            oben[:-k] |= region[k:]
+        region = oben
+    if a.grow > 0:
+        region = ndimage.binary_dilation(region, iterations=a.grow)
+    if not a.keine_spalten:
+        for x in range(region.shape[1]):
+            ys = np.nonzero(region[:, x])[0]
+            if len(ys):
+                region[ys.min():ys.max() + 1, x] = True
+    print("  Auswahl: %d Flaechen (oben %d, Saum %d, Spaltenfuellung %s) -> %.1f %% des Bildes"
+          % (len(ids), a.oben, a.grow, "aus" if a.keine_spalten else "an", 100 * region.mean()))
 
     if a.vergleich:
         truth = artist_region(rdt, cam, a.cut)
