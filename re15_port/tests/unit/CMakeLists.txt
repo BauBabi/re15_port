@@ -3235,3 +3235,13 @@ target_include_directories(probe_synchro_status PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(probe_synchro_status PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
+
+# --- PIN Laufzeit-Vordergrundatlas (SLD aus dem BSS-Chunk, FUN_800c47e8 + Trailer
+#     FUN_80021bbc). Orakel: die vorextrahierten PRI##.TIM muessen byte-gleich sein. ---
+add_executable(test_sld_atlas test_sld_atlas.c)
+target_link_libraries(test_sld_atlas PRIVATE re15_engine re15_test_support)
+target_include_directories(test_sld_atlas PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_sld_atlas PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_sld_atlas COMMAND test_sld_atlas)
+set_tests_properties(unit_sld_atlas PROPERTIES TIMEOUT 120)

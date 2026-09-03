@@ -1,0 +1,2515 @@
+{
+"ROOM102:0": {
+"e": 42016,
+"off": 31672,
+"usize": 61984,
+"present": 1,
+"sha": "426c06b9272c6a1326506a74ab9ab316f20b2c5f"
+},
+"ROOM102:1": {
+"e": 42840,
+"off": 25164,
+"usize": 61984,
+"present": 1,
+"sha": "1372ad4776c4f336e95047589e44932243388d13"
+},
+"ROOM102:2": {
+"e": 39764,
+"off": 22888,
+"usize": 61984,
+"present": 1,
+"sha": "1692e6b12972f9f5699b30bf1b5c89a878ba17f2"
+},
+"ROOM102:3": {
+"e": 42028,
+"off": 25564,
+"usize": 61984,
+"present": 1,
+"sha": "092e574ff34221ba9110ef2db55bc8c89a889519"
+},
+"ROOM102:4": {
+"e": 30628,
+"off": 20800,
+"usize": 61984,
+"present": 1,
+"sha": "5d38d3a4b0e0cef01338ba604ee35debf5f52993"
+},
+"ROOM102:5": {
+"e": 38208,
+"off": 25944,
+"usize": 61984,
+"present": 1,
+"sha": "5a5a98726f1b273172c1543326c2b7b873caa411"
+},
+"ROOM102:6": {
+"e": 35744,
+"off": 21980,
+"usize": 61984,
+"present": 1,
+"sha": "ea9d5d81ccba5b2a8f23c9d48488d95053b14136"
+},
+"ROOM102:7": {
+"e": 31968,
+"off": 24388,
+"usize": 61984,
+"present": 1,
+"sha": "dc0d8aebb1b9a0b927bcc588903de8cbe19b511a"
+},
+"ROOM102:8": {
+"e": 27968,
+"off": 21916,
+"usize": 61984,
+"present": 1,
+"sha": "07482294292885fe55087107dc17e6c44a6fa4ea"
+},
+"ROOM102:9": {
+"e": 34824,
+"off": 21044,
+"usize": 61984,
+"present": 1,
+"sha": "41e374db41f2dbadf968e08ee74d9cd3cc9db852"
+},
+"ROOM102:10": {
+"e": 37332,
+"off": 28188,
+"usize": 61984,
+"present": 1,
+"sha": "71c0322473353825e860b9b9d021297b63e1764f"
+},
+"ROOM102:12": {
+"e": 33980,
+"off": 22092,
+"usize": 61984,
+"present": 1,
+"sha": "b31e74396f253e4df9871c3830fb8442491c35a6"
+},
+"ROOM103:0": {
+"e": 39440,
+"off": 23220,
+"usize": 61984,
+"present": 1,
+"sha": "0f2ea9e72b6e30c07bf3819081c879d845ae6d63"
+},
+"ROOM103:1": {
+"e": 32676,
+"off": 21120,
+"usize": 61984,
+"present": 1,
+"sha": "99666da3ed38f56e4e34ddf3904fb4490dc475ef"
+},
+"ROOM103:2": {
+"e": 44080,
+"off": 31716,
+"usize": 61984,
+"present": 1,
+"sha": "21f82cdea461f5850eaf9aeaef4e9b88813b4d03"
+},
+"ROOM103:3": {
+"e": 30328,
+"off": 19268,
+"usize": 61984,
+"present": 1,
+"sha": "9a02b027787ec10e6d5711a285be1b9b05d8782a"
+},
+"ROOM103:4": {
+"e": 34152,
+"off": 21928,
+"usize": 61984,
+"present": 1,
+"sha": "0d7e6c24420ea783197620a12e86d9ed76aa6820"
+},
+"ROOM103:5": {
+"e": 36604,
+"off": 26984,
+"usize": 61984,
+"present": 1,
+"sha": "4e3919a5c2385831b046510dd40d6b7134f0d1c1"
+},
+"ROOM103:6": {
+"e": 42716,
+"off": 28300,
+"usize": 61984,
+"present": 1,
+"sha": "6f8df559e4227461688df88c9b64043d6a6dabe7"
+},
+"ROOM103:7": {
+"e": 27040,
+"off": 20524,
+"usize": 61984,
+"present": 1,
+"sha": "299cb770ab938c19c1597ce700b908825e0f04ad"
+},
+"ROOM103:9": {
+"e": 35696,
+"off": 22672,
+"usize": 61984,
+"present": 1,
+"sha": "17d7b93fe070856c5c334e70590e3c533081b847"
+},
+"ROOM103:10": {
+"e": 30076,
+"off": 19308,
+"usize": 61984,
+"present": 1,
+"sha": "95935ae5a4b7bbb8c146fd11ab438727bbc9fca8"
+},
+"ROOM103:11": {
+"e": 35628,
+"off": 21884,
+"usize": 61984,
+"present": 1,
+"sha": "b86a47f30ce365699cbbd31e29f69495479ae2ff"
+},
+"ROOM103:12": {
+"e": 36372,
+"off": 27936,
+"usize": 61984,
+"present": 1,
+"sha": "5f32e7b7ca422ba67ee0b3443e753ff83350436e"
+},
+"ROOM104:1": {
+"e": 48452,
+"off": 29028,
+"usize": 61984,
+"present": 1,
+"sha": "c3b7788d180d8750e3119864f37f5be17f10509a"
+},
+"ROOM104:2": {
+"e": 44208,
+"off": 24764,
+"usize": 61984,
+"present": 1,
+"sha": "7dfceb4390f78c04028a0f3291aa4e5b3a3ed2dd"
+},
+"ROOM104:3": {
+"e": 49660,
+"off": 27144,
+"usize": 61984,
+"present": 1,
+"sha": "291888beedc20806a370c275ac689e2ece1182a2"
+},
+"ROOM104:4": {
+"e": 41048,
+"off": 23316,
+"usize": 61984,
+"present": 1,
+"sha": "58935940e7592023617b89ba24eba038b71e7ff3"
+},
+"ROOM104:6": {
+"e": 42280,
+"off": 22652,
+"usize": 61984,
+"present": 1,
+"sha": "3ef9c9b0e941523900026069b011a7e183fd68e3"
+},
+"ROOM107:0": {
+"e": 34204,
+"off": 20040,
+"usize": 61984,
+"present": 1,
+"sha": "d7c6436b9a9c4df8474820e4c1b5f3ca40d287a4"
+},
+"ROOM107:1": {
+"e": 39248,
+"off": 24476,
+"usize": 61984,
+"present": 1,
+"sha": "54494c14bff560ca04d0cb4574cd05bf4f31407a"
+},
+"ROOM107:2": {
+"e": 35836,
+"off": 22540,
+"usize": 61984,
+"present": 1,
+"sha": "4cf8d22fbee969010a983be607e792923c3075fe"
+},
+"ROOM107:3": {
+"e": 46700,
+"off": 26284,
+"usize": 61984,
+"present": 1,
+"sha": "33a27616e4099dd842873d18b80448a26458211d"
+},
+"ROOM107:4": {
+"e": 39012,
+"off": 22876,
+"usize": 61984,
+"present": 1,
+"sha": "4b5574b91593c1f6037772c0200546376e631206"
+},
+"ROOM107:5": {
+"e": 43412,
+"off": 23008,
+"usize": 61984,
+"present": 1,
+"sha": "b70154cdbd6bed83bef54fb36997cd055aa62cb0"
+},
+"ROOM107:6": {
+"e": 34116,
+"off": 22400,
+"usize": 61984,
+"present": 1,
+"sha": "3261821de1b1711edbbd7107c6b0b941c0632146"
+},
+"ROOM107:7": {
+"e": 36436,
+"off": 23360,
+"usize": 61984,
+"present": 1,
+"sha": "f3949f8dad0d1e63042d0dcef92865f0010f825d"
+},
+"ROOM109:0": {
+"e": 43136,
+"off": 25704,
+"usize": 66080,
+"present": 1,
+"sha": "f8c7ec09bd2157c7bb6bc135015b2c8da052ad51"
+},
+"ROOM109:1": {
+"e": 32532,
+"off": 25196,
+"usize": 66080,
+"present": 1,
+"sha": "f009b750652a1100fb8fea21ffa71185ed8591f1"
+},
+"ROOM109:3": {
+"e": 37924,
+"off": 29588,
+"usize": 66080,
+"present": 1,
+"sha": "7441611edbc8c2a03fac6b661c3d5d3ef076821c"
+},
+"ROOM109:4": {
+"e": 44524,
+"off": 31632,
+"usize": 66080,
+"present": 1,
+"sha": "989bf8113a767b54d120000d5a09acd9c2996929"
+},
+"ROOM109:5": {
+"e": 33892,
+"off": 23320,
+"usize": 66080,
+"present": 1,
+"sha": "4b4e5a5caedfddba0bd6aab68c2b78b3670a5c6c"
+},
+"ROOM109:6": {
+"e": 41480,
+"off": 20280,
+"usize": 66080,
+"present": 1,
+"sha": "20cf0dee295af7bba9986ab426aaa02dfef550c8"
+},
+"ROOM109:7": {
+"e": 36788,
+"off": 30128,
+"usize": 66080,
+"present": 1,
+"sha": "8c4132d584c761522089696595b01244de5439dd"
+},
+"ROOM109:8": {
+"e": 44092,
+"off": 26528,
+"usize": 66080,
+"present": 1,
+"sha": "ef383230bcbba611e515259192442af3803c86de"
+},
+"ROOM109:9": {
+"e": 34564,
+"off": 26648,
+"usize": 66080,
+"present": 1,
+"sha": "ea73c2d0194e1068babe845fceeb2d3fff4e75c6"
+},
+"ROOM109:11": {
+"e": 40292,
+"off": 32188,
+"usize": 66080,
+"present": 1,
+"sha": "0e7b51716e320fc9ae243ad9f96e8d76de5f8208"
+},
+"ROOM109:12": {
+"e": 35416,
+"off": 22100,
+"usize": 66080,
+"present": 1,
+"sha": "6149b067cf60e4bac7933f9a7e35ca164fdcc2ad"
+},
+"ROOM109:13": {
+"e": 37780,
+"off": 27300,
+"usize": 66080,
+"present": 1,
+"sha": "6ac5df146e6dbc9a22f2afefee0487ecc354ba27"
+},
+"ROOM109:14": {
+"e": 35660,
+"off": 25276,
+"usize": 66080,
+"present": 1,
+"sha": "55b780c34d40c03f5d29fbd2dd4fcfec70061e89"
+},
+"ROOM10B:0": {
+"e": 28056,
+"off": 19756,
+"usize": 66080,
+"present": 1,
+"sha": "66f63c9da048dbf88f3948355f9dab284f480ba4"
+},
+"ROOM10B:1": {
+"e": 41456,
+"off": 31516,
+"usize": 66080,
+"present": 1,
+"sha": "a1af67bb995e51589d0672f6d62b76ef1e655131"
+},
+"ROOM10B:2": {
+"e": 28512,
+"off": 18992,
+"usize": 66080,
+"present": 1,
+"sha": "8f5981ad0b900ff229ee405bc8c2175b7cd484ee"
+},
+"ROOM10B:4": {
+"e": 38036,
+"off": 25632,
+"usize": 66080,
+"present": 1,
+"sha": "1f87da9654300c641bbe81a8b6ccda191696c404"
+},
+"ROOM10B:5": {
+"e": 47684,
+"off": 28604,
+"usize": 66080,
+"present": 1,
+"sha": "673bc7f37bb0f74ea7e54d1d6166ed2a25eb528f"
+},
+"ROOM10B:8": {
+"e": 28796,
+"off": 21860,
+"usize": 66080,
+"present": 1,
+"sha": "00ccf2c1fb349a5aba31254b39c3ededb4ec6328"
+},
+"ROOM115:0": {
+"e": 30788,
+"off": 26860,
+"usize": 66080,
+"present": 1,
+"sha": "6cf589d095529d686b0508be8fbd3f7946c43863"
+},
+"ROOM115:1": {
+"e": 42272,
+"off": 26024,
+"usize": 66080,
+"present": 1,
+"sha": "9e29433f7899dff38b2306b93d447105e29181e2"
+},
+"ROOM115:2": {
+"e": 47884,
+"off": 31212,
+"usize": 66080,
+"present": 1,
+"sha": "8c14fa7f6f9f9dc1e2ef68e8b6bd3a23f45b17ae"
+},
+"ROOM115:3": {
+"e": 44072,
+"off": 27252,
+"usize": 66080,
+"present": 1,
+"sha": "3602f9c7f30c88b1256e77491e97a82bd39eeef3"
+},
+"ROOM115:4": {
+"e": 40132,
+"off": 31140,
+"usize": 66080,
+"present": 1,
+"sha": "c134a8754edd80705ecaaa2ff86372fe3a3de08b"
+},
+"ROOM117:1": {
+"e": 24292,
+"off": 20428,
+"usize": 66080,
+"present": 1,
+"sha": "891943c818fca9f2ab20aaabb9f8a9ceb0920e1f"
+},
+"ROOM117:2": {
+"e": 26072,
+"off": 22136,
+"usize": 66080,
+"present": 1,
+"sha": "7dd2ed2d0dff68ef2645a927d4916f8a41f64fa5"
+},
+"ROOM117:4": {
+"e": 30772,
+"off": 23544,
+"usize": 66080,
+"present": 1,
+"sha": "3a31b1f07a780e7e71ed8a717df16e04f57adc3c"
+},
+"ROOM117:5": {
+"e": 27552,
+"off": 15488,
+"usize": 66080,
+"present": 1,
+"sha": "800a1be43bb23b196a76523359b411786791d2a6"
+},
+"ROOM119:0": {
+"e": 30132,
+"off": 21704,
+"usize": 66080,
+"present": 1,
+"sha": "16cc5e262a543d9fdfe3fd25afa73c26c7b91216"
+},
+"ROOM119:1": {
+"e": 30232,
+"off": 19372,
+"usize": 66080,
+"present": 1,
+"sha": "74db5e5a5b3a06f3e7836d10b61fa3f4ba0f7143"
+},
+"ROOM119:2": {
+"e": 30272,
+"off": 19236,
+"usize": 66080,
+"present": 1,
+"sha": "b8de5b13f05144100ca1311345751f8f5657ad33"
+},
+"ROOM119:3": {
+"e": 39884,
+"off": 31244,
+"usize": 66080,
+"present": 1,
+"sha": "44e11cc2280cba22fe0df130400335f6accf8ac5"
+},
+"ROOM119:6": {
+"e": 51180,
+"off": 29832,
+"usize": 66080,
+"present": 1,
+"sha": "a83f9e7f0d0e528f6846cec12f3c02c8c29f0966"
+},
+"ROOM119:7": {
+"e": 47836,
+"off": 28180,
+"usize": 66080,
+"present": 1,
+"sha": "b0c6a7500a68b220b868213c1bfcf65ec43797a6"
+},
+"ROOM119:8": {
+"e": 34872,
+"off": 29140,
+"usize": 66080,
+"present": 1,
+"sha": "591e0faf073f1ce59ca6a1553ac37fc7b687f953"
+},
+"ROOM119:12": {
+"e": 34860,
+"off": 21952,
+"usize": 66080,
+"present": 1,
+"sha": "735fba5b761d4eafd7eafe1a580fa9554f245704"
+},
+"ROOM119:13": {
+"e": 30076,
+"off": 21736,
+"usize": 66080,
+"present": 1,
+"sha": "a3063e1acdd5d13fbf7e0508053f9875091fc4c5"
+},
+"ROOM119:14": {
+"e": 32568,
+"off": 24172,
+"usize": 66080,
+"present": 1,
+"sha": "89b171b3a6f3cc102069fbce4f3ff942f261189c"
+},
+"ROOM11B:7": {
+"e": 25352,
+"off": 20080,
+"usize": 66080,
+"present": 1,
+"sha": "15fa296b87558646d30f5be8cc026094df597262"
+},
+"ROOM11B:8": {
+"e": 27436,
+"off": 22960,
+"usize": 66080,
+"present": 1,
+"sha": "6adcb76919a9c1aa2f79383da58d6b5e1bc347b1"
+},
+"ROOM11B:9": {
+"e": 31084,
+"off": 21116,
+"usize": 66080,
+"present": 1,
+"sha": "281f9c634ee91b2e7b738b2a6cce6736e77657f8"
+},
+"ROOM11B:10": {
+"e": 29688,
+"off": 23240,
+"usize": 66080,
+"present": 1,
+"sha": "71c3eaa55dadbc9ce4fcd5f9e72f20a75980bf87"
+},
+"ROOM11B:11": {
+"e": 35424,
+"off": 26776,
+"usize": 66080,
+"present": 1,
+"sha": "9ecc9a366ec636fa06bdea36e7b3a01cfc74c2b2"
+},
+"ROOM11C:0": {
+"e": 33660,
+"off": 28920,
+"usize": 66080,
+"present": 1,
+"sha": "fda9300f3f8064853d86e87b5760db81b74bdea2"
+},
+"ROOM11C:1": {
+"e": 41456,
+"off": 31612,
+"usize": 66080,
+"present": 1,
+"sha": "e7218ac5fa34fc3ff99653d40f61f5022f938d49"
+},
+"ROOM11C:2": {
+"e": 34284,
+"off": 21936,
+"usize": 66080,
+"present": 1,
+"sha": "803107d4831150609b5ac0cf7e115c2bd7c6a175"
+},
+"ROOM11C:3": {
+"e": 33136,
+"off": 23056,
+"usize": 66080,
+"present": 1,
+"sha": "e9de99c3b3d49046659d06cd1280aa74eaaae2d5"
+},
+"ROOM11C:4": {
+"e": 31836,
+"off": 22848,
+"usize": 66080,
+"present": 1,
+"sha": "a14a0c3dce894e5d1a92c0493167657b49adef81"
+},
+"ROOM11C:5": {
+"e": 28204,
+"off": 20796,
+"usize": 66080,
+"present": 1,
+"sha": "222690139f87f1d4ef46d8ada74606875dab8289"
+},
+"ROOM11C:6": {
+"e": 27228,
+"off": 21184,
+"usize": 66080,
+"present": 1,
+"sha": "499c2b4f80526420fabc4df6dfe2ef35a62db0a1"
+},
+"ROOM11C:7": {
+"e": 27864,
+"off": 20660,
+"usize": 66080,
+"present": 1,
+"sha": "1b5bbf6c1d4ee6bc32372be98841eeff7107eeb2"
+},
+"ROOM11C:8": {
+"e": 39836,
+"off": 32188,
+"usize": 66080,
+"present": 1,
+"sha": "0d82b3fbebbfe73953a3308ea7f1dc850c7b5f92"
+},
+"ROOM11C:9": {
+"e": 35948,
+"off": 29124,
+"usize": 66080,
+"present": 1,
+"sha": "dbd079b12712445af33b7fcd80858f02ba58b19a"
+},
+"ROOM11C:10": {
+"e": 37744,
+"off": 31212,
+"usize": 66080,
+"present": 1,
+"sha": "d1612a41e7a79122e9ea7106993124ea27e3c785"
+},
+"ROOM11C:11": {
+"e": 27696,
+"off": 20888,
+"usize": 66080,
+"present": 1,
+"sha": "8e1a6a0a25c33ca786ebe299ec1a52f5763fb6cf"
+},
+"ROOM11C:12": {
+"e": 40040,
+"off": 24956,
+"usize": 66080,
+"present": 1,
+"sha": "d3e961272e21d0a773f6d8748ba408f145f1c1a7"
+},
+"ROOM11E:1": {
+"e": 32520,
+"off": 23456,
+"usize": 66080,
+"present": 1,
+"sha": "c2952e2c8e6bd497ee0ebe759a48dfb1947a3822"
+},
+"ROOM11E:2": {
+"e": 34472,
+"off": 24716,
+"usize": 66080,
+"present": 1,
+"sha": "99bfbee030c4e441dfa016bacdc518995f7be22c"
+},
+"ROOM11E:3": {
+"e": 30076,
+"off": 24380,
+"usize": 66080,
+"present": 1,
+"sha": "b297abf9835dd88c884c024816746d981ca5370d"
+},
+"ROOM11E:4": {
+"e": 38768,
+"off": 24944,
+"usize": 66080,
+"present": 1,
+"sha": "299a6e87286b0d9eaf577eddaf26fee334e4093b"
+},
+"ROOM11E:5": {
+"e": 30160,
+"off": 24776,
+"usize": 66080,
+"present": 1,
+"sha": "6222d17396069255a9eb55e64e53e13d7e79641c"
+},
+"ROOM11E:8": {
+"e": 43104,
+"off": 26712,
+"usize": 66080,
+"present": 1,
+"sha": "c351e437edc46dc3f9832f7c8d17410ec6f2853f"
+},
+"ROOM11E:9": {
+"e": 32340,
+"off": 23496,
+"usize": 66080,
+"present": 1,
+"sha": "591c6c80cdcc1766044fe35e26724cb96792b93f"
+},
+"ROOM11E:11": {
+"e": 35488,
+"off": 25632,
+"usize": 66080,
+"present": 1,
+"sha": "44f4e97ea011ce925e25093b79b4701c78e603ac"
+},
+"ROOM11E:13": {
+"e": 29268,
+"off": 21980,
+"usize": 66080,
+"present": 1,
+"sha": "dba16404a524e8d42bdc3f91cc4e35598029d271"
+},
+"ROOM120:0": {
+"e": 35748,
+"off": 29328,
+"usize": 66080,
+"present": 1,
+"sha": "cb550fc9f6eb83c2413c41e2c2a1fdfbce550dc7"
+},
+"ROOM120:1": {
+"e": 36572,
+"off": 28380,
+"usize": 66080,
+"present": 1,
+"sha": "cf6541dd114fe7ffc0200f18c3d67b108e7ddb48"
+},
+"ROOM120:2": {
+"e": 40076,
+"off": 28332,
+"usize": 66080,
+"present": 1,
+"sha": "5e4d3d73538a475c768a210652306f836855bd74"
+},
+"ROOM120:3": {
+"e": 34804,
+"off": 30176,
+"usize": 66080,
+"present": 1,
+"sha": "65689f7945f86f8c3f3fa4bb659f47fc03bbefd4"
+},
+"ROOM121:1": {
+"e": 34416,
+"off": 24968,
+"usize": 66080,
+"present": 1,
+"sha": "cc8b22a875dc0c6eb975cdd75c9d278287f4f58c"
+},
+"ROOM121:2": {
+"e": 30256,
+"off": 25792,
+"usize": 66080,
+"present": 1,
+"sha": "7f2ec31fe0ee3369809fb434e4b268b58e684f73"
+},
+"ROOM121:3": {
+"e": 52552,
+"off": 27016,
+"usize": 66080,
+"present": 1,
+"sha": "ce39bd8b0003fef7f21b4e0223f37a743d1afd73"
+},
+"ROOM121:4": {
+"e": 52932,
+"off": 24776,
+"usize": 66080,
+"present": 1,
+"sha": "65c33746d9afeea43889e1091999858bc0159cd8"
+},
+"ROOM121:5": {
+"e": 46008,
+"off": 24340,
+"usize": 66080,
+"present": 1,
+"sha": "81a46c8e6d52f71c76fe319e123e315a12489b71"
+},
+"ROOM121:6": {
+"e": 38812,
+"off": 28880,
+"usize": 66080,
+"present": 1,
+"sha": "aecdd2919ad2f7ac10a2fa9098843698a9cf142e"
+},
+"ROOM121:7": {
+"e": 42556,
+"off": 27860,
+"usize": 66080,
+"present": 1,
+"sha": "6965e970bd80eb3ed7d60da4cd9224137618f714"
+},
+"ROOM121:8": {
+"e": 49664,
+"off": 24000,
+"usize": 66080,
+"present": 1,
+"sha": "459276174525bf0a50a5919edef3310e3730c727"
+},
+"ROOM122:0": {
+"e": 33452,
+"off": 25320,
+"usize": 61984,
+"present": 1,
+"sha": "9c58152a0a65da6299d09d9f82101d05df2c97ce"
+},
+"ROOM122:1": {
+"e": 34860,
+"off": 26348,
+"usize": 66080,
+"present": 1,
+"sha": "ebd1a7008aa83c15a318f285b766fc082dc42db8"
+},
+"ROOM122:2": {
+"e": 32984,
+"off": 24596,
+"usize": 66080,
+"present": 1,
+"sha": "6a8244e459cb8a7f02d5ee523389f37126f6d38f"
+},
+"ROOM122:3": {
+"e": 32552,
+"off": 26784,
+"usize": 66080,
+"present": 1,
+"sha": "068fb6838137901035a389469cd7dc7e5788b128"
+},
+"ROOM122:4": {
+"e": 33516,
+"off": 24920,
+"usize": 66080,
+"present": 1,
+"sha": "84486fba1dfddbbf17c7785996c15fd0efb7af24"
+},
+"ROOM122:5": {
+"e": 34608,
+"off": 26280,
+"usize": 66080,
+"present": 1,
+"sha": "850071b72aa0cac765c4b3744726db46a5c68a27"
+},
+"ROOM122:6": {
+"e": 31552,
+"off": 26128,
+"usize": 66080,
+"present": 1,
+"sha": "1fb5e59758929415b0ac20a0bac56157afe7349b"
+},
+"ROOM122:8": {
+"e": 33344,
+"off": 27976,
+"usize": 66080,
+"present": 1,
+"sha": "fd12d2b7ff2720a95555cb2f3f7bf293c9106cab"
+},
+"ROOM200:2": {
+"e": 24860,
+"off": 20768,
+"usize": 66080,
+"present": 1,
+"sha": "904b04ef16d000481a6673037743428508a5720b"
+},
+"ROOM200:3": {
+"e": 29568,
+"off": 22324,
+"usize": 66080,
+"present": 1,
+"sha": "7d0c6b7fc7e7a1738da58d0f54d56d40067501c9"
+},
+"ROOM200:4": {
+"e": 35764,
+"off": 22012,
+"usize": 66080,
+"present": 1,
+"sha": "85c38bebbb7ab835b8b9eb05287bd5803415c512"
+},
+"ROOM200:5": {
+"e": 32032,
+"off": 18816,
+"usize": 66080,
+"present": 1,
+"sha": "e574e685051f1db42773e2658c1d5923b234a554"
+},
+"ROOM200:6": {
+"e": 40096,
+"off": 32180,
+"usize": 66080,
+"present": 1,
+"sha": "e2058af719a416eca1a40616a3a78a9ada56c5e6"
+},
+"ROOM200:7": {
+"e": 26736,
+"off": 20052,
+"usize": 66080,
+"present": 1,
+"sha": "c5925dbf881e1773de844d6988b25b2d85912820"
+},
+"ROOM200:10": {
+"e": 36936,
+"off": 30304,
+"usize": 66080,
+"present": 1,
+"sha": "151565a32d687e4ef5ecefea7c52c7ad36c19254"
+},
+"ROOM20B:2": {
+"e": 24860,
+"off": 20768,
+"usize": 66080,
+"present": 1,
+"sha": "904b04ef16d000481a6673037743428508a5720b"
+},
+"ROOM20B:3": {
+"e": 29568,
+"off": 22324,
+"usize": 66080,
+"present": 1,
+"sha": "7d0c6b7fc7e7a1738da58d0f54d56d40067501c9"
+},
+"ROOM20B:4": {
+"e": 35764,
+"off": 22012,
+"usize": 66080,
+"present": 1,
+"sha": "85c38bebbb7ab835b8b9eb05287bd5803415c512"
+},
+"ROOM20B:5": {
+"e": 40096,
+"off": 32180,
+"usize": 66080,
+"present": 1,
+"sha": "e2058af719a416eca1a40616a3a78a9ada56c5e6"
+},
+"ROOM20B:6": {
+"e": 26736,
+"off": 20052,
+"usize": 66080,
+"present": 1,
+"sha": "c5925dbf881e1773de844d6988b25b2d85912820"
+},
+"ROOM20B:7": {
+"e": 35996,
+"off": 22324,
+"usize": 66080,
+"present": 1,
+"sha": "b3fd902f89b50f8c5a0db10eb0a215c464050a39"
+},
+"ROOM20B:9": {
+"e": 36936,
+"off": 30304,
+"usize": 66080,
+"present": 1,
+"sha": "151565a32d687e4ef5ecefea7c52c7ad36c19254"
+},
+"ROOM20B:14": {
+"e": 39544,
+"off": 24960,
+"usize": 66080,
+"present": 1,
+"sha": "b7e034808fc19754af02a82340ce7b70fcb694d7"
+},
+"ROOM300:0": {
+"e": 36380,
+"off": 28884,
+"usize": 66080,
+"present": 1,
+"sha": "cc27d4d14feafa4bf814befea9b204f75aee4fcb"
+},
+"ROOM300:1": {
+"e": 45856,
+"off": 28856,
+"usize": 66080,
+"present": 1,
+"sha": "ba3dbb6b1ddf0f25c285f5bf0cedde7ce1c5a98c"
+},
+"ROOM300:2": {
+"e": 44316,
+"off": 28152,
+"usize": 66080,
+"present": 1,
+"sha": "b9f9c1a6aba4a1b77f7b5ef4b3b261b7fabfc9b2"
+},
+"ROOM300:3": {
+"e": 39468,
+"off": 23912,
+"usize": 66080,
+"present": 1,
+"sha": "04cfd09e24ed576d3dd8b1c160d8b09a9bdeb0e8"
+},
+"ROOM301:0": {
+"e": 36540,
+"off": 27484,
+"usize": 66080,
+"present": 1,
+"sha": "e4379bf0215c774a430149c28c394ad48adf62d2"
+},
+"ROOM301:1": {
+"e": 43588,
+"off": 28468,
+"usize": 66080,
+"present": 1,
+"sha": "b32fea92ebed9ba3f62a857e68f5838a4fd4d507"
+},
+"ROOM301:2": {
+"e": 40244,
+"off": 27332,
+"usize": 66080,
+"present": 1,
+"sha": "2806ccaaf3a677d961c256c1121a23db56b0400b"
+},
+"ROOM301:3": {
+"e": 46832,
+"off": 31920,
+"usize": 66080,
+"present": 1,
+"sha": "964b359fba8c3b88596469e28120af75ad0991e1"
+},
+"ROOM301:4": {
+"e": 44544,
+"off": 26488,
+"usize": 66080,
+"present": 1,
+"sha": "3207ea2326cbae1dd5e1640d32069ee90302638e"
+},
+"ROOM301:5": {
+"e": 38324,
+"off": 26188,
+"usize": 66080,
+"present": 1,
+"sha": "fd26ae55591eae040de42cb0516c003dff9bca23"
+},
+"ROOM301:6": {
+"e": 35012,
+"off": 22344,
+"usize": 66080,
+"present": 1,
+"sha": "27c6807aa460e1b256746048fc5a5a29a8e56520"
+},
+"ROOM304:0": {
+"e": 31352,
+"off": 24196,
+"usize": 66080,
+"present": 1,
+"sha": "b70078ffb0e5fe6ff5adb927a380b843e4b74e10"
+},
+"ROOM304:1": {
+"e": 45660,
+"off": 26264,
+"usize": 66080,
+"present": 1,
+"sha": "4663f7c9b6df9e8765cdd45360ec50f27ddb056e"
+},
+"ROOM304:2": {
+"e": 46584,
+"off": 24968,
+"usize": 66080,
+"present": 1,
+"sha": "666d782746953a525f5b88b160660f11eba9335a"
+},
+"ROOM304:3": {
+"e": 46680,
+"off": 25488,
+"usize": 66080,
+"present": 1,
+"sha": "746dcabe72bacc20c188fe14db259825c7e1d360"
+},
+"ROOM304:4": {
+"e": 38560,
+"off": 20336,
+"usize": 66080,
+"present": 1,
+"sha": "74d44a976bcfd922b64d6b3a98ad89ca9cf9d629"
+},
+"ROOM304:5": {
+"e": 43832,
+"off": 23448,
+"usize": 66080,
+"present": 1,
+"sha": "db9a1cff67e23c528aa8c32b28464403f77c5cbd"
+},
+"ROOM304:6": {
+"e": 37028,
+"off": 21388,
+"usize": 66080,
+"present": 1,
+"sha": "eb01d350973dffdf2060e7c6b69e9dbb6af9dc14"
+},
+"ROOM304:7": {
+"e": 45984,
+"off": 23536,
+"usize": 66080,
+"present": 1,
+"sha": "e940012a9ff4ad3d0659f2846ab5f0157c28da2e"
+},
+"ROOM304:8": {
+"e": 44164,
+"off": 19400,
+"usize": 66080,
+"present": 1,
+"sha": "6ede0263642d7c5cd8be051aeae341789eb27029"
+},
+"ROOM304:9": {
+"e": 51552,
+"off": 31580,
+"usize": 66080,
+"present": 1,
+"sha": "23b4cfbe3de43f63d6d5fd19ab378fd595bd06dc"
+},
+"ROOM304:10": {
+"e": 37020,
+"off": 32208,
+"usize": 66080,
+"present": 1,
+"sha": "7c61e17f8a0e4eaac735a30f1a3199ca3d2d2bea"
+},
+"ROOM304:11": {
+"e": 37200,
+"off": 19676,
+"usize": 66080,
+"present": 1,
+"sha": "c8589d171a6fa7d15cc906e211776a3102b53980"
+},
+"ROOM304:12": {
+"e": 44340,
+"off": 22072,
+"usize": 66080,
+"present": 1,
+"sha": "e5c26d6197b79d16c830ef67fb5ca5d980f55548"
+},
+"ROOM304:13": {
+"e": 54364,
+"off": 27584,
+"usize": 66080,
+"present": 1,
+"sha": "6f4afed4eab840bc7f673979b1c027de9cc0b70c"
+},
+"ROOM305:0": {
+"e": 42836,
+"off": 31352,
+"usize": 66080,
+"present": 1,
+"sha": "67e7358c9e651534492a856ef5b19ca74ee5066f"
+},
+"ROOM305:1": {
+"e": 46128,
+"off": 30900,
+"usize": 66080,
+"present": 1,
+"sha": "0dd3c27f48461882af98280034fea05ec9da8d5a"
+},
+"ROOM305:2": {
+"e": 41800,
+"off": 22480,
+"usize": 66080,
+"present": 1,
+"sha": "36719051228c65157d1780abee2f4e4e365b7348"
+},
+"ROOM305:3": {
+"e": 41004,
+"off": 25580,
+"usize": 66080,
+"present": 1,
+"sha": "e3742c80847bda777cbde57b7dcd1eff8358903e"
+},
+"ROOM305:4": {
+"e": 39276,
+"off": 23864,
+"usize": 66080,
+"present": 1,
+"sha": "2afa83e128b10f6e65637a71adeb3a3eaa1b7799"
+},
+"ROOM305:5": {
+"e": 51028,
+"off": 31812,
+"usize": 66080,
+"present": 1,
+"sha": "fd94a4aba449e4c28014e1f95a62ca58c6952b7f"
+},
+"ROOM305:6": {
+"e": 32248,
+"off": 20120,
+"usize": 66080,
+"present": 1,
+"sha": "caf71a5c5c4a16b47fa6c2518fe2d7eef694a9f8"
+},
+"ROOM305:7": {
+"e": 47288,
+"off": 30736,
+"usize": 66080,
+"present": 1,
+"sha": "14af81ffdb75c522fe90485b490683932105b145"
+},
+"ROOM305:8": {
+"e": 39456,
+"off": 31744,
+"usize": 66080,
+"present": 1,
+"sha": "5ba7c63c31fc114b506d27056d6fe45a01aa713d"
+},
+"ROOM305:9": {
+"e": 39604,
+"off": 22872,
+"usize": 66080,
+"present": 1,
+"sha": "4569271c1e63c0690ca02e7a29de805b46c59740"
+},
+"ROOM305:11": {
+"e": 33720,
+"off": 21452,
+"usize": 66080,
+"present": 1,
+"sha": "a5ef5c04aa651949ea372db70196173b07c2139b"
+},
+"ROOM305:12": {
+"e": 39852,
+"off": 31252,
+"usize": 66080,
+"present": 1,
+"sha": "b9391197131770ad61b656ff2c57c96a18c4ba45"
+},
+"ROOM305:13": {
+"e": 38224,
+"off": 22016,
+"usize": 66080,
+"present": 1,
+"sha": "984e203a058af86e8efd0ddd311940989aa4d260"
+},
+"ROOM305:15": {
+"e": 58364,
+"off": 29392,
+"usize": 66080,
+"present": 1,
+"sha": "f2ef96943dc602f430f0349612fd2f0d105657f8"
+},
+"ROOM306:1": {
+"e": 28020,
+"off": 22876,
+"usize": 66080,
+"present": 1,
+"sha": "67ee536e90752b8df444e355a499f5cfb647257f"
+},
+"ROOM306:2": {
+"e": 25216,
+"off": 19680,
+"usize": 66080,
+"present": 1,
+"sha": "7e968d877ec0ffa3c8feb097d07265386b7cc8e6"
+},
+"ROOM306:3": {
+"e": 36676,
+"off": 20288,
+"usize": 66080,
+"present": 1,
+"sha": "f876f2606bbb0e06c89b45fdc423f2c32a874c6f"
+},
+"ROOM306:4": {
+"e": 27112,
+"off": 22488,
+"usize": 66080,
+"present": 1,
+"sha": "1de9e1a56bf5f14d386ffabcbfb886f426f9ca46"
+},
+"ROOM306:5": {
+"e": 41648,
+"off": 30328,
+"usize": 66080,
+"present": 1,
+"sha": "5f0ac906b01c2083e0448ccb6c924dd091636671"
+},
+"ROOM306:6": {
+"e": 35344,
+"off": 30732,
+"usize": 66080,
+"present": 1,
+"sha": "3878d23ede6c8e90784b39714aa387f6f1451ede"
+},
+"ROOM307:0": {
+"e": 41708,
+"off": 28076,
+"usize": 66080,
+"present": 1,
+"sha": "6c956a87166638aa9cf8a8baa442a189e4380c4f"
+},
+"ROOM307:1": {
+"e": 39452,
+"off": 26508,
+"usize": 66080,
+"present": 1,
+"sha": "7173ef32775aadc9e7553a6b9344a03665b6d4d2"
+},
+"ROOM307:2": {
+"e": 37192,
+"off": 19752,
+"usize": 66080,
+"present": 1,
+"sha": "f1ddaee47d5b5b2f9639059d834be5f5d0eeca5d"
+},
+"ROOM307:3": {
+"e": 40280,
+"off": 25860,
+"usize": 66080,
+"present": 1,
+"sha": "4b2014b6b3d7540d6fc0caae8fab59db52ae6f0a"
+},
+"ROOM307:4": {
+"e": 56580,
+"off": 29924,
+"usize": 66080,
+"present": 1,
+"sha": "92146625cc334ba777f549652cb527097f7869f3"
+},
+"ROOM307:5": {
+"e": 40504,
+"off": 27216,
+"usize": 66080,
+"present": 1,
+"sha": "377c68c7f599f3606b6b2aae7866ff42353a9a92"
+},
+"ROOM307:6": {
+"e": 53836,
+"off": 29720,
+"usize": 66080,
+"present": 1,
+"sha": "c148f49afcd9d12de9ffb364fec47b9a5ade493a"
+},
+"ROOM307:7": {
+"e": 43916,
+"off": 27780,
+"usize": 66080,
+"present": 1,
+"sha": "04529a0a1f8bd6d1dde7d36f7cfbe72339fe0b7a"
+},
+"ROOM307:8": {
+"e": 46060,
+"off": 29628,
+"usize": 66080,
+"present": 1,
+"sha": "23c3e70d2a338b6c3e5f1adf936340d52d33c591"
+},
+"ROOM307:9": {
+"e": 35924,
+"off": 30992,
+"usize": 66080,
+"present": 1,
+"sha": "5e5ca55e66e75bfc4a51b432f211285553a30051"
+},
+"ROOM307:10": {
+"e": 43792,
+"off": 27436,
+"usize": 66080,
+"present": 1,
+"sha": "e1bbaa6e2e93bf29b184d49494d2ec3c1180c15f"
+},
+"ROOM307:11": {
+"e": 40896,
+"off": 27284,
+"usize": 66080,
+"present": 1,
+"sha": "06577cb119dfcd81763d34c9fa699e18a758d8a9"
+},
+"ROOM307:12": {
+"e": 44016,
+"off": 30184,
+"usize": 66080,
+"present": 1,
+"sha": "cf74fcd918cc0064e80eb9480dcd40254042f249"
+},
+"ROOM308:0": {
+"e": 40240,
+"off": 28400,
+"usize": 66080,
+"present": 1,
+"sha": "9abfe8237b1b3d80f9f71f40cf92ca05cb62c368"
+},
+"ROOM308:3": {
+"e": 33500,
+"off": 25904,
+"usize": 66080,
+"present": 1,
+"sha": "2eaf80a23b10c5aff080a5181098654b8bf52708"
+},
+"ROOM309:2": {
+"e": 31164,
+"off": 22164,
+"usize": 66080,
+"present": 1,
+"sha": "e70cb5c50ab505225cc2df34acbbb51e1450553d"
+},
+"ROOM309:3": {
+"e": 37632,
+"off": 20952,
+"usize": 66080,
+"present": 1,
+"sha": "b51fcb204c943db10555e6f5fd3c5863ad035fcc"
+},
+"ROOM309:6": {
+"e": 48624,
+"off": 31532,
+"usize": 66080,
+"present": 1,
+"sha": "ebde8244d99a9f06d0af9e3f7baccf425c717600"
+},
+"ROOM309:10": {
+"e": 35424,
+"off": 27208,
+"usize": 66080,
+"present": 1,
+"sha": "2a49e7ec7ded39d65380c096f007e3ecc8b304f9"
+},
+"ROOM309:11": {
+"e": 41820,
+"off": 26396,
+"usize": 66080,
+"present": 1,
+"sha": "594e58fa2238d520987aa9e38b54c7c4f00af5b6"
+},
+"ROOM309:14": {
+"e": 47864,
+"off": 30816,
+"usize": 66080,
+"present": 1,
+"sha": "13176da08c472835482dc17826ef5631f9b6c00f"
+},
+"ROOM309:15": {
+"e": 33952,
+"off": 28520,
+"usize": 66080,
+"present": 1,
+"sha": "8416ef7970d61437cb073038620fc6255621ba2d"
+},
+"ROOM30A:0": {
+"e": 41168,
+"off": 22684,
+"usize": 66080,
+"present": 1,
+"sha": "8849e3aec6d9db7698b19547b39e90ee222d9570"
+},
+"ROOM30A:1": {
+"e": 37472,
+"off": 23060,
+"usize": 66080,
+"present": 1,
+"sha": "b68ad36275ab97b378e26c85519442d33cf879e0"
+},
+"ROOM30A:2": {
+"e": 27276,
+"off": 21600,
+"usize": 66080,
+"present": 1,
+"sha": "f93c4229af3786de78205cb307918180ad069061"
+},
+"ROOM30A:3": {
+"e": 52248,
+"off": 27728,
+"usize": 66080,
+"present": 1,
+"sha": "3a7d22615f0506106f175e904f1d3b67f993ad1f"
+},
+"ROOM30A:4": {
+"e": 42204,
+"off": 24920,
+"usize": 66080,
+"present": 1,
+"sha": "5ece0dc751cf61ab4b78b74b9101f56fbb9b9885"
+},
+"ROOM30A:5": {
+"e": 33708,
+"off": 22024,
+"usize": 66080,
+"present": 1,
+"sha": "0022f557d5e4322bcbd5e1b97846c75915b7b293"
+},
+"ROOM30E:6": {
+"e": 36688,
+"off": 24636,
+"usize": 66080,
+"present": 1,
+"sha": "7916a1f30d94e2b26131a95ef1824cebae0f5add"
+},
+"ROOM30E:7": {
+"e": 41144,
+"off": 28040,
+"usize": 66080,
+"present": 1,
+"sha": "099146681f1e43b8b3e7a57d89a2eb667adcce36"
+},
+"ROOM30E:8": {
+"e": 42544,
+"off": 30184,
+"usize": 66080,
+"present": 1,
+"sha": "767f29c976bae0fe852fcfe7538f8dea382899aa"
+},
+"ROOM30E:9": {
+"e": 43128,
+"off": 30364,
+"usize": 66080,
+"present": 1,
+"sha": "90808d5657eaaade640f54c003795125939990a5"
+},
+"ROOM400:0": {
+"e": 34912,
+"off": 21504,
+"usize": 66080,
+"present": 1,
+"sha": "642a530ab62f1ce69c3b86894aec64d8aaa72224"
+},
+"ROOM400:1": {
+"e": 27280,
+"off": 21976,
+"usize": 66080,
+"present": 1,
+"sha": "f03e932d07176e312eaf3be5764130a6b178537f"
+},
+"ROOM400:2": {
+"e": 41880,
+"off": 31476,
+"usize": 66080,
+"present": 1,
+"sha": "8f38a7aa96f8fffdbb5724d6597bcca4879a2db0"
+},
+"ROOM400:3": {
+"e": 29852,
+"off": 20236,
+"usize": 66080,
+"present": 1,
+"sha": "f6a825375f973ff6f059e316ba697a05bc33d9f6"
+},
+"ROOM400:4": {
+"e": 37064,
+"off": 22996,
+"usize": 66080,
+"present": 1,
+"sha": "c315897315b265363573209dd07b81eb2c1a5a33"
+},
+"ROOM400:5": {
+"e": 44432,
+"off": 28208,
+"usize": 66080,
+"present": 1,
+"sha": "52ba8824ed20b762f68a7df1a02b422ed8d48af0"
+},
+"ROOM401:1": {
+"e": 26280,
+"off": 22480,
+"usize": 66080,
+"present": 1,
+"sha": "f86747739092765d93ca05d79997a2a0463628b5"
+},
+"ROOM404:2": {
+"e": 30492,
+"off": 26316,
+"usize": 66080,
+"present": 1,
+"sha": "7868ce98e315166052a29999a2b238f0e0207df4"
+},
+"ROOM404:4": {
+"e": 37248,
+"off": 25692,
+"usize": 66080,
+"present": 1,
+"sha": "37aba4e5aa0e947e20e5fe6862e6dc37897674a9"
+},
+"ROOM404:5": {
+"e": 49856,
+"off": 25892,
+"usize": 58400,
+"present": 1,
+"sha": "0babf8a7661fc6e53d787c9a7c4320ad0ce924f2"
+},
+"ROOM404:6": {
+"e": 44216,
+"off": 32012,
+"usize": 66080,
+"present": 1,
+"sha": "d88c72be8f3d1220bc93cbc1369aac49fb27c9b2"
+},
+"ROOM404:7": {
+"e": 31504,
+"off": 21792,
+"usize": 66080,
+"present": 1,
+"sha": "6c1ba6aaa0317d74120e941d1238bb4fa414ac57"
+},
+"ROOM404:9": {
+"e": 45148,
+"off": 22036,
+"usize": 66080,
+"present": 1,
+"sha": "75e239214e82fee2fca4da10f596c6cad6b6a3c9"
+},
+"ROOM404:10": {
+"e": 38080,
+"off": 25224,
+"usize": 66080,
+"present": 1,
+"sha": "b615700afa140fecf0632cede2a203b9bdca3680"
+},
+"ROOM404:11": {
+"e": 35204,
+"off": 25740,
+"usize": 66080,
+"present": 1,
+"sha": "e4177d5998a479ab329c6ea5d00e9d8f0779acb4"
+},
+"ROOM404:12": {
+"e": 42788,
+"off": 25656,
+"usize": 66080,
+"present": 1,
+"sha": "c0ac58dc4fde7fd275fb4b24e783e11f47f852d5"
+},
+"ROOM408:1": {
+"e": 35140,
+"off": 24392,
+"usize": 66080,
+"present": 1,
+"sha": "d876c68365d8c3cd5dc46cd38e91fae2ff3be90f"
+},
+"ROOM408:2": {
+"e": 48548,
+"off": 29540,
+"usize": 66080,
+"present": 1,
+"sha": "4bce65d623e3c9c4146f46b79c2ddaa87d419fce"
+},
+"ROOM408:3": {
+"e": 34144,
+"off": 24956,
+"usize": 66080,
+"present": 1,
+"sha": "58791cf6bb4927d8d7d006f527539e4656e9d9b7"
+},
+"ROOM408:5": {
+"e": 59168,
+"off": 29040,
+"usize": 66080,
+"present": 1,
+"sha": "a594ea0ad8504206b5c6461b7e93505cbd0eca84"
+},
+"ROOM408:6": {
+"e": 39844,
+"off": 24612,
+"usize": 66080,
+"present": 1,
+"sha": "ad8f16e78d7d35398ab0e6c84ae837f8e2ac41bd"
+},
+"ROOM408:7": {
+"e": 36420,
+"off": 25512,
+"usize": 66080,
+"present": 1,
+"sha": "ee8b5a4c3f4242c40bf9aa3e73d2925acb9fb9d4"
+},
+"ROOM408:8": {
+"e": 33680,
+"off": 22764,
+"usize": 66080,
+"present": 1,
+"sha": "7c26187fc9d2258cc7ae98bfb8ca5ef5869ea3dc"
+},
+"ROOM409:1": {
+"e": 38120,
+"off": 27804,
+"usize": 66080,
+"present": 1,
+"sha": "3e48bde8daebe38f24e33595ca705a72c55141dd"
+},
+"ROOM409:2": {
+"e": 37840,
+"off": 26736,
+"usize": 66080,
+"present": 1,
+"sha": "81cf8d5e771fbd27d38b2e73f6efd2a30ce186c2"
+},
+"ROOM409:3": {
+"e": 32540,
+"off": 24868,
+"usize": 66080,
+"present": 1,
+"sha": "721219c5de35966f352121aa9d4d19f5c42008c5"
+},
+"ROOM40A:1": {
+"e": 30776,
+"off": 21384,
+"usize": 66080,
+"present": 1,
+"sha": "c070927ce65d255becb2f804feaa716033c67e9e"
+},
+"ROOM40A:2": {
+"e": 41312,
+"off": 32096,
+"usize": 66080,
+"present": 1,
+"sha": "18b69b21a7d0406036463c30bd201d6c4d264e3e"
+},
+"ROOM40A:3": {
+"e": 36944,
+"off": 29576,
+"usize": 66080,
+"present": 1,
+"sha": "ecfe1361585c52386f0e06d6c2ea938dbe1230e0"
+},
+"ROOM40A:4": {
+"e": 33288,
+"off": 28212,
+"usize": 66080,
+"present": 1,
+"sha": "e05abfb080eeafd5f7fb4b4e9a4549e376932bd5"
+},
+"ROOM40A:5": {
+"e": 39168,
+"off": 30792,
+"usize": 66080,
+"present": 1,
+"sha": "f2afbdad4f4f165201876ceecc6e9870bfb03c1c"
+},
+"ROOM40A:6": {
+"e": 30880,
+"off": 21844,
+"usize": 66080,
+"present": 1,
+"sha": "6ceb9802679c6eccd97c2b2a9ed6f47b7b6aa7fa"
+},
+"ROOM40A:7": {
+"e": 22472,
+"off": 16776,
+"usize": 66080,
+"present": 1,
+"sha": "3ce168fc1fb1f3ed6dcb473e514dbb4d7a861b74"
+},
+"ROOM502:0": {
+"e": 41236,
+"off": 24404,
+"usize": 66080,
+"present": 1,
+"sha": "55b865efa323c2b0ad35fba6835e20e8170256cf"
+},
+"ROOM502:2": {
+"e": 32360,
+"off": 22072,
+"usize": 66080,
+"present": 1,
+"sha": "8f9ba5c143a6bfd9f03662ef388082e168cdc9d1"
+},
+"ROOM502:3": {
+"e": 40140,
+"off": 31772,
+"usize": 66080,
+"present": 1,
+"sha": "b716ea7c4ea98f600d87da229cb16e9966a9a8f8"
+},
+"ROOM502:4": {
+"e": 51960,
+"off": 31064,
+"usize": 66080,
+"present": 1,
+"sha": "7844ce21ae2afbd6e9d49af4fe19051985ae3d00"
+},
+"ROOM502:5": {
+"e": 35236,
+"off": 22256,
+"usize": 66080,
+"present": 1,
+"sha": "6c4958610440055a08f58b84541711acbd921ed9"
+},
+"ROOM502:6": {
+"e": 43220,
+"off": 19752,
+"usize": 66080,
+"present": 1,
+"sha": "9ad16b6cd3c50e6f990849d8187f7a94509fb72a"
+},
+"ROOM502:7": {
+"e": 43228,
+"off": 21060,
+"usize": 66080,
+"present": 1,
+"sha": "7f7edd53f48254c276b3137877fa63e679cf9e30"
+},
+"ROOM502:8": {
+"e": 43412,
+"off": 29036,
+"usize": 66080,
+"present": 1,
+"sha": "01954719ddc3331fc94163fbb5003b63cd0b998d"
+},
+"ROOM502:9": {
+"e": 41392,
+"off": 22608,
+"usize": 66080,
+"present": 1,
+"sha": "b97d9470efcec5fcaeda524d7bfd0905a25acf29"
+},
+"ROOM502:10": {
+"e": 31120,
+"off": 25496,
+"usize": 66080,
+"present": 1,
+"sha": "2d6ed114c3d98861b75a84a8da4d7b3db45dc479"
+},
+"ROOM502:11": {
+"e": 54564,
+"off": 28360,
+"usize": 66080,
+"present": 1,
+"sha": "9ed03e5f29f71f5557c973d4ab44ce2712e5a429"
+},
+"ROOM502:12": {
+"e": 39048,
+"off": 29532,
+"usize": 66080,
+"present": 1,
+"sha": "56157ba0885ea75c16b86cb56d739cf0cffe3f36"
+},
+"ROOM503:1": {
+"e": 30300,
+"off": 23172,
+"usize": 66080,
+"present": 1,
+"sha": "9b7433f4a8703963d2ed27d9be5aa91ba08f0715"
+},
+"ROOM503:2": {
+"e": 40824,
+"off": 31184,
+"usize": 66080,
+"present": 1,
+"sha": "372cd23931ef4e5cb331b980a4973ff9b9b2c2f0"
+},
+"ROOM503:3": {
+"e": 32936,
+"off": 27432,
+"usize": 66080,
+"present": 1,
+"sha": "496f36fb2ca3e3f20139dd4645ea923ff34ab2cf"
+},
+"ROOM503:4": {
+"e": 34352,
+"off": 27416,
+"usize": 66080,
+"present": 1,
+"sha": "a19901f754e97870610626d61d78acd1735cfd8a"
+},
+"ROOM504:0": {
+"e": 49804,
+"off": 30384,
+"usize": 66080,
+"present": 1,
+"sha": "089dd37d3bb18546668af48ebe357fa6eb40deb3"
+},
+"ROOM504:1": {
+"e": 49616,
+"off": 30748,
+"usize": 66080,
+"present": 1,
+"sha": "792c3f1c6b4c5a1ae0754798801b2381c0e090c6"
+},
+"ROOM504:2": {
+"e": 41948,
+"off": 20736,
+"usize": 66080,
+"present": 1,
+"sha": "66cf9f1f334beac16462b49894a00290cb42ddfe"
+},
+"ROOM504:3": {
+"e": 45760,
+"off": 21592,
+"usize": 66080,
+"present": 1,
+"sha": "9181a9cb6550345e8ff6f184d96ccd889b3b6dbe"
+},
+"ROOM504:4": {
+"e": 55764,
+"off": 31520,
+"usize": 66080,
+"present": 1,
+"sha": "7d617db6148621d2fdffdd5a561a2dcfcf54bf81"
+},
+"ROOM504:6": {
+"e": 30312,
+"off": 21824,
+"usize": 66080,
+"present": 1,
+"sha": "472d92c79d9dc2e67843f83758fbea70c2c83294"
+},
+"ROOM505:0": {
+"e": 32724,
+"off": 23204,
+"usize": 66080,
+"present": 1,
+"sha": "965bbf3d1157d4c0af23c76deaf4fca69b98b1d2"
+},
+"ROOM505:1": {
+"e": 38992,
+"off": 25240,
+"usize": 66080,
+"present": 1,
+"sha": "66d4fed235e854a6840801a33c7119d8ac74a2c1"
+},
+"ROOM505:2": {
+"e": 34336,
+"off": 25560,
+"usize": 66080,
+"present": 1,
+"sha": "b75252f6610ab4e698bcdc2dca3e367d6d1e7b27"
+},
+"ROOM505:3": {
+"e": 36136,
+"off": 25952,
+"usize": 66080,
+"present": 1,
+"sha": "9a595da22e10c3aa83f4224529ea84cd6a9a2322"
+},
+"ROOM506:1": {
+"e": 46684,
+"off": 26372,
+"usize": 66080,
+"present": 1,
+"sha": "e6ea12c2949f2b74fd02fc005e08fc66939fee10"
+},
+"ROOM506:2": {
+"e": 42508,
+"off": 24372,
+"usize": 66080,
+"present": 1,
+"sha": "e1119bbd07f30b929c7a418d204d2e636aed2a6a"
+},
+"ROOM506:3": {
+"e": 45352,
+"off": 28332,
+"usize": 66080,
+"present": 1,
+"sha": "64524fb90ae0fefab9188a36746b955d4b6f0cd7"
+},
+"ROOM506:4": {
+"e": 40396,
+"off": 19140,
+"usize": 66080,
+"present": 1,
+"sha": "c00f5d125547e8dbac9ba8d8e3ffd9ac33621fe7"
+},
+"ROOM506:5": {
+"e": 51944,
+"off": 30100,
+"usize": 66080,
+"present": 1,
+"sha": "a50eb0aad36ebf69bb3f577c2e5c8d9f8b2f6ca1"
+},
+"ROOM506:6": {
+"e": 49424,
+"off": 29840,
+"usize": 66080,
+"present": 1,
+"sha": "fdf854cab0f45ba53e578331a7db0a0521a69ea8"
+},
+"ROOM506:7": {
+"e": 43104,
+"off": 23468,
+"usize": 66080,
+"present": 1,
+"sha": "adef7f723f0e9c1439d44cf06d2eaedb07899b5d"
+},
+"ROOM506:8": {
+"e": 40632,
+"off": 24544,
+"usize": 66080,
+"present": 1,
+"sha": "da7e954ca7cf0ff6e391ddf56673fa85774f269e"
+},
+"ROOM506:9": {
+"e": 39528,
+"off": 27172,
+"usize": 66080,
+"present": 1,
+"sha": "349f1d9b7851602e561cc735bacf877e1fe85ae1"
+},
+"ROOM506:10": {
+"e": 45736,
+"off": 31600,
+"usize": 66080,
+"present": 1,
+"sha": "e5fdc584b69c5295555e398b3a9968a36bd6683f"
+},
+"ROOM506:11": {
+"e": 27044,
+"off": 23284,
+"usize": 66080,
+"present": 1,
+"sha": "23b8ea92644b305f993711c1edae815caf43ff5a"
+},
+"ROOM506:12": {
+"e": 33068,
+"off": 25692,
+"usize": 66080,
+"present": 1,
+"sha": "31beaf134094b8a6a16e25be03b0d856d483526a"
+},
+"ROOM509:11": {
+"e": 38588,
+"off": 23812,
+"usize": 66080,
+"present": 1,
+"sha": "e828e25c1548433735383e420fe3cc12203e4fc3"
+},
+"ROOM509:12": {
+"e": 48464,
+"off": 28024,
+"usize": 66080,
+"present": 1,
+"sha": "428ccd5fc8cbf356a137adba9a7c5e128b9fa3c9"
+},
+"ROOM509:13": {
+"e": 51828,
+"off": 31192,
+"usize": 66080,
+"present": 1,
+"sha": "9e7bc3ecb44cec0955134bd29e3a26eb9d107710"
+},
+"ROOM509:14": {
+"e": 36980,
+"off": 21092,
+"usize": 66080,
+"present": 1,
+"sha": "16fe0d6e7d700c65c3522e5312e5406a4ef0a3fd"
+},
+"ROOM50A:1": {
+"e": 35032,
+"off": 31016,
+"usize": 66080,
+"present": 1,
+"sha": "0ef722d00b0e9e3f4b2536e1fc69a2eba62673f9"
+},
+"ROOM50A:2": {
+"e": 55484,
+"off": 31140,
+"usize": 66080,
+"present": 1,
+"sha": "3e3d4d9d12469317d58db06e24d7f3873a1f9211"
+},
+"ROOM50A:3": {
+"e": 51936,
+"off": 31928,
+"usize": 66080,
+"present": 1,
+"sha": "17a8d05feab36f4e4179009af832d9cf136bcfda"
+},
+"ROOM50A:4": {
+"e": 34544,
+"off": 19828,
+"usize": 66080,
+"present": 1,
+"sha": "e8f3b92c11c1ab421756dfb797fe25dcfabba2b8"
+},
+"ROOM50A:5": {
+"e": 29788,
+"off": 21208,
+"usize": 66080,
+"present": 1,
+"sha": "c5cacef1d1c39ddcf840bfe3dbb1b3b66d45250b"
+},
+"ROOM50A:6": {
+"e": 57376,
+"off": 31028,
+"usize": 66080,
+"present": 1,
+"sha": "a1e6ae369ec5cb4c062afef92628f50435f2792a"
+},
+"ROOM50A:7": {
+"e": 39568,
+"off": 19868,
+"usize": 66080,
+"present": 1,
+"sha": "bdeca6fe37322eb95559912d75cbb6c4c5ae1f46"
+},
+"ROOM50A:8": {
+"e": 24432,
+"off": 20884,
+"usize": 66080,
+"present": 1,
+"sha": "2ccbc210b85885c7f30bffe75a93998e5e8cff4c"
+},
+"ROOM50A:10": {
+"e": 44180,
+"off": 23060,
+"usize": 66080,
+"present": 1,
+"sha": "b8480d4d79368c2474a1197060c69dc55e05246b"
+},
+"ROOM50A:11": {
+"e": 25768,
+"off": 21828,
+"usize": 66080,
+"present": 1,
+"sha": "1564c6c241b57ff820b12d6f96c590e313c06e18"
+},
+"ROOM50B:1": {
+"e": 33664,
+"off": 20140,
+"usize": 66080,
+"present": 1,
+"sha": "c372013bb456b11fb270dda7ec3653e542d01457"
+},
+"ROOM50B:2": {
+"e": 39352,
+"off": 19804,
+"usize": 66080,
+"present": 1,
+"sha": "e799fb0fe8716e9cf795742c955592fdab551b69"
+},
+"ROOM50B:3": {
+"e": 51784,
+"off": 31512,
+"usize": 66080,
+"present": 1,
+"sha": "99bed328c69dfde8fdd7aa47cdf42ec6f0902203"
+},
+"ROOM50C:1": {
+"e": 26608,
+"off": 19880,
+"usize": 66080,
+"present": 1,
+"sha": "f339e87560d13a7ba1bfdf70a2857b0ce87c93b4"
+},
+"ROOM50C:2": {
+"e": 42852,
+"off": 29252,
+"usize": 66080,
+"present": 1,
+"sha": "8019ecac9cad7d9205377780e8f881c586cdac3d"
+},
+"ROOM50C:3": {
+"e": 35212,
+"off": 25904,
+"usize": 66080,
+"present": 1,
+"sha": "98e44ba5c15606528a4611eed7342ae0d698e204"
+},
+"ROOM50C:4": {
+"e": 32324,
+"off": 26168,
+"usize": 66080,
+"present": 1,
+"sha": "e6226e7efa3b2e3eeeebeac374c6e721c72f80a8"
+},
+"ROOM510:2": {
+"e": 43796,
+"off": 23516,
+"usize": 66080,
+"present": 1,
+"sha": "9b5dc6573d76be57270c4da4e154f8898a7765cd"
+},
+"ROOM510:3": {
+"e": 43340,
+"off": 23892,
+"usize": 66080,
+"present": 1,
+"sha": "0fec0b4b33ce5e30c5aace36cf0ba162cbbdd393"
+},
+"ROOM510:4": {
+"e": 42564,
+"off": 23032,
+"usize": 66080,
+"present": 1,
+"sha": "bad9e5be75ca51773a364df739c30817a2460b81"
+},
+"ROOM510:5": {
+"e": 40232,
+"off": 26904,
+"usize": 66080,
+"present": 1,
+"sha": "9ab3334ad4b6076c11f15d551cfced7a4a4d5710"
+},
+"ROOM510:6": {
+"e": 43776,
+"off": 22356,
+"usize": 66080,
+"present": 1,
+"sha": "bb98fb66b60801d993efcd09a8a0f29b1e1c6f0d"
+},
+"ROOM510:7": {
+"e": 39896,
+"off": 23552,
+"usize": 66080,
+"present": 1,
+"sha": "b60d2562dcb45ea3be0ca65f4c68468d718d94af"
+},
+"ROOM511:1": {
+"e": 34932,
+"off": 25468,
+"usize": 66080,
+"present": 1,
+"sha": "2037008e0784136b52a6cf765838ee4ac34b14d2"
+},
+"ROOM511:2": {
+"e": 33344,
+"off": 23368,
+"usize": 66080,
+"present": 1,
+"sha": "0992db5fabe76eb6d080049d48f78d5d680dc77c"
+},
+"ROOM511:3": {
+"e": 29560,
+"off": 20676,
+"usize": 66080,
+"present": 1,
+"sha": "7e420746b8cde564512e36a4956dc883aecb0ab2"
+},
+"ROOM511:4": {
+"e": 29580,
+"off": 19608,
+"usize": 66080,
+"present": 1,
+"sha": "33c17663866db2c9c34f1a727a2f0c386a1c4381"
+},
+"ROOM512:0": {
+"e": 35352,
+"off": 20040,
+"usize": 66080,
+"present": 1,
+"sha": "3329c94cfcea2adb1ca15eb51dbc1960290d475f"
+},
+"ROOM512:1": {
+"e": 34968,
+"off": 21920,
+"usize": 66080,
+"present": 1,
+"sha": "d2ba3931b3cf9615f5804e7da6ac045bfb7c5f05"
+},
+"ROOM512:2": {
+"e": 38216,
+"off": 22148,
+"usize": 66080,
+"present": 1,
+"sha": "6c5457d0cf8ddca7b3b16a8ba4958725643d5481"
+},
+"ROOM512:3": {
+"e": 42920,
+"off": 22400,
+"usize": 66080,
+"present": 1,
+"sha": "75c1e1f6ed0dcffde2c174c3d74099ccede955b0"
+},
+"ROOM512:4": {
+"e": 30508,
+"off": 18644,
+"usize": 66080,
+"present": 1,
+"sha": "e39d5266c6dcdd489bf78ca55e4f11c7f8533212"
+},
+"ROOM512:6": {
+"e": 25768,
+"off": 18556,
+"usize": 66080,
+"present": 1,
+"sha": "ccc600e483de99c82a341cedb2ddd07f7b83d52b"
+},
+"ROOM514:1": {
+"e": 25848,
+"off": 21532,
+"usize": 66080,
+"present": 1,
+"sha": "db66ced519347a1f995cfe6d103a0c18a392e20c"
+},
+"ROOM514:2": {
+"e": 50920,
+"off": 30656,
+"usize": 66080,
+"present": 1,
+"sha": "a7fce6377ad57400ddfb0684333f89f8b083b9bc"
+},
+"ROOM514:3": {
+"e": 48348,
+"off": 28800,
+"usize": 66080,
+"present": 1,
+"sha": "4873fa66d320c5ac50d35b3104c6462c8a89f643"
+},
+"ROOM514:4": {
+"e": 38148,
+"off": 22816,
+"usize": 66080,
+"present": 1,
+"sha": "5afc2e8f02bdcc9d9560939e4e07ea953369b0b8"
+},
+"ROOM514:5": {
+"e": 32112,
+"off": 23280,
+"usize": 66080,
+"present": 1,
+"sha": "ce052fd605490ff907ba43d020e354c9fd277da4"
+},
+"ROOM514:6": {
+"e": 44276,
+"off": 21708,
+"usize": 66080,
+"present": 1,
+"sha": "5e7ce0ebe14f6264269b60db9490eb43c365c65b"
+},
+"ROOM514:7": {
+"e": 41168,
+"off": 23328,
+"usize": 66080,
+"present": 1,
+"sha": "c40893b80387cb4c0ae35c0d7bfe65f3a8ee58cd"
+},
+"ROOM514:8": {
+"e": 35660,
+"off": 28280,
+"usize": 66080,
+"present": 1,
+"sha": "abf0b2885928feffd70d8498b0288e1385c177f9"
+},
+"ROOM514:9": {
+"e": 36328,
+"off": 21744,
+"usize": 66080,
+"present": 1,
+"sha": "85a7ae924d59a3bc01a69371de6f5504a1198dbe"
+},
+"ROOM514:10": {
+"e": 46048,
+"off": 29308,
+"usize": 66080,
+"present": 1,
+"sha": "2d561d95ac84950df1c44d01f7b6e0b5b6db2abc"
+},
+"ROOM514:12": {
+"e": 48484,
+"off": 30552,
+"usize": 66080,
+"present": 1,
+"sha": "13a6f56dd0a43ac99fb0c33501e40f454a39af5c"
+},
+"ROOM600:1": {
+"e": 40672,
+"off": 30692,
+"usize": 66080,
+"present": 1,
+"sha": "16005ff8b464a82219b86c47eb3d11b7eadd0bc1"
+},
+"ROOM600:2": {
+"e": 28204,
+"off": 20700,
+"usize": 66080,
+"present": 1,
+"sha": "664457571e4ede583cd51b9d8c61f86c44feff69"
+},
+"ROOM600:3": {
+"e": 29260,
+"off": 23304,
+"usize": 66080,
+"present": 1,
+"sha": "551407e2bea5550ae4e172b80d4ffedc89bca118"
+},
+"ROOM600:4": {
+"e": 30412,
+"off": 23200,
+"usize": 66080,
+"present": 1,
+"sha": "c6c1c5e62621023e0b03f27f5871a13e8046a0b7"
+},
+"ROOM600:5": {
+"e": 58972,
+"off": 28044,
+"usize": 66080,
+"present": 1,
+"sha": "e8147d95bd0e2625488b1cfa44e924b039590d77"
+},
+"ROOM600:6": {
+"e": 38780,
+"off": 23888,
+"usize": 66080,
+"present": 1,
+"sha": "669d37650e441e7ca6355c33b4c3b3e0c0dc7392"
+},
+"ROOM600:7": {
+"e": 56032,
+"off": 32248,
+"usize": 66080,
+"present": 1,
+"sha": "7842060ce325861ae56419b792e747daba9030fa"
+},
+"ROOM600:8": {
+"e": 47568,
+"off": 29488,
+"usize": 66080,
+"present": 1,
+"sha": "6b5ff31c5b475a840908a9547d9b97b4b7c6f66d"
+},
+"ROOM600:9": {
+"e": 37808,
+"off": 28204,
+"usize": 66080,
+"present": 1,
+"sha": "4a77b2ee1205cfff30ee7224af5c3a6fa4e992f7"
+},
+"ROOM601:0": {
+"e": 32844,
+"off": 26756,
+"usize": 66080,
+"present": 1,
+"sha": "79e60f8e4cd33f8541df30cc3ba032431dbc2dd3"
+},
+"ROOM601:1": {
+"e": 34832,
+"off": 29792,
+"usize": 66080,
+"present": 1,
+"sha": "d9c55231a4e6e1e44fee381193fbfaed716ce70b"
+},
+"ROOM601:2": {
+"e": 42188,
+"off": 27800,
+"usize": 66080,
+"present": 1,
+"sha": "fb86a656067abaefcc4e8bf4b3bc88f8de7a7608"
+},
+"ROOM601:3": {
+"e": 45472,
+"off": 26968,
+"usize": 66080,
+"present": 1,
+"sha": "ee617124155aeafef4f1a580662ca7331f0fb1fe"
+},
+"ROOM601:4": {
+"e": 33036,
+"off": 25324,
+"usize": 66080,
+"present": 1,
+"sha": "623846d16f4a7ae45a9522a83fd7b7479044500b"
+},
+"ROOM601:5": {
+"e": 34640,
+"off": 25444,
+"usize": 66080,
+"present": 1,
+"sha": "0353758e5125fbdf393a0de3b5c845c44df85f14"
+},
+"ROOM601:6": {
+"e": 39848,
+"off": 24740,
+"usize": 66080,
+"present": 1,
+"sha": "4e3a9e590fce4aff4a0dadb67c55c12a842f1463"
+},
+"ROOM601:7": {
+"e": 48964,
+"off": 31136,
+"usize": 66080,
+"present": 1,
+"sha": "89143546adf1cdaae4cdfbf2cc54c535e46533ea"
+},
+"ROOM601:10": {
+"e": 36720,
+"off": 28152,
+"usize": 66080,
+"present": 1,
+"sha": "fe011923fed5dd2cc69d6c495067810ac0027e7f"
+},
+"ROOM601:11": {
+"e": 35276,
+"off": 26592,
+"usize": 66080,
+"present": 1,
+"sha": "67632d7b6ce168ef0408cdc134841b4d3db58806"
+},
+"ROOM601:12": {
+"e": 47408,
+"off": 26400,
+"usize": 66080,
+"present": 1,
+"sha": "df5eb949f59fa6c901329f9a8a5949bf48e277bc"
+},
+"ROOM601:13": {
+"e": 47268,
+"off": 26328,
+"usize": 66080,
+"present": 1,
+"sha": "b36a68ce0f82d079eaeb3cb24cacbae250a4d360"
+},
+"ROOM603:7": {
+"e": 38612,
+"off": 32180,
+"usize": 66080,
+"present": 1,
+"sha": "504b8d9394b27d33391a3cecadb1876fd24ac237"
+},
+"ROOM603:9": {
+"e": 37464,
+"off": 30660,
+"usize": 66080,
+"present": 1,
+"sha": "a3a89c12f78cebccf8ff6c84364ccf25f87ac0ce"
+},
+"ROOM603:10": {
+"e": 34884,
+"off": 28784,
+"usize": 66080,
+"present": 1,
+"sha": "ad40e99a02527bf63d5de9508ba8a64ffb8d12e3"
+},
+"ROOM603:11": {
+"e": 32012,
+"off": 27324,
+"usize": 66080,
+"present": 1,
+"sha": "c4c56cee9ff626e35793068095e594ed7cd7c101"
+},
+"ROOM603:12": {
+"e": 31212,
+"off": 26724,
+"usize": 66080,
+"present": 1,
+"sha": "3b8c7d7067a9b43e26d8458d4a0ced9467f6205c"
+}
+}

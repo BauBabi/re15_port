@@ -1,0 +1,261 @@
+### ROOM1220  nCut=10 hdr7=0  lit=0x34C  pri_block=[0x4DC,0x530) next=['sca']@0x530  block_len=84  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x2650 eff=0x2AEC esp_tim=0x16DE8 model_tim=0x1A288 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x000004DC (=lit+10*40+0) -> RDT[0x04DC..0x04DF] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000004E0 (=lit+10*40+4) -> RDT[0x04E0..0x04E3] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x000004E4 (=lit+10*40+8) -> RDT[0x04E4..0x04E7] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x000004E8 (=lit+10*40+12) -> RDT[0x04E8..0x04EB] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x000004EC (=lit+10*40+16) -> RDT[0x04EC..0x04EF] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x000004F0 (=lit+10*40+20) -> RDT[0x04F0..0x04F3] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x000004F4 (=lit+10*40+24) -> RDT[0x04F4..0x04F7] = FF FF FF FF
+         cut  7  rec+0x1C @0x015C stores 0x000004F8 (=lit+10*40+28) -> RDT[0x04F8..0x04FB] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000004FC (=lit+10*40+32) -> RDT[0x04FC..0x04FF] = FF FF FF FF
+         cut  9  rec+0x1C @0x019C stores 0x00000500 (=lit+10*40+36) -> RDT[0x0500..0x0503] = FF FF FF FF
+
+### ROOM1221  nCut=10 hdr7=0  lit=0x34C  pri_block=[0x4DC,0x530) next=['sca']@0x530  block_len=84  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x2650 eff=0x2AEC esp_tim=0x16DE8 model_tim=0x1A288 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x000004DC (=lit+10*40+0) -> RDT[0x04DC..0x04DF] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000004E0 (=lit+10*40+4) -> RDT[0x04E0..0x04E3] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x000004E4 (=lit+10*40+8) -> RDT[0x04E4..0x04E7] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x000004E8 (=lit+10*40+12) -> RDT[0x04E8..0x04EB] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x000004EC (=lit+10*40+16) -> RDT[0x04EC..0x04EF] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x000004F0 (=lit+10*40+20) -> RDT[0x04F0..0x04F3] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x000004F4 (=lit+10*40+24) -> RDT[0x04F4..0x04F7] = FF FF FF FF
+         cut  7  rec+0x1C @0x015C stores 0x000004F8 (=lit+10*40+28) -> RDT[0x04F8..0x04FB] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000004FC (=lit+10*40+32) -> RDT[0x04FC..0x04FF] = FF FF FF FF
+         cut  9  rec+0x1C @0x019C stores 0x00000500 (=lit+10*40+36) -> RDT[0x0500..0x0503] = FF FF FF FF
+
+### ROOM3040  nCut=14 hdr7=0  lit=0x554  pri_block=[0x784,0x7F8) next=['sca']@0x7F8  block_len=116  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x0 eff=0x0 esp_tim=0x0 model_tim=0x0 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x00000784 (=lit+14*40+0) -> RDT[0x0784..0x0787] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x00000788 (=lit+14*40+4) -> RDT[0x0788..0x078B] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x0000078C (=lit+14*40+8) -> RDT[0x078C..0x078F] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x00000790 (=lit+14*40+12) -> RDT[0x0790..0x0793] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000794 (=lit+14*40+16) -> RDT[0x0794..0x0797] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000798 (=lit+14*40+20) -> RDT[0x0798..0x079B] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x0000079C (=lit+14*40+24) -> RDT[0x079C..0x079F] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x000007A0 (=lit+14*40+28) -> RDT[0x07A0..0x07A3] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000007A4 (=lit+14*40+32) -> RDT[0x07A4..0x07A7] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x000007A8 (=lit+14*40+36) -> RDT[0x07A8..0x07AB] = FF FF FF FF
+    ANOM cut 10  rec+0x1C @0x01BC stores 0x000007AC (=lit+14*40+40) -> RDT[0x07AC..0x07AF] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x000007B0 (=lit+14*40+44) -> RDT[0x07B0..0x07B3] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x000007B4 (=lit+14*40+48) -> RDT[0x07B4..0x07B7] = FF FF FF FF
+    ANOM cut 13  rec+0x1C @0x021C stores 0x000007B8 (=lit+14*40+52) -> RDT[0x07B8..0x07BB] = FF FF FF FF
+
+### ROOM3041  nCut=14 hdr7=0  lit=0x554  pri_block=[0x784,0x7F8) next=['sca']@0x7F8  block_len=116  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x0 eff=0x0 esp_tim=0x0 model_tim=0x0 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x00000784 (=lit+14*40+0) -> RDT[0x0784..0x0787] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x00000788 (=lit+14*40+4) -> RDT[0x0788..0x078B] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x0000078C (=lit+14*40+8) -> RDT[0x078C..0x078F] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x00000790 (=lit+14*40+12) -> RDT[0x0790..0x0793] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000794 (=lit+14*40+16) -> RDT[0x0794..0x0797] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000798 (=lit+14*40+20) -> RDT[0x0798..0x079B] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x0000079C (=lit+14*40+24) -> RDT[0x079C..0x079F] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x000007A0 (=lit+14*40+28) -> RDT[0x07A0..0x07A3] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000007A4 (=lit+14*40+32) -> RDT[0x07A4..0x07A7] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x000007A8 (=lit+14*40+36) -> RDT[0x07A8..0x07AB] = FF FF FF FF
+    ANOM cut 10  rec+0x1C @0x01BC stores 0x000007AC (=lit+14*40+40) -> RDT[0x07AC..0x07AF] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x000007B0 (=lit+14*40+44) -> RDT[0x07B0..0x07B3] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x000007B4 (=lit+14*40+48) -> RDT[0x07B4..0x07B7] = FF FF FF FF
+    ANOM cut 13  rec+0x1C @0x021C stores 0x000007B8 (=lit+14*40+52) -> RDT[0x07B8..0x07BB] = FF FF FF FF
+
+### ROOM3050  nCut=16 hdr7=0  lit=0x590  pri_block=[0x810,0x894) next=['sca']@0x894  block_len=132  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x6744 eff=0x6BE0 esp_tim=0x224DC model_tim=0x2597C rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x00000810 (=lit+16*40+0) -> RDT[0x0810..0x0813] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x00000814 (=lit+16*40+4) -> RDT[0x0814..0x0817] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000818 (=lit+16*40+8) -> RDT[0x0818..0x081B] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x0000081C (=lit+16*40+12) -> RDT[0x081C..0x081F] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000820 (=lit+16*40+16) -> RDT[0x0820..0x0823] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000824 (=lit+16*40+20) -> RDT[0x0824..0x0827] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000828 (=lit+16*40+24) -> RDT[0x0828..0x082B] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x0000082C (=lit+16*40+28) -> RDT[0x082C..0x082F] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x00000830 (=lit+16*40+32) -> RDT[0x0830..0x0833] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x00000834 (=lit+16*40+36) -> RDT[0x0834..0x0837] = FF FF FF FF
+         cut 10  rec+0x1C @0x01BC stores 0x00000838 (=lit+16*40+40) -> RDT[0x0838..0x083B] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x0000083C (=lit+16*40+44) -> RDT[0x083C..0x083F] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x00000840 (=lit+16*40+48) -> RDT[0x0840..0x0843] = FF FF FF FF
+    ANOM cut 13  rec+0x1C @0x021C stores 0x00000844 (=lit+16*40+52) -> RDT[0x0844..0x0847] = FF FF FF FF
+    ANOM cut 14  rec+0x1C @0x023C stores 0x00000848 (=lit+16*40+56) -> RDT[0x0848..0x084B] = FF FF FF FF
+    ANOM cut 15  rec+0x1C @0x025C stores 0x0000084C (=lit+16*40+60) -> RDT[0x084C..0x084F] = FF FF FF FF
+
+### ROOM3051  nCut=16 hdr7=0  lit=0x590  pri_block=[0x810,0x894) next=['sca']@0x894  block_len=132  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x6744 eff=0x6BE0 esp_tim=0x224DC model_tim=0x2597C rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x00000810 (=lit+16*40+0) -> RDT[0x0810..0x0813] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x00000814 (=lit+16*40+4) -> RDT[0x0814..0x0817] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000818 (=lit+16*40+8) -> RDT[0x0818..0x081B] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x0000081C (=lit+16*40+12) -> RDT[0x081C..0x081F] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000820 (=lit+16*40+16) -> RDT[0x0820..0x0823] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000824 (=lit+16*40+20) -> RDT[0x0824..0x0827] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000828 (=lit+16*40+24) -> RDT[0x0828..0x082B] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x0000082C (=lit+16*40+28) -> RDT[0x082C..0x082F] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x00000830 (=lit+16*40+32) -> RDT[0x0830..0x0833] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x00000834 (=lit+16*40+36) -> RDT[0x0834..0x0837] = FF FF FF FF
+         cut 10  rec+0x1C @0x01BC stores 0x00000838 (=lit+16*40+40) -> RDT[0x0838..0x083B] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x0000083C (=lit+16*40+44) -> RDT[0x083C..0x083F] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x00000840 (=lit+16*40+48) -> RDT[0x0840..0x0843] = FF FF FF FF
+    ANOM cut 13  rec+0x1C @0x021C stores 0x00000844 (=lit+16*40+52) -> RDT[0x0844..0x0847] = FF FF FF FF
+    ANOM cut 14  rec+0x1C @0x023C stores 0x00000848 (=lit+16*40+56) -> RDT[0x0848..0x084B] = FF FF FF FF
+    ANOM cut 15  rec+0x1C @0x025C stores 0x0000084C (=lit+16*40+60) -> RDT[0x084C..0x084F] = FF FF FF FF
+
+### ROOM3090  nCut=16 hdr7=26  lit=0x5C8  pri_block=[0x848,0xCE4) next=['sca']@0xCE4  block_len=1180  = nCut*4(sect)+nCut*4(tbl)+4 ? no
+    dirs 0x4C..0x5C: esp=0x0 eff=0x0 esp_tim=0x0 model_tim=0x0 rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x00000848 (=lit+16*40+0) -> RDT[0x0848..0x084B] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x0000084C (=lit+16*40+4) -> RDT[0x084C..0x084F] = FF FF FF FF
+         cut  2  rec+0x1C @0x00BC stores 0x00000850 (=lit+16*40+8) -> RDT[0x0850..0x0853] = 01 00 08 00
+         cut  3  rec+0x1C @0x00DC stores 0x000008BC (=lit+16*40+116) -> RDT[0x08BC..0x08BF] = 02 00 05 00
+         cut  4  rec+0x1C @0x00FC stores 0x0000090C (=lit+16*40+196) -> RDT[0x090C..0x090F] = FF FF FF FF
+         cut  5  rec+0x1C @0x011C stores 0x00000910 (=lit+16*40+200) -> RDT[0x0910..0x0913] = FF FF FF FF
+         cut  6  rec+0x1C @0x013C stores 0x00000914 (=lit+16*40+204) -> RDT[0x0914..0x0917] = 04 00 1A 00
+         cut  7  rec+0x1C @0x015C stores 0x00000A70 (=lit+16*40+552) -> RDT[0x0A70..0x0A73] = FF FF FF FF
+         cut  8  rec+0x1C @0x017C stores 0x00000A74 (=lit+16*40+556) -> RDT[0x0A74..0x0A77] = FF FF FF FF
+         cut  9  rec+0x1C @0x019C stores 0x00000A78 (=lit+16*40+560) -> RDT[0x0A78..0x0A7B] = FF FF FF FF
+         cut 10  rec+0x1C @0x01BC stores 0x00000A7C (=lit+16*40+564) -> RDT[0x0A7C..0x0A7F] = 01 00 08 00
+         cut 11  rec+0x1C @0x01DC stores 0x00000AE8 (=lit+16*40+672) -> RDT[0x0AE8..0x0AEB] = 02 00 05 00
+         cut 12  rec+0x1C @0x01FC stores 0x00000B38 (=lit+16*40+752) -> RDT[0x0B38..0x0B3B] = FF FF FF FF
+         cut 13  rec+0x1C @0x021C stores 0x00000B3C (=lit+16*40+756) -> RDT[0x0B3C..0x0B3F] = FF FF FF FF
+         cut 14  rec+0x1C @0x023C stores 0x00000B40 (=lit+16*40+760) -> RDT[0x0B40..0x0B43] = 04 00 1A 00
+    ANOM cut 15  rec+0x1C @0x025C stores 0x00000C9C (=lit+16*40+1108) -> RDT[0x0C9C..0x0C9F] = FF FF FF FF
+
+### ROOM3091  nCut=16 hdr7=26  lit=0x5D0  pri_block=[0x850,0xCEC) next=['sca']@0xCEC  block_len=1180  = nCut*4(sect)+nCut*4(tbl)+4 ? no
+    dirs 0x4C..0x5C: esp=0x0 eff=0x0 esp_tim=0x0 model_tim=0x0 rbj=0x2510
+         cut  0  rec+0x1C @0x007C stores 0x00000850 (=lit+16*40+0) -> RDT[0x0850..0x0853] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x00000854 (=lit+16*40+4) -> RDT[0x0854..0x0857] = FF FF FF FF
+         cut  2  rec+0x1C @0x00BC stores 0x00000858 (=lit+16*40+8) -> RDT[0x0858..0x085B] = 01 00 08 00
+         cut  3  rec+0x1C @0x00DC stores 0x000008C4 (=lit+16*40+116) -> RDT[0x08C4..0x08C7] = 02 00 05 00
+         cut  4  rec+0x1C @0x00FC stores 0x00000914 (=lit+16*40+196) -> RDT[0x0914..0x0917] = FF FF FF FF
+         cut  5  rec+0x1C @0x011C stores 0x00000918 (=lit+16*40+200) -> RDT[0x0918..0x091B] = FF FF FF FF
+         cut  6  rec+0x1C @0x013C stores 0x0000091C (=lit+16*40+204) -> RDT[0x091C..0x091F] = 04 00 1A 00
+         cut  7  rec+0x1C @0x015C stores 0x00000A78 (=lit+16*40+552) -> RDT[0x0A78..0x0A7B] = FF FF FF FF
+         cut  8  rec+0x1C @0x017C stores 0x00000A7C (=lit+16*40+556) -> RDT[0x0A7C..0x0A7F] = FF FF FF FF
+         cut  9  rec+0x1C @0x019C stores 0x00000A80 (=lit+16*40+560) -> RDT[0x0A80..0x0A83] = FF FF FF FF
+         cut 10  rec+0x1C @0x01BC stores 0x00000A84 (=lit+16*40+564) -> RDT[0x0A84..0x0A87] = 01 00 08 00
+         cut 11  rec+0x1C @0x01DC stores 0x00000AF0 (=lit+16*40+672) -> RDT[0x0AF0..0x0AF3] = 02 00 05 00
+         cut 12  rec+0x1C @0x01FC stores 0x00000B40 (=lit+16*40+752) -> RDT[0x0B40..0x0B43] = FF FF FF FF
+         cut 13  rec+0x1C @0x021C stores 0x00000B44 (=lit+16*40+756) -> RDT[0x0B44..0x0B47] = FF FF FF FF
+         cut 14  rec+0x1C @0x023C stores 0x00000B48 (=lit+16*40+760) -> RDT[0x0B48..0x0B4B] = 04 00 1A 00
+    ANOM cut 15  rec+0x1C @0x025C stores 0x00000CA4 (=lit+16*40+1108) -> RDT[0x0CA4..0x0CA7] = FF FF FF FF
+
+### ROOM30A0  nCut=7 hdr7=0  lit=0x2A8  pri_block=[0x3C0,0x3FC) next=['sca']@0x3FC  block_len=60  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x1800 eff=0x1C9C esp_tim=0x25698 model_tim=0x28B38 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x000003C0 (=lit+7*40+0) -> RDT[0x03C0..0x03C3] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000003C4 (=lit+7*40+4) -> RDT[0x03C4..0x03C7] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x000003C8 (=lit+7*40+8) -> RDT[0x03C8..0x03CB] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x000003CC (=lit+7*40+12) -> RDT[0x03CC..0x03CF] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x000003D0 (=lit+7*40+16) -> RDT[0x03D0..0x03D3] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x000003D4 (=lit+7*40+20) -> RDT[0x03D4..0x03D7] = FF FF FF FF
+         cut  6  rec+0x1C @0x013C stores 0x000003D8 (=lit+7*40+24) -> RDT[0x03D8..0x03DB] = FF FF FF FF
+
+### ROOM30A1  nCut=7 hdr7=0  lit=0x2A8  pri_block=[0x3C0,0x3FC) next=['sca']@0x3FC  block_len=60  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x1800 eff=0x1C9C esp_tim=0x25698 model_tim=0x28B38 rbj=0x0
+    ANOM cut  0  rec+0x1C @0x007C stores 0x000003C0 (=lit+7*40+0) -> RDT[0x03C0..0x03C3] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000003C4 (=lit+7*40+4) -> RDT[0x03C4..0x03C7] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x000003C8 (=lit+7*40+8) -> RDT[0x03C8..0x03CB] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x000003CC (=lit+7*40+12) -> RDT[0x03CC..0x03CF] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x000003D0 (=lit+7*40+16) -> RDT[0x03D0..0x03D3] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x000003D4 (=lit+7*40+20) -> RDT[0x03D4..0x03D7] = FF FF FF FF
+         cut  6  rec+0x1C @0x013C stores 0x000003D8 (=lit+7*40+24) -> RDT[0x03D8..0x03DB] = FF FF FF FF
+
+### ROOM30E0  nCut=10 hdr7=0  lit=0x338  pri_block=[0x4C8,0x51C) next=['sca']@0x51C  block_len=84  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x164AC eff=0x16948 esp_tim=0x2C6D4 model_tim=0x2FB74 rbj=0x1528
+         cut  0  rec+0x1C @0x007C stores 0x000004C8 (=lit+10*40+0) -> RDT[0x04C8..0x04CB] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x000004CC (=lit+10*40+4) -> RDT[0x04CC..0x04CF] = FF FF FF FF
+         cut  2  rec+0x1C @0x00BC stores 0x000004D0 (=lit+10*40+8) -> RDT[0x04D0..0x04D3] = FF FF FF FF
+         cut  3  rec+0x1C @0x00DC stores 0x000004D4 (=lit+10*40+12) -> RDT[0x04D4..0x04D7] = FF FF FF FF
+         cut  4  rec+0x1C @0x00FC stores 0x000004D8 (=lit+10*40+16) -> RDT[0x04D8..0x04DB] = FF FF FF FF
+         cut  5  rec+0x1C @0x011C stores 0x000004DC (=lit+10*40+20) -> RDT[0x04DC..0x04DF] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x000004E0 (=lit+10*40+24) -> RDT[0x04E0..0x04E3] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x000004E4 (=lit+10*40+28) -> RDT[0x04E4..0x04E7] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000004E8 (=lit+10*40+32) -> RDT[0x04E8..0x04EB] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x000004EC (=lit+10*40+36) -> RDT[0x04EC..0x04EF] = FF FF FF FF
+
+### ROOM30E1  nCut=10 hdr7=0  lit=0x338  pri_block=[0x4C8,0x51C) next=['sca']@0x51C  block_len=84  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0xE6A4 eff=0xEB40 esp_tim=0x248CC model_tim=0x27D6C rbj=0x13F8
+         cut  0  rec+0x1C @0x007C stores 0x000004C8 (=lit+10*40+0) -> RDT[0x04C8..0x04CB] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x000004CC (=lit+10*40+4) -> RDT[0x04CC..0x04CF] = FF FF FF FF
+         cut  2  rec+0x1C @0x00BC stores 0x000004D0 (=lit+10*40+8) -> RDT[0x04D0..0x04D3] = FF FF FF FF
+         cut  3  rec+0x1C @0x00DC stores 0x000004D4 (=lit+10*40+12) -> RDT[0x04D4..0x04D7] = FF FF FF FF
+         cut  4  rec+0x1C @0x00FC stores 0x000004D8 (=lit+10*40+16) -> RDT[0x04D8..0x04DB] = FF FF FF FF
+         cut  5  rec+0x1C @0x011C stores 0x000004DC (=lit+10*40+20) -> RDT[0x04DC..0x04DF] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x000004E0 (=lit+10*40+24) -> RDT[0x04E0..0x04E3] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x000004E4 (=lit+10*40+28) -> RDT[0x04E4..0x04E7] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x000004E8 (=lit+10*40+32) -> RDT[0x04E8..0x04EB] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x000004EC (=lit+10*40+36) -> RDT[0x04EC..0x04EF] = FF FF FF FF
+
+### ROOM4040  nCut=13 hdr7=0  lit=0x508  pri_block=[0x710,0x77C) next=['sca']@0x77C  block_len=108  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x1E34 eff=0x22D0 esp_tim=0x189AC model_tim=0x1BE4C rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x00000710 (=lit+13*40+0) -> RDT[0x0710..0x0713] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x00000714 (=lit+13*40+4) -> RDT[0x0714..0x0717] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000718 (=lit+13*40+8) -> RDT[0x0718..0x071B] = FF FF FF FF
+         cut  3  rec+0x1C @0x00DC stores 0x0000071C (=lit+13*40+12) -> RDT[0x071C..0x071F] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000720 (=lit+13*40+16) -> RDT[0x0720..0x0723] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000724 (=lit+13*40+20) -> RDT[0x0724..0x0727] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000728 (=lit+13*40+24) -> RDT[0x0728..0x072B] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x0000072C (=lit+13*40+28) -> RDT[0x072C..0x072F] = FF FF FF FF
+         cut  8  rec+0x1C @0x017C stores 0x00000730 (=lit+13*40+32) -> RDT[0x0730..0x0733] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x00000734 (=lit+13*40+36) -> RDT[0x0734..0x0737] = FF FF FF FF
+    ANOM cut 10  rec+0x1C @0x01BC stores 0x00000738 (=lit+13*40+40) -> RDT[0x0738..0x073B] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x0000073C (=lit+13*40+44) -> RDT[0x073C..0x073F] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x00000740 (=lit+13*40+48) -> RDT[0x0740..0x0743] = FF FF FF FF
+
+### ROOM4041  nCut=13 hdr7=0  lit=0x508  pri_block=[0x710,0x77C) next=['sca']@0x77C  block_len=108  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x1E34 eff=0x22D0 esp_tim=0x189AC model_tim=0x1BE4C rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x00000710 (=lit+13*40+0) -> RDT[0x0710..0x0713] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x00000714 (=lit+13*40+4) -> RDT[0x0714..0x0717] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000718 (=lit+13*40+8) -> RDT[0x0718..0x071B] = FF FF FF FF
+         cut  3  rec+0x1C @0x00DC stores 0x0000071C (=lit+13*40+12) -> RDT[0x071C..0x071F] = FF FF FF FF
+    ANOM cut  4  rec+0x1C @0x00FC stores 0x00000720 (=lit+13*40+16) -> RDT[0x0720..0x0723] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x00000724 (=lit+13*40+20) -> RDT[0x0724..0x0727] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000728 (=lit+13*40+24) -> RDT[0x0728..0x072B] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x0000072C (=lit+13*40+28) -> RDT[0x072C..0x072F] = FF FF FF FF
+         cut  8  rec+0x1C @0x017C stores 0x00000730 (=lit+13*40+32) -> RDT[0x0730..0x0733] = FF FF FF FF
+    ANOM cut  9  rec+0x1C @0x019C stores 0x00000734 (=lit+13*40+36) -> RDT[0x0734..0x0737] = FF FF FF FF
+    ANOM cut 10  rec+0x1C @0x01BC stores 0x00000738 (=lit+13*40+40) -> RDT[0x0738..0x073B] = FF FF FF FF
+    ANOM cut 11  rec+0x1C @0x01DC stores 0x0000073C (=lit+13*40+44) -> RDT[0x073C..0x073F] = FF FF FF FF
+    ANOM cut 12  rec+0x1C @0x01FC stores 0x00000740 (=lit+13*40+48) -> RDT[0x0740..0x0743] = FF FF FF FF
+
+### ROOM4080  nCut=9 hdr7=0  lit=0x390  pri_block=[0x4F8,0x544) next=['sca']@0x544  block_len=76  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x12E4 eff=0x1780 esp_tim=0x17E5C model_tim=0x1B2FC rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x000004F8 (=lit+9*40+0) -> RDT[0x04F8..0x04FB] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000004FC (=lit+9*40+4) -> RDT[0x04FC..0x04FF] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000500 (=lit+9*40+8) -> RDT[0x0500..0x0503] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x00000504 (=lit+9*40+12) -> RDT[0x0504..0x0507] = FF FF FF FF
+         cut  4  rec+0x1C @0x00FC stores 0x00000508 (=lit+9*40+16) -> RDT[0x0508..0x050B] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x0000050C (=lit+9*40+20) -> RDT[0x050C..0x050F] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000510 (=lit+9*40+24) -> RDT[0x0510..0x0513] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x00000514 (=lit+9*40+28) -> RDT[0x0514..0x0517] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x00000518 (=lit+9*40+32) -> RDT[0x0518..0x051B] = FF FF FF FF
+
+### ROOM4081  nCut=9 hdr7=0  lit=0x390  pri_block=[0x4F8,0x544) next=['sca']@0x544  block_len=76  = nCut*4(sect)+nCut*4(tbl)+4 ? yes
+    dirs 0x4C..0x5C: esp=0x12E4 eff=0x1780 esp_tim=0x17E5C model_tim=0x1B2FC rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x000004F8 (=lit+9*40+0) -> RDT[0x04F8..0x04FB] = FF FF FF FF
+    ANOM cut  1  rec+0x1C @0x009C stores 0x000004FC (=lit+9*40+4) -> RDT[0x04FC..0x04FF] = FF FF FF FF
+    ANOM cut  2  rec+0x1C @0x00BC stores 0x00000500 (=lit+9*40+8) -> RDT[0x0500..0x0503] = FF FF FF FF
+    ANOM cut  3  rec+0x1C @0x00DC stores 0x00000504 (=lit+9*40+12) -> RDT[0x0504..0x0507] = FF FF FF FF
+         cut  4  rec+0x1C @0x00FC stores 0x00000508 (=lit+9*40+16) -> RDT[0x0508..0x050B] = FF FF FF FF
+    ANOM cut  5  rec+0x1C @0x011C stores 0x0000050C (=lit+9*40+20) -> RDT[0x050C..0x050F] = FF FF FF FF
+    ANOM cut  6  rec+0x1C @0x013C stores 0x00000510 (=lit+9*40+24) -> RDT[0x0510..0x0513] = FF FF FF FF
+    ANOM cut  7  rec+0x1C @0x015C stores 0x00000514 (=lit+9*40+28) -> RDT[0x0514..0x0517] = FF FF FF FF
+    ANOM cut  8  rec+0x1C @0x017C stores 0x00000518 (=lit+9*40+32) -> RDT[0x0518..0x051B] = FF FF FF FF
+
+### ROOM40A0  nCut=8 hdr7=35  lit=0x2B8  pri_block=[0x3F8,0xCD0) next=['sca']@0xCD0  block_len=2264  = nCut*4(sect)+nCut*4(tbl)+4 ? no
+    dirs 0x4C..0x5C: esp=0x1420 eff=0x1A1C esp_tim=0x13B98 model_tim=0x17CD8 rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x000003F8 (=lit+8*40+0) -> RDT[0x03F8..0x03FB] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x000003FC (=lit+8*40+4) -> RDT[0x03FC..0x03FF] = 04 00 1F 00
+         cut  2  rec+0x1C @0x00BC stores 0x00000594 (=lit+8*40+412) -> RDT[0x0594..0x0597] = 04 00 19 00
+         cut  3  rec+0x1C @0x00DC stores 0x000006E4 (=lit+8*40+748) -> RDT[0x06E4..0x06E7] = 04 00 1A 00
+         cut  4  rec+0x1C @0x00FC stores 0x00000840 (=lit+8*40+1096) -> RDT[0x0840..0x0843] = 05 00 23 00
+         cut  5  rec+0x1C @0x011C stores 0x00000A04 (=lit+8*40+1548) -> RDT[0x0A04..0x0A07] = 03 00 1A 00
+         cut  6  rec+0x1C @0x013C stores 0x00000B58 (=lit+8*40+1888) -> RDT[0x0B58..0x0B5B] = 04 00 19 00
+    ANOM cut  7  rec+0x1C @0x015C stores 0x00000CA8 (=lit+8*40+2224) -> RDT[0x0CA8..0x0CAB] = FF FF FF FF
+
+### ROOM40A1  nCut=8 hdr7=35  lit=0x2B8  pri_block=[0x3F8,0xCD0) next=['sca']@0xCD0  block_len=2264  = nCut*4(sect)+nCut*4(tbl)+4 ? no
+    dirs 0x4C..0x5C: esp=0x1420 eff=0x1A1C esp_tim=0x13B98 model_tim=0x17CD8 rbj=0x0
+         cut  0  rec+0x1C @0x007C stores 0x000003F8 (=lit+8*40+0) -> RDT[0x03F8..0x03FB] = FF FF FF FF
+         cut  1  rec+0x1C @0x009C stores 0x000003FC (=lit+8*40+4) -> RDT[0x03FC..0x03FF] = 04 00 1F 00
+         cut  2  rec+0x1C @0x00BC stores 0x00000594 (=lit+8*40+412) -> RDT[0x0594..0x0597] = 04 00 19 00
+         cut  3  rec+0x1C @0x00DC stores 0x000006E4 (=lit+8*40+748) -> RDT[0x06E4..0x06E7] = 04 00 1A 00
+         cut  4  rec+0x1C @0x00FC stores 0x00000840 (=lit+8*40+1096) -> RDT[0x0840..0x0843] = 05 00 23 00
+         cut  5  rec+0x1C @0x011C stores 0x00000A04 (=lit+8*40+1548) -> RDT[0x0A04..0x0A07] = 03 00 1A 00
+         cut  6  rec+0x1C @0x013C stores 0x00000B58 (=lit+8*40+1888) -> RDT[0x0B58..0x0B5B] = 04 00 19 00
+    ANOM cut  7  rec+0x1C @0x015C stores 0x00000CA8 (=lit+8*40+2224) -> RDT[0x0CA8..0x0CAB] = FF FF FF FF
+
+ANOM cuts verified as 0xFFFFFFFF: 130

@@ -1,0 +1,155 @@
+
+---
+
+## Gegenpruefung
+
+Gegenpruefung 2026-09-03 durch einen zweiten Agenten. Auftrag: die 19 Behauptungen WIDERLEGEN.
+Vorgehen: jede zitierte Adresse in `ghidra1_V2.txt` / `RE_15_Quellcode_V2/` nachgeschlagen, jeder
+Datei-Byte-Offset in den Original-Bytes geprueft, und ALLE Datenaussagen mit EIGENEM Code neu
+erhoben — insbesondere ein von Hand aus der Disassembly von `0x800C47E8` neu geschriebener
+Depacker (`analysis/esp_masken_2026-09-03/xcheck/x_sld.py`, Instruktion fuer Instruktion, ohne
+`sld.py` und ohne die Zahlen des Berichts). Skripte: `xcheck/x_sld.py`, `xcheck/x_sweep.py`,
+`xcheck/x_sweep2.py`, `xcheck/x_cmp.py`.
+
+### Was NICHT standhaelt
+
+**(a) Behauptung 11 — "STAGE5 ... = 76" ist falsch, richtig ist 86.**
+Die im selben Satz aufgezaehlten Raum-Einzelwerte summieren sich selbst auf 86:
+12+4+6+4+12+4+10+3+4+6+4+6+11 = 86. Eigener Mengenvergleich `want(359)` gegen
+`re15_port/shared_assets/PSX/BSS/ROOM????/PRI*.TIM` (418 Dateien) ergibt fuer STAGE5:
+ROOM502 12, ROOM503 4, ROOM504 6, ROOM505 4, ROOM506 12, ROOM509 4, ROOM50A 10, ROOM50B 3,
+ROOM50C 4, ROOM510 6, ROOM511 4, ROOM512 6, ROOM514 11 = **86**. Die Gesamtzahl 151 der
+Behauptung beweist den Rechenfehler mit: 39 (STAGE1/4) + 76 + 26 (STAGE6) = 141 != 151;
+mit 86 kommt 151 heraus. (`xcheck/x_cmp.py`: `missing (want without file): 151`.)
+
+**(b) Behauptung 17 — "STAGE5 liefert 76 Cuts mit sld_present != 0" ist falsch, richtig ist 86.**
+Derselbe Fehler. Eigener deterministischer Sweep (`xcheck/x_sweep2.py`):
+`per stage {1: 122, 2: 15, 3: 77, 4: 33, 5: 86, 6: 26}` — Summe 359. Die inhaltliche Aussage
+("STAGE5 hat sehr wohl SLD-Bloecke, ihnen fehlt nur die extrahierte Datei") bleibt richtig,
+die Zahl nicht.
+
+**(c) Behauptung 14 — die Adresse `@0x8003973c sw a0,-0x3888(at)` steht so nicht da.**
+`ghidra1_V2.txt` (Zeile 137584 ff.):
+
+```
+80039734 0b 80 01 3c     lui        at,0x800b
+80039738 7c c7 24 ac     sw         a0,-0x3884(at)=>DAT_800ac77c
+8003973c 0b 80 01 3c     lui        at,0x800b
+80039740 78 c7 24 ac     sw         a0,-0x3888(at)=>DAT_800ac778
+```
+
+An `0x8003973c` steht ein `lui`, nicht der Store. Richtig waere `@0x80039740`. (`@0x80039738`
+und die inhaltliche Aussage stimmen; `FUN_80039270` verteilt tatsaechlich hdr7*4 + 2 x hdr7*0x20
+und schiebt `DAT_800ac77c` um hdr7*68 vor — Decompilat `RE_15_Quellcode_V2/FUN_80039270.c`
+und Disasm `0x80039270..0x800392d0` gegengeprueft.)
+Zusaetzlich: die Nicht-Kollision ist an EINEM Savestate gemessen (Arena-Kopf 0x8017197C); dass
+die Arena nie ueber 0x80190000 waechst, ist damit nicht allgemein belegt, sondern nur fuer diese
+Stichprobe.
+
+**(d) Behauptung 6 — "alle 16 STAGE1-Zeilen" ist die falsche Zahl.**
+STAGE1 hat **40** BSS-Dateien (ROOM100..ROOM127), nicht 16 — das sagt der eigene Sweep des
+Berichts in Zeile 1 von `_sld_dir_sweep.txt` selbst: `STAGE1: rooms=40  count-mismatches=1`.
+Eigene Nachrechnung: 39 von 40 Zeilen stimmen, **eine nicht** — `ROOM127.BSS` ist 4 Byte gross
+(0 Chunks), die Tabellenzeile 0x27 enthaelt 16 Eintraege != 0x0008. Die vier zitierten
+Beispielzeilen stimmen exakt (Zeile 0 = `53bc 607c 78a8 74a8 5564 6dd4 7420 7a54 69b4` + 7x0008;
+Zeile 2 = 13; Zeile 9 = 16; Zeile 12 = 6). Der Mechanismus (Zeile = Raum, Spalte = Cut) ist
+also sogar besser belegt als behauptet, die Angabe "16/16" ist aber sachlich falsch.
+
+**(e) Behauptung 7, Belegzeile — "e-Bereich 0x0A9C..0xE720" gilt nicht fuer die 359 Vordergrund-Cuts.**
+Ueber die 359 Cuts mit `sld_present != 0` ist der Bereich **0x57C8..0xE720**. `0x0A9C` ist das
+Minimum ueber ALLE 1119 Tabelleneintraege != 0x0008 (`ROOM103` Cut 13). In einer Belegzeile, die
+sonst ausschliesslich die 359 beschreibt, ist das irrefuehrend.
+
+**(f) Behauptung 16 — Zeilenangabe und Puffergroesse ungenau.**
+`re15_bg_load_room_cut` beginnt in `re15_port/platform/pc/src/bg_pc.c` bei **Zeile 195**, nicht 210.
+Und `buf` ist nur im ersten Zweig (`BSS/ROOM%04X/BG%02d.BSS`) 64 KB gross; im Rueckfall-Zweig
+(`STAGE%u/ROOM%03X.BSS`, ca. Z. 264) haelt `buf` die GANZE Original-Datei — bis 1 048 576 B
+(`ROOM126.BSS`). Die Kernaussage (Chunk liegt beim Laden vollstaendig vor, `free(buf)` steht in
+beiden Erfolgszweigen vor dem `return`, Einhaengepunkt ist `re15_bg_load_room_cut`) haelt.
+`bg_pc.c:63` und `main.c:4418` / `main.c:4451` stimmen exakt.
+
+### Was bestaetigt wurde (unabhaengig nachgemessen)
+
+* **1** — `PSX.EXE` Header: `t_addr=0x80010000`, `t_size=0x000AF000` -> Textende `0x800BF000`,
+  `0x800C47E8` liegt ausserhalb. `DEBUG.BIN` (262144 B = 0x40000) +0x47E8:
+  `21 58 00 00 21 60 00 00 3f 00 a0 18 21 40 00 00`, `+0x48F0: 08 00 e0 03 00 00 00 00`.
+  Savestate `stage_saves/lamp_1170_stage1.sav`, RAM 0x800C0000..0x80100000 gegen DEBUG.BIN:
+  **254956/262144 = 97,26 %** identisch, Codebereich 0x47E8..0x4908 **100 %** identisch — beide
+  Zahlen exakt wie behauptet.
+* **2** — `0x80021da8 lui a2,0x801a` / `0x80021dac addiu a2,a2,0x5800` / `0x80021db0 addu a0,s1,s0` /
+  `0x80021db4 lw a1,0x0(a0)` / `0x80021db8 jal FUN_800c47e8` / `0x80021dbc _addiu a0,a0,0x4`
+  wortwoertlich im Dump (Zeilen 101827-101832). Decompilat `FUN_80021bbc.c` bestaetigt.
+* **3** — alle sieben Adressen wortwoertlich bestaetigt (0x80021c40 / d4c / d50 / d5c / d64 / d6c /
+  d74 / da4). Welche Haelfte Raum und welche Cut ist, ist ueber Savestate `lamp_1170_run3.sav`
+  (fe0=0, fe2=23, fe4=1 bei ROOM1170, Cut 1) eindeutig.
+* **4** — `0x80021cb8 sw v1,-0x1a8c(at)=>DAT_800be574` und die kompletten Sequenzen in
+  `FUN_80013f80` (0x80013f90/f98/fa4/fc4) und `FUN_80013fdc` (0x80013fec/ff4/4010/4014)
+  stehen exakt so da.
+* **5** — alle sechs Trampoline nachgerechnet:
+  STAGE1 +0x1e970 `3c028012 2442eae4 3c01800b ac2252c8` -> 0x8011EAE4 -> Datei 0x1EAE4;
+  STAGE2 +0x16fc8 -> 0x8011713C -> 0x1713C; STAGE3 +0x1cf94 -> 0x8011D0F8 -> 0x1D0F8;
+  STAGE4 +0x1844c -> 0x80118590 -> 0x18590; STAGE5 +0x1ddbc -> 0x8011DF18 -> 0x1DF18;
+  STAGE6 +0x01e00 -> 0x80101E3C -> 0x01E3C. `RE_15_Quellcode_Overlays/STAGE1/FUN_8011e064.c`
+  enthaelt `_DAT_800b52c8 = &DAT_8011eae4;`.
+* **6** (Mechanismus) — `RE_15_Quellcode_V2/FUN_8001d600.c:45-47`:
+  `_DAT_800b0fe2 = *(byte*)((int)DAT_800ac9a8 + 9)`, `DAT_800b0fe0 = *(byte*)(DAT_800ac9a8 + 4)`.
+  Savestate `lamp_1170_run3.sav`: fe0=0, fe2=23, fe4=1. (Nur die Zeilenzahl "16" ist falsch, s. (d).)
+* **7** — mit dem NEU geschriebenen Depacker: **fg=359, flag0=760, bad=0**, 359+760 = 1119 Cuts.
+  Entpackte Groessen `{0xe420: 1, 0xf220: 38, 0x10220: 320}`. `off < e-8` und `Stream-Ende <= e-8`
+  gelten **359/359**. Luecke `(e-8) - Stream-Ende` = **{0: 96, 1: 91, 2: 97, 3: 75}** — alle
+  Zahlen identisch mit dem Bericht.
+* **8** — ROOM117 Chunk 1: `e=0x5EE4`, `chunk[e-4]=1`, `off=0x4FCC`, `unpacked=0x10220`,
+  TIM `flags=0x09`, CLUT-Block `x=0 y=480 w=256 h=1`, Bild-Block `w=128 h=256` (Halbworte).
+  `FUN_8004ee78` (Decompilat) mit `DAT_800aca4c=0x15` (`@0x80021de8 ori v0,zero,0x15`):
+  `21*64 = 1344`, `>0xF` -> `-0x400` -> **x=320**; `y=(0x15<0x10 ^ 1)<<8` = **256**;
+  CLUT-y = `DAT_800aca4d + 0x1e0` = **480** (der `sh` @0x80021df0 nullt 0x800aca4d).
+  Gegenprobe gegen Savestate `lamp_1170_run3.sav`: VRAM(320,256)..(447,511)
+  **32768/32768 Halbworte identisch**, CLUT @(0,480) **256/256 identisch**.
+* **9** — ROOM305 Cut 14: Tabellenwert `e=0x77CC`; `chunk[0x77C4..0x77CC) = 58 61 ff eb | 00 00 00 00`
+  -> `sld_present = 0`. Das Groessenwort AT `0x77CC` ist `0x10220`, der Altbestand
+  entpackt zu 66080 B mit sha1 `71062f7c66869666c1f521a3e65ee0d6d91e2370` — und **beide**
+  `BSS/ROOM3050/PRI14.TIM` und `BSS/ROOM3051/PRI14.TIM` haben genau diesen sha1. Bestaetigt.
+* **10** — eigener Vergleich der 359 deterministisch gefundenen Bloecke gegen die 418 Dateien:
+  **byte-identisch 416, differing 0, ohne Gegenstueck 2** (genau die beiden ROOM305-PRI14).
+* **11** (Mechanismus + Gesamtzahl) — **151** fehlende Dateien, Aufschluesselung
+  ROOM102 12, ROOM103 12, ROOM104 5, ROOM107 8, ROOM122 1, ROOM404 1, STAGE5 86, STAGE6
+  (ROOM600 9, ROOM601 12, ROOM603 5 = 26). Port-Ursache in `bg_pc.c:63` bestaetigt.
+  (Nur der STAGE5-Teilbetrag ist falsch, s. (a).)
+* **12** — alle vier Details an der eigenen Disassembly von DEBUG.BIN +0x47E8 bestaetigt:
+  (1) `800c4818 andi v0,a3,0x80` / `800c481c bne v0,zero,0x800c4834`, und der Roh-Zweig springt
+  mit `800c482c j 0x800c48e4` an BEIDEN `srl t4,t4,1` (0x4850, 0x48a8) UND am `andi t4,t4,0xffff`
+  (0x48e0) vorbei — kein Flag-Verbrauch.
+  (2) `800c483c sll v1,a3,24` + `800c4860 sll v0,a3,16` + `800c4868 sra t2,v0,20`: Bit 31 = Bit 7
+  von a3 = 1 -> t2 immer negativ. Ueber alle 359 Bloecke gemessen: **kein einziger nicht-negativer
+  Offset**.
+  (3) `800c4898 sll v0,v0,16` + `800c48a0 sra t2,v0,16`.
+  (4) `800c47f0 blez a1,0x800c48f0` + `800c48e4 slt v0,t0,a1` + `800c48e8 bne`.
+  Der aus dieser Disassembly neu geschriebene Depacker reproduziert 416/416 Dateien byte-genau —
+  staerkster moeglicher Beleg.
+* **13** — eigener Token-Sweep ueber die 359 Bloecke: Mittel `raw 2485,9 / flagged 1876,7 /
+  short 1586,0 / long 1569,5 / copied 61262,5 / flag 629,4`; groesster komprimierter Block
+  **30920 B**; groesster entpackter **0x10220 = 66080**; **max. Rueckdistanz gemessen 8191**,
+  **max. Match-Laenge gemessen 66**. Worst-Case-Block `ROOM121` Cut 4 mit exakt
+  `6495 / 160 / 5147 / 3370 / 59425 / 1085`. Die Instruktionszahl bleibt eine Rechnung — als
+  `[teilbelegt]` korrekt gekennzeichnet.
+* **15** — `re15_port/include/re15_cdfs.h:36 #define RE15_CD_STAGING_SIZE 0x19000` (= 102400);
+  `bg_psx.c:191` und `pri_psx.c:52` benutzen beide `re15_cd_staging`. 0x10000 + 0x10220 =
+  0x20220 = 131616 > 102400. Fenstergrenze 8192 folgt aus `800c4868 sra ...,20` + `800c4890
+  sll v1,t2,2` und ist oben gemessen bestaetigt (max. 8191).
+* **18** — `@0x80021d74 beq v0,zero,LAB_80021df8` ist tatsaechlich der einzige Test; eigener
+  Sweep: `Counter({1: 359})` — `sld_present` ist in allen 359 Faellen exakt 1. Korrekt als
+  NICHT BELEGT markiert.
+* **19** — `ghidra1_V2.txt` Zeile 114876: `80029480 3e 12 03 08  j LAB_800c48f8`, und
+  Zeile 575245 zeigt `LAB_800c48f8` mit XREF aus `FUN_8002939c:80029480(j)`. Die Einschraenkung
+  ("Lademechanismus nicht disassembliert") ist korrekt.
+
+### Fazit
+
+Der Kern des Plans — deterministische Lokalisierung ueber die Overlay-Cut-Tabelle, der
+byte-true Depacker aus DEBUG.BIN, die VRAM-Zielrechnung und das 416/416-Regressionsorakel —
+haelt der unabhaengigen Nachmessung vollstaendig stand. Widerlegt sind ausschliesslich vier
+Zahlen-/Adressfehler in den Belegzeilen (STAGE5 = 86 statt 76 in zwei Behauptungen, `0x80039740`
+statt `0x8003973c`, "16 STAGE1-Zeilen" statt 40 mit 39/40 Treffern, e-Bereich der 359 =
+0x57C8..0xE720) sowie zwei ungenaue Port-Angaben (`bg_pc.c:195` statt 210; `buf` bis 1 MB statt
+64 KB). Keiner dieser Fehler beruehrt den vorgeschlagenen Implementierungsweg — mit einer
+Ausnahme fuer die Planung: fuer STAGE5 fehlen **86** Vordergruende, nicht 76.

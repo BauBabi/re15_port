@@ -32,7 +32,14 @@
 #include "re15_room.h"   /* g_current_room_id — room-aware BG selection */
 #include "re15_bg.h"
 #include "re15_tim.h"    /* re15_tim_parse — per-cut foreground atlas decode */
+#include "re15_sld.h"    /* Laufzeit-Auszug des Vordergrundatlas aus dem BSS-Chunk */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
+
+extern int re15_fade_log_on(void);   /* fade_common.c — Messlauf-Log-Gate */
+
+/* Zieht den SLD-Vordergrundatlas aus einem BSS-Cut-Chunk in den Modul-Cache.
+ * Wird aus re15_bg_load_room_cut() gerufen, solange der Chunk noch lebt. */
+void re15_pri_cache_from_chunk(const uint8_t *chunk, int chunk_size, int cut_idx);
 
 /* PC asset helpers — declared in asset_pc.c */
 extern uint8_t  *re15_asset_read_file(const char *path, int *out_size);
@@ -60,25 +67,88 @@ static uint32_t s_pri_atlas_rgba[256 * 256];
  * gemeinsame CD-Wurzelliste (asset_root_pc.c), die zusaetzlich das Verzeichnis der laufenden
  * exe kennt. Reihenfolge-Semantik unveraendert: erste Wurzel, die die Datei hat, gewinnt. */
 
-int re15_pri_load_cut_atlas(int cut_idx)
+/* ------------------------------------------------------------------------
+ * LAUFZEIT-VORDERGRUNDATLAS (2026-09-03).
+ *
+ * VORHER: dieser Lader las ausschliesslich eine VOREXTRAHIERTE Datei
+ * BSS/ROOM####/PRI%02d.TIM. Die gab es nur fuer 209 der 359 Cuts, die im
+ * Original ueberhaupt einen Vordergrund tragen — fehlte sie, lieferte die
+ * Funktion 0 und der Overdraw blieb fuer den GANZEN Cut aus. Betroffen waren
+ * 188 Cuts mit zusammen 6530 echten Maskenrecords (ROOM1020/1030/1040/1070
+ * und STAGE5 komplett): die Verdeckung fiel dort ersatzlos weg, obwohl alle
+ * Daten auf der CD liegen. Das war kein Datenmangel, sondern eine Luecke im
+ * Extraktionsschritt — eine Abhaengigkeit, die das Original nicht hat.
+ *
+ * JETZT: der Atlas kommt byte-true aus dem BSS-Chunk selbst, ueber denselben
+ * Trailer, den das Original benutzt (FUN_80021bbc, s. re15_sld.h). Der Chunk
+ * liegt in re15_bg_load_room_cut() ohnehin im Speicher; dort wird der Atlas
+ * herausgezogen (re15_pri_cache_from_chunk) und hier nur noch verbraucht.
+ * Die PRI##.TIM-Datei bleibt als Rueckfall erhalten.
+ * ------------------------------------------------------------------------ */
+static uint8_t s_pri_tim[RE15_SLD_MAX_UNPACKED];
+static int     s_pri_tim_len  = 0;
+static int     s_pri_tim_room = -1;
+static int     s_pri_tim_cut  = -1;
+
+/* Cut-Laengentabelle des Stage-Overlays, einmal je Stage geladen. */
+static uint8_t *s_stage_bin      = NULL;
+static int      s_stage_bin_size = 0;
+static int      s_stage_bin_no   = -1;
+
+static const uint8_t *pri_stage_bin(unsigned stage, int *out_size)
 {
-    /* Globalization Phase 3-B (2026-06-13): read from the shared tree's disc layout
-     * (assets_shared/BSS/ROOM%04X/PRI%02d.TIM) instead of the old flat
-     * re15_reborn/assets/room####_pri##.tim. */
-    char rel[96];
-    uint8_t *buf = NULL; int sz = 0;
-    snprintf(rel, sizeof rel, "BSS/ROOM%04X/PRI%02d.TIM", g_current_room_id, cut_idx);
-    buf = re15_pc_read_cd(rel, &sz);
-    if (!buf) {
-        snprintf(rel, sizeof rel, "room%04x_pri%02d.tim", g_current_room_id, cut_idx);
-        buf = re15_pc_read_cd(rel, &sz);
+    if ((int)stage != s_stage_bin_no) {
+        char rel[32];
+        free(s_stage_bin);
+        s_stage_bin = NULL; s_stage_bin_size = 0; s_stage_bin_no = (int)stage;
+        snprintf(rel, sizeof rel, "BIN/STAGE%u.BIN", stage);
+        s_stage_bin = re15_pc_read_cd(rel, &s_stage_bin_size);
+        if (!s_stage_bin) s_stage_bin_size = 0;
     }
-    if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
+    *out_size = s_stage_bin_size;
+    return s_stage_bin;
+}
+
+void re15_pri_cache_from_chunk(const uint8_t *chunk, int chunk_size, int cut_idx)
+{
+    s_pri_tim_len = 0; s_pri_tim_room = -1; s_pri_tim_cut = -1;
+    if (!chunk || chunk_size <= 0 || cut_idx < 0) return;
+
+    unsigned stage = (g_current_room_id >> 12) & 0xF;
+    int      sbsz  = 0;
+    const uint8_t *sb = pri_stage_bin(stage, &sbsz);
+    if (!sb) return;
+
+    /* Zeilenindex = Raumnummer OHNE die Varianten-Ziffer: ROOM1210 und ROOM1211
+     * teilen sich Zeile 0x21 und die Datei ROOM121.BSS. */
+    uint16_t used = 0;
+    if (re15_sld_used_len(sb, sbsz, (int)stage,
+                          (int)((g_current_room_id >> 4) & 0xFFu), cut_idx, &used) != RE15_SLD_OK)
+        return;
+
+    int len = 0;
+    int rv  = re15_sld_atlas_from_chunk(chunk, chunk_size, used,
+                                        s_pri_tim, (int)sizeof s_pri_tim, &len);
+    if (rv != RE15_SLD_OK) {
+        if (rv < 0 && re15_fade_log_on())
+            fprintf(stderr, "[pri-sld] room=%04x cut=%d L=0x%X FEHLER %d\n",
+                    g_current_room_id, cut_idx, used, rv);
+        return;                       /* NO_FOREGROUND ist der Normalfall (735 Cuts) */
+    }
+    s_pri_tim_len  = len;
+    s_pri_tim_room = (int)g_current_room_id;
+    s_pri_tim_cut  = cut_idx;
+}
+
+/* 8-bpp-TIM + CLUT -> RGBA fuer den Renderer. Index 0 = transparent (das Original
+ * zeichnet die Masken als SPRT mit ABE=0; Farbindex 0 ist bei 8-bpp-Sprites die
+ * durchsichtige Farbe der GPU). Rueckgabe 1 = Atlas gesetzt. */
+static int pri_publish_tim(const uint8_t *data, int size)
+{
     re15_tim_t tim;
-    if (re15_tim_parse(buf, sz, &tim) != 0 || tim.bpp != 8 || !tim.has_clut ||
-        tim.width * tim.height > (int)(sizeof s_pri_atlas_rgba / sizeof s_pri_atlas_rgba[0])) {
-        free(buf); re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0;
-    }
+    if (re15_tim_parse(data, size, &tim) != 0 || tim.bpp != 8 || !tim.has_clut ||
+        tim.width * tim.height > (int)(sizeof s_pri_atlas_rgba / sizeof s_pri_atlas_rgba[0]))
+        return 0;
     const uint8_t *idx = (const uint8_t *)tim.pixels;
     for (int i = 0; i < tim.width * tim.height; i++) {
         uint8_t ix = idx[i];
@@ -88,10 +158,32 @@ int re15_pri_load_cut_atlas(int cut_idx)
                  b = (uint32_t)(((c >> 10) & 0x1f) << 3);
         s_pri_atlas_rgba[i] = (r << 24) | (g << 16) | (b << 8) | 0xFFu;
     }
-    int w = tim.width, h = tim.height;
-    free(buf);
-    re15_render_pc_set_pri_atlas(s_pri_atlas_rgba, w, h);
+    re15_render_pc_set_pri_atlas(s_pri_atlas_rgba, tim.width, tim.height);
     return 1;
+}
+
+int re15_pri_load_cut_atlas(int cut_idx)
+{
+    /* 1. Laufzeit-Auszug aus dem BSS-Chunk (byte-true, deckt alle 359 Cuts). */
+    if (s_pri_tim_len > 0 && s_pri_tim_room == (int)g_current_room_id
+        && s_pri_tim_cut == cut_idx) {
+        if (pri_publish_tim(s_pri_tim, s_pri_tim_len)) return 1;
+    }
+
+    /* 2. Rueckfall: vorextrahierte Datei (Alt-Baum, 209 Cuts). */
+    char rel[96];
+    uint8_t *buf = NULL; int sz = 0;
+    snprintf(rel, sizeof rel, "BSS/ROOM%04X/PRI%02d.TIM", g_current_room_id, cut_idx);
+    buf = re15_pc_read_cd(rel, &sz);
+    if (!buf) {
+        snprintf(rel, sizeof rel, "room%04x_pri%02d.tim", g_current_room_id, cut_idx);
+        buf = re15_pc_read_cd(rel, &sz);
+    }
+    if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
+    int ok = pri_publish_tim(buf, sz);
+    free(buf);
+    if (!ok) re15_render_pc_set_pri_atlas(NULL, 0, 0);
+    return ok;
 }
 
 #define BG_WIDTH   320
@@ -217,6 +309,9 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
         uint8_t *buf = re15_pc_read_cd(rel, &sz);
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
+            /* Vordergrundatlas AUS DEMSELBEN Chunk ziehen, solange er lebt — er wird
+             * gleich freigegeben und re15_pri_load_cut_atlas() laeuft erst spaeter. */
+            re15_pri_cache_from_chunk(buf, sz, cut_idx);
             free(buf);
             if (rv == 0) {
                 snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);
@@ -262,6 +357,7 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
                 size_t off = (size_t)cut_idx * stride;
                 if (off + stride <= (size_t)sz) {
                     int rv = re15_bg_load_from_bss(buf + off, stride);
+                    re15_pri_cache_from_chunk(buf + off, (int)stride, cut_idx);
                     free(buf);
                     if (rv == 0) {
                         snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);
@@ -288,6 +384,7 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
         uint8_t *buf = re15_pc_read_cd(rel, &sz);
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
+            re15_pri_cache_from_chunk(buf, sz, cut_idx);
             free(buf);
             if (rv == 0) {
                 snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);

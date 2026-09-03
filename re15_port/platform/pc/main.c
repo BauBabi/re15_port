@@ -4427,6 +4427,29 @@ re_title:;
                             g_re15_light_tint[2]);
                 }
 
+            }
+            /* ⛔ VORDERGRUND-MASKEN HAENGEN AM PAAR (RAUM, CUT) — NICHT am Cut allein.
+             *
+             * Bis 2026-09-03 stand dieser Block INNERHALB von `active_cut_idx != s_last_cut_idx`.
+             * Beim Raumwechsel setzt die Tuer-Praesentation aber s_last_cut_idx selbst auf den
+             * Eintritts-Cut des Zielraums (Zeile ~5712), damit der Spieler nicht von der Kamera
+             * des Vorgaengerraums gerahmt wird. Ist dieser Eintritts-Cut derselbe Index wie der
+             * zuletzt gezeigte (der Normalfall: beide 0), war die Bedingung beim ersten Bild im
+             * neuen Raum FALSCH — und der Maskensatz wurde nie neu gesetzt. Folgen, beide gemessen:
+             *   - Betritt man einen Raum, dessen Eintritts-Cut Masken hat (ROOM1020 Cut 0: 24),
+             *     bleibt die Verdeckung aus, bis zufaellig die Kamera wechselt.
+             *   - Kommt man aus einem Raum MIT Masken, blieben dessen Rechtecke stehen und
+             *     wurden im neuen Raum an denselben Bildschirmstellen ueberblendet.
+             * Der Hintergrund war davon nie betroffen (die Tuer-Praesentation ruft load_bg_cut
+             * selbst, Zeile ~5642) — nur die Masken.
+             *
+             * Jetzt: eigener Auslöser auf (g_current_room_id, active_cut_idx). Er feuert beim
+             * Cut-Wechsel UND beim Raumeintritt, und ruehrt Fade/Montage/Licht nicht an. */
+            static unsigned s_pri_room = 0xFFFFu;
+            static int      s_pri_cut  = -1;
+            if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut) {
+                s_pri_room = g_current_room_id;
+                s_pri_cut  = active_cut_idx;
                 /* AZ-round 2026-05-28: parse sprite.pri for this cut and
                  * push the mask list to the renderer's BG-overdraw layer.
                  * NULL section (pri_offset bytes 0xFFFFFFFF) → no masks,

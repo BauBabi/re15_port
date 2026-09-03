@@ -1,0 +1,92 @@
+        80039590 0b 80 02 3c     lui        v0,0x800b
+        80039594 78 c7 42 8c     lw         v0,-0x3888(v0)=>DAT_800ac778
+        80039598 b8 ff bd 27     addiu      sp,sp,-0x48
+        8003959c 28 00 b2 af     sw         s2,local_20(sp)
+        800395a0 40 00 bf af     sw         ra,local_8(sp)
+        800395a4 3c 00 b7 af     sw         s7,local_c(sp)
+        800395a8 38 00 b6 af     sw         s6,local_10(sp)
+        800395ac 34 00 b5 af     sw         s5,local_14(sp)
+        800395b0 30 00 b4 af     sw         s4,local_18(sp)
+        800395b4 2c 00 b3 af     sw         s3,local_1c(sp)
+        800395b8 24 00 b1 af     sw         s1,local_24(sp)
+        800395bc 20 00 b0 af     sw         s0,local_28(sp)
+        800395c0 00 00 54 90     lbu        s4,0x0(v0)
+        800395c4 0b 80 13 3c     lui        s3,0x800b
+        800395c8 84 25 73 8e     lw         s3,offset DAT_800b2584(s3)
+        800395cc 2a 00 80 12     beq        s4,zero,LAB_80039678
+        800395d0 21 90 00 00     _clear     s2
+        800395d4 0c 80 17 3c     lui        s7,0x800c
+        800395d8 d4 b4 f7 26     addiu      s7,s7,-0x4b2c
+        800395dc 0b 80 15 3c     lui        s5,0x800b
+        800395e0 34 ca b5 26     addiu      s5,s5,-0x35cc
+        800395e4 a4 dc b6 26     addiu      s6,s5,-0x235c
+        800395e8 00 00 62 92     lbu        v0,0x0(s3)
+        800395ec 00 00 00 00     nop
+        800395f0 01 00 42 30     andi       v0,v0,0x1
+        800395f4 1c 00 40 10     beq        v0,zero,LAB_80039668
+        800395f8 40 81 12 00     _sll       s0,s2,0x5
+        800395fc 00 00 a2 92     lbu        v0,0x0(s5)=>DAT_800aca34
+        80039600 00 00 00 00     nop
+        80039604 80 10 02 00     sll        v0,v0,0x2
+        80039608 21 10 57 00     addu       v0,v0,s7
+        8003960c 00 00 42 8c     lw         v0,0x0(v0)=>DAT_800bb4d4
+        80039610 00 00 00 00     nop
+        80039614 21 80 02 02     addu       s0,s0,v0
+        80039618 0c 00 11 26     addiu      s1,s0,0xc
+        8003961c c1 ad 01 0c     jal        SetSprt                                          void SetSprt(SPRT * p)
+        80039620 21 20 20 02     _move      a0,s1
+        80039624 21 20 00 02     move       a0,s0
+        80039628 01 00 05 34     ori        a1,zero,0x1
+        8003962c 01 00 06 34     ori        a2,zero,0x1
+        80039630 95 00 07 34     ori        a3,zero,0x95
+        80039634 16 a6 01 0c     jal        SetDrawMode                                      void SetDrawMode(DR_MODE * p, in
+        80039638 10 00 a0 af     _sw        zero,local_38(sp)
+        8003963c 21 20 00 02     move       a0,s0
+        80039640 56 ae 01 0c     jal        MargePrim                                        int MargePrim(void * p0, void *
+        80039644 21 28 20 02     _move      a1,s1
+        80039648 21 28 00 02     move       a1,s0
+        8003964c 00 00 a2 92     lbu        v0,0x0(s5)=>DAT_800aca34
+        80039650 02 00 64 86     lh         a0,0x2(s3)
+        80039654 00 13 02 00     sll        v0,v0,0xc
+        80039658 80 20 04 00     sll        a0,a0,0x2
+        8003965c 21 20 96 00     addu       a0,a0,s6
+        80039660 4e ad 01 0c     jal        AddPrim                                          void AddPrim(void * ot, void * p)
+        80039664 21 20 44 00     _addu      a0,v0,a0
+        80039668 01 00 52 26     addiu      s2,s2,0x1
+        8003966c 2b 10 54 02     sltu       v0,s2,s4
+        80039670 dd ff 40 14     bne        v0,zero,LAB_800395e8
+        80039674 04 00 73 26     _addiu     s3,s3,0x4
+        80039678 40 00 bf 8f     lw         ra,local_8(sp)
+        8003967c 3c 00 b7 8f     lw         s7,local_c(sp)
+        80039680 38 00 b6 8f     lw         s6,local_10(sp)
+        80039684 34 00 b5 8f     lw         s5,local_14(sp)
+        80039688 30 00 b4 8f     lw         s4,local_18(sp)
+        8003968c 2c 00 b3 8f     lw         s3,local_1c(sp)
+        80039690 28 00 b2 8f     lw         s2,local_20(sp)
+        80039694 24 00 b1 8f     lw         s1,local_24(sp)
+        80039698 20 00 b0 8f     lw         s0,local_28(sp)
+        8003969c 48 00 bd 27     addiu      sp,sp,0x48
+        800396a0 08 00 e0 03     jr         ra
+        800396a4 00 00 00 00     _nop
+        800396a8 f8 ff bd 27     addiu      sp,sp,-0x8
+        800396ac 0b 80 02 3c     lui        v0,0x800b
+        800396b0 78 c7 42 8c     lw         v0,-0x3888(v0)=>DAT_800ac778
+        800396b4 00 00 00 00     nop
+        800396b8 00 00 47 90     lbu        a3,0x0(v0)
+        800396bc 0b 80 03 3c     lui        v1,0x800b
+        800396c0 84 25 63 8c     lw         v1,offset DAT_800b2584(v1)
+        800396c4 0a 00 e0 10     beq        a3,zero,LAB_800396f0
+        800396c8 21 30 00 00     _clear     a2
+        800396cc ff 00 84 30     andi       a0,a0,0xff
+        800396d0 01 00 62 90     lbu        v0,0x1(v1)
+        800396d4 00 00 00 00     nop
+        800396d8 02 00 44 14     bne        v0,a0,LAB_800396e4
+        800396dc 01 00 c6 24     _addiu     a2,a2,0x1
+        800396e0 00 00 65 a0     sb         a1,0x0(v1)
+        800396e4 2b 10 c7 00     sltu       v0,a2,a3
+        800396e8 f9 ff 40 14     bne        v0,zero,LAB_800396d0
+        800396ec 04 00 63 24     _addiu     v1,v1,0x4
+        800396f0 08 00 bd 27     addiu      sp,sp,0x8
+        800396f4 08 00 e0 03     jr         ra
+        800396f8 00 00 00 00     _nop
+        800396fc d0 ff bd 27     addiu      sp,sp,-0x30
