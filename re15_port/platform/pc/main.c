@@ -4668,6 +4668,51 @@ re_title:;
                     psy = 120 + (int)(pvy * cam_view.fov_screen_dist / pvz);
                 }
                 re15_render_pc_set_pri_player(psx, psy, (int)pvz);
+                /* RE15_FLOOR_DUMP=1 — einmal je Raum die BEGEHBAREN Bodenpunkte ausgeben.
+                 *
+                 * ⛔ WARUM AUS DER ENGINE UND NICHT AUS PYTHON (Lehre vom 2026-09-02,
+                 * Memory reai-v2-live-statt-nachbildung): eine Python-Nachbildung der
+                 * SCA-Auswertung hat schon einmal vier Fehler NICHT gesehen, weil sie die
+                 * Regel nachbaute statt sie zu benutzen. Der SCA-Satz ist ausserdem KEINE
+                 * einfache Rechteckliste — das Feld hinter der Breite ist die "density",
+                 * nicht die Tiefe, und die Zellform entscheidet mit. Nur
+                 * re15_collision_on_floor kennt die echte Standflaeche.
+                 *
+                 * Ausgabe: je Punkt eine Zeile "[floor] room=%04x x=%d z=%d y=%d", dazu
+                 * eine Kopfzeile mit dem Gitter. Die Auswertung (Figur projizieren, mit
+                 * der PIXELGENAUEN Maskendeckung aus dem Atlas schneiden) passiert
+                 * offline — dort liegen die Atlaspixel vor, in der Engine nur die
+                 * Rechtecke, und ein Rechteck ueberschaetzt die Deckung erheblich. */
+                if (getenv("RE15_FLOOR_DUMP")) {
+                    static unsigned dumped_room = 0xFFFFu;
+                    if (dumped_room != g_current_room_id && rdt_ok) {
+                        dumped_room = g_current_room_id;
+                        int X0 = -13000, X1 = 15000, Z0 = -11000, Z1 = 17000;
+                        if (g_room_rdt.sca && g_room_rdt.sca_count > 0) {
+                            int mnx = 1 << 30, mxx = -(1 << 30), mnz = 1 << 30, mxz = -(1 << 30);
+                            for (int s = 0; s < g_room_rdt.sca_count; s++) {
+                                const re15_sca_entry_t *e = &g_room_rdt.sca[s];
+                                int ex = (int)e->x, ez = (int)e->z;
+                                if (ex < mnx) mnx = ex;
+                                if (ez < mnz) mnz = ez;
+                                if (ex + (int)e->width   > mxx) mxx = ex + (int)e->width;
+                                if (ez + (int)e->density > mxz) mxz = ez + (int)e->density;
+                            }
+                            if (mxx > mnx && mxz > mnz) { X0 = mnx; X1 = mxx; Z0 = mnz; Z1 = mxz; }
+                        }
+                        fprintf(stderr, "[floor-kopf] room=%04x x %d..%d z %d..%d schritt=100 y=%d\n",
+                                g_current_room_id, X0, X1, Z0, Z1, (int)plz->y);
+                        int nf = 0;
+                        for (int wx = X0; wx <= X1; wx += 100)
+                            for (int wz = Z0; wz <= Z1; wz += 100)
+                                if (re15_collision_on_floor(&g_room_rdt, wx, wz)) {
+                                    fprintf(stderr, "[floor] %d %d\n", wx, wz);
+                                    nf++;
+                                }
+                        fprintf(stderr, "[floor-summe] room=%04x punkte=%d\n", g_current_room_id, nf);
+                    }
+                }
+
                 /* MEASUREMENT PROBE (RE15_POCC=1): per-frame player camera-Z vs each
                  * active pri mask's threshold — the ground-truth instrument for the
                  * sprite.pri occlusion crossover. Pure logging, no behavior. */

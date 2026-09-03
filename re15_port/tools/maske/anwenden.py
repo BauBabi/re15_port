@@ -286,3 +286,87 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ---------------------------------------------------------------------------
+# OBJEKTWEISE Maske — der zweite Anlauf nach den Nutzerbefunden vom 2026-09-03
+# ---------------------------------------------------------------------------
+def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
+    """Maske aus EINZELNEN OBJEKTEN statt aus einer Blob-Region.
+
+    ⛔ WARUM (zwei gemessene Fehlerklassen, Nutzer-Screenshots vom 2026-09-03):
+
+    1. TIEFE AUS DEM FALSCHEN BODENPUNKT. Die Tiefe kam je Bildspalte aus dem
+       untersten Punkt der ZUSAMMENHANGSKOMPONENTE. Wo zwei Gegenstaende in einer
+       Spalte uebereinander liegen (Sitzbank hinten, Stativbein davor), erbt der
+       hintere die nahe Tiefe des vorderen. Und wo ein Gegenstand auf einer duennen
+       Stange steht, die in der Auswahl fehlt (Fahne, Stativ, Mikrofonstaender),
+       nimmt die Regel die Unterkante des TUCHS als Bodenkontakt.
+       Gemessen an ROOM1140 Cut 3, Spalte x=215: unsere Maske endet bei y=143 und
+       bekommt Tiefe 126/127 (Bodenkontakt vz~9000). Der Fahnenteller steht aber bei
+       y=178 (vz 7401, richtige Tiefe ~104). Leons Fuesse lagen bei y=165 (vz 7981);
+       verdeckt haette ihn nur eine Tiefe < 124.7. Ergebnis im Spiel: Leon wurde VOR
+       die Fahne gezeichnet (Screenshot 220043).
+       -> Jedes Objekt bekommt seine Tiefe aus SEINEM eigenen Fuss. Das Feld "fuss"
+          gibt die Bildzeile des Bodenkontakts an, wenn die Silhouette ihn nicht
+          selbst zeigt; dann ist die Tiefe fuer das ganze Objekt die dieses Punktes.
+
+    2. RECHTECKE UEBER ZWEI OBJEKTE. Ein Rechteck traegt genau EINE Tiefe. Lief die
+       Zerlegung ueber die vereinigte Region, konnte ein Rechteck zwei Gegenstaende
+       mit verschiedenem Abstand ueberdecken und bekam den Median.
+       -> Die Zerlegung laeuft jetzt JE OBJEKT.
+
+    objekte: [(name, region bool240x320, fuss oder None)]
+    """
+    dep_all = np.zeros((240, 320), np.int32)
+    stuecke = []
+    rest = budget or geom.MAX_MASKS_PER_CUT
+    for (name, reg, fuss) in objekte:
+        if not reg.any():
+            continue
+        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss)
+        if d is None:
+            continue
+        dep_all = np.where((d > 0) & ((dep_all == 0) | (d < dep_all)), d, dep_all)
+        stuecke.append((name, reg, d))
+    if not stuecke:
+        return None
+    # Budget nach Flaeche verteilen, mindestens 4 Rechtecke je Objekt
+    flaechen = [float(r.sum()) for (_, r, _) in stuecke]
+    gesamt = sum(flaechen) or 1.0
+    region_all = np.zeros((240, 320), bool)
+    for (_, r, _) in stuecke:
+        region_all |= r
+    tim = None
+    while True:
+        boxes, herkunft = [], []
+        for i, ((name, reg, d), fl) in enumerate(zip(stuecke, flaechen)):
+            b = max(4, int(rest * fl / gesamt))
+            for r_ in geom.rects_from_mask(reg, b):
+                boxes.append(r_); herkunft.append(i)
+        if len(atlasmod.split_oversize(boxes)[0]) <= geom.MAX_MASKS_PER_CUT or rest <= 8:
+            break
+        rest -= 4
+    tim, place, boxes2 = atlasmod.build(bg, region_all, boxes)
+    if tim is None:
+        return None
+    # split_oversize kann Kaesten zerlegt haben -> Herkunft mitziehen
+    _, herk2 = atlasmod.split_oversize(boxes)
+    groups, masks = [], []
+    for i, (x, y, w, h) in enumerate(boxes2):
+        if i not in place:
+            continue
+        ax, ay = place[i]
+        src = herkunft[herk2[i]] if i < len(herk2) else 0
+        win = stuecke[src][2][y:y + h, x:x + w]
+        win = win[win > 0]
+        if len(win) == 0:
+            continue
+        groups.append((1, x - ax, y - ay))
+        masks.append((ax, ay, x, y, w, h, int(np.median(win))))
+    if not masks:
+        return None
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+        open(os.path.join(out_dir, "%s_PRI%02d.TIM" % (room, cut)), "wb").write(tim)
+    return geom.pack_section(groups, masks), len(masks)

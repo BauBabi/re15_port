@@ -56,6 +56,63 @@ def eintrag(v):
     return e
 
 
+def objekt_regionen(room, cut, e, ppm, blattdir):
+    """-> [(name, region, fuss)] — die EINZELNEN Gegenstaende des Cuts.
+
+    Format in der Auswahldatei:
+      "objekte": [{"name": "Konferenztisch", "segments": 90, "ids": [...]},
+                  {"name": "US-Fahne", "segments": 220, "ids": [...], "fuss": 178,
+                   "minus": "..."}]
+    "fuss" ist die Bildzeile des Bodenkontakts und wird gebraucht, wenn die Silhouette
+    ihn nicht zeigt (duenne Stange/Beine) — siehe geom.depth_map_objekt.
+    """
+    from scipy import ndimage
+    rid = int(room[4:], 16)
+    aus = []
+    for o in e.get("objekte") or []:
+        seg = anwenden.lade_seg(blattdir, room, cut, o.get("segments", e["segments"]), ppm, rid)
+        r = np.isin(seg, o["ids"])
+        for k in anwenden.kaesten(o.get("plus", "")):
+            r[k[1]:k[3], k[0]:k[2]] = True
+        for k in anwenden.kaesten(o.get("minus", "")):
+            r[k[1]:k[3], k[0]:k[2]] = False
+        oben = o.get("oben", e["oben"]); grow = o.get("grow", e["grow"])
+        if oben > 0:
+            g = r.copy()
+            for k in range(1, oben + 1):
+                g[:-k] |= r[k:]
+            r = g
+        if grow > 0:
+            r = ndimage.binary_dilation(r, iterations=grow)
+        fuell = o.get("fuellen", e["fuellen"])
+        if fuell != "aus":
+            r = anwenden.spalten_fuellen(r, fuell)
+        for k in anwenden.kaesten(o.get("minus", "")):
+            r[k[1]:k[3], k[0]:k[2]] = False
+        for k in anwenden.kaesten(e["minus"]):
+            r[k[1]:k[3], k[0]:k[2]] = False
+        # ⛔ SCHRAEGE UNTERKANTE. Ein Tisch endet im Bild an einer DIAGONALEN — mit
+        # achsenparallelen Kaesten ist die nicht zu treffen, und genau darunter lag in
+        # ROOM1140 Cut 4 Maske auf blankem Teppich (gemessen: 649 Bildpunkte, die
+        # Tischstruktur endet in Spalte 120 bei y=140, die Maske lief bis y=176..213).
+        # "unterkante": "x0,y0,x1,y1" schneidet alles unterhalb der Geraden durch die
+        # beiden Punkte weg; die Gerade wird nach links und rechts verlaengert.
+        uk = o.get("unterkante")
+        if uk:
+            x0, y0, x1, y1 = [float(v) for v in uk.split(",")]
+            if x1 != x0:
+                m = (y1 - y0) / (x1 - x0)
+                xs = np.arange(320)
+                ys = y0 + m * (xs - x0)
+                for x in range(320):
+                    yy = int(round(ys[x]))
+                    if yy < 239:
+                        r[max(0, yy + 1):, x] = False
+        if r.any():
+            aus.append((o.get("name", "?"), r, o.get("fuss")))
+    return aus
+
+
 def region_of(room, cut, e, ppm, blattdir):
     """Auswahl -> fertige Region.
 
@@ -116,13 +173,24 @@ def main():
         if bg is None:
             print("  Cut %d: Hintergrund fehlt" % cut)
             continue
-        r = region_of(room, cut, e, a.ppm, a.blatt)
-        res = anwenden.build(rdt, cam, rid, cut, r, bg, a.out, room)
+        objekte = objekt_regionen(room, cut, e, a.ppm, a.blatt)
+        if objekte:
+            res = anwenden.bau_objektweise(rdt, cam, cut, objekte, bg, a.out, room)
+            flaeche = np.zeros((240, 320), bool)
+            for (_, r_, _) in objekte:
+                flaeche |= r_
+            r = flaeche
+        else:
+            r = region_of(room, cut, e, a.ppm, a.blatt)
+            res = anwenden.build(rdt, cam, rid, cut, r, bg, a.out, room)
         if not res:
             print("  Cut %d: nichts erzeugt" % cut)
             continue
         secs[cut], n = res
-        print("  Cut %d: %5.1f %% Bildflaeche, %3d Rechtecke" % (cut, 100 * r.mean(), n))
+        print("  Cut %d: %5.1f %% Bildflaeche, %3d Rechtecke%s"
+              % (cut, 100 * r.mean(), n,
+                 ("  [%s]" % ", ".join("%s%s" % (nm, "" if f is None else " Fuss y=%d" % f)
+                                        for (nm, _, f) in objekte)) if objekte else ""))
 
     # Container schreiben: bestehende Sektionen anderer Cuts erhalten
     path = os.path.join(a.out, "%s.MSK" % room)

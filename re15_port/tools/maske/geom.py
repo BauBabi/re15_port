@@ -263,3 +263,45 @@ def original_has_masks(rdt, cam, cut):
         return False
     gc, mc = struct.unpack_from("<HH", rdt, po)
     return not (gc == 0xFFFF or gc == 0 or mc == 0 or gc > 256)
+
+
+def depth_map_objekt(rdt, cam_off, cut, region, fuss=None):
+    """Tiefenkarte EINES Objekts.
+
+    fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
+                Richtig fuer Gegenstaende, deren Silhouette unten wirklich den Boden
+                beruehrt und die in die Tiefe laufen (Tisch, Schrank, Pult).
+    fuss=y    : Bildzeile des Bodenkontakts. Fuer Gegenstaende auf duennen Beinen oder
+                Stangen (Fahne, Stativ, Mikrofonstaender, Stuhl), deren Silhouette den
+                Kontakt NICHT zeigt. Die Tiefe gilt dann fuer das ganze Objekt und wird
+                in der Spalte des Objektschwerpunkts gemessen — ein senkrecht stehender
+                Gegenstand hat genau EINE Entfernung.
+                Beleg fuer die Notwendigkeit: ROOM1140 Cut 3, Spalte x=215 — Maske endet
+                bei y=143 (Tiefe 126, vz~9000), der Fahnenteller steht bei y=178
+                (vz 7401, Tiefe ~104). Leon bei vz 7981 wurde deshalb nicht verdeckt.
+    """
+    v = cut_view(rdt, cam_off, cut)
+    if not v:
+        return None
+    R, t, H = v
+    if H <= 0:
+        return None
+    dep = np.zeros((240, 320), np.int32)
+    if fuss is not None:
+        xs = np.nonzero(region.any(0))[0]
+        if len(xs) == 0:
+            return None
+        cx = float(xs.mean()) + 0.5
+        z = vz_at_floor(R, t, H, cx, float(min(int(fuss), 239)))
+        if not z:
+            return None
+        dep[region] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+        return dep
+    for x in np.where(region.any(0))[0]:
+        rows = np.where(region[:, x])[0]
+        yb = int(rows.max())
+        z = vz_at_floor(R, t, H, x + 0.5, float(min(yb, 239)))
+        if not z:
+            continue
+        dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+    return dep
