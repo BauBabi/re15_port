@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.4.0 (Early Preview)
+
+**Testpaket: ROOM1130 (Flur vor dem Briefing Room) ist nachgezeichnet.**
+
+Alle zehn Kamera-Einstellungen, **298 Masken**. Ueberwiegend Seitenwaende — dort gilt die
+Konvention der Original-Kuenstler durchgehend: senkrechte Flaechen vom Boden aufwaerts,
+Decke und Boden bleiben frei. Dazu die grossen Vitrinen an den Bildraendern, die sehr nah
+an der Kamera stehen.
+
+Zusammen mit v0.3.99 sind damit **zwei Raeume** fertig: ROOM1140 (Briefing Room, 316
+Masken) und ROOM1130 (614 Masken insgesamt).
+
+**Worauf du achten kannst:** ob du beim Durchlaufen des Flurs sauber hinter den
+Wandkanten und Vitrinen verschwindest — und ob umgekehrt irgendwo ein Stueck Wand ueber
+dir liegt, wo du davor stehst. Der zweite Fall waere schlimmer als der alte Zustand;
+melde ihn bitte mit der Kamera-Einstellung.
+
+Sonst unveraendert (gleiche Binaries wie v0.3.98, nur neue Maskendaten).
+
+---
+
 # RE1.5 Port — v0.3.99 (Early Preview)
 
 **Testpaket: ROOM1140 (Briefing Room) ist von Hand nachgezeichnet.**
