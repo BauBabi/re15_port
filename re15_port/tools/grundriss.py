@@ -765,6 +765,112 @@ class Blatt(object):
             lage[bester[1]] = bester[2]
         return lage
 
+    def _tiefe_max(self, lage, b):
+        """Tiefste Ueberschneidung dieses Rechtecks mit irgendeinem anderen (0 = keine)."""
+        ka = self.kasten(b, lage[b])
+        tief = 0
+        for o in lage:
+            if o == b:
+                continue
+            kb = self.kasten(o, lage[o])
+            ox = min(ka[0] + ka[2], kb[0] + kb[2]) - max(ka[0], kb[0])
+            oy = min(ka[1] + ka[3], kb[1] + kb[3]) - max(ka[1], kb[1])
+            if ox > 0 and oy > 0:
+                tief = max(tief, min(ox, oy))
+        return tief
+
+    def _grenzen(self, lage):
+        """Die vier Extremwerte des Blattes - Ursprung und Massstab des Einpassens
+        haengen daran, und damit die Rundung JEDES Rechtecks."""
+        alle = set()
+        for b in lage:
+            alle |= self.pixel(b, lage[b])
+        if not alle:
+            return None
+        xs = [p[0] for p in alle]
+        ys = [p[1] for p in alle]
+        return (min(xs), min(ys), max(xs), max(ys))
+
+    def entsenken(self, lage, weite=10):
+        """Ein Rechteck, das TIEF in einem anderen steckt, um wenige Pixel herausschieben.
+
+        ⛔ WARUM DER LOESER DAS NICHT VON ALLEIN FINDET: anlegen() erzeugt nur Lagen, in
+        denen eine Tuer EXAKT auf der Wand des Nachbarn sitzt. Ein Versatz von vier, fuenf
+        Pixeln kommt darin nicht vor - und genau der loest den Fall, den der Nutzer am
+        2026-09-03 gemeldet hat. Gemessen an ROOM1170 auf Blatt 4 (RE15_ORT_PROBE):
+
+            heute        Tuer->1130 4 px, Tuer->1140 0 px, steckt 8 px in ROOM1130
+            x-4 y+5      Tuer->1130 0 px, Tuer->1140 5 px, steckt in NICHTS
+
+        Beide Nachbarn beruehren sich weiterhin, gleich viele Tueren sind deckungsgleich,
+        und die eine Tuer wird sogar besser. Ohne diesen Nachlauf hatte ich dem Nutzer
+        gesagt, die Ueberschneidung sei durch die Spieldaten erzwungen - sie ist es nicht.
+
+        ⛔ DIE ANNAHME-REGEL IST STRENG, sonst wiederholt sich die alte Entzerrung, die
+        die Ueberlappung minimierte und dabei die beruehrenden Durchgaenge zerstoerte
+        (Memory reai-v2-proxy-mass): getrennt darf NICHT steigen, deckung NICHT fallen.
+        Uebernommen wird nur, was die Versenkung wirklich verringert.
+        """
+        if os.environ.get('RE15_ENTSENKEN') == '0':
+            return lage
+        gr0 = self._grenzen(lage)
+        for _runde in range(3):
+            k0 = self.kosten(lage)
+            if k0[6] == 0:
+                break
+            bester = None
+            for b in list(lage):
+                if b in self.feste_lagen:
+                    continue
+                ka = self.kasten(b, lage[b])
+                tief = 0
+                for o in lage:
+                    if o == b:
+                        continue
+                    kb = self.kasten(o, lage[o])
+                    ox = min(ka[0] + ka[2], kb[0] + kb[2]) - max(ka[0], kb[0])
+                    oy = min(ka[1] + ka[3], kb[1] + kb[3]) - max(ka[1], kb[1])
+                    if ox > WAND_RAND and oy > WAND_RAND:
+                        tief = max(tief, min(ox, oy))
+                if tief == 0:
+                    continue                       # dieses Rechteck steckt nirgends
+                ox0, oy0, k_, sp_ = lage[b]
+                for dx in range(-weite, weite + 1):
+                    for dy in range(-weite, weite + 1):
+                        if dx == 0 and dy == 0:
+                            continue
+                        alt = lage[b]
+                        lage[b] = (ox0 + dx, oy0 + dy, k_, sp_)
+                        k = self.kosten(lage)
+                        lage[b] = alt
+                        if k[5] > k0[5] or k[1] < k0[1] or k[6] >= k0[6]:
+                            continue               # teurer oder ohne Gewinn
+                        # ⛔ DIE BLATTGRENZEN MUESSEN EXAKT GLEICH BLEIBEN - nicht nur
+                        # die Groesse. Das Einpassen rechnet Ursprung UND Massstab aus
+                        # den Extremwerten des Blattes; verschiebt sich auch nur der
+                        # Ursprung, wird JEDES Rechteck neu gerundet. Gemessen: ROOM2080
+                        # z1 auf Blatt 6 fiel dadurch von 4x4 auf 4x3 px und die
+                        # Audit-Pruefung B2 schlug an - ein Rechteck, das der Nutzer
+                        # nicht mehr als Raum erkennt, fuer ein entflochtenes Paar
+                        # woanders. Der Zug muss INNERHALB der bestehenden Grenzen
+                        # bleiben.
+                        if self._grenzen(lage) != gr0:
+                            continue
+                        # ⛔ NACH TIEFE WAEHLEN, NICHT NACH WEG. Ein erster Wurf nahm
+                        # unter den Zuegen mit versenkt == 0 den KUERZESTEN - und blieb
+                        # bei ROOM1170 auf 4 px Ueberschneidung stehen (genau an der
+                        # Schwelle, ab der "versenkt" nicht mehr zaehlt), obwohl ein Zug
+                        # zwei Pixel weiter die Ueberschneidung ganz aufloest. Die
+                        # Schwelle ist die Grenze des ZAEHLENS, nicht das Ziel.
+                        rang = (k[6], self._tiefe_max(lage, b), k[4],
+                                abs(dx) + abs(dy))
+                        if bester is None or rang < bester[0]:
+                            bester = (rang, b, (ox0 + dx, oy0 + dy, k_, sp_))
+            if bester is None:
+                break
+            lage[bester[1]] = bester[2]
+        return lage
+
     def beste_lage(self):
         """⛔ DIE WURZEL ENTSCHEIDET, WELCHE RINGE AUFGEHEN.
 
@@ -778,8 +884,11 @@ class Blatt(object):
         Ueberlappung)."""
         if not self.zimmer:
             return {}
+        # ⛔ DAS ENTSENKEN LAEUFT EINMAL AUF DER SIEGERLAGE, NICHT JE WURZEL.
+        # Innerhalb der Wurzelschleife kostet es das ~16-fache (jede Wurzel x 441
+        # Verschiebungen x kosten()) - der Generator lief damit in 10 Minuten nicht durch.
         if self.feste_lagen:
-            return self.nachbessern(self.aufbauen())
+            return self.entsenken(self.nachbessern(self.aufbauen()))
         best = None
         for w in self.zimmer:
             self._wurzel = w
@@ -790,7 +899,7 @@ class Blatt(object):
             if best is None or ORDNUNG(k) < ORDNUNG(best[1]):
                 best = (lage, k)
         self._wurzel = None
-        return best[0] if best else {}
+        return self.entsenken(best[0]) if best else {}
 
     def loesen_roh(self):
         return self.beste_lage()

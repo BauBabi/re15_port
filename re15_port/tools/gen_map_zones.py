@@ -521,6 +521,71 @@ def _paar_probe(B, pg):
                  if bestst else ""))
 
 
+def _ort_probe(B, pg, spec):
+    """Alle Lagen EINES Ortes durchmessen: Tuerreste und Eindringtiefen."""
+    import grundriss as _g
+    _, raum, zone = spec.split(':')
+    ziel = (int(raum.replace('ROOM', ''), 16) << 4) | int(zone)
+    lage = B.beste_lage()
+    if ziel not in lage:
+        print("   [Ortprobe] ROOM%04X z%d liegt nicht auf Blatt %d"
+              % (ziel >> 4, ziel & 15, pg))
+        return
+    meine = [(a, pa, b, pb) for (a, pa, b, pb) in B.kanten if ziel in (a, b)]
+    print("   [Ortprobe Blatt %d] ROOM%04X z%d, %d eigene Kanten"
+          % (pg, ziel >> 4, ziel & 15, len(meine)))
+
+    def bewerte(st):
+        alt = lage[ziel]
+        lage[ziel] = st
+        reste = []
+        for (a, pa, b, pb) in meine:
+            if a in lage and b in lage:
+                reste.append((B.kantenrest(lage, a, pa, b, pb),
+                              'ROOM%04X' % ((b if a == ziel else a) >> 4)))
+        ka = B.kasten(ziel, st)
+        tiefen = []
+        for o in lage:
+            if o == ziel:
+                continue
+            kb = B.kasten(o, lage[o])
+            ox = min(ka[0]+ka[2], kb[0]+kb[2]) - max(ka[0], kb[0])
+            oy = min(ka[1]+ka[3], kb[1]+kb[3]) - max(ka[1], kb[1])
+            if ox > 0 and oy > 0 and min(ox, oy) > _g.WAND_RAND:
+                tiefen.append((min(ox, oy), 'ROOM%04X' % (o >> 4)))
+        k = B.kosten(lage)
+        lage[ziel] = alt
+        return reste, tiefen, k
+
+    kand = [('AKTUELL', lage[ziel])]
+    # ⛔ AUCH DIE ZWISCHENSCHRITTE. anlegen() liefert nur Lagen, die eine Tuer EXAKT
+    # treffen. Die Frage "was kostet es, das Rechteck ein Stueck herauszuschieben"
+    # beantwortet keine davon - dafuer wird die aktuelle Lage in 1-px-Schritten
+    # verschoben und jeder Schritt mit demselben Mass bewertet.
+    _ax, _ay, _ak, _asp = lage[ziel]
+    for _dx in range(-10, 11):
+        for _dy in range(-10, 11):
+            if _dx == 0 and _dy == 0:
+                continue
+            kand.append(('x%+d y%+d' % (_dx, _dy), (_ax + _dx, _ay + _dy, _ak, _asp)))
+    for (a, pa, b, pb) in meine:
+        wer, anker, p_anker, p_wer = (b, a, pa, pb) if a != ziel else (a, b, pb, pa)
+        for st in B.anlegen(anker, lage[anker], p_anker, wer, p_wer):
+            kand.append(('an ROOM%04X' % (anker >> 4), st))
+    gesehen = set()
+    for name, st in kand:
+        sch = tuple(round(v, 1) for v in st)
+        if sch in gesehen:
+            continue
+        gesehen.add(sch)
+        reste, tiefen, k = bewerte(st)
+        print("      %-14s Tuerreste %-30s | steckt in %-24s | getrennt %d, deckung %d"
+              % (name,
+                 ", ".join("%s %.0f px" % (t, v) for v, t in reste) or "-",
+                 ", ".join("%s %d px" % (t, v) for v, t in tiefen) or "NICHTS",
+                 k[5], k[1]))
+
+
 def _vollsuche(B, pg):
     """Erschoepfende Tiefensuche: wie viele Tuerkanten sind GLEICHZEITIG erfuellbar?
 
@@ -1476,6 +1541,8 @@ def main():
                 _paar_probe(_B, _pg)
             if os.environ.get('RE15_VOLLSUCHE') == str(_pg):
                 _vollsuche(_B, _pg)
+            if (os.environ.get('RE15_ORT_PROBE') or '').split(':')[0] == str(_pg):
+                _ort_probe(_B, _pg, os.environ['RE15_ORT_PROBE'])
             if os.environ.get('RE15_KANTEN_DUMP') == str(_pg):
                 print("   [Kanten Blatt %d] %d Orte, %d Tuerkanten, %d Notkanten"
                       % (_pg, len(_orte), len(_B.kanten), len(_B.notkanten)))
@@ -1923,6 +1990,17 @@ def main():
     _si_von = {}
     for (pg, b, zi) in sorted(synth, key=lambda k: (1 if k[1] in _ALIAS else 0, k)):
         x, y, w, h, zellen, ab = synth[(pg, b, zi)]
+        # ⛔ MINDESTENS 4 px KANTE. Ein Rechteck darunter ist auf dem Schirm kein Raum
+        # mehr, sondern ein Strich - die Audit-Pruefung B2 nennt das seit v0.3.93 einen
+        # Fehler. Es entsteht durch RUNDUNG, nicht durch die Geometrie: das Einpassen
+        # rechnet Ursprung und Massstab aus den Extremwerten des Blattes, und schon eine
+        # Verschiebung an anderer Stelle rundet jedes Rechteck neu. Gemessen am
+        # 2026-09-03 an ROOM2080 z1 auf Blatt 6: 4x4 -> 4x3 px, nachdem der
+        # Entsenkungs-Nachlauf einen Ort verschoben hatte, der auf zwei Blaettern liegt.
+        # Geklemmt wird die ANZEIGE, nicht die Abbildung - die Marker-Rechnung haengt an
+        # `ab` und bleibt unberuehrt.
+        if w < 4: w = 4
+        if h < 4: h = 4
         _quelle = (pg, _ALIAS.get(b, b), zi)
         if b in _ALIAS and _quelle in _si_von:
             # DERSELBE ORT: Zeichnung teilen statt ein zweites Mal anlegen.

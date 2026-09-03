@@ -1221,3 +1221,59 @@ nicht dasselbe wie bessere Suche.**
 Blatt 4 bleibt wie ausgeliefert (5 von 6 Türen, 1 versenktes Paar). Live gegenüber v0.3.97:
 Übergänge über 8 px 24 → **22**, ≤ 8 px 129 → **131**, ≤ 2 px 50 → 49; Symbole, rote
 Hervorhebung und Durchtritte unverändert; 267/267 Tests, Audit 1 Fehler.
+
+### §20a Nachtrag: die Überschneidung war NICHT erzwungen — ich hatte falsch gemessen
+
+Der Nutzer hat widersprochen: *„Aber vorher ging doch beides Türen inkl. nicht ineinander
+steckenden Rechteck auf der Etage."* Die Erinnerung stimmte so nicht — in v0.3.90 fehlte
+das Symbol zur ROOM1130-Tür, in v0.3.91 das zur ROOM1140-Tür, es ging also nie beides —
+**aber der Einwand hat einen echten Fehler in meiner Messung aufgedeckt.**
+
+⛔ **Die Vollsuche misst mit einem ANDEREN Kantentest als der Löser.** Sie prüft den
+Abstand der Wandpunkte, die Marken hängen aber an `kantenrest` (gemessen gegen die
+Berührung der beiden Rechtecke). Ihre Aussage „höchstens 5 von 6, mindestens 1 versenkt"
+trägt für diese Frage deshalb nicht — ich hatte sie trotzdem als Beweis zitiert.
+
+Neue Sonde `RE15_ORT_PROBE=<blatt>:<ROOMxxxx>:<zone>` zählt jede Lage eines Ortes auf und
+bewertet sie mit dem **richtigen** Maß, dazu die Eindringtiefe in jeden Nachbarn:
+
+```
+heute        Tuer->1130 4 px, Tuer->1140  0 px | steckt 8 px in ROOM1130 | getrennt 0, deckung 5
+x-4 y+5      Tuer->1130 0 px, Tuer->1140  5 px | steckt in NICHTS        | getrennt 0, deckung 5
+an ROOM1130  Tuer->1130 0 px, Tuer->1140 17 px | steckt in NICHTS        | getrennt 1, deckung 5
+```
+
+Die Ursache: `anlegen()` erzeugt **nur** Lagen, in denen eine Tür *exakt* auf der Wand des
+Nachbarn sitzt. Ein Versatz von vier, fünf Pixeln kommt darin nicht vor — und genau der
+löst den Fall.
+
+### Der Nachlauf `Blatt.entsenken()`
+
+Schiebt ein Rechteck, das tiefer als `WAND_RAND` steckt, um bis zu 10 px. ⛔ Die
+Annahme-Regel ist streng, sonst wiederholt sich die alte Entzerrung, die die Überlappung
+minimierte und dabei die berührenden Durchgänge zerstörte ([[reai-v2-proxy-mass]]):
+`getrennt` darf **nicht** steigen, `deckung` **nicht** fallen, `versenkt` **muss** sinken,
+und die Blattgrenzen müssen exakt gleich bleiben.
+
+**Drei eigene Fehler auf dem Weg, alle durch Messung entlarvt:**
+
+1. Der Nachlauf lief in `beste_lage()` **je Wurzel** — das ~16-fache; der Generator lief in
+   10 Minuten nicht durch. Er gehört einmal auf die Siegerlage.
+2. Er verschob den **Blatt-Ursprung**; das Einpassen rundete daraufhin *jedes* Rechteck
+   neu, und ROOM2080 z1 auf Blatt 6 fiel von 4×4 auf 4×3 px (Audit-Prüfung B2). Zwei
+   Riegel: die Blattgrenzen müssen gleich bleiben, und die **Anzeige** wird auf mindestens
+   4 px Kante geklemmt (die Abbildung bleibt unberührt, der Marker rechnet weiter exakt).
+3. Er nahm unter den Zügen mit `versenkt == 0` den **kürzesten** und blieb genau auf der
+   Schwelle stehen (4 px). ⛔ Die Schwelle ist die Grenze des *Zählens*, nicht das Ziel —
+   jetzt entscheidet die Tiefe.
+
+### Ergebnis
+
+ROOM1170 z1: `x181..201 y128..161` → `x178..198 y131..164`. Statt 7 px in ROOM1130 zu
+stecken und ROOM1140 nur mit 1 px zu berühren, teilt es jetzt mit **beiden** ein
+4-px-Wandband (20×4 gegen ROOM1130, 4×30 gegen ROOM1140). `VERSENKT 1 → 0`, `getrennt 0`
+und 5/6 deckungsgleiche Türen unverändert.
+
+Live gegenüber v0.3.97: über 8 px 24 → **23**, ≤ 8 px 129 → **130**, ≤ 2 px 50 → 48,
+≤ 4 px 103 → 101; Symbole 237/244, 96/96 rot, 199/199 Durchtritte unverändert.
+267/267 Tests, Audit 1 Fehler.
