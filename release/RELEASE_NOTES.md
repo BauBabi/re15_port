@@ -1,3 +1,35 @@
+# RE1.5 Port — v0.4.7 (Early Preview)
+
+**Die Maske ist jetzt die Silhouette des Gegenstands, nicht mehr ein Block darum herum.**
+
+Du hattest recht, und der Grund war groesser als gedacht. Nachgemessen: die US-Fahne ist
+rund 20 Bildpunkte breit — ihre Maske war ein Block von rund 55 x 117 Punkten. Das
+Vier- bis Fuenffache des Gegenstands, samt Fenster, Sockelwand, Teppich und Schrank.
+Alles, was dahinter stand, bekam diese Pixel uebergemalt. Genau das siehst du als
+halbdurchsichtigen Fleck.
+
+Zwei Ursachen:
+
+1. **Eine Fuellung, die Luecken schliessen sollte.** Sie fuellte je Bildspalte alles
+   zwischen oberstem und unterstem Punkt eines Gegenstands. Bei einer Fahne, deren
+   Fussteller 110 Zeilen tiefer sitzt, wird daraus ein voller Block. Sie ist jetzt aus —
+   sie war ohnehin die schlechtere Wahl.
+
+2. **Das Auswahlraster ist flaechig.** Ein Rasterfeld hat rund 700 Bildpunkte; eine
+   20 Punkte breite Fahne passt da nicht hinein, ohne die Umgebung mitzunehmen. Feiner
+   rastern half nicht (bei 900 Feldern zerfaellt das Verfahren in ein 4x4-Gitter, das
+   den Kanten gar nicht mehr folgt). Duenne Dinge — beide Fahnen, die Mikrofone —
+   werden jetzt direkt aus dem Bild geschnitten: je Bildzeile wird der Hintergrund links
+   und rechts daneben gemessen, und behalten wird nur, was sich davon abhebt. Massive
+   Dinge wie das Pult und die Anschlagtafel sind direkt als Kasten angegeben.
+
+Ergebnis im Sitzungssaal mit dem Pult: die Maskenflaeche faellt von 12,3 % auf 9,6 % des
+Bildes bei gleicher Wirkung — der Rest war Umgebung, die nichts verdecken durfte.
+
+Das Pult verdeckt weiterhin bis zur Pultplatte hinauf (aus v0.4.6).
+
+---
+
 # RE1.5 Port — v0.4.6 (Early Preview)
 
 Nachtrag zu v0.4.5, zwei Sachen:
