@@ -801,3 +801,66 @@ anschlägt, ist wertlos; korrigiert auf Symbole je **Durchgang**.
 Bergsteiger steht im lokalen Optimum), die Kriterien-Reihenfolge „Deckung zuerst"
 (91/97 statt 90/97, dafür 17 statt 16 getrennt — im Rauschen), und das Stutzen des
 Rechtecks auf den begehbaren Kern (§12).
+
+## §14 — Live-Prüfung: jeder Raum angesprungen, jede Tür durchschritten
+
+> „überprüfe jeden einzelnen Raum auf Fehler mit dem Hinspringen und dem Debugger … gehe
+> auch gerne einmal durch die Türen durch, und schaue dir dann an ob das Verhalten der
+> Erwartung entspricht."
+
+Neuer Test `integration_map_raum_live`. Er springt in **jeden der 96 Räume** (dieselbe
+Kette wie der Debug-JUMP: `scd_room_reenter`), setzt den Spieler auf den
+**Ankunftspunkt samt Band** der Tür, die dorthin führt, öffnet den Kartenschirm und baut
+die **echte** Op-Liste mit `re15_inv_screen_build`.
+
+⛔ Geprüft wird das **gerasterte Bild**, nicht die Tabelle. Die Op-Liste wird von hinten
+gerastert — für jeden Punkt gewinnt der kleinste Index.
+
+### Was nur die Live-Prüfung finden konnte
+
+**13 Räume zeigten keine sichtbare rote Hervorhebung**, weil ein *Nachbarraum* darüber
+lag: ROOM1060, ROOM1080, ROOM10A0, ROOM1200, ROOM2060, ROOM2070, ROOM3090, ROOM30D0,
+ROOM30E0, ROOM5110, ROOM5120, ROOM5140, ROOM6030. Das statische Audit hatte nur die
+Überdeckung durch eine andere Zone *desselben* Raums gefunden (ROOM1070) — die Überdeckung
+durch fremde Räume entsteht überall dort, wo sich Rechtecke überlappen (Blatt 7 und 9 über
+30 %).
+**Behoben:** der aktuelle Raum wird in einem *ersten* Durchgang gezeichnet und liegt damit
+oben. 13 → 0.
+
+**ROOM2080 blieb blau, obwohl der Spieler drin stand.** Der Zustands-Block sammelte nur
+Zonen mit *derselben Zeichnung* (`zg->synth != zn2->synth`). ROOM2080 hat zwei Zonen mit
+zwei Zeichnungen (9×18 und 4×4 px) — stand der Spieler in der kleinen, blieb die große
+blau.
+**Behoben:** rot wird jede *besuchte* Zeichnung des Raums, in dem der Spieler steht; das
+Besucht-Bit bleibt pro Zeichnung.
+
+### Durch die Türen gegangen
+
+**199 Türen durchschritten — 199 mal war vorher der Ausgangs- und nachher der Zielraum
+sichtbar rot.**
+
+| | vorher | jetzt |
+|---|---|---|
+| Räume mit sichtbarem Rot | 83 von 96 | **96 von 96** |
+| Marker in der roten Fläche | — | **95 von 96** |
+| Türdurchgänge mit korrekter Hervorhebung | — | **199 von 199** |
+
+Offen: der Fahrstuhl ROOM1080 (auf drei Blättern als Gast gezeichnet) — dort landet der
+Marker auf der Kopie eines anderen Blattes.
+
+### ⛔ Zwei eigene Messfehler, die erst behoben werden mussten
+
+* `oben_an()` zählte die kleinen **Marken** (Türbalken 5×2) als Überdeckung — die gehören
+  per Konstruktion nach oben. ROOM10A0 fiel dadurch fälschlich durch.
+* Das **Band** kam aus der größten Kollisionszelle statt von der Tür, durch die man
+  *ankommt* (`Door_aot_set` pc[4]). Davon hängt das gezeigte Blatt und das Etagen-Bit ab;
+  ROOM2070 wurde deshalb nie rot.
+
+### ⛔ Keine Zusicherung auf den Sprung in dieser Phase
+
+Sie läuft über **alle** AOT-Slots, auch über doppelt belegte mit veraltetem Spawn, und
+misst damit eine *andere* Menge als `integration_map_uebergang` (das auf Türen mit
+reziprokem Gegen-Datensatz filtert). Für ROOM1140 → ROOM1130 meldet sie 48 px,
+`map_uebergang` 13 px — dieselbe Tür, zwei Mengen. Der Sprung bleibt dort; hier ist er
+Diagnose (`RE15_SPRUNG_LISTE=1`). Eine Zahl, deren Abweichung ich nicht erklären kann,
+gehört nicht in eine Schranke.

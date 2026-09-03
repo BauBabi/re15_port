@@ -364,6 +364,74 @@ int main(void)
          * eine Schranke.
          */
     }
+    /* ================= PHASE 3: TUERSYMBOLE IM BILD ====================== */
+    {
+        static re15_inv_op_t ops3[1024];
+        int tueren = 0, sichtbar = 0;
+        for (st = 1; st <= 6; st++) {
+            for (r = 0; r < 0x400; r += 0x10) {
+                unsigned rid = (unsigned)(st << 12) | (unsigned)r;
+                int k;
+                if (!betrete(rid, 0, 0, -1)) continue;
+                for (k = 0; k < RE15_AOT_MAX; k++) {
+                    const re15_aot_t *a = &g_aot.slots[k];
+                    const re15_map_zone_t *zn;
+                    int nops, q, band, gelb = 0;
+                    int16_t mmx = 0, mmy = 0;
+                    if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
+                    band = (int)a->band;
+                    if (!betrete(rid, a->x, a->z, band)) continue;
+                    re15_map_visited_mark(rid);
+                    re15_map_visited_mark_at(rid, a->x, a->z);
+                    re15_map_zone_update(rid, a->x, a->z);
+                    zn = re15_map_zone_current();
+                    if (!zn || !zn->synth) continue;
+                    re15_inv_screen_open();
+                    g_inv_screen.substate = 1;
+                    g_inv_screen.item_state = 1;
+                    g_inv_screen.map_page = re15_inv_map_page_shown();
+                    nops = re15_inv_screen_build(&g_inv_screen, ops3, 1024);
+                    re15_inv_map_marker(a->x, a->z, 0, &mmx, &mmy);
+                    tueren++;
+                    /* Ein SICHTBARER gelber Balken im Umkreis von 4 px. Sichtbar =
+                     * keine groessere Flaeche liegt davor (kleinerer Index). */
+                    for (q = 0; q < nops; q++) {
+                        int dx, dy, w;
+                        if (ops3[q].kind != RE15_INV_OP_FILL) continue;
+                        if (ops3[q].r != 224 || ops3[q].g != 168 || ops3[q].b != 40)
+                            continue;
+                        dx = ops3[q].x + ops3[q].w / 2 - (int)mmx;
+                        dy = ops3[q].y + ops3[q].h / 2 - (int)mmy;
+                        if (dx < 0) dx = -dx;
+                        if (dy < 0) dy = -dy;
+                        if (dx > 4 || dy > 4) continue;
+                        /* liegt eine groessere Flaeche davor? */
+                        for (w = 0; w < q; w++) {
+                            if (ops3[w].kind != RE15_INV_OP_FILL) continue;
+                            if (ops3[w].w < 4 || ops3[w].h < 4) continue;
+                            if (ops3[q].x + ops3[q].w / 2 < ops3[w].x) continue;
+                            if (ops3[q].x + ops3[q].w / 2 >= ops3[w].x + ops3[w].w)
+                                continue;
+                            if (ops3[q].y + ops3[q].h / 2 < ops3[w].y) continue;
+                            if (ops3[q].y + ops3[q].h / 2 >= ops3[w].y + ops3[w].h)
+                                continue;
+                            break;
+                        }
+                        if (w == q) { gelb = 1; break; }
+                    }
+                    if (gelb) sichtbar++;
+                    else if (getenv("RE15_SYMBOL_LISTE"))
+                        printf("     KEIN SYMBOL: ROOM%04X Tuer bei Marker (%d,%d)\n",
+                               rid, (int)mmx, (int)mmy);
+                }
+            }
+        }
+        printf("  [Symbole] %d Tueren, %d mit SICHTBAREM Symbol im Bild\n",
+               tueren, sichtbar);
+        CHECK("es wurden genug Tueren geprueft", tueren >= 150);
+        CHECK("mindestens 9 von 10 Tueren zeigen ihr Symbol im Bild",
+              tueren == 0 || sichtbar * 10 >= tueren * 9);
+    }
     printf("  [Live] %d Raeume geprueft, %d zeigen SICHTBARES Rot, %d nicht\n",
            geprueft, rot_sichtbar, rot_fehlt);
     printf("  [Live] Spieler-Marker in der roten Flaeche: %d von %d\n",
