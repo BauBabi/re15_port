@@ -1277,3 +1277,72 @@ und 5/6 deckungsgleiche Türen unverändert.
 Live gegenüber v0.3.97: über 8 px 24 → **23**, ≤ 8 px 129 → **130**, ≤ 2 px 50 → 48,
 ≤ 4 px 103 → 101; Symbole 237/244, 96/96 rot, 199/199 Durchtritte unverändert.
 267/267 Tests, Audit 1 Fehler.
+
+---
+
+## §21 Das Original hat KEIN Aufdecken — instruktions-verifiziert (2026-09-03)
+
+Nutzer: *„was ist dein problem damit das so darzustellen, und nur die türen durch re 2
+türen auszutauschen, und die treppen einzuzeichnen?"* — berechtigte Frage. Antwort in
+zwei Teilen, beide gemessen.
+
+### Teil 1: Darstellen ist kein Problem — und das Original deckt nichts auf
+
+Blatt 4 (3F) setzt sich im Original aus **7 Rechtecken** zusammen, jedes mit einer
+`u/v`-Quelle in `DATA/MAP05.PIX`; die Karte wird also stückweise aus der gemalten Textur
+zusammengeblittet (Liste @0x80076468, Paar-Tabelle @0x80076840 + 8·Seite):
+
+```
+ 0: x127 y137  16x16  u=168 v= 40     4: x144 y 80  32x80  u=  0 v= 32
+ 1: x136 y137  24x24  u=168 v= 16     5: x120 y119  40x40  u=128 v= 16
+ 2: x120 y 80  32x40  u= 96 v= 48     6: x160 y110  56x56  u= 32 v= 32
+ 3: x152 y 89  48x24  u=192 v= 16
+```
+
+⛔ **Ein Kommentar im Port behauptete, das Original zeichne ein Rechteck nur bei gesetztem
+Besucht-Bit. Das ist falsch, und zwar instruktions-verifiziert:**
+
+| Stelle | einzige Verzweigung im Rumpf |
+|---|---|
+| Aufbau `FUN_80046fd8` @0x800472fc–0x800473e0 | `bne v0,zero,LAB_800472fc` @0x800473dc — Zähler `a2 < count` |
+| Zeichner `FUN_800473f8` @0x800475f8–0x8004761c | `jal AddPrim` @0x80047608, `bne` @0x80047618 — Zähler `s0 < s2` |
+
+Kein Zustands-Test, kein Raum-Nachschlag. Der Aufbau legt für **jedes** Rechteck der Seite
+zwei SPRTs an (Doppelpuffer, daher `count + 2` Primitive im Zeichner), der Zeichner hängt
+sie unbesehen ein. **Das RE1.5-Original zeigt beim ersten Kartenaufruf das ganze
+Stockwerk.** Das schrittweise Aufdecken ist eine Port-Ergänzung (RE2-Kartensystem,
+Nutzer-Auftrag 2026-08-30) — gewollt, aber ohne Original-Beleg.
+
+Folge für den Vorschlag des Nutzers: er wird dadurch **einfacher**. Die Kunst ist statisch,
+es braucht keinen Zustand je Rechteck und keine Raum-Zuordnung.
+
+### Teil 2: Das eigentliche Loch ist der Spieler-Marker
+
+Die Abbildung Welt → Kunst steht in den Maßstabszeilen `@0x800768b0` (Schrittweite 8,
+`{u16 x_off, y_off, x_scale, z_scale}`, Index = globaler Raum-Slot). Gezählt:
+
+| | |
+|---|---|
+| game-weit | **39 geeicht, 67 Stub** (Maßstab 1) |
+| auf 3F | **2 von 8 Räumen** |
+
+```
+ROOM1150 (Slot 21)  Versatz (111,130)  Massstab (2296,2312)
+ROOM1170 (Slot 23)  Versatz (100,206)  Massstab (2280,2268)
+ROOM1060/1080/1120/1130/1140/1160      STUB
+```
+
+Ein Stub mit Maßstab 1 bildet in `FUN_800473f8` jede Weltposition auf denselben Punkt ab
+(`((wx + 32000) · 10 · 1) >> 0x14` ist für den ganzen Wertebereich 0). In sechs der acht
+3F-Räume weiß das Original also nicht, wo der Spieler auf seiner eigenen Karte steht —
+das Kartensystem des Prototyps ist an dieser Stelle unfertig, siehe
+[[reai-v2-karte-massstabstabelle]].
+
+### Konsequenz für die Richtung
+
+Die gerechneten Rechtecke waren die falsche Antwort auf ein Loch, das nur die
+**Marker-Abbildung** betrifft. Richtig ist: Original-Kunst behalten, RE2-Türsymbole und
+Treppen als eigene Ebene darüber, und von uns kommt allein die fehlende Abbildung für die
+67 Stub-Räume — aus der Kollisionsgeometrie gegen das gemalte Rechteck bestimmt. Die
+geeichten Zeilen sind dabei die Kontrolle: dort muss die Rechnung die Original-Zeile
+treffen.

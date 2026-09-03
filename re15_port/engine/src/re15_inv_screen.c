@@ -1850,11 +1850,22 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
                 if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
-                /* ⛔ EIN RECHTECK OHNE ZUORDNUNG WIRD AUCH NICHT GEMALT. UNMAPPED ist
-                 * kein Zustand des Originals, sondern ein Loch in UNSERER Zonen-Tabelle:
-                 * das Original zeichnet ein Rechteck nur, wenn dessen Besucht-Bit steht
-                 * (FUN_800473f8, Schleife @0x800475f8-61c ueber die count Rechtecke des
-                 * Seiten-Paars @0x80076840). Bis v0.3.70 malte der Port unzugeordnete
+                /* ⛔ KORREKTUR 2026-09-03, instruktions-verifiziert: DAS ORIGINAL HAT
+                 * GAR KEIN BESUCHT-GATE. Hier stand, es zeichne ein Rechteck nur bei
+                 * gesetztem Besucht-Bit. Das ist FALSCH. Der Aufbau FUN_80046fd8 legt
+                 * fuer JEDES Rechteck der Seite zwei SPRTs an (Doppelpuffer) - die
+                 * Schleife @0x800472fc-0x800473e0 enthaelt genau EINE Verzweigung,
+                 * `bne v0,zero,LAB_800472fc` @0x800473dc, und das ist der Zaehler
+                 * (a2 < count). Der Zeichner FUN_800473f8 haengt sie unbesehen ein:
+                 * `jal AddPrim` @0x80047608, `bne` @0x80047618 - wieder nur der Zaehler.
+                 * Weder ein Raum-Nachschlag noch ein Zustands-Test kommt vor.
+                 * Das RE1.5-Original kennt also KEIN schrittweises Aufdecken: die
+                 * Kartenseite zeigt vom ersten Aufruf an das ganze Stockwerk.
+                 * Das Aufdecken ist eine PORT-ERGAENZUNG (RE2-Kartensystem, Nutzer-
+                 * Auftrag 2026-08-30) - richtig so, aber ohne Original-Beleg.
+                 *
+                 * UNMAPPED ist ein Loch in UNSERER Zonen-Tabelle.
+                 * Bis v0.3.70 malte der Port unzugeordnete
                  * Rechtecke grau - auf Seite 4 sind das Rect 0 (127,137,16,16) und Rect 3
                  * (152,89,48,24). Rect 0 liegt links unterhalb von ROOM1130s Zeichnung und
                  * stand deshalb vom ersten Kartenaufruf an da: "im Room 1130 gibt es unten
@@ -1962,7 +1973,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * noch nicht betretener zweiter Bereich nicht vorzeitig auftaucht. */
                 if (rs2 == RE15_MAP_RECT_VISITED && akt && akt->room == zn2->room)
                     rs2 = RE15_MAP_RECT_CURRENT;
-                if (re15_map_stock_mode()) rs2 = RE15_MAP_RECT_UNMAPPED;
+                /* ⛔ IM STOCK-MODUS GAR NICHT ZEICHNEN. RE15_MAP_STOCK=1 heisst "zeig
+                 * mir die Karte des Originals" - dazu gehoert die gemalte Kunst und die
+                 * ausgelieferte Rechteckliste (@0x80076840 + 8*seite), NICHT unser
+                 * gerechnetes Schema. Bis zum 2026-09-03 malte der Stock-Modus es in
+                 * Grau mit; ein Abzug von 3F zeigte dann beide Ebenen uebereinander und
+                 * war als Referenz unbrauchbar. */
+                if (re15_map_stock_mode()) continue;
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
                 /* RE2-STIL: die WANDLINIE ist in jedem Raum gleich hell; nur die
                  * FUELLUNG traegt den Zustand (blau besucht, dunkelrot aktuell).
