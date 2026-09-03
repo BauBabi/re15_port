@@ -421,6 +421,16 @@ static int32_t re15_zugrand(void)
     return wert;
 }
 
+static int re15_zugkurve(void)
+{
+    static int wert = -1;
+    if (wert < 0) {
+        const char *e = getenv("RE15_ZUGKURVE");
+        wert = e ? atoi(e) : 0;
+    }
+    return wert;
+}
+
 static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
                           int seite, int16_t *mx, int16_t *my)
 {
@@ -510,8 +520,34 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
             int mpg, mrc, smx, smy, kind;
             /* Gewicht: 0 am Rand des Triggers, 1 in seiner Mitte - stetig, damit der
              * Marker beim Betreten des Triggers nicht springt. */
-            int32_t fx = (hw - dx) * 256 / hw;
-            int32_t fz = (hh - dz) * 256 / hh;
+            /* ⛔ VOLLES GEWICHT IM TRIGGER SELBST - das ist die spieleigene
+             * Definition von "an dieser Tuer". Der Original-Trefftest FUN_80042b64
+             * (@0x80042b68-98) sagt: im Trigger = die Tuer ist bedienbar. Bis 2026-09-03
+             * fiel das Gewicht von der MITTE des Triggers linear auf null; an der
+             * Trigger-Kante - wo man beim Oeffnen steht und wo der Spawn liegt - waren
+             * davon nur noch rund 27 % uebrig, und der Marker blieb entsprechend weit
+             * daneben stehen (ROOM1050->ROOM1000 21 px, ROOM4040->ROOM4050 18 px,
+             * ROOM1210->ROOM11E0 17 px, alle DREI mit greifendem Zug).
+             * ⛔ GEMESSEN UND VERWORFEN - deshalb Default AUS (RE15_ZUGKURVE=1
+             * schaltet sie ein). Die Uebergangszahlen werden deutlich besser
+             * (innerhalb 2 px von 45 % auf 67 %, ueber 8 px von 12 auf 7, Spruenge
+             * ueber 16 px von 4 auf 3), aber das Gegenmass faellt: "Spieler-Marker in
+             * der roten Flaeche" sinkt von 95 auf 90 von 96. Das Tuersymbol sitzt auf
+             * der WAND zwischen zwei Raeumen; wer mit vollem Gewicht dorthin zieht,
+             * holt den Marker aus dem eigenen Raum. Nachklemmen repariert das nicht
+             * (siehe re15_inv_map_marker). Der Nutzer verlangt ausdruecklich beides -
+             * "der spielmarker [muss] im kleinen rechteck sein, nicht ausserhalb" -,
+             * und diese Vorgabe schlaegt die schoenere Uebergangszahl. */
+            int32_t tw = (a->half_w > 0 ? a->half_w : 1);
+            int32_t th = (a->half_h > 0 ? a->half_h : 1);
+            int32_t fx, fz;
+            if (re15_zugkurve()) {
+                fx = dx <= tw ? 256 : (hw - dx) * 256 / (hw - tw);
+                fz = dz <= th ? 256 : (hh - dz) * 256 / (hh - th);
+            } else {
+                fx = (hw - dx) * 256 / hw;
+                fz = (hh - dz) * 256 / hh;
+            }
             int32_t g = fx < fz ? fx : fz;
             if (g < 0) g = 0;
             if (g > 256) g = 256;
@@ -591,6 +627,14 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (*my < lo_y) *my = (int16_t)lo_y;
                 if (*my > hi_y) *my = (int16_t)hi_y;
                 tuer_anziehen(zn, world_x, world_z, (int)g_inv_screen.map_page, mx, my);
+                /* ⛔ NACH DEM ZUG NICHT NOCHMAL KLEMMEN - gemessen und verworfen
+                 * (2026-09-03). Naheliegend, weil das Tuersymbol auf der WAND zwischen
+                 * zwei Raeumen sitzt und der Zug den Marker daher aus dem eigenen
+                 * Rechteck holen kann. Ein zweites Klemmen macht es aber SCHLECHTER:
+                 * die Uebergaenge innerhalb 2 px fallen von 45 % auf 32 %, und die
+                 * Zahl "Marker in der roten Flaeche" bleibt unveraendert bei 95 von 96 -
+                 * es rettet also nichts und kostet Genauigkeit. Der Zug darf den Marker
+                 * die letzten Pixel bis an die Wand tragen. */
                 return;
             }
         }
