@@ -1452,3 +1452,42 @@ Auf Blatt 3 gibt es keinen einzigen geeichten Raum; dort kann die Kette gar nich
 Eine Karte, die auf einem Blatt Original-Kunst zeigt und auf dem nächsten meine
 Zeichnungen, sieht uneinheitlich aus — die Bedingung „wenn das gutaussehend geht" ist
 game-weit derzeit **nicht** erfüllt, auf 3F dagegen schon.
+
+## §24 Zuordnung Zone → gemaltes Rechteck: 82 von 117 (`tools/kunst_zuordnung.py`)
+
+Zweistufig: Räume mit ausgelieferter Maßstabszeile werden **direkt projiziert** und
+liefern die Anker; die übrigen kommen über den **Türgraphen** dazu (ein freies Rechteck,
+das ein bereits gesetztes Nachbar-Rechteck berührt).
+
+| Fassung | verortet | freie Rechtecke |
+|---|---|---|
+| nur Größe, Blatt-Median als Maßstab | 55 | — |
+| + geeichte Zeile je Raum direkt projiziert | 58 | 54 |
+| + Ausbreitung über den Türgraphen | **75** | 43 |
+| + „ohne Alternative ist die Größe keine Frage" | **82** | 36 |
+
+⛔ **Größe ist ein schwaches Maß** — der Maßstab ist je *Raum* verschieden, für die Stubs
+steht nur der Blatt-Median zur Verfügung. Sie darf deshalb nur die Feinauswahl treffen.
+Gibt es für eine Zone genau **ein** freies Rechteck an einem gesetzten Nachbarn, ist die
+Zuordnung erzwungen; 25 Zonen hingen allein an der Größenschranke.
+
+### Unabhängiger Zeuge: die Türprobe
+
+**70 von 77 Durchgängen** zwischen zwei zugeordneten Zonen haben berührende Rechtecke
+(**91 %**). „Berührend" war für die Anker nie ein Kriterium — die Übereinstimmung ist
+also nicht hineingerechnet. Die sieben Ausnahmen (dreimal ROOM30E0, ein Mehrzonen-Raum)
+gehören in die Werkzeug-Reserve.
+
+### Was übrig bleibt, nach Ursache getrennt
+
+| Grund | Zonen | Bewertung |
+|---|---|---|
+| **strukturell** — kein Türnachbar auf dem eigenen Blatt | **8** | Das Original malt sie zu Recht nicht: ROOM11A0, ROOM1250, ROOM10B0, **ROOM1160**, ROOM5080, ROOM5090, ROOM6020 (2 Zonen). Ein ergänztes Rechteck stünde frei in der Fläche. |
+| **Blatt 3 ohne Anker** | **9** | Keiner der Räume 12–17 (ROOM10C0…ROOM1110) hat eine geeichte Zeile, auch die Gast-Zeilen nicht. Ohne ein einziges (Zone → Rechteck) kann die Kette nicht starten. |
+| **Werkzeug-Reserve** | **18** | Hätten Nachbarn auf dem Blatt; der Zuordner erreicht sie noch nicht. |
+
+Die 8 strukturellen Fälle beantworten die Frage „ergänzen?" von selbst: dort gibt es
+nichts, woran etwas anschließen könnte. Für Blatt 3 müsste der Maßstab aus derselben
+Stage geliehen werden (die STAGE1-Zeilen streuen um ~15 %) und ein Startpaar anders
+gefunden werden — etwa über den Rechteck-Grad (das Rechteck mit den meisten Nachbarn ist
+der Raum mit den meisten Türen). Das ist noch nicht gemessen.
