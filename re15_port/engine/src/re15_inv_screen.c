@@ -1894,12 +1894,31 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              * Zonen, damit der aktuelle Raum auch dann rot wird, wenn der Spieler in
              * der zweiten Zone steht. */
             unsigned char getan[256];
+            /* ⛔ ZWEI DURCHGAENGE: ERST DER AKTUELLE RAUM, DANN DER REST.
+             * Die Op-Liste wird von HINTEN gerastert (inv_render_pc.c:
+             * for (i = n-1; i >= 0; i--)) - frueher eingetragen heisst OBEN. Wo
+             * sich Rechtecke ueberlappen (Blatt 7 und 9 ueber 30 % der Flaeche),
+             * verschwand die rote Hervorhebung des Raums, in dem der Spieler steht,
+             * unter einem NACHBARRAUM. Live gemessen an allen 96 Raeumen
+             * (integration_map_raum_live): 13 Raeume waren betroffen - ROOM1060,
+             * ROOM1080, ROOM10A0, ROOM1200, ROOM2060, ROOM2070, ROOM3090, ROOM30D0,
+             * ROOM30E0, ROOM5110, ROOM5120, ROOM5140, ROOM6030.
+             * Die statische Pruefung fand das nicht: sie sah nur die Ueberdeckung
+             * durch eine andere Zone DESSELBEN Raums (das war ROOM1070).
+             * Nutzer 2026-09-03: "ROOM 1070 wird nicht rot hervorgehoben wenn ich
+             * drin stehe." */
+            int durchgang;
+            const re15_map_zone_t *akt = re15_map_zone_current();
             memset(getan, 0, sizeof getan);
+            for (durchgang = 0; durchgang < 2; durchgang++)
             for (zi2 = 0; zi2 < nz; zi2++) {
                 const re15_map_zone_t *zn2 = re15_map_zone_by_index(zi2);
                 int sx2, sy2, sw2, sh2, erste, nzell, k2, rs2, j2;
                 int cr2 = 128, cg2 = 128, cb2 = 128;
+                int ist_akt;
                 if (!zn2 || zn2->page != st->map_page) continue;
+                ist_akt = (akt && akt->room == zn2->room);
+                if ((durchgang == 0) != (ist_akt != 0)) continue;
                 if (!re15_map_zone_synth(zn2, &sx2, &sy2, &sw2, &sh2, &erste, &nzell))
                     continue;
                 if (getan[zn2->synth]) continue;
@@ -1924,6 +1943,17 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                         (!zg->etage || re15_map_zone_etage_besucht(zg)))
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
+                /* ⛔ ROT GEHOERT DEM RAUM, NICHT DER EINZELNEN ZEICHNUNG.
+                 * Die Schleife oben sammelt nur Zonen mit DERSELBEN Zeichnung.
+                 * ROOM2080 hat zwei Zonen mit zwei Zeichnungen (9x18 und 4x4 px);
+                 * stand der Spieler in der kleinen, blieb die grosse - die er fuer
+                 * "den Raum" haelt - blau. Live an allen 96 Raeumen gemessen
+                 * (integration_map_raum_live).
+                 * Rot wird deshalb jede BESUCHTE Zeichnung des Raums, in dem der
+                 * Spieler steht. Das Besucht-Bit bleibt pro Zeichnung, damit ein
+                 * noch nicht betretener zweiter Bereich nicht vorzeitig auftaucht. */
+                if (rs2 == RE15_MAP_RECT_VISITED && akt && akt->room == zn2->room)
+                    rs2 = RE15_MAP_RECT_CURRENT;
                 if (re15_map_stock_mode()) rs2 = RE15_MAP_RECT_UNMAPPED;
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
                 /* RE2-STIL: die WANDLINIE ist in jedem Raum gleich hell; nur die

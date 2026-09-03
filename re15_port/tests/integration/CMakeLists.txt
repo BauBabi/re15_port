@@ -47,6 +47,16 @@ target_include_directories(test_map_uebergang PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_map_uebergang PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME integration_map_uebergang COMMAND test_map_uebergang)
+set_tests_properties(integration_map_uebergang PROPERTIES TIMEOUT 180)
+
+# --- Karte, jeder Raum LIVE ueber den Renderpfad (Nutzer 2026-09-03) -------------
+add_executable(test_map_raum_live test_map_raum_live.c)
+target_link_libraries(test_map_raum_live PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_raum_live PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_raum_live PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME integration_map_raum_live COMMAND test_map_raum_live)
+set_tests_properties(integration_map_raum_live PROPERTIES TIMEOUT 180)
 
 add_executable(test_door_traversal test_door_traversal.c)
 target_link_libraries(test_door_traversal PRIVATE re15_engine re15_test_support)
