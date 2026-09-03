@@ -1,3 +1,74 @@
+# RE1.5 Port — v0.3.98 (Early Preview)
+
+**Die fehlenden Verdeckungen.** Du hattest gemeldet: „so gut wie alle ESP fehlen — Leon
+steht auf dem Tisch statt dahinter". Diese Version behebt den technischen Teil davon und
+legt offen, was am Prototyp selbst fehlt.
+
+## Was dahintersteckte
+
+Der Mechanismus heißt `sprite.pri`: pro Kamera-Einstellung liegen im Raum Rechtecke, die
+Vordergrund-Pixel über die Figur zurückmalen. Beim Nachmessen kamen zwei Defekte heraus —
+und ein Befund, der keiner ist.
+
+**Defekt 1 — 188 Einstellungen waren tot.** Der Port holte die Vordergrund-Textur aus
+vorextrahierten Dateien. Die gab es für 209 von 359 Einstellungen; fehlte eine, fiel die
+Verdeckung für die *ganze* Einstellung aus — obwohl alle Daten auf der CD liegen. Betroffen
+waren **6530 echte Maskenrecords** in 24 Räumen, darunter ROOM1020/1030/1040/1070 und
+STAGE5 komplett. Der Port liest die Textur jetzt so, wie das Original es tut: über einen
+Trailer am Ende der geladenen Cut-Daten.
+
+**Defekt 2 — beim Raumwechsel wurde nichts erneuert.** Der Maskensatz hing allein am
+Kamerawechsel. Betrat man einen Raum, blieben die Rechtecke des **Vorgängerraums** stehen,
+bis zufällig die Kamera schwenkte.
+
+**Kein Defekt — ROOM1140.** Der Briefing Room, dein Beispiel, hat im Original *keine*
+Maskendaten: Header-Byte 0, alle zehn Einstellungen zeigen auf `FF FF FF FF`, kein
+Vordergrundbild im BSS. Zum Vergleich, gleiche Engine, gleiches Format:
+
+| | Einstellungen mit Masken | Räume mit ≥1 Maske |
+|---|---|---|
+| RE2 Retail | 67 % | 95 % |
+| RE1.5 | **22 %** | **33 %** |
+
+Die Maskenarbeit war im Prototyp zu etwa einem Drittel fertig. Der Tisch in 1140 ist eine
+dieser Lücken.
+
+## Was neu dazugekommen ist
+
+Nach deiner Ansage („fehlende Masken müssen wir nachzeichnen") sind **232 Einstellungen in
+32 Räumen mit 6740 nachgezeichneten Masken** dazugekommen — überall dort, wo der Prototyp
+die Vordergrund-*Grafik* hinterlassen hat, aber die Geometrie fehlte. Die Grafik musste
+nicht erfunden werden: sie steht im Hintergrundbild.
+
+Die Ergänzungen liegen als eigene Dateien neben den Originaldaten. **Die Originaldaten
+haben immer Vorrang** — jede Einstellung, die die Künstler damals bearbeitet haben, bleibt
+unangetastet.
+
+## Was ich nicht gemacht habe
+
+Für **1468 Einstellungen** fehlt beides, Geometrie *und* Grafik. Ich habe zwei Wege
+gemessen, sie automatisch zu füllen: aus der Kollisionsgeometrie (26–28 % richtig) und mit
+einem gelernten Bildverfahren (20–26 % richtig). Meine vorher festgelegte Grenze war 95 %.
+Eine automatische Füllung hätte also in drei von vier Fällen Hintergrund über Leon gemalt —
+**schlechter als der Zustand, den du behoben haben wolltest.** Deshalb bleiben sie leer.
+
+Stattdessen liegt ein Werkzeug bei (`re15_port/tools/maske/`): Bereiche werden im
+Hintergrundbild **angeklickt** statt gemalt, die Tiefe wird vorgeschlagen, die Ausgabe geht
+ins selbe Format. Damit sind diese Einstellungen Handarbeit — aber verlässliche.
+
+## Zahlen zur Einordnung
+
+* Verdeckung in ROOM3040 gemessen: vorher 0 von 12 erreichbaren Positionen, jetzt greift sie
+* Platzierung der nachgezeichneten Masken: **99,7 %** der markierten Pixel sitzen richtig
+* Tiefen-Übereinstimmung mit den Künstlerwerten: 73,7 %, bei 4,6 % zu früher Verdeckung
+* 267/267 Prüfungen grün, Windows und Linux/Deck beide frisch gebaut
+
+## Für Steam Deck / Linux
+
+Unverändert: entpacken, `run.sh` starten. Die glibc-Anforderung liegt bei 2.29.
+
+---
+
 # RE1.5 Port — v0.3.89 (Early Preview)
 
 **Die Karte ist nach deiner Vorgabe neu gebaut.**
