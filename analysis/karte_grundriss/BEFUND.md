@@ -1676,3 +1676,140 @@ Haufen statt auf **sein** Rechteck. Richtig wäre, nur die Deckung mit den ihm z
 Rechtecken zu zählen; die Zuordnung braucht aber die Zeile, die hier erst entsteht. Wer
 das auflösen will, muss beide Schritte **gemeinsam** lösen, nicht nacheinander.
 Abschaltbar geblieben unter `RE15_FEINSCHLIFF=1`, damit die Messung nachvollziehbar ist.
+
+
+## §29 ⛔ Die Messschiene log: 61 von 149 „Sprüngen“ waren ein Werkzeug-Artefakt
+
+`integration_map_raum_live` meldete **61 von 149 Übergängen mit über 16 px Sprung** —
+genau die Größenordnung des Nutzer-Reports *„Springt immer noch durch die Kartenbereiche
+nach dem Durchlaufen von Türen."* Daneben meldete `integration_map_uebergang` für
+**dieselbe Größe** (Trigger in A → Spawn in B) Median 3 px und 23 Ausreißer über 8 px.
+Beide Schienen liefen grün. Im Test stand dazu eine Erklärung — und die war falsch:
+
+> *„Diese Phase läuft über ALLE AOT-Slots, auch über doppelt belegte mit veraltetem
+> Spawn; sie misst damit eine ANDERE Menge … Eine Zahl, deren Abweichung ich nicht
+> erklären kann, gehört nicht in eine Schranke."*
+
+### Erst messen, ob die Ausrede trägt
+
+Wären wirklich veraltete Spawns schuld, müssten Spawn und Gegen-Trigger derselben Tür in
+der **Welt** weit auseinanderliegen. Gemessen über alle 217 Türen mit Gegen-Datensatz
+(Abstand zum *nächsten* Gegen-Trigger, damit Raumpaare mit mehreren Durchgängen nicht
+künstlich schlecht aussehen):
+
+| | Welteinheiten | ≈ Kartenpixel |
+|---|---|---|
+| Median | 850 | **1 px** |
+| 75 % | 1 000 | 2 px |
+| 95 % | 1 850 | 3 px |
+| über 8 px | **2 von 217 (1 %)** | max 16 px |
+
+⇒ Die Spieldaten binden beide Türseiten fest zusammen. Ein großer Kartensprung **kann**
+nur ein Kartenfehler sein — die Ausrede trug maximal 1 % der Fälle.
+
+### Der Defekt: live über ein Array laufen, das der eigene Rumpf neu befüllt
+
+```c
+if (!betrete(rid, 0, 0, -1)) continue;
+for (k = 0; k < RE15_AOT_MAX; k++) {
+    const re15_aot_t *a = &g_aot.slots[k];      /* <== LIVE gelesen */
+    ...
+    schau(rid,  ax, az, ...);                   /* betrete() -> re15_aot_init() */
+    schau(ziel, bx, bz, ...);                   /* und noch ein Raum */
+```
+
+`schau()` betritt zwei weitere Räume, `betrete()` ruft `re15_aot_init()`. Ab dem zweiten
+Durchgang liest die Schleife also die Türen des **zuletzt geladenen** Raums und schreibt
+sie dem aktuellen zu. Am Einzelfall nachgewiesen: für ROOM1140 meldete die Phase Türen
+nach ROOM1120 — ROOM1140 hat aber genau **eine** installierte Tür (Slot 0 → ROOM1130;
+Slot 1 ist `sce=0`, also inert). Und der gemeldete B-Punkt (197,128) war exakt der von
+`ROOM1170 -> ROOM1130` aus der anderen Schiene.
+
+**Behebung:** die Türliste vor der Schleife per `memcpy` abschreiben (Phase 2 *und*
+Phase 3, dort dieselbe Falle).
+
+| | vorher | nachher |
+|---|---|---|
+| Türen durchschritten | 199 | **201** |
+| auf demselben Blatt | 149 | **172** |
+| Sprung über 16 px | **61** | **10** (5,8 %) |
+| richtiger Raum rot | 199/199 | **201/201** |
+
+Die Karte war die ganze Zeit besser, als ihre eigene Messschiene behauptet hat. An die
+Stelle der Ausrede tritt jetzt ein Riegel (höchstens jeder zehnte Übergang über 16 px).
+
+**Die verbliebenen 10** (`RE15_SPRUNG_LISTE=1`): ROOM1090→ROOM1100 93 px (Blatt 3 — das
+Blatt ohne jeden geeichten Anker, §26), ROOM3060→ROOM3020 33 px, ROOM4040→ROOM4050 23 px,
+ROOM1210→ROOM1220 21/17 px, ROOM1050→ROOM1000 21 px, ROOM2070→ROOM2000 20/17 px,
+ROOM6000→ROOM6010 19 px, ROOM1210→ROOM11E0 17 px.
+
+**Lehre.** Zwei Schienen, die dieselbe Größe messen und sich widersprechen, sind ein
+Befund und kein Nebenbefund. Ich hatte die Abweichung mit einer Geschichte zugedeckt,
+statt sie an den Daten zu prüfen — die Prüfung dauerte fünf Minuten und war eindeutig.
+Verwandt mit [[reai-v2-live-statt-nachbildung]] und [[reai-v2-schwaches-mass]].
+
+## §30 Zeilen-Herleitung: 82 von 96 Räumen — drei gemessene Gewinne
+
+Der Türketten-Löser (`tools/gen_marker_zeilen.py`, §28) stand bei 73 von 96. Drei
+Änderungen, jede einzeln an der Auslassprobe gemessen:
+
+**1. Die Auslassprobe meldet ihre Abdeckung** ([[reai-v2-schiene-abdeckung]]). Sie prüfte
+nur 22 der 38 ausgelieferten Zeilen — die übrigen 16 hängen an Nachbarn, die selbst keine
+ausgelieferte Zeile haben. Ohne diese Zahl sah „Median 7 px" nach mehr aus, als es war.
+
+**2. Der Zonen-Filter sperrte den Empfänger zu Unrecht.** `ZONEN_N != 1` galt für *beide*
+Seiten. Die Zeile @0x800768b0 steht aber pro **Slot = pro Raum**
+(`re15_inv_screen.c:273-320`), nicht pro Zone; wie viele gemalte Rechtecke ein Raum
+bedeckt, kommt in der Rechnung gar nicht vor. Gemessen: der mehrzonige Empfänger ROOM30E0
+leitet mit **7 px** her, exakt wie die einzonigen. Abdeckung 22 → 24.
+
+**3. Drei Korrespondenz-Quellen statt einer, nach Genauigkeit gestaffelt.** Ein
+Türeintrag (`Door_aot_set`) trägt *beide* Seiten: `lx,lz` = Trigger im Quellraum,
+`nx,nz` = Spawn im Zielraum (`gen_map_zones.py:335`). Damit gibt es drei Wege zum
+gemeinsamen Punkt — je einzeln gemessen:
+
+| Familie | Auslassprobe | Abdeckung |
+|---|---|---|
+| Trigger ↔ Trigger | **7 px** | 23/38 |
+| Spawn (derselbe Datensatz) | 9 px | 24/38 |
+| einseitige Türen (A kennt B, B nicht A) | 9 px | 24/38 |
+| **alle gemischt** | **8 px** | 25/38 |
+
+⛔ Mischen ist **schlechter** — der Spawn liegt nicht in der Tür, sondern ein Stück im
+Raum, das ist ein systematischer Versatz. Also Rangfolge statt Beimischung: die genaue
+Familie gewinnt, die ungenauen sind nur Rückfallebene für Räume, die sonst nichts
+hätten. Die einseitigen Türen allein holten fünf Räume (ROOM1080, ROOM4020, ROOM4040
+und in der Folge ROOM4050/ROOM4070), die einen Nachbarn mit Zeile direkt daneben hatten.
+
+**4. Der Versatz ist der Median aller Türpunkte, nicht der der ersten Tür.** Der
+Rauschboden ist messbar: an den Räumen mit ausgelieferter Zeile liegen die zwei
+Kartenpunkte **einer** Tür im Median 5 px auseinander.
+
+| | vorher | nachher |
+|---|---|---|
+| Räume mit Zeile | 73/96 | **82/96** |
+| Auslassprobe geprüft | 22/38 | **26/38** |
+| Median | 7 px | **7 px** |
+| innerhalb 8 px | 13 | **16** |
+| schlechter geworden | — | 1 (ROOM3010 16→18 px) |
+
+**Die 14 Reste** haben keinen erreichbaren Nachbarn auf ihrem Blatt: alle sechs Räume von
+Blatt 3 (kein Anker, §26) plus die Einzelgänger ROOM10B0, ROOM1160, ROOM1230, ROOM1250,
+ROOM5080, ROOM5090, ROOM50F0, ROOM6020.
+
+### ⛔ Der gemeinsame Lösungsweg aus §28 — gemessen und endgültig verworfen
+
+§28 ließ offen, ob Zuordnung und Zeile *gemeinsam* gelöst besser wären. Gebaut wie dort
+verlangt (erst mit der groben Zeile das Rechteck zuordnen, dann die Zeile allein auf
+**dieses** Rechteck anpassen, Maßstab aus dem Größenverhältnis): **Median 14 px** statt 7.
+Fünf Räume gewinnen spektakulär (ROOM3090 51→5, ROOM3010 18→3, ROOM3040 11→3), zwanzig
+verlieren. Ein Riegel über die Größen-Übereinstimmung rettet es nicht — bei **jeder**
+Schwelle von 0 bis 24 px werden mehr Räume schlechter als besser.
+
+**Der Grund schließt den Weg, und er ist zählbar: die gemalte Kunst liegt auf einem
+8-Pixel-Raster.** Alle **236** Kantenlängen der 118 Rechtecke über alle 13 Blätter sind
+durch 8 teilbar. Ein Maßstab aus dem Größenverhältnis erbt diese Rasterung: 9 % Fehler
+bei einem 88 px breiten Rechteck, 33 % bei 24 px, **100 %** beim 8 px schmalen Korridor
+ROOM3030. Die Türkette ist mit ihrem Rauschboden von 5 px die deutlich stärkere Fessel.
+Der Weg ist damit nicht „noch nicht sauber gebaut", sondern durch die Auflösung der
+Vorlage begrenzt.

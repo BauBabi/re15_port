@@ -305,15 +305,30 @@ int main(void)
     /* ================= PHASE 2: DURCH JEDE TUER GEHEN ==================== */
     {
         static re15_inv_op_t ops2[1024];
+        static re15_aot_t sn_a[RE15_AOT_MAX];
+        static re15_aot_door_params_t sn_d[RE15_AOT_MAX];
         int tueren = 0, rot_ok = 0, marker_ok = 0, gleiches_blatt = 0, sprung_gross = 0;
         for (st = 1; st <= 6; st++) {
             for (r = 0; r < 0x400; r += 0x10) {
                 unsigned rid = (unsigned)(st << 12) | (unsigned)r;
                 int k;
                 if (!betrete(rid, 0, 0, -1)) continue;
+                /* ⛔ DIE TUERLISTE ERST ABSCHREIBEN. schau() betritt in DIESEM Rumpf
+                 * zwei weitere Raeume, und betrete() ruft re15_aot_init() - g_aot wird
+                 * also mitten in der Schleife neu befuellt. Wer live ueber
+                 * g_aot.slots[k] laeuft, liest ab dem zweiten Durchgang die Tueren des
+                 * ZULETZT geladenen Raums und schreibt sie diesem hier zu. Genau so
+                 * entstanden die 61 von 149 "Spruengen ueber 16 px": fuer ROOM1140
+                 * wurden Tueren nach ROOM1120 gemeldet, die es dort gar nicht gibt
+                 * (ROOM1140 hat genau EINE installierte Tuer, nach ROOM1130), und der
+                 * B-Punkt (197,128) war der von ROOM1170 -> ROOM1130. Die Zahl war ein
+                 * Werkzeug-Artefakt; der Kommentar darunter hat sie mit einer falschen
+                 * Geschichte ("veraltete Doppel-Slots") erklaert. */
+                memcpy(sn_a, g_aot.slots, sizeof sn_a);
+                memcpy(sn_d, g_aot.door_params, sizeof sn_d);
                 for (k = 0; k < RE15_AOT_MAX; k++) {
-                    const re15_aot_t *a = &g_aot.slots[k];
-                    const re15_aot_door_params_t *d = &g_aot.door_params[k];
+                    const re15_aot_t *a = &sn_a[k];
+                    const re15_aot_door_params_t *d = &sn_d[k];
                     unsigned ziel;
                     int32_t ax, az, bx, bz;
                     int band, rotA = 0, rotB = 0, sA = -1, sB = -1;
@@ -323,7 +338,7 @@ int main(void)
                          | ((unsigned)d->dest_room << 4) | (rid & 0x000Fu);
                     if (ziel == rid) continue;
                     ax = a->x; az = a->z; bx = d->spawn_x; bz = d->spawn_z;
-                    band = (int)g_aot.door_params[k].band;
+                    band = (int)sn_d[k].band;
                     if (!schau(rid, ax, az, band, ops2, 1024, &rotA, &max_, &may, &sA))
                         continue;
                     if (!schau(ziel, bx, bz, band, ops2, 1024, &rotB, &mbx, &mby, &sB))
@@ -356,19 +371,34 @@ int main(void)
         CHECK("es wurden genug Tueren durchschritten", tueren >= 150);
         CHECK("beim Durchschreiten ist immer der richtige Raum rot",
               rot_ok == tueren);
-        /* KEINE ZUSICHERUNG AUF DEN SPRUNG. Diese Phase laeuft ueber ALLE AOT-Slots,
-         * auch ueber doppelt belegte mit veraltetem Spawn; sie misst damit eine ANDERE
-         * Menge als integration_map_uebergang, das auf Tueren mit reziprokem
-         * Gegen-Datensatz filtert. Fuer ROOM1140 -> ROOM1130 meldet diese Phase 48 px,
-         * map_uebergang 13 px - dieselbe Tuer, zwei Mengen. Der Sprung gehoert deshalb
-         * dorthin; hier bleibt er reine Diagnose (RE15_SPRUNG_LISTE=1 listet jeden
-         * Fall). Eine Zahl, deren Abweichung ich nicht erklaeren kann, gehoert nicht in
-         * eine Schranke.
-         */
+        /* ⛔ DIE ALTE AUSREDE WAR FALSCH - JETZT STEHT HIER EIN RIEGEL.
+         * Bis 2026-09-03 meldete diese Phase 61 von 149 Uebergaengen mit ueber 16 px
+         * und erklaerte das mit "ALLE AOT-Slots, auch doppelt belegte mit veraltetem
+         * Spawn" gegenueber der gefilterten Menge von integration_map_uebergang. Das
+         * war eine Geschichte, keine Messung: die Schleife lief LIVE ueber g_aot,
+         * waehrend ihr eigener Rumpf ueber schau() zwei weitere Raeume in genau dieses
+         * Array lud (siehe der Kommentar an der memcpy-Stelle oben). Sie schrieb Raum A
+         * damit die Tueren des zuletzt geladenen Raums zu.
+         *
+         * Gegenprobe an den Daten: der Spawn einer Tuer liegt vom naechsten
+         * Gegen-Trigger im Median 850 Welteinheiten entfernt = 1 Kartenpixel, 95 %
+         * innerhalb 3 px, nur 2 von 217 ueber 8 px. Die Spieldaten binden beide
+         * Tuerseiten also fest zusammen - ein grosser Kartensprung KANN nur ein
+         * Kartenfehler sein und gehoert deshalb sehr wohl hinter eine Schranke.
+         *
+         * Nach der Reparatur: 10 von 172 (5,8 %). Die Schranke laesst 10 % zu, damit
+         * sie eine Regression faengt statt den heutigen Stand einzufrieren.
+         * RE15_SPRUNG_LISTE=1 listet jeden Fall. */
+        if (sprung_gross * 10 > gleiches_blatt)
+            printf("     (RE15_SPRUNG_LISTE=1 listet die Faelle)\n");
+        CHECK("hoechstens jeder zehnte Uebergang springt ueber 16 px",
+              gleiches_blatt > 0 && sprung_gross * 10 <= gleiches_blatt);
     }
     /* ================= PHASE 3: TUERSYMBOLE IM BILD ====================== */
     {
         static re15_inv_op_t ops3[1024];
+        static re15_aot_t sn3_a[RE15_AOT_MAX];
+        static re15_aot_door_params_t sn3_d[RE15_AOT_MAX];
         int tueren = 0, sichtbar = 0;
         int identitaet = 0, rueckfall = 0, zufall = 0, ohne_marke = 0;
         for (st = 1; st <= 6; st++) {
@@ -376,14 +406,20 @@ int main(void)
                 unsigned rid = (unsigned)(st << 12) | (unsigned)r;
                 int k;
                 if (!betrete(rid, 0, 0, -1)) continue;
+                /* Dieselbe Falle wie in Phase 2: betrete() weiter unten setzt g_aot
+                 * neu. Hier ist es derselbe Raum, aber scd_room_reenter installiert
+                 * abhaengig von der Spielerposition, also darf auch das nicht live
+                 * gelesen werden. */
+                memcpy(sn3_a, g_aot.slots, sizeof sn3_a);
+                memcpy(sn3_d, g_aot.door_params, sizeof sn3_d);
                 for (k = 0; k < RE15_AOT_MAX; k++) {
-                    const re15_aot_t *a = &g_aot.slots[k];
+                    const re15_aot_t *a = &sn3_a[k];
                     const re15_map_zone_t *zn;
                     int nops, q, band, gelb = 0;
                     int ident_mk = -1, einzeln_mk = -1;
                     int16_t mmx = 0, mmy = 0;
                     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
-                    band = (int)g_aot.door_params[k].band;
+                    band = (int)sn3_d[k].band;
                     if (!betrete(rid, a->x, a->z, band)) continue;
                     re15_map_visited_mark(rid);
                     re15_map_visited_mark_at(rid, a->x, a->z);
@@ -403,8 +439,8 @@ int main(void)
                     {
                         int seite = (int)g_inv_screen.map_page;
                         unsigned ziel =
-                            (((unsigned)g_aot.door_params[k].dest_stage + 1u) << 12)
-                            | ((unsigned)g_aot.door_params[k].dest_room << 4)
+                            (((unsigned)sn3_d[k].dest_stage + 1u) << 12)
+                            | ((unsigned)sn3_d[k].dest_room << 4)
                             | (rid & 0x000Fu);
                         int mn = re15_map_mark_count(), mk;
                         ident_mk = -1; einzeln_mk = -1;

@@ -24,11 +24,18 @@ Tuer ausrechenbar - und Bs Zeile muss (bx,bz) genau dorthin abbilden.
         ox = P1x - (b1x + 32000) * sx / 2^20
       also Versatz UND Massstab bestimmt.
 
+DREI QUELLEN FUER DIESEN PUNKT, nicht eine (siehe _paar_punkte, BEFUND.md §29):
+Trigger<->Trigger (genau, Median 7 px), einseitige Tueren ueber den Spawn des Nachbarn
+(9 px) und der Spawn im selben Datensatz (9 px). Die ungenauen sind Rueckfallebene, keine
+Beimischung - gemischt wird das Ergebnis schlechter.
+
 ⛔ DER RIEGEL IST DIE AUSLASSPROBE. Fuer jeden Raum, der eine ausgelieferte Zeile HAT,
 wird so getan, als fehlte sie; die Zeile wird hergeleitet und mit der echten verglichen.
-Ohne diese Probe waere die Herleitung eine Behauptung. Gemessen (gleiches Blatt, keine
-Selbst-Tuer, beide Raeume einzonig): Median 6 px, 21 von 32 innerhalb 8 px, die besten
-exakt.
+Ohne diese Probe waere die Herleitung eine Behauptung. Und sie muss ihre ABDECKUNG
+mitmelden (Memory reai-v2-schiene-abdeckung): sie prueft 26 der 38 ausgelieferten
+Zeilen - die uebrigen 12 haengen an Nachbarn, die selbst keine ausgelieferte Zeile haben,
+und sind damit nicht pruefbar, ohne die Kette durch bereits hergeleitete Zeilen zu
+fuehren. Gemessen: Median 7 px, 16 von 26 innerhalb 8 px, die besten exakt.
 
 Aufruf:
     python re15_port/tools/gen_marker_zeilen.py            # Auslassprobe + Uebersicht
@@ -85,29 +92,74 @@ def gegentuer(a, b):
     return None
 
 
+def _kartenpunkt(a, wx, wz, bekannt):
+    z = bekannt[a]
+    return (karte_x(wx, z[0], z[2]), karte_y(wz, z[1], z[3]))
+
+
+# Rangfolge der Korrespondenz-Familien. Gemessen 2026-09-03 an der Auslassprobe, jede
+# Familie EINZELN (BEFUND.md §29): trigger<->trigger Median 7 px, spawn 9 px, einseitig
+# 9 px. Gemischt wird es SCHLECHTER (8 px) - der Spawn liegt nicht in der Tuer, sondern
+# ein Stueck im Raum, das ist ein systematischer Versatz. Also: die genaue Familie
+# gewinnt, die ungenauen sind nur Rueckfallebene fuer Raeume, die sonst NICHTS haetten.
+FAMILIEN = ('trigger', 'einseitig', 'spawn')
+
+
 def _paar_punkte(b, bekannt):
-    """Fuer Raum b: Liste (lokaler Tuerpunkt in b, Kartenpunkt) ueber bekannte Nachbarn."""
-    aus = []
+    """Fuer Raum b: (lokaler Tuerpunkt in b, Kartenpunkt, Nachbar) ueber bekannte Nachbarn.
+
+    ⛔ KEIN ZONEN-FILTER. Ein frueherer Wurf sperrte mehrzonige Raeume auf BEIDEN Seiten
+    ("bei Mehrzonen-Raeumen ist unklar, welcher"). Das war fuer den EMPFAENGER falsch: die
+    Zeile @0x800768b0 steht pro SLOT = pro RAUM (re15_inv_screen.c:273-320), nicht pro
+    Zone, und der Tuerpunkt ist eine Weltkoordinate im lokalen System des Raums - wie
+    viele gemalte Rechtecke der Raum bedeckt, kommt in der Rechnung gar nicht vor.
+    Gemessen: der mehrzonige Empfaenger ROOM30E0 leitet mit 7 px her, genau wie die
+    einzonigen; die Abdeckung der Auslassprobe steigt von 22 auf 24 von 38.
+    """
+    fam = collections.defaultdict(list)
+    def darf(a):
+        return (a != b and a in bekannt and BLATT.get(a) is not None
+                and BLATT.get(a) == BLATT.get(b))   # ueber Blattgrenzen gibt es
+                                                    # keinen gemeinsamen Punkt
     for d in tueren(b):
         a = d['dest']
-        if a == b or a not in bekannt:
+        if not darf(a):
             continue
-        if BLATT.get(a) is None or BLATT.get(a) != BLATT.get(b):
-            continue                       # ueber Blattgrenzen gibt es keinen Punkt
-        if ZONEN_N[a] != 1 or ZONEN_N[b] != 1:
-            continue                       # bei Mehrzonen-Raeumen ist unklar, welcher
+        # (1) Trigger in B <-> Trigger in A: beide sind die AOT-Flaeche AN der Tuer.
         da = gegentuer(b, a)
-        if not da:
+        if da:
+            fam['trigger'].append(((d['lx'], d['lz']),
+                                   _kartenpunkt(a, da['lx'], da['lz'], bekannt), a))
+        # (2) Trigger in B <-> SPAWN in A. Steht im SELBEN Datensatz (Door_aot_set
+        #     nx/nz = Ankunftspunkt im Zielraum, gen_map_zones.py:335) und braucht
+        #     deshalb keine Gegentuer.
+        fam['spawn'].append(((d['lx'], d['lz']),
+                             _kartenpunkt(a, d['nx'], d['nz'], bekannt), a))
+    # (3) EINSEITIGE Tueren: A kennt B, B kennt A nicht. Ein Durchlauf nur ueber
+    #     tueren(b) sieht diese Verbindung gar nicht - es waren 5 Raeume (ROOM1080,
+    #     ROOM4020, ROOM4040 und in der Folge ROOM4050/ROOM4070), die deshalb ohne
+    #     Zeile blieben, obwohl ein Nachbar mit Zeile direkt daneben lag.
+    for a in bekannt:
+        if not darf(a):
             continue
-        za = bekannt[a]
-        P = (karte_x(da['lx'], za[0], za[2]), karte_y(da['lz'], za[1], za[3]))
-        aus.append(((d['lx'], d['lz']), P, a))
-    return aus
+        for e in tueren(a):
+            if e['dest'] == b:
+                fam['einseitig'].append(((e['nx'], e['nz']),
+                                         _kartenpunkt(a, e['lx'], e['lz'], bekannt), a))
+    for f in FAMILIEN:
+        if fam.get(f):
+            return fam[f], f
+    return [], None
+
+
+def _median(v):
+    v = sorted(v)
+    return v[len(v) // 2]
 
 
 def herleiten(b, bekannt):
     """Zeile fuer b herleiten. Rueckgabe (zeile, guete) oder (None, grund)."""
-    pk = _paar_punkte(b, bekannt)
+    pk, welche = _paar_punkte(b, bekannt)
     if not pk:
         return None, 'kein bekannter Nachbar auf dem Blatt'
 
@@ -134,39 +186,49 @@ def herleiten(b, bekannt):
         return best
 
     lx, lz = loese(0), loese(1)
-    za = bekannt[pk[0][2]]
-    sx = lx[1] if lx else za[2]
-    sz = lz[1] if lz else za[3]
-    b1, P1, a1 = pk[0]
-    ox = P1[0] - karte_x(b1[0], 0, sx)
-    oy = P1[1] - karte_y(b1[1], 0, sz)
-    wie = ('Massstab x %s, z %s'
-           % ('aus %04X/%04X' % (lx[2], lx[3]) if lx else 'geliehen von %04X' % a1,
+    a1 = pk[0][2]
+    sx = lx[1] if lx else bekannt[a1][2]
+    sz = lz[1] if lz else bekannt[a1][3]
+    # ⛔ DER VERSATZ IST DER MEDIAN ALLER TUERPUNKTE, nicht der des ersten. Eine
+    # einzelne Tuer ist in beiden Raeumen nicht exakt derselbe Ort: an den Raeumen mit
+    # ausgelieferter Zeile liegen die zwei Kartenpunkte EINER Tuer im Median 5 px
+    # auseinander (BEFUND.md §29). Das ist der Rauschboden - mitteln druckt ihn weg,
+    # und der Median haelt dabei die Ausreisser draussen (ROOM30E0/ROOM3030: 60 px,
+    # weil der Korridor IN der Zone des Nachbarn liegt, §25).
+    ox = _median([P[0] - karte_x(bl[0], 0, sx) for bl, P, _a in pk])
+    oy = _median([P[1] - karte_y(bl[1], 0, sz) for bl, P, _a in pk])
+    wie = ('%s x%d, Massstab x %s, z %s'
+           % (welche, len(pk),
+              'aus %04X/%04X' % (lx[2], lx[3]) if lx else 'geliehen von %04X' % a1,
               'aus %04X/%04X' % (lz[2], lz[3]) if lz else 'geliehen von %04X' % a1))
     return (ox, oy, sx, sz), wie
 
 
 def feinschliff(rm, z):
-    """⛔ GEMESSEN UND VERWORFEN (2026-09-03) - nur noch ueber RE15_FEINSCHLIFF=1.
+    """⛔ GEMESSEN UND ZWEIMAL VERWORFEN (2026-09-03) - nur noch ueber RE15_FEINSCHLIFF=1.
 
     Die Idee: die hergeleitete Zeile an den gemalten Rechtecken nachziehen, weil die
-    Kunst die staerkere Fessel ist. Das Ergebnis ist SCHLECHTER: die Auslassprobe faellt
-    von Median 7 px auf 15 px, und die Treffer innerhalb 8 px von 13 auf 7.
+    Kunst die staerkere Fessel sei. Erster Anlauf (BEFUND.md §28): Auslassprobe faellt von
+    7 px auf 15 px. Der Grund war mein alter Fehler (Memory reai-v2-proxy-mass) - maximiert
+    wurde die Deckung mit IRGENDEINEM Rechteck des Blattes, also zog der Raum auf den
+    dichtesten Haufen statt auf SEIN Rechteck.
 
-    Der Grund ist mein eigener alter Fehler (Memory reai-v2-proxy-mass): maximiert wird
-    die Deckung mit IRGENDEINEM Rechteck des Blattes - also zieht der Raum auf den
-    dichtesten Haufen, nicht auf SEIN Rechteck. Richtig waere, nur die Deckung mit den
-    ihm zugeordneten Rechtecken zu zaehlen; die Zuordnung braucht aber die Zeile, die
-    hier erst entsteht. Wer das aufloest, muss die beiden Schritte gemeinsam loesen,
-    nicht nacheinander.
+    Zweiter Anlauf mit genau der Korrektur, die §28 dafuer verlangt hat (BEFUND.md §29):
+    erst mit der groben Zeile das Rechteck ZUORDNEN, dann die Zeile allein auf DIESES
+    Rechteck anpassen, Massstab aus dem Groessenverhaeltnis. Ergebnis Median 14 px - fuenf
+    Raeume gewinnen spektakulaer (ROOM3090 51->5, ROOM3010 18->3), zwanzig verlieren.
+    Ein Riegel ueber die Groessen-Uebereinstimmung rettet es nicht: bei JEDER Schwelle
+    von 0 bis 24 px werden mehr Raeume schlechter als besser.
 
-    Urspruengliche Begruendung: die Herleitung setzt den Raum ueber EINEN Tuerpunkt. Jede
-    Ungenauigkeit dort schlaegt voll durch - die Auslassprobe lag im Median bei 7 px.
-    Die gemalte Kunst ist die staerkere Fessel: der Kasten des Raums soll auf den
-    Rechtecken liegen, die er ueberdeckt (BEFUND.md §22: die gemalten Rechtecke SIND die
-    Kollisionsboxen). Gesucht ist die Verschiebung, die die Deckung maximiert.
+    ⛔ DER GRUND IST MESSBAR UND SCHLIESST DEN WEG: die gemalte Kunst ist auf ein
+    8-PIXEL-RASTER gezeichnet - alle 236 Kantenlaengen der 118 Rechtecke ueber alle 13
+    Blaetter sind durch 8 teilbar. Ein Massstab aus dem Groessenverhaeltnis erbt diese
+    Rasterung: bei einem 24 px breiten Rechteck sind das 33 % Massstabsfehler, bei dem
+    8 px breiten Korridor ROOM3030 sogar 100 %. Die Tuerkette ist mit ihrem Rauschboden
+    von 5 px die deutlich staerkere Fessel. Der Weg ist damit nicht "noch nicht sauber
+    gebaut", sondern durch die Aufloesung der Vorlage begrenzt.
 
-    Der MASSSTAB wird dabei NICHT angetastet - ihn aus derselben groben Lage neu zu
+    Der MASSSTAB wird hier NICHT angetastet - ihn aus derselben groben Lage neu zu
     schaetzen hiesse, den Fehler mit sich selbst zu korrigieren.
     """
     g = A.read_rdt(rm)
