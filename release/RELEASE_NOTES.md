@@ -1,3 +1,41 @@
+# RE1.5 Port — v0.4.2 (Early Preview)
+
+**ROOM1140 (Briefing Room), zweiter Anlauf — diesmal nur freistehende Objekte.**
+
+Nach deinem Befund ("ueberall ueberlagernde Grafikfehler beim Vorbeilaufen an den
+Waenden") habe ich beide Raeume zurueckgezogen und ROOM1140 neu gezeichnet. Die Regel,
+die aus dem Fehler folgt: **Waende bleiben unmarkiert.** Eine Wandflaeche grenzt entlang
+einer langen Diagonale direkt an den Boden — genau dort laeufst du, also landet jede
+Ungenauigkeit unmittelbar in deinem Weg. Ein Tisch oder Schreibtisch beruehrt den Boden
+nur an einer kurzen Kante.
+
+Diesmal ist **jede** Einstellung einzeln durchgesehen worden (Auswahl mit Nummern ueber
+dem Bild), nicht nur gezeichnet:
+
+| Einstellung | verdeckt jetzt | Korrektur |
+|---|---|---|
+| 0 | Tisch + Stuehle | sauber |
+| 1 | Tisch + Stuehle | sauber |
+| 2 | Tisch + Kamerastative | 1 Flaeche entfernt |
+| 3 | Podium, Fahnen, Mikrofone | **11 entfernt** (das war dein Screenshot) |
+| 4 | Flipchart, Bank, Tisch | 3 entfernt |
+| 5 | Tisch + Schreibtisch | ganze linke Wand entfernt |
+| 6 | — | keine Maske: reiner Flur |
+| 7 | Tisch | 4 entfernt |
+| 8 | — | keine Maske |
+| 9 | Schreibtisch, Rechner, Muelleimer, Stuhl | sauber |
+
+**365 Masken in 8 von 10 Einstellungen.**
+
+**ROOM1130 bleibt bewusst ohne Masken** — er ist fast durchgehend Flur, dort gaebe es
+ueberwiegend Waende zu markieren.
+
+**Worauf es ankommt:** verschwindest du sauber hinter Tisch, Podium und Schreibtisch —
+und liegt umgekehrt NIRGENDS ein Stueck Hintergrund ueber dir, wo du davor stehst?
+Der zweite Fall ist der, den wir jagen; melde ihn bitte mit der Kamera-Einstellung.
+
+---
+
 # RE1.5 Port — v0.4.1 (Early Preview)
 
 **Sauberer Stand: die handgezeichneten Masken fuer ROOM1130 und ROOM1140 sind wieder
