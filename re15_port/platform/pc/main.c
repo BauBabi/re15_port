@@ -4676,15 +4676,47 @@ re_title:;
                  * the foreground element"), and report the camera-Z there. This is the
                  * instrument that decides the mask-vs-character crossover empirically. */
                 if (getenv("RE15_POCC_SCAN")) {
+                    /* ⛔ ZWEI FEHLER, DIE DIE SONDE STUMM MACHTEN (gefunden 2026-09-03,
+                     * als sie den Nachweis fuer die nachgezeichneten Masken liefern sollte):
+                     *
+                     * (1) Der Merker war NUR der Cut-Index. Nach einem Raumwechsel auf
+                     *     DENSELBEN Index (der Normalfall: beide 0) galt der Raum als schon
+                     *     gescannt und die Sonde lief nie wieder. Sie hatte also genau einmal
+                     *     im Startraum gemessen — der hat keine Masken, also null Ausgabe.
+                     *     Dieselbe Fehlerklasse wie beim Maskensatz selbst: der Zustand haengt
+                     *     am PAAR (Raum, Cut), nicht am Cut allein.
+                     * (2) Das Suchgitter war auf einen Raum fest verdrahtet
+                     *     (-13000..15000 / -11000..17000). ROOM3040 spawnt bei x=-25600 —
+                     *     komplett ausserhalb. Selbst wenn sie gelaufen waere, haette sie
+                     *     dort nichts gefunden. Jetzt kommen die Grenzen aus der
+                     *     Kollisionsgeometrie des Raums (SCA), also aus den Daten. */
                     static int scanned_cut = -999;
-                    if (scanned_cut != active_cut_idx) {
+                    static unsigned scanned_room = 0xFFFFu;
+                    if (scanned_cut != active_cut_idx || scanned_room != g_current_room_id) {
                         scanned_cut = active_cut_idx;
+                        scanned_room = g_current_room_id;
                         extern int re15_render_pc_debug_pri_rects(int *dx, int *dy, int *w,
                                                                   int *h, int *dep, int max);
                         int rx[64], ry[64], rw[64], rh[64], rd[64];
                         int rn = re15_render_pc_debug_pri_rects(rx, ry, rw, rh, rd, 64);
-                        for (int wx = -13000; wx <= 15000; wx += 200) {
-                            for (int wz = -11000; wz <= 17000; wz += 200) {
+                        int X0 = -13000, X1 = 15000, Z0 = -11000, Z1 = 17000;
+                        if (rdt_ok && g_room_rdt.sca && g_room_rdt.sca_count > 0) {
+                            int mnx = 1 << 30, mxx = -(1 << 30), mnz = 1 << 30, mxz = -(1 << 30);
+                            for (int s = 0; s < g_room_rdt.sca_count; s++) {
+                                const re15_sca_entry_t *e = &g_room_rdt.sca[s];
+                                int ex = (int)e->x, ez = (int)e->z;
+                                if (ex < mnx) mnx = ex;
+                                if (ez < mnz) mnz = ez;
+                                if (ex + (int)e->width   > mxx) mxx = ex + (int)e->width;
+                                if (ez + (int)e->density > mxz) mxz = ez + (int)e->density;
+                            }
+                            if (mxx > mnx && mxz > mnz) { X0 = mnx; X1 = mxx; Z0 = mnz; Z1 = mxz; }
+                        }
+                        fprintf(stderr, "[poccscan] room=%04x cut=%d masks=%d gitter x %d..%d z %d..%d\n",
+                                g_current_room_id, active_cut_idx, rn, X0, X1, Z0, Z1);
+                        int n_in = 0, n_occ = 0;
+                        for (int wx = X0; wx <= X1; wx += 200) {
+                            for (int wz = Z0; wz <= Z1; wz += 200) {
                                 long vx = ((long)wx * cam_view.rot[0] + (long)plz->y * cam_view.rot[1]
                                          + (long)wz * cam_view.rot[2]) / 4096 + cam_view.trans[0];
                                 long vy = ((long)wx * cam_view.rot[3] + (long)plz->y * cam_view.rot[4]
@@ -4697,16 +4729,27 @@ re_title:;
                                 for (int r = 0; r < rn; r++) {
                                     if (ssx >= rx[r] && ssx < rx[r] + rw[r] &&
                                         ssy >= ry[r] && ssy < ry[r] + rh[r]) {
+                                        /* Der Zeichner verdeckt, solange die Figur-Kamera-Z
+                                         * GROESSER als die Schwelle ist (re15_pri.h:
+                                         * depth < otz>>4  <=>  vz > depth*64). */
+                                        int occ = (int)(vz > (long)rd[r] * 64);
+                                        int flr = re15_collision_on_floor(&g_room_rdt, wx, wz);
+                                        n_in++; n_occ += occ;
                                         fprintf(stderr, "[poccscan] cut=%d world=(%d,%d) scr=(%d,%d) "
-                                                "vz=%ld maskdepth=%d k32=%d k64=%d occ32=%d occ64=%d\n",
+                                                "vz=%ld maskdepth=%d k64=%d occ64=%d boden=%d\n",
                                                 active_cut_idx, wx, wz, ssx, ssy, vz, rd[r],
-                                                rd[r] * 32, rd[r] * 64,
-                                                (int)(vz > rd[r] * 32), (int)(vz > rd[r] * 64));
+                                                rd[r] * 64, occ, flr);
                                         break;
                                     }
                                 }
                             }
                         }
+                        /* Zusammenfassung: ohne sie muesste man tausende Zeilen von Hand
+                         * auszaehlen — und genau daran scheitert sonst die Aussage
+                         * "verdeckt ueberhaupt irgendetwas". */
+                        fprintf(stderr, "[poccscan-summe] room=%04x cut=%d punkte_in_maske=%d "
+                                "davon_verdeckt=%d\n",
+                                g_current_room_id, active_cut_idx, n_in, n_occ);
                     }
                 }
                 /* Sweep report: is the player's projected point inside an ACTIVE mask? */

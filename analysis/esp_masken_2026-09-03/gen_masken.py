@@ -16,11 +16,28 @@ unregelmaessige Silhouette zwangslaeufig mit; auch die Kuenstler haben das getan
 macht die TRANSPARENZ: Palettenindex 0 wird nicht gezeichnet. Ueberdeckte Pixel
 ausserhalb der Silhouette sind im Atlas transparent und damit wirkungslos.
 
-TIEFE: Bodenkontakt je zusammenhaengendem Objekt (gemessen: funktionale
-Uebereinstimmung mit den Kuenstlerwerten im Median 87.5 %, Verhaeltnis 1.09).
-Bewusst KONSERVATIV gerundet — eine zu grosse Tiefe laesst die Maske seltener
-greifen (Verhalten wie heute), eine zu kleine wuerde die Figur verdecken, obwohl
-sie DAVOR steht. Nur der zweite Fehler waere sichtbar schlimmer als der Ist-Zustand.
+TIEFE: Bodenkontakt je zusammenhaengendem Objekt.
+
+⛔ DER SICHERHEITSFAKTOR WAR EINE ERFUNDENE ZAHL. Erst stand hier 1.10 "konservativ
+nach hinten". Die Sonde RE15_POCC_SCAN hat gemessen, was das kostet: in ROOM3040
+Cut 0 liegen alle 12 erreichbaren Punkte hinter der Maske bei vz 8882..9457, die
+Schwelle aber bei 9984 — die Maske verdeckte NIE, der ganze Nutzen war weg.
+Der Faktor ist jetzt an den 480 Kuenstler-Cuts kalibriert (q8_faktor.py):
+
+  Faktor   Uebereinstimmung   falsch_verdeckt   falsch_gezeigt
+   0.90        77.9 %             7.9 %            14.1 %
+   1.00        77.1 %             5.2 %            17.7 %
+   1.10        74.5 %             3.5 %            22.0 %
+
+Gewaehlt: 1.00 — die Schaetzung wird so benutzt, wie sie gemessen ist. Jede
+Abweichung davon waere selbst wieder eine geratene Zahl. "falsch_verdeckt" (die
+Figur verschwindet, obwohl sie davor steht) ist der sichtbar schlimmere Fehler,
+"falsch_gezeigt" entspricht dem heutigen Zustand.
+
+Bekannte Ursache der Restabweichung: die zurueckgewonnene Region deckt rund die
+Haelfte der Silhouette ab und verfehlt haeufig den unteren, kontrastarmen Teil des
+Objekts — dadurch liegt der geschaetzte Bodenkontakt zu HOCH und damit zu weit.
+Bessere Abdeckung verbessert also direkt die Tiefe.
 """
 import os, sys, struct
 import numpy as np
@@ -32,7 +49,7 @@ from gen_region import find_blocks
 
 MAX_MASKS_PER_CUT = 105        # spielweites Maximum (RDT-Header Byte[7], ROOM3000/3001 Cut 3)
 NCC_MIN           = 0.97       # gemessen: 99.7 % der so markierten Pixel sind richtig
-DEPTH_SAFETY      = 1.10       # konservativ nach HINTEN, s. Kopfkommentar
+DEPTH_SAFETY      = 1.00       # KALIBRIERT, nicht geraten — s. q8_faktor.py
 
 def _largest_rect(mask):
     """Groesstes achsenparalleles Vollrechteck in einer Boolmaske -> (y,x,h,w,flaeche)."""
