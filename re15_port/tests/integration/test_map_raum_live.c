@@ -94,17 +94,45 @@ static int betrete(unsigned rid, int32_t px, int32_t pz, int band)
 #define ROT_G 20
 #define ROT_B 20
 
+/* ⛔ ZWEI ARTEN VON RAUMFLAECHE, ZWEI OP-ARTEN.
+ * Eine Schema-Zeichnung ist ein FILL im Ton (74,20,20). Ein GEMALTES Original-Rechteck
+ * ist dagegen eine BILDKACHEL der Originalkarte - ein SPRT von RE15_INV_PAGE_MAP4, im
+ * Zustandston moduliert: grau unbesucht, gruen besucht, rot aktuell (192,24,24).
+ *
+ * ⛔ UNTERSCHIEDEN WIRD UEBER DIE TEXTUR-SEITE, NICHT UEBER DIE FARBE. Ein erster Wurf
+ * nahm jeden SPRT mit einem der drei Zustandstoene - und traf damit auch Rahmen und
+ * Panels des Kartenschirms (die liegen frueher in der Op-Liste, also OBEN). Ergebnis:
+ * 4 von 96 gemeldeten Hervorhebungen bei voellig unveraenderter Karte. Nur Seite MAP4
+ * traegt Kartenkacheln; TEX4/ICON8/PHOTO8 sind Rahmenwerk. */
+#define ROT_SPRT_R 192
+#define ROT_SPRT_G 24
+#define ROT_SPRT_B 24
+
+static int ist_raumflaeche(const re15_inv_op_t *o)
+{
+    if (o->w < 4 || o->h < 4) return 0;          /* Marken sind klein */
+    if (o->kind == RE15_INV_OP_FILL) return 1;
+    return o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_MAP4;
+}
+
+static int ist_rot(const re15_inv_op_t *o)
+{
+    if (!ist_raumflaeche(o)) return 0;
+    if (o->kind == RE15_INV_OP_FILL)
+        return o->r == ROT_R && o->g == ROT_G && o->b == ROT_B;
+    return o->r == ROT_SPRT_R && o->g == ROT_SPRT_G && o->b == ROT_SPRT_B;
+}
+
 /* Welche Op gewinnt an (x,y)? Die mit dem KLEINSTEN Index (Rasterung von hinten). */
 static int oben_an(const re15_inv_op_t *ops, int n, int x, int y)
 {
     int i;
     for (i = 0; i < n; i++) {
-        if (ops[i].kind != RE15_INV_OP_FILL) continue;
+        if (!ist_raumflaeche(&ops[i])) continue;
         /* ⛔ KLEINE MARKEN ZAEHLEN NICHT. Tuerbalken (5x2) und Treppensprossen
          * gehoeren per Konstruktion nach OBEN; sie verdecken den Raum nicht, auch
          * wenn sie zufaellig auf seinem Mittelpunkt liegen. Ein erster Wurf zaehlte
          * sie mit und meldete ROOM10A0 faelschlich als nicht hervorgehoben. */
-        if (ops[i].w < 4 || ops[i].h < 4) continue;
         if (x < ops[i].x || x >= ops[i].x + ops[i].w) continue;
         if (y < ops[i].y || y >= ops[i].y + ops[i].h) continue;
         return i;
@@ -126,7 +154,10 @@ static int schau(unsigned rid, int32_t px, int32_t pz, int band,
     re15_map_visited_mark_at(rid, px, pz);
     re15_map_zone_update(rid, px, pz);
     zn = re15_map_zone_current();
-    if (!zn || !zn->synth) return 0;
+    /* ⛔ NICHT `zn->synth` FRAGEN, SONDERN "hat die Zone ueberhaupt ein Rechteck".
+     * Eine Zone mit gemaltem ORIGINAL-Rechteck traegt KEINE Schema-Zeichnung; mit der
+     * alten Abfrage fiel sie aus der Messung - gemessen 2026-09-04: 0 von 96 Raeumen. */
+    if (!zn || (!zn->synth && zn->rect == 255)) return 0;
     re15_inv_screen_open();
     g_inv_screen.substate = 1;
     g_inv_screen.item_state = 1;
@@ -237,7 +268,7 @@ int main(void)
             re15_map_visited_mark_at(rid, px, pz);
             re15_map_zone_update(rid, px, pz);
             zn = re15_map_zone_current();
-            if (!zn || !zn->synth) continue;
+            if (!zn || (!zn->synth && zn->rect == 255)) continue;
 
             re15_inv_screen_open();
             g_inv_screen.substate = 1;
@@ -248,9 +279,7 @@ int main(void)
             geprueft++;
             /* Wie viele SICHTBARE rote Flaechenpixel gibt es? */
             for (k = 0; k < nops; k++) {
-                if (ops[k].kind != RE15_INV_OP_FILL) continue;
-                if (ops[k].r != ROT_R || ops[k].g != ROT_G || ops[k].b != ROT_B) continue;
-                if (ops[k].w < 4 || ops[k].h < 4) continue;   /* Marken sind klein */
+                if (!ist_rot(&ops[k])) continue;
                 /* Ist wenigstens ihr Mittelpunkt oben auf? */
                 {
                     int mx = ops[k].x + ops[k].w / 2;
@@ -283,9 +312,7 @@ int main(void)
                      * der ECHTE Fehler - Marker im FALSCHEN Raum - steht darunter als
                      * eigener, scharfer Riegel. */
                     for (q = 0; q < nops; q++) {
-                        if (ops[q].kind != RE15_INV_OP_FILL) continue;
-                        if (ops[q].r != ROT_R || ops[q].g != ROT_G ||
-                            ops[q].b != ROT_B) continue;
+                        if (!ist_rot(&ops[q])) continue;
                         if (mmx >= ops[q].x - 1 && mmx < ops[q].x + ops[q].w + 1 &&
                             mmy >= ops[q].y - 1 && mmy < ops[q].y + ops[q].h + 1) {
                             drin = 1; break;
@@ -508,7 +535,7 @@ int main(void)
                     re15_map_visited_mark_at(rid, a->x, a->z);
                     re15_map_zone_update(rid, a->x, a->z);
                     zn = re15_map_zone_current();
-                    if (!zn || !zn->synth) continue;
+                    if (!zn || (!zn->synth && zn->rect == 255)) continue;
                     re15_inv_screen_open();
                     g_inv_screen.substate = 1;
                     g_inv_screen.item_state = 1;

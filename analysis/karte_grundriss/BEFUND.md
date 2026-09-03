@@ -1978,11 +1978,14 @@ Karte wird dadurch strukturell besser — die Handarbeit ist stimmig:
 
 ### ⛔ Was es blockiert
 
-**Mit `RE15_KUNST=1` zeichnet der Port die gemalten Kacheln GAR NICHT.** Der Dump der
-Op-Liste für ROOM1130 (Blatt 4, dort zu 100 % Original) enthält **keine einzige
-Raumfläche** — weder `FILL` noch `SPRT`. Die Rechteck-Schleife überspringt sie also,
-das heißt `re15_map_rect_state()` meldet sie weder als besucht noch als aktuell. **Wo
-das hängt, habe ich nicht gefunden.**
+⛔ **KORREKTUR AN MIR SELBST (dieselbe Sitzung).** Hier stand, der Port zeichne die
+gemalten Kacheln gar nicht — der Op-Dump für ROOM1130 habe keine einzige Raumfläche
+enthalten. Das war ein **Messfehler**: mein Patch, der den Dump auch `SPRT`-Ops ausgeben
+lässt, war wegen einer fehlgeschlagenen Zusicherung nie angewendet worden. Der Dump zeigte
+weiterhin **nur `FILL`** — und die gemalten Rechtecke sind nun einmal keine `FILL`s. Die
+Kacheln wurden die ganze Zeit gezeichnet. Der Fehler ist die Klasse aus
+[[reai-v2-schiene-abdeckung]]: ein leeres Ergebnis ist nur dann ein Befund, wenn die
+Quelle das Gesuchte überhaupt zeigen kann.
 
 Zwei Dinge, die dabei zu klären sind:
 
@@ -2020,3 +2023,49 @@ Original-Rechteck benutzen.
 Türsymbole und Treppen sind davon unabhängig **fertig**: der RE1.5-Nischen-Code ist tot
 (`(void)SYM;`), gezeichnet wird der gelbe RE2-Balken, und Audit [D1]/[I] melden je 0
 fehlende.
+
+
+## §33 Original-Kartenmaterial: es funktioniert — und kostet die Marker-Genauigkeit
+
+Nachdem der Messfehler aus §32 behoben war (Kacheln über die **Textur-Seite** `MAP4`
+erkennen, nicht über die Farbe — Rahmen und Panels tragen dieselben Töne), ließ sich der
+Zustand endlich messen.
+
+### Die Zahlen, nebeneinander
+
+| | Grundriss-Lösung (ausgeliefert) | Original-Kartenmaterial |
+|---|---|---|
+| Räume mit Zone überhaupt | **96 von 96** | 67 von 96 |
+| davon sichtbar rot | **96** | 50 von 67 |
+| Marker im eigenen Rechteck | 95/96 | **50/50** |
+| Marker im fremden Raum | 0 | **0** |
+| Übergänge, Median | **2 px** | 11 px |
+| innerhalb 2 px | **66 %** | **0 %** |
+| innerhalb 8 px | **95 %** | 40 % |
+| schlimmster Sprung | **21 px** | **20 474 px** |
+| Audit [F]/[K]/[M]/[N] | 0 / 0 / 0 / 0 | **0 / 0 / 0 / 0** |
+| Audit [B1] ohne Zeichnung | 0 | 67 |
+
+### Was das heißt
+
+**Die Kunst gewinnt beim Aussehen, die Grundrisse beim Verhalten.** Auf der Original-Kunst
+gibt es keine Überlappungen und keine Lücken — sie ist Handarbeit und in sich stimmig.
+Aber:
+
+* **29 von 96 Räumen erscheinen gar nicht.** Das Original malt sie nicht; der Prototyp hat
+  für sie kein Rechteck. Auf der Karte bleiben sie leer — so wie im Original.
+* **Der Marker springt.** Median 11 px statt 2 px, und der schlimmste Fall liegt bei
+  **20 474 px**: die gemalten Rechtecke sind **nicht maßstabsgetreu** zur Kollision
+  (§22 — ROOM1100 misst echt 41×47 px, sein Rechteck 24×24). Wo Rechteck und Raum stark
+  auseinanderliegen, explodiert die Projektion.
+* Mischen ist keine Lösung: Löser-Kästen und gemalte Kacheln stehen in **verschiedenen**
+  Koordinatensystemen (§26), überlappen einander, und die Kacheln liegen oben.
+
+### Der nächste Schritt, wenn die Kunst bleiben soll
+
+Die Marker-Abbildung darf dann nicht mehr die Zonen-Bbox linear auf das Rechteck legen,
+sondern muss die **ausgelieferte Maßstabszeile** @0x800768b0 benutzen, wo es sie gibt
+(38 Räume), und für den Rest die aus der Türkette hergeleitete (§30, 82 von 96, Median
+7 px). Genau dafür ist `tools/gen_marker_zeilen.py` gebaut — es ist bisher nur nirgends
+angeschlossen (`--schreiben` steht im Kopf und ist nicht umgesetzt). **Das ist die
+Verbindung, die noch fehlt.**
