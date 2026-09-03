@@ -1,3 +1,19 @@
 {
- "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl."
+ "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl.",
+ "ROOM1140": {
+  "0": {
+   "objekte": [
+    {
+     "name": "Konferenztisch",
+     "png": "pri/1140/01.png",
+     "x": 0,
+     "y": 122,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0
+    }
+   ],
+   "_warum": "Freistellung des Nutzers (pri/1140/01.png). Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung mit dem Hintergrund (zum Vergleich der zweitbeste Cut: 81.4 %). Kein 'fuss' noetig — die Silhouette laeuft unten aus dem Bild, der Bodenkontakt ist also die Vorderkante des Tischs selbst."
+  }
+ }
 }
