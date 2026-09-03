@@ -69,6 +69,91 @@ def eintrag(v):
     return e
 
 
+def polygon_region(spec, loch=None):
+    """Polygonzug(e) -> Region. "x,y x,y ..." je Teil, Teile mit ";" getrennt."""
+    from PIL import Image as _I, ImageDraw as _D
+    def zeichne(text, wert):
+        bild = _I.new("1", (320, 240), 0)
+        d = _D.Draw(bild)
+        for teil in text.split(";"):
+            teil = teil.strip()
+            if not teil:
+                continue
+            pts = []
+            for pp in teil.replace(",", " ").split():
+                pts.append(float(pp))
+            if len(pts) < 6:
+                continue
+            d.polygon([(pts[i], pts[i + 1]) for i in range(0, len(pts) - 1, 2)], fill=1)
+        return np.array(bild, bool)
+    r = zeichne(spec, 1)
+    if loch:
+        r &= ~zeichne(loch, 1)
+    return r
+
+
+def zauberstab_region(bg, spec):
+    """Flutfuellung von Saatpunkten aus — die Grenze ist die echte Farbkante im Bild."""
+    from scipy import ndimage
+    a = bg.astype(np.int32)
+    saat = []
+    for teil in str(spec.get("saat", "")).split(";"):
+        teil = teil.strip()
+        if not teil:
+            continue
+        v = [int(x) for x in teil.replace(",", " ").split()]
+        saat.append((v[0], v[1]))
+    if not saat:
+        return np.zeros((240, 320), bool)
+    tol = float(spec.get("toleranz", 30))
+    erlaubt = np.ones((240, 320), bool)
+    if spec.get("box"):
+        erlaubt[:] = False
+        for k in anwenden.kaesten(spec["box"]):
+            erlaubt[k[1]:k[3], k[0]:k[2]] = True
+    if spec.get("minus"):
+        for k in anwenden.kaesten(spec["minus"]):
+            erlaubt[k[1]:k[3], k[0]:k[2]] = False
+    # Referenzfarbe = Mittel der Saatpunkte (mit 1 Punkt Umfeld)
+    ref = []
+    for (x, y) in saat:
+        ref.append(a[max(0, y - 1):y + 2, max(0, x - 1):x + 2].reshape(-1, 3))
+    ref = np.concatenate(ref, 0).mean(0)
+    # ⛔ FARBMASS: der reine Kanalabstand trennt hier NICHTS. Gemessen in ROOM1140
+    # Cut 3: Pult R=14.8 G=7.7 B=3.9, Teppich R=15.8 G=24.6 B=21.7 — die Helligkeiten
+    # liegen uebereinander, der Unterschied steckt im FARBTON: Pult R-B=+11 / G-R=-7,
+    # Teppich R-B=-6 / G-R=+9. In dieser Ebene ist der Abstand 23, also gut trennbar,
+    # waehrend der Kanalabstand die Flut ueber den ganzen Kasten laufen liess.
+    # "metrik": "ton" (Standard) misst in (R-B, G-R) plus 1/3 Helligkeit;
+    # "kanal" ist das alte Verhalten fuer Faelle mit klarem Helligkeitsunterschied.
+    if str(spec.get("metrik", "ton")) == "ton":
+        def merkmal(v):
+            r_, g_, b_ = v[..., 0], v[..., 1], v[..., 2]
+            return np.stack([r_ - b_, g_ - r_, (r_ + g_ + b_) / 3.0 / 3.0], -1)
+        d = np.abs(merkmal(a.astype(np.float64)) - merkmal(ref.reshape(1, 1, 3))).max(2)
+    else:
+        d = np.abs(a - ref).max(2)
+    aehnlich = (d <= tol) & erlaubt
+    lab, n = ndimage.label(aehnlich, np.ones((3, 3)))
+    r = np.zeros((240, 320), bool)
+    for (x, y) in saat:
+        if 0 <= y < 240 and 0 <= x < 320 and lab[y, x]:
+            r |= (lab == lab[y, x])
+    k = int(spec.get("schliessen", 2))
+    if k > 0:
+        r = ndimage.binary_closing(r, np.ones((2 * k + 1, 2 * k + 1)))
+    if spec.get("loecher", 1):
+        r = ndimage.binary_fill_holes(r)
+    m = int(spec.get("mindest", 40))
+    if m > 0:
+        lab2, n2 = ndimage.label(r, np.ones((3, 3)))
+        for i in range(1, n2 + 1):
+            sel = lab2 == i
+            if sel.sum() < m:
+                r[sel] = False
+    return r
+
+
 def kontrast_region(bg, spec):
     """Silhouette eines DUENNEN Gegenstands aus dem Bild selbst schneiden.
 
@@ -156,6 +241,24 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                          100 * info["uebereinstimmung"]))
             if r is None:
                 continue
+        elif "polygon" in o:
+            # ⛔ VON HAND GEZOGEN — dasselbe wie das Lasso des Nutzers, nur in
+            # Koordinaten statt mit der Maus. Fuer alles, was eine klare Kante hat
+            # (Tische, Stuehle, Schraenke, Tafeln) ist das der genaueste und
+            # schnellste Weg: Superpixel sind zu flaechig, der Kontrastschnitt
+            # verliert Dunkles vor Dunklem, Kaesten treffen keine Schraegen.
+            # "polygon": "x,y x,y x,y ..."  (mehrere Teile mit ";" trennen)
+            # "loch":    dieselbe Schreibweise, wird abgezogen (offene Gestelle)
+            r = polygon_region(o["polygon"], o.get("loch"))
+        elif "zauberstab" in o:
+            # ⛔ ZAUBERSTAB (Nutzer 2026-09-04: "das ist nicht genau genug"). Von Hand
+            # getippte Polygone treffen die Kante nur auf ±4 Bildpunkte genau — bei
+            # einem 6 Punkte breiten Tischrand ist das zu grob. Der Zauberstab arbeitet
+            # wie in GIMP: von einem Saatpunkt INNERHALB des Gegenstands wird geflutet,
+            # solange die Farbe zur Saat passt; die Grenze ist damit die ECHTE
+            # Objektkante im Bild, nicht meine Schaetzung.
+            # {"saat": "x,y;x,y", "toleranz": 30, "box": "x0,y0,x1,y1", "fuellen": 1}
+            r = zauberstab_region(load_bg(ppm, rid, cut), o["zauberstab"])
         elif "kontrast" in o:
             r = kontrast_region(load_bg(ppm, rid, cut), o["kontrast"])
         elif "kaesten" in o:

@@ -5,56 +5,23 @@
    "objekte": [
     {
      "name": "Konferenztisch",
-     "segments": 90,
-     "ids": [
-      47,
-      49,
-      50,
-      52,
-      53,
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      64,
-      65,
-      66,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      76,
-      77
-     ]
+     "polygon": "0,181 166,119 291,159 287,175 280,190 275,207 268,225 264,239 0,239",
+     "oben": 0,
+     "grow": 2
     }
    ],
-   "_warum": "Stuehle 44/54 und die dunkle Flaeche rechts 63/75 entfernt — dort lag Teppich mit in der Flaeche"
+   "_warum": "Von Hand nachgezogen. Die Stuetzpunkte sind an der gelben Tischkante GEMESSEN (Oberkante links y=-0.369x+180.5, Ecke bei x=166/y=119, rechte Kante je Zeile), nicht geschaetzt."
   },
   "1": {
    "objekte": [
     {
      "name": "Konferenztisch",
-     "segments": 90,
-     "ids": [
-      33,
-      43,
-      45,
-      58,
-      63,
-      64,
-      74,
-      75
-     ]
+     "polygon": "0,78 92,90 85,102 71,121 54,141 42,161 27,181 12,201 0,210",
+     "oben": 0,
+     "grow": 3
     }
    ],
-   "_warum": "Stuhlreihe 46/51/56/62/72 entfernt: 51 und 62 ragten bis x=120 in den Teppich, dort lag der schwarze Kasten ueber Leons Huefte (Screenshot 220234). Stuhl und Teppich sind hier fast gleich dunkel — die Kante ist nicht sauber zu fassen, also bleibt der Stuhl unmarkiert"
+   "_warum": "Von Hand nachgezogen; Stuetzpunkte an der gelben Tischkante gemessen."
   },
   "2": {
    "objekte": [
@@ -86,9 +53,33 @@
    "objekte": [
     {
      "name": "Rednerpult",
-     "kaesten": "148,119,209,197",
+     "zauberstab": {
+      "saat": "175,150;160,175;195,175;152,150;203,150;175,128;165,190;185,190;170,122;190,124",
+      "toleranz": 13,
+      "box": "140,116,215,203"
+     },
      "oben": 0,
-     "grow": 0
+     "grow": 1
+    },
+    {
+     "name": "Schrank links",
+     "zauberstab": {
+      "saat": "20,140;40,148;8,158;30,155",
+      "toleranz": 13,
+      "box": "0,120,56,176"
+     },
+     "oben": 0,
+     "grow": 1
+    },
+    {
+     "name": "Schrank rechts",
+     "zauberstab": {
+      "saat": "258,120;272,114;250,128;282,112",
+      "toleranz": 13,
+      "box": "243,100,296,152"
+     },
+     "oben": 0,
+     "grow": 1
     },
     {
      "name": "Mikrofone",
@@ -118,31 +109,6 @@
      "y": 63,
      "massstab": 3,
      "fuss": 182,
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Gestell links",
-     "kontrast": {
-      "box": "5,160,47,194",
-      "rand": 6,
-      "schwelle": 22,
-      "mindest": 14
-     },
-     "oben": 0,
-     "grow": 1
-    },
-    {
-     "name": "Schrank links",
-     "kaesten": "0,127,50,171",
-     "unterkante": "0,152,50,170",
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Schrank rechts",
-     "kaesten": "245,103,293,150",
-     "unterkante": "245,149,293,141",
      "oben": 0,
      "grow": 0
     }
@@ -237,22 +203,12 @@
    "objekte": [
     {
      "name": "Konferenztisch",
-     "segments": 90,
-     "ids": [
-      35,
-      37,
-      38,
-      47,
-      48,
-      49,
-      57,
-      59,
-      73
-     ],
-     "minus": "96,0,170,118"
+     "polygon": "0,88 122,106 105,122 88,132 73,142 57,152 40,162 15,172 0,176",
+     "oben": 0,
+     "grow": 3
     }
    ],
-   "_warum": "Fensterwand hinter dem fernen Tischende bleibt abgezogen"
+   "_warum": "Von Hand nachgezogen; Stuetzpunkte an der gelben Tischkante gemessen."
   },
   "9": {
    "objekte": [
