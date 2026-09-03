@@ -1400,3 +1400,55 @@ bekommen eine ergänzte Zeichnung. Das ist eine Nutzer-Entscheidung, keine RE-Fr
 
 Das ROT für den aktuellen Raum (RE2-Übernahme, vom Nutzer als gut bestätigt) hängt an
 derselben Zuordnung: es färbt das gemalte Rechteck des Raums, in dem man steht.
+
+## §23 Ergänzen auf 3F: es gibt nichts zu ergänzen
+
+Nutzer: *„ergänze sie wenn das gutaussehend geht."* Gemessen — und die Antwort ist, dass
+3F auf der Original-Kunst bereits **vollständig** ist. Meine frühere Aussage, drei Räume
+fehlten, war ungenau:
+
+| Zone auf Blatt 4 | Art | gemaltes Rechteck |
+|---|---|---|
+| ROOM1120 z0 | eigene | Nr5 40×40 |
+| ROOM1130 z0 | eigene | Nr4 32×80 |
+| ROOM1140 z0 | eigene | Nr6 56×56 |
+| ROOM1150 z0 | eigene | Nr2 32×40 *(geeicht)* |
+| ROOM1160 z0 | eigene | **keines** |
+| ROOM1060 z0 | **Gast** (Zuhause Blatt 2) | Nr1 24×24 |
+| ROOM1080 z0 | **Gast** (Zuhause Blatt 2) | — |
+| ROOM1170 z1 | **Gast** (Zuhause Blatt 5) | — |
+
+ROOM1080 und ROOM1170 sind Gast-Zeilen; ihr Rechteck steht auf ihrem eigenen Blatt. Auf
+3F brauchen sie keins. Bleibt **ROOM1160** — und der lässt sich nicht ergänzen:
+
+```
+ROOM1160 Tueren:  (-300,-16500) -> ROOM1180      (Blatt 0/1, also B1/B2)
+                  (-300,-16500) -> ROOM1230      (Blatt 1)
+```
+
+⛔ **ROOM1160 hat auf Blatt 4 keinen einzigen Nachbarn.** Beide Türen führen vom Stockwerk
+weg. Es gibt also nichts, woran ein ergänztes Rechteck anschließen könnte — es stünde frei
+in der Fläche. Genau deshalb malt das Original dort nichts, und das ist die bessere
+Darstellung. Die Original-Seitenzuordnung bestätigt, dass der Raum trotzdem zu 3F gehört
+(`FUN_8004b568`: Räume 18–22 → Seite 4, ROOM1160 = Index 22).
+
+**Ergebnis für 3F: 4 von 4 verortbaren eigenen Zonen sitzen auf der Original-Kunst.**
+Nichts zu ergänzen.
+
+### Game-weit ist die Lage anders
+
+Zweistufige Zuordnung (geeichte Räume direkt projiziert, Stubs über den Türgraphen):
+**58 von 103 Zonen** lassen sich auf der Original-Kunst verorten, 45 nicht; 54 gemalte
+Rechtecke bleiben unbeansprucht. Ein Teil davon ist mein Zuordner, nicht die Datenlage —
+die Zahl ist eine **Untergrenze**. Aber ein struktureller Fall bleibt:
+
+| Blatt | geeichte Anker |
+|---|---|
+| **3** | **0** — kein Anker, nichts zu propagieren |
+| 4, 6, 10, 11, 12 | je 1 |
+| 7 | 10 |
+
+Auf Blatt 3 gibt es keinen einzigen geeichten Raum; dort kann die Kette gar nicht starten.
+Eine Karte, die auf einem Blatt Original-Kunst zeigt und auf dem nächsten meine
+Zeichnungen, sieht uneinheitlich aus — die Bedingung „wenn das gutaussehend geht" ist
+game-weit derzeit **nicht** erfüllt, auf 3F dagegen schon.
