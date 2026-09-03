@@ -1,3 +1,37 @@
+# RE1.5 Port — v0.4.9 (Early Preview)
+
+**Du hast recht, und deine Freistellungen sind ab jetzt der Weg.**
+
+Nein, du siehst das nicht falsch: mehr als das brauche ich nicht. Das Maskenformat IST
+eine Freistellung — der Atlas hat einen Palettenplatz, der gar nicht gezeichnet wird.
+Dein Alphakanal ist also 1:1 der Inhalt. Beide Fahnen kommen in dieser Fassung direkt
+aus deinen beiden PNGs.
+
+**Die Lage muss ich dich nicht fragen**, die messe ich: die freigestellten Punkte sind
+Hintergrundpunkte, also gibt es genau eine Stelle im Bild, an der sie passen. Gefunden:
+US-Fahne bei x=120/y=67 im Maßstab 3 (86,7 % Übereinstimmung), blaue Fahne bei x=203/y=63
+(99,6 %).
+
+**Warum meine Automatik es nicht konnte** — drei Verfahren, drei Sackgassen, alle drei
+hast du als Fehler gesehen:
+* Superpixel sind flächig. Eine 20 Punkte breite Fahne bekommt einen 55×117-Block samt
+  Fenster und Teppich. (Das war die „überdeckende Transparenz".)
+* Der Bildschnitt nach Kontrast verliert Dunkles vor Dunklem — die untere Hälfte der
+  blauen Fahne. (Das war „Flagge rechts noch nicht".)
+* Kästen treffen keine fransigen Formen.
+
+Ein Mensch mit dem Lasso hat keins dieser Probleme.
+
+**Damit ist der Ablauf ab jetzt:** du stellst frei, was verdecken soll — ich messe die
+Lage, rechne die Tiefe aus dem Bodenkontakt und baue Rechtecke plus Atlas daraus. Wenn
+du magst, sammle die Freistellungen einfach im `fehler`-Ordner; ein Bild je Gegenstand,
+Dateiname egal.
+
+Pult, die beiden Holzschränke und das Metallgestell sind weiter als Kasten bzw.
+Bildschnitt drin — bei denen stimmt es. Die Pflanzen bleiben unmarkiert.
+
+---
+
 # RE1.5 Port — v0.4.8 (Early Preview)
 
 Deine drei Punkte aus v0.4.7:
