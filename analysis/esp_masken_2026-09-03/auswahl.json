@@ -115,19 +115,38 @@
     },
     {
      "name": "Blaue Fahne",
-     "kontrast": {
-      "box": "202,92,236,190",
-      "rand": 5,
-      "schwelle": 26,
-      "mindest": 25
-     },
+     "kaesten": "211,89,231,160;212,158,220,172;202,166,230,186",
      "fuss": 182,
      "oben": 0,
-     "grow": 1,
-     "minus": "214,94,252,107"
+     "grow": 0
+    },
+    {
+     "name": "Gestell links",
+     "kontrast": {
+      "box": "5,160,47,194",
+      "rand": 6,
+      "schwelle": 22,
+      "mindest": 14
+     },
+     "oben": 0,
+     "grow": 1
+    },
+    {
+     "name": "Schrank links",
+     "kaesten": "0,127,50,171",
+     "unterkante": "0,152,50,170",
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Schrank rechts",
+     "kaesten": "245,103,293,150",
+     "unterkante": "245,149,293,141",
+     "oben": 0,
+     "grow": 0
     }
    ],
-   "_warum": "Dritter Anlauf nach dem Nutzerbefund 233104 ('immer noch sehr viel ueberdeckende Transparenz, bei beiden Fahnen und beim Pult'). Superpixel sind FLAECHIG: eine Flaeche von rund 700 Bildpunkten kann eine 20 Punkte breite Fahne nicht umschliessen, ohne Fenster, Sockelwand und Teppich mitzunehmen — und die werden im Spiel ueber alles gemalt, was dahinter steht. Feiner segmentieren half nicht (bei 900 Flaechen zerfaellt SLIC hier in ein 4x4-Raster). Die Fahnen und die Mikrofone werden jetzt per KONTRAST zum oertlichen Hintergrund geschnitten, das Pult als Kasten angegeben."
+   "_warum": "Nutzer 23:50: 'Pult und Flagge links sind jetzt super. Flagge rechts noch nicht, Tisch unten rechts und oben rechts noch nicht.' Die blaue Fahne ist in ihrer unteren Haelfte fast schwarz vor dunklem Teppich — der Kontrastschnitt verlor sie dort; sie haengt gerade und ist deshalb als Kaesten angegeben (Tuch, Stange, Teller). Die beiden Holzschraenke mit den Pflanzen links und rechts sowie das Metallgestell links waren bisher gar nicht markiert. Die beiden Pflanzen auf den Schraenken bleiben unmarkiert: ihr Laub ist fransig, jeder Kasten und jeder Kontrastschnitt nahm dort Wand mit — der Nutzen ist zu klein fuer das Risiko."
   },
   "4": {
    "objekte": [
