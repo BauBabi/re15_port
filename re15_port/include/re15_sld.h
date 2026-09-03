@@ -91,6 +91,11 @@ uint32_t re15_sld_table_file_offset(int stage);
 int re15_sld_used_len(const uint8_t *stage_bin, int stage_bin_size, int stage,
                       int room_index, int cut, uint16_t *out_len);
 
+/* Dieselbe Auskunft aus der ERZEUGTEN Tabelle (gen/sld_lentab.inc) statt aus der
+ * Overlay-Datei — fuer Ziele, denen ein 137-KB-CD-Zugriff fuer 2 Byte zu teuer ist
+ * (PSX). Inhaltlich identisch; unit_sld_atlas prueft das gegen die Originaldateien. */
+int re15_sld_used_len_tab(int stage, int room_index, int cut, uint16_t *out_len);
+
 /* 1:1-Port von FUN_800c47e8 (BIN/DEBUG.BIN +0x47E8, geladen nach 0x800C0000 —
  * deshalb steht der Code NICHT in ghidra1_V2.txt, dessen Text bei 0x800BF000 endet).
  * src/src_size = der GANZE Chunk (fuer die Bereichswachen), src_pos = erstes

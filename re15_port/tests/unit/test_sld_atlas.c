@@ -78,6 +78,23 @@ int main(void)
 
             for (int cut = 0; cut < chunks; cut++) {
                 uint16_t L = 0;
+                /* DRIFTSCHUTZ: die erzeugte Tabelle (gen/sld_lentab.inc) ist eine KOPIE
+                 * der Overlay-Daten, damit die PSX nicht 137 KB fuer 2 Byte von CD holen
+                 * muss. Eine Kopie von Spieldaten darf nie unbemerkt auseinanderlaufen —
+                 * hier wird sie gegen die Originaldatei geprueft. */
+                {
+                    uint16_t Lt = 0;
+                    if (re15_sld_used_len_tab(stage, room_index, cut, &Lt) == RE15_SLD_OK) {
+                        uint16_t Lf = 0;
+                        if (re15_sld_used_len(sb, (int)sbsz, stage, room_index, cut, &Lf)
+                                == RE15_SLD_OK && Lt != Lf) {
+                            printf("  TABELLENDRIFT STAGE%d ROOM%X%02X cut%d: "
+                                   "erzeugt 0x%04X, Datei 0x%04X\n",
+                                   stage, stage, rr, cut, Lt, Lf);
+                            fails++;
+                        }
+                    }
+                }
                 if (re15_sld_used_len(sb, (int)sbsz, stage, room_index, cut, &L)
                         != RE15_SLD_OK) {
                     printf("  STAGE%d ROOM%X%02X cut%d: Tabellenzeile unlesbar\n",

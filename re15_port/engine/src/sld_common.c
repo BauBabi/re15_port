@@ -19,6 +19,14 @@
  */
 #include "re15_sld.h"
 
+/* Cut-Laengentabelle als erzeugte Kopie der STAGE-Overlays. WARUM eine Kopie: der
+ * Trailer braucht nur 2 Byte je (Raum, Cut), die stehen aber in einer bis zu 137 KB
+ * grossen Overlay-Datei. Auf dem PC ist das egal (dort wird die Datei gelesen), auf
+ * der PSX waere ein 137-KB-CD-Zugriff je Stage-Wechsel fuer 2 Byte nicht vertretbar.
+ * Die Kopie ist 120 Zeilen = gut 4 KB Nutzdaten und durch unit_sld_atlas gegen Drift
+ * abgesichert (der Test vergleicht sie gegen die Originaldateien). */
+#include "gen/sld_lentab.inc"
+
 /* Datei-Offset der Cut-Laengentabelle je Stage. Disasm-belegt (re15_sld.h Kopf):
  * das Stage-Overlay schreibt den Tabellenzeiger nach DAT_800b52c8, Overlay-
  * Ladebasis 0x80100000 ohne 0x800-Header. */
@@ -181,4 +189,18 @@ int re15_sld_atlas_from_chunk(const uint8_t *chunk, int chunk_size,
 
     *out_len = (int)unpacked;
     return RE15_SLD_OK;
+}
+
+int re15_sld_used_len_tab(int stage, int room_index, int cut, uint16_t *out_len)
+{
+    int i;
+    if (!out_len || cut < 0 || cut >= RE15_SLD_TBL_COLS) return RE15_SLD_E_ARG;
+    for (i = 0; i < RE15_SLD_LENTAB_COUNT; i++) {
+        if (re15_sld_lentab[i].stage == (unsigned char)stage &&
+            re15_sld_lentab[i].room  == (unsigned char)room_index) {
+            *out_len = re15_sld_lentab[i].len[cut];
+            return RE15_SLD_OK;
+        }
+    }
+    return RE15_SLD_E_NOTABLE;
 }

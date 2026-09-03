@@ -175,3 +175,64 @@ def region_by_blocks(idx, atlas_rgb_img, bg_rgb_img, **kw):
     ok = (by>=0)&(by<240)&(bx>=0)&(bx<320)
     screen[by[ok], bx[ok]] = True
     return screen, (have.sum()/float(opaque.sum())), len(blocks)
+
+
+def region_grow(A, opaque, B, blocks, block=16, tol=0.55, max_iter=64):
+    """Die sicheren Bloecke als SAAT nehmen und entlang der Silhouette wachsen lassen.
+
+    WARUM: die Blockabstimmung braucht ein VOLLSTAENDIG undurchsichtiges 16x16-Fenster.
+    Duenne Strukturen — Gelaender, Rohre, Kabel, Kanten — haben das nie, und genau die
+    sind Vordergrund. Gemessen deckte die reine Blockabstimmung nur rund die Haelfte
+    der undurchsichtigen Atlas-Pixel ab; die fehlende Haelfte sitzt bevorzugt am unteren,
+    kontrastarmen Rand der Objekte und verschob damit auch den geschaetzten Bodenkontakt
+    (= die Tiefe) nach hinten.
+
+    Der teure und fehleranfaellige Schritt ist das FINDEN einer Verschiebung. Ist sie
+    einmal bestaetigt, ist das Pruefen eines einzelnen Pixels billig und sicher. Also:
+    keine neuen Hypothesen, nur Verifikation gegen die schon belegten Verschiebungen —
+    und nur in ZUSAMMENHANG mit bereits zugeordneten Pixeln, damit kein zufaellig
+    passendes Pixel irgendwo im Bild angezogen wird.
+
+    -> (Zuordnungskarten je Verschiebung als dict {(dx,dy): boolmaske})
+    """
+    from scipy import ndimage
+    A = A.astype(np.float64); B = B.astype(np.float64)
+    ah, aw = A.shape; bh, bw = B.shape
+
+    # Saat je Verschiebung aus den angenommenen Bloecken
+    seeds = {}
+    for ax, ay, dx, dy, v in blocks:
+        m = seeds.setdefault((dx, dy), np.zeros((ah, aw), bool))
+        m[ay:ay+block, ax:ax+block] = True
+    if not seeds: return {}
+
+    taken = np.zeros((ah, aw), bool)
+    out = {}
+    # groesste Saat zuerst — sie ist am besten belegt
+    for (dx, dy) in sorted(seeds, key=lambda k: -int(seeds[k].sum())):
+        cur = seeds[(dx, dy)] & opaque & ~taken
+        if not cur.any(): continue
+        # Differenzkarte fuer DIESE Verschiebung, in z-Werten der Saatstatistik
+        ys, xs = np.nonzero(cur)
+        by = ys + dy; bx = xs + dx
+        ok = (by>=0)&(by<bh)&(bx>=0)&(bx<bw)
+        if ok.sum() < 16: continue
+        av = A[ys[ok], xs[ok]]; bv = B[by[ok], bx[ok]]
+        mA, sA = av.mean(), max(av.std(), 1e-6)
+        mB, sB = bv.mean(), max(bv.std(), 1e-6)
+        yy, xx = np.mgrid[0:ah, 0:aw]
+        gy = yy + dy; gx = xx + dx
+        inb = (gy>=0)&(gy<bh)&(gx>=0)&(gx<bw)
+        diff = np.full((ah, aw), np.inf)
+        gyc = np.clip(gy, 0, bh-1); gxc = np.clip(gx, 0, bw-1)
+        diff[inb] = np.abs((A[inb]-mA)/sA - (B[gyc[inb], gxc[inb]]-mB)/sB)
+        good = opaque & ~taken & (diff < tol)
+        grown = cur.copy()
+        st = np.ones((3,3), bool)
+        for _ in range(max_iter):
+            nb = ndimage.binary_dilation(grown, structure=st) & good & ~grown
+            if not nb.any(): break
+            grown |= nb
+        out[(dx, dy)] = grown
+        taken |= grown
+    return out
