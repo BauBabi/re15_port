@@ -1,3 +1,53 @@
+# RE1.5 Port — v0.4.5 (Early Preview)
+
+**Deine sieben Screenshots aus dem `fehler`-Ordner — durchgemessen, und ROOM1140 komplett
+neu gezeichnet.**
+
+Du hattest recht: es waren viele. Ich habe jeden Screenshot auf den Hintergrund
+ausgerichtet (93-99 % Deckung) und Bildpunkt fuer Bildpunkt nachgerechnet, welche Maske
+mit welcher Tiefe wo lag. Dahinter steckten **zwei Fehler im Verfahren**, nicht sieben
+Einzelfehler:
+
+**1. Der Maske fehlte der Fusspunkt des Gegenstands.**
+Die Tiefe einer Maske kam bisher aus dem untersten *sichtbaren* Punkt der markierten
+Flaeche. Bei der Fahne im Sitzungssaal ist das die Unterkante des Tuchs — die duenne
+Stange darunter war nicht markiert. Ergebnis: die Fahne galt als 1,5 m weiter hinten als
+sie steht, und du wurdest davor gezeichnet statt dahinter.
+Und umgekehrt: Fensterglas, Fensterbank, Wand, Teppich und Fahne hingen als EIN Stueck
+zusammen, das bis zum Fahnenfuss hinunterreichte — also erbte der ganze Streifen die
+nahe Tiefe der Fahne. Deshalb war von dir nur noch der Kopf zu sehen.
+
+**2. Wand und Gegenstand lagen in derselben Flaeche.**
+Das Auswahlraster war zu grob. Gemessen: in einer Einstellung lagen **500 von 504**
+Maskenpunkten auf **Fensterglas**, in einer anderen **649 Punkte auf blankem Teppich**
+unter der Tischkante, dazu Wandbild und Wand hinter der Sitzbank.
+
+**Was jetzt anders ist**
+
+* Jeder Gegenstand ist ein **eigenes Objekt** mit eigener Tiefe aus seinem eigenen
+  Fusspunkt. Wo der Fusspunkt im Bild verdeckt ist (Fahnen auf Stangen, die Anschlagtafel
+  im Rollgestell), wird er ausdruecklich angegeben.
+* Schraege Kanten: ein Tisch endet im Bild diagonal — dafuer gibt es jetzt eine schraege
+  Unterkante statt rechteckiger Naeherungen.
+* **Was sich nicht sauber abgrenzen laesst, bleibt unmarkiert.** Die Stuhlreihen sind
+  farblich fast nicht vom Teppich zu unterscheiden; sie haben jetzt keine Maske mehr.
+  Lieber verschwindest du hinter einem Stuhl nicht, als dass ein Stueck Teppich ueber
+  dir liegt.
+
+**Neue Messschiene.** Das Spiel gibt jetzt auf Wunsch alle **begehbaren** Bodenpunkte
+aus (51 260 in diesem Raum, aus der echten Kollision der Engine). Damit wird die Figur
+rechnerisch auf jeden dieser Punkte gestellt und gemessen, wieviel von ihr hinter der
+Maske verschwindet. Der Anteil stark verdeckter Stehplaetze faellt in der
+Sitzungssaal-Einstellung von 51 % auf 14 %.
+
+**Worauf es weiter ankommt:** liegt irgendwo noch ein Stueck Hintergrund ueber dir, wo du
+davor stehst? Melde es bitte weiter so — mit Screenshot. Fehlende Verdeckung (du stehst
+auf statt hinter etwas) ist der harmlosere Fall und kommt danach dran.
+
+**ROOM1130 bleibt ohne Masken.**
+
+---
+
 # RE1.5 Port — v0.4.4 (Early Preview)
 
 **Deine drei Befunde aus v0.4.2 (error01/02/03) sind behoben — und die Abnahme, die sie
