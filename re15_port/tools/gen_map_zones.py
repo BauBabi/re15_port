@@ -357,6 +357,26 @@ def read_rdt(rid):
         _gesehen.add(_k)
         _eindeutig.append(_d)
     doors = _eindeutig
+
+    # ⛔ NICHT ZUSAMMENFASSEN: EIN SLOT MIT ZWEI ZIELEN BLEIBT ZWEI KANTEN.
+    # 14 Raumeintraege tragen zwei Aot_set-Records auf DEMSELBEN Slot mit identischem
+    # Trigger und Spawn, aber verschiedenem Ziel (ROOM5050 Slot 0 -> ROOM5040 /
+    # ROOM5120, ROOM3090 Slot 0 -> ROOM30C0 / ROOM30D0, ROOM1160 Slot 0 -> ROOM1180 /
+    # ROOM1230, ...). Ein Slot ist EIN AOT-Platz, der zweite Aot_set ueberschreibt den
+    # ersten - es sieht also nach EINER Tuer aus, deren Ziel das Skript umschaltet.
+    # Sie deshalb zu EINER Kante zusammenzufassen liegt nahe und wurde am 2026-09-03
+    # gebaut und GEMESSEN - mit beiden moeglichen Wahlen:
+    #
+    #   ohne Zusammenfassen          <= 4 px 104 (67 %)   Audit 2 Fehler
+    #   Variante der Engine behalten <= 4 px 103 (66 %)   Audit 4 Fehler
+    #   zuletzt geschriebene         <= 4 px  95 (62 %)   Audit 3 Fehler
+    #
+    # Beide Varianten sind SCHLECHTER. Die zusaetzliche Kante ist echte Information:
+    # ueber den Spielverlauf fuehrt die Tuer wirklich zu BEIDEN Nachbarn, und auf einer
+    # Schema-Karte des ganzen Gebaeudes sind beide Verbindungen real. Sie haelt das
+    # Blatt zusammen; ohne sie fallen Raeume auseinander (getrennte Nachbarn 1 -> 2).
+    # Zurueckgenommen - die Begruendung steht hier, damit die Idee nicht ungeprueft
+    # wiederkehrt.
     return sca, doors, stairs
 
 def zones_of(sca):
