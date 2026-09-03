@@ -864,3 +864,64 @@ reziprokem Gegen-Datensatz filtert). Für ROOM1140 → ROOM1130 meldet sie 48 px
 `map_uebergang` 13 px — dieselbe Tür, zwei Mengen. Der Sprung bleibt dort; hier ist er
 Diagnose (`RE15_SPRUNG_LISTE=1`). Eine Zahl, deren Abweichung ich nicht erklären kann,
 gehört nicht in eine Schranke.
+
+## §15 — Optische Lösungen für die letzten offenen Punkte
+
+> „Überlege dir was, was optisch passt, um die letzten offenen Probleme zu lösen."
+
+### ✅ Alle Wandlinien über alle Füllungen
+
+Je Raum wurde erst die Wandlinie und dann die Füllung ausgegeben. Die Op-Liste wird von
+hinten gerastert — früher eingetragen heißt **oben**. Damit liegt die eigene Linie zwar
+über der eigenen Füllung, die Füllung des *zuerst* gezeichneten Raums aber über der
+**Linie aller späteren**. Wo sich zwei Rechtecke überlappen (Blatt 7: 31 %, Blatt 9: 35 %)
+verschluckte die Füllung des einen die Umrandung des anderen — die beiden Räume
+verschmolzen optisch zu **einer** Fläche.
+
+Neu in vier Durchgängen, von oben nach unten:
+
+| Durchgang | Inhalt |
+|---|---|
+| 0 | Wandlinie des **aktuellen** Raums |
+| 1 | Wandlinien aller übrigen |
+| 2 | Füllung des **aktuellen** Raums |
+| 3 | Füllungen aller übrigen |
+
+Das löst die Überlappung nicht geometrisch — es macht sie **lesbar**, und darum geht es
+auf einer Schema-Karte.
+
+### ⛔ Verworfen: die Tür zusätzlich auf dem eigenen Blatt ihres Ortes
+
+12 von 244 Türen zeigen beim Davorstehen kein Symbol, weil die Marke auf dem Blatt des
+**Bandes** liegt, der Spieler aber das Blatt seines **Ortes** sieht (ROOM1170 →
+ROOM1130/1140: Marke auf Blatt 4, Spieler auf Blatt 5). Die Tür zusätzlich auf dem eigenen
+Blatt zu zeichnen brachte **+2** sichtbare Symbole (232 → 234) — und verletzte eine
+ausdrückliche, aus einem Nutzer-Report abgeleitete Anforderung: der Pin
+`unit_map_mark_band` hält fest, dass das ROOF-Blatt **keine** Tür des unteren Bereichs von
+ROOM1170 trägt. Dazu kam ein weiteres Paar Symbole übereinander.
+**Zurückgenommen** — zwei sichtbare Symbole wiegen eine gesetzte Anforderung nicht auf.
+
+### ⛔ Verworfen: das Kartenfeld auf Original-Größe
+
+Die ausgelieferte Kunst bespielt x[39..293] = **254 px** und y[44..206] = 162 px
+(Rechteck-Listen @0x800768 44 + 8·Seite); unser Feld ist mit 132×140 nur etwa **halb so
+breit**. Die Karte auf Original-Größe zu bringen liegt nahe — und macht sie **messbar
+schlechter**:
+
+| Feld | Maßstab | Überlappung | ≤ 4 px |
+|---|---|---|---|
+| 100,55,**132**,140 | 919 u/px | 10,7 % | **69 %** |
+| 120,52,**160**,142 | 846 u/px | 10,4 % | 63 % |
+| 46,50,**232**,145 | 793 u/px | 10,4 % | 58 % |
+
+Die Überlappung sinkt **nicht** — der einzige Effekt ist, dass der feinere Maßstab jede
+vorhandene Türabweichung in mehr Pixel übersetzt (und die Anordnungen sich mitverschieben:
+der Verlust ist größer als der reine Maßstabseffekt von 1,16×). Der Nutzer hat wiederholt
+**Sprünge** bemängelt, nie eine zu kleine Karte.
+`RE15_FELD=x,y,w,h` lässt es jederzeit nachmessen; die Messung steht als Kommentar an der
+Konstanten, damit die Idee nicht ungeprüft wiederkehrt.
+
+### Stand
+
+266/266 Tests grün · ≤ 4 px 101 (69 %) · 96/96 Räume sichtbar rot · 199/199 Türdurchgänge
+korrekt hervorgehoben · 232/244 Türen mit sichtbarem Symbol · Audit 2 Fehler.
