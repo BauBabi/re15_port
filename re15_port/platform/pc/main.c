@@ -4715,8 +4715,56 @@ re_title:;
                         fprintf(stderr, "[poccscan] room=%04x cut=%d masks=%d gitter x %d..%d z %d..%d\n",
                                 g_current_room_id, active_cut_idx, rn, X0, X1, Z0, Z1);
                         int n_in = 0, n_occ = 0;
+                        /* ⛔ VERSCHLUCK-ZAEHLUNG (Nutzer-Befund 2026-09-03, error2.png:
+                         * "Leon verschwindet fast vollstaendig im Raum" — es war nur noch
+                         * sein Kopf zu sehen). Die vorhandene Zaehlung oben ist dafuer
+                         * BLIND: sie zaehlt nur Punkte, deren FUSSPUNKT in einem
+                         * Maskenrechteck liegt, und misst dort die Tiefe. Ob der KOERPER
+                         * an einer erreichbaren Stelle grossflaechig hinter Masken
+                         * verschwindet, sagt sie nicht.
+                         * Ein reines Offline-Mass scheiterte an der Begehbarkeit: mit dem
+                         * SCA-Rechteck als Naeherung meldete es 69 % der ORIGINAL-Cuts der
+                         * Kuenstler als "verschluckt" — also Unsinn. Nur die Engine kennt
+                         * die echten Standflaechen (re15_collision_on_floor), deshalb
+                         * gehoert die Zaehlung hierher.
+                         * Koerpermass: 1500 Einheiten hoch, 600 breit (PSX-Y zeigt nach
+                         * unten, Kopf also negativ). */
+                        int n_steh = 0, n_schluck = 0;
                         for (int wx = X0; wx <= X1; wx += 200) {
                             for (int wz = Z0; wz <= Z1; wz += 200) {
+                                if (re15_collision_on_floor(&g_room_rdt, wx, wz)) {
+                                    long bvz = ((long)wx * cam_view.rot[6] + (long)plz->y * cam_view.rot[7]
+                                              + (long)wz * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                                    if (bvz > 64) {
+                                        long bvx = ((long)wx * cam_view.rot[0] + (long)plz->y * cam_view.rot[1]
+                                                  + (long)wz * cam_view.rot[2]) / 4096 + cam_view.trans[0];
+                                        long fy  = ((long)wx * cam_view.rot[3] + (long)plz->y * cam_view.rot[4]
+                                                  + (long)wz * cam_view.rot[5]) / 4096 + cam_view.trans[1];
+                                        long ky  = ((long)wx * cam_view.rot[3]
+                                                  + (long)(plz->y - 1500) * cam_view.rot[4]
+                                                  + (long)wz * cam_view.rot[5]) / 4096 + cam_view.trans[1];
+                                        int cx = 160 + (int)(bvx * cam_view.fov_screen_dist / bvz);
+                                        int fsy = 120 + (int)(fy * cam_view.fov_screen_dist / bvz);
+                                        int ksy = 120 + (int)(ky * cam_view.fov_screen_dist / bvz);
+                                        int hw  = (int)(300 * cam_view.fov_screen_dist / bvz);
+                                        int bx0 = cx - hw, bx1 = cx + hw;
+                                        int by0 = ksy < fsy ? ksy : fsy, by1 = ksy < fsy ? fsy : ksy;
+                                        int tot = 0, cov = 0;
+                                        for (int py = by0; py < by1; py += 2)
+                                            for (int px = bx0; px < bx1; px += 2) {
+                                                if (px < 0 || px >= 320 || py < 0 || py >= 240) continue;
+                                                tot++;
+                                                for (int r = 0; r < rn; r++)
+                                                    if (px >= rx[r] && px < rx[r] + rw[r] &&
+                                                        py >= ry[r] && py < ry[r] + rh[r] &&
+                                                        (long)rd[r] * 64 < bvz) { cov++; break; }
+                                            }
+                                        if (tot > 0) {
+                                            n_steh++;
+                                            if (cov * 5 >= tot * 4) n_schluck++;   /* >= 80 % verdeckt */
+                                        }
+                                    }
+                                }
                                 long vx = ((long)wx * cam_view.rot[0] + (long)plz->y * cam_view.rot[1]
                                          + (long)wz * cam_view.rot[2]) / 4096 + cam_view.trans[0];
                                 long vy = ((long)wx * cam_view.rot[3] + (long)plz->y * cam_view.rot[4]
@@ -4748,8 +4796,9 @@ re_title:;
                          * auszaehlen — und genau daran scheitert sonst die Aussage
                          * "verdeckt ueberhaupt irgendetwas". */
                         fprintf(stderr, "[poccscan-summe] room=%04x cut=%d punkte_in_maske=%d "
-                                "davon_verdeckt=%d\n",
-                                g_current_room_id, active_cut_idx, n_in, n_occ);
+                                "davon_verdeckt=%d | STEHPLAETZE=%d figur_verschluckt=%d (%d%%)\n",
+                                g_current_room_id, active_cut_idx, n_in, n_occ,
+                                n_steh, n_schluck, n_steh ? (100 * n_schluck / n_steh) : 0);
                     }
                 }
                 /* Sweep report: is the player's projected point inside an ACTIVE mask? */

@@ -148,12 +148,25 @@ def _largest_rect(mask):
     return best
 
 
-def rects_from_mask(mask, budget, min_area=16):
-    """Region grob mit wenigen Rechtecken ueberdecken -> [(x, y, w, h)].
+def rects_from_mask(mask, budget, min_area=16, max_kante=40):
+    """Region mit Rechtecken ueberdecken -> [(x, y, w, h)].
 
-    Grosszuegig zu ueberdecken ist ungefaehrlich: die Feinmaskierung macht die
-    TRANSPARENZ (Palettenindex 0 wird nicht gezeichnet). Auch die Kuenstler-Rechtecke
-    beruhen darauf — die Obergrenze IoU(Silhouette, Rechteckvereinigung) liegt bei 0.826.
+    ⛔ MAX_KANTE IST DER KERN (Nutzer-Befund 2026-09-03, error2.png: "Leon verschwindet
+    fast vollstaendig im Raum"). Die erste Fassung nahm gierig immer das GROESSTE
+    Vollrechteck. Ergebnis: wenige, riesige Rechtecke — 26 Stueck fuer 65 % Bildflaeche.
+    Jedes bekommt EINE Tiefe. Ueber eine fliehende Wand oder einen langen Tisch
+    schwankt die echte Tiefe aber stark, und der eine Wert verdeckt dann alles
+    dahinter. Gemessen mit der echten Begehbarkeit der Engine (RE15_POCC_SCAN,
+    Zaehlung "figur_verschluckt"):
+        ROOM1170 Cut 2, KUENSTLER-Masken   ->  0 %
+        ROOM1140 Cut 0, meine (grosse Rechtecke) -> 29 %
+        ROOM1130 Cut 0, meine                    -> 43 %
+    Die Kuenstler benutzen viele KLEINE Rechtecke mit je eigener Tiefe (ROOM1210 Cut 4:
+    77 Rechtecke fuer 54 % Flaeche). Genau das macht die Kantenbegrenzung hier: sie
+    zwingt die Zerlegung auf Stuecke, ueber die die Tiefe noch annaehernd konstant ist.
+
+    Grosszuegiges Ueberdecken bleibt ungefaehrlich, weil die Feinmaskierung die
+    TRANSPARENZ macht (Palettenindex 0 wird nicht gezeichnet) — das gilt unveraendert.
     """
     m = mask.copy()
     out = []
@@ -161,8 +174,14 @@ def rects_from_mask(mask, budget, min_area=16):
         y, x, hh, ww, area = _largest_rect(m)
         if area < min_area:
             break
-        out.append((int(x), int(y), int(ww), int(hh)))
         m[y:y + hh, x:x + ww] = False
+        # in Stuecke zerlegen, ueber die die Tiefe noch aussagekraeftig ist
+        for oy in range(0, hh, max_kante):
+            for ox in range(0, ww, max_kante):
+                if len(out) >= budget:
+                    break
+                out.append((int(x + ox), int(y + oy),
+                            int(min(max_kante, ww - ox)), int(min(max_kante, hh - oy))))
         if not m.any():
             break
     return out

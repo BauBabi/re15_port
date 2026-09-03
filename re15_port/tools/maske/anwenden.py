@@ -160,6 +160,15 @@ def main():
     print("  Auswahl: %d Flaechen (oben %d, Saum %d, Spaltenfuellung %s) -> %.1f %% des Bildes"
           % (len(ids), a.oben, a.grow, "aus" if a.keine_spalten else "an", 100 * region.mean()))
 
+    # ⛔ EIN VERSUCH, DER NICHT TRUG: eine Warnung, die gewaehlte Flaechen mit der
+    # Bodenfarbe am unteren Bildrand vergleicht. In ROOM1140 Cut 3 meldete sie 13 von
+    # 20 Flaechen — darunter fast alle RICHTIGEN (Fahnen, Podium, Mikrofone). In den
+    # dunklen Raeumen liegen Teppich und dunkles Holz farblich zu nah beieinander.
+    # Als Filter unbrauchbar, als Warnung nur Rauschen; wieder entfernt.
+    # Was TRAEGT, ist die Zaehlung im laufenden Spiel (RE15_POCC_SCAN,
+    # "figur_verschluckt"): Cuts mit KUENSTLER-Masken kommen dort auf 0 %, meine
+    # fehlerhaften auf 29-43 %. Das ist der Abnahmeriegel je Raum.
+
     if a.vergleich:
         truth = artist_region(rdt, cam, a.cut)
         if truth is None:
