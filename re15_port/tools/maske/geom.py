@@ -1,0 +1,239 @@
+"""Geometrie und Tiefe fuer nachgezeichnete Vordergrundmasken — gemeinsame Grundlage.
+
+Diese Datei traegt die MESSERGEBNISSE der Untersuchung vom 2026-09-03
+(analysis/esp_masken_2026-09-03/) in eine dauerhafte Form. Jede Konstante hier steht
+mit ihrem Beleg; nichts ist geschaetzt.
+
+Kameramathematik = Python-Fassung von re15_camera_build_view (FUN_80053ca4):
+LookAt mit GANZZAHLIGER Normalisierung, H = fov>>7, sx = 160 + H*vx/vz.
+Die C-Division schneidet gegen null ab — Pythons // rundet ab, deshalb tdiv().
+"""
+import os
+import struct
+
+import numpy as np
+from PIL import Image
+from scipy import ndimage
+
+# ----------------------------------------------------------------------------
+# Gemessene Konstanten
+# ----------------------------------------------------------------------------
+
+# Spielweites Maximum der Maskenzahl je Cut (RDT-Header Byte[7]; ROOM3000/3001 Cut 3).
+MAX_MASKS_PER_CUT = 105
+
+# Tiefenfaktor auf den geschaetzten Bodenkontakt. END-ZU-ENDE kalibriert gegen 209
+# Kuenstler-Cuts (analysis/.../q12_faktor_schnell.py):
+#   Faktor   Uebereinstimmung   falsch_verdeckt   falsch_gezeigt
+#    0.75        75.4 %             8.8 %            15.7 %
+#    0.80        75.2 %             7.1 %            17.6 %
+#    0.90        73.7 %             4.6 %            21.8 %
+#    1.00        70.7 %             3.0 %            26.3 %
+# Gewaehlt 0.90: nicht die hoechste Trefferquote, aber die Zeile, die dem Grundsatz
+# folgt — eine FEHLENDE Maske laesst alles wie heute, eine FALSCHE malt Hintergrund
+# ueber die Figur. Der gemessene Versatz war 1.32; das Optimum bei etwa 1/1.32 zeigt,
+# dass die Groessenordnung aus der Messung faellt und nicht aus dem Bauch.
+DEPTH_FACTOR = 0.90
+
+# Bodenhoehe fuer den Kontaktpunkt. y0 = 0 ist die Hauptebene; Raeume mit mehreren
+# Stockwerken sind damit nicht erfasst — das ist die bekannte Restschwaeche des
+# Tiefenmodells (q3d: Verhaeltnis Ist/Soll 1.08 bei y0=0).
+FLOOR_Y = 0
+
+
+def tdiv(a, b):
+    """Ganzzahldivision mit C-Semantik (gegen null abschneiden)."""
+    q = abs(a) // abs(b)
+    return q if (a >= 0) == (b >= 0) else -q
+
+
+def isqrt(n):
+    return int(np.sqrt(float(n)))
+
+
+def build_view(fov, px, py, pz, tx, ty, tz):
+    """-> (R[9], t[3], H) oder None. Spiegelt re15_camera_build_view."""
+    dx, dy, dz = tx - px, ty - py, tz - pz
+    dist = isqrt(dx * dx + dy * dy + dz * dz)
+    if dist == 0:
+        return None
+    horiz = isqrt(dx * dx + dz * dz)
+    sp = tdiv(-dy * 4096, dist)
+    cp = tdiv(horiz * 4096, dist)
+    if horiz != 0:
+        sy = tdiv(dx * 4096, horiz)
+        cy = tdiv(dz * 4096, horiz)
+        R = [cy, 0, -sy,
+             (sp * sy) >> 12, cp, (sp * cy) >> 12,
+             (cp * sy) >> 12, -sp, (cp * cy) >> 12]
+    else:
+        R = [4096, 0, 0, 0, cp, sp, 0, -sp, cp]
+    t = [(R[0] * -px + R[1] * -py + R[2] * -pz) >> 12,
+         (R[3] * -px + R[4] * -py + R[5] * -pz) >> 12,
+         (R[6] * -px + R[7] * -py + R[8] * -pz) >> 12]
+    return R, t, (fov >> 7)
+
+
+def vz_at_floor(R, t, H, sx, sy, y0=FLOOR_Y):
+    """Kamera-Z des Punktes, an dem der Sehstrahl durch (sx,sy) die Ebene y=y0 trifft."""
+    a = (sx - 160.0) / H
+    b = (sy - 120.0) / H
+    k = R[1] * a + R[4] * b + R[7]
+    c = R[1] * t[0] + R[4] * t[1] + R[7] * t[2]
+    if abs(k) < 1e-9:
+        return None
+    vz = (y0 * 4096.0 + c) / k
+    return vz if vz > 1 else None
+
+
+def cut_view(rdt, cam_off, cut):
+    rec = cam_off + cut * 32
+    fov = struct.unpack_from("<H", rdt, rec + 2)[0]
+    P = struct.unpack_from("<iii", rdt, rec + 4)
+    T = struct.unpack_from("<iii", rdt, rec + 0x10)
+    return build_view(fov, *P, *T)
+
+
+def depth_map(rdt, cam_off, cut, region):
+    """Tiefenkarte (240x320) aus dem Bodenkontakt JE BILDSPALTE, 0 = kein Vordergrund.
+
+    Je Spalte, nicht je Objekt: ein Tisch, der in die Tiefe laeuft, hat keine
+    einheitliche Tiefe (Streuung in einer Kuenstler-Gruppe im Median 24.7 %), und
+    zwei benachbarte Objekte verschmelzen leicht zu einer Zusammenhangskomponente —
+    dann bekaeme das ferne den Kontakt des nahen.
+
+    Laeuft die Silhouette in einer Spalte unten aus dem Bild, wird der unterste
+    Bildpunkt genommen: das Objekt steht dann VOR allem, was in dieser Spalte
+    erreichbar ist. (Die frueher benutzte Behandlung "kein Kontakt sichtbar -> sehr
+    weit" war falsch herum und machte solche Masken wirkungslos.)
+    """
+    v = cut_view(rdt, cam_off, cut)
+    if not v:
+        return None
+    R, t, H = v
+    if H <= 0:
+        return None
+    lab, n = ndimage.label(region, structure=np.ones((3, 3)))
+    dep = np.zeros((240, 320), np.int32)
+    for k in range(1, n + 1):
+        m = (lab == k)
+        for x in np.where(m.any(0))[0]:
+            rows = np.where(m[:, x])[0]
+            yb = int(rows.max())
+            z = vz_at_floor(R, t, H, x + 0.5, float(min(yb, 239)))
+            if not z:
+                continue
+            dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+    return dep
+
+
+def _largest_rect(mask):
+    """Groesstes achsenparalleles Vollrechteck -> (y, x, h, w, flaeche)."""
+    h, w = mask.shape
+    height = np.zeros(w, np.int32)
+    best = (0, 0, 0, 0, 0)
+    for y in range(h):
+        height = np.where(mask[y], height + 1, 0)
+        stack = []
+        for x in range(w + 1):
+            cur = height[x] if x < w else 0
+            start = x
+            while stack and stack[-1][1] >= cur:
+                sx, sh = stack.pop()
+                area = sh * (x - sx)
+                if area > best[4]:
+                    best = (y - sh + 1, sx, sh, x - sx, area)
+                start = sx
+            stack.append((start, cur))
+    return best
+
+
+def rects_from_mask(mask, budget, min_area=16):
+    """Region grob mit wenigen Rechtecken ueberdecken -> [(x, y, w, h)].
+
+    Grosszuegig zu ueberdecken ist ungefaehrlich: die Feinmaskierung macht die
+    TRANSPARENZ (Palettenindex 0 wird nicht gezeichnet). Auch die Kuenstler-Rechtecke
+    beruhen darauf — die Obergrenze IoU(Silhouette, Rechteckvereinigung) liegt bei 0.826.
+    """
+    m = mask.copy()
+    out = []
+    while len(out) < budget:
+        y, x, hh, ww, area = _largest_rect(m)
+        if area < min_area:
+            break
+        out.append((int(x), int(y), int(ww), int(hh)))
+        m[y:y + hh, x:x + ww] = False
+        if not m.any():
+            break
+    return out
+
+
+def pack_section(groups, masks):
+    """Bytes im ORIGINAL-Sektionslayout: Header 4 B, Gruppen 8 B, Masken 12 B.
+
+    groups: [(anzahl, anker_dx, anker_dy)]
+    masks:  [(src_x, src_y, dst_x, dst_y, w, h, depth)]  — dst als Bildkoordinate;
+            gespeichert wird dst - anker als u8, wie das Original es erwartet
+            (Bildposition = Gruppenanker + Masken-Byte, @0x8003940c/0x8003941c).
+    """
+    out = bytearray()
+    out += struct.pack("<HH", len(groups), len(masks) & 0xFFFF)
+    for (n, dx, dy) in groups:
+        # +2 wird vom Original NIE gelesen (der Zeichner setzt CLUT 0x7800 als
+        # Immediate @0x80039498); der authorisierte Wert steht trotzdem drin.
+        out += struct.pack("<HHhh", n, 0x7800, dx, dy)
+    gi = 0
+    used = 0
+    for (sx, sy, dx, dy, w, h, dep) in masks:
+        while gi < len(groups) and used >= groups[gi][0]:
+            gi += 1
+            used = 0
+        ax, ay = (groups[gi][1], groups[gi][2]) if gi < len(groups) else (0, 0)
+        used += 1
+        out += struct.pack("<BBBBHH", sx & 0xFF, sy & 0xFF,
+                           (dx - ax) & 0xFF, (dy - ay) & 0xFF, dep, 0)
+        out += struct.pack("<HH", w, h)     # size-Feld High-Nibble 0 = rechteckig
+    return bytes(out)
+
+
+def pack_container(sections, n_cut):
+    """Seitendaten-Container "R15M" (s. re15_pri.h). sections: {cut: bytes}."""
+    head = 4 + 4 + 4 + 4 * n_cut
+    body = b""
+    offs = [0] * n_cut
+    for c in sorted(sections):
+        if c >= n_cut:
+            continue
+        offs[c] = head + len(body)
+        body += sections[c]
+    return b"R15M" + struct.pack("<II", 1, n_cut) \
+        + struct.pack("<%dI" % n_cut, *offs) + body
+
+
+# ----------------------------------------------------------------------------
+# Asset-Zugriff (hier, damit der Selbsttest ohne tkinter/skimage laeuft)
+# ----------------------------------------------------------------------------
+
+def load_rdt(cd, room):
+    for st in range(1, 7):
+        p = os.path.join(cd, "STAGE%d" % st, "%s.RDT" % room)
+        if os.path.exists(p):
+            return open(p, "rb").read(), st
+    return None, 0
+
+
+def load_bg(ppm_dir, room_id, cut):
+    """Hintergrund eines Cuts aus dem Abzug von probe_bg_dump."""
+    p = os.path.join(ppm_dir, "ROOM%03X%02d.ppm" % (room_id >> 4, cut))
+    if not os.path.exists(p):
+        return None
+    return np.asarray(Image.open(p).convert("RGB"), np.uint8)
+
+
+def original_has_masks(rdt, cam, cut):
+    """Traegt das ORIGINAL fuer diesen Cut Masken? Dann wird er nicht angefasst."""
+    po = struct.unpack_from("<I", rdt, cam + cut * 32 + 0x1C)[0]
+    if po + 4 > len(rdt):
+        return False
+    gc, mc = struct.unpack_from("<HH", rdt, po)
+    return not (gc == 0xFFFF or gc == 0 or mc == 0 or gc > 256)

@@ -179,6 +179,16 @@ int re15_pri_load_cut_atlas(int cut_idx)
         snprintf(rel, sizeof rel, "room%04x_pri%02d.tim", g_current_room_id, cut_idx);
         buf = re15_pc_read_cd(rel, &sz);
     }
+    /* 3. NACHGEZEICHNETER Atlas (Maskeneditor, re15_port/tools/maske). Fuer die Cuts,
+     *    in denen der Prototyp gar keine Vordergrundgrafik hinterlassen hat, gibt es
+     *    keinen Atlas im BSS — der Editor packt dann einen aus dem Hintergrundbild.
+     *    Noetig ist das, weil srcX/srcY u8 sind (@0x80039408/0x80039418): ein 320
+     *    Pixel breites Bild waere nicht adressierbar, der Hintergrund kann also nicht
+     *    direkt als Maskentextur dienen. */
+    if (!buf) {
+        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", g_current_room_id, cut_idx);
+        buf = re15_pc_read_cd(rel, &sz);
+    }
     if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
     int ok = pri_publish_tim(buf, sz);
     free(buf);
