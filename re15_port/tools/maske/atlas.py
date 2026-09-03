@@ -52,29 +52,40 @@ def split_oversize(boxes, w=ATLAS_W, h=ATLAS_H):
 
 
 def shelf_pack(boxes, w=ATLAS_W, h=ATLAS_H):
-    """Regalverfahren: Kaesten nach Hoehe sortiert in Reihen legen.
+    """Regalverfahren MIT Nachnutzung der Restbreiten.
+
+    Die erste Fassung legte nur in die JEWEILS aktuelle Zeile und verschenkte deren
+    Restbreite, sobald ein hoher Kasten kam. Bei ROOM1130 Cut 2 fehlten dadurch
+    2047 px von 65536 — 3 %, und die Auswahl haette beschnitten werden muessen.
+    Jetzt wird fuer jeden Kasten ZUERST in allen bereits offenen Zeilen nach Platz
+    gesucht (bestpassende Restbreite), und erst dann eine neue Zeile begonnen.
 
     -> {index: (ax, ay)} fuer die untergebrachten, plus Liste der nicht passenden.
     """
     order = sorted(range(len(boxes)), key=lambda i: -boxes[i][3])
-    place = {}
-    rejected = []
-    x = y = row_h = 0
+    place, rejected = {}, []
+    shelves = []                       # [y, hoehe, benutzte breite]
     for i in order:
         bw, bh = boxes[i][2], boxes[i][3]
         if bw > w or bh > h:
             rejected.append(i)
             continue
-        if x + bw > w:
-            x = 0
-            y += row_h
-            row_h = 0
-        if y + bh > h:
-            rejected.append(i)
-            continue
-        place[i] = (x, y)
-        x += bw
-        row_h = max(row_h, bh)
+        ziel = None
+        best = None
+        for s_ in shelves:             # bestpassende offene Zeile
+            if bh <= s_[1] and s_[2] + bw <= w:
+                rest = w - s_[2] - bw
+                if best is None or rest < best:
+                    best, ziel = rest, s_
+        if ziel is None:
+            y = sum(s_[1] for s_ in shelves)
+            if y + bh > h:
+                rejected.append(i)
+                continue
+            ziel = [y, bh, 0]
+            shelves.append(ziel)
+        place[i] = (ziel[2], ziel[0])
+        ziel[2] += bw
     return place, rejected
 
 
@@ -88,6 +99,29 @@ def build(bg_rgb, region, boxes):
     """
     boxes, _ = split_oversize(boxes)
     place, rejected = shelf_pack(boxes)
+    # Ein abgewiesener Kasten scheitert meist nicht an der FLAECHE, sondern an der
+    # Zerstueckelung des Blattes: es ist noch Platz da, nur nicht am Stueck.
+    # (ROOM1130 Cut 2: ein Kasten mit 2016 px fand keine Zeile, obwohl das Blatt
+    # nicht voll war.) Halbieren und erneut versuchen loest das, ohne etwas zu
+    # verlieren — die Haelften finden Restluecken. Bis hinunter zu 8 px Kante.
+    for _versuch in range(6):
+        if not rejected:
+            break
+        neu_boxes = list(boxes)
+        for i in rejected:
+            x, y, bw, bh = boxes[i]
+            if bw <= 8 and bh <= 8:
+                continue
+            if bw >= bh:
+                a_ = bw // 2
+                neu_boxes.append((x, y, a_, bh)); neu_boxes.append((x + a_, y, bw - a_, bh))
+            else:
+                a_ = bh // 2
+                neu_boxes.append((x, y, bw, a_)); neu_boxes.append((x, y + a_, bw, bh - a_))
+        # abgewiesene Originale entfernen, Haelften behalten
+        behalten = [b for j, b in enumerate(boxes) if j not in set(rejected)]
+        boxes = behalten + neu_boxes[len(boxes):]
+        place, rejected = shelf_pack(boxes)
     if not place:
         return None, None, boxes
     if rejected:
