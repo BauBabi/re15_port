@@ -167,3 +167,15 @@ if(TARGET re15_pc)
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/test_save_counter_pin.cmake)
     set_tests_properties(integration_save_counter_pin PROPERTIES TIMEOUT 240)
 endif()
+
+# --- Nachgezeichnete Vordergrund-Masken: Container, Vorrang, Geometrie -----------
+# Befund 2026-09-03: der .MSK-Ladepfad hatte NULL Testabdeckung — keine der 266
+# Pruefungen lud eine Maske. Der wichtigste Riegel hier ist der VORRANG: eine
+# nachgereichte Sektion darf nur greifen, wo das Original eine NULL-Sektion fuehrt.
+add_executable(test_pri_masken test_pri_masken.c)
+target_link_libraries(test_pri_masken PRIVATE re15_engine re15_test_support)
+target_include_directories(test_pri_masken PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_pri_masken PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME integration_pri_masken COMMAND test_pri_masken)
+set_tests_properties(integration_pri_masken PROPERTIES TIMEOUT 180)
