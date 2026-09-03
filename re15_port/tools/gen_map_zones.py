@@ -1753,6 +1753,12 @@ def main():
                     grundrisse[(_pg2, _al, _zi2)] = _v
     print(f"{len(grundrisse)} Orte mit Grundriss aus der Kollisionsgeometrie")
 
+    # ⛔ WER GEWINNT: DIE KUNST ODER DER GERECHNETE GRUNDRISS?
+    # Der Vorrang steht an ZWEI Stellen (hier und beim Fuellen von `synth`); sie muessen
+    # dieselbe Antwort geben, sonst faellt eine Zone durch beide Raster und verschwindet
+    # ganz aus der Tabelle (gemessen: 234 -> 66 Zeilen, nur noch 31 von 96 Raeumen).
+    # RE15_KUNST=1: das gemalte Original-Rechteck gewinnt, wo eine Zuordnung existiert.
+    KUNST_VOR = os.environ.get('RE15_KUNST') == '1'
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     zid_von = {}
@@ -1762,7 +1768,7 @@ def main():
             if pr is None: continue
             # ⛔ Ein Ort, eine Zeichnung. Hat der Loeser fuer diese Zone einen Grundriss
             # geliefert, gilt der - sonst stuenden beide Zeichnungen uebereinander.
-            if (page_of(b), b, i) in grundrisse: continue
+            if not KUNST_VOR and (page_of(b), b, i) in grundrisse: continue
             for var in (0, 1):
                 rows.append((b + var, bb, pr[0], pr[1], i, zid))
             zid_von[(b, i)] = zid
@@ -1891,7 +1897,17 @@ def main():
     synth = {}        # (seite, raum, zone) -> (x, y, w, h, [zellen], abbildung|None)
     # Die Grundrisse aus dem Loeser haben Vorrang: sie sind zusammenhaengend, ihre
     # Durchgaenge beruehren sich, und sie tragen eine affine Abbildung fuer den Marker.
+    #
+    # ⛔ DIESER VORRANG IST DER GRUND, WARUM DIE KARTE ZU 100 % SELBST GEZEICHNET IST.
+    # Die Zuordnung auf die gemalten Original-Rechtecke wird oben BERECHNET (assign,
+    # 75 von 103 Zonen) und hier bedingungslos ueberschrieben - gemessen 2026-09-04:
+    # 234 von 234 Zonen tragen rect = 255. Nutzer: "Die Map hat noch immer die
+    # selbstgezeichneten Raeume."
+    # RE15_KUNST=1 dreht den Vorrang um: wo eine Zuordnung existiert, gewinnt das
+    # gemalte Rechteck des Originals; nur der Rest wird gezeichnet.
     for _k, (_ab, _kasten, _rects) in sorted(grundrisse.items()):
+        if KUNST_VOR and assign.get((_k[1], _k[2])) is not None:
+            continue
         synth[_k] = (_kasten[0], _kasten[1], _kasten[2], _kasten[3], _rects, _ab)
     for b in sorted(zinfo):
         pg = page_of(b)
