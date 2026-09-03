@@ -535,8 +535,23 @@ def _vollsuche(B, pg):
     for _i, (a, pa, b, pb) in enumerate(B.kanten):
         nachbarn[a].append((_i, b, pa, pb))
         nachbarn[b].append((_i, a, pb, pa))
-    bestes = {'n': -1, 'lage': None}
+    import grundriss as _g
+    bestes = {'n': -1, 'vers': 10 ** 9, 'lage': None}
+    sauber = {'n': -1, 'lage': None}      # beste Lage OHNE Versenkung
     gesehen = set()
+
+    def versenkt(lage):
+        """Paare, die tiefer als eine Wand (WAND_RAND) ineinanderstecken."""
+        v = 0
+        ks = [B.kasten(o, lage[o]) for o in lage]
+        for _p in range(len(ks)):
+            for _q in range(_p + 1, len(ks)):
+                ka, kb = ks[_p], ks[_q]
+                ox = min(ka[0] + ka[2], kb[0] + kb[2]) - max(ka[0], kb[0])
+                oy = min(ka[1] + ka[3], kb[1] + kb[3]) - max(ka[1], kb[1])
+                if ox > _g.WAND_RAND and oy > _g.WAND_RAND:
+                    v += 1
+        return v
 
     def erfuellt(lage):
         n = 0
@@ -559,9 +574,21 @@ def _vollsuche(B, pg):
         if len(gesehen) > 400000:
             return
         n = erfuellt(lage)
-        if len(lage) == len(orte) and n > bestes['n']:
-            bestes['n'] = n
-            bestes['lage'] = dict(lage)
+        if len(lage) == len(orte):
+            # ⛔ ERST DIE KANTEN, DANN DIE OPTIK. Unter den kantenreichsten Lagen wird
+            # die mit der geringsten Versenkung behalten - so beantwortet die Suche
+            # BEIDE Fragen: wie viele Tueren gehen, und muss dabei wirklich ein
+            # Rechteck im anderen stecken?
+            v = versenkt(lage)
+            if (n, -v) > (bestes['n'], -bestes['vers']):
+                bestes['n'] = n
+                bestes['vers'] = v
+                bestes['lage'] = dict(lage)
+            # Die GEGENFRAGE: wie viele Tueren gehen, wenn KEIN Rechteck im anderen
+            # stecken darf? Erst beide Zahlen zusammen sagen, was der Tausch kostet.
+            if v == 0 and n > sauber['n']:
+                sauber['n'] = n
+                sauber['lage'] = dict(lage)
         # ⛔ UEBER JEDE ANLEGEKANTE VERZWEIGEN. Ein erster Wurf nahm nur die erste
         # gefundene Kante und war damit unvollstaendig: welche Kante man zum Anlegen
         # benutzt, bestimmt die Lage des Ortes, und eine andere Kante haette eine Lage
@@ -590,15 +617,43 @@ def _vollsuche(B, pg):
                         del lage[ziel]
             return
         # kein Nachbar mehr erreichbar: Rest frei danebenstellen
-        if len(lage) < len(orte) and n > bestes['n']:
-            bestes['n'] = n
-            bestes['lage'] = dict(lage)
+        # ⛔ AUCH HIER DIE VERSENKUNG BEWERTEN. Blatt 4 hat 8 Orte, aber nur 6 Kanten -
+        # die beste Lage kommt deshalb aus DIESEM Zweig, und ohne die Bewertung blieb
+        # der Sentinel stehen und die Suche meldete Unsinn (1000000000 Paare).
+        if len(lage) < len(orte):
+            v = versenkt(lage)
+            if (n, -v) > (bestes['n'], -bestes['vers']):
+                bestes['n'] = n
+                bestes['vers'] = v
+                bestes['lage'] = dict(lage)
+            if v == 0 and n > sauber['n']:
+                sauber['n'] = n
+                sauber['lage'] = dict(lage)
 
     for w in orte:
         gesehen.clear()
         tiefer({w: (0.0, 0.0, 0, 0)}, 0)
     print("   [Vollsuche Blatt %d] %d Orte, %d Kanten -> hoechstens %d gleichzeitig "
           "erfuellbar" % (pg, len(orte), len(B.kanten), bestes['n']))
+    print("   [Vollsuche Blatt %d] beste Lage: %d Kanten, dabei %d Paare, die tiefer als %g px ineinanderstecken"
+          % (pg, bestes['n'], bestes['vers'], _g.WAND_RAND))
+    print("   [Vollsuche Blatt %d] beste Lage OHNE Versenkung: %d Kanten "
+          "(= der Tausch kostet %d Tuer(en))"
+          % (pg, sauber['n'], max(0, bestes['n'] - sauber['n'])))
+    # ⛔ "KANTE ERFUELLT" IST JA/NEIN BEI <= 1 px UND VERDECKT DIE HOEHE DES FEHLERS.
+    # Eine Tuer, die um 2 px danebenliegt, zaehlt genauso als Verlust wie eine um 40 px.
+    # Fuer die Entscheidung "Tuer gegen Optik" braucht es den RESTBETRAG je Kante.
+    for _name, _b in (('mit Versenkung', bestes), ('ohne Versenkung', sauber)):
+        if not _b['lage']:
+            continue
+        _r = []
+        for (a, pa, b, pb) in B.kanten:
+            if a in _b['lage'] and b in _b['lage']:
+                _r.append((B.kantenrest(_b['lage'], a, pa, b, pb),
+                           'ROOM%04X z%d<->ROOM%04X z%d' % (a >> 4, a & 15, b >> 4, b & 15)))
+        _r.sort(reverse=True)
+        print("   [Vollsuche Blatt %d] %-16s Reste: %s"
+              % (pg, _name, ", ".join("%s %.0f px" % (t, v) for v, t in _r)))
     if bestes['lage'] is not None:
         for (a, pa, b, pb) in B.kanten:
             lg = bestes['lage']
@@ -1608,10 +1663,10 @@ def main():
                              _neu_lage[_a][3], _neu_lage[_bb][3], _rest))
             _kn = _B.kosten(_neu_lage)
             print("Seite %2d: Grundriss aus %d/%d Orten, %.1f %% Ueberlappung, "
-                  "%d/%d Durchgaenge deckungsgleich, %d GETRENNT, %dx%d px, "
-                  "%.0f Welteinheiten je Pixel"
+                  "%d/%d Durchgaenge deckungsgleich, %d GETRENNT, %d VERSENKT, "
+                  "%dx%d px, %.0f Welteinheiten je Pixel"
                   % (_pg, len(_lg[_pg]), len(_eingabe[_pg][0]), _kn[0], _kn[1],
-                     len(_B.kanten), _kn[5], _kn[2], _kn[3], _B.ex))
+                     len(_B.kanten), _kn[5], _kn[6], _kn[2], _kn[3], _B.ex))
 
     if _ALIAS:
         # Der Alias-Raum bekommt Rechteck, Abbildung und damit auch die Hervorhebung

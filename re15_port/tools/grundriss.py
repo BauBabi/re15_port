@@ -91,14 +91,39 @@ FELD = tuple(int(v) for v in
 def ORDNUNG(k):
     """Reihenfolge der Guetekriterien des Loesers.
 
-    k = (ueberlappung%, deckung, breite, hoehe, schlimmster_rest, getrennt).
+    k = (ueberlappung%, deckung, breite, hoehe, schlimmster_rest, getrennt, versenkt).
     Standard: erst KEINE getrennten Nachbarn (der Nutzer sieht ein Rechteck, das
     nicht anschliesst, sofort), dann moeglichst viele deckungsgleiche Tueren,
-    dann der schlimmste Rest, dann die Ueberlappung.
-    RE15_ORDNUNG=deckung stellt die Tueren voran - zum Vergleichen."""
+    dann moeglichst wenige Rechtecke, die ineinander STECKEN, dann der schlimmste
+    Rest, dann die Ueberlappung.
+
+    ⛔ "VERSENKT" STEHT HINTER "DECKUNG", NICHT DAVOR. Die lauteste Beschwerde des
+    Nutzers war zweimal die TUER ("Die Tueren sind durch die Bank weg alle falsch
+    platziert", "oftmals machst du so grosse spruenge"). Ein Rechteck, das schoener
+    liegt, aber die Tuer verfehlt, tauscht den sichtbaren Fehler nur gegen einen
+    schlimmeren - genau die Falle aus Memory reai-v2-proxy-mass. Die Einsinktiefe
+    entscheidet darum nur zwischen Lagen, die bei den Tueren GLEICH gut sind.
+    RE15_ORDNUNG=deckung stellt die Tueren ganz voran - zum Vergleichen.
+    RE15_ORDNUNG=alt laesst die Einsinktiefe weg - zum Gegenmessen."""
     if os.environ.get('RE15_ORDNUNG') == 'deckung':
-        return (-k[1], k[5], k[4], k[0])
-    return (k[5], -k[1], k[4], k[0])
+        return (-k[1], k[5], k[6], k[4], k[0])
+    if os.environ.get('RE15_ORDNUNG') == 'alt':
+        return (k[5], -k[1], k[4], k[0])
+    if os.environ.get('RE15_ORDNUNG') == 'optik':
+        # ⛔ GEMESSEN UND NICHT UEBERNOMMEN (2026-09-03). Die Einsinktiefe GANZ nach
+        # vorn zu stellen ist im Aggregat deutlich besser - Uebergaenge <= 2 px 50 -> 55,
+        # ueber 8 px 24 -> 22, Tuersymbole per Identitaet 189 -> 191, per Zufall 7 -> 4,
+        # game-weit tiefe Paare 23 -> 18, Blatt 7 von 37,8 auf 27,2 % Ueberlappung.
+        # ABER: auf Blatt 1 ruecken dabei zwei verschiedene Durchgaenge (ROOM10A0 <->
+        # ROOM11E0 und ROOM11E0 <-> ROOM1200) auf 2 px zusammen, an einer Ecke, in der
+        # schon sechs Marken in einem 6x6-Feld stehen - der Pin unit_map_durchgang faellt.
+        # Ein Symbol, das ein anderes verdeckt, ist genau die Klasse Fehler, die der
+        # Nutzer zweimal gemeldet hat; das Aggregat wiegt sie nicht auf. Wer es
+        # weiterverfolgt, muss zuerst die Marken-Trennung an dieser Ecke loesen.
+        return (k[5], k[6], -k[1], k[4], k[0])
+    # Einsinktiefe NACH der Tuerdeckung: sie entscheidet nur zwischen Lagen, die bei
+    # den Tueren gleich gut sind.
+    return (k[5], -k[1], k[6], k[4], k[0])
 
 
 def dreh(wx, wz, k, sp):
@@ -658,8 +683,28 @@ class Blatt(object):
             if (min(ka[0] + ka[2], kb[0] + kb[2]) < max(ka[0], kb[0]) or
                     min(ka[1] + ka[3], kb[1] + kb[3]) < max(ka[1], kb[1])):
                 getrennt += 1
+        # ⛔ "STECKT DRIN" IST EIN EIGENER FEHLER, KEIN BISSCHEN UEBERLAPPUNG.
+        # Nutzer 2026-09-03 zu ROOM1170: "das rechteck jetzt in room 1130 quasi drin
+        # steckt. Das war vorher nicht so." Gemessen stimmt das: die Ueberschneidung
+        # entstand in v0.3.92 (Wandwahl als Freiheitsgrad) und liegt seither bei 20x7 px.
+        # Das Aggregat oben SIEHT DAS NICHT - 140 Pixel auf einem ganzen Blatt sind
+        # 3 % Flaechenanteil, waehrend ein Rechteck sichtbar im anderen steckt. Gemessen
+        # wird darum die EINDRINGTIEFE je Paar: min(Ueberschneidung in x, in y). Eine
+        # gemeinsame WAND ist duenn - game-weit ist der Median aller 142 ueberlappenden
+        # Paare 1 px. Alles jenseits von WAND_RAND liest sich als "steckt drin";
+        # gemessen sind das 23 Paare, das tiefste 24 px.
+        versenkt = 0
+        drin = [b for b in lage]
+        for i in range(len(drin)):
+            ka = self.kasten(drin[i], lage[drin[i]])
+            for j in range(i + 1, len(drin)):
+                kb = self.kasten(drin[j], lage[drin[j]])
+                ox = min(ka[0] + ka[2], kb[0] + kb[2]) - max(ka[0], kb[0])
+                oy = min(ka[1] + ka[3], kb[1] + kb[3]) - max(ka[1], kb[1])
+                if ox > WAND_RAND and oy > WAND_RAND:
+                    versenkt += 1
         return (doppelt / max(1, len(alle)) * 100.0, deckung, br, ho, schlimmst,
-                getrennt)
+                getrennt, versenkt)
 
     def einpassen(self, lage, feld=FELD):
         pix = dict((b, self.pixel(b, lage[b])) for b in lage)
@@ -696,6 +741,13 @@ class Blatt(object):
             for (a, pa, b, pb) in self.kanten:
                 if a not in lage or b not in lage:
                     continue
+                # ⛔ GEMESSEN UND VERWORFEN (2026-09-03): auch schon SITZENDE Tueren
+                # nachzubessern klingt gratis - der Zug wird ja nur uebernommen, wenn
+                # ORDNUNG() besser wird - und ist es nicht. Der Bergsteiger landet dann
+                # in einem anderen lokalen Optimum: die tiefen Paare stiegen 18 -> 19
+                # und ROOM11E0/ROOM1230 auf Blatt 1 sank von 16 auf 44 px ineinander,
+                # waehrend Blatt 4 sich um genau 1 px bewegte. Mehr Suche ist nicht
+                # dasselbe wie bessere Suche.
                 if self.kantenrest(lage, a, pa, b, pb) <= 1.0:
                     continue                      # diese Tuer sitzt schon
                 for (wer, anker, p_anker, p_wer) in ((b, a, pa, pb), (a, b, pb, pa)):

@@ -1139,3 +1139,85 @@ trennt echt von Täuschung. Eine reine „26/26 gefunden"-Meldung wäre wertlos 
 * **ROOM5070/ROOM5130** stehen in der ausgelieferten Zonentabelle gar nicht (beide werden
   nicht gezeichnet). Von den vier zusammengelegten Paaren sind also nur **drei** auf der
   Karte sichtbar; die vierte Zusammenlegung ist im Auslieferungsstand nicht messbar.
+
+---
+
+## §20 ROOM1170 steckt in ROOM1130 — die Spieldaten erzwingen es
+
+Nutzer 2026-09-03 (`error1.png`): *„Bei der Map gibt es zum Teil neue Probleme wie das
+Room 1170 das rechteck jetzt in room 1130 quasi drin steckt. Das war vorher nicht so."*
+
+### Wann es entstand — nicht in v0.3.96/97
+
+| Fassung | Überschneidung ROOM1130 / ROOM1170 |
+|---|---|
+| v0.3.90 | 0 % |
+| v0.3.91 | 3 % |
+| **v0.3.92** | **23 %** ← hier entstanden |
+| v0.3.93 … v0.3.97 / HEAD | 21 % (20 × 7 px), **Geometrie unverändert** |
+
+Die Rechtecke auf Blatt 4 sind zwischen v0.3.95 und HEAD **byte-gleich**. Auslöser war
+v0.3.92 („Wandwahl als Freiheitsgrad", `WAND_RAND = 4`), nicht die Karten-Arbeit danach.
+
+### Warum es unvermeidbar ist
+
+ROOM1170 Zone 1 (die Gast-Zeile auf Blatt 4, `etage = 1`; ihr Zuhause ist Blatt 5) hat
+ihre beiden Ausgänge auf **gegenüberliegenden** Wänden:
+
+```
+Weltbox Zone 1:  x −28900 … −8784   z −28841 … −17070
+   Tür (−21230, −17925) → ROOM1130     855 vor der z-Max-Wand
+   Tür (−21600, −27005) → ROOM1140    1836 vor der z-Min-Wand
+```
+
+ROOM1130 und ROOM1140 liegen auf der Karte **direkt aufeinander** (1130 y 111…135,
+1140 y 134…179). Ein Rechteck, dessen zwei Türen auf gegenüberliegenden Wänden sitzen,
+kann nicht an zwei Räume anschließen, die selbst aneinandergrenzen — ohne einen davon zu
+überlappen. Das ist Geometrie, kein Löser-Fehler.
+
+Die erschöpfende Suche (`RE15_VOLLSUCHE=4`, jetzt auch mit Versenkungs-Bewertung) bestätigt
+es und beziffert den Tausch:
+
+```
+8 Orte, 6 Kanten -> hoechstens 5 gleichzeitig erfuellbar
+beste Lage: 5 Kanten, dabei 1 Paare, die tiefer als 4 px ineinanderstecken
+beste Lage OHNE Versenkung: 4 Kanten (= der Tausch kostet 1 Tuer(en))
+```
+
+### Neues Maß: EINSINKTIEFE statt Flächenanteil
+
+Das Gütemaß kannte nur „Überlappung in % **aller gezeichneten Pixel**" — 140 px auf einem
+ganzen Blatt sind 3 %, während ein Rechteck sichtbar im anderen steckt. ⛔ Wieder ein
+Aggregat, das den Einzelfall nicht sehen kann. Gemessen wird jetzt die **Eindringtiefe je
+Paar**, `min(Überschneidung in x, in y)`:
+
+* game-weit 142 überlappende Paare, **Median 1 px** — das ist die gemeinsame Wand, korrekt
+* **23 Paare** stecken tiefer als `WAND_RAND` (4 px) ineinander, das tiefste 24 px
+* ROOM1130 / ROOM1170 ist eines davon, mit 7 px
+
+`kosten()` liefert die Zahl als siebtes Kriterium, `ORDNUNG()` stellt sie **hinter** die
+Türdeckung, die Generator-Ausgabe meldet sie je Blatt als `N VERSENKT`.
+
+### ⛔ Zwei naheliegende Verschärfungen — gemessen und verworfen
+
+**1. Einsinktiefe GANZ nach vorn.** Im Aggregat deutlich besser: Übergänge ≤ 2 px 50 → 55,
+über 8 px 24 → 22, Türsymbole per Identität 189 → 191 / per Zufall 7 → 4, tiefe Paare
+23 → 18, tiefstes 24 → 19 px, Blatt 7 von 37,8 auf 27,2 % Überlappung. **Aber:** auf Blatt 1
+rücken zwei verschiedene Durchgänge (ROOM10A0↔ROOM11E0 und ROOM11E0↔ROOM1200) auf 2 px
+zusammen — an einer Ecke, in der schon sechs Marken in einem 6×6-Feld stehen — und der Pin
+`unit_map_durchgang` fällt. Ein Symbol, das ein anderes verdeckt, ist genau die Klasse
+Fehler, die der Nutzer zweimal gemeldet hat; das Aggregat wiegt sie nicht auf. Erreichbar
+über `RE15_ORDNUNG=optik`; wer es weiterverfolgt, muss zuerst die Marken-Trennung an dieser
+Ecke lösen.
+
+**2. Den Bergsteiger auch an SITZENDEN Türen nachbessern lassen.** Klingt gratis — der Zug
+wird ja nur übernommen, wenn `ORDNUNG()` besser wird. Ist es nicht: er landet in einem
+anderen lokalen Optimum, tiefe Paare 18 → 19, und ROOM11E0/ROOM1230 auf Blatt 1 sinkt von
+16 auf **44 px** ineinander, während Blatt 4 sich um genau 1 px bewegt. **Mehr Suche ist
+nicht dasselbe wie bessere Suche.**
+
+### Stand
+
+Blatt 4 bleibt wie ausgeliefert (5 von 6 Türen, 1 versenktes Paar). Live gegenüber v0.3.97:
+Übergänge über 8 px 24 → **22**, ≤ 8 px 129 → **131**, ≤ 2 px 50 → 49; Symbole, rote
+Hervorhebung und Durchtritte unverändert; 267/267 Tests, Audit 1 Fehler.
