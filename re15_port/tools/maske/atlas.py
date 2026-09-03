@@ -156,10 +156,17 @@ def build(bg_rgb, region, boxes):
     idx[opaque] = (np.argmin(d, 1) + 1).astype(np.uint8)
 
     # CLUT: 256 Eintraege BGR555. Index 0 = 0x0000 (bei ABE=0 durchsichtig).
+    # ⛔ RUNDEN STATT ABSCHNEIDEN. 8 -> 5 Bit mit `>> 3` schneidet immer nach unten ab;
+    # ueber die Palette gemessen ist der mittlere Kanalfehler dadurch -3.24 von 255, die
+    # Maskenflaeche wird also systematisch DUNKLER als der Hintergrund, auf den sie
+    # gezeichnet wird — ein sichtbarer dunkler Fleck genau dort, wo die Maske liegt.
+    # Mit +4 vor der Verschiebung liegt der Fehler bei +0.41. Kostet nichts: es sind
+    # nur 115 der 256 CLUT-Plaetze belegt, die Zwischenwerte sind vorhanden.
     clut = np.zeros(256, np.uint16)
-    r = (pal[:, 0] >> 3).astype(np.uint16)
-    g = (pal[:, 1] >> 3).astype(np.uint16)
-    b = (pal[:, 2] >> 3).astype(np.uint16)
+    q = np.minimum(pal.astype(np.int32) + 4, 255) >> 3
+    r = q[:, 0].astype(np.uint16)
+    g = q[:, 1].astype(np.uint16)
+    b = q[:, 2].astype(np.uint16)
     clut[1:] = r | (g << 5) | (b << 10)
 
     tim = bytearray()
