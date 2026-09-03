@@ -925,3 +925,51 @@ Konstanten, damit die Idee nicht ungeprüft wiederkehrt.
 
 266/266 Tests grün · ≤ 4 px 101 (69 %) · 96/96 Räume sichtbar rot · 199/199 Türdurchgänge
 korrekt hervorgehoben · 232/244 Türen mit sichtbarem Symbol · Audit 2 Fehler.
+
+## §16 — Der offene Ansatzpunkt: das falsche Band-Feld
+
+Aus §15 blieb offen: bei ROOM1170 liegt die Türmarke 17 px vom Marker entfernt, obwohl der
+Symbol-Zug greifen müsste.
+
+Eine Diagnose in `tuer_anziehen()`, die **Spielerband und Türbyte nebeneinander** druckt,
+zeigte sofort: *„Band 0 (Byte 4)"*.
+
+### Ursache: zwei Felder mit demselben Namen
+
+| Feld | Inhalt |
+|---|---|
+| `re15_aot_t.band` | `Aot_set`-Operand `chain` pc[4] — bei **Treppen** gefüllt, bei Türen **0** |
+| `re15_aot_door_params_t.band` | das **Band der Tür** (`Door_aot_set` pc[4] = obj[0x82]) |
+
+Beide Messschienen lasen das **Slot**-Feld. Damit liefen alle bandabhängigen Messungen mit
+Band 0 — die Aussage „das Blatt wird über das Band gewählt" war nie geprüft.
+
+### Wirkung der Korrektur (die Karte ist unverändert — nur die Messung war falsch)
+
+| | vorher | jetzt |
+|---|---|---|
+| gemessene Übergänge | 146 auf 11 Blättern | **153 auf 12 Blättern** (9 auf Blatt 4) |
+| ≤ 8 px | 123 (84 %) | **129 (84 %)** |
+| Türen mit sichtbarem Symbol | 232 von 244 | **237 von 244 (97 %)** |
+
+### Die verbleibenden sieben, charakterisiert
+
+* **1×** ROOM1170 → ROOM1240: der Zielraum ist überhaupt nicht gezeichnet — dort *kann*
+  kein Symbol sein.
+* **4×** über Stage-/Blattgrenzen ohne gepaarte Marke (ROOM3080 → ROOM4000,
+  ROOM4020 → ROOM4000 / ROOM5000 / ROOM50C0).
+* **2×** ROOM3020 und ROOM40A0: eine Marke existiert, der Zug reicht nicht heran.
+
+### Nebenbefund: Band-Byte ≠ `band_from_y(spawn_y)` bei 29 % der Türen
+
+`aot_common.c:561` schreibt beim Durchschreiten `band_from_y(d->spawn_y)` ins
+Kollisionsband. Gemessen weichen die zwei Größen bei **80 von 273** Türen ab. Das ist
+**kein Fehler**: das Byte beschreibt die Etage des Tür-Objekts, die Spawn-Höhe die Höhe im
+Zielraum (meist 0, weil der Boden dort auf y = 0 liegt). Für die Kartenseite ist das Byte
+die richtige Größe. `read_rdt` nimmt jetzt auch `ny` auf, damit es nachmessbar bleibt.
+
+### ⛔ Diagnose wieder entfernt
+
+Die Zug-Diagnose war ein `getenv()` + `printf` **pro Bild** im Kartenpfad. Für die
+Fehlersuche richtig, im Auslieferungscode nicht — erst recht mit Blick auf den kommenden
+PSX-Port (siehe Memory `reai-v2-psx-laufzeitbudget`).
