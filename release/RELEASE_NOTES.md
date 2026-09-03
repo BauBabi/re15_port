@@ -1,3 +1,47 @@
+# RE1.5 Port — v0.5.0 (Early Preview)
+
+**Die Karte springt nicht mehr durch die Bereiche.**
+
+Du hattest das dreimal gemeldet. Meine eigene Messschiene sagte dazu „61 von 149
+Übergängen springen über 16 Pixel" — und log. Die Schleife las die Türliste live aus
+demselben Speicher, den sie im selben Durchgang mit zwei weiteren Räumen überschrieb; ab
+der zweiten Tür bekam Raum A die Türen des zuletzt geladenen Raums zugeschrieben. Für
+ROOM1140 meldete sie Türen nach ROOM1120, den es dort gar nicht gibt.
+
+Die Karte war also die ganze Zeit besser als ihre eigene Prüfung. Was danach übrig blieb,
+waren vier echte Ursachen:
+
+* **Der Türzug griff um Haaresbreite nicht.** Wo du erscheinst, liegt bauartbedingt eine
+  Spielerbreite hinter der Wand — sonst stündest du in ihr. Es fehlten 15 bis 150
+  Einheiten, alles unter einem halben Kartenpixel.
+* **Skript-Warps wurden als Türen gezählt.** Dreizehn Einträge mit Nullfläche, durch die
+  man gar nicht läuft. Einer davon meldete einen 33-Pixel-Sprung durch eine Tür, die es
+  in den Raumdaten überhaupt nicht gibt.
+* **Beim Öffnen stehst du in der Tür, der Marker aber nur zu einem Viertel dort.** Das
+  Zug-Gewicht fiel von der Mitte des Auslösers ab statt von seinem Rand.
+* **Einseitige Türen banden den Grundriss nicht.** Ein Raum, der nur so hängt, wurde von
+  der Anordnung aktiv weggeschoben statt angelegt. Auf einem Blatt lagen deshalb zwei
+  Türsymbole übereinander — das war der letzte echte Fehler im Karten-Audit, jetzt null.
+
+| | vorher | jetzt |
+|---|---|---|
+| Sprünge über 16 Pixel | 10 von 172 | **4 von 167** |
+| Übergänge innerhalb 2 Pixel | 31 % | **66 %** |
+| Marker im eigenen Rechteck | 95 von 96 | **96 von 96** |
+| Marker im **fremden** Raum | nie geprüft | **0** |
+
+**Was ich dabei nicht gemacht habe:** den Zugbereich größer drehen, bis die Zahl schön
+ist. Sie wird nämlich immer schöner — weil ein weiter Zug beide Türseiten auf dasselbe
+Symbol schnappen lässt. Bei 1800 verschwindet ein ganzer Korridor im Zugbereich. Der
+eingebaute Wert ist der abgeleitete, nicht der schmeichelhafteste.
+
+**Ein Rest bleibt ehrlich stehen:** ROOM1090 → ROOM1100 springt weiter um 93 Pixel. Das
+ist die einzige echte Lücke im ganzen Spiel — zwei verbundene Räume, die auf ihrem Blatt
+42 Pixel auseinanderliegen. Die Ursache ist gefunden, die Reparatur fasst die Anordnung
+des ganzen Blattes an; das mache ich nicht nebenbei.
+
+---
+
 # RE1.5 Port — v0.4.9 (Early Preview)
 
 **Du hast recht, und deine Freistellungen sind ab jetzt der Weg.**
@@ -31,6 +75,9 @@ Pult, die beiden Holzschränke und das Metallgestell sind weiter als Kasten bzw.
 Bildschnitt drin — bei denen stimmt es. Die Pflanzen bleiben unmarkiert.
 
 ---
+
+---
+
 
 # RE1.5 Port — v0.4.8 (Early Preview)
 
