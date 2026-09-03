@@ -1813,3 +1813,124 @@ bei einem 88 px breiten Rechteck, 33 % bei 24 px, **100 %** beim 8 px schmalen K
 ROOM3030. Die Türkette ist mit ihrem Rauschboden von 5 px die deutlich stärkere Fessel.
 Der Weg ist damit nicht „noch nicht sauber gebaut", sondern durch die Auflösung der
 Vorlage begrenzt.
+
+
+## §31 Der Tür-Sprung: 61 → 4 von 167, in vier gemessenen Schritten (2026-09-03)
+
+Ausgangslage nach §29: 10 Übergänge mit über 16 px Sprung. Vier Ursachen, jede einzeln
+gemessen, jede mit ihrem eigenen Gegenmaß.
+
+### 1. Der Türzug scheiterte haarscharf — der Rand ist ableitbar
+
+`tuer_anziehen()` zog nur innerhalb des **doppelten** Trigger-Halbmaßes. Der Spawn wird
+aber bauartbedingt um mindestens einen **Spielerradius** in den Raum gesetzt, sonst stünde
+der Ankommende in der Wand — Radius **450** (`DAT_80073e94[6]`, code-verifiziert,
+`re15_collision.c:25/776`). Gemessen an den Fällen aus Audit [M]:
+
+| Tür | Abstand Spawn → Trigger | Zugbereich | fehlte |
+|---|---|---|---|
+| ROOM6000→ROOM6010 | 885 | 870 | **15** |
+| ROOM1050→ROOM1000 | 1050 | 1000 | **50** |
+| ROOM4040→ROOM4050 | 1100 | 1000 | **100** |
+| ROOM1210→ROOM1220 | 650 | 500 | **150** |
+
+Alle vier unter einem halben Kartenpixel, alle vier kleiner als 450. Die Ankunft fiel per
+Konstruktion aus dem Zugbereich, obwohl sie an der Tür steht.
+
+⛔ **Nicht auf den besten Metrikwert gezogen.** Der Rand wurde über 0/150/450/900/1800
+gefahren; die Übergangszahl wird **monoton** besser, weil ein größerer Zug beide Seiten
+auf dasselbe Symbol schnappen lässt — ein Proxy, der sich selbst belohnt
+([[reai-v2-proxy-mass]]). Gegenmaß ist die **verschluckte begehbare Fläche**:
+
+| Rand | Sprünge > 16 px | über 8 px | verschluckte Fläche | Räume > 25 % |
+|---|---|---|---|---|
+| 0 | 10 | 23 | 5,2 % | 2 |
+| **450** | **5** | **12** | **8,4 %** | **8** |
+| 900 | 4 | 7 | 12,4 % | 13 |
+| 1800 | 4 | 4 | 20,0 % | 31 — ROOM3030 zu **100 %** |
+
+450 ist nicht der beste Wert der Metrik, sondern der abgeleitete. Messhebel `RE15_ZUGRAND`.
+
+### 2. Die Schienen zählten Skript-Warps als Türen
+
+Ein `Aot_set` mit Breite und Tiefe 0 trifft nach dem Original-Trefftest `FUN_80042b64`
+(@0x80042b68-98) genau **einen** Weltpunkt — man läuft nicht hindurch, das Skript feuert
+ihn per `Aot_on`. Der Zonen-Generator wirft sie raus (`gen_map_zones.py:313`), die Tests
+nicht. Betroffen sind **13 Records**, darunter `ROOM3060 → ROOM3020` — als 33-px-Sprung
+gemeldet, obwohl ROOM3060 in den RDT-Daten überhaupt keine Tür dorthin hat — und das Paar
+`ROOM1170 ↔ ROOM1240` (der Eintritts-Warp). Nach dem Filter: 201 → 191 Türen.
+
+### 3. Das Maß war schärfer als die Vorgabe
+
+„Marker in der roten Fläche" fragte, ob der Marker in einer roten **Füllung** liegt.
+Gezeichnet wird ein Raum aber als helle Wandlinie **plus** Füllung darin; ein Marker genau
+auf der Wand seines **eigenen** Raums steht damit im Rechteck und fällt trotzdem durch.
+
+Gemessen: **jeder** der sechs gemeldeten Fälle lag exakt **+1 px** daneben, und alle sechs
+lagen laut Zonentabelle im eigenen Rechteck (`drin=True`). Die naheliegende Erklärung —
+ein Nachbar-Rechteck deckt den Pixel — wurde geprüft und **ausgeschlossen**: ein zweiter
+Klemmer bis an die Rechteckkante änderte keine einzige Zahl, der Marker verlässt sein
+Rechteck also nie.
+
+Der Nutzer verlangt *„der spielmarker [muss] im kleinen rechteck sein"* — das Rechteck,
+nicht sein Inneres. Die Prüfung misst jetzt das, **plus einen neuen scharfen Riegel**: der
+Marker darf nie im Rechteck eines *anderen* Raums landen (game-weit 0 Fälle).
+
+### 4. Volles Zug-Gewicht im Trigger
+
+Bis dahin fiel das Gewicht von der **Mitte** des Triggers linear auf null; an der
+Trigger-Kante — wo man beim Öffnen steht und wo der Spawn liegt — waren davon rund 27 %
+übrig. Im Trigger ist die Tür nach `FUN_80042b64` bedienbar; das ist die spieleigene
+Definition von „an dieser Tür". Jetzt 1 im ganzen Trigger, dann stetig auf 0 bis zum Rand
+des Zugbereichs — an der Trigger-Kante beidseitig 1, also weiterhin sprungfrei.
+
+Erst mit dem geschärften Maß aus Schritt 3 ist das **kostenlos**: 96/96 im eigenen
+Rechteck, 0 im fremden Raum, und innerhalb 2 px steigt von 43 % auf 66 %.
+
+### 5. Einseitige Türen binden jetzt den Grundriss-Löser
+
+`anheften()` in `tools/grundriss.py` bewertete Kandidatenlagen danach, wie viele **schon
+gesetzte** Kanten sie miterfüllt — zählte dabei aber nur `kanten` (reziproke Türpaare),
+nicht `notkanten` (einseitige). Für einen Ort, dessen einzige Verbindung auf dem Blatt
+einseitig ist, war `treffer` damit bei **jeder** Lage 0, und die Wahl fiel allein über die
+Überlappung — die schiebt den Raum aktiv **weg**.
+
+Wirkung auf Blatt 6: **3 GETRENNT → 0**, Überlappung 11,7 % → 4,5 %, Durchgänge
+deckungsgleich 10/13 → 11/13. Im Karten-Audit fällt damit der **einzige echte Fehler**
+weg: [N] „Symbole verschiedener Durchgänge liegen aufeinander" **1 → 0**
+(Blatt 6 (188,105): ROOM2030↔ROOM2070 und ROOM2070↔ROOM0000).
+
+⛔ **Ehrlicher Preis:** dieselbe Umordnung erzeugt **einen** neuen Markersprung,
+ROOM2070→ROOM2000 mit 27 px, und der schlimmste Sprung steigt von 21 auf 27 px. Zwei
+Türsymbole dauerhaft übereinander wiegen schwerer als ein Sprung an einer Tür.
+
+### Stand
+
+| | vorher (§29) | jetzt |
+|---|---|---|
+| Sprünge über 16 px | 10 von 172 | **4 von 167** |
+| über 8 px | 23 von 153 | **7 von 151** |
+| innerhalb 2 px | 31 % | **66 %** |
+| Median | 3 px | **2 px** |
+| richtiger Raum rot | 201/201 | **191/191** |
+| Marker im eigenen Rechteck | 95/96 (Füllung) | **96/96** (Rechteck) |
+| Marker im **fremden** Raum | nie geprüft | **0** |
+| Karten-Audit, echte Fehler | 1 | **0** |
+
+Die vier Reste: ROOM1090→ROOM1100 93 px, ROOM2070→ROOM2000 27 px, ROOM1050→ROOM1000
+21 px, ROOM1210→ROOM11E0 17 px.
+
+### ⛔ Nebenbefund: das Audit sah die Gast-Zeilen nicht
+
+Die Prüfungen [F] und [M] in `karte_audit.py` benutzen `zone_von()`, und das überspringt
+Etagen-/Gastzeilen (`if z['etage']: continue`) — genau die Zeilen, die die Engine benutzt
+(`re15_map_floor_lookup` / `re15_map_zone_fuer`). Mit voller Abdeckung — alle Blätter, auf
+denen **beide** Räume eine Zeichnung haben — gibt es im ganzen Spiel genau **eine** Lücke:
+**ROOM1090 ↔ ROOM1100, 42 px auf Blatt 3**, wo ROOM1090 Gast ist. 100 von 101 Paaren
+stoßen an.
+
+Der Fall ist bis auf den Löser durchdiagnostiziert: die Notkante `ROOM1090 → ROOM1100`
+**existiert** (Kantendump Blatt 3: 6 Türkanten, 3 Notkanten), aber der Löser heftet
+ROOM1090 immer an **ROOM10F0** an (9 von 9 Versuchen, über dessen eigene Notkante) und
+prüft die Bindung an ROOM1100 danach nie wieder nach. Am Ende liegt ROOM1090 von **beiden**
+42 px entfernt.
