@@ -135,7 +135,28 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     rid = int(room[4:], 16)
     aus = []
     for o in e.get("objekte") or []:
-        if "kontrast" in o:
+        if "png" in o:
+            # ⛔ DER BESTE WEG (Nutzer, 2026-09-04): ein von Hand freigestelltes PNG.
+            # Das Maskenformat IST eine Freistellung (Palettenindex 0 wird nicht
+            # gezeichnet), ein Alphakanal ist also 1:1 das, was hineingehoert — und ein
+            # Mensch mit dem Lasso trifft in drei Minuten, woran Superpixel, Kontrast-
+            # schnitt und Kaesten alle gescheitert sind. Die LAGE wird gemessen, nicht
+            # angegeben: die freigestellten Pixel sind Hintergrundpixel, es gibt also
+            # genau eine Stelle, an der sie passen (s. maske_aus_png.platziere).
+            import maske_aus_png
+            bgb = load_bg(ppm, rid, cut)
+            if all(k in o for k in ("x", "y", "massstab")):
+                r = maske_aus_png.setze(o["png"], o["x"], o["y"], o["massstab"])
+            else:
+                r, info = maske_aus_png.platziere(o["png"], bgb)
+                print("     %s: gefunden bei x=%d y=%d Massstab %d, "
+                      "Uebereinstimmung %.1f %% — diese drei Werte in die Auswahldatei "
+                      "eintragen, dann entfaellt die Suche"
+                      % (o.get("name", "?"), info["x"], info["y"], info["massstab"],
+                         100 * info["uebereinstimmung"]))
+            if r is None:
+                continue
+        elif "kontrast" in o:
             r = kontrast_region(load_bg(ppm, rid, cut), o["kontrast"])
         elif "kaesten" in o:
             # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als

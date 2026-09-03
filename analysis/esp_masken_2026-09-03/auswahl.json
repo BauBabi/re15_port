@@ -93,9 +93,9 @@
     {
      "name": "Mikrofone",
      "kontrast": {
-      "box": "150,103,212,124",
+      "box": "152,104,206,124",
       "rand": 8,
-      "schwelle": 22,
+      "schwelle": 26,
       "mindest": 10
      },
      "oben": 0,
@@ -103,19 +103,20 @@
     },
     {
      "name": "US-Fahne",
-     "kontrast": {
-      "box": "114,78,146,197",
-      "rand": 7,
-      "schwelle": 20,
-      "mindest": 10
-     },
+     "png": "analysis/esp_masken_2026-09-03/freistellungen/ROOM1140/cut03_usfahne.png",
+     "x": 120,
+     "y": 67,
+     "massstab": 3,
      "fuss": 192,
      "oben": 0,
-     "grow": 1
+     "grow": 0
     },
     {
      "name": "Blaue Fahne",
-     "kaesten": "211,89,231,160;212,158,220,172;202,166,230,186",
+     "png": "analysis/esp_masken_2026-09-03/freistellungen/ROOM1140/cut03_blaue_fahne.png",
+     "x": 203,
+     "y": 63,
+     "massstab": 3,
      "fuss": 182,
      "oben": 0,
      "grow": 0
@@ -146,7 +147,7 @@
      "grow": 0
     }
    ],
-   "_warum": "Nutzer 23:50: 'Pult und Flagge links sind jetzt super. Flagge rechts noch nicht, Tisch unten rechts und oben rechts noch nicht.' Die blaue Fahne ist in ihrer unteren Haelfte fast schwarz vor dunklem Teppich — der Kontrastschnitt verlor sie dort; sie haengt gerade und ist deshalb als Kaesten angegeben (Tuch, Stange, Teller). Die beiden Holzschraenke mit den Pflanzen links und rechts sowie das Metallgestell links waren bisher gar nicht markiert. Die beiden Pflanzen auf den Schraenken bleiben unmarkiert: ihr Laub ist fransig, jeder Kasten und jeder Kontrastschnitt nahm dort Wand mit — der Nutzen ist zu klein fuer das Risiko."
+   "_warum": "Stand 2026-09-04. Die beiden Fahnen kommen als von Hand FREIGESTELLTE PNGs (Nutzer, Lasso in GIMP, drei Minuten) — das ist genau das, was das Maskenformat braucht (Palettenindex 0 = durchsichtig), und es trifft, woran Superpixel (zu flaechig), Kontrastschnitt (verliert Dunkles vor Dunklem) und Kaesten (treffen keine fransigen Formen) alle gescheitert sind. Die LAGE wird gemessen, nicht angegeben: die freigestellten Pixel sind Hintergrundpixel, es gibt genau eine passende Stelle (US-Fahne x=120 y=67 Massstab 3, 87 % Uebereinstimmung; blaue Fahne x=203 y=63, 99.6 %). Pult, Schraenke und Gestell bleiben Kaesten bzw. Kontrastschnitt; die Pflanzen bleiben unmarkiert."
   },
   "4": {
    "objekte": [
