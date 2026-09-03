@@ -426,7 +426,7 @@ static int re15_zugkurve(void)
     static int wert = -1;
     if (wert < 0) {
         const char *e = getenv("RE15_ZUGKURVE");
-        wert = e ? atoi(e) : 0;
+        wert = e ? atoi(e) : 1;
     }
     return wert;
 }
@@ -634,7 +634,12 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                  * die Uebergaenge innerhalb 2 px fallen von 45 % auf 32 %, und die
                  * Zahl "Marker in der roten Flaeche" bleibt unveraendert bei 95 von 96 -
                  * es rettet also nichts und kostet Genauigkeit. Der Zug darf den Marker
-                 * die letzten Pixel bis an die Wand tragen. */
+                 * die letzten Pixel bis an die Wand tragen.
+                 * ⛔ UND DER MARKER VERLAESST SEIN RECHTECK GAR NICHT. Ein zweiter
+                 * Klemmer bis an die Rechteckkante (ohne die Reserve) aenderte KEINE
+                 * EINZIGE Zahl - weder die Uebergaenge noch "Marker in der roten
+                 * Flaeche". Die verlorene rote Flaeche der staerkeren Zugkurve kommt
+                 * also NICHT daher, dass der Marker aus seinem Rechteck laeuft. */
                 return;
             }
         }

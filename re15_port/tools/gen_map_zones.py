@@ -1549,6 +1549,15 @@ def main():
                 for (_a, _pa, _bb, _pb) in _B.kanten:
                     print("      ROOM%04X z%d  <->  ROOM%04X z%d"
                           % (_a >> 4, _a & 15, _bb >> 4, _bb & 15))
+                print("      Notkanten (einseitige Tueren):")
+                for (_a, _pa, _bb, _pb) in _B.notkanten:
+                    print("         ROOM%04X z%d  ->  ROOM%04X z%d"
+                          % (_a >> 4, _a & 15, _bb >> 4, _bb & 15))
+                for _o in _orte:
+                    print("      Ort ROOM%04X z%d: %d Tuer-Datensaetze -> %s"
+                          % (_o >> 4, _o & 15, len(_rd[_o][1]),
+                             ", ".join("ROOM%04X" % (_e['dest'] >> 4)
+                                       for _e in _rd[_o][1]) or "KEINE"))
                 _fehlt = []
                 for _o in _orte:
                     for _d in _rd[_o][1]:

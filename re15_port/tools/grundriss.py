@@ -492,7 +492,7 @@ class Blatt(object):
             # eine, ueber eine andere Ankerkante sind drei moeglich.
             kand = []
             gesehen_st = set()
-            for (nb_b, nb_pa, nb_pb) in nb[a]:
+            for (nb_b, nb_pa, nb_pb) in list(nb[a]) + list(nnb[a]):
                 if nb_b != b:
                     continue
                 for st in self.anlegen(a, lage[a], nb_pa, b, nb_pb):
@@ -528,13 +528,24 @@ class Blatt(object):
             # zog bei allen fuenf Tueren auf dieselbe Stelle.
             # Gezaehlt wird deshalb zuerst, wie viele SCHON GESETZTE Kanten die Lage
             # miterfuellt; die Ueberlappung entscheidet erst bei Gleichstand.
+            #
+            # ⛔ NOTKANTEN MUESSEN MITZAEHLEN. Sie taten es nicht - und fuer einen Ort,
+            # dessen EINZIGE Verbindung auf dem Blatt einseitig ist, war damit `treffer`
+            # bei JEDER Kandidatenlage 0. Die Wahl fiel dann allein ueber die
+            # Ueberlappung, und die schiebt den Raum aktiv WEG. Genau so entstand die
+            # einzige echte Luecke im ganzen Spiel: ROOM1090 (Gast auf Blatt 3) haengt
+            # dort nur an der einseitigen Tuer zu ROOM1100 und landete 42 px daneben,
+            # live als 93-px-Markersprung sichtbar. Der Anker einer Notkante ist der
+            # Spawn statt des Gegen-Tuerpunkts; "beruehren sich" ist damit genauso
+            # messbar wie bei einer gepaarten Tuer (siehe das Guetemass weiter unten,
+            # das sie aus demselben Grund schon mitzaehlt).
             best = None
             for st in kand:
                 pb2 = self.pixel(b, st)
                 ueb = sum(len(pb2 & v) for v in pix.values())
                 lage[b] = st
                 treffer = 0
-                for (a2, pa2, b2, pb2k) in self.kanten:
+                for (a2, pa2, b2, pb2k) in list(self.kanten) + list(self.notkanten):
                     if a2 not in lage or b2 not in lage:
                         continue
                     if b2 != b and a2 != b:
@@ -551,7 +562,7 @@ class Blatt(object):
                 for st in kand:
                     lage[b] = st
                     tr = 0
-                    for (a2, pa2, b2, pb2k) in self.kanten:
+                    for (a2, pa2, b2, pb2k) in list(self.kanten) + list(self.notkanten):
                         if a2 not in lage or b2 not in lage:
                             continue
                         if b2 != b and a2 != b:

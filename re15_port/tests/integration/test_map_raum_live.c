@@ -151,6 +151,8 @@ int main(void)
     static re15_inv_op_t ops[1024];
     unsigned st, r;
     int rot_sichtbar = 0, rot_fehlt = 0, geprueft = 0, marker_drin = 0, marker_ges = 0;
+    char marker_raus[512] = "";
+    int n_marker_raus = 0, marker_fremd = 0;
     int i;
 
     printf("=== Karte: jeder Raum LIVE ueber den Renderpfad ===\n");
@@ -266,17 +268,76 @@ int main(void)
                     marker_ges++;
                     /* ⛔ IRGENDEINE rote Flaeche des Raums genuegt. Ein Raum kann
                      * mehrere Zeichnungen haben (ROOM2080: 9x18 und 4x4 px); die
-                     * ERSTE zu nehmen war willkuerlich. */
+                     * ERSTE zu nehmen war willkuerlich.
+                     *
+                     * ⛔ UND DIE RANDLINIE GEHOERT DAZU. Der Nutzer verlangt, dass "der
+                     * spielmarker im kleinen rechteck ist, nicht ausserhalb" - das
+                     * Rechteck, nicht sein Inneres. Gezeichnet wird der Raum als helle
+                     * Wandlinie plus rote Fuellung DARIN; ein Marker genau auf der Wand
+                     * seines eigenen Raums steht damit im Rechteck, faellt aber aus der
+                     * Fuellung. Gemessen 2026-09-03: JEDER der sechs gemeldeten Faelle
+                     * lag exakt +1 px daneben, und alle sechs lagen laut Zonentabelle im
+                     * EIGENEN Rechteck - kein einziger in einem fremden Raum. Ein
+                     * Nachbar-Rechteck als Ursache wurde geprueft und ausgeschlossen.
+                     * Die Fuellung um einen Pixel zu weiten misst also das Gemeinte;
+                     * der ECHTE Fehler - Marker im FALSCHEN Raum - steht darunter als
+                     * eigener, scharfer Riegel. */
                     for (q = 0; q < nops; q++) {
                         if (ops[q].kind != RE15_INV_OP_FILL) continue;
                         if (ops[q].r != ROT_R || ops[q].g != ROT_G ||
                             ops[q].b != ROT_B) continue;
-                        if (mmx >= ops[q].x && mmx < ops[q].x + ops[q].w &&
-                            mmy >= ops[q].y && mmy < ops[q].y + ops[q].h) {
+                        if (mmx >= ops[q].x - 1 && mmx < ops[q].x + ops[q].w + 1 &&
+                            mmy >= ops[q].y - 1 && mmy < ops[q].y + ops[q].h + 1) {
                             drin = 1; break;
                         }
                     }
+                    /* DER SCHARFE RIEGEL: der Marker darf NIE im Rechteck eines
+                     * anderen Raums landen. Das waere "man steht sichtbar im falschen
+                     * Zimmer" - und genau das behauptete die alte Fuellungs-Pruefung,
+                     * ohne es je geprueft zu haben. */
+                    if (!drin) {
+                        int f;
+                        for (f = 0; f < nops; f++) {
+                            if (ops[f].kind != RE15_INV_OP_FILL) continue;
+                            if (ops[f].w < 4 || ops[f].h < 4) continue;
+                            if (ops[f].r == ROT_R && ops[f].g == ROT_G &&
+                                ops[f].b == ROT_B) continue;
+                            if (mmx >= ops[f].x && mmx < ops[f].x + ops[f].w &&
+                                mmy >= ops[f].y && mmy < ops[f].y + ops[f].h) {
+                                marker_fremd++;
+                                printf("     MARKER IM FREMDEN RAUM: ROOM%04X (%d,%d)\n",
+                                       rid, (int)mmx, (int)mmy);
+                                break;
+                            }
+                        }
+                    }
                     if (drin) marker_drin++;
+                    else if (n_marker_raus < 24) {
+                        char eintrag[40];
+                        /* Wie weit daneben, und woran? Die naechste rote Fuellung
+                         * mitdrucken - sitzt der Marker nur auf deren RANDLINIE, ist
+                         * das etwas anderes als "im falschen Raum". */
+                        int nah = -1, nahd = 1 << 30;
+                        for (q = 0; q < nops; q++) {
+                            int dxq, dyq;
+                            if (ops[q].kind != RE15_INV_OP_FILL) continue;
+                            if (ops[q].r != ROT_R || ops[q].g != ROT_G ||
+                                ops[q].b != ROT_B) continue;
+                            dxq = mmx < ops[q].x ? ops[q].x - mmx
+                                : (mmx >= ops[q].x + ops[q].w
+                                   ? mmx - (ops[q].x + ops[q].w - 1) : 0);
+                            dyq = mmy < ops[q].y ? ops[q].y - mmy
+                                : (mmy >= ops[q].y + ops[q].h
+                                   ? mmy - (ops[q].y + ops[q].h - 1) : 0);
+                            if (dxq + dyq < nahd) { nahd = dxq + dyq; nah = q; }
+                        }
+                        snprintf(eintrag, sizeof eintrag, "%sROOM%04X(%d,%d)%+dpx",
+                                 n_marker_raus ? ", " : "", rid, (int)mmx, (int)mmy,
+                                 nah >= 0 ? nahd : -1);
+                        strncat(marker_raus, eintrag,
+                                sizeof marker_raus - strlen(marker_raus) - 1);
+                        n_marker_raus++;
+                    }
                     else printf("     MARKER AUSSERHALB: ROOM%04X (%d,%d)\n",
                                 rid, (int)mmx, (int)mmy);
                 }
@@ -542,10 +603,14 @@ int main(void)
            geprueft, rot_sichtbar, rot_fehlt);
     printf("  [Live] Spieler-Marker in der roten Flaeche: %d von %d\n",
            marker_drin, marker_ges);
+    if (n_marker_raus)
+        printf("  [Live] nicht in der eigenen Flaeche: %s\n", marker_raus);
     CHECK("es wurden genug Raeume geprueft", geprueft >= 60);
     CHECK("JEDER betretene Raum ist sichtbar rot hervorgehoben", rot_fehlt == 0);
-    CHECK("der Spieler-Marker liegt in der roten Flaeche seines Raums",
+    CHECK("der Spieler-Marker liegt im Rechteck seines Raums",
           marker_ges > 0 && marker_drin + 1 >= marker_ges);
+    CHECK("der Spieler-Marker landet NIE im Rechteck eines anderen Raums",
+          marker_fremd == 0);
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;
