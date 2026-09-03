@@ -88,7 +88,9 @@
      "name": "Rednerpult",
      "segments": 220,
      "ids": [
+      88,
       99,
+      103,
       104,
       109,
       118,
@@ -122,7 +124,7 @@
      "fuss": 182
     }
    ],
-   "_warum": "Neu gezeichnet. Die grobe Auswahl (90 Flaechen) hatte Fensterbank, Wand und den linken Schrank mitgenommen und den Fahnen ihren Bodenkontakt gefehlt: die Maske endete an der Unterkante des Tuchs (y=143 in Spalte 215) und bekam Tiefe 126 statt ~104, obwohl der Fahnenteller bei y~178 steht. Leon (Fuesse y~165, vz 7981) wurde deshalb VOR die Fahne gezeichnet (Screenshot 220043). Jetzt ist jede Fahne ein eigenes Objekt mit 'fuss' = Bildzeile ihres Tellers."
+   "_warum": "Neu gezeichnet. Die grobe Auswahl (90 Flaechen) hatte Fensterbank, Wand und den linken Schrank mitgenommen und den Fahnen ihren Bodenkontakt gefehlt: die Maske endete an der Unterkante des Tuchs (y=143 in Spalte 215) und bekam Tiefe 126 statt ~104, obwohl der Fahnenteller bei y~178 steht. Leon (Fuesse y~165, vz 7981) wurde deshalb VOR die Fahne gezeichnet (Screenshot 220043). Jetzt ist jede Fahne ein eigenes Objekt mit 'fuss' = Bildzeile ihres Tellers. Nachtrag 23:20: der Nutzer meldet 'das Pult muss schon eher ueberdecken, quasi hoeher'. Gemessen: die Maske begann in Spalte 160..180 erst bei y=132, die Pultplatte mit den Mikrofonen reicht aber bis y=108 hinauf — Leons Arme und Bauch wurden deshalb ueber die Pultplatte gezeichnet. Flaechen 88 (Mikrofone und Platte) und 103 (linke Plattenkante) ergaenzt."
   },
   "4": {
    "objekte": [
