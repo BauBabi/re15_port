@@ -1,3 +1,32 @@
+# RE1.5 Port — v0.5.1 (Early Preview)
+
+**Dein Tisch ist drin.** Erste Maske im neuen Ablauf.
+
+Eingang war `pri/1140/01.png`. Die Zuordnung habe ich nicht angenommen, sondern gemessen
+— deine Freistellung gegen alle zehn Kamera-Einstellungen des Raums gehalten:
+
+| Einstellung | Übereinstimmung |
+|---|---|
+| **0** | **100,0 %** (Maßstab 1, x=0 y=122) |
+| 6 | 81,4 % |
+| 2 | 81,1 % |
+| 8 | 73,5 % |
+
+Der Dateiname hätte Einstellung 1 nahegelegt — die Messung sagt 0. Deshalb lese ich die
+Lage grundsätzlich aus dem Bild und nicht aus dem Namen; du musst dich um Nummerierung
+und Ausrichtung also nicht kümmern.
+
+Tiefe: hier war nichts anzugeben, die Silhouette läuft unten aus dem Bild, also ist der
+Bodenkontakt die Vorderkante des Tischs selbst. Daraus 59 Rechtecke mit acht
+verschiedenen Tiefen (der Tisch läuft ja in die Tiefe), 34,0 % des Bildes.
+
+Zum Nachsehen: `masken_vorschau/ROOM1140/ROOM1140_cut00_x3.png` — das ist genau das, was
+im Spiel über dich gemalt wird. Die Kante ist jetzt deine, kein Saum Teppich mehr.
+
+Die übrigen Einstellungen von ROOM1140 haben weiterhin keine Maske.
+
+---
+
 # RE1.5 Port — v0.5.0 (Early Preview)
 
 **ROOM1140 ist komplett zurueckgezogen.** Es ist keine von mir gezogene oder automatisch
