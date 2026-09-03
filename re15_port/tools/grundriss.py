@@ -69,7 +69,23 @@ WAND_RAND = float(os.environ.get('RE15_WAND_RAND', '4'))
 # Welcher Anteil der BEGEHBAREN Flaeche muss im Rechteck bleiben?
 # 1.0 = die alte aeussere Bbox (nichts stutzen).
 ANTEIL = float(os.environ.get('RE15_KERN_ANTEIL', '1.0'))
-FELD = (100, 55, 132, 140)      # Kartenfeld: dort liegen alle Rechtecke aller Seiten
+# ⛔ DAS FELD BLEIBT KLEIN - GEMESSEN, NICHT AUS BEQUEMLICHKEIT.
+# Die ausgelieferte Kunst bespielt ueber alle 13 Seiten x[39..293] = 254 px und
+# y[44..206] = 162 px (Rechteck-Listen @0x80076844 + 8*seite); unser Feld ist mit
+# 132x140 nur etwa halb so breit. Die Karte auf Original-Groesse zu bringen liegt
+# nahe - und macht sie MESSBAR SCHLECHTER, weil der feinere Massstab jede
+# Tuerabweichung in mehr Pixel uebersetzt und die Anordnungen sich mitverschieben:
+#
+#   Feld 100,55,132,140   919 Welteinheiten/px   Ueberlappung 10,7 %   <= 4 px 69 %
+#   Feld 120,52,160,142   846 Welteinheiten/px   Ueberlappung 10,4 %   <= 4 px 63 %
+#   Feld  46,50,232,145   793 Welteinheiten/px   Ueberlappung 10,4 %   <= 4 px 58 %
+#
+# Die Ueberlappung sinkt dabei NICHT - der einzige Effekt ist, dass die vorhandenen
+# Fehler groesser dargestellt werden. Der Nutzer hat wiederholt Spruenge bemaengelt,
+# nie eine zu kleine Karte; deshalb bleibt es bei der kleinen Flaeche.
+# RE15_FELD=x,y,w,h zum Nachmessen.
+FELD = tuple(int(v) for v in
+             os.environ.get('RE15_FELD', '100,55,132,140').split(','))
 
 
 def ORDNUNG(k):
