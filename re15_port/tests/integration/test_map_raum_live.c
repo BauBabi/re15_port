@@ -334,6 +334,17 @@ int main(void)
                     int band, rotA = 0, rotB = 0, sA = -1, sB = -1;
                     int16_t max_ = 0, may = 0, mbx = 0, mby = 0;
                     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
+                    /* ⛔ NULLFLAECHEN-RECORDS SIND SKRIPT-WARPS, KEINE TUEREN.
+                     * Ein Aot_set mit Breite und Tiefe 0 trifft nach dem Original-
+                     * Trefftest FUN_80042b64 (@0x80042b68-98: Treffer genau dann, wenn
+                     * (u32)(px-x0) <= w) nur einen EINZIGEN Weltpunkt - man laeuft nicht
+                     * hindurch, das Skript feuert ihn per Aot_on. Der Zonen-Generator
+                     * wirft sie deshalb raus (gen_map_zones.py:313); die Messschienen
+                     * muessen dieselbe Definition benutzen, sonst messen sie einen
+                     * Kartensprung ueber einen Warp, den kein Spieler durchschreitet.
+                     * Betroffen sind 13 Records, u.a. ROOM3060 -> ROOM3020 (33 px) und
+                     * das Paar ROOM1170 <-> ROOM1240 (der Eintritts-Warp). */
+                    if (a->half_w == 0 && a->half_h == 0) continue;
                     ziel = (((unsigned)d->dest_stage + 1u) << 12)
                          | ((unsigned)d->dest_room << 4) | (rid & 0x000Fu);
                     if (ziel == rid) continue;
@@ -419,6 +430,17 @@ int main(void)
                     int ident_mk = -1, einzeln_mk = -1;
                     int16_t mmx = 0, mmy = 0;
                     if (!a->active || a->type != RE15_AOT_TYPE_DOOR) continue;
+                    /* ⛔ NULLFLAECHEN-RECORDS SIND SKRIPT-WARPS, KEINE TUEREN.
+                     * Ein Aot_set mit Breite und Tiefe 0 trifft nach dem Original-
+                     * Trefftest FUN_80042b64 (@0x80042b68-98: Treffer genau dann, wenn
+                     * (u32)(px-x0) <= w) nur einen EINZIGEN Weltpunkt - man laeuft nicht
+                     * hindurch, das Skript feuert ihn per Aot_on. Der Zonen-Generator
+                     * wirft sie deshalb raus (gen_map_zones.py:313); die Messschienen
+                     * muessen dieselbe Definition benutzen, sonst messen sie einen
+                     * Kartensprung ueber einen Warp, den kein Spieler durchschreitet.
+                     * Betroffen sind 13 Records, u.a. ROOM3060 -> ROOM3020 (33 px) und
+                     * das Paar ROOM1170 <-> ROOM1240 (der Eintritts-Warp). */
+                    if (a->half_w == 0 && a->half_h == 0) continue;
                     band = (int)sn3_d[k].band;
                     if (!betrete(rid, a->x, a->z, band)) continue;
                     re15_map_visited_mark(rid);

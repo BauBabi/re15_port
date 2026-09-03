@@ -170,6 +170,17 @@ int main(void)
                 const re15_aot_door_params_t *d = &g_aot.door_params[k];
                 unsigned ziel;
                 if (!s->active || s->type != RE15_AOT_TYPE_DOOR) continue;
+                /* ⛔ NULLFLAECHEN-RECORDS SIND SKRIPT-WARPS, KEINE TUEREN.
+                 * Ein Aot_set mit Breite und Tiefe 0 trifft nach dem Original-
+                 * Trefftest FUN_80042b64 (@0x80042b68-98: Treffer genau dann, wenn
+                 * (u32)(px-x0) <= w) nur einen EINZIGEN Weltpunkt - man laeuft nicht
+                 * hindurch, das Skript feuert ihn per Aot_on. Der Zonen-Generator
+                 * wirft sie deshalb raus (gen_map_zones.py:313); die Messschienen
+                 * muessen dieselbe Definition benutzen, sonst messen sie einen
+                 * Kartensprung ueber einen Warp, den kein Spieler durchschreitet.
+                 * Betroffen sind 13 Records, u.a. ROOM3060 -> ROOM3020 (33 px) und
+                 * das Paar ROOM1170 <-> ROOM1240 (der Eintritts-Warp). */
+                if (s->half_w == 0 && s->half_h == 0) continue;
                 /* ⛔ DIESELBE FORMEL WIE DER WARP (aot_common.c:515-517):
                  *     dest_id = ((dest_stage+1) << 12) | (dest_room << 4) | Variante
                  * Ein erster Wurf nahm dest_room als vollen Bytewert und lud damit

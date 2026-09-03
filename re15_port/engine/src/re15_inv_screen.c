@@ -17,6 +17,7 @@
  * address, or carries its @0x citation inline.
  */
 #include <string.h>
+#include <stdlib.h>
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
@@ -390,6 +391,36 @@ static void re2_ton(int rs, int *r, int *g, int *b)
     else                                  { *r =  34; *g =  34; *b =  38; }
 }
 
+/* Spielerradius fuer den Kollisions-Klemmer: 450 (DAT_80073e94[6], code-verifiziert,
+ * siehe re15_collision.c:25 und der PLAYER-Aufruf @re15_collision.c:776). Ueber diese
+ * Strecke wird der Ankunftspunkt einer Tuer von der Wand weggesetzt. Umstellbar fuer die
+ * Messung: RE15_ZUGRAND. */
+#define RE15_SPIELER_RADIUS re15_zugrand()
+
+static int32_t re15_zugrand(void)
+{
+    /* ⛔ NICHT GROESSER MACHEN, AUCH WENN DIE UEBERGANGS-ZAHL DANN BESSER AUSSIEHT.
+     * Gemessen 2026-09-03 ueber beide Live-Schienen:
+     *      Rand |Spruenge>16px| ueber 8 px | verschluckte begehbare Flaeche
+     *         0 |     10      |     23     |  5,2 %  (2 Raeume ueber 25 %)
+     *       450 |      5      |     12     |  8,4 %  (8)
+     *       900 |      4      |      7     | 12,4 % (13)
+     *      1800 |      4      |      4     | 20,0 % (31, ROOM3030 zu 100 %)
+     * Die Uebergangs-Metrik wird monoton besser - weil ein groesserer Zug BEIDE Seiten
+     * auf dasselbe Symbol schnappen laesst. Das ist ein Proxy, der sich selbst belohnt
+     * (Memory reai-v2-proxy-mass): der Preis ist, dass Punkte mitten im Raum zur Tuer
+     * gezogen werden und der Marker aufhoert zu sagen, wo der Spieler steht. Bei 1800
+     * verschluckt der Zug den Korridor ROOM3030 vollstaendig.
+     * 450 ist deshalb nicht der beste Wert der Metrik, sondern der ABGELEITETE. */
+    static int32_t wert = -1;
+    if (wert < 0) {
+        const char *e = getenv("RE15_ZUGRAND");
+        wert = e ? (int32_t)atoi(e) : 450;
+        if (wert < 0) wert = 0;
+    }
+    return wert;
+}
+
 static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
                           int seite, int16_t *mx, int16_t *my)
 {
@@ -407,8 +438,17 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
          * und die Ankunft blieb daneben (live gemessen: nur 23 % der Uebergaenge unter
          * 2 px). Das Gewicht faellt zum Rand hin stetig auf null, es entsteht also kein
          * Sprung beim Betreten des Bereichs. */
-        hw = (a->half_w > 0 ? a->half_w : 1) * 2;
-        hh = (a->half_h > 0 ? a->half_h : 1) * 2;
+        /* ⛔ PLUS EINEN SPIELERRADIUS - ABGELEITET, NICHT GERATEN.
+         * Der Spawn wird bauartbedingt um mindestens einen Spielerradius IN den Raum
+         * gesetzt, sonst staende der Ankommende in der Wand. Der Radius ist 450
+         * (DAT_80073e94[6], code-verifiziert, re15_collision.c:25/776). Ohne diesen
+         * Rand scheitert der Zug HAARSCHARF: gemessen an den Faellen aus dem Audit [M]
+         * fehlten ROOM6000->ROOM6010 15 Einheiten, ROOM1050->ROOM1000 50,
+         * ROOM4040->ROOM4050 100, ROOM1210->ROOM1220 150 - allesamt weit unter einem
+         * halben Kartenpixel und allesamt kleiner als 450. Die Ankunft fiel damit per
+         * Konstruktion aus dem Zugbereich, obwohl sie an der Tuer steht. */
+        hw = (a->half_w > 0 ? a->half_w : 1) * 2 + RE15_SPIELER_RADIUS;
+        hh = (a->half_h > 0 ? a->half_h : 1) * 2 + RE15_SPIELER_RADIUS;
         dx = wx - a->x; if (dx < 0) dx = -dx;
         dz = wz - a->z; if (dz < 0) dz = -dz;
         if (dx > hw || dz > hh) continue;                  /* ausserhalb des Zugbereichs */
