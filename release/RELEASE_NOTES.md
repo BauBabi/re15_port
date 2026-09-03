@@ -1,3 +1,38 @@
+# RE1.5 Port — v0.3.99 (Early Preview)
+
+**Testpaket: ROOM1140 (Briefing Room) ist von Hand nachgezeichnet.**
+
+Der Raum aus deinem urspruenglichen Report — *"Leon steht auf dem Tisch"* — hat jetzt
+Vordergrund-Verdeckungen. Im Original hatte er **keine**: Header-Byte 0, alle zehn
+Einstellungen zeigen auf `FF FF FF FF`, kein Vordergrundbild. Das war eine der Luecken,
+die der Prototyp offen gelassen hat.
+
+| Einstellung | Masken | was verdeckt |
+|---|---|---|
+| 0 | 31 | Konferenztisch + Stuehle |
+| 1 | 17 | Tisch und Stuehle an der linken Wand |
+| 2 | 34 | Tisch, Kamerastative |
+| 3 | 50 | Podium, beide Fahnen, seitliche Baenke |
+| 4 | 57 | Flipchart, linke Bank, rechter Tisch |
+| 5 | 24 | nahe linke Wand, Tisch und Schreibtisch |
+| 6 | 12 | beide Flurwaende (nur die nahen Abschnitte) |
+| 7 | 36 | Tisch links, nahe rechte Wand |
+| 8 | — | **bewusst leer** |
+| 9 | 55 | Schreibtisch, Muelleimer, Stuhl, Eckwand |
+
+**316 Masken.** Einstellung 8 bleibt leer, weil dort Pflanze, Beistelltisch und Sockel
+alle *an* der Wand stehen und der Spieler davor laeuft — es gibt schlicht nichts
+zwischen Kamera und Figur. Eine Maske haette dort nur schaden koennen.
+
+**Worauf du achten kannst:** ob die Fuesse sauber hinter Tisch- und Wandkanten
+verschwinden, und ob umgekehrt irgendwo ein Stueck Hintergrund ueber Leon liegt, wo er
+davor steht. Der zweite Fall waere schlimmer als der alte Zustand — melde ihn bitte mit
+der Kamera-Einstellung, dann ist er gezielt zu finden.
+
+Sonst unveraendert gegenueber v0.3.98 (gleiche Binaries, nur neue Maskendaten).
+
+---
+
 # RE1.5 Port — v0.3.98 (Early Preview)
 
 **Die fehlenden Verdeckungen.** Du hattest gemeldet: „so gut wie alle ESP fehlen — Leon
