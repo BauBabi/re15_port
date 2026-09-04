@@ -204,6 +204,36 @@
      "grow": 0
     }
    ]
+  },
+  "4": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=108 y=0, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 111 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/04.png",
+     "x": 108,
+     "y": 0,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0
+    }
+   ]
+  },
+  "7": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=157 y=18, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 167 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/07.png",
+     "x": 157,
+     "y": 18,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0
+    }
+   ]
   }
  },
  "ROOM1120": {
