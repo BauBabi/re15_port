@@ -19,6 +19,14 @@
  * (re15_inv_screen.c:655) und ueberschreibt fr. Er war also nie betroffen. Genau
  * dieser Widerspruch - Marker drin, Rechteck gruen - stand im Screenshot.
  *
+ * ⛔ GEGENPROBE, unfreiwillig gefahren: derselbe Test lief am 2026-09-04 versehentlich
+ * gegen eine VERALTETE libre15_engine.a (zwei gleichzeitige Builds im selben build/) -
+ * also gegen genau den Stand VOR dem Fix. Ausgabe damals:
+ *     [Abdeckung] ... 290 auf der Seite der Zone, 290 Abweichungen
+ *     [3F  ] ROOM1170 Zone 1 Band 0 -> Blatt 4 Rect 255 (Zone: Blatt 4 Rect 3)
+ *     FAIL: ROOM1170s unterer Bereich kann auf 3F rot werden
+ * Der Waechter schlaegt also nachweislich aus, wenn der Fehler da ist.
+ *
  * GEPRUEFT WIRD die Uebereinstimmung selbst, nicht ein Einzelfall: fuer jede Zone und
  * jedes Band muss gelten - liefert die Etagen-Tabelle die Seite dieser Zone, dann muss
  * sie auch ihr Rechteck liefern. Zusaetzlich stehen die zwei gemeldeten Faelle
@@ -26,6 +34,7 @@
  */
 #include <stdio.h>
 #include "re15_room.h"
+#include "re15_collision.h"
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -87,6 +96,44 @@ int main(void)
                   z5 && fp == (int)z5->page && fr == (int)z5->rect && fr != 255);
         } else { printf("  FAIL: keine Etagen-Zeile fuer ROOM1170 Zone 1 Band 4\n");
                  g_fail = 1; }
+    }
+
+    /* ⛔ DAS EIGENTLICHE VERSPRECHEN IST NICHT "die Tabellen stimmen ueberein",
+     * SONDERN "das Rechteck wird ROT". Die Uebereinstimmung oben ist nur die
+     * Vorbedingung; der Nutzer sieht die Hervorhebung. Deshalb hier die echte Funktion,
+     * die der Zeichner fragt - mit gesetztem Band und gesetzter aktueller Zone, so wie
+     * im Spiel (Memory reai-v2-absicht-statt-ergebnis: die Abnahme gehoert ans
+     * ERGEBNIS, nicht an die Absicht). */
+    {
+        const int32_t px = -18842, pz = -22955;   /* Mitte von ROOM1170 Zone 1 */
+        int st3f, stroof, st_fremd;
+        re15_map_visited_reset();
+        for (i = 0; i < 13; i++) re15_map_debug_reveal_page((unsigned)i);
+
+        re15_collision_set_band(0);                 /* unten -> 3F-Blatt */
+        re15_map_zone_update(0x1170, px, pz);
+        st3f = re15_map_rect_state(4, 3);
+        printf("  [Live] Band 0 in ROOM1170 Zone 1: Blatt 4 Rect 3 -> Zustand %d (%d = aktuell)\n",
+               st3f, RE15_MAP_RECT_CURRENT);
+        CHECK("3F: das Rechteck des Spielers wird als AKTUELL gemeldet",
+              st3f == RE15_MAP_RECT_CURRENT);
+
+        re15_collision_set_band(4);                 /* oben -> ROOF-Blatt */
+        re15_map_zone_update(0x1170, px, pz);
+        stroof = re15_map_rect_state(5, 0);
+        printf("  [Live] Band 4 in ROOM1170 Zone 1: Blatt 5 Rect 0 -> Zustand %d\n",
+               stroof);
+        CHECK("ROOF: das Rechteck des Spielers wird als AKTUELL gemeldet",
+              stroof == RE15_MAP_RECT_CURRENT);
+
+        /* ⛔ GEGENPROBE: sonst waere die Bedingung auch erfuellt, wenn ALLES rot ist.
+         * Auf einer Etagen-Umschaltung darf nur das Rechteck DIESER Etage aktuell sein. */
+        st_fremd = re15_map_rect_state(4, 3);
+        printf("  [Gegenprobe] Band 4: Blatt 4 Rect 3 -> Zustand %d (nicht %d)\n",
+               st_fremd, RE15_MAP_RECT_CURRENT);
+        CHECK("die ANDERE Etage desselben Ortes ist dabei NICHT aktuell",
+              st_fremd != RE15_MAP_RECT_CURRENT);
+        re15_collision_reset_band();
     }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
