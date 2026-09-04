@@ -1,3 +1,63 @@
+# RE1.5 Port — v0.5.4 (Early Preview)
+
+**Die Karte ist ab jetzt das Original-Kartenmaterial.**
+
+Du hattest recht mit dem Vergleich: genau so macht es Resident Evil 2 — die gemalte Karte
+ist das Bild, und der Spieler-Marker rechnet über ein eigenes System darauf. Bis hierher
+hat der Port stattdessen jeden Raum selbst gezeichnet, aus seiner Kollisionsbox. Das war
+eine Freigabe von dir vom 1. September; sie ist damit zurückgenommen.
+
+**Was du jetzt siehst:** die Kacheln der Originalkarte, mit den gelben RE2-Türbalken und
+den RE2-Treppensymbolen darauf. 89 der 96 Räume sind da. Die restlichen sieben malt das
+Original schlicht nicht — die bleiben leer, so wie im Original auch.
+
+| | |
+|---|---|
+| Räume auf der Karte | **89 von 96** |
+| Marker im **eigenen** Raum | **80 von 80** |
+| Marker im **falschen** Raum | **0** |
+| Türen mit RE2-Symbol | 164 von 207 |
+
+**Der Marker sitzt immer im richtigen Raum und nie im falschen.** Das war die eigentliche
+Forderung, und die hält.
+
+**Was noch nicht perfekt ist, und warum.** Beim Durchschreiten einer Tür springt der
+Marker im Mittel 17 Pixel — bei der selbstgezeichneten Karte waren es 2. Das liegt nicht
+am Port, sondern am Prototyp: **das Original eicht nur 38 seiner 106 Räume.** Für die
+übrigen habe ich die Lage aus der Türkette hergeleitet (jede Tür ist derselbe Ort in zwei
+Räumen), und jede solche Herleitung trägt rund 7 Pixel Eigenfehler. An einer Tür treffen
+zwei davon aufeinander. Drei Viertel aller Übergänge hängen an mindestens einer.
+
+Vier Reste stehen namentlich in der Prüfung, damit sie nicht verschwinden: ROOM1060 und
+ROOM1080 teilen sich ein gemaltes Rechteck, ein Türsymbol von sechzig zeigt vom Nachbarn
+weg, sieben Symbolpaare liegen aufeinander, und eine Marke sitzt 72 Pixel daneben.
+
+**Die alte Karte ist nicht weg** — `RE15_KUNST=0` baut sie wieder, vollständig und
+geprüft. Falls dir die gerechnete Fassung am Ende doch lieber ist, sag Bescheid.
+
+---
+
+# RE1.5 Port — v0.5.4 (Early Preview)
+
+**Der wacklige Test ist repariert — und er hatte einen echten Befund im Bauch.**
+
+`integration_save_counter_pin` und `integration_relatch_pin` fielen sporadisch aus
+(gemessen: 1 Fehler in 12 Laeufen). Ich habe den Fehlerfall MIT Log eingefangen, und der
+zeigt: das Spiel macht alles richtig. Es speichert korrekt, erreicht seinen Testhaken und
+ruft `exit(0)` — der Prozess meldet **trotzdem** 1.
+
+Der Fehler liegt also nicht im Spiel, sondern im **Aufraeumen nach `exit()`**: dort laufen
+noch atexit-Handler, statische Destruktoren und der Abbau der SDL- und
+Grafiktreiber-Bibliotheken. Einer davon reisst den Prozess gelegentlich mit einem anderen
+Code ab. Dass genau die beiden Tests wackeln, die den Prozess ueber einen Testhaken
+beenden, war die Bestaetigung.
+
+Behoben: die Testhaken beenden jetzt sofort (`_exit`), ohne Bibliotheks-Abbau. Das ist fuer
+einen Testhaken das Richtige — die Speicherkarte ist an der Stelle bereits geschrieben und
+geschlossen, und das Log wird unmittelbar davor gespuelt.
+
+---
+
 # RE1.5 Port — v0.5.3 (Early Preview)
 
 **Die Ecke.** Ich habe nachgemessen, was dort passiert: an der rechten Tischecke wird
