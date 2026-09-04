@@ -2647,3 +2647,48 @@ gepaarten Tuermarke gegen die Lage ihrer beiden Rechtecke und gibt seine Abdecku
 Neues Werkzeug: `re15_port/tools/kartenbild.py` rastert ein Blatt mit beschrifteten
 Marken — damit ist ein Screenshot-Befund des Nutzers eindeutig einer Tabellenzeile
 zuzuordnen, statt sie zu erraten.
+
+## §43 Nutzer-Befund 2026-09-04: „does not turn red when i am in the room"
+
+Zweimal derselbe Satz, auf zwei verschiedenen Blaettern (`fehler/error2.png` = ROOF,
+`fehler/error3.png` = 3F). Beide Male steht der Spielermarker sichtbar IN dem Rechteck,
+und das Rechteck bleibt gruen. Beide Male ist es **ROOM1170s zweiter Bereich** (Zone 1,
+zid 21) — auf 3F Blatt 4 Rect 3, auf dem Dach Blatt 5 Rect 0.
+
+**Ursache, eine Zeile.** `re15_map_rect_state` (`re15_map_zones.c:312-320`) entscheidet
+die rote Hervorhebung eines stockwerkuebergreifenden Raums so:
+
+```c
+hat_etage = re15_map_floor_lookup(zn->room, zn->idx, band, &fp, &fr);
+if (hat_etage) {
+    if ((int)page == fp && (int)rect_idx == fr) return RE15_MAP_RECT_CURRENT;
+}
+```
+
+Die Etagen-Tabelle trug pauschal **`rect = 255`**:
+
+```python
+floors = [(b, zi, band, zp, 255) for (b, zi, band, zp) in ETAGEN]
+```
+
+Fuer ein GEMALTES Rechteck (Index 0..13) kann `rect_idx == 255` nie zutreffen.
+**Gemessen: ALLE 22 Etagen-Zeilen trugen 255**, waehrend ihre Zonenzeile ein echtes
+Rechteck nennt — kein einziger stockwerkuebergreifender Raum konnte je rot werden:
+ROOM1060, ROOM1080, ROOM10A0, ROOM10F0, ROOM1170, ROOM11A0, ROOM3080, ROOM4020,
+ROOM4070, ROOM50D0.
+
+Die 255 war ein **Ueberbleibsel**: sie stammt aus der Zeit, als diese Zweitzeichnungen
+Schema-Zeichnungen aus der Kollisionsbox waren (der Kommentar daneben sagt das auch so).
+Seit die Original-Kunst der Auslieferungsstand ist, traegt die Gast-Zeile ein gemaltes
+Rechteck — die Etagen-Zeile wurde nie nachgezogen.
+
+⛔ **Warum es so lange unentdeckt blieb: der Marker war nie betroffen.** Er holt sein
+Rechteck ueber `re15_map_zone_fuer` aus der ZONE (`re15_inv_screen.c:655`) und
+ueberschreibt `fr`. Genau dieser Widerspruch — Marker drin, Rechteck gruen — steht in
+beiden Screenshots. Zwei Wege lasen dieselbe Sache aus zwei verschiedenen Tabellen, und
+nur einer war gepflegt (vgl. Memory `reai-v2-doppeltes-byte`).
+
+**Fix:** die Etagen-Zeile nimmt das Rechteck aus der Zonenzeile derselben (Raum, Zone,
+Blatt). Neue Schranke `re15_port/tests/unit/test_map_etagen_rect.c` prueft fuer jede Zone
+und jedes Band: nennt die Etagen-Tabelle die Seite dieser Zone, muss sie auch ihr
+Rechteck nennen — plus die zwei gemeldeten Faelle namentlich als Pin.

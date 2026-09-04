@@ -2418,7 +2418,40 @@ def main():
     # Kunst-Rechteck hat, und lieferte 12 Zeilen. Seit der Loeser den Ort auf JEDEM
     # Blatt setzt, das eines seiner Baender erreicht (Vorlauf ETAGEN/GAST), ist die
     # Zweitzeichnung ein richtiger Grundriss und die Zeile traegt rect = 255.
-    floors = [(b, zi, band, zp, 255) for (b, zi, band, zp) in ETAGEN]
+    # ⛔ DAS RECHTECK MUSS AUS DER ZONENZEILE KOMMEN, NICHT PAUSCHAL 255 SEIN.
+    # NUTZER-BEFUND 2026-09-04 (fehler/error2.png und error3.png, zweimal derselbe Satz:
+    # "does not turn red when i am in the room") - ROOM1170s unterer Bereich blieb sowohl
+    # auf dem ROOF-Blatt als auch auf 3F gruen, obwohl der Spielermarker sichtbar darin
+    # stand.
+    #
+    # URSACHE: re15_map_rect_state (re15_map_zones.c:312-320) entscheidet die rote
+    # Hervorhebung so:
+    #       hat_etage = re15_map_floor_lookup(zn->room, zn->idx, band, &fp, &fr);
+    #       if (hat_etage) { if (page == fp && rect_idx == fr) return CURRENT; }
+    # Mit rect = 255 kann `rect_idx == fr` fuer ein GEMALTES Rechteck (Index 0..13) nie
+    # zutreffen - der Raum wird also NIE rot. Gemessen ueber die ganze Tabelle: ALLE 22
+    # Etagen-Zeilen trugen 255, waehrend ihre Zonenzeile ein echtes Rechteck nennt
+    # (ROOM1060, ROOM1080, ROOM10A0, ROOM10F0, ROOM1170, ROOM11A0, ROOM3080, ROOM4020,
+    # ROOM4070, ROOM50D0). Kein einziger stockwerkuebergreifender Raum konnte rot werden.
+    #
+    # Die 255 stammt aus dem Kommentar unten ("die Zweitzeichnung ist ein richtiger
+    # Grundriss") - das galt, solange der Loeser Schema-Zeichnungen setzte. Seit die
+    # Original-Kunst der Auslieferungsstand ist (KUNST_VOR), traegt die Gast-Zeile ein
+    # GEMALTES Rechteck, und die Etagen-Zeile muss dasselbe nennen.
+    #
+    # Der Marker war davon nicht betroffen: er holt sein Rechteck ueber
+    # re15_map_zone_fuer aus der ZONE (re15_inv_screen.c:655) und ueberschreibt fr.
+    # Genau deshalb stand er sichtbar in einem gruenen Rechteck - der Widerspruch, den
+    # der Nutzer gemeldet hat.
+    _zonen_rect = {}
+    for _row in rows:
+        _rroom, _rbb, _rpg, _rr, _rzi = _row[:5]
+        _zonen_rect.setdefault((_rroom & 0xFFF0, _rzi, _rpg), _rr)
+    floors = [(b, zi, band, zp, _zonen_rect.get((b, zi, zp), 255))
+              for (b, zi, band, zp) in ETAGEN]
+    _mit_kunst = sum(1 for f in floors if f[4] != 255)
+    print("   Etagen-Zeilen mit gemaltem Rechteck: %d von %d"
+          % (_mit_kunst, len(floors)))
 
     # Filter und Besucher-Regel stehen im VORLAUF (ETAGEN), damit der Loeser die
     # Gast-Lagen schon beim Setzen kennt.

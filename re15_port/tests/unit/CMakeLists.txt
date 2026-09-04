@@ -3270,3 +3270,10 @@ target_link_libraries(test_map_tuerachse PRIVATE re15_engine re15_test_support)
 target_include_directories(test_map_tuerachse PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_map_tuerachse COMMAND test_map_tuerachse)
 set_tests_properties(unit_map_tuerachse PROPERTIES TIMEOUT 30)
+
+# --- Etagen-Tabelle gegen Zonen-Tabelle (Nutzer 2026-09-04 "does not turn red") ---
+add_executable(test_map_etagen_rect test_map_etagen_rect.c)
+target_link_libraries(test_map_etagen_rect PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_etagen_rect PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_map_etagen_rect COMMAND test_map_etagen_rect)
+set_tests_properties(unit_map_etagen_rect PROPERTIES TIMEOUT 30)
