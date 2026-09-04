@@ -18,7 +18,8 @@
 #include <string.h>
 #include <SDL.h>
 #include "re15_engine.h"
-#include "re15_pri.h"           /* shared sprite.pri depth model (re15_pri_mask_camera_z) */
+#include "re15_pri.h"
+#include "re15_actor.h"           /* shared sprite.pri depth model (re15_pri_mask_camera_z) */
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
@@ -771,6 +772,41 @@ void re15_render_end_frame(void)
             }
             mask_order[j + 1] = k;
         }
+        /* ⛔ MESSSCHIENE (RE15_PRI_LOG=<Datei>) - die ECHTE Zahl statt meines Modells.
+         * ANLASS 2026-09-04: der Nutzer meldete zwei Verdeckungsfehler; mein
+         * Python-Tiefenmodell (tools/maske/geom.py vz_at_floor) widersprach seinem Bild.
+         * Es sagte fuer den Stehplatz vz 12740 (ROOM1140 Cut 0) bzw. 6410 (ROOM1130
+         * Cut 3), waehrend aus dem Screenshot folgt: die Maske dort verdeckt ihn NICHT,
+         * also vz < 8704 bzw. < 4864. Solange die echte Zahl fehlt, waere jede Korrektur
+         * an einer Objekt-Tiefe geraten. s_textri_depth ist genau der Wert, gegen den
+         * re15_pri_mask_camera_z(depth) unten verglichen wird. */
+        {
+            const char *plog = getenv("RE15_PRI_LOG");
+            static unsigned s_plog_n;
+            if (plog && *plog && s_textri_count > 0 && (s_plog_n++ % 30u) == 0u) {
+                FILE *lf = fopen(plog, "ab");
+                if (lf) {
+                    float lo = s_textri_depth[order[s_textri_count - 1]];
+                    float hi = s_textri_depth[order[0]];
+                    float md = s_textri_depth[order[s_textri_count / 2]];
+                    int q, dmin = 0x7fffffff, dmax = 0, verdeckend = 0;
+                    for (q = 0; q < mask_n; q++) {
+                        int d = s_pri_rects[mask_order[q]].depth;
+                        if (d < dmin) dmin = d;
+                        if (d > dmax) dmax = d;
+                        if ((float)re15_pri_mask_camera_z(d) < md) verdeckend++;
+                    }
+                    fprintf(lf, "Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
+                            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y,
+                            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                            lo, hi, md, mask_n,
+                            mask_n ? dmin : -1, mask_n ? dmax : -1,
+                            mask_n ? dmin * 64 : -1, mask_n ? dmax * 64 : -1, verdeckend);
+                    fclose(lf);
+                }
+            }
+        }
         /* Merge-walk: emit consecutive same-slot tri batches; whenever the next mask
          * is farther than (or equal to) the next tri, flush the pending batch and blit
          * that mask first (it belongs UNDER the nearer tri). I5-round GLOBAL z-sort is
@@ -1298,8 +1334,10 @@ void re15_render_end_frame(void)
  * Main loop ramps it 255→0 over the room-entry fade window. */
 void re15_render_pc_set_title_fade(int a) { s_title_fade = (a < 0) ? 0 : (a > 255) ? 255 : (uint8_t)a; }
 /* Title-Ebenen-Fades (Engine-Prim-Helligkeit B = level>>7; s.o.). */
-void re15_render_pc_title_fade_add(int b) { s_tfade_add = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
-
+void re15_render_pc_title_fade_add(int b) { s_tfade_add = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
+
+
+
 /* Restwert der beiden TITEL-Fade-Ebenen — fuer den Dark-Start-Pin (integration_dark_start_pin).
  * Beide MUESSEN im Spiel 0 sein; s_tfade_sub wird sonst als subtraktiver Vollbildquad
  * (oben, ABR2) ueber jedes Spielbild gelegt und dunkelt es dauerhaft ab. */
