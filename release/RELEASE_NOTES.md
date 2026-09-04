@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.5.5 (Early Preview)
+
+**Deine neuen Freistellungen sind drin: Konferenztisch und Kamerastativ in Einstellung 2.**
+
+Zuordnung wie immer gemessen, nicht aus dem Dateinamen gelesen:
+
+| Datei | Einstellung | Lage | Übereinstimmung |
+|---|---|---|---|
+| `00.png` | 0 | x=0 y=122 | **100,0 %** (zweitbeste 81,4 %) |
+| `02_01.png` | 2 | x=124 y=144 | **100,0 %** (zweitbeste 66,4 %) |
+| `02_02.png` | 2 | x=96 y=152 | **100,0 %** (zweitbeste 97,9 %) |
+
+**Beim Stativ musste ich etwas nachhelfen** — und das ist genau der Fall, den ich dir
+beschrieben hatte: seine Stange läuft im Bild bis Zeile 210 weiter, deine Freistellung
+endet bei 196. Ohne Hinweis käme die Tiefe aus einem zu fernen Punkt und das Stativ
+würde überhaupt nichts verdecken. Ich habe den Bodenkontakt auf Zeile 210 gesetzt.
+
+Beide Tische laufen mit derselben Bezugsebene wie in Einstellung 0 (die untere Kante ist
+die Tischplatte, nicht der Boden).
+
+**Treue: 26 526 von 26 526 und 16 940 von 16 940 Punkten gedeckt — 0 fehlen, 0 zuviel.**
+Einstellung 0: 78 Rechtecke / 34,5 % des Bildes. Einstellung 2: 79 Rechtecke / 22,1 %.
+
+Zum Nachsehen liegen die fertigen Masken als PNG in `masken_vorschau/ROOM1140/`.
+
+---
+
 # RE1.5 Port — v0.5.4 (Early Preview)
 
 **Die wackligen Tests sind repariert — und sie hatten drei echte Befunde im Bauch.**
