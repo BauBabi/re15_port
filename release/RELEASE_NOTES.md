@@ -1,3 +1,65 @@
+# RE1.5 Port — v0.6.1 (Early Preview)
+
+**Deine drei Befunde vom 3F-Blatt sind behoben, und deine vier Freistellungen sind drin.**
+
+## Die Karte: „does not turn red when i am in the room"
+
+Zweimal derselbe Satz auf zwei Blättern — und es war **eine ganze Klasse**. Die
+Stockwerkstabelle trug für jeden Raum, der über mehrere Etagen reicht, pauschal
+„kein Rechteck". Damit konnte die rote Hervorhebung nie greifen: **22 von 22 Zeilen**
+betroffen, also kein einziger stockwerkübergreifender Raum. Dass es so lange unbemerkt
+blieb, liegt daran, dass der **Spielermarker** seine Angabe aus einer *anderen* Tabelle
+holt — genau der Widerspruch, den du fotografiert hast: Marker sichtbar drin, Rechteck
+grün.
+
+## Die Karte: Fahrstuhl und Treppenhaus auf 3F
+
+Deine drei Anmerkungen waren in Wahrheit **ein** Defekt. Du hast „Elevator" und
+„staircase" geschrieben — und genau das sind sie:
+
+* **ROOM1060 ist das Treppenhaus**: fünf identische Kollisionsebenen, acht
+  Stufenzonen, drei Türen auf demselben Rechteck, die sich nur in der Etage
+  unterscheiden. Der Hintergrund zeigt eine Treppe mit dem Schild „F.3".
+* **ROOM1080 ist der Fahrstuhl**: eine Ebene, eine Kabine, Türen ohne Auslösefläche,
+  Zielwahl per Skript. Der Hintergrund ist eine Kabine mit Knopftafel.
+
+Und die beiden kleinen Kästen, auf die du gezeigt hast, gehören genau diesen zwei
+Räumen — über den Maßstab belegt (Verzerrung 1,02 bzw. 1,06; der Raum, der dort stand,
+bräuchte 1,56) und darüber, dass nur fünf Kachelgruppen im ganzen Spiel
+blattübergreifend pixelgleich sind: genau die Räume, die über Etagen reichen.
+
+Die Ursache: eine als „hart" dokumentierte Vorgabe wurde von einer späteren Ableitung
+still überschrieben, wodurch Treppenhaus, Fahrstuhl **und** ein dritter Raum alle auf
+demselben Rechteck landeten. Von dort vererbte sich der Fehler auf 3F.
+
+Ergebnis, gemessen an den **gemalten Original-Türsymbolen**: 18 richtig / 8 falsch →
+**24 richtig / 3 falsch**. Die Tür, die es nicht geben durfte, ist weg; die
+Treppenhaus-Tür sitzt einen Pixel neben dem gemalten Original; die Fahrstuhl-Tür ist
+wieder da.
+
+Nebenbei fiel auf, dass **ROOM1120s Kartenlage zu einem Rechteck gehörte, das der Raum
+gar nicht mehr hatte** — dein Spielermarker bewegte sich dort in einer Ecke von 11×18
+statt im ganzen 40×40-Feld. Auch behoben, ebenso für vier weitere Räume.
+
+## Die Masken
+
+Deine vier Freistellungen sind eingebaut, die Lage jeweils vom Werkzeug gemessen
+(99,9–100 % Übereinstimmung): die **diagonale Wandkante in ROOM1130**, der **Heizkörper**
+und die **Tischecke** in ROOM1140, und das **neu geschnittene Rednerpult** — das alte
+endete zu früh, sodass das untere Drittel der Verdeckung fehlte.
+
+Zur diagonalen Wand: sie verhält sich jetzt genau so, wie du es beschrieben hast.
+Weil jede Bildspalte ihre eigene Entfernung hat, verdeckt bei einem **nahen** Spieler
+nur die vordere Kante, bei einem **fernen** fast der ganze Pfeiler. Die Wand kommt also
+vor Leon, sobald er hinter sie tritt.
+
+⛔ Dabei gefunden: ein Maskenobjekt in ROOM1140 zeigte auf eine Datei, die es nicht mehr
+gibt — dieser Blickwinkel ist seit einer Umbenennung **nie** erzeugt worden. Jetzt drin.
+
+Tests: 270/270.
+
+---
+
 # RE1.5 Port — v0.6.0 (Early Preview)
 
 **Deine zwei Befunde aus dem `fehler`-Ordner sind behoben.**
