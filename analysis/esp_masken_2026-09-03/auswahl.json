@@ -14,7 +14,7 @@
      "grow": 0
     }
    ],
-   "_warum": "Freistellung des Nutzers. Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung (zweitbester Cut 81.4 %). Bezugsebene -700 statt Boden: die untere Silhouettenkante ist die TISCHPLATTE. Gemessen am Nutzer-Befund 'an der Ecke sieht es noch schlecht aus': Leons Bodenschatten bei Bild (287,208) hat vz 5495, verdeckt wird nur mit Tiefe < 85.9; Boden ergab 97, -700 ergibt 75."
+   "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3."
   },
   "2": {
    "objekte": [
@@ -22,14 +22,14 @@
      "name": "Konferenztisch",
      "png": "pri/1140/02_01.png",
      "x": 124,
-     "y": 144,
+     "y": 143,
      "massstab": 1,
      "ebene": -700,
      "oben": 0,
      "grow": 0
     },
     {
-     "name": "Kamerastativ",
+     "name": "Kamerastativ links",
      "png": "pri/1140/02_02.png",
      "x": 96,
      "y": 152,
@@ -37,9 +37,53 @@
      "fuss": 210,
      "oben": 0,
      "grow": 0
+    },
+    {
+     "name": "Kamerastativ rechts",
+     "png": "pri/1140/02_03.png",
+     "x": 274,
+     "y": 104,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0
     }
    ],
-   "_warum": "Freistellungen des Nutzers, Lage gemessen: Tisch Cut 2 x=124 y=144, Stativ Cut 2 x=96 y=152, beide 100.0 % Uebereinstimmung. Tisch mit derselben Bezugsebene -700 wie in Cut 0 (dasselbe Moebel). Das Stativ bekommt 'fuss': seine Stange laeuft im Bild bis y~210 weiter, die Freistellung endet aber bei y=196 — ohne den Hinweis kaeme die Tiefe aus einem zu fernen Punkt und das Stativ wuerde nichts verdecken."
+   "_warum": "Lage gemessen: Tisch x=124 y=143, linkes Stativ x=96 y=152, rechtes Stativ x=274 y=104 — alle 100.0 %. Linkes Stativ mit 'fuss' 210: seine Stange laeuft im Bild bis dahin weiter, die Freistellung endet bei 196. Rechtes Stativ OHNE 'fuss': seine Beine verschwinden bei y=164 HINTER dem Tisch, der Bodenkontakt ist im Bild also gar nicht zu sehen. Die Spaltenregel nimmt dort y=164 — das entspricht einem Bodenpunkt an der fernen Tischkante und damit ungefaehr der Stelle, an der das Stativ steht. Wenn im Spiel jemand dahinter NICHT verschwindet, ist hier die Zeile nachzutragen."
+  },
+  "3": {
+   "objekte": [
+    {
+     "name": "US-Fahne",
+     "png": "pri/1140/03_01.png",
+     "x": 120,
+     "y": 67,
+     "massstab": 1,
+     "fuss": 192,
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Rednerpult",
+     "png": "pri/1140/03_02.png",
+     "x": 149,
+     "y": 112,
+     "massstab": 1,
+     "fuss": 196,
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Blaue Fahne",
+     "png": "pri/1140/03_03.png",
+     "x": 212,
+     "y": 62,
+     "massstab": 1,
+     "fuss": 182,
+     "oben": 0,
+     "grow": 0
+    }
+   ],
+   "_warum": "Lage gemessen: US-Fahne x=120 y=67, Pult x=149 y=112, blaue Fahne x=212 y=62 — alle 100.0 %. Alle drei brauchen 'fuss', weil die Freistellung oberhalb des Bodenkontakts endet: die Fahnenstangen enden bei y=179 bzw. 171, ihre gelben Teller stehen aber bis y=194 bzw. 185 (gemessen am Hintergrund) — daher 192 und 182. Das Pult endet in der Freistellung bei y=169, sein Sockel trifft den Teppich aber erst bei y=196 — daher 196. ⛔ ANMERKUNG fuer den Nutzer: beim Pult fehlt damit das untere Drittel der Verdeckung (y 170..196). Die TIEFE stimmt, aber wer dort unten dahinter steht, wird nicht verdeckt."
   }
  }
 }
