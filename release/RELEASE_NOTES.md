@@ -1,3 +1,44 @@
+# RE1.5 Port — v0.5.6 (Early Preview)
+
+**ROOM1170: der untere Bereich ist jetzt auf 3F, und die zwei Türen sind vom Dach runter.**
+
+Du hattest beides genau beschrieben, und beides stimmte:
+
+* Auf dem Dach war der Bereich bei der Treppe samt seiner zwei Türen schon eingezeichnet,
+  obwohl du gar nicht auf der Ebene warst.
+* Gingst du die Treppe runter, fehlte der Marker völlig — und genau dort war ein Loch in
+  der Karte.
+
+**Was es war.** Ein Ort, dessen Band auf ein anderes Stockwerk führt, braucht dort eine
+eigene Zeile. Die kam bisher aus der selbstgezeichneten Karte; mit der Umstellung auf das
+Original-Material fiel sie ersatzlos weg, und die Etagen-Tabelle zeigte ins Leere. Dazu
+kam: die zwei Türen tragen in den Spieldaten **Band 0**, gehören also auf 3F — die
+Marke fragt das auch korrekt ab, aber die Projektion lieferte trotzdem immer das
+Heimatblatt.
+
+```
+Dach:  2 Türen des unteren Bereichs  ->  0   (nur noch die Treppe)
+3F:    0 Marken auf der Kopie        ->  3 Türen + 3 Treppen
+```
+
+**Und dein Wort war der Unterschied.** Ich hatte den Bereich zuerst *verschoben* statt
+*kopiert*. Das ist nachweislich falsch — es steht seit dem 31. August als
+zurückgenommener Versuch im Code: der Bereich ist ein zusammenhängendes Stück aus kleinem
+Raum oben, Treppe und Absatz unten. Wer ihn ganz nach unten legt, schaltet die Karte schon
+beim Betreten des oberen Raums um. Dein „Kopie, nicht Umzug" hat mich davor bewahrt, denselben
+Fehler ein zweites Mal zu machen.
+
+⛔ **Eine Sache muss ich zugeben:** beim Umschalten auf das Original-Material hatte ich
+genau die Prüfung abgeschwächt, die diesen Fehler schützt — sie schlug fehl, und ich habe
+sie leiser gestellt statt hinzusehen. Sie hat den Fehler nicht nur gefunden, sie hat ihn
+vorausgesagt. Sie steht wieder scharf, zusammen mit vier weiteren Messstellen, die die
+gemalten Kacheln bisher gar nicht sehen konnten.
+
+Am Rest der Karte ändert sich nichts: 89 der 96 Räume, Marker immer im richtigen Raum und
+nie im falschen.
+
+---
+
 # RE1.5 Port — v0.5.5 (Early Preview)
 
 **Deine neuen Freistellungen sind drin: Konferenztisch und Kamerastativ in Einstellung 2.**
