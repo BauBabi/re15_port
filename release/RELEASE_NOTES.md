@@ -1,3 +1,52 @@
+# RE1.5 Port — v0.5.9 (Early Preview)
+
+**Der Intro-Absturz ist gefunden — und er war ein anderer als der von gestern.**
+
+Deine Frage, ob etwas im Hintergrund die Anwendung killt, hat sich beantworten lassen:
+**nein.** Windows protokolliert jeden Absturz mit dem verursachenden Modul, und dort steht
+in allen Fällen `re15_pc.exe` selbst — kein Virenscanner, kein Fremdprozess.
+
+Dasselbe Protokoll hat aber gezeigt, dass ich gestern zu früh „behoben" gesagt habe. Es
+waren **drei verschiedene** Abstürze:
+
+| Version | Stelle | Status |
+|---|---|---|
+| v0.5.7 | Kartenbildschirm | behoben in v0.5.8 |
+| v0.5.7 **und v0.5.8** | Audio-Mixer | **behoben in v0.5.9** |
+| v0.5.0 | Modell-Animation, einmal gesehen | offen, siehe unten |
+
+Der v0.5.8-Fix war richtig und nötig — aber er war nicht der, der dein Intro traf.
+
+**Was es diesmal war:** Beim Raumwechsel wirft das Spiel die geladenen Sprachaufnahmen
+weg. Der Ton-Mixer läuft in einem eigenen Thread und las dabei *weiter aus genau diesen
+Aufnahmen* — also aus Speicher, den es nicht mehr gab. Das erklärt beides, was du gesehen
+hast: **„teilweise"**, weil es nur kracht, wenn das System den Speicher inzwischen anders
+vergeben hat, und **„im Intro"**, weil dort Sprachzeilen laufen *und* der Raum wechselt
+(1240 → 1170). Am längsten offen steht das Fenster, wenn der neue Raum für die
+angeforderte Zeile gar keine Aufnahme hat — dann zeigt der Mixer bis zum Ende der alten
+Aufnahme ins Leere.
+
+Der Fehler ist **älter als die ganze Kartenarbeit** — er steckt schon in v0.5.0.
+
+Behoben: der Mixer wird sauber gelöst, bevor die Aufnahme verschwindet, und das Ganze
+unter der Ton-Sperre. Die übrigen Ton-Puffer waren bereits richtig abgesichert; das war
+die einzige Lücke.
+
+**Warum 267 grüne Tests das nicht gesehen haben:** die Testschiene erreicht den
+PC-Ton-Code überhaupt nicht — er gehört zur Plattform, nicht zur Engine. Genau deshalb
+ging der Fehler zweimal durch. Es gibt jetzt einen Test, der den Sperr-Vertrag am
+Quelltext prüft und seine Abdeckung ausgibt, damit diese Klasse nicht ein drittes Mal
+durchrutscht.
+
+**Noch offen:** ein einzelner Absturz in der Modell-Animation, einmal in v0.5.0 gesehen
+und seither nicht wieder. Ich habe ihn dokumentiert statt ihn zu raten — ohne
+Reproduktion wäre jede Änderung dort geraten. Falls er dir begegnet: sag mir bitte, was
+gerade zu sehen war.
+
+Am Spielinhalt ändert sich gegenüber v0.5.8 nichts.
+
+---
+
 # RE1.5 Port — v0.5.8 (Early Preview)
 
 **Absturz behoben — bitte diese Fassung nehmen.**

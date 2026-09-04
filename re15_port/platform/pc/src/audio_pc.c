@@ -1508,11 +1508,65 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
 {
     if (voice_id < 0 || voice_id >= VOICE_MAX_MSG) return 0;
     if (s_voice_room != room) {        /* room changed -> drop the whole cache */
+        /* ⛔ ABSTURZ 2026-09-04 — GEMESSEN, nicht modelliert. Windows Error Reporting
+         * meldete für v0.5.7 UND v0.5.8 dasselbe: fehlerhaftes Modul `re15_pc.exe`,
+         * Ausnahme 0xc0000005, Fehleroffset 0x13300. Aufgelöst gegen genau das
+         * ausgelieferte Binary (ImageBase 0x140000000, PE-Zeitstempel 0x6a9ac99b):
+         *   140013300: 41 0f bf 04 4b   movswl (%r11,%rcx,2),%eax   <audio_callback+0x1e0>
+         *   140013305: 41 83 f8 1f      cmp    $0x1f,%r8d
+         * Das ist `int32_t smp = s_xa.pcm[s_xa.pos];` samt dem folgenden Vergleich
+         * `rem < MIXER_TAIL_FADE_SAMPLES` (32 = 0x1f + 1) — also der XA-Mixer, der aus
+         * FREIGEGEBENEM Speicher las.
+         *
+         * Ursache: s_xa.pcm ist GELIEHEN. re15_voice_play reicht unten
+         * `re15_xa_read_s(s_voice_clip[id].pcm, ...)` weiter; der Puffer gehört aber
+         * DIESEM Cache. Die Schleife gab ihn frei — ohne Sperre und ohne den Stream zu
+         * lösen —, während der SDL-Mixer-Thread weiterlas.
+         *   → „teilweise“: es kracht nur, wenn der Allokator die Seite inzwischen
+         *     zurückgenommen hat.
+         *   → „im Intro“: dort laufen Sprachzeilen UND die Raumkette 1240 → 1170.
+         *   → das längste Fenster entsteht, wenn der neue Raum für die angefragte Zeile
+         *     gar keinen Clip hat: dann kehrt re15_voice_play still zurück und s_xa zeigt
+         *     bis zum Ende der ALTEN Clip-Länge auf freigegebenen Speicher.
+         *
+         * Der Clip, aus dem der Stream liest, wird hier gelöscht — er KANN nicht
+         * weiterlaufen. Der Stream wird deshalb gelöst statt zu verwaisen; das ist keine
+         * Verhaltenswahl, sondern die Folge davon, dass seine Daten verschwinden.
+         * Alle übrigen Mixer-Puffer waren bereits richtig gesperrt (s_fmv_audio 1430/1443,
+         * ss_free_bank über seine Aufrufer). Dies war die einzige ungesperrte Freigabe,
+         * aus der der Callback liest. */
+        SDL_LockAudioDevice(s_audio_dev);
         for (int i = 0; i < VOICE_MAX_MSG; i++) {
+            if (s_voice_clip[i].pcm && s_xa.pcm == s_voice_clip[i].pcm) {
+                /* Dieser Zweig IST der Absturz — hier haette der Mixer weitergelesen.
+                 * Gezaehlt und gemeldet, damit die Ursache messbar bleibt statt nur
+                 * erschlossen zu sein: jede Meldung ist ein verhinderter Absturz. */
+                g_audio.xa_clip_dropped++;
+                /* ⛔ Die exe ist ein GUI-Programm (PE-Subsystem 2) und hat keine
+                 * Konsole - eine stderr-Meldung ist beim Umleiten NICHT sichtbar
+                 * (gemessen 2026-09-04: 0 Byte Ausgabe). Damit dieser Befund
+                 * ueberhaupt messbar ist, schreibt RE15_VOICE_LOG=<Pfad> ihn
+                 * zusaetzlich in eine Datei. Ohne die Variable passiert nichts. */
+                { const char *lg = getenv("RE15_VOICE_LOG");
+                  if (lg && *lg) { FILE *lf = fopen(lg, "ab");
+                    if (lf) { fprintf(lf, "XA-Stream geloest: Raum %04X -> %04X, Clip %d, "
+                                          "Position %d von %d [verhinderter Absturz #%u]\n",
+                                      (unsigned)s_voice_room, (unsigned)room, i,
+                                      s_xa.pos, s_xa.pcm_len,
+                                      (unsigned)g_audio.xa_clip_dropped);
+                             fclose(lf); } } }
+                fprintf(stderr, "[voice] XA-Stream geloest: Raum %04X -> %04X gab Clip %d "
+                                "frei, aus dem noch gemischt wurde (Position %d/%d) "
+                                "[verhinderter Absturz #%u]\n",
+                        (unsigned)s_voice_room, (unsigned)room, i,
+                        s_xa.pos, s_xa.pcm_len, (unsigned)g_audio.xa_clip_dropped);
+                s_xa.active = 0; s_xa.pcm = NULL; s_xa.pcm_len = 0; s_xa.pos = 0;
+            }
             free(s_voice_clip[i].pcm);
             s_voice_clip[i].pcm = NULL; s_voice_clip[i].len = 0; s_voice_clip[i].tried = 0;
         }
         s_voice_room = room;
+        SDL_UnlockAudioDevice(s_audio_dev);
     }
     if (s_voice_clip[voice_id].tried) return s_voice_clip[voice_id].pcm != NULL;
     s_voice_clip[voice_id].tried = 1;

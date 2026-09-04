@@ -37,6 +37,10 @@ typedef struct {
     uint32_t events_xa_on;        /* kind=XA_ON                         */
     uint32_t events_se_vol;       /* kind=SE_VOL                        */
     uint32_t events_unknown;      /* kind not recognized — should be 0  */
+    uint32_t xa_clip_dropped;     /* Sprach-Cache freigegeben, WAEHREND der XA-Mixer
+                                   * noch aus genau diesem Puffer las. Jeder Zaehler > 0
+                                   * ist ein Absturz, der ohne die Loesung passiert waere
+                                   * (WER 0xc0000005 @0x13300, audio_pc.c).  */
     uint8_t  initialized;         /* 1 after re15_audio_init() returned */
     uint8_t  backend_active;      /* PSX: SPU on. PC: SDL audio device on */
 } re15_audio_state_t;

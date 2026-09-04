@@ -3252,3 +3252,14 @@ set_tests_properties(unit_sld_atlas PROPERTIES TIMEOUT 120)
 add_executable(probe_bg_dump probe_bg_dump.c)
 target_link_libraries(probe_bg_dump PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_bg_dump PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- Audio-Sperrvertrag (Absturz 2026-09-04, WER 0xc0000005 @0x13300) ---
+# Quelltext-Pruefung, weil audio_pc.c zur PC-Plattform gehoert und von keinem
+# Testbinary aus erreichbar ist — genau deshalb ging der Absturz durch 267 gruene
+# Tests hindurch in zwei Pakete.
+add_executable(test_audio_sperren test_audio_sperren.c)
+target_link_libraries(test_audio_sperren PRIVATE re15_engine re15_test_support)
+target_include_directories(test_audio_sperren PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_audio_sperren PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
+add_test(NAME unit_audio_sperren COMMAND test_audio_sperren)
+set_tests_properties(unit_audio_sperren PROPERTIES TIMEOUT 30)
