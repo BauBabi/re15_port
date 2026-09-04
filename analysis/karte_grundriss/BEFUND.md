@@ -2436,3 +2436,61 @@ nicht die Form.
 
 Der Zwischenstand wurde **nicht** ausgeliefert: eine Fläche am falschen Ort ist nicht
 besser als eine fehlende. Der Auslieferungsstand bleibt v0.5.4, 267/267 grün.
+
+
+## §41 Die gemalten RE1.5-Türsymbole entfernen: gemessen, so nicht auslieferbar
+
+Nutzer 2026-09-04: *„Teilweise RE 1.5 türen gemischt unter den RE 2 türen … Und die
+RE 1.5 Türen sollst du natürlich ALLE entfernen."* Richtig — sie stecken in den gemalten
+Kacheln, und seit die Kunst gezeichnet wird, kommen sie mit.
+
+### Der Weg ist da, die Schwelle trägt nicht game-weit
+
+§27 hat das Verfahren an **einem** Blatt gemessen: Wandlinien sind lange gerade Läufe, ein
+Türschwenk ist kurz und gekrümmt; Saat „Lauf ≤ 4", Wachstum über Nachbarn mit „Lauf ≤ 10".
+Auf Blatt 4 traf das alle 6 Symbole und kein Wandpixel.
+
+Auf die **Kacheltextur** angewandt (nur innerhalb der gezeichneten Rechtecke, sonst frisst
+es den unbenutzten Rest):
+
+| Blatt | Wandpixel | entfernt | Komponenten |
+|---|---|---|---|
+| 0–7, 9–12 | 322–2425 | 3,3–9,1 % | 13–77 |
+| **8** | 1568 | **24,9 %** | **317** |
+
+### Warum Blatt 8 ausbricht — und es ist NICHT die Palette
+
+Erste Vermutung: der Wand-Index sei dort ein anderer. **Gemessen und widerlegt** — Index 4
+ist auf *jedem* Blatt die Wand (er trägt überall die zweitlängsten Läufe, nach dem
+Hintergrund-Index 0):
+
+```
+längster Wandlauf je Blatt:  47  53  55  63  67  68  78  80  81  88  98  112
+Blatt 8:                     32   <- die Wände sind dort von Natur aus KURZ
+```
+
+Die Schwelle „Lauf ≤ 4 / ≤ 10" ist absolut, die Wandlängen sind es nicht. Auf Blatt 8
+fällt echte Wand unter die Schwelle. Ein Riegel über die Komponentengröße (ein Schwenk ist
+nach §27 13 Pixel) hilft nicht: dort sind es **317 kleine** Komponenten, also wirklich
+kurze Wandstücke.
+
+⇒ Die Schwelle muss **relativ zur Wandlänge des Blattes** sein, und jedes Blatt braucht
+danach eine Sichtprüfung am gerenderten Bild — so wie §27 es für eines gemacht hat.
+Blind ausgeliefert wäre ein Viertel der Wände von Blatt 8 weg; das sähe schlechter aus als
+die vermischten Symbole. **Nicht ausgeliefert.**
+
+### Und die Kopie hängt daran
+
+Nutzer: *„Du hast unten in 3F 2 Türen bei der Map von RE 1.5 die nach draußen führen. Das
+sind GENAU DIE 2 Türen die du das oben gesehen hast. an die Muss das Rechteck quasi
+anschließen."* Der Anker für die Kopie sind also genau die **gemalten** Türen — dieselbe
+Erkennung, die für das Entfernen gebraucht wird. Beide Hälften sind eine Aufgabe, nicht
+zwei.
+
+Der zweite Grund, warum die jetzige Kopie danebenliegt, ist unabhängig gemessen: die
+Zweitfläche sucht sich ein *vorhandenes* Rechteck (40×40) statt die Dachfläche (48×24) in
+die Lücke zu setzen. Das passende Rechteck (Blatt 4 Rect 3, exakt 48×24) hält ROOM1120 —
+und eine Rangfolge „ausgelieferte Zeile schlägt hergeleitete" greift dort nicht, weil
+ROOM1170s ausgelieferte Zeile den unteren Bereich gar nicht auf sein eigenes Dach-Rechteck
+projiziert (y174..199 gegen Rechtecke bei y80..157). Die Zuordnung dieser Zone kommt
+ohnehin aus einer Heuristik.
