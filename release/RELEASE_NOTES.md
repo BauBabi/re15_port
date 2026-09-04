@@ -1,3 +1,26 @@
+# RE1.5 Port — v0.5.8 (Early Preview)
+
+**Absturz behoben — bitte diese Fassung nehmen.**
+
+Die Abstürze kamen von mir, und sie stecken schon in v0.5.6 und v0.5.7. Beide bitte
+löschen.
+
+**Was es war:** meine neue Routine, die die gemalten RE1.5-Türsymbole entfernt, hat die
+Tabelle der Kartenrechtecke aus dem **falschen Speicherbereich** gelesen — 556 Bytes
+hinter dessen Ende. Was sie dort fand, war Müll, und der nächste Zugriff darauf griff ins
+Leere. Deshalb stürzte die Anwendung beim Öffnen der Karte ab — und manchmal schon im
+Intro, weil die Bedingung, unter der die Routine läuft, dort zufällig zutreffen kann,
+bevor der Kartenbildschirm überhaupt initialisiert ist.
+
+Behoben: die Rechtecke werden jetzt über die Zugriffe der Engine gelesen, die den
+richtigen Bereich kennen. Eine ungültige Seite liefert dann schlicht null Rechtecke, und
+es wird nichts entfernt statt abzustürzen.
+
+Inhaltlich ändert sich nichts gegenüber v0.5.7 — die Türsymbole sind weiter draußen und
+ROOM1170 sitzt weiter auf seinem gemalten Rechteck.
+
+---
+
 # RE1.5 Port — v0.5.7 (Early Preview)
 
 **Die gemalten RE1.5-Türen sind weg, und ROOM1170 hat das Rechteck, das der Künstler
