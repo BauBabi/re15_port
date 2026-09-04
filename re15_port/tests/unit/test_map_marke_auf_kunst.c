@@ -20,7 +20,7 @@
  * Tuermarke klebt an der Wand und darf einen Punkt neben der Wandlinie liegen.
  * (Memory reai-v2-tabelle-vs-bild: was der Nutzer sieht, am gerasterten Bild pruefen.)
  *
- * SCHRANKE. Am AUSGELIEFERTEN Stand v0.6.2 gemessen: 173 Marken mit Rechteck, 13 auf
+ * SCHRANKE. Am AUSGELIEFERTEN Stand v0.6.1 gemessen: 173 Marken mit Rechteck, 13 auf
  * leerer Flaeche, davon auf Blatt 3 zwei von sechs - die schlechteste Quote aller
  * Blaetter und genau der gemeldete Fall. Mit der Ersatztabelle (BEFUND.md §44, gemessen
  * am FIXPUNKT des Generators, §45): 177 Marken, 8 leer, Blatt 3 eine von neun. Diese
@@ -119,10 +119,10 @@ int main(void)
     {
         char t[200];
         snprintf(t, sizeof t, "Blatt 3 (2F): hoechstens eine Marke auf leerer Flaeche "
-                 "(ausgeliefert v0.6.2: 2 von 6) - ist %d von %d", leer3, ges3);
+                 "(ausgeliefert v0.6.1: 2 von 6) - ist %d von %d", leer3, ges3);
         CHECK(t, leer3 <= 1);
         snprintf(t, sizeof t, "gesamt hoechstens 8 Marken auf leerer Flaeche "
-                 "(ausgeliefert v0.6.2: 13 von 173) - sind %d von %d", leer, ges);
+                 "(ausgeliefert v0.6.1: 13 von 173) - sind %d von %d", leer, ges);
         CHECK(t, leer <= 8);
     }
     return g_fail;

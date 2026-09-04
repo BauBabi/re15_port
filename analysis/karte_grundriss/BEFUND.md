@@ -2810,7 +2810,7 @@ Der Generator konvergiert nach vier Laeufen (md5 von Lauf 3 == Lauf 4,
 `97486f104b1c3e97ddac0e97b3f862dc`): 107 Zonen, 76 davon mit der ausgelieferten
 Massstabszeile @`0x800768b0` zugeordnet.
 
-Gegen den ausgelieferten Stand v0.6.2 (108 Zonen in 88 Raeumen):
+Gegen den ausgelieferten Stand v0.6.1 (108 Zonen in 88 Raeumen):
 
     FIXPUNKT mit Ersatztabelle:  107 Zonen in 87 Raeumen
     nur im ausgelieferten Stand: ROOM4040 (Blatt 8)
@@ -2830,7 +2830,7 @@ Live gemessen (`integration_map_raum_live`, ganze Raumkette ab EXE-Start):
 
 Marken auf gemaltem Grundriss (Zusammenbau der Seite, `unit_map_marke_auf_kunst`):
 
-    ausgeliefert v0.6.2:  173 Marken, 13 auf leerer Flaeche, Blatt 3 zwei von sechs
+    ausgeliefert v0.6.1:  173 Marken, 13 auf leerer Flaeche, Blatt 3 zwei von sechs
     Fixpunkt:             177 Marken,  8 auf leerer Flaeche, Blatt 3 eine von neun
 
 Die eine verbliebene auf Blatt 3 ist die Treppenmarke an der UNTERKANTE ihres Rechtecks
