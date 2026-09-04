@@ -2121,3 +2121,69 @@ Der Weg bleibt unter `RE15_KARTENZEILE=1` messbar; Default ist die lineare Strec
 Die Kunst sieht richtig aus und ist in sich stimmig; sie kostet ein Drittel der Räume
 (die das Original nicht malt) und die Marker-Genauigkeit. Die Umstellung bleibt deshalb
 opt-in, bis die gemeinsame Lösung von Zuordnung und Zeile steht.
+
+
+## §35 Zuordnung aus den Zeilen — gebaut, misst besser, und stößt an die Datenlage
+
+§34 hatte den Schluss gezogen: die Zone→Rechteck-Zuordnung muss **aus den Zeilen** kommen
+statt aus einer Kostenfunktion, sonst widersprechen sich Zuordnung und Projektion. Das ist
+jetzt gebaut (`gen_map_zones.py`, unter `RE15_KUNST`).
+
+**Verfahren:** jede Zone durch **ihre eigene Zeile** projizieren (ausgeliefert wo
+vorhanden, sonst aus der Türkette hergeleitet) und das gemalte Rechteck nehmen, das der
+projizierte Kasten am besten trifft — relativ zur *kleineren* Fläche, damit ein Korridor
+in einem großen Rechteck zählt, ohne dass das große alles einsammelt.
+
+| | Kostenheuristik | **aus den Zeilen** |
+|---|---|---|
+| zugeordnete Zonen | 72 | **78** |
+| Deckung, Median | — | **98 %** |
+| Räume mit Zone | 67 | **75 von 96** |
+| davon sichtbar rot | 50 | **61** |
+| Marker im eigenen Rechteck | 50/50 | **61/61** |
+
+Die Zuordnung selbst ist damit belastbar — die projizierten Kästen liegen praktisch
+deckungsgleich auf der Kunst.
+
+### ⛔ Der Marker wird davon trotzdem nicht gut
+
+| Übergänge (Original-Material) | linear | mit Zeile |
+|---|---|---|
+| Median | **22 px** | 28 px |
+| innerhalb 2 px | 2 % | **12 %** |
+| innerhalb 8 px | **29 %** | 24 % |
+
+Die Zeilen-Projektion trifft am *engen* Ende deutlich besser (2 % → 12 % innerhalb 2 px),
+verschlechtert aber den Median. Der Grund ist **die Datenlage des Prototyps**, nicht mehr
+das Verfahren:
+
+```
+Uebergaenge auf demselben Blatt (154):
+   beide Raeume vom Original geeicht:  40
+   nur einer:                          79
+   keiner (beide hergeleitet):         35
+```
+
+⇒ **74 % aller Übergänge hängen an mindestens einer hergeleiteten Zeile.** Jede trägt im
+Median 7 px Eigenfehler (§30), und an einer Tür addieren sich zwei davon. Das Original
+eicht nur **38 von 106** Slots — das Kartensystem ist im Prototyp unfertig, und genau
+diese Lücke lässt sich nicht wegrechnen.
+
+### Die Entscheidung, die daraus folgt
+
+| | Grundrisse (ausgeliefert) | Original-Material |
+|---|---|---|
+| Aussehen | gerechnet, gleichmäßig | **die Original-Kunst** |
+| Räume auf der Karte | **96 von 96** | 75 von 96 |
+| Übergänge Median | **2 px** | 22 px |
+| innerhalb 8 px | **95 %** | 29 % |
+| Marker im eigenen Rechteck | 95/96 | **61/61** |
+| Audit [F]/[K]/[M]/[N] | 0/0/0/0 | 0/0/0/0 |
+
+Die Grundriss-Lösung erreicht ihre 2 px gerade **weil** sie die unvollständigen
+Original-Daten nicht benutzt: sie rechnet die Anordnung aus Kollision und Türgraph und ist
+dadurch in sich konsistent. Die Kunst ist authentisch und in sich stimmig, kann aber die
+Genauigkeit nicht erreichen — und lässt 21 Räume leer, die das Original nicht malt.
+
+Das ist keine offene Aufgabe mehr, sondern eine **Abwägung**: originalgetreues Bild gegen
+brauchbaren Marker.

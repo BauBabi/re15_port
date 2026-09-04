@@ -1767,6 +1767,71 @@ def main():
     # re15_map_rect_state() sie weder als besucht noch als aktuell meldet. Bis das
     # gefunden ist, bleibt die Grundriss-Loesung der Auslieferungsstand.
     KUNST_VOR = os.environ.get('RE15_KUNST') in ('1', 'misch')
+
+    # ================================================================================
+    # ⛔ MIT DER KUNST KOMMT DIE ZUORDNUNG AUS DEN ZEILEN, NICHT AUS EINER KOSTENFUNKTION
+    #
+    # Bisher stammten Zuordnung (Zone -> gemaltes Rechteck) und Projektion (Weltpunkt ->
+    # Kartenpunkt) aus ZWEI unabhaengigen Quellen: einer Kostenheuristik und der Zeile
+    # @0x800768b0. Sie widersprechen sich, und auf der gemalten Karte faellt der
+    # zeilen-projizierte Marker aus seinem zugeordneten Rechteck und wird an dessen Kante
+    # geklemmt - gemessen wurde die Marker-Genauigkeit dadurch SCHLECHTER statt besser
+    # (BEFUND §34: Median 35 px gegen 11 px).
+    #
+    # Hier wird die Zone durch IHRE EIGENE ZEILE projiziert und das Rechteck genommen,
+    # das der projizierte Kasten am besten trifft. Damit stimmen Zuordnung und Projektion
+    # per KONSTRUKTION ueberein. Der Weg ist belegt (BEFUND §22): die gemalten Rechtecke
+    # SIND die Kollisionsboxen - von 38 Raeumen mit ausgelieferter Zeile treffen 30 ihr
+    # Rechteck zu mindestens 50 %, vier exakt. Gemessen ueber alle Zonen mit Zeile:
+    # 78 Zonen zugeordnet, Deckung im Median 98 %.
+    #
+    # Die Zeilen kommen aus tools/gen_marker_zeilen.py (ausgeliefert wo vorhanden, sonst
+    # aus der Tuerkette hergeleitet, Auslassprobe Median 7 px). ⛔ Dessen Blatt-Tabelle
+    # wird hier UEBERSCHRIEBEN: sie stammt sonst aus dem zuletzt erzeugten Header, und
+    # der Generator soll nicht von seinem eigenen vorherigen Ergebnis abhaengen.
+    # ================================================================================
+    if KUNST_VOR:
+        import gen_marker_zeilen as _GM
+        _GM.BLATT = dict((b, page_of(b)) for b in zinfo
+                         if page_of(b) is not None and page_of(b) != 0xd)
+        _GM.ZONEN_N = collections.Counter(dict((b, len(zinfo[b])) for b in zinfo))
+        _zeilen, _zq = _GM.alle_zeilen()
+        _neu, _guete = {}, []
+        for b in sorted(zinfo):
+            pg = page_of(b)
+            if pg is None or pg == 0xd or b not in _zeilen:
+                continue
+            _ox, _oy, _sx, _sz = _zeilen[b]
+            R = rects(pg)
+            if not R:
+                continue
+            for i, (x0, x1, z0, z1) in enumerate(zinfo[b]):
+                px0 = _GM.karte_x(x0, _ox, _sx); px1 = _GM.karte_x(x1, _ox, _sx)
+                py0 = _GM.karte_y(z1, _oy, _sz); py1 = _GM.karte_y(z0, _oy, _sz)
+                px0, px1 = min(px0, px1), max(px0, px1)
+                py0, py1 = min(py0, py1), max(py0, py1)
+                fl = max(1, (px1 - px0) * (py1 - py0))
+                best = None
+                for ri, (rx, ry, rw, rh) in enumerate(R):
+                    ox2 = min(px1, rx + rw) - max(px0, rx)
+                    oy2 = min(py1, ry + rh) - max(py0, ry)
+                    if ox2 <= 0 or oy2 <= 0:
+                        continue
+                    # relativ zur KLEINEREN Flaeche - ein Korridor in einem grossen
+                    # Rechteck zaehlt, ohne dass das grosse Rechteck alles einsammelt
+                    an = (ox2 * oy2) / float(min(fl, rw * rh))
+                    if best is None or an > best[0]:
+                        best = (an, ri)
+                if best and best[0] >= 0.35:
+                    _neu[(b, i)] = (pg, best[1])
+                    _guete.append(best[0])
+        _guete.sort()
+        print("Zuordnung AUS DEN ZEILEN: %d Zonen (Kostenheuristik hatte %d), "
+              "Deckung Median %.0f %%"
+              % (len(_neu), len(assign),
+                 100 * _guete[len(_guete) // 2] if _guete else 0))
+        assign = _neu
+
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
     zid_von = {}
