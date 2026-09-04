@@ -1944,7 +1944,15 @@ def main():
         # Tuersymbole liegen irgendwo (im Abzug des 3F-Blattes fehlten sie ganz).
         # Formel wie in der Engine (re15_map_zone_abbildung):
         #     mx = (A*wx + B*wz) >> 16 + C ,  my = (D*wx + E*wz) >> 16 + F
-        g = _gr(room, zi, pg_wunsch)
+        # ⛔ ...ABER NUR, WENN DER GRUNDRISS AUCH GEZEICHNET WIRD.
+        # Der Loeser berechnet seine Grundrisse fuer ALLE 117 Orte, auch wenn die
+        # Original-Kunst gezeichnet wird - dann steht hier eine Abbildung auf einen
+        # Kasten, den niemand malt. Genau der Fehler, den der Kommentar oben beschreibt,
+        # nur in die andere Richtung: gemessen 2026-09-04 trugen im Kunst-Stand ALLE
+        # 152 Tuermarken rect = 255 und lagen damit auf verschwundenen Kaesten - von 184
+        # Tueren fanden 172 gar keine Marke (Auslieferungsstand: 229 von 229).
+        # Hat die Zone ein gemaltes Rechteck, gilt DIESES.
+        g = None if (KUNST_VOR and assign.get((room, zi)) is not None)             else _gr(room, zi, pg_wunsch)
         if g:
             (A, B2, C, D, E, F), kasten, _z = g
             mx = (A * wx + B2 * wz) // 65536 + C
