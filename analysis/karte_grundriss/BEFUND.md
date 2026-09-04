@@ -2368,3 +2368,71 @@ Original geeichten Slots**.
 | Marker im eigenen Rechteck | 95/96 | **80/80** |
 | Marker im fremden Raum | **0** | **0** |
 | Übergänge Median | **2 px** | 17 px |
+
+
+## §40 ⛔ ROOM1170: der Nutzer-Report trifft eine Zusicherung, die ich stillgelegt hatte
+
+Nutzer 2026-09-04 (`finding/error1`, `finding/error2`), wörtlich:
+*„bin ich auf dem roof, ist dort bereits der bereich bei den treppen unten inkl. der 2
+Türen mit eingezeichnet, obwohl ich nicht auf der Ebene bin … Gehe ich dann die Treppen
+runter, fehlt der Cursor völlig. Hier hätte ich jetzt zwischen den beiden Türen genau den
+Bereich erwartet der oben eingezeichnet ist und unten fehlt."*
+
+### Der Befund
+
+```
+ROOM1170 z0  Blatt 5 (ROOF)  rect 1     der Dachbereich
+ROOM1170 z1  Blatt 5 (ROOF)  rect 0     der UNTERE Bereich - auf dem Dachblatt zu Hause
+Etagen-Tabelle: { 0x1170, z1, Band 0 -> Blatt 4, rect 255 }
+```
+
+Beide Bereiche sind auf dem **Dachblatt** zu Hause — daher error1. Und die Etagen-Zeile für
+Band 0 zeigt auf Blatt 4 mit **`rect 255`**, einem Schema-Kasten, den es auf der Kunst
+nicht mehr gibt — daher error2: dort ist ein Loch **und** kein Marker.
+
+Die Gast-Zeilen kamen bis dahin vom Grundriss-Löser. Mit der Umstellung auf die Kunst
+entfielen sie ersatzlos.
+
+### ⛔ Und ich hatte genau die Zusicherung weichgemacht, die das schützte
+
+Beim Umschalten (§39) fiel `test_map_re2_system` mit *„und dort liegt eine
+Gast-Zeichnung"*. Ich habe daraus *„wenn es eine gibt"* gemacht — mit der Begründung, auf
+der Kunst gebe es sie eben nicht. **Das war keine Anpassung an ein neues Modell, sondern
+das Abschalten eines Wächters.** Dieselbe Sitzung, dieselbe Datei: `test_map_mark_band`
+prüft wörtlich
+
+```
+FAIL: das ROOF-Blatt traegt keine Tuer des unteren Bereichs mehr
+FAIL: die Treppe erscheint auch auf dem 3F-Blatt
+[ROOF Seite 5]      2 Tueren nach draussen, 2 Treppen
+[3F Seite 4 Rect 3] 0 Tueren, 0 Treppen
+```
+
+— also **exakt** die beiden Punkte des Nutzer-Reports, und es nennt **Rect 3** als die
+erwartete Fläche auf 3F. Der Test hat den Fehler nicht nur gefunden, er hat ihn
+vorausgesagt.
+
+### Was ein Versuch schon gebracht hat — und woran er hängt
+
+Gast-Zeilen aus der Kunst erzeugt (Anker: die Nachbarn auf dem fremden Blatt, dann die
+Form): **13 Gast-Zeilen**, darunter ROOM1170 z1 auf Blatt 4. Die Fläche ist damit nicht
+mehr weg. Sie landet aber auf **Rect 5** statt Rect 3, weil **ROOM1120 Rect 3 hält** — und
+dessen Anspruch ist datenmäßig gut: seine Projektion liegt bei x148..190, Rect 3 bei
+x152..200.
+
+⛔ **Ein Form-Term im Zuordner wurde gemessen und verworfen:** Deckung mit der Ähnlichkeit
+der Kantenlängen zu multiplizieren machte es schlechter (Räume 89 → 87, Türen 170 → 154,
+beidseitig rot 140 → 126) und bewegte ROOM1120 nicht. Die Position gibt ihm den Anspruch,
+nicht die Form.
+
+### Der offene Schritt, eng umrissen
+
+1. **ROOM1170 z1 gehört auf 3F zu Hause**, nicht auf das Dachblatt — sein Band 0 zeigt
+   dorthin. Solange es auf Blatt 5 wohnt, ist error1 unvermeidlich.
+2. Die Gast-Zeile muss **Rect 3** bekommen; das verlangt, den Konflikt mit ROOM1120
+   aufzulösen (Tausch, nicht Vorrang).
+3. Die Tür- und Treppenmarken müssen der Zeile auf das 3F-Blatt folgen
+   (`blatt_fuer_band` / `to_map`).
+
+Der Zwischenstand wurde **nicht** ausgeliefert: eine Fläche am falschen Ort ist nicht
+besser als eine fehlende. Der Auslieferungsstand bleibt v0.5.4, 267/267 grün.
