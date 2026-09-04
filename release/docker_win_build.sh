@@ -93,6 +93,19 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 EOF
 
 BUILD="$REPO/release/wxbuild"
+# ⛔ EINEN FREMDEN CACHE WEGRAEUMEN (2026-09-05). Host- und Container-Build teilen
+# sich dieses Verzeichnis, sehen den Baum aber unter verschiedenen Pfaden
+# (C:/workspace/... gegen /src/...). Liegt ein Cache der anderen Seite da, bricht
+# cmake ab mit
+#     CMake Error: The current CMakeCache.txt directory .../CMakeCache.txt is
+#     different than the directory ... where CMakeCache.txt was created.
+# und der Release-Lauf endet, BEVOR irgendetwas gebaut wurde - waehrend in
+# win_out/ noch die alte exe liegt und ein Paketlauf sie klaglos einpacken wuerde.
+if [[ -f "$BUILD/CMakeCache.txt" ]] &&
+   ! grep -qxF "CMAKE_HOME_DIRECTORY:INTERNAL=$REPO/re15_port" "$BUILD/CMakeCache.txt"; then
+    echo "   Cache stammt von einem anderen Pfad - $BUILD wird neu angelegt"
+    rm -rf "$BUILD"
+fi
 cmake -S "$REPO/re15_port" -B "$BUILD" -G Ninja \
       -DCMAKE_TOOLCHAIN_FILE="$TC" \
       -DRE15_BUILD_PC=ON -DRE15_BUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release \
