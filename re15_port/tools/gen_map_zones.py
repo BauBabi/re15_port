@@ -1165,9 +1165,23 @@ def main():
     # (5040/5120 und 50A0/5140 tun das) - dann bekommt der bessere Treffer das Rechteck,
     # der andere faellt auf die Bbox-Streckung zurueck.
     belegt = set(); n_orig = 0
+    # ⛔ EINE BELEGTE VORGABE IST HART - AUCH GEGEN DIE MASSSTABSZEILE.
+    # Der Block unten schrieb bisher `assign` bedingungslos um ("Das abgeleitete
+    # Rechteck gewinnt gegen die geometrische Zuordnung") und hat damit ZONE_FIX
+    # ausgehebelt, obwohl dessen Kommentar es ausdruecklich als HARTE Vorgabe fuehrt.
+    # FOLGE, gemessen 2026-09-04: ROOM1060 (Treppenhaus) und ROOM1080 (Fahrstuhl) landeten
+    # BEIDE auf Blatt 2 Rect 2 - zusammen mit ROOM1040. Von dort erbte sich der Fehler auf
+    # die Gastblaetter: auf 3F trug ROOM1060 dasselbe Rect 5 wie ROOM1120, weshalb die
+    # Paarung ihrer gemeinsamen Tuer mit A == B rechnete und die Marke auf ROOM1120s
+    # eigene Westwand legte (Nutzer 2026-09-04: "This door shouldn't be there").
+    _fix_rects = set(ZONE_FIX.values())
     for (_w, b, pg, ri, ox, oy, sx, sy) in sorted(kandidaten, key=lambda t: -t[0]):
         if (pg, ri) in belegt: continue
         if any(k[0] == b for k in eichung): continue
+        if (pg, ri) in _fix_rects and ZONE_FIX.get((b, 0)) != (pg, ri):
+            continue                      # das Rechteck ist per Vorgabe vergeben
+        if (b, 0) in ZONE_FIX and ZONE_FIX[(b, 0)] != (pg, ri):
+            continue                      # dieser Raum ist per Vorgabe woanders
         # die Zeile gilt fuer den Raum; sie gehoert an die Zone, die dieses Rechteck haelt
         zi = None
         for i in range(len(zinfo[b])):
@@ -2039,6 +2053,39 @@ def main():
                 print("   Tausch auf Blatt %d: Rect %d geht an ROOM%04X z%d "
                       "(exakte Groesse), ROOM%04X z%d zieht auf Rect %d"
                       % (_zp, _ri2, _b, _zi, _bew[0], _bew[1], _neu_ri))
+                _n_gast += 1
+                continue
+            # ⛔ BELEGTE GASTLAGEN. Wie ZONE_FIX fuer die Heimat, nur fuer die
+            # Zweitzeichnung auf einem fremden Blatt. Belegt ueber DREI unabhaengige
+            # Messungen (Untersuchung 2026-09-04, adversarisch gegengeprueft):
+            #   1. MASSSTAB am GEMALTEN Kasten (nicht an der registrierten Kachel):
+            #      ROOM1080 6200x6100 auf Rect 0s 10x10-Kasten = 620/610 wu/px,
+            #      Anisotropie 1,02. ROOM1060 11100x12750 auf Rect 1s 18x22-Kasten =
+            #      617/580, Anisotropie 1,06. ROOM1160, das Rect 1 bisher hielt,
+            #      braeuchte 931/595 = 1,56 und findet auf dem ganzen Blatt nichts
+            #      unter 1,28.
+            #   2. KACHEL-WIEDERHOLUNG: nur fuenf Kachelgruppen im ganzen Spiel sind
+            #      ueber Blattgrenzen pixelgleich - und es ist genau die Menge der
+            #      stockwerkuebergreifenden Raeume. uv(168,40) liegt auf Blatt 2/3/4,
+            #      uv(168,16) auf Blatt 2/4.
+            #   3. TUERLAGE: ROOM1120s Tuer zur Kabine projiziert nach (135,146); die
+            #      Mitte von Rect 0 liegt bei (135,145). Ein Pixel.
+            # Und es sind genau die zwei Stellen, auf die der Nutzer gezeigt hat:
+            # "here i would have expect the Elevator door" (133,145) = Rect 0,
+            # "Here I would have expect the staircase door" (139,153) = Rect 1s
+            # gemaltes West-Tuersymbol (136..141, 152..156).
+            GAST_FIX = {(0x1080, 0, 4): 0, (0x1060, 0, 4): 1}
+            _gf = GAST_FIX.get((_b, _zi, _zp))
+            if _gf is not None and _gf < len(_R):
+                for _k in range(len(rows) - 1, -1, -1):
+                    if (rows[_k][2] == _zp and rows[_k][3] == _gf
+                            and (rows[_k][0] & 0xFFF0) != _b):
+                        del rows[_k]      # der bisherige Bewohner raeumt
+                for var in (0, 1):
+                    rows.append((_b + var, zinfo[_b][_zi], _zp, _gf, _zi,
+                                 zid_von[(_b, _zi)], 0, 1))
+                print("   Gastlage belegt: Blatt %d Rect %d -> ROOM%04X z%d"
+                      % (_zp, _gf, _b, _zi))
                 _n_gast += 1
                 continue
             _best = None
