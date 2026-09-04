@@ -1,5 +1,39 @@
 # RE1.5 Port — v0.5.6 (Early Preview)
 
+**Einstellung 2 und 3 sind jetzt komplett aus deinen Freistellungen gebaut.**
+
+Alle fuenf neuen Teile sitzen mit **100 %** (Lage gemessen, nicht aus dem Dateinamen):
+Konferenztisch und beide Kamerastative in Einstellung 2, US-Fahne, Rednerpult und blaue
+Fahne in Einstellung 3.
+
+**Vier davon brauchten den Fusspunkt** — deine Freistellung endet jeweils oberhalb der
+Stelle, an der der Gegenstand den Boden beruehrt. Ohne den Hinweis kaeme die Tiefe aus
+einem zu fernen Punkt und der Gegenstand wuerde gar nichts verdecken. Am Hintergrund
+gemessen:
+
+| Gegenstand | Freistellung endet | Bodenkontakt |
+|---|---|---|
+| US-Fahne | Zeile 179 | gelber Teller bis 194 → **192** |
+| Blaue Fahne | Zeile 171 | Teller bis 185 → **182** |
+| Rednerpult | Zeile 169 | Sockel trifft Teppich → **196** |
+| Kamerastativ links | Zeile 196 | Stange laeuft bis → **210** |
+
+Beim **rechten Kamerastativ** habe ich bewusst **nichts** gesetzt: seine Beine
+verschwinden bei Zeile 164 hinter dem Tisch, der Bodenkontakt ist im Bild gar nicht zu
+sehen. Die automatische Regel nimmt dort einen Punkt an der fernen Tischkante — das
+entspricht ungefaehr der Stelle, an der es steht. Wenn im Spiel jemand dahinter **nicht**
+verschwindet, sag Bescheid, dann trage ich die Zeile nach.
+
+**Eine Sache zum Nachziehen, falls du magst:** beim Rednerpult fehlt das untere Drittel
+(Zeile 170 bis 196) — deine Freistellung endet dort. Die Tiefe stimmt, aber wer unten
+dahinter steht, wird an dieser Stelle nicht verdeckt.
+
+**Treue: 26 526 / 17 602 / 4 822 Punkte — je 0 fehlen, 0 zuviel.**
+
+---
+
+# RE1.5 Port — v0.5.6 (Early Preview)
+
 **ROOM1170: der untere Bereich ist jetzt auf 3F, und die zwei Türen sind vom Dach runter.**
 
 Du hattest beides genau beschrieben, und beides stimmte:
