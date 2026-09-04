@@ -344,6 +344,8 @@ static void photo_upload_check(void)
  * -> u16[13] = 0 (bytes @0x80074c66) = CD file 0 (identity unresolved — OPEN; the
  * port renders a black page for non-MAP ids). A MAP0x.PIX is headerless raw VRAM data:
  * 32768 B = 64 halfwords x 256 rows = 256x256 4bpp texels. */
+static void re15_schwenke_entfernen(int page);
+
 static void map_page_check(void)
 {
     const unsigned char *p;
@@ -370,6 +372,127 @@ static void map_page_check(void)
             s_map4[y][u] = (u & 1) ? (bb >> 4) : (bb & 0xF);
         }
     free(buf);
+    re15_schwenke_entfernen((int)g_inv_screen.map_page);
+}
+
+/* ---- DIE GEMALTEN RE1.5-TUERSCHWENKE AUS DER KACHEL NEHMEN ----------------------
+ * Nutzer 2026-09-04: "Teilweise RE 1.5 tueren gemischt unter den RE 2 tueren ... die
+ * RE 1.5 Tueren sollst du natuerlich ALLE entfernen."
+ *
+ * Das Original fuehrt Tueren nicht als Daten, sondern MALT sie in den Grundriss: einen
+ * Tuerschwenk wie im Architektenplan, in der WANDFARBE (Palettenindex 4 - an allen 13
+ * Blaettern nachgemessen, er traegt ueberall die zweitlaengsten Laeufe). Ueber die Farbe
+ * sind sie also nicht zu fassen, ueber die LAUFLAENGE schon: Wandlinien sind lange
+ * gerade Laeufe, ein Schwenk ist kurz und gekruemmt (BEFUND §27).
+ *
+ * ⛔ DREI DINGE, DIE JEDES FUER SICH GEMESSEN WURDEN (BEFUND §41/§42, Werkzeug
+ * tools/tuersymbole.py zeichnet je Blatt ein Bild zur Abnahme):
+ *  1. NUR IN DEN GEZEICHNETEN KACHELN suchen. Die Textur haelt 256x256 Texel fuer viele
+ *     Raeume; ausserhalb steht Beliebiges.
+ *  2. ACHTER-NACHBARSCHAFT. Eine DIAGONALE Wand ist ein Treppchen aus kurzen Laeufen;
+ *     ueber die Vierer-Nachbarschaft zerfaellt sie in hunderte Kruemel, von denen jeder
+ *     wie ein Schwenk aussieht (Blatt 8: 317 Komponenten, 26,7 % der Wand weg).
+ *  3. AUSDEHNUNGS-GRENZE 10x10. Ein Schwenk ist eine feste Zeichenkonvention - 13 Pixel
+ *     in einem 6x5-Kasten (§27, SYM[13][2]). Was groesser ist, ist Wand.
+ * Danach: 2,9 bis 8,6 % je Blatt, 4 bis 16 Symbole - und auf Blatt 4 exakt die 6, die
+ * §27 im Bild gezaehlt hat. Absolute Schwellen; eine blattrelative wurde probiert und
+ * ist schlechter (Blatt 12: 63 % statt 4,8 %).
+ *
+ * Die getroffenen Pixel bekommen die Farbe ihrer Umgebung; der gelbe RE2-Balken wird
+ * danach wie gehabt darueber gezeichnet. */
+static void re15_schwenke_entfernen(int page)
+{
+    static unsigned char lauf[256][256], weg[256][256], ben[256][256];
+    static short stx[65536], sty[65536];
+    const int WAND = 4, S_SAAT = 4, S_WACHS = 10, MAX_AUSD = 10;
+    int x, y, i, n_weg = 0, n_sym = 0;
+
+    memset(lauf, 0, sizeof lauf);
+    memset(weg, 0, sizeof weg);
+    memset(ben, 0, sizeof ben);
+    {   /* (1) die Kachelbereiche, die diese Seite zeichnet */
+        const unsigned char *pp = RE15_INV_PTR(0x80076840u + (uint32_t)page * 8u);
+        int cnt = pp[0] | (pp[1] << 8), ri;
+        uint32_t lp = (uint32_t)pp[4] | ((uint32_t)pp[5] << 8) |
+                      ((uint32_t)pp[6] << 16) | ((uint32_t)pp[7] << 24);
+        for (ri = 0; ri < cnt; ri++) {
+            const unsigned char *rp = RE15_INV_PTR(lp + (uint32_t)ri * 12u);
+            int rw = (short)(rp[4] | (rp[5] << 8));
+            int rh = (short)(rp[6] | (rp[7] << 8));
+            int ru = rp[8], rv = rp[10], iy, ix;
+            for (iy = rv; iy < rv + rh && iy < 256; iy++)
+                for (ix = ru; ix < ru + rw && ix < 256; ix++)
+                    if (iy >= 0 && ix >= 0) ben[iy][ix] = 1;
+        }
+    }
+    for (y = 0; y < 256; y++)          /* laengster gerader Lauf je Wandpixel */
+        for (x = 0; x < 256; x++) {
+            int lx = 0, ly = 0, k;
+            if (!ben[y][x] || s_map4[y][x] != WAND) continue;
+            for (k = x; k < 256 && s_map4[y][k] == WAND; k++) lx++;
+            for (k = x - 1; k >= 0 && s_map4[y][k] == WAND; k--) lx++;
+            for (k = y; k < 256 && s_map4[k][x] == WAND; k++) ly++;
+            for (k = y - 1; k >= 0 && s_map4[k][x] == WAND; k--) ly++;
+            k = lx > ly ? lx : ly;
+            lauf[y][x] = (unsigned char)(k > 255 ? 255 : k);
+        }
+    for (y = 0; y < 256; y++)          /* Saat */
+        for (x = 0; x < 256; x++)
+            if (ben[y][x] && s_map4[y][x] == WAND &&
+                lauf[y][x] && lauf[y][x] <= S_SAAT) weg[y][x] = 1;
+    for (i = 0; i < 24; i++) {         /* wachsen */
+        int ge = 0;
+        for (y = 1; y < 255; y++)
+            for (x = 1; x < 255; x++) {
+                if (weg[y][x] || !ben[y][x] || s_map4[y][x] != WAND) continue;
+                if (lauf[y][x] > S_WACHS) continue;
+                if (weg[y-1][x] || weg[y+1][x] || weg[y][x-1] || weg[y][x+1]) {
+                    weg[y][x] = 1; ge = 1;
+                }
+            }
+        if (!ge) break;
+    }
+    for (y = 0; y < 256; y++)          /* Komponenten (8er) + Ausdehnungs-Grenze */
+        for (x = 0; x < 256; x++) {
+            int n = 0, x0 = x, x1 = x, y0 = y, y1 = y, t;
+            if (weg[y][x] != 1) continue;
+            stx[0] = (short)x; sty[0] = (short)y; n = 1; weg[y][x] = 2;
+            for (t = 0; t < n; t++) {
+                int cx = stx[t], cy = sty[t], dx, dy;
+                if (cx < x0) x0 = cx; if (cx > x1) x1 = cx;
+                if (cy < y0) y0 = cy; if (cy > y1) y1 = cy;
+                for (dy = -1; dy <= 1; dy++)
+                    for (dx = -1; dx <= 1; dx++) {
+                        int nx = cx + dx, ny = cy + dy;
+                        if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                        if (weg[ny][nx] != 1 || n >= 65536) continue;
+                        weg[ny][nx] = 2; stx[n] = (short)nx; sty[n] = (short)ny; n++;
+                    }
+            }
+            if (x1 - x0 + 1 > MAX_AUSD || y1 - y0 + 1 > MAX_AUSD) {
+                for (t = 0; t < n; t++) weg[sty[t]][stx[t]] = 0;   /* zu gross = Wand */
+            } else {
+                n_sym++;
+                for (t = 0; t < n; t++) weg[sty[t]][stx[t]] = 3;   /* behalten */
+            }
+        }
+    for (y = 0; y < 256; y++)          /* durch den haeufigsten Nicht-Wand-Nachbarn ersetzen */
+        for (x = 0; x < 256; x++) {
+            int z[16], b, best = -1, bn = 0, dx, dy;
+            if (weg[y][x] != 3) continue;
+            for (b = 0; b < 16; b++) z[b] = 0;
+            for (dy = -2; dy <= 2; dy++)
+                for (dx = -2; dx <= 2; dx++) {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                    if (weg[ny][nx] == 3 || s_map4[ny][nx] == WAND) continue;
+                    z[s_map4[ny][nx] & 15]++;
+                }
+            for (b = 0; b < 16; b++) if (z[b] > bn) { bn = z[b]; best = b; }
+            if (best >= 0) { s_map4[y][x] = (unsigned char)best; n_weg++; }
+        }
+    fprintf(stderr, "[inv] Blatt %d: %d RE1.5-Tuerschwenke entfernt (%d Pixel)\n",
+            page, n_sym, n_weg);
 }
 
 /* ---- rasterizer (pipeline calibrated against the savestate fb — header comment) ---- */
