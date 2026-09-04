@@ -5,16 +5,41 @@
    "objekte": [
     {
      "name": "Konferenztisch",
-     "png": "pri/1140/01.png",
+     "png": "pri/1140/00.png",
      "x": 0,
      "y": 122,
      "massstab": 1,
+     "ebene": -700,
      "oben": 0,
-     "grow": 0,
-     "ebene": -700
+     "grow": 0
     }
    ],
-   "_warum": "Freistellung des Nutzers (pri/1140/01.png). Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung mit dem Hintergrund (zum Vergleich der zweitbeste Cut: 81.4 %). Kein 'fuss' noetig — die Silhouette laeuft unten aus dem Bild, der Bodenkontakt ist also die Vorderkante des Tischs selbst. Bezugsebene -700 statt Boden: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden. Gemessen (Nutzer-Befund 'an der Ecke sieht es noch schlecht aus'): Leons Bodenschatten bei Bild (287,208) hat vz 5495, verdeckt wird nur mit Tiefe < 85.9; mit der Bodenebene kam an der Tischecke (288,175) 97 heraus, mit -700 sind es 79.5. -400 haette 87 ergeben, also weiter zu fern."
+   "_warum": "Freistellung des Nutzers. Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung (zweitbester Cut 81.4 %). Bezugsebene -700 statt Boden: die untere Silhouettenkante ist die TISCHPLATTE. Gemessen am Nutzer-Befund 'an der Ecke sieht es noch schlecht aus': Leons Bodenschatten bei Bild (287,208) hat vz 5495, verdeckt wird nur mit Tiefe < 85.9; Boden ergab 97, -700 ergibt 75."
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "Konferenztisch",
+     "png": "pri/1140/02_01.png",
+     "x": 124,
+     "y": 144,
+     "massstab": 1,
+     "ebene": -700,
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Kamerastativ",
+     "png": "pri/1140/02_02.png",
+     "x": 96,
+     "y": 152,
+     "massstab": 1,
+     "fuss": 210,
+     "oben": 0,
+     "grow": 0
+    }
+   ],
+   "_warum": "Freistellungen des Nutzers, Lage gemessen: Tisch Cut 2 x=124 y=144, Stativ Cut 2 x=96 y=152, beide 100.0 % Uebereinstimmung. Tisch mit derselben Bezugsebene -700 wie in Cut 0 (dasselbe Moebel). Das Stativ bekommt 'fuss': seine Stange laeuft im Bild bis y~210 weiter, die Freistellung endet aber bei y=196 — ohne den Hinweis kaeme die Tiefe aus einem zu fernen Punkt und das Stativ wuerde nichts verdecken."
   }
  }
 }
