@@ -2306,3 +2306,65 @@ bzw. auf sie umgehängt werden — dieselbe Türkette, aber die Position auf den
 Rechtecken statt auf den Grundriss-Kästen. `snap_wall()` liest dafür schon die gemalte
 Kachel (`DATA/MAP0x.PIX`, Palettenindex 0 = außerhalb); das Gegenstück `snap_grundriss()`
 wird dort nicht gebraucht.
+
+
+## §38 Runde zwei: Marken auf die Kunst, Kostenzuordnung als Rückfall
+
+### Die Türmarken lagen auf verschwundenen Kästen
+
+`to_map()` beginnt mit **„GRUNDRISS ZUERST"** — hat der Löser für eine Zone einen
+Grundriss geliefert, rechnet die Marke gegen dessen Kasten. Richtig, solange der Grundriss
+auch *gezeichnet* wird; der Löser berechnet ihn aber für **alle 117 Orte**, auch wenn die
+Kunst gemalt wird. Im Kunst-Stand trugen deshalb **alle 152 Türmarken `rect = 255`**.
+
+Genau der Fehler, den der Kommentar an der Stelle selbst beschreibt — *„sonst rechnen sie
+gegen ein Rechteck, das gar nicht mehr gezeichnet wird"* — nur in die andere Richtung.
+
+| | vorher | nachher |
+|---|---|---|
+| Türmarken auf gemaltem Rechteck | 0 | **124 von 172** |
+| Türen mit sichtbarem Symbol | 12 | **152 von 184** |
+| davon über die **Identität** | 9 | **88** |
+
+### Die Kostenzuordnung darf nicht ersetzt, nur ergänzt werden
+
+Die Zuordnung aus den Zeilen ist die genauere (Deckung im Median 98 %), deckt aber nur,
+wo der projizierte Kasten ein Rechteck über 35 % trifft. Sie zu **ersetzen** statt zu
+ergänzen kostete 21 Räume komplett — ein Raum ohne jede Zuordnung ist gar nicht auf der
+Karte, und das ist schlechter als eine heuristische. Mit der Heuristik als Rückfall
+(18 Zonen):
+
+| | nur Zeilen | **+ Rückfall** |
+|---|---|---|
+| Räume auf der Karte | 75 von 96 | **89 von 96** |
+| davon sichtbar rot | 70 | **80** |
+| Türen gesamt / mit Symbol | 184 / 152 | **207 / 164** |
+| Marker im eigenen Rechteck | 70/70 | **80/80** |
+| Marker im fremden Raum | 0 | **0** |
+| Übergänge Median | 14 px | 17 px |
+
+Der Preis sind 3 px Median — die heuristisch zugeordneten Zonen sind ungenauer als die
+zeilen-basierten. Für 14 zusätzliche Räume auf der Karte ist das der richtige Tausch.
+
+### Was die 43 Türen ohne Symbol wirklich sind
+
+**Kein Fehlen, sondern Abstand.** Die Prüfung verlangt einen gelben Balken innerhalb
+**4 px** vom Punkt, an dem der Spieler steht. Die Marke wird über `snap_wall()` auf der
+gemalten Kachel gesetzt, der Marker über die Zonen-Abbildung — beide weichen um dieselbe
+Größenordnung ab wie der Übergangs-Median (17 px). Geprüft und ausgeschlossen: die
+Zeichenreihenfolge ist nicht schuld, die Marken werden **vor** den Kacheln eingetragen und
+liegen damit oben.
+
+⇒ Die letzten Prozente hängen an derselben Grenze wie alles andere: **38 von 106 vom
+Original geeichten Slots**.
+
+### Stand gegenüber dem Auslieferungsstand
+
+| | Grundrisse (ausgeliefert) | Original-Kunst |
+|---|---|---|
+| Räume auf der Karte | **96 von 96** | 89 von 96 |
+| sichtbar rot | **96** | 80 von 89 |
+| Türen mit Symbol | **229 von 229** | 164 von 207 |
+| Marker im eigenen Rechteck | 95/96 | **80/80** |
+| Marker im fremden Raum | **0** | **0** |
+| Übergänge Median | **2 px** | 17 px |

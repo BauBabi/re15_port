@@ -1842,10 +1842,22 @@ def main():
                     _guete.append(best[0])
                     _zdeck[(b, i)] = best[0]
         _guete.sort()
-        print("Zuordnung AUS DEN ZEILEN: %d Zonen (Kostenheuristik hatte %d), "
-              "Deckung Median %.0f %%"
-              % (len(_neu), len(assign),
-                 100 * _guete[len(_guete) // 2] if _guete else 0))
+        # ⛔ DIE KOSTENHEURISTIK BLEIBT ALS RUECKFALL STEHEN.
+        # Die Zuordnung aus den Zeilen ist die genauere (Deckung im Median 98 %), aber
+        # sie deckt nur, wo der projizierte Kasten ein Rechteck ueber 35 % trifft. Wer
+        # sie ERSETZT statt zu ergaenzen, verliert die uebrigen Zonen ganz - und damit
+        # den Raum von der Karte: gemessen 2026-09-04 blieben 75 von 96 Raeumen uebrig,
+        # 21 waren gar nicht mehr da. Ein Raum ohne jede Zuordnung ist schlechter als
+        # einer mit einer heuristischen.
+        _uebernommen = 0
+        for _k, _v in assign.items():
+            if _k not in _neu:
+                _neu[_k] = _v
+                _uebernommen += 1
+        print("Zuordnung AUS DEN ZEILEN: %d Zonen (Deckung Median %.0f %%), "
+              "%d aus der Kostenheuristik uebernommen"
+              % (len(_zdeck), 100 * _guete[len(_guete) // 2] if _guete else 0,
+                 _uebernommen))
         assign = _neu
 
         # ⛔ DIE ZEILE WIRD ZUR ABBILDUNG DER ZONE - ABER NUR, WO SIE SICH BEWEIST.
