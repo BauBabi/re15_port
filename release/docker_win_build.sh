@@ -30,10 +30,38 @@ fi
 
 if [[ "$(id -u)" == "0" ]] && ! command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
+    # ⛔ SNAPSHOT STATT LEBENDEM SPIEGEL - dieselbe Haertung wie in
+    # docker_linux_build.sh, hier am 2026-09-05 nachgezogen, nachdem der
+    # Windows-Build an genau demselben Fehler starb:
+    #     E: Failed to fetch .../libperl5.32_5.32.1-4+deb11u5_amd64.deb  404
+    # Debian 11 ist in Rente: der normale Spiegel liefert fuer bullseye noch einen
+    # INDEX, aber nicht mehr jedes darin genannte Paket. snapshot.debian.org haelt
+    # jeden historischen Stand vor, Index und Pool passen dort per Konstruktion
+    # zusammen - und der Release-Build wird dadurch reproduzierbar.
+    # Zeitstempel und Begruendung: siehe docker_linux_build.sh (2026-07-01 ist der
+    # aelteste, der mit debian:11 (11.11) ohne Herabstufungen durchgeht).
+    SNAP=20260701T000000Z
+    { echo "deb http://snapshot.debian.org/archive/debian/$SNAP/ bullseye main"
+      echo "deb http://snapshot.debian.org/archive/debian-security/$SNAP/ bullseye-security main"
+    } > /etc/apt/sources.list
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
+    echo 'Acquire::Retries "5";' >> /etc/apt/apt.conf.d/99snapshot
+    PKGS="gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 ninja-build git ca-certificates wget make"
     apt-get update -qq
-    apt-get install -y -qq --no-install-recommends \
-        gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 \
-        ninja-build git ca-certificates wget make >/dev/null
+    if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+        echo "   Snapshot-Spiegel unvollstaendig - raeume die Listen und versuche erneut"
+        rm -rf /var/lib/apt/lists/*
+        apt-get clean
+        apt-get update -qq
+        if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+            echo "   apt-Spiegel unvollstaendig - schalte auf archive.debian.org um"
+            echo 'deb http://archive.debian.org/debian bullseye main' > /etc/apt/sources.list
+            echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
+            apt-get update -qq
+            apt-get install -y -qq --no-install-recommends \
+                --allow-downgrades --allow-change-held-packages $PKGS >/dev/null
+        fi
+    fi
 fi
 
 # cmake wie im Linux-Skript: Kitware-Tarball (bullseye liefert nur 3.18).

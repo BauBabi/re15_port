@@ -1,11 +1,115 @@
 # RE1.5 Port — v0.6.2 (Early Preview)
 
-**Der Stuhl verdeckt dich wieder — und diesmal ist die Zahl aus dem laufenden Spiel.**
+**Das 2F-Blatt zeichnete in Wahrheit den Grundriss von 1F — und der Stuhl verdeckt dich wieder.**
 
-Danke fürs Mitlaufen: die zwei Messpunkte, die du geliefert hast, haben den Fall gelöst
-und dabei einen Irrtum von mir aufgedeckt.
+Dein Befund („da fehlt das komplette Rechteck" und „ich hätte das Treppenhaus woanders
+erwartet") war beides Mal richtig — und die Ursache liegt im Original.
+
+## Was die Karte tut
+
+Eine Kartenseite wird nicht als ein Bild gezeichnet, sondern aus Kacheln
+zusammengesetzt: eine Tabelle je Blatt (@`0x80076840 + 8*Seite`, Einträge
+`{x, y, w, h, u, v}`) sagt, welchen Ausschnitt der Blattgrafik der Zeichner wohin setzt.
+
+Blatt 2 (1F) und Blatt 3 (2F) liegen an **verschiedenen Adressen** (`0x8007636C` und
+`0x800763F0`) — und ihre Einträge sind **Byte für Byte gleich**. Blatt 3 hat nur den
+elften nicht. Zwei Stockwerke können nicht dieselbe Kachelgeometrie haben; das ist eine
+Kopie, die nie fertig geschrieben wurde. Dieselbe Baustelle wie die Maßstabstabelle, von
+der 65 von 103 Zeilen nur ein Platzhalter sind.
+
+## Wie das messbar ist
+
+Jede Blattgrafik `MAP0x.PIX` enthält **zweierlei**: oben einen Streifen aus einzeln
+gezeichneten Raum-Kacheln (die Quelle der Kacheln) und darunter den **fertigen
+Grundriss** des Stockwerks. Baut man eine Seite nach ihrer Tabelle zusammen, kommt genau
+dieser Grundriss heraus:
+
+```
+Blatt 2 (1F)   93,0 % Deckung mit dem Grundriss des eigenen Blatts
+Blatt 4 (3F)   98,7 %
+Blatt 3 (2F)   57,3 %      <- die 1F-Ecken schneiden die 2F-Kunst falsch
+```
+
+Und dein `expect.png` ist genau dieser Grundriss — die fertige 2F-Zeichnung, die im
+Blatt liegt und die das Original nie zeigt.
+
+## Die Ersatztabelle
+
+Der 2F-Streifen enthält 10 Raum-Kacheln — genau so viele Rechtecke führt die Seite. Ich
+habe sie nicht erfunden, sondern gemessen:
+
+* **Größe** wie das Original schneidet: Kachelgröße auf das nächste Vielfache von 8
+  aufgerundet (an allen 7 Kacheln von 3F und 8 von 11 auf 1F nachgeprüft).
+* **Lage** per Schablonensuche im Grundriss desselben Blatts — 9 von 10 zu **100,0 %**
+  der eigenen Bildpunkte, eine zu 94,2 %.
+* Auch der **Versatz** auf den Bildschirm ist gemessen, nicht gewählt. Drei
+  unabhängige Wege treffen sich auf (−25, −71):
+  1. 1F hat denselben Versatz (aus seinem eigenen Blatt gefittet).
+  2. Die **Fahrstuhlkabine** ist auf 1F *und* 2F gezeichnet — dieselbe Kachel. 1F setzt
+     sie auf (109,134); die 2F-Rechnung ergibt (109,134). **Exakt.**
+  3. Das **Treppenhaus** ebenso: 1F (119,134), 2F-Rechnung (118,134). **Ein Pixel.**
+
+  In die Verortung der 2F-Kacheln ist von 1F nichts eingegangen — die beiden Schächte
+  sind eine echte Gegenprobe. (Meine erste Fassung setzte die Seite stattdessen mittig
+  ins Bild. Das war eine Wahl, keine Messung, und lag 1–3 Pixel daneben. Verworfen.)
+
+**Gegenprobe:** Der Zusammenbau trifft den Grundriss zu **93,1 %** — so gut wie die
+echte 1F-Tabelle (93,0 %).
+
+## Was dabei herauskam
+
+```
+161 Türen durchschritten — 161× vorher UND nachher der richtige Raum rot
+ 87 Räume geprüft — 87 zeigen sichtbares Rot, 0 nicht
+ 87 von 87 Spieler-Marker liegen in der roten Fläche
+```
+
+Die Treppe sitzt jetzt genau dort, wohin dein Pfeil zeigt: dein Punkt in `expect.png`
+entspricht Bildschirmpunkt (126,144), das Treppenhaus-Rechteck liegt bei (118,134)
+und ist 24×24 groß.
+
+## Neue Schranke
+
+Dein Befund fiel durch alle bestehenden Prüfungen, weil das Treppensymbol **innerhalb**
+seines Rechtecks lag — nur eben neben der gezeichneten Fläche. Ein Rechteck ist ja nur
+der Kasten, aus dem geblittet wird; die Kachel darin enthält Schwarz.
+
+Neu wird deshalb geprüft, ob jede Tür- und Treppenmarke auf **gemaltem** Grundriss
+sitzt. Vorher: 22 von 173 Marken standen auf leerer Fläche, auf 2F allein 3 von 6 —
+die schlechteste Quote aller Blätter.
+
+## Masken
+
+Deine neun neuen Freistellungen sind drin: das **Treppengeländer in ROOM1060** aus
+fünf Blickwinkeln (Cut 0, 1, 2, 4, 7 — Cut 2 in drei Teilen), der **Tresen in ROOM1120**
+und die **Karaffe auf dem Tisch** in ROOM1140. Lage jeweils vom Werkzeug gemessen, alle sieben zu 100,0 %; alle decken die
+gewollte Fläche punktgenau.
+
+Die Geländer und der Tresen laufen diagonal von der Kamera weg — sie bekommen deshalb
+eine Entfernung **je Bildspalte**, keine einzelne. Die Karaffe steht auf der
+Tischplatte und rechnet mit der Tischebene, wie Tisch und Stuhl.
+
+## ⛔ Ein Fehler in meiner eigenen Messkette
+
+Beim Nachmessen sprang die Zonenzahl von 108 auf 91 — auf Blättern, die mit 2F nichts zu
+tun haben. Die Kontrollmessung lieferte eine **dritte** Zahl.
+
+Ursache: der Kartengenerator liest über eine Hilfsdatei **seinen eigenen vorherigen
+Kopf**. Zwei Läufe mit identischer Eingabe liefern deshalb verschiedene Ergebnisse, und
+der ausgelieferte Stand war irgendein Zwischenschritt dieser Folge — der eingecheckte
+Kopf gehörte gar nicht zum eingecheckten Generator.
+
+Damit waren alle meine Vorher/Nachher-Zahlen an dieser Stelle wertlos. Der Generator
+läuft jetzt bis zum **Fixpunkt** (wiederholen, bis sich der Kopf nicht mehr ändert), und
+beide Seiten eines Vergleichs werden dort gemessen. Zweiter Fund derselben Untersuchung:
+eine Hilfsableitung las die Rechteck-Tabelle roh aus der EXE und rechnete für 2F weiter
+mit den 1F-Kacheln, während der Port die 2F-Kacheln zeichnet. Beide gehen jetzt über
+denselben Zugriff.
 
 ## Der Stuhl in ROOM1140
+
+Danke fürs Mitlaufen: die zwei Messpunkte, die du geliefert hast, haben diesen Fall
+gelöst und dabei einen Irrtum von mir aufgedeckt.
 
 Aus deinen Screenshots hatte ich zuerst geschlossen, meine Tiefenberechnung sei generell
 um rund die Hälfte zu weit. **Das war mein Messfehler** — ich hatte den untersten
@@ -47,7 +151,7 @@ nur verdecken, indem sie dich weiter unten im Flur fälschlich verschluckt.
 
 Die Sonde bleibt drin (`RE15_PRI_LOG=<Datei>`) und kostet ohne die Variable nichts.
 
-Tests: 270/270.
+Tests: 271/271.
 
 ---
 
