@@ -285,6 +285,25 @@ int re15_map_zone_kasten(const re15_map_zone_t *zn, int *x, int *y, int *w, int 
     return re15_map_zone_synth(zn, x, y, w, h, 0, 0);
 }
 
+/* Kachelecke (u,v) eines gemalten Rechtecks - Byte +8 und +10 des 12-Byte-Eintrags.
+ * ⛔ MUSS HIER STEHEN, NICHT IM RENDERER: die Seiten-Tabelle @0x80076840 liegt im
+ * re15_inv_map_blob (Basis 0x800762A0), NICHT im re15_inv_ui_blob, das nur bis
+ * 0x80076614 reicht. Ein Zugriff ueber RE15_INV_PTR laeuft 0x22C Bytes hinter dessen
+ * Array-Ende, liefert einen Muell-Zeiger und stuerzt beim naechsten Zugriff ab -
+ * genau das ist in v0.5.7 passiert (Nutzer: "crashed mir jetzt am laufenden Bande die
+ * Anwendung weg"). */
+int re15_map_rect_uv(unsigned page, unsigned rect, int *u, int *v)
+{
+    uint32_t lp, a;
+    if (page > 12) return 0;
+    if (rect >= (unsigned)mu16(0x80076840u + page * 8u)) return 0;
+    lp = mu32(0x80076844u + page * 8u);
+    a  = lp + rect * 12u;
+    if (u) *u = mu8(a + 8u);
+    if (v) *v = mu8(a + 10u);
+    return 1;
+}
+
 uint8_t re15_inv_map_page(void) { return s_map_page; }
 
 /* Die TATSAECHLICH gezeigte Kartenseite. Sie folgt dem BEREICH, in dem der Spieler

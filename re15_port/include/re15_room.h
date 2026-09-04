@@ -115,6 +115,7 @@ int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *
                         int *erste, int *n);   /* Schema-Zeichnung, 0 = keine */
 int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
 int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h);
+int re15_map_rect_uv(unsigned page, unsigned rect, int *u, int *v);
 
 /* DAS RECHTECK EINER ZONE - egal, woher es kommt.
  * ⛔ Bis 2026-09-04 fragten Zeichner, Pruefungen und Messschienen ueberall direkt

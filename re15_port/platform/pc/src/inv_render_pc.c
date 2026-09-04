@@ -38,6 +38,7 @@
 #include <stdint.h>
 
 #include "re15_inv_screen.h"
+#include "re15_room.h"
 #include "re15_inv_ui.h"     /* MAP wave: CD file-id table u16 @0x80074c4c[page] (region-1
                               * blob; the loader 0x8004c328 @0x8004c344-50) */
 #include "re15_inventory.h"
@@ -410,16 +411,17 @@ static void re15_schwenke_entfernen(int page)
     memset(lauf, 0, sizeof lauf);
     memset(weg, 0, sizeof weg);
     memset(ben, 0, sizeof ben);
-    {   /* (1) die Kachelbereiche, die diese Seite zeichnet */
-        const unsigned char *pp = RE15_INV_PTR(0x80076840u + (uint32_t)page * 8u);
-        int cnt = pp[0] | (pp[1] << 8), ri;
-        uint32_t lp = (uint32_t)pp[4] | ((uint32_t)pp[5] << 8) |
-                      ((uint32_t)pp[6] << 16) | ((uint32_t)pp[7] << 24);
-        for (ri = 0; ri < cnt; ri++) {
-            const unsigned char *rp = RE15_INV_PTR(lp + (uint32_t)ri * 12u);
-            int rw = (short)(rp[4] | (rp[5] << 8));
-            int rh = (short)(rp[6] | (rp[7] << 8));
-            int ru = rp[8], rv = rp[10], iy, ix;
+    {   /* (1) die Kachelbereiche, die diese Seite zeichnet.
+         * ⛔ UEBER DIE ENGINE-ZUGRIFFE, NICHT UEBER RE15_INV_PTR. Die Seiten-Tabelle
+         * @0x80076840 liegt im re15_inv_map_blob; re15_inv_ui_blob reicht nur bis
+         * 0x80076614. Der erste Wurf las 0x22C Bytes hinter dessen Array-Ende, bekam
+         * einen Muell-Zeiger und stuerzte beim naechsten Zugriff ab - bei JEDEM
+         * Kartenaufruf (v0.5.7). */
+        int ri, rx, ry, rw, rh, ru, rv, iy, ix;
+        for (ri = 0; ri < 64; ri++) {
+            if (!re15_map_rect_geometry((unsigned)page, (unsigned)ri,
+                                        &rx, &ry, &rw, &rh)) break;
+            if (!re15_map_rect_uv((unsigned)page, (unsigned)ri, &ru, &rv)) break;
             for (iy = rv; iy < rv + rh && iy < 256; iy++)
                 for (ix = ru; ix < ru + rw && ix < 256; ix++)
                     if (iy >= 0 && ix >= 0) ben[iy][ix] = 1;
