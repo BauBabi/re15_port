@@ -1,3 +1,56 @@
+# RE1.5 Port — v0.6.0 (Early Preview)
+
+**Deine zwei Befunde aus dem `fehler`-Ordner sind behoben.**
+
+## Die Karte, 3F
+
+**Das verdrehte Türsymbol** (ROOM1130 ↔ ROOM1150) steht jetzt senkrecht. Die Achse war
+übrigens von Anfang an richtig *berechnet* — beide Türdatensätze sagen „senkrechte Wand".
+Verloren ging sie erst beim Zusammenführen der zwei Raumseiten: dort griff die
+Achsen-Korrektur nur, wenn sich die beiden Rechtecke ganz knapp berühren (≤ 4 px). Bei
+diesen beiden überlappen sie 8 px breit und 40 px hoch — also übersprungen, und dann
+entschied die Richtung zur *Mitte* des Nachbarraums, die hier diagonal zeigt und damit
+ein Münzwurf ist.
+
+**Das Türsymbol, das es nicht geben durfte**, war ROOM1120s dritte Tür (nach ROOM1080).
+Ihre Position war nie eine Messung: sie projiziert weit außerhalb des eigenen Rechtecks,
+und die Klemmung parkte sie in der Ecke — direkt an ROOM1140s Rechteck, wo sie sich als
+Tür zwischen zwei Räumen las, die keine haben. Verworfen wird jetzt nur, was **beides**
+ist: ohne Gegenseite *und* diagonal ausgeklemmt. („Ohne Gegenseite" allein wäre falsch —
+das sind 98 von 201 Marken.)
+
+Über die ganze Karte gemessen: Türsymbole, die quer zu ihrer gemeinsamen Wand stehen,
+**8 → 0**. Der bestehende Prüfpunkt „Symbol zeigt vom Nachbarn weg" steht jetzt bei
+**0 von 65** — vorher 1 von 60.
+
+Ehrlich dazugesagt: **ROOM1070 hat dadurch gar kein Türsymbol mehr.** Der Raum hat genau
+eine Tür, und seine Kartenlage bildet sie 32 bzw. 39 px neben das eigene Rechteck ab. Das
+ist ein Eichungsfehler dieses Raums — vorher war er von einem Symbol an beliebiger Stelle
+zugedeckt, jetzt ist er sichtbar. Der ist noch offen.
+
+## Die Kamera in ROOM1140
+
+Die Maske war da und wurde geladen — sie lag nur **zu weit weg**. Eine Maske verdeckt nur
+etwas, das weiter hinten steht; die Stativbeine waren nah genug eingetragen, der
+Kamerakörper nicht. Deshalb lagen im Bild die Beine vor Leon und das Gehäuse hinter ihm.
+
+Der Grund war eine fehlende Zeile in den Objektdaten: ohne sie wird die Entfernung
+*spaltenweise* aus dem untersten sichtbaren Punkt geschätzt. Für die schmalen Beinspalten
+stimmt das, für die breiten Gehäusespalten nicht — dort ist der unterste Punkt die
+Gehäuse-Unterkante, also scheinbar viel weiter weg. Nachgetragen; alle drei Teile des
+Stativs tragen jetzt dieselbe Entfernung. Gemessen an Leons Standort aus deinem
+Screenshot: vorher 617 Maskenpixel ohne Wirkung, jetzt keiner mehr.
+
+Die linke Kamera bleibt wie besprochen ohne Maske.
+
+Keine der bestehenden Prüfungen konnte diesen Fehler sehen — sie prüfen, ob eine Maske da
+ist und ob sie zu *viel* verdeckt, nie ob sie zu wenig tut. Das Werkzeug warnt jetzt beim
+Bauen, wenn ein Objekt ohne Entfernungsangabe eingetragen wird.
+
+Tests: 269/269.
+
+---
+
 # RE1.5 Port — v0.5.9 (Early Preview)
 
 **Der Intro-Absturz ist gefunden — und er war ein anderer als der von gestern.**
