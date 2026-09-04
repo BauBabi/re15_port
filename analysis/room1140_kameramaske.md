@@ -102,3 +102,67 @@ misst `maske_aus_png.py` selbst, einzutragen ist dann nur `"fuss": 182`.
 
 Was fehlt, ist die Gegenprobe: je Objekt pruefen, ob es an den Stehplaetzen unmittelbar
 DAHINTER ueberhaupt verdeckt.
+
+## §2 Nutzer-Befunde 2026-09-04 (abends): Stuhl und Wand — im LAUFENDEN SPIEL gemessen
+
+Nutzer: *„error1 - when I get closer to the chair, it is not in front of me anymore."*
+und *„error2, even though i made a pri for this whole wall, my arm clips through."*
+
+### ⛔ Zuerst habe ich es FALSCH gemessen
+
+Aus den Screenshots hatte ich abgeleitet, das Tiefenmodell (`tools/maske/geom.py`,
+`vz_at_floor`) sei um Faktor ~1,47 zu fern. **Das war mein Fehler**: ich nahm den
+untersten *sichtbaren* Pixel der Figur als Fusspunkt — der ist in beiden Faellen
+verdeckt (vom Tisch bzw. von der Wand). Deshalb wurde nichts danach gedreht, sondern
+eine Sonde gebaut: `RE15_PRI_LOG=<Datei>` (render_pc.c) schreibt die Spielerposition und
+die Tiefen der Dreiecke, gegen die `re15_pri_mask_camera_z(depth)` wirklich vergleicht.
+
+Gegenprobe, dass die Nachrechnung stimmt (`view = R*welt/4096 + t`):
+
+| Ort | berechnet Kopf/Fuss | Sonde meldete |
+|---|---|---|
+| ROOM1130 Cut 3, Spieler (−3329,0,3332) | 6373 / 6835 | Dreiecke 5724…6920 |
+| ROOM1140 Cut 0, Spieler (−7125,0,−14807) | 8559 / 9028 | Dreiecke 5040…10369 (enthaelt auch andere Objekte) |
+
+### Der Stuhl (ROOM1140 Cut 0) — behoben
+
+Verdeckt wird der Spieler GANZ erst bei Tiefe < 133. Der Stuhl trug **136** — er
+verfehlte es um DREI und verdeckte nur noch die Beine; beim Naeherkommen fiel er aus.
+
+Ursache: `"fuss": 140` nahm den untersten Punkt der Freistellung als BODENkontakt. Der
+liegt aber auf der **Tischplatte** — der Stuhl steht dahinter, seine Fuesse sind
+verdeckt. Mit `"ebene": -700` (wie die Konferenztisch-Eintraege) ergeben sich **113/117**
+= Schwelle 7232/7488, beide unter 8559. Alle vier Rechtecke verdecken jetzt vollstaendig.
+
+### Die Wand (ROOM1130 Cut 3) — KEIN Fehler, gemessen und begruendet
+
+An seiner Position ist er bei 6373…6835. Die Wandtiefen je Bildspalte:
+
+```
+x = 85..95 : 122..832  = Kamera-Z  7808..53248  -> HINTER ihm
+x = 97..115:  75.. 94  = Kamera-Z  4800.. 6016  -> vor ihm
+```
+
+Sein Arm liegt bei x=85…95, also ueber dem Wandstueck, das **hinter ihm** liegt (973 bis
+46413 Einheiten). Dass es dort nicht verdeckt, ist richtig.
+
+⛔ **Die naheliegende Erklaerung „zu grobe Kachelung" wurde GEMESSEN UND VERWORFEN.**
+43 der 79 Kacheln liegen ueber einem Tiefensprung (die Kachel bei x=88 spannt intern
+122…414 und bekommt den Median 190). Es liegt nahe, feiner zu unterteilen. Nachgerechnet
+mit der feinstmoeglichen Aufloesung (Tiefe je BILDPUNKT statt je Kachel):
+
+```
+Wand-Freistellung 3450 Punkte
+   verdeckt bei Aufloesung je Bildpunkt : 2142
+   verdeckt mit der 8-px-Kachelung      : 2447
+   Differenz: -305 Punkte, davon 0 die NEU verdecken wuerden
+```
+
+Die grobe Kachelung verdeckt heute also **mehr** als die Geometrie hergibt, nicht
+weniger. Eine feinere Unterteilung wuerde den Befund **verschlimmern**. Sie wird deshalb
+nicht gebaut.
+
+Bleibt als Erklaerung fuer den optischen Eindruck: der Arm steht neben dem Pfeiler ueber
+der zurueckweichenden Wand. Wenn er dort in die Wand einzudringen SCHEINT, ist das die
+Figur/Kollision, nicht die Maske — eine Maske kann ihn dort nicht verdecken, ohne ihn
+weiter unten im Flur faelschlich zu verschlucken.

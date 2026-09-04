@@ -30,13 +30,47 @@ fi
 # eingebauten Wayland-Dekorationspfad zurueck.)
 if [[ "$(id -u)" == "0" ]] && ! command -v gcc >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
+    PKGS="build-essential ninja-build git ca-certificates wget libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols libasound2-dev libpulse-dev libdbus-1-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev"
     apt-get update -qq
-    apt-get install -y -qq --no-install-recommends \
-        build-essential ninja-build git ca-certificates wget \
-        libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev \
-        libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols \
-        libasound2-dev libpulse-dev libdbus-1-dev libudev-dev \
-        libgl1-mesa-dev libegl1-mesa-dev >/dev/null
+    if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+        # ⛔ DEBIAN 11 IST INS ARCHIV GEWANDERT (2026-09-04 gemessen). Der normale
+        # Spiegel liefert fuer bullseye noch einen Index, aber nicht mehr jedes darin
+        # genannte Paket:
+        #   E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
+        # Zweimal hintereinander reproduziert, also kein Aussetzer. Das ist ein
+        # Infrastruktur-Fehler, kein Code-Fehler - aber er legt den Release-Build lahm,
+        # und der Linux-Build ist Pflicht (ein Paket nur fuer Windows hat schon einmal
+        # zwoelf Releases lang das Deck-Paket mitgerissen, Memory
+        # reai-v2-paket-plattform-kollateral).
+        # archive.debian.org haelt alle bullseye-Pakete dauerhaft vor; Check-Valid-Until
+        # muss dafuer aus, weil die Release-Datei abgelaufen ist. Eine eigene
+        # Security-Suite fuehrt das Archiv NICHT mehr (gemessen: "does not have
+        # a Release file") - die Updates sind ins Hauptarchiv gefaltet.
+        # ⛔ ERST DEN INDEX WEGWERFEN. Der 404 nennt eine Paketversion, die im Pool
+        # nicht mehr liegt (deb11u8) - das ist das Muster eines VERALTETEN Index im
+        # Basis-Image, den ein blosses "apt-get update" nicht ersetzt. Gemessen
+        # 2026-09-04: zweimal derselbe 404, danach mit geleerter Liste erneut versucht.
+        echo "   apt-Index unvollstaendig - Listen leeren und neu laden"
+        rm -rf /var/lib/apt/lists/*
+        apt-get clean
+        apt-get update -qq
+        if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+            echo "   apt-Spiegel unvollstaendig - schalte auf archive.debian.org um"
+            # ⛔ NUR DAS HAUPTARCHIV. Eine eigene Security-Suite fuehrt
+            # archive.debian.org fuer bullseye unter KEINEM Namen mehr - beide
+            # geprueft, beide 'does not have a Release file':
+            #     debian-security bullseye-security
+            #     debian-security bullseye/updates
+            echo 'deb http://archive.debian.org/debian bullseye main' > /etc/apt/sources.list
+            echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
+            apt-get update -qq
+            # Das Basis-Image traegt Security-Versionen, die das Archiv nicht kennt;
+            # ohne diese Freigaben endet es in 'held broken packages'. Der Container
+            # ist ein Wegwerf-Container, das Spiel-Binary wird davon nicht beruehrt
+            # (das glibc-Gate prueft es weiterhin einzeln).
+            apt-get install -y -qq --no-install-recommends --allow-downgrades --allow-change-held-packages $PKGS >/dev/null
+        fi
+    fi
 fi
 # cmake: Debian 11 (bullseye) liefert nur 3.18, re15_port verlangt >=3.21, und
 # bullseye-backports ist inzwischen archiviert (kein Release-File). Deshalb das

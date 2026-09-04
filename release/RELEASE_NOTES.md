@@ -1,3 +1,56 @@
+# RE1.5 Port — v0.6.2 (Early Preview)
+
+**Der Stuhl verdeckt dich wieder — und diesmal ist die Zahl aus dem laufenden Spiel.**
+
+Danke fürs Mitlaufen: die zwei Messpunkte, die du geliefert hast, haben den Fall gelöst
+und dabei einen Irrtum von mir aufgedeckt.
+
+## Der Stuhl in ROOM1140
+
+Aus deinen Screenshots hatte ich zuerst geschlossen, meine Tiefenberechnung sei generell
+um rund die Hälfte zu weit. **Das war mein Messfehler** — ich hatte den untersten
+*sichtbaren* Punkt deiner Figur als Standpunkt genommen, und der ist dort vom Tisch
+verdeckt. Statt daran etwas zu drehen, habe ich eine Sonde eingebaut und dich einmal
+laufen lassen. Ergebnis:
+
+```
+Am Stuhl:  deine Tiefe 8559 (Kopf) bis 9028 (Fuß)
+           verdeckt wirst du ganz ab Tiefe < 133
+Der Stuhl trug: 136   —   er verfehlt es um DREI
+```
+
+Deshalb blieben nur noch deine Beine verdeckt, und beim Näherkommen fiel er ganz aus.
+
+Die Ursache war eine falsche Bezugsfläche: ich hatte den untersten Punkt der
+Freistellung als *Bodenkontakt* eingetragen — er liegt aber auf der **Tischplatte**, der
+Stuhl steht dahinter und seine Füße sind verdeckt. Jetzt rechnet er mit der Tischebene,
+wie der Tisch selbst: alle vier Teile verdecken dich vollständig.
+
+## Die Wand in ROOM1130 — gemessen, aber kein Fehler
+
+Hier sagen die Zahlen etwas anderes, als es aussieht. An deiner Position:
+
+```
+Bildspalten links  (dein Arm):  Wand liegt 970 bis 46000 Einheiten HINTER dir
+Bildspalten rechts (Pfeiler) :  Wand liegt vor dir  →  verdeckt dich
+```
+
+Dein Arm steht also vor einem Wandstück, das wirklich hinter dir liegt — dass es dort
+nicht verdeckt, ist richtig.
+
+Die naheliegende Erklärung wäre eine zu grobe Unterteilung der Maske. Die habe ich
+durchgerechnet und **verworfen**: mit der feinstmöglichen Auflösung würde die Wand dich
+**305 Bildpunkte weniger** verdecken und **keinen einzigen mehr**. Feiner zu unterteilen
+würde den Eindruck also verschlimmern. Wenn der Arm dort *in* der Wand zu stecken
+scheint, liegt das an der Figur selbst, nicht an der Maske — eine Maske könnte ihn dort
+nur verdecken, indem sie dich weiter unten im Flur fälschlich verschluckt.
+
+Die Sonde bleibt drin (`RE15_PRI_LOG=<Datei>`) und kostet ohne die Variable nichts.
+
+Tests: 270/270.
+
+---
+
 # RE1.5 Port — v0.6.1 (Early Preview)
 
 **Deine drei Befunde vom 3F-Blatt sind behoben, und deine vier Freistellungen sind drin.**
