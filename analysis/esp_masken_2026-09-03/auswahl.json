@@ -14,17 +14,17 @@
      "grow": 0
     },
     {
-     "name": "Heizkoerper an der Rueckwand",
+     "name": "Stuhl hinter dem Tisch",
      "png": "pri/1140/00_02.png",
      "x": 210,
      "y": 113,
      "massstab": 1,
-     "fuss": 140,
+     "ebene": -700,
      "oben": 0,
      "grow": 0
     }
    ],
-   "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig."
+   "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig. | ⛔ KORREKTUR 2026-09-04, aus dem laufenden Spiel gemessen (RE15_PRI_LOG): der Nutzer meldete \"when I get closer to the chair, it is not in front of me anymore\". An seinem Stehplatz (-7125,0,-14807) ist seine Kamera-Z 8559 (Kopf) bis 9028 (Fuss) - verdeckt wird er ganz erst von Tiefe < 133. Das Objekt trug 136, verfehlte es also um DREI und verdeckte nur noch seine Beine. Ursache: \"fuss\": 140 nahm den untersten Punkt der Freistellung als BODENkontakt - er liegt aber auf der TISCHPLATTE, der Stuhl steht dahinter und seine Fuesse sind verdeckt. Mit \"ebene\": -700 (wie die Konferenztisch-Eintraege) ergibt sich Tiefe 112 < 133. Nebenbei richtig benannt: es ist ein STUHL, kein Heizkoerper."
   },
   "2": {
    "objekte": [
