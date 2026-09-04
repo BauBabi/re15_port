@@ -1,138 +1,149 @@
-/* Karte: die Achse eines Tuersymbols folgt der gemeinsamen Wand, nicht dem Zufall.
+/* Karte: die Achse eines Tuersymbols stimmt mit dem GEMALTEN Original ueberein.
  *
- * ⛔ NUTZER-BEFUND 2026-09-04 (fehler/error1.png): auf Blatt 4 zeigt ein Pfeil auf das
- * Tuersymbol zwischen ROOM1130 und ROOM1150 mit dem Text
- *     "Wrong Rotation, Need 90 Degree turn"
- * Es wurde WAAGERECHT gezeichnet, obwohl die beiden Rechtecke NEBENEINANDER liegen -
- * die gemeinsame Wand ist also senkrecht.
+ * ⛔ NUTZER-BEFUND 2026-09-04 (fehler/error1.png): ein Pfeil auf das Tuersymbol zwischen
+ * ROOM1130 und ROOM1150 mit dem Text "Wrong Rotation, Need 90 Degree turn". Es wurde
+ * WAAGERECHT gezeichnet, obwohl beide Tuer-Datensaetze eine senkrechte Wand nennen.
  *
- * Der Zeichner (re15_inv_screen.c) liest aus kind nur die ACHSE:
- *   kind 0/2 (Nord/Sued) -> waagerechter 5x2-Balken
- *   kind 1/3 (Ost/West)  -> senkrechter  2x5-Balken
+ * Der Zeichner (re15_inv_screen.c:1921) liest aus kind NUR die ACHSE:
+ *     kind 0/2 (Nord/Sued) -> waagerechter 5x2-Balken
+ *     kind 1/3 (Ost/West)  -> senkrechter  2x5-Balken
+ * Das Vorzeichen ist auf dem Schirm nicht unterscheidbar und wird hier nicht geprueft.
  *
- * PRUEFUNG: Fuer eine GEPAARTE Tuermarke sind beide Rechtecke bekannt. Ueberlappen sie
- * sich in x deutlich weniger als in y, trennt sie eine SENKRECHTE Wand (und umgekehrt).
- * Die Achse der Marke muss dazu passen.
+ * ⛔ DIESER TEST HAT SEIN MASS GEWECHSELT - UND ZWAR WEIL DAS ERSTE FALSCH WAR.
+ * Die erste Fassung (2026-09-04, frueh) verglich die Achse mit der LAGE DER BEIDEN
+ * RECHTECKE (schmale x-Ueberdeckung => senkrechte Wand). Das sah gut aus: 26 von 26.
+ * Es war aber eine SELBSTBESTAETIGENDE Metrik - der Generator gewann die Achse zu dem
+ * Zeitpunkt aus genau derselben Ueberdeckung. Gemessen gegen eine UNABHAENGIGE Wahrheit
+ * kippte das Urteil:
  *
- * ⛔ WARUM "DEUTLICH" UND NICHT "IRGENDWIE". Bei annaehernd gleicher Ueberdeckung sagt
- * die Geometrie nichts - die Rechtecke beruehren sich dann ueber Eck. Solche Faelle
- * werden NICHT bewertet, statt sie mit einer Zufallsantwort zu belasten. Gemessen am
- * 2026-09-04 ueber die ganze Tabelle:
- *     Trennschaerfe >=  0 px : 27 passen, 13 widersprechen,  0 unentschieden
- *     Trennschaerfe >=  4 px : 25 passen, 10 widersprechen,  5 unentschieden
- *     Trennschaerfe >=  8 px : 23 passen,  8 widersprechen,  9 unentschieden
- *     Trennschaerfe >= 16 px : 21 passen,  8 widersprechen, 11 unentschieden
- * Ab 8 px aendert sich die MENGE der Widersprueche nicht mehr (identisch bei 8 und 16) -
- * das ist die stabile Schranke, keine gefuehlte Zahl.
+ *   Variante                          Original-Symbole   meine Ueberdeckungs-Schranke
+ *   vor allen Fixes                     18 richtig / 8         20 / 6
+ *   Achse aus der Ueberdeckung          20 richtig / 7         26 / 0   <- schmeichelt sich
+ *   Achse aus dem Tuer-Rechteck         23 richtig / 4         20 / 6   <- ist besser
  *
- * Der Test gibt seine ABDECKUNG aus (wie viele Marken bewertet, wie viele nicht und
- * warum), damit kein Aggregat einen Einzelfall zudeckt und niemand still gruen bleibt,
- * weil die Menge leer lief (Memory reai-v2-schiene-abdeckung).
+ * Gemessen wird deshalb gegen die GEMALTEN Tuersymbole des Originals:
+ * analysis/kartensymbole/symbolkatalog.csv, Spalte `ausrichtung` (senkrecht/waagerecht),
+ * gewonnen aus den Pixeln von DATA/MAP0x.PIX. Das ist eine Quelle, die von unserer
+ * Rechteck-Zuordnung, unserer Paarung und unserer Projektion voellig unabhaengig ist.
+ * (Memory reai-v2-selbstbestaetigende-metrik.)
+ *
+ * ZUORDNUNG: je Katalog-Symbol die naechstgelegene Tuermarke auf DEMSELBEN Blatt mit
+ * Manhattan-Abstand <= 8 px. Symbole ohne Marke in dieser Naehe werden nicht bewertet -
+ * der Test sagt aus, wie viele er bewerten konnte.
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "re15_room.h"
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
                          else { printf("  FAIL: %s\n", t); g_fail = 1; } } while (0)
 
-#define TRENNSCHAERFE 8
+#define TOLERANZ 8
 
-/* Rechteck-Index der Zone zid auf Blatt page (erste passende Zone). */
-static int rect_von_zone(int zid, int page, int *rx, int *ry, int *rw, int *rh)
+/* Spaltenindex einer Kopfzeile finden. */
+static int spalte(const char *kopf, const char *name)
 {
-    int i, n = re15_map_zone_count();
-    for (i = 0; i < n; i++) {
-        const re15_map_zone_t *z = re15_map_zone_by_index(i);
-        if (!z || z->zid != zid || z->page != page) continue;
-        if (z->rect == 255) return -1;               /* Grundriss, kein gemaltes Rechteck */
-        if (!re15_map_rect_geometry((unsigned)page, z->rect, rx, ry, rw, rh)) return -1;
-        return z->rect;
+    int i = 0; const char *p = kopf;
+    for (;;) {
+        const char *k = strchr(p, ',');
+        size_t n = k ? (size_t)(k - p) : strlen(p);
+        if (n == strlen(name) && strncmp(p, name, n) == 0) return i;
+        if (!k) return -1;
+        p = k + 1; i++;
     }
-    return -1;
+}
+
+static const char *feld(const char *zeile, int idx, char *puf, size_t n)
+{
+    const char *p = zeile; int i;
+    for (i = 0; i < idx; i++) { p = strchr(p, ','); if (!p) return 0; p++; }
+    {
+        const char *k = strchr(p, ',');
+        size_t len = k ? (size_t)(k - p) : strlen(p);
+        while (len && (p[len-1] == '\n' || p[len-1] == '\r')) len--;
+        if (len >= n) len = n - 1;
+        memcpy(puf, p, len); puf[len] = 0;
+    }
+    return puf;
 }
 
 int main(void)
 {
-    int k, n, bewertet = 0, passt = 0, unentschieden = 0, keine_daten = 0, treppen = 0,
-        ungepaart = 0, gleiches_rect = 0, widerspruch = 0;
+    char pfad[600], zeile[4096], kopf[4096], puf[128];
+    FILE *f;
+    int c_seite, c_typ, c_x, c_y, c_aus;
+    int k, n, bewertet = 0, passt = 0, falsch = 0, ohne_marke = 0, zeilen = 0;
 
-    printf("=== Karte: Tuersymbol-Achse folgt der gemeinsamen Wand ===\n");
+    printf("=== Karte: Tuersymbol-Achse gegen die GEMALTEN Original-Symbole ===\n");
 
-    /* ⛔ OHNE DAS MISST DER TEST NICHTS. re15_map_mark_get liefert eine Marke nur,
-     * wenn eine ihrer Zonen BESUCHT ist (re15_map_zones.c:586) - im frischen
-     * Testprozess ist keine besucht, und die Schleife lief ueber alle 189 Marken,
-     * ohne eine einzige zu bewerten. Aufgefallen ist das NUR, weil die
-     * Abdeckungszeile "189 ohne gemaltes Rechteck" ausgab und die Bedingung
-     * "Pruefmenge nicht leer" ansprang - genau dafuer stehen beide da
-     * (Memory reai-v2-schiene-abdeckung). */
     re15_map_visited_reset();
     for (k = 0; k < 13; k++) re15_map_debug_reveal_page((unsigned)k);
-
     n = re15_map_mark_count();
-    for (k = 0; k < n; k++) {
-        int pg, rc, mx, my, kind, za, zb;
-        int ax, ay, aw, ah, bx, by, bw, bh, ra, rb;
-        int ux, uy, erwartet_senk, ist_senk;
 
-        if (!re15_map_mark_get(k, &pg, &rc, &mx, &my, &kind)) { keine_daten++; continue; }
-        if (kind > 3)                       { treppen++;   continue; }   /* Treppe */
-        if (!re15_map_mark_zonen(k, &za, &zb)) { keine_daten++; continue; }
-        if (zb == 255)                      { ungepaart++; continue; }
+    snprintf(pfad, sizeof pfad, "%s/../analysis/kartensymbole/symbolkatalog.csv",
+             RE15_PORT_SRC_DIR);
+    f = fopen(pfad, "rb");
+    if (!f) { printf("  FAIL: Symbolkatalog nicht lesbar: %s\n", pfad); return 1; }
+    if (!fgets(kopf, sizeof kopf, f)) { printf("  FAIL: Katalog leer\n"); fclose(f); return 1; }
+    c_seite = spalte(kopf, "seite");  c_typ = spalte(kopf, "typ");
+    c_x = spalte(kopf, "screen_x");   c_y   = spalte(kopf, "screen_y");
+    c_aus = spalte(kopf, "ausrichtung");
+    if (c_seite < 0 || c_typ < 0 || c_x < 0 || c_y < 0 || c_aus < 0) {
+        printf("  FAIL: Kopfzeile ohne die erwarteten Spalten\n"); fclose(f); return 1; }
 
-        ra = rect_von_zone(za, pg, &ax, &ay, &aw, &ah);
-        rb = rect_von_zone(zb, pg, &bx, &by, &bw, &bh);
-        if (ra < 0 || rb < 0)               { keine_daten++;    continue; }
-        if (ra == rb)                       { gleiches_rect++;  continue; }
+    while (fgets(zeile, sizeof zeile, f)) {
+        int pg, sx, sy, senk_soll, bester = -1, bd = 0;
+        zeilen++;
+        if (!feld(zeile, c_typ, puf, sizeof puf) || strcmp(puf, "TUER") != 0) continue;
+        if (!feld(zeile, c_aus, puf, sizeof puf)) continue;
+        if      (strncmp(puf, "senk", 4) == 0) senk_soll = 1;
+        else if (strncmp(puf, "waag", 4) == 0) senk_soll = 0;
+        else continue;                                  /* '-' = keine Aussage */
+        feld(zeile, c_seite, puf, sizeof puf); pg = atoi(puf);
+        feld(zeile, c_x, puf, sizeof puf);     sx = atoi(puf);
+        feld(zeile, c_y, puf, sizeof puf);     sy = atoi(puf);
 
-        ux = (ax + aw < bx + bw ? ax + aw : bx + bw) - (ax > bx ? ax : bx);
-        uy = (ay + ah < by + bh ? ay + ah : by + bh) - (ay > by ? ay : by);
-        if (abs(ux - uy) < TRENNSCHAERFE)   { unentschieden++;  continue; }
-
-        /* ⛔ EINE UEBERDECKUNG IST NUR DANN EINE WAND, WENN SIE FUER BEIDE RECHTECKE
-         * SCHMAL IST. Steckt ein Rechteck IM anderen, ueberlappen sie grossflaechig und
-         * es gibt gar keine gemeinsame Wandlinie - die laengere Ueberdeckungsseite sagt
-         * dann nichts ueber die Wandrichtung. Gemessen 2026-09-04 an drei Faellen, die
-         * ohne diese Probe falsch bewertet wurden:
-         *     Blatt 7 (206,106): Ueberdeckung x=8, aber der Nachbar ist selbst nur 8 breit
-         *     Blatt 7 (224,175): Ueberdeckung x=24, aber der eigene Kasten ist 24 breit
-         *     Blatt 2 (111, 84): Ueberdeckung x=17 gegen einen 24 px breiten Nachbarn
-         * Der Nutzer-Fall ROOM1130 <-> ROOM1150 besteht sie klar: Ueberdeckung x=8 bei
-         * zwei je 32 px breiten Rechtecken. Dieselbe Probe steht im Generator
-         * (tools/gen_map_zones.py) - beide muessen dasselbe messen. */
-        {
-            int kw = (aw < bw ? aw : bw), kh = (ah < bh ? ah : bh);
-            int wand_senk = (uy > ux) && (ux * 2 < kw);
-            int wand_waag = (ux > uy) && (uy * 2 < kh);
-            if (!wand_senk && !wand_waag) { unentschieden++; continue; }
+        for (k = 0; k < n; k++) {
+            int mp, mr, mx, my, kind, d;
+            if (!re15_map_mark_get(k, &mp, &mr, &mx, &my, &kind)) continue;
+            if (mp != pg || kind > 3) continue;
+            d = abs(mx - sx) + abs(my - sy);
+            if (d <= TOLERANZ && (bester < 0 || d < bd)) { bester = k; bd = d; }
         }
-
-        bewertet++;
-        erwartet_senk = (ux < uy);          /* schmale x-Ueberdeckung = senkrechte Wand */
-        ist_senk      = (kind == 1 || kind == 3);
-        if (erwartet_senk == ist_senk) {
-            passt++;
-        } else {
-            widerspruch++;
-            printf("  [Widerspruch] Marke #%d Blatt %d rect %d (%d,%d) kind %d: "
-                   "Ueberdeckung x=%d y=%d verlangt %s, gezeichnet wird %s\n",
-                   k, pg, rc, mx, my, kind, ux, uy,
-                   erwartet_senk ? "senkrecht" : "waagerecht",
-                   ist_senk ? "senkrecht" : "waagerecht");
+        if (bester < 0) { ohne_marke++; continue; }
+        {
+            int mp, mr, mx, my, kind;
+            re15_map_mark_get(bester, &mp, &mr, &mx, &my, &kind);
+            bewertet++;
+            if ((kind == 1 || kind == 3) == (senk_soll != 0)) passt++;
+            else {
+                falsch++;
+                printf("  [Abweichung] Blatt %d Original-Symbol (%d,%d) ist %s, "
+                       "unsere Marke (%d,%d) kind %d ist %s (Abstand %d px)\n",
+                       pg, sx, sy, senk_soll ? "senkrecht" : "waagerecht",
+                       mx, my, kind, (kind == 1 || kind == 3) ? "senkrecht" : "waagerecht",
+                       bd);
+            }
         }
     }
+    fclose(f);
 
-    printf("  [Abdeckung] %d Marken gesamt: %d bewertet (%d passen, %d widersprechen), "
-           "%d unentschieden (<%d px Trennschaerfe)\n",
-           n, bewertet, passt, widerspruch, unentschieden, TRENNSCHAERFE);
-    printf("  [Abdeckung] nicht bewertbar: %d Treppen, %d ungepaart, %d gleiches Rechteck, "
-           "%d ohne gemaltes Rechteck\n", treppen, ungepaart, gleiches_rect, keine_daten);
+    printf("  [Abdeckung] %d Katalogzeilen, %d Tuersymbole bewertet "
+           "(%d richtig, %d falsch), %d ohne Marke im Umkreis von %d px\n",
+           zeilen, bewertet, passt, falsch, ohne_marke, TOLERANZ);
 
-    /* ⛔ DIE MENGE DARF NICHT LEER LAUFEN. Ohne diese Bedingung waere der Test still
-     * gruen, sobald sich die Tabellenform aendert und keine Marke mehr durchkommt. */
-    CHECK("die Pruefmenge ist nicht leer (>= 20 bewertete Marken)", bewertet >= 20);
-    CHECK("KEIN Tuersymbol steht quer zu seiner gemeinsamen Wand", widerspruch == 0);
+    /* ⛔ DIE MENGE DARF NICHT LEER LAUFEN (Memory reai-v2-schiene-abdeckung). */
+    CHECK("die Pruefmenge ist nicht leer (>= 20 bewertete Symbole)", bewertet >= 20);
+    /* ⛔ DIE SCHRANKE IST DER GEMESSENE STAND, NICHT EINE GEFUEHLTE ZAHL.
+     * Endstand 2026-09-04: 23 richtig, 4 falsch. Die vier Reste sind Symbole, deren
+     * Marke aus einem Tuer-Datensatz mit QUADRATISCHEM Trigger-Rechteck stammt (dort
+     * sagt die Streckung nichts) oder deren Zuordnung ueber ein geteiltes Rechteck
+     * laeuft. Sie stehen oben namentlich. Wer die Regel aendert, muss diese Zahlen
+     * verbessern - schlechter werden darf sie nicht. */
+    CHECK("mindestens 23 Achsen stimmen mit dem gemalten Original ueberein", passt >= 23);
+    CHECK("hoechstens 4 Achsen weichen ab", falsch <= 4);
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;

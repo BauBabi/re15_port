@@ -2012,6 +2012,27 @@ def main():
                             (rows[_k][0] & 0xFFF0) == _bew[0] and rows[_k][4] == _bew[1]):
                         rows[_k] = rows[_k][:3] + (_neu_ri,) + rows[_k][4:]
                 assign[_bew] = (_zp, _neu_ri)
+                # ⛔ DIE EICHUNG GEHOERT ZU EINEM BESTIMMTEN RECHTECK - NACH DEM UMZUG
+                # IST SIE UNGUELTIG. Sie wurde oben (Zeile ~1180) GEMEINSAM mit der
+                # Rechteck-Zuordnung aus der ausgelieferten Massstabszeile gewonnen; der
+                # Tausch schrieb bisher nur `assign` und `rows` um und liess sie stehen.
+                # NUTZER-BEFUND 2026-09-04 (fehler/error1.png, drei Anmerkungen zu
+                # ROOM1120): dessen Eichung (101,190,2296,2312) war fuer Blatt 4 Rect 3
+                # (152,89)+48x24 hergeleitet; der Tausch gab Rect 3 an ROOM1170 z1 und
+                # schob ROOM1120 auf Rect 5 (120,119)+40x40. Gemessen mit der alten
+                # Eichung auf dem neuen Rechteck:
+                #   Bbox projiziert nach x148..190 y90..137 - das Rechteck liegt bei
+                #   x120..159 y119..158. Nur 315 von 1755 Kollisionspunkten (18 %) landen
+                #   ohne Klemmung darin; der Spielermarker bewegt sich in einer 11x18-Ecke
+                #   eines 40x40-Rechtecks, und BEIDE vertikalen Tueren (-> ROOM1060
+                #   Treppenhaus, -> ROOM1080 Aufzug) projizieren diagonal daneben und
+                #   werden auf denselben Eckpixel (159,119) geklemmt. Das ist die
+                #   gemeinsame Ursache aller drei Anmerkungen des Nutzers.
+                # Ohne Eichung faellt to_map auf die Bbox-Streckung zurueck, die das
+                # zugewiesene Rechteck per Konstruktion ausfuellt.
+                if eichung.pop(_bew, None) is not None:
+                    print("      Eichung von ROOM%04X z%d verworfen - sie galt fuer "
+                          "Rect %d, nicht fuer Rect %d" % (_bew[0], _bew[1], _ri2, _neu_ri))
                 for var in (0, 1):
                     rows.append((_b + var, zinfo[_b][_zi], _zp, _ri2, _zi,
                                  zid_von[(_b, _zi)], 0, 1))
@@ -2998,6 +3019,25 @@ def main():
         # Bei einem Paar ist die Richtung bekannt: sie zeigt zur Zeichnung des anderen
         # Raums. Die WANDACHSE (senkrecht/waagerecht) bleibt, wie die Silhouette sie
         # bestimmt hat; nur das Vorzeichen wird korrigiert.
+        # ⛔ DIE ACHSE IST EINE AUSSAGE DER AUSLIEFERUNGSDATEN, NICHT UNSERER ZUORDNUNG.
+        # Sie kommt aus der Streckung des Aot_set-Trigger-Rechtecks (senk = rd > rw,
+        # Rechteck-Semantik Ecke+Ausdehnung FUN_80042b64 @0x80042b68-7c) und wird von
+        # snap_wall/snap_grundriss unveraendert weitergereicht. Die gemalten
+        # Karten-Rechtecke sind UNSERE Zuordnung; sie duerfen nur das VORZEICHEN
+        # bestimmen, nicht die Achse.
+        #
+        # ⛔ GEMESSEN GEGEN EINE UNABHAENGIGE WAHRHEIT, nicht gegen die eigene Regel.
+        # Vergleichsmass sind die GEMALTEN Original-Tuersymbole
+        # (analysis/kartensymbole/symbolkatalog.csv, Spalte `ausrichtung`), zugeordnet
+        # ueber die Lage (<= 8 px auf demselben Blatt). Drei Varianten, gleicher Baum:
+        #     vor allen Fixes                    18 richtig /  8 falsch
+        #     Achse aus der Ueberdeckung         20 richtig /  7 falsch
+        #     Achse aus dem Tuer-Rechteck (hier) 23 richtig /  4 falsch
+        # Die Ueberdeckungs-Regel sah auf MEINER eigenen Schranke ("Achse passt zur Lage
+        # der beiden Rechtecke") mit 26/0 besser aus als diese hier mit 20/6 - aber
+        # genau diese Schranke misst dieselbe Ueberdeckung, aus der die Regel entsteht.
+        # Eine selbstbestaetigende Metrik (Memory reai-v2-selbstbestaetigende-metrik);
+        # entschieden hat der externe Massstab.
         _seite = W['seite']
         _andere = B if W is A else A
         _gk = _geo(_andere['pg'], _andere['r'], _andere['room'], _andere['zi'])
@@ -3009,10 +3049,12 @@ def main():
             # schon die ACHSE falsch (Seite 7: Symbol (156,136) als Sued-Wand, waehrend
             # der Nachbar 9 px WESTLICH liegt), und dann hilft kein Vorzeichen.
             # Bei einem PAAR ist die Richtung bekannt und schlaegt die Silhouette.
-            if abs(_zx) >= abs(_zy):
-                _seite = 1 if _zx > 0 else 3      # Ost / West
+            # Die Achse bleibt, wie das Tuer-Rechteck sie sagt; nur das VORZEICHEN
+            # kommt aus der Richtung zum Nachbarn.
+            if W['seite'] % 2 == 1:
+                _seite = 1 if _zx > 0 else 3      # senkrecht: Ost / West
             else:
-                _seite = 2 if _zy > 0 else 0      # Sued / Nord
+                _seite = 2 if _zy > 0 else 0      # waagerecht: Sued / Nord
         # ⛔ DIE BERUEHRUNG SCHLAEGT DIE SCHWERPUNKT-RICHTUNG. Der Vergleich der beiden
         # Rechteck-Mitten sagt, wo der Nachbar UNGEFAEHR liegt; die Ueberdeckung sagt,
         # wo die Wand WIRKLICH verlaeuft. Bei zwei langgestreckten Raeumen, die sich
@@ -3026,7 +3068,11 @@ def main():
             # Richtung damit genau umgekehrt. Der Pin unit_map_durchgang hat das
             # gefunden (39 gepaarte Symbole zeigten vom Nachbarn weg) - er hatte recht,
             # nicht der erste Wurf dieses Umbaus.
-            _seite = _seite_kante if W is A else (_seite_kante + 2) % 4
+            # Auch hier nur das Vorzeichen: die Ueberdeckung darf die Achse des
+            # Tuer-Rechtecks nicht umwerfen (siehe die Messung oben).
+            _sk = _seite_kante if W is A else (_seite_kante + 2) % 4
+            if _sk % 2 == W['seite'] % 2:
+                _seite = _sk
         for X in (A, B):
             X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
