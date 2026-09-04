@@ -2187,3 +2187,66 @@ Genauigkeit nicht erreichen — und lässt 21 Räume leer, die das Original nich
 
 Das ist keine offene Aufgabe mehr, sondern eine **Abwägung**: originalgetreues Bild gegen
 brauchbaren Marker.
+
+
+## §36 Original-Kunst mit brauchbarem Marker — der Stand
+
+Nutzer: *„ich möchte das Original Kartenmaterial nutzen mit Tür und Treppenmarkern von
+Resident Evil 2 und du musst es nur gebacken bekommen den Spieler Marker darauf korrekt zu
+positionieren..... Wie ist mir egal."* Und richtig erkannt: **genau das tut RE2** — die
+Kunst ist das Bild, die Position kommt aus einer eigenen Abbildung.
+
+Die Engine hat dafür längst den Mechanismus: jede Zone kann eine **eigene Abbildung**
+tragen (`eichung`, vier Werte in `s_map_zones`) statt ihre Weltbox linear ins Rechteck zu
+strecken. Bisher bekamen ihn nur die 38 Räume mit ausgelieferter Zeile.
+
+**Jetzt bekommt ihn jede zugeordnete Zone, deren Zeile bekannt ist** — ausgeliefert oder
+aus der Türkette hergeleitet.
+
+| | | Median | ≤ 2 px | ≤ 8 px | Sprünge > 16 px |
+|---|---|---|---|---|---|
+| Streckung (§35) | 0 Zonen mit Abbildung | 22 px | 2 % | 29 % | 76 |
+| Zeile nur wenn Deckung ≥ 80 % | 47 | 22 px | 15 % | 36 % | 72 |
+| **Zeile immer** | **57** | **14 px** | **20 %** | **42 %** | **63** |
+
+⛔ **Die Deckungs-Schwelle war ein Fehler.** Ich hatte sie aus Sorge eingebaut, eine
+schlecht hergeleitete Zeile könne schaden. Das Gegenteil stimmt: die Zeile ist per
+Konstruktion **türkonsistent** — sie *entsteht* aus den Türpunkten —, die lineare
+Streckung ist es nie. Default ist deshalb 0; der Hebel `RE15_ZEILEN_DECKUNG` bleibt für
+die Nachmessung.
+
+### Zwei weitere Messfehler in derselben Schiene
+
+* `schau()` suchte weiter nur nach `FILL`. Der Türdurchgang meldete deshalb **0 von 143**
+  Türen mit rotem Ziel, obwohl 61 Räume ihre rote Kachel zeichneten. Nach dem Fix:
+  **94 von 143**.
+* Der Op-Dump filterte ebenfalls auf `FILL` (§32) — daraus war der falsche Schluss
+  entstanden, die Kacheln würden gar nicht gezeichnet.
+
+Dreimal dieselbe Klasse in einer Sitzung: **die Messschiene kannte nur eine der beiden
+Op-Arten.** Wer eine Darstellung umstellt, muss zuerst prüfen, ob das Messwerkzeug die
+neue Form überhaupt sehen kann.
+
+### Stand der Original-Karte
+
+| | Grundrisse (ausgeliefert) | **Original-Kunst** |
+|---|---|---|
+| Räume auf der Karte | 96 von 96 | **75 von 96** |
+| davon sichtbar rot | 96 | 61 von 75 |
+| Marker im eigenen Rechteck | 95/96 | **61/61** |
+| Marker im fremden Raum | 0 | **0** |
+| Türen mit beidseitig rotem Raum | 191/191 | 94/143 |
+| Übergänge Median | 2 px | **14 px** (von 22) |
+| innerhalb 8 px | 95 % | **42 %** (von 29) |
+
+Der Marker sitzt also **immer im richtigen Raum** und nie im falschen — das war die
+Kernforderung. Die verbleibende Ungenauigkeit ist der Sprung beim Türdurchtritt.
+
+### Was den Rest noch blockiert
+
+1. **21 Räume malt das Original nicht.** Sie bleiben leer — so wie im Original. Das ist
+   keine Lücke im Port, sondern der Zustand des Prototyps.
+2. **14 Räume haben gar keine Zeile** (§30), fallen also auf die Streckung zurück.
+3. **Nur 38 von 106 Slots sind vom Original geeicht.** 74 % der Übergänge hängen an
+   mindestens einer hergeleiteten Zeile mit je ~7 px Eigenfehler (§35). Das ist die
+   harte Grenze der Datenlage.

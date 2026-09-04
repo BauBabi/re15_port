@@ -165,9 +165,10 @@ static int schau(unsigned rid, int32_t px, int32_t pz, int band,
     *seite = (int)g_inv_screen.map_page;
     nops = re15_inv_screen_build(&g_inv_screen, ops, max_ops);
     for (k = 0; k < nops; k++) {
-        if (ops[k].kind != RE15_INV_OP_FILL) continue;
-        if (ops[k].r != ROT_R || ops[k].g != ROT_G || ops[k].b != ROT_B) continue;
-        if (ops[k].w < 4 || ops[k].h < 4) continue;
+        /* ⛔ AUCH HIER BEIDE ARTEN. Diese Stelle blieb beim Umbau zurueck und suchte
+         * weiter nur nach FILL - der Tuer-Durchgang meldete deshalb 0 von 143 Tueren
+         * mit rotem Ziel, obwohl 61 Raeume ihre rote Kachel sehr wohl zeichneten. */
+        if (!ist_rot(&ops[k])) continue;
         if (oben_an(ops, nops, ops[k].x + ops[k].w / 2,
                     ops[k].y + ops[k].h / 2) == k) { *rot_da = 1; break; }
     }

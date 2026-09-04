@@ -1790,6 +1790,7 @@ def main():
     # wird hier UEBERSCHRIEBEN: sie stammt sonst aus dem zuletzt erzeugten Header, und
     # der Generator soll nicht von seinem eigenen vorherigen Ergebnis abhaengen.
     # ================================================================================
+    _zdeck = {}
     if KUNST_VOR:
         import gen_marker_zeilen as _GM
         _GM.BLATT = dict((b, page_of(b)) for b in zinfo
@@ -1825,12 +1826,45 @@ def main():
                 if best and best[0] >= 0.35:
                     _neu[(b, i)] = (pg, best[1])
                     _guete.append(best[0])
+                    _zdeck[(b, i)] = best[0]
         _guete.sort()
         print("Zuordnung AUS DEN ZEILEN: %d Zonen (Kostenheuristik hatte %d), "
               "Deckung Median %.0f %%"
               % (len(_neu), len(assign),
                  100 * _guete[len(_guete) // 2] if _guete else 0))
         assign = _neu
+
+        # ⛔ DIE ZEILE WIRD ZUR ABBILDUNG DER ZONE - ABER NUR, WO SIE SICH BEWEIST.
+        # Eine Zone ohne eigene Abbildung streckt ihre Weltbox linear in ihr Rechteck.
+        # Das ist auf einem GEMALTEN Rechteck ungenau (es ist nicht massstabsgetreu zur
+        # Kollision, BEFUND §22), aber robust. Die Zeile ist das Gegenteil: wo sie stimmt,
+        # sitzt der Marker exakt; wo sie schlecht hergeleitet ist, sitzt er weit daneben.
+        # Gemessen (BEFUND §35): pauschal ueber alle Zonen angewandt steigen die
+        # Uebergaenge innerhalb 2 px von 2 % auf 12 %, der Median wird aber von 22 auf
+        # 28 px SCHLECHTER - die Zeile hilft den guten Faellen und schadet den schlechten.
+        # Der Riegel ist deshalb ihre eigene Deckung: nur wo der zeilen-projizierte
+        # Kasten sein Rechteck zu mindestens RE15_ZEILEN_DECKUNG trifft, wird sie zur
+        # Abbildung. Sonst bleibt die Streckung.
+        # ⛔ SCHWELLE 0 - GEMESSEN. Ein erster Wurf liess nur Zeilen mit >= 80 %
+        # Deckung zur Abbildung werden, aus Sorge, eine schlecht hergeleitete Zeile
+        # koenne schaden. Das Gegenteil stimmt: die Zeile ist per Konstruktion
+        # tuer-konsistent (sie ENTSTEHT aus den Tuerpunkten), die Streckung ist es nie.
+        #     Schwelle | Zonen | Median | <=2 px | <=8 px | Spruenge > 16 px
+        #        80 %  |  47   | 22 px  |  15 %  |  36 %  |  72
+        #         0 %  |  57   | 14 px  |  20 %  |  42 %  |  63
+        # Der Riegel bleibt als Hebel (RE15_ZEILEN_DECKUNG), damit die Messung
+        # nachvollziehbar ist.
+        _schwelle = float(os.environ.get('RE15_ZEILEN_DECKUNG', '0.0'))
+        _n_eich = 0
+        for (b, i), _d in sorted(_zdeck.items()):
+            if _d < _schwelle:
+                continue
+            if (b, i) in eichung:
+                continue                      # ausgelieferte Eichung schlaegt alles
+            eichung[(b, i)] = _zeilen[b]
+            _n_eich += 1
+        print("   davon mit eigener Abbildung (Deckung >= %.0f %%): %d"
+              % (100 * _schwelle, _n_eich))
 
     rows = []
     zid = 0   # globale Zonen-Nummer; beide Szenario-Varianten teilen sie
