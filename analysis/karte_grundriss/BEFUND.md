@@ -2692,3 +2692,152 @@ nur einer war gepflegt (vgl. Memory `reai-v2-doppeltes-byte`).
 Blatt). Neue Schranke `re15_port/tests/unit/test_map_etagen_rect.c` prueft fuer jede Zone
 und jedes Band: nennt die Etagen-Tabelle die Seite dieser Zone, muss sie auch ihr
 Rechteck nennen — plus die zwei gemeldeten Faelle namentlich als Pin.
+
+---
+
+## §44 — Blatt 3 (2F) traegt im Original die Tabelle von Blatt 2 (1F)
+
+**Nutzer-Befund 2026-09-04** (`fehler/error1.png`, `fehler/expect.png`): auf 2F steht das
+Treppensymbol auf leerem Blau, "da fehlt das komplette Rechteck". Dazu: "ich haette das
+Treppenhaus woanders erwartet, naemlich wie in expect.png dargestellt."
+
+### Was gemessen wurde
+
+1. **Die beiden Seiten-Tabellen sind byte-identisch.** Das Paar `{count, Zeiger}`
+   @`0x80076840 + 8*Seite` zeigt fuer Blatt 2 auf `0x8007636C` (11 Eintraege) und fuer
+   Blatt 3 auf `0x800763F0` (10 Eintraege). Zwei verschiedene Adressen — aber die zehn
+   Eintraege von Blatt 3 sind Byte fuer Byte die ersten zehn von Blatt 2:
+
+       Blatt 2  b4 00 45 00 20 00 60 00 00 00 20 00   x=180 y= 69  32x96  uv(  0,32)
+       Blatt 3  b4 00 45 00 20 00 60 00 00 00 20 00   x=180 y= 69  32x96  uv(  0,32)
+       … alle zehn gleich, Blatt 2 hat zusaetzlich
+       Blatt 2  77 00 86 00 18 00 18 00 a8 00 10 00   x=119 y=134  24x24  uv(168,16)
+
+   Zwei Stockwerke koennen nicht dieselbe Kachelgeometrie haben. Das ist eine
+   Kopie, die nie fertig geschrieben wurde — dieselbe Baustelle wie die
+   Massstabstabelle @`0x800768b0`, von der 65 von 103 Zeilen der Stub `{0,0,1,1}` sind.
+
+2. **Jedes `DATA/MAP0x.PIX` enthaelt zweierlei.** Oben (bis Zeile ~128) ein Streifen aus
+   einzeln gezeichneten Raum-Kacheln — das ist die Quelle, die der Zeichner
+   FUN_80046fd8 @`0x800472fc-0x800473e0` per SPRT abtastet (uv aus Byte +8/+10,
+   `AddPrim` @`0x80047608`). Darunter der fertige **Grundriss** des Stockwerks. Baut man
+   eine Seite nach ihrer Tabelle zusammen, kommt genau dieser Grundriss heraus:
+
+       Blatt 2 (1F)  Jaccard 0,930   (10234/10999 Bildpunkte)
+       Blatt 4 (3F)  Jaccard 0,987   ( 5776/ 5855)
+       Blatt 3 (2F)  Jaccard 0,573   ( 6860/11974)   <- kaputt
+
+   Legt man die zehn uv-Kaesten auf das 2F-Blatt, schneiden sie mitten durch Raeume,
+   einer liegt auf leerem Schwarz, und die untere Haelfte des 2F-Streifens wird nie
+   abgetastet. Auf dem 1F-Blatt umschliesst jeder Kasten genau einen Raum.
+
+3. **Der Nutzer hat recht.** `expect.png` ist der Grundriss aus der unteren Haelfte von
+   `MAP04.PIX` — die fertige 2F-Zeichnung, die das Original nie zeigt.
+
+### Ersatztabelle (PORT-ERGAENZUNG, `RECT_FIX` in `tools/gen_map_zones.py`)
+
+Der 2F-Streifen enthaelt 10 Raumkacheln (Zusammenhangskomponenten >= 80 px, ohne
+Kompass und Massstabsleiste) — genau so viele Rechtecke fuehrt die Seite.
+
+* `uv` = Ecke der Komponente; `w`/`h` = ihre Groesse auf das naechste Vielfache von 8
+  aufgerundet. So schneidet das Original: an allen 7 Kacheln von Blatt 4 und an 8 von
+  11 auf Blatt 2 nachgemessen.
+* Die Bildschirmlage kommt aus dem **Grundriss desselben Blatts**: jede Kachel wird dort
+  per Schablonensuche wiedergefunden — 9 von 10 zu 100,0 % der eigenen Bildpunkte, eine
+  zu 94,2 % (dort verschmilzt im Grundriss eine Nachbarwand).
+* Bildschirm = Fundstelle + Versatz `(-23,-74)`. Der Versatz ist die **einzige
+  Port-Wahl** an dieser Stelle: er setzt die Seite auf die Mitte, die die beiden
+  intakten Blaetter belegen (Blatt 2 `(165,124)`, Blatt 4 `(168,123)`).
+
+**Gegenproben.**
+* Der Zusammenbau trifft den Grundriss des Blatts zu **93,1 %** Jaccard — so gut wie die
+  echte Tabelle von Blatt 2 (93,0 %).
+* Die beiden Treppenhaus-Kacheln landen auf `(120,131)` und `(111,131)`. Blatt 2 setzt
+  **dieselben Schaechte** (ROOM1060/ROOM1080, uv(168,16) und uv(168,40)) auf `(119,134)`
+  und `(109,134)` — 1 bis 3 px daneben, obwohl in die Rechnung nichts von Blatt 2
+  eingegangen ist.
+
+### Engine
+
+`re15_map_rect_geometry`/`re15_map_rect_uv` lesen die Seiten-Tabelle nur noch, wenn fuer
+die Seite keine Ersatzzeile existiert; neu ist `re15_map_rect_count`. Der Zeichner in
+`re15_inv_screen.c` und die Marker-Kastenbestimmung lasen die Tabelle vorher direkt —
+beide gehen jetzt ueber die Zugriffsfunktionen, damit Zeichner, Marken und
+Zonen-Zuordnung dieselben Rechtecke sehen.
+
+---
+
+## §45 — Der Generator liest seinen eigenen vorherigen Kopf
+
+Beim Nachmessen von §44 sprang die Zonenzahl von 108 auf 91 — und zwar auf Blaettern
+(6, 7, 9, 10, 11, 12), die mit der 2F-Ersatztabelle nichts zu tun haben. Die
+Kontrollmessung "derselbe Generator, `RE15_KEIN_RECT_FIX=1`" lieferte eine **dritte**
+Zahl: 104.
+
+**Ursache.** `gen_map_zones.py` importiert `gen_marker_zeilen`, das `karte_audit`
+importiert, und `karte_audit.py:26` liest `re15_port/engine/src/re15_map_zones.h` — den
+Kopf, den `gen_map_zones.py` selbst schreibt. Ein Lauf haengt also am Ergebnis des
+vorigen. `gen_map_zones` ueberschreibt zwar `_GM.BLATT` und `_GM.ZONEN_N` mit genau
+dieser Begruendung (Kommentar bei `KUNST_VOR`), aber `karte_audit.ZONEN` bleibt die
+Quelle fuer alles Uebrige. Sichtbar an einer einzigen Zeile bei sonst identischem
+Protokoll:
+
+    Lauf A:  Zuordnung AUS DEN ZEILEN: 38 Zonen (Median 100 %), 42 aus der Heuristik
+    Lauf B:  Zuordnung AUS DEN ZEILEN: 76 Zonen (Median  97 %), 18 aus der Heuristik
+
+Alle uebrigen Protokollzeilen (Zuordnung je Seite, Kosten, Grundrisse, Ueberlappungen)
+sind zwischen den Laeufen identisch — die Kostenheuristik selbst ist deterministisch
+(`random.Random(9000 + pg)`).
+
+**Folge.** Der ausgelieferte Kopf ist irgendein Zwischenstand dieser Folge; der
+committete Kopf und der committete Generator gehoeren nicht zusammen (der Generator
+sortiert heute 19 Schablonen-Bereiche aus, der Kopf entspricht 12). Jedes
+"vorher 22, nachher 16" ohne Fixpunkt ist Rauschen aus zwei Punkten der Folge.
+
+**Vorgehen ab jetzt.** Den Generator bis zum **Fixpunkt** laufen lassen (wiederholen,
+bis die md5 des Kopfes gleich bleibt) und beide Seiten eines Vergleichs auf ihrem
+eigenen Fixpunkt messen. Ein einzelner Lauf ist kein Messwert.
+
+**Zweiter Fund derselben Untersuchung.** `kunst_zuordnung.rechtecke()` las die
+Rechteck-Tabelle roh aus der EXE und kannte die Ersatztabelle nicht — es leitete die
+Marker-Zeilen fuer Blatt 3 also gegen die 1F-Kacheln her, waehrend der Port die
+2F-Kacheln zeichnet. Beide gehen jetzt ueber `karte_audit.rects`/`rect_uv`, also ueber
+dieselben Zugriffe wie der Generator.
+
+### Ergebnis am Fixpunkt
+
+Der Generator konvergiert nach vier Laeufen (md5 von Lauf 3 == Lauf 4,
+`97486f104b1c3e97ddac0e97b3f862dc`): 107 Zonen, 76 davon mit der ausgelieferten
+Massstabszeile @`0x800768b0` zugeordnet.
+
+Gegen den ausgelieferten Stand v0.6.2 (108 Zonen in 88 Raeumen):
+
+    FIXPUNKT mit Ersatztabelle:  107 Zonen in 87 Raeumen
+    nur im ausgelieferten Stand: ROOM4040 (Blatt 8)
+
+⛔ Der befuerchtete Kollateralschaden war ein Artefakt der Rueckkopplung: ein einzelner,
+nicht konvergierter Lauf hatte 91 Zonen in 73 Raeumen gemeldet und 16 verschwundene
+Raeume auf Blaettern, die mit 2F nichts zu tun haben. Am Fixpunkt ist es **ein** Raum -
+ROOM4040 auf Blatt 8, also weder das gemeldete Blatt noch dessen Blatt-Komponente
+({1,2,3,4,5}). Er bleibt als OFFEN vermerkt; ob er am Fixpunkt OHNE Ersatztabelle
+zurueckkaeme, ist nicht gemessen (das kostet einen zweiten Fixpunkt-Lauf).
+
+Live gemessen (`integration_map_raum_live`, ganze Raumkette ab EXE-Start):
+
+    161 Tueren durchschritten, 161 mal war VORHER und NACHHER der richtige Raum rot
+     87 Raeume geprueft, 87 zeigen SICHTBARES Rot, 0 nicht
+     87 von 87 Spieler-Marker liegen in der roten Flaeche
+
+Marken auf gemaltem Grundriss (Zusammenbau der Seite, `unit_map_marke_auf_kunst`):
+
+    ausgeliefert v0.6.2:  173 Marken, 13 auf leerer Flaeche, Blatt 3 zwei von sechs
+    Fixpunkt:             177 Marken,  8 auf leerer Flaeche, Blatt 3 eine von neun
+
+Die eine verbliebene auf Blatt 3 ist die Treppenmarke an der UNTERKANTE ihres Rechtecks
+(118,157) - zwei Pixel unter der gezeichneten Flaeche, nicht mehr freischwebend ohne
+Rechteck. Zum Vergleich die Erwartung des Nutzers aus `expect.png`: sein Pfeil zeigt auf
+Kunstpunkt (151,215), was mit dem Versatz (-25,-71) dem Bildschirmpunkt (126,144)
+entspricht - das Treppenhaus-Rechteck liegt jetzt bei (118,134) 24x24, also genau darum
+herum.
+
+Suite: 271/271 gruen (neu: `unit_map_marke_auf_kunst`).

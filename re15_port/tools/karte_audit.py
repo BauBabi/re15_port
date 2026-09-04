@@ -32,6 +32,11 @@ _ns = {'__name__': 'audit', '__file__': os.path.join(WURZEL, 're15_port', 'tools
                                                      'gen_map_zones.py')}
 exec(compile(_src[:_src.index('def main(')], 'gen', 'exec'), _ns)
 read_rdt = _ns['read_rdt']
+# Die Rechteck-Zugriffe des Generators MIT seiner Ersatztabelle (RECT_FIX):
+# wer hier die EXE-Tabelle roh liest, rechnet fuer Blatt 3 mit den Kacheln von
+# Blatt 1F (BEFUND.md §44) und widerspricht dem, was der Port zeichnet.
+rects = _ns['rects']
+rect_uv = _ns['rect_uv']
 
 
 # ---------------------------------------------------------------- Tabelle lesen

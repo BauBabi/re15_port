@@ -93,11 +93,14 @@ def projiziere(z, wx, wz):
 
 
 def rechtecke(pg):
-    """Die gemalten Rechtecke einer Kartenseite (Paar-Tabelle @0x80076840 + 8*Seite)."""
-    cnt = _u16(0x80076840 + pg * 8)
-    lp = _u32(0x80076844 + pg * 8)
-    return [(k,) + struct.unpack_from('<HHHH', _rd(lp + k * 12, 12), 0)
-            for k in range(cnt)]
+    """Die gemalten Rechtecke einer Kartenseite (Paar-Tabelle @0x80076840 + 8*Seite).
+
+    ⛔ UEBER DIE ZUGRIFFE DES GENERATORS, NICHT ROH AUS DER EXE. Fuer Blatt 3 (2F)
+    fuehrt das Original die Tabelle von Blatt 2 (1F) - der Port ersetzt sie
+    (BEFUND.md §44, RECT_FIX in gen_map_zones.py). Wer hier roh liest, leitet die
+    Marker-Zeilen gegen eine andere Geometrie her als die, die gezeichnet wird.
+    """
+    return [(k, r[0], r[1], r[2], r[3]) for k, r in enumerate(A.rects(pg))]
 
 
 def _beruehrt(a, b, rand=2):

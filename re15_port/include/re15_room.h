@@ -116,6 +116,12 @@ int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *
 int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
 int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h);
 int re15_map_rect_uv(unsigned page, unsigned rect, int *u, int *v);
+/* Ersatz-Seitentabelle: > 0 = diese Seite wird NICHT aus @0x80076840 gelesen.
+ * Grund und Belege: s_map_rectfix in engine/src/re15_map_zones.h. */
+int re15_map_rect_fix_count(unsigned page);
+int re15_map_rect_fix_get(unsigned page, unsigned rect,
+                          int *x, int *y, int *w, int *h, int *u, int *v);
+int re15_map_rect_count(unsigned page);
 
 /* DAS RECHTECK EINER ZONE - egal, woher es kommt.
  * ⛔ Bis 2026-09-04 fragten Zeichner, Pruefungen und Messschienen ueberall direkt

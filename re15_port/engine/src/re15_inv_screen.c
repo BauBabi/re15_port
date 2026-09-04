@@ -225,10 +225,20 @@ uint8_t re15_inv_map_room(void) { return s_map_room; }
 /* Geometrie eines gemalten Karten-Rechtecks aus dem Seiten-Paar @0x80076840
  * (count + Listenzeiger, 12 B je Eintrag {s16 x,y,w,h; u8 u,_,v,_}). Fuer Pruefungen
  * und fuer den Zeichner der Schema-Zonen, die nicht aus dieser Tabelle stammen. */
+int re15_map_rect_count(unsigned page)
+{
+    int n;
+    if (page > 12) return 0;
+    n = re15_map_rect_fix_count(page);
+    return n ? n : (int)mu16(0x80076840u + page * 8u);
+}
+
 int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h)
 {
     uint32_t lp, a;
     if (page > 12) return 0;
+    if (re15_map_rect_fix_count(page))
+        return re15_map_rect_fix_get(page, rect, x, y, w, h, NULL, NULL);
     if (rect >= (unsigned)mu16(0x80076840u + page * 8u)) return 0;
     lp = mu32(0x80076844u + page * 8u);
     a  = lp + rect * 12u;
@@ -296,6 +306,8 @@ int re15_map_rect_uv(unsigned page, unsigned rect, int *u, int *v)
 {
     uint32_t lp, a;
     if (page > 12) return 0;
+    if (re15_map_rect_fix_count(page))
+        return re15_map_rect_fix_get(page, rect, NULL, NULL, NULL, NULL, u, v);
     if (rect >= (unsigned)mu16(0x80076840u + page * 8u)) return 0;
     lp = mu32(0x80076844u + page * 8u);
     a  = lp + rect * 12u;
@@ -661,11 +673,10 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
              * ersetzt das Rechteck; die Projektion darin ist dieselbe. */
             if (zrc == 255 && re15_map_zone_synth(zn, &rx, &ry, &rw, &rh, 0, 0)) {
                 ;   /* der Kasten steht */
-            } else {
-                uint32_t lp = mu32(0x80076844u + (uint32_t)zpg * 8u);
-                uint32_t a  = lp + (uint32_t)zrc * 12u;
-                rx = (int16_t)mu16(a);      ry = (int16_t)mu16(a + 2u);
-                rw = (int16_t)mu16(a + 4u); rh = (int16_t)mu16(a + 6u);
+            } else if (!re15_map_rect_geometry((unsigned)zpg, (unsigned)zrc,
+                                               &rx, &ry, &rw, &rh)) {
+                /* Kein Rechteck lesbar - dann gibt es auch keinen Marker-Kasten. */
+                rx = ry = 0; rw = rh = 1;
             }
             /* ⛔ DIE ORIGINAL-ZEILE STATT DER STRECKUNG: GEMESSEN UND VERWORFEN.
              * Naheliegend, weil ein GEMALTES Rechteck nicht massstabsgetreu zur
@@ -2022,8 +2033,12 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
          * NUR die Logik ist RE2-byte-belegt. Rects ohne Raum-Zuordnung
          * (re15_map_rooms.h) bleiben im Stock-Neutralton. */
         {
-            int cnt = (int)mu16(0x80076840u + (uint32_t)st->map_page * 8u);
-            uint32_t lp = mu32(0x80076844u + (uint32_t)st->map_page * 8u);
+            /* ⛔ NICHT MEHR DIREKT AUS @0x80076840: Blatt 3 (2F) hat eine
+             * Ersatztabelle, weil das Original dort die Tabelle von Blatt 2 fuehrt
+             * (Beleg: s_map_rectfix in re15_map_zones.h). Ueber die Zugriffs-
+             * funktionen sieht der Zeichner dieselben Rechtecke wie Pruefungen,
+             * Marken und Zonen-Zuordnung. */
+            int cnt = re15_map_rect_count((unsigned)st->map_page);
             int durchgang_r;
             /* ⛔ ZWEI DURCHGAENGE: ERST DER AKTUELLE RAUM, DANN DER REST.
              * Die Op-Liste wird von HINTEN gerastert (inv_render_pc.c), frueher
@@ -2037,7 +2052,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              * Rechteck einen Zustand trug. */
             for (durchgang_r = 0; durchgang_r < 2; durchgang_r++)
             for (i = 0; i < cnt; i++) {
-                uint32_t a = lp + (uint32_t)i * 12u;
+                int rx, ry, rw, rh, ru, rv;
                 int rs = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
@@ -2073,10 +2088,12 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * des Kuenstlers eingepasst. Sie ist entfallen - der Loeser setzt den
                  * Ort jetzt auf JEDEM Blatt, das eines seiner Baender erreicht, und
                  * die Gast-Zeile zeichnet sich im Schema-Durchgang selbst.) */
+                if (!re15_map_rect_geometry((unsigned)st->map_page, (unsigned)i,
+                                            &rx, &ry, &rw, &rh)) continue;
+                if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
+                    continue;
                 sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
-                     (int16_t)mu16(a), (int16_t)mu16(a + 2u),
-                     (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
-                     mu8(a + 8u), mu8(a + 10u), cr, cg, cb, 1);
+                     rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
             }
 
         /* ---- SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX ----------------------

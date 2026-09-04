@@ -48,13 +48,75 @@ def u16(a): return struct.unpack_from('<H', EXE, fo(a))[0]
 def s16(a): return struct.unpack_from('<h', EXE, fo(a))[0]
 def u32(a): return struct.unpack_from('<I', EXE, fo(a))[0]
 
+# ---- ⛔ BLATT 3 (2F) TRAEGT IM ORIGINAL DIE TABELLE VON BLATT 2 (1F) -------------
+# Nutzer-Befund 2026-09-04 (fehler/error1.png + expect.png): auf 2F fehlt das Rechteck
+# unter dem Treppensymbol, und "ich haette das Treppenhaus woanders erwartet, naemlich
+# wie in expect.png dargestellt".
+#
+# GEMESSEN, nicht geschlossen:
+#   1. Die beiden Seiten-Tabellen sind VERSCHIEDENE Adressen (Blatt 2 @0x8007636C,
+#      Blatt 3 @0x800763F0), ihre Eintraege aber BYTE-IDENTISCH - Blatt 3 hat nur den
+#      letzten der elf nicht. Zwei verschiedene Stockwerke koennen nicht dieselbe
+#      Kachel-Geometrie haben.
+#   2. Jedes Blatt DATA/MAP0x.PIX enthaelt zweierlei: oben einen Streifen aus einzeln
+#      gezeichneten Raum-KACHELN (die Quelle der SPRTs) und unten den fertigen
+#      GRUNDRISS des Stockwerks. Baut man die Seite nach ihrer Tabelle zusammen, kommt
+#      genau dieser Grundriss heraus - Blatt 2 zu 93,0 % Jaccard, Blatt 4 zu 98,7 %.
+#      Blatt 3 kommt auf 57,3 %: die 1F-Kachelecken schneiden die 2F-Kunst an den
+#      falschen Stellen, und die untere Haelfte des 2F-Streifens wird nie abgetastet.
+#      Genau diesen ungenutzten Grundriss zeigt expect.png - der Nutzer hat recht.
+#   3. Der 2F-Streifen enthaelt 10 Raumkacheln (Zusammenhangskomponenten >= 80 px,
+#      ohne Kompass/Massstab) - genau so viele Rechtecke fuehrt die Seite.
+#
+# HERLEITUNG DER ERSATZTABELLE (tools/karte_2f_tabelle.py schreibt dieselben Zahlen):
+#   * uv = Ecke der Streifen-Komponente; w/h = ihre Groesse auf das naechste Vielfache
+#     von 8 aufgerundet (an allen 7 Kacheln von Blatt 4 und 8 von 11 auf Blatt 2
+#     nachgemessen - so schneidet das Original).
+#   * Die Bildschirmlage kommt aus dem GRUNDRISS des Blatts: jede Kachel wird dort per
+#     Schablonensuche wiedergefunden (8 von 10 zu 100,0 %, eine zu 94,2 %, die kleinste
+#     zu 100,0 %). Bildschirm = Fundstelle + Versatz.
+#   * Der Versatz (-25,-71) ist ebenfalls GEMESSEN, nicht gewaehlt. Drei unabhaengige
+#     Herleitungen treffen sich:
+#       1. Blatt 2 (1F) hat denselben Versatz: passt man seinen Zusammenbau auf den
+#          Grundriss seines eigenen Blatts, kommt (-25,-71) heraus (Jaccard 0,930).
+#       2. ROOM1080, die Fahrstuhlkabine, ist auf 1F UND 2F gezeichnet - dieselbe
+#          Kachel uv(168,40). Blatt 2 setzt sie auf (109,134); die 2F-Fundstelle
+#          (134,205) minus (-25,-71) ergibt (109,134). EXAKT.
+#       3. ROOM1060, das Treppenhaus, ebenso: uv(168,16), Blatt 2 (119,134),
+#          2F-Fundstelle (143,205) -> (118,134). EIN Pixel.
+#     In die Rechnung, die die 2F-Kacheln im Grundriss verortet, ist von Blatt 2
+#     nichts eingegangen - die beiden Schaechte sind eine echte Gegenprobe.
+#     (Erste Fassung: die Seite auf die Bildschirmmitte der intakten Blaetter setzen,
+#     (-23,-74). Das war eine WAHL; die Schaechte lagen damit 1-3 px neben ihren
+#     1F-Positionen. Verworfen zugunsten des Belegs.)
+#   * GEGENPROBE: der Zusammenbau trifft den Grundriss des Blatts zu 93,1 % Jaccard,
+#     also so gut wie die echte Tabelle von Blatt 2 (93,0 %).
+# Kontrollschalter fuer die Gegenprobe: RE15_KEIN_RECT_FIX=1 schaltet die
+# Ersatztabelle ab, damit sich messen laesst, was allein an ihr haengt.
+RECT_FIX = {} if os.environ.get('RE15_KEIN_RECT_FIX') == '1' else {
+    3: [(102, 116,  40, 40, 128, 16),
+        (118, 134,  24, 24, 168, 16),
+        (135, 155,  56, 32, 192, 16),
+        (135,  76,  72, 88,   0, 32),
+        (109, 134,  16, 16, 168, 40),
+        (146, 114,  72, 32, 184, 48),
+        (186, 114,  40, 48,  72, 64),
+        (179,  67,  48, 48, 112, 74),
+        (102,  76,  48, 48, 160, 80),
+        (156,  76,  48, 40, 208, 80)],
+}
+
 def rects(page):
+    if page in RECT_FIX:
+        return [(r[0], r[1], r[2], r[3]) for r in RECT_FIX[page]]
     cnt = u16(0x80076840 + page * 8); ptr = u32(0x80076844 + page * 8)
     return [(s16(ptr + i*12), s16(ptr + i*12+2), s16(ptr + i*12+4), s16(ptr + i*12+6))
             for i in range(cnt)]
 
 def rect_uv(page, i):
     """Kachel-Ecke (u,v) des Rechtecks: Byte +8 und +10 des 12-Byte-Eintrags."""
+    if page in RECT_FIX:
+        return RECT_FIX[page][i][4], RECT_FIX[page][i][5]
     ptr = u32(0x80076844 + page * 8)
     return EXE[fo(ptr + i*12 + 8)], EXE[fo(ptr + i*12 + 10)]
 
@@ -845,10 +907,19 @@ def main():
     #     bei (135,145). Ein Pixel. Die Tuer zum Treppenhaus liegt 7 px daneben.
     # Damit stand auf dem 3F-Blatt die Kabine als "Treppenhaus" beschriftet an der
     # Stelle, an der der Nutzer die Kabine erwartet hat.
+    # ⛔ DIE ALTE VORGABE (0x10C0, 0) -> (3, 4) IST ENTFALLEN.
+    # Sie war auf der Seiten-Tabelle hergeleitet, die das Original fuer Blatt 3 fuehrt -
+    # und das ist die Tabelle von Blatt 2 (BEFUND.md §44, byte-identisch bis auf den
+    # elften Eintrag). Jede Aussage darin ("ROOM1060 liegt auf Rect 9", "nur Rect 2 und
+    # Rect 4 beruehren Rect 9") zaehlt Rechtecke des FALSCHEN Stockwerks. Mit der
+    # Ersatztabelle (RECT_FIX) haben die Indizes eine andere Bedeutung; die Zuordnung
+    # kommt jetzt wieder aus der Kostenheuristik, die dieselbe Beruehrungs-Bedingung
+    # verwendet.
+    # Die beiden Schaechte auf Blatt 3 sind GASTLAGEN (ihre Heimat ist Blatt 2) und
+    # stehen deshalb weiter unten in GAST_FIX.
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
-        (0x10C0, 0): (3, 4),
         (0x1060, 0): (2, 8),      # Treppenhaus -> der 16x17-Kasten
         (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
     }
@@ -2074,7 +2145,15 @@ def main():
             # "here i would have expect the Elevator door" (133,145) = Rect 0,
             # "Here I would have expect the staircase door" (139,153) = Rect 1s
             # gemaltes West-Tuersymbol (136..141, 152..156).
-            GAST_FIX = {(0x1080, 0, 4): 0, (0x1060, 0, 4): 1}
+            # Blatt 3 (2F) kam 2026-09-04 dazu: mit der Ersatztabelle (RECT_FIX,
+            # BEFUND.md §44) fuehrt die Seite dieselben zwei Schacht-Kacheln wie
+            # Blatt 4 - uv(168,16) 18x22 und uv(168,40) 10x10, gleiche Slots, gleiche
+            # Groessen. Auf Blatt 4 ist die Zuordnung gemessen (die Tuer aus ROOM1120
+            # zur Kabine liegt 1 px von der Mitte des uv(168,40)-Kastens, die zum
+            # Treppenhaus 7 px daneben); dazu die Groesse: ROOM1060 misst 24x27 px im
+            # ausgelieferten Massstab, ROOM1080 nur 14x13.
+            GAST_FIX = {(0x1080, 0, 4): 0, (0x1060, 0, 4): 1,
+                        (0x1080, 0, 3): 4, (0x1060, 0, 3): 1}
             _gf = GAST_FIX.get((_b, _zi, _zp))
             if _gf is not None and _gf < len(_R):
                 for _k in range(len(rows) - 1, -1, -1):
@@ -3424,6 +3503,28 @@ def main():
         o.append(f"    {{ {x:4d}, {y:4d}, {w:4d}, {h:4d} }},")
     o.append("};")
     print(f"{len(synth_liste)} Schema-Zeichnungen mit {len(synth_zellen)} Zellen")
+
+    o.append("/* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)")
+    o.append(" * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /")
+    o.append(" * @0x800763F0), byte-identische Eintraege, Blatt 3 nur ohne den elften.")
+    o.append(" * Gemessen: baut man eine Seite nach ihrer Tabelle zusammen, kommt der")
+    o.append(" * fertige Grundriss heraus, den dasselbe Blatt in seiner unteren Haelfte")
+    o.append(" * traegt - Blatt 2 zu 93,0 %, Blatt 4 zu 98,7 %, Blatt 3 nur zu 57,3 %.")
+    o.append(" * Die Zeilen hier sind aus den KACHELN DES 2F-BLATTS hergeleitet (Ecke +")
+    o.append(" * Groesse auf 8 aufgerundet, Lage per Schablonensuche im Grundriss des")
+    o.append(" * Blatts, 8/10 zu 100,0 %); Zusammenbau 93,1 %. Herleitung und Belege:")
+    o.append(" * tools/gen_map_zones.py (RECT_FIX) und analysis/karte_grundriss/BEFUND.md.")
+    o.append(" * page == 255 beendet die Liste. */")
+    o.append("typedef struct { unsigned char page, u, v; short x, y, w, h; }"
+             " re15_map_rectfix_t;")
+    o.append("static const re15_map_rectfix_t s_map_rectfix[] = {")
+    for _pg in sorted(RECT_FIX):
+        for (_x, _y, _w, _h, _u, _v) in RECT_FIX[_pg]:
+            o.append(f"    {{ {_pg:3d}, {_u:3d}, {_v:3d}, {_x:4d}, {_y:4d},"
+                     f" {_w:3d}, {_h:3d} }},")
+    o.append("};")
+    print(f"{sum(len(v) for v in RECT_FIX.values())} Ersatz-Rechtecke "
+           f"fuer Blatt {sorted(RECT_FIX)}")
 
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))

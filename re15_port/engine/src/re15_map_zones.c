@@ -600,3 +600,36 @@ int re15_map_stock_mode(void)
     return s_stock_mode;
 }
 void re15_map_stock_set(int v) { s_stock_mode = v; }
+
+/* ---- ERSATZ-SEITENTABELLE (Blatt 3 / 2F) -----------------------------------------
+ * Warum es sie gibt: das Original fuehrt fuer Blatt 3 die Tabelle von Blatt 2 - siehe
+ * den Kommentar an s_map_rectfix in re15_map_zones.h. Wo eine Seite hier Zeilen hat,
+ * ERSETZEN sie die Seiten-Tabelle @0x80076840 vollstaendig; alle anderen Seiten lesen
+ * unveraendert das Original. */
+#define RECTFIX_COUNT ((int)(sizeof s_map_rectfix / sizeof s_map_rectfix[0]))
+
+int re15_map_rect_fix_count(unsigned page)
+{
+    int i, n = 0;
+    for (i = 0; i < RECTFIX_COUNT; i++)
+        if (s_map_rectfix[i].page == page) n++;
+    return n;
+}
+
+int re15_map_rect_fix_get(unsigned page, unsigned rect,
+                          int *x, int *y, int *w, int *h, int *u, int *v)
+{
+    int i, n = 0;
+    for (i = 0; i < RECTFIX_COUNT; i++) {
+        if (s_map_rectfix[i].page != page) continue;
+        if ((unsigned)n++ != rect) continue;
+        if (x) *x = s_map_rectfix[i].x;
+        if (y) *y = s_map_rectfix[i].y;
+        if (w) *w = s_map_rectfix[i].w;
+        if (h) *h = s_map_rectfix[i].h;
+        if (u) *u = s_map_rectfix[i].u;
+        if (v) *v = s_map_rectfix[i].v;
+        return 1;
+    }
+    return 0;
+}
