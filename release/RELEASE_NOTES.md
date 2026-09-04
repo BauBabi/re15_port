@@ -1,3 +1,40 @@
+# RE1.5 Port — v0.5.7 (Early Preview)
+
+**Die gemalten RE1.5-Türen sind weg, und ROOM1170 hat das Rechteck, das der Künstler
+dafür gemalt hat.**
+
+Beides, was du gemeldet hast — und dein Hinweis mit den zwei Türen war der Schlüssel.
+
+**Die RE1.5-Türschwenke sind raus.** Sie stecken in den gemalten Kacheln und kommen mit,
+seit die Karte das Original-Material zeichnet. Über die Farbe sind sie nicht zu fassen
+(sie sind in der Wandfarbe gemalt), über die Lauflänge schon: Wände sind lange gerade
+Läufe, ein Schwenk ist kurz und gekrümmt.
+
+Drei Dinge mussten dazu, und jedes habe ich **am Bild abgenommen** statt behauptet:
+
+* nur in den Kacheln suchen, die eine Seite wirklich zeichnet
+* Diagonalen über die Ecke verbinden — eine schräge Wand ist ein Treppchen aus kurzen
+  Läufen, und ohne das sah jedes Treppchen-Pixel wie eine Tür aus (auf einem Blatt wären
+  so ein Viertel aller Wände verschwunden)
+* eine Größengrenze: ein Schwenk ist eine feste Zeichenkonvention, 13 Pixel
+
+Ergebnis: 3 bis 9 Prozent der Wandpixel je Blatt, 4 bis 16 Symbole — und auf 3F exakt die
+sechs, die dort im Bild stehen.
+
+**Und ROOM1170s unterer Bereich sitzt jetzt richtig.** Du hattest recht: die zwei Türen
+auf 3F, die nach draußen führen, sind genau die vom Dach. Nachgemessen — das Rechteck mit
+diesen zwei Türen ist **48×24 Pixel groß, exakt die Größe der Dachfläche**. Der Künstler
+hat den Bereich dort selbst gezeichnet; er war nur dem falschen Raum zugeordnet. Der ist
+auf sein passendes Rechteck umgezogen.
+
+Dieselbe Verwechslung steckte auf vier weiteren Blättern und ist jetzt überall behoben.
+
+**Der ehrliche Preis:** der umgezogene Raum sitzt auf einem quadratischeren Rechteck,
+seine zwei Türen liegen dadurch 13 statt 18 Pixel auseinander. Das steht so in der
+Prüfung, damit es nicht untergeht.
+
+---
+
 # RE1.5 Port — v0.5.6 (Early Preview)
 
 **Einstellung 2 und 3 sind jetzt komplett aus deinen Freistellungen gebaut.**
