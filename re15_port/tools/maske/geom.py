@@ -305,3 +305,59 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None):
             continue
         dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
     return dep
+
+
+def rects_gitter(region, budget=None, kapazitaet=256 * 256, kanten=(8, 10, 12, 16, 20, 24, 32, 40, 48, 64)):
+    """Region mit einem GITTER aus Rechtecken ueberdecken — vollstaendig, ohne Treppe.
+
+    ⛔ WARUM (Nutzer-Befund 2026-09-04, fehler/error.png: "sonst koennte es nicht zu den
+    Ueberblendungen kommen"): rects_from_mask nahm gierig immer das groesste Rechteck,
+    das GANZ INNERHALB der Region liegt. An einer schraegen Kante bleibt dabei
+    zwangslaeufig ein Saum aus duennen Dreiecken uebrig, den kein volles Rechteck mehr
+    fasst — er fiel unter min_area bzw. aus dem Budget und wurde NICHT gezeichnet.
+    Ergebnis im Spiel: die Tischkante war eine grobe Treppe aus 8-10 Bildpunkten,
+    obwohl die Freistellung des Nutzers eine glatte Diagonale ist.
+
+    Ein Rechteck DARF ueber die Region hinausragen: die Feinmaskierung macht der Atlas
+    (Palettenindex 0 wird nicht gezeichnet). Deshalb wird hier einfach der umschliessende
+    Kasten gekachelt und jede Kachel behalten, die Regionpixel enthaelt — damit ist JEDER
+    Regionpunkt gedeckt und die Kante ist exakt die der Freistellung.
+
+    Die Kachelgroesse wird so gewaehlt, dass die Kachelzahl ins Maskenbudget passt
+    (RDT-Header Byte[7], spielweit hoechstens 105) und die Summe der Kachelflaechen in
+    das 256x256-Atlasblatt.
+    """
+    budget = budget or MAX_MASKS_PER_CUT
+    ys, xs = np.nonzero(region)
+    if len(ys) == 0:
+        return []
+    x0, x1 = int(xs.min()), int(xs.max()) + 1
+    y0, y1 = int(ys.min()), int(ys.max()) + 1
+    best = None
+    for k in kanten:
+        boxes = []
+        flaeche = 0
+        for gy in range(y0, y1, k):
+            for gx in range(x0, x1, k):
+                w = min(k, x1 - gx)
+                h = min(k, y1 - gy)
+                if region[gy:gy + h, gx:gx + w].any():
+                    boxes.append((gx, gy, w, h))
+                    flaeche += w * h
+        if not boxes:
+            continue
+        if len(boxes) <= budget and flaeche <= kapazitaet:
+            # kleinste Flaeche gewinnt = engste Ueberdeckung
+            if best is None or flaeche < best[0]:
+                best = (flaeche, boxes)
+    if best is None:
+        # Notnagel: groebste Kachelung, damit ueberhaupt etwas gedeckt ist
+        k = kanten[-1]
+        boxes = []
+        for gy in range(y0, y1, k):
+            for gx in range(x0, x1, k):
+                w = min(k, x1 - gx); h = min(k, y1 - gy)
+                if region[gy:gy + h, gx:gx + w].any():
+                    boxes.append((gx, gy, w, h))
+        return boxes[:budget]
+    return best[1]

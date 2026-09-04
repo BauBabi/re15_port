@@ -338,11 +338,16 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     for (_, r, _) in stuecke:
         region_all |= r
     tim = None
+    # ⛔ GITTER statt gieriger Vollrechtecke (Nutzer-Befund 2026-09-04): ein Rechteck,
+    # das GANZ in der Region liegen muss, laesst an jeder schraegen Kante einen
+    # ungedeckten Saum — im Spiel als grobe Treppe sichtbar. Ein Rechteck darf aber
+    # ueber die Region hinausragen, die Feinmaskierung macht der Atlas.
     while True:
         boxes, herkunft = [], []
+        kap = 256 * 256
         for i, ((name, reg, d), fl) in enumerate(zip(stuecke, flaechen)):
             b = max(4, int(rest * fl / gesamt))
-            for r_ in geom.rects_from_mask(reg, b):
+            for r_ in geom.rects_gitter(reg, b, int(kap * fl / gesamt)):
                 boxes.append(r_); herkunft.append(i)
         if len(atlasmod.split_oversize(boxes)[0]) <= geom.MAX_MASKS_PER_CUT or rest <= 8:
             break

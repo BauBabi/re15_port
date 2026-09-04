@@ -387,6 +387,36 @@ def main():
             print("  Cut %d: nichts erzeugt" % cut)
             continue
         secs[cut], n = res
+        # ⛔ TREUEPRUEFUNG (Nutzer-Befund 2026-09-04, fehler/error.png). Die gierige
+        # Rechteckzerlegung liess an schraegen Kanten einen ungedeckten Saum stehen —
+        # im Spiel eine grobe Treppe statt der glatten Kante der Freistellung. Seitdem
+        # wird nach dem Bauen nachgezaehlt, wieviel der GEWOLLTEN Flaeche die fertige
+        # Maske wirklich deckt. Alles ausser 0 fehlenden Punkten ist ein Fehler.
+        try:
+            import maskenbild as _MB
+            _blob = geom.pack_container({cut: secs[cut]}, rdt[1])
+            _ms = _MB.masken(_blob, cut) or []
+            _t = _MB.lies_tim(os.path.join(a.out, "%s_PRI%02d.TIM" % (room, cut)))
+            _idx = _t[0] if _t else None
+            _deck = np.zeros((240, 320), bool)
+            for (_sx, _sy, _X, _Y, _w, _h, _dep) in _ms:
+                _x0, _x1 = max(0, _X), min(320, _X + _w)
+                _y0, _y1 = max(0, _Y), min(240, _Y + _h)
+                if _x1 <= _x0 or _y1 <= _y0:
+                    continue
+                _sub = _idx[_sy + (_y0 - _Y):_sy + (_y1 - _Y), _sx + (_x0 - _X):_sx + (_x1 - _X)]
+                if _sub.shape == (_y1 - _y0, _x1 - _x0):
+                    _deck[_y0:_y1, _x0:_x1] |= (_sub != 0)
+            _fehlt = int((r & ~_deck).sum())
+            _zuviel = int((_deck & ~r).sum())
+            if _fehlt or _zuviel:
+                print("     ⛔ TREUE: %d Punkte der gewollten Flaeche FEHLEN, %d zuviel"
+                      % (_fehlt, _zuviel))
+            else:
+                print("     Treue: die Maske deckt die gewollte Flaeche punktgenau (%d px)"
+                      % int(r.sum()))
+        except Exception as _e:
+            print("     (Treuepruefung nicht moeglich: %s)" % _e)
         print("  Cut %d: %5.1f %% Bildflaeche, %3d Rechtecke%s"
               % (cut, 100 * r.mean(), n,
                  ("  [%s]" % ", ".join("%s%s" % (nm, "" if f is None else " Fuss y=%d" % f)
