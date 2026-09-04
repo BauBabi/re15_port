@@ -55,6 +55,8 @@ import kunst_zuordnung as K                                # noqa: E402
 # dieses Bandes ist ein Rechenartefakt (zu nah beieinanderliegende Tueren), kein Ergebnis.
 SKALA_MIN, SKALA_MAX = 1200, 3300
 
+NL = chr(10)          # der Header wird mit LF geschrieben (.gitattributes)
+
 
 def karte_x(w, ox, sx):
     return ((((w + 32000) * 10 * sx) >> 20) + 5) // 10 + ox
@@ -312,7 +314,64 @@ def auslassprobe():
     return fehler
 
 
+def schreiben():
+    """Header mit den HERGELEITETEN Zeilen erzeugen.
+
+    ⛔ NUR DIE FEHLENDEN. Wo das Original eine echte Zeile ausliefert, gilt DIE - sie ist
+    die Wahrheit, die hergeleitete waere bestenfalls gleich gut. Geschrieben werden also
+    ausschliesslich Slots, deren ausgelieferte Zeile ein Platzhalter ist (Massstab 1).
+    """
+    bekannt, quelle = alle_zeilen()
+    zeilen = []
+    for rm in sorted(bekannt):
+        if K.zeile(rm):
+            continue                       # ausgeliefert -> Original gewinnt
+        slot = K.SLOT_BASIS[(rm >> 12) & 0xF] + ((rm >> 4) & 0xFF)
+        if slot > 105:
+            continue
+        ox, oy, sx, sz = bekannt[rm]
+        if not (-32768 <= ox < 32768 and 0 <= oy < 65536):
+            continue
+        if not (SKALA_MIN <= sx <= SKALA_MAX and SKALA_MIN <= sz <= SKALA_MAX):
+            continue
+        zeilen.append((slot, rm, ox, oy & 0xFFFF, sx, sz, quelle.get(rm, '')))
+
+    o = []
+    o.append("/* GENERIERT von tools/gen_marker_zeilen.py - HERGELEITETE MARKER-ZEILEN.")
+    o.append(" *")
+    o.append(" * Die Tabelle @0x800768b0 setzt die lokalen Koordinaten EINES Raums auf die")
+    o.append(" * gemalte Karte ({x_off, y_off, x_scale, z_scale}; Formel FUN_800473f8")
+    o.append(" * @0x8004741c-0x80047528). Von 106 Slots tragen nur 39 eine echte Zeile - die")
+    o.append(" * uebrigen haben Massstab 1, und die Formel bildet dort JEDE Weltposition auf")
+    o.append(" * denselben Punkt ab. Das Kartensystem des Prototyps ist unfertig.")
+    o.append(" *")
+    o.append(" * Diese Zeilen sind HERGELEITET, nicht ausgeliefert: eine Tuer ist derselbe Ort")
+    o.append(" * in zwei raumlokalen Systemen, also ist die Zeile des Nachbarn ueber sie")
+    o.append(" * ausrechenbar. Riegel ist die Auslassprobe - jede AUSGELIEFERTE Zeile einmal")
+    o.append(" * versteckt und hergeleitet: Median 7 px, 16 von 26 innerhalb 8 px.")
+    o.append(" * PORT-ERGAENZUNG, ausdruecklich keine Rekonstruktion. Wo das Original eine")
+    o.append(" * echte Zeile hat, steht sie hier NICHT - dort gilt das Original. */")
+    o.append("typedef struct {")
+    o.append("    unsigned char  slot;")
+    o.append("    short          ox;")
+    o.append("    unsigned short oy, sx, sz;")
+    o.append("} re15_map_zeile_t;")
+    o.append("")
+    o.append("static const re15_map_zeile_t s_map_zeilen[] = {")
+    for slot, rm, ox, oy, sx, sz, wie in zeilen:
+        o.append("    { %3d, %6d, %5d, %5d, %5d },   /* ROOM%04X  %s */"
+                 % (slot, ox, oy, sx, sz, rm, wie))
+    o.append("};")
+    o.append("")
+    ziel = os.path.join(HIER, '..', 'engine', 'src', 're15_map_zeilen.h')
+    io.open(ziel, 'w', encoding='utf-8', newline=NL).write(NL.join(o) + NL)
+    print("%d hergeleitete Zeilen -> engine/src/re15_map_zeilen.h" % len(zeilen))
+    return 0
+
+
 def main(argv):
+    if '--schreiben' in argv:
+        return schreiben()
     fehler = auslassprobe()
     print("=== AUSLASSPROBE: %d ausgelieferte Zeilen hergeleitet ===" % len(fehler))
     for f, rm, dx, dy, g in fehler:

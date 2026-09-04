@@ -2069,3 +2069,55 @@ sondern muss die **ausgelieferte Maßstabszeile** @0x800768b0 benutzen, wo es si
 7 px). Genau dafür ist `tools/gen_marker_zeilen.py` gebaut — es ist bisher nur nirgends
 angeschlossen (`--schreiben` steht im Kopf und ist nicht umgesetzt). **Das ist die
 Verbindung, die noch fehlt.**
+
+
+## §34 Marker-Zeilen angeschlossen — und gemessen wieder abgehängt
+
+§33 hatte den fehlenden Baustein benannt: auf der gemalten Karte darf der Marker nicht
+die Zonen-Box linear ins Rechteck strecken, sondern muss die **Zeile** @0x800768b0
+benutzen. Das ist jetzt gebaut und gemessen.
+
+**Gebaut:** `tools/gen_marker_zeilen.py --schreiben` (der Modus stand seit jeher im Kopf
+des Werkzeugs und war **nie implementiert**) erzeugt `engine/src/re15_map_zeilen.h` mit
+**44 hergeleiteten Zeilen** — ausschließlich für Slots, deren ausgelieferte Zeile ein
+Platzhalter ist. Wo das Original eine echte Zeile führt, gilt die. In der Engine wählt
+`karten_zeile()` genau so aus, `zeile_projizieren()` rechnet die Original-Formel.
+
+**Gemessen** (Original-Kartenmaterial, `RE15_KUNST=1`):
+
+| | lineare Streckung | mit Zeile |
+|---|---|---|
+| Übergänge, Median | **11 px** | 35 px |
+| innerhalb 4 px | **16 %** | 0 % |
+| innerhalb 8 px | **40 %** | 16 % |
+
+⛔ **Schlechter, und der Grund ist strukturell.** Es gibt **zwei unabhängige
+Platzierungen**: unsere Zone→Rechteck-Zuordnung stammt aus einer *Kostenheuristik*, die
+Zeile aus dem *Türgraphen*. Beide setzen den Raum an verschiedene Stellen. Der
+zeilen-projizierte Punkt fällt dann aus dem zugeordneten Rechteck und wird an dessen
+Kante geklemmt — daraus entsteht der größere Fehler.
+
+**Die Auflösung ist benannt, nicht gebaut:** die Zuordnung muss **aus den Zeilen**
+gewonnen werden statt aus einer Kostenfunktion. §22 zeigt, dass das trägt — die gemalten
+Rechtecke *sind* die Kollisionsboxen, 30 von 38 geeichten Räumen treffen ihr Rechteck zu
+mindestens 50 %, vier davon exakt. Dann stimmen Zuordnung und Projektion per
+Konstruktion überein. Das ist derselbe „beides gemeinsam lösen"-Schritt, den schon §28
+und §30 gefordert haben.
+
+Der Weg bleibt unter `RE15_KARTENZEILE=1` messbar; Default ist die lineare Streckung.
+
+### Stand der Umstellung auf das Original-Kartenmaterial
+
+| | Grundrisse (ausgeliefert) | Original-Material |
+|---|---|---|
+| Räume mit Zone | **96/96** | 67/96 |
+| sichtbar rot | **96** | 50 von 67 |
+| Marker im eigenen Rechteck | 95/96 | **50/50** |
+| Marker im fremden Raum | **0** | **0** |
+| Übergänge Median | **2 px** | 11 px |
+| innerhalb 8 px | **95 %** | 40 % |
+| Audit [F]/[K]/[M]/[N] | 0/0/0/0 | 0/0/0/0 |
+
+Die Kunst sieht richtig aus und ist in sich stimmig; sie kostet ein Drittel der Räume
+(die das Original nicht malt) und die Marker-Genauigkeit. Die Umstellung bleibt deshalb
+opt-in, bis die gemeinsame Lösung von Zuordnung und Zeile steht.

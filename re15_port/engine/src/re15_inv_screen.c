@@ -239,6 +239,44 @@ int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w,
     return 1;
 }
 
+#include "re15_map_zeilen.h"
+
+/* DIE WIRKSAME MARKER-ZEILE EINES RAUMS.
+ * Ausgeliefert schlaegt hergeleitet: wo die Tabelle @0x800768b0 eine echte Zeile fuehrt
+ * (Massstab > 1), ist DAS die Wahrheit. Nur fuer die Platzhalter-Slots greift die aus
+ * der Tuerkette hergeleitete Zeile (tools/gen_marker_zeilen.py, Auslassprobe Median
+ * 7 px). Rueckgabe 0 = fuer diesen Slot gibt es gar keine Zeile. */
+static int karten_zeile(unsigned slot, int *ox, int *oy, int *sx, int *sz)
+{
+    uint32_t row = 0x800768B0u + slot * 8u;
+    unsigned i;
+    int a = (int)mu16(row + 4u), b = (int)mu16(row + 6u);
+    if (a > 1 && b > 1) {
+        *ox = (int16_t)mu16(row); *oy = (int)mu16(row + 2u); *sx = a; *sz = b;
+        return 1;
+    }
+    for (i = 0; i < sizeof s_map_zeilen / sizeof s_map_zeilen[0]; i++) {
+        if (s_map_zeilen[i].slot != slot) continue;
+        *ox = s_map_zeilen[i].ox; *oy = (int)s_map_zeilen[i].oy;
+        *sx = (int)s_map_zeilen[i].sx; *sz = (int)s_map_zeilen[i].sz;
+        return 1;
+    }
+    return 0;
+}
+
+/* Die Original-Projektion FUN_800473f8 @0x8004741c-0x80047528 mit einer gegebenen
+ * Zeile - dieselbe Rechnung wie im Stock-Zweig unten, nur ohne die Tabelle zu lesen. */
+static void zeile_projizieren(int32_t world_x, int32_t world_z,
+                              int ox, int oy, int sx, int sz, int16_t *mx, int16_t *my)
+{
+    int32_t t  = (int32_t)((uint32_t)(world_x + 32000) * 10u * (unsigned)sx) >> 20;
+    int32_t t2 = (int32_t)((uint32_t)(world_z + 32000) * 10u * (unsigned)sz) >> 20;
+    t  = (t + 5) / 10;
+    t2 = -(t2 + 5) / 10;
+    *mx = (int16_t)(t + ox);
+    *my = (int16_t)(t2 + oy);
+}
+
 uint8_t re15_inv_map_page(void) { return s_map_page; }
 
 /* Die TATSAECHLICH gezeigte Kartenseite. Sie folgt dem BEREICH, in dem der Spieler
@@ -602,7 +640,32 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 rx = (int16_t)mu16(a);      ry = (int16_t)mu16(a + 2u);
                 rw = (int16_t)mu16(a + 4u); rh = (int16_t)mu16(a + 6u);
             }
-            if (re15_map_zone_marker(zn, world_x, world_z, rx, ry, rw, rh, mx, my)) {
+            /* ⛔ DIE ORIGINAL-ZEILE STATT DER STRECKUNG: GEMESSEN UND VERWORFEN.
+             * Naheliegend, weil ein GEMALTES Rechteck nicht massstabsgetreu zur
+             * Kollision ist (BEFUND §22) und das Original genau dafuer eine eigene
+             * Zeile je Raum fuehrt (@0x800768b0, FUN_800473f8 @0x8004741c-528).
+             * Angeschlossen (ausgeliefert wo vorhanden, sonst die aus der Tuerkette
+             * hergeleitete, tools/gen_marker_zeilen.py) wurde es SCHLECHTER:
+             *      Uebergaenge Median 11 px -> 35 px, innerhalb 8 px 40 % -> 16 %.
+             * Der Grund ist die zweite, unabhaengige Platzierung: unsere Zone->Rechteck-
+             * Zuordnung (Kostenheuristik) und die Zeile setzen den Raum an verschiedene
+             * Stellen; der zeilen-projizierte Punkt faellt dann aus dem zugeordneten
+             * Rechteck und wird an dessen Kante geklemmt. Wer das aufloesen will, muss
+             * die Zuordnung AUS DEN ZEILEN gewinnen (BEFUND §22: die gemalten Rechtecke
+             * SIND die Kollisionsboxen, 30 von 38 geeichten Raeumen treffen ihr Rechteck)
+             * statt aus einer Kostenfunktion - beides gemeinsam, nicht nacheinander. */
+            {
+                int zox, zoy, zsx, zsz, ok;
+                const char *ez = getenv("RE15_KARTENZEILE");
+                if (ez && *ez == '1' && zrc != 255 &&
+                    karten_zeile((unsigned)room_slot, &zox, &zoy, &zsx, &zsz)) {
+                    zeile_projizieren(world_x, world_z, zox, zoy, zsx, zsz, mx, my);
+                    ok = 1;
+                } else {
+                    ok = re15_map_zone_marker(zn, world_x, world_z,
+                                              rx, ry, rw, rh, mx, my);
+                }
+                if (ok) {
                 /* HART ins Rechteck klemmen: der Marker ist ein 8x8-Quad, das um
                  * (mx,my) zentriert gezeichnet wird — ohne Rand-Reserve haengt er
                  * sonst halb ueber der Kante.
@@ -640,7 +703,8 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                  * EINZIGE Zahl - weder die Uebergaenge noch "Marker in der roten
                  * Flaeche". Die verlorene rote Flaeche der staerkeren Zugkurve kommt
                  * also NICHT daher, dass der Marker aus seinem Rechteck laeuft. */
-                return;
+                    return;
+                }
             }
         }
         /* Keine passende Zone auf diesem Blatt: den Marker aus dem Bild nehmen,
