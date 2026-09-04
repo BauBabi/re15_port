@@ -309,6 +309,21 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                     if yy < 239:
                         r[max(0, yy + 1):, x] = False
         if r.any():
+            # ⛔ OHNE "fuss" UND OHNE "ebene" GILT DIE SPALTENREGEL — und die ist fuer
+            # jedes Objekt falsch, das oben breiter ist als unten. NUTZER-BEFUND
+            # 2026-09-04 (fehler/error2.png): ROOM1140 Cut 2, "Kamerastativ rechts" war
+            # als einziges Objekt ohne "fuss" eingetragen. geom.depth_map_objekt nimmt
+            # dann den Bodenkontakt JE BILDSPALTE aus dem untersten Silhouettenpunkt —
+            # richtig fuer die Beinspalten (Tiefe 122), falsch fuer die breiten
+            # Gehaeusespalten (176/193/280). Ergebnis: die Beine verdeckten den Spieler,
+            # der Kamerakoerper nicht. Keine Messschiene konnte das sehen
+            # (integration_pri_masken prueft die Tiefe nicht, verdeckungskarte.py zaehlt
+            # nur ZUVIEL Verdeckung), deshalb sagt es das Werkzeug jetzt beim Bauen.
+            if o.get("fuss") is None and not o.get("ebene"):
+                print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
+                      'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
+                      'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
+                      % o.get("name", "?"))
             aus.append((o.get("name", "?"), r, o.get("fuss"), int(o.get("ebene", 0))))
     return aus
 

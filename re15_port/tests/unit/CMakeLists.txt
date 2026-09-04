@@ -3263,3 +3263,10 @@ target_include_directories(test_audio_sperren PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_audio_sperren PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
 add_test(NAME unit_audio_sperren COMMAND test_audio_sperren)
 set_tests_properties(unit_audio_sperren PROPERTIES TIMEOUT 30)
+
+# --- Tuersymbol-Achse (Nutzer-Befund 2026-09-04 "Wrong Rotation, Need 90 Degree turn") ---
+add_executable(test_map_tuerachse test_map_tuerachse.c)
+target_link_libraries(test_map_tuerachse PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_tuerachse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_map_tuerachse COMMAND test_map_tuerachse)
+set_tests_properties(unit_map_tuerachse PROPERTIES TIMEOUT 30)

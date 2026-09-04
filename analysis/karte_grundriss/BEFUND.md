@@ -2494,3 +2494,156 @@ und eine Rangfolge „ausgelieferte Zeile schlägt hergeleitete" greift dort nic
 ROOM1170s ausgelieferte Zeile den unteren Bereich gar nicht auf sein eigenes Dach-Rechteck
 projiziert (y174..199 gegen Rechtecke bei y80..157). Die Zuordnung dieser Zone kommt
 ohnehin aus einer Heuristik.
+
+## §42 Nutzer-Befund 2026-09-04: zwei falsche Tuermarken auf Blatt 4 (fehler/error1.png)
+
+Zwei Anmerkungen im Screenshot, beide auf Blatt 4 (3F), aufgenommen in ROOM1140.
+
+**Zuordnung am gerasterten Bild, nicht geschaetzt.** Neues Werkzeug
+`re15_port/tools/kartenbild.py` zeichnet ein Blatt so, wie der Zeichner es zeichnet
+(Rechtecke aus `DATA/MAP0x.PIX`, Marken als 5x2- bzw. 2x5-Balken) und beschriftet jede
+Marke mit ihrem Tabellen-Index. Kartenpixel == Bildschirmpixel (die Rechtecke liegen bei
+x120..216, y80..166 im 320x240-Bild), der Screenshot ist also nur um 957/320 = 2,99
+skaliert. Damit sind beide Anmerkungen eindeutig:
+
+| Anmerkung des Nutzers | Marke | Tabellenzeile |
+|---|---|---|
+| „Wrong Rotation, Need 90 Degree turn" | **#64** | `{ 4, 4, 146, 85, 2, 16, 18 }` ROOM1130 ↔ ROOM1150 |
+| „wrong shouldn't exist" | **#70** | `{ 4, 5, 159, 119, 0, 15, 255 }` ROOM1120, ohne Partner |
+
+**Lage in ihrem Rechteck (gemessen):**
+
+```
+#64  rect 4 = (144,80) 32x80   Marke (146, 85):  West  2  Ost 29  Nord  5  Sued 74
+#70  rect 5 = (120,119) 40x40  Marke (159,119):  West 39  Ost  0  Nord  0  Sued 39
+```
+
+**Zwei naheliegende Filter — beide GEMESSEN und VERWORFEN, bevor sie gebaut wurden:**
+
+* *„ungepaarte Marken (zid2 == 255) sind falsch"* — **98 von 201** Marken sind ungepaart.
+  Auf Blatt 4 ist auch **#61** (ROOM1160) ungepaart, und der Nutzer hat sie NICHT
+  beanstandet. Der Filter wuerde die halbe Karte loeschen.
+* *„die gewaehlte Wand liegt zu weit von der naechsten Rechteckkante"* — **32 von 151**
+  Tuermarken auf gemalten Rechtecken liegen ≥ 20 px weiter. Das ist kein Defekt, sondern
+  die Bauart: `snap_wall` schnappt auf die **gemalte Wand in der Kachel**
+  (`DATA/MAP0x.PIX`, Palettenindex 0 = ausserhalb), nicht auf den Rand der Bounding-Box.
+  Die direkt benachbarte #66 (168,89) liegt 70 px „weit" und ist laut Nutzer richtig.
+
+**Mechanismus (gelesen, `gen_map_zones.py:2495` `snap_wall`):** `kind` folgt
+ausschliesslich aus `senk`. Ist `senk` wahr, sucht die Funktion senkrechte Kanten und
+liefert 1/3 (Ost/West) = senkrechter Balken; ist es falsch, waagerechte Kanten und 0/2
+(Nord/Sued) = waagerechter Balken. `senk` selbst kommt aus der Streckung des
+Tuer-Trigger-Rechtecks: `senk = m['rd'] > m['rw']`. #64 traegt kind 2, also war `senk`
+FALSCH — entweder ist das Rechteck dieses Datensatzes anders als der Code-Kommentar
+behauptet, oder DURCHGANG 2 (Paarung) hat den Datensatz des anderen Raums behalten.
+
+### §42.1 Marke #64 — die Achse wurde in der Paarung ueberschrieben
+
+**Beide Tuer-Datensaetze sind sich einig** (gelesen aus den RDTs):
+
+```
+ROOM1130 #2 -> ROOM1150   l=( -6650, 16350)  rw=1000 rd=2000   -> senk = rd>rw = True
+ROOM1150 #0 -> ROOM1130   l=(-16050,-11500)  rw=1500 rd=2200   -> senk = rd>rw = True
+```
+
+Die Achse war in DURCHGANG 1 also richtig (senkrechte Wand). Verloren geht sie in
+DURCHGANG 2: dort setzt `_seite_kante` die Achse nur, wenn die Ueberdeckung der beiden
+Rechtecke *duenn* ist (`_duenn = min(_br,_ho) <= 4`). Fuer ROOM1130/ROOM1150 ist
+`_br = 8` (x) und `_ho = 40` (y) — also `_duenn = False`, `_seite_kante = None`, und
+danach entscheidet die Richtung zur **Mitte** des Nachbar-Rechtecks:
+
+```
+_zx = 136 - 146 = -10      _zy = 100 - 85 = +15      |zx| < |zy|  ->  Seite 2 = Sued
+```
+
+Genau der Muenzwurf, den der Kommentar zwoelf Zeilen tiefer selbst verbietet: *„Bei zwei
+langgestreckten Raeumen, die sich ueber Eck beruehren, zeigen die Mitten diagonal und die
+Achse wird zur Muenzwurf-Entscheidung … Wo eine Ueberdeckung existiert, gilt sie."* Fuer
+Ueberdeckungen dicker als 4 px war dieser Satz nie umgesetzt.
+
+**Fix:** die Achse kommt aus der Ueberdeckung, sobald diese eine laengere und eine
+kuerzere Seite hat — unabhaengig von `_duenn`. `_duenn` regelt weiterhin allein die
+POSITION (die war getrennt eingemessen). Gleichstand `_br == _ho` bleibt der bisherigen
+Entscheidung ueberlassen, weil die Ueberdeckung dort nichts sagt.
+
+### §42.2 Marke #70 — die Lage war nur der Klemm-Anschlag
+
+`to_map` klemmt jede Projektion in ihr gemaltes Rechteck. ROOM1120 (Rect 5 = x120..159,
+y119..158, Eichung 101/190/2296/2312) projiziert seine drei Tueren so:
+
+| Tuer | Weltpunkt | rohe Projektion | Ergebnis |
+|---|---|---|---|
+| #2 → ROOM1130 | (-8450,-2900) | (153,126) | **im Rechteck** → echte Marke #69 |
+| #0 → ROOM1060 | (-700, 9550) | (170, 98) | ausserhalb in x UND y → Ecke (159,119) |
+| #1 → ROOM1080 | (1300, 6400) | (174,105) | ausserhalb in x UND y → Ecke (159,119) |
+
+Die ROOM1060-Tuer rettet die **Paarung**: sie zieht die Marke auf die gemeinsame Kante mit
+ROOM1060s Rechteck (120,151) = Marke #67. Die ROOM1080-Tuer hat keine Gegenseite —
+**ROOM1080 traegt null Tuer-Datensaetze** — und blieb auf dem Klemmwert in der Ecke stehen,
+direkt an ROOM1140s Rechteck. Genau das las der Nutzer als Tuer zwischen zwei Raeumen, die
+keine haben.
+
+**Fix:** verworfen wird, was BEIDES ist — ohne Partner UND diagonal ausserhalb geklemmt.
+Eine Klemmung in nur EINER Achse bleibt eine Aussage: die andere Koordinate ist gemessen,
+die Tuer sitzt auf dieser Wand.
+
+### §42.3 Nebenbefund: zwei Tueren auf einem Pixel
+
+Der Dubletten-Schluessel enthielt die SEITE. Zwei Marken am selben Punkt mit
+verschiedener Achse ueberlebten damit beide und ergaben ein Kreuz aus waagerechtem und
+senkrechtem Balken. Gemessen: Blatt 8 Rect 2 (142,83) trug schon vor dieser Aenderung
+zwei Tueren DESSELBEN Ortes (zid 67, einmal Nord, einmal West) uebereinander; der
+Achsen-Fix haette einen dritten Fall auf Blatt 6 erzeugt. Der Schluessel ist jetzt die
+POSITION (Tueren und Treppen getrennt), und bei Kollision gewinnt die **gepaarte** Achse —
+sie kennt beide Rechtecke, die ungepaarte nur die eigene Silhouette.
+
+### §42.4 Ergebnis, gemessen
+
+| Groesse | vorher | nachher |
+|---|---|---|
+| Marken gesamt | 201 | 189 |
+| Achse passt zur gemeinsamen Wand (`unit_map_tuerachse`) | — | **23 von 23** |
+| Achse WIDERSPRICHT der Wand | **8** | **0** |
+| nicht bewertbar (keine echte Wand, siehe Wand-Probe unten) | — | 17 |
+| „Symbol zeigt vom Nachbarn weg" (`unit_map_durchgang`) | 1 von 60 | **0 von 65** |
+| Stellen mit zwei Marken uebereinander | 2 | 1 |
+
+⛔ **DER ERSTE WURF WAR ZU GROB, und der Pin hat ihn gefangen.** „Die laengere
+Ueberdeckungsseite ist die Wandrichtung" liess `unit_map_durchgang` von 1 auf 9
+verdrehte Symbole steigen. Sechs der neun Faelle waren zwei Zonen, die sich DASSELBE
+gemalte Rechteck teilen (dort ist die „Ueberdeckung" das ganze Rechteck), drei waren
+Rechtecke, von denen eines IM anderen steckt. Beides sind keine Waende. Die Probe lautet
+deshalb: die kurze Seite der Ueberdeckung muss **kleiner als die halbe Ausdehnung des
+kleineren Rechtecks** sein, und die beiden Zeichnungen duerfen nicht identisch sein.
+Der Nutzer-Fall besteht sie klar (Ueberdeckung x=8 bei zwei je 32 px breiten Rechtecken);
+danach steht der Pin bei **0 von 65** — besser als sein Ausgangswert.
+
+Die verbliebene Doppelstelle ist Blatt 12 Rect 7 (265,118) = **Tuer + Treppe**. Die bleibt
+absichtlich: die Treppe zeichnet nur drei Sprossen ohne deckenden Grund, damit die
+darunterliegende gemalte Tuer durchscheint (Kommentar zur Treppen-Marke in
+`re15_inv_screen.c`).
+
+**Der Klemm-Filter deckt Eichungs-Defekte auf, statt sie zu bemalen.** Er hat 14 Marken
+verworfen; jede davon ist eine Tuer, deren Projektion diagonal ausserhalb des eigenen
+Rechtecks landet:
+
+```
+ROOM1070#0@Blatt2(203,88)   ROOM1120#1@Blatt4(159,119)  ROOM1180#0+#1@Blatt0(153,134)
+ROOM2040#4@Blatt6(193,185)  ROOM2050#1@Blatt6(65,124)   ROOM2090#0@Blatt6(164,163)
+ROOM3000#0@Blatt7(80,104)   ROOM3050#0@Blatt7(224,128)  ROOM4040#2@Blatt8(154,111)
+ROOM4050#4@Blatt8(127,79)   ROOM5040#2@Blatt9(131,128)  ROOM5140#0@Blatt9(161,174)
+ROOM6000#0@Blatt12(262,109)
+```
+
+⛔ **OFFEN, ehrlich benannt: ROOM1070 verliert damit sein EINZIGES Tuersymbol.** Der Raum
+hat genau eine Tuer (→ROOM1030, Weltpunkt (560,6200)); mit seiner Eichung
+(79/205/2229/2088) projiziert sie auf (148,129), waehrend sein Rechteck bei x180..227,
+y59..90 liegt — 32 px daneben in x und 39 px in y. Das ist ein **Eichungs**-Defekt dieses
+Raums, kein Tuer-Defekt. Vorher wurde er von einem Symbol an der Rechteckecke zugedeckt;
+jetzt ist er sichtbar. Elf weitere Zonen verlieren je ein Symbol, behalten aber andere.
+
+Neue Schranke: `re15_port/tests/unit/test_map_tuerachse.c` prueft die Achse jeder
+gepaarten Tuermarke gegen die Lage ihrer beiden Rechtecke und gibt seine Abdeckung aus.
+Neues Werkzeug: `re15_port/tools/kartenbild.py` rastert ein Blatt mit beschrifteten
+Marken — damit ist ein Screenshot-Befund des Nutzers eindeutig einer Tabellenzeile
+zuzuordnen, statt sie zu erraten.

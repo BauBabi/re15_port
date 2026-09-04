@@ -2097,7 +2097,11 @@ def main():
         R = rects(pg)
         return R[r] if r < len(R) else None
 
+    _klemm = {'xy': False}   # von to_map gefuellt: lag die rohe Projektion diagonal
+                             # ausserhalb des Rechtecks? (siehe dort)
+
     def to_map(room, zi, wx, wz, pg_wunsch=None):
+        _klemm['xy'] = False
         # ⛔ GRUNDRISS ZUERST. Seit der Loeser jeden Raum aus seiner Kollision setzt,
         # ist SEINE Abbildung die gueltige - die Marken muessen derselben folgen, sonst
         # rechnen sie gegen ein Rechteck, das gar nicht mehr gezeichnet wird, und die
@@ -2133,6 +2137,14 @@ def main():
             ox, oy, sx, sy = ei
             mx, my = _proj(wx, wz, ox, oy, sx, sy)
             R = rects(pg)[r]
+            # ⛔ MERKEN, OB DIE KLEMMUNG BEIDE ACHSEN GETROFFEN HAT. Trifft sie nur eine,
+            # bleibt die andere Koordinate eine echte Messung - die Tuer sitzt dann auf
+            # genau dieser Wand. Trifft sie BEIDE, liegt der Punkt diagonal ausserhalb des
+            # Rechtecks, und das Ergebnis ist die ECKE - kein Messwert, sondern der
+            # Anschlag. Siehe _klemm_xy unten.
+            _kx = (mx < R[0]) or (mx > R[0] + R[2] - 1)
+            _ky = (my < R[1]) or (my > R[1] + R[3] - 1)
+            _klemm['xy'] = bool(_kx and _ky)
             if mx < R[0]: mx = R[0]
             if mx > R[0] + R[2] - 1: mx = R[0] + R[2] - 1
             if my < R[1]: my = R[1]
@@ -2638,7 +2650,10 @@ def main():
                 if kind == 1 and _n in st_merge:
                     wx, wz = st_merge[_n]        # gemeinsamer WELT-Punkt beider Enden
                 mp = to_map(b, zi, wx, wz, _pgw)
-                if not mp: mp = to_map(b, zi, wx, wz)
+                _klemm_xy = _klemm['xy']
+                if not mp:
+                    mp = to_map(b, zi, wx, wz)
+                    _klemm_xy = _klemm['xy']
                 if not mp:
                     if _sp:
                         print("   [Marke] ROOM%04X %s #%d Zone z%d: KEINE ABBILDUNG "
@@ -2681,7 +2696,7 @@ def main():
                     # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
                     mkind = 5 if m.get('axis') == 12 else 4
                 vor.append({'room': b, 'zi': zi, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
-                            'mx': mx, 'my': my, 'seite': mkind,
+                            'mx': mx, 'my': my, 'seite': mkind, 'klemm_xy': _klemm_xy,
                             'zid': zid_of.get((b, zi), 0), 'd': m})
                 # ⛔ KEINE ZWEITE MARKE AUF DEM EIGENEN BLATT DES ORTES.
                 # Versucht am 2026-09-03, weil 12 von 244 Tueren beim Davorstehen
@@ -2864,7 +2879,57 @@ def main():
                     # verhindert nur das Ausbrechen.
                     cx = min(max(cx, _ux0), max(_ux0, _ux1 - 1))
                     cy = min(max(cy, _uy0), max(_uy0, _uy1 - 1))
-                    _seite_kante = None
+                    # ⛔ DIE ACHSE GILT AUCH OHNE DUENNE WAND. Bis 2026-09-04 stand hier
+                    # _seite_kante = None, und dann entschied weiter unten die Richtung zur
+                    # MITTE des Nachbar-Rechtecks ueber die Achse. Genau das ist der
+                    # Muenzwurf, den der Kommentar zwoelf Zeilen tiefer selbst verbietet
+                    # ("Wo eine Ueberdeckung existiert, gilt sie") - er war fuer
+                    # Ueberdeckungen dicker als 4 px nie umgesetzt.
+                    # NUTZER-BEFUND 2026-09-04 (fehler/error1.png, "Wrong Rotation, Need 90
+                    # Degree turn"): Marke #64, ROOM1130 <-> ROOM1150. Ueberdeckung _br=8
+                    # (x), _ho=40 (y) - eine eindeutig SENKRECHTE Wand. min(8,40)=8 > 4,
+                    # also _duenn=False, also _seite_kante=None; die Mittenrichtung ergab
+                    # _zx=-10, _zy=+15 -> |zx|<|zy| -> Seite 2 (Sued) = WAAGERECHTER Balken.
+                    # Die Ueberdeckung sagt das Gegenteil und ist die staerkere Aussage:
+                    # sie misst, wo die Wand VERLAEUFT, die Mitten nur, wo der Nachbar
+                    # ungefaehr liegt.
+                    # ⛔ NUR DIE ACHSE, NICHT DIE LAGE. _duenn regelt weiterhin allein die
+                    # POSITION (Mitte der Ueberdeckung vs. rohe Projektion) - die war
+                    # getrennt eingemessen und wird hier nicht angefasst.
+                    # Gleichstand (_br == _ho) bleibt der bisherigen Entscheidung
+                    # ueberlassen: da sagt die Ueberdeckung nichts.
+                    # ⛔ EINE UEBERDECKUNG IST NUR DANN EINE WAND, WENN SIE FUER BEIDE
+                    # RECHTECKE SCHMAL IST. Ein erster Wurf nahm einfach die laengere
+                    # Ueberdeckungsseite als Wandrichtung. Gemessen mit dem Pin
+                    # unit_map_durchgang stieg "Symbol zeigt vom Nachbarn weg" damit von
+                    # 1 auf 9 - und die neuen Faelle waren genau die, in denen ein
+                    # Rechteck IM anderen steckt:
+                    #     Blatt 7 (206,106): Ueberdeckung x=8, aber B ist selbst nur 8 breit
+                    #     Blatt 7 (224,175): Ueberdeckung x=24, aber A ist selbst nur 24 breit
+                    #     Blatt 2 (111, 84): Ueberdeckung x=17 gegen ein 24 breites B
+                    # Dort gibt es keine gemeinsame Wandlinie, und die Ueberdeckung sagt
+                    # nichts - genau die Einsicht, die der Kommentar oben schon als
+                    # `_duenn` formuliert hatte, nur an einer festen Zahl (<= 4 px)
+                    # statt an den Rechtecken gemessen.
+                    # Der Nutzer-Fall ROOM1130 <-> ROOM1150 besteht diese Probe klar:
+                    # Ueberdeckung x=8 bei zwei je 32 px breiten Rechtecken (8 < 16).
+                    _wand = None
+                    if _ho > _br and _br * 2 < min(_aw, _bw):
+                        _wand = 'senk'
+                    elif _br > _ho and _ho * 2 < min(_ah, _bh):
+                        _wand = 'waag'
+                    # ⛔ UND NUR BEI ZWEI VERSCHIEDENEN ZEICHNUNGEN. Teilen sich zwei Zonen
+                    # DASSELBE gemalte Rechteck (21 Marken game-weit), ist die
+                    # "Ueberdeckung" das ganze Rechteck und beschreibt keine Wand; dort
+                    # standen 6 der 9 neuen Fehlfaelle.
+                    if (_ax, _ay, _aw, _ah) == (_bx, _by, _bw, _bh):
+                        _wand = None
+                    if _wand == 'waag':
+                        _seite_kante = 2 if (_by + _bh / 2.0) > (_ay + _ah / 2.0) else 0
+                    elif _wand == 'senk':
+                        _seite_kante = 1 if (_bx + _bw / 2.0) > (_ax + _aw / 2.0) else 3
+                    else:
+                        _seite_kante = None
                 elif _br >= _ho:
                     # waagerechte Wand: Hoehe = Wanddicke, Laenge in x
                     cy = (_uy0 + _uy1) // 2
@@ -3119,14 +3184,63 @@ def main():
     # Raum: es erschien, sobald ROOM30C0 besucht war, und blieb aus, wenn der Spieler nur
     # ROOM30D0 kannte. Das Audit meldete "ROOM30D0 hat Treppen, aber kein Symbol".
     # Richtig ist dasselbe wie bei gepaarten Tueren: EINE Marke, ZWEI Zonen.
+    # ⛔ ZWEI TUEREN AUF EINEM PIXEL SIND EIN SYMBOL, EGAL MIT WELCHER ACHSE.
+    # Bis 2026-09-04 stand die SEITE im Dubletten-Schluessel. Zwei Marken am selben
+    # Punkt mit verschiedener Achse ueberlebten damit beide und wurden als KREUZ aus
+    # einem waagerechten und einem senkrechten Balken gezeichnet. Gemessen an der
+    # erzeugten Tabelle: Blatt 8 rect 2 (142,83) trug schon vorher zwei Tueren
+    # DESSELBEN Ortes (zid 67, einmal Nord, einmal West) uebereinander.
+    # Der Schluessel ist deshalb die POSITION; Tueren und Treppen bleiben getrennt,
+    # weil eine Treppe nur drei Sprossen ohne deckenden Grund zeichnet und die
+    # darunterliegende gemalte Tuer absichtlich durchscheinen laesst (siehe den
+    # Kommentar zur Treppen-Marke in re15_inv_screen.c).
+    # ⛔ DIE GEPAARTE AUSSAGE GEWINNT. Welche Achse ueberlebt, ist keine Geschmacks-
+    # frage: eine GEPAARTE Marke kennt beide Rechtecke und damit die gemeinsame Wand,
+    # eine ungepaarte hat ihre Achse nur aus der Silhouette ihres eigenen Rechtecks.
+    # Ohne diese Regel entschiede die Reihenfolge - also der Muenzwurf, den dieser
+    # Umbau gerade abschafft.
+    # ⛔ EINE MARKE, DEREN LAGE NUR DER ANSCHLAG IST, IST KEINE MARKE.
+    # NUTZER-BEFUND 2026-09-04 (fehler/error1.png, "wrong shouldn't exist"): auf Blatt 4
+    # stand ein Tuersymbol in der Nordost-ECKE von ROOM1120s Rechteck, direkt an
+    # ROOM1140s Rechteck - es las sich als Tuer zwischen zwei Raeumen, die keine haben.
+    #
+    # URSACHE, NACHGERECHNET: to_map KLEMMT die Projektion in das gemalte Rechteck.
+    # ROOM1120 (Rect 5 = x120..159, y119..158, Eichung 101/190/2296/2312) projiziert
+    # seine drei Tueren so:
+    #     #2 -> ROOM1130 (-8450,-2900)  roh (153,126)  IM Rechteck        -> echte Marke
+    #     #0 -> ROOM1060  (-700, 9550)  roh (170, 98)  ausserhalb x UND y -> Ecke (159,119)
+    #     #1 -> ROOM1080  ( 1300, 6400) roh (174,105)  ausserhalb x UND y -> Ecke (159,119)
+    # Die ROOM1060-Tuer rettet die PAARUNG: sie zieht die Marke auf die gemeinsame Kante
+    # mit ROOM1060s Rechteck (120,151). Die ROOM1080-Tuer hat keine Gegenseite - ROOM1080
+    # traegt NULL Tuer-Datensaetze - und blieb auf dem Klemmwert stehen.
+    #
+    # ⛔ DIE REGEL IST NICHT "UNGEPAART = WEG". 98 von 201 Marken sind ungepaart (u.a.
+    # ROOM1160s Tuer auf demselben Blatt, die der Nutzer NICHT beanstandet hat); dieser
+    # Filter loeschte die halbe Karte. Verworfen wird nur, was BEIDES ist: ohne Partner
+    # UND diagonal ausserhalb geklemmt. Eine Klemmung in nur EINER Achse bleibt eine
+    # Aussage - die andere Koordinate ist gemessen, die Tuer sitzt auf dieser Wand.
+    _weg_klemm = [v for v in vor
+                  if not v.get('weg') and v['kind'] == 0
+                  and v.get('zid2', 255) == 255 and v.get('klemm_xy')]
+    for v in _weg_klemm:
+        v['weg'] = True
+    print("   %d ungepaarte Tuermarken verworfen (Lage war nur der Klemm-Anschlag): %s"
+          % (len(_weg_klemm),
+             ', '.join('ROOM%04X#%d@Blatt%d(%d,%d)' % (v['room'], v['idx'], v['pg'],
+                                                       v['mx'], v['my'])
+                       for v in _weg_klemm) or '-'))
+
     seen = {}
     for v in vor:
         if v.get('weg'): continue
-        key = (v['pg'], v['r'], v['mx'], v['my'], v['seite'])
+        key = (v['pg'], v['r'], v['mx'], v['my'], v['seite'] > 3)
         if key in seen:
             erste = seen[key]
-            if (v['zid'] != erste['zid'] and erste.get('zid2', 255) == 255):
+            _erste_gepaart = erste.get('zid2', 255) != 255
+            if (v['zid'] != erste['zid'] and not _erste_gepaart):
                 erste['zid2'] = v['zid']
+            if not _erste_gepaart and v.get('zid2', 255) != 255:
+                erste['seite'] = v['seite']
             continue
         seen[key] = v
         marks.append(v)

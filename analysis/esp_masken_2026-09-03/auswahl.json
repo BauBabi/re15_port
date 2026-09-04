@@ -29,7 +29,7 @@
      "grow": 0
     },
     {
-     "name": "Kamerastativ links",
+     "name": "Stuhl vorne links (frueher falsch \"Kamerastativ links\")",
      "png": "pri/1140/02_02.png",
      "x": 96,
      "y": 152,
@@ -44,6 +44,7 @@
      "x": 274,
      "y": 104,
      "massstab": 1,
+     "fuss": 164,
      "oben": 0,
      "grow": 0
     }
