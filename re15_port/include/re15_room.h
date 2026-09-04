@@ -115,6 +115,15 @@ int re15_map_zone_synth(const re15_map_zone_t *zn, int *x, int *y, int *w, int *
                         int *erste, int *n);   /* Schema-Zeichnung, 0 = keine */
 int re15_map_synth_cell(int i, int *x, int *y, int *w, int *h);
 int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w, int *h);
+
+/* DAS RECHTECK EINER ZONE - egal, woher es kommt.
+ * ⛔ Bis 2026-09-04 fragten Zeichner, Pruefungen und Messschienen ueberall direkt
+ * re15_map_zone_synth(). Das ging gut, solange JEDE Zone eine Schema-Zeichnung trug.
+ * Seit die Original-Kunst der Auslieferungsstand ist, sieht so eine Abfrage die
+ * gemalten Rechtecke als "hat keine Zeichnung" - sechs Unit-Tests fielen daran aus,
+ * ohne dass an der Karte etwas falsch war (BEFUND §39). rect != 255 -> gemaltes
+ * Rechteck aus der Seiten-Tabelle @0x80076840, rect == 255 -> Kasten der Zeichnung. */
+int re15_map_zone_kasten(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h);
 int re15_map_zone_count(void);
 const re15_map_zone_t *re15_map_zone_by_index(int i);
 void re15_map_debug_reveal_page(unsigned page);  /* nur Messschiene */

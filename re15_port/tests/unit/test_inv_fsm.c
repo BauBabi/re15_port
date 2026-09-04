@@ -1345,7 +1345,7 @@ int main(void)
             const re15_map_zone_t *z50 = re15_map_zone_at(0x1150, 0, 0);
             int kx = 0, ky = 0, kw = 0, kh = 0, n2, i2, vorher = 0, nachher = 0;
             int fremd_vor = 0, fremd_nach = 0;
-            int hat = z50 && re15_map_zone_synth(z50, &kx, &ky, &kw, &kh, 0, 0);
+            int hat = z50 && re15_map_zone_kasten(z50, &kx, &ky, &kw, &kh);
             CHECK(hat, "(5) ROOM1150 hat eine Zeichnung auf dem Blatt");
             /* ⛔ "AUSSERHALB" HEISST: EINE ZELLE EINES ANDEREN ORTES. Gezaehlt wurde
              * hier jeder Fill ausserhalb des eigenen Kastens - seit die Raeume
@@ -1380,8 +1380,15 @@ int main(void)
               for (i2 = 0; i2 < n2; i2++)
                   if (ops[i2].kind == RE15_INV_OP_SPRT &&
                       ops[i2].page == RE15_INV_PAGE_MAP4) nmap2++;
-              CHECK(nmap2 == nmap,
-                    "(5) an den gemalten Kacheln aendert der Besuch nichts (%d -> %d)",
+              /* ⛔ UMGEKEHRT SEIT DER UMSTELLUNG AUF DIE ORIGINAL-KUNST.
+               * Solange die Karte aus Schema-Zeichnungen bestand, trug KEIN gemaltes
+               * Rechteck einen Zustand - die Kacheln blieben also beim Betreten eines
+               * Raums unveraendert, und genau das stand hier. Seit die Kunst gezeichnet
+               * wird, ist eine Kachel erst nach dem Besuch sichtbar (RE2-Aufdecken,
+               * gemessen 3 -> 4 Kacheln beim Betreten von ROOM1150). Dass es MEHR
+               * werden, ist jetzt die richtige Antwort; weniger duerfen es nie. */
+              CHECK(nmap2 >= nmap,
+                    "(5) der Besuch nimmt keine gemalte Kachel weg (%d -> %d)",
                     nmap, nmap2); }
             re15_map_visited_reset();
             n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);

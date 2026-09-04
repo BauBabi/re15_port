@@ -277,6 +277,14 @@ static void zeile_projizieren(int32_t world_x, int32_t world_z,
     *my = (int16_t)(t2 + oy);
 }
 
+int re15_map_zone_kasten(const re15_map_zone_t *zn, int *x, int *y, int *w, int *h)
+{
+    if (!zn) return 0;
+    if (zn->rect != 255)
+        return re15_map_rect_geometry(zn->page, zn->rect, x, y, w, h);
+    return re15_map_zone_synth(zn, x, y, w, h, 0, 0);
+}
+
 uint8_t re15_inv_map_page(void) { return s_map_page; }
 
 /* Die TATSAECHLICH gezeigte Kartenseite. Sie folgt dem BEREICH, in dem der Spieler

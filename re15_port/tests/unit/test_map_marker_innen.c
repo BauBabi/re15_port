@@ -75,7 +75,13 @@ static int probe(unsigned room, const char *rel, int *begangen, int *getroffen)
         if (q && q->room == room) { z = q; break; }
     }
     if (!z || z->room != room) return 0;
-    if (!re15_map_zone_synth(z, &kx, &ky, &kw, &kh, &erste, &nzell)) return 0;
+    /* ⛔ AUCH GEMALTE RECHTECKE. Seit die Original-Kunst der Auslieferungsstand ist,
+     * hat eine Zone in der Regel KEINE Schema-Zeichnung mehr - dann gibt es keine
+     * Zellenliste, und geprueft wird gegen das Rechteck selbst. */
+    if (!re15_map_zone_synth(z, &kx, &ky, &kw, &kh, &erste, &nzell)) {
+        erste = 0; nzell = 0;
+        if (!re15_map_zone_kasten(z, &kx, &ky, &kw, &kh)) return 0;
+    }
     x0 = z->wx0; x1 = z->wx1; z0 = z->wz0; z1 = z->wz1;
     if (x1 <= x0 || z1 <= z0) return 0;
     /* ⛔ NICHT re15_collision_on_floor ABFRAGEN. Ohne den vollen Raum-Aufbau
@@ -102,6 +108,8 @@ static int probe(unsigned room, const char *rel, int *begangen, int *getroffen)
                 if (!re15_map_synth_cell(erste + k, &cx, &cy, &cw, &ch)) continue;
                 if (mx >= cx && mx < cx + cw && my >= cy && my < cy + ch) drin = 1;
             }
+            if (nzell == 0 && mx >= kx && mx < kx + kw &&
+                my >= ky && my < ky + kh) drin = 1;
             if (drin) (*getroffen)++;
         }
     }
@@ -115,12 +123,20 @@ int main(void)
     printf("=== Karte: der Marker liegt in der Zeichnung seines Raums ===\n");
 
     if (!probe(0x10D0, "STAGE1/ROOM10D0.RDT", &n, &t)) {
-        printf("SKIP: ROOM10D0.RDT fehlt oder hat keine Zeichnung\n"); return 77;
+        /* ⛔ ROOM10D0 IST AUF DER ORIGINAL-KUNST NICHT GEMALT. Der Raum war der
+         * Nutzer-Fall von 2026-09-01 und hatte in der Grundriss-Loesung eine
+         * Schema-Zeichnung; das Original fuehrt fuer ihn kein Rechteck (BEFUND §38:
+         * 7 von 96 Raeumen bleiben leer, so wie im Original). Ein Raum, den es auf der
+         * Karte nicht gibt, ist kein Testfehler - die Probe laeuft dann ueber ROOM1120,
+         * und der ist der eigentliche Nutzer-Fall ("der spielmarker [muss] im kleinen
+         * rechteck sein"). */
+        printf("  [ROOM10D0] auf der Original-Kunst nicht gemalt - uebersprungen\n");
+    } else {
+        printf("  [ROOM10D0] %d Kollisionszellen, %d auf der Zeichnung\n", n, t);
+        CHECK("ROOM10D0 hat ueberhaupt begehbare Zellen", n >= 20);
+        CHECK("mindestens 90 % der Kollisionszellen liegen auf der Zeichnung",
+              n > 0 && t * 100 / n >= 90);
     }
-    printf("  [ROOM10D0] %d Kollisionszellen, %d auf der Zeichnung\n", n, t);
-    CHECK("ROOM10D0 hat ueberhaupt begehbare Zellen", n >= 20);
-    CHECK("mindestens 90 % der Kollisionszellen liegen auf der Zeichnung",
-          n > 0 && t * 100 / n >= 90);
 
     if (!probe(0x1120, "STAGE1/ROOM1120.RDT", &n, &t)) {
         printf("SKIP: ROOM1120.RDT fehlt\n"); return 77;
@@ -137,7 +153,7 @@ int main(void)
         const re15_map_zone_t *z = re15_map_zone_at(0x1120, -8450, -2900);
         int kx, ky, kw, kh;
         int16_t mx, my;
-        if (z && re15_map_zone_synth(z, &kx, &ky, &kw, &kh, 0, 0) &&
+        if (z && re15_map_zone_kasten(z, &kx, &ky, &kw, &kh) &&
             re15_map_zone_marker(z, 250000, 250000, kx, ky, kw, kh, &mx, &my)) {
             int randnah = (mx <= kx + 4 || mx >= kx + kw - 5 ||
                            my <= ky + 4 || my >= ky + kh - 5);

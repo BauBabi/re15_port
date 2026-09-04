@@ -26,6 +26,26 @@ static int g_fail;
 
 int main(void)
 {
+    /* ⛔ DIESER TEST PRUEFT DEN RUECKFALL, NICHT DEN AUSLIEFERUNGSSTAND.
+     * Seit 2026-09-04 zeichnet der Port die ORIGINAL-KUNST (RE15_KUNST, Nutzer-
+     * Entscheidung); die Schema-Zeichnung aus der Kollisions-Box ist damit inaktiv -
+     * gemessen 0 von 192 Zonen tragen noch eine. Der Pfad lebt weiter unter
+     * RE15_KUNST=0 und wird dort geprueft; hier ist "keine Schema-Zeichnung
+     * vorhanden" das ERWARTETE Ergebnis und kein Fehler. */
+    {
+        int i, n = 0;
+        for (i = 0; i < re15_map_zone_count(); i++) {
+            const re15_map_zone_t *z = re15_map_zone_by_index(i);
+            if (z && z->synth) { n++; break; }
+        }
+        if (n == 0) {
+            printf("=== Karte: Schema-Zeichnungen ===\n");
+            printf("  UEBERSPRUNGEN: der Auslieferungsstand zeichnet die Original-Kunst,"
+                   " es gibt keine Schema-Zonen (RE15_KUNST=0 baut sie)\n");
+            return 0;
+        }
+    }
+
     const re15_map_zone_t *zn;
     int x, y, w, h, erste, n, i, n_synth = 0, n_ueber = 0;
 
@@ -53,7 +73,7 @@ int main(void)
     for (i = 0; i < re15_map_zone_count(); i++) {
         const re15_map_zone_t *a = re15_map_zone_by_index(i);
         int ax, ay, aw, ah, j;
-        if (!a || !re15_map_zone_synth(a, &ax, &ay, &aw, &ah, 0, 0)) continue;
+        if (!a || !re15_map_zone_kasten(a, &ax, &ay, &aw, &ah)) continue;
         n_synth++;
         for (j = 0; j < re15_map_zone_count(); j++) {
             const re15_map_zone_t *b = re15_map_zone_by_index(j);

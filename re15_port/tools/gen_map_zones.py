@@ -1772,15 +1772,23 @@ def main():
     # nicht die SPRT-Kacheln der Originalkarte.)
     # RE15_KUNST=0 stellt die gerechnete Grundriss-Loesung wieder her,
     # RE15_KUNST=misch zeichnet zusaetzlich die Raeume, die das Original nicht malt.
-    # ⛔ EIN SCHRITT FEHLT NOCH VOR DEM UMSCHALTEN: die RE2-TUERMARKEN loesen auf der
-    # Kunst nicht auf. Gemessen 2026-09-04: von 184 Tueren tragen nur 12 eine sichtbare
-    # Marke, 172 finden gar keine - die 182 Marken der Tabelle verbinden die Zonen der
-    # GRUNDRISS-Anordnung, nicht die der gemalten Rechtecke. Der Nutzer hat die Umstellung
-    # ausdruecklich MIT "Tuer und Treppenmarkern von Resident Evil 2" verlangt; ohne sie
-    # waere die Kunst gegenueber dem heutigen Stand eine Verschlechterung. Deshalb bleibt
-    # sie bis dahin opt-in - nicht aus Zweifel an der Entscheidung, sondern weil die
-    # Auslieferung sonst weniger koennte als das, was bestellt wurde.
-    KUNST_VOR = os.environ.get('RE15_KUNST') in ('1', 'misch')
+    # ⛔ SEIT 2026-09-04 IST DIE ORIGINAL-KUNST DER AUSLIEFERUNGSSTAND.
+    # Nutzer: "ich moechte das Original Kartenmaterial nutzen mit Tuer und Treppenmarkern
+    # von Resident Evil 2 und du musst es nur gebacken bekommen den Spieler Marker darauf
+    # korrekt zu positionieren". Das ist das RE2-Modell: die Kunst ist das BILD, die
+    # Position kommt aus einer eigenen Abbildung je Zone (eichung).
+    #
+    # Der Weg dahin steht in BEFUND.md §32-§38. Die drei Bausteine:
+    #   1. Die Zuordnung Zone -> gemaltes Rechteck kommt AUS DEN ZEILEN (@0x800768b0 bzw.
+    #      aus der Tuerkette hergeleitet), nicht aus einer Kostenfunktion - sonst
+    #      widersprechen sich Zuordnung und Projektion. Die Heuristik bleibt Rueckfall.
+    #   2. Jede zugeordnete Zone bekommt ihre Zeile als eigene Abbildung.
+    #   3. to_map() folgt dem gemalten Rechteck statt dem nicht gezeichneten Grundriss.
+    #
+    # Gemessen: 89 von 96 Raeumen auf der Karte, 80 sichtbar rot, 164 von 207 Tueren mit
+    # Symbol, Marker 80/80 im eigenen Rechteck und 0 im fremden.
+    # RE15_KUNST=0 stellt die gerechnete Grundriss-Loesung wieder her.
+    KUNST_VOR = os.environ.get('RE15_KUNST') != '0'
 
     # ================================================================================
     # ⛔ MIT DER KUNST KOMMT DIE ZUORDNUNG AUS DEN ZEILEN, NICHT AUS EINER KOSTENFUNKTION
