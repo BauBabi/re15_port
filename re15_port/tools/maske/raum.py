@@ -319,7 +319,15 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # der Kamerakoerper nicht. Keine Messschiene konnte das sehen
             # (integration_pri_masken prueft die Tiefe nicht, verdeckungskarte.py zaehlt
             # nur ZUVIEL Verdeckung), deshalb sagt es das Werkzeug jetzt beim Bauen.
-            if o.get("fuss") is None and not o.get("ebene"):
+            # ⛔ "spalten": true macht die Spaltenregel zur ABSICHT statt zum Zufall.
+            # Sie ist RICHTIG fuer alles, was diagonal von der Kamera weglaeuft (dort
+            # hat jede Bildspalte ihre eigene Entfernung) und FALSCH fuer alles, was
+            # aufrecht steht und oben breiter ist als unten. Beide Faelle gibt es im
+            # Baum: ROOM1130 Cut 3 (diagonale Wandkante, Spannweite 182 px) und
+            # ROOM1140 Cut 2 (Kamerastativ, der gemeldete Fehler). Wer keins von
+            # beidem angibt, hat die Frage nicht beantwortet - deshalb die Warnung.
+            if (o.get("fuss") is None and not o.get("ebene")
+                    and not o.get("spalten")):
                 print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
                       'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
