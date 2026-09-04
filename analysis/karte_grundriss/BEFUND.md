@@ -2250,3 +2250,59 @@ Kernforderung. Die verbleibende Ungenauigkeit ist der Sprung beim Türdurchtritt
 3. **Nur 38 von 106 Slots sind vom Original geeicht.** 74 % der Übergänge hängen an
    mindestens einer hergeleiteten Zeile mit je ~7 px Eigenfehler (§35). Das ist die
    harte Grenze der Datenlage.
+
+
+## §37 Umschalten: alles steht bis auf die RE2-Türmarken
+
+Nutzer: *„umschalten"*. Gemacht, gemessen — und **ein** Teil fehlt noch, ausgerechnet der,
+den er ausdrücklich mitbestellt hat.
+
+### Was jetzt funktioniert
+
+**Zwei Durchgänge in der Kachel-Schleife.** Die gemalten Rechtecke überlappen einander
+stellenweise (der Künstler zeichnet Flure in Säle hinein), und die Op-Liste wird von
+hinten gerastert — früher eingetragen heißt oben. In Listenreihenfolge gezeichnet
+verschwand das **rote** Rechteck unter einem grünen Nachbarn mit kleinerem Index. Die
+Schema-Zeichnungen lösen das seit v0.3.70 mit zwei Durchgängen; die Kachel-Schleife hatte
+es nie nötig, solange kein Rechteck einen Zustand trug.
+
+| | vorher | nachher |
+|---|---|---|
+| Räume sichtbar rot | 61 von 75 | **70 von 75** |
+| Türen mit beidseitig rotem Raum | 94 von 143 | **133 von 143** |
+| Marker im eigenen Rechteck | 61/61 | **70/70** |
+| Marker im fremden Raum | 0 | **0** |
+
+Die fünf Reste sind benannt: **ROOM1060 und ROOM1080 teilen sich ein gemaltes Rechteck**,
+ROOM3080/ROOM4020/ROOM50D0 sind Einzelfälle.
+
+### ⛔ Der Blocker: die Türmarken lösen auf der Kunst nicht auf
+
+```
+[Symbole] 184 Tueren, 12 mit SICHTBAREM Symbol im Bild
+[Symbole] Identitaet 9 | Rueckfall 3 | Zufall 0 | ohne Marke 172
+```
+
+Zum Vergleich der Auslieferungsstand: **229 von 229** Türen mit Symbol, 0 ohne Marke.
+
+Die 182 Marken der Tabelle **existieren** — sie verbinden aber die Zonen der
+**Grundriss**-Anordnung, nicht die der gemalten Rechtecke. Die Identitäts-Auflösung
+(„welche Marke verbindet meine Zone mit einer Zone des Zielraums") findet deshalb nichts.
+
+Eine naheliegende Ursache wurde geprüft und **ausgeschlossen**: die Unterdrückung
+`kachel_zeigt_tuer()` (eine Marke entfällt, wenn die gemalte Kachel dort schon eine Tür
+zeigt). Abgeschaltet ändert sich **nichts** — sie filterte auf der Kunst ohnehin 0 Marken.
+
+### Warum trotzdem nicht umgeschaltet wurde
+
+Der Auftrag lautete „Original-Kartenmaterial **mit Tür- und Treppenmarkern von Resident
+Evil 2**". Eine Karte ohne Türmarken wäre gegenüber dem heutigen Stand (229/229) eine
+Verschlechterung — die Umstellung bliebe hinter dem zurück, was bestellt wurde. Sie bleibt
+deshalb bis dahin opt-in (`RE15_KUNST=1`); das ist kein Zweifel an der Entscheidung,
+sondern die Weigerung, weniger auszuliefern als verlangt.
+
+**Der nächste Schritt ist eng umrissen:** die Marken müssen für die Kunst-Zonen erzeugt
+bzw. auf sie umgehängt werden — dieselbe Türkette, aber die Position auf den gemalten
+Rechtecken statt auf den Grundriss-Kästen. `snap_wall()` liest dafür schon die gemalte
+Kachel (`DATA/MAP0x.PIX`, Palettenindex 0 = außerhalb); das Gegenstück `snap_grundriss()`
+wird dort nicht gebraucht.

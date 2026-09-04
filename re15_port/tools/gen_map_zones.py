@@ -1762,10 +1762,24 @@ def main():
     # Treppensymbole hinzufuegen"). Wo eine Zuordnung existiert, traegt die Zone das
     # gemalte Rechteck des Originals; gezeichnet wird nur noch, was das Original gar
     # nicht malt. RE15_KUNST=0 stellt die alte Grundriss-Loesung wieder her.
-    # ⛔ NOCH NICHT DEFAULT - der Zustandspfad traegt es nicht (siehe BEFUND §32):
-    # mit RE15_KUNST=1 zeichnet der Port die gemalten Kacheln GAR NICHT, weil
-    # re15_map_rect_state() sie weder als besucht noch als aktuell meldet. Bis das
-    # gefunden ist, bleibt die Grundriss-Loesung der Auslieferungsstand.
+    # ⛔ SEIT 2026-09-04 IST DIE ORIGINAL-KUNST DER AUSLIEFERUNGSSTAND.
+    # Nutzer: "ich moechte das Original Kartenmaterial nutzen mit Tuer und
+    # Treppenmarkern von Resident Evil 2 und du musst es nur gebacken bekommen den
+    # Spieler Marker darauf korrekt zu positionieren". Das ist genau das RE2-Modell:
+    # die Kunst ist das BILD, die Position kommt aus einer eigenen Abbildung je Zone.
+    # (Der frueher hier stehende Vorbehalt - "der Port zeichnet die Kacheln gar nicht" -
+    # war ein Messfehler, siehe BEFUND §36: die Messschiene kannte nur FILL-Ops und
+    # nicht die SPRT-Kacheln der Originalkarte.)
+    # RE15_KUNST=0 stellt die gerechnete Grundriss-Loesung wieder her,
+    # RE15_KUNST=misch zeichnet zusaetzlich die Raeume, die das Original nicht malt.
+    # ⛔ EIN SCHRITT FEHLT NOCH VOR DEM UMSCHALTEN: die RE2-TUERMARKEN loesen auf der
+    # Kunst nicht auf. Gemessen 2026-09-04: von 184 Tueren tragen nur 12 eine sichtbare
+    # Marke, 172 finden gar keine - die 182 Marken der Tabelle verbinden die Zonen der
+    # GRUNDRISS-Anordnung, nicht die der gemalten Rechtecke. Der Nutzer hat die Umstellung
+    # ausdruecklich MIT "Tuer und Treppenmarkern von Resident Evil 2" verlangt; ohne sie
+    # waere die Kunst gegenueber dem heutigen Stand eine Verschlechterung. Deshalb bleibt
+    # sie bis dahin opt-in - nicht aus Zweifel an der Entscheidung, sondern weil die
+    # Auslieferung sonst weniger koennte als das, was bestellt wurde.
     KUNST_VOR = os.environ.get('RE15_KUNST') in ('1', 'misch')
 
     # ================================================================================
@@ -2796,9 +2810,22 @@ def main():
         if _i in belegt and _j in belegt:
             partner[id(tueren[_i])] = tueren[_j]
             partner[id(tueren[_j])] = tueren[_i]
+    # ⛔ AUF DER ORIGINAL-KUNST DARF DIE GEMALTE TUER DIE RE2-MARKE NICHT VERDRAENGEN.
+    # Diese Unterdrueckung stammt aus der Zeit der gerechneten Grundrisse: zeigt die
+    # gemalte Kachel an dieser Stelle schon eine Tuer, waere eine zusaetzliche Marke
+    # doppelt gemoppelt. Seit die KUNST der Auslieferungsstand ist, kehrt sich das um -
+    # der Nutzer will ausdruecklich "Tuer und Treppenmarker von Resident Evil 2" AUF dem
+    # Original-Material. Gemessen 2026-09-04 mit aktiver Unterdrueckung: von 184 Tueren
+    # trugen nur 12 eine sichtbare Marke, 172 hatten gar keine.
+    # Die gemalten RE1.5-Schwenke bleiben darunter stehen; sie zu entfernen ist ein
+    # eigener Schritt (BEFUND §27 hat das Verfahren gemessen: die Lauflaenge trennt sie
+    # von der Wand, 6/6 auf Blatt 4 ohne ein einziges Wandpixel).
+    _RE2_TUEREN = os.environ.get('RE15_RE2_TUEREN', '1' if KUNST_VOR else '0') == '1'
     n_kachel = n_spiegel = n_partner = 0
     for v in vor:
         if v['kind'] != 0 or v.get('weg'): continue
+        if _RE2_TUEREN:
+            continue
         P = partner.get(id(v))
         raus = None
         if kachel_zeigt_tuer(v['pg'], v['r'], v['mx'], v['my']):

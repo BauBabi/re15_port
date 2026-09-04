@@ -1997,11 +1997,24 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         {
             int cnt = (int)mu16(0x80076840u + (uint32_t)st->map_page * 8u);
             uint32_t lp = mu32(0x80076844u + (uint32_t)st->map_page * 8u);
+            int durchgang_r;
+            /* ⛔ ZWEI DURCHGAENGE: ERST DER AKTUELLE RAUM, DANN DER REST.
+             * Die Op-Liste wird von HINTEN gerastert (inv_render_pc.c), frueher
+             * eingetragen heisst also OBEN. Die gemalten Rechtecke ueberlappen einander
+             * stellenweise - der Kuenstler zeichnet Flure in Saele hinein -, und in
+             * Listenreihenfolge gezeichnet verschwand das ROTE Rechteck unter einem
+             * gruenen Nachbarn mit kleinerem Index. Gemessen 2026-09-04: 14 Raeume
+             * hatten eine Zone und trotzdem kein sichtbares Rot (ROOM1030, ROOM1040,
+             * ROOM3030, ROOM5040 ...). Die Schema-Zeichnungen loesen das seit v0.3.70
+             * genauso; die Kachel-Schleife hatte es nur nie noetig, solange kein
+             * Rechteck einen Zustand trug. */
+            for (durchgang_r = 0; durchgang_r < 2; durchgang_r++)
             for (i = 0; i < cnt; i++) {
                 uint32_t a = lp + (uint32_t)i * 12u;
                 int rs = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
+                if ((rs == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0)) continue;
                 if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
                 /* ⛔ KORREKTUR 2026-09-03, instruktions-verifiziert: DAS ORIGINAL HAT
                  * GAR KEIN BESUCHT-GATE. Hier stand, es zeichne ein Rechteck nur bei
