@@ -1,3 +1,32 @@
+# RE1.5 Port — v0.5.3 (Early Preview)
+
+**Die Ecke.** Ich habe nachgemessen, was dort passiert: an der rechten Tischecke wird
+dein **Bodenschatten** ueber die Tischkante gemalt. Der Bildpunkt gehoert zur Maske und
+ist auch undurchsichtig — die Maske zeichnet den Rand also, aber der Schatten gewinnt
+die Sortierung.
+
+Ursache war eine falsche Annahme in meiner Tiefenrechnung: sie schneidet den Sehstrahl
+mit dem **Boden**. Fuer die untere Kante eines Tisches ist das falsch — dort ist die
+sichtbare Flaeche die **Tischplatte**, also eine erhoehte Ebene. Der Bodenschnitt landet
+dahinter, die Maske wird zu fern. In der Bildmitte faellt das nicht auf (dort laeuft die
+Tischkante unten aus dem Bild), an der gerundeten Ecke schlaegt es durch.
+
+Gemessen statt geraten — noetig war eine Tiefe unter 85,9:
+
+| Bezugsebene | Tiefe an der Ecke | Schatten verdeckt |
+|---|---|---|
+| Boden | 97 | nein |
+| −400 | 87 | nein |
+| −600 | 82 | ja |
+| **−700** | **75** | **ja, mit Abstand** |
+
+−700 passt auch zur Groessenordnung: du bist 1500 Einheiten hoch, ein Konferenztisch
+also knapp die Haelfte.
+
+Deine Freistellung ist unveraendert punktgenau eingebaut: 26 526 von 26 526 Punkten.
+
+---
+
 # RE1.5 Port — v0.5.2 (Early Preview)
 
 **Du hattest recht — der Fehler lag in meinem Einbau, nicht in deiner Freistellung.**
