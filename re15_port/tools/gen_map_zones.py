@@ -1962,6 +1962,64 @@ def main():
                 for _r2 in rows:
                     if (_r2[0] & 0xFFF0) == _d['dest'] and _r2[2] == _zp:
                         _nachbar.append(_R[_r2[3]])
+            # ⛔ EINE EXAKT PASSENDE FLAECHE DARF EINEN SCHWAECHEREN BEWOHNER VERDRAENGEN.
+            # Nutzer-Anker 2026-09-04: "Du hast unten in 3F 2 Tueren bei der Map von
+            # RE 1.5 die nach draussen fuehren. Das sind GENAU DIE 2 Tueren die du das
+            # oben gesehen hast. an die Muss das Rechteck quasi anschliessen."
+            # Nachgemessen mit der Symbol-Erkennung (tools/tuersymbole.py): auf Blatt 4
+            # traegt Rect 3 genau diese zwei gemalten Tueren - und es ist 48x24, also
+            # EXAKT die Groesse von ROOM1170s Dachflaeche (Blatt 5 Rect 0). Der Kuenstler
+            # hat den Bereich dort also selbst gezeichnet; er war nur ROOM1120
+            # zugeordnet, dessen Kasten 42x47 misst und nicht exakt passt.
+            # Regel: passt die Groesse EXAKT und die des Bewohners nicht, wird getauscht -
+            # der Bewohner zieht auf sein bestes freies Rechteck.
+            _tausch = None
+            for _ri, (_rx, _ry, _rw, _rh) in enumerate(_R):
+                if _rw != int(_sw) or _rh != int(_sh):
+                    continue
+                if _ri not in _belegt2:
+                    continue
+                _bew = None
+                for _r2 in rows:
+                    if _r2[2] == _zp and _r2[3] == _ri and not (len(_r2) > 7 and _r2[7]):
+                        _bew = (_r2[0] & 0xFFF0, _r2[4])
+                        break
+                if _bew is None:
+                    continue
+                _bR = rects(_zp)
+                _bx0, _bx1, _bz0, _bz1 = zinfo[_bew[0]][_bew[1]]
+                _bo = _zeilen.get(_bew[0])
+                if not _bo:
+                    continue
+                _bw = abs(_GM.karte_x(_bx1, 0, _bo[2]) - _GM.karte_x(_bx0, 0, _bo[2]))
+                _bh = abs(_GM.karte_y(_bz1, 0, _bo[3]) - _GM.karte_y(_bz0, 0, _bo[3]))
+                if _bw == _rw and _bh == _rh:
+                    continue          # der Bewohner passt selbst exakt - kein Tausch
+                _frei = None
+                for _fri, (_fx2, _fy2, _fw, _fh) in enumerate(_bR):
+                    if _fri in _belegt2 or _fri == _ri:
+                        continue
+                    _g = (min(_bw, _fw) / float(max(_bw, _fw))) *                          (min(_bh, _fh) / float(max(_bh, _fh)))
+                    if _frei is None or _g > _frei[0]:
+                        _frei = (_g, _fri)
+                if _frei and _frei[0] >= 0.5:
+                    _tausch = (_ri, _bew, _frei[1])
+                    break
+            if _tausch:
+                _ri2, _bew, _neu_ri = _tausch
+                for _k in range(len(rows)):
+                    if (rows[_k][2] == _zp and rows[_k][3] == _ri2 and
+                            (rows[_k][0] & 0xFFF0) == _bew[0] and rows[_k][4] == _bew[1]):
+                        rows[_k] = rows[_k][:3] + (_neu_ri,) + rows[_k][4:]
+                assign[_bew] = (_zp, _neu_ri)
+                for var in (0, 1):
+                    rows.append((_b + var, zinfo[_b][_zi], _zp, _ri2, _zi,
+                                 zid_von[(_b, _zi)], 0, 1))
+                print("   Tausch auf Blatt %d: Rect %d geht an ROOM%04X z%d "
+                      "(exakte Groesse), ROOM%04X z%d zieht auf Rect %d"
+                      % (_zp, _ri2, _b, _zi, _bew[0], _bew[1], _neu_ri))
+                _n_gast += 1
+                continue
             _best = None
             for _ri, (_rx, _ry, _rw, _rh) in enumerate(_R):
                 if _ri in _belegt2:

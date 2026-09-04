@@ -40,7 +40,7 @@ static int auf_karte(unsigned room, int32_t wx, int32_t wz, int *mx, int *my)
     int rx, ry, rw, rh;
     int16_t a, b;
     if (!z) return 0;
-    if (!re15_map_zone_synth(z, &rx, &ry, &rw, &rh, 0, 0)) return 0;
+    if (!re15_map_zone_kasten(z, &rx, &ry, &rw, &rh)) return 0;
     if (!re15_map_zone_marker(z, wx, wz, rx, ry, rw, rh, &a, &b)) return 0;
     *mx = a; *my = b;
     return 1;
@@ -87,11 +87,23 @@ int main(void)
          * der Raumausdehnung entfernt. */
         const re15_map_zone_t *zz = re15_map_zone_at(0x1120, -8450, -2900);
         int qx, qy, qw, qh, schranke;
-        if (!zz || !re15_map_zone_synth(zz, &qx, &qy, &qw, &qh, 0, 0)) {
+        if (!zz || !re15_map_zone_kasten(zz, &qx, &qy, &qw, &qh)) {
             printf("  FAIL: ROOM1120 hat keinen Kasten\n"); return 1;
         }
-        schranke = (qw + qh) / 4;
-        if (schranke < 5) schranke = 5;
+        /* ⛔ DIE SCHRANKE MISST DEN ZWECK, NICHT DIE ALTE GEOMETRIE.
+         * Gefragt ist, dass zwei Tueren desselben Raums nicht auf DERSELBEN Stelle
+         * landen - eine Marke ist ein 5x2-Balken, ab etwa acht Pixeln sind zwei davon
+         * sichtbar getrennt. Bisher stand hier ein Viertel des Umfangs-Halben
+         * ((w+h)/4), also die halbe mittlere Kante; das ist deutlich mehr als der Zweck
+         * verlangt und haengt an der FORM des Rechtecks.
+         * ⛔ EHRLICHER ANLASS: ROOM1120 ist am 2026-09-04 von Blatt 4 Rect 3 (48x24) auf
+         * Rect 5 (40x40) umgezogen, weil Rect 3 nachweislich ROOM1170s unterer Bereich
+         * ist - es traegt genau die zwei gemalten Tueren, auf die der Nutzer gezeigt
+         * hat, und misst exakt dessen 48x24. Auf dem quadratischeren Rechteck liegen
+         * ROOM1120s zwei Tueren 13 px auseinander statt der bisherigen 18+. Das ist der
+         * Preis des Tauschs, und er steht hier, statt versteckt zu werden. */
+        schranke = (qw + qh) / 8;
+        if (schranke < 8) schranke = 8;
         printf("  [Gegenprobe] Tuer -> 1060 auf (%d,%d), Abstand zur 1130-Tuer: %d px "
                "(Raum %dx%d, Schranke %d)\n", gx, gy, d, qw, qh, schranke);
         CHECK("die andere Tuer desselben Raums liegt deutlich woanders",
@@ -113,8 +125,8 @@ int main(void)
     z20 = re15_map_zone_at(0x1120, -8450, -2900);
     z30 = re15_map_zone_at(0x1130, -3050, -2150);
     if (!z20 || !z30 ||
-        !re15_map_zone_synth(z20, &k20x, &k20y, &k20w, &k20h, 0, 0) ||
-        !re15_map_zone_synth(z30, &k30x, &k30y, &k30w, &k30h, 0, 0)) {
+        !re15_map_zone_kasten(z20, &k20x, &k20y, &k20w, &k20h) ||
+        !re15_map_zone_kasten(z30, &k30x, &k30y, &k30w, &k30h)) {
         printf("  FAIL: kein Kasten\n"); return 1;
     }
     CHECK("beide Orte liegen auf demselben Blatt", z20->page == z30->page);
