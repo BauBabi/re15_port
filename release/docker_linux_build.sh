@@ -30,6 +30,33 @@ fi
 # eingebauten Wayland-Dekorationspfad zurueck.)
 if [[ "$(id -u)" == "0" ]] && ! command -v gcc >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
+    # ⛔ SNAPSHOT STATT LEBENDEM SPIEGEL (2026-09-04). Debian 11 ist in Rente; der
+    # normale Spiegel liefert fuer bullseye noch einen INDEX, aber nicht mehr jedes
+    # darin genannte Paket. Fuenfmal reproduziert, immer dieselben zwei Dateien:
+    #     E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
+    #     E: Failed to fetch .../libglx-mesa0_20.3.5-1+deb11u1_amd64.deb    404
+    # snapshot.debian.org haelt JEDEN historischen Stand dauerhaft vor - Index und
+    # Pool passen dort per Konstruktion zusammen. Das macht den Release-Build zugleich
+    # REPRODUZIERBAR: derselbe Zeitstempel liefert in einem Jahr dieselben Pakete.
+    # Der Zeitstempel liegt in der Lebenszeit von bullseye/LTS und enthaelt die oben
+    # genannten Versionen. Check-Valid-Until muss aus, weil die Release-Datei des
+    # Snapshots aus Sicht von heute abgelaufen ist.
+    # Der Zeitstempel muss MINDESTENS so neu sein wie das Basis-Image, sonst
+    # verlangt es Herabstufungen: debian:11 (11.11) traegt libudev1 in deb11u8,
+    # der Snapshot vom 2025-02-01 kennt nur deb11u6 ->
+    #   libudev-dev : Depends: libudev1 (= 247.3-7+deb11u6) but ...u8 is to be installed
+    # Durchprobiert mit der VOLLEN Paketliste: 2025-02-01 und 2026-01-01 fallen an
+    #   libudev-dev : Depends: libudev1 (= ...deb11u6) but ...u8 is to be installed
+    # 2026-06-01 faellt an
+    #   libc6-dev : Depends: libc6 (= 2.31-13+deb11u13) but ...u14 is to be installed
+    # 2026-07-01, -08-01 und -09-01 gehen vollstaendig durch. Genommen: der aelteste
+    # davon, damit der Stand so nah wie moeglich am ausgelieferten Deck-Binary bleibt.
+    SNAP=20260701T000000Z
+    { echo "deb http://snapshot.debian.org/archive/debian/$SNAP/ bullseye main"
+      echo "deb http://snapshot.debian.org/archive/debian-security/$SNAP/ bullseye-security main"
+    } > /etc/apt/sources.list
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
+    echo 'Acquire::Retries "5";' >> /etc/apt/apt.conf.d/99snapshot
     PKGS="build-essential ninja-build git ca-certificates wget libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols libasound2-dev libpulse-dev libdbus-1-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev"
     apt-get update -qq
     if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
