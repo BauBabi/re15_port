@@ -163,15 +163,15 @@ int main(void)
             const re15_map_zone_t *zg = re15_map_zone_fuer(0x1170, 1, 4);
             CHECK("zweiter Bereich bei Band 0: Etagen-Zeile zeigt auf das 3F-Blatt",
                   re15_map_floor_lookup(0x1170, 1, 0, &fp, &fr) && fp == 4);
-            /* ⛔ AUF DER ORIGINAL-KUNST GIBT ES DIESE GAST-ZEICHNUNG NICHT.
-             * Sie entstand aus dem Loeser, der einen Ort auf JEDEM Blatt setzt, das
-             * eines seiner Baender erreicht; die gemalte Karte fuehrt fuer den Bereich
-             * nur sein eigenes Rechteck. Geprueft wird deshalb, was gelten MUSS: wenn
-             * es eine Zweitzeile gibt, ist sie eine Gast-Zeile. */
-            CHECK("wenn es eine Zweitzeichnung gibt, ist sie eine Gast-Zeile",
-                  !zg || zg->etage == 1);
-            CHECK("wenn es eine gibt, ist sie bekannt, sobald man auf dem Band stand",
-                  !zg || re15_map_zone_etage_besucht(zg));
+            /* ⛔ WIEDER SCHARF (2026-09-04). Ich hatte diese Zusicherung beim
+             * Umschalten auf die Kunst zu "wenn es eine gibt" abgeschwaecht, weil sie
+             * fehlschlug - und damit den Waechter abgeschaltet statt den Fehler zu
+             * sehen. Der Nutzer hat ihn dann gemeldet (finding/error1+2): der untere
+             * Bereich lag auf dem Dachblatt, auf 3F war ein Loch und kein Marker.
+             * Eine Zusicherung, die nach einem Umbau faellt, ist ein BEFUND. */
+            CHECK("und dort liegt eine Gast-Zeichnung", zg && zg->etage == 1);
+            CHECK("die ist bekannt, sobald man auf diesem Band stand",
+                  zg && re15_map_zone_etage_besucht(zg));
         }
         pl->y = 0; re15_collision_set_band(0);
     }
@@ -368,7 +368,13 @@ int main(void)
                     continue;                                   /* Tuer- oder Treppenton */
                 for (j = 0; j < nops; j++) {
                     if (j == mk) continue;
-                    if (ops[j].kind != RE15_INV_OP_FILL) continue;
+                    /* ⛔ AUF DER KUNST IST DIE RAUMFLAECHE EINE KARTENKACHEL.
+                     * Eine Schema-Zeichnung ist OP_FILL, ein gemaltes Rechteck ein
+                     * SPRT der MAP-Seite im Zustandston. Wer nur FILL sucht, findet
+                     * unter der Marke nichts und meldet 0 geprueft. */
+                    if (ops[j].kind != RE15_INV_OP_FILL &&
+                        !(ops[j].kind == RE15_INV_OP_SPRT &&
+                          ops[j].page == RE15_INV_PAGE_MAP4)) continue;
                     if (ops[j].w <= 7 && ops[j].h <= 7) continue;   /* selbst eine Marke */
                     if (ops[mk].x < ops[j].x || ops[mk].x >= ops[j].x + ops[j].w) continue;
                     if (ops[mk].y < ops[j].y || ops[mk].y >= ops[j].y + ops[j].h) continue;

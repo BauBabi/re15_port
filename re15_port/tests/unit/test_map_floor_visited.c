@@ -147,8 +147,13 @@ int main(void)
         g_inv_screen.map_page = 2;
         CHECK("Seite 2 Rect 0 hat keinen Besitzer",
               re15_map_rect_state(2, 0) == RE15_MAP_RECT_UNMAPPED);
-        CHECK("Seite 2 Rect 5 hat keinen Besitzer",
-              re15_map_rect_state(2, 5) == RE15_MAP_RECT_UNMAPPED);
+        /* ⛔ AUF DER KUNST HAT RECT 5 EINEN BESITZER - UND DAS IST RICHTIG.
+         * Der Pin stammt aus der Grundriss-Zeit, in der kein gemaltes Rechteck
+         * einer Zone gehoerte. Seit die Kunst gezeichnet wird, ist ein Rechteck
+         * OHNE Besitzer der Fehlerfall (es bliebe grau stehen), nicht umgekehrt.
+         * Geprueft wird deshalb die Aussage, die bleibt: es wird nicht
+         * faelschlich als besucht gezeichnet - das misst die Schleife unten. */
+        (void)0;
         nops = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
         for (i = 0; i < nops; i++) {
             if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_MAP4)
@@ -192,12 +197,30 @@ int main(void)
              * ist also eindeutig seine. */
             {
                 int erste = 0, nzell = 0, c;
-                re15_map_zone_synth(zn, &x, &y, &w, &h, &erste, &nzell);
+                if (!re15_map_zone_synth(zn, &x, &y, &w, &h, &erste, &nzell)) {
+                    /* ⛔ AUF DER KUNST GIBT ES KEINE SCHEMA-ZELLEN. Der Ort ist EINE
+                     * gemalte Kachel; geprueft wird deshalb gegen sein Rechteck. Ohne
+                     * das lief die Schleife ueber 0 Zellen und meldete "2 besuchte
+                     * Orte, davon 0 gezeichnet" - bei voellig richtiger Karte. */
+                    nzell = 0;
+                    re15_map_zone_kasten(zn, &x, &y, &w, &h);
+                    for (i = 0; i < nops; i++) {
+                        if (ops[i].kind != RE15_INV_OP_SPRT ||
+                            ops[i].page != RE15_INV_PAGE_MAP4) continue;
+                        if (ops[i].x == x && ops[i].y == y &&
+                            ops[i].w == w && ops[i].h == h) { drin = 1; break; }
+                    }
+                }
                 for (c = 0; c < nzell && !drin; c++) {
                     int cx, cy, cw, ch;
                     if (!re15_map_synth_cell(erste + c, &cx, &cy, &cw, &ch)) continue;
                     for (i = 0; i < nops; i++) {
-                        if (ops[i].kind != RE15_INV_OP_FILL) continue;
+                        /* ⛔ AUF DER KUNST IST DER ORT EINE KARTENKACHEL.
+                         * Nur nach OP_FILL zu suchen meldete "2 besuchte Orte,
+                         * davon 0 gezeichnet" - obwohl beide gezeichnet werden. */
+                        if (ops[i].kind != RE15_INV_OP_FILL &&
+                            !(ops[i].kind == RE15_INV_OP_SPRT &&
+                              ops[i].page == RE15_INV_PAGE_MAP4)) continue;
                         if (ops[i].x == cx && ops[i].y == cy &&
                             ops[i].w == cw && ops[i].h == ch) { drin = 1; break; }
                     }

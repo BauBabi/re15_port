@@ -1914,6 +1914,77 @@ def main():
                 rows.append((b + var, bb, pr[0], pr[1], i, zid))
             zid_von[(b, i)] = zid
             zid += 1
+
+    # ================================================================================
+    # ⛔ EINE KOPIE AUF DEM ANDEREN BLATT - KEIN UMZUG.
+    #
+    # Nutzer 2026-09-04 (finding/error1, error2), woertlich: "wir wollen im Prinzip den
+    # linken Teil der Roof Karte einfach quasi kopiert/eingesetzt haben in 3F dort wo in
+    # error2 die Luecke ist." Und auf Nachfrage: "ich habe auch nichts von umzug gesagt,
+    # sondern von Kopie".
+    #
+    # ⛔ EIN UMZUG IST NACHWEISLICH FALSCH und wurde am 2026-08-31 schon einmal
+    # zurueckgenommen (siehe der Kommentar bei zpos weiter unten): ROOM1170s zweiter
+    # Bereich ist EIN Kollisions-Zusammenhang - kleiner Raum OBEN, Treppe, Absatz UNTEN.
+    # Wer ihn ganz nach unten legt, schaltet die Karte schon beim Betreten des oberen
+    # Raums um. Der Bereich gehoert zu BEIDEN Ebenen; die Umschaltung haengt am BAND.
+    #
+    # Ein Ort, dessen Band auf ein anderes Blatt fuehrt, braucht dort also eine ZWEITE
+    # Zeile (etage = 1). In der Grundriss-Loesung lieferte sie der Loeser; mit der Kunst
+    # entfiel sie ersatzlos, und die Etagen-Tabelle zeigte auf ein rect 255, das es nicht
+    # mehr gibt - daher das Loch auf 3F und der fehlende Marker.
+    #
+    # ⛔ DIE EIGENE ZEILE GILT AUF EINEM FREMDEN BLATT NICHT: sie setzt den Raum auf SEIN
+    # Blatt. Anker sind stattdessen die NACHBARN dort (der Ort haengt an einer Tuer, sein
+    # Rechteck muss deren beruehren); die FORM entscheidet unter den Kandidaten, denn der
+    # Ort ist auf beiden Blaettern derselbe.
+    # ================================================================================
+    if KUNST_VOR:
+        _n_gast = 0
+        for (_b, _zi, _band, _zp) in ETAGEN:
+            if (_b, _zi) not in zid_von:
+                continue
+            _heim = assign.get((_b, _zi))
+            if _heim is None or _heim[0] == _zp:
+                continue                      # schon auf diesem Blatt zu Hause
+            if any(r[0] == _b and r[2] == _zp and r[4] == _zi for r in rows):
+                continue                      # Zweitzeile steht schon
+            _R = rects(_zp)
+            if not _R:
+                continue
+            _belegt2 = set(r[3] for r in rows if r[2] == _zp and not (len(r) > 7 and r[7]))
+            _heimR = rects(_heim[0])[_heim[1]]
+            _sw, _sh = float(_heimR[2]), float(_heimR[3])
+            _nachbar = []
+            for _d in doors_all.get(_b, []):
+                if _d['rw'] == 0 and _d['rd'] == 0:
+                    continue
+                for _r2 in rows:
+                    if (_r2[0] & 0xFFF0) == _d['dest'] and _r2[2] == _zp:
+                        _nachbar.append(_R[_r2[3]])
+            _best = None
+            for _ri, (_rx, _ry, _rw, _rh) in enumerate(_R):
+                if _ri in _belegt2:
+                    continue
+                _ber = 0
+                for (_nx, _ny, _nw, _nh) in _nachbar:
+                    if (min(_rx + _rw, _nx + _nw) - max(_rx, _nx) >= -2 and
+                            min(_ry + _rh, _ny + _nh) - max(_ry, _ny) >= -2):
+                        _ber = 1
+                        break
+                _fx = min(_sw, _rw) / max(_sw, _rw)
+                _fy = min(_sh, _rh) / max(_sh, _rh)
+                _wert = (_fx * _fy) ** 0.5 + (0.5 if _ber else 0.0)
+                if _best is None or _wert > _best[0]:
+                    _best = (_wert, _ri)
+            if not _best or _best[0] < 0.5:
+                continue
+            for var in (0, 1):
+                rows.append((_b + var, zinfo[_b][_zi], _zp, _best[1], _zi,
+                             zid_von[(_b, _zi)], 0, 1))
+            _n_gast += 1
+        print("Zweitzeilen auf fremden Blaettern (Kunst-Kopie): %d" % _n_gast)
+
     o = []
     o.append("/* GENERIERT von tools/gen_map_zones.py - KARTEN-ZONEN.")
     o.append(" * Ein RDT-Raum ist nicht immer EIN Ort: 26 der 103 Basis-Raeume zerfallen in")
@@ -1940,6 +2011,17 @@ def main():
         for i, bb in enumerate(zs):
             pr = assign.get((b, i))
             if pr is not None: zpos[(b, i)] = (bb, pr[0], pr[1])
+    # ⛔ UND DASSELBE JE BLATT - SONST BLEIBT DIE TUER AUF DER FALSCHEN ETAGE.
+    # Ein Ort kann auf zwei Blaettern gezeichnet sein (Heimat + Zweitzeile). Die MARKE
+    # waehlt ihr Blatt ueber das BAND ihrer Tuer (blatt_fuer_band), to_map() hat den
+    # Wunsch auf der Kunst aber ignoriert und immer das Heimatblatt geliefert.
+    # Folge im Nutzer-Report 2026-09-04: ROOM1170s zwei Tueren nach ROOM1130/ROOM1140
+    # tragen BAND 0 (also 3F), lagen aber auf dem DACH-Blatt - "auf roof ebene die beiden
+    # Tueren nur wieder raus, die da nicht hin gehoeren" - und die 3F-Kopie blieb leer.
+    zpos_blatt = {}                 # (room, zi, page) -> (bbox, page, rect)
+    for _r in rows:
+        _rm = _r[0] & 0xFFF0
+        zpos_blatt[(_rm, _r[4], _r[2])] = (_r[1], _r[2], _r[3])
     def _gr(room, zi, pg=None):
         """Der Grundriss dieses Ortes auf DIESEM Blatt - ohne Angabe auf seinem
         eigenen. Ein Ort kann auf mehreren Blaettern liegen (Etagen)."""
@@ -1981,7 +2063,11 @@ def main():
             mx = min(max(mx, kx), kx + kw - 1)
             my = min(max(my, ky), ky + kh - 1)
             return (page_of(room) if pg_wunsch is None else pg_wunsch), 255, mx, my
-        e = zpos.get((room, zi))
+        e = None
+        if pg_wunsch is not None:
+            e = zpos_blatt.get((room, zi, pg_wunsch))
+        if e is None:
+            e = zpos.get((room, zi))
         if not e: return None
         (x0, x1, z0, z1), pg, r = e
         ei = eichung.get((room, zi))
