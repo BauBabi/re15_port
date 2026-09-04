@@ -10,10 +10,11 @@
      "y": 122,
      "massstab": 1,
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "ebene": -700
     }
    ],
-   "_warum": "Freistellung des Nutzers (pri/1140/01.png). Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung mit dem Hintergrund (zum Vergleich der zweitbeste Cut: 81.4 %). Kein 'fuss' noetig — die Silhouette laeuft unten aus dem Bild, der Bodenkontakt ist also die Vorderkante des Tischs selbst."
+   "_warum": "Freistellung des Nutzers (pri/1140/01.png). Lage gemessen: Cut 0, Massstab 1, x=0 y=122, 100.0 % Uebereinstimmung mit dem Hintergrund (zum Vergleich der zweitbeste Cut: 81.4 %). Kein 'fuss' noetig — die Silhouette laeuft unten aus dem Bild, der Bodenkontakt ist also die Vorderkante des Tischs selbst. Bezugsebene -700 statt Boden: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden. Gemessen (Nutzer-Befund 'an der Ecke sieht es noch schlecht aus'): Leons Bodenschatten bei Bild (287,208) hat vz 5495, verdeckt wird nur mit Tiefe < 85.9; mit der Bodenebene kam an der Tischecke (288,175) 97 heraus, mit -700 sind es 79.5. -400 haette 87 ergeben, also weiter zu fern."
   }
  }
 }

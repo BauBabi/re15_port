@@ -316,15 +316,17 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
        mit verschiedenem Abstand ueberdecken und bekam den Median.
        -> Die Zerlegung laeuft jetzt JE OBJEKT.
 
-    objekte: [(name, region bool240x320, fuss oder None)]
+    objekte: [(name, region bool240x320, fuss oder None, ebene)]
     """
     dep_all = np.zeros((240, 320), np.int32)
     stuecke = []
     rest = budget or geom.MAX_MASKS_PER_CUT
-    for (name, reg, fuss) in objekte:
+    for eintrag in objekte:
+        name, reg, fuss = eintrag[0], eintrag[1], eintrag[2]
+        ebene = eintrag[3] if len(eintrag) > 3 else 0
         if not reg.any():
             continue
-        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss)
+        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene)
         if d is None:
             continue
         dep_all = np.where((d > 0) & ((dep_all == 0) | (d < dep_all)), d, dep_all)

@@ -265,12 +265,25 @@ def original_has_masks(rdt, cam, cut):
     return not (gc == 0xFFFF or gc == 0 or mc == 0 or gc > 256)
 
 
-def depth_map_objekt(rdt, cam_off, cut, region, fuss=None):
+def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=0):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
                 Richtig fuer Gegenstaende, deren Silhouette unten wirklich den Boden
                 beruehrt und die in die Tiefe laufen (Tisch, Schrank, Pult).
+    ebene=y0  : Hoehe der Ebene, mit der der Sehstrahl geschnitten wird (0 = Boden,
+                negativ = darueber; PSX-Y zeigt nach unten).
+                ⛔ WARUM DAS NOETIG IST (Nutzer-Befund 2026-09-04, "an der Ecke sieht es
+                noch schlecht aus"): die untere Silhouettenkante eines TISCHES liegt
+                nicht auf dem Boden, sondern auf der TISCHPLATTE. Schneidet man ihren
+                Sehstrahl trotzdem mit dem Boden, landet der Punkt DAHINTER und die
+                Maske wird zu fern. Gemessen an ROOM1140 Cut 0: Leons Bodenschatten bei
+                Bild (287,208) hat vz 5495, verdeckt wird also nur mit Tiefe < 85.9;
+                die Bodenebene ergab an der Tischecke (288,175) Tiefe 97 — der Schatten
+                wurde ueber die Tischkante gemalt. Mit der Ebene -700 sind es 79.5.
+                -700 ist zugleich der kleinste Wert mit Abstand zur Schwelle (bei -400
+                waeren es 87, immer noch zu fern) und passt zur Groessenordnung: der
+                Spieler ist 1500 hoch, ein Konferenztisch also knapp die Haelfte.
     fuss=y    : Bildzeile des Bodenkontakts. Fuer Gegenstaende auf duennen Beinen oder
                 Stangen (Fahne, Stativ, Mikrofonstaender, Stuhl), deren Silhouette den
                 Kontakt NICHT zeigt. Die Tiefe gilt dann fuer das ganze Objekt und wird
@@ -292,7 +305,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None):
         if len(xs) == 0:
             return None
         cx = float(xs.mean()) + 0.5
-        z = vz_at_floor(R, t, H, cx, float(min(int(fuss), 239)))
+        z = vz_at_floor(R, t, H, cx, float(min(int(fuss), 239)), ebene)
         if not z:
             return None
         dep[region] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
@@ -300,7 +313,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None):
     for x in np.where(region.any(0))[0]:
         rows = np.where(region[:, x])[0]
         yb = int(rows.max())
-        z = vz_at_floor(R, t, H, x + 0.5, float(min(yb, 239)))
+        z = vz_at_floor(R, t, H, x + 0.5, float(min(yb, 239)), ebene)
         if not z:
             continue
         dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))

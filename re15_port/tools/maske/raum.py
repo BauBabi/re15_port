@@ -309,7 +309,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                     if yy < 239:
                         r[max(0, yy + 1):, x] = False
         if r.any():
-            aus.append((o.get("name", "?"), r, o.get("fuss")))
+            aus.append((o.get("name", "?"), r, o.get("fuss"), int(o.get("ebene", 0))))
     return aus
 
 
@@ -377,7 +377,8 @@ def main():
         if objekte:
             res = anwenden.bau_objektweise(rdt, cam, cut, objekte, bg, a.out, room)
             flaeche = np.zeros((240, 320), bool)
-            for (_, r_, _) in objekte:
+            for e_ in objekte:
+                r_ = e_[1]
                 flaeche |= r_
             r = flaeche
         else:
@@ -419,8 +420,9 @@ def main():
             print("     (Treuepruefung nicht moeglich: %s)" % _e)
         print("  Cut %d: %5.1f %% Bildflaeche, %3d Rechtecke%s"
               % (cut, 100 * r.mean(), n,
-                 ("  [%s]" % ", ".join("%s%s" % (nm, "" if f is None else " Fuss y=%d" % f)
-                                        for (nm, _, f) in objekte)) if objekte else ""))
+                 ("  [%s]" % ", ".join("%s%s%s" % (e[0], "" if e[2] is None else " Fuss y=%d" % e[2],
+                                        "" if len(e) < 4 or not e[3] else " Ebene %d" % e[3])
+                                        for e in objekte)) if objekte else ""))
 
     # Container schreiben: bestehende Sektionen anderer Cuts erhalten
     path = os.path.join(a.out, "%s.MSK" % room)
