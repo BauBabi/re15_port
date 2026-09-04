@@ -77,6 +77,44 @@ check_binary_paths() {   # $1 = Binary
         || die "$bin enthaelt den erwarteten BSS-Pfad nicht — kein RE1.5-Binary?"
 }
 
+check_binary_optimiert() {   # $1 = Binary, $2 = Label
+    # ⛔ BEINAHE-UNFALL 2026-09-04: Nach einem Fix habe ich das Binary aus
+    # re15_port/build/platform/pc/ nach win_out/ kopiert und wollte paketieren.
+    # re15_port/tools/local_build.sh laesst CMAKE_BUILD_TYPE **leer** - das ist ein
+    # Entwicklungs-Build OHNE Optimierung. Release-Binaries kommen ausschliesslich aus
+    #   release/docker_win_build.sh   (-DCMAKE_BUILD_TYPE=Release)
+    #   release/build_linux_deck.sh
+    # Aufgefallen ist es nur, weil die exe 1,4 MB groesser war als die vorige und das
+    # nicht zu einer 50-Zeilen-Aenderung passte. KEINE der uebrigen Pruefungen haette
+    # es gefangen - sie pruefen Subsystem, Laufzeit, Zeilenenden, x-Bit, Logs.
+    #
+    # MERKMAL, GEMESSEN (nicht gewaehlt): Release setzt -DNDEBUG, damit laesst SDL2
+    # seine __FILE__-Pfade in Fehler-/Assert-Meldungen weg. Gezaehlt wurden die
+    # Vorkommen der Zeichenkette "sdl2-src/src/" in drei Binaries desselben Tages:
+    #     v0.5.8 Windows (Release, ausgeliefert) :  3
+    #     v0.5.9 Linux   (Release)               :  4
+    #     lokaler Entwicklungs-Build             : 54
+    # Die Schranke liegt bei 20, also weit von beiden Messwerten entfernt; die
+    # Trennung betraegt Faktor 13. Schlaegt sie an, ist die Frage NICHT die Schranke,
+    # sondern welches Binary da liegt.
+    local bin="$1" label="$2" n
+    command -v strings >/dev/null 2>&1 || {
+        echo "   (Optimierungs-Gate uebersprungen: 'strings' fehlt)"; return; }
+    n="$(strings -a "$bin" 2>/dev/null | grep -c 'sdl2-src/src/' || true)"
+    [[ -n "$n" ]] || return
+    if (( n > 20 )); then
+        die "$label ist KEIN Release-Build: $bin
+        traegt $n SDL2-Quellpfade (Release-Binaries: 3-4). CMAKE_BUILD_TYPE war leer
+        oder Debug - das Paket waere unoptimiert und damit langsamer.
+        Richtig bauen:
+          Windows: MSYS_NO_PATHCONV=1 docker run --rm -v \"$REPO\":/src debian:11 \
+                       bash /src/release/docker_win_build.sh
+          Linux  : release/build_linux_deck.sh
+        Das Entwicklungs-Binary aus re15_port/build/ gehoert NICHT in ein Paket."
+    fi
+    echo "   Optimierungs-Gate: $label ist ein Release-Build ($n SDL2-Quellpfade)"
+}
+
 check_binary_fresh() {   # $1 = Binary, $2 = Label
     # ⛔ v0.3.9-UNFALL (2026-08-21): Das Skript BAUT NICHT, es KOPIERT aus win_out/
     # bzw. linux_out/. Der Windows-Build lief nach release/wbuild/, win_out/ blieb
@@ -377,6 +415,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "linux" ]]; then
     echo "== Linux/Steam-Deck-Paket: $NAME =="
     check_binary_paths "$LINUX_BIN"
     check_binary_fresh "$LINUX_BIN" "Linux-Binary"
+    check_binary_optimiert "$LINUX_BIN" "Linux-Binary"
     check_glibc        "$LINUX_BIN"
 
     OUT="$HERE/pkg-linux/$NAME"
@@ -408,6 +447,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
     echo "== Windows-Paket: $NAME =="
     check_binary_paths "$WIN_BIN"
     check_binary_fresh "$WIN_BIN" "Windows-Binary"
+    check_binary_optimiert "$WIN_BIN" "Windows-Binary"
 
     OUT="$HERE/pkg-win/$NAME"
     if [[ $ZIP_ONLY -eq 0 ]]; then
