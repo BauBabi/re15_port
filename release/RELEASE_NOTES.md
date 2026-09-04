@@ -1,39 +1,33 @@
 # RE1.5 Port — v0.5.4 (Early Preview)
 
-**Die Karte ist ab jetzt das Original-Kartenmaterial.**
+**Die wackligen Tests sind repariert — und sie hatten drei echte Befunde im Bauch.**
 
-Du hattest recht mit dem Vergleich: genau so macht es Resident Evil 2 — die gemalte Karte
-ist das Bild, und der Spieler-Marker rechnet über ein eigenes System darauf. Bis hierher
-hat der Port stattdessen jeden Raum selbst gezeichnet, aus seiner Kollisionsbox. Das war
-eine Freigabe von dir vom 1. September; sie ist damit zurückgenommen.
+`integration_save_counter_pin` und `integration_relatch_pin` fielen sporadisch aus
+(gemessen: 1 von 12 bzw. 2 von 8). Ich habe die Fehlerfaelle jeweils MIT Log eingefangen
+statt zu raten:
 
-**Was du jetzt siehst:** die Kacheln der Originalkarte, mit den gelben RE2-Türbalken und
-den RE2-Treppensymbolen darauf. 89 der 96 Räume sind da. Die restlichen sieben malt das
-Original schlicht nicht — die bleiben leer, so wie im Original auch.
+1. **Der Fehler lag nach `exit(0)`.** Im Fehlerfall ist das Spiel-Log vollstaendig — es
+   speichert korrekt, erreicht seinen Testhaken und beendet sich sauber. Der Prozess
+   meldet trotzdem 1. Dort laufen noch atexit-Handler und der Abbau der SDL- und
+   Treiber-Bibliotheken. Die Haken beenden jetzt sofort, ohne diesen Abbau.
+2. **Ein Restprozess pflanzte den Fehler fort.** Ein noch nicht ganz beendeter Prozess
+   des vorherigen Aufrufs haelt die Dateien im Arbeitsverzeichnis; der naechste Lauf
+   kann sein Log nicht anlegen und stirbt sofort — und hinterlaesst wieder einen
+   Prozess. Derselbe Effekt hat einmal still einen Rebuild scheitern lassen. Jeder
+   Testaufruf bekommt jetzt ein eigenes Verzeichnis. (Fremde Prozesse schiesse ich
+   NICHT ab — das koennte dein laufendes Spiel treffen.)
+3. **Das Spiel selbst ist in Ordnung.** Dieselbe Datei, dieselbe Umgebung, direkt
+   gestartet: 40 von 40 sauber; unter dem Debugger 25 von 25. Der Rest trat nur unter
+   der Teststeuerung auf. Dafuer meldet der Test jetzt im Fehlerfall den Code UND den
+   kompletten Log und wiederholt **genau einmal** — aber nur, wenn das Spiel gar nicht
+   ueber das Hochfahren hinauskam. Lief es und lieferte ein falsches **Ergebnis**, wird
+   nicht wiederholt; sonst wuerde der Riegel echte Fehler verschlucken. Jede
+   Wiederholung steht laut in der Ausgabe.
 
-| | |
-|---|---|
-| Räume auf der Karte | **89 von 96** |
-| Marker im **eigenen** Raum | **80 von 80** |
-| Marker im **falschen** Raum | **0** |
-| Türen mit RE2-Symbol | 164 von 207 |
+**Ergebnis: 0 Fehler in je 10 Runden — und das Netz aus Punkt 3 hat kein einziges Mal
+gegriffen.** Die beiden strukturellen Fixes allein reichen.
 
-**Der Marker sitzt immer im richtigen Raum und nie im falschen.** Das war die eigentliche
-Forderung, und die hält.
-
-**Was noch nicht perfekt ist, und warum.** Beim Durchschreiten einer Tür springt der
-Marker im Mittel 17 Pixel — bei der selbstgezeichneten Karte waren es 2. Das liegt nicht
-am Port, sondern am Prototyp: **das Original eicht nur 38 seiner 106 Räume.** Für die
-übrigen habe ich die Lage aus der Türkette hergeleitet (jede Tür ist derselbe Ort in zwei
-Räumen), und jede solche Herleitung trägt rund 7 Pixel Eigenfehler. An einer Tür treffen
-zwei davon aufeinander. Drei Viertel aller Übergänge hängen an mindestens einer.
-
-Vier Reste stehen namentlich in der Prüfung, damit sie nicht verschwinden: ROOM1060 und
-ROOM1080 teilen sich ein gemaltes Rechteck, ein Türsymbol von sechzig zeigt vom Nachbarn
-weg, sieben Symbolpaare liegen aufeinander, und eine Marke sitzt 72 Pixel daneben.
-
-**Die alte Karte ist nicht weg** — `RE15_KUNST=0` baut sie wieder, vollständig und
-geprüft. Falls dir die gerechnete Fassung am Ende doch lieber ist, sag Bescheid.
+Am Spiel selbst aendert sich nichts; dein Tisch aus v0.5.3 ist unveraendert drin.
 
 ---
 
