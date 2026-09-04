@@ -2321,6 +2321,40 @@ static void pc_run_config(void)
     re15_render_pc_hide_config();
 }
 
+/* ⛔ ENDE FUER TESTHAKEN — warum NICHT exit(0).
+ *
+ * Befund 2026-09-04: integration_save_counter_pin und integration_relatch_pin waren
+ * FLAKY (gemessen: 12 Laeufe des Save-Pins -> 1 Fehler; ausserdem einmal im vollen
+ * Durchlauf). Beide sind genau die Tests, die den Prozess ueber einen Testhaken
+ * beenden — und im Fehlerfall ist das Spiel-Log VOLLSTAENDIG: es speichert korrekt
+ * ("slot n=4 -> next=5"), erreicht "SAVE_TEST_EXIT_AFTER: 1 saves -> exit" und ruft
+ * exit(0). Der Prozess meldet trotzdem 1. Der Fehler liegt also NICHT im Spiel,
+ * sondern im Aufraeumen NACH exit(): atexit-Handler, statische Destruktoren und der
+ * Abbau von SDL/Grafiktreiber laufen dort noch, und einer davon reisst den Prozess
+ * gelegentlich mit einem anderen Ruecknahmecode ab.
+ *
+ * _Exit() beendet sofort, ohne atexit-Handler und ohne Bibliotheks-Abbau. Fuer einen
+ * Testhaken ist genau das richtig: die Karte ist an dieser Stelle bereits geschrieben
+ * und geschlossen, und die Aufrufer spuelen stderr (= debug.log) unmittelbar davor.
+ * Es geht also nichts verloren. Kein Spielverhalten — die Haken sind env-gegatet. */
+static void re15_testhaken_ende(void)
+{
+    /* ⛔ debug.log AUSDRUECKLICH schliessen, nicht nur spuelen. stderr ist per
+     * freopen("debug.log","w",stderr) (main.c) auf die Datei umgelenkt. _exit()
+     * schliesst zwar am Prozessende, aber Windows gibt den Griff dann erst
+     * verzoegert frei — der naechste Testlauf raeumt die Datei mit file(REMOVE)
+     * weg und bekam "resource busy or locked", das Spiel startete gar nicht erst
+     * (gemessen: Abbruch nach 0.86 s, kein debug.log im Arbeitsverzeichnis).
+     * fclose gibt den Griff sofort zurueck. */
+    fflush(NULL);
+    fclose(stderr);
+#if defined(_WIN32)
+    _exit(0);
+#else
+    _Exit(0);
+#endif
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc; (void) argv;
@@ -3624,7 +3658,7 @@ re_title:;
       s_boot_n++;
       if (s_boot_exit_at > 0 && s_boot_n >= s_boot_exit_at) {
           fprintf(stderr, "[flow] BOOT_EXIT_AT: boot #%d reached -> exit\n", s_boot_n);
-          fflush(stderr); exit(0);
+          fflush(stderr); re15_testhaken_ende();
       } }
 
     { extern int re15_fade_log_on(void);
@@ -3727,7 +3761,7 @@ re_title:;
                                            s_save_exit = (se && *se) ? atoi(se) : -1; }
                   if (s_save_exit > 0 && ++s_saves_done >= s_save_exit) {
                       fprintf(stderr, "[save] SAVE_TEST_EXIT_AFTER: %d saves -> exit\n", s_saves_done);
-                      fflush(stderr); exit(0);
+                      fflush(stderr); re15_testhaken_ende();
                   } }
             }
             /* No post-save re-examine cooldown: the examine fires only on a fresh action-button

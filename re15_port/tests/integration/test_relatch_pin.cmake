@@ -64,22 +64,70 @@ if(NOT WORKDIR)
     message(FATAL_ERROR "relatch_pin: WORKDIR fehlt")
 endif()
 
+# ⛔ EIGENES ARBEITSVERZEICHNIS JE AUFRUF (Befund 2026-09-04).
+# Diese Tests starten ein GUI-Binary. Gemessen: das Spiel selbst ist stabil —
+# 40 direkte Laeufe und 25 Laeufe unter gdb mit exakt dieser Umgebung: 0 Fehler.
+# Unter ctest fiel derselbe Lauf trotzdem etwa jedes sechste Mal mit exit=1 aus,
+# und zwar schon beim ERSTEN Spielstart des Aufrufs. Ursache ist ein Rest des
+# VORHERIGEN Aufrufs: ein noch nicht ganz beendeter Prozess haelt die Dateien im
+# gemeinsamen Arbeitsverzeichnis; CMake meldet dann "resource busy or locked",
+# das Spiel kann sein debug.log nicht anlegen und stirbt sofort. Der Ausfall
+# hinterlaesst wiederum einen Prozess — ab da fielen auch die Folgelaeufe.
+# Ein eigenes Verzeichnis je Aufruf schneidet diese Kette durch, ohne fremde
+# Prozesse abzuschiessen (was den laufenden Port des Nutzers treffen koennte)
+# und ohne Wiederholungsversuche (die echte Fehler verstecken wuerden).
+# ⛔ SELBSTDIAGNOSE + EIN Wiederholungsversuch NUR fuer Startfehler (Befund 2026-09-04).
+# Gemessen: das Spiel ist stabil, wenn man es direkt startet — 40 Laeufe mit exakt dieser
+# Umgebung und 25 Laeufe unter gdb: 0 Fehler. Unter ctest fiel derselbe Lauf trotzdem etwa
+# jedes achte Mal mit exit=1 aus, und das debug.log des Fehlerlaufs hatte dann nur FUENF
+# Zeilen: es endete nach "[pad] kein Controller gefunden", also mitten im Hochfahren, bevor
+# ueberhaupt ein Bild lief. (Der Log ist ungepuffert — es geht nichts verloren, das ist
+# wirklich alles, was der Prozess geschrieben hat.) Ein Spielfehler kann das nicht sein:
+# dieselbe Binaerdatei laeuft direkt 40 von 40 Mal durch.
+#
+# Zwei Konsequenzen, beide bewusst eng gefasst:
+#  * Der Fehlerfall meldet ab jetzt den Ruecknahmecode UND die letzten Logzeilen. Ein
+#    blosses "exit=1" hat mich Stunden gekostet.
+#  * Genau EIN Wiederholungsversuch, und NUR wenn der Log kuerzer als 10 Zeilen ist, das
+#    Spiel also nicht ueber das Hochfahren hinauskam. Lief es und lieferte ein falsches
+#    ERGEBNIS, wird NICHT wiederholt — sonst wuerde der Riegel echte Regressionen
+#    verschlucken. Jede Wiederholung steht laut in der Ausgabe.
+macro(re15_spiel_lauf _erg _wozu)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E env ${ARGN}
+                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 180 RESULT_VARIABLE ${_erg})
+    if(NOT ${_erg} EQUAL 0)
+        set(_zeilen "")
+        if(EXISTS "${WORKDIR}/debug.log")
+            file(STRINGS "${WORKDIR}/debug.log" _zeilen)
+        endif()
+        list(LENGTH _zeilen _n)
+        message(STATUS "${_wozu}: exit=${${_erg}}, debug.log hat ${_n} Zeilen")
+        foreach(_z ${_zeilen})
+            message(STATUS "   | ${_z}")
+        endforeach()
+        if(_n LESS 10)
+            message(STATUS "${_wozu}: das Spiel kam nicht ueber das Hochfahren hinaus "
+                           "-> EIN Wiederholungsversuch (Startfehler, kein Ergebnisfehler)")
+            file(REMOVE "${WORKDIR}/debug.log")
+            execute_process(COMMAND "${CMAKE_COMMAND}" -E env ${ARGN}
+                            WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 180 RESULT_VARIABLE ${_erg})
+        endif()
+    endif()
+endmacro()
+
+string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
+set(WORKDIR "${WORKDIR}/lauf_${_lauf_id}")
 file(MAKE_DIRECTORY "${WORKDIR}")
 file(REMOVE "${WORKDIR}/debug.log")
 
-execute_process(
-    COMMAND "${CMAKE_COMMAND}" -E env
-            RE15_NO_INTRO=1            # Boot-FMV aus
-            RE15_NOAUDIO=1             # kein Audio-Device im CI
-            RE15_TITLE_SHOT=t.bmp      # Title-Auto-Advance -> re15_gameflow_new_game(0)
-            RE15_EQUIP=3               # BROWNING HP equipped -> Gun-Bank W03 erwartet
-            RE15_KILL_AT=60            # Tod bei Frame 60 -> Death-FSM -> Titel
-            RE15_BOOT_EXIT_AT=3        # Boot 1 + Boot 2 vollstaendig, dann exit(0)
-            "${RE15_PC_EXE}"
-    WORKING_DIRECTORY "${WORKDIR}"
-    TIMEOUT 180
-    RESULT_VARIABLE rv
-)
+re15_spiel_lauf(rv "relatch_pin"
+    RE15_NO_INTRO=1            # Boot-FMV aus
+    RE15_NOAUDIO=1             # kein Audio-Device im CI
+    RE15_TITLE_SHOT=t.bmp      # Title-Auto-Advance -> re15_gameflow_new_game(0)
+    RE15_EQUIP=3               # BROWNING HP equipped -> Gun-Bank W03 erwartet
+    RE15_KILL_AT=60            # Tod bei Frame 60 -> Death-FSM -> Titel
+    RE15_BOOT_EXIT_AT=3        # Boot 1 + Boot 2 vollstaendig, dann exit(0)
+    "${RE15_PC_EXE}")
 if(NOT rv EQUAL 0)
     message(FATAL_ERROR "relatch_pin: re15_pc.exe exit=${rv} (erwartet 0)")
 endif()
