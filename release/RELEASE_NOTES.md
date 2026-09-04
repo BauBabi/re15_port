@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.5.2 (Early Preview)
+
+**Du hattest recht — der Fehler lag in meinem Einbau, nicht in deiner Freistellung.**
+
+Die Maske wird in Rechtecke zerlegt (so verlangt es das PSX-Format). Meine Zerlegung
+nahm immer das groesste Rechteck, das **ganz innerhalb** der Flaeche liegt. An einer
+schraegen Kante bleibt dabei zwangslaeufig ein Saum aus duennen Dreiecken uebrig, den
+kein volles Rechteck mehr fasst — der fiel raus und wurde nicht gezeichnet. Deshalb war
+die Tischkante im Spiel eine grobe Treppe aus 8-10 Bildpunkten, obwohl deine
+Freistellung eine glatte Diagonale ist.
+
+Behoben: ein Rechteck **darf** ueber die Flaeche hinausragen, die Feinmaskierung macht
+der Atlas. Jetzt wird der umschliessende Kasten gekachelt und jede Kachel behalten, die
+etwas von der Flaeche enthaelt. Aus 59 Rechtecken wurden 78, und:
+
+**26 526 von 26 526 Punkten deiner Freistellung sind gedeckt — 0 fehlen, 0 zuviel.**
+Die Maske ist jetzt punktgenau dein Umriss.
+
+Das wird ab sofort nach jedem Bauen nachgezaehlt und gemeldet, damit so etwas nicht
+wieder unbemerkt durchgeht.
+
+Und ja: **nummeriere die Dateien gern nach Cut**, das ist mir recht. Ich messe die Lage
+trotzdem weiter mit — falls mal eine Datei verrutscht, faellt es dadurch sofort auf.
+
+---
+
 # RE1.5 Port — v0.5.1 (Early Preview)
 
 **Dein Tisch ist drin.** Erste Maske im neuen Ablauf.
