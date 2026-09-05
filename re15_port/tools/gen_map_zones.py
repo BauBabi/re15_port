@@ -2903,6 +2903,48 @@ def main():
                         mx, my, mkind = snap_grundriss(b, zi, mx, my, senk, pg)
                     else:
                         mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                    # ⛔ EIN RECHTECK IM RECHTECK: DIE TUER GEHOERT AUF DEN INNEREN RAND.
+                    # Nutzer-Befund 2026-09-05 (fehler/error.png): "This door is wrong"
+                    # und "Staircase 2F only has one door!". Gemeint ist dieselbe Marke:
+                    # ROOM10C0s Tuer zur FAHRSTUHLKABINE ROOM1080. Die Kabine ist auf
+                    # Blatt 3 als eigenes kleines Rechteck gezeichnet (Rect 4, (109,134)
+                    # 16x16) und liegt VOLLSTAENDIG im Rechteck des Flurs (Rect 0,
+                    # (102,116) 40x40). snap_wall() rueckt die Marke auf eine Wand der
+                    # FLUR-Kachel - sie landete bei (126,134), also zwei Pixel neben der
+                    # Kabine und genau auf der Oberkante des Treppenhauses (Rect 1,
+                    # (118,134)). Fuer den Spieler sah das aus wie eine zweite Tuer AM
+                    # TREPPENHAUS, das auf 2F nur eine hat.
+                    # Wo zwei Rechtecke ineinander liegen, gibt es keine gemeinsame
+                    # Kante - die Grenze IST der Rand des inneren. Die Marke wird deshalb
+                    # dorthin gezogen, aber nur in genau diesem Fall (Ziel-Rechteck
+                    # vollstaendig im eigenen); beruehrende Rechtecke bleiben unberuehrt,
+                    # dort trifft snap_wall die gemeinsame Wand bereits.
+                    _ziel = m.get('dest')
+                    if _ziel is not None:
+                        _zr = None
+                        for _zzi in range(4):
+                            _c = _zonen_rect.get((_ziel & 0xFFF0, _zzi, pg))
+                            if _c is not None and _c != 255 and _c != r:
+                                _zr = _c
+                                break
+                        if _zr is not None:
+                            _R = rects(pg)
+                            if r < len(_R) and _zr < len(_R):
+                                ax, ay, aw, ah = _R[r]
+                                bx, by, bw, bh = _R[_zr]
+                                drin = (bx >= ax and by >= ay and
+                                        bx + bw <= ax + aw and by + bh <= ay + ah)
+                                if drin:
+                                    # naechster Punkt auf dem Rand des inneren Rechtecks
+                                    cx = min(max(mx, bx), bx + bw - 1)
+                                    cy = min(max(my, by), by + bh - 1)
+                                    dl, dr_ = cx - bx, bx + bw - 1 - cx
+                                    do, du = cy - by, by + bh - 1 - cy
+                                    kleinst = min(dl, dr_, do, du)
+                                    if kleinst == dl:   mx, my, mkind = bx, cy, 3
+                                    elif kleinst == dr_: mx, my, mkind = bx + bw - 1, cy, 1
+                                    elif kleinst == do:  mx, my, mkind = cx, by, 0
+                                    else:                mx, my, mkind = cx, by + bh - 1, 2
                     # ⛔ HIER NOCH NICHT VERWERFEN. Bis v0.3.80 fiel eine Marke schon in
                     # Durchgang 1 weg, wenn ihr eigenes Rechteck die Tuer malt - und ihr
                     # Partner blieb als freie Einzelmarke stehen, weil die Paarung erst in
@@ -3495,12 +3537,43 @@ def main():
     o.append(" * waagerechten bzw. senkrechten Sprossen.")
     o.append(" * Treppen stammen aus den SCD-Zonen Aot_set Typ 12/13 (die Band-Wechsel-")
     o.append(" * Zonen), Tueren aus den Tuer-Datensaetzen. Gezeichnet werden sie nur fuer")
-    o.append(" * Zonen, die der Spieler schon gesehen hat. */")
+    o.append(" * Zonen, die der Spieler schon gesehen hat.")
+    o.append(" * auf_partner = 1: die Marke liegt auf der GEMALTEN Flaeche des Rechtecks")
+    o.append(" * der zweiten Zone (zid2). Nur dann darf sie schon sichtbar sein, wenn")
+    o.append(" * bloss die zweite Zone besucht ist - sonst schwebt sie im Leeren.")
+    o.append(" * ACHTUNG - der KASTEN reicht dafuer nicht (Nutzer-Befund 2026-09-05,")
+    o.append(" * \"This door is flying\"): er ist nur die Bounding-Box, die Kachel darin")
+    o.append(" * enthaelt Schwarz. Blatt 3 Marke (141,117) liegt in Rect 0 (102,116)")
+    o.append(" * 40x40, dessen Kachel traegt dort aber Index 0. Gemessen ueber alle")
+    o.append(" * Marken mit Partner-Rechteck: 47 liegen auf dessen Kachel, 23 nicht. */")
     o.append("typedef struct { unsigned char page, rect; short mx, my;")
-    o.append("                 unsigned char kind, zid, zid2; } re15_map_mark_t;")
+    o.append("                 unsigned char kind, zid, zid2, auf_partner;")
+    o.append("               } re15_map_mark_t;")
     o.append("static const re15_map_mark_t s_map_marks[] = {")
     for pg, r, mx, my, kind, zd, zd2 in sorted(marks):
-        o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d}, {zd2:3d} }},")
+        _ap = 0
+        if zd2 != 255 and r != 255:
+            _pr = None
+            for _z in rows:
+                if _z[5] == zd2 and _z[2] == pg:
+                    _pr = _z[3]
+                    break
+            if _pr is not None and _pr != 255:
+                _R = rects(pg)
+                _px = page_pix(pg)
+                if _px is not None and _pr < len(_R):
+                    _rx, _ry, _rw, _rh = _R[_pr]
+                    _u, _v = rect_uv(pg, _pr)
+                    for _b in (-1, 0, 1):
+                        for _a in (-1, 0, 1):
+                            _sx, _sy = mx + _a, my + _b
+                            if not (_rx <= _sx < _rx + _rw and _ry <= _sy < _ry + _rh):
+                                continue
+                            _tx, _ty = _u + (_sx - _rx), _v + (_sy - _ry)
+                            if 0 <= _tx < 256 and 0 <= _ty < 256 and _px[_ty][_tx]:
+                                _ap = 1
+        o.append(f"    {{ {pg:2d}, {r:2d}, {mx:4d}, {my:4d}, {kind}, {zd:3d}, {zd2:3d},"
+                 f" {_ap} }},")
     o.append("};")
     o.append("")
     o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
@@ -3564,7 +3637,39 @@ def main():
            f"fuer Blatt {sorted(RECT_FIX)}")
 
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
-    open(dst, 'w', encoding='ascii', newline=chr(10)).write(chr(10).join(o) + chr(10))
+    _txt = chr(10).join(o) + chr(10)
+    _bad = [(_i, _c) for _i, _c in enumerate(_txt) if ord(_c) > 127]
+    if _bad:
+        _i = _bad[0][0]
+        raise SystemExit("NICHT-ASCII im Kopf an Position %d: %r" %(_i,_bad[0][1])+'\n'+"Kontext: %r"%(_txt[max(0,_i-140):_i+60],))
+
+    # Kommentar-Bilanz. Ein zu frueh geschlossenes /* ... */ macht den Rest des
+    # Absatzes zu Code - der Compiler meldet dann Unsinn weit hinter der Ursache
+    # ("invalid digit '9' in octal constant" fuer eine Masszahl im Fliesstext).
+    # Dreimal passiert (2026-09-05), deshalb hier eine Bilanz VOR dem Schreiben.
+    _tiefe, _auf = 0, 0
+    for _ln, _zeile in enumerate(o, 1):
+        # ⛔ Die Tiefe am ZEILENANFANG entscheidet, nicht die danach: die
+        # Schlusszeile eines Absatzes ("... md */") faengt mit "* " an UND schliesst
+        # den Kommentar. Wer erst abtastet und dann prueft, meldet genau sie
+        # faelschlich an - einmal passiert, direkt beim ersten Lauf.
+        if _tiefe == 0 and _zeile.lstrip().startswith('* '):
+            raise SystemExit(
+                'KOMMENTAR-BILANZ Zeile %d: Fortsetzungszeile ausserhalb eines '
+                'Kommentars (das /* wurde vorher geschlossen)%s  %r'
+                % (_ln, chr(10), _zeile))
+        _j = 0
+        while _j < len(_zeile) - 1:
+            if _tiefe == 0 and _zeile[_j:_j+2] == '/*':
+                _tiefe, _auf, _j = 1, _ln, _j + 2
+            elif _tiefe == 1 and _zeile[_j:_j+2] == '*/':
+                _tiefe, _j = 0, _j + 2
+            else:
+                _j += 1
+    if _tiefe:
+        raise SystemExit('KOMMENTAR-BILANZ: /* aus Zeile %d nie geschlossen' % _auf)
+
+    open(dst, 'w', encoding='ascii', newline=chr(10)).write(_txt)
     print(f"\n{len(rows)} Zonen-Eintraege ({len(rows)//2} Zonen x 2 Varianten) -> {dst}")
 
 if __name__ == '__main__':

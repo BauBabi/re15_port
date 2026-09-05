@@ -2908,3 +2908,107 @@ platzierter Raum ist fuer den Spieler immer noch besser als ein unsichtbarer.
 was hier besser wurde: es werden mehr Raeume gezeichnet, also gibt es mehr Marken.
 
 Suite: 274/274 gruen.
+
+## §47 — Zwei Turmarken auf 2F: die Kabine im Flur und die Marke ohne Rechteck
+
+Nutzer-Befund 2026-09-05 (`fehler/error.png`, Blatt 3): drei Pfeile, zwei Ursachen.
+
+### (a) "This door is wrong" + "Staircase 2F only has one door!" — dieselbe Marke
+
+Beide Pfeile zeigen auf ROOM10C0s Tuer zur **Fahrstuhlkabine ROOM1080**. Belegt an
+der erzeugten Tabelle (`s_map_rectfix`, Blatt 3) und am Zonen-Kopf:
+
+| Rect | Lage            | Zone |
+|------|-----------------|------|
+| 0    | (102,116) 40x40 | ROOM10C0, zid 11 |
+| 1    | (118,134) 24x24 | ROOM1060, zid 7 (Treppenhaus, auch Blatt 2 und 4) |
+| 3    | (135,76) 72x88  | ROOM10D0, zid 12 |
+| 4    | (109,134) 16x16 | ROOM1080, zid 9 (Kabine, auch Blatt 2 und 4) |
+
+Rect 4 liegt **vollstaendig** in Rect 0 (x 109..124 in 102..141, y 134..149 in
+116..155). `snap_wall` rueckt eine Turmarke auf die naechste Kante der **eigenen**
+Kachel — bei einem Rechteck IM Rechteck gibt es diese gemeinsame Kante nicht, die
+Grenze IST der Rand des inneren. Die Marke landete deshalb bei **(126,134) als
+Sued-Tuer**: zwei Pixel neben der Kabine und genau auf der **Oberkante von Rect 1**,
+dem Treppenhaus (dessen y bei 134 beginnt). Optisch eine zweite Tuer am Treppenhaus,
+das auf 2F nur eine hat.
+
+Fix: nach `snap_wall` ein zweiter Schritt. Er sucht das Rechteck der **Zielzone** der
+Tuer (`m['dest']`) auf demselben Blatt und prueft, ob es vollstaendig im eigenen
+liegt; nur dann wird die Marke auf den naechsten Punkt von dessen Rand gezogen.
+Beruehrende Rechtecke bleiben unberuehrt — dort trifft `snap_wall` die gemeinsame
+Wand bereits. Ergebnis **(124,134), kind 1 (Ost)** — die rechte Kante der Kabine.
+Diff gegen v0.6.4: `{3,0,126,134,2,...}` -> `{3,0,124,134,1,...}`.
+
+### (b) "This door is flying - not on the wall/Edge"
+
+Marke #51, Blatt 3, `zid 12` (ROOM10D0) / `zid2 11` (ROOM10C0), Lage (141,117).
+
+Die **Lage** einer Turmarke entsteht aus der Projektion **ihrer** Zone auf **deren**
+Rechteck — hier Rect 3, der Flur. Der Spieler hatte ROOM10D0 nicht betreten, Rect 3
+wurde also nicht gezeichnet. Die alte Sichtbarkeitsregel zeigte die Marke trotzdem:
+sichtbar, sobald **eine** der beiden Zonen besucht ist.
+
+⛔ **Der erste Fix haette nicht gereicht, und das ist der Kern.** Ich pruefte, ob die
+Marke im **Kasten** des Partner-Rechtecks liegt — und das tut sie: (141,117) liegt in
+Rect 0 (102,116) 40x40. Ein Kasten ist aber nur die Bounding-Box; die Kachel darin
+enthaelt Schwarz. An (141,117) traegt Rect 0s Kachel **Index 0**, also nichts
+Gemaltes. Gemalt ist die Stelle nur in Rect 3s Kachel.
+
+Der zweite Versuch — Sichtbarkeit nur ueber die **eigene** Zone — machte
+`unit_inv_fsm` und `unit_map_re2_system` rot: auf dem Dach-Blatt verschwand eine
+korrekt sitzende Tuer, deren eigene Zone kein Rechteck hat.
+
+Fix: der Generator rechnet je Marke das Bit **`auf_partner`** aus — liegt sie auf der
+GEMALTEN Flaeche (Kachel-Index != 0) des Partner-Rechtecks? Gemessen ueber alle 70
+Marken mit Partner-Rechteck: **47 ja, 23 nein**, darunter genau #51. Die Regel in
+`re15_map_mark_get` zeigt eine Marke, wenn ihre eigene Zone besucht ist — oder wenn
+`auf_partner` gilt und die Partnerzone besucht ist.
+
+### Schranke
+
+`test_map_marke_haengt_an.c`, ueber drei Besuchsstaende, zwei Aussagen:
+1. **hart (0):** keine sichtbare Marke gehoert zu einem Rechteck, dessen Raum
+   unbesucht ist. Gegenprobe mit der alten Regel gefahren — sie schlaegt an.
+2. **Nicht-Verschlechterung:** Marken auf dem eigenen, gezeichneten Rechteck, aber
+   neben der gemalten Flaeche. 2F-Anfang **2 -> 1** (die entfallene ist #51),
+   3F-Kette 0 -> 0, alles betreten 5 -> 5.
+
+Die verbleibenden 5 sind eine andere Klasse: eigener Kasten, aber ausserhalb der
+Zeichnung darin — auf Blatt 3 das Treppensymbol bei (118,157), zwei Pixel unter der
+gemalten Flaeche (§44). **Offen, nicht gefixt.**
+
+## §48 — Der Testhaken wartete auf einen Wrapper, nicht auf das Spiel
+
+Nebenbefund beim v0.6.5-Lauf: `integration_relatch_pin` lief in die Zeitueberschreitung,
+obwohl das Spiel fertig war. Letzte Zeile im `debug.log`:
+`[flow] BOOT_EXIT_AT: boot #3 reached -> exit` — danach ruft der Haken
+`re15_testhaken_ende()`, also `fclose(stderr)` + `_exit(0)`.
+
+Drei Messungen, gleiche Umgebung, gleiches Arbeitsverzeichnis:
+
+| Start | Ergebnis |
+|-------|----------|
+| exe direkt aus der Shell | `exit=0` nach 23/24/26 s (3 von 3) |
+| `execute_process` + `cmake -E env` | `Process terminated due to timeout` (120 s) |
+| `execute_process` + `set(ENV{...})` | `rv=0` nach 62 s |
+
+Der Unterschied ist allein der Zwischenprozess: `execute_process` wartet, bis die
+Ausgabe-Roehren geschlossen sind, und `cmake -E env` haelt sie ueber das Ende des
+Kindes hinaus offen. Seit das Spiel im Testhaken mit `_exit(0)` endet (2026-09-04,
+gegen eine andere Flatterhaftigkeit) laeuft kein `atexit`-Abbau mehr, und der Wrapper
+haengt sichtbar.
+
+⛔ **Das war NICHT nur ein Zeitproblem der beiden roten Haken.** Alle vier
+`-E env`-Haken wurden umgestellt (`tests/integration/spiel_lauf.cmake`), und auch die
+vorher gruenen wurden dabei schneller:
+
+| Haken | vorher | nachher |
+|-------|--------|---------|
+| boot_bg_pin | (gruen) | 7.3 s |
+| dark_start_pin | (gruen) | 6.3 s |
+| relatch_pin | Zeitueberschreitung 220 s | 24.9 s |
+| save_counter_pin | 123.7 s | 21.4 s |
+
+Der Wrapper hat also auch bestandene Laeufe aufgeblaeht — die gemessene Dauer eines
+Haken sagte bis hierher mehr ueber ihn als ueber das Spiel.

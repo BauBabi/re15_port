@@ -113,9 +113,9 @@ endif()
 #    Spiel also nicht ueber das Hochfahren hinauskam. Lief es und lieferte ein falsches
 #    ERGEBNIS, wird NICHT wiederholt — sonst wuerde der Riegel echte Regressionen
 #    verschlucken. Jede Wiederholung steht laut in der Ausgabe.
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 macro(re15_spiel_lauf _erg _wozu)
-    execute_process(COMMAND "${CMAKE_COMMAND}" -E env ${ARGN}
-                    WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 180 RESULT_VARIABLE ${_erg})
+    re15_start_spiel(${_erg} 180 ${ARGN})
     if(NOT ${_erg} EQUAL 0)
         set(_zeilen "")
         if(EXISTS "${WORKDIR}/debug.log")
@@ -130,8 +130,7 @@ macro(re15_spiel_lauf _erg _wozu)
             message(STATUS "${_wozu}: das Spiel kam nicht ueber das Hochfahren hinaus "
                            "-> EIN Wiederholungsversuch (Startfehler, kein Ergebnisfehler)")
             file(REMOVE "${WORKDIR}/debug.log")
-            execute_process(COMMAND "${CMAKE_COMMAND}" -E env ${ARGN}
-                            WORKING_DIRECTORY "${WORKDIR}" TIMEOUT 180 RESULT_VARIABLE ${_erg})
+            re15_start_spiel(${_erg} 180 ${ARGN})
         endif()
     endif()
 endmacro()

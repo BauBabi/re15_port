@@ -8293,6 +8293,27 @@ re_title:;
          * (sw 1 @0x8001449C) und die Rampe auf 0xff — Zustand 0 ist unerreichbar (einziger
          * Schreiber von DAT_8008f618 ist das Menue selbst, BSS-Startwert 0 zaehlt nicht, weil
          * das Menue nur bei DAT_800bbe5c!=0 zeichnet). */
+        /* ⛔ MESS-ANZEIGE FUER FEHLERMELDUNGEN (RE15_POS_HUD=1, im Normalpfad stumm).
+         * ANLASS 2026-09-05: der Nutzer meldet Verdeckungsfehler per Screenshot, und aus
+         * dem Bild allein laesst sich seine Weltlage NICHT widerspruchsfrei zurueck-
+         * rechnen (ROOM1140 Cut 0: aus der Bildhoehe folgte vz <= 5887, aus der Fusszeile
+         * vz 12198 - beides kann nicht stimmen, s. analysis/stuhl_1140_2026-09-05).
+         * Solange die fehlt, waere jede Aenderung an einer Maskentiefe geraten. Mit dieser
+         * Zeile im Bild enthaelt EIN Screenshot alles: Raum, Cut, Weltlage, Blickrichtung
+         * und wie viele Masken der Cut gerade zeichnet. */
+        if (getenv("RE15_POS_HUD")) {
+            extern int re15_render_pc_debug_text(int x, int y, const char *str);
+            extern int re15_pri_log_cut(void);
+            extern int re15_render_pc_debug_pri(int *depths, int max);
+            const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            char hud[80];
+            int tiefen[128];
+            int nmask = re15_render_pc_debug_pri(tiefen, 128);
+            snprintf(hud, sizeof hud, "R%04X C%d  %d %d %d  ROT%d  M%d",
+                     (unsigned)g_current_room_id, re15_pri_log_cut(),
+                     (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, nmask);
+            re15_render_pc_debug_text(4, 4, hud);
+        }
         if (re15_debug_menu_open()) {
             extern int  re15_render_pc_debug_text(int x, int y, const char *str);
             extern void re15_render_pc_debug_box(int rg);

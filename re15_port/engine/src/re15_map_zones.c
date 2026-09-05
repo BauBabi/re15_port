@@ -579,14 +579,31 @@ int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
         /* Nur zeigen, was der Spieler schon gesehen hat: die Marke gehoert zur Zone
          * mit dieser Nummer — ist sie unbesucht, wird auch das Rechteck nicht
          * gezeichnet, dann waere die Marke ein Hinweis auf Unbekanntes. */
-        /* Sichtbar, sobald EINE der beiden Zonen besucht ist. Ein Durchgang
-         * zwischen zwei Raeumen wird als EIN Datensatz gefuehrt; zid2 haelt die
-         * Zone der anderen Seite (255 = keine). Sonst waere die Tuer unsichtbar,
-         * wenn der Spieler zuerst den anderen Raum betritt. */
+        /* ⛔ NUR, WENN IHR EIGENES RECHTECK GEZEICHNET WIRD (Nutzer-Befund
+         * 2026-09-05, fehler/error.png: "This door is flying - not on the wall/Edge").
+         * Die LAGE einer Marke stammt aus der Projektion IHRER Zone auf DEREN
+         * Rechteck. Wird dieses Rechteck nicht gezeichnet, haengt die Marke an nichts.
+         *
+         * Die frueher hier stehende Ausnahme ("sichtbar, sobald EINE der beiden Zonen
+         * besucht ist") war genau dieser Fall. Gemessen auf Blatt 3: Marke #51 gehoert
+         * ROOM10D0 (Rect 3) und liegt bei (141,117); mit nur ROOM10C0 besucht stand sie
+         * frei im Blau. Sie im KASTEN der zweiten Zone zu pruefen reicht NICHT - der
+         * Kasten ist nur die Bounding-Box: (141,117) liegt in Rect 0 (102,116) 40x40,
+         * die Kachel traegt dort aber Index 0, also nichts Gemaltes. Gemalt ist die
+         * Stelle allein in Rect 3s Kachel (Punkt (6,73), Index 1).
+         *
+         * Die Tuer ist damit erst zu sehen, wenn man den Raum betreten hat, zu dem ihr
+         * Rechteck gehoert - und genau dann hat sie auch eine Wand, an der sie klebt.
+         * zid2 bleibt in der Tabelle: der Pin unit_map_mark_band unterscheidet daran
+         * die Selbst-Tuer von einer Tuer nach draussen. */
         if ((s_visited[m->zid >> 3] >> (m->zid & 7)) & 1) return 1;
-        if (m->zid2 != 255 &&
-            ((s_visited[m->zid2 >> 3] >> (m->zid2 & 7)) & 1)) return 1;
-        return 0;
+        /* Die zweite Zone zaehlt weiter - aber nur, wenn die Marke auf deren GEMALTER
+         * Flaeche sitzt. Das Bit dafuer rechnet der Generator aus (auf_partner); die
+         * Engine hat die Blattgrafik nicht. Gemessen ueber alle Marken mit
+         * Partner-Rechteck: 47 liegen darauf (die bleiben wie bisher schon von der
+         * anderen Seite sichtbar), 23 nicht (die schwebten). */
+        return (m->auf_partner && m->zid2 != 255 &&
+                ((s_visited[m->zid2 >> 3] >> (m->zid2 & 7)) & 1)) ? 1 : 0;
     }
 }
 

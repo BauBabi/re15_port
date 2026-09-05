@@ -38,16 +38,13 @@ endif()
 file(MAKE_DIRECTORY "${WORKDIR}")
 file(REMOVE "${WORKDIR}/debug.log")
 
-execute_process(
-    COMMAND "${CMAKE_COMMAND}" -E env
-            RE15_NO_INTRO=1              # Boot-FMV aus (spart ~20s; der Defekt haengt nicht daran)
-            RE15_TITLE_SHOT=title.bmp    # Titel-Auto-Advance
-            RE15_TITLE_SHOT_AF=4         # ... schon bei tblink=4 -> ohne Fix B=239
-            RE15_INV_SHOT=exit34.bmp     # sauberer exit(0) bei Game-Frame 34
-            "${RE15_PC_EXE}"
-    WORKING_DIRECTORY "${WORKDIR}"
-    TIMEOUT 100
-    RESULT_VARIABLE rv
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+re15_start_spiel(rv 100
+    RE15_NO_INTRO=1              # Boot-FMV aus (spart ~20s; der Defekt haengt nicht daran)
+    RE15_TITLE_SHOT=title.bmp    # Titel-Auto-Advance
+    RE15_TITLE_SHOT_AF=4         # ... schon bei tblink=4 -> ohne Fix B=239
+    RE15_INV_SHOT=exit34.bmp     # sauberer exit(0) bei Game-Frame 34
+    "${RE15_PC_EXE}"
 )
 if(NOT rv EQUAL 0)
     message(FATAL_ERROR "dark_start_pin: re15_pc.exe exit=${rv} (erwartet 0)")

@@ -30,16 +30,13 @@ endif()
 file(MAKE_DIRECTORY "${WORKDIR}")
 file(REMOVE "${WORKDIR}/debug.log")
 
-execute_process(
-    COMMAND "${CMAKE_COMMAND}" -E env
-            RE15_NO_INTRO=1              # Boot-FMV aus (irrelevant fuer den Pin, spart ~20s)
-            RE15_TITLE_SHOT=title.bmp    # Title-Auto-Advance -> re15_gameflow_new_game(0)
-            RE15_FADE_LOG=1              # [bg-log]/[fade-log]-Instrumentierung an
-            RE15_INV_SHOT=exit34.bmp     # sauberer exit(0) bei Game-Frame 34
-            "${RE15_PC_EXE}"
-    WORKING_DIRECTORY "${WORKDIR}"
-    TIMEOUT 100
-    RESULT_VARIABLE rv
+include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+re15_start_spiel(rv 100
+    RE15_NO_INTRO=1              # Boot-FMV aus (irrelevant fuer den Pin, spart ~20s)
+    RE15_TITLE_SHOT=title.bmp    # Title-Auto-Advance -> re15_gameflow_new_game(0)
+    RE15_FADE_LOG=1              # [bg-log]/[fade-log]-Instrumentierung an
+    RE15_INV_SHOT=exit34.bmp     # sauberer exit(0) bei Game-Frame 34
+    "${RE15_PC_EXE}"
 )
 if(NOT rv EQUAL 0)
     message(FATAL_ERROR "boot_bg_pin: re15_pc.exe exit=${rv} (erwartet 0)")
