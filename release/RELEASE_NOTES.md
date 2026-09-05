@@ -1,3 +1,85 @@
+# RE1.5 Port — v0.6.3 (Early Preview)
+
+**Deine sechs Befunde: fünf behoben, einer offen — und ich sage bei dem offenen, warum.**
+
+## Die Geländer (error03, error04) — eine ganze Klasse, nicht zwei Einzelfälle
+
+Ich habe im **laufenden Spiel** gemessen statt zu modellieren:
+
+```
+Spieler (20268,-14400,26482) | Figur-Tiefe 4800..6862
+| Atlas 1, Sektion 81 Masken | Tiefe 265..414 (Schwelle 16960..26496) | verdeckend 0
+```
+
+Der Ladeweg war intakt — die **Entfernung** war zwei- bis viermal zu groß. Mein
+Tiefenmodell schnitt den Sehstrahl immer mit dem Boden bei `y = 0`. ROOM1060 ist aber
+ein **Treppenhaus mit fünf Bodenebenen**, und das Podest liegt bei `y = −14400` — genau
+der Wert, den der Spieler dort trägt.
+
+Die Ebene kommt jetzt aus den Originaldaten, in drei Schritten:
+
+1. Jede Kollisionszelle trägt ein Boden-Byte; die Höhe eines Bandes ist `−band·0x708`.
+2. Welche Bänder wirklich betreten werden, sagen die **Tür-Spawns** und die
+   **Treppen-Datensätze**: ROOM1060 wird auf 0, −7200 und −14400 betreten, seine
+   Treppen bedienen zusätzlich −3600 und −10800. ROOM1120 dagegen nur 0 — seine drei
+   Bänder tragen identische Zellen, zwei davon betritt nie jemand.
+3. Welches Band ein Kamerawinkel zeigt, sagt sein **Blickzielpunkt**, gerundet auf das
+   nächste begehbare Band. Ist das nicht eindeutig, **bricht der Generator ab** und
+   verlangt den gemessenen Wert — lieber keine Maske als eine falsche.
+
+Zwei naheliegende Abkürzungen habe ich durchgerechnet und **verworfen**: „die Zelle
+sagt es" (die Bänder teilen sich ihre Zellen) und „das Blickziel allein sagt es"
+(ROOM1120 läge damit 3600 daneben).
+
+**Ergebnis:** verdeckende Masken **0 von 81 → 52…81 von 81**, steigend mit der
+Entfernung. Im Bild läuft der Handlauf jetzt vor Leons Beinen.
+
+## Der Tresen (error05)
+
+An genau deiner Stelle im Screenshot (Fußpunkt (171,154) → Tiefe 9782) lagen 12 von 14
+Maskenrechtecken vor dir — **zwei aber bei 8512 und 11072**, und zwar die zwei am linken
+Tresenrand, wo die unterste Maskenzeile die Tresen*platte* ist statt des Bodens.
+
+Die Spaltenregel ist für einen Tresen falsch: das ist ein Körper, hinter den man nicht
+halb treten kann. Jetzt eine Entfernung (5248) — er deckt dich vollständig.
+
+## Die Karte 2F (error01, error02)
+
+Beides derselbe Grund, und beides ist durch die Daten **erzwungen**, nicht gewählt:
+
+* Der Türgraph der Etage ist `Treppenhaus — 10C0 — 10D0 — {10E0, 10F0, 1100}`, dazu
+  `10C0 — Fahrstuhl`. Zählt man alle Zuordnungen auf, die **jede** Türkante erfüllen
+  (192 Stück), liegt ROOM10C0 in **192 von 192** auf dem Rechteck direkt neben dem
+  Treppenhaus. Genau das hattest du erwartet.
+* ROOM10D0 misst 63 × 91 px; das einzige Rechteck der Seite, in das das passt, ist
+  72 × 88. Mit der alten, von 1F kopierten Tabelle war das größte 72 × 64 — deshalb
+  ließ der Löser den Raum lieber **ganz weg**, und du wurdest dort nicht angezeigt.
+
+Zusätzlich darf ein Raum jetzt nicht mehr ganz wegfallen, solange Rechtecke frei sind.
+Auf 2F sind dadurch alle sechs Räume gezeichnet; spielweit 87 → 91 Räume.
+
+**Gemessen an der ganzen Raumkette ab EXE-Start:**
+
+```
+178 Türen durchschritten — 178× vorher UND nachher der richtige Raum rot
+ 91 Räume geprüft — 91 zeigen sichtbares Rot, 0 nicht        (vorher 87/87)
+ 91 von 91 Spieler-Marker liegen in der roten Fläche
+```
+
+Marken, die auf leerer Fläche sitzen: 13 von 173 (7,5 %) → **12 von 180 (6,7 %)**;
+auf 2F 2 von 6 → **1 von 10**.
+
+## Der Stuhl (error06) — offen, und ich sage warum
+
+Gemessen liegt die Stuhlmaske bei Kamera-z 7168…8256, du an dieser Stelle bei
+10165…12243 — sie **müsste** dich decken. Reproduzieren konnte ich es nicht: der
+Debug-Sprung nach ROOM1140 landet in der Irons-Zwischensequenz, in der der Spieler
+festhängt. Ich melde das nicht als erledigt.
+
+Tests: 274/274.
+
+---
+
 # RE1.5 Port — v0.6.2 (Early Preview)
 
 **Das 2F-Blatt zeichnete in Wahrheit den Grundriss von 1F — und der Stuhl verdeckt dich wieder.**
