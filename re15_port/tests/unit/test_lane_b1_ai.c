@@ -443,12 +443,16 @@ static void t3_sfx_gate(const char *base)
      *   identisch fuer EXEC[2]: @0x80102420 lbu v1,333(s0), bne @0x8010244c, jal @0x80102454
      * Der Port bildet +0x14D auf den Frame-Slot ab (anim_frame %% clip_len). GEMESSEN (Mutations-
      * Gegentest 2026-08-17: Takt-Zeile entfernt -> unveraenderte 9): der Takt ist auf DIESEM Clip
-     * WIRKUNGSLOS, weil die einzigen SE-tragenden Frames des EM010-Walk-Clips 20 und 62 sind und
-     * beide %%3==2 erfuellen. Dieser Pin deckt den Takt also NICHT ab — er haelt die SE-ZAHL fest
+     * fuer die SE-AUSWAHL wirkungslos, weil die einzigen SE-tragenden Frames des EM010-Walk-Clips
+     * 20 und 62 sind und beide %%3==2 erfuellen. Dieser Pin haelt die SE-ZAHL fest
      * (deterministisch via re15_damage_seed_rng(0x0badf00d)) und faengt Regressionen, die den
-     * Pfad verstummen lassen (Gegentest: Emitter stumm -> 0) oder ihn oefter feuern lassen. */
-    CHECK(walk_fw == 9,
-          "T3: SE-Zahl-Pin — im 300-Frame-Walk-Fenster feuern genau 9 Frame-Wort-SEs "
+     * Pfad verstummen lassen (Gegentest: Emitter stumm -> 0) oder ihn oefter feuern lassen.
+     * NEUBERECHNUNG 2026-09-05 (Welle B/F4): der EXTRA-ADVANCE 0x8002A9C8 (@0x80101D54,
+     * vorher bewusst fehlend) laesst den Fettzombie 3 Frames je 2 Ticks laufen — 300 Ticks
+     * durchmessen jetzt ~1,5 Clip-Zyklen mehr: 9 -> 13 Frame-Wort-SEs (2 je Durchlauf,
+     * SE-Frames 20/62; Herleitung verify_zombie_conf.md (e) Korrektur C). */
+    CHECK(walk_fw == 13,
+          "T3: SE-Zahl-Pin — im 300-Frame-Walk-Fenster feuern genau 13 Frame-Wort-SEs "
           "(2 je Clip-Durchlauf, SE-Frames 20/62); gemessen %d", walk_fw);
 
     /* (b) KNOCKDOWN (EXEC[5]): KEIN Frame-Wort-SE. Die Executor-eigenen SEs

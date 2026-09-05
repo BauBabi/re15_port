@@ -387,6 +387,11 @@ static void re2z_gait_tick(re15_actor_t *e)
     e->re2z_gaitrow = (uint8_t)row;
     uint32_t r = re2z_rand() & 0x1fu;                                    /* @0x80101b80 */
     e->re2z_gaittmr = (uint16_t)((re15_re2z_gait_tbl[row] & 0x7fffu) + r);
+    /* JITTER-Draw am Zeilenwechsel (B3-Fix 2026-09-05, @0x80101B8C-A8, selbst disasm'd:
+     * `jal rand; andi 1; sll 5; lhu +0x76; addiu -16; addu; sh +0x76`):
+     * yaw = yaw - 16 + ((rand&1)<<5) = +-16 je Zeilengrenze — der zweite Draw des
+     * Zeilenwechsels; fehlte im Port (nur 1 Draw). */
+    e->rot_y = (int16_t)((((int)e->rot_y - 16) + (int)((re2z_rand() & 1u) << 5)) & 0xfff);
 }
 
 /* Apply the RE2 walk turn for one tick. `dist` = distance to the player (the port's ai_dist, which is
@@ -1143,18 +1148,23 @@ static void re2z_hit_latch_release(re15_actor_t *e)
  *   dist<0x1388 && a1024==0 && (+0x154&0x800)                  -> 0x101  @0x80101308-1C
  *   dist<0xBB8 && a800!=0 && (cfbf6&0x15) && (+0x154&0x800) && (rand&1)==0 -> 0xC01 @0x80101374-78
  *   dist<0x7D0 && a1024!=0 && (cfbf6&0x17) && (+0x154&0x800) && (rand&1)==0 -> 0xC01 @0x801013CC-D0
- * +0x154 & 0x800: an actor flag word with no identified port producer -> MAPPED 1 (OPEN). */
+ * +0x154 & 0x800 = re2z_los154 (F2-Fix 2026-09-05; vorher konstant 1). WICHTIG: der LOS-Test
+ * steht VOR dem rand&1-Draw der Bloecke 2/3 (@0x8010134C/@0x80101390 vor den jals) — LOS=0
+ * aendert also auch die WURFZAHL, nicht nur das Gate (Kurzschluss-Reihenfolge = Byte-Kriterium,
+ * verify_zombie_conf.md (c)). */
 static void re2z_decide_stand(re15_actor_t *e, re15_actor_t *pl)
 {
     uint32_t dist = e->ai_dist;
     int a1024 = re15_ai_arc_test(e, pl->x, pl->z, 1024);
     int a800  = re15_ai_arc_test(e, pl->x, pl->z,  800);
     uint16_t mv = re2z_cfbf6(pl);
-    if (dist < 0x1388u && a1024 == 0)
+    if (dist < 0x1388u && a1024 == 0 && e->re2z_los154)
         re15_ai_set_state_word(e, 0x101);                          /* @0x80101318-1C */
-    if (dist < 0xbb8u && a800 != 0 && (mv & 0x15u) && (re2z_rand() & 1u) == 0u)
+    if (dist < 0xbb8u && a800 != 0 && (mv & 0x15u) && e->re2z_los154
+        && (re2z_rand() & 1u) == 0u)
         re15_ai_set_state_word(e, 0xC01);                          /* @0x80101374-78 */
-    if (dist < 0x7d0u && a1024 != 0 && (mv & 0x17u) && (re2z_rand() & 1u) == 0u)
+    if (dist < 0x7d0u && a1024 != 0 && (mv & 0x17u) && e->re2z_los154
+        && (re2z_rand() & 1u) == 0u)
         re15_ai_set_state_word(e, 0xC01);                          /* @0x801013CC-D0 */
 }
 
@@ -1176,25 +1186,101 @@ static void re2z_decide_walk_apply(re15_actor_t *e, re15_actor_t *pl)
 
 /* ============================== ACTIVE: EXECUTORS ========================================== */
 
-/* EXEC[0] @0x801013F4 (stand): P0 @0x80101458 clip 0 rate 0xF at a RANDOM start frame
- * (((rand&0x1F)<<8)|0xF0000|0), +0x158 = rand+150 @0x80101480-88, +0x15A = rand+300
- * @0x8010148C-90. P1 @0x80101494: advance(256); +0x15A expiry -> 1/2 moan SE 11 @0x801014CC-EC
- * (cooldown 150), reseed rand+300 @0x801014F0-FC. */
-static void re2z_exec_stand(re15_actor_t *e)
+/* EXEC[0] @0x801013F4 (stand) — die 4-PHASEN-WANDER-MASCHINE (F1-Fix 2026-09-05; vorher nur
+ * P0+Moan -> Zombies waren nach jedem Griff/Biss Statuen). Selbst disassembliert + adversarial
+ * gegengeprueft (verify_zombie_conf.md (a), alle Zeilen dort):
+ *   P0 @0x80101458-90: Clip 0 Rate 0xF ZUFALLSFRAME; +0x6=1; +0x158=rand+150; +0x15A=rand+300;
+ *      FAELLT im selben Tick in P1 durch (@0x80101490->0x80101494).
+ *   P1 @0x80101494: Advance(256) [Port: globaler Advancer]; +0x15A: pre-dec==0 -> Moan-Block
+ *      (+0x239-Gate, rand&1 -> SE 11, cd 150, Reseed rand+300 @0x801014BC-FC); sonst Dekrement,
+ *      und POST-dec==0 (= der Tick VOR dem Moan-Tick) -> WANDER-WURF @0x8010151C-40:
+ *      (rand&1)==0 -> +0x6=2 (der Moan-Tick des Zyklus ENTFAELLT, Phase verlassen).
+ *      [+0x14E==0-gegateter jal 0x80016200 @0x80101500-18: P0 schreibt Rate 0xF nach +0x14E ->
+ *       im Idle DORMANT; Konsument nicht identifiziert — benannt, nicht portiert.]
+ *      SELBST-WECKER @0x80101544-7C: +0x158==0 (sonst Dekrement @0x80101590-A0) ->
+ *      dist<0x1D4C && +0x154&0x800 -> sw 257,4 = 0x101. KEIN Kegel-Test (Call-Liste des ganzen
+ *      EXEC[0]: kein 0x80015614/0x80015758 — der Zombie weckt sich auch mit dem Ruecken).
+ *   P2 @0x801015A4-DC (WANDER-SETUP): +0x6=3; Clip-Wort 0xF0000+walkclip (Frame 0);
+ *      +0x158=rand+150; ZONEN-DRAW jal 0x8004AA50 @0x801015C4 -> +0x235 (rand % count;
+ *      count==0 -> 255 OHNE Draw — eigener EXE-Disasm 0x8004AA50-AAB4); +0x21A|=0x400;
+ *      faellt im selben Tick in P3 durch (@0x801015DC).
+ *   P3 @0x801015E0-16A8 (WANDER-GANG): Steer(+0x1C4/6, Rate 16) + Bewegungs-Trio
+ *      e7c/959c(256)/152c8; Exits: (i) +0x158-- UNBEDINGT, ==0 -> +0x6=0 + ~0x400
+ *      (@0x80101624-4C, KEIN Return — die Wake-Pruefungen laufen im selben Tick);
+ *      (ii) dist<0xBB8 -> 0x101 + Clear (OHNE LOS, @0x80101650-70);
+ *      (iii) dist<0x1D4C && LOS -> 0x101 + Clear (@0x80101674-A8).
+ * WP-BRUECKE (verify (f), NICHT als zweiter Nav-Aufruf — Doppel-Dekrement des Repath-Timers!):
+ * das Original uebergibt dem Navigator das PERSISTENTE +0x21A&0x400 + +0x235 (@0x8010034C-58);
+ * der Port-Prolog (enemy_ai_common.c) konsumiert ai_flags&8 als EIN-SCHUSS — P2/P3 bestellen
+ * das Bit deshalb JEDEN Tick neu (dieselbe 1-Tick-Pipeline: P2 setzt, der Navigator liest im
+ * Folgetick). Bank: re15_re2z_poses_loco_bank fuehrt sub0/P>=2 bereits als Paar 1. */
+static void re2z_exec_stand(re15_actor_t *e, re15_actor_t *pl)
 {
-    if (e->sub_state_2 == 0) {
+    if (e->sub_state_2 == 0) {                                     /* P0 @0x80101458-90 */
         uint32_t r = re2z_rand();
         re2z_clip(e, 0, (int)(r & 0x1fu), 0xF, 0x100, 1);          /* @0x80101458-70 */
         e->sub_state_2 = 1;                                        /* @0x80101474-7C */
         e->re2z_t158 = (int16_t)(re2z_rand() + 150);               /* @0x80101478-88 */
         e->re2z_t15a = (int16_t)(re2z_rand() + 300);               /* @0x80101484-90 */
-        return;
+        /* Durchfall in P1 (@0x80101490 -> 0x80101494) */
     }
-    if (e->re2z_t15a != 0) { e->re2z_t15a--; return; }             /* @0x801014A8-B8 */
-    if (e->re2z_cd239 == 0 && (re2z_rand() & 1u) != 0u) {          /* @0x801014BC-D8 */
-        re2z_se(11); e->re2z_cd239 = 150;                          /* @0x801014E0-EC */
+    if (e->sub_state_2 == 1) {                                     /* P1 @0x80101494 */
+        if (e->re2z_t15a == 0) {                                   /* Moan-Tick @0x801014BC-FC */
+            if (e->re2z_cd239 == 0 && (re2z_rand() & 1u) != 0u) {
+                re2z_se(11); e->re2z_cd239 = 150;                  /* @0x801014E0-EC */
+            }
+            e->re2z_t15a = (int16_t)(re2z_rand() + 300);           /* @0x801014F0-FC */
+        } else {
+            e->re2z_t15a--;                                        /* Delay-Slot-Store @0x801014B8 */
+            if (e->re2z_t15a == 0 && (re2z_rand() & 1u) == 0u) {   /* WANDER @0x8010151C-40 */
+                e->sub_state_2 = 2;                                /* +0x6=2; Moan des Zyklus
+                                                                    * entfaellt (Phase verlassen) */
+            }
+        }
+        if (e->sub_state_2 == 1) {                                 /* Wecker nur solange P1 */
+            if (e->re2z_t158 == 0) {                               /* @0x80101544-7C */
+                if (e->ai_dist < 0x1d4cu && e->re2z_los154) {
+                    re15_ai_set_state_word(e, 0x101);              /* sw 257,4 @0x80101578-7C */
+                    return;
+                }
+            } else e->re2z_t158--;                                 /* @0x80101590-A0 */
+            return;
+        }
     }
-    e->re2z_t15a = (int16_t)(re2z_rand() + 300);                   /* @0x801014F0-FC */
+    if (e->sub_state_2 == 2) {                                     /* P2 @0x801015A4-DC */
+        e->sub_state_2 = 3;
+        re2z_clip(e, e->re2z_walkclip, 0, 0xF, 0x100, 1);          /* 0xF0000+walkclip, Frame 0 */
+        e->root_prev_kf = -1;                                      /* Bankwechsel-Re-Anker */
+        e->re2z_t158 = (int16_t)(re2z_rand() + 150);               /* @0x801015B8-C0 */
+        {   /* Zonen-Draw 0x8004AA50: rand % count; count==0 -> 255 OHNE Draw */
+            int n = re15_nav_zone_count();
+            e->ai_wp_node = (n > 0) ? (uint8_t)(re2z_rand() % (unsigned)n) : 0xff;
+        }
+        e->re2z_flags21a |= 0x400u;                                /* @0x801015D4-D8 */
+        /* Durchfall in P3 (@0x801015DC) */
+    }
+    if (e->sub_state_2 == 3) {                                     /* P3 @0x801015E0-16A8 */
+        if (e->ai_wp_node != 0xff)
+            e->ai_flags |= 8u;                                     /* WP-Bruecke (s. Kopf) */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16);     /* @0x801015E8 Rate 16 */
+        re15_re2z_move_root(e);                                    /* e7c/152c8 @0x801015FC-20 */
+        e->re2z_t158--;                                            /* UNBEDINGT @0x80101624 */
+        if (e->re2z_t158 == 0) {                                   /* -> P0 + Clear, KEIN Return */
+            e->sub_state_2 = 0;
+            e->re2z_flags21a &= (uint16_t)~0x400u;                 /* @0x80101640-4C */
+        }
+        if (e->ai_dist < 0xbb8u) {                                 /* (ii) @0x80101650-70, OHNE LOS */
+            re15_ai_set_state_word(e, 0x101);
+            e->re2z_flags21a &= (uint16_t)~0x400u;
+            return;
+        }
+        if (e->ai_dist < 0x1d4cu && e->re2z_los154) {              /* (iii) @0x80101674-A8 */
+            re15_ai_set_state_word(e, 0x101);
+            e->re2z_flags21a &= (uint16_t)~0x400u;
+            return;
+        }
+    }
+    (void)pl;
 }
 
 /* EXEC[1] @0x80101A40 (walk): P0 @0x80101A74 clip word = +0x218 | 0xF0000 (@0x80101A7C-8C) +
@@ -1202,20 +1288,101 @@ static void re2z_exec_stand(re15_actor_t *e)
  * movement. Steer point +0x1C4/+0x1C6 = the RE2 navigator output; the PORT equivalent is its
  * own nav steer (re15_nav_update_steer fills e->steer_x/z each tick BEFORE this brain runs —
  * cross-zone it pathfinds exactly like FUN_8004A808's first-hop would). */
+/* FETTZOMBIE-/VERKOHLUNGS-KADENZ (B4-Fix 2026-09-05) — der Drittel-Takt-Block der beiden
+ * einzigen Call-Sites (eigener jal-Scan, s. Anim-SFX-Kommentar in enemy_ai_common.c):
+ *   WALK   @0x80101CD8-D5C: Gate (+0x10E&0x80)||(+0x21A&0x8000) @0x80101CE0-F8; +0x14D%3==2
+ *          (0xAAAAAAAB-Magie @0x80101D04-24, POST-Advance gelesen) -> jal 0x801016c8 (SE-Probe)
+ *          @0x80101D34 -> Steer Rate 8 @0x80101D48 -> jal 0x8002A9C8 (EXTRA-ADVANCE) @0x80101D54.
+ *   EXEC[2] @0x80102400-60: identisch, aber OHNE Steer-8 (@0x80102454 -> direkt @0x80102460).
+ * 0x8002A9C8 selbst disassembliert (@0x8002A9C8-AA24): +0x14D++ mit Clip-Wrap, KEIN Blend,
+ * KEINE Wurzelbewegung — Port: monotoner Frame-Zaehler ++. Residue 2 kehrt dadurch alle ZWEI
+ * Ticks wieder -> 3 Frames je 2 Ticks = 1,5-fache Gang-Kadenz (verify_zombie_conf.md (e)).
+ * ⛔ REIHENFOLGE TRAEGT: die Probe MUSS vor dem Extra-Advance laufen — der nachgelagerte
+ * gemeinsame Anim-SFX-Block sah die Residue-2-Frames nach dem Skip nie mehr (gemessen:
+ * unit_re2_gore PIN 6 verlor die Schritt-SEs); sein RE2-Drittel-Zweig ist deshalb hierher
+ * verschoben (eine Emissions-Stelle, kein Doppel-SE). */
+static void re2z_fat_cadence_tick(re15_actor_t *e, int steer8)
+{
+    if (!((e->re2z_f10e & 0x0080u) || (e->re2z_flags21a & 0x8000u)))
+        return;                                            /* @0x80101CE0-F8 / @0x80102400-18 */
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) return;
+    const re15_emd_animation_t *A = (re15_actor_uses_loco_bank(e) && b->loco_ok)
+                                        ? &b->anim_loco : &b->anim;
+    if ((int)e->motion >= A->clip_count) return;
+    const re15_emd_clip_t *c = &A->clips[e->motion];
+    if (c->frame_count <= 0) return;
+    uint32_t slot14d = e->anim_frame % (uint32_t)c->frame_count;   /* +0x14D POST-Advance */
+    if ((slot14d % 3u) != 2u) return;                      /* @0x80101D04-2C / @0x80102420-4C */
+    {   /* 0x801016c8: Frame-Wort-Bit 0x08000000 && (Wort>>28)<2 -> ENEMSE-SE (Wort>>28) */
+        uint32_t fw = A->frames[c->first_frame + slot14d];
+        if ((fw & 0x08000000u) && (fw >> 28) < 2u)
+            re15_re2z_se_play((int)(fw >> 28));            /* jal 0x8005bd6c @0x801016fc */
+    }
+    if (steer8)
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 8);   /* @0x80101D48 (nur WALK) */
+    /* 0x8002A9C8 @0x80101D54/@0x80102460: +0x14D++ MIT WRAP gegen das fc-Halbwort des
+     * Clip-Deskriptors (eigenes Disasm @0x8002A9C8-AA24). Der Wrap traegt: ohne ihn liegt
+     * der Zaehler am Zyklusrand auf ==fc, der globale Advancer wrappt dann 60->0 und frisst
+     * einen Frame — 41 statt 40 Ticks/Zyklus (gemessen: unit_re2_sfx_cadence C2 7 statt 8). */
+    e->anim_frame = (uint16_t)(((uint32_t)e->anim_frame + 1u) % (uint32_t)c->frame_count);
+}
+
 static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
+        /* P0 @0x80101A74-B20 = EXAKT FUENF Draws in dieser Reihenfolge (B3-Fix 2026-09-05;
+         * verify_zombie_conf.md (d) — der Draw-Strom ist Verhalten):
+         *   (1) Gait-Zeile (r&0xf)<<1 @0x80101A88-9C, (2) Zeilen-Timer tbl&0x7FFF + VOLLES
+         *   rand-Byte @0x80101AC0-C8 [beide in re15_re2z_gait_init], (3) +0x16A-Puls
+         *   (r&0x1f)+30 @0x80101AC4-E8, (4) +0x14D = r&0x1f ZUFALLS-STARTBILD @0x80101AEC-B0C
+         *   (zwischen den zwei e7c-Re-Ankern @0x80101AE4/@0x80101B08 — vorher liefen alle
+         *   Zombies im Gleichschritt ab Frame 0), (5) +0x15A = (r>>3)+100 @0x80101B10-20. */
         re2z_clip(e, e->re2z_walkclip, 0, 0xF, 0x100, 1);          /* @0x80101A74-8C */
         e->sub_state_2 = 1;
-        /* gait rows/timer seed themselves through re2z_gait_tick's entry tag */
+        re15_re2z_gait_init(e);                                    /* Draws 1+2 */
+        e->re2z_gaitinit = (uint8_t)(0x80u | (e->sub_state_1 & 0x7fu));
+        e->re2z_dir16a = (uint8_t)((re2z_rand() & 0x1fu) + 30u);   /* Draw 3 */
+        e->anim_frame  = (uint16_t)(re2z_rand() & 0x1fu);          /* Draw 4 */
+        e->root_prev_kf = -1;                                      /* e7c-Re-Anker */
+        e->re2z_t15a = (int16_t)((int)(re2z_rand() >> 3) + 100);   /* Draw 5 */
+        /* Durchfall in den Tick-Body (frisch geseedete Timer -> keine weiteren Draws) */
     }
-    re2z_walk_moan(e);                                             /* @0x80101C44-88 */
-    re15_re2z_walk_turn(e, e->steer_x, e->steer_z, e->ai_dist);    /* @0x80101BAC-CAC */
+    re15_re2z_walk_turn(e, e->steer_x, e->steer_z, e->ai_dist);    /* Gait @0x80101B2C-A8 (inkl.
+                                                                    * Jitter-Draw am Zeilen-
+                                                                    * wechsel) + Turn-Gate
+                                                                    * @0x80101BAC-CAC */
+    /* +0x16A-PULS @0x80101C08-40 (B3-Fix): Dekrement jeden Tick; NUR am Ablauf-Tick Reload
+     * (rand&0xf)+30 + EXTRA-Steer Rate 16 @0x80101C3C + ERST DANN der Moan-Block
+     * @0x80101C44-88. Vorher lief re2z_walk_moan JEDEN Tick (~4,5x zu haeufige Gang-Moans,
+     * 1-2 Fremd-Draws pro Tick) und die Original-Reihenfolge Turn->Puls->Moan war verletzt. */
+    if (e->re2z_dir16a == 0) {
+        e->re2z_dir16a = (uint8_t)((re2z_rand() & 0xfu) + 30u);    /* Reload @0x80101C28-34 */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16);     /* Extra-Steer @0x80101C3C */
+        re2z_walk_moan(e);                                         /* @0x80101C44-88 */
+    } else e->re2z_dir16a--;
+    /* FETTZOMBIE-/VERKOHLUNGS-KADENZ (B4-Fix): Probe -> Steer 8 -> Extra-Advance, s. Helfer. */
+    re2z_fat_cadence_tick(e, 1);
     /* WALK movement = the e7c+152c8 pair (@0x80101CBC + @0x80101D60): 0x80015e7c computes the
      * PAIR-1 clip root delta into +0x144, 0x800152C8 applies it rotated -> ONE delta
      * application in the port. NOT the RE1.5 foot-lock: pair-1 clips 0/2 carry the forward
      * translation in the kf root fields (byte-read: clip 0 sx 2/47/121/209...). */
     re15_re2z_move_root(e);                                        /* e7c @0x80101CBC + 152c8 @0x80101D60 */
+    /* +0x15A-TIMER-Block @0x80101D68-DBC (= Produzent (1) des 0x201-Gangs, s. OFFEN-Block
+     * unten): Dekrement; (alt-1)==0 -> Reseed (rand>>3)+100 @0x80101D84-98 + ZWEITER Draw
+     * rand&3 @0x80101D94-A0 [+ dist<0x1388 -> +0x4=0x201 @0x80101DB8-BC]. B3-Politik
+     * (verify (f) Risiko 4): die ZWEI Ablauf-Draws laufen fuer die Strom-Paritaet MIT —
+     * NUR der finale 0x201-Commit bleibt gedrosselt, solange der (1)+(2)-Nahkampf-
+     * Zusammenbruch (3523->0, Bisektion unten) unaufgeklaert ist. Vorher wurde +0x15A im
+     * Gang weder geseedet noch getickt -> ab dem ersten Original-Ablauf (~101-132 Ticks)
+     * war jeder Vergleichs-Strom verschoben. */
+    e->re2z_t15a--;
+    if (e->re2z_t15a == 0) {
+        e->re2z_t15a = (int16_t)((int)(re2z_rand() >> 3) + 100);   /* Reseed-Draw */
+        if ((re2z_rand() & 3u) == 0u && e->ai_dist < 0x1388u) {    /* 2. Draw + dist-Gate */
+            /* +0x4 = 0x201 @0x80101DB8-BC — BEWUSST NICHT SCHARF (s. OFFEN-Block) */
+        }
+    }
     (void)slot; (void)pl;
     /* WALK edge-fall death commits 0xA03/0xB03 (@0x80101E64/6C) — no reachable cliff geometry
      * in the RE1.5 rooms the port ships; OPEN, documented. */
@@ -1373,6 +1540,10 @@ static void re2z_exec_bump(re15_actor_t *e, re15_actor_t *pl)
             e->re2z_dir16a = (uint8_t)((re2z_rand() & 7u) + 5u);   /* @0x801023BC-CC */
         }
     }
+    /* FETTZOMBIE-KADENZ, EXEC[2]-Zwilling (B4-Fix): Probe -> Extra-Advance, OHNE Steer-8
+     * (verify (e) Korrektur B: @0x80102454 jal 0x801016c8 -> DIREKT jal 0x8002A9C8
+     * @0x80102460 — nur der WALK hat den Steer @0x80101D48). */
+    re2z_fat_cadence_tick(e, 0);
     re15_re2z_move_root(e);                                        /* e7c @0x801023DC + Advance
                                                                     * @0x801023F0 + 152c8
                                                                     * @0x8010246C — dasselbe
@@ -3015,9 +3186,9 @@ static void re2z_crawl_decide_wait(re15_actor_t *e, re15_actor_t *pl)
     if (re15_ai_arc_test(e, pl->x, pl->z, 512) != 0) return;        /* @0x80103AB4-C0 */
     if (e->ai_dist >= 0x514u)               return;                 /* @0x80103AC4-C8 */
     if (pl->re2z_self1d3 & 0x80u)           return;                 /* @0x80103AD4-E0 */
-    /* +0x154 & 0x800 (@0x80103AE8-F4): dasselbe Flagwort ohne Port-Produzenten wie in
-     * DECISION[0] — dort seit Welle A als 1 GEMAPPT (OPEN, siehe re2z_decide_stand). Hier
-     * identisch gehandhabt, damit beide Stellen dieselbe Aussage tragen. */
+    /* +0x154 & 0x800 (@0x80103AE8-F4): das SICHT-Bit — seit F2 (2026-09-05) mit echtem
+     * Produzenten (re2z_los154, RE1.5-Ray-MAPPING im Root-Prolog; vorher konstant 1). */
+    if (!e->re2z_los154)                    return;                 /* @0x80103AE8-F4 */
     if (e->floor != pl->floor)              return;                 /* @0x80103AFC-0C */
     re15_ai_set_state_word(e, 0x101);                               /* @0x80103B10-14 */
     pl->re2z_self1d3 |= 0x80u;                                      /* @0x80103B18-2C */
@@ -3181,7 +3352,7 @@ void re15_re2z_exec_only(int slot)
 static void re2z_exec_dispatch(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     switch (e->sub_state_1) {                                      /* EXECUTOR @0x8010C8CC */
-    case 0:  re2z_exec_stand(e); break;                            /* 0x801013F4 */
+    case 0:  re2z_exec_stand(e, pl); break;                        /* 0x801013F4 */
     case 1:  re2z_exec_walk(slot, e, pl); break;                   /* 0x80101A40 */
     case 2:  re2z_exec_bump(e, pl); break;                         /* 0x80102260 */
     case 3:  re2z_exec_grab(e, pl); break;                         /* 0x801025EC */
@@ -7254,6 +7425,17 @@ int re15_re2z_tick(int slot)
 
     if (e->state != 2) e->re2z_prev_hp = e->hp;                    /* HP snapshot for the HURT
                                                                     * resistance write-off */
+
+    /* F2 (2026-09-05): das SICHT-BIT +0x154&0x800. Produzent im Original ist der EXE-Navigator
+     * FUN_8004A808, den der Root JEDEN Tick ruft (@0x80100354): `+0x154 &= 0xF7FF`
+     * (@0x8004A87C-880), LOS-Ray FUN_80050858(self-Part, Spieler-Part, attr 0x2000, a3=1) —
+     * Rueckgabe 0 (frei) -> `+0x154 |= 0x800` (@0x8004A8E8-F4). Der Ray matcht SCA-Eintraege
+     * mit attr&0x2000, Form-Nibbles {1..5,13} blocken nie (Skip-Tabelle @0x800A73B4, selbst
+     * gelesen). PORT-MAPPING (Praezedenz RE2-Kraehe): der RE1.5-Region-Ray re15_re2_los_clear;
+     * ohne Raumgeometrie meldet er FREI (Default fuer synthetische Tests — verify_zombie_conf.md
+     * Risiko 5). Vorher war das Bit an allen sechs Lesern konstant 1 gemappt -> Zombies
+     * weckten/lungten durch Waende. */
+    e->re2z_los154 = (uint8_t)(re15_re2_los_clear(e, pl) ? 1u : 0u);
 
     /* ⛔ D15.2 GEFIXT — SKRIPT-WECKER fuer die Liegenden (Nutzer-Report ROOM1100: nach dem
      * "Leichen erwachen"-Event passiert nichts). Das Weck-Signal des Spiels ist ein RE1.5-

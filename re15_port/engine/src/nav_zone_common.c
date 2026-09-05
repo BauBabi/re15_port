@@ -44,6 +44,8 @@ static uint32_t nav_isqrt(uint32_t x) { return re15_squareroot0(x); }
 /* ---- node accessors (nodes base = re15_rdt_t.blocks, stride 12, LE) ------------------- */
 static const uint8_t *nav_tbl(void)   { return g_room_rdt_ok ? g_room_rdt.blocks : 0; }
 static int            nav_count(void) { return g_room_rdt_ok ? g_room_rdt.block_count : 0; }
+int re15_nav_zone_count(void) { return nav_count(); }   /* fuer den RE2-Wander-Zonen-Wurf
+                                                         * 0x8004AA50 (s. re15_enemy_ai.h) */
 static int16_t  nrd16(const uint8_t *p) { return (int16_t)(p[0] | (p[1] << 8)); }
 static uint16_t nrdu16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 #define NODE(i)      (nav_tbl() + (i) * 12)

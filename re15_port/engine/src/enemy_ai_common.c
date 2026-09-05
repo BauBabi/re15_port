@@ -13151,17 +13151,13 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
          *   re15_re2z_owns_type gefuehrte Typ) bleiben stumm, bis einer der beiden OPEN-Pfade
          *   portiert ist — im Original waeren sie es ebenfalls, solange DAT_800cfb74&0x40 nicht
          *   steht und sie nicht zerstueckelt wurden. */
-        if (!((e->re2z_f10e & 0x0080u) || (e->re2z_flags21a & 0x8000u)))
-            return;                                         /* @0x80101ce0-f8 / @0x80102400-18 */
-        const re15_emd_animation_t *A = re15_actor_uses_loco_bank(e) ? &b->anim_loco : &b->anim;
-        if ((int)e->motion >= A->clip_count) return;
-        const re15_emd_clip_t *c = &A->clips[e->motion];
-        if (c->frame_count <= 0) return;
-        uint32_t slot14d = e->anim_frame % (uint32_t)c->frame_count;    /* == +0x14D */
-        if ((slot14d % 3u) != 2u) return;                   /* @0x80101d00-2c / @0x80102420-4c */
-        uint32_t fw = A->frames[c->first_frame + slot14d];
-        if ((fw & 0x08000000u) && (fw >> 28) < 2u)          /* and @0x801016e4, sltiu @0x801016f0 */
-            re15_re2z_se_play((int)(fw >> 28));             /* jal 0x8005bd6c @0x801016fc */
+        /* ⛔ VERSCHOBEN (B4-Fix 2026-09-05): die Drittel-Takt-Probe 0x801016c8 lebt jetzt IM
+         * BRAIN an der byte-true Position — @0x80101D34 (WALK) / @0x80102454 (EXEC[2]),
+         * d.h. NACH dem regulaeren Advance und VOR dem Extra-Advance 0x8002A9C8
+         * (@0x80101D54/@0x80102460). Hier (nach dem Brain-Tick) haette sie die Residue-2-
+         * Frames nie mehr gesehen: der Extra-Advance des Fettzombies uebersprang sie im
+         * selben Tick (gemessen: unit_re2_gore PIN 6 verlor die Schritt-SEs). Gate + %3 +
+         * Probe: re2z_fat_cadence_tick, enemy_ai_re2_zombie.c. */
         return;
     }
     /* BANK = die des POSERS, nicht eine eigene Regel. FUN_8001b38c liest `*(entity+0x168)`
@@ -13363,6 +13359,20 @@ void re15_enemy_ai_run_all(int combat_active)
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
+            /* NAVIGATOR-ZUFUEHRUNG (S1-Fix 2026-09-05, diag_crow_stuck.md Ursache A):
+             * der RE2-Kraehen-ACTIVE-Prolog ruft FUN_8004A808 in JEDEM Tick
+             * (@0x80100584-5F8: Modus 1 = Routen-Knoten waehrend rel220, sonst Modus 0),
+             * und Sub 4/5/6/7-P6/8/9 steuern auf dessen Ausgabe +0x1C4/+0x1C6
+             * (@0x8010125C-60 u.a.) — NICHT auf den Spieler. RE2-Routen-Daten existieren
+             * in RE1.5-Raeumen nicht; wie beim Zombie (Welle-B-Nav) faehrt der Port den
+             * STRUKTUR-ZWILLING FUN_80039e7c mit den RE1.5-BLK-Zonen (deklarierte
+             * Substitution): gleiche Zone -> Spielerpos (== Modus 0), zonenfremd ->
+             * First-Hop-Kreuzung um die Kulisse. Vorher steuerten die MAPPING-Stellen
+             * hart auf den Spieler = Wand-Flatter-Attraktor ("Kraehen bleiben haengen"). */
+            re15_nav_update_steer(e, (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                     (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                                  e->ai_wp_node, (int)(e->ai_flags & 8u));
+            e->ai_flags &= (uint16_t)~8u;
             re15_crow_ai_tick(s);
         }
         else if (t == 0x20) {   /* DOG (Cerberus, type 0x20) — ground chase/bite AI.

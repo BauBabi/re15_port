@@ -306,6 +306,22 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
     /* (4) TREFFER: der Schuss muss HP senken und HURT/DEATH setzen. */
     {
         re15_actor_t *e = &g_actors[first];
+        /* FIXTURE-ANKER (2026-09-05, Welle B): der freie 300-Frame-Vorlauf kann den Probanden
+         * jetzt mitten in Knockdown/Fall/Liege stellen (gemessen: st=1.5.1, grid 0x80,
+         * +0x21A=0x0202, +0x10E=0x2004 — ein Level-Schuss verfehlt den Fallenden BYTE-TRUE).
+         * Der Pin misst den Schadens-DURCHGRIFF am stehenden Zombie; deshalb warten, bis er
+         * wieder aufrecht ist (state 1, sub<=2), und die Down-Marker sind dann von den
+         * Aufsteh-Ketten selbst geloescht. */
+        if (want_type == 0x10) {   /* nur die Zombie-Familie kennt Down-Zustaende; die
+                                    * Kraehe lebt in den Flug-Subs (13 = Hover) */
+            for (int w = 0; w < 600 && !(e->state == 1 && e->sub_state_1 <= 2); w++) {
+                pl->x = e->x - 3000; pl->z = e->z; pl->motion = 0;  /* ausser Grab-Reichweite */
+                frame();
+            }
+            CHECK(e->state == 1 && e->sub_state_1 <= 2,
+                  "%s: Proband kommt nicht in den Stand zurueck (st=%u.%u)", tag,
+                  e->state, e->sub_state_1);
+        }
         int hp0 = e->hp;
         pl->x = e->x - 800; pl->z = e->z; pl->rot_y = 0; e->hit_react = 0;
         re15_player_set_equipped_weapon(3);
@@ -325,11 +341,17 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
      *     @0x801055D8-EC, Phasen @0x801055B4 / @0x80105850-6C / @0x80105970-7C. */
     if (want_type == 0x10) {
         re15_actor_t *e = &g_actors[first];
-        /* frisch aufsetzen: lebendiger, gehender Zombie neben dem Spieler */
+        /* frisch aufsetzen: lebendiger, gehender Zombie neben dem Spieler. Seit Welle B
+         * (2026-09-05) auch die DOWN-Marker loeschen — der Vorlauf kann sie gesetzt haben,
+         * und der Kandidatenfilter schloesse den "Liegenden" trotz state=1.1 aus. */
         e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->hp = 60;                       /* < 81 -> kein Resistenz-Nachladen @0x80105604 */
         e->re2z_res223 = 20; e->re2z_flag222 = 0; e->re2z_cd239 = 0;
         e->hit_react = 0;
+        e->grid_id &= (uint8_t)~0x80u;
+        e->re2z_flags21a &= (uint16_t)~(0x2u | 0x10u | 0x200u);
+        e->re2z_f10e &= (uint16_t)~0x2000u;
+        e->y = 0;
         pl->x = e->x - 800; pl->z = e->z; pl->rot_y = 0;
         re15_player_set_equipped_weapon(3);
 

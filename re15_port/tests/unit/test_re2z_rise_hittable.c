@@ -65,6 +65,7 @@
 extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_len(int fc);
 extern int  re15_inv_equipped_slot(void);
+extern int  re15_player_victim_state(void);
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } \
@@ -162,24 +163,61 @@ static void run(unsigned seed, int budget, int *out_rise, int *out_hits, int *ou
     int hp_last = e->hp;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
-        e->hp  = (e->hp > 0 && e->hp < 400) ? 400 : e->hp;  /* am Leben halten: gemessen wird
-                                                             * die TREFFBARKEIT, nicht der Tod */
+        e->hp  = (e->hp > 0 && e->hp < 60) ? 60 : e->hp;    /* am Leben halten, aber UNTER der
+                                                             * 81er-Schwelle: der Flinch-Zweig
+                                                             * reseedet die Resistenz bei
+                                                             * hp>=81 kostenlos (@0x801055FC-
+                                                             * 0x80105620, `slti 81`) — mit
+                                                             * hp=400 war der Marke->0x501-
+                                                             * Knockdown byte-true UNERREICHBAR
+                                                             * und die Wache hing am 1/16-
+                                                             * Grab-Fall-Wurf (Neuverankerung
+                                                             * 2026-09-05; vorher 400) */
         hp_last = e->hp;
         /* LEBENDE Aufsteh-Phase, nicht das klebrige Bit +0x21A & 0x10 (siehe re15_damage.c):
          *   EXEC[5] P6 @0x80103568 .. P7 @0x80103628 | EXEC[8] P3 @0x80103d00 .. P4 @0x80103d60 */
         int rising = (e->state == 1) &&
                      ((e->sub_state_1 == 5 && (e->sub_state_2 == 6 || e->sub_state_2 == 7)) ||
                       (e->sub_state_1 == 8 && (e->sub_state_2 == 3 || e->sub_state_2 == 4)));
-        frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
-              (f == 0) ? RE15_PAD_BIT_SQUARE : 0);
+        /* MASH + RE-AIM-PAUSE (Fixture-Neuverankerung 2026-09-05, Welle B; Herleitung im
+         * Kopf des Laufs): seit dem Draw-Strom-Umbau (F1/F3) verschob sich der Kampf so,
+         * dass (a) der nie mashende Alt-Spieler in einer GRAB-Schleife hing und (b) mit
+         * Mash allein der SOFORT-Weiterbeschuss den P8-RUECKWAERTS-FALL des Zombies
+         * (Commit-Fenster Frames 7..24, `0x501`+Phase 1 @0x80102D24-DEC) jedes Mal per
+         * HURT abbrach — die Knockdown->Aufsteh-Zyklen (der Pruefgegenstand!) kamen nie
+         * zustande. Ein echter Spieler masht UND braucht nach dem Abwurf Re-Aim-Zeit.
+         * Gemessen (RISE_DBG): Grab f175 vs=1 -> Mash-Abwurf f200 vs=3 -> Schuss f230
+         * traf den Zombie noch in P8 (s2=8) -> ewige HURT-Schleife (Knockdown per
+         * Eligibility ist bei hp>=81 byte-true unerreichbar: Reseed @0x80105610-20). */
+        static int postgrab;
+        if (f == 0) postgrab = 0;
+        uint16_t pcur = RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE;
+        uint16_t pedge = (f == 0) ? RE15_PAD_BIT_SQUARE : 0;
+        if (re15_player_is_grabbed()) {
+            pedge = (uint16_t)((f & 1) ? RE15_PAD_BIT_SQUARE : 0);  /* mashen */
+            postgrab = 30;                                          /* Re-Aim-Fenster armieren */
+        } else if (postgrab > 0) {
+            /* Nur bis zum 0x501-COMMIT nicht feuern — sobald der Rueckwaerts-Fall laeuft
+             * (sub 5), zykliert der Beschuss byte-true durch Fall/Liege/Aufstehen
+             * (HURT am Boden -> 0x60501 -> P6 -> Rise; genau daraus stammen die
+             * Treffer-waehrend-des-Aufstehens der Messbasis). */
+            if (e->state == 1 && e->sub_state_1 == 5) postgrab = 0;
+            else { postgrab--; pcur = 0; pedge = 0; }
+        }
+        frame(pcur, pedge);
         if (rising) {
             (*out_rise)++;
             if (e->hp < hp_last) (*out_hits)++;
         }
-        if (getenv("RISE_DBG") && (f % 25) == 0)
-            fprintf(stderr, "   f%-4d st=%u.%u 21A=%04X 10E=%04X grid=%02X hp=%d rising=%d\n",
-                    f, e->state, e->sub_state_1, e->re2z_flags21a, e->re2z_f10e,
-                    e->grid_id, e->hp, rising);
+        if (getenv("RISE_DBG") && ((f % 25) == 0 || e->hp < hp_last))
+            fprintf(stderr, "   f%-4d st=%u.%u.%u 21A=%04X 10E=%04X grid=%02X hp=%d res223=%d "
+                    "f222=%u prevsub=%u vs=%d gr=%d pl1d3=%02X rising=%d%s\n",
+                    f, e->state, e->sub_state_1, e->sub_state_2, e->re2z_flags21a, e->re2z_f10e,
+                    e->grid_id, e->hp, (int)e->re2z_res223, (unsigned)e->re2z_flag222,
+                    (unsigned)e->re2z_prev_sub,
+                    re15_player_victim_state(), re15_player_is_grabbed(),
+                    (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].re2z_self1d3,
+                    rising, (e->hp < hp_last) ? "  <HIT" : "");
         *out_ok = 1;
     }
 }
@@ -201,7 +239,10 @@ int main(void)
                                       0xa5a5a5a5u, 0x5eed0001u, 0x13579bdfu, 0x2468ace0u };
     for (unsigned i = 0; i < sizeof seeds / sizeof seeds[0]; i++) {
         int rise = 0, hits = 0, ok = 0;
-        run(seeds[i], 900, &rise, &hits, &ok);
+        run(seeds[i], 2500, &rise, &hits, &ok);   /* Budget 900->2500 (2026-09-05): die
+                                                   * Grab-Zyklen des mashenden Fixtures
+                                                   * strecken die Zeit bis zu den
+                                                   * Knockdown-/Aufsteh-Phasen */
         if (!ok) continue;
         runs++;
         if (rise) seeds_with_rise++;

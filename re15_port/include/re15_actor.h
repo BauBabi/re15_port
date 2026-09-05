@@ -263,7 +263,18 @@ typedef struct {
                                  * sind daher nicht erzeugbar. Volle Kette in re15_damage.c.
                                  * Konsumenten: Zombie-Blut %3==0 (=Zone 0), Hunde-Gore /3 (=Bracket)  */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
-    uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98)            */
+    uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98);
+                                 * im WALK derselbe Offset als PULS-TIMER (Seed (rand&0x1f)+30
+                                 * @0x80101AC4-E8, Reload (rand&0xf)+30 + Extra-Steer 16 + Moan
+                                 * NUR am Ablauf-Tick @0x80101C08-88 — B3-Fix 2026-09-05)        */
+    uint8_t  re2z_los154;       /* +0x154-Bit 0x800 (SICHTLINIE): Produzent = EXE-Navigator
+                                 * FUN_8004A808 (+0x154&=0xF7FF @0x8004A87C-880; Ray
+                                 * FUN_80050858(parts, 0x2000, 1)==0 -> |=0x800 @0x8004A8E8-F4,
+                                 * praktisch jeden Tick). Port-Produzent: RE1.5-Ray-MAPPING im
+                                 * re2z-Root-Prolog (Praezedenz RE2-Kraehe); 6 Leser: 3x
+                                 * DECISION[0] @0x80101308/134C/1390, Idle-Wecker @0x80101568,
+                                 * Wander-Wecker @0x80101688, Kriecher-Wait @0x80103AE8.
+                                 * F2-Fix 2026-09-05 (vorher konstant 1 gemappt).              */
     int16_t  re2z_t158;         /* +0x158 Budget/Timer (Grab-Wehr-Budget 148 @0x80102828-2C u.a.)           */
     int16_t  re2z_t15a;         /* +0x15A Idle-Moan-Timer (Seed rand+300 @0x8010148C-90)                    */
     uint16_t re2z_flags21a;     /* +0x21A Flag-Wort (INIT-Clear @0x8010087C; 0x20/0x40 Seiten-Latches,

@@ -2570,3 +2570,81 @@ ROOM1210 **invertiert** waren: die Kollisionsabfrage meldet in diesem Raum *inne
 Wandzelle eine 1, gelaufen wird im Gegenstück. Die Wache benutzt jetzt nur noch den echten
 Laufweg. Das erklärt auch, warum meine Erreichbarkeits-Zahlen der letzten Runde nicht
 zusammenpassten.
+
+---
+
+# RE2-KI-Batch (zweite Meldung vom 2026-09-05): sechs Befunde
+
+Ablauf: sechs Diagnose-Agenten mit eigenem Disassemblieren (RE2-Retail EMOVL21/EMZ0 +
+beide EXEs), danach eine adversariale Gegenprüfung, die mehrere Erstbefunde gekippt hat —
+gebaut wurde nur, was die zweite Runde überlebt hat. Vollständige Belegkette in
+`RE15_RE2_AI.md`, Abschnitt „WELLE 2026-09-05".
+
+## „Wenn ich durch Krähen sterbe, bekomme ich keine Sterbeanimation" — BEHOBEN
+
+Die RE2-Krähe installiert im Original **keinen** Fress-Kollaps-Handler (Zensus über ihr
+ganzes Overlay: null Stores auf den cmd-6-Slot). Ihr Todesweg ist der Release-Trichter
+@0x80102848: er schreibt dem Spieler bedingungslos die Victim-Phase 3, und **die** biegt
+bei HP<0 auf das generische Todes-Kommando cmd 3 ab (@0x80104818-38) — ohne Release-Clip.
+Genau dieser Abzweig fehlte dem Port: der Tote spielte den Abwurf-Clip und stand dann im
+Idle, während Game-Over-Präsentation und Todeskamera drumherum liefen. Gemessen mit einer
+eigenen Sonde (vorher: `motion==7 nie`; nachher: Todes-Clip 7 über volle 113 Frames).
+
+## „Zombies starten beim Raumwechsel liegend und stehen dann plötzlich" — BEHOBEN
+
+Ein Render-Fehler im Blendfenster: der Spawn sät byte-true den RE1.5-Posen-Clip 39, die
+RE2-Bank hat aber nur 31 Clips — der Modulo-Rückfall des Renderers machte daraus
+ausgerechnet den Boden-Aufsteher, dessen erstes Bild flach liegt. Während der Türblende
+steht die KI, das Bild läuft: alle 0x0D-Spawns (1030, 1040, 1200 …) lagen sichtbar am
+Boden und poppten mit dem ersten KI-Tick hoch. Jetzt sät der Spawn den Clip, den der
+RE2-INIT ohnehin committen wird (stehend 1, liegend 22/23 seitenrichtig, fressend 18,
+kriechend 23) — die Gegenprüfung hat die naive Variante „überall Clip 0" verworfen, weil
+sie Fresser und Leichen im Blendfenster aufrecht gestellt hätte.
+
+## „Die Gorillas hängen zwischen den Autos und greifen kaum an" — BEHOBEN (RE1.5-KI, gilt für beide Modi)
+
+Der Original-Gorilla umfährt die Autos nicht — er **springt über sie**, entlang von vier
+unsichtbaren Marker-Zonen, die im Raum genau in den Auto-Gassen liegen (die Ost-Gasse ist
+für seinen Körperradius rechnerisch unpassierbar: Spalt 2711 bei Radius 1600). Diese
+Sprung-Entscheidung fehlte im Port komplett, und zusätzlich klemmte der Sprung-Flug am
+falschen Kollisionsband. Messung vorher/nachher (3600 Frames, eigene Raum-Sonde):
+Klemm-Quote 99 %, **null** Angriffe → Zonen-Sprung feuert, der Gorilla erreicht den
+Spieler, 48 Bisse + 1 Schulter-Schlag.
+
+## „Die Krähen bleiben manchmal einfach hängen" — ZWEI URSACHEN BEHOBEN
+
+1. Der Wand-Radius der Krähe war eine erfundene Konstante (200); im Original hängt er am
+   Lautstärke-Feld +0x90 (0/350/100/50/10 je Zustand) — jetzt exakt so.
+2. Die Flug-Zustände steuerten hart auf den Spieler zu; das Original steuert auf die
+   Ausgabe seines Navigators. Die Krähe fährt jetzt denselben Zonen-Navigator wie die
+   Zombies (um Kulissen herum statt in sie hinein). Die früher geplante dritte Ursache
+   (Sichtstrahl-Umbau) hat die Gegenprüfung als wirkungslos für unsere Räume gekippt —
+   nicht gebaut.
+
+## „Krähe ohne Animation, hing an mir und folgte mir" — TEILWEISE (Diagnose eingebaut)
+
+Der Grab-Zyklus selbst ist byte-genau (der Halte-Clip ist ein 8-Bilder-Loop, der Zustand
+hat null Eigenbewegung — „hängt reglos" ist die echte Optik). Der verdächtige Zerfall des
+Halte-Geschirrs ist im Normalspiel beweisbar **nicht** erreichbar; was deine Sitzung
+ausgelöst hat, ist noch offen. Der bestätigte Teil (Release-Trichter bedingungslos) ist
+gefixt, und drei Diagnose-Zeilen (RE15_RE2_TRACE=1) benennen beim nächsten Auftreten
+sofort den Zerfallsweg.
+
+## „Ist das Zombie-Verhalten wirklich RE2?" — VIER LÜCKEN GESCHLOSSEN
+
+* **Wander-Idle:** RE2-Zombies stehen nach Griff/Biss nicht als Statuen — der Idle ist
+  eine Wander-Maschine (Schutz-Timer, 50%-Wurf, Zufallszone, Rückfall), inklusive
+  Selbst-Wecker auf 7500 Einheiten **ohne Blickwinkel** (belegt: kein einziger Kegel-Test
+  im ganzen Executor — RE2-Zombies wecken auch mit dem Rücken zu dir).
+* **Sichtlinie:** das Sicht-Bit hat jetzt einen echten Produzenten (Strahl gegen die
+  Raumkollision) statt konstant „frei" — Zombies wachen nicht mehr durch Wände auf.
+* **Gang-Details:** Zufalls-Startbild (kein Gleichschritt mehr bei Gruppen), ±16er
+  Richtungs-Jitter je Gang-Zeile, und das Grunzen sitzt jetzt am richtigen Puls (vorher
+  ~4,5-fach zu häufig gewürfelt).
+* **Fetter Zombie (Brad):** seine 1,5-fache Gang-Kadenz (Extra-Frame alle zwei Ticks +
+  eigener Steuer-Puls) läuft jetzt — vorher watschelte er im Standard-Takt.
+
+Offen geblieben (dokumentiert, nicht geraten): der „Arme-hoch"-Ganganstoß (sein
+Scharfschalten kollabierte in der Messung unerklärt den Nahkampf — bleibt bis zur
+Aufklärung gedrosselt), der Kriecher-Umbau bei Bodenbeschuss und die
+Krähen-STRIKE-Schadenshöhe (deren RE2-Handler-Adresse jetzt bekannt ist).

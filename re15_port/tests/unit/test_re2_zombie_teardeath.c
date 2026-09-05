@@ -194,6 +194,8 @@ static void reset_zombie(int slot)
     if (s_pristine_ok) g_actors[slot] = s_pristine;
 }
 
+static int s_reaim = 0;   /* PIN7-Nachziel-Schalter (s. Kommentar im Kampf-Loop) */
+
 static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int budget, kill_t *t)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -224,12 +226,24 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
          *     r209 statt ~1232, hp 540 Frames konstant). Ein echter Spieler dreht sich.
          * (2) TIEF ZIELEN, solange der Kriecher LIEGT (RE2-Liege-Bit +0x21A&2):
          *     Bodentreffer brauchen das DOWN-Band (dist<0x1388). */
+        /* SCHUSSLINIEN-KLEMME (Fixture-Neuverankerung 2026-09-05, Welle B, NUR wo s_reaim
+         * gesetzt ist — PIN7-Regressionswache): seit der IDLE-Wander-Maschine (F1,
+         * @0x801013F4-16A8) und dem Gait-Jitter (F3, @0x80101B8C-A8) driftet der Zombie von
+         * der starren Schusslinie — Waffe 3/12 trafen nur noch 5x/2599 F (Waffe 4: 5x/379 F)
+         * und der Restkill fiel auf den LIEGENDEN Zombie (Down-Death -> CORPSE im selben
+         * Tick, state 3 nie beobachtbar). Nachzielen per rot_y-Override bricht die
+         * Aim-FSM-Mechanik des Harness (gemessen: hits=0). Deshalb wird hier die QUER-Drift
+         * des Pruef-Subjekts neutralisiert (z zurueck auf die Linie, solange er aufrecht
+         * laeuft) — PIN7 prueft die Todes-ZEILEN der Waffen, nicht die Lokomotion; die
+         * uebrigen Pins laufen unveraendert auf dem freien Verhalten. Muster
+         * reai-v2-pin-fixture-verschiebung: Fixture neu verankern, nicht Schranke senken. */
+        if (s_reaim && e->state == 1 && !(e->re2z_flags21a & 0x2u) && !(e->re2z_f10e & 1u))
+            e->z = s_pristine.z;
         if (e->re2z_f10e & 1u) {
             /* Gate = NICHT gegriffen (aim_ready ist bei gehaltenem SQUARE nach dem ersten
              * Schuss NIE wieder wahr — die FSM pendelt READY+Recoil/HOLD, ap=12 im Trace). */
             if (!re15_player_is_grabbed()) {
                 int32_t ddx = e->x - pl->x, ddz = e->z - pl->z;
-                pl->rot_y = (int16_t)(re15_atan2_q12(ddz, ddx) & 0x0fff);
                 /* HERANGEHEN am liegenden Kriecher: der P7-Abwurf platziert Leon ~2100
                  * Einheiten weg — ausserhalb der Kegel-Tester-Reichweite (w20 traf 540 F
                  * lang nie, w20-Trace 2026-08-24). Ein echter Spieler geht ran; hier
@@ -586,6 +600,7 @@ int main(void)
 
     /* ===== PIN 7 — REGRESSIONSWACHE: die schon byte-truen Waffen ========================== */
     {   const int wpn[] = { 3, 4, 12, 19, 20 };   /* Browning HP, Beretta, Ingram, MC51, Colt */
+        s_reaim = 1;                              /* Nachzielen (s. run_kill-Kommentar) */
         for (unsigned i = 0; i < sizeof wpn / sizeof wpn[0]; i++) {
             /* Budget 2600 (vorher 900): seit die Kriech-Varianten 2/3 scharf sind, nimmt der
              * Kampf bei w12/w20 den Kriecher-Umweg (Grab->Abwurf->Liegen-Zyklen ~100-140 F
@@ -615,6 +630,7 @@ int main(void)
                       "PIN7: Waffe %d reisst Part %d ab (flags=%04X) — REGRESSION",
                       wpn[i], p, t.pflags[p]);
         }
+        s_reaim = 0;
     }
 
     /* ===== PIN 8 — NEGATIVTEST RE1.5-MODUS ==============================================

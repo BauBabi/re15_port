@@ -222,6 +222,9 @@ uint8_t re15_em_status_zone(void);
  * 80039e7c over the RDT block.blk zone graph (see re15_rdt.h). */
 uint8_t re15_nav_zone_from_pos(int16_t x, int16_t z);
 uint8_t re15_nav_rand_zone(void);
+int     re15_nav_zone_count(void);   /* BLK-Zonenzahl des geladenen Raums (0 ohne Graph) —
+                                      * fuer den RE2-Wander-Zonen-Wurf 0x8004AA50
+                                      * (`rand % count`, count==0 -> 255 OHNE Draw) */
 void    re15_nav_pathfind(const re15_actor_t *e, uint8_t start, uint8_t goal,
                           int16_t tx, int16_t tz);
 int     re15_nav_update_steer(re15_actor_t *e, int16_t tx, int16_t tz,

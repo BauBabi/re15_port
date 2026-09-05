@@ -203,7 +203,13 @@ int main(void)
             if (e->sub_state_1 == 5 && e->state == 1) knocked = 1;
         }
         CHECK(knocked, "RE2: genug Treffer muessen den Knockdown 0x501 ausloesen (@0x801050A4)");
-        e->hp = -20; e->state = 3;                        /* Kill */
+        /* Kill — Todes-ZEILE explizit auf die MAIN-Zelle ankern (2026-09-05, Welle B):
+         * der Pin zitiert die MAIN-Kette (Todes-Clip 7 -> 0x907 @0x801084DC). Vorher stand
+         * hier zufaellig eine MAIN-Zeile im +0x5; seit dem Draw-Strom-Umbau endet der
+         * Beschuss im Knockdown-Sub 5 = DEATH-Zeile 5 = die MAGNUM-Zelle 0x801092C4 mit
+         * 50%-Kopflos-Weiterlauf ((rand&0x3F)+30 Frames) — das 8-Frame-Fenster misst dann
+         * eine andere Zelle. Zeile 3 (Pistole) dispatcht in JEDER Spalte die MAIN-Zelle. */
+        e->hp = -20; e->state = 3; e->sub_state_1 = 3; e->sub_state_2 = 0;
         for (int f = 0; f < 8; f++) frame();
         CHECK(e->state == 7, "DEATH -> CORPSE 0x907 (@0x801084DC), state=%d", e->state);
         CHECK(e->hp == -1, "CORPSE HP=-1 (@0x8010A4D4), hp=%d", e->hp);

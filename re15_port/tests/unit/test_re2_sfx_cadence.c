@@ -115,19 +115,32 @@ static const re15_emd_animation_t *emit_bank(const re15_actor_t *e)
 }
 
 /* Soll-Zahl: wie oft feuert der ORIGINAL-Pfad, wenn der Clip `clip` genau `ticks` Ticks ab
- * Frame `start` laeuft?  = |{ slot : SE-Bit gesetzt UND (fw>>28)<2 UND slot%3==2 }| */
+ * Frame `start` laeuft?
+ * MODELL-UMBAU 2026-09-05 (Welle B/F4, verify_zombie_conf.md (e) Korrektur C): der Block
+ * traegt jetzt auch den EXTRA-ADVANCE 0x8002A9C8 (@0x80101D54/@0x80102460, vorher bewusst
+ * fehlend) — am Residue-2-Tick laeuft NACH der SE-Probe (@0x80101D34/@0x80102454, Probe VOR
+ * dem Advance!) ein zweiter Frame-Schritt = 3 Frames je 2 Ticks (1,5-fache Kadenz; das alte
+ * Modell nahm 1 Frame/Tick an). Harness-Reihenfolge wie run_all: Brain (Probe+Extra) VOR
+ * dem globalen Advance. */
 static int expected_hits(const re15_emd_animation_t *A, int clip, int start, int ticks, int with_cadence)
 {
     if (!A || clip < 0 || clip >= A->clip_count) return -1;
     const re15_emd_clip_t *c = &A->clips[clip];
     if (c->frame_count <= 0) return -1;
     int n = 0;
+    unsigned frame = (unsigned)start;
     for (int t = 0; t < ticks; t++) {
-        int slot = (start + t) % c->frame_count;
-        uint32_t fw = A->frames[c->first_frame + slot];
-        if (!((fw & 0x08000000u) && (fw >> 28) < 2u)) continue;
-        if (with_cadence && (slot % 3) != 2) continue;
-        n++;
+        int slot = (int)(frame % (unsigned)c->frame_count);
+        if (!with_cadence || (slot % 3) == 2) {
+            uint32_t fw = A->frames[c->first_frame + slot];
+            if (with_cadence) {
+                if ((fw & 0x08000000u) && (fw >> 28) < 2u) n++;   /* Probe @0x801016c8 */
+                frame++;                                          /* Extra-Advance 0x8002A9C8 */
+            } else if ((fw & 0x08000000u) && (fw >> 28) < 2u) {
+                n++;
+            }
+        }
+        frame++;                                                  /* globaler Advance (959c) */
     }
     return n;
 }
@@ -283,14 +296,30 @@ int main(void)
     } else {
         re15_ai_set_state_word(z11, 0x101);
         z11->sub_state_2 = 1;                    /* P0 uebersprungen -> Messclip bleibt stehen */
+        /* Interferenzfrei messen (2026-09-05): Spieler ausser Leiter-Reichweite, sonst
+         * committen D/E/Grab neue Clips (re2z_clip -> anim_frame=0) und der Reset
+         * verschiebt den Takt gegen das expected_hits-Modell (gemessen: 7 statt 8 bei
+         * cmis>0). Der Pin misst den DRITTEL-TAKT, nicht die Leiter. */
+        pl->x = z11->x + 30000; pl->z = z11->z + 30000; pl->motion = 0;
         z11->motion = (int16_t)cand; z11->anim_frame = 0;
+        z11->anim_frac = 0; z11->anim_blend_rate = 0x100;  /* kein Blend-Halte-Tick am Start —
+                                                            * das Modell rechnet 1 Frame/Tick
+                                                            * (+ Extra-Advance) ohne frac-Decay */
         z11->anim_freeze = 0; z11->anim_flags |= 0x04u;    /* Loop, wie der Walk-Clip */
         s_se_fw = s_se_other = 0;
         int cmis = 0;
         for (int t = 0; t < WIN; t++) {
             if ((int)z11->motion != cand) { z11->motion = (int16_t)cand; cmis++; }
             z11->anim_freeze = 0;
+            int pre = (int)z11->anim_frame, se0 = s_se_fw;
             frame();
+            if (getenv("C2_DBG")) {
+                int fc2 = A->clips[cand].frame_count;
+                int want = ((pre % fc2) % 3 == 2) ? 2 : 1;
+                if ((int)z11->anim_frame - pre != want || (s_se_fw - se0) != 0)
+                    fprintf(stderr, "  t%-3d pre=%d slot=%d post=%d (want +%d) se+=%d\n",
+                            t, pre, pre % fc2, (int)z11->anim_frame, want, s_se_fw - se0);
+            }
         }
         printf("  [C2] Clip %d: gemessen %d — Soll mit Takt %d, ohne Takt %d (Clip-Resets %d)\n",
                cand, s_se_fw, cand_mit, cand_ohne, cmis);

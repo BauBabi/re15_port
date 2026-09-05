@@ -616,8 +616,12 @@ static void re2c_exec4_circle(re15_actor_t *e, re15_actor_t *pl)
         /* FALLTHRU: P1 laeuft im selben Tick (@0x80101258 fallthrough) */
         /* fall through */
     default:                                               /* P1 @0x8010125C */
-        /* Steer auf den NAVIGATOR-Punkt +0x1C4/+0x1C6 (lh 452/454) — MAPPING: Spieler */
-        re15_enemy_steer_point(e, pl->x, pl->z, 32);       /* rate 32 @0x8010125C-68 */
+        /* Steer auf den NAVIGATOR-Punkt +0x1C4/+0x1C6 (lh 452/454 @0x8010125C-60) —
+         * seit 2026-09-05 der RE1.5-Zwillings-Navigator (e->steer_x/z, gefuettert im
+         * run_all-Kraehen-Zweig; Praezedenz Zombie-Welle-B-Nav: gleiche Zone = Spielerpos,
+         * zonenfremd = First-Hop-Kreuzung um die Kulisse). Vorher hartes Spieler-Ziel =
+         * Wand-Attraktor (diag_crow_stuck.md Ursache A). */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 32);   /* rate 32 @0x8010125C-68 */
         re2c_move3d(e);                                    /* @0x8010126C-78 */
         if ((int)e->speed_h < 300)
             e->speed_h = (int16_t)(e->speed_h + (int)e->re2d_route218);   /* +2/+3 @0x8010127C-A0 */
@@ -657,7 +661,8 @@ static void re2c_exec5_climb(re15_actor_t *e, re15_actor_t *pl)
     }
     if (e->re2d_air219 == 0) e->re2d_air219 = 9;           /* Flap-Reload 9 @0x80101400-14 */
     else e->re2d_air219--;
-    re15_enemy_steer_point(e, pl->x, pl->z, 32);           /* +0x1C4/6 (MAPPING) @0x80101418-28 */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 32);  /* +0x1C4/6 (Nav-Zwilling,
+                                                            * s. exec4) @0x80101418-28 */
     re2c_move3d(e);                                        /* @0x8010142C-38 */
     if ((int)e->speed_h < 300) e->speed_h = (int16_t)(e->speed_h + 2);   /* @0x8010143C-54 */
     re2c_adv(e);                                           /* @0x80101458-68 */
@@ -684,7 +689,7 @@ static void re2c_exec6_descend(re15_actor_t *e, re15_actor_t *pl)
     }
     if (e->re2d_air219 == 0) e->re2d_air219 = 15;          /* Reload 15 @0x801015A0-B4 */
     else e->re2d_air219--;
-    re15_enemy_steer_point(e, pl->x, pl->z, 32);           /* @0x801015B8-C8 */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 32); /* +0x1C4/6 @0x801015B8-C8 */
     re2c_move3d(e);                                        /* @0x801015CC-D8 */
     if ((int)e->speed_h < 300) e->speed_h++;               /* +1 @0x801015DC-F4 */
     re2c_adv(e);                                           /* @0x801015F8-608 */
@@ -750,7 +755,8 @@ static void re2c_exec7_land(re15_actor_t *e, re15_actor_t *pl)
         break;
     }
     default: {                                             /* P6 Falten @0x80101890 */
-        re15_enemy_steer_point(e, pl->x, pl->z, 96);       /* +0x1C4/6 (MAPPING) rate 96 @0x80101894-A0 */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 96);  /* +0x1C4/6 (Nav-Zwilling)
+                                                            * rate 96 @0x80101894-A0 */
         re2c_move3d(e);                                    /* @0x801018A4-B0 */
         e->y = (int32_t)e->dog_floor_y - 250;              /* @0x801018C0-D0 */
         if (re2c_adv(e)) {
@@ -784,13 +790,14 @@ static void re2c_exec8_tumble(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_flags21a = (uint16_t)((uint8_t)(t - 1));   /* Wrap-Dec @0x801019F0-A00 */
         if (t == 0) e->re2z_flags21a = 14;                 /* Reload 14 @0x80101A04-08 */
     }
-    re15_enemy_steer_point(e, pl->x, pl->z, 96);           /* +0x1C4/6 (MAPPING) @0x80101A0C-1C */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 96); /* +0x1C4/6 (Nav-Zwilling)
+                                                            * @0x80101A0C-1C */
     e->rot_y = (int16_t)(((int)e->rot_y + (int8_t)e->re2d_route218) & 0xfff);
                                                            /* Yaw += (s8)+0x218 @0x80101A2C-44 */
     re2c_move3d(e);                                        /* @0x80101A40 */
     re2c_adv(e);                                           /* @0x80101A48-58 */
-    if (re15_ai_arc_test(e, pl->x, pl->z, 96) == 0)        /* Kegel 96 auf den Steuerpunkt
-                                                            * (+0x1C4/6, MAPPING Spieler) @0x80101A5C-70 */
+    if (re15_ai_arc_test(e, e->steer_x, e->steer_z, 96) == 0)  /* Kegel 96 auf den STEUERPUNKT
+                                                            * (+0x1C4/6, Nav-Zwilling) @0x80101A5C-70 */
         re2c_sub(e, 4);                                    /* @0x80101A90-94 */
     else {
         /* Review-Fix #6, selbst nachdisassembliert @0x80101A78-94: `lbu v1,537; addiu
@@ -809,7 +816,7 @@ static void re2c_exec9_settle(re15_actor_t *e, re15_actor_t *pl)
         re2c_clip(e, 8, 0);                                /* 0x70008 @0x80101AFC-B04 */
         e->sub_state_2 = 1;                                /* @0x80101B08-0C */
     }
-    re15_enemy_steer_point(e, pl->x, pl->z, 96);           /* @0x80101B14-20 */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 96); /* +0x1C4/6 @0x80101B14-20 */
     if (re2c_adv(e)) {                                     /* @0x80101B24-38 */
         e->re2z_t158 = (int16_t)(re15_re2_rand() & 0xfu);  /* Wake-Timer @0x80101B40-4C */
         re2c_sub(e, 0);                                    /* @0x80101B50-58 */

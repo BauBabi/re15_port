@@ -1298,3 +1298,108 @@ bedingungslos; der reine RE2-Modell-Zweig ist weg.
   ENEMSE.VBS für die RE2-SEs. `release/make_package.sh` kopiert also unverändert weiter; es gab
   dort **keinen** Kopierschritt nur für die Modell-Stufe.
 
+
+## ✅ WELLE 2026-09-05 — Nutzer-Batch „vieles von der RE2-KI sitzt noch nicht"
+
+Sechs Symptome, Ablauf streng nach STOP-GATE: 6 Diagnose-Agenten (Dossiers `diag_*.md`) →
+adversariale Skeptiker-Runde (`verify_*.md`, mehrere Erstbefunde REFUTED) → Messung → Fix.
+Alle Zitate dort; hier die Ergebnis-Uebersicht.
+
+### Welle A — Symptom-Fixes (Commit 8c64882f)
+
+* **S3 „Tod durch Kraehen: keine Sterbeanimation"** — `re2c_grab_release` schreibt PL+0x6=3
+  jetzt UNBEDINGT unter dem Claim-Gate (@0x80102890-98); die Victim-Ph3-HP-Weiche
+  (@0x80104804-38: tot → PL(3,0,0,0), KEIN Release-Clip) laeuft als `hp<0 →
+  re15_player_death_cmd3()` (RE2-cmd-3 = FUN_8003fee4 @0x800A4030[3], eigene Bank Clip 2 +
+  Se_on 0x04030001 → cmd 7; Port-Zwilling PL00-Clip 7/113 F; dokumentierte
+  1-Frame-Fruehstart-Divergenz). `re2z_player_damage`-Todeszweig traegt PL+0x1D3|=0x80 nach
+  (@0x800402C0-D0, Caller-unabhaengig — macht das Writher-Gate im Todesfall funktional).
+  Die Kraehe installiert im Original KEINEN cmd-6-Hook (Zensus: 0x0 Treffer auf 0x800CE484) —
+  der (3,0,0,0)-Handoff ist ihr Todesweg. Pin `unit_re2_crow_kill_cmd3`, Sonde
+  `probe_re2_crow_kill`.
+* **S4 „Zombies starten beim Raumwechsel liegend und poppen hoch"** — Render-Bug: der
+  RE1.5-Spawn-Seed (Clip 0x27=39 @0x80100F20-54) liegt ausserhalb der 31-Clip-RE2-Bank;
+  der Port-Modulo machte 39%31=8 = Boden-AUFSTEHER (Frame 0 flach, py -222). Waehrend der
+  Tuerblende (KI/Anim stehen, Rendering laeuft) lagen alle 0x0D-Spawns flach. Das Original
+  KANN den Zustand nicht zeigen: Sce_em_set saet Clip 0 (@0x800576A4) und der INIT laeuft
+  noch im LADE-Frame (@0x8001CDEC/CE04 unter pauseflags=7). Fix: `re15_re2z_spawn_pose_seed`
+  (Spawn + INIT) saet per behavior den INIT-Clip — 1 (@0x801009B8/D4), Liege 22/23 seitenrichtig
+  (@0x801009D8-0x80100A94, EXEC[7]-P0-Wahl @0x801037D0-E4), Fresser 18 (@0x80100AD0-DC),
+  Kriecher 23 (@0x80100AF8-FC), 0x0E = Sitz-Route. NICHT pauschal Clip 0 (Skeptiker:
+  Fresser/Lieger-Regression). RE1.5-Flavor unveraendert. Pin `unit_re2z_spawn_seed`.
+* **S5 „Gorillas haengen zwischen den Autos"** (Typ 0x27, RE1.5-Brain, beide Modi) — der
+  Original-Gorilla ueberquert die Autos per ZONEN-LEAP ueber SCA-Marker-Pads (ROOM11C0:
+  idx36/47 u1=0x10, idx4/31/19/55 u1=0x20; Ost-Spalt 2711 < 2*1600 am Boden unpassierbar).
+  Portiert: `re15_collision_zone_query` (= FUN_8003b93c: Band @0x8003BA08, u1==attr exakt
+  @0x8003BA0C-14, Kontakt (dir>>4)+8+(u1&3) @0x8003BA8C) + der A[4]-Path-A-Block
+  (@0x80117ED4-0x8011802C: 0x10 → +0x7=1; 0x20 blind → +0x7=3; Yaw-Fenster +-45 Grad) + die
+  Klemm-Band-Quelle des 0x27-Zweigs = +0x82-Zustands-Byte (`e->floor`; Leap-Writer
+  @0x80118AF0/@0x80118CA4; Sce_em_set-Seed pc[4] @0x800421C8-D0 war schon da) statt
+  band_from_y. Gemessen (probe_gorilla_11c0_stuck): vorher 99 % Klemm-Quote, 0 Angriffe,
+  0 Leaps / nachher Leap feuert, Gorilla erreicht den Spieler, 48xBITE+1xHEAVY.
+  Pin `unit_maggot_zone_leap`. OFFEN: Original-Beweis per PCSX-Watchpoint @0x80118AF0.
+* **S1-Teil (Kraehe)** — Wand-Radius = +0x90 (Vol-gekoppelt: Writer `sh a1,144` @0x80104734,
+  Konsument FUN_8003567c param[0x24] → FUN_8004c1bc; Kette 0→350/100/50/10) statt der
+  Port-erfundenen 200 (`crow_vol90`). Skeptiker-Korrektur: der frueher geplante
+  LOS-Ray-Port haette in 10C0/1170 fast nichts geaendert (10C0: Shim- und Klemm-Rechtecke
+  identisch; 1170: Flugbaender leer) — NICHT gebaut.
+* **S2-Teil (Kraehe „haengt ohne Animation am Spieler")** — Skeptiker: das Per-Frame-Geschirr
+  kann im Normalspiel NICHT reissen (run_all VOR victim_tick, Pin-Clear einmal am
+  Pass-Eintritt; HURT-mid-grab unerreichbar, gepinnter Spieler schiesst nicht); der
+  „Anker" war ein Fehl-Label (PL+0x1B4/188/18C = Victim-BANK-Zeiger + Greifer-Dispatch,
+  KEIN Render-Anker — die Original-Kraehe rendert ebenfalls an ihrer Entity-Position).
+  Realer Ausloeser der Nutzer-Sitzung UNBEWIESEN → Diagnose-Traces (RE15_RE2_TRACE) in
+  Auto-Release, Bank-Hart-Reset und victim_begin-Gates eingebaut.
+
+### Welle B — Zombie-Konformitaet + Kraehen-Navigator (dieser Commit)
+
+* **F1 IDLE = 4-Phasen-WANDER-Maschine** (@0x801013F4-16A8; vorher Statue nach jedem
+  Griff/Biss): P0→P1-Durchfall im selben Tick, Moan-Zyklus (+0x15A, Wander-Wurf am Tick
+  DAVOR @0x8010151C-40, gelungener Wurf laesst den Moan entfallen), SELBST-WECKER
+  dist<0x1D4C + Sichtbit OHNE Kegel (@0x80101544-7C; Call-Liste: kein 0x80015614/758 im
+  ganzen EXEC[0]), P2 Wander-Setup (Zonen-Draw 0x8004AA50 = `rand % count`, count==0 → 255
+  OHNE Draw; +0x21A|=0x400) → P3 Wander-Gang (Steer 16, Exits t158 / dist<0xBB8 /
+  dist<0x1D4C+LOS). WP-Bruecke: persistentes +0x21A&0x400 → Ein-Schuss `ai_flags|=8` pro
+  P3-Tick an den bestehenden Nav-Prolog (KEIN zweiter Nav-Aufruf — Repath-Doppeldekrement).
+* **F2 SICHT-BIT +0x154&0x800 mit echtem Produzenten** (`re2z_los154`): Original =
+  FUN_8004A808 (Clear @0x8004A87C-880, Ray FUN_80050858(parts, attr 0x2000, a3=1)==0 →
+  |=0x800 @0x8004A8E8-F4, praktisch jeden Tick; Skip-Tabelle @0x800A73B4). Port = RE1.5-Ray
+  als deklariertes MAPPING (Praezedenz Kraehe), Default FREI ohne Geometrie. Alle sechs
+  Leser verdrahtet (3x DECISION[0] — LOS VOR den rand&1-Draws, die WURFZAHL ist Verhalten —,
+  Idle-/Wander-Wecker, Kriecher-Wait @0x80103AE8). Zombies wecken/lungen nicht mehr durch
+  Waende.
+* **F3 WALK-Details**: P0 = exakt 5 Draws in Original-Reihenfolge (Zeile / Zeilen-Timer
+  VOLLES Byte / +0x16A / +0x14D-ZUFALLS-STARTBILD @0x80101AEC-B0C — kein Gleichschritt
+  mehr / +0x15A); +-16-Yaw-JITTER am Gait-Zeilenwechsel (@0x80101B8C-A8, 2. Draw);
+  +0x16A-PULS: Moan + Extra-Steer 16 NUR am Ablauf-Tick (@0x80101C08-88; vorher moante der
+  Port jeden Tick ca. 4,5x zu oft); der +0x15A-Timer-Block tickt mit BEIDEN Ablauf-Draws
+  (@0x80101D68-DBC), nur der 0x201-Commit bleibt gedrosselt (der (1)+(2)-Nahkampf-
+  Zusammenbruch 3523→0 ist weiter unaufgeklaert — OFFEN wie gehabt).
+* **F4 FETTZOMBIE-KADENZ** (`re2z_fat_cadence_tick`): Gate (+0x10E&0x80)||(+0x21A&0x8000),
+  +0x14D%3==2 POST-Advance → SE-Probe 0x801016c8 → Steer 8 (NUR WALK @0x80101D48; EXEC[2]
+  hat keinen — Skeptiker-Korrektur) → EXTRA-ADVANCE 0x8002A9C8 (purer Frame-++ mit Wrap)
+  = 1,5-fache Kadenz (nicht 4/3). ⛔ REIHENFOLGE TRAEGT: die Probe MUSS vor dem Advance
+  laufen — der nachgelagerte gemeinsame Anim-SFX-Block sah die Residue-2-Frames sonst nie
+  (gemessen: unit_re2_gore PIN 6 verlor die Schritt-SEs); sein RE2-Drittel-Zweig ist
+  dorthin verschoben.
+* **S1-Rest KRAEHEN-NAVIGATOR**: Sub 4/5/6/7-P6/8/9 steuern jetzt auf `e->steer_x/z` des
+  RE1.5-Zwillings-Navigators (run_all-Kraehen-Zweig fuettert FUN_80039e7c; Original:
+  FUN_8004A808-Ausgabe +0x1C4/+0x1C6 @0x8010125C-60 u.a., Modus-Logik @0x80100584-5F8) —
+  deklarierte Substitution wie beim Zombie; vorher hartes Spieler-Ziel = Wand-Attraktor.
+  Sub 11/13 bleiben byte-true spielerdirekt.
+* **Test-Neuverankerungen** (Muster reai-v2-pin-fixture-verschiebung, alle einzeln
+  vermessen): teardeath-PIN7 klemmt die Quer-Drift des Probanden auf die Schusslinie
+  (Nachzielen per rot_y bricht die Aim-FSM: hits=0 gemessen); rise_hittable haelt hp bei
+  60 UNTER der 81er-Resistenz-Reseed-Schwelle (@0x801055FC-620 — mit hp=400 war der
+  Marke→0x501-Knockdown BYTE-TRUE unerreichbar) + Mash + Re-Aim-Fenster (der
+  Sofort-Weiterbeschuss brach den P8-Rueckwaerts-Fall im Commit-Fenster 7..24 ab).
+
+### Weiterhin OFFEN nach dieser Welle
+
+* EXEC[2]-Produzenten (1)+(2) scharf schalten (Nahkampf-Kollaps unaufgeklaert).
+* Kriecher-Umbau FUN_80107A78 (+0x21A&0x10-Weg beim Bodenbeschuss) — Marker-Produzenten
+  sind scharf, der Umbau selbst ist ~280 Instr. eigene Welle.
+* Gorilla: PCSX-Watchpoint-Beweis @0x80118AF0 am echten Kampf; aec4-Player-Push (D2).
+* Kraehe: STRIKE-Schadenshoehe (cmd-2-Handler 0x8003F600, Tabelle jetzt bekannt
+  @0x800A4030); HURT-Zeilen = Waffen-Id-Uebersetzung (RE1.5-Ids 12/13 halten den
+  Flock-Mutex transient); realer S2-Zerfalls-Ausloeser (Traces liegen bereit).
