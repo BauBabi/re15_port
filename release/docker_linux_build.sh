@@ -116,7 +116,26 @@ cmake -S "$REPO/re15_port" -B "$BUILD" -G Ninja \
       -DRE15_ASSETS_PATH="$REPO/re15_port/shared_assets/PSX"
 cmake --build "$BUILD" -j"$(nproc)"
 
-( cd "$BUILD" && ctest --timeout 120 --output-on-failure 2>&1 | tail -3 )
+# ⛔ DIE SUMMENZEILE MUSS DA SEIN - "tail -3" hat sie am 2026-09-05 verschluckt.
+# Ein Container-Lauf meldete nur "The following tests FAILED: 144 - ..." und ich konnte
+# NICHT sehen, wie viele Haken ueberhaupt liefen. Schlimmer: laeuft ctest ins Leere
+# ("No tests were found!!!"), beendet es mit EXIT 0 - falsches Gruen, genau die Falle,
+# die local_build.sh fuer den lokalen Bau schon abfaengt (CLAUDE.md). Deshalb wird die
+# Ausgabe vollstaendig gesichert, die Summenzeile ausgegeben UND ihr Vorhandensein
+# erzwungen.
+( cd "$BUILD" && ctest --timeout 600 --output-on-failure > ctest_out.txt 2>&1 ) || CT_RC=$?
+CT_RC="${CT_RC:-0}"
+grep -aE "tests passed|Total Test time" "$BUILD/ctest_out.txt" || true
+grep -aA20 "The following tests FAILED" "$BUILD/ctest_out.txt" || true
+if ! grep -aqE "[0-9]+% tests passed, [0-9]+ tests failed out of [0-9]+" "$BUILD/ctest_out.txt"; then
+    echo "!!! ctest lieferte KEINE Summenzeile - kein Gruen ohne Zaehlung" >&2
+    tail -20 "$BUILD/ctest_out.txt" >&2
+    exit 1
+fi
+if [[ "$CT_RC" != "0" ]]; then
+    echo "!!! ctest fehlgeschlagen (exit=$CT_RC)" >&2
+    exit "$CT_RC"
+fi
 
 mkdir -p "$REPO/release/linux_out"
 cp "$BUILD/platform/pc/re15_pc" "$REPO/release/linux_out/"

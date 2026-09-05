@@ -1238,7 +1238,16 @@ set_tests_properties(unit_lane_b1_t1_aligntick unit_lane_b1_t2_idleloop
 add_executable(test_bss_room_source test_bss_room_source.c)
 target_compile_definitions(test_bss_room_source PRIVATE RE15_ASSETS_PATH=${RE15_ASSETS_PATH})
 add_test(NAME unit_bss_room_source COMMAND test_bss_room_source)
-set_tests_properties(unit_bss_room_source PROPERTIES TIMEOUT 120)
+# ⛔ 600 s statt 120 - der Haken ist EIN-/AUSGABE-gebunden, nicht rechengebunden.
+# Gemessen 2026-09-05 im Release-Container (debian:11, Repo als Docker-Bind-Mount von
+# einem Windows-Wirt), Haken ALLEIN gestartet:
+#     real 47.9 s | user 0.30 s | sys 3.44 s
+# also 47 s reines Warten auf die Platte: er liest die BSS-Quellen von 156 Raeumen.
+# Unter der parallel laufenden Suite kam dieselbe Arbeit ueber 120 s und ctest brach ab
+# ("144 - unit_bss_room_source (Timeout)") - auf dem nativen Windows-Dateisystem lief
+# er im selben Stand durch (276/276). Die Schranke, die dieser Haken PRUEFT, ist davon
+# unberuehrt (1688 Chunks identisch, 0 abweichend); erhoeht wird allein die Wartezeit.
+set_tests_properties(unit_bss_room_source PROPERTIES TIMEOUT 600)
 
 # --- Batch C (2026-08-17): GLOBALER TEXT-FREEZE (Nutzer-Report 16). Pins:
 #     (1) sce-1-Examine-AOT traegt die Pause-Maske im Payload u16@+2 (@0x80043098)
