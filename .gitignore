@@ -36,3 +36,9 @@ tools/redux/*_out.txt
 # Docker-Cross-Build-Arbeitsverzeichnisse (Windows/Linux Release)
 release/wxbuild/
 release/lbuild/
+
+# Release-Bauverzeichnisse (Host- und Container-Builds) und Cygwin-Absturzdumps
+release/wbuild_rel/
+release/wxbuild/
+release/lbuild/
+*.stackdump

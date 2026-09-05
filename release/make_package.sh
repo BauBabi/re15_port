@@ -469,7 +469,15 @@ fi
 
 # --- Zippen (Split-Volumes) --------------------------------------------------
 if [[ $DO_ZIP -eq 1 ]]; then
-    command -v zip >/dev/null 2>&1 || die "zip fehlt"
+    # ⛔ zip LIEGT IN msys64/usr/bin, NICHT IN mingw64/bin (CLAUDE.md, Build-Kapitel).
+    # Aus einer Shell, die nur mingw64/bin im PATH hat, starb der Paketlauf am
+    # 2026-09-05 mit "ABBRUCH: zip fehlt" - NACHDEM beide Ordner samt aller Gates
+    # fertig waren. Der Pfad wird deshalb hier nachgetragen, statt ihn beim Aufruf
+    # setzen zu muessen.
+    if ! command -v zip >/dev/null 2>&1 && [[ -x /c/msys64/usr/bin/zip ]]; then
+        export PATH="/c/msys64/usr/bin:$PATH"
+    fi
+    command -v zip >/dev/null 2>&1 || die "zip fehlt (auch nicht in /c/msys64/usr/bin)"
     cd "$HERE"
     if [[ "$ONLY" == "both" || "$ONLY" == "linux" ]]; then
         echo "== Zippen: ${NAME}_linux_steamdeck_x64 =="
