@@ -1,3 +1,59 @@
+# RE1.5 Port — v0.6.4 (Early Preview)
+
+**Das Inventar hat sämtliche Vordergrund-Masken abgeschaltet — dauerhaft.**
+
+Dein Befund: „wenn ich im Raum das player inventory öffne, sind sämtliche pri nicht mehr
+funktional." Das war ein reiner Zustandsfehler, und er erklärt womöglich mehr als nur
+diesen Fall.
+
+## Was passiert ist
+
+Wenn das Inventar aufgeht, blendet der Port die eingefrorene Szene aus — das ist richtig,
+das Original zeichnet dort auch nichts davon. Dabei wurden aber **drei Dinge gleich
+behandelt**, von denen nur zwei bildweise Warteschlangen sind:
+
+| | Art | Löschen richtig? |
+|---|---|---|
+| 3D-Dreiecke | wird jedes Bild neu gefüllt | ja |
+| Schattenflecken | dito | ja |
+| **Maskenliste** | **dauerhafter Zustand** | **nein** |
+
+Die Maskenliste wird nur gesetzt, wenn sich **Raum oder Kamerawinkel** ändert. Nach dem
+Schließen des Inventars ändert sich weder das eine noch das andere — also füllte sie
+niemand nach. Jede Maske des Raums blieb aus, bis zufällig die Kamera wechselte.
+
+## Gemessen, nicht vermutet
+
+Im laufenden Spiel, ROOM1060, Ablauf *warten → START → warten → START*:
+
+```
+vorher:   16 ×  Sektion liefert 81 Masken  ->  81 gezeichnet
+          12 ×  Sektion liefert 81 Masken  ->   0 gezeichnet   (ab dem Inventar)
+nachher:  28 ×  Sektion liefert 81 Masken  ->  81 gezeichnet   durchgehend
+```
+
+Die Maskendaten waren also die ganze Zeit da — nur die Liste im Zeichner war leer. Dass
+das Inventar dabei wirklich auf- und zuging, habe ich an den fertig komponierten Bildern
+nachgesehen, nicht nur am Protokoll.
+
+**Der Fix** ist ein Riegel für genau ein Bild, den der nächste Bildanfang zurücknimmt.
+Die Liste bleibt stehen; am Zweck des Aufrufs ändert sich nichts.
+
+**Neue Schranke,** die genau diese Verwechslung fängt — bildweise Warteschlange gegen
+dauerhaften Zustand. Gegenprobe gefahren: am alten Stand schlägt sie mit vier roten
+Punkten aus.
+
+## Zum offenen Stuhl-Befund
+
+Falls du vor dem Stuhl-Screenshot das Inventar offen hattest, waren dort **alle** Masken
+aus — nicht nur der Stuhl. Das würde erklären, warum meine Messungen sagen „die Maske
+liegt vor dir" und dein Bild etwas anderes zeigt. Prüfbar mit einem Bild ohne
+zwischenzeitliches Inventar.
+
+Tests: 275/275.
+
+---
+
 # RE1.5 Port — v0.6.3 (Early Preview)
 
 **Deine sechs Befunde: fünf behoben, einer offen — und ich sage bei dem offenen, warum.**
