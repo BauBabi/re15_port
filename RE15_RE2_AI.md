@@ -1303,7 +1303,8 @@ bedingungslos; der reine RE2-Modell-Zweig ist weg.
 
 Sechs Symptome, Ablauf streng nach STOP-GATE: 6 Diagnose-Agenten (Dossiers `diag_*.md`) →
 adversariale Skeptiker-Runde (`verify_*.md`, mehrere Erstbefunde REFUTED) → Messung → Fix.
-Alle Zitate dort; hier die Ergebnis-Uebersicht.
+Alle Zitate dort (Dossiers archiviert unter `analysis/re2_ki_batch_2026-09-05/`); hier die
+Ergebnis-Uebersicht.
 
 ### Welle A — Symptom-Fixes (Commit 8c64882f)
 
