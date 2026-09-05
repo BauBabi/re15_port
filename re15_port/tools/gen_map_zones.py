@@ -917,11 +917,36 @@ def main():
     # verwendet.
     # Die beiden Schaechte auf Blatt 3 sind GASTLAGEN (ihre Heimat ist Blatt 2) und
     # stehen deshalb weiter unten in GAST_FIX.
+    # ⛔ BLATT 3 (2F): ZWEI ZUORDNUNGEN SIND DURCH DIE DATEN ERZWUNGEN.
+    # Nutzer-Befunde 2026-09-05 (fehler/error01.png, error02.png): "sobald ich eine Tuer
+    # weiter gehe in den Flur werde ich auf der Map woanders hin geportet" und "wenn ich
+    # noch weiter gehe ... geht garnichts mehr bei der Map. Ich werde noch nicht einmal
+    # mehr angezeigt" (ROOM10D0).
+    #
+    # Der Tuergraph der Etage (aus den Door_aot_set-Records):
+    #     ROOM1060 (Treppenhaus, Rect 1) -- ROOM10C0 -- ROOM10D0 -- {10E0, 10F0, 1100}
+    #     ROOM10C0 -- ROOM1080 (Fahrstuhlkabine, Rect 4)
+    # Zwei Raeume, die eine Tuer verbindet, muessen Rechtecke haben, deren gezeichnete
+    # Flaechen sich beruehren. Beruehrungen auf Blatt 3 (Ersatztabelle, s. RECT_FIX):
+    #     Rect 1 beruehrt {0,2,3,4}    Rect 4 beruehrt {0,1}    Rect 3 beruehrt {0,1,2,5,6,7,8,9}
+    #
+    #   ROOM10C0 muss Rect 1 UND Rect 4 UND das Rechteck von ROOM10D0 beruehren.
+    #   Rect 0 erfuellt alle drei; Rect 2 beruehrt Rect 4 NICHT. Damit bleibt genau
+    #   Rect 0 uebrig - keine Wahl, eine Folgerung.
+    #
+    #   ROOM10D0 misst im ausgelieferten Massstab 63 x 91 px. Das einzige Rechteck der
+    #   Seite, in das das passt, ist Rect 3 (72x88); alle anderen sind hoechstens 48x48
+    #   oder 72x32. (Genau daran scheiterte es bisher: mit der alten, von Blatt 2
+    #   kopierten Tabelle war das groesste Rechteck der Seite 72x64, und die
+    #   Kostenheuristik liess den Raum lieber ganz weg - er hatte deshalb weder rote
+    #   Hervorhebung noch Spielermarker.)
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
         (0x1060, 0): (2, 8),      # Treppenhaus -> der 16x17-Kasten
         (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
+        (0x10C0, 0): (3, 0),      # einziges Rect, das Treppenhaus UND Kabine beruehrt
+        (0x10D0, 0): (3, 3),      # einziges Rect, in das 63x91 px passen
     }
 
     # Zonen je Seite sammeln
@@ -1030,7 +1055,19 @@ def main():
             if _v[0] != pg: continue
             _i = key2idx.get(_k)
             if _i is not None: fest[_i] = _v[1]
-        opts = [r for r in range(len(R)) if r not in fest.values()] + [None]
+        # ⛔ "GAR NICHT ZUORDNEN" NUR, WENN ES AUCH ZU WENIG RECHTECKE GIBT.
+        # Nutzer-Befund 2026-09-05 (fehler/error01.png): "wenn ich noch weiter gehe in
+        # 2F und aus dem Korridor raus, geht garnichts mehr bei der Map. Ich werde noch
+        # nicht einmal mehr angezeigt" - ROOM10D0 hatte kein Rechteck, also weder rote
+        # Hervorhebung noch Spielermarker. Auf Blatt 3 stehen 10 Rechtecke fuer 6 Zonen;
+        # eine Zone wegzulassen spart dort nur Kosten, es gibt keinen Zwang dazu.
+        # KEINE_ZUORDNUNG bleibt bei 30 (das A/B dort steht und gilt weiter) - die
+        # Moeglichkeit entfaellt nur da, wo sie sachlich nicht noetig ist. Wo Zonen und
+        # Rechtecke knapp sind (Blatt 6: 13 Zonen auf 11 Rechtecke), bleibt sie stehen,
+        # sonst waere die Suche unloesbar.
+        _frei = [r for r in range(len(R)) if r not in fest.values()]
+        _knapp = len(_frei) < (len(zl) - len(fest))
+        opts = _frei + ([None] if _knapp else [])
         for _ in range(80):
             a = dict(fest)
             order = [i for i in range(len(zl)) if i not in fest]; rng.shuffle(order)

@@ -2841,3 +2841,70 @@ entspricht - das Treppenhaus-Rechteck liegt jetzt bei (118,134) 24x24, also gena
 herum.
 
 Suite: 271/271 gruen (neu: `unit_map_marke_auf_kunst`).
+
+---
+
+## §46 — 2F: der Flur ohne Rechteck und der Raum am falschen Ende
+
+**Nutzer-Befunde 2026-09-05** (`fehler/error01.png`, `fehler/error02.png`):
+"sobald ich eine Tuer weiter gehe in den Flur werde ich auf der Map woanders hin
+geportet" und "wenn ich noch weiter gehe in 2F und aus dem Korridor raus, geht garnichts
+mehr bei der Map. Ich werde noch nicht einmal mehr angezeigt".
+
+Beides auf demselben Blatt, das §44 gerade erst richtiggestellt hat - und beide Male ist
+die Zuordnung durch die Daten ERZWUNGEN, nicht gewaehlt.
+
+### Der Tuergraph der Etage
+
+Aus den Door_aot_set-Records:
+
+    ROOM1060 (Treppenhaus) -- ROOM10C0 -- ROOM10D0 -- { ROOM10E0, ROOM10F0, ROOM1100 }
+    ROOM10C0 -- ROOM1080 (Fahrstuhlkabine)          ROOM1100 -- ROOM1110
+
+Zwei Raeume, die eine Tuer verbindet, muessen Rechtecke haben, deren gezeichnete
+Flaechen sich beruehren. Zaehlt man ALLE Zuordnungen auf, die jede Tuerkante erfuellen
+(ROOM1060 auf Rect 1 und ROOM1080 auf Rect 4 sind aus §44 gesetzt), bleiben **192**
+uebrig - und in **192 von 192** liegt
+
+    ROOM10C0 auf Rect 0   (das einzige, das Treppenhaus UND Kabine beruehrt)
+    ROOM10D0 auf Rect 3
+
+Die uebrigen vier Raeume sind mit 12-25 % unbestimmt und werden deshalb NICHT
+festgesetzt - dieselbe Schwelle wie bei der Vorgabe aus §22.
+
+### Warum ROOM10D0 vorher GAR NICHT gezeichnet wurde
+
+ROOM10D0 misst im ausgelieferten Massstab 63 x 91 px. Mit der alten, von Blatt 2
+kopierten Tabelle war das groesste Rechteck der Seite 72 x 64 - der Raum passte in
+keines, und die Kostenheuristik liess ihn lieber ganz weg (`KEINE_ZUORDNUNG` = 30 ist
+bewusst billig). Ohne Zone gibt es weder rote Hervorhebung noch Spielermarker; genau das
+hat der Nutzer fotografiert. Die Ersatztabelle aus §44 fuehrt Rect 3 mit **72 x 88** -
+das erste Rechteck der Seite, in das der Flur passt.
+
+### Ein Raum faellt nicht mehr ganz weg, wenn Rechtecke frei sind
+
+`KEINE_ZUORDNUNG` bleibt bei 30 (das A/B dort gilt weiter). Neu ist nur: die Option
+"gar nicht zuordnen" steht der Suche nur noch dort zur Verfuegung, wo es **weniger
+freie Rechtecke als Zonen** gibt (Blatt 6: 13 Zonen auf 11 Rechtecke). Wo es reicht -
+Blatt 3 hat 10 Rechtecke fuer 6 Zonen -, bekommt jede Zone eines. Ein falsch
+platzierter Raum ist fuer den Spieler immer noch besser als ein unsichtbarer.
+
+### Ergebnis am Fixpunkt (Lauf 2 == Lauf 3)
+
+    Blatt 3:  rect 0 ROOM10C0 | rect 1 ROOM1060 | rect 2 ROOM10F0 | rect 3 ROOM10D0
+              rect 4 ROOM1080 | rect 6 ROOM10E0 + ROOM1100 | rect 7 ROOM1110
+
+    Live (integration_map_raum_live, ganze Raumkette ab EXE-Start):
+        178 Tueren durchschritten, 178 mal war VORHER und NACHHER der richtige Raum rot
+         91 Raeume geprueft, 91 zeigen SICHTBARES Rot, 0 nicht   (vorher 87/87)
+         91 von 91 Spieler-Marker liegen in der roten Flaeche
+        219 Tueren, 171 mit sichtbarem Symbol im Bild
+
+    Marken auf gemaltem Grundriss (unit_map_marke_auf_kunst, Zusammenbau der Seite):
+        ausgeliefert v0.6.1  13 von 173 = 7,5 %   Blatt 3: 2 von 6
+        Fixpunkt             12 von 180 = 6,7 %   Blatt 3: 1 von 10
+
+⛔ Die Schranke dort misst jetzt die QUOTE. Eine Absolutzahl haette genau das bestraft,
+was hier besser wurde: es werden mehr Raeume gezeichnet, also gibt es mehr Marken.
+
+Suite: 274/274 gruen.
