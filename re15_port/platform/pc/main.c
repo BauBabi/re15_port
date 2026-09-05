@@ -4925,9 +4925,22 @@ re_title:;
                     extern int re15_render_pc_debug_pri(int *depths, int max);
                     int md[64];
                     int mn = re15_render_pc_debug_pri(md, 64);
-                    fprintf(stderr, "[pocc] F%u cut=%d pl=(%d,%d,%d) vz=%ld scr=(%d,%d) masks=%d",
+                    /* ⛔ EINE MASKE HAT EINE TIEFE, EINE FIGUR NICHT. Der Vergleich
+                     * Maske-gegen-FUSSPUNKT beantwortet nicht, was der Nutzer sieht: der
+                     * Zeichner vergleicht je DREIECK. Steht die Kamera erhoeht (rot[7] != 0),
+                     * liegt der Kopf in einer anderen Kamera-Tiefe als die Fuesse, und eine
+                     * Maske dazwischen schneidet die Figur waagerecht durch - genau das
+                     * Bild, das der Nutzer am Stuhl in ROOM1140 gemeldet hat. Deshalb hier
+                     * zusaetzlich Kopf (y-1500) und Huefte (y-750). */
+                    long pvz_kopf  = ((long)plz->x * cam_view.rot[6]
+                                    + (long)(plz->y - 1500) * cam_view.rot[7]
+                                    + (long)plz->z * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                    long pvz_huft  = ((long)plz->x * cam_view.rot[6]
+                                    + (long)(plz->y - 750) * cam_view.rot[7]
+                                    + (long)plz->z * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                    fprintf(stderr, "[pocc] F%u cut=%d pl=(%d,%d,%d) vz=%ld vzHuft=%ld vzKopf=%ld scr=(%d,%d) masks=%d",
                             (unsigned)g_engine.frame_count, active_cut_idx, plz->x, plz->y, plz->z,
-                            pvz, psx, psy, mn);
+                            pvz, pvz_huft, pvz_kopf, psx, psy, mn);
                     for (int mi2 = 0; mi2 < mn; mi2++)
                         fprintf(stderr, " | d=%d k32=%d k64=%d occ32=%d occ64=%d",
                                 md[mi2], md[mi2] * 32, md[mi2] * 64,

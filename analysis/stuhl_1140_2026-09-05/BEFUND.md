@@ -75,3 +75,74 @@ Der Debug-Sprung nach ROOM1140 landet in der **Irons-Zwischensequenz**; der Spie
 dort minutenlang nicht steuerbar. Nach ihrem Ende steht er in Cut 2. Der Autopilot
 (`RE15_AUTOPILOT="xz:..."`) bringt ihn in die Naehe, aber nicht auf die Stelle des
 Screenshots; drei Anlaeufe mit 45-115 s Laufzeit.
+
+---
+
+# Zweiter Durchgang, 2026-09-06 — sechs neue Nutzer-Bilder
+
+## Das Wichtigste zuerst: es gibt hier kein `@0x`
+
+Der Port liest die nachgezeichnete Maskendatei **nur dort, wo die RDT-Sektion
+`FFFFFFFF` fuehrt** (`platform/pc/main.c`, "NUR wenn das Original eine NULL-Sektion
+fuehrt"). Fuer ROOM1140 Cut 0 ist genau das der Fall — im Container
+`MASKS/ROOM1140.MSK` traegt Cut 0 die 86 Rechtecke, das Original traegt nichts.
+
+**Der Stuhl ist also meine Rekonstruktion.** Seine Tiefe hat keine Original-Adresse;
+sie stammt aus `auswahl.json` (`ebene: -700`, Tischplattenebene). Das gehoert offen
+gesagt, statt eine Herleitung wie einen Beleg klingen zu lassen.
+
+Maskensatz des Raums (aus dem Container gelesen):
+
+| Cut | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|-----|---|---|---|---|---|---|---|---|---|---|
+| Masken | 86 | – | 84 | 71 | – | 89 | – | – | – | – |
+
+Sechs der zehn Kamerawinkel haben ueberhaupt keine Maske. Eigene Luecke.
+
+## Die Maschinerie arbeitet — gemessen, nicht angenommen
+
+* `[pri] cut=0 pri_offset=0x51C masks=86 fg_atlas=1` — alle 86 geladen; der Deckel
+  `RE15_PRI_MAX_MASKS_PER_CUT` ist 105, es faellt nichts weg.
+* Neue Sonde (`RE15_POCC`, um Huefte und Kopf erweitert): am Spawn
+  `pl=(-7600,0,-17600) vz=11034 vzHuft=10800 vzKopf=10565`. Die Figur spannt also nur
+  **469 Einheiten** in der Tiefe — eine Maske kann sie nicht „waagerecht durchschneiden",
+  solange sie nicht genau in diesem Band liegt.
+* Nachgestellt bei `scr=(222,142) vz=9460`: der Stuhlrahmen laeuft im Bild
+  **ungebrochen** ueber ihre Beine (Frame-Abzug `m9/F2000_stuhl.png`).
+
+## Die Stuhl-Rechtecke
+
+    x=210..226  y=113..141   depth=117  -> Kamera-z 7488
+    x=226..233  y=113..141   depth=113  -> Kamera-z 7232
+
+## Wo die Grenze wirklich liegt
+
+Aus dem Bodengitter (`RE15_POCC_SCAN`, 539 begehbare Punkte im Maskenbereich): von den
+**153** Standplaetzen, deren Figur den Stuhl auf dem Bild ueberlappt, liegen
+
+* **84 dahinter** (vz > 7488) — der Stuhl deckt, richtig;
+* **69 davor**   (vz < 7488) — der Stuhl deckt nicht, ebenfalls richtig.
+
+Ein Schritt ueber diese Linie schaltet die Verdeckung um. Das erklaert, warum in
+`233105/233113/233123` gedeckt wird und in `233130/233139` nicht — **ohne** dass ein
+Fehler vorliegen muss. Ob 7488 die richtige Linie ist, ist die eigentliche Frage.
+
+## Was NICHT die Ursache ist (jeweils ausgeschlossen)
+
+* **Falscher Cut.** Hintergrundabgleich der Nutzerbilder gegen alle zehn Winkel:
+  Cut 0 mit Abweichung 8.3, naechstbester Cut 8 mit 26.3.
+* **Fehlende Dateien im Paket.** `re15_port_v0.6.5_win64.zip` enthaelt
+  `MASKS/ROOM1140.MSK` und `ROOM1140_PRI00.TIM`.
+* **Das Inventar.** Mit dem v0.6.4-Riegel bleibt die Liste stehen: 137 Sonden-Zeilen
+  im selben Raumbesuch, durchgehend „86 Masken".
+
+## Was offen bleibt
+
+1. ⛔ **Meine Belege sind Frame-Abzuege.** In diesem Projekt ist dokumentiert, dass
+   Abzuege Fehler verdecken koennen (Skill `re15-port-visual-verify`). Der Mitschnitt
+   des ECHTEN Fensters ist noch nicht gelungen: im Live-Fenster loeste der Debug-Sprung
+   nach ROOM1140 nicht aus (F20889 in ROOM1170), und ohne ihn kommt der Messlauf nicht
+   in den Raum.
+2. **Die Weltlage des Nutzers.** Aus dem Bild allein nicht bestimmbar; der Abgleich
+   gegen den Hintergrund traegt nicht weit genug (Ausrichtungs-Rest 5-9 gegen ~0 bei
+   einem eigenen Abzug). `RE15_POS_HUD=1` liefert sie in einer Zeile.

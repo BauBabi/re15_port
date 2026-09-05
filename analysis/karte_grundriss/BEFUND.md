@@ -3012,3 +3012,62 @@ vorher gruenen wurden dabei schneller:
 
 Der Wrapper hat also auch bestandene Laeufe aufgeblaeht — die gemessene Dauer eines
 Haken sagte bis hierher mehr ueber ihn als ueber das Spiel.
+
+## §49 — Der Ankunfts-Marker steht nicht an seiner Tuer (Nutzer-Befund 2026-09-05, 2F)
+
+Zwei Bilder, ein Grund. `fehler/Screenshot 2026-09-05 233339/233357.png`: *„when I go
+through this door, i expect to get out on the left of it — but I get out here."*
+`…233429.png`: *„Instead I land here somewhere and all door are wrong positioned."*
+
+### Gemessen
+
+Fuer jede Tuer laesst sich vergleichen, wo der **Ankunfts-Marker** landet (Projektion
+der Ziel-Weltposition auf das Ziel-Rechteck) und wo ihr **gezeichnetes Tuersymbol**
+sitzt. Gepaart wird ueber `zid`/`zid2`, also Marke zu Tuer, nicht „naechstes Symbol"
+(das schwaechere Mass sah mit Median 5 px harmlos aus — s. [[reai-v2-proxy-mass]]):
+
+| Projektion | n | Median | 90 %-Wert | schlimmster |
+|------------|---|--------|-----------|-------------|
+| geeicht (Original-Zeile @0x800768b0) | 62 | 2 px | 5 px | 41 px |
+| Stub (Bbox-Streckung, Port-Ergaenzung) | 19 | 2 px | **39 px** | **67 px** |
+
+Die beiden Nutzer-Faelle stehen in dieser Liste ganz oben:
+
+* **ROOM10C0 -> ROOM10D0: Marker (200,117), Symbol (141,117) — 59 px.** Das ist der
+  zweitschlimmste Fall im ganzen Spiel und genau der gelbe Strich, auf den der zweite
+  Pfeil in `233429.png` zeigt.
+* **ROOM1060 -> ROOM10C0:** Tuersymbol (119,151), Ankunft (123,122) — **29 px** weiter
+  oben, am oberen Rand des Rechtecks. Das ist der erste Befund: er geht unten links
+  hinaus und erscheint oben.
+
+### Ursache
+
+Der Marker hat drei moegliche Wege, und fuer 2F greift der schlechteste:
+
+1. `re15_map_zone_abbildung` (affine Abbildung des Grundriss-Loesers) — **greift nie**,
+   `s_map_synth[]` ist leer; sie ist nur fuer Zonen OHNE gemaltes Rechteck vorgesehen.
+2. Die Original-Formel `FUN_800473f8` mit `ox/oy/sx/sy` — nur fuer die 33 Raeume mit
+   ausgelieferter Zeile.
+3. **Lineare Bbox-Streckung** — Port-Ergaenzung ohne Original-Vorbild.
+
+Auf Blatt 3 tragen **6 von 8** Zonen `sx = 0`: ROOM10C0, ROOM10D0, ROOM10E0, ROOM10F0,
+ROOM1100, ROOM1110. Nur Treppenhaus (ROOM1060) und Fahrstuhl (ROOM1080) sind geeicht.
+Die Streckung bildet die ganze Weltbox linear auf das Rechteck ab — sie weiss nichts
+davon, wo die Tuer in der ZEICHNUNG liegt.
+
+### Was daraus folgt
+
+⛔ Eine allgemeine Eichung aus den Tuersymbolen ist NICHT verfuegbar: von 39 nicht
+geeichten Zonen haben ueberhaupt nur **6** eindeutige Anker (Welt-Ankunft ->
+gezeichnetes Symbol), davon **2** mindestens drei — ROOM1000 (Blatt 2, Rect 10) und
+**ROOM10D0** (Blatt 3, Rect 3). Fuer diese beiden ist eine bestimmte Eichung mit
+Kreuzprobe (ein Anker herausgehalten) moeglich; fuer die uebrigen fehlen die Daten.
+
+⛔ Und der frueher schon gemachte Fehler darf sich nicht wiederholen: am 2026-09-01
+wurde eine Eichung „aus der gezeichneten Flaeche und den Tuersymbolen" zurueckgenommen,
+weil sie 37 von 37 geeichten Zonen klemmen liess. Eine neue Eichung darf deshalb
+ausschliesslich dort greifen, wo das Original KEINE Zeile fuehrt, und muss ueber die
+Kreuzprobe belegt werden — der Fit auf die eigenen Anker ist sonst eine
+selbstbestaetigende Metrik ([[reai-v2-selbstbestaetigende-metrik]]).
+
+**Stand: gemessen und eingegrenzt, nicht gefixt.**
