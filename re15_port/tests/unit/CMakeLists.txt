@@ -3265,6 +3265,12 @@ add_test(NAME unit_audio_sperren COMMAND test_audio_sperren)
 set_tests_properties(unit_audio_sperren PROPERTIES TIMEOUT 30)
 
 # --- Tuersymbol-Achse (Nutzer-Befund 2026-09-04 "Wrong Rotation, Need 90 Degree turn") ---
+add_executable(test_pri_inventar_riegel test_pri_inventar_riegel.c)
+target_include_directories(test_pri_inventar_riegel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_pri_inventar_riegel PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
+add_test(NAME unit_pri_inventar_riegel COMMAND test_pri_inventar_riegel)
+set_tests_properties(unit_pri_inventar_riegel PROPERTIES TIMEOUT 30)
+
 add_executable(test_map_marke_auf_kunst test_map_marke_auf_kunst.c)
 target_link_libraries(test_map_marke_auf_kunst PRIVATE re15_engine re15_test_support)
 target_include_directories(test_map_marke_auf_kunst PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -427,11 +427,23 @@ void re15_render_pc_clear_textris(void)      { s_textri_count = 0; }
  * NOTHING of the frozen scene — besides the tri queue, the character-shadow blobs (layer 2)
  * and the room PRI overdraw rects (mask pass) must be dropped too, or they composite ON TOP
  * of the software-framebuffer screen. */
+/* ⛔ NUR FUER DIESES BILD, NICHT DAUERHAFT (Nutzer-Befund 2026-09-05: "wenn ich im
+ * Raum das player inventory oeffne, sind saemtliche pri nicht mehr funktional").
+ * s_textri_count und s_shadow_quad_count sind BILDWEISE Warteschlangen - sie werden
+ * jedes Bild neu gefuellt, sie zu leeren ist richtig. s_pri_rect_count ist es NICHT:
+ * die Maskenliste wird nur bei einem Wechsel von (Raum, Cut) gesetzt
+ * (main.c: `if ((int)g_current_room_id != (int)s_pri_room || active_cut_idx != s_pri_cut)`).
+ * Wer sie hier auf 0 setzt, loescht sie fuer immer - nach dem Schliessen des Inventars
+ * aendert sich weder Raum noch Cut, also fuellt sie niemand nach, und JEDE Maske des
+ * Raums bleibt aus, bis zufaellig die Kamera wechselt. Genau das hat der Nutzer gesehen.
+ * Deshalb hier nur ein Riegel fuer das laufende Bild; re15_render_begin_frame() nimmt
+ * ihn zurueck. */
+static int s_pri_suppress = 0;
 void re15_render_pc_clear_scene_overlays(void)
 {
     s_textri_count = 0;
     s_shadow_quad_count = 0;
-    s_pri_rect_count = 0;
+    s_pri_suppress = 1;
 }
 /* Per-tri vertex alpha for SUBSEQUENTLY queued tris (PSX ABE semi-transparency: the effect
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
@@ -594,6 +606,8 @@ void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
 
 void re15_render_begin_frame(void)
 {
+    /* Der Maskenriegel gilt genau ein Bild (s. re15_render_pc_clear_scene_overlays). */
+    s_pri_suppress = 0;
     /* Phase 4.5.10-F: reset debug bbox for this frame. */
     s_dbg_bbox_valid = 0;
     s_dbg_min_sx = 0; s_dbg_max_sx = 0;
@@ -768,7 +782,8 @@ void re15_render_end_frame(void)
             order[j + 1] = k;
         }
         /* Sort masks by camera-Z descending — SAME scale as the tri depth key. */
-        int mask_n = (s_pri_atlas_tex && s_pri_rect_count > 0) ? s_pri_rect_count : 0;
+        int mask_n = (!s_pri_suppress && s_pri_atlas_tex && s_pri_rect_count > 0)
+                   ? s_pri_rect_count : 0;
         int mask_order[RE15_PRI_RECTS_MAX];
         for (int i = 0; i < mask_n; i++) mask_order[i] = i;
         for (int i = 1; i < mask_n; i++) {
