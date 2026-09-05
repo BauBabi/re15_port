@@ -323,7 +323,9 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     rest = budget or geom.MAX_MASKS_PER_CUT
     for eintrag in objekte:
         name, reg, fuss = eintrag[0], eintrag[1], eintrag[2]
-        ebene = eintrag[3] if len(eintrag) > 3 else 0
+        # None = Bodenebene aus den Kollisionsdaten waehlen (geom.boden_ebenen);
+        # ein ausdruecklicher Wert (z.B. -700 fuer eine Tischplatte) hat Vorrang.
+        ebene = eintrag[3] if len(eintrag) > 3 else None
         if not reg.any():
             continue
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene)

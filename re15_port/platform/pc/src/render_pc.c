@@ -27,6 +27,15 @@
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
+extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
+/* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
+ * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
+ * Maske" statt "Maske wird nicht geladen". g_scd.cam_id ist dieselbe Quelle, aus der
+ * main.c active_cut_idx bildet (@0x8003f038-Kette). */
+static int s_pri_log_cut = -1, s_pri_log_fg = -1, s_pri_log_n = -1;
+void re15_pri_log_set_cut(int cut, int has_fg, int pri_n)
+{ s_pri_log_cut = cut; s_pri_log_fg = has_fg; s_pri_log_n = pri_n; }
+int re15_pri_log_cut(void) { return s_pri_log_cut; }
 
 #define WINDOW_SCALE 4
 
@@ -796,11 +805,12 @@ void re15_render_end_frame(void)
                         if (d > dmax) dmax = d;
                         if ((float)re15_pri_mask_camera_z(d) < md) verdeckend++;
                     }
-                    fprintf(lf, "Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
+                    fprintf(lf, "Raum %04X Cut %d | Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | Atlas %d Sektion %d | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
+                            (unsigned)g_current_room_id, re15_pri_log_cut(),
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].y,
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
-                            lo, hi, md, mask_n,
+                            lo, hi, md, s_pri_log_fg, s_pri_log_n, mask_n,
                             mask_n ? dmin : -1, mask_n ? dmax : -1,
                             mask_n ? dmin * 64 : -1, mask_n ? dmax * 64 : -1, verdeckend);
                     fclose(lf);

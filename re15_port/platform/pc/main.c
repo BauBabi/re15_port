@@ -4529,6 +4529,11 @@ re_title:;
                  * → overdraw off. */
                 extern int re15_pri_load_cut_atlas(int cut_idx);
                 int has_fg = re15_pri_load_cut_atlas(active_cut_idx);
+                /* Fuer die RE15_PRI_LOG-Messschiene: welcher Cut wird gezeigt, und traegt
+                 * er ueberhaupt einen Vordergrund-Atlas? Ohne beides ist "0 Masken" nicht
+                 * zu deuten. */
+                { extern void re15_pri_log_set_cut(int cut, int has_fg, int pri_n);
+                  re15_pri_log_set_cut(active_cut_idx, has_fg, pri_n); }
                 /* RE15_NO_PRI=1: measurement A/B — suppress the foreground overdraw
                  * so a diff against the normal frame shows exactly which pixels the
                  * sprite.pri masks paint, and onto what. */

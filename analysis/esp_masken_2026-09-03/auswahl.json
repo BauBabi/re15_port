@@ -238,7 +238,7 @@
  },
  "ROOM1120": {
   "2": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor; seine Unterkante IST der Bodenkontakt und laeuft schraeg. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 64 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor. ⛔ 2026-09-05 VON \"spalten\" AUF \"fuss\" 202 GEWECHSELT (Nutzer-Befund fehler/error05.png: \"Der Tisch ueberdeckt mich nur halb\"). GEMESSEN: in Leons Spalten (165..182, Fusspunkt aus dem Screenshot (171,154) -> Tiefe 9782) lagen 12 von 14 Maskenrechtecken vor ihm, ZWEI aber bei Kamera-z 8512 und 11072 - genau die zwei am linken Tresenrand, wo die unterste Maskenzeile die TRESENPLATTE ist und nicht der Boden. Die Spaltenregel ist hier falsch: ein Tresen ist ein Koerper, hinter den man nicht teilweise treten kann, also EIN Abstand. 202 ist die unterste Zeile der Freistellung (Kasten y=92, Hoehe 111).",
    "objekte": [
     {
      "name": "Tresen mit Monitor",
@@ -246,9 +246,9 @@
      "x": 165,
      "y": 92,
      "massstab": 1,
-     "spalten": true,
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "fuss": 202
     }
    ]
   }

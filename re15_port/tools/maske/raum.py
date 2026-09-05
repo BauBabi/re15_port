@@ -218,6 +218,12 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     """
     from scipy import ndimage
     rid = int(room[4:], 16)
+    # RDT + Kamerasatz fuer die Bodenebene (s. unten bei "ebene").
+    _rdt_pfad = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                             "shared_assets", "PSX", "STAGE%d" % (rid >> 12),
+                             "ROOM%04X.RDT" % rid)
+    rdt = open(os.path.abspath(_rdt_pfad), "rb").read()
+    cam_off = struct.unpack_from("<I", rdt, 0x24)[0]
     aus = []
     for o in e.get("objekte") or []:
         if "png" in o:
@@ -332,7 +338,38 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
                       'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
                       % o.get("name", "?"))
-            aus.append((o.get("name", "?"), r, o.get("fuss"), int(o.get("ebene", 0))))
+            # ⛔ KEIN VORGABEWERT 0 MEHR (Nutzer-Befund 2026-09-05,
+            # fehler/error03+04.png: "Die Gelaender scheinen mich gleich mal garnicht
+            # zu ueberdecken"). ROOM1060 ist ein Treppenhaus; das Podest liegt bei
+            # y = -14400, und mit y=0 landeten die Masken zwei- bis viermal zu weit
+            # weg - im Spiel gemessen (RE15_PRI_LOG): Figur-Tiefe 4800..6862, Masken
+            # 16960..26496, verdeckend 0 von 81.
+            # Fehlt "ebene", kommt sie aus dem BLICKZIEL des Kamerasatzes, gerundet
+            # auf das naechste BEGEHBARE Band (geom.ebene_aus_kamera). Ist das nicht
+            # eindeutig (guete >= GUETE_MAX), bricht der Bau ab und verlangt den
+            # gemessenen Wert - lieber keine Maske als eine falsche.
+            _eb = o.get("ebene")
+            if _eb is None and not o.get("fuss"):
+                _tref = geom.ebene_aus_kamera(rdt, cam_off, cut, rid)
+                if _tref is None:
+                    raise SystemExit(
+                        '   ⛔ "%s": Bodenebene nicht bestimmbar (kein Kamerasatz). '
+                        'Bitte "ebene" messen und in auswahl.json eintragen.'
+                        % o.get("name", "?"))
+                _eb, _guete = _tref
+                if _guete >= geom.GUETE_MAX:
+                    raise SystemExit(
+                        '   ⛔ "%s": Bodenebene NICHT EINDEUTIG (Blickziel liegt %.0f %% '
+                        'zwischen zwei begehbaren Baendern; naechstes waere y=%d). '
+                        'Bitte im Spiel messen (RE15_PRI_LOG -> "Spieler (x,y,z)") und '
+                        'als "ebene" in auswahl.json eintragen.'
+                        % (o.get("name", "?"), 100 * _guete, _eb))
+                print('     Bodenebene y=%d aus dem Blickziel des Cuts (Guete %.2f, '
+                      'begehbare Baender %s)'
+                      % (_eb, _guete,
+                         sorted(-b * geom.BAND_HOEHE for b in geom.begehbare_baender(rid))))
+            aus.append((o.get("name", "?"), r, o.get("fuss"),
+                        None if _eb is None else int(_eb)))
     return aus
 
 

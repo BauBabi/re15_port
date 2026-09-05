@@ -93,6 +93,207 @@ def vz_at_floor(R, t, H, sx, sy, y0=FLOOR_Y):
     return vz if vz > 1 else None
 
 
+# ----------------------------------------------------------------------------
+# BODENEBENEN EINES RAUMS (Kollisionsdaten)
+# ----------------------------------------------------------------------------
+# ⛔ NUTZER-BEFUND 2026-09-05 (fehler/error03.png, error04.png): "Die Gelaender
+# scheinen mich gleich mal garnicht zu ueberdecken." GEMESSEN im laufenden Spiel
+# (RE15_PRI_LOG, ROOM1060 Cut 0):
+#     Spieler (20268,-14400,26482) | Figur-Tiefe 4800..6862 | 81 Masken Tiefe 265..414
+#     (Schwelle 16960..26496) | verdeckend 0
+# Die Masken lagen zwei- bis viermal zu weit weg. Ursache ist FLOOR_Y = 0: ROOM1060
+# ist ein TREPPENHAUS und traegt fuenf Bodenebenen. Das Podest, auf dem der Spieler
+# steht, liegt bei y = -14400; schneidet man den Sehstrahl trotzdem mit y = 0, landet
+# der Punkt weit dahinter.
+#
+# DIE EBENEN STEHEN IN DEN DATEN, sie werden nicht geschaetzt: jede SCA-Zelle traegt
+# ein floor-Byte, das Band ist floor>>4, und die Hoehe eines Bandes ist
+#     y = -band * 0x708
+# Das ist die Umkehrung von re15_collision_band_from_y (engine: "Convert a spawn Y to
+# a floor band, as the original does: -(Y / 0x708)"). Gegenprobe: ROOM1060 fuehrt die
+# Baender 0,2,4,6,8 -> y = 0,-3600,-7200,-10800,-14400, und der gemessene Spieler-Y auf
+# dem Podest ist exakt -14400.
+#     ROOM1060 175 Zellen, Baender {0,2,4,6,8}
+#     ROOM1120 195 Zellen, Baender {0,1,2}
+#     ROOM1130  55 Zellen, Band {0}      ROOM1140 95 Zellen, Band {0}
+# (Die beiden letzten sind einetagig - ihre bereits geprueften Masken aendern sich
+# durch die Bandwahl also nicht.)
+BAND_HOEHE = 0x708          # engine/include/re15_collision.h: band = -(Y / 0x708)
+
+
+def sca_zellen(rdt):
+    """SCA-Zellen (x, z, breite, tiefe, band) aus dem RDT (+0x20, Eintrag 'collision').
+
+    Layout 12 B je Zelle (lib_sca v1.5): u16 width, u16 density, s16 x, s16 z,
+    u8 type, u8, u8, u8 floor — dasselbe, was tools/gen_map_zones.py liest.
+    """
+    try:
+        # Offset-Tabelle @0x20; Eintrag 0 = collision (Reihenfolge wie
+        # tools/gen_map_zones.py NAMES: collision, camera, zone, light, ...).
+        s = struct.unpack_from("<I", rdt, 0x20)[0]
+    except struct.error:
+        return []
+    if not (0 < s < len(rdt) - 24):
+        return []
+    counts = struct.unpack_from("<5I", rdt, s + 4)
+    n = sum(counts)
+    if not (0 < n < 2000) or s + 24 + 12 * n > len(rdt):
+        return []
+    aus = []
+    for i in range(n):
+        w, dep, x, z = struct.unpack_from("<HHhh", rdt, s + 24 + 12 * i)
+        flr = rdt[s + 24 + 12 * i + 11]
+        aus.append((x, z, w, dep, flr >> 4))
+    return aus
+
+
+def boden_ebenen(rdt):
+    """Bodenebenen des Raums, NAH ZUERST: [(y0, [(x,z,w,d), ...]), ...].
+
+    Nah zuerst heisst: das hoechste Band zuerst (y am staerksten negativ). Ein
+    Sehstrahl, der von oben kommt, trifft die obere Ebene frueher - und ein Objekt
+    steht auf der obersten Flaeche, die es unter sich hat.
+    """
+    nach_band = {}
+    for (x, z, w, d, band) in sca_zellen(rdt):
+        nach_band.setdefault(band, []).append((x, z, w, d))
+    return [(-band * BAND_HOEHE, nach_band[band]) for band in sorted(nach_band, reverse=True)]
+
+
+def _welt_von_sicht(R, t, vx, vy, vz):
+    """Sichtkoordinaten -> Weltkoordinaten. R ist orthonormal mal 4096, also R^T/4096."""
+    ax, ay, az = vx - t[0], vy - t[1], vz - t[2]
+    wx = (R[0] * ax + R[3] * ay + R[6] * az) / 4096.0
+    wy = (R[1] * ax + R[4] * ay + R[7] * az) / 4096.0
+    wz = (R[2] * ax + R[5] * ay + R[8] * az) / 4096.0
+    return wx, wy, wz
+
+
+# ⛔ ZWEI NAHELIEGENDE ABLEITUNGEN - BEIDE GEMESSEN UND VERWORFEN.
+# Die Ebene eines Cuts laesst sich NICHT aus den Daten erschliessen:
+#
+#   1. "Die Zelle sagt es": pro Bildspalte den Sehstrahl mit jeder Bandebene
+#      schneiden und die naechste nehmen, deren Treffer in einer Zelle DIESES Bandes
+#      liegt. Faellt aus, weil die Baender eines Raums DIESELBEN Zellen tragen:
+#          ROOM1060  y=-14400 gegen y=-10800/-7200/-3600: Zellen IDENTISCH (6 von 6)
+#          ROOM1120  alle drei Baender identisch (13 von 13)
+#      In ROOM1120 waehlte die Regel fuer 9 von 55 Spalten y=-1800, obwohl der
+#      Spieler dort gemessen auf y=0 steht.
+#   2. "Die Kamera sagt es": das Blickziel des Kamerasatzes (RDT +0x10) auf das
+#      naechste Band runden. Trifft in ROOM1060 jedes Band auf 226 Einheiten genau
+#      (Cut 0 Ziel -14174 -> -14400), scheitert aber in ROOM1120: Cut 0 Ziel -2739
+#      -> -3600, gemessen ist der Boden dort 0. Die Zielhoehe liegt je nach Cut
+#      ueber ODER unter dem Boden (ROOM1140 Cut 3: +7224 bei Boden 0).
+#
+# Was bleibt, ist die MESSUNG im laufenden Spiel: die Hoehe, auf der der Spieler in
+# diesem Cut steht (RE15_PRI_LOG -> "Spieler (x,y,z)"). Sie steht als "ebene" je Cut
+# in analysis/esp_masken_2026-09-03/auswahl.json, mit dem Messwert als Beleg.
+# boden_ebenen() bleibt als PRUEFUNG: hat ein Raum mehr als ein Band und fehlt die
+# Angabe, bricht raum.py ab, statt stillschweigend y=0 zu nehmen - genau das war der
+# Fehler, der die Gelaender in ROOM1060 wirkungslos machte.
+
+
+_BEGEHBAR = {}
+
+
+def begehbare_baender(rid):
+    """Baender, auf denen der Spieler in diesem Raum ueberhaupt STEHEN kann.
+
+    ⛔ WARUM DIE ROHEN KOLLISIONSBAENDER NICHT REICHEN: die Baender eines Raums tragen
+    DIESELBEN Zellen (ROOM1060 y=-14400 gegen -10800/-7200/-3600: 6 von 6 identisch;
+    ROOM1120 alle drei: 13 von 13). Ein Raum kann also Baender fuehren, die nie jemand
+    betritt - ROOM1120 hat drei, gemessen steht der Spieler dort aber in JEDEM Cut auf
+    y=0.
+
+    Zwei Quellen sagen, welche Baender wirklich vorkommen, beide aus dem Original:
+      * TUEREN: jeder Door_aot_set-Record traegt die Spawn-Position im ZIELraum; die
+        Hoehe ist band*0x708 (engine re15_collision_band_from_y). Gemessen:
+            ROOM1060 <- ROOM1040 y=0 | <- ROOM10C0 y=-7200 | <- ROOM1120 y=-14400
+            ROOM1120 <- ROOM1060 y=0 | <- ROOM1130 y=0
+      * TREPPEN: jeder Treppen-Record nennt sein Band (rec+0xC). ROOM1060 fuehrt acht
+        Records auf den Baendern 8,6,4,2 - genau die Zwischenpodeste, die keine Tuer
+        erreicht. ROOM1120/1130/1140 fuehren keinen einzigen.
+    Zusammen: ROOM1060 {0,2,4,6,8}, ROOM1120 {0}, ROOM1130 {0}, ROOM1140 {0}.
+    """
+    if rid in _BEGEHBAR:
+        return _BEGEHBAR[rid]
+    import glob
+    hier = os.path.dirname(os.path.abspath(__file__))
+    wurzel = os.path.abspath(os.path.join(hier, '..', '..', '..'))
+    gen = os.path.join(wurzel, 're15_port', 'tools', 'gen_map_zones.py')
+    ns = {'__name__': 'geom_baender', '__file__': gen}
+    src = open(gen, encoding='utf-8').read()
+    exec(compile(src[:src.index('def main(')], 'gen', 'exec'), ns)
+    read_rdt = ns['read_rdt']
+    baender = set()
+    got = read_rdt(rid) or read_rdt(rid + 1)
+    if got:
+        for st in got[2]:
+            baender.add(int(st['band']))
+    muster = os.path.join(wurzel, 're15_port', 'shared_assets', 'PSX', 'STAGE*', 'ROOM*.RDT')
+    for pfad in glob.glob(muster):
+        andere = int(os.path.basename(pfad)[4:8], 16)
+        if andere & 1:
+            continue
+        g2 = read_rdt(andere)
+        if not g2:
+            continue
+        for d in g2[1]:
+            if d['dest'] == (rid & 0xFFF0):
+                baender.add(int(round(-d['ny'] / float(BAND_HOEHE))))
+    _BEGEHBAR[rid] = baender
+    return baender
+
+
+def ebene_aus_kamera(rdt, cam_off, cut, rid=None):
+    """-> (y0, guete) oder None. y0 = Bodenebene dieses Cuts, guete = Uneindeutigkeit.
+
+    Der Kamerasatz eines Cuts traegt seinen BLICKZIELPUNKT (RDT +0x10). Er liegt in der
+    Naehe des Bodens, auf dem der Spieler in dieser Ansicht steht - aber nicht exakt
+    darauf (mal darueber, mal darunter). Brauchbar ist er deshalb nur, wenn er
+    EINDEUTIG auf ein Band faellt:
+
+        guete = Abstand zum naechsten Band / Bandabstand
+
+    GEMESSEN:
+        ROOM1060 (Baender 0,-3600,...,-14400, Abstand 3600)
+            Cut 0 Ziel -14174 -> -14400  guete 0.06   <- im Spiel gemessen: -14400 ✓
+            Cut 1 Ziel -10631 -> -10800  guete 0.05
+            Cut 2 Ziel  -7088 ->  -7200  guete 0.03
+            Cut 4 Ziel     -1 ->      0  guete 0.00
+        ROOM1120 (Baender 0,-1800,-3600, Abstand 1800)
+            Cut 0 Ziel  -2739 ->  -3600  guete 0.48   <- im Spiel gemessen: 0 ✗
+            Cut 2 Ziel  -1373 ->  -1800  guete 0.24   <- im Spiel gemessen: 0 ✗
+
+    Ueber der Schwelle GUETE_MAX ist die Angabe wertlos; raum.py bricht dann ab und
+    verlangt den gemessenen Wert in auswahl.json, statt stillschweigend y=0 zu nehmen.
+    Bei nur EINEM Band ist nichts zu entscheiden - dann gilt dieses Band.
+    """
+    ebenen = [y for y, _ in boden_ebenen(rdt)]
+    if rid is not None:
+        ok = begehbare_baender(rid)
+        gefiltert = [y for y in ebenen if int(round(-y / float(BAND_HOEHE))) in ok]
+        if gefiltert:
+            ebenen = gefiltert
+    if not ebenen:
+        return None
+    if len(ebenen) == 1:
+        return ebenen[0], 0.0
+    rec = cam_off + cut * 32
+    if rec + 0x1C > len(rdt):
+        return None
+    ty = struct.unpack_from("<i", rdt, rec + 0x14)[0]
+    if abs(ty) > 1 << 22:          # unbenutzter Kamerasatz (Mustermuell)
+        return None
+    schritt = min(abs(a - b) for a in ebenen for b in ebenen if a != b)
+    nah = min(ebenen, key=lambda y: abs(y - ty))
+    return nah, abs(nah - ty) / float(schritt)
+
+
+GUETE_MAX = 0.20    # s. ebene_aus_kamera: 0.06 (ROOM1060, richtig) gegen 0.24/0.48
+                    # (ROOM1120, falsch). Dazwischen liegt keine gemessene Zahl.
+
+
 def cut_view(rdt, cam_off, cut):
     rec = cam_off + cut * 32
     fov = struct.unpack_from("<H", rdt, rec + 2)[0]
@@ -265,7 +466,7 @@ def original_has_masks(rdt, cam, cut):
     return not (gc == 0xFFFF or gc == 0 or mc == 0 or gc > 256)
 
 
-def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=0):
+def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -299,13 +500,18 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=0):
     R, t, H = v
     if H <= 0:
         return None
+    y0 = 0 if ebene is None else ebene
+
+    def _z(sx, sy):
+        return vz_at_floor(R, t, H, sx, sy, y0)
+
     dep = np.zeros((240, 320), np.int32)
     if fuss is not None:
         xs = np.nonzero(region.any(0))[0]
         if len(xs) == 0:
             return None
         cx = float(xs.mean()) + 0.5
-        z = vz_at_floor(R, t, H, cx, float(min(int(fuss), 239)), ebene)
+        z = _z(cx, float(min(int(fuss), 239)))
         if not z:
             return None
         dep[region] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
@@ -313,7 +519,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=0):
     for x in np.where(region.any(0))[0]:
         rows = np.where(region[:, x])[0]
         yb = int(rows.max())
-        z = vz_at_floor(R, t, H, x + 0.5, float(min(yb, 239)), ebene)
+        z = _z(x + 0.5, float(min(yb, 239)))
         if not z:
             continue
         dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
