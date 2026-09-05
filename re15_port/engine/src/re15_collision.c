@@ -810,6 +810,63 @@ int re15_collision_constrain_contact(const re15_rdt_t *rdt,
                                     contact, cell_attr);
 }
 
+/* Wie re15_collision_constrain_contact, aber mit EXPLIZITEM Band statt band_from_y(y):
+ * das Original klemmt Gegner am ZUSTANDS-Byte +0x82 (FUN_8003b0a4 liest es selbst,
+ * `lbu v1,130(a3)` @0x8003b228-3c + `bne` gegen floor>>4), nicht an der Flughoehe. Der
+ * Gorilla-Zonen-Leap lebt genau davon: B[7] setzt +0x82=1 (@0x80118af0, nur +0x7!=0),
+ * die Landung 0 (@0x80118ca4) — waehrend des Flugs klemmen die Band-0-Autozellen nicht,
+ * die Band-1-Waende schon. band_from_y haette den Apex (~4680) in das leere Band 2
+ * gehoben = voellig ungeklemmt (S5-Fix 2026-09-05, diag_gorilla_stuck.md §2). */
+int re15_collision_constrain_contact_band(const re15_rdt_t *rdt,
+                                          int32_t old_x, int32_t old_z,
+                                          int32_t *x, int32_t *z,
+                                          int32_t radius, int band, uint32_t mask,
+                                          uint8_t *contact, uint16_t *cell_attr)
+{
+    return collision_constrain_impl(rdt, old_x, old_z, x, z,
+                                    band, radius, mask, contact, cell_attr);
+}
+
+/* FUN_8003b93c — die SCA-ATTRIBUT-ZONEN-ABFRAGE (RE1.5-PSX.EXE, selbst disassembliert;
+ * Args: a0=&entity+0x34, a1=Radius (Caller reicht hit_radius+100, @0x80117efc-f00),
+ * a2=+0x82-Band, a3=Attr 0x10/0x20):
+ *   @0x8003b9a8  jal 0x8003b068                Quadranten-Wahl (dieselbe Partition wie der
+ *                                              Resolver -> Port: quadrant_of)
+ *   @0x8003b9f8  lhu v1,0(s0)                  halfword = u1 | (floor<<8)  (s0 = Zelle+10)
+ *   @0x8003ba04  sra v0,v0,28                  = floor>>4 = BAND der Zelle
+ *   @0x8003ba08  bne a2,v0,skip                Band muss dem +0x82 des Aktors gleichen
+ *   @0x8003ba0c-14  andi/bne                   u1 muss EXAKT == Attr sein (kein Masken-Test;
+ *                                              u0 wird NICHT geprueft — die Pads sind u0=0)
+ *   @0x8003ba1c-58  Broadphase +-(r): x-(r) < width+2r, z analog
+ *   @0x8003ba68  jal 0x8001bf04                Richtungs-Code Aktor vs. Zelle
+ *   @0x8003ba8c  sb v0,144(a0)                 entity+0x90 = (Code>>4)+8+(u1&3)
+ *   @0x8003ba98-9c  ori v0,1 / j exit          return 1 beim ERSTEN Treffer
+ *   (@0x8003baa0  sw s1,436 — +0x1b4=&Zelle: kein Port-Konsument dieses Pfads, ausgelassen)
+ * Bei MISS: return 0, contact bleibt UNBERUEHRT (kein Clear-Praeambel wie FUN_8003b0a4).
+ * Konsument: der Gorilla-Zonen-Leap A[4] Path A (enemy_ai_common.c case 4). */
+int re15_collision_zone_query(const re15_rdt_t *rdt, int32_t px, int32_t pz,
+                              int32_t r, int band, unsigned attr, uint8_t *contact)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0 || band < 0) return 0;
+    int q = quadrant_of(px, pz, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
+    int start = 0; for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    if (start < 0) start = 0;
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        if (band != (e->floor >> 4)) continue;                 /* @0x8003ba08 */
+        if ((unsigned)e->u1 != attr) continue;                 /* @0x8003ba0c-14 (exakt!) */
+        if ((unsigned)(px - ((int32_t)e->x - r)) < (unsigned)((int32_t)e->width   + r * 2) &&
+            (unsigned)(pz - ((int32_t)e->z - r)) < (unsigned)((int32_t)e->density + r * 2)) {
+            if (contact)
+                *contact = (uint8_t)((coll_contact_dir(px, pz, e) >> 4) + 8 + (e->u1 & 3));
+            return 1;                                          /* @0x8003ba98-9c */
+        }
+    }
+    return 0;
+}
+
 /* FUN_8002cabc / FUN_8002bd44 — OBJECT (Obj_model_set prop) push-out.
  *
  * Separate from the SCA room pass: the original runs an object-collision pass so

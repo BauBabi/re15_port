@@ -779,7 +779,20 @@ static int re2z_player_damage(re15_actor_t *pl, int dmg)
 {
     pl->hp = (int16_t)(pl->hp - dmg);
     if (pl->hp < 0) {
-        if (pl->hp < -14 || s_re2z_onesave) return 2;    /* death (bit1) */
+        if (pl->hp < -14 || s_re2z_onesave) {            /* death (bit1) */
+            /* Der Todeszweig von FUN_800401d4 setzt SELBST (Caller-unabhaengig — Zombie-
+             * Biss, Hunde-Biss, Kraehen-Peck): PL+0x1D3 |= 0x80 (`lbu/ori 0x80/sb`
+             * @0x800402C0-D0). Port-Konsument: das Writher-Gate !(re2z_self1d3&0x80)
+             * (enemy_ai_common.c:11773) — kein Leichen-Grab am toten Spieler; einziger
+             * Clear (:1716) laeuft nur nach UEBERLEBTEM Grab. Das zweite Original-Store
+             * `0x800CFB74 |= 0x4000000` (@0x800402D4-E4, globales Todesbit) hat kein
+             * eigenes Port-Feld: sein einziger Konsument ist die Game-Over-Task-Schedule
+             * der Hauptschleife (@0x800266C8-34, FUN_80031e80(1,2)); Port-Analog
+             * re15_gameover_fsm_tick keyt bereits auf hp<0 (MAPPING, dokumentiert).
+             * Nachzug 2026-09-05, diag_crow_kill_noanim.md §1.1. */
+            pl->re2z_self1d3 |= 0x80u;
+            return 2;
+        }
         pl->hp = 0; s_re2z_onesave = 1; return 1;        /* one save (bit0) -> throw-off */
     }
     return 0;
@@ -6928,6 +6941,72 @@ static void re2z_state8(re15_actor_t *e)
         re15_ai_set_state_word(e, 0x901);                          /* sw 0x901 @0x8010AE9C */
 }
 
+/* ---- Freeze-Fenster-Posen-Seed (Spawn + INIT) ---------------------------------------------- */
+/* Nutzer-Report 2026-09-05 ("Zombies starten liegend und poppen in den Stand", z.B. 1050->1030):
+ * Waehrend der Tuerwechsel-Blende stehen KI+Anim (~6 Frames; Original-Gate pauseflags OR
+ * 0xFF000000 @0x8001CC54-6C), das RENDERING laeuft aber — sichtbar ist der Spawn-motion.
+ * Der byte-true RE1.5-Spawn-Seed (z.B. Clip 0x27=39 fuer behavior 0x0D, INIT-Decoder
+ * @0x80100F20-54 STAGE1.BIN) liegt ausserhalb der 31-Clip-RE2-Action-Bank (CDEMD0.EMS kind
+ * 0x16: EDD-Paare 8/31/17, selbst geparst); der Renderer-Modulo (anim_select_common.c:75,
+ * Port-Erfindung ohne @0x-Beleg) machte daraus 39%31 = 8 = den Boden-AUFSTEHER, dessen
+ * Frame 0 FLACH liegt (Wurzel-py -222 vs. stehend -1995, eigene EDD/EMR-Messung) -> alle
+ * 0x0D-Spawns renderten die Blende LIEGEND und poppten mit dem ersten EXEC-Tick in den
+ * Stand. Das RE2-Original kann diesen Zustand nicht zeigen: sein Sce_em_set saet Clip 0
+ * (`sb zero,332(s0)` @0x800576A4 im Handler 0x8005714C), und sein INIT laeuft bereits im
+ * LADE-Frame (Subsystem-Pass @0x8001CDEC/CE04 unter pauseflags=7) — jede Blende zeigt dort
+ * den INIT-Clip. PORT-MAPPING deshalb: der Spawn saet den Clip, den re2z_init fuer dieses
+ * behavior committen wird. INIT-Seeds selbst disassembliert (EMZ0.BIN == EMOVL10_S0.BIN,
+ * Voll-Vergleich):
+ *   Default-Clip-Wort 1  @0x801009B8/@0x801009D4 (unbedingte Delay-Slot-Stores)
+ *   Liege-Seiten 22/23   @0x801009D8-F0 / @0x80100A04-10 / @0x80100A24-40 / @0x80100A74-94
+ *   Fresser Clip 18      @0x80100AD0-DC
+ *   Kriecher Clip 23     @0x80100AF8-FC
+ * Seitenwahl = dieselbe, die EXEC[7] P0 trifft (+0x21A&0x4 ? 22 : 23 @0x801037D0-E4); die
+ * Zuordnung RE1.5-Familie {5,8,0xa} -> Seite 0x4 spiegelt die RE1.5-Clip-Spaltung 0x12/0x13
+ * (@0x80100dc0-e8 vs @0x80100e04-e2c) — PORT-OPTION, dokumentiert. Aufrufer: op_sce_em_set
+ * (scd_vm.c, flavor-gegated — deckt das Freeze-Fenster) und re2z_init (deckt den INIT-Tick
+ * und Headless-Spawns ohne Sce_em_set). Diagnose: diag_zombie_lying_spawn.md +
+ * verify_lying_spawn.md (2026-09-05). */
+void re15_re2z_spawn_pose_seed(re15_actor_t *a, uint8_t behavior)
+{
+    uint8_t sel = (uint8_t)(behavior & 0x1f);
+    int gated   = (behavior & 0x80u) != 0;
+    if (sel == 0x0e) {                                   /* 10D0-Sitzer: RE1.5-Sitz-Route (die
+                                                          * RE2-Bank hat keinen Sitz-Clip;
+                                                          * Nutzer-Mandat Praesentation=RE1.5,
+                                                          * s. re2z_init sel-0x0e-Zweig) */
+        if (re15_re2z_re15_pose_anim() != NULL) {
+            a->re2z_re15_pose = 1;
+            a->motion = 0x2a; a->anim_frame = 0;         /* @0x80100F74-78 (RE1.5-INIT) */
+            a->anim_frac = 0; a->anim_blend_rate = 0x200;
+            a->anim_freeze = 0;
+            a->anim_flags &= (uint16_t)~(0x80u | 0x04u);
+            return;
+        }
+        a->re2z_flags21a |= 0x4u;                        /* Fallback-Seite wie re2z_init */
+        re2z_clip(a, 22, 0, 0, 0x100, 0);
+        return;
+    }
+    if ((sel == 1 || sel == 3) && gated) {               /* Kriecher-Deskriptor 0x81/0x83 */
+        re2z_clip(a, 23, 0, 0, 0x100, 0);                /* @0x80100AF8-FC */
+        return;
+    }
+    if (sel == 6) {                                      /* Fresser */
+        re2z_clip(a, 18, 0, 0, 0x100, 0);                /* @0x80100AD0-DC */
+        return;
+    }
+    if (sel == 8 || sel == 0x0b ||
+        (gated && (sel == 4 || sel == 5 || sel == 7 || sel == 9 || sel == 0x0a))) {
+        if (sel == 5 || sel == 8 || sel == 0x0a)
+            a->re2z_flags21a |= 0x4u;                    /* Seite B (RE1.5-0x13-Familie) */
+        re2z_clip(a, (a->re2z_flags21a & 0x4u) ? 22 : 23, 0, 0, 0x100, 0);
+        return;
+    }
+    re2z_clip(a, 1, 0, 0, 0x100, 0);                     /* Clip-Wort 1 @0x801009B8/D4 —
+                                                          * 0x0D/DEFAULT; EXEC-P0 zieht den
+                                                          * Walk-/Idle-Clip im Folgetick */
+}
+
 /* ---- INIT (state 0) @0x8010065C ------------------------------------------------------------ */
 static void re2z_init(int slot, re15_actor_t *e)
 {
@@ -7055,6 +7134,13 @@ static void re2z_init(int slot, re15_actor_t *e)
      * schreiben +0x10E = 0x4004 (Feeder @0x80100A88-8C) / 0x4002 (Lyer @0x80100A34-38) —
      * das Limpet-Latch 0x4000 haelt die Executor-Ketten, bis der (gemappte) Wecker es loescht. */
     e->re2z_f10e = 0;
+    /* Posen-Seed VOR dem Zustands-Remap: das Original saet das Default-Clip-Wort 1 in
+     * unbedingten Delay-Slots (@0x801009B8/@0x801009D4) und laesst die Spezialpfade
+     * ueberschreiben (22/23/18/23 — Zitate an der Funktion). Deckt den INIT-Tick und alle
+     * Spawner ohne op_sce_em_set; der Sce_em_set-Weg hat denselben Seed schon am Spawn
+     * (Freeze-Fenster). Muss NACH dem flags21a-Clear (@0x8010087C, oben) laufen, weil er
+     * die Liege-SEITE (+0x21A&0x4) mitschreibt. */
+    re15_re2z_spawn_pose_seed(e, beh);
     if ((sel == 1 || sel == 3) && (beh & 0x80u)) {
         /* ⛔ KRIECHER-DESKRIPTOR 0x81/0x83 (Nutzer-Report 2026-08-25: "room 1010 die Zombies
          * kriechen im original").

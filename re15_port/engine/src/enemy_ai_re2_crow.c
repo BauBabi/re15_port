@@ -181,9 +181,12 @@ static void re2c_move3d(re15_actor_t *e)                   /* == 0x80015350(0,0)
 }
 
 /* 0x8010472C(self, vol): +0x9A/+0x9C/+0x90/+0x92 = vol (sh @0x8010472C-3C). Kein Port-
- * SE-Volume-Kanal → dokumentierter NOP (Aufrufstellen bleiben byte-sichtbar). +0x90 ist
- * zugleich der Wand-Radius von FUN_8003567c (param[0x24]) — s. Root-Tail-MAPPING. */
-static void re2c_vol(re15_actor_t *e, int vol) { (void)e; (void)vol; }
+ * SE-Volume-Kanal (die Lautstaerke-Haelfte bleibt dokumentierter NOP), aber +0x90 ist
+ * zugleich der WAND-RADIUS des Root-Wand-Passes: FUN_8003567c reicht param_1[0x24]
+ * (= Entity+0x90) als Radius an FUN_8004c1bc (Decompilat, selbst gelesen). S1-Fix
+ * 2026-09-05: der Port klemmte vorher mit erfundenen 200 — jetzt traegt das Feld die
+ * Original-Kette 0 (Spawn, kein INIT-Writer) -> 350/100/50/10 (Vol-Callsites). */
+static void re2c_vol(re15_actor_t *e, int vol) { e->crow_vol90 = (int16_t)vol; }
 
 /* 0x80104678(self, n): n Federn, Offsets ±512 (sll24/sra22 @0x801046A4-E0), FX-Wort
  * 0x0C000800 = Id 0x0C = das RE2-FEDER-FX (@0x801046EC-F0), a1 = rand<<4 (@0x801046F4).
@@ -1039,10 +1042,23 @@ static void re2c_grab_release(re15_actor_t *e, re15_actor_t *pl)
     if (e->re2c_flags22a & 0x4u) {                         /* @0x8010286C-78 */
         re2c_vol(e, 350);                                  /* @0x80102880-84 */
         re2c_broadcast(16);                                /* @0x80102888-8C */
-        if (pl->hp >= 0 && re15_player_victim_state() == 1)
-            re15_player_victim_throwoff();                 /* PL+0x6=3 @0x80102890-98 (Port:
-                                                            * Victim-Release-Phase; toter Spieler
-                                                            * laeuft ueber den Port-Todespfad) */
+        /* PL+0x6 := 3 UNBEDINGT (sb 3,-1026(at) = 0x800CFBFE @0x80102890-98 — kein HP-,
+         * kein Victim-State-Gate; der Release ist der EINZIGE +0x6=3-Producer im Overlay,
+         * Voll-Scan 4770 Instr.). Die Victim-FSM Ph3 @0x80104804 verzweigt dann auf der HP:
+         *   HP <  0 -> PL(3,0,0,0) @0x80104818-38, KEIN Release-Clip = das generische
+         *              Spieler-Todes-Kommando cmd 3. RE2-cmd-3-Handler = FUN_8003fee4
+         *              (Tabelle @0x800A4030[3]): Kollaps ueber die NORMALE Spielerbank
+         *              (Clip-Wort 0x70002 @0x8003FF9C, Bank +0x108/+0x17C @0x8003FF08-0C)
+         *              + Se_on(0x04030001) @0x8003FFA0-A4 -> cmd 7 @0x8004002C. Port-
+         *              Aequivalent: re15_player_death_cmd3() (RE1.5-Zwilling @0x800366BC,
+         *              PL00-Clip 7; loescht die Victim-FSM wie das bgez-Skip des Originals).
+         *              Dokumentierte Divergenz: der Port-Kollaps startet im Release-Tick,
+         *              das RE2-Original einen Dispatch spaeter (Ph3 im Folge-Frame).
+         *   HP >= 0 -> Release-Clip 2 (0x70002) + Phase 4 @0x80104844-50 = throwoff
+         *              (gatet selbst auf vs==1, enemy_ai_common.c:1142 — Call-Site-Gate
+         *              waere doppelt). Fix 2026-09-05, diag_crow_kill_noanim.md. */
+        if (pl->hp < 0) re15_player_death_cmd3();
+        else            re15_player_victim_throwoff();
     }
 }
 static void re2c_dec14_grab(re15_actor_t *e)
@@ -1873,12 +1889,16 @@ int re15_re2crow_tick(int slot)
         e->re2c_flags22a &= (uint16_t)~0x80u;              /* @0x80104510-18 */
         e->re2c_pac221 = 120;                              /* sb 120,545 @0x8010451C-20 */
     }
-    /* (3) Wand-Pass FUN_8003567C → +0x110/+0x114 (Radius = +0x90, Vol-gekoppelt — MAPPING:
-     *     Port-SCA-Klemme mit Radius 200 wie die RE1.5-Kraehe; Bit 1 = Frontal-Metrik als
-     *     deklariertes MAPPING fuer das 0x80050110-Ebenen-Fenster des Crash-Probers). */
+    /* (3) Wand-Pass FUN_8003567C → +0x110/+0x114 (MAPPING: Port-SCA-Klemme statt der
+     *     RE2-Linien-Records; Bit 1 = Frontal-Metrik als deklariertes MAPPING fuer das
+     *     0x80050110-Ebenen-Fenster des Crash-Probers). RADIUS = +0x90 (Vol-gekoppelt,
+     *     FUN_8003567c param_1[0x24] -> FUN_8004c1bc; Writer sh a1,144 @0x80104734) —
+     *     S1-Fix 2026-09-05: vorher Port-erfundene 200; jetzt 0 (Spawn) / 350 (Release/
+     *     Abort/dec13-Fail) / 100 (Harass nah) / 50 / 10 wie die Original-Callsites. */
     if (g_room_rdt_ok) {
         int32_t nx = e->x, nz = e->z;
-        re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, 200, e->y, 4u);
+        re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                       (int32_t)e->crow_vol90, e->y, 4u);
         if (nx != e->x || nz != e->z) {
             int64_t in2  = (int64_t)(e->x - ox) * (e->x - ox) + (int64_t)(e->z - oz) * (e->z - oz);
             int64_t out2 = (int64_t)(nx - ox) * (nx - ox) + (int64_t)(nz - oz) * (nz - oz);

@@ -1387,7 +1387,17 @@ void re15_player_victim_tick(void)
     if (g_player_victim == 0) return;
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
-    if (!vb || !vb->victim_ok) { g_player_victim = 0; return; }
+    if (!vb || !vb->victim_ok) {
+        /* S2-DIAGNOSE-TRACE (2026-09-05, verify_crow_grab.md §Messplan): der Bank-Hart-Reset
+         * ist einer der drei moeglichen Zerfallswege des Halte-Geschirrs ("Kraehe haengt ohne
+         * Animation am laufenden Spieler") — im Normal-Datenstand als unerreichbar belegt;
+         * faellt er DOCH, zeigt diese Zeile den realen Ausloeser. */
+        if (getenv("RE15_RE2_TRACE"))
+            fprintf(stderr, "[victim] BANK-HART-RESET vs=%d type=0x%02x zslot=%d (vb=%p ok=%d)\n",
+                    g_player_victim, g_player_victim_type, g_player_victim_zombie,
+                    (void *)vb, vb ? vb->victim_ok : -1);
+        g_player_victim = 0; return;
+    }
     /* +0x8f blend counter decay — byte-true f314 decrements it once per call (FUN_8001f3bc line 78),
      * and the cmd-5/6 handlers call f314 every tick. The port's normal decay sites (re15_player_tick /
      * re15_actors_anim_advance slot>=1) BOTH skip the pinned player, so without this the throw-off
@@ -1471,6 +1481,17 @@ void re15_player_victim_tick(void)
     if (g_player_victim == 1) {                         /* STRUGGLE (state 5, @0x8010a28c 6-phase machine) */
         if (!s_player_grabbed) {                        /* grab ended alive -> RELEASE finish (phases 4/5:
                                                          * clip release ONCE, then restore the free player) */
+            /* S2-DIAGNOSE-TRACE (2026-09-05): der Auto-Release ist der zweite moegliche
+             * Zerfallsweg des Per-Frame-Geschirrs; laut Tick-Reihenfolge-Beweis
+             * (run_all @game_step VOR victim_tick, Pin-Clear einmal am Pass-Eintritt)
+             * nur erreichbar, wenn der Greifer den Pin diesen Frame WIRKLICH nicht
+             * bestellt hat (regulaeres Grab-Ende — oder der unbewiesene Defektweg). */
+            if (getenv("RE15_RE2_TRACE"))
+                fprintf(stderr, "[victim] AUTO-RELEASE vs1->3 type=0x%02x zslot=%d "
+                        "(zst=%d zsub=%d)\n",
+                        g_player_victim_type, g_player_victim_zombie,
+                        (g_player_victim_zombie >= 0) ? g_actors[g_player_victim_zombie].state : -1,
+                        (g_player_victim_zombie >= 0) ? g_actors[g_player_victim_zombie].sub_state_1 : -1);
             g_player_victim = 3;
             s_victim_standup = 0;
             player->motion = c_release;
@@ -2394,7 +2415,17 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
                 extern void re15_player_aim_interrupt(void);
                 re15_player_aim_interrupt();
             }
+        } else if (getenv("RE15_RE2_TRACE")) {
+            /* S2-DIAGNOSE-TRACE (2026-09-05): vs-Gate blockiert den Latch (vs==1/2 =
+             * fremder Greifer) — dritter moeglicher Zerfallsweg des Halte-Geschirrs. */
+            fprintf(stderr, "[victim] BEGIN-GATE vs=%d blockiert Latch von type=0x%02x slot=%d\n",
+                    g_player_victim, zombie->type, (int)(zombie - g_actors));
         }
+    } else if (getenv("RE15_RE2_TRACE")) {
+        /* S2-DIAGNOSE-TRACE: victim_ok-Gate — Grab ohne ladbare Victim-Bank laesst den
+         * Spieler frei weiterlaufen, waehrend der Greifer seinen Grab-Zyklus faehrt. */
+        fprintf(stderr, "[victim] BEGIN-FAIL keine Victim-Bank type=0x%02x slot=%d (vb=%p)\n",
+                zombie->type, (int)(zombie - g_actors), (void *)vb);
     }
     /* ⛔ YAW-SNAP + POSE-YAW-OFFSET (Struggle-P0 @0x8010AA50; vollstaendiger Beleg-Block ueber
      * re15_victim_place). Der RE2-Griff schnappt den SPIELER-Yaw auf den Greifer
@@ -8398,16 +8429,58 @@ static void re15_maggot_ai_tick(int slot)
             if (pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0) && e->dog_blocked_ctr == 0) {
                 re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* HEAVY @0x80117e88-ec4 (clip by B[6] entry) */
             }
-            /* OPEN (subsystem gap, audit #11): the Path-A ZONE leaps @0x80117ecc-8011802c —
-             * +0x1e2!=0 (@0x80117ed4-dc, always 4) -> FUN_8003b93c(+0x34, hw+100, +0x82, a3=0x10)
-             * (@0x80117efc) then a3=0x20 (@0x80117f98, gated !(+0x1d0&1) @0x80117fbc); on a match the
-             * yaw window ((+0x90&0xf0)<<4 - +0x6a + 512)&0xfff < 1024 (@0x80117f20-38/0x80117fc8-e4)
-             * latches +0x9f=+0x90 (@0x80117f40/0x80117ff0) and commits +0x5=7 with +0x7=1 (attr 0x10,
-             * @0x80117f50-74) or +0x7=3 (attr 0x20 blind, @0x80118000-24; launch impulse 0x32a
-             * @0x80118a94-aa0, yaw snap (+0x9f&0xf0)<<4 + +0x82=1 @0x80118ac0-af0). The port has
-             * neither the b93c SCA-attr zone query nor the FUN_8003b0a4 +0x90 escape-heading writer
-             * (actor.h: port writer deferred) — the B[7] +0x7-variant launch code below is in place
-             * for when they land. */
+            /* Path-A ZONE-LEAPS @0x80117ecc-8011802c — PORTIERT 2026-09-05 (S5-Fix, Nutzer:
+             * "Gorillas haengen zwischen den Autos"; diag_gorilla_stuck.md + verify_gorilla.md).
+             * Das Original ueberquert die Autos NICHT durch Steuern, sondern per Sprung ueber
+             * SCA-MARKER-Zonen (ROOM11C0: Pads idx36/47 u1=0x10 in den Auto-Gassen, idx4/31/
+             * 19/55 u1=0x20; alle u0=0 = reine Marker; Ost-Spalt 2711 < 2*1600 = am Boden
+             * unpassierbar, selbst geparst):
+             *   +0x1e2!=0 (@0x80117ed4-dc; einziger Writer INIT=4 @0x80117098-9c)
+             *   -> FUN_8003b93c(+0x34, box[6]+100, +0x82, attr 0x10) @0x80117ee0-f00
+             *   -> Treffer: Yaw-Fenster ((+0x90&0xf0)<<4 - rot_y + 512)&0xfff < 1024
+             *      (@0x80117f18-38: der Gorilla schiebt frontal auf die Pad-Richtung)
+             *      -> +0x9f=+0x90 (@0x80117f40), +0x5=7/+0x6=0/+0x7=1 (@0x80117f50-74)
+             *   -> sonst attr 0x20 @0x80117f78-9c; Treffer + LOS-Latch (+0x1d0&1) GESETZT ->
+             *      bne @0x80117fbc nach 0x80118048 = in die Path-B-Gates AB dem +0x1d6-Check
+             *      (deckungsgleich mit dem normalen Durchfall, da Path Bs LOS-Gate dann eh
+             *      wahr ist); LOS-Latch FREI -> gleiches Yaw-Fenster (@0x80117fc8-e4) ->
+             *      +0x9f (@0x80117ff0), +0x7=3 = BLIND-Zonen-Leap (@0x80118000-24).
+             * Die B[7]-AUSFUEHRUNG (Windup-Slew, Blind-Impuls 0x32a @0x80118a94-aa0, Yaw-Snap
+             * + e->floor=1 @0x80118ab4-af0, Landung floor=0) war bereits portiert und wartete
+             * nur auf diese Entscheidung; die Band-Quelle der Klemme haengt seit demselben Fix
+             * am +0x82-Zustands-Byte (re15_collision_constrain_contact_band, s. 0x27-Tail). */
+            if (e->mag_boost != 0 && g_room_rdt_ok) {          /* @0x80117ed4-dc */
+                uint8_t zc = 0;
+                int committed = 0;
+                if (re15_collision_zone_query(&g_room_rdt, e->x, e->z,
+                                              (int32_t)e->hit_radius_min + 100,
+                                              (int)e->floor, 0x10u, &zc)) {
+                    e->ai_contact = zc;                        /* sb v0,144 @0x8003ba8c */
+                    int win = ((((int)(zc & 0xf0u)) << 4) - (int)e->rot_y + 512) & 0xfff;
+                    if (win < 1024) {                          /* slti 1024 @0x80117f34 */
+                        e->dog_aux9f = (int8_t)zc;             /* @0x80117f40 */
+                        re15_dog_sub(e, 7); e->sub_state_3 = 1;/* @0x80117f50-74 */
+                        committed = 1;
+                    }
+                }
+                if (!committed &&
+                    re15_collision_zone_query(&g_room_rdt, e->x, e->z,
+                                              (int32_t)e->hit_radius_min + 100,
+                                              (int)e->floor, 0x20u, &zc)) {
+                    e->ai_contact = zc;
+                    if (!(e->dog_flags & 1)) {                 /* LOS-Latch frei @0x80117fbc */
+                        int win = ((((int)(zc & 0xf0u)) << 4) - (int)e->rot_y + 512) & 0xfff;
+                        if (win < 1024) {                      /* @0x80117fc8-e4 */
+                            e->dog_aux9f = (int8_t)zc;         /* @0x80117ff0 */
+                            re15_dog_sub(e, 7); e->sub_state_3 = 3;   /* @0x80118000-24 */
+                            committed = 1;
+                        }
+                    }
+                    /* LOS-Latch gesetzt -> Durchfall in die Path-B-Gates (== Sprung nach
+                     * 0x80118048: nur deren dann ohnehin wahres LOS-Gate wird uebersprungen). */
+                }
+                if (committed) break;
+            }
             /* Path-B far leap @0x80118028-8100 */
             if ((e->dog_flags & 1)                            /* +0x1d0&1 @0x80118034-40 */
                 && !re15_dog_blocked(e)                       /* +0x1d6==0 @0x80118054-5c — the WALL-CLAMP gate, NOT +0x1dc (audit #15) */
@@ -12947,6 +13020,26 @@ static int re15_enemy_sca_clamp(re15_actor_t *e, int32_t ox, int32_t oz, uint32_
     return hit;
 }
 
+/* Dito, Band aus dem ZUSTANDS-Byte e->floor (+0x82) statt aus der Flughoehe — die
+ * Original-Klemme FUN_8003b0a4 liest +0x82 SELBST (`lbu v1,130(a3)` @0x8003b228-3c) und
+ * vergleicht gegen floor>>4 der Zelle. Vorerst NUR der 0x27-Zweig faehrt darueber
+ * (S5-Fix 2026-09-05): sein Zonen-Leap setzt +0x82=1 im Flug (@0x80118af0) / 0 bei der
+ * Landung (@0x80118ca4), und Sce_em_set seedet das Byte byte-true aus pc[4]
+ * (scd_vm.c, @0x800421c8-d0). Die uebrigen sechs sca_clamp-Zweige bleiben auf
+ * band_from_y, bis ihr +0x82-Lebenszyklus einzeln auditiert ist (verify_gorilla.md
+ * Fix-Risiko 2: der fliegende Cockroach u.a. haben heute keinen gepflegten floor). */
+static int re15_enemy_sca_clamp_band(re15_actor_t *e, int32_t ox, int32_t oz, uint32_t mask)
+{
+    if (!g_room_rdt_ok) { e->sca_wall_hit = 0; return 0; }
+    int32_t nx = e->x, nz = e->z;
+    int hit = re15_collision_constrain_contact_band(&g_room_rdt, ox, oz, &nx, &nz,
+                                                    e->hit_radius_min, (int)e->floor, mask,
+                                                    &e->ai_contact, &e->coll_cell_attr);
+    e->x = nx; e->z = nz;
+    e->sca_wall_hit = (uint8_t)(hit != 0);
+    return hit;
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -13378,12 +13471,21 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * tot. Deshalb im Port nicht nachgebildet (OPEN, benannt).
                                  * ⛔ WAR FALSCH: der Port erfand hier aus `hat die Klemme die
                                  * Position bewegt?` ein +0x90-Nibble. Das Original schreibt +0x90
-                                 * ohnehin (der Resolver tut es fuer JEDES Entity) und der Maggot
-                                 * LIEST es nie; gebraucht wird der Rueckgabewert. */
+                                 * ohnehin (der Resolver tut es fuer JEDES Entity); gebraucht wird
+                                 * der Rueckgabewert. (KORREKTUR 2026-09-05: "der Maggot liest
+                                 * +0x90 nie" stimmte NICHT absolut — A[4] Path A @0x80117f18/
+                                 * @0x80117fc8 liest die von FUN_8003b93c geschriebene Fassung;
+                                 * seit dem Zonen-Leap-Port laeuft das ueber
+                                 * re15_collision_zone_query, s. case 4.) */
             int32_t mag_ox = e->x, mag_oz = e->z;
             re15_maggot_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            re15_enemy_sca_clamp(e, mag_ox, mag_oz, 4u);
+            /* S5-Fix 2026-09-05: Band = +0x82-Zustands-Byte (e->floor), NICHT band_from_y —
+             * der Zonen-Leap fliegt mit floor=1 ueber die Band-0-Autozellen (@0x80118af0),
+             * der +0x7=0-Leap bleibt die GANZE Flugbahn an Band 0 geklemmt (Original laesst
+             * +0x82 dort unangetastet); band_from_y hob den Apex (~4680) ins leere Band 2 =
+             * voellig ungeklemmt -> Gorilla landete in Auto-Taschen (diag_gorilla_stuck.md §2). */
+            re15_enemy_sca_clamp_band(e, mag_ox, mag_oz, 4u);
         }
         else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b ||
                  t == 0x4d) {

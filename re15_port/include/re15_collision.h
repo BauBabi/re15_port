@@ -52,6 +52,21 @@ int  re15_collision_constrain_contact(const re15_rdt_t *rdt,
                                       int32_t radius, int32_t enemy_y, uint32_t mask,
                                       uint8_t *contact, uint16_t *cell_attr);
 
+/* Dito, aber mit EXPLIZITEM Band statt band_from_y(y) — fuer Gegner, deren Band das
+ * Original als ZUSTANDS-Byte +0x82 fuehrt (Gorilla-Zonen-Leap: +0x82=1 @0x80118af0,
+ * Landung 0 @0x80118ca4; FUN_8003b0a4 liest +0x82 selbst @0x8003b228-3c). S5 2026-09-05. */
+int  re15_collision_constrain_contact_band(const re15_rdt_t *rdt,
+                                           int32_t old_x, int32_t old_z,
+                                           int32_t *x, int32_t *z,
+                                           int32_t radius, int band, uint32_t mask,
+                                           uint8_t *contact, uint16_t *cell_attr);
+
+/* FUN_8003b93c — SCA-ATTRIBUT-ZONEN-ABFRAGE (Marker-Zellen u1==attr im eigenen Band,
+ * u0 ungeprueft; erster Treffer schreibt (Richtungs-Code>>4)+8+(u1&3) nach *contact und
+ * liefert 1; Zitate an der Implementierung). Konsument: Gorilla-Zonen-Leap A[4] Path A. */
+int  re15_collision_zone_query(const re15_rdt_t *rdt, int32_t px, int32_t pz,
+                               int32_t r, int band, unsigned attr, uint8_t *contact);
+
 /* Object (Obj_model_set prop) push-out: keep the player out of every SOLID prop's
  * authored collision box (FUN_8002cabc). Call AFTER re15_collision_constrain in the
  * player-move pass (walls first, then objects). Reads g_scd.props directly. */

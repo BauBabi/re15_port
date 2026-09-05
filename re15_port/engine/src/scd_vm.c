@@ -37,6 +37,7 @@
                               * (save-phone precedent, shots/itembox_spec.md §6) */
 #include "re15_room.h"       /* g_current_room_id (save-point room match) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
+#include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 
 scd_vm_t g_scd;
 
@@ -3346,6 +3347,15 @@ static int op_sce_em_set(scd_thread_t *t)
           re15_enemy_spawn_count_inc(); }        /* DAT_800aca4e ++ (@0x80042558-60): the behavior-
                                                   * table pick counts SPAWNS, never decremented */
         a->motion = re15_enemy_spawn_action(type, behavior);  /* byte-true spawn pose */
+        /* RE2-Flavor: der RE1.5-Seed (z.B. 0x27=39) liegt AUSSERHALB der 31-Clip-RE2-Bank
+         * und rendert ueber den Modulo-Fallback als Boden-Clip — waehrend der Tuerwechsel-
+         * Blende (KI/Anim eingefroren, Rendering laeuft) lagen deshalb alle 0x0D-Spawns
+         * flach und poppten mit dem ersten EXEC-Tick in den Stand (Nutzer-Report
+         * 2026-09-05). Ersatz-Seed = der Clip, den re2z_init committen wird (Original:
+         * Sce_em_set saet Clip 0 @0x800576A4, INIT-Seeds 1/22/23/18/23 laufen dort noch im
+         * Lade-Frame — Zitate an re15_re2z_spawn_pose_seed). */
+        if (re15_ai_re2_for_type(type) && re15_re2z_owns_type(type))
+            re15_re2z_spawn_pose_seed(a, behavior);
         /* BYTE-TRUE anim-flags init: Sce_em_set (@0x8004216c) does `sh zero,452(s0)` = +0x1c4 = 0.
          * The original spawns EVERY enemy/NPC with anim_flags = 0 (verified two ways: the disasm
          * store, and the ROOM11B0 savestate where all 3 idle NPCs read +0x1c4 = 0x0000). The prior

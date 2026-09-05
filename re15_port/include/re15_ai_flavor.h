@@ -221,6 +221,12 @@ void re15_re2z_exec_only(int slot);
  * Setzt zusaetzlich den Ein-Angreifer-Riegel Spieler+0x1D3 |= 0x80 (@0x8010459C-B0) und die
  * SCA-Zeile 8 (BRUECKE zu den RE1.5-Raumdaten, s. Block an der Definition). */
 void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub);
+void re15_re2z_spawn_pose_seed(re15_actor_t *a, uint8_t behavior);
+                                                  /* Freeze-Fenster-Posen-Seed: saet am Spawn/INIT
+                                                   * den Clip, den re2z_init committen wird
+                                                   * (Original-Seeds @0x801009B8/D4, 22/23, 18, 23;
+                                                   * Sce_em_set-Seed Clip 0 @0x800576A4) — S4-Fix
+                                                   * 2026-09-05, diag_zombie_lying_spawn.md */
 
 /* ---- RE1.5-Waffe -> RE2-ATTACKEN-ID (= Zeile der Trefferreaktions-Tabelle @0x8010C940) -------
  * Im Original ist diese Zeile die ITEM-ID der gefuehrten Waffe: EQUIP FUN_8006B000 schreibt sie

@@ -3285,3 +3285,36 @@ target_link_libraries(test_map_etagen_rect PRIVATE re15_engine re15_test_support
 target_include_directories(test_map_etagen_rect PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_map_etagen_rect COMMAND test_map_etagen_rect)
 set_tests_properties(unit_map_etagen_rect PROPERTIES TIMEOUT 30)
+
+# --- DIAGNOSE 2026-09-05: RE2-Kraehen-Kill ohne Spieler-Sterbeanimation (Symptom 3,
+#     diag_crow_kill_noanim.md). Reine Messsonde, kein add_test. ---
+add_executable(probe_re2_crow_kill probe_re2_crow_kill.c)
+target_link_libraries(probe_re2_crow_kill PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_crow_kill PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE 2026-09-05: Gorilla haengt zwischen den Autos (Symptom 5,
+#     diag_gorilla_stuck.md). Reine Messsonde, kein add_test. ---
+add_executable(probe_gorilla_11c0_stuck probe_gorilla_11c0_stuck.c)
+target_link_libraries(probe_gorilla_11c0_stuck PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gorilla_11c0_stuck PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- S3-Fix 2026-09-05: RE2-Kraehen-Kill -> Spieler-cmd-3-Sterbeanimation (diag_crow_kill_noanim.md) ---
+add_executable(test_re2_crow_kill_cmd3 test_re2_crow_kill_cmd3.c)
+target_link_libraries(test_re2_crow_kill_cmd3 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_crow_kill_cmd3 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_crow_kill_cmd3 COMMAND test_re2_crow_kill_cmd3)
+set_tests_properties(unit_re2_crow_kill_cmd3 PROPERTIES TIMEOUT 60)
+
+# --- S4-Fix 2026-09-05: RE2-Freeze-Fenster-Posen-Seed (diag_zombie_lying_spawn.md) ---
+add_executable(test_re2z_spawn_seed test_re2z_spawn_seed.c)
+target_link_libraries(test_re2z_spawn_seed PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_spawn_seed PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2z_spawn_seed COMMAND test_re2z_spawn_seed)
+set_tests_properties(unit_re2z_spawn_seed PROPERTIES TIMEOUT 30)
+
+# --- S5-Fix 2026-09-05: Gorilla-Zonen-Leap A[4] Path A + Band-Klemme (diag_gorilla_stuck.md) ---
+add_executable(test_maggot_zone_leap test_maggot_zone_leap.c)
+target_link_libraries(test_maggot_zone_leap PRIVATE re15_engine re15_test_support)
+target_include_directories(test_maggot_zone_leap PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_maggot_zone_leap COMMAND test_maggot_zone_leap)
+set_tests_properties(unit_maggot_zone_leap PROPERTIES TIMEOUT 30)

@@ -739,6 +739,12 @@ typedef struct {
                               * `0x8003b0a4(&+0x34, a1=dim[3]=200, a2=4)` -> sb 465 (audit wf_827f186d crow #B) */
     int16_t  crow_grav;      /* +0x1e8: vertical accel added to vvel each dive/fall tick       */
     int16_t  crow_speed;     /* +0x8c : horizontal move speed (per flight sub-state)           */
+    int16_t  crow_vol90;     /* +0x90 (RE2-Kraehe): Vol-Wort des Helfers 0x8010472C (sh a1,144
+                              * @0x80104734; auch +0x92/+0x9A/+0x9C @0x8010472C-3C) — zugleich
+                              * der WAND-RADIUS des Root-Wand-Passes: FUN_8003567c reicht
+                              * param_1[0x24] (= +0x90) als Radius an FUN_8004c1bc. Kein
+                              * INIT-Writer (eigener Scan @0x801002FC..) -> Kette 0 -> 350/
+                              * 100/50/10. S1-Fix 2026-09-05 (vorher Port-erfundene 200).     */
     uint8_t  crow_timer;     /* +0x1d5: sub-state countdown (climb-back / maneuver duration)   */
     uint8_t  crow_pturn;     /* +0x1d3: anim/timer completion flag (dive-decide pending-turn)  */
     uint8_t  crow_hs;        /* +0x1d8: flock handshake byte (dispatcher force-substate gate)  */
