@@ -1383,6 +1383,19 @@ def main():
         # (BEFUND §52); der Formvergleich sagte zwar durchgaengig 1/1, fiel aber bei
         # der unabhaengigen Tuerprobe durch. Erst die eingemessenen Punkte tragen.
         (0x10C0, 0): (1, 1),
+        # ⛔ EBENFALLS VOM NUTZER EINGEMESSEN 2026-09-06, mit 15 F9-Marken quer durch
+        # den L-foermigen Flur (Cuts 0..9, Welt x -18877..8182, z -8264..25582).
+        # Gemessen wurde, wie viele davon auf der GEMALTEN Flaeche von Rect 3 landen:
+        #     flip 0/0 (bisher)   1 von 15, mittlerer Abstand 38,9 px
+        #     flip 0/1            6 von 15, 35,5 px
+        #     flip 1/0            6 von 15, 28,9 px
+        #     flip 1/1           13 von 15,  0,3 px      <- 28,7 px Vorsprung
+        # Kein Muenzwurf, sondern ein Erdrutsch - und dieselbe Spiegelung wie ROOM10C0.
+        # ⛔ Der Formvergleich (BEFUND §52 Weg 3-5) hatte diese Orientierung uebrigens
+        # die ganze Zeit vorgeschlagen; er fiel nur durch, weil Massstab und Versatz
+        # dazu ueberangepasst waren. Die Orientierung ALLEIN ist bestimmbar, sobald
+        # gemessene Standplaetze vorliegen - der Rest war das Problem.
+        (0x10D0, 0): (1, 1),
     }
 
     # ================= GRUNDRISS AUS KOLLISION UND TUERGRAPH ===================

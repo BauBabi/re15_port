@@ -228,8 +228,8 @@
           "spalten": true,
           "oben": 0,
           "grow": 0,
-          "ebene": -1000,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene 0 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+          "ebene": -2800,
+          "grund": "⛔ Cut 4 zeigt wie Cut 1 einen TREPPENLAUF. Die hergeleitete Bodenebene ist das OBERE Podest (Band 0, y=0), der Lauf faellt bis Band 2 (-3600). Nutzer-Marke 2026-09-06: er stand bei y=-3872, also UNTER dem Podest und sogar unter dem naechsten Band - mitten im Lauf. Ebene deshalb LAUFMITTE (-1800) plus Handlaufhoehe 1000 = -2800, dieselbe Herleitung wie Cut 1."
         }
       ]
     },

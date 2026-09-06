@@ -54,9 +54,28 @@ typedef struct {
  * TOLERANZ 8 px: der Marker ist ein 8x8-Feld, und die Bbox-Streckung bleibt auch mit
  * richtiger Spiegelung eine Naeherung. Geprueft wird die GROESSENORDNUNG (Faktor 10
  * besser als vorher), nicht die letzte Stelle. */
+/* ---- ROOM10D0, eingemessen 2026-09-06 mit 15 F9-Marken ---------------------------
+ * Der Nutzer ist den L-foermigen Flur abgelaufen und hat in neun Kamerawinkeln
+ * markiert (Welt x -18877..8182, z -8264..25582). Gemessen wurde, wie viele Marken auf
+ * der GEMALTEN Flaeche von Rect 3 landen - ein Mass, das die Marken selbst nicht
+ * beeinflussen (die Zeichnung ist Originaldatei):
+ *     flip 0/0 (bisher)   1 von 15, mittlerer Abstand 38,9 px
+ *     flip 0/1            6 von 15, 35,5 px
+ *     flip 1/0            6 von 15, 28,9 px
+ *     flip 1/1           13 von 15,  0,3 px     <- 28,7 px Vorsprung
+ * Zwei der 15 liegen daneben; beide am Rand der Zeichnung, wo die Bbox-Streckung auch
+ * mit richtiger Spiegelung eine Naeherung bleibt.
+ * Hier stehen zwei weit auseinanderliegende davon als Schranke. */
 static const messpunkt_t MESS[] = {
     { 0x10C0,  -132, 10374, 118, 150, 8, "F9-Marke 1: Tuer zum Treppenhaus ROOM1060" },
     { 0x10C0, -7132, -1896, 135, 123, 8, "F9-Marke 5: Doppeltuer zu ROOM10D0"        },
+    /* Die beiden am weitesten auseinanderliegenden TREFFER (13 der 15 landen auf der
+     * Zeichnung; die zwei Ausreisser 16/17 am Nordwestende bleiben aussen vor - dort
+     * ist die Bbox-Streckung auch mit richtiger Spiegelung noch ungenau).
+     * Sollort ist die Lage, die sich mit flip 1/1 ergibt und die auf der gemalten
+     * Flaeche liegt; Toleranz 4 px. */
+    { 0x10D0,   1273, -8264, 156,  80, 4, "F9-Marke 3: Suedende des Flurs"     },
+    { 0x10D0, -14782, 25582, 191, 152, 4, "F9-Marke 15: Nordwestarm des Flurs" },
 };
 
 int main(void)

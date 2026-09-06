@@ -4827,8 +4827,18 @@ re_title:;
                                  * ist er tauglich, s. Skill re15-port-visual-verify.) */
                                 {   extern void re15_render_pc_screenshot(const char *path);
                                     char _sp[600];
-                                    snprintf(_sp, sizeof _sp, "%s%sbefund_marke%d.bmp",
-                                             wz ? wz : "", (wz && *wz) ? "/" : "", bl_marke);
+                                    /* ⛔ RAUM UND BILDNUMMER IN DEN NAMEN. Bis hier
+                                     * hiess der Abzug nur "befund_marke<N>.bmp", und die
+                                     * Zaehlung beginnt bei jedem Spielstart neu - jeder
+                                     * Lauf ueberschrieb also die Bilder des vorigen. Am
+                                     * 2026-09-06 habe ich deshalb den FALSCHEN Abzug
+                                     * angesehen (Treppenhaus statt Korridor) und daraus
+                                     * fast einen Schluss gezogen. Der Name traegt jetzt,
+                                     * wozu er gehoert. */
+                                    snprintf(_sp, sizeof _sp, "%s%sbefund_%04X_F%u_marke%d.bmp",
+                                             wz ? wz : "", (wz && *wz) ? "/" : "",
+                                             (unsigned) g_current_room_id,
+                                             (unsigned) g_engine.frame_count, bl_marke);
                                     re15_render_pc_screenshot(_sp);
                                     bl_bytes += fprintf(bl, "  Bild: %s\n", _sp); }
                             }
