@@ -1367,6 +1367,22 @@ def main():
     ZONE_ORIENT = {
         (0x1120, 0): (1, 1),   # Symbol 8->5 px, Nachbar ROOM1130 40->3 px
         (0x2050, 0): (1, 1),   # Symbol 33->4 px, Nachbar 56->6 px
+        # ⛔ VOM NUTZER EINGEMESSEN 2026-09-06. Er hat sich im Spiel an sechs Stellen
+        # hingestellt und F9 gedrueckt; das Log liefert die Weltlage, der Abzug zeigt,
+        # WO er steht. Zwei davon sind eindeutige Anker:
+        #     Marke 1  Welt(  -132, 10374)  an der Tuer zum Treppenhaus ROOM1060
+        #              -> Karte (118,150), denn das Treppenhaus ist als Rect 1
+        #                 (118,134) 24x24 INNERHALB von Rect 0 gezeichnet
+        #     Marke 5  Welt( -7132, -1896)  an der Tuer zu ROOM10D0
+        #              -> Karte (135,123), die gemeinsame Wand mit Rect 3
+        # Gesamtfehler beider Anker je Spiegelung:
+        #     0/0 (bisher)  82 px      0/1  36 px      1/0  54 px      1/1   8 px
+        # Die Zeichnung ist also in BEIDEN Achsen gespiegelt - Marke 5 steht am
+        # WEST-Ende des Raums, ihre Tuer aber auf der OST-Seite der Zeichnung.
+        # ⛔ Fuenf automatische Wege hatten das vorher NICHT entscheiden koennen
+        # (BEFUND §52); der Formvergleich sagte zwar durchgaengig 1/1, fiel aber bei
+        # der unabhaengigen Tuerprobe durch. Erst die eingemessenen Punkte tragen.
+        (0x10C0, 0): (1, 1),
     }
 
     # ================= GRUNDRISS AUS KOLLISION UND TUERGRAPH ===================

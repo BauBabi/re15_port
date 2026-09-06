@@ -3350,3 +3350,13 @@ target_include_directories(test_pri_kopfschnitt PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(test_pri_kopfschnitt PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
 add_test(NAME unit_pri_kopfschnitt COMMAND test_pri_kopfschnitt)
 set_tests_properties(unit_pri_kopfschnitt PROPERTIES TIMEOUT 600)
+
+# Vom Nutzer eingemessene Kartenpunkte (2026-09-06). Fuenf rechnerische Verfahren sind
+# an der Stub-Eichung gescheitert (BEFUND §49-§52); was traegt, sind gemessene Punkte -
+# und die muessen wie eine Disassembly-Adresse gegen stilles Verrutschen geschuetzt sein.
+add_executable(test_map_eingemessen test_map_eingemessen.c)
+target_link_libraries(test_map_eingemessen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_eingemessen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_eingemessen PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
+add_test(NAME unit_map_eingemessen COMMAND test_map_eingemessen)
+set_tests_properties(unit_map_eingemessen PROPERTIES TIMEOUT 30)
