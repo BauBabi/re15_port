@@ -3192,3 +3192,28 @@ bleiben als unabhaengige Gegenprobe uebrig, und genau daran waere der Erfolg zu 
 (Stub-Zeile oben: Median 4, 90 % 39, schlimmster 71).
 
 **Stand: gemessen und begruendet, nicht gebaut.**
+
+### Nachtrag zu §51: der Formvergleich traegt (so) NICHT
+
+Erster Versuch, die begehbare Flaeche gegen die gemalte Kachel zu legen — ROOM10D0,
+80534 begehbare Punkte aus der ENGINE (`RE15_FLOOR_DUMP`, nicht nachgebaut), acht
+Achsenlagen, reine Bbox-Streckung:
+
+| Bezug | Bester | Zweitbester | Zufallsniveau | jetzige Einstellung |
+|-------|--------|-------------|---------------|---------------------|
+| rohe Punkte-Bbox | flip 1/1: **48 %** | 46 % | 29 % | 0/0: 13 % (schlechteste) |
+| bereinigte Zonen-Box | 1/1/tausch: **36 %** | 34 % | 29 % | 0/0: 21 % |
+
+⛔ Der erste Bezug sah nach einem klaren Befund aus ("die Zeichnung ist in beiden
+Achsen gespiegelt, der Port nimmt an, sie sei es nicht"). Auf die bereinigte Box
+eingeschraenkt bleiben **2 Punkte** Abstand zwischen Bestem und Zweitbestem, bei 29 %
+Zufallsniveau. Das ist kein Signal, sondern Rauschen — die 48 % waren ein Artefakt der
+rohen Bbox (sie enthaelt die Schablonen-Rahmen).
+
+**Warum es scheitert:** eine reine Bbox-Streckung hat keine Freiheit in Massstab und
+Versatz. Fuellt die begehbare Flaeche ihren Kasten anders aus als die Zeichnung ihre
+Kachel, verschiebt die Streckung alles, und jede Achsenlage landet nahe am Zufall.
+Eine echte Registrierung braucht die Suche ueber Massstab UND Versatz.
+
+**Damit ist der Weg nicht widerlegt, aber auch nicht belegt.** Nicht darauf aufbauen,
+bevor eine Registrierung mit Massstab/Versatz gemessen ist.
