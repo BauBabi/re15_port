@@ -4843,6 +4843,25 @@ re_title:;
                                 if (gezeigt == 0) bl_bytes += fprintf(bl, " | keine Maske am Koerper");
                             }
                             bl_bytes += fprintf(bl, "\n");
+                            /* ⛔ BEI DER MARKE DEN GANZEN SATZ, aus dem LAUFENDEN Spiel.
+                             * Die Maskenliste aus der Datei nachzuschlagen genuegt nicht:
+                             * die Frage ist, was der Zeichner WIRKLICH geladen hat. Genau
+                             * dieser Unterschied hat hier schon zweimal eine Messung
+                             * wertlos gemacht (Paket/Sonde). Einmal je Marke ist das
+                             * bezahlbar. */
+                            if (marke) {
+                                int q;
+                                bl_bytes += fprintf(bl,
+                                    "  alle %d Masken dieses Winkels (Nr:(x,y)bxh Tiefe -> Kamera-z):\n", rn);
+                                for (q = 0; q < rn; q++) {
+                                    if ((q % 4) == 0) bl_bytes += fprintf(bl, "   ");
+                                    bl_bytes += fprintf(bl, " %3d:(%3d,%3d)%3dx%-3d t=%-3d z=%-5d",
+                                                        q, rx[q], ry[q], rw[q], rh[q], rd[q], rd[q] * 64);
+                                    if ((q % 4) == 3) bl_bytes += fprintf(bl, "\n");
+                                }
+                                if ((rn % 4) != 0) bl_bytes += fprintf(bl, "\n");
+                                bl_bytes += fprintf(bl, "====================================\n");
+                            }
                             fflush(bl);
                         }
                     }
