@@ -3280,3 +3280,29 @@ nachzubauen. Die Bbox-Streckung ist bereits eine PORT-ERFINDUNG, und die Frage i
 nicht „byte-true oder nicht", sondern welche Erfindung die bessere ist.
 
 **Stand: drei Wege gemessen und verworfen. Nicht weiter darauf aufbauen.**
+
+### Weg 4: derselbe Formvergleich, aber BEIDSEITIG bewertet — auch nicht
+
+⛔ Weg 3 hatte einen Bewertungsfehler: gemessen wurde „Anteil der Flaeche, der auf
+Gemaltem liegt" — das belohnt SCHRUMPFEN, weil eine kleine Form leicht ganz auf Farbe
+passt. Richtig ist die beidseitige Deckung (Schnitt durch Vereinigung), die auch
+bestraft, wenn gemalte Flaeche unbedeckt bleibt.
+
+    Bester:  IoU 0,53 (flip 1/1, Skala 1,50, Versatz +1/+7)
+
+Unabhaengige Probe an den Tuerankern (fuer die Deckung nicht benutzt):
+
+| Kandidat | Mittel |
+|----------|--------|
+| IoU 0,53 | 66,3 px |
+| IoU 0,52 (zwei Varianten) | 48,3 px |
+| **jetzige Bbox-Streckung** | **46,7 px** |
+
+Auch mit richtiger Bewertung kein Gewinn. **Damit ist der Formvergleich erledigt: die
+begehbare Flaeche und die gezeichnete Kachel sind NICHT durch eine Aehnlichkeits-
+abbildung verbunden.** Die Karte des Prototyps ist ein SCHEMA, kein massstaeblicher
+Grundriss — dieselbe Einsicht, die schon in `tools/grundriss.py` steht („Die Karte ist
+nur ein SCHEMA, das davon ausgeht, dass ein Raum an den anderen haengt").
+
+**Vier Wege gemessen, vier verworfen.** Was bleibt, ist Handarbeit: je Raum zwei bis
+drei bekannte Punkte, aus denen die Abbildung BESTIMMT wird.
