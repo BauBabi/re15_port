@@ -146,3 +146,63 @@ Fehler vorliegen muss. Ob 7488 die richtige Linie ist, ist die eigentliche Frage
 2. **Die Weltlage des Nutzers.** Aus dem Bild allein nicht bestimmbar; der Abgleich
    gegen den Hintergrund traegt nicht weit genug (Ausrichtungs-Rest 5-9 gegen ~0 bei
    einem eigenen Abzug). `RE15_POS_HUD=1` liefert sie in einer Zeile.
+
+---
+
+# Aufgeloest 2026-09-06 — mit den Messdaten des Nutzers
+
+Der Nutzer hat die Messfassung gefahren und dreimal F9 gedrueckt (`befund.log`,
+597 Zeilen in ROOM1140 Cut 0):
+
+    MARKE 1  vz Fuss/Huefte/Kopf = 8090 / 7856 / 7621     Stuhlmaske z = 7488
+    MARKE 2                        7764 / 7530 / 7295
+    MARKE 3                        7582 / 7347 / 7113
+
+**505** seiner Bilder liegen in der Stuhl-Spalte, davon **0** mit dem FUSS vor der
+Maske — er stand also nie davor — und **485** durchgeschnitten (Fuesse verdeckt, Kopf
+nicht). Weil die Kamera von oben schaut, liegt der Kopf 469 Einheiten naeher als die
+Fuesse; faellt die Maskentiefe dazwischen, schaelt sie die Figur beim Naeherkommen von
+oben herab frei.
+
+## Was NICHT die Erklaerung ist (jeweils gemessen)
+
+Ein Reihen-Zensus ueber alle 103 Raeume, 1094 Kamerawinkel und 1,77 Mio. begehbare
+Standplaetze (`tests/unit/test_pri_kopfschnitt.c`) hat drei Kriterien geprueft — **alle
+drei trennen nicht**:
+
+| Kriterium | Original-Masken | nachgezeichnete |
+|-----------|-----------------|-----------------|
+| erzeugt ueberhaupt Schnitte | 12761 Standplaetze | 7232 |
+| deckt nie voll | 9,6 % der Masken | 2,8 % |
+| schneidet an >= 80 % der Plaetze | 1 von 5931 | 0 von 2043 |
+
+⛔ Der Schnitt ist also NORMAL — die Kuenstler-Masken erzeugen ihn fast doppelt so oft
+wie unsere. Und die Regel laesst sich bei ihnen auch nicht ablesen: ueber 462
+Original-Cuts und 16598 Rechtecke gibt es keinen Zusammenhang zwischen Bildzeile und
+Tiefe (Korrelation -0,01, 49 % positiv).
+
+## Die Aufloesung
+
+Der Stuhl steht auf dem Boden; seine Maske bekam ihre Tiefe aus der Tischplatten-Ebene
+(`ebene: -700` -> 7488). Richtig ist die **Oberkante des Stuhls**: die Maske soll
+verdecken, wer HINTER dem Stuhl steht, und das ist nur ohne Schnitt zu haben, wenn die
+Tiefe an seinem naechsten Punkt liegt.
+
+Steigung gemessen: Boden (y=0) -> 8704, Tischplatte (y=-700) -> 7488, also **1,74
+Kamera-z je Hoeheneinheit**. Mit `ebene: -1050` ergibt sich **6656 / 6464**.
+
+Gegenprobe an den EIGENEN Aufzeichnungen des Nutzers, dieselben 505 Bilder:
+
+| Schwelle | voll gedeckt | durchgeschnitten | ganz frei |
+|----------|--------------|------------------|-----------|
+| alt 7488 | 20 | **485** | 0 |
+| neu 6656 | **505** | **0** | 0 |
+
+Raum-weiter Zensus: 7232 -> 7223 Schnitte. Suite 277/277.
+
+⛔ **Was daran Annahme bleibt:** die Stuhlhoehe (1050). Sie ist nicht aus den Daten
+bestimmbar — der Stuhl hat im Original keine Maske, die Kuenstler-Regel ist nicht
+ablesbar, und aus einem Bildpunkt folgen Tiefe und Hoehe nicht getrennt (zwei
+Unbekannte, eine Gleichung). Der zweite, baugleiche Stuhl im selben Bild taugt nicht
+als Massstab, weil er gedreht steht. Bestaetigt ist das Ergebnis am Bild des Nutzers,
+nicht die Zahl.

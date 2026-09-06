@@ -1,256 +1,257 @@
 {
- "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl.",
- "ROOM1140": {
-  "0": {
-   "objekte": [
-    {
-     "name": "Konferenztisch",
-     "png": "pri/1140/00_01.png",
-     "x": 0,
-     "y": 122,
-     "massstab": 1,
-     "ebene": -700,
-     "oben": 0,
-     "grow": 0
+  "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl.",
+  "ROOM1140": {
+    "0": {
+      "objekte": [
+        {
+          "name": "Konferenztisch",
+          "png": "pri/1140/00_01.png",
+          "x": 0,
+          "y": 122,
+          "massstab": 1,
+          "ebene": -700,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Stuhl hinter dem Tisch",
+          "png": "pri/1140/00_02.png",
+          "x": 210,
+          "y": 113,
+          "massstab": 1,
+          "ebene": -1050,
+          "oben": 0,
+          "grow": 0,
+          "grund": "Ebene = OBERKANTE des Stuhls, nicht die Tischplatte. Der Stuhl hat im Original keine Maske; -700 (Tischplatte) ergab Kamera-z 7488, und der Nutzer stand am 2026-09-06 in 505 gemessenen Bildern NIE davor, wurde aber in 485 durchgeschnitten (Kopf-Tiefe bis 7111). Steigung gemessen: Boden y=0 -> 8704, Tischplatte y=-700 -> 7488, also 1,74 je Hoeheneinheit."
+        },
+        {
+          "name": "Karaffe auf dem Tisch",
+          "png": "pri/1140/00_03.png",
+          "x": 95,
+          "y": 109,
+          "massstab": 1,
+          "ebene": -700,
+          "oben": 0,
+          "grow": 0
+        }
+      ],
+      "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig. | ⛔ KORREKTUR 2026-09-04, aus dem laufenden Spiel gemessen (RE15_PRI_LOG): der Nutzer meldete \"when I get closer to the chair, it is not in front of me anymore\". An seinem Stehplatz (-7125,0,-14807) ist seine Kamera-Z 8559 (Kopf) bis 9028 (Fuss) - verdeckt wird er ganz erst von Tiefe < 133. Das Objekt trug 136, verfehlte es also um DREI und verdeckte nur noch seine Beine. Ursache: \"fuss\": 140 nahm den untersten Punkt der Freistellung als BODENkontakt - er liegt aber auf der TISCHPLATTE, der Stuhl steht dahinter und seine Fuesse sind verdeckt. Mit \"ebene\": -700 (wie die Konferenztisch-Eintraege) ergibt sich Tiefe 112 < 133. Nebenbei richtig benannt: es ist ein STUHL, kein Heizkoerper. | 2026-09-04: Karaffe ergaenzt (Freistellung des Nutzers, Lage gemessen x=95 y=109, 100,0 %). \"ebene\": -700 wie Tisch und Stuhl - sie steht AUF der Tischplatte, ihr Bodenkontakt ist nicht der Fussboden."
     },
-    {
-     "name": "Stuhl hinter dem Tisch",
-     "png": "pri/1140/00_02.png",
-     "x": 210,
-     "y": 113,
-     "massstab": 1,
-     "ebene": -700,
-     "oben": 0,
-     "grow": 0
+    "2": {
+      "objekte": [
+        {
+          "name": "Konferenztisch",
+          "png": "pri/1140/02_01.png",
+          "x": 124,
+          "y": 143,
+          "massstab": 1,
+          "ebene": -700,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Stuhl vorne links (frueher falsch \"Kamerastativ links\")",
+          "png": "pri/1140/02_02.png",
+          "x": 96,
+          "y": 152,
+          "massstab": 1,
+          "fuss": 210,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Kamerastativ rechts",
+          "png": "pri/1140/02_03.png",
+          "x": 274,
+          "y": 104,
+          "massstab": 1,
+          "fuss": 164,
+          "oben": 0,
+          "grow": 0
+        }
+      ],
+      "_warum": "Lage gemessen: Tisch x=124 y=143, linkes Stativ x=96 y=152, rechtes Stativ x=274 y=104 — alle 100.0 %. Linkes Stativ mit 'fuss' 210: seine Stange laeuft im Bild bis dahin weiter, die Freistellung endet bei 196. Rechtes Stativ OHNE 'fuss': seine Beine verschwinden bei y=164 HINTER dem Tisch, der Bodenkontakt ist im Bild also gar nicht zu sehen. Die Spaltenregel nimmt dort y=164 — das entspricht einem Bodenpunkt an der fernen Tischkante und damit ungefaehr der Stelle, an der das Stativ steht. Wenn im Spiel jemand dahinter NICHT verschwindet, ist hier die Zeile nachzutragen."
     },
-    {
-     "name": "Karaffe auf dem Tisch",
-     "png": "pri/1140/00_03.png",
-     "x": 95,
-     "y": 109,
-     "massstab": 1,
-     "ebene": -700,
-     "oben": 0,
-     "grow": 0
+    "3": {
+      "objekte": [
+        {
+          "name": "US-Fahne",
+          "png": "pri/1140/03_01.png",
+          "x": 120,
+          "y": 67,
+          "massstab": 1,
+          "fuss": 192,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Rednerpult",
+          "png": "pri/1140/03_02.png",
+          "x": 150,
+          "y": 112,
+          "massstab": 1,
+          "fuss": 196,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Blaue Fahne",
+          "png": "pri/1140/03_03.png",
+          "x": 212,
+          "y": 62,
+          "massstab": 1,
+          "fuss": 182,
+          "oben": 0,
+          "grow": 0
+        }
+      ],
+      "_warum": "Lage gemessen: US-Fahne x=120 y=67, Pult x=149 y=112, blaue Fahne x=212 y=62 — alle 100.0 %. Alle drei brauchen 'fuss', weil die Freistellung oberhalb des Bodenkontakts endet: die Fahnenstangen enden bei y=179 bzw. 171, ihre gelben Teller stehen aber bis y=194 bzw. 185 (gemessen am Hintergrund) — daher 192 und 182. Das Pult endet in der Freistellung bei y=169, sein Sockel trifft den Teppich aber erst bei y=196 — daher 196. ⛔ ANMERKUNG fuer den Nutzer: beim Pult fehlt damit das untere Drittel der Verdeckung (y 170..196). Die TIEFE stimmt, aber wer dort unten dahinter steht, wird nicht verdeckt. | 2026-09-04: Rednerpult-Freistellung vom Nutzer ERSETZT (60x81 statt der alten, die bei y=169 endete). Sie reicht jetzt bis y=192; damit ist die untere Drittel-Verdeckung da, die vorher fehlte. Lage neu gemessen x=150 y=112 (100,0 %), \"fuss\": 196 unveraendert - der Bodenkontakt liegt knapp unter der Freistellung."
+    },
+    "5": {
+      "_warum": "Freistellung des Nutzers (pri/1140/05_01.png), Lage gemessen x=205 y=129, Massstab 1, 100,0 % Uebereinstimmung. \"ebene\": -700 wie die uebrigen Konferenztisch-Eintraege (Cut 0 und Cut 2) - der Bodenkontakt ist die Tischplatte, nicht der Fussboden.",
+      "objekte": [
+        {
+          "name": "Konferenztisch",
+          "png": "pri/1140/05_01.png",
+          "x": 205,
+          "y": 129,
+          "massstab": 1,
+          "ebene": -700,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
     }
-   ],
-   "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig. | ⛔ KORREKTUR 2026-09-04, aus dem laufenden Spiel gemessen (RE15_PRI_LOG): der Nutzer meldete \"when I get closer to the chair, it is not in front of me anymore\". An seinem Stehplatz (-7125,0,-14807) ist seine Kamera-Z 8559 (Kopf) bis 9028 (Fuss) - verdeckt wird er ganz erst von Tiefe < 133. Das Objekt trug 136, verfehlte es also um DREI und verdeckte nur noch seine Beine. Ursache: \"fuss\": 140 nahm den untersten Punkt der Freistellung als BODENkontakt - er liegt aber auf der TISCHPLATTE, der Stuhl steht dahinter und seine Fuesse sind verdeckt. Mit \"ebene\": -700 (wie die Konferenztisch-Eintraege) ergibt sich Tiefe 112 < 133. Nebenbei richtig benannt: es ist ein STUHL, kein Heizkoerper. | 2026-09-04: Karaffe ergaenzt (Freistellung des Nutzers, Lage gemessen x=95 y=109, 100,0 %). \"ebene\": -700 wie Tisch und Stuhl - sie steht AUF der Tischplatte, ihr Bodenkontakt ist nicht der Fussboden."
   },
-  "2": {
-   "objekte": [
-    {
-     "name": "Konferenztisch",
-     "png": "pri/1140/02_01.png",
-     "x": 124,
-     "y": 143,
-     "massstab": 1,
-     "ebene": -700,
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Stuhl vorne links (frueher falsch \"Kamerastativ links\")",
-     "png": "pri/1140/02_02.png",
-     "x": 96,
-     "y": 152,
-     "massstab": 1,
-     "fuss": 210,
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Kamerastativ rechts",
-     "png": "pri/1140/02_03.png",
-     "x": 274,
-     "y": 104,
-     "massstab": 1,
-     "fuss": 164,
-     "oben": 0,
-     "grow": 0
+  "ROOM1130": {
+    "3": {
+      "_warum": "Freistellung des Nutzers (pri/1130/03.png), Lage gemessen: x=79 y=0, Massstab 1, 99,9 % Uebereinstimmung. ⛔ ABSICHTLICH OHNE \"fuss\": die Wand laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung. Gemessen an der Freistellung selbst wandert die unterste opake Zeile von y=9 (links, fern) bis y=190 (rechts, nah) - Spannweite 182 px. Genau dafuer ist die Spaltenregel in geom.depth_map_objekt da. Nutzer 2026-09-04: \"diese Wand [muss] natuerlich hinter Leon sein, wenn er die Diagonale lang geht, aber sobald er quasi um die Ecke geht, muss sie vor Leon kommen. Also es ist abhaengig von seiner Position.\" Das leistet die Spaltenregel von selbst; ein einzelnes \"fuss\" wuerde die Wand auf EINE Entfernung zwingen und genau diese Positionsabhaengigkeit zerstoeren. | ⛔ FREISTELLUNG VOM NUTZER VERBREITERT 2026-09-04 (49x202 bei x=67 statt 38x192 bei x=79, 99,9 % Uebereinstimmung). ANLASS: \"even though i made a pri for this whole wall, my arm clips through\" - und seine Rueckfrage \"Ist er nicht breit genug?\" war richtig. Am Bild gemessen: von 38 Armpixeln lagen 32 UEBERHAUPT NICHT unter der alten Maske; sie deckte nur den schmalen Pfeiler, nicht die grosse Wandflaeche links davon. Zwei naheliegende Erklaerungen waren vorher gemessen und verworfen worden - feinere Kachelung (verdeckt 305 Punkte WENIGER) und Dilatation (grow=3 deckt 37/38 ab, verdeckt aber 0/38, weil die Tiefe dort zu fern bleibt). Erst die breitere Freistellung traegt: Arm abgedeckt 38/38, wirksam verdeckt 28/38 (vorher 6 bzw. 0). Rest: 10 Punkte bei x=87..88 mit Tiefe 103/112 gegen die Schwelle 99,6 - 3 % zu fern, an der aeussersten Kante.",
+      "objekte": [
+        {
+          "name": "Wandkante mit Lampe (diagonal)",
+          "png": "pri/1130/03.png",
+          "x": 67,
+          "y": 0,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
     }
-   ],
-   "_warum": "Lage gemessen: Tisch x=124 y=143, linkes Stativ x=96 y=152, rechtes Stativ x=274 y=104 — alle 100.0 %. Linkes Stativ mit 'fuss' 210: seine Stange laeuft im Bild bis dahin weiter, die Freistellung endet bei 196. Rechtes Stativ OHNE 'fuss': seine Beine verschwinden bei y=164 HINTER dem Tisch, der Bodenkontakt ist im Bild also gar nicht zu sehen. Die Spaltenregel nimmt dort y=164 — das entspricht einem Bodenpunkt an der fernen Tischkante und damit ungefaehr der Stelle, an der das Stativ steht. Wenn im Spiel jemand dahinter NICHT verschwindet, ist hier die Zeile nachzutragen."
   },
-  "3": {
-   "objekte": [
-    {
-     "name": "US-Fahne",
-     "png": "pri/1140/03_01.png",
-     "x": 120,
-     "y": 67,
-     "massstab": 1,
-     "fuss": 192,
-     "oben": 0,
-     "grow": 0
+  "ROOM1060": {
+    "0": {
+      "_warum": "Freistellung des Nutzers, Lage gemessen: x=55 y=135, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 98 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
+      "objekte": [
+        {
+          "name": "Treppengelaender",
+          "png": "pri/1060/00.png",
+          "x": 55,
+          "y": 135,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
     },
-    {
-     "name": "Rednerpult",
-     "png": "pri/1140/03_02.png",
-     "x": 150,
-     "y": 112,
-     "massstab": 1,
-     "fuss": 196,
-     "oben": 0,
-     "grow": 0
+    "1": {
+      "_warum": "Freistellung des Nutzers, Lage gemessen: x=0 y=137, Massstab 1, 100,0 %. Dasselbe Gelaender aus dem zweiten Blickwinkel. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 81 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
+      "objekte": [
+        {
+          "name": "Treppengelaender",
+          "png": "pri/1060/01.png",
+          "x": 0,
+          "y": 137,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
     },
-    {
-     "name": "Blaue Fahne",
-     "png": "pri/1140/03_03.png",
-     "x": 212,
-     "y": 62,
-     "massstab": 1,
-     "fuss": 182,
-     "oben": 0,
-     "grow": 0
+    "2": {
+      "_warum": "Drei Freistellungen des Nutzers, Lagen gemessen (je 100,0 %): x=178 y=121, x=307 y=160, x=185 y=133. Dasselbe Treppengelaender wie Cut 0/1, hier in drei Teilen. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 50 bzw. 31 Zeilen), jede Bildspalte hat ihre eigene Entfernung - genau dafuer ist die Spaltenregel da.",
+      "objekte": [
+        {
+          "name": "Treppengelaender",
+          "png": "pri/1060/02_01.png",
+          "x": 178,
+          "y": 121,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Gelaenderstueck rechts aussen",
+          "png": "pri/1060/02_02.png",
+          "x": 307,
+          "y": 160,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        },
+        {
+          "name": "Gelaenderpfosten links",
+          "png": "pri/1060/02_03.png",
+          "x": 185,
+          "y": 133,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
+    },
+    "4": {
+      "_warum": "Freistellung des Nutzers, Lage gemessen: x=108 y=0, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 111 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+      "objekte": [
+        {
+          "name": "Treppengelaender",
+          "png": "pri/1060/04.png",
+          "x": 108,
+          "y": 0,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
+    },
+    "7": {
+      "_warum": "Freistellung des Nutzers, Lage gemessen: x=157 y=18, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 167 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+      "objekte": [
+        {
+          "name": "Treppengelaender",
+          "png": "pri/1060/07.png",
+          "x": 157,
+          "y": 18,
+          "massstab": 1,
+          "spalten": true,
+          "oben": 0,
+          "grow": 0
+        }
+      ]
     }
-   ],
-   "_warum": "Lage gemessen: US-Fahne x=120 y=67, Pult x=149 y=112, blaue Fahne x=212 y=62 — alle 100.0 %. Alle drei brauchen 'fuss', weil die Freistellung oberhalb des Bodenkontakts endet: die Fahnenstangen enden bei y=179 bzw. 171, ihre gelben Teller stehen aber bis y=194 bzw. 185 (gemessen am Hintergrund) — daher 192 und 182. Das Pult endet in der Freistellung bei y=169, sein Sockel trifft den Teppich aber erst bei y=196 — daher 196. ⛔ ANMERKUNG fuer den Nutzer: beim Pult fehlt damit das untere Drittel der Verdeckung (y 170..196). Die TIEFE stimmt, aber wer dort unten dahinter steht, wird nicht verdeckt. | 2026-09-04: Rednerpult-Freistellung vom Nutzer ERSETZT (60x81 statt der alten, die bei y=169 endete). Sie reicht jetzt bis y=192; damit ist die untere Drittel-Verdeckung da, die vorher fehlte. Lage neu gemessen x=150 y=112 (100,0 %), \"fuss\": 196 unveraendert - der Bodenkontakt liegt knapp unter der Freistellung."
   },
-  "5": {
-   "_warum": "Freistellung des Nutzers (pri/1140/05_01.png), Lage gemessen x=205 y=129, Massstab 1, 100,0 % Uebereinstimmung. \"ebene\": -700 wie die uebrigen Konferenztisch-Eintraege (Cut 0 und Cut 2) - der Bodenkontakt ist die Tischplatte, nicht der Fussboden.",
-   "objekte": [
-    {
-     "name": "Konferenztisch",
-     "png": "pri/1140/05_01.png",
-     "x": 205,
-     "y": 129,
-     "massstab": 1,
-     "ebene": -700,
-     "oben": 0,
-     "grow": 0
+  "ROOM1120": {
+    "2": {
+      "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor. ⛔ 2026-09-05 VON \"spalten\" AUF \"fuss\" 202 GEWECHSELT (Nutzer-Befund fehler/error05.png: \"Der Tisch ueberdeckt mich nur halb\"). GEMESSEN: in Leons Spalten (165..182, Fusspunkt aus dem Screenshot (171,154) -> Tiefe 9782) lagen 12 von 14 Maskenrechtecken vor ihm, ZWEI aber bei Kamera-z 8512 und 11072 - genau die zwei am linken Tresenrand, wo die unterste Maskenzeile die TRESENPLATTE ist und nicht der Boden. Die Spaltenregel ist hier falsch: ein Tresen ist ein Koerper, hinter den man nicht teilweise treten kann, also EIN Abstand. 202 ist die unterste Zeile der Freistellung (Kasten y=92, Hoehe 111).",
+      "objekte": [
+        {
+          "name": "Tresen mit Monitor",
+          "png": "pri/1120/02.png",
+          "x": 165,
+          "y": 92,
+          "massstab": 1,
+          "oben": 0,
+          "grow": 0,
+          "fuss": 202
+        }
+      ]
     }
-   ]
   }
- },
- "ROOM1130": {
-  "3": {
-   "_warum": "Freistellung des Nutzers (pri/1130/03.png), Lage gemessen: x=79 y=0, Massstab 1, 99,9 % Uebereinstimmung. ⛔ ABSICHTLICH OHNE \"fuss\": die Wand laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung. Gemessen an der Freistellung selbst wandert die unterste opake Zeile von y=9 (links, fern) bis y=190 (rechts, nah) - Spannweite 182 px. Genau dafuer ist die Spaltenregel in geom.depth_map_objekt da. Nutzer 2026-09-04: \"diese Wand [muss] natuerlich hinter Leon sein, wenn er die Diagonale lang geht, aber sobald er quasi um die Ecke geht, muss sie vor Leon kommen. Also es ist abhaengig von seiner Position.\" Das leistet die Spaltenregel von selbst; ein einzelnes \"fuss\" wuerde die Wand auf EINE Entfernung zwingen und genau diese Positionsabhaengigkeit zerstoeren. | ⛔ FREISTELLUNG VOM NUTZER VERBREITERT 2026-09-04 (49x202 bei x=67 statt 38x192 bei x=79, 99,9 % Uebereinstimmung). ANLASS: \"even though i made a pri for this whole wall, my arm clips through\" - und seine Rueckfrage \"Ist er nicht breit genug?\" war richtig. Am Bild gemessen: von 38 Armpixeln lagen 32 UEBERHAUPT NICHT unter der alten Maske; sie deckte nur den schmalen Pfeiler, nicht die grosse Wandflaeche links davon. Zwei naheliegende Erklaerungen waren vorher gemessen und verworfen worden - feinere Kachelung (verdeckt 305 Punkte WENIGER) und Dilatation (grow=3 deckt 37/38 ab, verdeckt aber 0/38, weil die Tiefe dort zu fern bleibt). Erst die breitere Freistellung traegt: Arm abgedeckt 38/38, wirksam verdeckt 28/38 (vorher 6 bzw. 0). Rest: 10 Punkte bei x=87..88 mit Tiefe 103/112 gegen die Schwelle 99,6 - 3 % zu fern, an der aeussersten Kante.",
-   "objekte": [
-    {
-     "name": "Wandkante mit Lampe (diagonal)",
-     "png": "pri/1130/03.png",
-     "x": 67,
-     "y": 0,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  }
- },
- "ROOM1060": {
-  "0": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=55 y=135, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 98 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
-   "objekte": [
-    {
-     "name": "Treppengelaender",
-     "png": "pri/1060/00.png",
-     "x": 55,
-     "y": 135,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  },
-  "1": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=0 y=137, Massstab 1, 100,0 %. Dasselbe Gelaender aus dem zweiten Blickwinkel. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 81 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
-   "objekte": [
-    {
-     "name": "Treppengelaender",
-     "png": "pri/1060/01.png",
-     "x": 0,
-     "y": 137,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  },
-  "2": {
-   "_warum": "Drei Freistellungen des Nutzers, Lagen gemessen (je 100,0 %): x=178 y=121, x=307 y=160, x=185 y=133. Dasselbe Treppengelaender wie Cut 0/1, hier in drei Teilen. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 50 bzw. 31 Zeilen), jede Bildspalte hat ihre eigene Entfernung - genau dafuer ist die Spaltenregel da.",
-   "objekte": [
-    {
-     "name": "Treppengelaender",
-     "png": "pri/1060/02_01.png",
-     "x": 178,
-     "y": 121,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Gelaenderstueck rechts aussen",
-     "png": "pri/1060/02_02.png",
-     "x": 307,
-     "y": 160,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    },
-    {
-     "name": "Gelaenderpfosten links",
-     "png": "pri/1060/02_03.png",
-     "x": 185,
-     "y": 133,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  },
-  "4": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=108 y=0, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 111 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
-   "objekte": [
-    {
-     "name": "Treppengelaender",
-     "png": "pri/1060/04.png",
-     "x": 108,
-     "y": 0,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  },
-  "7": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=157 y=18, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 167 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
-   "objekte": [
-    {
-     "name": "Treppengelaender",
-     "png": "pri/1060/07.png",
-     "x": 157,
-     "y": 18,
-     "massstab": 1,
-     "spalten": true,
-     "oben": 0,
-     "grow": 0
-    }
-   ]
-  }
- },
- "ROOM1120": {
-  "2": {
-   "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor. ⛔ 2026-09-05 VON \"spalten\" AUF \"fuss\" 202 GEWECHSELT (Nutzer-Befund fehler/error05.png: \"Der Tisch ueberdeckt mich nur halb\"). GEMESSEN: in Leons Spalten (165..182, Fusspunkt aus dem Screenshot (171,154) -> Tiefe 9782) lagen 12 von 14 Maskenrechtecken vor ihm, ZWEI aber bei Kamera-z 8512 und 11072 - genau die zwei am linken Tresenrand, wo die unterste Maskenzeile die TRESENPLATTE ist und nicht der Boden. Die Spaltenregel ist hier falsch: ein Tresen ist ein Koerper, hinter den man nicht teilweise treten kann, also EIN Abstand. 202 ist die unterste Zeile der Freistellung (Kasten y=92, Hoehe 111).",
-   "objekte": [
-    {
-     "name": "Tresen mit Monitor",
-     "png": "pri/1120/02.png",
-     "x": 165,
-     "y": 92,
-     "massstab": 1,
-     "oben": 0,
-     "grow": 0,
-     "fuss": 202
-    }
-   ]
-  }
- }
 }
