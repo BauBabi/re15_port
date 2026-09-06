@@ -152,7 +152,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -15400,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -14400 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         }
       ]
     },
@@ -167,7 +169,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -11800,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -10800 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         }
       ]
     },
@@ -182,7 +186,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -8200,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         },
         {
           "name": "Gelaenderstueck rechts aussen",
@@ -192,7 +198,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -8200,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         },
         {
           "name": "Gelaenderpfosten links",
@@ -202,7 +210,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -8200,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         }
       ]
     },
@@ -217,7 +227,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -1000,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene 0 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         }
       ]
     },
@@ -232,7 +244,9 @@
           "massstab": 1,
           "spalten": true,
           "oben": 0,
-          "grow": 0
+          "grow": 0,
+          "ebene": -1000,
+          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene 0 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
         }
       ]
     }

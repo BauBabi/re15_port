@@ -268,11 +268,11 @@ int main(void)
      * Wahrheitswert gelesen). */
     CHECK("alle Stages erreicht (>= 100 Raeume, >= 300 Winkel mit Masken)",
           n_raeume >= 100 && n_mitmaske >= 300);
-    /* SCHRANKE GEGEN RUECKSCHRITT. Gemessen am Stand 2026-09-06: 7223 Standplaetze
+    /* SCHRANKE GEGEN RUECKSCHRITT. Gemessen am Stand 2026-09-06: 6518 Standplaetze
      * werden von einer NACHGEZEICHNETEN Maske durchschnitten. Der Schnitt an sich ist
      * NICHT der Fehler - die Original-Masken erzeugen 12761, also fast doppelt so
      * viele. Die Zahl haelt nur fest, dass kuenftige Maskenarbeit ihn nicht vermehrt. */
-    CHECK("Schnitte durch nachgezeichnete Masken nicht mehr als am Stand 2026-09-06 (7223)",
-          ges_geschnitten <= 7223);
+    CHECK("Schnitte durch nachgezeichnete Masken nicht mehr als am Stand 2026-09-06 (6518)",
+          ges_geschnitten <= 6518);
     return g_fail;
 }

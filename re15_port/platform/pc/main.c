@@ -4818,6 +4818,19 @@ re_title:;
                                 bl_marke++;
                                 bl_bytes += fprintf(bl,
                                     "\n=========== MARKE %d (F9) ===========\n", bl_marke);
+                                /* ⛔ ZUR MARKE GEHOERT DAS BILD. Die Zahlen allein sagen
+                                 * nicht, WAS dem Nutzer falsch vorkommt: beim Stuhl war die
+                                 * Tiefe zu fern, beim Gelaender koennte es das Gegenteil sein.
+                                 * Ein Abzug im selben Bild macht jede Meldung ohne Rueckfrage
+                                 * lesbar. (Der eingebaute Abzug erzwingt einen GPU-Flush und
+                                 * kann TEXTUR-Fehler maskieren - fuer Verdeckung/Reihenfolge
+                                 * ist er tauglich, s. Skill re15-port-visual-verify.) */
+                                {   extern void re15_render_pc_screenshot(const char *path);
+                                    char _sp[600];
+                                    snprintf(_sp, sizeof _sp, "%s%sbefund_marke%d.bmp",
+                                             wz ? wz : "", (wz && *wz) ? "/" : "", bl_marke);
+                                    re15_render_pc_screenshot(_sp);
+                                    bl_bytes += fprintf(bl, "  Bild: %s\n", _sp); }
                             }
                             bl_bytes += fprintf(bl,
                                 "F%-7u R%04X C%-2d pos=(%6d,%6d,%6d) rot=%-5d "
