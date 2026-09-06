@@ -4707,6 +4707,148 @@ re_title:;
                     psy = 120 + (int)(pvy * cam_view.fov_screen_dist / pvz);
                 }
                 re15_render_pc_set_pri_player(psx, psy, (int)pvz);
+
+                /* ================================================================
+                 * BEFUND-LOG "befund.log" — laeuft IMMER, ohne Umgebungsvariable.
+                 *
+                 * ANLASS 2026-09-06: der Nutzer meldet Verdeckungsfehler per Bild, und
+                 * aus einem Bild allein laesst sich seine Weltlage NICHT
+                 * widerspruchsfrei zurueckrechnen (aus der Bildhoehe folgte vz <= 5887,
+                 * aus der Fusszeile vz 12198 — beides kann nicht stimmen, s.
+                 * analysis/stuhl_1140_2026-09-05). Sein Vorschlag, und er ist besser als
+                 * mein Nachstellen: das Spiel schreibt mit, er laeuft hin und markiert
+                 * die Stelle. Deshalb hier KEIN env-Gate — die Datei muss ohne
+                 * Vorbereitung entstehen.
+                 *
+                 * WAS DRINSTEHT, und warum genau das: der Zeichner vergleicht je
+                 * DREIECK die Kamera-Tiefe gegen `depth*64` der Maske
+                 * (re15_pri.h: verdeckt, solange vz > depth*64). Um zu entscheiden, ob
+                 * eine Maske zu nah oder zu fern liegt, braucht es also BEIDE Seiten am
+                 * selben Bild: die Tiefe der Figur (Fuss/Huefte/Kopf — bei erhoehter
+                 * Kamera sind das drei verschiedene Werte) UND jede Maske, die ihren
+                 * Bildkasten ueberlappt, mit ihrer Schwelle und dem Urteil.
+                 *
+                 * ⛔ GEDECKELT UND ROTIEREND. Ein Log, das unbegrenzt waechst, ist nach
+                 * einer Stunde Spielen unbrauchbar (und fuellt die Platte). Bei
+                 * BEFUND_MAX Bytes wandert es nach befund.1.log und faengt neu an; es
+                 * bleibt also immer der juengste Abschnitt erhalten, plus der davor.
+                 *
+                 * F9 setzt eine MARKE: der Nutzer stellt sich hin, drueckt F9, und die
+                 * Zeile ist im Log nicht zu uebersehen. Ohne sie muesste ich aus
+                 * hunderten Zeilen die richtige raten. */
+                {
+#                   define ZN "\n"
+                    extern int re15_render_pc_debug_pri_rects(int *dx, int *dy, int *w,
+                                                              int *h, int *dep, int max);
+                    extern int re15_input_debug_fkey(int n);
+                    enum { BEFUND_MAX = 4 * 1024 * 1024, BEFUND_TAKT = 15 };
+                    static FILE *bl = NULL;
+                    static long  bl_bytes = 0;
+                    static int   bl_marke = 0;
+                    static unsigned bl_n = 0;
+                    int marke = re15_input_debug_fkey(9);
+                    if (marke || (bl_n % BEFUND_TAKT) == 0u) {
+                        char pfad[600], alt[600];
+                        const char *wz = re15_pc_exe_dir();
+                        snprintf(pfad, sizeof pfad, "%s%sbefund.log", wz ? wz : "",
+                                 (wz && *wz) ? "/" : "");
+                        snprintf(alt,  sizeof alt,  "%s%sbefund.1.log", wz ? wz : "",
+                                 (wz && *wz) ? "/" : "");
+                        if (bl && bl_bytes > BEFUND_MAX) {
+                            fclose(bl); bl = NULL; bl_bytes = 0;
+                            remove(alt); rename(pfad, alt);
+                        }
+                        if (!bl) {
+                            bl = fopen(pfad, "ab");
+                            /* ⛔ NICHT STILL AUFGEBEN. Liegt das Paket in einem
+                             * schreibgeschuetzten Verzeichnis (Programme\...), scheitert
+                             * das Anlegen neben der exe — und der Nutzer haette eine
+                             * Fassung in der Hand, die verspricht mitzuschreiben und es
+                             * nicht tut. Dann in das Arbeitsverzeichnis ausweichen. */
+                            if (!bl) { snprintf(pfad, sizeof pfad, "befund.log");
+                                       snprintf(alt,  sizeof alt,  "befund.1.log");
+                                       bl = fopen(pfad, "ab"); }
+                            if (bl) {
+                                bl_bytes = ftell(bl);
+                                if (bl_bytes == 0)
+                                    bl_bytes += fprintf(bl,
+"# RE1.5 Port — BEFUND-LOG (%s %s)" ZN
+"# Eine Zeile je 15 Bilder, dazu jede F9-MARKE." ZN
+"# Spalten:" ZN
+"#   F<n>        Bildnummer" ZN
+"#   R<xxxx> C<n> Raum und Kamerawinkel" ZN
+"#   pos=(x,y,z) Weltlage der Figur, rot = Blickrichtung (0..4095)" ZN
+"#   vz=a/b/c    Kamera-Tiefe von FUSS / HUEFTE / KOPF" ZN
+"#   scr=(x,y)   Fusspunkt im 320x240-Bild" ZN
+"#   kasten=...  geschaetzter Bildkasten der Figur (Messgroesse)" ZN
+"#   masken=n    geladene Vordergrund-Masken dieses Winkels" ZN
+"#   [i:(x,y)wxh t=T z=Z DECKT|frei]  jede Maske, die den Kasten beruehrt." ZN
+"#       Der Zeichner verdeckt, solange die Figur-Tiefe GROESSER als z ist" ZN
+"#       (z = T*64). 'frei' heisst: die Figur steht VOR dieser Maske." ZN
+"# ---------------------------------------------------------------" ZN,
+                                        __DATE__, __TIME__);
+                            }
+                        }
+                        if (bl) {
+                            int rx[128], ry[128], rw[128], rh[128], rd[128];
+                            int rn = re15_render_pc_debug_pri_rects(rx, ry, rw, rh, rd, 128);
+                            long vz_h = ((long)plz->x * cam_view.rot[6]
+                                       + (long)(plz->y - 750) * cam_view.rot[7]
+                                       + (long)plz->z * cam_view.rot[8]) / 4096
+                                      + cam_view.trans[2];
+                            long vz_k = ((long)plz->x * cam_view.rot[6]
+                                       + (long)(plz->y - 1500) * cam_view.rot[7]
+                                       + (long)plz->z * cam_view.rot[8]) / 4096
+                                      + cam_view.trans[2];
+                            /* Bildkasten der Figur: Breite aus 300 Welteinheiten halber
+                             * Schulterbreite, Hoehe aus 1500 (Fuss..Kopf) — dieselbe
+                             * Naeherung wie die Sonde [poccscan] weiter unten. */
+                            /* ⛔ LIEBER ZU WEIT ALS ZU ENG. Mit 300 Welteinheiten halber
+                             * Breite war der Kasten am Spawn nur 10 Bildpunkte breit
+                             * (gemessen: x167..177) — schmaler als die gezeichnete Figur,
+                             * und eine Maske, die ihre Schulter streift, waere nicht im
+                             * Log gelandet. 450 deckt Schulter samt Arm; dazu 3 Punkte
+                             * Rand, damit auch knapp danebenliegende Masken sichtbar
+                             * werden. Das ist ein MESS-Kasten, kein Spielwert. */
+                            int hw = (pvz > 64) ? (int)(450 * cam_view.fov_screen_dist / pvz) + 3 : 12;
+                            int ktop = psy + 3, kbot = psy + 3;
+                            if (pvz > 64) ktop = psy - (int)(1700 * cam_view.fov_screen_dist / pvz) - 3;
+                            if (ktop > kbot) { int t = ktop; ktop = kbot; kbot = t; }
+                            if (marke) {
+                                bl_marke++;
+                                bl_bytes += fprintf(bl,
+                                    "\n=========== MARKE %d (F9) ===========\n", bl_marke);
+                            }
+                            bl_bytes += fprintf(bl,
+                                "F%-7u R%04X C%-2d pos=(%6d,%6d,%6d) rot=%-5d "
+                                "vz=%5ld/%5ld/%5ld scr=(%3d,%3d) kasten=x%d..%d,y%d..%d masken=%d",
+                                (unsigned)g_engine.frame_count, (unsigned)g_current_room_id,
+                                active_cut_idx, plz->x, plz->y, plz->z, (int)plz->rot_y,
+                                pvz, vz_h, vz_k, psx, psy,
+                                psx - hw, psx + hw, ktop, kbot, rn);
+                            {   /* Nur die Masken, die ihren Bildkasten wirklich beruehren —
+                                 * alle 86 je Zeile waeren nicht lesbar und beantworten die
+                                 * Frage nicht. */
+                                int q, gezeigt = 0;
+                                for (q = 0; q < rn; q++) {
+                                    if (rx[q] + rw[q] <= psx - hw || rx[q] >= psx + hw) continue;
+                                    if (ry[q] + rh[q] <= ktop     || ry[q] >= kbot)     continue;
+                                    if (gezeigt == 0) bl_bytes += fprintf(bl, " |");
+                                    bl_bytes += fprintf(bl,
+                                        " [%d:(%d,%d)%dx%d t=%d z=%d %s]",
+                                        q, rx[q], ry[q], rw[q], rh[q], rd[q], rd[q] * 64,
+                                        (pvz > (long)rd[q] * 64) ? "DECKT" : "frei");
+                                    if (++gezeigt >= 12) { bl_bytes += fprintf(bl, " ..."); break; }
+                                }
+                                if (gezeigt == 0) bl_bytes += fprintf(bl, " | keine Maske am Koerper");
+                            }
+                            bl_bytes += fprintf(bl, "\n");
+                            fflush(bl);
+                        }
+                    }
+                    bl_n++;
+#                   undef ZN
+                }
                 /* RE15_FLOOR_DUMP=1 — einmal je Raum die BEGEHBAREN Bodenpunkte ausgeben.
                  *
                  * ⛔ WARUM AUS DER ENGINE UND NICHT AUS PYTHON (Lehre vom 2026-09-02,
