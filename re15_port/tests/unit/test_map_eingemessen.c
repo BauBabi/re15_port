@@ -91,5 +91,46 @@ int main(void)
                  m->soll_x, m->soll_y, d, m->toleranz);
         CHECK(t, d <= m->toleranz);
     }
+    /* ⛔ DIE FAHRSTUHLTUER IST MIR DREIMAL VERRUTSCHT: v0.6.5 an die Unterkante der
+     * Kabine (117,149), v0.6.8 an die Oberkante (117,134) - und beide Male hatte ich
+     * ein Kriterium ERFUNDEN, statt die Projektion stehen zu lassen. Der Nutzer hat
+     * sich am 2026-09-06 an die Tuer gestellt (Welt 1618/6868) und gesagt "die muss
+     * genau dort hin"; das projiziert auf (117,143). Seither gilt: liegt die Projektion
+     * schon IM Ziel-Rechteck, bleibt sie stehen. Diese Pruefung haelt die MARKE fest,
+     * nicht die Projektion - denn die Marke war es, die wanderte. */
+    {
+        int i, gefunden = 0, mx = -1, my = -1;
+        /* ⛔ re15_map_mark_get zeigt nur BESUCHTE Marken - ohne dieses Setzen liefert
+         * es nichts, und der Haken meldete "nicht gefunden" statt zu pruefen. */
+        re15_map_visited_reset();
+        re15_map_visited_mark(0x10C0u);
+        re15_map_visited_mark(0x1080u);
+        for (i = 0; i < re15_map_mark_count(); i++) {
+            int p, r, x, y, kind;
+            const re15_map_zone_t *zn;
+            int zi, nz = re15_map_zone_count();
+            if (!re15_map_mark_get(i, &p, &r, &x, &y, &kind)) continue;
+            if (p != 3 || r != 0 || kind >= 4) continue;
+            for (zi = 0; zi < nz; zi++) {
+                zn = re15_map_zone_by_index(zi);
+                if (zn && zn->page == 3 && zn->rect == 0 && zn->room == 0x10C0u) break;
+            }
+            /* die Fahrstuhltuer ist die einzige Marke von ROOM10C0 ohne Partnerzone */
+            if (x > 105 && x < 130 && y > 130 && y < 155) { gefunden = 1; mx = x; my = y; break; }
+        }
+        if (!gefunden) {
+            printf("  FAIL: Fahrstuhltuer-Marke auf Blatt 3 Rect 0 nicht gefunden\n");
+            g_fail = 1;
+        } else {
+            char t[200];
+            int d = abs(mx - 117) + abs(my - 143);
+            snprintf(t, sizeof t,
+                     "Fahrstuhltuer steht auf der F9-Marke des Nutzers: (%d,%d), "
+                     "soll (117,143), Abstand %d px (<= 3)", mx, my, d);
+            CHECK(t, d <= 3);
+        }
+    }
+
+    re15_map_visited_reset();
     return g_fail;
 }

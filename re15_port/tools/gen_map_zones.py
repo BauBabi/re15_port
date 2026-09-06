@@ -2944,7 +2944,40 @@ def main():
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
                     _vor_x, _vor_y = mx, my
-                    if r == 255:
+                    # ⛔ IM INNEREN RECHTECK BLEIBT DIE PROJEKTION STEHEN.
+                    # Nutzer-Marke 2026-09-06: er stellte sich an die Fahrstuhltuer
+                    # (Welt 1618/6868) und sagte "die muss genau dort hin". Diese Lage
+                    # projiziert auf (117,143) - mitten in die Kabine (109,134) 16x16.
+                    # Jedes Anschnappen zieht sie von dort weg: snap_wall an eine Wand
+                    # des UMGEBENDEN Rechtecks, der Innenrand-Schritt an eine Kante der
+                    # Kabine (v0.6.5: Unterkante, v0.6.8: Oberkante - beides falsch).
+                    # Wo die Projektion schon IM Ziel-Rechteck liegt, ist sie die Antwort:
+                    # die Tuer ist dort, und die Kanten der Kabine sind alle gleich sehr
+                    # "ihre" Wand. Nur wenn sie DANEBEN liegt, wird gerueckt.
+                    _innen = False
+                    _zielrect = None
+                    _zd = m.get('dest')
+                    if _zd is not None and r != 255:
+                        for _zzi in range(4):
+                            _c = _zonen_rect.get((_zd & 0xFFF0, _zzi, pg))
+                            if _c is not None and _c != 255 and _c != r:
+                                _zielrect = _c
+                                break
+                    if _zielrect is not None:
+                        _R0 = rects(pg)
+                        if r < len(_R0) and _zielrect < len(_R0):
+                            _ax0, _ay0, _aw0, _ah0 = _R0[r]
+                            _bx0, _by0, _bw0, _bh0 = _R0[_zielrect]
+                            if (_bx0 >= _ax0 and _by0 >= _ay0 and
+                                _bx0 + _bw0 <= _ax0 + _aw0 and _by0 + _bh0 <= _ay0 + _ah0 and
+                                _bx0 <= mx < _bx0 + _bw0 and _by0 <= my < _by0 + _bh0):
+                                _innen = True
+                                # Seite nur fuer die ZEICHNUNG des Symbols: quer zur
+                                # laengeren Achse der Kabine.
+                                mkind = 2 if _bh0 >= _bw0 else 1
+                    if _innen:
+                        pass
+                    elif r == 255:
                         mx, my, mkind = snap_grundriss(b, zi, mx, my, senk, pg)
                     else:
                         mx, my, mkind = snap_wall(pg, r, mx, my, senk)
@@ -2972,7 +3005,7 @@ def main():
                     # dorthin gezogen, aber nur in genau diesem Fall (Ziel-Rechteck
                     # vollstaendig im eigenen); beruehrende Rechtecke bleiben unberuehrt,
                     # dort trifft snap_wall die gemeinsame Wand bereits.
-                    _ziel = m.get('dest')
+                    _ziel = None if _innen else m.get('dest')
                     if _ziel is not None:
                         _zr = None
                         for _zzi in range(4):
