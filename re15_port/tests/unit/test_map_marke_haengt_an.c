@@ -197,8 +197,12 @@ int main(void)
     }
     CHECK("alles betreten: keine frei schwebende Marke",
           fremdes_rect("alles betreten", alle, na, g_px) == 0);
-    CHECK("alles betreten: hoechstens fuenf Marken neben der gemalten Flaeche (vorher 5)",
-          pruefe("alles betreten", alle, na) <= 5);
+    /* 5 -> 4 nachgezogen (2026-09-06): die Wand-Korrektur im Generator rueckt eine
+     * gepaarte Marke auf den naechsten Punkt, an dem BEIDE Kacheln malen. Diese
+     * Schranke misst etwas anderes (liegt die Marke auf der gemalten Flaeche ihres
+     * EIGENEN Rechtecks) und ist damit ein unabhaengiger Zeuge - sie ging von 5 auf 4. */
+    CHECK("alles betreten: hoechstens vier Marken neben der gemalten Flaeche (vorher 5)",
+          pruefe("alles betreten", alle, na) <= 4);
 
     re15_map_visited_reset();
     return g_fail;

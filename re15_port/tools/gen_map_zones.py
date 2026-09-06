@@ -795,6 +795,34 @@ def _vollsuche(B, pg):
                   % (a >> 4, a & 15, b >> 4, b & 15, r))
 
 
+_WANDRUECK = []
+def _kunst_an(pg, ri, mx, my):
+    """Malt die Kachel des Rechtecks (pg, ri) am Kartenpunkt (mx, my) etwas?
+
+    Index 0 wird nicht gezeichnet - ein Rechteck ist nur seine Bounding-Box, die
+    Zeichnung darin endet frueher. Genau diese Unterscheidung hat schon zweimal
+    einen Befund erklaert (schwebende Tuermarke v0.6.5, Tuerlage 2026-09-06).
+    Gelesen wird ueber page_pix(), den vorhandenen Kachel-Lader - kein zweiter Weg
+    zu denselben Daten."""
+    img = page_pix(pg)
+    if img is None:
+        return False
+    rr = rects(pg)
+    if ri >= len(rr):
+        return False
+    x, y, w, h = rr[ri]
+    if not (x <= mx < x + w and y <= my < y + h):
+        return False
+    u, v = rect_uv(pg, ri)
+    tx, ty = u + (mx - x), v + (my - y)
+    if not (0 <= tx < 256 and 0 <= ty < 256):
+        return False
+    return img[ty][tx] != 0
+
+
+_SCHNAPP = []
+
+
 def main():
     room_ids = []
     for line in open(os.path.join(ROOT, 're15_port', 'include', 're15_room_list.h')):
@@ -2899,10 +2927,19 @@ def main():
                         if R is None: continue
                         senk = (min(mx - R[0], R[0] + R[2] - 1 - mx) <
                                 min(my - R[1], R[1] + R[3] - 1 - my))
+                    _vor_x, _vor_y = mx, my
                     if r == 255:
                         mx, my, mkind = snap_grundriss(b, zi, mx, my, senk, pg)
                     else:
                         mx, my, mkind = snap_wall(pg, r, mx, my, senk)
+                    # ⛔ WIE WEIT HAT DAS ANSCHNAPPEN DIE MARKE GEZOGEN?
+                    # Nutzer-Befund 2026-09-06 ("all door are wrong positioned"):
+                    # in ROOM10D0 zog es Tuer #2 von (202,117) auf (141,117), also
+                    # 61 Punkte quer durch den Raum. Genau diese Marke hatte ich in
+                    # v0.6.5 als "schwebende Tuer" VERSTECKT - das Symptom war weg,
+                    # die Lage blieb falsch. Ohne diese Zahl faellt so etwas nicht auf.
+                    _SCHNAPP.append((abs(mx - _vor_x) + abs(my - _vor_y), b, _n,
+                                     (_vor_x, _vor_y), (mx, my), pg, r))
                     # ⛔ EIN RECHTECK IM RECHTECK: DIE TUER GEHOERT AUF DEN INNEREN RAND.
                     # Nutzer-Befund 2026-09-05 (fehler/error.png): "This door is wrong"
                     # und "Staircase 2F only has one door!". Gemeint ist dieselbe Marke:
@@ -3278,6 +3315,37 @@ def main():
             _sk = _seite_kante if W is A else (_seite_kante + 2) % 4
             if _sk % 2 == W['seite'] % 2:
                 _seite = _sk
+        # ⛔ DER KASTEN IST NICHT DIE MALEREI - LETZTE KORREKTUR AN DER KUNST.
+        # Alles oben rechnet mit den RECHTECKEN. Die gemalten Flaechen darin enden
+        # aber frueher: ROOM10C0 (Rect 0, Kasten x102..141) malt im Streifen x135..141
+        # nur bei x=135 etwas (Index 4 = Wand), danach Index 0. ROOM10D0 (Rect 3) malt
+        # ab x=135 seinen Boden. Die gemeinsame GEMALTE Wand liegt also bei x=135 -
+        # die Konstruktion aus den Kaesten setzte die Marke auf x=141, sechs Punkte
+        # daneben, mitten in den Nachbarboden.
+        # GEMESSEN ueber alle 70 gepaarten Marken (Abstand zur naechsten Stelle, an der
+        # BEIDE Kacheln malen): nur 21 sassen auf 0 px, 30 lagen 3 px oder weiter weg,
+        # 6 davon >= 25 px. Das ist die Zahl hinter dem Nutzer-Satz vom 2026-09-06
+        # ("all door are wrong positioned").
+        # Gerueckt wird nur, wenn eine solche Stelle NAH ist: ab RUECK_MAX gibt es
+        # keine gemeinsame Wand (die Raeume beruehren sich dort gar nicht), und ein
+        # Zug ueber diese Entfernung waere geraten statt gemessen.
+        if A.get('r') not in (None, 255) and B.get('r') not in (None, 255)            and A['pg'] == B['pg']:
+            _RUECK_MAX = 12
+            _bes = None
+            for _rad in range(0, _RUECK_MAX + 1):
+                for _dx in range(-_rad, _rad + 1):
+                    _dys = (-_rad, _rad) if _rad else (0,)
+                    for _dy in _dys:
+                        for (_ax2, _ay2) in ((cx + _dx, cy + _dy), (cx + _dy, cy + _dx)):
+                            if _kunst_an(A['pg'], A['r'], _ax2, _ay2) and                                _kunst_an(B['pg'], B['r'], _ax2, _ay2):
+                                _bes = (_ax2, _ay2); break
+                        if _bes: break
+                    if _bes: break
+                if _bes: break
+            if _bes and _bes != (cx, cy):
+                _WANDRUECK.append((abs(_bes[0] - cx) + abs(_bes[1] - cy),
+                                   A['room'], B['room'], (cx, cy), _bes))
+                cx, cy = _bes
         for X in (A, B):
             X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
@@ -3635,6 +3703,25 @@ def main():
     o.append("};")
     print(f"{sum(len(v) for v in RECT_FIX.values())} Ersatz-Rechtecke "
            f"fuer Blatt {sorted(RECT_FIX)}")
+
+    if _WANDRUECK:
+        _w3 = sorted(x[0] for x in _WANDRUECK)
+        print("Auf die gemeinsame GEMALTE Wand gerueckt: %d Marken, Median %d px, "
+              "schlimmster %d px" % (len(_w3), _w3[len(_w3) // 2], _w3[-1]))
+        for _d3, _r1, _r2, _v3, _n3 in sorted(_WANDRUECK, reverse=True)[:10]:
+            print("      %3d px  ROOM%04X <-> ROOM%04X  %s -> %s"
+                  % (_d3, _r1, _r2, _v3, _n3))
+
+    if _SCHNAPP:
+        _w = sorted(x[0] for x in _SCHNAPP)
+        _n2 = len(_w)
+        print("Anschnappen der Tuermarken: n=%d, Median %d px, 90%%-Wert %d px, "
+              "schlimmster %d px" % (_n2, _w[_n2 // 2], _w[max(0, int(.9 * _n2) - 1)], _w[-1]))
+        _weit = sorted((x for x in _SCHNAPP if x[0] >= 20), reverse=True)
+        print("   %d Marken um 20 px oder mehr verschoben:" % len(_weit))
+        for _d2, _b2, _n3, _v, _na, _pg3, _r3 in _weit[:12]:
+            print("      %3d px  ROOM%04X Tuer #%d  Blatt %d Rect %-3d  %s -> %s"
+                  % (_d2, _b2, _n3, _pg3, _r3, _v, _na))
 
     dst = os.path.join(ROOT, 're15_port', 'engine', 'src', 're15_map_zones.h')
     _txt = chr(10).join(o) + chr(10)

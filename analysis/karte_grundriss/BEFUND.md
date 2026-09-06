@@ -3071,3 +3071,70 @@ Kreuzprobe belegt werden — der Fit auf die eigenen Anker ist sonst eine
 selbstbestaetigende Metrik ([[reai-v2-selbstbestaetigende-metrik]]).
 
 **Stand: gemessen und eingegrenzt, nicht gefixt.**
+
+## §50 — Die Tuermarke gehoert auf die gemeinsame GEMALTE Wand, nicht auf die Kastenkante
+
+Fortsetzung von §49. Nutzer-Befund 2026-09-06: *„all door are wrong positioned."*
+
+### Was ich zuerst falsch gedeutet habe
+
+Die Marken-Spur (`RE15_MARKEN_DUMP=10d0`) zeigt fuer ROOM10D0:
+
+    projiziert:  Tuer #0 (184,156)   #1 (198,132)   #2 (202,117)   #3 (139,90)
+    endgueltig:      (184,156)          (198,130)       (141,117)     entfaellt
+
+Tuer #2 wandert 61 px. Ich habe daraus geschlossen, mein v0.6.5-Fix habe eine
+falsch liegende Marke bloss VERSTECKT. ⛔ **Das war voreilig.** Der Sprung ist kein
+Fehler, sondern der bewusste Schritt „gepaarte Marke auf die gemeinsame Kante beider
+Rechtecke" (§ Kommentar `_seite_kante`), und (141,117) ist ROOM10C0s rechte
+Kastenkante — also die Kante, die es mit ROOM10D0 teilt.
+
+Auf Pixelebene nachgesehen (Kacheln aus `DATA/MAP04.PIX`, Streifen x135..141):
+
+    y=117   Rect 0 (ROOM10C0): 4 0 0 0 0 0 0      Rect 3 (ROOM10D0): 4 1 1 1 1 1 1
+
+Bei (141,117) malt ROOM10D0 seinen Boden (Index 1), ROOM10C0 **nichts** (Index 0).
+Das ist genau, was das `auf_partner`-Bit sagt — der v0.6.5-Fix war richtig.
+
+### Der echte Fehler
+
+Die gemeinsame **gemalte** Wand liegt bei **x=135** (beide Kacheln malen dort Index 4).
+Die Marke stand bei x=141, also sechs Punkte weiter im Nachbarboden. Ursache: der
+ganze Platzierungsschritt rechnet mit den RECHTECKEN; die Zeichnung darin endet
+frueher. Dieselbe Unterscheidung wie bei `auf_partner` — der Kasten ist nicht die
+Malerei.
+
+**Gemessen ueber alle gepaarten Marken** (Abstand zur naechsten Stelle, an der BEIDE
+Kacheln malen):
+
+| | vorher | nachher |
+|---|--------|---------|
+| auf der gemeinsamen Wand (0 px) | 21 von 70 | **58 von 71** |
+| 3 px oder weiter weg | 30 | **12** |
+| Median | 1 px | **0 px** |
+
+### Fix
+
+Letzter Schritt nach der Paarung: die Marke rueckt auf den naechsten Punkt, an dem
+beide Kacheln etwas malen — hoechstens `RUECK_MAX = 12` px weit. Darueber hinaus gibt
+es keine gemeinsame Wand (die Raeume beruehren sich dort gar nicht), und ein Zug ueber
+diese Entfernung waere geraten statt gemessen. Gerueckt wurden 43 Marken, Median 6 px,
+schlimmster 12 px. ROOM10C0 <-> ROOM10D0: **(141,117) -> (135,123)**.
+
+Nebeneffekt: die Marke traegt jetzt `auf_partner = 1`, weil sie auf der Wand liegt, die
+BEIDE Raeume malen. Sie muss also gar nicht mehr verborgen werden.
+
+### ⛔ Warum die obige Tabelle NICHTS beweist
+
+Sie ist genau das Mass, auf das der Fix optimiert — eine selbstbestaetigende Metrik
+([[reai-v2-selbstbestaetigende-metrik]]). Der Beleg sind zwei **unabhaengige**
+Schranken, die etwas anderes fragen (liegt die Marke auf der gemalten Flaeche ihres
+EIGENEN Rechtecks) und auf die nicht optimiert wurde:
+
+| Schranke | vorher | nachher |
+|----------|--------|---------|
+| `unit_map_marke_auf_kunst`, Marken auf leerer Flaeche | 12 von 180 (6,7 %) | **8 von 181 (4,4 %)** |
+| `unit_map_marke_haengt_an`, sichtbar freistehend | 5 | **4** |
+
+Beide Schranken wurden auf den erreichten Stand nachgezogen UND gegengeprueft: mit dem
+alten Kopf schlagen sie an (`FAIL: … sind 12 von 180 = 6.7 %`). Suite 276/276.

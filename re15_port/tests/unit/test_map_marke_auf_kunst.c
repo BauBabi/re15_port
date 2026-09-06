@@ -127,9 +127,13 @@ int main(void)
          * auch mehr Marken (173 -> 180). Gemessen darf deshalb nur der ANTEIL werden.
          * Ausgeliefert v0.6.1: 13 von 173 = 7,5 %. */
         snprintf(t, sizeof t, "Anteil auf leerer Flaeche nicht schlechter als "
-                 "ausgeliefert (v0.6.1: 13 von 173 = 7,5 %%) - sind %d von %d = %.1f %%",
+                 "Stand 2026-09-06 (8 von 181 = 4,4 %%) - sind %d von %d = %.1f %%",
                  leer, ges, ges ? 100.0 * leer / ges : 0.0);
-        CHECK(t, ges > 0 && leer * 173 <= 13 * ges);
+        /* Bezug nachgezogen 2026-09-06 (v0.6.1: 13/173 = 7,5 %  ->  8/181 = 4,4 %).
+         * Grund: die Wand-Korrektur im Generator. Diese Schranke ist dabei UNABHAENGIG
+         * - sie fragt, ob eine Marke auf der gemalten Flaeche liegt, nicht ob sie auf
+         * der gemeinsamen Wand sitzt; auf ihr wurde also nicht optimiert. */
+        CHECK(t, ges > 0 && leer * 181 <= 8 * ges);
     }
     return g_fail;
 }
