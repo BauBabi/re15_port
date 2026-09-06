@@ -3340,3 +3340,13 @@ target_link_libraries(test_maggot_zone_leap PRIVATE re15_engine re15_test_suppor
 target_include_directories(test_maggot_zone_leap PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_maggot_zone_leap COMMAND test_maggot_zone_leap)
 set_tests_properties(unit_maggot_zone_leap PROPERTIES TIMEOUT 30)
+
+# Masken, die eine Figur waagerecht durchschneiden (Nutzer-Befund 2026-09-06, am
+# laufenden Spiel gemessen). Geht ALLE Raeume und Winkel durch, damit diese
+# Fehlerklasse nicht Maske fuer Maske erfahren werden muss.
+add_executable(test_pri_kopfschnitt test_pri_kopfschnitt.c)
+target_link_libraries(test_pri_kopfschnitt PRIVATE re15_engine re15_test_support)
+target_include_directories(test_pri_kopfschnitt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_pri_kopfschnitt PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
+add_test(NAME unit_pri_kopfschnitt COMMAND test_pri_kopfschnitt)
+set_tests_properties(unit_pri_kopfschnitt PROPERTIES TIMEOUT 600)
