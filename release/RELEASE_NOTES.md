@@ -1,10 +1,12 @@
 # RE1.5 Port — v0.7.1 (Early Preview)
 
-**Vier Befunde: der Wandpfeiler in ROOM1130 hat Leon nicht
-verdeckt, und auf der 2F-Karte stand ein Türsymbol am falschen Ende des Flurs.**
+**Vier Befunde:** der Wandpfeiler in ROOM1130 hat Leon nicht verdeckt, auf der
+2F-Karte stand ein Türsymbol am falschen Ende des Flurs, der Drehstuhl in ROOM10E0
+brauchte eine Tiefe je Bildzeile, und die Rückwand dort soll Zombies blocken, den
+Spieler aber nicht.
 
-Beide Male hat das laufende `befund.log` plus dein Tastendruck den Fall entschieden —
-aus Screenshots allein wäre keiner von beiden rekonstruierbar gewesen.
+Die ersten beiden hat das laufende `befund.log` plus dein Tastendruck entschieden — aus
+Screenshots allein wäre keiner von beiden rekonstruierbar gewesen.
 
 ---
 
@@ -49,12 +51,10 @@ lag das Messer), neues Modell → 0.
 Das Tiefenwerkzeug meldet ab jetzt seine **Abdeckung** („41 von 48 Spalten mit
 Bodenkontakt; OHNE Bodenkontakt: 68-74") — vorher fiel so etwas lautlos weg.
 
-⚠️ **Deine `pri/1130/03.png` hat beim Speichern die Transparenz verloren.** Die Datei ist
-ein 320×240-RGB-Bild und unterscheidet sich vom Hintergrund nur an 458 Punkten (die
-beiden flackernden Wandlampen) — also ein Bildschirmfoto. Ohne Alphakanal gilt die ganze
-Bildfläche als Maske (79,1 % statt 19,8 %). Deine Datei ist unangetastet; gebaut wird aus
-`pri/1130/03_wandkante.png`. Für eine neue Fassung bitte als PNG **mit Alphakanal**
-speichern.
+Deine neu gespeicherte Freistellung (55×209 bei x=62, 100,0 % Übereinstimmung) ist
+eingebaut; die Fußkante liegt damit bei Spalte 92 statt 94. Der Pfeiler nutzt jetzt
+zusätzlich das Zeilenprofil aus Abschnitt 3 — die Zeilen auf Körperhöhe tragen 60…80
+statt 68…81, damit verdeckt die Wand auch, was oben an ihr entlangläuft.
 
 ---
 
