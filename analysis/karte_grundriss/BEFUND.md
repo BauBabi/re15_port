@@ -3138,3 +3138,57 @@ EIGENEN Rechtecks) und auf die nicht optimiert wurde:
 
 Beide Schranken wurden auf den erreichten Stand nachgezogen UND gegengeprueft: mit dem
 alten Kopf schlagen sie an (`FAIL: … sind 12 von 180 = 6.7 %`). Suite 276/276.
+
+## §51 — Warum Tueranker einen FLUR nicht eichen koennen
+
+Nach der Wand-Korrektur (§50) sitzen die Tuersymbole richtig — und dadurch tritt die
+zweite Haelfte des Nutzer-Befunds hervor. Gemessen, Ankunfts-Marker gegen die eigene
+Tuermarke:
+
+|            | n  | Median | 90 % | schlimmster |
+|------------|----|--------|------|-------------|
+| geeicht    | 62 | 4 px   | 11 px | 41 px |
+| Stub       | 19 | 4 px   | 39 px | **71 px** |
+
+⛔ Der Nutzer-Fall ROOM10C0 -> ROOM10D0 ist von 59 px auf **71 px** GESTIEGEN. Nicht
+weil etwas kaputtging: das Symbol ist an seinen richtigen Platz gerueckt (135,123),
+der Marker steht weiter bei (200,117), weil er aus der Bbox-Streckung kommt. Der Fix
+hat die Zahl schlechter gemacht und die Lage besser — genau die Klasse
+[[reai-v2-defekt-schmeichelt-metrik]], hier mit umgekehrtem Vorzeichen.
+
+### Die Eichung aus Tueransankern ist prinzipiell unmoeglich
+
+Mit den nun korrekten Marken lassen sich Anker bilden: Tuerlage im eigenen Raum (RDT)
+gegen Markenlage (Kunst). Fuer ROOM10D0 ergibt der exakte Fit durch die drei Anker:
+
+    mx = 0.040614*wx - 0.019882*wz + 10.34
+    my = -0.004754*wx + 0.000288*wz + 160.84
+    Achsen 24 bzw. 50 Welteinheiten je Punkt, Winkel zwischen ihnen 174.2 Grad
+
+Unbrauchbar — und der Grund ist strukturell, nicht datenbedingt: die drei Tuerpunkte
+(800,-7050), (6750,4350), (8650,11400) liegen fast auf einer Geraden (Oeffnungswinkel
+12,5 Grad). **Ein Flur hat seine Tueren entlang seiner Achse.** Quer dazu sagen sie
+nichts, also ist die Abbildung in der Flaeche nicht bestimmt. Mit drei Ankern und drei
+Unbekannten je Achse waere sie ausserdem exakt und damit ungepruefbar
+([[reai-v2-selbstbestaetigende-metrik]]).
+
+### Was der Maszstab schon hergibt
+
+Die bereinigte Weltbox von ROOM10D0 ist 32145 x 41362 auf 72 x 88 px = **446 bzw. 470**
+Welteinheiten je Punkt — nahezu gleich. Der MASSSTAB der Bbox-Streckung stimmt also.
+(Die rohe Kollisionsflaeche misst 42350 x 62500, aber darin stecken die
+23950x17000-Schablonen-Rahmen aus [[reai-v2-karte-schablonen-zonen]].)
+
+Was der Streckung fehlt, ist Drehung/Spiegelung und der richtige Versatz, wenn die
+gemalte Form ihren Kasten nicht ausfuellt — ROOM10D0 ist ein L-foermiger Flur in einem
+72x88-Kasten.
+
+### Der Weg, der bleibt
+
+Registrierung der **Kollisionsflaeche** gegen die **gemalte Kachel**: beide sind
+Flaechen, beide sind Originaldaten, und die Deckung bestimmt Massstab, Drehung,
+Spiegelung und Versatz ueberbestimmt. Die Tueranker werden dabei NICHT verwendet — sie
+bleiben als unabhaengige Gegenprobe uebrig, und genau daran waere der Erfolg zu messen
+(Stub-Zeile oben: Median 4, 90 % 39, schlimmster 71).
+
+**Stand: gemessen und begruendet, nicht gebaut.**
