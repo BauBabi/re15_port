@@ -2988,16 +2988,48 @@ def main():
                                 drin = (bx >= ax and by >= ay and
                                         bx + bw <= ax + aw and by + bh <= ay + ah)
                                 if drin:
-                                    # naechster Punkt auf dem Rand des inneren Rechtecks
+                                    # ⛔ NICHT DER NAECHSTE RAND - DER RAND ZUM RAUM HIN.
+                                    # Nutzer-Befund 2026-09-06 ("The horizontal door
+                                    # should be there instead"): ROOM10C0s Tuer zur
+                                    # Fahrstuhlkabine wird auf (117,143) projiziert, also
+                                    # praktisch in die MITTE der Kabine (109,134) 16x16.
+                                    # Von dort sind die Raender fast gleich weit -
+                                    # Unterkante 6 px, Oberkante 9 px - und "der
+                                    # naechste" waehlte die Unterkante. Das ist ein
+                                    # Muenzwurf, kein Kriterium (dieselbe Klasse, die der
+                                    # Kommentar zu snap_wall schon beschreibt).
+                                    # Kriterium statt dessen: die Tuer gehoert auf die
+                                    # Seite, die dem RAUM zugewandt ist, aus dem man
+                                    # kommt - also zum Schwerpunkt der GEMALTEN Flaeche
+                                    # des umgebenden Rechtecks (ohne das innere).
+                                    # Fuer ROOM10C0: Schwerpunkt (115,130), Kabinenmitte
+                                    # (116,141) -> Richtung nach OBEN -> Oberkante.
                                     cx = min(max(mx, bx), bx + bw - 1)
                                     cy = min(max(my, by), by + bh - 1)
-                                    dl, dr_ = cx - bx, bx + bw - 1 - cx
-                                    do, du = cy - by, by + bh - 1 - cy
-                                    kleinst = min(dl, dr_, do, du)
-                                    if kleinst == dl:   mx, my, mkind = bx, cy, 3
-                                    elif kleinst == dr_: mx, my, mkind = bx + bw - 1, cy, 1
-                                    elif kleinst == do:  mx, my, mkind = cx, by, 0
-                                    else:                mx, my, mkind = cx, by + bh - 1, 2
+                                    _sx = _sy = _sn = 0
+                                    for _yy in range(ay, ay + ah):
+                                        for _xx in range(ax, ax + aw):
+                                            if bx <= _xx < bx + bw and by <= _yy < by + bh:
+                                                continue          # das innere zaehlt nicht
+                                            if _kunst_an(pg, r, _xx, _yy):
+                                                _sx += _xx; _sy += _yy; _sn += 1
+                                    if _sn:
+                                        _zx = _sx / float(_sn) - (bx + bw / 2.0)
+                                        _zy = _sy / float(_sn) - (by + bh / 2.0)
+                                        if abs(_zx) >= abs(_zy):
+                                            if _zx < 0: mx, my, mkind = bx, cy, 3
+                                            else:       mx, my, mkind = bx + bw - 1, cy, 1
+                                        else:
+                                            if _zy < 0: mx, my, mkind = cx, by, 0
+                                            else:       mx, my, mkind = cx, by + bh - 1, 2
+                                    else:
+                                        dl, dr_ = cx - bx, bx + bw - 1 - cx
+                                        do, du = cy - by, by + bh - 1 - cy
+                                        kleinst = min(dl, dr_, do, du)
+                                        if kleinst == dl:   mx, my, mkind = bx, cy, 3
+                                        elif kleinst == dr_: mx, my, mkind = bx + bw - 1, cy, 1
+                                        elif kleinst == do:  mx, my, mkind = cx, by, 0
+                                        else:                mx, my, mkind = cx, by + bh - 1, 2
                     # ⛔ HIER NOCH NICHT VERWERFEN. Bis v0.3.80 fiel eine Marke schon in
                     # Durchgang 1 weg, wenn ihr eigenes Rechteck die Tuer malt - und ihr
                     # Partner blieb als freie Einzelmarke stehen, weil die Paarung erst in

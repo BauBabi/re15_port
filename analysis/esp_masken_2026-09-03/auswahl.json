@@ -170,8 +170,8 @@
           "spalten": true,
           "oben": 0,
           "grow": 0,
-          "ebene": -11800,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -10800 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+          "ebene": -13600,
+          "grund": "⛔ Cut 1 zeigt einen TREPPENLAUF, nicht ein Podest. Die hergeleitete Bodenebene ist das OBERE Podest (Band 6, -10800); der Lauf faellt bis Band 8 (-14400). Ein Gelaender laengs der Treppe liegt im Mittel auf der LAUFMITTE (-12600) plus Handlaufhoehe 1000 = -13600. Nutzer-Marke 2026-09-06: er stand bei y=-12302, also 1502 UNTER dem hergeleiteten Podest - in Cut 0 und 2 stand er exakt darauf, und dort passte die Verdeckung. Gemessen lagen 6 von 12 Masken an seinem Koerper um 23..440 Einheiten zu fern, und zwar die Spalten treppaufwaerts."
         }
       ]
     },
