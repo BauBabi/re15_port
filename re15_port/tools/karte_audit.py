@@ -61,7 +61,8 @@ for z in _block('s_map_zones[] = {'):
     rid = int(m.group(1), 16)
     t = [int(x.strip()) for x in m.group(2).split(',')]
     ZONEN.append(dict(room=rid, variante=rid & 1, wx0=t[0], wz0=t[1], wx1=t[2], wz1=t[3],
-                      page=t[4], rect=t[5], idx=t[6], zid=t[7], synth=t[14], etage=t[15]))
+                      page=t[4], rect=t[5], idx=t[6], zid=t[7],
+                      flip_x=t[12], flip_z=t[13], synth=t[14], etage=t[15]))
 for z in _block('s_map_synth[] = {'):
     m = re.search(r'\{\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),'
                   r'\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\}', z)
@@ -69,12 +70,25 @@ for z in _block('s_map_synth[] = {'):
         v = [int(x) for x in m.groups()]
         SYNTH.append(dict(x=v[0], y=v[1], w=v[2], h=v[3], erste=v[4], n=v[5],
                           A=v[6], B=v[7], C=v[8], D=v[9], E=v[10], F=v[11]))
+# ⛔ DIESES WERKZEUG WAR BLIND. Der Ausdruck verlangte GENAU sieben Felder; seit
+# v0.6.5 hat die Marken-Zeile acht (auf_partner kam dazu). Er las damit 0 von 192
+# Marken - und JEDE Marken-Pruefung meldete "OK". D1 "Tueren ohne Symbol" stand auf 0,
+# waehrend in ROOM10D0 ein Tuersymbol 73 px neben seiner Tuer sass (Nutzer 2026-09-06).
+# Jetzt sieben ODER MEHR Felder, und die Abdeckung wird geprueft.
 for z in _block('s_map_marks[] = {'):
-    m = re.search(r'\{\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\}', z)
+    m = re.search(r'\{\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+),'
+                  r'\s*(\d+),\s*(\d+)(?:,\s*(\d+))?\s*\}', z)
     if m:
-        v = [int(x) for x in m.groups()]
+        v = [int(x) for x in m.groups()[:7]]
         MARKEN.append(dict(i=len(MARKEN), page=v[0], rect=v[1], mx=v[2], my=v[3],
-                           kind=v[4], zid=v[5], zid2=v[6]))
+                           kind=v[4], zid=v[5], zid2=v[6],
+                           auf_partner=int(m.group(8) or 0)))
+_N_ZEILEN = sum(1 for z in _block('s_map_marks[] = {') if z.strip().startswith('{'))
+if len(MARKEN) != _N_ZEILEN:
+    raise SystemExit('KARTEN-AUDIT LIEST NICHT ALLES: %d von %d Marken-Zeilen erkannt. '
+                     'Das Tabellenformat hat sich geaendert - der Ausdruck oben muss '
+                     'nachgezogen werden, sonst meldet jede Marken-Pruefung falsches OK.'
+                     % (len(MARKEN), _N_ZEILEN))
 
 HAUPT = [z for z in ZONEN if not z['variante']]
 ZID2RAUM = {}
@@ -115,6 +129,32 @@ def kasten(z):
     if z.get('rect', 255) != 255:
         return gemaltes_rechteck(z['page'], z['rect'])
     return None
+
+
+def rect_geo(page, rect):
+    """Rechteck aus der Tabelle DES GENERATORS (mit RECT_FIX fuer Blatt 3)."""
+    try:
+        R = rects(page)
+    except Exception:
+        return None
+    return tuple(R[rect][:4]) if 0 <= rect < len(R) else None
+
+
+def projiziere(z, wx, wz, R):
+    """Bbox-Streckung wie re15_map_zone_marker (re15_map_zones.c): x linear,
+    z GESPIEGELT, dazu flip_x/flip_z der Zone."""
+    rx, ry, rw, rh = R
+    w = z['wx1'] - z['wx0']
+    d = z['wz1'] - z['wz0']
+    if w <= 0 or d <= 0:
+        return None
+    fx = min(max(wx - z['wx0'], 0), w)
+    fz = min(max(wz - z['wz0'], 0), d)
+    if z.get('flip_x'):
+        fx = w - fx
+    if z.get('flip_z'):
+        fz = d - fz
+    return (rx + fx * rw // w, ry + rh - 1 - (fz * rh) // d)
 
 
 def auf_karte(z, wx, wz):
@@ -249,18 +289,35 @@ def p_tuermarken():
         a = ZID2RAUM.get(m['zid']); b = ZID2RAUM.get(m['zid2'])
         if a is not None and b is not None:
             fuer_paar[tuple(sorted((a, b)))].append(m)
+    # ⛔ ZWEI BLINDHEITEN (2026-09-06): (1) `if not za['synth']: continue` sprang ueber
+    # JEDE Tuer - s_map_synth[] ist leer, der Zaehler war immer 0. (2) Gefragt wurde, ob
+    # die ZONE irgendein Symbol hat, nicht ob DIESE Tuer eines hat.
+    # Gezaehlt wird jetzt je Zone: so viele Tuersymbole wie Tueren. Ein Durchgang wird
+    # absichtlich durch EINE Marke fuer beide Raeume dargestellt (zid + zid2), deshalb
+    # zaehlen beide Felder.
+    _tueren_je_zone = collections.defaultdict(list)
     for r in sorted(RDT):
         for d in RDT[r][1]:
             if d['rw'] == 0 and d['rd'] == 0 or d['dest'] not in RDT:
                 continue
             za = zone_von(r, d['lx'], d['lz'])
-            if not za or not za['synth']:
+            if not za:
                 continue
-            paar = tuple(sorted((r, d['dest'])))
-            eigen = [m for m in MARKEN if m['kind'] < 4 and
-                     (m['zid'] == za['zid'] or m['zid2'] == za['zid'])]
-            if not eigen:
-                ohne.append("ROOM%04X -> ROOM%04X hat KEIN Symbol" % (r, d['dest']))
+            _tueren_je_zone[za['zid']].append((r, d))
+    _je_zone = collections.Counter()
+    for m in MARKEN:
+        if m['kind'] >= 4:
+            continue
+        _je_zone[m['zid']] += 1
+        if m['zid2'] != 255 and m['zid2'] != m['zid']:
+            _je_zone[m['zid2']] += 1
+    for _zid, _ds in sorted(_tueren_je_zone.items()):
+        _hat = _je_zone.get(_zid, 0)
+        if _hat >= len(_ds):
+            continue
+        ohne.append("ROOM%04X Zone z%d: %d Tueren, nur %d Symbol(e) (Ziele %s)"
+                    % (_ds[0][0], _zid, len(_ds), _hat,
+                       ", ".join("ROOM%04X" % d['dest'] for (_, d) in _ds)))
     # ⛔ MEHRERE SYMBOLE SIND NICHT AUTOMATISCH FALSCH. Zwei Raeume koennen mehrere
     # ECHTE Tueren haben - ROOM1000 <-> ROOM1050 drei, ROOM4040 <-> ROOM4050 zwei -, und
     # ein Raum kann Tueren zu sich selbst fuehren (ROOM4050). Ein erster Wurf dieses
@@ -594,13 +651,83 @@ def p_unsichtbar():
     melde('P', 'Raeume mit Geometrie, aber ohne Zeichnung', zeilen, 'HINWEIS')
 
 
+def p_symbol_bei_eigener_tuer():
+    """Q) Steht das Tuersymbol dort, wo der SPIELER die Tuer findet?
+
+    ⛔ NUTZER-BEFUND 2026-09-06, an drei F9-Marken in ROOM10D0 gemessen (befund.log):
+        F9-1  Welt( 1278, -7231)  Funkraum-Tuer         -> Karte (155, 82)
+        F9-2  Welt( 6960,  4816)  Doppeltuer nach 10E0  -> Karte (143,108)
+        F9-3  Welt(-8121, 25008)  Nordende, KEINE Tuer  -> Karte (177,151)
+    Auf Blatt 3 steht das Symbol der Funkraum-Tuer bei (177,155) - also direkt neben
+    F9-3, wo keine Tuer ist, und 73 px von der Stelle, an der der Spieler sie oeffnet.
+    Nutzer: "beim letzten F9 druecken ist eine Tuer auf der Map, die nicht da sein
+    sollte. Bei den anderen F9 in den Raum ist eine Tuer die auf der Map fehlt."
+    Beides ist DASSELBE Symbol am falschen Ende, deshalb genuegt EINE Pruefung.
+
+    Zur Sicherheit der Richtung: dass ROOM10D0 in BEIDEN Achsen gespiegelt ist, ist
+    unabhaengig belegt - die Tuer nach ROOM1100 (Welt -19300,24000) landet damit auf
+    (202,149) und liegt in ROOM1100s eigenem Rechteck 6 (186,114) 40x48; ohne die
+    z-Spiegelung waere sie bei (202,90) und damit ausserhalb.
+
+    ⛔ Die Schranke ist die halbe kurze Kante des eigenen Rechtecks, keine freie Zahl:
+    ein Symbol darf innerhalb seiner Wand wandern (die Projektion ist eine Naeherung),
+    aber nicht auf eine ANDERE Wand desselben Rechtecks springen."""
+    schlecht = []
+    for r in sorted(RDT):
+        for d in RDT[r][1]:
+            if (d['rw'] == 0 and d['rd'] == 0) or d['dest'] not in RDT:
+                continue
+            za = zone_von(r, d['lx'], d['lz'])
+            if not za or za.get('rect', 255) == 255:
+                continue
+            R = rect_geo(za['page'], za['rect'])
+            if not R:
+                continue
+            p = projiziere(za, d['lx'], d['lz'], R)
+            if p is None:
+                continue
+            eigen = [m for m in MARKEN if m['kind'] < 4 and m['page'] == za['page']
+                     and (m['zid'] == za['zid'] or m['zid2'] == za['zid'])]
+            if not eigen:
+                continue          # fehlendes Symbol meldet bereits D1
+            nah = min(eigen, key=lambda m: abs(m['mx'] - p[0]) + abs(m['my'] - p[1]))
+            dist = abs(nah['mx'] - p[0]) + abs(nah['my'] - p[1])
+            grenze = max(4, min(R[2], R[3]) // 2)
+            if dist > grenze:
+                schlecht.append(
+                    "ROOM%04X -> ROOM%04X: Tuer projiziert auf (%d,%d), naechstes "
+                    "eigenes Symbol bei (%d,%d) - %d px weg (erlaubt %d)"
+                    % (r, d['dest'], p[0], p[1], nah['mx'], nah['my'], dist, grenze))
+    melde('Q', 'Tuersymbol an einer anderen Wand als die Tuer', schlecht)
+
+
+def p_ein_rechteck_zwei_raeume():
+    """R) Zwei verschiedene RAEUME auf demselben Rechteck.
+
+    Ein Rechteck ist der gemalte Grundriss EINES Ortes. Teilen sich zwei Raeume eins,
+    faerbt die Hervorhebung den falschen mit und beide Marker landen im selben Kasten.
+    Gefunden 2026-09-06: auf Blatt 3 tragen ROOM10E0 (z13) und ROOM1100 (z15) beide
+    Rect 6, waehrend die Rects 5, 8 und 9 leer bleiben.
+    (Mehrere ZONEN EINES Raums duerfen sich ein Rechteck teilen - der Selbst-Tuer-Fall
+    aus ROOM1170.)"""
+    belegt = collections.defaultdict(set)
+    for z in HAUPT:
+        if z.get('rect', 255) == 255:
+            continue
+        belegt[(z['page'], z['rect'])].add(z['room'])
+    schlecht = ["Blatt %d Rect %d: %s"
+                % (pg, r, ", ".join("ROOM%04X" % q for q in sorted(rs)))
+                for (pg, r), rs in sorted(belegt.items()) if len(rs) > 1]
+    melde('R', 'Ein Rechteck fuer zwei verschiedene Raeume', schlecht)
+
+
 def main():
     kurz = '--kurz' in sys.argv
     for f in (p_hervorhebung, p_zeichnung, p_verschachtelt, p_tuermarken,
               p_marke_auf_kante, p_nachbarn, p_marker_im_raum, p_massstab,
               p_treppen, p_blattwechsel, p_ueberlappung,
               p_doppelslot, p_ankunft, p_symbolabstand, p_gast,
-              p_unsichtbar):
+              p_unsichtbar, p_symbol_bei_eigener_tuer, p_ein_rechteck_zwei_raeume):
         f()
     print("=== KARTEN-AUDIT: %d Raeume, %d Zonen, %d Zeichnungen, %d Marken ==="
           % (len(RAEUME), len(HAUPT), len(SYNTH), len(MARKEN)))

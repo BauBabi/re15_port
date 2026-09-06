@@ -316,7 +316,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
        mit verschiedenem Abstand ueberdecken und bekam den Median.
        -> Die Zerlegung laeuft jetzt JE OBJEKT.
 
-    objekte: [(name, region bool240x320, fuss oder None, ebene)]
+    objekte: [(name, region bool240x320, fuss oder None, ebene, bodenkante)]
     """
     dep_all = np.zeros((240, 320), np.int32)
     stuecke = []
@@ -326,9 +326,17 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # None = Bodenebene aus den Kollisionsdaten waehlen (geom.boden_ebenen);
         # ein ausdruecklicher Wert (z.B. -700 fuer eine Tischplatte) hat Vorrang.
         ebene = eintrag[3] if len(eintrag) > 3 else None
+        # ⛔ "bodenkante": die Bildspalten, in denen die untere Silhouettenkante
+        # wirklich der Bodenkontakt ist — s. geom.depth_map_objekt.
+        bodenkante = eintrag[4] if len(eintrag) > 4 else None
         if not reg.any():
             continue
-        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene)
+        _ber = []
+        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber)
+        for _z in _ber:
+            print("     %s: %s%s" % (name, _z,
+                  "" if bodenkante is None else
+                  " (Bodenkante x %d..%d, uebrige Spalten erben)" % bodenkante))
         if d is None:
             continue
         dep_all = np.where((d > 0) & ((dep_all == 0) | (d < dep_all)), d, dep_all)

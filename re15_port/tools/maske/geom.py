@@ -466,7 +466,20 @@ def original_has_masks(rdt, cam, cut):
     return not (gc == 0xFFFF or gc == 0 or mc == 0 or gc > 256)
 
 
-def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None):
+def _bereiche(xs):
+    """[1,2,3,7,8] -> "1-3, 7-8" — kompakte Spaltenliste fuer Meldungen."""
+    aus, i = [], 0
+    while i < len(xs):
+        j = i
+        while j + 1 < len(xs) and xs[j + 1] == xs[j] + 1:
+            j += 1
+        aus.append(str(xs[i]) if j == i else "%d-%d" % (xs[i], xs[j]))
+        i = j + 1
+    return ", ".join(aus)
+
+
+def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
+                     bodenkante=None, bericht=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -493,6 +506,29 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None):
                 Beleg fuer die Notwendigkeit: ROOM1140 Cut 3, Spalte x=215 — Maske endet
                 bei y=143 (Tiefe 126, vz~9000), der Fahnenteller steht bei y=178
                 (vz 7401, Tiefe ~104). Leon bei vz 7981 wurde deshalb nicht verdeckt.
+    bodenkante=(x0, x1)
+              : Bildspalten, in denen die UNTERE SILHOUETTENKANTE WIRKLICH der
+                Bodenkontakt ist. Alle uebrigen Spalten erben die Tiefe der naechsten
+                Spalte darin.
+                ⛔ WARUM (Nutzer-Befund 2026-09-06, F9-Marke ROOM1130 Cut 3: "wenn Leon
+                rennt, sieht man noch seinen Arm durchblitzen"): bei einer WAND ist die
+                untere Silhouettenkante nur auf einem TEIL der Breite der Bodenkontakt.
+                Links davon ist sie die seitliche Kante des Pfeilers - eine SENKRECHTE
+                Weltkante, die im Bild steil ansteigt. Die Spaltenregel liest sie
+                trotzdem als Bodenkontakt und bekommt absurde Entfernungen.
+                Gemessen an ROOM1130 Cut 3 (Freistellung 49x202 bei x=67), Spalte ->
+                Tiefe: 94..115 ergeben 70..83 und ihre Weltpunkte liegen alle auf
+                EINER Geraden x = -3734..-3946, z = 4231..5189 (das ist der Wandfuss);
+                89 ergibt 94, 84 -> 141, 78 -> 345, 76 -> 684, 74 -> 32523, und
+                67..73 treffen den Boden ueberhaupt nicht mehr (Sehstrahl ueber dem
+                Horizont) - diese sieben Spalten liess das Werkzeug bisher STILL leer.
+                Der Spieler stand laut Log bei vz 6398/6166/5935; verdeckt wird nur mit
+                Tiefe < 92,7. Die Spalten 67..89 lagen alle darueber, deshalb wurde
+                das Messer ueber die Wand gezeichnet.
+                ⛔ Die Grenze ist NICHT automatisch zu finden: die Raumhuelle
+                (x -8650..6000, z -18400..19750) verwirft nur die Spalten 74..78, und
+                der Test "Weltpunkt liegt auf einer SCA-Bodenzelle" laesst 81, 82 und
+                90 faelschlich durch. Sie wird deshalb wie ein Messpunkt EINGETRAGEN.
     """
     v = cut_view(rdt, cam_off, cut)
     if not v:
@@ -516,13 +552,41 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None):
             return None
         dep[region] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
         return dep
-    for x in np.where(region.any(0))[0]:
+    spalten = list(np.where(region.any(0))[0])
+    tiefen = {}
+    for x in spalten:
         rows = np.where(region[:, x])[0]
         yb = int(rows.max())
         z = _z(x + 0.5, float(min(yb, 239)))
-        if not z:
+        if z:
+            tiefen[x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+    # ⛔ ABDECKUNG MELDEN. Spalten, deren Sehstrahl den Boden gar nicht trifft, blieben
+    # frueher STILL leer — in ROOM1130 Cut 3 waren das sieben von 49, und genau dort
+    # blitzte der Arm durch. Eine Messschiene, die ihre Abdeckung nicht ausgibt, sieht
+    # den Fall nie ([[reai-v2-schiene-abdeckung]]).
+    if bericht is not None:
+        ohne = [int(x) for x in spalten if x not in tiefen]
+        if spalten:
+            gr = max(tiefen.values()) if tiefen else 0
+            bericht.append("%d von %d Spalten mit Bodenkontakt, groesste Tiefe %d%s"
+                           % (len(tiefen), len(spalten), gr,
+                              "" if not ohne else
+                              "; OHNE Bodenkontakt: %s" % _bereiche(ohne)))
+    if bodenkante is not None:
+        # Nur die angegebenen Spalten tragen ihren eigenen Bodenkontakt; alle
+        # anderen erben den der naechstgelegenen davon.
+        bx0, bx1 = int(bodenkante[0]), int(bodenkante[1])
+        gueltig = sorted(x for x in tiefen if bx0 <= x <= bx1)
+        if not gueltig:
+            return None
+        for x in spalten:
+            if bx0 <= x <= bx1 and x in tiefen:
+                continue
+            tiefen[x] = tiefen[min(gueltig, key=lambda g: abs(g - x))]
+    for x in spalten:
+        if x not in tiefen:
             continue
-        dep[rows, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+        dep[np.where(region[:, x])[0], x] = tiefen[x]
     return dep
 
 

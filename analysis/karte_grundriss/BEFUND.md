@@ -3329,3 +3329,66 @@ Abbild der Kollisionsflaeche ist, sondern ein SCHEMA.
 
 **Fuenf Wege gemessen, fuenf verworfen.** Weiter nur noch mit bekannten Punkten
 (Handeinmessung), nicht mit einem weiteren Automaten.
+
+---
+
+## §53 — ROOM10D0: das Funkraum-Symbol steht am falschen Ende des Flurs (2026-09-06)
+
+**Nutzer-Befund, drei F9-Marken (`befund.log`, ROOM10D0):**
+
+| Marke | Bild | Welt | was dort ist | Karte (Blatt 3) |
+|-------|------|------|--------------|-----------------|
+| 1 | F534 C0 | (1278, −7231) | Tür zum Funkraum (Kartenleser) | (155, 82) |
+| 2 | F708 C2 | (6960, 4816) | Doppeltür mit grünem Kreuz → ROOM10E0 | (143, 108) |
+| 3 | F2248 C8 | (−8121, 25008) | Nordende, Spinde — **keine Tür** | (177, 151) |
+
+> „beim letzten F9 drücken ist eine Tür auf der Map, die nicht da sein sollte. Bei den
+> anderen F9 in den Raum ist eine Tür die auf der Map fehlt."
+
+**Es ist ein einziges Symbol am falschen Ende.** ROOM10D0 hat vier Türdatensätze; alle
+vier haben eine Marke, aber zwei davon stehen woanders:
+
+| Tür | Projektion von ROOM10D0 aus | gesetzte Marke | Abstand |
+|-----|----------------------------|----------------|---------|
+| → ROOM10C0 (8650, 11400) | (139, 122) | (135, 124) | 6 px ✔ |
+| → ROOM1100 (−19300, 24000) | (202, 149) | (199, 147) | 5 px ✔ |
+| → ROOM10F0 Funkraum (800, −7050) | (157, 83) | **(177, 155)** | **63 px** ✘ |
+| → ROOM10E0 (6750, 4350) | (143, 108) | **(192, 129)** | **70 px** ✘ |
+
+Die Marke bei (177,155) liegt 4 px neben F9-3 — deshalb sieht der Nutzer dort eine Tür,
+wo keine ist, und am Funkraum keine.
+
+**Warum genau diese zwei:** bei ihnen hat der Paar-Zusammenzug die Projektion des
+NACHBARN genommen (`W = A if _abstand(A,B) <= _abstand(B,A) else B`). Die beiden
+Projektionen desselben Durchgangs widersprechen sich massiv — ROOM10D0 sagt (157,83),
+ROOM10F0 sagt (185,179), das sind 124 px, und **keine der beiden liegt auf der
+gemeinsamen Kante** der Rechtecke (Rect 3 y76..163, Rect 2 y155..186, gemeinsam y=155).
+Beide Räume halten die Tür also für die vom anderen abgewandte Seite. Für `MITTEL_MAX`
+(4 px) gibt es diesen Schutz schon beim Mitteln; beim Auswählen fehlt er.
+
+**Die Richtung ist nicht die Ursache.** ROOM10D0 ist in beiden Achsen gespiegelt — die
+Tür nach ROOM1100 landet damit auf (202,149) und liegt in ROOM1100s eigenem Rechteck 6
+(186,114) 40x48; ohne die z-Spiegelung wäre sie bei (202,90), also 24 px darüber und
+außerhalb. Umgekehrt säßen dann → ROOM10C0 und → ROOM1100 falsch.
+
+**Die eigentliche Ursache liegt eine Stufe tiefer: die Rechteck-Zuordnung auf Blatt 3.**
+Der Löser meldet für Blatt 3 die höchsten Kosten aller kleinen Blätter (289,9), legt
+ROOM10E0 (z13) und ROOM1100 (z15) auf **dasselbe** Rect 6 und lässt die Rects 5, 8 und 9
+leer. Solange ROOM10F0 südlich von ROOM10D0 liegt, die Funkraumtür aber an dessen
+Karten-Nordkante, kann keine Marken-Regel das reparieren.
+
+### Drei blinde Messwerkzeuge, gefunden beim Nachgehen
+
+1. **`karte_audit.py` las 0 von 192 Marken.** Der Ausdruck verlangte genau sieben
+   Felder; seit v0.6.5 hat die Zeile acht (`auf_partner`). Jede Marken-Prüfung meldete
+   dadurch „OK". Berichtigt, dazu eine Abdeckungsprobe: erkennt der Ausdruck nicht alle
+   Zeilen, bricht der Audit ab, statt still weniger zu prüfen.
+2. **Prüfung [D1] „Türen ohne Symbol" hat nie etwas geprüft.** Sie sprang mit
+   `if not za['synth']: continue` über jede Tür — `s_map_synth[]` ist leer. Und sie
+   fragte nur, ob die ZONE irgendein Symbol hat, nicht ob DIESE Tür eines hat. Jetzt
+   Zählung je Zone (Symbole zählen für `zid` **und** `zid2`, weil ein Durchgang bewusst
+   durch eine Marke für beide Räume dargestellt wird).
+3. **Neu [Q]** „Türsymbol an einer anderen Wand als die Tür" (46 Fälle) und **[R]**
+   „ein Rechteck für zwei verschiedene Räume" (20 Fälle, darunter Blatt 3 Rect 6).
+   [R] enthält noch die zusammengelegten Varianten-Räume und muss vor der Auswertung
+   davon befreit werden.

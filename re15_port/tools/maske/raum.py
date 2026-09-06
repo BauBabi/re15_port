@@ -207,7 +207,7 @@ def kontrast_region(bg, spec):
 
 
 def objekt_regionen(room, cut, e, ppm, blattdir):
-    """-> [(name, region, fuss)] — die EINZELNEN Gegenstaende des Cuts.
+    """-> [(name, region, fuss, ebene, bodenkante)] — die EINZELNEN Gegenstaende.
 
     Format in der Auswahldatei:
       "objekte": [{"name": "Konferenztisch", "segments": 90, "ids": [...]},
@@ -368,8 +368,10 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                       'begehbare Baender %s)'
                       % (_eb, _guete,
                          sorted(-b * geom.BAND_HOEHE for b in geom.begehbare_baender(rid))))
+            _bk = o.get("bodenkante")
             aus.append((o.get("name", "?"), r, o.get("fuss"),
-                        None if _eb is None else int(_eb)))
+                        None if _eb is None else int(_eb),
+                        None if _bk is None else (int(_bk[0]), int(_bk[1]))))
     return aus
 
 
