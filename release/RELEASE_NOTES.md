@@ -1,6 +1,6 @@
 # RE1.5 Port — v0.7.1 (Early Preview)
 
-**Zwei Befunde aus deinen F9-Marken: der Wandpfeiler in ROOM1130 hat Leon nicht
+**Vier Befunde: der Wandpfeiler in ROOM1130 hat Leon nicht
 verdeckt, und auf der 2F-Karte stand ein Türsymbol am falschen Ende des Flurs.**
 
 Beide Male hat das laufende `befund.log` plus dein Tastendruck den Fall entschieden —
@@ -122,3 +122,58 @@ Beim Nachgehen kam heraus, dass die Karten-Prüfung seit v0.6.5 **nichts** gepr�
 Und der neue Haken für Verdeckungspunkte prüft **nicht** den Körperkasten: dein Messer
 lag bei x 76..81, der Kasten reicht nur von 105 bis 133. Hätte er nur den Kasten geprüft,
 wäre er auch vor dem Fix grün gewesen.
+
+
+---
+
+## 3. Der Drehstuhl in ROOM10E0 — Tiefe je BILDZEILE
+
+> „der Drehstuhl muss den Charakter weiter oben überdecken, aber weiter unten vom
+> Charakter überdeckt werden."
+
+Mit **einer** Tiefe je Objekt geht das nicht — und zwar genau andersherum: die Kamera
+schaut von oben, der **Kopf** der Figur ist also näher als ihre Füße (gemessen 469
+Einheiten Unterschied). Eine einzelne Schwelle mitten in der Figur verdeckt deshalb
+*immer* das untere Ende und lässt das obere frei.
+
+Richtig ist ein Tiefen**profil** über die Bildzeilen, und das ist geschlossen
+ausrechenbar: die Silhouette eines aufrecht stehenden Gegenstands ist die Projektion
+einer **senkrechten Weltlinie**. Für den Stuhl: Standpunkt Welt(4011,−4359), Tiefe
+**70 oben bis 79 unten** über alle 70 Zeilen.
+
+Gemessen über 2140 begehbare Standplätze, deren Körper die Stuhlmaske berührt:
+
+| Modell | ganz verdeckt | gar nicht | **nur unten verdeckt = verkehrt herum** |
+|---|---|---|---|
+| eine Tiefe (79) | 1785 | 310 | **45** |
+| Zeilenprofil | 1830 | 310 | **0** |
+
+## 4. Die Rückwand in ROOM10E0 — Zombies blocken, Spieler nicht
+
+> „da es Zombies gibt die durch die ganze Wand clippen auf der anderen Seite. Die
+> wollen wir blocken. Aber der Spielcharakter selber soll nicht davon geblockt werden."
+
+Beides zugleich leistet genau die richtige **Tiefe**: der Zeichner verdeckt, was
+*ferner* ist als die Maske. Wer hinter der Wand steht, verschwindet; wer davor steht,
+bleibt sichtbar.
+
+Dafür muss die Maske die Tiefe der **Wandfläche** tragen, nicht die ihres Bodens. Die
+reine Spaltenregel gab jeder Bildzeile die Bodentiefe — die Wandoberkante wäre zu fern
+gewesen. Jetzt trägt z. B. Spalte 112 **82 oben bis 95 unten** statt durchgehend 95.
+
+Die 41 Spalten über der **Türöffnung** haben keinen eigenen Bodenkontakt (ihr Sehstrahl
+landet hinter der Raumwand — nachprüfbar an der Hülle der Kollisionszellen) und erben
+den Standpunkt der Nachbarspalte. Derselbe Test verwirft bei den vier anderen
+Wand-Freistellungen **keine einzige** Spalte, produziert also keine Fehlalarme.
+
+## Und 27 neue Vordergrundmasken
+
+ROOM10C0 (3 Winkel), ROOM10D0 (5), ROOM10E0 (10). Alle deine Freistellungen sitzen bei
+**100,0 % Übereinstimmung**, Maßstab 1 — pixelgenau geschnitten; jede Maske deckt ihre
+Fläche punktgenau. Das Tiefenmodell steht je Gegenstand danach, *was er ist*, mit dem
+gemessenen Tiefenbereich als Beleg.
+
+Zwei Werkzeugfehler kamen dabei hoch: der Atlas brach bei kleinen Masken ab (die
+Palette hatte 220 statt 255 Farben), und die Zensus-Schranke war eine absolute Summe —
+sie wäre allein durch *gute* neue Masken gefallen. Maßstab ist jetzt das Original:
+2,152 Schnitte je Maske dort, 3,206 bei uns = Faktor **1,49** (vorher 1,48).
