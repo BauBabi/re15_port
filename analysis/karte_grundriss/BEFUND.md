@@ -3306,3 +3306,26 @@ nur ein SCHEMA, das davon ausgeht, dass ein Raum an den anderen haengt").
 
 **Vier Wege gemessen, vier verworfen.** Was bleibt, ist Handarbeit: je Raum zwei bis
 drei bekannte Punkte, aus denen die Abbildung BESTIMMT wird.
+
+### Weg 5: getrennte Massstaebe sx/sy (wie die Original-Formel) — ebenfalls nicht
+
+Die Wege 3 und 4 suchten nur EINEN Massstab fuer beide Achsen; die Original-Formel
+fuehrt aber getrennte `sx` und `sy`. Nachgeholt, mit beidseitiger Bewertung und der
+unabhaengigen Tuerprobe:
+
+| Kandidat | IoU | Tuerabweichung Mittel |
+|----------|-----|-----------------------|
+| flip 1/1, sx 1,2 sy 1,4 | 0,52 | 55,3 px |
+| flip 1/1, sx 1,0 sy 1,4 | 0,49 | 55,3 px |
+| flip 1/1 tausch, sx 1,4 sy 1,2 | 0,49 | 45,7 px |
+| **jetzige Bbox-Streckung** | — | **46,7 px** |
+
+Ein Pixel Unterschied ist kein Gewinn. Aufschlussreicher ist das MUSTER: die Kandidaten
+mit der BESTEN Deckung sagen durchgaengig `flip 1/1` und liegen bei den Tueren um
+55-58 px daneben, waehrend die jetzige Lage (`flip 0/0`) 46,7 px erreicht. **Deckung und
+Tueren widersprechen einander systematisch** — die beiden Quellen sind nicht miteinander
+vereinbar. Genau das ist zu erwarten, wenn die gezeichnete Kachel kein transformiertes
+Abbild der Kollisionsflaeche ist, sondern ein SCHEMA.
+
+**Fuenf Wege gemessen, fuenf verworfen.** Weiter nur noch mit bekannten Punkten
+(Handeinmessung), nicht mit einem weiteren Automaten.
