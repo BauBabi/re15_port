@@ -3217,3 +3217,66 @@ Eine echte Registrierung braucht die Suche ueber Massstab UND Versatz.
 
 **Damit ist der Weg nicht widerlegt, aber auch nicht belegt.** Nicht darauf aufbauen,
 bevor eine Registrierung mit Massstab/Versatz gemessen ist.
+
+## §52 — Drei Wege zur Stub-Eichung, alle gemessen gescheitert
+
+Nutzer-Befund 2026-09-06 (`fehler/error.png`, `error2.png`, zehn Anmerkungen). **Alle
+zehn betreffen ROOM10C0 oder ROOM10D0** — beides Stub-Raeume. Aus dieser einen Ursache
+folgt beides: der Ankunfts-Marker („I land in nowhere") und die Tuerlagen („this door
+shouldn't exist" / „here I would expect a door" — die Tueren existieren, sie werden nur
+falsch platziert, weil ihre Lage aus derselben Abbildung stammt).
+
+### Wie gross das Problem ist
+
+ROOM10D0, 14547 begehbare Standplaetze, jetzige Abbildung (Bbox-Streckung), Marker
+gegen die GEMALTE Flaeche:
+
+| Toleranz | daneben |
+|----------|---------|
+| 0 px | 11549 (79 %) |
+| 2 px | 10483 (72 %) |
+| 4 px |  9364 (64 %) |
+| 6 px |  8205 (56 %) |
+
+Der Marker ist ein 8x8-Feld; erst ab ~4 px faellt etwas auf. **Auch dann sind es 64 %** —
+das ist kein Rundungsfehler, sondern eine durchgehend falsche Abbildung.
+
+### Weg 1: Eichung aus Tueransankern — geometrisch unmoeglich
+
+ROOM10D0s drei Tueren liegen fast auf einer Geraden (Oeffnungswinkel 12,5 Grad): ein
+Flur hat seine Tueren entlang seiner Achse. Der exakte Fit liefert Achsen im Winkel von
+174 Grad und Massstaebe 24/50 statt ~460. Mit drei Ankern und drei Unbekannten je Achse
+waere er ausserdem ungepruefbar. (§51)
+
+### Weg 2: Formvergleich mit reiner Bbox-Streckung — kein Signal
+
+Acht Achsenlagen, begehbare Flaeche (80534 Punkte aus der ENGINE) gegen die Kachel:
+Bester 36 %, Zweitbester 34 %, Zufallsniveau 29 %. Zwei Punkte Abstand sind Rauschen.
+
+### Weg 3: Formvergleich MIT Massstab- und Versatzsuche — sieht gut aus, ist es nicht
+
+Suche ueber Spiegelungen, Achsentausch, Massstab 0,7..1,45 und Versatz ±16 px:
+
+    Bester:  79 % Deckung (flip 1/1, Skala 0,80, Versatz -12/+16)  bei 29 % Zufall
+
+⛔ **Die unabhaengige Probe verwirft ihn.** Die Tueranker wurden fuer die Deckung NICHT
+benutzt und dienen deshalb als Gegenprobe — mittlere Abweichung der drei Tueren:
+
+| Kandidat | Tuer 1 | Tuer 2 | Tuer 3 | Mittel |
+|----------|--------|--------|--------|--------|
+| 79 %-Deckung (flip 1/1, 0,80) | 67 | 73 | 28 | **56,0** |
+| jetzige Bbox-Streckung        | 33 | 19 | 88 | **46,7** |
+
+Die „beste" Registrierung ist **schlechter** als das, was schon drin ist. Die 79 % waren
+Ueberanpassung: die Form wird in die gemalte Flaeche hineingequetscht, ohne die
+Geometrie zu treffen.
+
+### Der Zusammenhang, der das erklaert
+
+Im ORIGINAL tragen diese Raeume die Stub-Zeile `{0,0,1,1}`, mit der die Formel
+`FUN_800473f8` **jede** Weltposition auf **(0,0)** abbildet. Das Kartensystem des
+Prototyps ist fuer sie unfertig — es gibt hier also kein Original-Verhalten
+nachzubauen. Die Bbox-Streckung ist bereits eine PORT-ERFINDUNG, und die Frage ist
+nicht „byte-true oder nicht", sondern welche Erfindung die bessere ist.
+
+**Stand: drei Wege gemessen und verworfen. Nicht weiter darauf aufbauen.**
