@@ -316,7 +316,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
        mit verschiedenem Abstand ueberdecken und bekam den Median.
        -> Die Zerlegung laeuft jetzt JE OBJEKT.
 
-    objekte: [(name, region bool240x320, fuss oder None, ebene, bodenkante)]
+    objekte: [(name, region, fuss, ebene, bodenkante, aufrecht)]
     """
     dep_all = np.zeros((240, 320), np.int32)
     stuecke = []
@@ -329,10 +329,14 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # ⛔ "bodenkante": die Bildspalten, in denen die untere Silhouettenkante
         # wirklich der Bodenkontakt ist — s. geom.depth_map_objekt.
         bodenkante = eintrag[4] if len(eintrag) > 4 else None
+        # ⛔ "aufrecht": Tiefe JE BILDZEILE fuer einen senkrecht stehenden Gegenstand
+        # (Stuhl, Stativ, Pfosten) - s. geom.vz_der_senkrechten.
+        aufrecht = eintrag[5] if len(eintrag) > 5 else None
         if not reg.any():
             continue
         _ber = []
-        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber)
+        d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
+                                  aufrecht)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else

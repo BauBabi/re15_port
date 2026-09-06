@@ -93,6 +93,53 @@ def vz_at_floor(R, t, H, sx, sy, y0=FLOOR_Y):
     return vz if vz > 1 else None
 
 
+def welt_am_boden(R, t, H, sx, sy, y0=FLOOR_Y):
+    """-> (wx, wz) des Punktes, an dem der Sehstrahl durch (sx,sy) die Ebene y=y0
+    trifft. Das ist der STANDPUNKT eines Gegenstands, dessen Fuss dort im Bild liegt."""
+    vz = vz_at_floor(R, t, H, sx, sy, y0)
+    if vz is None:
+        return None
+    vx = (sx - 160.0) * vz / H
+    vy = (sy - 120.0) * vz / H
+    ax, ay, az = vx - t[0], vy - t[1], vz - t[2]
+    wx = (R[0] * ax + R[3] * ay + R[6] * az) / 4096.0
+    wz = (R[2] * ax + R[5] * ay + R[8] * az) / 4096.0
+    return wx, wz
+
+
+def vz_der_senkrechten(R, t, H, wx, wz, sy):
+    """Kamera-Z der SENKRECHTEN Weltlinie durch (wx, ?, wz) in der Bildzeile sy.
+
+    ⛔ WOZU (Nutzer-Befund 2026-09-07, ROOM10E0 Cut 3, Drehstuhl): "der Drehstuhl muss
+    den Charakter weiter oben ueberdecken, aber weiter unten vom Charakter ueberdeckt
+    werden". Mit EINER Tiefe je Objekt geht das nicht - und zwar genau andersherum:
+    die Kamera schaut von oben, also ist der KOPF naeher als die Fuesse (gemessen 469
+    Einheiten Unterschied). Eine einzelne Schwelle mitten in der Figur verdeckt deshalb
+    immer das UNTERE Ende und laesst das obere frei. Der Nutzer will das Gegenteil, und
+    das ist auch das physikalisch Richtige: die Rueckenlehne des Stuhls steht HOCH und
+    ist damit NAEHER an der Kamera als sein Fussgestell.
+    Ein aufrecht stehender Gegenstand hat also keine Tiefe, sondern ein Tiefen-PROFIL
+    ueber die Bildzeilen - und das ist geschlossen ausrechenbar, weil seine Silhouette
+    die Projektion einer SENKRECHTEN Weltlinie ist:
+        vy = a*y + b   mit a = R4/4096, b = (R3*wx + R5*wz)/4096 + t1
+        vz = c*y + d   mit c = R7/4096, d = (R6*wx + R8*wz)/4096 + t2
+        sy - 120 = H * vy / vz
+      ->  y  = (H*b - (sy-120)*d) / ((sy-120)*c - H*a)
+      ->  vz = c*y + d
+    Gegenprobe eingebaut: fuer sy = die Bildzeile des Bodenpunktes muss vz gleich
+    vz_at_floor sein (geom.selbsttest)."""
+    a = R[4] / 4096.0
+    b = (R[3] * wx + R[5] * wz) / 4096.0 + t[1]
+    c = R[7] / 4096.0
+    d = (R[6] * wx + R[8] * wz) / 4096.0 + t[2]
+    n = (sy - 120.0) * c - H * a
+    if abs(n) < 1e-9:
+        return None
+    y = (H * b - (sy - 120.0) * d) / n
+    vz = c * y + d
+    return vz if vz > 1 else None
+
+
 # ----------------------------------------------------------------------------
 # BODENEBENEN EINES RAUMS (Kollisionsdaten)
 # ----------------------------------------------------------------------------
@@ -479,7 +526,7 @@ def _bereiche(xs):
 
 
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
-                     bodenkante=None, bericht=None):
+                     bodenkante=None, bericht=None, aufrecht=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -542,6 +589,115 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if aufrecht is not None:
+        # ---- AUFRECHT STEHENDER GEGENSTAND: Tiefe JE BILDZEILE ------------------
+        # Ein Stuhl, ein Stativ, ein Pfosten steht senkrecht. Seine Silhouette ist die
+        # Projektion einer SENKRECHTEN Weltlinie, und deren Kamera-Tiefe faellt mit der
+        # Hoehe: was oben im Bild liegt, ist NAEHER an der Kamera. Genau das verlangt
+        # der Nutzer (2026-09-07, ROOM10E0 Cut 3): "der Drehstuhl muss den Charakter
+        # weiter oben ueberdecken, aber weiter unten vom Charakter ueberdeckt werden".
+        # Mit EINER Tiefe ist das unmoeglich - sie verdeckt immer das UNTERE Ende der
+        # Figur (deren Fuesse sind ferner als ihr Kopf) und laesst das obere frei.
+        xs = np.nonzero(region.any(0))[0]
+        ys = np.nonzero(region.any(1))[0]
+        if len(xs) == 0 or len(ys) == 0:
+            return None
+        if aufrecht == "spalten":
+            # ---- SENKRECHTE FLAECHE (Wand): je Spalte ihr eigener Standpunkt -----
+            # Eine Wand hat BEIDES: sie laeuft in die Tiefe (das ist die Spaltenregel)
+            # UND sie steht senkrecht (das ist das Zeilenprofil). Die Spaltenregel
+            # allein gibt JEDER Zeile die Tiefe des BODENS - fuer die Oberkante der
+            # Wand ist das zu fern, und was davor an der Wand entlanglaeuft, blitzt
+            # oben durch. Hier bekommt jeder Bildpunkt die Tiefe der Wandflaeche.
+            n_ok = 0; ohne = []
+            gmin = 10 ** 9; gmax = 0
+            # ⛔ ERST ALLE STANDPUNKTE, DANN ZEICHNEN. Ueber einer TUEROEFFNUNG hat die
+            # Wand keinen Bodenkontakt - dort steht nur der Sturz. Diese Spalten blieben
+            # sonst still leer (dieselbe Klasse wie ROOM1130, s. "bodenkante"); sie
+            # erben den Standpunkt der naechsten Spalte, die einen hat. Das ist keine
+            # Naeherung: es ist DIESELBE Wandflaeche.
+            # ⛔ "bodenkante" gilt AUCH HIER, und sie ist noetig: eine Spalte kann
+            # einen Bodenpunkt liefern und trotzdem den falschen. In ROOM1130 Cut 3
+            # gemessen - ohne die Einschraenkung ergeben die Spalten 74..88 (dort ist
+            # die untere Kante die SEITE des Pfeilers, nicht der Boden) Tiefen bis 1023,
+            # und fuenf Spalten auf Koerperhoehe blieben wirkungslos.
+            bx0, bx1 = (int(bodenkante[0]), int(bodenkante[1]))                 if bodenkante is not None else (-10 ** 9, 10 ** 9)
+            # ⛔ EIN FUSSPUNKT AUSSERHALB DES RAUMS IST KEIN FUSSPUNKT.
+            # Ueber einer Tueroeffnung endet die Maske am Sturz; die Bodenregel
+            # verlaengert den Sehstrahl dann bis weit hinter die Raumwand. Das ist
+            # nachpruefbar und braucht keine gewaehlte Schranke: die Huelle der
+            # SCA-Kollisionszellen ist die Ausdehnung des Raums.
+            # Gemessen an ROOM10E0 (2026-09-07): verwirft bei 07_02 genau die 38
+            # Spalten ueber der Tuer (196..231 und zwei am Rand) und bei 00_01, 01,
+            # 03, 06 KEINE einzige - also keine Fehlalarme.
+            _zx = []; _zz = []
+            for (_cx, _cz, _cw, _cd, _b) in sca_zellen(rdt):
+                _zx += [_cx, _cx + _cw]; _zz += [_cz, _cz + _cd]
+            _hx0, _hx1 = (min(_zx), max(_zx)) if _zx else (-10 ** 9, 10 ** 9)
+            _hz0, _hz1 = (min(_zz), max(_zz)) if _zz else (-10 ** 9, 10 ** 9)
+            stand = {}
+            for x in xs:
+                rr = np.nonzero(region[:, x])[0]
+                if len(rr) == 0:
+                    continue
+                if not (bx0 <= int(x) <= bx1):
+                    ohne.append(int(x)); continue
+                Px = welt_am_boden(R, t, H, float(x) + 0.5,
+                                   float(min(int(rr.max()), 239)), y0)
+                if Px is None or not (_hx0 <= Px[0] <= _hx1 and _hz0 <= Px[1] <= _hz1):
+                    ohne.append(int(x))
+                else:
+                    stand[int(x)] = Px
+            if not stand:
+                return None
+            _mit = sorted(stand)
+            for x in ohne:
+                stand[x] = stand[min(_mit, key=lambda g: abs(g - x))]
+            for x in xs:
+                rr = np.nonzero(region[:, x])[0]
+                if len(rr) == 0 or int(x) not in stand:
+                    continue
+                Px = stand[int(x)]
+                for y in rr:
+                    z = vz_der_senkrechten(R, t, H, Px[0], Px[1], float(y) + 0.5)
+                    if not z:
+                        continue
+                    v = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+                    dep[y, x] = v
+                    gmin = min(gmin, v); gmax = max(gmax, v)
+                n_ok += 1
+            if bericht is not None:
+                bericht.append("aufrecht/spalten: %d Spalten, Tiefe %d..%d%s"
+                               % (n_ok, gmin if n_ok else 0, gmax,
+                                  "" if not ohne else
+                                  "; %d Spalten ohne eigenen Bodenkontakt (geerbt): %s"
+                                  % (len(ohne), _bereiche(sorted(ohne)))))
+            return dep if n_ok else None
+        cx = float(xs.mean()) + 0.5
+        yb = float(min(int(ys.max()) if aufrecht is True else int(aufrecht), 239))
+        P = welt_am_boden(R, t, H, cx, yb, y0)
+        if P is None:
+            if bericht is not None:
+                bericht.append("aufrecht: Fusspunkt (%.0f,%.0f) trifft die Ebene "
+                               "y=%d nicht" % (cx, yb, y0))
+            return None
+        wx, wz = P
+        n_ok = 0
+        for y in ys:
+            z = vz_der_senkrechten(R, t, H, wx, wz, float(y) + 0.5)
+            if not z:
+                continue
+            dep[y, region[y]] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+            n_ok += 1
+        if bericht is not None:
+            gut = dep[region]
+            gut = gut[gut > 0]
+            bericht.append("aufrecht: Standpunkt Welt(%.0f,%.0f) aus Bild(%.0f,%.0f); "
+                           "Tiefe %d (oben) bis %d (unten) ueber %d von %d Zeilen"
+                           % (wx, wz, cx, yb,
+                              int(gut.min()) if len(gut) else 0,
+                              int(gut.max()) if len(gut) else 0, n_ok, len(ys)))
+        return dep if n_ok else None
     if fuss is not None:
         xs = np.nonzero(region.any(0))[0]
         if len(xs) == 0:

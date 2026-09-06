@@ -3392,3 +3392,50 @@ Karten-Nordkante, kann keine Marken-Regel das reparieren.
    „ein Rechteck für zwei verschiedene Räume" (20 Fälle, darunter Blatt 3 Rect 6).
    [R] enthält noch die zusammengelegten Varianten-Räume und muss vor der Auswertung
    davon befreit werden.
+
+### §53a — Die Lösung: zwei Kacheln lagen frei, genau an den F9-Marken (2026-09-06)
+
+Der Zusammenbau von Blatt 3 (jede Kachel an ihre Kartenlage gezeichnet — die Kästen
+überlappen, die gemalten Flächen nicht) zeigt es unmittelbar:
+
+* **Rect 3 ist der L-Flur.** Die senkrechte Stange oben bei x 135..~158, der waagerechte
+  Arm unten bei y ~140..163.
+* An der **Oberkante** der Stange, genau an **F9-1 (155,82)**, stößt **Rect 9**
+  (156,76) 48x40 an → das ist der **Funkraum ROOM10F0**.
+* An der **linken** Kante, genau an **F9-2 (143,108)**, stößt **Rect 8** (102,76) 48x48
+  an → das ist **ROOM10E0**.
+* **F9-3 (177,151)** liegt mitten im waagerechten Arm — dort gehört gar kein Symbol hin.
+
+Der Löser hatte ROOM10F0 auf Rect 2 (135,155, *unter* dem Flur) und ROOM10E0 auf das
+schon an ROOM1100 vergebene Rect 6; die Rects 5, 8 und 9 blieben leer.
+
+**Zwei unabhängige Gegenproben:**
+
+1. *Die gemalte Kunst.* Rect 3s Kachel trägt genau zwei Türnischen, bei Karte (143,82)
+   und (195,149). Die erste liegt 14 px neben unserer Projektion der Funkraumtür
+   (157,83), die zweite 7 px neben der Projektion der Tür nach ROOM1100 (202,149) —
+   beide auf **derselben Kante**. Der Künstler malt die Tür also dorthin, wo unsere
+   Projektion sie hinlegt; falsch war nur, welches Rechteck daneben liegt.
+2. *Die Größe.* Maßstab von Rect 3: 32145×41362 Welt auf 72×88 px = 510 Welt/px.
+   ROOM10E0 misst 23150×20950 = 45×41 px, ROOM10F0 21100×22200 = 41×44 px — beide
+   passen in 48×48 bzw. 48×40; in Rect 2 (56×32) passt keiner.
+
+Eingetragen als `ZONE_FIX[(0x10E0,0)] = (3,8)` und `[(0x10F0,0)] = (3,9)`.
+
+⛔ **Die Rechteck-Tabelle selbst war nicht der Fehler.** `RECT_FIX[3]` ist über
+Schablonensuche im Grundriss des Blattes hergeleitet (8 von 10 Kacheln zu 100 %,
+Versatz (−25,−71) dreifach belegt, Jaccard 93,1 % gegen den Original-Grundriss) — sie
+reproduziert das Stockwerk. Falsch war allein, welche Zone welches Rechteck bekommt.
+
+**Dritte Gegenprobe — Abstand der F9-Marke zur GEMALTEN Fläche** (nicht zum Kasten, und
+ohne Rect 3 selbst):
+
+| F9-Marke | nächstes Rechteck | zweitnächstes |
+|---|---|---|
+| F9-1 Funkraumtür | **R9 = 1 px** | R8 = 8 px |
+| F9-2 Doppeltür | **R8 = 3 px** | R5 = 9 px |
+| F9-3 Spinde | R2 = 4 px | R5 = 7 px |
+
+R2 ist genau das Rechteck, auf dem der Löser den Funkraum liegen hatte — deshalb stand
+dessen Symbol bei den Spinden. Der Vorsprung (1 gegen 8, 3 gegen 9) ist deutlich; das
+ist kein Münzwurf.

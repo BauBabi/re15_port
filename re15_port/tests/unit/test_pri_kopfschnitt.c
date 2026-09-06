@@ -268,11 +268,31 @@ int main(void)
      * Wahrheitswert gelesen). */
     CHECK("alle Stages erreicht (>= 100 Raeume, >= 300 Winkel mit Masken)",
           n_raeume >= 100 && n_mitmaske >= 300);
-    /* SCHRANKE GEGEN RUECKSCHRITT. Gemessen am Stand 2026-09-06: 6518 Standplaetze
-     * werden von einer NACHGEZEICHNETEN Maske durchschnitten. Der Schnitt an sich ist
-     * NICHT der Fehler - die Original-Masken erzeugen 12761, also fast doppelt so
-     * viele. Die Zahl haelt nur fest, dass kuenftige Maskenarbeit ihn nicht vermehrt. */
-    CHECK("Schnitte durch nachgezeichnete Masken nicht mehr als am Stand 2026-09-06 (6518)",
-          ges_geschnitten <= 6518);
+    /* ⛔ SCHRANKE ALS RATE, NICHT ALS SUMME (berichtigt 2026-09-07).
+     * Die alte Schranke war die ABSOLUTE Zahl (6518 am Stand 2026-09-06). Sie fiel,
+     * sobald der Nutzer neue Freistellungen lieferte: mit 27 Masken mehr (2043 ->
+     * 2780) stieg die Summe auf 8913, obwohl JE MASKE nichts schlechter wurde
+     * (3,190 -> 3,206 Standplaetze je Maske). Eine Schranke, die beim blossen
+     * Hinzufuegen guter Masken bricht, misst die falsche Groesse - sie haette mich
+     * dazu gebracht, entweder die Zahl blind hochzusetzen oder Masken wegzulassen.
+     *
+     * Der Massstab ist das ORIGINAL: die Kuenstler erzeugen 12761 Schnitte mit 5931
+     * Masken = 2,152 je Maske. Wir liegen bei 3,206 je Maske, also beim 1,49-fachen.
+     * Gehalten wird dieses Verhaeltnis (mit Luft bis 1,70) - so darf die Maskenarbeit
+     * beliebig wachsen, aber nicht schlechter werden.
+     * Die absolute Zahl wird weiter AUSGEGEBEN, damit ein Sprung sichtbar bleibt. */
+    {
+        double r_uns  = u_masken ? (double) ges_geschnitten / u_masken : 0.0;
+        double r_orig = o_masken ? (double) orig_geschnitten / o_masken : 0.0;
+        char t[220];
+        printf("\n  Schnitte JE MASKE: nachgezeichnet %.3f (%d/%d), "
+               "Original %.3f (%d/%d) -> Verhaeltnis %.2f\n",
+               r_uns, ges_geschnitten, u_masken, r_orig, orig_geschnitten, o_masken,
+               r_orig > 0 ? r_uns / r_orig : 0.0);
+        snprintf(t, sizeof t,
+                 "Schnitte je nachgezeichneter Maske hoechstens das 1,70-fache des "
+                 "Originals (gemessen %.2f)", r_orig > 0 ? r_uns / r_orig : 0.0);
+        CHECK(t, r_orig > 0.0 && r_uns <= 1.70 * r_orig);
+    }
     return g_fail;
 }

@@ -148,7 +148,15 @@ def build(bg_rgb, region, boxes):
         return None, None, boxes
     tmp = Image.fromarray(pix.reshape(-1, 1, 3))
     pal_img = tmp.quantize(colors=255, method=Image.MEDIANCUT)
-    pal = np.array(pal_img.getpalette()[:255 * 3], np.uint8).reshape(255, 3)
+    # ⛔ WENIGER ALS 255 FARBEN IST ERLAUBT. quantize() liefert nur so viele Eintraege,
+    # wie die Flaeche wirklich braucht - bei einer kleinen Maske (ROOM10D0 Cut 6,
+    # 245 Punkte) waren es 220, und das feste reshape(255,3) brach den Bau ab
+    # ("cannot reshape array of size 660"). Die Zahl kommt jetzt aus der Palette selbst.
+    _roh = pal_img.getpalette() or []
+    _n = min(255, len(_roh) // 3)
+    if _n == 0:
+        return None, None, boxes
+    pal = np.array(_roh[:_n * 3], np.uint8).reshape(_n, 3)
 
     # Zuordnung aller undurchsichtigen Pixel auf die Palette (Index 1..255).
     flat = rgb[opaque].astype(np.int32)
@@ -167,7 +175,7 @@ def build(bg_rgb, region, boxes):
     r = q[:, 0].astype(np.uint16)
     g = q[:, 1].astype(np.uint16)
     b = q[:, 2].astype(np.uint16)
-    clut[1:] = r | (g << 5) | (b << 10)
+    clut[1:1 + len(pal)] = r | (g << 5) | (b << 10)
 
     tim = bytearray()
     tim += struct.pack("<II", 0x10, 0x09)                     # Magic, 8 bpp + CLUT

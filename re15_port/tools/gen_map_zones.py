@@ -968,6 +968,45 @@ def main():
     #   kopierten Tabelle war das groesste Rechteck der Seite 72x64, und die
     #   Kostenheuristik liess den Raum lieber ganz weg - er hatte deshalb weder rote
     #   Hervorhebung noch Spielermarker.)
+    #
+    # ⛔ BLATT 3: ROOM10E0 UND ROOM10F0 - EINGEMESSEN AM 2026-09-06.
+    # Nutzer-Befund mit drei F9-Marken in ROOM10D0 (befund.log):
+    #     F9-1  Welt( 1278, -7231)  Tuer zum Funkraum        -> Karte (155, 82)
+    #     F9-2  Welt( 6960,  4816)  Doppeltuer (gruenes Kreuz) -> Karte (143,108)
+    #     F9-3  Welt(-8121, 25008)  Spinde, KEINE Tuer        -> Karte (177,151)
+    # > "beim letzten F9 druecken ist eine Tuer auf der Map, die nicht da sein sollte.
+    # >  Bei den anderen F9 in den Raum ist eine Tuer die auf der Map fehlt."
+    #
+    # Der Loeser hatte ROOM10F0 auf Rect 2 (135,155) - UNTER dem Flur - und ROOM10E0 auf
+    # Rect 6, das er schon an ROOM1100 vergeben hatte; die Rects 5, 8 und 9 blieben leer.
+    # Damit landete das Funkraum-Symbol bei (177,155), also 4 px neben F9-3 (wo keine
+    # Tuer ist) und 63 px von der Stelle, an der der Spieler sie oeffnet.
+    #
+    # Am ZUSAMMENBAU des Blattes abgelesen (jede Kachel an ihrer Kartenlage gezeichnet;
+    # die Kaesten ueberlappen, die gemalten Flaechen nicht):
+    #   * Rect 3 ist der L-Flur. Seine senkrechte Stange liegt oben bei x 135..~158,
+    #     der waagerechte Arm unten bei y ~140..163.
+    #   * An der OBERKANTE der Stange, genau an F9-1 (155,82), stoesst Rect 9
+    #     (156,76) 48x40 an  -> das ist der FUNKRAUM (ROOM10F0).
+    #   * An der LINKEN Kante der Stange, genau an F9-2 (143,108), stoesst Rect 8
+    #     (102,76) 48x48 an  -> das ist ROOM10E0.
+    #   * F9-3 (177,151) liegt IM waagerechten Arm - dort gehoert gar kein Symbol hin.
+    # Gegenprobe an der gemalten Kunst: Rect 3s Kachel traegt genau zwei Tuernischen,
+    # bei Karte (143,82) und (195,149). Die erste liegt 14 px neben unserer Projektion
+    # der Funkraumtuer (157,83), die zweite 7 px neben der Projektion der Tuer nach
+    # ROOM1100 (202,149) - beide auf DERSELBEN Kante. Der Kuenstler malt die Tuer also
+    # dort, wo unsere Projektion sie hinlegt; falsch war nur, welches Rechteck daneben
+    # liegt.
+    # Groesse als zweite Stimme (Massstab von Rect 3: 32145x41362 Welt auf 72x88 px
+    # = 510 Welt/px): ROOM10E0 misst 23150x20950 = 45x41 px, ROOM10F0 21100x22200
+    # = 41x44 px - beide passen in 48x48 bzw. 48x40, in Rect 2 (56x32) passt keiner.
+    # DRITTE, unabhaengige Stimme - Abstand der F9-Marke zur GEMALTEN Flaeche jedes
+    # Rechtecks (nicht zum Kasten, und ohne Rect 3 selbst):
+    #     F9-1 Funkraumtuer:  R9 = 1 px   (zweitnaechstes R8 = 8)
+    #     F9-2 Doppeltuer:    R8 = 3 px   (zweitnaechstes R5 = 9)
+    #     F9-3 Spinde:        R2 = 4 px   <- genau das Rechteck, auf dem der Loeser den
+    #                                        Funkraum hatte; daher das Symbol dort.
+    # Der Vorsprung ist deutlich (1 gegen 8, 3 gegen 9), das ist kein Muenzwurf.
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
@@ -975,6 +1014,8 @@ def main():
         (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
         (0x10C0, 0): (3, 0),      # einziges Rect, das Treppenhaus UND Kabine beruehrt
         (0x10D0, 0): (3, 3),      # einziges Rect, in das 63x91 px passen
+        (0x10E0, 0): (3, 8),      # stoesst an F9-2 (143,108) an den Flur
+        (0x10F0, 0): (3, 9),      # Funkraum, stoesst an F9-1 (155,82) an den Flur
     }
 
     # Zonen je Seite sammeln

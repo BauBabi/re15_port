@@ -150,6 +150,47 @@ int main(void)
         }
     }
 
+    /* ⛔ ROOM10D0: DAS FUNKRAUM-SYMBOL STAND AM FALSCHEN ENDE DES FLURS.
+     * Nutzer 2026-09-06, drei F9-Marken (befund.log):
+     *     F9-1  Welt( 1278, -7231)  Tuer zum Funkraum          -> Karte (155, 82)
+     *     F9-2  Welt( 6960,  4816)  Doppeltuer (gruenes Kreuz) -> Karte (143,108)
+     *     F9-3  Welt(-8121, 25008)  Spinde, KEINE Tuer         -> Karte (177,151)
+     * > "beim letzten F9 druecken ist eine Tuer auf der Map, die nicht da sein sollte.
+     * >  Bei den anderen F9 in den Raum ist eine Tuer die auf der Map fehlt."
+     * Das Symbol der Funkraumtuer lag bei (177,155) - 4 px neben F9-3 und 63 px von
+     * der Tuer. Ursache war die Rechteck-Zuordnung von Blatt 3 (ROOM10F0 auf Rect 2
+     * UNTER dem Flur, ROOM10E0 auf dem schon an ROOM1100 vergebenen Rect 6, waehrend
+     * die passenden Rects 8 und 9 leer blieben) - jetzt in ZONE_FIX eingemessen.
+     * Geprueft werden BEIDE Haelften des Befundes: Symbol da, wo die Tuer ist, und
+     * KEIN Symbol da, wo keine ist. Nur zusammen faengt das den Fall. */
+    {
+        int i, n_nah_f3 = 0, best = 9999, bx = -1, by = -1;
+        re15_map_visited_reset();
+        re15_map_visited_mark(0x10D0u);
+        re15_map_visited_mark(0x10E0u);
+        re15_map_visited_mark(0x10F0u);
+        re15_map_visited_mark(0x1100u);
+        for (i = 0; i < re15_map_mark_count(); i++) {
+            int p, r, x, y, kind, d1, d3;
+            if (!re15_map_mark_get(i, &p, &r, &x, &y, &kind)) continue;
+            if (p != 3 || kind >= 4) continue;
+            d1 = abs(x - 155) + abs(y - 82);     /* Funkraumtuer, F9-1 */
+            d3 = abs(x - 177) + abs(y - 151);    /* Spinde, F9-3: hier gehoert nichts hin */
+            if (d1 < best) { best = d1; bx = x; by = y; }
+            if (d3 <= 8) n_nah_f3++;
+        }
+        {   char t[220];
+            snprintf(t, sizeof t,
+                     "ROOM10D0: ein Tuersymbol steht an der Funkraumtuer F9-1 (155,82) - "
+                     "naechstes bei (%d,%d), Abstand %d px (<= 16)", bx, by, best);
+            CHECK(t, best <= 16);
+            snprintf(t, sizeof t,
+                     "ROOM10D0: KEIN Tuersymbol an den Spinden F9-3 (177,151), wo keine "
+                     "Tuer ist - gefunden %d innerhalb von 8 px (soll 0)", n_nah_f3);
+            CHECK(t, n_nah_f3 == 0);
+        }
+    }
+
     re15_map_visited_reset();
     return g_fail;
 }
