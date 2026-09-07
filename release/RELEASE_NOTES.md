@@ -1,91 +1,84 @@
-# RE1.5 Port — v0.7.4 (Early Preview)
+# RE1.5 Port — v0.7.5 (Early Preview)
 
-**Aus deinen F9-Marken vom 07.09.** Der wichtigste Fund ist größer als die Wand, um die
-es ging: mein Kartengenerator hat die Kollisionsdaten seit Monaten **invertiert** gelesen.
+**Drei Korrekturen aus deinen F9-Marken vom 07.09.** — zwei davon Fehler, die ich selbst
+in v0.7.4 eingebaut hatte.
 
 ---
 
-## Die Kollisionszellen sind die WÄNDE, nicht der Boden
+## 1. „MASSENWEISE quatsch Wände, die es nicht gibt"
 
-Das steht seit dem 2026-06-07 in `re15_collision.c`, nach einem 135-Agenten-RE:
+Berechtigt. In v0.7.4 hatte ich **355 Linien** auf 70 Rechtecke gemalt, bis zu **27 in
+einem einzigen Raum**.
 
-> *„the player walks in the band-MATCH-FREE complement … band-4 cells = walls"*
+**Der Fehlschluss:** Aus „die SCA-Zellen sind die Wände" folgt *nicht*, dass jede solide
+Zelle eine Wand der Karte ist. Ein Tisch, eine Säule, eine Kiste sind genau dieselbe Art
+Zelle. Mein Filter („beidseits liegt gemalte Fläche") passt auf ein Möbelstück mitten im
+Zimmer wortwörtlich genauso wie auf eine Trennwand. Dazu kommt: der Künstler malt seine
+Innenwände selbst in die Kachel — alles, was der Port zusätzlich zeichnet, ist per
+Definition eine Wand, die es im Original nicht gibt.
 
-Der Generator hat daraus Grundrisse gebaut — also die Wände als begehbare Fläche
-gezeichnet. An **3727 Standorten**, die du selbst abgelaufen bist (13 Räume aus
-`befund.log`), liegen nur **2,9 %** in einer soliden Typ-1-Zelle des eigenen Bands; in
-**10 der 13 Räume kein einziger**. Wären es Bodenzellen, müsste der Wert bei 100 % liegen.
+**Der Beleg, den ich jetzt verlange:** Die Zelle muss zwei Absetzpunkte von
+**Selbst-Türen** desselben Raums *trennen*. Eine Selbst-Tür existiert nur, weil man von A
+nach B nicht laufen kann; liegt eine Wandzelle zwischen ihren Enden, ist sie diese
+Grenze. Ein Möbelstück ist es nie.
 
-Damit stand deine Trennwand die ganze Zeit in den Daten. Gegen deine fünf F9-Marken:
-
-```
-Wand y121..125  (x189..212)
-   Marke 2 (190,126)   Marke 3 (212,129)      oberer Raum
-Wand y130..136  (x189..212)   <-- deine Trennwand, gezeichnet bei y=134
-   Marke 4 (190,137)   Marke 5 (212,140)      unterer Raum
-Wand y141..144  (x189..212)
-```
-
-Zwei geometrische Regeln, keine gewählte Zahl: **Außenwände** werden nicht gezeichnet
-(die malt die Kachel selbst — eine Innenwand hat beidseits Raum), und gezeichnet wird die
-**Mittellinie**, nicht die Fläche (eine Weltwand ist ~2000 Einheiten = 5–7 px dick und
-würde den Raum zumauern).
-
-## „Zu lange Wand in der falschen Farbe"
-
-**Länge:** jede Wand endet jetzt an der gemalten Fläche. Die alte lief y113..145 und
-ragte 9 px ins Leere.
-
-**Farbe:** sie trug rgb(176,176,176) — den Palettenindex, in dem der *Künstler* auf seine
-Kachel malt. Der Port malt Rechtecke aber nach Zustand: aktuell rgb(192,24,24), besucht
-rgb(40,144,40). Eine graue Linie im roten Raum ist sichtbar fremd. Die Innenwand nimmt
-jetzt die Umrandungsfarbe ihres Raums.
-
-## Die zwei Türmarken
-
-| | deine F9-Marke | Türdaten von deiner Seite | vorher |
+| Raum | Wandzellen | Selbst-Türen | gezeichnet |
 |---|---|---|---|
-| Fahrstuhl | (134,146) | (135,146) — 1 px | (135,146), am Wandrand |
-| Treppenhaus | (138,152) | (139,152) — 1 px | **(153,142)** — 18 px |
+| ROOM1110 | 12 | 4 | **2** — deine beiden aus `howto.png` |
+| ROOM1130 (wo du standst) | 10 | 0 | **0** |
+| ROOM1120 / 1140 / 10E0 / 10D0 | 12–22 | 0 | **0** |
 
-**Fahrstuhl:** die Marke ist **ungepaart** und lief an dem ganzen Block vorbei, in dem
-überhaupt gemittet wird. Ihr Trigger ist 2000 Welteinheiten breit = Karte x133..137, die
-gemalte Kabinenwand nur x127..136 — das Symbol saß am rechten Ende und ragte heraus.
-Wandlauf 10 px, Mitte **x=131**. Die Mittigkeit gilt jetzt für alle Marken, mit derselben
-am Original gemessenen 16-px-Grenze wie bisher.
+**355 → 10 Linien im ganzen Spiel.**
 
-**Treppenhaus:** die Marke wird von zwei Seiten gerechnet, und die Auswahl war ein echter
-**Münzwurf**. Das Kriterium misst gegen das Nachbar-*Rechteck*; auf 3F liegt Rect 1
-komplett in Rect 5, also 0 gegen 0 — und dann gewann stumpf die erste Seite. Die gemalten
-*Flächen* überlappen nicht, sie ergänzen sich; ihre gemeinsame Grenze ist die Wand, in der
-die Tür sitzt. Rect 5 liegt 2 px davon entfernt, Rect 1 vier.
+⛔ Der eigentliche Befund: **kein Test hat die 355 bemerkt.** Neu ist deshalb
+`test_map_innenwand` — er deckelt die Gesamtzahl auf 24 und die je Rechteck auf 6, gibt
+alle Wände namentlich aus und pinnt ROOM1110s zwei fest. Wer dort anschlägt, hat wieder
+Möbel für Wände gehalten; die Grenze ist dann *nicht* zu heben.
+
+## 2. Das Treppenhaus war in beiden Achsen gespiegelt
+
+Du standst im Treppenhaus auf 2F, **668 bzw. 413 Welteinheiten** von der Türmitte — also
+praktisch in der Tür. Trotzdem lagen dein Marker (136,139) und die Tür (118,149)
+**28 px** auseinander. Es war weder das eine noch das andere allein, sondern die
+Orientierung der ganzen Zone:
+
+| Spiegelung | Standort → Türmarke | Türprojektion → Türmarke |
+|---|---|---|
+| 0/0 (bisher) | 28 px | 29 px |
+| 1/0 | 15 | 12 |
+| **1/1** | **8** | **5** |
+
+Die Gegenprobe stammt aus deinem eigenen Bildschirmabzug und ging nicht in die Herleitung
+ein: mit 1/1 landen die zwei Treppensymbole auf (126,144) und (134,146) — im Bild liegen
+sie bei x123..135, y143..149.
+
+Betroffen sind nur 2F und 3F. Auf 1F rechnet die Original-Kartenzeile `@0x800768b0`, die
+keine Spiegelung benutzt.
+
+Festgeschrieben ist nicht eine Einzelposition, sondern die **Zusammengehörigkeit**: wer an
+der Tür steht, muss auf der Karte an der Tür stehen.
+
+## 3. Die Türmarken
+
+- **Fahrstuhltür mittig.** Sie ist als einzige **ungepaart** und lief an dem ganzen Block
+  vorbei, in dem gemittet wird. Ihr Trigger ist 2000 Welteinheiten breit (Karte
+  x133..137), die gemalte Kabinenwand nur 10 px — das Symbol saß am Rand. Jetzt auf der
+  Wandmitte, mit derselben am Original gemessenen 16-px-Grenze wie bisher.
+- **Tür Richtung Treppenhaus.** Die Auswahl zwischen den beiden Seiten war ein
+  **Münzwurf**: das Kriterium misst gegen das Nachbar-*Rechteck*, und auf 3F liegt Rect 1
+  komplett in Rect 5 — also 0 gegen 0, und dann gewann stumpf die erste Seite mit 18 px
+  Fehler. Die gemalten *Flächen* überlappen nicht; ihre gemeinsame Grenze entscheidet es
+  jetzt. Deine F9-Marke (138,152), das Ergebnis (136,152).
 
 ---
 
-## Zwei Dinge, die kein Fortschritt sind
+## Offen und ehrlich
 
-**1. Ich überschreibe eine ältere Messung von dir.** Am 06.09. standst du an der
-**2F**-Fahrstuhltür und hast (117,143) bestätigt — das ist *nicht* mittig. Heute sagst du
-für dieselbe Stelle auf 3F „in die Mitte". Die Geometrie ist auf beiden Etagen identisch:
+- Ein Riegel steht auf 9 statt 8 überlappenden Türsymbol-Paaren. Das zusätzliche Paar
+  konnte ich **nicht benennen** — statisch liegt kein Symbolpaar dichter als 2 px, die
+  neun entstehen erst zur Laufzeit. Begründung und Weiterweg stehen im Test.
+- Die Mittigkeit überschreibt deine Messung vom 06.09. an der 2F-Fahrstuhltür (117,143 →
+  113,143). Die Geometrie ist auf beiden Etagen identisch, es kann nur eine der beiden
+  Aussagen gelten; ich habe deine spätere genommen.
 
-```
-2F  Zeile 143:  #......##########      Wandlauf x109..118, Mitte 113, Marke auf 117
-3F  Zeile 146:  #......##########      Wandlauf x127..136, Mitte 131, Marke auf 135
-```
-
-Es kann also nur eine der beiden gelten. Ich habe deine heutige, ausdrückliche Anweisung
-genommen und beide Aussagen im Test hinterlegt.
-
-**2. Ein Riegel steigt von 8 auf 9.** Die Umbauten haben 40 der 193 Marken bewegt, und
-dabei ist ein zusätzliches Paar überlappender Türsymbole entstanden. Das Paar konnte ich
-**nicht benennen**: in der statischen Marken-Tabelle liegt kein Symbolpaar dichter als
-2 px beieinander — die neun entstehen erst zur Laufzeit. Ich habe die Schranke angehoben
-und im Test hingeschrieben, dass das eine Verschlechterung ist und wie man sie
-weiterverfolgt. Auf der Original-Kunst sind es 7; dorthin gehört das Ziel.
-
-**Offen:** die 2F-Treppenhaustür steht jetzt bei (118,149) statt (135,139). Dafür habe ich
-nur deine Zeichnung, keine Messung — ein F9 davor legt sie fest.
-
----
-
-**280/280 Tests**, lokal und im Linux-Container.
+**281/281 Tests**, lokal und im Linux-Container.
