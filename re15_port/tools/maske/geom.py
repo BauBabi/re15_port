@@ -747,6 +747,23 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         # 1.00 erfuellt alle drei; darueber faengt die Maske an, auch am Bankende
         # wirkungslos zu werden.
         dep[_hit] = np.rint(_kt[_hit]).astype(np.int32)
+        # EINE MASKE DARF KEINE LOECHER BEKOMMEN.
+        # NUTZER-BEFUND 2026-09-07: "das mit der schreibmaschine ist jetzt irgendwie
+        # kaputt". Gemessen am Maskenblob ROOM10E0 Cut 7: 101 Rechtecke -> 82, es
+        # fehlten 19 - genau dort, wo der Sehstrahl die gewaehlte Zelle VERFEHLT
+        # (1898 von 5712 Punkten der Liege getroffen). Der Rest stand mit Tiefe 0 da,
+        # und Tiefe 0 heisst "keine Maske". Das Objekt ist aber undurchsichtig:
+        # ein Sehstrahl, der neben der groben Kollisionsbox vorbeigeht, ist eine
+        # Ungenauigkeit der BOX, kein Loch im Moebel.
+        # Die nicht getroffenen Punkte bekommen darum die Tiefe des naechstgelegenen
+        # getroffenen Punktes desselben Objekts (Distanztransformation).
+        _fehlt = _msk & ~_hit
+        if _fehlt.any() and _hit.any():
+            from scipy import ndimage as _nd
+            _, (_iy, _ix) = _nd.distance_transform_edt(~_hit, return_indices=True)
+            dep[_fehlt] = dep[_iy[_fehlt], _ix[_fehlt]]
+            if bericht is not None:
+                bericht.append('kollision: %d Punkte ohne Treffer aus der Nachbarschaft gefuellt' % int(_fehlt.sum()))
         if bericht is not None:
             _w = _kt[_hit]
             bericht.append('kollision: %d von %d Punkten getroffen, Tiefe %.0f..%.0f'
