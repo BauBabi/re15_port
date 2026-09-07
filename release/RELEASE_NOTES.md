@@ -1,67 +1,65 @@
-# RE1.5 Port — v0.7.12 (Early Preview)
+# RE1.5 Port — v0.7.13 (Early Preview)
 
-**Die Liege in ROOM10E0 hat jetzt eine echte Entfernung — sie steht hinter dir, nicht vor dir.**
-
-Dein Befund: *"Na, das komplette Bett überdeckt Leon da unten. Aber leon muss davor sein."*
-
-```
-Entfernung der Liege        fest 162   ->   gemessen 146..170
-deine Entfernung an der Marke                          108
-```
-
-Gegen **deine eigenen 176 Standorte** in diesem Blickwinkel, aus `befund.log`:
-
-```
-Figur fast ganz verschluckt      17  ->  1
-im Mittel verdeckter Körper    33,5 %  ->  23,6 %
-```
-
-Der eine Rest ist die **Schreibmaschine im Vordergrund** (Entfernung 97..102 gegen
-deine 106) — dort stehst du dahinter, das darf verdecken.
+**Drei Befunde von dir, zwei gelöst, einer war meiner.**
 
 ---
 
-## Warum eine feste Zahl hier nicht reichen konnte
+## 1. Die Löcher in der Maske — mein Fehler aus v0.7.12
 
-Die Liege trug `"fuss": 162` — **eine** Entfernung für das ganze Objekt. Damit verdeckt
-sie überall gleich, egal wo du stehst. Ein Möbelstück hat aber keine Entfernung, es hat
-eine **Lage**; ob es dich verdeckt, entscheidet erst dein Standort.
+Du: *"das mit der schreibmaschine ist jetzt irgendwie kaputt"*. Zu Recht.
 
-Die Lage steht in den Kollisionsdaten des Raums. Ein Sehstrahl je Bildpunkt trifft die
-Zelle und liefert die Entfernung exakt — dieselbe Rechnung, die letzte Woche die Holzbank
-gelöst hat.
-
-## ⛔ Dabei ist die Zellauswahl aufgefallen — und sie war zu naiv
-
-Bisher galt: *"nimm die Zelle, die mindestens 90 % der Freistellung deckt, und davon
-die nächste."* Für die Bank ging das gut. Für die Liege fiel es herein:
+Die neue Entfernungsrechnung setzte jeden Punkt, an dem der Sehstrahl die Kollisionszelle
+**verfehlt**, auf 0 — und 0 heißt „keine Maske". Gemessen an ROOM10E0:
 
 ```
-x -500..6350  z-4050..-1450   deckt 100 %   Entfernung  15..21   <- gewählt, falsch
-x-5000.. -600 z 2300.. 3100   deckt  47 %   Entfernung 121..155  <- richtig
+Rechtecke im Blickwinkel 7     101  ->  82      es fehlten 19
+getroffene Punkte der Liege    1898 von 5712
 ```
 
-Eine Zelle ist im Sehstrahl eine **unendlich hohe Säule**. Eine große, nahe Säule deckt
-darum leicht das halbe Bild — und gewinnt jede Deckungsprüfung, obwohl sie mit dem
-Möbelstück nichts zu tun hat. Bei Entfernung 15..21 hätte sie dich überall verschluckt.
+Ein Möbel ist aber undurchsichtig. Ein Strahl, der neben der groben Kollisionsbox
+vorbeigeht, ist eine Ungenauigkeit der **Box**, kein Loch im Möbel. Die nicht getroffenen
+Punkte erben jetzt die Entfernung des nächsten getroffenen. Wieder 101 Rechtecke.
 
-Neu entscheidet **Jaccard**: Schnittfläche geteilt durch Vereinigungsfläche. Das bestraft
-genau den Überschuss, den die naive Deckung belohnt:
+## 2. Der Tresen in ROOM1120 — vier Marken
+
+Er trug **eine** Zahl für alle 81 Kacheln und deckte dich damit komplett zu, obwohl du
+davor stehst. Eine einzige Zahl kann das nicht: am 05.09. standest du bei Entfernung 153
+*dahinter* und musstest verdeckt werden.
 
 ```
-ROOM10E0 Liege   J=0,165 (richtig)   gegen   J=0,080 (die nahe Säule)
-ROOM10C0 Bank    J=0,119 (richtig)   gegen   J=0,102
+                              vorher        jetzt
+Entfernung des Tresens        fest 82       84..95, je Bildzeile wachsend
+F613 / F626 / F634 / F642     alles zu      0 verdeckende Punkte
+bei Entfernung 153 dahinter   verdeckt      verdeckt weiter (Maximum 95)
 ```
 
-Beide Räume wählen damit die richtige Zelle — die Bank bleibt unverändert bei
-520/0/0 über deine drei Marken.
+## 3. Leons Kopf in der Wand — ROOM10E0
+
+Die Rückwand lag per Silhouette bei 112, dein **Kopf** bei 112,6 — sie schnitt ihn um einen
+halben Punkt ab. Eine Rückwand kann das nie, du stehst davor.
+
+```
+Zeile für Zeile im Körperkasten, F2103:
+   y110..144 (Kopf und Rumpf)    927 verdeckende Punkte  ->  0
+   F523 zusätzlich               164                     ->  0
+```
 
 ---
 
-## Kleinigkeit am Rande
+## Noch offen — gemessen, aber nicht gelöst
 
-Das Maskenwerkzeug warnte *"weder fuss noch ebene angegeben"* auch für Objekte, die ihre
-Entfernung längst aus der Kollision beziehen — und brach beim Ausgeben des Warnzeichens
-unter cp1252 ab. Die Bedingung kennt jetzt auch diesen Fall.
+Ich sage lieber, was ich nicht kann, als etwas zu raten:
+
+**Die Schreibmaschine in ROOM10E0** steckt mit dem Teppich in *einer* Freistellung, Modell
+„flach". Der Teppich ist zu Recht flach — die Maschine ist es nicht. Ihre Silhouette bekommt
+Bodenentfernungen 61..102, du stehst bei 68 mittendrin, also ist dieselbe Maschine halb vor
+und halb hinter dir. Ein Schnitt an der Teppichoberkante findet Maschine, Stuhl und Schrank
+sauber, lässt aber die untere Hälfte der Maschine beim Teppich — der Riss wandert nur.
+Das braucht eine Trennung am Maschinenfuß.
+
+**Die grünen Tische in ROOM10D0.** Keine Kollisionszelle passt (dort liegen nur lange
+Flurwände). „aufrecht" gibt pauschal 97 (481 verdeckende Punkte), „spalten" 106..292
+(210 Punkte, am rechten Rand nachweislich zu fern). Beides falsch — ein Tisch ist eine
+waagerechte Platte in bekannter Höhe, und die will als solche gerechnet werden.
 
 282/282 Tests.
