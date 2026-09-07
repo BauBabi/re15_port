@@ -1,67 +1,65 @@
-# RE1.5 Port — v0.7.9 (Early Preview)
+# RE1.5 Port — v0.7.10 (Early Preview)
 
-**Die Tiefe einer Vordergrundmaske kommt jetzt aus der Raumgeometrie**, nicht mehr aus der
-Kontur der Freistellung. Und der erste Fehler, den das behebt: die Holzbank in ROOM10C0.
+**Die Holzbank in ROOM10C0 verdeckt jetzt am Bankende — und nur dort.** Zwei deiner
+F9-Marken, zwei entgegengesetzte Anforderungen, beide erfüllt.
 
 ---
 
-## Die Holzbank verdeckt jetzt an ihrem Ende
+## Der Befund
 
-Dein Befund: *„ein weiterer Marker der unten überdecken muss fehlt … unter meinen Füßen.
-Ich stehe am Ende der Bank, aber sie überdeckt mich nicht."*
+*„Ich stehe am Ende der Bank, aber sie überdeckt mich nicht."* (Marke F1438)
+*„Geht zu weit, wenn ich daneben stehe, darf es nicht decken."* (Marke F468)
 
-Gemessen an deiner F9-Marke: du stehst bei Welt(−4468, −5782), Tiefe 156,7. In deinem
-Körperkasten trugen die Masken **174..187** — alle zu fern, **null** davon wirksam.
+| | verdeckende Punkte im Körperkasten | soll |
+|---|---|---|
+| **am Ende der Bank** | 0 → **520** | viel |
+| **daneben** | 516 → **180** | wenig |
 
-**Ursache:** Die Silhouettenregel nimmt je Bildspalte den untersten sichtbaren Punkt als
-Bodenkontakt. Am rechten Bankende ist das aber die **Seitenkante** der Bank, nicht ihr Fuß
-— der Sehstrahl durch diesen Punkt landet weit dahinter:
+## Warum es zweimal falsch war
+
+**1. Zu fern.** Die Silhouettenregel nimmt je Bildspalte den untersten sichtbaren Punkt
+als Bodenkontakt. Am rechten Bankende ist das die **Seitenkante** der Bank, nicht ihr Fuß
+— der Sehstrahl landet weit dahinter:
 
 ```
 Spalte 64 -> Tiefe 150      Spalte 80 -> 174      Spalte 88 -> 187
 ```
 
-**Fix:** die Tiefe aus den Kollisionsdaten. Die Bank steht dort als Zelle
-`x −4000..550, z −6250..−5250`, im Bild x 2..104, Tiefe **81,5..150,5** — also näher als
-du. (Und dein x=−4468 liegt knapp außerhalb der Zelle, die bei x=−4000 endet: genau das
-„am Ende der Bank".)
+Die Bank steht in den Kollisionsdaten dagegen bei **81..150**, also näher als du. Deshalb
+`"tiefe": "kollision"`.
 
-| im Körperkasten | vorher | jetzt |
-|---|---|---|
-| verdeckende Maskenpunkte | 0 | **520** |
-| zu fern („frei") | 672 | **0** |
+**2. Dann zu nah.** Der erste Wurf schoss die Sehstrahlen gegen **alle** Wandzellen des
+Raums, und jede gilt darin als unendlich hohe Säule. In der Tiefenkarte sichtbar: bis
+Bild-x 93 liegt sie bei 102..137 (die Bank), ab x=94 springt sie auf **56..62** — eine
+ganz andere Zelle, die der Strahl weit über ihrem Boden trifft. Weil die Kachelung je
+12×12-Feld die kleinste Tiefe nimmt, riss ein einziger Falschtreffer das ganze Feld nach
+vorn.
 
-## Der Mechanismus dahinter
-
-`geom.kollisionstiefe()` schießt einen Sehstrahl pro Bildpunkt gegen die Wandzellen des
-Raums:
+**Jetzt** wird die Zelle gesucht, die das freigestellte Objekt **ist** — über die Deckung
+der Freistellung (≥90 %); gibt es mehrere, gewinnt die **nächste**, denn ein
+Vordergrundobjekt ist das, was man sieht:
 
 ```
-Kameraort = R^-1 * (-t)            Richtung = R^-1 * (sx-160, sy-120, H)
-Schnitt mit den vier senkrechten Seitenflaechen jeder Zelle, naechster Treffer gewinnt.
+x -4000..550   z -6250..-5250   deckt  99 %, Tiefe  81..150   <- gewaehlt (die Bank)
+x -9600..8750  z -8250..-6250   deckt 100 %, Tiefe 233..236   (die Wand dahinter)
 ```
 
-Angeschlossen über `"tiefe": "kollision"` in der Auswahldatei. Selbstprüfung: der
-Treffpunkt Welt(−3950,−1813,5658) projiziert exakt auf Bild (85,140) zurück, und eine
-Spielerposition auf (122,6/201,9) gegen (123/201) aus dem Log, Tiefe 78,1 gegen 78.
+## Der Mechanismus
+
+`geom.kollisionstiefe()` — ein Sehstrahl je Bildpunkt gegen die Kollisionszellen:
+
+```
+Kameraort = R^-1 * (-t)        Richtung = R^-1 * (sx-160, sy-120, H)
+Schnitt mit den vier senkrechten Seitenflaechen, naechster Treffer gewinnt.
+```
+
+Selbstprüfung: der Treffpunkt Welt(−3950,−1813,5658) projiziert exakt auf Bild (85,140)
+zurück; eine Spielerposition auf (122,6/201,9) gegen (123/201) aus dem Log, Tiefe 78,1
+gegen 78.
 
 Das ersetzt eine Ableitung, die von der gezeichneten Unterkante abhing, durch eine aus der
-Geometrie — und braucht keine sorgfältig gezeichnete Silhouette mehr.
-
----
-
-## Zwei Dinge, die ich richtigstellen muss
-
-**1.** In ROOM1130 Cut 3 bringt derselbe Mechanismus **nichts** (Gesamtmetrik 22,4 % →
-22,5 %). Ich hatte dir vorher 27 % gemeldet — die kamen aus einem Vorabtest mit einer von
-mir *gewählten* Wandhöhe von 3000. Aus deiner Freistellung gemessen ist die Wand mindestens
-**4469** hoch; damit bleiben 39 %. Die 27 % waren ein Artefakt meiner Annahme.
-
-**2.** Der Fall dort ist gar kein Tiefenfehler. Du stehst bei Welt x=−4418, die Marmorwand
-bei x=−3950 — **468 Einheiten**, bei einem Spielerradius von **450**
-(`DAT_80073e94[6]`). Die Kamera ist so gedreht, dass Osten im Bild links liegt; dein
-ausgestreckter Arm zeigt also direkt auf die Wand und ragt hinein, weil die Kollision nur
-den Körperradius abhält. Die Maske schneidet ihn korrekt ab.
+Raumgeometrie — nützlich überall dort, wo eine Freistellung an einer **Seitenkante** endet
+statt am Boden.
 
 ---
 
