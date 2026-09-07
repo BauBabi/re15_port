@@ -39,6 +39,35 @@
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
+/* ---- RE2-KI-TRACE IN EINE DATEI ------------------------------------------------------------
+ * ⛔ WARUM: die ausgelieferte PC-exe ist GUI-Subsystem, dort ist stderr TOT
+ * (Memory reai-v2-absturz-ereignisprotokoll). Der Trace, den diag_crow_stuck.md als
+ * ersten Messschritt verlangt, kam beim Nutzer deshalb NIRGENDWO an - gemessen:
+ * `RE15_RE2_TRACE=1 ... 2>datei` liefert 0 Bytes. Er schreibt jetzt neben die exe,
+ * genau wie befund.log (main.c:4753), mit demselben Ausweich auf das Arbeitsverzeichnis. */
+static const char *s_re2_trace_dir = NULL;
+void re15_re2_trace_dir_set(const char *dir) { s_re2_trace_dir = dir; }
+
+FILE *re15_re2_trace_out(void)
+{
+    static FILE *f = NULL;
+    static int   versucht = 0;
+    if (!getenv("RE15_RE2_TRACE")) return NULL;
+    if (f) return f;
+    if (versucht) return stderr;
+    versucht = 1;
+    char pfad[600];
+    snprintf(pfad, sizeof pfad, "%s%sre2_ki.log",
+             s_re2_trace_dir ? s_re2_trace_dir : "",
+             (s_re2_trace_dir && *s_re2_trace_dir) ? "/" : "");
+    f = fopen(pfad, "ab");
+    if (!f) f = fopen("re2_ki.log", "ab");
+    if (!f) return stderr;
+    setvbuf(f, NULL, _IOLBF, 0);       /* zeilenweise - ein Absturz verliert nichts */
+    fprintf(f, "# RE2-KI-TRACE (RE15_RE2_TRACE=1). Zeilen: [re2crow]/[re2dog]/[victim].\n");
+    return f;
+}
+
 /* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
 static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
@@ -1393,7 +1422,7 @@ void re15_player_victim_tick(void)
          * Animation am laufenden Spieler") — im Normal-Datenstand als unerreichbar belegt;
          * faellt er DOCH, zeigt diese Zeile den realen Ausloeser. */
         if (getenv("RE15_RE2_TRACE"))
-            fprintf(stderr, "[victim] BANK-HART-RESET vs=%d type=0x%02x zslot=%d (vb=%p ok=%d)\n",
+            fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] BANK-HART-RESET vs=%d type=0x%02x zslot=%d (vb=%p ok=%d)\n",
                     g_player_victim, g_player_victim_type, g_player_victim_zombie,
                     (void *)vb, vb ? vb->victim_ok : -1);
         g_player_victim = 0; return;
@@ -1487,7 +1516,7 @@ void re15_player_victim_tick(void)
              * nur erreichbar, wenn der Greifer den Pin diesen Frame WIRKLICH nicht
              * bestellt hat (regulaeres Grab-Ende — oder der unbewiesene Defektweg). */
             if (getenv("RE15_RE2_TRACE"))
-                fprintf(stderr, "[victim] AUTO-RELEASE vs1->3 type=0x%02x zslot=%d "
+                fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] AUTO-RELEASE vs1->3 type=0x%02x zslot=%d "
                         "(zst=%d zsub=%d)\n",
                         g_player_victim_type, g_player_victim_zombie,
                         (g_player_victim_zombie >= 0) ? g_actors[g_player_victim_zombie].state : -1,
@@ -2418,13 +2447,13 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
         } else if (getenv("RE15_RE2_TRACE")) {
             /* S2-DIAGNOSE-TRACE (2026-09-05): vs-Gate blockiert den Latch (vs==1/2 =
              * fremder Greifer) — dritter moeglicher Zerfallsweg des Halte-Geschirrs. */
-            fprintf(stderr, "[victim] BEGIN-GATE vs=%d blockiert Latch von type=0x%02x slot=%d\n",
+            fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] BEGIN-GATE vs=%d blockiert Latch von type=0x%02x slot=%d\n",
                     g_player_victim, zombie->type, (int)(zombie - g_actors));
         }
     } else if (getenv("RE15_RE2_TRACE")) {
         /* S2-DIAGNOSE-TRACE: victim_ok-Gate — Grab ohne ladbare Victim-Bank laesst den
          * Spieler frei weiterlaufen, waehrend der Greifer seinen Grab-Zyklus faehrt. */
-        fprintf(stderr, "[victim] BEGIN-FAIL keine Victim-Bank type=0x%02x slot=%d (vb=%p)\n",
+        fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[victim] BEGIN-FAIL keine Victim-Bank type=0x%02x slot=%d (vb=%p)\n",
                 zombie->type, (int)(zombie - g_actors), (void *)vb);
     }
     /* ⛔ YAW-SNAP + POSE-YAW-OFFSET (Struggle-P0 @0x8010AA50; vollstaendiger Beleg-Block ueber

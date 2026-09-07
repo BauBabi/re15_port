@@ -3385,3 +3385,12 @@ target_include_directories(test_map_eingemessen PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(test_map_eingemessen PRIVATE RE15_PORT_SRC_DIR="${CMAKE_SOURCE_DIR}")
 add_test(NAME unit_map_eingemessen COMMAND test_map_eingemessen)
 set_tests_properties(unit_map_eingemessen PROPERTIES TIMEOUT 30)
+
+# --- RE2-Kraehen-Diagnose am ECHTEN ROOM10C0 (Nutzer-Report 2026-09-07) ---
+add_executable(probe_re2_crow_10c0 probe_re2_crow_10c0.c)
+target_link_libraries(probe_re2_crow_10c0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_crow_10c0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_re2_crow_bank probe_re2_crow_bank.c)
+target_link_libraries(probe_re2_crow_bank PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_crow_bank PRIVATE ${CMAKE_SOURCE_DIR}/include)

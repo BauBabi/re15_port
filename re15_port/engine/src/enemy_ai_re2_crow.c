@@ -76,6 +76,8 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex / re15_esp_fx_splatter (Stand-ins) */
 #include "re15_collision.h"  /* re15_collision_constrain_enemy (SCA-Wand-Klemme) */
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok */
+#include <stdio.h>
+FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 
@@ -1932,7 +1934,7 @@ int re15_re2crow_tick(int slot)
         static uint32_t s_last[RE15_ACTOR_MAX];
         uint32_t sig = ((uint32_t)e->state << 16) | ((uint32_t)e->sub_state_1 << 8) | e->sub_state_2;
         if (sig != s_last[slot]) {
-            fprintf(stderr, "[re2crow] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d "
+            fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[re2crow] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d "
                     "pos=(%d,%d,%d) flr=%d shW=%u pool=%d tint=%u hide=%d fl=%04x\n",
                     slot, e->state, e->sub_state_1, e->sub_state_2,
                     (int)e->motion, (int)e->hp, (unsigned)e->ai_dist, (int)e->speed_h,

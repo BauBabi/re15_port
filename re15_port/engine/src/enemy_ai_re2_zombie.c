@@ -85,6 +85,8 @@ const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
 #include "re15_gameflow.h"   /* g_gameflow.character — Port-Zwilling von DAT_800ACA5C (@0x80104008) */
+#include <stdio.h>
+FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
 /* ---- the flavor switch itself ------------------------------------------------------------- */
 
@@ -1175,7 +1177,7 @@ static void re2z_decide_walk_apply(re15_actor_t *e, re15_actor_t *pl)
     re15_re2z_fill_gates(e, pl, re15_player_is_grabbed(), &g);
     int committed = re15_re2z_decide_walk(&g, &d);
     if (getenv("RE15_RE2_TRACE") && (committed || e->ai_dist < 1500u))
-        fprintf(stderr, "[re2z] gates d=%u flo=%u/%u claimed=%u 21a=%04x cd23e=%u g1=%d g2=%d -> %s 0x%08x\n",
+        fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[re2z] gates d=%u flo=%u/%u claimed=%u 21a=%04x cd23e=%u g1=%d g2=%d -> %s 0x%08x\n",
                 g.dist, g.self_106, g.pl_106, g.pl_1d3, g.self_21a, g.self_23e,
                 g.g1_sector_hit, g.g2_sector_hit, committed ? "COMMIT" : "none", d.word);
     if (committed)

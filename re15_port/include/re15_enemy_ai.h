@@ -46,6 +46,7 @@
 #define RE15_ENEMY_AI_H
 
 #include <stdint.h>
+#include <stdio.h>   /* FILE* fuer re15_re2_trace_out */
 #include "re15_actor.h"
 
 /* Main-state values at entity+0x4 (= actor.state) — PTR_FUN_801217a0 index. */
@@ -400,3 +401,10 @@ void re15_enemy_ai_run_all(int combat_active);
 void re15_actor_prop_pushout(void);
 
 #endif /* RE15_ENEMY_AI_H */
+
+/* RE2-KI-TRACE (RE15_RE2_TRACE=1) schreibt nach <dir>/re2_ki.log statt nach stderr -
+ * die ausgelieferte PC-exe ist GUI-Subsystem und hat KEIN stderr. Die Plattform meldet
+ * hier ihr exe-Verzeichnis an (wie fuer befund.log); ohne Anmeldung landet die Datei im
+ * Arbeitsverzeichnis. */
+void  re15_re2_trace_dir_set(const char *dir);
+FILE *re15_re2_trace_out(void);

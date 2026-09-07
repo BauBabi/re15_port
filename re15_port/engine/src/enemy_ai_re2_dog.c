@@ -64,6 +64,8 @@
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
 #include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
+#include <stdio.h>
+FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
 /* zombie-file shims reused verbatim (enemy_ai_common.c / enemy_ai_re2_zombie.c) */
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
@@ -505,7 +507,7 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
         int64_t dx = (int64_t)pl->x - jaw[0], dz = (int64_t)pl->z - jaw[2];
         int32_t r  = (pl->hp < 21) ? 700 : 1000;           /* @0x80104E34-48 */
         if (getenv("RE15_RE2_TRACE"))
-            fprintf(stderr, "[re2dogC] jaw d2=%lld r=%d y=%d fy=%d plf=%d ef=%d plhp=%d\n",
+            fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[re2dogC] jaw d2=%lld r=%d y=%d fy=%d plf=%d ef=%d plhp=%d\n",
                     (long long)(dx * dx + dz * dz), r, e->y, e->dog_floor_y,
                     pl->floor, e->floor, pl->hp);
         if (dx * dx + dz * dz >= (int64_t)r * r) return 0; /* sltu @0x8001581C = strikt < */
@@ -2192,7 +2194,7 @@ int re15_re2dog_tick(int slot)
         static uint32_t s_last[RE15_ACTOR_MAX];
         uint32_t sig = ((uint32_t)e->state << 16) | ((uint32_t)e->sub_state_1 << 8) | e->sub_state_2;
         if (sig != s_last[slot]) {
-            fprintf(stderr, "[re2dog] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d\n",
+            fprintf(re15_re2_trace_out() ? re15_re2_trace_out() : stderr, "[re2dog] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d\n",
                     slot, e->state, e->sub_state_1, e->sub_state_2,
                     (int)e->motion, (int)e->hp, (unsigned)e->ai_dist, (int)e->speed_h);
             s_last[slot] = sig;

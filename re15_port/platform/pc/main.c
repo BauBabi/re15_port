@@ -2357,6 +2357,10 @@ static void re15_testhaken_ende(void)
 
 int main(int argc, char *argv[])
 {
+    /* RE2-KI-TRACE neben die exe umleiten (wie befund.log, main.c:4753). Diese exe ist
+     * GUI-Subsystem: stderr ist tot, der Trace kam beim Nutzer bisher nirgendwo an. */
+    re15_re2_trace_dir_set(re15_pc_exe_dir());
+    (void)re15_re2_trace_out();   /* gleich anlegen: der Nutzer sieht, dass der Schalter greift */
     (void) argc; (void) argv;
 
 #ifdef _WIN32
