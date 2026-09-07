@@ -322,7 +322,10 @@ def read_rdt(rid):
                 # (Nutzer 2026-09-02).
                 w, dep, x, z = struct.unpack_from('<HHhh', d, s + 24 + 12*i)
                 typ, u0, u1, flr = struct.unpack_from('<BBBB', d, s + 24 + 12*i + 8)
-                sca.append((x, z, w, dep, flr))
+                # (STOP) TYP UND FLAG MITNEHMEN. Ohne sie laesst sich nicht sagen,
+                # WAS eine Zelle ist: erst `typ&0x0f == 1` (Rechteck) und `u0&1`
+                # (solide) machen sie zur WAND - siehe wandlinien().
+                sca.append((x, z, w, dep, flr, typ, u0))
     doors = []
     stairs = []
     # Slots, die irgendwo im Raum per Aot_reset (Opcode 0x46, 10 B: pc[1]=Slot, pc[2]=sce)
@@ -915,6 +918,93 @@ def _vollsuche(B, pg):
 
 
 _WANDRUECK = []
+_WANDDIAG = []
+_WANDMITTE = []
+_GRENZWAHL = []
+_GRENZE_CACHE = {}
+
+
+def _grenzpunkte(pg, ra, rb):
+    """Die Punkte, an denen die GEMALTEN Flaechen der Rechtecke ra und rb
+    aneinanderstossen - die Wand, in der eine Tuer zwischen ihnen sitzt."""
+    _k = (pg, ra, rb)
+    if _k in _GRENZE_CACHE: return _GRENZE_CACHE[_k]
+    _aus = set()
+    _R = rects(pg)
+    if ra != 255 and rb != 255 and ra < len(_R) and rb < len(_R):
+        def _fl(_r):
+            _rx, _ry, _rw, _rh = _R[_r]
+            _uv = rect_uv(pg, _r); _px = page_pix(pg)
+            if _uv is None or _px is None: return set()
+            return {(_rx + _i, _ry + _j) for _i in range(_rw) for _j in range(_rh)
+                    if 0 <= _uv[1] + _j < 256 and 0 <= _uv[0] + _i < 256
+                    and _px[_uv[1] + _j][_uv[0] + _i] != 0}
+        _A, _B = _fl(ra), _fl(rb)
+        for _p in _A:
+            for _d in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (_p[0] + _d[0], _p[1] + _d[1]) in _B:
+                    _aus.add(_p); break
+    _GRENZE_CACHE[_k] = _aus
+    return _aus
+
+
+def _grenzabstand(X, Y):
+    """Manhattan-Abstand von X's Position zur gemeinsamen Grenze mit Y.
+    999, wenn es keine gibt (dann entscheidet die Grenze nichts)."""
+    if X.get('pg') != Y.get('pg'): return 999
+    _G = _grenzpunkte(X['pg'], X.get('r', 255), Y.get('r', 255))
+    if not _G: return 999
+    return min(abs(X['mx'] - _q[0]) + abs(X['my'] - _q[1]) for _q in _G)
+
+_ZUSAMMEN_CACHE = {}
+
+
+def _gemalt_irgendwo(pg, x, y):
+    """1, wenn auf DIESER Seite irgendein Rechteck an (x,y) malt.
+    Eine Marke, die dort landet, wo der Zusammenbau der Seite leer ist, schwebt fuer
+    den Spieler im Schwarzen - egal wie richtig sie im eigenen Rechteck sitzt.
+    Riegel: unit_map_marke_auf_kunst."""
+    if pg not in _ZUSAMMEN_CACHE:
+        _S = set()
+        _px = page_pix(pg)
+        if _px is not None:
+            for _ri, _R in enumerate(rects(pg)):
+                _uv = rect_uv(pg, _ri)
+                if _uv is None: continue
+                for _j in range(_R[3]):
+                    for _i in range(_R[2]):
+                        _ty, _tx = _uv[1] + _j, _uv[0] + _i
+                        if 0 <= _ty < 256 and 0 <= _tx < 256 and _px[_ty][_tx]:
+                            _S.add((_R[0] + _i, _R[1] + _j))
+        _ZUSAMMEN_CACHE[pg] = _S
+    return (x, y) in _ZUSAMMEN_CACHE[pg]
+
+def _ist_gast(X):
+    """1, wenn diese Marken-Seite auf einer GAST-Zeile steht: derselbe Ort auf einem
+    FREMDEN Blatt, weil eines seiner Baender dorthin fuehrt (Treppenhaus, Fahrstuhl).
+    Solche Zeilen sind eine Port-Ergaenzung - das Original zeichnet den Raum nur auf
+    seinem eigenen Blatt, und nur dort ist die Lage vom Kuenstler."""
+    try:
+        return X.get('pg') is not None and X['pg'] != page_of(X['room'])
+    except Exception:
+        return False
+
+def _kunst_wand(_pg, _r, _mx, _my):
+    """1, wenn die Kachel an (_mx,_my) den WAND-Index 4 traegt.
+    _kunst_an fragt nur 'ueberhaupt gemalt' - fuer das Anschnappen einer Tuer
+    braucht es die Wand selbst, nicht den Boden dahinter."""
+    _R = rects(_pg)
+    if _r == 255 or _r >= len(_R): return False
+    _rx, _ry, _rw, _rh = _R[_r]
+    _uv = rect_uv(_pg, _r)
+    _px = page_pix(_pg)
+    if _uv is None or _px is None: return False
+    _i, _j = _mx - _rx, _my - _ry
+    if not (0 <= _i < _rw and 0 <= _j < _rh): return False
+    _tx, _ty = _uv[0] + _i, _uv[1] + _j
+    if not (0 <= _tx < 256 and 0 <= _ty < 256): return False
+    return _px[_ty][_tx] == 4
+
 def _kunst_an(pg, ri, mx, my):
     """Malt die Kachel des Rechtecks (pg, ri) am Kartenpunkt (mx, my) etwas?
 
@@ -3429,7 +3519,58 @@ def main():
             dx = max(RX - X['mx'], 0, X['mx'] - (RX + RW - 1))
             dy = max(RY - X['my'], 0, X['my'] - (RY + RH - 1))
             return dx + dy
-        W = A if _abstand(A, B) <= _abstand(B, A) else B
+        # DIE GAST-ZEILE VERLIERT GEGEN DIE HAUPTZEILE.
+        # NUTZER-BEFUND 2026-09-07 (2 x F9 in ROOM1120): "Tuermarker fuer die Tuer
+        # Richtung Treppenhaus. Den hast du ganz versaut und jetzt irgendwo in die
+        # Mitte der Karte eingezeichnet."
+        #
+        # _abstand misst, wie weit die Position vom NACHBAR-RECHTECK entfernt ist.
+        # Liegen beide Positionen IM jeweils anderen Rechteck, ist das Ergebnis 0:0 -
+        # ein MUENZWURF, und `<=` gibt ihn an A. Genau so ist es hier:
+        #     von ROOM1120 (Rect 5, Hauptzeile) : (139,152)  Nutzermarke (138,152)   1 px
+        #     von ROOM1060 (Rect 1, GAST-Zeile) : (153,142)  Nutzermarke (138,152)  18 px
+        # Gegenprobe an der Fahrstuhltuer, dieselbe Konstellation:
+        #     von ROOM1120 (Rect 5, Hauptzeile) : (135,146)  Nutzermarke (134,146)   1 px
+        #
+        # Der Muenzwurf gehoert dem, der ihn aufloesen kann (Memory
+        # reai-v2-muenzwurf-als-freiheitsgrad), und hier gibt es ein Kriterium: eine
+        # GAST-Zeile (etage = 1) ist eine PORT-ERGAENZUNG - das Original zeichnet
+        # ROOM1060 nur auf Seite 2, die Lage auf Seite 4 hat der Loeser gesetzt. Die
+        # HAUPTZEILE eines Raums steht dagegen auf dem Blatt, fuer das der Kuenstler
+        # sie gemalt hat. Bei Gleichstand gewinnt deshalb die Hauptzeile.
+        # BEI GLEICHSTAND ENTSCHEIDET DIE GEMEINSAME GRENZE DER GEMALTEN FLAECHEN.
+        # NUTZER-BEFUND 2026-09-07 (2 x F9 in ROOM1120): "Tuermarker fuer die Tuer
+        # Richtung Treppenhaus. Den hast du ganz versaut und jetzt irgendwo in die
+        # Mitte der Karte eingezeichnet."
+        #
+        # _abstand misst gegen das NACHBAR-RECHTECK. Die Rechtecke des Kuenstlers
+        # ueberlappen sich aber (Blatt 4: Rect 1 x136..159 liegt ganz in Rect 5
+        # x120..159); dann liegen BEIDE Positionen im jeweils anderen Rechteck, das
+        # Ergebnis ist 0:0 und `<=` gibt den Zuschlag stumpf an A - ein Muenzwurf
+        # (Memory reai-v2-muenzwurf-als-freiheitsgrad). Genau daran ging die Tuer
+        # ROOM1120 <-> ROOM1060 auf 3F verloren:
+        #     von ROOM1060 (Rect 1): (153,142)   Nutzermarke (138,152)   18 px
+        #     von ROOM1120 (Rect 5): (139,152)   Nutzermarke (138,152)    1 px
+        #
+        # Die GEMALTEN FLAECHEN ueberlappen dagegen nicht - sie ergaenzen sich, weil
+        # der Kuenstler jedem Raum sein Stueck malt. Ihre gemeinsame Grenze ist die
+        # Wand, in der die Tuer sitzt. Gemessen (Manhattan zur Grenzpunktmenge):
+        #     Blatt 4: Rect 1 -> 4 px, Rect 5 -> 2 px   (richtig: Rect 5)
+        # Der Abstand zum Rechteck bleibt das erste Kriterium; die Grenze loest nur
+        # den Gleichstand, den er offen laesst.
+        _dA, _dB = _abstand(A, B), _abstand(B, A)
+        if _dA == _dB:
+            _gA, _gB = _grenzabstand(A, B), _grenzabstand(B, A)
+            # Ein Gewinner, der im Schwarzen steht, ist kein Gewinner.
+            if not _gemalt_irgendwo(A['pg'], A['mx'], A['my']): _gA = 999
+            if not _gemalt_irgendwo(B['pg'], B['mx'], B['my']): _gB = 999
+            if _gA != _gB:
+                W = A if _gA < _gB else B
+                _GRENZWAHL.append((A['room'], B['room'], W['room'], _gA, _gB))
+            else:
+                W = A
+        else:
+            W = A if _dA < _dB else B
         cx, cy = W['mx'], W['my']
         # ============ DIE MARKE SITZT AUF DER GEMEINSAMEN KANTE ===================
         # Nutzer 2026-09-02: "Die Tueren sind durch die Bank weg alle falsch platziert
@@ -3690,10 +3831,103 @@ def main():
                         if _bes: break
                     if _bes: break
                 if _bes: break
+            # DER DIAGONALE ZUG IST DIE ECKE, KEIN MESSWERT.
+            # NUTZER-BEFUND 2026-09-07 (fehler/howto 2.png): "Treppe und Tuer im
+            # Treppenhaus ist noch nicht korrekt positioniert" - er zeichnet die Tuer
+            # an der OSTwand des Treppenhauses bei (135,141).
+            # Die Rohlage der Tuer ist (138,140); die gemalte Ostwand von Rect 1 liegt
+            # bei x=135 (durchgehend Index 4 von y135 bis y155), also gehoert sie auf
+            # (135,140) - EIN Pixel von seiner Zeichnung.
+            # Der Zug suchte stattdessen eine Stelle, an der BEIDE Kacheln malen. Die
+            # gemalte Flaeche von ROOM10C0 (Rect 0) endet aber bei y=134; der einzige
+            # gemeinsame Punkt ist (132,134) - die ECKE, 6 px in x UND 6 px in y weg.
+            # Dieselbe Regel gilt hier wie bei der Zeilen-Klemmung (_klemm_xy weiter
+            # oben): aendern sich BEIDE Achsen, liegt der Zielpunkt diagonal und das
+            # Ergebnis ist der Anschlag, keine Messung. Eine Tuer sitzt IN einer Wand -
+            # sie darf ENTLANG der Wand rutschen, aber nicht auf eine andere geworfen
+            # werden.
+            # Faellt der Zug damit aus, gilt die eigene gemalte Wand: die naechste
+            # Stelle mit Index 4 in der Kachel des Raums, dem die Marke gehoert.
             if _bes and _bes != (cx, cy):
-                _WANDRUECK.append((abs(_bes[0] - cx) + abs(_bes[1] - cy),
-                                   A['room'], B['room'], (cx, cy), _bes))
-                cx, cy = _bes
+                _ddx, _ddy = abs(_bes[0] - cx), abs(_bes[1] - cy)
+                if _ddx > 1 and _ddy > 1:
+                    _WANDDIAG.append((_ddx + _ddy, A['room'], B['room'],
+                                      (cx, cy), _bes))
+                    _diag_ziel = _bes
+                    _bes = None
+                    _wr0 = W.get('r', 255)
+                    if _wr0 != 255:
+                        _best2 = None
+                        for _rad2 in range(1, _RUECK_MAX + 1):
+                            for _d2 in range(-_rad2, _rad2 + 1):
+                                for (_qx, _qy) in ((cx + _d2, cy + _rad2),
+                                                   (cx + _d2, cy - _rad2),
+                                                   (cx + _rad2, cy + _d2),
+                                                   (cx - _rad2, cy + _d2)):
+                                    if not _kunst_wand(W['pg'], _wr0, _qx, _qy):
+                                        continue
+                                    # EINE TUER SITZT IN EINER GETEILTEN WAND.
+                                    # NUTZER-BEFUND 2026-09-07 (fehler/howto 3.png,
+                                    # 3F): "This door belongs there. We used to have
+                                    # it Right before" - die Marke stand auf der
+                                    # OSTwand des Treppenhauses (Blatt 4, x=153).
+                                    # Dort endet aber ROOM1120s Kachel: oestlich
+                                    # davon malt NIEMAND. Eine Wand, hinter der kein
+                                    # zweiter Raum liegt, kann keine Tuer tragen.
+                                    # GEMESSEN an den drei Kandidaten dieser Tuer:
+                                    #   Ostwand  (153,142): Nachbar Index 0  -> nein
+                                    #   Nordwand (150,137): Nachbar Index 1  -> ja
+                                    #   Westwand (136,150): Nachbar Index 1  -> ja
+                                    # Geprueft wird quer zur Wand: auf der einen
+                                    # Seite der eigene Boden, auf der anderen der des
+                                    # Partners. (Die alte Bedingung verlangte, dass
+                                    # BEIDE Kacheln DENSELBEN Punkt malen - das trifft
+                                    # nur zu, wo die Wand doppelt gemalt ist.)
+                                    _pr2 = (B if W is A else A).get('r', 255)
+                                    _pp2 = (B if W is A else A).get('pg')
+                                    if _pr2 != 255 and _pp2 == W['pg']:
+                                        _senk2 = abs(_qy - cy) >= abs(_qx - cx)
+                                        _ok2 = False
+                                        for _s2 in (-1, 1):
+                                            if _senk2:
+                                                _e2 = _kunst_an(W['pg'], _wr0,
+                                                                _qx + _s2, _qy)
+                                                _n2 = _kunst_an(_pp2, _pr2,
+                                                                _qx - _s2, _qy)
+                                            else:
+                                                _e2 = _kunst_an(W['pg'], _wr0,
+                                                                _qx, _qy + _s2)
+                                                _n2 = _kunst_an(_pp2, _pr2,
+                                                                _qx, _qy - _s2)
+                                            if _e2 and _n2:
+                                                _ok2 = True
+                                                break
+                                        if not _ok2:
+                                            continue
+                                    if abs(_qx - cx) <= 1 or abs(_qy - cy) <= 1:
+                                        _best2 = (_qx, _qy)
+                                        break
+                                if _best2: break
+                            if _best2: break
+                        if _best2:
+                            _bes = _best2
+                    if _bes is None and not _gemalt_irgendwo(W['pg'], cx, cy):
+                        # LIEBER DIE GEMALTE ECKE ALS DAS SCHWARZE.
+                        # Wird der diagonale Zug verworfen und findet sich kein
+                        # Ersatz auf der eigenen Wand, bleibt die Marke liegen -
+                        # und die Ausgangslage kann UNGEMALT sein (Index 0). Dann
+                        # schwebt das Symbol fuer den Spieler im Schwarzen.
+                        # Gemessen 2026-09-07, nachdem der Diagonal-Riegel kam:
+                        #   Blatt  8 Rect 2 (140,83) und (142,83)  -> Index 0
+                        #   Blatt 11 Rect 0 (167,149)              -> Index 0
+                        # (vorher (162,133), Index 4 = auf der Wand).
+                        # Rangfolge: gemalte Wand > gemalte Ecke > ungemalt.
+                        # Riegel: unit_map_marke_auf_kunst.
+                        _bes = (_ax2, _ay2) if False else _diag_ziel
+                if _bes and _bes != (cx, cy):
+                    _WANDRUECK.append((abs(_bes[0] - cx) + abs(_bes[1] - cy),
+                                       A['room'], B['room'], (cx, cy), _bes))
+                    cx, cy = _bes
         # ⛔ EINE TUER AM ENDE EINES GANGS GEHOERT IN DIE MITTE DER OEFFNUNG.
         # Nutzer 2026-09-07: "die beiden Tueren am Gangende [sind] immer noch verrueckt,
         # und nicht genau in der Mitte platziert. Liegen im echten Raum aber EXAKT in
@@ -3712,6 +3946,7 @@ def main():
         # Bis 16 px setzt der Kuenstler die Tuer also mittig, darueber frei. Genau das
         # macht diese Regel - und nur dort.
         _MITTIG_MAX = _MITTIG_MAX_G
+        _mittig_griff = False
         if _seite < 4:
             _wr = W.get('r', 255)
             if _wr != 255:
@@ -3735,6 +3970,46 @@ def main():
                                             _tr[0][1] - _tr[0][0] + 1))
                             if _senk: cy = _m
                             else:     cx = _m
+                            _mittig_griff = True
+        # MITTIG AUCH IM WANDLAUF, WENN DER KUENSTLER KEINE OEFFNUNG GELASSEN HAT.
+        # NUTZER-BEFUND 2026-09-07 (fehler/howto 3.png): "this door Needs to be
+        # centralized here" und "bis auf das du die Fahrstuhl Tuer nicht in der
+        # Wandmitte zentriert hast".
+        # Die Regel darueber mittet in der OEFFNUNG - der Luecke, die der Kuenstler
+        # in die Wand gemalt hat. Fuer die Fahrstuhltuer gibt es keine: die Wand
+        # unter der Kabine ist durchgezogen. GEMESSEN auf Blatt 4, Zeile 146:
+        # Rect 5 (ROOM1120) UND Rect 0 (die Kabine) malen beide den Wandlauf
+        # x127..136 - 10 px, Mitte x=131. Die Marke stand auf x=135, am rechten
+        # Ende. Dieselbe am Original gemessene Grenze wie oben (bis 16 px setzt der
+        # Kuenstler mittig, darueber frei - 72 gemalte Tuersymbole, siehe dort).
+        if _seite < 4 and not _mittig_griff:
+            _wr9 = W.get('r', 255)
+            if _wr9 != 255:
+                _senk9 = _seite in (1, 3)
+                _R9 = rects(W['pg'])
+                if _wr9 < len(_R9):
+                    _rx9, _ry9, _rw9, _rh9 = _R9[_wr9]
+                    if _senk9:
+                        _bereich = range(_ry9, _ry9 + _rh9)
+                        _ist = lambda _t: _kunst_wand(W['pg'], _wr9, cx, _t)
+                        _key9 = cy
+                    else:
+                        _bereich = range(_rx9, _rx9 + _rw9)
+                        _ist = lambda _t: _kunst_wand(W['pg'], _wr9, _t, cy)
+                        _key9 = cx
+                    if _ist(_key9):
+                        _a9 = _b9 = _key9
+                        while (_a9 - 1) in _bereich and _ist(_a9 - 1): _a9 -= 1
+                        while (_b9 + 1) in _bereich and _ist(_b9 + 1): _b9 += 1
+                        if 1 < (_b9 - _a9 + 1) <= _MITTIG_MAX_G:
+                            _m9 = (_a9 + _b9) // 2
+                            _zx9 = cx if _senk9 else _m9
+                            _zy9 = _m9 if _senk9 else cy
+                            if _m9 != _key9 and _gemalt_irgendwo(W['pg'], _zx9, _zy9):
+                                _WANDMITTE.append((abs(_m9 - _key9), A['room'],
+                                                   B['room'], _b9 - _a9 + 1))
+                                if _senk9: cy = _m9
+                                else:      cx = _m9
         for X in (A, B):
             X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
@@ -3971,6 +4246,45 @@ def main():
                                                        v['mx'], v['my'])
                        for v in _weg_klemm) or '-'))
 
+    for v in vor:
+        if v.get('weg'): continue
+        # MITTIG IM WANDLAUF - AUCH FUER UNGEPAARTE MARKEN.
+        # NUTZER-BEFUND 2026-09-07: "Tuermarker fuer den Fahrstuhl. In der Map soll
+        # der in die Mitte eingezeichnet werden verdammt...."
+        # Die Fahrstuhlmarke ist UNGEPAART (zid2 = 255) und lief deshalb an dem
+        # ganzen Paar-Block vorbei, in dem gemittet wird. Gemessen auf Blatt 4:
+        # ihr Trigger ist 2000 Welteinheiten breit = Karte x133..137, die gemalte
+        # Kabinenwand aber nur x127..136 - die Marke sass auf x135, am rechten Ende,
+        # und ragte rechts heraus. Der Wandlauf ist 10 px, Mitte x=131.
+        # Dieselbe am Original gemessene Grenze wie im Paar-Block (bis 16 px setzt
+        # der Kuenstler mittig, darueber frei - 72 gemalte Tuersymbole).
+        if v.get('r', 255) != 255 and v.get('seite', 4) < 4:
+            _sk = v['seite'] in (1, 3)
+            _RR = rects(v['pg'])
+            if v['r'] < len(_RR):
+                _rx0, _ry0, _rw0, _rh0 = _RR[v['r']]
+                if _sk:
+                    _rng = range(_ry0, _ry0 + _rh0)
+                    _f = lambda _t: _kunst_wand(v['pg'], v['r'], v['mx'], _t)
+                    _k0 = v['my']
+                else:
+                    _rng = range(_rx0, _rx0 + _rw0)
+                    _f = lambda _t: _kunst_wand(v['pg'], v['r'], _t, v['my'])
+                    _k0 = v['mx']
+                if _f(_k0):
+                    _aa = _bb = _k0
+                    while (_aa - 1) in _rng and _f(_aa - 1): _aa -= 1
+                    while (_bb + 1) in _rng and _f(_bb + 1): _bb += 1
+                    if 1 < (_bb - _aa + 1) <= _MITTIG_MAX_G:
+                        _mm0 = (_aa + _bb) // 2
+                        _zx0 = v['mx'] if _sk else _mm0
+                        _zy0 = _mm0 if _sk else v['my']
+                        if _mm0 != _k0 and _gemalt_irgendwo(v['pg'], _zx0, _zy0):
+                            _WANDMITTE.append((abs(_mm0 - _k0), v['room'],
+                                               v['room'], _bb - _aa + 1))
+                            if _sk: v['my'] = _mm0
+                            else:   v['mx'] = _mm0
+
     seen = {}
     for v in vor:
         if v.get('weg'): continue
@@ -4033,53 +4347,151 @@ def main():
                  f" {_ap} }},")
     o.append("};")
     o.append("")
-    # ---- INNENWAENDE aus den Selbst-Tueren -------------------------------------
-    # ⛔ NUTZER-BEFUND 2026-09-07 (ROOM1110): "da fehlt noch eine Querwand ... Diese 2
-    # Raeume sind separate Raeume, sie gehoeren nicht zu den grossen Raum."
-    # Zwei Selbst-Tuer-Records, deren Ausloeser-Rechtecke sich auf einer Achse nicht
-    # ueberlappen und die den Spieler jeweils JENSEITS der Luecke absetzen, sind die
-    # beiden Seiten EINES Durchgangs - dazwischen steht eine Wand. Die Kachel des
-    # Kuenstlers zeichnet sie nicht (fuer ROOM1110 ist sie EIN Block), und eine eigene
-    # Zone geht auch nicht: die zwei Haelften braeuchten 41x33 und 27x34 px, frei sind
-    # auf Blatt 3 nur Rect 6 (40x48, gemessen ROOM1100s) und Rect 7 (48x48). Mit der
-    # Zerlegung verdraengte der Loeser ROOM1100 und das Audit stieg von 182 auf 202.
-    # Der Port zeichnet die Wand deshalb selbst - dieselbe Klasse wie die Tuer- und
-    # Treppensymbole, die RE1.5 auf seinen Kacheln ebenfalls nicht fuehrt.
+    # ---- INNENWAENDE aus den KOLLISIONSZELLEN ---------------------------------
+    # NUTZER-BEFUND 2026-09-07 (ROOM1110): "da fehlt noch eine Querwand ... Diese 2
+    # Raeume sind separate Raeume, sie gehoeren nicht zu den grossen Raum." Und zur
+    # ersten Fassung: "du hast noch immer diese komische zu lange wand in der falschen
+    # farbe + nicht die separaten raeume".
+    #
+    # DIE SCA-ZELLEN SIND DIE WAENDE, NICHT DER BODEN. Das steht seit dem
+    # 2026-06-07 in re15_collision.c (Kopfkommentar, nach 135-Agenten-RE):
+    #     "the player walks in the band-MATCH-FREE complement ... band-4 cells = walls
+    #      and push-out is correct"
+    # Dieses Werkzeug hat sie umgekehrt gelesen und daraus Grundrisse gebaut.
+    # GEMESSEN an 3727 Standorten des Nutzers aus befund.log (13 Raeume): nur 2,9 %
+    # liegen in einer soliden Typ-1-Zelle des eigenen Bands - in 10 der 13 Raeume KEIN
+    # EINZIGER. Waeren die Zellen der Boden, muesste der Wert bei 100 % liegen.
+    # (Die 18,7 % in ROOM1060 sind Treppenzellen, Typ != 1.)
+    #
+    # Damit steht die gesuchte Trennwand direkt in den Daten. ROOM1110, auf Rect 5
+    # projiziert, gegen die fuenf F9-Marken des Nutzers:
+    #       Wand y121..125            (x189..212)
+    #          Marke 2 (190,126)  Marke 3 (212,129)      <- oberer Raum
+    #       Wand y130..136            (x189..212)        <- SEINE TRENNWAND
+    #          Marke 4 (190,137)  Marke 5 (212,140)      <- unterer Raum
+    #       Wand y141..144            (x189..212)
+    # Er hatte sie in fehler/howto.png bei y=134 gezeichnet.
+    #
+    # ZWEI REGELN, beide geometrisch, keine gewaehlte Zahl:
+    #  (1) AUSSENWAENDE NICHT ZEICHNEN - die Kachel malt sie schon. Eine Innenwand hat
+    #      auf BEIDEN Seiten ihrer schmalen Achse gemalte Flaeche, eine Aussenwand nicht.
+    #      Ohne diese Regel wuerde ROOM1110s Ostwand (x146..151, 6 px dick) als Balken
+    #      mitten in den Raum gemalt.
+    #  (2) ALS MITTELLINIE, nicht als Flaeche. Eine Weltwand ist ~2000 Einheiten dick,
+    #      auf Blatt 3 sind das 5-7 px - als Flaeche gezeichnet mauert sie den Raum zu.
+    #      Der Kuenstler malt seine Waende 1 px breit; die Mittellinie trifft das.
+    # Dazu die Begrenzung auf die GEMALTE Flaeche: die alte Wand lief von y113 bis y145
+    # und ragte damit 9 px ins Leere - das war die "zu lange wand".
     o.append("/* INNENWAENDE in Karten-Pixeln: Linie (x0,y0)-(x1,y1) im Rechteck der Zone.")
-    o.append(" * Abgeleitet aus SELBST-Tueren, deren beide Seiten den Spieler jenseits")
-    o.append(" * einer Luecke zwischen ihren Ausloeser-Rechtecken absetzen - dazwischen")
-    o.append(" * steht eine Wand. Gezeichnet wird sie nur fuer besuchte Zonen. */")
+    o.append(" * Quelle: die soliden Typ-1-SCA-Zellen des Bands - das SIND die Waende")
+    o.append(" * (re15_collision.c: der Spieler laeuft im band-freien Komplement; an 3727")
+    o.append(" * Nutzer-Standorten zu 97,1 % bestaetigt). Gezeichnet wird die Mittellinie,")
+    o.append(" * begrenzt auf die gemalte Flaeche, und nur wo BEIDSEITS Raum liegt -")
+    o.append(" * Aussenwaende malt die Kachel selbst. Nur fuer besuchte Zonen. */")
     o.append("typedef struct { unsigned char page, rect; short x0, y0, x1, y1;")
     o.append("                 unsigned char zid; } re15_map_wall_t;")
     o.append("static const re15_map_wall_t s_map_walls[] = {")
     _nw = 0
     _gesehen = set()
-    for _b in sorted(waende_all):
+    _stat = {'zellen': 0, 'aussen': 0, 'leer': 0, 'innen': 0}
+
+    def _band_der_zone(_b, _pg):
+        """Das Stockwerk-Band, dessen Waende auf DIESEM Blatt gelten.
+        Quelle in dieser Reihenfolge: die Etagen-Tabelle (Band -> Blatt, aus den
+        Tueren abgeleitet), sonst das haeufigste Band der Tueren des Raums, sonst 0."""
+        for _fz in floors:
+            if _fz[0] == _b and _fz[3] == _pg:
+                return _fz[2]
+        _bd = [d.get('band', 0) for d in (doors_all.get(_b) or ())]
+        if _bd:
+            return max(set(_bd), key=_bd.count)
+        return 0
+
+    for _b in sorted(sca_all):
         for _zi in range(len(zinfo.get(_b, ()))):
             _key = (_b, _zi)
             if _key not in assign:
                 continue
             _pg, _r = assign[_key]
-            _bb = zinfo[_b][_zi]
-            for _achse, _k in waende_all[_b]:
-                # Die Wand laeuft quer zur Achse durch die ganze Zone.
-                if _achse == 0:
-                    _p0 = to_map(_b, _zi, _k, _bb[2]); _p1 = to_map(_b, _zi, _k, _bb[3])
-                else:
-                    _p0 = to_map(_b, _zi, _bb[0], _k); _p1 = to_map(_b, _zi, _bb[1], _k)
+            if _r == 255:
+                continue                       # Grundriss-Zeichnung: sie IST die Wand
+            _R = rects(_pg)
+            if _r >= len(_R):
+                continue
+            _rx, _ry, _rw, _rh = _R[_r]
+            _px = page_pix(_pg)
+            _uv = rect_uv(_pg, _r)
+            if _px is None or _uv is None:
+                continue
+            _u, _v = _uv
+
+            def _gemalt(_mx, _my, _rx=_rx, _ry=_ry, _rw=_rw, _rh=_rh,
+                        _u=_u, _v=_v, _px=_px):
+                _i, _j = _mx - _rx, _my - _ry
+                if not (0 <= _i < _rw and 0 <= _j < _rh):
+                    return False
+                _tx, _ty = _u + _i, _v + _j
+                return 0 <= _tx < 256 and 0 <= _ty < 256 and _px[_ty][_tx] != 0
+
+            _bd = _band_der_zone(_b, _pg)
+            for _c in sca_all[_b]:
+                if len(_c) < 7:
+                    continue
+                _cx, _cz, _cw, _cd, _cfl, _ct, _cu0 = _c[0], _c[1], _c[2], _c[3], _c[4], _c[5], _c[6]
+                if _cw <= 0 or _cd <= 0:
+                    continue
+                if (_ct & 0x0f) != 1:            # nur Rechtecke; Treppen/Schraegen nicht
+                    continue
+                if not (_cu0 & 1):               # nur solide (u0&1), sonst nur Status
+                    continue
+                if (_cfl >> 4) != _bd:           # nur das Band dieses Blattes
+                    continue
+                _stat['zellen'] += 1
+                _p0 = to_map(_b, _zi, _cx, _cz)
+                _p1 = to_map(_b, _zi, _cx + _cw, _cz + _cd)
                 if not _p0 or not _p1 or _p0[0] != _pg or _p1[0] != _pg:
                     continue
+                _a0, _a1 = sorted((_p0[2], _p1[2]))
+                _b0, _b1 = sorted((_p0[3], _p1[3]))
+                _sp = [(_i, _j) for _i in range(_a0, _a1 + 1)
+                                for _j in range(_b0, _b1 + 1) if _gemalt(_i, _j)]
+                if not _sp:
+                    _stat['leer'] += 1
+                    continue
+                _a0 = min(q[0] for q in _sp); _a1 = max(q[0] for q in _sp)
+                _b0 = min(q[1] for q in _sp); _b1 = max(q[1] for q in _sp)
+                _senk = (_a1 - _a0) <= (_b1 - _b0)      # schmale Achse = x?
+                if _senk:
+                    _aussen = not (_gemalt(_a0 - 1, (_b0 + _b1) // 2) and
+                                   _gemalt(_a1 + 1, (_b0 + _b1) // 2))
+                else:
+                    _aussen = not (_gemalt((_a0 + _a1) // 2, _b0 - 1) and
+                                   _gemalt((_a0 + _a1) // 2, _b1 + 1))
+                if _aussen:
+                    _stat['aussen'] += 1
+                    continue
+                if _senk:
+                    _m = (_a0 + _a1) // 2
+                    _lx0, _ly0, _lx1, _ly1 = _m, _b0, _m, _b1
+                else:
+                    _m = (_b0 + _b1) // 2
+                    _lx0, _ly0, _lx1, _ly1 = _a0, _m, _a1, _m
+                if _lx0 == _lx1 and _ly0 == _ly1:
+                    continue                     # ein Punkt ist keine Wand
                 _zd = zid_von.get((_b, _zi), 255)
-                _sig = (_p0[0], _r, _p0[2], _p0[3], _p1[2], _p1[3])
+                _sig = (_pg, _r, _lx0, _ly0, _lx1, _ly1)
                 if _sig in _gesehen:
-                    continue              # dieselbe Wand von zwei Tuerpaaren belegt
+                    continue
                 _gesehen.add(_sig)
-                o.append(f"    {{ {_p0[0]:2d}, {_r:2d}, {_p0[2]:4d}, {_p0[3]:4d},"
-                         f" {_p1[2]:4d}, {_p1[3]:4d}, {_zd:3d} }},")
+                o.append(f"    {{ {_pg:2d}, {_r:2d}, {_lx0:4d}, {_ly0:4d},"
+                         f" {_lx1:4d}, {_ly1:4d}, {_zd:3d} }},")
                 _nw += 1
+                _stat['innen'] += 1
     o.append("};")
     o.append("")
-    print("%d Innenwand-Linien aus Selbst-Tueren" % _nw)
+    print("%d Innenwand-Linien aus den Kollisionszellen "
+          "(%d Wandzellen geprueft: %d innen, %d aussen, %d ausserhalb der Zeichnung)"
+          % (_nw, _stat['zellen'], _stat['innen'], _stat['aussen'], _stat['leer']))
     o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
     o.append(" * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber")
     o.append(" * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */")
@@ -4139,6 +4551,25 @@ def main():
     o.append("};")
     print(f"{sum(len(v) for v in RECT_FIX.values())} Ersatz-Rechtecke "
            f"fuer Blatt {sorted(RECT_FIX)}")
+
+    if _GRENZWAHL:
+        print("Gleichstand ueber die gemeinsame GRENZE entschieden: %d Marken"
+              % len(_GRENZWAHL))
+
+    if _WANDMITTE:
+        _w5 = sorted(x[0] for x in _WANDMITTE)
+        print("In die Mitte des WANDLAUFS gerueckt (keine gemalte Oeffnung): "
+              "%d Marken, Median %d px, groesste %d px"
+              % (len(_w5), _w5[len(_w5) // 2], _w5[-1]))
+
+    if _WANDDIAG:
+        _w4 = sorted(x[0] for x in _WANDDIAG)
+        print("DIAGONALER Zug verworfen (Eck-Anschlag, kein Messwert): %d Marken, "
+              "Median %d px, groesster %d px"
+              % (len(_w4), _w4[len(_w4) // 2], _w4[-1]))
+        for _d4, _q1, _q2, _v4, _n4 in sorted(_WANDDIAG, reverse=True)[:8]:
+            print("      %3d px  ROOM%04X <-> ROOM%04X  %s haette -> %s"
+                  % (_d4, _q1, _q2, _v4, _n4))
 
     if _WANDRUECK:
         _w3 = sorted(x[0] for x in _WANDRUECK)

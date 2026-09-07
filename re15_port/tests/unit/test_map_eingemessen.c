@@ -142,10 +142,26 @@ int main(void)
             g_fail = 1;
         } else {
             char t[200];
-            int d = abs(mx - 117) + abs(my - 143);
+            /* (2026-09-07) DIE MITTE, NICHT DAS WANDENDE - UND DAS UEBERSCHREIBT
+             * EINE AELTERE MESSUNG DESSELBEN NUTZERS. BEIDES GEHOERT HIERHIN:
+             *   2026-09-06, er stand an der 2F-Fahrstuhltuer (Welt 1618/6868):
+             *        "die muss genau dort hin" -> (117,143)
+             *   2026-09-07, zur 3F-Fahrstuhltuer:
+             *        "In der Map soll der in die Mitte eingezeichnet werden verdammt"
+             * Die Geometrie ist auf beiden Etagen IDENTISCH - dieselbe Kabinen-Kachel,
+             * Wandlauf 10 px, die Marke jeweils 1 px vor dem rechten Ende:
+             *      2F Blatt 3 Rect 0, Zeile 143:  #......##########   x109..118, Marke 117
+             *      3F Blatt 4 Rect 5, Zeile 146:  #......##########   x127..136, Marke 135
+             * Es kann also nicht beides stimmen. Genommen wird die spaetere, ausdrueck-
+             * liche Anweisung (Mitte); die Marke des 06.09. war die TUERSTELLE, an der
+             * er stand, nicht die Stelle, an der das Symbol gemalt gehoert. Die Welt-
+             * position bleibt als Projektionspruefung oben erhalten - nur diese
+             * Symbol-Pruefung wandert auf die Wandmitte.
+             * Faellt das hier, ist die Wandlauf-Mittigkeit im Generator kaputt. */
+            int d = abs(mx - 113) + abs(my - 143);
             snprintf(t, sizeof t,
-                     "Fahrstuhltuer steht auf der F9-Marke des Nutzers: (%d,%d), "
-                     "soll (117,143), Abstand %d px (<= 3)", mx, my, d);
+                     "Fahrstuhltuer steht in der MITTE des Wandlaufs: (%d,%d), "
+                     "soll (113,143), Abstand %d px (<= 3)", mx, my, d);
             CHECK(t, d <= 3);
         }
     }

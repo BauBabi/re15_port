@@ -1882,13 +1882,29 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * px, frei sind auf Blatt 3 nur Rect 6 (40x48, gemessen ROOM1100s) und Rect 7
      * (48x48) - mit der Zerlegung verdraengte der Loeser ROOM1100 und das Audit stieg
      * von 182 auf 202. Also gezeichnet, wie Tuer- und Treppensymbole auch.
-     * Farbe: der Wand-Palettenindex der Kacheln, rgb(176,176,176). */
+     * FARBE: DIE UMRANDUNGSFARBE DES RECHTECKS, NICHT GRAU.
+     * NUTZER-BEFUND 2026-09-07: "du hast noch immer diese komische zu lange wand in
+     * der FALSCHEN FARBE". Die Wand trug den Wand-Palettenindex der Kacheln,
+     * rgb(176,176,176) - das ist die Farbe, in der der KUENSTLER auf seine Kachel malt.
+     * Der Port malt die Rechtecke aber nicht in Kachelfarben, sondern nach ZUSTAND
+     * (unten, L2119-2120): besucht = rgb(40,144,40), aktuell = rgb(192,24,24). Eine
+     * graue Linie im roten Raum ist deshalb sichtbar fremd. Die Innenwand gehoert zur
+     * Umrandung dieses Raums und nimmt deren Farbe.
+     * LAENGE: der Generator begrenzt jede Wand jetzt auf die GEMALTE Flaeche der
+     * Kachel; die alte Linie lief von y113 bis y145 und ragte 9 px ins Leere. */
     if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
         int nw = re15_map_wall_count(), w;
         for (w = 0; w < nw; w++) {
             int wpage, wrect, wx0, wy0, wx1, wy1;
             if (!re15_map_wall_get(w, &wpage, &wrect, &wx0, &wy0, &wx1, &wy1)) continue;
             if (wpage != (int)st->map_page) continue;
+            /* Eine Wand in einem Raum, den man noch nicht gesehen hat, verraet
+             * Gelaende - dieselbe Regel wie fuer Tuer- und Treppensymbole. */
+            {
+                int _rs0 = re15_map_rect_state((unsigned)wpage, (unsigned)wrect);
+                if (_rs0 != RE15_MAP_RECT_CURRENT &&
+                    _rs0 != RE15_MAP_RECT_VISITED) continue;
+            }
             if (e.n < e.max) {
                 re15_inv_op_t *q = &e.ops[e.n++];
                 int a0, a1;
@@ -1903,7 +1919,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     q->x = (int16_t)a0;  q->y = (int16_t)wy0;
                     q->w = (int16_t)(a1 - a0 + 1); q->h = 1;
                 }
-                q->r = 176; q->g = 176; q->b = 176;
+                {
+                    int _rs = re15_map_rect_state((unsigned)wpage,
+                                                  (unsigned)wrect);
+                    if (_rs == RE15_MAP_RECT_CURRENT)
+                        { q->r = 192; q->g =  24; q->b =  24; }
+                    else { q->r =  40; q->g = 144; q->b =  40; }
+                }
             }
         }
     }
