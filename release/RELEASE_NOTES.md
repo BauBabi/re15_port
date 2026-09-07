@@ -1,74 +1,91 @@
-# RE1.5 Port — v0.7.3 (Early Preview)
+# RE1.5 Port — v0.7.4 (Early Preview)
 
-**Aus deiner Zeichnung `fehler/howto.png` und deinem `befund.log` vom 07.09.:** der
-Spielermarker bewegte sich im Treppenhaus nicht mit. Dahinter steckte ein Fehler, der
-gleich mehrere deiner Meldungen erklärt.
-
----
-
-## Der Marker stand still — und die Treppe stand in der Ecke
-
-Du hast es im Treppenhaus auf 2F gesehen: *„Da habe ich auch gesehen das sich der
-Marker nicht bewegt, wenn sich der Spieler bewegt."*
-
-Das Original führt für 33 seiner 72 Karten-Räume eine eigene **Kartenzeile**
-(`@0x800768b0`, ausgewertet in `FUN_800473f8 @0x8004741c-0x80047528`):
-
-```
-mx =  ((((wx + 32000) * 10 * sx) >> 20) + 5) / 10 + ox
-my = -((((wz + 32000) * 10 * sy) >> 20) + 5) / 10 + oy
-```
-
-Diese Zeile bildet **absolut** auf ein Blatt ab — nämlich auf das, wo das *Original*
-den Raum zeichnet. Das Treppenhaus steht dort auf 1F (Seite 2).
-
-Die Etagen-Umschaltung ist dagegen eine Ergänzung von mir: ich zeichne das
-Treppenhaus zusätzlich auf 2F und 3F, dort an anderer Stelle. Dieselbe absolute Zeile
-zeigt daneben — der Marker wird an die Rechteckkante geklemmt und steht.
-
-An **deinen eigenen 522 Standorten** in ROOM1060 gemessen:
-
-| Blatt | Zeile trifft das Rechteck | verschiedene Markerpixel |
-|---|---|---|
-| Seite 2 (1F, Originalblatt) | 275/522 | 45 |
-| Seite 3 (**2F**) | **0/522** | **6** — alle in *einer* Spalte, x=122 |
-| Seite 4 (3F) | 0/522 | 9 |
-
-Betroffen waren 14 Zeilen: Treppenhaus, **Fahrstuhl** (auch auf 2F/3F), ROOM4020,
-ROOM50D0. Über die begehbaren Punkte gemessen:
-
-| | mit Zeile | ohne Zeile |
-|---|---|---|
-| ROOM1060 2F / 3F | 6 / 9 Pixel | **80 / 80** |
-| ROOM1080 2F / 3F | 17 / 5 | 12 / 12 |
-| ROOM4020 | 6 / 3 | 13 / 13 |
-| ROOM50D0 | 53 | **244** |
-
-Auf dem Originalblatt bleibt die Zeile unangetastet — dort ist sie die Vorgabe des
-Originals und damit der Maßstab.
-
-**Dieselbe Ursache traf die Marken.** Die Treppe im Treppenhaus stand auf 2F wörtlich
-in der Ecke bei (118,157). Jetzt sind es **zwei** Treppenmarken bei (125,145) und
-(133,147) — und du hattest zwei Leitersymbole bei etwa (121,142) und (131,142)
-gezeichnet. 4–5 px, ohne dass deine Zeichnung in die Herleitung eingegangen wäre.
-
-## Was ich NICHT belegen konnte
-
-Deine zwei Räume rechts, *„separat und mit eigener Wand"*. Die senkrechte Wand bei
-Karten-x 189 steht — sie folgt aus ROOM1110s Selbst-Türpaar. Für eine **waagerechte**
-Trennung zwischen deinen beiden Kästen finde ich keinen Beleg:
-
-* die **gemalte Kachel** des Originals (Rect 5, uv 184/48) zeigt dort eine
-  durchgehende Fläche — Wandindex 4 nur außen herum;
-* die **Kollisionszellen** haben in diesem Bereich keine Lücke, die eine Linie ergäbe;
-* die **Türdaten** kennen nur die eine Wand, in der beide Türpaare sitzen.
-
-Ich trage sie deshalb nicht ein. Was mir helfen würde: an welcher Stelle im Raum
-stehst du, wenn du auf der einen bzw. der anderen Seite dieser Wand bist? Zwei
-F9-Marken — je eine links und rechts davon — legen die Linie fest, so wie deine
-Türmarken es beim Gangende getan haben.
+**Aus deinen F9-Marken vom 07.09.** Der wichtigste Fund ist größer als die Wand, um die
+es ging: mein Kartengenerator hat die Kollisionsdaten seit Monaten **invertiert** gelesen.
 
 ---
 
-**280/280 Tests**, lokal und im Linux-Container. Neu: `test_map_etagenzeile` prüft die
-Regel *und* ihre Wirkung — gegen den alten Stand fällt er mit 6 Fehlschlägen durch.
+## Die Kollisionszellen sind die WÄNDE, nicht der Boden
+
+Das steht seit dem 2026-06-07 in `re15_collision.c`, nach einem 135-Agenten-RE:
+
+> *„the player walks in the band-MATCH-FREE complement … band-4 cells = walls"*
+
+Der Generator hat daraus Grundrisse gebaut — also die Wände als begehbare Fläche
+gezeichnet. An **3727 Standorten**, die du selbst abgelaufen bist (13 Räume aus
+`befund.log`), liegen nur **2,9 %** in einer soliden Typ-1-Zelle des eigenen Bands; in
+**10 der 13 Räume kein einziger**. Wären es Bodenzellen, müsste der Wert bei 100 % liegen.
+
+Damit stand deine Trennwand die ganze Zeit in den Daten. Gegen deine fünf F9-Marken:
+
+```
+Wand y121..125  (x189..212)
+   Marke 2 (190,126)   Marke 3 (212,129)      oberer Raum
+Wand y130..136  (x189..212)   <-- deine Trennwand, gezeichnet bei y=134
+   Marke 4 (190,137)   Marke 5 (212,140)      unterer Raum
+Wand y141..144  (x189..212)
+```
+
+Zwei geometrische Regeln, keine gewählte Zahl: **Außenwände** werden nicht gezeichnet
+(die malt die Kachel selbst — eine Innenwand hat beidseits Raum), und gezeichnet wird die
+**Mittellinie**, nicht die Fläche (eine Weltwand ist ~2000 Einheiten = 5–7 px dick und
+würde den Raum zumauern).
+
+## „Zu lange Wand in der falschen Farbe"
+
+**Länge:** jede Wand endet jetzt an der gemalten Fläche. Die alte lief y113..145 und
+ragte 9 px ins Leere.
+
+**Farbe:** sie trug rgb(176,176,176) — den Palettenindex, in dem der *Künstler* auf seine
+Kachel malt. Der Port malt Rechtecke aber nach Zustand: aktuell rgb(192,24,24), besucht
+rgb(40,144,40). Eine graue Linie im roten Raum ist sichtbar fremd. Die Innenwand nimmt
+jetzt die Umrandungsfarbe ihres Raums.
+
+## Die zwei Türmarken
+
+| | deine F9-Marke | Türdaten von deiner Seite | vorher |
+|---|---|---|---|
+| Fahrstuhl | (134,146) | (135,146) — 1 px | (135,146), am Wandrand |
+| Treppenhaus | (138,152) | (139,152) — 1 px | **(153,142)** — 18 px |
+
+**Fahrstuhl:** die Marke ist **ungepaart** und lief an dem ganzen Block vorbei, in dem
+überhaupt gemittet wird. Ihr Trigger ist 2000 Welteinheiten breit = Karte x133..137, die
+gemalte Kabinenwand nur x127..136 — das Symbol saß am rechten Ende und ragte heraus.
+Wandlauf 10 px, Mitte **x=131**. Die Mittigkeit gilt jetzt für alle Marken, mit derselben
+am Original gemessenen 16-px-Grenze wie bisher.
+
+**Treppenhaus:** die Marke wird von zwei Seiten gerechnet, und die Auswahl war ein echter
+**Münzwurf**. Das Kriterium misst gegen das Nachbar-*Rechteck*; auf 3F liegt Rect 1
+komplett in Rect 5, also 0 gegen 0 — und dann gewann stumpf die erste Seite. Die gemalten
+*Flächen* überlappen nicht, sie ergänzen sich; ihre gemeinsame Grenze ist die Wand, in der
+die Tür sitzt. Rect 5 liegt 2 px davon entfernt, Rect 1 vier.
+
+---
+
+## Zwei Dinge, die kein Fortschritt sind
+
+**1. Ich überschreibe eine ältere Messung von dir.** Am 06.09. standst du an der
+**2F**-Fahrstuhltür und hast (117,143) bestätigt — das ist *nicht* mittig. Heute sagst du
+für dieselbe Stelle auf 3F „in die Mitte". Die Geometrie ist auf beiden Etagen identisch:
+
+```
+2F  Zeile 143:  #......##########      Wandlauf x109..118, Mitte 113, Marke auf 117
+3F  Zeile 146:  #......##########      Wandlauf x127..136, Mitte 131, Marke auf 135
+```
+
+Es kann also nur eine der beiden gelten. Ich habe deine heutige, ausdrückliche Anweisung
+genommen und beide Aussagen im Test hinterlegt.
+
+**2. Ein Riegel steigt von 8 auf 9.** Die Umbauten haben 40 der 193 Marken bewegt, und
+dabei ist ein zusätzliches Paar überlappender Türsymbole entstanden. Das Paar konnte ich
+**nicht benennen**: in der statischen Marken-Tabelle liegt kein Symbolpaar dichter als
+2 px beieinander — die neun entstehen erst zur Laufzeit. Ich habe die Schranke angehoben
+und im Test hingeschrieben, dass das eine Verschlechterung ist und wie man sie
+weiterverfolgt. Auf der Original-Kunst sind es 7; dorthin gehört das Ziel.
+
+**Offen:** die 2F-Treppenhaustür steht jetzt bei (118,149) statt (135,139). Dafür habe ich
+nur deine Zeichnung, keine Messung — ein F9 davor legt sie fest.
+
+---
+
+**280/280 Tests**, lokal und im Linux-Container.
