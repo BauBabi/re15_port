@@ -461,6 +461,105 @@ def read_rdt(rid):
     # wiederkehrt.
     return sca, doors, stairs
 
+def innenwaende(doors, eigen):
+    """-> [(achse, koordinate)] fuer jede INNENWAND, die SELBST-Tueren belegen.
+
+    ⛔ NUTZER-BEFUND 2026-09-07 (ROOM1110): "da fehlt noch eine Querwand ... Diese 2
+    Raeume sind separate Raeume, sie gehoeren nicht zu den grossen Raum."
+
+    Eine SELBST-Tuer (dest == eigener Raum) heisst nicht immer "zwei weit getrennte
+    Bereiche". Gemessen:
+        ROOM1170: die Selbst-Tueren springen 14000 und 42000 Einheiten weit
+                  -> zwei Orte, die Kollisionszellen liegen getrennt, zones_of findet sie.
+        ROOM1110: vier Selbst-Tueren, Sprung jeweils nur ~1450 Einheiten
+                  -> eine DUENNE WAND. Die Zellen beruehren sich, zones_of sieht EINEN
+                     Bereich, und auf der Karte verschmelzen zwei Raeume zu einem Block.
+    Die Wand ist aus den Ausloeser-Rechtecken ablesbar und braucht keine gewaehlte Zahl:
+    zwei Selbst-Tuer-Records, deren Rechtecke sich auf einer Achse NICHT ueberlappen,
+    auf der anderen aber schon, sind die beiden Seiten DESSELBEN Durchgangs; die Wand
+    liegt in der Luecke dazwischen.
+    ROOM1110: Rechtecke x -3400..-2800 und -4100..-3500 -> Wand bei x = -3450, und
+    dieselbe Wand traegt das zweite Tuerpaar bei z = 4400.
+    """
+    selbst = [d for d in doors if d['dest'] == eigen and (d['rw'] or d['rd'])]
+    aus = []
+    for i in range(len(selbst)):
+        A = selbst[i]
+        for j in range(i + 1, len(selbst)):
+            B = selbst[j]
+            for achse in (0, 1):
+                a0, a1 = (A['rx'], A['rx'] + A['rw']) if achse == 0 else (A['rz'], A['rz'] + A['rd'])
+                b0, b1 = (B['rx'], B['rx'] + B['rw']) if achse == 0 else (B['rz'], B['rz'] + B['rd'])
+                q0, q1 = (A['rz'], A['rz'] + A['rd']) if achse == 0 else (A['rx'], A['rx'] + A['rw'])
+                r0, r1 = (B['rz'], B['rz'] + B['rd']) if achse == 0 else (B['rx'], B['rx'] + B['rw'])
+                if q0 >= r1 or r0 >= q1:          # quer zur Wand muessen sie sich decken
+                    continue
+                # ⛔ DIE BEIDEN MUESSEN SEITEN DESSELBEN DURCHGANGS SEIN, nicht zwei
+                # Tueren IN DERSELBEN Wand. Kriterium: jede Seite setzt den Spieler
+                # JENSEITS der Wand ab. Ohne das meldete ROOM1110 eine zweite,
+                # erfundene Wand bei z=1900 - das sind in Wahrheit die zwei Tueren
+                # derselben Wand bei z=-600 und z=4400.
+                sa = A['nx'] if achse == 0 else A['nz']
+                sb = B['nx'] if achse == 0 else B['nz']
+                if a1 <= b0:                      # A liegt vor B, dazwischen die Wand
+                    k = (a1 + b0) // 2
+                    if sa > k and sb < k:
+                        aus.append((achse, k)); break
+                if b1 <= a0:
+                    k = (b1 + a0) // 2
+                    if sb > k and sa < k:
+                        aus.append((achse, k)); break
+    # dieselbe Wand kann von mehreren Tuerpaaren belegt sein
+    zusammen = []
+    for achse, k in sorted(set(aus)):
+        if any(a == achse and abs(k - v) <= 500 for a, v in zusammen):
+            continue
+        zusammen.append((achse, k))
+    return zusammen
+
+
+def teile_an_waenden(sca, waende):
+    """Bereiche NEU bilden, wobei die Innenwaende trennen.
+
+    ⛔ NICHT die Bbox schneiden. Ein erster Wurf zerlegte jede Zonen-Bbox an JEDER Wand
+    und bildete damit das Kreuzprodukt: ROOM4050 (5 Waende) zerfiel in 12 Kaesten,
+    obwohl es hoechstens ein paar Raeume sind. Getrennt werden die ZELLEN: jede
+    Kollisionszelle bekommt ihre Seite je Wand, und nur Zellen mit gleicher Seitenfolge
+    duerfen zusammenwachsen. Danach gilt wieder die normale Nachbarschaft.
+    """
+    if not waende:
+        return None
+    def seite(c):
+        x, z, w, d = c[:4]
+        mx, mz = x + w // 2, z + d // 2
+        return tuple(1 if ((mx if a == 0 else mz) > k) else 0 for a, k in waende)
+    gruppen = collections.defaultdict(list)
+    for c in sca:
+        gruppen[seite(c)].append(c)
+    aus = []
+    for sf, teil in gruppen.items():
+        for bb in zones_of(teil):
+            # ⛔ AN DER WAND BESCHNEIDEN. Eine Zelle kann die Wand ueberragen; ihre Bbox
+            # laege dann auf BEIDEN Seiten und die zwei Bereiche ueberlappten sich (bei
+            # ROOM1110 um 500 Einheiten, bei ROOM2040 um 22000). zone_index_at nimmt die
+            # KLEINSTE passende Zone - bei ueberlappenden Kaesten also womoeglich die
+            # falsche. Der Zuschnitt macht die Trennung eindeutig.
+            x0, x1, z0, z1 = bb
+            for i, (a, k) in enumerate(waende):
+                if a == 0:
+                    if sf[i]: x0 = max(x0, k)
+                    else:     x1 = min(x1, k)
+                else:
+                    if sf[i]: z0 = max(z0, k)
+                    else:     z1 = min(z1, k)
+            if x1 - x0 > 0 and z1 - z0 > 0:
+                aus.append((x0, x1, z0, z1))
+    aus.sort(key=lambda b: -((b[1] - b[0]) * (b[3] - b[2])))
+    # Splitter unter MIN_FRAC verwerfen wie in zones_of
+    ges = sum((b[1] - b[0]) * (b[3] - b[2]) for b in aus) or 1
+    return [b for b in aus if (b[1] - b[0]) * (b[3] - b[2]) >= MIN_FRAC * ges]
+
+
 def zones_of(sca):
     """Zusammenhaengende Bereiche der Kollisionsgeometrie."""
     n = len(sca)
@@ -859,6 +958,7 @@ def main():
     doors_all = {}
     stairs_all = {}
     sca_all = {}
+    waende_all = {}
     roh_zonen = {}
     for b in bases:
         got = read_rdt(b) or read_rdt(b + 1)
@@ -866,6 +966,20 @@ def main():
         sca, doors, stairs = got
         sca_all[b] = sca
         zs = zones_of(sca)
+        # ⛔ INNENWAENDE aus den Selbst-Tueren: zones_of sieht nur die Kollisionszellen
+        # und verschmilzt zwei Raeume, die nur eine duenne Wand trennt (ROOM1110).
+        # ⛔ DIE INNENWAENDE TRENNEN KEINE ZONEN (2026-09-07 gemessen und verworfen).
+        # Der Nutzer wollte fuer ROOM1110s zwei Haelften zwei eigene Rechtecke. Das geht
+        # nicht: die Haelften braeuchten 41x33 und 27x34 px, frei sind auf Blatt 3 nur
+        # Rect 6 (40x48) und Rect 7 (48x48) - und Rect 6 ist GEMESSEN ROOM1100s Rechteck
+        # (dessen Tuer stimmt dort auf 3 px). Mit der Zerlegung verdraengte der Loeser
+        # ROOM1100 auf Rect 2, und das Audit stieg von 182 auf 202 echte Fehler.
+        # Der Grund dahinter: die KACHEL des Kuenstlers fuer ROOM1110 ist EIN Block ohne
+        # Innenwand - fuer die Haelften gibt es gar keine zweite Zeichnung.
+        # Die Wand wird deshalb GEZEICHNET (s_map_walls, unten) statt die Zone zu teilen.
+        _w = innenwaende(doors, b)
+        if _w:
+            waende_all[b] = _w
         if zs: roh_zonen[b] = zs
         doors_all[b] = doors
         stairs_all[b] = stairs
@@ -3875,6 +3989,53 @@ def main():
                  f" {_ap} }},")
     o.append("};")
     o.append("")
+    # ---- INNENWAENDE aus den Selbst-Tueren -------------------------------------
+    # ⛔ NUTZER-BEFUND 2026-09-07 (ROOM1110): "da fehlt noch eine Querwand ... Diese 2
+    # Raeume sind separate Raeume, sie gehoeren nicht zu den grossen Raum."
+    # Zwei Selbst-Tuer-Records, deren Ausloeser-Rechtecke sich auf einer Achse nicht
+    # ueberlappen und die den Spieler jeweils JENSEITS der Luecke absetzen, sind die
+    # beiden Seiten EINES Durchgangs - dazwischen steht eine Wand. Die Kachel des
+    # Kuenstlers zeichnet sie nicht (fuer ROOM1110 ist sie EIN Block), und eine eigene
+    # Zone geht auch nicht: die zwei Haelften braeuchten 41x33 und 27x34 px, frei sind
+    # auf Blatt 3 nur Rect 6 (40x48, gemessen ROOM1100s) und Rect 7 (48x48). Mit der
+    # Zerlegung verdraengte der Loeser ROOM1100 und das Audit stieg von 182 auf 202.
+    # Der Port zeichnet die Wand deshalb selbst - dieselbe Klasse wie die Tuer- und
+    # Treppensymbole, die RE1.5 auf seinen Kacheln ebenfalls nicht fuehrt.
+    o.append("/* INNENWAENDE in Karten-Pixeln: Linie (x0,y0)-(x1,y1) im Rechteck der Zone.")
+    o.append(" * Abgeleitet aus SELBST-Tueren, deren beide Seiten den Spieler jenseits")
+    o.append(" * einer Luecke zwischen ihren Ausloeser-Rechtecken absetzen - dazwischen")
+    o.append(" * steht eine Wand. Gezeichnet wird sie nur fuer besuchte Zonen. */")
+    o.append("typedef struct { unsigned char page, rect; short x0, y0, x1, y1;")
+    o.append("                 unsigned char zid; } re15_map_wall_t;")
+    o.append("static const re15_map_wall_t s_map_walls[] = {")
+    _nw = 0
+    _gesehen = set()
+    for _b in sorted(waende_all):
+        for _zi in range(len(zinfo.get(_b, ()))):
+            _key = (_b, _zi)
+            if _key not in assign:
+                continue
+            _pg, _r = assign[_key]
+            _bb = zinfo[_b][_zi]
+            for _achse, _k in waende_all[_b]:
+                # Die Wand laeuft quer zur Achse durch die ganze Zone.
+                if _achse == 0:
+                    _p0 = to_map(_b, _zi, _k, _bb[2]); _p1 = to_map(_b, _zi, _k, _bb[3])
+                else:
+                    _p0 = to_map(_b, _zi, _bb[0], _k); _p1 = to_map(_b, _zi, _bb[1], _k)
+                if not _p0 or not _p1 or _p0[0] != _pg or _p1[0] != _pg:
+                    continue
+                _zd = zid_von.get((_b, _zi), 255)
+                _sig = (_p0[0], _r, _p0[2], _p0[3], _p1[2], _p1[3])
+                if _sig in _gesehen:
+                    continue              # dieselbe Wand von zwei Tuerpaaren belegt
+                _gesehen.add(_sig)
+                o.append(f"    {{ {_p0[0]:2d}, {_r:2d}, {_p0[2]:4d}, {_p0[3]:4d},"
+                         f" {_p1[2]:4d}, {_p1[3]:4d}, {_zd:3d} }},")
+                _nw += 1
+    o.append("};")
+    o.append("")
+    print("%d Innenwand-Linien aus Selbst-Tueren" % _nw)
     o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
     o.append(" * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber")
     o.append(" * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */")

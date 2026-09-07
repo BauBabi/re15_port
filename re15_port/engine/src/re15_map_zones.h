@@ -440,6 +440,24 @@ static const re15_map_mark_t s_map_marks[] = {
     { 12,  7,  265,  118, 5,  98, 255, 0 },
 };
 
+/* INNENWAENDE in Karten-Pixeln: Linie (x0,y0)-(x1,y1) im Rechteck der Zone.
+ * Abgeleitet aus SELBST-Tueren, deren beide Seiten den Spieler jenseits
+ * einer Luecke zwischen ihren Ausloeser-Rechtecken absetzen - dazwischen
+ * steht eine Wand. Gezeichnet wird sie nur fuer besuchte Zonen. */
+typedef struct { unsigned char page, rect; short x0, y0, x1, y1;
+                 unsigned char zid; } re15_map_wall_t;
+static const re15_map_wall_t s_map_walls[] = {
+    {  3,  5,  189,  113,  189,  145,  16 },
+    {  6,  8,  202,  185,  202,  143,  39 },
+    {  8,  2,  127,   83,  127,   68,  69 },
+    {  8,  2,  133,   83,  133,   68,  69 },
+    {  8,  2,  136,   83,  136,   68,  69 },
+    {  8,  2,  127,   83,  142,   83,  69 },
+    {  8,  2,  127,   83,  142,   83,  69 },
+    {  9,  7,  201,  165,  201,   85,  83 },
+    { 12,  7,  265,  130,  265,  109,  98 },
+};
+
 /* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums
  * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber
  * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */

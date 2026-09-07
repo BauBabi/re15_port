@@ -422,6 +422,26 @@ int re15_map_visited(unsigned room_id)
 
 int re15_map_mark_count(void) { return MARK_COUNT; }
 
+/* ---- INNENWAENDE (Port-Ergaenzung) --------------------------------------------
+ * Linien, die eine Zone in getrennte Raeume teilen, abgeleitet aus SELBST-Tueren.
+ * Gezeichnet wird nur, was zu einer BESUCHTEN Zone gehoert. */
+#define WALL_COUNT ((int)(sizeof s_map_walls / sizeof s_map_walls[0]))
+
+int re15_map_wall_count(void) { return WALL_COUNT; }
+
+int re15_map_wall_get(int i, int *page, int *rect, int *x0, int *y0, int *x1, int *y1)
+{
+    const re15_map_wall_t *w;
+    if (i < 0 || i >= WALL_COUNT) return 0;
+    w = &s_map_walls[i];
+    if (!zid_besucht(w->zid)) return 0;
+    if (page) *page = w->page;
+    if (rect) *rect = w->rect;
+    if (x0) *x0 = w->x0;  if (y0) *y0 = w->y0;
+    if (x1) *x1 = w->x1;  if (y1) *y1 = w->y1;
+    return 1;
+}
+
 
 
 

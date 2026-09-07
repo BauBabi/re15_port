@@ -106,6 +106,8 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z);
 /* MARKEN auf der Karte: Tueren (kind 0) und Treppen (kind 1), in Karten-Pixeln.
  * re15_map_mark_get liefert 1, wenn die Marke SICHTBAR ist (ihre Zone ist besucht). */
 int re15_map_mark_count(void);
+int re15_map_wall_count(void);
+int re15_map_wall_get(int i, int *page, int *rect, int *x0, int *y0, int *x1, int *y1);
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind);
 int re15_map_mark_zonen(int i, int *zid, int *zid2);
 int re15_map_page_known(unsigned page);

@@ -1872,6 +1872,41 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * Projektion — die ist seit dem Marker-Fix behoben.
      * Gezeichnet wird nur in Bereichen, die der Spieler schon gesehen hat, und nur
      * auf dem Karten-Schirm (derselbe Riegel wie die Karte selbst). */
+    /* ---- INNENWAENDE (Port-Ergaenzung, 2026-09-07) ---------------------------
+     * Nutzer: "da fehlt noch eine Querwand ... Diese 2 Raeume sind separate Raeume,
+     * sie gehoeren nicht zu den grossen Raum." (ROOM1110)
+     * Die Kachel des Kuenstlers zeichnet ROOM1110 als EINEN Block; die trennende Wand
+     * steht nur in den Daten - zwei Selbst-Tueren, deren Ausloeser-Rechtecke sich nicht
+     * ueberlappen und die den Spieler jeweils jenseits der Luecke absetzen.
+     * Eine eigene Zone dafuer geht nicht: die zwei Haelften braeuchten 41x33 und 27x34
+     * px, frei sind auf Blatt 3 nur Rect 6 (40x48, gemessen ROOM1100s) und Rect 7
+     * (48x48) - mit der Zerlegung verdraengte der Loeser ROOM1100 und das Audit stieg
+     * von 182 auf 202. Also gezeichnet, wie Tuer- und Treppensymbole auch.
+     * Farbe: der Wand-Palettenindex der Kacheln, rgb(176,176,176). */
+    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
+        int nw = re15_map_wall_count(), w;
+        for (w = 0; w < nw; w++) {
+            int wpage, wrect, wx0, wy0, wx1, wy1;
+            if (!re15_map_wall_get(w, &wpage, &wrect, &wx0, &wy0, &wx1, &wy1)) continue;
+            if (wpage != (int)st->map_page) continue;
+            if (e.n < e.max) {
+                re15_inv_op_t *q = &e.ops[e.n++];
+                int a0, a1;
+                q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
+                q->u = 0; q->v = 0;
+                if (wx0 == wx1) {                      /* senkrechte Wand */
+                    a0 = wy0 < wy1 ? wy0 : wy1; a1 = wy0 < wy1 ? wy1 : wy0;
+                    q->x = (int16_t)wx0; q->y = (int16_t)a0;
+                    q->w = 1;            q->h = (int16_t)(a1 - a0 + 1);
+                } else {                               /* waagerechte Wand */
+                    a0 = wx0 < wx1 ? wx0 : wx1; a1 = wx0 < wx1 ? wx1 : wx0;
+                    q->x = (int16_t)a0;  q->y = (int16_t)wy0;
+                    q->w = (int16_t)(a1 - a0 + 1); q->h = 1;
+                }
+                q->r = 176; q->g = 176; q->b = 176;
+            }
+        }
+    }
     if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
         int n = re15_map_mark_count(), k;
         for (k = 0; k < n; k++) {
