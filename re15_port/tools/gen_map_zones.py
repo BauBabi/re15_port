@@ -4434,6 +4434,9 @@ def main():
                 return 0 <= _tx < 256 and 0 <= _ty < 256 and _px[_ty][_tx] != 0
 
             _bd = _band_der_zone(_b, _pg)
+            # Die Absetzpunkte der SELBST-Tueren dieses Raums (dest == eigener Raum).
+            _spawn = [(_t['nx'], _t['nz']) for _t in (doors_all.get(_b) or ())
+                      if _t['dest'] == _b]
             for _c in sca_all[_b]:
                 if len(_c) < 7:
                     continue
@@ -4447,6 +4450,53 @@ def main():
                 if (_cfl >> 4) != _bd:           # nur das Band dieses Blattes
                     continue
                 _stat['zellen'] += 1
+                # EINE WANDZELLE IST NOCH KEINE WAND DER KARTE.
+                # NUTZER-BEFUND 2026-09-07: "DU hast jetzt MASSENWEISE quatsch
+                # Waende eingezeichnet die es nicht gibt" - 355 Linien auf 70
+                # Rechtecke, bis zu 27 in EINEM Raum.
+                #
+                # URSACHE: Kollisionshindernis != Wand. Ein Tisch, eine Saeule, eine
+                # Kiste sind solide Typ-1-Zellen des Bands - genau wie eine Wand. Die
+                # erste Fassung filterte ueber "beidseits gemalte Flaeche", und das
+                # trifft auf ein Moebelstueck mitten im Raum genauso zu.
+                #
+                # Der Kuenstler malt seine Innenwaende SELBST in die Kachel
+                # (Palettenindex 4). Alles, was der Port zusaetzlich zeichnet, ist
+                # per Definition eine Wand, die das Original NICHT hat - dafuer
+                # braucht es einen eigenen Beleg, nicht nur eine Zelle.
+                #
+                # DER BELEG: die Zelle TRENNT zwei Spawns von SELBST-Tueren desselben
+                # Raums. Eine Selbst-Tuer setzt den Spieler jenseits einer Grenze ab,
+                # die er nicht durchlaufen kann - sonst braeuchte es die Tuer nicht.
+                # Liegt eine Wandzelle zwischen zwei solchen Absetzpunkten, ist sie
+                # genau diese Grenze. Ein Moebelstueck ist es nie.
+                # GEMESSEN ueber die Raeume, in denen der Nutzer war:
+                #   ROOM1110: 12 Wandzellen, 4 Selbst-Tuer-Spawns -> 2 Waende
+                #        x  -3750..-3250 (senkrecht)  und  z 400..2900 (quer)
+                #        = genau die beiden, die er in fehler/howto.png gezeichnet
+                #          und mit fuenf F9-Marken eingegrenzt hat.
+                #   ROOM1130/1120/1140/10E0/10D0: 10..22 Wandzellen, 0 Selbst-Tueren
+                #        -> 0 Waende. Vorher zeichnete der Port dort Moebel als Wand.
+                _trennt = False
+                for _s1 in range(len(_spawn)):
+                    for _s2 in range(_s1 + 1, len(_spawn)):
+                        _pa, _pb = _spawn[_s1], _spawn[_s2]
+                        if ((_pa[0] < _cx and _pb[0] > _cx + _cw) or
+                            (_pb[0] < _cx and _pa[0] > _cx + _cw)):
+                            if _cz <= min(_pa[1], _pb[1]) and \
+                               max(_pa[1], _pb[1]) <= _cz + _cd:
+                                _trennt = True; break
+                        if ((_pa[1] < _cz and _pb[1] > _cz + _cd) or
+                            (_pb[1] < _cz and _pa[1] > _cz + _cd)):
+                            if _cx <= min(_pa[0], _pb[0]) and \
+                               max(_pa[0], _pb[0]) <= _cx + _cw:
+                                _trennt = True; break
+                    if _trennt: break
+                if not _trennt:
+                    _aussen = True
+                    _stat['aussen'] += 1
+                    continue
+                _aussen = False
                 _p0 = to_map(_b, _zi, _cx, _cz)
                 _p1 = to_map(_b, _zi, _cx + _cw, _cz + _cd)
                 if not _p0 or not _p1 or _p0[0] != _pg or _p1[0] != _pg:
@@ -4461,12 +4511,6 @@ def main():
                 _a0 = min(q[0] for q in _sp); _a1 = max(q[0] for q in _sp)
                 _b0 = min(q[1] for q in _sp); _b1 = max(q[1] for q in _sp)
                 _senk = (_a1 - _a0) <= (_b1 - _b0)      # schmale Achse = x?
-                if _senk:
-                    _aussen = not (_gemalt(_a0 - 1, (_b0 + _b1) // 2) and
-                                   _gemalt(_a1 + 1, (_b0 + _b1) // 2))
-                else:
-                    _aussen = not (_gemalt((_a0 + _a1) // 2, _b0 - 1) and
-                                   _gemalt((_a0 + _a1) // 2, _b1 + 1))
                 if _aussen:
                     _stat['aussen'] += 1
                     continue
