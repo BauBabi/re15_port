@@ -426,6 +426,71 @@ int re15_map_mark_count(void) { return MARK_COUNT; }
  * Linien, die eine Zone in getrennte Raeume teilen, abgeleitet aus SELBST-Tueren.
  * Gezeichnet wird nur, was zu einer BESUCHTEN Zone gehoert. */
 #define WALL_COUNT ((int)(sizeof s_map_walls / sizeof s_map_walls[0]))
+#define TEIL_COUNT ((int)(sizeof s_map_teile / sizeof s_map_teile[0]))
+
+/* ---- TEILBEREICHE EINES RECHTECKS -----------------------------------------
+ * NUTZER-BEFUND 2026-09-07 (fehler/howto4.png): "bei den Evidence room und den
+ * angrenzenden Raeumen haette ich es wie in howto4 erwartet ... Betrete ich den 1.
+ * kleinen Room oben, wird der rot markiert und der Evidence Room wieder gruen."
+ *
+ * re15_map_rect_state liefert EINEN Zustand je Rechteck - also leuchtet ROOM1110 als
+ * ganzes rot, obwohl seine drei Teile durch belegte Innenwaende getrennt sind und der
+ * Spieler nur in einem steht. Eine eigene Zone je Teil geht nicht (die Teile
+ * braeuchten eigene Rechtecke; auf Blatt 3 ist keins frei - der Versuch verdraengte
+ * ROOM1100 und trieb das Audit von 182 auf 202). Die Zone bleibt deshalb ganz, und
+ * ihr Rechteck zerfaellt in Teile mit je eigener Weltbox.
+ *
+ * AKTUELL ist der Teil, in dessen WELTBOX der Spieler steht - nicht der, dessen
+ * Rechteck-Ausschnitt der Marker trifft. Die Weltbox ist die Messung, der Ausschnitt
+ * nur ihre Darstellung. */
+static int teil_zustand(const re15_map_teil_t *t)
+{
+    extern unsigned g_current_room_id;
+    const re15_map_zone_t *cur = re15_map_zone_current();
+    int i, besucht = 0;
+    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+                                     g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                     g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    for (i = 0; i < ZONE_COUNT; i++) {
+        const re15_map_zone_t *zn = &s_map_zones[i];
+        if (zn->zid != t->zid) continue;
+        if (re15_map_zone_visited(zn)) besucht = 1;
+        if (cur && cur->zid == t->zid) {
+            int32_t px = g_actors[RE15_ACTOR_SLOT_PLAYER].x;
+            int32_t pz = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
+            /* Rand mitnehmen: die Weltbox stammt aus einem 250er-Raster, der
+             * Spieler kann eine halbe Zelle daneben stehen. */
+            if (px >= t->wx0 - 250 && px <= t->wx1 + 250 &&
+                pz >= t->wz0 - 250 && pz <= t->wz1 + 250)
+                return RE15_MAP_RECT_CURRENT;
+        }
+    }
+    return besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+}
+
+int re15_map_teil_count(unsigned page, unsigned rect_idx)
+{
+    int i, n = 0;
+    for (i = 0; i < TEIL_COUNT; i++)
+        if (s_map_teile[i].page == page && s_map_teile[i].rect == rect_idx) n++;
+    return n;
+}
+
+int re15_map_teil_get(unsigned page, unsigned rect_idx, int n,
+                      int *tx, int *ty, int *tw, int *th, int *state)
+{
+    int i, k = 0;
+    for (i = 0; i < TEIL_COUNT; i++) {
+        const re15_map_teil_t *t = &s_map_teile[i];
+        if (t->page != page || t->rect != rect_idx) continue;
+        if (k++ != n) continue;
+        if (tx) *tx = t->tx;   if (ty) *ty = t->ty;
+        if (tw) *tw = t->tw;   if (th) *th = t->th;
+        if (state) *state = teil_zustand(t);
+        return 1;
+    }
+    return 0;
+}
 
 int re15_map_wall_count(void) { return WALL_COUNT; }
 

@@ -604,6 +604,12 @@ target_include_directories(test_map_innenwand PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_map_innenwand PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_map_innenwand COMMAND test_map_innenwand)
+add_executable(test_map_teilbereich test_map_teilbereich.c)
+target_link_libraries(test_map_teilbereich PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_teilbereich PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_teilbereich PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_map_teilbereich COMMAND test_map_teilbereich)
 
 add_executable(test_map_synth test_map_synth.c)
 target_link_libraries(test_map_synth PRIVATE re15_engine re15_test_support)

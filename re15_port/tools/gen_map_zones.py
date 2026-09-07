@@ -4409,6 +4409,7 @@ def main():
     _nw = 0
     _gesehen = set()
     _stat = {'zellen': 0, 'aussen': 0, 'leer': 0, 'innen': 0}
+    _wandlinien = {}
 
     def _band_der_zone(_b, _pg):
         """Das Stockwerk-Band, dessen Waende auf DIESEM Blatt gelten.
@@ -4546,11 +4547,140 @@ def main():
                          f" {_lx1:4d}, {_ly1:4d}, {_zd:3d} }},")
                 _nw += 1
                 _stat['innen'] += 1
+                _wandlinien.setdefault((_kbz := (_b, _zi, _pg, _r)),
+                                       []).append((_lx0, _ly0, _lx1, _ly1))
     o.append("};")
     o.append("")
     print("%d Innenwand-Linien aus den Kollisionszellen "
           "(%d Wandzellen geprueft: %d innen, %d aussen, %d ausserhalb der Zeichnung)"
           % (_nw, _stat['zellen'], _stat['innen'], _stat['aussen'], _stat['leer']))
+
+    # ---- TEILBEREICHE: EIN RECHTECK, MEHRERE HERVORHEBUNGEN ------------------
+    # NUTZER-BEFUND 2026-09-07 (fehler/howto4.png): "bei den Evidence room und den
+    # angrenzenden Raeumen haette ich es wie in howto4 erwartet. Das wenn ich den
+    # Evidence Room betrete das so aussieht von der Markierung. Betrete ich den 1.
+    # kleinen Room oben, wird der rot markiert und der Evidence Room wieder gruen."
+    #
+    # Der Zustand (aktuell/besucht) wurde bisher je RECHTECK bestimmt - also leuchtet
+    # ROOM1110 als ganzes rot, obwohl seine drei Teile durch Waende getrennt sind und
+    # der Spieler nur in einem davon steht. Eine eigene ZONE je Teil geht nicht: die
+    # Teile braeuchten eigene Rechtecke, und auf Blatt 3 sind keine frei (Versuch vom
+    # 2026-09-07: der Loeser verdraengte ROOM1100, Audit 182 -> 202).
+    #
+    # Also: die Zone bleibt, aber ihr Rechteck zerfaellt in TEILE. Hergeleitet wird
+    # das aus den Innenwaenden, die oben schon belegt sind - Rasterung der Weltbox,
+    # Wandzellen sperren, Zusammenhangskomponenten bilden. Keine gewaehlte Zahl:
+    # die Wand steht, die Komponenten folgen daraus.
+    # ROOM1110 ergibt genau die drei aus seinem Bild:
+    #     Evidence Room  Karte x146..188 y114..145
+    #     klein oben     Karte x189..217 y114..130
+    #     klein unten    Karte x189..217 y136..145
+    o.append("/* TEILBEREICHE eines Rechtecks: wo Innenwaende einen Ort zerschneiden,")
+    o.append(" * traegt jeder Teil seinen EIGENEN Zustand (aktuell/besucht). Weltbox")
+    o.append(" * sagt, wo der Spieler drin ist; (tx,ty,tw,th) ist der Ausschnitt des")
+    o.append(" * Rechtecks, der dafuer eingefaerbt wird. Leere Tabelle = jedes Rechteck")
+    o.append(" * hat genau einen Zustand, wie bisher. */")
+    o.append("typedef struct { unsigned char page, rect; int wx0, wz0, wx1, wz1;")
+    o.append("                 short tx, ty, tw, th; unsigned char zid; }"
+           " re15_map_teil_t;")
+    o.append("static const re15_map_teil_t s_map_teile[] = {")
+    _nt = 0
+    for (_kb, _kzi, _kpg, _kr), _linien in sorted(_wandlinien.items()):
+        # DIE ZERLEGUNG GEHOERT IN KARTENKOORDINATEN, NICHT IN DIE WELT.
+        # Erster Versuch rasterte die Weltbox und sperrte Wandzellen. Nimmt man dafuer
+        # nur die GEZEICHNETEN Innenwaende, bleiben Luecken (ROOM1110s senkrechte Wand
+        # endet bei z=7100, die Bbox reicht bis 7600 -> alles haengt zusammen, 1 Teil).
+        # Nimmt man ALLE Wandzellen, zerhacken die Moebel den Raum in Dutzende Kammern.
+        # Beides falsch. Richtig ist die Ebene, auf der auch der Nutzer es sieht: die
+        # GEMALTE FLAECHE des Rechtecks, zerschnitten von genau den Linien, die der Port
+        # dort zeichnet. Die sind schon auf die Flaeche begrenzt und laufen von Rand zu
+        # Rand - was sie trennen, ist genau das, was getrennt aussieht.
+        _RR = rects(_kpg)
+        if _kr == 255 or _kr >= len(_RR):
+            continue
+        _rx9, _ry9, _rw9, _rh9 = _RR[_kr]
+        _uv9 = rect_uv(_kpg, _kr)
+        _px9 = page_pix(_kpg)
+        if _uv9 is None or _px9 is None:
+            continue
+        _gem = set()
+        for _j in range(_rh9):
+            for _i in range(_rw9):
+                _ty9, _tx9 = _uv9[1] + _j, _uv9[0] + _i
+                if 0 <= _ty9 < 256 and 0 <= _tx9 < 256 and _px9[_ty9][_tx9]:
+                    _gem.add((_rx9 + _i, _ry9 + _j))
+        _sperr = set()
+        for (_lx, _ly, _lx2, _ly2) in _linien:
+            if _lx == _lx2:
+                for _q in range(min(_ly, _ly2), max(_ly, _ly2) + 1):
+                    _sperr.add((_lx, _q))
+            else:
+                for _q in range(min(_lx, _lx2), max(_lx, _lx2) + 1):
+                    _sperr.add((_q, _ly))
+        _frei = sorted(_gem - _sperr)
+        if not _frei:
+            continue
+        _par = {q: q for q in _frei}
+        def _f(a2):
+            while _par[a2] != a2:
+                _par[a2] = _par[_par[a2]]
+                a2 = _par[a2]
+            return a2
+        _S = set(_frei)
+        for (_i, _j) in _frei:
+            for (_di, _dj) in ((1, 0), (0, 1)):
+                _q = (_i + _di, _j + _dj)
+                if _q in _S:
+                    _ra, _rb = _f((_i, _j)), _f(_q)
+                    if _ra != _rb:
+                        _par[_ra] = _rb
+        _grp = {}
+        for _q in _frei:
+            _grp.setdefault(_f(_q), []).append(_q)
+        _teile = [v for v in _grp.values() if len(v) >= 12]
+        if len(_teile) < 2:
+            continue
+        # Die Weltbox jedes Teils: alle Weltpunkte, die dorthin projizieren. Sie ist
+        # die MESSUNG (wo steht der Spieler), der Kartenausschnitt nur ihre Darstellung.
+        _bb9 = zinfo[_kb][_kzi]
+        _wx09, _wx19, _wz09, _wz19 = _bb9[0], _bb9[1], _bb9[2], _bb9[3]
+        _zuord = {}
+        for _t in _teile:
+            for _q in _t:
+                _zuord[_q] = id(_t)
+        _box = {}
+        _NS = 120
+        for _ii in range(_NS):
+            _wx9 = _wx09 + (_wx19 - _wx09) * _ii // (_NS - 1)
+            for _jj in range(_NS):
+                _wz9 = _wz09 + (_wz19 - _wz09) * _jj // (_NS - 1)
+                _pm = to_map(_kb, _kzi, _wx9, _wz9)
+                if not _pm or _pm[0] != _kpg:
+                    continue
+                _k9 = _zuord.get((_pm[2], _pm[3]))
+                if _k9 is None:
+                    continue
+                _e9 = _box.get(_k9)
+                if _e9 is None:
+                    _box[_k9] = [_wx9, _wz9, _wx9, _wz9]
+                else:
+                    _e9[0] = min(_e9[0], _wx9); _e9[1] = min(_e9[1], _wz9)
+                    _e9[2] = max(_e9[2], _wx9); _e9[3] = max(_e9[3], _wz9)
+        for _t in sorted(_teile, key=lambda v: -len(v)):
+            _e9 = _box.get(id(_t))
+            if _e9 is None:
+                continue
+            _mx09 = min(q[0] for q in _t); _mx19 = max(q[0] for q in _t)
+            _my09 = min(q[1] for q in _t); _my19 = max(q[1] for q in _t)
+            _zd9 = zid_von.get((_kb, _kzi), 255)
+            o.append(f"    {{ {_kpg:2d}, {_kr:2d}, {_e9[0]:7d}, {_e9[1]:7d},"
+                     f" {_e9[2]:7d}, {_e9[3]:7d},"
+                     f" {_mx09:4d}, {_my09:4d}, {_mx19 - _mx09 + 1:3d},"
+                     f" {_my19 - _my09 + 1:3d}, {_zd9:3d} }},")
+            _nt += 1
+    o.append("};")
+    o.append("")
+    print("%d Teilbereiche (Rechtecke, die eine Innenwand zerschneidet)" % _nt)
     o.append("/* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums")
     o.append(" * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber")
     o.append(" * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */")

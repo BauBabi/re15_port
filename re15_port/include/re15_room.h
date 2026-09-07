@@ -40,6 +40,16 @@ enum {
 };
 int re15_map_rect_state(unsigned page, unsigned rect_idx);
 
+/* TEILBEREICHE eines Rechtecks. Wo Innenwaende einen Ort zerschneiden, traegt jeder
+ * Teil seinen eigenen Zustand - der Spieler steht ja nur in EINEM davon.
+ * NUTZER 2026-09-07 (fehler/howto4.png): "Betrete ich den 1. kleinen Room oben, wird
+ * der rot markiert und der Evidence Room wieder gruen."
+ * re15_map_teil_count/get liefern die Teile eines Rechtecks; hat es keine, gilt
+ * re15_map_rect_state wie bisher fuer das ganze Rechteck. */
+int re15_map_teil_count(unsigned page, unsigned rect_idx);
+int re15_map_teil_get(unsigned page, unsigned rect_idx, int n,
+                      int *tx, int *ty, int *tw, int *th, int *state);
+
 /* KARTEN-ZONEN (Nutzer-Report 2026-08-30 "Marker im falschen Rechteck / falsches
  * Rechteck hervorgehoben"): Ein RDT-Raum kann MEHRERE raeumlich getrennte Bereiche
  * enthalten (ROOM1170: zwei, verbunden durch eine Selbst-Tuer). Jede Zone traegt ihr

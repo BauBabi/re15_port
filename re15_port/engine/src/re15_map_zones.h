@@ -462,6 +462,24 @@ static const re15_map_wall_t s_map_walls[] = {
     {  9,  7,  213,  143,  221,  143,  83 },
 };
 
+/* TEILBEREICHE eines Rechtecks: wo Innenwaende einen Ort zerschneiden,
+ * traegt jeder Teil seinen EIGENEN Zustand (aktuell/besucht). Weltbox
+ * sagt, wo der Spieler drin ist; (tx,ty,tw,th) ist der Ausschnitt des
+ * Rechtecks, der dafuer eingefaerbt wird. Leere Tabelle = jedes Rechteck
+ * hat genau einen Zustand, wie bisher. */
+typedef struct { unsigned char page, rect; int wx0, wz0, wx1, wz1;
+                 short tx, ty, tw, th; unsigned char zid; } re15_map_teil_t;
+static const re15_map_teil_t s_map_teile[] = {
+    {  3,  5,   -2909,   -7522,   14950,    7087,  146,  114,  42,  31,  16 },
+    {  3,  5,  -13521,   -3806,   -3686,    1320,  189,  122,  24,  11,  16 },
+    {  3,  5,  -13521,    1961,   -3686,    7087,  189,  134,  24,  11,  16 },
+    {  9,  7,   -5683,  -13414,   26019,   -4716,  173,  117,  49,  18,  83 },
+    {  9,  7,   20532,     850,   29067,   11288,  213,   86,  14,  21,  83 },
+    {  9,  7,   20532,  -26982,   29067,  -18632,  213,  144,  14,  17,  83 },
+    {  9,  7,   20532,   -3672,   26019,     155,  213,  108,   9,   8,  83 },
+    {  9,  7,   20532,  -17589,   26019,  -14458,  213,  136,   9,   7,  83 },
+};
+
 /* ETAGEN: Band -> (Kartenseite, Rechteck). Aus den Tueren des Raums
  * abgeleitet (Band der Tuer -> Seite des Zielraums), Ziel-Rechteck ueber
  * die gleiche Kachel-uv gefunden. Siehe tools/gen_map_zones.py. */

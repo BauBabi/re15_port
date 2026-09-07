@@ -2113,7 +2113,12 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 int rs = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
-                if ((rs == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0)) continue;
+                /* Ein Rechteck mit TEILBEREICHEN traegt gemischte Zustaende - es
+                 * muss deshalb in BEIDEN Durchgaengen drankommen, damit der rote Teil
+                 * frueh (= oben) und die gruenen spaeter eingetragen werden. Das Gate
+                 * je Teil steht unten. */
+                if (re15_map_teil_count((unsigned)st->map_page, (unsigned)i) <= 0 &&
+                    (rs == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0)) continue;
                 if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
                 /* ⛔ KORREKTUR 2026-09-03, instruktions-verifiziert: DAS ORIGINAL HAT
                  * GAR KEIN BESUCHT-GATE. Hier stand, es zeichne ein Rechteck nur bei
@@ -2149,8 +2154,50 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                                             &rx, &ry, &rw, &rh)) continue;
                 if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
                     continue;
-                sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
-                     rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
+                /* TEILBEREICHE: EIN RECHTECK, MEHRERE ZUSTAENDE.
+                 * NUTZER 2026-09-07 (fehler/howto4.png): "Betrete ich den 1. kleinen
+                 * Room oben, wird der rot markiert und der Evidence Room wieder gruen."
+                 * Wo belegte Innenwaende einen Ort zerschneiden (ROOM1110: drei Teile),
+                 * traegt jeder Teil seinen eigenen Zustand. Gezeichnet wird dann statt
+                 * eines Sprites je Teil ein Ausschnitt DERSELBEN Kachel - die Zeichnung
+                 * bleibt also unveraendert, nur die Einfaerbung zerfaellt.
+                 * Hat das Rechteck keine Teile, laeuft alles wie bisher. */
+                {
+                    int nteil = re15_map_teil_count((unsigned)st->map_page,
+                                                    (unsigned)i);
+                    if (nteil <= 0) {
+                        sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                             rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
+                    } else {
+                        int k2;
+                        for (k2 = 0; k2 < nteil; k2++) {
+                            int tx, ty, tw, th, ts;
+                            int tr = 40, tg = 144, tb = 40;
+                            if (!re15_map_teil_get((unsigned)st->map_page,
+                                                   (unsigned)i, k2,
+                                                   &tx, &ty, &tw, &th, &ts)) continue;
+                            /* Dasselbe Zwei-Durchgang-Gate wie fuer ganze Rechtecke:
+                             * der aktuelle Teil zuerst, damit er nicht unter einem
+                             * gruenen Nachbarn verschwindet. */
+                            if ((ts == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0))
+                                continue;
+                            if (ts == RE15_MAP_RECT_UNVISITED) continue;
+                            if (ts == RE15_MAP_RECT_CURRENT)
+                                { tr = 192; tg = 24; tb = 24; }
+                            /* auf das Rechteck klemmen - der Ausschnitt kommt aus
+                             * einem Weltraster und darf nicht darueber hinausragen */
+                            if (tx < rx) { tw -= (rx - tx); tx = rx; }
+                            if (ty < ry) { th -= (ry - ty); ty = ry; }
+                            if (tx + tw > rx + rw) tw = rx + rw - tx;
+                            if (ty + th > ry + rh) th = ry + rh - ty;
+                            if (tw <= 0 || th <= 0) continue;
+                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                                 tx, ty, tw, th,
+                                 ru + (tx - rx), rv + (ty - ry),
+                                 tr, tg, tb, 1);
+                        }
+                    }
+                }
             }
 
         /* ---- SCHEMA-ZEICHNUNGEN aus der KOLLISIONS-BOX ----------------------
