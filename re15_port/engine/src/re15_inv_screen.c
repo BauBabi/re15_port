@@ -1905,16 +1905,83 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 if (_rs0 != RE15_MAP_RECT_CURRENT &&
                     _rs0 != RE15_MAP_RECT_VISITED) continue;
             }
-            if (e.n < e.max) {
+            {
+                /* EINE WAND WIRD ABSCHNITTSWEISE EINGEFAERBT.
+                 * NUTZER-BEFUND 2026-09-07 (fehler/error2.png, error3.png):
+                 * "this half should be green" - er steht im oberen kleinen Raum,
+                 * der untere ist korrekt gruen GEFUELLT, aber dessen linke Kante
+                 * leuchtet rot mit. Die senkrechte Wand (188,122) laeuft 23 px weit
+                 * ueber BEIDE Teile und bekam EINE Farbe - den staerksten Zustand
+                 * ihrer Nachbarn, also rot.
+                 * Jetzt traegt jeder Pixel der Wand den Zustand des Teils, an dem
+                 * er entlanglaeuft; gleiche Farben werden zu einem Lauf
+                 * zusammengefasst, damit die Op-Liste nicht aufblaeht.
+                 *
+                 * (Zu meiner eigenen Messung: der Befund davor - die Teile wuerden
+                 * gar nicht gemalt - war FALSCH. Mein Farbfilter erfasste nur helles
+                 * Gruen, nicht die dunkle Fuellung rgb(0,64,40). Die Fuellung war
+                 * immer richtig; nur die Wandfarbe war es nicht.) */
+                int senk = (wx0 == wx1);
+                int a0 = senk ? (wy0 < wy1 ? wy0 : wy1) : (wx0 < wx1 ? wx0 : wx1);
+                int a1 = senk ? (wy0 < wy1 ? wy1 : wy0) : (wx0 < wx1 ? wx1 : wx0);
+                int fest = senk ? wx0 : wy0;
+                int nt3 = re15_map_teil_count((unsigned)wpage, (unsigned)wrect);
+                int lauf0 = a0, s;
+                int vorher = -1;
+                for (s = a0; s <= a1 + 1; s++) {
+                    int zu = RE15_MAP_RECT_UNVISITED;
+                    if (s <= a1) {
+                        if (nt3 <= 0) {
+                            zu = re15_map_rect_state((unsigned)wpage,
+                                                     (unsigned)wrect);
+                        } else {
+                            /* der staerkste Zustand der Teile, die DIESEN Punkt
+                             * beruehren (links/rechts bzw. oben/unten davon) */
+                            int k4;
+                            for (k4 = 0; k4 < nt3; k4++) {
+                                int ax, ay, aw, ah, as3;
+                                int px2 = senk ? fest : s;
+                                int py2 = senk ? s : fest;
+                                if (!re15_map_teil_get((unsigned)wpage,
+                                                       (unsigned)wrect, k4,
+                                                       &ax, &ay, &aw, &ah, &as3))
+                                    continue;
+                                if (px2 < ax - 1 || px2 > ax + aw) continue;
+                                if (py2 < ay - 1 || py2 > ay + ah) continue;
+                                if (as3 > zu) zu = as3;
+                            }
+                        }
+                    }
+                    if (vorher < 0) { vorher = zu; lauf0 = s; continue; }
+                    if (zu == vorher && s <= a1) continue;
+                    if (e.n < e.max && vorher != RE15_MAP_RECT_UNVISITED) {
+                        re15_inv_op_t *q = &e.ops[e.n++];
+                        q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0;
+                        q->abe = 0; q->u = 0; q->v = 0;
+                        if (senk) {
+                            q->x = (int16_t)fest;  q->y = (int16_t)lauf0;
+                            q->w = 1;              q->h = (int16_t)(s - lauf0);
+                        } else {
+                            q->x = (int16_t)lauf0; q->y = (int16_t)fest;
+                            q->w = (int16_t)(s - lauf0); q->h = 1;
+                        }
+                        if (vorher == RE15_MAP_RECT_CURRENT)
+                            { q->r = 192; q->g =  24; q->b =  24; }
+                        else { q->r =  40; q->g = 144; q->b =  40; }
+                    }
+                    vorher = zu; lauf0 = s;
+                }
+            }
+            if (0) {
                 re15_inv_op_t *q = &e.ops[e.n++];
                 int a0, a1;
                 q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
                 q->u = 0; q->v = 0;
-                if (wx0 == wx1) {                      /* senkrechte Wand */
+                if (wx0 == wx1) {
                     a0 = wy0 < wy1 ? wy0 : wy1; a1 = wy0 < wy1 ? wy1 : wy0;
                     q->x = (int16_t)wx0; q->y = (int16_t)a0;
                     q->w = 1;            q->h = (int16_t)(a1 - a0 + 1);
-                } else {                               /* waagerechte Wand */
+                } else {
                     a0 = wx0 < wx1 ? wx0 : wx1; a1 = wx0 < wx1 ? wx1 : wx0;
                     q->x = (int16_t)a0;  q->y = (int16_t)wy0;
                     q->w = (int16_t)(a1 - a0 + 1); q->h = 1;

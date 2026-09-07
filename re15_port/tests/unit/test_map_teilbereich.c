@@ -30,6 +30,8 @@
 #include <string.h>
 #include "re15_room.h"
 #include "re15_actor.h"
+#include "re15_inv_screen.h"
+extern re15_inv_screen_t g_inv_screen;
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -116,6 +118,51 @@ int main(void)
             if (ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah) ok = 0;
         }
         CHECK("die drei Bildausschnitte ueberlappen einander nicht", ok);
+    }
+
+    /* DIE WAND DARF NICHT IN DEN FREMDEN TEIL HINEINROTEN.
+     * NUTZER-BEFUND 2026-09-07 (fehler/error2.png): "this half should be green" - er
+     * steht im oberen kleinen Raum; der untere ist korrekt gruen GEFUELLT, aber seine
+     * linke Kante leuchtete rot mit. Die senkrechte Wand (188,122) laeuft 23 px ueber
+     * BEIDE Teile und bekam EINE Farbe.
+     * (Mein Befund davor - die Teile wuerden gar nicht gemalt - war FALSCH: mein
+     * Farbfilter erfasste nur helles Gruen, nicht die Fuellung rgb(0,64,40).)
+     * Geprueft an der Op-Liste: kein roter Wandabschnitt darf INNEN in einem Teil
+     * liegen, der nicht aktuell ist. */
+    {
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int p2;
+        struct { int32_t x, z; const char *wo; } Q[] = {
+            {  6020,  -217, "Evidence Room" },
+            { -8603, -1243, "kleiner Raum oben" },
+            { -8603,  4524, "kleiner Raum unten" },
+        };
+        for (p2 = 0; p2 < 3; p2++) {
+            int nops, o, schlecht = 0;
+            stelle_hin(Q[p2].x, Q[p2].z);
+            memset(&g_inv_screen, 0, sizeof g_inv_screen);
+            g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
+            g_inv_screen.map_page = 3;
+            nops = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+            for (o = 0; o < nops; o++) {
+                re15_inv_op_t *q = &ops[o];
+                int k4;
+                if (q->kind != RE15_INV_OP_FILL) continue;
+                if (!(q->r > 150 && q->g < 80)) continue;
+                if (q->w > 4 && q->h > 4) continue;
+                for (k4 = 0; k4 < n; k4++) {
+                    int tx, ty, tw, th, ts;
+                    if (!re15_map_teil_get(3, 5, k4, &tx, &ty, &tw, &th, &ts)) continue;
+                    if (ts == RE15_MAP_RECT_CURRENT) continue;
+                    if (q->x >= tx && q->x + q->w <= tx + tw &&
+                        q->y >= ty && q->y + q->h <= ty + th) schlecht++;
+                }
+            }
+            snprintf(t, sizeof t,
+                     "im %s: kein roter Wandabschnitt in einem fremden Teil - sind %d",
+                     Q[p2].wo, schlecht);
+            CHECK(t, schlecht == 0);
+        }
     }
 
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");
