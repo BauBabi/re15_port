@@ -332,11 +332,13 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # ⛔ "aufrecht": Tiefe JE BILDZEILE fuer einen senkrecht stehenden Gegenstand
         # (Stuhl, Stativ, Pfosten) - s. geom.vz_der_senkrechten.
         aufrecht = eintrag[5] if len(eintrag) > 5 else None
+        # ⛔ "flach": Tiefe je BILDPUNKT fuer alles, was auf dem Boden liegt.
+        flach = eintrag[6] if len(eintrag) > 6 else None
         if not reg.any():
             continue
         _ber = []
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
-                                  aufrecht)
+                                  aufrecht, flach)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else
@@ -358,16 +360,45 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     # das GANZ in der Region liegen muss, laesst an jeder schraegen Kante einen
     # ungedeckten Saum — im Spiel als grobe Treppe sichtbar. Ein Rechteck darf aber
     # ueber die Region hinausragen, die Feinmaskierung macht der Atlas.
-    while True:
-        boxes, herkunft = [], []
-        kap = 256 * 256
-        for i, ((name, reg, d), fl) in enumerate(zip(stuecke, flaechen)):
-            b = max(4, int(rest * fl / gesamt))
-            for r_ in geom.rects_gitter(reg, b, int(kap * fl / gesamt)):
-                boxes.append(r_); herkunft.append(i)
-        if len(atlasmod.split_oversize(boxes)[0]) <= geom.MAX_MASKS_PER_CUT or rest <= 8:
-            break
-        rest -= 4
+    # ⛔ DIE KACHELGROESSE WIRD GLOBAL GEWAEHLT, NICHT JE OBJEKT (2026-09-07).
+    # Vorher bekam jedes Objekt einen ANTEIL des 256x256-Atlasblatts nach seiner
+    # Regionflaeche. Eine Kachelung braucht aber immer MEHR Flaeche als die Region (die
+    # Kacheln ragen ueber die Silhouette hinaus), der Anteil war also prinzipiell nicht
+    # zu halten. Bei ROOM10E0 Cut 7 (drei Objekte, 53,7 % Bildflaeche) scheiterte
+    # dadurch JEDE Kantenlaenge und es griff der Notnagel "groebste Kachelung":
+    # 54 Rechtecke statt 105, Tiefen von 58..288 auf 61..117 zusammengebrochen, der
+    # Spieler an der Nutzer-Marke F559 zu 2050 von 2110 Punkten verdeckt.
+    # Jetzt: je Objekt die Kosten aller Kantenlaengen messen, dann die FEINSTE
+    # Kombination suchen, die Maskenzahl UND Atlasflaeche zusammen haelt.
+    kap = 256 * 256
+    KANTEN = (8, 10, 12, 16, 20, 24, 32, 40, 48, 64)
+    kosten = [geom.gitter_kosten(reg, KANTEN) for (_, reg, _) in stuecke]
+    import itertools
+    wahl = None
+    for komb in itertools.product(*[[k for k in KANTEN if k in ko] for ko in kosten]):
+        n = sum(kosten[i][k][0] for i, k in enumerate(komb))
+        f = sum(kosten[i][k][1] for i, k in enumerate(komb))
+        if n > rest or f > kap:
+            continue
+        note = (max(komb), sum(komb), f)
+        if wahl is None or note < wahl[0]:
+            wahl = (note, komb, n, f)
+    if wahl is None:
+        # Nichts passt: groebste Kachelung, damit ueberhaupt etwas gedeckt ist.
+        komb = tuple(max(ko) for ko in kosten)
+        n = sum(kosten[i][k][0] for i, k in enumerate(komb))
+        f = sum(kosten[i][k][1] for i, k in enumerate(komb))
+        print("     ⚠ keine Kombination haelt beide Grenzen - groebste Kachelung "
+              "(%d Rechtecke, %d Atlaspunkte)" % (n, f))
+    else:
+        komb, n, f = wahl[1], wahl[2], wahl[3]
+    boxes, herkunft = [], []
+    for i, (name, reg, d) in enumerate(stuecke):
+        for r_ in geom.gitter_mit_kante(reg, komb[i]):
+            boxes.append(r_); herkunft.append(i)
+    print("     Kachelung: %s -> %d Rechtecke, %d von %d Atlaspunkten"
+          % (", ".join("%s=%d" % (stuecke[i][0][:14], k) for i, k in enumerate(komb)),
+             n, f, kap))
     tim, place, boxes2 = atlasmod.build(bg, region_all, boxes)
     if tim is None:
         return None

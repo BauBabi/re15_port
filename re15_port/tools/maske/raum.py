@@ -333,7 +333,8 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # ROOM1140 Cut 2 (Kamerastativ, der gemeldete Fehler). Wer keins von
             # beidem angibt, hat die Frage nicht beantwortet - deshalb die Warnung.
             if (o.get("fuss") is None and not o.get("ebene")
-                    and not o.get("spalten") and not o.get("aufrecht")):
+                    and not o.get("spalten") and not o.get("aufrecht")
+                    and not o.get("flach")):
                 print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
                       'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
@@ -349,7 +350,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # eindeutig (guete >= GUETE_MAX), bricht der Bau ab und verlangt den
             # gemessenen Wert - lieber keine Maske als eine falsche.
             _eb = o.get("ebene")
-            if _eb is None and not o.get("fuss") and not o.get("aufrecht"):
+            if _eb is None and not o.get("fuss") and not o.get("aufrecht")                     and not o.get("flach"):
                 _tref = geom.ebene_aus_kamera(rdt, cam_off, cut, rid)
                 if _tref is None:
                     raise SystemExit(
@@ -373,7 +374,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             aus.append((o.get("name", "?"), r, o.get("fuss"),
                         None if _eb is None else int(_eb),
                         None if _bk is None else (int(_bk[0]), int(_bk[1])),
-                        _au))
+                        _au, o.get("flach")))
     return aus
 
 

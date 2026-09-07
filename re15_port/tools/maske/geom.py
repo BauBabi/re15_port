@@ -526,7 +526,7 @@ def _bereiche(xs):
 
 
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
-                     bodenkante=None, bericht=None, aufrecht=None):
+                     bodenkante=None, bericht=None, aufrecht=None, flach=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -589,6 +589,30 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if flach:
+        # ---- FLACH AUF DEM BODEN: Tiefe JE BILDPUNKT --------------------------
+        # ⛔ Ein Teppich, eine Blutlache, eine liegende Leiche hat keine Vorderkante,
+        # hinter der alles gleich weit weg waere - jeder Bildpunkt IST ein Bodenpunkt
+        # und hat seine eigene Entfernung. Die Spaltenregel gibt der ganzen Spalte die
+        # Tiefe ihres UNTERSTEN Punktes, also die des vordersten; damit verdeckt der
+        # Teppich alles, was hinter seiner Vorderkante steht.
+        # Nutzer-Befund 2026-09-07 (ROOM10E0 Cut 7, Marken F4141 und F559): der
+        # Vordergrund-Teppich trug Tiefe 58 fuer seine GESAMTE Flaeche und schnitt 697
+        # gezeichnete Figurpunkte weg, obwohl der Spieler mitten darauf stand.
+        ys, xs = np.nonzero(region)
+        n_ok = 0
+        for y, x in zip(ys, xs):
+            z = _z(float(x) + 0.5, float(y) + 0.5)
+            if not z:
+                continue
+            dep[y, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+            n_ok += 1
+        if bericht is not None:
+            g = dep[region]; g = g[g > 0]
+            bericht.append("flach: %d von %d Bildpunkten mit Bodenschnitt, Tiefe %d..%d"
+                           % (n_ok, int(region.sum()),
+                              int(g.min()) if len(g) else 0, int(g.max()) if len(g) else 0))
+        return dep if n_ok else None
     if aufrecht is not None:
         # ---- AUFRECHT STEHENDER GEGENSTAND: Tiefe JE BILDZEILE ------------------
         # Ein Stuhl, ein Stativ, ein Pfosten steht senkrecht. Seine Silhouette ist die
@@ -744,6 +768,52 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
             continue
         dep[np.where(region[:, x])[0], x] = tiefen[x]
     return dep
+
+
+def gitter_kosten(region, kanten=(8, 10, 12, 16, 20, 24, 32, 40, 48, 64)):
+    """-> {kante: (Zahl der Kacheln, Summe ihrer Flaechen)} fuer eine Region.
+
+    ⛔ WOZU (Nutzer-Befund 2026-09-07, ROOM10E0 Cut 7): rects_gitter bekam bisher je
+    Objekt einen ANTEIL des Atlasblatts nach Regionflaeche. Eine Kachelung braucht aber
+    IMMER mehr Flaeche als die Region selbst (die Kacheln ragen ueber die Silhouette
+    hinaus) - der Anteil ist damit prinzipiell nicht zu halten, und bei drei Objekten auf
+    53,7 % Bildflaeche scheiterte JEDE Kantenlaenge. Es griff der Notnagel "groebste
+    Kachelung": 54 Rechtecke statt 105, und die Tiefen brachen von 58..288 auf 61..117
+    zusammen - der Spieler verschwand fast ganz (2050 von 2110 gezeichneten Punkten).
+    Die Wahl gehoert deshalb GLOBAL getroffen: erst je Objekt die Kosten messen, dann
+    die feinste Kombination suchen, die beide Grenzen zusammen haelt."""
+    aus = {}
+    ys, xs = np.nonzero(region)
+    if len(ys) == 0:
+        return aus
+    x0, x1 = int(xs.min()), int(xs.max()) + 1
+    y0, y1 = int(ys.min()), int(ys.max()) + 1
+    for k in kanten:
+        n = 0; fl = 0
+        for gy in range(y0, y1, k):
+            for gx in range(x0, x1, k):
+                w = min(k, x1 - gx); h = min(k, y1 - gy)
+                if region[gy:gy + h, gx:gx + w].any():
+                    n += 1; fl += w * h
+        if n:
+            aus[k] = (n, fl)
+    return aus
+
+
+def gitter_mit_kante(region, k):
+    """Region mit Kacheln der Kantenlaenge k ueberdecken."""
+    ys, xs = np.nonzero(region)
+    if len(ys) == 0:
+        return []
+    x0, x1 = int(xs.min()), int(xs.max()) + 1
+    y0, y1 = int(ys.min()), int(ys.max()) + 1
+    boxes = []
+    for gy in range(y0, y1, k):
+        for gx in range(x0, x1, k):
+            w = min(k, x1 - gx); h = min(k, y1 - gy)
+            if region[gy:gy + h, gx:gx + w].any():
+                boxes.append((gx, gy, w, h))
+    return boxes
 
 
 def rects_gitter(region, budget=None, kapazitaet=256 * 256, kanten=(8, 10, 12, 16, 20, 24, 32, 40, 48, 64)):

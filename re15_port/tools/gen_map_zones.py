@@ -236,6 +236,26 @@ def _beruehren(pg, a, b):
 # Rechteck) wird offen benannt statt zugerechnet.
 KEINE_ZUORDNUNG = 30.0
 
+_KUNSTFL = {}
+def _kunst_flaeche(pg, r):
+    """Die GEMALTEN Bildpunkte eines Rechtecks in Kartenkoordinaten."""
+    if (pg, r) in _KUNSTFL:
+        return _KUNSTFL[(pg, r)]
+    pix = page_pix(pg); R = rects(pg)
+    s = set()
+    if pix is not None and r < len(R):
+        rx, ry, rw, rh = R[r]
+        uv = rect_uv(pg, r)
+        if uv:
+            u, v = uv
+            for dy in range(rh):
+                for dx in range(rw):
+                    if 0 <= v + dy < 256 and 0 <= u + dx < 256 and pix[v + dy][u + dx]:
+                        s.add((rx + dx, ry + dy))
+    _KUNSTFL[(pg, r)] = s
+    return s
+
+
 def kachel_zeigt_tuer(pg, r, mx, my, tol=4):
     """Zeichnet die Kachel DIESES Rechtecks an dieser Stelle schon eine Tuer?
 
@@ -821,6 +841,8 @@ def _kunst_an(pg, ri, mx, my):
 
 
 _SCHNAPP = []
+_MITTIG = []
+_MITTIG_MAX_G = 16
 
 
 def main():
@@ -1429,6 +1451,16 @@ def main():
         # Paar-Zusammenzug schob die Marke auf die dortige gemeinsame Kante y=114.
         # Mit Rect 5 stimmen beide Seiten auf 4 px ueberein - s. ZONE_FIX.
         (0x1110, 0): (1, 1),
+        # ⛔ ROOM10E0 UND ROOM10F0 EINGEMESSEN 2026-09-07. Nutzer: "Kommunikation
+        # Room befinde ich mich noch an der falschen Position." Beim Festsetzen der
+        # Rechtecke am 2026-09-06 hatte ich nur das RECHTECK belegt, nicht die
+        # Spiegelung - die blieb auf 0/0 stehen. Gemessen an der gemeinsamen Tuer
+        # mit ROOM10D0 (dessen Seite ist durch die F9-Marken geeicht):
+        #   ROOM10F0: 0/0 = 65 px | 0/1 = 44 | 1/0 = 26 | 1/1 =  5 px
+        #   ROOM10E0: 0/0 = 49 px | 0/1 = 34 | 1/0 = 18 | 1/1 =  3 px
+        # ROOM1100 bleibt 0/0 (dort ist 0/0 mit 3 px der beste Wert).
+        (0x10E0, 0): (1, 1),
+        (0x10F0, 0): (1, 1),
         (0x1120, 0): (1, 1),   # Symbol 8->5 px, Nachbar ROOM1130 40->3 px
         (0x2050, 0): (1, 1),   # Symbol 33->4 px, Nachbar 56->6 px
         # ⛔ VOM NUTZER EINGEMESSEN 2026-09-06. Er hat sich im Spiel an sechs Stellen
@@ -3504,6 +3536,47 @@ def main():
                 _WANDRUECK.append((abs(_bes[0] - cx) + abs(_bes[1] - cy),
                                    A['room'], B['room'], (cx, cy), _bes))
                 cx, cy = _bes
+        # ⛔ EINE TUER AM ENDE EINES GANGS GEHOERT IN DIE MITTE DER OEFFNUNG.
+        # Nutzer 2026-09-07: "die beiden Tueren am Gangende [sind] immer noch verrueckt,
+        # und nicht genau in der Mitte platziert. Liegen im echten Raum aber EXAKT in
+        # der Mitte am Ende des Ganges."
+        # Gemessen an ROOM1100: an Spalte 186 malt der Gang die Zeilen 114..122 (9 px),
+        # Mitte 118 - die Marke stand auf 122, also auf der letzten Zeile. An Spalte 199
+        # sind es 144..155 (12 px), Mitte 150 - die Marke stand auf 147.
+        # ⛔ DIE GRENZE IST AM ORIGINAL GEMESSEN, NICHT GEWAEHLT. Ueber alle 72 gemalten
+        # Tuersymbole der Kacheln, Abstand zur Mitte ihrer Wandoeffnung:
+        #     Lauf  0..8 px:  2 Symbole, Median 1,0 px
+        #     Lauf  9..12:    7 Symbole, Median 0,0 px
+        #     Lauf 13..16:    2 Symbole, Median 1,5 px
+        #     Lauf 17..24:   18 Symbole, Median 5,0 px
+        #     Lauf 25..40:   21 Symbole, Median 8,0 px
+        #     Lauf 41+  :    22 Symbole, Median 18,5 px
+        # Bis 16 px setzt der Kuenstler die Tuer also mittig, darueber frei. Genau das
+        # macht diese Regel - und nur dort.
+        _MITTIG_MAX = _MITTIG_MAX_G
+        if _seite < 4:
+            _wr = W.get('r', 255)
+            if _wr != 255:
+                _fl = _kunst_flaeche(W['pg'], _wr)
+                if _fl:
+                    _senk = _seite in (1, 3)
+                    _fest = cx if _senk else cy
+                    _v = sorted(b for a, b in _fl if a == _fest) if _senk else                          sorted(a for a, b in _fl if b == _fest)
+                    if _v:
+                        _key = cy if _senk else cx
+                        _grp = []; _a = _v[0]; _p = _v[0]
+                        for _w in _v[1:]:
+                            if _w != _p + 1:
+                                _grp.append((_a, _p)); _a = _w
+                            _p = _w
+                        _grp.append((_a, _p))
+                        _tr = [q for q in _grp if q[0] - 2 <= _key <= q[1] + 2]
+                        if _tr and (_tr[0][1] - _tr[0][0] + 1) <= _MITTIG_MAX:
+                            _m = (_tr[0][0] + _tr[0][1]) // 2
+                            _MITTIG.append((abs(_m - _key), A['room'], B['room'],
+                                            _tr[0][1] - _tr[0][0] + 1))
+                            if _senk: cy = _m
+                            else:     cx = _m
         for X in (A, B):
             X['mx'], X['my'], X['seite'] = cx, cy, _seite
         # EIN Datensatz genuegt. Beide zu behalten hiesse: dieselbe Stelle zweimal
@@ -3873,6 +3946,13 @@ def main():
     if _SCHNAPP:
         _w = sorted(x[0] for x in _SCHNAPP)
         _n2 = len(_w)
+        if _MITTIG:
+            _mm = sorted(x[0] for x in _MITTIG)
+            print("In die Mitte der Wandoeffnung gerueckt: %d Marken (Oeffnung <= %d px, "
+                  "wie im Original), Median %d px, groesste %d px"
+                  % (len(_MITTIG), _MITTIG_MAX_G, _mm[len(_mm) // 2], _mm[-1]))
+        else:
+            print("In die Mitte der Wandoeffnung gerueckt: 0 Marken")
         print("Anschnappen der Tuermarken: n=%d, Median %d px, 90%%-Wert %d px, "
               "schlimmster %d px" % (_n2, _w[_n2 // 2], _w[max(0, int(.9 * _n2) - 1)], _w[-1]))
         _weit = sorted((x for x in _SCHNAPP if x[0] >= 20), reverse=True)
