@@ -1922,6 +1922,33 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 {
                     int _rs = re15_map_rect_state((unsigned)wpage,
                                                   (unsigned)wrect);
+                    /* EINE WAND ZWISCHEN ZWEI GRUENEN TEILEN IST NICHT ROT.
+                     * NUTZER-BEFUND 2026-09-07 (fehler/error1.png): er steht im
+                     * Evidence Room, und die Trennwand der beiden kleinen Raeume
+                     * (Karte y=133) leuchtete rot mit - sie nahm den Zustand des
+                     * GANZEN Rechtecks. Hat das Rechteck Teile, gilt der staerkste
+                     * Zustand der Teile, die die Wand BERUEHRT: steht der Spieler in
+                     * keinem von beiden, ist die Wand gruen wie sie. */
+                    int nt2 = re15_map_teil_count((unsigned)wpage,
+                                                  (unsigned)wrect);
+                    if (nt2 > 0) {
+                        int k3, best = RE15_MAP_RECT_UNVISITED;
+                        int lx = wx0 < wx1 ? wx0 : wx1;
+                        int hx = wx0 < wx1 ? wx1 : wx0;
+                        int ly = wy0 < wy1 ? wy0 : wy1;
+                        int hy = wy0 < wy1 ? wy1 : wy0;
+                        for (k3 = 0; k3 < nt2; k3++) {
+                            int ax, ay, aw, ah, as2;
+                            if (!re15_map_teil_get((unsigned)wpage,
+                                                   (unsigned)wrect, k3,
+                                                   &ax, &ay, &aw, &ah, &as2))
+                                continue;
+                            if (ax - 1 > hx || lx > ax + aw ||
+                                ay - 1 > hy || ly > ay + ah) continue;
+                            if (as2 > best) best = as2;
+                        }
+                        _rs = best;
+                    }
                     if (_rs == RE15_MAP_RECT_CURRENT)
                         { q->r = 192; q->g =  24; q->b =  24; }
                     else { q->r =  40; q->g = 144; q->b =  40; }
@@ -2176,11 +2203,31 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             if (!re15_map_teil_get((unsigned)st->map_page,
                                                    (unsigned)i, k2,
                                                    &tx, &ty, &tw, &th, &ts)) continue;
-                            /* Dasselbe Zwei-Durchgang-Gate wie fuer ganze Rechtecke:
-                             * der aktuelle Teil zuerst, damit er nicht unter einem
-                             * gruenen Nachbarn verschwindet. */
-                            if ((ts == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0))
+                            /* ALLE TEILE DES AKTUELLEN RECHTECKS GEHOEREN IN DEN
+                             * ERSTEN DURCHGANG - nicht nur der rote.
+                             * NUTZER-BEFUND 2026-09-07 (fehler/error1..3.png): "this
+                             * half should be green" - der jeweils ANDERE kleine Raum
+                             * war gar nicht gemalt, nur seine Kachel-Umrandung stand
+                             * da. Gemessen an seinen drei Abzuegen:
+                             *   error2 (er steht oben):  y122..133 rot, y134..144 LEER
+                             *   error3 (er steht unten): y134..145 rot, y123..133 LEER
+                             * URSACHE: die nicht-aktuellen Teile gingen in den zweiten
+                             * Durchgang, und dort ueberdeckt sie Rect 3 (ROOM10D0,
+                             * x135..206, y76..163). Es belegt denselben Bildbereich und
+                             * hat den KLEINEREN Index, wird also frueher eingetragen -
+                             * und frueher heisst OBEN, weil die Op-Liste von HINTEN
+                             * gerastert wird (inv_render_pc.c).
+                             * Das Zwei-Durchgang-Gate loest genau das fuer ganze
+                             * Rechtecke; fuer ein Rechteck mit GEMISCHTEN Teilen reicht
+                             * es nicht - dessen Teile gehoeren ALLE zum aktuellen Raum
+                             * und muessen zusammen nach oben. Untereinander koennen sie
+                             * sich nicht verdecken: unit_map_teilbereich prueft, dass
+                             * die Bildausschnitte disjunkt sind. */
+                            if (rs == RE15_MAP_RECT_CURRENT) {
+                                if (durchgang_r != 0) continue;
+                            } else if (durchgang_r != 1) {
                                 continue;
+                            }
                             if (ts == RE15_MAP_RECT_UNVISITED) continue;
                             if (ts == RE15_MAP_RECT_CURRENT)
                                 { tr = 192; tg = 24; tb = 24; }
