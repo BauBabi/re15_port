@@ -1,44 +1,67 @@
-# RE1.5 Port — v0.7.8 (Early Preview)
+# RE1.5 Port — v0.7.9 (Early Preview)
 
-**Der letzte Kartenfehler aus `error1..3` — und ein Messfehler von mir, der zwei Runden
-gekostet hat.**
+**Die Tiefe einer Vordergrundmaske kommt jetzt aus der Raumgeometrie**, nicht mehr aus der
+Kontur der Freistellung. Und der erste Fehler, den das behebt: die Holzbank in ROOM10C0.
 
 ---
 
-## Die Wand rotete in den fremden Bereich hinein
+## Die Holzbank verdeckt jetzt an ihrem Ende
 
-Du stehst im oberen kleinen Raum von ROOM1110. Der untere ist korrekt grün **gefüllt** —
-aber seine linke Kante leuchtet rot mit. Die senkrechte Wand bei x=188 läuft 23 px weit
-über **beide** Teile und bekam eine einzige Farbe: den stärksten Zustand ihrer Nachbarn,
-also rot.
+Dein Befund: *„ein weiterer Marker der unten überdecken muss fehlt … unter meinen Füßen.
+Ich stehe am Ende der Bank, aber sie überdeckt mich nicht."*
 
-Jetzt trägt jeder Pixel der Wand den Zustand des Bereichs, an dem er entlangläuft; gleiche
-Farben werden zu einem Lauf zusammengefasst. An der Op-Liste des Kartenschirms gemessen:
+Gemessen an deiner F9-Marke: du stehst bei Welt(−4468, −5782), Tiefe 156,7. In deinem
+Körperkasten trugen die Masken **174..187** — alle zu fern, **null** davon wirksam.
+
+**Ursache:** Die Silhouettenregel nimmt je Bildspalte den untersten sichtbaren Punkt als
+Bodenkontakt. Am rechten Bankende ist das aber die **Seitenkante** der Bank, nicht ihr Fuß
+— der Sehstrahl durch diesen Punkt landet weit dahinter:
 
 ```
-im oberen Raum:   (188,122) 1x12 ROT   + (188,134) 1x11 gruen
-im unteren Raum:  (188,122) 1x11 gruen + (188,133) 1x12 ROT
-im Evidence Room: (188,122) 1x23 ROT   (grenzt durchgehend an den aktiven Bereich)
+Spalte 64 -> Tiefe 150      Spalte 80 -> 174      Spalte 88 -> 187
 ```
 
-Als Prüfung festgeschrieben: an keinem der drei Standorte darf ein roter Wandabschnitt
-*innen* in einem nicht-aktiven Bereich liegen.
+**Fix:** die Tiefe aus den Kollisionsdaten. Die Bank steht dort als Zelle
+`x −4000..550, z −6250..−5250`, im Bild x 2..104, Tiefe **81,5..150,5** — also näher als
+du. (Und dein x=−4468 liegt knapp außerhalb der Zelle, die bei x=−4000 endet: genau das
+„am Ende der Bank".)
 
-## Was ich falsch gemacht habe
+| im Körperkasten | vorher | jetzt |
+|---|---|---|
+| verdeckende Maskenpunkte | 0 | **520** |
+| zu fern („frei") | 672 | **0** |
 
-Mein Befund davor — die nicht-aktiven Bereiche würden **gar nicht gemalt** — war falsch.
-Ich hatte deine Screenshots über einen Farbfilter gerastert, der nur *helles* Grün erfasste;
-die Füllung ist aber `rgb(0,64,40)`. Die Bereiche erschienen dadurch als „leer", und ich
-habe daraus eine Überdeckung durch ein Nachbar-Rechteck abgeleitet und dagegen gefixt. An
-denselben Bildern, an Stellen die deine Pfeile nicht verdecken, nachgemessen: **die Füllung
-war die ganze Zeit richtig.** Deshalb hat sich für dich nichts geändert, obwohl ich zweimal
-„gefixt" gemeldet habe.
+## Der Mechanismus dahinter
 
-Der Zwei-Durchgang-Fix bleibt drin — er ist für sich korrekt —, aber er hat nicht behoben,
-was du gesehen hast.
+`geom.kollisionstiefe()` schießt einen Sehstrahl pro Bildpunkt gegen die Wandzellen des
+Raums:
 
-**Merksatz, den ich mir notiert habe:** erst die Rohfarbe lesen, dann klassifizieren. Ein
-Filter, der eine Farbe nicht kennt, meldet „nichts da" statt „unbekannt".
+```
+Kameraort = R^-1 * (-t)            Richtung = R^-1 * (sx-160, sy-120, H)
+Schnitt mit den vier senkrechten Seitenflaechen jeder Zelle, naechster Treffer gewinnt.
+```
+
+Angeschlossen über `"tiefe": "kollision"` in der Auswahldatei. Selbstprüfung: der
+Treffpunkt Welt(−3950,−1813,5658) projiziert exakt auf Bild (85,140) zurück, und eine
+Spielerposition auf (122,6/201,9) gegen (123/201) aus dem Log, Tiefe 78,1 gegen 78.
+
+Das ersetzt eine Ableitung, die von der gezeichneten Unterkante abhing, durch eine aus der
+Geometrie — und braucht keine sorgfältig gezeichnete Silhouette mehr.
+
+---
+
+## Zwei Dinge, die ich richtigstellen muss
+
+**1.** In ROOM1130 Cut 3 bringt derselbe Mechanismus **nichts** (Gesamtmetrik 22,4 % →
+22,5 %). Ich hatte dir vorher 27 % gemeldet — die kamen aus einem Vorabtest mit einer von
+mir *gewählten* Wandhöhe von 3000. Aus deiner Freistellung gemessen ist die Wand mindestens
+**4469** hoch; damit bleiben 39 %. Die 27 % waren ein Artefakt meiner Annahme.
+
+**2.** Der Fall dort ist gar kein Tiefenfehler. Du stehst bei Welt x=−4418, die Marmorwand
+bei x=−3950 — **468 Einheiten**, bei einem Spielerradius von **450**
+(`DAT_80073e94[6]`). Die Kamera ist so gedreht, dass Osten im Bild links liegt; dein
+ausgestreckter Arm zeigt also direkt auf die Wand und ragt hinein, weil die Kollision nur
+den Körperradius abhält. Die Maske schneidet ihn korrekt ab.
 
 ---
 
