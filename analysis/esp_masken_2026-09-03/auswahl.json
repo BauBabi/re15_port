@@ -1,655 +1,655 @@
 {
-  "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl.",
-  "ROOM1140": {
-    "0": {
-      "objekte": [
-        {
-          "name": "Konferenztisch",
-          "png": "pri/1140/00_01.png",
-          "x": 0,
-          "y": 122,
-          "massstab": 1,
-          "ebene": -700,
-          "oben": 0,
-          "grow": 0
-        },
-        {
-          "name": "Stuhl hinter dem Tisch",
-          "png": "pri/1140/00_02.png",
-          "x": 210,
-          "y": 113,
-          "massstab": 1,
-          "ebene": -1050,
-          "oben": 0,
-          "grow": 0,
-          "grund": "Ebene = OBERKANTE des Stuhls, nicht die Tischplatte. Der Stuhl hat im Original keine Maske; -700 (Tischplatte) ergab Kamera-z 7488, und der Nutzer stand am 2026-09-06 in 505 gemessenen Bildern NIE davor, wurde aber in 485 durchgeschnitten (Kopf-Tiefe bis 7111). Steigung gemessen: Boden y=0 -> 8704, Tischplatte y=-700 -> 7488, also 1,74 je Hoeheneinheit."
-        },
-        {
-          "name": "Karaffe auf dem Tisch",
-          "png": "pri/1140/00_03.png",
-          "x": 95,
-          "y": 109,
-          "massstab": 1,
-          "ebene": -700,
-          "oben": 0,
-          "grow": 0
-        }
-      ],
-      "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig. | ⛔ KORREKTUR 2026-09-04, aus dem laufenden Spiel gemessen (RE15_PRI_LOG): der Nutzer meldete \"when I get closer to the chair, it is not in front of me anymore\". An seinem Stehplatz (-7125,0,-14807) ist seine Kamera-Z 8559 (Kopf) bis 9028 (Fuss) - verdeckt wird er ganz erst von Tiefe < 133. Das Objekt trug 136, verfehlte es also um DREI und verdeckte nur noch seine Beine. Ursache: \"fuss\": 140 nahm den untersten Punkt der Freistellung als BODENkontakt - er liegt aber auf der TISCHPLATTE, der Stuhl steht dahinter und seine Fuesse sind verdeckt. Mit \"ebene\": -700 (wie die Konferenztisch-Eintraege) ergibt sich Tiefe 112 < 133. Nebenbei richtig benannt: es ist ein STUHL, kein Heizkoerper. | 2026-09-04: Karaffe ergaenzt (Freistellung des Nutzers, Lage gemessen x=95 y=109, 100,0 %). \"ebene\": -700 wie Tisch und Stuhl - sie steht AUF der Tischplatte, ihr Bodenkontakt ist nicht der Fussboden."
+ "_hinweis": "Auswahl je Raum und Cut. ⛔ ROOM1140 wurde am 2026-09-04 auf Wunsch des Nutzers KOMPLETT ZURUECKGEZOGEN — meine von Hand gezogenen und automatisch geschnittenen Masken waren nicht genau genug (Saum Teppich/Wand an Pult, Schraenken, Stuehlen). Der Nutzer stellt die Objekte selbst frei; ich baue sie nur noch ein. Der Eintrag dafuer ist {\"name\": ..., \"png\": <Pfad zur Freistellung>, \"fuss\": <Bildzeile des Bodenkontakts, nur wenn die Silhouette ihn nicht zeigt>} — Lage und Massstab misst maske_aus_png.py selbst. Die uebrigen Quellen (polygon / zauberstab / kontrast / kaesten / Superpixel) bleiben im Werkzeug, sind aber NICHT die erste Wahl.",
+ "ROOM1140": {
+  "0": {
+   "objekte": [
+    {
+     "name": "Konferenztisch",
+     "png": "pri/1140/00_01.png",
+     "x": 0,
+     "y": 122,
+     "massstab": 1,
+     "ebene": -700,
+     "oben": 0,
+     "grow": 0
     },
-    "2": {
-      "objekte": [
-        {
-          "name": "Konferenztisch",
-          "png": "pri/1140/02_01.png",
-          "x": 124,
-          "y": 143,
-          "massstab": 1,
-          "ebene": -700,
-          "oben": 0,
-          "grow": 0
-        },
-        {
-          "name": "Stuhl vorne links (frueher falsch \"Kamerastativ links\")",
-          "png": "pri/1140/02_02.png",
-          "x": 96,
-          "y": 152,
-          "massstab": 1,
-          "fuss": 210,
-          "oben": 0,
-          "grow": 0
-        },
-        {
-          "name": "Kamerastativ rechts",
-          "png": "pri/1140/02_03.png",
-          "x": 274,
-          "y": 104,
-          "massstab": 1,
-          "fuss": 164,
-          "oben": 0,
-          "grow": 0
-        }
-      ],
-      "_warum": "Lage gemessen: Tisch x=124 y=143, linkes Stativ x=96 y=152, rechtes Stativ x=274 y=104 — alle 100.0 %. Linkes Stativ mit 'fuss' 210: seine Stange laeuft im Bild bis dahin weiter, die Freistellung endet bei 196. Rechtes Stativ OHNE 'fuss': seine Beine verschwinden bei y=164 HINTER dem Tisch, der Bodenkontakt ist im Bild also gar nicht zu sehen. Die Spaltenregel nimmt dort y=164 — das entspricht einem Bodenpunkt an der fernen Tischkante und damit ungefaehr der Stelle, an der das Stativ steht. Wenn im Spiel jemand dahinter NICHT verschwindet, ist hier die Zeile nachzutragen."
+    {
+     "name": "Stuhl hinter dem Tisch",
+     "png": "pri/1140/00_02.png",
+     "x": 210,
+     "y": 113,
+     "massstab": 1,
+     "ebene": -1050,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Ebene = OBERKANTE des Stuhls, nicht die Tischplatte. Der Stuhl hat im Original keine Maske; -700 (Tischplatte) ergab Kamera-z 7488, und der Nutzer stand am 2026-09-06 in 505 gemessenen Bildern NIE davor, wurde aber in 485 durchgeschnitten (Kopf-Tiefe bis 7111). Steigung gemessen: Boden y=0 -> 8704, Tischplatte y=-700 -> 7488, also 1,74 je Hoeheneinheit."
     },
-    "3": {
-      "objekte": [
-        {
-          "name": "US-Fahne",
-          "png": "pri/1140/03_01.png",
-          "x": 120,
-          "y": 67,
-          "massstab": 1,
-          "fuss": 192,
-          "oben": 0,
-          "grow": 0
-        },
-        {
-          "name": "Rednerpult",
-          "png": "pri/1140/03_02.png",
-          "x": 150,
-          "y": 112,
-          "massstab": 1,
-          "fuss": 196,
-          "oben": 0,
-          "grow": 0
-        },
-        {
-          "name": "Blaue Fahne",
-          "png": "pri/1140/03_03.png",
-          "x": 212,
-          "y": 62,
-          "massstab": 1,
-          "fuss": 182,
-          "oben": 0,
-          "grow": 0
-        }
-      ],
-      "_warum": "Lage gemessen: US-Fahne x=120 y=67, Pult x=149 y=112, blaue Fahne x=212 y=62 — alle 100.0 %. Alle drei brauchen 'fuss', weil die Freistellung oberhalb des Bodenkontakts endet: die Fahnenstangen enden bei y=179 bzw. 171, ihre gelben Teller stehen aber bis y=194 bzw. 185 (gemessen am Hintergrund) — daher 192 und 182. Das Pult endet in der Freistellung bei y=169, sein Sockel trifft den Teppich aber erst bei y=196 — daher 196. ⛔ ANMERKUNG fuer den Nutzer: beim Pult fehlt damit das untere Drittel der Verdeckung (y 170..196). Die TIEFE stimmt, aber wer dort unten dahinter steht, wird nicht verdeckt. | 2026-09-04: Rednerpult-Freistellung vom Nutzer ERSETZT (60x81 statt der alten, die bei y=169 endete). Sie reicht jetzt bis y=192; damit ist die untere Drittel-Verdeckung da, die vorher fehlte. Lage neu gemessen x=150 y=112 (100,0 %), \"fuss\": 196 unveraendert - der Bodenkontakt liegt knapp unter der Freistellung."
-    },
-    "5": {
-      "_warum": "Freistellung des Nutzers (pri/1140/05_01.png), Lage gemessen x=205 y=129, Massstab 1, 100,0 % Uebereinstimmung. \"ebene\": -700 wie die uebrigen Konferenztisch-Eintraege (Cut 0 und Cut 2) - der Bodenkontakt ist die Tischplatte, nicht der Fussboden.",
-      "objekte": [
-        {
-          "name": "Konferenztisch",
-          "png": "pri/1140/05_01.png",
-          "x": 205,
-          "y": 129,
-          "massstab": 1,
-          "ebene": -700,
-          "oben": 0,
-          "grow": 0
-        }
-      ]
+    {
+     "name": "Karaffe auf dem Tisch",
+     "png": "pri/1140/00_03.png",
+     "x": 95,
+     "y": 109,
+     "massstab": 1,
+     "ebene": -700,
+     "oben": 0,
+     "grow": 0
     }
+   ],
+   "_warum": "Freistellung des Nutzers, Lage gemessen (Cut 0, Massstab 1, x=0 y=122, 100.0 %; zweitbester Cut 81.4 %). Bezugsebene -700: die untere Silhouettenkante ist die TISCHPLATTE, nicht der Boden — hergeleitet am Nutzer-Befund 'an der Ecke', s. v0.5.3. | 2026-09-04: Heizkoerper ergaenzt (Freistellung des Nutzers, Lage gemessen x=210 y=113, 100,0 %). \"fuss\": 140 = die unterste sichtbare Zeile der Freistellung; der echte Bodenkontakt liegt hinter der Tischkante und ist nicht sichtbar. Ein aufrecht stehendes Objekt hat EINE Entfernung, deshalb \"fuss\" und nicht die Spaltenregel (vgl. der Kamera-Fall in Cut 2). | ⛔ 2026-09-04: der Pfad zeigte auf pri/1140/00.png - die Datei gibt es nicht (sie heisst 00_01.png). raum.py brach fuer diesen Cut mit FileNotFoundError ab, also ist Cut 0 seit der Umbenennung NIE erzeugt worden. Lage nachgemessen: x=0 y=122, 100,0 % - unveraendert richtig. | ⛔ KORREKTUR 2026-09-04, aus dem laufenden Spiel gemessen (RE15_PRI_LOG): der Nutzer meldete \"when I get closer to the chair, it is not in front of me anymore\". An seinem Stehplatz (-7125,0,-14807) ist seine Kamera-Z 8559 (Kopf) bis 9028 (Fuss) - verdeckt wird er ganz erst von Tiefe < 133. Das Objekt trug 136, verfehlte es also um DREI und verdeckte nur noch seine Beine. Ursache: \"fuss\": 140 nahm den untersten Punkt der Freistellung als BODENkontakt - er liegt aber auf der TISCHPLATTE, der Stuhl steht dahinter und seine Fuesse sind verdeckt. Mit \"ebene\": -700 (wie die Konferenztisch-Eintraege) ergibt sich Tiefe 112 < 133. Nebenbei richtig benannt: es ist ein STUHL, kein Heizkoerper. | 2026-09-04: Karaffe ergaenzt (Freistellung des Nutzers, Lage gemessen x=95 y=109, 100,0 %). \"ebene\": -700 wie Tisch und Stuhl - sie steht AUF der Tischplatte, ihr Bodenkontakt ist nicht der Fussboden."
   },
-  "ROOM1130": {
-    "3": {
-      "_warum": "Freistellung des Nutzers (pri/1130/03.png), Lage gemessen: x=79 y=0, Massstab 1, 99,9 % Uebereinstimmung. ⛔ ABSICHTLICH OHNE \"fuss\": die Wand laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung. Gemessen an der Freistellung selbst wandert die unterste opake Zeile von y=9 (links, fern) bis y=190 (rechts, nah) - Spannweite 182 px. Genau dafuer ist die Spaltenregel in geom.depth_map_objekt da. Nutzer 2026-09-04: \"diese Wand [muss] natuerlich hinter Leon sein, wenn er die Diagonale lang geht, aber sobald er quasi um die Ecke geht, muss sie vor Leon kommen. Also es ist abhaengig von seiner Position.\" Das leistet die Spaltenregel von selbst; ein einzelnes \"fuss\" wuerde die Wand auf EINE Entfernung zwingen und genau diese Positionsabhaengigkeit zerstoeren. | ⛔ FREISTELLUNG VOM NUTZER VERBREITERT 2026-09-04 (49x202 bei x=67 statt 38x192 bei x=79, 99,9 % Uebereinstimmung). ANLASS: \"even though i made a pri for this whole wall, my arm clips through\" - und seine Rueckfrage \"Ist er nicht breit genug?\" war richtig. Am Bild gemessen: von 38 Armpixeln lagen 32 UEBERHAUPT NICHT unter der alten Maske; sie deckte nur den schmalen Pfeiler, nicht die grosse Wandflaeche links davon. Zwei naheliegende Erklaerungen waren vorher gemessen und verworfen worden - feinere Kachelung (verdeckt 305 Punkte WENIGER) und Dilatation (grow=3 deckt 37/38 ab, verdeckt aber 0/38, weil die Tiefe dort zu fern bleibt). Erst die breitere Freistellung traegt: Arm abgedeckt 38/38, wirksam verdeckt 28/38 (vorher 6 bzw. 0). Rest: 10 Punkte bei x=87..88 mit Tiefe 103/112 gegen die Schwelle 99,6 - 3 % zu fern, an der aeussersten Kante. | ⛔ TIEFE BERICHTIGT 2026-09-06 (F9-Marke des Nutzers, ROOM1130 C3, Bild F506: \"wenn Leon rennt, sieht man noch seinen Arm durchblitzen\"). Die Verbreiterung von 2026-09-04 hat die FLAECHE gebracht, aber nicht die Verdeckung — genau wie damals schon an grow=3 gemessen (\"deckt 37/38 ab, verdeckt aber 0/38\"). Ursache ist die Spaltenregel selbst: die untere Silhouettenkante dieser Freistellung ist nur in den Spalten 94..115 der Bodenkontakt (Zeilen 201..179). Links davon ist sie die SEITLICHE Kante des Pfeilers — eine senkrechte Weltkante, die im Bild um 7,4 Zeilen je Bildpunkt ansteigt (Zeile 201 bei x=94 -> Zeile 0 bei x=67). Nachgerechnet mit der Kamera dieses Cuts (H=208): Spalte->Tiefe 94..115 = 70..83, und ihre Weltpunkte liegen alle auf EINER Geraden (x -3734..-3946, z 4231..5189) — das ist der Wandfuss. Weiter links: 89->94, 84->141, 78->345, 76->684, 74->32523, und 67..73 treffen den Boden ueberhaupt nicht mehr (Sehstrahl ueber dem Horizont); diese sieben Spalten liess das Werkzeug bisher STILL leer. Der Spieler stand laut befund.log bei vz 6398/6166/5935, verdeckt wird also nur mit Tiefe < 92,7 — die Spalten 67..89 lagen ALLE darueber. Deshalb \"bodenkante\": [94,115]: nur diese Spalten tragen ihren eigenen Bodenkontakt, die uebrigen erben den der naechsten davon (also 70). ⛔ Die Grenze ist NICHT automatisch zu finden — gemessen und verworfen: die Raumhuelle (x -8650..6000, z -18400..19750) verwirft nur 74..78, und der Test \"Weltpunkt liegt auf einer SCA-Bodenzelle\" laesst 81, 82 und 90 faelschlich durch. Sie steht deshalb als MESSWERT hier. ⛔ Die alte Begruendung \"absichtlich ohne fuss, weil die Wand diagonal weglaeuft\" war im Kern richtig (die Tiefe DARF nicht konstant sein), hat aber uebersehen, dass die Spaltenregel ihre Eingabe nur auf einem Teil der Breite bekommt. | ⛔ ZWISCHENFALL 2026-09-06/07: der Nutzer hatte pri/1130/03.png versehentlich OHNE Alphakanal gespeichert (320x240 RGB, vom Hintergrund nur an 458 Punkten verschieden - den beiden Wandlampen, also ein Bildschirmfoto). Ohne Alpha gilt die ganze Bildflaeche als Maske (79,1 % statt 19,8 %); gebaut wurde solange aus einer Kopie. Am 2026-09-07 hat er die Datei richtig gespeichert - seither zeigt \"png\" wieder direkt darauf. | ⛔ 2026-09-07: der Nutzer hat die Freistellung NEU gespeichert - jetzt MIT Alphakanal (55x209 statt 49x202, Lage x=62 y=0, 100,0 % Uebereinstimmung). Die Fusskante liegt damit bei Spalte 92 statt 94, deshalb \"bodenkante\": [92,115]. Dazu \"aufrecht\": \"spalten\": die Spaltenregel gab bisher JEDER Bildzeile die BODENtiefe - fuer die Oberkante eines senkrechten Pfeilers ist das zu fern. Mit dem Zeilenprofil (geom.vz_der_senkrechten) tragen die Zeilen auf Koerperhoehe jetzt 60..80 statt 68..81, und die Wand verdeckt auch, was oben an ihr entlanglaeuft. Gemessen: ohne \"bodenkante\" waeren es 59..141 mit fuenf wirkungslosen Spalten (79..83) - beide Angaben zusammen sind noetig.",
-      "objekte": [
-        {
-          "name": "Wandkante mit Lampe (diagonal)",
-          "png": "pri/1130/03.png",
-          "x": 62,
-          "y": 0,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "bodenkante": [
-            92,
-            115
-          ],
-          "aufrecht": "spalten"
-        }
-      ]
+  "2": {
+   "objekte": [
+    {
+     "name": "Konferenztisch",
+     "png": "pri/1140/02_01.png",
+     "x": 124,
+     "y": 143,
+     "massstab": 1,
+     "ebene": -700,
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Stuhl vorne links (frueher falsch \"Kamerastativ links\")",
+     "png": "pri/1140/02_02.png",
+     "x": 96,
+     "y": 152,
+     "massstab": 1,
+     "fuss": 210,
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Kamerastativ rechts",
+     "png": "pri/1140/02_03.png",
+     "x": 274,
+     "y": 104,
+     "massstab": 1,
+     "fuss": 164,
+     "oben": 0,
+     "grow": 0
     }
+   ],
+   "_warum": "Lage gemessen: Tisch x=124 y=143, linkes Stativ x=96 y=152, rechtes Stativ x=274 y=104 — alle 100.0 %. Linkes Stativ mit 'fuss' 210: seine Stange laeuft im Bild bis dahin weiter, die Freistellung endet bei 196. Rechtes Stativ OHNE 'fuss': seine Beine verschwinden bei y=164 HINTER dem Tisch, der Bodenkontakt ist im Bild also gar nicht zu sehen. Die Spaltenregel nimmt dort y=164 — das entspricht einem Bodenpunkt an der fernen Tischkante und damit ungefaehr der Stelle, an der das Stativ steht. Wenn im Spiel jemand dahinter NICHT verschwindet, ist hier die Zeile nachzutragen."
   },
-  "ROOM1060": {
-    "0": {
-      "_warum": "Freistellung des Nutzers, Lage gemessen: x=55 y=135, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 98 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
-      "objekte": [
-        {
-          "name": "Treppengelaender",
-          "png": "pri/1060/00.png",
-          "x": 55,
-          "y": 135,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -15400,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -14400 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
-        }
-      ]
+  "3": {
+   "objekte": [
+    {
+     "name": "US-Fahne",
+     "png": "pri/1140/03_01.png",
+     "x": 120,
+     "y": 67,
+     "massstab": 1,
+     "fuss": 192,
+     "oben": 0,
+     "grow": 0
     },
-    "1": {
-      "_warum": "Freistellung des Nutzers, Lage gemessen: x=0 y=137, Massstab 1, 100,0 %. Dasselbe Gelaender aus dem zweiten Blickwinkel. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 81 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
-      "objekte": [
-        {
-          "name": "Treppengelaender",
-          "png": "pri/1060/01.png",
-          "x": 0,
-          "y": 137,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -13600,
-          "grund": "⛔ Cut 1 zeigt einen TREPPENLAUF, nicht ein Podest. Die hergeleitete Bodenebene ist das OBERE Podest (Band 6, -10800); der Lauf faellt bis Band 8 (-14400). Ein Gelaender laengs der Treppe liegt im Mittel auf der LAUFMITTE (-12600) plus Handlaufhoehe 1000 = -13600. Nutzer-Marke 2026-09-06: er stand bei y=-12302, also 1502 UNTER dem hergeleiteten Podest - in Cut 0 und 2 stand er exakt darauf, und dort passte die Verdeckung. Gemessen lagen 6 von 12 Masken an seinem Koerper um 23..440 Einheiten zu fern, und zwar die Spalten treppaufwaerts."
-        }
-      ]
+    {
+     "name": "Rednerpult",
+     "png": "pri/1140/03_02.png",
+     "x": 150,
+     "y": 112,
+     "massstab": 1,
+     "fuss": 196,
+     "oben": 0,
+     "grow": 0
     },
-    "2": {
-      "_warum": "Drei Freistellungen des Nutzers, Lagen gemessen (je 100,0 %): x=178 y=121, x=307 y=160, x=185 y=133. Dasselbe Treppengelaender wie Cut 0/1, hier in drei Teilen. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 50 bzw. 31 Zeilen), jede Bildspalte hat ihre eigene Entfernung - genau dafuer ist die Spaltenregel da.",
-      "objekte": [
-        {
-          "name": "Treppengelaender",
-          "png": "pri/1060/02_01.png",
-          "x": 178,
-          "y": 121,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -8200,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
-        },
-        {
-          "name": "Gelaenderstueck rechts aussen",
-          "png": "pri/1060/02_02.png",
-          "x": 307,
-          "y": 160,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -8200,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
-        },
-        {
-          "name": "Gelaenderpfosten links",
-          "png": "pri/1060/02_03.png",
-          "x": 185,
-          "y": 133,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -8200,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
-        }
-      ]
-    },
-    "4": {
-      "_warum": "Freistellung des Nutzers, Lage gemessen: x=108 y=0, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 111 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
-      "objekte": [
-        {
-          "name": "Treppengelaender",
-          "png": "pri/1060/04.png",
-          "x": 108,
-          "y": 0,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -2800,
-          "grund": "⛔ Cut 4 zeigt wie Cut 1 einen TREPPENLAUF. Die hergeleitete Bodenebene ist das OBERE Podest (Band 0, y=0), der Lauf faellt bis Band 2 (-3600). Nutzer-Marke 2026-09-06: er stand bei y=-3872, also UNTER dem Podest und sogar unter dem naechsten Band - mitten im Lauf. Ebene deshalb LAUFMITTE (-1800) plus Handlaufhoehe 1000 = -2800, dieselbe Herleitung wie Cut 1."
-        }
-      ]
-    },
-    "7": {
-      "_warum": "Freistellung des Nutzers, Lage gemessen: x=157 y=18, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 167 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
-      "objekte": [
-        {
-          "name": "Treppengelaender",
-          "png": "pri/1060/07.png",
-          "x": 157,
-          "y": 18,
-          "massstab": 1,
-          "spalten": true,
-          "oben": 0,
-          "grow": 0,
-          "ebene": -1000,
-          "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene 0 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
-        }
-      ]
+    {
+     "name": "Blaue Fahne",
+     "png": "pri/1140/03_03.png",
+     "x": 212,
+     "y": 62,
+     "massstab": 1,
+     "fuss": 182,
+     "oben": 0,
+     "grow": 0
     }
+   ],
+   "_warum": "Lage gemessen: US-Fahne x=120 y=67, Pult x=149 y=112, blaue Fahne x=212 y=62 — alle 100.0 %. Alle drei brauchen 'fuss', weil die Freistellung oberhalb des Bodenkontakts endet: die Fahnenstangen enden bei y=179 bzw. 171, ihre gelben Teller stehen aber bis y=194 bzw. 185 (gemessen am Hintergrund) — daher 192 und 182. Das Pult endet in der Freistellung bei y=169, sein Sockel trifft den Teppich aber erst bei y=196 — daher 196. ⛔ ANMERKUNG fuer den Nutzer: beim Pult fehlt damit das untere Drittel der Verdeckung (y 170..196). Die TIEFE stimmt, aber wer dort unten dahinter steht, wird nicht verdeckt. | 2026-09-04: Rednerpult-Freistellung vom Nutzer ERSETZT (60x81 statt der alten, die bei y=169 endete). Sie reicht jetzt bis y=192; damit ist die untere Drittel-Verdeckung da, die vorher fehlte. Lage neu gemessen x=150 y=112 (100,0 %), \"fuss\": 196 unveraendert - der Bodenkontakt liegt knapp unter der Freistellung."
   },
-  "ROOM1120": {
-    "2": {
-      "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor. ⛔ 2026-09-05 VON \"spalten\" AUF \"fuss\" 202 GEWECHSELT (Nutzer-Befund fehler/error05.png: \"Der Tisch ueberdeckt mich nur halb\"). GEMESSEN: in Leons Spalten (165..182, Fusspunkt aus dem Screenshot (171,154) -> Tiefe 9782) lagen 12 von 14 Maskenrechtecken vor ihm, ZWEI aber bei Kamera-z 8512 und 11072 - genau die zwei am linken Tresenrand, wo die unterste Maskenzeile die TRESENPLATTE ist und nicht der Boden. Die Spaltenregel ist hier falsch: ein Tresen ist ein Koerper, hinter den man nicht teilweise treten kann, also EIN Abstand. 202 ist die unterste Zeile der Freistellung (Kasten y=92, Hoehe 111).",
-      "objekte": [
-        {
-          "name": "Tresen mit Monitor",
-          "png": "pri/1120/02.png",
-          "x": 165,
-          "y": 92,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "fuss": 202
-        }
-      ]
+  "5": {
+   "_warum": "Freistellung des Nutzers (pri/1140/05_01.png), Lage gemessen x=205 y=129, Massstab 1, 100,0 % Uebereinstimmung. \"ebene\": -700 wie die uebrigen Konferenztisch-Eintraege (Cut 0 und Cut 2) - der Bodenkontakt ist die Tischplatte, nicht der Fussboden.",
+   "objekte": [
+    {
+     "name": "Konferenztisch",
+     "png": "pri/1140/05_01.png",
+     "x": 205,
+     "y": 129,
+     "massstab": 1,
+     "ebene": -700,
+     "oben": 0,
+     "grow": 0
     }
-  },
-  "ROOM10E0": {
-    "0": {
-      "_warum": "Freistellungen des Nutzers, Lage gemessen (100,0 % Uebereinstimmung).",
-      "objekte": [
-        {
-          "name": "Schrankwand links",
-          "png": "pri/10E0/00_01.png",
-          "x": 0,
-          "y": 94,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": "spalten"
-        },
-        {
-          "name": "Leiche am Boden",
-          "png": "pri/10E0/00_02.png",
-          "x": 207,
-          "y": 151,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "flach": true
-        }
-      ]
-    },
-    "1": {
-      "_warum": "Leiche auf der Trage - Bodenkontakt sind die Rollen.",
-      "objekte": [
-        {
-          "name": "Trage mit Leiche",
-          "png": "pri/10E0/01.png",
-          "x": 37,
-          "y": 105,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "2": {
-      "_warum": "Schreibtisch mit Ordnern.",
-      "objekte": [
-        {
-          "name": "Schreibtisch mit Ordnern",
-          "png": "pri/10E0/02.png",
-          "x": 0,
-          "y": 142,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "3": {
-      "_warum": "⛔ DREHSTUHL, NUTZERWUNSCH 2026-09-07: \"der Drehstuhl muss den Charakter weiter oben ueberdecken, aber weiter unten vom Charakter ueberdeckt werden.\" Mit EINER Tiefe geht das nicht - und zwar genau andersherum: die Kamera schaut von oben, der KOPF der Figur ist also naeher als ihre Fuesse (gemessen 469 Einheiten). Eine einzelne Schwelle mitten in der Figur verdeckt deshalb IMMER das untere Ende und laesst das obere frei. Richtig ist ein Tiefen-PROFIL ueber die Bildzeilen: die Rueckenlehne steht hoch und ist damit naeher an der Kamera als das Fussgestell. Das ist geschlossen ausrechenbar, weil die Silhouette eines aufrecht stehenden Gegenstands die Projektion einer SENKRECHTEN Weltlinie ist (geom.vz_der_senkrechten). Gemessen an dieser Freistellung: Standpunkt Welt(4011,-4359) aus Bild(190,183), Tiefe 70 (oben) bis 79 (unten) ueber alle 70 Zeilen. Zum Vergleich: mit \"fuss\" waeren es durchgehend 79, mit der Spaltenregel 79..137.",
-      "objekte": [
-        {
-          "name": "Drehstuhl",
-          "png": "pri/10E0/03.png",
-          "x": 177,
-          "y": 114,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        }
-      ]
-    },
-    "4": {
-      "_warum": "Schreibtisch mit Rechner.",
-      "objekte": [
-        {
-          "name": "Schreibtisch mit Rechner",
-          "png": "pri/10E0/04.png",
-          "x": 178,
-          "y": 95,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "5": {
-      "_warum": "Schreibtisch mit Bildschirm.",
-      "objekte": [
-        {
-          "name": "Schreibtisch mit Bildschirm",
-          "png": "pri/10E0/05.png",
-          "x": 0,
-          "y": 104,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "6": {
-      "_warum": "Stuhllehne - aufrecht stehend, wie Cut 3.",
-      "objekte": [
-        {
-          "name": "Stuhllehne",
-          "png": "pri/10E0/06.png",
-          "x": 259,
-          "y": 178,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        }
-      ]
-    },
-    "7": {
-      "_warum": "⛔ WAND, NUTZERWUNSCH 2026-09-07: \"Bei 07_02 habe ich die vollstaendige Wand ausgeschnitten, da es Zombies gibt die durch die ganze Wand clippen auf der anderen Seite. Die wollen wir blocken. Aber der Spielcharakter selber soll nicht davon geblockt werden.\" Beides zugleich leistet genau die richtige TIEFE: der Zeichner verdeckt, was FERNER ist als die Maske. Wer hinter der Wand steht, ist ferner und verschwindet; wer davor steht, bleibt sichtbar. Dafuer muss die Maske aber die Tiefe der WANDFLAECHE tragen, nicht die ihres Bodens: mit der reinen Spaltenregel bekaeme jede Bildzeile die Bodentiefe, und die Wandoberkante waere zu fern. \"aufrecht\": \"spalten\" gibt je Spalte den Standpunkt aus dem Bodenkontakt und je Zeile die Tiefe der senkrechten Wandflaeche. Gemessen: Spalte 112 traegt 82 (oben) bis 95 (unten) statt durchgehend 95. Die 41 Spalten ueber der TUEROEFFNUNG (195..231) und am rechten Rand haben keinen eigenen Bodenkontakt - ihr Sehstrahl landet hinter der Raumwand, nachpruefbar an der Huelle der SCA-Zellen - und erben den Standpunkt der naechsten Spalte, die einen hat. Das ist dieselbe Wandflaeche.\n\n⛔ NACHTRAG 2026-09-07 (Nutzer-Marke F4141): in dieser Freistellung steckt NEBEN der Wand auch die LIEGE davor. Die Spaltenregel nimmt je Spalte den untersten Punkt - in den Liegen-Spalten ist das deren Rolle, also ein Standpunkt VOR der Wand. Gemessen: der Standpunkt von Spalte 110 ist Welt(-2351,-421), der Nutzer stand bei (-2360,-164) - 9 Einheiten daneben. Das senkrechte Profil lief damit genau durch ihn hindurch und schnitt ihn mittendrin, obwohl er NEBEN der Liege steht (\"die muss ueberdecken wenn ich dahinter stehe, aber nicht an der Seite\"). Die Bodenlinie der WAND ist an den Spalten 164..188 und 236..300 ablesbar (Zeilen 148..151 bzw. 157..168, eine Gerade); die Liegen-Spalten 52..163 brechen sie um bis zu 34 Zeilen. Mit \"bodenkante\": [164,300] tragen die Spalten der Liege die Tiefe der WAND: im Koerperkasten des Nutzers 0 statt 971 verdeckende Punkte, Tiefe dort 117..127 statt 78..103. OFFEN: die Liege verdeckt damit gar nicht mehr, obwohl man hinter sie kommt (7315 begehbare Punkte zwischen Liege und Wand). Sie braucht eine EIGENE Freistellung mit eigener Tiefe - als waagerechte Flaeche, nicht als senkrechte.\n\n⛔ GETRENNT 2026-09-07. Der Nutzer hat die Liege als EIGENE Freistellung geliefert (07_04, 124x88 bei x=52 y=97) und die Wand ohne sie (07_03, 268x161 bei x=52 y=25). Beide sitzen bei 100,0 % Uebereinstimmung, und 21554 + 5712 = 27266 Punkte entsprechen genau der alten gemeinsamen Datei (27262) - es ist derselbe Schnitt, nur getrennt. Damit koennen die beiden endlich verschiedene Tiefen tragen; in EINER Datei ging das nicht, weil die Wand senkrecht und die Liege waagerecht ist (alle vier Modelle an der Nutzer-Marke F4141 durchgerechnet, keines erfuellte beide Bedingungen).\n  * WAND (07_03): \"aufrecht\": \"spalten\" mit \"bodenkante\": [164,300]. Ohne die Bodenkante schneidet sie ihn an 14 gezeichneten Figurpunkten - die Spalten 112..148 enden jetzt am FENSTERBRETT (Tiefe 238..292), weil die Liege dort nicht mehr drin ist. Die echte Wandlinie steht in den Spalten 164..192 und 232..300 (Tiefe 98..123).\n  * LIEGE (07_04): \"fuss\": 162 - EINE Tiefe (100..104). Begruendung aus zwei unabhaengigen Richtungen:\n      (a) Nutzerbedingung: er stand bei Welt(-2360,-164) mit Fuss-vz 6361, also darf die Tiefe nicht unter 99,4 liegen. Gemessen an seinen GEZEICHNETEN Figurpunkten (nicht am Koerperkasten, der ist breiter als die Figur): fuss=166 (Tiefe 100) schneidet 0 Punkte, fuss=170 (Tiefe 96) schneidet 497.\n      (b) Die eigene Fusslinie der Liege: die Spaltenregel gibt 95..132, eine robuste Geradenanpassung ihres Bodenkontakts 98..111 und an seinen Spalten 102..105. Der Wert 102..105 liegt also in ihrer gemessenen Fusslinie UND erfuellt seine Bedingung.\n    ⛔ WARUM NICHT DIE SPALTENREGEL: die Liege steht auf BEINEN. Deren Spalte traegt den echten Bodenkontakt (Zeile 184 statt 166..171 bei den Nachbarn, Tiefe 85), und diese nahe Tiefe gilt dann fuer die ganze Spalte samt Matratze darueber - im Bild ein schmaler senkrechter Streifen, der genau durch die Figur schneidet. Genau das hat der Nutzer gemeldet: \"die muss ueberdecken wenn ich dahinter stehe, aber nicht an der Seite\".\n    Wirkung: 0 Schnitte an seiner Figur, und 2065 von 3345 Standplaetzen HINTER der Liege werden verdeckt (mit fuss=166 waeren es 2265, aber ohne Rand zu seiner Bedingung).\n\n⛔ TEPPICH FLACH 2026-09-07. Der Vordergrund-Teppich trug die Tiefe seiner VORDERKANTE fuer die ganze Flaeche (58..67), weil die Spaltenregel je Spalte den untersten Punkt nimmt. Ein Teppich hat aber keine Vorderkante, hinter der alles gleich weit weg waere - jeder Bildpunkt IST ein Bodenpunkt. Mit \"flach\": true bekommt jeder Bildpunkt seine eigene Entfernung (Tiefe 58..288 statt 58..67).",
-      "objekte": [
-        {
-          "name": "Vordergrund Teppich und Schreibmaschine",
-          "png": "pri/10E0/07_01.png",
-          "x": 110,
-          "y": 97,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "flach": true
-        },
-        {
-          "name": "Rueckwand mit Tuer (ohne Liege)",
-          "png": "pri/10E0/07_03.png",
-          "x": 52,
-          "y": 25,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": "spalten",
-          "bodenkante": [
-            164,
-            300
-          ]
-        },
-        {
-          "name": "Liege",
-          "png": "pri/10E0/07_04.png",
-          "x": 52,
-          "y": 97,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "fuss": 162
-        }
-      ]
-    },
-    "8": {
-      "_warum": "Betten.",
-      "objekte": [
-        {
-          "name": "Bett vorn",
-          "png": "pri/10E0/08_01.png",
-          "x": 0,
-          "y": 123,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        },
-        {
-          "name": "Bettgestell rechts",
-          "png": "pri/10E0/08_02.png",
-          "x": 259,
-          "y": 153,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "9": {
-      "_warum": "Bett mit Kopfteil.",
-      "objekte": [
-        {
-          "name": "Bett",
-          "png": "pri/10E0/09.png",
-          "x": 167,
-          "y": 102,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    }
-  },
-  "ROOM10C0": {
-    "2": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
-      "objekte": [
-        {
-          "name": "Spielautomat",
-          "png": "pri/10C0/02_01.png",
-          "x": 255,
-          "y": 74,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        },
-        {
-          "name": "Tischplatte rechts",
-          "png": "pri/10C0/02_02.png",
-          "x": 259,
-          "y": 148,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        },
-        {
-          "name": "Sitzbankreihe",
-          "png": "pri/10C0/02_03.png",
-          "x": 52,
-          "y": 134,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "3": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
-      "objekte": [
-        {
-          "name": "Holzbank",
-          "png": "pri/10C0/03_01.png",
-          "x": 0,
-          "y": 103,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        },
-        {
-          "name": "Sitzreihen mit Trennwand",
-          "png": "pri/10C0/03_02.png",
-          "x": 104,
-          "y": 104,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "4": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
-      "objekte": [
-        {
-          "name": "Theke",
-          "png": "pri/10C0/04.png",
-          "x": 84,
-          "y": 187,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    }
-  },
-  "ROOM10D0": {
-    "1": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
-      "objekte": [
-        {
-          "name": "Hocker",
-          "png": "pri/10D0/01.png",
-          "x": 124,
-          "y": 87,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        }
-      ]
-    },
-    "6": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
-      "objekte": [
-        {
-          "name": "Stuhlkante",
-          "png": "pri/10D0/06.png",
-          "x": 34,
-          "y": 172,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        }
-      ]
-    },
-    "7": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
-      "objekte": [
-        {
-          "name": "Stuhl",
-          "png": "pri/10D0/07_01.png",
-          "x": 0,
-          "y": 123,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        },
-        {
-          "name": "Tischplattenecke",
-          "png": "pri/10D0/07_02.png",
-          "x": 0,
-          "y": 146,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "8": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
-      "objekte": [
-        {
-          "name": "Tischkante",
-          "png": "pri/10D0/08.png",
-          "x": 86,
-          "y": 95,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        }
-      ]
-    },
-    "9": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
-      "objekte": [
-        {
-          "name": "Theke mit Papieren",
-          "png": "pri/10D0/09_01.png",
-          "x": 203,
-          "y": 127,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        },
-        {
-          "name": "Schreibtisch mit Stuhl",
-          "png": "pri/10D0/09_02.png",
-          "x": 161,
-          "y": 91,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "spalten": true
-        },
-        {
-          "name": "Schrankwand",
-          "png": "pri/10D0/09_03.png",
-          "x": 80,
-          "y": 104,
-          "massstab": 1,
-          "oben": 0,
-          "grow": 0,
-          "aufrecht": true
-        }
-      ]
-    }
+   ]
   }
+ },
+ "ROOM1130": {
+  "3": {
+   "_warum": "Freistellung des Nutzers (pri/1130/03.png), Lage gemessen: x=79 y=0, Massstab 1, 99,9 % Uebereinstimmung. ⛔ ABSICHTLICH OHNE \"fuss\": die Wand laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung. Gemessen an der Freistellung selbst wandert die unterste opake Zeile von y=9 (links, fern) bis y=190 (rechts, nah) - Spannweite 182 px. Genau dafuer ist die Spaltenregel in geom.depth_map_objekt da. Nutzer 2026-09-04: \"diese Wand [muss] natuerlich hinter Leon sein, wenn er die Diagonale lang geht, aber sobald er quasi um die Ecke geht, muss sie vor Leon kommen. Also es ist abhaengig von seiner Position.\" Das leistet die Spaltenregel von selbst; ein einzelnes \"fuss\" wuerde die Wand auf EINE Entfernung zwingen und genau diese Positionsabhaengigkeit zerstoeren. | ⛔ FREISTELLUNG VOM NUTZER VERBREITERT 2026-09-04 (49x202 bei x=67 statt 38x192 bei x=79, 99,9 % Uebereinstimmung). ANLASS: \"even though i made a pri for this whole wall, my arm clips through\" - und seine Rueckfrage \"Ist er nicht breit genug?\" war richtig. Am Bild gemessen: von 38 Armpixeln lagen 32 UEBERHAUPT NICHT unter der alten Maske; sie deckte nur den schmalen Pfeiler, nicht die grosse Wandflaeche links davon. Zwei naheliegende Erklaerungen waren vorher gemessen und verworfen worden - feinere Kachelung (verdeckt 305 Punkte WENIGER) und Dilatation (grow=3 deckt 37/38 ab, verdeckt aber 0/38, weil die Tiefe dort zu fern bleibt). Erst die breitere Freistellung traegt: Arm abgedeckt 38/38, wirksam verdeckt 28/38 (vorher 6 bzw. 0). Rest: 10 Punkte bei x=87..88 mit Tiefe 103/112 gegen die Schwelle 99,6 - 3 % zu fern, an der aeussersten Kante. | ⛔ TIEFE BERICHTIGT 2026-09-06 (F9-Marke des Nutzers, ROOM1130 C3, Bild F506: \"wenn Leon rennt, sieht man noch seinen Arm durchblitzen\"). Die Verbreiterung von 2026-09-04 hat die FLAECHE gebracht, aber nicht die Verdeckung — genau wie damals schon an grow=3 gemessen (\"deckt 37/38 ab, verdeckt aber 0/38\"). Ursache ist die Spaltenregel selbst: die untere Silhouettenkante dieser Freistellung ist nur in den Spalten 94..115 der Bodenkontakt (Zeilen 201..179). Links davon ist sie die SEITLICHE Kante des Pfeilers — eine senkrechte Weltkante, die im Bild um 7,4 Zeilen je Bildpunkt ansteigt (Zeile 201 bei x=94 -> Zeile 0 bei x=67). Nachgerechnet mit der Kamera dieses Cuts (H=208): Spalte->Tiefe 94..115 = 70..83, und ihre Weltpunkte liegen alle auf EINER Geraden (x -3734..-3946, z 4231..5189) — das ist der Wandfuss. Weiter links: 89->94, 84->141, 78->345, 76->684, 74->32523, und 67..73 treffen den Boden ueberhaupt nicht mehr (Sehstrahl ueber dem Horizont); diese sieben Spalten liess das Werkzeug bisher STILL leer. Der Spieler stand laut befund.log bei vz 6398/6166/5935, verdeckt wird also nur mit Tiefe < 92,7 — die Spalten 67..89 lagen ALLE darueber. Deshalb \"bodenkante\": [94,115]: nur diese Spalten tragen ihren eigenen Bodenkontakt, die uebrigen erben den der naechsten davon (also 70). ⛔ Die Grenze ist NICHT automatisch zu finden — gemessen und verworfen: die Raumhuelle (x -8650..6000, z -18400..19750) verwirft nur 74..78, und der Test \"Weltpunkt liegt auf einer SCA-Bodenzelle\" laesst 81, 82 und 90 faelschlich durch. Sie steht deshalb als MESSWERT hier. ⛔ Die alte Begruendung \"absichtlich ohne fuss, weil die Wand diagonal weglaeuft\" war im Kern richtig (die Tiefe DARF nicht konstant sein), hat aber uebersehen, dass die Spaltenregel ihre Eingabe nur auf einem Teil der Breite bekommt. | ⛔ ZWISCHENFALL 2026-09-06/07: der Nutzer hatte pri/1130/03.png versehentlich OHNE Alphakanal gespeichert (320x240 RGB, vom Hintergrund nur an 458 Punkten verschieden - den beiden Wandlampen, also ein Bildschirmfoto). Ohne Alpha gilt die ganze Bildflaeche als Maske (79,1 % statt 19,8 %); gebaut wurde solange aus einer Kopie. Am 2026-09-07 hat er die Datei richtig gespeichert - seither zeigt \"png\" wieder direkt darauf. | ⛔ 2026-09-07: der Nutzer hat die Freistellung NEU gespeichert - jetzt MIT Alphakanal (55x209 statt 49x202, Lage x=62 y=0, 100,0 % Uebereinstimmung). Die Fusskante liegt damit bei Spalte 92 statt 94, deshalb \"bodenkante\": [92,115]. Dazu \"aufrecht\": \"spalten\": die Spaltenregel gab bisher JEDER Bildzeile die BODENtiefe - fuer die Oberkante eines senkrechten Pfeilers ist das zu fern. Mit dem Zeilenprofil (geom.vz_der_senkrechten) tragen die Zeilen auf Koerperhoehe jetzt 60..80 statt 68..81, und die Wand verdeckt auch, was oben an ihr entlanglaeuft. Gemessen: ohne \"bodenkante\" waeren es 59..141 mit fuenf wirkungslosen Spalten (79..83) - beide Angaben zusammen sind noetig. | 2026-09-07 (spaeter): der Nutzer hat die Freistellung ERNEUT verbreitert - 75x225 bei x=42 statt 55x209 bei x=62 (Lage gemessen, 100,0 % Uebereinstimmung). ANLASS: seine zwei F9-Marken in Cut 3 (F582, F994) - \"die Pistole und ein Fuss ragen durch die Wand\". Gemessen am Abzug der beiden Bilder gegeneinander (256 Figurpunkte links von x95): mit der alten Freistellung waren 90 abgedeckt (35 %), mit der neuen 242 (95 %). Offen bleiben 14 Punkte bei x58..61, y119..123 - die Muendung der Waffe, vier Spalten. | 2026-09-07 (noch spaeter): bodenkante [92,115] -> [85,115]. Mit der breiteren Freistellung reichen die Spalten 85..91 jetzt bis zum Wandfuss und brauchen die geerbte Tiefe nicht mehr. Gemessen an den zwei F9-Marken F808/F860 (984 Figurpunkte im Abzug gegeneinander): verdeckt 488 -> 540 von 984. Ebenfalls durchgerechnet und schlechter: [81,115] = 540 (gleich), [75,115] = 525. ⛔ OFFEN: die FLAECHE stimmt jetzt (984 von 984 abgedeckt, vorher 90 von 256), die TIEFE nicht - 444 Punkte tragen Maskentiefe 63..71, noetig waere < 63 (Spieler vz 4077). Die Bodenkante ist dafuer NICHT der Hebel.",
+   "objekte": [
+    {
+     "name": "Wandkante mit Lampe (diagonal)",
+     "png": "pri/1130/03.png",
+     "x": 42,
+     "y": 0,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "bodenkante": [
+      85,
+      115
+     ],
+     "aufrecht": "spalten"
+    }
+   ]
+  }
+ },
+ "ROOM1060": {
+  "0": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=55 y=135, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 98 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/00.png",
+     "x": 55,
+     "y": 135,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -15400,
+     "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -14400 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+    }
+   ]
+  },
+  "1": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=0 y=137, Massstab 1, 100,0 %. Dasselbe Gelaender aus dem zweiten Blickwinkel. ⛔ ABSICHTLICH OHNE \"fuss\": das Objekt laeuft DIAGONAL von der Kamera weg, jede Bildspalte hat ihre eigene Entfernung (unterste Zeile wandert ueber 81 Zeilen). Genau dafuer ist die Spaltenregel da; ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen. Vgl. ROOM1130 Cut 3.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/01.png",
+     "x": 0,
+     "y": 137,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -13600,
+     "grund": "⛔ Cut 1 zeigt einen TREPPENLAUF, nicht ein Podest. Die hergeleitete Bodenebene ist das OBERE Podest (Band 6, -10800); der Lauf faellt bis Band 8 (-14400). Ein Gelaender laengs der Treppe liegt im Mittel auf der LAUFMITTE (-12600) plus Handlaufhoehe 1000 = -13600. Nutzer-Marke 2026-09-06: er stand bei y=-12302, also 1502 UNTER dem hergeleiteten Podest - in Cut 0 und 2 stand er exakt darauf, und dort passte die Verdeckung. Gemessen lagen 6 von 12 Masken an seinem Koerper um 23..440 Einheiten zu fern, und zwar die Spalten treppaufwaerts."
+    }
+   ]
+  },
+  "2": {
+   "_warum": "Drei Freistellungen des Nutzers, Lagen gemessen (je 100,0 %): x=178 y=121, x=307 y=160, x=185 y=133. Dasselbe Treppengelaender wie Cut 0/1, hier in drei Teilen. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 50 bzw. 31 Zeilen), jede Bildspalte hat ihre eigene Entfernung - genau dafuer ist die Spaltenregel da.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/02_01.png",
+     "x": 178,
+     "y": 121,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -8200,
+     "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+    },
+    {
+     "name": "Gelaenderstueck rechts aussen",
+     "png": "pri/1060/02_02.png",
+     "x": 307,
+     "y": 160,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -8200,
+     "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+    },
+    {
+     "name": "Gelaenderpfosten links",
+     "png": "pri/1060/02_03.png",
+     "x": 185,
+     "y": 133,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -8200,
+     "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene -7200 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+    }
+   ]
+  },
+  "4": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=108 y=0, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 111 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/04.png",
+     "x": 108,
+     "y": 0,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -2800,
+     "grund": "⛔ Cut 4 zeigt wie Cut 1 einen TREPPENLAUF. Die hergeleitete Bodenebene ist das OBERE Podest (Band 0, y=0), der Lauf faellt bis Band 2 (-3600). Nutzer-Marke 2026-09-06: er stand bei y=-3872, also UNTER dem Podest und sogar unter dem naechsten Band - mitten im Lauf. Ebene deshalb LAUFMITTE (-1800) plus Handlaufhoehe 1000 = -2800, dieselbe Herleitung wie Cut 1."
+    }
+   ]
+  },
+  "7": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=157 y=18, Massstab 1, 100,0 %. Treppengelaender. ⛔ ABSICHTLICH OHNE \"fuss\": das Gelaender laeuft DIAGONAL von der Kamera weg (unterste Zeile wandert ueber 167 Zeilen), jede Bildspalte hat ihre eigene Entfernung. Ein einzelnes \"fuss\" wuerde es auf EINE Entfernung zwingen.",
+   "objekte": [
+    {
+     "name": "Treppengelaender",
+     "png": "pri/1060/07.png",
+     "x": 157,
+     "y": 18,
+     "massstab": 1,
+     "spalten": true,
+     "oben": 0,
+     "grow": 0,
+     "ebene": -1000,
+     "grund": "Ebene = OBERKANTE des Gelaenders (hergeleitete Bodenebene 0 minus 1000). Ein Gelaender ist duenn und senkrecht: Fuss und Oberkante liegen fast gleich weit weg, aber der Sehstrahl durch die untere Silhouettenkante trifft den Boden ZU WEIT HINTEN. Nutzer 2026-09-06: 'es deckt zu wenig das Gelaender'. Gemessene Marken: Cut 0 Kopf-Tiefe 6619, Cut 2 6198."
+    }
+   ]
+  }
+ },
+ "ROOM1120": {
+  "2": {
+   "_warum": "Freistellung des Nutzers, Lage gemessen: x=165 y=92, Massstab 1, 100,0 %. Empfangstresen mit Monitor. ⛔ 2026-09-05 VON \"spalten\" AUF \"fuss\" 202 GEWECHSELT (Nutzer-Befund fehler/error05.png: \"Der Tisch ueberdeckt mich nur halb\"). GEMESSEN: in Leons Spalten (165..182, Fusspunkt aus dem Screenshot (171,154) -> Tiefe 9782) lagen 12 von 14 Maskenrechtecken vor ihm, ZWEI aber bei Kamera-z 8512 und 11072 - genau die zwei am linken Tresenrand, wo die unterste Maskenzeile die TRESENPLATTE ist und nicht der Boden. Die Spaltenregel ist hier falsch: ein Tresen ist ein Koerper, hinter den man nicht teilweise treten kann, also EIN Abstand. 202 ist die unterste Zeile der Freistellung (Kasten y=92, Hoehe 111).",
+   "objekte": [
+    {
+     "name": "Tresen mit Monitor",
+     "png": "pri/1120/02.png",
+     "x": 165,
+     "y": 92,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "fuss": 202
+    }
+   ]
+  }
+ },
+ "ROOM10E0": {
+  "0": {
+   "_warum": "Freistellungen des Nutzers, Lage gemessen (100,0 % Uebereinstimmung).",
+   "objekte": [
+    {
+     "name": "Schrankwand links",
+     "png": "pri/10E0/00_01.png",
+     "x": 0,
+     "y": 94,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": "spalten"
+    },
+    {
+     "name": "Leiche am Boden",
+     "png": "pri/10E0/00_02.png",
+     "x": 207,
+     "y": 151,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "flach": true
+    }
+   ]
+  },
+  "1": {
+   "_warum": "Leiche auf der Trage - Bodenkontakt sind die Rollen.",
+   "objekte": [
+    {
+     "name": "Trage mit Leiche",
+     "png": "pri/10E0/01.png",
+     "x": 37,
+     "y": 105,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "2": {
+   "_warum": "Schreibtisch mit Ordnern.",
+   "objekte": [
+    {
+     "name": "Schreibtisch mit Ordnern",
+     "png": "pri/10E0/02.png",
+     "x": 0,
+     "y": 142,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "3": {
+   "_warum": "⛔ DREHSTUHL, NUTZERWUNSCH 2026-09-07: \"der Drehstuhl muss den Charakter weiter oben ueberdecken, aber weiter unten vom Charakter ueberdeckt werden.\" Mit EINER Tiefe geht das nicht - und zwar genau andersherum: die Kamera schaut von oben, der KOPF der Figur ist also naeher als ihre Fuesse (gemessen 469 Einheiten). Eine einzelne Schwelle mitten in der Figur verdeckt deshalb IMMER das untere Ende und laesst das obere frei. Richtig ist ein Tiefen-PROFIL ueber die Bildzeilen: die Rueckenlehne steht hoch und ist damit naeher an der Kamera als das Fussgestell. Das ist geschlossen ausrechenbar, weil die Silhouette eines aufrecht stehenden Gegenstands die Projektion einer SENKRECHTEN Weltlinie ist (geom.vz_der_senkrechten). Gemessen an dieser Freistellung: Standpunkt Welt(4011,-4359) aus Bild(190,183), Tiefe 70 (oben) bis 79 (unten) ueber alle 70 Zeilen. Zum Vergleich: mit \"fuss\" waeren es durchgehend 79, mit der Spaltenregel 79..137.",
+   "objekte": [
+    {
+     "name": "Drehstuhl",
+     "png": "pri/10E0/03.png",
+     "x": 177,
+     "y": 114,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    }
+   ]
+  },
+  "4": {
+   "_warum": "Schreibtisch mit Rechner.",
+   "objekte": [
+    {
+     "name": "Schreibtisch mit Rechner",
+     "png": "pri/10E0/04.png",
+     "x": 178,
+     "y": 95,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "5": {
+   "_warum": "Schreibtisch mit Bildschirm.",
+   "objekte": [
+    {
+     "name": "Schreibtisch mit Bildschirm",
+     "png": "pri/10E0/05.png",
+     "x": 0,
+     "y": 104,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "6": {
+   "_warum": "Stuhllehne - aufrecht stehend, wie Cut 3.",
+   "objekte": [
+    {
+     "name": "Stuhllehne",
+     "png": "pri/10E0/06.png",
+     "x": 259,
+     "y": 178,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    }
+   ]
+  },
+  "7": {
+   "_warum": "⛔ WAND, NUTZERWUNSCH 2026-09-07: \"Bei 07_02 habe ich die vollstaendige Wand ausgeschnitten, da es Zombies gibt die durch die ganze Wand clippen auf der anderen Seite. Die wollen wir blocken. Aber der Spielcharakter selber soll nicht davon geblockt werden.\" Beides zugleich leistet genau die richtige TIEFE: der Zeichner verdeckt, was FERNER ist als die Maske. Wer hinter der Wand steht, ist ferner und verschwindet; wer davor steht, bleibt sichtbar. Dafuer muss die Maske aber die Tiefe der WANDFLAECHE tragen, nicht die ihres Bodens: mit der reinen Spaltenregel bekaeme jede Bildzeile die Bodentiefe, und die Wandoberkante waere zu fern. \"aufrecht\": \"spalten\" gibt je Spalte den Standpunkt aus dem Bodenkontakt und je Zeile die Tiefe der senkrechten Wandflaeche. Gemessen: Spalte 112 traegt 82 (oben) bis 95 (unten) statt durchgehend 95. Die 41 Spalten ueber der TUEROEFFNUNG (195..231) und am rechten Rand haben keinen eigenen Bodenkontakt - ihr Sehstrahl landet hinter der Raumwand, nachpruefbar an der Huelle der SCA-Zellen - und erben den Standpunkt der naechsten Spalte, die einen hat. Das ist dieselbe Wandflaeche.\n\n⛔ NACHTRAG 2026-09-07 (Nutzer-Marke F4141): in dieser Freistellung steckt NEBEN der Wand auch die LIEGE davor. Die Spaltenregel nimmt je Spalte den untersten Punkt - in den Liegen-Spalten ist das deren Rolle, also ein Standpunkt VOR der Wand. Gemessen: der Standpunkt von Spalte 110 ist Welt(-2351,-421), der Nutzer stand bei (-2360,-164) - 9 Einheiten daneben. Das senkrechte Profil lief damit genau durch ihn hindurch und schnitt ihn mittendrin, obwohl er NEBEN der Liege steht (\"die muss ueberdecken wenn ich dahinter stehe, aber nicht an der Seite\"). Die Bodenlinie der WAND ist an den Spalten 164..188 und 236..300 ablesbar (Zeilen 148..151 bzw. 157..168, eine Gerade); die Liegen-Spalten 52..163 brechen sie um bis zu 34 Zeilen. Mit \"bodenkante\": [164,300] tragen die Spalten der Liege die Tiefe der WAND: im Koerperkasten des Nutzers 0 statt 971 verdeckende Punkte, Tiefe dort 117..127 statt 78..103. OFFEN: die Liege verdeckt damit gar nicht mehr, obwohl man hinter sie kommt (7315 begehbare Punkte zwischen Liege und Wand). Sie braucht eine EIGENE Freistellung mit eigener Tiefe - als waagerechte Flaeche, nicht als senkrechte.\n\n⛔ GETRENNT 2026-09-07. Der Nutzer hat die Liege als EIGENE Freistellung geliefert (07_04, 124x88 bei x=52 y=97) und die Wand ohne sie (07_03, 268x161 bei x=52 y=25). Beide sitzen bei 100,0 % Uebereinstimmung, und 21554 + 5712 = 27266 Punkte entsprechen genau der alten gemeinsamen Datei (27262) - es ist derselbe Schnitt, nur getrennt. Damit koennen die beiden endlich verschiedene Tiefen tragen; in EINER Datei ging das nicht, weil die Wand senkrecht und die Liege waagerecht ist (alle vier Modelle an der Nutzer-Marke F4141 durchgerechnet, keines erfuellte beide Bedingungen).\n  * WAND (07_03): \"aufrecht\": \"spalten\" mit \"bodenkante\": [164,300]. Ohne die Bodenkante schneidet sie ihn an 14 gezeichneten Figurpunkten - die Spalten 112..148 enden jetzt am FENSTERBRETT (Tiefe 238..292), weil die Liege dort nicht mehr drin ist. Die echte Wandlinie steht in den Spalten 164..192 und 232..300 (Tiefe 98..123).\n  * LIEGE (07_04): \"fuss\": 162 - EINE Tiefe (100..104). Begruendung aus zwei unabhaengigen Richtungen:\n      (a) Nutzerbedingung: er stand bei Welt(-2360,-164) mit Fuss-vz 6361, also darf die Tiefe nicht unter 99,4 liegen. Gemessen an seinen GEZEICHNETEN Figurpunkten (nicht am Koerperkasten, der ist breiter als die Figur): fuss=166 (Tiefe 100) schneidet 0 Punkte, fuss=170 (Tiefe 96) schneidet 497.\n      (b) Die eigene Fusslinie der Liege: die Spaltenregel gibt 95..132, eine robuste Geradenanpassung ihres Bodenkontakts 98..111 und an seinen Spalten 102..105. Der Wert 102..105 liegt also in ihrer gemessenen Fusslinie UND erfuellt seine Bedingung.\n    ⛔ WARUM NICHT DIE SPALTENREGEL: die Liege steht auf BEINEN. Deren Spalte traegt den echten Bodenkontakt (Zeile 184 statt 166..171 bei den Nachbarn, Tiefe 85), und diese nahe Tiefe gilt dann fuer die ganze Spalte samt Matratze darueber - im Bild ein schmaler senkrechter Streifen, der genau durch die Figur schneidet. Genau das hat der Nutzer gemeldet: \"die muss ueberdecken wenn ich dahinter stehe, aber nicht an der Seite\".\n    Wirkung: 0 Schnitte an seiner Figur, und 2065 von 3345 Standplaetzen HINTER der Liege werden verdeckt (mit fuss=166 waeren es 2265, aber ohne Rand zu seiner Bedingung).\n\n⛔ TEPPICH FLACH 2026-09-07. Der Vordergrund-Teppich trug die Tiefe seiner VORDERKANTE fuer die ganze Flaeche (58..67), weil die Spaltenregel je Spalte den untersten Punkt nimmt. Ein Teppich hat aber keine Vorderkante, hinter der alles gleich weit weg waere - jeder Bildpunkt IST ein Bodenpunkt. Mit \"flach\": true bekommt jeder Bildpunkt seine eigene Entfernung (Tiefe 58..288 statt 58..67).",
+   "objekte": [
+    {
+     "name": "Vordergrund Teppich und Schreibmaschine",
+     "png": "pri/10E0/07_01.png",
+     "x": 110,
+     "y": 97,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "flach": true
+    },
+    {
+     "name": "Rueckwand mit Tuer (ohne Liege)",
+     "png": "pri/10E0/07_03.png",
+     "x": 52,
+     "y": 25,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": "spalten",
+     "bodenkante": [
+      164,
+      300
+     ]
+    },
+    {
+     "name": "Liege",
+     "png": "pri/10E0/07_04.png",
+     "x": 52,
+     "y": 97,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "fuss": 162
+    }
+   ]
+  },
+  "8": {
+   "_warum": "Betten.",
+   "objekte": [
+    {
+     "name": "Bett vorn",
+     "png": "pri/10E0/08_01.png",
+     "x": 0,
+     "y": 123,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    },
+    {
+     "name": "Bettgestell rechts",
+     "png": "pri/10E0/08_02.png",
+     "x": 259,
+     "y": 153,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "9": {
+   "_warum": "Bett mit Kopfteil.",
+   "objekte": [
+    {
+     "name": "Bett",
+     "png": "pri/10E0/09.png",
+     "x": 167,
+     "y": 102,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  }
+ },
+ "ROOM10C0": {
+  "2": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
+   "objekte": [
+    {
+     "name": "Spielautomat",
+     "png": "pri/10C0/02_01.png",
+     "x": 255,
+     "y": 74,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    },
+    {
+     "name": "Tischplatte rechts",
+     "png": "pri/10C0/02_02.png",
+     "x": 259,
+     "y": 148,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    },
+    {
+     "name": "Sitzbankreihe",
+     "png": "pri/10C0/02_03.png",
+     "x": 52,
+     "y": 134,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "3": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "objekte": [
+    {
+     "name": "Holzbank",
+     "png": "pri/10C0/03_01.png",
+     "x": 0,
+     "y": 103,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    },
+    {
+     "name": "Sitzreihen mit Trennwand",
+     "png": "pri/10C0/03_02.png",
+     "x": 104,
+     "y": 104,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "4": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "objekte": [
+    {
+     "name": "Theke",
+     "png": "pri/10C0/04.png",
+     "x": 84,
+     "y": 187,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  }
+ },
+ "ROOM10D0": {
+  "1": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "objekte": [
+    {
+     "name": "Hocker",
+     "png": "pri/10D0/01.png",
+     "x": 124,
+     "y": 87,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    }
+   ]
+  },
+  "6": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "objekte": [
+    {
+     "name": "Stuhlkante",
+     "png": "pri/10D0/06.png",
+     "x": 34,
+     "y": 172,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    }
+   ]
+  },
+  "7": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
+   "objekte": [
+    {
+     "name": "Stuhl",
+     "png": "pri/10D0/07_01.png",
+     "x": 0,
+     "y": 123,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    },
+    {
+     "name": "Tischplattenecke",
+     "png": "pri/10D0/07_02.png",
+     "x": 0,
+     "y": 146,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "8": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
+   "objekte": [
+    {
+     "name": "Tischkante",
+     "png": "pri/10D0/08.png",
+     "x": 86,
+     "y": 95,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    }
+   ]
+  },
+  "9": {
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
+   "objekte": [
+    {
+     "name": "Theke mit Papieren",
+     "png": "pri/10D0/09_01.png",
+     "x": 203,
+     "y": 127,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    },
+    {
+     "name": "Schreibtisch mit Stuhl",
+     "png": "pri/10D0/09_02.png",
+     "x": 161,
+     "y": 91,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "spalten": true
+    },
+    {
+     "name": "Schrankwand",
+     "png": "pri/10D0/09_03.png",
+     "x": 80,
+     "y": 104,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "aufrecht": true
+    }
+   ]
+  }
+ }
 }
