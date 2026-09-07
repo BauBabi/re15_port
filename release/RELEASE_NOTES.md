@@ -1,65 +1,62 @@
-# RE1.5 Port — v0.7.13 (Early Preview)
+# RE1.5 Port — v0.7.14 (Early Preview)
 
-**Drei Befunde von dir, zwei gelöst, einer war meiner.**
-
----
-
-## 1. Die Löcher in der Maske — mein Fehler aus v0.7.12
-
-Du: *"das mit der schreibmaschine ist jetzt irgendwie kaputt"*. Zu Recht.
-
-Die neue Entfernungsrechnung setzte jeden Punkt, an dem der Sehstrahl die Kollisionszelle
-**verfehlt**, auf 0 — und 0 heißt „keine Maske". Gemessen an ROOM10E0:
-
-```
-Rechtecke im Blickwinkel 7     101  ->  82      es fehlten 19
-getroffene Punkte der Liege    1898 von 5712
-```
-
-Ein Möbel ist aber undurchsichtig. Ein Strahl, der neben der groben Kollisionsbox
-vorbeigeht, ist eine Ungenauigkeit der **Box**, kein Loch im Möbel. Die nicht getroffenen
-Punkte erben jetzt die Entfernung des nächsten getroffenen. Wieder 101 Rechtecke.
-
-## 2. Der Tresen in ROOM1120 — vier Marken
-
-Er trug **eine** Zahl für alle 81 Kacheln und deckte dich damit komplett zu, obwohl du
-davor stehst. Eine einzige Zahl kann das nicht: am 05.09. standest du bei Entfernung 153
-*dahinter* und musstest verdeckt werden.
-
-```
-                              vorher        jetzt
-Entfernung des Tresens        fest 82       84..95, je Bildzeile wachsend
-F613 / F626 / F634 / F642     alles zu      0 verdeckende Punkte
-bei Entfernung 153 dahinter   verdeckt      verdeckt weiter (Maximum 95)
-```
-
-## 3. Leons Kopf in der Wand — ROOM10E0
-
-Die Rückwand lag per Silhouette bei 112, dein **Kopf** bei 112,6 — sie schnitt ihn um einen
-halben Punkt ab. Eine Rückwand kann das nie, du stehst davor.
-
-```
-Zeile für Zeile im Körperkasten, F2103:
-   y110..144 (Kopf und Rumpf)    927 verdeckende Punkte  ->  0
-   F523 zusätzlich               164                     ->  0
-```
+**Für die Krähen brauche ich einen Mitschrieb aus deiner Sitzung — diese Fassung schreibt ihn.**
 
 ---
 
-## Noch offen — gemessen, aber nicht gelöst
+## Was du tun musst
 
-Ich sage lieber, was ich nicht kann, als etwas zu raten:
+Start den Port mit gesetzter Umgebungsvariable:
 
-**Die Schreibmaschine in ROOM10E0** steckt mit dem Teppich in *einer* Freistellung, Modell
-„flach". Der Teppich ist zu Recht flach — die Maschine ist es nicht. Ihre Silhouette bekommt
-Bodenentfernungen 61..102, du stehst bei 68 mittendrin, also ist dieselbe Maschine halb vor
-und halb hinter dir. Ein Schnitt an der Teppichoberkante findet Maschine, Stuhl und Schrank
-sauber, lässt aber die untere Hälfte der Maschine beim Teppich — der Riss wandert nur.
-Das braucht eine Trennung am Maschinenfuß.
+```
+RE15_RE2_TRACE=1
+```
 
-**Die grünen Tische in ROOM10D0.** Keine Kollisionszelle passt (dort liegen nur lange
-Flurwände). „aufrecht" gibt pauschal 97 (481 verdeckende Punkte), „spalten" 106..292
-(210 Punkte, am rechten Rand nachweislich zu fern). Beides falsch — ein Tisch ist eine
-waagerechte Platte in bekannter Höhe, und die will als solche gerechnet werden.
+Dann liegt neben der `re15_pc.exe` eine **`re2_ki.log`** — genau wie `befund.log`. Spiel wie
+sonst, bis die Krähen die Macke zeigen (hängen bleiben, oder nach dem ersten Hacken nur
+noch an dir kleben). Schick mir die Datei; darin steht jeder Zustandswechsel jeder Krähe
+mit Position, Abstand, Clip und Flags.
 
-282/282 Tests.
+**Warum das nötig ist:** die Diagnose von vorletzter Woche nennt als ersten Messschritt
+genau diesen Trace. Er lief die ganze Zeit — nur ins Leere. Die ausgelieferte exe ist eine
+GUI-Anwendung, und die hat **kein stderr**. Gemessen: `2>datei` liefert 0 Bytes. Alle acht
+Trace-Stellen schreiben jetzt in die Datei, zeilenweise, damit auch ein Absturz nichts
+verliert.
+
+---
+
+## Was ich in der Nacht gemessen habe
+
+Ich habe die erste Sonde gebaut, die **ROOM10C0 wirklich lädt** — die beiden vorhandenen
+Tests laufen ohne Raum, womit Wand, Sichtlinie und Kontakt gar nicht geprüft waren, also
+genau das, worin die Diagnose die Ursachen vermutet.
+
+Sechs Läufe zu je 3600 Ticks, der Spieler jeweils neben einer der drei Krähen, einmal mit
+und einmal ohne wirkende Treffer:
+
+```
+Weg je Krähe            151 590 .. 163 690 Einheiten     kein Hänger
+längste Stille          2 .. 3 Fenster (600..900 Ticks)
+Bildwechsel             1 220 .. 1 533                   Animation läuft
+Griff ohne Opfer-FSM    0 .. 1 von hunderten Ticks       der Griff rastet ein
+Schuss auf eine Krähe im Anflug (Sub 13):  hp 10 -> -5, Zustand 3 = Tod
+```
+
+**Keins deiner beiden Symptome reproduziert sich so.** Der Defekt braucht eine Bedingung,
+die mein Prüfstand nicht hat — ein *bewegter* Spieler, ein anderer Raum oder eine längere
+Sitzung. Deshalb der Mitschrieb: deine Sitzung hat die Bedingung, meine nicht.
+
+## Ein Fehlschluss, den ich fast geliefert hätte
+
+Der erste Sondenlauf zeigte **101 von 101 Grab-Ticks mit ausgeschalteter Opfer-FSM** — exakt
+das Bild, das die Diagnose als Ursache C1 beschreibt („der Griff rastet nie ein"). Das sah
+aus wie der gesuchte Fehler.
+
+Es war einer meiner Sonde: ohne geladene Gegnerbank meldet der Griff „keine Victim-Bank"
+und rastet nie ein. Gegengemessen — Typ 0x21 aus `CDEMD0.EMS` **hat** eine Opfer-Bank. Mit
+geladener Bank verschwand der Befund vollständig. Ich sage das dazu, weil ich es dir sonst
+als Fund verkauft hätte.
+
+---
+
+Die Masken aus v0.7.13 sind unverändert enthalten. 282/282 Tests.

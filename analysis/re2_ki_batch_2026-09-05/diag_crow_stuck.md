@@ -335,3 +335,45 @@ Body-Push-Commit; (f) Positions-Fortschritts-Metrik pro Kraehe.
 - `FUN_8004aab8`-Zonenquelle (`DAT_800ce324`-Struktur +0x38: 12-Byte-Knoten) ↔
   RE1.5-RDT-Aequivalent.
 - ROOM10C0-Spawn-Hoehen der drei Kraehen (RDT 0xF8C/0xFA0/0xFB4) fuer Ursache C.
+
+---
+
+## 8. NACHTRAG 2026-09-08 — Repro-Versuch am echten Raum (Hauptagent)
+
+**Der Trace aus §6.1 kam nie an.** Die ausgelieferte PC-exe ist GUI-Subsystem, dort ist
+stderr tot (Memory `reai-v2-absturz-ereignisprotokoll`). Gemessen: ein Lauf mit
+`RE15_RE2_TRACE=1 ... 2>datei` liefert **0 Bytes**. Seit v0.7.14 schreiben alle acht
+Trace-Stellen ueber `re15_re2_trace_out()` nach `<exe-Verzeichnis>/re2_ki.log` (gleicher
+Ausweich wie befund.log, zeilengepuffert). Verifiziert: 4726 Zeilen aus einem Sondenlauf.
+
+**Neue Sonde `probe_re2_crow_10c0`** — die erste, die ROOM10C0 wirklich laedt
+(`g_room_rdt_ok=1`, Kollisionsband gesetzt), also §6.2 des Dossiers.
+
+⛔ **Ein Artefakt, das fast als Bestaetigung von Ursache C1 durchgegangen waere:** ohne
+geladene Gegnerbank meldet `re15_re2z_victim_begin` "keine Victim-Bank"
+(enemy_ai_common.c:2372); die Sonde zeigte daraufhin **101 von 101 Grab-Ticks mit
+`re15_player_victim_state()==0`** — genau die Signatur aus C1. Gegenmessung
+(`probe_re2_crow_bank`): Typ 0x21 aus CDEMD0.EMS hat `victim_ok=1`. Mit geladener Bank
+verschwand der Befund restlos. (Zweite Falle derselben Art: `re15_enemy_alloc` liefert ab
+dem zweiten Lauf NULL, wodurch die Laeufe 2..n wieder bankfrei massen.)
+
+**Ergebnis, 6 Laeufe a 3600 Ticks** (Spieler je neben einer der drei Kraehen, je einmal mit
+und ohne wirkende Treffer — `hit_react` stehengelassen, weil der Nutzer von "einmal
+GEHACKT" spricht):
+
+```
+Weg je Kraehe            151590 .. 163690     kein Haenger
+laengste Stille          2 .. 3 Fenster       (600..900 Ticks unter 300 Einheiten)
+Bildwechsel              1220 .. 1533         Animation laeuft
+Grab-Ticks ohne Opfer    0 .. 1               der Griff rastet ein
+Schuss in Sub 13         fire=4 -> hp=-5, state 3 = Tod
+```
+
+**Keines der beiden Nutzer-Symptome reproduziert sich unter diesen Bedingungen.** Ursache A
+(Navigator) ist seit dem S1-Fix angeschlossen — alle Flug-Subs steuern auf +0x1C4/+0x1C6
+(enemy_ai_common.c:13366, enemy_ai_re2_crow.c:624/664/692/758/793/819); Ursache B (LOS-Shim)
+bleibt offen, laesst sich mit stehendem Spieler aber nicht ausloesen.
+
+**Naechster Schritt:** `re2_ki.log` aus einer Nutzer-Sitzung. Defekt-Signatur laut §2:
+eine Kraehe mit `fl & 0x0004` dauerhaft in `sub=13`/`sub=11` bei eingefrorener `pos`,
+waehrend keine andere Kraehe je sub 11..14 zeigt.
