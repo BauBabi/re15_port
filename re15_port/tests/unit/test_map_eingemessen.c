@@ -110,6 +110,38 @@ int main(void)
                  m->soll_x, m->soll_y, d, m->toleranz);
         CHECK(t, d <= m->toleranz);
     }
+    /* TREPPENHAUS 2F: DER SPIELERMARKER UND DIE TUER MUESSEN ZUSAMMENPASSEN.
+     * NUTZER 2026-09-07, im Treppenhaus auf 2F stehend: "Bzw. der Spieler Marker
+     * ist auf der falschen Seite" - die Tuer sei richtig.
+     * Er stand bei Welt(26432,25813), also unmittelbar an der Tuer (Trigger-Mitte
+     * 27100/25400, 668 bzw. 413 Einheiten entfernt). Sein Marker landete auf
+     * (136,139), die von ihm bestaetigte Tuermarke auf (118,149) - zwei Projektionen
+     * DESSELBEN Ortes, 28 px auseinander. Ursache war die Spiegelung der Zone:
+     *     0/0 (bisher)  28 px      0/1  21 px      1/0  15 px      1/1   8 px
+     * Gegenprobe an den Treppen: 1/1 setzt sie auf (126,144) und (134,146); sein
+     * Bildschirmabzug zeigt die zwei Symbole bei Karte x123..135, y143..149.
+     * Diese Pruefung haelt die ZUSAMMENGEHOERIGKEIT fest, nicht eine Einzelposition -
+     * wer an der Tuer steht, muss auf der Karte an der Tuer stehen. */
+    {
+        const re15_map_zone_t *zn2 = re15_map_zone_fuer(0x1060u, 0, 3);
+        int rx2, ry2, rw2, rh2;
+        int16_t mx2 = 0, my2 = 0;
+        char t2[200];
+        if (!zn2 || !re15_map_rect_geometry(zn2->page, zn2->rect,
+                                            &rx2, &ry2, &rw2, &rh2) ||
+            !re15_map_zone_marker(zn2, 26432, 25813, rx2, ry2, rw2, rh2,
+                                  &mx2, &my2)) {
+            printf("  FAIL: keine Projektion fuer ROOM1060 auf Blatt 3\n");
+            g_fail = 1;
+        } else {
+            int d2 = abs((int)mx2 - 118) + abs((int)my2 - 149);
+            snprintf(t2, sizeof t2,
+                     "Treppenhaus 2F: Standort an der Tuer -> (%d,%d), "
+                     "Tuermarke (118,149), Abstand %d px (<= 10; war 28)",
+                     (int)mx2, (int)my2, d2);
+            CHECK(t2, d2 <= 10);
+        }
+    }
     /* ⛔ DIE FAHRSTUHLTUER IST MIR DREIMAL VERRUTSCHT: v0.6.5 an die Unterkante der
      * Kabine (117,149), v0.6.8 an die Oberkante (117,134) - und beide Male hatte ich
      * ein Kriterium ERFUNDEN, statt die Projektion stehen zu lassen. Der Nutzer hat

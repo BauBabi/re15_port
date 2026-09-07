@@ -1655,6 +1655,21 @@ def main():
         # Paar-Zusammenzug schob die Marke auf die dortige gemeinsame Kante y=114.
         # Mit Rect 5 stimmen beide Seiten auf 4 px ueberein - s. ZONE_FIX.
         (0x1110, 0): (1, 1),
+        # ROOM1060 (TREPPENHAUS) EINGEMESSEN 2026-09-07. Nutzer, im Treppenhaus
+        # auf 2F stehend: "Bzw. der Spieler Marker ist auf der falschen Seite"
+        # (die Tuer sei richtig). Er stand bei Welt(26432,25813), also unmittelbar
+        # an der Tuer (Trigger-Mitte 27100/25400 - 668 bzw. 413 Einheiten entfernt).
+        # Sein Marker landete auf Karte (136,139), die vom Nutzer bestaetigte
+        # Tuermarke steht auf (118,149): ZWEI Projektionen desselben Ortes, 28 px
+        # auseinander. Gemessen ueber alle vier Spiegelungen (Abstand des Standorts
+        # bzw. der Tuerprojektion zur bestaetigten Marke):
+        #     0/0 (bisher)  28 / 29 px      0/1  21 / 22 px
+        #     1/0           15 / 12 px      1/1   8 /  5 px
+        # Gegenprobe an den Treppen: 1/1 setzt sie auf (126,144) und (134,146); sein
+        # Bildschirmabzug zeigt die zwei Symbole bei Karte x123..135, y143..149.
+        # Gilt nur fuer die GAST-Zeilen (Blatt 3 und 4) - auf Blatt 2 rechnet die
+        # Original-Kartenzeile @0x800768b0, die keine Spiegelung braucht.
+        (0x1060, 0): (1, 1),
         # ⛔ ROOM10E0 UND ROOM10F0 EINGEMESSEN 2026-09-07. Nutzer: "Kommunikation
         # Room befinde ich mich noch an der falschen Position." Beim Festsetzen der
         # Rechtecke am 2026-09-06 hatte ich nur das RECHTECK belegt, nicht die
