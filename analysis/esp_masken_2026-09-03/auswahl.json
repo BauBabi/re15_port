@@ -506,7 +506,7 @@
    ]
   },
   "3": {
-   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil. | 2026-09-07: die HOLZBANK bekommt \"tiefe\": \"kollision\". NUTZER-BEFUND (F9-Marke F1438): \"ein weiterer Marker der unten ueberdecken muss fehlt ... unter meinen Fuessen. Ich stehe am Ende der Bank, aber sie ueberdeckt mich nicht.\" Gemessen: er steht bei Welt(-4468,-5782), Tiefe 156,7; die Maske trug dort 174..187 und war damit \"frei\". Die Silhouettenregel nimmt je Spalte den untersten opaken Punkt als Bodenkontakt - am rechten Bankende ist das aber die SEITENKANTE der Bank, nicht ihr Fuss, und der Sehstrahl landet dahinter. Die Bank steht in den Kollisionsdaten: Zelle x -4000..550, z -6250..-5250, Bild-x 2..104, Tiefe 81,5..150,5 - also NAEHER als er. Und sein x=-4468 liegt knapp ausserhalb der Zelle, die bei x=-4000 endet: genau das \"am Ende der Bank\".",
    "objekte": [
     {
      "name": "Holzbank",
@@ -516,7 +516,8 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "spalten": true,
+     "tiefe": "kollision"
     },
     {
      "name": "Sitzreihen mit Trennwand",
