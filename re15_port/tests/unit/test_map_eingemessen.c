@@ -191,6 +191,35 @@ int main(void)
         }
     }
 
+    /* ⛔ ROOM1100: DIE TUER AM ENDE DES GANGS (Nutzer-Marke F9-5, 2026-09-07).
+     * > "Die Tuer befindet sich am Ende des Ganges, nicht an der Seite."
+     * Er stand bei Welt(-26232,-10781) = Karte (192,121), unmittelbar an der Tuer nach
+     * ROOM1110; von SEINER Seite projiziert sie auf (190,121). Die Marke lag aber auf
+     * (197,114), also auf der Oberkante von Rect 6. Ursache war die Rechteck-Zuordnung:
+     * ROOM1110 lag auf Rect 7 UEBER ROOM1100, und der Paar-Zusammenzug schob die Marke
+     * auf die dortige gemeinsame Kante y=114. Mit ROOM1110 auf Rect 5 (vier unabhaengige
+     * Messungen, s. gen_map_zones ZONE_FIX) steht sie auf (187,122) - am Westende. */
+    {
+        int i, best = 9999, bx = -1, by = -1;
+        re15_map_visited_reset();
+        re15_map_visited_mark(0x1100u);
+        re15_map_visited_mark(0x1110u);
+        for (i = 0; i < re15_map_mark_count(); i++) {
+            int p, r, x, y, kind, d;
+            if (!re15_map_mark_get(i, &p, &r, &x, &y, &kind)) continue;
+            if (p != 3 || kind >= 4) continue;
+            d = abs(x - 190) + abs(y - 121);
+            if (d < best) { best = d; bx = x; by = y; }
+        }
+        {   char t[220];
+            snprintf(t, sizeof t,
+                     "ROOM1100: Tuersymbol am ENDE des Gangs, wo der Nutzer steht "
+                     "(190,121) - naechstes bei (%d,%d), Abstand %d px (<= 10)",
+                     bx, by, best);
+            CHECK(t, best <= 10);
+        }
+    }
+
     re15_map_visited_reset();
     return g_fail;
 }

@@ -206,3 +206,61 @@ ablesbar, und aus einem Bildpunkt folgen Tiefe und Hoehe nicht getrennt (zwei
 Unbekannte, eine Gleichung). Der zweite, baugleiche Stuhl im selben Bild taugt nicht
 als Massstab, weil er gedreht steht. Bestaetigt ist das Ergebnis am Bild des Nutzers,
 nicht die Zahl.
+
+---
+
+## 2026-09-07 — „aufrecht" auf Tischplatten angewandt: über-verdeckt massiv
+
+**Nutzer:** „Bei der Liege — die muss überdecken wenn ich dahinter stehe, aber nicht an
+der Seite. Und solche Sachen."
+
+Zwei Fälle, dieselbe Ursache: das neue Zeilenprofil (`aufrecht`) ist nur für **wirklich
+senkrechte** Gegenstände richtig. Wo die untere Silhouettenkante nicht der Boden ist
+(eine Tischplattenecke endet an ihrer eigenen Kante), liegt der abgeleitete Standpunkt
+irgendwo im Raum — und ein senkrechtes Profil durch diesen Punkt macht die ganze Fläche
+viel zu nah.
+
+### 1. ROOM10D0 Cut 9, „Schreibtisch mit Stuhl" (Marke F4933)
+
+Standpunkt der Maske: Welt(−15173, 25365). Der Nutzer stand bei (−14782, 25582) —
+**391 Einheiten daneben**. Das Profil lief also praktisch durch ihn hindurch.
+
+Gemessen an seiner Lage (Kopf-vz 7672, wirksam nur unter Tiefe 119), 872 Punkte des
+Körperkastens:
+
+| Modell | verdeckende Punkte |
+|---|---|
+| `aufrecht` | **872** — er war vollständig verschwunden |
+| Spaltenregel | **43** |
+| eine Tiefe (`fuss`) | 872 |
+
+Vier Objekte zurück auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02, 08, 09_02.
+
+### 2. ROOM10E0 Cut 7, die Liege in `07_02` (Marke F4141)
+
+In dieser Freistellung steckt **neben der Wand auch die Liege davor**. Die Spaltenregel
+nimmt je Spalte den untersten Punkt — in den Liegen-Spalten ist das deren Rolle, also ein
+Standpunkt *vor* der Wand. Der Standpunkt von Spalte 110 ist Welt(−2351, −421); der
+Nutzer stand bei (−2360, −164), also **9 Einheiten daneben**. Das Profil schnitt ihn
+mittendrin, obwohl er *neben* der Liege steht.
+
+Die Bodenlinie der **Wand** ist an den Spalten 164…188 und 236…300 ablesbar (Zeilen
+148…151 bzw. 157…168 — eine Gerade); die Liegen-Spalten 52…163 brechen sie um bis zu 34
+Zeilen. Mit `bodenkante: [164,300]` tragen die Liegen-Spalten die Tiefe der **Wand**:
+
+| | im Körperkasten des Nutzers |
+|---|---|
+| vorher | 971 verdeckende Punkte, Tiefe 78…103 |
+| nachher | **0**, Tiefe 117…127 |
+
+⛔ **Offen:** die Liege verdeckt damit gar nicht mehr, obwohl man hinter sie kommt —
+gemessen **7315 begehbare Punkte** zwischen Liege und Wand. Sie braucht eine **eigene**
+Freistellung mit eigener Tiefe, und zwar als *waagerechte* Fläche (Matratzenhöhe), nicht
+als senkrechte.
+
+### Die Regel, die daraus folgt
+
+`aufrecht` ist richtig für: Stuhl, Stuhllehne, Pfosten, Spielautomat, Schrankwand, Wand
+(als `"spalten"`). Falsch für alles mit einer waagerechten Oberseite: Tisch, Schreibtisch,
+Liege, Bett. Ein großer Tiefenbereich der Spaltenregel ist **kein** Hinweis auf
+„senkrecht" — er kommt dort meist daher, dass die untere Kante nicht der Boden ist.

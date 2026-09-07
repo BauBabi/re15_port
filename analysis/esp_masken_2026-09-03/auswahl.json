@@ -389,7 +389,7 @@
       ]
     },
     "7": {
-      "_warum": "⛔ WAND, NUTZERWUNSCH 2026-09-07: \"Bei 07_02 habe ich die vollstaendige Wand ausgeschnitten, da es Zombies gibt die durch die ganze Wand clippen auf der anderen Seite. Die wollen wir blocken. Aber der Spielcharakter selber soll nicht davon geblockt werden.\" Beides zugleich leistet genau die richtige TIEFE: der Zeichner verdeckt, was FERNER ist als die Maske. Wer hinter der Wand steht, ist ferner und verschwindet; wer davor steht, bleibt sichtbar. Dafuer muss die Maske aber die Tiefe der WANDFLAECHE tragen, nicht die ihres Bodens: mit der reinen Spaltenregel bekaeme jede Bildzeile die Bodentiefe, und die Wandoberkante waere zu fern. \"aufrecht\": \"spalten\" gibt je Spalte den Standpunkt aus dem Bodenkontakt und je Zeile die Tiefe der senkrechten Wandflaeche. Gemessen: Spalte 112 traegt 82 (oben) bis 95 (unten) statt durchgehend 95. Die 41 Spalten ueber der TUEROEFFNUNG (195..231) und am rechten Rand haben keinen eigenen Bodenkontakt - ihr Sehstrahl landet hinter der Raumwand, nachpruefbar an der Huelle der SCA-Zellen - und erben den Standpunkt der naechsten Spalte, die einen hat. Das ist dieselbe Wandflaeche.",
+      "_warum": "⛔ WAND, NUTZERWUNSCH 2026-09-07: \"Bei 07_02 habe ich die vollstaendige Wand ausgeschnitten, da es Zombies gibt die durch die ganze Wand clippen auf der anderen Seite. Die wollen wir blocken. Aber der Spielcharakter selber soll nicht davon geblockt werden.\" Beides zugleich leistet genau die richtige TIEFE: der Zeichner verdeckt, was FERNER ist als die Maske. Wer hinter der Wand steht, ist ferner und verschwindet; wer davor steht, bleibt sichtbar. Dafuer muss die Maske aber die Tiefe der WANDFLAECHE tragen, nicht die ihres Bodens: mit der reinen Spaltenregel bekaeme jede Bildzeile die Bodentiefe, und die Wandoberkante waere zu fern. \"aufrecht\": \"spalten\" gibt je Spalte den Standpunkt aus dem Bodenkontakt und je Zeile die Tiefe der senkrechten Wandflaeche. Gemessen: Spalte 112 traegt 82 (oben) bis 95 (unten) statt durchgehend 95. Die 41 Spalten ueber der TUEROEFFNUNG (195..231) und am rechten Rand haben keinen eigenen Bodenkontakt - ihr Sehstrahl landet hinter der Raumwand, nachpruefbar an der Huelle der SCA-Zellen - und erben den Standpunkt der naechsten Spalte, die einen hat. Das ist dieselbe Wandflaeche.\n\n⛔ NACHTRAG 2026-09-07 (Nutzer-Marke F4141): in dieser Freistellung steckt NEBEN der Wand auch die LIEGE davor. Die Spaltenregel nimmt je Spalte den untersten Punkt - in den Liegen-Spalten ist das deren Rolle, also ein Standpunkt VOR der Wand. Gemessen: der Standpunkt von Spalte 110 ist Welt(-2351,-421), der Nutzer stand bei (-2360,-164) - 9 Einheiten daneben. Das senkrechte Profil lief damit genau durch ihn hindurch und schnitt ihn mittendrin, obwohl er NEBEN der Liege steht (\"die muss ueberdecken wenn ich dahinter stehe, aber nicht an der Seite\"). Die Bodenlinie der WAND ist an den Spalten 164..188 und 236..300 ablesbar (Zeilen 148..151 bzw. 157..168, eine Gerade); die Liegen-Spalten 52..163 brechen sie um bis zu 34 Zeilen. Mit \"bodenkante\": [164,300] tragen die Spalten der Liege die Tiefe der WAND: im Koerperkasten des Nutzers 0 statt 971 verdeckende Punkte, Tiefe dort 117..127 statt 78..103. OFFEN: die Liege verdeckt damit gar nicht mehr, obwohl man hinter sie kommt (7315 begehbare Punkte zwischen Liege und Wand). Sie braucht eine EIGENE Freistellung mit eigener Tiefe - als waagerechte Flaeche, nicht als senkrechte.",
       "objekte": [
         {
           "name": "Vordergrund Teppich und Schreibmaschine",
@@ -409,7 +409,11 @@
           "massstab": 1,
           "oben": 0,
           "grow": 0,
-          "aufrecht": "spalten"
+          "aufrecht": "spalten",
+          "bodenkante": [
+            164,
+            300
+          ]
         }
       ]
     },
@@ -456,7 +460,7 @@
   },
   "ROOM10C0": {
     "2": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
       "objekte": [
         {
           "name": "Spielautomat",
@@ -476,7 +480,7 @@
           "massstab": 1,
           "oben": 0,
           "grow": 0,
-          "aufrecht": true
+          "spalten": true
         },
         {
           "name": "Sitzbankreihe",
@@ -563,7 +567,7 @@
       ]
     },
     "7": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
       "objekte": [
         {
           "name": "Stuhl",
@@ -583,12 +587,12 @@
           "massstab": 1,
           "oben": 0,
           "grow": 0,
-          "aufrecht": true
+          "spalten": true
         }
       ]
     },
     "8": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
       "objekte": [
         {
           "name": "Tischkante",
@@ -598,12 +602,12 @@
           "massstab": 1,
           "oben": 0,
           "grow": 0,
-          "aufrecht": true
+          "spalten": true
         }
       ]
     },
     "9": {
-      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+      "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n\n⛔ BERICHTIGT 2026-09-07 (Nutzer-Marke F4933, ROOM10D0 Cut 9): \"aufrecht\" gilt NUR fuer wirklich senkrechte Gegenstaende (Stuhl, Pfosten, Schrankwand, Wand). Ich hatte es zusaetzlich auf TISCHPLATTEN angewandt, weil deren Bodenregel eine grosse Tiefenspanne zeigt - die kommt dort aber nicht von der Hoehe, sondern davon, dass die untere Silhouettenkante die eigene Plattenkante ist und nicht der Boden. Ein senkrechtes Profil durch diesen Punkt macht die ganze Platte VIEL zu nah. Am Standort des Nutzers gemessen (Kopf-vz 7672, also wirksam nur unter Tiefe 119), 872 Punkte des Koerperkastens: aufrecht 872 verdeckend (er war ganz verschwunden), Spaltenregel 43, eine Tiefe 872. Vier Objekte zurueck auf die Spaltenregel: ROOM10C0 02_02, ROOM10D0 07_02/08/09_02.",
       "objekte": [
         {
           "name": "Theke mit Papieren",
@@ -623,7 +627,7 @@
           "massstab": 1,
           "oben": 0,
           "grow": 0,
-          "aufrecht": true
+          "spalten": true
         },
         {
           "name": "Schrankwand",

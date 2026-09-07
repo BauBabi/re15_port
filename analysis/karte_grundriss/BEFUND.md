@@ -3439,3 +3439,32 @@ ohne Rect 3 selbst):
 R2 ist genau das Rechteck, auf dem der Löser den Funkraum liegen hatte — deshalb stand
 dessen Symbol bei den Spinden. Der Vorsprung (1 gegen 8, 3 gegen 9) ist deutlich; das
 ist kein Münzwurf.
+
+---
+
+## §54 — ROOM1110 lag auf dem falschen Rechteck (2026-09-07)
+
+**Nutzer-Marke F9-5**, ROOM1100, Welt(−26232, −10781):
+
+> „Die Tür befindet sich am Ende des Ganges, nicht an der Seite."
+
+Er steht auf Karte **(192,121)**, direkt an der Tür nach ROOM1110. Von *seiner* Seite
+projiziert diese Tür auf **(190,121)** — 2 px daneben. Die gesetzte Marke lag aber auf
+**(197,114)**, also auf der Oberkante von Rect 6 statt am Westende des Gangs.
+
+**Ursache:** ROOM1110 lag auf Rect 7 (179,67) 48×48, das *über* ROOM1100 sitzt; der
+Paar-Zusammenzug schob die Marke deshalb auf die dortige gemeinsame Kante y=114. Die
+beiden Seiten derselben Tür widersprachen sich dabei um 23 px — weit über `MITTEL_MAX`.
+
+**Vier unabhängige Messungen sagen: ROOM1110 gehört auf Rect 5 (146,114) 72×32.**
+
+| | Rect 5 | Rect 7 |
+|---|---|---|
+| Abstand seines Standorts zur **gemalten** Fläche | **1 px** | 12 px |
+| Seitenverhältnis (ROOM1110 misst 2,02:1) | 2,25:1 | 1,00:1 |
+| Größe bei 467 Welt/px (erwartet 66×33 px) | 72×32 | 48×48 |
+| Übereinstimmung beider Türseiten (flip 1/1) | **4 px** | 23 px |
+
+Die drei anderen Spiegelungen liegen auf Rect 5 bei 17, 21 und 34 px — flip 1/1 ist
+eindeutig. Eingetragen als `ZONE_FIX[(0x1110,0)] = (3,5)` und
+`ZONE_ORIENT[(0x1110,0)] = (1,1)`.

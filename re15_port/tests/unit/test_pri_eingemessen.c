@@ -55,9 +55,33 @@ typedef struct {
  *
  * Geprueft wird die ganze Breite der Maske (67..115), nicht nur die gemeldeten
  * Spalten: der Befund gilt fuer jede Spalte, die der Koerper beruehrt. */
+/* ---- ROOM10D0 Cut 1, eingemessen 2026-09-07 --------------------------------------
+ * Der Nutzer hat zwei Marken gesetzt und dazugesagt, was sie bedeuten:
+ * "einmal wo sie verdecken sollte, einmal wo sie nicht verdecken sollte daneben."
+ *
+ *   MARKE 1 (F423)  Welt( 3228, -4568)  vz 12010/11795/11579  Kasten x156..176 y82..117
+ *                   Er steht HINTER der Liege - sie MUSS verdecken.
+ *   MARKE 2 (F731)  Welt( 2432, -3040)  vz 10454/10238/10022  Kasten x168..190 y85..124
+ *                   Er steht DANEBEN im Gang - sie darf NICHT verdecken.
+ *
+ * ⛔ AM ABZUG GEGEN DEN HINTERGRUND NACHGEMESSEN, nicht am Koerperkasten: der Kasten ist
+ * sx +/- 450 um die Huefte und damit breiter als die Figur, er ueberlappt die Maske auch
+ * dort, wo gar nichts gezeichnet ist. Gezaehlt wurden die WIRKLICH gezeichneten
+ * Figurpunkte (Abweichung > 40 vom Hintergrund):
+ *     Marke 1: 256 Punkte, x157..175 y58..114, davon unter der Maske 0
+ *     Marke 2: 400 Punkte, x167..188 y59..123, davon unter der Maske 0
+ * Beide Male null - bei Marke 1, weil die Maske ihn dort wirklich verdeckt (unter ihr
+ * wird nichts gezeichnet), bei Marke 2, weil ihre Flaeche bei x=177 endet und seine
+ * Figur rechts davon steht. Beide Bedingungen sind also erfuellt.
+ *
+ * GEPRUEFT WIRD deshalb Marke 1 (die Maske muss auf Koerperhoehe wirksam sein) und
+ * zusaetzlich, dass die Maske ihre gemessene Breite nicht ueberschreitet - genau daran
+ * haengt Marke 2. */
 static const messpunkt_t MESS[] = {
     { 0x1130, 3, -3818, 3732, 67, 115,
       "ROOM1130 C3 F9-Marke 1 (F506): Wandpfeiler muss Leon verdecken" },
+    { 0x10D0, 1,  3228, -4568, 156, 176,
+      "ROOM10D0 C1 F9-Marke 1 (F423): Liege muss verdecken, er steht dahinter" },
 };
 
 static uint8_t *slurp(const char *pfad, size_t *n)
@@ -201,6 +225,44 @@ int main(void)
         }
         CHECK(t, offen == 0);
         geprueft++;
+        free(roh); free(msk);
+    }
+
+    /* ⛔ DIE GEGENBEDINGUNG: bei Marke 2 steht der Nutzer NEBEN der Liege, und dass sie
+     * ihn nicht verdeckt, haengt allein an ihrer BREITE - ihre Flaeche endet bei x=177,
+     * seine Figur ist bei x167..188 gezeichnet. Waechst die Maske nach rechts, faellt
+     * die Bedingung, ohne dass eine Tiefenpruefung es merkt. */
+    {
+        char pfad[600], t[200];
+        size_t sz = 0, ms = 0;
+        uint8_t *roh, *msk = NULL;
+        re15_rdt_t rdt;
+        re15_pri_cut_t pri;
+        int n = 0, j, rechts = -1;
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/STAGE1/ROOM10D0.RDT",
+                 RE15_PORT_SRC_DIR);
+        roh = slurp(pfad, &sz);
+        if (roh && re15_rdt_parse(roh, sz, &rdt) >= 0 && rdt.cut_count > 1) {
+            n = re15_pri_parse_section(roh, sz, rdt.cuts[1].pri_offset, &pri);
+            if (n == 0) {
+                snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/ROOM10D0.MSK",
+                         RE15_PORT_SRC_DIR);
+                msk = slurp(pfad, &ms);
+                if (msk) {
+                    uint32_t off = re15_pri_msk_section_offset(msk, ms, 1);
+                    if (off) n = re15_pri_parse_section(msk, ms, off, &pri);
+                }
+            }
+        }
+        for (j = 0; j < n && j < pri.draw_count; j++) {
+            int rx = (int16_t) pri.masks[j].dstX + (int) pri.masks[j].width;
+            if (rx > rechts) rechts = rx;
+        }
+        snprintf(t, sizeof t,
+                 "ROOM10D0 C1 F9-Marke 2 (F731): Liege reicht nicht bis zu ihm - "
+                 "rechter Rand der Maske x=%d (gemessen 178, seine Figur ab x=167 "
+                 "gezeichnet, erlaubt <= 182)", rechts);
+        CHECK(t, n > 0 && rechts > 0 && rechts <= 182);
         free(roh); free(msk);
     }
 

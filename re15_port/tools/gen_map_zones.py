@@ -1016,6 +1016,20 @@ def main():
         (0x10D0, 0): (3, 3),      # einziges Rect, in das 63x91 px passen
         (0x10E0, 0): (3, 8),      # stoesst an F9-2 (143,108) an den Flur
         (0x10F0, 0): (3, 9),      # Funkraum, stoesst an F9-1 (155,82) an den Flur
+        # ⛔ ROOM1110 -> Rect 5, EINGEMESSEN 2026-09-07. Nutzer in ROOM1100 an der Tuer
+        # nach ROOM1110 (Welt -26232,-10781 = Karte 192,121): "Die Tuer befindet sich am
+        # Ende des Ganges, nicht an der Seite." Vier unabhaengige Messungen:
+        #   1. Abstand seines Standorts zur GEMALTEN Flaeche der Rechtecke (ohne Rect 6):
+        #      R5 = 1 px, R9 = 7, R7 = 12. R5 grenzt also unmittelbar an.
+        #   2. Seitenverhaeltnis: ROOM1110 misst 30800x15250 = 2,02:1. Rect 5 ist 72x32
+        #      = 2,25:1, Rect 7 ist 48x48 = 1,00:1.
+        #   3. Massstab: mit ROOM1100s 467 Welt/px waere ROOM1110 66x33 px - Rect 5 ist
+        #      72x32.
+        #   4. Die beiden Seiten derselben Tuer: ROOM1100 sagt (190,121); ROOM1110 sagt
+        #      auf Rect 5 mit flip 1/1 (188,119) - 4 px, also innerhalb MITTEL_MAX. Die
+        #      drei anderen Spiegelungen liegen 17, 21 und 34 px daneben, und Rect 7 kam
+        #      auf 23 px. Deshalb zugleich ZONE_ORIENT[(0x1110,0)] = (1,1).
+        (0x1110, 0): (3, 5),
     }
 
     # Zonen je Seite sammeln
@@ -1406,6 +1420,15 @@ def main():
     # kein Nachbar-Beleg) und ROOM5020 (nur eine Beobachtung) erfuellen das NICHT und
     # bleiben deshalb ungedreht.
     ZONE_ORIENT = {
+        # ⛔ ROOM1110 EINGEMESSEN 2026-09-07 (Nutzer-Marke F9-5 in ROOM1100):
+        # "Die Tuer befindet sich am Ende des Ganges, nicht an der Seite."
+        # Er stand bei Welt(-26232,-10781) = Karte (192,121), die Tuer nach ROOM1110
+        # projiziert von SEINER Seite auf (190,121) - 2 px daneben. Die gesetzte Marke
+        # lag aber auf (197,114), also auf der OBERkante von Rect 6 statt am Westende
+        # des Gangs. Ursache: ROOM1110 lag auf Rect 7 (179,67) ueber ROOM1100, und der
+        # Paar-Zusammenzug schob die Marke auf die dortige gemeinsame Kante y=114.
+        # Mit Rect 5 stimmen beide Seiten auf 4 px ueberein - s. ZONE_FIX.
+        (0x1110, 0): (1, 1),
         (0x1120, 0): (1, 1),   # Symbol 8->5 px, Nachbar ROOM1130 40->3 px
         (0x2050, 0): (1, 1),   # Symbol 33->4 px, Nachbar 56->6 px
         # ⛔ VOM NUTZER EINGEMESSEN 2026-09-06. Er hat sich im Spiel an sechs Stellen
