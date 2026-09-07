@@ -132,6 +132,7 @@ def build(rdt, cam, rid, cut, region, bg, out_dir, room):
     tim, place, boxes = atlasmod.build(bg, region, boxes)
     if tim is None:
         return None
+    _hat_kollision = bool(globals().get('_KOLLISION_AKTIV'))
     groups, masks = [], []
     for i, (x, y, w, h) in enumerate(boxes):
         if i not in place:
@@ -320,6 +321,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     """
     dep_all = np.zeros((240, 320), np.int32)
     stuecke = []
+    _koll_aktiv = []
     rest = budget or geom.MAX_MASKS_PER_CUT
     for eintrag in objekte:
         name, reg, fuss = eintrag[0], eintrag[1], eintrag[2]
@@ -339,6 +341,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         _tq = eintrag[7] if len(eintrag) > 7 else None
         _koll = None
         if _tq == "kollision":
+            globals()['_KOLLISION_AKTIV'] = True
             _koll = []
             for _e in (geom.sca_wandzellen(rdt) or ()):
                 _koll.append(_e)
@@ -355,6 +358,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
             continue
         dep_all = np.where((d > 0) & ((dep_all == 0) | (d < dep_all)), d, dep_all)
         stuecke.append((name, reg, d))
+        _koll_aktiv.append(_tq == "kollision")
     if not stuecke:
         return None
     # Budget nach Flaeche verteilen, mindestens 4 Rechtecke je Objekt
@@ -423,7 +427,19 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         if len(win) == 0:
             continue
         groups.append((1, x - ax, y - ay))
-        masks.append((ax, ay, x, y, w, h, int(np.median(win))))
+        # DIE STATISTIK JE FELD HAENGT AN DER GENAUIGKEIT DER TIEFE.
+        # Median: fuer die SILHOUETTEN-Ableitung richtig, die streut (Medianfehler +2
+        # von rund 80, s. DEPTH_FACTOR im Kopf von geom.py).
+        # Maximum: fuer die KOLLISIONSTIEFE. Die ist exakt gerechnet; ein Feld soll nur
+        # verdecken, wenn es GANZ vor dem Spieler liegt - ein Feld, das halb auf dem
+        # Objekt und halb dahinter liegt, wuerde sonst mitverdecken.
+        # NUTZER 2026-09-07 (ROOM10C0 C3): "geht immer noch durch den Charakter durch".
+        # Verdeckende Punkte im Koerperkasten seiner drei Marken:
+        #                  F1438 (soll viel)  F468 (soll wenig)  F508 (soll wenig)
+        #   Median               648                72                 48
+        #   Maximum              648                 0                  0
+        _st = np.max if (src < len(_koll_aktiv) and _koll_aktiv[src]) else np.median
+        masks.append((ax, ay, x, y, w, h, int(_st(win))))
     if not masks:
         return None
     if out_dir:

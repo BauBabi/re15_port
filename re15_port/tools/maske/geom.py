@@ -717,7 +717,21 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
             _kt = kollisionstiefe(rdt, R, t, H, kollision)
         _msk = np.asarray(region, bool)
         _hit = _msk & (_kt > 0)
-        dep[_hit] = np.rint(_kt[_hit] * DEPTH_FACTOR).astype(np.int32)
+        # KEIN DEPTH_FACTOR fuer die Kollisionstiefe.
+        # Die 0,90 sind am Fehler der SILHOUETTEN-Ableitung gemessen (Kopf dieser
+        # Datei: Medianfehler +2 von rund 80, kleinster Wert aller geprueften Faktoren).
+        # Die Kollisionstiefe hat diesen Fehler nicht - sie schneidet den Sehstrahl
+        # exakt mit der Zellwand. Der Sicherheitsabschlag macht die Maske dort nur
+        # unnoetig NAH und laesst sie verdecken, wo sie nicht soll.
+        # NUTZER-BEFUND 2026-09-07 (ROOM10C0 C3): "geht immer noch durch den Charakter
+        # durch". Gemessen an seinen drei Marken, verdeckende Punkte im Koerperkasten:
+        #                          0.90   1.00   1.05   1.10
+        #   F1438 'am Ende'  soll viel    295    295    295    236
+        #   F468  'daneben'  soll wenig   120      0      0      0
+        #   F508  'geht durch' soll wenig 101      0      0      0
+        # 1.00 erfuellt alle drei; darueber faengt die Maske an, auch am Bankende
+        # wirkungslos zu werden.
+        dep[_hit] = np.rint(_kt[_hit]).astype(np.int32)
         if bericht is not None:
             _w = _kt[_hit]
             bericht.append('kollision: %d von %d Punkten getroffen, Tiefe %.0f..%.0f'
