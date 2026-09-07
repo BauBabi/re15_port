@@ -525,8 +525,97 @@ def _bereiche(xs):
     return ", ".join(aus)
 
 
+def sca_wandzellen(rdt, band=0):
+    """Die soliden Typ-1-SCA-Zellen eines Bands als (x, z, breite, tiefe).
+
+    DAS SIND DIE WAENDE des Raums, nicht der Boden - re15_collision.c: der Spieler
+    laeuft im band-freien Komplement, an 3727 Nutzer-Standorten zu 97,1 % bestaetigt
+    (Memory reai-v2-kollisionszellen-sind-waende).
+    Gefiltert wird wie die Engine: (typ & 0x0f) == 1 (Rechteck), u0 & 1 (solide),
+    (floor >> 4) == band. Layout 12 B: u16 width, u16 density, s16 x, s16 z,
+    u8 type, u8 u0, u8 u1, u8 floor (re15_rdt.h, re15_sca_entry_t)."""
+    import struct as _s
+    _off = _s.unpack_from('<I', rdt, 0x20)[0]      # Index 0 = collision (RDT-Kopf)
+    if _off <= 0 or _off + 24 > len(rdt):
+        return []
+    _n = sum(_s.unpack_from('<5I', rdt, _off + 4))
+    if not (0 < _n < 2000) or _off + 24 + 12 * _n > len(rdt):
+        return []
+    _aus = []
+    for _i in range(_n):
+        _w, _d, _x, _z = _s.unpack_from('<HHhh', rdt, _off + 24 + 12 * _i)
+        _t, _u0, _u1, _f = _s.unpack_from('<BBBB', rdt, _off + 24 + 12 * _i + 8)
+        if (_t & 0x0f) != 1 or not (_u0 & 1) or (_f >> 4) != band:
+            continue
+        if _w <= 0 or _d <= 0:
+            continue
+        if (_x, _z, _w, _d) not in _aus:
+            _aus.append((_x, _z, _w, _d))
+    return _aus
+
+def kollisionstiefe(rdt, R, t, H, wandzellen, hoehe=None):
+    """Tiefenkarte (240x320) aus der RAUMGEOMETRIE statt aus der Bildkontur.
+
+    NUTZER-BEFUND 2026-09-07 (ROOM1130 Cut 3, drei F9-Marken): "von der Ecke aus ist
+    Perfekt, von Vorne hat man nach wie vor den Ueberdeckungsfehler" und auf Rueckfrage
+    "von der Position aus, wo der Charakter rein laeuft soll mich nichts von der Wand
+    verdecken". Beides zusammen ist eine Aussage ueber die ENTFERNUNG der Wand, und die
+    liess sich aus der Silhouette nicht gewinnen: die Spaltenregel leitet die Tiefe aus
+    der unteren Kante der Freistellung ab, und deren Verlauf ist von der Zeichnung
+    bestimmt, nicht von der Geometrie. Gemessen war der Zielbereich 70..92 (verdecken
+    an der Ecke, nicht von vorne), die Silhouette lieferte 47..82.
+
+    DIE KOLLISIONSZELLEN SIND DIE WAENDE (re15_collision.c; an 3727 Nutzer-Standorten
+    zu 97,1 % bestaetigt, Memory reai-v2-kollisionszellen-sind-waende). Damit steht die
+    Entfernung jeder Wand fest, und ein Sehstrahl je Bildpunkt liefert sie exakt:
+        Kameraort in der Welt = R^-1 * (-t)
+        Richtung von (sx,sy)  = R^-1 * (sx-160, sy-120, H)
+        Schnitt mit den vier senkrechten Seitenflaechen jeder Zelle, naechster gewinnt.
+
+    Gemessen an ROOM1130 Cut 3 (Figurpunkte aus dem Abzug zweier Nutzer-Marken):
+        von vorne  (soll NICHT verdecken)  Silhouette 43 %  ->  Kollision 27 %
+        an der Ecke (soll verdecken)       Silhouette 71 %  ->  Kollision 69 %
+    Also weniger, wo der Nutzer frei sein will, und unveraendert, wo die Wand traegt.
+
+    hoehe: bis zu welcher Weltyhoehe die Wand reicht (PSX-Y zeigt nach unten, also
+    negativ). None = unbegrenzt; das ist fuer Flurwaende richtig, die bis zur Decke
+    gehen. Eine Zahl NUR eintragen, wenn ein Hindernis nachweislich niedriger ist.
+    """
+    import numpy as _np
+    _R = _np.array(R, float).reshape(3, 3) / 4096.0
+    _t = _np.array(t, float)
+    _Ri = _np.linalg.inv(_R)
+    _c = _Ri.dot(-_t)
+    aus = _np.zeros((240, 320), _np.float64)
+    for sy in range(240):
+        for sx in range(320):
+            dw = _Ri.dot(_np.array([sx - 160.0, sy - 120.0, float(H)]))
+            best = None
+            for (X, Z, W, D) in wandzellen:
+                for (achse, wert, lo, hi) in ((0, X, Z, Z + D), (0, X + W, Z, Z + D),
+                                              (2, Z, X, X + W), (2, Z + D, X, X + W)):
+                    if abs(dw[achse]) < 1e-9:
+                        continue
+                    s = (wert - _c[achse]) / dw[achse]
+                    if s <= 0:
+                        continue
+                    q = _c + s * dw
+                    r = q[2] if achse == 0 else q[0]
+                    if not (lo <= r <= hi):
+                        continue
+                    if hoehe is not None and (q[1] > 0 or q[1] < hoehe):
+                        continue
+                    vz = (q[0]*R[6] + q[1]*R[7] + q[2]*R[8]) / 4096.0 + t[2]
+                    if vz <= 64:
+                        continue
+                    if best is None or vz < best:
+                        best = vz
+            aus[sy, sx] = best / 64.0 if best else 0.0
+    return aus
+
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
-                     bodenkante=None, bericht=None, aufrecht=None, flach=None):
+                     bodenkante=None, bericht=None, aufrecht=None, flach=None,
+                     kollision=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -589,6 +678,23 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if kollision is not None:
+        # ---- TIEFE AUS DER RAUMGEOMETRIE, NICHT AUS DER BILDKONTUR -----------
+        # Siehe kollisionstiefe() oben fuer den Beleg und die Messwerte.
+        # `kollision` ist die Liste der Wandzellen (x, z, breite, tiefe); die
+        # Silhouette der Freistellung sagt nur noch WO gezeichnet wird, die
+        # Entfernung kommt aus der Wand selbst.
+        _kt = kollisionstiefe(rdt, R, t, H, kollision)
+        _msk = np.asarray(region, bool)
+        _hit = _msk & (_kt > 0)
+        dep[_hit] = np.rint(_kt[_hit] * DEPTH_FACTOR).astype(np.int32)
+        if bericht is not None:
+            _w = _kt[_hit]
+            bericht.append('kollision: %d von %d Punkten getroffen, Tiefe %.0f..%.0f'
+                           % (int(_hit.sum()), int(_msk.sum()),
+                              float(_w.min()) if _w.size else 0,
+                              float(_w.max()) if _w.size else 0))
+        return dep
     if flach:
         # ---- FLACH AUF DEM BODEN: Tiefe JE BILDPUNKT --------------------------
         # ⛔ Ein Teppich, eine Blutlache, eine liegende Leiche hat keine Vorderkante,

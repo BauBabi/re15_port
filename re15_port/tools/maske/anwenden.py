@@ -334,11 +334,19 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         aufrecht = eintrag[5] if len(eintrag) > 5 else None
         # ⛔ "flach": Tiefe je BILDPUNKT fuer alles, was auf dem Boden liegt.
         flach = eintrag[6] if len(eintrag) > 6 else None
+        # "tiefe": "kollision" - die Entfernung kommt aus den Wandzellen des Raums,
+        # nicht aus der Silhouette. Beleg und Messwerte: geom.kollisionstiefe.
+        _tq = eintrag[7] if len(eintrag) > 7 else None
+        _koll = None
+        if _tq == "kollision":
+            _koll = []
+            for _e in (geom.sca_wandzellen(rdt) or ()):
+                _koll.append(_e)
         if not reg.any():
             continue
         _ber = []
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
-                                  aufrecht, flach)
+                                  aufrecht, flach, _koll)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else
