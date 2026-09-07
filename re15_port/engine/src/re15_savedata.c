@@ -217,7 +217,24 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
     re15_wound_load(in->wounds);
     /* v6 RE2-Kartensystem: Besucht-Bits laden; der geladene Raum wird beim folgenden
      * scd_room_reenter ohnehin markiert (Choke-Point), das Import genuegt hier. */
-    re15_map_visited_import(in->visited);
+    /* BITS AUS v<8 BEDEUTEN ETWAS ANDERES UND WERDEN VERWORFEN.
+     * Bis v7 war das Besucht-Bit die laufende Zonen-Nummer aus tools/gen_map_zones.py.
+     * Die verschiebt sich, sobald eine Zone dazukommt oder wegfaellt - ein alter Stand
+     * zeigt dann fremde Raeume als besucht. GEMESSEN am Stand des Nutzers (Slot 3,
+     * gespeichert in ROOM1120): gesetzt waren die Bits 15, 16, 18, die heute ROOM1100,
+     * ROOM1110 und ROOM1130 bedeuten - ROOM1120 selbst war NICHT gesetzt. Um 2
+     * verschoben ergeben sie ROOM1120, ROOM1130, ROOM1150, was zum Stand passt. Der
+     * Nutzer sah deshalb Raeume auf der Karte, in denen er nie war.
+     * Seit v8 haengt das Bit an re15_room_ids[] (2 Bits je Basisraum, 240 von 256), also
+     * an der Raumliste des Asset-Baums statt an einer erzeugten Nummer.
+     * Lieber eine leere Karte als eine falsche: aeltere Staende starten ohne Besuche. */
+    if (in->version >= 8) {
+        re15_map_visited_import(in->visited);
+    } else {
+        uint8_t leer[32];
+        memset(leer, 0, sizeof leer);
+        re15_map_visited_import(leer);
+    }
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

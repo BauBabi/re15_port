@@ -263,6 +263,11 @@ do_build() {
       || die "kein CMakeCache in $BUILD_REL — erst 'configure' laufen lassen"
     # Bekannte Falle: eine noch laufende re15_pc.exe haelt das Link-Ziel
     # gesperrt, der Link scheitert mit "Permission denied".
+    # WARUM DAS WICHTIG IST (2026-09-07): wer stattdessen direkt "cmake --build"
+    # aufruft, bekommt genau diesen Link-Fehler, waehrend alle TESTS durchbauen und
+    # gruen melden - die alte exe bleibt liegen. So habe ich dem Nutzer einen Fix
+    # gemeldet, den seine exe nicht enthielt; er lief 13 Sekunden vor dem Neubau und
+    # sah auf der Karte KEINE einzige Tuer mehr. Immer ueber dieses Skript bauen.
     if command -v taskkill >/dev/null 2>&1; then
         taskkill //F //IM re15_pc.exe >/dev/null 2>&1 || true
     fi

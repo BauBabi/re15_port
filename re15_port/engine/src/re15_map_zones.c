@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "re15_room_list.h"   /* re15_room_ids[] / RE15_ROOM_COUNT — der STABILE Schluessel der Besucht-Bits */
 #include "re15_room.h"
 #include "re15_collision.h"
 #include "re15_actor.h"   /* Spielerposition fuer die Ersatz-Zonenbestimmung */
@@ -52,10 +53,55 @@ void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
 void re15_map_visited_export(uint8_t out[32]) { memcpy(out, s_visited, 32); }
 void re15_map_visited_import(const uint8_t in[32]) { memcpy(s_visited, in, 32); }
 
-/* Ein Besucht-Bit je ORT: die globale Zonen-Nummer aus der Tabelle. (Ein aus dem
- * Tabellen-Index abgeleitetes Bit waere falsch — die Eintraege stehen zwar paarweise,
- * aber nicht an durchgehend geraden Positionen.) */
-static int zone_bit(int idx) { return s_map_zones[idx].zid; }
+/* ⛔ EIN BESUCHT-BIT JE ORT — GESCHLUESSELT AUF DIE RAUM-NUMMER, NICHT AUF DIE
+ * ZONEN-NUMMER DES GENERATORS.
+ *
+ * Bis 2026-09-07 stand hier `return s_map_zones[idx].zid;` — die laufende Nummer, die
+ * tools/gen_map_zones.py vergibt. Die verschiebt sich, sobald eine Zone dazukommt oder
+ * wegfaellt, und dann zeigt ein ALTER Spielstand fremde Raeume als besucht.
+ * GEMESSEN am Spielstand des Nutzers (Slot 3, Raum ROOM1120): gesetzt waren die Bits
+ * 15, 16, 18 = heute ROOM1100, ROOM1110, ROOM1130 — ROOM1120 selbst war NICHT gesetzt,
+ * obwohl der Stand dort gespeichert wurde. Um 2 verschoben ergeben sie 17, 18, 20 =
+ * ROOM1120, ROOM1130, ROOM1150, was zum Stand passt. Der Nutzer sah deshalb auf der
+ * Karte Raeume, in denen er nie war ("er zeichnet den Gang von ROOM 1110 ff schon mit,
+ * obwohl ich dort noch garnicht drin war") — im Log seiner Sitzungen kommt R1110 kein
+ * einziges Mal vor.
+ *
+ * Die Struktur re15_savedata_t dokumentiert das Richtige seit v6: "1 Besucht-Bit je
+ * re15_room_ids[]-Eintrag (240 Bits)". re15_room_ids[] hat 240 Eintraege = 120
+ * Basisraeume (die ungeraden sind Elzas Varianten desselben Ortes). Zwei Bits je
+ * Basisraum decken damit genau die dokumentierten 240 Bits ab und lassen Platz fuer
+ * die zweite Zone der 16 mehrteiligen Raeume.
+ * Der Schluessel haengt jetzt nur noch an der Raumliste, die aus dem Asset-Baum
+ * erzeugt wird - nicht mehr an der Zonentabelle. */
+static int zone_bit(int idx)
+{
+    unsigned room = (unsigned)s_map_zones[idx].room & ~1u;   /* Variante = derselbe Ort */
+    int n = 0, i;
+    for (i = 0; i < RE15_ROOM_COUNT; i++) {
+        if (re15_room_ids[i] & 1) continue;                  /* nur Basisraeume zaehlen */
+        if (re15_room_ids[i] == room)
+            return 2 * n + (s_map_zones[idx].idx ? 1 : 0);
+        n++;
+    }
+    return -1;                                               /* Raum nicht in der Liste */
+}
+
+/* Ist die Zone mit dieser erzeugten Nummer besucht? Die Marken-Tabelle fuehrt die zid
+ * des Generators; das Besucht-Bit haengt seit v8 an der RAUM-Nummer. Der Umweg ueber
+ * die Zonentabelle uebersetzt zwischen beiden - so bleibt die erzeugte Nummer eine
+ * reine Tabellen-Referenz und wird nie wieder zum Speicher-Schluessel. */
+static int zid_besucht(int zid)
+{
+    int i;
+    for (i = 0; i < ZONE_COUNT; i++) {
+        int b;
+        if (s_map_zones[i].zid != zid) continue;
+        b = zone_bit(i);
+        if (b >= 0 && ((s_visited[b >> 3] >> (b & 7)) & 1)) return 1;
+    }
+    return 0;
+}
 
 /* Die Zone, in der (x,z) im Raum liegt.
  * ⛔ KLEINSTE passende Zone gewinnt: die Bbox eines grossen Bereichs UMSCHLIESST oft
@@ -150,6 +196,7 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
     int b, f;
     if (i < 0) return;
     b = zone_bit(i);
+    if (b < 0) return;
     s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
     /* zusaetzlich die Etage, auf der er gerade steht */
     f = floor_row(s_map_zones[i].room, s_map_zones[i].idx, re15_map_player_band());
@@ -183,6 +230,7 @@ int re15_map_zone_visited(const re15_map_zone_t *zn)
     if (!zn) return 0;
     int i = (int)(zn - s_map_zones);
     int b = zone_bit(i);
+    if (b < 0) return 0;
     return (s_visited[b >> 3] >> (b & 7)) & 1;
 }
 
@@ -346,6 +394,7 @@ void re15_map_visited_mark(unsigned room_id)
     int i = zone_index_at(room_id, 0x7fffffff, 0x7fffffff);
     if (i < 0) return;
     int b = zone_bit(i);
+    if (b < 0) return;
     s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
 }
 
@@ -354,7 +403,7 @@ int re15_map_visited(unsigned room_id)
     for (int i = 0; i < ZONE_COUNT; i++) {
         if (s_map_zones[i].room != (unsigned short)room_id) continue;
         int b = zone_bit(i);
-        if ((s_visited[b >> 3] >> (b & 7)) & 1) return 1;
+        if (b >= 0 && ((s_visited[b >> 3] >> (b & 7)) & 1)) return 1;
     }
     return 0;
 }
@@ -474,7 +523,7 @@ void re15_map_debug_reveal_page(unsigned page)
         int b;
         if (s_map_zones[i].page != page) continue;
         b = zone_bit(i);
-        s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+        if (b >= 0) s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
     }
     for (i = 0; i < FLOOR_COUNT; i++) {
         int j;
@@ -489,7 +538,7 @@ void re15_map_debug_reveal_page(unsigned page)
             if (s_map_zones[j].room != s_map_floors[i].room) continue;
             if (s_map_zones[j].idx != (int)s_map_floors[i].zone) continue;
             b = zone_bit(j);
-            s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
+            if (b >= 0) s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
         }
     }
 }
@@ -596,14 +645,13 @@ int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
          * Rechteck gehoert - und genau dann hat sie auch eine Wand, an der sie klebt.
          * zid2 bleibt in der Tabelle: der Pin unit_map_mark_band unterscheidet daran
          * die Selbst-Tuer von einer Tuer nach draussen. */
-        if ((s_visited[m->zid >> 3] >> (m->zid & 7)) & 1) return 1;
+        if (zid_besucht(m->zid)) return 1;
         /* Die zweite Zone zaehlt weiter - aber nur, wenn die Marke auf deren GEMALTER
          * Flaeche sitzt. Das Bit dafuer rechnet der Generator aus (auf_partner); die
          * Engine hat die Blattgrafik nicht. Gemessen ueber alle Marken mit
          * Partner-Rechteck: 47 liegen darauf (die bleiben wie bisher schon von der
          * anderen Seite sichtbar), 23 nicht (die schwebten). */
-        return (m->auf_partner && m->zid2 != 255 &&
-                ((s_visited[m->zid2 >> 3] >> (m->zid2 & 7)) & 1)) ? 1 : 0;
+        return (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2)) ? 1 : 0;
     }
 }
 

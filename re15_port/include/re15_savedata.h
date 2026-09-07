@@ -26,7 +26,11 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  7             /* v7: die ITEM BOX waechst von 32 auf 64
+#define RE15_SAVE_VERSION  8             /* v8: die Besucht-Bits sind auf die
+                                          * RAUM-Nummer geschluesselt statt auf die
+                                          * laufende Zonen-Nummer des Generators.
+                                          * Bits aus v<8 bedeuten etwas anderes und
+                                          * werden beim Laden VERWORFEN. */             /* v7: die ITEM BOX waechst von 32 auf 64
                                           * Plaetze — die Umstellung auf RESIDENT EVIL 2s
                                           * vollstaendigen Box-Mechanismus (64-Platz-Ring,
                                           * Maske 0x3f in FUN_800703b8; Nutzer-Auftrag
