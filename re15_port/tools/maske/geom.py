@@ -684,7 +684,37 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         # `kollision` ist die Liste der Wandzellen (x, z, breite, tiefe); die
         # Silhouette der Freistellung sagt nur noch WO gezeichnet wird, die
         # Entfernung kommt aus der Wand selbst.
-        _kt = kollisionstiefe(rdt, R, t, H, kollision)
+        # NUR DIE ZELLE, DIE DAS OBJEKT IST - nicht alle Waende des Raums.
+        # NUTZER-BEFUND 2026-09-07 (ROOM10C0 C3, Marke F468): "Geht zu weit, wenn ich
+        # daneben stehe, darf es nicht decken." Er stand bei Welt(-1671,-4798); die
+        # Bank-Zelle reicht in z nur bis -5250, also NEBEN ihm - trotzdem verdeckte sie.
+        # URSACHE: der Raycast lief gegen ALLE Wandzellen, und jede gilt als unendlich
+        # hohe Saeule. Ab Bild-x 94 sprang die Tiefenkarte von 102..137 (die Bank) auf
+        # 56..62 - eine ganz andere Zelle, die der Strahl weit ueber ihrem Boden traf.
+        # RICHTIG ist die Zelle, die das freigestellte Objekt IST. Gesucht wird sie
+        # ueber die Deckung der Freistellung; bei mehreren gewinnt die NAECHSTE, denn
+        # ein Vordergrundobjekt ist das, was man sieht. Fuer die Holzbank:
+        #   x -4000..550  z -6250..-5250  deckt 99 %, Tiefe  81..150   <- gewaehlt
+        #   x -9600..8750 z -8250..-6250  deckt 100 %, Tiefe 233..236  (die Wand dahinter)
+        _msk0 = np.asarray(region, bool)
+        _kand = []
+        for _zc in kollision:
+            _k1 = kollisionstiefe(rdt, R, t, H, [_zc])
+            _tr = _k1 > 0
+            _u = float((_tr & _msk0).sum())
+            if _msk0.sum() and _u / float(_msk0.sum()) >= 0.90:
+                _w1 = _k1[_tr & _msk0]
+                _kand.append((float(_w1.mean()) if _w1.size else 1e9, _zc, _k1))
+        if _kand:
+            _kand.sort(key=lambda q: q[0])
+            _kt = _kand[0][2]
+            if bericht is not None:
+                _zc = _kand[0][1]
+                bericht.append('kollision: Zelle x%d..%d z%d..%d von %d Kandidaten'
+                               % (_zc[0], _zc[0]+_zc[2], _zc[1], _zc[1]+_zc[3],
+                                  len(_kand)))
+        else:
+            _kt = kollisionstiefe(rdt, R, t, H, kollision)
         _msk = np.asarray(region, bool)
         _hit = _msk & (_kt > 0)
         dep[_hit] = np.rint(_kt[_hit] * DEPTH_FACTOR).astype(np.int32)
