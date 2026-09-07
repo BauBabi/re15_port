@@ -1,71 +1,55 @@
-# RE1.5 Port — v0.7.6 (Early Preview)
+# RE1.5 Port — v0.7.7 (Early Preview)
 
-**Der Evidence Room und seine zwei Nebenräume werden jetzt getrennt hervorgehoben** —
-so wie du es in `howto4` gezeichnet hast.
-
----
-
-## Ein Rechteck, drei Zustände
-
-Bisher bestimmte der Port den Zustand (rot = hier stehst du, grün = besucht) **je
-Rechteck**. ROOM1110 leuchtete deshalb als Ganzes rot, obwohl seine drei Teile durch
-belegte Innenwände getrennt sind und du nur in einem davon stehst.
-
-Eine eigene *Zone* je Teil geht nicht: die bräuchten eigene Rechtecke, und auf Blatt 3
-ist keins frei — der Versuch verdrängte ROOM1100 und trieb das Audit von 182 auf 202
-Befunde. Die Zone bleibt deshalb ganz, und ihr Rechteck zerfällt in **Teilbereiche** mit
-je eigener Weltbox:
-
-| Teil | Bildausschnitt | Weltbox |
-|---|---|---|
-| Evidence Room | (146,114) 42×31 | x −2909…14950 |
-| kleiner Raum oben | (189,122) 24×11 | z −3806…1320 |
-| kleiner Raum unten | (189,134) 24×11 | z 1961…7087 |
-
-Als *aktuell* gilt der Teil, in dessen **Weltbox** du stehst — nicht der, dessen
-Bildausschnitt der Marker trifft. Die Weltbox ist die Messung, der Ausschnitt nur ihre
-Darstellung. Gezeichnet wird je Teil ein Ausschnitt derselben Kachel; die Zeichnung des
-Künstlers bleibt unverändert, nur die Einfärbung zerfällt.
-
-Dasselbe fällt für ROOM5090 an, der ebenfalls Selbst-Türen hat: fünf Bereiche statt einem
-Block. Insgesamt 8.
-
-## Zwei Sackgassen unterwegs
-
-Beide, weil ich in **Weltkoordinaten** zerlegt habe statt dort, wo du hinschaust:
-
-* **Nur die gezeichneten Innenwände sperren.** ROOM1110s senkrechte Wand endet bei
-  z=7100, die Weltbox reicht bis 7600 — durch diese 500 Einheiten hing der ganze Raum
-  zusammen. Ergebnis: *ein* Teil statt drei.
-* **Alle Wandzellen sperren.** Dann zerhacken die Möbel den Raum in Dutzende Kammern
-  (Blatt 12 lieferte 8×8-Schnipsel).
-
-Richtig ist die **gemalte Fläche** des Rechtecks, zerschnitten von genau den Linien, die
-der Port dort zeichnet: die sind bereits auf die Fläche begrenzt und laufen von Rand zu
-Rand. Die Weltbox jedes Teils folgt danach rückwärts — alle Weltpunkte, die in diesen
-Bildbereich projizieren.
-
-## Eine Falle im Zeichner
-
-Der Zwei-Durchgang-Mechanismus (erst der aktuelle Raum, dann der Rest — sonst verschwindet
-Rot unter einem grünen Nachbarn) filterte nach dem Zustand des **ganzen** Rechtecks. Ein
-Rechteck mit gemischten Teilen wäre nur in einem Durchgang drangekommen und hätte je nach
-Standort entweder das Rot oder die grünen Nachbarn verloren. Das Gate sitzt jetzt pro Teil.
-
-## Geprüft
-
-`test_map_teilbereich` stellt den Spieler in jeden der drei Bereiche und verlangt:
-
-```
-im Evidence Room       -> Evidence rot,   beide kleinen gruen
-im kleinen Raum oben   -> oben rot,       Evidence + unten gruen
-im kleinen Raum unten  -> unten rot,      Evidence + oben gruen
-```
-
-— **genau einer** aktuell, die anderen **grün** (nicht schwarz), und die Bildausschnitte
-überlappen einander nicht.
+**Deine drei Befunde aus `error1..3` — sie hatten eine gemeinsame Ursache**, plus ein
+zweiter Fehler, den ich selbst verursacht hatte.
 
 ---
 
-**282/282 Tests**, lokal und im Linux-Container. Alle drei Bereiche zusätzlich direkt im
-ausgelieferten Binary nachgewiesen.
+## 1. „this half should be green" — der andere Teil war gar nicht gemalt
+
+Aus deinen Abzügen gerastert:
+
+```
+error2 (du stehst oben):   y122..133 rot,  y134..144 LEER
+error3 (du stehst unten):  y134..145 rot,  y123..133 LEER
+```
+
+Nur die Kachel-Umrandung stand da, keine Fläche.
+
+**Ursache:** Die nicht-aktiven Teile gingen in den *zweiten* Zeichendurchgang — und dort
+überdeckt sie **Rect 3 (ROOM10D0, x135..206, y76..163)**. Es belegt denselben
+Bildbereich und hat den **kleineren Index**, wird also früher eingetragen; und früher
+heißt *oben*, weil die Op-Liste von hinten gerastert wird.
+
+Der Zwei-Durchgang-Mechanismus löst genau dieses Problem für ganze Rechtecke — für ein
+Rechteck mit **gemischten** Teilen reicht er nicht. Dessen Teile gehören alle zum
+aktuellen Raum und gehen jetzt zusammen in den ersten Durchgang. Untereinander können sie
+sich nicht verdecken; dass ihre Ausschnitte disjunkt sind, prüft `unit_map_teilbereich`
+bereits.
+
+## 2. Die Trennwand leuchtete rot mit
+
+Im Evidence Room stehend war die Wand zwischen den beiden kleinen Räumen (Karte y=133)
+rot, obwohl **beide** angrenzenden Bereiche grün sind — sie nahm den Zustand des ganzen
+Rechtecks. Hat ein Rechteck Teile, gilt jetzt der stärkste Zustand der Teile, die die Wand
+**berührt**.
+
+---
+
+## In eigener Sache
+
+Beim Patchen habe ich `re15_inv_screen.c` auf **0 Bytes** gekürzt: ein Python-Skript
+öffnete die Datei zum Schreiben (was sofort leert) und scheiterte danach an einem
+Sonderzeichen. **Denselben Fehler hatte ich in dieser Sitzung schon einmal** an
+`re15_savedata.c`. Aus git wiederhergestellt; die ausgelieferte v0.7.6 war nicht betroffen
+(16:18 gebaut, die Datei ging um 16:39 kaputt). Meine Patch-Skripte lesen und schreiben ab
+jetzt binär und prüfen vorher die Dateigröße.
+
+Außerdem war die neue `.exe` byte-genau so groß wie die vorige — ein Warnsignal, dem ich
+nachgegangen bin: ein zweiter Build meldete `ninja: no work to do`, der Fix ist also drin
+und die Größengleichheit Zufall.
+
+---
+
+**282/282 Tests**, lokal und im Linux-Container. Alle drei Teilbereiche zusätzlich direkt
+im ausgelieferten Binary nachgewiesen.
