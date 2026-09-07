@@ -1,58 +1,67 @@
-# RE1.5 Port — v0.7.11 (Early Preview)
+# RE1.5 Port — v0.7.12 (Early Preview)
 
-**Die Holzbank in ROOM10C0 verdeckt jetzt genau dort, wo sie soll — und nur dort.**
-Drei deiner F9-Marken, drei Anforderungen, alle erfüllt.
+**Die Liege in ROOM10E0 hat jetzt eine echte Entfernung — sie steht hinter dir, nicht vor dir.**
+
+Dein Befund: *"Na, das komplette Bett überdeckt Leon da unten. Aber leon muss davor sein."*
 
 ```
-"am Ende der Bank"   520 verdeckende Punkte   (soll verdecken)
-"daneben"              0                      (soll nicht)
-"geht durch"           0                      (soll nicht)
+Entfernung der Liege        fest 162   ->   gemessen 146..170
+deine Entfernung an der Marke                          108
 ```
+
+Gegen **deine eigenen 176 Standorte** in diesem Blickwinkel, aus `befund.log`:
+
+```
+Figur fast ganz verschluckt      17  ->  1
+im Mittel verdeckter Körper    33,5 %  ->  23,6 %
+```
+
+Der eine Rest ist die **Schreibmaschine im Vordergrund** (Entfernung 97..102 gegen
+deine 106) — dort stehst du dahinter, das darf verdecken.
 
 ---
 
-## Der Weg dahin
+## Warum eine feste Zahl hier nicht reichen konnte
 
-**Zuerst zu fern.** Die Silhouettenregel nimmt je Bildspalte den untersten sichtbaren
-Punkt als Bodenkontakt. Am rechten Bankende ist das die **Seitenkante**, nicht der Fuß —
-der Sehstrahl landet weit dahinter (Spalte 88 → Tiefe 187 statt real ~150). Deshalb
-`"tiefe": "kollision"`: die Bank steht in den Kollisionsdaten und hat dort eine echte
-Entfernung.
+Die Liege trug `"fuss": 162` — **eine** Entfernung für das ganze Objekt. Damit verdeckt
+sie überall gleich, egal wo du stehst. Ein Möbelstück hat aber keine Entfernung, es hat
+eine **Lage**; ob es dich verdeckt, entscheidet erst dein Standort.
 
-**Dann zu nah**, aus zwei Gründen in der Aufbereitung:
+Die Lage steht in den Kollisionsdaten des Raums. Ein Sehstrahl je Bildpunkt trifft die
+Zelle und liefert die Entfernung exakt — dieselbe Rechnung, die letzte Woche die Holzbank
+gelöst hat.
 
-*Der Sicherheitsabschlag.* Der Faktor 0,90 ist am Fehler der **Silhouetten**-Ableitung
-gemessen (Medianfehler +2 von rund 80). Die Kollisionstiefe schneidet den Sehstrahl exakt
-mit der Zellwand und braucht ihn nicht.
+## ⛔ Dabei ist die Zellauswahl aufgefallen — und sie war zu naiv
 
-```
-Faktor            0.90   1.00   1.05   1.10
-am Ende            295    295    295    236
-daneben            120      0      0      0
-geht durch         101      0      0      0
-```
-
-*Die Kachelstatistik.* Jedes 12×12-Feld bekam den Median. Für die streuende Silhouette
-richtig; für die exakte Kollisionstiefe soll ein Feld nur verdecken, wenn es **ganz** vor
-dir liegt — sonst zieht ein halb auf dem Objekt liegendes Feld mit.
+Bisher galt: *"nimm die Zelle, die mindestens 90 % der Freistellung deckt, und davon
+die nächste."* Für die Bank ging das gut. Für die Liege fiel es herein:
 
 ```
-Statistik        am Ende   daneben   geht durch
-Median               648        72           48
-Maximum              648         0            0
+x -500..6350  z-4050..-1450   deckt 100 %   Entfernung  15..21   <- gewählt, falsch
+x-5000.. -600 z 2300.. 3100   deckt  47 %   Entfernung 121..155  <- richtig
 ```
 
-Beides hängt jetzt je Objekt an seiner Tiefenquelle.
+Eine Zelle ist im Sehstrahl eine **unendlich hohe Säule**. Eine große, nahe Säule deckt
+darum leicht das halbe Bild — und gewinnt jede Deckungsprüfung, obwohl sie mit dem
+Möbelstück nichts zu tun hat. Bei Entfernung 15..21 hätte sie dich überall verschluckt.
 
-## Was ich verworfen habe, obwohl du es wolltest
+Neu entscheidet **Jaccard**: Schnittfläche geteilt durch Vereinigungsfläche. Das bestraft
+genau den Überschuss, den die naive Deckung belohnt:
 
-Die Objektgeometrie aus der Freistellung abzuleiten statt aus der Kollisionszelle („mach
-3"). Gemessen: die Bodenpunkte der Bank-Freistellung liegen bei z≈−7100, alle drei deiner
-Positionen bei z −4782..−5782 — also davor. Damit hätte die Bank an **keiner** der drei
-Marken verdeckt, auch nicht am Bankende. Die grobe Kollisionszelle ist trotz ihrer
-Ausdehnung die bessere Quelle; was fehlte, war nur die richtige Aufbereitung.
+```
+ROOM10E0 Liege   J=0,165 (richtig)   gegen   J=0,080 (die nahe Säule)
+ROOM10C0 Bank    J=0,119 (richtig)   gegen   J=0,102
+```
+
+Beide Räume wählen damit die richtige Zelle — die Bank bleibt unverändert bei
+520/0/0 über deine drei Marken.
 
 ---
 
-**282/282 Tests**, lokal und im Linux-Container. ROOM1130 unverändert (22,3 %),
-ROOM10C0 Cut 3 bei 14,7 % — unter der Warnschwelle.
+## Kleinigkeit am Rande
+
+Das Maskenwerkzeug warnte *"weder fuss noch ebene angegeben"* auch für Objekte, die ihre
+Entfernung längst aus der Kollision beziehen — und brach beim Ausgeben des Warnzeichens
+unter cp1252 ab. Die Bedingung kennt jetzt auch diesen Fall.
+
+282/282 Tests.
