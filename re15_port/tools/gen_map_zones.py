@@ -2584,6 +2584,15 @@ def main():
         if not e: return None
         (x0, x1, z0, z1), pg, r = e
         ei = eichung.get((room, zi))
+        # DIESELBE BLATT-BINDUNG WIE BEI DER ZONENZEILE (siehe dort, _et).
+        # Die Zeile @0x800768b0 bildet ABSOLUT auf das Blatt ab, auf dem das Original
+        # den Raum zeichnet. Steht die Marke auf einem ETAGEN-Blatt (Port-Ergaenzung),
+        # zeigt dieselbe Zeile daneben und die Marke landet am Rechteck-Anschlag - bei
+        # ROOM1060 auf 2F woertlich in der Ecke (118,157), obwohl die Treppe in der
+        # Mitte des Treppenhauses liegt (Nutzer-Zeichnung fehler/howto.png, 2026-09-07:
+        # "habe ich die Treppe im Treppenhaus so platziert wie es in etwa sein muesste").
+        if ei and pg != page_of(room):
+            ei = None
         if ei:
             ox, oy, sx, sy = ei
             mx, my = _proj(wx, wz, ox, oy, sx, sy)
@@ -2832,6 +2841,41 @@ def main():
         _sy = _row[6] if len(_row) > 6 else 0
         _et = _row[7] if len(_row) > 7 else 0
         ei = eichung.get((room & 0xFFF0, zi), (0, 0, 0, 0))
+        # DIE ORIGINAL-KARTENZEILE GILT NUR AUF IHREM EIGENEN BLATT.
+        # NUTZER-BEFUND 2026-09-07 (Treppenhaus, 2F): "Da habe ich auch gesehen das
+        # sich der Marker nicht bewegt, wenn sich der Spieler bewegt."
+        #
+        # Die Zeile @0x800768b0 (FUN_800473f8 @0x8004741c-0x80047528) ist eine
+        # ABSOLUTE Abbildung Welt -> Blattkoordinate:
+        #       mx =  ((((wx + 32000) * 10 * sx) >> 20) + 5) / 10 + ox
+        #       my = -((((wz + 32000) * 10 * sy) >> 20) + 5) / 10 + oy
+        # Sie ist auf das Blatt geeicht, auf dem das ORIGINAL den Raum zeichnet.
+        # Die Etagen-Umschaltung ist dagegen eine PORT-ERGAENZUNG (siehe die
+        # Etagen-Tabelle weiter unten): der Port zeichnet denselben Raum zusaetzlich
+        # auf den Blaettern seiner anderen Baender, dort an anderer Stelle. Dieselbe
+        # absolute Zeile zeigt daneben, der Marker wird an die Rechteckkante geklemmt
+        # und steht still.
+        #
+        # GEMESSEN an den begehbaren Punkten (SCA-Zellen, 4x4-Raster je Zelle) -
+        # verschiedene Markerpixel nach der Klemmung, Zeile gegen Bbox-Streckung:
+        #     ROOM1060 Seite  3 Rect  1:  14/192 innen ->   6 Pixel | Streckung  80
+        #     ROOM1060 Seite  4 Rect  1:   0/192 innen ->   9 Pixel | Streckung  80
+        #     ROOM1080 Seite  3 Rect  4:  30/128 innen ->  17 Pixel | Streckung  12
+        #     ROOM1080 Seite  4 Rect  0:   0/128 innen ->   5 Pixel | Streckung  12
+        #     ROOM4020 Seite  9 Rect 13:   0/128 innen ->   6 Pixel | Streckung  13
+        #     ROOM4020 Seite 10 Rect  3:   8/128 innen ->   3 Pixel | Streckung  13
+        #     ROOM50D0 Seite 11 Rect  0:  89/496 innen ->  53 Pixel | Streckung 244
+        # An den 522 Standorten, die der Nutzer selbst in ROOM1060 abgelaufen ist
+        # (befund.log), lieferte die Zeile auf 2F fuer JEDEN davon x = 122 - eine
+        # einzige Spalte, y nur 149..154. Genau der gemeldete Stillstand.
+        #
+        # Auf dem Originalblatt (_et == 0) bleibt die Zeile unangetastet: dort ist
+        # sie die Vorgabe des Originals und damit der Massstab. Auf den Etagen-Kopien
+        # gibt es keine Original-Vorgabe, also gilt dort die Bbox-Streckung
+        # (re15_map_zone_marker, Zweig ohne Zeile) - eine Port-Ergaenzung, die per
+        # Konstruktion nie aus dem Rechteck laeuft.
+        if _et:
+            ei = (0, 0, 0, 0)
         _o = ZONE_ORIENT.get((room & 0xFFF0, zi), (0, 0))
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:3d}, {zi}, {zd:3d},"
                  f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d}, {_et} }},")

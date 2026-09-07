@@ -592,6 +592,12 @@ target_include_directories(test_map_marker_innen PRIVATE ${CMAKE_SOURCE_DIR}/inc
 target_compile_definitions(test_map_marker_innen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_map_marker_innen COMMAND test_map_marker_innen)
+add_executable(test_map_etagenzeile test_map_etagenzeile.c)
+target_link_libraries(test_map_etagenzeile PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_etagenzeile PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_map_etagenzeile PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_map_etagenzeile COMMAND test_map_etagenzeile)
 
 add_executable(test_map_synth test_map_synth.c)
 target_link_libraries(test_map_synth PRIVATE re15_engine re15_test_support)
