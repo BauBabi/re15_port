@@ -702,9 +702,24 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
             _k1 = kollisionstiefe(rdt, R, t, H, [_zc])
             _tr = _k1 > 0
             _u = float((_tr & _msk0).sum())
-            if _msk0.sum() and _u / float(_msk0.sum()) >= 0.90:
+            # DIE BESTE BILD-UEBEREINSTIMMUNG, NICHT DIE NAECHSTE ZELLE.
+            # Erst hiess die Regel "deckt >= 90 % der Freistellung, dann die naechste".
+            # Das ging fuer die Holzbank gut, faellt aber bei ROOM10E0 C7 (Liege) auf
+            # eine Zelle herein, die 100 % deckt und bei Tiefe 15..21 liegt - sie wuerde
+            # den Spieler ueberall verschlucken. Der Grund: eine Zelle ist im Raycast
+            # eine unendlich hohe Saeule und deckt darum leicht das halbe Bild.
+            # Jaccard (Schnitt durch Vereinigung) bestraft genau diesen Ueberschuss:
+            #   ROOM10E0 C7 Liege : x-5000..-600  z2300..3100  J=0,165  Tiefe 121..155  <-
+            #                       x -500..6350  z-4050..-1450 J=0,080  Tiefe  15..21
+            #   ROOM10C0 C3 Bank  : x-4000..550   z-6250..-5250 J=0,119  Tiefe  81..150  <-
+            #                       x-9600..8750  z-8250..-6250 J=0,102  Tiefe 233..236
+            # Beide Faelle waehlen damit die richtige Zelle.
+            if _u >= 20 and _msk0.sum():
+                _ver = float((_tr | _msk0).sum())
+                _jac = _u / _ver if _ver else 0.0
                 _w1 = _k1[_tr & _msk0]
-                _kand.append((float(_w1.mean()) if _w1.size else 1e9, _zc, _k1))
+                if _w1.size:
+                    _kand.append((-_jac, _zc, _k1))
         if _kand:
             _kand.sort(key=lambda q: q[0])
             _kt = _kand[0][2]

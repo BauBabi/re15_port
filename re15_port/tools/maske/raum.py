@@ -334,7 +334,8 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # beidem angibt, hat die Frage nicht beantwortet - deshalb die Warnung.
             if (o.get("fuss") is None and not o.get("ebene")
                     and not o.get("spalten") and not o.get("aufrecht")
-                    and not o.get("flach")):
+                    and not o.get("flach")
+                    and o.get("tiefe") != "kollision"):   # kollision beantwortet sie auch
                 print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
                       'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
