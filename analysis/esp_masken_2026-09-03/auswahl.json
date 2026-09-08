@@ -718,6 +718,47 @@
     }
    ],
    "_warum": "⛔ 2026-09-08 MARKE F595: \"die Zombies um die Ecke sind alle durch die Wand sichtbar\". ROOM1100 hat im Original KEINE Masken und C2 kein Regions-Viereck (RVD leer) - nichts verdeckt oder cullt die Gegner im Querflur. Die beiden Eckwaende sind Kollisionszellen (RDT); als QUADER mit voller Wandhoehe (-4000, die Waende gehen bis zur Decke, Kamera bei y=-3078) liefern sie Silhouette UND Tiefe ohne Freistellung. Gemessen: Zombie 5 (-20275,-10713, Tiefe 195) liegt hinter BEIDEN Zellen (Fussstrahl schneidet sie); Zombie 4 steht in der OEFFNUNG (x>-15600) und bleibt zu Recht sichtbar; Zombie 3 liegt im sichtbaren Flur. ALLGEMEIN: dieselbe Technik traegt fuer jeden Winkel, dessen Wand eine Zelle ist - auf Zuruf je Marke nachziehbar."
+  },
+  "1": {
+   "objekte": [
+    {
+     "name": "Westwand",
+     "quader": [
+      -17600,
+      -23200,
+      2000,
+      11100,
+      -4000
+     ],
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Suedblock",
+     "quader": [
+      -22700,
+      -23201,
+      7100,
+      1897,
+      -4000
+     ],
+     "oben": 0,
+     "grow": 0
+    },
+    {
+     "name": "Suedwestwand",
+     "quader": [
+      -23105,
+      -28356,
+      1947,
+      6814,
+      -4000
+     ],
+     "oben": 0,
+     "grow": 0
+    }
+   ],
+   "_warum": "⛔ 2026-09-09 MARKE F205 (C1, Blick nach Sueden, masken=0): dieselbe Loesung wie C2 - die Flurwaende sind Zellen, als Quader (volle Hoehe) verdecken sie die Gegner im Nachbarflur. Leere Silhouetten kosten nichts; der Bau meldet die Bildpunkte je Wand."
   }
  },
  "ROOM10F0": {
@@ -787,7 +828,7 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "tiefe": "kollision"
     },
     {
      "name": "10F0 Cut 4 Teil 02 (Nutzer-Lasso)",
@@ -797,7 +838,7 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "tiefe": "kollision"
     },
     {
      "name": "10F0 Cut 4 Teil 03 (Nutzer-Lasso)",
@@ -809,7 +850,8 @@
      "grow": 0,
      "spalten": true
     }
-   ]
+   ],
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank."
   },
   "5": {
    "objekte": [
@@ -821,7 +863,7 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "tiefe": "kollision"
     },
     {
      "name": "10F0 Cut 5 Teil 02 (Nutzer-Lasso)",
@@ -831,7 +873,7 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "tiefe": "kollision"
     },
     {
      "name": "10F0 Cut 5 Teil 03 (Nutzer-Lasso)",
@@ -841,9 +883,10 @@
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "spalten": true
+     "tiefe": "kollision"
     }
-   ]
+   ],
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank."
   },
   "6": {
    "objekte": [
