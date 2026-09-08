@@ -108,6 +108,16 @@ void re15_collision_reset_band(void);
 void re15_collision_set_band(int band);
 /* Convert a spawn Y to a floor band, as the original does: -(Y / 0x708). */
 int  re15_collision_band_from_y(int32_t y);
+
+/* SICHTSTRAHL GEGEN DIE ZELLEN, DIE DEN FLUG STOPPEN - gleiches Band, gleiche Maske wie
+ * re15_collision_constrain_enemy, Segment gegen Zellrechteck ueber ALLE Quadranten.
+ * Das Original koppelt Sicht und Bewegungsgeometrie ueber 0x80050858 Mode 0x8400; ohne
+ * diese Kopplung findet eine RE2-Kraehe in Sub 11/13 keinen Ausweg um ein Hindernis
+ * (der Wand-Prober laeuft nur in Sub 4/5/6). Vollstaendiger Beleg im Funktionskopf in
+ * enemy_ai_common.c. Rueckgabe 1 = blockiert. */
+void re15_re2_los_cells_enable(int an);   /* nur fuer Sonden: Zell-Strahl aus/an */
+int  re15_re2_los_cells_blocked(const re15_rdt_t *rdt, int32_t x0, int32_t z0,
+                                int32_t x1, int32_t z1, int band, unsigned mask);
 /* Current tracked floor band (diagnostic). */
 int  re15_collision_debug_band(void);
 /* Set the band from the player Y only if it isn't set yet (initial spawn). */

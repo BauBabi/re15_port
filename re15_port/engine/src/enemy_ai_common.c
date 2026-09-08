@@ -2714,9 +2714,77 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
  * (re15_los_ray_blocked oben), alle 4 Regionen in EINEM Tick — OHNE den 16-Tick-Amortisierer
  * und OHNE FOV-Kegel des RE1.5-Sensors (0x80050858 ist ein reiner Kollisionsstrahl; die
  * Mode-0x8400-Semantik selbst ist nicht RE'd -> deklariertes MAPPING, RE15_RE2_AI.md OFFEN). */
+/* ---- SICHTSTRAHL GEGEN DIE ZELLEN, DIE DEN FLUG STOPPEN -----------------------------------
+ * NUTZER-BEFUND 2026-09-08 (RE2-Modus): "sie folgen Leon stumpf linear, wenn ein Tresen im Weg
+ * ist, fliegen sie stumpf linear Richtung Leon, auch wenn der Tresen zwischen beiden die Kraehe
+ * blockt. Die Kraehe muesste erkennen, dass sie lange geblockt wurde und dann etwas anderes
+ * probieren."
+ *
+ * DAS ORIGINAL HAT GENAU DIESEN AUSWEG - er haengt an der SICHTLINIE. Sub 11 (DEC @0x80101D30-84)
+ * und Sub 13 (DEC @0x801021EC-25C) haben nur ZWEI geometrische Ausgaenge: den Kegel auf den
+ * Spieler und das LOS-Bit +0x22A&0x2. Der Wand-Prober 0x80104094 laeuft NUR im flight_dec_tail
+ * von Sub 4/5/6 (@0x80101150-98) - in 11/13 gibt es keinen Wand-Ausweg. Im Original macht das
+ * nichts, weil der LOS-Ray 0x80050858(self, PL, 0x8400, 0) DIESELBE Kulissen-Familie abtastet,
+ * die auch die Bewegung stoppt: ein Hindernis, das den Flug blockt, bricht damit auch die Sicht,
+ * das Bit faellt, DEC 11/13 exiten nach Sub 4 - und DORT greift der Wand-Prober und laesst sie
+ * ausweichen.
+ *
+ * DER PORT HAT DIESE KOPPLUNG BISHER NICHT: re15_re2_los_clear zog den RE1.5-Sichtstrahl ueber
+ * die BODEN-REGIONEN (re15_los_ray_blocked). Die SCA-Zellen, die re15_collision_constrain_enemy
+ * der Kraehe in den Weg stellt (crow.c:1909, Maske 4, Band aus ihrer Flughoehe), sind eine ANDERE
+ * Menge. Meldet der Strahl "frei", wo die Zelle den Flug klemmt, bleibt die geclaimte Kraehe
+ * dauerhaft in Sub 13 stehen - und haelt dabei den Flock-Mutex, wodurch auch alle anderen nie
+ * angreifen. Genau das beschreibt der Nutzer.
+ *
+ * Der Strahl laeuft jetzt gegen dieselben Zellen wie die Klemme: gleiches Band, gleiche Maske,
+ * Segment gegen Zellrechteck (Slab-Test). Ueber ALLE Quadranten, nicht nur den eigenen - eine
+ * Sichtlinie kreuzt sie (das Original iteriert seine Linien-Records ebenfalls ungefiltert).
+ * MAPPING bleibt: RE1.5 hat Zell-Rechtecke, wo RE2 Linien-Records hat; die Mode-0x8400-Semantik
+ * ist weiterhin nicht RE'd. Neu ist die KOPPLUNG an die Bewegungs-Geometrie, nicht der Ray. */
+int re15_re2_los_cells_blocked(const re15_rdt_t *rdt, int32_t x0, int32_t z0,
+                               int32_t x1, int32_t z1, int band, unsigned mask)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0 || band < 0) return 0;
+    const double p0[2] = { (double)x0, (double)z0 };
+    const double d[2]  = { (double)x1 - (double)x0, (double)z1 - (double)z0 };
+    for (int i = 0; i < rdt->sca_count; i++) {
+        const re15_sca_entry_t *c = &rdt->sca[i];
+        if (band != (c->floor >> 4)) continue;
+        if ((mask & c->u0) == 0) continue;
+        const double r0[2] = { (double)(int32_t)c->x, (double)(int32_t)c->z };
+        const double r1[2] = { r0[0] + (double)c->width, r0[1] + (double)c->density };
+        double lo = 0.0, hi = 1.0;                 /* die Strecke als t in [0,1] */
+        int drin = 1;
+        for (int a = 0; a < 2 && drin; a++) {
+            if (d[a] == 0.0) {                     /* parallel zur Achse */
+                if (p0[a] < r0[a] || p0[a] > r1[a]) drin = 0;
+                continue;
+            }
+            double t0 = (r0[a] - p0[a]) / d[a];
+            double t1 = (r1[a] - p0[a]) / d[a];
+            if (t0 > t1) { double t = t0; t0 = t1; t1 = t; }
+            if (t0 > lo) lo = t0;
+            if (t1 < hi) hi = t1;
+            if (lo > hi) drin = 0;
+        }
+        if (drin) return 1;                        /* die Strecke schneidet die Zelle */
+    }
+    return 0;
+}
+
+
+/* NUR FUER SONDEN: den Zell-Strahl abschalten, um den Stand VOR dem Fix im selben Lauf
+ * messen zu koennen. Das Spiel ruft das nie. */
+static int s_los_zellen = 1;
+void re15_re2_los_cells_enable(int an) { s_los_zellen = an ? 1 : 0; }
+
 int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
 {
     if (!g_room_rdt_ok) return 1;                 /* keine Zellen -> frei (wie der Sensor oben) */
+    if (s_los_zellen && re15_re2_los_cells_blocked(&g_room_rdt, e->x, e->z, pl->x, pl->z,
+                                   re15_collision_band_from_y(e->y),
+                                   e->sca_mask ? e->sca_mask : 4u))
+        return 0;
     for (int k = 0; k < 4; k++)
         if (re15_los_ray_blocked(e, pl, k)) return 0;
     return 1;

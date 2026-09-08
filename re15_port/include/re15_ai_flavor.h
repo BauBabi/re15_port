@@ -194,6 +194,7 @@ int re15_re2_player_damage_mode(re15_actor_t *pl, int dmg, int mode);
  * RE1.5-16-Tick-Amortisierer und ohne FOV-Kegel — 0x80050858 ist ein reiner Kollisionsstrahl).
  * Rueckgabe 1 = Sicht frei (Mode 0x8400 selbst nicht RE'd — deklariertes MAPPING). */
 int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl);
+
 void re15_re2z_gait_init(re15_actor_t *e);        /* seed the gait row/timer  @0x80101A7C-AC   */
 int  re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist); /* @0x80101BAC */
 void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on room load (also
