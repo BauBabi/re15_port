@@ -4751,6 +4751,19 @@ re_title:;
                     static int   bl_marke = 0;
                     static unsigned bl_n = 0;
                     int marke = re15_input_debug_fkey(9);
+                    /* RE15_BEFUND_MARKE=<Bildnummer> loest EINE Marke ohne Tastendruck aus.
+                     * Grund: die F-Tasten kommen aus dem echten Tastaturzustand, ein
+                     * Eingabeskript kann sie nicht druecken - ohne diesen Haken laesst sich
+                     * der Marken-Pfad (und der neue Gegner-Block darin) nicht selbst
+                     * pruefen, und ich haette dem Nutzer wieder etwas Ungetestetes gegeben. */
+                    {
+                        const char *_mf = getenv("RE15_BEFUND_MARKE");
+                        static int _mf_done = 0;
+                        if (_mf && !_mf_done &&
+                            (unsigned)atoi(_mf) <= (unsigned)g_engine.frame_count) {
+                            _mf_done = 1; marke = 1;
+                        }
+                    }
                     if (marke || (bl_n % BEFUND_TAKT) == 0u) {
                         char pfad[600], alt[600];
                         const char *wz = re15_pc_exe_dir();
@@ -4887,6 +4900,39 @@ re_title:;
                                     if ((q % 4) == 3) bl_bytes += fprintf(bl, "\n");
                                 }
                                 if ((rn % 4) != 0) bl_bytes += fprintf(bl, "\n");
+                                /* ⛔ ZUR MARKE GEHOEREN AUCH DIE GEGNER.
+                                 * NUTZER-BEFUND 2026-09-08: er hat beide Kraehen-Macken (an einem Raum-Blocker
+                                 * haengend; nach dem Hacken reglos am Spieler klebend) mit F9 dokumentiert - und
+                                 * die Marke enthielt NUR Spieler und Masken. Aus den Bildern ist das Symptom
+                                 * sichtbar, der ZUSTAND aber nicht: welcher Sub, welcher Clip, wer haelt den
+                                 * Flock-Anspruch (+0x22A&4), laeuft die Opfer-FSM. Genau das entscheidet zwischen
+                                 * den Ursachen A (Navigator) und B (LOS-Shim) aus diag_crow_stuck.md. Der
+                                 * RE2-Trace koennte es auch, braucht aber eine Umgebungsvariable - die Marke
+                                 * laeuft immer. */
+                                {
+                                    int _a, _gez = 0;
+                                    for (_a = 1; _a < RE15_ACTOR_MAX; _a++) {
+                                        const re15_actor_t *_en = &g_actors[_a];
+                                        if (!_en->active || _en->type == 0) continue;
+                                        if (_gez == 0)
+                                            bl_bytes += fprintf(bl, "  Gegner im Raum:\n");
+                                        _gez++;
+                                        bl_bytes += fprintf(bl,
+                                            "    %2d  typ=0x%02X st=%d ss=%2d/%-2d clip=%-3d bild=%-3d hp=%-4d "
+                                            "dist=%-6u pos=(%6d,%6d,%6d) rot=%-5d spd=%-4d "
+                                            "fl22a=%04X grid=%02X anim=%04X\n",
+                                            _a, (unsigned)_en->type, _en->state, _en->sub_state_1,
+                                            _en->sub_state_2, (int)_en->motion, (int)_en->anim_frame,
+                                            (int)_en->hp, (unsigned)_en->ai_dist,
+                                            _en->x, _en->y, _en->z, (int)_en->rot_y, (int)_en->speed_h,
+                                            (unsigned)_en->re2c_flags22a, (unsigned)_en->grid_id,
+                                            (unsigned)_en->anim_flags);
+                                    }
+                                    if (_gez == 0) bl_bytes += fprintf(bl, "  Gegner im Raum: keine\n");
+                                    else bl_bytes += fprintf(bl,
+                                        "  Opfer-FSM des Spielers: state=%d typ=0x%02X\n",
+                                        re15_player_victim_state(), (unsigned)re15_player_victim_type());
+                                }
                                 bl_bytes += fprintf(bl, "====================================\n");
                             }
                             fflush(bl);
