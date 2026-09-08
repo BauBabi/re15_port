@@ -773,26 +773,51 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return dep
     if flach:
         # ---- FLACH AUF DEM BODEN: Tiefe JE BILDPUNKT --------------------------
-        # ⛔ Ein Teppich, eine Blutlache, eine liegende Leiche hat keine Vorderkante,
-        # hinter der alles gleich weit weg waere - jeder Bildpunkt IST ein Bodenpunkt
-        # und hat seine eigene Entfernung. Die Spaltenregel gibt der ganzen Spalte die
-        # Tiefe ihres UNTERSTEN Punktes, also die des vordersten; damit verdeckt der
-        # Teppich alles, was hinter seiner Vorderkante steht.
-        # Nutzer-Befund 2026-09-07 (ROOM10E0 Cut 7, Marken F4141 und F559): der
-        # Vordergrund-Teppich trug Tiefe 58 fuer seine GESAMTE Flaeche und schnitt 697
-        # gezeichnete Figurpunkte weg, obwohl der Spieler mitten darauf stand.
+        # Ein Teppich, eine Blutlache hat keine Vorderkante, hinter der alles gleich
+        # weit weg waere - jeder Bildpunkt IST ein Bodenpunkt mit eigener Entfernung.
+        #
+        # NUR VOR DEM BEGEHBAREN. Nutzer-Entscheidung 2026-09-08 nach zwei
+        # gegenlaeufigen Befunden:
+        #   (a) mit voller Teppichmaske schnitt die Teppichkante eine LEICHE ab, die
+        #       darauf lag (Marke F1585) - alles auf dem Teppich hat DESSEN Tiefe, der
+        #       Vergleich wird zum Muenzwurf und faellt zugunsten der Maske aus;
+        #   (b) ohne Teppichmaske blitzte die Figur an 146 Punkten durch (Marke F331).
+        # Beides zugleich loest die Frage "kann dort ueberhaupt jemand STEHEN?": ein
+        # Bodenpunkt, der BEGEHBAR ist, darf nicht maskiert werden - dort steht die
+        # Figur selbst oder liegt die Leiche. Ein Bodenpunkt, der in einer soliden
+        # SCA-Zelle liegt (unter einem Moebel, in einer Wand), kann niemanden tragen -
+        # dort ist der Teppich echter Vordergrund und darf verdecken.
+        # Belegquelle fuer "begehbar": die soliden Typ-1-Zellen des Bandes
+        # (re15_collision.c-Kopf; an 3727 Nutzer-Standorten zu 97,1 % bestaetigt).
+        _nur_vor = (flach == "vor_begehbar")
+        _zellen = sca_wandzellen(rdt, 0) if _nur_vor else []
         ys, xs = np.nonzero(region)
         n_ok = 0
+        n_frei = 0
         for y, x in zip(ys, xs):
             z = _z(float(x) + 0.5, float(y) + 0.5)
             if not z:
                 continue
+            if _nur_vor:
+                _w = welt_am_boden(R, t, H, float(x) + 0.5, float(y) + 0.5, y0)
+                if _w is None:
+                    continue
+                _wx, _wz = _w
+                _drin = False
+                for (_cx, _cz, _cw, _cd) in _zellen:
+                    if _cx <= _wx <= _cx + _cw and _cz <= _wz <= _cz + _cd:
+                        _drin = True; break
+                if not _drin:
+                    n_frei += 1
+                    continue           # begehbar -> hier darf der Teppich nicht decken
             dep[y, x] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
             n_ok += 1
         if bericht is not None:
             g = dep[region]; g = g[g > 0]
-            bericht.append("flach: %d von %d Bildpunkten mit Bodenschnitt, Tiefe %d..%d"
-                           % (n_ok, int(region.sum()),
+            bericht.append("flach%s: %d von %d Bildpunkten maskiert%s, Tiefe %d..%d"
+                           % (" (nur vor Begehbarem)" if _nur_vor else "",
+                              n_ok, int(region.sum()),
+                              (", %d begehbar ausgelassen" % n_frei) if _nur_vor else "",
                               int(g.min()) if len(g) else 0, int(g.max()) if len(g) else 0))
         return dep if n_ok else None
     if aufrecht is not None:
