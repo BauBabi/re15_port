@@ -270,6 +270,23 @@ static void re2c_wall_probe(re15_actor_t *e)
 }
 
 /* ====================== Arbitrierung 0x801041F0 + Listener ================================= */
+/* FUN_8004AA50 - der RE2-Routen-Wurf, byte-genau nachgebaut (selbst disassembliert):
+ *   8004aa64  lw v0,56(v0)      ; Zonentabelle = [Raumdaten + 0x38]
+ *   8004aa6c  lhu s0,0(v0)      ; Knotenzahl
+ *   8004aa74  beq s0,zero,...   ; 0 Knoten -> 255 OHNE Wurf
+ *   8004aa7c  jal 0x80015fe8    ; RE2-Zufallszahl
+ *   8004aa84  divu v0,s0 ; mfhi ; andi 0xff   ; rand % Knotenzahl
+ * DER ZUFALL MUSS DER VON RE2 SEIN: re2_route_draw() ist der RE1.5-Zwilling
+ * FUN_8003a07c und zieht aus re15_engine_rand8() - im RE2-Modus die falsche Quelle.
+ * Die KNOTENZAHL kommt weiterhin aus dem RE1.5-Zonengraphen, weil RE1.5-RDTs keine
+ * RE2-Routentabelle haben (deklarierte Ersetzung, s. Datei-Kopf). */
+static uint8_t re2_route_draw(void)
+{
+    int n = re15_nav_zone_count();
+    if (n <= 0) return 0xffu;
+    return (uint8_t)(re15_re2_rand() % (unsigned)n);
+}
+
 /* Nur EINE Kraehe greift an: Flock-Mutex = g_re2_room_gflags Bit 0 (0x800CFBF4). */
 static void re2c_attack_arbiter(re15_actor_t *e, re15_actor_t *pl)
 {
@@ -308,7 +325,7 @@ static void re2c_attack_arbiter(re15_actor_t *e, re15_actor_t *pl)
         if (e->re2d_bite21e >= 11) {                       /* sltiu 0xb @0x8010432C/8C-90 */
             re2c_sub(e, 8);                                /* @0x80104398-9C */
             e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);   /* @0x801043A0-B0 */
-            e->re2d_budget21f = re15_nav_rand_zone();       /* 0x8004AA50 @0x801043AC-B4 */
+            e->re2d_budget21f = re2_route_draw();       /* 0x8004AA50 @0x801043AC-B4 */
         }
         if ((int)e->speed_h >= 101) e->speed_h = (int16_t)(e->speed_h - 4);   /* @0x801043B8-D0 */
         e->re2d_bite21e++;                                 /* @0x801043D4-E4 */
@@ -322,7 +339,7 @@ static void re2c_abort_listener(re15_actor_t *e)
     if (!(e->re2c_flags22a & 0x10u)) return;
     re2c_vol(e, 350);                                      /* @0x80104424-28 */
     e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x9du);/* andi 0x9d @0x80104434-3C */
-    e->re2d_budget21f = re15_nav_rand_zone();               /* 0x8004AA50 @0x80104438-48 */
+    e->re2d_budget21f = re2_route_draw();               /* 0x8004AA50 @0x80104438-48 */
     re2c_sub(e, 4);                                        /* @0x80104440-50 */
     e->re2d_abort21c  = 30;                                /* sb 30,540 @0x8010444C-54 */
     e->re2c_flags22a &= (uint16_t)~0x58u;
@@ -918,7 +935,7 @@ static void re2c_exec11_attackrun(re15_actor_t *e, re15_actor_t *pl)
             if ((int)e->speed_h >= 231) re2c_sub(e, 12);   /* STRIKE @0x80101F18-30 */
             else {
                 e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);   /* @0x80101F3C-4C */
-                e->re2d_budget21f = re15_nav_rand_zone();   /* 0x8004AA50 @0x80101F48-5C */
+                e->re2d_budget21f = re2_route_draw();   /* 0x8004AA50 @0x80101F48-5C */
                 re2c_sub(e, 8);                            /* Trudeln @0x80101F50-58 */
             }
         }
@@ -1046,7 +1063,7 @@ static void re2c_grab_release(re15_actor_t *e, re15_actor_t *pl)
     /* @0x80102848-98: Nav-Reseed + Sub 4; geclaimt → Vol 350 + Broadcast 16 + PL+0x6=3
      * (0x800CFBFE = Victim-FSM-Phase 3 = Release) */
     e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);/* @0x80102848-58 */
-    e->re2d_budget21f = re15_nav_rand_zone();               /* 0x8004AA50 @0x80102854-68 */
+    e->re2d_budget21f = re2_route_draw();               /* 0x8004AA50 @0x80102854-68 */
     re2c_sub(e, 4);                                        /* @0x8010285C-64 */
     if (e->re2c_flags22a & 0x4u) {                         /* @0x8010286C-78 */
         re2c_vol(e, 350);                                  /* @0x80102880-84 */
@@ -1786,7 +1803,7 @@ int re15_re2crow_tick(int slot)
         /* Nav-Reseed 1/32 @0x80100508-540: +0x220=rand&0x7f, +0x21F=0x8004AA50() (MAPPING 0) */
         if (e->re2d_rel220 == 0 && (re15_re2_rand() & 0x1fu) == 0u) {
             e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);
-            e->re2d_budget21f = re15_nav_rand_zone();   /* 0x8004AA50 */
+            e->re2d_budget21f = re2_route_draw();   /* 0x8004AA50 */
         }
         /* Navigator-Modus @0x80100544-5F4 (0x8004A808-MAPPING: Steuerziel = Spieler; die
          * Buchhaltung laeuft byte-true): */
@@ -1817,6 +1834,22 @@ int re15_re2crow_tick(int slot)
             int modus = 0;
             if (pl->hp < 0) modus = (e->re2c_pac221 != 0 && e->re2d_rel220 != 0);
             else            modus = (!(e->re2c_flags22a & 0x40u) && e->re2d_rel220 != 0);
+            /* WAS HIER RE2 IST UND WAS ERSETZT - ausdruecklich, weil es zwei Modi gibt:
+             *   RE2 (belegt, hier abgebildet): die AUFRUFSTELLEN und ihre Modi stammen aus
+             *     EMOVL21_S0.BIN (4 Aufrufe von 0x8004A808, 5 von 0x8004AA50; der Modus aus
+             *     dem Delay-Slot @0x801005C4 / @0x801005F4), und der Routen-Wurf aus
+             *     0x8004AA50 mit RE2s Zufallszahl 0x80015FE8 (re2_route_draw oben).
+             *   ERSETZT (unvermeidbar): der KOERPER des Navigators. RE2s FUN_8004A808 liest
+             *     seine Routen-Knoten aus [Raumdaten+0x38] - diese Tabelle gibt es in
+             *     RE1.5-RDTs nicht, und der Port faehrt in BEIDEN Modi RE1.5-Raeume. Also
+             *     laeuft der Struktur-Zwilling FUN_80039E7C ueber den RE1.5-BLK-Zonengraphen:
+             *     gleiche Reihenfolge (Repath-Zaehler, Zone von Selbst und Ziel, gleiche Zone
+             *     -> rohes Ziel, zonenfremd -> Kreuzungspunkt), andere Datenquelle.
+             *   OFFEN: RE2s Navigator zieht bei jedem Repath-Tick SELBST einen Sichtstrahl mit
+             *     Modus 0x2000 und legt ihn in +0x154 Bit 0x800 ab (@0x8004A860-68
+             *     `andi v0,v0,0x80` / `addiu a2,zero,8192`, Loeschen @0x8004A87C-80). Der
+             *     RE1.5-Zwilling hat diesen zweiten Sicht-Kanal nicht; wer ihn liest, ist
+             *     noch nicht ermittelt. */
             re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
                                   e->re2d_budget21f, modus);
         }

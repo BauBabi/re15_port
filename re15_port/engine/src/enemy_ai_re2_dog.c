@@ -624,6 +624,15 @@ static int re2d_landing(re15_actor_t *e)
  * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP. */
 static void re2d_hitbox(re15_actor_t *e, int restore) { (void)e; (void)restore; }
 
+/* FUN_8004AA50 mit dem RE2-Zufall (@0x8004aa7c `jal 0x80015fe8`), Knotenzahl aus dem
+ * RE1.5-Zonengraphen - dieselbe deklarierte Ersetzung wie bei der Kraehe. */
+static uint8_t re2d_route_draw(void)
+{
+    int n = re15_nav_zone_count();
+    if (n <= 0) return 0xffu;
+    return (uint8_t)(re15_re2_rand() % (unsigned)n);
+}
+
 /* ============================== ACTIVE substates ========================================== */
 
 /* shared idle-wander helper 0x80100548 (subs 0 und 10; self-disasm'd @0x80100548-0x80100780).
@@ -651,7 +660,7 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
                 e->re2z_t15a = 90;                         /* sh 90,346 @0x80100660 */
                 re2d_clip(e, 0, 0, 0xF, 0x100, 1);         /* 0xF0000 @0x80100664-6C */
             } else e->sub_state_2 = 3;                     /* v1=3 @0x8010063C */
-            e->re2d_route218 = re15_nav_rand_zone();        /* 0x8004AA50 -> +0x218 @0x80100644 */
+            e->re2d_route218 = re2d_route_draw();        /* 0x8004AA50 -> +0x218 @0x80100644 */
         }
         break;
     case 2:
@@ -771,7 +780,7 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
         }
         if (e->re2d_circle22e) {                           /* Kreis-Modus (Spawn 9) @0x80100C58-60 */
             e->sub_state_2 = 3; e->sub_state_3 = 0;        /* sh 3,6 @0x80100C6C */
-            e->re2d_route218 = re15_nav_rand_zone();        /* 0x8004AA50 @0x80100C68-70 */
+            e->re2d_route218 = re2d_route_draw();        /* 0x8004AA50 @0x80100C68-70 */
             e->re2d_nolatch22c = 1;                        /* sb 1,556 @0x80100C74 */
             e->re2d_stuck230 = 0; e->re2z_t15a = 0;        /* @0x80100C78-7C */
         }
@@ -1185,7 +1194,7 @@ static void re2d_sub8_breakoff(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
         e->sub_state_2 = 1;                                /* sb 1,6 @0x80102284 */
-        e->re2d_route218 = re15_nav_rand_zone();            /* 0x8004AA50 @0x80102280-8C */
+        e->re2d_route218 = re2d_route_draw();            /* 0x8004AA50 @0x80102280-8C */
         e->re2z_t158 = (int16_t)(re2d_wait_tbl[re15_re2_rand() & 7u] + 30);   /* @0x80102288-AC */
         e->re2z_flags21a = (uint16_t)(e->re2z_flags21a + 300);   /* Fatigue+300 @0x801022A0-B0 */
     }
