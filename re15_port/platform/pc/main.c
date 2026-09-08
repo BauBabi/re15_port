@@ -4932,6 +4932,19 @@ re_title:;
                                     else bl_bytes += fprintf(bl,
                                         "  Opfer-FSM des Spielers: state=%d typ=0x%02X\n",
                                         re15_player_victim_state(), (unsigned)re15_player_victim_type());
+                                    {   /* die ECHTE Tiefenspanne der gezeichneten Dreiecke -
+                                         * ohne sie ist nicht entscheidbar, ob eine Maske zu
+                                         * Recht verliert (Nutzer-Marke F752: 239 Punkte trotz
+                                         * Maske gezeichnet, weil die vorgestreckte Hand naeher
+                                         * ist als der Koerper). */
+                                        extern void re15_render_pc_tri_z_range(int *a, int *b);
+                                        int _zn = 0, _zx = 0;
+                                        re15_render_pc_tri_z_range(&_zn, &_zx);
+                                        if (_zx >= _zn)
+                                            bl_bytes += fprintf(bl,
+                                                "  Gezeichnete Dreiecke: Kamera-z %d..%d (Maskentiefe %d..%d)\n",
+                                                _zn, _zx, _zn / 64, _zx / 64);
+                                    }
                                 }
                                 bl_bytes += fprintf(bl, "====================================\n");
                             }
@@ -6669,6 +6682,7 @@ re_title:;
                 }
             }
             int kf_idx = 0;
+            { extern void re15_render_pc_tri_z_reset(void); re15_render_pc_tri_z_reset(); }
             if (player_visible && skel_ok && p_anim->clip_count > 0) {
                 /* The platform owns the fps policy: at 30fps target anim_frame is
                  * already 30Hz; at 60fps halve to PSX-canonical 30Hz. */
@@ -7422,6 +7436,7 @@ re_title:;
                             c0[0],c0[1],c0[2], c3[0],c3[1],c3[2], c2[0],c2[1],c2[2]);
                     }
                 }
+                { extern void re15_render_pc_tri_z_freeze(void); re15_render_pc_tri_z_freeze(); }
             }
 #undef PROJECT_VERT
 #undef IS_BACKFACE

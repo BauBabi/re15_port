@@ -3407,3 +3407,7 @@ target_include_directories(probe_los_divergenz PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 add_executable(probe_nav_wirkung probe_nav_wirkung.c)
 target_link_libraries(probe_nav_wirkung PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_nav_wirkung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_sichtregion probe_sichtregion.c)
+target_link_libraries(probe_sichtregion PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_sichtregion PRIVATE ${CMAKE_SOURCE_DIR}/include)

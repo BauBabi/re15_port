@@ -235,6 +235,14 @@ static int             s_pri_rect_count = 0;
  * dropping foreground the player doesn't even overlap (that wrongly made the box's far
  * lower masks transparent). player_z=0 → no gate (draw all). */
 static int             s_pri_player_z  = 0;
+static int s_tri_zmin = 0x7fffffff, s_tri_zmax = -0x7fffffff;
+void re15_render_pc_tri_z_reset(void) { s_tri_zmin = 0x7fffffff; s_tri_zmax = -0x7fffffff; }
+static int s_tri_zmin_f = 0, s_tri_zmax_f = -1;
+/* Die Spanne des SPIELERS einfrieren: der Marken-Block laeuft frueher in der Schleife als
+ * der Zeichenteil, liest also den Wert des VORIGEN Bildes - bei stehendem Spieler derselbe. */
+void re15_render_pc_tri_z_freeze(void) { s_tri_zmin_f = s_tri_zmin; s_tri_zmax_f = s_tri_zmax; }
+void re15_render_pc_tri_z_range(int *zmin, int *zmax)
+{ if (zmin) *zmin = s_tri_zmin_f; if (zmax) *zmax = s_tri_zmax_f; }
 static int             s_pri_player_sx = 0, s_pri_player_sy = 0;
 static int          s_tim_w           = 0;
 static int          s_tim_h           = 0;
@@ -2217,6 +2225,13 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
     if (s_tim_w == 0 || s_tim_h == 0) return;
 
+    /* MESSHAKEN: die ECHTE Tiefenspanne der gezeichneten Dreiecke.
+     * Die F9-Marke gab bisher nur Fuss/Huefte/Kopf aus der AKTORPOSITION aus - damit war
+     * nicht entscheidbar, ob eine Maske zu Recht verliert. Nutzer-Marke F752 (ROOM10E0):
+     * 239 Punkte wurden gezeichnet, OBWOHL die Maschinenmaske darueberlag; die vorgestreckte
+     * Hand ist naeher als der Koerper - um wieviel, sagte keine Zahl. Jetzt schon. */
+    if (z < s_tri_zmin) s_tri_zmin = z;
+    if (z > s_tri_zmax) s_tri_zmax = z;
     s_textri_depth[s_textri_count] = (float)z;
     s_textri_slot[s_textri_count]  = (uint8_t)s_active_slot;
     s_textri_blend[s_textri_count] = (uint8_t)s_tri_blend;
