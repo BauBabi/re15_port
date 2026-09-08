@@ -13466,9 +13466,15 @@ void re15_enemy_ai_run_all(int combat_active)
              * Substitution): gleiche Zone -> Spielerpos (== Modus 0), zonenfremd ->
              * First-Hop-Kreuzung um die Kulisse. Vorher steuerten die MAPPING-Stellen
              * hart auf den Spieler = Wand-Flatter-Attraktor ("Kraehen bleiben haengen"). */
-            re15_nav_update_steer(e, (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
-                                     (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
-                                  e->ai_wp_node, (int)(e->ai_flags & 8u));
+            /* NUR fuer die RE1.5-Kraehe. Das RE2-Brain ruft den Navigator seit 2026-09-08
+             * SELBST, mit seinen eigenen Routen-Feldern (+0x21F/+0x220) und dem Modus aus
+             * @0x80100544-5F4 - hier noch einmal zu rufen wuerde den Repath-Zaehler zweimal
+             * je Tick herunterzaehlen. */
+            if (!(re15_ai_re2_for_type(e->type) && e->type == 0x21)) {
+                re15_nav_update_steer(e, (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                         (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                                      e->ai_wp_node, (int)(e->ai_flags & 8u));
+            }
             e->ai_flags &= (uint16_t)~8u;
             re15_crow_ai_tick(s);
         }

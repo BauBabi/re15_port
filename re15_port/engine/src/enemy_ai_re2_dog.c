@@ -651,7 +651,7 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
                 e->re2z_t15a = 90;                         /* sh 90,346 @0x80100660 */
                 re2d_clip(e, 0, 0, 0xF, 0x100, 1);         /* 0xF0000 @0x80100664-6C */
             } else e->sub_state_2 = 3;                     /* v1=3 @0x8010063C */
-            e->re2d_route218 = 0;                          /* 0x8004AA50 → +0x218 (MAPPING: 0) */
+            e->re2d_route218 = re15_nav_rand_zone();        /* 0x8004AA50 -> +0x218 @0x80100644 */
         }
         break;
     case 2:
@@ -662,7 +662,9 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
         break;
     default:                                               /* 3: Roam @0x801006A0 */
         /* Navigator 0x8004A808(route,1) → s2 (Wake); MAPPING: Steuerziel = Spieler, wake 0 */
-        re15_enemy_steer_point(e, pl->x, pl->z, 16);       /* 0x80015558(+0x1C4/6,16) @0x801006C0 */
+        /* Navigator 0x8004A808(route, a3=1) @0x801006A8 - ROUTEN-Modus. */
+        re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z, e->re2d_route218, 1);
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16); /* @0x801006C0 auf +0x1C4/6 */
         re2d_move(e, 0);                                   /* @0x801006CC */
         if (!e->sca_wall_hit) e->sub_state_2 = 1;          /* +0x110&1 @0x801006D4-E8 */
         break;
@@ -706,7 +708,8 @@ static void re2d_sub1_stalk(re15_actor_t *e, re15_actor_t *pl)
     }
     /* Ziel: Navigator 0x8004A808(target+off) → +0x1C4/6; MAPPING: Spieler + Offsets */
     int32_t tx = pl->x + e->re2d_offx228, tz = pl->z + e->re2d_offz22a;  /* @0x801008F4-928 */
-    int arc = re15_ai_arc_test(e, tx, tz, 16);             /* 0x80015614(...,16) @0x80100938-3C */
+    re15_nav_update_steer(e, (int16_t)tx, (int16_t)tz, e->re2d_route218, 0);  /* a3=0 @0x8010091C/924 */
+    int arc = re15_ai_arc_test(e, e->steer_x, e->steer_z, 16); /* auf +0x1C4/6 @0x80100938-3C */
     e->rot_y = (int16_t)(((int)e->rot_y + arc) & 0xfff);   /* yaw += arc @0x80100944-54 */
     re2d_move(e, 0);                                       /* 0x800152C8(0) @0x80100950 */
 
@@ -768,7 +771,7 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
         }
         if (e->re2d_circle22e) {                           /* Kreis-Modus (Spawn 9) @0x80100C58-60 */
             e->sub_state_2 = 3; e->sub_state_3 = 0;        /* sh 3,6 @0x80100C6C */
-            e->re2d_route218 = 0;                          /* 0x8004AA50 (MAPPING) @0x80100C68-70 */
+            e->re2d_route218 = re15_nav_rand_zone();        /* 0x8004AA50 @0x80100C68-70 */
             e->re2d_nolatch22c = 1;                        /* sb 1,556 @0x80100C74 */
             e->re2d_stuck230 = 0; e->re2z_t15a = 0;        /* @0x80100C78-7C */
         }
@@ -779,7 +782,8 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
         int s2 = 0;
         if (e->re2d_pause21d == 0) {
             /* Navigator (MAPPING: Spieler) + Arc(rate +0x224) @0x80100CEC-D04 */
-            s2 = re15_ai_arc_test(e, pl->x, pl->z, (int)e->re2d_turn224);
+            re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z, e->re2d_route218, 0); /* a3=0 @0x80100CEC */
+            s2 = re15_ai_arc_test(e, e->steer_x, e->steer_z, (int)e->re2d_turn224);
             if (e->re2d_stuck230 >= 16 && s2 == 0)         /* Unstick @0x80100D08-24 */
                 s2 = (int)e->re2d_turn224;
             e->rot_y = (int16_t)(((int)e->rot_y + s2) & 0xfff);   /* @0x80100D28-38 */
@@ -817,7 +821,8 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
     }
     case 2: {                                              /* P2 Halbkreis-Abdrehen @0x80100E4C */
         if (e->sub_state_3 == 0) { e->sub_state_3 = 1; e->re2z_t158 = 0; }   /* @0x80100E60-74 */
-        int s0 = re15_ai_arc_test(e, pl->x, pl->z, 96);    /* rate 96 @0x80100EA0-A4 (MAPPING nav) */
+        re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z, e->re2d_route218, 0); /* @0x80100E8C */
+        int s0 = re15_ai_arc_test(e, e->steer_x, e->steer_z, 96);  /* rate 96 @0x80100EA0-A4 */
         re2d_move(e, -(int)e->re2z_t158);                  /* 0x800152C8(−Akku) @0x80100EAC-B8 */
         re2d_lean(e, s0);                                  /* @0x80100EC4 */
         if (e->sub_state_3 == 1) {
@@ -1180,11 +1185,12 @@ static void re2d_sub8_breakoff(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
         e->sub_state_2 = 1;                                /* sb 1,6 @0x80102284 */
-        e->re2d_route218 = 0;                              /* 0x8004AA50 @0x80102280-8C (MAPPING) */
+        e->re2d_route218 = re15_nav_rand_zone();            /* 0x8004AA50 @0x80102280-8C */
         e->re2z_t158 = (int16_t)(re2d_wait_tbl[re15_re2_rand() & 7u] + 30);   /* @0x80102288-AC */
         e->re2z_flags21a = (uint16_t)(e->re2z_flags21a + 300);   /* Fatigue+300 @0x801022A0-B0 */
     }
-    int s1 = re15_ai_arc_test(e, pl->x, pl->z, (int)e->re2d_turn224);   /* @0x801022D0-E0 (Nav-MAPPING) */
+    re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z, e->re2d_route218, 1); /* a3=1 @0x801022C8 */
+    int s1 = re15_ai_arc_test(e, e->steer_x, e->steer_z, (int)e->re2d_turn224);   /* @0x801022D0-E0 */
     e->rot_y = (int16_t)(((int)e->rot_y + s1) & 0xfff);    /* @0x801022EC-FC */
     re2d_move(e, 0);                                       /* @0x801022F8 */
     if (--e->re2z_t158 == 0) {                             /* @0x80102300-14 */

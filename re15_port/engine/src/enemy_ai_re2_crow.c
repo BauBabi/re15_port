@@ -308,7 +308,7 @@ static void re2c_attack_arbiter(re15_actor_t *e, re15_actor_t *pl)
         if (e->re2d_bite21e >= 11) {                       /* sltiu 0xb @0x8010432C/8C-90 */
             re2c_sub(e, 8);                                /* @0x80104398-9C */
             e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);   /* @0x801043A0-B0 */
-            e->re2d_budget21f = 0;                         /* 0x8004AA50 (MAPPING) @0x801043AC-B4 */
+            e->re2d_budget21f = re15_nav_rand_zone();       /* 0x8004AA50 @0x801043AC-B4 */
         }
         if ((int)e->speed_h >= 101) e->speed_h = (int16_t)(e->speed_h - 4);   /* @0x801043B8-D0 */
         e->re2d_bite21e++;                                 /* @0x801043D4-E4 */
@@ -322,7 +322,7 @@ static void re2c_abort_listener(re15_actor_t *e)
     if (!(e->re2c_flags22a & 0x10u)) return;
     re2c_vol(e, 350);                                      /* @0x80104424-28 */
     e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x9du);/* andi 0x9d @0x80104434-3C */
-    e->re2d_budget21f = 0;                                 /* aa50 (MAPPING) @0x80104438-48 */
+    e->re2d_budget21f = re15_nav_rand_zone();               /* 0x8004AA50 @0x80104438-48 */
     re2c_sub(e, 4);                                        /* @0x80104440-50 */
     e->re2d_abort21c  = 30;                                /* sb 30,540 @0x8010444C-54 */
     e->re2c_flags22a &= (uint16_t)~0x58u;
@@ -918,7 +918,7 @@ static void re2c_exec11_attackrun(re15_actor_t *e, re15_actor_t *pl)
             if ((int)e->speed_h >= 231) re2c_sub(e, 12);   /* STRIKE @0x80101F18-30 */
             else {
                 e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);   /* @0x80101F3C-4C */
-                e->re2d_budget21f = 0;                     /* aa50 (MAPPING) @0x80101F48-5C */
+                e->re2d_budget21f = re15_nav_rand_zone();   /* 0x8004AA50 @0x80101F48-5C */
                 re2c_sub(e, 8);                            /* Trudeln @0x80101F50-58 */
             }
         }
@@ -1046,7 +1046,7 @@ static void re2c_grab_release(re15_actor_t *e, re15_actor_t *pl)
     /* @0x80102848-98: Nav-Reseed + Sub 4; geclaimt → Vol 350 + Broadcast 16 + PL+0x6=3
      * (0x800CFBFE = Victim-FSM-Phase 3 = Release) */
     e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);/* @0x80102848-58 */
-    e->re2d_budget21f = 0;                                 /* aa50 (MAPPING) @0x80102854-68 */
+    e->re2d_budget21f = re15_nav_rand_zone();               /* 0x8004AA50 @0x80102854-68 */
     re2c_sub(e, 4);                                        /* @0x8010285C-64 */
     if (e->re2c_flags22a & 0x4u) {                         /* @0x8010286C-78 */
         re2c_vol(e, 350);                                  /* @0x80102880-84 */
@@ -1786,7 +1786,7 @@ int re15_re2crow_tick(int slot)
         /* Nav-Reseed 1/32 @0x80100508-540: +0x220=rand&0x7f, +0x21F=0x8004AA50() (MAPPING 0) */
         if (e->re2d_rel220 == 0 && (re15_re2_rand() & 0x1fu) == 0u) {
             e->re2d_rel220    = (uint8_t)(re15_re2_rand() & 0x7fu);
-            e->re2d_budget21f = 0;
+            e->re2d_budget21f = re15_nav_rand_zone();   /* 0x8004AA50 */
         }
         /* Navigator-Modus @0x80100544-5F4 (0x8004A808-MAPPING: Steuerziel = Spieler; die
          * Buchhaltung laeuft byte-true): */
@@ -1799,6 +1799,26 @@ int re15_re2crow_tick(int slot)
         } else {
             if (!(e->re2c_flags22a & 0x40u) && e->re2d_rel220 != 0)
                 e->re2d_rel220--;                           /* @0x80100584-A8/5C8-E0 */
+        }
+        /* DER NAVIGATOR-AUFRUF SELBST - er fehlte, und damit waren die ROUTEN-FENSTER TOT.
+         * NUTZER-BEFUND 2026-09-08 (Marke F1239, ROOM1120): eine Kraehe steht bei Abstand
+         * 546 neben dem Spieler in Sub 4 und greift nicht an. Das ist byte-true richtig -
+         * das Anspruchs-Fenster ist dist in [901, 7199] (`addiu -901; sltiu 0x189B`
+         * @0x80104254-60) und der Direktschlag braucht Tempo >= 231 (@0x80104330-38); sie
+         * hat 99. Sie sitzt also in der TOTZONE: zu nah zum Anspruch, zu langsam zum Schlag.
+         * Das Original kommt da ueber die ROUTE heraus: waehrend +0x220 laeuft, steuert der
+         * Navigator auf einen ZUFAELLIGEN Routen-Knoten (0x8004AA50 = rand % Knotenzahl),
+         * also WEG vom Spieler - danach ist der Abstand wieder im Fenster.
+         * Im Port lief die Buchhaltung (rel220, +0x21F) byte-true mit, wurde aber nie
+         * benutzt: der Aufruf in run_all uebergab die RE1.5-Wanderfelder (ai_wp_node,
+         * ai_flags&8), die eine Kraehe nie setzt, und +0x21F war konstant 0.
+         * Modus-Auswahl selbst disassembliert @0x80100544-5F4 (s. oben). */
+        {
+            int modus = 0;
+            if (pl->hp < 0) modus = (e->re2c_pac221 != 0 && e->re2d_rel220 != 0);
+            else            modus = (!(e->re2c_flags22a & 0x40u) && e->re2d_rel220 != 0);
+            re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
+                                  e->re2d_budget21f, modus);
         }
         /* DEC → EXEC Doppel-Dispatch (@0x801005F8-69C; ALT-Tabellen inhaltsgleich). Das
          * Original liest +0x5 fuer den EXEC NEU (`lbu v0,5` @0x80100654 UND @0x8010067C) —

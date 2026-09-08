@@ -104,7 +104,8 @@ int main(void)
     printf("Sichtlinien-Vergleich: RE1.5-Regionenstrahl gegen die Kollisionszellen\n");
     printf("(nur wo die ZELLEN blockieren und der alte Strahl NICHT, kann der Fix wirken)\n");
     const char *raeume[] = { "ROOM1120", "ROOM10C0", "ROOM1130", "ROOM10D0", "ROOM10E0",
-                             "ROOM1140", "ROOM1110", "ROOM1170" };
+                             "ROOM1140", "ROOM1110", "ROOM1170",
+                             "ROOM1190", "ROOM1230" };   /* die Hunde-Raeume */
     for (unsigned i = 0; i < sizeof raeume / sizeof raeume[0]; i++) raum(raeume[i]);
     return 0;
 }

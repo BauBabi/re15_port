@@ -3403,3 +3403,7 @@ target_include_directories(probe_re2_crow_1120 PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 add_executable(probe_los_divergenz probe_los_divergenz.c)
 target_link_libraries(probe_los_divergenz PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_los_divergenz PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_nav_wirkung probe_nav_wirkung.c)
+target_link_libraries(probe_nav_wirkung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_nav_wirkung PRIVATE ${CMAKE_SOURCE_DIR}/include)
