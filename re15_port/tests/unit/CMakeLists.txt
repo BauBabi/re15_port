@@ -3411,3 +3411,7 @@ target_include_directories(probe_nav_wirkung PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_executable(probe_sichtregion probe_sichtregion.c)
 target_link_libraries(probe_sichtregion PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_sichtregion PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_atlas_kollision probe_atlas_kollision.c)
+target_link_libraries(probe_atlas_kollision PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_atlas_kollision PRIVATE ${CMAKE_SOURCE_DIR}/include)

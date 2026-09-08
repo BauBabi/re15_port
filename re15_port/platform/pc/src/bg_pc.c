@@ -162,8 +162,37 @@ static int pri_publish_tim(const uint8_t *data, int size)
     return 1;
 }
 
-int re15_pri_load_cut_atlas(int cut_idx)
+/* NACHGEZEICHNETE MASKEN BRAUCHEN IHREN EIGENEN ATLAS.
+ * NUTZER-MARKEN 2026-09-08 (ROOM10D0 Cut 7, ROOM10E0 Cut 7): "Leons Bein blitzt durch die
+ * Tischplatte" / "Leon blitzt durch die Schreibmaschine". Gemessen (Spielbild gegen
+ * Hintergrundbild): 414 Figurpunkte werden gezeichnet, OBWOHL eine Maske mit Tiefe 47..55
+ * (Kamera-z 3008..3520) darueberliegt, waehrend der Spieler bei 5852..6233 steht - die Maske
+ * ist da, ist naeher, und verdeckt trotzdem nicht.
+ * URSACHE: der Editor packt fuer nachgezeichnete Masken einen EIGENEN Atlas
+ * (MASKS/ROOM..._PRI##.TIM), weil srcX/srcY nur u8 sind (@0x80039408/0x80039418) und ein
+ * 320 Pixel breites Hintergrundbild damit nicht adressierbar waere. Dieser Lader nahm aber
+ * ZUERST den Atlas aus dem BSS-Klotz - und genau die Cuts, die nachgezeichnet werden mussten,
+ * haben Original-GRAFIK (nur keine Geometrie). Der Original-Atlas gewann also, und die
+ * nachgezeichneten Rechtecke griffen an voellig anderen Stellen ins Bild.
+ * Cuts OHNE Original-Grafik waren nie betroffen - deshalb funktionierte der Tresen in
+ * ROOM1120 und die Schreibmaschine nicht. */
+int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
 {
+    char rel[96];
+    uint8_t *buf = NULL; int sz = 0;
+
+    if (nachgezeichnet) {
+        /* Die Rechtecke stammen aus dem R15M-Container - ihre srcX/srcY sind fuer DIESEN
+         * Atlas gepackt. Jeder andere waere ein anderes Bild an denselben Koordinaten. */
+        snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", g_current_room_id, cut_idx);
+        buf = re15_pc_read_cd(rel, &sz);
+        if (!buf) { re15_render_pc_set_pri_atlas(NULL, 0, 0); return 0; }
+        int ok2 = pri_publish_tim(buf, sz);
+        free(buf);
+        if (!ok2) re15_render_pc_set_pri_atlas(NULL, 0, 0);
+        return ok2;
+    }
+
     /* 1. Laufzeit-Auszug aus dem BSS-Chunk (byte-true, deckt alle 359 Cuts). */
     if (s_pri_tim_len > 0 && s_pri_tim_room == (int)g_current_room_id
         && s_pri_tim_cut == cut_idx) {
@@ -171,20 +200,13 @@ int re15_pri_load_cut_atlas(int cut_idx)
     }
 
     /* 2. Rueckfall: vorextrahierte Datei (Alt-Baum, 209 Cuts). */
-    char rel[96];
-    uint8_t *buf = NULL; int sz = 0;
     snprintf(rel, sizeof rel, "BSS/ROOM%04X/PRI%02d.TIM", g_current_room_id, cut_idx);
     buf = re15_pc_read_cd(rel, &sz);
     if (!buf) {
         snprintf(rel, sizeof rel, "room%04x_pri%02d.tim", g_current_room_id, cut_idx);
         buf = re15_pc_read_cd(rel, &sz);
     }
-    /* 3. NACHGEZEICHNETER Atlas (Maskeneditor, re15_port/tools/maske). Fuer die Cuts,
-     *    in denen der Prototyp gar keine Vordergrundgrafik hinterlassen hat, gibt es
-     *    keinen Atlas im BSS — der Editor packt dann einen aus dem Hintergrundbild.
-     *    Noetig ist das, weil srcX/srcY u8 sind (@0x80039408/0x80039418): ein 320
-     *    Pixel breites Bild waere nicht adressierbar, der Hintergrund kann also nicht
-     *    direkt als Maskentextur dienen. */
+    /* 3. Nachgezeichneter Atlas als letzter Rueckfall (Cut ohne jede Vordergrundgrafik). */
     if (!buf) {
         snprintf(rel, sizeof rel, "MASKS/ROOM%04X_PRI%02d.TIM", g_current_room_id, cut_idx);
         buf = re15_pc_read_cd(rel, &sz);
@@ -195,6 +217,8 @@ int re15_pri_load_cut_atlas(int cut_idx)
     if (!ok) re15_render_pc_set_pri_atlas(NULL, 0, 0);
     return ok;
 }
+
+int re15_pri_load_cut_atlas(int cut_idx) { return re15_pri_load_cut_atlas_ex(cut_idx, 0); }
 
 #define BG_WIDTH   320
 #define BG_HEIGHT  240

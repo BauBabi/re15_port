@@ -4506,6 +4506,7 @@ re_title:;
                  * Atlas zurueckgewonnen und als Seitendatei nachgereicht.
                  * ⛔ NUR wenn das Original eine NULL-Sektion fuehrt — jeder Cut, den die
                  * Kuenstler bearbeitet haben, bleibt unangetastet byte-true. */
+                int pri_nachgezeichnet = 0;
                 if (pri_n == 0 && active_cut_idx >= 0) {
                     static uint8_t *s_msk = NULL; static int s_msk_size = 0;
                     static unsigned s_msk_room = 0xFFFFu;
@@ -4521,6 +4522,8 @@ re_title:;
                                                                     active_cut_idx);
                         if (moff)
                             pri_n = re15_pri_parse_section(s_msk, (size_t)s_msk_size, moff, &pri);
+                        /* Merker: die Rechtecke stammen aus dem R15M-Container. */
+                        if (pri_n > 0) pri_nachgezeichnet = 1;
                     }
                 }
                 /* sprite.pri FOREGROUND OCCLUSION (2026-06-09): the AZ-round bug
@@ -4532,7 +4535,8 @@ re_title:;
                  * FUN_800392d4/FUN_80039590). Cuts with no foreground → atlas absent
                  * → overdraw off. */
                 extern int re15_pri_load_cut_atlas(int cut_idx);
-                int has_fg = re15_pri_load_cut_atlas(active_cut_idx);
+                extern int re15_pri_load_cut_atlas_ex(int cut, int nachgezeichnet);
+                int has_fg = re15_pri_load_cut_atlas_ex(active_cut_idx, pri_nachgezeichnet);
                 /* Fuer die RE15_PRI_LOG-Messschiene: welcher Cut wird gezeigt, und traegt
                  * er ueberhaupt einen Vordergrund-Atlas? Ohne beides ist "0 Masken" nicht
                  * zu deuten. */
