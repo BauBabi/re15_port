@@ -1,91 +1,64 @@
-# RE1.5 Port — v0.7.18 (Early Preview)
+# RE1.5 Port — v0.7.19 (Early Preview)
 
-**Die Krähen sehen jetzt durch das, was sie blockiert, nicht mehr hindurch.**
-
----
-
-## Der Krähen-Befund
-
-Du: *„sie folgen Leon stumpf linear, wenn ein Tresen im Weg ist, fliegen sie stumpf linear
-Richtung Leon, auch wenn der Tresen zwischen beiden die Krähe blockt. Die Krähe müsste
-erkennen, dass sie lange geblockt wurde, und dann etwas anderes probieren."*
-
-**Das Original hat genau diesen Ausweg — er hängt an der Sichtlinie.** Die zwei
-Angriffs-Zustände haben nur zwei geometrische Ausgänge: den Blickkegel auf dich und ein
-Sicht-Bit. Der Wand-Prober, der ein Hindernis erkennt und umlenkt, läuft **nur** in den
-Flug-Zuständen davor. Im Original macht das nichts, weil der Sichtstrahl dieselbe Kulisse
-abtastet, die auch die Bewegung stoppt: was den Flug blockt, bricht auch die Sicht → das
-Bit fällt → die Krähe fällt in den Flugzustand zurück → dort weicht sie aus.
-
-**Der Port hatte diese Kopplung nicht.** Der Sichtstrahl lief über die *Boden-Regionen*,
-die Klemme über die *Kollisionszellen* — zwei verschiedene Mengen. Meldet der Strahl „frei",
-wo die Zelle den Flug festhält, fliegt die Krähe stur weiter gegen den Tresen.
-
-**Dass es diese Lücke wirklich gibt, ist jetzt gemessen** (Gitter aus Standort-Paaren je
-Raum, nur Paare in Krähen-Reichweite). Anteil der Paare, die von den Zellen blockiert
-werden, vom alten Strahl aber nicht:
-
-```
-ROOM1140  33,6 %      ROOM10C0  24,1 %      ROOM1130  23,6 %      ROOM1120  18,8 %
-ROOM1110  16,6 %      ROOM10E0  14,0 %      ROOM10D0   4,2 %      ROOM1170   1,5 %
-```
-
-Umgekehrt (nur der alte Strahl blockt) praktisch nie — 0 bis 21 von Zehntausenden.
-
-An einem solchen Paar über 3600 Ticks:
-
-```
-                        vorher                     jetzt
-Zustände               enthält 13 und 14          keine Angriffs-Zustände
-Anflug-Ticks                   75                          0
-Sicht-Bit          1 („frei" durch den Tresen)              0
-```
-
-Die Krähe legt sich also nicht mehr auf eine Angriffslinie **durch** ein Hindernis fest.
-
-⚠️ **Ehrlich dazu:** der von dir beschriebene *Stillstand* ist damit nicht reproduziert — in
-beiden Sondenläufen bewegt sich die Krähe. Belegt ist der Mechanismus-Wechsel, nicht das
-Verschwinden des Symptoms. Dein nächster Durchlauf entscheidet; die F9-Marke schreibt jetzt
-ja den Krähen-Zustand mit.
-
-Und ein Fehler von mir, den du wissen sollst: mein **erster** Nachweis bewies gar nichts.
-Ich hatte ein Standort-Paar gewählt, an dem *beide* Strahlen blockieren — beide Stände
-lieferten identische Zahlen. Die Sonde sucht sich das Paar jetzt selbst aus der
-Divergenzmenge.
+**Eine flache Maske deckt nur noch da, wo niemand stehen kann.**
 
 ---
 
-## Masken
+## Zwei deiner Marken widersprachen sich
 
-**Zombies durch die Wand** (dein Marker in ROOM10E0). Mein Fehler aus v0.7.13: die
-automatische Zellwahl nahm für die Rückwand die *hinterste* Zelle (Entfernung 176…263) —
-damit ist die Wand ferner als die Zombies dahinter und verdeckt sie nicht. Die Auswahl misst
-nur die Bildübereinstimmung; *welche* Zelle die Wand ist, entscheiden erst die Standorte der
-Figuren davor und dahinter:
+Der Vordergrund-Teppich in ROOM10E0 (Cut 7) hat mich in beide Richtungen gefahren:
+
+* **F1585** — mit der vollen Teppichmaske schnitt die Teppichkante eine **Leiche** ab, die
+  auf dem Teppich lag.
+* **F331 / F436** — ohne Teppichmaske **blitzte die Figur an 146 Punkten durch**.
+
+Beides ist derselbe Mechanismus. Eine Maske verdeckt, wenn ihre Tiefe kleiner ist als die
+des gezeichneten Dreiecks. Ein Teppich hat aber keine Vorderkante, hinter der alles gleich
+weit weg wäre — und alles, was **auf** ihm liegt, hat praktisch **seine** Tiefe. Der
+Vergleich wird zum Münzwurf und fällt zugunsten der Maske aus. Die Leiche verschwindet.
+
+## Die Frage, die beides trennt
+
+**„Kann dort überhaupt jemand stehen?"**
+
+* Ein Bodenpunkt, der **begehbar** ist, darf nie maskiert werden — dort steht die Figur
+  selbst, oder es liegt eine Leiche.
+* Ein Bodenpunkt, der **in einer soliden Kollisionszelle** liegt (unter einem Möbel, in
+  einer Wand), kann niemanden tragen — dort ist der Teppich echter Vordergrund und darf
+  verdecken.
+
+Beleg für „begehbar" sind die soliden Typ-1-Zellen des Bandes (Filter
+`(type&0x0f)==1 && (u0&1) && (floor>>4)==band`, Kollisionsoffset RDT `0x20`) — an 3727
+deiner eigenen Standorte zu 97,1 % bestätigt. Kein neuer Schätzwert.
+
+## Gemessen
 
 ```
-                      dein Kopf      Zombie dahinter      Türöffnung
-                      soll >103,3    soll <166            soll frei
-alte Zelle            245..256       228..248  zu fern    221..225
-neue Zelle            126..131       117..131  richtig    kein Treffer = frei
+Teppichpunkte gesamt                        7700
+davon vor einer soliden Zelle                518   -> maskiert (515 nach Kachelraster)
+davon auf begehbarem Boden                  7182   -> bleiben frei
+Cut 7 danach                     103 Rechtecke, 44,6 % Bildfläche, alle 10 Winkel intakt
 ```
 
-Der Zombie wird jetzt auf 803 von 1071 Punkten verdeckt, die Türöffnung bleibt auf 982 von
-1173 frei, und dein Kopf bleibt an allen drei Marken in **jeder Zeile** unangetastet.
+Der volle Teppich als siebtes Objekt hätte den Kachelhaushalt gesprengt (nur noch **8**
+statt 103 Rechtecke, 38583 Punkte der gewollten Fläche hätten gefehlt). Die Regel steckt
+deshalb schon in der Freistellung; der Generator prüft sie erneut und meldet
+„0 begehbar ausgelassen".
 
-**Die Pflanze** (dein „kleines Stück durchblitzen"). Der Blickwinkel hatte nur eine
-797-Punkte-Freistellung — der Strauch links war gar nicht erfasst. Die größte Blattgruppe war
-zu 22 % gedeckt; in deinem Körperkasten hatten 126 von 194 Blattpunkten keine Maske. Die
-dünnen Blätter sind farblich kaum vom Putz zu trennen, deshalb die **Hülle** statt der
-Blattkontur — das ist hier zulässig, weil die Maske Hintergrundpunkte über dich malt, ein
-gefüllter Zwischenraum also genau das zeigt, was man durch die Pflanze sähe. 126 → **0**.
+## ⛔ Was das NICHT löst — und warum das so bleiben muss
 
-⛔ **Nicht gelöst: der Klappstuhl.** Gemessen: seine Freistellung ist nur ein schmales Band
-entlang *einer* Strebe — Sitzfläche und übriges Gestell haben keine Maske, allein in deinem
-Körperkasten 2278 Punkte Stuhlmaterial. Der Tisch daneben endet wirklich bei Bildspalte 49,
-seine Freistellung stimmt. Eine Nachbildung per Farbe scheitert: Sitzfläche und **Fußboden**
-rechts davon sind nahezu gleich dunkelgrün, jede Schwelle nimmt den Boden mit — und ein
-maskierter Boden würde dich beim Danebenstehen verschlucken. Das braucht eine gezeichnete
-Freistellung von dir.
+Von den 214 Durchbruchpunkten der Marken F331/F436 liegen **213 auf begehbarem Boden**
+(einer in einer Zelle). Die neue Maske deckt **0** davon.
 
-282/282 Tests.
+Das ist kein Versäumnis, sondern die Regel: dort steht der Spieler selbst. Diese Punkte zu
+maskieren wäre exakt der Fehler, den du bei F1585 gemeldet hast. Wenn dort weiter etwas
+durchblitzt, ist die Ursache **nicht** eine fehlende Maske — dann melde bitte eine Marke,
+und ich messe an dieser Stelle den Zeichenpfad statt der Maske.
+
+## Weiter offen
+
+* Der Klappstuhl in ROOM10D0 Cut 7 braucht eine Freistellung von Hand — Sitzfläche und
+  Gestell sind farblich nicht vom Boden zu trennen; automatisch freistellen hieße den
+  Boden mitmaskieren.
+
+Tests: **282/282** (im Release-Container).
