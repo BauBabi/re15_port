@@ -7437,6 +7437,32 @@ int re15_re2z_tick(int slot)
      * ohne Raumgeometrie meldet er FREI (Default fuer synthetische Tests — verify_zombie_conf.md
      * Risiko 5). Vorher war das Bit an allen sechs Lesern konstant 1 gemappt -> Zombies
      * weckten/lungten durch Waende. */
+    /* NACHTRAG 2026-09-08 - die Luecke ist jetzt ausgemessen, nicht mehr nur benannt.
+     * WER LIEST DAS BIT: eine jal-/Feldsuche ueber alle RE2-Overlays findet die Leser
+     * AUSSCHLIESSLICH hier im Zombie-Overlay, sechsmal, und alle tun dasselbe:
+     *     80101308  lhu  v0,340(s0)      ; +0x154
+     *     80101310  andi v0,v0,0x800
+     *     80101314  beq  v0,zero,skip
+     *     80101318  addiu v0,zero,257    ; 0x101
+     *     8010131c  sw   v0,4(s0)        ; Zustandswort := state 1 / sub 1 = WALK
+     * (ebenso @0x8010134C, @0x80101390, @0x80101568, @0x80101688, @0x80103AE8). Es ist also
+     * das "ich sehe ihn, losgehen"-Signal des Zombies - und der Port bildet alle sechs ab.
+     * Die Kraehe liest es NICHT (ihr Kanal ist +0x22A&2 aus Modus 0x8400).
+     * WIE GROSS DIE ERSETZUNG IST: das Original hat also ZWEI getrennte Sicht-Kanaele mit
+     * verschiedenen Modi, der Port speist beide aus re15_re2_los_clear. Gemessen an den
+     * RE2-Kollisionslinien selbst (Block = [Raumdaten+0x20], Anzahl u32 @Block+4, Saetze
+     * 16 B, Attribut u16 @Satz+0x08 - Layout aus FUN_80050858 abgelesen), 250 Raeume,
+     * 5259 Saetze:
+     *     beide Modi blocken   4270  81,2 %
+     *     nur 0x8400 (Kraehe)   703  13,4 %
+     *     nur 0x2000 (Zombie)   136   2,6 %
+     *     keiner                150   2,9 %
+     * Die Kanaele ueberlappen also zu 81 %; die Kraehen-Sicht ist die STRENGERE (94,6 %
+     * der Saetze blocken sie, beim Zombie 83,8 %). Der Port unterscheidet die beiden ueber
+     * das RE1.5-Analogon - die Solid-Maske des Aktors (+0x1D7): ein KRIECHER (8) bekommt
+     * damit einen anderen Strahl als die Kraehe (4), ein STEHENDER Zombie (4) denselben.
+     * Die restlichen 16 % waeren nur mit einem RE1.5-Zellattribut abbildbar, das dem
+     * RE2-Modus entspricht - ein solches gibt es nicht. OFFEN und beziffert. */
     e->re2z_los154 = (uint8_t)(re15_re2_los_clear(e, pl) ? 1u : 0u);
 
     /* ⛔ D15.2 GEFIXT — SKRIPT-WECKER fuer die Liegenden (Nutzer-Report ROOM1100: nach dem
