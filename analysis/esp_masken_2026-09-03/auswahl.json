@@ -555,17 +555,27 @@
  },
  "ROOM10D0": {
   "1": {
-   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.",
+   "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n⛔ 2026-09-08 GETEILT (Nutzer-Marken F191 und F367, \"gruene liege wenn ich daneben stehe ueberdeckt noch immer\"). Die Freistellung 01.png enthielt den HINTEREN Klapptisch als EIN Objekt unter dem Namen \"Hocker\" - also eine waagerechte Platte UND ein senkrechtes Gestell zusammen. Nach dem RE2-Retail-Vorbild (4253 Maskengruppen: ein Gegenstand = eine Gruppe mit im Median 5 gestuften Tiefen) kann das nie beides stimmen. Getrennt am Hintergrundbild build/bg_ppm/ROOM10D01.ppm ueber die gruene Plattenfarbe (g > r+10 und g > b+10): 344 Punkte Platte, 924 Gestell, zusammen 1268 = die Vorlage.\n  * GESTELL \"spalten\": die Beine stehen auf dem Boden, ihre unterste Silhouettenkante IST der Bodenkontakt. Tiefe 106..292. Gemessen an den Marken: F191 481 -> 188 verdeckende Punkte, F367 497 -> 99.\n  * PLATTE \"flach\": alle drei Modelle geben 200..306, also weit HINTER dem Spieler (119 bzw. 112) - sie verdeckt ihn in keinem Fall (0 Punkte an beiden Marken) und deckt nur den Flur dahinter ab. Das ist richtig: eine Tischplatte auf Huefthoehe, fast von der Kante gesehen, trifft den Boden erst weit hinten.\n  ⛔ VORHER stand das Ganze auf \"aufrecht\", also EIN Standpunkt (der tiefste Silhouettenpunkt = das vorderste Bein) fuer Platte UND Gestell: pauschal Tiefe 97..106, damit naeher als der Spieler an JEDER seiner 248 Standorte in diesem Winkel.",
    "objekte": [
     {
-     "name": "Hocker",
-     "png": "pri/10D0/01.png",
+     "name": "Tischplatte hinten",
+     "png": "pri/10D0/01a_tischplatte.png",
+     "x": 130,
+     "y": 88,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "flach": true
+    },
+    {
+     "name": "Tischgestell hinten",
+     "png": "pri/10D0/01b_gestell.png",
      "x": 124,
      "y": 87,
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "aufrecht": true
+     "spalten": true
     }
    ]
   },
