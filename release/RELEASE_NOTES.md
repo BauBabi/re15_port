@@ -1,69 +1,50 @@
-# RE1.5 Port — v0.7.20 (Early Preview)
+# RE1.5 Port — v0.7.21 (Early Preview)
 
-**Die Schreibmaschine schnitt dich weg — und die Tischplatte hatte gar keine Maske.**
+**Diesmal war ich es dreifach: Profil, Median, und eine Freistellung ohne Löcher.**
 
 ---
 
-## Marke 1: „Leon blitzt durch die Schreibmaschine" (ROOM10E0, F376)
+Deine beiden Marken (F315, F690) zeigten dieselbe Fehlerklasse aus drei Quellen. Der
+Kern: eine Masken-Kachel trägt **eine** Tiefe — und sobald du direkt am Gegenstand
+stehst, überstreicht dein Körper selbst ein ganzes Tiefenband (an F315: Kamera-z
+3486…4498). Jede Kacheltiefe, die in diesem Band landet, schneidet irgendein Dreieck
+aus dir heraus.
 
-Es war das Gegenteil. Die Schreibmaschine verdeckte **zu viel**.
+## 1. Schreibmaschine (ROOM10E0): eine Tiefe statt Zeilenprofil
 
-Du stehst bei Welt (1232, 0, −982). Deine Körperlinie liegt in den Bildzeilen der
-Maschine bei Tiefe **61,2…68,2**; die Maschine steht geometrisch bei **64,4…71,5** — du
-bist also **davor**. Ihre Maske trug aber **58,0…64,4** und schnitt dich über **1840
-Bildpunkte** ihrer Silhouette weg. Nach dem Fix: **0**.
+An F315 wurden dir **Papier und Walze über den Bauch geblittet**. Die Maschine hat
+keine Kollisionszelle — du kannst bis in ihre Standfläche laufen. Damit liegt *jede*
+Zeile ihres Tiefenprofils (64…71) mitten in deinem Körperband; irgendetwas verliert
+immer. Die einzige Tiefe, die dich davor verschont **und** dich dahinter verdeckt, ist
+ihr gemessener Bodenkontakt: Kamera-z 4577 → **Tiefe 71, einheitlich**.
 
-**Ursache: der Eichfaktor 0,90.** Der korrigiert die *Silhouetten*-Schätzung (Bodenkontakt
-je Bildspalte) — deshalb verzichtet die Kollisionstiefe schon immer darauf. Er lief aber
-auch über `aufrecht`, und das rechnet geometrisch: gemessener Standpunkt, exakte
-Trigonometrie mit eingebauter Gegenprobe. Dort ist er schlicht falsch.
+Gemessen an deiner Marke: dein fernstes gezeichnetes Dreieck 4498 < 4544 → **0 von
+2330** Maskenpunkten in deinem Kasten schneiden noch (vorher die komplette
+Maschinen-Silhouette).
 
-Dass 1,00 richtig ist, ist zweifach gemessen:
+## 2. Tisch-Quader (ROOM10D0): Maximum statt Median, aufrunden statt kappen
+
+Die Kacheln am Tischrand erbten per **Median** die näheren Deckflächen-Punkte (63…67
+gegen deine Körperlinie 67,7…73,7) und `int()` kappte zusätzlich bis zu 63 Einheiten in
+die schädliche Richtung. Jetzt gilt dieselbe Regel wie bei der Kollisionstiefe: **eine
+Kachel verdeckt nur, wenn sie ganz vor dir liegt** (Maximum je Feld, aufgerundet).
+
+## 3. Stuhl (ROOM10D0): die Rahmen-Lücken sind jetzt offen
+
+Das war dein „**Leon dahinter transparent**": die Stuhl-Freistellung füllte die offenen
+Lücken zwischen den Rohren. Stehst du dahinter, bist du durch die Lücken sichtbar — und
+genau dort wurde der **Boden** über dich geblittet. 245 von 2898 Punkten entfernt; die
+Lücken zeigen jetzt dich statt Fliesen.
+
+## Gemessen, an deinen drei letzten Marken
 
 ```
-Quadertiefe gegen 260858 Punkte aus Capcoms EIGENEN Maskenrechtecken (31 Winkel)
-   Faktor   Medianfehler   zu nah    zu fern
-    0.90       -8.6        52.7 %     9.9 %
-    1.00       -1.0        21.7 %    21.6 %     <- ausgeglichen
+F315   0 schneidende Maskenpunkte im Spielerkasten          (vorher: ganze Maschine)
+F690   re-geblittete Patches 57 -> 30, und die 30 liegen AUF dem Stuhl
+       (Lehnenoberkante, hinteres Rohr - der ist bei dieser Kamera wirklich
+        vor dir; das ist korrekte Verdeckung, keine Lücke)
+F3218  hinter dem Tisch bleibst du verdeckt: 408 von 411 Beinpunkten
+       (3 Randpunkte kostet die Aufrundung - die harmlose Richtung)
 ```
 
-## Marke 2: „Leons Bein blitzt durch die Tischplatte" (ROOM10D0, F3218)
-
-Die Holztischplatte hatte **überhaupt keine Maske**. Sie ist farblich nicht vom dunklen
-Raum zu trennen (43, 30, 11) — jede Farbfreistellung hätte den Boden mitgenommen.
-
-**Neues Modell: die Kollisionszelle als QUADER.** Der bisherige Sehstrahl kennt nur
-unendlich hohe *Säulen ohne Deckel*: bei einem Hindernis, über das die Kamera hinwegsieht,
-fällt er durch und trifft erst die gegenüberliegende Innenseite — viel zu fern, und eine
-Silhouette gibt es gar nicht. Mit Deckfläche liefert die Zelle **beides** ohne eine einzige
-Farbentscheidung.
-
-```
-ROOM10D0 Cut 7, Zelle x-1350..-50 z26300..27850, Höhe -1100
-   Höhe gemessen an der Deckfläche: IoU 0,561, 786 der 836 braunen Plattenpunkte
-   Ergebnis: 411 von 411 Figurpunkten unterhalb der Tischkante verdeckt (vorher 0)
-```
-
-Dazu in ROOM10E0 die **Trennwand rechts** (Zelle x1700..4100 z−4700..−900, Höhe −1400),
-zweifach eingemessen: Kantenlage 53,99 gegen 15,64 beim zweitbesten Wert, und die
-Deckfläche trifft bei −1400 alle 836 Punkte des hellen Bands.
-
-## ⛔ Warum ich es zweimal nicht gefunden habe
-
-Meine Messschiene zählte nur Bildpunkte, an denen die Figur **gezeichnet** wurde. Wo eine
-Maske sie zu Unrecht wegschneidet, ist das Bild gleich dem Hintergrund — der Fehler fällt
-aus der Zählung heraus. Deshalb meldete ich zweimal „der Renderer ist sauber", während du
-den Fehler die ganze Zeit gesehen hast.
-
-`selbsttest.geometrische_tiefen()` prüft jetzt für jedes geometrische Modell, dass die
-Tiefe am Bodenkontakt gleich `vz_at_floor` ist. 11 Objekte — mit dem alten Faktor wären
-**alle** durchgefallen.
-
-## Noch offen
-
-Oberhalb der Tischkante in ROOM10D0 bleibt dein Oberschenkel sichtbar — das ist richtig,
-der Tisch ist 1,1 m hoch und du stehst dahinter. Sollte dort trotzdem etwas verdecken
-müssen, ist es die **zweite, hellere Klappstuhl-Lehne** dahinter; die braucht eine
-Freistellung von Hand und ist noch nicht drin.
-
-Tests: **282/282** (im Release-Container).
+Tests: **282/282** (im Release-Container), `selbsttest.geometrische_tiefen` 10/10.
