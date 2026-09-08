@@ -414,24 +414,31 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     KANTEN = (8, 10, 12, 16, 20, 24, 32, 40, 48, 64)
     kosten = [geom.gitter_kosten(reg, KANTEN) for (_, reg, _) in stuecke]
     import itertools
-    wahl = None
-    for komb in itertools.product(*[[k for k in KANTEN if k in ko] for ko in kosten]):
-        n = sum(kosten[i][k][0] for i, k in enumerate(komb))
-        f = sum(kosten[i][k][1] for i, k in enumerate(komb))
-        if n > rest or f > kap:
-            continue
-        note = (max(komb), sum(komb), f)
-        if wahl is None or note < wahl[0]:
-            wahl = (note, komb, n, f)
-    if wahl is None:
-        # Nichts passt: groebste Kachelung, damit ueberhaupt etwas gedeckt ist.
-        komb = tuple(max(ko) for ko in kosten)
-        n = sum(kosten[i][k][0] for i, k in enumerate(komb))
-        f = sum(kosten[i][k][1] for i, k in enumerate(komb))
-        print("     ⚠ keine Kombination haelt beide Grenzen - groebste Kachelung "
-              "(%d Rechtecke, %d Atlaspunkte)" % (n, f))
-    else:
-        komb, n, f = wahl[1], wahl[2], wahl[3]
+    # ⛔ DIE SCHRANKE GILT FUER DAS ERGEBNIS, NICHT FUER DIE SCHAETZUNG (Marke F591,
+    # 2026-09-08): die Kombinationssuche hielt 104 Rechtecke ein, der fertige Bau hatte
+    # 117 - Atlas-Zerlegung und Packung koennen Kaesten NACHTRAEGLICH vermehren. Die
+    # Engine liest aber hart hoechstens 105 (RDT-Kopf, re15_pri_parse_section); alles
+    # danach fiel STILL weg, und genau die letzten Objekte bekamen Loecher. Deshalb:
+    # bauen, NACHZAEHLEN, bei Ueberlauf mit verschaerfter Schranke neu waehlen.
+    def _waehle(_rest):
+        wahl = None
+        for komb in itertools.product(*[[k for k in KANTEN if k in ko] for ko in kosten]):
+            n = sum(kosten[i][k][0] for i, k in enumerate(komb))
+            f = sum(kosten[i][k][1] for i, k in enumerate(komb))
+            if n > _rest or f > kap:
+                continue
+            note = (max(komb), sum(komb), f)
+            if wahl is None or note < wahl[0]:
+                wahl = (note, komb, n, f)
+        if wahl is None:
+            komb = tuple(max(ko) for ko in kosten)
+            n = sum(kosten[i][k][0] for i, k in enumerate(komb))
+            f = sum(kosten[i][k][1] for i, k in enumerate(komb))
+            print("     ⚠ keine Kombination haelt beide Grenzen - groebste Kachelung "
+                  "(%d Rechtecke, %d Atlaspunkte)" % (n, f))
+            return komb, n, f
+        return wahl[1], wahl[2], wahl[3]
+    komb, n, f = _waehle(rest)
     boxes, herkunft = [], []
     for i, (name, reg, d) in enumerate(stuecke):
         for r_ in geom.gitter_mit_kante(reg, komb[i]):
@@ -469,6 +476,42 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         _st = np.max if (src < len(_koll_aktiv) and _koll_aktiv[src]) else np.median
         masks.append((ax, ay, x, y, w, h, int(_st(win))))
     if not masks:
+        return None
+    # Nachzaehlung gegen die ENGINE-Schranke (s.o.): bei Ueberlauf ein zweiter Lauf
+    # mit entsprechend verringerter Schaetz-Schranke.
+    _versuch = 0
+    while len(masks) > rest and _versuch < 4:
+        _versuch += 1
+        _neu_rest = rest - (len(masks) - rest)
+        print("     ⚠ %d Rechtecke im BAU (> %d) - Neuwahl mit Schranke %d"
+              % (len(masks), rest, _neu_rest))
+        komb, n, f = _waehle(_neu_rest)
+        boxes, herkunft = [], []
+        for i, (name, reg, d) in enumerate(stuecke):
+            for r_ in geom.gitter_mit_kante(reg, komb[i]):
+                boxes.append(r_); herkunft.append(i)
+        print("     Kachelung: %s -> %d Rechtecke (Schaetzung)"
+              % (", ".join("%s=%d" % (stuecke[i][0][:14], k) for i, k in enumerate(komb)), n))
+        tim, place, boxes2 = atlasmod.build(bg, region_all, boxes)
+        if tim is None:
+            return None
+        _, herk2 = atlasmod.split_oversize(boxes)
+        groups, masks = [], []
+        for i, (x, y, w, h) in enumerate(boxes2):
+            if i not in place:
+                continue
+            ax, ay = place[i]
+            src = herkunft[herk2[i]] if i < len(herk2) else 0
+            win = stuecke[src][2][y:y + h, x:x + w]
+            win = win[win > 0]
+            if len(win) == 0:
+                continue
+            groups.append((1, x - ax, y - ay))
+            _st = np.max if (src < len(_koll_aktiv) and _koll_aktiv[src]) else np.median
+            masks.append((ax, ay, x, y, w, h, int(_st(win))))
+    if len(masks) > rest:
+        print("     ⛔ auch nach %d Versuchen %d > %d Rechtecke - Abbruch statt stiller Loecher"
+              % (_versuch, len(masks), rest))
         return None
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
