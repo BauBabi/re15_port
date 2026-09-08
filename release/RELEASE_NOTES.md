@@ -1,38 +1,34 @@
-# RE1.5 Port — v0.7.23 (Early Preview)
+# RE1.5 Port — v0.7.24 (Early Preview)
 
-**Du hattest recht: alles Nicht-Transparente deckt. Punkt.**
+**Dein Original deckt als Ganzes: das Pult ist ein Tresen.**
 
 ---
 
-## Warum dein einfacher Satz die richtige Lösung war
+## Marke F591: „Leons komplette Beine schauen immer noch durch"
 
-Die Vorderwand-Kollision klemmt dich bei z=−982 (deine 1695 geloggten Positionen enden
-exakt dort). Die Vorderkante der Schreibmaschine liegt bei z=−958. **Du kannst nie vor
-der Maschine stehen** — nur daneben oder dahinter. Für solche Objekte ist „deckt immer"
-schlicht die korrekte Semantik.
+Meine vier Teil-Freistellungen deckten nur die *Gegenstände* (Maschine, Schrank,
+Lehne, Kante) — die grüne Pultfläche darunter blieb frei, und deine Beine zeichneten
+sich davor. Das war der letzte fehlende Schritt zu dem, was du von Anfang an gesagt
+hast.
 
-Mein Fehler war die Leserichtung deiner Marken: ich habe „Leon blitzt durch die
-Schreibmaschine" als *„Maske deckt zu viel"* gelesen und die Tiefe immer weiter
-weggenommen (58…64 → 65…68 → 71 → ganz gelöscht). Alle drei Tiefen lagen **mitten in
-deinem Körper-Tiefenband** (gezeichnete Dreiecke 3466…4545) — das erzeugte genau das
-Geflacker, das du gemeldet hast: halb bedeckt, halb durchgestreckt. Die richtige
-Richtung war **näher**, nicht ferner.
+Jetzt ist es **ein** Objekt: dein unverändertes Original (`07_01.png`, 14303 Punkte,
+der komplette Pultbereich) mit fester naher Tiefe. Wer im Pultbereich steht, steht
+**hinter dem Tresen** — die Beine verschwinden, der Oberkörper schaut heraus. Dieselbe
+Optik wie der Tresen in ROOM1120. An deiner Marke simuliert: links Beine über dem
+Pult, rechts vollständig verschluckt.
 
-## Was jetzt gilt (ROOM10E0, Winkel 7)
+## Ein Zerleger-Fehler, den deine Marke aufgedeckt hat
 
-Schreibmaschine, Schrank rechts, Stuhllehne und Kachelkante: **feste Tiefe 50** — unter
-dem kleinsten je gezeichneten Spieler-Dreieck aller deiner F9-Marken (3466 = Tiefe 54,
-also 266 Einheiten Abstand). Ergebnis: das Objekt steht immer vollständig und ruhig vor
-der Figur. An deinen drei Maschinen-Marken (F376/F315/F208) simuliert und angesehen:
-Maschine samt Papier und Walze komplett vor Leon, keine Fransen.
+Die 105er-Schranke der Engine griff nur auf die *Schätzung* der Kachelwahl; Packung und
+Zerlegung vermehrten die Kästen nachträglich (104 geschätzt, **117 gebaut**). Die Engine
+liest hart 105 — der Rest fiel **still** weg, mit Löchern in den zuletzt gepackten
+Objekten. Jetzt wird das Ergebnis nachgezählt und bei Überlauf neu gewählt (117 → 86).
 
-Die zellengestützten Objekte (Rückwand, Liege, Trennwand, Tisch-Quader in 10D0) behalten
-ihre echten Entfernungen — vor die kann man laufen, dort wäre „deckt immer" falsch.
+## Bewusste Folge (deine Entscheidung)
 
-## ROOM10D0
+Auch eine Leiche oder eine zweite Figur **im** Pultbereich wird unterhalb der Pultkante
+verdeckt — die alte Leichen-Abwägung (F1585) fällt zugunsten des Immer-Deckens.
 
-Unverändert zu v0.7.22: der Tisch-Quader deckt deine Beine hinter der Platte; der
-Klappstuhl wartet auf dein Lasso (vier automatische Freistellungen haben schwarz auf
-schwarz jedes Mal danebengegriffen — deine Hand trifft es in drei Minuten).
+ROOM10D0 unverändert: Tisch-Quader deckt, der Klappstuhl wartet auf dein Lasso.
 
 Tests: **282/282** (im Release-Container).
