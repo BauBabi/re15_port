@@ -348,7 +348,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                     and not o.get("spalten") and not o.get("aufrecht")
                     and not o.get("flach")
                     and not o.get("quader")
-                    and o.get("tiefe") != "kollision"):   # kollision beantwortet sie auch
+                    and o.get("tiefe") is None):   # kollision/feste Tiefe beantworten sie auch
                 print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
                       'sobald es oben breiter ist als unten (ROOM1140-Kamera, 2026-09-04).'
@@ -364,7 +364,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # eindeutig (guete >= GUETE_MAX), bricht der Bau ab und verlangt den
             # gemessenen Wert - lieber keine Maske als eine falsche.
             _eb = o.get("ebene")
-            if _eb is None and not o.get("fuss") and not o.get("aufrecht")                     and not o.get("flach") and not o.get("quader"):
+            if _eb is None and not o.get("fuss") and not o.get("aufrecht")                     and not o.get("flach") and not o.get("quader")                     and not isinstance(o.get("tiefe"), int):
                 _tref = geom.ebene_aus_kamera(rdt, cam_off, cut, rid)
                 if _tref is None:
                     raise SystemExit(

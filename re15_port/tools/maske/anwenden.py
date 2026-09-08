@@ -353,6 +353,10 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # fuer die Hoehe: geom.quader_tiefe.
         _quader = eintrag[9] if len(eintrag) > 9 else None
         _tf = eintrag[10] if len(eintrag) > 10 else None
+        # "tiefe": <Zahl> = feste Tiefe (deckt immer) - s. geom.depth_map_objekt.
+        _fest = _tq if isinstance(_tq, int) else None
+        if _fest is not None:
+            _tq = None
         _koll = None
         if _tq == "kollision":
             globals()['_KOLLISION_AKTIV'] = True
@@ -366,7 +370,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
             continue
         _ber = []
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
-                                  aufrecht, flach, _koll, _quader, _tf)
+                                  aufrecht, flach, _koll, _quader, _tf, _fest)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else

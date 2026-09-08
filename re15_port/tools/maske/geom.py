@@ -732,7 +732,7 @@ def quader_tiefe(R, t, H, X0, X1, Z0, Z1, hoehe):
 
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
                      bodenkante=None, bericht=None, aufrecht=None, flach=None,
-                     kollision=None, quader=None, tiefenfaktor=None):
+                     kollision=None, quader=None, tiefenfaktor=None, tiefe_fest=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -795,6 +795,26 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if tiefe_fest is not None:
+        # ---- IMMER DECKEN: feste, nahe Tiefe fuer Objekte OHNE erreichbare Vorderseite.
+        # ⛔ NUTZER, 2026-09-08, nach drei fehlgeschlagenen Tiefenmodellen fuer die
+        # Schreibmaschine: "Du bekamst ein Bild von mir. Alles wo nicht alpha
+        # transparent ist soll ueberdecken. so schwer kann's ja nicht sein." Er hat
+        # recht, und zwar GEOMETRISCH: die Vorderwand-Zelle klemmt den Spieler bei
+        # z=-982 (1695 geloggte Positionen enden exakt dort), die Maschinen-Vorderkante
+        # liegt bei z=-958 - man kann NIE vor der Maschine stehen, nur daneben oder
+        # dahinter. Dann ist "deckt immer" die korrekte Semantik, und jede Tiefe
+        # MITTEN im Koerperband des Spielers (58..64, 65..68, 71 - alle drei probiert)
+        # erzeugt genau das gemeldete Geflacker: halb bedeckt, halb durchgestreckt.
+        # Der Wert muss nur UNTER dem kleinsten je gezeichneten Spieler-Dreieck liegen:
+        # ueber alle F9-Marken in ROOM10E0 C7 gemessen 3466 (= Tiefe 54); gewaehlt 50
+        # (= 3200, 266 Einheiten Abstand). NICHT fuer Objekte benutzen, vor die der
+        # Spieler laufen kann - dort braucht es die echte Entfernung.
+        dep[np.asarray(region, bool)] = max(1, min(1023, int(tiefe_fest)))
+        if bericht is not None:
+            bericht.append("tiefe %d FEST (deckt immer; Vorderseite unerreichbar)"
+                           % int(tiefe_fest))
+        return dep
     if quader is not None:
         # ---- HINDERNIS ALS QUADER: Silhouette UND Tiefe aus der Zelle ----------
         # Siehe quader_tiefe() oben fuer Beleg, Pruefung gegen das Original und die
