@@ -1,50 +1,53 @@
-# RE1.5 Port — v0.7.21 (Early Preview)
+# RE1.5 Port — v0.7.22 (Early Preview)
 
-**Diesmal war ich es dreifach: Profil, Median, und eine Freistellung ohne Löcher.**
+**Die harte Regel: begehbare Standfläche heißt keine Maske.**
 
 ---
 
-Deine beiden Marken (F315, F690) zeigten dieselbe Fehlerklasse aus drei Quellen. Der
-Kern: eine Masken-Kachel trägt **eine** Tiefe — und sobald du direkt am Gegenstand
-stehst, überstreicht dein Körper selbst ein ganzes Tiefenband (an F315: Kamera-z
-3486…4498). Jede Kacheltiefe, die in diesem Band landet, schneidet irgendein Dreieck
-aus dir heraus.
+## Warum ausgerechnet diese zwei Winkel — und Dutzende andere nicht
 
-## 1. Schreibmaschine (ROOM10E0): eine Tiefe statt Zeilenprofil
+Alle PRIs, die gut aussehen, decken Objekte mit **Kollisionszelle**: du kommst nie näher
+als ~250 Einheiten, zwischen dir und dem Objekt bleibt immer ein sauberer Tiefenabstand.
 
-An F315 wurden dir **Papier und Walze über den Bauch geblittet**. Die Maschine hat
-keine Kollisionszelle — du kannst bis in ihre Standfläche laufen. Damit liegt *jede*
-Zeile ihres Tiefenprofils (64…71) mitten in deinem Körperband; irgendetwas verliert
-immer. Die einzige Tiefe, die dich davor verschont **und** dich dahinter verdeckt, ist
-ihr gemessener Bodenkontakt: Kamera-z 4577 → **Tiefe 71, einheitlich**.
+Diese zwei Winkel enthalten die einzigen Objekte **mitten auf begehbarem Boden**. An
+deiner Marke F208 standest du bei z=−798 mitten in der Standfläche der Schreibmaschine
+(Basis z−958..−768). Dein Körper überstreicht dann selbst ~1000 Einheiten Tiefe — und
+*jede* Maskentiefe liegt mittendrin. Drei Marken, drei probierte Tiefen (58…64 / 65…68 /
+71), dreimal geschnitten. Das ist unlösbar, kein Feinschliff.
 
-Gemessen an deiner Marke: dein fernstes gezeichnetes Dreieck 4498 < 4544 → **0 von
-2330** Maskenpunkten in deinem Kasten schneiden noch (vorher die komplette
-Maschinen-Silhouette).
+**Capcom wusste das: das Original liefert für genau diese Winkel gar keine Masken.**
+Auf der PSX zeichnet Leon immer über Schreibmaschine und Stuhl.
 
-## 2. Tisch-Quader (ROOM10D0): Maximum statt Median, aufrunden statt kappen
+## Was sich ändert
 
-Die Kacheln am Tischrand erbten per **Median** die näheren Deckflächen-Punkte (63…67
-gegen deine Körperlinie 67,7…73,7) und `int()` kappte zusätzlich bis zu 63 Einheiten in
-die schädliche Richtung. Jetzt gilt dieselbe Regel wie bei der Kollisionstiefe: **eine
-Kachel verdeckt nur, wenn sie ganz vor dir liegt** (Maximum je Feld, aufgerundet).
+**Entfernt** (Standfläche begehbar — Standort-Schiene über das ganze begehbare Gitter):
+* ROOM10E0: Schreibmaschine (2032 Punktbisse), Schrank rechts (1141), Stuhllehne (718),
+  und der Teppich-Rest — nachgemessen lagen *alle* seine 518 Punkte vor der
+  **Vorderwand-Zelle**, durch die die Kamera schaut; vor den Möbelzellen liegt kein
+  einziger. Der Teppich war nie Vordergrund (damit ist auch der Leichen-Konflikt F1585
+  endgültig gegenstandslos).
+* ROOM10D0: der Stuhl — vier automatische Freistellungen, vier Fehlschläge
+  (schwarz auf schwarz); seine Streuner-Punkte waren dein „Leon dahinter transparent".
 
-## 3. Stuhl (ROOM10D0): die Rahmen-Lücken sind jetzt offen
+**Bleibt** (zellengeschützt): Rückwand, Liege, Trennwand, Kachelkante (ihr Fuß steht *in*
+der Trennwand-Zelle), Tischplattenecke — und der **Holztisch-Quader**, jetzt auf das
+*gemalte* Möbel beschnitten (die Zelle ist ein Polster; ihr rechter Überstand deckte im
+Bild den Trolley und blittete ihn über deine Hüfte).
 
-Das war dein „**Leon dahinter transparent**": die Stuhl-Freistellung füllte die offenen
-Lücken zwischen den Rohren. Stehst du dahinter, bist du durch die Lücken sichtbar — und
-genau dort wurde der **Boden** über dich geblittet. 245 von 2898 Punkten entfernt; die
-Lücken zeigen jetzt dich statt Fliesen.
-
-## Gemessen, an deinen drei letzten Marken
+## Nachgerechnet an allen fünf Marken
 
 ```
-F315   0 schneidende Maskenpunkte im Spielerkasten          (vorher: ganze Maschine)
-F690   re-geblittete Patches 57 -> 30, und die 30 liegen AUF dem Stuhl
-       (Lehnenoberkante, hinteres Rohr - der ist bei dieser Kamera wirklich
-        vor dir; das ist korrekte Verdeckung, keine Lücke)
-F3218  hinter dem Tisch bleibst du verdeckt: 408 von 411 Beinpunkten
-       (3 Randpunkte kostet die Aufrundung - die harmlose Richtung)
+F208  0 Bisse   F315  0   F690  0
+F310  Re-Blit nur noch über dem GEMALTEN Stuhl/der Platte (stehen dort echt vor dir)
+F3218 295 Beinpunkte über der Platte verdeckt; die 116 offenen liegen ALLE über
+      begehbarem Boden rechts der Platte - dort musst du sichtbar sein
 ```
 
-Tests: **282/282** (im Release-Container), `selbsttest.geometrische_tiefen` 10/10.
+## Erwartung beim Testen
+
+*Hinter* Schreibmaschine und Bürostuhl zeichnet Leon jetzt **über** das Möbel — exakt wie
+auf der echten PSX. Willst du den 10D0-Klappstuhl trotzdem verdeckend haben (über das
+Original hinaus): schick mir einmal dein Lasso für den Stuhl, dann bekommt er eine
+Hand-Freistellung. Für die Schreibmaschine hilft auch das nicht — begehbare Standfläche.
+
+Tests: **282/282** (im Release-Container), Selbsttest 7/7.
