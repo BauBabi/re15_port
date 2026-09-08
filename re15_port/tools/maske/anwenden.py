@@ -347,6 +347,11 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # Bilduebereinstimmung; WELCHE Zelle die Wand IST, entscheiden erst die Standorte
         # der Figuren davor und dahinter. Wo das gemessen ist, wird sie eingetragen.
         _zelle = eintrag[8] if len(eintrag) > 8 else None
+        # ⛔ "quader": [x, z, breite, tiefe, hoehe] - das Hindernis als QUADER mit
+        # Deckflaeche. Silhouette UND Tiefe kommen aus der Zelle, keine Farbtrennung
+        # noetig. Beleg, Pruefung gegen die Original-Masken und die beiden Messkriterien
+        # fuer die Hoehe: geom.quader_tiefe.
+        _quader = eintrag[9] if len(eintrag) > 9 else None
         _koll = None
         if _tq == "kollision":
             globals()['_KOLLISION_AKTIV'] = True
@@ -360,7 +365,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
             continue
         _ber = []
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
-                                  aufrecht, flach, _koll)
+                                  aufrecht, flach, _koll, _quader)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else

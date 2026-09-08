@@ -613,9 +613,82 @@ def kollisionstiefe(rdt, R, t, H, wandzellen, hoehe=None):
             aus[sy, sx] = best / 64.0 if best else 0.0
     return aus
 
+def quader_tiefe(R, t, H, X0, X1, Z0, Z1, hoehe):
+    """Sehstrahl gegen eine Kollisionszelle als QUADER - vier Seiten UND eine Deckflaeche.
+
+    ⛔ WARUM ES kollisionstiefe() NICHT TUT (Nutzer-Marken 2026-09-08, ROOM10E0 Cut 7
+    F376 und ROOM10D0 Cut 7 F3218: "keines der beiden Probleme ist geloest"):
+    kollisionstiefe() behandelt jede Zelle als unendlich hohe SAEULE ohne Deckel. Fuer
+    eine Wand ist das richtig. Fuer ein Hindernis, ueber das die Kamera hinwegschaut -
+    Tischplatte, Bank, Trennwand, Gelaender - ist es falsch, und zwar doppelt:
+      * der Strahl faellt durch den fehlenden Deckel und trifft erst die
+        GEGENUEBERLIEGENDE Innenseite, also viel zu fern;
+      * es gibt keine SILHOUETTE, weil eine unendliche Saeule das halbe Bild fuellt.
+    Beides zusammen war der Grund, warum diese beiden Gegenstaende ueberhaupt keine
+    Maske hatten: die Farbtrennung scheiterte an ihnen (Tischplatte 43,30,11 vor
+    dunklem Raum; das Gelaender ist so grau wie der Boden), und ein Ersatz aus der
+    Geometrie stand nicht zur Verfuegung.
+
+    Der Quader liefert BEIDES ohne jede Farbe: die Trefferkarte IST die Silhouette,
+    die Tiefe ist die Entfernung der zuerst getroffenen Flaeche.
+
+    GEGEN DAS ORIGINAL GEPRUEFT. RE1.5 traegt in 480 Kamerawinkeln eigene Masken mit
+    eigenen Tiefen. Ueber 36 davon (je Winkel die beste Zelle und Hoehe gesucht) betraegt
+    der mittlere Abstand zwischen Capcoms eingetragener Tiefe und der Quadertiefe
+    im Median 10,5 Tiefeneinheiten, im besten Fall 3,0 (ROOM1020 C6, ROOM1070 C7,
+    ROOM1020 C9). Die Tiefen des Originals SIND also die Entfernung zum Kollisionsquader.
+
+    hoehe: Oberkante in Weltkoordinaten, negativ (PSX-Y zeigt nach unten). Sie ist die
+    einzige Groesse, die nicht in den Daten steht, und wird deshalb MESSEND bestimmt -
+    zwei unabhaengige Kriterien, beide gegen das Hintergrundbild:
+      (a) Kantenlage: die Oberkante der Silhouette muss auf einer echten Bildkante
+          liegen (Mittel des Gradientenbetrags entlang der Oberkante).
+      (b) Deckflaeche: die vom Deckel sichtbaren Bildpunkte muessen die Oberflaeche des
+          Gegenstands treffen (Jaccard gegen dessen Farbflaeche).
+    ROOM10E0 Cut 7, Zelle x1700..4100 z-4700..-900 (Trennwand rechts):
+        (a) h=-1400 -> 53,99 gegen 15,64 beim zweitbesten Wert
+        (b) h=-1400 -> alle 836 Punkte des hellen Bands, Abfall ab -1500
+    ROOM10D0 Cut 7, Zelle x-1350..-50 z26300..27850 (Holztisch mit Klappstuhl):
+        (a) ohne Aussage (0,696 gegen 0,694 - die Ecke ist zu dunkel, ein Muenzwurf)
+        (b) h=-1100 -> IoU 0,561, 786 der 836 braunen Tischplattenpunkte, einseitiger
+            Gipfel (0,451 bei -1000, 0,526 bei -1200)
+    Ohne eindeutigen Gipfel wird KEINE Hoehe eingetragen - lieber keine Maske als eine,
+    die den Spieler an der falschen Stelle wegschneidet.
+    """
+    _R = np.array(R, float).reshape(3, 3) / 4096.0
+    _Ri = np.linalg.inv(_R)
+    _c = _Ri.dot(-np.array(t, float))
+    _sx, _sy = np.meshgrid(np.arange(320) - 160.0, np.arange(240) - 120.0)
+    _d = np.stack([_sx, _sy, np.full_like(_sx, float(H))], -1) @ _Ri.T
+    best = np.full((240, 320), np.inf)
+
+    def _eintragen(s, q):
+        vz = (q[..., 0] * R[6] + q[..., 1] * R[7] + q[..., 2] * R[8]) / 4096.0 + t[2]
+        ok = (s > 0) & np.isfinite(vz) & (vz > 64) & (vz < best)
+        best[ok] = vz[ok]
+
+    for achse, wert, lo, hi, oa in ((0, X0, Z0, Z1, 2), (0, X1, Z0, Z1, 2),
+                                    (2, Z0, X0, X1, 0), (2, Z1, X0, X1, 0)):
+        dd = _d[..., achse]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            s = (wert - _c[achse]) / dd
+            q = _c + s[..., None] * _d
+        gut = (np.isfinite(s) & (np.abs(dd) > 1e-9) & (q[..., oa] >= lo) & (q[..., oa] <= hi)
+               & (q[..., 1] <= 0) & (q[..., 1] >= hoehe))
+        _eintragen(np.where(gut, s, -1.0), np.nan_to_num(q))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        s = (hoehe - _c[1]) / _d[..., 1]
+        q = _c + s[..., None] * _d
+    gut = (np.isfinite(s) & (np.abs(_d[..., 1]) > 1e-9)
+           & (q[..., 0] >= X0) & (q[..., 0] <= X1) & (q[..., 2] >= Z0) & (q[..., 2] <= Z1))
+    _eintragen(np.where(gut, s, -1.0), np.nan_to_num(q))
+    treffer = np.isfinite(best)
+    return np.where(treffer, best, 0.0), treffer
+
+
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
                      bodenkante=None, bericht=None, aufrecht=None, flach=None,
-                     kollision=None):
+                     kollision=None, quader=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -678,6 +751,25 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if quader is not None:
+        # ---- HINDERNIS ALS QUADER: Silhouette UND Tiefe aus der Zelle ----------
+        # Siehe quader_tiefe() oben fuer Beleg, Pruefung gegen das Original und die
+        # beiden Messkriterien fuer die Hoehe.
+        _X, _Z, _W, _D, _h = [int(v) for v in quader]
+        _vz, _tr = quader_tiefe(R, t, H, _X, _X + _W, _Z, _Z + _D, _h)
+        _msk = np.asarray(region, bool) & _tr
+        if not _msk.any():
+            if bericht is not None:
+                bericht.append("quader: keine Ueberdeckung von Freistellung und Zelle")
+            return None
+        dep[_msk] = np.clip((_vz[_msk] / 64.0).astype(np.int32), 1, 1023)
+        if bericht is not None:
+            bericht.append("quader x%d..%d z%d..%d Hoehe %d: %d von %d Bildpunkten, "
+                           "Tiefe %d..%d"
+                           % (_X, _X + _W, _Z, _Z + _D, _h, int(_msk.sum()),
+                              int(np.asarray(region, bool).sum()),
+                              int(dep[_msk].min()), int(dep[_msk].max())))
+        return dep
     if kollision is not None:
         # ---- TIEFE AUS DER RAUMGEOMETRIE, NICHT AUS DER BILDKONTUR -----------
         # Siehe kollisionstiefe() oben fuer den Beleg und die Messwerte.
@@ -893,7 +985,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
                     z = vz_der_senkrechten(R, t, H, Px[0], Px[1], float(y) + 0.5)
                     if not z:
                         continue
-                    v = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+                    v = max(1, min(1023, int(z / 64.0)))   # kein Faktor, s. unten
                     dep[y, x] = v
                     gmin = min(gmin, v); gmax = max(gmax, v)
                 n_ok += 1
@@ -918,7 +1010,26 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
             z = vz_der_senkrechten(R, t, H, wx, wz, float(y) + 0.5)
             if not z:
                 continue
-            dep[y, region[y]] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+            # ⛔ KEIN DEPTH_FACTOR. Der Faktor 0,90 korrigiert die SILHOUETTEN-Schaetzung
+            # (Bodenkontakt je Bildspalte), nicht die Tiefenskala selbst - deshalb
+            # verzichtet die Kollisionstiefe schon immer darauf. "aufrecht" rechnet
+            # ebenso geometrisch: der Standpunkt ist ein gemessener Bodenpunkt, das
+            # Zeilenprofil exakte Trigonometrie (vz_der_senkrechten, mit Gegenprobe).
+            # ZWEIFACH GEMESSEN, dass hier 1,00 richtig ist:
+            #  (1) Quadertiefe gegen 260858 Punkte aus Capcoms eigenen Maskenrechtecken
+            #      (31 Kamerawinkel): Faktor 1,00 -> Medianfehler -1,0 und die beiden
+            #      Fehlerrichtungen ausgeglichen (21,7 % zu nah / 21,6 % zu fern);
+            #      0,90 -> Medianfehler -8,6 und 52,7 % zu nah.
+            #  (2) Nutzer-Marke F376 (ROOM10E0 Cut 7): Leon steht bei Welt(1232,0,-982),
+            #      seine Koerperlinie liegt in den Bildzeilen der Schreibmaschine bei
+            #      Tiefe 61,8..67,5. Die Maschine steht geometrisch bei 64,4..71,5 -
+            #      Leon ist also DAVOR und darf nicht verdeckt werden. Mit 0,90 trug ihre
+            #      Maske 58,0..64,4 und schnitt ihn ueber ihre ganze Silhouette weg.
+            #      Dasselbe galt fuer Schrank, Stuhllehne und Kachelkante desselben Cuts.
+            # ⛔ Und meine Messschiene war dafuer BLIND: sie zaehlte nur Punkte, an denen
+            # die Figur GEZEICHNET wurde. Wo eine Maske sie zu Unrecht wegschneidet, ist
+            # das Bild gleich dem Hintergrund - der Fehler faellt aus der Zaehlung heraus.
+            dep[y, region[y]] = max(1, min(1023, int(z / 64.0)))
             n_ok += 1
         if bericht is not None:
             gut = dep[region]

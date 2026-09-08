@@ -149,5 +149,75 @@ def main():
     return 1 if bad else 0
 
 
+def geometrische_tiefen():
+    """⛔ SCHIENE GEGEN ZU VIEL VERDECKUNG (Nutzer-Marke F376, 2026-09-08).
+
+    Die bisherige Abnahme zaehlte nur Bildpunkte, an denen die Figur GEZEICHNET wurde.
+    Schneidet eine Maske die Figur zu Unrecht weg, ist das Bild gleich dem Hintergrund -
+    der Fehler faellt aus der Zaehlung heraus und war deshalb UNSICHTBAR. Genau so blieb
+    liegen, dass die Schreibmaschine in ROOM10E0 Cut 7 den Spieler ueber 1840 Bildpunkte
+    ihrer Silhouette wegschnitt, obwohl er 3,6 Tiefeneinheiten DAVOR stand.
+
+    Ursache war der Eichfaktor 0,90: er korrigiert die SILHOUETTEN-Schaetzung, wurde aber
+    auch auf die geometrischen Modelle angewandt. Diese Probe haelt das fest: fuer jedes
+    Objekt mit "aufrecht" muss die Tiefe an der Bildzeile seines Bodenkontakts gleich
+    vz_at_floor an demselben Punkt sein - ohne jeden Faktor.
+    """
+    import json
+    import maske_aus_png
+    aus = json.load(io.open("analysis/esp_masken_2026-09-03/auswahl.json",
+                            encoding="utf-8")) if False else json.load(
+          open("analysis/esp_masken_2026-09-03/auswahl.json", encoding="utf-8"))
+    schlecht = 0; geprueft = 0
+    print("Geometrische Tiefen ohne Eichfaktor:")
+    for room, cuts in aus.items():
+        if not isinstance(cuts, dict):
+            continue
+        rdt, _ = load_rdt(CD, room)
+        if not rdt:
+            continue
+        cam = struct.unpack_from("<I", rdt, 0x24)[0]
+        for cut, e in cuts.items():
+            if not isinstance(e, dict):
+                continue
+            v = geom.cut_view(rdt, cam, int(cut))
+            if not v or v[2] <= 0:
+                continue
+            R, t, H = v
+            for o in e.get("objekte") or []:
+                if not o.get("aufrecht") or "png" not in o or o.get("aufrecht") == "spalten":
+                    continue
+                r = maske_aus_png.setze(o["png"], o["x"], o["y"], o.get("massstab", 1))
+                if r is None or not r.any():
+                    continue
+                ys = np.nonzero(r.any(1))[0]; xs = np.nonzero(r.any(0))[0]
+                cx = float(xs.mean()) + 0.5
+                yb = float(min(int(ys.max()), 239))
+                P = geom.welt_am_boden(R, t, H, cx, yb, 0)
+                if P is None:
+                    continue
+                soll = geom.vz_at_floor(R, t, H, cx, yb, 0)
+                ist = geom.vz_der_senkrechten(R, t, H, P[0], P[1], yb)
+                d = geom.depth_map_objekt(rdt, cam, int(cut), r, None, 0, None, None,
+                                          o["aufrecht"])
+                if d is None or not (d > 0).any():
+                    continue
+                geprueft += 1
+                gemessen = int(d[ys.max(), np.nonzero(r[ys.max()])[0][0]])
+                erwartet = int(soll / 64.0)
+                ok = abs(gemessen - erwartet) <= 1
+                if not ok:
+                    schlecht += 1
+                print("   %-9s C%-2s %-24s Bodenkontakt Kamera-z %6.0f -> Tiefe %3d, "
+                      "Maske %3d  %s"
+                      % (room, cut, o.get("name", "?"), soll, erwartet, gemessen,
+                         "ok" if ok else "⛔ ABWEICHUNG (Eichfaktor auf ein "
+                                          "geometrisches Modell angewandt?)"))
+    print("   %d Objekte geprueft, %d Abweichungen" % (geprueft, schlecht))
+    return 1 if schlecht else 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    rc = main()
+    rc |= geometrische_tiefen()
+    sys.exit(rc)

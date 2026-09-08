@@ -267,6 +267,18 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             r = zauberstab_region(load_bg(ppm, rid, cut), o["zauberstab"])
         elif "kontrast" in o:
             r = kontrast_region(load_bg(ppm, rid, cut), o["kontrast"])
+        elif "quader" in o:
+            # ⛔ SILHOUETTE AUS DER RAUMGEOMETRIE (Nutzer-Marken 2026-09-08). Zwei
+            # Gegenstaende hatten ueberhaupt keine Maske, weil sie farblich nicht vom
+            # Hintergrund zu trennen sind: die Holztischplatte in ROOM10D0 (43,30,11 vor
+            # dunklem Raum) und die Trennwand rechts in ROOM10E0 (so grau wie der Boden).
+            # Ihre KOLLISIONSZELLE steht aber im RDT. Als Quader mit Deckflaeche
+            # gezeichnet liefert sie die Silhouette selbst - siehe geom.quader_tiefe.
+            # "quader": [x, z, breite, tiefe, hoehe]
+            _q = [int(v) for v in o["quader"]]
+            _v = geom.cut_view(rdt, cam_off, cut)
+            _vz, r = geom.quader_tiefe(_v[0], _v[1], _v[2], _q[0], _q[0] + _q[2],
+                                       _q[1], _q[1] + _q[3], _q[4])
         elif "kaesten" in o:
             # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als
             # Kaesten angeben. Genauer als eine Superpixel-Auswahl, die zwangslaeufig
@@ -335,6 +347,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             if (o.get("fuss") is None and not o.get("ebene")
                     and not o.get("spalten") and not o.get("aufrecht")
                     and not o.get("flach")
+                    and not o.get("quader")
                     and o.get("tiefe") != "kollision"):   # kollision beantwortet sie auch
                 print('   ⚠ "%s": weder "fuss" noch "ebene" — die Tiefe kommt aus der '
                       'Spaltenregel. Fuer ein senkrecht stehendes Objekt ist das falsch, '
@@ -351,7 +364,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             # eindeutig (guete >= GUETE_MAX), bricht der Bau ab und verlangt den
             # gemessenen Wert - lieber keine Maske als eine falsche.
             _eb = o.get("ebene")
-            if _eb is None and not o.get("fuss") and not o.get("aufrecht")                     and not o.get("flach"):
+            if _eb is None and not o.get("fuss") and not o.get("aufrecht")                     and not o.get("flach") and not o.get("quader"):
                 _tref = geom.ebene_aus_kamera(rdt, cam_off, cut, rid)
                 if _tref is None:
                     raise SystemExit(
@@ -375,7 +388,8 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             aus.append((o.get("name", "?"), r, o.get("fuss"),
                         None if _eb is None else int(_eb),
                         None if _bk is None else (int(_bk[0]), int(_bk[1])),
-                        _au, o.get("flach"), o.get("tiefe"), o.get("zelle")))
+                        _au, o.get("flach"), o.get("tiefe"), o.get("zelle"),
+                        o.get("quader")))
     return aus
 
 
