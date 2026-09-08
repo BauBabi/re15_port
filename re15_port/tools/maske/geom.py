@@ -688,7 +688,7 @@ def quader_tiefe(R, t, H, X0, X1, Z0, Z1, hoehe):
 
 def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
                      bodenkante=None, bericht=None, aufrecht=None, flach=None,
-                     kollision=None, quader=None):
+                     kollision=None, quader=None, tiefenfaktor=None):
     """Tiefenkarte EINES Objekts.
 
     fuss=None : wie bisher je Bildspalte aus dem untersten Punkt der Silhouette.
@@ -762,7 +762,13 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
             if bericht is not None:
                 bericht.append("quader: keine Ueberdeckung von Freistellung und Zelle")
             return None
-        dep[_msk] = np.clip((_vz[_msk] / 64.0).astype(np.int32), 1, 1023)
+        # ⛔ AUFRUNDEN. Die Maskentiefe ist auf 64er-Schritte gerastert; int() haette
+        # die exakte Flaechentiefe um bis zu 63 Einheiten Richtung "zu nah" gekappt -
+        # und "zu nah" ist die schaedliche Richtung (schneidet den davorstehenden
+        # Spieler). Aufgerundet verliert die Maske schlimmstenfalls 63 Einheiten
+        # Verdeckung gegen Gegner, die ohnehin WEIT dahinter stehen (Zelle ist solide,
+        # niemand steht dazwischen).
+        dep[_msk] = np.clip(np.ceil(_vz[_msk] / 64.0).astype(np.int32), 1, 1023)
         if bericht is not None:
             bericht.append("quader x%d..%d z%d..%d Hoehe %d: %d von %d Bildpunkten, "
                            "Tiefe %d..%d"
@@ -1048,7 +1054,20 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         z = _z(cx, float(min(int(fuss), 239)))
         if not z:
             return None
-        dep[region] = max(1, min(1023, int(z * DEPTH_FACTOR / 64.0)))
+        # "tiefenfaktor": 1.0 fuer ein Objekt, dessen "fuss"-Zeile ein GEMESSENER
+        # Bodenkontakt ist - dann ist die Tiefe exakt und der Eichfaktor 0,90 (der die
+        # Silhouetten-SCHAETZUNG korrigiert, s. DEPTH_FACTOR im Kopf) waere ein Defekt.
+        # Beleg an der Schreibmaschine (ROOM10E0 C7, Marken F376/F315): Fuss verifiziert
+        # bei Welt(647,-977), Kamera-z 4577 = Tiefe 71; mit 0,90 trug die Maske 58..64
+        # und blittete Papier und Walze ueber den Bauch des Spielers, der bei
+        # Koerperlinie 61..71 DAVOR stand. Bestehende fuss-Objekte ohne den Schluessel
+        # rechnen unveraendert mit 0,90 (die Fahne in ROOM1140 braucht ihn: ihr Teller
+        # verschwindet hinter dem Pult, die Zeile ist eine Schaetzung).
+        _f = DEPTH_FACTOR if tiefenfaktor is None else float(tiefenfaktor)
+        dep[region] = max(1, min(1023, int(z * _f / 64.0)))
+        if bericht is not None:
+            bericht.append("fuss %d: Tiefe %d fuer das ganze Objekt (Faktor %.2f)"
+                           % (int(fuss), int(dep[region].max()), _f))
         return dep
     spalten = list(np.where(region.any(0))[0])
     tiefen = {}

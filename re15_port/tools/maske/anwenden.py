@@ -352,6 +352,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # noetig. Beleg, Pruefung gegen die Original-Masken und die beiden Messkriterien
         # fuer die Hoehe: geom.quader_tiefe.
         _quader = eintrag[9] if len(eintrag) > 9 else None
+        _tf = eintrag[10] if len(eintrag) > 10 else None
         _koll = None
         if _tq == "kollision":
             globals()['_KOLLISION_AKTIV'] = True
@@ -365,7 +366,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
             continue
         _ber = []
         d = geom.depth_map_objekt(rdt, cam, cut, reg, fuss, ebene, bodenkante, _ber,
-                                  aufrecht, flach, _koll, _quader)
+                                  aufrecht, flach, _koll, _quader, _tf)
         for _z in _ber:
             print("     %s: %s%s" % (name, _z,
                   "" if bodenkante is None else
@@ -374,7 +375,14 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
             continue
         dep_all = np.where((d > 0) & ((dep_all == 0) | (d < dep_all)), d, dep_all)
         stuecke.append((name, reg, d))
-        _koll_aktiv.append(_tq == "kollision")
+        # ⛔ QUADER ZAEHLT WIE KOLLISION (Nutzer-Marke F690, 2026-09-08: "beim Tisch
+        # ist Leon dahinter transparent"). Die Quadertiefe ist exakt gerechnet; mit dem
+        # MEDIAN je Feld erbten Kacheln am Tischrand die naeheren Deckflaechen-Punkte
+        # und schnitten Patches aus der Huefte des Spielers, der VOR dem Tisch stand
+        # (Feldtiefen 63..67 gegen seine Koerperlinie 67,7..73,7). Das Maximum laesst
+        # ein Feld nur verdecken, wenn es GANZ vor dem Spieler liegt - dieselbe Regel
+        # und derselbe Beleg wie oben fuer die Kollisionstiefe.
+        _koll_aktiv.append(_tq == "kollision" or _quader is not None)
     if not stuecke:
         return None
     # Budget nach Flaeche verteilen, mindestens 4 Rechtecke je Objekt

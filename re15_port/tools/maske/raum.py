@@ -389,7 +389,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                         None if _eb is None else int(_eb),
                         None if _bk is None else (int(_bk[0]), int(_bk[1])),
                         _au, o.get("flach"), o.get("tiefe"), o.get("zelle"),
-                        o.get("quader")))
+                        o.get("quader"), o.get("tiefenfaktor")))
     return aus
 
 
