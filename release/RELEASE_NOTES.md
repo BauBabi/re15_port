@@ -1,34 +1,31 @@
-# RE1.5 Port — v0.7.24 (Early Preview)
+# RE1.5 Port — v0.7.25 (Early Preview)
 
-**Dein Original deckt als Ganzes: das Pult ist ein Tresen.**
+**Der Stuhl deckt wieder.**
 
 ---
 
-## Marke F591: „Leons komplette Beine schauen immer noch durch"
+## Marke F1456: „jetzt überdeckt der Stuhl nicht mehr"
 
-Meine vier Teil-Freistellungen deckten nur die *Gegenstände* (Maschine, Schrank,
-Lehne, Kante) — die grüne Pultfläche darunter blieb frei, und deine Beine zeichneten
-sich davor. Das war der letzte fehlende Schritt zu dem, was du von Anfang an gesagt
-hast.
+Meine eigene Über-Korrektur: in v0.7.22 hatte ich den 10D0-Klappstuhl unter der
+Pauschale „vier Farbheuristiken, vier Fehlschläge" mit entfernt — dabei hatte seine
+**bereinigte** Freistellung (Rahmen-Lücken geöffnet, 245 Streuner-Punkte entfernt) an
+deinen Marken F690/F310 bereits sauber gearbeitet: die verbliebenen Re-Blit-Punkte lagen
+*auf* dem Stuhl, also korrekte Verdeckung. Ohne ihn zeichneten sich deine Beine hinter
+dem Stuhl über dessen Lehne.
 
-Jetzt ist es **ein** Objekt: dein unverändertes Original (`07_01.png`, 14303 Punkte,
-der komplette Pultbereich) mit fester naher Tiefe. Wer im Pultbereich steht, steht
-**hinter dem Tresen** — die Beine verschwinden, der Oberkörper schaut heraus. Dieselbe
-Optik wie der Tresen in ROOM1120. An deiner Marke simuliert: links Beine über dem
-Pult, rechts vollständig verschluckt.
+Er ist zurück, mit derselben bereinigten Freistellung und seinem Tiefenprofil.
 
-## Ein Zerleger-Fehler, den deine Marke aufgedeckt hat
+## Gemessen
 
-Die 105er-Schranke der Engine griff nur auf die *Schätzung* der Kachelwahl; Packung und
-Zerlegung vermehrten die Kästen nachträglich (104 geschätzt, **117 gebaut**). Die Engine
-liest hart 105 — der Rest fiel **still** weg, mit Löchern in den zuletzt gepackten
-Objekten. Jetzt wird das Ergebnis nachgezählt und bei Überlauf neu gewählt (117 → 86).
+```
+F3218/F1456 (hinter dem Tisch): Stuhl-/Plattenbereich wieder 295/295 verdeckt;
+       die 95 offenen Punkte liegen rechts davon ueber begehbarem Boden,
+       wo die Figur sichtbar sein muss
+F690   (vor dem Tisch): 26 Re-Blit-Punkte, alle AUF dem Stuhl (korrekt)
+Simulation an F1456: Lehne, Rahmen und Platte wieder vor der Figur,
+       die Beine verschwinden dahinter
+```
 
-## Bewusste Folge (deine Entscheidung)
-
-Auch eine Leiche oder eine zweite Figur **im** Pultbereich wird unterhalb der Pultkante
-verdeckt — die alte Leichen-Abwägung (F1585) fällt zugunsten des Immer-Deckens.
-
-ROOM10D0 unverändert: Tisch-Quader deckt, der Klappstuhl wartet auf dein Lasso.
+ROOM10E0 unverändert zu v0.7.24: dein Original deckt das ganze Pult als Tresen.
 
 Tests: **282/282** (im Release-Container).
