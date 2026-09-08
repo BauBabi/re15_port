@@ -553,6 +553,50 @@ def sca_wandzellen(rdt, band=0):
             _aus.append((_x, _z, _w, _d))
     return _aus
 
+def sca_sperrzellen(rdt, band=0):
+    """ALLE Zellen, die den Spieler blocken - nicht nur die Rechtecke.
+
+    ⛔ NUTZER-KORREKTUR 2026-09-08: "der Schreibtisch mit der Schreibmaschine und auch
+    die Stuehle in der Ecke sind ja nur bedingt begehbar. Danach blockt es ja." Er hat
+    recht, und sca_wandzellen() konnte das nicht sehen: die Engine blockt auf den Typen
+    1 (Rechteck), 3 (Kreis), 2/4/5/6/7 (Diagonalen) und 8/9 (Kapseln)
+    (re15_collision.c, Dispatch @FUN_8003b0a4), der Filter dort nimmt aber NUR Typ 1.
+    Gemessen: die Stuhlecke in ROOM10D0 steht auf Typ-4/5/6/7-Diagonalen
+    (x-9650..-5250, z24900..27200), die Blumentoepfe auf Typ-3-Kreisen - alle fuer die
+    Erreichbarkeits-Analyse unsichtbar gewesen.
+    (Die Schreibmaschine in ROOM10E0 blockt dagegen NICHT selbst: dort klemmt die
+    VORDERWAND-Zelle 7 (Kante z=-1450) den Spieler bei z=-982 - seine 1695 gelaufenen
+    Positionen enden ueber x0..1400 exakt dort, Radius 468. Die Sperrlinie laeuft MITTEN
+    durch die Maschinenbasis x224..1066 z-1026..-768; der hintere Teil bleibt offen,
+    er stand 54x bei (400,-800) IN der Basis. Deshalb bleibt ihre Maske entfernt:
+    Verschonen verlangte Tiefe*64 >= 5213, Schneiden < 5093 - das Fenster ist um
+    120 Einheiten LEER.)
+
+    Rueckgabe (x, z, breite, tiefe, typ) je Zelle - Kreis/Diagonale/Kapsel als ihr
+    umschliessendes Rechteck. Fuer ERREICHBARKEIT (wo kann der Spieler stehen) ist das
+    konservativ genug; fuer TIEFEN-Raycasts weiter sca_wandzellen benutzen (eine
+    Diagonale als volles Rechteck geraycastet waere zu nah)."""
+    import struct as _s
+    _off = _s.unpack_from('<I', rdt, 0x20)[0]
+    if _off <= 0 or _off + 24 > len(rdt):
+        return []
+    _n = sum(_s.unpack_from('<5I', rdt, _off + 4))
+    if not (0 < _n < 2000) or _off + 24 + 12 * _n > len(rdt):
+        return []
+    _aus = []
+    for _i in range(_n):
+        _w, _d, _x, _z = _s.unpack_from('<HHhh', rdt, _off + 24 + 12 * _i)
+        _t, _u0, _u1, _f = _s.unpack_from('<BBBB', rdt, _off + 24 + 12 * _i + 8)
+        _typ = _t & 0x0f
+        if _typ not in (1, 2, 3, 4, 5, 6, 7, 8, 9) or not (_u0 & 1) or (_f >> 4) != band:
+            continue
+        if _w <= 0 or _d <= 0:
+            continue
+        if (_x, _z, _w, _d, _typ) not in _aus:
+            _aus.append((_x, _z, _w, _d, _typ))
+    return _aus
+
+
 def kollisionstiefe(rdt, R, t, H, wandzellen, hoehe=None):
     """Tiefenkarte (240x320) aus der RAUMGEOMETRIE statt aus der Bildkontur.
 
