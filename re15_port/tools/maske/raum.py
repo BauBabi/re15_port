@@ -375,7 +375,7 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             aus.append((o.get("name", "?"), r, o.get("fuss"),
                         None if _eb is None else int(_eb),
                         None if _bk is None else (int(_bk[0]), int(_bk[1])),
-                        _au, o.get("flach"), o.get("tiefe")))
+                        _au, o.get("flach"), o.get("tiefe"), o.get("zelle")))
     return aus
 
 

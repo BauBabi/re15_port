@@ -339,12 +339,23 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # "tiefe": "kollision" - die Entfernung kommt aus den Wandzellen des Raums,
         # nicht aus der Silhouette. Beleg und Messwerte: geom.kollisionstiefe.
         _tq = eintrag[7] if len(eintrag) > 7 else None
+        # FESTE ZELLE ("zelle": [x, z, breite, tiefe]) schlaegt die Jaccard-Auswahl.
+        # NUTZER-BEFUND 2026-09-08: "die Zombies sind durch die Wand sichtbar". Die
+        # Jaccard-Regel hatte fuer die Rueckwand von ROOM10E0 Cut 7 die HINTERSTE Zelle
+        # gewaehlt (J=0,358, Tiefe 176..263) - damit ist die Wand ferner als die Zombies
+        # dahinter (Tiefe 166 und 122) und verdeckt sie nicht. Jaccard misst nur die
+        # Bilduebereinstimmung; WELCHE Zelle die Wand IST, entscheiden erst die Standorte
+        # der Figuren davor und dahinter. Wo das gemessen ist, wird sie eingetragen.
+        _zelle = eintrag[8] if len(eintrag) > 8 else None
         _koll = None
         if _tq == "kollision":
             globals()['_KOLLISION_AKTIV'] = True
-            _koll = []
-            for _e in (geom.sca_wandzellen(rdt) or ()):
-                _koll.append(_e)
+            if _zelle:
+                _koll = [tuple(int(v) for v in _zelle)]
+            else:
+                _koll = []
+                for _e in (geom.sca_wandzellen(rdt) or ()):
+                    _koll.append(_e)
         if not reg.any():
             continue
         _ber = []
