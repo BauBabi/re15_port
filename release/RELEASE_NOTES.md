@@ -1,64 +1,69 @@
-# RE1.5 Port — v0.7.19 (Early Preview)
+# RE1.5 Port — v0.7.20 (Early Preview)
 
-**Eine flache Maske deckt nur noch da, wo niemand stehen kann.**
+**Die Schreibmaschine schnitt dich weg — und die Tischplatte hatte gar keine Maske.**
 
 ---
 
-## Zwei deiner Marken widersprachen sich
+## Marke 1: „Leon blitzt durch die Schreibmaschine" (ROOM10E0, F376)
 
-Der Vordergrund-Teppich in ROOM10E0 (Cut 7) hat mich in beide Richtungen gefahren:
+Es war das Gegenteil. Die Schreibmaschine verdeckte **zu viel**.
 
-* **F1585** — mit der vollen Teppichmaske schnitt die Teppichkante eine **Leiche** ab, die
-  auf dem Teppich lag.
-* **F331 / F436** — ohne Teppichmaske **blitzte die Figur an 146 Punkten durch**.
+Du stehst bei Welt (1232, 0, −982). Deine Körperlinie liegt in den Bildzeilen der
+Maschine bei Tiefe **61,2…68,2**; die Maschine steht geometrisch bei **64,4…71,5** — du
+bist also **davor**. Ihre Maske trug aber **58,0…64,4** und schnitt dich über **1840
+Bildpunkte** ihrer Silhouette weg. Nach dem Fix: **0**.
 
-Beides ist derselbe Mechanismus. Eine Maske verdeckt, wenn ihre Tiefe kleiner ist als die
-des gezeichneten Dreiecks. Ein Teppich hat aber keine Vorderkante, hinter der alles gleich
-weit weg wäre — und alles, was **auf** ihm liegt, hat praktisch **seine** Tiefe. Der
-Vergleich wird zum Münzwurf und fällt zugunsten der Maske aus. Die Leiche verschwindet.
+**Ursache: der Eichfaktor 0,90.** Der korrigiert die *Silhouetten*-Schätzung (Bodenkontakt
+je Bildspalte) — deshalb verzichtet die Kollisionstiefe schon immer darauf. Er lief aber
+auch über `aufrecht`, und das rechnet geometrisch: gemessener Standpunkt, exakte
+Trigonometrie mit eingebauter Gegenprobe. Dort ist er schlicht falsch.
 
-## Die Frage, die beides trennt
-
-**„Kann dort überhaupt jemand stehen?"**
-
-* Ein Bodenpunkt, der **begehbar** ist, darf nie maskiert werden — dort steht die Figur
-  selbst, oder es liegt eine Leiche.
-* Ein Bodenpunkt, der **in einer soliden Kollisionszelle** liegt (unter einem Möbel, in
-  einer Wand), kann niemanden tragen — dort ist der Teppich echter Vordergrund und darf
-  verdecken.
-
-Beleg für „begehbar" sind die soliden Typ-1-Zellen des Bandes (Filter
-`(type&0x0f)==1 && (u0&1) && (floor>>4)==band`, Kollisionsoffset RDT `0x20`) — an 3727
-deiner eigenen Standorte zu 97,1 % bestätigt. Kein neuer Schätzwert.
-
-## Gemessen
+Dass 1,00 richtig ist, ist zweifach gemessen:
 
 ```
-Teppichpunkte gesamt                        7700
-davon vor einer soliden Zelle                518   -> maskiert (515 nach Kachelraster)
-davon auf begehbarem Boden                  7182   -> bleiben frei
-Cut 7 danach                     103 Rechtecke, 44,6 % Bildfläche, alle 10 Winkel intakt
+Quadertiefe gegen 260858 Punkte aus Capcoms EIGENEN Maskenrechtecken (31 Winkel)
+   Faktor   Medianfehler   zu nah    zu fern
+    0.90       -8.6        52.7 %     9.9 %
+    1.00       -1.0        21.7 %    21.6 %     <- ausgeglichen
 ```
 
-Der volle Teppich als siebtes Objekt hätte den Kachelhaushalt gesprengt (nur noch **8**
-statt 103 Rechtecke, 38583 Punkte der gewollten Fläche hätten gefehlt). Die Regel steckt
-deshalb schon in der Freistellung; der Generator prüft sie erneut und meldet
-„0 begehbar ausgelassen".
+## Marke 2: „Leons Bein blitzt durch die Tischplatte" (ROOM10D0, F3218)
 
-## ⛔ Was das NICHT löst — und warum das so bleiben muss
+Die Holztischplatte hatte **überhaupt keine Maske**. Sie ist farblich nicht vom dunklen
+Raum zu trennen (43, 30, 11) — jede Farbfreistellung hätte den Boden mitgenommen.
 
-Von den 214 Durchbruchpunkten der Marken F331/F436 liegen **213 auf begehbarem Boden**
-(einer in einer Zelle). Die neue Maske deckt **0** davon.
+**Neues Modell: die Kollisionszelle als QUADER.** Der bisherige Sehstrahl kennt nur
+unendlich hohe *Säulen ohne Deckel*: bei einem Hindernis, über das die Kamera hinwegsieht,
+fällt er durch und trifft erst die gegenüberliegende Innenseite — viel zu fern, und eine
+Silhouette gibt es gar nicht. Mit Deckfläche liefert die Zelle **beides** ohne eine einzige
+Farbentscheidung.
 
-Das ist kein Versäumnis, sondern die Regel: dort steht der Spieler selbst. Diese Punkte zu
-maskieren wäre exakt der Fehler, den du bei F1585 gemeldet hast. Wenn dort weiter etwas
-durchblitzt, ist die Ursache **nicht** eine fehlende Maske — dann melde bitte eine Marke,
-und ich messe an dieser Stelle den Zeichenpfad statt der Maske.
+```
+ROOM10D0 Cut 7, Zelle x-1350..-50 z26300..27850, Höhe -1100
+   Höhe gemessen an der Deckfläche: IoU 0,561, 786 der 836 braunen Plattenpunkte
+   Ergebnis: 411 von 411 Figurpunkten unterhalb der Tischkante verdeckt (vorher 0)
+```
 
-## Weiter offen
+Dazu in ROOM10E0 die **Trennwand rechts** (Zelle x1700..4100 z−4700..−900, Höhe −1400),
+zweifach eingemessen: Kantenlage 53,99 gegen 15,64 beim zweitbesten Wert, und die
+Deckfläche trifft bei −1400 alle 836 Punkte des hellen Bands.
 
-* Der Klappstuhl in ROOM10D0 Cut 7 braucht eine Freistellung von Hand — Sitzfläche und
-  Gestell sind farblich nicht vom Boden zu trennen; automatisch freistellen hieße den
-  Boden mitmaskieren.
+## ⛔ Warum ich es zweimal nicht gefunden habe
+
+Meine Messschiene zählte nur Bildpunkte, an denen die Figur **gezeichnet** wurde. Wo eine
+Maske sie zu Unrecht wegschneidet, ist das Bild gleich dem Hintergrund — der Fehler fällt
+aus der Zählung heraus. Deshalb meldete ich zweimal „der Renderer ist sauber", während du
+den Fehler die ganze Zeit gesehen hast.
+
+`selbsttest.geometrische_tiefen()` prüft jetzt für jedes geometrische Modell, dass die
+Tiefe am Bodenkontakt gleich `vz_at_floor` ist. 11 Objekte — mit dem alten Faktor wären
+**alle** durchgefallen.
+
+## Noch offen
+
+Oberhalb der Tischkante in ROOM10D0 bleibt dein Oberschenkel sichtbar — das ist richtig,
+der Tisch ist 1,1 m hoch und du stehst dahinter. Sollte dort trotzdem etwas verdecken
+müssen, ist es die **zweite, hellere Klappstuhl-Lehne** dahinter; die braucht eine
+Freistellung von Hand und ist noch nicht drin.
 
 Tests: **282/282** (im Release-Container).
