@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.7.32 (Early Preview)
+
+**1F-Karte: das Treppenhaus landet auf seiner Treppenkachel.**
+
+---
+
+## Dein Befund (fehler/MAP03.bmp)
+
+Ankunft unten im Treppenhaus (1F): die Karte markierte den langen Flur statt des
+kleinen Treppenbereichs. Gemessen: ROOM1060 saß per Zeilen-Block-Override auf
+Rect 2 (Westflur-Zeichnung); die Treppenhaus-Vorgabe war nie wirksam, und auf der
+Treppenkachel (Rect 10) saßen stattdessen zwei Flur-Splitter (ROOM1000-z0/1030).
+
+**Fix:** ROOM1060 → Rect 10 (die 24×24-Treppenkachel mit Treppensymbol), die
+Splitter → Rect 4 über eine neue NICHT-exklusive Vorgabenliste (ein harter
+ZONE_FIX hätte Rect 4 gesperrt und die geeichten Nachbarn verdrängt — die
+Kaskade des ersten Versuchs). Nebeneffekt, ebenfalls belegt: die alte
+Fahrstuhl-Vorgabe (ROOM1080 → Rect 9) greift jetzt auch.
+
+**Beweis-Anker:** die Tür 1040→1060 projiziert über 1040s AUSGELIEFERTE
+Maßstabszeile auf Karte (118,151) = die linke Kante von Rect 10; die Tür
+1040→1080 auf (114,145) = Kante von Rect 9. Der alte 1060-Marker rechnete sich
+auf ~(112,154) — unten in Rect 2, exakt „der längere Flur" deines Befunds.
+
+Die Gegenprobe im Kartentest wurde getauscht (1000↔1010 war ungültig — ROOM1000
+ist ein Flur, seine zweite Zone saß schon immer Rahmen-an-Rahmen mit Rect 1):
+neu ROOM1010↔ROOM10A0, Türgraph-Abstand 5, Rahmenlücke 15 px. Suite 282/282
+(lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.31 (Early Preview)
 
 **Dein Lasso IST die Stuhl-Zuordnung — Kunst trägt jetzt die Tiefe ihres eigenen Stuhls.**
