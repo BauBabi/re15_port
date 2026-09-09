@@ -1,3 +1,44 @@
+# RE1.5 Port — v0.7.34 (Early Preview)
+
+**Karte: der aktuelle Raum zeigt jetzt seine Zeichnung — rot geschleiert statt schwarz. Plus: der Alligator schwimmt in ROOM2090.**
+
+---
+
+## Deine zwei Nachzügler-Marken + „Kartenstück freischalten"
+
+**„Das soll weg verdammt!" — der Bogen (Blatt 1F):** Der Rest-Türschwenk stand in
+der WANDFARBE (Index 4) und klebte an den kurzen Kastenwänden eines Zimmerchens —
+das Lauflängen-Wachstum verschmolz beide, und die Größenschranke verwarf dann ALLES.
+Zweiter Filterpass nur für solche Reste (Saat ≤3, Wachstum ≤6, Komponente ≤13 px =
+Schwenkgröße §27). Gemessen am Blatt: 10 statt 9 Symbole entfernt, Nachbarblätter
+unverändert in der dokumentierten Spanne.
+
+**Wandbündige Türbalken:** die synthetischen Querbalken sind jetzt 1 px tief und
+liegen AUF der Wandlinie statt 2 px in den Raum zu ragen (deine Marke 1,
+„Wandstück links vom Spieler").
+
+**„Wenn ich Room 1010 betrete … Kartenstück freischalten":** Der Raum WURDE
+freigeschaltet — aber unsichtbar: die rote Modulation multiplizierte die grüne
+Kachel-Kunst zu fast-Schwarz. Jetzt zeichnet der aktuelle Raum seine Kunst im
+Besucht-Ton und legt einen halbtransparenten roten Schleier darüber (50/50-Mix,
+neu im Rasterizer). Live geprüft (Framebuffer-Dump 1F + 3F): Wände, Auskerbungen
+und Türsymbole sind unter dem Rot sichtbar.
+
+## Außerdem (dein Auftrag 3)
+
+**Alligator in ROOM2090:** Das RE2-EM23-Modell (22 Bones, 12 Clips) hängt an der
+byte-true RE1.5-KI (Typ 0x23, State-Tabelle @0x80118bc8, Hitbox @0x80118b98) und
+spawnt im leeren dritten Wasser-Areal des Pools (−5300, 0, −16300), Grid „Wasser".
+Bitte im Spiel ansehen — Clip-Zuordnung der RE2-Bank ist noch nicht abgenommen.
+
+**Bekannt:** Der Debug-Sprung direkt nach 1010/2090 wirft nach ~2 s in den
+Vorraum zurück (Sprung-Spawn steht in einem Tür-AOT) — der normale Weg durch
+die Tür ist nicht betroffen.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.33 (Early Preview)
 
 **1F-Karte: Türsymbole standen über Kreuz — gespiegelte Zeilen werden jetzt erkannt.**
