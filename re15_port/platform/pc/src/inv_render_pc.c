@@ -493,6 +493,80 @@ static void re15_schwenke_entfernen(int page)
             for (b = 0; b < 16; b++) if (z[b] > bn) { bn = z[b]; best = b; }
             if (best >= 0) { s_map4[y][x] = (unsigned char)best; n_weg++; }
         }
+    /* ---- ZWEITPASS FUER VERSCHMOLZENE SCHWENKE (Nutzer-Marke 2, 2026-09-09 spaet):
+     * der Bogen bei Blatt-2-Textur (99..105, 99..103) hat Laeufe 1..6, klebt aber an
+     * den KURZEN Kastenwaenden eines kleinen Zimmers (Laeufe 9..11 <= S_WACHS=10).
+     * Das Wachstum verschmolz Bogen+Kastenwand, die 10x10-Schranke verwarf ALLES -
+     * der Bogen blieb stehen ("Remaining of Resident Evil 1.5 door"). Zweiter
+     * Durchgang NUR fuer die Reste: Saat wie gehabt (<=4), Wachstum enger (<=6) -
+     * erreicht die 9..11er-Kastenwaende nicht, den 6er-Bogenfuss schon. Additiv:
+     * was Pass 1 schon entfernt hat, ist keine Wand mehr; bestehende Treffer
+     * koennen nicht verloren gehen. */
+    {
+        int t2;
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++)
+                weg[y][x] = 0;
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++)
+                if (ben[y][x] && s_map4[y][x] == WAND &&
+                    lauf[y][x] && lauf[y][x] <= 3) weg[y][x] = 1;
+        for (i = 0; i < 24; i++) {
+            int ge = 0;
+            for (y = 1; y < 255; y++)
+                for (x = 1; x < 255; x++) {
+                    if (weg[y][x] || !ben[y][x] || s_map4[y][x] != WAND) continue;
+                    if (lauf[y][x] > 6) continue;
+                    if (weg[y-1][x] || weg[y+1][x] || weg[y][x-1] || weg[y][x+1]) {
+                        weg[y][x] = 1; ge = 1;
+                    }
+                }
+            if (!ge) break;
+        }
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++) {
+                int n = 0, x0 = x, x1 = x, y0 = y, y1 = y;
+                if (weg[y][x] != 1) continue;
+                stx[0] = (short)x; sty[0] = (short)y; n = 1; weg[y][x] = 2;
+                for (t2 = 0; t2 < n; t2++) {
+                    int cx = stx[t2], cy = sty[t2], dx, dy;
+                    if (cx < x0) x0 = cx; if (cx > x1) x1 = cx;
+                    if (cy < y0) y0 = cy; if (cy > y1) y1 = cy;
+                    for (dy = -1; dy <= 1; dy++)
+                        for (dx = -1; dx <= 1; dx++) {
+                            int nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                            if (weg[ny][nx] != 1 || n >= 65536) continue;
+                            weg[ny][nx] = 2; stx[n] = (short)nx; sty[n] = (short)ny; n++;
+                        }
+                }
+                if (x1 - x0 + 1 > MAX_AUSD || y1 - y0 + 1 > MAX_AUSD || n > 13) {
+                    /* n > 13: ein Schwenk ist 13 Pixel (§27) - groessere Funde des
+                     * engen Zweitpasses sind kurze ECHTE Wandstuecke (Blatt 8/9,
+                     * gemessen: ohne die Schranke stieg der Abtrag dort auf
+                     * 9,5-10,8 %% gegen die dokumentierte Spanne 2,9-8,6 %%). */
+                    for (t2 = 0; t2 < n; t2++) weg[sty[t2]][stx[t2]] = 0;
+                } else {
+                    n_sym++;
+                    for (t2 = 0; t2 < n; t2++) weg[sty[t2]][stx[t2]] = 3;
+                }
+            }
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++) {
+                int z[16], b, best = -1, bn = 0, dx, dy;
+                if (weg[y][x] != 3) continue;
+                for (b = 0; b < 16; b++) z[b] = 0;
+                for (dy = -2; dy <= 2; dy++)
+                    for (dx = -2; dx <= 2; dx++) {
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                        if (weg[ny][nx] == 3 || s_map4[ny][nx] == WAND) continue;
+                        z[s_map4[ny][nx] & 15]++;
+                    }
+                for (b = 0; b < 16; b++) if (z[b] > bn) { bn = z[b]; best = b; }
+                if (best >= 0) { s_map4[y][x] = (unsigned char)best; n_weg++; }
+            }
+    }
     /* ---- ZWEITE KLASSE: die ORANGENEN Original-Tuerbalken (Palettenindex 2) -----
      * Nutzer 2026-09-09 (Marke 2, ROOM1040 auf 1F): "Noch ein bisschen eingezeichnete
      * Tuer der Original Resident Evil 1.5 Map die du nicht sauber entfernt hast."
@@ -762,8 +836,11 @@ static void raster_op(const re15_inv_op_t *o)
                 }
         }
     } else if (o->kind == RE15_INV_OP_FILL) {
-        /* Deckendes Rechteck in exakter Farbe (kein ABE): fuer die aus dem
-         * laufenden RE2 gemessenen Panel-Flaechen. RGB888 -> RGB555. */
+        /* Deckendes Rechteck in exakter Farbe. RGB888 -> RGB555.
+         * abe=1 = 50/50-Mix mit dem Untergrund (PSX ABR 0) - eingefuehrt fuer den
+         * CURRENT-Schleier der Karte (Nutzer 2026-09-09: die multiplikative
+         * Rot-Modulation loeschte die gruene Kachel-Kunst zu Schwarz; der Schleier
+         * faerbt rot, laesst die Zeichnung aber durchscheinen). */
         int py, pxx;
         int r5 = o->r >> 3, g5 = o->g >> 3, b5 = o->b >> 3;
         uint16_t src = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
@@ -771,7 +848,15 @@ static void raster_op(const re15_inv_op_t *o)
             for (pxx = 0; pxx < o->w; pxx++) {
                 int x = o->x + pxx, y = o->y + py;
                 if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
-                s_fb5[y][x] = src;
+                if (o->abe) {
+                    uint16_t d = s_fb5[y][x];
+                    int dr = d & 31, dg = (d >> 5) & 31, db = (d >> 10) & 31;
+                    s_fb5[y][x] = (uint16_t)(((dr + r5) >> 1)
+                                           | (((dg + g5) >> 1) << 5)
+                                           | (((db + b5) >> 1) << 10));
+                } else {
+                    s_fb5[y][x] = src;
+                }
             }
     } else if (o->kind == RE15_INV_OP_GBOX) {
         /* wave 4 + wave-6 fix (finding 3): POLY_G4 gouraud quad (DEBUG.BIN builder

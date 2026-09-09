@@ -129,7 +129,65 @@ def erkennen(pg, s_saat=4, s_wachs=10):
                     ge = 1
         if not ge:
             break
+    # ZWEITPASS (wie inv_render_pc.c re15_schwenke_entfernen): Reste, deren
+    # Komponente im ersten Pass mit kurzen Kastenwaenden verschmolz und an der
+    # 10x10-Schranke scheiterte - Wachstum enger (<=6).
+    _entf = [[0]*256 for _ in range(256)]
+    _n1 = _markiere(weg, px, ben)
+    for y in range(256):
+        for x in range(256):
+            if weg[y][x] == 3:
+                _entf[y][x] = 1
+    weg2 = [[0]*256 for _ in range(256)]
+    for y in range(256):
+        for x in range(256):
+            if ben[y][x] and px[y][x] == WAND and not _entf[y][x]                and 0 < lauf[y][x] <= 3:
+                weg2[y][x] = 1
+    for _ in range(24):
+        ge = 0
+        for y in range(1, 255):
+            for x in range(1, 255):
+                if weg2[y][x] or not ben[y][x] or px[y][x] != WAND or _entf[y][x]:
+                    continue
+                if lauf[y][x] > 6:
+                    continue
+                if weg2[y-1][x] or weg2[y+1][x] or weg2[y][x-1] or weg2[y][x+1]:
+                    weg2[y][x] = 1; ge = 1
+        if not ge:
+            break
+    _markiere(weg2, px, ben, max_px=13)
+    for y in range(256):
+        for x in range(256):
+            if weg2[y][x] == 3:
+                weg[y][x] = 3
     return weg, lauf, px, ben, maxlauf, s_saat, s_wachs
+
+
+def _markiere(weg, px, ben, max_px=65536):
+    """Komponenten (8er) + 10x10-Schranke: weg 1 -> 3 (Symbol) oder 0 (Wand)."""
+    n_sym = 0
+    for y in range(256):
+        for x in range(256):
+            if weg[y][x] != 1:
+                continue
+            st = [(x, y)]; weg[y][x] = 2
+            x0 = x1 = x; y0 = y1 = y; i = 0
+            while i < len(st):
+                cx, cy = st[i]; i += 1
+                x0 = min(x0, cx); x1 = max(x1, cx)
+                y0 = min(y0, cy); y1 = max(y1, cy)
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        nx, ny = cx + dx, cy + dy
+                        if 0 <= nx < 256 and 0 <= ny < 256 and weg[ny][nx] == 1:
+                            weg[ny][nx] = 2; st.append((nx, ny))
+            wert = 3 if (x1 - x0 + 1 <= 10 and y1 - y0 + 1 <= 10
+                         and len(st) <= max_px) else 0
+            if wert == 3:
+                n_sym += 1
+            for (cx, cy) in st:
+                weg[cy][cx] = wert
+    return n_sym
 
 
 def komponenten(weg):

@@ -118,8 +118,15 @@ static int ist_raumflaeche(const re15_inv_op_t *o)
 static int ist_rot(const re15_inv_op_t *o)
 {
     if (!ist_raumflaeche(o)) return 0;
-    if (o->kind == RE15_INV_OP_FILL)
+    if (o->kind == RE15_INV_OP_FILL) {
+        /* NEUE CURRENT-DARSTELLUNG (Nutzer 2026-09-09: "statt dass ein neues
+         * Kartenstueck freigeschaltet wird" - die (192,24,24)-Modulation
+         * loeschte die gruene Kachelkunst zu Schwarz): Kunst im Besucht-Ton +
+         * halbtransparenter roter Schleier (FILL abe=1, 200,16,16). Der
+         * Schleier IST jetzt die rote Hervorhebung der Kunst-Blaetter. */
+        if (o->abe && o->r == 200 && o->g == 16 && o->b == 16) return 1;
         return o->r == ROT_R && o->g == ROT_G && o->b == ROT_B;
+    }
     return o->r == ROT_SPRT_R && o->g == ROT_SPRT_G && o->b == ROT_SPRT_B;
 }
 

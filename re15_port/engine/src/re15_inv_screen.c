@@ -2086,10 +2086,15 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                         q = &e.ops[e.n++];
                         q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
                         q->u = 0; q->v = 0;
-                        q->x = (int16_t)(laengs_x ? mx - 2 : mx - 1);
-                        q->y = (int16_t)(laengs_x ? my - 1 : my - 2);
-                        q->w = (int16_t)(laengs_x ? 5 : 2);
-                        q->h = (int16_t)(laengs_x ? 2 : 5);
+                        /* ⛔ WANDBUENDIG, 1 px dick (Nutzer 2026-09-09 spaet, Marke 1
+                         * "Little piece of wall"): der 2 px dicke Balken ragte an der
+                         * Treppenkachel-Westwand ueber die 1-px-Wandlinie hinaus in
+                         * den Raum und las sich als Wandstummel. Der RE2-Balken sitzt
+                         * IN der Wandlinie - also genau ihre Dicke. */
+                        q->x = (int16_t)(laengs_x ? mx - 2 : mx);
+                        q->y = (int16_t)(laengs_x ? my : my - 2);
+                        q->w = (int16_t)(laengs_x ? 5 : 1);
+                        q->h = (int16_t)(laengs_x ? 1 : 5);
                         q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb;
                     }
                 } else {
@@ -2260,6 +2265,30 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     int nteil = re15_map_teil_count((unsigned)st->map_page,
                                                     (unsigned)i);
                     if (nteil <= 0) {
+                        /* ⛔ CURRENT NICHT MULTIPLIKATIV ROT (Nutzer 2026-09-09 spaet:
+                         * "statt dass ein neues Kartenstueck freigeschaltet wird").
+                         * Die Kachel-Kunst ist GRUEN-dominiert (Raumfarbe Index 1);
+                         * mod5 mit (192,24,24) loescht den Gruenkanal -> die Zeichnung
+                         * wird fast schwarz und liest sich als "nicht aufgedeckt".
+                         * RE2s Vorlage traegt dunkelrote FUELLUNG auf sichtbarer
+                         * Zeichnung. Deshalb: Kunst im Besucht-Ton blitten und einen
+                         * halbtransparenten roten Schleier darueberlegen. */
+                        if (rs == RE15_MAP_RECT_CURRENT) {
+                            /* ⛔ SCHLEIER-OP ZUERST einreihen: die Op-Liste wird von
+                             * HINTEN gerastert (inv_render_pc.c; Memory reai-v2-
+                             * zeichenreihenfolge-invers) - eine nach der Kachel
+                             * eingereihte Op laege UNTER ihr. */
+                            if (e.n < e.max) {
+                                re15_inv_op_t *qs = &e.ops[e.n++];
+                                qs->kind = RE15_INV_OP_FILL; qs->page = 0; qs->clut = 0;
+                                qs->abe = 1; qs->u = 0; qs->v = 0;
+                                qs->x = (int16_t)rx; qs->y = (int16_t)ry;
+                                qs->w = (int16_t)rw; qs->h = (int16_t)rh;
+                                qs->r = 200; qs->g = 16; qs->b = 16;
+                            }
+                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                                 rx, ry, rw, rh, ru, rv, 40, 144, 40, 1);
+                        } else
                         sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
@@ -2296,8 +2325,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                                 continue;
                             }
                             if (ts == RE15_MAP_RECT_UNVISITED) continue;
+                            /* wie oben: current = Kunst im Besucht-Ton + Schleier */
                             if (ts == RE15_MAP_RECT_CURRENT)
-                                { tr = 192; tg = 24; tb = 24; }
+                                { tr = 40; tg = 144; tb = 40; }
                             /* auf das Rechteck klemmen - der Ausschnitt kommt aus
                              * einem Weltraster und darf nicht darueber hinausragen */
                             if (tx < rx) { tw -= (rx - tx); tx = rx; }
@@ -2305,6 +2335,14 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             if (tx + tw > rx + rw) tw = rx + rw - tx;
                             if (ty + th > ry + rh) th = ry + rh - ty;
                             if (tw <= 0 || th <= 0) continue;
+                            if (ts == RE15_MAP_RECT_CURRENT && e.n < e.max) {
+                                re15_inv_op_t *qs = &e.ops[e.n++];
+                                qs->kind = RE15_INV_OP_FILL; qs->page = 0; qs->clut = 0;
+                                qs->abe = 1; qs->u = 0; qs->v = 0;
+                                qs->x = (int16_t)tx; qs->y = (int16_t)ty;
+                                qs->w = (int16_t)tw; qs->h = (int16_t)th;
+                                qs->r = 200; qs->g = 16; qs->b = 16;
+                            }
                             sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
