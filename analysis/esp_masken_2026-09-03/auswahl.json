@@ -394,7 +394,7 @@
    "objekte": [
     {
      "name": "Pult mit Schreibmaschine (Nutzer-Original)",
-     "png": "pri/10E0/07_01_pult_gefixed.png",
+     "png": "pri/10E0/07_01.png",
      "x": 110,
      "y": 97,
      "massstab": 1,
@@ -555,7 +555,7 @@
    "objekte": [
     {
      "name": "Tischplatte hinten",
-     "png": "pri/10D0/01a_tischplatte.png",
+     "png": "pri/10D0/01_01.png",
      "x": 130,
      "y": 88,
      "massstab": 1,
@@ -565,7 +565,7 @@
     },
     {
      "name": "Tischgestell hinten",
-     "png": "pri/10D0/01b_gestell.png",
+     "png": "pri/10D0/01_02.png",
      "x": 124,
      "y": 87,
      "massstab": 1,
@@ -580,7 +580,7 @@
    "objekte": [
     {
      "name": "Stuhlkante",
-     "png": "pri/10D0/06.png",
+     "png": "pri/10D0/06_01.png",
      "x": 34,
      "y": 172,
      "massstab": 1,
@@ -590,7 +590,7 @@
     },
     {
      "name": "Pflanze links",
-     "png": "pri/10D0/06b_pflanze.png",
+     "png": "pri/10D0/06_02.png",
      "x": 2,
      "y": 72,
      "massstab": 1,

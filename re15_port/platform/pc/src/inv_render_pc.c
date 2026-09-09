@@ -493,6 +493,59 @@ static void re15_schwenke_entfernen(int page)
             for (b = 0; b < 16; b++) if (z[b] > bn) { bn = z[b]; best = b; }
             if (best >= 0) { s_map4[y][x] = (unsigned char)best; n_weg++; }
         }
+    /* ---- ZWEITE KLASSE: die ORANGENEN Original-Tuerbalken (Palettenindex 2) -----
+     * Nutzer 2026-09-09 (Marke 2, ROOM1040 auf 1F): "Noch ein bisschen eingezeichnete
+     * Tuer der Original Resident Evil 1.5 Map die du nicht sauber entfernt hast."
+     * GEMESSEN: der Rest ist NICHT in der Wandfarbe (Index 4), sondern Index 2 -
+     * den fasst der Schwenke-Filter nie an. Index 2 ist aber nicht ueberall Tuer:
+     * Blatt 6/7/12 tragen grosse, WANDFERNE Index-2-Flaechen (150-200 px, 0-10 %
+     * Wandnachbarn = legitime Zeichnung). Der Tuerbalken auf Blatt 2 ist klein und
+     * liegt IN der Wand (53 px, 100 % mit Index-4-Nachbar). Kriterium deshalb:
+     * Komponente <= 64 px UND >= 60 % der Pixel mit Wand-Nachbar (8er). */
+    {
+        static unsigned char b2[256][256];
+        int t;
+        memset(b2, 0, sizeof b2);
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++)
+                if (ben[y][x] && s_map4[y][x] == 2) b2[y][x] = 1;
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++) {
+                int n = 0, wandnah = 0, dx, dy;
+                if (b2[y][x] != 1) continue;
+                stx[0] = (short)x; sty[0] = (short)y; n = 1; b2[y][x] = 2;
+                for (t = 0; t < n; t++) {
+                    int cx = stx[t], cy = sty[t], hat = 0;
+                    for (dy = -1; dy <= 1; dy++)
+                        for (dx = -1; dx <= 1; dx++) {
+                            int nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                            if (s_map4[ny][nx] == WAND) hat = 1;
+                            if (b2[ny][nx] != 1 || n >= 65536) continue;
+                            b2[ny][nx] = 2; stx[n] = (short)nx; sty[n] = (short)ny; n++;
+                        }
+                    if (hat) wandnah++;
+                }
+                if (n <= 64 && wandnah * 100 >= n * 60) {
+                    int u2;
+                    for (u2 = 0; u2 < n; u2++) {
+                        /* Ersatz wie oben: haeufigster Nicht-Wand-Nicht-Index-2-Nachbar */
+                        int z[16], b, best = -1, bn = 0, px2 = stx[u2], py2 = sty[u2];
+                        for (b = 0; b < 16; b++) z[b] = 0;
+                        for (dy = -2; dy <= 2; dy++)
+                            for (dx = -2; dx <= 2; dx++) {
+                                int nx = px2 + dx, ny = py2 + dy;
+                                if (nx < 0 || nx > 255 || ny < 0 || ny > 255) continue;
+                                if (s_map4[ny][nx] == WAND || s_map4[ny][nx] == 2) continue;
+                                z[s_map4[ny][nx] & 15]++;
+                            }
+                        for (b = 0; b < 16; b++) if (z[b] > bn) { bn = z[b]; best = b; }
+                        if (best >= 0) { s_map4[py2][px2] = (unsigned char)best; n_weg++; }
+                    }
+                    n_sym++;
+                }
+            }
+    }
     fprintf(stderr, "[inv] Blatt %d: %d RE1.5-Tuerschwenke entfernt (%d Pixel)\n",
             page, n_sym, n_weg);
 }

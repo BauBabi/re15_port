@@ -1565,9 +1565,13 @@ def main():
         a = 0x800768b0 + idx * 8
         return s16(a), s16(a + 2), u16(a + 4), u16(a + 6)
 
-    def _proj(wx, wz, ox, oy, sx, sy):
-        return (((((wx + 32000) * 10 * sx) >> 20) + 5) // 10 + ox,
-                -(((((wz + 32000) * 10 * sy) >> 20) + 5) // 10) + oy)
+    def _proj(wx, wz, ox, oy, sx, sy, fx=0, fz=0):
+        # fx/fz: Achsen-Spiegelung der ZEILE (hergeleitete Zeilen gespiegelter
+        # Raum-Frames, gen_marker_zeilen.FLIPS - Nutzer-Marken 3-6, 2026-09-09).
+        _vx = ((((wx + 32000) * 10 * sx) >> 20) + 5) // 10
+        _vz = ((((wz + 32000) * 10 * sy) >> 20) + 5) // 10
+        return ((-_vx if fx else _vx) + ox,
+                (_vz if fz else -_vz) + oy)
 
     def _sca_punkte(rid):
         pts = []
@@ -1578,6 +1582,7 @@ def main():
         return pts
 
     eichung = {}          # (room, zi) -> (ox, oy, sx, sy)
+    _ZFLIP = {}           # raum -> (fx, fz): Spiegelung der hergeleiteten Zeile
     kandidaten = []
     for b in sorted(zinfo):
         ox, oy, sx, sy = _zeile(b)
@@ -2367,18 +2372,22 @@ def main():
                          if page_of(b) is not None and page_of(b) != 0xd)
         _GM.ZONEN_N = collections.Counter(dict((b, len(zinfo[b])) for b in zinfo))
         _zeilen, _zq = _GM.alle_zeilen()
+        # Spiegelungen der hergeleiteten Zeilen - gelten ueberall, wo mit der
+        # Zeile projiziert wird (rows-Block, to_map, Header-Emission).
+        _ZFLIP.update(getattr(_GM, 'FLIPS', {}))
         _neu, _guete = {}, []
         for b in sorted(zinfo):
             pg = page_of(b)
             if pg is None or pg == 0xd or b not in _zeilen:
                 continue
             _ox, _oy, _sx, _sz = _zeilen[b]
+            _fl = _ZFLIP.get(b, (0, 0))
             R = rects(pg)
             if not R:
                 continue
             for i, (x0, x1, z0, z1) in enumerate(zinfo[b]):
-                px0 = _GM.karte_x(x0, _ox, _sx); px1 = _GM.karte_x(x1, _ox, _sx)
-                py0 = _GM.karte_y(z1, _oy, _sz); py1 = _GM.karte_y(z0, _oy, _sz)
+                px0 = _GM.karte_x(x0, _ox, _sx, _fl[0]); px1 = _GM.karte_x(x1, _ox, _sx, _fl[0])
+                py0 = _GM.karte_y(z1, _oy, _sz, _fl[1]); py1 = _GM.karte_y(z0, _oy, _sz, _fl[1])
                 px0, px1 = min(px0, px1), max(px0, px1)
                 py0, py1 = min(py0, py1), max(py0, py1)
                 fl = max(1, (px1 - px0) * (py1 - py0))
@@ -2768,7 +2777,8 @@ def main():
             ei = None
         if ei:
             ox, oy, sx, sy = ei
-            mx, my = _proj(wx, wz, ox, oy, sx, sy)
+            _fl = _ZFLIP.get(room & 0xFFF0, (0, 0))
+            mx, my = _proj(wx, wz, ox, oy, sx, sy, _fl[0], _fl[1])
             R = rects(pg)[r]
             # ⛔ MERKEN, OB DIE KLEMMUNG BEIDE ACHSEN GETROFFEN HAT. Trifft sie nur eine,
             # bleibt die andere Koordinate eine echte Messung - die Tuer sitzt dann auf
@@ -3049,7 +3059,11 @@ def main():
         # Konstruktion nie aus dem Rechteck laeuft.
         if _et:
             ei = (0, 0, 0, 0)
-        _o = ZONE_ORIENT.get((room & 0xFFF0, zi), (0, 0))
+        _o = ZONE_ORIENT.get((room & 0xFFF0, zi))
+        if _o is None and ei != (0, 0, 0, 0):
+            _o = _ZFLIP.get(room & 0xFFF0)
+        if _o is None:
+            _o = (0, 0)
         o.append(f"    {{ 0x{room:04X}, {bb[0]:6d}, {bb[2]:6d}, {bb[1]:6d}, {bb[3]:6d}, {pg:2d}, {r:3d}, {zi}, {zd:3d},"
                  f" {ei[0]:5d}, {ei[1]:5d}, {ei[2]:5d}, {ei[3]:5d}, {_o[0]}, {_o[1]}, {_sy:3d}, {_et} }},")
     o.append("};")

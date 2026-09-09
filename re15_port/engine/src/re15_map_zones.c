@@ -276,8 +276,14 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
     if (zn->sx && zn->sy) {
         int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
         int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
-        int32_t px = (t + 5) / 10 + zn->ox;
-        int32_t py = -((t2 + 5) / 10) + zn->oy;
+        /* ⛔ SPIEGELUNG AUCH IM ZEILEN-PFAD (Nutzer-Marken 3-6, 2026-09-09):
+         * hergeleitete Zeilen gespiegelter Raum-Frames (ROOM1010: sein lokales
+         * +z laeuft gegen Karten-oben, bezeugt durch die AUSGELIEFERTE Zeile
+         * des Nachbarn ROOM1020 samt dessen Tuer-Records) tragen flip_x/flip_z;
+         * ohne den Toggle sprang der Marker beim Tuerdurchgang von der oberen
+         * zur unteren Tuer. Ausgelieferte Zeilen tragen immer 0/0. */
+        int32_t px = (zn->flip_x ? -((t + 5) / 10) : ((t + 5) / 10)) + zn->ox;
+        int32_t py = (zn->flip_z ? ((t2 + 5) / 10) : -((t2 + 5) / 10)) + zn->oy;
         if (px < rx) px = rx;
         if (px > rx + rw - 1) px = rx + rw - 1;
         if (py < ry) py = ry;

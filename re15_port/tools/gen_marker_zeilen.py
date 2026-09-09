@@ -58,13 +58,27 @@ SKALA_MIN, SKALA_MAX = 1200, 3300
 NL = chr(10)          # der Header wird mit LF geschrieben (.gitattributes)
 
 
-def karte_x(w, ox, sx):
-    return ((((w + 32000) * 10 * sx) >> 20) + 5) // 10 + ox
+# ⛔ ORIENTIERUNG (2026-09-09, Nutzer-Marken 3-6): jeder Raum hat ein EIGENES lokales
+# System; nichts zwingt Welt-+z eines Raums auf Karten-oben. FLIPS[raum] = (fx, fz)
+# traegt die je Raum ERKANNTE Spiegelung der hergeleiteten Zeile (Ordnungs-Signatur,
+# s. herleiten); die ausgelieferten Zeilen definieren ihre Orientierung selbst (lhu,
+# positiv) und bekommen nie einen Eintrag.
+FLIPS = {}
+# Raeume mit AUSGELIEFERTER Zeile - nur sie sind erstklassige Zeugen fuer die
+# Ordnungs-Signatur (eine selbst hergeleitete Nachbar-Zeile kann selbst schief
+# stehen; ROOM1180 bekam so einen falschen Flip ueber den 11D0-Punkt).
+AUSGELIEFERT = set()
 
 
-def karte_y(w, oy, sz):
+def karte_x(w, ox, sx, flip=0):
+    v = ((((w + 32000) * 10 * sx) >> 20) + 5) // 10
+    return (-v if flip else v) + ox
+
+
+def karte_y(w, oy, sz, flip=0):
     t = -(((((w + 32000) * 10 * sz) >> 20)) + 5)
-    return (t // 10 if t >= 0 else -((-t) // 10)) + oy
+    v = (t // 10 if t >= 0 else -((-t) // 10))
+    return (-v if flip else v) + oy
 
 
 def _blatt_und_zonen():
@@ -86,17 +100,28 @@ def tueren(a):
             if not (d['rw'] == 0 and d['rd'] == 0)]
 
 
-def gegentuer(a, b):
-    """Der Datensatz in B, der zurueck nach A fuehrt."""
-    for d in tueren(b):
-        if d['dest'] == a:
-            return d
-    return None
+def gegentuer(a, b, eigene=None):
+    """Der Datensatz in B, der zurueck nach A fuehrt.
+
+    ⛔ Bei ZWEI Tueren zum selben Nachbarn (ROOM1010<->ROOM1020) nahm der
+    Erste-Treffer-Weg fuer BEIDE eigenen Tueren dieselbe Gegentuer - der
+    Zeilen-Fit mischte damit Kreuz-Korrespondenzen (Nutzer-Marken 3-6,
+    2026-09-09). Die Gegentuer ist der Record, dessen SPAWN im eigenen Raum
+    der eigenen Tuer am naechsten liegt - reine Weltdaten, kein Fit.
+    """
+    kand = [d for d in tueren(b) if d['dest'] == a]
+    if not kand:
+        return None
+    if eigene is None or len(kand) == 1:
+        return kand[0]
+    return min(kand, key=lambda d: (d['nx'] - eigene['lx']) ** 2
+                                 + (d['nz'] - eigene['lz']) ** 2)
 
 
 def _kartenpunkt(a, wx, wz, bekannt):
     z = bekannt[a]
-    return (karte_x(wx, z[0], z[2]), karte_y(wz, z[1], z[3]))
+    f = FLIPS.get(a, (0, 0))
+    return (karte_x(wx, z[0], z[2], f[0]), karte_y(wz, z[1], z[3], f[1]))
 
 
 # Rangfolge der Korrespondenz-Familien. Gemessen 2026-09-03 an der Auslassprobe, jede
@@ -128,7 +153,7 @@ def _paar_punkte(b, bekannt):
         if not darf(a):
             continue
         # (1) Trigger in B <-> Trigger in A: beide sind die AOT-Flaeche AN der Tuer.
-        da = gegentuer(b, a)
+        da = gegentuer(b, a, d)
         if da:
             fam['trigger'].append(((d['lx'], d['lz']),
                                    _kartenpunkt(a, da['lx'], da['lz'], bekannt), a))
@@ -171,8 +196,53 @@ def herleiten(b, bekannt):
     # Zwei-Tueren-Weg fast immer aus (1 von 96 Raeumen), und fast ueberall musste der
     # Massstab geliehen werden, was der groesste Fehleranteil ist. x und z sind
     # unabhaengige Gleichungen; sie duerfen aus VERSCHIEDENEN Paaren kommen.
+    # ⛔ ORIENTIERUNG ZUERST (Nutzer-Marken 3-6, 2026-09-09): die ORDNUNG der
+    # Tuerpunkte entlang jeder Achse ist ein freier Zeuge ohne Offset-Fit. Normal
+    # gilt: Welt-x steigt -> Karten-x steigt; Welt-z steigt -> Karten-y FAELLT
+    # (FUN_800473f8 negiert die z-Haelfte). Sagen ALLE nutzbaren Paare das
+    # Gegenteil, ist die Achse des Raums gegen die Karte gespiegelt. Das
+    # Offset-Residuum kann das bei 2 Punkten prinzipiell nicht sehen (mit je neu
+    # gefittetem Median ist es vorzeichen-symmetrisch) - ROOM1010 stand deshalb
+    # monatelang spiegelverkehrt: beide Tuermarken ueber Kreuz, 24 px, und der
+    # Marker sprang beim Durchgang von der oberen zur unteren Tuer.
+    def _ordnung(achse):
+        stimmen = 0; gesamt = 0
+        for i in range(len(pk)):
+            for j in range(i + 1, len(pk)):
+                (b1, P1, a1), (b2, P2, a2) = pk[i], pk[j]
+                # ⛔ NUR ERSTKLASSIGE ZEUGEN: beide Kartenpunkte ueber AUSGELIEFERTE
+                # Nachbarzeilen, und der Karten-Abstand deutlich ueber dem
+                # Rauschboden (Zeilen-Median 5 px). ROOM1180 bekam sonst einen
+                # falschen z-Flip: sein Welt-z bildet kaum auf Karten-y ab
+                # (19,5k Welt -> 4 px), und der dritte Zeuge lief ueber die
+                # selbst hergeleitete 11D0-Zeile.
+                if a1 not in AUSGELIEFERT or a2 not in AUSGELIEFERT:
+                    continue
+                dw = b1[achse] - b2[achse]
+                dP = P1[achse] - P2[achse]
+                if abs(dw) < 1500 or abs(dP) < 6:
+                    continue
+                gesamt += 1
+                erwartet = dw * dP         # x: gleichsinnig; z: gegensinnig
+                if achse == 1:
+                    erwartet = -erwartet
+                if erwartet < 0:
+                    stimmen += 1
+        if gesamt == 0:
+            return 0
+        if stimmen == gesamt:
+            return 1                       # ALLE Paare widersprechen -> Flip
+        if stimmen > 0:
+            return -1                      # uneins -> kein Urteil, kein Flip
+        return 0
+
+    _sig_x, _sig_z = _ordnung(0), _ordnung(1)
+    fx = 1 if _sig_x == 1 else 0
+    fz = 1 if _sig_z == 1 else 0
+
     def loese(achse):
         best = None
+        flip = fx if achse == 0 else fz
         for i in range(len(pk)):
             for j in range(i + 1, len(pk)):
                 (b1, P1, a1), (b2, P2, a2) = pk[i], pk[j]
@@ -180,7 +250,10 @@ def herleiten(b, bekannt):
                 if abs(d) < 3000:
                     continue               # zu nah: die Division wird beliebig
                 dp = P1[achse] - P2[achse]
-                s = int(round(1048576.0 * (dp if achse == 0 else -dp) / d))
+                s = 1048576.0 * (dp if achse == 0 else -dp) / d
+                if flip:
+                    s = -s
+                s = int(round(s))
                 if not (SKALA_MIN <= s <= SKALA_MAX):
                     continue
                 if best is None or abs(d) > best[0]:
@@ -188,6 +261,33 @@ def herleiten(b, bekannt):
         return best
 
     lx, lz = loese(0), loese(1)
+
+    # ⛔ ZWEITER ZEUGE (ROOM2060): findet die Normal-Variante KEINEN gueltigen
+    # Massstab, die gespiegelte aber schon, und streut deren Offset-Fit enger,
+    # ist die Achse gespiegelt - auch ohne ausgelieferten Nachbarn. Die Signatur
+    # hat Vorrang; hier geht es nur um Achsen OHNE deren Urteil.
+    def _streuung(achse, flip, skala):
+        f = (karte_x, karte_y)[achse]
+        w = sorted(P[achse] - f(bl[achse], 0, skala, flip) for bl, P, _a in pk)
+        med = w[len(w) // 2]
+        return sum(abs(v - med) for v in w) / len(w)
+    _ref_nachbar = pk[0][2]
+    for _achse, _sig in ((0, _sig_x), (1, _sig_z)):
+        if _sig != 0:
+            continue
+        _norm = loese(_achse)
+        _alt_flip = (fx, fz)
+        if _achse == 0: fx = 1
+        else:           fz = 1
+        _gefl = loese(_achse)
+        _ref = bekannt[_ref_nachbar][2 if _achse == 0 else 3]
+        if _norm is None and _gefl is not None and len(pk) >= 2 and            _streuung(_achse, 1, _gefl[1]) + 2 < _streuung(_achse, 0, _ref):
+            if _achse == 0: lx = _gefl
+            else:           lz = _gefl
+        else:
+            fx, fz = _alt_flip
+    lx = lx if lx else loese(0)
+    lz = lz if lz else loese(1)
     a1 = pk[0][2]
     sx = lx[1] if lx else bekannt[a1][2]
     sz = lz[1] if lz else bekannt[a1][3]
@@ -197,12 +297,18 @@ def herleiten(b, bekannt):
     # auseinander (BEFUND.md §29). Das ist der Rauschboden - mitteln druckt ihn weg,
     # und der Median haelt dabei die Ausreisser draussen (ROOM30E0/ROOM3030: 60 px,
     # weil der Korridor IN der Zone des Nachbarn liegt, §25).
-    ox = _median([P[0] - karte_x(bl[0], 0, sx) for bl, P, _a in pk])
-    oy = _median([P[1] - karte_y(bl[1], 0, sz) for bl, P, _a in pk])
-    wie = ('%s x%d, Massstab x %s, z %s'
+    ox = _median([P[0] - karte_x(bl[0], 0, sx, fx) for bl, P, _a in pk])
+    oy = _median([P[1] - karte_y(bl[1], 0, sz, fz) for bl, P, _a in pk])
+    if fx or fz:
+        FLIPS[b] = (fx, fz)
+    else:
+        FLIPS.pop(b, None)
+    wie = ('%s x%d, Massstab x %s, z %s%s'
            % (welche, len(pk),
               'aus %04X/%04X' % (lx[2], lx[3]) if lx else 'geliehen von %04X' % a1,
-              'aus %04X/%04X' % (lz[2], lz[3]) if lz else 'geliehen von %04X' % a1))
+              'aus %04X/%04X' % (lz[2], lz[3]) if lz else 'geliehen von %04X' % a1,
+              ', GESPIEGELT %s%s (Ordnungs-Signatur)'
+              % ('x' if fx else '', 'z' if fz else '') if (fx or fz) else ''))
     return (ox, oy, sx, sz), wie
 
 
@@ -277,6 +383,8 @@ def alle_zeilen():
         if z:
             bekannt[rm] = z
             quelle[rm] = 'ausgeliefert'
+    AUSGELIEFERT.clear()
+    AUSGELIEFERT.update(bekannt)
     for _runde in range(6):
         neu = {}
         for rm in sorted(BLATT):
