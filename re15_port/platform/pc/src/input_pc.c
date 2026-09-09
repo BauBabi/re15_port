@@ -74,6 +74,8 @@ static uint16_t script_bit_for(char c)
          * Die Zeilen-/Raum-Navigation laeuft dort ueber das HELD-Halbwort 0x800AC760, ein Token
          * muss deshalb exakt so viele Frames lang sein wie Schritte gewuenscht sind. */
         case 'E': case 'e': return RE15_PAD_SELECT;
+        case 'Q': case 'q': return 0x0400;  /* L1 - Karten-Sofortstart im Status-Screen
+                                             * (MAP entry @0x8004997c-98, re15_inv_screen.c:347) */
         case 'T': case 't': return RE15_PAD_TRIANGLE;
         case 'W': case 'w': default: return 0;   /* wait / unknown -> no bit */
     }
