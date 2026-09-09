@@ -1,3 +1,37 @@
+# RE1.5 Port — v0.7.33 (Early Preview)
+
+**1F-Karte: Türsymbole standen über Kreuz — gespiegelte Zeilen werden jetzt erkannt.**
+
+---
+
+## Deine Marken 1–6 (Kartenansicht)
+
+**Marken 3–6** („gehe oben durch die Tür, lande unten"): Engine und Türen waren
+unschuldig — die HERGELEITETE Kartenzeile von ROOM1010 war z-gespiegelt (jeder Raum
+hat sein eigenes lokales Koordinatensystem; die Herleitung kannte keine Spiegelung,
+und bei zwei Türen zum selben Nachbarn paarte sie beide mit demselben Gegen-Record).
+Jetzt: Ordnungs-Signatur je Achse (nur ausgelieferte Nachbarzeilen als Zeugen),
+Spawn-basierte Gegentür-Paarung, Spiegel-Spalten wirken auch im Zeilen-Pfad.
+Prüfmaß Türpaar-Konsistenz game-weit: Median 2,2 → 0,0 px; Ausreißer >12 px 19 → 8;
+dein Fall 1010↔1020 von 24 px über Kreuz auf deckungsgleich.
+
+**Marke 2** (Original-Tür „nicht sauber entfernt"): der Rest steht in Palettenindex 2
+(orange), nicht in der Wandfarbe — zweite Filterklasse ergänzt (klein + wandnah;
+die großen wandfernen Index-2-Flächen auf anderen Blättern sind legitime Kunst
+und bleiben).
+
+**Marke 1** (Wand-Stück an der Treppenkachel): Tabellenlage der Symbole ist per
+Original-Anker korrekt; die Zeichnung an der Kachelkante braucht noch eine
+verlässliche Panel-Messung — offen, kein Blindfix.
+
+## Außerdem (dein Auftrag)
+
+PRI-Aufräumen: 10 unbenutzte Dateien entfernt, 5 auf deine NN_MM-Nomenklatur
+umbenannt (10D0/01a+01b→01_01/01_02, 06+06b→06_01/06_02, 10E0-Pult→07_01);
+die abgenommenen Masken bleiben byte-identisch. Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.32 (Early Preview)
 
 **1F-Karte: das Treppenhaus landet auf seiner Treppenkachel.**
