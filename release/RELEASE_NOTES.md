@@ -1,47 +1,43 @@
-# RE1.5 Port — v0.7.26 (Early Preview)
+# RE1.5 Port — v0.7.27 (Early Preview)
 
-**Drei Marker gefixt — und deine letzten 2F-Freistellungen sind drin.**
+**Dein Pult-Fix gilt, und die Bürostühle im Communication Room decken.**
 
 ---
 
-## Marke 1 (ROOM10E0): das Überblenden oberhalb des Blatts
+## Schreibmaschine: dein `07_01_pult_gefixed.png` ist die Quelle
 
-Zwei Quellen, beide beseitigt:
-1. Im **Lehn-Fenster** über der Maschine steckten Nicht-Maschinen-Punkte in der
-   Pult-Freistellung (graue Kante, grüner Teppich) — die blitteten auf deinen Oberkörper,
-   wenn du dich über die Maschine lehnst. 1076 Punkte in einer **Kopie** entfernt; dein
-   Original bleibt unangetastet, Maschine/Papier/Tasten decken unverändert.
-2. Die **Trennwand rechts** hatte eine Maske ohne jeden möglichen Verdeckungsfall —
-   hinter ihrer Zelle kann niemand stehen (Sperrbereich, auch für Gegner). Ihre
-   Randkacheln blendeten deinen Arm. Entfernt.
+Was ich anders gemacht hatte: meine `bereinigt`-Datei war dein Original **minus 35
+Punkte** (x211..259/y150..182) — exakt das halbrunde Loch oberhalb der Tischplatte, das
+du gesehen hast; entfernt wegen der minimalen Lehn-Blende an F3245. Deine Abwägung ist
+übernommen: das Loch stört mehr. (Dein gefixed ist übrigens nicht 100 % identisch mit
+dem Original: 14291 statt 14303 Deckpunkte — 12 Randpixel.) Die Lehn-Blende kann an der
+einen Stelle minimal wiederkehren.
 
-Sichtprobe an deiner Marke: Hand und Arm frei, Beine an der Sperrlinie weiter verschluckt.
+## Communication Room (ROOM10F0): die Bürostühle
 
-## Marke 2 (ROOM10D0): die Pflanze
+Deine fünf Marken zeigten alle dasselbe: die Stühle deckten nicht, weil meine
+Kollisions-Umstellung ihnen ferne Zellen zugewiesen hatte. Die Stühle stehen auf
+**eigenen Kreiszellen** (11 im RDT) — jeder sichtbare Stuhl ist jetzt ein eigener
+Quader (Winkel 4: acht, Winkel 5: vier; Höhe −700 aus dem einzigen sauberen
+Binnen-Gipfel des Kantenmaßes). Fünf-Marken-Probe: der Stuhl zwischen Kamera und dir
+deckt seinen Überlapp **vollständig** (238/238, 245/245, 573/573, 257/257, 161/161).
 
-Ihr Standpunkt kam aus der bildrand-geklippten untersten Zeile → Tiefe 53…62, *vor* dir.
-Der Topf steht auf der **Kreiszelle** x7600..8600 z25200..26200 (RDT-Kollision); ihre
-Mitte projiziert auf Bild(33,170), Kamera-z 7006. Mit der gemessenen Topfzeile liegt das
-Profil bei **100…117 — hinter dir**, wie es sein muss.
+## Werkzeug: zwei Bremsen raus
 
-## Marke 3 (ROOM1100): Zombies um die Ecke — und deine Frage
+Der 10F0-Bau hing über eine Stunde. Ursachen gemessen und behoben:
+1. Der Kollisions-Raycast lief als reine Python-Doppelschleife je Kandidatenzelle —
+   jetzt vektorisiert, **bit-identische** Gegenprobe, ~20× schneller.
+2. Die Kachel-Kombinationssuche war `10^Objekte` (11 Objekte = 10¹¹) — jetzt
+   Gier-Verfeinerung mit denselben Grenzen. Der ganze Raum baut in Sekunden.
 
-**Ja, allgemein lösbar.** Das Original liefert für diesen Raum weder Masken noch ein
-Regions-Viereck — deshalb war nichts da, was die Gegner im Querflur verdeckt. Aber die
-Eckwände sind **Kollisionszellen**, und der Quader macht daraus Maske samt Tiefe ohne
-jede Freistellung. Gemessen: der Zombie hinter der Wand (Tiefe 195) komplett gedeckt,
-der in der Ecköffnung bleibt zu Recht sichtbar, dein Spielerkasten 0 Bisse. Dieselbe
-Technik trägt für jeden Winkel, dessen Wand eine Zelle ist — F9 genügt.
+## Karte 1F (dein Treppenhaus-Befund): diagnostiziert, kommt als eigene Runde
 
-## Deine letzten 2F-Freistellungen
-
-Alle 15 eingemessen (jede mit **100 % Übereinstimmung** platziert, Standard-Tiefenregel):
-
-```
-ROOM10F0: 11 Objekte auf den Winkeln 0-6
-ROOM1110:  4 Objekte auf den Winkeln 0, 2, 6
-```
-
-Wenn eine davon eine andere Tiefenregel braucht, zeigt es dein nächster F9-Durchlauf.
+Die Ursache ist gefunden und dokumentiert: **ROOM1000 — der lange Flur — saß auf der
+Treppenhaus-Kachel** (Rect 10, Bildschirm 119,134), und die Vorgabe für ROOM1060 wurde
+im Generator von einem späteren Block überfahren. Der Fix selbst ist gemessen richtig,
+löste aber eine Kaskade in den historisch verdrahteten 1F-Zuordnungen aus (Eichungen
+wanderten, zwei Kartentests wurden rot). Statt das neben dem Release zu verbiegen,
+kommt die Karte als fokussierte eigene Runde — die komplette Schreibpfad-Diagnose
+liegt bereit.
 
 Tests: **282/282** (im Release-Container).
