@@ -1236,19 +1236,7 @@ def main():
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
-        # ⛔ 2026-09-09, Nutzer-Befund (fehler/MAP03.bmp): "im Treppenhaus unten haette
-        # ich erwartet, im kleinen Bereich zu landen, mit Treppensymbol - stattdessen
-        # lande ich im laengeren Flur". Die Vertausch-Analyse vom 2026-09-01 verglich
-        # nur Rect 8 (16x17) und Rect 9 (10x10) - Seite 2 fuehrt aber ELF Rechtecke,
-        # und Rect 10 fehlte im Vergleich: Bildschirm(119,134) 24x24, uv(168,16).
-        # Drei Stimmen fuer Rect 10:
-        #   1. GROESSE: ROOM1060 misst 24x27 px - Rect 10 ist 24x24 (Rect 8 nur 16x17).
-        #   2. IDENTITAET: die Blatt-3-Offsetbeweise oben zitieren genau diese Kachel
-        #      als Treppenhaus-Zeichnung ("ROOM1060 ... uv(168,16), Blatt 2 (119,134),
-        #      2F-Fundstelle (143,205) -> (118,134). EIN Pixel.").
-        #   3. LAGE: der Nutzer-Pfeil "would have expected" liegt auf (119,134); sein
-        #      "instead I land here" liegt im Span von Rect 4 (119..191,125..189).
-        (0x1060, 0): (2, 10),
+        (0x1060, 0): (2, 8),      # Treppenhaus -> der 16x17-Kasten
         (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
         (0x10C0, 0): (3, 0),      # einziges Rect, das Treppenhaus UND Kabine beruehrt
         (0x10D0, 0): (3, 3),      # einziges Rect, in das 63x91 px passen
