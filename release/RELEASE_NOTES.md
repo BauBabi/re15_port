@@ -1,43 +1,31 @@
-# RE1.5 Port — v0.7.27 (Early Preview)
+# RE1.5 Port — v0.7.28 (Early Preview)
 
-**Dein Pult-Fix gilt, und die Bürostühle im Communication Room decken.**
+**Die Stühle decken nur noch mit deiner Kunst.**
 
 ---
 
-## Schreibmaschine: dein `07_01_pult_gefixed.png` ist die Quelle
+## Communication Room, zweite Runde (deine fünf Marken)
 
-Was ich anders gemacht hatte: meine `bereinigt`-Datei war dein Original **minus 35
-Punkte** (x211..259/y150..182) — exakt das halbrunde Loch oberhalb der Tischplatte, das
-du gesehen hast; entfernt wegen der minimalen Lehn-Blende an F3245. Deine Abwägung ist
-übernommen: das Loch stört mehr. (Dein gefixed ist übrigens nicht 100 % identisch mit
-dem Original: 14291 statt 14303 Deckpunkte — 12 Randpixel.) Die Lehn-Blende kann an der
-einen Stelle minimal wiederkehren.
+Beide Symptome hatten eine Wurzel: die Quader-Silhouette einer Stuhl-Kreiszelle ist
+**breiter als der gemalte Stuhl**.
 
-## Communication Room (ROOM10F0): die Bürostühle
+* Ihre Randpixel re-blitteten **Boden** über dich — genau die „Transparenzen, die ich
+  in meinen Bildern überhaupt nicht geliefert habe".
+* Zugleich blieben die Lehnenspitzen oberhalb der 700er-Höhe ungedeckt — „Leon
+  überdeckt den Stuhl".
 
-Deine fünf Marken zeigten alle dasselbe: die Stühle deckten nicht, weil meine
-Kollisions-Umstellung ihnen ferne Zellen zugewiesen hatte. Die Stühle stehen auf
-**eigenen Kreiszellen** (11 im RDT) — jeder sichtbare Stuhl ist jetzt ein eigener
-Quader (Winkel 4: acht, Winkel 5: vier; Höhe −700 aus dem einzigen sauberen
-Binnen-Gipfel des Kantenmaßes). Fünf-Marken-Probe: der Stuhl zwischen Kamera und dir
-deckt seinen Überlapp **vollständig** (238/238, 245/245, 573/573, 257/257, 161/161).
+**Neu:** die Stuhl-Quader werden mit der **Vereinigung deiner Freistellungen** des
+Winkels geschnitten. Decken kann nur noch, was **du** als Vordergrund geliefert hast;
+im Gegenzug reicht die Höhe jetzt großzügig bis zur Lehnenspitze (−1100), denn der
+Überstand ist durch deine Kunst begrenzt. Quader ohne Kunst-Schnitt entfallen von
+selbst.
 
-## Werkzeug: zwei Bremsen raus
+## Gemessen, an allen fünf Marken
 
-Der 10F0-Bau hing über eine Stunde. Ursachen gemessen und behoben:
-1. Der Kollisions-Raycast lief als reine Python-Doppelschleife je Kandidatenzelle —
-   jetzt vektorisiert, **bit-identische** Gegenprobe, ~20× schneller.
-2. Die Kachel-Kombinationssuche war `10^Objekte` (11 Objekte = 10¹¹) — jetzt
-   Gier-Verfeinerung mit denselben Grenzen. Der ganze Raum baut in Sekunden.
-
-## Karte 1F (dein Treppenhaus-Befund): diagnostiziert, kommt als eigene Runde
-
-Die Ursache ist gefunden und dokumentiert: **ROOM1000 — der lange Flur — saß auf der
-Treppenhaus-Kachel** (Rect 10, Bildschirm 119,134), und die Vorgabe für ROOM1060 wurde
-im Generator von einem späteren Block überfahren. Der Fix selbst ist gemessen richtig,
-löste aber eine Kaskade in den historisch verdrahteten 1F-Zuordnungen aus (Eichungen
-wanderten, zwei Kartentests wurden rot). Statt das neben dem Release zu verbiegen,
-kommt die Karte als fokussierte eigene Runde — die komplette Schreibpfad-Diagnose
-liegt bereit.
+```
+Maskenpunkte AUSSERHALB deiner Kunst:   0 von 2131 (Winkel 4) / 0 von 3576 (Winkel 5)
+Stuhl-Kunst im Spielerkasten ungedeckt: 0 / 0 / 0 / 0 / 0
+Sichtprobe F954: Lehne läuft vor dem Bein durch, kein Boden-Patch auf dem Schenkel
+```
 
 Tests: **282/282** (im Release-Container).
