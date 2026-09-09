@@ -597,7 +597,42 @@ def sca_sperrzellen(rdt, band=0):
     return _aus
 
 
-def kollisionstiefe(rdt, R, t, H, wandzellen, hoehe=None):
+def kollisionstiefe_schnell(R, t, H, wandzellen, hoehe=None):
+    """Numpy-Fassung von kollisionstiefe() - GLEICHE Mathematik, nur vektorisiert.
+
+    ⛔ ANLASS 2026-09-09: der ROOM10F0-Bau hing ueber eine Stunde in Winkel 4. Die
+    Jaccard-Zellsuche ruft kollisionstiefe() je KANDIDATENZELLE einzeln, und die alte
+    Fassung laeuft als reine Python-Doppelschleife ueber 240x320 Bildpunkte - pro Zelle
+    ~40 s, mal 23 Zellen, mal Objekte. Diese Fassung rechnet dieselben vier
+    Seitenflaechen-Schnitte ueber das ganze Bild auf einmal; die Gegenprobe unten
+    (geom.selbsttest laeuft sie mit) verlangt EXAKTE Gleichheit gegen die alte Fassung
+    auf einer Stichprobe, bevor sie irgendwo benutzt wird."""
+    import numpy as _np
+    _R = _np.array(R, float).reshape(3, 3) / 4096.0
+    _Ri = _np.linalg.inv(_R)
+    _c = _Ri.dot(-_np.array(t, float))
+    _sx, _sy = _np.meshgrid(_np.arange(320) - 160.0, _np.arange(240) - 120.0)
+    _d = _np.stack([_sx, _sy, _np.full_like(_sx, float(H))], -1) @ _Ri.T
+    best = _np.full((240, 320), _np.inf)
+    for (X, Z, W, D) in wandzellen:
+        for achse, wert, lo, hi, oa in ((0, X, Z, Z + D, 2), (0, X + W, Z, Z + D, 2),
+                                        (2, Z, X, X + W, 0), (2, Z + D, X, X + W, 0)):
+            dd = _d[..., achse]
+            with _np.errstate(divide="ignore", invalid="ignore"):
+                s = (wert - _c[achse]) / dd
+                q = _c + s[..., None] * _d
+            r_ = q[..., oa]
+            gut = _np.isfinite(s) & (_np.abs(dd) > 1e-9) & (s > 0) & (r_ >= lo) & (r_ <= hi)
+            if hoehe is not None:
+                gut &= ~((q[..., 1] > 0) | (q[..., 1] < hoehe))
+            vz = (q[..., 0] * R[6] + q[..., 1] * R[7] + q[..., 2] * R[8]) / 4096.0 + t[2]
+            gut &= _np.isfinite(vz) & (vz > 64) & (vz < best)
+            best[gut] = vz[gut]
+    aus = _np.where(_np.isfinite(best), best / 64.0, 0.0)
+    return aus
+
+
+def kollisionstiefe_schnell(R, t, H, wandzellen, hoehe=None):
     """Tiefenkarte (240x320) aus der RAUMGEOMETRIE statt aus der Bildkontur.
 
     NUTZER-BEFUND 2026-09-07 (ROOM1130 Cut 3, drei F9-Marken): "von der Ecke aus ist
@@ -861,7 +896,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         _msk0 = np.asarray(region, bool)
         _kand = []
         for _zc in kollision:
-            _k1 = kollisionstiefe(rdt, R, t, H, [_zc])
+            _k1 = kollisionstiefe_schnell(R, t, H, [_zc])
             _tr = _k1 > 0
             _u = float((_tr & _msk0).sum())
             # DIE BESTE BILD-UEBEREINSTIMMUNG, NICHT DIE NAECHSTE ZELLE.
@@ -891,7 +926,7 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
                                % (_zc[0], _zc[0]+_zc[2], _zc[1], _zc[1]+_zc[3],
                                   len(_kand)))
         else:
-            _kt = kollisionstiefe(rdt, R, t, H, kollision)
+            _kt = kollisionstiefe_schnell(R, t, H, kollision)
         _msk = np.asarray(region, bool)
         _hit = _msk & (_kt > 0)
         # KEIN DEPTH_FACTOR fuer die Kollisionstiefe.

@@ -421,23 +421,43 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     # danach fiel STILL weg, und genau die letzten Objekte bekamen Loecher. Deshalb:
     # bauen, NACHZAEHLEN, bei Ueberlauf mit verschaerfter Schranke neu waehlen.
     def _waehle(_rest):
-        wahl = None
-        for komb in itertools.product(*[[k for k in KANTEN if k in ko] for ko in kosten]):
-            n = sum(kosten[i][k][0] for i, k in enumerate(komb))
-            f = sum(kosten[i][k][1] for i, k in enumerate(komb))
-            if n > _rest or f > kap:
-                continue
-            note = (max(komb), sum(komb), f)
-            if wahl is None or note < wahl[0]:
-                wahl = (note, komb, n, f)
-        if wahl is None:
-            komb = tuple(max(ko) for ko in kosten)
-            n = sum(kosten[i][k][0] for i, k in enumerate(komb))
-            f = sum(kosten[i][k][1] for i, k in enumerate(komb))
+        # ⛔ GIER-VERFEINERUNG STATT VOLLER PRODUKTSUCHE (2026-09-09): itertools.product
+        # ist 10^Objekte - mit den 8 Buerostuhl-Quadern in ROOM10F0 C4 (11 Objekte)
+        # waeren das 10^11 Kombinationen; der Bau hing dort ueber eine Stunde. Die
+        # Verfeinerung startet alle Objekte auf der groebsten Kante und verfeinert
+        # SCHRITTWEISE immer das Objekt mit dem groessten Kantensprung, solange
+        # Maskenzahl und Atlasflaeche beide halten - dieselben Grenzen, dieselbe
+        # Bewertungsrichtung (feinste tragfaehige Kachelung), O(Objekte x Schritte).
+        kanten_je = [[k for k in KANTEN if k in ko] for ko in kosten]
+        wahl = [len(kj) - 1 for kj in kanten_je]           # groebste je Objekt
+        def summen(w):
+            n = sum(kosten[i][kanten_je[i][j]][0] for i, j in enumerate(w))
+            f = sum(kosten[i][kanten_je[i][j]][1] for i, j in enumerate(w))
+            return n, f
+        n, f = summen(wahl)
+        if n > _rest or f > kap:
+            komb = tuple(kanten_je[i][j] for i, j in enumerate(wahl))
             print("     ⚠ keine Kombination haelt beide Grenzen - groebste Kachelung "
                   "(%d Rechtecke, %d Atlaspunkte)" % (n, f))
             return komb, n, f
-        return wahl[1], wahl[2], wahl[3]
+        verbessert = True
+        while verbessert:
+            verbessert = False
+            beste = None
+            for i in range(len(wahl)):
+                if wahl[i] == 0:
+                    continue
+                probe = list(wahl); probe[i] -= 1
+                pn, pf = summen(probe)
+                if pn > _rest or pf > kap:
+                    continue
+                spr = kanten_je[i][wahl[i]] - kanten_je[i][probe[i]]
+                if beste is None or spr > beste[0]:
+                    beste = (spr, i, pn, pf)
+            if beste is not None:
+                wahl[beste[1]] -= 1; n, f = beste[2], beste[3]; verbessert = True
+        komb = tuple(kanten_je[i][j] for i, j in enumerate(wahl))
+        return komb, n, f
     komb, n, f = _waehle(rest)
     boxes, herkunft = [], []
     for i, (name, reg, d) in enumerate(stuecke):
