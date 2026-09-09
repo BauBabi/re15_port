@@ -225,6 +225,23 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     rdt = open(os.path.abspath(_rdt_pfad), "rb").read()
     cam_off = struct.unpack_from("<I", rdt, 0x24)[0]
     aus = []
+    # ⛔ KUNST-UNION DES WINKELS (Nutzer-Marken 2026-09-09, ROOM10F0: "Boden-
+    # Transparenzen drin, die mich ueberblenden, die ich in meinen Bildern ueberhaupt
+    # nicht geliefert habe"). Die Quader-Silhouette einer Stuhl-Zelle ist BREITER als
+    # der gemalte Stuhl; ihre Rand-Pixel re-blitten BODEN ueber die Figur. Ein Quader
+    # mit "nur_kunst": true wird deshalb mit der Vereinigung aller PNG-Freistellungen
+    # des Winkels geschnitten - nur Pixel, die der Nutzer als Vordergrund geliefert
+    # hat, duerfen decken. Im Gegenzug darf die Hoehe grosszuegig sein (Lehnenspitzen),
+    # denn der Ueberstand ist durch die Kunst begrenzt.
+    _kunst = None
+    for _o2 in (e.get("objekte") or []):
+        if "png" not in _o2 or not all(k in _o2 for k in ("x", "y")):
+            continue
+        import maske_aus_png as _map2
+        _r2 = _map2.setze(_o2["png"], _o2["x"], _o2["y"], _o2.get("massstab", 1))
+        if _r2 is None:
+            continue
+        _kunst = _r2 if _kunst is None else (_kunst | _r2)
     for o in e.get("objekte") or []:
         if "png" in o:
             # ⛔ DER BESTE WEG (Nutzer, 2026-09-04): ein von Hand freigestelltes PNG.
@@ -279,6 +296,8 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             _v = geom.cut_view(rdt, cam_off, cut)
             _vz, r = geom.quader_tiefe(_v[0], _v[1], _v[2], _q[0], _q[0] + _q[2],
                                        _q[1], _q[1] + _q[3], _q[4])
+            if o.get("nur_kunst") and _kunst is not None:
+                r = r & _kunst
         elif "kaesten" in o:
             # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als
             # Kaesten angeben. Genauer als eine Superpixel-Auswahl, die zwangslaeufig

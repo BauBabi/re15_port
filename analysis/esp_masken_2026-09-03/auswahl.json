@@ -857,10 +857,11 @@
       7500,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x6700 z10300",
@@ -869,10 +870,11 @@
       10300,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x4200 z11800",
@@ -881,10 +883,11 @@
       11800,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x1550 z11650",
@@ -893,10 +896,11 @@
       11650,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x-1600 z12200",
@@ -905,10 +909,11 @@
       12200,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x-1800 z8200",
@@ -917,10 +922,11 @@
       8200,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x-1900 z4300",
@@ -929,10 +935,11 @@
       4300,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x1600 z5700",
@@ -941,13 +948,14 @@
       5700,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     }
    ],
-   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand)."
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze."
   },
   "5": {
    "objekte": [
@@ -988,10 +996,11 @@
       4300,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x1600 z5700",
@@ -1000,10 +1009,11 @@
       5700,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x1600 z1900",
@@ -1012,10 +1022,11 @@
       1900,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     },
     {
      "name": "Buerostuhl x1500 z-2000",
@@ -1024,13 +1035,14 @@
       -2000,
       1500,
       1500,
-      -700
+      -1100
      ],
      "oben": 0,
-     "grow": 0
+     "grow": 0,
+     "nur_kunst": true
     }
    ],
-   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand)."
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze."
   },
   "6": {
    "objekte": [
