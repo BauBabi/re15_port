@@ -1,3 +1,37 @@
+# RE1.5 Port — v0.7.31 (Early Preview)
+
+**Dein Lasso IST die Stuhl-Zuordnung — Kunst trägt jetzt die Tiefe ihres eigenen Stuhls.**
+
+---
+
+## Communication Room, fünfte Runde (deine zwei Marken F697/F1327)
+
+Dein Befund nach v0.7.30: der Stuhl deckt dich weiterhin, obwohl du davor stehst.
+Die Messkette: du standest bei z=11816 ZWISCHEN zwei Stühlen — vor dem fernen
+(Zelle 12200..13700), hinter dem nahen (8200..9700). Die Kunst des FERNEN Stuhls
+über deiner Hüfte trug die Tiefe der NAHEN Zelle (z 5120..6464 statt ~8900).
+
+**Ursache:** die Zuordnung "welche Zellen-Box trifft der Sehstrahl zuerst"
+beantwortet nicht, welchen Stuhl das Pixel ZEIGT. Die Kollisionszellen sind
+1500×1500, die gezeichneten Stühle ~700 — die Fantasie-Box der nahen Zelle
+überlappt im Bild die Kunst des fernen Stuhls.
+
+**Fix:** gemessen liegt jede deiner Lasso-Komponenten zu ≥0,99 in genau EINER
+Zellen-Silhouette — also bekommt jedes Lasso als Ganzes den Quader SEINER Zelle,
+und die Schwarz-Regel etikettiert: Tiefschwarz ≤7 Pixel neben eigener Kunst in
+eigener Silhouette = Lehnen-Lücke (gemessen: Lücken-Klasse 1..7, Pult-Dunkel ab 7),
+sonst nächste enthaltende Zelle, ohne Silhouette gar nicht (kein Boden-Blit).
+
+## Gemessen, an neun Marken
+
+```
+ungerechtfertigte Deckung (Maske näher als Szene):  0 an allen neun Marken
+Sichtproben F697/F1327: Bein wieder sichtbar; nahe Stühle decken weiter korrekt
+Suite 282/282 (lokal + Docker); Masken in beiden Paketen hash-verifiziert
+```
+
+---
+
 # RE1.5 Port — v0.7.30 (Early Preview)
 
 **Das Atlas-Leck: eine Stuhl-Kachel deckte fremde Pixel mit der eigenen Tiefe.**
