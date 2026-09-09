@@ -1,31 +1,31 @@
-# RE1.5 Port — v0.7.28 (Early Preview)
+# RE1.5 Port — v0.7.29 (Early Preview)
 
-**Die Stühle decken nur noch mit deiner Kunst.**
+**Die Stuhllehnen decken bis zur echten Höhe — Schwarz zählt als Stuhl.**
 
 ---
 
-## Communication Room, zweite Runde (deine fünf Marken)
+## Communication Room, dritte Runde (deine vier Marken)
 
-Beide Symptome hatten eine Wurzel: die Quader-Silhouette einer Stuhl-Kreiszelle ist
-**breiter als der gemalte Stuhl**.
+Zwei gemessene Ursachen, warum Leon noch teilweise im Vordergrund war:
 
-* Ihre Randpixel re-blitteten **Boden** über dich — genau die „Transparenzen, die ich
-  in meinen Bildern überhaupt nicht geliefert habe".
-* Zugleich blieben die Lehnenspitzen oberhalb der 700er-Höhe ungedeckt — „Leon
-  überdeckt den Stuhl".
+1. **Die schwarzen Lehnen sind höher als gedacht:** an drei Schwarz-Säulen aufgelöst
+   liegen sie bei h≈−1950 (−1970/−1927/−1970) — meine −1100-Boxen endeten darunter,
+   die Lehnenspitzen blieben frei.
+2. **Dein Lasso hat schwarz-auf-schwarz-Lücken** (gemessen: bg-Farbsummen 4..32 an
+   Pixeln, die nicht im Lasso sind — dieselbe Klasse wie beim 10D0-Klappstuhl). Mit
+   „nur Kunst deckt" blieb genau dort nichts übrig.
 
-**Neu:** die Stuhl-Quader werden mit der **Vereinigung deiner Freistellungen** des
-Winkels geschnitten. Decken kann nur noch, was **du** als Vordergrund geliefert hast;
-im Gegenzug reicht die Höhe jetzt großzügig bis zur Lehnenspitze (−1100), denn der
-Überstand ist durch deine Kunst begrenzt. Quader ohne Kunst-Schnitt entfallen von
-selbst.
+**Fix:** Höhe −1950, und die Deck-Region ist jetzt *deine Kunst ODER Tiefschwarz*
+(Farbsumme < 45). In diesem Raum ist Schwarz eindeutig Stuhl — der Boden ist hell
+(Summe 180+), die Boden-Überblendungen aus der zweiten Runde bleiben damit
+ausgeschlossen.
 
-## Gemessen, an allen fünf Marken
+## Gemessen, an fünf Marken
 
 ```
-Maskenpunkte AUSSERHALB deiner Kunst:   0 von 2131 (Winkel 4) / 0 von 3576 (Winkel 5)
-Stuhl-Kunst im Spielerkasten ungedeckt: 0 / 0 / 0 / 0 / 0
-Sichtprobe F954: Lehne läuft vor dem Bein durch, kein Boden-Patch auf dem Schenkel
+schwarze Vordergrund-Stuhlfläche:  1790 / 747 / 878 / 1049 / 1711 Punkte
+davon ungedeckt:                      0 /   0 /   0 /    0 /    0
+Sichtproben F1195/F1321: Stuhlmechanik, dunkle und weiße Lehne sauber VOR der Figur
 ```
 
 Tests: **282/282** (im Release-Container).
