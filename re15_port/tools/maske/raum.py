@@ -297,7 +297,15 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             _vz, r = geom.quader_tiefe(_v[0], _v[1], _v[2], _q[0], _q[0] + _q[2],
                                        _q[1], _q[1] + _q[3], _q[4])
             if o.get("nur_kunst") and _kunst is not None:
-                r = r & _kunst
+                # ⛔ KUNST ODER TIEFSCHWARZ (Nutzer-Marken F1039..F1451, dritte Runde):
+                # die Lehnen der Buerostuehle sind schwarz auf schwarz - im Lasso des
+                # Nutzers fehlen Teile davon (gemessen an (101..109,167..175): bg-Summe
+                # 4..32, nicht im Lasso). In DIESEM Raum ist Schwarz eindeutig: der
+                # Boden ist hell (Summe 180+). Gedeckt wird also Kunst ODER Pixel mit
+                # Farbsumme < 45 - Boden-Re-Blits bleiben ausgeschlossen.
+                _bgq = load_bg(ppm, rid, cut)
+                _dunkel = (_bgq.astype(int).sum(2) < 45) if _bgq is not None else False
+                r = r & (_kunst | _dunkel)
         elif "kaesten" in o:
             # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als
             # Kaesten angeben. Genauer als eine Superpixel-Auswahl, die zwangslaeufig
