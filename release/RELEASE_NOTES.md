@@ -1,3 +1,41 @@
+# RE1.5 Port — v0.7.30 (Early Preview)
+
+**Das Atlas-Leck: eine Stuhl-Kachel deckte fremde Pixel mit der eigenen Tiefe.**
+
+---
+
+## Communication Room, vierte Runde (deine zwei Marken)
+
+Dein Befund: die beiden Stühle im Hintergrund decken Leon auch dann, wenn er
+davor steht. Die Messkette führte NICHT zu den Tiefen der Lasso-Objekte, sondern
+in den Atlas-Packer:
+
+1. **Täter identifiziert:** die deckenden Pixel an F1476 sind Kunst des FERNEN
+   Stuhls (−1600, 12200) — sein Quader-Raycast steht dort bei vz≈8900..9280
+   (dürfte dich nie decken). Geblittet wurden sie aber von Kacheln des NAHEN
+   Bürostuhls (−1800, 8200) mit t=97..103 (z 6208..6592).
+2. **Ursache:** `atlas.build` machte jede Kachel mit der VEREINIGUNG aller
+   Objektregionen deckend — jede Kachel nahm Fremd-Pixel in ihrem Rechteck mit
+   und gab ihnen die eigene (hier: zu nahe) Tiefe. Deshalb blieben die
+   Messzahlen über drei Umbauten bitgleich: die Täter-Kacheln gehörten einem
+   Objekt, das ich gar nicht anfasste.
+3. **Fix:** jede Kachel deckt nur noch Pixel des EIGENEN Objekts (Herkunft wird
+   durch Zerlegung und Halbierung verfolgt). Dazu läuft die Szene-Attribution
+   der Lassos nur noch über Möbel-Kreiszellen — Schreibtisch-Säulen ohne Deckel
+   schnappten sich sonst Pixel, über die man in Wahrheit hinwegsieht.
+
+## Gemessen, an sieben Marken
+
+```
+ungerechtfertigte Deckung (Maske näher als Szene):  212 -> 0
+Alt-Neu-Diff je Marker-Kasten: weggefallen NUR Leck-Deckung ohne Möbel davor,
+0 gerechtfertigte Deckung verloren, 0 neu hinzu
+Sichtproben F1254/F1476: Stuhl deckt hinter ihm, gibt frei davor
+Suite 282/282 (lokal + Docker)
+```
+
+---
+
 # RE1.5 Port — v0.7.29 (Early Preview)
 
 **Die Stuhllehnen decken bis zur echten Höhe — Schwarz zählt als Stuhl.**
