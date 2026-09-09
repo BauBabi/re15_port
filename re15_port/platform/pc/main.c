@@ -798,6 +798,18 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
     size_t buflen = 0;
     uint8_t *buf = pc_enemy_read_re15_emd(type, &buflen);
     if (!buf) {
+        /* ALLIGATOR 0x23 (Nutzer-Auftrag 2026-09-09: "Packe mir den grossen Aligator
+         * aus RE2 nach ROOM2090 in das Wasser"): das RE1.5-EM023 ist eine bekannte
+         * DATENLUECKE des Prototyps (kein Record im RE1.5-CDEMD0.EMS — deshalb landet
+         * der Typ genau hier). Die byte-true RE1.5-KI (re15_alligator_ai_tick) laeuft
+         * laengst; als MODELL dient das beschaffte RE2-EM23 (22-Bone-Rig, 12 Clips
+         * [163,26,150,150,45,120,125,165,97,37,30,59], TIM 256x256 — Beleg
+         * analysis/re2_alligator_2026-09-09/DOSSIER.md, TOC @0x8009ADF4 Records
+         * Sektor 1512..1598). REIN, ohne Hybrid: es gibt keine RE1.5-Geometrie zum
+         * Tauschen. Damit schliesst sich zugleich die Proxy-Luecke (c) der KI
+         * (echte Cliplaengen statt Frame-Fenster-Proxy). */
+        if (type == 0x23u && pc_enemy_load_re2(type, eb))
+            return;
         eb->type = 0;
         fprintf(stderr, "[enemy] EM%02X model not found (no split file, not in CDEMD0.EMS)\n", type);
         return;
@@ -5781,6 +5793,40 @@ re_title:;
                  * die EM047-Bank-1 ist (CDEMD0.EMS Blob 21 @0x336000, 6 Clips {22,16,52,1,50,30}) —
                  * re15_actor_clip_len/re15_npc_channel_anim brauchen die Registry-Bank. Mesh/TIM
                  * rendern weiter aus ELLIOT.PLD (anim_select-0x47-Zweig unveraendert). */
+                /* ALLIGATOR-POOL ROOM2090/2091 (Nutzer-Auftrag 2026-09-09: "Packe mir den
+                 * grossen Aligator ... nach ROOM 2090 Aligator Pool in das Wasser").
+                 * PORT-ERGAENZUNG, kein Auslieferungs-Record: das RDT setzt dort zwei
+                 * Adult-Spinnen (Typ 0x25, Slots 0/1, @0x0AB0/@0x0AC4) und DREI
+                 * sce-8-Wasserzonen (p0 = -1620). Der Alligator kommt ZUSAETZLICH in die
+                 * dritte, leere Wasserzone (Slot 4: x[-8900..-1700] z[-18100..-14500]),
+                 * Spawn in deren Mitte. grid_id 0 (gerade) = Wasser-Start der byte-true
+                 * KI-INIT (default water sub6, +0x1e0=1, Y=-1200 setzt die KI selbst);
+                 * em_flag_id 0xFF = kein Persist-Gate (Boss erscheint je Betreten).
+                 * Der Slot wird RUECKWAERTS gesucht, damit kein Script-Slot des Raums
+                 * kollidiert; die RL-4-Schleife direkt darunter laedt die Bank mit
+                 * (Typ 0x23 -> RE2-EM23-Modell, s. pc_enemy_load_ex). */
+                if (!getenv("RE15_KEIN_GATOR") && (g_current_room_id & 0xFFFEu) == 0x2090u) {
+                    int _hat = 0, _frei = -1;
+                    for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
+                        if (g_actors[_pi].active && g_actors[_pi].type == 0x23u) _hat = 1;
+                    for (int _pi = RE15_ACTOR_MAX - 1; _pi >= 1; _pi--)
+                        if (!g_actors[_pi].active) { _frei = _pi; break; }
+                    if (!_hat && _frei > 0) {
+                        re15_actor_t *_al = &g_actors[_frei];
+                        memset(_al, 0, sizeof *_al);
+                        _al->active = 1;
+                        _al->type   = 0x23u;
+                        _al->x = -5300; _al->y = 0; _al->z = -16300;
+                        _al->rot_y = 0;
+                        _al->grid_id = 0;              /* +0x9: Wasser-INIT (gerade) */
+                        _al->state = 0;                /* +0x4: INIT */
+                        _al->em_flag_id = 0xFF;        /* kein Kill-Persist-Flag */
+                        re15_enemy_apply_hitbox(_al, 0x23u);
+                        fprintf(stderr, "[enemy] ROOM2090: Alligator (0x23) in Wasserzone "
+                                        "gesetzt, Slot %d (Port-Ergaenzung, Nutzer-Auftrag)\n",
+                                _frei);
+                    }
+                }
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                     if (g_actors[_pi].active && g_actors[_pi].type)
                         /* ⛔ 0x26 nach HERKUNFT (2026-08-22): ein per RDT-`Sce_em_set` gesetzter
