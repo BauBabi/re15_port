@@ -412,6 +412,53 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                          sorted(-b * geom.BAND_HOEHE for b in geom.begehbare_baender(rid))))
             _bk = o.get("bodenkante")
             _au = o.get("aufrecht")
+            # ⛔ SZENE ZERLEGT, STATT ZU MISCHEN (Marken F1254/F1476 + Folgemessung):
+            # EIN Tiefenfeld ueber ein Lasso mit Schreibtischen UND Stuehlen hat steile
+            # Spruenge; das Kachel-MAXIMUM (noetig gegen Bisse) frisst dann die nahe
+            # Deckung (Schwarz-ungedeckt 0 -> bis 363 an denselben Marken). Deshalb
+            # wird das Lasso hier pro Moebel zerlegt: jedes Pixel gehoert der Zelle,
+            # deren Flaeche der Sehstrahl zuerst trifft (Kreiszellen als -1950-Quader,
+            # Rechteckzellen als Saeulen); jede Teilregion wird ein eigenes Objekt mit
+            # der Tiefe IHRER Zelle. Innerhalb eines Teilobjekts ist die Varianz klein,
+            # das Kachel-Maximum wieder harmlos.
+            if o.get("tiefe") == "szene":
+                import numpy as _np
+                _v2 = geom.cut_view(rdt, cam_off, cut)
+                _Rv, _tv, _Hv = _v2
+                _sperr = geom.sca_sperrzellen(rdt, 0) or []
+                _best = _np.full((240, 320), _np.inf); _wer = _np.full((240, 320), -1, int)
+                # NUR Kreiszellen (typ 3 = Moebel): die Lasso-Kunst zeigt Stuehle.
+                # Rechteck-Zellen waeren unendlich hohe Saeulen (kollisionstiefe hat
+                # keinen Deckel) und schnappen sich Pixel, ueber die man in Wahrheit
+                # hinwegsieht - gemessen ROOM10F0 C4: Schreibtisch-Saeule cz 6300-6600
+                # verdeckte den fernen Stuhl (-1600,12200) mit vz ~9000.
+                for _ki, (_zx, _zz, _zw, _zd, _typ) in enumerate(_sperr):
+                    if _typ != 3:
+                        continue
+                    _vzq, _trq = geom.quader_tiefe(_Rv, _tv, _Hv, _zx, _zx + _zw,
+                                                   _zz, _zz + _zd, -1950)
+                    _m = _trq & (_vzq < _best)
+                    _best[_m] = _vzq[_m]; _wer[_m] = _ki
+                # Pixel ohne Treffer erben die Zuordnung des naechsten Treffers
+                _hit = r & _np.isfinite(_best)
+                if (r & ~_hit).any() and _hit.any():
+                    from scipy import ndimage as _nd2
+                    _, (_iy2, _ix2) = _nd2.distance_transform_edt(~_hit, return_indices=True)
+                    _wer = _wer[_iy2, _ix2]
+                for _ki in sorted(set(int(k) for k in _wer[r]) ):
+                    _teil = r & (_wer == _ki)
+                    if _teil.sum() < 25:
+                        continue
+                    _zx, _zz, _zw, _zd, _typ = _sperr[_ki]
+                    if _typ == 3:
+                        aus.append(("%s [Moebel %d]" % (o.get("name", "?")[:20], _ki),
+                                    _teil, None, None, None, None, None, None, None,
+                                    [_zx, _zz, _zw, _zd, -1950], None))
+                    else:
+                        aus.append(("%s [Moebel %d]" % (o.get("name", "?")[:20], _ki),
+                                    _teil, None, None, None, None, None, "kollision",
+                                    [_zx, _zz, _zw, _zd], None, None))
+                continue
             aus.append((o.get("name", "?"), r, o.get("fuss"),
                         None if _eb is None else int(_eb),
                         None if _bk is None else (int(_bk[0]), int(_bk[1])),

@@ -358,7 +358,10 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         if _fest is not None:
             _tq = None
         _koll = None
-        if _tq == "kollision":
+        if _tq == "szene":
+            globals()['_KOLLISION_AKTIV'] = True
+            _koll = "szene"
+        elif _tq == "kollision":
             globals()['_KOLLISION_AKTIV'] = True
             if _zelle:
                 _koll = [tuple(int(v) for v in _zelle)]
@@ -386,7 +389,7 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
         # (Feldtiefen 63..67 gegen seine Koerperlinie 67,7..73,7). Das Maximum laesst
         # ein Feld nur verdecken, wenn es GANZ vor dem Spieler liegt - dieselbe Regel
         # und derselbe Beleg wie oben fuer die Kollisionstiefe.
-        _koll_aktiv.append(_tq == "kollision" or _quader is not None)
+        _koll_aktiv.append(_tq in ("kollision", "szene") or _quader is not None)
     if not stuecke:
         return None
     # Budget nach Flaeche verteilen, mindestens 4 Rechtecke je Objekt
@@ -466,17 +469,16 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
     print("     Kachelung: %s -> %d Rechtecke, %d von %d Atlaspunkten"
           % (", ".join("%s=%d" % (stuecke[i][0][:14], k) for i, k in enumerate(komb)),
              n, f, kap))
-    tim, place, boxes2 = atlasmod.build(bg, region_all, boxes)
+    tim, place, boxes2, orig2 = atlasmod.build(
+        bg, region_all, boxes, regionen=[s_[1] for s_ in stuecke], herkunft=herkunft)
     if tim is None:
         return None
-    # split_oversize kann Kaesten zerlegt haben -> Herkunft mitziehen
-    _, herk2 = atlasmod.split_oversize(boxes)
     groups, masks = [], []
     for i, (x, y, w, h) in enumerate(boxes2):
         if i not in place:
             continue
         ax, ay = place[i]
-        src = herkunft[herk2[i]] if i < len(herk2) else 0
+        src = herkunft[orig2[i]]
         win = stuecke[src][2][y:y + h, x:x + w]
         win = win[win > 0]
         if len(win) == 0:
@@ -512,16 +514,16 @@ def bau_objektweise(rdt, cam, cut, objekte, bg, out_dir, room, budget=None):
                 boxes.append(r_); herkunft.append(i)
         print("     Kachelung: %s -> %d Rechtecke (Schaetzung)"
               % (", ".join("%s=%d" % (stuecke[i][0][:14], k) for i, k in enumerate(komb)), n))
-        tim, place, boxes2 = atlasmod.build(bg, region_all, boxes)
+        tim, place, boxes2, orig2 = atlasmod.build(
+            bg, region_all, boxes, regionen=[s_[1] for s_ in stuecke], herkunft=herkunft)
         if tim is None:
             return None
-        _, herk2 = atlasmod.split_oversize(boxes)
         groups, masks = [], []
         for i, (x, y, w, h) in enumerate(boxes2):
             if i not in place:
                 continue
             ax, ay = place[i]
-            src = herkunft[herk2[i]] if i < len(herk2) else 0
+            src = herkunft[orig2[i]]
             win = stuecke[src][2][y:y + h, x:x + w]
             win = win[win > 0]
             if len(win) == 0:

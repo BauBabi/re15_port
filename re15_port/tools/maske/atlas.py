@@ -89,15 +89,24 @@ def shelf_pack(boxes, w=ATLAS_W, h=ATLAS_H):
     return place, rejected
 
 
-def build(bg_rgb, region, boxes):
+def build(bg_rgb, region, boxes, regionen=None, herkunft=None):
     """-> (tim_bytes, placement, boxes) — boxes ist die ZERLEGTE Liste, der Aufrufer
     muss mit ihr weiterrechnen, sonst passen Indizes und Platzierung nicht zusammen.
 
     bg_rgb: (240,320,3) uint8 — der dekodierte Hintergrund des Cuts
     region: (240,320) bool   — die markierte Vordergrundflaeche
     boxes:  [(x, y, w, h)]   — Bildschirm-Rechtecke (aus geom.rects_from_mask)
+
+    regionen/herkunft (optional, beide zusammen): je EIN Regionsbild pro Objekt und
+    je Eingangs-Kasten der Objektindex. Dann wird jede Kachel NUR mit den Pixeln
+    IHRES Objekts undurchsichtig — nicht mit der Vereinigung aller Regionen.
+    ⛔ Gemessen ROOM10F0 C4 (Marken F1254/F1476): die Kachel des nahen Buerostuhls
+    (t=97..103) nahm ueber die Regions-VEREINIGUNG Kunst-Pixel des fernen Stuhls
+    (-1600,12200, vz~9000) mit und blitte sie mit der nahen Tiefe ueber den Spieler.
+    Rueckgabe ist dann ein 4-Tupel (…, origin): je End-Kachel der Index des
+    EINGANGS-Kastens (durch Zerlegung UND Halbierung hindurch verfolgt).
     """
-    boxes, _ = split_oversize(boxes)
+    boxes, origin = split_oversize(boxes)
     place, rejected = shelf_pack(boxes)
     # Ein abgewiesener Kasten scheitert meist nicht an der FLAECHE, sondern an der
     # Zerstueckelung des Blattes: es ist noch Platz da, nur nicht am Stueck.
@@ -108,6 +117,7 @@ def build(bg_rgb, region, boxes):
         if not rejected:
             break
         neu_boxes = list(boxes)
+        neu_orig = []
         for i in rejected:
             x, y, bw, bh = boxes[i]
             if bw <= 8 and bh <= 8:
@@ -118,12 +128,14 @@ def build(bg_rgb, region, boxes):
             else:
                 a_ = bh // 2
                 neu_boxes.append((x, y, bw, a_)); neu_boxes.append((x, y + a_, bw, bh - a_))
+            neu_orig += [origin[i], origin[i]]
         # abgewiesene Originale entfernen, Haelften behalten
         behalten = [b for j, b in enumerate(boxes) if j not in set(rejected)]
+        origin = [origin[j] for j in range(len(boxes)) if j not in set(rejected)] + neu_orig
         boxes = behalten + neu_boxes[len(boxes):]
         place, rejected = shelf_pack(boxes)
     if not place:
-        return None, None, boxes
+        return (None, None, boxes, None) if herkunft is not None else (None, None, boxes)
     if rejected:
         # LAUT statt still: fehlende Kaesten sind fehlende Verdeckung, und genau das
         # ist als "die Fuesse stehen auf dem Tisch" im Spiel aufgefallen.
@@ -139,13 +151,17 @@ def build(bg_rgb, region, boxes):
     for i, (ax, ay) in place.items():
         x, y, w, h = boxes[i]
         rgb[ay:ay + h, ax:ax + w] = bg_rgb[y:y + h, x:x + w]
-        opaque[ay:ay + h, ax:ax + w] = region[y:y + h, x:x + w]
+        if regionen is not None and herkunft is not None:
+            _r = regionen[herkunft[origin[i]]]
+            opaque[ay:ay + h, ax:ax + w] = _r[y:y + h, x:x + w]
+        else:
+            opaque[ay:ay + h, ax:ax + w] = region[y:y + h, x:x + w]
 
     # Palette NUR aus den undurchsichtigen Pixeln bilden — Schwarz aus den Luecken
     # wuerde sonst Eintraege verbrauchen und die Farben der echten Flaeche verschlechtern.
     pix = rgb[opaque]
     if len(pix) == 0:
-        return None, None, boxes
+        return (None, None, boxes, None) if herkunft is not None else (None, None, boxes)
     tmp = Image.fromarray(pix.reshape(-1, 1, 3))
     pal_img = tmp.quantize(colors=255, method=Image.MEDIANCUT)
     # ⛔ WENIGER ALS 255 FARBEN IST ERLAUBT. quantize() liefert nur so viele Eintraege,
@@ -155,7 +171,7 @@ def build(bg_rgb, region, boxes):
     _roh = pal_img.getpalette() or []
     _n = min(255, len(_roh) // 3)
     if _n == 0:
-        return None, None, boxes
+        return (None, None, boxes, None) if herkunft is not None else (None, None, boxes)
     pal = np.array(_roh[:_n * 3], np.uint8).reshape(_n, 3)
 
     # Zuordnung aller undurchsichtigen Pixel auf die Palette (Index 1..255).
@@ -183,4 +199,6 @@ def build(bg_rgb, region, boxes):
     tim += clut.tobytes()
     tim += struct.pack("<IHHHH", 12 + ATLAS_W * ATLAS_H, 0, 0, ATLAS_W // 2, ATLAS_H)
     tim += idx.tobytes()
+    if herkunft is not None:
+        return bytes(tim), place, boxes, origin
     return bytes(tim), place, boxes

@@ -830,6 +830,42 @@ def depth_map_objekt(rdt, cam_off, cut, region, fuss=None, ebene=None,
         return vz_at_floor(R, t, H, sx, sy, y0)
 
     dep = np.zeros((240, 320), np.int32)
+    if kollision == "szene":
+        # ---- SZENEN-TIEFE (Nutzer-Marken F1254/F1476, ROOM10F0 vierte Runde) -----
+        # Ein Nutzer-Lasso umfasst dort Schreibtische UND mehrere Stuehle; die
+        # Jaccard-Kollisionstiefe gab dem GANZEN Lasso das Feld EINER Zelle - die
+        # Hintergrund-Stuehle trugen dadurch zu nahe Tiefen und deckten den Spieler,
+        # der VOR ihnen stand (gemessen: 15 Punkte t=126 an F1254, 50+4 Punkte
+        # t=103/97 an F1476, jeweils OHNE naechere Zellflaeche am Pixel).
+        # Hier bekommt jedes Pixel die Flaeche seines EIGENEN Moebels: naechster
+        # Treffer ueber ALLE Sperrzellen - Rechteckzellen als unbegrenzte Saeulen
+        # (Waende/Tische, wie kollisionstiefe), Kreiszellen als Quader mit Deckel
+        # (Stuehle, Hoehe -1950, gemessen an den Lehnen-Schwarzsaeulen). Luecken
+        # erben vom Nachbarn (wie kollisionstiefe).
+        _best = np.full((240, 320), np.inf)
+        for (_x, _z, _w, _d, _typ) in (sca_sperrzellen(rdt, 0) or ()):
+            if _typ == 3:
+                _vzq, _trq = quader_tiefe(R, t, H, _x, _x + _w, _z, _z + _d, -1950)
+                _m = _trq & (_vzq < _best)
+                _best[_m] = _vzq[_m]
+            else:
+                _kt = kollisionstiefe_schnell(R, t, H, [(_x, _z, _w, _d)]) * 64.0
+                _m = (_kt > 0) & (_kt < _best)
+                _best[_m] = _kt[_m]
+        _msk = np.asarray(region, bool)
+        _hit = _msk & np.isfinite(_best)
+        dep[_hit] = np.clip(np.ceil(_best[_hit] / 64.0).astype(np.int32), 1, 1023)
+        _fehlt = _msk & ~_hit
+        if _fehlt.any() and _hit.any():
+            from scipy import ndimage as _nd
+            _, (_iy, _ix) = _nd.distance_transform_edt(~_hit, return_indices=True)
+            dep[_fehlt] = dep[_iy[_fehlt], _ix[_fehlt]]
+        if bericht is not None:
+            g = dep[_msk]; g = g[g > 0]
+            bericht.append("szene: %d von %d Punkten direkt getroffen, Tiefe %d..%d"
+                           % (int(_hit.sum()), int(_msk.sum()),
+                              int(g.min()) if len(g) else 0, int(g.max()) if len(g) else 0))
+        return dep if (dep > 0).any() else None
     if tiefe_fest is not None:
         # ---- IMMER DECKEN: feste, nahe Tiefe fuer Objekte OHNE erreichbare Vorderseite.
         # ⛔ NUTZER, 2026-09-08, nach drei fehlgeschlagenen Tiefenmodellen fuer die
