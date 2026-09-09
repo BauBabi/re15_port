@@ -225,15 +225,35 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     rdt = open(os.path.abspath(_rdt_pfad), "rb").read()
     cam_off = struct.unpack_from("<I", rdt, 0x24)[0]
     aus = []
-    # ⛔ KUNST-UNION DES WINKELS (Nutzer-Marken 2026-09-09, ROOM10F0: "Boden-
-    # Transparenzen drin, die mich ueberblenden, die ich in meinen Bildern ueberhaupt
-    # nicht geliefert habe"). Die Quader-Silhouette einer Stuhl-Zelle ist BREITER als
-    # der gemalte Stuhl; ihre Rand-Pixel re-blitten BODEN ueber die Figur. Ein Quader
-    # mit "nur_kunst": true wird deshalb mit der Vereinigung aller PNG-Freistellungen
-    # des Winkels geschnitten - nur Pixel, die der Nutzer als Vordergrund geliefert
-    # hat, duerfen decken. Im Gegenzug darf die Hoehe grosszuegig sein (Lehnenspitzen),
-    # denn der Ueberstand ist durch die Kunst begrenzt.
-    _kunst = None
+    # ⛔ ETIKETTEN STATT KUNST-UNION (Nutzer-Marken F697/F1327, 2026-09-09):
+    # die blosse VEREINIGUNG aller PNG-Freistellungen liess die Silhouette des NAHEN
+    # Stuhls Kunst-Pixel des FERNEN mitnehmen und mit der nahen Tiefe ueber die Figur
+    # blitten (Spieler stand bei z=11816 ZWISCHEN Zelle 18 (8200..9700) und Zelle 17
+    # (12200..13700); Kunst des fernen Stuhls deckte ihn mit z 5120..6464 statt
+    # ~8900). Jede Freistellung gehoert genau EINEM Stuhl - gemessen liegt jede
+    # Lasso-Komponente zu >=0.99 in genau EINER Zellen-Silhouette (Cut 4: 04_01->
+    # Z17 1.00, 04_02->Z18 1.00, 04_03->Z19 1.00; Cut 5: 05_01->Z20 1.00,
+    # 05_02->Z21 1.00, 05_03->Z22 0.99). Deshalb:
+    #   _kunst_label: je Kunst-Pixel der Index seiner Moebel-Zelle (Komponente ->
+    #                 Zelle mit groesster Silhouetten-Ueberdeckung),
+    #   _dunkel_label: Tiefschwarz (<45) -> Zelle, deren Silhouette es enthaelt;
+    #                 bei MEHREREN die TIEFSTE (Nutzer-Regel: steht er davor, darf
+    #                 nichts decken - zu tief zeigt hoechstens die Figur ueber dem
+    #                 Stuhl, zu nah schneidet sie weg); ohne Silhouette KEINE Zelle
+    #                 (Bodenschatten blitten sonst Boden ueber die Figur).
+    import numpy as _np
+    from scipy import ndimage as _nd
+    _sperr = geom.sca_sperrzellen(rdt, 0) or []
+    _v2 = geom.cut_view(rdt, cam_off, cut)
+    _sil = {}
+    for _ki, (_zx, _zz, _zw, _zd, _typ) in enumerate(_sperr):
+        if _typ != 3:
+            continue
+        _vzq, _trq = geom.quader_tiefe(_v2[0], _v2[1], _v2[2], _zx, _zx + _zw,
+                                       _zz, _zz + _zd, -1950)
+        _sil[_ki] = (_vzq, _trq)
+    _kunst_label = _np.full((240, 320), -1, int)
+    _lasso_teile = {}      # id(objekt-dict) -> [(zellindex, komponenten-region)]
     for _o2 in (e.get("objekte") or []):
         if "png" not in _o2 or not all(k in _o2 for k in ("x", "y")):
             continue
@@ -241,7 +261,65 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
         _r2 = _map2.setze(_o2["png"], _o2["x"], _o2["y"], _o2.get("massstab", 1))
         if _r2 is None:
             continue
-        _kunst = _r2 if _kunst is None else (_kunst | _r2)
+        _lab2, _n2 = _nd.label(_r2)
+        _teile = []
+        for _k2 in range(1, _n2 + 1):
+            _comp = _lab2 == _k2
+            _npx = int(_comp.sum())
+            if _npx < 20:
+                continue
+            _best_f, _best_ki = 0.0, None
+            for _ki, (_vzq, _trq) in _sil.items():
+                _f = float((_trq & _comp).sum()) / _npx
+                if _f > _best_f:
+                    _best_f, _best_ki = _f, _ki
+            if _best_ki is None:
+                print('   ⚠ "%s": Komponente %d (%d px) liegt in KEINER '
+                      'Moebel-Silhouette - bleibt ohne Zelle'
+                      % (_o2.get("png", "?"), _k2, _npx))
+                continue
+            if _best_f < 0.90:
+                print('   ⚠ "%s": Komponente %d nur %.2f in Zelle %d - '
+                      'Zuordnung unsicher, bitte pruefen'
+                      % (_o2.get("png", "?"), _k2, _best_f, _best_ki))
+            _kunst_label[_comp] = _best_ki
+            _teile.append((_best_ki, _comp))
+        _lasso_teile[id(_o2)] = _teile
+    _bgL = load_bg(ppm, rid, cut)
+    _dunkel_label = _np.full((240, 320), -1, int)
+    if _bgL is not None and _sil:
+        _dk = _bgL.astype(int).sum(2) < 45
+        # 1) KUNST-SAUM: ein Dunkel-Pixel im Abstand <= 7 zur Kunst einer Zelle
+        #    ist deren Lehnen-Luecke (schwarz auf schwarz im Lasso-Loch).
+        #    GEMESSEN (2026-09-09, ROOM10F0): Luecken-Dunkel der F697-Klasse
+        #    liegt bei Distanz 1..7 zur eigenen Kunst (60/52/31/19/12/3/2),
+        #    Schreibtisch-Dunkel der F1195-Klasse beginnt bei 7 (7..18+).
+        #    Beim Konflikt (genau 7) gewinnt die Luecken-Klasse: die Kosten
+        #    sind unsichtbare Speckles ueber dunklem Pult statt sichtbarer
+        #    Ueber-Deckung auf der Figur.
+        #    Bedingung ZUSAETZLICH: das Pixel liegt in der Silhouette DERSELBEN
+        #    Zelle - sonst wird Boden-SCHATTEN neben der Kunst etikettiert und
+        #    deckt mit Stuhltiefe (gemessen F1451: 0 -> 77 ungerechtfertigt).
+        _naechste = _np.full((240, 320), _np.inf)
+        for _ki in sorted(set(int(v) for v in _kunst_label[_kunst_label >= 0])):
+            if _ki not in _sil:
+                continue
+            _dist = _nd.distance_transform_edt(~(_kunst_label == _ki))
+            _m = _dk & _sil[_ki][1] & (_dist <= 7) & (_dist < _naechste)
+            _naechste[_m] = _dist[_m]
+            _dunkel_label[_m] = _ki
+        # 2) Sonst: die NAECHSTE enthaltende Zelle - der vorgerenderte
+        #    Hintergrund zeigt an einem Pixel die vorderste Flaeche; dunkles
+        #    Pult-Zeug in der Silhouette eines nahen Stuhls deckte schon in
+        #    der dritten (abgenommenen) Runde mit dessen Tiefe. Der Tiefste-
+        #    Bias hier war falsch (Schwarz-ungedeckt 960 -> 2888, F1195/F954
+        #    je 700 - Pult-Dunkel wanderte in die fernere Silhouette).
+        _rest = _dk & (_dunkel_label < 0)
+        _naechstes = _np.full((240, 320), _np.inf)
+        for _ki, (_vzq, _trq) in _sil.items():
+            _m = _rest & _trq & (_vzq < _naechstes)
+            _naechstes[_m] = _vzq[_m]
+            _dunkel_label[_m] = _ki
     for o in e.get("objekte") or []:
         if "png" in o:
             # ⛔ DER BESTE WEG (Nutzer, 2026-09-04): ein von Hand freigestelltes PNG.
@@ -296,16 +374,25 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
             _v = geom.cut_view(rdt, cam_off, cut)
             _vz, r = geom.quader_tiefe(_v[0], _v[1], _v[2], _q[0], _q[0] + _q[2],
                                        _q[1], _q[1] + _q[3], _q[4])
-            if o.get("nur_kunst") and _kunst is not None:
-                # ⛔ KUNST ODER TIEFSCHWARZ (Nutzer-Marken F1039..F1451, dritte Runde):
-                # die Lehnen der Buerostuehle sind schwarz auf schwarz - im Lasso des
-                # Nutzers fehlen Teile davon (gemessen an (101..109,167..175): bg-Summe
-                # 4..32, nicht im Lasso). In DIESEM Raum ist Schwarz eindeutig: der
-                # Boden ist hell (Summe 180+). Gedeckt wird also Kunst ODER Pixel mit
-                # Farbsumme < 45 - Boden-Re-Blits bleiben ausgeschlossen.
-                _bgq = load_bg(ppm, rid, cut)
-                _dunkel = (_bgq.astype(int).sum(2) < 45) if _bgq is not None else False
-                r = r & (_kunst | _dunkel)
+            if o.get("nur_kunst"):
+                # ⛔ NUR EIGENE Kunst oder EIGENES Tiefschwarz (Etiketten, s.o.).
+                # Dritte Runde (F1039..F1451): Lehnen sind schwarz auf schwarz und
+                # fehlen im Lasso -> Tiefschwarz (<45) zaehlt als Stuhl. Vierte
+                # Runde (F697/F1327): FREMDE Kunst in der eigenen Silhouette deckte
+                # mit falscher Tiefe -> nur Pixel, deren Etikett DIESER Zelle
+                # gehoert.
+                _eig = None
+                for _ki2, (_zx2, _zz2, _zw2, _zd2, _typ2) in enumerate(_sperr):
+                    if _typ2 == 3 and _zx2 == _q[0] and _zz2 == _q[1]:
+                        _eig = _ki2
+                        break
+                if _eig is None:
+                    print('   ⚠ "%s": Quader (%d,%d) entspricht keiner '
+                          'Moebel-Zelle - nur Tiefschwarz deckt'
+                          % (o.get("name", "?"), _q[0], _q[1]))
+                    r = r & (_dunkel_label >= 0)
+                else:
+                    r = r & ((_kunst_label == _eig) | (_dunkel_label == _eig))
         elif "kaesten" in o:
             # Massiver, nahezu rechteckiger Gegenstand (Pult, Schrank): direkt als
             # Kaesten angeben. Genauer als eine Superpixel-Auswahl, die zwangslaeufig
@@ -412,52 +499,21 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
                          sorted(-b * geom.BAND_HOEHE for b in geom.begehbare_baender(rid))))
             _bk = o.get("bodenkante")
             _au = o.get("aufrecht")
-            # ⛔ SZENE ZERLEGT, STATT ZU MISCHEN (Marken F1254/F1476 + Folgemessung):
-            # EIN Tiefenfeld ueber ein Lasso mit Schreibtischen UND Stuehlen hat steile
-            # Spruenge; das Kachel-MAXIMUM (noetig gegen Bisse) frisst dann die nahe
-            # Deckung (Schwarz-ungedeckt 0 -> bis 363 an denselben Marken). Deshalb
-            # wird das Lasso hier pro Moebel zerlegt: jedes Pixel gehoert der Zelle,
-            # deren Flaeche der Sehstrahl zuerst trifft (Kreiszellen als -1950-Quader,
-            # Rechteckzellen als Saeulen); jede Teilregion wird ein eigenes Objekt mit
-            # der Tiefe IHRER Zelle. Innerhalb eines Teilobjekts ist die Varianz klein,
-            # das Kachel-Maximum wieder harmlos.
+            # ⛔ GANZES LASSO ZU SEINER ZELLE (Nutzer-Marken F697/F1327): die
+            # fruehere Naechster-Treffer-Zerlegung schnitt ein Lasso an der Kante
+            # der NAEHEREN Fantasie-Box (Zellen sind 1500x1500, die Stuehle ~700)
+            # und gab Fern-Stuhl-Kunst die nahe Tiefe. Gemessen gehoert jede
+            # Lasso-Komponente zu >=0.99 genau EINER Zelle (Tabelle oben) - also
+            # bekommt sie deren Quader als Ganzes; das eigene Tiefschwarz kommt
+            # dazu (Lehnen-Luecken, dritte Runde).
             if o.get("tiefe") == "szene":
-                import numpy as _np
-                _v2 = geom.cut_view(rdt, cam_off, cut)
-                _Rv, _tv, _Hv = _v2
-                _sperr = geom.sca_sperrzellen(rdt, 0) or []
-                _best = _np.full((240, 320), _np.inf); _wer = _np.full((240, 320), -1, int)
-                # NUR Kreiszellen (typ 3 = Moebel): die Lasso-Kunst zeigt Stuehle.
-                # Rechteck-Zellen waeren unendlich hohe Saeulen (kollisionstiefe hat
-                # keinen Deckel) und schnappen sich Pixel, ueber die man in Wahrheit
-                # hinwegsieht - gemessen ROOM10F0 C4: Schreibtisch-Saeule cz 6300-6600
-                # verdeckte den fernen Stuhl (-1600,12200) mit vz ~9000.
-                for _ki, (_zx, _zz, _zw, _zd, _typ) in enumerate(_sperr):
-                    if _typ != 3:
-                        continue
-                    _vzq, _trq = geom.quader_tiefe(_Rv, _tv, _Hv, _zx, _zx + _zw,
-                                                   _zz, _zz + _zd, -1950)
-                    _m = _trq & (_vzq < _best)
-                    _best[_m] = _vzq[_m]; _wer[_m] = _ki
-                # Pixel ohne Treffer erben die Zuordnung des naechsten Treffers
-                _hit = r & _np.isfinite(_best)
-                if (r & ~_hit).any() and _hit.any():
-                    from scipy import ndimage as _nd2
-                    _, (_iy2, _ix2) = _nd2.distance_transform_edt(~_hit, return_indices=True)
-                    _wer = _wer[_iy2, _ix2]
-                for _ki in sorted(set(int(k) for k in _wer[r]) ):
-                    _teil = r & (_wer == _ki)
-                    if _teil.sum() < 25:
-                        continue
+                for _ki, _comp in _lasso_teile.get(id(o), []):
                     _zx, _zz, _zw, _zd, _typ = _sperr[_ki]
-                    if _typ == 3:
-                        aus.append(("%s [Moebel %d]" % (o.get("name", "?")[:20], _ki),
-                                    _teil, None, None, None, None, None, None, None,
-                                    [_zx, _zz, _zw, _zd, -1950], None))
-                    else:
-                        aus.append(("%s [Moebel %d]" % (o.get("name", "?")[:20], _ki),
-                                    _teil, None, None, None, None, None, "kollision",
-                                    [_zx, _zz, _zw, _zd], None, None))
+                    _teil = _comp | (_dunkel_label == _ki)
+                    aus.append(("%s [Stuhl %d,%d]" % (o.get("name", "?")[:20],
+                                                      _zx, _zz),
+                                _teil, None, None, None, None, None, None, None,
+                                [_zx, _zz, _zw, _zd, -1950], None))
                 continue
             aus.append((o.get("name", "?"), r, o.get("fuss"),
                         None if _eb is None else int(_eb),
