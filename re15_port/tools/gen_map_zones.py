@@ -1236,7 +1236,13 @@ def main():
     ZONE_FIX = {
         (0x1130, 0): (4, 4),
         (0x1120, 0): (4, 5),
-        (0x1060, 0): (2, 8),      # Treppenhaus -> der 16x17-Kasten
+        # ⛔ TREPPENHAUS -> Rect 10, GEMESSEN 2026-09-09 (Nutzer, fehler/MAP03.bmp:
+        # "im Treppenhaus unten sollte der kleine Bereich mit Treppensymbol kommen,
+        # stattdessen der lange Flur"). Rect 10 = (119,134) 24x24 uv(168,16) - die
+        # kleine Treppenraum-Zeichnung unten links im Cluster; ROOM1060s Zeilen-
+        # Projektion deckt sie zu 1.00 (576 px Schnitt). Der fruehere Eintrag (2,8)
+        # verglich 2026-09-01 nur Rect 8 und 9 - Rect 10 fehlte im Vergleich.
+        (0x1060, 0): (2, 10),
         (0x1080, 0): (2, 9),      # Fahrstuhlkabine -> der 10x10-Kasten
         (0x10C0, 0): (3, 0),      # einziges Rect, das Treppenhaus UND Kabine beruehrt
         (0x10D0, 0): (3, 3),      # einziges Rect, in das 63x91 px passen
@@ -1256,6 +1262,28 @@ def main():
         #      drei anderen Spiegelungen liegen 17, 21 und 34 px daneben, und Rect 7 kam
         #      auf 23 px. Deshalb zugleich ZONE_ORIENT[(0x1110,0)] = (1,1).
         (0x1110, 0): (3, 5),
+    }
+
+    # ⛔ NICHT-EXKLUSIVE Vorgaben: Zone -> Rechteck, ohne das Rechteck fuer andere
+    # zu sperren. GEMESSEN 2026-09-09: ROOM1000-z0 (Suedflur-Arm 24800x1650) und
+    # ROOM1030-z0 (4560x16-Splitter) sassen auf Rect 10 (der Treppenkachel) und
+    # muessen dem Treppenhaus weichen. Ihre Zeilen-Projektionen treffen KEIN
+    # Rechteck (1000-z0: Karte x198..256 y191..195, Massstab geliehen; 1030-z0:
+    # 1 px) - der Kosten-Loeser wich auf Rect 8 aus, dessen gemalte Flaeche Rect 1
+    # (ROOM1010) beruehrt -> Gegenprobe unit_map_durchgang rot (Tuergraph-Abstand
+    # 5). Rect 4 traegt bereits ROOM1000s EIGENE z1 (geeicht) und ROOM1050 - dass
+    # 1000-auf-Rect-4 die Gegenprobe besteht, beweist der heutige gruene Stand.
+    # Ein ZONE_FIX-Eintrag wuerde Rect 4 ueber _fix_rects sperren und 1050/z1
+    # verdraengen (die Kaskade vom 2026-09-09) - deshalb diese zweite, weiche Liste.
+    ZONE_FIX_TEILT = {
+        (0x1000, 0): (2, 4),
+        (0x1030, 0): (2, 4),
+        # ⛔ DRIFT-BREMSE (2026-09-09): das Freiwerden von Rect 2 (ROOM1060 zog auf
+        # Rect 10) liess den Kosten-Loeser Blatt 2 neu ausbalancieren - ROOM10A0
+        # sprang 6->8 und ROOM1090 tauchte neu auf Rect 6 auf, samt Gast-Kaskade
+        # auf Blatt 3. Nichts davon ist gemessen. 10A0 bleibt auf seinem gruenen
+        # Rechteck festgehalten.
+        (0x10A0, 0): (2, 6),
     }
 
     # Zonen je Seite sammeln
@@ -1360,7 +1388,7 @@ def main():
         # HARTE Vorgaben dieser Seite: fest zugewiesen, nie veraendert, ihr Rechteck ist
         # fuer alle anderen gesperrt.
         fest = {}
-        for _k, _v in ZONE_FIX.items():
+        for _k, _v in list(ZONE_FIX.items()) + list(ZONE_FIX_TEILT.items()):
             if _v[0] != pg: continue
             _i = key2idx.get(_k)
             if _i is not None: fest[_i] = _v[1]
@@ -1494,6 +1522,11 @@ def main():
             for k2, v2 in list(assign.items()):
                 if v2 == val and k2 != key: del assign[k2]
             assign[key] = val
+    # TEILT: setzen ohne zu verdraengen - das Rechteck bleibt geteilt.
+    for key, val in ZONE_FIX_TEILT.items():
+        room, zi = key
+        if room in zinfo and zi < len(zinfo[room]):
+            assign[key] = val
 
     # ================= MASSSTAB AUS DER AUSGELIEFERTEN TABELLE ==================
     # ⛔ ZURUECKGENOMMEN am 2026-09-01: hier stand bis v0.3.70 eine SELBST GERECHNETE
@@ -1599,19 +1632,40 @@ def main():
             continue                      # das Rechteck ist per Vorgabe vergeben
         if (b, 0) in ZONE_FIX and ZONE_FIX[(b, 0)] != (pg, ri):
             continue                      # dieser Raum ist per Vorgabe woanders
-        # die Zeile gilt fuer den Raum; sie gehoert an die Zone, die dieses Rechteck haelt
-        zi = None
+        # die Zeile gilt fuer den Raum; sie gehoert an die Zone, die dieses Rechteck haelt.
+        # ⛔ Halten MEHRERE eigene Zonen dasselbe Rechteck (ROOM1000: z0 per
+        # ZONE_FIX_TEILT und z1 geometrisch auf Rect 4), entscheidet die
+        # ZEILEN-DECKUNG - sonst erbte z0 (Deckung 0) die Eichung von z1 (1.00).
+        zi = None; _zi_best = None
+        _R5 = rects(pg)
         for i in range(len(zinfo[b])):
-            if assign.get((b, i)) == (pg, ri): zi = i; break
+            if assign.get((b, i)) != (pg, ri): continue
+            _x0, _x1, _z0, _z1 = zinfo[b][i]
+            import gen_marker_zeilen as _GM5
+            _px0 = _GM5.karte_x(_x0, ox, sx); _px1 = _GM5.karte_x(_x1, ox, sx)
+            _py0 = _GM5.karte_y(_z1, oy, sy); _py1 = _GM5.karte_y(_z0, oy, sy)
+            _px0, _px1 = min(_px0, _px1), max(_px0, _px1)
+            _py0, _py1 = min(_py0, _py1), max(_py0, _py1)
+            _rx, _ry, _rw, _rh = _R5[ri] if ri < len(_R5) else (0, 0, 0, 0)
+            _ox5 = min(_px1, _rx + _rw) - max(_px0, _rx)
+            _oy5 = min(_py1, _ry + _rh) - max(_py0, _ry)
+            _an5 = (_ox5 * _oy5) if (_ox5 > 0 and _oy5 > 0) else 0
+            if _zi_best is None or _an5 > _zi_best[0]:
+                _zi_best = (_an5, i)
+        if _zi_best is not None: zi = _zi_best[1]
         if zi is None:
             for i in range(len(zinfo[b])):
                 if assign.get((b, i)) is not None: zi = i; break
         if zi is None: zi = 0
         belegt.add((pg, ri))
         eichung[(b, zi)] = (ox, oy, sx, sy)
-        # Das abgeleitete Rechteck gewinnt gegen die geometrische Zuordnung.
+        # Das abgeleitete Rechteck gewinnt gegen die geometrische Zuordnung -
+        # aber NIE gegen eine Vorgabe (ZONE_FIX/ZONE_FIX_TEILT sind hart; genau
+        # dieses Loeschen hat 2026-09-09 den TEILT-Pin von ROOM1000-z0 entfernt).
         for k2, v2 in list(assign.items()):
-            if v2 == (pg, ri) and k2 != (b, zi): del assign[k2]
+            if v2 == (pg, ri) and k2 != (b, zi) \
+                    and k2 not in ZONE_FIX and k2 not in ZONE_FIX_TEILT:
+                del assign[k2]
         assign[(b, zi)] = (pg, ri)
         n_orig += 1
     print(f"{n_orig} Zonen mit der ausgelieferten Massstabszeile @0x800768b0 "
@@ -2328,8 +2382,22 @@ def main():
                 px0, px1 = min(px0, px1), max(px0, px1)
                 py0, py1 = min(py0, py1), max(py0, py1)
                 fl = max(1, (px1 - px0) * (py1 - py0))
+                # ⛔ VORGABEN UEBERLEBEN DIE ZEILEN-ZUORDNUNG. Dieser Block baut
+                # assign bedingungslos neu und hat ZONE_FIX damit ueberfahren
+                # (Schreibpfad-Beweis 2026-09-09: Loeser schreibt (2,10), beim
+                # rows-Bau steht (2,2) - ROOM1060s Weltkasten deckt Rect 2 >=35%).
+                # NICHT ueberspringen, sondern die Vorgabe als EINZIGEN Kandidaten
+                # bewerten: sonst faellt fuer alle ZONE_FIX-Raeume die Deckungs-
+                # Bewertung (_zdeck) aus, und mit ihr die Zeilen-Eichung - gemessen
+                # 2026-09-09 verloren 1130/1140-Klasse ihre Eichungszeilen.
+                _pin = ZONE_FIX.get((b, i)) or ZONE_FIX_TEILT.get((b, i))
                 best = None
                 for ri, (rx, ry, rw, rh) in enumerate(R):
+                    if _pin is not None and (pg, ri) != _pin:
+                        continue
+                    # exklusive Fix-Rechtecke sind fuer fremde Zonen tabu
+                    if _pin is None and (pg, ri) in _fix_rects:
+                        continue
                     ox2 = min(px1, rx + rw) - max(px0, rx)
                     oy2 = min(py1, ry + rh) - max(py0, ry)
                     if ox2 <= 0 or oy2 <= 0:

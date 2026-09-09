@@ -124,15 +124,22 @@ int main(void)
      * ZWEI Schritte auseinander. Dass zwei Raeume mit gemeinsamem Nachbarn sich
      * beruehren, ist normal und beweist gar nichts; die Probe fiel entsprechend,
      * sobald sich die Anordnung leicht aenderte, ohne dass etwas kaputt war.
-     * Genommen wird jetzt ROOM1000 <-> ROOM1010: Tuergraph-Abstand 5 (gemessen ueber
-     * eine Breitensuche im Tuergraph), gezeichnet auf demselben Blatt 2. Fuenf Tueren
-     * Entfernung duerfen nicht aneinandergrenzen - stapelt der Loeser, faellt das hier
-     * sofort auf. */
+     * ⛔ ZWEITER AUSTAUSCH 2026-09-09: ROOM1000 <-> ROOM1010 war ebenfalls kein
+     * gueltiges Paar. ROOM1000 ist ein FLUR, der sich ueber das Blatt zieht; seine
+     * z1 sass im abgenommenen Stand schon immer auf Blatt 2 Rect 4, dessen RAHMEN
+     * Rect 1 (ROOM1010) beruehrt - die Probe bestand nur, weil ort() zufaellig z0
+     * traf. Sobald z0 (Suedarm, per ZONE_FIX_TEILT) ebenfalls auf Rect 4 liegt,
+     * schlug die Probe an, ohne dass etwas kaputt war - dieselbe Falle wie beim
+     * ersten Austausch.
+     * Genommen wird jetzt ROOM1010 <-> ROOM10A0: Tuergraph-Abstand 5 (Breitensuche
+     * ueber die Aot-3b/68-Ziele aller Stage-1-RDTs), beide kompakt mit eigenem
+     * Rechteck auf Blatt 2 (Rect 1 und Rect 6, Rahmenluecke 15 px), und ROOM10A0
+     * ist im Generator per ZONE_FIX_TEILT auf Rect 6 festgehalten. */
     {
-        const re15_map_zone_t *z00 = ort(0x1000, 19575, -7600);
-        const re15_map_zone_t *z10 = ort(0x1010, 1100, 1375);
+        const re15_map_zone_t *z00 = ort(0x1010, 1100, 1375);
+        const re15_map_zone_t *z10 = ort(0x10A0, 20000, 20000);
         int l3 = (z00 && z10) ? luecke(z00, z10) : -1;
-        printf("  [Gegenprobe] 1000<->1010 (Tuergraph-Abstand 5): %d px\n", l3);
+        printf("  [Gegenprobe] 1010<->10A0 (Tuergraph-Abstand 5): %d px\n", l3);
         CHECK("zwei weit entfernte Raeume stossen NICHT aneinander", l3 > 0);
     }
     /* ---- (4) ZWEI VERSCHIEDENE TUEREN LIEGEN NICHT AUFEINANDER ---------------
