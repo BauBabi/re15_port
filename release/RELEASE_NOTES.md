@@ -1,3 +1,32 @@
+# RE1.5 Port — v0.7.42 (Early Preview)
+
+**ROOM2090: Belagerung mit Hochbiss, Geist-Hänger behoben, Wand-Following.**
+
+---
+
+Deine Punkte:
+
+1. **Der „gewaltige Hänger"**: Dein Marker zeigte die wahre Ursache — ein
+   Geist: Du hattest den Boss getötet und den Raum neu betreten; der frische
+   Alligator übernahm dabei den „tot"-Zustand des Vorgängers und stand nur
+   herum (hp=0). Der Neustart wird jetzt sauber erkannt (der Boss kommt bei
+   jedem Betreten frisch). Auch eine getötete Spinne hing im Sitz-Anker fest —
+   der Anker greift nur noch bei lebenden Spinnen.
+2. **Dein Wand-Vorschlag ist umgesetzt**: Statt der „günstigsten" Ecke (die in
+   Wandnähe diagonal in die Klemme steuerte) läuft er jetzt die Wand entlang
+   bis zur nächsten Ecke in der kürzeren Umlaufrichtung — und dreht erst dort.
+3. **Plattform-Belagerung (dein neues Design)**: Solange du oben stehst (Steg
+   ODER Rampe), klettert er nicht mehr — er schwimmt an die Kante unter dich,
+   richtet den Vorderkörper steil auf und **schnappt nach oben**, mit Schaden
+   und Niederschlag, wenn du nah an der Kante stehst (die Plattform-Mitte ist
+   sicher). Erst wenn du herunterspringst, kommt die Kletter-Überquerung zur
+   Verfolgung. Sichtbilder: der Vorderkörper ragt aus dem Wasser, das Maul
+   arbeitet im Schnapp-Takt.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.41 (Early Preview)
 
 **ROOM2090: Lauern ganz hinten, solide Körperlänge, Knockdown-Treffer, sichtbarer Schnapp.**
