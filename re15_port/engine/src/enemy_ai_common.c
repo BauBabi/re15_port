@@ -33,6 +33,7 @@
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
+#include "re15_boss_gator.h" /* ROOM2090 Nutzer-Design-Bosskampf (2026-09-10) */
 #include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
@@ -13535,9 +13536,14 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * @0x801111d0/@0x8011144c (`+0x1dc >= 31 -> +0x5=1, +0x6=0xa`)
                                  * stehen im Port (Zeilen mit `ai_target_x >= 31`). */
             int32_t asp_ox = e->x, asp_oz = e->z;
-            re15_adult_spider_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);
-            re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+            if (re15_gator_boss_spider_override(s)) {
+                /* ROOM2090-Boss (Nutzer-Punkt 7): Wandflucht ersetzt die Spinnen-KI;
+                 * kein SCA-Clamp — die Bahn endet AN der Wand und klettert sie hoch. */
+            } else {
+                re15_adult_spider_ai_tick(s);
+                re15_enemy_body_push_tail(s, e);
+                re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
+            }
         }
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
                                  * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
@@ -13661,11 +13667,16 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);                  /* b544 body separation (root tail @0x8010c300) */
         }
         else if (t == 0x23) {   /* ALLIGATOR boss (type 0x23, EM023, STAGE2) — giant ground walk-chaser +
-                                 * grab-eat. SCA wall-clamp after the tick like the dog/zombie. */
+                                 * grab-eat. SCA wall-clamp after the tick like the dog/zombie.
+                                 * ROOM2090/2091: NUTZER-DESIGN-Bosskampf (enemy_ai_boss_gator.c)
+                                 * statt der byte-true KI; waehrend der Plattform-Ueberquerung
+                                 * bleibt der Wand-Clamp aus (der Block IST die Bahn). */
             int32_t al_ox = e->x, al_oz = e->z;
-            re15_alligator_ai_tick(s);
+            if (re15_gator_boss_active(e)) re15_gator_boss_tick(s);
+            else                           re15_alligator_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)) {
+            if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)
+                && !re15_gator_boss_skip_clamp(e)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain_enemy(&g_room_rdt, al_ox, al_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
@@ -13701,3 +13712,12 @@ void re15_enemy_ai_run_all(int combat_active)
          * covers). */
     }
 }
+
+
+/* ==== ROOM2090-BOSS: schmale Export-Wrapper (enemy_ai_boss_gator.c) ========== *
+ * Die byte-true Helfer bleiben static; der Boss-Kampf (Nutzer-Design 2026-09-10)
+ * nutzt exakt dieselbe Mechanik ueber diese drei Namen. */
+void re15_ai_advance(re15_actor_t *e, int32_t sp)                  { re15_dog_advance(e, sp); }
+int  re15_ai_arc(const re15_actor_t *e, const re15_actor_t *t, int32_t r, int arc)
+                                                                   { return re15_dog_arc(e, t, r, arc); }
+int32_t re15_ai_contact_reach(const re15_actor_t *e)               { return re15_body_contact_reach(e); }

@@ -20,6 +20,7 @@
 #include <stdio.h>    /* RE15_NECK_TRACE diagnostics */
 #include <stdlib.h>   /* getenv */
 #include "re15_skeleton.h"
+#include "re15_boss_gator.h" /* re15_gator_spine_arc_vz (ROOM2090-Boss) */
 #include "re15_emd.h"
 #include "re15_actor.h"     /* g_actors for Plc_neck head-look */
 #include "re15_math.h"      /* re15_squareroot0 — the BIOS sqrt approx for the neck-pitch horiz dist */
@@ -594,6 +595,12 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
          * (@0x8001f408/@0x8001f41c). Same vz slot as the neck pitch above. */
         if (bact && bact->hurt_bend_bone >= 0 && b == (int)bact->hurt_bend_bone)
             az = (int16_t)(az + bact->hurt_bend_vz);
+
+        /* ROOM2090-BOSS (Nutzer-Design 2026-09-10, Punkt 8): Wirbelsaeulen-Bogen der
+         * Plattform-Ueberquerung — additiver vz je Spine-Bone, dieselbe Stelle und
+         * Semantik wie die HURT-Beuge oben (pro Tick absolut, nie akkumulierend). */
+        if (bact && bact->type == 0x23u)
+            az = (int16_t)(az + re15_gator_spine_arc_vz(bact, b));
 
         int32_t local_rot[9];
         mat3_from_euler((int)ax, (int)ay, (int)az, local_rot);

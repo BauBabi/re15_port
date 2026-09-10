@@ -4876,10 +4876,11 @@ re_title:;
                                     bl_bytes += fprintf(bl, "  Bild: %s\n", _sp); }
                             }
                             bl_bytes += fprintf(bl,
-                                "F%-7u R%04X C%-2d pos=(%6d,%6d,%6d) rot=%-5d "
+                                "F%-7u R%04X C%-2d hp=%-4d pos=(%6d,%6d,%6d) rot=%-5d "
                                 "vz=%5ld/%5ld/%5ld scr=(%3d,%3d) kasten=x%d..%d,y%d..%d masken=%d",
                                 (unsigned)g_engine.frame_count, (unsigned)g_current_room_id,
-                                active_cut_idx, plz->x, plz->y, plz->z, (int)plz->rot_y,
+                                active_cut_idx, (int)plz->hp,
+                                plz->x, plz->y, plz->z, (int)plz->rot_y,
                                 pvz, vz_h, vz_k, psx, psy,
                                 psx - hw, psx + hw, ktop, kbot, rn);
                             {   /* Nur die Masken, die ihren Bildkasten wirklich beruehren —
@@ -5825,6 +5826,28 @@ re_title:;
                         fprintf(stderr, "[enemy] ROOM2090: Alligator (0x23) in Wasserzone "
                                         "gesetzt, Slot %d (Port-Ergaenzung, Nutzer-Auftrag)\n",
                                 _frei);
+                    }
+                    /* BOSSKAMPF-UMBAU (Nutzer-Auftrag 2026-09-10, Punkt 1): die zwei
+                     * RDT-Spinnen (Typ 0x25, Records @0x0AB0/@0x0AC4: (-100,0,-8296) und
+                     * (-2300,0,-23896)) sitzen jetzt AUF der Plattform in der Raummitte
+                     * (SCA-Block x[-1700..1850] z[-20000..-12450]; Oberflaeche -1800 =
+                     * floor-Ebene 1 x byte-true Y=-1800*floor @0x8010c7a4). Position =
+                     * DESIGN-Werte; Start/Blick des Gators setzt dessen Boss-INIT
+                     * (enemy_ai_boss_gator.c). */
+                    {
+                        int _sp = 0;
+                        for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++) {
+                            re15_actor_t *_a2 = &g_actors[_pi];
+                            if (!_a2->active || _a2->type != 0x25u) continue;
+                            if (_sp == 0) { _a2->x =  -700; _a2->z = -17800; }
+                            else          { _a2->x =   800; _a2->z = -14800; }
+                            _a2->y = -1800; _a2->floor = 1;
+                            _sp++;
+                            if (_sp >= 2) break;
+                        }
+                        if (_sp)
+                            fprintf(stderr, "[enemy] ROOM2090: %d Spinnen auf die "
+                                            "Plattform umgesetzt (Boss-Design)\n", _sp);
                     }
                 }
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
@@ -7894,8 +7917,16 @@ re_title:;
                     }
                 }
 
-                int32_t nfs = re15_sin_q12((int)npc->rot_y);
-                int32_t nfc = re15_cos_q12((int)npc->rot_y);
+                /* PURE-RE2-EM23 (Alligator, ROOM2090-Boss): die RE2-Grundpose blickt -X,
+                 * die RE1.5-Mesh-Konvention +X (re15_atan2_q12-Doku re15_actor.h:972).
+                 * SICHTLAUF 2026-09-10: mit korrekt gerechnetem rot_y (2657 = SW zur
+                 * Leiter) stand der Kopf exakt entgegengesetzt (NO) — 180-Grad-Offset
+                 * NUR fuer den Mesh-Yaw dieses reinen RE2-Modells; rot_y selbst bleibt
+                 * unveraendert (re15_dog_advance laeuft weiter Kopf-voran). */
+                int npc_mesh_yaw = (int)npc->rot_y;
+                if (npc->type == 0x23u) npc_mesh_yaw = (npc_mesh_yaw + 0x800) & 0xfff;
+                int32_t nfs = re15_sin_q12(npc_mesh_yaw);
+                int32_t nfc = re15_cos_q12(npc_mesh_yaw);
                 int32_t nyaw[9] = { nfc, 0, nfs, 0, 0x1000, 0, -nfs, 0, nfc };
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
