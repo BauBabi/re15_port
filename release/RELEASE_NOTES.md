@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.7.48 (Early Preview)
+
+**ROOM2090: Bogen jetzt aus der Positions-Wahrheit — und die Hänger-Ecken sind entschärft.**
+
+---
+
+Deine Session-Telemetrie hat beide Restfälle exakt belegt:
+
+1. **„Bogen obwohl nicht bei der Insel"**: Mehrere deiner Querungs-Bahnen
+   führten durch die Wassertasche zwischen Steg und Rampe — das bisherige
+   Zeitfenster überspannte sie, er schwebte dort. Der Bogen hängt jetzt nicht
+   mehr an der Zeit, sondern an der **Position**: Er steigt nur, solange er
+   sich wirklich über der Insel befindet; Höhe fährt mit begrenzter Rate,
+   Wirbelbogen folgt der Höhe, Neigung der Steig-/Sinkrate. Schweben ist
+   damit konstruktiv unmöglich.
+2. **„Bleibt hängen"**: Die Ausweich-Ecken des Wand-Followings lagen mit
+   Abstand 1200 innerhalb seiner 2200er-Kollisionszone — unerreichbare Ziele,
+   an denen er festlief. Sie liegen jetzt außerhalb (2600). Zusätzlich wird
+   das Anlaufziel eingefroren statt jede Frame neu berechnet (kein Zickzack).
+
+Kontrolle: Nach einer Test-Querung steht er exakt auf der Wasserlinie
+(y=−1200; vorher hing er bei −2986 in der Luft) und greift direkt an.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.47 (Early Preview)
 
 **ROOM2090: der Bogen läuft nur noch über der Insel — kein Schweben überm Wasser.**
