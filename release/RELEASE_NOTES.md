@@ -1,3 +1,26 @@
+# RE1.5 Port — v0.7.43 (Early Preview)
+
+**ROOM2090: kein Phantom-Klettern mehr — Aufbäumen und Übersteigen nur an der Insel.**
+
+---
+
+Dein Befund („kann über die Insel klettern, obwohl er überhaupt nicht da ist"):
+Zwei Quellen derselben Klasse gefunden und geschlossen. Erstens lief die
+Aufbäum-Pose der Plattform-Belagerung ab dem Moment, in dem du oben standest —
+also auch, während er noch quer durchs Becken anschwamm: die „Kletterpose" im
+freien Wasser. Sie baut sich jetzt erst in Kanten-Nähe auf (und sauber wieder
+ab). Zweitens durfte die Block-Überquerung aus beliebiger Ferne starten; jetzt
+nur noch nahe der Startkante — von weiter weg bringt ihn erst das
+Wand-Following heran.
+
+Beleg per Telemetrie (liegt als `gator_boss.log` neben der exe): auf dem ganzen
+Anschwimmweg (Distanz 15000→5000) bleibt die Pose flach, erst bei ~3400 baut
+sich das Aufbäumen auf, nach deinem Wegschleudern wieder ab.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.42 (Early Preview)
 
 **ROOM2090: Belagerung mit Hochbiss, Geist-Hänger behoben, Wand-Following.**
