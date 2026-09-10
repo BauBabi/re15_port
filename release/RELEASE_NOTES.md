@@ -1,3 +1,32 @@
+# RE1.5 Port — v0.7.49 (Early Preview)
+
+**ROOM2090: der Ecken-Hänger ist gefangen und die ganze Fehlerklasse geschlossen.**
+
+---
+
+Diesmal habe ich den Hänger selbst gejagt: Vollzeit-Telemetrie plus
+Stillstands-Detektor haben ihn eingefangen — das Patrouillen-Ziel der
+Belagerung saß in der Nordwest-**Poolecke**, jenseits beider Wand-Kollisions-
+grenzen: Er schob dort ewig gegen ein Ziel, das sein 2200er-Körperradius nie
+erreichen kann. Dieselbe Fehlerklasse wie die früheren Ring-Ecken.
+
+Der Klassen-Fix sitzt jetzt an der zentralen Stelle: **Jedes** Ziel, das die
+Boss-Logik erzeugt (Patrouille, Kletter-Bahnenden, Anlauf), wird auf die für
+ihn tatsächlich erreichbare Poolfläche geklemmt (Wandabstand 2500) —
+unerreichbare Ziele sind konstruktiv ausgeschlossen. Im Nachtest desselben
+Szenarios erreicht er sein Ziel und belagert dort mit Schnapp-Zyklen statt in
+der Ecke festzuhängen. Außerdem patrouilliert die Belagerung jetzt sichtbar an
+der Insel-Kante unter dir her, statt regungslos an der Wand zu stehen, wenn du
+außer Reichweite bist.
+
+Die Telemetrie (`gator_boss.log`) schreibt weiter mit — falls doch noch etwas
+hängt: F9 drücken und mir die Datei mitgeben, dann sehe ich Phase, Position
+und Ziel des Moments.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.48 (Early Preview)
 
 **ROOM2090: Bogen jetzt aus der Positions-Wahrheit — und die Hänger-Ecken sind entschärft.**
