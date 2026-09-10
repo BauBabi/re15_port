@@ -585,8 +585,23 @@ void re15_gator_boss_tick(int slot)
             }
             ex = s_apx; ez = s_apz;
             gb_rim_point(pl->x, pl->z, &lx, &lz);
-            if (gb_seg_hits_platform(ex, ez, lx, lz, -200)
-                || gb_seg_hits_ramp(ex, ez, lx, lz, -200)) {
+            {
+                /* Mindest-Schnittlaenge (Nutzer-Marker: die Bahn streifte die
+                 * Block-NW-Ecke mit ~1000 Schnitt und galt als "Querung"):
+                 * Summe der Insel-Abschnitte der Bahn muss >= 2000 sein. */
+                int32_t q0, q1; int64_t bl2; int32_t blen, schnitt = 0;
+                int64_t bdx = lx - ex, bdz = lz - ez;
+                bl2 = bdx * bdx + bdz * bdz;
+                blen = 64; while ((int64_t)blen * blen < bl2 && blen < 30000) blen += 64;
+                if (gb_seg_rect_span(ex, ez, lx, lz, GB_PLAT_X0, GB_PLAT_Z0,
+                                     GB_PLAT_X1, GB_PLAT_Z1, -200, &q0, &q1))
+                    schnitt += (int32_t)(((int64_t)blen * (q1 - q0)) >> 12);
+                if (gb_seg_rect_span(ex, ez, lx, lz, GB_RAMP_X0, GB_RAMP_Z0,
+                                     GB_RAMP_X1, GB_RAMP_Z1, -200, &q0, &q1))
+                    schnitt += (int32_t)(((int64_t)blen * (q1 - q0)) >> 12);
+                if (schnitt < 2000) goto gb_kein_cross;
+            }
+            {
                 ddx = e->x - ex; ddz = e->z - ez;
                 if (ddx * ddx + ddz * ddz < (int64_t)1400 * 1400) {
                     gb_cross_begin(e, g, pl);
@@ -599,7 +614,8 @@ void re15_gator_boss_tick(int slot)
                 }
                 break;
             }
-            /* Bahn quert nichts -> kein Klettern; unten uebernimmt der Ring. */
+            gb_kein_cross: ;
+            /* Bahn quert nicht substanziell -> kein Klettern; unten Ring. */
         }
 
         int32_t tx = pl->x, tz = pl->z;
@@ -754,7 +770,10 @@ void re15_gator_boss_tick(int slot)
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
-            g->cross_cd = 300;               /* DESIGN: ~10 s Ring, dann darf er wieder drueber */
+            g->cross_cd = 90;                /* Nutzer-Telemetrie 2026-09-10: mit 300
+                                              * (10 s) kam er nicht hinterher, wenn
+                                              * Leon direkt zurueckquerte - 3 s
+                                              * reichen als Abwechslungs-Pause */
             e->y = GB_WATER_Y;
             e->motion = 0; e->anim_frame = 0;
             break;
@@ -775,8 +794,10 @@ void re15_gator_boss_tick(int slot)
             int32_t y_ziel = gb_ueber_insel(e->x, e->z)
                                ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
             int32_t dy = y_ziel - e->y;
-            if (dy >  60) dy =  60;
-            if (dy < -60) dy = -60;
+            if (dy >  150) dy =  150;        /* Telemetrie: mit 60/F klang der Bogen
+                                              * ~1500 Einheiten NEBEN der Insel aus
+                                              * ("weit weg hochgeklettert") */
+            if (dy < -150) dy = -150;
             e->y += dy;
             {
                 int32_t hub = GB_WATER_Y - e->y;           /* 0..HUB */
