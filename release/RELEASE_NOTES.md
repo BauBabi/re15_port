@@ -1,3 +1,22 @@
+# RE1.5 Port — v0.7.46 (Early Preview)
+
+**ROOM2090: kein Eck-Klettern mehr — geklettert wird nur, wenn die Bahn wirklich hinüberführt.**
+
+---
+
+Dein Marker zeigte ihn im Kletterbogen an der Nordwest-Ecke, während du im
+Nordosten standst — ihr wart auf derselben Seite, da gab es nichts zu queren.
+Ursache: Streift seine Sichtlinie die Insel nur an einer Ecke, lief die
+Kletter-Bahn an der Kante entlang statt darüber. Jetzt prüft er vor dem Start,
+ob die Bahn die Insel wirklich substanziell quert — wenn nicht, schwimmt er
+außen um die Ecke (Wand-Following) statt zu klettern. Mit exakt deinen
+Marker-Koordinaten durchgerechnet: dieser Fall wird jetzt abgefangen; die
+legitime Überquerung (du auf der Gegenseite) läuft unverändert.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.45 (Early Preview)
 
 **ROOM2090: Überquerungssystem neu gebaut — kein Stecken, kein Phantom-Klettern.**
