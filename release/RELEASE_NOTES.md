@@ -1,3 +1,23 @@
+# RE1.5 Port — v0.7.37 (Early Preview)
+
+**ROOM2090: der Alligator schwimmt wieder mit dem Maul voran.**
+
+---
+
+Dein Befund („läuft mit Hintern Richtung Charakter"): der 180°-Ausrichtungs-
+Offset aus v0.7.35 war eine Fehldeutung meines damaligen Standbilds — beim noch
+raumgroßen Modell hatte ich Kopf und Schwanz verwechselt. Das RE2-Modell steht
+nativ richtig; der Offset ist entfernt, und alle Blick-Setzungen des Bosses
+(Lauern zur Leiter, Überquerungs-Bahn) nutzen jetzt exakt dieselbe Engine-
+Peilung wie die Verfolgung selbst.
+
+Diesmal als Bewegt-Serie abgenommen (zwei Aufnahmen im Sekundenabstand): er
+rückt auf Leon zu, und das Maul führt die Bewegung an.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.36 (Early Preview)
 
 **ROOM2090: der Alligator auf ⅔-Maßstab — er war länger als der Pool.**
