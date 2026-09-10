@@ -94,6 +94,13 @@ extern re15_actor_t g_actors[];
                                  * 1200 lagen die Wand-Following-Ecken IN der
                                  * Klemme = unerreichbare Ziele = Haenger
                                  * (Nutzer + Session-Telemetrie 2026-09-10). */
+#define GB_KOERPER_M     2500   /* Weg-frei-Marge der Following-Tests = Koerper-
+                                 * radius 2200 (byte-true Box @0x80118b98) + 300.
+                                 * Die alte 1300er-Marge (GB_RING_M/2) meldete
+                                 * "Sichtlinie frei", wo der Koerper laengst an
+                                 * der Kante schliff: Nutzer-Marken 1+2
+                                 * 2026-09-10, x klemmte konstant auf -3871 =
+                                 * Plattform-Westkante -1700 minus Radius. */
 #define GB_BAHN_M        2600   /* Bahn-Endpunkte AUSSERHALB des SCA-Clamp-Radius
                                  * (Hitbox 2200 + Marge): der Anlauf erreicht die
                                  * Kante MIT aktiver Wand-Klemme - das fruehere
@@ -270,6 +277,18 @@ static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
         /* Ziel-Ecke = die in Laufrichtung naechste Ecke der eigenen Seite:
          * Uhrzeigersinn: Seite k endet an Ecke (k+1)&3; gegen ihn: an Ecke k. */
         ecke = (cw <= 2) ? ((gs + 1) & 3) : gs;
+        /* SCHATTEN-FALLBACK (Nutzer-Marken 1+2, 2026-09-10): steht der Gator
+         * im Radius-Schatten der Kante (Diagonal-Feld), schert die Luftlinie
+         * zur fernen Ecke am Koerperradius entlang - die SCA-Klemme frisst
+         * die Hauptkomponente und er kriecht (2/F statt 48/F). Dann erst die
+         * NAEHERE der beiden Seiten-Ecken anlaufen (fuehrt von der Kante weg). */
+        if (gb_seg_hits_platform(e->x, e->z, C[ecke][0], C[ecke][1], GB_KOERPER_M)) {
+            int alt2 = (ecke == gs) ? ((gs + 1) & 3) : gs;
+            int64_t da_x = e->x - C[ecke][0], da_z = e->z - C[ecke][1];
+            int64_t db_x = e->x - C[alt2][0], db_z = e->z - C[alt2][1];
+            if (db_x * db_x + db_z * db_z < da_x * da_x + da_z * da_z)
+                ecke = alt2;
+        }
         *tx = C[ecke][0]; *tz = C[ecke][1];
     }
     #undef GB_SEITE
@@ -405,8 +424,14 @@ static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
 static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued)
 {
     int32_t cx = e->x;
-    if (cx < GB_RAMP_X0 + 700) cx = GB_RAMP_X0 + 700;   /* Rand-Puffer: Bogen */
-    if (cx > GB_RAMP_X1 - 700) cx = GB_RAMP_X1 - 700;   /* nicht an der Kante */
+    if (cx < GB_RAMP_X0 + GB_RING_M) cx = GB_RAMP_X0 + GB_RING_M;
+    if (cx > GB_RAMP_X1 - 700)       cx = GB_RAMP_X1 - 700;
+    /* Westgrenze = X0+GB_RING_M (4450), NICHT +700: die Plattform-Ostkante
+     * (1850) wirft mit dem 2200er-Koerperradius (@0x80118b98) einen
+     * Klemm-Schatten bis x~3950 - ein Anlaufpunkt darunter ist mit dem
+     * Koerper UNERREICHBAR (Nutzer-Marke 3, 2026-09-10: er stand bei
+     * (2522,-22170) exakt auf der Suedkanten-Klemmlinie, Ziel (2550,-20700),
+     * 1470 vor dem 1400er-Gate - fuer immer). */
     g->cx0 = cx; g->cx1 = cx;
     if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
     else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
@@ -592,8 +617,8 @@ void re15_gator_boss_tick(int slot)
                 int32_t eckz_l = (zg == 0) ? (GB_PLAT_Z1 + GB_RING_M) : (GB_PLAT_Z0 - GB_RING_M);
                 int32_t eckx   = GB_PLAT_X0 - GB_RING_M;      /* Westumlauf-Ecken */
                 int32_t rx     = e->x;                        /* Rampen-Anlauf-x */
-                if (rx < GB_RAMP_X0 + 700) rx = GB_RAMP_X0 + 700;
-                if (rx > GB_RAMP_X1 - 700) rx = GB_RAMP_X1 - 700;
+                if (rx < GB_RAMP_X0 + GB_RING_M) rx = GB_RAMP_X0 + GB_RING_M;
+                if (rx > GB_RAMP_X1 - 700)       rx = GB_RAMP_X1 - 700;
                 int32_t rz_ein = (zg == 0) ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
                 int32_t rz_aus = (zg == 0) ? (GB_RAMP_Z1 + GB_BAHN_M) : (GB_RAMP_Z0 - GB_BAHN_M);
                 if (g->route == 0 || zg != g->zone_g || zl != g->zone_l
@@ -619,9 +644,9 @@ void re15_gator_boss_tick(int slot)
                     tx = rx; tz = rz_ein; g->dbg_zweig = 2;
                 } else {
                     /* WEST: naechsten noch noetigen Wegpunkt ansteuern */
-                    if (!gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2))
+                    if (!gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
                         { g->dbg_zweig = 1; }                     /* frei: direkt */
-                    else if (!gb_seg_hits_platform(e->x, e->z, eckx, eckz_l, GB_RING_M / 2))
+                    else if (!gb_seg_hits_platform(e->x, e->z, eckx, eckz_l, GB_KOERPER_M))
                         { tx = eckx; tz = eckz_l; g->dbg_zweig = 3; }
                     else { tx = eckx; tz = eckz_g; g->dbg_zweig = 4; }
                 }
@@ -629,12 +654,15 @@ void re15_gator_boss_tick(int slot)
                 /* verbunden (gleiche Zone oder Westkanal): direkt zu Leon;
                  * streift die Sichtlinie den Plattform-Sporn oder die
                  * Rampen-Westkante, um die Ecke fuehren. */
-                if (gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2))
+                if (gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
                     { gb_ring_target(e, pl, &tx, &tz); g->dbg_zweig = 5; }
-                else if (gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_RING_M / 2)) {
-                    tx = GB_RAMP_X0 - GB_RING_M;      /* Rampen-Westecke der */
-                    tz = (gb_zone(e->z) == 0)          /* eigenen Seite */
-                           ? (GB_RAMP_Z0 - GB_RING_M) : (GB_RAMP_Z1 + GB_RING_M);
+                else if (gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_KOERPER_M)) {
+                    /* westlich um die Rampe = westlich um die PLATTFORM (die
+                     * Rampe schliesst an sie an; eine "Rampen-Westecke" laege
+                     * im Radius-Schatten der Plattform-Suedkante). */
+                    tx = GB_PLAT_X0 - GB_RING_M;
+                    tz = (gb_zone(e->z) == 0)
+                           ? (GB_PLAT_Z0 - GB_RING_M) : (GB_PLAT_Z1 + GB_RING_M);
                     g->dbg_zweig = 6;
                 }
                 g->route = 0;                          /* Latch loesen */
@@ -734,8 +762,8 @@ void re15_gator_boss_tick(int slot)
             /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
              * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
              * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
-            if (gb_seg_hits_platform(e->x, e->z, gx, gz, GB_RING_M / 2)
-                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_RING_M / 2)) {
+            if (gb_seg_hits_platform(e->x, e->z, gx, gz, GB_KOERPER_M)
+                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_KOERPER_M)) {
                 gb_ring_target(e, pl, &gx, &gz);
                 /* SACKGASSEN-PENDEL (Telemetrie: 3-s-Staende an der NO-Ecke -
                  * die T-Geometrie hat ostseitig keinen Umlauf): ist auch das
