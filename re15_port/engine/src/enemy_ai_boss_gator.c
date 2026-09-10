@@ -44,6 +44,7 @@
  *   TOD     Clip 7 einmal, dann CORPSE-Verhalten der byte-true KI (state 7).
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>   /* getenv - RE15_GB_TEST (Sichtlauf-Hebel) */
 #include "re15_boss_gator.h"
@@ -448,8 +449,17 @@ void re15_gator_boss_tick(int slot)
             break;
         }
         if (blocked && g->cross_cd == 0) {
-            gb_cross_begin(e, g, 0);
-            break;
+            /* Nur aus Kanten-Naehe klettern (gleiche Nutzer-Klasse: Kletterstart
+             * quer durchs Becken wirkt "obwohl er nicht da ist") - fern bringt
+             * das Wand-Following unten ihn erst heran, blocked bleibt bestehen. */
+            int32_t kx = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2)
+                           ? (GB_PLAT_X0 - GB_RING_M) : (GB_PLAT_X1 + GB_RING_M);
+            int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
+            int64_t ddx = e->x - kx, ddz = e->z - zm;
+            if (ddx * ddx + ddz * ddz < (int64_t)6000 * 6000) {
+                gb_cross_begin(e, g, 0);
+                break;
+            }
         }
 
         int32_t tx = pl->x, tz = pl->z;
@@ -537,13 +547,26 @@ void re15_gator_boss_tick(int slot)
                                                * ihn an der Blockwand - er drueckt
                                                * sich unter die Kante */
         e->y = GB_WATER_Y;
-        /* Aufrichten (DESIGN): Nase + Kopfkette heben (negatives Vorzeichen =
-         * heben, s. Hook-Geometrie), Rampe ueber 24 Frames. */
-        if (g->guard_t < 24) g->guard_t++;
+        /* Aufrichten NUR NAHE DER KANTE (Nutzer 2026-09-10: "klettert ueber die
+         * Insel, obwohl er ueberhaupt nicht da ist" - die Aufbaeum-Rampe lief ab
+         * GUARD-EINTRITT, also schon beim Anschwimmen quer durchs Becken).
+         * Fern: Rampe abbauen, flach schwimmen, kein Schnapp. */
+        if (dist < 4200) { if (g->guard_t < 24) g->guard_t++; }
+        else             { if (g->guard_t > 0)  g->guard_t--; }
+        {   /* Mess-Telemetrie (Nutzer-Diagnose): alle 30 F in gator_boss.log */
+            static FILE *s_gl = NULL; static int s_gc = 0;
+            if (!s_gl) s_gl = fopen("gator_boss.log", "a");
+            if (s_gl && (++s_gc % 30) == 0) {
+                fprintf(s_gl, "GUARD dist=%d guard_t=%d pitch=%d arc=%d mo=%d af=%d pos=(%d,%d)\n",
+                        (int)dist, (int)g->guard_t, (int)g->pitch_vz, (int)g->arc_vz,
+                        (int)e->motion, (int)e->anim_frame, e->x, e->z);
+                fflush(s_gl);
+            }
+        }
         g->pitch_vz = (int16_t)(-(350 * g->guard_t) / 24);
         g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
         /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
-        if (e->hit_stun == 0 && e->motion != 4) {
+        if (dist < 4200 && e->hit_stun == 0 && e->motion != 4) {
             e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
         }
         if (e->motion == 4) {
