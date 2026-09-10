@@ -1,3 +1,47 @@
+# RE1.5 Port — v0.7.35 (Early Preview)
+
+**ROOM2090: der Alligator-Bosskampf nach deinem Drehbuch.**
+
+---
+
+## Deine 8 Punkte
+
+1. **Spinnen auf der Plattform**: die zwei Raum-Spinnen sitzen jetzt oben auf dem
+   Mittelblock und bleiben dort verankert sitzen.
+2. **Lauerstellung**: der Alligator startet links oben im Wasser und fixiert die
+   Leiter an der Westwand. Die Türnische ist sicher — der Kampf beginnt erst, wenn
+   du in den Pool vordringst, ihm direkt vor die Nase läufst oder schießt.
+3. **Biss**: byte-true Fenster/Reichweite der 1.5-KI, jetzt mit echtem Schaden
+   (50, die byte-true Tabellenzeile) + Knockdown. Ein Biss pro Angriff, danach
+   die originale Wieder-Angriffs-Sperre.
+4. **Boss-HP 3000** (10× der originale 300er-Wert — Magnum 10 Treffer,
+   Shotgun 15, Pistole 150).
+5. **Treffer zeigen**: Blutspritzer bei jedem Treffer am vorderen Rumpf; alle
+   10% HP zuckt er sichtbar zurück (Flinch-Clip), dazwischen Boss-Panzerung.
+6. **Ring-Verfolgung**: er umschwimmt den Plattform-Block auf der kürzeren
+   Seite, statt in ihm hängenzubleiben.
+7. **Spinnen-Flucht**: sobald er die Überquerung ansetzt, rennen die Spinnen
+   zur Wand dahinter und klettern sie hoch.
+8. **Plattform-Überquerung**: steht Leon oben, hebt der Alligator den
+   Oberkörper, schiebt sich im Halbbogen über die Plattform (Wirbelsäule
+   krümmt sich mit, Kopf taucht drüben ein, Schwanz noch diesseits) und
+   gleitet auf der anderen Seite ins Wasser.
+
+Sichtgeprüft am laufenden Spiel: Lauerstellung flach im Wasser, Lunge-Biss mit
+aufgerissenem Maul, Überquerung mit gehobenem Oberkörper. Das RE2-Modell stand
+anfangs 180° verkehrt (RE2-Grundpose blickt −X) — behoben im Renderer.
+
+**Zum Selbsttesten**: RE15_GB_TEST=1 startet den Kampf sofort, =2 erzwingt
+sofort die Plattform-Überquerung.
+
+**Bekannt/offen**: Clip-Deutung der RE2-Bank ist Statistik-basiert (Biss/Flinch/
+Todesrolle sitzen sichtbar richtig; Feinschliff nach deinem Eindruck). Der
+Debug-Sprung direkt nach 2090 lädt je nach Latenz 25–55 s.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.34 (Early Preview)
 
 **Karte: der aktuelle Raum zeigt jetzt seine Zeichnung — rot geschleiert statt schwarz. Plus: der Alligator schwimmt in ROOM2090.**
