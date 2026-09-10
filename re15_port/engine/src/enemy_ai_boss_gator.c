@@ -94,13 +94,16 @@ extern re15_actor_t g_actors[];
                                  * 1200 lagen die Wand-Following-Ecken IN der
                                  * Klemme = unerreichbare Ziele = Haenger
                                  * (Nutzer + Session-Telemetrie 2026-09-10). */
-#define GB_KOERPER_M     2500   /* Weg-frei-Marge der Following-Tests = Koerper-
-                                 * radius 2200 (byte-true Box @0x80118b98) + 300.
-                                 * Die alte 1300er-Marge (GB_RING_M/2) meldete
-                                 * "Sichtlinie frei", wo der Koerper laengst an
-                                 * der Kante schliff: Nutzer-Marken 1+2
-                                 * 2026-09-10, x klemmte konstant auf -3871 =
-                                 * Plattform-Westkante -1700 minus Radius. */
+#define GB_GPAT_M        1900   /* Belagerungs-Kantenabstand: > GB_KOERPER_M
+                                 * (sonst ueberschreibt das Following das Ziel)
+                                 * und > skalierte Klemmlinie ~1470. */
+#define GB_KOERPER_M     1800   /* Weg-frei-Marge der Following-Tests = SKALIERTER
+                                 * Koerperradius 1466 (byte-true Box @0x80118b98
+                                 * r=2200 x GB_SCALE_Q12, s. Boss-INIT) + ~330.
+                                 * Lehre der Nutzer-Marken 1+2 (2026-09-10): eine
+                                 * Marge unter dem Koerperradius meldet "Sicht-
+                                 * linie frei", wo der Rumpf laengst an der Kante
+                                 * schliff (x klemmte konstant auf Kante-Radius). */
 #define GB_BAHN_M        2600   /* Bahn-Endpunkte AUSSERHALB des SCA-Clamp-Radius
                                  * (Hitbox 2200 + Marge): der Anlauf erreicht die
                                  * Kante MIT aktiver Wand-Klemme - das fruehere
@@ -502,6 +505,18 @@ void re15_gator_boss_tick(int slot)
          * -GB_WATER_Y. Auf der Plattform-Passage (Root -3192, Leon oben -1800)
          * bleibt dy=192 im Band - der Push wirkt dort ebenfalls. */
         e->hit_offset_y = (int16_t)(-GB_WATER_Y);
+        /* KOLLISION IM MASSSTAB DES MODELLS (Nutzer 2026-09-10: "musst du ihn
+         * halt noch ein wenig kleiner machen"): die byte-true Box @0x80118b98
+         * (r=2200, rz=800, h=720) gilt dem Full-Size-Alligator; der Boss
+         * laeuft optisch mit GB_SCALE_Q12 (2/3). Ungeskaliert kollidierte er
+         * wie in Originalgroesse und blieb an Kanten haengen, wo er optisch
+         * laengst vorbeipasst (alle Haenger-Marken 2026-09-10). Idempotent
+         * ueber den >2000-Wachtest (INIT laeuft je Aktor-Leben einmal). */
+        if (e->hit_radius_min > 2000) {
+            e->hit_radius_min = (uint16_t)(((uint32_t)e->hit_radius_min * GB_SCALE_Q12) >> 12);
+            e->hit_radius_max = (uint16_t)(((uint32_t)e->hit_radius_max * GB_SCALE_Q12) >> 12);
+            e->hit_height     = (uint16_t)(((uint32_t)e->hit_height     * GB_SCALE_Q12) >> 12);
+        }
         e->motion = 0; e->anim_frame = 0;     /* flacher Loko-Zyklus als Wasser-Lauern
                                                * (Clip 6 = WENDE ringelte den Koerper,
                                                * Clip 11 = AUFGERICHTETE Pose — beide im
@@ -669,6 +684,17 @@ void re15_gator_boss_tick(int slot)
                 g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
             }
         }
+        /* Steuerziel in die vom KOERPER-ZENTRUM erreichbare Flaeche klemmen
+         * (Raum-SCA x[-8900..7200] z[-27000..-5400], Klemmlinie = Kante +
+         * Radius 2200; GEMESSEN -24829 an der Suedwand): steht Leon im
+         * Wand-Schatten (z.B. Tuernische am Suedufer), schliff der Gator
+         * dauerhaft an der Wand (Repro 2026-09-10: 10 Stillstands-Ticks
+         * bei z=-24829, +-350-Slew-Pendel). Am geklemmten Punkt lauert er
+         * ruhig, bis Leon wieder erreichbar ist. */
+        if (tx < -8900 + 1600)  tx = -8900 + 1600;
+        if (tx >  7200 - 1600)  tx =  7200 - 1600;
+        if (tz < -27000 + 1600) tz = -27000 + 1600;
+        if (tz >  -5400 - 1600) tz =  -5400 - 1600;
         g->dbg_tx = tx; g->dbg_tz = tz;
         {
             int slew = (re15_engine_rand8() & 0x1f) + 6;   /* byte-true B[4]-Slew-Streuung */
@@ -758,7 +784,60 @@ void re15_gator_boss_tick(int slot)
              * er schwimmt sichtbar an der Kante unter Leon her. */
             int32_t gx, gz;
             int64_t gdx, gdz;
-            gb_rim_point(pl->x, pl->z, &gx, &gz);
+            /* Randpunkt auf der EIGENEN Seite konstruieren (Nutzer-Marken
+             * F2579-F2809, 2026-09-10: Leon oben auf der Rampe, der Gator
+             * kreiste ewig im Nordbecken an der Plattform-NO-Ecke - der
+             * gb_rim_point/ring_target-Weg fuehrte um die PLATTFORM, aber um
+             * die RAMPE gibt es keinen Ostumlauf. Belagert wird die Kante
+             * der Gator-Zone unter Leon; Kantenabstand GB_BAHN_M 2600:
+             * ausserhalb der Klemm-Box (Kante+2170, @0x80118b98-Radius) UND
+             * ausserhalb der 2500er-Following-Marge - ein naeheres Ziel (2300)
+             * wurde vom Following-Zweig sofort wieder durch eine Ecke ersetzt
+             * (GB_TEST=6-Lauf: GPAT pendelte an der Westecke). Hochbiss-
+             * Reichweite bleibt unter dem 4200er-Aufricht-Gate. */
+            {
+                int zg2 = gb_zone(e->z);
+                int auf_rampe = (pl->x >= GB_RAMP_X0);
+                if (zg2 == 2) {               /* Westkanal: Plattform-Westkante */
+                    gx = GB_PLAT_X0 - GB_GPAT_M;
+                    gz = pl->z;
+                    if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
+                    if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
+                } else if (auf_rampe) {       /* Rampen-Kante der eigenen Seite */
+                    gx = pl->x;
+                    if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
+                    if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
+                    gz = (zg2 == 0) ? (GB_RAMP_Z0 - GB_GPAT_M) : (GB_RAMP_Z1 + GB_GPAT_M);
+                } else {                      /* Plattform-Kante der eigenen Seite */
+                    gx = pl->x;
+                    if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
+                    if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
+                    gz = (zg2 == 0) ? (GB_PLAT_Z0 - GB_GPAT_M) : (GB_PLAT_Z1 + GB_GPAT_M);
+                }
+                {   /* Kanten-Pendel: steht Leon still (und damit das Ziel),
+                     * patrouilliert er sichtbar laengs der Kante statt zu
+                     * erstarren (+-1500 alle 90 F, Timer laeuft nur nahe
+                     * am Ziel; laengs = x an Sued-/Nordkante, z am Kanal). */
+                    static int s_bt = 0; static int s_bdir = 1;
+                    int64_t bdx = e->x - gx, bdz = e->z - gz;
+                    if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
+                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
+                    if (zg2 == 2) {
+                        gz += s_bdir * 1500;
+                        if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
+                        if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
+                    } else {
+                        gx += s_bdir * 1500;
+                        if (auf_rampe) {
+                            if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
+                            if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
+                        } else {
+                            if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
+                            if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
+                        }
+                    }
+                }
+            }
             /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
              * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
              * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
