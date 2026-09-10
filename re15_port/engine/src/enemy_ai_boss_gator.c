@@ -489,21 +489,32 @@ void re15_gator_boss_tick(int slot)
         if ((blocked || rampe) && g->cross_cd == 0) {
             /* Insel zwischen Gator und Leon: zum eigenen Randpunkt schwimmen
              * (MIT Wand-Klemme - Randpunkte liegen ausserhalb der Klemmzonen)
-             * und erst DORT die Bogen-Bahn starten. */
-            int32_t ex, ez;
+             * und erst DORT die Bogen-Bahn starten.
+             * BAHN-PROBE (Nutzer-Marker 2026-09-10: Bogen an der NW-ECKE,
+             * Leon im NO - beide auf der Nordseite!): streift die Sichtlinie
+             * die Insel nur an einer Ecke, laeuft die Randpunkt-Bahn an der
+             * Kante ENTLANG statt darueber. Klettern NUR, wenn die Bahn die
+             * Insel substanziell quert (Marge -200) - sonst fuehrt das
+             * Wand-Following unten um die Ecke. */
+            int32_t ex, ez, lx, lz;
             int64_t ddx, ddz;
             gb_rim_point(e->x, e->z, &ex, &ez);
-            ddx = e->x - ex; ddz = e->z - ez;
-            if (ddx * ddx + ddz * ddz < (int64_t)1400 * 1400) {
-                gb_cross_begin(e, g, pl);
-            } else {
-                re15_enemy_steer_point(e, ex, ez, 0x40);
-                re15_ai_advance(e, GB_SWIM_SPEED);
-                e->y = GB_WATER_Y;
-                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-                e->anim_frame++;
+            gb_rim_point(pl->x, pl->z, &lx, &lz);
+            if (gb_seg_hits_platform(ex, ez, lx, lz, -200)
+                || gb_seg_hits_ramp(ex, ez, lx, lz, -200)) {
+                ddx = e->x - ex; ddz = e->z - ez;
+                if (ddx * ddx + ddz * ddz < (int64_t)1400 * 1400) {
+                    gb_cross_begin(e, g, pl);
+                } else {
+                    re15_enemy_steer_point(e, ex, ez, 0x40);
+                    re15_ai_advance(e, GB_SWIM_SPEED);
+                    e->y = GB_WATER_Y;
+                    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+                    e->anim_frame++;
+                }
+                break;
             }
-            break;
+            /* Bahn quert nichts -> kein Klettern; unten uebernimmt der Ring. */
         }
 
         int32_t tx = pl->x, tz = pl->z;
