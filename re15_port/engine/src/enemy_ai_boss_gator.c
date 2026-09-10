@@ -89,7 +89,11 @@ extern re15_actor_t g_actors[];
 #define GB_PLAT_X1       1850
 #define GB_PLAT_Z0     -20000
 #define GB_PLAT_Z1     -12450
-#define GB_RING_M        1200   /* DESIGN: Wegpunkt-Abstand vom Block */
+#define GB_RING_M        2600   /* Wegpunkt-Abstand vom Block: MUSS ausserhalb
+                                 * der SCA-Klemmzone (Hitbox 2200) liegen - mit
+                                 * 1200 lagen die Wand-Following-Ecken IN der
+                                 * Klemme = unerreichbare Ziele = Haenger
+                                 * (Nutzer + Session-Telemetrie 2026-09-10). */
 #define GB_BAHN_M        2600   /* Bahn-Endpunkte AUSSERHALB des SCA-Clamp-Radius
                                  * (Hitbox 2200 + Marge): der Anlauf erreicht die
                                  * Kante MIT aktiver Wand-Klemme - das fruehere
@@ -313,11 +317,21 @@ static void gb_rim_out(int32_t *x, int32_t *z,
         else                *z = rz1;
     }
 }
+/* Liegt (px,pz) ueber der Insel (+300)? Positions-Wahrheit fuer den Bogen. */
+static int gb_ueber_insel(int32_t px, int32_t pz)
+{
+    if (px >= GB_PLAT_X0 - 300 && px <= GB_PLAT_X1 + 300 &&
+        pz >= GB_PLAT_Z0 - 300 && pz <= GB_PLAT_Z1 + 300) return 1;
+    if (px >= GB_RAMP_X0 - 300 && px <= GB_RAMP_X1 + 300 &&
+        pz >= GB_RAMP_Z0 - 300 && pz <= GB_RAMP_Z1 + 300) return 1;
+    return 0;
+}
+
 static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
 {
     int32_t x = px, z = pz;
     int it;
-    for (it = 0; it < 2; it++) {
+    for (it = 0; it < 3; it++) {
         gb_rim_out(&x, &z, GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1);
         gb_rim_out(&x, &z, GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1);
     }
@@ -556,7 +570,16 @@ void re15_gator_boss_tick(int slot)
              * Wand-Following unten um die Ecke. */
             int32_t ex, ez, lx, lz;
             int64_t ddx, ddz;
-            gb_rim_point(e->x, e->z, &ex, &ez);
+            static int32_t s_apx = 0, s_apz = 0;
+            static int s_ap_alter = 9999;
+            if (++s_ap_alter >= 60) {                 /* Anlaufziel einfrieren:
+                                                       * jede Frame neu berechnete
+                                                       * rim-Ziele springen zwischen
+                                                       * Kanten = Zickzack/Haenger */
+                gb_rim_point(e->x, e->z, &s_apx, &s_apz);
+                s_ap_alter = 0;
+            }
+            ex = s_apx; ez = s_apz;
             gb_rim_point(pl->x, pl->z, &lx, &lz);
             if (gb_seg_hits_platform(ex, ez, lx, lz, -200)
                 || gb_seg_hits_ramp(ex, ez, lx, lz, -200)) {
@@ -722,19 +745,25 @@ void re15_gator_boss_tick(int slot)
                                   / (g->cframes ? g->cframes : GB_CROSS_FRAMES));
         {
             /* sin(pi * t/N) ueber die Q12-Tabelle: Winkel 0..0x800 (halbe Periode). */
-            /* Bogen nur ueber dem Insel-Abschnitt (t_ein..t_aus); die Wasser-
-             * Endstuecke der Bahn werden flach geschwommen. */
-            if (t <= g->t_ein || t >= g->t_aus) {
-                e->y = GB_WATER_Y;
-                g->arc_vz = 0; g->pitch_vz = 0;
-            } else {
-                int span = (int)g->t_aus - (int)g->t_ein;
-                int ang = (int)((int64_t)(t - g->t_ein) * 0x800 / span);
-                int sv  = re15_sin_q12(ang);               /* 0..4096..0 */
-                int cv  = re15_cos_q12(ang);               /* 4096..0..-4096 */
-                e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * sv >> 12);
-                g->arc_vz = (int16_t)((GB_ARC_VZ_MAX * sv) >> 12);
-                g->pitch_vz = (int16_t)(-((GB_PITCH_MAX * cv) >> 12));
+            /* Bogen aus der POSITIONS-WAHRHEIT (Session-Telemetrie 2026-09-10:
+             * die t-Fenster ueberspannten die WASSERTASCHE zwischen Steg und
+             * Rampe sowie Streif-Bahnen -> Schweben ueberm Wasser). Ziel-Y =
+             * Peak nur UEBER der Insel, sonst Wasserlinie; y bewegt sich mit
+             * begrenzter Rate dorthin (glatte Kanten), Bogen/Neigung folgen
+             * der tatsaechlichen Hoehe. */
+            int32_t y_ziel = gb_ueber_insel(e->x, e->z)
+                               ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
+            int32_t dy = y_ziel - e->y;
+            if (dy >  60) dy =  60;
+            if (dy < -60) dy = -60;
+            e->y += dy;
+            {
+                int32_t hub = GB_WATER_Y - e->y;           /* 0..HUB */
+                if (hub < 0) hub = 0;
+                g->arc_vz = (int16_t)(-(int32_t)GB_ARC_VZ_MAX * hub / RE15_GB_CROSS_HUB);
+                g->arc_vz = (int16_t)(-g->arc_vz);         /* Betrag: haengen wie gehabt */
+                /* Neigung aus der y-RATE: steigen = Nase hoch, sinken = runter. */
+                g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 60);
             }
         }
         /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
