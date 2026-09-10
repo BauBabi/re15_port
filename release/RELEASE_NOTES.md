@@ -1,3 +1,31 @@
+# RE1.5 Port — v0.7.41 (Early Preview)
+
+**ROOM2090: Lauern ganz hinten, solide Körperlänge, Knockdown-Treffer, sichtbarer Schnapp.**
+
+---
+
+Deine vier Punkte:
+
+1. **Startposition**: Er lauert jetzt ganz hinten — im diagonal fernen Ende des
+   Beckens (Süd-West), Blick über das ganze Becken zur Leiter. An der Tür bist
+   du sicher; der Kampf beginnt erst, wenn du dich ihm näherst (oder schießt).
+2. **Durchclippen**: Die Kollision deckte nur den Rumpf — Kopf und Schweif des
+   12-m-Tiers waren durchlässig. Vier zusätzliche Kollisionskreise entlang der
+   Körperachse machen ihn jetzt auf ganzer Länge solide.
+3. **Schadens-Animation**: Gemessen spielte Leon nur ein 22-Frame-Zucken. Der
+   Biss löst jetzt den byte-true **Niederschlag** aus (dieselbe Knockdown-Klasse,
+   die der Original-Alligator-Biss anstößt): Leon geht zu Boden und rappelt sich
+   auf — im Test dreimal sauber durchlaufen.
+4. **Beiß-Animation**: Die Kieferkurven beider Kandidaten-Clips wurden Frame für
+   Frame vermessen: Der bisherige Clip öffnet das Maul erst ab Frame 54 — mein
+   Abbruch bei 40 zeigte also nur den Ansatz. Der Angriff nutzt jetzt den
+   Schnapp-Clip (Maul reißt ab Frame 4 auf, Peak bei 12) mit dem Schadensfenster
+   genau auf dem offenen Maul. Sichtbild: er kommt mit aufgerissenem Maul.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.40 (Early Preview)
 
 **ROOM2090: kein Durchclippen mehr — und er steigt jetzt auch über die Rampe.**
