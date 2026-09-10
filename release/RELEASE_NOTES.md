@@ -1,3 +1,25 @@
+# RE1.5 Port — v0.7.51 (Early Preview)
+
+**ROOM2090: das Sinken beginnt vor der Kante, und die Belagerung läuft um die Insel statt dagegen.**
+
+---
+
+Deine zwei Marker, beide per Telemetrie aufgeklärt:
+
+1. **„Kletterte im Nirgendwo kurzzeitig nach oben"**: Das war der Ausklang des
+   Bogens — die Höhe baute sich erst NACH der Inselkante ab und trug ihn
+   600–1200 Einheiten sichtbar hinaus. Jetzt schaut die Bahn 13 Frames
+   voraus: Das Sinken beginnt vor der Kante und endet exakt an ihr. Der
+   Schwebe-Detektor findet im Regressionslauf null Treffer (vorher zwei).
+2. **„Teilweise geblockt"**: Die Belagerungs-Patrouille steuerte stur
+   geradeaus auf einen Randpunkt hinter der Rampe (du oben auf der anderen
+   Seite) und stand 3 Sekunden gegen die Kollision. Liegt die Insel zwischen
+   ihm und dem Patrouillenziel, schwimmt er jetzt per Wand-Following herum.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.50 (Early Preview)
 
 **ROOM2090: er kommt jetzt hinterher — und klettert nur noch bei echter Querung.**
