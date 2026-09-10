@@ -83,10 +83,20 @@ extern re15_actor_t g_actors[];
 /* CROSS-Bogen: Hub ueber die Wasserlinie. Plattformhoehe im Spiel gemessen
  * (siehe GB_PLAT_TOP_Y-Messnotiz unten) + Kopffreiheit. */
 #define GB_CROSS_FRAMES   150   /* DESIGN: ~5950 Einheiten Bahn / 40 pro Frame */
-/* Bogen-Hub: Peak-Root-Y = Plattformoberflaeche -1800 (SCA[7]-floor-Bit 1 x der
- * byte-true Land-INIT-Formel Y=-1800*floor @0x8010c7a4) minus halbe Koerperhoehe
- * (Hitbox-Hoehe 720 @0x80118b98 / 2 = 360) => Peak -2160; Hub = |-2160 - (-1200)|. */
-#define RE15_GB_CROSS_HUB 960
+/* MODELL-MASSSTAB (Nutzer 2026-09-10: "ein wenig zu gross fuer den Raum"):
+ * GEMESSEN an der Bindpose des RE2-EM23 (MD1-Vertices + EMR-Bone-Offsets,
+ * selbst geparst): x-Laenge 18313, Hoehe 3984 (y -1896..+2088), Breite 3378 —
+ * LAENGER als die Pool-Kurzseite (16100). Scale 2/3 (Q12 2731) ueber den
+ * byte-true ENTITY-RENDER-SCALE +0x166 (ScaleMatrix-Pfad FUN_8001e8c8
+ * @0x8001e904-40; der Gorilla-Boss nutzt ihn mit 0x1b33): Koerper ~12200 lang,
+ * ~2650 hoch — Boss-Praesenz (~1,5x Leon-Hoehe), passt in die Ring-Rinne
+ * (7200). Hitbox/Reichweiten bleiben die byte-true 0x23-Werte. */
+#define GB_SCALE_Q12     2731
+/* Bogen-Hub: Peak-Root-Y so, dass der BAUCH auf der Plattformoberflaeche
+ * (-1800 = floor-Ebene 1 x byte-true Y=-1800*floor @0x8010c7a4) aufliegt:
+ * Bauch-Tiefe unter Root = 2088 (Mesh-y-Max, gemessen) x Scale 2/3 = 1392;
+ * Peak = -1800 - 1392 = -3192; Hub = |-3192 - (-1200)|. */
+#define RE15_GB_CROSS_HUB 1992
 #define GB_ARC_VZ_MAX     260   /* DESIGN: Q12-Spitzenkruemmung je Wirbelgelenk (~23 deg) */
 /* Spinnen (Nutzer-Punkte 1+7): Plattform-Sitzplaetze + Ostwand-Flucht. */
 #define GB_SPID0_X       -700
@@ -255,6 +265,7 @@ void re15_gator_boss_tick(int slot)
         e->x = GB_START_X; e->z = GB_START_Z; e->y = GB_WATER_Y;
         e->rot_y = (int16_t)(((int)re15_atan2_q12(GB_LADDER_Z - e->z,
                                                   GB_LADDER_X - e->x) - 0x400) & 0xfff);
+        e->render_scale_q12 = GB_SCALE_Q12;   /* 2/3-Massstab, s. GB_SCALE_Q12 oben */
         e->motion = 0; e->anim_frame = 0;     /* flacher Loko-Zyklus als Wasser-Lauern
                                                * (Clip 6 = WENDE ringelte den Koerper,
                                                * Clip 11 = AUFGERICHTETE Pose — beide im
