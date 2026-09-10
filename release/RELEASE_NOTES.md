@@ -1,3 +1,33 @@
+# RE1.5 Port — v0.7.54 (Early Preview)
+
+**ROOM2090: die Kollision ist jetzt so gross wie der Alligator aussieht.**
+
+---
+
+Du hast den Kern getroffen: Es war die Größe — aber nicht die sichtbare.
+Optisch schwimmt er längst im 2/3-Maßstab, seine KOLLISIONSBOX hatte aber
+noch die Originalgröße des Full-Size-Alligators. Er stieß deshalb an Kanten
+an, an denen er optisch locker vorbeipasst — das war die gemeinsame Wurzel
+der Hänger. Jetzt ist die Kollision mit demselben Faktor geschrumpft wie
+das Modell, und alle Wegmaße rechnen mit dem echten Körper.
+
+Dazu aus deinen drei Kanten-Marken:
+
+1. **Belagerung an der richtigen Kante**: Standest du oben auf der Rampe,
+   kreiste er dauerhaft im Nordbecken an der Plattform-Ecke — seine
+   Patrouille wollte um die Rampe herum, um die es keinen Ostumlauf gibt.
+   Jetzt schwimmt er an die Kante seiner Seite direkt unter dich, pendelt
+   dort sichtbar und schnappt nach oben, sobald du nah an der Kante bist.
+2. **Kein Wandschleifen mehr**: Stand Leon für ihn unerreichbar (z. B. in
+   der Süd-Türnische), schliff er dauerhaft an der Wand — sein Steuerziel
+   wird jetzt auf die erreichbare Fläche geklemmt, er lauert ruhig am
+   nächstmöglichen Punkt.
+
+Kontroll-Läufe: Südwand-Szenario null Stillstände (vorher zehn), volle
+Jagd-Runde durchs Becken null Stillstände, Bissnähe 261. Suite 282/282.
+
+---
+
 # RE1.5 Port — v0.7.53 (Early Preview)
 
 **ROOM2090: geklettert wird nur noch am kleinen Vorsprung — und die Spinnen sind eingefroren.**
