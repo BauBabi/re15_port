@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.44 (Early Preview)
+
+**ROOM2090: der Durch-die-Insel-Tunnel ist zu — klettern nur noch von der Kante aus.**
+
+---
+
+Dein Nachtest hatte recht — zwei Löcher waren noch offen:
+
+1. **Der eigentliche Übeltäter**: Der Anlauf zur Überquerung lief seit v0.7.39
+   mit abgeschalteter Wand-Kollision (damals ein Patt-Fix). Kreuzte seine
+   Anlauf-Route die Insel, glitt er flach QUER DURCH sie hindurch — genau dein
+   „er klettert drüber, obwohl er gar nicht dort ist". Strukturell behoben: Die
+   Kletter-Startkanten liegen jetzt außerhalb des Kollisionsradius, der Anlauf
+   schwimmt wieder MIT Wand-Kollision (kein Patt und kein Tunnel mehr möglich);
+   nur der Bogen selbst darf über den Block.
+2. Der **Rampen-Kletterstart** feuerte weiter aus beliebiger Ferne (v0.7.43
+   hatte nur den Block gedeckelt): jetzt nur noch nahe der Rampen-Kante, von
+   weiter weg schwimmt er erst flach heran.
+
+Gegengeprüft mit deinem Marker-Szenario: die legitime Überquerung (Nord→Süd
+über die Rampe) läuft weiterhin sauber durch.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.43 (Early Preview)
 
 **ROOM2090: kein Phantom-Klettern mehr — Aufbäumen und Übersteigen nur an der Insel.**
