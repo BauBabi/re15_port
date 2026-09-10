@@ -156,6 +156,7 @@ typedef struct {
     int32_t  cx0, cz0, cx1, cz1;   /* Kante A -> Kante B */
     int16_t  ct;                   /* 0..GB_CROSS_FRAMES */
     int16_t  cross_cd;             /* Ring-Pflichtphase nach einer Ueberquerung */
+    int16_t  cframes;              /* Bahn-Dauer der laufenden Ueberquerung */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
@@ -288,33 +289,68 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
     }
 }
 
-/* CROSS-Bahn aufsetzen: von der naechsten Laengskante (West/Ost) ueber die
- * Plattform-Mitte zur gegenueberliegenden Kante (Punkt 8). */
-static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int ueber_rampe)
+/* Naechster Randpunkt der aufgeblasenen Insel-VEREINIGUNG (Block und Rampe,
+ * je +GB_BAHN_M) fuer einen Aussenpunkt. Zwei Durchgaenge schieben aus der
+ * jeweils anderen Klemmzone heraus (Innenecken Block/Rampe) - die frueheren
+ * FESTEN Bahnkanten konnten in der Klemmzone des Nachbar-Rechtecks liegen
+ * (Nutzer-Marker 2026-09-10: Anlauf-Patt, spd=0, "bleibt komisch stehen"). */
+static void gb_rim_out(int32_t *x, int32_t *z,
+                       int32_t bx0, int32_t bz0, int32_t bx1, int32_t bz1)
 {
-    if (ueber_rampe) {
-        /* N<->S ueber die Ost-Rampe, auf Hoehe des Gators (in die Rampe geklemmt). */
-        int from_south = (e->z < (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
-        int32_t cx = e->x;
-        if (cx < GB_RAMP_X0 + 1050) cx = GB_RAMP_X0 + 1050;
-        if (cx > GB_RAMP_X1 - 1050) cx = GB_RAMP_X1 - 1050;
-        g->cx0 = cx; g->cx1 = cx;
-        g->cz0 = from_south ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
-        g->cz1 = from_south ? (GB_RAMP_Z1 + GB_BAHN_M) : (GB_RAMP_Z0 - GB_BAHN_M);
-    } else {
-        int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
-        int from_west = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2);
-        g->cx0 = from_west ? (GB_PLAT_X0 - GB_BAHN_M) : (GB_PLAT_X1 + GB_BAHN_M);
-        g->cx1 = from_west ? (GB_PLAT_X1 + GB_BAHN_M) : (GB_PLAT_X0 - GB_BAHN_M);
-        g->cz0 = from_west ? ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2) : ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2);
-        g->cz1 = g->cz0;
+    int32_t rx0 = bx0 - GB_BAHN_M, rx1 = bx1 + GB_BAHN_M;
+    int32_t rz0 = bz0 - GB_BAHN_M, rz1 = bz1 + GB_BAHN_M;
+    if (*x < rx0 || *x > rx1 || *z < rz0 || *z > rz1) return;   /* schon draussen */
+    {
+        int32_t dw = *x - rx0, de = rx1 - *x, dn = *z - rz0, ds = rz1 - *z;
+        int32_t m = dw; int side = 0;
+        if (de < m) { m = de; side = 1; }
+        if (dn < m) { m = dn; side = 2; }
+        if (ds < m) { m = ds; side = 3; }
+        if      (side == 0) *x = rx0;
+        else if (side == 1) *x = rx1;
+        else if (side == 2) *z = rz0;
+        else                *z = rz1;
+    }
+}
+static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
+{
+    int32_t x = px, z = pz;
+    int it;
+    for (it = 0; it < 2; it++) {
+        gb_rim_out(&x, &z, GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1);
+        gb_rim_out(&x, &z, GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1);
+    }
+    /* In die Pool-Innenflaeche klemmen (nie hinter die Aussenwaende). */
+    if (x < -8900 + 500) x = -8900 + 500;
+    if (x >  7200 - 500) x =  7200 - 500;
+    if (z < -27000 + 500) z = -27000 + 500;
+    if (z >  -5400 - 500) z =  -5400 - 500;
+    *ox = x; *oz = z;
+}
+
+/* Ueberquerung: gerade Bahn vom eigenen Randpunkt zum Leon-seitigen Randpunkt
+ * UEBER die Insel; Dauer aus der Bahnlaenge. Kein Anlauf-Zustand mehr - der
+ * Aufrufer startet die Bahn erst aus Kanten-Naehe (Rim-Distanz < 1400). */
+static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, const re15_actor_t *pl)
+{
+    int32_t ex, ez, lx, lz;
+    gb_rim_point(e->x, e->z, &ex, &ez);
+    gb_rim_point(pl->x, pl->z, &lx, &lz);
+    g->cx0 = ex; g->cz0 = ez;
+    g->cx1 = lx; g->cz1 = lz;
+    {
+        int64_t dx = lx - ex, dz = lz - ez;
+        int64_t d2 = dx * dx + dz * dz;
+        int32_t len = 64; while ((int64_t)len * len < d2 && len < 30000) len += 64;
+        g->cframes = (int16_t)(len / 40);
+        if (g->cframes < 90)  g->cframes = 90;
+        if (g->cframes > 240) g->cframes = 240;
     }
     g->ct = 0; g->bite_done = 0;
-    /* Nutzer-Befund 2026-09-10 ("klettert nicht natuerlich"): KEIN Teleport an
-     * die Kante mehr - erst ANSCHWIMMEN (GBP_CROSS_APPR), dann der Bogen. */
-    g->phase = GBP_CROSS_APPR;
+    g->phase = GBP_CROSS;
     g->spider_flee = 1;                  /* Punkt 7: Spinnen fliehen JETZT */
-    e->motion = 0; e->anim_frame = 0;    /* Loko-Clip waehrend Anlauf + Bogen */
+    e->motion = 0; e->anim_frame = 0;
+    re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
 }
 
 void re15_gator_boss_tick(int slot)
@@ -362,7 +398,7 @@ void re15_gator_boss_tick(int slot)
              * 3 = Todes-Pfad testen (hp=1; nach ~10 s Raumzeit toeten). */
             const char *tv = getenv("RE15_GB_TEST");
             if (tv) { g->aggro = 1;
-                      if (*tv == '2') gb_cross_begin(e, g, 0);
+                      if (*tv == '2') gb_cross_begin(e, g, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
                       if (*tv == '3') e->hp = 1;
                       if (*tv == '5') {          /* Rampen-Repro: Nutzer-Marker-Lage
                                                   * (Gator noerdlich der Rampe), scharf
@@ -433,29 +469,6 @@ void re15_gator_boss_tick(int slot)
         /* Nutzer-Marker 2026-09-10: die RAMPE ist der natuerliche Uebersteigpunkt
          * ("nur HIER sollte er ... druebersteigen") - sie triggert OHNE Cooldown;
          * oestlich von ihr steht die Aussenwand, ein Umweg existiert dort nicht. */
-        if (rampe && !player_on_platform && e->x > GB_RAMP_X0 - GB_RING_M) {
-            /* Kletterstart NUR aus Kanten-Naehe (Nutzer 2026-09-10: der Rampen-
-             * Cross feuerte aus beliebiger Ferne - "obwohl er sich garnicht
-             * dort befindet"); fern erst flach zur Startkante schwimmen. */
-            int from_south = (e->z < (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
-            int32_t rx = e->x, rz;
-            if (rx < GB_RAMP_X0 + 1050) rx = GB_RAMP_X0 + 1050;
-            if (rx > GB_RAMP_X1 - 1050) rx = GB_RAMP_X1 - 1050;
-            rz = from_south ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
-            {
-                int64_t rdx = e->x - rx, rdz = e->z - rz;
-                if (rdx * rdx + rdz * rdz < (int64_t)6000 * 6000) {
-                    gb_cross_begin(e, g, 1);
-                } else {
-                    re15_enemy_steer_point(e, rx, rz, 0x40);
-                    re15_ai_advance(e, GB_SWIM_SPEED);
-                    e->y = GB_WATER_Y;
-                    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-                    e->anim_frame++;
-                }
-            }
-            break;
-        }
         /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
          * die Ueberquerung passiert AUCH in der normalen Verfolgung, sobald die
          * Plattform zwischen Gator und Leon liegt - nicht nur, wenn Leon oben
@@ -473,18 +486,24 @@ void re15_gator_boss_tick(int slot)
             e->motion = 0; e->anim_frame = 0;
             break;
         }
-        if (blocked && g->cross_cd == 0) {
-            /* Nur aus Kanten-Naehe klettern (gleiche Nutzer-Klasse: Kletterstart
-             * quer durchs Becken wirkt "obwohl er nicht da ist") - fern bringt
-             * das Wand-Following unten ihn erst heran, blocked bleibt bestehen. */
-            int32_t kx = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2)
-                           ? (GB_PLAT_X0 - GB_BAHN_M) : (GB_PLAT_X1 + GB_BAHN_M);
-            int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
-            int64_t ddx = e->x - kx, ddz = e->z - zm;
-            if (ddx * ddx + ddz * ddz < (int64_t)6000 * 6000) {
-                gb_cross_begin(e, g, 0);
-                break;
+        if ((blocked || rampe) && g->cross_cd == 0) {
+            /* Insel zwischen Gator und Leon: zum eigenen Randpunkt schwimmen
+             * (MIT Wand-Klemme - Randpunkte liegen ausserhalb der Klemmzonen)
+             * und erst DORT die Bogen-Bahn starten. */
+            int32_t ex, ez;
+            int64_t ddx, ddz;
+            gb_rim_point(e->x, e->z, &ex, &ez);
+            ddx = e->x - ex; ddz = e->z - ez;
+            if (ddx * ddx + ddz * ddz < (int64_t)1400 * 1400) {
+                gb_cross_begin(e, g, pl);
+            } else {
+                re15_enemy_steer_point(e, ex, ez, 0x40);
+                re15_ai_advance(e, GB_SWIM_SPEED);
+                e->y = GB_WATER_Y;
+                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+                e->anim_frame++;
             }
+            break;
         }
 
         int32_t tx = pl->x, tz = pl->z;
@@ -611,24 +630,16 @@ void re15_gator_boss_tick(int slot)
         }
         break; }
 
-    case GBP_CROSS_APPR: {                    /* Punkt 8: Anlauf zur Startkante */
-        int64_t dxs = g->cx0 - e->x, dzs = g->cz0 - e->z;
-        int64_t d2  = dxs * dxs + dzs * dzs;
-        re15_enemy_steer_point(e, g->cx0, g->cz0, 0x40);
-        re15_ai_advance(e, GB_SWIM_SPEED);
-        e->y = GB_WATER_Y;
-        e->anim_frame++;
-        if (d2 < 900 * 900) {                 /* Kante erreicht (Klemme haelt ihn
-                                               * ~400 davor) -> Bogen beginnen */
-            g->phase = GBP_CROSS; g->ct = 0;
-            re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);  /* Blick ueber den Steg */
-        }
-        break; }
+    case GBP_CROSS_APPR:                      /* entfaellt (Rim-System) - Altzustand
+                                               * sicher in die Verfolgung zurueck */
+        g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
+        e->motion = 0; e->anim_frame = 0;
+        break;
 
     case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Plattform */
         g->ct++;
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
-        if (t >= GB_CROSS_FRAMES) {
+        if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
             g->cross_cd = 300;               /* DESIGN: ~10 s Ring, dann darf er wieder drueber */
             e->y = GB_WATER_Y;
@@ -636,11 +647,14 @@ void re15_gator_boss_tick(int slot)
             break;
         }
         /* Bahn: linear cx0->cx1; Hoehe + Kruemmung als Halbbogen sin(pi*t). */
-        e->x = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * t / GB_CROSS_FRAMES);
-        e->z = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * t / GB_CROSS_FRAMES);
+        e->x = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * t
+                                  / (g->cframes ? g->cframes : GB_CROSS_FRAMES));
+        e->z = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * t
+                                  / (g->cframes ? g->cframes : GB_CROSS_FRAMES));
         {
             /* sin(pi * t/N) ueber die Q12-Tabelle: Winkel 0..0x800 (halbe Periode). */
-            int ang = (int)((int64_t)t * 0x800 / GB_CROSS_FRAMES);
+            int nfr = (g->cframes ? g->cframes : GB_CROSS_FRAMES);
+            int ang = (int)((int64_t)t * 0x800 / nfr);
             int s   = re15_sin_q12(ang);                   /* 0..4096..0 */
             int c   = re15_cos_q12(ang);                   /* 4096..0..-4096 */
             e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * s >> 12);
