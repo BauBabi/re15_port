@@ -128,6 +128,7 @@ typedef struct {
     /* CROSS-Bahn */
     int32_t  cx0, cz0, cx1, cz1;   /* Kante A -> Kante B */
     int16_t  ct;                   /* 0..GB_CROSS_FRAMES */
+    int16_t  cross_cd;             /* Ring-Pflichtphase nach einer Ueberquerung */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
     /* Spinnen-Flucht */
@@ -274,12 +275,24 @@ void re15_gator_boss_tick(int slot)
         e->state = 1; e->sub_state_1 = 0;
         g->phase = GBP_LURK;
         {   /* Sichtlauf-Hebel: 1 = Kampf sofort, 2 = zusaetzlich sofort die
-             * Plattform-Ueberquerung erzwingen (Bogen + Spinnen-Flucht pruefen). */
+             * Plattform-Ueberquerung erzwingen (Bogen + Spinnen-Flucht pruefen),
+             * 3 = Todes-Pfad testen (hp=1; nach ~10 s Raumzeit toeten). */
             const char *tv = getenv("RE15_GB_TEST");
-            if (tv) { g->aggro = 1; if (*tv == '2') gb_cross_begin(e, g); }
+            if (tv) { g->aggro = 1;
+                      if (*tv == '2') gb_cross_begin(e, g);
+                      if (*tv == '3') e->hp = 1; }
         }
     }
 
+    {   /* GB_TEST=3: Kill nach ~10 s Raumzeit (Todes-Pfad-Probe ohne Waffe).
+         * EIGENER Zaehler - g->timer wird von LUNGE/FLINCH-Commits genullt. */
+        static int s_kill_ctr = 0;
+        const char *tv = getenv("RE15_GB_TEST");
+        if (tv && *tv == '3' && g->phase != GBP_DIE && g->phase != GBP_DEAD) {
+            s_kill_ctr++;
+            if (s_kill_ctr == 300) { e->hp = -1; e->state = 3; }
+        }
+    }
     /* Treffer seit letztem Tick? (HP-Delta + HURT/DEATH-Intercept) */
     if (e->hp != g->prev_hp || e->state == 2 || e->state == 3) {
         gb_absorb_hit(e, g);
@@ -312,10 +325,20 @@ void re15_gator_boss_tick(int slot)
         int player_on_platform =
             (pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
              pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1);
-        if (player_on_platform) { gb_cross_begin(e, g); break; }
+        int blocked = gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
+        if (g->cross_cd > 0) g->cross_cd--;
+        /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
+         * die Ueberquerung passiert AUCH in der normalen Verfolgung, sobald die
+         * Plattform zwischen Gator und Leon liegt - nicht nur, wenn Leon oben
+         * steht (Nutzer-Befund 2026-09-10: "klettert nicht ueber die Platform").
+         * Nach einer Passage erzwingt cross_cd eine Ring-Phase (Abwechslung). */
+        if (player_on_platform || (blocked && g->cross_cd == 0)) {
+            gb_cross_begin(e, g);
+            break;
+        }
 
         int32_t tx = pl->x, tz = pl->z;
-        if (gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2))
+        if (blocked)
             gb_ring_target(e, pl, &tx, &tz);  /* Block im Weg -> Eck-Wegpunkt */
         {
             int slew = (re15_engine_rand8() & 0x1f) + 6;   /* byte-true B[4]-Slew-Streuung */
@@ -374,6 +397,7 @@ void re15_gator_boss_tick(int slot)
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         if (t >= GB_CROSS_FRAMES) {
             g->phase = GBP_CHASE; g->arc_vz = 0;
+            g->cross_cd = 300;               /* DESIGN: ~10 s Ring, dann darf er wieder drueber */
             e->y = GB_WATER_Y;
             e->motion = 0; e->anim_frame = 0;
             break;

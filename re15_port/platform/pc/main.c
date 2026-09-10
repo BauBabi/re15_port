@@ -5369,6 +5369,15 @@ re_title:;
                     static long long ap_bestcross = -1;
                     static int ap_stuck = 0, ap_avoid = 0, ap_avoid_dir = +1;
                     static int32_t ap_lastx = 0, ap_lastz = 0;
+                    /* RE15_AUTOPILOT_ROOM=<hex>: Autopilot schlaeft, bis der Raum passt
+                     * (Testinfra: sonst faehrt er schon im Continue-Save-Raum los und
+                     * verschleppt Leon durch fremde Tueren, bevor der DEBUG_JUMP feuert). */
+                    {
+                        const char *apr = getenv("RE15_AUTOPILOT_ROOM");
+                        if (apr && *apr &&
+                            (unsigned)strtoul(apr, NULL, 16) != (g_current_room_id & 0xFFFFu))
+                            goto ap_skip;
+                    }
                     if (!ap_init) {
                         ap_init = 1;
                         const char *s = getenv("RE15_AUTOPILOT");
@@ -5640,6 +5649,7 @@ re_title:;
                                         (long long)(fdist2 / 1000), gctx.pad_current, ap_pl->motion);
                         }
                     }
+                ap_skip: ;
                 }
 
                 /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
@@ -5810,6 +5820,24 @@ re_title:;
                     int _hat = 0, _frei = -1;
                     for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                         if (g_actors[_pi].active && g_actors[_pi].type == 0x23u) _hat = 1;
+                    /* WATCHDOG (Nutzer-Befund 2026-09-10: Gator fehlte im Marker):
+                     * jedes Verschwinden mit Frame in gator_boss.log festhalten. */
+                    {
+                        static int s_gb_was = 0;
+                        static FILE *s_gb_log = NULL;
+                        if (!s_gb_log) s_gb_log = fopen("gator_boss.log", "a");
+                        if (s_gb_log && s_gb_was && !_hat) {
+                            fprintf(s_gb_log, "F%u R%04X GATOR VERSCHWUNDEN\n",
+                                    (unsigned)g_engine.frame_count, g_current_room_id);
+                            fflush(s_gb_log);
+                        }
+                        if (s_gb_log && !s_gb_was && _hat) {
+                            fprintf(s_gb_log, "F%u R%04X gator da\n",
+                                    (unsigned)g_engine.frame_count, g_current_room_id);
+                            fflush(s_gb_log);
+                        }
+                        s_gb_was = _hat;
+                    }
                     for (int _pi = RE15_ACTOR_MAX - 1; _pi >= 1; _pi--)
                         if (!g_actors[_pi].active) { _frei = _pi; break; }
                     if (!_hat && _frei > 0) {
