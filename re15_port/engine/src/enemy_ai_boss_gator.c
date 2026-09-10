@@ -705,6 +705,12 @@ void re15_gator_boss_tick(int slot)
             int32_t gx, gz;
             int64_t gdx, gdz;
             gb_rim_point(pl->x, pl->z, &gx, &gz);
+            /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
+             * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
+             * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
+            if (gb_seg_hits_platform(e->x, e->z, gx, gz, GB_RING_M / 2)
+                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_RING_M / 2))
+                gb_ring_target(e, pl, &gx, &gz);
             gdx = e->x - gx; gdz = e->z - gz;
             re15_enemy_steer_point(e, gx, gz, 0x40);
             if (gdx * gdx + gdz * gdz > (int64_t)600 * 600)
@@ -791,7 +797,17 @@ void re15_gator_boss_tick(int slot)
              * Peak nur UEBER der Insel, sonst Wasserlinie; y bewegt sich mit
              * begrenzter Rate dorthin (glatte Kanten), Bogen/Neigung folgen
              * der tatsaechlichen Hoehe. */
-            int32_t y_ziel = gb_ueber_insel(e->x, e->z)
+            /* LOOKAHEAD (Nutzer 2026-09-10 "kletterte im Nirgendwo kurzzeitig
+             * nach oben": der Raten-Abbau trug die Hoehe ~600-1200 Einheiten
+             * ueber die Kante hinaus, Telemetrie y=-2442 bei 491 neben der
+             * Insel). Peak nur, wenn JETZT und in 13 Bahn-Frames (Abbauzeit
+             * 1992/150) noch Insel darunter ist - das Sinken beginnt vor der
+             * Kante und endet AN ihr. */
+            int nfr2 = (g->cframes ? g->cframes : GB_CROSS_FRAMES);
+            int tla  = t + 13; if (tla > nfr2) tla = nfr2;
+            int32_t lax = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * tla / nfr2);
+            int32_t laz = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * tla / nfr2);
+            int32_t y_ziel = (gb_ueber_insel(e->x, e->z) && gb_ueber_insel(lax, laz))
                                ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
             int32_t dy = y_ziel - e->y;
             if (dy >  150) dy =  150;        /* Telemetrie: mit 60/F klang der Bogen
