@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.40 (Early Preview)
+
+**ROOM2090: kein Durchclippen mehr — und er steigt jetzt auch über die Rampe.**
+
+---
+
+Deine zwei Punkte:
+
+1. **Durchclippen**: Gemessen an deinen Markern lag es am byte-true Höhenband
+   der Körper-Kollision — der Alligator schwimmt bei −1200, Leon watet bei 0,
+   und die Engine hielt die beiden deshalb für „übereinander gestapelt" und
+   ließ den Schubs aus. Sein Kollisionszentrum sitzt jetzt auf Bodenniveau.
+   Praxis-Check: Leon versucht 20 Sekunden per Autopilot durch den Körper zu
+   laufen und prallt jedes Mal ab.
+2. **Übersteigen an deiner Marker-Stelle**: Dein Marker zeigte ihn exakt an
+   der Rampen-Kante festhängend (deine Position jenseits davon). Die Ost-Rampe
+   war im Barriere-Modell nicht enthalten — und östlich von ihr steht die
+   Außenwand, es gibt dort keinen Umweg. Sie ist jetzt zweite Übersteig-Zone:
+   Liegt sie zwischen ihm und dir, steigt er sofort im Bogen darüber (Nord↔Süd,
+   auf seiner Höhe). Nachgestellt mit exakt deiner Marker-Lage: der Kontroll-
+   Marker fing ihn mitten auf der Rampe im Bogen.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.39 (Early Preview)
 
 **ROOM2090: Lauerstellung zur echten Leiter, natürliches Klettern, Bogen in Bogenform.**
