@@ -84,6 +84,13 @@ extern re15_actor_t g_actors[];
 #define GB_PLAT_Z0     -20000
 #define GB_PLAT_Z1     -12450
 #define GB_RING_M        1200   /* DESIGN: Wegpunkt-Abstand vom Block */
+/* Ost-Rampe (SCA [5], u1=0x01): zweite Uebersteig-Barriere (Nutzer-Marker
+ * 2026-09-10: Leon (5766,-13028) noerdlich, Gator (4997,-20318) SUEDLICH fest
+ * dagegen, spd=0 - "nur HIER sollte er ueber den Bereich druebersteigen"). */
+#define GB_RAMP_X0       1850
+#define GB_RAMP_X1       7200
+#define GB_RAMP_Z0     -18100
+#define GB_RAMP_Z1     -14500
 /* CROSS-Bogen: Hub ueber die Wasserlinie. Plattformhoehe im Spiel gemessen
  * (siehe GB_PLAT_TOP_Y-Messnotiz unten) + Kopffreiheit. */
 #define GB_CROSS_FRAMES   150   /* DESIGN: ~5950 Einheiten Bahn / 40 pro Frame */
@@ -162,10 +169,12 @@ int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 
 /* Schneidet die Strecke (x0,z0)->(x1,z1) das um `m` aufgeblasene Plattform-Rechteck?
  * (Slab-Test; reicht fuer die Ring-Entscheidung.) */
-static int gb_seg_hits_platform(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m)
+static int gb_seg_hits_rect(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
+                            int32_t bx0, int32_t bz0, int32_t bx1, int32_t bz1,
+                            int32_t m)
 {
-    int32_t rx0 = GB_PLAT_X0 - m, rx1 = GB_PLAT_X1 + m;
-    int32_t rz0 = GB_PLAT_Z0 - m, rz1 = GB_PLAT_Z1 + m;
+    int32_t rx0 = bx0 - m, rx1 = bx1 + m;
+    int32_t rz0 = bz0 - m, rz1 = bz1 + m;
     /* beide Punkte auf derselben Aussenseite -> kein Schnitt */
     if (x0 < rx0 && x1 < rx0) return 0;
     if (x0 > rx1 && x1 > rx1) return 0;
@@ -194,6 +203,17 @@ static int gb_seg_hits_platform(int32_t x0, int32_t z0, int32_t x1, int32_t z1, 
     if (lo > hi) return 0;
     if (hi < 0 || lo > 4096) return 0;
     return 1;
+}
+
+static int gb_seg_hits_platform(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m)
+{
+    return gb_seg_hits_rect(x0, z0, x1, z1,
+                            GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1, m);
+}
+static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m)
+{
+    return gb_seg_hits_rect(x0, z0, x1, z1,
+                            GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1, m);
 }
 
 /* Ring-Wegpunkt: die vier Block-Ecken (+Marge); waehle die Ecke, die vom Gator aus
@@ -245,13 +265,25 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
 
 /* CROSS-Bahn aufsetzen: von der naechsten Laengskante (West/Ost) ueber die
  * Plattform-Mitte zur gegenueberliegenden Kante (Punkt 8). */
-static void gb_cross_begin(re15_actor_t *e, gb_state_t *g)
+static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int ueber_rampe)
 {
-    int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
-    int from_west = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2);
-    g->cx0 = from_west ? (GB_PLAT_X0 - GB_RING_M) : (GB_PLAT_X1 + GB_RING_M);
-    g->cx1 = from_west ? (GB_PLAT_X1 + GB_RING_M) : (GB_PLAT_X0 - GB_RING_M);
-    g->cz0 = zm; g->cz1 = zm;
+    if (ueber_rampe) {
+        /* N<->S ueber die Ost-Rampe, auf Hoehe des Gators (in die Rampe geklemmt). */
+        int from_south = (e->z < (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
+        int32_t cx = e->x;
+        if (cx < GB_RAMP_X0 + 1050) cx = GB_RAMP_X0 + 1050;
+        if (cx > GB_RAMP_X1 - 1050) cx = GB_RAMP_X1 - 1050;
+        g->cx0 = cx; g->cx1 = cx;
+        g->cz0 = from_south ? (GB_RAMP_Z0 - GB_RING_M) : (GB_RAMP_Z1 + GB_RING_M);
+        g->cz1 = from_south ? (GB_RAMP_Z1 + GB_RING_M) : (GB_RAMP_Z0 - GB_RING_M);
+    } else {
+        int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
+        int from_west = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2);
+        g->cx0 = from_west ? (GB_PLAT_X0 - GB_RING_M) : (GB_PLAT_X1 + GB_RING_M);
+        g->cx1 = from_west ? (GB_PLAT_X1 + GB_RING_M) : (GB_PLAT_X0 - GB_RING_M);
+        g->cz0 = from_west ? ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2) : ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2);
+        g->cz1 = g->cz0;
+    }
     g->ct = 0; g->bite_done = 0;
     /* Nutzer-Befund 2026-09-10 ("klettert nicht natuerlich"): KEIN Teleport an
      * die Kante mehr - erst ANSCHWIMMEN (GBP_CROSS_APPR), dann der Bogen. */
@@ -280,6 +312,13 @@ void re15_gator_boss_tick(int slot)
          * Sofort-Snap) — exakt die Konvention, mit der advance/Verfolgung laufen. */
         re15_enemy_steer_point(e, GB_LADDER_X, GB_LADDER_Z, 0x800);
         e->render_scale_q12 = GB_SCALE_Q12;   /* 2/3-Massstab, s. GB_SCALE_Q12 oben */
+        /* CLIPPING-FIX (Nutzer 2026-09-10, GEMESSEN an den Markern: Gator y=-1200,
+         * Leon y=0): das byte-true Y-Band-Gate des Body-Push (@0x8002b1f0, Push nur
+         * bei |dy| < hit_height-Summe) sah dy=1200 > 720 und liess Leon DURCH den
+         * Koerper laufen. Kollisionszentrum auf Bodenniveau heben: +0x7c-Offset =
+         * -GB_WATER_Y. Auf der Plattform-Passage (Root -3192, Leon oben -1800)
+         * bleibt dy=192 im Band - der Push wirkt dort ebenfalls. */
+        e->hit_offset_y = (int16_t)(-GB_WATER_Y);
         e->motion = 0; e->anim_frame = 0;     /* flacher Loko-Zyklus als Wasser-Lauern
                                                * (Clip 6 = WENDE ringelte den Koerper,
                                                * Clip 11 = AUFGERICHTETE Pose — beide im
@@ -291,8 +330,14 @@ void re15_gator_boss_tick(int slot)
              * 3 = Todes-Pfad testen (hp=1; nach ~10 s Raumzeit toeten). */
             const char *tv = getenv("RE15_GB_TEST");
             if (tv) { g->aggro = 1;
-                      if (*tv == '2') gb_cross_begin(e, g);
-                      if (*tv == '3') e->hp = 1; }
+                      if (*tv == '2') gb_cross_begin(e, g, 0);
+                      if (*tv == '3') e->hp = 1;
+                      if (*tv == '5') {          /* Rampen-Repro: Nutzer-Marker-Lage
+                                                  * (Gator noerdlich der Rampe), scharf
+                                                  * erst wenn Leon seine Route lief */
+                          e->x = 4997; e->z = -20318;
+                          g->aggro = 0;
+                      } }
         }
     }
 
@@ -314,7 +359,15 @@ void re15_gator_boss_tick(int slot)
     int32_t dist = re15_enemy_player_dist(e, pl);
 
     switch (g->phase) {
-    case GBP_LURK:                            /* Punkt 2: ruhig, bis Leon naeher kommt.
+    case GBP_LURK:
+        {   const char *tv5 = getenv("RE15_GB_TEST");
+            if (tv5 && *tv5 == '5') {
+                static int s_t5 = 0;
+                if (++s_t5 >= 900) g->aggro = 1;   /* ~30 s: Leon ist im SO-Becken */
+                if (!g->aggro) { e->motion = 0; e->anim_frame++; break; }
+                g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; break;
+            }
+        }                            /* Punkt 2: ruhig, bis Leon naeher kommt.
                                                * GEMESSEN 2026-09-10: der Tuer-A-Spawn
                                                * (-8200,-25550) liegt nur ~1400 vom
                                                * Lauerplatz — Distanz allein wuerde den
@@ -338,14 +391,22 @@ void re15_gator_boss_tick(int slot)
             (pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
              pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1);
         int blocked = gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
+        int rampe   = gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
         if (g->cross_cd > 0) g->cross_cd--;
+        /* Nutzer-Marker 2026-09-10: die RAMPE ist der natuerliche Uebersteigpunkt
+         * ("nur HIER sollte er ... druebersteigen") - sie triggert OHNE Cooldown;
+         * oestlich von ihr steht die Aussenwand, ein Umweg existiert dort nicht. */
+        if (rampe && e->x > GB_RAMP_X0 - GB_RING_M) {
+            gb_cross_begin(e, g, 1);
+            break;
+        }
         /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
          * die Ueberquerung passiert AUCH in der normalen Verfolgung, sobald die
          * Plattform zwischen Gator und Leon liegt - nicht nur, wenn Leon oben
          * steht (Nutzer-Befund 2026-09-10: "klettert nicht ueber die Platform").
          * Nach einer Passage erzwingt cross_cd eine Ring-Phase (Abwechslung). */
         if (player_on_platform || (blocked && g->cross_cd == 0)) {
-            gb_cross_begin(e, g);
+            gb_cross_begin(e, g, 0);
             break;
         }
 
