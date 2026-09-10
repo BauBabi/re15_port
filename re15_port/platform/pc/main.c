@@ -7917,16 +7917,14 @@ re_title:;
                     }
                 }
 
-                /* PURE-RE2-EM23 (Alligator, ROOM2090-Boss): die RE2-Grundpose blickt -X,
-                 * die RE1.5-Mesh-Konvention +X (re15_atan2_q12-Doku re15_actor.h:972).
-                 * SICHTLAUF 2026-09-10: mit korrekt gerechnetem rot_y (2657 = SW zur
-                 * Leiter) stand der Kopf exakt entgegengesetzt (NO) — 180-Grad-Offset
-                 * NUR fuer den Mesh-Yaw dieses reinen RE2-Modells; rot_y selbst bleibt
-                 * unveraendert (re15_dog_advance laeuft weiter Kopf-voran). */
-                int npc_mesh_yaw = (int)npc->rot_y;
-                if (npc->type == 0x23u) npc_mesh_yaw = (npc_mesh_yaw + 0x800) & 0xfff;
-                int32_t nfs = re15_sin_q12(npc_mesh_yaw);
-                int32_t nfc = re15_cos_q12(npc_mesh_yaw);
+                /* ⛔ ZURUECKGENOMMEN (Nutzer 2026-09-10: "laeuft mit Hintern Richtung
+                 * Charakter"): der fruehere 180-Grad-Mesh-Yaw-Offset fuer Typ 0x23 war
+                 * eine FEHLDEUTUNG des Lauer-Standbilds (beim 18m-uebergrossen Modell
+                 * wurden Kopf und Schwanz verwechselt). Die Verfolgung laeuft ueber
+                 * dieselbe steer/advance-Peilung wie alle Gegner — das RE2-EM23-Mesh
+                 * steht nativ in der Engine-Konvention (rot_y 0 = +X, Kopfkette +X). */
+                int32_t nfs = re15_sin_q12((int)npc->rot_y);
+                int32_t nfc = re15_cos_q12((int)npc->rot_y);
                 int32_t nyaw[9] = { nfc, 0, nfs, 0, 0x1000, 0, -nfs, 0, nfc };
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8

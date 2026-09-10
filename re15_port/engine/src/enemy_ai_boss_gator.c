@@ -263,8 +263,9 @@ void re15_gator_boss_tick(int slot)
         g->prev_hp = e->hp;
         g->next_flinch_hp = (int16_t)(e->hp - GB_FLINCH_STEP);
         e->x = GB_START_X; e->z = GB_START_Z; e->y = GB_WATER_Y;
-        e->rot_y = (int16_t)(((int)re15_atan2_q12(GB_LADDER_Z - e->z,
-                                                  GB_LADDER_X - e->x) - 0x400) & 0xfff);
+        /* Blick zur Leiter ueber die ENGINE-Peilung (steer mit Voll-Slew 0x800 =
+         * Sofort-Snap) — exakt die Konvention, mit der advance/Verfolgung laufen. */
+        re15_enemy_steer_point(e, GB_LADDER_X, GB_LADDER_Z, 0x800);
         e->render_scale_q12 = GB_SCALE_Q12;   /* 2/3-Massstab, s. GB_SCALE_Q12 oben */
         e->motion = 0; e->anim_frame = 0;     /* flacher Loko-Zyklus als Wasser-Lauern
                                                * (Clip 6 = WENDE ringelte den Koerper,
@@ -390,9 +391,8 @@ void re15_gator_boss_tick(int slot)
             e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * s >> 12);
             g->arc_vz = (int16_t)((GB_ARC_VZ_MAX * s) >> 12);
         }
-        /* Blick in Bahnrichtung */
-        e->rot_y = (int16_t)(((int)re15_atan2_q12(g->cz1 - g->cz0,
-                                                  g->cx1 - g->cx0) - 0x400) & 0xfff);
+        /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
+        re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);
         e->anim_frame++;
         /* Biss-Fenster auch auf der Plattform (Leon vertreiben): Reichweiten-Test,
          * EIN Biss pro Passage + byte-true Cooldown-Feld als Zweitsperre. */
