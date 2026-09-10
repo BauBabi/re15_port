@@ -131,6 +131,7 @@ enum {
     GBP_CHASE,      /* Punkt 6: Ring-Verfolgung im Wasser */
     GBP_LUNGE,      /* Punkt 3: Biss */
     GBP_FLINCH,     /* Punkt 5: Schadensanimation (Schwelle) */
+    GBP_GUARD,      /* Plattform-Belagerung: Hochbiss, solange Leon oben steht */
     GBP_CROSS_APPR, /* Punkt 8: Anlauf an die Startkante (KEIN Teleport) */
     GBP_CROSS,      /* Punkt 8: Bogen ueber die Plattform */
     GBP_DIE,        /* Todesrolle (Clip 7) */
@@ -149,6 +150,7 @@ typedef struct {
     int16_t  cross_cd;             /* Ring-Pflichtphase nach einer Ueberquerung */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
+    int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
     /* Spinnen-Flucht */
     uint8_t  spider_flee;          /* 1 = Flucht ausgeloest (Punkt 7) */
@@ -232,16 +234,26 @@ static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
         { GB_PLAT_X1 + GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
         { GB_PLAT_X0 - GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
     };
-    int best = -1; int64_t best_cost = 0;
-    for (int i = 0; i < 4; i++) {
-        if (gb_seg_hits_platform(e->x, e->z, C[i][0], C[i][1], GB_RING_M / 2)) continue;
-        int64_t d1x = C[i][0] - e->x,  d1z = C[i][1] - e->z;
-        int64_t d2x = pl->x - C[i][0], d2z = pl->z - C[i][1];
-        int64_t cost = d1x * d1x + d1z * d1z + d2x * d2x + d2z * d2z;
-        if (best < 0 || cost < best_cost) { best = i; best_cost = cost; }
+    /* WAND-FOLLOWING (Nutzer 2026-09-10: "ganz ans Ende der Wand laufen und
+     * erst dann drehen"): statt der global guenstigsten Ecke die Ecken-FOLGE
+     * in der kuerzeren Umlaufrichtung ablaufen - naechste Ecke auf dem Weg
+     * als Ziel; Best-Cost steuerte in Wandnaehe diagonal in die Klemme. */
+    int gs, ps, i;
+    /* Seiten-Index 0=N,1=O,2=S,3=W (zwischen den Ecken C[0..3]) */
+    #define GB_SEITE(px, pz)         ((pz) <= GB_PLAT_Z0 ? 0 : (pz) >= GB_PLAT_Z1 ? 2 : (px) >= GB_PLAT_X1 ? 1 : 3)
+    gs = GB_SEITE(e->x, e->z);
+    ps = GB_SEITE(pl->x, pl->z);
+    if (gs == ps) { *tx = pl->x; *tz = pl->z; return; }
+    /* kuerzere Drehrichtung: Seitenabstand im Uhrzeigersinn vs. gegen ihn */
+    {
+        int cw = (ps - gs + 4) & 3, ecke;
+        /* Ziel-Ecke = die in Laufrichtung naechste Ecke der eigenen Seite:
+         * Uhrzeigersinn: Seite k endet an Ecke (k+1)&3; gegen ihn: an Ecke k. */
+        ecke = (cw <= 2) ? ((gs + 1) & 3) : gs;
+        *tx = C[ecke][0]; *tz = C[ecke][1];
     }
-    if (best < 0) best = 0;
-    *tx = C[best][0]; *tz = C[best][1];
+    #undef GB_SEITE
+    (void)i;
 }
 
 /* Treffer-Intercept: re15_enemy_take_damage hat state=2 (+ ggf. 3) gesetzt und
@@ -307,6 +319,13 @@ void re15_gator_boss_tick(int slot)
         memset(s_gb, 0, sizeof s_gb);
         s_gb_room = g_current_room_id;
     }
+    /* NUTZER-MARKER 2026-09-10 ("haengt ganz gewaltig"): nach Toeten des Bosses
+     * + SAME-ROOM-Re-Entry (Raum-ID unveraendert!) spawnte main.c einen frischen
+     * Aktor (memset: hp=0/state=0), aber s_gb stand noch auf GBP_DEAD des
+     * Vorgaengers - der Neue blieb als Geist stehen. Neuspawn erkennen und den
+     * Boss-Zustand nullen (em_flag_id 0xFF = Boss erscheint je Betreten). */
+    if (g->phase != GBP_OFF && e->state == 0 && e->hp <= 0)
+        memset(g, 0, sizeof *g);
 
     if (g->phase == GBP_OFF) {                /* INIT (Punkt 2): Lauerstellung */
         if (e->hp <= 0) e->hp = GB_HP;
@@ -392,17 +411,23 @@ void re15_gator_boss_tick(int slot)
         break;
 
     case GBP_CHASE: {                         /* Punkt 6: Ring-Verfolgung */
-        int player_on_platform =
-            (pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
-             pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1);
+        int player_on_platform =                    /* begehbare Flaeche OBEN =
+                                                     * Block UND Ost-Rampe (Nutzer-
+                                                     * Marker: Leon auf der Rampe
+                                                     * bei 2318,-1800) */
+            ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
+              pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
+             (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
+              pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
         int blocked = gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
         int rampe   = gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
         if (g->cross_cd > 0) g->cross_cd--;
         /* Nutzer-Marker 2026-09-10: die RAMPE ist der natuerliche Uebersteigpunkt
          * ("nur HIER sollte er ... druebersteigen") - sie triggert OHNE Cooldown;
          * oestlich von ihr steht die Aussenwand, ein Umweg existiert dort nicht. */
-        if (rampe && e->x > GB_RAMP_X0 - GB_RING_M) {
-            gb_cross_begin(e, g, 1);
+        if (rampe && !player_on_platform && e->x > GB_RAMP_X0 - GB_RING_M) {
+            gb_cross_begin(e, g, 1);      /* klettern NUR, wenn Leon nicht oben
+                                           * steht - sonst belagern (GUARD) */
             break;
         }
         /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
@@ -410,7 +435,19 @@ void re15_gator_boss_tick(int slot)
          * Plattform zwischen Gator und Leon liegt - nicht nur, wenn Leon oben
          * steht (Nutzer-Befund 2026-09-10: "klettert nicht ueber die Platform").
          * Nach einer Passage erzwingt cross_cd eine Ring-Phase (Abwechslung). */
-        if (player_on_platform || (blocked && g->cross_cd == 0)) {
+        {   const char *tv6 = getenv("RE15_GB_TEST");
+            if (tv6 && *tv6 == '6') player_on_platform = 1;
+        }
+        if (player_on_platform) {
+            /* Nutzer 2026-09-10: solange Leon OBEN steht -> BELAGERN und nach
+             * oben schnappen; geklettert wird erst, wenn er heruntergesprungen
+             * ist (dann faellt player_on_platform und die blocked-Regel unten
+             * loest die Ueberquerung aus). */
+            g->phase = GBP_GUARD; g->guard_t = 0; g->bite_done = 0;
+            e->motion = 0; e->anim_frame = 0;
+            break;
+        }
+        if (blocked && g->cross_cd == 0) {
             gb_cross_begin(e, g, 0);
             break;
         }
@@ -478,6 +515,53 @@ void re15_gator_boss_tick(int slot)
             e->motion = 0; e->anim_frame = 0;
         }
         break;
+
+    case GBP_GUARD: {                         /* Plattform-Belagerung (Nutzer-Design):
+                                               * an die Kante unter Leon, aufrichten,
+                                               * nach OBEN schnappen inkl. Schaden. */
+        int oben = ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
+                     pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
+                    (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
+                     pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
+        {   const char *tv6 = getenv("RE15_GB_TEST");
+            if (tv6 && *tv6 == '6') oben = 1;   /* Sichtlauf: Belagerung erzwingen */
+        }
+        if (!oben) {                          /* heruntergesprungen -> Verfolgung
+                                               * (deren blocked-Regel klettert) */
+            g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
+            e->motion = 0; e->anim_frame = 0;
+            break;
+        }
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+        if (dist > 3000) re15_ai_advance(e, GB_SWIM_SPEED);  /* der SCA-Clamp haelt
+                                               * ihn an der Blockwand - er drueckt
+                                               * sich unter die Kante */
+        e->y = GB_WATER_Y;
+        /* Aufrichten (DESIGN): Nase + Kopfkette heben (negatives Vorzeichen =
+         * heben, s. Hook-Geometrie), Rampe ueber 24 Frames. */
+        if (g->guard_t < 24) g->guard_t++;
+        g->pitch_vz = (int16_t)(-(350 * g->guard_t) / 24);
+        g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
+        /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
+        if (e->hit_stun == 0 && e->motion != 4) {
+            e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
+        }
+        if (e->motion == 4) {
+            e->anim_frame++;
+            if (!g->bite_done && e->anim_frame >= 8 && e->anim_frame <= 20
+                && pl->hit_react == 0 && dist < 3400) {   /* DESIGN: Kantenstand +
+                                               * gehobener Kopf erreicht die Flaeche */
+                re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+                re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
+                pl->hit_react |= 1;
+                g->bite_done = 1;
+                e->hit_stun = 0x64;
+            }
+            if (e->anim_frame > 42) { e->motion = 0; e->anim_frame = 0; }
+        } else {
+            e->anim_frame++;
+        }
+        break; }
 
     case GBP_CROSS_APPR: {                    /* Punkt 8: Anlauf zur Startkante */
         int64_t dxs = g->cx0 - e->x, dzs = g->cz0 - e->z;
@@ -634,7 +718,9 @@ int re15_gator_boss_spider_override(int slot)
         /* Punkt 1: SITZEN, bis der Gator Richtung Plattform kommt — die normale
          * Spinnen-KI liefe sofort von der Plattform (Sichtlauf 2026-09-10).
          * Anker: Position/Hoehe halten, ruhiger Idle-Zyklus. */
-        if (e->state != 0) {
+        if (e->state != 0 && e->state < 3 && e->hp > 0) {   /* nur LEBENDE ankern -
+                                               * Nutzer-Marker: getoetete Spinne
+                                               * hing mit hp=0 im Sitz-Anker */
             static const int32_t sitz[2][2] = { { -700, -17800 }, { 800, -14800 } };
             int which = (e->x > 0);
             e->x = sitz[which][0]; e->z = sitz[which][1];
