@@ -1,3 +1,31 @@
+# RE1.5 Port — v0.7.52 (Early Preview)
+
+**ROOM2090: nur Wände blocken den Alligator — und die Spinnen sind zurück im Wasser.**
+
+---
+
+Deine zwei Marker („zeitweise geblockt im Pool“ + „kletterte im Nirgendwo
+kurz hoch“) führten zu vier Änderungen:
+
+1. **Gegner blocken den Boss nicht mehr**: Der Alligator überspringt jetzt
+   den Gegner-Körper-Push — schwimmende Körper, Spinnen usw. sind für ihn
+   durchlässig, nur die Wände (SCA) halten ihn. Genau wie von dir
+   beauftragt: „Die Körper die im Wasser schwimmen, die spinnen usw. die
+   sollten für ihn durchlässig sein.“
+2. **Spinnen zurück ins Wasser**: Da sie ihn nicht mehr blocken, sitzen die
+   zwei RDT-Spinnen wieder auf ihren Original-Wasserpositionen
+   (@0x0AB0/@0x0AC4) — Plattform-Sitz und Wandflucht sind wieder raus.
+3. **Nahstand-Schnapp**: Direkt vor Leon setzte die Verfolgung manchmal aus,
+   weil der Winkel-Arc knapp verfehlte — unter 2600 Einheiten schnappt er
+   jetzt immer.
+4. **Sackgassen-Pendel**: Erreicht die Belagerungs-Patrouille ihr Ziel, ohne
+   dass du dich bewegst, pendelt er dort statt in der Ecke zu erstarren.
+
+Verifiziert: Gator spawnt und tickt (Telemetrie), Spinnen wandern im Wasser,
+Suite 282/282.
+
+---
+
 # RE1.5 Port — v0.7.51 (Early Preview)
 
 **ROOM2090: das Sinken beginnt vor der Kante, und die Belagerung läuft um die Insel statt dagegen.**
