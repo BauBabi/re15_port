@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.50 (Early Preview)
+
+**ROOM2090: er kommt jetzt hinterher — und klettert nur noch bei echter Querung.**
+
+---
+
+Beide Marker waren dank der mitlaufenden Telemetrie in Minuten aufgeklärt:
+
+1. **„Kam nicht hinterher über die Plattform"**: Die Positions-Spur zeigte den
+   Kletter-Cooldown (10 s) als Bremse — nach einer Querung musste er den
+   langen Ring schwimmen, während du längst zurückgewechselt warst. Der
+   Cooldown beträgt jetzt 3 Sekunden.
+2. **„Weit weg davon hochgeklettert"**: Seine Bahn streifte nur die
+   Nordwest-Ecke des Stegs (~1000 Einheiten Schnitt) und galt trotzdem als
+   Querung; zusätzlich klang die Bogenhöhe zu träge aus (~1500 Einheiten
+   sichtbares Nachschweben). Die Kletter-Probe verlangt jetzt mindestens
+   2000 Einheiten echten Insel-Schnitt, und die Höhe baut sich 2,5× schneller
+   auf und ab.
+
+Regression: die legitime Rampen-Querung läuft unverändert, danach exakt
+Wasserlinie und Schnapp-Verfolgung.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.49 (Early Preview)
 
 **ROOM2090: der Ecken-Hänger ist gefangen und die ganze Fehlerklasse geschlossen.**
