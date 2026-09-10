@@ -157,6 +157,7 @@ typedef struct {
     int16_t  ct;                   /* 0..GB_CROSS_FRAMES */
     int16_t  cross_cd;             /* Ring-Pflichtphase nach einer Ueberquerung */
     int16_t  cframes;              /* Bahn-Dauer der laufenden Ueberquerung */
+    int16_t  t_ein, t_aus;         /* Frames, in denen die Bahn UEBER der Insel ist */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
@@ -328,6 +329,36 @@ static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
     *ox = x; *oz = z;
 }
 
+/* t-Intervall (Q12, 0..4096) der Strecke (x0,z0)->(x1,z1) durch ein Rechteck
+ * (+m). Rueckgabe 0 = kein Schnitt. Fuer das Bogen-Fenster der Ueberquerung. */
+static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
+                            int32_t bx0, int32_t bz0, int32_t bx1, int32_t bz1,
+                            int32_t m, int32_t *t0, int32_t *t1)
+{
+    int32_t rx0 = bx0 - m, rx1 = bx1 + m, rz0 = bz0 - m, rz1 = bz1 + m;
+    int64_t dx = x1 - x0, dz = z1 - z0;
+    int64_t ax0 = 0, ax1 = 4096, az0 = 0, az1 = 4096;
+    if (dx != 0) {
+        int64_t ta = ((int64_t)(rx0 - x0) << 12) / dx;
+        int64_t tb = ((int64_t)(rx1 - x0) << 12) / dx;
+        ax0 = (ta < tb) ? ta : tb; ax1 = (ta < tb) ? tb : ta;
+    } else if (x0 < rx0 || x0 > rx1) return 0;
+    if (dz != 0) {
+        int64_t ta = ((int64_t)(rz0 - z0) << 12) / dz;
+        int64_t tb = ((int64_t)(rz1 - z0) << 12) / dz;
+        az0 = (ta < tb) ? ta : tb; az1 = (ta < tb) ? tb : ta;
+    } else if (z0 < rz0 || z0 > rz1) return 0;
+    {
+        int64_t lo = (ax0 > az0) ? ax0 : az0;
+        int64_t hi = (ax1 < az1) ? ax1 : az1;
+        if (lo > hi || hi < 0 || lo > 4096) return 0;
+        if (lo < 0) lo = 0;
+        if (hi > 4096) hi = 4096;
+        *t0 = (int32_t)lo; *t1 = (int32_t)hi;
+    }
+    return 1;
+}
+
 /* Ueberquerung: gerade Bahn vom eigenen Randpunkt zum Leon-seitigen Randpunkt
  * UEBER die Insel; Dauer aus der Bahnlaenge. Kein Anlauf-Zustand mehr - der
  * Aufrufer startet die Bahn erst aus Kanten-Naehe (Rim-Distanz < 1400). */
@@ -346,11 +377,38 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, const re15_actor_t *p
         if (g->cframes < 90)  g->cframes = 90;
         if (g->cframes > 240) g->cframes = 240;
     }
+    /* BOGEN-FENSTER (Nutzer-Marker 2026-09-10: er hing bei (-2454, y=-2986)
+     * UEBER DEM WASSER - der sin-Hub lief ueber die GESAMTE Bahn, also auch
+     * ueber die 2600er-Wasser-Endstuecke vor/nach der Insel: er "schwebte
+     * voellig frei"). Der Bogen wirkt nur auf dem Insel-Abschnitt der Bahn. */
+    {
+        int32_t ta0, ta1, tb0, tb1, lo = 4096, hi = 0;
+        if (gb_seg_rect_span(g->cx0, g->cz0, g->cx1, g->cz1,
+                             GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1,
+                             300, &ta0, &ta1)) { if (ta0 < lo) lo = ta0; if (ta1 > hi) hi = ta1; }
+        if (gb_seg_rect_span(g->cx0, g->cz0, g->cx1, g->cz1,
+                             GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1,
+                             300, &tb0, &tb1)) { if (tb0 < lo) lo = tb0; if (tb1 > hi) hi = tb1; }
+        if (lo >= hi) { lo = 0; hi = 4096; }              /* Sicherheitsnetz */
+        g->t_ein = (int16_t)(((int32_t)g->cframes * lo) >> 12);
+        g->t_aus = (int16_t)(((int32_t)g->cframes * hi) >> 12);
+        if (g->t_aus <= g->t_ein) g->t_aus = (int16_t)(g->t_ein + 1);
+    }
     g->ct = 0; g->bite_done = 0;
     g->phase = GBP_CROSS;
     g->spider_flee = 1;                  /* Punkt 7: Spinnen fliehen JETZT */
     e->motion = 0; e->anim_frame = 0;
     re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
+    {   /* CROSS-Start-Telemetrie (Diagnose) */
+        static FILE *s_cl = NULL;
+        if (!s_cl) s_cl = fopen("gator_boss.log", "a");
+        if (s_cl) {
+            fprintf(s_cl, "CROSS start=(%d,%d) ende=(%d,%d) frames=%d fenster=%d..%d\n",
+                    g->cx0, g->cz0, g->cx1, g->cz1,
+                    (int)g->cframes, (int)g->t_ein, (int)g->t_aus);
+            fflush(s_cl);
+        }
+    }
 }
 
 void re15_gator_boss_tick(int slot)
@@ -664,15 +722,20 @@ void re15_gator_boss_tick(int slot)
                                   / (g->cframes ? g->cframes : GB_CROSS_FRAMES));
         {
             /* sin(pi * t/N) ueber die Q12-Tabelle: Winkel 0..0x800 (halbe Periode). */
-            int nfr = (g->cframes ? g->cframes : GB_CROSS_FRAMES);
-            int ang = (int)((int64_t)t * 0x800 / nfr);
-            int s   = re15_sin_q12(ang);                   /* 0..4096..0 */
-            int c   = re15_cos_q12(ang);                   /* 4096..0..-4096 */
-            e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * s >> 12);
-            g->arc_vz = (int16_t)((GB_ARC_VZ_MAX * s) >> 12);
-            /* Root-Neigung entlang der Bahn (Nutzer: "klettert nicht natuerlich"):
-             * Aufstieg Nase hoch, Abstieg Nase runter; GB_PITCH_MAX = DESIGN. */
-            g->pitch_vz = (int16_t)(-((GB_PITCH_MAX * c) >> 12));
+            /* Bogen nur ueber dem Insel-Abschnitt (t_ein..t_aus); die Wasser-
+             * Endstuecke der Bahn werden flach geschwommen. */
+            if (t <= g->t_ein || t >= g->t_aus) {
+                e->y = GB_WATER_Y;
+                g->arc_vz = 0; g->pitch_vz = 0;
+            } else {
+                int span = (int)g->t_aus - (int)g->t_ein;
+                int ang = (int)((int64_t)(t - g->t_ein) * 0x800 / span);
+                int sv  = re15_sin_q12(ang);               /* 0..4096..0 */
+                int cv  = re15_cos_q12(ang);               /* 4096..0..-4096 */
+                e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * sv >> 12);
+                g->arc_vz = (int16_t)((GB_ARC_VZ_MAX * sv) >> 12);
+                g->pitch_vz = (int16_t)(-((GB_PITCH_MAX * cv) >> 12));
+            }
         }
         /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
         re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);
