@@ -335,11 +335,15 @@ static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
         gb_rim_out(&x, &z, GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1);
         gb_rim_out(&x, &z, GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1);
     }
-    /* In die Pool-Innenflaeche klemmen (nie hinter die Aussenwaende). */
-    if (x < -8900 + 500) x = -8900 + 500;
-    if (x >  7200 - 500) x =  7200 - 500;
-    if (z < -27000 + 500) z = -27000 + 500;
-    if (z >  -5400 - 500) z =  -5400 - 500;
+    /* In die fuer den GATOR ERREICHBARE Pool-Flaeche klemmen: Wandabstand =
+     * SCA-Klemmradius 2200 + Marge (GEMESSEN 2026-09-10: mit 500er-Rand lag
+     * das Patrouillen-Ziel (-8400,-26500) in der NW-Poolecke JENSEITS beider
+     * Klemmgrenzen (-6700/-24800) - er schob ewig in die Ecke = der Haenger,
+     * dieselbe Fehlerklasse wie die alten 1200er-Ring-Ecken). */
+    if (x < -8900 + 2500) x = -8900 + 2500;
+    if (x >  7200 - 2500) x =  7200 - 2500;
+    if (z < -27000 + 2500) z = -27000 + 2500;
+    if (z >  -5400 - 2500) z =  -5400 - 2500;
     *ox = x; *oz = z;
 }
 
@@ -678,10 +682,27 @@ void re15_gator_boss_tick(int slot)
             e->motion = 0; e->anim_frame = 0;
             break;
         }
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-        if (dist > 3000) re15_ai_advance(e, GB_SWIM_SPEED);  /* der SCA-Clamp haelt
-                                               * ihn an der Blockwand - er drueckt
-                                               * sich unter die Kante */
+        {   /* PATROUILLE statt Erstarren (Nutzer "bleibt haengen": stand Leon
+             * oben ausser Reichweite, drueckte steer ihn nur in die Wand und er
+             * stand regungslos). Ziel = der Leon-naechste RANDPUNKT der Insel -
+             * er schwimmt sichtbar an der Kante unter Leon her. */
+            int32_t gx, gz;
+            int64_t gdx, gdz;
+            gb_rim_point(pl->x, pl->z, &gx, &gz);
+            gdx = e->x - gx; gdz = e->z - gz;
+            re15_enemy_steer_point(e, gx, gz, 0x40);
+            if (gdx * gdx + gdz * gdz > (int64_t)600 * 600)
+                re15_ai_advance(e, GB_SWIM_SPEED);
+            {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
+                static FILE *s_gd = NULL; static int s_gc2 = 0;
+                if (!s_gd) s_gd = fopen("gator_boss.log", "a");
+                if (s_gd && (++s_gc2 % 30) == 0) {
+                    fprintf(s_gd, "GPAT ziel=(%d,%d) rot=%d\n",
+                            gx, gz, (int)e->rot_y);
+                    fflush(s_gd);
+                }
+            }
+        }
         e->y = GB_WATER_Y;
         /* Aufrichten NUR NAHE DER KANTE (Nutzer 2026-09-10: "klettert ueber die
          * Insel, obwohl er ueberhaupt nicht da ist" - die Aufbaeum-Rampe lief ab
@@ -802,6 +823,18 @@ void re15_gator_boss_tick(int slot)
         break;
     }
 
+    {   /* VOLLPHASEN-TELEMETRIE (Nutzer "bleibt immer noch haengen"): alle 30 F
+         * Phase+Position in gator_boss.log - der Stillstands-Detektor findet
+         * damit JEDEN Haenger samt Phase/Ziel-Kontext. */
+        static FILE *s_tl = NULL; static int s_tc = 0;
+        if (!s_tl) s_tl = fopen("gator_boss.log", "a");
+        if (s_tl && (++s_tc % 30) == 0) {
+            fprintf(s_tl, "TICK ph=%d pos=(%d,%d) y=%d dist=%d mo=%d cd=%d\n",
+                    (int)g->phase, e->x, e->z, e->y, (int)dist,
+                    (int)e->motion, (int)g->cross_cd);
+            fflush(s_tl);
+        }
+    }
     /* byte-true ACTIVE-Tail: Cooldowns jeden Frame herunterzaehlen (@0x8010c9d4-ca40). */
     if (e->hit_stun > 0) e->hit_stun--;
 
