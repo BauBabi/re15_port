@@ -166,6 +166,14 @@ typedef struct {
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
+    /* ROUTEN-LATCH (Nutzer-Marker 2026-09-10 "bleibt haengen": die je Frame neu
+     * bewertete Wegwahl konnte zwischen Rim-Anlauf und Ring-Ecke flattern -
+     * sichtbares Vor-zurueck-Pendeln im Westkanal, Marke 3). Die Route wird
+     * einmal gewaehlt und nur bei Zonenwechsel/Cooldown-Ablauf neu bewertet. */
+    int8_t   route;                /* 0=keine, 1=WEST (um die Plattform), 2=RAMPE (queren) */
+    int8_t   zone_g, zone_l;       /* gemerkte Becken-Zonen (Neubewertungs-Trigger) */
+    int8_t   dbg_zweig;            /* Telemetrie: aktiver CHASE-Zweig */
+    int32_t  dbg_tx, dbg_tz;       /* Telemetrie: aktuelles Steuer-Ziel */
 } gb_state_t;
 
 static gb_state_t s_gb[RE15_ACTOR_MAX];
@@ -315,15 +323,28 @@ static void gb_rim_out(int32_t *x, int32_t *z,
         else                *z = rz1;
     }
 }
-/* Liegt (px,pz) ueber der Insel (+300)? Positions-Wahrheit fuer den Bogen. */
-static int gb_ueber_insel(int32_t px, int32_t pz)
+/* Liegt (px,pz) ueber der RAMPE (+300)? Positions-Wahrheit fuer den Bogen.
+ * NUR die Rampe: geklettert wird ausschliesslich ueber den kleinen Vorsprung
+ * (Nutzer: "nur HIER sollte er ... druebersteigen" + 2026-09-10 "klettert
+ * irgendwo anders rum als auf den kleinen Vorsprung"). */
+static int gb_ueber_rampe(int32_t px, int32_t pz)
 {
-    if (px >= GB_PLAT_X0 - 300 && px <= GB_PLAT_X1 + 300 &&
-        pz >= GB_PLAT_Z0 - 300 && pz <= GB_PLAT_Z1 + 300) return 1;
-    if (px >= GB_RAMP_X0 - 300 && px <= GB_RAMP_X1 + 300 &&
-        pz >= GB_RAMP_Z0 - 300 && pz <= GB_RAMP_Z1 + 300) return 1;
-    return 0;
+    return (px >= GB_RAMP_X0 - 300 && px <= GB_RAMP_X1 + 300 &&
+            pz >= GB_RAMP_Z0 - 300 && pz <= GB_RAMP_Z1 + 300);
 }
+
+/* Becken-Zone aus den drei sce-8-Wasserzonen des RDT (@0x09D6/@0x09EA/@0x09FE:
+ * Suedbecken z[-27000..-18100], Nordbecken z[-14500..-5400], Westkanal
+ * x[-8900..-1700] z[-18100..-14500]): 0=Sued, 1=Nord, 2=Mittelstreifen (dort
+ * ist nur der Westkanal Wasser - Plattform und Rampe sind SCA-Bloecke).
+ * Sued<->Nord geht NUR westlich um die Plattform oder kletternd ueber die
+ * Rampe; genau diese Wahl trifft die CHASE-Routenlogik. */
+static int gb_zone(int32_t z)
+{
+    return (z <= GB_RAMP_Z0) ? 0 : (z >= GB_RAMP_Z1) ? 1 : 2;
+}
+
+static int32_t gb_iabs(int32_t v) { return v < 0 ? -v : v; }
 
 static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
 {
@@ -375,39 +396,35 @@ static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
     return 1;
 }
 
-/* Ueberquerung: gerade Bahn vom eigenen Randpunkt zum Leon-seitigen Randpunkt
- * UEBER die Insel; Dauer aus der Bahnlaenge. Kein Anlauf-Zustand mehr - der
- * Aufrufer startet die Bahn erst aus Kanten-Naehe (Rim-Distanz < 1400). */
-static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, const re15_actor_t *pl)
+/* Ueberquerung: feste Nord-Sued-Bahn ueber die RAMPE (den kleinen Vorsprung)
+ * am aktuellen x des Gators - NUR dort wird geklettert (Nutzer: "nur HIER
+ * sollte er ... druebersteigen"; 2026-09-10: "klettert irgendwo anders rum
+ * als auf den kleinen Vorsprung" beendete die freien rim->rim-Bahnen, die
+ * diagonal ueber die Plattform-Mitte liefen, Marke 4: y=-3192 mitten auf dem
+ * Block). Der Aufrufer startet die Bahn aus Kanten-Naehe (Anlaufpunkt). */
+static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued)
 {
-    int32_t ex, ez, lx, lz;
-    gb_rim_point(e->x, e->z, &ex, &ez);
-    gb_rim_point(pl->x, pl->z, &lx, &lz);
-    g->cx0 = ex; g->cz0 = ez;
-    g->cx1 = lx; g->cz1 = lz;
+    int32_t cx = e->x;
+    if (cx < GB_RAMP_X0 + 700) cx = GB_RAMP_X0 + 700;   /* Rand-Puffer: Bogen */
+    if (cx > GB_RAMP_X1 - 700) cx = GB_RAMP_X1 - 700;   /* nicht an der Kante */
+    g->cx0 = cx; g->cx1 = cx;
+    if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
+    else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
     {
-        int64_t dx = lx - ex, dz = lz - ez;
-        int64_t d2 = dx * dx + dz * dz;
-        int32_t len = 64; while ((int64_t)len * len < d2 && len < 30000) len += 64;
+        int32_t len = (GB_RAMP_Z1 - GB_RAMP_Z0) + 2 * GB_BAHN_M;   /* 8800 */
         g->cframes = (int16_t)(len / 40);
         if (g->cframes < 90)  g->cframes = 90;
         if (g->cframes > 240) g->cframes = 240;
     }
-    /* BOGEN-FENSTER (Nutzer-Marker 2026-09-10: er hing bei (-2454, y=-2986)
-     * UEBER DEM WASSER - der sin-Hub lief ueber die GESAMTE Bahn, also auch
-     * ueber die 2600er-Wasser-Endstuecke vor/nach der Insel: er "schwebte
-     * voellig frei"). Der Bogen wirkt nur auf dem Insel-Abschnitt der Bahn. */
+    /* Bogen-Fenster: nur der Rampen-Abschnitt der Bahn traegt den Hub. */
     {
-        int32_t ta0, ta1, tb0, tb1, lo = 4096, hi = 0;
-        if (gb_seg_rect_span(g->cx0, g->cz0, g->cx1, g->cz1,
-                             GB_PLAT_X0, GB_PLAT_Z0, GB_PLAT_X1, GB_PLAT_Z1,
-                             300, &ta0, &ta1)) { if (ta0 < lo) lo = ta0; if (ta1 > hi) hi = ta1; }
+        int32_t t0, t1;
         if (gb_seg_rect_span(g->cx0, g->cz0, g->cx1, g->cz1,
                              GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1,
-                             300, &tb0, &tb1)) { if (tb0 < lo) lo = tb0; if (tb1 > hi) hi = tb1; }
-        if (lo >= hi) { lo = 0; hi = 4096; }              /* Sicherheitsnetz */
-        g->t_ein = (int16_t)(((int32_t)g->cframes * lo) >> 12);
-        g->t_aus = (int16_t)(((int32_t)g->cframes * hi) >> 12);
+                             300, &t0, &t1)) {
+            g->t_ein = (int16_t)(((int32_t)g->cframes * t0) >> 12);
+            g->t_aus = (int16_t)(((int32_t)g->cframes * t1) >> 12);
+        } else { g->t_ein = 0; g->t_aus = (int16_t)g->cframes; } /* Sicherheitsnetz */
         if (g->t_aus <= g->t_ein) g->t_aus = (int16_t)(g->t_ein + 1);
     }
     g->ct = 0; g->bite_done = 0;
@@ -471,7 +488,7 @@ void re15_gator_boss_tick(int slot)
              * 3 = Todes-Pfad testen (hp=1; nach ~10 s Raumzeit toeten). */
             const char *tv = getenv("RE15_GB_TEST");
             if (tv) { g->aggro = 1;
-                      if (*tv == '2') gb_cross_begin(e, g, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+                      if (*tv == '2') gb_cross_begin(e, g, gb_zone(e->z) == 0);
                       if (*tv == '3') e->hp = 1;
                       if (*tv == '5') {          /* Rampen-Repro: Nutzer-Marker-Lage
                                                   * (Gator noerdlich der Rampe), scharf
@@ -527,97 +544,104 @@ void re15_gator_boss_tick(int slot)
         e->anim_frame++;
         break;
 
-    case GBP_CHASE: {                         /* Punkt 6: Ring-Verfolgung */
+    case GBP_CHASE: {                         /* Punkt 6: Verfolgung im Wasser */
         int player_on_platform =                    /* begehbare Flaeche OBEN =
                                                      * Block UND Ost-Rampe (Nutzer-
                                                      * Marker: Leon auf der Rampe
-                                                     * bei 2318,-1800) */
+                                                     * bei 2318,-1800). y-CHECK
+                                                     * (Nutzer-Session 2026-09-10:
+                                                     * Leon WATET bei y=0 im Wasser
+                                                     * neben der Rampe - x/z allein
+                                                     * loeste die Belagerung aus,
+                                                     * waehrend er unten stand;
+                                                     * OBEN hat er y=-1800). */
+            (pl->y < -900) &&
             ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
               pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
              (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
               pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
-        int blocked = gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
-        int rampe   = gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_RING_M / 2);
         if (g->cross_cd > 0) g->cross_cd--;
-        /* Nutzer-Marker 2026-09-10: die RAMPE ist der natuerliche Uebersteigpunkt
-         * ("nur HIER sollte er ... druebersteigen") - sie triggert OHNE Cooldown;
-         * oestlich von ihr steht die Aussenwand, ein Umweg existiert dort nicht. */
-        /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
-         * die Ueberquerung passiert AUCH in der normalen Verfolgung, sobald die
-         * Plattform zwischen Gator und Leon liegt - nicht nur, wenn Leon oben
-         * steht (Nutzer-Befund 2026-09-10: "klettert nicht ueber die Platform").
-         * Nach einer Passage erzwingt cross_cd eine Ring-Phase (Abwechslung). */
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') player_on_platform = 1;
         }
         if (player_on_platform) {
             /* Nutzer 2026-09-10: solange Leon OBEN steht -> BELAGERN und nach
              * oben schnappen; geklettert wird erst, wenn er heruntergesprungen
-             * ist (dann faellt player_on_platform und die blocked-Regel unten
-             * loest die Ueberquerung aus). */
+             * ist (dann faellt player_on_platform und die Routenwahl unten
+             * fuehrt ihn herum oder ueber die Rampe). */
             g->phase = GBP_GUARD; g->guard_t = 0; g->bite_done = 0;
             e->motion = 0; e->anim_frame = 0;
             break;
         }
-        if ((blocked || rampe) && g->cross_cd == 0) {
-            /* Insel zwischen Gator und Leon: zum eigenen Randpunkt schwimmen
-             * (MIT Wand-Klemme - Randpunkte liegen ausserhalb der Klemmzonen)
-             * und erst DORT die Bogen-Bahn starten.
-             * BAHN-PROBE (Nutzer-Marker 2026-09-10: Bogen an der NW-ECKE,
-             * Leon im NO - beide auf der Nordseite!): streift die Sichtlinie
-             * die Insel nur an einer Ecke, laeuft die Randpunkt-Bahn an der
-             * Kante ENTLANG statt darueber. Klettern NUR, wenn die Bahn die
-             * Insel substanziell quert (Marge -200) - sonst fuehrt das
-             * Wand-Following unten um die Ecke. */
-            int32_t ex, ez, lx, lz;
-            int64_t ddx, ddz;
-            static int32_t s_apx = 0, s_apz = 0;
-            static int s_ap_alter = 9999;
-            if (++s_ap_alter >= 60) {                 /* Anlaufziel einfrieren:
-                                                       * jede Frame neu berechnete
-                                                       * rim-Ziele springen zwischen
-                                                       * Kanten = Zickzack/Haenger */
-                gb_rim_point(e->x, e->z, &s_apx, &s_apz);
-                s_ap_alter = 0;
-            }
-            ex = s_apx; ez = s_apz;
-            gb_rim_point(pl->x, pl->z, &lx, &lz);
-            {
-                /* Mindest-Schnittlaenge (Nutzer-Marker: die Bahn streifte die
-                 * Block-NW-Ecke mit ~1000 Schnitt und galt als "Querung"):
-                 * Summe der Insel-Abschnitte der Bahn muss >= 2000 sein. */
-                int32_t q0, q1; int64_t bl2; int32_t blen, schnitt = 0;
-                int64_t bdx = lx - ex, bdz = lz - ez;
-                bl2 = bdx * bdx + bdz * bdz;
-                blen = 64; while ((int64_t)blen * blen < bl2 && blen < 30000) blen += 64;
-                if (gb_seg_rect_span(ex, ez, lx, lz, GB_PLAT_X0, GB_PLAT_Z0,
-                                     GB_PLAT_X1, GB_PLAT_Z1, -200, &q0, &q1))
-                    schnitt += (int32_t)(((int64_t)blen * (q1 - q0)) >> 12);
-                if (gb_seg_rect_span(ex, ez, lx, lz, GB_RAMP_X0, GB_RAMP_Z0,
-                                     GB_RAMP_X1, GB_RAMP_Z1, -200, &q0, &q1))
-                    schnitt += (int32_t)(((int64_t)blen * (q1 - q0)) >> 12);
-                if (schnitt < 2000) goto gb_kein_cross;
-            }
-            {
-                ddx = e->x - ex; ddz = e->z - ez;
-                if (ddx * ddx + ddz * ddz < (int64_t)1400 * 1400) {
-                    gb_cross_begin(e, g, pl);
-                } else {
-                    re15_enemy_steer_point(e, ex, ez, 0x40);
-                    re15_ai_advance(e, GB_SWIM_SPEED);
-                    e->y = GB_WATER_Y;
-                    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
-                    e->anim_frame++;
-                }
-                break;
-            }
-            gb_kein_cross: ;
-            /* Bahn quert nicht substanziell -> kein Klettern; unten Ring. */
-        }
 
+        /* ROUTENWAHL ueber die Becken-Zonen (ersetzt rim-Anlauf + Ring-Mix,
+         * die in der Nutzer-Session 2026-09-10 frameweise gegeneinander
+         * flatterten: 200-F-Kriechstand im Nordbecken, Marken 1+2, und
+         * Pendeln im Westkanal, Marke 3). Sued<->Nord trennt die Plattform;
+         * es gibt GENAU zwei Wege: WEST um die Plattform-Ecken oder KLETTERN
+         * ueber die Rampe (den kleinen Vorsprung - NUR dort, Nutzer-Wort).
+         * Die Route wird gelatcht und nur neu bewertet, wenn eine Zone
+         * wechselt oder der Kletter-Cooldown ablaeuft. */
         int32_t tx = pl->x, tz = pl->z;
-        if (blocked)
-            gb_ring_target(e, pl, &tx, &tz);  /* Block im Weg -> Eck-Wegpunkt */
+        {
+            int zg = gb_zone(e->z), zl = gb_zone(pl->z);
+            g->dbg_zweig = 0;
+            if (zg != zl && zg != 2 && zl != 2) {
+                /* Sued<->Nord: Route waehlen/halten */
+                int32_t eckz_g = (zg == 0) ? (GB_PLAT_Z0 - GB_RING_M) : (GB_PLAT_Z1 + GB_RING_M);
+                int32_t eckz_l = (zg == 0) ? (GB_PLAT_Z1 + GB_RING_M) : (GB_PLAT_Z0 - GB_RING_M);
+                int32_t eckx   = GB_PLAT_X0 - GB_RING_M;      /* Westumlauf-Ecken */
+                int32_t rx     = e->x;                        /* Rampen-Anlauf-x */
+                if (rx < GB_RAMP_X0 + 700) rx = GB_RAMP_X0 + 700;
+                if (rx > GB_RAMP_X1 - 700) rx = GB_RAMP_X1 - 700;
+                int32_t rz_ein = (zg == 0) ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
+                int32_t rz_aus = (zg == 0) ? (GB_RAMP_Z1 + GB_BAHN_M) : (GB_RAMP_Z0 - GB_BAHN_M);
+                if (g->route == 0 || zg != g->zone_g || zl != g->zone_l
+                    || g->cross_cd == 1) {   /* cd-Ablauf-Flanke: die wegen des
+                                              * Cooldowns erzwungene WEST-Route
+                                              * neu bewerten */
+                    /* Kostenvergleich (grobe Manhattan-Summen reichen zur Wahl) */
+                    int32_t kw = gb_iabs(e->x - eckx) + gb_iabs(e->z - eckz_g)
+                               + gb_iabs(eckz_l - eckz_g)
+                               + gb_iabs(pl->x - eckx) + gb_iabs(pl->z - eckz_l);
+                    int32_t kr = gb_iabs(e->x - rx) + gb_iabs(e->z - rz_ein)
+                               + gb_iabs(rz_aus - rz_ein)
+                               + gb_iabs(pl->x - rx) + gb_iabs(pl->z - rz_aus);
+                    g->route = (g->cross_cd == 0 && kr < kw) ? 2 : 1;
+                    g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
+                }
+                if (g->route == 2 && g->cross_cd == 0) {
+                    int64_t adx = e->x - rx, adz = e->z - rz_ein;
+                    if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
+                        gb_cross_begin(e, g, zg == 0);
+                        break;
+                    }
+                    tx = rx; tz = rz_ein; g->dbg_zweig = 2;
+                } else {
+                    /* WEST: naechsten noch noetigen Wegpunkt ansteuern */
+                    if (!gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2))
+                        { g->dbg_zweig = 1; }                     /* frei: direkt */
+                    else if (!gb_seg_hits_platform(e->x, e->z, eckx, eckz_l, GB_RING_M / 2))
+                        { tx = eckx; tz = eckz_l; g->dbg_zweig = 3; }
+                    else { tx = eckx; tz = eckz_g; g->dbg_zweig = 4; }
+                }
+            } else {
+                /* verbunden (gleiche Zone oder Westkanal): direkt zu Leon;
+                 * streift die Sichtlinie den Plattform-Sporn oder die
+                 * Rampen-Westkante, um die Ecke fuehren. */
+                if (gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_RING_M / 2))
+                    { gb_ring_target(e, pl, &tx, &tz); g->dbg_zweig = 5; }
+                else if (gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_RING_M / 2)) {
+                    tx = GB_RAMP_X0 - GB_RING_M;      /* Rampen-Westecke der */
+                    tz = (gb_zone(e->z) == 0)          /* eigenen Seite */
+                           ? (GB_RAMP_Z0 - GB_RING_M) : (GB_RAMP_Z1 + GB_RING_M);
+                    g->dbg_zweig = 6;
+                }
+                g->route = 0;                          /* Latch loesen */
+                g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
+            }
+        }
+        g->dbg_tx = tx; g->dbg_tz = tz;
         {
             int slew = (re15_engine_rand8() & 0x1f) + 6;   /* byte-true B[4]-Slew-Streuung */
             re15_enemy_steer_point(e, tx, tz, slew);
@@ -685,7 +709,9 @@ void re15_gator_boss_tick(int slot)
     case GBP_GUARD: {                         /* Plattform-Belagerung (Nutzer-Design):
                                                * an die Kante unter Leon, aufrichten,
                                                * nach OBEN schnappen inkl. Schaden. */
-        int oben = ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
+        int oben = (pl->y < -900) &&          /* y-Check wie im CHASE: watender
+                                               * Leon (y=0) ist NICHT oben */
+                   ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
                      pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
                     (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
                      pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
@@ -821,7 +847,7 @@ void re15_gator_boss_tick(int slot)
             int tla  = t + 13; if (tla > nfr2) tla = nfr2;
             int32_t lax = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * tla / nfr2);
             int32_t laz = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * tla / nfr2);
-            int32_t y_ziel = (gb_ueber_insel(e->x, e->z) && gb_ueber_insel(lax, laz))
+            int32_t y_ziel = (gb_ueber_rampe(e->x, e->z) && gb_ueber_rampe(lax, laz))
                                ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
             int32_t dy = y_ziel - e->y;
             if (dy >  150) dy =  150;        /* Telemetrie: mit 60/F klang der Bogen
@@ -880,9 +906,11 @@ void re15_gator_boss_tick(int slot)
         static FILE *s_tl = NULL; static int s_tc = 0;
         if (!s_tl) s_tl = fopen("gator_boss.log", "a");
         if (s_tl && (++s_tc % 30) == 0) {
-            fprintf(s_tl, "TICK ph=%d pos=(%d,%d) y=%d dist=%d mo=%d cd=%d\n",
+            fprintf(s_tl, "TICK ph=%d pos=(%d,%d) y=%d dist=%d mo=%d cd=%d "
+                          "rt=%d zw=%d ziel=(%d,%d)\n",
                     (int)g->phase, e->x, e->z, e->y, (int)dist,
-                    (int)e->motion, (int)g->cross_cd);
+                    (int)e->motion, (int)g->cross_cd,
+                    (int)g->route, (int)g->dbg_zweig, g->dbg_tx, g->dbg_tz);
             fflush(s_tl);
         }
     }
