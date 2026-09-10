@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.39 (Early Preview)
+
+**ROOM2090: Lauerstellung zur echten Leiter, natürliches Klettern, Bogen in Bogenform.**
+
+---
+
+Deine drei Punkte:
+
+1. **Startrichtung**: Er lauerte messbar exakt auf meinen falschen Leiter-Anker
+   (der lag 5,3 m südlich — eine Bilddeutungs-Panne). Die Leiter ist dein
+   Einstieg an der Türnische oben links; der Anker sitzt jetzt dort. Kontrolle:
+   Maul zeigt auf die Leiter, keine 180°-Wende mehr beim Kampfstart.
+2. **Klettern**: Kein Sprung mehr an die Stegkante — er schwimmt sie jetzt
+   sichtbar an (dabei saß er zunächst exakt am Kollisions-Radius fest: die
+   Wand-Klemme drückte ihn vom Steg weg, während er hinwollte — behoben).
+   Zusätzlich neigt sich der Körper entlang der Bahn: Aufstieg Nase hoch,
+   Abstieg Nase runter.
+3. **Bogenform**: Die Wirbelkrümmung war seitenverkehrt (beide Enden hoben
+   nach oben). Jetzt wie von dir beschrieben: unten Kopf — Rücken oben —
+   unten Schweif; im Bild hängt der Kopf vorn über die Kante, der Rücken
+   wölbt sich über den Steg, der Schweif hängt hinten nach.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.38 (Early Preview)
 
 **ROOM2090: die Überquerung kommt jetzt im normalen Kampf — und damit auch die Spinnen-Flucht.**
