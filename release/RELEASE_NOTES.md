@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.7.45 (Early Preview)
+
+**ROOM2090: Überquerungssystem neu gebaut — kein Stecken, kein Phantom-Klettern.**
+
+---
+
+Dein Marker hat die Systemschwäche endgültig offengelegt: Du standst oben auf
+der Rampe, aber die Belagerung lief nie an — der Alligator steckte bewegungslos
+im Kletter-**Anlauf** fest, weil sein Anlaufziel mitten in der Kollisionszone
+der Rampe lag (die festen „Kletterkanten" vertrugen sich nicht mit der
+T-Form aus Steg + Rampe). Daraus folgten alle drei Symptome: Stecken,
+Kletterstarts aus dem Nirgendwo, „komisch stehenbleiben".
+
+Das Kanten-System ist ersetzt: Der Alligator berechnet jetzt den **nächsten
+Punkt am Rand der gesamten Insel** (Steg + Rampe als Einheit, immer außerhalb
+aller Kollisionszonen), schwimmt sichtbar mit aktiver Wand-Kollision dorthin
+und startet erst von dort den Bogen — geradewegs hinüber zu dem Randpunkt auf
+deiner Seite, Dauer nach Bahnlänge. Steht du oben, hat die Belagerung mit dem
+Hochbiss weiter Vorrang.
+
+Nachgestellt mit deiner Marker-Lage: Überquerung läuft sauber durch, kein
+Stecken; Belagerungs-Telemetrie unverändert korrekt.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.44 (Early Preview)
 
 **ROOM2090: der Durch-die-Insel-Tunnel ist zu — klettern nur noch von der Kante aus.**
