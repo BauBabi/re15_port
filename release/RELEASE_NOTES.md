@@ -1,3 +1,25 @@
+# RE1.5 Port — v0.7.47 (Early Preview)
+
+**ROOM2090: der Bogen läuft nur noch über der Insel — kein Schweben überm Wasser.**
+
+---
+
+Dein Marker („kann völlig frei unten überqueren") zeigte ihn im Kletterbogen
+über dem freien Wasser hängend. Ursache: Die Überquerungs-Bahn beginnt und
+endet konstruktionsbedingt ein Stück vor der Insel (außerhalb seiner
+Kollisionszone), aber der Steig-Bogen lief über die gesamte Bahn — er hob
+also schon im Wasser ab und schwebte die Endstücke entlang.
+
+Jetzt berechnet die Bahn beim Start, auf welchem Abschnitt sie wirklich über
+der Insel liegt: Nur dort wirken Hub, Wirbelbogen und Körperneigung — die
+Endstücke schwimmt er flach im Wasser. Messbeleg aus der Telemetrie: eine
+240-Frame-Querung trägt den Bogen exakt im Fenster 57–140, davor und danach
+flaches Schwimmen.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.46 (Early Preview)
 
 **ROOM2090: kein Eck-Klettern mehr — geklettert wird nur, wenn die Bahn wirklich hinüberführt.**
