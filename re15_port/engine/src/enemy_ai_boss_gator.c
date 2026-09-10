@@ -72,8 +72,12 @@ extern re15_actor_t g_actors[];
                                  * mind. 2800 vom Tuer-A-Spawn (-8200,-25550), sonst
                                  * feuert der Nasen-Guard schon in der Tuernische */
 #define GB_START_Z     -22800
-#define GB_LADDER_X     -8700   /* Leiter-Anker: Westwand, z aus Kamera-Cut-0-Target */
-#define GB_LADDER_Z    -20500
+#define GB_LADDER_X     -8800   /* Leiter = Leons EINSTIEG an der Tuer-A-Nische oben
+                                 * links (Tuer-Spawn -8200,-25550). GEMESSEN 2026-09-10:
+                                 * der alte Kamera-Cut-0-Anker (-8700,-20500) lag 5300
+                                 * suedlich - der Gator lauerte mit rot=2655 fast genau
+                                 * ENTGEGENGESETZT ("muss erst 180 Grad drehen"). */
+#define GB_LADDER_Z    -25600
 /* Plattform-Block + Ring (RDT-SCA [4], Rand = halbe Koerperbreite ~800 + Marge). */
 #define GB_PLAT_X0      -1700
 #define GB_PLAT_X1       1850
@@ -98,6 +102,7 @@ extern re15_actor_t g_actors[];
  * Peak = -1800 - 1392 = -3192; Hub = |-3192 - (-1200)|. */
 #define RE15_GB_CROSS_HUB 1992
 #define GB_ARC_VZ_MAX     260   /* DESIGN: Q12-Spitzenkruemmung je Wirbelgelenk (~23 deg) */
+#define GB_PITCH_MAX      300   /* DESIGN: Root-Neigung am Bahnanfang/-ende (~26 deg) */
 /* Spinnen (Nutzer-Punkte 1+7): Plattform-Sitzplaetze + Ostwand-Flucht. */
 #define GB_SPID0_X       -700
 #define GB_SPID0_Z     -17800
@@ -114,6 +119,7 @@ enum {
     GBP_CHASE,      /* Punkt 6: Ring-Verfolgung im Wasser */
     GBP_LUNGE,      /* Punkt 3: Biss */
     GBP_FLINCH,     /* Punkt 5: Schadensanimation (Schwelle) */
+    GBP_CROSS_APPR, /* Punkt 8: Anlauf an die Startkante (KEIN Teleport) */
     GBP_CROSS,      /* Punkt 8: Bogen ueber die Plattform */
     GBP_DIE,        /* Todesrolle (Clip 7) */
     GBP_DEAD
@@ -130,6 +136,7 @@ typedef struct {
     int16_t  ct;                   /* 0..GB_CROSS_FRAMES */
     int16_t  cross_cd;             /* Ring-Pflichtphase nach einer Ueberquerung */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
+    int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
     /* Spinnen-Flucht */
     uint8_t  spider_flee;          /* 1 = Flucht ausgeloest (Punkt 7) */
@@ -147,7 +154,10 @@ int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    return g->phase == GBP_CROSS;
+    /* AUCH im Anlauf: GEMESSEN 2026-09-10 parkte der Gator exakt am Clamp-Radius
+     * (-3918 = Blockkante -1700 - Hitbox 2200) - steer zog zur Kante, der
+     * SCA-Clamp drueckte zurueck, Patt. */
+    return g->phase == GBP_CROSS || g->phase == GBP_CROSS_APPR;
 }
 
 /* Schneidet die Strecke (x0,z0)->(x1,z1) das um `m` aufgeblasene Plattform-Rechteck?
@@ -243,9 +253,11 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g)
     g->cx1 = from_west ? (GB_PLAT_X1 + GB_RING_M) : (GB_PLAT_X0 - GB_RING_M);
     g->cz0 = zm; g->cz1 = zm;
     g->ct = 0; g->bite_done = 0;
-    g->phase = GBP_CROSS;
+    /* Nutzer-Befund 2026-09-10 ("klettert nicht natuerlich"): KEIN Teleport an
+     * die Kante mehr - erst ANSCHWIMMEN (GBP_CROSS_APPR), dann der Bogen. */
+    g->phase = GBP_CROSS_APPR;
     g->spider_flee = 1;                  /* Punkt 7: Spinnen fliehen JETZT */
-    e->motion = 0; e->anim_frame = 0;    /* Loko-Clip waehrend des Bogens */
+    e->motion = 0; e->anim_frame = 0;    /* Loko-Clip waehrend Anlauf + Bogen */
 }
 
 void re15_gator_boss_tick(int slot)
@@ -392,11 +404,24 @@ void re15_gator_boss_tick(int slot)
         }
         break;
 
+    case GBP_CROSS_APPR: {                    /* Punkt 8: Anlauf zur Startkante */
+        int64_t dxs = g->cx0 - e->x, dzs = g->cz0 - e->z;
+        int64_t d2  = dxs * dxs + dzs * dzs;
+        re15_enemy_steer_point(e, g->cx0, g->cz0, 0x40);
+        re15_ai_advance(e, GB_SWIM_SPEED);
+        e->y = GB_WATER_Y;
+        e->anim_frame++;
+        if (d2 < 700 * 700) {                 /* Kante erreicht -> Bogen beginnen */
+            g->phase = GBP_CROSS; g->ct = 0;
+            re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);  /* Blick ueber den Steg */
+        }
+        break; }
+
     case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Plattform */
         g->ct++;
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         if (t >= GB_CROSS_FRAMES) {
-            g->phase = GBP_CHASE; g->arc_vz = 0;
+            g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
             g->cross_cd = 300;               /* DESIGN: ~10 s Ring, dann darf er wieder drueber */
             e->y = GB_WATER_Y;
             e->motion = 0; e->anim_frame = 0;
@@ -409,11 +434,12 @@ void re15_gator_boss_tick(int slot)
             /* sin(pi * t/N) ueber die Q12-Tabelle: Winkel 0..0x800 (halbe Periode). */
             int ang = (int)((int64_t)t * 0x800 / GB_CROSS_FRAMES);
             int s   = re15_sin_q12(ang);                   /* 0..4096..0 */
-            /* Hub: Plattformhoehe. GEMESSEN wird Leon-Y auf der Plattform im
-             * Sichtlauf; bis dahin traegt der Bogen den Wasser-Hub relativ:
-             * Peak = Wasserlinie -1620 minus Freibord (Koerper auf der Flaeche). */
+            int c   = re15_cos_q12(ang);                   /* 4096..0..-4096 */
             e->y = GB_WATER_Y - (int32_t)((int64_t)(RE15_GB_CROSS_HUB) * s >> 12);
             g->arc_vz = (int16_t)((GB_ARC_VZ_MAX * s) >> 12);
+            /* Root-Neigung entlang der Bahn (Nutzer: "klettert nicht natuerlich"):
+             * Aufstieg Nase hoch, Abstieg Nase runter; GB_PITCH_MAX = DESIGN. */
+            g->pitch_vz = (int16_t)(-((GB_PITCH_MAX * c) >> 12));
         }
         /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
         re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);
@@ -462,10 +488,15 @@ int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    if (g->arc_vz == 0) return 0;
+    if (g->arc_vz == 0 && g->pitch_vz == 0) return 0;
+    /* Nutzer-Befund 2026-09-10: "Der Bogen muss sein - unten Kopf, Ruecken
+     * oben, unten Schweif" - die alte Vorzeichenwahl schweifte BEIDE Enden
+     * nach OBEN (U statt Bogen). Rz-Geometrie: +X-Kette (Kopf) haengt mit
+     * az>0 ab (x'->+y = PSX-unten), -X-Kette (Schwanz) mit az<0. */
     switch (bone) {
-    case 1: case 5: case 6:            return -(int)g->arc_vz;   /* Kopfkette abwaerts (drueben) */
-    case 11: case 12: case 13:         return  (int)g->arc_vz;   /* Schwanz haengt diesseits */
+    case 0:                            return  (int)g->pitch_vz; /* Root-Neigung der Bahn */
+    case 1: case 5: case 6:            return  (int)g->arc_vz;   /* Kopf haengt drueben ab */
+    case 11: case 12: case 13:         return -(int)g->arc_vz;   /* Schweif haengt diesseits */
     default:                           return 0;
     }
 }
