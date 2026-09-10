@@ -1,3 +1,49 @@
+# RE1.5 Port — v0.7.53 (Early Preview)
+
+**ROOM2090: geklettert wird nur noch am kleinen Vorsprung — und die Spinnen sind eingefroren.**
+
+---
+
+Deine vier Marken (F1243–F3088) waren per Telemetrie eindeutig:
+
+1. **„Bleibt in der Welt hängen“**: Zwei alte Wegwahl-Systeme (Randpunkt-Anlauf
+   und Ecken-Ring) bewerteten jeden Frame neu und flatterten gegeneinander —
+   im Nordbecken stand er 200 Frames quasi still (Marken 1+2), im Westkanal
+   pendelte er vor und zurück (Marke 3). Jetzt gibt es ein Zonen-Modell aus
+   den drei Wasserzonen des Raums: Süd↔Nord kennt genau zwei Wege — westlich
+   um die Plattform oder kletternd über den Vorsprung — und die gewählte
+   Route wird gehalten statt je Frame neu gewürfelt. Vier Kontroll-Läufe:
+   null Stillstände, er kommt in jedem Szenario bis auf Bissweite heran.
+2. **„Klettert irgendwo anders rum als auf den kleinen Vorsprung“**: Die
+   freien Kletterbahnen (Marke 4: er hing mitten über der Plattform in der
+   Luft) sind raus. Geklettert wird ausschließlich über die flache Ost-Rampe
+   — dein „nur HIER“-Punkt — als gerade Nord-Süd-Bahn, und der Bogen trägt
+   nur über der Rampe Höhe.
+3. **Belagerung nur, wenn du wirklich OBEN stehst**: Bisher reichte die
+   Grundriss-Position — standest du im Wasser NEBEN der Rampe, belagerte er
+   schon die Kante. Jetzt zählt auch die Höhe.
+4. **Spinnen eingefroren** (dein Auftrag, temporär): beide stehen regungslos
+   auf ihren Wasserpositionen, bis du sie wieder freigibst. Sag einfach
+   Bescheid, dann löse ich den Freeze wieder heraus.
+
+5. **Nachschlag aus deinen drei Abend-Marken (F424/F552/F940)**: Zwei
+   Rest-Hänger kamen vom KÖRPERRADIUS — der Alligator ist 2200 Einheiten
+   dick, die Wegprüfungen rechneten aber nur mit 1300: „Weg frei“, wo sein
+   Rumpf längst an der Plattformkante schliff (deine Marken 1+2: er klemmte
+   exakt auf Kante-minus-Radius). Und der Kletter-Anlaufpunkt der Rampe lag
+   im Radius-Schatten der Plattform-Südostecke — mit seinem Körper physisch
+   unerreichbar, er stand ewig 1470 vor dem Ziel (Marke 3). Alle Wegprüfungen
+   rechnen jetzt mit Körpermaß, und der Kletteranlauf liegt außerhalb des
+   Schattens. Drei Kontroll-Läufe an deinen Marker-Positionen: null
+   Stillstände, Bissnähe in allen Szenarien.
+
+Telemetrie erweitert: jede TICK-Zeile in gator_boss.log trägt jetzt Route,
+Zweig und Steuerziel — der nächste Marker ist damit noch schneller zuordenbar.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.52 (Early Preview)
 
 **ROOM2090: nur Wände blocken den Alligator — und die Spinnen sind zurück im Wasser.**
