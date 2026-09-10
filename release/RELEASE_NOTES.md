@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.7.36 (Early Preview)
+
+**ROOM2090: der Alligator auf ⅔-Maßstab — er war länger als der Pool.**
+
+---
+
+Dein Befund („ein wenig zu groß für den Raum") nachgemessen: das RE2-Modell ist
+in Bindpose 18,3 m lang und 4 m hoch — länger als die kurze Poolseite (16,1 m).
+Jetzt ⅔-Maßstab über den byte-true Entity-Render-Scale (derselbe Mechanismus,
+mit dem das Original den Gorilla-Boss auf 1,7× zieht): ~12 m lang, ~2,6 m hoch
+(≈ 1,5 Leon-Höhen), passt in die Ring-Rinne um die Plattform. Trefferboxen und
+Reichweiten bleiben die byte-true 0x23-Werte; der Überquerungs-Bogen wurde auf
+die neue Bauchhöhe nachgeeicht (er liegt am Scheitel auf der Plattform auf).
+
+Sichtgeprüft: Lauerstellung an der Leiter und Plattform-Überquerung in
+stimmiger Proportion.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.35 (Early Preview)
 
 **ROOM2090: der Alligator-Bosskampf nach deinem Drehbuch.**
