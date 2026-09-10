@@ -90,6 +90,13 @@ extern re15_actor_t g_actors[];
 #define GB_PLAT_Z0     -20000
 #define GB_PLAT_Z1     -12450
 #define GB_RING_M        1200   /* DESIGN: Wegpunkt-Abstand vom Block */
+#define GB_BAHN_M        2600   /* Bahn-Endpunkte AUSSERHALB des SCA-Clamp-Radius
+                                 * (Hitbox 2200 + Marge): der Anlauf erreicht die
+                                 * Kante MIT aktiver Wand-Klemme - das fruehere
+                                 * skip_clamp im Anlauf liess ihn flach QUER DURCH
+                                 * die Insel gleiten, wenn die Route sie kreuzte
+                                 * (Nutzer 2026-09-10: "klettert drueber, obwohl
+                                 * er sich garnicht dort befindet"). */
 /* Ost-Rampe (SCA [5], u1=0x01): zweite Uebersteig-Barriere (Nutzer-Marker
  * 2026-09-10: Leon (5766,-13028) noerdlich, Gator (4997,-20318) SUEDLICH fest
  * dagegen, spd=0 - "nur HIER sollte er ueber den Bereich druebersteigen"). */
@@ -169,10 +176,10 @@ int re15_gator_boss_skip_clamp(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    /* AUCH im Anlauf: GEMESSEN 2026-09-10 parkte der Gator exakt am Clamp-Radius
-     * (-3918 = Blockkante -1700 - Hitbox 2200) - steer zog zur Kante, der
-     * SCA-Clamp drueckte zurueck, Patt. */
-    return g->phase == GBP_CROSS || g->phase == GBP_CROSS_APPR;
+    /* NUR die Bogen-Phase: der Anlauf laeuft seit GB_BAHN_M (Kante ausserhalb
+     * des Clamp-Radius) wieder MIT Wand-Klemme - das fruehere skip im Anlauf
+     * war der Durch-die-Insel-Tunnel (Nutzer 2026-09-10). */
+    return g->phase == GBP_CROSS;
 }
 
 /* Schneidet die Strecke (x0,z0)->(x1,z1) das um `m` aufgeblasene Plattform-Rechteck?
@@ -292,13 +299,13 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int ueber_rampe)
         if (cx < GB_RAMP_X0 + 1050) cx = GB_RAMP_X0 + 1050;
         if (cx > GB_RAMP_X1 - 1050) cx = GB_RAMP_X1 - 1050;
         g->cx0 = cx; g->cx1 = cx;
-        g->cz0 = from_south ? (GB_RAMP_Z0 - GB_RING_M) : (GB_RAMP_Z1 + GB_RING_M);
-        g->cz1 = from_south ? (GB_RAMP_Z1 + GB_RING_M) : (GB_RAMP_Z0 - GB_RING_M);
+        g->cz0 = from_south ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
+        g->cz1 = from_south ? (GB_RAMP_Z1 + GB_BAHN_M) : (GB_RAMP_Z0 - GB_BAHN_M);
     } else {
         int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
         int from_west = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2);
-        g->cx0 = from_west ? (GB_PLAT_X0 - GB_RING_M) : (GB_PLAT_X1 + GB_RING_M);
-        g->cx1 = from_west ? (GB_PLAT_X1 + GB_RING_M) : (GB_PLAT_X0 - GB_RING_M);
+        g->cx0 = from_west ? (GB_PLAT_X0 - GB_BAHN_M) : (GB_PLAT_X1 + GB_BAHN_M);
+        g->cx1 = from_west ? (GB_PLAT_X1 + GB_BAHN_M) : (GB_PLAT_X0 - GB_BAHN_M);
         g->cz0 = from_west ? ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2) : ((GB_PLAT_Z0 + GB_PLAT_Z1) / 2);
         g->cz1 = g->cz0;
     }
@@ -427,8 +434,26 @@ void re15_gator_boss_tick(int slot)
          * ("nur HIER sollte er ... druebersteigen") - sie triggert OHNE Cooldown;
          * oestlich von ihr steht die Aussenwand, ein Umweg existiert dort nicht. */
         if (rampe && !player_on_platform && e->x > GB_RAMP_X0 - GB_RING_M) {
-            gb_cross_begin(e, g, 1);      /* klettern NUR, wenn Leon nicht oben
-                                           * steht - sonst belagern (GUARD) */
+            /* Kletterstart NUR aus Kanten-Naehe (Nutzer 2026-09-10: der Rampen-
+             * Cross feuerte aus beliebiger Ferne - "obwohl er sich garnicht
+             * dort befindet"); fern erst flach zur Startkante schwimmen. */
+            int from_south = (e->z < (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
+            int32_t rx = e->x, rz;
+            if (rx < GB_RAMP_X0 + 1050) rx = GB_RAMP_X0 + 1050;
+            if (rx > GB_RAMP_X1 - 1050) rx = GB_RAMP_X1 - 1050;
+            rz = from_south ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
+            {
+                int64_t rdx = e->x - rx, rdz = e->z - rz;
+                if (rdx * rdx + rdz * rdz < (int64_t)6000 * 6000) {
+                    gb_cross_begin(e, g, 1);
+                } else {
+                    re15_enemy_steer_point(e, rx, rz, 0x40);
+                    re15_ai_advance(e, GB_SWIM_SPEED);
+                    e->y = GB_WATER_Y;
+                    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+                    e->anim_frame++;
+                }
+            }
             break;
         }
         /* Punkt 7/8 (Nutzer-Wortlaut "wenn der Aligator Richtung Platform kommt"):
@@ -453,7 +478,7 @@ void re15_gator_boss_tick(int slot)
              * quer durchs Becken wirkt "obwohl er nicht da ist") - fern bringt
              * das Wand-Following unten ihn erst heran, blocked bleibt bestehen. */
             int32_t kx = (e->x < (GB_PLAT_X0 + GB_PLAT_X1) / 2)
-                           ? (GB_PLAT_X0 - GB_RING_M) : (GB_PLAT_X1 + GB_RING_M);
+                           ? (GB_PLAT_X0 - GB_BAHN_M) : (GB_PLAT_X1 + GB_BAHN_M);
             int32_t zm = (GB_PLAT_Z0 + GB_PLAT_Z1) / 2;
             int64_t ddx = e->x - kx, ddz = e->z - zm;
             if (ddx * ddx + ddz * ddz < (int64_t)6000 * 6000) {
@@ -593,7 +618,8 @@ void re15_gator_boss_tick(int slot)
         re15_ai_advance(e, GB_SWIM_SPEED);
         e->y = GB_WATER_Y;
         e->anim_frame++;
-        if (d2 < 700 * 700) {                 /* Kante erreicht -> Bogen beginnen */
+        if (d2 < 900 * 900) {                 /* Kante erreicht (Klemme haelt ihn
+                                               * ~400 davor) -> Bogen beginnen */
             g->phase = GBP_CROSS; g->ct = 0;
             re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);  /* Blick ueber den Steg */
         }
