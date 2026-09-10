@@ -56,6 +56,9 @@
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
 extern int     re15_ai_arc(const re15_actor_t *e, const re15_actor_t *t, int32_t r, int arc);
 extern int32_t re15_ai_contact_reach(const re15_actor_t *e);
+extern int     re15_ai_facing_dir(const re15_actor_t *e, const re15_actor_t *pl);
+extern void    re15_player_knockdown_begin(int dir);
+extern int     re15_player_is_grabbed(void);
 extern void    re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 extern re15_actor_t g_actors[];
 
@@ -68,10 +71,12 @@ extern re15_actor_t g_actors[];
 #define GB_SWIM_SPEED      48   /* byte-true B[4]-Advance-Proxy der 0x23-KI */
 #define GB_LUNGE_SPEED     64   /* byte-true B[3]-Advance-Proxy der 0x23-KI */
 /* Start/Blick (Nutzer-Punkt 2): links oben im Wasser, Blick zur Leiter (Westwand). */
-#define GB_START_X      -7000   /* DESIGN: Zone Slot2 West — GEMESSEN 2026-09-10:
-                                 * mind. 2800 vom Tuer-A-Spawn (-8200,-25550), sonst
-                                 * feuert der Nasen-Guard schon in der Tuernische */
-#define GB_START_Z     -22800
+#define GB_START_X      -7200   /* Nutzer 2026-09-10: "ganz hinten" - das dem
+                                 * Einstieg (Tuer A, NW) diagonal ferne Ende des
+                                 * Beckens: Sued-Becken West (Zone Slot3). Blick
+                                 * ueber das Becken zur Leiter (Sichtlinie laeuft
+                                 * WESTLICH am Block vorbei, frei). */
+#define GB_START_Z      -9200
 #define GB_LADDER_X     -8800   /* Leiter = Leons EINSTIEG an der Tuer-A-Nische oben
                                  * links (Tuer-Spawn -8200,-25550). GEMESSEN 2026-09-10:
                                  * der alte Kamera-Cut-0-Anker (-8700,-20500) lag 5300
@@ -376,11 +381,11 @@ void re15_gator_boss_tick(int slot)
                                                * Einstieg in den Pool vor (oder laeuft
                                                * dem Gator direkt vor die Nase, oder
                                                * schiesst — gb_absorb_hit setzt aggro). */
-        if (dist < 2200) g->aggro = 1;                     /* DESIGN: Nasen-Abstand
-                                                            * (< 3000 = Tuer-Spawn-Distanz
-                                                            * zum Lauerplatz, gemessen) */
-        if (pl->z > -24200 || pl->x > -5500) g->aggro = 1; /* DESIGN: Leon verlaesst die
-                                                            * Tuernische in den Pool */
+        if (dist < GB_AGGRO) g->aggro = 1;                 /* DESIGN: mit dem fernen
+                                                            * Lauerplatz ("ganz hinten")
+                                                            * reicht die Distanzregel -
+                                                            * der Tuer-Spawn ist ~16600
+                                                            * entfernt */
         if (g->aggro) { g->phase = GBP_CHASE; e->motion = 0; e->anim_frame = 0; break; }
         e->motion = 0;                        /* still liegen, Blick zur Leiter */
         e->anim_frame++;
@@ -426,7 +431,11 @@ void re15_gator_boss_tick(int slot)
         if (pl->hit_react == 0 && e->hit_stun == 0 &&
             re15_ai_arc(e, pl, 0x1770, 0x180)) {
             g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
-            e->motion = 3; e->anim_frame = 0;             /* Lunge-Biss-Clip */
+            /* Clip 4 = SCHNAPP-Biss - Kieferkurve GEMESSEN (EDD/EMR 2026-09-10):
+             * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
+             * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
+             * zeigte deshalb "keinerlei Beissanimation" (Nutzer-Befund). */
+            e->motion = 4; e->anim_frame = 0;
         }
         break; }
 
@@ -435,7 +444,8 @@ void re15_gator_boss_tick(int slot)
         if (dist > re15_ai_contact_reach(e)) re15_ai_advance(e, GB_LUNGE_SPEED);
         e->y = GB_WATER_Y;
         if (!g->bite_done
-            && (e->anim_frame == 19 || e->anim_frame == 20 || e->anim_frame == 21)
+            && e->anim_frame >= 8 && e->anim_frame <= 20   /* Maul-offen-Fenster der
+                                                            * gemessenen Clip-4-Kurve */
             && pl->hit_react == 0 && dist <= re15_ai_contact_reach(e)
             && re15_ai_arc(e, pl, re15_ai_contact_reach(e), 0x400)) {
             /* Fenster {19,20,21} @0x80118c68 (byte-true Mechanik) — DESIGN-Schaden:
@@ -443,12 +453,16 @@ void re15_gator_boss_tick(int slot)
              * Lunge (bite_done): ohne den Latch traefen alle drei Fensterframes
              * (gemessen 2026-09-10: Leon 100 HP -> Game Over in <2 s). */
             re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+            /* Byte-true KNOCKDOWN (cmd-2-Klasse) - die Reaktion, die der 0x23-Biss
+             * im Original ausloest; die 22-Frame-Hurt-Zuckung allein war "keinerlei
+             * Schadens-Animation" (Nutzer-Befund, POSE_DUMP-gemessen mo=8/22F). */
+            re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
             pl->hit_react |= 1;
             g->bite_done = 1;
             e->hit_stun = 0x64;                            /* byte-true Re-Attack-Sperre */
         }
         e->anim_frame++;
-        if (e->anim_frame > 40) {             /* Clip 3 ausklingen lassen, dann weiter */
+        if (e->anim_frame > 42) {             /* Clip 4 (45 F) ausklingen lassen */
             if (e->hit_stun == 0) e->hit_stun = 0x2d;      /* byte-true Nachlauf-Sperre */
             g->phase = GBP_CHASE;
             e->motion = 0; e->anim_frame = 0;
@@ -511,6 +525,7 @@ void re15_gator_boss_tick(int slot)
             && pl->hit_react == 0 && dist <= re15_ai_contact_reach(e)
             && re15_ai_arc(e, pl, re15_ai_contact_reach(e), 0x400)) {
             re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+            re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
             pl->hit_react |= 1;
             g->bite_done = 1;
             e->hit_stun = 0x64;
@@ -539,6 +554,41 @@ void re15_gator_boss_tick(int slot)
 
     /* byte-true ACTIVE-Tail: Cooldowns jeden Frame herunterzaehlen (@0x8010c9d4-ca40). */
     if (e->hit_stun > 0) e->hit_stun--;
+
+    /* KOERPERLAENGEN-PUSH (Nutzer 2026-09-10 "kann immer noch durchclippen"):
+     * die byte-true Root-Ellipse (2200/800) deckt nur den Rumpf - das gerenderte
+     * Tier ist 2/3 x 18313 = 12200 lang, Kopf und Schweif lagen AUSSERHALB. Vier
+     * Zusatzkreise entlang der Blickachse (Bindpose-Enden: Kopf 2/3x8403=5600,
+     * Schweif 2/3x9910=6600; Radien nach Koerperbreite): Leon prallt auf der
+     * GANZEN Laenge ab. Y-Fenster wie der Body-Push (Zentrum auf Bodenniveau,
+     * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
+    if (g->phase != GBP_DIE && g->phase != GBP_DEAD
+        && pl->hp >= 0 && !re15_player_is_grabbed()) {
+        static const struct { int32_t ofs, r; } SEG[4] = {
+            { 2600, 900 }, { 4600, 700 }, { -2600, 900 }, { -4800, 750 }
+        };
+        int32_t fc = re15_cos_q12((int)e->rot_y);
+        int32_t fs = re15_sin_q12((int)e->rot_y);
+        int32_t dy = pl->y - (e->y - GB_WATER_Y);  /* Push-Zentrum = e->y + 1200 */
+        if (dy > -1500 && dy < 1500) {
+            int si;
+            for (si = 0; si < 4; si++) {
+                int32_t cx = e->x + (int32_t)(((int64_t)fc * SEG[si].ofs) >> 12);
+                int32_t cz = e->z - (int32_t)(((int64_t)fs * SEG[si].ofs) >> 12);
+                int32_t dx = pl->x - cx, dz = pl->z - cz;
+                int32_t R  = SEG[si].r + 450;      /* + Spieler-Radius 0x1c2 */
+                int64_t d2; int32_t dd, pen;
+                if (dx > R || dx < -R || dz > R || dz < -R) continue;
+                d2 = (int64_t)dx * dx + (int64_t)dz * dz;
+                if (d2 >= (int64_t)R * R) continue;
+                dd = 1; while ((int64_t)dd * dd < d2) dd++;
+                pen = R - dd;
+                if (pen < 1) continue;
+                pl->x += dx * pen / (dd + 1);
+                pl->z += dz * pen / (dd + 1);
+            }
+        }
+    }
 }
 
 /* ==== Punkt 8: Wirbelsaeulen-vz fuer den Skelett-Bogen ======================== *

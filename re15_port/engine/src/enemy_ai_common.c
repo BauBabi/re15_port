@@ -13721,3 +13721,5 @@ void re15_ai_advance(re15_actor_t *e, int32_t sp)                  { re15_dog_ad
 int  re15_ai_arc(const re15_actor_t *e, const re15_actor_t *t, int32_t r, int arc)
                                                                    { return re15_dog_arc(e, t, r, arc); }
 int32_t re15_ai_contact_reach(const re15_actor_t *e)               { return re15_body_contact_reach(e); }
+int  re15_ai_facing_dir(const re15_actor_t *e, const re15_actor_t *pl)
+                                                                   { return re15_maggot_a780(e, pl); }
