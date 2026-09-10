@@ -1,3 +1,28 @@
+# RE1.5 Port — v0.7.38 (Early Preview)
+
+**ROOM2090: die Überquerung kommt jetzt im normalen Kampf — und damit auch die Spinnen-Flucht.**
+
+---
+
+Deine Marker („Spinne flieht nicht, Krokodil klettert nicht über die Platform"):
+Die Überquerung feuerte bisher nur, wenn Leon exakt AUF dem Plattform-Block
+stand — beim Umlaufen des Beckens kam sie nie, und die Spinnen-Flucht hängt an
+ihrem Start. Jetzt gilt dein Wortlaut („wenn der Aligator Richtung Platform
+kommt"): Sobald die Plattform in der Verfolgung zwischen ihm und Leon liegt,
+hebt er den Oberkörper und schiebt sich im Bogen darüber — die Spinnen rennen
+in dem Moment zur Wand und klettern hoch. Nach einer Passage umschwimmt er das
+Becken erst wieder ~10 s, damit sich beides abwechselt.
+
+Dein Marker zeigte außerdem GAR KEINEN Alligator mehr in der Gegnerliste —
+das konnte ich in Kampf-, Dauer- und Todes-Proben nicht reproduzieren (auch
+seine Leiche bleibt liegen). Deshalb liegt jetzt ein Watchdog neben der exe:
+`gator_boss.log` protokolliert Spawn und jedes Verschwinden mit Frame. Wenn
+es dir wieder passiert, schick mir bitte diese Datei mit.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.37 (Early Preview)
 
 **ROOM2090: der Alligator schwimmt wieder mit dem Maul voran.**
