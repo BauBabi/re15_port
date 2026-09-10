@@ -25,9 +25,6 @@ int  re15_gator_boss_skip_clamp(const re15_actor_t *e);
  * re15_skel_compute_pose fuer Typ-0x23-Aktoren abgefragt. */
 int  re15_gator_spine_arc_vz(const re15_actor_t *e, int bone);
 
-/* Spinnen-Wandflucht (Nutzer-Punkt 7): uebernimmt die zwei 0x25-Spinnen des Raums,
- * sobald der Gator Richtung Plattform kommt. 1 = Aktor ist gekapert (normale
- * Spinnen-KI fuer diesen Tick uebersprungen). */
-int  re15_gator_boss_spider_override(int slot);
+
 
 #endif /* RE15_BOSS_GATOR_H */

@@ -13536,14 +13536,9 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * @0x801111d0/@0x8011144c (`+0x1dc >= 31 -> +0x5=1, +0x6=0xa`)
                                  * stehen im Port (Zeilen mit `ai_target_x >= 31`). */
             int32_t asp_ox = e->x, asp_oz = e->z;
-            if (re15_gator_boss_spider_override(s)) {
-                /* ROOM2090-Boss (Nutzer-Punkt 7): Wandflucht ersetzt die Spinnen-KI;
-                 * kein SCA-Clamp — die Bahn endet AN der Wand und klettert sie hoch. */
-            } else {
-                re15_adult_spider_ai_tick(s);
-                re15_enemy_body_push_tail(s, e);
-                re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
-            }
+            re15_adult_spider_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
+            re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
         }
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
                                  * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
@@ -13674,7 +13669,12 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t al_ox = e->x, al_oz = e->z;
             if (re15_gator_boss_active(e)) re15_gator_boss_tick(s);
             else                           re15_alligator_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);
+            /* BOSS: Gegner/Requisiten schieben ihn NICHT (Nutzer 2026-09-10:
+             * "Koerper im Wasser, Spinnen usw. sollen fuer den Alligator
+             * durchlaessig sein") - nur Waende (Clamp unten) und Leon
+             * (byte-true push_player-Loop + Koerperlaengen-Push) bleiben. */
+            if (!re15_gator_boss_active(e))
+                re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)
                 && !re15_gator_boss_skip_clamp(e)) {
                 int32_t nx = e->x, nz = e->z;

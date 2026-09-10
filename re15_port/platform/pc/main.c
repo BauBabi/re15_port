@@ -5855,28 +5855,9 @@ re_title:;
                                         "gesetzt, Slot %d (Port-Ergaenzung, Nutzer-Auftrag)\n",
                                 _frei);
                     }
-                    /* BOSSKAMPF-UMBAU (Nutzer-Auftrag 2026-09-10, Punkt 1): die zwei
-                     * RDT-Spinnen (Typ 0x25, Records @0x0AB0/@0x0AC4: (-100,0,-8296) und
-                     * (-2300,0,-23896)) sitzen jetzt AUF der Plattform in der Raummitte
-                     * (SCA-Block x[-1700..1850] z[-20000..-12450]; Oberflaeche -1800 =
-                     * floor-Ebene 1 x byte-true Y=-1800*floor @0x8010c7a4). Position =
-                     * DESIGN-Werte; Start/Blick des Gators setzt dessen Boss-INIT
-                     * (enemy_ai_boss_gator.c). */
-                    {
-                        int _sp = 0;
-                        for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++) {
-                            re15_actor_t *_a2 = &g_actors[_pi];
-                            if (!_a2->active || _a2->type != 0x25u) continue;
-                            if (_sp == 0) { _a2->x =  -700; _a2->z = -17800; }
-                            else          { _a2->x =   800; _a2->z = -14800; }
-                            _a2->y = -1800; _a2->floor = 1;
-                            _sp++;
-                            if (_sp >= 2) break;
-                        }
-                        if (_sp)
-                            fprintf(stderr, "[enemy] ROOM2090: %d Spinnen auf die "
-                                            "Plattform umgesetzt (Boss-Design)\n", _sp);
-                    }
+                    /* Spinnen bleiben auf ihren RDT-Wasserpositionen (Nutzer
+                     * 2026-09-10: da sie den Alligator nicht mehr blocken, entfiel
+                     * der Plattform-Sitz samt Wandflucht wieder). */
                 }
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                     if (g_actors[_pi].active && g_actors[_pi].type)

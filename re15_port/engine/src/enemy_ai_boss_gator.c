@@ -166,8 +166,6 @@ typedef struct {
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
-    /* Spinnen-Flucht */
-    uint8_t  spider_flee;          /* 1 = Flucht ausgeloest (Punkt 7) */
 } gb_state_t;
 
 static gb_state_t s_gb[RE15_ACTOR_MAX];
@@ -414,7 +412,6 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, const re15_actor_t *p
     }
     g->ct = 0; g->bite_done = 0;
     g->phase = GBP_CROSS;
-    g->spider_flee = 1;                  /* Punkt 7: Spinnen fliehen JETZT */
     e->motion = 0; e->anim_frame = 0;
     re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
     {   /* CROSS-Start-Telemetrie (Diagnose) */
@@ -630,9 +627,12 @@ void re15_gator_boss_tick(int slot)
         if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
         e->anim_frame++;
 
-        /* Biss-Commit: byte-true Reichweiten-/Bogen-Test (B[3]-Gate 6000/0x180). */
+        /* Biss-Commit: byte-true Reichweiten-Test, Winkel-Gate auf 0x400
+         * geoeffnet + Nah-Trigger (Session-Telemetrie 2026-09-10: er stand
+         * 3 s reglos bei dist=623 vor Leon - das enge 0x180-Gate liess den
+         * Schnapp nie zu, wenn Leon seitlich in der Nische stand). */
         if (pl->hit_react == 0 && e->hit_stun == 0 &&
-            re15_ai_arc(e, pl, 0x1770, 0x180)) {
+            (dist < 2600 || re15_ai_arc(e, pl, 0x1770, 0x400))) {
             g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
             /* Clip 4 = SCHNAPP-Biss - Kieferkurve GEMESSEN (EDD/EMR 2026-09-10):
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
@@ -709,8 +709,22 @@ void re15_gator_boss_tick(int slot)
              * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
              * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
             if (gb_seg_hits_platform(e->x, e->z, gx, gz, GB_RING_M / 2)
-                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_RING_M / 2))
+                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_RING_M / 2)) {
                 gb_ring_target(e, pl, &gx, &gz);
+                /* SACKGASSEN-PENDEL (Telemetrie: 3-s-Staende an der NO-Ecke -
+                 * die T-Geometrie hat ostseitig keinen Umlauf): ist auch das
+                 * Following-Ziel schon erreicht, patrouilliere sichtbar an
+                 * der Kante (Ziel alle 90 F um +-1500 laengs versetzt). */
+                {
+                    static int s_pt = 0; static int s_pdir = 1;
+                    int64_t rdx = e->x - gx, rdz = e->z - gz;
+                    if (rdx * rdx + rdz * rdz < (int64_t)800 * 800) {
+                        if (++s_pt >= 90) { s_pt = 0; s_pdir = -s_pdir; }
+                        if (gx >= GB_PLAT_X1 || gx <= GB_PLAT_X0) gz += s_pdir * 1500;
+                        else                                      gx += s_pdir * 1500;
+                    }
+                }
+            }
             gdx = e->x - gx; gdz = e->z - gz;
             re15_enemy_steer_point(e, gx, gz, 0x40);
             if (gdx * gdx + gdz * gdz > (int64_t)600 * 600)
@@ -932,49 +946,7 @@ int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
     }
 }
 
-/* ==== Punkt 7: Spinnen-Wandflucht ============================================ *
- * Sobald der Gator Richtung Plattform kommt (CROSS ausgeloest), rennen die zwei
- * 0x25-Spinnen zur Ostwand und klettern sie hoch (Kamera-Cut 9 schaut von
- * Nordwest auf die Plattform — die Ostwand ist "die Wand dahinter"). */
-int re15_gator_boss_spider_override(int slot)
-{
-    re15_actor_t *e = &g_actors[slot];
-    if (e->type != 0x25u || ((g_current_room_id & 0xFFFEu) != 0x2090u)) return 0;
-    /* Nur im BOSSKAMPF kapern: ohne aktiven 0x23er (z.B. RE15_KEIN_GATOR oder die
-     * SCA-Testfixtures, unit_sca_wall_hit laedt 2090-Spinnen) laeuft die normale
-     * Spinnen-KI unveraendert. */
-    int gator = 0, flee = 0;
-    for (int i = 1; i < RE15_ACTOR_MAX; i++)
-        if (g_actors[i].active && g_actors[i].type == 0x23u) {
-            gator = 1;
-            if (s_gb[i].spider_flee) flee = 1;
-        }
-    if (!gator) return 0;
-    if (!flee) {
-        /* Punkt 1: SITZEN, bis der Gator Richtung Plattform kommt — die normale
-         * Spinnen-KI liefe sofort von der Plattform (Sichtlauf 2026-09-10).
-         * Anker: Position/Hoehe halten, ruhiger Idle-Zyklus. */
-        if (e->state != 0 && e->state < 3 && e->hp > 0) {   /* nur LEBENDE ankern -
-                                               * Nutzer-Marker: getoetete Spinne
-                                               * hing mit hp=0 im Sitz-Anker */
-            static const int32_t sitz[2][2] = { { -700, -17800 }, { 800, -14800 } };
-            int which = (e->x > 0);
-            e->x = sitz[which][0]; e->z = sitz[which][1];
-            e->y = -1800; e->motion = 0x10; e->anim_frame++;
-            return 1;
-        }
-        return 0;   /* INIT der Spinnen-KI noch durchlaufen lassen (HP/Clip-Setup) */
-    }
+/* Punkt 7 ENTFERNT (Nutzer 2026-09-10): die Spinnen leben wieder auf ihren
+ * RDT-Wasserpositionen; da der Boss von Gegnern nicht mehr geschoben wird,
+ * brauchte es weder Plattform-Sitz noch Wandflucht. */
 
-    if (e->x < GB_WALL_X - 400) {             /* Phase 1: schnell zur Ostwand */
-        re15_enemy_steer_point(e, GB_WALL_X, e->z, 0x80);
-        re15_ai_advance(e, GB_SPID_RUN);
-        e->motion = 2; e->anim_frame++;       /* Lauf-Zyklus der Spinnen-Bank */
-    } else if (e->y > -5000) {                /* Phase 2: Wand hoch (Y negativ = oben) */
-        e->y -= GB_SPID_CLIMB;
-        e->anim_frame++;
-    } else {
-        e->flags |= 0x40;                     /* oben angekommen: inert parken */
-    }
-    return 1;
-}
