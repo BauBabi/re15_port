@@ -1720,7 +1720,11 @@ void re15_gator_boss_tick(int slot)
                                                * abgehen (Nutzer-Design 09-11) */
         int32_t fc, fs, kx, kz;
         g->timer++;
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
+        if (g->timer < 95)                    /* ab dem Wurf steht er still -
+                                               * der Koerper fliegt ueber dem
+                                               * eigenen Maul (bearing waere
+                                               * degeneriert) */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
         e->y = GB_WATER_Y;
         fc = re15_cos_q12((int)e->rot_y);
         fs = re15_sin_q12((int)e->rot_y);
@@ -1746,15 +1750,27 @@ void re15_gator_boss_tick(int slot)
             /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
              * bleiben sichtbar und wirbeln durch die Luft. */
             pl->fress_skip_mask = 0x7F01; g->gefressen = 1;
-            g->wirbel_x = pl->x; g->wirbel_y = pl->y; g->wirbel_z = pl->z;
+            /* Wurf-Start AM MAUL (Sync-Umbau 2026-09-11): der Koerper kommt
+             * aus dem Maul hoch, nicht vom alten Todesort. -400 = Maulhoehe
+             * beim gesenkten Kopf (nahe Wasseroberflaeche). */
+            g->wirbel_x = kx; g->wirbel_y = -400; g->wirbel_z = kz;
         } else if (g->timer > 95 && g->timer < 175) {
-            /* Wirbelbahn: Lerp Todesort -> Maulpunkt + Parabel-Hub 2200,
-             * Ueberschlag um rot_x, Taumeln um rot_y. */
+            /* Wirbelbahn SYNCHRON ZUM MAUL (Nutzer 2026-09-11): Start und
+             * Ende sind der MAULPUNKT (Ende live nachgefuehrt), dazwischen
+             * Parabel-Hub 2200; der KOPF schnellt beim Wurf hoch (pitch
+             * +350 -> -260 in 15 F) und bleibt oben zum Koerper gerichtet,
+             * bis der Rest im Maul landet. */
             int32_t t = g->timer - 95;
             const int32_t T = 80;
+            if (g->timer <= 110)
+                g->pitch_vz = (int16_t)(350 - (610 * t) / 15);
+            else
+                g->pitch_vz = -260;
             pl->x = g->wirbel_x + (int32_t)((int64_t)(kx - g->wirbel_x) * t / T);
             pl->z = g->wirbel_z + (int32_t)((int64_t)(kz - g->wirbel_z) * t / T);
-            pl->y = g->wirbel_y - (int32_t)((int64_t)g->wirbel_y * t / T)
+            pl->y = g->wirbel_y
+                  - (int32_t)((int64_t)300 * t / T)           /* -400 -> -700:
+                                               * ins gehobene, offene Maul */
                   - (int32_t)((int64_t)4 * 2200 * t * (T - t) / ((int64_t)T * T));
             pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
             pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
@@ -1776,6 +1792,10 @@ void re15_gator_boss_tick(int slot)
         } else if (g->timer > 185 && g->timer < 210) {
             if (g->jaw_vz > 45) g->jaw_vz = (int16_t)(g->jaw_vz - 45);
             else g->jaw_vz = 0;               /* Maul schliesst sich */
+            if (g->pitch_vz < 0) {            /* ... und der Kopf kommt runter */
+                g->pitch_vz = (int16_t)(g->pitch_vz + 12);
+                if (g->pitch_vz > 0) g->pitch_vz = 0;
+            }
         } else if (g->timer >= 240) {
             g->pitch_vz = 0; g->jaw_vz = 0;
             g->phase = GBP_CHASE;             /* der pl->hp<0-Abzug uebernimmt:
