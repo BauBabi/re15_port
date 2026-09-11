@@ -1,3 +1,27 @@
+# RE1.5 Port — v0.7.59 (Early Preview)
+
+**ROOM2090: die Rampe zählt jetzt überall als Hindernis — und ein Wächter heilt jeden Rest-Hänger selbst.**
+
+---
+
+Dein Hänger: Er drückte an der Rampen-NORDKANTE südwärts gegen den Block
+(du standest dahinter), weil zwei Wegprüfungen nur die Plattform als
+Hindernis kannten — die Rampe blockt ihn aber genauso. Beide prüfen jetzt
+beide Blöcke, und die Kletter-Route wird nach ihrer Cooldown-Sperre
+zuverlässig neu bewertet (die alte Wieder-Freigabe konnte verpuffen).
+
+Dazu die Versicherung gegen die ganze Fehlerklasse: Ein
+**Fortschritts-Wächter** erkennt zur Laufzeit, wenn er trotz fernem Ziel
+90 Frames lang kaum Strecke macht, und zwingt ihn dann für zwei Sekunden
+auf die nächste freie Umlauf-Ecke — jeder künftige Geometrie-Sonderfall
+löst sich damit sichtbar von selbst, statt zum Dauerstand zu werden (und
+meldet sich im Log, damit ich die Wurzel trotzdem fixen kann).
+
+Kontroll-Lauf im Marker-Szenario: null Stillstände, Bissnähe 26, der
+Wächter musste nie eingreifen. Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.58 (Early Preview)
 
 **ROOM2090: ein zentraler Kanten-Umweg für alle Wege.**
