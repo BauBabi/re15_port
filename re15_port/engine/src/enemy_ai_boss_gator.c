@@ -194,6 +194,8 @@ typedef struct {
     int16_t  ziel_zt;              /* Restframes der Etappe */
     int8_t   seite_l, seite_init;  /* gelatchte Belagerungsseite (0=Sued,1=Nord) */
     int8_t   umlauf;               /* Seitenwechsel-Umlauf laeuft (bis Ankunft) */
+    int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
+                                    * bricht Leons Absprung die Bahn ab) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
     int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
@@ -661,7 +663,8 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
         int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
         int64_t l2 = ldx * ldx + ldz * ldz;
         int32_t len = 64; while ((int64_t)len * len < l2 && len < 30000) len += 64;
-        g->cframes = (int16_t)(len / 40);
+        g->cframes = (int16_t)(len / 32);   /* DESIGN 2026-09-11: 25% fixer
+                                             * (Kletterphase war 7 s Hilflosigkeit) */
         if (g->cframes < 90)  g->cframes = 90;
         if (g->cframes > 240) g->cframes = 240;
     }
@@ -953,6 +956,7 @@ void re15_gator_boss_tick(int slot)
                     int64_t adx = e->x - rx, adz = e->z - rz_ein;
                     if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
                         gb_cross_begin(e, g, zg == 0, pl->x);
+                        g->cross_oben = 0;    /* Verfolgungs-Querung */
                         break;
                     }
                     tx = rx; tz = rz_ein; g->dbg_zweig = 2;
@@ -1233,6 +1237,7 @@ void re15_gator_boss_tick(int slot)
                             int64_t adx = e->x - rx, adz = e->z - rz_ein;
                             if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
                                 gb_cross_begin(e, g, zg2 == 0, pl->x);
+                                g->cross_oben = 1;   /* Belagerungs-Querung */
                                 break;
                             }
                         }
@@ -1429,9 +1434,27 @@ void re15_gator_boss_tick(int slot)
         e->motion = 0; e->anim_frame = 0;
         break;
 
-    case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Plattform */
+    case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Rampe */
         g->ct++;
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
+        /* ANTI-HILFLOSIGKEIT (Nutzer 2026-09-11: "waehrend seiner Kletter-
+         * phase ist der Aligator absolut hilflos" - Leon sprang die Stufe
+         * hoch/runter um die starre 7-s-Bahn herum): */
+        if (pl->y < -900) {
+            /* (b) Leon OBEN: das Bahn-Ende verfolgt LIVE seine Spur */
+            int32_t zx = pl->x;
+            if (zx < 3350)             zx = 3350;
+            if (zx > GB_RAMP_X1 - 700) zx = GB_RAMP_X1 - 700;
+            g->cx1 = zx;
+        } else if (g->cross_oben && (t < g->t_ein || t > g->t_aus)) {
+            /* (c) Leon UNTEN + Gator noch/wieder ueber Wasser: Bahn sofort
+             * beenden und normal jagen statt die Restbahn abzusitzen */
+            g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
+            g->cross_cd = 90;
+            e->y = GB_WATER_Y;
+            e->motion = 0; e->anim_frame = 0;
+            break;
+        }
         if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
             g->cross_cd = (int16_t)((pl->y < -900) ? 300 : 90);
@@ -1515,7 +1538,9 @@ void re15_gator_boss_tick(int slot)
         e->anim_frame++;
         /* Biss-Fenster auch auf der Plattform (Leon vertreiben): Reichweiten-Test,
          * EIN Biss pro Passage + byte-true Cooldown-Feld als Zweitsperre. */
-        if (!g->bite_done && e->hit_stun == 0
+        if (e->hit_stun == 0                  /* Mehrfach-Schnapp: hit_stun
+                                               * 0x64 taktet die Rate (Anti-
+                                               * Hilflosigkeit 2026-09-11) */
             && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500) {
             re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
             re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
