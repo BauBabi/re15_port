@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.7.74 (Early Preview)
+
+**ROOM2090: würdevoller Sieger — und spürbare Treffer.**
+
+---
+
+Deine zwei Punkte:
+
+1. **Nach deinem Tod** kreiselt er nicht mehr über der Leiche: Er lässt ab
+   und gleitet ruhig zu seinem Lauerplatz zurück, während die Todes-Kamera
+   läuft.
+2. **Schadens-Animation**: Bisher zuckte er nur an 10-%-Schwellen — mit der
+   Handfeuerwaffe hieß das rund zwanzig Treffer pro Reaktion. Jetzt flincht
+   er zusätzlich nach jeweils sechs Treffern — dein Beschuss ist sichtbar
+   wirksam, ohne ihn zum Dauerzucken zu bringen (große Schadenssprünge
+   reagieren weiterhin sofort).
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.73 (Early Preview)
 
 **ROOM2090: kompromisslose Jagd — und der Kletter-Treffer wirft dich sauber runter.**
