@@ -253,6 +253,35 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
                             GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1, m);
 }
 
+/* Distanz Leon <-> MAUL (Kopfpunkt = Zentrum + 2600 voraus, die Kopf-Segment-
+ * Lage des Koerperlaengen-Push). GEMESSEN 2026-09-11 (BISS-Telemetrie): der
+ * Push haelt Leon am Kopf-Segment - das alte Zentrum-Gate (contact_reach
+ * 1917) war dadurch fast nie erfuellbar (Messung: Leon bei maul=864-1264
+ * DIREKT vorm Maul, Zentrum-dist 2187-3574 > 1917, hr blieb 0;
+ * Nutzer: "trifft mich quasi so gut wie nie"). */
+static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    int32_t fc = re15_cos_q12((int)e->rot_y);
+    int32_t fs = re15_sin_q12((int)e->rot_y);
+    int32_t kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);
+    int32_t kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);
+    int64_t dx = pl->x - kx, dz = pl->z - kz;
+    int64_t d2 = dx * dx + dz * dz;
+    int32_t d = 0;
+    while ((int64_t)d * d < d2 && d < 30000) d += 16;
+    return d;
+}
+
+/* Insel-Wand zwischen Gator und Leon? (Marge 0 = die reine Wand) - ein Biss
+ * DURCH die Plattform ist unmoeglich (Nutzer 2026-09-11: "direkt an der
+ * Platform auf der anderen Seite ... probiert staendig die Angriffs-
+ * animation aber trifft mich nicht"). */
+static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    return gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, 0)
+        || gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, 0);
+}
+
 /* Ring-Wegpunkt: die vier Block-Ecken (+Marge); waehle die Ecke, die vom Gator aus
  * sichtbar ist (Strecke frei) und den Winkelumweg zu Leon minimiert. */
 static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
@@ -709,8 +738,13 @@ void re15_gator_boss_tick(int slot)
          * geoeffnet + Nah-Trigger (Session-Telemetrie 2026-09-10: er stand
          * 3 s reglos bei dist=623 vor Leon - das enge 0x180-Gate liess den
          * Schnapp nie zu, wenn Leon seitlich in der Nische stand). */
-        if (pl->hit_react == 0 && e->hit_stun == 0 &&
-            (dist < 2600 || re15_ai_arc(e, pl, 0x1770, 0x400))) {
+        if (pl->hit_react == 0 && e->hit_stun == 0
+            && !gb_wand_dazwischen(e, pl)
+            && (dist < 2600 || gb_maul_dist(e, pl) < 2400)) {
+            /* Commit-Gate GEMESSEN 2026-09-11: der alte 0x1770er-Sichtkegel
+             * (6000) startete Leer-Schnapps, deren Maul Leon im 45-F-Clip
+             * nie erreichte (Messung: maul 3088->2624, kein Treffer);
+             * maul<2400 = Fenster-Ankunft bei ~40/F Lunge-Vortrieb. */
             g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
             /* Clip 4 = SCHNAPP-Biss - Kieferkurve GEMESSEN (EDD/EMR 2026-09-10):
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
@@ -722,13 +756,26 @@ void re15_gator_boss_tick(int slot)
 
     case GBP_LUNGE: {                         /* Punkt 3: Biss mit Schaden */
         re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* byte-true B[3]-Slew */
-        if (dist > re15_ai_contact_reach(e)) re15_ai_advance(e, GB_LUNGE_SPEED);
+        if (gb_maul_dist(e, pl) > 1400) re15_ai_advance(e, GB_LUNGE_SPEED);
         e->y = GB_WATER_Y;
+        {   /* Mess-Telemetrie Biss-Fenster (Nutzer 2026-09-11: "trifft mich
+             * quasi so gut wie nie") */
+            static FILE *s_bl = NULL;
+            if (!s_bl) s_bl = fopen("gator_boss.log", "a");
+            if (s_bl && e->anim_frame >= 8 && e->anim_frame <= 20) {
+                fprintf(s_bl, "BISS af=%d dist=%d maul=%d wand=%d hr=%d\n",
+                        (int)e->anim_frame, (int)dist, gb_maul_dist(e, pl),
+                        gb_wand_dazwischen(e, pl), (int)pl->hit_react);
+                fflush(s_bl);
+            }
+        }
         if (!g->bite_done
             && e->anim_frame >= 8 && e->anim_frame <= 20   /* Maul-offen-Fenster der
                                                             * gemessenen Clip-4-Kurve */
-            && pl->hit_react == 0 && dist <= re15_ai_contact_reach(e)
-            && re15_ai_arc(e, pl, re15_ai_contact_reach(e), 0x400)) {
+            && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500
+            && !gb_wand_dazwischen(e, pl)) {
+            /* Treffer = MAUL-Kontakt (Kopf-Segment 900 + Spieler 450 + 150
+             * Puffer); das alte Zentrum-Gate s. gb_maul_dist-Messnotiz. */
             /* Fenster {19,20,21} @0x80118c68 (byte-true Mechanik) — DESIGN-Schaden:
              * attack_type 5 -> dmg_table[5] = 50 + Knockdown-Latch. EIN Biss pro
              * Lunge (bite_done): ohne den Latch traefen alle drei Fensterframes
@@ -977,8 +1024,7 @@ void re15_gator_boss_tick(int slot)
         /* Biss-Fenster auch auf der Plattform (Leon vertreiben): Reichweiten-Test,
          * EIN Biss pro Passage + byte-true Cooldown-Feld als Zweitsperre. */
         if (!g->bite_done && e->hit_stun == 0
-            && pl->hit_react == 0 && dist <= re15_ai_contact_reach(e)
-            && re15_ai_arc(e, pl, re15_ai_contact_reach(e), 0x400)) {
+            && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500) {
             re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
             re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
             pl->hit_react |= 1;
