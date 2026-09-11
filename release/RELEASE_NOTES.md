@@ -1,3 +1,25 @@
+# RE1.5 Port — v0.7.58 (Early Preview)
+
+**ROOM2090: ein zentraler Kanten-Umweg für alle Wege.**
+
+---
+
+Dein Hänger (Marke F2063): Der Kletter-Anlauf zur Rampe steuerte sein Ziel
+blind an, während der Alligator westlich der Plattform im Körper-Schatten
+der Kante stand — die Wandklemme fraß die Bewegung und er kroch auf der
+Klemmlinie. Das war der dritte Auftritt derselben Fehlerklasse in
+verschiedenen Zweigen der Wegwahl. Statt eines weiteren Einzel-Flicks
+prüft jetzt EIN zentraler Schritt jedes Steuerziel, egal aus welchem
+Zweig es kommt: Schert die Luftlinie im Kanten-Schatten, läuft er erst
+über die günstigste freie Umlauf-Ecke. Die Marker-Situation ist
+handgerechnet abgedeckt (SW-Ecke → SO-Ecke → Anlauf → Klettern), der
+Kontroll-Lauf an deiner Marker-Position lief ohne einen einzigen
+Stillstand durch, und die Telemetrie zeigt künftig jede Umweg-Nutzung.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.57 (Early Preview)
 
 **ROOM2090: wen die Schnauze schiebt, den beißt sie auch.**
