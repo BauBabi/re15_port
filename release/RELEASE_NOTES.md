@@ -1,3 +1,23 @@
+# RE1.5 Port — v0.7.64 (Early Preview)
+
+**ROOM2090: eine einzige Wegfindung — das Schwanken ist an der Wurzel raus.**
+
+---
+
+Dein Marker („schwankt hin und her“): Er schwamm exakt auf einer internen
+Zonengrenze, und zwei konkurrierende Wegfindungs-Systeme der Belagerung
+zogen ihn im 30-Frame-Takt in entgegengesetzte Richtungen. Das war der
+vierte Widerspruch dieser Art — deshalb jetzt der strukturelle Schnitt
+statt eines fünften Flickens: Verfolgung UND Belagerung benutzen ab
+sofort dieselbe einzige Weg-Maschine (Ziel → Kanten-Umweg über die freien
+Ecken), die konkurrierenden Alt-Systeme sind ersatzlos entfernt, und die
+Zonengrenzen haben eine Hysterese, damit ein Schwimmen AUF der Linie
+nichts mehr umwirft.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.63 (Early Preview)
 
 **ROOM2090: der Seitenwechsel-Wegpunkt bleibt jetzt unverbogen.**
