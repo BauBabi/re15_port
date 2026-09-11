@@ -1148,6 +1148,7 @@ void re15_gator_boss_tick(int slot)
     case GBP_GUARD: {                         /* Plattform-Belagerung (Nutzer-Design):
                                                * an die Kante unter Leon, aufrichten,
                                                * nach OBEN schnappen inkl. Schaden. */
+        if (g->cross_cd > 0) g->cross_cd--;   /* auch im Dauer-GUARD abbauen */
         int oben = (pl->y < -900) &&          /* y-Check wie im CHASE: watender
                                                * Leon (y=0) ist NICHT oben */
                    ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 &&
@@ -1200,17 +1201,37 @@ void re15_gator_boss_tick(int slot)
                                                * (kein Ostumlauf, und KLETTERN bei
                                                * Leon-oben bleibt per Nutzer-Design
                                                * verboten). */
-                    /* v0.7.64: IMMER das Kanten-Ziel nach LEONS Seite -
-                     * den WEG dorthin (inkl. Seitenwechsel um West) findet
-                     * der zentrale Kanten-Umweg unten; der fruehere eigene
-                     * Westumlauf-Zweig widersprach Pendel und Following
-                     * (Marken F1095 + "schwankt hin und her"). */
                     int zielzone = gb_seite_latch(g, pl->z, (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
-                    gx = pl->x;
-                    if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
-                    if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
-                    gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
-                                         : (GB_RAMP_Z1 + GB_GPAT_M);
+                    if (zg2 != 2 && zg2 != zielzone && g->cross_cd == 0) {
+                        /* QUER-CROSS unter dem oben stehenden Leon hindurch
+                         * (NUTZER-FREIGABE 2026-09-11 "kannst du schon
+                         * machen"): statt des Riesen-Westumlaufs klettert er
+                         * ueber die Rampe zur Leon-Seite - der Schnapp im
+                         * Vorbeigehen ist der CROSS-Biss (maul<=1500, ohne
+                         * Wand-Check, v0.7.55); Leon schiebt der SEG-Push
+                         * NUR mit Spieler-Wand-Klemme (v0.7.56), er kann
+                         * schlimmstenfalls die offene Stufe hinab. */
+                        int32_t rx = pl->x, rz_ein;
+                        if (rx < GB_RAMP_X0 + GB_RING_M) rx = GB_RAMP_X0 + GB_RING_M;
+                        if (rx > GB_RAMP_X1 - 700)       rx = GB_RAMP_X1 - 700;
+                        rz_ein = (zg2 == 0) ? (GB_RAMP_Z0 - GB_BAHN_M)
+                                            : (GB_RAMP_Z1 + GB_BAHN_M);
+                        {
+                            int64_t adx = e->x - rx, adz = e->z - rz_ein;
+                            if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
+                                gb_cross_begin(e, g, zg2 == 0);
+                                break;
+                            }
+                        }
+                        gx = rx; gz = rz_ein;   /* Anlauf; Weg via Umweg unten */
+                        g->umlauf = 0;          /* kein West-Commit noetig */
+                    } else {
+                        gx = pl->x;
+                        if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
+                        if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
+                        gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
+                                             : (GB_RAMP_Z1 + GB_GPAT_M);
+                    }
                 } else if (zg2 == 2) {        /* Westkanal: Plattform-Westkante */
                     pend_z = 1;                   /* laengs der Kante = z-Achse */
                     gx = GB_PLAT_X0 - GB_GPAT_M;
