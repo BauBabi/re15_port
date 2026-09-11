@@ -1,3 +1,18 @@
+# v0.7.80 — 2026-09-12
+
+## Karte: der rote Bereich passt wieder zum Raum
+
+- Der aktuelle Raum wurde bisher rot gefuellt, indem ein Schleier ueber das
+  GANZE Rechteck des Kartenzeichners gelegt wurde — auch ueber dessen
+  unbemalte Ecken. Dadurch wirkte z. B. das Treppenhaus auf allen Etagen viel
+  breiter als seine Zeichnung, und grosse Flaechen erschienen rot.
+  Gemessen am 3F-Abzug: rot lag auf 40x40 Pixeln, die gemalte L-Form des
+  Raums nur auf 32x38.
+- Jetzt folgt der Schleier der gemalten Kachel: wo der Zeichner nichts malt,
+  bleibt auch kein Rot.
+- Die Kartendaten selbst waren nie das Problem — 2F und 3F sind bei
+  aufgedeckter Karte pixelgleich zum Stand vor den Kartenarbeiten vom 9.9.
+
 # v0.7.79 — 2026-09-11
 
 ## Vier tote Treppen erwachen + Spinnen wieder aktiv
