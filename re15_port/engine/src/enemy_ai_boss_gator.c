@@ -189,6 +189,18 @@ typedef struct {
      * einmal gewaehlt und nur bei Zonenwechsel/Cooldown-Ablauf neu bewertet. */
     int8_t   route;                /* 0=keine, 1=WEST (um die Plattform), 2=RAMPE (queren) */
     int8_t   gzone_h;              /* Hysterese-Zone der GUARD-Zielwahl */
+    int8_t   befrei;               /* Selbst-Befreiungs-Fenster (Klemm-Slab) */
+    int32_t  ziel_lx, ziel_lz;     /* GUARD-Etappen-Latch: gehaltenes Steuer-Ziel */
+    int16_t  ziel_zt;              /* Restframes der Etappe */
+    int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
+    int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
+    /* v0.7.65: Steuer-Zustaende AUS den file-statics hierher - die lebten
+     * ueber Neuspawns/Raum-Re-Entries (und Sweep-Testpaare) hinweg weiter
+     * und verschleppten Pendel-/Waechterziele (Sweep-Beleg: Einzelfall
+     * konvergent, Sequenz-Lauf rot). memset beim Neuspawn nullt sie. */
+    int16_t  pend_t;  int8_t pend_dir;      /* Kanten-Pendel */
+    int32_t  fw_x, fw_z; int16_t fw_t, fw_not;               /* CHASE-Waechter */
+    int32_t  gw_x, gw_z, gw_notx, gw_notz; int16_t gw_t, gw_not; /* GUARD-Waechter */
     int8_t   route_zwang;          /* 1 = Route wurde unter cross_cd>0 gewaehlt
                                     * (RAMPE gesperrt) -> bei cd-Ablauf neu bewerten
                                     * (die alte cd==1-Flanke verpuffte, wenn der
@@ -203,6 +215,8 @@ typedef struct {
     int32_t  dbg_tx, dbg_tz;       /* Telemetrie: aktuelles Steuer-Ziel */
 } gb_state_t;
 
+/* RE15_GB_STUMM=1: gesamte gator_boss.log-Telemetrie aus (Sweep-Test). */
+static int s_gb_stumm = -1;
 static gb_state_t s_gb[RE15_ACTOR_MAX];
 static unsigned   s_gb_room;       /* Raum, fuer den s_gb gilt (Reset bei Wechsel) */
 
@@ -218,7 +232,7 @@ int re15_gator_boss_skip_clamp(const re15_actor_t *e)
     /* NUR die Bogen-Phase: der Anlauf laeuft seit GB_BAHN_M (Kante ausserhalb
      * des Clamp-Radius) wieder MIT Wand-Klemme - das fruehere skip im Anlauf
      * war der Durch-die-Insel-Tunnel (Nutzer 2026-09-10). */
-    return g->phase == GBP_CROSS;
+    return g->phase == GBP_CROSS || g->befrei > 0;
 }
 
 /* Schneidet die Strecke (x0,z0)->(x1,z1) das um `m` aufgeblasene Plattform-Rechteck?
@@ -333,24 +347,68 @@ static int32_t gb_iabs(int32_t v);       /* fwd */
  * ring_target-Wegwahl widersprach ihr dreimal (Marken 2026-09-11). */
 static int gb_kanten_umweg(const re15_actor_t *e, int32_t *tx, int32_t *tz)
 {
-    int ci, bi = -1; int64_t best = 0;
+    /* v0.7.65: KUERZESTER PFAD im 6-Knoten-Sichtgraph (Start, 4 Ecken, Ziel)
+     * statt 1-Hop-Greedy. SWEEP-BELEG (probe_gator_sweep, 530/3286 Paare):
+     * ein Sued-Ost-Kantenziel ist von Norden NUR ueber die 2-Hop-Kette
+     * Nordecke->Westecke erreichbar - der Ecken-Graph ist wegen der Rampe
+     * (Ost-Schiene blockiert) eine KETTE C1-C0-C3-C2, und die greedy
+     * zielnaechste Ecke (C2) war eine Sackgasse mit stabilem Attraktor
+     * (Endpunkt (3903,-9628) aus 28+ Starts). */
+    enum { NK = 5 };                       /* 0..3 = Ecken, 4 = Ziel */
+    int32_t kx[NK], kz[NK];
+    int64_t dist[NK]; int prev[NK], fest[NK];
+    int i, j;
     if (gb_seg_frei(e->x, e->z, *tx, *tz, GB_KOERPER_M)) return -1;
-    for (ci = 0; ci < 4; ci++) {
-        int64_t k;
-        if (!gb_seg_frei(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
-                         GB_KOERPER_M)) continue;
-        k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0]) + gb_iabs(e->z - gb_ecke[ci][1])
-          + gb_iabs(*tx - gb_ecke[ci][0]) + gb_iabs(*tz - gb_ecke[ci][1]);
-        if (bi < 0 || k < best) { best = k; bi = ci; }
+    for (i = 0; i < 4; i++) { kx[i] = gb_ecke[i][0]; kz[i] = gb_ecke[i][1]; }
+    kx[4] = *tx; kz[4] = *tz;
+    for (i = 0; i < NK; i++) {
+        fest[i] = 0; prev[i] = -2;
+        if (gb_seg_frei(e->x, e->z, kx[i], kz[i], GB_KOERPER_M)) {
+            dist[i] = (int64_t)gb_iabs(e->x - kx[i]) + gb_iabs(e->z - kz[i]);
+            prev[i] = -1;                  /* direkt vom Start */
+        } else dist[i] = (int64_t)1 << 60;
     }
-    if (bi < 0)
-        for (ci = 0; ci < 4; ci++) {
-            int64_t k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0])
-                      + gb_iabs(e->z - gb_ecke[ci][1]);
-            if (bi < 0 || k < best) { best = k; bi = ci; }
+    for (;;) {                             /* naive Dijkstra-Relaxation */
+        int u = -1;
+        for (i = 0; i < NK; i++)
+            if (!fest[i] && dist[i] < ((int64_t)1 << 60) && (u < 0 || dist[i] < dist[u]))
+                u = i;
+        if (u < 0 || u == 4) break;
+        fest[u] = 1;
+        for (j = 0; j < NK; j++) {
+            int64_t w;
+            if (fest[j] || !gb_seg_frei(kx[u], kz[u], kx[j], kz[j], GB_KOERPER_M))
+                continue;
+            w = dist[u] + gb_iabs(kx[u] - kx[j]) + gb_iabs(kz[u] - kz[j]);
+            if (w < dist[j]) { dist[j] = w; prev[j] = u; }
         }
-    *tx = gb_ecke[bi][0]; *tz = gb_ecke[bi][1];
-    return bi;
+    }
+    if (prev[4] != -2) {                   /* Ziel erreichbar: ersten Hop nehmen */
+        int hop = 4;
+        while (prev[hop] >= 0) hop = prev[hop];
+        if (hop == 4) return -1;           /* (kann nicht: Ziel nicht seg-frei) */
+        /* Stand-Ecke als erster Hop bringt nichts - dann den NAECHSTEN
+         * Pfadknoten nehmen (Marke F721: er stand AUF C0). */
+        if (gb_iabs(e->x - kx[hop]) + gb_iabs(e->z - kz[hop]) < 700) {
+            int nxt = 4;
+            while (prev[nxt] >= 0 && prev[nxt] != hop) nxt = prev[nxt];
+            hop = nxt;
+        }
+        *tx = kx[hop]; *tz = kz[hop];
+        return (hop < 4) ? hop : -1;
+    }
+    {   /* Ziel unerreichbar (Schattenlage): naechstgelegene freie Ecke,
+         * sonst naechstgelegene ueberhaupt - raus aus dem Schatten. */
+        int bi = -1; int64_t best = 0;
+        for (i = 0; i < 4; i++) {
+            int64_t k = (int64_t)gb_iabs(e->x - kx[i]) + gb_iabs(e->z - kz[i]);
+            if (k < 700) k += 200000;
+            if (!gb_seg_frei(e->x, e->z, kx[i], kz[i], GB_KOERPER_M)) k += 400000;
+            if (bi < 0 || k < best) { best = k; bi = i; }
+        }
+        *tx = kx[bi]; *tz = kz[bi];
+        return bi;
+    }
 }
 
 /* Becken-Zone mit 300er-HYSTERESE (Nutzer-Marke 2026-09-11 "schwankt hin
@@ -585,7 +643,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued)
     re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);   /* Blick ueber die Insel */
     {   /* CROSS-Start-Telemetrie (Diagnose) */
         static FILE *s_cl = NULL;
-        if (!s_cl) s_cl = fopen("gator_boss.log", "a");
+        if (!s_cl) s_cl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
         if (s_cl) {
             fprintf(s_cl, "CROSS start=(%d,%d) ende=(%d,%d) frames=%d fenster=%d..%d\n",
                     g->cx0, g->cz0, g->cx1, g->cz1,
@@ -597,6 +655,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued)
 
 void re15_gator_boss_tick(int slot)
 {
+    if (s_gb_stumm < 0) s_gb_stumm = (getenv("RE15_GB_STUMM") != NULL);
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     gb_state_t   *g  = &s_gb[slot];
@@ -680,6 +739,81 @@ void re15_gator_boss_tick(int slot)
         g->prev_hp = e->hp;
     }
 
+    /* SELBST-BEFREIUNG (Sweep-Klasse "end==start", probe_gator_sweep
+     * 2026-09-11): steckt das ZENTRUM im Klemm-Slab (Blockkante +
+     * Koerperradius), verwirft die Box-Klemme von innen JEDE Bewegung -
+     * Totalstand trotz korrektem Ziel/advance. Real erreichbar ueber
+     * CROSS-Landungen (Klemme ausgesetzt). Raus zum naechsten Slab-Rand,
+     * Klemme fuer das Fenster ausgesetzt (skip_clamp liest g->befrei). */
+    if (g->befrei > 0) g->befrei--;
+    if (g->phase == GBP_LURK || g->phase == GBP_CHASE || g->phase == GBP_GUARD) {
+        /* Gefangen = im Slab (Kante+radius+60) UND Totalstand (<8 Bewegung
+         * seit dem Vortick): echte Gefangene bewegen sich EXAKT null (die
+         * Box-Klemme verwirft von innen alles), legitime Kanten-Staende
+         * wackeln oder lauern ausserhalb des Slabs (Ziele >= Kante+1600).
+         * Ein reiner Tiefen-Test war nicht trennscharf (Klemmlinie ~radius-30
+         * vs. Gefangenen-Tiefen bis radius-50, Sweep 365->476-Rueckschlag). */
+        int32_t r = (int32_t)e->hit_radius_min + 60;
+        /* Aussenwand-Slabs (Sweep-Rest: Starts (-3200,-26200)/(6400,-21400)
+         * sassen im Sued-/Ostwand-Schatten mit Totalstand): */
+        {
+            int32_t bx = e->x, bz = e->z, war = 0;
+            if (bx < -8900 + r) { bx = -8900 + r + 120; war = 1; }
+            if (bx >  7200 - r) { bx =  7200 - r - 120; war = 1; }
+            if (bz < -27000 + r) { bz = -27000 + r + 120; war = 1; }
+            if (bz >  -5400 - r) { bz =  -5400 - r - 120; war = 1; }
+            if (war && gb_iabs(e->x - g->frei_lx) + gb_iabs(e->z - g->frei_lz) < 8
+                && g->frei_seen) {
+                re15_enemy_steer_point(e, bx, bz, 0x800);
+                re15_ai_advance(e, GB_SWIM_SPEED);
+                e->y = GB_WATER_Y;
+                g->befrei = 2;
+                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+                e->anim_frame++;
+                return;
+            }
+        }
+        int in_p = (e->x >= GB_PLAT_X0 - r && e->x <= GB_PLAT_X1 + r &&
+                    e->z >= GB_PLAT_Z0 - r && e->z <= GB_PLAT_Z1 + r);
+        int in_r = (e->x >= GB_RAMP_X0 - r && e->x <= GB_RAMP_X1 + r &&
+                    e->z >= GB_RAMP_Z0 - r && e->z <= GB_RAMP_Z1 + r);
+        if ((in_p || in_r)
+            && gb_iabs(e->x - g->frei_lx) + gb_iabs(e->z - g->frei_lz) < 8
+            && g->frei_seen) {
+            int32_t bx = e->x, bz = e->z;
+            if (in_p) {
+                int32_t dw = bx - (GB_PLAT_X0 - r), de2 = (GB_PLAT_X1 + r) - bx;
+                int32_t dn = bz - (GB_PLAT_Z0 - r), ds = (GB_PLAT_Z1 + r) - bz;
+                int32_t m2 = dw; int s2 = 0;
+                if (de2 < m2) { m2 = de2; s2 = 1; }
+                if (dn  < m2) { m2 = dn;  s2 = 2; }
+                if (ds  < m2) { m2 = ds;  s2 = 3; }
+                if      (s2 == 0) bx = GB_PLAT_X0 - r - 120;
+                else if (s2 == 1) bx = GB_PLAT_X1 + r + 120;
+                else if (s2 == 2) bz = GB_PLAT_Z0 - r - 120;
+                else              bz = GB_PLAT_Z1 + r + 120;
+            } else {
+                int32_t dw = bx - (GB_RAMP_X0 - r), de2 = (GB_RAMP_X1 + r) - bx;
+                int32_t dn = bz - (GB_RAMP_Z0 - r), ds = (GB_RAMP_Z1 + r) - bz;
+                int32_t m2 = dw; int s2 = 0;
+                if (de2 < m2) { m2 = de2; s2 = 1; }
+                if (dn  < m2) { m2 = dn;  s2 = 2; }
+                if (ds  < m2) { m2 = ds;  s2 = 3; }
+                if      (s2 == 0) bx = GB_RAMP_X0 - r - 120;
+                else if (s2 == 1) bx = GB_RAMP_X1 + r + 120;
+                else if (s2 == 2) bz = GB_RAMP_Z0 - r - 120;
+                else              bz = GB_RAMP_Z1 + r + 120;
+            }
+            re15_enemy_steer_point(e, bx, bz, 0x800);
+            re15_ai_advance(e, GB_SWIM_SPEED);
+            e->y = GB_WATER_Y;
+            g->befrei = 2;
+            if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+            e->anim_frame++;
+            return;
+        }
+    }
+    g->frei_lx = e->x; g->frei_lz = e->z; g->frei_seen = 1;
     int32_t dist = re15_enemy_player_dist(e, pl);
 
     switch (g->phase) {
@@ -815,14 +949,12 @@ void re15_gator_boss_tick(int slot)
              * FREIE Umlauf-Ecke und setzt das Routen-Latch zurueck - JEDER
              * kuenftige Geometrie-Sonderfall heilt sich damit sichtbar
              * selbst, statt zum Dauerstand zu werden. */
-            static int32_t s_fw_x = 0, s_fw_z = 0;
-            static int s_fw_t = 0, s_fw_not = 0;
             int64_t zdx = (int64_t)tx - e->x, zdz = (int64_t)tz - e->z;
-            if (s_fw_not > 0) {
-                s_fw_not--;
+            if (g->fw_not > 0) {
+                g->fw_not--;
                 tx = g->dbg_tx; tz = g->dbg_tz;   /* Not-Ecke halten */
-            } else if (++s_fw_t >= 90) {
-                int64_t mdx = (int64_t)e->x - s_fw_x, mdz = (int64_t)e->z - s_fw_z;
+            } else if (++g->fw_t >= 90) {
+                int64_t mdx = (int64_t)e->x - g->fw_x, mdz = (int64_t)e->z - g->fw_z;
                 if (mdx * mdx + mdz * mdz < (int64_t)300 * 300
                     && zdx * zdx + zdz * zdz > (int64_t)1500 * 1500) {
                     int ci, bi = -1; int64_t best = 0;
@@ -834,14 +966,14 @@ void re15_gator_boss_tick(int slot)
                         if (bi < 0 || k < best) { best = k; bi = ci; }
                     }
                     tx = gb_ecke[bi][0]; tz = gb_ecke[bi][1];
-                    s_fw_not = 60; g->route = 0;
+                    g->fw_not = 60; g->route = 0;
                     {   static FILE *s_fl = NULL;
-                        if (!s_fl) s_fl = fopen("gator_boss.log", "a");
+                        if (!s_fl) s_fl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
                         if (s_fl) { fprintf(s_fl, "NOTFREI pos=(%d,%d) ecke=%d\n",
                                             e->x, e->z, bi); fflush(s_fl); }
                     }
                 }
-                s_fw_t = 0; s_fw_x = e->x; s_fw_z = e->z;
+                g->fw_t = 0; g->fw_x = e->x; g->fw_z = e->z;
             }
         }
         /* ZENTRALER KANTEN-UMWEG (Nutzer-Marke 2026-09-11, dritter Fall
@@ -873,7 +1005,7 @@ void re15_gator_boss_tick(int slot)
             static FILE *s_dl = NULL;
             static int8_t s_zw_alt = -99, s_rt_alt = -99;
             static int s_dreh_n = 0;
-            if (!s_dl) s_dl = fopen("gator_boss.log", "a");
+            if (!s_dl) s_dl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
             if (g->dbg_zweig != s_zw_alt || g->route != s_rt_alt) {
                 s_zw_alt = g->dbg_zweig; s_rt_alt = g->route; s_dreh_n = 48;
                 if (s_dl) { fprintf(s_dl, "WECHSEL zw=%d rt=%d\n",
@@ -939,7 +1071,7 @@ void re15_gator_boss_tick(int slot)
         {   /* Mess-Telemetrie Biss-Fenster (Nutzer 2026-09-11: "trifft mich
              * quasi so gut wie nie") */
             static FILE *s_bl = NULL;
-            if (!s_bl) s_bl = fopen("gator_boss.log", "a");
+            if (!s_bl) s_bl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
             if (s_bl && e->anim_frame >= 8 && e->anim_frame <= 20) {
                 fprintf(s_bl, "BISS af=%d dist=%d maul=%d wand=%d hr=%d\n",
                         (int)e->anim_frame, (int)dist, gb_maul_dist(e, pl),
@@ -1024,6 +1156,11 @@ void re15_gator_boss_tick(int slot)
             {
                 int zg2 = gb_zone_hyst(e->z, &g->gzone_h);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
+                int pend_z = 0;   /* Pendel-Achse folgt der ZIELART (Sweep-Beleg
+                                   * 2026-09-11: die zg2-Achsenwahl verschob das
+                                   * SUED-Kantenziel bei Hysterese-Kipp auf
+                                   * gz-18500 = Rampen-Band = unerreichbar ->
+                                   * Dijkstra-Fallback C3 = der C0<->C3-Flip). */
                 if (auf_rampe) {              /* Nutzer-Marken F755-F936 2026-09-11
                                                * ("er findet den Weg wieder nicht"):
                                                * Leon stand an der NORDkante der
@@ -1048,15 +1185,33 @@ void re15_gator_boss_tick(int slot)
                     gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
                                          : (GB_RAMP_Z1 + GB_GPAT_M);
                 } else if (zg2 == 2) {        /* Westkanal: Plattform-Westkante */
+                    pend_z = 1;                   /* laengs der Kante = z-Achse */
                     gx = GB_PLAT_X0 - GB_GPAT_M;
                     gz = pl->z;
                     if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                     if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
-                } else {                      /* Plattform-Kante der eigenen Seite */
+                } else {                      /* Plattform-Kante auf LEONS Seite
+                                               * (Sweep-Klasse Platt-NO-oben,
+                                               * 2026-09-11: die Gator-Zonen-Wahl
+                                               * belagerte die Suedkante, Leon
+                                               * stand nordseitig - dieselbe
+                                               * Luecke wie v0.7.62 bei der
+                                               * Rampe; den Weg findet der
+                                               * Dijkstra-Umweg). */
+                    int zzp = (pl->z >= (GB_PLAT_Z0 + GB_PLAT_Z1) / 2) ? 1 : 0;
                     gx = pl->x;
                     if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
                     if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
-                    gz = (zg2 == 0) ? (GB_PLAT_Z0 - GB_GPAT_M) : (GB_PLAT_Z1 + GB_GPAT_M);
+                    gz = (zzp == 0) ? (GB_PLAT_Z0 - GB_GPAT_M) : (GB_PLAT_Z1 + GB_GPAT_M);
+                }
+                if (!s_gb_stumm) {   /* Diagnose: Kantenziel VOR Pendel/Umweg */
+                    static FILE *s_gzl = NULL; static int s_gzc = 0;
+                    if (!s_gzl) s_gzl = fopen("gator_boss.log", "a");
+                    if (s_gzl && (++s_gzc % 30) == 0) {
+                        fprintf(s_gzl, "GZIEL kante=(%d,%d) zg=%d rampe=%d\n",
+                                gx, gz, zg2, auf_rampe);
+                        fflush(s_gzl);
+                    }
                 }
                 {   /* Kanten-Pendel: steht Leon still (und damit das Ziel),
                      * patrouilliert er sichtbar laengs der Kante statt zu
@@ -1065,14 +1220,14 @@ void re15_gator_boss_tick(int slot)
                      * Basis-Messung ergab den Drei-Radien-Deadlock 573<600
                      * Advance vs. 1222>800 Basis-Naehe - der Timer lief nie,
                      * er stand fuer immer 573 vorm Pendelpunkt). */
-                    static int s_bt = 0; static int s_bdir = 1;
                     int64_t bdx, bdz;
-                    if (zg2 == 2) {
-                        gz += s_bdir * 1500;
+                    if (!g->pend_dir) g->pend_dir = 1;
+                    if (pend_z) {
+                        gz += g->pend_dir * 1500;
                         if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                         if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
                     } else {
-                        gx += s_bdir * 1500;
+                        gx += g->pend_dir * 1500;
                         if (auf_rampe) {
                             if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
                             if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
@@ -1083,47 +1238,68 @@ void re15_gator_boss_tick(int slot)
                     }
                     bdx = e->x - gx; bdz = e->z - gz;
                     if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
+                        if (++g->pend_t >= 90) { g->pend_t = 0; g->pend_dir = (int8_t)-g->pend_dir; }
                 }
             }
             /* v0.7.64: der WEG zum Belagerungsziel laeuft ueber DIESELBE
              * Umweg-Maschine wie im CHASE - das GUARD-eigene Following
              * (ring_target) widersprach ihr dreimal (Kreiseln, SO-Sackgasse,
              * Grenz-Schwanken). */
-            gb_kanten_umweg(e, &gx, &gz);
+            {
+                int uh = gb_kanten_umweg(e, &gx, &gz);
+                if (!s_gb_stumm) {
+                    static FILE *s_gwl2 = NULL; static int s_gwc2 = 0;
+                    if (!s_gwl2) s_gwl2 = fopen("gator_boss.log", "a");
+                    if (s_gwl2 && (++s_gwc2 % 30) == 0) {
+                        fprintf(s_gwl2, "GWEG hop=%d ziel=(%d,%d) not=%d\n",
+                                uh, gx, gz, (int)g->gw_not);
+                        fflush(s_gwl2);
+                    }
+                }
+            }
             {   /* Fortschritts-Waechter auch im GUARD (Nutzer-Marke
                  * 2026-09-11: der CHASE-Waechter griff im GUARD-Deadlock
                  * nicht, 0 NOTFREI bei 11 s Stillstand): kaum Strecke in
                  * 90 F bei fernem Ziel -> 60 F naechste freie Ecke. */
-                static int32_t s_gw_x = 0, s_gw_z = 0;
-                static int32_t s_gw_notx = 0, s_gw_notz = 0;
-                static int s_gw_t = 0, s_gw_not = 0;
                 int64_t wdx = (int64_t)gx - e->x, wdz = (int64_t)gz - e->z;
-                if (s_gw_not > 0) {
-                    s_gw_not--;
-                } else if (++s_gw_t >= 90) {
-                    int64_t pdx = (int64_t)e->x - s_gw_x, pdz = (int64_t)e->z - s_gw_z;
+                if (g->gw_not > 0) {
+                    g->gw_not--;
+                } else if (++g->gw_t >= 90) {
+                    int64_t pdx = (int64_t)e->x - g->gw_x, pdz = (int64_t)e->z - g->gw_z;
                     if (pdx * pdx + pdz * pdz < (int64_t)300 * 300
                         && wdx * wdx + wdz * wdz > (int64_t)1500 * 1500) {
-                        int ci2, bi2 = -1; int64_t best2 = 0;
-                        for (ci2 = 0; ci2 < 4; ci2++) {
-                            int64_t k2 = (int64_t)gb_iabs(e->x - gb_ecke[ci2][0])
-                                       + gb_iabs(e->z - gb_ecke[ci2][1]);
-                            if (!gb_seg_frei(e->x, e->z, gb_ecke[ci2][0],
-                                             gb_ecke[ci2][1], GB_KOERPER_M)) k2 += 100000;
-                            if (bi2 < 0 || k2 < best2) { best2 = k2; bi2 = ci2; }
-                        }
-                        s_gw_not = 60;
+                        /* v0.7.65: Zwangs-Ziel = der PFAD-Hop des Dijkstra
+                         * (die alte "naechste freie Ecke" zwang im Wechsel
+                         * GEGEN den Pfad - C0<->C3-Flip im Westkanal,
+                         * Einzelfall-Telemetrie Sweep 2026-09-11). */
+                        int32_t hx = gx, hz = gz;
+                        int bi2 = gb_kanten_umweg(e, &hx, &hz);
+                        g->gw_notx = hx; g->gw_notz = hz;
+                        if (bi2 < 0) bi2 = 9;   /* Ziel direkt frei */
+                        g->gw_not = 60;
                         {   static FILE *s_gwl = NULL;
-                            if (!s_gwl) s_gwl = fopen("gator_boss.log", "a");
+                            if (!s_gwl) s_gwl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
                             if (s_gwl) { fprintf(s_gwl, "NOTFREI-G pos=(%d,%d) ecke=%d\n",
                                                  e->x, e->z, bi2); fflush(s_gwl); }
                         }
-                        s_gw_notx = gb_ecke[bi2][0]; s_gw_notz = gb_ecke[bi2][1];
                     }
-                    s_gw_t = 0; s_gw_x = e->x; s_gw_z = e->z;
+                    g->gw_t = 0; g->gw_x = e->x; g->gw_z = e->z;
                 }
-                if (s_gw_not > 0) { gx = s_gw_notx; gz = s_gw_notz; }
+                if (g->gw_not > 0) { gx = g->gw_notx; gz = g->gw_notz; }
+            }
+            {   /* ETAPPEN-LATCH (Frame-Telemetrie 2026-09-11: das finale
+                 * Ziel flippte zyklisch C0<->C3 an den Zonen-Schwellen -
+                 * Wende alle 35-78 F, ewiges Kanal-Pendeln): das Steuer-Ziel
+                 * wird GEHALTEN, bis es erreicht ist (<800) oder 120 F um
+                 * sind. Jede Flip-Quelle unterhalb der Etappenlaenge ist
+                 * damit wirkungslos - er faehrt Etappen zu Ende. */
+                if (g->ziel_zt > 0
+                    && gb_iabs(e->x - g->ziel_lx) + gb_iabs(e->z - g->ziel_lz) > 800) {
+                    g->ziel_zt--;
+                    gx = g->ziel_lx; gz = g->ziel_lz;
+                } else {
+                    g->ziel_lx = gx; g->ziel_lz = gz; g->ziel_zt = 120;
+                }
             }
             gdx = e->x - gx; gdz = e->z - gz;
             re15_enemy_steer_point(e, gx, gz, 0x40);
@@ -1136,7 +1312,7 @@ void re15_gator_boss_tick(int slot)
             }
             {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
                 static FILE *s_gd = NULL; static int s_gc2 = 0;
-                if (!s_gd) s_gd = fopen("gator_boss.log", "a");
+                if (!s_gd) s_gd = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
                 if (s_gd && (++s_gc2 % 30) == 0) {
                     fprintf(s_gd, "GPAT ziel=(%d,%d) rot=%d\n",
                             gx, gz, (int)e->rot_y);
@@ -1153,7 +1329,7 @@ void re15_gator_boss_tick(int slot)
         else             { if (g->guard_t > 0)  g->guard_t--; }
         {   /* Mess-Telemetrie (Nutzer-Diagnose): alle 30 F in gator_boss.log */
             static FILE *s_gl = NULL; static int s_gc = 0;
-            if (!s_gl) s_gl = fopen("gator_boss.log", "a");
+            if (!s_gl) s_gl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
             if (s_gl && (++s_gc % 30) == 0) {
                 fprintf(s_gl, "GUARD dist=%d guard_t=%d pitch=%d arc=%d mo=%d af=%d pos=(%d,%d)\n",
                         (int)dist, (int)g->guard_t, (int)g->pitch_vz, (int)g->arc_vz,
@@ -1259,7 +1435,7 @@ void re15_gator_boss_tick(int slot)
                     if (bp2[1] > miny) miny = bp2[1];   /* groesstes y = tiefster Punkt */
                 }
                 {   static FILE *s_pk = NULL;
-                    if (!s_pk) s_pk = fopen("gator_boss.log", "a");
+                    if (!s_pk) s_pk = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
                     if (s_pk) { fprintf(s_pk, "PEAK root=%d tiefster_bone=%d deck=-1800\n",
                                         root, miny); fflush(s_pk); }
                 }
@@ -1305,7 +1481,7 @@ void re15_gator_boss_tick(int slot)
          * Phase+Position in gator_boss.log - der Stillstands-Detektor findet
          * damit JEDEN Haenger samt Phase/Ziel-Kontext. */
         static FILE *s_tl = NULL; static int s_tc = 0;
-        if (!s_tl) s_tl = fopen("gator_boss.log", "a");
+        if (!s_tl) s_tl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
         if (s_tl && (++s_tc % 30) == 0) {
             fprintf(s_tl, "TICK ph=%d pos=(%d,%d) y=%d dist=%d mo=%d cd=%d "
                           "rt=%d zw=%d ziel=(%d,%d)\n",
@@ -1374,7 +1550,7 @@ void re15_gator_boss_tick(int slot)
             if (aus && !s_ow_war) s_ow_n = 0;         /* neue Episode */
             s_ow_war = aus;
             if (aus && s_ow_n < 24) { s_ow_n++;
-                if (!s_ow) s_ow = fopen("gator_boss.log", "a");
+                if (!s_ow) s_ow = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
                 if (s_ow) {
                     fprintf(s_ow, "AUSSEN pos=(%d,%d) hp=%d hr=%d mo=%d gph=%d gpos=(%d,%d)\n",
                             pl->x, pl->z, (int)pl->hp, (int)pl->hit_react,

@@ -3415,3 +3415,15 @@ target_include_directories(probe_sichtregion PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_executable(probe_atlas_kollision probe_atlas_kollision.c)
 target_link_libraries(probe_atlas_kollision PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_atlas_kollision PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- BRUTE-FORCE-KONVERGENZTEST des ROOM2090-Bosskampfs (Nutzer 2026-09-11:
+#     "voraus schauen was den Aligator noch alles blocken wird"): echter
+#     Boss-Tick + Dispatcher-Klemme ueber Gator-Raster x Leon-Positionsmenge;
+#     jedes nicht konvergierende Paar ist ein kuenftiger Marker. ---
+add_executable(probe_gator_sweep probe_gator_sweep.c)
+target_link_libraries(probe_gator_sweep PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_sweep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_gator_sweep COMMAND probe_gator_sweep)
+set_tests_properties(unit_gator_sweep PROPERTIES TIMEOUT 300)
