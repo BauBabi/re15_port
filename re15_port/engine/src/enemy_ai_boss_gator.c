@@ -990,6 +990,7 @@ void re15_gator_boss_tick(int slot)
             {
                 int zg2 = gb_zone(e->z);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
+                int weg_modus = 0;   /* 1 = Westumlauf-Wegpunkt (KEIN Pendel!) */
                 if (auf_rampe) {              /* Nutzer-Marken F755-F936 2026-09-11
                                                * ("er findet den Weg wieder nicht"):
                                                * Leon stand an der NORDkante der
@@ -1012,6 +1013,7 @@ void re15_gator_boss_tick(int slot)
                         if (gb_seg_frei(e->x, e->z, wx, wz_and, GB_KOERPER_M))
                              { gx = wx; gz = wz_and; }   /* direkt zur Gegen-Ecke */
                         else { gx = wx; gz = wz_eig; }   /* erst zur eigenen */
+                        weg_modus = 1;
                     } else {
                         gx = pl->x;
                         if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
@@ -1039,7 +1041,12 @@ void re15_gator_boss_tick(int slot)
                      * er stand fuer immer 573 vorm Pendelpunkt). */
                     static int s_bt = 0; static int s_bdir = 1;
                     int64_t bdx, bdz;
-                    if (zg2 == 2) {
+                    /* Nutzer-Marke F1095 2026-09-11: das Pendel verbog den
+                     * WESTUMLAUF-Wegpunkt C0 (-4300,-22600) per auf_rampe-
+                     * x-Klemme auf (4450,-22600) = die SO-SACKGASSE; er stand
+                     * dort 555 vorm falschen Ziel. Wegpunkte pendeln NICHT. */
+                    if (weg_modus) { bdx = 0; bdz = 0; (void)bdx; (void)bdz; }
+                    else if (zg2 == 2) {
                         gz += s_bdir * 1500;
                         if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                         if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
@@ -1053,9 +1060,11 @@ void re15_gator_boss_tick(int slot)
                             if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
                         }
                     }
-                    bdx = e->x - gx; bdz = e->z - gz;
-                    if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
+                    if (!weg_modus) {
+                        bdx = e->x - gx; bdz = e->z - gz;
+                        if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
+                            if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
+                    }
                 }
             }
             /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
