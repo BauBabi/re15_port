@@ -182,6 +182,10 @@ typedef struct {
      * sichtbares Vor-zurueck-Pendeln im Westkanal, Marke 3). Die Route wird
      * einmal gewaehlt und nur bei Zonenwechsel/Cooldown-Ablauf neu bewertet. */
     int8_t   route;                /* 0=keine, 1=WEST (um die Plattform), 2=RAMPE (queren) */
+    int8_t   route_zwang;          /* 1 = Route wurde unter cross_cd>0 gewaehlt
+                                    * (RAMPE gesperrt) -> bei cd-Ablauf neu bewerten
+                                    * (die alte cd==1-Flanke verpuffte, wenn der
+                                    * Frame in einer anderen Phase verging) */
     int8_t   zone_g, zone_l;       /* gemerkte Becken-Zonen (Neubewertungs-Trigger) */
     int8_t   maul_kontakt;         /* Frames seit die SCHNAUZE Leon schob (SEG-
                                     * Push ofs>0): wen sie schiebt, den darf sie
@@ -288,6 +292,12 @@ static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
         || gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, 0);
 }
 
+/* Weg-frei-Test gegen BEIDE Bloecke (Plattform UND Rampe) - die Rampe blockt
+ * den Gator genauso (SCA Band 0); Weg-Tests, die nur die Plattform sahen,
+ * liessen ihn an der Rampen-NORDKANTE kriechen (Nutzer 2026-09-11, 4. Fall:
+ * z=-13063-Klemmlinie, Ziel suedlich hinter der Rampe). */
+static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m);
+
 /* Die vier Plattform-Umlauf-Ecken (+GB_RING_M) - gemeinsame Wegpunkte fuer
  * Ring-Following und den zentralen Kanten-Umweg. */
 static const int32_t gb_ecke[4][2] = {
@@ -299,6 +309,12 @@ static const int32_t gb_ecke[4][2] = {
 
 /* Ring-Wegpunkt: die vier Block-Ecken (+Marge); waehle die Ecke, die vom Gator aus
  * sichtbar ist (Strecke frei) und den Winkelumweg zu Leon minimiert. */
+static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m)
+{
+    return !gb_seg_hits_platform(x0, z0, x1, z1, m)
+        && !gb_seg_hits_ramp(x0, z0, x1, z1, m);
+}
+
 static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
                            int32_t *tx, int32_t *tz)
 {
@@ -692,9 +708,7 @@ void re15_gator_boss_tick(int slot)
                 int32_t rz_ein = (zg == 0) ? (GB_RAMP_Z0 - GB_BAHN_M) : (GB_RAMP_Z1 + GB_BAHN_M);
                 int32_t rz_aus = (zg == 0) ? (GB_RAMP_Z1 + GB_BAHN_M) : (GB_RAMP_Z0 - GB_BAHN_M);
                 if (g->route == 0 || zg != g->zone_g || zl != g->zone_l
-                    || g->cross_cd == 1) {   /* cd-Ablauf-Flanke: die wegen des
-                                              * Cooldowns erzwungene WEST-Route
-                                              * neu bewerten */
+                    || (g->route_zwang && g->cross_cd == 0)) {
                     /* Kostenvergleich (grobe Manhattan-Summen reichen zur Wahl) */
                     int32_t kw = gb_iabs(e->x - eckx) + gb_iabs(e->z - eckz_g)
                                + gb_iabs(eckz_l - eckz_g)
@@ -703,6 +717,7 @@ void re15_gator_boss_tick(int slot)
                                + gb_iabs(rz_aus - rz_ein)
                                + gb_iabs(pl->x - rx) + gb_iabs(pl->z - rz_aus);
                     g->route = (g->cross_cd == 0 && kr < kw) ? 2 : 1;
+                    g->route_zwang = (int8_t)(g->cross_cd > 0);
                     g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
                 }
                 if (g->route == 2 && g->cross_cd == 0) {
@@ -714,9 +729,9 @@ void re15_gator_boss_tick(int slot)
                     tx = rx; tz = rz_ein; g->dbg_zweig = 2;
                 } else {
                     /* WEST: naechsten noch noetigen Wegpunkt ansteuern */
-                    if (!gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
+                    if (gb_seg_frei(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
                         { g->dbg_zweig = 1; }                     /* frei: direkt */
-                    else if (!gb_seg_hits_platform(e->x, e->z, eckx, eckz_l, GB_KOERPER_M))
+                    else if (gb_seg_frei(e->x, e->z, eckx, eckz_l, GB_KOERPER_M))
                         { tx = eckx; tz = eckz_l; g->dbg_zweig = 3; }
                     else { tx = eckx; tz = eckz_g; g->dbg_zweig = 4; }
                 }
@@ -739,6 +754,41 @@ void re15_gator_boss_tick(int slot)
                 g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
             }
         }
+        {   /* FORTSCHRITTS-WAECHTER (Selbstheilung; 4. Klemm-Fall in Folge,
+             * 2026-09-11): macht der Gator ueber 90 F kaum Strecke, obwohl
+             * das Ziel fern ist, erzwingt er 60 F lang die naechstgelegene
+             * FREIE Umlauf-Ecke und setzt das Routen-Latch zurueck - JEDER
+             * kuenftige Geometrie-Sonderfall heilt sich damit sichtbar
+             * selbst, statt zum Dauerstand zu werden. */
+            static int32_t s_fw_x = 0, s_fw_z = 0;
+            static int s_fw_t = 0, s_fw_not = 0;
+            int64_t zdx = (int64_t)tx - e->x, zdz = (int64_t)tz - e->z;
+            if (s_fw_not > 0) {
+                s_fw_not--;
+                tx = g->dbg_tx; tz = g->dbg_tz;   /* Not-Ecke halten */
+            } else if (++s_fw_t >= 90) {
+                int64_t mdx = (int64_t)e->x - s_fw_x, mdz = (int64_t)e->z - s_fw_z;
+                if (mdx * mdx + mdz * mdz < (int64_t)300 * 300
+                    && zdx * zdx + zdz * zdz > (int64_t)1500 * 1500) {
+                    int ci, bi = -1; int64_t best = 0;
+                    for (ci = 0; ci < 4; ci++) {
+                        int64_t k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0])
+                                  + gb_iabs(e->z - gb_ecke[ci][1]);
+                        if (!gb_seg_frei(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
+                                         GB_KOERPER_M)) k += 100000;
+                        if (bi < 0 || k < best) { best = k; bi = ci; }
+                    }
+                    tx = gb_ecke[bi][0]; tz = gb_ecke[bi][1];
+                    s_fw_not = 60; g->route = 0;
+                    {   static FILE *s_fl = NULL;
+                        if (!s_fl) s_fl = fopen("gator_boss.log", "a");
+                        if (s_fl) { fprintf(s_fl, "NOTFREI pos=(%d,%d) ecke=%d\n",
+                                            e->x, e->z, bi); fflush(s_fl); }
+                    }
+                }
+                s_fw_t = 0; s_fw_x = e->x; s_fw_z = e->z;
+            }
+        }
         /* ZENTRALER KANTEN-UMWEG (Nutzer-Marke 2026-09-11, dritter Fall
          * derselben Klasse: der Rampen-ANLAUF steuerte blind auf
          * (4450,-20700), waehrend der Gator westlich der Plattform im
@@ -746,12 +796,12 @@ void re15_gator_boss_tick(int slot)
          * JEDEN Zweig: schert die Luftlinie zum Steuerziel im Schatten der
          * Plattform, erst zur guenstigsten FREIEN Umlauf-Ecke; ist keine
          * frei (Start selbst im Schatten-Band), zur naechstgelegenen. */
-        if (gb_seg_hits_platform(e->x, e->z, tx, tz, GB_KOERPER_M)) {
+        if (!gb_seg_frei(e->x, e->z, tx, tz, GB_KOERPER_M)) {
             int ci, bi = -1; int64_t best = 0;
             for (ci = 0; ci < 4; ci++) {
                 int64_t k;
-                if (gb_seg_hits_platform(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
-                                         GB_KOERPER_M)) continue;
+                if (!gb_seg_frei(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
+                                 GB_KOERPER_M)) continue;
                 k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0]) + gb_iabs(e->z - gb_ecke[ci][1])
                   + gb_iabs(tx - gb_ecke[ci][0]) + gb_iabs(tz - gb_ecke[ci][1]);
                 if (bi < 0 || k < best) { best = k; bi = ci; }
