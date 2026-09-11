@@ -225,6 +225,20 @@ uint8_t re15_inv_map_room(void) { return s_map_room; }
 /* Geometrie eines gemalten Karten-Rechtecks aus dem Seiten-Paar @0x80076840
  * (count + Listenzeiger, 12 B je Eintrag {s16 x,y,w,h; u8 u,_,v,_}). Fuer Pruefungen
  * und fuer den Zeichner der Schema-Zonen, die nicht aus dieser Tabelle stammen. */
+/* MESSSCHIENE RE15_MAP_EBENE=kachel|schema (Vorgabe: beide). Die Karte legt
+ * ZWEI Ebenen uebereinander - die gemalten Original-Kacheln und das gerechnete
+ * Grundriss-Schema. Fuer die Fehlersuche laesst sich jede einzeln abziehen. */
+int re15_map_ebene_kachel(void)
+{
+    const char *e = getenv("RE15_MAP_EBENE");
+    return !(e && *e && e[0] == 's');
+}
+int re15_map_ebene_schema(void)
+{
+    const char *e = getenv("RE15_MAP_EBENE");
+    return !(e && *e && e[0] == 'k');
+}
+
 int re15_map_rect_count(unsigned page)
 {
     int n;
@@ -2242,6 +2256,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * stehe" (Nutzer 2026-09-01). Der Stock-Modus (ganze Seite grau) bleibt
                  * ausgenommen - dort ist genau das erwuenscht. */
                 if (rs == RE15_MAP_RECT_UNMAPPED && !re15_map_stock_mode()) continue;
+                if (!re15_map_ebene_kachel()) continue;      /* Messschiene */
                 if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }
                 else if (rs == RE15_MAP_RECT_CURRENT) { cr = 192; cg = 24;  cb = 24; }
                 /* (Die Etagen-Zweitzeichnung war hier bis 2026-09-02 ein
@@ -2278,14 +2293,23 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                              * HINTEN gerastert (inv_render_pc.c; Memory reai-v2-
                              * zeichenreihenfolge-invers) - eine nach der Kachel
                              * eingereihte Op laege UNTER ihr. */
-                            if (e.n < e.max) {
-                                re15_inv_op_t *qs = &e.ops[e.n++];
-                                qs->kind = RE15_INV_OP_FILL; qs->page = 0; qs->clut = 0;
-                                qs->abe = 1; qs->u = 0; qs->v = 0;
-                                qs->x = (int16_t)rx; qs->y = (int16_t)ry;
-                                qs->w = (int16_t)rw; qs->h = (int16_t)rh;
-                                qs->r = 200; qs->g = 16; qs->b = 16;
-                            }
+                            /* DER SCHLEIER GEHOERT AUF DIE KACHEL, NICHT AUF DAS
+                             * RECHTECK (Nutzer 2026-09-11: "das Treppenhaus in der
+                             * Map ist jetzt viel breiter als sein Viereck auf allen
+                             * Etagen", "so gut wie alles rot"). Ein FILL ueber
+                             * (rx,ry,rw,rh) faerbt das GANZE Kaestchen des
+                             * Kuenstlers rot - auch die unbemalten Ecken darin.
+                             * GEMESSEN am 3F-Abzug des Nutzer-Spielstands
+                             * (ROOM1120, Rect 5 = 40x40): rot lag auf
+                             * x120..159/y119..158, die gemalte L-Form nur auf
+                             * x121..152 - der Rest war Fuellung ohne Zeichnung.
+                             * Jetzt wird DIESELBE Kachel ein zweites Mal rot und
+                             * halbdurchlaessig geblittet: wo die Kachel nichts
+                             * malt, bleibt auch der Schleier weg. (Zuerst
+                             * einreihen = OBEN, die Op-Liste wird von HINTEN
+                             * gerastert.) */
+                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                                 rx, ry, rw, rh, ru, rv, 200, 16, 16, 1);
                             sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                                  rx, ry, rw, rh, ru, rv, 40, 144, 40, 1);
                         } else
@@ -2335,14 +2359,12 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             if (tx + tw > rx + rw) tw = rx + rw - tx;
                             if (ty + th > ry + rh) th = ry + rh - ty;
                             if (tw <= 0 || th <= 0) continue;
-                            if (ts == RE15_MAP_RECT_CURRENT && e.n < e.max) {
-                                re15_inv_op_t *qs = &e.ops[e.n++];
-                                qs->kind = RE15_INV_OP_FILL; qs->page = 0; qs->clut = 0;
-                                qs->abe = 1; qs->u = 0; qs->v = 0;
-                                qs->x = (int16_t)tx; qs->y = (int16_t)ty;
-                                qs->w = (int16_t)tw; qs->h = (int16_t)th;
-                                qs->r = 200; qs->g = 16; qs->b = 16;
-                            }
+                            if (ts == RE15_MAP_RECT_CURRENT)   /* Schleier auf der
+                                                                * Kachel, s.o. */
+                                sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                                     tx, ty, tw, th,
+                                     ru + (tx - rx), rv + (ty - ry),
+                                     200, 16, 16, 1);
                             sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
@@ -2446,6 +2468,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * Grau mit; ein Abzug von 3F zeigte dann beide Ebenen uebereinander und
                  * war als Referenz unbrauchbar. */
                 if (re15_map_stock_mode()) continue;
+                if (!re15_map_ebene_schema()) continue;      /* Messschiene */
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
                 /* RE2-STIL: die WANDLINIE ist in jedem Raum gleich hell; nur die
                  * FUELLUNG traegt den Zustand (blau besucht, dunkelrot aktuell).
