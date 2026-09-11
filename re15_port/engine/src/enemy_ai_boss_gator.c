@@ -340,8 +340,15 @@ static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
  * animation aber trifft mich nicht"). */
 static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
 {
-    return gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, 0)
-        || gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, 0);
+    /* Prueflinie ab MAULPUNKT (Zentrum+2600 voraus) statt ab Zentrum
+     * (Biss-Sweep 2026-09-11): die lange Zentrum-Linie streifte schon bei
+     * Ecken-Beruehrung die Plattform-Box und blockte legitime Bisse. */
+    int32_t fc = re15_cos_q12((int)e->rot_y);
+    int32_t fs = re15_sin_q12((int)e->rot_y);
+    int32_t kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);
+    int32_t kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);
+    return gb_seg_hits_platform(kx, kz, pl->x, pl->z, 0)
+        || gb_seg_hits_ramp(kx, kz, pl->x, pl->z, 0);
 }
 
 /* Weg-frei-Test gegen BEIDE Bloecke (Plattform UND Rampe) - die Rampe blockt
@@ -1154,6 +1161,29 @@ void re15_gator_boss_tick(int slot)
             if (dlt > 0x300 || dlt < -0x300) {
                 re15_enemy_steer_point(e, tx, tz, 0x60);   /* zackige Wende
                                                             * (180 Grad in 21 F) */
+                /* NOT-SCHNAPP (Nutzer 2026-09-11 "keine Luecke auf gleicher
+                 * Ebene"): auch mitten in der Wende beisst er zu, wenn Leon
+                 * in Reichweite ist - vorher brach der Zweig VOR dem Commit
+                 * ab (Biss-Sweep: Leon kreiste bei dist~120 dauerhaft im
+                 * toten Winkel, BISS-FAIL sz=2 NO/Nord-Ost). */
+                if (pl->hit_react == 0 && e->hit_stun == 0
+                    && !gb_wand_dazwischen(e, pl)
+                    && (dist < 3200 || gb_maul_dist(e, pl) < 2400
+                        || g->maul_kontakt > 0)) {
+                    g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+                    e->motion = 4; e->anim_frame = 0;
+                    break;
+                }
+                /* RUECKWAERTSGANG (Nutzer: "wenn es dem Alligator hilft mal
+                 * rueckwaerts zu laufen"): Leon klebt seitlich/hinten am
+                 * Koerper - rueckwaerts rausziehen und dabei drehen, statt
+                 * auf der Stelle zu ruehren. */
+                if (dist < 3500 && (dlt > 0x600 || dlt < -0x600)) {
+                    int32_t bc = re15_cos_q12((int)e->rot_y);
+                    int32_t bs = re15_sin_q12((int)e->rot_y);
+                    e->x -= (int32_t)(((int64_t)bc * 44) >> 12);
+                    e->z += (int32_t)(((int64_t)bs * 44) >> 12);
+                }
                 e->y = GB_WATER_Y;
                 if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
                 e->anim_frame++;
@@ -1193,7 +1223,9 @@ void re15_gator_boss_tick(int slot)
          * Schnapp nie zu, wenn Leon seitlich in der Nische stand). */
         if (pl->hit_react == 0 && e->hit_stun == 0
             && !gb_wand_dazwischen(e, pl)
-            && (dist < 2600 || gb_maul_dist(e, pl) < 2400 || g->maul_kontakt > 0)) {
+            && (dist < 3200 || gb_maul_dist(e, pl) < 2400 || g->maul_kontakt > 0)) {
+            /* dist-Netz 2600->3200 (Biss-Sweep 2026-09-11): seitlich am
+             * Koerper zeigte der Maulpunkt weg und 2600 griff nicht. */
             /* Commit-Gate GEMESSEN 2026-09-11: der alte 0x1770er-Sichtkegel
              * (6000) startete Leer-Schnapps, deren Maul Leon im 45-F-Clip
              * nie erreichte (Messung: maul 3088->2624, kein Treffer);
@@ -1208,14 +1240,29 @@ void re15_gator_boss_tick(int slot)
         break; }
 
     case GBP_LUNGE: {                         /* Punkt 3: Biss mit Schaden */
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* byte-true B[3]-Slew */
-        if (gb_maul_dist(e, pl) > 1400) re15_ai_advance(e, GB_LUNGE_SPEED);
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x50);    /* Slew 0x30->0x50
+                                                            * (DESIGN): der Not-
+                                                            * Schnapp startet auch
+                                                            * aus schraegem Winkel */
+        if (gb_maul_dist(e, pl) > 1400) {
+            if (dist < 1500) {
+                /* Leon klebt am Koerper - das Maul (2600 voraus) ist VORBEI:
+                 * rueckwaerts ziehen, bis es wieder vor Leon liegt
+                 * (Nutzer-Freigabe Rueckwaertsgang, Biss-Sweep 2026-09-11). */
+                int32_t bc = re15_cos_q12((int)e->rot_y);
+                int32_t bs = re15_sin_q12((int)e->rot_y);
+                e->x -= (int32_t)(((int64_t)bc * 44) >> 12);
+                e->z += (int32_t)(((int64_t)bs * 44) >> 12);
+            } else {
+                re15_ai_advance(e, GB_LUNGE_SPEED);
+            }
+        }
         e->y = GB_WATER_Y;
         {   /* Mess-Telemetrie Biss-Fenster (Nutzer 2026-09-11: "trifft mich
              * quasi so gut wie nie") */
             static FILE *s_bl = NULL;
             if (!s_bl) s_bl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
-            if (s_bl && e->anim_frame >= 8 && e->anim_frame <= 20) {
+            if (s_bl && e->anim_frame >= 6 && e->anim_frame <= 34) {
                 fprintf(s_bl, "BISS af=%d dist=%d maul=%d wand=%d hr=%d\n",
                         (int)e->anim_frame, (int)dist, gb_maul_dist(e, pl),
                         gb_wand_dazwischen(e, pl), (int)pl->hit_react);
@@ -1223,11 +1270,15 @@ void re15_gator_boss_tick(int slot)
             }
         }
         if (!g->bite_done
-            && e->anim_frame >= 8 && e->anim_frame <= 20   /* Maul-offen-Fenster der
-                                                            * gemessenen Clip-4-Kurve */
+            && e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet
+                                                            * (Biss-Sweep 2026-09-11):
+                                                            * 8..20 liess Leon in
+                                                            * F21-42 entkommen */
             && pl->hit_react == 0
-            && (gb_maul_dist(e, pl) <= 1500 || g->maul_kontakt > 0)
+            && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
             && !gb_wand_dazwischen(e, pl)) {
+            /* dist<1000 = Leon IM Kopf-Segment-Radius (900+Puffer): Nahkontakt
+             * zaehlt als Biss (Biss-Sweep 2026-09-11, Leon auf dem Koerper). */
             /* Treffer = MAUL-Kontakt (Kopf-Segment 900 + Spieler 450 + 150
              * Puffer); das alte Zentrum-Gate s. gb_maul_dist-Messnotiz. */
             /* Fenster {19,20,21} @0x80118c68 (byte-true Mechanik) — DESIGN-Schaden:
@@ -1238,7 +1289,10 @@ void re15_gator_boss_tick(int slot)
         }
         e->anim_frame++;
         if (e->anim_frame > 42) {             /* Clip 4 (45 F) ausklingen lassen */
-            if (e->hit_stun == 0) e->hit_stun = 0x2d;      /* byte-true Nachlauf-Sperre */
+            if (e->hit_stun == 0) e->hit_stun = 0x14;      /* Fehlschnapp-Sperre
+                                                            * 0x2d->0x14 (DESIGN,
+                                                            * Biss-Sweep 2026-09-11):
+                                                            * 45 F bisslos = Luecke */
             g->phase = GBP_CHASE;
             e->motion = 0; e->anim_frame = 0;
         }
@@ -1356,11 +1410,25 @@ void re15_gator_boss_tick(int slot)
                                                * Luecke wie v0.7.62 bei der
                                                * Rampe; den Weg findet der
                                                * Dijkstra-Umweg). */
+                    int32_t lw  = pl->x - GB_PLAT_X0;              /* Leon->Westkante */
+                    int32_t lz0 = pl->z - GB_PLAT_Z0, lz1 = GB_PLAT_Z1 - pl->z;
+                    int32_t lns = (lz0 < lz1) ? lz0 : lz1;
+                    if (lw < lns) {
+                        /* Leon westnah ODER mittig (Biss-Sweep 2026-09-11
+                         * Platt-Mitte: N/S-Kante = dist 5675, unerreichbar;
+                         * die Westkante = 3675 liegt in Hochbiss-Reichweite) */
+                        pend_z = 1;
+                        gx = GB_PLAT_X0 - GB_GPAT_M;
+                        gz = pl->z;
+                        if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
+                        if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
+                    } else {
                     int zzp = gb_seite_latch(g, pl->z, (GB_PLAT_Z0 + GB_PLAT_Z1) / 2);
                     gx = pl->x;
                     if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
                     if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
                     gz = (zzp == 0) ? (GB_PLAT_Z0 - GB_GPAT_M) : (GB_PLAT_Z1 + GB_GPAT_M);
+                    }
                 }
                 if (g->umlauf && gb_iabs(e->z - gz) < 1500)
                     g->umlauf = 0;             /* an der neuen Kante angekommen */
@@ -1505,9 +1573,13 @@ void re15_gator_boss_tick(int slot)
         }
         if (e->motion == 4) {
             e->anim_frame++;
-            if (!g->bite_done && e->anim_frame >= 8 && e->anim_frame <= 20
-                && pl->hit_react == 0 && dist < 3400) {   /* DESIGN: Kantenstand +
-                                               * gehobener Kopf erreicht die Flaeche */
+            if (!g->bite_done && e->anim_frame >= 6 && e->anim_frame <= 34
+                && pl->hit_react == 0 && dist < 3900) {   /* DESIGN: Kantenstand +
+                                               * gehobener Kopf erreicht die Flaeche;
+                                               * 3400->3900 + Fenster geweitet
+                                               * (Biss-Sweep 2026-09-11: die
+                                               * Plattform-MITTE liegt 3675 von
+                                               * der besten Kanten-Position) */
                                 gb_biss_abschluss(e, g, pl);
             }
             if (e->anim_frame > 42) { e->motion = 0; e->anim_frame = 0; }
@@ -1760,8 +1832,10 @@ void re15_gator_boss_tick(int slot)
      * s. hit_offset_y im INIT): Leon OBEN auf dem Steg wird nicht geschoben. */
     if (g->phase != GBP_DIE && g->phase != GBP_DEAD
         && pl->hp >= 0 && !re15_player_is_grabbed()) {
-        static const struct { int32_t ofs, r; } SEG[4] = {
-            { 2600, 900 }, { 4600, 700 }, { -2600, 900 }, { -4800, 750 }
+        static const struct { int32_t ofs, r; } SEG[5] = {
+            { 2600, 900 }, { 4600, 700 }, { -2600, 900 }, { -4800, 750 },
+            {    0, 1050 }   /* Koerpermitte (Biss-Sweep 2026-09-11: zwischen
+                              * den +-2600er-Segmenten stand Leon im Loch) */
         };
         int32_t fc = re15_cos_q12((int)e->rot_y);
         int32_t fs = re15_sin_q12((int)e->rot_y);
@@ -1769,7 +1843,7 @@ void re15_gator_boss_tick(int slot)
         if (dy > -1500 && dy < 1500) {
             int si;
             int32_t plox = pl->x, ploz = pl->z;   /* fuer die Wand-Klemme unten */
-            for (si = 0; si < 4; si++) {
+            for (si = 0; si < 5; si++) {
                 int32_t cx = e->x + (int32_t)(((int64_t)fc * SEG[si].ofs) >> 12);
                 int32_t cz = e->z - (int32_t)(((int64_t)fs * SEG[si].ofs) >> 12);
                 int32_t dx = pl->x - cx, dz = pl->z - cz;

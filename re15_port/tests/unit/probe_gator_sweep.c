@@ -250,6 +250,145 @@ int main(int argc, char **argv)
             }
         }
     }
+    {   /* BISS-SWEEP (Nutzer 2026-09-11): auf gleicher Ebene darf es KEINE
+         * Konstellation geben, in der Leon einem Biss entgeht. Kriterium =
+         * ECHTER Treffer (hp sinkt / hit_react), nicht Annaeherung.
+         * Leon-Verhalten: 0 = statisch, 1 = Flucht (55/F radial weg),
+         * 2 = Kreisen (55/F tangential, Richtungswechsel alle 240 F). */
+        static const struct { int32_t x, z; const char *wo; } BSTART[] = {
+            { -6900, -24700, "Lauerplatz" }, {  5000, -24000, "SO" },
+            { -6000,  -8000, "NW" },         {  3000,  -7000, "NO" },
+        };
+        static const struct { int32_t x, z; const char *wo; } BLEON[] = {
+            { -5500, -22000, "Sued-West" }, {  4000, -21000, "Sued-Ost" },
+            { -4000,  -9500, "Nord-West" }, {  3500,  -8000, "Nord-Ost" },
+            { -4500, -16000, "Westgasse" }, {  4700, -12000, "Ost-Nord" },
+        };
+        int bfaelle = 0, bohne = 0;
+        const char *bnur = getenv("RE15_BISS_NUR");   /* "sz,gi,lj" (sz=9: OBEN) */
+        int nsz = -1, ngi = -1, nlj = -1;
+        if (bnur) sscanf(bnur, "%d,%d,%d", &nsz, &ngi, &nlj);
+        for (int sz = 0; sz < 3; sz++)
+        for (int gi = 0; gi < (int)(sizeof BSTART / sizeof BSTART[0]); gi++)
+        for (int lj = 0; lj < (int)(sizeof BLEON / sizeof BLEON[0]); lj++) {
+            if (bnur && (sz != nsz || gi != ngi || lj != nlj)) continue;
+            int slot = RE15_ACTOR_MAX - 1;
+            re15_actor_t *e = &g_actors[slot];
+            memset(e, 0, sizeof *e);
+            e->active = 1; e->type = 0x23u;
+            e->x = BSTART[gi].x; e->y = 0; e->z = BSTART[gi].z;
+            e->grid_id = 0; e->state = 0; e->em_flag_id = 0xFF;
+            re15_enemy_apply_hitbox(e, 0x23u);
+            int32_t lx = BLEON[lj].x, lz = BLEON[lj].z;
+            pl->active = 1; pl->type = 0; pl->hp = 100;
+            pl->x = lx; pl->z = lz; pl->y = 0;
+            re15_gator_boss_tick(slot);
+            e->x = BSTART[gi].x; e->z = BSTART[gi].z; e->y = -1200;
+            int treffer = 0;
+            for (int f = 0; f < 2400 && !treffer; f++) {
+                pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+                pl->state = 0; pl->motion = 0;
+                pl->x = lx; pl->z = lz; pl->y = 0; pl->floor = 0;
+                int32_t ox = e->x, oz = e->z;
+                re15_gator_boss_tick(slot);
+                if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+                    int32_t nx = e->x, nz = e->z;
+                    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                                   e->hit_radius_min, e->y, 4u);
+                    e->x = nx; e->z = nz;
+                }
+                if (pl->hp < 100 || (pl->hit_react & 1)) { treffer = 1; break; }
+                if (sz != 0) {
+                    int64_t dx = (int64_t)lx - e->x, dz = (int64_t)lz - e->z;
+                    int64_t d2 = dx * dx + dz * dz;
+                    int32_t d = 0;
+                    while ((int64_t)d * d < d2 && d < 40000) d += 32;
+                    if (d < 1) d = 1;
+                    int32_t vx, vz;
+                    if (sz == 1) {
+                        vx = (int32_t)(dx * 55 / d); vz = (int32_t)(dz * 55 / d);
+                    } else {
+                        int dir = ((f / 240) & 1) ? 1 : -1;
+                        vx = (int32_t)(-dz * 55 * dir / d);
+                        vz = (int32_t)( dx * 55 * dir / d);
+                    }
+                    lx += vx; lz += vz;
+                    if (lx < -8600) lx = -8600; else if (lx > 6900) lx = 6900;
+                    if (lz < -26700) lz = -26700; else if (lz > -5700) lz = -5700;
+                    if (lx > -1800 && lx < 1950 && lz > -20100 && lz < -12350) {
+                        int32_t dw = lx + 1800, de_ = 1950 - lx;
+                        int32_t ds = lz + 20100, dn = -12350 - lz;
+                        int32_t m = dw; int k = 0;
+                        if (de_ < m) { m = de_; k = 1; }
+                        if (ds  < m) { m = ds;  k = 2; }
+                        if (dn  < m) { m = dn;  k = 3; }
+                        if (k == 0) lx = -1800; else if (k == 1) lx = 1950;
+                        else if (k == 2) lz = -20100; else lz = -12350;
+                    }
+                    if (lx > 1750 && lz > -18200 && lz < -14400) {
+                        int32_t ds = lz + 18200, dn = -14400 - lz, dw = lx - 1750;
+                        if (dw <= ds && dw <= dn) lx = 1750;
+                        else if (ds < dn) lz = -18200; else lz = -14400;
+                    }
+                }
+            }
+            bfaelle++;
+            if (!treffer) {
+                bohne++;
+                printf("BISS-FAIL: sz=%d gator=%s leon=%s leon_ende=(%ld,%ld) gator_ende=(%ld,%ld)\n",
+                       sz, BSTART[gi].wo, BLEON[lj].wo,
+                       (long)lx, (long)lz, (long)e->x, (long)e->z);
+                fails++;
+            }
+            e->active = 0;
+        }
+        /* OBEN: Leon statisch auf Plattform/Rampe - GUARD-Hochbiss/CROSS
+         * muessen ihn in 3000 F erwischen (gleiche-Ebene-Anspruch oben). */
+        static const struct { int32_t x, z; const char *wo; } BOBEN[] = {
+            {   75, -16225, "Platt-Mitte" }, {    0, -19400, "Platt-Sued" },
+            {    0, -13000, "Platt-Nord" },  { 4400, -16300, "Rampe-Mitte" },
+        };
+        for (int gi = 0; gi < 2; gi++)
+        for (int lj = 0; lj < (int)(sizeof BOBEN / sizeof BOBEN[0]); lj++) {
+            if (bnur && (nsz != 9 || gi != ngi || lj != nlj)) continue;
+            int slot = RE15_ACTOR_MAX - 1;
+            re15_actor_t *e = &g_actors[slot];
+            memset(e, 0, sizeof *e);
+            e->active = 1; e->type = 0x23u;
+            e->x = BSTART[gi].x; e->y = 0; e->z = BSTART[gi].z;
+            e->grid_id = 0; e->state = 0; e->em_flag_id = 0xFF;
+            re15_enemy_apply_hitbox(e, 0x23u);
+            pl->active = 1; pl->type = 0; pl->hp = 100;
+            pl->x = BOBEN[lj].x; pl->z = BOBEN[lj].z; pl->y = -1800;
+            re15_gator_boss_tick(slot);
+            e->x = BSTART[gi].x; e->z = BSTART[gi].z; e->y = -1200;
+            int treffer = 0;
+            for (int f = 0; f < 3000 && !treffer; f++) {
+                pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+                pl->state = 0; pl->motion = 0;
+                pl->x = BOBEN[lj].x; pl->z = BOBEN[lj].z; pl->y = -1800;
+                pl->floor = 1;
+                int32_t ox = e->x, oz = e->z;
+                re15_gator_boss_tick(slot);
+                if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+                    int32_t nx = e->x, nz = e->z;
+                    re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                                   e->hit_radius_min, e->y, 4u);
+                    e->x = nx; e->z = nz;
+                }
+                if (pl->hp < 100 || (pl->hit_react & 1)) treffer = 1;
+            }
+            bfaelle++;
+            if (!treffer) {
+                bohne++;
+                printf("BISS-FAIL-OBEN: gator=%s leon=%s gator_ende=(%ld,%ld)\n",
+                       BSTART[gi].wo, BOBEN[lj].wo, (long)e->x, (long)e->z);
+                fails++;
+            }
+            e->active = 0;
+        }
+        printf("gator-biss: %d Faelle, %d ohne Treffer\n", bfaelle, bohne);
+    }
     printf("gator-sweep: %d Paare, %d nicht konvergiert\n", paare, tote);
     free(buf);
     if (fails) { printf("%d FAILURES\n", fails); return 1; }
