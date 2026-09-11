@@ -1,3 +1,22 @@
+# RE1.5 Port — v0.7.69 (Early Preview)
+
+**ROOM2090: die Querung zielt jetzt auf DICH.**
+
+---
+
+Dein Marker zeigte es exakt: Alle Querungen liefen auf einer festen
+Ost-Spur — du standest im West-Drittel der Rampe, gut zwei Meter neben
+der Bahn, und der Vorbeigeh-Schnapp konnte dich nie erreichen. Darum
+wirkte das Hin-und-Her wie Clownerei. Jetzt klettert er DIAGONAL: Der
+Einstieg bleibt, wo er physisch hinkommt, aber die Bahn zieht über die
+Rampe direkt auf deine Position — wer oben stehen bleibt, bekommt den
+Schnapp. Und nach einer Querung bleibt er zehn Sekunden standhaft auf
+deiner Seite, statt sich sofort wieder zurückschicken zu lassen.
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.68 (Early Preview)
 
 **ROOM2090: bleib besser nicht auf der Rampe stehen.**
