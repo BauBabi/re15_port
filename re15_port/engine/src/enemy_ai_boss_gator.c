@@ -1643,13 +1643,18 @@ void re15_gator_boss_tick(int slot)
         g->timer++;
         re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
         e->y = GB_WATER_Y;
-        if (g->timer <= 30) {
-            g->pitch_vz = (int16_t)((350 * g->timer) / 30);   /* Kopf senkt sich */
-        } else if (g->timer == 45) {
+        /* Timing gestreckt (Nutzer 2026-09-11: "geht etwas zu frueh, man
+         * sieht es zu dem Zeitpunkt noch nicht") - Leons Todesanimation und
+         * der Todeskamera-Einschwenk brauchen ihre Zeit, erst DANN darf das
+         * sichtbare Zubeissen und das Verschwinden kommen. */
+        if (g->timer <= 60) {
+            g->pitch_vz = (int16_t)((350 * g->timer) / 60);   /* Kopf senkt sich */
+        } else if (g->timer == 75) {
             e->motion = 4; e->anim_frame = 0;                 /* Zubeissen */
-        } else if (g->timer == 60 && !g->gefressen) {
-            pl->no_draw = 1; g->gefressen = 1;                /* Leon verschwindet */
-        } else if (g->timer >= 120) {
+        } else if (g->timer == 95 && !g->gefressen) {
+            pl->no_draw = 1; g->gefressen = 1;                /* Leon verschwindet
+                                                               * NACH dem Schnapp */
+        } else if (g->timer >= 170) {
             g->pitch_vz = 0;
             g->phase = GBP_CHASE;         /* der pl->hp<0-Abzug uebernimmt:
                                            * er geht einfach weg */
