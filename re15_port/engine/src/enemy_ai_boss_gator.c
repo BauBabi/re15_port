@@ -132,10 +132,14 @@ extern re15_actor_t g_actors[];
  * (7200). Hitbox/Reichweiten bleiben die byte-true 0x23-Werte. */
 #define GB_SCALE_Q12     2731
 /* Bogen-Hub: Peak-Root-Y so, dass der BAUCH auf der Plattformoberflaeche
- * (-1800 = floor-Ebene 1 x byte-true Y=-1800*floor @0x8010c7a4) aufliegt:
- * Bauch-Tiefe unter Root = 2088 (Mesh-y-Max, gemessen) x Scale 2/3 = 1392;
- * Peak = -1800 - 1392 = -3192; Hub = |-3192 - (-1200)|. */
-#define RE15_GB_CROSS_HUB 1992
+ * (-1800 = floor-Ebene 1 x byte-true Y=-1800*floor @0x8010c7a4) aufliegt.
+ * GEMESSEN 2026-09-11 (PEAK-Hook, Bone-Welt-y am Bahn-Scheitel): der
+ * EM23-Rig-URSPRUNG sitzt an der Koerper-UNTERSEITE (tiefster Bone -3481
+ * bei Root -3192 = ALLE Bones ueber dem Root) - die alte Bindpose-Rechnung
+ * ("Bauch 1392 unter Root") hatte die y-Richtung invertiert, der Koerper
+ * schwebte 1392 ueberm Deck (Nutzer-Bild fehler/error.png). Unterseite ~=
+ * Root: Peak = Deck -1800 - 100 Toleranz = -1900; Hub = |-1900-(-1200)|. */
+#define RE15_GB_CROSS_HUB 700
 #define GB_ARC_VZ_MAX     100   /* DESIGN (Nutzer 2026-09-11 "zu umschweifend,
                                  * muss flacher aussehen"): ~9 deg je Wirbelgelenk
                                  * statt 23 - der Koerper bleibt fast gerade */
@@ -1166,6 +1170,25 @@ void re15_gator_boss_tick(int slot)
                 g->arc_vz = (int16_t)(-g->arc_vz);         /* Betrag: haengen wie gehabt */
                 /* Neigung aus der y-RATE: steigen = Nase hoch, sinken = runter. */
                 g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 100);
+            }
+        }
+        {   /* MESS-HOOK (Nutzer-Bild fehler/error.png 2026-09-11: "Abstand
+             * hin zur Rampe sehr hoch"): am Bahn-Peak einmal die tiefste
+             * gerenderte Bone-Welt-y loggen - die Bindpose-Rechnung (Bauch
+             * 1392 unter Root) passt nicht zur Loko-Pose. */
+            static int s_pk_done = 0;
+            if (e->y <= (GB_WATER_Y - RE15_GB_CROSS_HUB) && !s_pk_done) {
+                int bi2; int32_t bp2[3], miny = -99999, root = e->y;
+                for (bi2 = 0; bi2 < 22; bi2++) {
+                    re15_enemy_bone_world_pos(e, bi2, bp2);
+                    if (bp2[1] > miny) miny = bp2[1];   /* groesstes y = tiefster Punkt */
+                }
+                {   static FILE *s_pk = NULL;
+                    if (!s_pk) s_pk = fopen("gator_boss.log", "a");
+                    if (s_pk) { fprintf(s_pk, "PEAK root=%d tiefster_bone=%d deck=-1800\n",
+                                        root, miny); fflush(s_pk); }
+                }
+                s_pk_done = 1;
             }
         }
         /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
