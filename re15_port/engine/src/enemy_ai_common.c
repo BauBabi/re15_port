@@ -11348,7 +11348,18 @@ static void re15_birkin_ai_tick(int slot)
             break;
         case 2:   /* phase 2 @0x8011a690: ESP 0x1c gore, +0x9c=300, -> phase 3 (or 4 if grid&0xf already 2) */
             e->ai_timer = 300;                         /* +0x9c = 0x12c @0x8011a6a8 */
-            /* ESP effect 0x1c (0x8004ef90 gore) @0x8011a6b8 — render-side, OPEN */
+            /* ⛔ DAS IST KEIN EFFEKT, SONDERN DER FORTSCHRITTS-SCHALTER.
+             * FUN_8004ef90 setzt ein Spiel-Flag (`bank[bit>>5] |= 0x80000000 >>
+             * (bit & 0x1f)`, RE_15_Quellcode_V2/FUN_8004ef90.c); die Bank-Tabelle
+             * @0x80074664[5] = DAT_800b1028 = Flag-Zone 5. Der Aufruf
+             * `func_0x8004ef90(0x800b1028,0x1c)` steht im Birkin-Morph-Tail
+             * @0x8011a6b8 (STAGE3, FUN_8011a5d8.c:26) bzw. @0x8011ae10 (STAGE5,
+             * FUN_8011adec.c:26). Der Port hielt ihn faelschlich fuer einen
+             * Gore-Effekt und liess ihn aus - damit blieb z5:0x1C UNGESETZT, und
+             * die acht Raeume, die es abfragen (3070/3071, 5080/5081, 5090/5091,
+             * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
+             * DIESEN einen Produzenten. */
+            re15_game_flag_set(5, 0x1c, 1);            /* @0x8011a6b8 / @0x8011ae10 */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */
             break;
         case 3:   /* phase 3 @0x8011a6c0: WAIT for the room-SCD morph trigger (grid&0xf)==2. OPEN: not wired -> HOLD */

@@ -1011,6 +1011,26 @@ static int op_evt_exec(scd_thread_t *t)
 
     if (!s_current_rdt) return 1;
     if (sub_id >= RE15_RDT_MAX_SUB_SCD) return 1;
+    /* ⛔ GESTRICHENE EREIGNIS-SUBS (Nutzer-Auftrag 2026-09-12: Abspann raus).
+     * ROOM5090/5091 sub02 ist der Abspann-Vorspann: Set(2,7,1) = Pad-Sperre
+     * @0x12C2, Set(1,0x1B,1) = Letterbox @0x12C6, Message_on(0) = "THANK YOU
+     * FOR PLAYING !!!" @0x12CE, dann Aot_on(5) @0x12D6 = Sprung nach ROOM6040.
+     * Die Tuer selbst ist schon geriegelt (aot_common.c), aber sub02 muss
+     * TROTZDEM weg: es setzt Pad-Sperre und Letterbox und loest sie NIE wieder
+     * - die Entsperrung war der Raumwechsel. Ohne diesen Riegel stuende der
+     * Spieler nach dem Bosstod eingefroren im Raum.
+     * Die Zeile Set(5,0x1C,0) in sub01 @0x12AA laeuft weiter und verbraucht das
+     * Flag - also kein Dauerfeuer. */
+    {
+        static const struct { uint16_t room; uint8_t sub; } gestrichen[] = {
+            { 0x5090u, 0x02u }, { 0x5091u, 0x02u },
+        };
+        unsigned gi;
+        for (gi = 0; gi < sizeof gestrichen / sizeof gestrichen[0]; gi++)
+            if (gestrichen[gi].room == (uint16_t)g_current_room_id &&
+                gestrichen[gi].sub  == sub_id)
+                return 1;       /* PC steht bereits hinter dem Opcode */
+    }
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
     if (!target_pc) return 1;   /* no such sub → drop */
 

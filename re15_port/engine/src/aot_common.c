@@ -515,6 +515,22 @@ static int aot_fire_door(int i)
         unsigned dest_id = (((unsigned)d->dest_stage + 1u) << 12)
                          | ((unsigned)d->dest_room << 4)
                          | (g_current_room_id & 0x000Fu);
+        /* ⛔ ABSPANN ENTFERNT (Nutzer-Auftrag 2026-09-12: "dann kommen die
+         * Credits. Ich moechte dass du das raus nimmst. Dort erfolgt dann der
+         * finale Boss Fight."). ROOM6040/6041 IST der Abspann - kein eigener
+         * Code-Pfad, sondern eine 9-Bild-Diashow: ROOM6040.RDT sub02
+         * @0x052A-0x0597 schaltet nur Cut 0..8 mit Sleeps durch (nCut=9, Bilder
+         * aus ROOM604.BSS) und loescht am Ende mit `Set(0,1,0)` @0x0590 das
+         * INGAME-Bit (= zurueck zum Titel). Der Raum hat keine Tuer, keinen
+         * Gegner, keine Message-Sektion.
+         * Zensus ueber alle 653 Door_aot_set-Records des Spiels: GENAU ZWEI
+         * loesen hierher auf - ROOM5090 und ROOM5091, main00 Slot 5 (Rect 0x0,
+         * @0x010EE). Dieser Riegel greift fuer den Scan-Pfad wie fuer Aot_on(5)
+         * gleichermassen, weil beide durch aot_fire_door laufen. */
+        if (dest_id == 0x6040u || dest_id == 0x6041u) {
+            a->was_inside = 1;                 /* wie ein bereits betretener AOT */
+            return 1;
+        }
         if (dest_id != g_current_room_id) {
             /* BYTE-TRUE (Fahrstuhl-ROOM1080-Fix 2026-08-08): der Warp nutzt IMMER den
              * Door_aot_set-Payload — Handler sce-2 @0x800430bc `sw a0,DAT_800ac9a8`;
