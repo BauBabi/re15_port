@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.7.73 (Early Preview)
+
+**ROOM2090: kompromisslose Jagd — und der Kletter-Treffer wirft dich sauber runter.**
+
+---
+
+Deine zwei Punkte:
+
+1. **Kletter-Treffer**: Erwischte er dich mitten im Hochklettern, hingst du
+   in der Luft. Jetzt bricht der Treffer das Klettern ab und du fällst auf
+   die unterste Ebene — wie von dir vorgegeben.
+2. **Kompromisslose Jagd**: Liegt der Block zwischen euch, klettert er ab
+   sofort IMMER direkt drüber (der Außen-Umlauf existiert nur noch als
+   Notweg direkt nach einer Querung). Das Zufalls-Wackeln der Nase beim
+   Schwimmen ist raus, Wenden sind zackig statt träge, und in deiner Nähe
+   hält er stur auf dich — keine leeren Drehungen mehr.
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.72 (Early Preview)
 
 **ROOM2090: jetzt ist er gefährlich.**
