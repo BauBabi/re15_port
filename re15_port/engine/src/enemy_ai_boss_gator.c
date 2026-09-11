@@ -633,22 +633,34 @@ static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
  * als auf den kleinen Vorsprung" beendete die freien rim->rim-Bahnen, die
  * diagonal ueber die Plattform-Mitte liefen, Marke 4: y=-3192 mitten auf dem
  * Block). Der Aufrufer startet die Bahn aus Kanten-Naehe (Anlaufpunkt). */
-static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued)
+static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
+                           int32_t ziel_x)
 {
+    /* DIAGONAL-BAHN (Nutzer 2026-09-11 "man kann ihn perfekt austricksen
+     * waehrend er oben vorbei laeuft": Leon stand im WEST-Drittel der
+     * Rampe (x=2318), alle Bahnen liefen auf der 4450er-Klemme 2100+
+     * seitlich vorbei - der Vorbeigeh-Schnapp war nie erreichbar):
+     * START-x bleibt im erreichbaren Osten (Anlauf-Klemme, Plattform-
+     * Ecken-Schatten), das BAHN-ENDE zieht auf LEONS Spur (Lande-x-
+     * Klemme 3350 = Eckenschatten sqrt(1466^2-550^2)+1850 + Marge). */
     int32_t cx = e->x;
     if (cx < GB_RAMP_X0 + GB_RING_M) cx = GB_RAMP_X0 + GB_RING_M;
     if (cx > GB_RAMP_X1 - 700)       cx = GB_RAMP_X1 - 700;
+    if (ziel_x < 3350)               ziel_x = 3350;
+    if (ziel_x > GB_RAMP_X1 - 700)   ziel_x = GB_RAMP_X1 - 700;
     /* Westgrenze = X0+GB_RING_M (4450), NICHT +700: die Plattform-Ostkante
      * (1850) wirft mit dem 2200er-Koerperradius (@0x80118b98) einen
      * Klemm-Schatten bis x~3950 - ein Anlaufpunkt darunter ist mit dem
      * Koerper UNERREICHBAR (Nutzer-Marke 3, 2026-09-10: er stand bei
      * (2522,-22170) exakt auf der Suedkanten-Klemmlinie, Ziel (2550,-20700),
      * 1470 vor dem 1400er-Gate - fuer immer). */
-    g->cx0 = cx; g->cx1 = cx;
+    g->cx0 = cx; g->cx1 = ziel_x;
     if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
     else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
     {
-        int32_t len = (GB_RAMP_Z1 - GB_RAMP_Z0) + 2 * GB_BAHN_M;   /* 8800 */
+        int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
+        int64_t l2 = ldx * ldx + ldz * ldz;
+        int32_t len = 64; while ((int64_t)len * len < l2 && len < 30000) len += 64;
         g->cframes = (int16_t)(len / 40);
         if (g->cframes < 90)  g->cframes = 90;
         if (g->cframes > 240) g->cframes = 240;
@@ -739,7 +751,8 @@ void re15_gator_boss_tick(int slot)
              * 3 = Todes-Pfad testen (hp=1; nach ~10 s Raumzeit toeten). */
             const char *tv = getenv("RE15_GB_TEST");
             if (tv) { g->aggro = 1;
-                      if (*tv == '2') gb_cross_begin(e, g, gb_zone(e->z) == 0);
+                      if (*tv == '2') gb_cross_begin(e, g, gb_zone(e->z) == 0,
+                                                    g_actors[RE15_ACTOR_SLOT_PLAYER].x);
                       if (*tv == '3') e->hp = 1;
                       if (*tv == '5') {          /* Rampen-Repro: Nutzer-Marker-Lage
                                                   * (Gator noerdlich der Rampe), scharf
@@ -939,7 +952,7 @@ void re15_gator_boss_tick(int slot)
                 if (g->route == 2 && g->cross_cd == 0) {
                     int64_t adx = e->x - rx, adz = e->z - rz_ein;
                     if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
-                        gb_cross_begin(e, g, zg == 0);
+                        gb_cross_begin(e, g, zg == 0, pl->x);
                         break;
                     }
                     tx = rx; tz = rz_ein; g->dbg_zweig = 2;
@@ -1219,7 +1232,7 @@ void re15_gator_boss_tick(int slot)
                         {
                             int64_t adx = e->x - rx, adz = e->z - rz_ein;
                             if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
-                                gb_cross_begin(e, g, zg2 == 0);
+                                gb_cross_begin(e, g, zg2 == 0, pl->x);
                                 break;
                             }
                         }
@@ -1421,7 +1434,12 @@ void re15_gator_boss_tick(int slot)
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
         if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
-            g->cross_cd = 90;                /* Nutzer-Telemetrie 2026-09-10: mit 300
+            g->cross_cd = (int16_t)((pl->y < -900) ? 300 : 90);
+                                             /* Leon OBEN: 10 s auf der Seite
+                                              * bleiben (souveraene Belagerung
+                                              * statt Dauer-Pendelei, Nutzer
+                                              * 2026-09-11 "faehrt komisch
+                                              * rum"); unten agil (90):
                                               * (10 s) kam er nicht hinterher, wenn
                                               * Leon direkt zurueckquerte - 3 s
                                               * reichen als Abwechslungs-Pause */
