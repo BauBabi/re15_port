@@ -1,3 +1,17 @@
+# v0.7.79 — 2026-09-11
+
+## Vier tote Treppen erwachen + Spinnen wieder aktiv
+
+- **ROOM6030-Treppe** (Nutzer-Report "kann sie nicht runter laufen"):
+  Der Raum nutzt einen Einzel-Treppen-Record mit dem byte-true
+  Band-WILDCARD 0x80 (@0x80042cac-cd4: Bit gesetzt = Band-Vergleich wird
+  uebersprungen, EIN Record bedient beide Enden). Der Port verglich das
+  Byte roh — die Treppe war in beide Richtungen tot. Der RDT-Vollscan
+  fand insgesamt VIER solcher Wildcard-Treppen (ROOM2030, 2080, 3010,
+  6030) — alle funktionieren jetzt; normale Treppen unveraendert.
+- **Spinnen im Bosskampf-Raum wieder aktiv** (der temporaere Freeze aus
+  der Bosskampf-Abstimmung ist entfernt).
+
 # v0.7.78 — 2026-09-11
 
 ## Bosskampf ROOM2090: Routenwahl nach Wegkosten
