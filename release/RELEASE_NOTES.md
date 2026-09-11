@@ -1,3 +1,15 @@
+# v0.7.77 — 2026-09-11
+
+## Bosskampf ROOM2090: Fress-Finisher synchron zum Maul
+
+- Der Halbkoerper-Wurf startet jetzt AM MAUL (nicht mehr am Todesort) —
+  der Koerper kommt sichtbar aus dem Maul hoch.
+- Der Kopf schnellt beim Wurf nach oben und bleibt zum fliegenden Koerper
+  gerichtet, bis der Rest im aufgerissenen Maul landet — vorher blieb der
+  Kopf gesenkt, waehrend der Koerper losgeloest in der Luft wedelte.
+- Die Bahn endet auf Maulhoehe im gehobenen Maul; nach dem Verschlingen
+  senken sich Kopf und Kiefer gemeinsam.
+
 # v0.7.76 — 2026-09-11
 
 ## Bosskampf ROOM2090: keine Luecke mehr auf gleicher Ebene
