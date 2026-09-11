@@ -1,3 +1,48 @@
+# RE1.5 Port — v0.7.68 (Early Preview)
+
+**ROOM2090: bleib besser nicht auf der Rampe stehen.**
+
+---
+
+Deine Freigabe ist drin: Stehst du oben auf der Rampe und er muss auf
+deine Seite, klettert er jetzt QUER über die Rampe — direkt unter dir
+durch, mit Schnapp im Vorbeigehen — statt den langen Umlauf zu schwimmen,
+den du bisher mit einem Schritt zurück entwerten konntest.
+
+Zu deiner Auflage („ohne dass die Spielfigur hängen bleibt“): Leon wird
+beim Drüberklettern ausschließlich von der Körper-Schub-Mechanik mit
+Wand-Klemme bewegt — dieselbe, die auch deine eigene Bewegung begrenzt.
+Er kann also weggeschoben werden oder die offene Stufe hinabrutschen,
+aber nicht durch Wände oder ins Nirgendwo. Falls sich beim Testen doch
+irgendwo ein Haken zeigt: F9-Marke reicht, die Telemetrie läuft mit.
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
+# RE1.5 Port — v0.7.67 (Early Preview)
+
+**ROOM2090: der Alligator ist jetzt stur — fernsteuern klappt nicht mehr.**
+
+---
+
+Dein Nachtest hat gezeigt: Du hast nicht getänzelt, du bist wirklich die
+Seite gewechselt — und er hat jedes Mal brav den Riesen-Umlauf gestartet,
+den du mit einem Schritt zurück entwertet hast. Jetzt ist er stur: Die
+Belagerungsseite wechselt erst, wenn du rund zehn Sekunden stabil auf der
+Gegenseite stehst — vorher bleibt er lauernd an seiner Kante. Und wenn er
+sich einmal für den Umlauf entschieden hat, schwimmt er ihn zu Ende, statt
+auf halber Strecke umzudrehen.
+
+Anmerkung: Die aggressivste Lösung wäre, dass er bei Seitenwechsel-Bedarf
+quer über die Rampe klettert — direkt unter dir durch, mit Schnapp. Das
+würde aber deine Regel „klettern erst, wenn er heruntergesprungen ist“
+aufweichen — sag Bescheid, wenn du das möchtest.
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.66 (Early Preview)
 
 **ROOM2090: der Alligator lässt sich nicht mehr austricksen.**
