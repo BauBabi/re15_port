@@ -136,8 +136,10 @@ extern re15_actor_t g_actors[];
  * Bauch-Tiefe unter Root = 2088 (Mesh-y-Max, gemessen) x Scale 2/3 = 1392;
  * Peak = -1800 - 1392 = -3192; Hub = |-3192 - (-1200)|. */
 #define RE15_GB_CROSS_HUB 1992
-#define GB_ARC_VZ_MAX     260   /* DESIGN: Q12-Spitzenkruemmung je Wirbelgelenk (~23 deg) */
-#define GB_PITCH_MAX      300   /* DESIGN: Root-Neigung am Bahnanfang/-ende (~26 deg) */
+#define GB_ARC_VZ_MAX     100   /* DESIGN (Nutzer 2026-09-11 "zu umschweifend,
+                                 * muss flacher aussehen"): ~9 deg je Wirbelgelenk
+                                 * statt 23 - der Koerper bleibt fast gerade */
+#define GB_PITCH_MAX      140   /* DESIGN: ~12 deg Nase-Neigung statt 26 */
 /* Spinnen (Nutzer-Punkte 1+7): Plattform-Sitzplaetze + Ostwand-Flucht. */
 #define GB_SPID0_X       -700
 #define GB_SPID0_Z     -17800
@@ -1142,16 +1144,20 @@ void re15_gator_boss_tick(int slot)
              * 1992/150) noch Insel darunter ist - das Sinken beginnt vor der
              * Kante und endet AN ihr. */
             int nfr2 = (g->cframes ? g->cframes : GB_CROSS_FRAMES);
-            int tla  = t + 13; if (tla > nfr2) tla = nfr2;
+            int tla  = t + (RE15_GB_CROSS_HUB / 100); /* = Abbauzeit HUB/Rate
+                                                        * (Rate unten 100/F) */
+            if (tla > nfr2) tla = nfr2;
             int32_t lax = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * tla / nfr2);
             int32_t laz = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * tla / nfr2);
             int32_t y_ziel = (gb_ueber_rampe(e->x, e->z) && gb_ueber_rampe(lax, laz))
                                ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
             int32_t dy = y_ziel - e->y;
-            if (dy >  150) dy =  150;        /* Telemetrie: mit 60/F klang der Bogen
-                                              * ~1500 Einheiten NEBEN der Insel aus
-                                              * ("weit weg hochgeklettert") */
-            if (dy < -150) dy = -150;
+            if (dy >  100) dy =  100;        /* DESIGN 2026-09-11 "flacher": 100/F
+                                              * = weicher An-/Abstieg (~20 F); der
+                                              * Lookahead oben ist an HUB/Rate
+                                              * gekoppelt, damit das Sinken weiter
+                                              * AN der Kante endet (v0.7.51!) */
+            if (dy < -100) dy = -100;
             e->y += dy;
             {
                 int32_t hub = GB_WATER_Y - e->y;           /* 0..HUB */
@@ -1159,7 +1165,7 @@ void re15_gator_boss_tick(int slot)
                 g->arc_vz = (int16_t)(-(int32_t)GB_ARC_VZ_MAX * hub / RE15_GB_CROSS_HUB);
                 g->arc_vz = (int16_t)(-g->arc_vz);         /* Betrag: haengen wie gehabt */
                 /* Neigung aus der y-RATE: steigen = Nase hoch, sinken = runter. */
-                g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 60);
+                g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 100);
             }
         }
         /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
