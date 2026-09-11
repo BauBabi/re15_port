@@ -990,24 +990,40 @@ void re15_gator_boss_tick(int slot)
             {
                 int zg2 = gb_zone(e->z);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
-                if (zg2 == 2 && auf_rampe)    /* Nutzer-Marke 2026-09-11: Leon
-                                               * OBEN AUF DER RAMPE (Osten), der
-                                               * Gator lauerte nutzlos an der
-                                               * Plattform-WESTkante (dist 9216,
-                                               * kein Hochbiss moeglich) - in die
-                                               * naehere Becken-Zone wechseln und
-                                               * dort an die Rampen-Kante. */
-                    zg2 = (e->z > (GB_RAMP_Z0 + GB_RAMP_Z1) / 2) ? 1 : 0;
-                if (zg2 == 2) {               /* Westkanal: Plattform-Westkante */
+                if (auf_rampe) {              /* Nutzer-Marken F755-F936 2026-09-11
+                                               * ("er findet den Weg wieder nicht"):
+                                               * Leon stand an der NORDkante der
+                                               * Rampe, der Gator belagerte stur
+                                               * die SUEDkante seiner eigenen Zone
+                                               * (dist 5700, Hochbiss unerreichbar).
+                                               * Die Belagerungs-SEITE richtet sich
+                                               * jetzt nach LEONS naeherer Kante;
+                                               * der Seitenwechsel laeuft um WEST
+                                               * (kein Ostumlauf, und KLETTERN bei
+                                               * Leon-oben bleibt per Nutzer-Design
+                                               * verboten). */
+                    int zielzone = (pl->z >= (GB_RAMP_Z0 + GB_RAMP_Z1) / 2) ? 1 : 0;
+                    if (zg2 != 2 && zg2 != zielzone) {
+                        int32_t wx = GB_PLAT_X0 - GB_RING_M;
+                        int32_t wz_and = (zg2 == 0) ? (GB_PLAT_Z1 + GB_RING_M)
+                                                    : (GB_PLAT_Z0 - GB_RING_M);
+                        int32_t wz_eig = (zg2 == 0) ? (GB_PLAT_Z0 - GB_RING_M)
+                                                    : (GB_PLAT_Z1 + GB_RING_M);
+                        if (gb_seg_frei(e->x, e->z, wx, wz_and, GB_KOERPER_M))
+                             { gx = wx; gz = wz_and; }   /* direkt zur Gegen-Ecke */
+                        else { gx = wx; gz = wz_eig; }   /* erst zur eigenen */
+                    } else {
+                        gx = pl->x;
+                        if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
+                        if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
+                        gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
+                                             : (GB_RAMP_Z1 + GB_GPAT_M);
+                    }
+                } else if (zg2 == 2) {        /* Westkanal: Plattform-Westkante */
                     gx = GB_PLAT_X0 - GB_GPAT_M;
                     gz = pl->z;
                     if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                     if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
-                } else if (auf_rampe) {       /* Rampen-Kante der eigenen Seite */
-                    gx = pl->x;
-                    if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
-                    if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
-                    gz = (zg2 == 0) ? (GB_RAMP_Z0 - GB_GPAT_M) : (GB_RAMP_Z1 + GB_GPAT_M);
                 } else {                      /* Plattform-Kante der eigenen Seite */
                     gx = pl->x;
                     if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
