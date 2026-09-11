@@ -197,6 +197,7 @@ typedef struct {
     int32_t  leon_lx, leon_lz;     /* Leon-Vortick (Vorhalte-Jagd) */
     int16_t  burst_t, burst_cd;    /* Wasser-BURST: Sprintframes / Abklingzeit */
     int8_t   leon_oben_alt;        /* Absprung-Flanke oeffnet den Burst sofort */
+    int8_t   hit_zaehler;          /* Treffer seit letztem Flinch (alle 6 zuckt er) */
     int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
                                     * bricht Leons Absprung die Bahn ab) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
@@ -505,8 +506,15 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
         re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
                              bp[0], bp[1], bp[2], (int16_t)e->rot_y);
     }
-    if (e->hp <= g->next_flinch_hp && g->phase != GBP_CROSS && g->phase != GBP_DIE) {
+    g->hit_zaehler++;
+    if ((e->hp <= g->next_flinch_hp || g->hit_zaehler >= 6)
+        && g->phase != GBP_CROSS && g->phase != GBP_DIE) {
+        /* Nutzer 2026-09-11 ("die Schadenanimation fehlt mir noch ab einer
+         * gewissen Menge an treffern"): mit der 10%-Schwelle allein waeren
+         * es ~20 Handgun-Treffer je Flinch - zusaetzlich flincht er alle
+         * 6 TREFFER (DESIGN), grosse Schadensspruenge weiterhin sofort. */
         while (g->next_flinch_hp >= e->hp) g->next_flinch_hp -= GB_FLINCH_STEP;
+        g->hit_zaehler = 0;
         g->phase = GBP_FLINCH; g->timer = 0;
         e->motion = 10; e->anim_frame = 0;   /* Flinch-Clip 10 (30 F, Clip-Statistik) */
     }
@@ -858,6 +866,22 @@ void re15_gator_boss_tick(int slot)
             e->anim_frame++;
             return;
         }
+    }
+    /* SIEGER-ABZUG (Nutzer 2026-09-11: "Sobald ich tot bin dreht sich der
+     * aligator noch die ganze Zeit ueber mir"): nach Leons Tod laesst er ab
+     * und gleitet zum Lauerplatz zurueck - kein Nahstand-Gewende ueber der
+     * Leiche waehrend der Todes-Kamera. */
+    if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
+        && g->phase != GBP_OFF) {
+        int64_t rdx = (int64_t)GB_START_X - e->x, rdz = (int64_t)GB_START_Z - e->z;
+        re15_enemy_steer_point(e, GB_START_X, GB_START_Z, 0x20);
+        if (rdx * rdx + rdz * rdz > (int64_t)1500 * 1500)
+            re15_ai_advance(e, 40);
+        e->y = GB_WATER_Y;
+        g->arc_vz = 0; g->pitch_vz = 0;
+        if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+        e->anim_frame++;
+        return;
     }
     g->frei_lx = e->x; g->frei_lz = e->z; g->frei_seen = 1;
     {   /* WASSER-BURST-Verwaltung (DESIGN "gefaehrlich machen", Nutzer
