@@ -194,6 +194,7 @@ typedef struct {
     int16_t  ziel_zt;              /* Restframes der Etappe */
     int8_t   seite_l, seite_init;  /* gelatchte Belagerungsseite (0=Sued,1=Nord) */
     int8_t   umlauf;               /* Seitenwechsel-Umlauf laeuft (bis Ankunft) */
+    int32_t  leon_lx, leon_lz;     /* Leon-Vortick (Vorhalte-Jagd) */
     int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
                                     * bricht Leons Absprung die Bahn ab) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
@@ -926,6 +927,15 @@ void re15_gator_boss_tick(int slot)
          * Die Route wird gelatcht und nur neu bewertet, wenn eine Zone
          * wechselt oder der Kletter-Cooldown ablaeuft. */
         int32_t tx = pl->x, tz = pl->z;
+        {   /* VORHALTE (DESIGN "schlauer machen", Nutzer 2026-09-11): auf
+             * die in 20 F extrapolierte Leon-Position zielen; Sprung-/
+             * Teleport-Frames (>200 Delta) und Erst-Tick liefern 0. */
+            int32_t vdx = pl->x - g->leon_lx, vdz = pl->z - g->leon_lz;
+            if (gb_iabs(vdx) <= 200 && gb_iabs(vdz) <= 200
+                && (g->leon_lx | g->leon_lz)) {
+                tx += vdx * 20; tz += vdz * 20;
+            }
+        }
         {
             int zg = gb_zone(e->z), zl = gb_zone(pl->z);
             g->dbg_zweig = 0;
@@ -1441,9 +1451,17 @@ void re15_gator_boss_tick(int slot)
          * phase ist der Aligator absolut hilflos" - Leon sprang die Stufe
          * hoch/runter um die starre 7-s-Bahn herum): */
         if (pl->y < -900) {
-            /* (b) Leon OBEN: das Bahn-Ende verfolgt LIVE seine Spur */
+            /* (b) Leon OBEN: das Bahn-Ende verfolgt LIVE seine Spur.
+             * SAFE-ZONE-SCHLIESSUNG (Nutzer 2026-09-11 "immer noch total
+             * leicht ausgetrickst": Leon stand im West-Drittel x=2318,
+             * die 3350er-Lande-Klemme liess jede Bahn 2100 seitlich
+             * vorbeiziehen): UEBER der Rampe (t im Fenster) darf die Bahn
+             * die volle Rampenbreite [2550..6500] - die 3350er-Klemme
+             * sichert nur noch den LANDEPUNKT im Wasser (Ecken-Schatten). */
             int32_t zx = pl->x;
-            if (zx < 3350)             zx = 3350;
+            int32_t lo = (t >= g->t_ein && t <= g->t_aus)
+                           ? (GB_RAMP_X0 + 700) : 3350;
+            if (zx < lo)               zx = lo;
             if (zx > GB_RAMP_X1 - 700) zx = GB_RAMP_X1 - 700;
             g->cx1 = zx;
         } else if (g->cross_oben && (t < g->t_ein || t > g->t_aus)) {
@@ -1573,6 +1591,7 @@ void re15_gator_boss_tick(int slot)
     {   /* VOLLPHASEN-TELEMETRIE (Nutzer "bleibt immer noch haengen"): alle 30 F
          * Phase+Position in gator_boss.log - der Stillstands-Detektor findet
          * damit JEDEN Haenger samt Phase/Ziel-Kontext. */
+        g->leon_lx = pl->x; g->leon_lz = pl->z;   /* Vorhalte-Vortick */
         static FILE *s_tl = NULL; static int s_tc = 0;
         if (!s_tl) s_tl = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
         if (s_tl && (++s_tc % 30) == 0) {
