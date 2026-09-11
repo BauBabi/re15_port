@@ -1,3 +1,35 @@
+# RE1.5 Port — v0.7.61 (Early Preview)
+
+**ROOM2090: er liegt beim Klettern AUF der Rampe — und die Belagerung friert nicht mehr ein.**
+
+---
+
+Dein zweiter Marker (Alligator stand bewegungslos im Westkanal, während du
+oben auf der Rampe standest) deckte drei Belagerungs-Fehler auf: Er
+lauerte an der falschen Kante (Plattform-West statt Rampen-Seite — jetzt
+wechselt er in das nähere Becken und belagert die Rampen-Kante unter
+dir), sein Kanten-Pendel war in einem Zahlen-Deadlock eingefroren (jetzt
+patrouilliert er sichtbar), und der Anti-Hänger-Wächter galt bisher nur
+für die Verfolgung, nicht für die Belagerung (jetzt für beide). Dein
+dritter Marker („dreht planlos Runden“) war ein Ziel-Flattern zwischen
+Belagerungskante und Umlauf-Ecke — die Belagerung hält ihr Kantenziel
+jetzt stabil und weicht nur noch aus, wenn wirklich ein Block im Weg ist.
+
+---
+
+Dein Bild mit dem Lineal war der Schlüssel: Der Körper schwebte am
+Scheitel exakt 1392 Einheiten über dem Deck. Die Messung am lebenden
+Modell zeigte den Grund — der Ursprung des Alligator-Rigs sitzt an der
+Körper-UNTERSEITE, nicht in der Mitte; meine Höhenrechnung aus den
+Modelldaten hatte die Richtung invertiert und hob ihn um genau eine
+Körperhöhe zu hoch. Der Scheitel liegt jetzt so, dass die Unterseite mit
+~100 Einheiten Toleranz auf dem Deck aufliegt — nachgemessen am selben
+Mess-Hook, und im Sichtlauf liegt er flach auf der Fläche.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.60 (Early Preview)
 
 **ROOM2090: das Klettern ist jetzt flach.**
