@@ -1,3 +1,28 @@
+# RE1.5 Port — v0.7.65 (Early Preview)
+
+**ROOM2090: die Vorausschau — 3286 Konstellationen durchgerechnet, alle Blocker raus.**
+
+---
+
+Deine Ansage („schau voraus, was ihn noch alles blocken wird“) ist jetzt
+Programm: Ein neuer Dauertest lässt den echten Alligator über ein Raster
+ALLER Startpositionen gegen 31 Leon-Positionen laufen (Ufer, Ecken,
+Nischen, Wasser, oben auf Plattform und Rampe) und verlangt für jede der
+3286 Konstellationen, dass er binnen 50 Sekunden in Kontakt- bzw.
+Belagerungsnähe kommt.
+
+Der Erstbefund waren 530 Blocker-Konstellationen — sieben Fehlerklassen,
+alle in dieser Version behoben, darunter: echte Kürzeste-Wege-Suche statt
+kurzsichtiger Eckenwahl (die Rampe macht den Eckenring zur Kette),
+Selbst-Befreiung aus Klemm-Fällen an Wänden und Block, ein Etappen-Latch
+gegen jedes Ziel-Flattern, und die Belagerung wählt ihre Kante jetzt
+überall nach DEINER Position. Endstand: 0 von 3286 blockiert — und der
+Test läuft ab jetzt bei jedem Build mit, damit es so bleibt.
+
+Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.64 (Early Preview)
 
 **ROOM2090: eine einzige Wegfindung — das Schwanken ist an der Wurzel raus.**
