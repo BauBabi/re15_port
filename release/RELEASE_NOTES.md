@@ -1,3 +1,21 @@
+# RE1.5 Port — v0.7.62 (Early Preview)
+
+**ROOM2090: die Belagerung kommt auf deine Seite der Rampe.**
+
+---
+
+Deine drei Marker: Du standest oben nahe der NORDkante der Rampe, er
+belagerte stur die SÜDkante — dauerhaft außer Reichweite, und einen Weg
+auf die richtige Seite kannte die Belagerung nicht. Jetzt richtet sich
+die Belagerungsseite nach DEINER näheren Kante: Steht er im falschen
+Becken, schwimmt er westlich um die Plattform herum und taucht an der
+Kante unter dir auf. Klettern während du oben stehst bleibt wie von dir
+festgelegt tabu — er nimmt den Wasserweg.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.61 (Early Preview)
 
 **ROOM2090: er liegt beim Klettern AUF der Rampe — und die Belagerung friert nicht mehr ein.**
