@@ -1907,6 +1907,124 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * LAENGE: der Generator begrenzt jede Wand jetzt auf die GEMALTE Flaeche der
      * Kachel; die alte Linie lief von y113 bis y145 und ragte 9 px ins Leere. */
     if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
+/* REIHENFOLGE: TUERMARKEN VOR DEN INNENWAENDEN EINREIHEN.
+ * Die Op-Liste wird von HINTEN gerastert - frueher eingereiht heisst OBEN.
+ * Die Innenwand ist eine DURCHGEZOGENE Linie; lag sie oben, uebermalte sie die
+ * Tuerbalken, die genau in ihr sitzen sollen. GEMESSEN (Nutzer-Marke ROOM1110,
+ * 2026-09-12, "mir fehlen die Tueren fuer die beiden kleinen Raeume"): die
+ * Trennwand auf Blatt 3 Rect 5 lief bei x=188 von y=122 bis y=144 durchgehend
+ * in rgb(192,24,24) - die beiden Tuermarken (188,128) und (188,139) waren
+ * spurlos weg. Eine Tuer ist eine OEFFNUNG in der Wand und gehoert deshalb
+ * ueber die Wandlinie. */
+        int n = re15_map_mark_count(), k;
+        for (k = 0; k < n; k++) {
+            int mpage, mrect, mx, my, kind, row;
+            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
+            if (mpage != (int)st->map_page) continue;
+            {
+                /* ---- RE1.5-TUERSYMBOL statt eines eigenen Balkens -------------------
+                 * Nutzer 2026-08-31: "ich haette gerne die Resident Evil 1.5 Tuer
+                 * Symbole, wie sie in ROOM 1130 oben zu sehen sind, anstatt der gelben
+                 * Balken."
+                 *
+                 * Das Original fuehrt Tueren nicht als Daten, sondern MALT sie in die
+                 * Grundriss-Kachel: eine Nische in der Wand mit angewinkeltem Tuerblatt,
+                 * im Wand-Palettenindex 4. Abgemessen an DATA/MAP05.PIX, Seite 4 Rect 4
+                 * (ROOM1130, uv(0,32) 32x80), Kachelzeilen 2..6 in der Westwand:
+                 *        Spalte 012345
+                 *          j=2  444444    Laibung oben
+                 *          j=3  4....4
+                 *          j=4  4....4    Tuerblatt senkrecht ...
+                 *          j=5  4...4     ... knickt ab
+                 *          j=6  4444      Laibung unten
+                 * Gegenprobe Seite 4 Rect 3 (uv(192,16)): dieselbe Form zweimal, einmal
+                 * in der Nord-, einmal in der Suedwand.
+                 *
+                 * SYM[] unten ist genau dieser Pixelsatz fuer eine WESTWAND; die anderen
+                 * drei Seiten entstehen durch Spiegeln/Transponieren. Welche Wand es ist,
+                 * steht im kind-Byte (0=Nord 1=Ost 2=Sued 3=West); der Generator liest die
+                 * Seite aus der Kachel selbst - auf welcher Seite der Wand weitergezeichnet
+                 * ist.
+                 *
+                 * FARBE = die der Wand, damit das Symbol Teil der Zeichnung wird. Die
+                 * Wandlinie ist CLUT-Index 4 = 0x5ad6 = 5-Bit (22,22,22) und wird vom
+                 * Rechteck-Sprite mit dem Zustands-Ton moduliert (inv_render_pc.c mod5:
+                 * min(255,(t5*m)>>4)>>3). Das rechnen wir nach, damit die Nische im
+                 * unbesuchten Grau, im besuchten Gruen und im aktuellen Rot mitgeht. */
+                static const signed char SYM[13][2] = {   /* Westwand, Wand bei dx=0 */
+                    {0,-2},{1,-2},{2,-2},{3,-2},{4,-2},{5,-2},
+                    {5,-1},{5, 0},{4, 1},
+                    {0, 2},{1, 2},{2, 2},{3, 2}
+                };
+                int wr = RE2_TUER_R, wg = RE2_TUER_G, wb = RE2_TUER_B;
+                (void)SYM;
+                if (kind <= 3) {
+                    /* ---- RE2-TUERSYMBOL: ein kurzer gelber Balken IN der Wand ------
+                     * Nutzer 2026-09-02: "Setze um im RE 2 Map style ... Gerne auch mit
+                     * den RE 2 Symbolen, bis auf der Spieler Marker." Abgenommen an
+                     * re2_map_style.png: die Tuer ist ein 5x2-Balken im Wandton Gelb,
+                     * der LAENGS der Wand liegt und sie an dieser Stelle ersetzt.
+                     *
+                     * ⛔ DER BALKEN LOEST DAS RICHTUNGSPROBLEM DER NISCHE. Die gemalte
+                     * RE1.5-Nische ist gerichtet (kind 0=Nord..3=West), ein Durchgang
+                     * gehoert aber ZWEI Raeumen und liegt auf ihrer gemeinsamen Wand -
+                     * dort zeigt jede Nische zwangslaeufig zu einem hin und vom anderen
+                     * weg. Aus kind wird deshalb nur noch die ACHSE gelesen:
+                     * Nord/Sued = waagerechte Wand = Balken laeuft in x,
+                     * Ost/West  = senkrechte Wand  = Balken laeuft in y. */
+                    int laengs_x = (kind == 0 || kind == 2);
+                    re15_inv_op_t *q;
+                    if (e.n < e.max) {
+                        q = &e.ops[e.n++];
+                        q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
+                        q->u = 0; q->v = 0;
+                        /* ⛔ WANDBUENDIG, 1 px dick (Nutzer 2026-09-09 spaet, Marke 1
+                         * "Little piece of wall"): der 2 px dicke Balken ragte an der
+                         * Treppenkachel-Westwand ueber die 1-px-Wandlinie hinaus in
+                         * den Raum und las sich als Wandstummel. Der RE2-Balken sitzt
+                         * IN der Wandlinie - also genau ihre Dicke. */
+                        q->x = (int16_t)(laengs_x ? mx - 2 : mx);
+                        q->y = (int16_t)(laengs_x ? my : my - 2);
+                        q->w = (int16_t)(laengs_x ? 5 : 1);
+                        q->h = (int16_t)(laengs_x ? 1 : 5);
+                        q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb;
+                    }
+                } else {
+                    /* TREPPE: drei Sprossen QUER zur Laufrichtung, auf dunklem Grund.
+                     * Die Achse steht im sce-Byte der Band-Wechsel-Zone: 12 = X, 13 = Z
+                     * (Handler LAB_80043500 liest x @0x80043510-14, LAB_800435cc liest z
+                     * @0x800435dc-e0). Karten-Achsen map_x = welt_x, map_y = -welt_z:
+                     * X-Treppe laeuft waagerecht -> SENKRECHTE Sprossen (kind 5),
+                     * Z-Treppe senkrecht -> waagerechte Sprossen (kind 4).
+                     * (RE2 haelt dafuer eigene 8x8-Icons vor, RE1.5 liefert keine mit.) */
+                    /* ⛔ KEIN deckender Grund. Bis v0.3.70 lag unter den Sprossen ein
+                     * deckendes 7x7-Rechteck. Das uebermalte, was die Kachel an derselben
+                     * Stelle zeigt — in ROOM1170 ausgerechnet das GEMALTE Tuersymbol unter
+                     * der Treppe: Treppen-Marke (164,107) deckt x161..167/y104..110, das
+                     * Tuersymbol der Kachel liegt bei x162..166/y105..109, also 25 von 25
+                     * Pixeln verdeckt (Nutzer 2026-09-01: "es fehlt die eingezeichnete Tuer
+                     * unter der Treppe"). Gezeichnet werden nur noch die drei Sprossen. */
+                    int quer = (kind == 5);
+                    re15_inv_op_t tpl;
+                    tpl.kind = RE15_INV_OP_FILL; tpl.page = 0; tpl.clut = 0; tpl.abe = 0;
+                    tpl.u = 0; tpl.v = 0;
+                    tpl.x = 0; tpl.y = 0; tpl.w = 0; tpl.h = 0;
+                    tpl.r = 240; tpl.g = 240; tpl.b = 216;
+                    for (row = -2; row <= 2; row += 2) {
+                        re15_inv_op_t *q;
+                        if (e.n >= e.max) break;
+                        q = &e.ops[e.n++];
+                        *q = tpl;
+                        if (quer) { q->x = (int16_t)(mx + row); q->y = (int16_t)(my - 2);
+                                    q->w = 1; q->h = 5; }
+                        else      { q->x = (int16_t)(mx - 2);   q->y = (int16_t)(my + row);
+                                    q->w = 5; q->h = 1; }
+                    }
+                }
+            }
+        }
+    }
+    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
         int nw = re15_map_wall_count(), w;
         for (w = 0; w < nw; w++) {
             int wpage, wrect, wx0, wy0, wx1, wy1;
@@ -2033,115 +2151,6 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     if (_rs == RE15_MAP_RECT_CURRENT)
                         { q->r = 192; q->g =  24; q->b =  24; }
                     else { q->r =  40; q->g = 144; q->b =  40; }
-                }
-            }
-        }
-    }
-    if (st->substate == 1 && st->item_state == 1 && !re15_map_stock_mode()) {
-        int n = re15_map_mark_count(), k;
-        for (k = 0; k < n; k++) {
-            int mpage, mrect, mx, my, kind, row;
-            if (!re15_map_mark_get(k, &mpage, &mrect, &mx, &my, &kind)) continue;
-            if (mpage != (int)st->map_page) continue;
-            {
-                /* ---- RE1.5-TUERSYMBOL statt eines eigenen Balkens -------------------
-                 * Nutzer 2026-08-31: "ich haette gerne die Resident Evil 1.5 Tuer
-                 * Symbole, wie sie in ROOM 1130 oben zu sehen sind, anstatt der gelben
-                 * Balken."
-                 *
-                 * Das Original fuehrt Tueren nicht als Daten, sondern MALT sie in die
-                 * Grundriss-Kachel: eine Nische in der Wand mit angewinkeltem Tuerblatt,
-                 * im Wand-Palettenindex 4. Abgemessen an DATA/MAP05.PIX, Seite 4 Rect 4
-                 * (ROOM1130, uv(0,32) 32x80), Kachelzeilen 2..6 in der Westwand:
-                 *        Spalte 012345
-                 *          j=2  444444    Laibung oben
-                 *          j=3  4....4
-                 *          j=4  4....4    Tuerblatt senkrecht ...
-                 *          j=5  4...4     ... knickt ab
-                 *          j=6  4444      Laibung unten
-                 * Gegenprobe Seite 4 Rect 3 (uv(192,16)): dieselbe Form zweimal, einmal
-                 * in der Nord-, einmal in der Suedwand.
-                 *
-                 * SYM[] unten ist genau dieser Pixelsatz fuer eine WESTWAND; die anderen
-                 * drei Seiten entstehen durch Spiegeln/Transponieren. Welche Wand es ist,
-                 * steht im kind-Byte (0=Nord 1=Ost 2=Sued 3=West); der Generator liest die
-                 * Seite aus der Kachel selbst - auf welcher Seite der Wand weitergezeichnet
-                 * ist.
-                 *
-                 * FARBE = die der Wand, damit das Symbol Teil der Zeichnung wird. Die
-                 * Wandlinie ist CLUT-Index 4 = 0x5ad6 = 5-Bit (22,22,22) und wird vom
-                 * Rechteck-Sprite mit dem Zustands-Ton moduliert (inv_render_pc.c mod5:
-                 * min(255,(t5*m)>>4)>>3). Das rechnen wir nach, damit die Nische im
-                 * unbesuchten Grau, im besuchten Gruen und im aktuellen Rot mitgeht. */
-                static const signed char SYM[13][2] = {   /* Westwand, Wand bei dx=0 */
-                    {0,-2},{1,-2},{2,-2},{3,-2},{4,-2},{5,-2},
-                    {5,-1},{5, 0},{4, 1},
-                    {0, 2},{1, 2},{2, 2},{3, 2}
-                };
-                int wr = RE2_TUER_R, wg = RE2_TUER_G, wb = RE2_TUER_B;
-                (void)SYM;
-                if (kind <= 3) {
-                    /* ---- RE2-TUERSYMBOL: ein kurzer gelber Balken IN der Wand ------
-                     * Nutzer 2026-09-02: "Setze um im RE 2 Map style ... Gerne auch mit
-                     * den RE 2 Symbolen, bis auf der Spieler Marker." Abgenommen an
-                     * re2_map_style.png: die Tuer ist ein 5x2-Balken im Wandton Gelb,
-                     * der LAENGS der Wand liegt und sie an dieser Stelle ersetzt.
-                     *
-                     * ⛔ DER BALKEN LOEST DAS RICHTUNGSPROBLEM DER NISCHE. Die gemalte
-                     * RE1.5-Nische ist gerichtet (kind 0=Nord..3=West), ein Durchgang
-                     * gehoert aber ZWEI Raeumen und liegt auf ihrer gemeinsamen Wand -
-                     * dort zeigt jede Nische zwangslaeufig zu einem hin und vom anderen
-                     * weg. Aus kind wird deshalb nur noch die ACHSE gelesen:
-                     * Nord/Sued = waagerechte Wand = Balken laeuft in x,
-                     * Ost/West  = senkrechte Wand  = Balken laeuft in y. */
-                    int laengs_x = (kind == 0 || kind == 2);
-                    re15_inv_op_t *q;
-                    if (e.n < e.max) {
-                        q = &e.ops[e.n++];
-                        q->kind = RE15_INV_OP_FILL; q->page = 0; q->clut = 0; q->abe = 0;
-                        q->u = 0; q->v = 0;
-                        /* ⛔ WANDBUENDIG, 1 px dick (Nutzer 2026-09-09 spaet, Marke 1
-                         * "Little piece of wall"): der 2 px dicke Balken ragte an der
-                         * Treppenkachel-Westwand ueber die 1-px-Wandlinie hinaus in
-                         * den Raum und las sich als Wandstummel. Der RE2-Balken sitzt
-                         * IN der Wandlinie - also genau ihre Dicke. */
-                        q->x = (int16_t)(laengs_x ? mx - 2 : mx);
-                        q->y = (int16_t)(laengs_x ? my : my - 2);
-                        q->w = (int16_t)(laengs_x ? 5 : 1);
-                        q->h = (int16_t)(laengs_x ? 1 : 5);
-                        q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb;
-                    }
-                } else {
-                    /* TREPPE: drei Sprossen QUER zur Laufrichtung, auf dunklem Grund.
-                     * Die Achse steht im sce-Byte der Band-Wechsel-Zone: 12 = X, 13 = Z
-                     * (Handler LAB_80043500 liest x @0x80043510-14, LAB_800435cc liest z
-                     * @0x800435dc-e0). Karten-Achsen map_x = welt_x, map_y = -welt_z:
-                     * X-Treppe laeuft waagerecht -> SENKRECHTE Sprossen (kind 5),
-                     * Z-Treppe senkrecht -> waagerechte Sprossen (kind 4).
-                     * (RE2 haelt dafuer eigene 8x8-Icons vor, RE1.5 liefert keine mit.) */
-                    /* ⛔ KEIN deckender Grund. Bis v0.3.70 lag unter den Sprossen ein
-                     * deckendes 7x7-Rechteck. Das uebermalte, was die Kachel an derselben
-                     * Stelle zeigt — in ROOM1170 ausgerechnet das GEMALTE Tuersymbol unter
-                     * der Treppe: Treppen-Marke (164,107) deckt x161..167/y104..110, das
-                     * Tuersymbol der Kachel liegt bei x162..166/y105..109, also 25 von 25
-                     * Pixeln verdeckt (Nutzer 2026-09-01: "es fehlt die eingezeichnete Tuer
-                     * unter der Treppe"). Gezeichnet werden nur noch die drei Sprossen. */
-                    int quer = (kind == 5);
-                    re15_inv_op_t tpl;
-                    tpl.kind = RE15_INV_OP_FILL; tpl.page = 0; tpl.clut = 0; tpl.abe = 0;
-                    tpl.u = 0; tpl.v = 0;
-                    tpl.x = 0; tpl.y = 0; tpl.w = 0; tpl.h = 0;
-                    tpl.r = 240; tpl.g = 240; tpl.b = 216;
-                    for (row = -2; row <= 2; row += 2) {
-                        re15_inv_op_t *q;
-                        if (e.n >= e.max) break;
-                        q = &e.ops[e.n++];
-                        *q = tpl;
-                        if (quer) { q->x = (int16_t)(mx + row); q->y = (int16_t)(my - 2);
-                                    q->w = 1; q->h = 5; }
-                        else      { q->x = (int16_t)(mx - 2);   q->y = (int16_t)(my + row);
-                                    q->w = 5; q->h = 1; }
-                    }
                 }
             }
         }
