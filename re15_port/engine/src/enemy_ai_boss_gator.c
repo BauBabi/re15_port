@@ -193,6 +193,7 @@ typedef struct {
     int32_t  ziel_lx, ziel_lz;     /* GUARD-Etappen-Latch: gehaltenes Steuer-Ziel */
     int16_t  ziel_zt;              /* Restframes der Etappe */
     int8_t   seite_l, seite_init;  /* gelatchte Belagerungsseite (0=Sued,1=Nord) */
+    int8_t   umlauf;               /* Seitenwechsel-Umlauf laeuft (bis Ankunft) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
     int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
@@ -564,7 +565,14 @@ static int gb_seite_latch(gb_state_t *g, int32_t lz, int32_t mitte)
         g->seite_init = 1; g->seite_t = 0;
         g->seite_l = (int8_t)(lz >= mitte);
     } else if (roh >= 0 && roh != g->seite_l) {
-        if (++g->seite_t >= 90) { g->seite_l = (int8_t)roh; g->seite_t = 0; }
+        /* v0.7.67 (Nutzer: "geht immer noch so"): Leon wechselte die Seite
+         * mit ECHTEN Schritten (2600er, jenseits des Totbands) im 10-s-Takt
+         * und entwertete jeden Riesen-Westumlauf per Schritt zurueck. 300 F
+         * (10 s) stabile Gegenseite noetig, und ein BEGONNENER Umlauf wird
+         * zu Ende geschwommen (g->umlauf, geloescht bei Kanten-Ankunft). */
+        if (!g->umlauf && ++g->seite_t >= 300) {
+            g->seite_l = (int8_t)roh; g->seite_t = 0; g->umlauf = 1;
+        }
     } else g->seite_t = 0;
     return g->seite_l;
 }
@@ -1223,6 +1231,8 @@ void re15_gator_boss_tick(int slot)
                     if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
                     gz = (zzp == 0) ? (GB_PLAT_Z0 - GB_GPAT_M) : (GB_PLAT_Z1 + GB_GPAT_M);
                 }
+                if (g->umlauf && gb_iabs(e->z - gz) < 1500)
+                    g->umlauf = 0;             /* an der neuen Kante angekommen */
                 if (!s_gb_stumm) {   /* Diagnose: Kantenziel VOR Pendel/Umweg */
                     static FILE *s_gzl = NULL; static int s_gzc = 0;
                     if (!s_gzl) s_gzl = fopen("gator_boss.log", "a");
