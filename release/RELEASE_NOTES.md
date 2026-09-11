@@ -1,3 +1,30 @@
+# RE1.5 Port — v0.7.56 (Early Preview)
+
+**ROOM2090: kein Rauswurf durch die Wand mehr — und er wendet, statt Bögen zu ziehen.**
+
+---
+
+Deine zwei Befunde:
+
+1. **„Ich wurde außerhalb der Wand geschoben“**: Der Körper-Schub des
+   Alligators war der einzige Mechanismus, der Leon ohne Wandprüfung
+   verschiebt — stand Leon zwischen Maul und Wand, schob der Biss ihn durch
+   die Zelle nach draußen (deine Marker: bis 2.400 Einheiten hinter der
+   Südwand). Der Schub läuft jetzt durch dieselbe Wand-Klemme wie deine
+   eigene Bewegung. Kontroll-Lauf mit Bissen direkt an der Südwand inklusive
+   Tod: null Ausbrüche — und ein fest eingebauter Wächter meldet jeden
+   künftigen Fall sofort im Log.
+2. **„Dreht erst in die entgegengesetzte Richtung“**: Sein Schwimm-Drehwert
+   ist träge (bis zu mehrere Sekunden für 180°), und er schwamm während des
+   Drehens stur vorwärts — nach jedem harten Zielwechsel Richtung Plattform
+   zog er deshalb erst einen Bogen in die alte Richtung. Ab ~67°
+   Kurskorrektur wendet er jetzt auf der Stelle und schwimmt erst wieder an,
+   wenn die Nase zum Ziel zeigt.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.55 (Early Preview)
 
 **ROOM2090: der Biss trifft jetzt am Maul — und nie mehr durch die Wand.**
