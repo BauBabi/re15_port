@@ -1,3 +1,27 @@
+# v0.7.76 — 2026-09-11
+
+## Bosskampf ROOM2090: keine Luecke mehr auf gleicher Ebene
+
+- **Neues Messwerkzeug**: Der Dauertest prueft jetzt echte TREFFER statt
+  blosser Annaeherung — 80 Konstellationen (Leon statisch, fliehend mit
+  Laufgeschwindigkeit, kreisend; unten und oben auf der Plattform).
+  Ausgangslage: 4 Luecken, jetzt 0.
+- **Rueckwaertsgang** (Nutzer-Freigabe): Klebt Leon seitlich/hinter dem
+  Alligator, zieht er sich rueckwaerts raus, statt auf der Stelle zu
+  drehen — auch im Biss selbst, wenn Leon zu nah am Koerper steht.
+- **Not-Schnapp**: Auch mitten in der Wende beisst er zu, wenn Leon in
+  Reichweite ist (vorher toter Winkel, in dem Leon dauerhaft kreisen
+  konnte).
+- **Koerpermitte zu**: Zwischen den Schiebe-Segmenten war ein Loch — Leon
+  konnte direkt AUF dem Alligator stehen; Nahkontakt zaehlt jetzt als
+  Treffer.
+- **Plattform-Mitte erreichbar**: Er belagert jetzt Leons naechste Kante
+  (auch die Westkante) statt stur Nord/Sued, und der Hochbiss reicht bis
+  zur Plattform-Mitte.
+- Fluessiger: breiteres Treffer-Fenster, kuerzere Fehlschnapp-Pause,
+  schnelleres Nachsteuern im Biss, Wand-Pruefung ab dem Maul (Ecken-
+  Streifung blockt keine legitimen Bisse mehr).
+
 # v0.7.75 — 2026-09-11
 
 ## Bosskampf ROOM2090: Fress-Finisher
