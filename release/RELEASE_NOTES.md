@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.55 (Early Preview)
+
+**ROOM2090: der Biss trifft jetzt am Maul — und nie mehr durch die Wand.**
+
+---
+
+Deine zwei Punkte, beide per Biss-Fenster-Telemetrie vermessen:
+
+1. **„Trifft mich quasi so gut wie nie“**: Der Treffer-Test maß die Distanz
+   zu seinem KÖRPERZENTRUM — aber sein eigener Körper hält dich am KOPF auf
+   Abstand. Die Messung zeigte dich wörtlich direkt vorm Maul (Abstand ~900),
+   während das Zentrum-Gate meilenweit verfehlte. Jetzt zählt die Distanz
+   zum MAUL: Steht Leon vor der Schnauze, sitzt der Biss. Im Kontroll-Lauf
+   traf der allererste Schnapp (vorher ein Glückstreffer pro Minute).
+2. **Dauerschnappen an der Plattform vorbei**: Zwei Ursachen — das Angriffs-
+   Kommit feuerte schon auf 6000 Sichtweite (das Maul kam im 45-Frame-Clip
+   nie an: reine Leer-Animation), und die Distanz wurde notfalls DURCH die
+   Plattform gemessen. Jetzt startet der Schnapp erst, wenn das Maul es im
+   Clip wirklich erreichen kann, und nie, wenn die Wand dazwischen ist —
+   dann schwimmt er stattdessen herum. Kontroll-Lauf an der Plattform-Wand:
+   null Wand-Schnapps, Leon wurde regulär um die Ecke herum gestellt.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.54 (Early Preview)
 
 **ROOM2090: die Kollision ist jetzt so gross wie der Alligator aussieht.**
