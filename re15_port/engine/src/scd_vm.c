@@ -2583,8 +2583,14 @@ static int op_aot_set(scd_thread_t *t)
             st_extent = (type == 13) ? hh * 2 : hw * 2;
         }
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[STAIRREG] slot=%d type=%d chain=%d side=%u count=%u corner=%d extent=%d centre=(%d,%d) half=(%d,%d)\n",
-                slot, type, chain, side, count, st_corner, st_extent, cx, cz, hw, hh);
+        {   /* GUI-exe: stderr tot - Diagnose in stair_dbg.log (RE15_STAIR_DBG). */
+            FILE *srg = getenv("RE15_STAIR_DBG") ? fopen("stair_dbg.log", "a") : NULL;
+            if (srg) {
+                fprintf(srg, "[STAIRREG] slot=%d type=%d chain=%d side=%u count=%u corner=%d extent=%d centre=(%d,%d) half=(%d,%d)\n",
+                        slot, type, chain, side, count, st_corner, st_extent, cx, cz, hw, hh);
+                fclose(srg);
+            }
+        }
 #endif
         re15_aot_set_stair(slot, cx, cz, hw, hh, chain, side, count,
                            (uint8_t)type, st_corner, st_extent);

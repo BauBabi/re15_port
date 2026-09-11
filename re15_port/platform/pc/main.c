@@ -5607,7 +5607,14 @@ re_title:;
                             } else if (fdist2 < arrive) {
                                 /* Am Ziel: Aktion HALTEN. Eine Tuer braucht 9 Frames Halten
                                  * (obj+0x8C, FUN_8002bd44) — ein Tipp reicht nicht. */
-                                if (ap_act) gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                if (ap_act) {
+                                    gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                    /* Treppen brauchen den PRESS-EDGE (der
+                                     * Halten-Pfad deckt nur Tueren ab):
+                                     * alle 30 F einen Edge einspeisen. */
+                                    if ((ap_hold % 30) == 1)
+                                        gctx.pad_pressed |= RE15_PAD_BIT_SQUARE;
+                                }
                                 if (ap_hold++ == 0)
                                     fprintf(stderr, "[auto] Ziel erreicht (%d,%d), halte Aktion\n",
                                             ap_pl->x, ap_pl->z);

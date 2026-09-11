@@ -13535,22 +13535,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * `if (+0x1da) +0x1dc += 1; else +0x1dc = 0` — dessen Folge-Leser
                                  * @0x801111d0/@0x8011144c (`+0x1dc >= 31 -> +0x5=1, +0x6=0xa`)
                                  * stehen im Port (Zeilen mit `ai_target_x >= 31`). */
-            /* ⏸ TEMPORAER (Nutzer 2026-09-10: "friere mir bitte einmal temporaer
-             * die Spinnen ein, bis ich sie wieder frei gebe"): die zwei Boss-Raum-
-             * Spinnen (ROOM2090/2091) stehen komplett still — kein KI-Tick, keine
-             * Animation. WIEDER ENTFERNEN, sobald der Nutzer sie freigibt.
-             * Der INIT-Tick (state 0: HP/Clip/state=1 setzen) laeuft noch durch,
-             * damit sie sichtbar in Pose stehen — erst DANACH friert alles.
-             * Nur wenn der BOSS im Raum steht (aktiver 0x23): der Freeze gilt dem
-             * Bosskampf-Test; unit_sca_wall_hit prueft im selben Raum den byte-true
-             * Wandkontakt-Pfad (+0x1da/+0x1dc @0x80111008) OHNE Gator-Aktor. */
-            int asp_eis = 0;
-            if ((g_current_room_id & 0xFFFEu) == 0x2090u && e->state != 0)
-                for (int _gi = 1; _gi < RE15_ACTOR_MAX; _gi++)
-                    if (g_actors[_gi].active && g_actors[_gi].type == 0x23u) {
-                        asp_eis = 1; break;
-                    }
-            if (!asp_eis) {
+            {   /* Spinnen-Freeze 2026-09-10..11 ENTFERNT (Nutzer-Freigabe). */
                 int32_t asp_ox = e->x, asp_oz = e->z;
                 re15_adult_spider_ai_tick(s);
                 re15_enemy_body_push_tail(s, e);

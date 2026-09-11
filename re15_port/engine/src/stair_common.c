@@ -49,6 +49,18 @@
                                 * (uncited) — stair_10a0.md finding stair-dir-04. */
 #define RE15_ANIM_REVERSE 0x80
 
+/* RE15_STAIR_DBG-Ausgaben: die GUI-exe hat kein nutzbares stderr (bekannte
+ * Falle, s. re2_ki.log) - alle Diagnosen gehen in stair_dbg.log. */
+static FILE *re15_stair_dbg_f(void)
+{
+    static FILE *f = NULL;
+    if (!f) {
+        f = fopen("stair_dbg.log", "a");
+        if (f) setvbuf(f, NULL, _IONBF, 0);
+    }
+    return f ? f : stderr;
+}
+
 /* BYTE-TRUE descend handler LAB_80038c60. ANIMATION = PL00 clip 21 (down)/20 (up)
  * — USER-CONFIRMED. The body XZ travel EMERGES from the FK foot-lock FUN_800390e0
  * (body dragged by the planted support FOOT, bones 4(L)/7(R) — byte-confirmed from
@@ -302,11 +314,11 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
             for (int i = 0; i < RE15_AOT_MAX; i++) {
                 const re15_aot_t *a = &g_aot.slots[i];
                 if (a->active && a->type == RE15_AOT_TYPE_STAIR)
-                    fprintf(stderr, "[stairzone] slot=%d pos=(%d,%d) band=%d event=%d hw=%d hh=%d\n",
+                    fprintf(re15_stair_dbg_f(), "[stairzone] slot=%d pos=(%d,%d) band=%d event=%d hw=%d hh=%d\n",
                             i, a->x, a->z, (int)a->band, (int)a->event_id,
                             (int)a->half_w, (int)a->half_h);
             }
-            fprintf(stderr, "[stairzone] player band=%d pos=(%d,%d,%d) rot=%d\n",
+            fprintf(re15_stair_dbg_f(), "[stairzone] player band=%d pos=(%d,%d,%d) rot=%d\n",
                     cur, p->x, p->y, p->z, p->rot_y);
         }
     }
@@ -352,7 +364,14 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
         int probe_ok  = (a->sce_flags == 0) || (a->sce_flags & 0x20);
         int pospos_ok = (a->sce_flags == 0) || (a->sce_flags & 0x40);
         if (a->active && a->type == RE15_AOT_TYPE_STAIR &&
-            (int)a->band == cur &&
+            /* Band-Gate byte-true @0x80042cac-cd4: Bit 0x80 im Record-Band-
+             * Byte = WILDCARD (`andi v0,v0,0x80` / `bne v0,zero,+cd4`
+             * ueberspringt den Vergleich) - EIN Record bedient beide Enden;
+             * die Richtung entscheidet die Halbseiten-Logik LAB_80043500.
+             * ROOM6030 liefert genau so einen Record (pc[4]=0x80, RDT
+             * @0xCB8) - der rohe ==-Vergleich machte die Treppe dort in
+             * BEIDE Richtungen tot (Nutzer 2026-09-11). */
+            ((a->band & 0x80) || (int)a->band == cur) &&
             ((probe_ok  && point_in_zone(fx, fz, a)) ||
              (pospos_ok && player_in_zone(p, a)))) {
             zone = a; zone_idx = i; break;
@@ -462,7 +481,7 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     p->anim_flags = 0;
 
     if (getenv("RE15_STAIR_DBG"))
-        fprintf(stderr, "[stair] START dir=%s cur_band=%d target_band=%d (straight to gait, no turn)\n",
+        fprintf(re15_stair_dbg_f(), "[stair] START dir=%s cur_band=%d target_band=%d (straight to gait, no turn)\n",
                 (s_motion == RE15_PLAYER_MOTION_STAIR_DOWN) ? "DOWN" : "UP",
                 cur, target);
 
