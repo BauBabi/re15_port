@@ -195,6 +195,8 @@ typedef struct {
     int8_t   seite_l, seite_init;  /* gelatchte Belagerungsseite (0=Sued,1=Nord) */
     int8_t   umlauf;               /* Seitenwechsel-Umlauf laeuft (bis Ankunft) */
     int32_t  leon_lx, leon_lz;     /* Leon-Vortick (Vorhalte-Jagd) */
+    int16_t  burst_t, burst_cd;    /* Wasser-BURST: Sprintframes / Abklingzeit */
+    int8_t   leon_oben_alt;        /* Absprung-Flanke oeffnet den Burst sofort */
     int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
                                     * bricht Leons Absprung die Bahn ab) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
@@ -858,6 +860,15 @@ void re15_gator_boss_tick(int slot)
         }
     }
     g->frei_lx = e->x; g->frei_lz = e->z; g->frei_seen = 1;
+    {   /* WASSER-BURST-Verwaltung (DESIGN "gefaehrlich machen", Nutzer
+         * 2026-09-11 "relativ dumm und 0 gefaehrlich"): Timer + Absprung-
+         * Flanke (Leon verlaesst die Flaeche -> Burst sofort frei). */
+        int lo = (pl->y < -900);
+        if (g->leon_oben_alt && !lo) g->burst_cd = 0;
+        g->leon_oben_alt = (int8_t)lo;
+        if (g->burst_t > 0) g->burst_t--;
+        else if (g->burst_cd > 0) g->burst_cd--;
+    }
     int32_t dist = re15_enemy_player_dist(e, pl);
 
     switch (g->phase) {
@@ -1093,7 +1104,25 @@ void re15_gator_boss_tick(int slot)
             }
             re15_enemy_steer_point(e, tx, tz, (re15_engine_rand8() & 0x1f) + 6);
         }
-        re15_ai_advance(e, GB_SWIM_SPEED);
+        {   /* BURST-Start: Leon im Wasser-Sichtkegel, mittlere Distanz */
+            int soll2 = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
+            int dlt2  = ((soll2 - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
+            if (g->burst_t == 0 && g->burst_cd == 0
+                && dist > 2600 && dist < 9000
+                && dlt2 <= 0x180 && dlt2 >= -0x180) {
+                g->burst_t = 75; g->burst_cd = 255;
+                if (!s_gb_stumm) {
+                    static FILE *s_bu = NULL;
+                    if (!s_bu) s_bu = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
+                    if (s_bu) { fprintf(s_bu, "BURST pos=(%d,%d) dist=%d\n",
+                                        e->x, e->z, (int)dist); fflush(s_bu); }
+                }
+            }
+        }
+        re15_ai_advance(e, g->burst_t ? 100 : 56);
+                                 /* DESIGN: Verfolgung 56 (statt byte-true
+                                  * Proxy 48), BURST 100 fuer 75 F - im
+                                  * Wasser ist Leon nie sicher */
         e->y = GB_WATER_Y;
         if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
         e->anim_frame++;
