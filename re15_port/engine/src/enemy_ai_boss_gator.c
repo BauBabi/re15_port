@@ -943,6 +943,7 @@ void re15_gator_boss_tick(int slot)
              * Teleport-Frames (>200 Delta) und Erst-Tick liefern 0. */
             int32_t vdx = pl->x - g->leon_lx, vdz = pl->z - g->leon_lz;
             if (gb_iabs(vdx) <= 200 && gb_iabs(vdz) <= 200
+                && dist > 2000                 /* nah: direkt, kein Zappeln */
                 && (g->leon_lx | g->leon_lz)) {
                 tx += vdx * 20; tz += vdz * 20;
             }
@@ -969,7 +970,11 @@ void re15_gator_boss_tick(int slot)
                     int32_t kr = gb_iabs(e->x - rx) + gb_iabs(e->z - rz_ein)
                                + gb_iabs(rz_aus - rz_ein)
                                + gb_iabs(pl->x - rx) + gb_iabs(pl->z - rz_aus);
-                    g->route = (g->cross_cd == 0 && kr < kw) ? 2 : 1;
+                    (void)kr; (void)kw;
+                    g->route = (g->cross_cd == 0) ? 2 : 1;
+                    /* DESIGN (Nutzer 2026-09-11 "immer Leon jagen und direkt
+                     * drueber klettern ohne ewige umschweife"): RAMPE immer,
+                     * wenn verfuegbar; West-Umlauf nur im Kletter-Cooldown. */
                     g->route_zwang = (int8_t)(g->cross_cd > 0);
                     g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
                 }
@@ -1096,13 +1101,17 @@ void re15_gator_boss_tick(int slot)
             int soll = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
             int dlt  = ((soll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
             if (dlt > 0x300 || dlt < -0x300) {
-                re15_enemy_steer_point(e, tx, tz, 0x38);
+                re15_enemy_steer_point(e, tx, tz, 0x60);   /* zackige Wende
+                                                            * (180 Grad in 21 F) */
                 e->y = GB_WATER_Y;
                 if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
                 e->anim_frame++;
                 break;
             }
-            re15_enemy_steer_point(e, tx, tz, (re15_engine_rand8() & 0x1f) + 6);
+            re15_enemy_steer_point(e, tx, tz, 0x30);
+                                 /* DESIGN: konstanter straffer Slew statt der
+                                  * byte-true B[4]-Streuung (6..37) - "leere
+                                  * Drehungen ohne Sinn muessen komplett raus" */
         }
         {   /* BURST-Start: Leon im Wasser-Sichtkegel, mittlere Distanz */
             int soll2 = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
