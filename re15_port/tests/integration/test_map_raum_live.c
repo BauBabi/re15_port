@@ -111,14 +111,17 @@ static int betrete(unsigned rid, int32_t px, int32_t pz, int band)
 static int ist_raumflaeche(const re15_inv_op_t *o)
 {
     if (o->w < 4 || o->h < 4) return 0;          /* Marken sind klein */
-    if (o->kind == RE15_INV_OP_FILL) return 1;
+    /* FILLMASK = derselbe Schleier, nur auf die bemalten Texel der Kachel
+     * beschraenkt (Nutzer 2026-09-11: der volle Rechteck-Schleier machte den
+     * Raum "viel breiter als sein Viereck"). Zaehlt wie ein FILL. */
+    if (o->kind == RE15_INV_OP_FILL || o->kind == RE15_INV_OP_FILLMASK) return 1;
     return o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_MAP4;
 }
 
 static int ist_rot(const re15_inv_op_t *o)
 {
     if (!ist_raumflaeche(o)) return 0;
-    if (o->kind == RE15_INV_OP_FILL) {
+    if (o->kind == RE15_INV_OP_FILL || o->kind == RE15_INV_OP_FILLMASK) {
         /* NEUE CURRENT-DARSTELLUNG (Nutzer 2026-09-09: "statt dass ein neues
          * Kartenstueck freigeschaltet wird" - die (192,24,24)-Modulation
          * loeschte die gruene Kachelkunst zu Schwarz): Kunst im Besucht-Ton +

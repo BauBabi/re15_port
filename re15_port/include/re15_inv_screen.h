@@ -45,6 +45,16 @@ enum {
                              * gemessenen Farben lassen sich so nicht zeichnen
                              * (Nutzer 2026-08-31: "die Felder sind sau dunkel, ich
                              * sehe nicht mal einen cursor"). */
+    RE15_INV_OP_FILLMASK = 6, /* Wie FILL, aber MASKIERT: gefaerbt wird nur, wo die
+                             * Kachel (page/clut/u/v wie beim SPRT) einen nicht-
+                             * durchsichtigen Texel hat. Gebraucht fuer den roten
+                             * Schleier des aktuellen Kartenraums: ein einfaches
+                             * FILL faerbte das ganze Rechteck des Kartenzeichners
+                             * ein - auch dessen unbemalte Ecken (Nutzer 2026-09-11:
+                             * "das Treppenhaus ist viel breiter als sein Viereck").
+                             * Ein Sprite-Schleier scheidet aus: dessen Tint
+                             * MULTIPLIZIERT, und die gruene Kachelkunst wird mit
+                             * Rot schwarz. */
     RE15_INV_OP_GBOX = 3    /* wave 4: POLY_G4 navy gradient box (CHECK panel
                              * interior, DEBUG.BIN 0x800c6b84: prim code 0x38
                              * @0x800c6bd0 opaque gouraud quad behind DR_MODE

@@ -858,6 +858,32 @@ static void raster_op(const re15_inv_op_t *o)
                     s_fb5[y][x] = src;
                 }
             }
+    } else if (o->kind == RE15_INV_OP_FILLMASK) {
+        /* Wie FILL, aber nur auf bemalten Texeln der Kachel (s. re15_inv_screen.h). */
+        const uint16_t *clut = s_clut[o->clut];
+        int py, pxx;
+        int r5 = o->r >> 3, g5 = o->g >> 3, b5 = o->b >> 3;
+        for (py = 0; py < o->h; py++) {
+            int v = (o->v + py) & 255;
+            for (pxx = 0; pxx < o->w; pxx++) {
+                int u = (o->u + pxx) & 255;
+                int x = o->x + pxx, y = o->y + py;
+                uint8_t t = (o->page == RE15_INV_PAGE_MAP4)  ? s_map4[v][u]
+                          : (o->page == RE15_INV_PAGE_TEX4)  ? s_tex4[v][u]
+                          :                                    s_icon8[v][u];
+                if (clut[t] == 0) continue;           /* unbemalt -> kein Schleier */
+                if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                if (o->abe) {
+                    uint16_t d = s_fb5[y][x];
+                    int dr = d & 31, dg = (d >> 5) & 31, db = (d >> 10) & 31;
+                    s_fb5[y][x] = (uint16_t)(((dr + r5) >> 1)
+                                           | (((dg + g5) >> 1) << 5)
+                                           | (((db + b5) >> 1) << 10));
+                } else {
+                    s_fb5[y][x] = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
+                }
+            }
+        }
     } else if (o->kind == RE15_INV_OP_GBOX) {
         /* wave 4 + wave-6 fix (finding 3): POLY_G4 gouraud quad (DEBUG.BIN builder
          * 0x800c6b84: tag len 9 @0x800c6bbc-c0, embedded DR_MODE word 0xE1000260

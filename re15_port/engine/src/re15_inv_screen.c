@@ -2317,8 +2317,19 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                              * malt, bleibt auch der Schleier weg. (Zuerst
                              * einreihen = OBEN, die Op-Liste wird von HINTEN
                              * gerastert.) */
-                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
-                                 rx, ry, rw, rh, ru, rv, 200, 16, 16, 1);
+                            if (e.n < e.max) {   /* Schleier NUR auf bemalten
+                                                  * Texeln - s. re15_inv_screen.h,
+                                                  * RE15_INV_OP_FILLMASK */
+                                re15_inv_op_t *qs = &e.ops[e.n++];
+                                qs->kind = RE15_INV_OP_FILLMASK;
+                                qs->page = RE15_INV_PAGE_MAP4;
+                                qs->clut = RE15_INV_CLUT_TEXROW21;
+                                qs->abe = 1;
+                                qs->u = (uint8_t)ru; qs->v = (uint8_t)rv;
+                                qs->x = (int16_t)rx; qs->y = (int16_t)ry;
+                                qs->w = (int16_t)rw; qs->h = (int16_t)rh;
+                                qs->r = 200; qs->g = 16; qs->b = 16;
+                            }
                             sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                                  rx, ry, rw, rh, ru, rv, 40, 144, 40, 1);
                         } else
@@ -2368,12 +2379,18 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             if (tx + tw > rx + rw) tw = rx + rw - tx;
                             if (ty + th > ry + rh) th = ry + rh - ty;
                             if (tw <= 0 || th <= 0) continue;
-                            if (ts == RE15_MAP_RECT_CURRENT)   /* Schleier auf der
-                                                                * Kachel, s.o. */
-                                sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
-                                     tx, ty, tw, th,
-                                     ru + (tx - rx), rv + (ty - ry),
-                                     200, 16, 16, 1);
+                            if (ts == RE15_MAP_RECT_CURRENT && e.n < e.max) {
+                                re15_inv_op_t *qs = &e.ops[e.n++];   /* s.o. */
+                                qs->kind = RE15_INV_OP_FILLMASK;
+                                qs->page = RE15_INV_PAGE_MAP4;
+                                qs->clut = RE15_INV_CLUT_TEXROW21;
+                                qs->abe = 1;
+                                qs->u = (uint8_t)(ru + (tx - rx));
+                                qs->v = (uint8_t)(rv + (ty - ry));
+                                qs->x = (int16_t)tx; qs->y = (int16_t)ty;
+                                qs->w = (int16_t)tw; qs->h = (int16_t)th;
+                                qs->r = 200; qs->g = 16; qs->b = 16;
+                            }
                             sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
