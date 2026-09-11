@@ -990,6 +990,14 @@ void re15_gator_boss_tick(int slot)
             {
                 int zg2 = gb_zone(e->z);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
+                if (zg2 == 2 && auf_rampe)    /* Nutzer-Marke 2026-09-11: Leon
+                                               * OBEN AUF DER RAMPE (Osten), der
+                                               * Gator lauerte nutzlos an der
+                                               * Plattform-WESTkante (dist 9216,
+                                               * kein Hochbiss moeglich) - in die
+                                               * naehere Becken-Zone wechseln und
+                                               * dort an die Rampen-Kante. */
+                    zg2 = (e->z > (GB_RAMP_Z0 + GB_RAMP_Z1) / 2) ? 1 : 0;
                 if (zg2 == 2) {               /* Westkanal: Plattform-Westkante */
                     gx = GB_PLAT_X0 - GB_GPAT_M;
                     gz = pl->z;
@@ -1008,12 +1016,13 @@ void re15_gator_boss_tick(int slot)
                 }
                 {   /* Kanten-Pendel: steht Leon still (und damit das Ziel),
                      * patrouilliert er sichtbar laengs der Kante statt zu
-                     * erstarren (+-1500 alle 90 F, Timer laeuft nur nahe
-                     * am Ziel; laengs = x an Sued-/Nordkante, z am Kanal). */
+                     * erstarren (+-1500 alle 90 F). Die Naehe wird gegen das
+                     * VERSETZTE Ziel gemessen (Nutzer-Marke 2026-09-11:
+                     * Basis-Messung ergab den Drei-Radien-Deadlock 573<600
+                     * Advance vs. 1222>800 Basis-Naehe - der Timer lief nie,
+                     * er stand fuer immer 573 vorm Pendelpunkt). */
                     static int s_bt = 0; static int s_bdir = 1;
-                    int64_t bdx = e->x - gx, bdz = e->z - gz;
-                    if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
+                    int64_t bdx, bdz;
                     if (zg2 == 2) {
                         gz += s_bdir * 1500;
                         if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
@@ -1028,6 +1037,9 @@ void re15_gator_boss_tick(int slot)
                             if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
                         }
                     }
+                    bdx = e->x - gx; bdz = e->z - gz;
+                    if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
+                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
                 }
             }
             /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
@@ -1049,6 +1061,40 @@ void re15_gator_boss_tick(int slot)
                         else                                      gx += s_pdir * 1500;
                     }
                 }
+            }
+            {   /* Fortschritts-Waechter auch im GUARD (Nutzer-Marke
+                 * 2026-09-11: der CHASE-Waechter griff im GUARD-Deadlock
+                 * nicht, 0 NOTFREI bei 11 s Stillstand): kaum Strecke in
+                 * 90 F bei fernem Ziel -> 60 F naechste freie Ecke. */
+                static int32_t s_gw_x = 0, s_gw_z = 0;
+                static int32_t s_gw_notx = 0, s_gw_notz = 0;
+                static int s_gw_t = 0, s_gw_not = 0;
+                int64_t wdx = (int64_t)gx - e->x, wdz = (int64_t)gz - e->z;
+                if (s_gw_not > 0) {
+                    s_gw_not--;
+                } else if (++s_gw_t >= 90) {
+                    int64_t pdx = (int64_t)e->x - s_gw_x, pdz = (int64_t)e->z - s_gw_z;
+                    if (pdx * pdx + pdz * pdz < (int64_t)300 * 300
+                        && wdx * wdx + wdz * wdz > (int64_t)1500 * 1500) {
+                        int ci2, bi2 = -1; int64_t best2 = 0;
+                        for (ci2 = 0; ci2 < 4; ci2++) {
+                            int64_t k2 = (int64_t)gb_iabs(e->x - gb_ecke[ci2][0])
+                                       + gb_iabs(e->z - gb_ecke[ci2][1]);
+                            if (!gb_seg_frei(e->x, e->z, gb_ecke[ci2][0],
+                                             gb_ecke[ci2][1], GB_KOERPER_M)) k2 += 100000;
+                            if (bi2 < 0 || k2 < best2) { best2 = k2; bi2 = ci2; }
+                        }
+                        s_gw_not = 60;
+                        {   static FILE *s_gwl = NULL;
+                            if (!s_gwl) s_gwl = fopen("gator_boss.log", "a");
+                            if (s_gwl) { fprintf(s_gwl, "NOTFREI-G pos=(%d,%d) ecke=%d\n",
+                                                 e->x, e->z, bi2); fflush(s_gwl); }
+                        }
+                        s_gw_notx = gb_ecke[bi2][0]; s_gw_notz = gb_ecke[bi2][1];
+                    }
+                    s_gw_t = 0; s_gw_x = e->x; s_gw_z = e->z;
+                }
+                if (s_gw_not > 0) { gx = s_gw_notx; gz = s_gw_notz; }
             }
             gdx = e->x - gx; gdz = e->z - gz;
             re15_enemy_steer_point(e, gx, gz, 0x40);
