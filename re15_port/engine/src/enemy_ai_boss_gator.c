@@ -1028,11 +1028,14 @@ void re15_gator_boss_tick(int slot)
                     int32_t kr = gb_iabs(e->x - rx) + gb_iabs(e->z - rz_ein)
                                + gb_iabs(rz_aus - rz_ein)
                                + gb_iabs(pl->x - rx) + gb_iabs(pl->z - rz_aus);
-                    (void)kr; (void)kw;
-                    g->route = (g->cross_cd == 0) ? 2 : 1;
-                    /* DESIGN (Nutzer 2026-09-11 "immer Leon jagen und direkt
-                     * drueber klettern ohne ewige umschweife"): RAMPE immer,
-                     * wenn verfuegbar; West-Umlauf nur im Kletter-Cooldown. */
+                    /* Nutzer-Marke F280 2026-09-11 ("nimmt den langen Weg,
+                     * dreht sogar um"): das fruehere "RAMPE immer" warf den
+                     * Kostenvergleich weg - Gator NW, Leon SW hiess kw 23150
+                     * vs kr 40650, und er lief trotzdem nach OSTEN zum
+                     * Rampen-Anlauf. Jetzt entscheiden die KOSTEN; die Rampe
+                     * behaelt +2000 Praeferenz ("direkt drueber klettern"
+                     * gilt, wenn sie wirklich der direkte Weg ist). */
+                    g->route = (g->cross_cd == 0 && kr <= kw + 2000) ? 2 : 1;
                     g->route_zwang = (int8_t)(g->cross_cd > 0);
                     g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
                 }
