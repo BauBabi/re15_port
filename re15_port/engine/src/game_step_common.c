@@ -1457,6 +1457,15 @@ void re15_game_step(const re15_game_ctx_t *c)
             if (re15_player_slash_window())
                 re15_player_weapon_fire(re15_player_equipped_weapon());
         }
+        /* SCHROTFLINTE: drei WEITERE Resolves in den Rueckstoss-Bildern 3/5/7
+         * (byte-true @0x80033508-58, Herleitung im Kopf von
+         * re15_player_schrot_fenster). Vier Treffer je Abzug = die Streuung der
+         * Ladung; der Port feuerte bisher nur einen. */
+        {
+            extern int re15_player_schrot_fenster(void);
+            if (re15_player_equipped_weapon() == 8 && re15_player_schrot_fenster())
+                re15_player_weapon_fire(8);
+        }
         /* RE15_STAIR_DEMO=down|up: once, at a fixed frame, drop Leon INTO ROOM1170's
          * {2,4} staircase on the matching band and fire the action, so the stair
          * animation can be captured without the fragile long-range navigation.

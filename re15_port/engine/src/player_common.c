@@ -228,6 +228,30 @@ int re15_player_slash_window(void)
     int f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
     return (f >= 6 && f <= 11);
 }
+/* SCHROTFLINTEN-STREUUNG: drei ZUSAETZLICHE Schadens-Resolves im Rueckstoss.
+ * Byte-true @0x80033508-58 (selbst disassembliert 2026-09-12):
+ *     80033508  lbu v1, DAT_800aca5d      ; angelegte Waffe
+ *     80033510  ori v0, zero, 0x8         ; 8 = SCHROTFLINTE
+ *     80033514  bne v1, v0, LAB_8003355c  ; jede andere Waffe: raus
+ *     80033520  lbu v1, DAT_800acae9      ; Bildzaehler im Rueckstoss-Clip
+ *     80033528  beq v1, 3 -> LAB_80033540
+ *     80033530  beq v1, 5 -> LAB_80033540
+ *     80033538  bne v1, 7 -> LAB_8003355c
+ *     80033554  jal FUN_80011f50          ; der Schadens-Resolver
+ * Zusammen mit dem Grundschuss beim Abdruecken sind das VIER Treffer - die
+ * Schrotladung. Der Port feuerte bisher nur einen (Nutzer 2026-09-12: der
+ * Schaden sei bei allen Waffen der der Handfeuerwaffe).
+ * DAT_800acae9 ist derselbe In-Clip-Bildzaehler, den auch Treppe und Kletterei
+ * benutzen - im Port der anim_frame des Spielers (wie re15_player_slash_window). */
+int re15_player_schrot_fenster(void)
+{
+    extern re15_actor_t g_actors[];
+    int f;
+    if (s_aim_melee || !s_aim_recoil) return 0;
+    f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
+    return (f == 3 || f == 5 || f == 7);
+}
+
 /* RELOAD entry (gun FSM sub4 @0x80033d7c, fired by the empty+press-edge gate @0x80033378):
  * clip 0xD from frame 0 with blend 7, elevation reset to LEVEL ((x&0x1fff)|0x4000 -> acaec),
  * NO SE at entry — the reload SE 0x01030001 plays at clip COMPLETION together with the
