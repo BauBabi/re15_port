@@ -183,6 +183,11 @@ typedef struct {
      * einmal gewaehlt und nur bei Zonenwechsel/Cooldown-Ablauf neu bewertet. */
     int8_t   route;                /* 0=keine, 1=WEST (um die Plattform), 2=RAMPE (queren) */
     int8_t   zone_g, zone_l;       /* gemerkte Becken-Zonen (Neubewertungs-Trigger) */
+    int8_t   maul_kontakt;         /* Frames seit die SCHNAUZE Leon schob (SEG-
+                                    * Push ofs>0): wen sie schiebt, den darf sie
+                                    * auch beissen (Nutzer 2026-09-11: er schob
+                                    * Leon am 5750er-Gleichgewicht vor sich her,
+                                    * maul~3150 blieb ewig ueber dem 2400er-Gate) */
     int8_t   dbg_zweig;            /* Telemetrie: aktiver CHASE-Zweig */
     int32_t  dbg_tx, dbg_tz;       /* Telemetrie: aktuelles Steuer-Ziel */
 } gb_state_t;
@@ -303,13 +308,28 @@ static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
     #define GB_SEITE(px, pz)         ((pz) <= GB_PLAT_Z0 ? 0 : (pz) >= GB_PLAT_Z1 ? 2 : (px) >= GB_PLAT_X1 ? 1 : 3)
     gs = GB_SEITE(e->x, e->z);
     ps = GB_SEITE(pl->x, pl->z);
-    if (gs == ps) { *tx = pl->x; *tz = pl->z; return; }
+    if (gs == ps &&
+        !gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_KOERPER_M)) {
+        *tx = pl->x; *tz = pl->z; return;
+    }
     /* kuerzere Drehrichtung: Seitenabstand im Uhrzeigersinn vs. gegen ihn */
     {
         int cw = (ps - gs + 4) & 3, ecke;
+        if (gs == ps) {
+            /* gleiche Seite, aber der Weg schert im Kanten-Schatten (Nutzer-
+             * Marke 1, 2026-09-11: Gator im SW-Schatten, Leon Ostwand -
+             * "direkt" kroch mit 2/F an der Westkanten-Klemmlinie): erst
+             * die LEON-naehere Ecke der eigenen Seite anlaufen; der
+             * Schatten-Fallback unten korrigiert notfalls auf die nahe. */
+            int e1 = gs, e2 = (gs + 1) & 3;
+            int64_t a_x = pl->x - C[e1][0], a_z = pl->z - C[e1][1];
+            int64_t b_x = pl->x - C[e2][0], b_z = pl->z - C[e2][1];
+            cw = 9;   /* markiert: ecke unten schon gesetzt */
+            ecke = (a_x * a_x + a_z * a_z <= b_x * b_x + b_z * b_z) ? e1 : e2;
+        } else
         /* Ziel-Ecke = die in Laufrichtung naechste Ecke der eigenen Seite:
          * Uhrzeigersinn: Seite k endet an Ecke (k+1)&3; gegen ihn: an Ecke k. */
-        ecke = (cw <= 2) ? ((gs + 1) & 3) : gs;
+        ecke = (cw == 9) ? ecke : (cw <= 2) ? ((gs + 1) & 3) : gs;
         /* SCHATTEN-FALLBACK (Nutzer-Marken 1+2, 2026-09-10): steht der Gator
          * im Radius-Schatten der Kante (Diagonal-Feld), schert die Luftlinie
          * zur fernen Ecke am Koerperradius entlang - die SCA-Klemme frisst
@@ -578,6 +598,7 @@ void re15_gator_boss_tick(int slot)
             if (s_kill_ctr == 300) { e->hp = -1; e->state = 3; }
         }
     }
+    if (g->maul_kontakt > 0) g->maul_kontakt--;
     /* Treffer seit letztem Tick? (HP-Delta + HURT/DEATH-Intercept) */
     if (e->hp != g->prev_hp || e->state == 2 || e->state == 3) {
         gb_absorb_hit(e, g);
@@ -777,7 +798,7 @@ void re15_gator_boss_tick(int slot)
          * Schnapp nie zu, wenn Leon seitlich in der Nische stand). */
         if (pl->hit_react == 0 && e->hit_stun == 0
             && !gb_wand_dazwischen(e, pl)
-            && (dist < 2600 || gb_maul_dist(e, pl) < 2400)) {
+            && (dist < 2600 || gb_maul_dist(e, pl) < 2400 || g->maul_kontakt > 0)) {
             /* Commit-Gate GEMESSEN 2026-09-11: der alte 0x1770er-Sichtkegel
              * (6000) startete Leer-Schnapps, deren Maul Leon im 45-F-Clip
              * nie erreichte (Messung: maul 3088->2624, kein Treffer);
@@ -809,7 +830,8 @@ void re15_gator_boss_tick(int slot)
         if (!g->bite_done
             && e->anim_frame >= 8 && e->anim_frame <= 20   /* Maul-offen-Fenster der
                                                             * gemessenen Clip-4-Kurve */
-            && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500
+            && pl->hit_react == 0
+            && (gb_maul_dist(e, pl) <= 1500 || g->maul_kontakt > 0)
             && !gb_wand_dazwischen(e, pl)) {
             /* Treffer = MAUL-Kontakt (Kopf-Segment 900 + Spieler 450 + 150
              * Puffer); das alte Zentrum-Gate s. gb_maul_dist-Messnotiz. */
@@ -1144,6 +1166,7 @@ void re15_gator_boss_tick(int slot)
                 if (pen < 1) continue;
                 pl->x += dx * pen / (dd + 1);
                 pl->z += dz * pen / (dd + 1);
+                if (SEG[si].ofs > 0) g->maul_kontakt = 10;   /* Schnauze schiebt */
             }
             /* WAND-KLEMME fuer den geschobenen Spieler (Nutzer-Marker
              * 2026-09-11: Biss an der Suedwand schob Leon HINTER die Wand,
