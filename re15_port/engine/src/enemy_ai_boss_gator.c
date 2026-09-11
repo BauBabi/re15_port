@@ -1045,8 +1045,15 @@ void re15_gator_boss_tick(int slot)
             /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
              * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
              * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
-            if (gb_seg_hits_platform(e->x, e->z, gx, gz, GB_KOERPER_M)
-                || gb_seg_hits_ramp(e->x, e->z, gx, gz, GB_KOERPER_M)) {
+            /* Marge 300 = die reine Wand (Nutzer-Marker 2026-09-11 "dreht
+             * planlos Runden"): mit GB_KOERPER_M (1800) lag das Belagerungs-
+             * ziel (Kante-1900) nur 100 ausserhalb des Schattens - beim
+             * Pendeln schwappte er hinein, das Following riss das Ziel zur
+             * NO-Ecke um, zurueck, dazu der Waechter: vier Ziele im Wechsel
+             * = Kreiseln. Die GPAT-Ziele sind zonenrein konstruiert; nur ein
+             * Weg DURCH den Block selbst braucht noch das Following. */
+            if (gb_seg_hits_platform(e->x, e->z, gx, gz, 300)
+                || gb_seg_hits_ramp(e->x, e->z, gx, gz, 300)) {
                 gb_ring_target(e, pl, &gx, &gz);
                 /* SACKGASSEN-PENDEL (Telemetrie: 3-s-Staende an der NO-Ecke -
                  * die T-Geometrie hat ostseitig keinen Umlauf): ist auch das
