@@ -3410,7 +3410,9 @@ re_title:;
         fprintf(stderr, "[boot] player spawn for ROOM%04X = (%d,%d,%d) yaw=%d\n",
                 boot_room, bsp->x, bsp->y, bsp->z, bsp->yaw);
     }
-    g_actors[RE15_ACTOR_SLOT_PLAYER].hp     = 100;   /* RE1.5 max HP (DAT_800acaee
+    g_actors[RE15_ACTOR_SLOT_PLAYER].hp     = 100;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].no_draw = 0;    /* Fress-Finisher-Reset beim
+                                                      * (Continue-)Spawn */   /* RE1.5 max HP (DAT_800acaee
         init 0x64), matching the PSX build — drives the HP-gated injured idle
         (clip22 <50 / clip23 <30). Was 1024 (pre-unify), which never injured. */
     /* Collision floor band from the spawn Y (band = -(Y/0x708); ROOM1170 = 4).
@@ -6609,6 +6611,9 @@ re_title:;
                     !re15_aot_point_in_quad(player_ref->x, player_ref->z,
                                             cam_region_xs, cam_region_zs));
             }
+            if (player_ref->no_draw)          /* Boss-Fress-Finisher: Leon ist
+                                               * verschluckt (enemy_ai_boss_gator) */
+                player_visible = 0;
             /* MESS-HAKEN RE15_VIS_TRACE=1 — reine Messausgabe (kein Verhalten). Protokolliert
              * pro Bild GENAU die Groessen, aus denen der Spieler-Cull entsteht: aktiver Cut,
              * angeforderter Cut, der Kamera-Spiegel work_vars[0x0A], Position/Yaw, ob der Cut

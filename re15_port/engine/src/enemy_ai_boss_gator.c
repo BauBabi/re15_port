@@ -163,6 +163,8 @@ enum {
     GBP_GUARD,      /* Plattform-Belagerung: Hochbiss, solange Leon oben steht */
     GBP_CROSS_APPR, /* Punkt 8: Anlauf an die Startkante (KEIN Teleport) */
     GBP_CROSS,      /* Punkt 8: Bogen ueber die Plattform */
+    GBP_FRESSEN,    /* toedlicher Biss: Kopf runter, Leon fressen, abgehen
+                     * (Nutzer-Design 2026-09-11) */
     GBP_DIE,        /* Todesrolle (Clip 7) */
     GBP_DEAD
 };
@@ -197,6 +199,7 @@ typedef struct {
     int32_t  leon_lx, leon_lz;     /* Leon-Vortick (Vorhalte-Jagd) */
     int16_t  burst_t, burst_cd;    /* Wasser-BURST: Sprintframes / Abklingzeit */
     int8_t   leon_oben_alt;        /* Absprung-Flanke oeffnet den Burst sofort */
+    int8_t   gefressen;            /* wir haben Leon versteckt (no_draw-Rueckgabe!) */
     int8_t   hit_zaehler;          /* Treffer seit letztem Flinch (alle 6 zuckt er) */
     int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
                                     * bricht Leons Absprung die Bahn ab) */
@@ -299,6 +302,23 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
  * 1917) war dadurch fast nie erfuellbar (Messung: Leon bei maul=864-1264
  * DIREKT vorm Maul, Zentrum-dist 2187-3574 > 1917, hr blieb 0;
  * Nutzer: "trifft mich quasi so gut wie nie"). */
+/* Biss-Treffer-Abschluss: normal = Schaden + Knockdown; TOEDLICH = die
+ * FRESS-Sequenz (Nutzer-Design 2026-09-11: "Kopf zu Leon runter machen,
+ * ihn Fressen - Leon verschwindet, und danach geht er einfach weg"). */
+static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
+{
+    re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+    if (pl->hp < 0) {
+        g->phase = GBP_FRESSEN; g->timer = 0;
+        e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
+        g->arc_vz = 0;
+    } else {
+        re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
+    }
+    pl->hit_react |= 1;
+    e->hit_stun = 0x64;                       /* byte-true Re-Attack-Sperre */
+}
+
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
 {
     int32_t fc = re15_cos_q12((int)e->rot_y);
@@ -871,8 +891,12 @@ void re15_gator_boss_tick(int slot)
      * aligator noch die ganze Zeit ueber mir"): nach Leons Tod laesst er ab
      * und gleitet zum Lauerplatz zurueck - kein Nahstand-Gewende ueber der
      * Leiche waehrend der Todes-Kamera. */
+    if (pl->hp >= 0 && g->gefressen) {        /* Continue-Respawn: Leon
+                                               * wieder sichtbar machen! */
+        pl->no_draw = 0; g->gefressen = 0;
+    }
     if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
-        && g->phase != GBP_OFF) {
+        && g->phase != GBP_OFF && g->phase != GBP_FRESSEN) {
         int64_t rdx = (int64_t)GB_START_X - e->x, rdz = (int64_t)GB_START_Z - e->z;
         re15_enemy_steer_point(e, GB_START_X, GB_START_Z, 0x20);
         if (rdx * rdx + rdz * rdz > (int64_t)1500 * 1500)
@@ -1207,14 +1231,7 @@ void re15_gator_boss_tick(int slot)
              * attack_type 5 -> dmg_table[5] = 50 + Knockdown-Latch. EIN Biss pro
              * Lunge (bite_done): ohne den Latch traefen alle drei Fensterframes
              * (gemessen 2026-09-10: Leon 100 HP -> Game Over in <2 s). */
-            re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
-            /* Byte-true KNOCKDOWN (cmd-2-Klasse) - die Reaktion, die der 0x23-Biss
-             * im Original ausloest; die 22-Frame-Hurt-Zuckung allein war "keinerlei
-             * Schadens-Animation" (Nutzer-Befund, POSE_DUMP-gemessen mo=8/22F). */
-            re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
-            pl->hit_react |= 1;
-            g->bite_done = 1;
-            e->hit_stun = 0x64;                            /* byte-true Re-Attack-Sperre */
+                            gb_biss_abschluss(e, g, pl);
         }
         e->anim_frame++;
         if (e->anim_frame > 42) {             /* Clip 4 (45 F) ausklingen lassen */
@@ -1488,11 +1505,7 @@ void re15_gator_boss_tick(int slot)
             if (!g->bite_done && e->anim_frame >= 8 && e->anim_frame <= 20
                 && pl->hit_react == 0 && dist < 3400) {   /* DESIGN: Kantenstand +
                                                * gehobener Kopf erreicht die Flaeche */
-                re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
-                re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
-                pl->hit_react |= 1;
-                g->bite_done = 1;
-                e->hit_stun = 0x64;
+                                gb_biss_abschluss(e, g, pl);
             }
             if (e->anim_frame > 42) { e->motion = 0; e->anim_frame = 0; }
         } else {
@@ -1622,12 +1635,27 @@ void re15_gator_boss_tick(int slot)
                                                * 0x64 taktet die Rate (Anti-
                                                * Hilflosigkeit 2026-09-11) */
             && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500) {
-            re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
-            re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
-            pl->hit_react |= 1;
-            g->bite_done = 1;
-            e->hit_stun = 0x64;
+                            gb_biss_abschluss(e, g, pl);
         }
+        break; }
+
+    case GBP_FRESSEN: {                       /* Kopf runter, fressen, abgehen */
+        g->timer++;
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
+        e->y = GB_WATER_Y;
+        if (g->timer <= 30) {
+            g->pitch_vz = (int16_t)((350 * g->timer) / 30);   /* Kopf senkt sich */
+        } else if (g->timer == 45) {
+            e->motion = 4; e->anim_frame = 0;                 /* Zubeissen */
+        } else if (g->timer == 60 && !g->gefressen) {
+            pl->no_draw = 1; g->gefressen = 1;                /* Leon verschwindet */
+        } else if (g->timer >= 120) {
+            g->pitch_vz = 0;
+            g->phase = GBP_CHASE;         /* der pl->hp<0-Abzug uebernimmt:
+                                           * er geht einfach weg */
+            e->motion = 0; e->anim_frame = 0;
+        }
+        e->anim_frame++;
         break; }
 
     case GBP_DIE:                             /* Todesrolle Clip 7, dann CORPSE */
