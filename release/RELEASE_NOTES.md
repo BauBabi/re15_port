@@ -1,3 +1,24 @@
+# RE1.5 Port — v0.7.66 (Early Preview)
+
+**ROOM2090: der Alligator lässt sich nicht mehr austricksen.**
+
+---
+
+Dein Befund („gehe ich vor, kommt er an; gehe ich zurück, geht er weg“):
+Die Belagerungskante folgte jedem deiner Schritte sofort — ein Tänzeln um
+die Flächen-Mitte ließ ihn im Sekundentakt die Seite wechseln, inklusive
+des langen Wegs außen herum. Jetzt hat seine Seitenwahl Beharrlichkeit:
+Ein Totband um die Mitte ignoriert das Tänzeln, und erst wenn du rund
+drei Sekunden stabil auf der anderen Hälfte stehst, verlegt er die
+Belagerung — dann aber entschlossen.
+
+Der Vorausschau-Test hat dafür Tänzel-Szenarien bekommen (Leon springt
+im Test permanent über die Mitte): alle 3342 Konstellationen konvergieren.
+
+Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.65 (Early Preview)
 
 **ROOM2090: die Vorausschau — 3286 Konstellationen durchgerechnet, alle Blocker raus.**
