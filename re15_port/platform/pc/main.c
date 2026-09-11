@@ -3412,7 +3412,9 @@ re_title:;
     }
     g_actors[RE15_ACTOR_SLOT_PLAYER].hp     = 100;
     g_actors[RE15_ACTOR_SLOT_PLAYER].no_draw = 0;    /* Fress-Finisher-Reset beim
-                                                      * (Continue-)Spawn */   /* RE1.5 max HP (DAT_800acaee
+                                                      * (Continue-)Spawn */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_x = 0;   /* RE1.5 max HP (DAT_800acaee
         init 0x64), matching the PSX build — drives the HP-gated injured idle
         (clip22 <50 / clip23 <30). Was 1024 (pre-unify), which never injured. */
     /* Collision floor band from the spawn Y (band = -(Y/0x708); ROOM1170 = 4).
@@ -6858,6 +6860,21 @@ re_title:;
                  0,      0x1000, 0,
                 -face_s, 0,  face_c
             };
+            /* Fress-Wirbel: der halbe Koerper ueberschlaegt sich - Root wird
+             * M = Ry*Rx (Prop-Euler-Expansion main.c, rz=0): row0 bleibt
+             * [cy,0,sy]; row1 = [Q(sy*sx), cx, -Q(cy*sx)];
+             * row2 = [-Q(sy*cx), sx, Q(cy*cx)]. Nur aktiv solange die
+             * Fress-Maske gesetzt ist. */
+            if (player_ref->fress_skip_mask && player_ref->rot_x) {
+                int32_t wsx = re15_sin_q12((int)player_ref->rot_x);
+                int32_t wcx = re15_cos_q12((int)player_ref->rot_x);
+                yaw_rot_q12[3] = (int32_t)(((int64_t)face_s * wsx) >> 12);
+                yaw_rot_q12[4] = wcx;
+                yaw_rot_q12[5] = -(int32_t)(((int64_t)face_c * wsx) >> 12);
+                yaw_rot_q12[6] = -(int32_t)(((int64_t)face_s * wcx) >> 12);
+                yaw_rot_q12[7] = wsx;
+                yaw_rot_q12[8] = (int32_t)(((int64_t)face_c * wcx) >> 12);
+            }
 
             /* RE1.5 CHARACTER SHADOW (FUN_8001b064 + FUN_8001af5c, 2026-05-29).
              * A subtractive textured floor quad under the actor: 4 corners at
@@ -6870,7 +6887,7 @@ re_title:;
              * Floor Y = the actor's own Y (= floorIdx·−0x708 on the helipad,
              * where every actor stands on the −7200 floor). Player-only, matching
              * the PSX caller (player update FUN_80031c44). */
-            if (player_visible) {
+            if (player_visible && !g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask) {
                 /* Half-extents = descriptor +0xc/+0xe (= player entity+0xbc/+0xbe). RAM-CONFIRMED
                  * 500/600 across every alive-player savestate (they grow ONLY at death = the blood
                  * pool below); a workflow finder's "square ~400" claim was wrong — the savestate is
@@ -7190,6 +7207,12 @@ re_title:;
                     /* B0/VT/VR HUD silenced for cleaner cinematic view. */
                 }
 
+                /* Fress-Finisher: maskierte Meshes (Oberkoerper im Maul) nicht
+                 * zeichnen - NACH den bi==11-Seiteneffekten (Hand-Anker). */
+                if (g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask &&
+                    ((g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask >> mi) & 1))
+                    continue;
+
                 const re15_md1_mesh_t *m = &md1.meshes[mi];
 
                 /* Phase 4.5.7.5: textured triangles. The MD1's per-tri
@@ -7433,6 +7456,7 @@ re_title:;
                 int wi = (eq >= 0 && eq < RE15_WPN_MDL_MAX) ? eq : 0;
                 int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
                 if (vis && wpn_bone_valid && player_visible &&
+                    !(g_actors[RE15_ACTOR_SLOT_PLAYER].fress_skip_mask & 0x0800) &&
                     re15_player_victim_state() == 0) {
                     re15_render_pc_bind_tim_slot(0);   /* body-skin TIM (PL00.TIM for Leon); gun art page 0x81/clut-1 */
                     for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];

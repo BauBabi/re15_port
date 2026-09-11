@@ -25,6 +25,10 @@ int  re15_gator_boss_skip_clamp(const re15_actor_t *e);
  * re15_skel_compute_pose fuer Typ-0x23-Aktoren abgefragt. */
 int  re15_gator_spine_arc_vz(const re15_actor_t *e, int bone);
 
+/* 1 solange die Fress-Sequenz laeuft - der Gameover-Exit (game_step_common)
+ * haelt dann an, bis Schnapp 2 + Verschlingen sichtbar durchgespielt sind. */
+int  re15_gator_fressen_hold(void);
+
 
 
 #endif /* RE15_BOSS_GATOR_H */

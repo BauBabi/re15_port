@@ -604,6 +604,12 @@ static void re15_gameover_fsm_tick(void)
             break;
         case 6:                                           /* exit: fade to black + leave */
             if (g_death_flyin < 50) g_death_flyin++;
+            {   /* Custom-Bosskampf ROOM2090: solange der Alligator Leon
+                 * frisst, YOU DIED + Death-Cam stehen lassen - erst nach
+                 * dem Verschlingen faedelt der Fade ein. */
+                extern int re15_gator_fressen_hold(void);
+                if (s_go_ctr < 0x50 && re15_gator_fressen_hold()) break;
+            }
             if (s_go_ctr >= 0x50) {                       /* +0x400/frame subtractive -> 8/frame */
                 int f = (s_go_ctr - 0x50) * 8;
                 g_death_fade = f > 255 ? 255 : f;

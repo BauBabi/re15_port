@@ -182,6 +182,8 @@ typedef struct {
     int16_t  cframes;              /* Bahn-Dauer der laufenden Ueberquerung */
     int16_t  t_ein, t_aus;         /* Frames, in denen die Bahn UEBER der Insel ist */
     int16_t  arc_vz;               /* aktueller Wirbelsaeulen-Winkel (Q12) */
+    int16_t  jaw_vz;               /* Kiefer-Zusatzoeffnung Bone 7 (Fressen) */
+    int32_t  wirbel_x, wirbel_y, wirbel_z;  /* Startpunkt der Wirbelbahn */
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
@@ -894,6 +896,7 @@ void re15_gator_boss_tick(int slot)
     if (pl->hp >= 0 && g->gefressen) {        /* Continue-Respawn: Leon
                                                * wieder sichtbar machen! */
         pl->no_draw = 0; g->gefressen = 0;
+        pl->fress_skip_mask = 0; pl->rot_x = 0;
     }
     if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
         && g->phase != GBP_OFF && g->phase != GBP_FRESSEN) {
@@ -1639,25 +1642,72 @@ void re15_gator_boss_tick(int slot)
         }
         break; }
 
-    case GBP_FRESSEN: {                       /* Kopf runter, fressen, abgehen */
+    case GBP_FRESSEN: {                       /* Kopf runter, AM Leon zubeissen,
+                                               * halber Koerper wirbelt, Maul
+                                               * reisst auf, Rest verschlungen,
+                                               * abgehen (Nutzer-Design 09-11) */
+        int32_t fc, fs, kx, kz;
         g->timer++;
         re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
         e->y = GB_WATER_Y;
-        /* Timing gestreckt (Nutzer 2026-09-11: "geht etwas zu frueh, man
-         * sieht es zu dem Zeitpunkt noch nicht") - Leons Todesanimation und
-         * der Todeskamera-Einschwenk brauchen ihre Zeit, erst DANN darf das
-         * sichtbare Zubeissen und das Verschwinden kommen. */
+        fc = re15_cos_q12((int)e->rot_y);
+        fs = re15_sin_q12((int)e->rot_y);
+        kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);   /* Maulpunkt wie */
+        kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);   /* gb_maul_dist  */
+        /* Bahn-Endpunkt in den Raum klemmen (SCA x[-8900..7200]
+         * z[-27000..-5400], Marge 300) - Telemetrie 2026-09-11 zeigte
+         * pl.x=-9988: der Halbkoerper flog in die Westwand. */
+        if (kx < -8600) kx = -8600; else if (kx > 6900) kx = 6900;
+        if (kz < -26700) kz = -26700; else if (kz > -5700) kz = -5700;
         if (g->timer <= 60) {
+            int32_t dx = pl->x - kx, dz = pl->z - kz;
             g->pitch_vz = (int16_t)((350 * g->timer) / 60);   /* Kopf senkt sich */
+            /* "muss dann schon dort hin beissen": Maulpunkt aktiv an Leon
+             * heranschieben (Dispatcher-Klemme laeuft danach wie immer) */
+            if ((int64_t)dx * dx + (int64_t)dz * dz > 300 * 300) {
+                e->x += (int32_t)(((int64_t)fc * 48) >> 12);
+                e->z -= (int32_t)(((int64_t)fs * 48) >> 12);
+            }
         } else if (g->timer == 75) {
-            e->motion = 4; e->anim_frame = 0;                 /* Zubeissen */
+            e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
         } else if (g->timer == 95 && !g->gefressen) {
-            pl->no_draw = 1; g->gefressen = 1;                /* Leon verschwindet
-                                                               * NACH dem Schnapp */
-        } else if (g->timer >= 170) {
-            g->pitch_vz = 0;
-            g->phase = GBP_CHASE;         /* der pl->hp<0-Abzug uebernimmt:
-                                           * er geht einfach weg */
+            /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
+             * bleiben sichtbar und wirbeln durch die Luft. */
+            pl->fress_skip_mask = 0x7F01; g->gefressen = 1;
+            g->wirbel_x = pl->x; g->wirbel_y = pl->y; g->wirbel_z = pl->z;
+        } else if (g->timer > 95 && g->timer < 175) {
+            /* Wirbelbahn: Lerp Todesort -> Maulpunkt + Parabel-Hub 2200,
+             * Ueberschlag um rot_x, Taumeln um rot_y. */
+            int32_t t = g->timer - 95;
+            const int32_t T = 80;
+            pl->x = g->wirbel_x + (int32_t)((int64_t)(kx - g->wirbel_x) * t / T);
+            pl->z = g->wirbel_z + (int32_t)((int64_t)(kz - g->wirbel_z) * t / T);
+            pl->y = g->wirbel_y - (int32_t)((int64_t)g->wirbel_y * t / T)
+                  - (int32_t)((int64_t)4 * 2200 * t * (T - t) / ((int64_t)T * T));
+            pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
+            pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
+            if (g->timer >= 150)              /* Maul reisst weiter auf */
+                g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
+            if (g->timer == 174) { e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
+        } else if (g->timer == 185) {
+            pl->no_draw = 1;                  /* Rest verschlungen */
+            pl->fress_skip_mask = 0; pl->rot_x = 0;
+            if (!s_gb_stumm) {
+                FILE *fl = fopen("gator_boss.log", "a");
+                if (fl) {
+                    fprintf(fl, "FRESS-ENDE pl=(%d,%d,%d) nodraw=%d mask=%04x\n",
+                            (int)pl->x, (int)pl->y, (int)pl->z,
+                            (int)pl->no_draw, (unsigned)pl->fress_skip_mask);
+                    fclose(fl);
+                }
+            }
+        } else if (g->timer > 185 && g->timer < 210) {
+            if (g->jaw_vz > 45) g->jaw_vz = (int16_t)(g->jaw_vz - 45);
+            else g->jaw_vz = 0;               /* Maul schliesst sich */
+        } else if (g->timer >= 240) {
+            g->pitch_vz = 0; g->jaw_vz = 0;
+            g->phase = GBP_CHASE;             /* der pl->hp<0-Abzug uebernimmt:
+                                               * er geht einfach weg */
             e->motion = 0; e->anim_frame = 0;
         }
         e->anim_frame++;
@@ -1773,17 +1823,33 @@ void re15_gator_boss_tick(int slot)
  * Kopfkette (1,5,6) kippt zur Bahn hin, Schwanzkette (11,12,13) gegenlaeufig —
  * konstante Kruemmung je Gelenk formt den Halbbogen. Kiefer (7), Beine und
  * Schwanzspitze bleiben der Animation ueberlassen. */
+/* Fuer den Death-Flow (game_step_common.c): laeuft gerade die Fress-
+ * Sequenz? Dann haelt der Gameover-Exit an, bis sie zu Ende gespielt ist
+ * (Nutzer-Design: Schnapp 2 + Verschlingen muessen sichtbar sein). */
+int re15_gator_fressen_hold(void)
+{
+    int i;
+    for (i = 0; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *e = &g_actors[i];
+        if (re15_gator_boss_active(e) && s_gb[i].phase == GBP_FRESSEN
+            && s_gb[i].timer < 215)
+            return 1;
+    }
+    return 0;
+}
+
 int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];
-    if (g->arc_vz == 0 && g->pitch_vz == 0) return 0;
+    if (g->arc_vz == 0 && g->pitch_vz == 0 && g->jaw_vz == 0) return 0;
     /* Nutzer-Befund 2026-09-10: "Der Bogen muss sein - unten Kopf, Ruecken
      * oben, unten Schweif" - die alte Vorzeichenwahl schweifte BEIDE Enden
      * nach OBEN (U statt Bogen). Rz-Geometrie: +X-Kette (Kopf) haengt mit
      * az>0 ab (x'->+y = PSX-unten), -X-Kette (Schwanz) mit az<0. */
     switch (bone) {
     case 0:                            return  (int)g->pitch_vz; /* Root-Neigung der Bahn */
+    case 7:                            return  (int)g->jaw_vz;   /* Kiefer reisst auf (Fressen) */
     case 1: case 5: case 6:            return  (int)g->arc_vz;   /* Kopf haengt drueben ab */
     case 11: case 12: case 13:         return -(int)g->arc_vz;   /* Schweif haengt diesseits */
     default:                           return 0;

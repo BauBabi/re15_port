@@ -571,6 +571,10 @@ typedef struct {
      * ROOM1090-Feuer-Emitter sind unsichtbare Traeger fuer ihre Flammen-Effekte; ihr Mesh
      * ist ein einziges Dreieck, und genau das hat der Port gezeichnet.) */
     uint8_t  no_draw;
+    uint16_t fress_skip_mask;  /* Boss-Fress-Finisher: gesetzte Bits = PLD-Mesh
+                                * NICHT zeichnen (0x7F01 = Torso/Kopf/Arme aus,
+                                * nur Huefte+Beine wirbeln); aktiviert zugleich
+                                * den rot_x-Ueberschlag im Player-Root. */
     uint8_t  re2s_baby_spawned; /* PORT-Feld (HERKUNFT, kein Original-Offset): dieser Typ-0x26-
                                  * Aktor wurde vom RE2-Adult-Spawner FUN_80105D38 erzeugt
                                  * (`jal 0x8001ad3c` / `addiu a0,zero,38` @0x80105DE4-E8) und ist
