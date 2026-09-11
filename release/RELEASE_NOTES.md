@@ -1,3 +1,25 @@
+# RE1.5 Port — v0.7.71 (Early Preview)
+
+**ROOM2090: die letzte Safe-Zone ist zu — und er hält vor.**
+
+---
+
+Dein Marker entlarvte eine unsichtbare Schutzzone: Im West-Drittel der
+Rampe konnte dich keine Querung je erreichen, weil eine interne
+Sicherheitsklemme die Bahn dort abschnitt. Jetzt darf die Kletterbahn
+über der Rampe die volle Breite nutzen — die Klemme sichert nur noch den
+Landepunkt im Wasser. Oben gibt es keinen sicheren Fleck mehr.
+
+Dazu die erste „schlauer machen“-Stufe: Bei der Jagd im Wasser zielt er
+jetzt mit Vorhalt auf deine vorhergesagte Position statt stur auf deinen
+Rücken — wegrennen in gerader Linie ist spürbar riskanter. Wenn du danach
+noch Lücken findest, ist die nächste Stufe vorbereitet (Lauern am
+Rampen-Aufgang).
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.70 (Early Preview)
 
 **ROOM2090: die Kletterphase hat jetzt Zähne.**
