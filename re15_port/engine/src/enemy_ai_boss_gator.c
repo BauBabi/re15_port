@@ -192,6 +192,8 @@ typedef struct {
     int8_t   befrei;               /* Selbst-Befreiungs-Fenster (Klemm-Slab) */
     int32_t  ziel_lx, ziel_lz;     /* GUARD-Etappen-Latch: gehaltenes Steuer-Ziel */
     int16_t  ziel_zt;              /* Restframes der Etappe */
+    int8_t   seite_l, seite_init;  /* gelatchte Belagerungsseite (0=Sued,1=Nord) */
+    int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
     int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
     /* v0.7.65: Steuer-Zustaende AUS den file-statics hierher - die lebten
@@ -549,6 +551,23 @@ static int gb_zone(int32_t z)
 }
 
 static int32_t gb_iabs(int32_t v) { return v < 0 ? -v : v; }
+
+/* Belagerungsseite mit BEHARRLICHKEIT (Nutzer 2026-09-11: "Gehe ich vor
+ * kommt er an, gehe ich dann zurueck, geht er weg" - Leon konnte das
+ * Kantenziel per Taenzeln um die Flaechen-Mitte im Sekundentakt flippen,
+ * der Gator lief fernsteuerbare Riesen-Achten): 800er-Totband um die
+ * Mitte + die neue Seite muss 90 F stabil anstehen. */
+static int gb_seite_latch(gb_state_t *g, int32_t lz, int32_t mitte)
+{
+    int roh = (lz >= mitte + 800) ? 1 : (lz <= mitte - 800) ? 0 : -1;
+    if (!g->seite_init) {
+        g->seite_init = 1; g->seite_t = 0;
+        g->seite_l = (int8_t)(lz >= mitte);
+    } else if (roh >= 0 && roh != g->seite_l) {
+        if (++g->seite_t >= 90) { g->seite_l = (int8_t)roh; g->seite_t = 0; }
+    } else g->seite_t = 0;
+    return g->seite_l;
+}
 
 static void gb_rim_point(int32_t px, int32_t pz, int32_t *ox, int32_t *oz)
 {
@@ -1178,7 +1197,7 @@ void re15_gator_boss_tick(int slot)
                      * der zentrale Kanten-Umweg unten; der fruehere eigene
                      * Westumlauf-Zweig widersprach Pendel und Following
                      * (Marken F1095 + "schwankt hin und her"). */
-                    int zielzone = (pl->z >= (GB_RAMP_Z0 + GB_RAMP_Z1) / 2) ? 1 : 0;
+                    int zielzone = gb_seite_latch(g, pl->z, (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
                     gx = pl->x;
                     if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
                     if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
@@ -1198,7 +1217,7 @@ void re15_gator_boss_tick(int slot)
                                                * Luecke wie v0.7.62 bei der
                                                * Rampe; den Weg findet der
                                                * Dijkstra-Umweg). */
-                    int zzp = (pl->z >= (GB_PLAT_Z0 + GB_PLAT_Z1) / 2) ? 1 : 0;
+                    int zzp = gb_seite_latch(g, pl->z, (GB_PLAT_Z0 + GB_PLAT_Z1) / 2);
                     gx = pl->x;
                     if (gx < GB_PLAT_X0) gx = GB_PLAT_X0;
                     if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;

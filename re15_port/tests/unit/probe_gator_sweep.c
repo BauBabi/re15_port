@@ -192,6 +192,64 @@ int main(int argc, char **argv)
             }
         }
     }
+    {   /* TAENZEL-SZENARIEN (Nutzer 2026-09-11 "austricksen"): Leon oben
+         * springt alle 60 F ueber die Flaechen-Mitte - der Gator muss trotz
+         * flippender Seite in Belagerungsnaehe kommen (Seiten-Latch). */
+        static const struct { int32_t x, za, zb; const char *wo; } TANZ[] = {
+            { 4400, -17500, -15100, "Rampe-Taenzler" },
+            {  400, -17600, -15000, "Platt-Taenzler" },
+        };
+        for (int ti = 0; ti < 2; ti++) {
+            for (int32_t gx0 = -8000; gx0 <= 6400; gx0 += 3200) {
+                for (int32_t gz0 = -26200; gz0 <= -6200; gz0 += 3200) {
+                    if (in_insel(gx0, gz0, 300)) continue;
+                    int slot = RE15_ACTOR_MAX - 1;
+                    re15_actor_t *e = &g_actors[slot];
+                    memset(e, 0, sizeof *e);
+                    e->active = 1; e->type = 0x23u;
+                    e->x = gx0; e->y = 0; e->z = gz0;
+                    e->grid_id = 0; e->state = 0; e->em_flag_id = 0xFF;
+                    re15_enemy_apply_hitbox(e, 0x23u);
+                    pl->active = 1; pl->type = 0; pl->hp = 100;
+                    pl->x = TANZ[ti].x; pl->z = TANZ[ti].za; pl->y = -1800;
+                    re15_gator_boss_tick(slot);
+                    e->x = gx0; e->z = gz0; e->y = -1200;
+                    int32_t mind = 0x7fffffff;
+                    for (int f = 0; f < 1800; f++) {
+                        pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+                        pl->state = 0; pl->motion = 0;
+                        pl->x = TANZ[ti].x; pl->y = -1800; pl->floor = 1;
+                        pl->z = ((f / 60) & 1) ? TANZ[ti].zb : TANZ[ti].za;
+                        int32_t ox = e->x, oz = e->z;
+                        re15_gator_boss_tick(slot);
+                        if ((e->x != ox || e->z != oz) && !re15_gator_boss_skip_clamp(e)) {
+                            int32_t nx = e->x, nz = e->z;
+                            re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz,
+                                                           e->hit_radius_min, e->y, 4u);
+                            e->x = nx; e->z = nz;
+                        }
+                        {
+                            int64_t dx = (int64_t)pl->x - e->x, dz = (int64_t)pl->z - e->z;
+                            int64_t d2 = dx * dx + dz * dz;
+                            int32_t d = 0;
+                            while ((int64_t)d * d < d2 && d < 40000) d += 32;
+                            if (d < mind) mind = d;
+                        }
+                        if (mind < 6200) break;
+                    }
+                    paare++;
+                    if (mind >= 6200) {
+                        tote++;
+                        printf("FAIL: TANZ %s start=(%ld,%ld) min_dist=%ld end=(%ld,%ld)\n",
+                               TANZ[ti].wo, (long)gx0, (long)gz0,
+                               (long)mind, (long)e->x, (long)e->z);
+                        fails++;
+                    }
+                    e->active = 0;
+                }
+            }
+        }
+    }
     printf("gator-sweep: %d Paare, %d nicht konvergiert\n", paare, tote);
     free(buf);
     if (fails) { printf("%d FAILURES\n", fails); return 1; }
