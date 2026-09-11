@@ -149,7 +149,11 @@ static int s_player_aim_phase = RE15_AIM_NONE;
  * PLW-verified layout (PL00W01≡W00≡W02 melee / PL00W03≡W04 gun, both 14 clips): melee draw+hold
  * = clip 0xD (15f); gun raise 6 (10f), holds 8/10/12 (1f), recoils 7/9/11 (23/24/24f), reload 0xD
  * (32f). re15_player_set_aim_clip_len(fc) survives as the "all clips = fc" test mock. */
-#define RE15_AIM_CLIP_MAX 14
+/* 16, nicht 14: die DAUERFEUER-Baenke PL00W0C (Ingram M10), W0E (Flammen-
+ * werfer) und W13 (H&K MC51) fuehren 16 Clips - GEMESSEN beim Laden aller 21
+ * PLW-Baenke 2026-09-12 (wpnbank.log). Mit 14 blieben ihre Clips 14 und 15
+ * (Feuer-Ende-runter / Halten-runter) unadressierbar. */
+#define RE15_AIM_CLIP_MAX 16
 static uint16_t s_aim_clip_fcs[RE15_AIM_CLIP_MAX] = {0};
 static int s_aim_cur_clip = 6;              /* the current W-bank clip (melee 0xD; gun 6/8/7/...) */
 static int s_aim_recoil = 0;                /* 1 while the discharge/slash clip plays */

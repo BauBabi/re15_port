@@ -3085,6 +3085,15 @@ re_title:;
     #define RE15_WPN_MDL_MAX 21   /* W00..W14 for the current character's family */
     const char *wpn_fam = (g_gameflow.character == 0) ? "PL00" : "PL04";  /* base_table charid split */
     re15_md1_t wpn_md1[RE15_WPN_MDL_MAX]; int wpn_md1_ok[RE15_WPN_MDL_MAX] = {0};
+    /* ANIMATIONSBANK JE WAFFE (byte-true FUN_80036b68: CD-Datei =
+     * base_table[charid] + item, Basis @0x800741e8; dir[0] -> 0x800acbc8
+     * @0x80036be4 = EDD, dir[1] -> 0x800acbc4 @0x80036c04 = EMR). Die PLW
+     * liegen hier ohnehin schon im Speicher - wir schneiden nur zusaetzlich
+     * die beiden Animationsteile heraus. */
+    static re15_emd_animation_t wpn_anim[RE15_WPN_MDL_MAX];
+    static re15_emd_skeleton_t  wpn_skel_raw[RE15_WPN_MDL_MAX];
+    static re15_emd_skeleton_t  wpn_skel[RE15_WPN_MDL_MAX];
+    static int wpn_bank_ok[RE15_WPN_MDL_MAX];
     for (int wi = 0; wi < RE15_WPN_MDL_MAX; wi++) {
         char plw_name[32]; snprintf(plw_name, sizeof plw_name, "PLD/%sW%02X.PLW", wpn_fam, wi);
         int psz = 0;
@@ -3099,6 +3108,15 @@ re_title:;
         if (de[2] >= de[3] || de[3] > (uint32_t)psz) continue;
         if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) == 0)
             wpn_md1_ok[wi] = 1;
+        /* dir[0] = EDD (Clips), dir[1] = EMR (Bindepose + Keyframes) derselben
+         * Datei - die Animationsbank genau dieser Waffe. */
+        if (de[0] < de[1] && de[1] < de[2] && de[2] <= (uint32_t)psz) {
+            if (re15_emd_parse_animation(plw + de[0], (int)(de[1] - de[0]),
+                                         &wpn_anim[wi]) == 0 &&
+                re15_emd_parse_skeleton (plw + de[1], (int)(de[2] - de[1]),
+                                         &wpn_skel_raw[wi]) == 0)
+                wpn_bank_ok[wi] = 1;
+        }
     }
     /* NO separate weapon TIM upload: the in-hand mesh reads its texture from the character's own
      * body-skin TIM already resident in slot 0 (PL00.TIM for Leon @main.c:1907), the same slot the
@@ -3218,11 +3236,44 @@ re_title:;
         fprintf(stderr, "[w03-composite] PL00 bind + W03 keyframes: %d bones, %d kf\n",
                 w03_skel.bone_count, w03_skel.keyframe_count);
     }
+    /* Verbund-Bank je Waffe: PL00-Bindepose + Keyframe-Vorrat der Waffenbank -
+     * genau das Muster, das oben schon fuer W01/W03 steht (W**.EMR traegt eine
+     * ANDERE Bindepose als das PL00-Mesh erwartet; nur der Keyframe-Vorrat
+     * darf uebernommen werden). */
+    if (skel_ok) {
+        int wi, nbank = 0;
+        for (wi = 0; wi < RE15_WPN_MDL_MAX; wi++) {
+            if (!wpn_bank_ok[wi]) continue;
+            wpn_skel[wi] = skel;
+            wpn_skel[wi].keyframe_data       = wpn_skel_raw[wi].keyframe_data;
+            wpn_skel[wi].keyframe_data_size  = wpn_skel_raw[wi].keyframe_data_size;
+            wpn_skel[wi].keyframe_count      = wpn_skel_raw[wi].keyframe_count;
+            wpn_skel[wi].keyframe_size_bytes = wpn_skel_raw[wi].keyframe_size_bytes;
+            nbank++;
+        }
+        fprintf(stderr, "[wpn-bank] %d/%d Animationsbaenke aus %sW**.PLW\n",
+                nbank, RE15_WPN_MDL_MAX, wpn_fam);
+        if (getenv("RE15_WPN_DBG")) {      /* die GUI-exe hat kein nutzbares stderr */
+            FILE *wf = fopen("wpnbank.log", "a");
+            if (wf) {
+                int wj;
+                fprintf(wf, "[wpn-bank] %d/%d Baenke aus %sW**.PLW\n",
+                        nbank, RE15_WPN_MDL_MAX, wpn_fam);
+                for (wj = 0; wj < RE15_WPN_MDL_MAX; wj++)
+                    if (wpn_bank_ok[wj])
+                        fprintf(wf, "   W%02X: %d Clips, %d Keyframes\n", wj,
+                                wpn_anim[wj].clip_count,
+                                wpn_skel_raw[wj].keyframe_count);
+                fclose(wf);
+            }
+        }
+    }
+
     /* Seed the aim-FSM per-clip lengths with the START bank (byte-true default equip = the
      * KNIFE, item 1 -> melee bank W01). The per-frame equip watcher below re-feeds on switch. */
     {
         extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
-        uint16_t fcs[14]; int n = (w01_anim.clip_count < 14) ? w01_anim.clip_count : 14;
+        uint16_t fcs[16]; int n = (w01_anim.clip_count < 16) ? w01_anim.clip_count : 16;
         for (int i = 0; i < n; i++) fcs[i] = (uint16_t)w01_anim.clips[i].frame_count;
         if (w01_ok) re15_player_set_aim_clip_lens(fcs, n);
     }
@@ -6686,23 +6737,51 @@ re_title:;
             {
                 extern int  re15_player_equipped_weapon(void);
                 extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
-                int is_gun_bound = (wact_anim == &w03_anim);   /* == DAT_800acbc8 readback */
-                int want_gun = (re15_player_equipped_weapon() >= 3) && w03_ok;
-                if (want_gun != is_gun_bound) {
-                    wact_skel = want_gun ? &w03_skel : &w01_skel;
-                    wact_anim = want_gun ? &w03_anim : &w01_anim;
-                    wact_ok   = want_gun ? w03_ok    : w01_ok;
-                    uint16_t fcs[14];
-                    int n = (wact_anim->clip_count < 14) ? wact_anim->clip_count : 14;
+                /* DIE BANK KOMMT AUS DER WAFFEN-ID, NICHT AUS "Waffe >= 3".
+                 * Bis 2026-09-12 gab es nur die zwei vorgeschnittenen Baenke
+                 * W01/W03; jede Schusswaffe lief damit in der Handfeuerwaffen-
+                 * Animation (Nutzer: "die Schrotfline, Maschinengewehr etc.
+                 * haben alle die Handfeuerwaffe Animation"). Byte-true laedt
+                 * FUN_80036b68 die Bank base_table[charid]+item, also
+                 * PL00W<item> - und die liegen hier alle bereits geparst. */
+                int wid_now = re15_player_equipped_weapon();
+                const re15_emd_animation_t *want_anim;
+                const re15_emd_skeleton_t  *want_skel;
+                int want_ok;
+                if (wid_now >= 0 && wid_now < RE15_WPN_MDL_MAX && wpn_bank_ok[wid_now]) {
+                    want_anim = &wpn_anim[wid_now];
+                    want_skel = &wpn_skel[wid_now];
+                    want_ok   = 1;
+                } else {                     /* Rueckfall wie bisher */
+                    int gun = (wid_now >= 3) && w03_ok;
+                    want_anim = gun ? &w03_anim : &w01_anim;
+                    want_skel = gun ? &w03_skel : &w01_skel;
+                    want_ok   = gun ? w03_ok    : w01_ok;
+                }
+                if (wact_anim != want_anim) {
+                    wact_skel = (re15_emd_skeleton_t *)want_skel;
+                    wact_anim = (re15_emd_animation_t *)want_anim;
+                    wact_ok   = want_ok;
+                    uint16_t fcs[16];   /* Dauerfeuer-Baenke fuehren 16 Clips */
+                    int n = (wact_anim->clip_count < 16) ? wact_anim->clip_count : 16;
                     for (int i = 0; i < n; i++) fcs[i] = (uint16_t)wact_anim->clips[i].frame_count;
                     re15_player_set_aim_clip_lens(fcs, n);
                     /* Fires only on an actual bank switch (rare) — and MUST fire again after every
                      * death->title->boot, which is exactly what the removed latch prevented. The
                      * recoil clip 7 frame count is the bank fingerprint: W01 (knife) = 25, W03
                      * (gun) = 23 (EDD clip tables, measured). */
-                    fprintf(stderr, "[equip] W-bank -> %s (recoil clip7 fc=%d)\n",
-                            want_gun ? "W03" : "W01",
+                    fprintf(stderr, "[equip] W-bank -> W%02X (Clips %d, Rueckstoss-Clip7 fc=%d)\n",
+                            wid_now, wact_anim->clip_count,
                             (n > 7) ? (int)fcs[7] : -1);
+                    if (getenv("RE15_WPN_DBG")) {
+                        FILE *wf = fopen("wpnbank.log", "a");
+                        if (wf) {
+                            fprintf(wf, "[equip] Waffe %d -> Bank W%02X, %d Clips, Clip7 fc=%d\n",
+                                    wid_now, wid_now, wact_anim->clip_count,
+                                    (n > 7) ? (int)fcs[7] : -1);
+                            fclose(wf);
+                        }
+                    }
                 }
             }
             re15_anim_banks_t banks = {

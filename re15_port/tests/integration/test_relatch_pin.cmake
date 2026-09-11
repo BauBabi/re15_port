@@ -149,7 +149,11 @@ if(n_bank LESS 2)
                         "Bank-Pointer-Writes @0x80036be4/@0x80036c04. Zeilen: '${bank_lines}'")
 endif()
 foreach(line IN LISTS bank_lines)
-    if(NOT line MATCHES "W03 \\(recoil clip7 fc=23\\)")
+    # Wortlaut 2026-09-12 erweitert: die Bank kommt jetzt aus der WAFFEN-ID (alle
+    # 21 PLW-Baenke werden geladen), die Zeile nennt zusaetzlich die Clipzahl.
+    # Geprueft bleibt dasselbe: Waffe 3 -> Bank W03, Rueckstoss-Clip 7 = 23 Frames
+    # (W01/Messer waere 25).
+    if(NOT line MATCHES "W03 \\(Clips [0-9]+, Rueckstoss-Clip7 fc=23\\)")
         message(FATAL_ERROR "relatch_pin: falsche Bank gebunden (RE15_EQUIP=3 = BROWNING HP -> W03, "
                             "Recoil-Clip 7 fc=23; W01/Messer waere fc=25): '${line}'")
     endif()
