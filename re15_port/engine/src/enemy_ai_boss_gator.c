@@ -188,6 +188,7 @@ typedef struct {
      * sichtbares Vor-zurueck-Pendeln im Westkanal, Marke 3). Die Route wird
      * einmal gewaehlt und nur bei Zonenwechsel/Cooldown-Ablauf neu bewertet. */
     int8_t   route;                /* 0=keine, 1=WEST (um die Plattform), 2=RAMPE (queren) */
+    int8_t   gzone_h;              /* Hysterese-Zone der GUARD-Zielwahl */
     int8_t   route_zwang;          /* 1 = Route wurde unter cross_cd>0 gewaehlt
                                     * (RAMPE gesperrt) -> bei cd-Ablauf neu bewerten
                                     * (die alte cd==1-Flanke verpuffte, wenn der
@@ -319,6 +320,53 @@ static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m
 {
     return !gb_seg_hits_platform(x0, z0, x1, z1, m)
         && !gb_seg_hits_ramp(x0, z0, x1, z1, m);
+}
+
+static int     gb_zone(int32_t z);       /* fwd (definiert unten) */
+static int32_t gb_iabs(int32_t v);       /* fwd */
+
+/* Zentraler Kanten-Umweg als FUNKTION (v0.7.64): schert die Luftlinie zum
+ * Ziel im Koerper-Schatten von Plattform ODER Rampe, erst zur guenstigsten
+ * FREIEN Umlauf-Ecke (Kosten = Umwegstrecke); ist keine frei, zur
+ * naechstgelegenen. Rueckgabe: gewaehlte Ecke (0..3) oder -1 (Weg frei).
+ * CHASE und GUARD nutzen dieselbe Maschine - die GUARD-eigene Following/
+ * ring_target-Wegwahl widersprach ihr dreimal (Marken 2026-09-11). */
+static int gb_kanten_umweg(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    int ci, bi = -1; int64_t best = 0;
+    if (gb_seg_frei(e->x, e->z, *tx, *tz, GB_KOERPER_M)) return -1;
+    for (ci = 0; ci < 4; ci++) {
+        int64_t k;
+        if (!gb_seg_frei(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
+                         GB_KOERPER_M)) continue;
+        k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0]) + gb_iabs(e->z - gb_ecke[ci][1])
+          + gb_iabs(*tx - gb_ecke[ci][0]) + gb_iabs(*tz - gb_ecke[ci][1]);
+        if (bi < 0 || k < best) { best = k; bi = ci; }
+    }
+    if (bi < 0)
+        for (ci = 0; ci < 4; ci++) {
+            int64_t k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0])
+                      + gb_iabs(e->z - gb_ecke[ci][1]);
+            if (bi < 0 || k < best) { best = k; bi = ci; }
+        }
+    *tx = gb_ecke[bi][0]; *tz = gb_ecke[bi][1];
+    return bi;
+}
+
+/* Becken-Zone mit 300er-HYSTERESE (Nutzer-Marke 2026-09-11 "schwankt hin
+ * und her": der Gator schwamm AUF der Grenze z=-18100, gb_zone flippte
+ * frameweise 0<->2 und mit ihr das komplette Belagerungsziel). */
+static int gb_zone_hyst(int32_t z, int8_t *alt)
+{
+    int zn = gb_zone(z);
+    if (zn != *alt) {
+        if (*alt < 0 || *alt > 2
+            || (zn == 0 && z <= GB_RAMP_Z0 - 300)
+            || (zn == 1 && z >= GB_RAMP_Z1 + 300)
+            || (zn == 2 && z >= GB_RAMP_Z0 + 300 && z <= GB_RAMP_Z1 - 300))
+            *alt = (int8_t)zn;
+    }
+    return *alt;
 }
 
 static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
@@ -581,6 +629,7 @@ void re15_gator_boss_tick(int slot)
          * -GB_WATER_Y. Auf der Plattform-Passage (Root -3192, Leon oben -1800)
          * bleibt dy=192 im Band - der Push wirkt dort ebenfalls. */
         e->hit_offset_y = (int16_t)(-GB_WATER_Y);
+        g->gzone_h = (int8_t)gb_zone(e->z);
         /* KOLLISION IM MASSSTAB DES MODELLS (Nutzer 2026-09-10: "musst du ihn
          * halt noch ein wenig kleiner machen"): die byte-true Box @0x80118b98
          * (r=2200, rz=800, h=720) gilt dem Full-Size-Alligator; der Boss
@@ -802,24 +851,9 @@ void re15_gator_boss_tick(int slot)
          * JEDEN Zweig: schert die Luftlinie zum Steuerziel im Schatten der
          * Plattform, erst zur guenstigsten FREIEN Umlauf-Ecke; ist keine
          * frei (Start selbst im Schatten-Band), zur naechstgelegenen. */
-        if (!gb_seg_frei(e->x, e->z, tx, tz, GB_KOERPER_M)) {
-            int ci, bi = -1; int64_t best = 0;
-            for (ci = 0; ci < 4; ci++) {
-                int64_t k;
-                if (!gb_seg_frei(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
-                                 GB_KOERPER_M)) continue;
-                k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0]) + gb_iabs(e->z - gb_ecke[ci][1])
-                  + gb_iabs(tx - gb_ecke[ci][0]) + gb_iabs(tz - gb_ecke[ci][1]);
-                if (bi < 0 || k < best) { best = k; bi = ci; }
-            }
-            if (bi < 0)
-                for (ci = 0; ci < 4; ci++) {
-                    int64_t k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0])
-                              + gb_iabs(e->z - gb_ecke[ci][1]);
-                    if (bi < 0 || k < best) { best = k; bi = ci; }
-                }
-            tx = gb_ecke[bi][0]; tz = gb_ecke[bi][1];
-            g->dbg_zweig = (int8_t)(10 + bi);   /* Telemetrie: Umweg-Ecke */
+        {
+            int ubi = gb_kanten_umweg(e, &tx, &tz);
+            if (ubi >= 0) g->dbg_zweig = (int8_t)(10 + ubi);
         }
         /* Steuerziel in die vom KOERPER-ZENTRUM erreichbare Flaeche klemmen
          * (Raum-SCA x[-8900..7200] z[-27000..-5400], Klemmlinie = Kante +
@@ -988,9 +1022,8 @@ void re15_gator_boss_tick(int slot)
              * (GB_TEST=6-Lauf: GPAT pendelte an der Westecke). Hochbiss-
              * Reichweite bleibt unter dem 4200er-Aufricht-Gate. */
             {
-                int zg2 = gb_zone(e->z);
+                int zg2 = gb_zone_hyst(e->z, &g->gzone_h);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
-                int weg_modus = 0;   /* 1 = Westumlauf-Wegpunkt (KEIN Pendel!) */
                 if (auf_rampe) {              /* Nutzer-Marken F755-F936 2026-09-11
                                                * ("er findet den Weg wieder nicht"):
                                                * Leon stand an der NORDkante der
@@ -1003,24 +1036,17 @@ void re15_gator_boss_tick(int slot)
                                                * (kein Ostumlauf, und KLETTERN bei
                                                * Leon-oben bleibt per Nutzer-Design
                                                * verboten). */
+                    /* v0.7.64: IMMER das Kanten-Ziel nach LEONS Seite -
+                     * den WEG dorthin (inkl. Seitenwechsel um West) findet
+                     * der zentrale Kanten-Umweg unten; der fruehere eigene
+                     * Westumlauf-Zweig widersprach Pendel und Following
+                     * (Marken F1095 + "schwankt hin und her"). */
                     int zielzone = (pl->z >= (GB_RAMP_Z0 + GB_RAMP_Z1) / 2) ? 1 : 0;
-                    if (zg2 != 2 && zg2 != zielzone) {
-                        int32_t wx = GB_PLAT_X0 - GB_RING_M;
-                        int32_t wz_and = (zg2 == 0) ? (GB_PLAT_Z1 + GB_RING_M)
-                                                    : (GB_PLAT_Z0 - GB_RING_M);
-                        int32_t wz_eig = (zg2 == 0) ? (GB_PLAT_Z0 - GB_RING_M)
-                                                    : (GB_PLAT_Z1 + GB_RING_M);
-                        if (gb_seg_frei(e->x, e->z, wx, wz_and, GB_KOERPER_M))
-                             { gx = wx; gz = wz_and; }   /* direkt zur Gegen-Ecke */
-                        else { gx = wx; gz = wz_eig; }   /* erst zur eigenen */
-                        weg_modus = 1;
-                    } else {
-                        gx = pl->x;
-                        if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
-                        if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
-                        gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
-                                             : (GB_RAMP_Z1 + GB_GPAT_M);
-                    }
+                    gx = pl->x;
+                    if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
+                    if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
+                    gz = (zielzone == 0) ? (GB_RAMP_Z0 - GB_GPAT_M)
+                                         : (GB_RAMP_Z1 + GB_GPAT_M);
                 } else if (zg2 == 2) {        /* Westkanal: Plattform-Westkante */
                     gx = GB_PLAT_X0 - GB_GPAT_M;
                     gz = pl->z;
@@ -1041,12 +1067,7 @@ void re15_gator_boss_tick(int slot)
                      * er stand fuer immer 573 vorm Pendelpunkt). */
                     static int s_bt = 0; static int s_bdir = 1;
                     int64_t bdx, bdz;
-                    /* Nutzer-Marke F1095 2026-09-11: das Pendel verbog den
-                     * WESTUMLAUF-Wegpunkt C0 (-4300,-22600) per auf_rampe-
-                     * x-Klemme auf (4450,-22600) = die SO-SACKGASSE; er stand
-                     * dort 555 vorm falschen Ziel. Wegpunkte pendeln NICHT. */
-                    if (weg_modus) { bdx = 0; bdz = 0; (void)bdx; (void)bdz; }
-                    else if (zg2 == 2) {
+                    if (zg2 == 2) {
                         gz += s_bdir * 1500;
                         if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                         if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
@@ -1060,40 +1081,16 @@ void re15_gator_boss_tick(int slot)
                             if (gx > GB_PLAT_X1) gx = GB_PLAT_X1;
                         }
                     }
-                    if (!weg_modus) {
-                        bdx = e->x - gx; bdz = e->z - gz;
-                        if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                            if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
-                    }
+                    bdx = e->x - gx; bdz = e->z - gz;
+                    if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
+                        if (++s_bt >= 90) { s_bt = 0; s_bdir = -s_bdir; }
                 }
             }
-            /* Liegt die Insel zwischen Gator und Patrouillenziel, fuehrt das
-             * Wand-Following herum (Nutzer-Session 2026-09-10: er stand 3 s
-             * noerdlich der Rampe und schob stur gegen sie, Ziel suedlich). */
-            /* Marge 300 = die reine Wand (Nutzer-Marker 2026-09-11 "dreht
-             * planlos Runden"): mit GB_KOERPER_M (1800) lag das Belagerungs-
-             * ziel (Kante-1900) nur 100 ausserhalb des Schattens - beim
-             * Pendeln schwappte er hinein, das Following riss das Ziel zur
-             * NO-Ecke um, zurueck, dazu der Waechter: vier Ziele im Wechsel
-             * = Kreiseln. Die GPAT-Ziele sind zonenrein konstruiert; nur ein
-             * Weg DURCH den Block selbst braucht noch das Following. */
-            if (gb_seg_hits_platform(e->x, e->z, gx, gz, 300)
-                || gb_seg_hits_ramp(e->x, e->z, gx, gz, 300)) {
-                gb_ring_target(e, pl, &gx, &gz);
-                /* SACKGASSEN-PENDEL (Telemetrie: 3-s-Staende an der NO-Ecke -
-                 * die T-Geometrie hat ostseitig keinen Umlauf): ist auch das
-                 * Following-Ziel schon erreicht, patrouilliere sichtbar an
-                 * der Kante (Ziel alle 90 F um +-1500 laengs versetzt). */
-                {
-                    static int s_pt = 0; static int s_pdir = 1;
-                    int64_t rdx = e->x - gx, rdz = e->z - gz;
-                    if (rdx * rdx + rdz * rdz < (int64_t)800 * 800) {
-                        if (++s_pt >= 90) { s_pt = 0; s_pdir = -s_pdir; }
-                        if (gx >= GB_PLAT_X1 || gx <= GB_PLAT_X0) gz += s_pdir * 1500;
-                        else                                      gx += s_pdir * 1500;
-                    }
-                }
-            }
+            /* v0.7.64: der WEG zum Belagerungsziel laeuft ueber DIESELBE
+             * Umweg-Maschine wie im CHASE - das GUARD-eigene Following
+             * (ring_target) widersprach ihr dreimal (Kreiseln, SO-Sackgasse,
+             * Grenz-Schwanken). */
+            gb_kanten_umweg(e, &gx, &gz);
             {   /* Fortschritts-Waechter auch im GUARD (Nutzer-Marke
                  * 2026-09-11: der CHASE-Waechter griff im GUARD-Deadlock
                  * nicht, 0 NOTFREI bei 11 s Stillstand): kaum Strecke in
