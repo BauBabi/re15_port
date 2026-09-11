@@ -1,3 +1,15 @@
+# v0.7.78 — 2026-09-11
+
+## Bosskampf ROOM2090: Routenwahl nach Wegkosten
+
+- **Kein Ost-Umweg mehr am kurzen Westweg vorbei** (Nutzer-Marke): Die
+  fruehere Verkuerzung "Rampe immer, wenn verfuegbar" liess den Alligator
+  von Leon WEG nach Osten drehen und den fast doppelt so langen Weg ueber
+  den Rampen-Kletterpfad nehmen. Jetzt entscheiden die tatsaechlichen
+  Wegkosten (West-Umlauf vs. Klettern); die Rampe behaelt eine kleine
+  Praeferenz, damit er bei aehnlich langen Wegen weiterhin spektakulaer
+  drueber klettert statt aussen herum zu schwimmen.
+
 # v0.7.77 — 2026-09-11
 
 ## Bosskampf ROOM2090: Fress-Finisher synchron zum Maul
