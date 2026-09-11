@@ -52,6 +52,7 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex + re15_esp_room_bank */
 #include "re15_room.h"       /* g_current_room_id */
 #include "re15_skeleton.h"   /* re15_sin_q12 */
+#include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -725,9 +726,45 @@ void re15_gator_boss_tick(int slot)
         if (tz < -27000 + 1600) tz = -27000 + 1600;
         if (tz >  -5400 - 1600) tz =  -5400 - 1600;
         g->dbg_tx = tx; g->dbg_tz = tz;
+        {   /* Dreh-Telemetrie (Nutzer 2026-09-11: "dreht fast immer erst in
+             * die entgegengesetzte Richtung bevor er Richtung Platform
+             * dreht"): bei jedem Zweig-/Routenwechsel 48 F Drehverlauf. */
+            static FILE *s_dl = NULL;
+            static int8_t s_zw_alt = -99, s_rt_alt = -99;
+            static int s_dreh_n = 0;
+            if (!s_dl) s_dl = fopen("gator_boss.log", "a");
+            if (g->dbg_zweig != s_zw_alt || g->route != s_rt_alt) {
+                s_zw_alt = g->dbg_zweig; s_rt_alt = g->route; s_dreh_n = 48;
+                if (s_dl) { fprintf(s_dl, "WECHSEL zw=%d rt=%d\n",
+                                    (int)g->dbg_zweig, (int)g->route); fflush(s_dl); }
+            }
+            if (s_dreh_n > 0 && s_dl && (s_dreh_n-- & 3) == 0) {
+                int soll = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
+                int dlt = ((soll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
+                fprintf(s_dl, "DREH rot=%d soll=%d dlt=%d pos=(%d,%d) ziel=(%d,%d)\n",
+                        (int)e->rot_y & 0x0fff, soll, dlt, e->x, e->z, tx, tz);
+                fflush(s_dl);
+            }
+        }
         {
-            int slew = (re15_engine_rand8() & 0x1f) + 6;   /* byte-true B[4]-Slew-Streuung */
-            re15_enemy_steer_point(e, tx, tz, slew);
+            /* WENDE STATT BOGEN (Nutzer 2026-09-11: "dreht fast immer erst
+             * in die entgegengesetzte Richtung bevor er Richtung Platform
+             * dreht"): der byte-true B[4]-Slew (6..37/F) braucht fuer 180
+             * Grad 55-340 Frames - da advance stur vorwaerts schwimmt, zog
+             * jeder harte Zielwechsel einen sichtbaren Bogen in die ALTE
+             * Richtung. DESIGN: ab ~67 Grad Winkelfehler (0x300) dreht er
+             * auf der Stelle (0x38/F = 180 Grad in ~37 F) und schwimmt erst
+             * wieder an, wenn die Nase zum Ziel zeigt. */
+            int soll = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
+            int dlt  = ((soll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
+            if (dlt > 0x300 || dlt < -0x300) {
+                re15_enemy_steer_point(e, tx, tz, 0x38);
+                e->y = GB_WATER_Y;
+                if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; }
+                e->anim_frame++;
+                break;
+            }
+            re15_enemy_steer_point(e, tx, tz, (re15_engine_rand8() & 0x1f) + 6);
         }
         re15_ai_advance(e, GB_SWIM_SPEED);
         e->y = GB_WATER_Y;
@@ -907,8 +944,13 @@ void re15_gator_boss_tick(int slot)
             }
             gdx = e->x - gx; gdz = e->z - gz;
             re15_enemy_steer_point(e, gx, gz, 0x40);
-            if (gdx * gdx + gdz * gdz > (int64_t)600 * 600)
-                re15_ai_advance(e, GB_SWIM_SPEED);
+            {   /* Wende statt Bogen auch hier (s. CHASE-Steer-Notiz) */
+                int gsoll = ((int)re15_atan2_q12(gz - e->z, gx - e->x) - 0x400) & 0x0fff;
+                int gdlt  = ((gsoll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
+                if ((gdlt <= 0x300 && gdlt >= -0x300)
+                    && gdx * gdx + gdz * gdz > (int64_t)600 * 600)
+                    re15_ai_advance(e, GB_SWIM_SPEED);
+            }
             {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
                 static FILE *s_gd = NULL; static int s_gc2 = 0;
                 if (!s_gd) s_gd = fopen("gator_boss.log", "a");
@@ -1087,6 +1129,7 @@ void re15_gator_boss_tick(int slot)
         int32_t dy = pl->y - (e->y - GB_WATER_Y);  /* Push-Zentrum = e->y + 1200 */
         if (dy > -1500 && dy < 1500) {
             int si;
+            int32_t plox = pl->x, ploz = pl->z;   /* fuer die Wand-Klemme unten */
             for (si = 0; si < 4; si++) {
                 int32_t cx = e->x + (int32_t)(((int64_t)fc * SEG[si].ofs) >> 12);
                 int32_t cz = e->z - (int32_t)(((int64_t)fs * SEG[si].ofs) >> 12);
@@ -1101,6 +1144,36 @@ void re15_gator_boss_tick(int slot)
                 if (pen < 1) continue;
                 pl->x += dx * pen / (dd + 1);
                 pl->z += dz * pen / (dd + 1);
+            }
+            /* WAND-KLEMME fuer den geschobenen Spieler (Nutzer-Marker
+             * 2026-09-11: Biss an der Suedwand schob Leon HINTER die Wand,
+             * F351-F411 z=-27087..-29468, Marke 2 x=-13067 hinter der
+             * Westwand): dieser Push schrieb pl->x/z DIREKT, als einziger
+             * Leon-Beweger ohne re15_collision_constrain - kd_move und der
+             * Pad-Move klemmen beide. */
+            if (g_room_rdt_ok && (pl->x != plox || pl->z != ploz)) {
+                int32_t nx = pl->x, nz = pl->z;
+                re15_collision_ensure_band(pl->y);
+                re15_collision_constrain(&g_room_rdt, plox, ploz, &nx, &nz);
+                pl->x = nx; pl->z = nz;
+            }
+        }
+        {   /* AUSSEN-WAECHTER (Diagnose, Nutzer-Marker 2026-09-11: Leon
+             * landete hinter Sued-/Westwand): meldet die ersten Frames, in
+             * denen der Spieler ausserhalb des SCA-Innenraums steht, samt
+             * Spieler-Zustand - zeigt den verschiebenden Mechanismus. */
+            static FILE *s_ow = NULL; static int s_ow_n = 0; static int s_ow_war = 0;
+            int aus = (pl->x < -8900 || pl->x > 7200 || pl->z < -27000 || pl->z > -5400);
+            if (aus && !s_ow_war) s_ow_n = 0;         /* neue Episode */
+            s_ow_war = aus;
+            if (aus && s_ow_n < 24) { s_ow_n++;
+                if (!s_ow) s_ow = fopen("gator_boss.log", "a");
+                if (s_ow) {
+                    fprintf(s_ow, "AUSSEN pos=(%d,%d) hp=%d hr=%d mo=%d gph=%d gpos=(%d,%d)\n",
+                            pl->x, pl->z, (int)pl->hp, (int)pl->hit_react,
+                            (int)pl->motion, (int)g->phase, e->x, e->z);
+                    fflush(s_ow);
+                }
             }
         }
     }
