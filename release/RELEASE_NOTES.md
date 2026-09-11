@@ -1,3 +1,22 @@
+# RE1.5 Port — v0.7.70 (Early Preview)
+
+**ROOM2090: die Kletterphase hat jetzt Zähne.**
+
+---
+
+Dein Befund war präzise: Während der Querung war er ein hilfloses
+Fahrgeschäft. Jetzt gilt oben auf der Rampe: Er schnappt MEHRFACH zu,
+sobald du in Maulnähe bist (nicht mehr einmal pro Querung), das Ende
+seiner Kletterbahn verfolgt live deine Position (seitliches Wegtippeln
+führt nicht mehr ins Leere), und die Querung ist ein Viertel schneller.
+Springst du während seiner Belagerungs-Querung herunter, bricht er die
+Bahn ab, sobald er überm Wasser hängt, und jagt dich sofort normal —
+das Hoch-Runter-Spiel füttert ihn jetzt, statt ihn vorzuführen.
+
+Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.69 (Early Preview)
 
 **ROOM2090: die Querung zielt jetzt auf DICH.**
