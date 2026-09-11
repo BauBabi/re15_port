@@ -1,3 +1,29 @@
+# RE1.5 Port — v0.7.57 (Early Preview)
+
+**ROOM2090: wen die Schnauze schiebt, den beißt sie auch.**
+
+---
+
+Deine zwei Marken:
+
+1. **„Schiebt mich immer noch weg“**: Messbar — du klebtest exakt am
+   vordersten Punkt seines Körper-Schubs und wurdest mit vollem Schwimmtempo
+   vor der Schnauze hergeschoben, während die Bissfreigabe ein Stück WEITER
+   INNEN lag: frontal konnte er dich physisch schieben, aber nie beißen.
+   Jetzt meldet der Schub den Schnauzen-Kontakt direkt an den Biss — sobald
+   er dich vor sich herdrückt, kommt der Schnapp samt Schaden. Im
+   Kontroll-Lauf an der Nordwand: reguläre Bisse statt Dauerschieben.
+2. **„Bleibt teilweise hängen“**: Standest du an der Ostwand und er westlich
+   der Plattform, hielt die Wegwahl die Route für „frei“, obwohl sein
+   Körper an der Plattformkante entlangschliff — er kroch mit 2/Frame an
+   der Klemmlinie. Der Kanten-Schatten wird jetzt auch auf gleicher
+   Beckenseite erkannt und er nimmt die Ecke. Kontroll-Lauf: null
+   Stillstände, er stellt dich regulär.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.56 (Early Preview)
 
 **ROOM2090: kein Rauswurf durch die Wand mehr — und er wendet, statt Bögen zu ziehen.**
