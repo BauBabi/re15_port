@@ -1,3 +1,28 @@
+# RE1.5 Port — v0.7.72 (Early Preview)
+
+**ROOM2090: jetzt ist er gefährlich.**
+
+---
+
+Dein Urteil („relativ dumm und 0 gefährlich“) hatte drei Ursachen, alle
+adressiert:
+
+1. **Wasser-Burst**: Sieht er dich im Wasser vor sich (mittlere Distanz),
+   explodiert er in einen 2,5-Sekunden-Sprint mit doppeltem Tempo — das
+   Krokodil-Verhalten, das Weglaufen in gerader Linie tödlich macht.
+   Danach braucht er eine Verschnaufpause — dein Fenster.
+2. **Absprung-Strafe**: In dem Moment, wo du die Rampe verlässt, ist sein
+   Sprint sofort bereit — der Abstieg kostet. Zusammen mit den Querungen
+   oben (die inzwischen auf deine Spur zielen und mehrfach schnappen) gibt
+   es kein bequemes Versteck mehr.
+3. **Verfolgungstempo** moderat angehoben — er ist dir im Wasser jetzt
+   grundsätzlich überlegen; Lauern und Belagerung bleiben ruhig lesbar.
+
+Im Kontroll-Lauf stellte er einen fliehenden Leon per Sprint und setzte
+durch. Sweep 3342/3342 konvergent, Suite 283/283 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.71 (Early Preview)
 
 **ROOM2090: die letzte Safe-Zone ist zu — und er hält vor.**
