@@ -288,17 +288,21 @@ static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
         || gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, 0);
 }
 
+/* Die vier Plattform-Umlauf-Ecken (+GB_RING_M) - gemeinsame Wegpunkte fuer
+ * Ring-Following und den zentralen Kanten-Umweg. */
+static const int32_t gb_ecke[4][2] = {
+    { GB_PLAT_X0 - GB_RING_M, GB_PLAT_Z0 - GB_RING_M },
+    { GB_PLAT_X1 + GB_RING_M, GB_PLAT_Z0 - GB_RING_M },
+    { GB_PLAT_X1 + GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
+    { GB_PLAT_X0 - GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
+};
+
 /* Ring-Wegpunkt: die vier Block-Ecken (+Marge); waehle die Ecke, die vom Gator aus
  * sichtbar ist (Strecke frei) und den Winkelumweg zu Leon minimiert. */
 static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
                            int32_t *tx, int32_t *tz)
 {
-    static const int32_t C[4][2] = {
-        { GB_PLAT_X0 - GB_RING_M, GB_PLAT_Z0 - GB_RING_M },
-        { GB_PLAT_X1 + GB_RING_M, GB_PLAT_Z0 - GB_RING_M },
-        { GB_PLAT_X1 + GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
-        { GB_PLAT_X0 - GB_RING_M, GB_PLAT_Z1 + GB_RING_M },
-    };
+    const int32_t (*C)[2] = gb_ecke;   /* gemeinsame Umlauf-Ecken (s. gb_ecke) */
     /* WAND-FOLLOWING (Nutzer 2026-09-10: "ganz ans Ende der Wand laufen und
      * erst dann drehen"): statt der global guenstigsten Ecke die Ecken-FOLGE
      * in der kuerzeren Umlaufrichtung ablaufen - naechste Ecke auf dem Weg
@@ -734,6 +738,32 @@ void re15_gator_boss_tick(int slot)
                 g->route = 0;                          /* Latch loesen */
                 g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
             }
+        }
+        /* ZENTRALER KANTEN-UMWEG (Nutzer-Marke 2026-09-11, dritter Fall
+         * derselben Klasse: der Rampen-ANLAUF steuerte blind auf
+         * (4450,-20700), waehrend der Gator westlich der Plattform im
+         * Koerper-Schatten stand - Klemm-Kriechen auf x=-3137). Gilt fuer
+         * JEDEN Zweig: schert die Luftlinie zum Steuerziel im Schatten der
+         * Plattform, erst zur guenstigsten FREIEN Umlauf-Ecke; ist keine
+         * frei (Start selbst im Schatten-Band), zur naechstgelegenen. */
+        if (gb_seg_hits_platform(e->x, e->z, tx, tz, GB_KOERPER_M)) {
+            int ci, bi = -1; int64_t best = 0;
+            for (ci = 0; ci < 4; ci++) {
+                int64_t k;
+                if (gb_seg_hits_platform(e->x, e->z, gb_ecke[ci][0], gb_ecke[ci][1],
+                                         GB_KOERPER_M)) continue;
+                k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0]) + gb_iabs(e->z - gb_ecke[ci][1])
+                  + gb_iabs(tx - gb_ecke[ci][0]) + gb_iabs(tz - gb_ecke[ci][1]);
+                if (bi < 0 || k < best) { best = k; bi = ci; }
+            }
+            if (bi < 0)
+                for (ci = 0; ci < 4; ci++) {
+                    int64_t k = (int64_t)gb_iabs(e->x - gb_ecke[ci][0])
+                              + gb_iabs(e->z - gb_ecke[ci][1]);
+                    if (bi < 0 || k < best) { best = k; bi = ci; }
+                }
+            tx = gb_ecke[bi][0]; tz = gb_ecke[bi][1];
+            g->dbg_zweig = (int8_t)(10 + bi);   /* Telemetrie: Umweg-Ecke */
         }
         /* Steuerziel in die vom KOERPER-ZENTRUM erreichbare Flaeche klemmen
          * (Raum-SCA x[-8900..7200] z[-27000..-5400], Klemmlinie = Kante +
