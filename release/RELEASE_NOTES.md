@@ -1,3 +1,33 @@
+# v0.7.75 — 2026-09-11
+
+## Bosskampf ROOM2090: Fress-Finisher
+
+- **Der Biss landet jetzt AM Koerper**: Waehrend des Kopf-Senkens schiebt
+  sich der Alligator heran, bis das Maul auf Leon liegt.
+- **Halbkoerper-Wirbel**: Nach dem Schnapp ist Leons Oberkoerper im Maul —
+  Huefte und Beine wirbeln kopfueber durch die Luft (Parabel zum Maul),
+  dann reisst das Maul noch weiter auf (Kiefer-Bone), ein zweiter Schnapp,
+  und der Rest wird verschlungen. Danach geht er einfach weg.
+- **YOU DIED wartet**: Der Gameover-Fade haelt an, bis die Fress-Sequenz
+  sichtbar zu Ende gespielt ist (nur im Bosskampf; der byte-true
+  Todes-Ablauf sonst unveraendert).
+
+- **Tödlicher Biss endet im Fressen** (Nutzer-Design): Statt Knockdown
+  senkt der Alligator den Kopf zu Leon (60 Frames), beißt zu (Schnapp-Clip
+  ab F75), Leon verschwindet erst NACH dem sichtbaren Schnapp (F95) —
+  und ab F170 geht er einfach weg (der Sieger-Abzug aus v0.7.74
+  übernimmt). Timing nach Nutzer-Feedback gestreckt: Sterbe-Moment und
+  Todeskamera-Einschwenk kommen jetzt VOR dem Verschwinden.
+- Leon wird beim Continue-Respawn wieder sichtbar (no_draw-Reset am Spawn,
+  zusätzlich im Spieler-Sichtbarkeits-Gate verdrahtet).
+- Klärung zum Report „weggelaufen nach einem Treffer“: Der Verlauf im
+  befund.log zeigt hp=15 → −35 — der 50er-Biss (byte-true dmg_table[5]
+  @DAT_8006f418) war ein regulärer Tod; der Alligator zog als Sieger ab.
+  Der Fress-Finisher macht genau diesen Moment jetzt lesbar.
+- Verifikation: gdigrab-Bildserie (Leon am Maul → im Folgebild weg,
+  Raum-Leiche bleibt), 4× ph=8-Telemetrie, Konvergenz-Sweep 3342/0,
+  Suite 283/283.
+
 # RE1.5 Port — v0.7.74 (Early Preview)
 
 **ROOM2090: würdevoller Sieger — und spürbare Treffer.**
