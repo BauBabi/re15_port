@@ -1,3 +1,22 @@
+# RE1.5 Port — v0.7.60 (Early Preview)
+
+**ROOM2090: das Klettern ist jetzt flach.**
+
+---
+
+Dein Feinschliff-Wunsch: Die Kletteranimation war zu umschweifend. Die Höhe
+selbst war schon minimal (sein Bauch streift am Scheitel exakt über das
+Rampendeck) — das Umschweifende kam aus der starken Körperkrümmung, der
+Nase-hoch-Neigung und dem steilen An-/Abstieg. Alle drei sind deutlich
+zurückgenommen: Die Wirbelsäule krümmt sich nur noch leicht (~9° statt
+23° je Gelenk), die Nase hebt sich dezent (~12° statt 26°), und er steigt
+weicher an und ab. Im Sichtlauf gleitet er jetzt flach über die Kante —
+Silhouette fast waagerecht, kein Bogen mehr.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.59 (Early Preview)
 
 **ROOM2090: die Rampe zählt jetzt überall als Hindernis — und ein Wächter heilt jeden Rest-Hänger selbst.**
