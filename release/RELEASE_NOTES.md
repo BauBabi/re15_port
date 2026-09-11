@@ -1,3 +1,20 @@
+# RE1.5 Port — v0.7.63 (Early Preview)
+
+**ROOM2090: der Seitenwechsel-Wegpunkt bleibt jetzt unverbogen.**
+
+---
+
+Dein Marker: Der v0.7.62-Seitenwechsel wählte zwar korrekt die West-Ecke
+als Zwischenziel — aber das nachgeschaltete Patrouillen-Pendel „korrigierte“
+den Wegpunkt mit seiner Rampen-Klemme in die Südost-Sackgasse, und dort
+stand er knapp vor dem falschen Ziel still. Wegpunkte sind jetzt vom
+Pendel ausgenommen (nur echte Kanten-Ziele pendeln) — die West-Route
+Süd → Westecke → Kanal → Nordkante läuft unverbogen.
+
+Suite 282/282 (lokal + Docker).
+
+---
+
 # RE1.5 Port — v0.7.62 (Early Preview)
 
 **ROOM2090: die Belagerung kommt auf deine Seite der Rampe.**
