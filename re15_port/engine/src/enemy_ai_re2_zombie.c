@@ -7715,16 +7715,34 @@ int re15_re2z_tick(int slot)
      *         `sw 1,4` @0x80107A58 (die Kombination, mit der der Kriecher-HURT selbst in seine
      *         LOKOMOTION zurueckkehrt) — Lokomotion, nicht der Kampf-Griff `sw 0x101`
      *         @0x8010458C, denn das Skript will Fortbewegung, keinen Angriff.
-     *   ZURUECK (+0x1C4 & 0x2000): +0x10E Bit 0 loeschen und `sw 0x901` = EXEC[9] AUFSTEHEN
-     *         @0x80103E48 — dasselbe Ziel, das schon der D15.2-Wecker und der RE2-Liege-Executor
-     *         selbst ansteuern. Plus SCA-Zeile zurueck auf 4 (@0x801050B4, RE1.5-Raumdaten).
+     *   ZURUECK (+0x1C4 & 0x2000): +0x10E Bit 0 loeschen und in die BODEN-AUFSTEHKETTE.
+     *         ⛔ KORRIGIERT (Runde 5, lobby-aufstehen.md): das alte Ziel `sw 0x901` = EXEC[9]
+     *         ist der STOSS-/TAUMEL-Executor (aufrecht startende Clips {3,3,4,0x0D}
+     *         @0x801000D8, Rueckwaerts-Schub +0x144=400 @0x80103F60-64, am Schub-Ende
+     *         7/8-STURZ `0x501` @0x80104000-28 mit Fall-Clip 1/2) - GENAU das "komische
+     *         Fliegen nach dem Aufstehen" der Lobby (befund.log F1140: lebende Zombies in
+     *         ss=5/x mit Fall-Clip bei vollem HP). Neues Ziel: EXEC[7] DIREKT in P2
+     *         (Boden-Aufsteher Clip 8/9 @0x80103840-80 -> P3 -> P4 `0x101` @0x80103900-0C);
+     *         Praezedenz fuer den P2-Direkteinstieg: der Kriecher-Abwurf betritt EXEC[5]
+     *         direkt in P2 via `0x00020501` @0x801045D4. Der alte Kommentar ("dasselbe Ziel
+     *         wie der D15.2-Wecker") beschrieb den vor 2026-08-21 zurueckgebauten Stand.
+     *         Plus SCA-Zeile zurueck auf 4 (@0x801050B4, RE1.5-Raumdaten).
      * Der Spieler-Riegel wird beim Skript-Kriechen NICHT gesetzt: er gehoert dem Angriff
      * (@0x8010459C-B0 haengt hinter dem Kampf-Test), nicht der Fortbewegung.
      * ========================================================================================== */
     if ((e->anim_flags & 0x2000u) && (e->re2z_f10e & 1u)) {
+        if (getenv("RE15_RE2_TRACE")) {
+            FILE *tf = re15_re2_trace_out();
+            if (tf) fprintf(tf, "[z-stand1030] slot=%d ss=%d/%d clip=%d f10e=%04x "
+                                "21a=%04x grid=%02x hp=%d pos=(%d,%d)" "%c",
+                            (int)(e - g_actors), e->sub_state_1, e->sub_state_2,
+                            (int)e->motion, e->re2z_f10e, e->re2z_flags21a,
+                            e->grid_id, (int)e->hp, (int)e->x, (int)e->z, 10);
+        }
         e->re2z_f10e &= (uint16_t)~1u;                             /* Kriecher-Bit aus */
         e->sca_mask  = 4;                                          /* +0x1D7 = 4 @0x801050B4 */
-        re15_ai_set_state_word(e, 0x901);                          /* EXEC[9] Get-up @0x80103E48 */
+        re15_ai_set_state_word(e, 0x20701);                        /* EXEC[7] P2 Boden-Aufsteher
+                                                                    * @0x80103840-80 (s. Block oben) */
     } else if ((e->anim_flags & 0x1000u) && !(e->re2z_f10e & 1u)
                && e->state == 1 && e->hp >= 0) {
         /* `e->state == 1` spiegelt die RE1.5-Seite: dort lesen NUR die Zustand-1-Decides das Bit

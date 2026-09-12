@@ -324,7 +324,16 @@ int main(void)
     ck((e->re2z_f10e & 1u) == 0u, "+0x10E Bit 0 geloescht (kein Kriecher mehr)",
        (long)(e->re2z_f10e & 1u), 0);
     ck(e->sca_mask == 4,      "+0x1D7 zurueck auf 4 (@0x801050B4)", e->sca_mask, 4);
-    ck(e->sub_state_1 == 9,   "+0x5 == 9 = EXEC[9] Aufstehen @0x80103E48", e->sub_state_1, 9);
+    /* UMVERANKERT (Runde 5, lobby-aufstehen.md): der Skript-Rueckweg committet
+     * jetzt EXEC[7] DIREKT in P2 (Boden-Aufsteher @0x80103840-80) statt EXEC[9]
+     * (Stoss/Taumel mit 7/8-Sturz `0x501` @0x80104000-28 - die "fliegenden"
+     * Lobby-Zombies). Praezedenz P2-Direkteinstieg: `0x00020501` @0x801045D4. */
+    ck(e->sub_state_1 == 7,   "+0x5 == 7 = EXEC[7] Boden-Aufsteher @0x80103840", e->sub_state_1, 7);
+    ck(e->sub_state_2 == 3,   "+0x6 == 3: P2 lief im Commit-Tick durch (Clip gesetzt, "
+                              "-> P3 Abspielen)", e->sub_state_2, 3);
+    ck(e->motion == 8 || e->motion == 9,
+                              "P2 hat den Boden-Aufsteh-Clip 8/9 gesetzt (@0x80103840-80)",
+                              (long)e->motion, 8);
 
     /* ---------------------------------------------------------------------------------------
      * P6 + N1..N3  DECIDE[0]: der Angriffs-Entscheider des Kriechers
