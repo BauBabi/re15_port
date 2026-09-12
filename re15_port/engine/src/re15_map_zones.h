@@ -322,14 +322,18 @@ static const re15_map_mark_t s_map_marks[] = {
     {  2,  2,  113,  143, 2,   5, 255, 0 },
     {  2,  4,  119,  129, 3,   4,   5, 1 },
     {  2,  4,  145,  133, 1,   4,   8, 1 },
-    /* 1000-Flur <-> 1050 (2026-09-12): mit Zone 6 auf Rect 0 liegen die
-     * Tueren auf der WESTKANTE x=180 der Rect-0-Kunst (Generator-Snap mit den
-     * karte-1050-Seeds; die alten 169/176er stammten aus der Rect-4-Welt und
-     * lagen 11-14 px ausserhalb der Kasten-Ueberdeckung, s. unit_map_durchgang
-     * AUSSEN-Schiene). Dritte Tuer ohne eigenes Rechteck (rect 255). */
-    {  2,  4,  180,  159, 1,   1,   6, 0 },
-    {  2,  4,  180,  164, 1,   0,   6, 0 },
-    {  2, 255,  185,  164, 0,   0,   6, 0 },
+    /* 1000-Flur <-> 1050, KORRIGIERT (Runde 7, karte-1050-tueren.md; Nutzer:
+     * 'in ROOM 1050 fehlen 3 Tueren auf der Map. Da stehe ich davor.'): die
+     * drei West-Tueren nach ROOM1000 (Door_aot slot1/2/3 @0x00AFA/0x00B1A/
+     * 0x00B3A, Mitten (13700,9200)/(13700,6100)/(13700,-13450)) projizieren
+     * mit der flip(1,1)-Zeile auf die OSTWAND x206 der gedrehten Zeichnung.
+     * Der Runde-6-Snap auf die Westkante x180 war ein Fehl-Snap unter dem
+     * Druck der AUSSEN-Schiene (deren Beruehrungs-Modell gilt fuer
+     * flip-montierte Nachbarn nicht; Ausnahme jetzt in test_map_durchgang).
+     * Traeger Rect 0 / zid 6; zwei mit Partner-Zeichnung (zid2 1/0). */
+    {  2,  0,  206,  147, 1,   6,   1, 0 },
+    {  2,  0,  206,  140, 1,   6,   1, 0 },
+    {  2,  0,  206,   98, 1,   6,   0, 0 },
     /* (177,188)/(183,188) ersetzt (karte-1050.md): Klemm-Artefakte der alten
      * Rect-4-Zuordnung - sie lagen 40+ px unter jeder Kunst. Die 1090-Tuer
      * projiziert mit der neuen 1050-Zeile auf (191,77), Nordwand-Snap der

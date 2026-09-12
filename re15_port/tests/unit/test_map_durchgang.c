@@ -78,6 +78,21 @@ int main(void)
                 (z->synth || z->rect != 255)) { zb = z; break; }
         }
         if (!zb || !re15_map_zone_kasten(zb, &bx, &by, &bw, &bh)) continue;
+        /* FLIP-MISMATCH-AUSNAHME (Runde 7, wie in der Kanten-Schiene unten):
+         * bei verschieden gespiegelt montierten Nachbarn benennt kind die
+         * Nischen-Seite der EIGENEN (gedrehten) Kachel - der Nachbar liegt
+         * kartenseitig auf der Gegenseite (1050 flip(1,1): Tuer an der
+         * Ostwand x206, ROOM1000 westlich). Richtung dort nicht bewertbar. */
+        {
+            const re15_map_zone_t *za2 = 0;
+            for (i = 0; i < nz; i++) {
+                const re15_map_zone_t *z = re15_map_zone_by_index(i);
+                if (z && z->page == pg && z->zid == zid &&
+                    (z->synth || z->rect != 255)) { za2 = z; break; }
+            }
+            if (za2 && (za2->flip_x != zb->flip_x || za2->flip_z != zb->flip_z))
+                continue;
+        }
         gepaart++;
         if ((bx + bw / 2 - mx) * rx[kind] + (by + bh / 2 - my) * ry[kind] <= 0) {
             verdreht++;
@@ -238,6 +253,15 @@ int main(void)
                 if (z->zid == zid2 && !zb) zb = z;
             }
             if (!za || !zb) continue;
+            /* FLIP-MISMATCH-AUSNAHME (Runde 7, karte-1050-tueren.md): das
+             * Beruehrungs-Modell dieser Schiene (Marke liegt in der Kasten-
+             * UEBERDECKUNG beider Zonen) gilt NICHT fuer Nachbarn, deren
+             * Zeichnungen verschieden gespiegelt montiert sind - dort liegt
+             * die physische Tuer auf gegenueberliegenden Kanten der Kacheln
+             * (1050 flip(1,1) vs 1000 flip(0,0): Tuer auf x206-Ostwand,
+             * Ueberdeckung endet bei x191). Der Runde-6-Snap auf die
+             * Ueberdeckung war genau der dadurch erzwungene Fehl-Snap. */
+            if (za->flip_x != zb->flip_x || za->flip_z != zb->flip_z) continue;
             if (!re15_map_zone_kasten(za, &ax, &ay, &aw, &ah)) continue;
             if (!re15_map_zone_kasten(zb, &bx, &by, &bw, &bh)) continue;
             ux0 = ax > bx ? ax : bx;

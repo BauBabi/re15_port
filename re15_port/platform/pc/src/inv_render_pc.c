@@ -495,6 +495,13 @@ static void re15_schwenke_entfernen(int page)
                         weg[ny][nx] = 2; stx[n] = (short)nx; sty[n] = (short)ny; n++;
                     }
             }
+            /* MINDESTGROESSE (Runde 7, karte-1050-tueren.md Befund B): ein
+             * echter Tuerschwenk misst >= 3 px in BEIDEN Achsen (kleinster
+             * echter Schwenk 7 px / Bbox 3x4, statisch ueber alle 13 Blaetter
+             * nachgerechnet; 18 Wand-Kruemel <= 2 px). Die 2-Texel-Wandstufe
+             * 204..205/y88 der 1050-Ostwand wurde sonst als Schwenk gefressen
+             * ('fehlt ein Stueck Wand'). */
+            if (x1 - x0 + 1 < 3 || y1 - y0 + 1 < 3) continue;
             if (x1 - x0 + 1 > MAX_AUSD || y1 - y0 + 1 > MAX_AUSD) {
                 for (t = 0; t < n; t++) weg[sty[t]][stx[t]] = 0;   /* zu gross = Wand */
             } else {
@@ -567,6 +574,7 @@ static void re15_schwenke_entfernen(int page)
                             weg[ny][nx] = 2; stx[n] = (short)nx; sty[n] = (short)ny; n++;
                         }
                 }
+                if (x1 - x0 + 1 < 3 || y1 - y0 + 1 < 3) continue;   /* s. oben */
                 if (x1 - x0 + 1 > MAX_AUSD || y1 - y0 + 1 > MAX_AUSD || n > 13) {
                     /* n > 13: ein Schwenk ist 13 Pixel (§27) - groessere Funde des
                      * engen Zweitpasses sind kurze ECHTE Wandstuecke (Blatt 8/9,
