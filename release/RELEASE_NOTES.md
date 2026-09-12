@@ -1,3 +1,27 @@
+# v0.7.84 — 2026-09-12
+
+## Sieben Befunde aus dem Spieltest behoben
+
+- **Schrotflinte: der Nah-Kopfschuss nach oben funktioniert** — wie in RE2: nah
+  vor dem Zombie hochzielen trifft den Kopf (mit der Pistole geht das wie im
+  RE2-Original nicht, und aus der Ferne laesst sich nicht nach oben snipen).
+  Die Hoehenfenster aller Waffen stammen aus der RE2-EXE.
+- **Auf den Kopf zielen bringt nicht mehr WENIGER Gore**: leere Zellen der
+  RE2-Treffertabellen werden auf die Rumpf-Reaktion geklemmt — im Original sind
+  sie unerreichbar, im Port fiel der Treffer seit den Trefferzonen ins Leere.
+- **Schrot-Huelsen fliegen nicht mehr ewig auf der Stelle**: die fehlende
+  Original-Routine 38 (Haltedauer, Auswurf mit Streuung, Boden-Despawn) ist da.
+- **Game Over/Finisher: keine PRI-Schnipsel mehr ueber der Todesszene** — die
+  Vordergrund-Masken gehoeren zum Raumbild und gehen jetzt mit ihm.
+- **2F-Karte: die frei schwebende Tuermarke ist weg** — eine Marke erscheint nur
+  noch, wenn unter ihr wirklich etwas gezeichnet ist.
+- **Endkampf-Birkin steht auf dem Boden und ist der richtige Koerper**: das
+  RE2-Modell traegt zwei Gestalten — gekaempft wird der animierte Kriecher, die
+  starre 7-Meter-Zugkulisse bleibt verborgen. Wurzelhoehe je Animationsbild
+  geerdet, Clip-Zuordnung der KI auf den RE2-Clipsatz.
+- **Und er ist besiegbar**: die Endform ist im Original waffenimmun — im
+  Endkampf erbt sie jetzt die Schadenswerte der Form, die sie ersetzt.
+
 # v0.7.83 — 2026-09-12
 
 ## Waffen: Dauerfeuer + eigene Muendungseffekte je Waffe
