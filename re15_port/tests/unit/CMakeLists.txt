@@ -3453,6 +3453,16 @@ set_tests_properties(unit_re2_gore_decoder PROPERTIES TIMEOUT 60)
 
 # --- G5-ENDKAMPF-SMOKE (Runde 6, birkin-g5-ki.md): Park, Intro-Choreo mit
 #     Root-Motion, Tentakel-Zug, Blob-Biss, Todes-Absink-Rampe. ---
+# --- G5-MORPH-PIN (Runde 7, g5-morph.md): dir[0]-Format, Basis-Restore und die
+#     drei integergenauen Regressionsanker der Segment-Kette. ---
+add_executable(test_g5_morph test_g5_morph.c)
+target_link_libraries(test_g5_morph PRIVATE re15_engine re15_test_support)
+target_include_directories(test_g5_morph PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_g5_morph PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_g5_morph COMMAND test_g5_morph)
+set_tests_properties(unit_g5_morph PROPERTIES TIMEOUT 60)
+
 add_executable(probe_g5_boss probe_g5_boss.c)
 target_link_libraries(probe_g5_boss PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_g5_boss PRIVATE ${CMAKE_SOURCE_DIR}/include)

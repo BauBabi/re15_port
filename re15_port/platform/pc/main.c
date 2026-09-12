@@ -8473,6 +8473,17 @@ re_title:;
                     }
                     if (nmi >= src_md1->mesh_count) continue;
                     const re15_md1_mesh_t *nm = &src_md1->meshes[nmi];
+                    /* G5-BLOB (Typ 0x36): dir[0]-Vertex-Morph (Runde 7, g5-morph.md;
+                     * Konsument FUN_8004BF90 @0x8004bf90). Das MD1 aliast das residente
+                     * CDEMD0.EMS - die Basis wird NIE ueberschrieben, der Zeichner liest
+                     * den Morph-Puffer des G5-Moduls. Tri- und Quad-Array sind dasselbe
+                     * Vertexarray (EMD 0x118FC), ein Zeiger genuegt fuer beide. */
+                    const re15_md1_vertex_t *nmv = nm->tri_vertices;
+                    const re15_md1_vertex_t *nmq = nm->quad_vertices;
+                    if (npc->type == 0x36u) {
+                        const re15_md1_vertex_t *mv = re15_g5_morph_verts(npc->type, nmi);
+                        if (mv) { nmv = mv; nmq = mv; }
+                    }
                     /* TIM-Bind pro Part (per-Tri gecaptured, render_pc.c s_textri_slot):
                      * Stumpf-Parts sampeln die RE2-TIM, alle anderen ihre normale. */
                     if (npc_gorebank)
@@ -8495,9 +8506,7 @@ re_title:;
                         if (tri->v2 >= (uint32_t)nm->tri_vertex_count) continue;
                         float ax[3], ay[3], wz[3];
                         const re15_md1_vertex_t *vp[3] = {
-                            &nm->tri_vertices[tri->v0],
-                            &nm->tri_vertices[tri->v1],
-                            &nm->tri_vertices[tri->v2],
+                            &nmv[tri->v0], &nmv[tri->v1], &nmv[tri->v2],
                         };
                         int ok = 1;
                         int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;
@@ -8574,10 +8583,7 @@ re_title:;
                         if (qd->v3 >= (uint32_t)nm->quad_vertex_count) continue;
                         float ax[4], ay[4], wz[4];
                         const re15_md1_vertex_t *vp[4] = {
-                            &nm->quad_vertices[qd->v0],
-                            &nm->quad_vertices[qd->v1],
-                            &nm->quad_vertices[qd->v2],
-                            &nm->quad_vertices[qd->v3],
+                            &nmq[qd->v0], &nmq[qd->v1], &nmq[qd->v2], &nmq[qd->v3],
                         };
                         int ok = 1;
                         int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;

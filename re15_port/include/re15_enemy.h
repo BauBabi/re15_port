@@ -33,6 +33,17 @@
  * rather than bumping this back — the PSX boot is RAM-critical. */
 #define RE15_ENEMY_MAX 4
 
+/* dir[0]-Morph-Controller EINES Meshes (Format g5-morph.md 2.2; Parser =
+ * FUN_8004b3b8, Konsument FUN_8004BF90 @0x8004bf90). seg0 zeigt auf die
+ * BASIS-Pose (Segment 0), danach folgen seg_count ZIEL-Posen im Abstand
+ * seg_size; alle Tabellen sind nverts * 3 * s16. */
+typedef struct {
+    const uint8_t *seg0;
+    uint32_t       seg_size;
+    uint16_t       seg_count;
+    uint16_t       nverts;
+} re15_morph_ctrl_t;
+
 typedef struct {
     uint8_t type;                 /* Sce_em_set type byte; 0 = free slot */
     uint8_t ok;                   /* 1 = loaded + parsed, ready to render */
@@ -70,6 +81,14 @@ typedef struct {
      * aliasen das residente RE2-EMS (pc_re2_cdemd haelt es fuer immer). Der Stumpf
      * braucht die RE2-TIM (Mesh 15 sampelt eine in RE1.5 UNBELEGTE Atlas-Region,
      * Mesh 16 wuerde die falsche Brusthaut aliassen) -> eigener Slot pc_tex_slot_gore. */
+    /* dir[0]-VERTEX-MORPH (Runde 7, analysis/befunde_runde7_2026-09-13/g5-morph.md):
+     * der Konsument FUN_8004BF90 @0x8004bf90 verformt die Vertices EINES Meshes
+     * kettenweise gegen bis zu 4 Ziel-Posen; die Gewichte fuehrt die KI (G5-Blob).
+     * Zeiger aliasen das residente CDEMD0.EMS (eb->buf == NULL) - nichts wird kopiert. */
+    re15_morph_ctrl_t morph[MD1_MAX_MESHES];   /* nur wo das Maskenbit steht */
+    const uint8_t    *morph_block;             /* EMD + dir[0]  (@0x8001aba0) */
+    uint32_t          morph_mask;              /* block[0]      (FUN_8004b3b8) */
+    uint8_t           morph_ok;
     re15_md1_t md1_gore;
     uint8_t    md1_gore_ok;
     int        pc_tex_slot_gore;  /* -1 = keiner */
@@ -81,6 +100,15 @@ typedef struct {
 } re15_enemy_bank_t;
 
 extern re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
+
+/* dir[0]-Vertex-Morph (engine/src/emd_morph.c, byte-true FUN_8004BF90 @0x8004bf90):
+ * schreibt nverts gemorphte Vertices nach out (Basis + Segment-Kette). */
+void re15_emd_morph_apply(const re15_morph_ctrl_t *c, const int16_t *w,
+                          re15_md1_vertex_t *out);
+
+/* Gemorphte Vertices des G5-Blobs fuer den Zeichner (NULL = kein Morph fuer dieses
+ * Mesh/diesen Frame). Muster: re15_re2z_gore_part_burst. */
+const re15_md1_vertex_t *re15_g5_morph_verts(uint8_t type, int mesh_index);
 
 /* Loaded bank for `type`, or NULL. (type 0 = none.) */
 re15_enemy_bank_t *re15_enemy_find(uint8_t type);

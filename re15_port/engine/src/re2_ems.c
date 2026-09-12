@@ -104,6 +104,41 @@ int re2_emd_parse_bank(const uint8_t *emd, size_t emd_size, re15_enemy_bank_t *e
         re15_md1_parse(emd + D[7], (int)(emd_size - D[7]), &eb->md1) != 0)
         return -4;
 
+    /* dir[0] = VERTEX-MORPH-BLOCK (Binder `lw v1,0(s0)` / `sw v1,444(s1)`
+     * @0x8001ab94-aba0 -> Entity+0x1BC). Parser byte-true nach FUN_8004b3b8:
+     * block[0] = Mesh-Maske, ab block+12 je gesetztem Maskenbit ein Record
+     * {data_off, seg_size, seg_count}, dessen Laenge (3 + seg_count) Worte
+     * betraegt. EM036 liefert Maske 0x4 (nur Mesh 2 = die Fleischmasse),
+     * seg0 = emd+0x3C, seg_size 0xEE4, seg_count 4, nverts 635. */
+    eb->morph_ok = 0; eb->morph_block = NULL; eb->morph_mask = 0;
+    for (int m = 0; m < MD1_MAX_MESHES; m++) eb->morph[m].seg_count = 0;
+    if (D[0] && (size_t)D[0] + 12 <= emd_size) {
+        const uint8_t *blk = emd + D[0];
+        uint32_t mask = rd_u32(blk + 0);
+        const uint8_t *rec = blk + 12;
+        for (int m = 0; m < eb->md1.mesh_count && m < MD1_MAX_MESHES; m++) {
+            uint32_t doff, ssz, scnt;
+            size_t need;
+            if (!(mask & (1u << m))) continue;
+            if ((size_t)(rec - emd) + 12 > emd_size) break;
+            doff = rd_u32(rec + 0); ssz = rd_u32(rec + 4); scnt = rd_u32(rec + 8);
+            /* Plausibilitaet (Port-Sicherheit, nicht im Original): Tabellen muessen
+             * vollstaendig im EMS liegen und mindestens nverts*6 Bytes fassen. */
+            need = (size_t)D[0] + doff + (size_t)(scnt + 1) * ssz;
+            if (scnt == 0u || scnt > 15u || need > emd_size ||
+                ssz < (uint32_t)eb->md1.meshes[m].tri_vertex_count * 6u) {
+                rec += (size_t)(3 + scnt) * 4; continue;
+            }
+            eb->morph[m].seg0      = blk + doff;
+            eb->morph[m].seg_size  = ssz;
+            eb->morph[m].seg_count = (uint16_t)scnt;
+            eb->morph[m].nverts    = (uint16_t)eb->md1.meshes[m].tri_vertex_count;
+            eb->morph_ok = 1;
+            rec += (size_t)(3 + scnt) * 4;
+        }
+        eb->morph_block = blk; eb->morph_mask = mask;
+    }
+
     /* Paar 1 (dir[1]/[2] — Entity+0x17C/+0x108 @0x8001aba0/abb0) -> loco-Feld.
      * dir[2] ist zugleich der Struktur-EMR; Pool == Struktur, kein Re-Point. */
     eb->loco_ok = (re2_parse_pair(emd, emd_size, D[1], D[2], 0,

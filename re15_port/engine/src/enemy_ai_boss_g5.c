@@ -116,6 +116,42 @@ typedef struct {
 static g5_state_t s_g5;
 static int s_g5_slot = -1;
 
+/* ---- dir[0]-VERTEX-MORPH der Fleischmasse (Runde 7, g5-morph.md) ----------------------
+ * Der Blob (Mesh 2) traegt 4 Ziel-Posen; die Gewichte fuehrt die Blob-Maschine oben.
+ * Das Original rechnet sie einmal je Frame NACH der Blob-Maschine in den Vertexpuffer
+ * (Blob @0x80103bc8, dann `jal 0x8004bf90` @0x80103bf8) - dieselbe Reihenfolge hier. */
+#define RE15_G5_MORPH_MAX_V 1024
+static re15_md1_vertex_t s_g5_morph[RE15_G5_MORPH_MAX_V];
+static int s_g5_morph_mesh = -1;
+static int s_g5_morph_gueltig = 0;
+
+const re15_md1_vertex_t *re15_g5_morph_verts(uint8_t type, int mesh_index)
+{
+    if (type != 0x36u) return 0;
+    if (!s_g5_morph_gueltig || mesh_index != s_g5_morph_mesh) return 0;
+    return s_g5_morph;
+}
+
+static void g5_morph_bauen(const g5_state_t *g)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x36u);
+    int m;
+    s_g5_morph_gueltig = 0;
+    if (!eb || !eb->ok || !eb->morph_ok) return;
+    for (m = 0; m < eb->md1.mesh_count && m < MD1_MAX_MESHES; m++) {
+        int16_t w[4];
+        if (!eb->morph[m].seg_count) continue;
+        if (eb->morph[m].nverts > RE15_G5_MORPH_MAX_V) continue;
+        /* (int16_t)-Kappung ist Pflicht: das Original fuehrt die Gewichte als sh/lh
+         * (g5-morph.md 3.1). */
+        w[0] = (int16_t)g->gewicht[0]; w[1] = (int16_t)g->gewicht[1];
+        w[2] = (int16_t)g->gewicht[2]; w[3] = (int16_t)g->gewicht[3];
+        re15_emd_morph_apply(&eb->morph[m], w, s_g5_morph);
+        s_g5_morph_mesh = m; s_g5_morph_gueltig = 1;
+        break;                      /* EM036: Maske 0x4 -> genau ein Mesh */
+    }
+}
+
 /* u-Achse SPIELER-RELATIV (s. Kopf): u = 12000 - |dx|, dx entlang des Korridors (X). */
 static int32_t g5_dx(const re15_actor_t *e)
 {
@@ -218,18 +254,36 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
     int32_t dist = re15_enemy_player_dist(e, pl);
     switch (g->blob) {
     case 0: {   /* KAMPF-PULS + Trigger (0x80103C18): die Masse ATMET dauerhaft. */
-        if (g->blob_ph == 0) { g->blob_timer = 180 + (re15_engine_rand8() & 0x1F);
-                               g->blob_speed = 6; g->blob_ph = 1; }
-        else if (g->blob_ph == 1) {
+        /* KORRIGIERT (Runde 7, g5-morph.md 3.3 Punkte 1-4 - erst mit dem gebauten
+         * Morph sichtbar):
+         *  - ph0 FAELLT im Original in ph1 durch (kein Sprung hinter 0x80103c88);
+         *    der Port verlor je Zyklus einen Puls-Frame.
+         *  - AUSKLANG: das Original bremst die Rampe erst aus (speed -= 6 bzw. -= 8)
+         *    und wechselt die Phase erst bei NEGATIVER Geschwindigkeit
+         *    (@0x80103d2c-48 / @0x80103dd4-f0). Ohne das erreicht die Amplitude nie
+         *    ~8000+ - die Masse atmete zu flach und zu hart.
+         *  - Ruecksprung ph2 -> ph1 (sb v0=1,537 @0x80103df0), NICHT ph0: der
+         *    180+rng-Timer wird nur EINMAL gewuerfelt.
+         *  - gewicht[3] halbiert das Original arithmetisch (sll 16 / sra 17
+         *    @0x80103c9c-a8, Abrundung gegen -unendlich) und NUR im ph0/ph1-Pfad
+         *    (ph2 springt hinter 0x80103d54). */
+        if (g->blob_ph == 0) {
+            g->blob_timer = 180 + (re15_engine_rand8() & 0x1F);
+            g->blob_speed = 6; g->blob_ph = 1;
+            /* FALLTHROUGH nach ph1 (s.o.) */
+        }
+        if (g->blob_ph == 1) {
             g->gewicht[0] += g->blob_speed;
-            if (g->blob_speed < 162) g->blob_speed += 6;
-            if (g->gewicht[0] > 8000) g->blob_ph = 2;
+            if (g->gewicht[0] > 8000) { if (g->blob_speed > 0) g->blob_speed -= 6; }
+            else if (g->blob_speed < 162) g->blob_speed += 6;
+            if (g->blob_speed <= 0) { g->blob_ph = 2; g->blob_speed = 6; }
+            g->gewicht[3] = (int32_t)(((int32_t)g->gewicht[3]) >> 1);
         } else {
             g->gewicht[0] -= g->blob_speed;
-            if (g->blob_speed < 192) g->blob_speed += 6;
-            if (g->gewicht[0] < -548) { g->blob_ph = 0; }
+            if (g->gewicht[0] < -548) { if (g->blob_speed > 0) g->blob_speed -= 8; }
+            else if (g->blob_speed < 192) g->blob_speed += 6;
+            if (g->blob_speed <= 0) { g->blob_ph = 1; g->blob_speed = 6; }
         }
-        g->gewicht[3] /= 2;
         /* Trigger jeden Frame (@0x80103e08-ec): Biss / zweiter Devour-Pfad. */
         if (dist < 6000 && g->biss_cd == 0 &&
             re15_ai_arc_test(e, pl->x, pl->z, 128) && !(g->busy & 4u)) {
@@ -248,9 +302,12 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
         switch (g->blob_ph) {
         case 0: g->blob_ph = 1; g->blob_speed = 0; break;
         case 1:                                        /* AUSHOLEN @0x80103F58 */
+            /* KORRIGIERT (g5-morph.md 3.3 Punkt 5): Original rechnet
+             * w3 = (w3>>1) + (speed>>1) mit der ALTEN Geschwindigkeit und
+             * erhoeht sie ERST danach (@0x80103f58-fdc). */
             g->gewicht[0] -= g->blob_speed;
+            g->gewicht[3] = (g->gewicht[3] >> 1) + (g->blob_speed >> 1);
             g->blob_speed += 32;
-            g->gewicht[3] += g->blob_speed / 2;
             if (g->gewicht[0] < -4048) g->blob_ph = 2;
             break;
         case 2: {                                      /* ZUSCHNAPPEN @0x80103FE0 */
@@ -283,7 +340,10 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             break;
         }
         case 3:                                        /* Nachwackeln (15 T) */
-            g->gewicht[3] += ((g->blob_timer & 1) ? 64 : -192);
+            /* KORRIGIERT (g5-morph.md 3.3 Punkt 6): +64 bei GERADEM Zaehler,
+             * -192 bei ungeradem ((+0x21E&1)<<8 @0x8010420c-1c) - der Port
+             * hatte es andersherum. */
+            g->gewicht[3] += ((g->blob_timer & 1) ? -192 : 64);
             if (--g->blob_timer <= 0) g->blob_ph = 4;
             break;
         default:                                       /* Rueckzug der Masse */
@@ -311,13 +371,16 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
         break;
     }
     case 4: {   /* DEVOUR-Blob (0x80104848): Kompress, dann Kauen mit SE 14/6. */
+        /* KORRIGIERT (g5-morph.md 3.3 Punkt 7): Rampe += 32 (nicht 256), ph2
+         * addiert die LAUFENDE Geschwindigkeit (nicht konstant 512), Schwelle
+         * 10001. */
         if (g->blob_ph == 0) { g->blob_speed = 1024; g->blob_ph = 1; }
         else if (g->blob_ph == 1) {
-            g->gewicht[0] -= g->blob_speed; g->blob_speed += 256;
+            g->gewicht[0] -= g->blob_speed; g->blob_speed += 32;
             if (g->gewicht[0] < -4048) g->blob_ph = 2;
         } else if (g->blob_ph == 2) {
-            g->gewicht[0] += 512;
-            if (g->gewicht[0] > 10000) { g->blob_ph = 3; g->blob_timer = 0; }
+            g->gewicht[0] += g->blob_speed;
+            if (g->gewicht[0] > 10001) { g->blob_ph = 3; g->blob_timer = 0; }
         } else {
             if ((g->blob_timer++ & 15) == 0) g5_se((re15_engine_rand8() & 1) ? 14 : 6);
         }
@@ -328,7 +391,12 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             g->gewicht[0] -= 128;
             if (g->gewicht[0] < -4048) { g->blob_ph = 1; g->blob_timer = 300; }
         } else if (g->blob_ph == 1) {
-            g->gewicht[0] += (int32_t)(re15_engine_rand8() & 0x3F) - 32;
+            /* KORRIGIERT (g5-morph.md 3.3 Punkt 8): das Original zuckt mit
+             * w0 += 32 +- 4*(rng&0xFF) (Amplitude bis +-1020) - der Port hatte
+             * +-32, also ~30x zu schwach. Klemmen und Tick-Zahl stimmen. */
+            g->gewicht[0] += 32 + ((re15_engine_rand8() & 1)
+                                   ? -(int32_t)(re15_engine_rand8() & 0xFF) * 4
+                                   :  (int32_t)(re15_engine_rand8() & 0xFF) * 4);
             if (g->gewicht[0] < -5000) g->gewicht[0] = -5000;
             if (g->gewicht[0] > 8000)  g->gewicht[0] = 8000;
             if (--g->blob_timer <= 0) g->blob_ph = 2;
@@ -364,6 +432,16 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 2:                                            /* [T2] Clip 1: +7014 Root-Spur */
         g5_root_motion(e, 0, 4096, 0);
+        /* INTRO-KOPPLUNG (g5-morph.md 3.3 Punkt 9): waehrend des Heranrobbens
+         * geht die Masse AUF - das Original koppelt gewicht[1] an die Hebung der
+         * Wurzel (@0x8010132c-68: w1 = (part0.bind_y - Baseline)*4415 >> 11).
+         * Der Port hat die Bind-Baseline nicht, nutzt aber denselben Verlauf
+         * ueber den Clip-Fortschritt (dokumentierte Naeherung, Amplitude aus der
+         * Original-Formel: Clip 1 hebt 1345 Einheiten -> w1 bis ~2895). */
+        {
+            int fc = g5_clip_len(e);
+            if (fc > 1) g->gewicht[1] = (int32_t)((int64_t)e->anim_frame * 2895 / (fc - 1));
+        }
         if (g5_anim(e)) g->ph = 3;
         break;
     case 3: g5_clip(e, 3, 0); g5_se(9); g->ph = 4; g->timer = 0; break;   /* [T3] */
@@ -380,6 +458,10 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 6:                                            /* [T6] Clip 4: +3946 Root-Spur */
         g5_root_motion(e, 0, 4096, 0);
+        {   /* [T6]-Kopplung @0x80101584-b4 (dort mit Faktor 4415*2/4096) */
+            int fc = g5_clip_len(e);
+            if (fc > 1) g->gewicht[1] = (int32_t)((int64_t)e->anim_frame * 2895 / (fc - 1));
+        }
         if (g5_anim(e)) g->ph = 7;
         break;
     case 7: g5_clip(e, 2, 0); g->gewicht[1] = 0; g->ph = 8; g5_se(10); break;  /* [T7] */
@@ -512,6 +594,7 @@ void re15_g5_boss_tick(int slot)
     if (g->routine == 3) {                             /* TOD */
         g5_tod_tick(e);
         g5_blob_tick(e, pl);
+        g5_morph_bauen(g);
         return;
     }
 
@@ -542,6 +625,7 @@ void re15_g5_boss_tick(int slot)
             if (g5_anim(e)) { g->sub = 0; g->ph = 0; }
         }
         g5_blob_tick(e, pl);
+        g5_morph_bauen(g);
         return;
     }
 
@@ -666,6 +750,7 @@ void re15_g5_boss_tick(int slot)
     }
 
     g5_blob_tick(e, pl);
+    g5_morph_bauen(g);              /* Reihenfolge wie im Original (s. Block oben) */
 
     /* Mess-Schiene (env-gegated, birkin_dbg.log wie gehabt). */
     if (getenv("RE15_BIRKIN_DBG")) {
