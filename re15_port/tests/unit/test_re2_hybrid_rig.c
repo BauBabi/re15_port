@@ -325,6 +325,35 @@ int main(void)
 
     /* ---- (4) Die beiden dokumentierten GRENZEN als Messung --------------- */
     {
+        /* (4d) GORE-SEITENBANK (gore-vollausbau.md 4.2 Punkt 7i): re2_hybrid_apply
+         * ersetzt eb->md1 durchs RE1.5-MD1, muss aber das RE2-MD1 (mit den Reserve-
+         * Meshes 15 = Bein-Stumpf, 16 = Rumpf-Stumpf) in md1_gore sichern - exakt die
+         * Luecke, durch die test_re2_zombie_teardeath (misst die PURE RE2-Bank) am
+         * Nutzer vorbei gruen war. Mess-Solls aus dem frischen EMS-Scan (4.1):
+         * Mesh 15 = 26 Verts (Oberschenkel gekappt), Mesh 16 = Brust-Klon 41v/24t/27q
+         * wie Mesh 0. */
+        if (load_re2(0x10) && load_re15(0x10) &&
+            re2_hybrid_apply(&s_bank, 0x10, &s_md15, &s_sk15, NULL) == 0) {
+            CHECK(s_bank.md1_gore_ok == 1, "EM10-Hybrid: md1_gore nicht gesichert");
+            CHECK(s_bank.md1_gore.mesh_count == 17,
+                  "md1_gore: %d Meshes != 17", s_bank.md1_gore.mesh_count);
+            if (s_bank.md1_gore_ok && s_bank.md1_gore.mesh_count == 17) {
+                CHECK(s_bank.md1_gore.meshes[15].tri_vertex_count == 26,
+                      "Gore-Mesh 15 (Bein-Stumpf): %d Verts != 26",
+                      s_bank.md1_gore.meshes[15].tri_vertex_count);
+                CHECK(s_bank.md1_gore.meshes[16].tri_vertex_count ==
+                      s_bank.md1_gore.meshes[0].tri_vertex_count &&
+                      s_bank.md1_gore.meshes[16].triangle_count ==
+                      s_bank.md1_gore.meshes[0].triangle_count,
+                      "Gore-Mesh 16 (Rumpf-Stumpf) ist kein Brust-Klon (%d/%d vs %d/%d)",
+                      s_bank.md1_gore.meshes[16].tri_vertex_count,
+                      s_bank.md1_gore.meshes[16].triangle_count,
+                      s_bank.md1_gore.meshes[0].tri_vertex_count,
+                      s_bank.md1_gore.meshes[0].triangle_count);
+            }
+            printf("  (4d) GORE-SEITENBANK: RE2-MD1 (17 Meshes, Stumpf 15/16) am Hybrid gesichert\n");
+        }
+
         /* (4a) GORE-STUMPF: der Zerleger stempelt part_mesh = RESERVE-Mesh 15
          * (@0x8010531C-50). Im RE1.5-MD1 gibt es das nicht — Beleg: mesh_count == bone_count
          * fuer JEDEN Zombie-Typ, also kein ungenutztes Reserve-Mesh. */

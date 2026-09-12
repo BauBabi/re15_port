@@ -174,7 +174,12 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 46   /* 45 = Raum-Prop 16. Nur ROOM1190/1191 haben
+#define RE15_TIM_SLOT_MAX 50   /* 46..49 = RE2-GORE-TIM je Enemy-Bank (g_enemy 0..3,
+                                *      gore-vollausbau.md 4.2: der Stumpf-Mesh 15
+                                *      sampelt eine in RE1.5 UNBELEGTE Atlas-Region,
+                                *      Mesh 16 wuerde die falsche Brusthaut aliassen
+                                *      -> die RE2-TIM braucht einen eigenen Slot)
+                                * 45 = Raum-Prop 16. Nur ROOM1190/1191 haben
                                 *      nOmodel=17; RE15_TIM_SLOT_PROP haette op=16
                                 *      sonst auf 36 = Raum-ESP-Slot 0 gelegt.
                                 *      Es ist die POLIZEIWESTE.

@@ -30,6 +30,7 @@ re15_enemy_bank_t *re15_enemy_alloc(uint8_t type)
             g_enemy[i].clut        = -1;
             g_enemy[i].xshift      = -1;
             g_enemy[i].pc_tex_slot = -1;
+            g_enemy[i].pc_tex_slot_gore = -1;
             return &g_enemy[i];
         }
     }
@@ -129,6 +130,7 @@ void re15_enemy_reset(void)
         if (g_enemy[i].buf) free(g_enemy[i].buf);   /* PC malloc'd buffer; PSX leaves NULL */
         memset(&g_enemy[i], 0, sizeof(g_enemy[i]));
         g_enemy[i].pc_tex_slot = -1;
+        g_enemy[i].pc_tex_slot_gore = -1;
     }
     re15_rbj_bind_room(NULL, 0);  /* Raum-RBJ + Kanal-Cache fallen mit den Banks (Raumwechsel) */
     re15_player_victim_reset();   /* clear Leon's grab-victim anim state (banks just dropped) */

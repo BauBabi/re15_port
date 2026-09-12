@@ -371,6 +371,11 @@ int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
     for (int i = 0; i < RE15_EMD_MAX_BONES; i++)
         eb->mesh_remap[i] = (i < n) ? perm[i] : (int8_t)-1;
     eb->remap_ok = 1;
+    /* Das RE2-MD1 (mit Reserve-Meshes 15/16 = Bein-/Rumpf-Stumpf) in die Gore-
+     * Seitenbank retten, BEVOR es ersetzt wird (gore-vollausbau.md 4.2 Punkt 2).
+     * re2_md1 aliast das residente RE2-EMS - kein Lifetime-Problem. */
+    eb->md1_gore    = re2_md1;
+    eb->md1_gore_ok = 1;
     eb->md1 = *md15;
     if (out_unmapped) *out_unmapped = um;
     return 0;

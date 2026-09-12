@@ -3432,6 +3432,17 @@ set_tests_properties(unit_gator_sweep PROPERTIES TIMEOUT 300)
 #     echten Boss-Tick mit geladener RE2-EM23-Bank bis in die FRESS-Sequenz;
 #     die FSYNC-Zeilen (Anker vs. gerenderte Kiefer-Bones) landen in
 #     gator_boss.log. Bestehen = Sequenz laeuft bis zum Verschlingen. ---
+# --- GORE-DEKODER-FIXTURE (Runde 4, gore-vollausbau.md 7ii/iii): gepackte
+#     RE2-Effekt-Ids -> RE1.5-Baenke (8->Raum-5, 9->Raum-7, 5->CORE00-8, 4/15->0/3,
+#     10->0/0, Spark -> kein Spawn), Skalen-Durchreichung, Anker-Versatz. ---
+add_executable(test_re2_gore_decoder test_re2_gore_decoder.c)
+target_link_libraries(test_re2_gore_decoder PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_gore_decoder PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_gore_decoder PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_gore_decoder COMMAND test_re2_gore_decoder)
+set_tests_properties(unit_re2_gore_decoder PROPERTIES TIMEOUT 60)
+
 add_executable(probe_gator_fress probe_gator_fress.c)
 target_link_libraries(probe_gator_fress PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gator_fress PRIVATE ${CMAKE_SOURCE_DIR}/include)

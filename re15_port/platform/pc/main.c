@@ -634,6 +634,27 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
         re15_render_pc_upload_tim_slot(&tim, slot);    /* RE1.5-TIM ersetzt die RE2-Textur */
         eb->pc_tex_slot = slot;
     }
+    /* GORE-TIM (gore-vollausbau.md 4.1/4.2 Punkt 3): die RE2-TIM zusaetzlich in den
+     * GORE-Slot 46+bank laden. Der Bein-Stumpf (RE2-Mesh 15) sampelt Page 128
+     * u105-126 v146-250 - in der RE1.5-TIM UNBELEGT (Page-128-Nutzer dort: Haende
+     * u73-127 v84-127, Kopf u0-118 v3-118); der Rumpf-Stumpf (Mesh 16) wuerde die
+     * falsche Brusthaut aliassen. Beide TIMs formatgleich (8bpp 256x256, 2 CLUTs). */
+    eb->pc_tex_slot_gore = -1;
+    if (eb->md1_gore_ok) {
+        size_t g_ems_sz = 0;
+        const uint8_t *g_ems = pc_re2_cdemd(&g_ems_sz);
+        const uint8_t *g_tp = NULL; size_t g_tl = 0;
+        if (g_ems &&
+            re2_ems_locate(g_ems, g_ems_sz, (int)type, RE2_EMS_REC_TIM, &g_tp, &g_tl) == 0) {
+            re15_tim_t gtim; memset(&gtim, 0, sizeof gtim);
+            if (re15_tim_parse(g_tp, (int)g_tl, &gtim) == 0 &&
+                gtim.width > 0 && gtim.height > 0) {
+                int gslot = 46 + (int)(eb - g_enemy);   /* Slot-Karte render_pc.c */
+                re15_render_pc_upload_tim_slot(&gtim, gslot);
+                eb->pc_tex_slot_gore = gslot;
+            }
+        }
+    }
     fprintf(stderr, "[enemy] Hybrid EM%02X: RE1.5-Geometrie (%d Meshes) unter RE2-Rig "
                     "(%d Bones, %d Clips), %d Kanten ohne Zuordnung -> slot %d\n",
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count,
@@ -7983,9 +8004,16 @@ re_title:;
                 /* WELLE G: Bone-Slot -> Mesh-Index NUR fuer eine Hybrid-Bank, und NUR wenn wir
                  * wirklich deren MD1 zeichnen (nicht den Elliot-/PL00-Fallback). */
                 const int8_t *npc_remap = NULL;
+                /* GORE-SEITENBANK: nur gesetzt, wenn der Hybrid das RE2-MD1 gesichert hat
+                 * UND dessen TIM im Gore-Slot liegt (sonst zeigte der Stumpf undefinierte
+                 * RE1.5-Texel). Quelle der Stumpf-Geometrie im Zeichenblock unten. */
+                re15_enemy_bank_t *npc_gorebank = NULL;
                 {
                     re15_enemy_bank_t *hb = re15_enemy_find(npc->type);
                     if (hb && hb->remap_ok && npc_md1 == &hb->md1) npc_remap = hb->mesh_remap;
+                    if (hb && hb->md1_gore_ok && hb->pc_tex_slot_gore >= 0 &&
+                        npc_md1 == &hb->md1)
+                        npc_gorebank = hb;
                 }
 
                 /* LOCO-BANK render: the STAGE1 zombie WALKING states pose the locomotion bank (bank0,
@@ -8408,8 +8436,26 @@ re_title:;
                      * (`lw 2588/2592/2596/2600` -> `sw 8/12/16/20` @0x8010531C-50) liefert der
                      * RESERVE-Part 15 die vier Geometrie-Woerter des Oberschenkels. */
                     int nmi = nbi;
-                    if (gore_on && gore_mesh[nbi] < (uint8_t)npc_md1->mesh_count)
-                        nmi = (int)gore_mesh[nbi];
+                    const re15_md1_t *src_md1 = npc_md1;
+                    int gore_side = 0;
+                    if (gore_on) {
+                        if (gore_mesh[nbi] < (uint8_t)npc_md1->mesh_count) {
+                            nmi = (int)gore_mesh[nbi];
+                        } else if (npc_gorebank && gore_mesh[nbi] <
+                                   (uint8_t)npc_gorebank->md1_gore.mesh_count) {
+                            /* STUMPF aus der GORE-SEITENBANK (gore-vollausbau.md 4.2
+                             * Punkt 4): der Zerleger/8BEC stempelt part_mesh = RE2-
+                             * Reserve-Mesh 15 (Bein) / 16 (Rumpf, `lw 2760..2772 ->
+                             * sw 8..20` @0x80108FB8-FDC) - die gibt es nur im
+                             * gesicherten RE2-MD1. Gore-Meshes sind RE2-INDIZES:
+                             * das Remap unten wird NICHT angewandt. Bind-Raum-
+                             * Abweichung Oberschenkel +-2 Einheiten (re2_ems.h
+                             * 100-107) - akzeptiert, dokumentiert. */
+                            src_md1 = &npc_gorebank->md1_gore;
+                            nmi = (int)gore_mesh[nbi];
+                            gore_side = 1;
+                        }
+                    }
                     /* WELLE G — HYBRID-BANK ("RE2 AI" mit RE1.5-Modellen): der Bone-Slot ist ein
                      * RE2-Slot, das Mesh liegt im RE1.5-MD1 mit ANDERER Ordnung. -1 = der Slot
                      * hat kein RE1.5-Gegenstueck (RE2-Hund: die zwei zusaetzlichen Pfoten-
@@ -8420,13 +8466,20 @@ re_title:;
                      * (Schienbein+Fuss fliegen weiter weg): im Hybrid gibt es KEINEN Stumpf.
                      * Selbst gemessen: KEIN RE1.5-Zombie-EMD (EM10/11/12/13/16/18) traegt ein
                      * 16. Mesh, aus dem sich ein Stumpf bauen liesse (mesh_count == bone_count). */
-                    if (npc_remap) {
+                    if (!gore_side && npc_remap) {
                         int r = (nmi >= 0 && nmi < RE15_EMD_MAX_BONES) ? (int)npc_remap[nmi] : -1;
                         if (r < 0) continue;
                         nmi = r;
                     }
-                    if (nmi >= npc_md1->mesh_count) continue;
-                    const re15_md1_mesh_t *nm = &npc_md1->meshes[nmi];
+                    if (nmi >= src_md1->mesh_count) continue;
+                    const re15_md1_mesh_t *nm = &src_md1->meshes[nmi];
+                    /* TIM-Bind pro Part (per-Tri gecaptured, render_pc.c s_textri_slot):
+                     * Stumpf-Parts sampeln die RE2-TIM, alle anderen ihre normale. */
+                    if (npc_gorebank)
+                        re15_render_pc_bind_tim_slot(gore_side
+                            ? npc_gorebank->pc_tex_slot_gore
+                            : (av.pc_tex_slot >= 0 ? av.pc_tex_slot
+                                                   : (is_elliot ? 1 : 0)));
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];
                         if (tri->v0 >= (uint32_t)nm->tri_vertex_count) continue;

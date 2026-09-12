@@ -64,6 +64,15 @@ typedef struct {
      * gezeichnet. remap_ok == 0 => 1:1 (mesh_idx == bone_idx, emd_common.c:190). */
     int8_t  mesh_remap[RE15_EMD_MAX_BONES];
     uint8_t remap_ok;
+    /* GORE-SEITENBANK (Stumpf-Geometrie, gore-vollausbau.md 4.2): das ORIGINALE RE2-MD1
+     * mit den Reserve-Meshes 15 (Bein-Stumpf) / 16 (Rumpf-Stumpf) - re2_hybrid_apply
+     * ersetzt eb->md1 durch das RE1.5-MD1 und legt die RE2-Fassung hier ab. Die Zeiger
+     * aliasen das residente RE2-EMS (pc_re2_cdemd haelt es fuer immer). Der Stumpf
+     * braucht die RE2-TIM (Mesh 15 sampelt eine in RE1.5 UNBELEGTE Atlas-Region,
+     * Mesh 16 wuerde die falsche Brusthaut aliassen) -> eigener Slot pc_tex_slot_gore. */
+    re15_md1_t md1_gore;
+    uint8_t    md1_gore_ok;
+    int        pc_tex_slot_gore;  /* -1 = keiner */
     int tpage, clut;              /* PSX VRAM handles (per-tri path: both -1) */
     int xshift, yshift;           /* PSX VRAM tpage-X / CLUT-row relocation shifts */
     int pc_tex_slot;              /* PC render texture slot (-1 if unused) */
