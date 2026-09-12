@@ -9,8 +9,23 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1001,  14350, -16850,  24800,   1650,  2,   4, 0,   0,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x1000,  -7000,  -7150,   3600,  10400,  2,   4, 1,   1,    91,   263,  2428,  3095, 0, 0,   0, 0 },
     { 0x1001,  -7000,  -7150,   3600,  10400,  2,   4, 1,   1,    91,   263,  2428,  3095, 0, 0,   0, 0 },
-    { 0x1010,  -4400,  -7600,   6600,  10350,  2,   1, 0,   2,    84,    20,  2287,  2319, 0, 1,   0, 0 },
-    { 0x1011,  -4400,  -7600,   6600,  10350,  2,   1, 0,   2,    84,    20,  2287,  2319, 0, 1,   0, 0 },
+    /* ⛔ ROOM1010: NICHT Rect 1 - das ist ROOM1020s Kachel! Die alte hergeleitete
+     * Zeile (ox 84, flip 0,1) spiegelte den GANZEN Raum in die Zeichnung des
+     * Nachbarn (gemessen: 276 Gitterpunkte, Deckung 1,00 auf Rect-1-Kunst), und
+     * die EIGENEN Kacheln des Raums - Rect 8 (Nordkammer) und Rect 7 (Sued) -
+     * gehoerten niemandem und blieben schwarz (Nutzer 2026-09-12: "in ROOM 1010
+     * wird mir der Raum auf der Karte noch nicht gezeichnet"). Der 2-Trigger-Fit
+     * konnte flip_x nicht sehen: beide Tueren liegen auf EINER Senkrechten
+     * (lokal x=4650 -> Kartenspalte 164), der Spiegel pivotiert genau um die
+     * Tuerwand. Anker der Korrektur: 1020s AUSGELIEFERTE Zeile -> Tueren
+     * (164,82)/(163,106); SCA-Teilerwand voller Breite z1450..1550 = gemalte
+     * Grenze y93/94; ox per Spiegelrelation 2*164-84 = 244. Der Raum hat laut
+     * SCA ZWEI unverbundene Kammern, vom Kuenstler als ZWEI Kacheln gemalt ->
+     * zwei Zonen (Dossier analysis/befunde_runde3_2026-09-12/karte-1010.md). */
+    { 0x1010,  -4400,  -7600,   6600,   1550,  2,   8, 0,   2,   244,    20,  2287,  2319, 1, 1,   0, 0 },
+    { 0x1011,  -4400,  -7600,   6600,   1550,  2,   8, 0,   2,   244,    20,  2287,  2319, 1, 1,   0, 0 },
+    { 0x1010,  -4400,   1450,   6600,  10350,  2,   7, 1, 100,   244,    20,  2287,  2319, 1, 1,   0, 0 },
+    { 0x1011,  -4400,   1450,   6600,  10350,  2,   7, 1, 100,   244,    20,  2287,  2319, 1, 1,   0, 0 },
     { 0x1020, -28874, -28532,  -1044,  -3990,  2,   1, 0,   3,   100,   136,  2287,  2287, 0, 0,   0, 0 },
     { 0x1021, -28874, -28532,  -1044,  -3990,  2,   1, 0,   3,   100,   136,  2287,  2287, 0, 0,   0, 0 },
     { 0x1030, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2428,  2229, 0, 0,   0, 0 },
@@ -276,7 +291,9 @@ static const re15_map_mark_t s_map_marks[] = {
     {  1, 255,  144,   80, 1,   0, 255, 0 },
     {  2,  1,  109,   83, 1,   3,   5, 1 },
     {  2,  1,  163,   81, 3,   2,   3, 1 },
-    {  2,  1,  163,  106, 3,   2,   3, 1 },
+    /* Tuer B (1010-Sued <-> 1020): Position bleibt, Bindung wandert an die neue
+     * Sued-Zone 100 (Rect 7) - s. 1010-Zeilen oben. */
+    {  2,  1,  163,  106, 3, 100,   3, 1 },
     /* ⛔ FAHRSTUHLTUER AUF DIE WAND (Nutzer 2026-09-12: "die Tuer im Korridor 1F
      * Richtung Fahrstuhl ist ganz leicht versetzt unten. Die muss auf der
      * gleichen Ebene sein wie in 2F oder 3F - direkt auf der Wand in der Map").

@@ -136,10 +136,18 @@ int main(void)
      * Rechteck auf Blatt 2 (Rect 1 und Rect 6, Rahmenluecke 15 px), und ROOM10A0
      * ist im Generator per ZONE_FIX_TEILT auf Rect 6 festgehalten. */
     {
-        const re15_map_zone_t *z00 = ort(0x1010, 1100, 1375);
+        /* ⛔ PAAR GETAUSCHT (2026-09-12, dritte Verschiebung dieser Probe):
+         * ROOM1010 wohnt nach der Spiegel-Korrektur auf seinen ECHTEN Kacheln
+         * Rect 8/7 (Dossier karte-1010.md) - und Rect 8 (164,77,24x24) grenzt
+         * auf der Original-Kunst direkt an Rect 6 (180,88) = ROOM10A0. Die
+         * Annahme "tuergraph-fern => kartenfern" galt fuer dieses Paar nur mit
+         * der FALSCHEN 1010-Zeile (Rect 1). Neues Paar: ROOM1020 (Rect 1,
+         * endet x=165) <-> ROOM10A0 (Rect 6, beginnt x=180) - Rahmenluecke
+         * 15 px wie urspruenglich beabsichtigt, Tuergraph-Abstand >= 4. */
+        const re15_map_zone_t *z00 = ort(0x1020, -15000, -15000);
         const re15_map_zone_t *z10 = ort(0x10A0, 20000, 20000);
         int l3 = (z00 && z10) ? luecke(z00, z10) : -1;
-        printf("  [Gegenprobe] 1010<->10A0 (Tuergraph-Abstand 5): %d px\n", l3);
+        printf("  [Gegenprobe] 1020<->10A0: %d px\n", l3);
         CHECK("zwei weit entfernte Raeume stossen NICHT aneinander", l3 > 0);
     }
     /* ---- (4) ZWEI VERSCHIEDENE TUEREN LIEGEN NICHT AUFEINANDER ---------------
@@ -255,9 +263,16 @@ int main(void)
          * Schranke da, damit ein zweiter auffaellt, statt in einem Mittelwert zu
          * verschwinden. */
         CHECK("es gibt genug gepaarte Marken zum Pruefen", gepr >= 50);
+        /* ⛔ NEU VERANKERT (2026-09-12, Fixture-Verschiebung nach der
+         * 1010-Spiegel-Korrektur): der alte 72-px-Ausreisser WAR die
+         * gespiegelte 1010-Marke - er ist weg. Uebrig sind drei ehrliche
+         * 1-4-px-Randfaelle: Tuermarken sitzen auf der WANDSPALTE (x=163),
+         * die Kasten-Ueberdeckung der neuen 1010-Kaesten beginnt eine Spalte
+         * daneben (x=164). Die Schranke ist im SCHLIMMSTFALL von 72 auf 4 px
+         * verschaerft; die Anzahl-Schranke traegt die drei Randfaelle. */
         CHECK("hoechstens 4 gepaarte Marken liegen daneben", aussen <= 4);
-        CHECK("hoechstens EINE gepaarte Marke liegt weiter als 3 px daneben",
-              aussen <= 1);
+        CHECK("keine gepaarte Marke liegt weiter als 4 px daneben (war: 72)",
+              schlimmst <= 4);
     }
 
     printf(g_fail ? "FAIL\n" : "OK\n");
