@@ -1,3 +1,28 @@
+# v0.7.82 — 2026-09-12
+
+## Karte 1F — alle vier gemeldeten Punkte
+
+- Die **Fahrstuhl-Tuer** im 1F-Korridor sitzt jetzt exakt auf der Wand — dieselbe
+  Stelle wie auf 2F und 3F.
+- Der **hintere kleine Raum** erscheint erst, wenn man die Etage auch betreten
+  hat (bisher genuegte ein Schritt in denselben Raum auf einer anderen Etage).
+- Die **zwei Strich-Reste** der Original-Tueren (Treppenhaus und Korridor) sind
+  weg.
+
+## Waffen
+
+- **Dreier-Burst**: Beretta M93R und Glock 18 ziehen wieder drei Patronen pro
+  Abzug statt einer.
+- **Trefferzonen Kopf / Rumpf / Beine** sind freigeschaltet. Die Zone stand im
+  Port auf einem festen Wert, wodurch zwei Drittel der Treffer-Reaktionen — und
+  damit saemtliche daran haengenden Gore-Effekte — unerreichbar waren.
+
+## Endkampf
+
+- Modelle mit **mehr Koerperteilen als Knochen** werden vollstaendig gezeichnet.
+  Der finale Birkin hat sieben Teile an zwei Knochen; bisher blieben fuenf davon
+  unsichtbar.
+
 # v0.7.81 — 2026-09-12
 
 ## Endkampf: kein Abspann mehr, dafuer der FINALE Birkin
