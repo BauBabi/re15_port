@@ -1,3 +1,31 @@
+# v0.7.89 - 2026-09-12
+
+## Runde 6: die beiden Bosse bekommen ihre echte RE2-Seele
+
+- **Endboss-Birkin kaempft jetzt wie in RE2** (neues Boss-Modul, kompletter
+  Overlay-Zensus): das grosse Auftauch-Intro mit echter Kriech-Bewegung aus
+  den Animationsdaten, der TENTAKEL-ZUG nach vorn (Clip-Spur x1,5), der
+  Rueckzug ans Korridorende, die atmende Fleischmasse mit dem MASSEN-BISS
+  (Ausholen, Zuschnappen, Vorstoss, 40 Schaden), der Verschling-Kill in der
+  Naehe, ein Treffer-Wut-System mit Stagger und die volle Todes-Sequenz
+  (Einbruch, Zucken, Kollaps in halber Geschwindigkeit, Versinken in die
+  Masse). Die frueheren Naeherungen (Clip-Umsortierung, 2950er-Hoehenanker)
+  sind raus - sie beruhten auf einer Fehldeutung: die vermeintliche
+  Kampfhoehen-Rampe ist in Wahrheit die Todes-Phase.
+- **Der Alligator-Finisher ist der echte**: Resident Evil 2 wirft Leon nicht
+  per Formel durchs Bild - es spielt eine eigens animierte OPFER-ANIMATION
+  auf Leons Skelett ab (120 Bilder Rumschleudern, bis 9 Meter hochgerissen,
+  seitlich geschleudert), synchron zum Schuettel-Clip des Alligators und nur
+  ueber einen gemeinsamen Anker gekoppelt. Genau das laeuft jetzt im Port:
+  Leon strampelt, das Maul schnappt bei Bild 13 zu, dann fliegt er die
+  authored Bahn und haengt am Ende sichtbar im kauenden Maul.
+- **Schrot-Bauchtreffer**: die Ragdoll-Bodenklemme rechnete mit der rohen
+  statt der gerenderten Wurzel (Zombie lag eine halbe Koerpertiefe zu tief);
+  drei weitere Verdachtsmomente wurden am Original geprueft und als
+  byte-gleich belegt. Fuer den seltenen 'taumelt unter dem Boden'-Moment
+  liegt jetzt eine Dauer-Messschiene bereit (RE15_RE2_TRACE=1) - ein F9 im
+  richtigen Moment benennt den Verursacher exakt.
+
 # v0.7.88 - 2026-09-12
 
 ## Runde 5 der Spieltest-Befunde
