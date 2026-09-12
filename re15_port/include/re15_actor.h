@@ -328,6 +328,13 @@ typedef struct {
      * Kopie der Part-0-Matrix, Part 0, w=+0x158) = elementweise ((4096-w)*I + w*M) >> 12
      * (@0x801072F8 / @0x801073C0). 0 = aus. */
     int16_t  re2_bone0_wgt;
+    int16_t  re2z_ground_y;     /* +0x1C2-Zwilling (Runde 7, liegend-unter-boden.md):
+                                 * das BODEN-Y der Entity (EXE-Produzent schreibt +0x3C
+                                 * und +0x1C2 zusammen @0x8003EE04-18, Treppen-Nachzug
+                                 * @0x8003EAA0-AC). Gepflegt im re2z-Tick, solange die
+                                 * Entity AM BODEN ist (state 0/1) - der Ragdoll-P0
+                                 * latcht davon, nicht vom womoeglich schon versunkenen
+                                 * e->y (der Fehl-Latch schrieb die Senke fest). */
     int16_t  re2z_gy232;        /* +0x232 = Kopie von +0x1C2 (Boden-Y) beim Ragdoll-Start
                                  * (`lhu v0,450; sh v0,562` @0x80106994-A0)                     */
     uint8_t  re2z_rag231;       /* +0x231 Ragdoll-Untermaschinen-Wahl (@0x80106738/@0x801067B0/

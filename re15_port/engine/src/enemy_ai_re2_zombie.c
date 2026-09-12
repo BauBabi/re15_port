@@ -5866,7 +5866,11 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
             e->re2z_cd239 = 150;                                   /* @0x80106980-84 */
         }
         re2z_se(9);                                                /* @0x80106988-90, unbedingt */
-        e->re2z_gy232   = (int16_t)e->y;                           /* +0x232 = +0x1C2 @0x80106994-A0.
+        e->re2z_gy232   = e->re2z_ground_y;                        /* +0x232 = +0x1C2 @0x80106994-A0
+                                                                    * (Runde 7: BODEN-Zwilling statt
+                                                                    * (int16_t)e->y - der Fehl-Latch
+                                                                    * schrieb versunkene Senken fest,
+                                                                    * liegend-unter-boden.md Q4).
                                                                     * +0x1C2 ist das Boden-Y der
                                                                     * Entity: der EXE-Produzent
                                                                     * schreibt +0x3C und +0x1C2 aus
@@ -7670,6 +7674,9 @@ int re15_re2z_tick(int slot)
      * Anwenden wird pro Tick neu bestellt. */
     e->re2_lean_on    = 0;
     e->re2_bone0_wgt  = 0;
+    /* BODEN-Zwilling pflegen (+0x1C2 @0x8003EE04-18): solange die Entity im
+     * Grund-Gang steht/geht (state 0/1), IST e->y der Boden. */
+    if (e->state == 0 || e->state == 1) e->re2z_ground_y = (int16_t)e->y;
     /* REAKTIONS-SCHIENE (Runde 6, env-gegated): der Nutzer sieht "manchmal"
      * einen Taumel mit Animation unter dem Boden - der EBEN-Schrot-Pfad ist
      * inzwischen dreifach byte-verifiziert; diese Zeile benennt beim naechsten
