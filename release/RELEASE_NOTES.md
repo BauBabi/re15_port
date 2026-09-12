@@ -1,3 +1,32 @@
+# v0.7.83 — 2026-09-12
+
+## Waffen: Dauerfeuer + eigene Muendungseffekte je Waffe
+
+Grundlage ist die vollstaendige Einzeldisassemblierung aller Waffen-Handler des
+Originals (Listings unter analysis/waffen_fsm_2026-09-12/).
+
+- **Ingram M10, Flammenwerfer und H&K MC51 feuern jetzt DAUERFEUER**, solange
+  der Abzug gehalten wird — mit den Original-Feuerclips, dem Original-Takt
+  (Ingram/MC51: 5 Schuss je 9 Bilder; Flammenwerfer: 12 je 21) und dem
+  Abkling-Clip beim Loslassen. Zielhoehe laesst sich mitten im Feuern wechseln,
+  ohne dass der Schusstakt neu ansetzt. Diese drei Waffen laden byte-true nie
+  nach und klicken auch nicht bei leerem Magazin im Anschlag.
+- **Jede Waffe spawnt ihre eigenen Muendungs-, Rauch- und Huelseneffekte**
+  (bisher bekamen alle die der Browning HP): der Revolver wirft keine Huelse,
+  die Schrotflinten haben ihren Grossblitz und eine eigene Schrothuelse, die
+  Beretta/Glock-Bursts ihre eigene Blitzvariante.
+- **Der Granatwerfer feuert wieder sein Projektil** — an genau den drei
+  Rueckstoss-Bildern des Originals, abhaengig von der Zielhoehe. Wer R1 vor dem
+  Abschussbild loslaesst, unterdrueckt die Granate (Munition trotzdem weg) —
+  wie im Original.
+- Kuriosum aus der Disassemblierung: die Raketen-Klasse (Waffen 15–18) haette
+  im Original beim Feuern die PSX zum ABSTURZ gebracht (Null-Handler) — sie
+  war schlicht unfertig. Im Port bleibt sie ueber eine dokumentierte Bruecke
+  spielbar.
+- Neuer Dauertest nagelt die komplette Kadenz fest — bis hin zum Detail, dass
+  der Huelsen-Takt nach 126 Schuessen wegen eines vorzeichenbehafteten
+  Ueberlaufs um vier Bilder springt (ja, das tut das Original wirklich).
+
 # v0.7.82 — 2026-09-12
 
 ## Karte 1F — alle vier gemeldeten Punkte
