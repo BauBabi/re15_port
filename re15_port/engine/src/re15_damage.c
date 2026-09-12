@@ -1218,7 +1218,13 @@ retry_after_latch:
          * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
-        if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
+        /* RE2-ADULT-SPINNE (Runde 7, spinne-todeszyklus.md 5.2): das Original kennt
+         * KEIN state-Gate (Kandidaten-Gates @0x8004712C-30/@0x80047138-40/
+         * @0x80047148-50/@0x80047158-64) - die generische Leiche (HP=1) bleibt
+         * beschiessbar, nur HP<0 scheidet aus. Damit wird der byte-true
+         * Leichen-Ausbruch @0x80104440 (Clip 13 + 1-4 Babys) erreichbar. */
+        if (e->state == 7 && !(e->type == 0x25u && re15_ai_re2_for_type(e->type)))
+            continue;                  /* RE15_AI_STATE_CORPSE (RE1.5-Semantik) */
         /* ⛔ RE2-FLAVOR / BABY-SPINNE: HP < 0 heisst in RE2 "kein gueltiges Ziel", nicht "gleich
          * tot". Der RE2-Applier verwirft solche Kandidaten VOR dem Schaden:
          *   80047148: lh   v0,342(s0)          ; HP (+0x156)
@@ -1231,7 +1237,11 @@ retry_after_latch:
          * Eng gefasst auf genau diesen Fall (RE2-Flavor + Typ 0x26) — die RE1.5-Semantik von
          * HP < 0 bei allen anderen Typen bleibt unveraendert. */
         /* MIXED: typ-bezogen (0x26 != 0x20) -> RE1.5-Semantik von HP<0 bleibt dort. */
-        if (e->type == 0x26u && re15_ai_re2_for_type(e->type) && e->hp < 0) continue;
+        if ((e->type == 0x25u || e->type == 0x26u) &&
+            re15_ai_re2_for_type(e->type) && e->hp < 0) continue;
+                                       /* HP<0-Gate @0x80047148-50 - auch die STERBENDE
+                                        * Adult ist kein Ziel (kein DEATH-Neustart,
+                                        * keine Zusatz-Babys je Nachtreffer) */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
@@ -1887,6 +1897,11 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
  * Returns 1 if the hit landed, 0 if the enemy was already hit this attack. */
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
 {
+    /* RE2-Adult/Baby-Spinne (Runde 7, spinne-todeszyklus.md 5.2): HP<0 = kein
+     * gueltiges Ziel (@0x80047148-50) - auch der Messer-/Hitbox-Pfad laeuft im
+     * Original durch dieselben Kandidaten-Gates. */
+    if (e && (e->type == 0x25u || e->type == 0x26u) &&
+        re15_ai_re2_for_type(e->type) && e->hp < 0) return 0;
     if (!e) return 0;
     /* hit-once guard +0x93 bit0x1 (@80012fb4-c0): already hit → mark bit0x2, no re-damage. */
     if (e->hit_react & 0x1) {

@@ -2421,6 +2421,19 @@ static void re2s_corpse(re15_actor_t *e)
         if (re2s_advance(e, 512)) {                        /* @0x80104D18-20 */
             e->sub_state_1 = 1;                            /* @0x80104D2C */
             e->re2z_dir16a = (uint8_t)((re2s_rand() & 0x1fu) + 30u);   /* +0x16A @0x80104D30-3C */
+            /* HALTE-FRAME (Runde 7, spinne-todeszyklus.md 5.1; Nutzer: "stellt
+             * sich wieder auf, dann legt sie sich wieder hin"): der Wrap nullt
+             * anim_frame, der Port posiert aber STATELESS aus (motion,frame) -
+             * 30-61 Ticks lang stand Clip-12-BILD-0 (kf158, Root-Y -681 =
+             * AUFGEBAEUMT), ehe Clip 13 sie wieder hinlegte. Das Original haelt
+             * die zuletzt komponierte f205-Pose in den model_inst-Matrizen
+             * (+0x198, RotMatrix @0x80029B14) - der Frame-Wrap @0x80029B48-4C
+             * ist dort render-irrelevant. Port-Aequivalent: letztes Bild halten. */
+            {
+                extern int re15_actor_clip_len(const re15_actor_t *a);
+                int fc = re15_actor_clip_len(e);
+                if (fc > 0) e->anim_frame = (uint32_t)(fc - 1);
+            }
         }
     } else {                                               /* @0x80104D40 */
         e->re2z_dir16a--;                                  /* @0x80104D48-4C */
