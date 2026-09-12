@@ -8155,8 +8155,16 @@ re_title:;
                  * wurden Kopf und Schwanz verwechselt). Die Verfolgung laeuft ueber
                  * dieselbe steer/advance-Peilung wie alle Gegner — das RE2-EM23-Mesh
                  * steht nativ in der Engine-Konvention (rot_y 0 = +X, Kopfkette +X). */
-                int32_t nfs = re15_sin_q12((int)npc->rot_y);
-                int32_t nfc = re15_cos_q12((int)npc->rot_y);
+                /* MESS-EXPERIMENT (RE15_G5_FLIP=1, nur Typ 0x36): 180-Grad-
+                 * Praesentations-Flip. RE2s G5 rueckt in -X vor (@0x80101934-4c)
+                 * und der Spieler steht bei kleinerem X - RE2 zeigt also die
+                 * LOKALE -X-Seite des Blobs; der Port drehte per steer die
+                 * lokale +X-Seite zum Spieler. A/B-Sichttest fuer das Dossier. */
+                int npc_yaw_eff = (int)npc->rot_y;
+                if (npc->type == 0x36 && getenv("RE15_G5_FLIP"))
+                    npc_yaw_eff = (npc_yaw_eff + 0x800) & 0xfff;
+                int32_t nfs = re15_sin_q12(npc_yaw_eff);
+                int32_t nfc = re15_cos_q12(npc_yaw_eff);
                 int32_t nyaw[9] = { nfc, 0, nfs, 0, 0x1000, 0, -nfs, 0, nfc };
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
@@ -8327,6 +8335,25 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
+                    /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die
+                     * PART-SICHT des finalen Birkin (Typ 0x36) — welche nbi laufen
+                     * und wo jeder Part in WELT-Y landet (Blob-Bodenkontakt!). */
+                    if (npc->type == 0x36) {
+                        static int bk_dbg2 = -1;
+                        if (bk_dbg2 < 0) bk_dbg2 = (getenv("RE15_BIRKIN_DBG") != NULL);
+                        if (bk_dbg2 && (g_engine.frame_count % 60u) == 0u) {
+                            FILE *bf2 = fopen("birkin_dbg.log", "a");
+                            if (bf2) {
+                                fprintf(bf2, "  DRAW f=%u part=%d/%d (bones=%d meshes=%d) "
+                                             "welt=(%d,%d,%d) aktorY=%d\n",
+                                        g_engine.frame_count, nbi, npc_zeichen_n,
+                                        npc_bones, npc_md1->mesh_count,
+                                        nbone_world_trans[0], nbone_world_trans[1],
+                                        nbone_world_trans[2], (int)npc->y);
+                                fclose(bf2);
+                            }
+                        }
+                    }
                     /* ---- RE2-GORE: DAS FREIFLIEGENDE TEIL --------------------------------
                      * Traegt der Part Bit 0x40, ueberspringt der Original-Zeichner die
                      * Eltern-Verkettung und nimmt die Matrix aus dem Part-Record selbst

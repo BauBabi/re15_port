@@ -11398,6 +11398,30 @@ static void re15_birkin_ai_tick(int slot)
     /* +0x1d8 = +0x4 snapshot (consumed by the HURT/revive resume) @0x80116698-a0 */
     e->birkin_saved_state = e->state; e->birkin_saved_sub = e->sub_state_1;
     e->birkin_saved_ph2 = e->sub_state_2; e->birkin_saved_ph3 = e->sub_state_3;
+
+    /* MESS-SCHIENE (env-gegated, RE15_BIRKIN_DBG=1 -> birkin_dbg.log; die GUI-exe
+     * hat KEIN stderr). Alle 15 Ticks eine Zeile: Zustand/Sub/Phase/Clip/Frame/
+     * Pos/Rot/Dist/HP/Grid/Flags — Nutzer-Befund 2026-09-12 "bewegt sich nicht". */
+    {
+        static int bk_dbg = -1;
+        static unsigned bk_n = 0;
+        if (bk_dbg < 0) bk_dbg = (getenv("RE15_BIRKIN_DBG") != NULL);
+        if (bk_dbg && (bk_n++ % 15u) == 0u) {
+            FILE *bf = fopen("birkin_dbg.log", "a");
+            if (bf) {
+                fprintf(bf, "tick=%u st=%u sub=%u ph2=%u ph3=%u clip=%u af=%u "
+                            "pos=(%d,%d,%d) rot=%d dist=%d hp=%d grid=0x%02x "
+                            "flags=0x%02x atk_cd=%u stun=%d timer=%d\n",
+                        bk_n - 1, e->state, e->sub_state_1, e->sub_state_2,
+                        e->sub_state_3, e->motion, e->anim_frame,
+                        (int)e->x, (int)e->y, (int)e->z, (int)e->rot_y,
+                        (int)dist, (int)e->hp, (unsigned)e->grid_id,
+                        (unsigned)e->birkin_flags, (unsigned)e->birkin_atk_cd,
+                        (int)e->hit_stun, (int)e->ai_timer);
+                fclose(bf);
+            }
+        }
+    }
 }
 
 /* ============================ WRITHE-HAZARD (type 0x1a, EM01A) — STAGE1 ROOM1210/1211 =========== *
