@@ -3428,6 +3428,18 @@ target_compile_definitions(probe_gator_sweep PRIVATE
 add_test(NAME unit_gator_sweep COMMAND probe_gator_sweep)
 set_tests_properties(unit_gator_sweep PROPERTIES TIMEOUT 300)
 
+# --- FRESS-SYNC-MESS-SCHIENE (Befund B 2026-09-12, fress-sync.md): treibt den
+#     echten Boss-Tick mit geladener RE2-EM23-Bank bis in die FRESS-Sequenz;
+#     die FSYNC-Zeilen (Anker vs. gerenderte Kiefer-Bones) landen in
+#     gator_boss.log. Bestehen = Sequenz laeuft bis zum Verschlingen. ---
+add_executable(probe_gator_fress probe_gator_fress.c)
+target_link_libraries(probe_gator_fress PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_fress PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_fress PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_gator_fress COMMAND probe_gator_fress)
+set_tests_properties(unit_gator_fress PROPERTIES TIMEOUT 120)
+
 # DAUERFEUER-KADENZ-PIN (Disasm 2026-09-12, analysis/waffen_fsm_2026-09-12/):
 # Hold 9/12/15, Schuesse (f&4)==0 auf dem 9-Frame-Loop (5 je Zyklus), Abklingen 8,
 # signierter Huelsentakt inkl. s8-Ueberlauf 127->-128.

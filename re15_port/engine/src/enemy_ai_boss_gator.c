@@ -52,6 +52,7 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex + re15_esp_room_bank */
 #include "re15_room.h"       /* g_current_room_id */
 #include "re15_skeleton.h"   /* re15_sin_q12 */
+#include "re15_anim_select.h"/* re15_compute_actor_kf - FRESS-SYNC-Mess-Schiene (gb_bone_welt) */
 #include "re15_enemy.h"      /* re15_enemy_find - Frame-Flag-SEs aus der EM23-Bank */
 #include "re15_emd.h"
 #include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
@@ -367,6 +368,39 @@ static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
     int32_t d = 0;
     while ((int64_t)d * d < d2 && d < 30000) d += 16;
     return d;
+}
+
+/* ==== FRESS-SYNC-MESS-SCHIENE (Befund B, analysis/befunde_runde4_2026-09-12/
+ * fress-sync.md): GERENDERTE Bone-Weltposition — dieselbe Kette wie der
+ * NPC-Renderer (main.c:8119 g_anim_pose_actor=npc; main.c:8155-8159 Uniform-
+ * Scale +0x166 auf der 3x3 = Offsets x/y/z um die Wurzel skaliert).
+ * re15_enemy_bone_world_pos taugt hier NICHT als Render-Wahrheit: es NULLT
+ * g_anim_pose_actor (re15_damage.c:1979), wodurch der pitch_vz/jaw_vz/arc_vz-
+ * Hook (skeleton_common.c:602, gated auf bact) NICHT posiert wird, und es
+ * skaliert nicht (Wurzel-Fallback + ungeskalierte Offsets).
+ * NUR MESSUNG: der zusaetzliche prev_root/prev_angles-Snapshot des Pose-Laufs
+ * ist waehrend FRESSEN wirkungsfrei, weil der Boss e->motion DIREKT setzt
+ * (anim_frac bleibt 0 -> blend nie aktiv, skeleton_common.c:213). */
+static void gb_bone_welt(re15_actor_t *e, int bone, int32_t out[3])
+{
+    out[0] = e->x; out[1] = e->y; out[2] = e->z;
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok || b->skel.bone_count <= 0
+        || bone < 0 || bone >= b->skel.bone_count) return;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = e;               /* Render-Pfad: vz-Hook aktiv (main.c:8119) */
+    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return;
+    re15_skel_bone_to_world(poses[bone].trans, (int16_t)e->rot_y,
+                            e->x, e->y, e->z, out);
+    if (e->render_scale_q12) {           /* main.c:8155: Scale liegt auf der 3x3 */
+        out[0] = e->x + (int32_t)(((int64_t)(out[0] - e->x) * e->render_scale_q12) >> 12);
+        out[1] = e->y + (int32_t)(((int64_t)(out[1] - e->y) * e->render_scale_q12) >> 12);
+        out[2] = e->z + (int32_t)(((int64_t)(out[2] - e->z) * e->render_scale_q12) >> 12);
+    }
 }
 
 /* Insel-Wand zwischen Gator und Leon? (Marge 0 = die reine Wand) - ein Biss
@@ -1802,8 +1836,16 @@ void re15_gator_boss_tick(int slot)
             /* "muss dann schon dort hin beissen": Maulpunkt aktiv an Leon
              * heranschieben (Dispatcher-Klemme laeuft danach wie immer) */
             if ((int64_t)dx * dx + (int64_t)dz * dz > 300 * 300) {
-                e->x += (int32_t)(((int64_t)fc * 48) >> 12);
-                e->z -= (int32_t)(((int64_t)fs * 48) >> 12);
+                /* FSYNC-Messung 2026-09-12: der Vorwaerts-Schub liess den Boss
+                 * die Leiche UMKREISEN statt konvergieren (Blick zeigt nicht
+                 * exakt hin, steer ist aus). Schub jetzt ENTLANG (Leiche -
+                 * Maulpunkt), grob normiert ueber die groessere Komponente. */
+                int32_t adx = dx < 0 ? -dx : dx, adz = dz < 0 ? -dz : dz;
+                int32_t nmax = (adx > adz) ? adx : adz;
+                if (nmax > 0) {
+                    e->x += (int32_t)((int64_t)48 * dx / nmax);
+                    e->z += (int32_t)((int64_t)48 * dz / nmax);
+                }
             }
         } else if (g->timer == 75) {
             gb_se(4); e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
@@ -1811,10 +1853,10 @@ void re15_gator_boss_tick(int slot)
             /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
              * bleiben sichtbar und wirbeln durch die Luft. */
             pl->fress_skip_mask = 0x7F01; g->gefressen = 1;
-            /* Wurf-Start AM MAUL (Sync-Umbau 2026-09-11): der Koerper kommt
-             * aus dem Maul hoch, nicht vom alten Todesort. -400 = Maulhoehe
-             * beim gesenkten Kopf (nahe Wasseroberflaeche). */
-            g->wirbel_x = kx; g->wirbel_y = -400; g->wirbel_z = kz;
+            /* Wurf-Start AN DER LEICHE (FSYNC-Messung 2026-09-12: der alte
+             * kx/kz-Start teleportierte den Halbkoerper um 731 Einheiten).
+             * Der Lerp unten traegt ihn von hier ins LIVE-Maul. */
+            g->wirbel_x = pl->x; g->wirbel_y = pl->y; g->wirbel_z = pl->z;
         } else if (g->timer > 95 && g->timer < 175) {
             /* Wirbelbahn SYNCHRON ZUM MAUL (Nutzer 2026-09-11): Start und
              * Ende sind der MAULPUNKT (Ende live nachgefuehrt), dazwischen
@@ -1827,17 +1869,36 @@ void re15_gator_boss_tick(int slot)
                 g->pitch_vz = (int16_t)(350 - (610 * t) / 15);
             else
                 g->pitch_vz = -260;
-            pl->x = g->wirbel_x + (int32_t)((int64_t)(kx - g->wirbel_x) * t / T);
-            pl->z = g->wirbel_z + (int32_t)((int64_t)(kz - g->wirbel_z) * t / T);
-            pl->y = g->wirbel_y
-                  - (int32_t)((int64_t)300 * t / T)           /* -400 -> -700:
-                                               * ins gehobene, offene Maul */
-                  - (int32_t)((int64_t)4 * 2200 * t * (T - t) / ((int64_t)T * T));
+            /* ZIEL = LIVE-MAULMITTE (FSYNC-Messung 2026-09-12: der analytische
+             * Anker lag im Wurf-Fenster 2300-2450 Einheiten UNTER dem
+             * gerenderten Maul - Kopf hochgerissen + Schnapp-Clip-HOLD; kein
+             * einziger Frame in Deckung). gb_bone_welt ist die Render-
+             * Wahrheit; die Bahn folgt damit automatisch jedem Anim-Umbau.
+             * Hub 600 = Design-Ueberhoehung UEBERS Maul (2200 stammte vom
+             * tiefen Anker und wuerde jetzt weit ueber den Kopf schleudern). */
+            {
+                int32_t b6[3], b7[3], mzx, mzy, mzz;
+                gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
+                mzx = (b6[0] + b7[0]) / 2; mzy = (b6[1] + b7[1]) / 2;
+                mzz = (b6[2] + b7[2]) / 2;
+                pl->x = g->wirbel_x + (int32_t)((int64_t)(mzx - g->wirbel_x) * t / T);
+                pl->z = g->wirbel_z + (int32_t)((int64_t)(mzz - g->wirbel_z) * t / T);
+                pl->y = g->wirbel_y + (int32_t)((int64_t)(mzy - g->wirbel_y) * t / T)
+                      - (int32_t)((int64_t)4 * 600 * t * (T - t) / ((int64_t)T * T));
+            }
             pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
             pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
             if (g->timer >= 150)              /* Maul reisst weiter auf */
                 g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
             if (g->timer == 174) { gb_se(4); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
+        } else if (g->timer >= 175 && g->timer < 185) {
+            /* FANG: Leon haengt AN der Maulmitte, Schnapp 2 (t=174) klappt
+             * sichtbar um ihn zu (FSYNC: vorher klaffte hier 2352). */
+            int32_t b6[3], b7[3];
+            gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
+            pl->x = (b6[0] + b7[0]) / 2;
+            pl->y = (b6[1] + b7[1]) / 2;
+            pl->z = (b6[2] + b7[2]) / 2;
         } else if (g->timer == 185) {
             pl->no_draw = 1;                  /* Rest verschlungen */
             pl->fress_skip_mask = 0; pl->rot_x = 0;
@@ -1864,6 +1925,33 @@ void re15_gator_boss_tick(int slot)
             e->motion = 0; e->anim_frame = 0;
         }
         e->anim_frame++;
+        {   /* FRESS-SYNC-MESSUNG (Befund B 2026-09-12): pro Frame der Anker
+             * der Wirbelbahn (analytischer Maulpunkt kx/kz) gegen die
+             * GERENDERTEN Kiefer-Bones (Kopf 6, Unterkiefer 7 - Kopfkette
+             * 1->5->6/Kiefer 7, Datei-Kopf) und Leons Wurzel. dpl = |pl -
+             * Maulmitte| (3D). Nach anim_frame++ = der Stand, den der
+             * Renderer DIESES Frame posiert. */
+            static FILE *s_fs = NULL;
+            if (!s_fs) s_fs = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
+            if (s_fs) {
+                int32_t b6[3], b7[3], mx, my, mz, ddx, ddy, ddz, d = 0;
+                int64_t d2;
+                gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
+                mx = (b6[0] + b7[0]) / 2; my = (b6[1] + b7[1]) / 2;
+                mz = (b6[2] + b7[2]) / 2;
+                ddx = pl->x - mx; ddy = pl->y - my; ddz = pl->z - mz;
+                d2 = (int64_t)ddx * ddx + (int64_t)ddy * ddy + (int64_t)ddz * ddz;
+                while ((int64_t)d * d < d2 && d < 30000) d += 16;
+                fprintf(s_fs, "FSYNC t=%d anker=(%d,%d) pl=(%d,%d,%d) "
+                              "b6=(%d,%d,%d) b7=(%d,%d,%d) maul=(%d,%d,%d) "
+                              "dpl=%d pitch=%d jaw=%d mo=%d af=%d\n",
+                        (int)g->timer, kx, kz, pl->x, pl->y, pl->z,
+                        b6[0], b6[1], b6[2], b7[0], b7[1], b7[2],
+                        mx, my, mz, d, (int)g->pitch_vz, (int)g->jaw_vz,
+                        (int)e->motion, (int)e->anim_frame);
+                fflush(s_fs);
+            }
+        }
         break; }
 
     case GBP_DIE:                             /* Todesrolle Clip 7, dann CORPSE */
