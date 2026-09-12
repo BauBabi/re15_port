@@ -1,3 +1,38 @@
+# v0.7.88 - 2026-09-12
+
+## Runde 5 der Spieltest-Befunde
+
+- **Der Endboss ist zurueck im Kampf** (Regression aus v0.7.87): das
+  Kampfstart-Skript setzt erst die Position und einen Tick spaeter die
+  Freigabe - der neue Park-Modus ueberschrieb in diesem Fenster die
+  Kampfposition und der Boss stand unsichtbar ausserhalb der Welt. Jetzt
+  beendet schon die gesetzte Position das Parken; Sichtlauf bestaetigt.
+- **Der Kopf zerplatzt wie in RE2, statt davonzufliegen**: abgetrennte
+  Koepfe/Arme wurden als intaktes Modell auf der Flugbahn gezeichnet. Das
+  Original zeichnet solche Teile NIE als Mesh - es versetzt jedes Dreieck
+  entlang seiner Normale nach aussen (ueber 30 Bilder von 30 auf 465
+  anwachsend) und faerbt alles dunkelrot: eine auseinanderberstende
+  Scherbenwolke, die nach 29 Bildern verschwindet. Beine fliegen weiterhin
+  intakt - wie im Original.
+- **Lobby-Zombies stehen normal auf**: der Skript-Rueckweg aus dem Kriechen
+  schaltete in den STOSS-Executor (rueckwaertsschleudernder Taumel mit
+  Sturz) statt in die Boden-Aufstehkette - das war das 'komische Fliegen'
+  nach dem Aufstehen.
+- **Karte 1F ab ROOM1050 repariert**: der Raum sass auf der falschen Kachel
+  und verschmolz mit Empfang/Lobby zu einem braunen Block; jetzt wohnt er
+  (spiegelverkehrt eingemessen wie seinerzeit 1010) auf seinem eigenen
+  Streifen, die Tuermarken sitzen auf den Waenden.
+- **Alligator-Finisher**: Leon steckt jetzt in Laufrichtung des Mauls und
+  bleibt beim Rumschuetteln daran gekoppelt (wedelt MIT dem Maul, statt
+  frei zu trudeln). Der Zubeiss-Sound kommt jetzt aus der RE1.5-Raum-Bank
+  von ROOM2090 (der Angriffs-Impakt des Raums) statt des hellen
+  Wasser-Klatschers.
+- **Torso abschiessen - Klarstellung nach RE2-Original-Messung**: die
+  NORMALE Schrotflinte reisst auch im RE2-Original keinen Rumpf ab (ihre
+  Todeszeile hat keinen Zerreisser); das kann nur die aufgeruestete CUSTOM
+  Shotgun - deren Gegenstueck im Port die SPAS-12 ist (liegt in ROOM2030).
+  SPAS + nach oben zielen zerreisst garantiert, mit Rumpf-Stumpf.
+
 # v0.7.87 - 2026-09-12
 
 ## Runde 3/4 der Spieltest-Befunde: Gore-Vollausbau, Spinnen-Tod, Fress-Finisher, Endboss
