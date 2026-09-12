@@ -3996,6 +3996,8 @@ static void re15_re2z_part_reset(re15_actor_t *e)
     memset(e->re2z_part_w9c,  0, sizeof e->re2z_part_w9c);
     memset(e->re2z_part_w9e,  0, sizeof e->re2z_part_w9e);
     memset(e->re2z_part_life, 0, sizeof e->re2z_part_life);
+    memset(e->re2z_part_life_draw, 0, sizeof e->re2z_part_life_draw);
+    e->re2z_part_burst_draw = 0u;
     memset(e->re2z_part_wa4,  0, sizeof e->re2z_part_wa4);
     for (int i = 0; i < 16; i++) e->re2z_part_blend[i] = -1;   /* +0x7A: -1 = keine Setz-Blende
                                                                 * (`bltz` @0x80028D2C) */
@@ -4380,10 +4382,17 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
     part = re2z_bone_to_part(e, part);
     if (part < 0 || part >= 16) return 0;
     uint16_t fl = e->re2z_part_flags[part];
-    if (!(fl & 0x40u)) return 0;                               /* andi v0,s3,0x40 @0x80027498 */
-    if (!(fl & 0x01u)) return 0;                               /* Bit 0 weg -> der Walk betritt
+    if (!(fl & 0x40u) || !(fl & 0x01u)) {                      /* andi 0x40 @0x80027498;
+                                                                * Bit 0 weg -> der Walk betritt
                                                                 * FUN_80027434 gar nicht erst
                                                                 * (@0x8002737C/@0x800273C4) */
+        /* Burst-Maske mit raeumen (BEIDE Ausstiege - das abgelaufene Teil hat
+         * Flagwort 0 und faellt schon am 0x40-Check raus): der letzte
+         * gezeichnete Flug-Frame ist vorbei; ohne Raeumung haette die Maske
+         * kein Verfallsdatum, wenn kein anderer 0x40-Part mehr steppt. */
+        e->re2z_part_burst_draw &= (uint16_t)~(1u << part);
+        return 0;
+    }
 
     uint16_t bit = (uint16_t)(1u << part);
     if (!(e->re2z_part_seeded & bit)) {
@@ -4399,9 +4408,16 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
     if (e->re2z_part_frame != frame) {                         /* neuer Frame -> Schritt-Sperre auf */
         e->re2z_part_frame   = frame;
         e->re2z_part_stepped = 0u;
+        e->re2z_part_burst_draw = 0u;
     }
     if (!(e->re2z_part_stepped & bit)) {
         e->re2z_part_stepped = (uint16_t)(e->re2z_part_stepped | bit);
+        /* Timer-Latch VOR dem Physik-Schritt (kopf-flug.md Schritt 1): das
+         * Original zeichnet vor `jal 0x80028dac` (FUN_80027434.c:169 vs :184) -
+         * die Burst-Skala dieses Frames gehoert zum VOR-Physik-Stand. */
+        e->re2z_part_life_draw[part] = e->re2z_part_life[part];
+        if ((fl & 0x08u) && (fl & 0x01u))
+            e->re2z_part_burst_draw = (uint16_t)(e->re2z_part_burst_draw | bit);
         if (fl & 0x20u) re2z_part_phys_ad8(e, part);           /* @0x80027694-A0 */
         /* Der 0x08-Zweig haengt hinter dem `param_3 & 0x18`-Gate; 0x08 impliziert es. */
         if (fl & 0x08u) re2z_part_phys_dac(e, part);           /* @0x80027B98 */
@@ -4410,6 +4426,61 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
     for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
     for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
     return 1;
+}
+
+/* BURST-ZEICHNUNG (Runde 5, kopf-flug.md; Nutzer: "beim Schiessen nach oben
+ * fliegt immer noch der Kopf weg ... Ich glaube beim Original RE2 fliegt der
+ * Kopf nicht weg"): Routing und Kinetik waren byte-true, aber der ZEICHNER
+ * divergierte - ein Bit-0x08-Part laeuft im Original NIE durch den normalen
+ * Mesh-Renderer (FUN_80027434.c:158-170), sondern durch FUN_8002D3C8/D718:
+ * jedes Dreieck/Quad einzeln entlang seiner n0-Normale nach aussen versetzt
+ * (`lhu v1,0(t0)` / sll16/sra26 = n>>10 / mult mit der Timer-Skala
+ * @0x8002D490-A4) und ALLE Vertexfarben flach durchs Tint-Wort +0x70 ersetzt
+ * (`lw t2,112(a2)` @0x8002D508; GT3 |0x34000000, GT4 |0x3C000000; keine
+ * NCCT-Beleuchtung). Sichtbar: eine auseinanderberstende dunkelrote
+ * Scherbenwolke, kein intakter Kopf. Beine (0x1062, &0x18==0) fliegen intakt.
+ * Skalentabelle selbst gedumpt (info/re2leon/PSX.EXE @0x8009DC28/@0x8009DC64,
+ * t_addr 0x80010000): Index life&0x7fff (klemmt bei 29), Zeile life>>15
+ * (@0x8002D3F8-408). Timer = der VOR-Physik-Latch (s. gore_part_matrix). */
+int re15_re2z_gore_part_burst(const re15_actor_t *e, int bone_slot,
+                              int32_t *out_scale, uint32_t *out_tint)
+{
+    static const int16_t burst_scale[2][30] = {
+        {  30,  59,  87, 114, 140, 165, 189, 212, 234, 255,   /* @0x8009DC28 */
+          275, 294, 312, 329, 345, 360, 374, 387, 399, 410,
+          420, 429, 437, 444, 450, 455, 459, 462, 464, 465 },
+        { 180, 354, 522, 684, 840, 990,1134,1272,1404,1530,   /* @0x8009DC64 */
+         1650,1764,1872,1974,2070,2160,2244,2322,2394,2460,
+         2520,2574,2622,2664,2700,2730,2754,2772,2784,2790 },
+    };
+    if (!e) return 0;
+    {
+        int part = re2z_bone_to_part(e, bone_slot);
+        if (part < 0 || part >= 16) return 0;
+        {
+            uint16_t life;
+            int idx;
+            /* PRAE-PHYSIK-Latch statt Live-Flags: am letzten Flug-Frame (life 29)
+             * nullt die Physik das Flagwort NACH dem Zeichen-Zeitpunkt des
+             * Originals - die Maske traegt den Vor-Physik-Stand dieses Frames
+             * (FUN_80027434.c:168-170 zeichnet VOR `jal 0x80028dac`). */
+            if (!(e->re2z_part_burst_draw & (uint16_t)(1u << part))) return 0;
+            {   /* Stale-Schutz: die Maske gilt nur fuer den 0x08-Flieger dieses
+                 * Frames (Flags noch gesetzt) ODER seinen letzten Frame (die
+                 * Physik hat das Wort soeben genullt, gezeichnet wird er noch -
+                 * wie das Original vor `jal 0x80028dac`). Ein spaeter wieder
+                 * normal gezeichneter Part (Flags 1 ohne 0x08) faellt durch. */
+                uint16_t flq = e->re2z_part_flags[part];
+                if (flq != 0u && !(flq & 0x08u)) return 0;
+            }
+            life = e->re2z_part_life_draw[part];
+            idx = (int)(life & 0x7fffu);
+            if (idx > 29) idx = 29;
+            if (out_scale) *out_scale = (int32_t)burst_scale[(life >> 15) & 1u][idx];
+            if (out_tint)  *out_tint  = e->re2z_part_tint[part];
+            return 1;
+        }
+    }
 }
 
 /* ---- FUN_80106128 — VERKOHLUNG (+ das +0x10E-Bit 0x80) ------------------------------------ */

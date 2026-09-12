@@ -264,6 +264,13 @@ int main(void)
             int32_t F = (int32_t)e->y;                        /* [PORT] Boden = Aktor-Y */
             ident(rot); tr[0] = 1000; tr[1] = F - 400; tr[2] = 2000;
             int own = re15_re2z_gore_part_matrix(e, shin, fr++, rot, tr);
+            {   /* Negativ-Pin (kopf-flug.md): 0x1062 & 0x08 == 0 - das BEIN
+                 * fliegt als INTAKTES Mesh (FUN_80027434.c:158-160), nie als
+                 * Scherbenwolke. */
+                int32_t bsc = 0;
+                CHECK(re15_re2z_gore_part_burst(e, shin, &bsc, NULL) == 0,
+                      "Bein (0x1062) darf NIE als Burst gemeldet werden");
+            }
             printf("== PIN 4  INIT: own=%d v=(%d,%d,%d) +0x86=%d +0x7A=%d -> trans=(%d,%d,%d)\n",
                    own, e->re2z_part_v[shin][0], e->re2z_part_v[shin][1], e->re2z_part_v[shin][2],
                    (int)e->re2z_part_st86[shin], (int)e->re2z_part_blend[shin],
@@ -381,10 +388,35 @@ int main(void)
             CHECK(own == 1, "Bit 0x40 steht (0x4B) -> eigene Matrix, own=%d", own);
             CHECK(tr[1] == -710 && tr[0] == 500 && tr[2] == -900,
                   "Frame 1: nur t[1] += -10 (Vortrieb 0) — ist (%d,%d,%d)", tr[0], tr[1], tr[2]);
+            /* ==== BURST-ZEICHNUNGS-PINS (Runde 5, kopf-flug.md Schritt 3): ein
+             * 0x08-Part wird NIE als intaktes Mesh gezeichnet - FUN_8002D3C8
+             * versetzt jedes Prim entlang n0 mit der Timer-Skala @0x8009DC28
+             * (30 bei life 0, 465 bei life 29) und faerbt flach mit +0x70. ==== */
+            {
+                int32_t bsc = 0; uint32_t bti = 0;
+                CHECK(re15_re2z_gore_part_burst(e, 3, &bsc, &bti) == 1,
+                      "Burst-Query muss den 0x08-Flieger melden");
+                CHECK(bsc == 30, "Skala bei life_draw=0 ist 30 (@0x8009DC28), ist %d", (int)bsc);
+                CHECK(bti == e->re2z_part_tint[3],
+                      "Tint = Part-Wort +0x70 (`lw t2,112(a2)` @0x8002D508)");
+            }
             int gone = -1;
+            int32_t last_bsc = 0; int last_burst = 0;
             for (int k = 2; k <= 40 && gone < 0; k++) {
                 re15_re2z_gore_part_matrix(e, 3, fr++, rot, tr);
+                last_burst = re15_re2z_gore_part_burst(e, 3, &last_bsc, NULL);
                 if (e->re2z_part_flags[3] == 0u) gone = k;
+            }
+            CHECK(last_burst == 1 && last_bsc == 465,
+                  "LETZTER Flug-Frame: die Physik nullt das Flagwort NACH dem "
+                  "Zeichen-Zeitpunkt (draw vor `jal 0x80028dac`) - die Query muss "
+                  "diesen Frame noch mit Skala 465 melden (ist burst=%d scale=%d)",
+                  last_burst, (int)last_bsc);
+            {   /* Folgeframe: Part tot, Maske frisch -> Query 0. */
+                int32_t bsc2 = 0;
+                (void)re15_re2z_gore_part_matrix(e, 3, fr++, rot, tr);
+                CHECK(re15_re2z_gore_part_burst(e, 3, &bsc2, NULL) == 0,
+                      "nach dem Ablauf (Flagwort 0) darf die Query nichts melden");
             }
             printf("   Ablauf nach %d Frames: Flagwort 0x%04X trans=(%d,%d,%d) +0xA0=%d\n",
                    gone, e->re2z_part_flags[3], tr[0], tr[1], tr[2], e->re2z_part_life[3]);

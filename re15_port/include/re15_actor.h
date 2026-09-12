@@ -422,6 +422,18 @@ typedef struct {
     int16_t  re2z_part_w9c[16];     /* +0x9C */
     int16_t  re2z_part_w9e[16];     /* +0x9E */
     uint16_t re2z_part_life[16];    /* +0xA0 */
+    uint16_t re2z_part_burst_draw;  /* Bitmaske: Part war DIESES Frame vor der
+                                     * Physik im Burst-Zustand (0x08|0x01) - am
+                                     * letzten Flug-Frame loescht die Physik das
+                                     * Flagwort NACH dem Zeichnen (Original:
+                                     * draw vor `jal 0x80028dac`); die Query
+                                     * liest diese Maske statt der Live-Flags. */
+    uint16_t re2z_part_life_draw[16]; /* VOR-Physik-Latch von +0xA0 fuer die
+                                       * BURST-Zeichnung: das Original zeichnet
+                                       * VOR `jal 0x80028dac` (FUN_80027434.c:169
+                                       * vs :184); der Port steppt die Physik im
+                                       * Matrix-Query - der Zeichner liest den
+                                       * Latch (kopf-flug.md Schritt 1). */
     int16_t  re2z_part_wa4[16];     /* +0xA4 */
     uint16_t re2z_part_seeded;      /* PORT: Bit i = Matrix von Part i ist eingefroren            */
     uint16_t re2z_part_stepped;     /* PORT: Bit i = Part i hat in re2z_part_frame schon geschritten */
@@ -1020,6 +1032,16 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
  * Im RE1.5-Flavor liefert die Funktion IMMER 0 (dasselbe Dreifach-Gate wie _gore_active). */
 int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
                                int32_t rot[9], int32_t trans[3]);
+
+/* BURST-ZEICHNUNG (Runde 5, kopf-flug.md): ein Part mit Flag-Bit 0x08 wird im
+ * Original NIE als intaktes Mesh gezeichnet - FUN_80027434.c:158-170 leitet ihn
+ * an FUN_8002D3C8/D718: jedes Prim entlang seiner n0-Normale versetzt (Skala
+ * timer-indiziert, 30->465 ueber 30 Frames @0x8009DC28) und ALLE Vertexfarben
+ * flach durch das Tint-Wort +0x70 ersetzt (dunkelrote Scherben, unbeleuchtet;
+ * 0x34/0x3C = texturierte Prims). Rueckgabe 1 + Skala/Tint, wenn der Bone-Slot
+ * dieses Frame so zu zeichnen ist. */
+int re15_re2z_gore_part_burst(const re15_actor_t *e, int bone_slot,
+                              int32_t *out_scale, uint32_t *out_tint);
 
 /* ---- PORT-OPTION 2026-08-20: der Zerleger AUCH im RE1.5-Modus (Nutzer-Auftrag) --------------
  * ⛔ Bewusste Abweichung vom RE1.5-Original, per Schalter re15_re15_re2z_import()

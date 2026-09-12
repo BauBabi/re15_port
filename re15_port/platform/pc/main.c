@@ -8487,6 +8487,14 @@ re_title:;
                             ? npc_gorebank->pc_tex_slot_gore
                             : (av.pc_tex_slot >= 0 ? av.pc_tex_slot
                                                    : (is_elliot ? 1 : 0)));
+                    /* BURST-ZEICHNUNG (Runde 5, kopf-flug.md): 0x08-Flug-Parts
+                     * (Kopf/Arm-Abrisse) zerplatzen als dunkelrote Scherbenwolke
+                     * statt als intaktes Mesh zu fliegen - Versatz je Prim
+                     * entlang n0 (FUN_8002D3C8 @0x8002D490-A4, Skala 30->465
+                     * @0x8009DC28), Farben flach = Tint +0x70, unbeleuchtet. */
+                    int32_t nburst_scale = 0; uint32_t nburst_tint = 0;
+                    int nburst = gore_on ? re15_re2z_gore_part_burst(
+                                     npc, nbi, &nburst_scale, &nburst_tint) : 0;
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];
                         if (tri->v0 >= (uint32_t)nm->tri_vertex_count) continue;
@@ -8499,8 +8507,18 @@ re_title:;
                             &nm->tri_vertices[tri->v2],
                         };
                         int ok = 1;
+                        int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;
+                        if (nburst && nm->tri_normals &&
+                            tri->n0 < (uint32_t)nm->tri_normal_count) {
+                            const re15_md1_vertex_t *bn = &nm->tri_normals[tri->n0];
+                            bofs_x = ((int32_t)bn->x >> 10) * nburst_scale; /* sll16/sra26
+                                                                             * @0x8002D490-A4 */
+                            bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
+                            bofs_z = ((int32_t)bn->z >> 10) * nburst_scale;
+                        }
                         for (int v = 0; v < 3; v++) {
-                            int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                            int32_t _x = vp[v]->x + bofs_x, _y = vp[v]->y + bofs_y,
+                                    _z = vp[v]->z + bofs_z;
                             int32_t _vx = (int32_t)(((int64_t)_x*nbone_m[0] + (int64_t)_y*nbone_m[1] + (int64_t)_z*nbone_m[2]) >> 12) + nbone_t[0];
                             int32_t _vy = (int32_t)(((int64_t)_x*nbone_m[3] + (int64_t)_y*nbone_m[4] + (int64_t)_z*nbone_m[5]) >> 12) + nbone_t[1];
                             int32_t _vz = (int32_t)(((int64_t)_x*nbone_m[6] + (int64_t)_y*nbone_m[7] + (int64_t)_z*nbone_m[8]) >> 12) + nbone_t[2];
@@ -8541,6 +8559,12 @@ re_title:;
                         RE2_GORE_TINT(nr0, ng0, nb0);
                         RE2_GORE_TINT(nr1, ng1, nb1);
                         RE2_GORE_TINT(nr2, ng2, nb2);
+                        if (nburst) {   /* FLACH = Tint-Wort (FUN_8002d3c8.c:49/69-71),
+                                         * ersetzt Beleuchtung UND Gore-Modulation */
+                            nr0 = nr1 = nr2 = (uint8_t)(nburst_tint & 0xFFu);
+                            ng0 = ng1 = ng2 = (uint8_t)((nburst_tint >> 8) & 0xFFu);
+                            nb0 = nb1 = nb2 = (uint8_t)((nburst_tint >> 16) & 0xFFu);
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
@@ -8563,8 +8587,18 @@ re_title:;
                             &nm->quad_vertices[qd->v3],
                         };
                         int ok = 1;
+                        int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;
+                        if (nburst && nm->quad_normals &&
+                            qd->n0 < (uint32_t)nm->quad_normal_count) {
+                            const re15_md1_vertex_t *bn = &nm->quad_normals[qd->n0];
+                            bofs_x = ((int32_t)bn->x >> 10) * nburst_scale; /* FUN_8002d718.c:
+                                                                             * dieselbe n0-Regel */
+                            bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
+                            bofs_z = ((int32_t)bn->z >> 10) * nburst_scale;
+                        }
                         for (int v = 0; v < 4; v++) {
-                            int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                            int32_t _x = vp[v]->x + bofs_x, _y = vp[v]->y + bofs_y,
+                                    _z = vp[v]->z + bofs_z;
                             int32_t _vx = (int32_t)(((int64_t)_x*nbone_m[0] + (int64_t)_y*nbone_m[1] + (int64_t)_z*nbone_m[2]) >> 12) + nbone_t[0];
                             int32_t _vy = (int32_t)(((int64_t)_x*nbone_m[3] + (int64_t)_y*nbone_m[4] + (int64_t)_z*nbone_m[5]) >> 12) + nbone_t[1];
                             int32_t _vz = (int32_t)(((int64_t)_x*nbone_m[6] + (int64_t)_y*nbone_m[7] + (int64_t)_z*nbone_m[8]) >> 12) + nbone_t[2];
@@ -8608,6 +8642,11 @@ re_title:;
                         RE2_GORE_TINT(nqr1, nqg1, nqb1);
                         RE2_GORE_TINT(nqr2, nqg2, nqb2);
                         RE2_GORE_TINT(nqr3, nqg3, nqb3);
+                        if (nburst) {   /* FLACH = Tint-Wort (FUN_8002d718.c:45) */
+                            nqr0 = nqr1 = nqr2 = nqr3 = (uint8_t)(nburst_tint & 0xFFu);
+                            nqg0 = nqg1 = nqg2 = nqg3 = (uint8_t)((nburst_tint >> 8) & 0xFFu);
+                            nqb0 = nqb1 = nqb2 = nqb3 = (uint8_t)((nburst_tint >> 16) & 0xFFu);
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
