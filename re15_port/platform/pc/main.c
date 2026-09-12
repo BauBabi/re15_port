@@ -756,6 +756,10 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
         (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u)) {
         if (pc_enemy_load_re2(type, eb)) {
             if (type == 0x36u) {
+                extern void re15_g5_audio_hook(void (*)(int, int), void (*)(int));
+                /* ENEMSE-Bank 25 fuer den G5 (Paar-Zeile {0x27,0x00} @EXE-Datei
+                 * 0x97C32, flag2000=0 - birkin-g5-ki.md 5). */
+                re15_g5_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
                 /* Drei Nacharbeiten am RE2-EM36 (Dossier analysis/schrot_befunde_
                  * 2026-09-12/birkin-em36.md; Nutzer: "fliegt komisch in der Luft
                  * ... ist unvollstaendig"):
@@ -787,45 +791,12 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
                  * verborgen, bis ihre Emitter existieren - dokumentierte
                  * Abweichung. Versaetze werden im Render angewandt. */
                 if (eb->md1.mesh_count > 4) eb->md1.mesh_count = 4;
-                {
-                    static int16_t s_bk_fix[1408];
-                    int kf, nkf = eb->skel.keyframe_count;
-                    if (nkf > 1408) nkf = 1408;
-                    for (kf = 0; kf < nkf; kf++) {
-                        /* KORRIGIERT (Dossier g5-optik.md 3.2): RE2 ankert per
-                         * Setz-Rampe die ENTITY auf +2950 (y=(t*2950)>>12 bei
-                         * t=4096, @0x801037c4-f4) und laesst die Keyframe-
-                         * Wurzel (-4534..-3105) darauf reiten - der Kriecher
-                         * schwingt 1,6-4,4 m UEBER dem Boden, der Blob sitzt
-                         * fest AM Boden. Das fruehere Pro-Keyframe-Erden
-                         * (tiefster Punkt auf 0) nahm der Animation genau
-                         * dieses Wogen. Konstante = der Rampen-Endwert. */
-                        (void)kf;
-                        s_bk_fix[kf] = (int16_t)2950;
-                    }
-                    eb->skel.root_y_fix = s_bk_fix;
-                    eb->skel.root_y_fix_count = nkf;
-                }
-                {
-                    /* NACHGEZOGEN (Runde 4, birkin-bewegung.md Plan 3, Katalog
-                     * birkin-em36.md 2.1 - Praesentations-Mapping, kein byte-true
-                     * Original dieser Kombination, Feinabnahme visuell):
-                     *   0x0a Recovery -> RE2-Clip 8 (50-F-Angriffscluster statt
-                     *        100-F-Idle: 3,3 s "steht nur da" je Klauen-Zyklus),
-                     *   0x10/0x0d Emergence -> RE2-Clips 1 (180-F-Aufbaeumen/Rise,
-                     *        INIT-Grundpose @0x8010116c) / 3 (aufgerichtete Lage). */
-                    static const uint8_t BKMAP[21] = {
-                        /* 0   1  2  3  4  5  6  7  8  9  a  b  c  d  e  f 10 11 12 13 14 */
-                           0,  2, 0, 6, 7, 8, 0, 9, 0, 9, 8, 1, 9, 3, 7, 0, 1, 0, 0, 0, 1 };
-                    re15_emd_clip_t bk_orig[RE15_EMD_MAX_CLIPS];
-                    int ci, oc = eb->anim.clip_count;
-                    memcpy(bk_orig, eb->anim.clips, sizeof bk_orig);
-                    for (ci = 0; ci < 21; ci++) {
-                        int ziel = BKMAP[ci];
-                        eb->anim.clips[ci] = (ziel < oc) ? bk_orig[ziel] : bk_orig[0];
-                    }
-                    eb->anim.clip_count = 21;
-                }
+                /* SEIT RUNDE 6 (birkin-g5-ki.md 6/7): KEIN 2950er-Root-Fix und
+                 * KEINE BKMAP-Umsortierung mehr - die vermeintliche "Setz-Rampe"
+                 * @0x80103668 ist die TODES-Phase [T20] (der Kriecher versinkt
+                 * in die Masse), nicht die Kampfhoehe; und die echte G5-KI
+                 * (enemy_ai_boss_g5.c) treibt die RE2-Clip-Indizes 0..10
+                 * DIREKT samt Root-Motion und eigener y-Fuehrung. */
             }
             fprintf(stderr, "[enemy] FINALER Birkin: RE2 EM0%02X geladen\n", type);
             return;                                    /* REIN, kein Hybrid */
@@ -8357,7 +8328,10 @@ re_title:;
                     re15_skel_pose_t np_kind;
                     const re15_skel_pose_t *np = &npc_poses[nbi < npc_bones ? nbi : 0];
                     if (nbi >= npc_bones && npc->type == 0x36 && nbi <= 3) {
-                        static const int32_t G5B[2][3] = { {1800,1550,0}, {800,500,0} };
+                        /* Bind zurueck auf die EMD-Werte (Runde 6): der 2950er-
+                         * Kampf-Anker ist entfallen (Todes-Rampe!), also keine
+                         * 4500-2950-Kompensation mehr. */
+                        static const int32_t G5B[2][3] = { {1800,4500,0}, {800,500,0} };
                         const int32_t *g5o = G5B[(nbi == 2) ? 0 : 1];
                         const re15_skel_pose_t *r0 = &npc_poses[0];
                         int rr;

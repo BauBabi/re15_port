@@ -3451,6 +3451,16 @@ target_compile_definitions(test_re2_gore_decoder PRIVATE
 add_test(NAME unit_re2_gore_decoder COMMAND test_re2_gore_decoder)
 set_tests_properties(unit_re2_gore_decoder PROPERTIES TIMEOUT 60)
 
+# --- G5-ENDKAMPF-SMOKE (Runde 6, birkin-g5-ki.md): Park, Intro-Choreo mit
+#     Root-Motion, Tentakel-Zug, Blob-Biss, Todes-Absink-Rampe. ---
+add_executable(probe_g5_boss probe_g5_boss.c)
+target_link_libraries(probe_g5_boss PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_g5_boss PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_g5_boss PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_g5_boss COMMAND probe_g5_boss)
+set_tests_properties(unit_g5_boss PROPERTIES TIMEOUT 120)
+
 add_executable(probe_gator_fress probe_gator_fress.c)
 target_link_libraries(probe_gator_fress PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gator_fress PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -13682,6 +13682,13 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
+        else if (t == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {
+            /* ENDKAMPF-G5 (Runde 6, birkin-g5-ki.md): eigenes byte-true Modul
+             * enemy_ai_boss_g5.c ersetzt fuer ROOM5090/5091 die geteilte
+             * 0x30-Wurzel + BKMAP-Naeherung; ROOM3070/0x30 bleibt unangetastet. */
+            extern void re15_g5_boss_tick(int slot);
+            re15_g5_boss_tick(s);
+        }
         else if (t == 0x30 || t == 0x36) {   /* G-BIRKIN boss (type 0x30 form-1 EM030 / type 0x36 form-5 EM036).
                                  * STAGE3 registers BOTH 0x30 and 0x36 to the SAME root 0x80116230, which has ZERO
                                  * +0x8 type reads and ZERO 0x36 immediates in [0x80116230..0x8011a800] — the two
