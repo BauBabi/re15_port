@@ -151,14 +151,25 @@ static int s_player_aim_phase = RE15_AIM_NONE;
  * (32f). re15_player_set_aim_clip_len(fc) survives as the "all clips = fc" test mock. */
 /* 16, nicht 14: die DAUERFEUER-Baenke PL00W0C (Ingram M10), W0E (Flammen-
  * werfer) und W13 (H&K MC51) fuehren 16 Clips - GEMESSEN beim Laden aller 21
- * PLW-Baenke 2026-09-12 (wpnbank.log). Mit 14 blieben ihre Clips 14 und 15
- * (Feuer-Ende-runter / Halten-runter) unadressierbar. */
+ * PLW-Baenke 2026-09-12 (wpnbank.log). Belegte Belegung (Disasm 2026-09-12):
+ * Halten 9/12/15, Feuern 7/10/13, Abklingen 8/11/14 (jeweils Mitte/hoch/tief,
+ * @0x800342bc-e8 / @0x80034588-a8 / @0x80034794); Clip 15 ist also der
+ * Aim-TIEF-Hold, NICHT "Halten-runter". Mit 14 blieben 14/15 unadressierbar. */
 #define RE15_AIM_CLIP_MAX 16
 static uint16_t s_aim_clip_fcs[RE15_AIM_CLIP_MAX] = {0};
 static int s_aim_cur_clip = 6;              /* the current W-bank clip (melee 0xD; gun 6/8/7/...) */
 static int s_aim_recoil = 0;                /* 1 while the discharge/slash clip plays */
 static int s_aim_elev = 0;                  /* 0 level / +1 up / -1 down (acaec bits 15/13) */
 static int s_aim_melee = 0;                 /* latched item class at raise entry (item < 3) */
+/* DAUERFEUER (Ids 12/14/19, Dispatch @0x80074030 -> FSM 0x80034014, Subs @0x80074150;
+ * Disasm-Dossiers analysis/waffen_fsm_2026-09-12/). Clip-System der 16-Clip-Baenke
+ * W0C/W0E/W13: Halten 9/12/15 = 9+3*hoch+6*tief (@0x800342bc-e8), Feuern 7/10/13
+ * (@0x80034588-a8), Abklingen 8/11/14 (@0x80034794). */
+static int     s_aim_auto    = 0;   /* Klasse beim Raise gelatcht (Spiegel @0x80074030) */
+static int     s_auto_firing = 0;   /* 0=aus, 1=Feuerschleife (aca5b P1), 2=Abkling-Clip (P2/3) */
+static uint8_t s_feuertakt   = 0;   /* acaf2: ++ jeden Feuer-Frame, %7 signiert = Huelse */
+static int     s_elev_gate   = 0;   /* Elevationswechsel-Frame: Feuerdruck VERLIERT
+                                     * (Frueh-Exit @0x80034348/94/e0 bzw. Melee-HOLD) */
 static int s_knife_in_hand = 0;             /* player word 0x800aca54 bit 0x4000: the knife DRAW
                                              * (sub4, clip 0xD + SE + model attach) runs only ONCE;
                                              * later aims RE-RAISE (sub0, clip 6, no SE). Persists
@@ -202,6 +213,7 @@ void re15_player_aim_reset(void)                              /* test/room-chang
     extern re15_actor_t g_actors[];
     s_player_aim_phase = RE15_AIM_NONE;
     s_aim_recoil = 0; s_aim_elev = 0; s_knife_in_hand = 0;
+    s_aim_auto = 0; s_auto_firing = 0; s_feuertakt = 0; s_elev_gate = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_flags &= (uint8_t)~0x80u;
 }
 /* HIT/GRAB interrupt (byte-true mechanism: the player command dispatch @0x80031c88 indexes
@@ -285,6 +297,15 @@ void re15_player_fire_start(void)
     extern re15_actor_t g_actors[];
     if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil) return;
     s_aim_recoil = 1;
+    if (s_aim_auto) {
+        /* Sub-1 -> Sub-2 (sh 2 @0x80034418): Feuer-Clip 7/10/13 (@0x80034588-a8),
+         * acae9 := 0 (@0x80034420, hier anim_frame), Feuertakt acaf2 := 0
+         * (@0x80034428), Crossfade 7. Die Schleife tickt danach in
+         * re15_player_autofire_tick (Entlade-jalr jeden Frame @0x800345ec). */
+        s_auto_firing  = 1;
+        s_feuertakt    = 0;
+        s_aim_cur_clip = 7 + (s_aim_elev > 0 ? 3 : s_aim_elev < 0 ? 6 : 0);   /* 7/10/13 */
+    } else
     s_aim_cur_clip = 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 (both FSMs) */
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;
@@ -297,6 +318,66 @@ extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 static int16_t re15_atan2_q12_pl(int32_t dz, int32_t dx) { return re15_atan2_q12(dz, dx); }
 
 int re15_player_aim_ready(void) { return s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil; }
+
+/* ---- DAUERFEUER-Exporte (game_step_common.c konsumiert sie je Frame) ---------------
+ * Feuertakt EXAKT (liegt byte-true im Entlade-Handler, der in Sub 2 JEDEN Frame laeuft,
+ * jalr @0x800345ec; Ingram @0x800347F8, MC51 @0x80034A30, Flammenwerfer @0x800C45A8):
+ *   SCHUSS (Munition+Schaden)  (acae9 & 4) == 0      @0x800349bc / 0x80034bf4 / 0x800c4774
+ *   Muendungsfeuer             acae9 % 3 == 0        @0x8003483c / 0x80034a80 / 0x800c45f0
+ *   Rauch                      acae9 % 6 == 0        @0x800348e0 / 0x80034b10 (W14: keiner)
+ *   Huelse                     (s8)acaf2 % 7 == 0    @0x80034948 / 0x80034ba4 (signiert!
+ *                              u8-Ueberlauf 127->-128 verschiebt die 7er-Phase byte-true)
+ *   Taktzaehler                acaf2++ IMMER         @0x800349c4 / 0x80034bfc / 0x800c477c
+ * acae9 ist hier p->anim_frame (derselbe In-Clip-Zaehler; einziger Inkrementierer ist der
+ * Anim-Stepper FUN_8001f314 @0x8001f610-1c). Die effektive Kadenz folgt aus der
+ * CLIP-LAENGE (W0C/W13 Feuer-Clip 9 Frames -> Schuesse auf 0,1,2,3,8; W0E 21 Frames ->
+ * 0-3, 8-11, 16-19) - KEINE eigene Takt-Konstante. */
+int re15_player_autofire_active(void) { return s_aim_auto && s_auto_firing != 0; }
+int re15_player_autofire_feuert(void)  { return s_aim_auto && s_auto_firing == 1; }
+
+static void re15_player_autofire_ende(void)
+{   /* Abzug losgelassen ODER Magazin leer: aca5b:=2 (@0x8003474c bzw. @0x800349fc) ->
+     * P2 setzt Abkling-Clip 8/11/14 (@0x80034794) und macht den EINZIGEN Frame-Reset
+     * der Schleife (acae9:=0 @0x8003477c). */
+    extern re15_actor_t g_actors[];
+    s_auto_firing  = 2;
+    s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 3 : s_aim_elev < 0 ? 6 : 0);
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;
+}
+void re15_player_autofire_empty(void) { re15_player_autofire_ende(); }
+
+int re15_player_autofire_tick(int abzug_gehalten, int *schuss, int *muendung, int *rauch, int *huelse)
+{
+    extern re15_actor_t g_actors[];
+    int f;
+    if (!s_aim_auto || s_auto_firing != 1 || !s_aim_recoil) return 0;
+    if (!abzug_gehalten) { re15_player_autofire_ende(); return 0; }
+    f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
+    *schuss   = ((f & 4) == 0);
+    *muendung = (f % 3 == 0);
+    *rauch    = (f % 6 == 0);
+    *huelse   = (((int8_t)s_feuertakt % 7) == 0);
+    s_feuertakt++;                       /* Delay-Slot: laeuft IMMER (@0x800349c4) */
+    return 1;
+}
+
+/* Elevationswechsel-Frame: 1 genau einmal, danach geloescht (Frueh-Exit-Regel). */
+int re15_player_elev_gate_consume(void)
+{
+    int g = s_elev_gate; s_elev_gate = 0; return g;
+}
+
+/* Granatwerfer (NUR Id 9, Gate hart @0x8003368c): liefert den Rueckstoss-Frame oder -1.
+ * game_step spawnt das Projektil 0x040D1000 bei Frame 19 (HOCH) / 22 (MITTE) / 24 (TIEF)
+ * (@0x800336bc-0x800337a4); R1-Loslassen vor dem Spawn-Frame bricht den Rueckstoss
+ * (Recoil-Break-Schwelle 10) und unterdrueckt die Granate byte-true. */
+int re15_player_granate_frame(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_aim_melee || !s_aim_recoil || s_aim_auto) return -1;
+    return (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
+}
 /* Test-Sichtfenster (nur Diagnose, kein Spiel-Code liest das): Phase im Low-Nibble,
  * Recoil-Flag in Bit 4. */
 int re15_player_aim_phase_debug(void) { return (int)s_player_aim_phase | (s_aim_recoil ? 0x10 : 0); }
@@ -607,8 +688,18 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * the advance so the render's %fc wrap can never replay them. Uses LAST tick's clip
          * state — byte-true, since this advance logically belongs to the END of the last tick. */
         if (p->motion == RE15_MOTION_AIM_W && aim_cur_fc() > 0 &&
-            p->anim_frame > aim_cur_fc() - 1)
+            p->anim_frame > aim_cur_fc() - 1) {
+            /* DAUERFEUER-Feuerclip LOOPT (f314-Wrap wird in Sub 2 ignoriert,
+             * @0x80034664): hier wrappen statt klemmen, und zwar GENAU hier -
+             * die Klemme laeuft VOR dem FSM-/Entlade-Teil des Ticks, das letzte
+             * Bild (fc-1) wurde also im Vortick noch vom Entlade-Takt gelesen,
+             * wie im Original (jalr @0x800345ec VOR f314). */
+            extern int re15_player_autofire_feuert(void);
+            if (re15_player_autofire_feuert())
+                p->anim_frame = 0;
+            else
             p->anim_frame = (uint16_t)(aim_cur_fc() - 1);
+        }
     }
 
     /* BL-round 2026-05-29: player-mode FSM input gate. While SCRIPTED
@@ -676,6 +767,17 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             int rb_thr = (eq_w >= 1 && eq_w <= 16) ? recoil_break[eq_w - 1] : 7;
             if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil)
                 enter_lower = 1;                        /* HOLD + !R1 */
+            else if (s_aim_auto && s_aim_recoil) {
+                /* DAUERFEUER kennt keinen Recoil-Break: !R1 in der Feuerschleife geht
+                 * ZUERST zurueck in den Hold (sh 1 @0x800347e4 via @0x8003464c), erst
+                 * der Hold sieht !R1 und senkt (@0x8003430c). Hier also: Schleife
+                 * beenden, Hold-Clip 9/12/15 rein; der READY+!R1-Zweig uebernimmt im
+                 * Folgeframe. */
+                s_aim_recoil   = 0;
+                s_auto_firing  = 0;
+                s_aim_cur_clip = 9 + (s_aim_elev > 0 ? 3 : s_aim_elev < 0 ? 6 : 0);
+                p->anim_frame = 0; p->anim_frac = 7;
+            }
             else if (!s_aim_melee && s_aim_recoil && p->anim_frame > rb_thr)
                 enter_lower = 1;                        /* gun recoil break (@0x8003364c, per-weapon byte2) */
             if (enter_lower) {
@@ -746,6 +848,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 extern int re15_player_equipped_weapon(void);       /* re15_damage.c (DAT_800aca5d) */
                 s_player_aim_phase = RE15_AIM_RAISE;
                 s_aim_melee = (re15_player_equipped_weapon() < 3);  /* @0x80074030 class split */
+                {   /* Dauerfeuer-Klasse: exakt die drei Ids des Dispatches @0x80074030 */
+                    int eqw = re15_player_equipped_weapon();
+                    s_aim_auto = (eqw == 12 || eqw == 14 || eqw == 19);
+                }
+                s_auto_firing = 0; s_feuertakt = 0;
                 s_aim_recoil = 0; s_aim_elev = 0;
                 if (s_aim_melee && !s_knife_in_hand) {
                     s_aim_cur_clip = 0x0d;                          /* DRAW (sub4 @0x80035538) */
@@ -762,16 +869,37 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 if (s_aim_melee && s_aim_cur_clip == 0x0d)
                     s_knife_in_hand = 1;                            /* DRAW done -> in-hand 0x4000 */
                 s_player_aim_phase = RE15_AIM_READY;                /* raise/draw done -> HOLD */
-                s_aim_cur_clip = 8; p->anim_frame = 0;              /* HOLD clip 8 (both machines) */
+                /* Dauerfeuer haelt auf Clip 9 (9+3*hoch+6*tief @0x800342bc-e8, Elevation
+                 * beim Raise auf MITTE @0x800340e0-ec); die anderen Maschinen auf 8. */
+                s_aim_cur_clip = s_aim_auto ? 9 : 8; p->anim_frame = 0;
             }
             if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
                 /* dpad elevation (BOTH machines, same acaec scheme @0x80035164/1b8/204): the hold
                  * clip re-enters as 8/10/12 = 8 + 2*up + 4*down. */
                 int elev = (pad_bits & RE15_PAD_BIT_UP) ? 1 : (pad_bits & RE15_PAD_BIT_DOWN) ? -1 : 0;
+                s_elev_gate = 0;
                 if (elev != s_aim_elev) {                           /* elevation switch re-enters */
                     s_aim_elev = elev;
-                    s_aim_cur_clip = 8 + (elev > 0 ? 2 : elev < 0 ? 4 : 0);   /* 8/10/12 */
+                    s_aim_cur_clip = s_aim_auto
+                        ? 9 + (elev > 0 ? 3 : elev < 0 ? 6 : 0)     /* 9/12/15 (@0x800342bc-e8) */
+                        : 8 + (elev > 0 ? 2 : elev < 0 ? 4 : 0);    /* 8/10/12 */
                     p->anim_frame = 0;
+                    /* Frueh-Exit-Regel (@0x80034348/94/e0 Dauerfeuer-Hold, Melee-HOLD
+                     * analog fsm-sub56): im Wechselframe VERLIERT der Feuerdruck. Der
+                     * Feuer-Pfad in game_step fragt dieses Gate ab. Standard-Gun-FSM
+                     * unveraendert (dort nicht belegt). */
+                    if (s_aim_auto || s_aim_melee) s_elev_gate = 1;
+                }
+            }
+            if (s_aim_auto && s_auto_firing == 1 && s_aim_recoil) {
+                /* Aim-Wechsel MITTEN im Feuern (@0x8003467c-0x80034734): nur aca5b:=0
+                 * -> Folgeframe neuer Feuer-Clip 7/10/13 + Crossfade 7; acae9 und
+                 * acaf2 laufen WEITER (Schusstakt bleibt phasengleich). */
+                int elev2 = (pad_bits & RE15_PAD_BIT_UP) ? 1 : (pad_bits & RE15_PAD_BIT_DOWN) ? -1 : 0;
+                if (elev2 != s_aim_elev) {
+                    s_aim_elev = elev2;
+                    s_aim_cur_clip = 7 + (elev2 > 0 ? 3 : elev2 < 0 ? 6 : 0);
+                    p->anim_frac = 7;                   /* KEIN anim_frame/takt-Reset */
                 }
             }
             if (s_player_aim_phase == RE15_AIM_LOWER &&
@@ -791,10 +919,21 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 s_idle_phase = -1;                                  /* clean idle-FSM (re)entry */
             }
             if (s_aim_recoil && aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
+                if (s_aim_auto && s_auto_firing == 1) {
+                    /* Feuer-Clip LOOPT - NICHT beenden. Der Wrap selbst passiert in
+                     * der Fortschalt-Klemme oben (nach dem Entlade-Tick des letzten
+                     * Bildes), damit Bild fc-1 den Schuss (f&4)==0 noch traegt. */
+                } else if (s_aim_auto && s_auto_firing == 2) {
+                    s_aim_recoil = 0;       /* Abkling-Clip zu Ende -> Hold (sh 1 @0x800347e4) */
+                    s_auto_firing = 0;
+                    s_aim_cur_clip = 9 + (s_aim_elev > 0 ? 3 : s_aim_elev < 0 ? 6 : 0);
+                    p->anim_frame = 0;
+                } else {
                 s_aim_recoil = 0;                                   /* recoil/slash played out */
                 if (!s_aim_melee) {
                     s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
                     p->anim_frame = 0;                              /* gun: back to HOLD (refire) */
+                }
                 }
             }
             /* RELOAD weapon-7 SPEEDLOADER drop (@0x80033e34-88): item 7 (SUPER REDHAWK) at anim

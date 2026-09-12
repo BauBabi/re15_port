@@ -1370,34 +1370,117 @@ void re15_game_step(const re15_game_ctx_t *c)
                     extern void re15_player_reload_start(void);
                     if (re15_ammo_reserve_slot() > 0 && eq_item < 9)
                         re15_player_reload_start();                 /* sub=4 @0x80033378 */
-                    else
+                    else if (!(eq_item == 12 || eq_item == 14 || eq_item == 19))
                         re15_audio_weapon_se(1);                    /* click 0x01010001 */
+                    /* DAUERFEUER (12/14/19): Abzug mit leerem Magazin im Hold tut
+                     * NICHTS - kein Klick, kein Nachladen. Der einzige Leer-Zweig in
+                     * Sub 1 verlangt Waffen-Id 0x12 (@0x80034448-58), die aber auf den
+                     * Standard-Handler dispatcht und diese FSM nie erreicht; das
+                     * Reload-Gate sltiu id,9 (@0x80033368) schliesst sie ohnehin aus. */
                 }
             }
             else if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 extern void re15_player_fire_start(void);
+                extern int  re15_player_elev_gate_consume(void);
+                int auto_w = (eq_item == 12 || eq_item == 14 || eq_item == 19);
+                if (re15_player_elev_gate_consume()) {
+                    /* Frueh-Exit-Regel: im Elevationswechsel-Frame VERLIERT der
+                     * Feuerdruck (@0x80034348/94/e0; Melee-HOLD analog fsm-sub56).
+                     * Naechster Frame darf feuern. */
+                }
+                else if (auto_w) {
+                    /* DAUERFEUER-Eintritt Sub1->Sub2 nur mit Magazin (@0x80034404);
+                     * die Schleife selbst tickt unten pro Frame. Leer: NICHTS. */
+                    if (re15_ammo_mag_nonzero()) re15_player_fire_start();
+                }
+                else {
                 re15_player_fire_start();                 /* gun: recoil 7/9/11; melee: SLASH 7/9/11
                                                            * (swing SE inside; damage runs per-tick
                                                            * in the frame-6..11 window below) */
-                if (eq_item >= 3) {                       /* GUN-only discharge side (@0x800337bc):
-                                                           * the melee items 0-2 have no muzzle/shell */
+                if (eq_item >= 3) {                       /* Entlade-Tabelle @0x80074100 (Datei 0x64900):
+                                                           * JE WAFFE ein eigener Handler. Der Port fuhr
+                                                           * bis 2026-09-12 fuer ALLE Schusswaffen den
+                                                           * Browning-Handler 0x800337BC - falsche
+                                                           * Effekt-Codes/Offsets fuer 5..8/13, erfundene
+                                                           * FX+Resolve fuer die Granaten-Stubs 9/10/11. */
+                    /* Tabellen-Spiegel; Belege je Zeile in analysis/waffen_fsm_2026-09-12/SPEC.md §2 */
+                    typedef struct { uint8_t fx_id, sub; uint16_t scale; int16_t ofs[3]; } re15_fx_spawn_t;
+                    typedef struct { uint8_t aktiv, resolve, ammo, n_fx; re15_fx_spawn_t fx[3]; } re15_entlade_t;
+                    static const re15_entlade_t ENT[21] = {
+                        /* 0..2 Nahkampf: nie als Entlade gerufen (Tabellen-Alias) */
+                        [3] = {1,1,1,3, {{2,0,0x0800,{0x8c,0x25d,0}},   /* Browning @0x800337c0-f8 */
+                                         {3,0,0x0c00,{0x91,0x1f4,-25}}, /* @0x80033808-38 */
+                                         {4,0,0x0800,{0x91,0x109,-50}}}},/* @0x8003383c-68 */
+                        [4] = {1,1,1,3, {{2,0,0x0800,{0x8c,0x25d,0}},
+                                         {3,0,0x0c00,{0x91,0x1f4,-25}},
+                                         {4,0,0x0800,{0x91,0x109,-50}}}},
+                        /* M93R/Glock 18: Handler 0x800338A8 - Burst (3 Patronen) und
+                         * FX-SUB 2 statt 0 (@0x800338ac/f4/28) */
+                        [5] = {1,1,3,3, {{2,2,0x0800,{0x8c,0x25d,0}},
+                                         {3,2,0x0c00,{0x91,0x1f4,-25}},
+                                         {4,2,0x0800,{0x91,0x109,-50}}}},
+                        [6] = {1,1,3,3, {{2,2,0x0800,{0x8c,0x25d,0}},
+                                         {3,2,0x0c00,{0x91,0x1f4,-25}},
+                                         {4,2,0x0800,{0x91,0x109,-50}}}},
+                        /* Super Redhawk: Handler 0x800339A4 - groessere Scales
+                         * (0xE00/0x1000 @0x800339a8/ec) und KEINE Huelse (Revolver) */
+                        [7] = {1,1,1,2, {{2,0,0x0e00,{0x8c,0x25d,0}},
+                                         {3,0,0x1000,{0x91,0x1f4,-25}}}},
+                        /* Remington M870: Handler 0x80033A58 - Muendung SUB 3 =
+                         * Grossblitz mit 5 Streams (CORE00.ESP rowblk 0x0FC8),
+                         * Huelse SUB 3 = Schrothuelse Routine 38 (rowblk 0x18C0);
+                         * Rauch erbt x/z vom Muendungs-Triple, nur y neu
+                         * (@0x80033ac8 - hier ausmaterialisiert) */
+                        [8] = {1,1,1,3, {{2,3,0x0f00,{0xa0,0x528,3}},   /* @0x80033a5c-a4 */
+                                         {3,0,0x1400,{0xa0,0x500,3}},   /* @0x80033aa8-c8 */
+                                         {4,3,0x0920,{0xa0,0x208,0x50}}}},/* @0x80033acc-f8 */
+                        /* Granatwerfer: Handler 0x80033B38 = reiner Ammo-Stub (8
+                         * Instruktionen, KEINE FX, KEIN Hitscan @0x80033b40). Das
+                         * Projektil 0x040D1000 spawnt im FSM bei Rueckstoss-Frame
+                         * 19/22/24 (unten). resolve=1 ist eine PORT-BRUECKE: der
+                         * Explosionsschaden des Projektils ist noch un-RE'd (SPEC §4
+                         * Punkt 4) - ohne die Bruecke waere die Waffe wirkungslos. */
+                        [9] = {1,1,1,0, {{0}}},
+                        /* Granaten-Varianten 10/11: im Auslieferungsstand FOLGENLOS
+                         * (nur Ammo-Abzug @0x80033b58/78, kein Projektil, kein
+                         * Schaden) - byte-true so uebernommen. */
+                        [10] = {1,0,1,0, {{0}}},
+                        [11] = {1,0,1,0, {{0}}},
+                        /* 12/14/19 Dauerfeuer: NICHT hier - eigener Pfad unten */
+                        /* SPAS-12: Handler 0x80033B98 - Schrot-FX-Familie, aber
+                         * KEINE Streu-Resolves (Gate hart ==8 @0x80033508-14) */
+                        [13] = {1,1,1,3, {{2,3,0x0f00,{0x17c,0x636,-0x1a4}},  /* @0x80033b9c-e0 */
+                                          {3,0,0x1400,{0x17c,0x5d2,-0x1a4}}, /* @0x80033be4-04 */
+                                          {4,3,0x0920,{0x118,0x190,-0xa0}}}},/* @0x80033c08-38 */
+                        /* 15..18 Werfer-Klasse: Original-Handler ist NULL
+                         * (@0x8007413c-4b) - auf der PSX waere das Feuern ein jalr-0-
+                         * ABSTURZ, die Klasse ist unfertig. PORT-BRUECKE wie bei der
+                         * Granate: Hitscan-Resolve + 1 Patrone, KEINE Effekte, damit
+                         * die Werfer benutzbar bleiben (und die RE2-Zerreiss-Zeilen
+                         * erreichbar - Pin unit_re2_zombie_teardeath PIN2, Waffe 18).
+                         * 20: feuert nie (Dispatch @0x80074080 = NULL). */
+                        [15] = {1,1,1,0, {{0}}},
+                        [16] = {1,1,1,0, {{0}}},
+                        [17] = {1,1,1,0, {{0}}},
+                        [18] = {1,1,1,0, {{0}}},
+                        /* Id 20: der Dispatch @0x80074080 ist NULL - im Original
+                         * feuert sie NIE (die Tabellenzelle [20] @0x80074150 ist in
+                         * Wahrheit der erste Dauerfeuer-Sub, Tabellen-Ueberlappung).
+                         * PORT-BRUECKE wie 15..18: die RE2-Treffertabelle fuehrt eine
+                         * Zeile fuer sie (Pin unit_re2_zombie_teardeath PIN7). */
+                        [20] = {1,1,1,0, {{0}}},
+                    };
+                    const re15_entlade_t *ent = (eq_item <= 20) ? &ENT[eq_item] : ENT + 3;
+                    if (ent->aktiv) {
+                    int az;
+                    if (ent->resolve)
                     re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
+                    for (az = 0; az < ent->ammo; az++)
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
-                    /* ⛔ 3-SCHUSS-BURST (Beretta M93R = Item 5, Glock 18 = Item 6).
-                     * Die Entlade-Tabelle @0x80074100 fuehrt fuer BEIDE denselben
-                     * eigenen Handler 0x800338A8 (Waffe 3/4 = Browning HP hat
-                     * dagegen 0x800337BC). Dessen Ende, selbst disassembliert:
-                     *     8003396c  jal FUN_80011f50   ; EIN Schadens-Resolve
-                     *     80033974  jal FUN_8004eae4   ; Patrone -1
-                     *     8003397c  jal FUN_8004eae4   ; Patrone -1
-                     *     80033984  jal FUN_8004eae4   ; Patrone -1
-                     * Also DREI Patronen je Abzug bei EINEM Treffer - der Burst.
-                     * Der Port zog bisher eine einzige. */
-                    if (eq_item == 5 || eq_item == 6) {
-                        re15_ammo_consume();              /* @0x8003397c */
-                        re15_ammo_consume();              /* @0x80033984 */
-                    }
+                    /* (3-Schuss-Burst der M93R/Glock: jetzt datengetrieben ueber
+                     * ent->ammo == 3; Beleg 0x800338A8: 1x FUN_80011f50 @0x8003396c
+                     * + 3x FUN_8004eae4 @0x80033974/7c/84.) */
                     /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line).
                      * The MUZZLE runs the ROW VM (stage 3b): st0 R8 (show + chain the 0x02040bb8
                      * secondary flash) -> R9 (the positional BANG, ARMS record 0, on the slot's
@@ -1414,30 +1497,26 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int32_t fsin = re15_sin_q12((int)pl->rot_y);
                     int32_t gy   = pl->y - 2083;          /* fallback aim hand-bone height (b13) */
                     int32_t gp[3];
-                    if (re15_player_gunbone_world(0x8c, 0x25d, 0, gp))    /* MUZZLE 0x02000800 {0x8c,0x25d,0} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800, gp[0], gp[1], gp[2], pl->y, 0);
-                    else
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800,
-                            pl->x + ( fcos * 0x25d >> 12), gy, pl->z + (-fsin * 0x25d >> 12), gy + 2083, 0);
-                    if (re15_player_gunbone_world(0x91, 0x1f4, -25, gp)) /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00, gp[0], gp[1], gp[2], pl->y, 0);
-                    else
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00,
-                            pl->x + ( fcos * 0x1f4 >> 12), gy - 25, pl->z + (-fsin * 0x1f4 >> 12), gy + 2083, 0);
-                    /* SHELL EJECT (byte-true @0x8003383c-64 of the handgun one-shot @0x800337bc =
-                     * item-dispatch [6]/[7]): id 4 sub 0 scale 0x800 = 0x04000800, spawned INLINE at
-                     * discharge alongside muzzle+smoke (offset {0x91,0x109,-50}) — the SAME handler the
-                     * muzzle 0x02000800 + smoke 0x03000c00 above come from. The old code deferred a
-                     * 0x040d1000 (id 4 sub 0xd) to a recoil-frame watcher, but that 0x040d1000-at-recoil
-                     * is a DIFFERENT weapon handler (@0x80033680), never the handgun's — a mis-port. */
-                    /* ROW-VM driven (stage 3, trace wf_a18487d9): R16 2-tick eject hold ->
-                     * R11 RNG spread on the row seed (-35,-50,-140) -> gravity (0,10,0) +
-                     * B=12 floor bounce (clink SE; kill on the 2nd contact). floor = gy. */
-                    if (re15_player_gunbone_world(0x91, 0x109, -50, gp))  /* SHELL 0x04000800 {0x91,0x109,-50} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800, gp[0], gp[1], gp[2], pl->y, 0);
-                    else
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800,
-                            pl->x + ( fcos * 0x109 >> 12), gy - 50, pl->z + (-fsin * 0x109 >> 12), gy, 0);
+                    int fxi;
+                    for (fxi = 0; fxi < ent->n_fx; fxi++) {
+                        const re15_fx_spawn_t *fx = &ent->fx[fxi];
+                        if (re15_player_gunbone_world(fx->ofs[0], fx->ofs[1], fx->ofs[2], gp))
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), fx->fx_id, fx->sub,
+                                                   fx->scale, gp[0], gp[1], gp[2], pl->y, 0);
+                        else   /* faithful-line-Rueckfall wie bisher: ofs[1] = vorwaerts,
+                                * ofs[2] = Hoehendelta an der Hand-Bone-Hoehe */
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), fx->fx_id, fx->sub,
+                                                   fx->scale,
+                                                   pl->x + ( fcos * fx->ofs[1] >> 12),
+                                                   gy + fx->ofs[2],
+                                                   pl->z + (-fsin * fx->ofs[1] >> 12),
+                                                   pl->y, 0);
+                    }
+                    /* (Huelse laeuft ueber die Tabelle mit: Pistolen/MPs sub 0 =
+                     * Routine-16-Eject + R11-Physik; Schrot sub 3 = Routine-38-
+                     * Schrothuelse, CORE00.ESP rowblk 0x18C0; Revolver 7 = keine.) */
+                    }
+                }
                 }
             }
             /* (Der fruehere R1-Clear von g_aot_action_pressed stand HIER. Ersetzt durch das
@@ -1470,6 +1549,86 @@ void re15_game_step(const re15_game_ctx_t *c)
             extern int re15_player_slash_window(void);
             if (re15_player_slash_window())
                 re15_player_weapon_fire(re15_player_equipped_weapon());
+        }
+        /* DAUERFEUER-SCHLEIFE (Ids 12/14/19): der Entlade-Handler der Waffe laeuft
+         * im Original JEDEN Frame von Sub 2 (jalr @0x800345ec). Takt und Belege im
+         * Kopf von re15_player_autofire_tick (player_common.c). */
+        {
+            extern int  re15_player_autofire_active(void);
+            extern int  re15_player_autofire_tick(int, int*, int*, int*, int*);
+            extern void re15_player_autofire_empty(void);
+            extern int  re15_player_gunbone_world(int32_t, int32_t, int32_t, int32_t out[3]);
+            int eqa = re15_player_equipped_weapon();
+            if ((eqa == 12 || eqa == 14 || eqa == 19) && re15_player_autofire_active()) {
+                int schuss = 0, muendung = 0, rauch = 0, huelse = 0;
+                int held = (c->pad_current & RE15_PAD_BIT_SQUARE) != 0;
+                if (re15_player_autofire_tick(held, &schuss, &muendung, &rauch, &huelse)) {
+                    /* Effekt-Saetze je Waffe (Leon-Offsets aktiv; die Elza-Varianten
+                     * haengen am un-RE'd Bit aca5c&4, SPEC §4 Punkt 7):
+                     * W12 Ingram  Muendung (2,1,0x800) {70,1050,-60}  @0x80034884-b4
+                     *             Rauch    (3,0,0xB00) gleiche Offs   @0x800348e8
+                     *             Huelse   (4,0,0x800) {200,100,-20}  @0x80034968-a8
+                     * W19 MC51    Muendung {65,1300,90} @0x80034a94-adc, Rauch gleiche
+                     *             @0x80034b38-54, Huelse {145,530,25} @0x80034bc4-d4
+                     * W14 Flamme  NUR Strahl (3,0x1D,0x1200) {150,1200,0}, param=3000
+                     *             statt Yaw (@0x800c464c-74); kein Rauch, keine Huelse */
+                    static const struct { int16_t mo[3], so[3]; uint8_t flamme; } AFX[3] = {
+                        { {70,1050,-60}, {200,100,-20}, 0 },   /* 12 */
+                        { {150,1200,0},  {0,0,0},       1 },   /* 14 */
+                        { {65,1300,90},  {145,530,25},  0 },   /* 19 */
+                    };
+                    int ai = (eqa == 12) ? 0 : (eqa == 14) ? 1 : 2;
+                    int32_t gp2[3];
+                    if (AFX[ai].flamme) {
+                        if (muendung && re15_player_gunbone_world(AFX[ai].mo[0], AFX[ai].mo[1], AFX[ai].mo[2], gp2))
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0x1D, 0x1200,
+                                                   gp2[0], gp2[1], gp2[2], pl->y, 3000);
+                    } else {
+                        if (muendung && re15_player_gunbone_world(AFX[ai].mo[0], AFX[ai].mo[1], AFX[ai].mo[2], gp2))
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 1, 0x0800,
+                                                   gp2[0], gp2[1], gp2[2], pl->y, 0);
+                        if (rauch && re15_player_gunbone_world(AFX[ai].mo[0], AFX[ai].mo[1], AFX[ai].mo[2], gp2))
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0b00,
+                                                   gp2[0], gp2[1], gp2[2], pl->y, 0);
+                        if (huelse && re15_player_gunbone_world(AFX[ai].so[0], AFX[ai].so[1], AFX[ai].so[2], gp2))
+                            re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800,
+                                                   gp2[0], gp2[1], gp2[2], pl->y, 0);
+                    }
+                    if (schuss) {
+                        if (re15_ammo_mag_nonzero()) {
+                            re15_ammo_consume();                    /* @0x800349c8/0x80034c0c */
+                            re15_player_weapon_fire(eqa);           /* FUN_80011f50 @0x800349ec */
+                        } else {
+                            re15_player_autofire_empty();           /* aca5b:=2 @0x800349fc */
+                            re15_audio_weapon_se(eqa == 14 ? 0 : 1);/* 0x01000001 / 0x01010001
+                                                                     * @0x800c47bc / @0x80034a04 */
+                        }
+                    }
+                }
+            }
+        }
+        /* GRANATWERFER (NUR Id 9, Gate hart @0x8003368c): Projektil 0x040D1000 bei
+         * Rueckstoss-Frame 19 (HOCH, Offs {0,0x12c,0x320}) / 22 (MITTE, {0,0,0x1f4}) /
+         * 24 (TIEF, {0,0,0x12c}) (@0x800336bc-0x800337a4). R1-Loslassen vor dem
+         * Spawn-Frame bricht den Rueckstoss (Schwelle 10) und unterdrueckt die
+         * Granate - Munition ist trotzdem weg (byte-true). */
+        {
+            extern int re15_player_granate_frame(void);
+            extern int re15_player_aim_elevation(void);
+            extern int re15_player_gunbone_world(int32_t, int32_t, int32_t, int32_t out[3]);
+            if (re15_player_equipped_weapon() == 9) {
+                int gf = re15_player_granate_frame();
+                int ge = re15_player_aim_elevation();
+                int treff = (gf == 19 && ge > 0) || (gf == 22 && ge == 0) || (gf == 24 && ge < 0);
+                if (treff) {
+                    int32_t gp3[3];
+                    int32_t gox = 0, goy = (ge > 0) ? 0x12c : (ge == 0) ? 0 : 0,
+                            goz = (ge > 0) ? 0x320 : (ge == 0) ? 0x1f4 : 0x12c;
+                    if (re15_player_gunbone_world(gox, goy, goz, gp3))
+                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0x0d, 0x1000,
+                                               gp3[0], gp3[1], gp3[2], pl->y, 0);
+                }
+            }
         }
         /* SCHROTFLINTE: drei WEITERE Resolves in den Rueckstoss-Bildern 3/5/7
          * (byte-true @0x80033508-58, Herleitung im Kopf von
