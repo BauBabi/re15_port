@@ -16,14 +16,33 @@
  * ROOM3070/Typ 0x30 bleibt unangetastet auf re15_birkin_ai_tick (enemy_ai_common.c).
  * e->motion traegt DIREKT die RE2-Clip-Indizes 0..10 der EM036-Bank (keine BKMAP mehr).
  *
- * KOORDINATEN-ANKER (dokumentierte Port-Entscheidung, Dossier §7): ROOM5090-Streifen C ist
- * der gekuerzte room7040-Korridor; die absoluten RE2-X-Schwellen laufen auf der u-Achse:
- *   u = 8000 - (x - 1200)      (X0 = sub04-Pos_set-X = 1200 @ROOM5090.RDT 0x12FE;
- *                               s = -1 Richtung Spieler-Kampfmarke 300 @0x1320)
- * Alle RE2-Schwellen woertlich auf u: Rueckzugslinie 4000 (@0x80101934), Zug-/Lunge-Kappe
- * 12000 (@0x80100fd0/@0x80104074), Devour u>=9001 (@0x801008a0), sub0-Entscheidungen
- * 7000/8000/10000/10001/11001 (§2). Yaw: einmalig beim Kampfstart auf die Spielermarke,
- * danach KONSTANT (RE2: einziger Kampf-Schreiber @0x8010044c, Yaw bleibt 0).
+ * BUEHNE (selbst gemessen 2026-09-13 aus ROOM5090.RDT + Nutzer-Marken; Nutzer:
+ * "er kommt jetzt von der falschen Seite. Eigentlich sollte er - wie im Original hinten
+ * durch den Zug durch den Eingang herein kommen"):
+ *   - Kampfstreifen (SCA @0x860, 160 Zellen) spannt x -37469..23962 bei z ~ -23400;
+ *     der Korridor laeuft also entlang X.
+ *   - Der SPIELER betritt ihn im OSTEN (Door_aot 4 @main-sub00 0x10CE, Rechteck
+ *     x 25150..26050 / z -25300..-21350) und laeuft nach WESTEN (Nutzer-Marken
+ *     F467 x=13600 -> F750 x=4388).
+ *   - Der BOSS steht im Auslieferungs-Skript WEIT WESTLICH: sub00 @0x124A
+ *     `44 01 30 33 ... 94 C6 00 00 CA A4` = Sce_em_set Slot 1, Typ 0x30 (Port: 0x36),
+ *     grid 0x33, Pos (-14700, 0, -23350) - also vorn im Zug, dort wohin Leon laeuft.
+ *   - Der Kampfstart sub04 @0x12F2 setzt ihn per Pos_set(1200,0,-23350) direkt neben
+ *     die Spielermarke Plc_dest(300,-23400) @0x1322 - ein Auftritt findet dort nicht
+ *     statt. Fuer die RE2-Intro-Choreo (Root-Motion +7014/+3946) braucht er den Anlauf:
+ *     das Modul startet deshalb am RDT-SPAWN und laesst ihn das Intro nach OSTEN
+ *     kriechen (dokumentierte Abweichung vom Pos_set, Begruendung siehe oben).
+ *
+ * KOORDINATEN-ANKER (Port-Entscheidung): die RE2-Arena legt den Spieler ans Ostende
+ * (Lunge-Kappe X=12000 @0x80104074, Devour X>=9001 @0x801008a0) - die absoluten
+ * X-Schwellen des Originals sind faktisch ABSTAENDE ZUM SPIELER. Im Port ist die
+ * Spielerposition nicht fest (langer Korridor, der Spieler weicht aus), deshalb laeuft
+ * die u-Achse SPIELER-RELATIV:
+ *     u = 12000 - |x_spieler - x_boss|
+ * Damit gelten alle RE2-Schwellen woertlich: Kappe 12000 = am Spieler, Devour >=9001 =
+ * hoechstens 3000 entfernt, Rueckzugslinie 4000 = 8000 entfernt, sub0-Entscheidungen
+ * 7000/8000/10000/10001/11001 (§2). "Vorwaerts" ist immer die Spielerrichtung entlang X
+ * (RE2: Yaw bleibt 0, vorwaerts = +X @0x8010044c).
  *
  * TENTAKEL: RE2 kommandiert 4 eigene 0x37-Entities (Sender 0x80104E9C/0x80104E5C,
  *   Muster @0x80105674). RE1.5-ROOM5090 spawnt keine 0x37 -> die Kommandos laufen hier
@@ -97,9 +116,28 @@ typedef struct {
 static g5_state_t s_g5;
 static int s_g5_slot = -1;
 
-/* u-Achse (Dossier §7): u = 8000 - (x - 1200). */
-static int32_t g5_u(const re15_actor_t *e) { return 8000 - ((int32_t)e->x - 1200); }
-static void    g5_setze_u(re15_actor_t *e, int32_t u) { e->x = 1200 - (u - 8000); }
+/* u-Achse SPIELER-RELATIV (s. Kopf): u = 12000 - |dx|, dx entlang des Korridors (X). */
+static int32_t g5_dx(const re15_actor_t *e)
+{
+    return (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x - (int32_t)e->x;
+}
+static int32_t g5_u(const re15_actor_t *e)
+{
+    int32_t d = g5_dx(e);
+    if (d < 0) d = -d;
+    return 12000 - d;
+}
+/* Setzt den Abstand zum Spieler auf (12000 - u) und BEHAELT die Seite, auf der der
+ * Boss gerade steht (er kriecht nicht durch den Spieler hindurch). */
+static void g5_setze_u(re15_actor_t *e, int32_t u)
+{
+    int32_t plx = (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
+    int32_t d   = 12000 - u;
+    if (d < 0) d = 0;
+    e->x = (e->x <= plx) ? (plx - d) : (plx + d);
+}
+/* Vorwaerts = Richtung Spieler (+1 = Welt-+X). */
+static int g5_vor(const re15_actor_t *e) { return (g5_dx(e) >= 0) ? 1 : -1; }
 
 /* Clip setzen (Clip-Wort +0x14C; +0x14E-Blendstaerke traegt der Port als anim_frac-Naeherung:
  * 0x1F = harter Schnitt, 0x07 = weicher Crossfade — FUN_80029614 IR0-Lerp a3*flag/4096). */
@@ -165,10 +203,10 @@ static void g5_root_motion(re15_actor_t *e, int neu_verankert, int32_t skala_q12
             dsz = (int32_t)(((int64_t)dsz * skala_q12) >> 12);
         }
         {
-            int32_t u = g5_u(e) + dsx;                 /* vorwaerts = +u (RE2-X) */
+            int32_t u = g5_u(e) + dsx;                 /* dsx > 0 = Schritt Richtung Spieler */
             if (kappe_u_max > 0 && u > kappe_u_max) u = kappe_u_max;
             g5_setze_u(e, u);
-            e->z += dsz;
+            e->z += dsz * g5_vor(e);
         }
     }
 }
@@ -436,14 +474,18 @@ void re15_g5_boss_tick(int slot)
     if (!g->gestartet) {
         if (e->grid_id == 0x13) {
             g->gestartet = 1;
-            /* Yaw EINMALIG auf die Spielermarke (Kampfkorridor -X); danach konstant. */
+            /* INTRO-STARTPOSITION = der RDT-SPAWN des Auslieferungsstands
+             * (sub00 @0x124A: Pos (-14700, 0, -23350)) - weit WESTLICH, vorn im
+             * Zug, dort wohin Leon laeuft. Das sub04-Pos_set(1200) wird bewusst
+             * ueberschrieben (s. Kopf: es setzt den Boss ohne Auftritt direkt
+             * neben den Spieler; die RE2-Intro-Choreo braucht den Anlauf, ihr
+             * Root-Motion traegt +10960 = 7014+3946 nach Osten). Der SCD laeuft
+             * vor der KI (scd_vm_tick main.c:4279 vor re15_enemy_ai_run_all),
+             * das Ueberschreiben greift also im selben Frame. */
+            e->x = -14700; e->z = -23350;
+            /* Yaw EINMALIG auf den Spieler (danach konstant - RE2 dreht G5 im
+             * Kampf nie, @0x8010044c ist der einzige Schreiber). */
             e->rot_y = (int16_t)((re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
-            /* Intro-Startposition: RE2 [T0] parkt u=-9000 (X=-9000 im room7040-Raum,
-             * @0x801011d0-dc); die u-Formel klemmt auf den begehbaren Streifen. */
-            {   int32_t x = 1200 - (-9000 - 8000);
-                if (x > 18200) x = 18200;
-                e->x = x; e->z = -23350;
-            }
         } else {
             e->x = -32000; e->z = -32000;              /* wie bisher: off-world parken */
             e->motion = 0; e->anim_frame = 0;

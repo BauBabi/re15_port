@@ -41,7 +41,13 @@ static int g_fail = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { g_fail = 1; \
     fprintf(stderr, "FAIL: " __VA_ARGS__); fprintf(stderr, "\n"); } } while (0)
 
-static int32_t u_von(const re15_actor_t *e) { return 8000 - ((int32_t)e->x - 1200); }
+/* u SPIELER-RELATIV wie im Modul (Runde 7): u = 12000 - |dx| entlang X. */
+static int32_t u_von(const re15_actor_t *e)
+{
+    int32_t d = (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x - (int32_t)e->x;
+    if (d < 0) d = -d;
+    return 12000 - d;
+}
 
 int main(void)
 {
@@ -75,7 +81,10 @@ int main(void)
     CHECK(e->x == -32000 && e->z == -32000, "PARK: pos=(%d,%d) != (-32000,-32000)",
           (int)e->x, (int)e->z);
 
-    /* PIN 2: Kampfstart -> Intro-Choreo mit Root-Motion. */
+    /* PIN 2: Kampfstart -> Intro-Choreo mit Root-Motion.
+     * Erwartung nach der Buehnen-Messung (Runde 7): der Boss startet am
+     * RDT-Spawn x=-14700 (WESTEN, 15000 vom Spieler) und kriecht das Intro
+     * nach OSTEN auf ihn zu - u waechst also. */
     e->grid_id = 0x13;
     int32_t u_start = 0;
     int treffer = 0;
@@ -99,10 +108,16 @@ int main(void)
     CHECK(saw_clip[1] && saw_clip[3] && saw_clip[4] && saw_clip[2] && saw_clip[0],
           "Intro-Choreo 1/3/4/2/0 nicht vollstaendig gesehen");
     CHECK(intro_fertig_t > 0, "der Tentakel-Zug (Clip 5) wurde nie erreicht");
+    CHECK(e->x <= -14000 || u_start <= -2500,
+          "Intro startet nicht am RDT-Spawn (u_start=%d, erwartet ~-3000)", u_start);
     CHECK(u_von(e) > u_start + 8000,
           "Root-Motion traegt nicht: u-Delta %d (erwartet > 8000: Intro 10960 + Zuege)",
           u_von(e) - u_start);
     CHECK(u_von(e) <= 12000, "Zug-Kappe 12000 verletzt: u=%d", u_von(e));
+    CHECK(e->x < g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+          "der Boss muss WESTLICH des Spielers bleiben (x=%d, Spieler=%d) - er kommt "
+          "von vorn aus dem Zug, nicht vom Eingang hinter dem Spieler",
+          (int)e->x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x);
 
     /* PIN 4: der Kampf hat den Spieler getroffen (Biss 40 und/oder Devour
      * Clip 9); der Hauptlauf resettet hp je Tick, das Ereignis wird VOR dem
@@ -113,14 +128,21 @@ int main(void)
     CHECK(treffer > 0 || saw_clip[9],
           "weder Biss-Schaden noch Devour im Hauptlauf gesehen");
 
-    /* TOD: HP 0 -> Sequenz bis zur Absink-Rampe. */
-    e->hp = 0;
+    /* TOD: frischer Aktor-Slot (der Devour-Endzustand des Hauptlaufs haelt
+     * byte-true fuer immer - "kein Routine-Exit, der Spieler ist tot"
+     * @0x80101ccc-d24; ein Slot-Wechsel initialisiert den Modul-Zustand neu). */
     {
+        re15_actor_t *e2 = &g_actors[3];
+        memset(e2, 0, sizeof *e2);
+        e2->active = 1; e2->type = 0x36; e2->flags = 1; e2->hp = 600;
+        e2->x = -14700; e2->z = -23350; e2->grid_id = 0x13;
+        re15_g5_boss_tick(3);          /* Kampfstart-Armierung */
+        e2->hp = 0;                    /* toedlicher Treffer */
         int saw10 = 0; int32_t y_max = 0;
         for (int t = 0; t < 2200; t++) {
-            re15_g5_boss_tick(2);
-            if (e->motion == 10) saw10 = 1;
-            if (e->y > y_max) y_max = e->y;
+            re15_g5_boss_tick(3);
+            if (e2->motion == 10) saw10 = 1;
+            if (e2->y > y_max) y_max = e2->y;
         }
         printf("Tod: Clip10=%d, Absink-y max=%d (Soll 2950)\n", saw10, (int)y_max);
         CHECK(saw10, "Todes-Kollaps Clip 10 nie gesehen");
