@@ -1384,6 +1384,20 @@ void re15_game_step(const re15_game_ctx_t *c)
                     re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
+                    /* ⛔ 3-SCHUSS-BURST (Beretta M93R = Item 5, Glock 18 = Item 6).
+                     * Die Entlade-Tabelle @0x80074100 fuehrt fuer BEIDE denselben
+                     * eigenen Handler 0x800338A8 (Waffe 3/4 = Browning HP hat
+                     * dagegen 0x800337BC). Dessen Ende, selbst disassembliert:
+                     *     8003396c  jal FUN_80011f50   ; EIN Schadens-Resolve
+                     *     80033974  jal FUN_8004eae4   ; Patrone -1
+                     *     8003397c  jal FUN_8004eae4   ; Patrone -1
+                     *     80033984  jal FUN_8004eae4   ; Patrone -1
+                     * Also DREI Patronen je Abzug bei EINEM Treffer - der Burst.
+                     * Der Port zog bisher eine einzige. */
+                    if (eq_item == 5 || eq_item == 6) {
+                        re15_ammo_consume();              /* @0x8003397c */
+                        re15_ammo_consume();              /* @0x80033984 */
+                    }
                     /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line).
                      * The MUZZLE runs the ROW VM (stage 3b): st0 R8 (show + chain the 0x02040bb8
                      * secondary flash) -> R9 (the positional BANG, ARMS record 0, on the slot's

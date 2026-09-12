@@ -1670,7 +1670,35 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
      * durch den alten Elevation-Stempel `hits1d2 = elev<0?0:elev>0?2:1` OHNE das +0x6-Nullen,
      * wird probe_re2_livepath sofort rot — kein Grunzer (SE=-1), +0x223 unveraendert 20, kein
      * Knockdown. Das ist exakt der gemeldete Fehler. */
-    e->re2z_hits1d2 = 1u;   /* Basis-Zone 1 @0x80047294-98 + 3*Bracket 0 (OPEN, s.o.) */
+    /* ⛔ TREFFERZONE: KOPF / RUMPF / BEINE (Nutzer 2026-09-12: "Ich moechte dabei
+     * auch die volle Brutalitaet von Resident Evil 2 uebernehmen").
+     * Byte-true Struktur, selbst disassembliert @0x80047294-0x80047334:
+     *   80047294  li v0,1 / sb v0,0x1d2(s1)   ; Vorgabe RUMPF
+     *   8004729c  lui v0,0x2 / and v0,s5,v0   ; Angriffswort Bit 0x20000:
+     *   800472a4  beq -> 0x80047314           ;   kennt der Angriff keine Zonen,
+     *                                         ;   bleibt es bei RUMPF
+     *   800472ac  lhu v0,0x98(s1)             ; Koerperhoehe des Gegners
+     *   800472b8  sra a0,v0,0x11              ; halbe Hoehe
+     *   800472c8  slt (Y + h/2) < Ziel-Y      ; Schuss TIEFER -> Zone 0 (BEINE)
+     *   800472d4  sb zero,0x1d2(s1)
+     *   800472e0  and word0, 0x10000000       ; erlaubt dieser Gegner Kopftreffer?
+     *   80047300  slt Ziel-Y < (Y + 1.5h)     ; Schuss HOEHER -> Zone 2 (KOPF)
+     *   8004730c  sb v0(=2),0x1d2(s1)
+     *   80047328  addu zone, 3*Klammer        ; ergibt die Spalten 0..8
+     * PORT-BRUECKE (als solche gekennzeichnet, NICHT byte-true): der Port schiesst
+     * mit dem RE1.5-Hitscan FUN_80011F50 und hat keinen 3D-Zielpunkt, aus dem sich
+     * Ziel-Y ableiten liesse. RE1.5 fuehrt die Schusshoehe aber ohnehin nur in DREI
+     * Stufen (Zielen hoch / eben / tief, acaec Bits 15/13) - genau die drei Baender
+     * der Original-Rechnung. Deshalb wird die Stufe direkt auf die Zone abgebildet.
+     * Die Klammer (3*s6) bleibt 0 wie bisher.
+     * Ohne das stand +0x1D2 konstant auf 1: Spalte 0 und 2 der Treffer-Tabelle
+     * @0x8010C940 waren unerreichbar, es gab also WEDER Kopf- NOCH Beintreffer -
+     * und damit auch keinen der daran haengenden Gore-Effekte. */
+    {
+        extern int re15_player_aim_elevation(void);
+        int elev = re15_player_aim_elevation();
+        e->re2z_hits1d2 = (uint8_t)(elev > 0 ? 2u : elev < 0 ? 0u : 1u);
+    }
     e->sub_state_2  = 0u;   /* +0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290 */
     if (re15_re2z_owns_type(e->type)) {
         int survived = (e->state != 3);   /* +0x4 == 3 -> DEATH-Wurzel statt HURT (@0x8004728C-90) */
