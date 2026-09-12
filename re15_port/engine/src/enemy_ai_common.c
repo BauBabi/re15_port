@@ -11049,7 +11049,19 @@ static void re15_birkin_ai_tick(int slot)
          * 0,-23350) @0x12FE setzt die Kampfposition VOR dem Member_set; danach laeuft
          * INIT (nib 3 -> EMERGENCE) an der Kampfmarke. Raumgebundene Port-Wahl:
          * die 0x30-Wurzel (ROOM3070) bleibt unangetastet. */
-        if (e->grid_id == 0x33) {
+        /* ⛔ REGRESSION v0.7.87 (Runde 5, birkin-unpark.md): sub04 hat zwischen
+         * Pos_set @0x12FE und Member_set(0x0c,0x13) @0x130A ein Sleep(1) @0x1306
+         * (`09 0a 01 00`) - in dem 2-Tick-Fenster war grid noch 0x33 und der
+         * Per-Tick-Park ueberschrieb die frisch gesetzte KAMPFPOSITION mit
+         * (-32000,-32000): der Boss wurde korrekt freigegeben, stand aber
+         * off-world -> "kein William Birkin zu sehen". Der Park haelt deshalb
+         * nur noch, solange die Position der RDT-SPAWN (-14700,-23350; sub00
+         * @0x124A) oder die Parkposition selbst ist - das sub04-Pos_set beendet
+         * ihn SOFORT (SCD laeuft vor der KI: scd_vm_tick main.c:4279 vor
+         * re15_enemy_ai_run_all game_step_common.c:1896). */
+        if (e->grid_id == 0x33 &&
+            ((e->x == -14700 && e->z == -23350) ||
+             (e->x == -32000 && e->z == -32000))) {
             e->x = -32000; e->z = -32000;              /* RE2-Parkposition @0x801011d0-dc */
             e->motion = 0; e->anim_frame = 0; e->speed_h = 0;
             return;

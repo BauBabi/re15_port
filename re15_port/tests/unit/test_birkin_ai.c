@@ -184,7 +184,10 @@ int main(void)
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 4000; pl->hp = 100;
     re15_actor_t *e5 = &g_actors[BS];
-    e5->active = 1; e5->type = 0x36; e5->state = 0; e5->grid_id = 0x33; e5->x = 0; e5->y = 0; e5->z = 0;
+    e5->active = 1; e5->type = 0x36; e5->state = 0; e5->grid_id = 0x33;
+    e5->x = -14700; e5->y = 0; e5->z = -23350;   /* RDT-Spawn ROOM5090 sub00 @0x124A -
+                                                  * der Park greift nur auf Spawn- oder
+                                                  * Parkposition (birkin-unpark.md) */
     re15_enemy_apply_hitbox(e5, 0x36);
     /* UMVERANKERT (Runde 4, birkin-bewegung.md Plan 1): der 0x36 PARKT auf dem
      * RDT-Spawn-grid 0x33 (RE2 parkt G5 bei (-32000,0,-32000) bis zum Kampfstart,
