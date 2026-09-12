@@ -52,6 +52,8 @@
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex + re15_esp_room_bank */
 #include "re15_room.h"       /* g_current_room_id */
 #include "re15_skeleton.h"   /* re15_sin_q12 */
+#include "re15_enemy.h"      /* re15_enemy_find - Frame-Flag-SEs aus der EM23-Bank */
+#include "re15_emd.h"
 #include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
@@ -231,6 +233,39 @@ typedef struct {
 
 /* RE15_GB_STUMM=1: gesamte gator_boss.log-Telemetrie aus (Sweep-Test). */
 static int s_gb_stumm = -1;
+
+/* ---- AUDIO (Nutzer 2026-09-12: "es fehlt der Biss Sound beim Alligator") -----
+ * Der Boss war komplett stumm by omission: kein einziger SE-Aufruf, keine
+ * ENEMSE-Bank registriert (Dossier gator-biss-sound.md). RE2-Belege:
+ *   - ENEMSE-Bank des EM23 = 17 (Paar-Tabelle @0x800A7400; laengste Probe
+ *     SE 4 = 18032 B = der Biss).
+ *   - SE 4 spielt beim ANGRIFFS-START (ACTIVE sub3 Phase 0: li a0,4
+ *     @0x80100D64, jal 0x8005bd6c @0x80100D84) und als Frame-Flag im
+ *     Lunge-Clip 3 (Woerter 0x48000178/0x48000193 = f50/f77).
+ *   - Frame-Flag-Dekodierung FUN_80016028 @0x80016034-54: Bit 0x08000000
+ *     gesetzt -> SE = Wort >> 28.
+ *   - SE-4-Frames armen einen 55-Frame-Cooldown fuer den Standard-Hurt-SE 5
+ *     (@0x80100424-50; Hurt-Gate @0x801020AC-B8).
+ * Der Port-Schnapp nutzt Clip 4 (in RE2 datenseitig stumm) - der explizite
+ * SE-4-Ruf am Schnapp-Start ist das dokumentierte MAPPING des Angriffs-Start-
+ * Rufs auf das Port-Design. Hook-Muster wie enemy_ai_re2_dog.c. */
+#define GATOR_ENEMSE_BANK 17
+static void (*s_gb_se_fn)(int se_id, int flag2000) = 0;
+static void (*s_gb_bank_fn)(int bank) = 0;
+static int  s_gb_brull_cd = 0;        /* 55-Frame-Hurt-SE-Sperre (@0x80100424-50) */
+static int  s_gb_kf_zuletzt = -1;     /* Frame-Flag: je Keyframe genau einmal */
+
+void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
+{
+    s_gb_se_fn   = se_fn;
+    s_gb_bank_fn = bank_fn;
+    if (s_gb_bank_fn) s_gb_bank_fn(GATOR_ENEMSE_BANK);
+}
+static void gb_se(int id)
+{
+    if (s_gb_se_fn) s_gb_se_fn(id, 0);
+    if (id == 4) s_gb_brull_cd = 55;  /* Biss/Bruell armt die Hurt-SE-Sperre */
+}
 static gb_state_t s_gb[RE15_ACTOR_MAX];
 static unsigned   s_gb_room;       /* Raum, fuer den s_gb gilt (Reset bei Wechsel) */
 
@@ -312,7 +347,7 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
     re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
     if (pl->hp < 0) {
         g->phase = GBP_FRESSEN; g->timer = 0;
-        e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
+        gb_se(4); e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
         g->arc_vz = 0;
     } else {
         re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
@@ -527,6 +562,8 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
     if (e->state != 2) return;
     e->state = 1;                       /* Boss-Panzerung: HURT-Route selbst verwalten */
     e->hit_react &= (uint8_t)~1u;       /* Fenster-Latch loesen (byte-true HURT-Tail) */
+    if (s_gb_brull_cd == 0) gb_se(5);   /* Standard-Hurt-SE 5 (@0x801020C4), gegated
+                                         * auf die 55er-Bruell-Sperre (@0x801020AC-B8) */
     if (!g->aggro) g->aggro = 1;        /* Fernschuss startet den Kampf */
     /* Blut bei JEDEM Treffer (Punkt 5): Burst 0x1500 am vorderen Rumpf (Bone 1). */
     {
@@ -745,6 +782,27 @@ void re15_gator_boss_tick(int slot)
     if (s_gb_room != g_current_room_id) {     /* Raumwechsel: Boss-Zustand frisch */
         memset(s_gb, 0, sizeof s_gb);
         s_gb_room = g_current_room_id;
+        s_gb_brull_cd = 0; s_gb_kf_zuletzt = -1;
+    }
+    if (s_gb_brull_cd > 0) s_gb_brull_cd--;   /* @0x80100440-50: je Tick -1 */
+    {   /* FRAME-FLAG-SEs byte-true (FUN_80016028 @0x80016034-54): das EDD-Wort
+         * der aktuellen (Clip,Frame)-Position; Bit 0x08000000 -> SE = Wort>>28.
+         * Deckt Schwimmen (Clip 0: SE 2 @f76/f162) und die Todesrolle (Clip 7:
+         * SE 4 @f4/f45/f115 + SE 2 @f25/f36/f44) ab; Clip 4 ist datenseitig
+         * stumm (der Schnapp-SE kommt vom expliziten Mapping-Ruf).
+         * emd_common.c:93 haelt die EDD-Woerter ROH - die Flag-Bits sind da. */
+        re15_enemy_bank_t *bb = re15_enemy_find(0x23);
+        if (bb && bb->ok && e->motion >= 0 && e->motion < bb->anim.clip_count) {
+            const re15_emd_clip_t *cl = &bb->anim.clips[e->motion];
+            if (e->anim_frame < cl->frame_count) {
+                int kf = cl->first_frame + (int)e->anim_frame;
+                if (kf != s_gb_kf_zuletzt) {
+                    uint32_t w = bb->anim.frames[kf];
+                    s_gb_kf_zuletzt = kf;
+                    if (w & 0x08000000u) gb_se((int)(w >> 28));
+                }
+            }
+        }
     }
     /* NUTZER-MARKER 2026-09-10 ("haengt ganz gewaltig"): nach Toeten des Bosses
      * + SAME-ROOM-Re-Entry (Raum-ID unveraendert!) spawnte main.c einen frischen
@@ -1174,7 +1232,7 @@ void re15_gator_boss_tick(int slot)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
                     g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
-                    e->motion = 4; e->anim_frame = 0;
+                    gb_se(4); e->motion = 4; e->anim_frame = 0;
                     break;
                 }
                 /* RUECKWAERTSGANG (Nutzer: "wenn es dem Alligator hilft mal
@@ -1238,7 +1296,7 @@ void re15_gator_boss_tick(int slot)
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
              * zeigte deshalb "keinerlei Beissanimation" (Nutzer-Befund). */
-            e->motion = 4; e->anim_frame = 0;
+            gb_se(4); e->motion = 4; e->anim_frame = 0;
         }
         break; }
 
@@ -1572,7 +1630,7 @@ void re15_gator_boss_tick(int slot)
         g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
         /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
         if (dist < 4200 && e->hit_stun == 0 && e->motion != 4) {
-            e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
+            gb_se(4); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
         }
         if (e->motion == 4) {
             e->anim_frame++;
@@ -1748,7 +1806,7 @@ void re15_gator_boss_tick(int slot)
                 e->z -= (int32_t)(((int64_t)fs * 48) >> 12);
             }
         } else if (g->timer == 75) {
-            e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
+            gb_se(4); e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
         } else if (g->timer == 95 && !g->gefressen) {
             /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
              * bleiben sichtbar und wirbeln durch die Luft. */
@@ -1779,7 +1837,7 @@ void re15_gator_boss_tick(int slot)
             pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
             if (g->timer >= 150)              /* Maul reisst weiter auf */
                 g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
-            if (g->timer == 174) { e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
+            if (g->timer == 174) { gb_se(4); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
         } else if (g->timer == 185) {
             pl->no_draw = 1;                  /* Rest verschlungen */
             pl->fress_skip_mask = 0; pl->rot_x = 0;
