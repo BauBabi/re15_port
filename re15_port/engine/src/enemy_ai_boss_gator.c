@@ -56,6 +56,7 @@
 #include "re15_enemy.h"      /* re15_enemy_find - Frame-Flag-SEs aus der EM23-Bank */
 #include "re15_emd.h"
 #include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
+#include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -409,6 +410,41 @@ static void gb_bone_welt(re15_actor_t *e, int bone, int32_t out[3])
         out[1] = e->y + (int32_t)(((int64_t)(out[1] - e->y) * e->render_scale_q12) >> 12);
         out[2] = e->z + (int32_t)(((int64_t)(out[2] - e->z) * e->render_scale_q12) >> 12);
     }
+}
+
+/* FRESS-AUSRICHTUNG (Nutzer 2026-09-12: "Er muss am Ende einwandfrei in
+ * Laufrichtung des Maules stecken und auch beim rumwedeln in Laufrichtung
+ * des Maules bleiben"): Leon wird an die MAUL-LAENGSACHSE gekoppelt -
+ * Kopfbasis (Bone 5, Kopfkette 1->5->6, Kiefer 7) -> Maulmitte (Bones 6+7).
+ * yaw nutzt dieselbe atan2-Konvention wie die Blick-Solls dieses Moduls
+ * (re15_atan2_q12(dz,dx) - 0x400); die Elevation kippt ihn liegend entlang
+ * der Achse (rot_x = 1024 + elev), Blick Richtung Rachen (yaw + 2048), Beine
+ * aus der Mauloeffnung. DESIGN-Finisher (Nutzer-Design 09-11), kein
+ * byte-true Original - Feinabnahme visuell (re15-port-visual-verify). */
+static int16_t gb_dreh_zu(int16_t cur, int soll)
+{
+    int d = (soll - (int)cur) & 0x0fff;
+    if (d > 2048) d -= 4096;
+    return (int16_t)(((int)cur + d / 4) & 0x0fff);
+}
+
+static void gb_fress_ausrichten(re15_actor_t *e, re15_actor_t *pl, int hart)
+{
+    int32_t b5[3], b6[3], b7[3], mx, my, mz, dx, dy, dz, dh;
+    int yaw, elev, sy, sx;
+    gb_bone_welt(e, 5, b5); gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
+    mx = (b6[0] + b7[0]) / 2; my = (b6[1] + b7[1]) / 2; mz = (b6[2] + b7[2]) / 2;
+    dx = mx - b5[0]; dy = my - b5[1]; dz = mz - b5[2];
+    yaw = ((int)re15_atan2_q12(dz, dx) - 0x400) & 0x0fff;
+    dh = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
+    if (dh < 1) dh = 1;
+    elev = (int)re15_atan2_q12(-dy, dh) & 0x0fff;   /* PSX-y nach unten: Maul
+                                                     * ueber der Basis -> -dy>0 */
+    sy = (yaw + 2048) & 0x0fff;
+    sx = (1024 + elev) & 0x0fff;
+    if (hart) { pl->rot_y = (int16_t)sy; pl->rot_x = (int16_t)sx; }
+    else      { pl->rot_y = gb_dreh_zu(pl->rot_y, sy);
+                pl->rot_x = gb_dreh_zu(pl->rot_x, sx); }
 }
 
 /* Insel-Wand zwischen Gator und Leon? (Marge 0 = die reine Wand) - ein Biss
@@ -1894,8 +1930,15 @@ void re15_gator_boss_tick(int slot)
                 pl->y = g->wirbel_y + (int32_t)((int64_t)(mzy - g->wirbel_y) * t / T)
                       - (int32_t)((int64_t)4 * 600 * t * (T - t) / ((int64_t)T * T));
             }
-            pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
-            pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
+            /* ORIENTIERUNG: frei trudeln bis kurz vor der Ankunft, die
+             * letzten ~35 Bilder auf die Maul-Laengsachse EINDREHEN
+             * (gb_fress_ausrichten; Nutzer 2026-09-12). */
+            if (g->timer < 140) {
+                pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
+                pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
+            } else {
+                gb_fress_ausrichten(e, pl, 0);
+            }
             if (g->timer >= 150)              /* Maul reisst weiter auf */
                 g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
             if (g->timer == 174) { gb_se(3); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
@@ -1907,6 +1950,7 @@ void re15_gator_boss_tick(int slot)
             pl->x = (b6[0] + b7[0]) / 2;
             pl->y = (b6[1] + b7[1]) / 2;
             pl->z = (b6[2] + b7[2]) / 2;
+            gb_fress_ausrichten(e, pl, 1);    /* hart: wedelt MIT dem Maul */
         } else if (g->timer == 185) {
             pl->no_draw = 1;                  /* Rest verschlungen */
             pl->fress_skip_mask = 0; pl->rot_x = 0;
@@ -1952,11 +1996,13 @@ void re15_gator_boss_tick(int slot)
                 while ((int64_t)d * d < d2 && d < 30000) d += 16;
                 fprintf(s_fs, "FSYNC t=%d anker=(%d,%d) pl=(%d,%d,%d) "
                               "b6=(%d,%d,%d) b7=(%d,%d,%d) maul=(%d,%d,%d) "
-                              "dpl=%d pitch=%d jaw=%d mo=%d af=%d\n",
+                              "dpl=%d pitch=%d jaw=%d mo=%d af=%d "
+                              "roty=%d rotx=%d\n",
                         (int)g->timer, kx, kz, pl->x, pl->y, pl->z,
                         b6[0], b6[1], b6[2], b7[0], b7[1], b7[2],
                         mx, my, mz, d, (int)g->pitch_vz, (int)g->jaw_vz,
-                        (int)e->motion, (int)e->anim_frame);
+                        (int)e->motion, (int)e->anim_frame,
+                        (int)pl->rot_y, (int)pl->rot_x);
                 fflush(s_fs);
             }
         }
