@@ -5619,9 +5619,29 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
 
     switch (e->sub_state_2) {
     case 0:
-        /* `0x800CFBF8 < 0` @0x8010679C-B0 (-> +0x231 = 2 -> FUN_801092C4) und `+0x10C != 0` /
-         * `0x800CFBD8 & 0x10000000` @0x801067CC-EC (-> +0x231 = 1 -> FUN_80109610): drei
-         * Eingaben ohne Port-Produzenten (OPEN, mit Adresse) -> der Pfad faellt bis zum Wurf. */
+        /* ⛔ DER KOPF-WEGSCHUSS WOHNT HIER, NICHT IN EINER TABELLEN-SPALTE
+         * (Nutzer 2026-09-12: "Man kann den Zombies mit der Shotgun noch nicht
+         * den Kopf wegschiessen"; Dossier kopf-wegschiessen.md): RE2s Zombie
+         * traegt NIE das Kopf-Bit (INIT word0 |= 0x0C000000 @0x80100984-998,
+         * kein 0x10000000-Setzer im ganzen Overlay) - die Kopf-Spalte 2 ist
+         * fuer ihn unerreichbar. Stattdessen prueft DIESE Rumpf-Todeszelle als
+         * ERSTES das Spieler-word0-Bit 31 = ZIELEN-HOCH (`lw 0x800CFBF8 /
+         * bgez` @0x8010679C-A8) und springt dann DETERMINISTISCH in die
+         * Kopf-Explosion: +0x231 := 2 (@0x801067B0) -> FUN_801092C4
+         * (@0x801067BC). Der Port-Produzent des Bits ist die Ziel-Elevation.
+         * KEIN death-Gate (das Original prueft +0x4 hier nicht), und der
+         * rand-Wurf unten laeuft bei HOCH gar nicht erst an. */
+        {
+            extern int re15_player_aim_elevation(void);
+            if (re15_player_aim_elevation() > 0) {
+                e->re2z_rag231 = 2u;                               /* sb 2,561 @0x801067B0 */
+                re2z_death_magnum(e, pl);                          /* jal 0x801092C4 @0x801067BC */
+                return;
+            }
+        }
+        /* `+0x10C != 0` / `0x800CFBD8 & 0x10000000` @0x801067CC-EC (-> +0x231 = 1 ->
+         * FUN_80109610): zwei weitere Eingaben ohne Port-Produzenten (OPEN, mit
+         * Adresse) -> der Pfad faellt bis zum Wurf. */
         if ((re2z_rand() & 3u) != 0u && death) {                   /* jal @0x801067F4 (IMMER),
                                                                     * `andi 0x3 / beq zero`
                                                                     * @0x801067FC-800,

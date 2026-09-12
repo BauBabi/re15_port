@@ -1852,10 +1852,21 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
      * Ohne das stand +0x1D2 konstant auf 1: Spalte 0 und 2 der Treffer-Tabelle
      * @0x8010C940 waren unerreichbar, es gab also WEDER Kopf- NOCH Beintreffer -
      * und damit auch keinen der daran haengenden Gore-Effekte. */
+    /* ⛔ KORRIGIERT 2026-09-12 (Dossier kopf-wegschiessen.md): der ZOMBIE traegt
+     * in RE2 NIE das Kopf-Bit (INIT word0 |= 0x0C000000 = Beine+Rumpf
+     * @0x80100984-998; Vollscan: kein 0x10000000-Setzer im Overlay) - die
+     * Zonen-Rechnung aus der Teile-Maske (DAT_800A6DB4 gegen word0>>26&7)
+     * liefert fuer den STEHENDEN Zombie deshalb: HOCH -> RUMPF, EBEN -> RUMPF,
+     * TIEF -> BEINE (Schrot-Records @0x800A6724/40/5C). Die Kopf-Spalte 2 ist
+     * original-unerreichbar; der Kopf-Wegschuss laeuft ueber den HOCH-Zweig
+     * der Rumpf-Todeszelle (enemy_ai_re2_zombie.c re2z_hit_ragdoll case 0).
+     * Der fruehere Stempel HOCH->2 war eine Fehldeutung; die Spalten-Klemmen
+     * bleiben als Sicherung stehen. Kriecher/Liegende stempeln BEINE. */
     {
         extern int re15_player_aim_elevation(void);
         int elev = re15_player_aim_elevation();
-        e->re2z_hits1d2 = (uint8_t)(elev > 0 ? 2u : elev < 0 ? 0u : 1u);
+        int liegt = (e->re2z_f10e & 1u) || (e->re2z_flags21a & 0x2u);
+        e->re2z_hits1d2 = (uint8_t)((liegt || elev < 0) ? 0u : 1u);
     }
     e->sub_state_2  = 0u;   /* +0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290 */
     if (re15_re2z_owns_type(e->type)) {
