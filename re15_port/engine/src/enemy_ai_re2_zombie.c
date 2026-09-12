@@ -3673,6 +3673,13 @@ static const uint8_t re2z_hit_tbl[19][9] = {
 };
 
 /* ---- die Zuordnungs-Funktionen (Tabellen + Kriterien s. Block oben) ------------------------ */
+/* Rohe RE1.5-Waffen-Id -> RE2-Zeilen-/Item-Id (fuer das dy-Fenster in
+ * re15_damage.c; dieselbe Karte, die der Dispatch unten benutzt). */
+unsigned re15_re2z_weapon_id(unsigned w)
+{
+    return (w < 22u) ? (unsigned)re2z_row_from_weapon[w] : 1u;
+}
+
 static uint8_t re2z_row_guard(unsigned row, unsigned col, int survived)
 {
     if (row == 0u || row > (unsigned)RE2Z_ATK_MAX) row = 1u;      /* nie ausserhalb 1..19 */
@@ -6189,6 +6196,16 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
     {
         unsigned col = e->re2z_hits1d2;
         uint8_t h = (row < 19u && col < 9u) ? re2z_hit_tbl[row][col] : (uint8_t)RE2ZH_NULL;
+        /* SPALTEN-KLEMME (Nutzer 2026-09-12, Abtrennen-Dossier par.1.3): eine
+         * NULL-Zelle ENTSTEHT im Original nie (kein NULL-Waechter am jalr
+         * @0x80105410 - die Fenster-Geometrie macht die Kombination unerreichbar,
+         * z.B. Schrot+Kopf nur nah = immer toedlich). Faellt die Elevations-
+         * Spalte des Ports doch hinein, klemmt sie auf RUMPF (1), statt den
+         * Treffer stumm zu schlucken. */
+        if (h == (uint8_t)RE2ZH_NULL && col != 1u && row < 19u) {
+            col = 1u;
+            h = re2z_hit_tbl[row][col];
+        }
         if (h == (uint8_t)RE2ZH_7438 && row != 12u) re2z_knockdown_gore(e);  /* @0x8010750C-708 */
     }
 }
@@ -6349,6 +6366,16 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
     unsigned row = e->sub_state_1;
     unsigned col = e->re2z_hits1d2;
     uint8_t h = (row < 19u && col < 9u) ? re2z_hit_tbl[row][col] : (uint8_t)RE2ZH_NULL;
+    /* SPALTEN-KLEMME (Nutzer 2026-09-12, Abtrennen-Dossier par.1.3): eine
+     * NULL-Zelle ENTSTEHT im Original nie (kein NULL-Waechter am jalr
+     * @0x80105410 - die Fenster-Geometrie macht die Kombination unerreichbar,
+     * z.B. Schrot+Kopf nur nah = immer toedlich). Faellt die Elevations-
+     * Spalte des Ports doch hinein, klemmt sie auf RUMPF (1), statt den
+     * Treffer stumm zu schlucken. */
+    if (h == (uint8_t)RE2ZH_NULL && col != 1u && row < 19u) {
+        col = 1u;
+        h = re2z_hit_tbl[row][col];
+    }
     s_re2z_last_handler = h;                                       /* Port-Diagnose (Tests) */
     switch (h) {
     case RE2ZH_MAIN:    re2z_hit_main(e, pl);    return;           /* 0x80105438 */
@@ -6550,6 +6577,16 @@ int re15_re2z_poses_loco_bank(const re15_actor_t *a)
         if (a->re2z_flags21a & 2u) return 0;
         {   unsigned row = a->sub_state_1, col = a->re2z_hits1d2;
             uint8_t h = (row < 19u && col < 9u) ? re2z_hit_tbl[row][col] : (uint8_t)RE2ZH_NULL;
+            /* SPALTEN-KLEMME (Nutzer 2026-09-12, Abtrennen-Dossier par.1.3): eine
+             * NULL-Zelle ENTSTEHT im Original nie (kein NULL-Waechter am jalr
+             * @0x80105410 - die Fenster-Geometrie macht die Kombination unerreichbar,
+             * z.B. Schrot+Kopf nur nah = immer toedlich). Faellt die Elevations-
+             * Spalte des Ports doch hinein, klemmt sie auf RUMPF (1), statt den
+             * Treffer stumm zu schlucken. */
+            if (h == (uint8_t)RE2ZH_NULL && col != 1u && row < 19u) {
+                col = 1u;
+                h = re2z_hit_tbl[row][col];
+            }
             if (h == RE2ZH_MAIN && a->re2z_flag222 != 1u) return 1;   /* @0x80105790/@0x801058C0 */
             if (h == RE2ZH_703C) return 1;                            /* @0x801071E4/9C/@0x80107364 */
         }
@@ -6558,6 +6595,13 @@ int re15_re2z_poses_loco_bank(const re15_actor_t *a)
     case 3: {
         unsigned row = a->sub_state_1, col = a->re2z_hits1d2;
         uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
+        /* Spalten-Klemme wie im HURT-Dispatch: NULL-Zelle -> RUMPF-Spalte, sonst
+         * bekaeme "auf den Kopf zielen" mit Schrot den SCHWAECHSTEN Tod statt
+         * Burst/Zerreissen (Abtrennen-Dossier par.1.3). */
+        if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) {
+            col = 1u;
+            h = re2z_death_tbl[row][col];
+        }
         if (h == RE2ZD_92C4 && a->sub_state_2 == 4u) return 1;   /* MAGNUM P4 @0x801095D0 */
         if (h == RE2ZD_8BEC && a->sub_state_2 == 6u) return 1;   /* RIP    P6 @0x80109288 */
         return 0;
@@ -6889,6 +6933,13 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
         unsigned row = e->sub_state_1;
         unsigned col = e->re2z_hits1d2;
         uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
+        /* Spalten-Klemme wie im HURT-Dispatch: NULL-Zelle -> RUMPF-Spalte, sonst
+         * bekaeme "auf den Kopf zielen" mit Schrot den SCHWAECHSTEN Tod statt
+         * Burst/Zerreissen (Abtrennen-Dossier par.1.3). */
+        if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) {
+            col = 1u;
+            h = re2z_death_tbl[row][col];
+        }
         s_re2z_last_death_handler = (int)h;
         switch (h) {
         case RE2ZD_MAIN: re2z_death_main(e);            return;

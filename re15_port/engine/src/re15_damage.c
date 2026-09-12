@@ -662,7 +662,18 @@ static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
         case 0x29: return s_wpn_dmg_roach;
         case 0x2b: return s_wpn_dmg_tyrant;
         case 0x30: return s_wpn_dmg_birkin;
-        case 0x26: case 0x2d: case 0x36: return s_wpn_dmg_immune;   /* all-zero rows = weapon-immune */
+        case 0x36:
+            /* Byte-true ist 0x36 WAFFENIMMUN (Null-Zeile @0x8006e0d0 - Endformen
+             * sterben im Original nicht durch Beschuss). Im ENDKAMPF ROOM5090/5091
+             * ist 0x36 aber unser umgetypter Kampf-Birkin (Nutzer-Design: der
+             * finale Birkin ERSETZT dort den 0x30 und muss besiegbar sein wie
+             * der Kampf, den er ersetzt) - er erbt darum die 0x30-Zeile
+             * (@0x8006e0d0 + 0x30*0x58; "birkin 30"). Ueberall sonst bleibt
+             * 0x36 byte-true immun (ROOM3080). PORT-BRUECKE, als solche markiert. */
+            if (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u)
+                return s_wpn_dmg_birkin;
+            return s_wpn_dmg_immune;
+        case 0x26: case 0x2d: return s_wpn_dmg_immune;   /* all-zero rows = weapon-immune */
         default:   return s_player_wpn_dmg_zombie;                  /* fallback (unrouted combat types) */
     }
 }
@@ -1235,6 +1246,18 @@ retry_after_latch:
             int elev = re15_player_aim_elevation();
             uint32_t pband = (elev > 0) ? 0x80000000u : (elev < 0) ? 0x20000000u : 0x40000000u;
             uint32_t eband;
+            /* RE2-VERTIKALFENSTER (statt Band-Schnitt) fuer STEHENDE RE2-owned
+             * Zombies - Nutzer 2026-09-12: "nahe Headshots nach oben funktionieren
+             * nicht". RE2s Kandidatenfilter hat KEIN Hoehen-Band (FUN_800470C0,
+             * genau vier Gates @0x8004712c/38/48/60); die Hoehen-Selektivitaet ist
+             * ein dy-Fenster je Waffe+Elevation aus dem Zombie-Schadensrecord
+             * @0x800A412C + (id-1)*20, Paare +8/+0xc/+0x10 (info/re2leon/PSX.EXE,
+             * selbst gedumpt 2026-09-12, Tabelle unten). Das Schrot-UP-Fenster
+             * [-5000,+500] schliesst dy=0 EIN -> der beruehmte RE2-Nah-Kopfschuss.
+             * Liegende/aufstehende Zombies behalten ihre bestehenden, gemessenen
+             * Ausnahmen (Kriech-Root/Aufsteher/grid&0x80) unveraendert. */
+            int re2_fenster = 0;
+            int32_t fen_lo = 0, fen_hi = 0;
             if (e->type == 0x21) {
                 /* KRAEHE: das Band kommt aus dem ACTIVE-Tail-Stempel (@0x80112560-c8) —
                  * UP 0x80000000 (0x80012a0c(0x1770): vert>=4001 && dist<6000) / DOWN
@@ -1344,6 +1367,68 @@ retry_after_latch:
                             if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388)
                                                                * @0x800129cc-f0 */
                         }
+                        if (re2_owned && !lying && !re2_rising) {
+                            /* dy-Fenster des Zombie-Records je RE2-Waffen-Id und
+                             * Elevation (Dump-Belege am Tabellenkopf unten). UP-
+                             * Fenster gelten voll nur im NAH-Bereich: die Sub-Boxen
+                             * des UP-Records @0x800a675c beginnen bei z=100 (nah) /
+                             * 3100 (Mitte) / 9100 (fern), und FUN_80041b20 case 5/6
+                             * verschiebt das Fenster je Box um ein Drittel nach oben
+                             * - dy=0 faellt ab der Mitte-Box heraus (kein UP-Snipen
+                             * auf bodengleiche Ziele). Die Radius-Erweiterung der
+                             * Boxgrenzen (FUN_80041ce4) ist noch un-RE'd - die
+                             * rohen Box-Starts sind die faithful-line (SPEC §5). */
+                            extern unsigned re15_re2z_weapon_id(unsigned w);
+                            static const int16_t FEN[20][6] = {
+                                /* je RE2-Id: UPlo,UPhi, LVlo,LVhi, DNlo,DNhi
+                                 * (@0x800A412C + (id-1)*20 + 8/12/16) */
+                                [ 1] = {-3000, -500,-1900,1000, -300,2500},
+                                [ 2] = {-5000,-2000,-3000,2000, -500,3000},
+                                [ 3] = {-5000,-2000,-3000,2000, -500,3000},
+                                [ 4] = {-5000,-2000,-3000,2000, -500,3000},
+                                [ 5] = {-5000,-2000,-3000,2000, -500,3000},
+                                [ 6] = {-5000,-2000,-3000,2000, -500,3000},
+                                [ 7] = {-5000,  500,-3000,2000, -500,3000},
+                                [ 8] = {-5000,  500,-3000,2000, -500,3000},
+                                [ 9] = {-3000,-2000,-2000,-1000,-1000,3000},
+                                [10] = {-3000,-2000,-2000,-1000,-1000,3000},
+                                [11] = {-3000,-2000,-2000,-1000,-1000,3000},
+                                [12] = {-4000,-2000,-3000,2000, -500,3000},
+                                [13] = {-5000,-2000,-3000,2000, -500,3000},
+                                [14] = {-4000,-2000,-3000,2000, -500,3000},
+                                [15] = {-5000,  500,-3000,2000, -500,3000},
+                                [16] = {-3000,-2000,-2000,-1000,-1000,3000},
+                                [17] = {-3000,-2000,-2000,-1000,-1000,3000},
+                                [18] = {-5000,  500,-3000,2000, -500,3000},
+                                [19] = {-5000,-2000,-3000,2000, -500,3000},
+                            };
+                            unsigned rid = re15_re2z_weapon_id((unsigned)weapon_id);
+                            /* NUR fuer echte Hitscan-Klassen: die RE2-Ids 9/10/11
+                             * (Granaten), 16 (Flammen-/Funkenstrahl) und 17 (Rakete)
+                             * sind in RE2 PROJEKTIL-/STRAHL-Waffen - ihre Hitscan-
+                             * Fenster schliessen dy=0 aus (LEVEL [-2000,-1000], Dump
+                             * oben), weil der Schaden dort NICHT ueber diesen Pfad
+                             * laeuft. Der Port feuert genau diese Waffen als
+                             * dokumentierte Hitscan-BRUECKE - fuer sie bleibt das
+                             * bisherige Band-Gate, sonst waeren sie wirkungslos
+                             * (Pins unit_re2_weapon_rows/hp_model/teardeath). */
+                            if (rid >= 1 && rid <= 19 &&
+                                rid != 9 && rid != 10 && rid != 11 &&
+                                rid != 16 && rid != 17) {
+                                const int16_t *fw = FEN[rid];
+                                int32_t lo, hi, drittel;
+                                if (elev > 0)      { lo = fw[0]; hi = fw[1]; }
+                                else if (elev < 0) { lo = fw[4]; hi = fw[5]; }
+                                else               { lo = fw[2]; hi = fw[3]; }
+                                drittel = (hi - lo) / 3;
+                                if (elev > 0) {   /* Boxen @0x800a675c: 100/3100/9100 */
+                                    if (bdist >= 9100u)      { lo -= 2*drittel; hi -= 2*drittel; }
+                                    else if (bdist >= 3100u) { lo -= drittel;   hi -= drittel;   }
+                                }
+                                re2_fenster = 1;
+                                fen_lo = lo; fen_hi = hi;
+                            }
+                        }
                     }
                 } else if (e->type == 0x20 && !re15_ai_re2_for_type(0x20)) {
                     /* HUND (RE1.5-owned): Band aus dem ACTIVE-Tail-Stempel — enemy_ai_common.c
@@ -1398,7 +1483,13 @@ retry_after_latch:
                         eband = 0x40000000u;                           /* @0x801015f4-fc */
                 }
             }
-            if ((pband & eband) == 0) continue;
+            if (re2_fenster) {
+                /* dy = enemy_y - player_y (PSX-Y: negativ = oben), gegen das Fenster
+                 * - ersetzt den Band-Schnitt (RE2 hat keinen, s.o.). */
+                int32_t fdy = e->y - pl->y;
+                if (fdy < fen_lo || fdy > fen_hi) continue;
+            }
+            else if ((pband & eband) == 0) continue;
         }
         /* distance from the hit-test ORIGIN (0x800127fc measures POINT->target: lh 0(a2) vs
          * actor+0x34): guns = player pos; melee = the bone-11 blade point (extends the effective
