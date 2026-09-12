@@ -741,15 +741,30 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
                  *    RE1.5-Index -> RE2-Clip nach der RE2-Semantik (Dossier 2.1;
                  *    PORT-BRUECKE, Feinabstimmung visuell). Die Bank selbst wird
                  *    umsortiert - dieselben Clips speisen KI-Uhr und Renderer. */
-                if (eb->md1.mesh_count > 2) eb->md1.mesh_count = 2;
+                /* KORRIGIERT (Dossier g5-optik.md, Kernbefund @0x80100670-740):
+                 * Kriecher und Masse sind EIN verbundener Koerper - der Blob
+                 * (Mesh 2, Bind 1800/4500/0) und der Arm (Mesh 3, Bind
+                 * 800/500/0) haengen als KINDER am Wurzelknochen des
+                 * Kriechers; ALLE Parts sind im RE2-Kampf sichtbar. Die
+                 * Effekt-Quads 4-6 (Emitter-Anker, Kinder des Blobs) bleiben
+                 * verborgen, bis ihre Emitter existieren - dokumentierte
+                 * Abweichung. Versaetze werden im Render angewandt. */
+                if (eb->md1.mesh_count > 4) eb->md1.mesh_count = 4;
                 {
                     static int16_t s_bk_fix[1408];
                     int kf, nkf = eb->skel.keyframe_count;
                     if (nkf > 1408) nkf = 1408;
                     for (kf = 0; kf < nkf; kf++) {
-                        int16_t px = 0, py = 0, pz = 0;
-                        re15_emd_get_keyframe_position(&eb->skel, kf, &px, &py, &pz);
-                        s_bk_fix[kf] = (int16_t)(-(py + 1687));
+                        /* KORRIGIERT (Dossier g5-optik.md 3.2): RE2 ankert per
+                         * Setz-Rampe die ENTITY auf +2950 (y=(t*2950)>>12 bei
+                         * t=4096, @0x801037c4-f4) und laesst die Keyframe-
+                         * Wurzel (-4534..-3105) darauf reiten - der Kriecher
+                         * schwingt 1,6-4,4 m UEBER dem Boden, der Blob sitzt
+                         * fest AM Boden. Das fruehere Pro-Keyframe-Erden
+                         * (tiefster Punkt auf 0) nahm der Animation genau
+                         * dieses Wogen. Konstante = der Rampen-Endwert. */
+                        (void)kf;
+                        s_bk_fix[kf] = (int16_t)2950;
                     }
                     eb->skel.root_y_fix = s_bk_fix;
                     eb->skel.root_y_fix_count = nkf;
@@ -884,8 +899,13 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
          * Sektor 1512..1598). REIN, ohne Hybrid: es gibt keine RE1.5-Geometrie zum
          * Tauschen. Damit schliesst sich zugleich die Proxy-Luecke (c) der KI
          * (echte Cliplaengen statt Frame-Fenster-Proxy). */
-        if (type == 0x23u && pc_enemy_load_re2(type, eb))
+        if (type == 0x23u && pc_enemy_load_re2(type, eb)) {
+            extern void re15_gator_audio_hook(void (*)(int, int), void (*)(int));
+            /* ENEMSE-Bank 17 fuer den Boss-Alligator (Paar-Tabelle @0x800A7400;
+             * bislang war er komplett stumm - Dossier gator-biss-sound.md). */
+            re15_gator_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
             return;
+        }
         eb->type = 0;
         fprintf(stderr, "[enemy] EM%02X model not found (no split file, not in CDEMD0.EMS)\n", type);
         return;
@@ -8253,8 +8273,27 @@ re_title:;
                      * @0x800273F8 / @0x8010740C) — die Kinder verschwinden NICHT automatisch
                      * mit, dafuer sorgt allein die Kaskade in re15_re2z_gore_resolve. */
                     if (gore_on && nbi < npc_bones && !gore_draw[nbi]) continue;
-                    /* Teile ohne eigenen Knochen reiten auf der Wurzelpose - s.o. */
+                    /* Teile ohne eigenen Knochen reiten auf der Wurzelpose - s.o.
+                     * G5-KINDER (Typ 0x36; Dossier g5-optik.md @0x80100670-740 +
+                     * Pro-Frame-Kette @0x80103b4c/5c): Blob und Arm haengen mit
+                     * festem Bind-Versatz am WURZELKNOCHEN: T = R0*bind + T0,
+                     * R = R0. Blob-Bind (1800,4500,0), im Kampf-Steady-State
+                     * um die Setz-Rampe reduziert: 4500-2950 = 1550
+                     * (@0x801037f8-804); Arm (800,500,0). */
+                    re15_skel_pose_t np_kind;
                     const re15_skel_pose_t *np = &npc_poses[nbi < npc_bones ? nbi : 0];
+                    if (nbi >= npc_bones && npc->type == 0x36 && nbi <= 3) {
+                        static const int32_t G5B[2][3] = { {1800,1550,0}, {800,500,0} };
+                        const int32_t *g5o = G5B[(nbi == 2) ? 0 : 1];
+                        const re15_skel_pose_t *r0 = &npc_poses[0];
+                        int rr;
+                        np_kind = *r0;
+                        for (rr = 0; rr < 3; rr++)
+                            np_kind.trans[rr] = r0->trans[rr] +
+                                ((r0->rot[rr*3+0]*g5o[0] + r0->rot[rr*3+1]*g5o[1] +
+                                  r0->rot[rr*3+2]*g5o[2]) >> 12);
+                        np = &np_kind;
+                    }
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
