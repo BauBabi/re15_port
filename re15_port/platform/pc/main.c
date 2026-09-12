@@ -721,6 +721,22 @@ static void pc_re2z_se_re15(int se_id, int flag2000)
     re15_audio_re2_enemy_se(se_id, flag2000);
 }
 
+/* Gator-SE-Mapper (Nutzer 2026-09-12 "Der Beiss-Sound vom Aligator passt auch noch
+ * nicht"; Dossier analysis/befunde_runde5_2026-09-12/gator-biss-se.md): das ZUBEISSEN
+ * (id 3, 6 Rufstellen enemy_ai_boss_gator.c) wechselt auf die RE1.5-RAUM-Bank -
+ * ROOM2090 snd1 SE 2 = der authored Angriff-Connect-Impakt dieses Raums (die
+ * Raum-Raubtier-KI ruft ihn am STRIKE @0x8011254c-58 und am LEAP-Treffer
+ * @0x801129c4-d4; 0,22 s, dumpf, 95%% FS). Bank-17-SE 3 war zwar byte-true
+ * wiedergegeben, aber der falsche Kontext (heller Wasser-Klatsch). Muster =
+ * Zombie-Mapper pc_re2z_se_re15 (NUTZER-MANDAT 2026-08-23: RE1.5-Sounds).
+ * Chirurgisch: die EM23-Frame-Flags liefern nur Ids 2/4, id 3 kommt ausschliesslich
+ * von den sechs Zubeiss-Stellen. */
+void pc_gator_se_re15(int se_id, int flag2000)
+{
+    if (se_id == 3) { re15_audio_room_se(2); return; }
+    re15_audio_re2_enemy_se(se_id, flag2000);
+}
+
 static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
@@ -941,9 +957,12 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
          * (echte Cliplaengen statt Frame-Fenster-Proxy). */
         if (type == 0x23u && pc_enemy_load_re2(type, eb)) {
             extern void re15_gator_audio_hook(void (*)(int, int), void (*)(int));
+            extern void pc_gator_se_re15(int se_id, int flag2000);
             /* ENEMSE-Bank 17 fuer den Boss-Alligator (Paar-Tabelle @0x800A7400;
-             * bislang war er komplett stumm - Dossier gator-biss-sound.md). */
-            re15_gator_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+             * bislang war er komplett stumm - Dossier gator-biss-sound.md).
+             * Seit Runde 5 laeuft das ZUBEISSEN ueber den RE1.5-Raum-SE-Mapper
+             * (pc_gator_se_re15 unten, gator-biss-se.md). */
+            re15_gator_audio_hook(pc_gator_se_re15, re15_audio_re2_enemy_bank);
             return;
         }
         eb->type = 0;
