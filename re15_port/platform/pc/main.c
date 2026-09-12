@@ -718,6 +718,56 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
     if ((type == 0x36u || type == 0x37u) &&
         (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u)) {
         if (pc_enemy_load_re2(type, eb)) {
+            if (type == 0x36u) {
+                /* Drei Nacharbeiten am RE2-EM36 (Dossier analysis/schrot_befunde_
+                 * 2026-09-12/birkin-em36.md; Nutzer: "fliegt komisch in der Luft
+                 * ... ist unvollstaendig"):
+                 * 1. PART-MASKE: das EMD traegt ZWEI Gestalten - Kriecher (Mesh
+                 *    0/1, an den 2 Bones animiert) und den starren 4,2-m-Blob
+                 *    (Mesh 2, bonelos, 7,3 m breit - Kulisse des Zugkorridors)
+                 *    plus Arm (3) und Effekt-Quads. Alle 11 Clips animieren NUR
+                 *    Bone 0/1; der Kampfkoerper ist der Kriecher. Meshes ab 2
+                 *    werden verborgen (damit greift auch die Mehr-Meshes-als-
+                 *    Bones-Schleife nicht mehr).
+                 * 2. WURZEL-Y: alle Keyframes tragen rootY -4534..-3105
+                 *    (Wurzel-Bind-Y -4534 @EMD 0x602A) - RE2s G5-Handler ankert
+                 *    Y selbst (Rampe @0x801037f8-808), der Port ankert am
+                 *    Actor-Y, das Modell schwebte 3-4,5 m hoch. root_y_fix hebt
+                 *    je Keyframe den tiefsten Kriecher-Punkt auf den Boden
+                 *    (tiefster Punkt = rootY + 1687, Mesh-0-BBox, Dossier 1.4).
+                 * 3. CLIP-ZUORDNUNG: die RE1.5-0x36-KI treibt Clip-Indizes bis
+                 *    0x14, das RE2-EDD hat 11 Clips - das mod-11-Wickeln
+                 *    (anim_select_common.c) erzeugte die Pose-Spruenge. Tabelle
+                 *    RE1.5-Index -> RE2-Clip nach der RE2-Semantik (Dossier 2.1;
+                 *    PORT-BRUECKE, Feinabstimmung visuell). Die Bank selbst wird
+                 *    umsortiert - dieselben Clips speisen KI-Uhr und Renderer. */
+                if (eb->md1.mesh_count > 2) eb->md1.mesh_count = 2;
+                {
+                    static int16_t s_bk_fix[1408];
+                    int kf, nkf = eb->skel.keyframe_count;
+                    if (nkf > 1408) nkf = 1408;
+                    for (kf = 0; kf < nkf; kf++) {
+                        int16_t px = 0, py = 0, pz = 0;
+                        re15_emd_get_keyframe_position(&eb->skel, kf, &px, &py, &pz);
+                        s_bk_fix[kf] = (int16_t)(-(py + 1687));
+                    }
+                    eb->skel.root_y_fix = s_bk_fix;
+                    eb->skel.root_y_fix_count = nkf;
+                }
+                {
+                    static const uint8_t BKMAP[21] = {
+                        /* 0   1  2  3  4  5  6  7  8  9  a  b  c  d  e  f 10 11 12 13 14 */
+                           0,  2, 0, 6, 7, 8, 0, 9, 0, 9, 0, 1, 9, 0, 7, 0, 0, 0, 0, 0, 1 };
+                    re15_emd_clip_t bk_orig[RE15_EMD_MAX_CLIPS];
+                    int ci, oc = eb->anim.clip_count;
+                    memcpy(bk_orig, eb->anim.clips, sizeof bk_orig);
+                    for (ci = 0; ci < 21; ci++) {
+                        int ziel = BKMAP[ci];
+                        eb->anim.clips[ci] = (ziel < oc) ? bk_orig[ziel] : bk_orig[0];
+                    }
+                    eb->anim.clip_count = 21;
+                }
+            }
             fprintf(stderr, "[enemy] FINALER Birkin: RE2 EM0%02X geladen\n", type);
             return;                                    /* REIN, kein Hybrid */
         }
