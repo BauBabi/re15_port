@@ -548,6 +548,15 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
     eb->ok = 1;
     fprintf(stderr, "[enemy] RE2 EM0%02X loaded: %d meshes, %d bones, %d clips -> slot %d\n",
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
+    if (getenv("RE15_ENEMY_DBG")) {     /* die GUI-exe hat kein nutzbares stderr */
+        FILE *ef = fopen("enemy_dbg.log", "a");
+        if (ef) {
+            fprintf(ef, "RE2 EM0%02X: %d Meshes, %d Bones, %d Clips, Slot %d\n",
+                    type, eb->md1.mesh_count, eb->skel.bone_count,
+                    eb->anim.clip_count, eb->pc_tex_slot);
+            fclose(ef);
+        }
+    }
     return 1;
 }
 
@@ -8127,6 +8136,23 @@ re_title:;
                  * -1-Eintraege in mesh_remap uebernehmen die Aufgabe pro Slot. */
                 if (!npc_remap && npc_bones > npc_md1->mesh_count) npc_bones = npc_md1->mesh_count;
                 if (npc_bones > RE15_EMD_MAX_BONES) npc_bones = RE15_EMD_MAX_BONES;
+                /* ⛔ MEHR MESHES ALS BONES: die ueberzaehligen trotzdem zeichnen.
+                 * GEMESSEN 2026-09-12 (RE15_ENEMY_DBG -> enemy_dbg.log): der FINALE
+                 * Birkin "RE2 EM036: 7 Meshes, 2 Bones". Die Schleife lief bisher
+                 * ueber die BONE-Zahl und liess damit 5 von 7 Teilen des Bosses
+                 * unsichtbar. RE2 fuehrt in FUN_80028368 pro MESH ein eigenes
+                 * Work-Struct; Teile ohne eigenen Knochen haengen dort an der
+                 * globalen Identitaetsmatrix @0x8009db44, also im Modellraum des
+                 * Aktors. Genau das leistet hier die Wurzelpose (Index 0): sie IST
+                 * die Aktor-Transformation ohne Gelenkdrehung.
+                 * Nur aktiv, wenn es MEHR Meshes als Bones gibt - fuer jedes andere
+                 * Modell (Mesh-Index == Bone-Index) aendert sich nichts. */
+                int npc_zeichen_n = npc_bones;
+                if (!npc_remap && npc_md1->mesh_count > npc_bones) {
+                    npc_zeichen_n = npc_md1->mesh_count;
+                    if (npc_zeichen_n > RE15_EMD_MAX_BONES)
+                        npc_zeichen_n = RE15_EMD_MAX_BONES;
+                }
                 /* ---- RE2-GORE: Part-Sichtbarkeit + Part-Tinte (Zwilling FUN_80027160) ----
                  * gore_on == 0 im GESAMTEN RE1.5-Pfad (re15_re2z_gore_active gated auf
                  * Flavor + RE2-Zombie-Typ + INIT-Seed) — dann bleibt der Renderpfad Byte
@@ -8158,13 +8184,27 @@ re_title:;
         (r_) = (uint8_t)(_r > 255 ? 255 : _r);                                         \
         (g_) = (uint8_t)(_g > 255 ? 255 : _g);                                         \
         (b_) = (uint8_t)(_b > 255 ? 255 : _b); } } while (0)
-                for (int nbi = 0; nbi < npc_bones; nbi++) {
+                if (getenv("RE15_ENEMY_DBG")) {   /* einmal je Gegnertyp: was wird gezeichnet? */
+                    static unsigned char gemeldet[256];
+                    unsigned t_ = (unsigned)npc->type & 0xFFu;
+                    if (!gemeldet[t_]) {
+                        FILE *df = fopen("enemy_dbg.log", "a");
+                        gemeldet[t_] = 1;
+                        if (df) {
+                            fprintf(df, "ZEICHNE Typ 0x%02X: %d Teile (Bones %d, Meshes %d)\n",
+                                    t_, npc_zeichen_n, npc_bones, npc_md1->mesh_count);
+                            fclose(df);
+                        }
+                    }
+                }
+                for (int nbi = 0; nbi < npc_zeichen_n; nbi++) {
                     /* Bit 0 klar -> dieser Part wird nicht gezeichnet. Das `continue` ist
                      * flach wie im Original (`_addiu s2,s2,0xac` im Delay-Slot @0x800273A4 /
                      * @0x800273F8 / @0x8010740C) — die Kinder verschwinden NICHT automatisch
                      * mit, dafuer sorgt allein die Kaskade in re15_re2z_gore_resolve. */
-                    if (gore_on && !gore_draw[nbi]) continue;
-                    const re15_skel_pose_t *np = &npc_poses[nbi];
+                    if (gore_on && nbi < npc_bones && !gore_draw[nbi]) continue;
+                    /* Teile ohne eigenen Knochen reiten auf der Wurzelpose - s.o. */
+                    const re15_skel_pose_t *np = &npc_poses[nbi < npc_bones ? nbi : 0];
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
