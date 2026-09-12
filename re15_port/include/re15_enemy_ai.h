@@ -48,6 +48,7 @@
 #include <stdint.h>
 #include <stdio.h>   /* FILE* fuer re15_re2_trace_out */
 #include "re15_actor.h"
+#include "re15_emd.h"   /* re15_emd_skeleton_t/_animation_t (Clip-Anker-Exporte) */
 
 /* Main-state values at entity+0x4 (= actor.state) — PTR_FUN_801217a0 index. */
 enum {
@@ -288,6 +289,15 @@ int re15_player_is_grabbed(void);
  * 4 Clips, nur HAUPT + LOCO). Paar 3 posiert LEON und ist PL00-kompatibel — vollstaendiger
  * Beleg-Block bei re15_victim_donor_set in enemy_ai_common.c. for_type == 0 hebt auf. */
 void re15_victim_donor_set(uint8_t for_type, uint8_t donor_type);
+
+/* GATOR-FRESS (Runde 6): Opfer-Clip-Direktbetrieb (Victim-Modus 4) + die exportierten
+ * Clip-Anker-Helfer (RE2-Zwillinge 0x80015B94/0x80015CB8) - s. enemy_ai_common.c. */
+void re15_player_victim_force(uint8_t grabber_type, int clip, uint32_t frame);
+void re15_player_victim_force_end(void);
+void re15_clip_anchor_set_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                              const re15_emd_animation_t *anim, int clip, int frame);
+void re15_clip_root_motion_abs_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                   const re15_emd_animation_t *anim, int clip, int frame);
 
 /* Spieler-KNOCKDOWN-Klasse (cmd-2 [4]/[5] = 0x800360e8/0x8003644c; analysis/player_knockdown.md):
  * begin(dir) startet den Umfall (0 = von vorn [4], 1 = von hinten [5]); Ausloeser = der

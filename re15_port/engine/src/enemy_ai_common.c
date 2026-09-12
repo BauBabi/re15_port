@@ -591,7 +591,9 @@ int re15_player_is_grabbed(void)
  * missing"). This drives Leon's motion/anim_frame off the grabbing zombie's bank 2 so he struggles
  * then collapses. g_player_victim: 0 none / 1 struggle / 2 collapse. Set by re15_enemy_ai_live_grab
  * (the grab that pins him), advanced by re15_player_victim_tick (game_step, after the enemy AI). */
-static int     g_player_victim = 0;           /* 0 none / 1 struggle / 2 collapse / 3 release-finish */
+static int     g_player_victim = 0;           /* 0 none / 1 struggle / 2 collapse / 3 release-finish
+                                               * / 4 EXTERN GETRIEBEN (Gator-Fress: der Boss setzt
+                                               *   Clip+Frame je Tick selbst; victim_tick ruht) */
 static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
 static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
 static uint8_t s_victim_phase = 0;            /* struggle phase (DAT_800aca5a model: 0 intro, >=1 hold) */
@@ -794,6 +796,40 @@ void re15_victim_donor_set(uint8_t for_type, uint8_t donor_type)
 {
     g_victim_donor_for  = for_type;
     g_victim_donor_type = donor_type;
+}
+
+/* GATOR-FRESS (Runde 6, gator-vollausbau.md 6.1): direkter Opfer-Clip-Betrieb an der
+ * Grab-FSM vorbei. Der Renderer posiert wie im Grab (Leons PL00-Skelett + Keyframes
+ * der skel_victim/anim_victim-Bank des Greifers, main.c s_victim_skel-Komposition) -
+ * NUR die Clip-/Frame-Fuehrung liegt beim Boss-Modul (RE2: Leon-Handler @0x80102D44,
+ * Advance ueber Spieler+0x188/+0x18C = EM23-EMR3/EDD3 @0x80102EA4-C0). */
+void re15_player_victim_force(uint8_t grabber_type, int clip, uint32_t frame)
+{
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    g_player_victim      = 4;
+    g_player_victim_type = grabber_type;
+    player->motion       = (int16_t)clip;
+    player->anim_frame   = frame;
+}
+
+void re15_player_victim_force_end(void)
+{
+    if (g_player_victim == 4) g_player_victim = 0;
+}
+
+/* Export der beiden Clip-Anker-Helfer (byte-true FUN_8001ac38/func_0x8001ad68; die
+ * RE2-Zwillinge sind 0x80015B94/0x80015CB8) fuer den Gator-Finisher - Anker-Paar +
+ * absolute Platzierung sind DIE Kopplung des authored Fressens (kein Bone-Attach). */
+void re15_clip_anchor_set_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                              const re15_emd_animation_t *anim, int clip, int frame)
+{
+    re15_clip_anchor_set(a, skel, anim, clip, frame);
+}
+
+void re15_clip_root_motion_abs_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                   const re15_emd_animation_t *anim, int clip, int frame)
+{
+    re15_clip_root_motion_abs(a, skel, anim, clip, frame);
 }
 
 /* Die Opfer-Bank fuer `type` aufloesen — eigene zuerst, sonst die angemeldete Leihgabe.
@@ -1415,6 +1451,9 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
 void re15_player_victim_tick(void)
 {
     if (g_player_victim == 0) return;
+    if (g_player_victim == 4) return;   /* GATOR-FRESS (gator-vollausbau.md 6.1): reiner
+                                         * Kill-Ablauf ohne Struggle/Mash/Release - der
+                                         * Boss-Treiber fuehrt Leons Clip/Frame/Platzierung. */
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
     if (!vb || !vb->victim_ok) {

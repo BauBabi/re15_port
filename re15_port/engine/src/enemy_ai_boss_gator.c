@@ -57,6 +57,7 @@
 #include "re15_emd.h"
 #include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
 #include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
+#include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -412,40 +413,6 @@ static void gb_bone_welt(re15_actor_t *e, int bone, int32_t out[3])
     }
 }
 
-/* FRESS-AUSRICHTUNG (Nutzer 2026-09-12: "Er muss am Ende einwandfrei in
- * Laufrichtung des Maules stecken und auch beim rumwedeln in Laufrichtung
- * des Maules bleiben"): Leon wird an die MAUL-LAENGSACHSE gekoppelt -
- * Kopfbasis (Bone 5, Kopfkette 1->5->6, Kiefer 7) -> Maulmitte (Bones 6+7).
- * yaw nutzt dieselbe atan2-Konvention wie die Blick-Solls dieses Moduls
- * (re15_atan2_q12(dz,dx) - 0x400); die Elevation kippt ihn liegend entlang
- * der Achse (rot_x = 1024 + elev), Blick Richtung Rachen (yaw + 2048), Beine
- * aus der Mauloeffnung. DESIGN-Finisher (Nutzer-Design 09-11), kein
- * byte-true Original - Feinabnahme visuell (re15-port-visual-verify). */
-static int16_t gb_dreh_zu(int16_t cur, int soll)
-{
-    int d = (soll - (int)cur) & 0x0fff;
-    if (d > 2048) d -= 4096;
-    return (int16_t)(((int)cur + d / 4) & 0x0fff);
-}
-
-static void gb_fress_ausrichten(re15_actor_t *e, re15_actor_t *pl, int hart)
-{
-    int32_t b5[3], b6[3], b7[3], mx, my, mz, dx, dy, dz, dh;
-    int yaw, elev, sy, sx;
-    gb_bone_welt(e, 5, b5); gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
-    mx = (b6[0] + b7[0]) / 2; my = (b6[1] + b7[1]) / 2; mz = (b6[2] + b7[2]) / 2;
-    dx = mx - b5[0]; dy = my - b5[1]; dz = mz - b5[2];
-    yaw = ((int)re15_atan2_q12(dz, dx) - 0x400) & 0x0fff;
-    dh = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
-    if (dh < 1) dh = 1;
-    elev = (int)re15_atan2_q12(-dy, dh) & 0x0fff;   /* PSX-y nach unten: Maul
-                                                     * ueber der Basis -> -dy>0 */
-    sy = (yaw + 2048) & 0x0fff;
-    sx = (1024 + elev) & 0x0fff;
-    if (hart) { pl->rot_y = (int16_t)sy; pl->rot_x = (int16_t)sx; }
-    else      { pl->rot_y = gb_dreh_zu(pl->rot_y, sy);
-                pl->rot_x = gb_dreh_zu(pl->rot_x, sx); }
-}
 
 /* Insel-Wand zwischen Gator und Leon? (Marge 0 = die reine Wand) - ein Biss
  * DURCH die Plattform ist unmoeglich (Nutzer 2026-09-11: "direkt an der
@@ -1853,161 +1820,109 @@ void re15_gator_boss_tick(int slot)
         }
         break; }
 
-    case GBP_FRESSEN: {                       /* Kopf runter, AM Leon zubeissen,
-                                               * halber Koerper wirbelt, Maul
-                                               * reisst auf, Rest verschlungen,
-                                               * abgehen (Nutzer-Design 09-11) */
-        int32_t fc, fs, kx, kz;
+    case GBP_FRESSEN: {
+        /* ============ DER ECHTE RE2-FINISHER (Runde 6, gator-vollausbau.md 6.1/7b) ============
+         * Ersetzt die prozedurale Wirbelbahn + fress_skip_mask + Trudel/Ausricht-Design:
+         * RE2 SPIELT DATEN AB. Ablauf (jede Zahl mit @0x im Dossier):
+         *   P0 (einmalig): Spieler-HP=-1; TELEPORT Spieler = Gator + RotY(yaw)*(10643,-915)
+         *      (@0x8010106C-84; der RE2-Korridor laeuft entlang X, generische Form);
+         *      Spieler-Yaw = Gator-Yaw (@0x80101154-5C). Leon STRAMPELT (RE2: PLD-Paar-1
+         *      Clip 2, 113 F @0x80102E88-90; Port-MAPPING: Leons eigener Clip 2).
+         *   P1: Gator-Clip 4 (45 F). Bei anim_frame==13 (@0x801010FC-1104): gemeinsames
+         *      ANKER-PAAR (0x80015B94-Zwilling re15_clip_anchor_set_pub am AKTUELLEN
+         *      Gator-Frame, Kopie in den Spieler) + Opfer-Start (Spieler+0x158=1-Analogon
+         *      @0x80101148-50): Victim-Modus 4 mit EM23-OPFER-PAAR-3 CLIP 1.
+         *   P2: Gator-Clip 5 (120 F Schuetteln) + Leon Opfer-Clip 1 (120 F) SYNCHRON;
+         *      je Frame absolute Platzierung Anker + RotY(yaw)*(kf-Offset) fuer BEIDE
+         *      (0x80015CB8-Zwilling @0x80101168-78; Leon-Schleuderbahn steckt in den
+         *      Keyframes: dx 7541..10527 vorm Anker, dz -2648..+1254, y-Spitze -9177
+         *      bei f60-75 aus dem POSE-Kanal - der Victim-Renderer traegt sie).
+         *   P3: Gator-Clip 11 als Kau-Loop OHNE Bewegung (FUN_8001A240 @0x801011D8-E0);
+         *      Leon im letzten Opfer-Frame GEPARKT (kein no_draw - er haengt im Maul).
+         * SEs: Frame-Flags von Clip 5 (f2 SE1, f80 SE3) spielt der Frame-Flag-Spieler;
+         * Clip 4 ist datenseitig stumm (SE-3-Zubeiss-Mapping bleibt separat, Runde 5). */
+        re15_enemy_bank_t *gb23 = re15_enemy_find(e->type);
         g->timer++;
-        if (g->timer < 95)                    /* ab dem Wurf steht er still -
-                                               * der Koerper fliegt ueber dem
-                                               * eigenen Maul (bearing waere
-                                               * degeneriert) */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x60);
         e->y = GB_WATER_Y;
-        fc = re15_cos_q12((int)e->rot_y);
-        fs = re15_sin_q12((int)e->rot_y);
-        kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);   /* Maulpunkt wie */
-        kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);   /* gb_maul_dist  */
-        /* Bahn-Endpunkt in den Raum klemmen (SCA x[-8900..7200]
-         * z[-27000..-5400], Marge 300) - Telemetrie 2026-09-11 zeigte
-         * pl.x=-9988: der Halbkoerper flog in die Westwand. */
-        if (kx < -8600) kx = -8600; else if (kx > 6900) kx = 6900;
-        if (kz < -26700) kz = -26700; else if (kz > -5700) kz = -5700;
-        if (g->timer <= 60) {
-            int32_t dx = pl->x - kx, dz = pl->z - kz;
-            g->pitch_vz = (int16_t)((350 * g->timer) / 60);   /* Kopf senkt sich */
-            /* "muss dann schon dort hin beissen": Maulpunkt aktiv an Leon
-             * heranschieben (Dispatcher-Klemme laeuft danach wie immer) */
-            if ((int64_t)dx * dx + (int64_t)dz * dz > 300 * 300) {
-                /* FSYNC-Messung 2026-09-12: der Vorwaerts-Schub liess den Boss
-                 * die Leiche UMKREISEN statt konvergieren (Blick zeigt nicht
-                 * exakt hin, steer ist aus). Schub jetzt ENTLANG (Leiche -
-                 * Maulpunkt), grob normiert ueber die groessere Komponente. */
-                int32_t adx = dx < 0 ? -dx : dx, adz = dz < 0 ? -dz : dz;
-                int32_t nmax = (adx > adz) ? adx : adz;
-                if (nmax > 0) {
-                    e->x += (int32_t)((int64_t)48 * dx / nmax);
-                    e->z += (int32_t)((int64_t)48 * dz / nmax);
+        if (g->timer == 1) {                           /* ---- P0 @0x80100FBC-10E4 ---- */
+            int32_t fc0 = re15_cos_q12((int)e->rot_y), fs0 = re15_sin_q12((int)e->rot_y);
+            pl->fress_skip_mask = 0;                   /* Halbkoerper-Trick entfaellt */
+            pl->no_draw = 0;
+            pl->x = e->x + (int32_t)(((int64_t)fc0 * 10643 + (int64_t)fs0 * (-915)) >> 12);
+            pl->z = e->z + (int32_t)((-(int64_t)fs0 * 10643 + (int64_t)fc0 * (-915)) >> 12);
+            pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
+            pl->rot_x = 0;
+            pl->motion = 2; pl->anim_frame = 0;        /* STRAMPELN: Leons Clip 2 (113 F) */
+            e->motion = 4; e->anim_frame = 0;          /* Gator-Clip 4 (45 F) */
+            g->gefressen = 0;
+        }
+        if (!g->gefressen) {                           /* ---- P1: Clip 4 bis f13 ---- */
+            if (pl->anim_frame < 112) pl->anim_frame++;   /* Strampeln vorwaerts */
+            if (e->anim_frame == 13 && gb23 && gb23->ok) {   /* @0x801010FC-1104 */
+                /* Gemeinsames Anker-Paar am AKTUELLEN Gator-Frame (@0x80101110-34):
+                 * erst der Gator mit SEINEM Clip, dann Kopie in den Spieler. */
+                re15_clip_anchor_set_pub(e, &gb23->skel, &gb23->anim, 4, 13);
+                pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
+                if (gb23->victim_ok) {                 /* Opfer-Start (+0x158=1-Analogon) */
+                    re15_player_victim_force(e->type, 1, 0);
+                    g->gefressen = 1;
+                    if (!s_gb_stumm) {
+                        FILE *fl = fopen("gator_boss.log", "a");
+                        if (fl) { fprintf(fl, "FRESS-P2 Anker=(%d,%d) yaw=%d\n",
+                                          (int)e->anchor_x, (int)e->anchor_z,
+                                          (int)e->rot_y); fclose(fl); }
+                    }
+                } else {
+                    g->gefressen = 1;                  /* bankfrei (Unit-Pins): weiter ohne
+                                                        * Victim-Anim, Ablauf identisch */
+                }
+                g->timer = 100;                        /* P2-Zeitbasis: t-100 = Schuettel-Frame */
+            }
+            e->anim_frame++;
+        } else if (g->timer <= 220) {                  /* ---- P2: Clip 5 + Opfer-1, 120 F ---- */
+            int sf = g->timer - 100;                   /* 0..120 */
+            e->motion = 5;
+            e->anim_frame = (uint32_t)sf;
+            if (gb23 && gb23->ok) {
+                /* Absolute Platzierung BEIDER aus dem gemeinsamen Anker (@0x80101168-78):
+                 * Gator mit Clip 5, Leon mit Opfer-Clip 1 (Victim-Skelett = kf-Traeger). */
+                re15_clip_root_motion_abs_pub(e, &gb23->skel, &gb23->anim, 5, sf);
+                if (gb23->victim_ok && sf < 120) {
+                    pl->rot_y = e->rot_y;              /* Yaw haelt die Drehbahn synchron */
+                    pl->motion = 1; pl->anim_frame = (uint32_t)sf;
+                    re15_clip_root_motion_abs_pub(pl, &gb23->skel_victim,
+                                                  &gb23->anim_victim, 1, sf);
                 }
             }
-        } else if (g->timer == 75) {
-            gb_se(3); e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
-        } else if (g->timer == 95 && !g->gefressen) {
-            /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
-             * bleiben sichtbar und wirbeln durch die Luft. */
-            pl->fress_skip_mask = 0x7F01; g->gefressen = 1;
-            /* Wurf-Start AN DER LEICHE (FSYNC-Messung 2026-09-12: der alte
-             * kx/kz-Start teleportierte den Halbkoerper um 731 Einheiten).
-             * Der Lerp unten traegt ihn von hier ins LIVE-Maul. */
-            g->wirbel_x = pl->x; g->wirbel_y = pl->y; g->wirbel_z = pl->z;
-        } else if (g->timer > 95 && g->timer < 175) {
-            /* Wirbelbahn SYNCHRON ZUM MAUL (Nutzer 2026-09-11): Start und
-             * Ende sind der MAULPUNKT (Ende live nachgefuehrt), dazwischen
-             * Parabel-Hub 2200; der KOPF schnellt beim Wurf hoch (pitch
-             * +350 -> -260 in 15 F) und bleibt oben zum Koerper gerichtet,
-             * bis der Rest im Maul landet. */
-            int32_t t = g->timer - 95;
-            const int32_t T = 80;
-            if (g->timer <= 110)
-                g->pitch_vz = (int16_t)(350 - (610 * t) / 15);
-            else
-                g->pitch_vz = -260;
-            /* ZIEL = LIVE-MAULMITTE (FSYNC-Messung 2026-09-12: der analytische
-             * Anker lag im Wurf-Fenster 2300-2450 Einheiten UNTER dem
-             * gerenderten Maul - Kopf hochgerissen + Schnapp-Clip-HOLD; kein
-             * einziger Frame in Deckung). gb_bone_welt ist die Render-
-             * Wahrheit; die Bahn folgt damit automatisch jedem Anim-Umbau.
-             * Hub 600 = Design-Ueberhoehung UEBERS Maul (2200 stammte vom
-             * tiefen Anker und wuerde jetzt weit ueber den Kopf schleudern). */
-            {
-                int32_t b6[3], b7[3], mzx, mzy, mzz;
-                gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
-                mzx = (b6[0] + b7[0]) / 2; mzy = (b6[1] + b7[1]) / 2;
-                mzz = (b6[2] + b7[2]) / 2;
-                pl->x = g->wirbel_x + (int32_t)((int64_t)(mzx - g->wirbel_x) * t / T);
-                pl->z = g->wirbel_z + (int32_t)((int64_t)(mzz - g->wirbel_z) * t / T);
-                pl->y = g->wirbel_y + (int32_t)((int64_t)(mzy - g->wirbel_y) * t / T)
-                      - (int32_t)((int64_t)4 * 600 * t * (T - t) / ((int64_t)T * T));
-            }
-            /* ORIENTIERUNG: frei trudeln bis kurz vor der Ankunft, die
-             * letzten ~35 Bilder auf die Maul-Laengsachse EINDREHEN
-             * (gb_fress_ausrichten; Nutzer 2026-09-12). */
-            if (g->timer < 140) {
-                pl->rot_x = (int16_t)(((int)pl->rot_x + 150) & 0x0fff);
-                pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
-            } else {
-                gb_fress_ausrichten(e, pl, 0);
-            }
-            if (g->timer >= 150)              /* Maul reisst weiter auf */
-                g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
-            if (g->timer == 174) { gb_se(3); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
-        } else if (g->timer >= 175 && g->timer < 185) {
-            /* FANG: Leon haengt AN der Maulmitte, Schnapp 2 (t=174) klappt
-             * sichtbar um ihn zu (FSYNC: vorher klaffte hier 2352). */
-            int32_t b6[3], b7[3];
-            gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
-            pl->x = (b6[0] + b7[0]) / 2;
-            pl->y = (b6[1] + b7[1]) / 2;
-            pl->z = (b6[2] + b7[2]) / 2;
-            gb_fress_ausrichten(e, pl, 1);    /* hart: wedelt MIT dem Maul */
-        } else if (g->timer == 185) {
-            pl->no_draw = 1;                  /* Rest verschlungen */
-            pl->fress_skip_mask = 0; pl->rot_x = 0;
             if (!s_gb_stumm) {
-                FILE *fl = fopen("gator_boss.log", "a");
-                if (fl) {
-                    fprintf(fl, "FRESS-ENDE pl=(%d,%d,%d) nodraw=%d mask=%04x\n",
-                            (int)pl->x, (int)pl->y, (int)pl->z,
-                            (int)pl->no_draw, (unsigned)pl->fress_skip_mask);
-                    fclose(fl);
+                static FILE *s_ff = NULL;
+                if (!s_ff) s_ff = fopen("gator_boss.log", "a");
+                if (s_ff && (sf & 7) == 0) {
+                    int32_t vb0[3];
+                    re15_enemy_bone_world_pos(pl, 0, vb0);
+                    fprintf(s_ff, "FSYNC2 sf=%d gaf=%u laf=%u pl=(%d,%d,%d) b0y=%d\n",
+                            sf, (unsigned)e->anim_frame, (unsigned)pl->anim_frame,
+                            (int)pl->x, (int)pl->y, (int)pl->z, vb0[1]);
+                    fflush(s_ff);
                 }
             }
-        } else if (g->timer > 185 && g->timer < 210) {
-            if (g->jaw_vz > 45) g->jaw_vz = (int16_t)(g->jaw_vz - 45);
-            else g->jaw_vz = 0;               /* Maul schliesst sich */
-            if (g->pitch_vz < 0) {            /* ... und der Kopf kommt runter */
-                g->pitch_vz = (int16_t)(g->pitch_vz + 12);
-                if (g->pitch_vz > 0) g->pitch_vz = 0;
+        } else if (g->timer <= 340) {                  /* ---- P3: Clip 11 Kau-Loop ---- */
+            e->motion = 11;
+            e->anim_frame = (uint32_t)((g->timer - 221) % 30);   /* Loop ohne Bewegung
+                                                                  * (FUN_8001A240) */
+            if (gb23 && gb23->victim_ok) {             /* Leon im letzten Opfer-Frame parken */
+                pl->motion = 1; pl->anim_frame = 119;
+                re15_clip_root_motion_abs_pub(pl, &gb23->skel_victim,
+                                              &gb23->anim_victim, 1, 119);
             }
-        } else if (g->timer >= 240) {
+        } else {
+            re15_player_victim_force_end();
             g->pitch_vz = 0; g->jaw_vz = 0;
-            g->phase = GBP_CHASE;             /* der pl->hp<0-Abzug uebernimmt:
-                                               * er geht einfach weg */
+            g->phase = GBP_CHASE;                      /* der pl->hp<0-Abzug uebernimmt */
             e->motion = 0; e->anim_frame = 0;
         }
-        e->anim_frame++;
-        {   /* FRESS-SYNC-MESSUNG (Befund B 2026-09-12): pro Frame der Anker
-             * der Wirbelbahn (analytischer Maulpunkt kx/kz) gegen die
-             * GERENDERTEN Kiefer-Bones (Kopf 6, Unterkiefer 7 - Kopfkette
-             * 1->5->6/Kiefer 7, Datei-Kopf) und Leons Wurzel. dpl = |pl -
-             * Maulmitte| (3D). Nach anim_frame++ = der Stand, den der
-             * Renderer DIESES Frame posiert. */
-            static FILE *s_fs = NULL;
-            if (!s_fs) s_fs = s_gb_stumm ? NULL : fopen("gator_boss.log", "a");
-            if (s_fs) {
-                int32_t b6[3], b7[3], mx, my, mz, ddx, ddy, ddz, d = 0;
-                int64_t d2;
-                gb_bone_welt(e, 6, b6); gb_bone_welt(e, 7, b7);
-                mx = (b6[0] + b7[0]) / 2; my = (b6[1] + b7[1]) / 2;
-                mz = (b6[2] + b7[2]) / 2;
-                ddx = pl->x - mx; ddy = pl->y - my; ddz = pl->z - mz;
-                d2 = (int64_t)ddx * ddx + (int64_t)ddy * ddy + (int64_t)ddz * ddz;
-                while ((int64_t)d * d < d2 && d < 30000) d += 16;
-                fprintf(s_fs, "FSYNC t=%d anker=(%d,%d) pl=(%d,%d,%d) "
-                              "b6=(%d,%d,%d) b7=(%d,%d,%d) maul=(%d,%d,%d) "
-                              "dpl=%d pitch=%d jaw=%d mo=%d af=%d "
-                              "roty=%d rotx=%d\n",
-                        (int)g->timer, kx, kz, pl->x, pl->y, pl->z,
-                        b6[0], b6[1], b6[2], b7[0], b7[1], b7[2],
-                        mx, my, mz, d, (int)g->pitch_vz, (int)g->jaw_vz,
-                        (int)e->motion, (int)e->anim_frame,
-                        (int)pl->rot_y, (int)pl->rot_x);
-                fflush(s_fs);
-            }
-        }
-        break; }
-
+        break;
+    }
     case GBP_DIE:                             /* Todesrolle Clip 7, dann CORPSE */
         e->motion = 7;
         e->anim_frame++;

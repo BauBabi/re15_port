@@ -135,11 +135,17 @@ int main(void)
             e->x = nx; e->z = nz;
         }
         if (re15_gator_fressen_hold()) fress_gesehen = 1;
-        if (pl->no_draw) break;           /* Verschlungen = Sequenz komplett */
+        /* UMVERANKERT (Runde 6, gator-vollausbau.md 7b): der authored Finisher
+         * verschlingt Leon nicht mehr per no_draw - er haengt im letzten
+         * Opfer-Frame sichtbar im Maul, waehrend der Gator Clip 11 kaut. */
+        if (e->motion == 11) break;       /* P3-Kau-Loop = Sequenz komplett */
     }
 
     if (!fress_gesehen) { printf("FAIL: FRESSEN nie erreicht\n"); return 1; }
-    if (!pl->no_draw)   { printf("FAIL: Verschlingen (no_draw) nie erreicht\n"); return 1; }
+    if (e->motion != 11) { printf("FAIL: P3-Kau-Loop (Clip 11) nie erreicht\n"); return 1; }
+    if (pl->motion != 1 || pl->anim_frame != 119) {
+        printf("FAIL: Leon nicht im letzten Opfer-Frame geparkt (clip=%d af=%u)\n",
+               (int)pl->motion, (unsigned)pl->anim_frame); return 1; }
     printf("OK: FRESS-Sequenz komplett - FSYNC-Messreihe in gator_boss.log\n");
     return 0;
 }
