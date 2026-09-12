@@ -1,3 +1,32 @@
+# v0.7.81 — 2026-09-12
+
+## Endkampf: kein Abspann mehr, dafuer der FINALE Birkin
+
+- **Der Abspann ist raus.** Er sass nicht in STAGE6, sondern am Ende von
+  ROOM5090 ("TRAIN CAR ABC"): dort spawnt der G-Birkin, dort laeuft die
+  Cutscene, und von dort fuehrte die einzige Tuer in den Abspann-Raum — eine
+  Diashow aus neun Bildern, die zum Titel zurueckwirft. Drei Riegel sorgen
+  dafuer, dass daraus jetzt der Endkampf wird; die Cutscene selbst bleibt, weil
+  sie den Boss an den Kampfplatz setzt und die Fluchttuer sperrt.
+- **Der finale Birkin aus RE2 steht im Endkampf** (EM36 — in RE2 tritt er nur in
+  der Endarena an, dem einzigen Raum ohne Ausgang) statt der fruehen Form.
+- **Nebenbei repariert:** Der Birkin-Tod setzte sein Fortschritts-Flag nie — im
+  Port war der Aufruf faelschlich als Gore-Effekt kommentiert. Acht Raeume haben
+  den Tod dadurch nie mitbekommen.
+
+## Waffen
+
+- **Jede Waffe hat wieder ihre eigene Animation.** Bisher liefen Schrotflinte,
+  Maschinenpistole und Magnum alle in der Handfeuerwaffen-Animation, weil der
+  Port nur zwei Bewegungsbaenke kannte. Jetzt wird die Bank aus der Waffe
+  abgeleitet — alle 21 liegen vor, mit deutlich verschiedenen Bewegungen.
+- **Die Schrotflinte streut wieder**: vier Treffer je Schuss statt einem.
+
+## Bosskampf ROOM2090
+
+- Der Raum hat jetzt **Vordergrund-Masken** (Kamerawinkel 0–7): der Klaertank
+  samt Sockel verdeckt die Spielfigur wieder korrekt.
+
 # v0.7.80 — 2026-09-12
 
 ## Karte: der rote Bereich passt wieder zum Raum
