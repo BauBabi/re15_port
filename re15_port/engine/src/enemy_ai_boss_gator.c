@@ -348,7 +348,15 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
     re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
     if (pl->hp < 0) {
         g->phase = GBP_FRESSEN; g->timer = 0;
-        gb_se(4); e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
+        /* SE 3, NICHT 4 (Korrektur 2026-09-12, gator-se-korrektur.md): SE 4 ist der
+         * 2,40-s-Brueller mit 1,43 s Attack - beim 45-F-Schnapp (Maul zu @F24) kam der
+         * Peak 1,6+ s NACH dem Biss ("der Sound von den Aligator Bissen ist falsch").
+         * SE 3 ist das einzige kurz-perkussive Sample der Bank 17 (<30 ms Attack,
+         * 22 kHz "Klatsch"; RE2-Kontext Wasser-Einschlag Clip 5 f80). Ein echtes
+         * Schnapp-Sample existiert nirgends (Clip 4 datenstumm, ROOM40A0-Raumbank
+         * leer). RE2 startet SE 4 nur am Lunge-Clip-3-BEGINN (@0x80100D64/84), wo
+         * das Maul erst ~F54 oeffnet - Peak faellt MIT dem Biss zusammen. */
+        gb_se(3); e->motion = 4; e->anim_frame = 0;     /* Schnapp-Clip als Zubeissen */
         g->arc_vz = 0;
     } else {
         re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
@@ -1266,7 +1274,7 @@ void re15_gator_boss_tick(int slot)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
                     g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
-                    gb_se(4); e->motion = 4; e->anim_frame = 0;
+                    gb_se(3); e->motion = 4; e->anim_frame = 0;
                     break;
                 }
                 /* RUECKWAERTSGANG (Nutzer: "wenn es dem Alligator hilft mal
@@ -1330,7 +1338,7 @@ void re15_gator_boss_tick(int slot)
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
              * zeigte deshalb "keinerlei Beissanimation" (Nutzer-Befund). */
-            gb_se(4); e->motion = 4; e->anim_frame = 0;
+            gb_se(3); e->motion = 4; e->anim_frame = 0;
         }
         break; }
 
@@ -1664,7 +1672,7 @@ void re15_gator_boss_tick(int slot)
         g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
         /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
         if (dist < 4200 && e->hit_stun == 0 && e->motion != 4) {
-            gb_se(4); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
+            gb_se(3); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
         }
         if (e->motion == 4) {
             e->anim_frame++;
@@ -1848,7 +1856,7 @@ void re15_gator_boss_tick(int slot)
                 }
             }
         } else if (g->timer == 75) {
-            gb_se(4); e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
+            gb_se(3); e->motion = 4; e->anim_frame = 0;                 /* Schnapp 1 AM Leon */
         } else if (g->timer == 95 && !g->gefressen) {
             /* Oberkoerper ist im Maul: nur Huefte+Beine (PLD-Meshes 1-7)
              * bleiben sichtbar und wirbeln durch die Luft. */
@@ -1890,7 +1898,7 @@ void re15_gator_boss_tick(int slot)
             pl->rot_y = (int16_t)(((int)pl->rot_y + 70) & 0x0fff);
             if (g->timer >= 150)              /* Maul reisst weiter auf */
                 g->jaw_vz = (int16_t)((450 * (g->timer - 150)) / 25);
-            if (g->timer == 174) { gb_se(4); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
+            if (g->timer == 174) { gb_se(3); e->motion = 4; e->anim_frame = 0; } /* Schnapp 2 */
         } else if (g->timer >= 175 && g->timer < 185) {
             /* FANG: Leon haengt AN der Maulmitte, Schnapp 2 (t=174) klappt
              * sichtbar um ihn zu (FSYNC: vorher klaffte hier 2352). */
