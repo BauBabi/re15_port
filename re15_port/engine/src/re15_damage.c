@@ -281,6 +281,13 @@ int re15_player_is_dead(void)
         extern int      re15_player_victim_state(void);
         extern uint8_t  re15_player_victim_type(void);
         unsigned vt = re15_player_victim_type();
+        if (re15_player_victim_state() == 4)           /* GATOR-FRESS (Runde 7,
+                                                        * victim-render-gate.md): Modus 4
+                                                        * BESITZT den Spieler - die Tod-FSM
+                                                        * (YOU DIED/Death-Cam) wartet, bis
+                                                        * der Finisher den Modus beendet
+                                                        * (Muster Zombie-Devour). */
+            return 0;
         if (re15_player_victim_state() != 0 &&
             g_actors[RE15_ACTOR_SLOT_PLAYER].state != 7 &&
             re15_ai_re2_for_type(vt) &&

@@ -575,7 +575,7 @@ int re15_player_is_grabbed(void)
      * pin those first 35 frames; the cmd-6 handler never reads the pad either. */
     extern int re15_player_victim_state(void);
     int vs = re15_player_victim_state();
-    return s_player_grabbed || vs == 1 || vs == 2 || vs == 3;
+    return s_player_grabbed || vs == 1 || vs == 2 || vs == 3 || vs == 4;
 }
 
 /* ===================== LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) ===========

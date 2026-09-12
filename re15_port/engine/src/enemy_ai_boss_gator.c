@@ -350,6 +350,13 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
     re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
     if (pl->hp < 0) {
         g->phase = GBP_FRESSEN; g->timer = 0;
+        /* VICTIM-MODUS SOFORT armen (Runde 7, victim-render-gate.md): hp<0 wuerde
+         * sonst NOCH IN DIESEM game_step die Tod-FSM starten (cmd3 nullt den Modus
+         * via re15_player_victim_reset und faehrt YOU-DIED mitten im Finisher).
+         * Opfer-Clip 0 = HOCHHEBEN (30 F; RE2-Proximity-Variante startet ihn ab
+         * Frame 3 @0x80102FBC) traegt die Zeit bis zum f13-Schnapp - danach
+         * Opfer-Clip 1 (Rumschleudern). */
+        re15_player_victim_force(e->type, 0, 0);
         /* SE 3, NICHT 4 (Korrektur 2026-09-12, gator-se-korrektur.md): SE 4 ist der
          * 2,40-s-Brueller mit 1,43 s Attack - beim 45-F-Schnapp (Maul zu @F24) kam der
          * Peak 1,6+ s NACH dem Biss ("der Sound von den Aligator Bissen ist falsch").
@@ -1852,18 +1859,21 @@ void re15_gator_boss_tick(int slot)
             pl->z = e->z + (int32_t)((-(int64_t)fs0 * 10643 + (int64_t)fc0 * (-915)) >> 12);
             pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
             pl->rot_x = 0;
-            pl->motion = 2; pl->anim_frame = 0;        /* STRAMPELN: Leons Clip 2 (113 F) */
+            /* Leon laeuft seit dem Biss-Abschluss im VICTIM-MODUS 4 auf Opfer-
+             * Clip 0 (Hochheben) - kein pl->motion-Schreiben mehr noetig (die
+             * Tod-FSM ist per Modus-4-Besitz pausiert). */
             e->motion = 4; e->anim_frame = 0;          /* Gator-Clip 4 (45 F) */
             g->gefressen = 0;
         }
         if (!g->gefressen) {                           /* ---- P1: Clip 4 bis f13 ---- */
-            if (pl->anim_frame < 112) pl->anim_frame++;   /* Strampeln vorwaerts */
+            if (pl->anim_frame < 29) pl->anim_frame++;    /* Opfer-Clip 0 (30 F), HOLD */
             if (e->anim_frame == 13 && gb23 && gb23->ok) {   /* @0x801010FC-1104 */
                 /* Gemeinsames Anker-Paar am AKTUELLEN Gator-Frame (@0x80101110-34):
                  * erst der Gator mit SEINEM Clip, dann Kopie in den Spieler. */
                 re15_clip_anchor_set_pub(e, &gb23->skel, &gb23->anim, 4, 13);
                 pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
-                if (gb23->victim_ok) {                 /* Opfer-Start (+0x158=1-Analogon) */
+                if (gb23->victim_ok) {                 /* Opfer-Start (+0x158=1-Analogon):
+                                                        * Umschalt auf Clip 1 (Rumschleudern) */
                     re15_player_victim_force(e->type, 1, 0);
                     g->gefressen = 1;
                     if (!s_gb_stumm) {
