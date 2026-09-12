@@ -1,3 +1,25 @@
+# v0.7.91 - 2026-09-13
+
+## Birkin bekommt seine Tentakel - und die Fleischmasse lebt
+
+- **Die vier Tentakel sind da.** Im Original sind sie keine Teile des
+  Boss-Modells, sondern vier eigene Kreaturen, die Birkin per Befehl steuert -
+  deshalb fehlten sie bisher komplett. Jetzt fahren sie beim Auftauchen aus der
+  Fleischmasse heraus (zwei je Seite, je einer hoch und einer tief), haengen
+  jeden Moment an der Masse und wandern mit ihr mit, peitschen und stechen nach
+  Leon (15 Schaden) und ziehen sich am Ende des Auftritts wieder ein. Birkin
+  waehlt dabei wie im Original einen gerade freien Arm aus; unverwundbar sind
+  sie auch dort.
+- **Die Masse pulsiert, holt aus und schnappt zu.** Ihr Verformen ist kein
+  Trick, sondern ein eigener Datenblock im Modell: vier gespeicherte Zielposen,
+  gegen die das Original jeden Frame interpoliert. Dieser Block ist jetzt
+  entschluesselt und wird byte-genau nachgerechnet - die Masse atmet im
+  Leerlauf, holt vor dem Biss aus, schnellt vor und zerfliesst im Tod.
+- Dabei sind zehn Rechenfehler in der Steuerung der Verformung aufgefallen und
+  behoben worden (sie waren unsichtbar, solange nichts verformt wurde): das
+  Atmen war zu flach und zu hart, das Zucken der Leiche dreissigmal zu schwach,
+  das Aufgehen der Masse beim Heranrobben fehlte ganz.
+
 # v0.7.90 - 2026-09-13
 
 ## Runde 7: Maul, Boden, Spinnen-Leiche, Karte 1050, Birkins Auftritt
