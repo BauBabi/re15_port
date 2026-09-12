@@ -145,8 +145,13 @@ int main(void)
         re15_inv_screen_open();
         g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
         g_inv_screen.map_page = 2;
-        CHECK("Seite 2 Rect 0 hat keinen Besitzer",
-              re15_map_rect_state(2, 0) == RE15_MAP_RECT_UNMAPPED);
+        /* UMVERANKERT 2026-09-12 (karte-1050.md): Rect 0 (180,69,32,96) gehoert
+         * jetzt ROOM1050 (spiegelverkehrt eingemessen, Anker 1030s Original-
+         * Zeile @0x800768c8) - herrenlos ist auf Seite 2 nur noch Rect 5. Die
+         * eigentliche Schranke ("kein unzugeordnetes Rechteck wird grau
+         * gemalt") traegt die Schleife unten weiter. */
+        CHECK("Seite 2 Rect 0 hat jetzt einen Besitzer (ROOM1050)",
+              re15_map_rect_state(2, 0) != RE15_MAP_RECT_UNMAPPED);
         /* ⛔ AUF DER KUNST HAT RECT 5 EINEN BESITZER - UND DAS IST RICHTIG.
          * Der Pin stammt aus der Grundriss-Zeit, in der kein gemaltes Rechteck
          * einer Zone gehoerte. Seit die Kunst gezeichnet wird, ist ein Rechteck
@@ -159,9 +164,9 @@ int main(void)
             if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_MAP4)
                 continue;
             if (ops[i].r == 128 && ops[i].g == 128 && ops[i].b == 128) {
-                if ((ops[i].x == 180 && ops[i].y == 69 && ops[i].w == 32 && ops[i].h == 96) ||
-                    (ops[i].x == 180 && ops[i].y == 59 && ops[i].w == 48 && ops[i].h == 32))
-                    grau_grundriss++;
+                if (ops[i].x == 180 && ops[i].y == 59 && ops[i].w == 48 && ops[i].h == 32)
+                    grau_grundriss++;      /* nur noch Rect 5 ist herrenlos -
+                                            * Rect 0 gehoert seit 2026-09-12 ROOM1050 */
             }
         }
         /* GEZAEHLT WIRD JETZT JE ORT (2026-09-02). Frueher wurden die gemalten

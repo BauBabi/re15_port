@@ -32,8 +32,16 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1031, -27992, -31110,   4560,     16,  2,   4, 0,   4,   108,   194,  2428,  2229, 0, 0,   0, 0 },
     { 0x1040, -32762, -19208, -15590,  24856,  2,   2, 0,   5,    94,   193,  2080,  2320, 0, 0,   0, 0 },
     { 0x1041, -32762, -19208, -15590,  24856,  2,   2, 0,   5,    94,   193,  2080,  2320, 0, 0,   0, 0 },
-    { 0x1050,  12700, -24350,  26100,  15805,  2,   4, 0,   6,    63,   247,  2428,  2229, 0, 0,   0, 0 },
-    { 0x1051,  12700, -24350,  26100,  15805,  2,   4, 0,   6,    63,   247,  2428,  2229, 0, 0,   0, 0 },
+    /* ROOM1050 -> Rect 0, spiegelverkehrt eingemessen 2026-09-12 (karte-1050.md;
+     * Nutzer: "Ab 1050 nicht mehr [klasse]"). Anker = 1030s Original-Zeile
+     * @0x800768c8 auf (187,153): ox=187+124=311, oy=153-94=59, flip(1,1).
+     * Zeugen: Tuer->1030 trifft die gemalte Tuernische (188..192,147..151);
+     * Tuer->10A0 (197,98) gegen 10A0s Ostwand-Marke (197,94) = 4 px.
+     * VON HAND wie die 1010er-Zeilen - ein gen_map_zones-Regen wuerde die
+     * Hand-Staende dieses Headers zerstoeren (Seeds stehen trotzdem im
+     * Generator fuer einen kuenftig konsolidierten Regen). */
+    { 0x1050,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    59,  2428,  2229, 1, 1,   0, 0 },
+    { 0x1051,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    59,  2428,  2229, 1, 1,   0, 0 },
     { 0x1060,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1061,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1070,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
@@ -314,17 +322,28 @@ static const re15_map_mark_t s_map_marks[] = {
     {  2,  2,  113,  143, 2,   5, 255, 0 },
     {  2,  4,  119,  129, 3,   4,   5, 1 },
     {  2,  4,  145,  133, 1,   4,   8, 1 },
-    {  2,  4,  169,  159, 3,   1,   6, 1 },
-    {  2,  4,  169,  167, 3,   1,   6, 1 },
-    {  2,  4,  176,  173, 3,   0,   6, 1 },
-    {  2,  4,  177,  188, 3,   6, 255, 0 },
-    {  2,  4,  183,  188, 0,   6,   0, 0 },
+    /* 1000-Flur <-> 1050 (2026-09-12): mit Zone 6 auf Rect 0 liegen die
+     * Tueren auf der WESTKANTE x=180 der Rect-0-Kunst (Generator-Snap mit den
+     * karte-1050-Seeds; die alten 169/176er stammten aus der Rect-4-Welt und
+     * lagen 11-14 px ausserhalb der Kasten-Ueberdeckung, s. unit_map_durchgang
+     * AUSSEN-Schiene). Dritte Tuer ohne eigenes Rechteck (rect 255). */
+    {  2,  4,  180,  159, 1,   1,   6, 0 },
+    {  2,  4,  180,  164, 1,   0,   6, 0 },
+    {  2, 255,  185,  164, 0,   0,   6, 0 },
+    /* (177,188)/(183,188) ersetzt (karte-1050.md): Klemm-Artefakte der alten
+     * Rect-4-Zuordnung - sie lagen 40+ px unter jeder Kunst. Die 1090-Tuer
+     * projiziert mit der neuen 1050-Zeile auf (191,77), Nordwand-Snap der
+     * Rect-0-Kunst y=71. */
+    {  2,  0,  191,   71, 0,   6, 255, 0 },
     {  2,  4,  186,  152, 3,   4,   6, 1 },
     {  2,  5,  180,   64, 3,  11, 255, 0 },
     {  2,  5,  222,   75, 1,  11, 255, 0 },
     {  2,  6,  187,  100, 4,  10, 255, 0 },
     {  2,  6,  196,   99, 4,  10, 255, 0 },
-    {  2,  6,  197,   94, 1,  10, 255, 0 },
+    {  2,  6,  197,   94, 1,  10,   6, 1 },  /* 2026-09-12: dieselbe physische
+                                               * Tuer wie 1050->10A0 (197,98);
+                                               * Punkt auf bemalter Flaeche
+                                               * BEIDER Kacheln (Rect 6 UND 0) */
     /* (171,77) entfernt: Marke der 10F0-Ausweich-Gastzeile auf Rect 8 -
      * die "Tuer, die gar nicht existiert" (Nutzer 2026-09-12). */
     {  2, 10,  120,  151, 3,   7,   5, 0 },

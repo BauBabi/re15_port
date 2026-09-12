@@ -252,6 +252,11 @@ int main(void)
             if (dx + dy > 0) {
                 aussen++;
                 if (dx + dy > schlimmst) schlimmst = dx + dy;
+                /* Schiene: JEDEN Ausreisser benennen (Memory schiene-abdeckung -
+                 * "6 ausserhalb, schlimmste 14" ohne Namen war unbrauchbar). */
+                printf("    AUSSEN p%d (%d,%d) zid %d<->%d kaesten (%d,%d %dx%d)/"
+                       "(%d,%d %dx%d) d=%d\n", pg, mx, my, zid, zid2,
+                       ax, ay, aw, ah, bx, by, bw, bh, dx + dy);
             }
         }
         printf("  [Kante] %d gepaarte Marken geprueft, %d ausserhalb der "

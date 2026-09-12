@@ -1262,6 +1262,17 @@ def main():
         #      drei anderen Spiegelungen liegen 17, 21 und 34 px daneben, und Rect 7 kam
         #      auf 23 px. Deshalb zugleich ZONE_ORIENT[(0x1110,0)] = (1,1).
         (0x1110, 0): (3, 5),
+        # ROOM1050 -> Rect 0, EINGEMESSEN 2026-09-12 (Nutzer-Marke F620 in 1050,
+        # befund_1050_F620_marke2.bmp: "bis ROOM1050 sah die Karte von 1F richtig
+        # klasse aus. Ab 1050 nicht mehr" - Rect 4 verschmolz 1000/1030/1050 zu
+        # EINEM braunen Block, Tuermarken 40+ px unter jeder Kunst). Belege
+        # (karte-1050.md): Deckung der begehbaren Flaeche auf Rect-0-Kunst mit
+        # flip(1,1)+ox/oy(311,59); Tuer->1030 trifft die gemalte Tuernische
+        # (188..192,147..151); Tuer->10A0 landet (197,98) gegen 10A0s eigene
+        # Ostwand-Marke (197,94) = 4 px; Raum-Spanne x177..208/y75..161 gegen
+        # gemalt 180..211/69..164. ROOM1090 als Alternativ-Besitzer verworfen
+        # (bestes IoU 0.209).
+        (0x1050, 0): (2, 0),
     }
 
     # ⛔ NICHT-EXKLUSIVE Vorgaben: Zone -> Rechteck, ohne das Rechteck fuer andere
@@ -1271,7 +1282,8 @@ def main():
     # Rechteck (1000-z0: Karte x198..256 y191..195, Massstab geliehen; 1030-z0:
     # 1 px) - der Kosten-Loeser wich auf Rect 8 aus, dessen gemalte Flaeche Rect 1
     # (ROOM1010) beruehrt -> Gegenprobe unit_map_durchgang rot (Tuergraph-Abstand
-    # 5). Rect 4 traegt bereits ROOM1000s EIGENE z1 (geeicht) und ROOM1050 - dass
+    # 5). Rect 4 traegt bereits ROOM1000s EIGENE z1 (geeicht); ROOM1050 zog am
+    # 2026-09-12 auf Rect 0 um (ZONE_FIX oben, karte-1050.md) - dass
     # 1000-auf-Rect-4 die Gegenprobe besteht, beweist der heutige gruene Stand.
     # Ein ZONE_FIX-Eintrag wuerde Rect 4 ueber _fix_rects sperren und 1050/z1
     # verdraengen (die Kaskade vom 2026-09-09) - deshalb diese zweite, weiche Liste.
@@ -1705,6 +1717,12 @@ def main():
     # kein Nachbar-Beleg) und ROOM5020 (nur eine Beobachtung) erfuellen das NICHT und
     # bleiben deshalb ungedreht.
     ZONE_ORIENT = {
+        # ROOM1050 EINGEMESSEN 2026-09-12 (karte-1050.md): Zeile spiegelverkehrt
+        # wie die 1010er (Anker = Original-Zeile des Nachbarn 1030 @0x800768c8
+        # auf (187,153); ox = 187+124 = 311, oy = 153-94 = 59; 1 bzw. 5 px vom
+        # freien Form-Optimum, innerhalb des 5-px-Rauschbodens). Mechanik-Luecke
+        # wie karte-1010: EIN Tuerpaar => Ordnungs-Signatur blind fuer Spiegelung.
+        (0x1050, 0): (1, 1),
         # ⛔ ROOM1110 EINGEMESSEN 2026-09-07 (Nutzer-Marke F9-5 in ROOM1100):
         # "Die Tuer befindet sich am Ende des Ganges, nicht an der Seite."
         # Er stand bei Welt(-26232,-10781) = Karte (192,121), die Tuer nach ROOM1110
