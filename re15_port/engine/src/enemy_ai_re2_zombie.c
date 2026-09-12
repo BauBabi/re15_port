@@ -7670,6 +7670,25 @@ int re15_re2z_tick(int slot)
      * Anwenden wird pro Tick neu bestellt. */
     e->re2_lean_on    = 0;
     e->re2_bone0_wgt  = 0;
+    /* REAKTIONS-SCHIENE (Runde 6, env-gegated): der Nutzer sieht "manchmal"
+     * einen Taumel mit Animation unter dem Boden - der EBEN-Schrot-Pfad ist
+     * inzwischen dreifach byte-verifiziert; diese Zeile benennt beim naechsten
+     * Auftreten den echten Taeter-Executor (jede Reaktion ausser Gang/Stand,
+     * alle 4 Frames): Zustandswort, Clip/Frame, e->y und die gerenderte
+     * Wurzel-Welt-Y. Kanal re2_ki.log (GUI-exe hat kein stderr). */
+    if ((e->state == 2 || (e->state == 1 && (e->sub_state_1 == 5 || e->sub_state_1 == 9)))
+        && (e->anim_frame & 3u) == 0u && getenv("RE15_RE2_TRACE")) {
+        FILE *tf = re15_re2_trace_out();
+        if (tf) {
+            int32_t rb[3];
+            re15_enemy_bone_world_pos(e, 0, rb);
+            fprintf(tf, "[z-reakt] slot=%d st=%d/%d/%d clip=%d af=%u ey=%d b0y=%d "
+                        "f10e=%04x pos=(%d,%d)%c",
+                    slot, e->state, e->sub_state_1, e->sub_state_2, (int)e->motion,
+                    (unsigned)e->anim_frame, (int)e->y, rb[1], e->re2z_f10e,
+                    (int)e->x, (int)e->z, 10);
+        }
+    }
 
     if (e->re2z_cd239) e->re2z_cd239--;
     if (e->re2z_cd23e) e->re2z_cd23e--;
