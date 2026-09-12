@@ -1,3 +1,39 @@
+# v0.7.90 - 2026-09-13
+
+## Runde 7: Maul, Boden, Spinnen-Leiche, Karte 1050, Birkins Auftritt
+
+- **Der Alligator hat Leon jetzt wirklich im Maul**: Der Finisher spielte die
+  Opfer-Animation zwar ab, aber die Todes-FSM des Spielers lief parallel weiter
+  und riss ihn zurueck (sie loeschte den Opfer-Modus und startete den
+  YOU-DIED-Ablauf mitten in der Sequenz). Jetzt BESITZT die Fress-Sequenz den
+  Spieler von der Sekunde des toedlichen Bisses an - Leon strampelt im
+  Hochhebe-Clip, wird geschleudert und haengt am Ende im kauenden Maul; das
+  Game-Over kommt erst danach.
+- **Zombies versinken nicht mehr im Boden**: Der Schrot-Sturz merkt sich beim
+  Aufschlag die Bodenhoehe. Er nahm dafuer bisher die AKTUELLE Hoehe des
+  Zombies - war der schon abgesackt, wurde die Senke festgeschrieben und alles
+  Weitere baute darauf auf. Jetzt fuehrt der Port (wie das Original) ein
+  eigenes Boden-Register mit.
+- **Die tote Spinne bleibt liegen**: Nach dem Tod zeigte der Port fuer eine
+  halbe Sekunde das ERSTE Bild der Todesanimation (aufgebaeumt), bevor der
+  Liege-Clip sie wieder hinlegte - das Original haelt stattdessen das letzte
+  Bild. Ausserdem war eine sterbende Spinne weiter beschiessbar: jeder
+  Nachtreffer startete die Todesanimation neu und spuckte weitere Baby-Spinnen
+  aus. (Dass ueberhaupt Babys herauskommen, ist original so.)
+- **Karte 1F, ROOM1050**: Die drei Tueren zum Empfangsflur fehlten - ihre
+  Symbole sassen auf der falschen Kachelkante, weil die Zeichnung dieses Raums
+  um 180 Grad gedreht montiert ist. Sie sitzen jetzt auf der richtigen Wand.
+  Und das fehlende Wandstueck war ein zwei Pixel breiter Mauerversatz, den die
+  automatische Tuerschwenk-Erkennung als Schwenk entfernt hatte.
+- **Birkin kommt von der richtigen Seite**: Er startete am Ende des Zuges
+  HINTER dem Spieler. Nachgemessen (Tuerdaten, Kollisionsstreifen und der
+  Spawn-Eintrag des Auslieferungs-Skripts): Er gehoert weit nach vorn in den
+  Zug - dorthin, wo Leon hinlaeuft - und kriecht ihm sein Original-Intro
+  entgegen. Der Kampf rechnet ausserdem in Abstaenden zum Spieler, damit die
+  Original-Schwellen im laengeren Zugkorridor stimmen.
+  (Noch offen: Tentakel und das Pulsieren der Fleischmasse - beides ist
+  spezifiziert und in Arbeit.)
+
 # v0.7.89 - 2026-09-12
 
 ## Runde 6: die beiden Bosse bekommen ihre echte RE2-Seele
