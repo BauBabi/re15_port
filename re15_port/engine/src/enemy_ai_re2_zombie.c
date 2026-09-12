@@ -3645,6 +3645,16 @@ enum { RE2Z_ATK_MAX = 19 };   /* Ids 1..19 (Beleg (a)/(b)/(c) oben)             
  * hat keine Armbrust), 14 (Spark Shot — RE1.5 hat keine Elektrowaffe) und 19 (existiert als
  * Attacken-Id, liegt physisch aber schon in der 1D-Kriecher-Tabelle, s. re2z_hit_tbl).
  */
+/* ⛔ TORSO-ABSCHUSS (Runde 5, torso-schrot.md; Nutzer: "die Schrotflinte kann den
+ * Oberkoerper noch nicht abschiessen ... was im Original RE2 geht"): W8 (Pump/
+ * Remington M870) -> RE2-Zeile 7 ist BYTE-RICHTIG (Zeile = RE2-Item-Id der Waffe,
+ * Applier `sb (hi16)+1,0x5` @0x80041aa0-b4; Tabelle @0x8010CD20: Zeile-7-Rumpfzelle
+ * = 66FC, KEIN Zerreisser). Den Rumpf abreissen kann im RE2-Original NUR die
+ * CUSTOM Shotgun (Item-Id 8 -> Zeile 8, Rumpfzelle 8BEC @0x8010CD44) - deren
+ * RE1.5-Pendant W13/SPAS-12 (Pickup ROOM2030 @0x1bd6) liegt hier schon auf 8;
+ * SPAS + hoch zielen zerreisst deterministisch (HOCH-Gate @0x80108C94-A0).
+ * W8 auf 8 umlegen waere eine bewusste Original-Abweichung -> nur auf
+ * ausdrueckliche Nutzer-Entscheidung. */
 static const uint8_t re2z_row_from_weapon[22] = {
     /* 0*/  1, /* 1*/  1, /* 2*/  1, /* 3*/  3, /* 4*/  2, /* 5*/  4,
     /* 6*/  4, /* 7*/  5, /* 8*/  7, /* 9*/  9, /*10*/ 11, /*11*/ 10,
