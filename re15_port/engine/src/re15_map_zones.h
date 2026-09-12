@@ -224,6 +224,14 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1061,  17800,  16200,  28900,  28950,  4,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x10A0,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x10A1,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* ⛔ AUSWEICH-KACHEL, NUR GEDULDET (2026-09-12): diese 1F-Gastlage von
+     * ROOM10F0/10F1 sitzt auf Blatt 2 Rect 8 - einer AUSWEICH-Kachel des
+     * Loesers; Rect 8 gehoert pixelgenau belegt ROOM1010-Nord (Dossier
+     * karte-1010.md). Die Zeilen BLEIBEN, weil sie die Etagen-Buchfuehrung
+     * des Bands 1 tragen (ohne sie leckte ein 1F-Besuch aufs 2F-Blatt -
+     * Pin unit_map_floor_visited). Ihre TUERMARKE (171,77) ist entfernt
+     * (die "Tuer, die gar nicht existiert", Nutzer 2026-09-12); 10F0s echte
+     * 1F-Kachel ist unvermessen - OFFEN in karte-1010.md 5.3. */
     { 0x10F0,  -9800,  -5400,  11300,  16800,  2,   8, 0,  15,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x10F1,  -9800,  -5400,  11300,  16800,  2,   8, 0,  15,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x1170, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,     0,     0,     0,     0, 0, 0,   0, 1 },
@@ -317,7 +325,8 @@ static const re15_map_mark_t s_map_marks[] = {
     {  2,  6,  187,  100, 4,  10, 255, 0 },
     {  2,  6,  196,   99, 4,  10, 255, 0 },
     {  2,  6,  197,   94, 1,  10, 255, 0 },
-    {  2,  8,  171,   77, 0,  15, 255, 0 },
+    /* (171,77) entfernt: Marke der 10F0-Ausweich-Gastzeile auf Rect 8 -
+     * die "Tuer, die gar nicht existiert" (Nutzer 2026-09-12). */
     {  2, 10,  120,  151, 3,   7,   5, 0 },
     {  2, 10,  127,  144, 4,   7, 255, 0 },
     {  2, 10,  135,  146, 4,   7, 255, 0 },
