@@ -404,6 +404,13 @@ static void map_page_check(void)
 static void re15_schwenke_entfernen(int page)
 {
     static unsigned char lauf[256][256], weg[256][256], ben[256][256];
+    /* Welchem Rechteck gehoert der Texel (Index+1, erstes gewinnt)? Der Atlas
+     * legt FREMDE Raeume Kante an Kante - Blatt 2: Rect 7 uv(152,16) endet bei
+     * u167, Rect 10 uv(168,16) faengt bei u168 an. Ein Wandlauf darf deshalb
+     * nicht in die Nachbarkachel weiterlaufen, sonst sieht die kurze Laibung
+     * eines Tuerschwenks wie ein langer, echter Wandlauf aus und bleibt stehen
+     * (Nutzer 2026-09-12: die zwei Strich-Reste auf 1F). */
+    static unsigned char benr[256][256];
     static short stx[65536], sty[65536];
     const int WAND = 4, S_SAAT = 4, S_WACHS = 10, MAX_AUSD = 10;
     int x, y, i, n_weg = 0, n_sym = 0;
@@ -411,6 +418,7 @@ static void re15_schwenke_entfernen(int page)
     memset(lauf, 0, sizeof lauf);
     memset(weg, 0, sizeof weg);
     memset(ben, 0, sizeof ben);
+    memset(benr, 0, sizeof benr);
     {   /* (1) die Kachelbereiche, die diese Seite zeichnet.
          * ⛔ UEBER DIE ENGINE-ZUGRIFFE, NICHT UEBER RE15_INV_PTR. Die Seiten-Tabelle
          * @0x80076840 liegt im re15_inv_map_blob; re15_inv_ui_blob reicht nur bis
@@ -424,17 +432,33 @@ static void re15_schwenke_entfernen(int page)
             if (!re15_map_rect_uv((unsigned)page, (unsigned)ri, &ru, &rv)) break;
             for (iy = rv; iy < rv + rh && iy < 256; iy++)
                 for (ix = ru; ix < ru + rw && ix < 256; ix++)
-                    if (iy >= 0 && ix >= 0) ben[iy][ix] = 1;
+                    if (iy >= 0 && ix >= 0) {
+                        ben[iy][ix] = 1;
+                        if (!benr[iy][ix] && ri < 254)
+                            benr[iy][ix] = (unsigned char)(ri + 1);
+                    }
         }
     }
     for (y = 0; y < 256; y++)          /* laengster gerader Lauf je Wandpixel */
         for (x = 0; x < 256; x++) {
             int lx = 0, ly = 0, k;
+            int u0 = 0, u1 = 255, v0 = 0, v1 = 255;
             if (!ben[y][x] || s_map4[y][x] != WAND) continue;
-            for (k = x; k < 256 && s_map4[y][k] == WAND; k++) lx++;
-            for (k = x - 1; k >= 0 && s_map4[y][k] == WAND; k--) lx++;
-            for (k = y; k < 256 && s_map4[k][x] == WAND; k++) ly++;
-            for (k = y - 1; k >= 0 && s_map4[k][x] == WAND; k--) ly++;
+            if (benr[y][x]) {          /* Lauf endet an der eigenen Kachel */
+                int qx, qy, qw, qh, qu, qv;
+                unsigned qi = (unsigned)(benr[y][x] - 1);
+                if (re15_map_rect_geometry((unsigned)page, qi, &qx, &qy, &qw, &qh) &&
+                    re15_map_rect_uv((unsigned)page, qi, &qu, &qv)) {
+                    u0 = qu; u1 = qu + qw - 1;
+                    v0 = qv; v1 = qv + qh - 1;
+                    if (u0 < 0) u0 = 0; if (u1 > 255) u1 = 255;
+                    if (v0 < 0) v0 = 0; if (v1 > 255) v1 = 255;
+                }
+            }
+            for (k = x; k <= u1 && s_map4[y][k] == WAND; k++) lx++;
+            for (k = x - 1; k >= u0 && s_map4[y][k] == WAND; k--) lx++;
+            for (k = y; k <= v1 && s_map4[k][x] == WAND; k++) ly++;
+            for (k = y - 1; k >= v0 && s_map4[k][x] == WAND; k--) ly++;
             k = lx > ly ? lx : ly;
             lauf[y][x] = (unsigned char)(k > 255 ? 255 : k);
         }
@@ -510,7 +534,10 @@ static void re15_schwenke_entfernen(int page)
         for (y = 0; y < 256; y++)
             for (x = 0; x < 256; x++)
                 if (ben[y][x] && s_map4[y][x] == WAND &&
-                    lauf[y][x] && lauf[y][x] <= 3) weg[y][x] = 1;
+                    lauf[y][x] && lauf[y][x] <= S_SAAT) weg[y][x] = 1;
+        /* Saatschwelle 3 -> S_SAAT (4): die Laibung des Korridor-Tuerschwenks
+         * auf Blatt 2 hat Lauf 4 und fiel sonst durch, weil Pass 1 ihre
+         * Komponente wegen der 10x19-Ausdehnung verworfen hatte. */
         for (i = 0; i < 24; i++) {
             int ge = 0;
             for (y = 1; y < 255; y++)

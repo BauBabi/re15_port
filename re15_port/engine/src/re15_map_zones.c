@@ -372,8 +372,23 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
                 return RE15_MAP_RECT_CURRENT;
             }
         }
+        /* ⛔ EINE GAST-ZEILE HAENGT AM ETAGEN-BIT, NICHT AM ZONEN-BIT.
+         * Nutzer 2026-09-12: "der kleine Raum ganz hinten wird schon gezeichnet,
+         * obwohl ich da noch gar nicht drin war." Das Zonen-Bit ist EIN Bit je
+         * RAUM (zone_bit oben) - ein Schritt in ROOM10F0 auf 2F liess damit
+         * sofort auch dessen 1F-Gastzeichnung (Blatt 2 Rect 8) erscheinen.
+         * Regel jetzt:
+         *   - Gast-Zeilen (zn->etage) zaehlen NUR ueber ihr Etagen-Bit;
+         *   - eine Haupt-Zeile, die fuer GENAU dieses Rechteck eine Etagenzeile
+         *     fuehrt, braucht das Bit ihres Bands;
+         *   - Raeume ohne Etagenzeile (etage_hier == 0) bleiben unveraendert.
+         * Der Schema-Durchgang macht es seit 2026-09-02 genauso
+         * (re15_inv_screen.c). Der Fahrstuhl bleibt auf allen drei Blaettern
+         * sichtbar, weil die "gleiche Baender"-Regel in re15_map_visited_mark_at
+         * seine drei Etagenbits gemeinsam setzt - dokumentierte Absicht. */
         if (state < RE15_MAP_RECT_VISITED &&
-            ((eigen && re15_map_zone_visited(zn)) || etage_besucht))
+            ((eigen && !zn->etage && (!etage_hier || etage_besucht)
+                    && re15_map_zone_visited(zn)) || etage_besucht))
             state = RE15_MAP_RECT_VISITED;
         else if (state < RE15_MAP_RECT_UNVISITED)
             state = RE15_MAP_RECT_UNVISITED;

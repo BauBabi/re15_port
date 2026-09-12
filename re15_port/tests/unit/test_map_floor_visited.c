@@ -178,7 +178,12 @@ int main(void)
             int x, y, w, h, j, drin = 0, ueberdeckt = 0, sichtbar;
             if (!zn || zn->page != 2) continue;
             if (!re15_map_zone_kasten(zn, &x, &y, &w, &h)) continue;
-            sichtbar = re15_map_zone_visited(zn);
+            /* Gast-Zeilen haengen seit 2026-09-12 am ETAGEN-Bit (re15_map_zones.c,
+             * "EINE GAST-ZEILE HAENGT AM ETAGEN-BIT"). Der Pin muss dieselbe Frage
+             * stellen wie der Zeichner, sonst gruent er den Defekt und roetet den
+             * Fix. */
+            sichtbar = zn->etage ? re15_map_zone_etage_besucht(zn)
+                                 : re15_map_zone_visited(zn);
             for (j = 0; j < nz; j++) {
                 const re15_map_zone_t *zo = re15_map_zone_by_index(j);
                 int ox, oy, ow, oh;

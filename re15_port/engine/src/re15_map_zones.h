@@ -277,7 +277,16 @@ static const re15_map_mark_t s_map_marks[] = {
     {  2,  1,  109,   83, 1,   3,   5, 1 },
     {  2,  1,  163,   81, 3,   2,   3, 1 },
     {  2,  1,  163,  106, 3,   2,   3, 1 },
-    {  2,  2,  114,  145, 2,   5, 255, 0 },
+    /* ⛔ FAHRSTUHLTUER AUF DIE WAND (Nutzer 2026-09-12: "die Tuer im Korridor 1F
+     * Richtung Fahrstuhl ist ganz leicht versetzt unten. Die muss auf der
+     * gleichen Ebene sein wie in 2F oder 3F - direkt auf der Wand in der Map").
+     * Die Kabinen-Suedwand der Kachel uv(168,40) laeuft auf y=143 ueber x109..118,
+     * Mitte also (113,143) - exakt die Werte, die Blatt 3 (Zeile ~298) und
+     * Blatt 4 (Zeile ~318) fuer DIESELBE Kabine ROOM1080 fuehren. Der Generator
+     * setzte hier (114,145): zwei Pixel zu tief, weil snap_wall nur die
+     * Silhouette kennt und die Kabine INNERHALB der gemalten Flaeche von Rect 2
+     * liegt (bekanntes Muster, Memory reai-v2-schranke-strenger-als-befund). */
+    {  2,  2,  113,  143, 2,   5, 255, 0 },
     {  2,  4,  119,  129, 3,   4,   5, 1 },
     {  2,  4,  145,  133, 1,   4,   8, 1 },
     {  2,  4,  169,  159, 3,   1,   6, 1 },
