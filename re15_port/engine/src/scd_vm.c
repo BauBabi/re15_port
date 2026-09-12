@@ -3304,6 +3304,24 @@ static int op_sce_em_set(scd_thread_t *t)
      * Enemy_sceEmSet_44.java struct. */
     int16_t  dir = scd_read_le_s16(&t->pc[16]);
 
+    /* ⛔ DER FINALE BIRKIN IM ENDKAMPF (Nutzer-Auftrag 2026-09-12: "Dafuer haben
+     * wir schon einmal den Finalen Birkin aus Resident Evil 2 geholt. Den
+     * moechte ich dass wir dort einbauen anstelle des nicht finalen Birkin
+     * dort.").
+     * ROOM5090/5091 spawnt byte-true den Typ 0x30 = G-Birkin Form 1/2
+     * (sub00 @0x0124A: `44 01 30 33 ...`, Slot 1, grid 0x33, Pos
+     * (-14700,0,-23350)). Die ENDFORM aus RE2 ist EM36 / Typ 0x36 - belegt
+     * ueber RE2s Endarena room7040 (sub00.scd @0x6C: `44 00 00 36 ...` Boss +
+     * 4x Typ 0x37 Tentakel) und dadurch, dass room7040/roomF040 als einzige
+     * RE2-Raeume nDoor 0 fuehren, also keinen Ausgang haben.
+     * Der Port kennt 0x36 bereits: STAGE3 haengt 0x30 UND 0x36 an dieselbe
+     * KI-Wurzel 0x80116230 (null Typ-Abfragen dazwischen) - die beiden Formen
+     * laufen byte-identisch, der Typ waehlt nur das Modell. Deshalb genuegt
+     * hier die Umtypung; KI, Schaden und Tod bleiben unveraendert. */
+    if ((g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
+        type == 0x30u)
+        type = 0x36u;
+
     if (getenv("RE15_SPAWN_DIAG"))
         fprintf(stderr, "[spawn-diag] Sce_em_set type=0x%02X behavior=0x%02X slot=%u pos=(%d,%d,%d) dir=%d\n",
                 type, behavior, slot, x, y, z, dir);

@@ -698,6 +698,23 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
     re15_enemy_bank_t *eb = re15_enemy_alloc(type);
     if (!eb) return;                                   /* registry full */
 
+    /* ⛔ FINALER BIRKIN IM ENDKAMPF: RE2-Modell EM36 statt des RE1.5-Modells.
+     * Anders als beim Alligator (dort gibt es kein RE1.5-Gegenstueck) FUEHRT das
+     * RE1.5-EMS einen Typ 0x36 - der wuerde sonst gewinnen. Das Tor sitzt
+     * deshalb VOR dem RE2-Flavor-Zweig und ist RAUMGEBUNDEN: ausserhalb der
+     * Arena bekommt 0x36 weiter sein RE1.5-Modell.
+     * Beleg der Endform: RE2 room7040/roomF040 sub00 `44 00 00 36` (Boss) +
+     * 4x `44 00 0n 37` (Tentakel); beide Raeume fuehren nDoor 0. Umtypung des
+     * Spawns 0x30 -> 0x36 in scd_vm.c (dortiger Kommentar). */
+    if ((type == 0x36u || type == 0x37u) &&
+        (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u)) {
+        if (pc_enemy_load_re2(type, eb)) {
+            fprintf(stderr, "[enemy] FINALER Birkin: RE2 EM0%02X geladen\n", type);
+            return;                                    /* REIN, kein Hybrid */
+        }
+        fprintf(stderr, "[enemy] RE2 EM0%02X nicht ladbar -> RE1.5-Modell\n", type);
+    }
+
     /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
      * besitzt (re15_re2_owns_type: Zombie-Familie + Hund 0x20). Fehlt das RE2-Archiv oder
      * der Record, faellt der Lauf UNVERAENDERT in den byte-true RE1.5-Pfad darunter. */
