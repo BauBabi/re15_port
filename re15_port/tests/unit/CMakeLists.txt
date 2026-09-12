@@ -3455,6 +3455,16 @@ set_tests_properties(unit_re2_gore_decoder PROPERTIES TIMEOUT 60)
 #     Root-Motion, Tentakel-Zug, Blob-Biss, Todes-Absink-Rampe. ---
 # --- G5-MORPH-PIN (Runde 7, g5-morph.md): dir[0]-Format, Basis-Restore und die
 #     drei integergenauen Regressionsanker der Segment-Kette. ---
+# --- TENTAKEL-SMOKE (Runde 7, em037-tentakel.md): Spawn, Blob-Anker, Austritt,
+#     Kommando/+0x228-Maske und der 15er-Peitschenschaden. ---
+add_executable(probe_g5_tentakel probe_g5_tentakel.c)
+target_link_libraries(probe_g5_tentakel PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_g5_tentakel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_g5_tentakel PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_g5_tentakel COMMAND probe_g5_tentakel)
+set_tests_properties(unit_g5_tentakel PROPERTIES TIMEOUT 120)
+
 add_executable(test_g5_morph test_g5_morph.c)
 target_link_libraries(test_g5_morph PRIVATE re15_engine re15_test_support)
 target_include_directories(test_g5_morph PRIVATE ${CMAKE_SOURCE_DIR}/include)

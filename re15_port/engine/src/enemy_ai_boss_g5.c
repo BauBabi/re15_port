@@ -82,9 +82,38 @@ void re15_g5_audio_hook(void (*se)(int, int), void (*bank)(int))
 }
 static void g5_se(int id) { if (s_g5_se_fn) s_g5_se_fn(id, 0); }
 
-/* Tentakel-Kommando-Hook (No-Op ohne 0x37-Entities; Sender-Ziele @0x80104E9C). */
-static void g5_tentakel_cmd(int idx, uint32_t wort) { (void)idx; (void)wort; }
-static void g5_tentakel_broadcast(uint32_t wort) { (void)wort; }
+/* TENTAKEL (Runde 7, em037-tentakel.md): vier eigene 0x37-Entities, die G5 per
+ * ganzem Routine-Wort kommandiert (Sender 0x80104E9C @0x80104E9C-B0 / Broadcast
+ * 0x80104E5C). Modul: enemy_ai_tentakel_g5.c. */
+extern void    re15_g5_tentakel_cmd(int idx, uint32_t wort);
+extern void    re15_g5_tentakel_broadcast(uint32_t wort);
+extern void    re15_g5_tentakel_spawn(const re15_actor_t *g5);
+extern void    re15_g5_tentakel_tick(const re15_actor_t *g5);
+extern void    re15_g5_tentakel_reset(void);
+extern uint8_t re15_g5_tentakel_maske(void);
+static void g5_tentakel_cmd(int idx, uint32_t wort) { re15_g5_tentakel_cmd(idx, wort); }
+static void g5_tentakel_broadcast(uint32_t wort) { re15_g5_tentakel_broadcast(wort); }
+
+/* Kandidatenwahl wie im Original (@0x801009E8-A50): Bit i+4 der +0x228-Maske =
+ * beschaeftigt (Bits 0..3 werden nirgends gesetzt, em037-tentakel.md 5.2). */
+static int g5_tentakel_frei(int *liste)
+{
+    uint8_t maske = re15_g5_tentakel_maske();
+    int i, n = 0;
+    for (i = 0; i < 4; i++)
+        if (!((maske >> i) & 1) && !((maske >> (i + 4)) & 1)) liste[n++] = i;
+    return n;
+}
+
+/* Muster-Kommandos der sub0-Schlagkaskade (@0x80100bc0-c8): nur 0x301/0xD01. */
+static void g5_tentakel_schlag(void)
+{
+    int liste[4], n = g5_tentakel_frei(liste);
+    if (n <= 0) return;
+    {   int idx = liste[(int)(re15_engine_rand8() % (unsigned)n)];
+        g5_tentakel_cmd(idx, (re15_engine_rand8() & 1u) ? 0xD01u : 0x301u);
+    }
+}
 
 /* ---- Modul-Zustand (ein Boss je Raum) ------------------------------------------------- */
 typedef struct {
@@ -427,8 +456,15 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 1:                                            /* [T1] 90 T Tentakel wecken */
         g->timer++;
-        if (g->timer == 10 || g->timer == 30 || g->timer == 40) g5_se(9);
-        if (g->timer >= 90) { g->ph = 2; g5_se(11); g5_root_motion(e, 1, 4096, 0); }
+        /* t=10/30/40: Tentakel 0/2/3 wecken (+0x06 = 1), t=90: alle vier auf +0x06 = 6
+         * (@0x80101214ff). Das Wort traegt Sub 8 (Austritt) und die Phase. */
+        if (g->timer == 10) { g5_tentakel_cmd(0, 0x10801u); g5_se(9); }
+        if (g->timer == 30) { g5_tentakel_cmd(2, 0x10801u); g5_se(9); }
+        if (g->timer == 40) { g5_tentakel_cmd(3, 0x10801u); g5_se(9); }
+        if (g->timer >= 90) {
+            g5_tentakel_broadcast(0x60801u);           /* alle vier +0x06 = 6 */
+            g->ph = 2; g5_se(11); g5_root_motion(e, 1, 4096, 0);
+        }
         break;
     case 2:                                            /* [T2] Clip 1: +7014 Root-Spur */
         g5_root_motion(e, 0, 4096, 0);
@@ -476,7 +512,7 @@ static void g5_intro_tick(re15_actor_t *e)
     case 13:                                           /* [T13]: Puls an, Timer 60 */
         g5_clip(e, 0, 0); g->ph = 14; g->timer = 60; g5_se(9);
         g->blob = 0; g->blob_ph = 0;
-        g5_tentakel_broadcast(0x601);
+        g5_tentakel_broadcast(0x601u);                 /* alle Tentakel einziehen */
         break;
     default:                                           /* [T14] -> Kampf (sub1) */
         g5_anim(e);
@@ -565,6 +601,7 @@ void re15_g5_boss_tick(int slot)
              * vor der KI (scd_vm_tick main.c:4279 vor re15_enemy_ai_run_all),
              * das Ueberschreiben greift also im selben Frame. */
             e->x = -14700; e->z = -23350;
+            re15_g5_tentakel_spawn(e);     /* vier 0x37-Arme (Port-Entscheidung, s. Modul) */
             /* Yaw EINMALIG auf den Spieler (danach konstant - RE2 dreht G5 im
              * Kampf nie, @0x8010044c ist der einzige Schreiber). */
             e->rot_y = (int16_t)((re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
@@ -595,6 +632,7 @@ void re15_g5_boss_tick(int slot)
         g5_tod_tick(e);
         g5_blob_tick(e, pl);
         g5_morph_bauen(g);
+        re15_g5_tentakel_tick(e);
         return;
     }
 
@@ -653,6 +691,9 @@ void re15_g5_boss_tick(int slot)
             if (u >= 8000 || dist >= 11001) { g->sub = 1; g->ph = 0; break; }
         }
         if (g5_anim(e) && (re15_engine_rand8() & 3) == 0) g5_se(9);   /* Grollen */
+        /* Alle 16 Ticks kommandiert G5 einen freien Tentakel auf den Spieler
+         * (@0x80100b4c-c8, Muster-Tabelle @0x80105674: nur 0x301/0xD01). */
+        if (dist < 7000 && (g->timer & 0xF) == 0) g5_tentakel_schlag();
         if (--g->timer <= 0) {
             /* Entscheidung @0x80100c44-ce4 (Reihenfolge = letzte trifft): */
             uint8_t ziel = 3;                                        /* default Rueckzug */
@@ -751,6 +792,7 @@ void re15_g5_boss_tick(int slot)
 
     g5_blob_tick(e, pl);
     g5_morph_bauen(g);              /* Reihenfolge wie im Original (s. Block oben) */
+    re15_g5_tentakel_tick(e);       /* die vier Arme haengen an der Blob-Matrix */
 
     /* Mess-Schiene (env-gegated, birkin_dbg.log wie gehabt). */
     if (getenv("RE15_BIRKIN_DBG")) {

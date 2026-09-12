@@ -760,6 +760,15 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
                 /* ENEMSE-Bank 25 fuer den G5 (Paar-Zeile {0x27,0x00} @EXE-Datei
                  * 0x97C32, flag2000=0 - birkin-g5-ki.md 5). */
                 re15_g5_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+                {   /* Die vier Tentakel (Typ 0x37) teilen sich dieselbe ENEMSE-Bank. */
+                    extern void re15_tentakel_audio_hook(void (*)(int, int));
+                    re15_tentakel_audio_hook(re15_audio_re2_enemy_se);
+                }
+                /* TENTAKEL-BANK MITLADEN (Runde 7): ROOM5090 hat keine 0x37 in der
+                 * RDT - die vier Arme spawnt das Modul beim Kampfstart. Ohne diese
+                 * Vorab-Ladung faende der Zeichner fuer sie keine Bank und fiele auf
+                 * das Spielermodell zurueck. */
+                if (!re15_enemy_find(0x37u)) pc_enemy_load_ex(0x37u, 1);
                 /* Drei Nacharbeiten am RE2-EM36 (Dossier analysis/schrot_befunde_
                  * 2026-09-12/birkin-em36.md; Nutzer: "fliegt komisch in der Luft
                  * ... ist unvollstaendig"):
