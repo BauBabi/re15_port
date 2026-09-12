@@ -2076,6 +2076,34 @@ static void re2s_death_done_generic(re15_actor_t *e)
 /* --- Der ABSCHLUSS-AUSBRUCH der Sonderzeile @0x801047F8 (+0x224 != 0) ---
  *   wie oben, aber FUN_80105D38(self, 0x2002, (rand & 3) + 6) (@0x80104828-30),
  *   FUN_801056DC(self, 19, 1) (@0x80104840) und zusaetzlich FUN_80104890(self) (@0x80104848). */
+/* Bank wirklich geladen? Die Unit-KI-Pins laufen BANKFREI - dort liefert
+ * re2s_frame_word immer 0 und die Flag-Gates wuerden DEATH nie beenden.
+ * Rueckfall dort: die alte Wrap-Naeherung. */
+static int re2s_bank_da(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    return b && b->ok;
+}
+
+/* EDD-Frame-Wort der aktuellen (Clip,Frame)-Position - Klon von re2d_frame_word
+ * (enemy_ai_re2_dog.c). Die Bank fuehrt die ECHTEN RE2-EDD-Woerter (der Hybrid
+ * tauscht nur Geometrie/Skelett, nie anim). Traeger der DEATH->CORPSE-Flags:
+ * Clip 12 traegt f12-179 = 0x40000, f180-205 = 0x40000|0x80000 (selbst aus dem
+ * RE2-CDEMD0.EMS gemessen, Dossier spinnen-tod.md). */
+static uint32_t re2s_frame_word(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) return 0;
+    {
+        const re15_emd_animation_t *A = &b->anim;
+        const re15_emd_clip_t *c;
+        if ((int)e->motion >= A->clip_count) return 0;
+        c = &A->clips[e->motion];
+        if (c->frame_count <= 0) return 0;
+        return A->frames[c->first_frame + (e->anim_frame % (uint32_t)c->frame_count)];
+    }
+}
+
 static void re2s_death_done_special(re15_actor_t *e)
 {
     (void)re2s_advance(e, 512);                            /* @0x80104814 */
@@ -2131,7 +2159,11 @@ static void re2s_death_row_special(re15_actor_t *e)
         re2s_gore(e);                                      /* FUN_80104890(self) @0x80104588 */
         (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104590-A4 */
     }
-    if (!re2s_advance(e, 512)) return;                     /* Frame-Flag 0x40000 @0x801045B8-D4 */
+    int fw_wrapped = re2s_advance(e, 512);
+    /* Sonderzeile (Schrot w8 -> Zeile 7): Uebergang am Frame-Flag 0x40000 (ab
+     * Bild 12!) - `lui v1,0x4` @0x801045B8-D4. Die Wrap-Naeherung war hier um
+     * 194 Bilder zu spaet UND erzeugte den Doppellauf. Bankfrei: Wrap. */
+    if (re2s_bank_da(e) ? !(re2s_frame_word(e) & 0x40000u) : !fw_wrapped) return;
     /* WASSER-ZWEIG @0x801045DC-3C (frueher unerreichbar, weil +0x10C immer 0 war):
      *   +0x10C == 0 -> direkt CORPSE (@0x801045E4 -> @0x80104644)
      *   sonst: +0x23C in {9,10} ODER == 16 -> FUN_801056DC(self,0,7) (@0x801045F4-1C)
@@ -2324,7 +2356,11 @@ static void re2s_death_row_generic(re15_actor_t *e)
             re2s_se(e->re2s_c23a < 0 ? 6 : 5);             /* @0x8010400C */
             return;
         }
-        if (!re2s_advance(e, 1024)) return;                /* @0x80104164 */
+        {
+            int fw_wrapped = re2s_advance(e, 1024);        /* @0x80104164 */
+            /* Flag statt Wrap @0x8010416C-80; bankfrei: Wrap. */
+            if (re2s_bank_da(e) ? !(re2s_frame_word(e) & 0x80000u) : !fw_wrapped) return;
+        }
         re2s_word(e, 7u);                                  /* @0x80104190 */
         if (e->re2s_dead239 != 0u) return;                 /* @0x801041A0 */
         e->hp = 1;                                         /* @0x801041AC */
@@ -2339,10 +2375,16 @@ static void re2s_death_row_generic(re15_actor_t *e)
         if (e->re2s_row23c != 1)                           /* +0x23C != 1 @0x80103DDC */
             re2s_gore(e);                                  /* @0x80103DE4 */
     }
-    int wrapped = re2s_advance(e, 512);                    /* @0x80103E08 */
-    if (!wrapped) return;   /* Frame-Flag *(+0x178) & 0x80000 @0x80103E10-24 — im Port als
-                             * Clip-Wrap genaehert (dieselbe deklarierte Naeherung wie der
-                             * Schritt-SE; das Original feuert auf dem markierten EDD-Frame). */
+    int fw_wrapped = re2s_advance(e, 512);                 /* @0x80103E08 */
+    /* ⛔ DER DOPPELTE TOD SASS HIER (Nutzer 2026-09-12: "die Todesanimation der
+     * Spinne spielt irgendwie 2x ab"): das Original schaltet DEATH->CORPSE am
+     * EDD-FRAME-FLAG 0x80000 (ab Bild 180 von 206; `lw v0,376(s0) / lw v0,0(v0) /
+     * lui v1,0x8 / and / beq` @0x80103E10-24) - die alte Wrap-Naeherung wartete
+     * bis Bild 206, nullte anim_frame, re2s_word(7) nullte die Substates, und
+     * CORPSE-Phase-0 spielte den genullten Clip 12 KOMPLETT neu (412 statt 206
+     * Bilder). Jetzt byte-true am Flag; ohne geladene Bank (Unit-Pins laufen
+     * bankfrei) Rueckfall auf die Wrap-Naeherung. */
+    if (re2s_bank_da(e) ? !(re2s_frame_word(e) & 0x80000u) : !fw_wrapped) return;
     /* WELLE-F-FIX: +0x23A = -1 (@0x80103E84) und der +0x23E/+0x23F-Block (@0x80103E8C-94)
      * liegen im Original INNERHALB von `+0x10C != 0` (@0x80103E3C) — dem WASSER-Zweig. Welle E
      * hat sie unbedingt ausgefuehrt; das war eine Divergenz. +0x10C ist im Port immer 0. */

@@ -836,7 +836,19 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
              * laeuft der Hybrid BEDINGUNGSLOS — der reine RE2-Modell-Zweig ist damit tot und weg.
              * pc_enemy_load_re2 bleibt: es liefert Skelett, EDD/Clips und die Bank, die der
              * Hybrid umbaut (und ist der sichtbare Fallback, wenn der Umbau scheitert). */
-            pc_enemy_hybrid_re15_models(type, eb);
+            /* ⛔ KEIN HYBRID FUER DIE BABY-SPINNE 0x26 (Nutzer 2026-09-12:
+             * "komische schwarze Dreiecke" ueber der sterbenden Spinne; Dossier
+             * spinnen-tod.md): der Tod spawnt byte-true 6-9 Babys
+             * (FUN_80105D38(self,0x2002,(rand&3)+6) @0x80104590-A4). Der
+             * bedingungslose Hybrid ersetzte deren RE2-EM026 (1 Mesh/1 Bone,
+             * eigene Spinnen-TIM) durch RE1.5-EM26 - das ist aber KEIN
+             * Spinnenmodell, sondern der ROOM1090-FEUER-EMITTER-ANKER: ein
+             * einziges nacktes Dreieck (3 Verts/1 Face), im Original per
+             * Part-Bit versteckt (@0x801165d0-e4); das RE2-Baby-Brain setzt
+             * no_draw nie. REIN wie Alligator/Birkin - die RDT-gesetzten
+             * 0x26-Feueranker laden weiter mit allow_re2=0 die RE1.5-Bank. */
+            if (type != 0x26u)
+                pc_enemy_hybrid_re15_models(type, eb);
             return;
         }
     }

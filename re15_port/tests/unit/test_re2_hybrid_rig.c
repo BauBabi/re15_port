@@ -156,8 +156,22 @@ int main(void)
      * Paar-3-Pool-Header {0,8,15,80} = die 15-Bone-Spielerbank). GEMESSEN, hier nur
      * festgehalten — der Hybrid braucht davon nur bone_count, und der Spinnen-Pfad gehoert
      * gerade einem anderen Arbeitsstrang. */
-    pin_rig(0x26,  1, 80,  1, 20);      /* Baby Spider                               */
-    if (!g_fail) printf("  (1) 10 Hybrid-Typen: Bone-Zahlen, Injektivitaet, 0 offene Kanten\n");
+    /* UMVERANKERT 2026-09-12 (Dossier analysis/befunde_runde4_2026-09-12/spinnen-tod.md):
+     * 0x26 hat BEWUSST KEINEN Hybrid mehr. Das RE1.5-EM26 ist der ROOM1090-FEUER-ANKER
+     * (1 Mesh / 1 Dreieck, im Original per Part-Bit versteckt @0x801165d0-e4); der Hybrid
+     * stuelpte dieses schwarze Dreieck ueber jede Baby-Spinne. Der Typ laeuft REIN auf der
+     * RE2-Bank; hier gepinnt, dass er NIE wieder eine Permutation bekommt. */
+    {
+        const int8_t *p26 = (const int8_t *)1;
+        CHECK(re2_hybrid_perm(0x26, &p26) < 0 && p26 == NULL,
+              "0x26 darf keinen Hybrid mehr haben (Feuer-Anker-Platzhalter)");
+        if (load_re2(0x26) && load_re15(0x26)) {
+            CHECK(re2_hybrid_apply(&s_bank, 0x26, &s_md15, &s_sk15, NULL) < 0,
+                  "re2_hybrid_apply(0x26) haette scheitern muessen");
+            CHECK(s_bank.remap_ok == 0, "0x26: gescheiterter Hybrid hat die Bank angefasst");
+        }
+    }
+    if (!g_fail) printf("  (1) 9 Hybrid-Typen + 0x26-Negativpin: Bone-Zahlen, Injektivitaet, 0 offene Kanten\n");
 
     /* ---- (2) Der Umbau an EM10 im Detail -------------------------------- */
     if (load_re2(0x10) && load_re15(0x10)) {

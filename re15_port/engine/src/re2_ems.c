@@ -175,7 +175,9 @@ int re2_hybrid_perm(int kind, const int8_t **out_perm)
     case 0x20:                                             p = k_perm_dog;    n = 17; break;
     case 0x21:                                             p = k_perm_ident;  n = 13; break;
     case 0x25:                                             p = k_perm_ident;  n = 20; break;
-    case 0x26:                                             p = k_perm_ident;  n =  1; break;
+    /* 0x26 entfernt 2026-09-12: die Baby-Spinne laeuft REIN auf der RE2-Bank
+     * (kein Hybrid mehr - main.c; das RE1.5-"Gegenstueck" ist der Feuer-Anker,
+     * ein einzelnes Dreieck). Kein Test pinnt die 0x26-Permutation. */
     default: break;
     }
     if (out_perm) *out_perm = p;
