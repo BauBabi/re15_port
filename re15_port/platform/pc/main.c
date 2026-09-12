@@ -791,9 +791,16 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
                     eb->skel.root_y_fix_count = nkf;
                 }
                 {
+                    /* NACHGEZOGEN (Runde 4, birkin-bewegung.md Plan 3, Katalog
+                     * birkin-em36.md 2.1 - Praesentations-Mapping, kein byte-true
+                     * Original dieser Kombination, Feinabnahme visuell):
+                     *   0x0a Recovery -> RE2-Clip 8 (50-F-Angriffscluster statt
+                     *        100-F-Idle: 3,3 s "steht nur da" je Klauen-Zyklus),
+                     *   0x10/0x0d Emergence -> RE2-Clips 1 (180-F-Aufbaeumen/Rise,
+                     *        INIT-Grundpose @0x8010116c) / 3 (aufgerichtete Lage). */
                     static const uint8_t BKMAP[21] = {
                         /* 0   1  2  3  4  5  6  7  8  9  a  b  c  d  e  f 10 11 12 13 14 */
-                           0,  2, 0, 6, 7, 8, 0, 9, 0, 9, 0, 1, 9, 0, 7, 0, 0, 0, 0, 0, 1 };
+                           0,  2, 0, 6, 7, 8, 0, 9, 0, 9, 8, 1, 9, 3, 7, 0, 1, 0, 0, 0, 1 };
                     re15_emd_clip_t bk_orig[RE15_EMD_MAX_CLIPS];
                     int ci, oc = eb->anim.clip_count;
                     memcpy(bk_orig, eb->anim.clips, sizeof bk_orig);

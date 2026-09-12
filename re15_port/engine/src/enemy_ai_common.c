@@ -11002,10 +11002,24 @@ static int re15_birkin_anim(re15_actor_t *e)
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
+/* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
+ * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
+ * ~4494 Einheiten VOR dem Entity-Ursprung (gemessene Masse-Front, birkin_dbg
+ * DRAW-Zeilen); RE2 misst die Nahkampf-Distanzen zur BLOB-Weltposition
+ * (@0x80101db8-dc/@0x80102008-38) und klemmt den Vortrieb an einer Stopplinie
+ * (@0x80101934-4c). Der Port versetzt dafuer dist UND die Trefferfenster-
+ * Reichweiten (re15_bk_arc) um den Vorlauf. */
+static int32_t s_bk_masse = 0;
+static int re15_bk_arc(re15_actor_t *e, re15_actor_t *pl, int32_t range, int arc)
+{
+    return re15_dog_arc(e, pl, range + s_bk_masse, arc);
+}
+
 static void re15_birkin_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_bk_masse = (e->type == 0x36) ? 4494 : 0;
 
     /* ============================ ROOT pre-dispatch (0x80116230) ============================ */
     if (e->birkin_hurt_cd > 0) {                       /* +0x1de countdown @0x801163c8-3d4 */
@@ -11023,6 +11037,27 @@ static void re15_birkin_ai_tick(int slot)
     }
     e->dog_dist = (int16_t)dist;
     if (e->birkin_grab) s_player_grabbed = 1;          /* re-assert the global grab channel aca58==5 (run_all cleared it) */
+
+    if (e->type == 0x36) {
+        /* PARKEN BIS KAMPFSTART (Runde 4, birkin-bewegung.md Plan 1): der ROOM5090-
+         * Endkampf-Birkin war ab Raumladung frei (INIT->EMERGENCE->WALK) und verkeilte
+         * sich ohne Pfadsuche an den Zug-Zwischenwaenden (gemessen: >5500 Ticks
+         * Oszillation an (-3490,-2381)). RE2 parkt G5 bei (-32000,0,-32000) bis zum
+         * Kampfstart (@0x801011d0-dc; RDT-Spawns dort). Freigabe-Signal = das sub04-
+         * Member_set(0x0c,0x13) @ROOM5090 0x130A (grid==0x13 ist NUR nach dem
+         * Kampfstart-Event wahr; grid 0x33 = der RDT-Spawnwert). sub04-Pos_set(1200,
+         * 0,-23350) @0x12FE setzt die Kampfposition VOR dem Member_set; danach laeuft
+         * INIT (nib 3 -> EMERGENCE) an der Kampfmarke. Raumgebundene Port-Wahl:
+         * die 0x30-Wurzel (ROOM3070) bleibt unangetastet. */
+        if (e->grid_id == 0x33) {
+            e->x = -32000; e->z = -32000;              /* RE2-Parkposition @0x801011d0-dc */
+            e->motion = 0; e->anim_frame = 0; e->speed_h = 0;
+            return;
+        }
+        /* MASSE-VORLAUF (Plan 2): dist misst fortan zur MASSE-Front (RE2-Beleg s.
+         * s_bk_masse oben); der Rueckzugspunkt-Zweig (birkin_flags&1) bleibt roh. */
+        if (!(e->birkin_flags & 0x1)) { dist -= s_bk_masse; if (dist < 0) dist = 0; }
+    }
 
     switch (e->state) {
     case 0:   /* INIT 0x801166e0: HP 300 UNCONDITIONAL, grid-nibble sub dispatch, work-byte seeds */
@@ -11052,17 +11087,17 @@ static void re15_birkin_ai_tick(int slot)
             int grabbed = s_player_grabbed;            /* aca58==5 proxy */
             uint8_t nsub = 0;                          /* 0 = keep sub 1 (walk) */
             /* sub-3 (0x301) @0x80116fe8: +0x1df==0 && dist<0xc80 && aca58!=5 && arc(0x338) */
-            if (e->birkin_atk_cd == 0 && !grabbed && dist < 0xc80 && re15_dog_arc(e, pl, 0xc80, 0x338)) nsub = 3;
+            if (e->birkin_atk_cd == 0 && !grabbed && dist < 0xc80 && re15_bk_arc(e, pl, 0xc80, 0x338)) nsub = 3;
             /* sub-4 (0x401) @0x80117038: dist<0x9c4 && aca58!=5 && arc(0x1f4) — overrides sub-3 at closer range */
-            if (!grabbed && dist < 0x9c4 && re15_dog_arc(e, pl, 0x9c4, 0x1f4)) nsub = 4;
+            if (!grabbed && dist < 0x9c4 && re15_bk_arc(e, pl, 0x9c4, 0x1f4)) nsub = 4;
             /* sub-7 (0x701) @0x8011706c: dist<0xed8 && arc(0x464) && !arc(0x10) && player+0x8c>=101 && +0x1df==0 && aca58!=5.
              * player+0x8c (0x800acae0) = the player's instantaneous speed; the tackle only targets a RUNNING player. */
-            if (!grabbed && dist < 0xed8 && re15_dog_arc(e, pl, 0xed8, 0x464)
-                && !re15_dog_arc(e, pl, 0xed8, 0x10) && pl->speed_h >= 101 && e->birkin_atk_cd == 0) nsub = 7;
+            if (!grabbed && dist < 0xed8 && re15_bk_arc(e, pl, 0xed8, 0x464)
+                && !re15_bk_arc(e, pl, 0xed8, 0x10) && pl->speed_h >= 101 && e->birkin_atk_cd == 0) nsub = 7;
             if (nsub) { e->sub_state_1 = nsub; e->sub_state_2 = 0; e->sub_state_3 = 0; }
             else if (grabbed) {                        /* grab-tail @0x80117118 (aca58==5); fall-through, last match wins */
                 uint8_t gsub = 0;
-                if (dist < 0xbb8 && re15_dog_arc(e, pl, 0xbb8, 0x10)) gsub = 5;   /* @0x8011712c dist<3000 & dead-ahead -> THROW */
+                if (dist < 0xbb8 && re15_bk_arc(e, pl, 0xbb8, 0x10)) gsub = 5;   /* @0x8011712c dist<3000 & dead-ahead -> THROW */
                 if (dist < 0x7d0) gsub = 8;                                       /* @0x80117160 dist<2000 -> REPOSITION */
                 if (!(e->grid_id & 0x10) && (e->birkin_flags & 0x4)) gsub = 6;    /* @0x8011719c !form2 && heave -> MUTATE */
                 if (gsub) { e->sub_state_1 = gsub; e->sub_state_2 = 0; e->sub_state_3 = 0; }
@@ -11073,11 +11108,18 @@ static void re15_birkin_ai_tick(int slot)
         case 1: {  /* WALK 0x801171d4: measured two-phase approach; +0x8c += 0x14 (+10 form-2) */
             if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 0xf; e->sub_state_2 = 1; }  /* phase 0 @0x80117220 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);              /* steer 0x20 @0x80117268 (toward +0x1bc/be) */
-            re15_dog_advance(e, 0x14 + ((e->grid_id & 0x10) ? 10 : 0)); /* +0x8c += 0x14 @0x801172ac (+10 form-2 @0x801172dc) */
+            /* STOPPLINIE (0x36, Plan 2): kein Vortrieb mehr, sobald die MASSE-Front in
+             * Klauen-Triggerweite (0xc80) steht - RE2 klemmt den X-Advance an der
+             * Arena-Stopplinie @0x80101934-4c; sonst schob die Masse den Spieler ein
+             * (Leon stand IN der Silhouette) und die Klauen-Schleife fror bei
+             * 2500<dist<3200 ein (birkin-bewegung.md 2/3). dist ist hier bereits
+             * masse-versetzt. */
+            if (!(e->type == 0x36 && dist <= 0xc80))
+                re15_dog_advance(e, 0x14 + ((e->grid_id & 0x10) ? 10 : 0)); /* +0x8c += 0x14 @0x801172ac (+10 form-2 @0x801172dc) */
             if (e->sub_state_2 == 2) {                                  /* phase 2 pause @0x80117330: hold, +0x9e -> phase 1 */
                 if (e->birkin_pause == 0) e->sub_state_2 = 1;          /* @0x801173c4 */
                 else e->birkin_pause--;                                /* +0x9e-- @0x801173b8 */
-            } else if (!re15_dog_arc(e, pl, 30000, 0x400) && e->anim_frac == 0) {  /* arc(0x400)!=0 @0x801172f4 && +0x8f==0 @0x80117310 */
+            } else if (!re15_bk_arc(e, pl, 30000, 0x400) && e->anim_frac == 0) {  /* arc(0x400)!=0 @0x801172f4 && +0x8f==0 @0x80117310 */
                 e->sub_state_2 = 2; e->birkin_pause = 0x5a;            /* phase->2, +0x9e=0x5a @0x80117318/324 */
             }
             re15_birkin_anim(e);
@@ -11093,12 +11135,12 @@ static void re15_birkin_ai_tick(int slot)
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* steer 0x50 @0x80117624 */
                 int done = re15_birkin_anim(e);                        /* anim_set @0x80117640 (advance before the window read) */
                 /* continue-gate @0x80117668: (arc(0x400) && dist<0xfa1) || frame>=0x1e; else abort (phase 2) when frame<0x1e */
-                if (!re15_dog_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
+                if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
                     e->sub_state_2 = 2;                                /* abort @0x801176b8 */
                 } else {
                     /* damage window [0x24..0x2b] tested EVERY frame (attack-box 0x8001a5e0 -> re15_dog_arc proxy) @0x801176ec */
                     if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0
-                        && re15_dog_arc(e, pl, 2500, 0x400)) {
+                        && re15_bk_arc(e, pl, 2500, 0x400)) {
                         s_player_grabbed = 1; e->birkin_grab = 1;      /* aca58 = (facing<<8)|5 grab latch @0x801177d0 */
                         pl->hit_react |= 1; re15_audio_room_se(7);     /* Se(7) @0x801177dc */
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x801177f0 */
@@ -11133,11 +11175,11 @@ static void re15_birkin_ai_tick(int slot)
             if (e->sub_state_2 == 1) {
                 int done = re15_birkin_anim(e);
                 /* continue-gate @0x80117b10: (arc(0x320) && dist<0xdad) || frame>=0xf; else abort (phase 2) frame<0xf */
-                if (!re15_dog_arc(e, pl, 0xdad, 0x320) && e->anim_frame < 0xf) {
+                if (!re15_bk_arc(e, pl, 0xdad, 0x320) && e->anim_frame < 0xf) {
                     e->sub_state_2 = 2;                                /* abort @0x80117b60 */
                 } else {
                     if (e->anim_frame >= 0x23 && e->anim_frame <= 0x2a && pl->hit_react == 0
-                        && re15_dog_arc(e, pl, 2500, 0x400)) {         /* box proxy @0x80117bec */
+                        && re15_bk_arc(e, pl, 2500, 0x400)) {         /* box proxy @0x80117bec */
                         if (e->anim_frame < 0x26) { s_player_grabbed = 1; e->birkin_grab = 1; }  /* aca58=0x205 grab @0x80117c1c */
                         pl->hit_react |= 1;                            /* aca58=0x202 knockdown (frame>=0x26) @0x80117c38 -> hit_react proxy */
                         re15_audio_room_se(7);                         /* Se(7) @0x80117c64 */
@@ -11162,7 +11204,7 @@ static void re15_birkin_ai_tick(int slot)
             if (e->sub_state_2 == 1) {
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
-                    if (re15_dog_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
+                    if (re15_bk_arc(e, pl, 2500, 0x400)) {            /* hit: throw (aca58=6) + Se(2) @0x80117ee4/f0c */
                         s_player_grabbed = 1; pl->hit_react |= 1; re15_audio_room_se(2);
                     } else {
                         re15_audio_room_se(6);                         /* miss: Se(6) @0x80117f08 */
@@ -11210,7 +11252,7 @@ static void re15_birkin_ai_tick(int slot)
                 int done = re15_birkin_anim(e);
                 if (e->anim_frame == 1 || e->anim_frame == 0x12) re15_audio_room_se(4);  /* Se(4) whoosh @0x80118a94 */
                 if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 0x12 && e->anim_frame <= 0x1b))
-                    && pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 0x400)) {  /* box proxy @0x80118adc */
+                    && pl->hit_react == 0 && re15_bk_arc(e, pl, 2500, 0x400)) {  /* box proxy @0x80118adc */
                     pl->hit_react |= 1;                                /* aca58=0x202 knockdown @0x80118b04 -> hit_react proxy */
                     re15_audio_room_se(7);                             /* Se(7) on hit @0x80118b08 */
                     pl->hp = (int16_t)(pl->hp - 5);                    /* hp-=5 @0x80118b1c */
@@ -11230,7 +11272,7 @@ static void re15_birkin_ai_tick(int slot)
                 re15_birkin_clip(e, 1); e->anim_frac = 0xf; e->ai_timer = 0x78; e->sub_state_2 = 1;
             }
             /* early exit -> sub 5 @0x80118c28: dist>=0x9c5 && arc(0x10) dead-ahead && timer<100 */
-            if (dist >= 0x9c5 && re15_dog_arc(e, pl, 30000, 0x10) && e->ai_timer < 100) {  /* @0x80118c50 -> 0x501 */
+            if (dist >= 0x9c5 && re15_bk_arc(e, pl, 30000, 0x10) && e->ai_timer < 100) {  /* @0x80118c50 -> 0x501 */
                 e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0; break;
             }
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* steer 0x20 @0x80118c68 */

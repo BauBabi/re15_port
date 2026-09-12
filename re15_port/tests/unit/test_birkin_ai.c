@@ -186,11 +186,20 @@ int main(void)
     re15_actor_t *e5 = &g_actors[BS];
     e5->active = 1; e5->type = 0x36; e5->state = 0; e5->grid_id = 0x33; e5->x = 0; e5->y = 0; e5->z = 0;
     re15_enemy_apply_hitbox(e5, 0x36);
+    /* UMVERANKERT (Runde 4, birkin-bewegung.md Plan 1): der 0x36 PARKT auf dem
+     * RDT-Spawn-grid 0x33 (RE2 parkt G5 bei (-32000,0,-32000) bis zum Kampfstart,
+     * @0x801011d0-dc) und wird erst durchs sub04-Member_set(0x0c,0x13) frei -
+     * dann laeuft die byte-identische Boss-Wurzel (INIT nib 3 -> sub 9). */
+    re15_enemy_ai_run_all(0);
+    if (e5->state != 0)       { fprintf(stderr, "FAIL(4): form-5 grid 0x33 muss PARKEN (state 0), got %d\n", e5->state); fail = 1; }
+    if (e5->x != -32000 || e5->z != -32000) {
+        fprintf(stderr, "FAIL(4): Parkposition (%d,%d) != (-32000,-32000)\n", (int)e5->x, (int)e5->z); fail = 1; }
+    e5->grid_id = 0x13;                                 /* sub04-Kampfstart @ROOM5090 0x130A */
     re15_enemy_ai_run_all(0);
     if (e5->state != 1)       { fprintf(stderr, "FAIL(4): form-5 INIT->BRAIN expected state 1, got %d\n", e5->state); fail = 1; }
     if (e5->hp != 300)        { fprintf(stderr, "FAIL(4): form-5 must share the boss brain (HP 300), got %d\n", e5->hp); fail = 1; }
-    if (e5->sub_state_1 != 9) { fprintf(stderr, "FAIL(4): form-5 grid 0x33 -> sub 9, got %d\n", e5->sub_state_1); fail = 1; }
-    printf("  (4) FORM-5 (0x36): shares the boss brain -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
+    if (e5->sub_state_1 != 9) { fprintf(stderr, "FAIL(4): form-5 grid 0x13 (nib 3) -> sub 9, got %d\n", e5->sub_state_1); fail = 1; }
+    printf("  (4) FORM-5 (0x36): parkt auf 0x33, Kampfstart 0x13 -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
 
     if (fail) { printf("BIRKIN BOSS: FAIL\n"); return 1; }
     printf("BIRKIN BOSS: all checks passed\n");
