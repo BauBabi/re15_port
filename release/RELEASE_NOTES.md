@@ -1,3 +1,24 @@
+# v0.7.86 — 2026-09-12
+
+## Vier Spieltest-Befunde der zweiten Runde
+
+- **Kopf wegschiessen funktioniert**: nah vor dem Zombie hochzielen und
+  abdruecken laesst den Kopf platzen — ueber RE2s echten Mechanismus (die
+  Rumpf-Todeszelle prueft das Hochziel-Bit und springt deterministisch in die
+  Kopf-Explosion; eine Kopf-"Spalte" hat der RE2-Zombie gar nicht).
+- **Der Alligator hat eine Stimme**: Biss beim Zuschnappen, Grunzen bei
+  Treffern (mit der originalen 55-Bild-Sperre), dazu die in den Animationsdaten
+  kodierten Sounds beim Schwimmen und in der Todesrolle — alles aus der
+  RE2-Soundbank des Alligators.
+- **Der Endboss sieht aus wie in RE2**: Fleischmasse und wogender Vorderleib
+  sind EIN verbundener Koerper — die Masse sitzt am Boden verankert, der
+  Kriecher-Vorderkoerper haengt daran und wogt mit der Animation; der Arm ist
+  angebaut. (Noch offen: das Pulsieren der Masse per Vertex-Morph und die
+  Uebergangs-Naehte — kommt in einer eigenen Runde.)
+- **ROOM1010 zeichnet sich auf der Karte**: der Raum war komplett in die Kachel
+  des Nachbarraums gespiegelt; jetzt wohnen seine zwei Kammern auf den eigenen
+  Kacheln, und die Tuersymbole binden richtig.
+
 # v0.7.85 — 2026-09-12
 
 ## Spinnen & Huelsen
