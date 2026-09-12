@@ -751,13 +751,44 @@ int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
          * Rechteck gehoert - und genau dann hat sie auch eine Wand, an der sie klebt.
          * zid2 bleibt in der Tabelle: der Pin unit_map_mark_band unterscheidet daran
          * die Selbst-Tuer von einer Tuer nach draussen. */
-        if (zid_besucht(m->zid)) return 1;
-        /* Die zweite Zone zaehlt weiter - aber nur, wenn die Marke auf deren GEMALTER
-         * Flaeche sitzt. Das Bit dafuer rechnet der Generator aus (auf_partner); die
-         * Engine hat die Blattgrafik nicht. Gemessen ueber alle Marken mit
-         * Partner-Rechteck: 47 liegen darauf (die bleiben wie bisher schon von der
-         * anderen Seite sichtbar), 23 nicht (die schwebten). */
-        return (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2)) ? 1 : 0;
+        /* ⛔ SEIT DEM ETAGEN-GATE (v0.7.82, "GAST-ZEILE AM ETAGEN-BIT") IST DAS
+         * ZONEN-BIT KEIN BELEG MEHR DAFUER, DASS DAS RECHTECK AUCH GEZEICHNET
+         * WIRD: eine besuchte Zone kann ihre Zeichnung auf DIESEM Blatt
+         * verweigern (fremde Etage, Etagen-Bit fehlt). Nutzer-Befund 2026-09-12
+         * (befund_10C0_F310_marke1.bmp): auf Blatt 3 stand die Marke (156,83)
+         * (Rect 9, Zone 15, Partner 13) frei im Blau - ihre Zone(n) trugen das
+         * Besucht-Bit, aber KEIN Rechteck unter dem Punkt wurde gezeichnet.
+         * Deshalb fragt die Marke jetzt DENSELBEN Schalter wie der Zeichner:
+         * den RECHTECK-Zustand. Eigene Seite = eigenes Rect; Partner-Seite
+         * (auf_partner: der Generator hat die Bemalung am PARTNER-Rechteck
+         * verifiziert) = das eigene Rect reicht als Traeger nicht, also muss
+         * ein gezeichnetes Rechteck den Markenpunkt tatsaechlich enthalten. */
+        /* Blockiert NUR der Zustand UNVISITED (= zugeordnet, aber nichts
+         * gezeichnet - der schwarze Fall). UNMAPPED-Rechtecke (RE2-System-
+         * Blaetter ab Seite 5) werden im Stock-Neutralton IMMER gemalt und
+         * tragen eine Marke weiterhin (Pin unit_map_re2_system). */
+        /* Das Rechteck-Gate gilt NUR auf den Etagen-Blaettern 2..4 (POLICE
+         * STATION): nur dort existiert das Etagen-System, das Zonen-Bit und
+         * Rechteck-Zeichnung auseinanderziehen kann. Die RE2-System-Blaetter
+         * (ab Seite 5) fuehren ihre Rechtecke anders (Pin unit_map_re2_system:
+         * Marken erscheinen dort direkt mit dem Besuch). */
+        if (m->page < 2 || m->page > 4)
+            return (zid_besucht(m->zid) ||
+                    (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2))) ? 1 : 0;
+        if (zid_besucht(m->zid) &&
+            re15_map_rect_state((unsigned)m->page, (unsigned)m->rect) != RE15_MAP_RECT_UNVISITED)
+            return 1;
+        if (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2)) {
+            int ri, rx, ry, rw, rh;
+            for (ri = 0; ri < 64; ri++) {
+                if (!re15_map_rect_geometry((unsigned)m->page, (unsigned)ri, &rx, &ry, &rw, &rh))
+                    break;
+                if (m->mx >= rx && m->mx < rx + rw && m->my >= ry && m->my < ry + rh &&
+                    re15_map_rect_state((unsigned)m->page, (unsigned)ri) != RE15_MAP_RECT_UNVISITED)
+                    return 1;
+            }
+        }
+        return 0;
     }
 }
 

@@ -790,7 +790,17 @@ void re15_render_end_frame(void)
             order[j + 1] = k;
         }
         /* Sort masks by camera-Z descending — SAME scale as the tri depth key. */
-        int mask_n = (!s_pri_suppress && s_pri_atlas_tex && s_pri_rect_count > 0)
+        /* ⛔ KEINE MASKEN AUF DEM SCHWARZ-/SPOTLIGHT-HINTERGRUND (Nutzer-Befund
+         * 2026-09-12: "Bei den Game Over Screen/Finishers bleiben die PRIs
+         * vorhanden"). Die Masken sind RE-BLITS des Raum-Hintergrundbilds
+         * (sprite.pri: atlas[src]->screen[dst]); im YOU-DIED-Ablauf ersetzt
+         * FUN_80021634(2,0) genau dieses Hintergrundbild durch Schwarz
+         * (g_death_blackbg -> s_black_bg). Ein Fragment eines Bildes, das gar
+         * nicht mehr gezeichnet wird, darf nicht stehen bleiben - es hing als
+         * Raum-Schnipsel ueber der Todesszene. NUR den PASS gaten, NIE die
+         * LISTE leeren (Falle vom 2026-09-05: einmal geleert fuellt sie erst
+         * der naechste (Raum,Cut)-Wechsel wieder). */
+        int mask_n = (!s_pri_suppress && !s_black_bg && s_pri_atlas_tex && s_pri_rect_count > 0)
                    ? s_pri_rect_count : 0;
         int mask_order[RE15_PRI_RECTS_MAX];
         for (int i = 0; i < mask_n; i++) mask_order[i] = i;

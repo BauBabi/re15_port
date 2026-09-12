@@ -244,6 +244,45 @@ int main(void)
 
     }
 
+    /* --- PIN (Nutzer-Befund 2026-09-12, befund_10C0_F310_marke1.bmp): --------
+     * "Auf 2F steht noch eine Tuer auf der MAP im Nichts."
+     * ROOM10F0 hat ZWEI Zeichnungen derselben Zone 15: Band 0 -> Blatt 3 Rect 9
+     * (2F, Etagen-Zeile) und Band 1 -> Blatt 2 Rect 8 (1F-Gastlage). Das
+     * Besucht-Bit gilt PRO RAUM: ein Besuch auf 1F setzt es, das 2F-Rechteck
+     * bleibt aber (korrekt, seit dem Etagen-Gate v0.7.82) verborgen. Die
+     * Tuermarke (3, Rect 9, 156,83, zid 15, Partner 13) fragte bis heute nur
+     * das ZONEN-Bit und stand damit frei im Blau. Regel jetzt: eine Marke
+     * zeichnet nur, wenn unter ihr tatsaechlich ein GEZEICHNETES Rechteck
+     * liegt (eigenes Rect bzw. beim Partner-Weg ein enthaltendes Rect). */
+    {
+        int mi, page, rect, mx, my, kind, gefunden = -1;
+        re15_map_visited_reset();
+        for (mi = 0; mi < 4096; mi++) {
+            if (!re15_map_mark_get(mi, &page, &rect, &mx, &my, &kind)) {
+                /* unsichtbar fuellt die Felder trotzdem — Index-Ende erkennen wir
+                 * an der unveraenderten Suche unten */
+            }
+            if (page == 3 && rect == 9 && mx == 156 && my == 83) { gefunden = mi; break; }
+            if (mi > 0 && page == 0 && rect == 0 && mx == 0 && my == 0) break;
+        }
+        CHECK("Pin-Marke (3,9,156,83) existiert in der Tabelle", gefunden >= 0);
+        if (gefunden >= 0) {
+            /* (a) 10F0 nur auf 1F betreten: Zone besucht, 2F-Rect verborgen,
+             *     Marke UNSICHTBAR (vorher: sichtbar = der gemeldete Fehler). */
+            stelle(0x10F0, 0, 6000, 1);
+            CHECK("10F0 nur 1F: Blatt-3-Rect 9 bleibt unbesucht",
+                  re15_map_rect_state(3, 9) < RE15_MAP_RECT_VISITED);
+            CHECK("10F0 nur 1F: die Marke (156,83) haengt NICHT im Nichts",
+                  !re15_map_mark_get(gefunden, &page, &rect, &mx, &my, &kind));
+            /* (b) 10F0 auch auf 2F betreten: Rechteck da -> Marke darf zeigen. */
+            stelle(0x10F0, 0, 6000, 0);
+            CHECK("10F0 auch 2F: Blatt-3-Rect 9 gezeichnet",
+                  re15_map_rect_state(3, 9) >= RE15_MAP_RECT_VISITED);
+            CHECK("10F0 auch 2F: die Marke (156,83) ist wieder sichtbar",
+                  re15_map_mark_get(gefunden, &page, &rect, &mx, &my, &kind));
+        }
+    }
+
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;
 }

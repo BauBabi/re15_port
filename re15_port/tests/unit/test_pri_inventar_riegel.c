@@ -105,8 +105,13 @@ int main(void)
           enthaelt(r, "re15_render_pc_clear_scene_overlays", "s_pri_suppress = 1") == 1);
     CHECK("re15_render_begin_frame nimmt den Riegel zurueck",
           enthaelt(r, "void re15_render_begin_frame", "s_pri_suppress = 0") == 1);
+    /* Seit 2026-09-12 haengt im Gate zusaetzlich !s_black_bg (Nutzer-Befund:
+     * "Bei den Game Over Screen/Finishers bleiben die PRIs vorhanden" - die
+     * Masken sind Re-Blits des Raumhintergrunds, der im YOU-DIED-Ablauf durch
+     * Schwarz ersetzt wird; FUN_80021634(2,0)). Beide Riegel muessen im PASS
+     * stehen, die LISTE bleibt unangetastet. */
     CHECK("der Maskendurchgang fragt den Riegel ab",
-          strstr(r, "!s_pri_suppress && s_pri_atlas_tex") != NULL);
+          strstr(r, "!s_pri_suppress && !s_black_bg && s_pri_atlas_tex") != NULL);
 
     /* Die Vorbedingung, die den Fehler ueberhaupt toedlich machte: die Liste wird nur
      * bei einem Wechsel von (Raum, Cut) gesetzt. Bleibt das so, MUSS der Riegel oben

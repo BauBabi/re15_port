@@ -537,6 +537,28 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             else { f->row[0] = 0; f->row[1] = 0; }
             break;
         }
+        case 38: {  /* @0x800188b8: SCHROTHUELSEN-INIT (Ein-Schuss-Routine; Dispatch-
+                     * Tabelle @0x80071d40[38]). Der Port kannte 38 nicht (default:
+                     * Noop) - die Huelse blieb ewig auf Row 0 stehen: vel (0,0,0),
+                     * Anim von id 4 loopt ohne Terminator => "die Kugeln fliegen auf
+                     * der Stelle rum und bleiben da" (Nutzer 2026-09-12).
+                     * Byte-true:
+                     *   800188bc lbu DAT_800aca5d     ; angelegte Waffe
+                     *   800188c4 bne v1,8             ; 8 = Remington M870
+                     *   800188e8 sh  v0,0x16(v1)      ; Haltedauer := 0x17 (23) bzw. 3
+                     *                                  ; (SPAS-12 faellt in den 3er-Zweig)
+                     *   80018900 sb  row[0x0e],flags  ; := 0x67 (FOLLOW + Physik-/Anim-Freeze)
+                     *   80018914 sh  16,row[0x00]     ; Selector := Routine 16
+                     * KEIN Advance, KEIN Countdown in diesem Tick - ab dem naechsten
+                     * uebernimmt Routine 16 (Hold, dann Release auf Anim 9 + Row 1 =
+                     * Routine 11 mit RNG-Streuung und B=12-Bodenkill). */
+            extern int re15_player_equipped_weapon(void);
+            uint16_t halt = (re15_player_equipped_weapon() == 8) ? 0x17 : 3;
+            f->row[0x16] = (uint8_t)halt; f->row[0x17] = (uint8_t)(halt >> 8);
+            f->flags = f->row[0x0e];
+            f->row[0x00] = 16; f->row[0x01] = 0;
+            break;
+        }
         case 16: {  /* @0x80017b80: 2-phase freeze — flags := row[0x0e] (0x63 = bit5+bit6 frozen);
                      * countdown row[0x16]; at 0: flags := row[0x1e], anim := row[0x26],
                      * advance UNCONDITIONAL. The shell's 2-tick eject hold. */
