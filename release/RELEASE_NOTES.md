@@ -1,3 +1,37 @@
+# v0.7.87 - 2026-09-12
+
+## Runde 3/4 der Spieltest-Befunde: Gore-Vollausbau, Spinnen-Tod, Fress-Finisher, Endboss
+
+- **Die RE2-Brutalitaet ist jetzt komplett verdrahtet**: Der Port dekodiert die
+  gepackten RE2-Effekt-Kennungen und spielt sie ueber die richtigen
+  RE1.5-Effektbaenke ab - die Kopf-Explosion feuert ihre drei Original-Spawns
+  am HALS (Blutstrahlen, Fleischbrocken Richtung Spieler, Fontaene), der
+  Fleischbrocken-Regen beim Zerreissen/Burst kommt aus den byte-identischen
+  Brocken-Sheets der Raeume, Brand-/Aetz-Treffer haben ihre Effektklassen.
+- **Torsos abschiessen wie in RE2**: Der SPAS-Zerreisstod zeigt jetzt den
+  RUMPF-Stumpf und den Bein-Stumpf - die Original-RE2-Stumpf-Geometrie samt
+  ihrer eigenen Textur faehrt als Seitenbank mit (das RE1.5-Modell hat diese
+  Meshes nicht). Und wie im Original gilt: SPAS + nach oben zielen zerreisst
+  GARANTIERT, sonst wuerfelt das Spiel.
+- **Die Spinnen-Todesanimation spielt nur noch EINMAL**: Das Original schaltet
+  vom Tod zur Leiche am Markierungs-Bit der Animationsdaten (ab Bild 180 von
+  206) - die alte Naeherung wartete das Clip-Ende ab und spielte den Clip
+  danach komplett neu. Die schwarzen Dreiecke darueber sind weg: das waren
+  RE1.5-Feuer-Anker-Platzhalter, die der Modell-Hybrid faelschlich ueber die
+  Baby-Spinnen stuelpte.
+- **Der Alligator-Fress-Finisher ist synchron**: Leon fliegt jetzt ins LIVE
+  gerenderte Maul (die Bahn folgt den Kiefer-Knochen), haengt beim zweiten
+  Zuschnappen zwischen den Kiefern und wird verschlungen - vorher klaffte der
+  Zielpunkt um zwei Meter unter dem Maul. Der Biss-Sound ist der kurze
+  perkussive Schnapper der Alligator-Bank statt des 2,4-Sekunden-Bruellers,
+  dessen Hoehepunkt erst lange nach dem Biss kam.
+- **Der Endboss kaempft jetzt richtig**: Er wartet (wie in RE2 geparkt) bis zum
+  Kampfstart-Ereignis, statt ab Raumladung gegen die Zugwaende zu laufen; seine
+  Angriffe messen zur FLEISCHMASSE-Front statt zum Koerpermittelpunkt (die
+  Masse ueberrollte vorher den Spieler, und die Klauen-Schleife fror ein); das
+  Auftauchen und die Angriffs-Erholung spielen passende RE2-Clips statt des
+  100-Bilder-Idles.
+
 # v0.7.86 — 2026-09-12
 
 ## Vier Spieltest-Befunde der zweiten Runde
