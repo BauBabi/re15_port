@@ -1,3 +1,14 @@
+# v0.7.85 — 2026-09-12
+
+## Spinnen & Huelsen
+
+- **Die Spinnen sind nicht mehr "immun"**: Sie waren nur mit exakt ebener
+  Zielhoehe treffbar — wer (voellig natuerlich) auf das flache Bodentier nach
+  unten zielte, verfehlte immer. Jetzt treffen EBEN und TIEF die Bodenspinne,
+  HOCH die Deckenspinne — nach den Hoehenfenstern aus der RE2-EXE.
+- **Auch die Huelsen der Beretta/Glock-Bursts** bleiben nicht mehr in der Luft
+  haengen (zweite fehlende Original-Routine nachgebaut).
+
 # v0.7.84 — 2026-09-12
 
 ## Sieben Befunde aus dem Spieltest behoben
