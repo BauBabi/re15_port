@@ -537,6 +537,36 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             else { f->row[0] = 0; f->row[1] = 0; }
             break;
         }
+        case 15: {  /* @0x80017ac8 (selbst disassembliert 2026-09-12): UNSICHTBAR
+                     * WARTEN, dann KIND-EFFEKT am Slot spawnen. Traeger u.a. die
+                     * Huelsen-Slots der Burst-Pistolen (id4 sub2) - ohne die
+                     * Routine hing deren Slot ewig (dieselbe Klasse wie die
+                     * Schrothuelse, Dossier effekte-haengen.md par.3).
+                     *   80017adc  sb 0x65,slot+0x6c   ; aktiv+FOLLOW+Freezes,
+                     *                                  ; OHNE sichtbar-Bit 0x02
+                     *   80017af4  row[0x0e] != 0 -> row[0x0e]--, RETURN
+                     *   80017b10-3c  Kind: Code = row[0x17]<<24 | row[0x16]<<16
+                     *                | scale16 (slot+0x72), param = slot+0x2e,
+                     *                Ort = Slot-Position (FUN_800199d4 =
+                     *                Positions-Spawner; im Port derselbe Weg wie
+                     *                der Routine-8-Kind-Spawn)
+                     *   80017b4c-60  row[0x26] != 0 -> Advance (0x800174e4)
+                     *   80017b6c     sonst Slot AUS (Flags 0) */
+            f->flags = 0x65;
+            {
+                uint16_t cnt = row_u16(f->row, 0x0e);
+                if (cnt != 0) {
+                    cnt--;
+                    f->row[0x0e] = (uint8_t)cnt; f->row[0x0f] = (uint8_t)(cnt >> 8);
+                    break;
+                }
+            }
+            re15_esp_fx_spawn_rows(f->bank, f->row[0x17], f->row[0x16], f->scale16,
+                                   f->x, f->y, f->z, f->floor_y, f->param);
+            if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
+            else f->flags = 0;
+            break;
+        }
         case 38: {  /* @0x800188b8: SCHROTHUELSEN-INIT (Ein-Schuss-Routine; Dispatch-
                      * Tabelle @0x80071d40[38]). Der Port kannte 38 nicht (default:
                      * Noop) - die Huelse blieb ewig auf Row 0 stehen: vel (0,0,0),

@@ -1470,6 +1470,73 @@ retry_after_latch:
                     eband = ((e->aim_band & 2) ? 0x40000000u : 0u) |
                             ((e->aim_band & 1) ? 0x20000000u : 0u) |
                             ((e->aim_band & 4) ? 0x80000000u : 0u);
+                } else if (e->type == 0x25u) {
+                    /* SPINNE (Adult) - Nutzer 2026-09-12: "die Spinnen scheinen
+                     * immun gegen Schuesse". GEMESSEN (probe_spinne_elevation):
+                     * nur EBEN traf, TIEF/HOCH nie - der alte OFFEN-Platzhalter
+                     * stempelte pauschal LEVEL. Auf ein flaches Bodentier zielt
+                     * man aber natuerlich NACH UNTEN -> "immun".
+                     * BYTE-STAND RE1.5 (ACTIVE-Tail FUN_80112420 @0x80112420,
+                     * STAGE1-Overlay; Helfer selbst disassembliert):
+                     *   word0 &= 0x1fffffff; dy = playerY - enemyY;
+                     *   dy <  800   -> FUN_80012974(6000) = NUR DOWN, wenn
+                     *                  dist < 6000 (|= 0x20000000 @0x800129d4-f0)
+                     *   dy <  0xfa1 -> NUR LEVEL (|= 0x40000000)
+                     *   sonst       -> FUN_80012a0c(6000) = NUR UP
+                     *                  (|= 0x80000000 @0x80012a6c-88)
+                     * Eine Boden-Spinne traefe in RE1.5 also NUR mit Tiefzielen.
+                     * Die Port-Spinne ist aber AUSNAHMSLOS RE2-behirnt
+                     * (re15_re2spider_owns, kein Flavor-Split) - massgeblich ist
+                     * der RE2-Pfad, und der hat KEIN Band, sondern die
+                     * dy-Fenster des Spinnen-Records @0x800A4B90 (alle 19 Zeilen
+                     * gedumpt 2026-09-12; Waffenklasse 2..8/13/15..19:
+                     * UP[-7000,-2000] LEVEL[-4200,+500] DOWN[-500,+2000]) -
+                     * EBEN UND TIEF treffen die Boden-Spinne, HOCH nicht (die
+                     * UP-Fenster schliessen dy=0 aus, kein Drittel-Schub noetig). */
+                    extern unsigned re15_re2z_weapon_id(unsigned w);
+                    static const int16_t SFEN[20][6] = {
+                        /* je RE2-Id: UPlo,UPhi, LVlo,LVhi, DNlo,DNhi
+                         * (@0x800A4B90 + (id-1)*20 + 8/12/16) */
+                        [ 1] = {-3000,-2000,-3500, -500, -500,  500},
+                        [ 2] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 3] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 4] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 5] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 6] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 7] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 8] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [ 9] = {-3000,-2000,-2500, -500, -500,  500},
+                        [10] = {-3000,-2000,-2500, -500, -500,  500},
+                        [11] = {-3000,-2000,-2500, -500, -500,  500},
+                        [12] = {-7000,-2000,-2500, -500, -500,  500},
+                        [13] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [14] = {-7000,-2000,-6000, 6000, -500,  500},
+                        [15] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [16] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [17] = {-7000,-2000,-4200,  500, -500, 2000},
+                        [18] = {-5000,-2000,-4200,  500, -500, 2000},
+                        [19] = {-7000,-2000,-4200,  500, -500, 2000},
+                    };
+                    /* ⛔ ADDITIV, NICHT ERSETZEND (gemessen an ROOM2050): die
+                     * Spinnen spawnen dort an der DECKE (Sce_em_set @0x01CE6/1CFA:
+                     * y = -5400), und der Port pflegt das Spinnen-y im weiteren
+                     * Leben nicht nach - ein reines Fenster auf dem (moeglicherweise
+                     * veralteten) y brach den funktionierenden EBEN-Pfad (Pins
+                     * unit_re2_hit_repeat_crow_spider 4-6, unit_re2_hp_model).
+                     * Deshalb: LEVEL bleibt wie bisher stehen (Port-Bestand), die
+                     * RE2-Fenster oeffnen ZUSAETZLICH DOWN/UP, wo dy hineinfaellt -
+                     * Bodenspinne wird tief-treffbar (der Nutzer-Fix), Deckenspinne
+                     * hoch-treffbar, nichts Bestehendes verliert. Volle
+                     * Fenster-Semantik erst, wenn der y-Lebenslauf der Spinne
+                     * (Abseilen/Boden) ge-RE't ist. */
+                    unsigned srid = re15_re2z_weapon_id((unsigned)weapon_id);
+                    eband = 0x40000000u;               /* Bestand: LEVEL immer */
+                    if (srid >= 1 && srid <= 19) {
+                        const int16_t *fw = SFEN[srid];
+                        int32_t sdy = e->y - pl->y;
+                        if (sdy >= fw[4] && sdy <= fw[5]) eband |= 0x20000000u;  /* DOWN-Fenster */
+                        if (sdy >= fw[0] && sdy <= fw[1]) eband |= 0x80000000u;  /* UP-Fenster */
+                    }
                 } else {
                     /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
                      * uebrigen Familien stempeln mit anderen Helfern/Radien — die generischen

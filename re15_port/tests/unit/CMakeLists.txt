@@ -3436,3 +3436,13 @@ target_link_libraries(test_autofire_pin PRIVATE re15_engine re15_test_support)
 target_include_directories(test_autofire_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_autofire_pin COMMAND test_autofire_pin)
 set_tests_properties(unit_autofire_pin PROPERTIES TIMEOUT 30)
+
+# MESSPROBE Spinnen-Elevation (Nutzer 2026-09-12: 'Spinnen scheinen immun'):
+# Adult 0x25 in ROOM1090, echter Schussweg, Flavor x Waffe x Zielhoehe.
+add_executable(probe_spinne_elevation probe_spinne_elevation.c)
+target_link_libraries(probe_spinne_elevation PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_spinne_elevation PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_spinne_elevation PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME probe_spinne_elevation COMMAND probe_spinne_elevation)
+set_tests_properties(probe_spinne_elevation PROPERTIES TIMEOUT 120)
