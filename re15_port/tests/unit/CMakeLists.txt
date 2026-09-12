@@ -1619,6 +1619,14 @@ set_tests_properties(unit_re2_baby_spider_dmg PROPERTIES TIMEOUT 60)
 
 # --- DIAGNOSE: Zustandsfolge Stagger -> Niederschlag beim WIEDERHOLTEN Treffer (Nutzer-Report
 #     2026-08-19 "sie fallen nicht um"). Kein add_test — reine Messsonde. ---
+# --- Y-MESS-SONDE Runde 6 (kein ctest): Schrot-Bauch-Taumel "unter dem Boden" -
+#     loggt je Reaktions-Frame e->y UND die gerenderte Wurzel-Welt-Y. ---
+add_executable(probe_schrot_bauch_y probe_schrot_bauch_y.c)
+target_link_libraries(probe_schrot_bauch_y PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_schrot_bauch_y PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_schrot_bauch_y PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_re2_stagger probe_re2_stagger.c)
 target_link_libraries(probe_re2_stagger PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_re2_stagger PRIVATE ${CMAKE_SOURCE_DIR}/include)

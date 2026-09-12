@@ -5059,10 +5059,10 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
  *   Zeile  9   HE-Granate    (RE1.5-Waffe 9/15)   -> 0x80108BEC  re2z_death_rip
  *   Zeile 12   Bowgun        (im Port nie gestempelt)            -> 0x80109610 re2z_death_burst
  *   Zeile 17   Rakete        (RE1.5-Waffe 18)     -> 0x80108BEC  re2z_death_rip
- * SPALTE 0 (0x80107438 = re2z_hit_knockdown mit death=1) ist im Port heute UNERREICHBAR — die
- * Zone 0 hat keinen Produzenten, genau wie an der HURT-Tabelle dokumentiert. Der Zweig ist
- * trotzdem portiert (er ist eine Verzweigung IN einer schon portierten Funktion) und wird im
- * Test durch einen Direktaufruf der Zelle positiv kontrolliert.
+ * SPALTE 0 (0x80107438 = re2z_hit_knockdown mit death=1): seit den Trefferzonen HAT Zone 0
+ * einen Produzenten (re15_damage.c:1869: +0x1D2 = (liegt || elev < 0) ? 0 : 1 - TIEF zielen
+ * oder Liegend-Treffer stempeln Spalte 0). Der alte Satz "im Port unerreichbar" galt vor den
+ * Trefferzonen (Kommentar nachgezogen 2026-09-12, port-y-audit.md).
  *
  * ---- WAS DIESE VIER GEMEINSAM HABEN --------------------------------------------------------
  * Alle vier laufen ueber DENSELBEN Modellblock +0x198 (16 Records a 172 Byte), den der Port
@@ -5752,10 +5752,26 @@ static int re2z_root_py(const re15_actor_t *e)
     int slot = (int)(e->anim_frame % (uint32_t)fc);
     int fi   = an->clips[clip].first_frame + slot;
     if (fi < 0 || fi >= an->frame_count) return 0;
-    int16_t px = 0, py = 0, pz = 0;
-    re15_emd_get_keyframe_position(sk, (int)(an->frames[fi] & 0xfffu), &px, &py, &pz);
-    (void)px; (void)pz;
-    return (int)py;
+    {   /* ⛔ RUNDE-6-FIX (port-y-audit.md / original-hurt-kette.md, Nutzer: "gehen
+         * mit Animation unterhalb des Bodens taumeln weiter"): das Original liest
+         * die GERENDERTE Part-0-Translation (`lw 48(s3)` @0x80106E64/EAC) - der
+         * Renderer zeichnet kf_py + root_y_fix (skeleton_common.c:256). Diese
+         * Funktion lieferte das ROHE kf_py; die Ragdoll-Bodenklemme
+         * (`y = gy-300-rooty` @0x80106EF0-F10) setzte die gerenderte Wurzel damit
+         * um K (+108..+185, re2_ems.c-Rootfix) ZU TIEF - gemessen (probe_schrot_
+         * bauch_y): e->y bis 1345 statt Klemme, Wurzel-Welt -175 statt -300.
+         * Dazu der 0x8000-Flag-Skip wie die move_root-Vorlage
+         * (enemy_ai_common.c:633-635). */
+        int fend = an->clips[clip].first_frame + fc - 1;
+        while ((an->frames[fi] & 0x8000u) && fi < fend) fi++;
+        {
+            int kf = (int)(an->frames[fi] & 0xfffu);
+            int16_t px = 0, py = 0, pz = 0;
+            re15_emd_get_keyframe_position(sk, kf, &px, &py, &pz);
+            (void)px; (void)pz;
+            return (int)py + re15_skel_root_y_fix(sk, kf);
+        }
+    }
 }
 
 /* `death` = 1: die Wurzel ist die DEATH-Tabelle (+0x4 == 3, Zelle RE2ZD_66FC, Zeile 7 =
@@ -5936,6 +5952,14 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
 
     /* ---- BOUNCE-PHYSIK @0x80106E64-F10 ---- */
     int rooty = re2z_root_py(e);                                   /* `lw 48(s3)` @0x80106E64/EAC */
+    if (getenv("RE15_RE2_TRACE")) {
+        FILE *tf = re15_re2_trace_out();
+        if (tf) fprintf(tf, "[z-ragdoll] slot=%d f=%d y=%d gy=%d rooty=%d wurzelwelt=%d "
+                            "dir=%d v=%d clip=%d%c",
+                        (int)(e - g_actors), frame, (int)e->y, (int)e->re2z_gy232,
+                        rooty, (int)e->y + rooty, (int)(int8_t)e->re2z_dir16a,
+                        (int)e->re2z_t15a, (int)e->motion, 10);
+    }
     if ((int8_t)e->re2z_dir16a != 0) {                             /* lb 362 / beq @0x80106E68-70 */
         e->y = e->y + (int)e->re2z_t15a;                           /* +0x3C += +0x15A @0x80106E84-88 */
         e->re2z_t15a = (int16_t)(e->re2z_t15a + (frame < 35 ? 5 : 55));
