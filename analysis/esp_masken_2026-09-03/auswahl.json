@@ -1482,6 +1482,39 @@
      "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 9708 Maskenpixel."
     }
    ]
+  },
+  "0": {
+   "objekte": [
+    {
+     "name": "Spindblock vorne links",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Zauberstab statt getipptem Polygon, weil die Spindkante im Bild scharf ist und meine Schaetzung sie nur auf +-4 px traefe. Zauberstab flutete hier den Teppich (Spind und Boden liegen farblich zu nah) - deshalb Polygon entlang der sichtbaren Spindkante.",
+     "polygon": "0,141 52,157 94,187 94,240 0,240"
+    },
+    {
+     "name": "Spindblock vorne rechts",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Zauberstab statt getipptem Polygon, weil die Spindkante im Bild scharf ist und meine Schaetzung sie nur auf +-4 px traefe. dito Polygon.",
+     "polygon": "248,163 320,119 320,240 248,240"
+    }
+   ]
+  },
+  "2": {
+   "objekte": [
+    {
+     "name": "Spindreihe links",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Polygon entlang der Spindkante (Cut 2 blickt von oben, die Reihe laeuft schraeg nach unten aus dem Bild).",
+     "polygon": "0,44 86,92 80,240 0,240"
+    },
+    {
+     "name": "Spindreihe rechts",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. dito.",
+     "polygon": "252,92 320,44 320,240 258,240"
+    },
+    {
+     "name": "Bank unten",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. die Sitzbank im Vordergrund.",
+     "polygon": "146,196 232,196 240,240 138,240"
+    }
+   ]
   }
  },
  "ROOM1010": {
