@@ -335,9 +335,42 @@ static void re2d_fx(re15_actor_t *e, int part, int fx)
     int spread = (int)re2d_fx_tbl[fx][2] | ((int)re2d_fx_tbl[fx][3] << 8);   /* lhu 2(s1) @0x80105100 */
     int off    = (int)(r & (uint32_t)((spread << 1) - 1)) - spread;          /* @0x8010510C-120 */
     int32_t p[3];
-    re15_enemy_bone_world_pos(at, part & 0x7f, p);         /* Part-Array +0x198 Stride 0xAC analog */
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, p[0], p[1], p[2],
-                         (int16_t)(((int)at->rot_y + off) & 0xfff));         /* lh 118(s0) @0x80105104 */
+    /* ⛔ DIE EFFEKT-TABELLE WURDE IGNORIERT (Nutzer 2026-09-13: "die Zombie Hunde bekommen
+     * wenn sie tot sind keine Blutlache").
+     *
+     * Hier stand fest `id 0, sub 0` fuer JEDEN Effekt - egal ob Bluttropfen, Spritzer oder
+     * Gore. Die Tabelle @0x801056AC daneben fuehrt aber pro Effekt eine eigene Art und
+     * Unterart, und der Todes-Handler des Hundes nutzt genau diese Unterschiede.
+     * SELBST NACHDISASSEMBLIERT (EMD0G_MOD0.BIN): der Schrot-Todeszweig @0x801042B0 ruft
+     * dreimal den FX-Spawner 0x80105070 -
+     *     801042e8  addiu a1,3 / 801042ec jal / 801042f0 addu a2,zero,zero   -> Part 3, fx 0
+     *     801042f8  addiu a1,2 / 801042fc jal / 80104300 addu a2,zero,zero   -> Part 2, fx 0
+     *     80104310  addiu a1,2 / 80104318 jal / 8010431c addiu a2,v0,1       -> Part 2, fx 1|2
+     * (der Zweig fuer die Zeilen 5/6 @0x80104610 ruft ihn ebenso dreimal). Mit fester id 0
+     * kamen dreimal Bluttropfen statt Tropfen PLUS Spritzer heraus - die Lache fehlte.
+     *
+     * Die Art-Nummern der Tabelle sind dieselbe Kodierung wie beim Zombie und brauchen
+     * denselben Dekoder (re2z_gore_fx_ex, enemy_ai_re2_zombie.c): 9 -> 7, 8 -> 5, 5 -> 8,
+     * 10 -> 0. Das hohe Bit 0x80 markiert Gore-Eintraege und wird vor dem Dekodieren
+     * abgezogen. */
+    {
+        int kind = (int)re2d_fx_tbl[fx][0];
+        int sub  = (int)re2d_fx_tbl[fx][1];
+        int id   = kind & 0x7f;
+        switch (id) {
+        case 0:  break;
+        case 8:  id = 5; break;
+        case 9:  id = 7; break;
+        case 5:  id = 8; break;
+        case 10: id = 0; sub = 0; break;
+        default: id = 0; break;          /* unbekannte Art: der bisherige Stand-in */
+        }
+        re15_enemy_bone_world_pos(at, part & 0x7f, p);     /* Part-Array +0x198 Stride 0xAC analog */
+        re15_esp_fx_spawn_rows(re15_esp_room_bank(), (uint8_t)id, (uint8_t)sub, 0x1500,
+                               p[0], p[1], p[2], at->y,
+                               (int16_t)(((int)at->rot_y + off) & 0xfff));  /* lh 118(s0)
+                                                                             * @0x80105104 */
+    }
 }
 
 /* ============================================================================================
