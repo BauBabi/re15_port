@@ -1,3 +1,31 @@
+# v0.7.99 - 2026-09-14
+
+## Die Gitterhaende greifen, ROOM1090 ist auf der Karte, das Intro redet aus
+
+- **Die Arme im Korridor von ROOM1210 greifen jetzt beim Vorbeigehen - einmal.**
+  Gemessen fuhren vorher NULL von zehn aus: das Tor mass den Abstand zur
+  ausgefahrenen Hand, und der begehbare Flur ist 109 Einheiten zu weit von ihr
+  entfernt. Dazu las der Port den Original-Ausloeser gar nicht - das Skript
+  schaltet die Arme scharf (Aot_set im Flur, dann Member_set auf allen zehn),
+  und die KI liest dieses Byte. Beides ist zu; der Radius sitzt jetzt am Arm
+  selbst und zaehlt den Koerperradius des Spielers mit. Wer gegriffen und wieder
+  losgelassen wurde, bekommt denselben Arm im selben Raumbesuch nicht noch
+  einmal - im Original kommt er auch nie zurueck.
+- **ROOM1090 steht auf der Karte**, beide Ebenen: der Hinterhof mit dem
+  verunglueckten Polizeitransporter auf dem 1F-Blatt, die Dachterrasse darueber
+  auf dem 2F-Blatt. Dem Raum fehlte keine Kunst, sondern seine Zeile - die
+  Etagenangaben zeigten ins Leere, deshalb gab es weder Marker noch Faerbung.
+  Die gemalte Kachel gab es laengst; sie war an ROOM10B0 vergeben, der auf dem
+  Blatt gar keine Tuer hat, waehrend auf ihr das Tuerblatt nach ROOM1050 sitzt.
+- **Im Intro redet Elliot aus.** "They almost caught me" brach nach "They almost
+  caught..." ab, weil die naechste Zeile die laufende Aufnahme abwuergt: das
+  Skript gibt ihr 101 Bilder, die Aufnahme ist 117 lang. Der naechste Satz
+  wartet jetzt, bis der vorige zu Ende ist - nur dort, wo es noetig ist; sechs
+  der acht Zeilen passen ohnehin.
+- ROOM10B0 hat dadurch vorerst kein eigenes Kartenrechteck mehr. Das Blatt haelt
+  eine passende Kachel bereit, die aber in keiner Tabelle steht; sie kommt, wenn
+  das Blatt eine eigene Rechteckliste bekommt.
+
 # v0.7.98 - 2026-09-13
 
 ## Abgetrennte Beine bleiben liegen, kein Landen in der Wand, Hunde bluten
