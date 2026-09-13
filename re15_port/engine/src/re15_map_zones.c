@@ -74,18 +74,61 @@ void re15_map_visited_import(const uint8_t in[32]) { memcpy(s_visited, in, 32); 
  * die zweite Zone der 16 mehrteiligen Raeume.
  * Der Schluessel haengt jetzt nur noch an der Raumliste, die aus dem Asset-Baum
  * erzeugt wird - nicht mehr an der Zonentabelle. */
+/* ⛔ DIE DRITTE ZONE BRAUCHT EIN EIGENES BIT (Nutzer-Befund 2026-09-13: "bei ROOM 1000
+ * werden gleich beide kleinen Raeume geladen und markiert - es soll immer nur der
+ * markiert und geladen werden, in dem man auch drin ist").
+ *
+ * Die Formel unten vergibt ZWEI Bits je Basisraum: Zone 0 bekommt 2n, und JEDE weitere
+ * Zone teilt sich 2n+1. Bei zwei Zonen geht das auf - ab der dritten nicht mehr: der
+ * Nord-WC und der Sued-WC von ROOM1000 haetten dasselbe Bit, und wer einen betritt,
+ * bekommt beide auf die Karte. ROOM2070 traegt dieselbe Kollision schon laenger (auch
+ * er hat drei Zonen); sichtbar wurde sie erst, als ROOM1000 am 2026-09-13 von zwei auf
+ * drei Zonen ging.
+ *
+ * Das Bitfeld ist 32 Bytes = 256 Bits, belegt sind die 240 der Raumliste (120
+ * Basisraeume x 2, re15_savedata.h:107). Die dritte und jede weitere Zone bekommt
+ * deshalb ein Bit aus dem ungenutzten Rest 240..255 - das Speicherformat bleibt
+ * unveraendert, und alte Spielstaende tragen dort Nullen (= nicht besucht), was genau
+ * richtig ist.
+ *
+ * ⛔ Die Zuordnung steht als EXPLIZITE Tabelle, nicht als laufende Nummer ueber die
+ * Zonentabelle: eine laufende Nummer verschiebt sich, sobald eine Zone dazukommt, und
+ * dann zeigt ein alter Spielstand fremde Orte als besucht - genau der Fehler, der am
+ * 2026-09-07 aus dieser Funktion entfernt wurde. Neue Eintraege hier ANHAENGEN, nie
+ * dazwischenschieben. */
+static const struct { unsigned short room; unsigned char idx; } s_zone_zusatzbit[] = {
+    { 0x1000, 2 },   /* ROOM1000 Sued-WC   (Bit 240) */
+    { 0x2070, 2 },   /* ROOM2070 Zone 2    (Bit 241) */
+};
+#define ZONE_ZUSATZ_BASIS 240
+#define ZONE_ZUSATZ_N ((int)(sizeof s_zone_zusatzbit / sizeof s_zone_zusatzbit[0]))
+
 static int zone_bit(int idx)
 {
     unsigned room = (unsigned)s_map_zones[idx].room & ~1u;   /* Variante = derselbe Ort */
+    int zidx = (int)s_map_zones[idx].idx;
     int n = 0, i;
+    if (zidx >= 2) {
+        for (i = 0; i < ZONE_ZUSATZ_N; i++)
+            if (s_zone_zusatzbit[i].room == (unsigned short)room &&
+                (int)s_zone_zusatzbit[i].idx == zidx)
+                return ZONE_ZUSATZ_BASIS + i;
+        /* Kein Eintrag: lieber das geteilte Bit 2n+1 wie bisher als gar keins - aber
+         * der Riegel unit_map_zone_bits faengt genau diesen Fall, damit eine neue
+         * dritte Zone nicht still wieder zusammenfaellt. */
+    }
     for (i = 0; i < RE15_ROOM_COUNT; i++) {
         if (re15_room_ids[i] & 1) continue;                  /* nur Basisraeume zaehlen */
         if (re15_room_ids[i] == room)
-            return 2 * n + (s_map_zones[idx].idx ? 1 : 0);
+            return 2 * n + (zidx ? 1 : 0);
         n++;
     }
     return -1;                                               /* Raum nicht in der Liste */
 }
+
+/* Fuer den Riegel: wie viele Bits kennt das Feld, und welches Bit traegt Zone `i`? */
+int re15_map_zone_bit_test(int zonen_index) { return zone_bit(zonen_index); }
+int re15_map_zone_bit_kapazitaet(void) { return 8 * (int)sizeof s_visited; }
 
 /* Ist die Zone mit dieser erzeugten Nummer besucht? Die Marken-Tabelle fuehrt die zid
  * des Generators; das Besucht-Bit haengt seit v8 an der RAUM-Nummer. Der Umweg ueber
