@@ -1,3 +1,26 @@
+# v0.7.93 - 2026-09-13
+
+## Der Raum fror ein, weil mein eigener Fix den Spieler abschaltete
+
+- **ROOM5090 haengt nicht mehr fest, Birkin kommt wieder.** Der gestern
+  eingebaute "neuer Kampf = neue Arme"-Reset schaltete beim Betreten des Raums
+  als Erstes Leon selbst ab: die Arm-Liste ist beim Start mit Nullen gefuellt,
+  und Platz 0 ist der Spieler. Der Raum fror ein (im Log zweimal reproduziert,
+  einmal 575 Bilder lang auf derselben Stelle), und weil die Boss-Steuerung
+  einen abgeschalteten Spieler las, erschien auch Birkin nie. Der Reset fasst
+  jetzt nur noch echte Arme an.
+- **Karte ROOM1000: nur noch der Raum, in dem man wirklich steht.** Die Karte
+  hatte pro Raum nur zwei Merkzettel fuer "hier war ich schon" - ab dem dritten
+  Bereich teilten sich zwei Raeume einen. In ROOM1000 (Ostraum + zwei Toiletten)
+  erschienen deshalb beide Toiletten auf einmal. Jeder Bereich hat jetzt seinen
+  eigenen; alte Spielstaende bleiben lesbar. ROOM2070 war still davon betroffen
+  und ist mit repariert.
+- **Fress-Finisher: gemessen statt vermutet.** Die Kette stimmt rechnerisch -
+  der Bildschirm setzt 44 Bilder vor dem Ende der Fress-Animation ein. Der
+  verbleibende Verdacht ist die Todes-Kamera, die auf den Spieler zoomt,
+  waehrend der im Maul haengt. Dafuer gibt es jetzt eine Mess-Schiene
+  (RE15_FINISHER_LOG=1), die der naechste Spiellauf beantwortet.
+
 # v0.7.92 - 2026-09-13
 
 ## Runde 8: Beine bleiben am Boden, Birkin bewegt sich selbst, der Alligator bruellt
