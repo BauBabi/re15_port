@@ -44,8 +44,63 @@ def kachel(pg):
              for u in range(256)] for y in range(256)]
 
 
+def schema_kaesten():
+    """Die Schema-Zeichnungen (s_map_synth) mit ihrer Seite aus den Zonen."""
+    zonen = tabelle('zones')
+    synth = tabelle('synth')
+    aus = []
+    gesehen = set()
+    for z in zonen:
+        # zones-Zeile: room, wx0, wz0, wx1, wz1, page, rect, idx, zid, ox, oy,
+        #              sx, sy, flipx, flipy, synth, ...
+        if len(z) < 16:
+            continue
+        page, sy_idx = z[5], z[15]
+        if not sy_idx or sy_idx > len(synth) or sy_idx in gesehen:
+            continue
+        gesehen.add(sy_idx)
+        x, y, w, h = synth[sy_idx - 1][:4]
+        aus.append((page, x, y, w, h, z[0], sy_idx))
+    return aus
+
+
+def pruefe_schema(nur):
+    """⛔ EIGENER RIEGEL (2026-09-13): eine SCHEMA-Zeichnung fuellt ihren Kasten - faellt
+    er auf bemalte Texel, uebermalt er die Kunst des Nachbarn. Der Unit-Test kann das
+    nicht sehen: er kennt nur die Rechteck-BBOX, und die reicht bei gedreht montierten
+    Kacheln weit ueber die Kunst hinaus (ROOM1050s Rect 0 auf Blatt 2). Gemessen an der
+    Kachel, aus der der Zeichner blittet - wie bei den Marken oben."""
+    kaesten = schema_kaesten()
+    if not kaesten:
+        print('Schema-Zeichnungen: keine')
+        return 0
+    schlecht = 0
+    for (pg, x, y, w, h, room, si) in kaesten:
+        if nur is not None and pg != nur:
+            continue
+        px = kachel(pg); rr = rects(pg)
+        treffer = 0
+        for yy in range(y, y + h):
+            for xx in range(x, x + w):
+                for ri, (rx, ry, rw, rh) in enumerate(rr):
+                    if rx <= xx < rx + rw and ry <= yy < ry + rh:
+                        u, v = rect_uv(pg, ri)
+                        su, sv = u + (xx - rx), v + (yy - ry)
+                        if 0 <= su < 256 and 0 <= sv < 256 and px[sv][su]:
+                            treffer += 1
+                        break
+        marke = 'OK' if treffer == 0 else '*** UEBERMALT KUNST ***'
+        print('Schema %d (ROOM%04X, Blatt %d) Kasten (%d,%d) %dx%d: %d von %d Punkten '
+              'auf bemalter Flaeche  %s'
+              % (si, room, pg, x, y, w, h, treffer, w * h, marke))
+        if treffer:
+            schlecht += 1
+    return schlecht
+
+
 def main(argv):
     nur = int(argv[argv.index('--blatt') + 1]) if '--blatt' in argv else None
+    schlecht_schema = pruefe_schema(nur)
     marken = tabelle('marks')
     n_ges = n_leer = 0
     for pg in range(13):

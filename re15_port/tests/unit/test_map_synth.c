@@ -51,21 +51,23 @@ int main(void)
 
     printf("=== Karte: Schema-Zeichnung aus der Kollisions-Box ===\n");
 
-    /* (1) ROOM10D0 - der 2F-Flur - hat eine Zeichnung. */
-    zn = re15_map_zone_at(0x10D0, 0, 0);
-    if (!zn) { /* ueber die Weltmitte seiner Zone suchen */
-        zn = re15_map_zone_at(0x10D0, -5000, 10000);
+    /* (1) JEDE Schema-Zeichnung liegt im Kartenfeld.
+     * ⛔ FRUEHER STAND HIER NUR ROOM10D0 (der 2F-Flur des RE15_KUNST=0-Pfads). Seit
+     * 2026-09-13 traegt ROOM1000 drei Schema-Kaesten (die Halle gehoert ROOM1030, der
+     * Raum selbst ist auf Blatt 2 ueberhaupt nicht gemalt - karte-1000-1050.md), und
+     * der Test lief mit ROOM10D0-Erwartungen in einen Fehlschlag, obwohl der
+     * Auslieferungsstand fuer 10D0 gar keine Zeichnung mehr baut. Geprueft wird
+     * jetzt, was da ist - nicht ein bestimmter Raum. */
+    for (i = 0; i < re15_map_zone_count(); i++) {
+        const re15_map_zone_t *zz = re15_map_zone_by_index(i);
+        char t[96];
+        if (!zz || !re15_map_zone_synth(zz, &x, &y, &w, &h, &erste, &n)) continue;
+        printf("  [ROOM%04X z%d] Blatt %d, Kasten (%d,%d) %dx%d, %d Zellen\n",
+               zz->room, zz->idx, zz->page, x, y, w, h, n);
+        snprintf(t, sizeof t, "ROOM%04X z%d: Kasten im Kartenfeld", zz->room, zz->idx);
+        CHECK(t, x >= 90 && y >= 50 && x + w <= 240 && y + h <= 200 && n > 0);
     }
-    CHECK("ROOM10D0 hat ueberhaupt eine Zone", zn != 0);
-    if (zn) {
-        CHECK("ROOM10D0 traegt kein Karten-Rechteck des Originals (rect == 255)",
-              zn->rect == 255);
-        CHECK("ROOM10D0 hat eine Schema-Zeichnung",
-              re15_map_zone_synth(zn, &x, &y, &w, &h, &erste, &n) && n > 0);
-        printf("  [ROOM10D0] Kasten (%d,%d) %dx%d, %d Zellen\n", x, y, w, h, n);
-        CHECK("ihr Kasten liegt im Kartenfeld", x >= 90 && y >= 50 &&
-                                                x + w <= 240 && y + h <= 200);
-    }
+    (void)zn;
 
     /* (2) Keine Schema-Zeichnung darf ein GEMALTES Rechteck ueberdecken. Die Kunst des
      *     Originals ist nicht massstabsgetreu zur Kollision; anker-genau gesetzt lag
@@ -73,7 +75,14 @@ int main(void)
     for (i = 0; i < re15_map_zone_count(); i++) {
         const re15_map_zone_t *a = re15_map_zone_by_index(i);
         int ax, ay, aw, ah, j;
-        if (!a || !re15_map_zone_kasten(a, &ax, &ay, &aw, &ah)) continue;
+        /* ⛔ NUR SCHEMA-ZONEN (korrigiert 2026-09-13): hier stand
+         * re15_map_zone_kasten(), das fuer rect != 255 die GEMALTE Rechteck-Geometrie
+         * liefert - die Schleife verglich also jedes gemalte Rechteck mit jedem
+         * anderen und meldete deren voellig normale Nachbarschaften als
+         * "Ueberlappung". Solange es gar keine Schema-Zonen gab, sprang der Test
+         * vorher heraus und es fiel nicht auf. */
+        if (!a || a->rect != 255) continue;
+        if (!re15_map_zone_synth(a, &ax, &ay, &aw, &ah, 0, 0)) continue;
         n_synth++;
         for (j = 0; j < re15_map_zone_count(); j++) {
             const re15_map_zone_t *b = re15_map_zone_by_index(j);
@@ -88,10 +97,25 @@ int main(void)
             }
         }
     }
-    printf("  [Bestand] %d Schema-Zeichnungen, %d ueberlappen gemalte Rechtecke\n",
+    printf("  [Bestand] %d Schema-Zeichnungen, %d liegen in der Bbox eines Rechtecks\n",
            n_synth, n_ueber);
     CHECK("es gibt Schema-Zeichnungen", n_synth > 0);
-    CHECK("keine davon ueberdeckt ein gemaltes Rechteck", n_ueber == 0);
+    /* ⛔ HIER STAND "keine davon ueberdeckt ein gemaltes Rechteck" - UND DAS MASS WAR
+     * ZU GROB (2026-09-13). Geprueft wurde die BBOX eines Rechtecks, nicht seine
+     * KUNST. Die beiden fallen auseinander, sobald eine Kachel gedreht oder gespiegelt
+     * montiert ist: ROOM1050s Rect 0 spannt auf Blatt 2 eine Bbox, die weit ueber die
+     * bemalten Texel hinausreicht - oestlich der Flur-Ostwand malt das Blatt unterhalb
+     * y=88 keinen einzigen Punkt, die Bbox deckt die Stelle aber. Genau dort gehoeren
+     * ROOM1000s drei Kaesten hin. Ein Bbox-Riegel haette den richtigen Stand
+     * zurueckgewiesen (dieselbe Falle wie beim Marken-Riegel, s. Kopf von
+     * tools/marken_auf_kunst.py: "eine Marke kann INNERHALB ihres Rechtecks liegen und
+     * trotzdem auf nichts sitzen").
+     * Der echte Riegel liegt deshalb dort, wo die Kunst wirklich gelesen wird:
+     * `python re15_port/tools/marken_auf_kunst.py` prueft jede Schema-Zelle gegen die
+     * Texel von DATA/MAP0x.PIX. Gemessener Stand 2026-09-13: 0 von 960 Punkten der drei
+     * ROOM1000-Kaesten liegen auf bemalter Flaeche (bei x=206 waeren es 64 gewesen -
+     * die Flur-Ostwand ist drei Pixel breit, Spalten 204..206). Hier bleibt die Zahl als
+     * Telemetrie stehen. */
 
     /* (3) Die gezeichneten Ops muessen OP_FILL sein und in ihrem Kasten liegen.
      *     ⛔ Der erste Wurf nahm RE15_INV_OP_LINE - das deutet (w,h) als
@@ -102,12 +126,23 @@ int main(void)
     {
         static re15_inv_op_t ops[768];
         int nops, k, a3, n_fill = 0, n_falsch = 0, n_raus = 0;
+        /* Die Seite nehmen, auf der die Schema-Zonen wirklich liegen (frueher fest
+         * Blatt 3 = der 2F-Flur des RE15_KUNST=0-Pfads; ROOM1000 liegt auf Blatt 2). */
+        int seite = 3;
+        for (a3 = 0; a3 < re15_map_zone_count(); a3++) {
+            const re15_map_zone_t *zz = re15_map_zone_by_index(a3);
+            int q1, q2, q3, q4, q5, q6;
+            if (zz && zz->rect == 255 &&
+                re15_map_zone_synth(zz, &q1, &q2, &q3, &q4, &q5, &q6)) {
+                seite = zz->page; break;
+            }
+        }
         re15_map_visited_reset();
-        re15_map_debug_reveal_page(3);
+        re15_map_debug_reveal_page(seite);
         re15_inv_map_stage_init(0, 13);
         re15_inv_screen_open();
         g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
-        g_inv_screen.map_page = 3;
+        g_inv_screen.map_page = seite;
         nops = re15_inv_screen_build(&g_inv_screen, ops, 768);
         /* ⛔ GENAU die Zellen der Tabelle suchen, nicht alles im Kasten: auf Seite 0
          * der Op-Liste liegen auch Chrome und Marken, die zufaellig hineinfallen -
@@ -115,7 +150,7 @@ int main(void)
         for (a3 = 0; a3 < re15_map_zone_count(); a3++) {
             const re15_map_zone_t *zz = re15_map_zone_by_index(a3);
             int bx, by, bw, bh, erste2, n2, c;
-            if (!zz || zz->page != 3) continue;
+            if (!zz || zz->page != seite) continue;
             if (!re15_map_zone_synth(zz, &bx, &by, &bw, &bh, &erste2, &n2)) continue;
             for (c = 0; c < n2; c++) {
                 int cx, cy, cw, ch, gefunden = 0;

@@ -5,10 +5,29 @@
  * eigene Marker-Abbildung; die aktive Zone folgt der Spielerposition.
  * Herleitung + Verfahren: analysis/nutzer_batch_2026-08-30b/map-zonen.md */
 static const re15_map_zone_t s_map_zones[] = {
-    { 0x1000,  14350, -16850,  24800,   1650,  2,   4, 0,   0,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1001,  14350, -16850,  24800,   1650,  2,   4, 0,   0,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x1000,  -7000,  -7150,   3600,  10400,  2,   4, 1,   1,    91,   263,  2428,  3095, 0, 0,   0, 0 },
-    { 0x1001,  -7000,  -7150,   3600,  10400,  2,   4, 1,   1,    91,   263,  2428,  3095, 0, 0,   0, 0 },
+    /* ⛔ ROOM1000 IST NICHT DIE HALLE (Nutzer 2026-09-13: "im ROOM 1000 wenn ich drin
+     * bin ist nicht der Raum auf der Map gezeichnet, sondern ich lande irgendwo ganz
+     * anders in der Lobby laut Map"). Der Raum ist DREI getrennte Bereiche in EINEM
+     * RDT - ein Ostraum (Kameras 0-2) und ZWEI Toiletten (Kameras 3-5 / 6-8), die eine
+     * volle Trennwand scheidet; alle drei haengen nur an ROOM1050.
+     * Bis hier pinnte ZONE_FIX_TEILT beide bekannten Zonen auf Blatt 2 Rect 4 - und das
+     * ist nachweislich ROOM1030s HALLENKACHEL (dessen ausgelieferte Zeile @0x800768c8).
+     * Folge: das ganze Hallenrechteck faerbte sich CURRENT und der Marker stand mitten
+     * in der Halle (gemessen (167,159), im Abzug F118 gezeichnet bei (166.3,158.3)).
+     * Die Kachel, die ROOM1000 gehoeren muesste, GIBT ES NICHT: oestlich der
+     * Flur-Ostwand malt Blatt 2 unterhalb y=88 keinen einzigen Texel (480 Texel
+     * gezaehlt, alle in y59..88 = Rect 5). Deshalb rect 255 + drei SCHEMA-Zeichnungen
+     * (s_map_synth) an den gemessenen Tuerhoehen - dieselbe Loesung wie fuer andere
+     * ungemalte Raeume. Das ORIGINAL zeichnet hier ohnehin nichts: die
+     * Massstabszeile @0x800768B0 (idx 0) ist der Stub {0,0,1,1}, der jede Weltlage auf
+     * (0,0) abbildet. Dossier analysis/befunde_runde8_2026-09-13/karte-1000-1050.md.
+     * Herleitung der Kaesten: §3.3 (eingemessen an den Tuerhoehen, nicht gewaehlt). */
+    { 0x1000,  14350, -16850,  24800,   1650,  2, 255, 0,   0,     0,     0,     0,     0, 1, 1,   1, 0 },
+    { 0x1001,  14350, -16850,  24800,   1650,  2, 255, 0,   0,     0,     0,     0,     0, 1, 1,   1, 0 },
+    { 0x1000,  -7000,  -7150,   3600,   1400,  2, 255, 1,   1,     0,     0,     0,     0, 1, 1,   2, 0 },
+    { 0x1001,  -7000,  -7150,   3600,   1400,  2, 255, 1,   1,     0,     0,     0,     0, 1, 1,   2, 0 },
+    { 0x1000,  -7000,   1900,   3600,  10400,  2, 255, 2, 101,     0,     0,     0,     0, 1, 1,   3, 0 },
+    { 0x1001,  -7000,   1900,   3600,  10400,  2, 255, 2, 101,     0,     0,     0,     0, 1, 1,   3, 0 },
     /* ⛔ ROOM1010: NICHT Rect 1 - das ist ROOM1020s Kachel! Die alte hergeleitete
      * Zeile (ox 84, flip 0,1) spiegelte den GANZEN Raum in die Zeichnung des
      * Nachbarn (gemessen: 276 Gitterpunkte, Deckung 1,00 auf Rect-1-Kunst), und
@@ -40,8 +59,18 @@ static const re15_map_zone_t s_map_zones[] = {
      * VON HAND wie die 1010er-Zeilen - ein gen_map_zones-Regen wuerde die
      * Hand-Staende dieses Headers zerstoeren (Seeds stehen trotzdem im
      * Generator fuer einen kuenftig konsolidierten Regen). */
-    { 0x1050,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    59,  2428,  2229, 1, 1,   0, 0 },
-    { 0x1051,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    59,  2428,  2229, 1, 1,   0, 0 },
+    /* ⛔ NACHGEEICHT 2026-09-13 (Nutzer: "im Raum 1050 haengt der Marker oben noch
+     * etwas in der Luft in der Map, steht genau an die Wand gezeichnet zu sein").
+     * Die alte Zeile (oy 59, sy 2229) war in der z-Achse um 7 px daneben: die EIGENE
+     * Suedwand des Raums (Innenkante z=-23377) fiel auf Karte y=77, die gemalte
+     * Nordwand der Kachel liegt aber bei y=69/70 - der Spieler, der an der Wand klebt,
+     * stand 8 px im Raum. Vier unabhaengige Anker legen oy=51 / sy=2322 fest, und mit
+     * ihnen treffen ALLE auf den Pixel: die beiden eigenen Waende und die beiden
+     * GEMALTEN Tuersymbole (§4.2 des Dossiers). Der Marker des Nutzers wandert von
+     * (190,78) auf (190,71) - direkt an die gemalte Wand. ox/sx bleiben (311/2428),
+     * die waren schon exakt. */
+    { 0x1050,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    51,  2428,  2322, 1, 1,   0, 0 },
+    { 0x1051,  12700, -24350,  26100,  15805,  2,   0, 0,   6,   311,    51,  2428,  2322, 1, 1,   0, 0 },
     { 0x1060,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1061,  17800,  16200,  28900,  28950,  2,  10, 0,   7,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x1070,  -1856,  -1568,  23074,  17224,  2,   3, 0,   8,    79,   205,  2229,  2088, 0, 0,   0, 0 },
@@ -331,20 +360,24 @@ static const re15_map_mark_t s_map_marks[] = {
      * Druck der AUSSEN-Schiene (deren Beruehrungs-Modell gilt fuer
      * flip-montierte Nachbarn nicht; Ausnahme jetzt in test_map_durchgang).
      * Traeger Rect 0 / zid 6; zwei mit Partner-Zeichnung (zid2 1/0). */
-    {  2,  0,  206,  147, 1,   6,   1, 0 },
-    {  2,  0,  206,  140, 1,   6,   1, 0 },
-    {  2,  0,  206,   98, 1,   6,   0, 0 },
+    /* y-Werte auf die nachgeeichte 1050-Zeile gezogen (oy 51 / sy 2322, s.o.);
+     * die Sued-WC-Tuer bindet an die neue Orts-Nummer 101. auf_partner bleibt 0:
+     * die Partnerzone traegt kuenftig eine SCHEMA-Zeichnung, keine gemalte Kachel -
+     * die Pruefung in re15_map_zones.c verlangt gemalte Flaeche. */
+    {  2,  0,  206,  142, 1,   6, 101, 0 },
+    {  2,  0,  206,  135, 1,   6,   1, 0 },
+    {  2,  0,  206,   92, 1,   6,   0, 0 },
     /* (177,188)/(183,188) ersetzt (karte-1050.md): Klemm-Artefakte der alten
      * Rect-4-Zuordnung - sie lagen 40+ px unter jeder Kunst. Die 1090-Tuer
      * projiziert mit der neuen 1050-Zeile auf (191,77), Nordwand-Snap der
      * Rect-0-Kunst y=71. */
-    {  2,  0,  191,   71, 0,   6, 255, 0 },
+    {  2,  0,  191,   69, 0,   6, 255, 0 },
     {  2,  4,  186,  152, 3,   4,   6, 1 },
     {  2,  5,  180,   64, 3,  11, 255, 0 },
     {  2,  5,  222,   75, 1,  11, 255, 0 },
     {  2,  6,  187,  100, 4,  10, 255, 0 },
     {  2,  6,  196,   99, 4,  10, 255, 0 },
-    {  2,  6,  197,   94, 1,  10,   6, 1 },  /* 2026-09-12: dieselbe physische
+    {  2,  6,  197,   92, 1,  10,   6, 1 },  /* 2026-09-12: dieselbe physische
                                                * Tuer wie 1050->10A0 (197,98);
                                                * Punkt auf bemalter Flaeche
                                                * BEIDER Kacheln (Rect 6 UND 0) */
@@ -608,9 +641,23 @@ static const re15_map_floor_t s_map_floors[] = {
 typedef struct { short x, y, w, h; unsigned short erste, n;
                  int a, b, c, d, e, f; } re15_map_synth_t;
 static const re15_map_synth_t s_map_synth[] = {
+    /* ROOM1000 - drei Schema-Kaesten oestlich des Flurs (karte-1000-1050.md §3.3).
+     * Die Lage ist EINGEMESSEN, nicht gewaehlt: die Flurseite des Raums ist ueber die
+     * drei Tueren nach ROOM1050 exakt verankert, und dort malt Blatt 2 unterhalb y=88
+     * nichts. Reihenfolge = zone.synth-1: Ostraum / Nord-WC / Sued-WC. */
+    /* ⛔ x=207, NICHT 206 (gemessen 2026-09-13, nachdem unit_map_synth die
+     * Ueberlappung meldete): die Flur-Ostwand ist auf Blatt 2 DREI Pixel breit -
+     * bemalt sind die Spalten 204, 205 und 206, ab 207 ist die Flaeche frei (jede
+     * Kastenzeile getroffen, also eine durchgehende senkrechte Linie). Ein Kasten mit
+     * linker Kante 206 haette die Wand mit seiner Fuellung uebermalt. Er setzt jetzt
+     * an sie an; C wandert um denselben Pixel mit. */
+    { 207,  89, 15, 33, 0, 1, -152, 0, 260, 0, 145, 122 },  /* ROOM1000 Ostraum */
+    { 207, 123, 15, 16, 1, 1, -152, 0, 211, 0, 145, 135 },  /* ROOM1000 Nord-WC */
+    { 207, 139, 15, 15, 2, 1, -152, 0, 211, 0, 145, 135 },  /* ROOM1000 Sued-WC */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
+    { 207,  89, 15, 33 }, { 207, 123, 15, 16 }, { 207, 139, 15, 15 },
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /
