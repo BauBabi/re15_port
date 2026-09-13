@@ -1,3 +1,11 @@
+# v0.7.96 - 2026-09-13
+
+## Boiler Room: die Vordergrund-Objekte verdecken jetzt
+
+- **ROOM11F0 hat Masken** - aus den Freistellungen des Nutzers (Cut 1, 6 und 7).
+  Vorher hatte der Raum keine einzige, deshalb wurden Rohre, Tank und Gitterrost
+  hinter den Spieler gezeichnet: es sah aus, als stuende er obendrauf.
+
 # v0.7.95 - 2026-09-13
 
 ## Der Zombie trennt sich am Becken
