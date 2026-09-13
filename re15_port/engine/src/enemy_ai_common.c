@@ -1428,7 +1428,17 @@ static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int
      * dieselbe Klemme wie beim Gitter-Greifer Leon im Begehbaren. */
     {
     uint8_t vg_ty = (uint8_t)re15_player_victim_grabber_type();
-    if ((vg_ty == 0x1Au || vg_ty == 0x27u) && g_room_rdt_ok) {
+    /* ⛔ NICHT MEHR AUF 0x1A/0x27 BEGRENZT (Nutzer-Marke ROOM1220 F299, 2026-09-13:
+     * "wenn ich gebissen werde lande ich irgendwie in der Wand"). Der Kommentar oben
+     * sagte, die RE2-Greifer braeuchten die Klemme nicht, "weil sie im Begehbaren
+     * stehen" - das ist widerlegt. GEMESSEN an seiner Marke: der Spieler stand auf
+     * (-21553, 0, -4586), und das liegt INNERHALB der Wandzelle 7 von ROOM1220
+     * (x -21825..-21550, z -19875..-4300, typ 1, Band 0) - drei Einheiten hinter der
+     * Innenkante. Im Bild steht er sichtbar im Mauerwerk zwischen Tuer und Gitter.
+     * Der Greifer war ein Zombie (0x10..0x18), fuer den die Klemme bisher NICHT lief.
+     * Sie ist konservativ: sie haelt den letzten nachweislich begehbaren Standpunkt
+     * dieses Griffs und kann die Opfer-Animation deshalb nicht verreissen. */
+    if (vg_ty != 0u && g_room_rdt_ok) {
         /* ⛔ DIE WANDKLEMME DES GITTER-GREIFERS (Nutzer 2026-08-26: "wenn ich zu oft
          * hintereinander gegriffen werde, werde ich trotzdem noch in die Wand gezogen").
          *
