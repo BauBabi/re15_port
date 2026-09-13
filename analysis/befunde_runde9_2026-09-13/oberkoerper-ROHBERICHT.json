@@ -1,0 +1,694 @@
+{
+  "summary": "Wo wirft RE2 beim Zombie den Oberkoerper ab - und was fehlt dem Port in 0x80109610 / 0x801092C4?",
+  "agentCount": 9,
+  "logs": [],
+  "result": {
+    "dimensionen": [
+      {
+        "dimension": "burst",
+        "kernaussage": "FUN_80109610 wirft NICHTS ab - und der Port bildet das korrekt ab. Ein exhaustiver Store-Scan aller 39 Store-Instruktionen im Bereich 0x80109610..0x801099E0 zeigt: jede einzelne schreibt nach `sp` oder nach `s2` (die Entity). Der Modellblock-Zeiger aus `lw 408(s2)` (in s3/s0/v1) taucht NIE als Store-Basis auf - er wird ausschliesslich als Matrix-Anker fuer den Effekt-Spawner gelesen. Kein Part-Flag, kein Mesh-Tausch, keine Wurf-Felder, kein word0-Variantenwechsel; auch keine Delegation (alle neun jal-Ziele nachgesehen). Das \"Wegschleudern\" ist im Original reine Blut-/Brocken-Praesentation plus Schub - der Koerper bleibt im ORIGINAL ganz. Der Nutzer-Befund kann folglich nicht in 0x80109610 gefixt werden. Drei Nebenfunde mit Substanz: (1) der Ragdoll-Schwanz von FUN_801066FC stempelt ab Frame 20 `flags |= 0x9000` auf die Parts 1..7 (@0x80106DC0-E14) - im Port fehlt das komplett; (2) der als \"ohne Konsument\" gefuehrte Stumpf-Marker 0x80 HAT einen Konsumenten: FUN_80027434 `andi 0x80` @0x80027B08 -> `jal 0x8002940C` @0x80027B1C faerbt die Part-Polygone mit part+0x98/+0x9C um; (3) die Aufgaben-Hypothese \"word0 &= 0xF3FFFFFF | 0x04000000 = Modellwechsel\" ist WIDERLEGT - die Bits 26..28 sind eine Ziel-Hoehenband-Maske (`srl v0,v0,26` @0x800413CC / `andi s6,v0,0x7` @0x800413D4), und FUN_80028368 bekommt sein Modell aus entity+0x108, nicht aus word0.",
+        "befunde": [
+          {
+            "titel": "Funktionsgrenze und Phasenstruktur von FUN_80109610",
+            "aussage": "0x80109610..0x801099E0 (72-Byte-Rahmen, `addiu sp,sp,-72` @0x80109610, `jr ra` @0x801099DC; naechster Prolog `addiu sp,sp,-56` @0x801099E4). Es gibt KEINE Phasentabelle - anders als FUN_801092C4 (Tabelle @0x8010014C) dispatcht 0x80109610 ueber drei inline-Vergleiche auf +0x6. Drei Phasen: P0 = Aufsetzen (0x80109690), P1 = Lauf (0x80109894, P0 FAELLT durch), P2 = Abschluss (0x801099B0) mit `sw v0,4(s2)`, v0 = 7 aus dem DELAY-SLOT @0x80109684 -> Zustandswort 7 (CORPSE, Sub 0..3 = 0).",
+            "belege": [
+              "`lbu v1,6(s2)` @0x80109650 (Phasenbyte)",
+              "`beq v1,1 -> 0x80109894` @0x80109658",
+              "`slti v0,v1,2` @0x80109660 / `beq v0,zero -> 0x8010967C` @0x80109664 / `beq v1,zero -> 0x80109690` @0x8010966C",
+              "`addiu v0,zero,2` @0x8010967C / `beq v1,v0 -> 0x801099B0` @0x80109680 / DELAY `addiu v0,zero,7` @0x80109684",
+              "`sw v0,4(s2)` @0x801099B0",
+              "`j 0x801099B4` (Epilog) @0x80109674 / @0x80109688",
+              "Funktionsende: `jr ra` @0x801099DC, `addiu sp,sp,-56` @0x801099E4"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5137-5253 (re2z_death_burst)"
+          },
+          {
+            "titel": "⛔ KERNANTWORT: FUN_80109610 setzt KEIN Part-Flag, tauscht KEIN Mesh, schreibt KEIN Wurf-Feld",
+            "aussage": "Exhaustiver Store-Scan aller 39 Store-Instruktionen im Bereich 0x80109610..0x801099E0: JEDE hat als Basisregister entweder `sp` (Rahmen/Vektor-Puffer) oder `s2` (die ENTITY). Die Modellblock-Register - s3 (@0x801096F4, @0x801097FC, @0x80109910), s0 (@0x8010970C) und v1 (@0x801097F0, @0x801098E0), alle aus `lw 408(s2)` = entity[+0x198] - erscheinen NIEMALS als Store-Basis. Sie werden ausschliesslich GELESEN, und zwar nur als Matrix-Anker fuer den FX-Spawner (`addiu a2,s3,72` bzw. `addiu s0,s3,72`) und als Quelle der Part-8-Weltposition (`lw 1420/1424/1428(v1)` = 172*8+44/48/52). Damit ist ausgeschlossen: `|= 0x40` (eigene Matrix), `|= 0x20` (Wurfphysik), `|= 0x08` (Burst-Zeichner), `|= 0x4A`, `|= 0x1062`, `|= 0x80` (Stumpf-Marker); Stores auf +0x38/+0x3A/+0x3C, +0x3E/+0x40/+0x42, +0x79, +0x86, +0x98..+0xA4 eines Parts; Mesh-Tausch; word0-Variantenwechsel. Die Funktion ist REINE EFFEKT-/BEWEGUNGS-Praesentation.",
+            "belege": [
+              "Store-Liste (Basis sp): @0x80109614,618? nein - @0x80109614/61C/624/628/62C/630/634/638/63C (Register-Spill), @0x80109644/64C (clipsel-Tabelle), @0x801096FC/700/704, @0x80109724/728/72C, @0x80109750/764/774, @0x801098F0/900/90C (Vektor-Puffer sp+24)",
+              "Store-Liste (Basis s2 = Entity): @0x801096A8 (+0x1C0), @0x801096AC (+0x1D3), @0x801096CC (+0x158), @0x801097F8 (+0x16A), @0x80109820 (+0x16A), @0x80109834/83C (+0x21A), @0x80109858 (+0x6), @0x80109864 (+0x14C), @0x8010988C (+0x144), @0x80109890 (+0x148), @0x80109968 (+0x6), @0x80109978 (+0x144), @0x80109988 (+0x144), @0x801099B0 (+0x4)",
+              "Modellblock nur lesend: `lw s3,408(s2)` @0x801096F4 -> `addiu s0,s3,72` @0x8010970C; `lw s3,408(s2)` @0x80109910 -> `addiu a2,s3,72` @0x80109938; `lw v1,408(s2)` @0x801098E0 -> `lw v0,1420(v1)` @0x801098E8, `lw v0,1424(v1)` @0x801098F4, `lw v0,1428(v1)` @0x80109904",
+              "Gegenprobe Flag-Idiom im selben Overlay: `lw s0,408(s3)` @0x80108DC8 / `lw v0,1376(s0)` @0x80108DD4 / `ori v0,v0,0x4a` @0x80108DDC / `sw v0,1376(s0)` @0x80108DE0 - genau dieses Lese-Ori-Schreib-Tripel kommt in 0x80109610 NICHT EIN EINZIGES MAL vor"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5137-5253"
+          },
+          {
+            "titel": "Die einzige 172er-Kette in der Funktion ist ein LESE-Anker (Zeile-12-Zweig)",
+            "aussage": "@0x801097D0-F4 steht die Schiebekette 172*i (v1<<1 +v1 <<2 -v1 <<2 -v1 <<2 = 172*v1). Sie berechnet KEINE Flag-Adresse, sondern die MATRIX des Treffer-Parts als Spawn-Anker: `s3 = entity[+0x198] + 172*t0`, danach `addiu a2,s3,72` und `jal 0x8001BF10`. Der Part-Index t0 kommt aus `lbu t0,153(s3)` mit s3 = entity[+0x200] (= Record+0x99). Das begleitende `sb t0,362(s2)` (+0x16A) wird 0x28 Instruktionen spaeter @0x80109820 bedingungslos mit 0/1 ueberschrieben und ist damit ein toter Zwischenwert.",
+            "belege": [
+              "`lw s3,512(s2)` @0x801097C0 (= entity[+0x200])",
+              "`lbu t0,153(s3)` @0x801097C8",
+              "Schiebekette @0x801097D0-F4: `sll v1,t0,24` / `sra v1,v1,24` / `sll v0,v1,1` / `addu v0,v0,v1` / `sll v0,v0,2` / `subu v0,v0,v1` / `sll v0,v0,2` / `subu v0,v0,v1` / `sll v0,v0,2` = 172*v1",
+              "`lw v1,408(s2)` @0x801097F0 / `addu s3,v1,v0` @0x801097FC / `addiu a2,s3,72` @0x80109804 / `jal 0x8001bf10` @0x80109800",
+              "`sb t0,362(s2)` @0x801097F8, ueberschrieben durch `sb v0,362(s2)` @0x80109820"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5182-5189"
+          },
+          {
+            "titel": "Mesh-Tausch existiert im GESAMTEN Zombie-Overlay nur an zwei Stellen - keine davon in 0x80109610",
+            "aussage": "Ein Scan aller `sw`-Stores auf Part-Geometrie-Offsets (172*i + 8/12/16/20) ueber die komplette EMZ0.BIN liefert exakt zwei echte Tauschstellen (alle uebrigen Treffer sind sp-relative Rahmen-Spills): (a) @0x8010532C-50 = der Bein-Stumpf (re2z_leg_gore), (b) @0x80108FC0-DC = der Rumpf-Stumpf im ZERREISS-Tod FUN_80108BEC - dort wandern die vier Geometrie-Worte des RESERVE-Parts 16 (`lw 2760/2764/2768/2772(v0)` = 172*16 + 8/12/16/20) in Part 0. FUN_80109610 kommt in dieser Liste nicht vor.",
+            "belege": [
+              "Bein: `sw v0,8(s0)` @0x8010532C, `sw v0,16(s0)` @0x80105338, `sw v0,12(s0)` @0x80105344, `sw v0,20(s0)` @0x80105350",
+              "Rumpf: `lw v1,2760(v0)` @0x80108FC0, `lw a0,2768(v0)` @0x80108FC4, `lw a1,2764(v0)` @0x80108FC8, `lw a2,2772(v0)` @0x80108FCC -> `sw v1,8(v0)` @0x80108FD0, `sw a0,16(v0)` @0x80108FD4, `sw a1,12(v0)` @0x80108FD8, `sw a2,20(v0)` @0x80108FDC",
+              "Begleitender Stumpf-Marker davor: `lw v0,0(s1)` @0x80108FA0 / `sw v1(=32),152(s1)` @0x80108FA8 / `sw v1,156(s1)` @0x80108FAC / `ori v0,v0,0x80` @0x80108FB0 / `sw v0,0(s1)` @0x80108FB4"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Delegation: neun jal-Ziele, keines wirft ein Koerperteil ab",
+            "aussage": "Vollstaendige jal-Liste aus 0x80109610..0x801099E0 und was jedes Ziel tut: 0x800154AC = Peilung self->Spieler (reine Arithmetik, schreibt nur sp); 0x80015910 = Blickrichtungs-Vergleich (LEAF, kein einziger Store); 0x80015FE8 = RNG (9 Aufrufe); 0x8001BF10 = Effekt-Spawner (5 Aufrufe, Argument a2 ist IMMER eine Part-MATRIX als Anker, nie ein Flagwort); 0x8005BD6C = Sound-Effekt; 0x80018FB0 = Pad-Rumble (liest +0x1CE, ruft 0x8007730C); 0x8002959C = Clip-Advance (leitet auf 0x80029614 weiter, schreibt in den Modellblock nur Pose-Felder +44/+48/+52 Wurzel-Translation, +56/+58/+60 Vor-Wurzel, +124 Winkel - keine Flagworte); 0x800152C8 = Schub, schreibt NUR entity[+0x38] und entity[+0x40]; 0x80016200 = Matrix-Nachzieher (MulMatrix-Kette ueber 0x8002CE94). Ergebnis: es gibt KEINE Delegation eines Abwurfs.",
+            "belege": [
+              "jal-Liste: 0x800152C8 @0x80109964; 0x800154AC @0x801096C0; 0x80015910 @0x80109810; 0x80015FE8 @0x801096C8/@0x8010973C/@0x8010974C/@0x80109760/@0x80109770/@0x80109784/@0x80109860/@0x80109914/@0x80109920; 0x80016200 @0x801099A0; 0x80018FB0 @0x80109880; 0x8001BF10 @0x80109710/@0x80109734/@0x801097A4/@0x80109800/@0x80109934; 0x8002959C @0x80109948; 0x8005BD6C @0x80109878",
+              "0x80015910 ist ein Leaf: `lh v0,118(a1)` @0x80015910 ... `jr ra` @0x80015928, `slti v0,v0,2048` @0x8001592C - kein Store",
+              "0x800152C8 Stores: `sw v0,56(s1)` @0x80015320, `sw v0,64(s1)` @0x80015334 (nur X/Z der Entity)",
+              "0x80018FB0 endet in `jal 0x8007730C` @0x8001900C (Pad-Vibration)",
+              "0x8002959C: `jal 0x80029614` @0x800295FC; dessen Modellblock-Stores `sw v1,44(s0)` @0x80029688, `sw v0,48(s0)` @0x80029694, `sw v0,52(s0)` @0x800296A0, `sh v0,56/58/60(s0)` @0x8002974C-54, `sw v1,124(s0)` @0x80029774"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Die Part-Flag-Semantik ist jetzt vollstaendig belegt (FUN_80027434) - inklusive der bisher OFFENEN Bits",
+            "aussage": "Der Part-Zeichner FUN_80027434 nimmt das Flagwort als param_3 und testet: 0x40 = Eltern-Verkettung ueberspringen (eigene Matrix); 0x800 = Skalierung aus entity+0x8C/0x8E/0x90; 0x20 = Wurfphysik FUN_80028AD8; 0x1000 = per-Part-LICHT-Neuverankerung (FUN_80076F88 auf die Part-Translation, MulMatrix0, SetLightMatrix, dann FUN_80076F88 auf modelwork+0x5C); 0x400/0x2000 = ScaleMatrix-Varianten; 0x8000 = per-Part-SICHTBARKEITSTEST (FUN_8002C820 auf part+0x5C; scheitert er, wird 0x4000 gesetzt = Part wird NICHT gezeichnet); 0x18==0 = Normalzeichnung; 0x08 = Burst-Zeichner FUN_8002D3C8/FUN_8002D718 + Driftphysik FUN_80028DAC; 0x10 = FUN_8002DA80/FUN_8002DDF0 + FUN_80028EA4; 0x80 = STUMPF-UMFAERBUNG ueber FUN_8002940C(part+4, part[+0x98], part[+0x9C]). Damit hat der im Port als 'ohne Konsument' gefuehrte Stumpf-Marker 0x80 einen benannten Konsumenten.",
+            "belege": [
+              "`andi v0,s3,0x40` @0x80027498",
+              "`andi v0,s3,0x800` @0x800274A0 / @0x800275E0",
+              "`andi v0,s3,0x20` @0x80027694 -> `jal 0x80028AD8` @0x800276A0",
+              "`andi v0,s3,0x1000` @0x800277C8 -> `jal 0x80076F88` @0x800277D4 und @0x800277FC",
+              "`andi v0,s3,0x400` @0x80027994 / `andi v0,s3,0x2000` @0x800279C8",
+              "`andi v0,s3,0x8000` @0x80027A54 -> `jal 0x8002C820` @0x80027A68; Zeichen-Gate `andi v0,s3,0x4000` @0x80027ABC",
+              "`andi v0,s3,0x18` @0x80027AC8 / `andi v0,s3,0x8` @0x80027AC4/@0x80027AD0/@0x80027B8C / `andi v0,s3,0x10` @0x80027B50/@0x80027B94",
+              "⛔ `andi v0,s3,0x80` @0x80027B08 -> `jal 0x8002940C` @0x80027B1C",
+              "FUN_8002940C (RE2_Quellcode_V2/FUN_8002940c.c:19-24 und :31-40): schreibt param_2 als RGB-Tripel HART in die Primitiv-Farbbytes der ersten Mesh und mischt param_3 mit (alt+neu)>>1; fuer die zweite Mesh mischt es beide Worte ein",
+              "Argument-Herkunft: FUN_80027434 ruft `FUN_8002940c(param_2 + 1, param_2[0x26], param_2[0x27])` = (part+4, part[+0x98], part[+0x9C]) - exakt die Felder, die alle drei Stumpf-Stempel setzen"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:4172-4213 (re15_re2z_gore_resolve) / re15_port/platform/pc/main.c:8290-8300"
+          },
+          {
+            "titel": "⛔ ECHTE PORT-LUECKE: der 0x9000-Stempel auf den Parts 1..7 im Ragdoll-Schwanz fehlt",
+            "aussage": "FUN_801066FC stempelt ab Clip-Frame 20 in Phase 1 JEDEN Tick `flags |= 0x9000` auf die Parts 1,2,3,4,5,6,7. Nach der oben belegten Zeichner-Semantik heisst das: per-Part-Lichtneuverankerung (0x1000) UND per-Part-Sichtbarkeitstest (0x8000). Der Port fuehrt genau an dieser Stelle (nach dem Frame-20-Gate, vor der Bounce-Physik) NICHTS davon - der Kommentarblock beschreibt die Region ausschliesslich als Bounce-Physik. Das ist eine reale, benannte Divergenz in der Praesentation der liegenden Leiche.",
+            "belege": [
+              "Gate: `lbu v0,333(s2)` @0x80106D90 / `sltiu v0,v0,0x14` @0x80106D98 / `bne v0,zero,0x80106F14` @0x80106D9C; `lbu v1,6(s2)` @0x80106DA4 / `bne v1,1,0x80106F14` @0x80106DAC",
+              "`lw s3,408(s2)` @0x80106DB8",
+              "Part 1: `lw v0,172(s3)` @0x80106DC0 / `ori v0,v0,0x9000` @0x80106DC8 / `sw v0,172(s3)` @0x80106DCC",
+              "Part 3: `lw v1,516(s3)` @0x80106DC4 / `ori v1,v1,0x9000` @0x80106DD4 / `sw v1,516(s3)` @0x80106DD8",
+              "Part 2: `lw v0,344(s3)` @0x80106DD0 / `ori v0,v0,0x9000` @0x80106DE0 / `sw v0,344(s3)` @0x80106DE4",
+              "Part 5: `lw v1,860(s3)` @0x80106DDC / `ori v1,v1,0x9000` @0x80106DEC / `sw v1,860(s3)` @0x80106DF0",
+              "Part 4: `lw v0,688(s3)` @0x80106DE8 / `ori v0,v0,0x9000` @0x80106DF8 / `sw v0,688(s3)` @0x80106DFC",
+              "Part 7: `lw v1,1204(s3)` @0x80106DF4 / `ori v1,v1,0x9000` @0x80106E04 / `sw v1,1204(s3)` @0x80106E08",
+              "Part 6: `lw v0,1032(s3)` @0x80106E00 / `ori v0,v0,0x9000` @0x80106E0C / `sw v0,1032(s3)` @0x80106E14"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5979 (direkt nach dem Frame-20-Gate, vor Zeile 5982)"
+          },
+          {
+            "titel": "⛔ KORREKTUR der Aufgaben-Hypothese: word0-Bits 26..28 sind KEIN Modellwaehler",
+            "aussage": "Die Aufgabe nannte `word0 &= 0xF3FFFFFF; |= 0x04000000` als moeglichen 'Modell-Variantenwechsel, auf den FUN_80028368 den Part-Block neu aufbaut'. Das ist falsch, und zwar zweifach belegt: (a) FUN_80028368 bekommt das Modell als PARAMETER - der einzige Aufrufer uebergibt `*(undefined4*)(param_1 + 0x108)`, also den Modellzeiger aus entity+0x108, nicht aus word0; (b) der tatsaechliche Konsument der Bits liest sie als DREI-Bit-Wert 26..28 und verwendet ihn als Ziel-Hoehenband-Maske in der Angriffs-/Zielauswahl. INIT setzt den Wert auf 3 (0x0C000000), die Kriecher-/Niedergang-Uebergaenge auf 1 (0x04000000). Der Part-Block wird dabei NICHT neu gebaut.",
+            "belege": [
+              "Aufrufer: RE2_Quellcode_V2/FUN_8002e2d8.c:64 `uVar2 = FUN_80028368(param_1, iVar9 + iVar4, *(undefined4 *)(param_1 + 0x108), 0);`",
+              "Konsument: `srl v0,v0,26` @0x800413CC, `andi s6,v0,0x7` @0x800413D4 (RE2_Quellcode_V2/FUN_800410cc.c:89 `uVar5 = *puVar9 >> 0x1a & 7;`), danach Vergleich gegen die Bandtabelle `&DAT_800A6DB4 + iVar8 + (bVar2 & 8 ? 9 : 0)` (FUN_800410cc.c:100-113)",
+              "INIT-Setzer: `lui v1,0xc00` @0x80100984 / `or v0,v0,v1` @0x80100988 / `sw v0,0(s2)` @0x80100998",
+              "Ragdoll-Phase-2-Setzer: `lui t1,0xf3ff` @0x80106AE0 / `ori t1,t1,0xffff` @0x80106AEC / `lw v1,0(a0)` @0x80106B08 / `lui v0,0x400` @0x80106B38 / `and v1,v1,t1` @0x80106B44 / `or v1,v1,v0` @0x80106B48 / `sw v1,0(a0)` @0x80106B50"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5924 (Kommentar 'Hitbox-/word0-Felder ... OPEN' praezisieren)"
+          },
+          {
+            "titel": "Punkt-fuer-Punkt-Diff re2z_death_burst gegen das Original - vier Restposten",
+            "aussage": "Der Port bildet 0x80109610 sehr genau ab (Phasen, Fallthrough P0->P1, clipsel {1,2}, Clipwort 0x000F0F00+sel, Blutfenster [10*dir+4 .. 10*dir+16] auf ungeraden Frames, RNG-Wurfzahlen, Schub-Abbau -50 mit Null-Klemme, P2 = Zustandswort 7). Offen bleiben genau vier Posten, keiner davon ein Koerperteil-Abwurf: (1) `+0x1C0 |= 1` @0x801096A0/A8 - das ist NICHT nur Kosmetik: Bit 0 sperrt die gesamte Funktion FUN_800177C0 ab; (2) `+0x148 = 0` @0x80109890 (Z-Komponente des Schubvektors; FUN_800152C8 rotiert den VOLLEN Vektor entity+324..+328, der Port fuehrt nur X); (3) `jal 0x80018FB0` @0x80109880 = Pad-Rumble; (4) `+0x144 == 0 -> FUN_80016200(self,0,1)` @0x8010998C-A4. Zusaetzlich: im Zeile-12-Zweig ankert das Original den Emitter am Treffer-Part (s.o.), der Port an Part 0 - dieser Zweig ist im Port aber ohnehin unerreichbar (keine RE1.5-Waffe bildet auf Zeile 12 ab).",
+            "belege": [
+              "`lbu v0,448(s2)` @0x80109698 / `ori v0,v0,0x1` @0x801096A0 / `sb v0,448(s2)` @0x801096A8",
+              "Konsument von +0x1C0 Bit 0: `lbu v0,448(s0)` @0x800177E0 / `andi v0,v0,0x1` @0x800177E8 / `bne v0,zero,0x80017D74` @0x800177EC - gesetztes Bit springt an den Funktions-Epilog, der ganze Rumpf (Zielverfolgung ueber das Treffer-Part +0x1C1 des Ziels, RE2_Quellcode_V2/FUN_800177c0.c:22-130) entfaellt",
+              "`sh zero,328(s2)` @0x80109890; Verbraucher `addiu a1,s1,324` @0x80015304 in FUN_800152C8 (VECTOR ab +0x144)",
+              "`jal 0x80018FB0` @0x80109880",
+              "`lh v0,324(s2)` @0x8010998C / `bne v0,zero,0x801099B4` @0x80109994 / `jal 0x80016200` @0x801099A0 mit a1=0 @0x8010999C, a2=1 @0x801099A4"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5144 (+0x1C0), :5209-5216 (+0x148, Rumble), :5244-5246 (0x80016200)"
+          },
+          {
+            "titel": "Wo der Rumpf im Original tatsaechlich zerteilt wird - und warum nicht bei Zeile 7",
+            "aussage": "Zeile 7 (Schrotflinte) Spalte 1 fuehrt in BEIDEN Tabellen auf FUN_801066FC. Dessen drei Ausgaenge sind: (a) Ziel-Elevation hoch -> +0x231 = 2 -> FUN_801092C4 = KOPF ab (Part 8 `|= 0x4A`), (b) Wurf -> +0x231 = 1 -> FUN_80109610 = Wegschleudern OHNE jeden Abwurf, (c) sonst der Kriecher-Ragdoll. Der einzige Pfad, der den RUMPF gegen einen Stumpf tauscht und Kopf + BEIDE Beine abwirft, ist FUN_80108BEC - und der haengt an den Zeilen 8/9/17 (SPAS-12, HE-Granate, Rakete), nicht an Zeile 7. Im Original zerteilt die Schrotflinte den Zombie also nicht.",
+            "belege": [
+              "Trefferzeile 7: Tabelle 0x8010C940 + 7*36 = 0x8010CA3C; Spalte 1 @0x8010CA40 -> 0x801066FC",
+              "Todeszeile 7: Tabelle 0x8010CC24 + 7*36 = 0x8010CD20; Spalte 1 @0x8010CD24 -> 0x801066FC",
+              "Ausgang (a): `lw v0,-1032(v0)` = 0x800CFBF8 @0x801067A0 / `bgez v0,0x801067CC` @0x801067A8 / `addiu v0,zero,2` @0x801067AC / `sb v0,561(s2)` @0x801067B0 / `jal 0x801092C4` @0x801067BC",
+              "Ausgang (b): `jal 0x80015FE8` @0x801067F4 / `andi v0,v0,0x3` @0x801067FC / `beq v0,zero,0x80106838` @0x80106800 / `lbu v1,4(s2)` @0x80106808 / `bne v1,3,0x8010683C` @0x80106810 / `sb v0(=1),561(s2)` @0x8010681C / `jal 0x80109610` @0x80106828 - der Zweig verlangt ZUSAETZLICH Zustand +0x4 == 3 (Death-Wurzel)",
+              "Ausgang (c): `sb v0(=1),6(s2)` @0x8010684C ... Kriecher-Uebergang @0x80106A8C-B50",
+              "Kopf-ab in (a): `lw v1,1376(...)` / `ori 0x4a` / `sw a3,1376(v1)` @0x80109498; Stumpf-Marker Part 0 `sw v1,0(s1)` @0x801094C8",
+              "Rumpf-Stumpf nur in FUN_80108BEC: Mesh-Tausch @0x80108FC0-DC, Kopf Part 8 `sw v0,1376(s0)` @0x80108DE0, Beine Part 9 `sw v0,1548(s0)` @0x80108E60 und Part 12 `sw v0,2064(s0)` @0x80108F1C"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:5057-5063 (Zeilen-Zuordnung), :5779-5827 (re2z_hit_ragdoll P0)"
+          },
+          {
+            "titel": "Warum im Port trotz korrekter Stempel kein Stumpf sichtbar wird (bestehende Grenze, hier praezisiert)",
+            "aussage": "Selbst auf den Pfaden, auf denen der Port die Stumpf-Felder byte-true stempelt (Magnum-Tod: `re2z_part_flags[0] |= 0x80`, `_yaw98[0]=64`, `_w9c[0]=0x1010`, `_w9e[0]=0x0010`), bleibt der Rumpf unveraendert, weil die Anzeige-Bruecke re15_re2z_gore_resolve nur drei Kanaele liefert: Bit 0 (zeichnen), das Farbwort +0x70 und den Mesh-Index. Der Kanal fuer Bit 0x80 (die Umfaerbung ueber part+0x98/+0x9C) existiert nicht. Zweite Grenze: der Geometrie-Tausch zeigt auf die RE2-Reserve-Parts 15/16, die der RE1.5-MD1 nicht hat - der Hybrid-Rig zieht die Meshes ausdruecklich aus dem RE1.5-Modell (`md15->mesh_count`), also greift die Klammer und der Rumpf bleibt vollstaendig.",
+            "belege": [
+              "Port-Kanaele: re15_re2z_gore_resolve schreibt nur out_draw/out_tint/out_mesh (enemy_ai_re2_zombie.c:4172-4213); der 0x80-Zweig des Originals (`andi v0,s3,0x80` @0x80027B08 -> `jal 0x8002940C` @0x80027B1C) hat dort keine Entsprechung",
+              "Hybrid zieht RE1.5-Meshes: re15_port/engine/src/re2_ems.c:374 `if (m >= md15->mesh_count) return -6;`",
+              "Renderer-Klammer: re15_port/engine/src/re2_ems.c:321 `if (!has_remap && md && nb > md->mesh_count) nb = md->mesh_count;` (Zwilling der main.c-Klemme)"
+            ],
+            "sicherheit": "belegt",
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:4210 / re15_port/platform/pc/main.c:8297"
+          }
+        ],
+        "patchplan": [
+          "NICHT TUN: re2z_death_burst (re15_port/engine/src/enemy_ai_re2_zombie.c:5137-5253) um einen Part-Abwurf ergaenzen. Das Original wirft dort nichts ab - belegt durch den vollstaendigen Store-Scan von 0x80109610..0x801099E0. Ein 'Oberkoerper faellt ab' an dieser Stelle waere ein erfundener Mechanismus und verstoesst gegen das RE-Gate.",
+          "ZUERST MESSEN (blockiert alles andere): re15_port/engine/src/enemy_ai_re2_zombie.c:5979-5989 hat bereits einen RE15_RE2_TRACE-Haken ([z-ragdoll]). Denselben Haken je EINE Zeile an den Kopf von re2z_death_burst (:5139), re2z_death_magnum (:5271) und re2z_hit_ragdoll (:5781) setzen, Schrotschuss wiederholen, Log lesen. Erst wenn feststeht, welche Zelle laeuft, ist der Nutzer-Befund adressierbar.",
+          "re15_port/engine/src/enemy_ai_re2_zombie.c:5979 - den fehlenden 0x9000-Stempel einbauen. Direkt NACH `if (frame < 20 || e->sub_state_2 != 1) return;` und VOR `int rooty = re2z_root_py(e);` (Zeile 5982), in der Original-Reihenfolge der sieben Stores: for (int p : {1,3,2,5,4,7,6}) e->re2z_part_flags[p] |= 0x9000u; mit Einzelkommentaren @0x80106DCC / @0x80106DD8 / @0x80106DE4 / @0x80106DF0 / @0x80106DFC / @0x80106E08 / @0x80106E14. re2z_part_flags ist uint16_t (re15_actor.h:401) - 0x9000 passt.",
+          "re15_port/engine/src/enemy_ai_re2_zombie.c:4172-4213 - re15_re2z_gore_resolve um den vierten Kanal erweitern: einen `uint32_t *out_recolor_a, *out_recolor_b` (oder ein gepacktes Paar) fuellen, wenn (fl[i] & 0x80) gesetzt ist, aus ((uint16_t)re2z_part_w9a[p] << 16) | (uint16_t)re2z_part_yaw98[p] bzw. ((uint16_t)re2z_part_w9e[p] << 16) | (uint16_t)re2z_part_w9c[p]. Beleg im Kommentar: `andi v0,s3,0x80` @0x80027B08 / `jal 0x8002940C` @0x80027B1C, Argumente part[0x26]/part[0x27] = part+0x98/+0x9C. Die Signatur aendert sich - auch re15_actor.h:1039 und die zwei Testaufrufer (tests/unit/probe_re15_gore_import.c:295, probe_re2_ztear.c) nachziehen.",
+          "re15_port/platform/pc/main.c:8297 (Aufruf) und die Mesh-Farbschleife darunter - den neuen Kanal anwenden: fuer die ERSTE Mesh die drei Farbbytes HART auf Wort A setzen, fuer die ZWEITE Mesh Wort A und Wort B je als (alt + neu) >> 1 einmischen. Genau so macht es FUN_8002940C (RE2_Quellcode_V2/FUN_8002940c.c:19-24 bzw. :31-40). Danach ist der Hals-/Rumpf-Stumpf im Magnum-Tod und im Ragdoll wenigstens BLUTIG EINGEFAERBT, auch wenn die Reserve-Geometrie im RE1.5-MD1 fehlt.",
+          "re15_port/engine/src/enemy_ai_re2_zombie.c:5144 - `+0x1C0 |= 1` nachziehen (ori @0x801096A0 / sb @0x801096A8). Braucht ein neues uint8_t-Feld re2z_self1c0 in re15_actor.h neben re2z_self1d3 (:396-402) und einen Konsumenten: das Bit sperrt im Original die komplette Zielverfolgung FUN_800177C0 ab (`lbu v0,448(s0)` @0x800177E0 / `andi 0x1` @0x800177E8 / `bne -> 0x80017D74` @0x800177EC). Ohne Konsument nur stempeln und den Konsumenten als OFFEN mit dieser Adresse dokumentieren - nicht als erledigt melden.",
+          "re15_port/engine/src/enemy_ai_re2_zombie.c:5924 - den Kommentar 'Hitbox-/word0-Felder @0x80106B14-50 sind Modell-/Kollisions-Praesentation ohne Port-Zwilling (OPEN)' korrigieren: die word0-Bits 26..28 sind KEIN Modellwaehler, sondern die Ziel-Hoehenband-Maske (`srl v0,v0,26` @0x800413CC / `andi s6,v0,0x7` @0x800413D4). Dieselbe Korrektur an den drei Zwillings-Kommentaren :1858, :2704, :6138 und im Kommentar :5897, der den Variantenwechsel als 'wahrscheinlichsten Kandidaten' fuer den Part-Zeiger-Reset nennt - dieser Kandidat ist damit ausgeschlossen (FUN_80028368 bekommt das Modell aus entity+0x108, RE2_Quellcode_V2/FUN_8002e2d8.c:64).",
+          "re15_port/engine/src/enemy_ai_re2_zombie.c:5209-5216 - `+0x148 = 0` @0x80109890 ergaenzen, sobald der Port die Z-Komponente des Schubvektors fuehrt. FUN_800152C8 rotiert den VOLLEN VECTOR ab entity+324 (`addiu a1,s1,324` @0x80015304), der Port nur X. Bis dahin: Kommentar mit der Adresse stehen lassen, nicht als erledigt zaehlen."
+        ],
+        "offen": [
+          "⛔ WELCHE ZELLE beim Nutzer tatsaechlich gefeuert hat, ist NICHT gemessen. Zeile 7 hat drei Ausgaenge (0x801092C4 Kopf-ab / 0x80109610 Wegschleudern / Kriecher-Ragdoll) und der Vorbefund dieser Sitzung setzt 0x80109610 nur voraus. Vor jedem Fix: mit RE15_RE2_TRACE=1 den Schuss wiederholen und im Log ablesen, ob re2z_death_burst, re2z_death_magnum oder der Ragdoll-Schwanz gelaufen ist. Solange das offen ist, ist auch offen, welche ANIMATION der Nutzer beschreibt.",
+          "Die Clip-Indizes sind RE2-Nummern, das geladene Modell ist RE1.5 (re2_ems.c:374 zieht die Meshes aus md15). Ob der RE1.5-Zombie-Clip 1/2 ab Startframe 15 (Wort 0x000F0F01/02 @0x80109840-64) ueberhaupt eine Rumpf-Trenn-Animation IST, ist nicht belegt - das muesste am RE1.5-EMD/EDD selbst nachgesehen werden. Ohne diesen Beleg bleibt der Nutzer-Satz 'die Animation zeigt, dass der Oberkoerper abfallen sollte' unverifiziert.",
+          "Der genaue Zweck von FUN_800177C0 (dessen Rumpf +0x1C0 Bit 0 absperrt, @0x800177E0-EC) ist nicht zu Ende verfolgt. Belegt ist nur: die Funktion liest das Treffer-Part +0x1C1 eines Zielobjekts +0x1B8 und laeuft bei gesetztem Bit gar nicht erst an.",
+          "Die Bytetabelle DAT_800A6DB4, gegen die der 3-Bit-Hoehenband-Wert aus word0 geprueft wird (FUN_800410cc.c:100-113), ist nicht dekodiert - damit ist die Bedeutung der einzelnen Bits 26/27/28 (3 = stehend, 1 = kriechend) nur aus den Setzern erschlossen, nicht aus dem Verbraucher.",
+          "entity+0x200 (Record, dessen +0x99 den Treffer-Part traegt, gelesen @0x801097C0-C8) hat im Port keinen Produzenten. Betrifft nur den Zeile-12-Zweig, der im Port unerreichbar ist.",
+          "FUN_80076F88 (das Ziel des 0x1000-Zweigs @0x800277D4/@0x800277FC) ist nicht disassembliert - die Beschreibung 'per-Part-Lichtneuverankerung' stuetzt sich auf die umgebenden MulMatrix0/SetLightMatrix-Aufrufe in FUN_80027434, nicht auf die Funktion selbst.",
+          "FUN_8002C820 (0x8000-Sichtbarkeitstest, @0x80027A68) ist nicht disassembliert; belegt ist nur, dass sein Ergebnis 0 das Zeichen-Sperrbit 0x4000 setzt."
+        ],
+        "verdikte": [
+          {
+            "titel": "Funktionsgrenze und Phasenstruktur von FUN_80109610",
+            "haelt_stand": true,
+            "begruendung": "Alle zwoelf zitierten Anker stehen woertlich im Binary (EMZ0.BIN, Datei-Off = addr - 0x80100000), roh auf Wort-Ebene nachgeprueft: 0x80109610 = 27bdffb8 (addiu sp,sp,-72); 0x80109650 = 92430006 (lbu v1,6(s2)); 0x80109654 = 24020001; 0x80109658 = 1062008e (beq v1,v0 -> 0x80109894); 0x80109660 = 28620002 (slti v0,v1,2); 0x80109664 = 10400005 (beq v0,zero -> 0x8010967c); 0x8010966c = 10600008 (beq v1,zero -> 0x80109690); 0x80109674 und 0x80109688 = 0804266d (j 0x801099b4); 0x8010967c = 24020002; 0x80109680 = 106200cb (beq v1,v0 -> 0x801099b0); 0x80109684 = 24020007 (DELAY-SLOT, addiu v0,zero,7); 0x801099b0 = ae420004 (sw v0,4(s2)); 0x801099dc = 03e00008 (jr ra), 0x801099e0 = 00000000 (Delay-nop); 0x801099e4 = 27bdffc8 (addiu sp,sp,-56).\n\nDrei unabhaengige Strukturpruefungen tragen die Aussage ueber die blosse Anker-Wiederholung hinaus:\n(1) Datei-weiter Prolog-Scan: im Fenster 0x80109500-0x80109B00 existieren NUR die Prologe 0x80109610 und 0x801099E4, und im Rahmen nur ein einziges jr ra @0x801099DC (das vorige @0x80109608 gehoert zur Vorgaengerfunktion). Die Funktionsgrenze 0x80109610..0x801099E0 ist damit exakt.\n(2) Sprungziel-Scan ueber den gesamten Rahmen: kein Branch/Jump (jal ausgenommen) verlaesst 0x80109610..0x801099E0 - kein verstecktes Hineinfallen in Nachbarcode.\n(3) 0x801099B0 wird von GENAU EINEM Branch angesprungen (@0x80109680). Damit ist v0 = 7 beim sw zwingend, nicht nur wahrscheinlich - die Delay-Slot-Aussage haelt ohne Zwischenannahme.\n\nPhasenstruktur bestaetigt: P0 @0x80109690 laeuft ohne unbedingten Ruecksprung bis 0x80109890 (sh zero,328(s2)) und faellt in 0x80109894 (lbu v1,5(s2)) durch; P0 setzt selbst sb v1(=1),6(s2) @0x80109858 (naechster Frame -> P1). P1 addiert das Ergebnis von jal 0x8002959C auf +0x6 (lbu v1,6(s2) @0x80109958, addu v1,v1,v0 @0x80109960, sb v1,6(s2) @0x80109968) -> P2. P2 besteht aus der einen Store-Instruktion @0x801099B0 und faellt in den Epilog.\n\nDer Kontrast zu FUN_801092C4 stimmt ebenfalls: dort lbu v1,6(s4) @0x80109300, sltiu v0,v1,0x5 @0x80109308, lw v0,0x8010014c(at) @0x80109320, jr v0 @0x80109328; die Tabelle @0x8010014C selbst gedumpt: [0]0x80109330 [1]0x801094F4 [2]0x80109534 [3]0x80109540 [4]0x80109568.\n\nAuch die Semantik \"7 = CORPSE\" ist unabhaengig vom Port belegt (also keine Port-Aussage, die als Original-Aussage verkauft wird): Routinen-Tabelle @0x8010C830, indiziert aus lbu v0,4(s0) @0x801004CC, Eintrag [7] = 0x8010A440; diese Funktion dispatcht 12 Subzustaende (lbu v1,5(s0) @0x8010A460, sltiu v0,v1,0xc @0x8010A468, Tabelle @0x8010019C, jr v0 @0x8010A488). Der sw-Wortstore auf +0x4 setzt Little-Endian +0x4 = 7 und loescht +0x5/+0x6/+0x7.\n\nRE2-Adressraum durchgehend eingehalten (alle Adressen liegen in 0x80100000..0x8010CF4C, Dateigroesse 0xCF4C). Keine HURT/DEATH-Verwechslung, da die Aussage gar keine Tabellenzeile behauptet. Kein Schluss aus einer Store-Bilanz - die Aussage betrifft nur Rahmen und Dispatch, und alle jal-Ziele im Rahmen (0x800152C8, 0x800154AC, 0x80015910, 0x80015FE8, 0x80016200, 0x80018FB0, 0x8001BF10, 0x8002959C, 0x8005BD6C) liegen in der EXE, keines im Overlay.",
+            "korrigiert": "0x80109610..0x801099E0 ist genau eine Funktion (72-Byte-Rahmen, `addiu sp,sp,-72` = 27bdffb8 @0x80109610; einziges `jr ra` = 03e00008 @0x801099DC mit Delay-nop @0x801099E0; naechster Prolog `addiu sp,sp,-56` = 27bdffc8 @0x801099E4; kein weiterer Prolog und kein Branch, der den Rahmen verlaesst). Es gibt KEINE Phasentabelle - anders als FUN_801092C4 (lbu v1,6(s4) @0x80109300, sltiu v0,v1,0x5 @0x80109308, Tabelle @0x8010014C, jr v0 @0x80109328) dispatcht 0x80109610 ueber inline-Vergleiche auf das Phasenbyte +0x6 (`lbu v1,6(s2)` @0x80109650): == 1 -> P1 @0x80109894 (@0x80109658), == 0 -> P0 @0x80109690 (@0x80109660-6C), == 2 -> P2 @0x801099B0 (@0x8010967C-80), sonst Epilog (`j 0x801099B4` @0x80109674/@0x80109688). Drei Phasen: P0 (Aufsetzen) laeuft ohne unbedingten Ruecksprung bis 0x80109890 und FAELLT in P1 durch; P0 setzt selbst `sb 1,6(s2)` @0x80109858. P1 (Lauf) addiert den Rueckgabewert von jal 0x8002959C auf +0x6 (@0x80109958-68). P2 besteht aus der einzigen Instruktion `sw v0,4(s2)` @0x801099B0; 0x801099B0 wird von genau einem Branch erreicht (@0x80109680), dessen DELAY-SLOT `addiu v0,zero,7` @0x80109684 v0 zwingend auf 7 setzt -> Routinen-Wort +0x4 = 7 (= CORPSE, Tabelle @0x8010C830[7] = 0x8010A440 mit 12 Subzustaenden @0x8010019C), Sub[1..3] werden durch den Wortstore auf 0 geloescht. ERGAENZUNG: 0x80109610 wird nicht nur aus FUN_801066FC aufgerufen (@0x80106748, @0x80106828), sondern auch zweimal aus dem Zerreiss-Tod FUN_80108BEC (@0x80108C44, @0x80108D34) - dessen Part-Flag-Stores (`ori 0x4a` @0x80108DDC) liegen im Aufrufer, weshalb aus dem Fehlen von Part-Flag-Stores INNERHALB 0x80109610 nicht folgt, dass ueber diese Maschine keine Koerperteile abfallen."
+          },
+          {
+            "titel": "⛔ KERNANTWORT: FUN_80109610 setzt KEIN Part-Flag, tauscht KEIN Mesh, schreibt KEIN Wurf-Feld",
+            "haelt_stand": false,
+            "begruendung": "Der LITERALE Kern stimmt, die AUSSAGE nicht. Ich habe den Store-Scan maschinell nachgefahren (alle Opcodes 0x28/0x29/0x2A/0x2B/0x2E/0x38/0x39/0x3A): im Bereich 0x80109610..0x801099E0 liegen **38** Stores, nicht 39, und jeder hat tatsaechlich `sp` oder `s2` als Basis. Soweit traegt der Beleg. Vier Defekte kippen ihn trotzdem:\n\n(1) ZAEHLUNG: \"39\" ist falsch, es sind 38 — und die beiden Einzellisten der Belege summieren sich selbst auf 23 (sp) + 15 (s2) = 38. Ein als \"exhaustiv\" verkaufter Scan, der sich mit seinen eigenen Belegen widerspricht, wurde nicht gemessen.\n\n(2) FALSCHE ADRESSE: Die Belege behaupten, s3 stamme @0x801096F4, @0x801097FC und @0x80109910 \"alle aus `lw 408(s2)`\". @0x801097FC steht aber `addu s3,v1,v0` (Rohbytes `21 98 62 00`). v0 ist dort `172 * entity[+0x200][+0x99]` (Multiplikationskette @0x801097D0-F4, t0 aus `lbu t0,153(s3)` @0x801097C8) — s3 ist an dieser Stelle ein zur LAUFZEIT AUSGEWAEHLTER PART-Zeiger, nicht die Modellblock-Basis. Genau die Stelle, an der die Funktion einen einzelnen Part adressiert, ist in den Belegen als harmlose Basis-Ladung verbucht.\n\n(3) UNBELEGTE ZWISCHENANNAHME: @0x801096A8 `entity[+0x1C0] |= 0x01` und @0x801096AC `entity[+0x1D3] |= 0x80` werden mit \"Basis s2 = Entity\" durchgewunken und daraus \"kein Stumpf-Marker\" gefolgert, ohne die Felder zu dekodieren. Genau diese zwei Schreibzugriffe stehen im RIP-Tod @0x80108DC4 (`sb s0,448(s3)`) und @0x80108DD0 (`ori v0,v0,0x80; sb v0,467(s3)`) unmittelbar VOR dem `ori 0x4a`-Part-8-Abwurf — also in der Passage, die die Belege selbst als Gegenprobe zitieren. Die Gegenprobe enthaelt die uebersprungenen Instruktionen.\n\n(4) SCOPE — der in der Aufgabe benannte Fehler, zweimal: Die Funktion enthaelt 21 `jal` auf 9 verschiedene Callees, von denen die Belege keinen einzigen pruefen (ich habe 0x800154AC = reiner atan2, 0x80018FB0 = Pad/SE ueber 0x8007730C und 0x8002959C = Anim-Frame-Zeiger nachgesehen — unauffaellig; 0x8001BF10, 0x800152C8, 0x80016200, 0x80015910, 0x8005BD6C bleiben ungeprueft, und 0x8001BF10 bekommt mit `a2 = s3+72` einen Zeiger IN den Modellblock). Und der TERMINALE Store @0x801099B0 `sw v0,4(s2)` schreibt v0 = 7 (@0x80109684) — die Funktion uebergibt die Entity an Routine 7 (Tabelle @0x8010001C[7] = 0x80102C30). Eine Bilanz, die am `jr ra` endet, kann \"setzt KEIN Part-Flag\" als MECHANISMUS-Aussage nicht tragen.\n\n(5) DER ENTSCHEIDENDE PUNKT — die Praemisse ist unvollstaendig: Schrot+Rumpf zerfaellt NICHT in nur zwei Untermaschinen. FUN_801066FC reicht von 0x801066FC bis 0x80106F3C (`jr ra` @0x80106F38) und enthaelt einen DRITTEN, INLINE-Zweig @0x8010683C, der weder 0x80109610 noch 0x801092C4 ist — und GENAU DER zerlegt den Koerper: @0x801068B4 `sw v0,152(s3)` (Part0 +0x98 = 64), @0x801068B8 `sw a0,156(s3)` (Part0 +0x9C = 0x00101030), @0x801068BC/C4 `ori v1,v1,0x80` / `sw v1,0(s3)` (Part0.flags |= 0x80). Das sind woertlich die zwei Dinge, die die Aussage als \"ausgeschlossen\" auffuehrt: \"|= 0x80 (Stumpf-Marker)\" und \"Stores auf +0x98..+0xA4 eines Parts\". Dazu @0x80106DC0-E14, noch in DERSELBEN Funktion: das Lese-Ori-Schreib-Tripel `|= 0x9000` auf den Parts 1,2,3,4,5,6,7. Die Behauptung, dieses Tripel komme \"NICHT EIN EINZIGES MAL\" vor, stimmt fuer 0x80109610 — ist aber irrefuehrend, weil es 0x5C4 Bytes frueher in der aufrufenden Funktion siebenmal steht.\n\nRouting (Rohbytes geprueft @0x801067F4): `jal rng` / `andi v0,v0,3` / `beq v0,zero,0x80106838` / `lbu v1,4(s2)` / `bne v1,3,0x8010683C`. 0x80109610 wird also nur bei (rand&3)!=0 UND entity[+0x4]==3 erreicht; bei (rand&3)==0 laeuft der INLINE-Zerlege-Zweig. Beide `jal 0x80109610`-Stellen (@0x80106748, @0x80106828) springen danach sofort `j 0x80106F14` — am Zerlege-Code vorbei. Der Inline-Zweig setzt stattdessen +0x6 = 1 (@0x8010684C) und laeuft in Phase 1, wo @0x80106D98 `sltiu v0,v0,0x14` (Anim-Frame >= 20) und @0x80106DAC `bne v1,1` das Ausklinken der Parts 1-7 freischalten.\n\nAuch die Clips trennen die beiden Toede sauber: Inline = +0x14C := 0x00030004/0x00030003 (@0x80106838/3C/74/88), 0x80109610 = 0x000F0F01/0x000F0F02 (@0x80109840/48/64). Der Nutzer meldet \"die Animation sieht so aus, als sollte der Oberkoerper abfallen\" — das ist die Clip-3/4-Familie des Inline-Zweigs, nicht Clip 1/2 von 0x80109610.\n\nPort-Abgleich (damit die Aussage nicht in Wahrheit den Port beschreibt): der Port kennt den Inline-Zweig (re2z_hit_ragdoll, :5790ff.) und modelliert `|= 0x9000` als Boden-Anker (re15_re2z_ragdoll_part_anchor, :8131 — Sinken, nicht Abwurf). Die drei Stores @0x801068B4/B8/BC-C4 (Part0 |= 0x80 + +0x98/+0x9C) kommen im Port NICHT vor; grep auf 0x801068B4/B8/BC findet nur den RNG-Wurf @0x801068C0 im FX-Emitter. Der Port-Kommentar :5705 verbucht @0x801068A0-4C pauschal als \"Gore-Emitter (FUN_8001BF10)\" und ueberspringt die drei Nicht-FX-Stores darin.\n\nFazit: Der Befund beantwortet die falsche Frage. Er weist korrekt nach, dass 0x80109610 nichts abwirft — und leitet daraus ab, der Schrot-Rumpf-Tod werfe nichts ab. Das ist falsch. Im Zweifel, und hier auch ohne Zweifel: widerlegt.",
+            "korrigiert": "Korrekt und maschinell nachgeprueft ist nur der enge Kern: FUN_80109610 (0x80109610..0x801099E0) enthaelt 38 Stores — nicht 39 — und jeder einzelne hat `sp` oder `s2` als Basis. Die aus `lw 408(s2)` geladenen Modellblock-Register erscheinen in DIESER Funktion nie als Store-Basis; sie dienen als Matrix-Anker fuer FUN_8001BF10 (`addiu a2/s0,s3,72` @0x8010970C, @0x80109938, @0x80109804) und als Quelle der Part-8-Weltposition (`lw 1420/1424/1428(v1)` @0x801098E8-904). Einschraenkung: @0x801097FC ist `addu s3,v1,v0` = Modellblock + 172 * entity[+0x200][+0x99], also ein zur Laufzeit gewaehlter PART-Zeiger, nicht die Basis; und die Bilanz schliesst nichts ab, weil 21 `jal` die Funktion verlassen und der terminale Store @0x801099B0 `sw v0,4(s2)` = 7 (@0x80109684) die Entity an Routine 7 (Tabelle @0x8010001C[7] = 0x80102C30) uebergibt.\n\nFALSCH ist die daraus gezogene Mechanismus-Folgerung. Der Schrot-Rumpf-Tod zerfaellt nicht in zwei, sondern in DREI Untermaschinen. FUN_801066FC (0x801066FC..0x80106F3C, `jr ra` @0x80106F38) waehlt @0x801067F4-810 so: `jal rng` / `andi 0x3` / `beq v0,zero,0x80106838` und `lbu v1,4(s2)` / `bne v1,3,0x8010683C`. Nur bei (rand&3)!=0 UND entity[+0x4]==3 laeuft FUN_80109610 (Clip 0x000F0F01/02, @0x80109840-64) — und das wirft tatsaechlich nichts ab. In allen uebrigen Faellen laeuft ein DRITTER, INLINE-Zweig ab 0x8010683C (Clip 0x00030004/03, @0x80106838/3C/74/88), und DER zerlegt den Koerper:\n\n  * @0x801068A4-C4: `lw s3,408(s2)`; `sw v0,152(s3)` -> Part0 +0x98 := 64; `sw a0,156(s3)` -> Part0 +0x9C := 0x00101030; `ori v1,v1,0x80` / `sw v1,0(s3)` -> Part0.flags |= 0x80.\n  * @0x80106DC0-E14 (noch in derselben Funktion), gegated auf Anim-Frame >= 0x14 (@0x80106D98) und +0x6 == 1 (@0x80106DAC): `|= 0x9000` auf die Flags-Worte der Parts 1,2,3,4,5,6,7.\n\nDamit sind genau die Dinge belegt, die der Befund als \"ausgeschlossen\" auffuehrt (|= 0x80, Stores auf +0x98..+0xA4 eines Parts, das Lese-Ori-Schreib-Tripel) — nur eben 0x5C4 Bytes vor der untersuchten Funktion, in ihrem eigenen Aufrufer. Der Nutzer-Befund (\"die Animation sagt, der Oberkoerper sollte abfallen, er tut es aber nicht\") zeigt auf diesen Inline-Zweig, nicht auf FUN_80109610.\n\nPort-Stand (getrennt gehalten): Der Port implementiert den Inline-Zweig in re2z_hit_ragdoll (enemy_ai_re2_zombie.c:5790ff.) und bildet `|= 0x9000` als Boden-Anker ab (re15_re2z_ragdoll_part_anchor, :8131 — das ist Sinken, nicht Abwurf). Die drei Stores @0x801068B4/B8/BC-C4 fehlen im Port vollstaendig; der Kommentar :5705 verbucht @0x801068A0-4C pauschal als FX-Emitter. Das ist die konkrete, adressierte Luecke, an der weiterzuarbeiten ist.\n\nOFFEN (Spur endet dort, nicht geraten): (a) Bedeutung von entity[+0x1C0] Bit0 und entity[+0x1D3] Bit7 — beide werden von FUN_80109610 @0x801096A8/AC UND vom Zerreiss-Tod @0x80108DC4/DD0 gesetzt, die Dekodierung steht aus. (b) Semantik von Part +0x98 (=64) und +0x9C (=0x00101030) — dieselbe Konstante 0x00101030 taucht @0x80108DD8 im Zerreiss-Tod auf. (c) Ob eine der 9 Callees von FUN_80109610 doch in den Modellblock schreibt — geprueft und unauffaellig sind 0x800154AC, 0x80018FB0, 0x8002959C; ungeprueft bleiben 0x8001BF10 (erhaelt `a2 = s3+72`), 0x800152C8, 0x80016200, 0x80015910, 0x8005BD6C. (d) Was Routine 7 (0x80102C30) mit dem Kadaver macht."
+          }
+        ]
+      },
+      {
+        "dimension": "oberkoerper",
+        "kernaussage": "Nein — RE2 wirft den Brustkorb NIE ab: Part 0 (Brust) bekommt im ganzen Zombie-Overlay an keiner einzigen Stelle das Abwurf-Bit 0x40. RE2 trennt den Zombie stattdessen am BECKEN: beim Schrot-Rumpf-Treffer (Zeile 7 Spalte 1 -> FUN_801066FC) haengt das Original bei Anim-Frame 20 die Huefte (Part 1) samt beider Beinketten aus der Skelettkette aus und auf eine ZWEITE Matrix entity+0x11C um (`sw v0,288(v1)` @0x80106D00; part[1]+0x74 ist der Eltern-Matrix-Zeiger, belegt durch `lw a2,116(s1)` @0x8002747C), markiert Parts 1..7 mit |= 0x9000 (eigener Transform + eigenes Culling) und startet in Phase 2 mit `+0x21A |= 1` @0x80106AD0 die Zustandsmaschine FUN_8010B7D4, die diese Unterhaelfte wegschieben laesst und sie im Zustand 4 mit `part[1] |= 0x40` @0x8010BA9C endgueltig in der Welt einfriert. Der Port hat den Aushang als 'Ragdoll-Bodenanker', schaltet ihn aber in Phase 2 ab (enemy_ai_re2_zombie.c:5899) — also genau dort, wo das Original die Maschine erst anschaltet — und kennt FUN_8010B7D4 ueberhaupt nicht. Zusaetzlich: eine Rumpf-Verstuemmelung per MESH-TAUSCH existiert sehr wohl (Reserve-Record 16 -> Part 0, @0x80108FB8-FDC), sie haengt aber am Zerreiss-Tod FUN_80108BEC (Todeszeilen 8/9/17), nicht an der normalen Schrotflinte. ⛔ Nebenbefund mit grosser Tragweite: die Part-Benennung im Port ist vertauscht — laut byte-true EMD ist 2-7 = BEINE und 9-14 = ARME, nicht umgekehrt.",
+        "befunde": [
+          {
+            "titel": "Vollzensus: Part 0 (BRUST) bekommt im gesamten Zombie-Overlay NIE das Abwurf-Bit 0x40",
+            "aussage": "Ich habe jeden `sw` im Overlay datenfluss-verfolgt, dessen Basisregister aus `lw rX,408(entity)` (= +0x198, das Part-Array, Stride 172) stammt und der das Flagwort am Record-Anfang trifft. VOLLSTAENDIGE Liste der Stores, die Bit 0x40 (= eigene Matrix, Eltern-Verkettung uebersprungen) setzen, nach Part sortiert: KOPF (Part 8): @0x80102AE4 |=0x4A, @0x80108DE0 |=0x4A, @0x80109498 |=0x4A, @0x8010A3A4 |=0x4A, @0x8010BD5C |=0x8040. BEINE (Parts 3/5/6): @0x80107548, @0x801075B8, @0x80107634 je |=0x4A (alle in Handler 0x80107438). ARME (Parts 9/10/12/13): @0x80105380, @0x80108E60, @0x80108F1C, @0x8010C588 je |=0x1062. HUEFTE (Part 1): @0x8010BA9C |=0x40 — der EINZIGE Rumpf-Store. BRUST (Part 0): kein einziger. Part 0 bekommt nur |=0x80 (@0x801068C4, @0x80108FB4, @0x801094C8, @0x8010A3C8, @0x8010B720), |=0x1000 (@0x80102778/88), |=0x501 (@0x80104F1C), |=0x02 (@0x8010A4E8) und &=~0x40 (@0x801070E4, @0x801073FC, `addiu v1,zero,-65` = 0xFFFFFFBF). Bit-Bedeutung byte-belegt aus dem Part-Zeichner FUN_80027434 (RE2-PSX.EXE): 0x40 @0x80027498 = Eltern-Kette weg; 0x20 @0x80027694 -> FUN_80028AD8 (Wurfphysik); 0x08/0x18 @0x80027AC4-D0 und @0x80027B8C-98 -> FUN_80028DAC (Drift); 0x80 @0x80027B08 -> FUN_8002940C(rec+4, rec+0x98, rec+0x9C) = STUMPF-BLUTEN; 0x400 @0x80027994 (ScaleMatrix); 0x800 @0x800274A0/@0x800275E0; 0x1000 @0x800277C8 (eigener Kamera-Transform FUN_8008D6C4); 0x2000 @0x800279C8; 0x4000 @0x80027ABC; 0x8000 @0x80027A54 (eigener Sichtbarkeitstest FUN_8002C820).",
+            "belege": [
+              "info/re2leon/COMMON/BIN/EMZ0.BIN (roh, Ladebasis 0x80100000); Zensus-Skript: C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/ec5adfb1-5bd6-4d61-9f5e-01806f05047b/scratchpad/census2.py",
+              "@0x8010BA88-9C: `lw v1,408(s2)` / `lw v0,172(v1)` / `ori v0,v0,0x40` / `sw v0,172(v1)`  (172 = 1*172 = Part 1 = Huefte)",
+              "@0x80027498: `andi v0,s3,0x40` / @0x8002749C: `bne v0,zero,0x800275e4`  (info/re2leon/PSX.EXE)",
+              "@0x80027B08-20: `andi v0,s3,0x80` / `lw a1,152(s1)` / `lw a2,156(s1)` / `jal 0x8002940c` / `addiu a0,s1,4`",
+              "@0x801070D8-E4 und @0x801073F0-FC: `lw v0,0(s2)` / `addiu v1,zero,-65` / `and v0,v0,v1` / `sw v0,0(s2)` = part[0].flags &= ~0x40"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "⛔ Die Part-Nummern im Port sind RICHTIG, die deutschen Kommentare dazu sind VERTAUSCHT (Arme <-> Beine)",
+            "aussage": "Selbst geparst aus info/re2leon/PL0/PLD/CDEMD0.EMS @0x2A800 (EM010 = RE2-Zombie, Groesse 0x23DAC; dir[2] = EMR @0x69C, bones_tbl=0x64, nbones=15, kf_size=0x50): parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13]. Mit den relativen Bone-Positionen: Part 0 = BRUST (Wurzel, relpos (0,-2067,0), Kinder 1/8/9/12), Part 1 = HUEFTE (relpos (0,0,0), Kinder 2/5), Parts 2-4 = RECHTES BEIN (relpos (0,252,-175) / (0,730,1) / (0,861,1)), Parts 5-7 = LINKES BEIN (Spiegel, z=+176), Part 8 = KOPF (relpos (-40,-783,0), kinderlos), Parts 9-11 = RECHTER ARM (Schulter (-54,-605,-421), Segmente 569/459), Parts 12-14 = LINKER ARM (z=+418). Bestaetigt durch MD1 (dir[7] @0x1EE38, nObj=34 = 17 Slots): Objekt 0 hat 41 Vertices = die Brust; Slots 15/16 sind die zwei RESERVE-Stumpf-Meshes. Zweite, unabhaengige Bestaetigung aus der Logik: Handler 0x80107438 trennt Parts 3/4 (+ optional 5/6/7) ab UND setzt danach `+0x10E = 0x2001` (KRIECHER-Bit) @0x80107820-24 — Kriecher wird man nur, wenn die BEINE weg sind. Folge: `re2z_knockdown_gore` (Parts 3/4/5/6/7) heisst faelschlich 'ARM-ABRISS' und ist der BEIN-Abriss; `re2z_leg_gore` (Parts 9/12 -> 10/13) heisst faelschlich 'BEIN' und ist der ARM-Abriss; `re2z_stagger_acid_leg` (10/11 bzw. 13/14) aetzt UNTERARM+HAND; im Zerreiss-Tod `re2z_death_rip` sind die als 'Bein' kommentierten Parts 9/10/11/12/13 die beiden ARME. Die Zahlen im Code stimmen ueberall — nur die Kommentare fuehren die Suche in die Irre (genau das ist in dieser Sitzung passiert).",
+            "belege": [
+              "info/re2leon/PL0/PLD/CDEMD0.EMS, Byte-Offset 0x2A800 (EM010), EMR-Header {bones_tbl=0x64, kf_off=0xB0, nbones=15, kf_size=0x50}, parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13]",
+              "MD1 @EMD+0x1EE38: Header {len=0x35F4, 0, nObj=0x22}, Objekt 0: vert_off=0x3B8, vert_count=0x29 (41 Vertices = Brust)",
+              "Gegenprobe: re15_port/include/re2_ems.h:87-90 dokumentiert exakt dasselbe parent[] und 'Slot 0 Brust | 1 Huefte | 2-4 R-Bein | 5-7 L-Bein | 8 Kopf | 9-11 R-Arm | 12-14 L-Arm'; k_perm_zombie[15] = {7,0,1,2,3,4,5,6,14,8,9,10,11,12,13} in re15_port/engine/src/re2_ems.c:196 ist damit konsistent",
+              "@0x80107820-24: `+0x10E = 0x2001` direkt nach dem Abtrennen von Parts 3/4/5/6/7",
+              "Falsch kommentierte Port-Stellen: re15_port/engine/src/enemy_ai_re2_zombie.c:6164, :4640, :4720, :5498, :5517"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "JA — RE2 trennt den Zombie am BECKEN: Part 1 (Huefte) + beide Beinketten werden auf eine ZWEITE Matrix entity+0x11C umgehaengt",
+            "aussage": "Im gemeinsamen Schwanz des Ragdoll-Handlers FUN_80106B5C, gegated auf `+0x14D == 20 && +0x6 == 1` (@0x80106CD8-F0): (1) @0x80106CF4 `addiu v0,s2,284` bildet &entity[+0x11C]; (2) @0x80106CF8-D00 `lw v1,408(s2)` / `sw v0,288(v1)` schreibt diesen Zeiger nach part[1]+0x74 — und +0x74 IST der ELTERN-MATRIX-ZEIGER, belegt durch FUN_80027434: @0x8002747C `lw a2,116(s1)`, danach @0x800274A4-DC `lw t4,0(a2)` … `lw t6,28(a2)` (32 Byte = 3x3-Matrix + 3 Translationen) in die GTE. Die Huefte haengt ab diesem Frame nicht mehr an der Brust, sondern an entity+0x11C; die vier Beinparts folgen ueber die Huefte mit. (3) @0x80106D04-40 wird entity[+0x11C..+0x138] mit der aktuellen BRUST-Matrix (part[0]+0x48..+0x64, gelesen als `lw v0,72(v1)` … `lw a2,100(v1)`) initialisiert — deshalb springt im Moment der Trennung nichts. (4) @0x80106D44-68 werden +0x130 und +0x138 auf die WELT-X/Z der Entity (+0x38 / +0x40) gesetzt. (5) @0x80106D90-E14 bekommen Parts 1..7 `|= 0x9000`, also eigener Transform (0x1000 @0x800277C8) + eigener Sichtbarkeitstest (0x8000 @0x80027A54); der Zeichner-Zweig @0x800273BC prueft exakt `andi v0,a2,0x9000`. Die untere Haelfte ist damit ein eigenstaendig transformiertes, eigenstaendig gecultes Objekt.",
+            "belege": [
+              "@0x80106CD8-F0: `lbu v1,333(s2)` / `addiu v0,zero,20` / `bne v1,v0,0x80106d90` und `lbu v1,6(s2)` / `bne v1,v0,0x80106d90`",
+              "@0x80106CF4-D00: `addiu v0,s2,284` / `lw v1,408(s2)` / `sw v0,288(v1)`  (288 = 1*172 + 116 = part[1]+0x74)",
+              "@0x8002747C: `lw a2,116(s1)`; @0x800274A4-DC laedt daraus 32 Byte in die GTE",
+              "@0x80106D04-40: part[0]+72..+100 -> entity+284..+312",
+              "@0x80106D44-68: `lw v1,56(s2)` / `lw a0,64(s2)` / `sw v1,304(s2)` / `sw a0,312(s2)`",
+              "@0x80106DC0-E14: sieben mal `ori …,0x9000` auf Offsets 172/344/516/688/860/1032/1204 = Parts 1..7",
+              "@0x800273BC: `andi v0,a2,0x9000` im zweiten Zeichen-Loop (FUN_80027434 statt FUN_80027FF0)"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Die abgetrennte Unterhaelfte hat eine EIGENE Zustandsmaschine: FUN_8010B7D4 (9 Zustaende) — im Port nicht vorhanden",
+            "aussage": "FUN_8010B7D4 wird JEDEN FRAME aus dem Wurzel-Dispatcher gerufen (@0x80100550 `jal 0x8010b7d4`, a0 = Entity, a1 = +0x180, a2 = +0x184) und laeuft nur, wenn `+0x21A & 1` gesetzt ist (@0x8010B830-3C). Dieses Bit wird im GANZEN Overlay an genau EINER Stelle gesetzt: @0x80106AD0-D4 `ori v0,v0,0x1` / `sh v0,538(s2)` — Phase 2 von FUN_801066FC. Zustandsbyte +0x219, Sprungtabelle @0x8010027C (0x8010B870 / B8D8 / B9AC / B9C8 / BA88 / BB0C / BB6C / BBA4 / BBE8). Zustand 0 @0x8010B870: `+0x21C = +0x218` (Walk-Clip, im Port re2z_walkclip), `+0x21E = 7`, `+0x130 = part[1].t.x` / `+0x138 = part[1].t.z` (`lw v0,264(a0)` / `lw a0,272(a0)` = 1*172+92 / 1*172+100), `+0x220 = +0x76`, Effekt-Handle in +0x224 via FUN_80016480(&+0x224, 0, 0x02BC01F4, 0, &+0x130), `+0x21F = (rand&0x1f)+10`, `+0x219 = 1`. Zustand 1 @0x8010B8D8: Clip-Advance FUN_80029E10(sp+24, +0x108, +0x17C, 512) UND Gleiten: RotMatrix({0,+0x220,0}) @0x8010B940, ApplyMatrixSV({(rand&7)+10,0,0}) @0x8010B968, Ergebnis auf +0x130/+0x138 addiert (@0x8010B970-9C); `+0x21F--`, bei 0 -> `+0x219 = 2`. Zustand 4 @0x8010BA88: `part[1].flags |= 0x40` (@0x8010BA90-9C) — ab jetzt benutzt die Huefte ihre EIGENE Record-Matrix und friert in der Welt ein (weder 0x20 noch 0x08 gesetzt, also treibt sie nichts mehr); dazu `+0x219 = 5`, `+0x21C = 22`, `+0x21E = 7`, `+0x21F = (rand&0x1f)+10` und die Effektfarbe 0x00BFBF10 in +0x224[+28]/[+68]. Der Schwanz @0x8010BC0C-94 (nur solange `+0x219 < 4`) baut entity+0x11C jeden Frame neu: RotMatrix aus +0x74 mit temporaer auf +0x220 gesetztem Yaw (`sh v0,118(s2)` @0x8010BC34), FUN_8002CE94 -> +0x11C..+0x12C, `+0x134 = Ergebnis + +0x232`.",
+            "belege": [
+              "@0x80100550: `jal 0x8010b7d4` / `addu a0,s0,zero` (Per-Frame-Wurzel-Dispatcher, direkt nach `jal 0x80017d98`)",
+              "@0x8010B830-3C: `lhu v0,538(s2)` / `andi v0,v0,0x1` / `beq v0,zero,0x8010bcb4`",
+              "@0x80106AD0-D4: `ori v0,v0,0x1` / `sh v0,538(s2)` — EINZIGER Setzer von +0x21A Bit 0 (Voll-Scan aller `sh …,538` im Overlay)",
+              "Zustandstabelle @0x8010027C -> 0x8010B870 / B8D8 / B9AC / B9C8 / BA88 / BB0C / BB6C / BBA4 / BBE8",
+              "@0x8010B888/94: `lw v0,264(a0)` / `lw a0,272(a0)` mit a0 = `lw a0,408(s2)`",
+              "@0x8010BA90-9C: `lw v0,172(v1)` / `ori v0,v0,0x40` / `sw v0,172(v1)`",
+              "@0x8010BC28-94: `lhu v0,544(s2)` / `sh v0,118(s2)` / `jal 0x8008e1f4` / `jal 0x8002ce94` / `sw v0,284(s2)` … `sw v0,308(s2)`"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Die Schrotflinte landet genau hier — Zeile 7 Spalte 1 zeigt in BEIDEN Tabellen auf FUN_801066FC",
+            "aussage": "Tabellenlayout selbst verifiziert: Zellenindex = Zeile*9 + (3*Klammer + Zone), Zeilenstride 9 Worte. Treffer-Tabelle @0x8010C940, Zeile 7 = {0x80107438, 0x801066FC, NULL, 0x80107438, 0x80105BC0, NULL, 0x80107438, 0x80105438, NULL}; Beleg fuer den Stride: die drei Rumpfzonen-Zellen der drei Klammern liegen auf 0x8010CA40 / 0x8010CA4C / 0x8010CA58 = Index 64/67/70, Differenz genau 3. Todes-Tabelle @0x8010CC24: Zeile 7 Spalte 1 = @0x8010CD24 = 0x801066FC (64 = 7*9+1). In FUN_801066FC Phase 0 (@0x801067CC-838) faellt die Entscheidung: `+0x10C != 0` ODER `0x800CFBD8 & 0x10000000` -> `+0x231 = 1` und FUN_80109610 (Wegschleudern); sonst `rand & 3`: ist es 0 -> weiter im Ragdoll (@0x80106838); ist es != 0 UND `+0x4 == 3` (Tod) -> ebenfalls Wegschleudern. Bei einem UEBERLEBTEN Schrottreffer auf den Rumpf geht es also IMMER in den Ragdoll — der reisst bei Anim-Frame 20 das Becken heraus und endet in Phase 2 als KRIECHER (`+0x10E = 0x2001` @0x80106B0C-10, `hp = 10` @0x80106AE4-E8, Clip 5 @0x80106B40). Genau das sieht der Nutzer: die Animation gehoert zu einem Koerper, der in der Mitte durchtrennt ist.",
+            "belege": [
+              "Treffer-Tabelle @0x8010C940, Zellen 0x8010CA3C..0x8010CA58 (Zeile 7): 0x80107438 / 0x801066FC / 0x00000000 / 0x80107438 / 0x80105BC0 / 0x00000000 / 0x80107438 / 0x80105438",
+              "Todes-Tabelle @0x8010CC24, Zelle @0x8010CD24 (Index 64 = 7*9+1) = 0x801066FC",
+              "@0x801067CC-838: `lh v0,268(s2)` / `bne v0,zero,0x8010681c`; `lw v0,0x800cfbd8` / `lui v1,0x1000` / `and` / `bne`; `jal 0x80015fe8` / `andi v0,v0,0x3` / `beq v0,zero,0x80106838`; `lbu v1,4(s2)` / `bne v1,3,0x8010683c`; `sb v0,561(s2)` / `jal 0x80109610`",
+              "@0x80106AD0-B40: `ori v0,v0,0x1` / `sh v0,538(s2)`; `sh 10,342(s2)` bei +0x4==3; `sh 8193,270(s2)`; `sw 0xF0005,332(s2)`; `sw 1,4(s2)`",
+              "Zeile 7 = Schrot ist in re15_port/engine/src/re15_damage.c:1763 belegt (200/60/40 Schaden je Klammer)"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "MESH-TAUSCH am RUMPF existiert — Reserve-Record 16 wird in Part 0 kopiert (aber nur im Zerreiss-Tod)",
+            "aussage": "Den gesuchten Stumpf-Weg gibt es fuer den Oberkoerper. In FUN_80108BEC Phase 0 @0x80108F98-FDC: erst `part[0].flags |= 0x80` (Stumpf-Bluten) plus `part[0]+0x98 = 32` / `+0x9C = 32` (`sw v1,152(s1)` / `sw v1,156(s1)`, v1 = 32), dann vier Geometrie-Worte des Reserve-Records 16 in Part 0: `lw v1,2760(v0)`->`sw v1,8(v0)`, `lw a0,2768(v0)`->`sw a0,16(v0)`, `lw a1,2764(v0)`->`sw a1,12(v0)`, `lw a2,2772(v0)`->`sw a2,20(v0)` (2760..2772 = 16*172 + 8/12/16/20). Danach Blut-Emitter 8000 am Part 0 mit Offset (0,-500,0) (@0x80108FE0-9028). Dasselbe Muster mit Reserve-Record 15 ist der ARM-Stumpf @0x8010531C-50 (Ziel Part 9 oder 12). Die INIT nullt beide Reserve-Records (`sw zero,2580(v0)` / `sw zero,2752(v0)` @0x801010DC/E8 und @0x80104D38/44). FUN_80108BEC haengt aber NUR an den Todeszeilen 8 (Custom-Schrot) Spalte 1 @0x8010CD48, 9 (GL explosiv) Spalten 1+2 @0x8010CD6C/70 und 17 (Rakete) Spalte 1 @0x8010CE8C — die normale Schrotflinte (Zeile 7) kommt dort nie hin. Einen Mesh-Tausch, der das Becken (Part 1) betrifft, gibt es nicht.",
+            "belege": [
+              "@0x80108F98-B4: `lw s1,408(s3)` / `lw v0,0(s1)` / `addiu v1,zero,32` / `sw v1,152(s1)` / `sw v1,156(s1)` / `ori v0,v0,0x80` / `sw v0,0(s1)`",
+              "@0x80108FB8-FDC: `lw v0,408(s3)` / `lw v1,2760(v0)` / `lw a0,2768(v0)` / `lw a1,2764(v0)` / `lw a2,2772(v0)` / `sw v1,8(v0)` / `sw a0,16(v0)` / `sw a1,12(v0)` / `sw a2,20(v0)`",
+              "@0x8010531C-50 (Arm-Stumpf, Reserve 15): `lw v1,408(s1)` / `lw v0,2588(v1)` / `sw v0,8(s0)` / …",
+              "MD1 EM010 nObj = 0x22 = 34 Objekte = 17 Slots = 15 Bones + Reserve 15/16 (CDEMD0.EMS @0x2A800, MD1 @EMD+0x1EE38)",
+              "Todeszellen @0x8010CD48 (Index 73 = 8*9+1), @0x8010CD6C/70 (82/83), @0x8010CE8C (154 = 17*9+1) = 0x80108BEC"
+            ],
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Port-Abdeckung: der Aushang ist da, die Maschine dahinter fehlt — und der Port schaltet den Aushang genau dann ab, wenn das Original ihn anschaltet",
+            "aussage": "VORHANDEN im Port: (a) das Umhaengen @0x80106D00 als 'Ragdoll-Bodenanker' — re15_port/engine/src/enemy_ai_re2_zombie.c:5966-5970 setzt re2z_rag_anchor_x/z/on, :8134 re15_re2z_ragdoll_part_anchor() verschiebt Bones 1..7 auf den eingefrorenen Anker, aufgerufen in re15_port/platform/pc/main.c:8405; (b) der Rumpf-Stumpf @0x80108FB8-FDC als `e->re2z_part_mesh[0] = 16u;` (:5570). FEHLT vollstaendig (0 Treffer im gesamten Port-Quelltext): FUN_8010B7D4 (Unterhaelften-Maschine), FUN_8010C2A4 (abgetrennter Arm; Zustandsbyte +0x23C, Tabelle @0x801002AC, Basis `part_base + (9 + 3*(+0x23D>>1))*172` @0x8010C2BC-DC, Wurf `part |= 0x1062` @0x8010C57C-88), FUN_8010BCD0 (rollender Kopf; Gate `+0x21A & 0x180` @0x8010BD2C, `part[8] |= 0x8040` @0x8010BD5C) — alle drei ruft das Original PRO FRAME aus dem Wurzel-Dispatcher (@0x801004F0 / @0x80100550 / @0x80100614). Ebenfalls ohne Zwilling: `|= 0x9000` auf Parts 1..7 (@0x80106DC0-E14). REGRESSION: der Port loescht `e->re2z_rag_anchor_on = 0u;` in Phase 2 (enemy_ai_re2_zombie.c:5899) — in genau der Phase, in der das Original mit `+0x21A |= 1` @0x80106AD0 die Unterhaelften-Maschine ERST startet. Voll-Grep: es gibt im Port KEINEN Leser von +0x21A Bit 0 (re2z_flags21a wird nur gegen 0x2, 0x4, 0x10, 0x1000, 0x1800 geprueft). Der Koerper bleibt deshalb ganz, sobald der Ragdoll in Phase 2 geht, und der Zombie kriecht mit komplettem Unterkoerper weiter.",
+            "belege": [
+              "re15_port/engine/src/enemy_ai_re2_zombie.c:5899 `e->re2z_rag_anchor_on = 0u;` im default-Zweig (Phase 2 @0x80106A8C)",
+              "re15_port/engine/src/enemy_ai_re2_zombie.c:5905 `e->re2z_flags21a |= 1u;  /* ori 1 @0x80106AD0-D4 */` — gesetzt, nie gelesen",
+              "re15_port/engine/src/enemy_ai_re2_zombie.c:8134-8146 re15_re2z_ragdoll_part_anchor (Bones 1..7, feste Anker-X/Z)",
+              "re15_port/platform/pc/main.c:8405-8418 (Aufruf des Ankers vor dem Gore-Haken)",
+              "grep -ci '8010B7D4' / '8010C2A4' / '8010BCD0' in re15_port/engine/src/enemy_ai_re2_zombie.c = 0 / 0 / 0",
+              "re15_port/engine/src/enemy_ai_re2_zombie.c:5570 `e->re2z_part_mesh[0] = 16u;` (Rumpf-Stumpf vorhanden, aber nur in re2z_death_rip = Todeszeilen 8/9/17)"
+            ],
+            "sicherheit": "belegt"
+          }
+        ],
+        "patchplan": [
+          "(0) ZUERST die Kommentar-Luege entfernen, sonst patcht die naechste Runde wieder falsch: in re15_port/engine/src/enemy_ai_re2_zombie.c die Benennungen umdrehen — re2z_knockdown_gore (Parts 3/4/5/6/7) = BEIN-Abriss (nicht Arm), re2z_leg_gore (Parts 9/12 -> 10/13) = ARM-Abriss (nicht Bein), re2z_stagger_acid_leg (10/11 bzw. 13/14) = Unterarm+Hand, re2z_death_rip (9..13) = beide ARME. Beleg im Kommentar: CDEMD0.EMS @0x2A800, EMR parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13], plus re2_ems.h:87-90. KEINE Code-Aenderung, nur Kommentare — die Zahlen sind korrekt.",
+          "(1) `e->re2z_rag_anchor_on = 0u;` in enemy_ai_re2_zombie.c:5899 ENTFERNEN. Das Original loescht in Phase 2 nur `+0x21A &= ~4` (@0x80106A98) und `+0x1D3 &= 0x7F` (@0x80106A9C); den Part-1-Aushang stellt es dort NICHT zurueck — es startet stattdessen die Maschine.",
+          "(2) Feld-Set am Aktor anlegen (Spiegel der Original-Offsets, jedes mit @0x-Kommentar): re2z_low219 (+0x219 Zustand), re2z_low21c/21d/21e (+0x21C/D/E Clip-Zustand), re2z_low21f (+0x21F Zaehler), re2z_low220 (+0x220 Yaw), re2z_low_m[9] + re2z_low_t[3] (entity+0x11C..+0x138). Init in Ragdoll-Phase 1: re2z_low_m ← Brust-Matrix, re2z_low_t[0]/[2] ← e->x / e->z (@0x80106D04-68); das ersetzt re2z_rag_anchor_x/z durch die vollstaendige Matrix.",
+          "(3) FUN_8010B7D4 als `re2z_lower_body_machine(e)` byte-true portieren und PRO FRAME nach dem Routine-Dispatch aufrufen (Original @0x80100550, nach dem Routine-Call und nach FUN_80017D98). Gate `if (!(e->re2z_flags21a & 1u)) return;` (@0x8010B830-3C). Zustand 0 @0x8010B870: +0x21C = re2z_walkclip, +0x21E = 7, low_t[0]/[2] = gerenderte Welt-Translation von Part 1, +0x220 = e->rot_y, +0x21F = (rand&0x1f)+10, +0x219 = 1 — inklusive der RNG-Wuerfe an den exakten Stellen (@0x8010B8A4, @0x8010B948, @0x8010BB6C, @0x8010BB84), sonst desynct der RNG gegen das Original.",
+          "(4) Zustand 1 @0x8010B8D8 als Gleit-Schritt: RotMatrix({0, +0x220, 0}) ueber mat3_from_euler, Vektor {(rand&7)+10, 0, 0} durch die Matrix, Ergebnis auf low_t[0]/low_t[2] addieren (@0x8010B970-9C), +0x21F herunterzaehlen, bei 0 -> +0x219 = 2. Zustand 4 @0x8010BA88: `e->re2z_part_flags[1] |= 0x40u;` (@0x8010BA90-9C) + +0x219 = 5, +0x21C = 22, +0x21E = 7, +0x21F = (rand&0x1f)+10.",
+          "(5) Zeichner: re15_re2z_ragdoll_part_anchor durch eine echte Matrix-Ersetzung ersetzen. Fuer Bones 1..7 die ELTERN-Matrix durch re2z_low_m/re2z_low_t ersetzen, statt nur die Translation zu verschieben (das Original haengt den ZEIGER um, @0x80106D00). Sobald part_flags[1] das Bit 0x40 traegt, die zuletzt komponierte Weltmatrix von Part 1 festhalten und weiterverwenden — das Original friert genau so ein, weil FUN_80027434 die komponierte Matrix nach rec+0x48 zurueckschreibt (@0x8002751C ff.) und der 0x40-Zweig sie unveraendert nimmt.",
+          "(6) Messschiene/Test: probe_re2_ztear.c erweitern — ein ueberlebter Schrot-Rumpf-Treffer (Zeile 7, Klammer 0, Zone 1) muss ab Frame 20 der Ragdoll-Phase 1 eine WELT-Distanz zwischen Part 0 und Part 1 erzeugen, die ueber die naechsten ~60 Frames monoton waechst und danach konstant bleibt (Part-1-Einfrieren). Abnahme am Artefakt (FB_SHOT-Sichtlauf), nicht an der Absicht.",
+          "(7) Danach — getrennte Runde, nicht vermischen: FUN_8010C2A4 (abgetrennter Arm, Tabelle @0x801002AC, Basis part_base + (9+3*(+0x23D>>1))*172 @0x8010C2BC-DC) und FUN_8010BCD0 (rollender Kopf, Gate `+0x21A & 0x180` @0x8010BD2C, part[8] |= 0x8040 @0x8010BD5C) portieren; beide ruft das Original ebenfalls pro Frame (@0x801004F0 / @0x80100614) und beide fehlen im Port komplett."
+        ],
+        "offen": [
+          "Wer stellt part[1]+0x74 zurueck, wenn der Zombie den Ragdoll ueberlebt und als Kriecher weiterlebt? Nicht gefunden. Spur endet bei `word0 &= 0xF3FFFFFF` / `| 0x04000000` @0x80106B38-50 (Modellvarianten-Wechsel, vermutlich Neuaufbau des Part-Blocks) — der Port markiert dieselbe Luecke bereits als offen (enemy_ai_re2_zombie.c:5893-5898). Naechster Weg: Xrefs auf FUN_80028368 in der RE2-EXE, oder PCSX-Redux-Watchpoint auf part[1]+0x74.",
+          "FUN_80029E10 (@0x8010B904, a0 = sp+24 = {+0x21C,+0x21D,+0x21E}, a1 = +0x108, a2 = +0x17C, a3 = 512) ist nicht bis zur Pose-Ausgabe verfolgt. Damit ist NICHT belegt, ob die abgetrennte Unterhaelfte eine EIGENE Animation posiert oder nur ihr Clip-Zustand fortgezaehlt wird — das entscheidet, ob der Port-Zwilling einen zweiten Skelett-Pose-Durchlauf braucht.",
+          "Die Zustaende 2/3/5/6/7/8 von FUN_8010B7D4 (0x8010B9AC / B9C8 / BB0C / BB6C / BBA4 / BBE8) sind nur grob gelesen — die genauen Clip-/Zaehler-Werte fuer den Ausklang der Unterhaelfte fehlen noch.",
+          "Der Effekt in +0x224 (FUN_80016480, Id 0x02BC01F4 @0x8010B8B4-D0; Update FUN_800168B4 @0x8010BCAC; Farbe 0x00BFBF10 @0x8010BAC0-FC) ist nicht identifiziert — vermutlich Blut-/Schleifspur der Unterhaelfte, aber ohne Beleg.",
+          "Nicht geprueft: PSX-Laufzeitbudget. Parts 1..7 mit eigenem Transform + eigenem Culling (0x9000, FUN_8008D6C4 pro Part) ist im Original ein eigener Posten; der Port muesste das im Zeichner statt in der KI machen.",
+          "Nicht geprueft: ob Zombie-Typ 0x13 (Zombie Girl, eigene Permutation k_perm_zgirl) dieselben Part-Indizes benutzt — die RE1.5-Seite weicht dort ab (Kopf auf Slot 8 statt 14)."
+        ],
+        "verdikte": [
+          {
+            "titel": "Vollzensus: Part 0 (BRUST) bekommt im gesamten Zombie-Overlay NIE das Abwurf-Bit 0x40",
+            "haelt_stand": true,
+            "begruendung": "KERNAUSSAGE BESTAETIGT - aber NICHT durch die im Befund genannte Methode; ich musste zwei Loecher selbst schliessen.\n\n1) GEGENPROBE VON DER WERTSEITE (staerker als die Store-Bilanz des Befunds): Ich habe alle 170 Instruktionen in EMZ0.BIN enumeriert, die einen Wert mit Bit 0x40 erzeugen (ori-imm bzw. addiu rt,zero,imm mit &0x40), und jede zu ihrem Store verfolgt. Genau 13 landen in einem Part-Flagwort: @0x80102AE4 / @0x80108DE0 / @0x80109498 / @0x8010A3A4 (je sw ...,1376 = 8*172, ori 0x4A), @0x8010BD5C (sw 1376, ori 0x8040), @0x80107548 (sw 516 = 3*172), @0x801075B8 (sw 860 = 5*172), @0x80107634 (sw 1032 = 6*172) je ori 0x4A, @0x80108E60 (sw 1548 = 9*172) und @0x80108F1C (sw 2064 = 12*172) je ori 0x1062, @0x80105380 und @0x8010C588 je ori 0x1062 auf berechneter Basis, @0x8010BA9C (sw 172 = 1*172, ori 0x40). KEIN einziger auf Offset 0. Alle uebrigen 0x40-haltigen Werte gehen nach +0x98 / +0x70 / +0x9E oder in Entity-Felder.\n\n2) STRIDE, FLAGWORT UND BIT-SEMANTIK unabhaengig belegt am Aufrufer des Zeichners @0x80027374-90 (RE2-PSX.EXE): lw a2,0(s2) / andi v0,a2,0x1 / jal 0x80027434 / addiu a3,s2,72, Schleife addiu s2,s2,172 @0x800273A4, Zaehler lbu s3,263(s1). Damit ist s3 in FUN_80027434 wirklich das Part-Flagwort, Stride 172, Flag bei +0. Bit 0x40 @0x80027498 andi v0,s3,0x40 / @0x8002749C bne v0,zero,0x800275e4 ueberspringt den Eltern-Matrix-Block 0x800274A4-0x800275DC. Bit 0x80 @0x80027B08-20 lw a1,152(s1) / lw a2,156(s1) / jal 0x8002940c / addiu a0,s1,4. Bit 0x20 @0x80027694-A0 jal 0x80028ad8. Alles wie behauptet.\n\n3) PART-ZU-KOERPERTEIL SELBST GEMESSEN (nicht aus dem Port uebernommen): EM010-EMR aus re15_port/shared_assets/RE2/CDEMD0.EMS @0x2A800, dir[2]=0x69C, EMR-Header {armature 0x64, kf 0xB0, 15 Knochen, kf_size 80}. Kinderlisten: 0={1,8,9,12}, 1={2,5}, 2={3}, 3={4}, 5={6}, 6={7}, 9={10}, 10={11}, 12={13}, 13={14}. Bind-Absoluthoehen (-y): 0=2067, 1=2067, 2/3/4=1815/1085/224, 5/6/7=1816/1086/225, 8=2850, 9/10/11=2672/2103/1644 (z=-421), 12/13/14 spiegelbildlich (z=+418). Daraus folgt: 8=Kopf, 2-4 und 5-7 = die BEINE, 9-11 und 12-14 = die ARME, 1 = Becken (nur die zwei Beinketten haengen daran), 0 = Wurzel/Rumpf (Kopf + beide Arme + Becken haengen daran). Die Zuordnungen des Befunds (Kopf 8, Beine 3/5/6, Arme 9/10/12/13, Huefte 1) sind damit RICHTIG - und der mir als Sitzungskontext gegebene Stand (Parts 9/12 = Beine) ist FALSCH. Der Port markiert diese Namensfrage selbst als offenen Befund (enemy_ai_re2_zombie.c:4118-4124: \"RE2-Bone 9/12 liegen 605 Einheiten OBERHALB der Wurzel, sind also Schultern\"), waehrend seine Tabelle :3948 die alte, falsche Benennung fuehrt.\n\n4) ZWEI LOECHER DER BEFUND-METHODE, die ich geschlossen habe (beide aendern das Ergebnis nicht):\n(a) census2.py verwirft jeden Store mit berechnetem Index stillschweigend (track liefert \"DYN\", der Aufrufer macht continue). Es gibt 27 solche Stores. Aufgeloest: @0x80105E84-90 v0 = s0*516 + 1720 -> s3 = part[3*s0+10], danach addiu s3,s3,172 -> part[3*s0+11]; @0x8010C2C8-DC v1 = entity[0x23D]>>1, v0 = v1*516 + 1548 -> s1 = part[3k+9]. 516 = 3*172. Untergrenze 9 bzw. 10, Part 0 unerreichbar; gesetzt werden 0x10 / 0x9280 / 0x9200 / 0x1062.\n(b) Die WIRKUNG VERLAESST DAS OVERLAY: FUN_80028EA4 (RE2-PSX.EXE, gerufen @0x80027BB0 aus dem Zeichner und @0x80028300) dekrementiert part+0x9E und setzt beim Erreichen von exakt 0x8000 @0x80028F1C-20 ori v1,v1,0x1062 / sw v1,0(a2) - also Bit 0x40 OHNE jeden Store im Overlay. Geseedet wird das nur fuer part 8 (@0x80108758 und @0x80109BF4, sh ...,1534 = 8*172+158, Wert 0x801E) und fuer das Glied-Paar (@0x80105EB4/@0x80105EF0, Wert 0x8032). Fuer Part 0 existiert kein solcher Seed.\n(c) Zusaetzlich geprueft und leer: sb/sh-Stores ins Flagwort (0 Treffer), sowie alle Aufrufe, die einen Part-Zeiger weiterreichen - nur FUN_80028EA4 schreibt dort ein Flagwort, kein anderer Callee.\n\nFAZIT: Die Titel-Aussage haelt. Sie ist aber nicht so stark, wie sie klingt: Part 0 ist der WURZEL-Knochen, dessen Eltern-Verkettung es gar nicht gibt - \"nie 0x40 auf Part 0\" ist dort fast tautologisch und belegt fuer sich genommen NICHT, dass der Oberkoerper nicht abfallen kann. Der einzige Trennschnitt zwischen Ober- und Unterkoerper im Original ist das 0x40 auf Part 1 (Becken) @0x8010BA9C, in FUN_8010B7D4 (Funktionsstart selbst ermittelt), gerufen nur @0x80100550 - nicht aus der Schrot-Zeile-7-Zelle FUN_801066FC.",
+            "korrigiert": "Vollzensus (verifiziert und erweitert): In EMZ0.BIN setzt KEIN Store Bit 0x40 im Flagwort von Part 0. Belegt nicht ueber eine Store-Bilanz, sondern von der Wertseite: alle 170 Instruktionen im Overlay, die einen Wert mit Bit 0x40 erzeugen, wurden zu ihrem Store verfolgt; genau 13 treffen ein Part-Flagwort (Offset k*172): Part 1 @0x8010BA9C |=0x40; Part 3 @0x80107548, Part 5 @0x801075B8, Part 6 @0x80107634 je |=0x4A; Part 8 @0x80102AE4/@0x80108DE0/@0x80109498/@0x8010A3A4 |=0x4A und @0x8010BD5C |=0x8040; Part 9 @0x80108E60 und Part 12 @0x80108F1C je |=0x1062; dazu zwei mit berechnetem Index: @0x80105380 (s0 = partbase+2064 bzw. +1548 @0x801052DC/F0, danach addiu s0,s0,172 @0x80105370 -> Part 13 bzw. 10) und @0x8010C588 (s1 = part[3k+9], k = entity[0x23D]>>1, @0x8010C2C8-DC; Sprungtabelle @0x801002AC Eintrag 3). Part 0 bekommt nur |=0x80 (@0x801068C4, @0x80108FB4, @0x801094C8, @0x8010A3C8, @0x8010B720), |=0x1000 (@0x80102778/88), |=0x02 (@0x8010A4E8), |=0x04 (@0x8010AFD4), mehrere Setzungen der Hochbits 0x04000000/0x0C000000 (lui 0x400 bzw. 0xC00, z.B. @0x801003A8, @0x80102C20, @0x80107838), &=~0x8 (@0x80104F1C, addiu v1,zero,-9 - NICHT |=0x501 wie behauptet) und &=~0x40 (@0x801070E4 und @0x801073FC, addiu v1,zero,-65 = 0xFFFFFFBF, Basis jeweils lw s2,408(s1) @0x801070BC/@0x801073E8).\n\nDrei Ergaenzungen, ohne die der Zensus nicht vollstaendig ist: (1) sb/sh-Stores ins Flagwort gibt es nicht (0 Treffer). (2) 27 Stores mit berechnetem Index, die das Beleg-Skript stillschweigend verwirft, treffen nur part[3k+9..11] und setzen 0x10/0x9280/0x9200/0x1062, nie Part 0. (3) Bit 0x40 kann OHNE Overlay-Store gesetzt werden: FUN_80028EA4 (RE2-PSX.EXE) dekrementiert part+0x9E und setzt bei exakt 0x8000 @0x80028F1C-20 ori 0x1062 / sw 0(a2). Geseedet mit gesetztem Bit 15 werden nur Part 8 (@0x80108758, @0x80109BF4, Wert 0x801E) und das Glied-Paar (@0x80105EB4/@0x80105EF0, Wert 0x8032) - Part 0 nie.\n\nBit-Bedeutung und Geometrie sind gegengeprueft: Aufrufer @0x80027374-90 (lw a2,0(s2) / jal 0x80027434 / addiu s2,s2,172) beweist Stride 172 und Flagwort bei +0; 0x40 @0x80027498-9C ueberspringt den Eltern-Matrix-Block. Die EM010-EMR (CDEMD0.EMS @0x2A800, dir[2]=0x69C, 15 Knochen) ergibt: 0 = Wurzel/Rumpf (Kinder 1, 8, 9, 12), 1 = Becken (Kinder 2, 5), 2-4 / 5-7 = Beine, 8 = Kopf, 9-11 / 12-14 = Arme.\n\nWICHTIGE EINSCHRAENKUNG: Weil Part 0 der Wurzel-Knochen ohne Eltern ist, beweist \"Part 0 bekommt nie 0x40\" NICHT, dass der Oberkoerper nicht abfallen kann. Der einzige Ober-/Unterkoerper-Schnitt im Original ist das 0x40 auf Part 1 (Becken) @0x8010BA9C in FUN_8010B7D4 - und diese Funktion wird nur @0x80100550 gerufen, nicht aus der Schrot-Zeile-7-Rumpfzelle FUN_801066FC. Fuer den Nutzer-Befund (\"Oberkoerper sollte abfallen\") ist das die Spur, die weiterverfolgt werden muss; die Frage nach Part 0 ist ein Nebengleis."
+          },
+          {
+            "titel": "⛔ Die Part-Nummern im Port sind RICHTIG, die deutschen Kommentare dazu sind VERTAUSCHT (Arme <-> Beine)",
+            "haelt_stand": true,
+            "begruendung": "Der Befund haelt in jedem belastbaren Punkt — ich habe jede Zahl selbst aus den Binaries geholt, nicht aus dem Port uebernommen.\n\nA) RECORD-ANKER (unabhaengig, RE2-EXE): TOC @0x8009adf4 (Datei-Offset 0x8B5F4). Das Wortpaar 6/7 @0x8009AE0C/0x8009AE10 lautet 0x00000055 / 0x00023DCC -> kind 0x10, Record 3 (EMD) liegt bei EMS-Datei-Offset 0x55*0x800 = 0x2A800, Groesse 0x23DCC. Der Befund hat den Ort also nicht geraten, er steht in der EXE-Tabelle.\n\nB) EMD-DIRECTORY @0x2A800: dir_off=0x23DAC, dir_cnt=8, Eintraege [0x8,0xC,0x69C,0x506C,0x64A8,0x17300,0x17B80,0x1EE38]. dir[2]=0x69C (EMR), dir[7]=0x1EE38 (MD1) — wie behauptet.\n\nC) EMR @EMS+0x2AE9C selbst geparst (Header u16 bones_tbl/kf_off/nbones/kf_size, Relpos-Tabelle @+8, Bone-Header @bones_tbl mit u16 child_count/child_off, Kindliste relativ zu bones_tbl): Header {0x64, 0xB0, 15, 0x50} — exakt der behauptete Wert. parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13] — exakt der behauptete Vektor. Relpos bitgenau: 0=(0,-2067,0) Kinder 1/8/9/12; 1=(0,0,0) Kinder 2/5; 2=(0,252,-175); 3=(0,730,1); 4=(0,861,1); 5=(0,251,176); 6=(0,730,1); 7=(0,861,1); 8=(-40,-783,0) kinderlos; 9=(-54,-605,-421); 10=(0,569,1); 11=(0,459,0); 12=(-54,-606,418); 13=(0,569,1); 14=(0,461,0).\nDie Deutung ist mit PSX-Konvention (+y = UNTEN, CLAUDE.md) NICHT umdeutbar:\n  - Bone 0 traegt Huefte + Kopf + zwei seitliche Ketten -> Brust/Torso.\n  - Bone 1 traegt genau die zwei symmetrischen Ketten 2/5 -> Huefte.\n  - Ketten 2-4 / 5-7 laufen mit +252/+730/+861 nach UNTEN, Gesamtlaenge 1843, Ansatz schmal (z=+-175).\n  - Ketten 9-11 / 12-14 setzen an z=+-421 (deutlich BREITER = Schulter) auf Brusthoehe y=-605 an und sind mit 569+459=1028 nur gut halb so lang.\n  Schultern breiter als Huefte, Beine laenger als Arme — die Zuordnung 2-7=Beine / 9-14=Arme ist zwingend, nicht interpretatorisch.\n\nD) MD1 @EMS+0x49638 selbst geparst: len=0x35F4, unk=0, nObj=0x22 -> 17 Mesh-Slots. Mesh 0 = 41 Tri-Vertices, bbox y -852..132 (nach OBEN vom Ursprung = Brust). Mesh 1 = 15 Verts, y -2..463 (Huefte, nach unten). Mesh 2/5 y -6..871 und 3/6 y 48..880 (lange Beinsegmente). Mesh 4/7: x -122..374 bei y 19..223 = flach und nach VORNE ausladend = Fuss. Mesh 8 = 68 Verts (detailreichstes Mesh), y -520..44 = Kopf. Mesh 9-14 kurz (y bis 529/478/376). Mesh 15 = 26 Verts (Stumpf), Mesh 16 = 41 Verts y -782..132 = dieselbe Brust, oben um ~70 Einheiten gekappt (Hals-Stumpf-Torso). Die MD1-Bestaetigung des Befunds trifft zu.\n\nE) PART-INDEX == BONE-INDEX — selbst verifiziert, nicht vorausgesetzt. Part-Struct-Stride = 172 (0xAC). ALLE Flag-Stores in EMZ0.BIN sind glatte Vielfache davon: 516=3, 688=4, 860=5, 1032=6, 1204=7, 1376=8, 1548=9, 1720=10, 1892=11, 2064=12, 2236=13, 2580(+8)=15. Der Kopf-Abwurf `lw v0,1376(s0) / ori v0,v0,0x4a / sw v0,1376(s0)` @0x80108DD4-E0 trifft damit Part 8 — und Bone 8 ist per EMR der kinderlose Kopf. Zusaetzlich existiert Part 15 als Reserve, und MD1 hat exakt 17 Slots (15 Bones + 2 Reserve): eine anders indizierte Tabelle haette dort keinen Stumpf. Der Stumpf-Tausch @0x8010531C-50 kopiert genau Part-15-Mesh-Worte in den abgetrennten Part. Damit ist die Achse Part<->Bone dreifach verankert.\n\nF) LOGIK-GEGENPROBE selbst disassembliert. FUN_80107438 dispatcht ueber `lbu v1,6(s2)`: v1==0 -> 0x801074B0, ==1 -> 0x80107734, ==2 -> 0x8010777C. Zustand 0 trennt Part 3 (`lw v0,516(v1) / ori 0x4a / sw` @0x8010753C-48), nullt Part 4 (`sw zero,688(v0)` @0x80107588), und bei rand&1 (@0x8010758C-98) zusaetzlich Part 5 (`lw v0,860 / ori 0x4a` @0x801075AC-B8) und Part 6 (`lw v0,1032 / ori 0x4a` @0x80107628-34) und nullt Part 7 (`sw zero,1204(v0)` @0x8010767C); danach `sb v1,6(s2)` = Zustand 1. Zustand 1 advanciert die Anim (`jal 0x8002959c` @0x80107754, `addu v1,v1,v0 / sb v1,6(a0)` @0x80107768-70) bis Zustand 2. Zustand 2 setzt `addiu v1,zero,8193 / sh v1,270(s2)` @0x80107820-24, also +0x10E = 0x2001. Dass Bit 0 von +0x10E der Kriecher-Selektor ist, steht literal im Binary: `lhu v0,270(s1)` @0x8010266C, `andi s5,v0,0x1` @0x80102674. Beine ab -> Kriecher. Die Wirkungskette bleibt vollstaendig innerhalb FUN_80107438 (Zustandsmaschine ueber +0x6), es wird also KEINE Store-Bilanz einer Funktion gezogen, deren Wirkung ueber ein jal entweicht — die Falle aus der Aufgabenstellung greift hier nicht.\n\nG) PORT-SEITE (die Behauptung ueber den Port, sauber getrennt von der ueber das Original): enemy_ai_re2_zombie.c:6164 `re2z_knockdown_gore` fasst Parts 3/4/5/6/7 an und kommentiert sie als \"RECHTER UNTERARM, RECHTE HAND WEG\" / \"LINKER OBERARM + UNTERARM AB, LINKE HAND WEG\". :5498/:5517 kommentieren Parts 9/10/11 bzw. 12/13 als \"DAS RECHTE BEIN\" / \"DAS LINKE BEIN\". :4636 `re2z_leg_gore` nennt Part 9/12 \"Oberschenkel\" und 10 \"Schienbein\". :4711 `re2z_stagger_acid_leg` rechnet shin = 10 + 3*side -> Parts 10/11 bzw. 13/14. Alle diese INDIZES decken sich mit dem Original (Offsets s. E); nur die deutschen Namen sind vertauscht. Die staerkste Gegenprobe steckt im Port selbst: re2_ems.h:87-90 dokumentiert dasselbe parent[] mit \"Slot 0 Brust | 1 Huefte | 2-4 R-Bein | 5-7 L-Bein | 8 Kopf | 9-11 R-Arm | 12-14 L-Arm\", und re2_ems.c:196 `k_perm_zombie[15] = {7,0,1,2,3,4,5,6,14,8,9,10,11,12,13}` bildet RE2-Slot 8 auf RE1.5-Slot 14 (= Kopf) ab. Die Rig-Schicht des Ports sagt also \"Bein\", die KI-Kommentarschicht sagt \"Arm\" — fuer exakt dieselben Zahlen. Genau das behauptet der Befund.\n\nPRAEZISIERUNGEN (keine Gegenbelege, aendern das Ergebnis nicht):\n1. Die Formulierung \"trennt Parts 3/4 (+ optional 5/6/7) ab\" ist eine Zusammenfassung der WIRKUNG, nicht der Stores: abgetrennt (flags |= 0x4A) werden 3, 5, 6; genullt (flags = 0, Mesh weg) werden 4 und 7. Da 4 Kind von 3 und 7 Kind von 6 ist, ist die betroffene Teilmenge dieselbe. Anatomisch praeziser: rechtes Bein UNTERHALB DES KNIES ab (Part 3 = Schienbein, Part 2 = Oberschenkel bleibt), linkes Bein KOMPLETT ab Huefte (Part 5 = Oberschenkel). Genau das ergibt einen Kriecher.\n2. Die Links/Rechts-Vergabe (2-4 \"rechts\", 9-11 \"rechts\") ist eine Konvention ueber die Blickachse und nicht aus der EMR beweisbar. Sie ist immerhin in sich konsistent (beide Ketten haben z<0) und fuer die Aussage Arm-vs-Bein irrelevant.\n3. \"Slots 15/16 = zwei Reserve-Stumpf-Meshes\" ist korrekt, aber Slot 16 ist praeziser ein zweiter BRUST-Mesh mit gekapptem Hals (41 Verts, y -782..132 gegen Mesh 0 y -852..132), waehrend Slot 15 (26 Verts) der Gliedmassen-Stumpf ist, den 0x8010531C-50 einkopiert.",
+            "korrigiert": "Bestaetigt, mit zwei Praezisierungen. Selbst nachgeparst: EMS-Record kind 0x10 liegt laut RE2-EXE-TOC @0x8009adf4 (Wortpaar @0x8009AE0C/0x8009AE10 = Sektor 0x55 / Groesse 0x23DCC) bei CDEMD0.EMS-Datei-Offset 0x2A800. Dessen EMD-Directory (dir_off=0x23DAC, 8 Eintraege) liefert EMR = dir[2] @+0x69C und MD1 = dir[7] @+0x1EE38. Die EMR {bones_tbl=0x64, kf_off=0xB0, nbones=15, kf_size=0x50} ergibt parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13]; mit +y = unten und den Relpos-Werten ist die Zuordnung zwingend: 0 Brust (Kinder 1/8/9/12), 1 Huefte (0,0,0; Kinder 2/5), 2-4 und 5-7 BEINE (Ansatz z=+-175, Kettenlaenge 252+730+861=1843, Mesh 4/7 = flacher, nach vorn ausladender Fuss), 8 KOPF (kinderlos, (-40,-783,0), MD1-Mesh 8 = 68 Verts), 9-11 und 12-14 ARME (Ansatz an der breiteren Schulter z=+-421, Kettenlaenge 569+459=1028). Die Part-Tabelle der Entity hat Stride 172 und ist 1:1 bone-indiziert — alle Flag-Stores in EMZ0.BIN sind glatte Vielfache (516=3, 688=4, 860=5, 1032=6, 1204=7, 1376=8, 1548=9, 1720=10, 1892=11, 2064=12, 2236=13, 2580=15), und der Kopf-Abwurf @0x80108DD4-E0 trifft Offset 1376 = Part 8 = der per EMR kinderlose Kopf. Zweite, unabhaengige Bestaetigung: FUN_80107438 trennt in Zustand +0x6==0 Part 3 ab (ori 0x4A @0x80107544-48) und nullt Part 4 (sw zero,688 @0x80107588), bei rand&1 zusaetzlich Parts 5/6 (@0x801075B4/@0x80107630) und nullt Part 7 (sw zero,1204 @0x8010767C) — also rechtes Bein unterhalb des Knies, linkes Bein komplett; in Zustand +0x6==2 setzt sie +0x10E = 0x2001 (@0x80107820-24), und Bit 0 von +0x10E ist nachweislich der Kriecher-Selektor (lhu v0,270(s1) / andi s5,v0,0x1 @0x8010266C-74). Folge: die ZAHLEN im Port stimmen ueberall, nur die deutschen Kommentare sind vertauscht — re2z_knockdown_gore (:6164, Parts 3/4/5/6/7) ist der BEIN-Abriss und nicht der Arm-Abriss; re2z_leg_gore (:4636, Parts 9/12 -> 10/13) ist der ARM-Abriss; re2z_stagger_acid_leg (:4711, Parts 10/11 bzw. 13/14) aetzt Unterarm+Hand; in re2z_death_rip (:5498/:5517) sind die als \"Bein\" kommentierten Parts 9/10/11/12/13 die beiden Arme. Die Rig-Schicht des Ports selbst (re2_ems.h:87-90 und k_perm_zombie in re2_ems.c:196, das RE2-Slot 8 auf RE1.5-Slot 14 = Kopf legt) sagt bereits dasselbe. Praezisierungen: (1) abgetrennt (flags |= 0x4A) werden die Parts 3, 5, 6 — 4 und 7 werden auf flags = 0 genullt; die betroffene Teilmenge ist wegen der Kind-Verkettung identisch. (2) Die Links/Rechts-Etiketten sind eine Blickachsen-Konvention und aus der EMR nicht beweisbar (beide \"rechten\" Ketten haben lediglich konsistent z<0); fuer die Aussage Arm-statt-Bein ist das ohne Belang."
+          }
+        ]
+      },
+      {
+        "dimension": "zeile7",
+        "kernaussage": "Der Schrot-Tod des RE2-Zombies zerlegt auch im ORIGINAL nichts, solange man eben oder nach oben zielt - Zeile 7 Spalte 1 (0x801066FC) fuehrt in 3/4 der Faelle in den Wegschleuder-Tod 0x80109610, der nachweislich KEINEN einzigen Part-Flag-Store enthaelt, und im restlichen 1/4 in einen Zweig, der dieselbe Clip-3/4-Animation wie das Zerreissen spielt, aber statt eines Abwurfs den Zombie mit HP=10 als KRIECHER wiederbelebt (+0x10E=0x2001 @0x80106B10). Kein Handler des ganzen Zombie-Overlays trennt jemals den Oberkoerper ab; das Zerreissen 0x80108BEC wirft Kopf (Part 8) und die beiden OBERARME (Parts 9/12) ab, nicht den Rumpf. Zwei Vorbefunde dieser Sitzung sind zu korrigieren: (a) Spalte 4/7 der TODES-Zeile 7 ist zweimal 0x80108530, nicht 0x80105BC0/0x80105438 (das war die Treffer-Tabelle); (b) die Klammer ist jetzt in Weltmass aufgeloest (eben zielen: 200-4200 / 4200-8200 / ab 8200 Einheiten, Beweis ueber die lueckenlose Kachelung nach dem /4-vs-roh-Mischmass in FUN_80041CE4) - und weil jeder normale Schrot-Kill unter 4200 Einheiten stattfindet, liefert die Port-Klemme auf Klammer 0 fuer die uebliche Spielentfernung die RICHTIGE Zelle. Auch der Zonen-Stempel des Ports ist byte-true. Die vom Nutzer vermisste Zerlegung existiert im Original nur in Spalte 0 (0x80107438, Parts 3/5/6) - erreichbar ausschliesslich beim ZIELEN NACH UNTEN.",
+        "befunde": [
+          {
+            "titel": "Die Todes-Tabelle liegt @0x8010CC24, 19 Zeilen x 9 Spalten, Stride 36 - selbst aus dem Dispatch abgeleitet",
+            "aussage": "Der 2D-Dispatch der DEATH-Wurzel steht @0x801084E0-518: Zeile = +0x5 (Angriffs-Id) mit Stride 36 (`sll 3 / addu / sll 2` @0x801084F0-F8), Spalte = +0x1D2 (`lbu v1,466(a0)` @0x801084FC, `sll 2` @0x80108504), Basis `addiu a2,a2,-13276` @0x801084EC = 0x8010CC24, Aufruf `lw v0,0(v1)` @0x8010850C / `jalr v0` @0x80108514. Zeile 7 beginnt damit bei 0x8010CC24+7*36 = 0x8010CD20, Zeile 8 bei 0x8010CD44. Der Kandidat 0x8010CD24 aus dem Vorbefund war nicht die Tabellenbasis, sondern Zeile 7 Spalte 1.",
+            "belege": [
+              "@0x801084E0-518 (Dispatch, EMZ0.BIN)",
+              "@0x801084EC Basis 0x8010CC24",
+              "@0x8010CD20 Zeile 7, @0x8010CD44 Zeile 8"
+            ],
+            "port_stelle": "re15_port/engine/src/enemy_ai_re2_zombie.c:6704ff (re2z_death_tbl) - stimmt mit dem Dump ueberein",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Zeile 7 (Schrot) und Zeile 8 (Custom-Schrot), alle 9 Spalten aufgeloest",
+            "aussage": "Zeile 7 @0x8010CD20: [0]=0x80107438 [1]=0x801066FC [2]=NULL [3]=0x80107438 [4]=0x80108530 [5]=NULL [6]=0x80107438 [7]=0x80108530 [8]=NULL. Zeile 8 @0x8010CD44: [0]=0x80107438 [1]=0x80108BEC [2]=NULL [3]=0x80107438 [4]=0x80109610 [5]=NULL [6]=0x80107438 [7]=0x80108530 [8]=NULL. Spalte = 3*Klammer + Zone; Spalten 2/5/8 (Zone 2 = Kopf) sind NULL, weil der Zombie das Kopf-Bit 0x10000000 nie traegt.",
+            "belege": [
+              "Voll-Dump beider Tabellen aus EMZ0.BIN (Datei-Offset = addr-0x80100000)",
+              "@0x8010CD20-40 Zeile 7",
+              "@0x8010CD44-64 Zeile 8"
+            ],
+            "port_stelle": "re2z_death_tbl[7] = {2,4,0,2,1,0,2,1,0}, [8] = {2,5,0,2,6,0,2,1,0} - identisch",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "KORREKTUR am Vorbefund: Spalte 4 und 7 der TODES-Zeile 7 sind beide 0x80108530, nicht STAGGER/MAIN",
+            "aussage": "Der Kurzbericht schrieb: 'auf mittlere Distanz gehoerte Spalte 4 = 0x80105BC0 (STAGGER), auf grosse Spalte 7 = 0x80105438 (MAIN)'. Das sind die Werte der TREFFER-Tabelle @0x8010CA3C (Zeile 7: 80107438 801066fc - 80107438 80105bc0 - 80107438 80105438). In der TODES-Tabelle @0x8010CD20 stehen dort beide Male 0x80108530 = der normale Sturz-Tod. Die Aussage ueber den Tod auf Distanz war also aus der falschen Tabelle gelesen.",
+            "belege": [
+              "@0x8010CA3C Zeile 7 der HURT-Tabelle",
+              "@0x8010CD30 = 0x80108530 (Spalte 4)",
+              "@0x8010CD3C = 0x80108530 (Spalte 7)"
+            ],
+            "port_stelle": "analysis/befunde_runde9_2026-09-13/schrot-zerteilen-KURZ.md, Abschnitt 'Was das fuer den Port heisst'",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Was jeder Handler der Zeile 7 dem Spieler zeigt",
+            "aussage": "0x80107438 (Sp. 0/3/6, Zone 0 = tief zielen): P0 spielt Clip 1 ab Zufallsframe (rand&7) und REISST GLIEDMASSEN AB - 1/2 Chance Part 3 (Flags |= 0x4A @0x80107544-48, Tinte 0x0010104F @0x80107568, Wurf, SE 2, Part 4 geloescht), darin nochmal 1/2 Chance Parts 5 und 6 (@0x801075B4-B8 / @0x80107630-34, Part 7 geloescht); danach IMMER vier Blut-/Gore-Emitter am Part 3 (@0x801076A4-704) plus SE 12. P2 im Todesfall: 3/4 -> HP=10 (steht wieder auf), sonst entscheidet +0x16B: Glied ab -> Zustand 7 CORPSE, sonst ebenfalls HP=10 (@0x8010777C-B0).\n0x801066FC (Sp. 1, nah + Rumpf): verzweigt ueber +0x231. Spieler-word0 Bit 31 (Zielen hoch) -> +0x231=2 -> 0x801092C4 = KOPF PLATZT AB (Part 8 Flags |= 0x4A @0x80109490-98, Wurfphysik 1528-1540). Sonst (rand&3)!=0 und +0x4==3 -> +0x231=1 -> 0x80109610. Sonst (1/4) der hauseigene Zweig: Clip 3 bzw. 4 ab Frame 0 (Wort 0x00030004-Ruecken @0x80106888), Schub -250/+100, Blut am Part 0 - und in P2 KEIN Abwurf, sondern +0x156=10 und +0x10E=0x2001 (@0x80106AE4-B10) = der Zombie belebt als KRIECHER wieder.\n0x80109610 (Burst): Wurfwinkel zum Spieler (@0x801096C0), (rand&3)+1 Fleischbrocken-Wuerfe, Clip 1/2 ab FRAME 15 (`sw 0x000F0F0x,332` @0x80109864), Root-Motion, +0x144=400 laeuft auf 0 und endet in Zustand 7 (@0x80109684/@0x801099B0). KEIN EINZIGER Part-Flag-Store in der ganzen Funktion - der Port bildet das korrekt ab.\n0x80108530 (Sp. 4/7): der normale Sturz-Tod, Clip 1 (rueckwaerts) bzw. 2 (vorwaerts ab Frame 10), +0x21A Bit 4 waehlt die Leichen-Pose.",
+            "belege": [
+              "@0x80107514-708 Glieder-Abwurf",
+              "@0x8010777C-B0 Todes-P2 mit HP=10",
+              "@0x8010679C-A8 word0-Bit-31-Zweig",
+              "@0x801067F4-828 (rand&3)!=0 + +0x4==3",
+              "@0x80106AE4 sh 10,342 / @0x80106B10 sh 8193,270",
+              "@0x80109460-98 Part 8 |= 0x4A",
+              "Vollscan 0x80109610-0x801099E0: keine Stores auf Vielfache von 172"
+            ],
+            "port_stelle": "re2z_hit_knockdown / re2z_hit_ragdoll / re2z_death_burst / re2z_death_magnum / re2z_death_main",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Die KLAMMER ist aufgeloest - in Weltkoordinaten, mit Beweis ueber die lueckenlose Kachelung",
+            "aussage": "Die Teilbox-Tabelle wird als a2 = 0x800A68E8 + 24*Angriffs-Id + 8*0x800A6F8C[s2] uebergeben (@0x80047EB4-F8); s3 = boxbase + 28*Sequenzbyte (@0x80041224). Jeder 28-B-Record: +0 unbenutzt, +1/+2/+3 = Selektorbytes, drei 8-B-Teilboxen bei +4/+12/+20 mit den Halbworten f0,f1,f2,f3. FUN_80041CE4 baut Identitaet + Translation (f0, 0, -(f1+4*f3)) @0x80041D20-5C, verkettet mit der Aktor-MATRIX bei +0x24 (m[3][3] @0x24, t[3] @0x38/0x3C/0x40) und testet ein Parallelogramm aus C, C+u, C+v mit u = R*(f2,0,0) und v = R*(0,0,2*f3). ENTSCHEIDEND: C wird durch 4 geteilt (`sra v0,v0,2` @0x80041D74/78) und die Opferposition ebenfalls (@0x80041E0C/14), die Kantenvektoren u/v aber NICHT - in Weltmass sind die Kanten also 4*f2 bzw. 8*f3 lang. Damit ergibt sich fuer Schrot (Zeilen-Id 7):\n  ZIELEN TIEF  (0x800A6724): 100-4100 / 4100-8100 / 8100-18100\n  ZIELEN EBEN  (0x800A6740): 200-4200 / 4200-8200 / 8200-38200\n  ZIELEN HOCH  (0x800A675C): 100-3100 / 3100-9100 / 9100-19100\nDie Baender stossen exakt aneinander (4100=4100, 8100=8100 usw.) - das ist der Beweis, dass f0 die NAHKANTE des Entfernungsbandes ist und die Vervierfachung stimmt. Die Querspanne ist symmetrisch: -(f1+4f3) .. -f1+4f3, fuer Schrot eben +-2500 / +-3500 / +-4500 - ein sich oeffnender Kegel. Das Opfer verbreitert ihn zur Laufzeit um seinen Radius (`s3+10/+18/+26 += +0x9A>>2` @0x80041318-38).",
+            "belege": [
+              "@0x80047EB4-F8 Tabellenadressierung",
+              "@0x80041224 s3 = base + 28*id",
+              "@0x80041D20-5C Translation",
+              "@0x80041D74/78 /4 fuer C",
+              "@0x80041E0C/14 /4 fuer das Opfer",
+              "@0x80041DC0-F4 Parallelogramm-Ecken",
+              "0x800A6724/40/5C Roh-Dump"
+            ],
+            "port_stelle": "re15_damage.c:1705ff dokumentiert die Klammer bisher ohne aufgeloeste Geometrie",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Bei typischer Spielentfernung trifft der Schrotschuss Spalte 1 - der Port zeigt dieselbe Zelle",
+            "aussage": "Beim ebenen Zielen (idx 1) teilen sich alle drei Teilboxen dasselbe Hoehenfenster, alle drei sind also lebendig, und die Klammer entscheidet allein ueber die Entfernung: 200-4200 -> Spalte 1 = 0x801066FC, 4200-8200 -> Spalte 4 = 0x80108530, ab 8200 -> Spalte 7 = 0x80108530. Beim tiefen und beim hohen Zielen bestehen die Teilboxen 2 und 3 auf ebenem Boden das Hoehenfenster NICHT (Fenster [666,4166] bzw. [1833,5333] und [-6833,-1333] bzw. [-8666,-3166], Hoehendifferenz = 0), es bleibt nur Klammer 0. Zum Massstab: die RE2-EM010-Bindepose spannt rund 1644 Einheiten vom Fuss (861 unter der Wurzel) bis zum Kopf (783 darueber) - 4200 Einheiten sind also gut 2,5 Koerperhoehen, praktisch der gesamte Nahkampfraum eines Raumes. JEDER normale Schrot-Kill liegt damit in Klammer 0. Die harte Klemme des Ports auf 0 liefert fuer die uebliche Spielentfernung also die RICHTIGE Zelle; die Abweichung beginnt erst jenseits von 4200 Einheiten, wo das Original auf den schlichten Sturz 0x80108530 zurueckfaellt und der Port weiter Ragdoll/Burst zeigt. Der Nutzer-Befund kann daraus NICHT stammen.",
+            "belege": [
+              "@0x800A6740 (ebenes Zielen) f0 = 200/4200/8200",
+              "@0x80041C0C-60 Fall 3 (rec12/rec14 = -3000/2000) fuer alle drei Boxen",
+              "@0x80041BB0-E4 / @0x80041B74-AC Faelle 1/0 mit verschobenen Fenstern",
+              "@0x800A41A4 Schadensrecord Zeile 7 (Wort 4 = 0x0BB8FE0C)",
+              "Port-Messung der Bindepose: enemy_ai_re2_zombie.c Block 'DIE PART-NUMMERIERUNG'"
+            ],
+            "port_stelle": "re15_damage.c:1886 (Klammer hart 0)",
+            "sicherheit": "teilweise"
+          },
+          {
+            "titel": "Die ZONE ist KEINE Divergenz - der Elevations-Stempel des Ports ist auf ebenem Boden byte-true",
+            "aussage": "FUN_80041B20(a0=Schadensrecord, a1=Selektorbyte, a2=&unten, a3=&oben) sucht das niedrigste gesetzte Bit des Selektorbytes (@0x80041B28-48) und springt in 0x80010FF4[bit]. Die sieben Faelle liefern das Hoehenfenster aus einem der drei Halbwort-Paare des 20-B-Schadensrecords (+8/+10, +12/+14, +16/+18) und geben als v0 den DRITTELSCHRITT t1 = (oben-unten)/3 zurueck - das steht im DELAY-SLOT von `jr ra`: 0x80041CE0 = 0x01201021 = `addu v0,t1,zero`. Der Aufrufer bildet daraus drei Baender (@0x8004142C-54): s0 = 6 / 3 / 0. Die Zone kommt dann aus der Maskentabelle 0x800A6DB4 (Zeile = Selektorbit 3 gesetzt, Spalte = s0), gegated mit der Haltungsmaske des Opfers s6 = (word0>>26)&7 = 3 beim Zombie; gelesen werden a0+2, a0+1, a0+0, der letzte Treffer gewinnt, Zone = Byte>>1 (@0x80041488-E4). Durchgerechnet mit Hoehendifferenz 0 (gleicher Boden): TIEF -> Band 6 -> Maske 0x800A6DBA=01 -> ZONE 0; EBEN -> Band 3 -> Maske 0x800A6DC0=02 -> ZONE 1; HOCH -> Band 0 -> 0x800A6DB4=04 ist Zone 2 und beim Zombie gesperrt -> Rueckfall auf 02 -> ZONE 1. Genau das macht re15_re2_stamp_hit (`(liegt || elev<0) ? 0 : 1`). Gegenprobe: waere die Zone immer 0, liefe der Magnum-Tod (Zeile 5/6 Spalte 0 = 0x80107438) nie in die Kopfexplosion 0x801092C4 - das waere sichtbar falsch.",
+            "belege": [
+              "@0x80041B28-48 Bitsuche",
+              "@0x80010FF4 Sprungtabelle, 7 Faelle",
+              "@0x80041CE0 = 0x01201021 (addu v0,t1,zero) im Delay-Slot",
+              "@0x8004142C-54 Band 6/3/0",
+              "@0x80041488-E4 Maskenkette 0x800A6DB4",
+              "0x800A6DB4 Roh-Dump: 04 02 01 | 02 01 04 | 01 02 04 | 04 02 00 | 02 00 00 | 01 02 00",
+              "@0x80100984-998 word0 |= 0x0C000000"
+            ],
+            "port_stelle": "re15_damage.c re15_re2_stamp_hit - bleibt unveraendert",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Der Selektor s2 IST die Ziel-Elevation - Bits 29/30/31 von word0 des Spielers",
+            "aussage": "Im Spieler-Angriffs-Executor gilt `lw v0,0(s0)` @0x80047D10 / `srl s2,v0,29` @0x80047D18, danach `lbu a2,28556(at)` = 0x800A6F8C[s2] @0x80047EE0. Die Tabelle ist {ff,00,01,ff,02,00,00,00}: Bit 29 -> idx 0, Bit 30 -> idx 1, Bit 31 -> idx 2. Das passt exakt zu den drei Hoehenfenstern des Schadensrecords (idx 2 nimmt +8/+10 = -5000..500 = oben, idx 1 +12/+14 = -3000..2000 = mitte, idx 0 +16/+18 = -500..3000 = unten) und zu dem Bit, das die Rumpf-Todeszelle selbst abfragt (`lw 0x800CFBF8 / bgez` @0x8010679C-A8 testet dasselbe Bit 31). Damit ist belegt, dass die Aim-Elevation im Original sowohl das Entfernungsraster als auch das Hoehenfenster umschaltet.",
+            "belege": [
+              "@0x80047D10-18 srl s2,word0,29",
+              "@0x80047EE0 0x800A6F8C[s2]",
+              "0x800A6F8C = ff 00 01 ff 02 00 00 00",
+              "@0x800A41A4+8/+12/+16 die drei Fensterpaare",
+              "@0x8010679C-A8 bgez auf dasselbe word0"
+            ],
+            "port_stelle": "re15_player_aim_elevation() ist damit der belegte Zwilling, nicht nur eine Naeherung",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Zeile 8 fuehrt wirklich auf 0x80108BEC - aber nur in 1/4 der Faelle, und es faellt KOPF + beide OBERARME, nicht der Oberkoerper",
+            "aussage": "Zeile 8 Spalte 1 = 0x80108BEC ist bestaetigt (@0x8010CD48). Die Funktion steigt jedoch selbst wieder aus: `lbu v1,561 / bne 1` @0x80108C34-3C -> Burst; in P0 `rand&3 != 0` UND word0 Bit 31 nicht gesetzt UND Zeile weder 9 noch 17 -> +0x231=1 -> 0x80109610 (@0x80108C80-D34). Fuer Zeile 8 heisst das: 3/4 Burst, 1/4 (oder beim Zielen nach oben deterministisch) das echte Zerreissen. Das Zerreissen selbst setzt Clip 3 bzw. 4 (Wort 0x00030004-Seite @0x80108D74-A4), Schub -450/+250, und wirft ab: Part 8 |= 0x4A (@0x80108DD4-E0), Part 9 |= 0x1062 (@0x80108E54-60), Part 12 |= 0x1062 (@0x80108F10-1C), Part 13 |= 0x80 (@0x80108F58-5C). Nach den vom Port selbst gemessenen RE2-EM010-Bindeoffsets sind 9 und 12 die beiden OBERARME (-605/-421, also oberhalb der Wurzel), nicht die Beine - der Kommentar 'Beine (Parts 9/12)' in enemy_ai_re2_zombie.c ist falsch beschriftet (der Port markiert diese Unstimmigkeit selbst als offen). Kein Handler des Zombie-Overlays trennt jemals den RUMPF ab.",
+            "belege": [
+              "@0x8010CD48 Zeile 8 Spalte 1",
+              "@0x80108C80-D34 Burst-Ausstieg 3/4",
+              "@0x80108DD4-E0 Part 8 (1376 = 8*172) |= 0x4A",
+              "@0x80108E54-60 Part 9 (1548) |= 0x1062",
+              "@0x80108F10-1C Part 12 (2064) |= 0x1062",
+              "Part-Stride 172 gegengeprueft: 516=3*172, 860=5*172, 1376=8*172, 1548=9*172"
+            ],
+            "port_stelle": "re2z_death_rip (enemy_ai_re2_zombie.c:5402) - Mechanismus korrekt portiert, nur die Koerperteil-Namen im Kommentar stimmen nicht",
+            "sicherheit": "belegt"
+          },
+          {
+            "titel": "Der Nutzer-Befund erklaert sich aus der geteilten Animation Clip 3/4 - und ist fuer die Standard-Schrotflinte byte-true",
+            "aussage": "Clip 3/4 ist DIESELBE Animation in zwei Handlern: 0x80108BEC schreibt +0x14C = 0x00030004-Seite @0x80108D74-A4 UND wirft Kopf + Oberarme ab; 0x801066FC schreibt im 1/4-Zweig das WORTGLEICHE +0x14C = 0x00030004-Seite @0x8010683C-88 und wirft NICHTS ab, sondern belebt in P2 als Kriecher (HP=10, +0x10E=0x2001). Was der Nutzer sieht - 'die Animation, bei der eigentlich etwas abfallen sollte, und es faellt nichts' - ist exakt dieser 1/4-Zweig, und er ist im Original genauso leer. Die RE1.5-Zuordnung des Ports schickt Waffe 8 (Remington M870) auf Zeile 7 und nur Waffe 13 (SPAS-12) auf Zeile 8; mit der M870 kann im Original folglich nie ein Teil abfallen, solange man eben oder nach oben zielt. Die einzige Schrot-Zerlegung im Original ist Spalte 0 = 0x80107438 beim ZIELEN NACH UNTEN (Parts 3/5/6), und die ist im Port seit dem Zonen-Stempel vom 2026-09-12 erreichbar - der Warnkommentar bei re2z_hit_knockdown ('die Zelle ist im Spiel heute unerreichbar') ist veraltet.",
+            "belege": [
+              "@0x8010683C-88 Ragdoll-Clipwort 0x00030004",
+              "@0x80108D74-A4 RIP-Clipwort 0x00030004",
+              "@0x80106AE4/@0x80106B10 HP=10 + Kriecher-Bit",
+              "@0x80107514-708 der einzige Schrot-Abwurf (Spalte 0)",
+              "re2z_row_from_weapon: w8 -> Zeile 7, w13 -> Zeile 8"
+            ],
+            "port_stelle": "enemy_ai_re2_zombie.c:6211 (veralteter Kommentar), :5781 re2z_hit_ragdoll, :5402 re2z_death_rip",
+            "sicherheit": "belegt"
+          }
+        ],
+        "patchplan": [
+          "KORREKTUR im Dossier: analysis/befunde_runde9_2026-09-13/schrot-zerteilen-KURZ.md, Abschnitt 'Was das fuer den Port heisst' - 'Spalte 4 = 0x80105BC0 (STAGGER), Spalte 7 = 0x80105438 (MAIN)' streichen. In der TODES-Tabelle stehen dort 0x8010CD30 = 0x80108530 und 0x8010CD3C = 0x80108530. Die zitierten Werte gehoeren zur TREFFER-Tabelle @0x8010CA3C.",
+          "KORREKTUR des veralteten Kommentars re15_port/engine/src/enemy_ai_re2_zombie.c:6211 ('Spalte 0 verlangt Zone 0; der Port stempelt immer Zone 1 ... die Zelle ist im Spiel heute unerreichbar'). Seit dem Zonen-Stempel vom 2026-09-12 (re15_damage.c: `(liegt || elev<0) ? 0 : 1`) IST Spalte 0 beim Zielen nach unten erreichbar - re2z_hit_knockdown mit dem Glieder-Abwurf laeuft dann wirklich. Gleicher Satz steht sinngemaess bei :6418-6423 fuer die HURT-Tabelle.",
+          "KORREKTUR der Beschriftung in re2z_death_rip (:5402ff): 'Beine (Parts 9/12)' -> Oberarme, gemaess den Bindeoffsets im Block 'DIE PART-NUMMERIERUNG IM RE1.5-MODUS' (9/10/11 und 12/13/14 liegen -605/-421 OBERHALB der Wurzel). Nur Kommentar, kein Verhalten.",
+          "NEUER BELEG-BLOCK in re15_damage.c ueber re15_re2_stamp_hit: die Zone ist jetzt byte-true hergeleitet, nicht mehr Naeherung. Zitate: Bitsuche @0x80041B28-48, Sprungtabelle 0x80010FF4 (7 Faelle), Drittelschritt im Delay-Slot @0x80041CE0 = 0x01201021, Bandwahl @0x8004142C-54, Maskenkette @0x80041488-E4 auf 0x800A6DB4, Haltungsmaske @0x800413CC-D4 gegen word0 |= 0x0C000000 @0x80100984-998, Elevations-Selektor `srl s2,word0,29` @0x80047D18 + 0x800A6F8C. Ergebnis auf ebenem Boden: TIEF->0, EBEN->1, HOCH->1 - genau der aktuelle Port-Code. Kein Code-Aenderung, aber der Stempel verliert damit das Etikett 'PORT-BRUECKE'.",
+          "IMPLEMENTIERUNG der Klammer (re15_damage.c:1886 ersetzt die harte 0): Entfernung des Opfers entlang der Aktor-Vorwaertsachse gegen die Baender der gewaehlten Elevations-Variante pruefen. Datensatz: 0x800A68E8 + 24*Zeile + 8*idx, idx = 0x800A6F8C[Bit29/30/31 von word0]; 28-B-Record, Teilboxen bei +4/+12/+20, Halbworte f0..f3. Klammer k ist die HOECHSTE Box, deren Band [f0, f0 + 4*f2] die Distanz und deren Querspanne [-(f1+4*f3'), -f1+4*f3'] mit f3' = f3 + Opferradius/4 die Seitenablage enthaelt; beim tiefen/hohen Zielen zusaetzlich das Hoehenfenster aus dem Schadensrecord pruefen (Boxen 2/3 fallen dort auf ebenem Boden heraus). Werte fuer Schrot eben: 200-4200 / 4200-8200 / 8200-38200 (@0x800A6740). Wirkung: Schrot-Kills jenseits 4200 Einheiten fallen auf 0x80108530 (schlichter Sturz) statt Ragdoll/Burst - byte-true, aber nur auf Distanz sichtbar.",
+          "NICHT aendern: re2z_death_burst darf weiterhin keine Part-Flags setzen. Gegenprobe ist gelaufen - ein Vollscan von 0x80109610 bis 0x801099E0 findet keinen einzigen Store auf ein Vielfaches von 172 des Modellblocks +0x198; die einzigen Modellzugriffe sind der FX-Anker s3+72 und die Lesezugriffe 1420/1424/1428.",
+          "ANTWORT AN DEN NUTZER (kein Code): mit der Remington M870 faellt im Original kein Koerperteil, solange man eben oder nach oben zielt - das ist Zeile 7 und dort steht in Spalte 1 der Wegschleuder-/Ragdoll-Tod. Wer die Zerlegung sehen will, zielt NACH UNTEN (Spalte 0 -> 0x80107438, Parts 3/5/6, 50 % Chance) oder nimmt die SPAS-12 (Waffe 13 -> Zeile 8 -> 0x80108BEC, Kopf + beide Oberarme, aber selbst dort nur in 1/4 der Faelle bzw. deterministisch beim Zielen nach oben)."
+        ],
+        "offen": [
+          "Die Klammer 1/2 ist geometrisch aufgeloest, aber nicht dynamisch gegengemessen. Der Beweis stuetzt sich auf die lueckenlose Kachelung (4100=4100, 8100=8100, 4200=4200, 8200=8200, 3100=3100, 9100=9100 ueber alle drei Elevations-Records) plus das /4-vs-roh-Mischmass zwischen C (@0x80041D74/78) und den Kantenvektoren (@0x80041DC0-D4). Ein PCSX-Watchpoint auf +0x1D2 gegen die gemessene Distanz wuerde es hart bestaetigen. Ebenfalls ungeprueft: FUN_8008D6C4 (der Vorzeichentest @0x80041E9C-D0) und FUN_8008DBA4 (ApplyMatrixSV, aus dem Aufrufmuster erschlossen, nicht per PSYQ-Signatur identifiziert).",
+          "Der Massstab 'Einheit -> Meter' ist geschaetzt, nicht gemessen: 1644 Einheiten Bindepose-Hoehe (Fuss 861 unter, Kopf 783 ueber der Wurzel, aus der Port-Messung probe_tmp_rigdump). Die Aussage 'jeder normale Schrot-Kill liegt unter 4200 Einheiten' ist damit plausibilisiert, nicht gemessen. Offener Weg: Spieler-/Zombie-Abstand im Port bei einem typischen Schuss protokollieren.",
+          "Die HOEHENDIFFERENZ s5 = Opfer+0x3C - Angreifer+0x3C (@0x800413C0-DC) fliesst im Original in das Band und damit in die Zone ein; auf ebenem Boden ist sie 0 und der Port stimmt, auf Treppen/Podesten nicht. Beispiel: ebenes Zielen, Zombie >1332 Einheiten HOEHER -> Band 6 -> Zone 0 statt 1. Dem Port fehlt dieser Eingang komplett.",
+          "+0x1D3 wird vom Applier zweifach gefuettert und nur eine Haelfte ist im Port verdrahtet: `+0x1D3 = (alt & 0x80) | ((Wort1 >> (7*Klammer+9)) & 0x7F)` @0x80041AB8-E8 (Schrot = 15, Pistole = 5) neben dem schon portierten Reserve-Abzug `+0x151/+0x152/+0x153 -= (Wort1 >> (3*Klammer)) & 7` @0x80041930-88. Der Konsument des 7-Bit-Feldes ist nicht gesucht worden.",
+          "Die Koerperteil-BENENNUNG bleibt widerspruechlich: die Port-Kommentare nennen 0x80107438 den 'Arm-Abriss' (Parts 3/5/6) und 0x80108BEC 'Kopf + Beine (9/12)', die vom Port selbst gemessenen RE2-EM010-Bindeoffsets sagen dagegen 2/3/4 und 5/6/7 = Beinketten, 9/10/11 und 12/13/14 = Armketten. Der Mechanismus ist davon unberuehrt; welche Namen stimmen, muesste an der geladenen EM010-Bank visuell abgenommen werden.",
+          "Ob 0x800CFBF8 wirklich auf die Spieler-Entity zeigt (und `bgez` damit dasselbe Bit 31 testet wie `srl s2,v0,29` @0x80047D18), ist aus der Uebereinstimmung der Semantik erschlossen, nicht durch einen Dump des Zeigers belegt."
+        ],
+        "verdikte": [
+          {
+            "titel": "Die Todes-Tabelle liegt @0x8010CC24, 19 Zeilen x 9 Spalten, Stride 36 - selbst aus dem Dispatch abgeleitet",
+            "haelt_stand": true,
+            "begruendung": "Der Befund haelt jeder Gegenprobe stand. Ich habe die zitierten Adressen ROH aus `info/re2leon/COMMON/BIN/EMZ0.BIN` (Datei-Offset = addr - 0x80100000) gelesen, nicht nur den Disassembler geglaubt.\n\n1) DIE INSTRUKTIONEN STEHEN DORT, BYTE FUER BYTE (Rohwoerter, little-endian):\n   0x801084E4 = 0x90830005  lbu v1,0x005(a0)      -> Zeile = +0x5\n   0x801084E8 = 0x3C068011  lui  a2,0x8011\n   0x801084EC = 0x24C6CC24  addiu a2,a2,-13276    -> 0x80110000-0x33DC = 0x8010CC24  ✔ Basis\n   0x801084F0 = 0x000310C0  sll  v0,v1,3\n   0x801084F4 = 0x00431021  addu v0,v0,v1\n   0x801084F8 = 0x00021080  sll  v0,v0,2          -> (v1*8+v1)*4 = v1*36  ✔ Stride 36\n   0x801084FC = 0x908301D2  lbu  v1,0x1D2(a0)     -> Spalte = +0x1D2 (466)  ✔\n   0x80108504 = 0x00031880  sll  v1,v1,2          ✔\n   0x8010850C = 0x8C620000  lw   v0,0(v1)         ✔\n   0x80108514 = 0x0040F809  jalr v0               ✔\n   Arithmetik: 0x8010CC24 + 7*36 = 0x8010CD20 (Zeile 7), + 8*36 = 0x8010CD44 (Zeile 8), Zeile 7 Spalte 1 = 0x8010CD24.  Alles exakt wie behauptet.\n\n2) HURT vs. DEATH sauber getrennt (die Falle, vor der gewarnt wurde):\n   Ein eigener Scan ueber ALLE lui-0x8011-relativen Zugriffe im Overlay findet genau DREI Basen: 0x801053E8 (`addiu a2,a2,-14016` = 0x8010C940), 0x801084EC (= 0x8010CC24) und 0x801083D8 (`lw v0,-12596(at)` = 0x8010CECC, 1D-Tabelle). Der Kandidat 0x8010CD24 wird von KEINER Instruktion als Basis benutzt.\n   Funktionsgrenzen gemessen (`addiu sp,sp,-N`/`+N`): HURT-Wurzel 0x80104F40..0x8010542C (enthaelt die 0x8010C940-Dispatch @0x801053E0-414), DEATH-Wurzel 0x80108250..0x80108524 (enthaelt die 0x8010CC24-Dispatch @0x801084E0-518). Die Zustands-EXEC-Tabelle @0x8010C830 bestaetigt die Zuordnung: Slot 2 = 0x80104F40 (HURT), Slot 3 = 0x80108250 (DEATH), Slot 7 = 0x8010A440 (Leiche), Slot 8 = 0x80109CFC. 0x8010CC24 ist also zweifelsfrei die TODES-Tabelle.\n\n3) DER DUMP TRAEGT DIE GEOMETRIE UNABHAENGIG:\n   Zeilenweise mit Stride 36 gelesen ergibt sich ein sauberes 9-Spalten-Muster aus drei Tripeln {A,B,0}; die Musterbrueche liegen GENAU auf den Zeilengrenzen (r5/r6 = 0x801092C4, r7 = 0x801066FC, r8/r17 = 0x80108BEC/0x80109610, r9-r11 ohne Nullen, r12 = 0x80109610). Mit irgendeinem anderen Stride als 36 zerfaellt dieses Muster. Zeile 7 @0x8010CD20 = {80107438, 801066FC, 0, 80107438, 80108530, 0, 80107438, 80108530, 0} — Spalte 1 ist 0x801066FC, exakt der Wert, den der Vorbefund unter „0x8010CD24\" gemeldet hatte. Der Vorbefund nannte also die ZELLE, nicht die Basis. Zeile 8 @0x8010CD44 = {..., 80108BEC, ...} (Zerreiss-Tod), Zeile 17 @0x8010CE88 identisch aufgebaut.\n\n4) BEIDE INDIZES SIND BELEGT ALS DAS, WAS DIE AUSSAGE BEHAUPTET (RE2-EXE, t_addr 0x80010000):\n   @0x80041A9C `sb v1,466(t0)`  -> schreibt die Trefferzone nach +0x1D2 (Spalte)\n   @0x80041AA8 `srl v1,t0,16` / @0x80041AB0 `addiu v1,v1,1` / @0x80041AB4 `sb v1,5(t0)`\n   -> schreibt (Angriffs-Id aus dem Hi-Halbwort des Schadenswortes) + 1 nach +0x5 (Zeile).\n   Damit ist die Bezeichnung „Zeile = Angriffs-Id\" nicht nur Etikett, sondern belegt — UND das `+1` erklaert, warum Zeile 0 physisch Fremddaten traegt (die Id ist 1-basiert).\n\n5) WIRKUNG VERLAESST DIE FUNKTION NICHT unbemerkt: die Aussage ist eine reine Adress-/Geometrie-Aussage; der einzige Kontrollfluss-Austritt ist das `jalr v0` @0x80108514, und genau dessen Ziel-Berechnung wurde geprueft. Kein Schluss haengt an einer Store-Bilanz.\n\n6) PORT-ABGLEICH (als PORT gekennzeichnet, nicht als Original ausgegeben): `re15_port/engine/src/enemy_ai_re2_zombie.c:6704` deklariert `static const uint8_t re2z_death_tbl[19][9]`. Ich habe alle 19 Zeilen des Ports gegen meinen eigenen Dump gemappt (0=NULL, 1=0x80108530, 2=0x80107438, 3=0x801092C4, 4=0x801066FC, 5=0x80108BEC, 6=0x80109610) — Zeilen 1..18 stimmen Zelle fuer Zelle; Zeile 0 ist im Port bewusst genullt und dort (:6685) als Fremddaten dokumentiert.\n\nPRAEZISIERUNG (kein Gegenbeleg, aber Wortgenauigkeit): „19 Zeilen x 9 Spalten ... selbst aus dem Dispatch abgeleitet\" ist etwas zu grosszuegig formuliert. Aus dem Dispatch @0x801084E0-518 folgen Basis, Stride 36 und die beiden Index-Quellen; die 9 folgt als Obergrenze aus 36/4, die 19 stammt aus der DATEN-Ausdehnung (Zeile 19 @0x8010CED0 bricht das Muster und ist der Rumpf der separaten 1D-Tabelle, deren Basis @0x801083D8 auf 0x8010CECC = Zeile-18-Spalte-8 zeigt). Real dispatchbar sind Zeilen 1..18, weil +0x5 @0x80041AB0 um 1 erhoeht wird. Das aendert an Basis, Stride und den Zeilen-7/8-Adressen nichts.",
+            "korrigiert": "Der 2D-Dispatch der DEATH-Wurzel FUN_80108250 (Zustands-EXEC-Slot 3, Tabelle @0x8010C830+0xC) steht @0x801084E0-518: Zeile = +0x5 (Angriffs-Id, vom EXE-Schadensapplier als Id+1 geschrieben, `srl v1,t0,16` @0x80041AA8 / `addiu v1,v1,1` @0x80041AB0 / `sb v1,5(t0)` @0x80041AB4) mit Stride 36 (`sll 3 / addu / sll 2` @0x801084F0-F8 = 0x000310C0/0x00431021/0x00021080), Spalte = +0x1D2 (`lbu v1,466(a0)` @0x801084FC = 0x908301D2, vom selben Applier gesetzt `sb v1,466(t0)` @0x80041A9C; `sll 2` @0x80108504), Basis `addiu a2,a2,-13276` @0x801084EC = 0x24C6CC24 -> 0x8010CC24, Aufruf `lw v0,0(v1)` @0x8010850C / `jalr v0` @0x80108514. Zeile 7 beginnt bei 0x8010CC24+7*36 = 0x8010CD20, Zeile 8 bei 0x8010CD44. Der Kandidat 0x8010CD24 aus dem Vorbefund war nicht die Tabellenbasis, sondern Zeile 7 Spalte 1 (Wert 0x801066FC); keine Instruktion im Overlay benutzt 0x8010CD24 als Basis. Geometrie: 9 Spalten (= Stride 36 / 4); die Tabelle reicht von 0x8010CC24 bis 0x8010CED0, dispatchbar sind davon die Zeilen 1..18 — Zeile 0 ist Fremddaten (Angriffs-Id ist 1-basiert), Zeile 18 Spalte 8 faellt auf 0x8010CECC = Index 0 der separaten 1D-Tabelle (@0x801083D8, `lw v0,-12596(at)`) und ist NULL. Die HURT-Tabelle ist eine ANDERE, gleich geformte Tabelle @0x8010C940 (`addiu a2,a2,-14016` @0x801053E8) in der HURT-Wurzel 0x80104F40 (EXEC-Slot 2)."
+          },
+          {
+            "titel": "Zeile 7 (Schrot) und Zeile 8 (Custom-Schrot), alle 9 Spalten aufgeloest",
+            "haelt_stand": false,
+            "begruendung": "Der Zahlenkern der Aussage ist byte-exakt richtig, der angehaengte Kausalsatz ist es nicht — und er ist von keinem der drei BELEGE gedeckt.\n\nVERIFIZIERT (roh aus info/re2leon/COMMON/BIN/EMZ0.BIN, Datei-Offset = addr - 0x80100000):\n- 0x8010CD20: 80107438 801066FC 00000000 | 80107438 80108530 00000000 | 80107438 80108530 00000000  -> exakt die behauptete Zeile 7.\n- 0x8010CD44: 80107438 80108BEC 00000000 | 80107438 80109610 00000000 | 80107438 80108530 00000000  -> exakt die behauptete Zeile 8.\n- Port-Vergleich stimmt zellenweise: re15_port/engine/src/enemy_ai_re2_zombie.c:6712 = {2,4,0,2,1,0,2,1,0}, :6713 = {2,5,0,2,6,0,2,1,0}, Enum :6690-6700 (1=0x80108530, 2=0x80107438, 3=0x801092C4, 4=0x801066FC, 5=0x80108BEC, 6=0x80109610).\n\nVERIFIZIERT, ABER IM BEFUND UNBELEGT (ich habe die Adressen selbst gesucht — die BELEGE listen nur den Dump und die beiden Zeilen-Ranges, kein einziger Beleg kann die Spaltenformel tragen):\n- Tabellenbasis 0x8010CC24 wird literal geladen @0x801084E8-EC (lui a2,0x8011 / addiu a2,a2,-13276); Schrittweite 9 Worte @0x801084F0-F8; Zeile = lbu v1,5(a0) @0x801084E4; Spalte = lbu v1,466(a0) @0x801084FC. Zeile 7 = 0x8010CC24 + 7*0x24 = 0x8010CD20 ist damit korrekt hergeleitet.\n- DEATH- vs. HURT-Tabelle ist sauber getrennt: Wurzeltabelle @0x8010C830, Index = entity+0x4 @0x801004CC-E0; [2]=0x80104F40 (HURT, benutzt 0x8010C940 @0x801053E4-E8), [3]=0x80108250 (DEATH, benutzt 0x8010CC24). +0x4=3 wird gesetzt, wenn HP (+0x156) < 0: @0x8004727C-90 (lh v1,342(s1); bgez -> sw 2, sonst sw 3).\n- Spaltenformel: Klammer = srl s6,s5,28 @0x80047114; Zone-Default 1 @0x80047294-98; Zone 0 (tief) @0x800472D4; Zone 2 (Kopf) @0x8010730C... korrekt @0x8004730C; Summe Spalte = Zone + 3*Klammer @0x80047320 (addu v1,v1,s6) + @0x80047328, Store @0x80047330. Zeile = sb s5,5(s1) @0x80047324 (niedriges Byte desselben Angriffsworts).\n- Kopf-Gate: lw v0,0(s1) / lui v1,0x1000 / and / beq @0x800472D8-E4 — Zone 2 nur, wenn entity+0x00 & 0x10000000.\n\nWIDERLEGT — der Kausalsatz \"Spalten 2/5/8 sind NULL, WEIL der Zombie das Kopf-Bit 0x10000000 nie traegt\":\n1. Er ist von keinem BELEG gedeckt. Die drei zitierten Belege (Dump, 0x8010CD20-40, 0x8010CD44-64) koennen ueber das Flag-Wort entity+0x00 nichts aussagen. Das ist genau eine unbelegte Zwischenannahme, auf der ein Schluss steht.\n2. Er ist durch die eigene Tabelle widerlegt: In DERSELBEN Zombie-DEATH-Tabelle sind die Spalten 2/5/8 in den Zeilen 9, 10 und 11 NICHT NULL — Zeile 9 @0x8010CD68 = 80107438 80108BEC 80108BEC 80108530 x6 (Spalte 2 = 0x80108BEC), Zeilen 10 @0x8010CD8C und 11 @0x8010CDB0 sind durchgaengig 0x80108530 in allen neun Spalten. Waere \"der Zombie erreicht Zone 2 nie\" der Grund, muessten diese Zellen genauso NULL sein. Die NULL-Belegung ist ZEILEN-spezifisch (Waffe), nicht GEGNER-spezifisch.\n3. Die Aussage \"Spalten 2/5/8 sind NULL\" ist als Satz ueber die Tabelle zudem zu allgemein formuliert; sie gilt nur fuer die Zeilen 1-8, 12-18, nicht fuer 9/10/11.\n\nZusaetzlich fehlt der Aussage die Bedingung, ohne die \"alle 9 Spalten aufgeloest\" nicht stimmt: die Zonen-Verfeinerung laeuft ueberhaupt nur, wenn (Angriffswort & 0x20000) gesetzt ist — lui v0,0x2 / and v0,s5,v0 / beq -> 0x80047314 @0x8004729C-A4. Ist das Bit klar, bleibt Zone = 1 und es zaehlen ausschliesslich die Spalten 1/4/7. Fuer Zeile 7 heisst das: FUN_801066FC steht NUR in Spalte 1, also nur bei Klammer 0 (s5>>28 == 0); bei Klammer 1 und 2 landet \"Schrot + Rumpf\" auf 0x80108530 (normaler Sturz). Das ist fuer den Nutzer-Befund (\"Oberkoerper faellt nicht ab\") die eigentlich relevante Einschraenkung und fehlt im Befund.\n\nNebenbefund zur Fairness: die Teilbehauptung \"der Zombie traegt das Bit nie\" laesst sich tatsaechlich stuetzen — EMZ0.BIN enthaelt kein einziges `or` mit 0x10000000 auf ein Entity-Wort; seine vier `lui ?,0x1000` (@0x801002E8, @0x801067E4, @0x801077C0, @0x8010895C) testen alle die GLOBALE 0x800CFBD8, waehrend andere Gegner-Overlays das Bit ausdruecklich auf ihre eigene Entity setzen (EMS25.BIN: or @0x801004A0, sw v0,0(s2) @0x801004A8; EMD0G_MOD0.BIN: or @0x8010133C, sw v0,0(a1) @0x80101348). Auch in PSX.EXE gibt es keinen Store eines Wortes mit Bit 28 nach entity+0x00 (Scan ueber alle lui(imm&0x1000)->or->sw 0(rs) in PSX.EXE + allen COMMON/BIN-Overlays). Diese Belege standen aber NICHT im Befund, und selbst mit ihnen bleibt der Kausalsatz falsch, weil Punkt 2 ihn unabhaengig kippt. OFFEN bleibt, ob entity+0x00 irgendwo aus einem Datenwort (lw Tabelle -> sw 0(entity)) initialisiert wird; dort endet meine Spur.",
+            "korrigiert": "Zeile 7 der RE2-Zombie-DEATH-Tabelle steht @0x8010CD20 = [0]=0x80107438 [1]=0x801066FC [2]=NULL [3]=0x80107438 [4]=0x80108530 [5]=NULL [6]=0x80107438 [7]=0x80108530 [8]=NULL; Zeile 8 @0x8010CD44 = [0]=0x80107438 [1]=0x80108BEC [2]=NULL [3]=0x80107438 [4]=0x80109610 [5]=NULL [6]=0x80107438 [7]=0x80108530 [8]=NULL (roh aus EMZ0.BIN, Datei-Offset = addr-0x80100000). Der Port ist zellengleich (enemy_ai_re2_zombie.c:6712/6713).\n\nDie Tabelle ist die DEATH-Tabelle: Basis 0x8010CC24 wird @0x801084EC geladen, Schrittweite 9 Worte @0x801084F0-F8, Zeile = entity+0x5 @0x801084E4, Spalte = entity+0x1D2 @0x801084FC; erreicht wird sie ueber die Wurzeltabelle @0x8010C830 Eintrag[3] (Index entity+0x4 @0x801004CC-E0), und +0x4=3 setzt die EXE bei HP<0 @0x8004727C-90. HURT laeuft ueber Eintrag[2]=0x80104F40 mit Tabelle 0x8010C940 @0x801053E8.\n\nSpalte = 3*Klammer + Zone ist korrekt: Klammer = Angriffswort>>28 @0x80047114, Summe @0x80047320/28, Store @0x80047330; die Zeile ist das niedrige Byte desselben Angriffsworts @0x80047324. Zone 1 (Rumpf) ist Default @0x80047294-98, Zone 0 (tief) @0x800472D4, Zone 2 (Kopf) @0x8004730C.\n\nENTSCHEIDEND UND IM URSPRUNGSBEFUND FALSCH: Die NULL-Zellen in den Spalten 2/5/8 sind KEINE Folge eines fehlenden Kopf-Bits am Zombie. Dieselbe Tabelle hat in den Zeilen 9 (@0x8010CD68), 10 (@0x8010CD8C) und 11 (@0x8010CDB0) an genau diesen Spalten Nicht-NULL-Eintraege (0x80108BEC bzw. 0x80108530). Die NULL-Belegung ist zeilen-(waffen-)spezifisch, nicht gegnerspezifisch.\n\nFuer die Praxis von Zeile 7/8 wichtiger als die NULL-Spalten: die Zonen-Verfeinerung laeuft ueberhaupt nur, wenn (Angriffswort & 0x20000) gesetzt ist @0x8004729C-A4; sonst bleibt Zone = 1, und es zaehlen ausschliesslich die Spalten 1/4/7. FUN_801066FC (Zeile 7) steht nur in Spalte 1 und ist damit nur bei Klammer 0 erreichbar - bei Klammer 1 und 2 landet \"Schrot + Rumpf\" auf 0x80108530, dem normalen Sturz.\n\nZusatz (im Befund nicht belegt, von mir nachgetragen): das Kopf-Gate haengt an entity+0x00 & 0x10000000 @0x800472D8-E4; EMZ0.BIN setzt dieses Bit nirgends (keine einzige or-Verknuepfung mit 0x10000000 auf ein Entity-Wort; die vier lui ?,0x1000 @0x801002E8/0x801067E4/0x801077C0/0x8010895C testen alle die Globale 0x800CFBD8), waehrend EMS25.BIN @0x801004A0/A8 und EMD0G_MOD0.BIN @0x8010133C/48 es ausdruecklich setzen. OFFEN bleibt, ob entity+0x00 irgendwo aus einem Datenwort initialisiert wird - dort endet die Spur."
+          }
+        ]
+      }
+    ]
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Abgleich"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "re:burst",
+      "phaseIndex": 1,
+      "phaseTitle": "Abgleich",
+      "agentId": "acc34c644cd4f32c6",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789325165409,
+      "queuedAt": 1789325165395,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "FUN_80109610 wirft NICHTS ab - und der Port bildet das korr…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789326138535,
+      "tokens": 203357,
+      "toolCalls": 53,
+      "durationMs": 973125,
+      "resultPreview": "{\"befunde\":[{\"titel\":\"Funktionsgrenze und Phasenstruktur von FUN_80109610\",\"aussage\":\"0x80109610..0x801099E0 (72-Byte-Rahmen, `addiu sp,sp,-72` @0x80109610, `jr ra` @0x801099DC; naechster Prolog `addiu sp,sp,-56` @0x801099E4). Es gibt KEINE Phasentabelle - anders als FUN_801092C4 (Tabelle @0x8010014C) dispatcht 0x80109610 ueber drei inline-Vergleiche auf +0x6. Drei Phasen: P0 = Aufsetzen (0x801096…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "re:oberkoerper",
+      "phaseIndex": 1,
+      "phaseTitle": "Abgleich",
+      "agentId": "a6c5ec8a32205d258",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789325165409,
+      "queuedAt": 1789325165395,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Nein — RE2 wirft den Brustkorb NIE ab: Part 0 (Brust) bekom…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789326724831,
+      "tokens": 275608,
+      "toolCalls": 77,
+      "durationMs": 1557820,
+      "resultPreview": "{\"befunde\":[{\"titel\":\"Vollzensus: Part 0 (BRUST) bekommt im gesamten Zombie-Overlay NIE das Abwurf-Bit 0x40\",\"aussage\":\"Ich habe jeden `sw` im Overlay datenfluss-verfolgt, dessen Basisregister aus `lw rX,408(entity)` (= +0x198, das Part-Array, Stride 172) stammt und der das Flagwort am Record-Anfang trifft. VOLLSTAENDIGE Liste der Stores, die Bit 0x40 (= eigene Matrix, Eltern-Verkettung uebersprun…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "re:zeile7",
+      "phaseIndex": 1,
+      "phaseTitle": "Abgleich",
+      "agentId": "ab6aee3ac42b1ef33",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789325165410,
+      "queuedAt": 1789325165395,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Der Schrot-Tod des RE2-Zombies zerlegt auch im ORIGINAL nic…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789326942864,
+      "tokens": 290481,
+      "toolCalls": 59,
+      "durationMs": 1775852,
+      "resultPreview": "{\"befunde\":[{\"titel\":\"Die Todes-Tabelle liegt @0x8010CC24, 19 Zeilen x 9 Spalten, Stride 36 - selbst aus dem Dispatch abgeleitet\",\"aussage\":\"Der 2D-Dispatch der DEATH-Wurzel steht @0x801084E0-518: Zeile = +0x5 (Angriffs-Id) mit Stride 36 (`sll 3 / addu / sll 2` @0x801084F0-F8), Spalte = +0x1D2 (`lbu v1,466(a0)` @0x801084FC, `sll 2` @0x80108504), Basis `addiu a2,a2,-13276` @0x801084EC = 0x8010CC24,…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "verify:burst",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "af554c5eb8deadca0",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326138553,
+      "queuedAt": 1789326138541,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Alle zwoelf zitierten Anker stehen woertlich im Binary (EMZ…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789326461050,
+      "tokens": 93247,
+      "toolCalls": 24,
+      "durationMs": 322496,
+      "resultPreview": "{\"haelt_stand\":true,\"begruendung\":\"Alle zwoelf zitierten Anker stehen woertlich im Binary (EMZ0.BIN, Datei-Off = addr - 0x80100000), roh auf Wort-Ebene nachgeprueft: 0x80109610 = 27bdffb8 (addiu sp,sp,-72); 0x80109650 = 92430006 (lbu v1,6(s2)); 0x80109654 = 24020001; 0x80109658 = 1062008e (beq v1,v0 -> 0x80109894); 0x80109660 = 28620002 (slti v0,v1,2); 0x80109664 = 10400005 (beq v0,zero -> 0x80109…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:burst",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a6c58e0713fbd3d89",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326138554,
+      "queuedAt": 1789326138541,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Der LITERALE Kern stimmt, die AUSSAGE nicht. Ich habe den S…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789326704516,
+      "tokens": 116489,
+      "toolCalls": 23,
+      "durationMs": 564517,
+      "resultPreview": "{\"haelt_stand\":false,\"begruendung\":\"Der LITERALE Kern stimmt, die AUSSAGE nicht. Ich habe den Store-Scan maschinell nachgefahren (alle Opcodes 0x28/0x29/0x2A/0x2B/0x2E/0x38/0x39/0x3A): im Bereich 0x80109610..0x801099E0 liegen **38** Stores, nicht 39, und jeder hat tatsaechlich `sp` oder `s2` als Basis. Soweit traegt der Beleg. Vier Defekte kippen ihn trotzdem:\\n\\n(1) ZAEHLUNG: \\\"39\\\" ist falsch, e…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "verify:oberkoerper",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a51ae56fca7a072fc",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326724836,
+      "queuedAt": 1789326724835,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "KERNAUSSAGE BESTAETIGT - aber NICHT durch die im Befund gen…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789327851482,
+      "tokens": 196167,
+      "toolCalls": 55,
+      "durationMs": 1126645,
+      "resultPreview": "{\"haelt_stand\":true,\"begruendung\":\"KERNAUSSAGE BESTAETIGT - aber NICHT durch die im Befund genannte Methode; ich musste zwei Loecher selbst schliessen.\\n\\n1) GEGENPROBE VON DER WERTSEITE (staerker als die Store-Bilanz des Befunds): Ich habe alle 170 Instruktionen in EMZ0.BIN enumeriert, die einen Wert mit Bit 0x40 erzeugen (ori-imm bzw. addiu rt,zero,imm mit &0x40), und jede zu ihrem Store verfolg…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 7,
+      "label": "verify:oberkoerper",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a28b1b73cd392ea49",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326724837,
+      "queuedAt": 1789326724835,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Der Befund haelt in jedem belastbaren Punkt — ich habe jede…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789327090993,
+      "tokens": 109173,
+      "toolCalls": 24,
+      "durationMs": 366155,
+      "resultPreview": "{\"haelt_stand\":true,\"begruendung\":\"Der Befund haelt in jedem belastbaren Punkt — ich habe jede Zahl selbst aus den Binaries geholt, nicht aus dem Port uebernommen.\\n\\nA) RECORD-ANKER (unabhaengig, RE2-EXE): TOC @0x8009adf4 (Datei-Offset 0x8B5F4). Das Wortpaar 6/7 @0x8009AE0C/0x8009AE10 lautet 0x00000055 / 0x00023DCC -> kind 0x10, Record 3 (EMD) liegt bei EMS-Datei-Offset 0x55*0x800 = 0x2A800, Groe…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 8,
+      "label": "verify:zeile7",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a25256984bf405600",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326942869,
+      "queuedAt": 1789326942868,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Der Befund haelt jeder Gegenprobe stand. Ich habe die zitie…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789327270730,
+      "tokens": 98267,
+      "toolCalls": 21,
+      "durationMs": 327859,
+      "resultPreview": "{\"haelt_stand\":true,\"begruendung\":\"Der Befund haelt jeder Gegenprobe stand. Ich habe die zitierten Adressen ROH aus `info/re2leon/COMMON/BIN/EMZ0.BIN` (Datei-Offset = addr - 0x80100000) gelesen, nicht nur den Disassembler geglaubt.\\n\\n1) DIE INSTRUKTIONEN STEHEN DORT, BYTE FUER BYTE (Rohwoerter, little-endian):\\n   0x801084E4 = 0x90830005  lbu v1,0x005(a0)      -> Zeile = +0x5\\n   0x801084E8 = 0x3…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 9,
+      "label": "verify:zeile7",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a609967df0aa5e13c",
+      "model": "claude-opus-5[1m]",
+      "state": "done",
+      "startedAt": 1789326942870,
+      "queuedAt": 1789326942868,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Der Zahlenkern der Aussage ist byte-exakt richtig, der ange…",
+      "promptPreview": "## Projekt (reAi_v2, byte-true RE1.5-Port), Arbeitsverzeichnis c:/workspace/git/reAi_v2\n\n⛔ REGELN (CLAUDE.md, verbindlich):\n- JEDE verhaltensrelevante Aussage braucht eine Disassembly-Adresse (@0x...) oder einen\n  Datei-Byte-Offset. Ohne Beleg kommt sie nicht in den Bericht - und wird NICHT als\n  \"vermutlich/plausibel/interim\" verkauft.\n- NIEMALS RATEN, NIEMALS AUFGEBEN. Sackgasse -> Weg wechseln …",
+      "lastProgressAt": 1789327610448,
+      "tokens": 124605,
+      "toolCalls": 36,
+      "durationMs": 667577,
+      "resultPreview": "{\"haelt_stand\":false,\"begruendung\":\"Der Zahlenkern der Aussage ist byte-exakt richtig, der angehaengte Kausalsatz ist es nicht — und er ist von keinem der drei BELEGE gedeckt.\\n\\nVERIFIZIERT (roh aus info/re2leon/COMMON/BIN/EMZ0.BIN, Datei-Offset = addr - 0x80100000):\\n- 0x8010CD20: 80107438 801066FC 00000000 | 80107438 80108530 00000000 | 80107438 80108530 00000000  -> exakt die behauptete Zeile …"
+    }
+  ],
+  "totalTokens": 1507394,
+  "totalToolCalls": 372
+}
