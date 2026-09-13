@@ -138,6 +138,33 @@ typedef struct {
      * See [[bugfix_BC_message_blocking_2026_05_28]]. */
     uint16_t message_wait;
 
+    /* DER SATZ DAVOR DARF AUSREDEN - PORT-ERGAENZUNG, KEIN ORIGINAL-WERT.
+     * Nutzer 2026-09-13, ROOM1170-Intro: "bricht ein voiceover zu frueh ab
+     * 'They almost Caught...' dort kommt das 'me' nicht mehr durch, da dann
+     * schon der naechste Dialog kommt."
+     *
+     * GEMESSEN, warum das passiert: das Skript gibt jeder Zeile eine feste
+     * Anzahl Bilder, die Vertonung des Projekts ist aber laenger als das
+     * Original-XA. ROOM1170 sub02, Nachricht 3 ("They almost caught me",
+     * Skript-Offset +0x00BE) hat Sleep 25+25+51 = 101 Bilder; die Aufnahme
+     * synchro/STAGE1/room1170/main03.wav ist 373376 B @48 kHz = 3,89 s =
+     * 117 Bilder bei 30 Hz. 16 Bilder zu wenig - genau das fehlende "me".
+     * Bei Nachricht 6 (main06, 102 Bilder gegen Sleep 100) fehlen 2.
+     * Die anderen sechs Zeilen passen (main00 91/101, main02 76/101,
+     * main04 87/100, main07 56/100).
+     *
+     * Das naechste Message_on ruft re15_voice_play -> re15_xa_read_s, und das
+     * setzt pos=0 (audio_pc.c) - der laufende Satz bricht also mitten im Wort ab.
+     * Deshalb wartet op_message_on, BEVOR es die naechste Zeile oeffnet, bis der
+     * vorige Satz zu Ende ist. Dieser Zaehler deckelt das Warten.
+     *
+     * KEINE BYTE-TRUE-FRAGE (wie schon bei scd_queue_voice vermerkt): RE1.5 hat
+     * gar keine englische Sprachausgabe, synchro/ ist eigene Produktion. Die
+     * Sleep-Werte im Skript bleiben unangetastet; gewartet wird nur, wenn eine
+     * Aufnahme laenger ist als das Original ihr Zeit gibt - wo sie hineinpasst
+     * (sechs von acht Zeilen), aendert sich NICHTS am Timing. */
+    uint8_t  voice_wait;
+
     /* [#9] Switch (0x13) no longer snapshots a value into the thread: the
      * byte-true handler (LAB_8003fa5c) scans the whole Case/Default table inline
      * and jumps to the matching body, comparing work_vars[var_index] on the spot.

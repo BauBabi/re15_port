@@ -2969,6 +2969,11 @@ void re15_audio_seq_ctl(int slot, int op)
 
 void re15_audio_tick(void)
 {
+    /* Der SCD-VM fragt hierueber, ob eine Sprachaufnahme noch laeuft, bevor er die
+     * naechste Dialogzeile oeffnet (scd_vm.c op_message_on / scd_thread_t.voice_wait).
+     * s_xa ist ausschliesslich der Stimm-Kanal: aktiviert wird er nur von
+     * re15_xa_read_s, und das ruft allein re15_voice_play. */
+    { extern int g_re15_voice_laeuft; g_re15_voice_laeuft = s_xa.active ? 1 : 0; }
     if (!g_audio.initialized) return;
 
     /* RE15_AUDIO_CAP_SYNC: ein Spielframe = RE15_AUDIO_RATE/30 Stereo-Frames, gerendert durch

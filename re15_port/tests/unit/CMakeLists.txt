@@ -3523,3 +3523,10 @@ target_compile_definitions(probe_spinne_elevation PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME probe_spinne_elevation COMMAND probe_spinne_elevation)
 set_tests_properties(probe_spinne_elevation PROPERTIES TIMEOUT 120)
+
+# --- Der vorige Satz darf ausreden (Nutzer 2026-09-13, ROOM1170 Nachricht 3) ---
+add_executable(test_voice_ausreden test_voice_ausreden.c)
+target_link_libraries(test_voice_ausreden PRIVATE re15_engine re15_test_support)
+target_include_directories(test_voice_ausreden PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_voice_ausreden COMMAND test_voice_ausreden)
+set_tests_properties(unit_voice_ausreden PROPERTIES TIMEOUT 30)

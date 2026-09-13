@@ -1451,6 +1451,13 @@ extern unsigned g_current_room_id;
  *     synchro/STAGE<n>/room<RAUM-ID 4 Hex>/main<MESSAGE-ID 2 Dezimal>.wav
  * z.B. ROOM1150, Message 7  ->  synchro/STAGE1/room1150/main07.wav
  * Datei da = sie spielt, an genau der Message. Nichts einzutragen. */
+/* Laeuft gerade eine Sprachaufnahme? Die Plattform stampt das je Bild (PC:
+ * audio_pc.c re15_audio_tick aus s_xa.active, dem Kanal, den re15_voice_play
+ * fuellt). Die Engine haelt die Variable selbst, damit Tests und das
+ * PSX-Target ohne Sprachpfad linken - dort bleibt sie 0 und das Gate in
+ * op_message_on ist wirkungslos. Begruendung s. scd_thread_t.voice_wait. */
+int g_re15_voice_laeuft = 0;
+
 static void scd_queue_voice(uint8_t msg_id)
 {
     scd_audio_event_t vev;
@@ -1483,6 +1490,21 @@ static int op_message_on(scd_thread_t *t)
 {
     extern uint8_t g_aot_action_pressed;
     uint8_t arg2 = t->pc[2];
+
+    /* DEN VORIGEN SATZ AUSREDEN LASSEN (Nutzer 2026-09-13, ROOM1170 Nachricht 3:
+     * "They almost caught me" - das "me" fehlte). Herleitung, Messwerte und die
+     * Begruendung, warum das KEINE byte-true-Frage ist: scd_thread_t.voice_wait.
+     * Das Gate greift nur beim ERSTEN Betreten einer Zeile - die parkenden Zweige
+     * unten (Auswahl-Dialog, Schreibmaschinen-FSM) betreten diese Funktion jedes
+     * Bild neu und duerfen hier nicht erneut haengen bleiben. */
+    if (g_scd.message_query == 0 && !g_scd.message_fsm_active) {
+        extern int g_re15_voice_laeuft;
+        /* Deckel: die laengste Aufnahme des Projekts ist 117 Bilder, der kuerzeste
+         * Abstand im Skript 100 - noetig sind also <20. 90 Bilder (3 s) lassen viel
+         * Luft und verhindern trotzdem, dass ein haengender Kanal das Skript anhaelt. */
+        if (g_re15_voice_laeuft && t->voice_wait < 90u) { t->voice_wait++; return 2; }
+        t->voice_wait = 0;
+    }
 
     /* GLOBALER TEXT-FREEZE — pc[2..3] ist NICHT die "Farbe" (alte Fehl-Etikettierung,
      * korrigiert 2026-08-17), sondern die PAUSE-MASKE fuer DAT_800aca40.  Byte-true
