@@ -372,6 +372,17 @@ typedef struct {
     int32_t  re2z_low_x;        /* +0x130 Weltlage der Unterhaelfte (Ankermatrix-Translation) */
     int32_t  re2z_low_z;        /* +0x138                                                  */
     uint8_t  re2z_low_frozen;   /* part[1] hat 0x40 bekommen (@0x8010BA9C) - ab hier steht sie */
+    int16_t  re2z_low_kf;       /* ⛔ DIE EINGEFRORENE POSE DER UNTERHAELFTE (Nutzer 2026-09-13:
+                                 * "Die abgetrennten Beine vom Oberkoerper bewegen sich noch,
+                                 * nachdem sie abgetrennt sind. Das ist in Resident Evil 2 nicht
+                                 * so!"). Der Keyframe-Index, der im Moment des Aushaengens galt.
+                                 * Im Original posiert die abgetrennte Haelfte ueber ihren EIGENEN
+                                 * Clip-Zustand (+0x21C/D/E -> FUN_80029E10 @0x8010B904), nicht
+                                 * ueber den des Rumpfes; der Port hat dafuer keinen zweiten
+                                 * Skelett-Durchlauf und friert die Pose deshalb auf dem Stand des
+                                 * Trennmoments ein. Das ist NAEHER am Original als die bisherige
+                                 * Loesung (Beine folgten der Rumpf-Animation und zappelten mit),
+                                 * aber nicht byte-true - der Ausklang-Clip fehlt. */
     /* ---- RE2-GORE/ZERLEGER (enemy_ai_re2_zombie.c, Welle E) ---------------------------------
      * Die drei ZONEN-POOLS +0x151/+0x152/+0x153 sind KEINE Erfindung: der RE2-INIT setzt alle
      * drei auf 13 (`addiu v0,zero,13` @0x8010081C, `sb v0,337/338/339(s2)` @0x80100820/24/28,

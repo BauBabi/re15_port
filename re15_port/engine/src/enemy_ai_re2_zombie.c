@@ -5976,6 +5976,13 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
         e->re2z_rag_anchor_x  = e->x;
         e->re2z_rag_anchor_z  = e->z;
         e->re2z_rag_anchor_on = 1u;
+        {   /* Pose der Unterhaelfte einfrieren (s. re2z_low_kf): ab dem Aushaengen zeigt sie
+             * den Stand dieses Augenblicks und laeuft NICHT mit dem Rumpf weiter. */
+            re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+            e->re2z_low_kf = (int16_t)(bk && bk->ok
+                ? re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, e->anim_frame)
+                : 0);
+        }
         e->re2z_t15a   = 10;                                       /* +0x15A = 10 @0x80106D50-54 */
         e->re2z_dir16a = 2;                                        /* +0x16A = 2  @0x80106D58-5C */
         (void)re2z_rand();                                         /* Staub-FX-Wurf @0x80106D64 */

@@ -172,6 +172,12 @@ int main(int argc, char **argv)
      * abfallen - tut er aber nicht"). Gemessener Stand: 0 bis Bild 39, dann wachsend auf
      * rund 550 und konstant (= eingefroren, low_state 5). */
     int32_t trenn_max = 0;
+    /* Bewegen sich die abgetrennten Beine noch? (Nutzer 2026-09-13: "Die abgetrennten
+     * Beine vom Oberkoerper bewegen sich noch, nachdem sie abgetrennt sind. Das ist in
+     * Resident Evil 2 nicht so!") Gemessen wird die Streuung der LOKALEN Bein-Pose ab
+     * dem Aushaengen - sie muss null sein, sonst laeuft die Unterhaelfte noch mit dem
+     * Rumpf mit. */
+    int32_t bein_lok_min = 999999, bein_lok_max = -999999; int bein_n = 0;
     int y_max_clip = -1, y_max_st = -1;
     for (int f = 0; f < budget && e->hp > 25 && reaktionen < 6; f++) {
         pl->hp = 100;
@@ -220,6 +226,12 @@ int main(int argc, char **argv)
                 int32_t td  = (tdx < 0 ? -tdx : tdx) + (tdz < 0 ? -tdz : tdz);
                 if (td > trenn_max) trenn_max = td;
             }
+            if (e->re2z_rag_anchor_on) {
+                int32_t lok = b4[1] - b1[1];      /* Bein relativ zur Huefte = die POSE */
+                if (lok < bein_lok_min) bein_lok_min = lok;
+                if (lok > bein_lok_max) bein_lok_max = lok;
+                bein_n++;
+            }
             if (b4[1] > beiny_max) beiny_max = b4[1];
             if (b4[1] < beiny_min) beiny_min = b4[1];
             if (e->y > y_max) { y_max = e->y; y_max_clip = e->motion; y_max_st = e->sub_state_1; }
@@ -247,6 +259,14 @@ int main(int argc, char **argv)
            reaktionen, e->hp, e->state, e->sub_state_1);
     printf("Trennung am Becken: groesster Abstand Brust<->Huefte = %d (low_state=%d)\n",
            (int)trenn_max, (int)e->re2z_low_state);
+    printf("Bein-Pose nach dem Aushaengen: %d Bilder, Spanne %d (min %d max %d)\n",
+           bein_n, (bein_n ? bein_lok_max - bein_lok_min : 0),
+           (bein_n ? bein_lok_min : 0), (bein_n ? bein_lok_max : 0));
+    if (bein_n > 4 && bein_lok_max - bein_lok_min > 40) {
+        printf("FAIL: die abgetrennten Beine bewegen sich noch (Spanne %d) - die Pose "
+               "muss ab dem Aushaengen stehen\n", (int)(bein_lok_max - bein_lok_min));
+        return 1;
+    }
     if (trenn_max < 200) {
         printf("FAIL: die Unterhaelfte trennt sich nicht (max %d) - FUN_8010B7D4 laeuft "
                "nicht, oder der Zeichner folgt ihr nicht\n", (int)trenn_max);
