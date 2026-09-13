@@ -120,6 +120,17 @@ int main(void)
     e->x = -6000; e->z = -22000; e->y = -1200;
 
     int fress_gesehen = 0;
+    /* ⛔ WANN STARTET DIE TODES-PRAESENTATION? (Nutzer 2026-09-13, zweite Meldung:
+     * "Die Fressanimation findet immer noch nicht im YOU ARE DEAD Screen statt, sondern
+     * davor.") Im Original laeuft sie MITTEN im Fressen: RE1.5s FSM FUN_8001500c gated
+     * auf Spieler-Kommando 6 = GEFRESSEN (@0x80015014-30), RE2 setzt den Todes-Latch bei
+     * Gator-Clip-4-FRAME 13 (@0x80101104-34). Gemessen wird deshalb der ABSTAND zwischen
+     * dem Beginn des Fressens und dem Moment, in dem re15_death_presentation_active()
+     * anschlaegt - und wie viele Frames danach noch Fress-Animation laeuft.
+     * Die FSM selbst braucht ab dort fest 0x32 + 0x1b = 77 Ticks bis zum schwarzen
+     * Grund (game_step_common.c, sub0/sub1) - das ist die zweite Haelfte der Rechnung. */
+    extern int re15_death_presentation_active(void);
+    int f_fress_start = -1, f_praesentation = -1, f_ende = -1;
     for (int f = 0; f < 3000; f++) {
         if (pl->hp >= 0) {                /* Statue nur solange er lebt — danach
                                            * fuehrt die FRESS-Sequenz Leon selbst */
@@ -134,11 +145,44 @@ int main(void)
                                            e->hit_radius_min, e->y, 4u);
             e->x = nx; e->z = nz;
         }
-        if (re15_gator_fressen_hold()) fress_gesehen = 1;
+        if (re15_gator_fressen_hold()) {
+            fress_gesehen = 1;
+            if (f_fress_start < 0) f_fress_start = f;
+        }
+        if (f_praesentation < 0 && re15_death_presentation_active()) f_praesentation = f;
         /* UMVERANKERT (Runde 6, gator-vollausbau.md 7b): der authored Finisher
          * verschlingt Leon nicht mehr per no_draw - er haengt im letzten
          * Opfer-Frame sichtbar im Maul, waehrend der Gator Clip 11 kaut. */
-        if (e->motion == 11) break;       /* P3-Kau-Loop = Sequenz komplett */
+        if (e->motion == 11) { f_ende = f; break; }  /* P3-Kau-Loop = Sequenz komplett */
+    }
+
+    {   /* Die Rechnung, die der Nutzer sieht: schwarzer Grund = Praesentationsstart + 77
+         * (FSM sub0 0x32 + sub1 0x1b). Liegt er VOR dem Ende der Fress-Animation, sieht
+         * man das Fressen unter dem Bildschirm - genau das ist gefordert. */
+        int blackbg = (f_praesentation >= 0) ? f_praesentation + 77 : -1;
+        printf("Praesentation: Fressen ab F%d, Gate ab F%d, Kau-Loop ab F%d, "
+               "schwarzer Grund bei F%d\n",
+               f_fress_start, f_praesentation, f_ende, blackbg);
+        if (f_praesentation < 0) {
+            printf("FAIL: re15_death_presentation_active() schlaegt NIE an - die "
+                   "Todes-Praesentation startet gar nicht waehrend des Fressens\n");
+            return 1;
+        }
+        /* ⛔ KEIN "Gate am Phasenbeginn"-Test (korrigiert 2026-09-13): der Latch sitzt
+         * im Original NICHT am Anfang der Fress-Phase, sondern bei CLIP-4-FRAME 13
+         * (@0x80101104-34) - demselben Block, der das Opfer-Paar koppelt. Gemessen sind
+         * das 14 Frames nach dem Phasenbeginn; ein 2-Frame-Fenster haette den richtigen
+         * Stand zurueckgewiesen. Geprueft wird deshalb die Eigenschaft, um die es dem
+         * Nutzer geht: ein nennenswerter Teil der Fress-Animation muss UNTER dem
+         * Bildschirm laufen. Gemessener Stand: schwarzer Grund F102, Kau-Loop ab F146 =
+         * 44 Frames Ueberlappung. Vor dem Runde-8-Fix startete die FSM erst NACH dem
+         * Finisher - der schwarze Grund waere dann erst bei F146+77 gefallen. */
+        if (f_ende >= 0 && blackbg >= 0 && blackbg > f_ende - 30) {
+            printf("FAIL: der schwarze Grund faellt auf F%d, das Fressen endet schon F%d "
+                   "- unter dem Bildschirm laeuft fast nichts mehr (Soll: mindestens 30 "
+                   "Frames)\n", blackbg, f_ende);
+            return 1;
+        }
     }
 
     if (!fress_gesehen) { printf("FAIL: FRESSEN nie erreicht\n"); return 1; }

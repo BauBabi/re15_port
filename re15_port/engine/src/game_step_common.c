@@ -577,9 +577,34 @@ int re15_death_presentation_active(void)
     return re15_player_is_dead() || re15_gator_fress_todeslatch();
 }
 
+/* ⛔ MESS-SCHIENE (Nutzer 2026-09-13, zweite Meldung: "Die Fressanimation findet immer
+ * noch nicht im YOU ARE DEAD Screen statt, sondern davor"). Die Probe
+ * probe_gator_fress misst, dass das Gate im selben Block wie die Opfer-Kopplung
+ * anschlaegt (Latch bei Clip-4-Frame 13) und der schwarze Grund 44 Frames VOR dem Ende
+ * der Fress-Sequenz faellt - die Kette stimmt also rechnerisch. Was sie NICHT misst, ist
+ * das Bild: ab sub2 uebernimmt die TODES-KAMERA und orbitet mit Radius 3300 um den
+ * SPIELER-Slot (main.c:4800). Beim Fressen haengt Leon im Maul, die Kamera schneidet
+ * also mitten in den Gator - im Original kopiert sub0 dagegen Spieler UND GREIFER in
+ * den Snapshot (@0x800150d0-0x8001510c) und sub2 baut die Kamera aus [0x800ACBDC]
+ * (@0x800152a4-f0). Diese Zeile schreibt mit, was wann passiert, damit der naechste
+ * Spiellauf die Frage entscheidet statt einer weiteren Vermutung. */
+static void finisher_log(const char *was, int sub, int ctr)
+{
+    static FILE *f = NULL;
+    static int versucht = 0;
+    extern int re15_gator_fress_todeslatch(void);
+    if (!versucht) { versucht = 1; if (getenv("RE15_FINISHER_LOG")) f = fopen("finisher.log", "a"); }
+    if (!f) return;
+    fprintf(f, "%-10s sub=%d ctr=%3d | latch=%d isdead=%d blackbg=%d cam=%d flyin=%3d "
+               "aktiv=%d\n",
+            was, sub, ctr, re15_gator_fress_todeslatch(), re15_player_is_dead(),
+            g_death_blackbg, g_death_cam, g_death_flyin, g_gameover_active);
+    fflush(f);
+}
+
 static void re15_gameover_fsm_tick(void)
 {
-    if (!s_go_on) { re15_gameover_fsm_reset(); s_go_on = 1; }
+    if (!s_go_on) { re15_gameover_fsm_reset(); s_go_on = 1; finisher_log("FSM-START", s_go_sub, s_go_ctr); }
     if (re15_death_pool_grows() && g_death_pool < 122)
         g_death_pool++;                                   /* cmd-7 pool +0xc/frame, live cap 122
                                                            * (D5: cmd 3 haelt sie bis @0x80036814) */
@@ -597,6 +622,7 @@ static void re15_gameover_fsm_tick(void)
             if (++s_go_ctr >= 0x1b) {
                 s_go_rate = -0x2556;
                 g_death_blackbg = 1;                      /* FUN_80021634(2,0) */
+                finisher_log("BLACKBG", s_go_sub, s_go_ctr);
                 g_death_glow = 255;                       /* backdrop starts saturated... */
                 s_go_sub = 2; s_go_ctr = 0;
             }
@@ -605,6 +631,7 @@ static void re15_gameover_fsm_tick(void)
             g_death_cam = 1;
             g_death_flyin = 0;
             s_go_sub = 3; s_go_ctr = 0;
+            finisher_log("YOUDIED", s_go_sub, s_go_ctr);
             break;
         case 3:                                           /* heartbeat laps (0x13 frames each) */
             if (g_death_flyin < 50) g_death_flyin++;
