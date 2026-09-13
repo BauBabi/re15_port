@@ -1,3 +1,54 @@
+# v0.7.92 - 2026-09-13
+
+## Runde 8: Beine bleiben am Boden, Birkin bewegt sich selbst, der Alligator bruellt
+
+- **Zombies versinken nicht mehr beim Schrotschuss.** Der zweite Anlauf hat den
+  richtigen Taeter gefunden: dass der Koerper beim Sturz absinkt, ist korrekt -
+  aber im Original sinkt nur der RUMPF. Becken und beide Beine haengt das Spiel
+  im Moment des Aufschlags aus der Knochenkette aus und nagelt sie auf den
+  Boden; der Port zog die ganze Figur mit nach unten. Gemessen lag der tiefste
+  Bein-Knochen bis zu 1,4 m unter dem Boden, jetzt steht er ueber den ganzen
+  Sturz bei 21 cm darueber - wie im Original. Nebenbei startet die anschliessende
+  Kriech-Animation nicht mehr aus der Stehpose (sie zog die Figur erst 1,6 m
+  hoch, bevor sie absackte).
+- **Birkins Bewegung haengt nicht mehr am Spieler.** Der Port hatte jeden
+  Schritt des Bosses als Abstand zu Leon verbucht statt als eigene Bewegung.
+  An den Bewegungsgrenzen kippte das um: beim Heranziehen stand Birkin
+  buchstaeblich IN Leon drin (gemessen 243 Bilder am Stueck), beim Rueckzug
+  sprang er auf einen festen Abstand. Er bewegt sich jetzt auf seiner eigenen
+  Achse, wie im Original.
+- **Die vier Tentakel behielten ihre Plaetze.** Beim Raumwechsel oder einem
+  zweiten Kampf gaben sie ihre Aktor-Plaetze nie frei - die Arm-Steuerung
+  schrieb danach auf Gegner, die laengst jemand anderes waren. Ausserdem haengen
+  die Arme jetzt an der richtigen Hoehe (vorher steckten sie zwei bis vier Meter
+  unter dem Boden).
+- **Der Alligator hat seine Schreie.** Ein Vollzensus des Original-Codes ergab
+  zehn Tonquellen, der Port spielte drei. Es fehlte vor allem der grosse
+  Schmerzensbrueller - das Original hat zwei getrennte Treffer-Reaktionen mit
+  je eigenem Laut, der Port spielte immer den kleinen. Und Leon schreit jetzt
+  auch, wenn der Alligator ihn packt.
+- **Die Schadensanimation ist staerker.** Drei Dinge aus dem Original
+  uebernommen: jeder Treffer wirft die laufende Bewegung zwei Bilder zurueck,
+  die Zuck-Animation schneidet hart hinein statt weich zu blenden, und sie
+  traegt ihre Rueckwaerts-Bewegung - der Alligator weicht beim Treffer zurueck,
+  statt auf der Stelle zu zucken.
+- **Gefressen wird jetzt WAEHREND des YOU-DIED-Bildschirms.** Im Original ist
+  die Fress-Sequenz kein Vorspiel zum Game-Over, sondern laeuft mittendrin -
+  beide Vorlagen starten die Todes-Praesentation in dem Moment, in dem das Maul
+  zuschnappt. Der Port machte es umgekehrt: erst fressen, dann Bildschirm.
+- **Karte ROOM1000**: Der Raum ist gar nicht die Lobby, sondern drei getrennte
+  Bereiche - ein Ostraum und zwei Toiletten. Die Karte pinnte ihn auf die
+  Hallenkachel des Nachbarn; der Marker landete mitten in der Halle. Der Raum
+  ist auf dem Blatt ueberhaupt nicht gezeichnet und bekommt deshalb drei eigene
+  Kaesten, genau an die Flurwand angesetzt.
+- **Karte ROOM1050**: Der Marker stand acht Pixel im Raum, obwohl der Spieler an
+  der Wand klebte - die Kartenzeile war in der Tiefe daneben. Vier unabhaengige
+  Messpunkte legen die neue fest; jetzt steht der Marker an der gemalten Wand.
+- **30 neue Vordergrund-Masken.** ROOM1000, ROOM1010 und ROOM1050 bekommen
+  erstmals welche, ROOM2090 zwei weitere Ansichten - Waschbecken, Kabinenwaende,
+  Getraenkeautomat, Leiterschacht und Betonplattform verdecken Leon jetzt
+  richtig.
+
 # v0.7.91 - 2026-09-13
 
 ## Birkin bekommt seine Tentakel - und die Fleischmasse lebt
