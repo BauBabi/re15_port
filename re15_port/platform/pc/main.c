@@ -8391,6 +8391,25 @@ re_title:;
                             }
                         }
                     }
+                    /* ---- RAGDOLL-BODENANKER (Runde 8, versinken2.md §3) ------------------
+                     * Waehrend des Ragdolls haelt das Original Becken+Beine am BODEN, statt
+                     * sie am sinkenden +0x3C mitzuziehen (s. re15_re2z_ragdoll_part_anchor).
+                     * Laeuft VOR dem Gore-Haken: ein freifliegendes Teil hat seine eigene
+                     * Matrix und darf danach nicht mehr verschoben werden. */
+                    if (npc->re2z_rag_anchor_on) {
+                        const re15_skel_pose_t *p0 = &npc_poses[0];
+                        int32_t p0w[3];
+                        int rr;
+                        for (rr = 0; rr < 3; rr++) {
+                            int64_t s0 = 0;
+                            int kk;
+                            for (kk = 0; kk < 3; kk++)
+                                s0 += (int64_t)nyaw[rr*3+kk] * (int64_t)p0->trans[kk];
+                            p0w[rr] = (int32_t)(s0 >> 12);
+                        }
+                        p0w[0] += npc->x; p0w[1] += npc->y; p0w[2] += npc->z;
+                        re15_re2z_ragdoll_part_anchor(npc, nbi, p0w, nbone_world_trans);
+                    }
                     /* ---- RE2-GORE: DAS FREIFLIEGENDE TEIL --------------------------------
                      * Traegt der Part Bit 0x40, ueberspringt der Original-Zeichner die
                      * Eltern-Verkettung und nimmt die Matrix aus dem Part-Record selbst

@@ -2002,6 +2002,16 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
     g_anim_pose_actor = save;
     if (rv != 0) return;
     re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);
+    /* RAGDOLL-BODENANKER (Runde 8, versinken2.md §3): waehrend des Ragdolls haengen
+     * Becken+Beine (parts 1..7) im Original an der eingefrorenen Ankermatrix statt an
+     * der sinkenden Entity (@0x80106D00 / @0x80106E64-74). Der Renderer wendet das in
+     * main.c an; hier steht derselbe Haken, damit Messschienen, Kollision und
+     * Effekt-Anker nicht eine ANDERE Welt sehen als das Bild. */
+    if (e->re2z_rag_anchor_on) {
+        int32_t p0w[3];
+        re15_skel_bone_to_world(poses[0].trans, e->rot_y, e->x, e->y, e->z, p0w);
+        re15_re2z_ragdoll_part_anchor(e, bone, p0w, out);
+    }
 }
 
 /* The gore/death anchor keeps its own per-type bone table (LAB_8011f784[type]). */

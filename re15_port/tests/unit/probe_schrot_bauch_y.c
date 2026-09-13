@@ -160,6 +160,11 @@ int main(int argc, char **argv)
     int hp_last = e->hp;
     int logging = 0, still = 0, reaktionen = 0;
     int32_t y_min = 0, y_max = 0, b0y_max = -99999, b0y_min = 99999;
+    /* BEIN-Welt-Y (Abnahme versinken2.md §7): Bone 4 liegt in der Beinkette, die im
+     * Original ueber den ganzen Ragdoll AM BODEN steht (parts 1..7 haengen an der
+     * eingefrorenen Ankermatrix, @0x80106D00/@0x80106E64-74). Erwartet -180..-260;
+     * gemessen war vor dem Anker +439..+1403. */
+    int32_t beiny_max = -99999, beiny_min = 99999;
     int y_max_clip = -1, y_max_st = -1;
     for (int f = 0; f < budget && e->hp > 25 && reaktionen < 6; f++) {
         pl->hp = 100;
@@ -174,6 +179,7 @@ int main(int argc, char **argv)
         if (e->hp < hp_last && !logging) {
             logging = 1; still = 0; reaktionen++;
             y_min = y_max = e->y; b0y_max = -99999; b0y_min = 99999;
+            beiny_max = -99999; beiny_min = 99999;
             printf("-- Reaktion %d: Handler=%d hp %d->%d --\n",
                    reaktionen, re15_re2z_last_hit_handler(), hp_last, e->hp);
         }
@@ -188,12 +194,17 @@ int main(int argc, char **argv)
                    (int)e->y, bb[1], e->re2z_f10e);
         }
         if (logging) {
-            int32_t b0[3], b1[3];
+            int32_t b0[3], b1[3], b4[3];
             re15_enemy_bone_world_pos(e, 0, b0);
             re15_enemy_bone_world_pos(e, 1, b1);
-            printf("F%04d st=%d/%d/%d clip=%2d af=%3u ey=%5d b0y=%5d b1y=%5d f10e=%04x\n",
+            re15_enemy_bone_world_pos(e, 4, b4);
+            printf("F%04d st=%d/%d/%d clip=%2d af=%3u ey=%5d b0y=%5d b1y=%5d beiny=%5d "
+                   "anker=%d f10e=%04x\n",
                    f, e->state, e->sub_state_1, e->sub_state_2, (int)e->motion,
-                   (unsigned)e->anim_frame, (int)e->y, b0[1], b1[1], e->re2z_f10e);
+                   (unsigned)e->anim_frame, (int)e->y, b0[1], b1[1], b4[1],
+                   (int)e->re2z_rag_anchor_on, e->re2z_f10e);
+            if (b4[1] > beiny_max) beiny_max = b4[1];
+            if (b4[1] < beiny_min) beiny_min = b4[1];
             if (e->y > y_max) { y_max = e->y; y_max_clip = e->motion; y_max_st = e->sub_state_1; }
             if (e->y < y_min) y_min = e->y;
             if (b0[1] > b0y_max) b0y_max = b0[1];
@@ -203,9 +214,12 @@ int main(int argc, char **argv)
             if (still >= 20) {
                 logging = 0;
                 printf(">> Reaktion %d ENDE: e.y[min..max]=[%d..%d] (max bei clip %d sub %d), "
-                       "b0y[min..max]=[%d..%d]  %s\n",
+                       "b0y[min..max]=[%d..%d] beiny[min..max]=[%d..%d]  %s\n",
                        reaktionen, y_min, y_max, y_max_clip, y_max_st, b0y_min, b0y_max,
-                       (y_max > 100 || b0y_max > 100) ? "*** UNTER BODEN ***" : "ok");
+                       beiny_min, beiny_max,
+                       (beiny_max > 100) ? "*** BEINE UNTER BODEN ***"
+                       : (y_max > 100 || b0y_max > 100) ? "Rumpf faellt (ok), Beine stehen"
+                       : "ok");
             }
         }
     }

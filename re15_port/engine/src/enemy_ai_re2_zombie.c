@@ -5891,6 +5891,22 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
     default:                                                       /* Phase 2 @0x80106A8C */
         e->re2z_flags21a &= (uint16_t)~4u;                         /* andi 0xfffb @0x80106A98 */
         e->re2z_self1d3  &= 0x7fu;                                 /* andi 0x7f    @0x80106A9C */
+        /* Der Bodenanker endet mit dem Ragdoll. ⛔ EHRLICH OFFEN: welche Stelle im
+         * Original den Zeiger part1+0x74 zurueckstellt, ist nicht gefunden;
+         * wahrscheinlichster Kandidat ist der Modell-Variantenwechsel hier
+         * (`word0 &= 0xF3FFFFFF`, `| 0x04000000` @0x80106B38-50), der den Part-Block
+         * ueber FUN_80028368 neu aufbaut und child[+0x74] dabei neu setzt. */
+        e->re2z_rag_anchor_on = 0u;
+        /* CROSSFADE-SAAT fuer den Kriech-Clip (versinken2.md §4): das Original setzt die
+         * Blend-QUELLE auf eine LIEGENDE Pose - `sh -200,58(s3)` @0x80106AAC (part0
+         * "prev root py") und `sh 0/0/1024,104..108(s3)` @0x80106AB4-BC (part0-Winkel
+         * = 90 Grad um Z). Ohne das blendet der Port aus der zuletzt GERENDERTEN
+         * Stehpose (prev_root[1] etwa -1788) mit 94 %, und die ersten ~15 Bilder des
+         * Kriech-Clips ziehen die Wurzel 1,6 m hoch, bevor sie absackt. */
+        e->prev_root[1]      = -200;                               /* @0x80106AAC */
+        e->prev_angles[0][0] = 0;                                  /* @0x80106AB4 */
+        e->prev_angles[0][1] = 0;                                  /* @0x80106AB8 */
+        e->prev_angles[0][2] = 1024;                               /* @0x80106ABC */
         e->y              = (int32_t)e->re2z_gy232;                /* +0x3C = +0x232 @0x80106AC8 */
         e->re2z_flags21a |= 1u;                                    /* ori 1 @0x80106AD0-D4 */
         if (death) e->hp = 10;                                     /* `lbu v1,4 / bne 3 / sh 10,342`
@@ -5944,6 +5960,14 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
     re2z_lean_pair(e, e->re2_lean[0], e->re2_lean[1], e->re2_lean[2]);
 
     if (frame == 20 && e->sub_state_2 == 1) {                      /* @0x80106CD8-F0 */
+        /* BODENANKER fuer Becken+Beine (versinken2.md §3): das Original haengt hier
+         * Part 1 aus der Kette (`sw v0,288(v1)` = part1+0x74 := entity+0x11C
+         * @0x80106D00) und friert x/z der Ankermatrix auf die Entity-Position ein
+         * (@0x80106D44-68). Der Port merkt sich dieselben zwei Werte; die Y bildet
+         * der Zeichner je Tick aus +0x232 + Wurzel-Translation (@0x80106E64-74). */
+        e->re2z_rag_anchor_x  = e->x;
+        e->re2z_rag_anchor_z  = e->z;
+        e->re2z_rag_anchor_on = 1u;
         e->re2z_t15a   = 10;                                       /* +0x15A = 10 @0x80106D50-54 */
         e->re2z_dir16a = 2;                                        /* +0x16A = 2  @0x80106D58-5C */
         (void)re2z_rand();                                         /* Staub-FX-Wurf @0x80106D64 */
@@ -8100,4 +8124,24 @@ void re15_re2z_hit_filter_apply(int slot)
         e->hit_react &= (uint8_t)~2u;                              /* RE2 kennt +0x93 nicht ->
                                                                     * kein RE1.5-Wurzel-Gore */
     }
+}
+
+
+/* ---- RAGDOLL-BODENANKER (versinken2.md §3, Deklaration in re15_actor.h) --------------------
+ * parts 1..7 = Becken + beide Beinketten (das Original markiert genau diese mit |= 0x9000
+ * @0x80106DC0-E0C). Bone-Index == RE2-Part-Index: die Hybrid-Hierarchie IST die RE2-Hierarchie;
+ * NICHT ueber re2z_bone_to_part gehen, das ist die Mesh-Permutation des Gore-Blocks. */
+void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
+                                   const int32_t part0_welt[3], int32_t trans[3])
+{
+    int k;
+    int32_t anker[3];
+    if (!e || !e->re2z_rag_anchor_on) return;
+    if (bone < 1 || bone > 7) return;
+    anker[0] = e->re2z_rag_anchor_x;                /* +0x130 eingefroren @0x80106D44-60 */
+    anker[1] = (int32_t)e->re2z_gy232 + (part0_welt[1] - e->y);
+                                                    /* +0x134 = part0.t[1] + +0x232
+                                                     * @0x80106E64-74 - OHNE das sinkende +0x3C */
+    anker[2] = e->re2z_rag_anchor_z;                /* +0x138 eingefroren @0x80106D48-68 */
+    for (k = 0; k < 3; k++) trans[k] += anker[k] - part0_welt[k];
 }

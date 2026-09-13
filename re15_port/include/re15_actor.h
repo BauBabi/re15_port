@@ -339,6 +339,21 @@ typedef struct {
                                  * (`lhu v0,450; sh v0,562` @0x80106994-A0)                     */
     uint8_t  re2z_rag231;       /* +0x231 Ragdoll-Untermaschinen-Wahl (@0x80106738/@0x801067B0/
                                  * @0x8010681C) — 1 -> FUN_80109610, 2 -> FUN_801092C4, beide OPEN */
+    /* ---- RAGDOLL-BODENANKER von Becken+Beinen (Runde 8, versinken2.md §3) ---------------
+     * Beim Aufschlagbild haengt das Original Part 1 (Becken) AUS der Kette: es setzt den
+     * Eltern-Matrix-Zeiger `part1+0x74 := entity+0x11C` (`sw v0,288(v1)` @0x80106D00) und
+     * friert x/z dieser Matrix auf die Entity-Position ein (`+0x130 = entity.x`,
+     * `+0x138 = entity.z` @0x80106D44-68). Ihre Y wird danach pro Tick auf
+     * `part0.t[1] + +0x232` gesetzt (@0x80106E64-74) - also auf den BODEN, OHNE das
+     * sinkende +0x3C. Becken und beide Beine (parts 1..7) bleiben damit im Original waehrend
+     * des ganzen Ragdolls bei Welt-Y -210..-214 stehen; nur der Rumpf faellt.
+     * Ohne diesen Anker zieht der Port die ganze Kette am sinkenden e->y mit - gemessen
+     * tiefster Bein-Bone +439/+593/+817/+1403 bei Bild 32/34/36/43 (Nutzer-Marke F1975,
+     * "versinkt komisch im Boden"). Ein Y-Feld braucht es nicht: die Anker-Y ist
+     * re2z_gy232 + Wurzel-Translation und wird je Tick neu gebildet. */
+    int32_t  re2z_rag_anchor_x;
+    int32_t  re2z_rag_anchor_z;
+    uint8_t  re2z_rag_anchor_on;
     /* ---- RE2-GORE/ZERLEGER (enemy_ai_re2_zombie.c, Welle E) ---------------------------------
      * Die drei ZONEN-POOLS +0x151/+0x152/+0x153 sind KEINE Erfindung: der RE2-INIT setzt alle
      * drei auf 13 (`addiu v0,zero,13` @0x8010081C, `sb v0,337/338/339(s2)` @0x80100820/24/28,
@@ -1039,6 +1054,19 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
  * Im RE1.5-Flavor liefert die Funktion IMMER 0 (dasselbe Dreifach-Gate wie _gore_active). */
 int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
                                int32_t rot[9], int32_t trans[3]);
+
+/* ---- RAGDOLL-BODENANKER (Runde 8, versinken2.md §3) -----------------------------------------
+ * Zwilling des Original-Zweigs, der Becken+Beine waehrend des Ragdolls AM BODEN haelt: dort
+ * zeigt part1+0x74 nicht mehr auf die Eltern-Matrix, sondern auf die eingefrorene Ankermatrix
+ * entity+0x11C (`sw v0,288(v1)` @0x80106D00), deren x/z beim Aufschlagbild festgehalten werden
+ * (@0x80106D44-68) und deren Y pro Tick auf `part0.t[1] + +0x232` gesetzt wird (@0x80106E64-74).
+ * Part 1 hat Bind (0,0,0), Becken und beide Beine (parts 1..7) sitzen also exakt darauf.
+ * Der Port kann den Zeiger nicht umhaengen (die Kette ist im Renderer schon aufgeloest), setzt
+ * aber dasselbe Ergebnis: fuer Bone 1..7 wird die Welt-Translation um die Differenz
+ * Anker - Part0-Welt verschoben. Der Y-Term kuerzt sich dabei auf `+0x232 - e->y` - genau die
+ * Senke, die der Port heute mitzeichnet. Ausserhalb des Ragdolls tut die Funktion nichts. */
+void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
+                                   const int32_t part0_welt[3], int32_t trans[3]);
 
 /* BURST-ZEICHNUNG (Runde 5, kopf-flug.md): ein Part mit Flag-Bit 0x08 wird im
  * Original NIE als intaktes Mesh gezeichnet - FUN_80027434.c:158-170 leitet ihn
