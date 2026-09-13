@@ -487,18 +487,37 @@ void re15_inv_map_stage_init(int stage, int room)
  * Die Toene hier sind jetzt die der Kunst. Die Wandlinie bleibt als Form-Kante erhalten,
  * aber im selben Farbton aufgehellt statt in Weiss - ein Raum ohne gemalte Kachel soll
  * wie ein Raum aussehen, nicht wie ein Kasten. */
+/* ⛔ ZWEITER ANLAUF, JETZT GEMESSEN (Nutzer 2026-09-13: "die Raumfarbe der Raeume von
+ * ROOM 1000 stimmt immer noch nicht mit der Originalfarbe der anderen Karten/Raumteile
+ * ueberein").
+ *
+ * Mein erster Wurf nahm die Zahlen (40,144,40) / (192,24,24) aus dem Kachel-Blit - das
+ * sind aber MODULATIONS-Faktoren, keine Farben. Eine gemalte Kachel ist ein TEXTUR-Sprite:
+ * der Renderer rechnet `mod5(texel5, faktor) = ((texel5*faktor)>>4)>>3`
+ * (inv_render_pc.c:822), das Ergebnis ist also viel dunkler als der Faktor. Eine
+ * FILL-Flaeche mit demselben Wert leuchtet daneben grell - genau das hat der Nutzer
+ * gesehen, zweimal.
+ *
+ * Die Werte hier sind an SEINEM Karten-Abzug gemessen (befund_10A0_F135_marke1.bmp,
+ * Haeufigkeitszaehlung ueber das ganze Bild):
+ *     besuchte Kachelflaeche   (0,64,40)    2062 Punkte
+ *     ihre hellen Linien      (48,192,48)    402 Punkte
+ *     aktuelle Kachelflaeche   (80,16,0)     882 Punkte
+ *     ihre hellen Linien     (176,80,0)      270 Punkte
+ * (Zum Vergleich: die alte Schema-Fuellung stand als (24,56,136) mit 1760 Punkten im
+ * selben Bild - das war der blaue Fremdkoerper.) */
 static void re2_ton(int rs, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 192; *g =  24; *b =  24; }
-    else if (rs == RE15_MAP_RECT_VISITED) { *r =  40; *g = 144; *b =  40; }
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r =  80; *g =  16; *b =   0; }
+    else if (rs == RE15_MAP_RECT_VISITED) { *r =   0; *g =  64; *b =  40; }
     else                                  { *r =  34; *g =  34; *b =  38; }
 }
 
-/* Die Kante der Schema-Zeichnung: derselbe Farbton, aufgehellt (s. re2_ton). */
+/* Die Kante der Schema-Zeichnung - die hellen Linien derselben Kacheln (s. re2_ton). */
 static void re2_ton_kante(int rs, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 255; *g = 104; *b = 104; }
-    else                                  { *r = 120; *g = 216; *b = 120; }
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 176; *g =  80; *b =   0; }
+    else                                  { *r =  48; *g = 192; *b =  48; }
 }
 
 /* Spielerradius fuer den Kollisions-Klemmer: 450 (DAT_80073e94[6], code-verifiziert,

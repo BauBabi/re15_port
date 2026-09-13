@@ -354,6 +354,24 @@ typedef struct {
     int32_t  re2z_rag_anchor_x;
     int32_t  re2z_rag_anchor_z;
     uint8_t  re2z_rag_anchor_on;
+    /* ---- DIE ABGETRENNTE UNTERHAELFTE (FUN_8010B7D4, Runde 9) --------------------------
+     * Der Aushang oben ist im Original nur die HAELFTE des Vorgangs: in Phase 2 setzt der
+     * Ragdoll `+0x21A |= 1` (@0x80106AD0) und schaltet damit eine eigene Zustandsmaschine
+     * scharf, die die ausgehaengte Huefte samt Beinen WEGSCHIEBT und am Ende mit
+     * `part[1] |= 0x40` (@0x8010BA9C) in der Welt einfriert. Aus Spielersicht trennt sich
+     * der Zombie damit am Becken - genau das, was der Nutzer als "der Oberkoerper faellt
+     * ab" beschreibt (2026-09-13). Dossier: analysis/befunde_runde9_2026-09-13/
+     * oberkoerper-abwurf-KURZ.md. Der Rumpf faellt in RE2 NIE ab: Part 0 bekommt im ganzen
+     * Overlay nie das Abwurf-Bit 0x40. */
+    uint8_t  re2z_low_state;    /* +0x219 Zustand der Maschine (0..8)                      */
+    uint8_t  re2z_low_clip;     /* +0x21C Clip-Byte der Unterhaelfte                       */
+    uint8_t  re2z_low_c1;       /* +0x21D                                                  */
+    uint8_t  re2z_low_c2;       /* +0x21E (konstant 7 an allen Setzern)                    */
+    uint8_t  re2z_low_timer;    /* +0x21F Gleit-Zaehler, (rand&0x1f)+10                    */
+    int16_t  re2z_low_yaw;      /* +0x220 Gleitrichtung, beim Start = e->rot_y             */
+    int32_t  re2z_low_x;        /* +0x130 Weltlage der Unterhaelfte (Ankermatrix-Translation) */
+    int32_t  re2z_low_z;        /* +0x138                                                  */
+    uint8_t  re2z_low_frozen;   /* part[1] hat 0x40 bekommen (@0x8010BA9C) - ab hier steht sie */
     /* ---- RE2-GORE/ZERLEGER (enemy_ai_re2_zombie.c, Welle E) ---------------------------------
      * Die drei ZONEN-POOLS +0x151/+0x152/+0x153 sind KEINE Erfindung: der RE2-INIT setzt alle
      * drei auf 13 (`addiu v0,zero,13` @0x8010081C, `sb v0,337/338/339(s2)` @0x80100820/24/28,
@@ -1067,6 +1085,12 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
  * Senke, die der Port heute mitzeichnet. Ausserhalb des Ragdolls tut die Funktion nichts. */
 void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
                                    const int32_t part0_welt[3], int32_t trans[3]);
+
+/* ---- DIE ABGETRENNTE UNTERHAELFTE (FUN_8010B7D4, Runde 9) -----------------------------------
+ * Pro Frame zu rufen, solange der Zombie lebt oder liegt. Schiebt die beim Ragdoll
+ * ausgehaengte Huefte samt Beinen weg und friert sie am Ende ein - so trennt sich der Zombie
+ * in RE2 am Becken. Tut nichts ohne `+0x21A & 1` (das Phase-2-Bit) und ohne Aushang. */
+void re15_re2z_lower_body_tick(re15_actor_t *e);
 
 /* BURST-ZEICHNUNG (Runde 5, kopf-flug.md): ein Part mit Flag-Bit 0x08 wird im
  * Original NIE als intaktes Mesh gezeichnet - FUN_80027434.c:158-170 leitet ihn

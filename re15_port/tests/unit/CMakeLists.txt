@@ -1632,6 +1632,9 @@ set_tests_properties(unit_re2_baby_spider_dmg PROPERTIES TIMEOUT 60)
 add_executable(probe_schrot_bauch_y probe_schrot_bauch_y.c)
 target_link_libraries(probe_schrot_bauch_y PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_schrot_bauch_y PRIVATE ${CMAKE_SOURCE_DIR}/include)
+# Runde 9: die Probe prueft jetzt auch, dass sich die Unterhaelfte am Becken loest
+# (FUN_8010B7D4). Deshalb laeuft sie als ctest mit.
+add_test(NAME unit_schrot_trennung COMMAND probe_schrot_bauch_y)
 target_compile_definitions(probe_schrot_bauch_y PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 

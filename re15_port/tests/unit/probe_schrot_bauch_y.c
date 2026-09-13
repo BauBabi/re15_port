@@ -165,6 +165,13 @@ int main(int argc, char **argv)
      * eingefrorenen Ankermatrix, @0x80106D00/@0x80106E64-74). Erwartet -180..-260;
      * gemessen war vor dem Anker +439..+1403. */
     int32_t beiny_max = -99999, beiny_min = 99999;
+    /* TRENNUNG AM BECKEN (Runde 9, oberkoerper-abwurf-KURZ.md): FUN_8010B7D4 schiebt die
+     * beim Ragdoll ausgehaengte Unterhaelfte weg und friert sie ein. Gemessen wird der
+     * groesste Abstand Brust<->Huefte - er muss deutlich ueber 0 gehen, sonst bleibt der
+     * Zombie ganz (Nutzer-Marker ROOM1030, 2026-09-13: "eigentlich sollte der Oberkoerper
+     * abfallen - tut er aber nicht"). Gemessener Stand: 0 bis Bild 39, dann wachsend auf
+     * rund 550 und konstant (= eingefroren, low_state 5). */
+    int32_t trenn_max = 0;
     int y_max_clip = -1, y_max_st = -1;
     for (int f = 0; f < budget && e->hp > 25 && reaktionen < 6; f++) {
         pl->hp = 100;
@@ -198,11 +205,21 @@ int main(int argc, char **argv)
             re15_enemy_bone_world_pos(e, 0, b0);
             re15_enemy_bone_world_pos(e, 1, b1);
             re15_enemy_bone_world_pos(e, 4, b4);
-            printf("F%04d st=%d/%d/%d clip=%2d af=%3u ey=%5d b0y=%5d b1y=%5d beiny=%5d "
-                   "anker=%d f10e=%04x\n",
-                   f, e->state, e->sub_state_1, e->sub_state_2, (int)e->motion,
-                   (unsigned)e->anim_frame, (int)e->y, b0[1], b1[1], b4[1],
-                   (int)e->re2z_rag_anchor_on, e->re2z_f10e);
+            {   /* TRENNUNG AM BECKEN (Runde 9): waagerechter Abstand zwischen Brust
+                 * (Bone 0) und Huefte (Bone 1). Solange die Unterhaelfte am Rumpf haengt,
+                 * ist er praktisch 0; sobald FUN_8010B7D4 sie wegschiebt, waechst er. */
+                int32_t dx = b0[0] - b1[0], dz = b0[2] - b1[2];
+                int32_t d  = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+                printf("F%04d st=%d/%d/%d clip=%2d af=%3u ey=%5d b0y=%5d b1y=%5d beiny=%5d "
+                       "anker=%d low=%d trenn=%5d f10e=%04x\n",
+                       f, e->state, e->sub_state_1, e->sub_state_2, (int)e->motion,
+                       (unsigned)e->anim_frame, (int)e->y, b0[1], b1[1], b4[1],
+                       (int)e->re2z_rag_anchor_on, (int)e->re2z_low_state, d, e->re2z_f10e);
+            }
+            {   int32_t tdx = b0[0] - b1[0], tdz = b0[2] - b1[2];
+                int32_t td  = (tdx < 0 ? -tdx : tdx) + (tdz < 0 ? -tdz : tdz);
+                if (td > trenn_max) trenn_max = td;
+            }
             if (b4[1] > beiny_max) beiny_max = b4[1];
             if (b4[1] < beiny_min) beiny_min = b4[1];
             if (e->y > y_max) { y_max = e->y; y_max_clip = e->motion; y_max_st = e->sub_state_1; }
@@ -228,5 +245,12 @@ int main(int argc, char **argv)
                y_min, y_max, b0y_min, b0y_max);
     printf("=== ENDE: %d Reaktionen, Zombie hp=%d st=%d/%d ===\n",
            reaktionen, e->hp, e->state, e->sub_state_1);
+    printf("Trennung am Becken: groesster Abstand Brust<->Huefte = %d (low_state=%d)\n",
+           (int)trenn_max, (int)e->re2z_low_state);
+    if (trenn_max < 200) {
+        printf("FAIL: die Unterhaelfte trennt sich nicht (max %d) - FUN_8010B7D4 laeuft "
+               "nicht, oder der Zeichner folgt ihr nicht\n", (int)trenn_max);
+        return 1;
+    }
     return 0;
 }

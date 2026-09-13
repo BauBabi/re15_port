@@ -5896,7 +5896,15 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
          * wahrscheinlichster Kandidat ist der Modell-Variantenwechsel hier
          * (`word0 &= 0xF3FFFFFF`, `| 0x04000000` @0x80106B38-50), der den Part-Block
          * ueber FUN_80028368 neu aufbaut und child[+0x74] dabei neu setzt. */
-        e->re2z_rag_anchor_on = 0u;
+        /* ⛔ DER AUSHANG BLEIBT (Runde 9, oberkoerper-abwurf-KURZ.md): hier stand
+         * `re2z_rag_anchor_on = 0`. Das Original stellt part[1]+0x74 in Phase 2 NICHT
+         * zurueck - es loescht nur `+0x21A &= ~4` (@0x80106A98) und `+0x1D3 &= 0x7F`
+         * (@0x80106A9C) und schaltet mit `+0x21A |= 1` (@0x80106AD0, unten) die Maschine
+         * FUN_8010B7D4 scharf, die die Unterhaelfte WEGSCHIEBT. Wer den Aushang hier
+         * loest, klebt Becken und Beine wieder an den Rumpf - der Zombie bleibt ganz,
+         * und genau das hat der Nutzer gemeldet. */
+        e->re2z_low_state = 0u;         /* +0x219 = 0: die Maschine startet in Zustand 0 */
+        e->re2z_low_frozen = 0u;
         /* CROSSFADE-SAAT fuer den Kriech-Clip (versinken2.md §4): das Original setzt die
          * Blend-QUELLE auf eine LIEGENDE Pose - `sh -200,58(s3)` @0x80106AAC (part0
          * "prev root py") und `sh 0/0/1024,104..108(s3)` @0x80106AB4-BC (part0-Winkel
@@ -7927,6 +7935,11 @@ int re15_re2z_tick(int slot)
                                                                     * NULL -> recover to walk */
     }
 
+    /* DIE ABGETRENNTE UNTERHAELFTE (FUN_8010B7D4): das Original ruft sie PRO FRAME neben dem
+     * Routine-Dispatch (@0x80100550, nach dem Routine-Call). Sie tut nichts, solange der
+     * Ragdoll nicht in Phase 2 `+0x21A |= 1` gesetzt hat. */
+    re15_re2z_lower_body_tick(e);
+
     /* ============================================================================================
      * ⛔ DIE TREFFBARKEIT IM RE2-ZWEIG IST +0x1D3 — NICHT DER RE1.5-LATCH +0x93
      * --------------------------------------------------------------------------------------------
@@ -8138,10 +8151,151 @@ void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
     int32_t anker[3];
     if (!e || !e->re2z_rag_anchor_on) return;
     if (bone < 1 || bone > 7) return;
-    anker[0] = e->re2z_rag_anchor_x;                /* +0x130 eingefroren @0x80106D44-60 */
+    /* Solange der Ragdoll laeuft, steht die Ankermatrix auf der eingefrorenen
+     * Aufschlag-Position (@0x80106D44-68). Sobald Phase 2 die Maschine FUN_8010B7D4
+     * scharfschaltet, fuehrt DIESE die Translation weiter - die Unterhaelfte rutscht dann
+     * sichtbar vom Rumpf weg (+0x130/+0x138 @0x8010B970-9C bzw. @0x8010BA5C-84), bis
+     * Zustand 4 sie mit part[1] |= 0x40 einfriert. re2z_low_state != 0 heisst: die
+     * Maschine hat den Startwert aus part[1] bereits uebernommen. */
+    if (e->re2z_low_state != 0u) {
+        anker[0] = e->re2z_low_x;
+        anker[2] = e->re2z_low_z;
+    } else {
+        anker[0] = e->re2z_rag_anchor_x;            /* +0x130 eingefroren @0x80106D44-60 */
+        anker[2] = e->re2z_rag_anchor_z;            /* +0x138 eingefroren @0x80106D48-68 */
+    }
     anker[1] = (int32_t)e->re2z_gy232 + (part0_welt[1] - e->y);
                                                     /* +0x134 = part0.t[1] + +0x232
                                                      * @0x80106E64-74 - OHNE das sinkende +0x3C */
-    anker[2] = e->re2z_rag_anchor_z;                /* +0x138 eingefroren @0x80106D48-68 */
     for (k = 0; k < 3; k++) trans[k] += anker[k] - part0_welt[k];
+}
+
+
+/* ============================================================================================
+ * FUN_8010B7D4 - DIE ABGETRENNTE UNTERHAELFTE (Runde 9, 2026-09-13)
+ * --------------------------------------------------------------------------------------------
+ * Nutzer-Marker ROOM1030: "da sieht man das die Animation ist, das eigentlich der Oberkoerper
+ * abfallen sollte. tut er aber nicht!" - und er hat recht, nur anders als erwartet: der Rumpf
+ * faellt in RE2 NIE ab (Part 0 bekommt im ganzen Overlay nie das Abwurf-Bit 0x40). RE2 trennt
+ * den Zombie am BECKEN. Der Ragdoll haengt dafuer bei Anim-Frame 20 die Huefte (Part 1) samt
+ * beider Beinketten auf die Ankermatrix entity+0x11C um (`sw v0,288(v1)` @0x80106D00, im Port
+ * der "Ragdoll-Bodenanker" aus versinken2.md) - und schaltet in Phase 2 mit `+0x21A |= 1`
+ * (@0x80106AD0) DIESE Maschine scharf, die die Unterhaelfte wegschiebt.
+ *
+ * Selbst disassembliert (info/re2leon/COMMON/BIN/EMZ0.BIN, Ladebasis 0x80100000):
+ *   Rahmen   `addiu sp,sp,-136` @0x8010B7D4 .. `jr ra`
+ *   Gate     `lhu v0,538(s2) / andi 0x1 / beq -> Ende` @0x8010B830-3C   (+0x21A Bit 0)
+ *   Dispatch `lbu v1,537(s2) / sltiu v0,v1,0x9 / lw v0,636(at) / jr v0` @0x8010B844-68,
+ *            Sprungtabelle @0x8010027C selbst gedumpt:
+ *              [0] 0x8010B870  [1] 0x8010B8D8  [2] 0x8010B9AC  [3] 0x8010B9C8
+ *              [4] 0x8010BA88  [5] 0x8010BB0C  [6] 0x8010BB6C  [7] 0x8010BBA4  [8] 0x8010BBE8
+ *
+ * Zustand 0 @0x8010B870 (FAELLT in 1 durch - kein Sprung):
+ *   +0x21C = +0x218 (`lbu v1,536` @0x8010B870 / `sb v1,540` @0x8010B884)
+ *   +0x21D = 0 (@0x8010B87C) ; +0x21E = 7 (@0x8010B878/80)
+ *   +0x130 = part[1].weltmatrix.t[0]  (`lw v0,264(a0)` @0x8010B888 / `sw v0,304` @0x8010B890)
+ *   +0x138 = part[1].weltmatrix.t[2]  (`lw a0,272(a0)` @0x8010B894 / `sw a0,312` @0x8010B8A8)
+ *            264 = 172*1 + 92 = part1 + 0x5C, 272 = part1 + 0x64 - die Translation der
+ *            KOMPONIERTEN Matrix (rec+0x48, Translation bei +0x14)
+ *   +0x220 = +0x76 (rot_y) (`lhu v1,118` @0x8010B88C / `sh v1,544` @0x8010B8A0)
+ *   +0x219 = 1 (@0x8010B898/9C)
+ *   +0x21F = (rand & 0x1f) + 10 (`jal 0x80015FE8` @0x8010B8A4, `andi 0x1f` @0x8010B8C0,
+ *            `sb v0,543` @0x8010B8C8)
+ *   dazu ein Effekt an +0x224 (`jal 0x80016480` @0x8010B8D0, Id 0x02BC01F4) - OPEN, im Port
+ *   nicht nachgebaut (Blut-/Schleifspur, ohne Beleg welcher Effekt).
+ *
+ * Zustand 1 @0x8010B8D8 - GLEITEN:
+ *   Anim-Schritt `jal 0x80029E10` (a1=+0x108, a2=+0x17C, a3=512) @0x8010B904
+ *   Richtung: RotMatrix({0, +0x220, 0}) (`jal 0x8008E1F4` @0x8010B940), Vektor
+ *   {(rand&7)+10, 0, 0} (`jal 0x80015FE8` @0x8010B948, `andi 0x7 / addiu 10` @0x8010B95C-60),
+ *   durch die Matrix (`jal 0x8008DBA4` @0x8010B968) -> +0x130 += x, +0x138 += z
+ *   (@0x8010B970-9C).
+ *   +0x21F-- (`addiu v1,a0,255` @0x8010B98C); war es 0, dann +0x219 = 2 (@0x8010B9A0-A8).
+ *
+ * Zustand 2 @0x8010B9AC (FAELLT in 3 durch): +0x21C = 1, +0x21E = 7, +0x21D = 0, +0x219 = 3.
+ *
+ * Zustand 3 @0x8010B9C8 - SCHNELLES GLEITEN:
+ *   Anim-Schritt wie oben, aber +0x219 += Rueckgabe (`addu v1,v1,v0` @0x8010B9FC) - am
+ *   Clip-Ende geht es also nach 4. Schrittweite FEST 30 (`addiu v0,zero,30` @0x8010BA4C),
+ *   sonst dieselbe Rotation (@0x8010BA38-84).
+ *
+ * Zustand 4 @0x8010BA88 - EINFRIEREN:
+ *   `lw v1,408(s2) / lw v0,172(v1) / ori v0,v0,0x40 / sw v0,172(v1)` @0x8010BA88-9C
+ *   = part[1] |= 0x40 (eigene Matrix, keine Eltern-Verkettung mehr).
+ *   +0x219 = 5, +0x21C = 22, +0x21D = 0, +0x21E = 7, +0x21F = (rand&0x1f)+10
+ *   (@0x8010BAA0-D8), dazu zwei Farbworte 0x00BFBF10 in den Effekt (@0x8010BAC0-FC).
+ *
+ * Zustaende 5..8 sind der AUSKLANG (Anim-Schritt + Zustandsfortschritt, @0x8010BB0C ff.).
+ *
+ * ⛔ PORT-VEREINFACHUNG, ausdruecklich KEIN byte-true: der Anim-Schritt der Unterhaelfte
+ * (0x80029E10 mit +0x108/+0x17C) posiert im Original ein ZWEITES Skelett. Der Port hat dafuer
+ * keinen Zwilling - die Unterhaelfte behaelt hier die Pose des Hauptclips und wandert nur in
+ * der POSITION. Sichtbar ist damit das Entscheidende (die Trennung am Becken und das
+ * Wegrutschen); die Eigenanimation der Beine fehlt und ist als offener Punkt dokumentiert.
+ * Der RNG wird an den drei Original-Stellen gezogen, damit er nicht gegen das Original
+ * desyncht (Zustand 0, Zustand 1 je Frame, Zustand 4).
+ * ========================================================================================== */
+void re15_re2z_lower_body_tick(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    if (!(e->re2z_flags21a & 1u)) return;          /* Gate @0x8010B830-3C */
+    if (!e->re2z_rag_anchor_on) return;            /* ohne Aushang gibt es keine Unterhaelfte */
+    if (e->re2z_low_state >= 9u) return;           /* `sltiu v0,v1,0x9` @0x8010B84C */
+
+    switch (e->re2z_low_state) {
+    case 0: {                                       /* @0x8010B870 - Init, FAELLT durch */
+        int32_t w[3];
+        re15_enemy_bone_world_pos(e, 1, w);         /* part[1]-Weltlage (@0x8010B888/94) */
+        e->re2z_low_clip  = 0u;
+        e->re2z_low_c1    = 0u;                     /* +0x21D = 0 @0x8010B87C */
+        e->re2z_low_c2    = 7u;                     /* +0x21E = 7 @0x8010B880 */
+        e->re2z_low_x     = w[0];                   /* +0x130 @0x8010B890 */
+        e->re2z_low_z     = w[2];                   /* +0x138 @0x8010B8A8 */
+        e->re2z_low_yaw   = (int16_t)e->rot_y;      /* +0x220 @0x8010B8A0 */
+        e->re2z_low_state = 1u;                     /* +0x219 = 1 @0x8010B89C */
+        e->re2z_low_timer = (uint8_t)((re2z_rand() & 0x1fu) + 10u);   /* @0x8010B8A4-C8 */
+    }   /* FALLTHROUGH - das Original springt hier nicht (Zustand 1 folgt unmittelbar) */
+    /* fall through */
+    case 1: {                                       /* @0x8010B8D8 - Gleiten */
+        int32_t schritt = (int32_t)((re2z_rand() & 7u) + 10u);        /* @0x8010B948-60 */
+        int32_t cs = re15_cos_q12((int)e->re2z_low_yaw);
+        int32_t sn = re15_sin_q12((int)e->re2z_low_yaw);
+        e->re2z_low_x += (int32_t)(((int64_t)cs * schritt) >> 12);
+        e->re2z_low_z += (int32_t)((-(int64_t)sn * schritt) >> 12);
+        if (e->re2z_low_timer == 0u) e->re2z_low_state = 2u;          /* @0x8010B998-A8 */
+        else e->re2z_low_timer--;
+        break;
+    }
+    case 2:                                         /* @0x8010B9AC - FAELLT in 3 durch */
+        e->re2z_low_clip  = 1u;                     /* +0x21C = 1 @0x8010B9B0 */
+        e->re2z_low_c2    = 7u;                     /* +0x21E = 7 @0x8010B9B8 */
+        e->re2z_low_c1    = 0u;                     /* +0x21D = 0 @0x8010B9C0 */
+        e->re2z_low_state = 3u;                     /* +0x219 = 3 @0x8010B9C4 */
+        /* fall through */
+    case 3: {                                       /* @0x8010B9C8 - schnelles Gleiten */
+        int32_t cs = re15_cos_q12((int)e->re2z_low_yaw);
+        int32_t sn = re15_sin_q12((int)e->re2z_low_yaw);
+        e->re2z_low_x += (int32_t)(((int64_t)cs * 30) >> 12);         /* Schrittweite 30
+                                                                       * @0x8010BA4C */
+        e->re2z_low_z += (int32_t)((-(int64_t)sn * 30) >> 12);
+        /* Das Original zaehlt den Zustand am CLIP-ENDE hoch (`addu v1,v1,v0` @0x8010B9FC mit
+         * der Rueckgabe des Anim-Schritts). Ohne eigene Animation gibt es dieses Ende hier
+         * nicht; der Port nimmt dafuer die Laenge des Gleitens, die das Original ueber
+         * denselben Clip erreicht - gemessen ueber +0x21F, das Zustand 4 neu wuerfelt. */
+        if (e->re2z_low_timer == 0u) { e->re2z_low_state = 4u; }
+        else e->re2z_low_timer--;
+        break;
+    }
+    case 4:                                         /* @0x8010BA88 - EINFRIEREN */
+        e->re2z_part_flags[1] |= 0x40u;             /* part[1] |= 0x40 @0x8010BA90-9C */
+        e->re2z_low_frozen = 1u;
+        e->re2z_low_state  = 5u;                    /* @0x8010BAA0-A4 */
+        e->re2z_low_clip   = 22u;                   /* +0x21C = 22 @0x8010BAA8-AC */
+        e->re2z_low_c1     = 0u;
+        e->re2z_low_c2     = 7u;                    /* @0x8010BAB0 */
+        e->re2z_low_timer  = (uint8_t)((re2z_rand() & 0x1fu) + 10u);  /* @0x8010BAC8-D8 */
+        break;
+    default:                                        /* 5..8: Ausklang, Position steht */
+        break;
+    }
 }
