@@ -872,7 +872,17 @@ void re15_game_step(const re15_game_ctx_t *c)
      * (re15_enemy_ai_run_all) laeuft erst am Step-Ende. */
     re15_npc_neck_spawn_init();
 
-    if (s_go_on && !re15_player_is_dead())
+    /* ⛔ DASSELBE GATE WIE DER START (2026-09-13, gemessen am Nutzer-Lauf): hier stand
+     * `!re15_player_is_dead()`. Waehrend des Gator-Fress-Finishers ist is_dead bewusst 0
+     * (Victim-Modus 4 besitzt den Spieler, re15_damage.c) - diese Zeile hat die FSM
+     * deshalb in JEDEM Frame wieder zurueckgesetzt, kaum dass sie gestartet war.
+     * Im finisher.log des Laufs steht es 241 Mal in Folge:
+     *   FSM-START sub=0 ctr=0 | latch=1 isdead=0 blackbg=0 cam=0
+     * Die Praesentation kam nie ueber sub 0 hinaus und lief erst durch, als der Latch
+     * weg und isdead=1 war - also NACH dem Fressen. Genau der Nutzer-Befund
+     * ("die Fressanimation findet nicht im YOU ARE DEAD Screen statt, sondern davor").
+     * Der Runde-8-Fix hatte nur das START-Gate getrennt, dieses hier nicht. */
+    if (s_go_on && !re15_death_presentation_active())
         re15_gameover_fsm_reset();                       /* continue-reload revived the player */
     if (!re15_player_is_dead())
         re15_player_death_cmd3_reset();                  /* cmd 3 gehoert dem Toten (hp<0, das Gate

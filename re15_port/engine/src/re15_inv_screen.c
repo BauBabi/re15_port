@@ -475,11 +475,30 @@ void re15_inv_map_stage_init(int stage, int room)
 #define RE2_TUER_G   168
 #define RE2_TUER_B    40
 
+/* ⛔ DIESELBEN TOENE WIE DIE GEMALTE KUNST (Nutzer-Befund 2026-09-13: "warum bekommen
+ * denn die ROOM 1000 Raeume als einziges eine andere Farbe ... als alle anderen?").
+ *
+ * Auf dem 1F-Blatt trugen die drei ROOM1000-Kaesten eine blaue Fuellung (28,60,140) und
+ * eine weisse Wandlinie, waehrend JEDER andere Raum die eingefaerbte Original-Kachel
+ * zeigt - besucht gruen (40,144,40), aktuell rot (192,24,24), gesetzt in derselben
+ * Datei beim Kachel-Blit. Zwei Farbsaetze auf einem Blatt: die Schema-Zeichnung las sich
+ * als Fremdkoerper, und genau das hat der Nutzer gesehen.
+ *
+ * Die Toene hier sind jetzt die der Kunst. Die Wandlinie bleibt als Form-Kante erhalten,
+ * aber im selben Farbton aufgehellt statt in Weiss - ein Raum ohne gemalte Kachel soll
+ * wie ein Raum aussehen, nicht wie ein Kasten. */
 static void re2_ton(int rs, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r =  74; *g =  20; *b =  20; }
-    else if (rs == RE15_MAP_RECT_VISITED) { *r =  28; *g =  60; *b = 140; }
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 192; *g =  24; *b =  24; }
+    else if (rs == RE15_MAP_RECT_VISITED) { *r =  40; *g = 144; *b =  40; }
     else                                  { *r =  34; *g =  34; *b =  38; }
+}
+
+/* Die Kante der Schema-Zeichnung: derselbe Farbton, aufgehellt (s. re2_ton). */
+static void re2_ton_kante(int rs, int *r, int *g, int *b)
+{
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 255; *g = 104; *b = 104; }
+    else                                  { *r = 120; *g = 216; *b = 120; }
 }
 
 /* Spielerradius fuer den Kollisions-Klemmer: 450 (DAT_80073e94[6], code-verifiziert,
@@ -2501,7 +2520,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * Vorher trugen beide denselben Ton, wodurch benachbarte Raeume
                  * ineinanderliefen - in der Vorlage trennt genau diese helle Linie
                  * die Abschnitte voneinander. */
-                cr2 = RE2_WAND_R; cg2 = RE2_WAND_G; cb2 = RE2_WAND_B;
+                re2_ton_kante(rs2, &cr2, &cg2, &cb2);
                 /* ⛔ UMRANDUNG ENTLANG DER SILHOUETTE, NICHT UM DEN KASTEN.
                  * Solange die Schema-Zeichnung nur ein Notbehelf fuer ein fehlendes
                  * Rechteck war, war der Kasten-Rahmen richtig. Seit der Grundriss die
