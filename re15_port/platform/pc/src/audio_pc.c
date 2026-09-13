@@ -2973,7 +2973,13 @@ void re15_audio_tick(void)
      * naechste Dialogzeile oeffnet (scd_vm.c op_message_on / scd_thread_t.voice_wait).
      * s_xa ist ausschliesslich der Stimm-Kanal: aktiviert wird er nur von
      * re15_xa_read_s, und das ruft allein re15_voice_play. */
-    { extern int g_re15_voice_laeuft; g_re15_voice_laeuft = s_xa.active ? 1 : 0; }
+    { extern int g_re15_voice_laeuft;
+      /* g_audio.initialized mitpruefen: ohne Audiogeraet laeuft der Mixer-Rueckruf nicht,
+       * der s_xa.active am Clip-Ende wieder loescht. Das Flag wuerde dann stehen bleiben
+       * und jede Dialogzeile bis an den Deckel (90 Bilder) aufhalten. re15_voice_play
+       * kehrt zwar schon bei !initialized still zurueck, aber der Riegel gehoert an die
+       * Stelle, die das Flag setzt - nicht an die, die es zufaellig nie erreicht. */
+      g_re15_voice_laeuft = (g_audio.initialized && s_xa.active) ? 1 : 0; }
     if (!g_audio.initialized) return;
 
     /* RE15_AUDIO_CAP_SYNC: ein Spielframe = RE15_AUDIO_RATE/30 Stereo-Frames, gerendert durch

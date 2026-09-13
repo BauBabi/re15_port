@@ -1503,7 +1503,18 @@ static int op_message_on(scd_thread_t *t)
          * Abstand im Skript 100 - noetig sind also <20. 90 Bilder (3 s) lassen viel
          * Luft und verhindern trotzdem, dass ein haengender Kanal das Skript anhaelt. */
         if (g_re15_voice_laeuft && t->voice_wait < 90u) { t->voice_wait++; return 2; }
-        t->voice_wait = 0;
+        if (t->voice_wait) {
+            /* Messschiene (GUI-exe: stderr tot). Sagt je Zeile, wieviele Bilder der
+             * vorige Satz noch gebraucht hat - gegen die Skript-Sleeps nachrechenbar. */
+            FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
+            if (lg) {
+                fprintf(lg, "raum=%04x nachricht=%d  %u Bilder gewartet%s\n",
+                        g_current_room_id, t->pc[1], (unsigned)t->voice_wait,
+                        t->voice_wait >= 90u ? "  (DECKEL - Kanal haengt?)" : "");
+                fclose(lg);
+            }
+            t->voice_wait = 0;
+        }
     }
 
     /* GLOBALER TEXT-FREEZE — pc[2..3] ist NICHT die "Farbe" (alte Fehl-Etikettierung,
