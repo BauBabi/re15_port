@@ -159,14 +159,23 @@ static void tent_anker(tent_t *t, int idx, const re15_actor_t *g5, re15_actor_t 
         v[1] = s_tent_anker[idx][1] / 2 - ((idx == 1 || idx == 2) ? 1500 : 1300);
         v[2] = s_tent_anker[idx][2] / 2;
     }
-    /* Part 2 = die Masse: Bind (1800,4500,0) am Wurzelknochen (main.c-Komposition,
-     * g5-optik.md @0x80100670-740). Weltlage = G5-Wurzel + Rot(yaw) * (Bind + Anker). */
-    v[0] += 1800; v[1] += 4500;
-    cs = re15_cos_q12((int)g5->rot_y);
-    sn = re15_sin_q12((int)g5->rot_y);
-    e->x = g5->x + (int32_t)(((int64_t)cs * v[0] + (int64_t)sn * v[2]) >> 12);
-    e->z = g5->z + (int32_t)((-(int64_t)sn * v[0] + (int64_t)cs * v[2]) >> 12);
-    e->y = g5->y + v[1];
+    /* Part 2 = die Masse: Bind (1800,4500,0) am WURZELKNOCHEN des Kriechers
+     * (main.c-Komposition, g5-optik.md @0x80100670-740). Die Weltlage ist also
+     * WURZELPOSE + Rot(yaw)*(Bind + Anker) - und die Wurzel haengt 3,1-4,5 m
+     * UEBER dem Entity-Ursprung (alle EM036-Keyframes tragen rootY -4536..-3105).
+     * ⛔ GEMESSEN 2026-09-13 (Nutzer-Marke R5090 F550): ohne diese Wurzelhoehe
+     * landeten die vier Arme bei y = +2057..+3816, also 2-4 m UNTER dem Boden.
+     * re15_enemy_bone_world_pos liefert die gerenderte Wurzel samt rootY. */
+    {
+        int32_t w[3];
+        re15_enemy_bone_world_pos(g5, 0, w);
+        v[0] += 1800; v[1] += 4500;
+        cs = re15_cos_q12((int)g5->rot_y);
+        sn = re15_sin_q12((int)g5->rot_y);
+        e->x = w[0] + (int32_t)(((int64_t)cs * v[0] + (int64_t)sn * v[2]) >> 12);
+        e->z = w[2] + (int32_t)((-(int64_t)sn * v[0] + (int64_t)cs * v[2]) >> 12);
+        e->y = w[1] + v[1];
+    }
     e->rot_y = g5->rot_y;
 }
 

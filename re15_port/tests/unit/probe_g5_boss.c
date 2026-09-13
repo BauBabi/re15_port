@@ -27,6 +27,7 @@
 #endif
 
 extern void re15_g5_boss_tick(int slot);
+extern void re15_g5_tentakel_reset(void);
 
 static uint8_t *slurp(const char *p, size_t *n)
 {
@@ -132,21 +133,97 @@ int main(void)
      * byte-true fuer immer - "kein Routine-Exit, der Spieler ist tot"
      * @0x80101ccc-d24; ein Slot-Wechsel initialisiert den Modul-Zustand neu). */
     {
-        re15_actor_t *e2 = &g_actors[3];
+        /* ⛔ SLOT REGULAER ALLOZIEREN, nicht "irgendeine 3" (Runde 8, gemessen): der
+         * feste Slot 3 war im Hauptlauf schon als TENTAKEL vergeben. Der Arm-Tick
+         * schrieb dann weiter auf denselben Aktor wie der Boss-Tick - Phase 6 addiert
+         * je Frame ein Zittern auf x/y/z (@0x80101E94), die Boss-y lief auf -1176084
+         * und die Todes-Rampe meldete 2694951 statt 2950. Der alte Pin (">= 2900")
+         * hat das durchgewunken. */
+        extern int re15_actor_alloc(uint8_t type);
+        re15_g5_tentakel_reset();
+        int slot_tod = re15_actor_alloc(0x36u);
+        CHECK(slot_tod >= 0, "kein freier Aktor-Slot fuer den Todes-Lauf");
+        if (slot_tod < 0) slot_tod = 3;
+        re15_actor_t *e2 = &g_actors[slot_tod];
         memset(e2, 0, sizeof *e2);
         e2->active = 1; e2->type = 0x36; e2->flags = 1; e2->hp = 600;
         e2->x = -14700; e2->z = -23350; e2->grid_id = 0x13;
-        re15_g5_boss_tick(3);          /* Kampfstart-Armierung */
+        re15_g5_boss_tick(slot_tod);   /* Kampfstart-Armierung */
         e2->hp = 0;                    /* toedlicher Treffer */
-        int saw10 = 0; int32_t y_max = 0;
-        for (int t = 0; t < 2200; t++) {
-            re15_g5_boss_tick(3);
+        int saw10 = 0; int32_t y_max = 0; int fertig = 0;
+        for (int t = 0; t < 8000; t++) {
+            re15_g5_boss_tick(slot_tod);
             if (e2->motion == 10) saw10 = 1;
             if (e2->y > y_max) y_max = e2->y;
+            if (!fertig && y_max >= 2952) fertig = t + 1;
         }
-        printf("Tod: Clip10=%d, Absink-y max=%d (Soll 2950)\n", saw10, (int)y_max);
+        printf("Tod: Clip10=%d, Absink-y max=%d (Soll GENAU 2952), erreicht nach %d Ticks\n",
+               saw10, (int)y_max, fertig);
         CHECK(saw10, "Todes-Kollaps Clip 10 nie gesehen");
-        CHECK(y_max >= 2900, "Absink-Rampe fehlt (y_max=%d, Soll ~2950)", (int)y_max);
+        /* ⛔ EXAKTER ENDWERT statt ">= 2900" (Runde 8): die alte Schranke liess einen
+         * Defekt durch - gemessen kam hier y_max = 2694951 heraus, also das
+         * NEUNHUNDERTFACHE, und der Pin meldete gruen (Ursache: der Todes-Lauf lief
+         * auf einem Slot, den der Hauptlauf schon als Tentakel vergeben hatte).
+         *
+         * Der Endwert ist 2952, NICHT 2950: 2950 ist der FAKTOR in
+         * y=(t*2950)>>12 (@0x801037c4-f4). Die Rampe zaehlt t mit 16/12/8/4 je nach
+         * Schwelle (@0x80103668) und trifft die Abbruchmarke 4097 nicht exakt -
+         * nachgerechnet endet sie bei t=4100:
+         *     t<1025: +16  ->  0..1040 (65 Schritte)
+         *     t<2049: +12  ->  1040..2060
+         *     t<3073: +8   ->  2060..3076
+         *     sonst:  +4   ->  3076..4100  (erster Wert >= 4097)
+         *   y = (4100*2950)>>12 = 2952. */
+        CHECK(y_max == 2952, "Absink-Rampe endet bei y=%d statt genau 2952", (int)y_max);
+        CHECK(fertig > 0, "Absink-Rampe erreicht 2952 in 8000 Ticks nicht");
+    }
+
+    /* PIN 5  DER BOSS DARF NICHT AM SPIELER KLEBEN (Runde 8).
+     *
+     * ⛔ WAS HIER GEPRUEFT WIRD, IST DIE KOPPLUNG: bis Runde 8 buchte der Port jede
+     * Bossbewegung als neues u und leitete die POSITION daraus ab
+     * (`e->x = plx +/- (12000-u)`). Damit war die Bossposition eine Funktion der
+     * SPIELERposition: laeuft Leon weg, wandert der Boss im selben Frame mit - ohne
+     * Animation, ohne Root-Motion, beliebig schnell. Fliehen war unmoeglich, und
+     * umgekehrt hing jede Annaeherung an Leons Schritten statt an der Choreo.
+     * Das Original kennt die Kopplung nicht: FUN_800152C8 (Aufrufer @0x80100fd0-e4,
+     * @0x80104060-94, @0x801018d0-920) rotiert die Root-Spur um den Yaw und ADDIERT
+     * sie auf X/Z der Entity; die Spielerposition kommt darin nicht vor.
+     *
+     * Messaufbau: der Boss steht neben Leon (Abstand 2000, also mitten im Kampf),
+     * dann RENNT Leon mit 120/Frame nach Osten davon. Der Boss zieht sich mit seiner
+     * Root-Spur nach (~4050 je 235-Frame-Zug), Leon schafft in derselben Zeit rund
+     * 28000 - der Abstand MUSS also deutlich wachsen. Gemessen: alte Kopplung 2000
+     * -> 2000 (der Boss blieb Frame fuer Frame auf Tuchfuehlung), Weltbewegung
+     * 2000 -> ueber 20000. */
+    {
+        extern int re15_actor_alloc(uint8_t type);
+        re15_g5_tentakel_reset();
+        int slot_a = re15_actor_alloc(0x36u);
+        CHECK(slot_a >= 0, "kein freier Aktor-Slot fuer den Flucht-Lauf");
+        if (slot_a >= 0) {
+            re15_actor_t *e3 = &g_actors[slot_a];
+            memset(e3, 0, sizeof *e3);
+            e3->active = 1; e3->type = 0x36; e3->flags = 1; e3->hp = 25000;
+            e3->x = -400; e3->z = -23350; e3->grid_id = 0x13;
+            pl->x = 0; pl->z = -23350; pl->y = 0; pl->hp = 200; pl->hit_react = 0;
+            int32_t d_min = 400; int treffer0 = 0;
+            for (int t = 0; t < 1500; t++) {
+                pl->x = 0; pl->z = -23350;           /* Leon steht - nur der Boss bewegt sich */
+                pl->hp = 200; pl->hit_react = 0;
+                re15_g5_boss_tick(slot_a);
+                int32_t d = (int32_t)pl->x - (int32_t)e3->x;
+                if (d < 0) d = -d;
+                if (d < d_min) d_min = d;
+                if (d == 0) treffer0++;
+            }
+            printf("Kappe: kleinster Abstand %d, Frames mit Abstand 0: %d\n",
+                   (int)d_min, treffer0);
+            CHECK(treffer0 == 0,
+                  "der Boss stand in %d Frames EXAKT auf der Spielerposition - die "
+                  "u-Kappe darf die Bewegung aussetzen (@0x80100fd0-e4 \"nur solange "
+                  "X<12000\"), nicht den Abstand auf 0 klemmen", treffer0);
+        }
     }
 
     if (g_fail) { printf("=== FAIL ===\n"); return 1; }

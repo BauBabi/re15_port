@@ -2712,9 +2712,16 @@ static void re15_bgm_play_room(int stage, int room) {
 /* Offline render: synth the room's MAIN+SUB layers (+reverb) to a 16-bit stereo
  * WAV via the EXACT render path, for A/B vs the PSX capture. RE15_BGM_DUMP. */
 static void re15_bgm_dump_wav(const char *path, int stage, int room, int seconds) {
-    int main_ok = re15_bgm_load_track(&s_ss_main, "MAIN", re15_bgm_for_room(stage, room)) == 0;
-    int sub_ok  = re15_bgm_load_track(&s_ss_sub,  "SUB_", re15_bgm_sub_for_room(stage, room)) == 0;
-    re15_amb_load_rotor(stage, room);
+    /* Diagnose: RE15_BGM_DUMP_MAIN=<slot> / RE15_BGM_DUMP_SUB=<slot> rendern einen direkten
+     * Track-Slot statt der Raum-Zuordnung (Katalog-Renderings aller MAIN/SUB-Container). */
+    const char *env_m = getenv("RE15_BGM_DUMP_MAIN");
+    const char *env_s = getenv("RE15_BGM_DUMP_SUB");
+    int main_slot = env_m ? (int)strtol(env_m, NULL, 0) : re15_bgm_for_room(stage, room);
+    int sub_slot  = env_s ? (int)strtol(env_s, NULL, 0)
+                          : (env_m ? -1 : re15_bgm_sub_for_room(stage, room));
+    int main_ok = re15_bgm_load_track(&s_ss_main, "MAIN", main_slot) == 0;
+    int sub_ok  = re15_bgm_load_track(&s_ss_sub,  "SUB_", sub_slot) == 0;
+    if (!env_m && !env_s) re15_amb_load_rotor(stage, room);
     if (!main_ok && !sub_ok && !s_amb.pcm) { fprintf(stderr,"[bgm] dump: load failed\n"); return; }
     int subonly = getenv("RE15_BGM_SUBONLY") != NULL;   /* isolate the SUB (rotor) layer */
     int mainonly = getenv("RE15_BGM_MAINONLY") != NULL;

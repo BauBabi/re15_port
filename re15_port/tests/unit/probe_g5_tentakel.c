@@ -114,6 +114,18 @@ int main(void)
         }
         printf("Anker: %d/4 Tentakel an der Masse (nicht auf der Boss-Wurzel)\n", weg);
         CHECK(weg == 4, "nur %d/4 Tentakel korrekt geankert", weg);
+        {   /* HOEHE (Runde 8, Nutzer-Marke R5090 F550): die Arme haengen an der
+             * Masse, die am WURZELKNOCHEN des Kriechers sitzt - der liegt 3,1-4,5 m
+             * ueber dem Entity-Ursprung (alle EM036-Keyframes rootY -4536..-3105).
+             * Ohne diese Wurzelhoehe landeten sie bei y = +2057..+3816, also METER
+             * UNTER dem Boden (PSX-y waechst nach unten). */
+            int unten = 0, i2;
+            for (i2 = 0; i2 < 4; i2++) if (g_actors[slots[i2]].y > 300) unten++;
+            printf("Hoehe: y = %d / %d / %d / %d\n",
+                   (int)g_actors[slots[0]].y, (int)g_actors[slots[1]].y,
+                   (int)g_actors[slots[2]].y, (int)g_actors[slots[3]].y);
+            CHECK(unten == 0, "%d Tentakel stecken unter dem Boden", unten);
+        }
     }
 
     /* ---- PIN 2: Austritt waehrend der Intro-Choreo ---- */

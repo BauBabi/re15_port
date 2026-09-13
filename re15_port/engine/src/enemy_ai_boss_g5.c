@@ -139,6 +139,11 @@ typedef struct {
     int32_t  tod_timer;
     int32_t  absink_t;       /* [T20]-Rampe t (Gewicht[2]) */
     uint8_t  gestartet;      /* Kampfstart gesehen (grid==0x13) */
+    int8_t   vor;            /* Vorwaerts-Vorzeichen auf der Korridor-X-Achse, EINMAL beim
+                              * Kampfstart bestimmt: RE2 dreht G5 im ganzen Kampf nie
+                              * (@0x8010044c ist der einzige Yaw-Schreiber), seine
+                              * Vorwaertsrichtung ist also konstant. Je Frame neu aus der
+                              * Relativlage abgeleitet wuerde er beim Ueberholen umdrehen. */
     int32_t  clip_prev;
 } g5_state_t;
 
@@ -192,17 +197,32 @@ static int32_t g5_u(const re15_actor_t *e)
     if (d < 0) d = -d;
     return 12000 - d;
 }
-/* Setzt den Abstand zum Spieler auf (12000 - u) und BEHAELT die Seite, auf der der
- * Boss gerade steht (er kriecht nicht durch den Spieler hindurch). */
-static void g5_setze_u(re15_actor_t *e, int32_t u)
+/* Vorwaerts-Vorzeichen auf der Korridor-X-Achse. Beim Kampfstart eingefroren (s.
+ * g5_state_t.vor); davor die Live-Ableitung, damit das Einfrieren selbst sie nutzen kann. */
+static int g5_vor(const re15_actor_t *e)
 {
-    int32_t plx = (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
-    int32_t d   = 12000 - u;
-    if (d < 0) d = 0;
-    e->x = (e->x <= plx) ? (plx - d) : (plx + d);
+    if (s_g5.vor) return s_g5.vor;
+    return (g5_dx(e) >= 0) ? 1 : -1;
 }
-/* Vorwaerts = Richtung Spieler (+1 = Welt-+X). */
-static int g5_vor(const re15_actor_t *e) { return (g5_dx(e) >= 0) ? 1 : -1; }
+/* Schiebt den Boss um `du` Einheiten VORWAERTS (du < 0 = zurueck) und `dz` seitlich —
+ * in WELTkoordinaten, wie das Original.
+ *
+ * ⛔ WARUM NICHT UEBER DEN SPIELERABSTAND (Nutzer-Befund Runde 8, "Birkin kommt schon
+ * wieder nicht an"): bis hierher buchte der Port jede Bewegung als neues u und leitete
+ * daraus die Position ab (`e->x = plx +/- (12000-u)`). Damit haengt die Bossposition an
+ * der SPIELERposition: laeuft Leon einen Schritt auf ihn zu, setzt der naechste
+ * Root-Motion-Tick den Boss um genau diesen Schritt zurueck — der Abstand bleibt stehen,
+ * egal wie lange der Boss sich heranzieht. Das Original kennt diese Kopplung nicht:
+ * FUN_800152C8 (Anwendung der Root-Spur, Aufrufer @0x80100fd0-e4 / @0x80104060-94 /
+ * @0x801018d0-920) rechnet `RotMatrix(yaw)*(vx,vz)` und ADDIERT auf X/Z der Entity. Die
+ * u-Achse ist nur die Vergleichsgroesse fuer die Schwellen (Dossier birkin-g5-ki §
+ * "Koordinaten-Anker"), nicht der Positionsspeicher. */
+static void g5_schiebe(re15_actor_t *e, int32_t du, int32_t dz)
+{
+    int v = g5_vor(e);
+    e->x += du * v;
+    e->z += dz * v;
+}
 
 /* Clip setzen (Clip-Wort +0x14C; +0x14E-Blendstaerke traegt der Port als anim_frac-Naeherung:
  * 0x1F = harter Schnitt, 0x07 = weicher Crossfade — FUN_80029614 IR0-Lerp a3*flag/4096). */
@@ -267,12 +287,10 @@ static void g5_root_motion(re15_actor_t *e, int neu_verankert, int32_t skala_q12
             dsx = (int32_t)(((int64_t)dsx * skala_q12) >> 12);
             dsz = (int32_t)(((int64_t)dsz * skala_q12) >> 12);
         }
-        {
-            int32_t u = g5_u(e) + dsx;                 /* dsx > 0 = Schritt Richtung Spieler */
-            if (kappe_u_max > 0 && u > kappe_u_max) u = kappe_u_max;
-            g5_setze_u(e, u);
-            e->z += dsz * g5_vor(e);
-        }
+        /* Anwendung nur solange u UNTER der Kappe liegt (@0x80100fd0-e4: "nur
+         * solange X<12000") — das Original klemmt nicht, es setzt die Anwendung aus. */
+        if (kappe_u_max > 0 && g5_u(e) >= kappe_u_max) return;
+        g5_schiebe(e, dsx, dsz);
     }
 }
 
@@ -347,12 +365,9 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
                 g->blob_ph = 3; g5_se(6);              /* @0x80104040-5c */
                 g->blob_timer = 15;                    /* +0x21E */
             }
-            /* Lunge: u += Speed>>3, Kappe 12000 (@0x80104060-94). */
-            {   int32_t du = g->blob_speed >> 3;
-                int32_t u = g5_u(e) + du;
-                if (u > 12000) u = 12000;
-                g5_setze_u(e, u);
-            }
+            /* Lunge: X += Speed>>3, Kappe 12000 (@0x80104060-94) — Weltachse, s.
+             * g5_schiebe. */
+            if (g5_u(e) < 12000) g5_schiebe(e, g->blob_speed >> 3, 0);
             if (g->hitbox_b < 3700) g->hitbox_b += 500;   /* @0x801040b8-e0 */
             /* Treffer: Punkt u+900 vorgehalten, Radius 1500 (@0x801040ec-f4). */
             {   int32_t px = 1200 - ((g5_u(e) + 900) - 8000);
@@ -579,6 +594,15 @@ void re15_g5_boss_tick(int slot)
     int32_t dist;
 
     if (s_g5_slot != slot || !g->aktiv) {
+        /* ⛔ NEUER KAMPF = NEUE ARME (Runde 8, gemessen): re15_g5_tentakel_reset() stand
+         * bis hier NUR im Test. Die vier 0x37-Arme behielten ihre Aktor-Slots damit ueber
+         * Raumwechsel und Kampfneustart hinweg (`if (s_tent_bereit) return;` im Spawn), und
+         * der Tentakel-Tick schrieb weiter auf diese Slots - die der Raumwechsel laengst
+         * anderen Gegnern gegeben hatte. Sichtbar wurde es in probe_g5_boss: dort landete
+         * der Boss selbst auf einem Alt-Slot und bekam das Zittern von Arm-Phase 6
+         * (`e->x/y/z += z`, @0x80101E94) aufaddiert - seine y-Koordinate lief bis
+         * -1176084, und die Todes-Rampe stand danach auf 2694951 statt 2950. */
+        re15_g5_tentakel_reset();
         memset(g, 0, sizeof *g);
         g->aktiv = 1; g->routine = 1; g->sub = 2; g->ph = 0;   /* Ctor: +0x05=2 @0x8010076C */
         g->hitbox_b = 2200;
@@ -601,6 +625,9 @@ void re15_g5_boss_tick(int slot)
              * vor der KI (scd_vm_tick main.c:4279 vor re15_enemy_ai_run_all),
              * das Ueberschreiben greift also im selben Frame. */
             e->x = -14700; e->z = -23350;
+            /* Vorwaertsrichtung EINFRIEREN (s. g5_state_t.vor): ab hier bewegt sich der
+             * Boss immer auf dieser Achse, auch wenn der Spieler ihn ueberholt. */
+            g->vor = (int8_t)((g5_dx(e) >= 0) ? 1 : -1);
             re15_g5_tentakel_spawn(e);     /* vier 0x37-Arme (Port-Entscheidung, s. Modul) */
             /* Yaw EINMALIG auf den Spieler (danach konstant - RE2 dreht G5 im
              * Kampf nie, @0x8010044c ist der einzige Schreiber). */
@@ -751,9 +778,12 @@ void re15_g5_boss_tick(int slot)
                 g->rampe--;
                 if (g->rampe <= 0) { g->rampe = 0; g5_se(10); }      /* @0x80101920 */
             }
-            {   int32_t u = g5_u(e) - g->rampe;        /* if (X>4000) X -= Zaehler */
-                if (u < 4000) u = 4000;
-                if (g5_u(e) > 4000) g5_setze_u(e, u);
+            {   int32_t u = g5_u(e);                   /* if (X>4000) X -= Zaehler */
+                if (u > 4000) {
+                    int32_t schritt = g->rampe;
+                    if (u - schritt < 4000) schritt = u - 4000;
+                    g5_schiebe(e, -schritt, 0);
+                }
             }
             if (g5_anim(e)) {                          /* Clip-2-Ende -> sub0 */
                 g->sub = 0; g->ph = 0;
