@@ -1629,19 +1629,44 @@
   "6": {
    "objekte": [
     {
-     "name": "Rohr quer im Vordergrund",
-     "grund": "Selbst freigestellt 2026-09-13. Nutzer-Marken ROOM11F0 F3464/F3959: \"Der Boiler Room ist auch nicht ganz sauber korrekt ... dort wuerde ich erwarten dass ich geblockt werde, damit das mit dem Hintergrund funktioniert.\" GEMESSEN: die Kollision ist RICHTIG - an beiden Marker-Positionen liegt ein freier Gang zwischen den SCA-Bloecken (x 4900..9650 z bis 300 und x 6350..11950 z ab 3700; der Spieler stand bei z=981 bzw. z=2670, also dazwischen). Falsch war, dass ROOM11F0 ueberhaupt KEINE Vordergrund-Maske hatte (Log: masken=0) - die Rohre und der Steg wurden deshalb HINTER den Spieler gezeichnet, und es sah aus, als stuende er darauf. Das Rohr-Polygon 2026-09-13 nachjustiert: der erste Wurf lag rund 15 px zu hoch (im Maskenbild sofort zu sehen), es folgt jetzt der sichtbaren Rohrachse von (0,218) nach (195,180).",
-     "polygon": "0,210 60,202 120,192 170,182 200,174 210,192 170,202 120,212 60,222 0,236"
+     "name": "ROOM11F0 Cut 6 06_01",
+     "png": "pri/STAGE1/11F0/06_01.png",
+     "x": 13,
+     "y": 191,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 100.0 %, 2718 Maskenpunkte. ⛔ ERSETZT 2026-09-13: hier standen meine eigenen Polygone (Rohr/Tank/Steg). Der Nutzer hat fuer diesen Raum Freistellungen geliefert - die sind genauer und haben Vorrang."
     },
     {
-     "name": "Tank unten rechts",
-     "grund": "Selbst freigestellt 2026-09-13. Nutzer-Marken ROOM11F0 F3464/F3959: \"Der Boiler Room ist auch nicht ganz sauber korrekt ... dort wuerde ich erwarten dass ich geblockt werde, damit das mit dem Hintergrund funktioniert.\" GEMESSEN: die Kollision ist RICHTIG - an beiden Marker-Positionen liegt ein freier Gang zwischen den SCA-Bloecken (x 4900..9650 z bis 300 und x 6350..11950 z ab 3700; der Spieler stand bei z=981 bzw. z=2670, also dazwischen). Falsch war, dass ROOM11F0 ueberhaupt KEINE Vordergrund-Maske hatte (Log: masken=0) - die Rohre und der Steg wurden deshalb HINTER den Spieler gezeichnet, und es sah aus, als stuende er darauf.",
-     "polygon": "206,199 268,190 320,183 320,240 196,240"
-    },
+     "name": "ROOM11F0 Cut 6 06_02",
+     "png": "pri/STAGE1/11F0/06_02.png",
+     "x": 177,
+     "y": 60,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 99.9 %, 14065 Maskenpunkte. ⛔ ERSETZT 2026-09-13: hier standen meine eigenen Polygone (Rohr/Tank/Steg). Der Nutzer hat fuer diesen Raum Freistellungen geliefert - die sind genauer und haben Vorrang."
+    }
+   ]
+  },
+  "1": {
+   "objekte": [
     {
-     "name": "Steg mit Warnmarkierung rechts",
-     "grund": "Selbst freigestellt 2026-09-13. Nutzer-Marken ROOM11F0 F3464/F3959: \"Der Boiler Room ist auch nicht ganz sauber korrekt ... dort wuerde ich erwarten dass ich geblockt werde, damit das mit dem Hintergrund funktioniert.\" GEMESSEN: die Kollision ist RICHTIG - an beiden Marker-Positionen liegt ein freier Gang zwischen den SCA-Bloecken (x 4900..9650 z bis 300 und x 6350..11950 z ab 3700; der Spieler stand bei z=981 bzw. z=2670, also dazwischen). Falsch war, dass ROOM11F0 ueberhaupt KEINE Vordergrund-Maske hatte (Log: masken=0) - die Rohre und der Steg wurden deshalb HINTER den Spieler gezeichnet, und es sah aus, als stuende er darauf.",
-     "polygon": "183,148 244,136 320,124 320,178 244,190 183,196"
+     "name": "ROOM11F0 Cut 1 01",
+     "png": "pri/STAGE1/11F0/01.png",
+     "x": 99,
+     "y": 161,
+     "massstab": 4,
+     "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 85.2 %, 769 Maskenpunkte."
+    }
+   ]
+  },
+  "7": {
+   "objekte": [
+    {
+     "name": "ROOM11F0 Cut 7 07",
+     "png": "pri/STAGE1/11F0/07.png",
+     "x": 0,
+     "y": 16,
+     "massstab": 1,
+     "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 100.0 %, 20072 Maskenpunkte."
     }
    ]
   }
