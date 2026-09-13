@@ -1,3 +1,19 @@
+# v0.7.97 - 2026-09-13
+
+## Abgetrennte Beine bleiben liegen, kein Landen mehr in der Wand
+
+- **Die abgetrennten Beine bewegen sich nicht mehr mit.** Seit der
+  Becken-Trennung behielt die Unterhaelfte die Pose des Rumpfes und zappelte
+  deshalb weiter. Sie friert jetzt im Moment der Trennung ein. (Im Original hat
+  sie eine eigene, kurze Ausklang-Animation - die fehlt weiterhin und steht so
+  im Code.)
+- **Beim Gebissen-werden landet man nicht mehr in der Wand.** Die Klemme, die
+  genau das verhindert, gab es seit Runde 6 - sie galt aber nur fuer zwei
+  Greifer-Typen, und der Zombie war nicht dabei. Gemessen an der Nutzer-Marke:
+  der Spieler stand drei Einheiten innerhalb der Wandzelle von ROOM1220.
+- **ROOM11F0 Cut 0** hatte als einziger Kamerawinkel des Boiler Rooms keine
+  Vordergrund-Maske; Tank und Rohr sind jetzt gezogen.
+
 # v0.7.96 - 2026-09-13
 
 ## Boiler Room: die Vordergrund-Objekte verdecken jetzt
