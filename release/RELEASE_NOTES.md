@@ -1,6 +1,6 @@
-# v0.7.97 - 2026-09-13
+# v0.7.98 - 2026-09-13
 
-## Abgetrennte Beine bleiben liegen, kein Landen mehr in der Wand
+## Abgetrennte Beine bleiben liegen, kein Landen in der Wand, Hunde bluten
 
 - **Die abgetrennten Beine bewegen sich nicht mehr mit.** Seit der
   Becken-Trennung behielt die Unterhaelfte die Pose des Rumpfes und zappelte
@@ -13,6 +13,9 @@
   der Spieler stand drei Einheiten innerhalb der Wandzelle von ROOM1220.
 - **ROOM11F0 Cut 0** hatte als einziger Kamerawinkel des Boiler Rooms keine
   Vordergrund-Maske; Tank und Rohr sind jetzt gezogen.
+- **Tote Hunde hinterlassen wieder Blut.** Der Port kannte die Effekt-Tabelle des
+  Hundes zwar, benutzte sie aber nicht - er schickte fuer jeden Effekt dieselbe
+  Art. Statt Bluttropfen UND Spritzer kamen dreimal Tropfen heraus.
 
 # v0.7.96 - 2026-09-13
 
