@@ -1,3 +1,26 @@
+# v0.7.95 - 2026-09-13
+
+## Der Zombie trennt sich am Becken
+
+- **Schrotflinte: der Zombie bleibt nicht mehr ganz.** Im Original faellt nie der
+  Oberkoerper ab - das Spiel trennt den Zombie am BECKEN: Huefte und Beine
+  werden aus dem Skelett ausgehaengt, rutschen weg und bleiben liegen, waehrend
+  der Rumpf zusammensackt. Die erste Haelfte davon hatte der Port seit heute
+  frueh (der Bodenanker gegen das Versinken), die zweite fehlte - und schlimmer:
+  der Port loeste den Aushang genau dort wieder, wo das Original die
+  Wegschieb-Maschine erst startet. Gemessen: der Abstand zwischen Brust und
+  Huefte bleibt bis Bild 39 bei null und waechst dann auf rund 550, bevor die
+  Unterhaelfte einfriert.
+- **Kartenfarbe der ROOM1000-Raeume, zweiter Anlauf.** Mein erster Versuch nahm
+  die Zahlen aus dem Kachel-Code - das sind aber Modulations-Faktoren, keine
+  Farben: eine gemalte Kachel ist eine Textur, die damit multipliziert wird, das
+  Ergebnis ist viel dunkler. Eine einfarbige Flaeche mit demselben Wert leuchtet
+  daneben grell. Die Toene sind jetzt am Karten-Abzug des Nutzers GEMESSEN
+  (besuchte Kachel 0,64,40 - Linien 48,192,48 - aktuelle Kachel 80,16,0).
+- **ROOM1000 Cut 0 und Cut 2 haben endlich Masken.** Fuer diese beiden
+  Kamerawinkel gab es keine, deshalb verdeckte dort nichts: die Spindbloecke
+  links und rechts sowie die Bank im Vordergrund sind jetzt gezogen.
+
 # v0.7.94 - 2026-09-13
 
 ## Der YOU-DIED-Bildschirm kommt jetzt waehrend des Fressens
