@@ -141,8 +141,14 @@ int main(void)
          * entlang +0x6a), sonst geht das Naeherungs-Tor gar nicht auf. Zum Schiessen steht
          * er danach wieder nah genug fuer die Zielerfassung. */
         int32_t sx = pl->x, sz = pl->z; int16_t sr = pl->rot_y;
-        pl->x = 4091; pl->z = 900;
+        pl->x = 4091; pl->z = 800;   /* auf z-Hoehe: |dz| < 850 @ROOM1210.RDT 0x1EAE */
         re15_actor_t *e = arm_spawn(1, 0, 0);
+    /* ⛔ FIXTURE NEU VERANKERT (Runde 10): der Arm faehrt seit dem Original-Ausloeser nur
+     * noch aus, wenn ihn das Skript SCHARFGESCHALTET hat - A[0] @0x8010c614 liest
+     * `lbu v0,9(a0)` / `andi v0,v0,0x1f` / `==1`. Im Spiel setzt das ROOM1210 sub02
+     * (Member_set(12,1) @0x1EDA); hier setzt es der Test von Hand. Ohne diese Zeile
+     * misst der Test nur noch, dass ein nie ausgeloester Arm stillhaelt. */
+        e->grid_id = 1;
         int came_out = 0;
         for (int f = 0; f < 200; f++) {
             re15_enemy_ai_run_all(0);

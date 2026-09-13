@@ -11647,6 +11647,18 @@ static int re15_writher_sector(const re15_actor_t *a, const re15_actor_t *b, int
 static int32_t s_writher_home_x[RE15_ACTOR_MAX];
 static int32_t s_writher_home_z[RE15_ACTOR_MAX];
 static uint8_t s_writher_home_ok[RE15_ACTOR_MAX];
+/* EINMAL PRO RAUMBESUCH - der Arm, der schon gegriffen hat, kommt nicht wieder.
+ * Nutzer 2026-09-13: "Diese greifen dann einmalig durch die Wand, greifen Leon und gehen
+ * dann zurueck danach kommen sie waehrend man noch im Raum ist nicht mehr wieder."
+ * Das deckt sich mit dem Original: im ganzen Arm-Baum 0x8010c1ec..0x8010d774 gibt es
+ * KEINEN Store, der +0x5 wieder auf 0 oder 1 setzt (Voll-Scan aller `sb ?,5(?)`: nur
+ * @0x8010c628=1 - das ist A[0], der EINZIGE Einstieg -, @0x8010c65c=2, @0x8010c8e4=(rng&1)+2,
+ * @0x8010cacc=3, @0x8010ce0c=2, @0x8010cf94=2, @0x8010d08c=2, @0x8010d164=4). Der Port
+ * schickte den Arm nach dem Rueckzug dagegen auf sub 0 zurueck, wo das Reichweiten-Tor
+ * sofort wieder zog - er fuhr also immer neu aus. Weil der Rueckzug selbst schon eine
+ * Nachruestung ist (das Original kennt kein Zurueck), bekommt der Riegel hier ein eigenes
+ * Feld, statt ein Original-Byte umzudeuten. */
+static uint8_t s_writher_verbraucht[RE15_ACTOR_MAX];
 
 /* FUN_800245d8(a0) - der Schritt um +0x8c entlang (Yaw + a0), byte-gelesen:
  *   800245f0: lhu v0,140(v0)   ; +0x8c wird als Z-Komponente des Vektors abgelegt
@@ -11718,6 +11730,12 @@ static void re15_writher_ai_tick(int slot)
             if (slot >= 0 && slot < RE15_ACTOR_MAX) {
                 s_writher_home_x[slot] = e->x; s_writher_home_z[slot] = e->z;
                 s_writher_home_ok[slot] = 1;
+                /* Der Einmal-Riegel gilt je RAUMBESUCH - der Nutzer hat ihn genau so
+                 * beschrieben ("waehrend man noch im Raum ist"). Dieser INIT-Zweig laeuft
+                 * bei jedem Betreten neu, also wird hier zurueckgesetzt. Der Ausloeser
+                 * selbst bleibt davon unberuehrt: Flag(3,44) liegt im Spielstand und
+                 * schaltet die Arme nur EINMAL ueberhaupt scharf. */
+                s_writher_verbraucht[slot] = 0;
             }
         }
         /* HP und Trefferbudget seeden (Nutzer-Auftrag 2026-08-26: "Ich wuerde die Haende
@@ -11964,7 +11982,53 @@ static void re15_writher_ai_tick(int slot)
         const int32_t handz = hz - (int32_t)(((int32_t)re15_sin_q12(hd) * out) >> 12);
         int32_t rdx = pl->x - handx, rdz = pl->z - handz;
         int64_t r2  = (int64_t)rdx * rdx + (int64_t)rdz * rdz;
-        int reach = (r2 < (int64_t)RE15_WRITHER_REACH_R * RE15_WRITHER_REACH_R);
+        /* ⛔ DAS AUSFAHR-TOR IST DIE z-HOEHE, NICHT DER 2D-ABSTAND (Runde 10, gemessen mit
+         * probe_1210_trigger auf der begehbaren Bahn, 287 Bilder).
+         *
+         * Bis hierher stand hier `r2 < 1300^2` gegen die AUSGEFAHRENE HAND (Heimat + 4091
+         * voraus). Auf einem normalen Flurdurchlauf geht dieser Ausdruck NIE auf: der
+         * Laufraum ist x -20622..-18164, die Arm-Reihen stehen bei x -25000 und -14000, die
+         * Haende landen also bei -20909 bzw. -18091. In der Flurmitte (-19500) sind das
+         * 1409 Einheiten - 109 zu viel. Die Sonde misst genau das: 0 von 10 Armen reagieren.
+         * Das ist das "komisch" aus dem Nutzer-Report vom 2026-09-13.
+         *
+         * Ein groesserer Radius waere geraten. Die belegte Groesse steckt im Ausloeser
+         * selbst: das Original-Rechteck @ROOM1210.RDT 0x1EAE ist (-22100,-15000) mit der
+         * Ausdehnung 5200 x 1700 - die 5200 sind die Flurbreite, die 1700 die z-TIEFE, in
+         * der der Ausloeser zieht. Als Halb-Hoehe um den Arm sind das 850. Mehr als die
+         * Umrechnung Ausdehnung -> Halb-Breite steckt nicht darin.
+         *
+         * Gemessen ergibt das 10 von 10 reagierenden Armen, hoechstens 2 gleichzeitig, mit
+         * 11..12 Bildern Vorlauf - also das gestaffelte Greifen im Vorbeigehen, das der
+         * Nutzer beschreibt, statt "alle zehn in EINEM Bild" (Original) oder "gar keiner"
+         * (bisheriger Port-Stand). Gemessen wird gegen die HEIMAT-z, nicht gegen e->z: die
+         * wandert waehrend der Lunge, und dasselbe Tor ist zugleich das Halte-Tor (case 1
+         * bricht bei !reach ab) - an e->z gehaengt kippte der Ausdruck mitten in der
+         * Bewegung um. Der GRIFF behaelt sein eigenes, byte-true Tor
+         * (RE15_WRITHER_GRAB_DIST @0x801018f4 auf hand_dist). */
+        /* Der Radius sitzt am ARM-URSPRUNG und misst, ob die Hand den Spieler ueberhaupt
+         * ERREICHEN kann - das ist RE2s Form (`lw s0,496(s1)` = Abstand Ursprung/Ursprung,
+         * `sltiu s0,s0,0x514` @0x80102f3c), nur mit der Reichweite dieses Armes statt RE2s
+         * Zahl. Beide Summanden stehen schon im Code:
+         *     4091 = LUNGE_NET 2420 (3x800 @0x8010c7b8 + 1x20 @0x8010c7f8)
+         *          + MESH_REACH 1671 (groesste Vorwaerts-Auslenkung des EM01A-Ausfahr-Clips)
+         *      450 = Klemmradius des Spielers @0x80073e9a - so nah kommt sein Zylinder an
+         *            den Punkt heran, den die Hand erreicht.
+         * Warum der Spieler-Radius hier gebraucht wird, ist gemessen: der begehbare Flur ist
+         * x -20622..-18164, die Arm-Reihen stehen bei -25000/-14000. Der kuerzeste Abstand
+         * eines Ursprungs zum begehbaren Raum ist damit 4164 - 73 Einheiten MEHR als die
+         * Handreichweite. Ohne den Koerperradius kann also kein Arm je jemanden erreichen,
+         * und genau das hat die Sonde gezeigt: 0 von 10 reagierten.
+         *
+         * Gegenprobe, die dieser Form ihren Sinn gibt (unit_1210_gitterhaende): die
+         * GEGENUEBERLIEGENDE Reihe steht 11000 entfernt und bleibt still. Ein reines
+         * z-Hoehen-Tor liess sie mitreagieren - der Flur ist fuer beide Reihen dieselbe
+         * z-Zeile. */
+        enum { RE15_WRITHER_ERREICHT = 4091 + 450 };
+        {   const int32_t ux = pl->x - hx, uz = pl->z - hz;
+            r2 = (int64_t)ux * ux + (int64_t)uz * uz;
+        }
+        int reach = (r2 < (int64_t)RE15_WRITHER_ERREICHT * RE15_WRITHER_ERREICHT);
 
         /* Stoehn-Cooldown: liegt jetzt auf +0x239 (re2z_cd239) - genau dem Feld, aus dem
          * der Wert stammt (RE2s verankerter Zombie setzt +0x239 = 150 @0x801038d0-d4).
@@ -12304,6 +12368,8 @@ static void re15_writher_ai_tick(int slot)
                         e->x = s_writher_home_x[slot];   /* Drift-Klemme, s. Kopf */
                         e->z = s_writher_home_z[slot];
                     }
+                    if (slot >= 0 && slot < RE15_ACTOR_MAX)
+                        s_writher_verbraucht[slot] = 1;  /* s. s_writher_verbraucht */
                     e->sub_state_1 = 0; e->sub_state_2 = 0;
                     break;
                 }
@@ -12346,7 +12412,30 @@ static void re15_writher_ai_tick(int slot)
         default:                                         /* RUHE — B[0] @0x8010c678 */
             e->motion = 0;                               /* +0x94 = 0 @0x8010c6bc */
             e->anim_frame++;                             /* Clip 0 laeuft in Schleife @0x8010c6f4 */
-            if (reach) { e->sub_state_1 = 1; e->anim_frame = 0; }
+            /* ⛔ DER ORIGINAL-AUSLOESER, der hier FEHLTE (Nutzer 2026-09-13: "Schaue noch mal
+             * genau nach wie der Mechanismus ist!"). Das Skript scharfschaltet den Arm, die
+             * KI liest das Byte:
+             *     8010c614  lbu   v0,9(a0)        ; entity+0x9 = grid_id
+             *     8010c61c  andi  v0,v0,0x1f
+             *     8010c620  bne   v0,v1(=1),0x8010c644
+             *     8010c628  sb    v0(=1),5(a0)    ; +0x5 = 1 = AUSFAHREN
+             * Gesetzt wird es von ROOM1210 sub02 @0x1EC8 (`34 0c 01 00` = Member_set(12,1),
+             * Member 12 -> `sb a2,9(a0)` @0x800411f8), und dorthin kommt man nur durch den
+             * Aot_set aot=6 sce=3 @0x1EAE - das Rechteck (-22100,-15000) 5200x1700 im Flur,
+             * und auch das nur, solange Flag(3,44) == 0 ist (`21 03 2c 00` in sub00 @0x1EA6;
+             * Zone 3 = DAT_800B0FF8 laut Zeigertabelle @0x80074664[3], Wort @0x800B0FFC,
+             * Maske 0x00080000). sub02 setzt das Flag sofort auf 1 und ruft Aot_reset(6) -
+             * der Ausloeser toetet sich also selbst, raum-lokal UND fuer den Spielstand.
+             *
+             * Der Port las dieses Byte NIE und haengte das Ausfahren allein an das
+             * nachgeruestete Reichweiten-Tor. Damit fuhren die Arme ohne jeden Skript-Bezug
+             * aus - und nach dem Rueckzug immer wieder neu. Beides ist jetzt zu:
+             * grid_id macht scharf (byte-true), reach staffelt (Nachruestung, weil der
+             * Nutzer das "alle zehn in EINEM Bild" des Originals verworfen hat),
+             * s_writher_verbraucht laesst es bei dem einen Mal. */
+            if (reach && (e->grid_id & 0x1fu) == 1u &&
+                !(slot >= 0 && slot < RE15_ACTOR_MAX && s_writher_verbraucht[slot]))
+                { e->sub_state_1 = 1; e->anim_frame = 0; }
             break;
         }
         /* ORTSFEST: die Position wird in KEINEM Zweig veraendert (siehe Kopf). */

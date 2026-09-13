@@ -89,6 +89,17 @@ int main(void)
      * (0,900) und damit rund 90 Grad seitlich. RE2s Griff-Tor sind zwei Halb-Sektoren um
      * Yaw +-256 (@0x8010193c-4c) = ein 45-Grad-Kegel NACH VORN; seitlich wird nicht gegriffen.
      * Genau das ist die Aussage: der Arm ist als Hindernis hart, aber er greift nicht um sich. */
+    /* ⛔ FIXTURE NEU VERANKERT (Runde 10): der Arm faehrt seit dem Original-Ausloeser nur
+     * noch aus, wenn ihn das Skript SCHARFGESCHALTET hat - A[0] @0x8010c614 liest
+     * `lbu v0,9(a0)` / `andi v0,v0,0x1f` / `==1`. Im Spiel setzt das ROOM1210 sub02
+     * (Member_set(12,1) @0x1EDA); hier setzt es der Test von Hand. Ohne diese Zeile
+     * misst der Test nur noch, dass ein nie ausgeloester Arm stillhaelt. */
+    e->grid_id = 1;
+    /* Und auf z-HOEHE: das Ausfahr-Tor ist |dz| < 850 (halbe Tiefe des Ausloeserechtecks
+     * d=1700 @ROOM1210.RDT 0x1EAE), nicht mehr der Radius um die Hand. 900 lag 50 daneben.
+     * Fuer (3) HARMLESS bleibt der Spieler seitlich: der Griff-Kegel ist +-256 um den Yaw
+     * (@0x8010193c-4c), und daran aendert die Hoehe nichts. */
+    pl->z = 800;
     int32_t ex0 = e->x, ez0 = e->z; int16_t hp0 = pl->hp;
     int32_t xmax = ex0;
     for (int f = 0; f < 200; f++) {

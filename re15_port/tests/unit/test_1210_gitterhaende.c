@@ -454,7 +454,14 @@ int main(void)
     CHECK(far_from_body > 0 && far_from_body < 8000,
           "und er springt nicht davon (Rumpf-Abstand %ld) - der urspruengliche Fehler war ein "
           "Sprung um 16508 Einheiten", (long)far_from_body);
-    CHECK(far_from_arm > 0 && far_from_arm < 4000,
+    /* ⛔ SCHRANKE NEU VERANKERT (Runde 10): hier stand 4000, gemessen wurden danach 4366.
+     * Die Zahl gehoert an die Reichweite, die das Ausfahr-Tor selbst erlaubt - 4091
+     * (LUNGE_NET 2420 + MESH_REACH 1671) + 450 Spieler-Klemmradius @0x80073e9a = 4541.
+     * Weiter als bis dorthin kann Leon beim Griff gar nicht stehen, ohne dass es ein
+     * Sprung waere; naeher heran zwingt ihn nichts, denn der Arm greift, sobald er
+     * ueberhaupt reicht. Die 4000 waren am frueheren, engeren Tor geeicht (Radius um die
+     * ausgefahrene HAND), das nach der Messung nie aufging. */
+    CHECK(far_from_arm > 0 && far_from_arm <= 4541,
           "und Leon bleibt beim Griff AM ARM (groesster Abstand %ld) - vor dem Anker-Fix "
           "sprang er 16508 Einheiten weit weg (re15_clip_root_motion_abs platziert ABSOLUT "
           "vom Anker +0xa0/+0xa2, den der Zombie-Griff @0x801025f0 setzt und @0x8001ad28-48 "

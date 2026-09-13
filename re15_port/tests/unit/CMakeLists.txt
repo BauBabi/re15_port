@@ -3530,3 +3530,12 @@ target_link_libraries(test_voice_ausreden PRIVATE re15_engine re15_test_support)
 target_include_directories(test_voice_ausreden PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_voice_ausreden COMMAND test_voice_ausreden)
 set_tests_properties(unit_voice_ausreden PROPERTIES TIMEOUT 30)
+
+# --- ROOM1210 Gitterhaende: Ausloeser/Staffelung/Einmal-Riegel (Nutzer 2026-09-13) ---
+add_executable(test_1210_arme test_1210_arme.c)
+target_link_libraries(test_1210_arme PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1210_arme PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1210_arme PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1210_arme COMMAND test_1210_arme)
+set_tests_properties(unit_1210_arme PROPERTIES TIMEOUT 60)
