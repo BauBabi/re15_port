@@ -1287,8 +1287,20 @@ def main():
     # 1000-auf-Rect-4 die Gegenprobe besteht, beweist der heutige gruene Stand.
     # Ein ZONE_FIX-Eintrag wuerde Rect 4 ueber _fix_rects sperren und 1050/z1
     # verdraengen (die Kaskade vom 2026-09-09) - deshalb diese zweite, weiche Liste.
+    # ⛔ (0x1000, 0) IST RAUS (2026-09-13, karte-1000-1050.md): Rect 4 ist ROOM1030s
+    # HALLENKACHEL - belegt durch dessen AUSGELIEFERTE Massstabszeile @0x800768c8. Der
+    # Pin faerbte in ROOM1000 die ganze Halle CURRENT und setzte den Marker mitten
+    # hinein (gemessen (167,159); Nutzer: "ich lande irgendwo ganz anders in der Lobby
+    # laut Map"). ROOM1000 hat auf Blatt 2 ueberhaupt KEINE Kachel - oestlich der
+    # Flur-Ostwand malt das Blatt unterhalb y=88 keinen einzigen Texel (480 Texel,
+    # alle in y59..88 = Rect 5). Der Raum traegt jetzt rect 255 + drei SCHEMA-
+    # Zeichnungen (s_map_synth im Header, an den Tuerhoehen eingemessen, linke Kante
+    # x=207: die Flur-Ostwand ist drei Pixel breit, Spalten 204..206) und zerfaellt in
+    # DREI Zonen: Ostraum (Kameras 0-2) und zwei Toiletten (3-5 / 6-8), getrennt durch
+    # eine volle Trennwand bei z=1400.
+    # Massstabs-Seed fuer ROOM1050 (2026-09-13): oy 51 / sy 2322 statt 59 / 2229 - die
+    # alte Zeile lag in z um 7 px daneben (eigene Suedwand auf y77 statt y69/70).
     ZONE_FIX_TEILT = {
-        (0x1000, 0): (2, 4),
         (0x1030, 0): (2, 4),
         # ⛔ DRIFT-BREMSE (2026-09-09): das Freiwerden von Rect 2 (ROOM1060 zog auf
         # Rect 10) liess den Kosten-Loeser Blatt 2 neu ausbalancieren - ROOM10A0
