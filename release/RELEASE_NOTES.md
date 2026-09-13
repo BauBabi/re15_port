@@ -1,3 +1,23 @@
+# v0.7.94 - 2026-09-13
+
+## Der YOU-DIED-Bildschirm kommt jetzt waehrend des Fressens
+
+- **Die Todes-Praesentation wurde jeden Frame wieder abgeraeumt.** Das eingebaute
+  Log hat es gezeigt: 241 Mal hintereinander startete sie und wurde im selben
+  Moment zurueckgesetzt. Es gibt zwei Schalter dafuer, und gestern hatte ich nur
+  einen umgestellt - der zweite prueft, ob der Spieler "tot" ist, und genau das
+  ist er waehrend des Fressens absichtlich nicht (der Alligator besitzt ihn).
+  Jetzt laufen beide auf derselben Bedingung, und der Bildschirm setzt mitten in
+  der Fress-Animation ein.
+- **Die ROOM1000-Raeume haben nicht mehr ihre eigene Farbe.** Raeume mit gemalter
+  Kachel werden gruen (besucht) bzw. rot (aktuell) eingefaerbt; die gerechnete
+  Zeichnung fuer ROOM1000 benutzte einen ganz anderen Satz - blaue Fuellung, weisse
+  Kante - und stach als Fremdkoerper heraus. Sie traegt jetzt dieselben Toene.
+
+Weiter offen und gemessen (nicht geraten): Leon wird beim Fressen noch nicht im
+Maul gezeichnet, Birkin erscheint noch nicht, und die neun PRI-Marken des
+Spiellaufs sind noch nicht abgearbeitet.
+
 # v0.7.93 - 2026-09-13
 
 ## Der Raum fror ein, weil mein eigener Fix den Spieler abschaltete
