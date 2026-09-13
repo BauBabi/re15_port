@@ -1669,6 +1669,20 @@
      "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 100.0 %, 20072 Maskenpunkte."
     }
    ]
+  },
+  "0": {
+   "objekte": [
+    {
+     "name": "Tank/Sockel rechts unten",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer-Marke ROOM11F0 F789: \"PRI bei 11F0 sieht gut aus, bis auf der eine\"). Fuer Cut 0 gab es keine Freistellung - das Log meldete dort masken=0, waehrend der Spieler bei (1926,0,-1182) mit den Beinen vor Tank und Rohr stand.",
+     "polygon": "212,168 266,154 320,145 320,240 194,240"
+    },
+    {
+     "name": "Rohr links unten",
+     "grund": "Selbst freigestellt 2026-09-13 (Nutzer-Marke ROOM11F0 F789: \"PRI bei 11F0 sieht gut aus, bis auf der eine\"). Fuer Cut 0 gab es keine Freistellung - das Log meldete dort masken=0, waehrend der Spieler bei (1926,0,-1182) mit den Beinen vor Tank und Rohr stand.",
+     "polygon": "0,190 42,163 62,146 74,155 52,176 18,206 0,222"
+    }
+   ]
   }
  }
 }
