@@ -3539,3 +3539,10 @@ target_compile_definitions(test_1210_arme PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1210_arme COMMAND test_1210_arme)
 set_tests_properties(unit_1210_arme PROPERTIES TIMEOUT 60)
+
+# --- ROOM1090 auf der Karte: Hof Blatt 2, Dach Blatt 3 (Nutzer 2026-09-13) ---
+add_executable(test_map_1090 test_map_1090.c)
+target_link_libraries(test_map_1090 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_map_1090 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_map_1090 COMMAND test_map_1090)
+set_tests_properties(unit_map_1090 PROPERTIES TIMEOUT 30)

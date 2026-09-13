@@ -79,8 +79,54 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1081, -16750,  -5150, -10550,    950,  2,   9, 0,   9,    78,   214,  2080,  2320, 0, 0,   0, 0 },
     { 0x10A0,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x10A1,  17850,  15550,  29100,  28300,  2,   6, 0,  10,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x10B0, -25040, -21700,  19888,   9088,  2,   5, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x10B1, -25040, -21700,  19888,   9088,  2,   5, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* ⛔ ROOM1090 FEHLTE GANZ AUF DER KARTE (Nutzer 2026-09-13: "Fuer ROOM 1090 fehlt noch
+     * das Kartenstueck"). Die Ursache war keine fehlende Kunst: s_map_floors fuehrte vier
+     * Etagenzeilen fuer 0x1090/0x1091, s_map_zones aber keine einzige - damit gab
+     * zone_index_at -1 zurueck, und Marker, Besucht-Bit und Rechteck-Faerbung fielen
+     * zusammen aus.
+     *
+     * DIE KACHEL GIBT ES, sie war nur falsch vergeben. Blatt 2 rect 5 (Schirm (180,59)
+     * 48x32, uv(112,64)) traegt genau EIN gemaltes Tuerblatt, bei (191,66). Die Tuer
+     * ROOM1050 -> ROOM1090 projiziert mit 1050s AUSGELIEFERTER Massstabszeile (ox 311,
+     * oy 51, sx 2428, sy 2322, flip 1,1) durch die Original-Formel FUN_800473f8
+     * (@0x8004741c-0x80047528) auf (191,70) - 4 px daneben, dieselbe Guete wie der schon
+     * akzeptierte Anker 1050<->10A0 (Glyph (194,92) gegen (197,92)). Kein anderes
+     * Rechteck von Blatt 2 meldet an (191,70) etwas.
+     * Zweiter, unabhaengiger Beleg aus der KUNST: eine Schablonensuche der Streifenkacheln
+     * im 1F-Grundriss von MAP02.PIX legt rect5 bei (205,130) ab (853/853 Texel, 100,0 %);
+     * seine Suedwand faellt dort auf dieselbe Linie wie die Nordwand von rect0 (ROOM1050).
+     * Die beiden Raeume teilen sich im Grundriss EINE Wand, und das Tuerblatt steckt darin.
+     *
+     * ROOM10B0 kann dieselbe Kachel nicht erklaeren: seine einzigen Nachbarn sind ROOM1170
+     * (Blatt 5) und ROOM1260 (Raumindex 38 >= 0x26, bekommt vom Stage-Init gar keine
+     * Seite) - auf Blatt 2 hat er NULL Tueren. Seine Zuordnung auf rect 5 kam allein aus
+     * der Flaechen-/Formkosten des Loesers, ohne jeden Tuer-Anker.
+     * ⛔ WAS ROOM10B0 STATTDESSEN BEKOMMT: vorerst rect 255, also kein gemaltes Rechteck.
+     * Blatt 2 haelt fuer ihn eine ZWOELFTE, tabellenlose Kachel bereit (uv(32,88), Schirm
+     * (94,125)); nutzbar wird sie erst, wenn Blatt 2 - wie Blatt 3 heute - eine eigene
+     * Ersatz-Seitentabelle in s_map_rectfix bekommt. Bis dahin bleiben Marker und
+     * Besucht-Bit von 10B0 unveraendert, nur die (falsche) Faerbung entfaellt. */
+    { 0x10B0, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x10B1, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* ROOM1090, untere Ebene (Hinterhof mit dem verunglueckten Polizeitransporter).
+     * Heimatblatt ist KEINE Wahl: der Stage-1-Karteninit FUN_8004b568 schickt Raumindex
+     * (0x1090>>4)&0xFF = 9 ueber die Kette 0..11, deren Schwanz @0x8004b680 `j 0x8004b888`
+     * mit `ori v0,zero,0x2` im Verzoegerungsschlitz steht - Seite 2. (Gegenprobe:
+     * @0x8004b6f4/f8 gibt fuer 12..17 die 3.) Eine geeichte Massstabszeile hat der Raum
+     * nicht - @0x800768b0 + 9*8 = @0x800768F8 ist der Stub {0,0,1,1}, mit dem die
+     * Originalformel jede Weltlage auf (0,0) abbildet; es gilt also die Bbox-Streckung.
+     * Weltbox = Huelle aller SCA-Zellen beider Ebenen (Baender 0/1/2 unten, 4/5/6 oben,
+     * 61 Zellen, selbst geparst): x -17500..10285, z -18592..11754 - in z auf -18700
+     * erweitert, weil der Tuer-Trigger nach ROOM1100 bei (-5820,-18690) liegt und damit
+     * 98 Einheiten hinter der Zellenhuelle. Dort STEHT der Spieler, wenn er die Tuer
+     * nimmt; ohne die Erweiterung faellt er in diesem Augenblick aus seiner eigenen Zone.
+     * ⛔ ZONEN-NUMMER 22, NICHT 37. Die 37 war der erste Griff und ist FALSCH: sie gehoert
+     * schon ROOM2000 (Blatt 6). Die zid ist das Besucht-Bit - zwei Orte auf derselben
+     * Nummer teilen es sich. Gemessen hat das unit_map_marke_haengt_an sofort gemeldet:
+     * mit 37 schwebten auf Blatt 6 fuenf Tuermarken frei im Blau (vorher null). 22 ist die
+     * einzige Luecke im dicht belegten Bereich 0..101. */
+    { 0x1090, -17500, -18700,  10285,  11754,  2,   5, 0,  22,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x1091, -17500, -18700,  10285,  11754,  2,   5, 0,  22,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x10C0,  -9600,  -8250,   8750,  13100,  3,   0, 0,  12,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x10C1,  -9600,  -8250,   8750,  13100,  3,   0, 0,  12,     0,     0,     0,     0, 1, 1,   0, 0 },
     { 0x10D0, -21495, -10512,  10650,  30850,  3,   3, 0,  13,     0,     0,     0,     0, 1, 1,   0, 0 },
@@ -261,6 +307,24 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1061,  17800,  16200,  28900,  28950,  4,   1, 0,   7,     0,     0,     0,     0, 1, 1,   0, 1 },
     { 0x10A0,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
     { 0x10A1,  17850,  15550,  29100,  28300,  1,   9, 0,  10,     0,     0,     0,     0, 0, 0,   0, 1 },
+    /* ROOM1090, obere Ebene (Dachterrasse) - GAST-ZEILE auf Blatt 3, gleiche Zonen-Nummer
+     * wie die Hauptzeile, sichtbar ueber das ETAGEN-Bit. Dass der Raum zwei Ebenen hat, ist
+     * gemessen: die 16 Kamerasaetze (@+0x24 -> Dateioffset 0x60, 32 B je Satz) sind 8
+     * Kameras in zwei Baenken, und deren Y zerfaellt in zwei Gruppen - cuts 0/1/2 bei
+     * -12798/-12798/-11088 (Dach), cuts 3..7 bei -3006/-5526/-5526/-5526/-3294 (Hof).
+     * Die SCA-Baender folgen dem (0/1/2 unten, 4/5/6 oben; band_from_y = -(y/0x708)).
+     * Blatt 3 folgt der Generator-Regel "Band der Tuer -> Seite des Zielraums": die
+     * Band-6-Tuer fuehrt nach ROOM1100, und dessen Seite ist 3.
+     * RECHTECK 7, und zwar als einziger Kandidat: von Blatt 3s zehn Rechtecken sind nur 2
+     * und 7 frei, und eine Schablonensuche im 2F-Grundriss von MAP03.PIX legt rect7 auf
+     * x204..248 / y138..186 - es beruehrt rect6 (= ROOM1100) auf einer gemeinsamen
+     * Wandlinie (dy = -1, 36 px Ueberlappung) und ueberlappt rect9 (= ROOM10F0). Genau
+     * diese beiden sind die Nachbarn der oberen Ebene (hinein aus ROOM10F0 auf Band 5,
+     * hinaus nach ROOM1100 auf Band 6). rect2 (x160..211 / y226..253) beruehrt ROOM10F0
+     * gar nicht. Ein Tuer-Anker aus einer ausgelieferten Massstabszeile ist hier nicht zu
+     * haben - ROOM10F0 (@0x80076928) und ROOM1100 (@0x80076930) tragen beide den Stub. */
+    { 0x1090, -17500, -18700,  10285,  11754,  3,   7, 0,  22,     0,     0,     0,     0, 0, 0,   0, 1 },
+    { 0x1091, -17500, -18700,  10285,  11754,  3,   7, 0,  22,     0,     0,     0,     0, 0, 0,   0, 1 },
     /* ⛔ AUSWEICH-KACHEL, NUR GEDULDET (2026-09-12): diese 1F-Gastlage von
      * ROOM10F0/10F1 sitzt auf Blatt 2 Rect 8 - einer AUSWEICH-Kachel des
      * Loesers; Rect 8 gehoert pixelgenau belegt ROOM1010-Nord (Dossier
@@ -586,10 +650,10 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x1081, 0,  0,  3,  4 },
     { 0x1080, 0,  0,  4,  0 },
     { 0x1081, 0,  0,  4,  0 },
-    { 0x1090, 0,  1,  2, 255 },
-    { 0x1091, 0,  1,  2, 255 },
-    { 0x1090, 0,  6,  3, 255 },
-    { 0x1091, 0,  6,  3, 255 },
+    { 0x1090, 0,  1,  2,   5 },
+    { 0x1091, 0,  1,  2,   5 },
+    { 0x1090, 0,  6,  3,   7 },
+    { 0x1091, 0,  6,  3,   7 },
     { 0x10A0, 0,  1,  1,  9 },
     { 0x10A1, 0,  1,  1,  9 },
     { 0x10A0, 0,  8,  2,  6 },
