@@ -60,6 +60,21 @@ int main(void)
 {
     printf("=== G5-TENTAKEL (Typ 0x37, ROOM5090) ===\n");
     re15_actor_init();
+    /* ⛔ PIN: DER RESET DARF DEN SPIELER NICHT ABSCHALTEN (Nutzer-Befund 2026-09-13,
+     * "es taucht immer noch kein Birkin auf, + ich haenge in der cutscene fest").
+     * s_tent[] ist NULL-initialisiert, `slot` also 0 vor dem ersten Spawn - und Slot 0
+     * ist der SPIELER (re15_actor.h:23). Der Reset schrieb damit viermal
+     * g_actors[0].active = 0 und fror den ganzen Raum ein. Aufgefallen ist es erst, als
+     * der Reset ueberhaupt gerufen wurde (Runde-8-Fix); bis dahin stand er nur hier im
+     * Test - und dieser Test hat ihn gerufen, OHNE die Folge zu pruefen. */
+    {
+        re15_actor_t *pl_pin = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl_pin->active = 1; pl_pin->type = 0;
+        re15_g5_tentakel_reset();
+        CHECK(pl_pin->active == 1,
+              "der Tentakel-Reset hat den SPIELER abgeschaltet (Slot 0) - der Raum friert "
+              "damit ein und der Boss erscheint nie");
+    }
     re15_g5_tentakel_reset();
     g_current_room_id = 0x5090;
 

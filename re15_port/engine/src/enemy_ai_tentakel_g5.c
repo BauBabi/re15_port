@@ -139,8 +139,25 @@ void re15_g5_tentakel_reset(void)
 {
     int i;
     for (i = 0; i < TENT_N; i++) {
-        if (s_tent[i].slot >= 0 && s_tent[i].slot < RE15_ACTOR_MAX)
-            g_actors[s_tent[i].slot].active = 0;
+        int slot = s_tent[i].slot;
+        /* ⛔ NUR EINEN ECHTEN ARM ABSCHALTEN (Nutzer-Befund 2026-09-13: "es taucht immer
+         * noch kein Birkin auf, + ich haenge in der cutscene fest").
+         *
+         * s_tent[] ist als `static` NULL-initialisiert - `slot` ist vor dem ersten Spawn
+         * also 0, und Slot 0 ist per Definition der SPIELER (re15_actor.h:23
+         * RE15_ACTOR_SLOT_PLAYER). Die alte Schleife hat beim ersten Reset viermal
+         * `g_actors[0].active = 0` geschrieben und damit Leon abgeschaltet: der Raum fror
+         * ein (befund.log 2026-09-13: Cut 12 bzw. 15, Position konstant ueber 110-575
+         * Messzeilen), und weil der Boss-Tick den toten Spieler-Aktor las, erschien auch
+         * Birkin nicht. Aufgefallen ist es erst, als der Reset ueberhaupt gerufen wurde -
+         * bis zum selben Tag stand er nur im Test (das war der Runde-8-Fix).
+         *
+         * Zwei Riegel statt einem: Slot 0 ist NIE ein Arm, und der Aktor muss auch
+         * wirklich noch der 0x37-Arm sein - sonst gehoert der Platz inzwischen jemand
+         * anderem und das Abschalten waere genau der Fehler, den der Reset verhindern
+         * soll. */
+        if (slot > 0 && slot < RE15_ACTOR_MAX && g_actors[slot].type == 0x37u)
+            g_actors[slot].active = 0;
         s_tent[i].slot = -1;
     }
     s_tent_bereit = 0; s_tent_maske = 0;
