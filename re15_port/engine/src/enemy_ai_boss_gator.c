@@ -58,6 +58,7 @@
 #include "re15_collision.h"  /* re15_collision_constrain + ensure_band (Push-Klemme) */
 #include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
 #include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
+#include "re15_audio.h"     /* re15_audio_core_se - Leons Schrei im Fress-Finisher (@0x80102EF4) */
 
 /* Wrapper aus enemy_ai_common.c (dort static — als re15_ai_* exportiert). */
 extern void    re15_ai_advance(re15_actor_t *e, int32_t sp);
@@ -264,10 +265,30 @@ void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
     s_gb_bank_fn = bank_fn;
     if (s_gb_bank_fn) s_gb_bank_fn(GATOR_ENEMSE_BANK);
 }
+/* ⛔ KAM DER SE AUS EINEM FRAME-FLAG? (Runde 8, gator-schrei-schaden.md §10)
+ * Der PC-Mapper pc_gator_se_re15 biegt id 3 auf die RE1.5-Raumbank um, weil die sechs
+ * ZUBEISS-Rufstellen im Port sonst einen hellen Wasser-Klatsch spielten. Seine
+ * Runde-5-Begruendung war "id 3 kommt ausschliesslich von den sechs Zubeiss-Stellen" -
+ * seit dem Fress-Finisher (Clip 5) stimmt das nicht mehr: RE2s Frame-Wort Clip 5 f80
+ * ist 0x38000259, traegt also id 3 aus den DATEN. Diese Rufe muessen am Mapper vorbei,
+ * sonst klingt der Finisher falsch. Der Zeiger wird nur fuer die Dauer des Rufs gesetzt
+ * (synchron, kein Zustand ueber Frames hinweg). */
+static int s_gb_se_frameflag = 0;
+int re15_gator_se_aus_frameflag(void) { return s_gb_se_frameflag; }
 static void gb_se(int id)
 {
     if (s_gb_se_fn) s_gb_se_fn(id, 0);
+    /* Die 55-Frame-Sperre armt in RE2 NUR ein 0x48-Frame-Wort (`addiu v0,zero,55`
+     * @0x80100430 / `sb v0,562(s0)` @0x80100434), nicht der direkte Ruf. Im Port ist
+     * das ohne Unterschied: id 4 kommt ausschliesslich aus den Frame-Flags (die
+     * EM23-Daten fuehren nur 2/4), die sechs direkten Rufe tragen id 3. */
     if (id == 4) s_gb_brull_cd = 55;  /* Biss/Bruell armt die Hurt-SE-Sperre */
+}
+static void gb_se_frameflag(int id)
+{
+    s_gb_se_frameflag = 1;
+    gb_se(id);
+    s_gb_se_frameflag = 0;
 }
 static gb_state_t s_gb[RE15_ACTOR_MAX];
 static unsigned   s_gb_room;       /* Raum, fuer den s_gb gilt (Reset bei Wechsel) */
@@ -614,8 +635,11 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
     if (e->state != 2) return;
     e->state = 1;                       /* Boss-Panzerung: HURT-Route selbst verwalten */
     e->hit_react &= (uint8_t)~1u;       /* Fenster-Latch loesen (byte-true HURT-Tail) */
-    if (s_gb_brull_cd == 0) gb_se(5);   /* Standard-Hurt-SE 5 (@0x801020C4), gegated
-                                         * auf die 55er-Bruell-Sperre (@0x801020AC-B8) */
+    /* TREFFER-STOTTERER: RE2 wirft die laufende Animation bei JEDEM Treffer zwei
+     * Bilder zurueck - `lhu v0,332(s0)` / `addiu v0,v0,-2` / `sh` @0x80102030-48.
+     * Das ist der erste von vier Bausteinen der "staerkeren Schadensanimation"
+     * (Nutzer Runde 8); er wirkt auch dann, wenn keine Reaktion gewaehlt wird. */
+    if (e->anim_frame >= 2u) e->anim_frame -= 2u;
     if (!g->aggro) g->aggro = 1;        /* Fernschuss startet den Kampf */
     /* Blut bei JEDEM Treffer (Punkt 5): Burst 0x1500 am vorderen Rumpf (Bone 1). */
     {
@@ -625,16 +649,50 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
                              bp[0], bp[1], bp[2], (int16_t)e->rot_y);
     }
     g->hit_zaehler++;
-    if ((e->hp <= g->next_flinch_hp || g->hit_zaehler >= 6)
-        && g->phase != GBP_CROSS && g->phase != GBP_DIE) {
-        /* Nutzer 2026-09-11 ("die Schadenanimation fehlt mir noch ab einer
-         * gewissen Menge an treffern"): mit der 10%-Schwelle allein waeren
-         * es ~20 Handgun-Treffer je Flinch - zusaetzlich flincht er alle
-         * 6 TREFFER (DESIGN), grosse Schadensspruenge weiterhin sofort. */
-        while (g->next_flinch_hp >= e->hp) g->next_flinch_hp -= GB_FLINCH_STEP;
-        g->hit_zaehler = 0;
-        g->phase = GBP_FLINCH; g->timer = 0;
-        e->motion = 10; e->anim_frame = 0;   /* Flinch-Clip 10 (30 F, Clip-Statistik) */
+    {
+        /* ⛔ SE 0 ODER SE 5, NIE BEIDES (gator-schrei-schaden.md §2/§6): RE2 fuehrt
+         * zwei getrennte Treffer-Handler - die kleine Reaktion @0x801020B0 spielt
+         * SE 5 (`jal 0x8005BD6C` @0x801020C4, Gate `lbu v0,562(s0)` @0x801020AC),
+         * die GROSSREAKTION @0x80102BD0 spielt SE 0 (`addu a0,zero,zero` @0x80102C0C,
+         * `jal` @0x80102C10, dasselbe Gate @0x80102C00). Beide liegen auf Kanal 4
+         * Prioritaet 2, koennen sich also gar nicht ueberlagern. Bis hier spielte der
+         * Port IMMER SE 5 - der 1,32-s-Bruller SE 0 war komplett stumm, obwohl er
+         * genau der Laut ist, den der Nutzer vermisst. */
+        int flinch = (e->hp <= g->next_flinch_hp || g->hit_zaehler >= 6)
+                     && g->phase != GBP_CROSS && g->phase != GBP_DIE;
+        if (s_gb_brull_cd == 0) gb_se(flinch ? 0 : 5);
+        if (flinch) {
+            /* Nutzer 2026-09-11 ("die Schadenanimation fehlt mir noch ab einer
+             * gewissen Menge an treffern"): mit der 10%-Schwelle allein waeren
+             * es ~20 Handgun-Treffer je Flinch - zusaetzlich flincht er alle
+             * 6 TREFFER (DESIGN), grosse Schadensspruenge weiterhin sofort.
+             * ⛔ DIVERGENZ, bewusst und dokumentiert: RE2 waehlt die Grossreaktion
+             * mit `+0x225==0 && +0x22E==0 && (rand&3)==0` und sperrt danach
+             * 120..183 Frames (`+0x22E = (rand&0x3F)+120` @0x80101F8C-FD4), also
+             * 25 % je Treffer bei 4,0-6,1 s Sperre. Die Port-Kadenz bleibt, weil sie
+             * eine Nutzer-Entscheidung ist; die Unverwundbarkeit waehrend des Flinch
+             * (`+0x1D3 |= 0x80` @0x80102C20-28) wird deshalb NICHT uebernommen - sie
+             * gehoert zur RE2-Kadenz und wuerde den Kampf hier verlangsamen. */
+            while (g->next_flinch_hp >= e->hp) g->next_flinch_hp -= GB_FLINCH_STEP;
+            g->hit_zaehler = 0;
+            g->phase = GBP_FLINCH; g->timer = 0;
+            e->motion = 10; e->anim_frame = 0;   /* Flinch-Clip 10 (30 F, Clip-Statistik) */
+            /* CROSSFADE-LAENGE 3 (`addiu a2,zero,3` @0x80102C44): das Gewicht ist
+             * 4096/(frac+1) (`divu` @0x8001A384, Mischung @0x800296B8-EC) - der Flinch
+             * schneidet also hart in drei Schritten hinein statt weich zu blenden.
+             * Das ist der sichtbare Ruck, der bisher fehlte. */
+            e->anim_frac = 3;
+            {   /* ROOT-MOTION des Flinch-Clips: er traegt netto dx = -1025 ueber
+                 * 30 Bilder (-34,2/F) und richtet den Koerper auf (PoseY -2033 ->
+                 * -1053) - selbst nachgemessen (em23_rootmotion.py). Der Treiber
+                 * FUN_8001A330 faehrt das ueber `jal 0x80015E7C` @0x8001A374 +
+                 * `jal 0x800152C8` @0x8001A3C0. Ohne den Anker spielte der Port den
+                 * Clip auf der Stelle ab - der Gator zuckte, wich aber nicht zurueck. */
+                re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+                if (bk && bk->ok)
+                    re15_clip_anchor_set_pub(e, &bk->skel, &bk->anim, 10, 0);
+            }
+        }
     }
 }
 
@@ -851,7 +909,7 @@ void re15_gator_boss_tick(int slot)
                 if (kf != s_gb_kf_zuletzt) {
                     uint32_t w = bb->anim.frames[kf];
                     s_gb_kf_zuletzt = kf;
-                    if (w & 0x08000000u) gb_se((int)(w >> 28));
+                    if (w & 0x08000000u) gb_se_frameflag((int)(w >> 28));
                 }
             }
         }
@@ -1415,6 +1473,14 @@ void re15_gator_boss_tick(int slot)
         e->motion = 10;
         e->anim_frame++;
         g->timer++;
+        {   /* Die Ruecksetz-Spur des Flinch-Clips fahren (s. gb_absorb_hit): absolute
+             * Platzierung aus dem beim Eintritt gesetzten Anker, derselbe Helfer wie im
+             * Finisher-Pfad. Sollwert netto dx = -1025 ueber 30 F. */
+            re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+            if (bk && bk->ok)
+                re15_clip_root_motion_abs_pub(e, &bk->skel, &bk->anim, 10,
+                                              (int)e->anim_frame);
+        }
         if (g->timer >= 30) {                 /* Clip 10 = 30 Frames (Clip-Statistik) */
             g->phase = GBP_CHASE;
             e->motion = 0; e->anim_frame = 0;
@@ -1893,6 +1959,11 @@ void re15_gator_boss_tick(int slot)
             int sf = g->timer - 100;                   /* 0..120 */
             e->motion = 5;
             e->anim_frame = (uint32_t)sf;
+            /* LEONS SCHREI: RE2 feuert `Se_on(0x04020001)` = CORE-Bank Record 2 an
+             * der Spielerposition, ausgeloest bei OPFER-Frame 3 (`lbu v1,333(s0)` /
+             * `addiu v0,zero,3` / `bne` @0x80102EDC-E4; Ruf @0x80102EF4). `sf` ist
+             * genau dieser Frame. Ohne ihn war der Finisher auf Leons Seite tonlos. */
+            if (sf == 3) re15_audio_core_se(2);
             if (gb23 && gb23->ok) {
                 /* Absolute Platzierung BEIDER aus dem gemeinsamen Anker (@0x80101168-78):
                  * Gator mit Clip 5, Leon mit Opfer-Clip 1 (Victim-Skelett = kf-Traeger). */
@@ -2057,6 +2128,34 @@ int re15_gator_fressen_hold(void)
             && s_gb[i].timer < 215)
             return 1;
     }
+    return 0;
+}
+
+/* RE2-TODES-LATCH (Runde 8, finisher-timing.md §4 FIX 1). Nutzer: "ich werde schon
+ * gefressen VOR dem YOU ARE DEAD Bildschirm. Das ist aber der Finisher des
+ * Bildschirms. Ich muss also DORT gefressen werden."
+ *
+ * Im Original laeuft die Todes-Praesentation MITTEN im Fressen, nicht danach:
+ *   RE2   sub4-P1 setzt `0x800CFB74 |= 0x04000000` bei Gator-Clip-4-FRAME 13
+ *         (@0x80101104-34) - derselbe Block, der das Opfer-Paar koppelt; der
+ *         Flow-Manager @0x800266c8-34 sieht den Latch und startet das DIE-Overlay
+ *         `FUN_80031e80(1,2)` @0x8002671c. Das 120-Frame-Schuetteln laeuft also
+ *         UNTER dem YOU-DIED.
+ *   RE1.5 die Game-Over-FSM FUN_8001500c hat genau ein Gate: Spieler-Kommando
+ *         DAT_800aca58 in {3,6,7} (@0x80015014-30) - und Kommando 6 IST der
+ *         Gefressen-Zustand (Typ-Tabelle 0x800AC858 @0x8003690c-2c). Ihr sub0
+ *         kopiert Spieler UND Greifer in einen Snapshot (@0x800150d0-0x8001510c):
+ *         die Praesentation ist um ein LAUFENDES Fressen herum gebaut.
+ *
+ * g->gefressen wird genau an der f13-Stelle gesetzt (oben im P1-Block) - kein neues
+ * Feld, kein geratener Frame. */
+int re15_gator_fress_todeslatch(void)
+{
+    int i;
+    for (i = 0; i < RE15_ACTOR_MAX; i++)
+        if (re15_gator_boss_active(&g_actors[i])
+            && s_gb[i].phase == GBP_FRESSEN && s_gb[i].gefressen)
+            return 1;
     return 0;
 }
 

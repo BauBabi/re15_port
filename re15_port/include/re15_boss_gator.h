@@ -28,6 +28,9 @@ int  re15_gator_spine_arc_vz(const re15_actor_t *e, int bone);
 /* 1 solange die Fress-Sequenz laeuft - der Gameover-Exit (game_step_common)
  * haelt dann an, bis Schnapp 2 + Verschlingen sichtbar durchgespielt sind. */
 int  re15_gator_fressen_hold(void);
+/* RE2-Todes-Latch: laeuft der Fress-Finisher ab dem f13-Koppelframe? Ab da gehoert im
+ * Original die Todes-Praesentation dazu (s. enemy_ai_boss_gator.c). */
+int  re15_gator_fress_todeslatch(void);
 /* ENEMSE-Anbindung (Bank 17, Dossier gator-biss-sound.md) - PC registriert beim
  * 0x23-Laden; se_fn(id, flag2000), bank_fn(bank). */
 void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));

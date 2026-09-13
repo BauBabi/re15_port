@@ -554,6 +554,29 @@ static void re15_gameover_fsm_reset(void)
 }
 
 /* One death tick of the byte-true chain (called from the death branch below). */
+/* ---- GATE DER TODES-PRAESENTATION (Runde 8, finisher-timing.md §4 FIX 2) --------------
+ * Das Gate der Game-Over-FSM ist im Original NICHT das Gate des Spieler-Zweigs:
+ * FUN_8001500c laeuft fuer Spieler-Kommando 3, **6** und 7 (@0x80015014-30) - und 6 ist
+ * der GEFRESSEN-Zustand (Handler 0x800368c0, Typ-Tabelle 0x800AC858 @0x8003692c). Die
+ * Praesentation startet also MITTEN im Fressen; ihr sub0 kopiert Spieler UND Greifer in
+ * einen Snapshot (@0x800150d0-0x8001510c). RE2 macht es genauso: Todes-Latch
+ * `0x800CFB74 |= 0x04000000` bei Gator-Clip-4-Frame 13 (@0x80101104-34), Flow-Manager
+ * @0x800266c8-34 startet daraufhin das DIE-Overlay (@0x8002671c).
+ *
+ * Nutzer Runde 8: "ich werde schon gefressen VOR dem YOU ARE DEAD Bildschirm. Das ist
+ * aber der Finisher des Bildschirms. Ich muss also DORT gefressen werden." Der Port hatte
+ * es genau andersherum: seit dem Runde-7-Fix (is_dead-Ausnahme fuer Victim-Modus 4) war
+ * die FSM waehrend des GANZEN Finishers aus und startete erst ~255 Ticks spaeter.
+ *
+ * re15_player_is_dead() bleibt fuer Modus 4 auf 0 - der Spieler-ZWEIG muss gesperrt
+ * bleiben (sonst reisst die Tod-FSM den Victim-Modus wieder ab), exakt wie Kommando 6 im
+ * Original weder 3 noch 7 faehrt. Nur die PRAESENTATION bekommt ihr eigenes Gate. */
+int re15_death_presentation_active(void)
+{
+    extern int re15_gator_fress_todeslatch(void);
+    return re15_player_is_dead() || re15_gator_fress_todeslatch();
+}
+
 static void re15_gameover_fsm_tick(void)
 {
     if (!s_go_on) { re15_gameover_fsm_reset(); s_go_on = 1; }
@@ -604,12 +627,12 @@ static void re15_gameover_fsm_tick(void)
             break;
         case 6:                                           /* exit: fade to black + leave */
             if (g_death_flyin < 50) g_death_flyin++;
-            {   /* Custom-Bosskampf ROOM2090: solange der Alligator Leon
-                 * frisst, YOU DIED + Death-Cam stehen lassen - erst nach
-                 * dem Verschlingen faedelt der Fade ein. */
-                extern int re15_gator_fressen_hold(void);
-                if (s_go_ctr < 0x50 && re15_gator_fressen_hold()) break;
-            }
+            /* ⛔ DER ERSATZ-RIEGEL IST RAUS (Runde 8, finisher-timing.md §4 FIX 4):
+             * hier stand ein Hold, der den Fade anhielt, bis das Verschlingen durch
+             * war - die Kruecke dafuer, dass die FSM ueberhaupt erst NACH dem
+             * Finisher startete. Mit dem getrennten Gate (re15_death_presentation_active)
+             * laeuft die Praesentation jetzt parallel zum Fressen wie im Original, und
+             * RE1.5-sub6 @0x80015798 kennt kein solches Gate. */
             if (s_go_ctr >= 0x50) {                       /* +0x400/frame subtractive -> 8/frame */
                 int f = (s_go_ctr - 0x50) * 8;
                 g_death_fade = f > 255 ? 255 : f;
@@ -1038,7 +1061,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * laeuft also auch im eingefrorenen Text weiter: die Game-Over-Kette kommt aus jedem
      * Freeze heraus. (`c->rdt_ok` bleibt als Port-Vorbedingung stehen — im Original ist immer
      * ein Raum geladen; die Bedingungsmenge des alten Zweigs bleibt damit unveraendert.) */
-    if (c->rdt_ok && re15_player_is_dead())
+    if (c->rdt_ok && re15_death_presentation_active())
         re15_gameover_fsm_tick();                 /* @0x8001cdfc, vor @0x8001ce0c */
 
     /* ===== ACTION-ZUSTANDS-GATE (Nutzer-Report 2026-08-08: "waehrend einer Aktion kann man

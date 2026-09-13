@@ -810,6 +810,24 @@ void re15_player_victim_force(uint8_t grabber_type, int clip, uint32_t frame)
     g_player_victim_type = grabber_type;
     player->motion       = (int16_t)clip;
     player->anim_frame   = frame;
+    /* GREIFER-SLOT (Runde 8, finisher-timing.md §4 FIX 5): im Original zeigt
+     * Spieler+0x1B4 auf den Greifer (RE2 `sw s0,-596(at)` @0x80101068 = 0x800CFDAC;
+     * RE1.5 liest ihn ueber 0x800ACBFC), und die TODES-FSM braucht ihn - sub0 kopiert
+     * den Greifer in den Snapshot (@0x800150e8), sub2 baut die Todes-Kamera aus
+     * [0x800ACBDC] (@0x800152a4-f0). Seit die Praesentation waehrend des Fressens
+     * laeuft (re15_death_presentation_active) wird dieser Pfad zum ersten Mal
+     * betreten; ohne den Slot orbitet die Kamera um einen Leerplatz. Der Greifer
+     * wird aus dem Typ gesucht, damit die Signatur der Aufrufer unveraendert bleibt. */
+    {
+        int i;
+        for (i = 0; i < RE15_ACTOR_MAX; i++) {
+            if (i == RE15_ACTOR_SLOT_PLAYER) continue;
+            if (g_actors[i].active && g_actors[i].type == grabber_type) {
+                g_player_victim_zombie = i;
+                break;
+            }
+        }
+    }
 }
 
 void re15_player_victim_force_end(void)

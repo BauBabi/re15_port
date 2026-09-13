@@ -161,6 +161,10 @@ extern int g_death_blackbg;   /* flat-black background mode (FUN_80021634(2,0)) 
 extern int g_death_cam;       /* death-camera glide active */
 extern int g_death_pool;      /* blood-pool growth ticks (500+12t x 600+12t) */
 extern int g_death_flyin;     /* YOU DIED letter fly-in tick 0..50, -1 hidden */
+/* Laeuft die TODES-PRAESENTATION? Eigenes Gate, nicht re15_player_is_dead(): im Original
+ * faehrt FUN_8001500c auch fuer Spieler-Kommando 6 = GEFRESSEN (@0x80015014-30), die
+ * Praesentation laeuft also parallel zum Fress-Finisher. S. game_step_common.c. */
+int re15_death_presentation_active(void);
 extern int g_death_glow;      /* spotlight backdrop brightness (gradual decay) */
 
 /* The room the game boots into (RE1.5 intro = the helipad, STAGE1/ROOM1170). The single

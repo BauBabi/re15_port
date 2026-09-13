@@ -733,7 +733,13 @@ static void pc_re2z_se_re15(int se_id, int flag2000)
  * von den sechs Zubeiss-Stellen. */
 void pc_gator_se_re15(int se_id, int flag2000)
 {
-    if (se_id == 3) { re15_audio_room_se(2); return; }
+    /* ⛔ NUR DIE ZUBEISS-RUFE UMBIEGEN (Runde 8, gator-schrei-schaden.md §10): seit dem
+     * Fress-Finisher traegt auch das RE2-Frame-Wort Clip 5 f80 (0x38000259) die id 3.
+     * Ein Frame-Flag-SE gehoert in seine Original-Bank, sonst klingt der Finisher
+     * falsch - der Mapper ist eine Korrektur fuer die sechs expliziten Zubeiss-Stellen,
+     * nicht fuer die Daten. */
+    extern int re15_gator_se_aus_frameflag(void);
+    if (se_id == 3 && !re15_gator_se_aus_frameflag()) { re15_audio_room_se(2); return; }
     re15_audio_re2_enemy_se(se_id, flag2000);
 }
 
@@ -6202,7 +6208,7 @@ re_title:;
                  * white additive flash + heartbeat pulses (g_death_white), flat-black background
                  * (g_death_blackbg), YOU DIED letters flying in over 50 frames (g_death_flyin),
                  * the sub-6 exit fade-to-black (g_death_fade), then the mode-cycle to TITLE. */
-                if (re15_player_is_dead() || g_gameover_active) {
+                if (re15_death_presentation_active() || g_gameover_active) {
                     re15_render_pc_set_fade(g_death_fade);
                     re15_render_pc_set_white_fade(g_death_white);
                     re15_render_pc_set_black_bg(g_death_blackbg);
