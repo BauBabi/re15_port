@@ -4635,6 +4635,20 @@ static void re2z_dismember_row(re15_actor_t *e, int death)
  * @0x801053BC-D4). Danach faellt der Zweig in den DISPATCH (kein return, @0x801053D8).
  * MACHT DREI RNG-WUERFE. [PORT-MAPPING]: der Mesh-Tausch und die Wurf-Felder haben keinen
  * Renderer-Zwilling — Flag-Wort und Tinte tragen den Zustand, der Wurf-Vektor bleibt OFFEN. */
+/* ⛔ DIE BENENNUNG IN DIESER FUNKTION IST FALSCH - DIE ZAHLEN SIND RICHTIG.
+ * "leg_gore" und "thigh"/"shin" stehen hier seit der ersten Runde; die Parts 9 und 12 sind
+ * aber ARME, nicht Beine. BELEGT aus der geladenen Bank (probe_re2z_hierarchie, Ausgabe
+ * 2026-09-14) - das EMR traegt die Hierarchie NICHT als flaches parent[]-Array, zwei rohe
+ * Byte-Griffe (0x2A800, 0x2AE9C) lieferten deshalb Muell und haben die Korrektur zweimal
+ * verzoegert. Der Parser liefert:
+ *     parent[] = [-1, 0, 1, 2, 3, 1, 5, 6, 0, 0, 9, 10, 0, 12, 13]
+ *     Bone 0  Rumpf-Wurzel (relpos y -2067)
+ *     Bone 1  Becken (relpos 0,0,0 - koinzident mit der Wurzel)
+ *     2-3-4   BEIN  (252 / 730 / 861)          5-6-7   BEIN
+ *     Bone 8  KOPF  (relpos -40,-783,0)
+ *     9-10-11 ARM   (-605 / 569 / 459)        12-13-14 ARM
+ * Umbenannt wird hier NICHT - die Indizes stammen aus dem Original und sind korrekt; ein
+ * Rename waere reines Risiko. Dieser Block ist die Warnung fuer die naechste Runde. */
 static void re2z_leg_gore(re15_actor_t *e)
 {
     if (e->re2z_flags21a & 0x60u) return;                       /* @0x80105288-8C */
