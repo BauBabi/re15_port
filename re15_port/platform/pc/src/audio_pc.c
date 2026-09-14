@@ -2979,7 +2979,15 @@ void re15_audio_tick(void)
        * und jede Dialogzeile bis an den Deckel (90 Bilder) aufhalten. re15_voice_play
        * kehrt zwar schon bei !initialized still zurueck, aber der Riegel gehoert an die
        * Stelle, die das Flag setzt - nicht an die, die es zufaellig nie erreicht. */
-      g_re15_voice_laeuft = (g_audio.initialized && s_xa.active) ? 1 : 0; }
+      extern int g_re15_voice_restbilder;
+      g_re15_voice_laeuft = (g_audio.initialized && s_xa.active) ? 1 : 0;
+      /* Restbilder aus dem Stream selbst: s_xa.pos laeuft ein Sample je Geraete-Frame
+       * (s_xa.pos++ im Mischer), die Clips liegen auf RE15_AUDIO_RATE. Damit ist die
+       * Restzeit exakt bekannt, und der Riegel in scd_vm.c braucht keinen geschaetzten
+       * Deckel mehr. */
+      g_re15_voice_restbilder = g_re15_voice_laeuft
+          ? (int)(((int64_t)(s_xa.pcm_len - s_xa.pos) * 30) / RE15_AUDIO_RATE)
+          : 0; }
     if (!g_audio.initialized) return;
 
     /* RE15_AUDIO_CAP_SYNC: ein Spielframe = RE15_AUDIO_RATE/30 Stereo-Frames, gerendert durch

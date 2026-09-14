@@ -1,0 +1,30 @@
+0x142C  Set                                          | 22 04 f2 00
+0x1430  Set                                          | 22 02 07 01
+0x1434  Set                                          | 22 01 1b 01
+0x1438  Sce_bgm_control                              | 54 01 01 00 00 00
+0x143E  Cut_chg                                      | 29 00
+0x1440  Work_set                                     | 2e 01 00
+0x1443  Nop                                          | 00
+0x1444  Member_set                                   | 34 00 e8 86
+0x1448  Member_set                                   | 34 02 18 79
+0x144C  Member_set                                   | 34 04 00 04
+0x1450  Sleep            1 Bilder                    | 09 0a 01 00
+0x1454  Work_set                                     | 2e 02 00
+0x1457  Nop                                          | 00
+0x1458  Plc_dest                                     | 40 00 05 21 2b f7 9f 16
+0x1460  Gosub            sub10                       | 18 0a
+0x1462  Plc_dest                                     | 40 00 09 21 7b f2 8b 11
+0x146A  Gosub            sub10                       | 18 0a
+0x146C  Cut_chg                                      | 29 02
+0x146E  Message_on       msg=0 mask=0000             | 2b 00 00 00
+0x1472  Plc_motion                                   | 3f 00 0f 00
+0x1476  Sleep            50 Bilder                   | 09 0a 32 00
+0x147A  Plc_motion                                   | 3f 00 0f 00
+0x147E  Plc_flg                                      | 43 00 80 00
+0x1482  Sleep            51 Bilder                   | 09 0a 33 00
+0x1486  Message_on       msg=1 mask=0000             | 2b 01 00 00
+0x148A  Sleep            100 Bilder                  | 09 0a 64 00
+0x148E  Message_on       msg=2 mask=0000             | 2b 02 00 00
+0x1492  Plc_motion                                   | 3f 00 14 00
+0x1496  Sleep            50 Bilder                   | 09 0a 32 00
+0x149A  Plc_motion                                   | 3f 00 14 00

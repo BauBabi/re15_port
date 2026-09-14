@@ -3546,3 +3546,12 @@ target_link_libraries(test_map_1090 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_map_1090 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_map_1090 COMMAND test_map_1090)
 set_tests_properties(unit_map_1090 PROPERTIES TIMEOUT 30)
+
+# --- MESSUNG Sprach-Takt: Aufnahme gegen Skript-Abstand (Nutzer 2026-09-14) ---
+# Kein add_test — reine Messung (probe_*).
+add_executable(probe_stimme_takt probe_stimme_takt.c)
+target_link_libraries(probe_stimme_takt PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stimme_takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_stimme_takt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")

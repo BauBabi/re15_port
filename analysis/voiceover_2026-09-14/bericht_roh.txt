@@ -1,0 +1,223 @@
+
+=============== STAGE1 ROOM1050 ===============
+  Subs: 5  Messages im RDT: 9  vertont: 1  Message_on-Stellen: 2
+  Pause-Masken aller Message_on: 0x0000, 0xff80   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [8]
+  main08  Aufnahme   33.1 B  sub03 @0x0DD6 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM1090 ===============
+  Subs: 8  Messages im RDT: 10  vertont: 7  Message_on-Stellen: 10
+  Pause-Masken aller Message_on: 0x0000, 0xffff   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5, 6, 9]
+  main00  Aufnahme  101.4 B  Skript  134 B  sub02 @0x2438 mask=0000 -> Killer main01   Reserve 32.6
+  main01  Aufnahme   43.2 B  Skript  101 B  sub02 @0x248A mask=0000 -> Killer main02   Reserve 57.8
+  main02  Aufnahme  131.3 B  sub02 @0x24B6 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+  main03  Aufnahme   51.2 B  Skript  161 B  sub03 @0x2586 mask=0000 -> Killer main04   Reserve 109.8
+  main04  Aufnahme  140.0 B  Skript  155 B  sub03 @0x25E8 mask=0000 -> Killer main05   Reserve 15.0
+  main05  Aufnahme   77.0 B  Skript  101 B  sub03 @0x2640 mask=0000 -> Killer main06   Reserve 24.0
+  main06  Aufnahme  112.8 B  sub03 @0x2670 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM10D0 ===============
+  Subs: 23  Messages im RDT: 28  vertont: 16  Message_on-Stellen: 26
+  Pause-Masken aller Message_on: 0x0000, 0xff80, 0xffff   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 5]
+  main12  Aufnahme   31.7 B  Skript   50 B  sub21 @0x1A3E mask=0000 -> Killer main13   Reserve 18.3
+  main13  Aufnahme   56.1 B  Skript  150 B  sub21 @0x1A60 mask=0000 -> Killer main14   Reserve 93.9
+  main14  Aufnahme   78.0 B  Skript  141 B  sub21 @0x1A92 mask=0000 -> Killer main15   Reserve 63.0
+  main15  Aufnahme   74.2 B  Skript  151 B  sub21 @0x1B0C mask=0000 -> Killer main16   Reserve 76.8
+  main16  Aufnahme   56.1 B  Skript  101 B  sub21 @0x1B34 mask=0000 -> Killer main17   Reserve 44.9
+  main17  Aufnahme  159.2 B  Skript  131 B  sub21 @0x1B3C mask=0000 -> Killer main18   FEHLEN 28.2
+  main18  Aufnahme  149.1 B  Skript  101 B  sub21 @0x1B5C mask=0000 -> Killer main19   FEHLEN 48.1
+  main19  Aufnahme   91.3 B  Skript  121 B  sub21 @0x1B78 mask=0000 -> Killer main20   Reserve 29.7
+  main20  Aufnahme  171.0 B  Skript  140 B  sub21 @0x1B98 mask=0000 -> Killer main21   FEHLEN 31.0
+  main21  Aufnahme  147.7 B  Skript  110 B  sub21 @0x1BE2 mask=0000 -> Killer main22   FEHLEN 37.7
+  main22  Aufnahme  135.1 B  Skript  140 B  sub21 @0x1C1E mask=0000 -> Killer main23   Reserve 4.9
+  main23  Aufnahme  204.8 B  Skript  140 B  sub21 @0x1C56 mask=0000 -> Killer main24   FEHLEN 64.8
+  main24  Aufnahme  190.2 B  Skript  121 B  sub21 @0x1C8E mask=0000 -> Killer main25   FEHLEN 69.2
+  main25  Aufnahme  129.9 B  Skript  140 B  sub21 @0x1CBE mask=0000 -> Killer main26   Reserve 10.1
+  main26  Aufnahme  163.0 B  Skript  140 B  sub21 @0x1CF2 mask=0000 -> Killer main27   FEHLEN 23.0
+  main27  Aufnahme   74.2 B  sub21 @0x1D2A mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM1150 ===============
+  Subs: 9  Messages im RDT: 15  vertont: 11  Message_on-Stellen: 13
+  Pause-Masken aller Message_on: 0x0000, 0xffff   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [2]
+  main02  Aufnahme  124.3 B  sub03 @0x0F1C mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+  main04  Aufnahme  127.5 B  Skript  121 B  sub08 @0x117E mask=0000 -> Killer main05   FEHLEN 6.5
+  main05  Aufnahme  102.1 B  Skript  120 B  sub08 @0x1196 mask=0000 -> Killer main06   Reserve 17.9
+  main06  Aufnahme   98.9 B  Skript  121 B  sub08 @0x119E mask=0000 -> Killer main07   Reserve 22.1
+  main07  Aufnahme  170.1 B  Skript  130 B  sub08 @0x11B6 mask=0000 -> Killer main08   FEHLEN 40.1
+  main08  Aufnahme   57.5 B  Skript  101 B  sub08 @0x11DE mask=0000 -> Killer main09   Reserve 43.5
+  main09  Aufnahme  242.5 B  Skript  150 B  sub08 @0x11FA mask=0000 -> Killer main10   FEHLEN 92.5
+  main10  Aufnahme  101.4 B  Skript  121 B  sub08 @0x1236 mask=0000 -> Killer main12   Reserve 19.6
+  main12  Aufnahme  187.7 B  Skript  120 B  sub08 @0x1252 mask=0000 -> Killer main13   FEHLEN 67.7
+  main13  Aufnahme  176.2 B  Skript  130 B  sub08 @0x1262 mask=0000 -> Killer main14   FEHLEN 46.2
+  main14  Aufnahme   26.8 B  sub08 @0x127E mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM1170 ===============
+  Subs: 16  Messages im RDT: 17  vertont: 11  Message_on-Stellen: 16
+  Pause-Masken aller Message_on: 0x0000   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16]
+  main00  Aufnahme   91.3 B  Skript  101 B  sub02 @0x146E mask=0000 -> Killer main01   Reserve 9.7
+  main01  Aufnahme   60.3 B  Skript  100 B  sub02 @0x1486 mask=0000 -> Killer main02   Reserve 39.7
+  main02  Aufnahme   75.6 B  Skript  101 B  sub02 @0x148E mask=0000 -> Killer main03   Reserve 25.4
+  main03  Aufnahme  116.7 B  Skript  101 B  sub02 @0x14A6 mask=0000 -> Killer main04   FEHLEN 15.7
+  main04  Aufnahme   87.1 B  Skript  358 B  sub02 @0x14C6 mask=0000 -> Killer main05   Reserve 270.9
+  main05  Aufnahme   87.0 B  Skript  218 B  sub02 @0x1534 mask=0000 -> Killer main06   Reserve 131.0
+  main06  Aufnahme  102.1 B  Skript  100 B  sub02 @0x15DC mask=0000 -> Killer main07   FEHLEN 2.1
+  main07  Aufnahme   55.7 B  sub02 @0x15EC mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+  main13  Aufnahme   92.4 B  Skript  110 B  sub14 @0x175E mask=0000 -> Killer main14   Reserve 17.6
+  main14  Aufnahme   76.2 B  Skript  200 B  sub14 @0x178E mask=0000 -> Killer main16   Reserve 123.8
+  main16  Aufnahme   91.3 B  sub14 @0x17A2 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM11B0 ===============
+  Subs: 12  Messages im RDT: 16  vertont: 13  Message_on-Stellen: 15
+  Pause-Masken aller Message_on: 0x0000, 0xffff   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  main00  Aufnahme   29.3 B  sub04 @0x1338 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+  main01  Aufnahme  143.7 B  Skript  110 B  sub06 @0x14EE mask=0000 -> Killer main02   FEHLEN 33.7
+  main02  Aufnahme   98.9 B  Skript  110 B  sub06 @0x150E mask=0000 -> Killer main03   Reserve 11.1
+  main03  Aufnahme   43.2 B  Skript  180 B  sub06 @0x152E mask=0000 -> Killer main04   Reserve 136.8
+  main04  Aufnahme  113.8 B  Skript   90 B  sub06 @0x1574 mask=0000 -> Killer main05   FEHLEN 23.8
+  main05  Aufnahme  183.9 B  Skript  140 B  sub06 @0x1590 mask=0000 -> Killer main06   FEHLEN 43.9
+  main06  Aufnahme   61.6 B  Skript  155 B  sub06 @0x15B8 mask=0000 -> Killer main07   Reserve 93.4
+  main07  Aufnahme  124.3 B  Skript  200 B  sub06 @0x1622 mask=0000 -> Killer main08   Reserve 75.7
+  main08  Aufnahme  176.2 B  Skript  110 B  sub06 @0x166E mask=0000 -> Killer main09   FEHLEN 66.2
+  main09  Aufnahme   64.1 B  Skript  268 B  sub06 @0x168A mask=0000 -> Killer main10   Reserve 203.9
+  main10  Aufnahme   66.5 B  Skript  100 B  sub06 @0x176E mask=0000 -> Killer main11   Reserve 33.5
+  main11  Aufnahme  106.6 B  Skript  100 B  sub06 @0x178E mask=0000 -> Killer main12   FEHLEN 6.6
+  main12  Aufnahme   78.0 B  sub06 @0x17AE mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM11C0 ===============
+  Subs: 8  Messages im RDT: 10  vertont: 10  Message_on-Stellen: 10
+  Pause-Masken aller Message_on: 0x0000   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  main00  Aufnahme   97.5 B  Skript  101 B  sub02 @0x18A0 mask=0000 -> Killer main01   Reserve 3.5
+  main01  Aufnahme   84.6 B  Skript   90 B  sub02 @0x18D4 mask=0000 -> Killer main02   Reserve 5.4
+  main02  Aufnahme   93.7 B  Skript   90 B  sub02 @0x18EC mask=0000 -> Killer main03   FEHLEN 3.7
+  main03  Aufnahme   47.0 B  Skript  100 B  sub02 @0x1904 mask=0000 -> Killer main04   Reserve 53.0
+  main04  Aufnahme   24.0 B  Skript  219 B  sub02 @0x1928 mask=0000 -> Killer main05   Reserve 195.0
+  main05  Aufnahme   81.9 B  Skript   90 B  sub02 @0x1A5E mask=0000 -> Killer main06   Reserve 8.1
+  main06  Aufnahme   62.7 B  sub02 @0x1A80 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+  main07  Aufnahme   70.4 B  Skript   86 B  sub03 @0x1B68 mask=0000 -> Killer main08   Reserve 15.6
+  main08  Aufnahme   91.3 B  Skript   85 B  sub03 @0x1B7A mask=0000 -> Killer main09   FEHLEN 6.3
+  main09  Aufnahme  113.5 B  sub03 @0x1B86 mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE1 ROOM1240 ===============
+  Subs: 4  Messages im RDT: 6  vertont: 6  Message_on-Stellen: 6
+  Pause-Masken aller Message_on: 0x0000   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5]
+  main00  Aufnahme  168.7 B  Skript  202 B  sub02 @0x057E mask=0000 -> Killer main01   Reserve 33.3
+  main01  Aufnahme  160.0 B  Skript  180 B  sub02 @0x0598 mask=0000 -> Killer main02   Reserve 20.0
+  main02  Aufnahme  176.2 B  Skript  202 B  sub02 @0x05A0 mask=0000 -> Killer main03   Reserve 25.8
+  main03  Aufnahme  196.2 B  Skript  202 B  sub02 @0x05BA mask=0000 -> Killer main04   Reserve 5.8
+  main04  Aufnahme  210.0 B  Skript  202 B  sub02 @0x05DA mask=0000 -> Killer main05   FEHLEN 8.0
+  main05  Aufnahme  165.0 B  sub02 @0x05FA mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+=============== STAGE2 ROOM2000 ===============
+  Subs: 8  Messages im RDT: 12  vertont: 12  Message_on-Stellen: 12
+  Pause-Masken aller Message_on: 0x0000   (Bit 0x0200 = RE15_PAUSE_SCD -> Skript-Freeze)
+  Evt_exec-Subs mit Message_on: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  main00  Aufnahme   66.5 B  Skript  101 B  sub02 @0x1832 mask=0000 -> Killer main01   Reserve 34.5
+  main01  Aufnahme   46.0 B  Skript  120 B  sub02 @0x184A mask=0000 -> Killer main02   Reserve 74.0
+  main02  Aufnahme  101.4 B  Skript  121 B  sub02 @0x186E mask=0000 -> Killer main03   Reserve 19.6
+  main03  Aufnahme   78.0 B  Skript  120 B  sub02 @0x189E mask=0000 -> Killer main04   Reserve 42.0
+  main04  Aufnahme  163.0 B  Skript  121 B  sub02 @0x18C2 mask=0000 -> Killer main05   FEHLEN 42.0
+  main05  Aufnahme   62.7 B  Skript  101 B  sub02 @0x18EC mask=0000 -> Killer main06   Reserve 38.3
+  main06  Aufnahme   58.9 B  Skript  120 B  sub02 @0x1904 mask=0000 -> Killer main07   Reserve 61.1
+  main07  Aufnahme  146.6 B  Skript  122 B  sub02 @0x1926 mask=0000 -> Killer main08   FEHLEN 24.6
+  main08  Aufnahme  110.4 B  Skript  140 B  sub02 @0x197C mask=0000 -> Killer main09   Reserve 29.6
+  main09  Aufnahme  120.5 B  Skript  140 B  sub02 @0x19A0 mask=0000 -> Killer main10   Reserve 19.5
+  main10  Aufnahme   62.7 B  Skript  120 B  sub02 @0x19DE mask=0000 -> Killer main11   Reserve 57.3
+  main11  Aufnahme  143.8 B  sub02 @0x19FE mask=0000 -> kein weiteres vertontes Message_on => laeuft aus
+
+
+============ TABELLE: Fehlbetrag absteigend ============
+ROOM   MSG      Aufnahme   Skript     Fehlt  Stelle               Killer
+1150   main09     242.5      150      92.5  sub08@0x11FA         main10
+10D0   main24     190.2      121      69.2  sub21@0x1C8E         main25
+1150   main12     187.7      120      67.7  sub08@0x1252         main13
+11B0   main08     176.2      110      66.2  sub06@0x166E         main09
+10D0   main23     204.8      140      64.8  sub21@0x1C56         main24
+10D0   main18     149.1      101      48.1  sub21@0x1B5C         main19
+1150   main13     176.2      130      46.2  sub08@0x1262         main14
+11B0   main05     183.9      140      43.9  sub06@0x1590         main06
+2000   main04     163.0      121      42.0  sub02@0x18C2         main05
+1150   main07     170.1      130      40.1  sub08@0x11B6         main08
+10D0   main21     147.7      110      37.7  sub21@0x1BE2         main22
+11B0   main01     143.7      110      33.7  sub06@0x14EE         main02
+10D0   main20     171.0      140      31.0  sub21@0x1B98         main21
+10D0   main17     159.2      131      28.2  sub21@0x1B3C         main18
+2000   main07     146.6      122      24.6  sub02@0x1926         main08
+11B0   main04     113.8       90      23.8  sub06@0x1574         main05
+10D0   main26     163.0      140      23.0  sub21@0x1CF2         main27
+1170   main03     116.7      101      15.7  sub02@0x14A6         main04
+1240   main04     210.0      202       8.0  sub02@0x05DA         main05
+11B0   main11     106.6      100       6.6  sub06@0x178E         main12
+1150   main04     127.5      121       6.5  sub08@0x117E         main05
+11C0   main08      91.3       85       6.3  sub03@0x1B7A         main09
+11C0   main02      93.7       90       3.7  sub02@0x18EC         main03
+1170   main06     102.1      100       2.1  sub02@0x15DC         main07
+11C0   main00      97.5      101      -3.5  sub02@0x18A0         main01
+10D0   main22     135.1      140      -4.9  sub21@0x1C1E         main23
+11C0   main01      84.6       90      -5.4  sub02@0x18D4         main02
+1240   main03     196.2      202      -5.8  sub02@0x05BA         main04
+11C0   main05      81.9       90      -8.1  sub02@0x1A5E         main06
+1170   main00      91.3      101      -9.7  sub02@0x146E         main01
+10D0   main25     129.9      140     -10.1  sub21@0x1CBE         main26
+11B0   main02      98.9      110     -11.1  sub06@0x150E         main03
+1090   main04     140.0      155     -15.0  sub03@0x25E8         main05
+11C0   main07      70.4       86     -15.6  sub03@0x1B68         main08
+1170   main13      92.4      110     -17.6  sub14@0x175E         main14
+1150   main05     102.1      120     -17.9  sub08@0x1196         main06
+10D0   main12      31.7       50     -18.3  sub21@0x1A3E         main13
+2000   main09     120.5      140     -19.5  sub02@0x19A0         main10
+1150   main10     101.4      121     -19.6  sub08@0x1236         main12
+2000   main02     101.4      121     -19.6  sub02@0x186E         main03
+1240   main01     160.0      180     -20.0  sub02@0x0598         main02
+1150   main06      98.9      121     -22.1  sub08@0x119E         main07
+1090   main05      77.0      101     -24.0  sub03@0x2640         main06
+1170   main02      75.6      101     -25.4  sub02@0x148E         main03
+1240   main02     176.2      202     -25.8  sub02@0x05A0         main03
+2000   main08     110.4      140     -29.6  sub02@0x197C         main09
+10D0   main19      91.3      121     -29.7  sub21@0x1B78         main20
+1090   main00     101.4      134     -32.6  sub02@0x2438         main01
+1240   main00     168.7      202     -33.3  sub02@0x057E         main01
+11B0   main10      66.5      100     -33.5  sub06@0x176E         main11
+2000   main00      66.5      101     -34.5  sub02@0x1832         main01
+2000   main05      62.7      101     -38.3  sub02@0x18EC         main06
+1170   main01      60.3      100     -39.7  sub02@0x1486         main02
+2000   main03      78.0      120     -42.0  sub02@0x189E         main04
+1150   main08      57.5      101     -43.5  sub08@0x11DE         main09
+10D0   main16      56.1      101     -44.9  sub21@0x1B34         main17
+11C0   main03      47.0      100     -53.0  sub02@0x1904         main04
+2000   main10      62.7      120     -57.3  sub02@0x19DE         main11
+1090   main01      43.2      101     -57.8  sub02@0x248A         main02
+2000   main06      58.9      120     -61.1  sub02@0x1904         main07
+10D0   main14      78.0      141     -63.0  sub21@0x1A92         main15
+2000   main01      46.0      120     -74.0  sub02@0x184A         main02
+11B0   main07     124.3      200     -75.7  sub06@0x1622         main08
+10D0   main15      74.2      151     -76.8  sub21@0x1B0C         main16
+11B0   main06      61.6      155     -93.4  sub06@0x15B8         main07
+10D0   main13      56.1      150     -93.9  sub21@0x1A60         main14
+1090   main03      51.2      161    -109.8  sub03@0x2586         main04
+1170   main14      76.2      200    -123.8  sub14@0x178E         main16
+1170   main05      87.0      218    -131.0  sub02@0x1534         main06
+11B0   main03      43.2      180    -136.8  sub06@0x152E         main04
+11C0   main04      24.0      219    -195.0  sub02@0x1928         main05
+11B0   main09      64.1      268    -203.9  sub06@0x168A         main10
+1170   main04      87.1      358    -270.9  sub02@0x14C6         main05
+1050   main08      33.1        -         -  sub03@0x0DD6         kein toetendes Message_on erreichbar
+1090   main02     131.3        -         -  sub02@0x24B6         kein toetendes Message_on erreichbar
+1090   main06     112.8        -         -  sub03@0x2670         kein toetendes Message_on erreichbar
+10D0   main27      74.2        -         -  sub21@0x1D2A         kein toetendes Message_on erreichbar
+1150   main02     124.3        -         -  sub03@0x0F1C         kein toetendes Message_on erreichbar
+1150   main14      26.8        -         -  sub08@0x127E         kein toetendes Message_on erreichbar
+1170   main07      55.7        -         -  sub02@0x15EC         kein toetendes Message_on erreichbar
+1170   main16      91.3        -         -  sub14@0x17A2         kein toetendes Message_on erreichbar
+11B0   main00      29.3        -         -  sub04@0x1338         kein toetendes Message_on erreichbar
+11B0   main12      78.0        -         -  sub06@0x17AE         kein toetendes Message_on erreichbar
+11C0   main06      62.7        -         -  sub02@0x1A80         kein toetendes Message_on erreichbar
+11C0   main09     113.5        -         -  sub03@0x1B86         kein toetendes Message_on erreichbar
+1240   main05     165.0        -         -  sub02@0x05FA         kein toetendes Message_on erreichbar
+2000   main11     143.8        -         -  sub02@0x19FE         kein toetendes Message_on erreichbar

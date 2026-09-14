@@ -163,7 +163,10 @@ typedef struct {
      * Sleep-Werte im Skript bleiben unangetastet; gewartet wird nur, wenn eine
      * Aufnahme laenger ist als das Original ihr Zeit gibt - wo sie hineinpasst
      * (sechs von acht Zeilen), aendert sich NICHTS am Timing. */
-    uint8_t  voice_wait;
+    /* 16 bit, NICHT 8: die Notbremse des Riegels liegt bei 300 Bildern (ueber der
+     * laengsten Aufnahme des Bestands, 242,5). Als uint8_t wrappte der Zaehler bei 255
+     * auf 0 und die Notbremse haette nie ausgeloest - unit_voice_ausreden faengt das. */
+    uint16_t voice_wait;
 
     /* [#9] Switch (0x13) no longer snapshots a value into the thread: the
      * byte-true handler (LAB_8003fa5c) scans the whole Case/Default table inline

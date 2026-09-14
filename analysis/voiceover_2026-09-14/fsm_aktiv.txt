@@ -1,0 +1,88 @@
+ROOM   MSG      Aufnahme   Skript  Text-FSM FSM offen?  Riegel greift?
+1050   main08      33.1        -   62/hold nein (62 <= -)         JA
+1090   main00     101.4      134  102/hold nein (102 <= 134)      JA
+1090   main01      43.2      101  102/hold ja (102 > 101)         NEIN
+1090   main02     131.3        -  102/hold nein (102 <= -)        JA
+1090   main03      51.2      161  102/hold nein (102 <= 161)      JA
+1090   main04     140.0      155  102/hold nein (102 <= 155)      JA
+1090   main05      77.0      101  102/hold ja (102 > 101)         NEIN
+1090   main06     112.8        -  102/hold nein (102 <= -)        JA
+10D0   main12      31.7       50   32/hold nein (32 <= 50)        JA
+10D0   main13      56.1      150   62/hold nein (62 <= 150)       JA
+10D0   main14      78.0      141  102/hold nein (102 <= 141)      JA
+10D0   main15      74.2      151  102/hold nein (102 <= 151)      JA
+10D0   main16      56.1      101  102/hold ja (102 > 101)         NEIN
+10D0   main17     159.2      131  102/hold nein (102 <= 131)      JA
+10D0   main18     149.1      101  102/hold ja (102 > 101)         NEIN
+10D0   main19      91.3      121  102/hold nein (102 <= 121)      JA
+10D0   main20     171.0      140  122/hold nein (122 <= 140)      JA
+10D0   main21     147.7      110  102/hold nein (102 <= 110)      JA
+10D0   main22     135.1      140  122/hold nein (122 <= 140)      JA
+10D0   main23     204.8      140  122/hold nein (122 <= 140)      JA
+10D0   main24     190.2      121  122/hold ja (122 > 121)         NEIN
+10D0   main25     129.9      140  122/hold nein (122 <= 140)      JA
+10D0   main26     163.0      140  122/hold nein (122 <= 140)      JA
+10D0   main27      74.2        -  102/hold nein (102 <= -)        JA
+1150   main02     124.3        -  102/hold nein (102 <= -)        JA
+1150   main04     127.5      121  122/hold ja (122 > 121)         NEIN
+1150   main05     102.1      120  122/hold ja (122 > 120)         NEIN
+1150   main06      98.9      121  122/hold ja (122 > 121)         NEIN
+1150   main07     170.1      130  122/hold nein (122 <= 130)      JA
+1150   main08      57.5      101  102/hold ja (102 > 101)         NEIN
+1150   main09     242.5      150  142/hold nein (142 <= 150)      JA
+1150   main10     101.4      121  122/hold ja (122 > 121)         NEIN
+1150   main12     187.7      120  122/hold ja (122 > 120)         NEIN
+1150   main13     176.2      130  122/hold nein (122 <= 130)      JA
+1150   main14      26.8        -  102/hold nein (102 <= -)        JA
+1170   main00      91.3      101  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main01      60.3      100  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main02      75.6      101  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main03     116.7      101  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main04      87.1      358  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main05      87.0      218   53/hold nein (Full-Text: fsm_active=0) JA
+1170   main06     102.1      100  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main07      55.7        -  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main13      92.4      110  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main14      76.2      200  102/hold nein (Full-Text: fsm_active=0) JA
+1170   main16      91.3        -  102/hold nein (Full-Text: fsm_active=0) JA
+11B0   main00      29.3        -   62/hold nein (62 <= -)         JA
+11B0   main01     143.7      110  108/hold nein (108 <= 110)      JA
+11B0   main02      98.9      110  108/hold nein (108 <= 110)      JA
+11B0   main03      43.2      180   88/hold nein (88 <= 180)       JA
+11B0   main04     113.8       90   88/hold nein (88 <= 90)        JA
+11B0   main05     183.9      140  138/hold nein (138 <= 140)      JA
+11B0   main06      61.6      155   88/hold nein (88 <= 155)       JA
+11B0   main07     124.3      200  108/hold nein (108 <= 200)      JA
+11B0   main08     176.2      110  108/hold nein (108 <= 110)      JA
+11B0   main09      64.1      268   88/hold nein (88 <= 268)       JA
+11B0   main10      66.5      100   98/hold nein (98 <= 100)       JA
+11B0   main11     106.6      100   98/hold nein (98 <= 100)       JA
+11B0   main12      78.0        -   98/hold nein (98 <= -)         JA
+11C0   main00      97.5      101   99/hold nein (99 <= 101)       JA
+11C0   main01      84.6       90   89/hold nein (89 <= 90)        JA
+11C0   main02      93.7       90   89/hold nein (89 <= 90)        JA
+11C0   main03      47.0      100   99/hold nein (99 <= 100)       JA
+11C0   main04      24.0      219   89/hold nein (89 <= 219)       JA
+11C0   main05      81.9       90   89/hold nein (89 <= 90)        JA
+11C0   main06      62.7        -   84/hold nein (84 <= -)         JA
+11C0   main07      70.4       86   84/hold nein (84 <= 86)        JA
+11C0   main08      91.3       85   84/hold nein (84 <= 85)        JA
+11C0   main09     113.5        -  129/hold nein (129 <= -)        JA
+1240   main00     168.7      202  178/hold nein (Full-Text: fsm_active=0) JA
+1240   main01     160.0      180  178/hold nein (Full-Text: fsm_active=0) JA
+1240   main02     176.2      202  178/hold nein (Full-Text: fsm_active=0) JA
+1240   main03     196.2      202  178/hold nein (Full-Text: fsm_active=0) JA
+1240   main04     210.0      202  178/hold nein (Full-Text: fsm_active=0) JA
+1240   main05     165.0        -  178/hold nein (Full-Text: fsm_active=0) JA
+2000   main00      66.5      101  102/hold ja (102 > 101)         NEIN
+2000   main01      46.0      120  102/hold nein (102 <= 120)      JA
+2000   main02     101.4      121  122/hold ja (122 > 121)         NEIN
+2000   main03      78.0      120  102/hold nein (102 <= 120)      JA
+2000   main04     163.0      121  122/hold ja (122 > 121)         NEIN
+2000   main05      62.7      101  102/hold ja (102 > 101)         NEIN
+2000   main06      58.9      120  102/hold nein (102 <= 120)      JA
+2000   main07     146.6      122  122/hold nein (122 <= 122)      JA
+2000   main08     110.4      140  122/hold nein (122 <= 140)      JA
+2000   main09     120.5      140  122/hold nein (122 <= 140)      JA
+2000   main10      62.7      120  102/hold nein (102 <= 120)      JA
+2000   main11     143.8        -  122/hold nein (122 <= -)        JA

@@ -1,0 +1,92 @@
+== Sprach-Takt: Aufnahme gegen Skript, mit dem ECHTEN VM gemessen ==
+   Standzeit = Zahl der re15_msg_tick-Aufrufe, bis message_fsm_active faellt
+   Abstand   = Zahl der scd_vm_tick-Aufrufe bis zum naechsten Message_on
+
+ROOM   MSG     Aufnahme  Abstand Standzeit  Riegel      Anmerkung
+1050   main08      33.1       -1        61  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1090   main00     101.4       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1090   main01      43.2      101       101  JA          Reserve 57.8 B, Killer main02  [data-Groesse defekt]
+1090   main02     131.3       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1090   main03      51.2      161       101  JA          Reserve 109.8 B, Killer main04  [data-Groesse defekt]
+1090   main04     140.0       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1090   main05      77.0      101       101  JA          Reserve 24.0 B, Killer main06  [data-Groesse defekt]
+1090   main06     112.8       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+10D0   main12      31.7       50        31  JA          Reserve 18.3 B, Killer main13  [data-Groesse defekt]
+10D0   main13      56.1      150        61  JA          Reserve 93.9 B, Killer main14  [data-Groesse defekt]
+10D0   main14      78.0      141       101  JA          Reserve 63.0 B, Killer main15  [data-Groesse defekt]
+10D0   main15      74.2      151       101  JA          Reserve 76.8 B, Killer main16  [data-Groesse defekt]
+10D0   main16      56.1      101       101  JA          Reserve 44.9 B, Killer main17  [data-Groesse defekt]
+10D0   main17     159.2      131       101  JA          FEHLEN 28.2 B, Killer main18  [data-Groesse defekt]
+10D0   main18     149.1      101       101  JA          FEHLEN 48.1 B, Killer main19  [data-Groesse defekt]
+10D0   main19      91.3      121       101  JA          Reserve 29.7 B, Killer main20  [data-Groesse defekt]
+10D0   main20     171.0      140       121  JA          FEHLEN 31.0 B, Killer main21  [data-Groesse defekt]
+10D0   main21     147.7      110       101  JA          FEHLEN 37.7 B, Killer main22  [data-Groesse defekt]
+10D0   main22     135.1      140       121  JA          Reserve 4.9 B, Killer main23  [data-Groesse defekt]
+10D0   main23     204.8      140       121  JA          FEHLEN 64.8 B, Killer main24  [data-Groesse defekt]
+10D0   main24     190.2      121       121  JA          FEHLEN 69.2 B, Killer main25  [data-Groesse defekt]
+10D0   main25     129.9      140       121  JA          Reserve 10.1 B, Killer main26  [data-Groesse defekt]
+10D0   main26     163.0      140       121  JA          FEHLEN 23.0 B, Killer main27  [data-Groesse defekt]
+10D0   main27      74.2       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1150   main02     124.3       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1150   main04     127.5      121       121  JA          FEHLEN 6.5 B, Killer main05  [data-Groesse defekt]
+1150   main05     102.1      120       121  NEIN        Reserve 17.9 B, Killer main06
+1150   main06      98.9      121       121  JA          Reserve 22.1 B, Killer main07  [data-Groesse defekt]
+1150   main07     170.1      130       121  JA          FEHLEN 40.1 B, Killer main08
+1150   main08      57.5      101       101  JA          Reserve 43.5 B, Killer main09  [data-Groesse defekt]
+1150   main09     242.5      150       141  JA          FEHLEN 92.5 B, Killer main10
+1150   main10     101.4      121       121  JA          Reserve 19.6 B, Killer main12  [data-Groesse defekt]
+1150   main12     187.7      120       121  NEIN        FEHLEN 67.7 B, Killer main13  [data-Groesse defekt]
+1150   main13     176.2      130       121  JA          FEHLEN 46.2 B, Killer main14  [data-Groesse defekt]
+1150   main14      26.8       -1       101  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1170   main00      91.3      101       101  JA(Volltext) Reserve 9.7 B, Killer main01
+1170   main01      60.3      100       101  JA(Volltext) Reserve 39.7 B, Killer main02  [data-Groesse defekt]
+1170   main02      75.6      101       101  JA(Volltext) Reserve 25.4 B, Killer main03
+1170   main03     116.7      101       101  JA(Volltext) FEHLEN 15.7 B, Killer main04
+1170   main04      87.1      358       101  JA(Volltext) Reserve 270.9 B, Killer main05
+1170   main05      87.0       -1        52  egal        kein weiteres Message_on in 1500 B
+1170   main06     102.1      100       101  JA(Volltext) FEHLEN 2.1 B, Killer main07
+1170   main07      55.7       -1       101  egal        kein weiteres Message_on in 1500 B
+1170   main13      92.4      110       101  JA(Volltext) Reserve 17.6 B, Killer main14
+1170   main14      76.2      100       101  JA(Volltext) Reserve 23.8 B, Killer main15
+1170   main16      91.3       -1       101  egal        kein weiteres Message_on in 1500 B
+11B0   main00      29.3       -1        61  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11B0   main01     143.7      110       107  JA          FEHLEN 33.7 B, Killer main02  [data-Groesse defekt]
+11B0   main02      98.9      110       107  JA          Reserve 11.1 B, Killer main03  [data-Groesse defekt]
+11B0   main03      43.2      180        87  JA          Reserve 136.8 B, Killer main04  [data-Groesse defekt]
+11B0   main04     113.8       90        87  JA          FEHLEN 23.8 B, Killer main05  [data-Groesse defekt]
+11B0   main05     183.9      140       137  JA          FEHLEN 43.9 B, Killer main06  [data-Groesse defekt]
+11B0   main06      61.6       -1        87  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11B0   main07     124.3      200       107  JA          Reserve 75.7 B, Killer main08  [data-Groesse defekt]
+11B0   main08     176.2      110       107  JA          FEHLEN 66.2 B, Killer main09  [data-Groesse defekt]
+11B0   main09      64.1       -1        87  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11B0   main10      66.5      100        97  JA          Reserve 33.5 B, Killer main11  [data-Groesse defekt]
+11B0   main11     106.6      100        97  JA          FEHLEN 6.6 B, Killer main12  [data-Groesse defekt]
+11B0   main12      78.0       -1        97  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11C0   main00      97.5       -1        98  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11C0   main01      84.6       90        88  JA          Reserve 5.4 B, Killer main02  [data-Groesse defekt]
+11C0   main02      93.7       90        88  JA          FEHLEN 3.7 B, Killer main03  [data-Groesse defekt]
+11C0   main03      47.0      100        98  JA          Reserve 53.0 B, Killer main04  [data-Groesse defekt]
+11C0   main04      24.0       -1        88  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11C0   main05      81.9       90        88  JA          Reserve 8.1 B, Killer main06  [data-Groesse defekt]
+11C0   main06      62.7       -1        83  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11C0   main07      70.4       -1        83  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+11C0   main08      91.3       85        83  JA          FEHLEN 6.3 B, Killer main09  [data-Groesse defekt]
+11C0   main09     113.5       -1       128  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+1240   main00     168.8      202       177  JA(Volltext) Reserve 33.2 B, Killer main01
+1240   main01     160.0      180       177  JA(Volltext) Reserve 20.0 B, Killer main02
+1240   main02     176.2      202       177  JA(Volltext) Reserve 25.8 B, Killer main03
+1240   main03     196.2      202       177  JA(Volltext) Reserve 5.8 B, Killer main04
+1240   main04     210.0      202       177  JA(Volltext) FEHLEN 8.0 B, Killer main05
+1240   main05     165.0      434       177  JA(Volltext) Reserve 269.0 B, Killer main00
+2000   main00      66.5      101       101  JA          Reserve 34.5 B, Killer main01  [data-Groesse defekt]
+2000   main01      46.0      120       101  JA          Reserve 74.0 B, Killer main02  [data-Groesse defekt]
+2000   main02     101.4      121       121  JA          Reserve 19.6 B, Killer main03  [data-Groesse defekt]
+2000   main03      78.0      120       101  JA          Reserve 42.0 B, Killer main04  [data-Groesse defekt]
+2000   main04     163.0      121       121  JA          FEHLEN 42.0 B, Killer main05  [data-Groesse defekt]
+2000   main05      62.7      101       101  JA          Reserve 38.3 B, Killer main06  [data-Groesse defekt]
+2000   main06      58.9      120       101  JA          Reserve 61.1 B, Killer main07  [data-Groesse defekt]
+2000   main07     146.6       -1       121  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]
+2000   main08     110.4      140       121  JA          Reserve 29.6 B, Killer main09  [data-Groesse defekt]
+2000   main09     120.5      140       121  JA          Reserve 19.5 B, Killer main10  [data-Groesse defekt]
+2000   main10      62.7      120       101  JA          Reserve 57.3 B, Killer main11  [data-Groesse defekt]
+2000   main11     143.8       -1       121  egal        kein weiteres Message_on in 1500 B  [data-Groesse defekt]

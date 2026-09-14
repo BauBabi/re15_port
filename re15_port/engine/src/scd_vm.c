@@ -1457,6 +1457,14 @@ extern unsigned g_current_room_id;
  * PSX-Target ohne Sprachpfad linken - dort bleibt sie 0 und das Gate in
  * op_message_on ist wirkungslos. Begruendung s. scd_thread_t.voice_wait. */
 int g_re15_voice_laeuft = 0;
+/* Wieviele BILDER die laufende Aufnahme noch braucht. Dieselbe Durchreiche wie das Flag
+ * darueber - die Plattform stempelt beide je Bild im selben Block (audio_pc.c), die Engine
+ * haelt die Variable selbst, damit Tests und das PSX-Target ohne Sprachpfad linken.
+ * Der Riegel in op_message_on braucht das, weil ein FESTER Deckel nicht reicht: ueber den
+ * ganzen Bestand ist die laengste Aufnahme 242,5 Bilder (ROOM1150 main09) und der groesste
+ * Fehlbetrag 92,5 - der erste Deckel von 90 haette genau diesen einen Fall um 2,5 Bilder
+ * abgeschnitten. Mit der echten Restlaenge gibt es nichts mehr zu schaetzen. */
+int g_re15_voice_restbilder = 0;
 
 static void scd_queue_voice(uint8_t msg_id)
 {
@@ -1491,31 +1499,6 @@ static int op_message_on(scd_thread_t *t)
     extern uint8_t g_aot_action_pressed;
     uint8_t arg2 = t->pc[2];
 
-    /* DEN VORIGEN SATZ AUSREDEN LASSEN (Nutzer 2026-09-13, ROOM1170 Nachricht 3:
-     * "They almost caught me" - das "me" fehlte). Herleitung, Messwerte und die
-     * Begruendung, warum das KEINE byte-true-Frage ist: scd_thread_t.voice_wait.
-     * Das Gate greift nur beim ERSTEN Betreten einer Zeile - die parkenden Zweige
-     * unten (Auswahl-Dialog, Schreibmaschinen-FSM) betreten diese Funktion jedes
-     * Bild neu und duerfen hier nicht erneut haengen bleiben. */
-    if (g_scd.message_query == 0 && !g_scd.message_fsm_active) {
-        extern int g_re15_voice_laeuft;
-        /* Deckel: die laengste Aufnahme des Projekts ist 117 Bilder, der kuerzeste
-         * Abstand im Skript 100 - noetig sind also <20. 90 Bilder (3 s) lassen viel
-         * Luft und verhindern trotzdem, dass ein haengender Kanal das Skript anhaelt. */
-        if (g_re15_voice_laeuft && t->voice_wait < 90u) { t->voice_wait++; return 2; }
-        if (t->voice_wait) {
-            /* Messschiene (GUI-exe: stderr tot). Sagt je Zeile, wieviele Bilder der
-             * vorige Satz noch gebraucht hat - gegen die Skript-Sleeps nachrechenbar. */
-            FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
-            if (lg) {
-                fprintf(lg, "raum=%04x nachricht=%d  %u Bilder gewartet%s\n",
-                        g_current_room_id, t->pc[1], (unsigned)t->voice_wait,
-                        t->voice_wait >= 90u ? "  (DECKEL - Kanal haengt?)" : "");
-                fclose(lg);
-            }
-            t->voice_wait = 0;
-        }
-    }
 
     /* GLOBALER TEXT-FREEZE — pc[2..3] ist NICHT die "Farbe" (alte Fehl-Etikettierung,
      * korrigiert 2026-08-17), sondern die PAUSE-MASKE fuer DAT_800aca40.  Byte-true
@@ -1612,6 +1595,58 @@ static int op_message_on(scd_thread_t *t)
         g_scd.message_query = 0;
         t->pc += 4;
         return 1;                                  /* → Evt_next + the YES/NO branch */
+    }
+
+    /* DEN VORIGEN SATZ AUSREDEN LASSEN - und zwar GENAU HIER, hinter allen Abfangungen.
+     * Nutzer 2026-09-14: "es gibt diverse andere cutscenes wo die voiceovers ebenfalls
+     * abgeschnitten werden, weil sie zu lang sind bevor das naechste startet."
+     *
+     * ERHEBUNG (analysis/voiceover_2026-09-14/BEFUND.md, mit dem echten VM gegengeprueft):
+     * von 87 Aufnahmen werden 24 abgeschnitten, 6 weitere sind knapp (<10 Bilder Reserve),
+     * 14 haben keinen Nachfolger, unerreichbar ist keine. Groesster Fehlbetrag: ROOM1150
+     * main09 mit 92,5 Bildern (242,5 Bilder Aufnahme gegen Sleep 35+35+35+35+10 = 150 ab
+     * sub08 @0x11FA). Die Zeit zwischen zwei vertonten Zeilen besteht in ALLEN 24 Faellen
+     * ausschliesslich aus Sleep-Ketten.
+     *
+     * WARUM DIESE STELLE und nicht mehr der Funktionsanfang: dort parkte der Riegel auch
+     * das, was gar keine Dialogzeile ist. Alles Uebrige ist vorher abgefangen - das
+     * SAVE-TELEFON (ROOM1150 msg 1) und die ITEM-BOX (msg 3) springen mit pc+=4 heraus,
+     * der AUSWAHL-Dialog (ROOM1050 msg0, ROOM1090 msg8, ROOM10D0 msg7/11) parkt in seinem
+     * eigenen Zweig darueber. Examinierte man Telefon oder Box, waehrend noch eine
+     * Irons-Zeile klang, passierte bis zu 3 s lang NICHTS: kein Menue, kein Text, keine
+     * Rueckmeldung. Hier unten kann das nicht mehr passieren.
+     *
+     * UND DAS ALTE GATE AUF message_fsm_active FAELLT DAMIT WEG. Es war zu eng: bei
+     * ROOM1150 main12 (67,7 Bilder Fehlbetrag) steht der Text der Vorzeile beim naechsten
+     * Message_on noch (Standzeit 121 Bilder gegen 120 Bilder Abstand), das Gate griff dort
+     * also gar nicht. An dieser Stelle braucht es die Bedingung nicht: die parkenden
+     * Zweige liegen alle darueber.
+     *
+     * Gewartet wird gegen die ECHTE Restlaenge (g_re15_voice_restbilder), nicht gegen eine
+     * geschaetzte Zahl. Der Deckel darunter ist nur noch Notbremse fuer einen haengenden
+     * Kanal und liegt ueber der laengsten Aufnahme des Bestands (242,5 Bilder).
+     *
+     * KEINE BYTE-TRUE-FRAGE (wie bei scd_queue_voice vermerkt): RE1.5 hat gar keine
+     * englische Sprachausgabe, synchro/ ist eigene Produktion. Die Sleep-Werte des Skripts
+     * bleiben unangetastet; gewartet wird nur, wo eine Aufnahme laenger ist als das
+     * Original ihr Zeit gibt. Wo sie hineinpasst, aendert sich am Timing NICHTS. */
+    {   extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
+        enum { RE15_VOICE_NOTBREMSE = 300 };   /* 10 s > laengste Aufnahme (242,5 Bilder) */
+        if (g_re15_voice_laeuft && g_re15_voice_restbilder > 0
+            && t->voice_wait < RE15_VOICE_NOTBREMSE) { t->voice_wait++; return 2; }
+        if (t->voice_wait) {
+            /* Messschiene (GUI-exe: stderr tot). Sagt je Zeile, wieviele Bilder der vorige
+             * Satz noch gebraucht hat - gegen die Skript-Sleeps nachrechenbar. */
+            FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
+            if (lg) {
+                fprintf(lg, "raum=%04x nachricht=%d  %u Bilder gewartet%s\n",
+                        g_current_room_id, t->pc[1], (unsigned)t->voice_wait,
+                        t->voice_wait >= (unsigned)RE15_VOICE_NOTBREMSE
+                            ? "  (NOTBREMSE - Kanal haengt?)" : "");
+                fclose(lg);
+            }
+            t->voice_wait = 0;
+        }
     }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
