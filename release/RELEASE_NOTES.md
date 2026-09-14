@@ -1,3 +1,29 @@
+# v0.8.0 - 2026-09-14
+
+## Jeder dritte Zombie laeuft schneller, und die Dialoge reden aus
+
+- **Etwa jeder dritte Zombie ist schneller unterwegs.** In Resident Evil 2 bekommt
+  beim Spawn rund ein Drittel der Zombies einen 1,5-fachen Gang - und dieselben sind
+  zugleich die zaeheren, die auf Treffer weniger zucken. Der Port hatte den Schalter
+  dafuer, benutzte ihn aber nie, weil er an einem RE2-Spielglobal haengt. Das Global
+  ist im Auslieferungsstand ab dem Start IMMER gesetzt und wird nirgends geloescht -
+  es gab also nichts abzubilden. Jetzt laufen sie wie im Original.
+- **Die Sprachaufnahmen werden nicht mehr abgeschnitten.** Erhoben wurde der ganze
+  Bestand: von 87 Aufnahmen brachen 24 mitten im Wort ab, weil die naechste Zeile zu
+  frueh startete, sechs weitere waren auf der Kippe. Am schlimmsten traf es Irons in
+  ROOM1150, dem ueber drei Sekunden fehlten. Der naechste Satz wartet jetzt genau so
+  lange, wie der vorige noch braucht - keine geschaetzte Zahl mehr, sondern die
+  tatsaechliche Restlaenge.
+- **Und er wartet nur noch dort, wo es Dialog ist.** Save-Telefon, Item-Box und die
+  Ja/Nein-Abfragen reagieren wieder sofort; vorher konnte es bis zu drei Sekunden
+  dauern, bis ueberhaupt etwas passierte, wenn nebenher noch eine Stimme lief.
+
+### Bekannt und offen
+
+Mit dem schnelleren Gang bleibt in ROOM1030 ein zweiter Kriecher in der Wand haengen
+(Laufanimation ohne Fortkommen) - die Wand-Klemme des Ports vertraegt das hoehere
+Tempo noch nicht. Das ist gemessen und notiert, aber in dieser Fassung nicht behoben.
+
 # v0.7.99 - 2026-09-14
 
 ## Die Gitterhaende greifen, ROOM1090 ist auf der Karte, das Intro redet aus
