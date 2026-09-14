@@ -1174,6 +1174,25 @@ target_include_directories(probe_crawl_commit PRIVATE ${CMAKE_SOURCE_DIR}/includ
 # @0x80110a84-aa4), (2) Rueckstoss-Hop sub 7 (Clip 0x13, +0x8c=0x14, 245d8(0x800)
 # @0x8010f070/f120), (3) Corpse haelt LETZTEN Collapse-Keyframe (f314-Wrap FUN_8001f3bc,
 # kein f314 im Corpse-Root 0x80111774). Bank-echt (EM020 aus CDEMD0.EMS).
+# MESSUNG (Nutzer 2026-09-14 "Hunde erst wieder treffbar, wenn sie stehen"): wie lange ist der
+# RE2-Hund im Port kein Ziel? Original-Gate ist +0x1D3 (@0x80047138-40 / Setzer @0x80047338-4C,
+# Hunde-Waffenzeile 0x800A4424), NICHT +0x93 (in RE2 nirgends: Voll-Scan 147 = 0 Treffer).
+add_executable(probe_re2_dog_hitwindow probe_re2_dog_hitwindow.c)
+target_link_libraries(probe_re2_dog_hitwindow PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_dog_hitwindow PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_dog_hitwindow PRIVATE
+    RE15_ASSETS_PATH=${CMAKE_SOURCE_DIR}/shared_assets/PSX)
+add_test(NAME unit_re2_dog_hitwindow COMMAND probe_re2_dog_hitwindow)
+set_tests_properties(unit_re2_dog_hitwindow PROPERTIES TIMEOUT 30)
+
+add_executable(probe_gegenprobe_hund_luftzeile probe_gegenprobe_hund_luftzeile.c)
+target_link_libraries(probe_gegenprobe_hund_luftzeile PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gegenprobe_hund_luftzeile PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gegenprobe_hund_luftzeile PRIVATE
+    RE15_ASSETS_PATH=${CMAKE_SOURCE_DIR}/shared_assets/PSX)
+add_test(NAME unit_gegenprobe_hund_luftzeile COMMAND probe_gegenprobe_hund_luftzeile)
+set_tests_properties(unit_gegenprobe_hund_luftzeile PROPERTIES TIMEOUT 30)
+
 add_executable(probe_dog_hit probe_dog_hit.c)
 target_link_libraries(probe_dog_hit PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_dog_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -1570,6 +1589,19 @@ target_include_directories(probe_re2_hitpath PRIVATE ${CMAKE_SOURCE_DIR}/include
 target_compile_definitions(probe_re2_hitpath PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- DIAGNOSE 2026-09-14: Hunde-Ersttreffer-Verzoegerung (Nutzer-Befund). Kein add_test. ---
+add_executable(probe_hund_ersttreffer probe_hund_ersttreffer.c)
+target_link_libraries(probe_hund_ersttreffer PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hund_ersttreffer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_hund_ersttreffer PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_hund_ersttreffer2 probe_hund_ersttreffer2.c)
+target_link_libraries(probe_hund_ersttreffer2 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hund_ersttreffer2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_hund_ersttreffer2 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- DIAGNOSE: derselbe echte Schuss-Weg auf KRAEHE (ROOM10C0) und SPINNE (ROOM1090).
 #     Kein add_test — reine Messsonde. ---
 add_executable(probe_re2_hit_crow_spider probe_re2_hit_crow_spider.c)
@@ -1943,6 +1975,21 @@ set_tests_properties(unit_1090_room_pin PROPERTIES TIMEOUT 60)
 #     Kandidatenfilters, DOWN-Dauern samt Streuung aus der Liegezeit-Tabelle @0x8010004C, plus
 #     Positiv-Kontrollen (es muss getroffen und gestorben werden), vier Negativ-Kontrollen
 #     (Leiche / +0x10E&0x8000 / stehengebliebener +0x1D3-Claim) und die RE1.5-Regressionswache. ---
+# --- MESSSONDE (Runde 13, Auftrag "Was sperrt 200-400 Bilder?"): seed 29 / slot 5 Bild fuer
+#     Bild. Reine Diagnose, kein add_test. ---
+# --- GEGENPROBE (Runde 13): run_sweep mit der EXAKTEN Testbedingung + Modal-Wache. ---
+add_executable(probe_re2z_gegen13 probe_re2z_gegen13.c)
+target_link_libraries(probe_re2z_gegen13 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_gegen13 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_gegen13 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_re2z_sperre29 probe_re2z_sperre29.c)
+target_link_libraries(probe_re2z_sperre29 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_sperre29 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_sperre29 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(test_re2_zombie_abc test_re2_zombie_abc.c)
 target_link_libraries(test_re2_zombie_abc PRIVATE re15_engine re15_test_support)
 target_include_directories(test_re2_zombie_abc PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -3697,4 +3744,89 @@ add_executable(probe_verify_portklemme probe_verify_portklemme.c)
 target_link_libraries(probe_verify_portklemme PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_verify_portklemme PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_verify_portklemme PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_re2z_block probe_re2z_block.c)
+target_link_libraries(probe_re2z_block PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_block PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_block PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# probe_marke_treffbar - Gegenpruefung Befund "spieler-schiene: treffbar=-Deutung" (Mess-Sonde)
+add_executable(probe_marke_treffbar probe_marke_treffbar.c)
+target_link_libraries(probe_marke_treffbar PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_marke_treffbar PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_marke_treffbar PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- Verifikation der vorgeschlagenen Sperr-Messschiene (Befundpruefung, nur lesend) ---
+add_executable(probe_sperre_schiene probe_sperre_schiene.c)
+target_link_libraries(probe_sperre_schiene PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_sperre_schiene PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME probe_sperre_schiene COMMAND probe_sperre_schiene)
+set_tests_properties(probe_sperre_schiene PROPERTIES TIMEOUT 30)
+
+# --- probe_hund_trefferluecke: Mess-Sonde zu den Nutzer-Befunden 2026-09-14 (Hunde-Treffer
+#     verzoegert / unverwundbar bis zum Stehen). Reine Messung, KEIN add_test. ---
+add_executable(probe_hund_trefferluecke probe_hund_trefferluecke.c)
+target_link_libraries(probe_hund_trefferluecke PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hund_trefferluecke PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_hund_trefferluecke PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# probe_verify_sperre_dauer - Gegenpruefung Befund "Sperre/Liegezeit" (Mess-Sonde, kein Pin)
+add_executable(probe_verify_sperre_dauer probe_verify_sperre_dauer.c)
+target_link_libraries(probe_verify_sperre_dauer PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_sperre_dauer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_sperre_dauer PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG (Session 2026-09-14): Dauer des +0x1D3-Fensters am RE2-Zombie ---
+add_executable(probe_gegen_1d3fenster probe_gegen_1d3fenster.c)
+target_link_libraries(probe_gegen_1d3fenster PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gegen_1d3fenster PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gegen_1d3fenster PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG: zaehlt der "Abzug" des Ersttreffer-Befundes wirklich Schuesse?
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_verify_hund_abzugzaehlung probe_verify_hund_abzugzaehlung.c)
+target_link_libraries(probe_verify_hund_abzugzaehlung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_hund_abzugzaehlung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_hund_abzugzaehlung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG (Verifier 2026-09-14): woraus bestehen die 120 Bilder der Hunde-Sperre?
+#     Clip-Protokoll + Sweep ueber den Leerlauf-Frame. Reine Messsonde, KEIN add_test. ---
+add_executable(probe_verify_hundsperre probe_verify_hundsperre.c)
+target_link_libraries(probe_verify_hundsperre PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_hundsperre PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_hundsperre PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Verifikation Befund "erster-treffer"): Bild-Abstand zwischen Abzugsbild
+#     und erstem HP-Abzug im Port. Original-Gegenstueck: Sub1 @0x80033328 sh 2 -> aca5a +
+#     @0x8003332c j 0x80033450 (Rueckkehr), Entlade-Sub 2 @0x80033460 erst im Folgebild
+#     (Wurzel @0x80032e9c-c4 dispatcht je Bild EINMAL). ---
+add_executable(probe_abzug_takt probe_abzug_takt.c)
+target_link_libraries(probe_abzug_takt PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_abzug_takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_abzug_takt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME probe_abzug_takt COMMAND probe_abzug_takt)
+set_tests_properties(probe_abzug_takt PROPERTIES TIMEOUT 120)
+
+# --- GEGENPRUEFUNG (Befundpruefung 2026-09-14): Dauer der Hunde-Sperre unter RE2-KI.
+#     Waffen-Sweep + HURT-Zeilen-Sweep + Pin/Ohne-Pin. Reine Messsonde, KEIN add_test. ---
+add_executable(probe_gegen_hundsperre probe_gegen_hundsperre.c)
+target_link_libraries(probe_gegen_hundsperre PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gegen_hundsperre PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gegen_hundsperre PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG II: haengt die 120-Bilder-Sperre an der Dauerfeuer-Kadenz? Messsonde. ---
+add_executable(probe_gegen_hundsperre2 probe_gegen_hundsperre2.c)
+target_link_libraries(probe_gegen_hundsperre2 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gegen_hundsperre2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gegen_hundsperre2 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
