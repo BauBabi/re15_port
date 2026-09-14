@@ -1,3 +1,31 @@
+# v0.8.1 - 2026-09-14
+
+## Die schnellen Zombies laufen jetzt wirklich schneller
+
+- **Der Schnellgang war im Port halb so schnell statt anderthalbmal.** In Resident
+  Evil 2 ueberspringt der schnellere Zombie jeden dritten Tick ein Animationsbild und
+  legt dafuer den doppelten Weg zurueck. Der Port liess den Schritt an diesen Ticks
+  einfach aus - gemessen kam er auf Faktor 0,50 statt 1,50. Jetzt stimmt beides auf
+  die Einheit genau mit dem Original ueberein.
+- **Damit ist auch der Verdacht vom letzten Mal ausgeraeumt**: nicht die
+  Wand-Kollision vertrug das hoehere Tempo nicht - die arbeitet wie im Original und
+  laesst mit 443 Einheiten groesstem Schritt gegen 1158 Einheiten duennster Wand
+  nichts durch. Der Fehler sass in der Bewegung selbst.
+- **Der Zombie, der in ROOM1030 zurueckbleibt, hat einen ganz anderen Grund**: das
+  Skript schaltet nur die ersten vier scharf, und er erreicht seine Zone 50 Bilder zu
+  spaet. Mit dem Tempo hat das nichts zu tun - er ist nicht einmal einer der
+  schnellen. Die falsche Erklaerung von gestern steht jetzt richtig im Code.
+- **Alle Sprachaufnahmen tragen wieder eine gueltige Groessenangabe.** 68 der 87
+  Dateien hatten eine kaputte (ein Artefakt des Exports). Gehoert hat man davon
+  nichts, aber seit der Dialog-Riegel an der Laenge haengt, sollte sie stimmen. Die
+  Tondaten sind dabei Byte fuer Byte dieselben geblieben.
+
+### Bekannt und offen
+
+In einem von 64 Durchlaeufen ist ein niedergeschlagener Zombie 7 bis 13 Sekunden
+lang nicht treffbar, bevor er sich wieder faengt. Das ist lang; ob das Original sich
+dort genauso verhaelt, ist noch nicht nachgemessen.
+
 # v0.8.0 - 2026-09-14
 
 ## Jeder dritte Zombie laeuft schneller, und die Dialoge reden aus
