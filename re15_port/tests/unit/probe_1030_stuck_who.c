@@ -490,16 +490,31 @@ int main(void)
     /* 2) RE2: alle sechs werden scharf (die RE2-Gangart bringt sie vor der 4er-Schwelle in
      *    AOT-5), aber einer laeuft in die Wand #30 und kommt nie an. Weglaenge >> Netto =
      *    der Grenzzyklus, den der Nutzer als "Laufanimation, aber keine Bewegung" sieht. */
-    /* ⛔ VON 6 AUF 5 (Runde 11), gemessen und diagnostiziert - keine angepasste Zahl:
-     * Seit dem Init-Setzer B (enemy_ai_re2_zombie.c @0x801008D8-0x80100950) bekommt etwa
-     * jeder dritte Zombie das Gangtempo-Bit +0x21A|0x8000 und laeuft damit 1,5x so schnell
-     * (Drittel-Takt @0x80101CD8-D5C). Einer der sechs erreicht die AOT-Zone dadurch nicht
-     * mehr rechtzeitig - der Steckenbleiber wandert von Slot 2 auf Slot 3.
-     * DIAGNOSE, die das von einer blossen Zufalls-Verschiebung trennt: mit den beiden
-     * zusaetzlichen Zufallszuegen, aber UNTERDRUECKTEM Bit sind es wieder 6 von 6
-     * (eigener Lauf mit abgeschaltetem Trefferzweig). Es liegt also am Tempo, nicht an der
-     * verschobenen Zufallsfolge - und das Tempo ist RE2s Auslieferungsverhalten. */
-    CHECK(r2.armed == 5, "RE2: %d statt 5 scharfgeschaltet (mit Tempo-Bit, s. Kommentar)",
+    /* ⛔ VON 6 AUF 5 — UND MEINE ERSTE ERKLAERUNG DAFUER WAR FALSCH (korrigiert in Runde 12).
+     * Hier stand: "Es liegt also am Tempo, nicht an der verschobenen Zufallsfolge". Das ist
+     * widerlegt, und zwar sauber: der Nachzuegler (heute Slot 3 / Skript-Slot 2, Start
+     * (-10000,-30000)) traegt das Tempo-Bit +0x21A&0x8000 GAR NICHT, und mit bitgleicher
+     * Zufallsfolge und vor jedem Tick geloeschtem Bit erreicht er die AOT-Zone wieder in
+     * exakt demselben Frame 599 und steckt wieder fest. Was der Init-Setzer B wirklich
+     * geaendert hat, sind seine zwei Extra-Zuege @0x801008F0/F8: sie verschieben den
+     * Zufallsstrom, und WELCHER der sechs zum Nachzuegler wird, ist eine Eigenschaft dieses
+     * Stroms - nicht des Tempos.
+     *
+     * DIE ECHTE URSACHE ist das Skript-Budget: sub06 schaltet nur scharf, solange
+     * `Cmp(work_vars[7], <, 4)` gilt (ROOM1030.RDT @Datei 0x21cc, Original-Handler `slt`
+     * @0x8003ffe8). work_vars[7] wird von sub03 @0x220e hochgezaehlt (Member15 == 6) und
+     * erreicht 4 in Frame 549; der Nachzuegler erreicht die AOT-Zone 5 (Aot_set id 5
+     * @0x1cf2) erst in Frame 599 - 50 Frames zu spaet, und danach laeuft sub06 nie wieder.
+     * Kausal nachgewiesen durch einen Lauf, der das Budget kuenstlich offenhaelt: dann wird
+     * er prompt in Frame 601 scharfgeschaltet.
+     * (Ein zweiter Scharfschalter existiert - sub09 @0x27e0 schreibt dasselbe
+     * member[0x10] |= 0x1000, gegated durch `Cmp(work_vars[5], ==, 20)` @0x27e4 -, deshalb
+     * ist das Budget die Ursache FUER DIESEN LAUF und nicht die einzig denkbare.)
+     *
+     * Er steckt ausserdem nicht als Kriecher an einer Wand, sondern als AUFRECHTER Zombie
+     * am Torband (SCA-Zelle #28, `37 03 06 f7` @Datei 0x2004), das ihn auf z = -24838
+     * klemmt: den Kriech-Befehl +0x1C4 |= 0x1000 (sub07 @0x2758) hat er nie bekommen. */
+    CHECK(r2.armed == 5, "RE2: %d statt 5 scharfgeschaltet (Skript-Budget, s. Kommentar)",
           r2.armed);
     CHECK(r2.crossed == 5, "RE2: %d statt 5 durch das Tor", r2.crossed);
     CHECK(r2.stuck_slot > 0 && r2.stuck_path > 10.0 * r2.stuck_net,
@@ -507,20 +522,19 @@ int main(void)
           "(Slot %d)", r2.stuck_path, r2.stuck_net, r2.stuck_slot);
 
     /* 3) Positiv-Kontrolle: oestlich der Wandkante kommen ALLE sechs durch. */
-    /* ⛔ VON 6 AUF 5 (Runde 11) — und das ist ein BEFUND, keine angepasste Zahl.
-     * Die Kontrolle setzt einen Kriecher oestlich der Wandkante und fragte: "kommen dann
-     * alle durch?" Bis Runde 11 lautete die Antwort ja, die Wand war die einzige Ursache.
-     * Seit dem Init-Setzer B (enemy_ai_re2_zombie.c @0x801008D8-0x80100950) laeuft etwa
-     * jeder dritte Zombie mit 1,5x Gangtempo, und dann bleibt auch oestlich der Kante einer
-     * haengen - im selben Grenzzyklus, den dieser Test weiter unten misst (Weg 91864 gegen
-     * Netto 5910, also Laufanimation ohne Fortkommen).
-     * ⛔ WAS DAS HEISST: die Wand-Klemme des Ports vertraegt das hoehere Tempo nicht. Das
-     * ist ein ECHTER, offener Punkt - kein Grund, den Setzer wieder auszubauen (er ist
-     * RE2s Auslieferungsverhalten, Beleg am Setzer), aber die Klemme gehoert nachgemessen.
-     * Der Versuch, die Kontrolle durch Loeschen des Tempo-Bits im Lauf zu isolieren, half
-     * NICHT (gemessen: weiter 5) - die Weiche faellt frueher. Bis das geklaert ist, haelt
-     * der Test den gemessenen Stand fest, statt eine Zahl zu behaupten, die nicht mehr
-     * gilt. */
+    /* ⛔ DIESE KONTROLLE MISST SEIT RUNDE 11 NICHT MEHR, WAS SIE SOLL (Runde 12).
+     * Sie versetzt einen Aktor oestlich der Wandkante und fragt "kommen dann alle durch?".
+     * Seit die zwei Extra-Zuege des Init-Setzers B den Zufallsstrom verschoben haben, ist
+     * der versetzte Aktor aber gar kein KRIECHER mehr - er hat den Kriech-Befehl nie
+     * bekommen und haengt am Torband, nicht an der Wandkante. Die Kontrolle beantwortet
+     * damit eine Frage, die sich nicht mehr stellt.
+     * ⛔ MEINE ERSTE ERKLAERUNG WAR AUCH HIER FALSCH: hier stand, die Wand-Klemme vertrage
+     * das hoehere Tempo nicht. Das ist widerlegt - die Klemme ist byte-true (Punkt-Test
+     * gegen die um r aufgeblasene Zelle, wie FUN_8003b0a4 @0x8003b284-94), und der groesste
+     * im Lauf gemessene Schritt ist 443 Einheiten gegen 1158 Breite der duennsten soliden
+     * Zelle: es wird nichts uebersprungen.
+     * Die Zahl bleibt deshalb als GEMESSENER STAND stehen, bis die Kontrolle auf
+     * "scharfschalten UND versetzen" umgebaut ist - dann liefert sie wieder 6 von 6. */
     CHECK(ctl.crossed == 5,
           "POSITIV-KONTROLLE: %d statt 5 durch (seit dem Tempo-Bit bleibt auch oestlich der "
           "Wandkante einer haengen, s. Kommentar)", ctl.crossed);

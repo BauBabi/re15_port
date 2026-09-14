@@ -697,19 +697,58 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
-    if (fr_prev < 0 || fr_now != fr_prev + 1) return;              /* clip-set/jump: re-anchor */
-    /* The shared anim pass advances anim_frame MONOTONICALLY (it does not wrap at the clip length —
-     * the renderer takes slot = frame % frame_count). Mirror that here: consecutive frames map to
-     * consecutive LOOP SLOTS; a slot wrap (now < prev) is the loop restart = re-anchor (skip). */
-    int s_now  = fr_now  % c->frame_count;
-    int s_prev = fr_prev % c->frame_count;
-    if (s_now != s_prev + 1) return;                               /* wrapped -> re-anchor */
-    int kf_n = (int)(anim->frames[c->first_frame + s_now ] & 0xFFFu);
-    int kf_p = (int)(anim->frames[c->first_frame + s_prev] & 0xFFFu);
-    int16_t sx, sy, sz, sx0, sz0;
-    if (!re15_emd_get_keyframe_speed(skel, kf_n, &sx,  &sy, &sz))  return;
-    if (!re15_emd_get_keyframe_speed(skel, kf_p, &sx0, &sy, &sz0)) return;
-    int32_t dx = (int32_t)sx - sx0, dz = (int32_t)sz - sz0;
+    /* ⛔ MOMENTAUFNAHME STATT BILDNUMMERN-VERGLEICH (Runde 12, Nutzer-Auftrag 2026-09-14).
+     *
+     * Hier standen zwei Rueckweisungen:
+     *     if (fr_prev < 0 || fr_now != fr_prev + 1) return;   // clip-set/jump: re-anchor
+     *     if (s_now != s_prev + 1) return;                    // wrapped -> re-anchor
+     * Sie machten aus jedem UEBERSPRUNGENEN Keyframe eine NULL-Bewegung. Genau das trifft den
+     * Schnellgang aus dem Init-Setzer B: der ruft bei (+0x14D % 3) == 2 einen ZWEITEN
+     * Bildvorschub (FUN_8002A9C8 @0x80101D54), das Bild springt also um 2 - und der Port
+     * verschluckte den Schritt, statt ihn zu verdoppeln.
+     * GEMESSEN (probe_re2z_tempobit, echte RE2-Bank EM010 Paar-1, 100 Ticks, Gangclip 0):
+     * Original 2590 Einheiten mit Bit gegen 1713 ohne (Faktor 1,512 - die 1,5x-Theorie
+     * stimmt), der Port 850 gegen 1711 (Faktor 0,497) bei 51 von 100 Ticks mit Versatz NULL.
+     * Der "schnelle" Zombie war im Port also HALB so schnell.
+     *
+     * DAS ORIGINAL VERGLEICHT KEINE BILDNUMMERN. FUN_80015E7C haelt eine Momentaufnahme des
+     * zuletzt angewandten Wurzelstandes in der Entity (+0x20C/+0x20E/+0x210) und bildet den
+     * Delta bedingungslos dagegen:
+     *   80015fb4  lhu  v1,524(t0)      ; Momentaufnahme laden
+     *   80015fc4  sw   v0,524(t0)      ; Momentaufnahme := root(kf_jetzt)
+     *   80015fc8  sh   t3,528(t0)
+     *   80015fcc  subu v1,t1,v1        ; dx = root(kf_jetzt) - Momentaufnahme  (OHNE Bedingung)
+     *   80015fd4  subu a1,t3,a1        ; dz
+     *   80015fd8  sh   v1,324(t0)      ; +0x144
+     * Ein uebersprungener Keyframe ergibt damit von selbst den doppelten Weg - es gibt im
+     * Original gar keinen Sonderfall dafuer.
+     * Der EINZIGE Re-Anker ist das Clip-Bild 0:
+     *   80015f04  lbu  v0,333(t0)      ; +0x14D
+     *   80015f0c  bne  v0,zero,0x80015fa8
+     *   80015f14  sw   zero,524(t0)    ; Momentaufnahme := 0 -> Delta = root(kf0), ABSOLUT
+     *   80015f1c  sh   zero,528(t0)
+     * (Der a3 != 0-Zweig @0x80015F18-A4 spielt hier keine Rolle: die Gang-Aufrufstelle
+     * uebergibt a3 = 0, @0x80101CC0.)
+     *
+     * Der Port fuehrt die Momentaufnahme in root_prev_x/y/z. fr_prev < 0 ist weiterhin der
+     * Bank-/Clip-Wechsel - dort wird die Momentaufnahme auf den aktuellen Stand gesetzt und
+     * der Delta 0, statt den Tick auszulassen (der Aufrufer re15_re2z_move_root hat dafuer
+     * den Re-Anker-Zweig). */
+    int s_now = fr_now % c->frame_count;
+    int kf_n  = (int)(anim->frames[c->first_frame + s_now] & 0xFFFu);
+    int16_t sx, sy, sz;
+    if (!re15_emd_get_keyframe_speed(skel, kf_n, &sx, &sy, &sz)) return;
+    if (s_now == 0) {                                              /* @0x80015F14-1C */
+        a->root_prev_x = 0; a->root_prev_y = 0; a->root_prev_z = 0;
+    }
+    int32_t dx, dz;
+    if (fr_prev < 0) {                       /* Bank-/Clipwechsel: nur neu verankern */
+        dx = 0; dz = 0;
+    } else {
+        dx = (int32_t)sx - a->root_prev_x;                         /* subu @0x80015FCC */
+        dz = (int32_t)sz - a->root_prev_z;                         /* subu @0x80015FD4 */
+    }
+    a->root_prev_x = sx; a->root_prev_y = sy; a->root_prev_z = sz; /* sw/sh @0x80015FC4/C8 */
     a->re2z_root144 = (int16_t)dx;                                 /* sh v1,324(t0) @0x80015FD8 */
     if (dx == 0 && dz == 0) return;
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
@@ -2620,8 +2659,14 @@ void re15_re2z_move_root(re15_actor_t *e)
         s = &b->skel_loco; a = &b->anim_loco;
     }
     int fr = (int)e->anim_frame;
-    if (e->root_prev_motion == e->motion && e->root_prev_kf >= 0)
-        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, e->root_prev_kf);
+    /* ⛔ AUCH DER RE-ANKER-TICK RUFT JETZT (Runde 12). Bisher wurde der Aufruf beim Bank-/
+     * Clipwechsel ganz uebersprungen; seit die Funktion eine MOMENTAUFNAHME des Wurzelstandes
+     * fuehrt (s. dort), muss sie auch an diesem Tick laufen - sonst bliebe die Aufnahme auf
+     * dem Stand des ALTEN Clips stehen und der naechste Tick rechnete einen Delta ueber die
+     * Clip-Grenze hinweg. Sie legt in diesem Fall Delta 0 ab und verankert nur neu. */
+    {   int prev = (e->root_prev_motion == e->motion) ? (int)e->root_prev_kf : -1;
+        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, prev);
+    }
     e->root_prev_kf = (int16_t)fr;
     e->root_prev_motion = e->motion;
 }

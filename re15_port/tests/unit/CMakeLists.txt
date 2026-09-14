@@ -2134,7 +2134,29 @@ target_include_directories(probe_1030_stuck_who PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(probe_1030_stuck_who PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1030_stuck_who COMMAND probe_1030_stuck_who)
+add_executable(probe_1030_bandsweep probe_1030_bandsweep.c)
+target_link_libraries(probe_1030_bandsweep PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_bandsweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_bandsweep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1030_bandsweep COMMAND probe_1030_bandsweep)
 set_tests_properties(unit_1030_stuck_who PROPERTIES TIMEOUT 300)
+
+# --- MESS-SONDE (kein Pin): wo faellt die ROOM1030-Tempo-Weiche? -------------------------------
+#     Drei Laeufe: RE2 mit Setzer B (@0x801008D8-0x80100950), RE2 mit vor jedem Tick
+#     geloeschtem Tempo-Bit +0x21A&0x8000 (gleiche Zufallsfolge), RE1.5-Geschmack.
+# --- GEGENPRUEFUNGS-SONDE (kein Pin): wirkt das Tempo-Bit als Ursache? ---
+add_executable(probe_pruef_tempoursache probe_pruef_tempoursache.c)
+target_link_libraries(probe_pruef_tempoursache PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_pruef_tempoursache PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_pruef_tempoursache PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_1030_tempo_weiche probe_1030_tempo_weiche.c)
+target_link_libraries(probe_1030_tempo_weiche PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_tempo_weiche PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_tempo_weiche PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # --- PIN "entity+0x90 (SCA-Kontakt-Byte) — Schreiber + Leser" ---------------------------------
 #     Der SCA-Klemmpfad FUN_8003b0a4 schreibt bei jedem Treffer
@@ -3555,3 +3577,124 @@ target_include_directories(probe_stimme_takt PRIVATE ${CMAKE_SOURCE_DIR}/include
 target_compile_definitions(probe_stimme_takt PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
+
+# --- MESSUNG ROOM1030-Grenzzyklus: wo klemmt der Port seit dem Tempo-Bit? (Runde 12) ---
+# Kein add_test — reine Messung (probe_*).
+add_executable(probe_1030_grenzzyklus probe_1030_grenzzyklus.c)
+target_link_libraries(probe_1030_grenzzyklus PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_grenzzyklus PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_grenzzyklus PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+
+add_executable(probe_res223_test probe_res223_test.c)
+target_link_libraries(probe_res223_test PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_res223_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_res223_test PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSUNG Tempo-Bit (+0x21A & 0x8000): Extra-Advance FUN_8002A9C8 vs. Port-Delta ---
+# Kein add_test - reine Messung (probe_*).
+add_executable(probe_re2z_tempobit probe_re2z_tempobit.c)
+target_link_libraries(probe_re2z_tempobit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_tempobit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_tempobit PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESS-SONDE (kein Pin): wie gross ist EIN Wurzel-Schritt des RE2-Zombies? ------------------
+#     Liest die echten Clip-Wurzelfelder der geladenen RE2-/RE1.5-Baenke und gibt je Clip die
+#     Ein-Keyframe- und die Zwei-Keyframe-Differenz aus (Original FUN_80015E7C @0x80015FCC-FE4:
+#     Delta = root(kf_jetzt) - gespeicherter Stand +0x20C, also bei uebersprungenem Keyframe die
+#     SUMME zweier Keyframe-Differenzen).
+add_executable(probe_re2_stepsize probe_re2_stepsize.c)
+target_link_libraries(probe_re2_stepsize PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_stepsize PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_stepsize PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_stepsize COMMAND probe_re2_stepsize)
+set_tests_properties(unit_re2_stepsize PROPERTIES TIMEOUT 120)
+
+# --- MESS-SONDE (kein Pin): Verhalten der SCA-Klemme bei GROSSEM Schritt (ROOM1030 Torzelle) ---
+add_executable(probe_wallstep probe_wallstep.c)
+target_link_libraries(probe_wallstep PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_wallstep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_wallstep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_wallstep COMMAND probe_wallstep)
+set_tests_properties(unit_wallstep PROPERTIES TIMEOUT 120)
+add_executable(probe_wallstep_gegen probe_wallstep_gegen.c)
+target_link_libraries(probe_wallstep_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_wallstep_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_wallstep_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_wallstep_gegen COMMAND probe_wallstep_gegen)
+set_tests_properties(unit_wallstep_gegen PROPERTIES TIMEOUT 120)
+
+# --- GEGENPRUEFUNG (kein add_test): welche Guard-Zeile weist den Clip-Wrap ab, und wie gross
+#     ist der am Wrap NICHT addierte Anschub root(kf[0])? ---
+add_executable(probe_wrapgain_check probe_wrapgain_check.c)
+target_link_libraries(probe_wrapgain_check PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_wrapgain_check PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_wrapgain_check PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG Tempo-Bit: unabhaengige Nachrechnung beider Modelle (kein add_test) ---
+add_executable(probe_tempo_gegenpruefung probe_tempo_gegenpruefung.c)
+target_link_libraries(probe_tempo_gegenpruefung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_tempo_gegenpruefung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_tempo_gegenpruefung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PRUEFSONDE (tempo-wirkung): Bildzahlen der RE2-Gangclips + Tick-Vergleich Port vs
+#     Original-Modell (@0x80029b30-48 global / @0x8002a9c8 extra / @0x80101cd8-d54 Kadenz).
+add_executable(probe_verify_fatcadence probe_verify_fatcadence.c)
+target_link_libraries(probe_verify_fatcadence PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_fatcadence PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_fatcadence PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESS-SONDE (kein Pin): Bildspruenge (+2) des RE2-Zombies vs. Wurzelbewegung ---------------
+add_executable(probe_re2_kfjump probe_re2_kfjump.c)
+target_link_libraries(probe_re2_kfjump PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_kfjump PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_kfjump PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_kfjump COMMAND probe_re2_kfjump)
+set_tests_properties(unit_re2_kfjump PROPERTIES TIMEOUT 180)
+
+# --- GEGENPRUEFUNG des room1030-fall-Befundes (unabhaengige Nachmessung) ---
+add_executable(probe_1030_gegenpruefung probe_1030_gegenpruefung.c)
+target_link_libraries(probe_1030_gegenpruefung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_gegenpruefung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_gegenpruefung PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# probe_verify_step_tunnel — Nachmessung Schrittgroessen + DIREKTER Segment-vs-Zelle-Test
+add_executable(probe_verify_step_tunnel probe_verify_step_tunnel.c)
+target_link_libraries(probe_verify_step_tunnel PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_step_tunnel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_step_tunnel PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_verify_step_tunnel COMMAND probe_verify_step_tunnel)
+
+# --- GEGENPRUEFUNG dkf=2 (Mess-Sonde, kein Pin) ---
+add_executable(probe_gegen_dkf2 probe_gegen_dkf2.c)
+target_link_libraries(probe_gegen_dkf2 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gegen_dkf2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gegen_dkf2 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG Grenzzyklus ROOM1030: Motor-Trace OHNE Stups, Fenster 2630..2700 ---
+# Kein add_test - reine Messung (probe_*).
+add_executable(probe_1030_gz_verify probe_1030_gz_verify.c)
+target_link_libraries(probe_1030_gz_verify PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_gz_verify PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_gz_verify PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# probe_verify_portklemme — Gegenpruefung Befund "port-klemme" (Mess-Sonde, kein Pin)
+add_executable(probe_verify_portklemme probe_verify_portklemme.c)
+target_link_libraries(probe_verify_portklemme PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_portklemme PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_portklemme PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

@@ -256,6 +256,19 @@ int main(int argc, char **argv)
                "-> LEVEL = %2d | DOWN-Aim = %2d | ohne Liege-Bit = %2d\n",
                i, c->seed, c->slot, c->frame, st, s1, g_save, a_save, elev, h_stale, h_down, h_clean);
         if (pin) {
+            /* ⛔ NUR LEBENDE, AUFRECHTE KANDIDATEN PRUEFEN (Runde 12). Der Kandidat wird
+             * beim Sweep als aufrecht gefunden, das Orakel laeuft aber Hunderte Bilder
+             * spaeter - bis dahin kann er gestorben sein. Genau das trat mit dem
+             * byte-true Wurzel-Delta auf (Runde 12, enemy_ai_common.c): die Zombies
+             * bewegen sich anders, und Fall 0 stand beim Orakel auf st=7 = LEICHE
+             * (grid 0x80, 21A C016). Eine Leiche IST nicht mit LEVEL treffbar - der Pin
+             * meldete also eine Regression, wo keine ist. Die Zusage gilt dem LEBENDEN
+             * Kriecher; tote Kandidaten gehoeren uebersprungen, nicht gezaehlt. */
+            if (st != 1 || hp_save <= 0) {
+                printf("      (uebersprungen: beim Orakel nicht mehr aufrecht/lebend - "
+                       "st=%u hp=%d)\n", st, (int)hp_save);
+                continue;
+            }
             pin_checked++;
             /* Der Nutzer-Befund selbst: ein LEBENDER, aufrecht laufender RE2-Zombie im
              * Kriech-Root darf mit normal gehaltener Waffe nicht unverwundbar sein. Vor dem

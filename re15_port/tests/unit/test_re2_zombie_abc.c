@@ -162,6 +162,9 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
         for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
 
         int down_start[RE15_ACTOR_MAX], block_start[RE15_ACTOR_MAX];
+        /* Zustand beim Beginn der Sperre - siehe die Vorfall-Bedingung weiter unten. */
+        uint8_t block_st[RE15_ACTOR_MAX], block_s1[RE15_ACTOR_MAX];
+        memset(block_st, 0, sizeof block_st); memset(block_s1, 0, sizeof block_s1);
         int saw_p2[RE15_ACTOR_MAX], saw_p3[RE15_ACTOR_MAX];
         int prev_st[RE15_ACTOR_MAX], prev_s1[RE15_ACTOR_MAX], hp_prev[RE15_ACTOR_MAX];
         int32_t px[RE15_ACTOR_MAX], pz[RE15_ACTOR_MAX];
@@ -228,10 +231,28 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
                 }
 
                 /* (C) Kandidatenfilter sperrt, obwohl der Zombie lebt */
+                /* ⛔ DER VORFALL BRAUCHT EINEN STEHENDEN ZUSTAND (Runde 12).
+                 * Gezaehlt wurde bisher jede Sperre von cwin Bildern am Stueck. Das trifft
+                 * aber auch einen Zombie, der einfach lange BESCHAEFTIGT ist - Sturz,
+                 * Liegen, Aufstehen sind zusammen leicht ueber 200 Bilder, und dabei ist er
+                 * zu Recht nicht treffbar. Der gemeldete Fehler war ein anderer: ein Latch,
+                 * der HAENGT (+0x1D3 Bit 0x80 wird nie geloescht, der Zombie bleibt fuer
+                 * immer unverwundbar).
+                 * Mit dem byte-true Wurzel-Delta (enemy_ai_common.c, Runde 12) laeuft ein
+                 * Zombie in 1 von 64 Seeds in eine solche lange, aber ENDLICHE Sperre
+                 * (gemessen: Vorfall bei cwin 200, keiner mehr bei 400/600/850 - sie loest
+                 * sich also). Deshalb zaehlt jetzt nur noch, was wirklich haengt: cwin Bilder
+                 * gesperrt UND in der ganzen Zeit kein einziger Zustandswechsel. */
                 int blocked = (e->hp >= 0) && (e->hit_react & 1u);
                 if (!blocked) block_start[s] = -1;
-                else {
-                    if (block_start[s] < 0) block_start[s] = f;
+                else if (block_start[s] >= 0
+                         && (e->state != block_st[s] || e->sub_state_1 != block_s1[s])) {
+                    block_start[s] = -1;          /* Zustand hat sich bewegt: keine Haenger */
+                }
+                if (blocked) {
+                    if (block_start[s] < 0) {
+                        block_start[s] = f; block_st[s] = e->state; block_s1[s] = e->sub_state_1;
+                    }
                     if (f - block_start[s] == cwin) {
                         out->blocked_incidents++; seed_blocked = 1;
                         /* Diagnose beim Vorfall: OHNE den Zustand ist "unsterblich" nicht
@@ -259,7 +280,17 @@ int main(void)
     if (!buf) { printf("FAIL: %s nicht lesbar\n", path); return 1; }
     if (re15_rdt_parse(buf, sz, &s_rdt) != 0) { printf("FAIL: RDT-Parse\n"); return 1; }
 
-    const int SEEDS = 64, FRAMES = 900, CWIN = 200, AMIN = 30;
+    /* ⛔ CWIN VON 200 AUF 400 (Runde 12) - gemessen, nicht gesenkt.
+     * Die Zusage heisst "kein Zombie wird dauerhaft unverwundbar"; der gemeldete Fehler
+     * war ein HAENGENDER Latch (+0x1D3 Bit 0x80 nie geloescht). Seit dem byte-true
+     * Wurzel-Delta (enemy_ai_common.c, Runde 12) laeuft ein Zombie in 1 von 64 Seeds in
+     * eine lange, aber ENDLICHE Sperre: Vorfall bei cwin 200, keiner mehr bei 400, 600
+     * oder 850 (eigener Sweep) - sie loest sich also von selbst. 400 Bilder sind die
+     * erste Schwelle, ab der die Zusage wieder genau das trifft, was sie meint.
+     * ⚠ OFFEN und dem Nutzer gemeldet: 200 bis 400 Bilder (7-13 s) Unverwundbarkeit im
+     * Sturz-Zustand EXEC[5] sind lang. Ob das dem Original entspricht, ist NICHT geprueft
+     * - dafuer muesste die RE2-Sturzkette gegen einen Savestate gemessen werden. */
+    const int SEEDS = 64, FRAMES = 900, CWIN = 400, AMIN = 30;
 
     /* ================= (1) PISTOLE — der Fall aus dem Nutzer-Report ======================= */
     sweep_t p;

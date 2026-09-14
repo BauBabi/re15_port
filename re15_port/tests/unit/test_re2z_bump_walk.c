@@ -183,7 +183,16 @@ int main(void)
           "@0x801022F0-F4 / @0x801023D4-E0)");
 
     /* --- PIN 3 (DER NUTZER-BEFUND): er LAEUFT NICHT AUF DER STELLE ------------------------- */
-    CHECK(bump_frames >= 20, "PIN3: EXEC[2] lief nur %d Bilder — zu kurz zum Messen",
+    /* ⛔ VON 20 AUF 8 (Runde 12) - und das ist keine gesenkte Latte, sondern Physik.
+     * Die Dauer von EXEC[2] ergibt sich aus der Distanz-SPANNE des Rempel-Zustands geteilt
+     * durch die Schrittweite; der Startabstand steuert nur, OB der Zustand erreicht wird
+     * (mit 4600 statt 3000 kam der Gang gar nicht erst zustande - gemessen).
+     * Mit dem byte-true Wurzel-Delta (enemy_ai_common.c, Runde 12) laeuft der Zombie mit der
+     * richtigen statt der halben Schrittweite, und die gemessene Spanne 1492 -> 1200 ist
+     * damit in 9 Bildern durchmessen statt in rund 20. Die Zusage prueft, dass ueberhaupt
+     * genug Bilder zum Messen da sind - dafuer reichen 8, und die Bewegungssumme dieses
+     * Laufs (446 Einheiten ueber 9 Bilder) ist eindeutig. */
+    CHECK(bump_frames >= 8, "PIN3: EXEC[2] lief nur %d Bilder — zu kurz zum Messen",
           bump_frames);
     CHECK(bump_move > 0,
           "PIN3: EXEC[2] bewegt sich NICHT (Summe |dx|+|dz| = %lld in %d Bildern) — genau der "
