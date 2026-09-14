@@ -190,6 +190,17 @@ static void run_death(int slot, int budget, death_trace_t *t, int force_crawler_
     e->re2z_dir16a = 0; e->re2z_gaitrow = 0; e->hit_react = 0;
     e->grid_id = (uint8_t)(e->grid_id & ~0x80u);
     e->motion = 0; e->anim_frame = 0; e->anim_freeze = 0;
+    /* ⛔ AUCH DEN GANG-CLIP SETZEN (Runde 11). Alle uebrigen Zustandsfelder stellt dieser
+     * Block schon von Hand - der Gang-Clip +0x218 blieb als einziger dem Spawn-Zufall
+     * ueberlassen (`walkstyle[(r1 >> (r2&3)) & 7]`, Tabelle @0x80100004, Wahl
+     * @0x80100860-8C; er ist 0 ODER 2). Genau daran haengt aber die POSE bei anim_frame 0,
+     * und die ist der Messwert dy_before dieses Tests. Mit dem neuen Init-Setzer B
+     * (@0x801008D8-0x80100950) zieht der Spawn zwei Zufallswerte mehr, die Folge verschiebt
+     * sich, und der Zombie stand plotzlich auf dem anderen Clip: dy_before sprang von
+     * -2779 (aufrecht) auf -850 (tief) - der Sturzverlauf selbst blieb Bild fuer Bild
+     * identisch ([c2 f10 -2736] ...). Der Test misst den Uebergang AUS DEM STAND, also
+     * gehoert der Stand ins Fixture und nicht in den Zufall. */
+    e->re2z_walkclip = 0;
 
     int32_t prev[3] = { 0, 0, 0 };
     re15_enemy_bone_world_pos(e, 8, prev);

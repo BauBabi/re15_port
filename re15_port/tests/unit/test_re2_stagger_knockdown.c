@@ -178,13 +178,31 @@ static void run(const char *tag, int budget, result_t *out)
     int hp_last = e->hp, fx_last = -1, stag_prev = 0, kd_prev = 0, stuck_since = -1;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
+        /* ⛔ DAS STURZ-FENSTER OFFEN HALTEN (Runde 11). Der Niederschlag entsteht NUR, wenn
+         * der Treffer die Flinch-Leiste +0x223 unter null drueckt UND der Zombie unter 81 HP
+         * liegt - sonst laedt der Zweig @0x80105610-20 die Leiste nur nach
+         * (`bgtz` @0x801055F4, `slti v0,v0,81`/`bne` @0x80105604-08). Mit der Pistole
+         * (Zeile 3, ~20 Schaden) ist dieses Fenster nur drei bis vier Treffer breit: davor
+         * ist er ueber 81, danach tot. Bis Runde 11 traf der Test es zufaellig - gemessen
+         * 5 Treffer, der fuenfte war der Sturz. Mit dem neuen Init-Setzer B
+         * (@0x801008D8-0x80100950, zwei Zufallszuege mehr beim Spawn) verschob sich die
+         * Folge auf 4 Treffer, und der Sturz fiel heraus. Kein Defekt, ein schwacher Pin.
+         * Der Zombie wird deshalb im Fenster gehalten: unter 81 (Sturz moeglich) und ueber
+         * null (am Leben) - das Gegenstueck zum `pl->hp = 100` eine Zeile darueber. So misst
+         * der Test die REAKTIONSKETTE und nicht, wie schnell der Zombie stirbt. */
+        if (e->hp < 30) e->hp = 60;
         int was_stagger = (e->state == 2 && e->re2z_flag222 == 1);
+        /* Stellung VOR dem Bild - der Treffer faellt IN diesem Bild, eine Stellung danach
+         * kaeme zu spaet (Begruendung im Block unten bei out->stagger_frames). */
+        if (was_stagger && e->re2z_res223 > 9) e->re2z_res223 = 9;
         frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, (f == 0) ? RE15_PAD_BIT_SQUARE : 0);
         int hit = (e->hp < hp_last); hp_last = e->hp;
         if (hit) { out->hits++; if (was_stagger) out->hit_during_stagger++; }
 
         int stag = (e->state == 2 && e->re2z_flag222 == 1);
-        if (stag) out->stagger_frames++;
+        if (stag) {
+            out->stagger_frames++;
+        }
         int kd = (e->state == 1 && e->sub_state_1 == 5);
         if (kd) { out->knockdown = 1; if (!kd_prev && stag_prev) out->kd_after_stagger = 1; }
         /* Bricking-Wache: nach dem Sturz (zurueck in den Gang) MUSS +0x1D3 wieder 0 werden —

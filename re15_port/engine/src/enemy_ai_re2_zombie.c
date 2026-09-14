@@ -7563,11 +7563,10 @@ static void re2z_init(int slot, re15_actor_t *e)
      * Wer das Bit direkt nach dem Spawn liest (ohne einen re15_enemy_ai_run_all-Tick), sieht
      * korrekterweise 0.
      *
-     * OPEN (nicht erfunden): @0x801008D8-0x80100950 setzt dasselbe Bit fuer 1 von 3 zufaelligen
-     * Zombies, aber nur wenn das RE2-Spielglobal DAT_800cfb74 Bit 0x40 traegt
-     * (`lw v0,-1164(v0)` @0x801008DC, `andi v0,v0,0x40` @0x801008E4, `beq -> 0x80100954`
-     * @0x801008E8; Rest-3-Test @0x80100900-28; `+0x223 = (rand&0xf)+32` @0x80100944-4C).
-     * Der Port hat kein Gegenstueck zu diesem RE2-Global -> Pfad bleibt OPEN.
+     * ⛔ SETZER B IST JETZT DRIN (Nutzer-Auftrag 2026-09-14: "Na implementiere das
+     * GEgenstueck."). Hier stand, der Pfad bleibe OPEN, "der Port hat kein Gegenstueck zu
+     * diesem RE2-Global". Das war die falsche Schlussfolgerung aus einer richtigen
+     * Beobachtung - siehe den Block direkt unter dieser Zeile.
      *
      * ⚠ +0x156 = 250 (@0x801008C8-CC) LIEGT NICHT HIER, SONDERN IN re15_damage.c
      * (re15_re2_init_hp -> re15_re2_hp_sync, gestempelt aus game_step). Grund: +0x156 ist das
@@ -7605,6 +7604,66 @@ static void re2z_init(int slot, re15_actor_t *e)
                                                                     * (re15_damage.c). Beide sind
                                                                     * scharf — nie nur eine
                                                                     * aendern. */
+    /* ================================================================================
+     * SETZER B @0x801008D8-0x80100950 — jeder dritte Zombie laeuft schneller.
+     * --------------------------------------------------------------------------------
+     * Nutzer-Auftrag 2026-09-14. Bis hierher stand an dieser Stelle "OPEN", begruendet
+     * mit "der Port hat kein Gegenstueck zu DAT_800cfb74". Die Beobachtung stimmt, die
+     * Schlussfolgerung nicht: das Global ist im AUSLIEFERUNGSSTAND IMMER GESETZT, die
+     * Bedingung also konstant wahr - es gibt nichts abzubilden.
+     *
+     * WAS DAT_800cfb74 BIT 0x40 IST, selbst nachgelesen: das Wort bei +0x398C der grossen
+     * Work-Struktur @0x800CC1E8 (main haelt den Zeiger in s3: `addiu s0,s0,-0x3e18`
+     * @0x8002af0c -> 0x800CC1E8, `addiu s3,s0,0x398c` @0x8002af10 -> 0x800CFB74). Ein
+     * persistentes Haerte-/Modus-Bit. Es wird genau ZWEIMAL gesetzt - im System-Init
+     * FUN_8002b48c `ori v0,v0,0x40` @0x8002b4ac, BEDINGUNGSLOS und als erstes in main
+     * (@0x8002af00), und beim Laden eines Spielstands (MEM_CARD.BIN @0x80103af4) - und
+     * NIRGENDS in PSX.EXE oder einem der 29 Overlays geloescht; auch der New-Game-Reset
+     * FUN_8002c610 (`and` mit 0x010008D9 @0x8002c690) und die beiden Bulk-Clears lassen es
+     * stehen. Ab Boot steht es also immer. Es steuert drei Haerte-Effekte: Spielerschaden
+     * x1,5 (FUN_800401d4 @0x800401e4), die Zombie-HP-Zeile 0x8010C670 statt 0x8010C600
+     * (+10 je Eintrag, @0x801006d4) und diesen Schnellgang hier.
+     * RE1.5 hat KEIN Gegenstueck: sein System-Init FUN_80020f8c setzt kein solches Bit, die
+     * Schadenszeile FUN_80012d60 zieht ungeskaliert aus DAT_8006f418, und die Zombie-INIT-HP
+     * (STAGE1.BIN @0x801007c4-f4) waehlt die Zeile ueber den ENTITY-TYP (+0x8). Die
+     * RE2-KI-Option des Ports waere der falsche Anker - sie schaltet die KI um, nicht den
+     * Schwierigkeitsgrad. Deshalb steht hier KEINE Bedingung: unter RE2-KI gilt RE2s
+     * Auslieferungsstand, und der ist "Bit 0x40 an".
+     *
+     * DER TEST IST NICHT `rand % 3`, sondern zwei Zuege mit Schiebe-Betrag - dieselbe Form
+     * wie die Gangclip-Wahl elf Zeilen weiter oben (@0x80100860-8C):
+     *   801008f0  jal   <rng>            ; r1 -> s0
+     *   801008f8  jal   <rng>            ; r2
+     *   80100908  andi  v0,v0,0x3        ; Schiebe-Betrag 0..3
+     *   8010090c  srav  s0,s0,v0         ; r1 >> (r2 & 3)
+     *   80100910  mult  s0,0x55555556    ; /3
+     *   80100928  bne   s0,v0,0x80100954 ; Rest != 0 -> Block ueberspringen
+     * Durchlassrate gemessen: 33,16 % auf dem realen PRNG-Hauptzyklus (24312 Schritte),
+     * 33,98 % unter Gleichverteilung - also "etwa jeder dritte", nicht "genau jeder dritte".
+     *
+     * DER TREFFERZWEIG SETZT ZWEI FELDER:
+     *   80100930/38/40  lhu 538 / ori 0x8000 / sh 538   -> +0x21A |= 0x8000 (Schnellgang)
+     *   8010093c/44/48/4c  jal <rng> / andi 0xf / addiu 32 / sb 547
+     *                                                   -> +0x223 = 32 + (rand&0xf)
+     * +0x223 ist die Flinch-Widerstandsleiste (drei Leser: Flinch-Tor @0x8010506C, Abzug
+     * @0x801055C4, Erholungs-Nachladen @0x80106010). Setzer A oben gibt 16..31, dieser hier
+     * 32..47 - derselbe Spielraum, um 16 versetzt. Die schnellen Zombies sind also zugleich
+     * die zuckfesteren, und das ist EIN Wurf, kein zweiter Zufall.
+     *
+     * ZWEI LESER hat das Bit im ganzen Overlay: @0x80101CEC (EXEC[1] Gang) und @0x8010240C
+     * (EXEC[2] Rempeln) - beide bereits portiert (re2z_fat_cadence_tick).
+     *
+     * ⛔ REIHENFOLGE DER ZUEGE: das Original zieht die beiden Test-Werte IMMER (der
+     * 0x40-Test davor ist ja konstant wahr) und den dritten NUR im Trefferzweig. Genau so
+     * steht es hier - wer das aendert, verschiebt die ganze folgende Zufallsfolge des
+     * Spawns (RNG-Determinismus: NULL Entropie). Zwischen Setzer A und dieser Stelle liegt
+     * im Port kein weiterer Zug, die Folge ist also deckungsgleich mit dem Original. */
+    {   uint32_t r1 = re2z_rand(), r2 = re2z_rand();               /* @0x801008F0/F8 */
+        if ((((uint32_t)r1 >> (r2 & 3u)) % 3u) == 0u) {            /* @0x80100908-28 */
+            e->re2z_flags21a |= 0x8000u;                           /* @0x80100930-40 */
+            e->re2z_res223 = (int8_t)(32 + (re2z_rand() & 0xfu));  /* @0x8010093C-4C */
+        }
+    }
     e->re2z_prev_hp = e->hp;
     e->speed_h = 0;                                                /* +0x144 spawn-clean (kein Walk-
                                                                     * Writer; Attacken saeen 11) */
