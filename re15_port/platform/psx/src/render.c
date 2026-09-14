@@ -154,8 +154,10 @@ void re15_render_init(void)
      * a single GP0(0x80) CopyVramToVram per frame, no clear, full-screen
      * BG overpaints any stale pixels. The dark-blue clear color stays
      * configured as a fallback for boot frames before the BG loads. */
-    setRGB0(&s_ctx.buffers[0].draw_env, 8, 16, 48);
-    setRGB0(&s_ctx.buffers[1].draw_env, 8, 16, 48);
+    setRGB0(&s_ctx.buffers[0].draw_env, 0, 0, 0);   /* FUN_80021634 a1 == 0 an allen zehn
+                                                     * Aufrufstellen; EXE-Bytes
+                                                     * @Datei 0xa5b89-8b / 0xa5be5-e7 = 00 */
+    setRGB0(&s_ctx.buffers[1].draw_env, 0, 0, 0);
     s_ctx.buffers[0].draw_env.isbg = 0;
     s_ctx.buffers[1].draw_env.isbg = 0;
 

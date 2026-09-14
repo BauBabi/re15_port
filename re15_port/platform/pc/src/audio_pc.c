@@ -1654,14 +1654,21 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         src_n = frames;
         src   = conv;
     }
-    /* linear resample src_rate → 44100 (and downmix to mono if stereo).
-     * int64_t throughout: on Windows `long` is 32-bit and src_n*44100 overflows. */
-    int64_t out_n = (int64_t)src_n * RE15_AUDIO_RATE / rate;
+    /* Linear auf die GERAETERATE umrechnen (und auf Mono mischen, falls Stereo).
+     * int64_t durchgehend: auf Windows ist `long` 32 Bit, src_n * 44100 laeuft ueber.
+     * ⛔ HIER STAND RE15_AUDIO_RATE (feste 44100). Das Geraet wird aber mit
+     * SDL_AUDIO_ALLOW_FREQUENCY_CHANGE geoeffnet (:1332), und der Mischer verbraucht
+     * EIN s_xa-Sample je GERAETE-Bild (:461-467). Auf einem 48-kHz-Geraet lief jede
+     * Sprachaufnahme dadurch 8,8 % zu schnell - und die Restlaenge, gegen die der
+     * Voiceover-Riegel wartet (:2989), wurde mit derselben falschen Zahl gerechnet.
+     * Der Film-Pfad macht es seit jeher richtig (:1411/:1416). */
+    int64_t out_n = (int64_t)src_n * s_dev_freq / rate;
     if (out_n < 1) out_n = 1;
     int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
     if (!pcm) { free(conv); free(wav); return 0; }
     for (int64_t i = 0; i < out_n; i++) {
-        int64_t sp = i * (int64_t)rate * 65536 / RE15_AUDIO_RATE;   /* Q16 src pos */
+        int64_t sp = i * (int64_t)rate * 65536 / s_dev_freq;        /* Q16 src pos -
+                                                                     * Gegenstueck zu :1416 */
         int64_t si = sp >> 16; int frac = (int)(sp & 0xffff);
         int64_t s0i = si * ch, s1i = (si + 1 < src_n ? (si + 1) : si) * ch;
         int32_t a, b2;
@@ -2424,12 +2431,14 @@ static void re15_amb_load_rotor(int stage, int room) {
     int src_n = (dbytes / 2) / ch;
     const int16_t *src = (const int16_t *)data;
     /* resample to the device rate so it loops 1:1 (int64 — Windows long is 32-bit). */
-    int64_t out_n = (int64_t)src_n * RE15_AUDIO_RATE / rate;
+    int64_t out_n = (int64_t)src_n * s_dev_freq / rate;   /* der Kommentar darueber sagt
+                                                           * "device rate" - der Code tat es
+                                                           * bisher nicht */
     if (out_n < 2) { free(wav); return; }
     int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
     if (!pcm) { free(wav); return; }
     for (int64_t i = 0; i < out_n; i++) {
-        int64_t sp = i * (int64_t)rate * 65536 / RE15_AUDIO_RATE;
+        int64_t sp = i * (int64_t)rate * 65536 / s_dev_freq;
         int64_t si = sp >> 16; int frac = (int)(sp & 0xffff);
         int64_t a = src[si * ch];
         int64_t b = src[(si + 1 < src_n ? si + 1 : si) * ch];
@@ -2985,8 +2994,12 @@ void re15_audio_tick(void)
        * (s_xa.pos++ im Mischer), die Clips liegen auf RE15_AUDIO_RATE. Damit ist die
        * Restzeit exakt bekannt, und der Riegel in scd_vm.c braucht keinen geschaetzten
        * Deckel mehr. */
+      /* s_xa.pos laeuft im GERAETE-Bild-Takt (`s_xa.pos++` :467) - die Restzeit in
+       * Spielbildern muss deshalb durch die Geraeterate geteilt werden, nicht durch die
+       * feste 44100. Sonst wartet der Riegel auf einem 48-kHz-Geraet zu kurz. */
       g_re15_voice_restbilder = g_re15_voice_laeuft
-          ? (int)(((int64_t)(s_xa.pcm_len - s_xa.pos) * 30) / RE15_AUDIO_RATE)
+          ? (int)(((int64_t)(s_xa.pcm_len - s_xa.pos) * 30)
+                  / (s_dev_freq > 0 ? s_dev_freq : RE15_AUDIO_RATE))
           : 0; }
     if (!g_audio.initialized) return;
 

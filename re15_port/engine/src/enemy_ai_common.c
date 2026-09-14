@@ -889,6 +889,56 @@ void re15_clip_root_motion_abs_pub(re15_actor_t *a, const re15_emd_skeleton_t *s
     re15_clip_root_motion_abs(a, skel, anim, clip, frame);
 }
 
+/* Den Wurzelversatz sy des gewaehlten Bildes holen - dieselbe Aufloesung wie oben
+ * (0x8000-SKIP, RE1.5 @0x8001aec8-e0 / RE2 @0x80015e18-38). */
+static int re15_clip_sy(const re15_emd_skeleton_t *skel, const re15_emd_animation_t *anim,
+                        int clip, int frame, int16_t *out_sy)
+{
+    const re15_emd_clip_t *c;
+    int slot, fi, fend, kf;
+    int16_t sx, sy, sz;
+    if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return 0;
+    c = &anim->clips[clip];
+    if (c->frame_count <= 0) return 0;
+    slot = frame % c->frame_count;
+    fi = c->first_frame + slot;
+    fend = c->first_frame + c->frame_count - 1;
+    while ((anim->frames[fi] & 0x8000u) && fi < fend) fi++;
+    kf = (int)(anim->frames[fi] & 0xFFFu);
+    if (!re15_emd_get_keyframe_speed(skel, kf, &sx, &sy, &sz)) return 0;
+    (void)sx; (void)sz;
+    *out_sy = sy;
+    return 1;
+}
+
+/* ── DIE RE2-ZWILLINGE, DREIKOMPONENTIG ──────────────────────────────────────────────────
+ * FUN_80015B94 / FUN_80015CB8 fuehren y MIT: Anker `sh v0,358(s0)` @0x80015c64, Kopie ins
+ * Ziel `sh v0,358(s3)` @0x80015c88, Anwendung `lh v0,358(s1)` @0x80015d6c ->
+ * `sw v0,60(s1)` @0x80015d7c. y wird nicht gedreht (RotMatrixY @0x8008e8b4 laesst es
+ * invariant), der Versatz geht also roh durch.
+ * ⛔ EIGENE FUNKTIONEN, kein globales Einschalten: die RE1.5-Zwillinge FUN_8001ac38 /
+ * func_0x8001ad68 schreiben NUR +0xa0/+0xa2 (@0x8001acfc / @0x8001ad18). Wer y ueberall
+ * mitfuehrt, verschiebt jeden Griff im Spiel in der Hoehe.
+ * Nutzer-Anlass: "Beim Aligator finisher ist Leon immer noch nicht im Maul" - der Port
+ * kopierte nur zwei der drei Komponenten und liess Leon 1200 Einheiten unter dem Gator. */
+void re15_clip_anchor_set_y3_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                 const re15_emd_animation_t *anim, int clip, int frame)
+{
+    int16_t sy = 0;
+    re15_clip_anchor_set(a, skel, anim, clip, frame);
+    if (re15_clip_sy(skel, anim, clip, frame, &sy))
+        a->anchor_y = a->y - (int32_t)sy;              /* @0x80015c54-64 */
+}
+
+void re15_clip_root_motion_abs_y3_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                      const re15_emd_animation_t *anim, int clip, int frame)
+{
+    int16_t sy = 0;
+    re15_clip_root_motion_abs(a, skel, anim, clip, frame);
+    if (re15_clip_sy(skel, anim, clip, frame, &sy))
+        a->y = a->anchor_y + (int32_t)sy;              /* @0x80015d6c-7c */
+}
+
 /* Die Opfer-Bank fuer `type` aufloesen — eigene zuerst, sonst die angemeldete Leihgabe.
  * `*out_type` traegt danach den Typ, unter dem die Bank in der Registry steht (= was
  * g_player_victim_type bekommt, damit Renderer (main.c re15_enemy_find(re15_player_victim_type())),

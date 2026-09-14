@@ -400,12 +400,33 @@ static SDL_Vertex     s_textri_flush_buf[TEXTRI_QUEUE_MAX * 3];
  * gar nicht mehr haben"). Jeder sichtbare Text laeuft ueber die echte TEX.TIM-Spielschrift
  * (re15_msgfont_glyph + die Wrapper _game_text/_game_codes/_msg_text/_item_prompt). */
 
-/* [#42] byte-true PSX clear colour. Texture is SDL_PIXELFORMAT_RGBA8888 = 0xRRGGBBAA,
- * so the PSX `setRGB0(draw_env, 8, 16, 48)` (psx/render.c:157) = R8 G16 B48, opaque
- * alpha → 0x081030FF. The old 0x00081830 was byte-shifted (R0 G8 B24 A0x30 = wrong
- * colour AND semi-transparent). Visible only on boot/error frames before the first
- * BG blit (the BG memcpy overwrites it otherwise). */
-#define CLEAR_RGB  0x081030FFu
+/* DIE LOESCHFARBE IST SCHWARZ. Texture ist SDL_PIXELFORMAT_RGBA8888 = 0xRRGGBBAA.
+ *
+ * ⛔ HIER STAND 0x081030FFu = R8 G16 B48, ein DUNKELBLAU, und als Beleg war
+ * `setRGB0(draw_env, 8, 16, 48)` aus psx/render.c:157 zitiert - also der Port selbst.
+ * Dort ist die Farbe ausserdem tot, weil isbg = 0 gesetzt wird (psx/render.c:159-160).
+ * Der Nutzer sah das Blau am Spielstart ("kurz ein dunkelblauer Hintergrund statt
+ * schwarz"); gemessen im echten Boot mit RE15_FBDUMP="0:fb0.ppm": 76800 von 76800
+ * Pixeln = (8,16,48).
+ *
+ * DAS ORIGINAL LOESCHT IN JEDEM CODEPFAD MIT SCHWARZ:
+ *  - SetDefDrawEnv nullt r0/g0/b0 und isbg (RE_15_Quellcode_V2/SetDefDrawEnv.c);
+ *    FUN_80020f8c setzt danach nur dfe (Offset 0x17).
+ *  - Einziger Schreiber von isbg/r0/g0/b0 ist FUN_80021634, und nur fuer Modus 2:
+ *      @0x80021640  bne a0,v0,LAB_80021698
+ *      @0x80021650  sb v0,DAT_800b538b     (b0 = a1>>16)
+ *      @0x80021664  sb a1,DAT_800b5389     (r0 = a1)
+ *      @0x8002166c  sb v1,DAT_800b538a     (g0 = a1>>8)
+ *    Alle zehn Aufrufstellen uebergeben a1 = 0 (`_clear a1` im Delay-Slot):
+ *      @0x80015204 @0x8001642c @0x8001ca30 @0x8001d624 @0x8001d830
+ *      @0x8001dadc @0x80021184 @0x80046704 @0x8004957c @0x8004d848
+ *  - Auslieferungsstand info/Re1.5/PSX.EXE: draw_env[0] @Datei-Offset 0xa5b70,
+ *    draw_env[1] @0xa5bcc - beide 0x1c Bytes komplett 00 (r0/g0/b0 @0xa5b89-8b
+ *    bzw. @0xa5be5-e7).
+ *
+ * Sichtbar wird die Loeschfarbe, wo keine Montage-Ebene schreibt: bg_pc.c:527 kehrt bei
+ * level <= 0 zurueck, ohne einen Pixel zu setzen. */
+#define CLEAR_RGB  0x000000FFu   /* RGBA8888: R0 G0 B0 A255 */
 
 static void put_pixel(int x, int y, uint32_t rgba)
 {
@@ -542,7 +563,7 @@ void re15_render_init(void)
     /* Logical render size so SDL handles scale/letterbox for us */
     SDL_RenderSetLogicalSize(s_renderer, SCREEN_XRES, SCREEN_YRES);
 
-    /* Clear framebuffer to dark blue */
+    /* Clear framebuffer to black (DRAWENV r0/g0/b0 = 0, s. CLEAR_RGB) */
     for (int i = 0; i < SCREEN_XRES * SCREEN_YRES; i++) {
         s_framebuffer[i] = CLEAR_RGB;
     }
@@ -638,7 +659,8 @@ void re15_render_begin_frame(void)
         /* CONTROLLERDEVICEADDED/REMOVED are pumped here; input_pc.c lazily (re)opens the pad. */
     }
 
-    /* Clear framebuffer to background color (matches PSX setRGB0 / isbg=1) */
+    /* Clear framebuffer to black - im Original ist isbg = 0 (kein Clear), und wo
+     * FUN_80021634(2, rgb) ihn einschaltet, ist rgb an ALLEN zehn Aufrufstellen 0. */
     for (int i = 0; i < SCREEN_XRES * SCREEN_YRES; i++) {
         s_framebuffer[i] = CLEAR_RGB;
     }

@@ -131,6 +131,13 @@ typedef struct {
                              * +0xa2   func_0x8001ad68 places pos = anchor + rotate(off[kf], yaw).
                              *         The grab [0] COPIES the zombie anchor onto the player -> the
                              *         pair interlocks in the AUTHORED formation (no clipping). */
+    /* +0x166 im RE2-Zwilling FUN_80015B94/FUN_80015CB8: die DRITTE Ankerkomponente.
+     * Setzen `sh v0,358(s0)` @0x80015c64, Kopie ins Ziel `sh v0,358(s3)` @0x80015c88,
+     * Anwenden `lh v0,358(s1)` @0x80015d6c -> `sw v0,60(s1)` @0x80015d7c.
+     * UNROTIERT - gedreht wird mit RotMatrixY (@0x8008e8b4), y bleibt invariant.
+     * ⛔ NUR die _y3-Pfade fuehren sie: RE1.5s Zwillinge FUN_8001ac38 / func_0x8001ad68
+     * schreiben ausschliesslich +0xa0/+0xa2 (@0x8001acfc / @0x8001ad18). */
+    int32_t  anchor_y;
     int32_t  anchor_z;
     uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block);
                              * bit0x1 = "actively grabbing" (set grab-[0] FUN_80102548.c Z.28,

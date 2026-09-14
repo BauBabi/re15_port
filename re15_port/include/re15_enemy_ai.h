@@ -298,6 +298,12 @@ void re15_clip_anchor_set_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
                               const re15_emd_animation_t *anim, int clip, int frame);
 void re15_clip_root_motion_abs_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
                                    const re15_emd_animation_t *anim, int clip, int frame);
+/* Dieselben Zwillinge MIT der dritten Ankerkomponente (@0x80015c64 / @0x80015d7c) - nur
+ * fuer RE2-Pfade, s. den Kommentarblock in enemy_ai_common.c. */
+void re15_clip_anchor_set_y3_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                 const re15_emd_animation_t *anim, int clip, int frame);
+void re15_clip_root_motion_abs_y3_pub(re15_actor_t *a, const re15_emd_skeleton_t *skel,
+                                      const re15_emd_animation_t *anim, int clip, int frame);
 
 /* Spieler-KNOCKDOWN-Klasse (cmd-2 [4]/[5] = 0x800360e8/0x8003644c; analysis/player_knockdown.md):
  * begin(dir) startet den Umfall (0 = von vorn [4], 1 = von hinten [5]); Ausloeser = der

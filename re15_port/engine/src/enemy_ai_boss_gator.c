@@ -1938,6 +1938,17 @@ void re15_gator_boss_tick(int slot)
                  * erst der Gator mit SEINEM Clip, dann Kopie in den Spieler. */
                 re15_clip_anchor_set_pub(e, &gb23->skel, &gb23->anim, 4, 13);
                 pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
+                /* ⛔ DIE DRITTE ANKERKOMPONENTE BLEIBT HIER AUSSEN VOR - gemessen, nicht
+                 * aus Bequemlichkeit. Das Original kopiert sie sehr wohl (@0x80015c7c /
+                 * @0x80015c88 / @0x80015c94), und re15_clip_*_y3_pub bilden sie ab. Aber
+                 * der Port zeichnet den Gator mit GB_SCALE_Q12 = 2731 (2/3), und in DIESEM
+                 * Massstab senkt die y-Leitung Leons Wurzel-Bone auf -2403, waehrend das
+                 * geschrumpfte Maul-Mesh 6 nur y[-1991..-432] ueberdeckt: mit y-Leitung
+                 * faellt er unten heraus (gemessen 6=0/7=0), ohne sie sitzt er drin
+                 * (6=1/7=0). Erst OHNE die Skalierung passen beide zusammen (6=1/7=1) -
+                 * und die Skalierung selbst ist eine Port-Entscheidung aus drei
+                 * Nutzer-Meldungen vom 2026-09-10, kein Original-Wert. Beides gehoert in
+                 * EINEN Schritt, nicht halb. */
                 if (gb23->victim_ok) {                 /* Opfer-Start (+0x158=1-Analogon):
                                                         * Umschalt auf Clip 1 (Rumschleudern) */
                     re15_player_victim_force(e->type, 1, 0);
@@ -1989,8 +2000,22 @@ void re15_gator_boss_tick(int slot)
             }
         } else if (g->timer <= 340) {                  /* ---- P3: Clip 11 Kau-Loop ---- */
             e->motion = 11;
-            e->anim_frame = (uint32_t)((g->timer - 221) % 30);   /* Loop ohne Bewegung
-                                                                  * (FUN_8001A240) */
+            /* ⛔ HIER STAND `% 30`. Clip 11 hat 59 Bilder (EDD1-Clip-Tabelle EM23.EMD
+             * @0x38 = 59/0x1180); 30 ist die Laenge von Clip 10. FUN_8001A240
+             * @0x801011e0 -> FUN_8002959C wrappt auf die CLIP-EIGENE Laenge
+             * (`lhu s3,0(v0)` @0x80029680 / `sltu v0,v0,s3` @0x80029b3c). */
+            e->anim_frame = (uint32_t)((g->timer - 221) % 59);
+            /* ⛔ UND DIE PLATZIERUNG FEHLTE GANZ. Das Original ruft FUN_80015CB8
+             * @0x801011cc - VOR FUN_8001A240(a1=11) @0x801011d8-e0 -, setzt den Gator
+             * also JEDEN Tick absolut aus dem gemeinsamen Anker. Ohne diesen Aufruf blieb
+             * er auf der letzten P2-Platzierung stehen, und die las wegen sf = 120 ->
+             * 120 % 120 = 0 den Clip-5-Bild-0-Versatz 2803 (@0xf76e) statt des
+             * Clip-11-Versatzes 3132 (@0x1f21e) - 329 Einheiten zu weit hinten. Im
+             * Original dauert dieser Ruecksprung genau EINEN Tick (Wrap
+             * `sb zero,333(s2)` @0x80029b48 vor der 1-Rueckgabe). */
+            if (gb23 && gb23->ok)
+                re15_clip_root_motion_abs_pub(e, &gb23->skel, &gb23->anim, 11,
+                                              (int)e->anim_frame);
             if (gb23 && gb23->victim_ok) {             /* Leon im letzten Opfer-Frame parken */
                 pl->motion = 1; pl->anim_frame = 119;
                 re15_clip_root_motion_abs_pub(pl, &gb23->skel_victim,
