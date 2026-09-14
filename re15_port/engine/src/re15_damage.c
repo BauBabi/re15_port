@@ -511,6 +511,72 @@ static const uint16_t s_re2_wpn_dmg_spiderbaby[22] = {
  * GEGENPROBE: die Spinnen-Zeile reproduziert s_re2_wpn_dmg_spiderbaby (Commit 49de51f3) Zelle
  * fuer Zelle — dieselbe Methode, dasselbe Ergebnis. */
 
+
+/* ============================================================================================
+ * RE2s TREFFERPAUSE +0x1D3 (low-7) — der Grund, warum ein Gegner kurz nach einem Treffer
+ * kein Ziel ist.
+ * --------------------------------------------------------------------------------------------
+ * Nutzer 2026-09-14: "man kann die Zombie Hunde erst wieder treffen, sobald sie nach dem
+ * schiessen wieder komplett stehen. Vorher sind sie unverwundbar. Ist das im Original
+ * genauso?" - NEIN. Gemessen: im Port 120 Bilder (4,00 s), Ende exakt am letzten Bild des
+ * Aufsteh-Clips; im Original 15 Bilder (0,50 s), voellig unabhaengig von der Animation.
+ *
+ * WIE RE2 ES MACHT. +0x1D3 ist ZWEI Felder in einem Byte: Bit 0x80 ist der Pose-/Anspruch-
+ * Riegel, die unteren 7 Bits sind ein BILD-ZAEHLER. Der Applier stempelt ihn beim Treffer:
+ *     8004731C  lbu  a0,467(s1)      ; alt
+ *     8004732C  andi a0,a0,0x80      ; Bit 7 ueberlebt
+ *     80047338  lw   v0,4(a1)        ; Wort 1 der Schadenszeile
+ *     80047340  srl  v0,v0,0x9       ; Schiebeweite FEST 9 in diesem Pfad
+ *     80047344  andi v0,v0,0x7f
+ *     80047348  or   a0,a0,v0
+ *     8004734C  sb   a0,467(s1)
+ * (zweiter, identischer Block @0x8004756C-9C). Der Gegner-Root zieht ihn jedes Bild ab
+ * (Hund: EMD0G_MOD0.BIN @0x80100028-3C), und der Kandidatenfilter wirft jeden Gegner mit
+ * +0x1D3 != 0 heraus (`lbu v0,467(s0)` / `bne v0,zero,0x8004740c` @0x80047138-40).
+ * Das ist RE2s ganze Nachtreffer-Sperre - ein Zeitfenster, KEIN Zustands-Gate. RE2s Filter
+ * FUN_800470C0 hat genau vier Gates (@0x8004712C aktiv, @0x80047138 Trefferpause,
+ * @0x80047148 hp<0, @0x80047158) und prueft die Hurt-Animation NIRGENDS.
+ *
+ * WARUM DER PORT ES ANDERS MACHTE: er fuhr fuer RE2-eigene Gegner den RE1.5-Riegel +0x93,
+ * den RE2 gar nicht kennt (Voll-Scan Offset 147: 0 Treffer in EMD0G_MOD0.BIN und in
+ * info/re2leon/PSX.EXE), und gab ihn erst am Ende der Hurt-Kette frei
+ * (enemy_ai_re2_dog.c:1631/:1655). Daher "erst wenn er wieder komplett steht".
+ *
+ * DIE WERTE, selbst aus info/re2leon/PSX.EXE gelesen: Zeile = 0x800A6A88[typ] + (row-1)*0x14,
+ * Stun = (Zeile[+4] >> 9) & 0x7F, row = s_re2_row_from_weapon (dieselbe Uebersetzung, die der
+ * Schaden schon benutzt). Der Generator-Lauf steht in der Commit-Message. */
+static const uint8_t s_re2_stun_zombie[22] = {   /* 0x800A412C - 0x10/0x11/0x12/0x13/0x18 */
+    15, 15, 15,  5,  5,  1,  1, 15, 15, 15, 15, 15,  1, 15,  5, 15, 15, 15, 15,  2,  5, 15
+};
+static const uint8_t s_re2_stun_zgirl[22] = {    /* 0x800A42A8 - 0x16 (bitgleich zum Zombie) */
+    15, 15, 15,  5,  5,  1,  1, 15, 15, 15, 15, 15,  1, 15,  5, 15, 15, 15, 15,  2,  5, 15
+};
+static const uint8_t s_re2_stun_dog[22] = {      /* 0x800A4424 - 0x20 */
+    15, 15, 15, 15, 15,  0,  0, 15, 15, 15, 15, 15,  3, 15,  5, 15, 15, 15, 15,  3, 15, 15
+};
+static const uint8_t s_re2_stun_crow[22] = {     /* 0x800A45A0 - 0x21 */
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15
+};
+static const uint8_t s_re2_stun_spider[22] = {   /* 0x800A4B90 - 0x25/0x26 */
+    15, 15, 15, 15, 15,  0,  0, 15, 15, 15, 15, 15,  5, 15,  5, 15, 15, 15, 15,  5, 15, 15
+};
+
+/* Die Trefferpause fuer (Typ, Waffe) in Bildern. 0 = keine. */
+static uint8_t re15_re2_stun_frames(uint8_t type, unsigned weapon_id)
+{
+    const uint8_t *t;
+    if (weapon_id >= 22u) return 0;
+    switch (type) {
+        case 0x10: case 0x11: case 0x12: case 0x13: case 0x18: t = s_re2_stun_zombie; break;
+        case 0x16:                                             t = s_re2_stun_zgirl;  break;
+        case 0x20:                                             t = s_re2_stun_dog;    break;
+        case 0x21:                                             t = s_re2_stun_crow;   break;
+        case 0x25: case 0x26:                                  t = s_re2_stun_spider; break;
+        default: return 0;   /* kein Zeiger in 0x800A6A88 -> keine belegte Zeile */
+    }
+    return t[weapon_id];
+}
+
 /* 0x800A412C — Zombies 0x10/0x11/0x12/0x13/0x18 */
 static const uint16_t s_re2_wpn_dmg_zombie[22] = {
     /* w0  -> r1  @0x800A412C */   3, /* w1  -> r1  @0x800A412C */   3,
@@ -1249,7 +1315,20 @@ retry_after_latch:
                                        /* HP<0-Gate @0x80047148-50 - auch die STERBENDE
                                         * Adult ist kein Ziel (kein DEATH-Neustart,
                                         * keine Zusatz-Babys je Nachtreffer) */
-        if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
+        /* ⛔ HIER STAND VORUEBERGEHEND EIN ZWEITES AUSSCHLUSS-GATE auf die Trefferpause
+         * +0x1D3 (RE2 @0x80047138-40). Es ist wieder draussen, und der Grund gehoert
+         * festgehalten: ein Gate, das auf einen HERUNTERZAEHLENDEN Wert prueft, sperrt
+         * dauerhaft, sobald der Zaehler einmal nicht abgezogen wird. Genau das passierte -
+         * mit dem Gate liefen unit_re2_dog_hitwindow, unit_re2_hit_repeat,
+         * unit_re2_hit_repeat_crow_spider und probe_spinne_elevation in TIMEOUTS, weil das
+         * Dekrement an Root-Zweigen haengt, die nicht jeder Zustand erreicht
+         * (enemy_ai_re2_dog.c:2177, enemy_ai_re2_crow.c:1779,
+         * enemy_ai_re2_spider.c:2826/:2952). "Zu lange gesperrt" gegen "nie wieder treffbar"
+         * zu tauschen waere der schlechtere Handel.
+         * Die Trefferpause wirkt stattdessen ueber den vorhandenen Riegel: der Hunde-Root
+         * gibt +0x93 Bit 0 frei, sobald sie abgelaufen ist (enemy_ai_re2_dog.c). Damit
+         * bleibt dieses Gate die einzige Ausschluss-Bedingung, und sie kann nicht haengen. */
+        if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
          * UP bit31 / LEVEL bit30 / DOWN bit29).
@@ -1561,7 +1640,27 @@ retry_after_latch:
                      * Bis jede davon einzeln disassembliert ist, bleibt fuer sie das
                      * bisherige Verhalten unveraendert stehen. (Hund 2026-08-29, Maggot
                      * 2026-08-30 oben geloest.) */
-                    if (e->grid_id & 0x80)
+                    if (re15_ai_re2_for_type(e->type)) {
+                        /* ⛔ RE2-EIGENE GEGNER HABEN GAR KEIN HOEHENBAND (Nutzer 2026-09-14:
+                         * "der erste Treffer bei den Zombie Hunden ist irgendwie delayed").
+                         * RE2s Kandidatenfilter FUN_800470C0 hat GENAU VIER Gates -
+                         * @0x8004712C (aktiv), @0x80047138 (+0x1D3 != 0), @0x80047148 (hp < 0),
+                         * @0x80047158 - und kein einziges davon prueft eine Hoehe. Hier stand
+                         * fuer sie trotzdem pauschal LEVEL, und das hatte eine harte Folge:
+                         * GEMESSEN unter RE2-KI traf ein Schuss mit Tiefzielen den Hund in
+                         * 0 von 300 Bildern - jeder Abzug wurde vor dem Treffertest still
+                         * verworfen. Genau das fuehlt sich an wie "der erste Treffer kommt
+                         * verzoegert": man schiesst mehrfach ins Leere, bis man zufaellig
+                         * eben zielt.
+                         * Der RE1.5-Hund hat denselben Fehler schon 2026-08-29 hinter sich
+                         * (der Zweig oben, `e->type == 0x20 && !re15_ai_re2_for_type(0x20)`) -
+                         * dort loest ihn der ACTIVE-Tail-Stempel. Fuer den RE2-Geschmack gibt
+                         * es nichts zu stempeln, weil das Original die Frage nicht stellt:
+                         * alle drei Baender offen.
+                         * ⛔ NUR fuer RE2-EIGENE Typen. Der RE1.5-Pfad bleibt unveraendert -
+                         * dort IST das Band byte-true (@0x8010dd20-4c). */
+                        eband = 0xE0000000u;      /* UP|LEVEL|DOWN - kein Schnitt */
+                    } else if (e->grid_id & 0x80)
                         eband = (bdist < 0x1388u) ? 0x20000000u : 0u;  /* @0x80101630-38 -> @0x800129cc-f0 */
                     else
                         eband = 0x40000000u;                           /* @0x801015f4-fc */
@@ -1624,6 +1723,13 @@ retry_after_latch:
     }
 
     re15_actor_t *e = &g_actors[best];
+    if (re15_ai_re2_for_type(e->type)) {
+        /* Trefferpause stempeln - Bit 0x80 ueberlebt (`andi a0,a0,0x80` @0x8004732C),
+         * die unteren 7 Bits kommen aus der Schadenszeile (@0x80047338-4C). Begruendung und
+         * Herkunft der Werte: der Block bei re15_re2_stun_frames. */
+        uint8_t stun = re15_re2_stun_frames(e->type, weapon_id);
+        e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | stun);
+    }
     int dmg = re15_enemy_dmg_row(e)[weapon_id];     /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
     /* ⛔ TREFFERBUDGET DES GITTER-ARMS (Nutzer 2026-08-26: "Ich wuerde die Haende auch gerne

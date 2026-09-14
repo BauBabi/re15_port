@@ -1881,13 +1881,30 @@ static void re2d_knockdown(re15_actor_t *e, re15_actor_t *pl)
  * Sprung: Luft-Kick @0x80104030 — word0&0x18000000 && !+0x219 → vy=−140/Speed 240),
  * [9] 0x80103CE4 (Gore-FX budget 2−hits/3, FX 8), [10]/[16] 0x80103D9C (budget 4−hits/3 + Claim),
  * [11] 0x80103E60 (FX 9 + Part-Feld — Render-OPEN), [14] 0x80103F00 (Glas-FX 11 — OPEN). */
+/* RE1.5-Waffe -> RE2-Schadenszeile. Werte == re2z_row_from_weapon (Zombie) und
+ * s_re2s_row_from_weapon (Spinne); die Todes-Variante weiter unten fuehrte bis Runde 13
+ * ihre eigene Kopie. */
+static const uint8_t s_re2d_row_von_waffe[22] = {
+    1, 1, 1, 3, 2, 4, 4, 5, 7, 9, 11, 10, 15, 8, 16, 9, 11, 10, 17, 18, 13, 1
+};
+
 static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->re2d_dbl223 & 0x80u) { re2d_knockdown(e, pl); return; }   /* Router @0x801032B0-BC */
     if (e->sub_state_2 == 0) {                             /* frischer Treffer → Zeilen-Entry */
-        uint8_t row = e->re2z_prev_sub;                    /* +0x5 = Herkunfts-Substate (Port-
-                                                            * Schnappschuss; take_damage über-
-                                                            * schreibt +0x5 — Welle-B-Muster) */
+        /* ⛔ DIE HURT-ZEILE WAEHLT DIE WAFFE, NICHT DER HERKUNFTS-SUBSTATE (Runde 13).
+         * Nutzer 2026-09-14: "der erste Treffer bei den Zombie Hunden ist irgendwie delayed".
+         * Das Original liest die Zeile aus +0x5 (`lbu v0,5(a0)` @0x801032C4 -> Tabelle
+         * @0x80105538), und +0x5 traegt beim Treffer die WAFFEN-ID: der Applier stempelt sie
+         * @0x80047324 (der Port tut dasselbe, re15_damage.c `+0x5 = weapon_id` @0x800124bc).
+         * Hier stand stattdessen der Herkunfts-Substate. Folge, gemessen: ein im IDLE (0)
+         * getroffener Hund fiel in Zeile [0] = 0x8010321C, das Landungs-Gate - er zuckte erst
+         * nach 17 Bildern statt im naechsten Tick. Genau das fuehlt sich an wie ein
+         * verzoegerter erster Treffer.
+         * ⛔ DERSELBE FEHLER WAR IM TODES-ZWEIG SCHON EINMAL DRIN und ist dort laengst
+         * korrigiert (s. den Block bei s_re2d_row_from_weapon weiter unten: "Vorher waehlte
+         * der Port die Variante nach re2z_prev_sub"). Hier ist der Zwilling. */
+        uint8_t row = (e->sub_state_1 < 22u) ? s_re2d_row_von_waffe[e->sub_state_1] : 1u;
         switch (row) {
         case 9:                                            /* [9] 0x80103CE4 */
         {
@@ -2174,8 +2191,40 @@ int re15_re2dog_tick(int slot)
     /* Root-Prolog @0x80100004-50: Freeze-Gate 0x800CFBDC&0x20000000 übernimmt der Port-Caller
      * (re15_dog_ai_tick wird bei s_ai_paused gar nicht erreicht); +0x1D3 low-7 Dekrement
      * (@0x80100028-3C) + +0x232 Dekrement (@0x80100040-50): */
-    if (e->re2z_self1d3 & 0x7fu)
+    if (e->re2z_self1d3 & 0x7fu) {
         e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | ((e->re2z_self1d3 & 0x7fu) - 1u));
+        if ((e->re2z_self1d3 & 0x7fu) == 0u) {
+            /* ⛔ HIER ENDET DIE TREFFERPAUSE - und damit der Riegel (Nutzer 2026-09-14:
+             * "man kann die Zombie Hunde erst wieder treffen, sobald sie nach dem schiessen
+             * wieder komplett stehen. Vorher sind sie unverwundbar. Ist das im Original
+             * genauso?" - NEIN).
+             *
+             * RE2 sperrt nach einem Treffer ueber ZEIT: der Applier stempelt +0x1D3 low-7
+             * aus der Schadenszeile (`lw v0,4(a1)` / `srl v0,v0,0x9` / `andi v0,v0,0x7f`
+             * @0x80047338-4C), der Root zieht das Byte jedes Bild ab (@0x80100028-3C, die
+             * Zeile direkt darueber), und der Kandidatenfilter wirft nur heraus, wer noch
+             * einen Rest hat (@0x80047138-40). Fuer den Hund sind das 15 Bilder (0,50 s) -
+             * bei fast jeder Waffe; Ausnahmen: w5/w6 = 0, w12 = 3, w19 = 3, w14 = 5
+             * (Zeile 0x800A4424, selbst ausgelesen).
+             * Ein Zustands-Gate gibt es in RE2 NICHT: FUN_800470C0 hat vier Gates
+             * (@0x8004712C aktiv, @0x80047138 Trefferpause, @0x80047148 hp<0, @0x80047158)
+             * und prueft die Hurt-Animation nirgends.
+             *
+             * DER PORT fuhr hier den RE1.5-Riegel +0x93, den RE2 gar nicht kennt (Voll-Scan
+             * Offset 147: 0 Treffer in EMD0G_MOD0.BIN und in info/re2leon/PSX.EXE), und gab
+             * ihn erst am ENDE der Hurt-Kette frei (:1631 / :1655) - gemessen 120 Bilder
+             * (4,00 s) statt 15. Genau das beschreibt der Nutzer.
+             *
+             * ⛔ WARUM DIE FREIGABE HIER SITZT UND NICHT ALS EIGENES GATE IM FILTER: ein
+             * Filter-Gate auf einen herunterzaehlenden Wert sperrt dauerhaft, sobald der
+             * Zaehler einmal nicht abgezogen wird (probiert; vier Tests liefen in Timeouts,
+             * s. re15_damage.c). So herum ist der schlimmste Fall, dass der Hund FRUEHER
+             * treffbar wird - nicht, dass er es nie mehr wird.
+             * Die beiden alten Freigaben am Kettenende (:1631 / :1655) bleiben stehen: sie
+             * fangen den Fall ab, dass der Root waehrend der Hurt-Kette nicht laeuft. */
+            e->hit_react &= (uint8_t)~1u;
+        }
+    }
     if (e->re2d_cd232) e->re2d_cd232--;
 
     if (e->state == 1) { e->re2z_prev_sub = e->sub_state_1; e->re2z_prev_hp = e->hp; }
