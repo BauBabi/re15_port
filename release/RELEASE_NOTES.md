@@ -1,3 +1,26 @@
+# v0.8.3 - 2026-09-14
+
+## Die kurze Trefferpause gilt jetzt fuer alle Gegner
+
+- **Nicht mehr nur der Hund.** In Resident Evil 2 ist ein Gegner nach einem Treffer
+  kurz nicht erneut treffbar - eine halbe Sekunde, unabhaengig davon, was er gerade
+  fuer eine Animation spielt. Seit v0.8.2 galt das im Port nur fuer die Hunde; jetzt
+  auch fuer Kraehen und Spinnen. Die Zombies hatten es ueber ihren eigenen Filter
+  schon.
+- **Und sie kann nicht mehr haengenbleiben.** An vier Stellen hat der Port die Pause
+  nicht heruntergezaehlt - ein wartender Zwingerhund etwa blieb danach dauerhaft
+  gesperrt. Alle vier sind geschlossen und nachgemessen. Zusaetzlich gibt der Riegel
+  jetzt nur noch frei, statt auch zu sperren: falls irgendwo doch einmal ein Takt
+  ausfaellt, ist ein Gegner hoechstens frueher treffbar - nie fuer immer unverwundbar.
+- Nebenbei bekamen die Feuer-Emitter in ROOM1090 die Pause ab, obwohl sie gar keine
+  Gegner sind. Auch das ist behoben.
+
+### Was sich im Spiel aendert
+
+Wenig, und das ist Absicht: die Pause ist meist kuerzer als der Waffentakt. Spuerbar
+wird sie im Nahkampf und bei Waffen, die schnell nachladen - dort verschluckt das
+Spiel jetzt nicht mehr Treffer, sondern haelt den Original-Rhythmus ein.
+
 # v0.8.2 - 2026-09-14
 
 ## Die Hunde lassen sich wieder treffen
