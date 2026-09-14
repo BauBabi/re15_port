@@ -93,7 +93,13 @@ static const re15_map_zone_t s_map_zones[] = {
      * akzeptierte Anker 1050<->10A0 (Glyph (194,92) gegen (197,92)). Kein anderes
      * Rechteck von Blatt 2 meldet an (191,70) etwas.
      * Zweiter, unabhaengiger Beleg aus der KUNST: eine Schablonensuche der Streifenkacheln
-     * im 1F-Grundriss von MAP02.PIX legt rect5 bei (205,130) ab (853/853 Texel, 100,0 %);
+     * im 1F-Grundriss legt rect5 bei (205,130) ab (853/853 Texel, 100,0 %);
+     * ⛔ DATEINAME BERICHTIGT (2026-09-14): hier stand MAP02.PIX. Das ist das B2-Blatt.
+     * Die Blaetter sind gegen die Dateinamen um eins versetzt - selbst an den Titeln
+     * abgelesen: MAP01=B1, MAP02=B2, MAP03=1F, MAP04=2F, also Seite N = MAP0(N+1).
+     * Seite 2 (1F) ist damit MAP03.PIX und Seite 3 (2F) ist MAP04.PIX. Die Zuordnung
+     * der Zeilen unten ist davon NICHT betroffen - sie arbeiten mit Seitennummern -,
+     * aber wer die Belege nachmisst, sucht sonst im falschen Bild;
      * seine Suedwand faellt dort auf dieselbe Linie wie die Nordwand von rect0 (ROOM1050).
      * Die beiden Raeume teilen sich im Grundriss EINE Wand, und das Tuerblatt steckt darin.
      *
@@ -316,7 +322,7 @@ static const re15_map_zone_t s_map_zones[] = {
      * Blatt 3 folgt der Generator-Regel "Band der Tuer -> Seite des Zielraums": die
      * Band-6-Tuer fuehrt nach ROOM1100, und dessen Seite ist 3.
      * RECHTECK 7, und zwar als einziger Kandidat: von Blatt 3s zehn Rechtecken sind nur 2
-     * und 7 frei, und eine Schablonensuche im 2F-Grundriss von MAP03.PIX legt rect7 auf
+     * und 7 frei, und eine Schablonensuche im 2F-Grundriss (MAP04.PIX, s.o.) legt rect7 auf
      * x204..248 / y138..186 - es beruehrt rect6 (= ROOM1100) auf einer gemeinsamen
      * Wandlinie (dy = -1, 36 px Ueberlappung) und ueberlappt rect9 (= ROOM10F0). Genau
      * diese beiden sind die Nachbarn der oberen Ebene (hinein aus ROOM10F0 auf Band 5,

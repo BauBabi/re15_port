@@ -324,6 +324,7 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
         }
         int hp0 = e->hp;
         pl->x = e->x - 800; pl->z = e->z; pl->rot_y = 0; e->hit_react = 0;
+        e->re2z_self1d3 = 0;
         re15_player_set_equipped_weapon(3);
         int r = re15_player_weapon_fire(3);
         CHECK(r != 0, "%s: der Schuss trifft den Gegner gar nicht (weapon_fire == 0)", tag);
@@ -425,6 +426,7 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
         int knocked = 0;
         for (int shot = 0; shot < 10 && !knocked; shot++) {
             e->hit_react = 0;
+            e->re2z_self1d3 = 0;
             re15_player_weapon_fire(3);
             frame();
             if (e->state == 1 && e->sub_state_1 == 5) knocked = 1;

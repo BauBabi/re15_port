@@ -1315,19 +1315,20 @@ retry_after_latch:
                                        /* HP<0-Gate @0x80047148-50 - auch die STERBENDE
                                         * Adult ist kein Ziel (kein DEATH-Neustart,
                                         * keine Zusatz-Babys je Nachtreffer) */
-        /* ⛔ HIER STAND VORUEBERGEHEND EIN ZWEITES AUSSCHLUSS-GATE auf die Trefferpause
-         * +0x1D3 (RE2 @0x80047138-40). Es ist wieder draussen, und der Grund gehoert
-         * festgehalten: ein Gate, das auf einen HERUNTERZAEHLENDEN Wert prueft, sperrt
-         * dauerhaft, sobald der Zaehler einmal nicht abgezogen wird. Genau das passierte -
-         * mit dem Gate liefen unit_re2_dog_hitwindow, unit_re2_hit_repeat,
-         * unit_re2_hit_repeat_crow_spider und probe_spinne_elevation in TIMEOUTS, weil das
-         * Dekrement an Root-Zweigen haengt, die nicht jeder Zustand erreicht
-         * (enemy_ai_re2_dog.c:2177, enemy_ai_re2_crow.c:1779,
-         * enemy_ai_re2_spider.c:2826/:2952). "Zu lange gesperrt" gegen "nie wieder treffbar"
-         * zu tauschen waere der schlechtere Handel.
-         * Die Trefferpause wirkt stattdessen ueber den vorhandenen Riegel: der Hunde-Root
-         * gibt +0x93 Bit 0 frei, sobald sie abgelaufen ist (enemy_ai_re2_dog.c). Damit
-         * bleibt dieses Gate die einzige Ausschluss-Bedingung, und sie kann nicht haengen. */
+        /* ⛔ DER EIN-TREFFER-LATCH IST DER EINZIGE FIXPUNKT DIESER SCHLEIFE.
+         * `(+0x93 & 3) == 3` (Original `lui s4,0x300` @0x800120C0 / `and v0,v0,s4`
+         * @0x800120FC / `beq v0,s4` @0x80012100) ist die Bedingung, die das `goto
+         * retry_after_latch` weiter unten terminieren laesst (@0x800123FC-0x80012418):
+         * der Rueckgriff laesst das gewaehlte Ziel mit exakt 0x03 zurueck, und beim
+         * naechsten Durchlauf faellt es hier heraus. Jeder Durchlauf verkleinert die
+         * Kandidatenmenge also echt.
+         * ⛔ HIER STAND VORUEBERGEHEND RE2s ZWEITES GATE (+0x1D3 @0x80047138-40), erst
+         * als `else if` (das ersetzte den Fixpunkt und haengte den Resolver endlos - vier
+         * Tests liefen in Timeouts), dann als zusaetzliches `continue`. Auch das gehoert
+         * nicht hierher: es verschluckt Schuesse STILL, und vier gruene Tests fielen
+         * darueber (gemessen 297/305). Die Trefferpause wird stattdessen dort abgebildet,
+         * wo der Port sie fuer die Zombie-Familie schon fuehrt - als Neuberechnung von
+         * +0x93 Bit 0 je Bild, s. re15_re2_pause_filter_apply am Dateiende. */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
@@ -2666,4 +2667,39 @@ int re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player)
     if (!e || !player) return 0;
     if ((uint32_t)re15_enemy_player_dist(e, player) >= 2000) return 0;   /* dist < 0x7d0 */
     return re15_ai_arc_test(e, player->x, player->z, 0x2c8) != 0;
+}
+
+
+/* ============================================================================================
+ * RE2-KANDIDATENFILTER, GATE (2) — fuer HUND 0x20, KRAEHE 0x21 und SPINNE 0x25/0x26.
+ * --------------------------------------------------------------------------------------------
+ * RE2s Applier wirft jeden Kandidaten mit laufender Trefferpause heraus:
+ *     80047138  lbu  v0,467(s0)           ; +0x1D3
+ *     80047140  bne  v0,zero,0x8004740c   ; Rest != 0 -> naechster Kandidat
+ *
+ * Der Port bildet das NICHT als zweites `continue` in der Kandidatenschleife ab, sondern - wie
+ * fuer die Zombie-Familie (re15_re2z_hit_filter_apply, enemy_ai_re2_zombie.c) - als
+ * Neuberechnung des vorhandenen Riegels +0x93 Bit 0, und zwar in BEIDE Richtungen.
+ *
+ * ⛔ WARUM NICHT IN DER SCHLEIFE (gemessen, nicht vermutet): `(+0x93 & 3) == 3` ist dort der
+ * einzige Fixpunkt des `goto retry_after_latch` (@0x800123FC-0x80012418). Ersetzt man ihn fuer
+ * RE2-Typen durch das 1D3-Gate, laeuft der Resolver endlos (vier Tests in Timeouts; Taeter u.a.
+ * der Skript-Hund, der mit `+0x93 |= 3` @0x801113f8 startet). Stellt man es DANEBEN, terminiert
+ * es zwar, verschluckt aber Schuesse still - vier gruene Tests fielen darueber.
+ * Ueber Bit 0 wirkt die Pause dagegen genau wie im Original: der Resolver sieht "schon
+ * getroffen", setzt Bit 1 dazu (`+0x93 |= 2` @0x8001240c) und nimmt beim Rueckgriff den
+ * naechsten Kandidaten - Ausschluss MIT Terminierung.
+ *
+ * Idempotent und jedes Bild frisch gerechnet: die Pause kann damit nicht dauerhaft sperren,
+ * auch wenn ein Root-Tick einmal ausfaellt. */
+void re15_re2_pause_filter_apply(int slot)
+{
+    re15_actor_t *e;
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
+    e = &g_actors[slot];
+    if (!e->active) return;
+    if (e->type != 0x20u && e->type != 0x21u && e->type != 0x25u && e->type != 0x26u) return;
+    if (!re15_ai_re2_for_type(e->type)) return;          /* RE1.5-Pfad bleibt unberuehrt */
+    if ((e->re2z_self1d3 & 0x7fu) != 0u) e->hit_react |= (uint8_t)1u;   /* Pause laeuft */
+    else                                 e->hit_react &= (uint8_t)~1u;  /* Pause abgelaufen */
 }

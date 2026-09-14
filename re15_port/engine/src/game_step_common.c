@@ -1983,10 +1983,17 @@ void re15_game_step(const re15_game_ctx_t *c)
      * das Freeze-Gate ueberspringt bei ihm den gesamten Aktor, nicht nur den Filter. */
     if (c->rdt_ok) {
         extern void re15_re2z_hit_filter_apply(int slot);
+        extern void re15_re2_pause_filter_apply(int slot);
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
-            if (g_actors[s].active && re15_ai_re2_for_type(g_actors[s].type)
-                && re15_re2z_owns_type(g_actors[s].type))
-                re15_re2z_hit_filter_apply(s);
+            if (g_actors[s].active && re15_ai_re2_for_type(g_actors[s].type)) {
+                if (re15_re2z_owns_type(g_actors[s].type))
+                    re15_re2z_hit_filter_apply(s);
+                else
+                    /* Hund/Kraehe/Spinne: Gate (2) des RE2-Filters (+0x1D3 @0x80047138-40),
+                     * s. re15_re2_pause_filter_apply in re15_damage.c. Die Zombie-Familie
+                     * bringt es in ihrem eigenen Vier-Gate-Filter schon mit. */
+                    re15_re2_pause_filter_apply(s);
+            }
     }
 
     /* RE2-FLAVOR: die RE2-INIT-HP nachstempeln. Der Stempel feuert GENAU EINMAL pro Spawn, in

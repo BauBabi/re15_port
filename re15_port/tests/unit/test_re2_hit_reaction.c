@@ -193,7 +193,7 @@ static void reset_zombie(re15_actor_t *e, uint8_t row)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     e->state = 2; e->sub_state_1 = row; e->sub_state_2 = 0; e->sub_state_3 = 0;
-    e->hp = 60; e->hit_react = 0;
+    e->hp = 60; e->hit_react = 0; e->re2z_self1d3 = 0;
     e->re2z_res223 = 20; e->re2z_flag222 = 0; e->re2z_cd239 = 0;
     e->re2z_hits1d2 = 1;                       /* Basis-Zone 1 @0x80047294-98 */
     e->re2z_flags21a = 0; e->re2z_f10e = 0;
@@ -401,6 +401,7 @@ int main(void)
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
             if (g_actors[s].active && g_actors[s].type == 0x10) {
                 g_actors[s].hp = 400; g_actors[s].hit_react = 0;
+                g_actors[s].re2z_self1d3 = 0;
                 g_actors[s].state = 1; g_actors[s].sub_state_1 = 1;
             }
         pl->x = e->x - 4000; pl->z = e->z; pl->rot_y = 0;   /* > 3000 -> kein Instant-Kill */
