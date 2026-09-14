@@ -5130,16 +5130,38 @@ re_title:;
                                         if (_gez == 0)
                                             bl_bytes += fprintf(bl, "  Gegner im Raum:\n");
                                         _gez++;
+                                        /* ⛔ IST DER GEGNER GERADE UEBERHAUPT TREFFBAR?
+                                         * (Nutzer 2026-09-14: "Wie kann ich das mit dem
+                                         * Zombie testen?") Die Zielauswahl beim Schuss
+                                         * (re15_damage.c, byte-true Kandidaten-Gates
+                                         * @0x8004712C-30 / @0x80047138-40 / @0x80047148-50)
+                                         * wirft einen Gegner aus vier Gruenden heraus.
+                                         * Hier stehen die ROHWERTE und die Deutung, damit
+                                         * eine F9-Marke sofort zeigt, WARUM ein Zombie nicht
+                                         * reagiert - statt dass man raten muss, ob man
+                                         * danebengeschossen hat.
+                                         * ⛔ NUR LESEN: diese Zeilen werten aus, sie
+                                         * entscheiden nichts. Die Gates selbst bleiben, wo
+                                         * sie sind; wer sie dort aendert, muss die Deutung
+                                         * hier nachziehen. */
+                                        const char *_ziel = "ja";
+                                        if (_en->hit_radius_min <= 0)        _ziel = "NEIN: keine Trefferbox";
+                                        else if (_en->state == 7)            _ziel = "NEIN: Leiche (st 7)";
+                                        else if ((_en->hit_react & 0x3) == 0x3) _ziel = "NEIN: Ein-Treffer-Riegel +0x93 (Bits 0+1)";
+                                        else if (_en->hp < 0)                _ziel = "NEIN: hp < 0";
                                         bl_bytes += fprintf(bl,
                                             "    %2d  typ=0x%02X st=%d ss=%2d/%-2d clip=%-3d bild=%-3d hp=%-4d "
                                             "dist=%-6u pos=(%6d,%6d,%6d) rot=%-5d spd=%-4d "
-                                            "fl22a=%04X grid=%02X anim=%04X\n",
+                                            "fl22a=%04X grid=%02X anim=%04X 1D3=%02X +0x93=%02X "
+                                            "treffbar=%s\n",
                                             _a, (unsigned)_en->type, _en->state, _en->sub_state_1,
                                             _en->sub_state_2, (int)_en->motion, (int)_en->anim_frame,
                                             (int)_en->hp, (unsigned)_en->ai_dist,
                                             _en->x, _en->y, _en->z, (int)_en->rot_y, (int)_en->speed_h,
                                             (unsigned)_en->re2c_flags22a, (unsigned)_en->grid_id,
-                                            (unsigned)_en->anim_flags);
+                                            (unsigned)_en->anim_flags,
+                                            (unsigned)_en->re2z_self1d3, (unsigned)_en->hit_react,
+                                            _ziel);
                                     }
                                     if (_gez == 0) bl_bytes += fprintf(bl, "  Gegner im Raum: keine\n");
                                     else bl_bytes += fprintf(bl,
