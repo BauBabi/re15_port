@@ -1724,7 +1724,13 @@ retry_after_latch:
     }
 
     re15_actor_t *e = &g_actors[best];
-    if (re15_ai_re2_for_type(e->type)) {
+    /* ⛔ TYP 0x26 NUR, WENN ES WIRKLICH EIN BABY IST (Runde 14). Unter 0x26 laufen im
+     * Port auch die ROOM1090-FEUER-EMITTER - RE1.5-Aktoren ohne RE2-Brain und ohne
+     * Root-Dekrement. Sie bekamen den Stempel und behielten ihn: gemessen 900 von 900
+     * Bildern auf +0x1D3 = 15. Die aktor-genaue Weiche ist re15_re2spider_owns(), nicht
+     * der typ-bezogene re15_ai_re2_for_type(). */
+    if (re15_ai_re2_for_type(e->type)
+        && !(e->type == 0x26u && !re15_re2spider_owns(e))) {
         /* Trefferpause stempeln - Bit 0x80 ueberlebt (`andi a0,a0,0x80` @0x8004732C),
          * die unteren 7 Bits kommen aus der Schadenszeile (@0x80047338-4C). Begruendung und
          * Herkunft der Werte: der Block bei re15_re2_stun_frames. */
@@ -2700,6 +2706,19 @@ void re15_re2_pause_filter_apply(int slot)
     if (!e->active) return;
     if (e->type != 0x20u && e->type != 0x21u && e->type != 0x25u && e->type != 0x26u) return;
     if (!re15_ai_re2_for_type(e->type)) return;          /* RE1.5-Pfad bleibt unberuehrt */
-    if ((e->re2z_self1d3 & 0x7fu) != 0u) e->hit_react |= (uint8_t)1u;   /* Pause laeuft */
-    else                                 e->hit_react &= (uint8_t)~1u;  /* Pause abgelaufen */
+    /* ⛔ NUR FREIGEBEN, NIE SETZEN - und das ist eine Messung, keine Vorsicht.
+     * Ein `|= 1`, solange die Pause laeuft, sperrt DAUERHAFT, sobald ihr Dekrement einmal
+     * ausfaellt. Vier solche Loecher sind gemessen und erreichbar:
+     *   - der wartende ROOM1190-Zwingerhund (grid 0x40, state 4/0/0) - enemy_ai_common.c
+     *     zweigt bei state 4..6 vor dem RE2-Root ab; er bleibt auf +0x1D3 = 14 stehen;
+     *   - ein ROOM1140-Zombie mit grid|0x20 (RE1.5-Per-Entity-Skip) bleibt auf +0x1D3 = 5;
+     *   - die ROOM1090-Feuer-Emitter (Typ 0x26 ohne Baby-Spawn) bekommen den Stempel, haben
+     *     aber kein Dekrement: gemessen 900 von 900 Bildern auf 15;
+     *   - die beiden Sitz-Import-Ausstiege vor re15_re2z_tick.
+     * Die Pause wirkt trotzdem: der Treffer selbst setzt Bit 0 (`+0x93 |= 1` @0x800124F0),
+     * und diese Zeile gibt es frei, sobald die Pause abgelaufen ist - vorher nicht. Wo das
+     * Dekrement laeuft, ist das Ergebnis dasselbe wie beim echten Gate (Hund gemessen: 15
+     * Bilder, exakt der Original-Wert); wo es ausfaellt, bleibt der Gegner hoechstens
+     * frueher treffbar statt fuer immer unverwundbar. */
+    if ((e->re2z_self1d3 & 0x7fu) == 0u) e->hit_react &= (uint8_t)~1u;
 }

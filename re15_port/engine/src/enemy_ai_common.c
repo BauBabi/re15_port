@@ -5496,6 +5496,14 @@ int re15_enemy_ai_live_tick(int slot)
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return 0;
     if (s_ai_paused) return 0;                          /* g_pauseflags & 0x20000000 */
+    /* ⛔ AUCH HIER DIE PAUSE ZUERST (Runde 14). Der RE1.5-Per-Entity-Skip hat im
+     * RE2-Root kein Gegenstueck - dessen Prolog kennt nur den globalen Freeze
+     * (0x800cfbdc, Disasm 0x801002c0-0x801004c8) und zieht +0x1D3 davor ab. Ohne diese
+     * Zeile fror die Pause fuer uebersprungene Aktoren ein; GEMESSEN erreichbar an einem
+     * ROOM1140-Zombie mit grid|0x20, der auf +0x1D3 = 5 stehen blieb. */
+    if (re15_ai_re2_for_type(e->type) && (e->re2z_self1d3 & 0x7fu))
+        e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
+                                  | ((e->re2z_self1d3 & 0x7fu) - 1u));
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
@@ -7438,6 +7446,18 @@ static void re15_dog_ai_tick(int slot)
          * (re2d_init routet die grid-Spawns dorthin; Exit 0x201 @0x8011162c landet im
          * RE2-Substate 2). Vorher fielen sie in den re2dog-Default `0x201` OHNE den Drop —
          * die ROOM1190-Hunde blieben auf Parkhoehe (Nutzer-Report "haengen tot in der Luft"). */
+        /* ⛔ DIE TREFFERPAUSE ZUERST - vor jeder Weiche (Runde 14).
+         * Das Original zieht +0x1D3 low-7 im ROOT-PROLOG ab, bedingungslos und vor der
+         * Zustandsweiche (EMD0G_MOD0.BIN @0x80100028-3C). Der Port zweigt hier aber fuer
+         * state 4..6 in die RE1.5-Praesentation ab und kehrt zurueck, ohne den RE2-Root
+         * ueberhaupt zu betreten - die Pause fror dort ein.
+         * GEMESSEN erreichbar: ein wartender ROOM1190-Zwingerhund (grid 0x40, state 4/0/0)
+         * ist treffbar und blieb danach auf +0x1D3 = 14 stehen. state 4..6 sind reine
+         * RE1.5-Zustaende, die RE2 gar nicht kennt - das Dekrement gehoert trotzdem davor,
+         * genau wie im Original. */
+        if (re15_ai_re2_for_type(e->type) && (e->re2z_self1d3 & 0x7fu))
+            e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
+                                      | ((e->re2z_self1d3 & 0x7fu) - 1u));
         if (e->state >= 4 && e->state <= 6) { re15_dog_state456(e, pl); return; }
         re15_re2dog_tick(slot);
         return;
