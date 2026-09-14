@@ -1,3 +1,59 @@
+# v0.8.4 - 2026-09-14
+
+## Birkin kommt endlich, und die Beine kippen um
+
+- **Birkin taucht im Endkampf wieder auf.** Er war nie weg - er kroch nur aus der
+  falschen Ecke heran. Das Raumskript setzt ihn zu Kampfbeginn an eine bestimmte
+  Stelle im Zug; der Port hat diesen Wert im selben Bild wieder weggeworfen und ihn
+  stattdessen an seinen Spawn 15.900 Einheiten weiter westlich gesetzt. Von dort
+  brauchte er rund 74 Sekunden bis zu Leon statt 19, die erste halbe Minute davon
+  ausserhalb des Bildausschnitts. Beide Stellen sind behoben.
+- **Die Beine abgeschossener Zombies kippen um, statt stehenzubleiben.** Hier hatte der
+  Port zweimal danebengelegen: erst liefen die abgetrennten Beine mit der Animation des
+  Oberkoerpers weiter, dann standen sie ganz still. Das Original macht keines von beidem
+  - die untere Haelfte hat eine EIGENE Animation und kippt ueber zwei Sekunden um,
+  zuckt danach noch und friert erst am Ende ein. Genau das laeuft jetzt.
+- **Tote Zombiehunde hinterlassen eine Blutlache.** Das Ausrollen nach dem Tod war
+  schon richtig; was fehlte, war das, was danach passiert: im Original faerbt sich der
+  Schatten unter der Leiche um und breitet sich drei Sekunden lang aus. Im Port lag
+  dort der normale graue Schatten, und nach dem Umfallen geschah sichtbar nichts mehr.
+
+## Der Bildschirm wird schwarz geloescht, nicht dunkelblau
+
+Beim Spielstart blitzte kurz ein dunkelblauer Hintergrund auf. Die Loeschfarbe des
+Bildpuffers stand auf einem Blauton, der sich auf den Port selbst als Quelle berief.
+Das Original loescht in jedem seiner zehn Codepfade mit Schwarz.
+
+## Sprachaufnahmen laufen wieder im richtigen Tempo
+
+Der Port rechnete Sprache und die Rotor-Gerausche fest auf 44100 Hz um - unabhaengig
+davon, mit welcher Rate die Soundkarte tatsaechlich laeuft. Auf einem 48-kHz-Geraet
+liefen dadurch alle Dialogzeilen 8,8 % zu schnell, und der Riegel, der eine Zeile
+ausreden laesst, rechnete mit derselben falschen Zahl und loeste zu frueh. Der
+Film-Pfad hatte es laengst richtig gemacht - Sprache und Rotor ziehen jetzt nach.
+
+## Alligator-Finisher: der Kau-Vorgang setzt Leon wieder
+
+Waehrend des Fressens hat der Port den Alligator ueberhaupt nicht mehr positioniert -
+er blieb auf der letzten Stellung der vorigen Phase stehen, und die lag wegen eines
+Ueberlaufs in der Bildzaehlung 329 Einheiten zu weit hinten. Dazu lief der Kau-Zyklus
+mit der Laenge einer anderen Animation. Beides ist behoben; Leon rueckt damit in den
+Kopfbereich des Mauls.
+
+*Noch nicht ganz:* vollstaendig im Maul sitzt er erst, wenn die Verkleinerung des
+Alligator-Modells entfaellt - die stammt aus einer frueheren Rueckmeldung ("ein wenig
+zu gross fuer den Raum") und wuerde den ganzen Bosskampf wieder veraendern. Das bleibt
+bewusst fuer eine eigene Runde.
+
+## Noch offen
+
+Leon scheint in ROOM1050 stellenweise durch die Vordergrund-Objekte durch. Die Ursache
+ist gefunden (ein gekippt stehender Kaffeeautomat bekommt spaltenweise gestaffelte
+Tiefen, die mitten in Leons eigener Tiefe liegen), aber die naheliegende Korrektur
+bringt nur die Haelfte - und die Messschiene, mit der das geprueft wird, erfasst nur
+14 % der gezeichneten Dreiecke, sobald ein Gegner im Raum ist. Beides braucht eine
+eigene Runde; die Befunde stehen in analysis/befunde_2026-09-14/.
+
 # v0.8.3 - 2026-09-14
 
 ## Die kurze Trefferpause gilt jetzt fuer alle Gegner
