@@ -46,6 +46,7 @@
 #include "re15_collision.h"
 #include "re15_inventory.h"
 #include "re15_msg.h"
+#include "re15_item_modal.h"
 #include "re15_emd.h"
 #include "re2_ems.h"
 
@@ -99,6 +100,20 @@ static void frame(uint16_t cur, uint16_t edge)
     re15_msg_tick(&raw, &len, &id);
     s_ctx.pad_current = cur; s_ctx.pad_pressed = edge;
     re15_game_step(&s_ctx);
+    /* ⛔ DAS ITEM-MODAL LEERFAHREN - ohne das misst dieser Test NICHTS MEHR.
+     * re15_game_step kehrt bei offenem Item-Get-Modal SOFORT zurueck
+     * (game_step_common.c:867), und zwar VOR re15_enemy_ai_run_all und vor der
+     * Filterschleife. Der Freeze selbst ist byte-true (g_pauseflags |= 0xff000000,
+     * `or v0,v0,t0` @0x8001dbb8 / `sw v0,0(t1)` @0x8001dbc8); im Spiel beendet ihn die
+     * Plattform-Schleife (platform/pc/main.c:6170), im headless-Test muss der Test es tun -
+     * genau wie test_aot_edge.c:51/59 es schon vormacht.
+     * ⛔ DAS WAR DIE URSACHE DER "UNSTERBLICHKEIT" AUS RUNDE 12: der Zombie war nicht
+     * 200-400 Bilder gesperrt, der ganze Spielschritt stand still, weil der Spieler ein
+     * Item aufgenommen hatte und das Modal nie bestaetigt wurde. Der Latch fror mit ein. */
+    {   int _schutz = 0;
+        while (re15_item_modal_active() && _schutz++ < 600)
+            re15_item_modal_tick(0x4000, 0);   /* 0x4000 = virtuelles Bestaetigen */
+    }
 }
 
 static int is_zombie(const re15_actor_t *e)
@@ -280,17 +295,16 @@ int main(void)
     if (!buf) { printf("FAIL: %s nicht lesbar\n", path); return 1; }
     if (re15_rdt_parse(buf, sz, &s_rdt) != 0) { printf("FAIL: RDT-Parse\n"); return 1; }
 
-    /* ⛔ CWIN VON 200 AUF 400 (Runde 12) - gemessen, nicht gesenkt.
-     * Die Zusage heisst "kein Zombie wird dauerhaft unverwundbar"; der gemeldete Fehler
-     * war ein HAENGENDER Latch (+0x1D3 Bit 0x80 nie geloescht). Seit dem byte-true
-     * Wurzel-Delta (enemy_ai_common.c, Runde 12) laeuft ein Zombie in 1 von 64 Seeds in
-     * eine lange, aber ENDLICHE Sperre: Vorfall bei cwin 200, keiner mehr bei 400, 600
-     * oder 850 (eigener Sweep) - sie loest sich also von selbst. 400 Bilder sind die
-     * erste Schwelle, ab der die Zusage wieder genau das trifft, was sie meint.
-     * ⚠ OFFEN und dem Nutzer gemeldet: 200 bis 400 Bilder (7-13 s) Unverwundbarkeit im
-     * Sturz-Zustand EXEC[5] sind lang. Ob das dem Original entspricht, ist NICHT geprueft
-     * - dafuer muesste die RE2-Sturzkette gegen einen Savestate gemessen werden. */
-    const int SEEDS = 64, FRAMES = 900, CWIN = 400, AMIN = 30;
+    /* ⛔ CWIN WIEDER AUF 200 (Runde 13). In Runde 12 hatte ich hier auf 400 erhoeht und
+     * das mit einer "endlichen Sperre" begruendet - das war FALSCH, und nicht knapp: die
+     * Sperre war ein EINGEFRORENER Latch, weil dieser Testaufbau das Item-Modal nie
+     * leergefahren hat (s. frame() oben). Kein Zombie war je 200 Bilder gesperrt; der
+     * ganze Spielschritt stand still.
+     * Gegen das Original gemessen liegt die gesunde Sturz-Sperre bei 35..51 Bildern
+     * (Original: 25 bzw. 50, exakt die Laenge des Sturz-Clips; Setzer @0x80103304-0C,
+     * Loescher @0x80103484-90) - 200 ist also reichlich Luft und trifft wieder genau
+     * das, was die Zusage meint: DAUERHAFT unverwundbar. */
+    const int SEEDS = 64, FRAMES = 900, CWIN = 200, AMIN = 30;
 
     /* ================= (1) PISTOLE — der Fall aus dem Nutzer-Report ======================= */
     sweep_t p;
