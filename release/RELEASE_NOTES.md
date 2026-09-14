@@ -1,3 +1,37 @@
+# v0.8.2 - 2026-09-14
+
+## Die Hunde lassen sich wieder treffen
+
+- **Ein angeschossener Hund ist nur noch eine halbe Sekunde unverwundbar statt vier.**
+  Bisher konnte man ihn erst wieder treffen, wenn er nach dem Beschuss vollstaendig
+  aufgestanden war. In Resident Evil 2 gibt es das nicht: dort sperrt nach einem
+  Treffer eine kurze Pause von 15 Bildern, und die hat mit der Animation nichts zu
+  tun. Der Port benutzte dafuer einen Riegel aus Resident Evil 1.5, den RE2 gar nicht
+  kennt - und gab ihn erst am Ende der ganzen Zuck-Kette frei. Gemessen: 120 Bilder
+  vorher, 15 danach. Unter RE1.5-KI bleibt alles wie es war, dort sind die 19 Bilder
+  original.
+- **Der erste Treffer kommt nicht mehr verzoegert.** Zwei Ursachen, beide behoben:
+  Wer nach unten zielte, traf den Hund unter RE2-KI ueberhaupt nie - jeder Schuss
+  wurde vor dem Treffertest still verworfen, weil der Port ihn auf "waagerecht"
+  festgenagelt hatte. RE2 kennt diese Einteilung gar nicht. Und ein im Ruhezustand
+  getroffener Hund zuckte erst eine halbe Sekunde spaeter, weil die Reaktion nach dem
+  falschen Merkmal ausgewaehlt wurde (Herkunfts-Zustand statt Waffe).
+- **Die F9-Marke sagt jetzt, ob ein Gegner ueberhaupt treffbar ist** - und wenn nicht,
+  warum. Damit laesst sich so etwas kuenftig direkt im Spiel nachweisen, statt zu
+  raten, ob man danebengeschossen hat.
+
+### Zurueckgenommen
+
+Die Meldung aus v0.8.1, ein niedergeschlagener Zombie sei 7 bis 13 Sekunden lang
+unverwundbar, war falsch - der Fehler lag in meiner Messung, nicht im Spiel. Gegen das
+Original geprueft ist die Sperre dort voellig unauffaellig.
+
+### Offen
+
+Die kurze Trefferpause ist bisher nur beim Hund scharf. Bei Zombie, Kraehe und Spinne
+muss erst nachgemessen werden, in welchen Zustaenden ihr Zaehler ueberhaupt laeuft -
+sonst tauscht man "zu lange gesperrt" gegen "nie wieder treffbar".
+
 # v0.8.1 - 2026-09-14
 
 ## Die schnellen Zombies laufen jetzt wirklich schneller
