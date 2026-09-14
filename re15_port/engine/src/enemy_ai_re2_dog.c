@@ -2107,11 +2107,25 @@ static void re2d_corpse(re15_actor_t *e)
         e->re2z_dir16a = 0;                                /* +0x221-Analoge */
     }
     if (e->re2z_dir16a == 0) {                             /* Phase 0 @0x80104A4C-88 */
-        e->re2z_dir16a = 1;
+        e->re2z_dir16a = 1;                                /* sb 1,545 @0x80104A60 */
         e->re2z_t15a = 90;                                 /* sb 90,363 @0x80104A80-88 */
-    } else if (e->re2z_dir16a == 1) {                      /* Phase 1 @0x80104A8C-C0 */
+        /* BLUTLACHE: Record-Recolor rec+28 / rec+68 = (alt & 0xFF000000) | 0x00BFBF10
+         * (`lui a1,0xbf` / `ori a1,a1,0xbf10` @0x80104A50-54, Stores @0x80104A7C und
+         * @0x80104A84) - dieselbe Farbe und derselbe Record wie bei der RE2-Kraehe
+         * (@0x80103A20) und der RE2-Zombie-Leiche (@0x8010a4c0-508). */
+        e->crow_pool = 1;
+    }
+    if (e->re2z_dir16a == 1) {                             /* Phase 1 @0x80104A8C-C0.
+                                                            * ⛔ FALL-THROUGH, kein `else if`:
+                                                            * auf @0x80104A88 folgt @0x80104A8C
+                                                            * OHNE Sprung - das Bild, das die
+                                                            * Lache anlegt, laesst sie schon
+                                                            * wachsen und zaehlt 90 -> 89. */
+        e->crow_shadow_w = (uint16_t)(e->crow_shadow_w + 8);  /* rec+4 += 8 @0x80104A8C/94/9C */
+        e->crow_shadow_h = (uint16_t)(e->crow_shadow_h + 8);  /* rec+6 += 8 @0x80104A90/98/A0 */
         if (--e->re2z_t15a == 0) e->re2z_dir16a = 2;       /* @0x80104AA4-C0 */
     }
+    /* Endstand nach 90 Takten: 1200+720 = 1920 breit, 600+720 = 1320 tief. */
     /* Liegepose hält (der globale Advancer überspringt state 7) */
 }
 
@@ -2153,6 +2167,16 @@ static void re2d_init(re15_actor_t *e)
                                                             * Luft (Nutzer-Report "haengen tot mit
                                                             * eingefrorener Animation in der Luft"). */
     e->speed_h = 0;                                        /* +0x144/146/148 = 0 @0x80100308-310 */
+    /* SCHATTEN-RECORD des Hundes - der Port liess ihn bisher aus, weshalb der
+     * Standard-Charakterschatten (500x600) griff und die Leiche spaeter keine Lache
+     * bekommen konnte. Allokator-Aufruf 0x80016480(&+0x16C, a1=0, a2=0x025804B0, a3=0,
+     * &+0x38) @0x80100238-64; a2 legt der Allokator als WORT auf rec+4
+     * (`sw a2,4(t0)` @0x80016530) -> rec+4 = 0x04B0 = 1200 (Halbbreite),
+     * rec+6 = 0x0258 = 600 (Halbtiefe). a3 == 0 -> Alloc-Farbe GRAU 0x00808080
+     * (@0x80016500-04), im Port crow_pool = 0. */
+    e->crow_shadow_w = 1200;                               /* rec+4 @0x80100244 (0x4B0) */
+    e->crow_shadow_h = 600;                                /* rec+6 @0x80100240 (0x258) */
+    e->crow_pool     = 0;                                  /* Grau 0x00808080 @0x80016500-04 */
     e->root_prev_kf = -1;
     e->sca_mask = 4;
     /* Spawn-Param +0x10E: RE1.5-Räume tragen kein RE2-+0x10E → Port-MAPPING: alle RE1.5-Hunde-

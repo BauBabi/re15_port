@@ -24,14 +24,25 @@
  *   - Der SPIELER betritt ihn im OSTEN (Door_aot 4 @main-sub00 0x10CE, Rechteck
  *     x 25150..26050 / z -25300..-21350) und laeuft nach WESTEN (Nutzer-Marken
  *     F467 x=13600 -> F750 x=4388).
- *   - Der BOSS steht im Auslieferungs-Skript WEIT WESTLICH: sub00 @0x124A
+ *   - Der BOSS wird WEIT WESTLICH gespawnt: sub00 @0x124A
  *     `44 01 30 33 ... 94 C6 00 00 CA A4` = Sce_em_set Slot 1, Typ 0x30 (Port: 0x36),
- *     grid 0x33, Pos (-14700, 0, -23350) - also vorn im Zug, dort wohin Leon laeuft.
- *   - Der Kampfstart sub04 @0x12F2 setzt ihn per Pos_set(1200,0,-23350) direkt neben
- *     die Spielermarke Plc_dest(300,-23400) @0x1322 - ein Auftritt findet dort nicht
- *     statt. Fuer die RE2-Intro-Choreo (Root-Motion +7014/+3946) braucht er den Anlauf:
- *     das Modul startet deshalb am RDT-SPAWN und laesst ihn das Intro nach OSTEN
- *     kriechen (dokumentierte Abweichung vom Pos_set, Begruendung siehe oben).
+ *     grid 0x33, Pos (-14700, 0, -23350). Dort liegt er ausserhalb JEDER Cut-Ankerzone
+ *     (RVD @0x04A4, Viereck x -5600..28100) und ist damit gar nicht zeichenbar - das ist
+ *     der SPAWN, nicht die Kampfposition.
+ *   - Die KAMPFPOSITION setzt sub04: @0x12FA `2e 02 01` (Work_set auf Gegner-Slot 1),
+ *     @0x12FE `32 00 b0 04 00 00 ca a4` = Pos_set(1200, 0, -23350), dann Sleep(1)
+ *     @0x1306 und erst @0x130A `34 0c 13 00` = Member_set(0x0c, 0x13), die Armierung.
+ *     Von x=1200 aus traegt die RE2-Intro-Choreo (Root-Motion +7014/+3946 = +10960)
+ *     den Boss bis x=12160, also auf 1633 an den Spieler heran - genau der Auftritt.
+ *
+ *   ⛔ HIER STAND, das Pos_set setze ihn "direkt neben die Spielermarke
+ *   Plc_dest(300,-23400) @0x1322", weshalb das Modul stattdessen am RDT-SPAWN starte.
+ *   Das ist WIDERLEGT: @0x1322 ist Modus 9, und Handler 0x80073e30[9] = 0x80031360 ruft
+ *   nur den Yaw-Schleifer 0x8001aac4 und den Kegeltest 0x8001ab9c - KEIN pos_advance
+ *   0x800245d8 (Gegenprobe: Modus 5 @0x80030eb0 ruft es). Modus 9 DREHT auf der Stelle.
+ *   Der Spieler bleibt, wo ihn der Kamerawechsel 13->12 (RVD @0x04F4, x 12249..13873)
+ *   erwischt - gemessen x=13699, Nutzer-Marke 13600. Der Abstand zu x=1200 betraegt also
+ *   ~12500 Einheiten, nicht "direkt daneben".
  *
  * KOORDINATEN-ANKER (Port-Entscheidung): die RE2-Arena legt den Spieler ans Ostende
  * (Lunge-Kappe X=12000 @0x80104074, Devour X>=9001 @0x801008a0) - die absoluten
@@ -611,20 +622,29 @@ void re15_g5_boss_tick(int slot)
                                                         * RE1.5-Spiel kennt kein easy-Bit) */
     }
 
-    /* KAMPFSTART-Armierung (+0x1D4-Bit-0-Analogon): sub04-Member_set(0x0c,0x13). Davor
-     * PARK auf der RE2-Parkposition — [T0] unarmiert tut NICHTS (@0x801011d0-dc). */
+    /* KAMPFSTART-Armierung (+0x1D4-Bit-0-Analogon): sub04-Member_set(0x0c,0x13)
+     * @0x130A. Davor tut der Boss NICHTS - [T0] unarmiert ist leer (@0x801011d0-dc);
+     * er steht auf seiner Spawn- bzw. Skriptposition und wird dort ohnehin gecullt. */
     if (!g->gestartet) {
         if (e->grid_id == 0x13) {
             g->gestartet = 1;
-            /* INTRO-STARTPOSITION = der RDT-SPAWN des Auslieferungsstands
-             * (sub00 @0x124A: Pos (-14700, 0, -23350)) - weit WESTLICH, vorn im
-             * Zug, dort wohin Leon laeuft. Das sub04-Pos_set(1200) wird bewusst
-             * ueberschrieben (s. Kopf: es setzt den Boss ohne Auftritt direkt
-             * neben den Spieler; die RE2-Intro-Choreo braucht den Anlauf, ihr
-             * Root-Motion traegt +10960 = 7014+3946 nach Osten). Der SCD laeuft
-             * vor der KI (scd_vm_tick main.c:4279 vor re15_enemy_ai_run_all),
-             * das Ueberschreiben greift also im selben Frame. */
-            e->x = -14700; e->z = -23350;
+            /* KEINE Positions-Zuweisung: es gilt, was das SKRIPT gesetzt hat.
+             * sub04 schreibt Pos_set(1200, 0, -23350) @0x12FE ein Bild VOR dem
+             * Member_set @0x130A; scd_vm_tick laeuft vor re15_enemy_ai_run_all
+             * (main.c:4284), der Wert steht hier also bereits in e->x/e->z.
+             *
+             * ⛔ HIER STAND `e->x = -14700; e->z = -23350;` - der RDT-SPAWN, mit dem
+             * der Port den byte-true Skriptwert ueberschrieb. GEMESSEN (Sonde
+             * probe_5090_birkin, drei Abgriffe im selben Bild): "nach SCD x=1200 ->
+             * nach game_step x=-32000", Folgebild "-32000 -> -14700". Das Pos_set
+             * zuendete also jeden Lauf und wurde im selben Bild zerstoert.
+             * Wirkung des Umwegs von 15.900 Einheiten, mit geklemmtem Spieler ueber
+             * 6000 Bilder gemessen - Bild, ab dem der Boss den Spieler erreicht:
+             *     ab -14700 (Port bisher):  |dx|<=3000 bei 2207, <=800 bei 2229 (~74 s)
+             *     ab   1200 (Skript):       |dx|<=3000 bei  580, <=800 bei 1151 (~19 s)
+             * Der Nutzer meldete das drei Runden lang als "Birkin taucht nicht auf" -
+             * er kriecht 55 s laenger heran, die ersten 578 Bilder davon ausserhalb
+             * jeder Cut-Ankerzone und damit ungezeichnet. */
             /* Vorwaertsrichtung EINFRIEREN (s. g5_state_t.vor): ab hier bewegt sich der
              * Boss immer auf dieser Achse, auch wenn der Spieler ihn ueberholt. */
             g->vor = (int8_t)((g5_dx(e) >= 0) ? 1 : -1);
@@ -633,7 +653,15 @@ void re15_g5_boss_tick(int slot)
              * Kampf nie, @0x8010044c ist der einzige Schreiber). */
             e->rot_y = (int16_t)((re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
         } else {
-            e->x = -32000; e->z = -32000;              /* wie bisher: off-world parken */
+            /* ⛔ HIER STAND `e->x = -32000; e->z = -32000;`. Genau dieser Park lag im
+             * Sleep(1)-Fenster @0x1306 - also GENAU zwischen dem Pos_set @0x12FE und
+             * dem Member_set @0x130A - und warf den Skriptwert weg, bevor der
+             * Kampfstart ihn lesen konnte (gemessen: "nach SCD x=1200 -> nach
+             * game_step x=-32000").
+             * Das Original parkt unarmiert ueberhaupt nicht: [T0] tut NICHTS
+             * (@0x801011d0-dc). Ein Park ist auch unnoetig - der RDT-Spawn -14700
+             * liegt ausserhalb jeder Cut-Ankerzone (RVD @0x04A4: x -5600..28100) und
+             * wird vom Gegner-Cull (main.c:7839) ohnehin verworfen. */
             e->motion = 0; e->anim_frame = 0;
             return;
         }

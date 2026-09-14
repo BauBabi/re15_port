@@ -1081,6 +1081,10 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
  * `frame` ist der Frame-Zaehler: der Physikschritt laeuft genau EINMAL je Frame und Aktor,
  * egal wie oft der Renderer die Funktion aufruft (Schatten-Pass, zweiter Zeichen-Pass).
  * Im RE1.5-Flavor liefert die Funktion IMMER 0 (dasselbe Dreifach-Gate wie _gore_active). */
+/* Keyframe + Keyframe-Pool-Skelett der abgetrennten Unterhaelfte (Parts 1..6,
+ * Maske 0x7E @0x8010024C). skel_out darf NULL sein. */
+int re15_re2z_lower_kf(const re15_actor_t *e, const re15_emd_skeleton_t **skel_out);
+
 int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
                                int32_t rot[9], int32_t trans[3]);
 

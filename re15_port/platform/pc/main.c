@@ -7921,6 +7921,26 @@ re_title:;
                     if (npc->type == 0x21 && re15_ai_re2_for_type(npc->type)
                         && npc->crow_shadow_w == 0)
                         crow_no_record = 1;
+                    /* HUND 0x20 - EIGENE Lachen-Maschine, genau wie die Kraehe:
+                     * RE2 0x80104A2C faerbt den Record auf 0x00BFBF10 (@0x80104A50-84) und
+                     * laesst rec+4/+6 90 Takte lang um 8 wachsen (@0x80104A8C-C0);
+                     * RE1.5 FUN_80111774 faerbt auf 0x00FFFF38 und waechst ebenso um 8
+                     * (@0x80111818-34) ueber 0x5a Takte (@0x801117a0).
+                     * ⛔ Der Hund fehlte hier - er lief in den Standard-Charakterschatten
+                     * (500x600, grau), und unter der Leiche passierte sichtbar NICHTS.
+                     * Genau das meldete der Nutzer als "laufen nicht aus": das Ausrollen
+                     * selbst ist byte-true (21 Takte, 240 -> 30), die Lache fehlte. */
+                    if (npc->type == 0x20 && npc->crow_shadow_w != 0) {
+                        nhx = npc->crow_shadow_w; nhz = npc->crow_shadow_h;
+                        if (npc->crow_pool) {
+                            corpse_pool = 1;
+                            if (re15_ai_re2_for_type(npc->type)) {
+                                sh_r = 0x10; sh_g = 0xBF; sh_b = 0xBF;  /* 0x00BFBF10 @0x80104A50-54 */
+                            } else {
+                                sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;  /* 0x00FFFF38 @0x801117F0 */
+                            }
+                        }
+                    }
                     if (npc->type == 0x21 && npc->crow_shadow_w != 0) {
                         /* Krähe: Groesse/Farbe kommen KOMPLETT aus der AI (Prim-Feld-Port von
                          * +0xbc/+0xbe/+0xc4/+0xec bzw. rec+0x04/+0x06/+0x1C/+0x44). */
@@ -8364,22 +8384,35 @@ re_title:;
                      * (@0x801037f8-804); Arm (800,500,0). */
                     re15_skel_pose_t np_kind;
                     const re15_skel_pose_t *np = &npc_poses[nbi < npc_bones ? nbi : 0];
-                    /* ⛔ DIE ABGETRENNTE UNTERHAELFTE BEWEGT SICH NICHT MEHR (Nutzer
-                     * 2026-09-13). Bones 1..7 nehmen ab dem Aushaengen die Pose des
-                     * Trennmoments (npc->re2z_low_kf), nicht die laufende des Rumpfes.
-                     * Die Berechnung steht hier und nicht oben, weil sie nur fuer diese
-                     * sieben Bones gilt - der Rumpf animiert normal weiter. */
+                    /* DIE ABGETRENNTE UNTERHAELFTE HAT IHRE EIGENE ANIMATION.
+                     * Der zweite, BONE-MASKIERTE Anim-Durchlauf (@0x8010B904 ->
+                     * 0x80029E10) schreibt mit Maske 0x0000007E (@0x8010024C, Auswertung
+                     * @0x80029F04 + Kette @0x80029F40 ff.) in DIESELBE Part-Tabelle -
+                     * also nur Parts 1..6 (Becken + beide Beine). Part 7 behaelt die
+                     * Rumpf-Rotation, sein Maskenbit ist nicht gesetzt.
+                     * ⛔ HIER STAND `nbi <= 7` mit dem eingefrorenen npc->re2z_low_kf.
+                     * Der Nutzer hat beide Extreme gemeldet: Runde 9 "die Beine bewegen
+                     * sich noch" (Rumpf-Clip), jetzt "die Beine bleiben einfach stehen"
+                     * (Standbild). Richtig ist der eigene Clip: Zustand 2/3 spielt Clip 1
+                     * (@0x8010B9B0) = 60 Bilder UMKIPPEN (Knie y -1031 -> -177),
+                     * Zustand 4/5 Clip 22 (@0x8010BAA8) = 10 Bilder Zucken; erst die
+                     * Zustaende 7/8 halten Bild 0. */
                     static re15_skel_pose_t s_low_poses[RE15_EMD_MAX_BONES];
                     static int s_low_kf_cache = -1;
                     static const re15_emd_skeleton_t *s_low_skel_cache = NULL;
-                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= 7 &&
+                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= 6 &&
                         nbi < npc_bones && npc_skel) {
-                        int lkf = (int)npc->re2z_low_kf;
-                        if (lkf != s_low_kf_cache || npc_skel != s_low_skel_cache) {
+                        const re15_emd_skeleton_t *lskel = NULL;
+                        int lkf = re15_re2z_lower_kf(npc, &lskel);
+                        if (!lskel) lskel = npc_skel;   /* Bank fehlt -> Haupt-Skel */
+                        if (lkf != s_low_kf_cache || lskel != s_low_skel_cache) {
                             void *sav = g_anim_pose_actor;
                             g_anim_pose_actor = NULL;       /* QUERY: den Crossfade nicht stoeren */
-                            if (re15_skel_compute_pose(npc_skel, lkf, s_low_poses) == 0) {
-                                s_low_kf_cache = lkf; s_low_skel_cache = npc_skel;
+                            /* MIT lskel posieren, nicht mit npc_skel: beide Paare teilen zwar
+                             * das Struktur-EMR (dir[2]), haben aber EIGENE Keyframe-Pools
+                             * (dir[4] bzw. dir[6], re2_ems.c:144-150). */
+                            if (re15_skel_compute_pose(lskel, lkf, s_low_poses) == 0) {
+                                s_low_kf_cache = lkf; s_low_skel_cache = lskel;
                             } else {
                                 s_low_kf_cache = -1;
                             }

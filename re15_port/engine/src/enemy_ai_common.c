@@ -8087,11 +8087,16 @@ static void re15_dog_ai_tick(int slot)
             e->grab_kill_ctr = 0x5a;                          /* +0x9e = 90 fade frames @0x801117a0-a4 */
             e->sub_state_3 = 1;                               /* +0x7 = 1 @0x801117b0-b4 */
             /* entity word0 |= 2 (@0x801117cc) | 0x40 (@0x801117e8) — flag word OPEN (header) */
+            e->crow_pool = 1;                                 /* Tint 0x00FFFF38 @0x801117f0 */
         }
         if (e->sub_state_3 == 1) {
             /* +0xc4/+0xec = (old & 0xff000000) | 0xffff38 tint + pool +0xbc/+0xbe += 8/frame
              * (@0x801117f0-834): the corpse blood-pool spread — render-side keyed on the state-7
-             * countdown, same presentation channel as the zombie corpse pool. */
+             * countdown, same presentation channel as the zombie corpse pool.
+             * ⛔ Die beiden += 8 waren beschrieben, aber nie ausgefuehrt - darum blieb unter
+             * dem toten Hund der unveraenderte Schatten liegen (Nutzer: "laufen nicht aus"). */
+            e->crow_shadow_w = (uint16_t)(e->crow_shadow_w + 8);  /* +0xBC += 8 @0x80111828 */
+            e->crow_shadow_h = (uint16_t)(e->crow_shadow_h + 8);  /* +0xBE += 8 @0x8011182c */
             int16_t old = e->grab_kill_ctr;
             e->grab_kill_ctr = (int16_t)(old - 1);            /* +0x9e-- @0x80111844-54 */
             if (old == 0) e->sub_state_3 = 2;                 /* WAS 0 -> phase 2 inert @0x80111850-64 */
@@ -8541,6 +8546,14 @@ static void re15_maggot_ai_tick(int slot)
         e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
         e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
         e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
+        /* SCHATTEN-RECORD (+0xBC/+0xBE): FUN_8001af5c legt a2/a3 als Halbworte ab
+         * (`sh s3,12(s0)` @0x8001b030 / `sh s4,14(s0)` @0x8001b038) auf Record
+         * entity+0xB0; der Hunde-INIT uebergibt `ori a2,zero,0x3e8` = 1000
+         * @0x8010dabc und `ori a3,zero,0x1f4` = 500 @0x8010dac8. Ohne diese Felder
+         * griff der Standard-Charakterschatten und die Leiche bekam nie ihre Lache. */
+        e->crow_shadow_w = 1000;                              /* +0xBC @0x8010dabc */
+        e->crow_shadow_h = 500;                               /* +0xBE @0x8010dac8 */
+        e->crow_pool     = 0;
         /* RENDER-SCALE: Flag 0x800 an @0x80117138 (ori v0,v0,0x800) + +0x166 = 0x1b33
          * (= 6963/4096 = 1.6999 ~ 1.7x) @0x80117148-4c; Override wenn Spawn-Byte +0x9
          * Bit 0x40 (@0x80117164 andi 0x40): Scale = ((+0x9 & 0xf) + 10) * 0x1000 / 10

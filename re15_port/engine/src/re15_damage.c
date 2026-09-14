@@ -2108,13 +2108,18 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) return;
     int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
-    /* ⛔ DIE ABGETRENNTE UNTERHAELFTE STEHT (Nutzer 2026-09-13: "Die abgetrennten Beine
-     * vom Oberkoerper bewegen sich noch, nachdem sie abgetrennt sind. Das ist in
-     * Resident Evil 2 nicht so!"). Ab dem Aushaengen zeigen die Bones 1..7 den Keyframe
-     * des Trennmoments. Der Renderer (main.c) macht dasselbe; hier steht es, damit
-     * Messschienen, Kollision und Effekt-Anker nicht eine ANDERE Welt sehen als das Bild
-     * - dieselbe Doppelung wie beim Ragdoll-Bodenanker. */
-    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 7) kf = (int)e->re2z_low_kf;
+    /* DIE ABGETRENNTE UNTERHAELFTE HAT IHRE EIGENE ANIMATION - Bones 1..6 folgen ihrem
+     * eigenen Clip-Cursor, nicht dem Rumpf und auch keinem Standbild.
+     * ⛔ HIER STAND `bone >= 1 && bone <= 7 -> kf = re2z_low_kf` (der eingefrorene
+     * Keyframe des Trennmoments). Beide Enden waren falsch: in Runde 9 meldete der
+     * Nutzer "die abgetrennten Beine bewegen sich noch" (sie liefen mit dem RUMPF-Clip),
+     * jetzt "die Beine bleiben einfach stehen". Das Original macht keines von beidem -
+     * der zweite Anim-Durchlauf @0x8010B904 posiert die Parts 1..6 aus der EIGENEN Bank
+     * (Maske 0x7E @0x8010024C, Testkette @0x80029F04/F40). Part 7 bleibt beim Rumpf,
+     * sein Maskenbit ist nicht gesetzt.
+     * Der Renderer (main.c) macht dasselbe; hier steht es, damit Messschienen, Kollision
+     * und Effekt-Anker nicht eine ANDERE Welt sehen als das Bild. */
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 6) kf = re15_re2z_lower_kf(e, NULL);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                          /* QUERY: don't mutate the crossfade blend */

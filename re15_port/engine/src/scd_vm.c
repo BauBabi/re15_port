@@ -1634,13 +1634,15 @@ static int op_message_on(scd_thread_t *t)
         enum { RE15_VOICE_NOTBREMSE = 300 };   /* 10 s > laengste Aufnahme (242,5 Bilder) */
         if (g_re15_voice_laeuft && g_re15_voice_restbilder > 0
             && t->voice_wait < RE15_VOICE_NOTBREMSE) { t->voice_wait++; return 2; }
-        if (t->voice_wait) {
-            /* Messschiene (GUI-exe: stderr tot). Sagt je Zeile, wieviele Bilder der vorige
-             * Satz noch gebraucht hat - gegen die Skript-Sleeps nachrechenbar. */
-            FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
+        /* Messschiene (GUI-exe: stderr tot) - schreibt bei JEDEM Message_on, nicht nur
+         * wenn gewartet wurde. Ein Riegel, der gar nicht anspringt, hinterliesse sonst
+         * eine leere Datei, und daraus laesst sich nichts schliessen. So steht je Zeile
+         * da, ob der Kanal lief und wieviel Rest er meldete. */
+        {   FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
             if (lg) {
-                fprintf(lg, "raum=%04x nachricht=%d  %u Bilder gewartet%s\n",
-                        g_current_room_id, t->pc[1], (unsigned)t->voice_wait,
+                fprintf(lg, "raum=%04x nachricht=%d  laeuft=%d rest=%d  %u gewartet%s\n",
+                        g_current_room_id, t->pc[1], g_re15_voice_laeuft,
+                        g_re15_voice_restbilder, (unsigned)t->voice_wait,
                         t->voice_wait >= (unsigned)RE15_VOICE_NOTBREMSE
                             ? "  (NOTBREMSE - Kanal haengt?)" : "");
                 fclose(lg);

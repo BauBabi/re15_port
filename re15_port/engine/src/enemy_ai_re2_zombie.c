@@ -8307,14 +8307,84 @@ void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
  *
  * Zustaende 5..8 sind der AUSKLANG (Anim-Schritt + Zustandsfortschritt, @0x8010BB0C ff.).
  *
- * ⛔ PORT-VEREINFACHUNG, ausdruecklich KEIN byte-true: der Anim-Schritt der Unterhaelfte
- * (0x80029E10 mit +0x108/+0x17C) posiert im Original ein ZWEITES Skelett. Der Port hat dafuer
- * keinen Zwilling - die Unterhaelfte behaelt hier die Pose des Hauptclips und wandert nur in
- * der POSITION. Sichtbar ist damit das Entscheidende (die Trennung am Becken und das
- * Wegrutschen); die Eigenanimation der Beine fehlt und ist als offener Punkt dokumentiert.
- * Der RNG wird an den drei Original-Stellen gezogen, damit er nicht gegen das Original
- * desyncht (Zustand 0, Zustand 1 je Frame, Zustand 4).
+ * ⛔ HIER STAND, 0x80029E10 posiere ein ZWEITES SKELETT, das der Port nicht habe - deshalb
+ * behalte die Unterhaelfte die Pose des Hauptclips und wandere nur in der POSITION.
+ * Das ist WIDERLEGT: es gibt kein zweites Skelett. 0x80029E10 laedt aus dem Arbeitswerk ein
+ * 32-Bit-Wort (`lw s4,4(s5)` @0x80029F04) und wertet es Part fuer Part als BIT-MASKE aus
+ * (`andi v0,s4,0x1` / `beq` ueberspringt den Schreibvorgang, `srl s4,s4,1` - Kette
+ * @0x80029F40 / @0x80029FD4 / @0x80029FEC / @0x8002A02C / @0x8002A044 / @0x8002A080 /
+ * @0x8002A098). Geschrieben wird in DIESELBE Part-Tabelle (s1 = Modellblock+128, Schritt 172,
+ * @0x80029F0C-F20). FUN_8010B7D4 kopiert sein Werk aus der Schablone @0x80100248; das Wort
+ * an Schablone+4 ist 0x0000007E (Bytes `7e 00 00 00` @0x8010024C) = Bits 1..6. Der zweite
+ * Durchlauf ueberschreibt also NUR die Parts 1..6 (Becken + beide Beine); Rumpf, Kopf und
+ * Arme behalten, was der Haupt-Durchlauf unmittelbar davor (@0x801004E8) gesetzt hat.
+ *
+ * DIE UNTERHAELFTE HAT EINE EIGENE ANIMATION, und die ist das, was der Spieler sieht:
+ * Zustand 1 spielt aus Bank A = Entity+0x108/+0x17C (`lw a1,264(s2)` / `lw a2,380(s2)`
+ * @0x8010B8FC/900), alle uebrigen Zustaende aus Bank B = Entity+0x180/+0x184 (@0x80100548-54).
+ * Zustand 2/3 spielt Clip 1 (@0x8010B9B0), Zustand 4/5 Clip 22 (@0x8010BAA8-AC).
+ * Gemessen aus der geladenen Bank (CDEMD0.EMS/EM010): Clip 1 = 60 Bilder und eine GROSSE
+ * Bewegung - der Knieknochen faellt von y=-1031 (Bild 0) auf y=-177 (Bild 20), Spannweite
+ * Bone1 dy=1796, Bone3 dx=1546/dy=1132. Das ist das UMKIPPEN. Clip 22 (10 Bilder) ist ein
+ * Zucken: Bone3 schwankt nur um 45, Bone6 um 30. Erst die Zustaende 7 und 8 halten ein
+ * Standbild - sie setzen c1=0 (@0x8010BBB8 bzw. @0x8010BBFC) und c2=0 (@0x8010BBBC bzw.
+ * @0x8010BC00) nur ins Stack-Werk und schreiben NICHTS zurueck.
+ * Der RNG wird an den Original-Stellen gezogen, damit er nicht gegen das Original desyncht.
  * ========================================================================================== */
+/* EIN Bild des EIGENEN Clip-Cursors der Unterhaelfte. Byte-true nach dem Bildzaehler in
+ * FUN_80029E10: `lbu v0,1(s5) / addiu v0,v0,1 / sb v0,1(s5) / sltu v0,v0,<len> /
+ * bne -> return 0 / sb zero,1(s5) / addiu v0,zero,1` @0x8002A430-58. Ein Aufruf = EIN Bild,
+ * Rueckgabe 1 genau im Umlaufbild - das ist der Wert, den die Maschine auf +0x219 addiert
+ * (`addu v1,v1,v0` @0x8010B9FC / @0x8010BB40).
+ * Bankwahl wie im Original: Zustand 1 aus Bank A (Entity+0x108/+0x17C, @0x8010B8FC/900),
+ * alle uebrigen aus Bank B (Entity+0x180/+0x184, @0x80100548-54). */
+static int re2z_low_anim_step(re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    const re15_emd_animation_t *A;
+    int len;
+    if (!b || !b->ok) return 0;
+    A = (e->re2z_low_state == 1u && b->loco_ok) ? &b->anim_loco
+        : (b->own_ok ? &b->anim_own : &b->anim);
+    if ((int)e->re2z_low_clip >= A->clip_count) return 0;
+    len = A->clips[e->re2z_low_clip].frame_count;
+    if (len <= 0) return 0;
+    e->re2z_low_c1 = (uint8_t)(e->re2z_low_c1 + 1u);      /* @0x8002A430-3C */
+    if ((int)e->re2z_low_c1 < len) return 0;              /* `sltu v0,v0,t2` @0x8002A448 */
+    e->re2z_low_c1 = 0u;                                  /* `sb zero,1(s5)` @0x8002A454 */
+    return 1;                                             /* `addiu v0,zero,1` @0x8002A458 */
+}
+
+/* Der Keyframe, den der zweite, BONE-MASKIERTE Anim-Durchlauf fuer die Parts 1..6 setzt -
+ * plus das Skelett, zu dessen Keyframe-Pool er gehoert. Beide Paare teilen zwar das
+ * Struktur-EMR (dir[2], re2_ems.c:144-150), haben aber EIGENE Pools (dir[4] bzw. dir[6]),
+ * darum muss der Aufrufer mit der passenden Skel posieren.
+ * Bankwahl wie im Original: Zustand 1 aus Bank A (Entity+0x108/+0x17C, @0x8010B8FC/900),
+ * alle uebrigen aus Bank B (Entity+0x180/+0x184, @0x80100548-54).
+ * Zustaende 7 und 8 halten Bild 0 (c1 = 0 @0x8010BBB8 bzw. @0x8010BBFC, nur ins
+ * Stack-Werk geschrieben, nie zurueck). */
+int re15_re2z_lower_kf(const re15_actor_t *e, const re15_emd_skeleton_t **skel_out)
+{
+    re15_enemy_bank_t *b;
+    const re15_emd_animation_t *A;
+    const re15_emd_skeleton_t *S;
+    int f, idx;
+    if (skel_out) *skel_out = NULL;
+    if (!e) return 0;
+    b = re15_enemy_find(e->type);
+    if (!b || !b->ok) return 0;
+    if (e->re2z_low_state == 1u && b->loco_ok) { A = &b->anim_loco; S = &b->skel_loco; }
+    else if (b->own_ok)                        { A = &b->anim_own;  S = &b->skel_own;  }
+    else                                       { A = &b->anim;      S = &b->skel;      }
+    if ((int)e->re2z_low_clip >= A->clip_count) return 0;
+    f = (e->re2z_low_state >= 7u) ? 0 : (int)e->re2z_low_c1;
+    if (f >= A->clips[e->re2z_low_clip].frame_count) f = 0;
+    idx = A->clips[e->re2z_low_clip].first_frame + f;
+    if (idx < 0 || idx >= A->frame_count) return 0;
+    if (skel_out) *skel_out = S;
+    return (int)(A->frames[idx] & 0xFFFu);
+}
+
 void re15_re2z_lower_body_tick(re15_actor_t *e)
 {
     if (!e || !e->active) return;
@@ -8337,7 +8407,11 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
     }   /* FALLTHROUGH - das Original springt hier nicht (Zustand 1 folgt unmittelbar) */
     /* fall through */
     case 1: {                                       /* @0x8010B8D8 - Gleiten */
-        int32_t schritt = (int32_t)((re2z_rand() & 7u) + 10u);        /* @0x8010B948-60 */
+        int32_t schritt;
+        (void)re2z_low_anim_step(e);                /* `jal 0x80029E10` @0x8010B904 - die
+                                                     * Rueckgabe wertet Zustand 1 NICHT aus,
+                                                     * der Bildzaehler +0x21D laeuft aber mit */
+        schritt = (int32_t)((re2z_rand() & 7u) + 10u);                /* @0x8010B948-60 */
         int32_t cs = re15_cos_q12((int)e->re2z_low_yaw);
         int32_t sn = re15_sin_q12((int)e->re2z_low_yaw);
         e->re2z_low_x += (int32_t)(((int64_t)cs * schritt) >> 12);
@@ -8358,12 +8432,13 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
         e->re2z_low_x += (int32_t)(((int64_t)cs * 30) >> 12);         /* Schrittweite 30
                                                                        * @0x8010BA4C */
         e->re2z_low_z += (int32_t)((-(int64_t)sn * 30) >> 12);
-        /* Das Original zaehlt den Zustand am CLIP-ENDE hoch (`addu v1,v1,v0` @0x8010B9FC mit
-         * der Rueckgabe des Anim-Schritts). Ohne eigene Animation gibt es dieses Ende hier
-         * nicht; der Port nimmt dafuer die Laenge des Gleitens, die das Original ueber
-         * denselben Clip erreicht - gemessen ueber +0x21F, das Zustand 4 neu wuerfelt. */
-        if (e->re2z_low_timer == 0u) { e->re2z_low_state = 4u; }
-        else e->re2z_low_timer--;
+        /* +0x219 += Rueckgabe des Anim-Schritts (`addu v1,v1,v0` @0x8010B9FC): der Zustand
+         * endet am ENDE VON CLIP 1, nicht an einem Timer.
+         * ⛔ HIER STAND `if (e->re2z_low_timer == 0u)`. Der Timer stand beim Eintritt aus
+         * Zustand 1 aber bereits auf 0 - Zustand 2 setzt ihn nicht neu -, also lief dieser
+         * Zustand GENAU EIN BILD: die Unterhaelfte rutschte 30 Einheiten statt 60 x 30 =
+         * 1800 und blieb dann stehen. Das ist der Nutzer-Befund. */
+        if (re2z_low_anim_step(e)) e->re2z_low_state = 4u;
         break;
     }
     case 4:                                         /* @0x8010BA88 - EINFRIEREN */
@@ -8374,8 +8449,32 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
         e->re2z_low_c1     = 0u;
         e->re2z_low_c2     = 7u;                    /* @0x8010BAB0 */
         e->re2z_low_timer  = (uint8_t)((re2z_rand() & 0x1fu) + 10u);  /* @0x8010BAC8-D8 */
+        /* MUENZWURF @0x8010BAF8 / `andi 0x1` @0x8010BB00 / `bne -> 0x8010BB9C` @0x8010BB04
+         * mit `addiu v0,zero,8` im Delay-Slot: in der Haelfte der Faelle direkt in den
+         * Endzustand 8 und RAUS. */
+        if (re2z_rand() & 1u) { e->re2z_low_state = 8u; break; }
+        e->re2z_low_state = 5u;
+        /* sonst faellt das Original im SELBEN Bild weiter nach @0x8010BB0C */
+        /* fall through */
+    case 5:                                         /* @0x8010BB0C - Clip 22 zucken lassen */
+        if (re2z_low_anim_step(e)) e->re2z_low_state = 6u;  /* `addu v1,v1,v0` @0x8010BB40 */
         break;
-    default:                                        /* 5..8: Ausklang, Position steht */
+    case 6:                                         /* @0x8010BB6C - Pause wuerfeln */
+        e->re2z_low_timer = (uint8_t)((re2z_rand() & 0x1fu) + 60u);   /* @0x8010BB6C-7C */
+        e->re2z_low_state = 7u;                                       /* @0x8010BB80/88 */
+        if ((re2z_rand() & 0xfu) == 0u) { e->re2z_low_state = 8u; break; }  /* @0x8010BB84-98 */
+        /* 15 von 16: das Original faellt direkt weiter (`bne -> 0x8010BBA8` @0x8010BB90) */
+        /* fall through */
+    case 7:                                         /* @0x8010BBA4 - Pose HALTEN */
+        /* Kein Anim-Schritt: das Original setzt c1 = 0 (@0x8010BBB8) und c2 = 0
+         * (@0x8010BBBC) nur ins Stack-Werk und schreibt sie NICHT zurueck - also jedes
+         * Bild Clip 22, Bild 0, uninterpoliert. */
+        if (e->re2z_low_timer == 0u) e->re2z_low_state = 5u;   /* @0x8010BBD4-E4 */
+        else e->re2z_low_timer--;                              /* @0x8010BBC8-D8 */
+        break;
+    case 8:                                         /* @0x8010BBE8 - Endzustand, Pose haelt */
+        break;
+    default:
         break;
     }
 }

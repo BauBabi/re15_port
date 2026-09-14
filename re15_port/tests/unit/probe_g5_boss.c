@@ -70,23 +70,36 @@ int main(void)
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
-    pl->x = 300; pl->z = -23400; pl->y = 0;
+    /* SPIELERSTAND BEIM KAMPFSTART - gemessen, nicht aus Plc_dest abgelesen.
+     * @0x1322 ist Modus 9 (Handler 0x80073e30[9] = 0x80031360: nur Yaw-Schleifer
+     * 0x8001aac4 + Kegeltest 0x8001ab9c, KEIN pos_advance 0x800245d8) - der Spieler
+     * DREHT sich dort, er geht nicht nach x=300. Er bleibt stehen, wo ihn der
+     * Kamerawechsel 13->12 erwischt (RVD @0x04F4, x 12249..13873): gemessen x=13699,
+     * Nutzer-Marke 13600. */
+    pl->x = 13699; pl->z = -23400; pl->y = 0;
 
     re15_actor_t *e = &g_actors[2];
     memset(e, 0, sizeof *e);
     e->active = 1; e->type = 0x36; e->flags = 1; e->hp = 600;
-    e->x = -14700; e->z = -23350; e->grid_id = 0x33;   /* RDT-Spawn */
+    e->x = -14700; e->z = -23350; e->grid_id = 0x33;   /* RDT-Spawn @0x124A */
 
-    /* PIN 1: PARK. */
+    /* PIN 1: UNARMIERT WIRD DIE POSITION NICHT ANGETASTET.
+     * ⛔ Hier stand `CHECK(e->x == -32000 && e->z == -32000)` - der Port parkte den Boss
+     * off-world, solange grid != 0x13. Dieses Fenster ist aber genau das Sleep(1)
+     * @0x1306 ZWISCHEN Pos_set(1200) @0x12FE und Member_set @0x130A: der Park warf den
+     * Skriptwert weg, bevor der Kampfstart ihn lesen konnte (gemessen "nach SCD x=1200
+     * -> nach game_step x=-32000"). Das Original tut unarmiert NICHTS (@0x801011d0-dc). */
     for (int t = 0; t < 30; t++) re15_g5_boss_tick(2);
-    CHECK(e->x == -32000 && e->z == -32000, "PARK: pos=(%d,%d) != (-32000,-32000)",
+    CHECK(e->x == -14700 && e->z == -23350,
+          "UNARMIERT: die Position wurde angetastet - pos=(%d,%d), erwartet (-14700,-23350)",
           (int)e->x, (int)e->z);
 
     /* PIN 2: Kampfstart -> Intro-Choreo mit Root-Motion.
-     * Erwartung nach der Buehnen-Messung (Runde 7): der Boss startet am
-     * RDT-Spawn x=-14700 (WESTEN, 15000 vom Spieler) und kriecht das Intro
-     * nach OSTEN auf ihn zu - u waechst also. */
-    e->grid_id = 0x13;
+     * Der Boss startet dort, wo das SKRIPT ihn hinsetzt: Pos_set(1200, 0, -23350)
+     * @0x12FE, ein Bild vor dem Member_set. Von dort traegt die RE2-Intro-Spur
+     * +10960 (7014+3946) nach OSTEN auf den Spieler zu - u waechst. */
+    e->x = 1200; e->z = -23350;                    /* Pos_set @0x12FE */
+    e->grid_id = 0x13;                             /* Member_set(0x0c,0x13) @0x130A */
     int32_t u_start = 0;
     int treffer = 0;
     int saw_clip[16]; memset(saw_clip, 0, sizeof saw_clip);
@@ -109,8 +122,11 @@ int main(void)
     CHECK(saw_clip[1] && saw_clip[3] && saw_clip[4] && saw_clip[2] && saw_clip[0],
           "Intro-Choreo 1/3/4/2/0 nicht vollstaendig gesehen");
     CHECK(intro_fertig_t > 0, "der Tentakel-Zug (Clip 5) wurde nie erreicht");
-    CHECK(e->x <= -14000 || u_start <= -2500,
-          "Intro startet nicht am RDT-Spawn (u_start=%d, erwartet ~-3000)", u_start);
+    /* ⛔ Hier stand `e->x <= -14000 || u_start <= -2500` ("Intro startet am RDT-Spawn").
+     * Das zementierte genau die Buehne, die den Nutzer-Befund erzeugte. Der Start liegt
+     * jetzt auf dem Skriptwert 1200; bei Spieler 13699 ist u_start = 12000 - 12499 = -499. */
+    CHECK(u_start < 0 && u_start > -3000,
+          "Intro startet nicht auf dem Skript-Pos_set (u_start=%d, erwartet ~-500)", u_start);
     CHECK(u_von(e) > u_start + 8000,
           "Root-Motion traegt nicht: u-Delta %d (erwartet > 8000: Intro 10960 + Zuege)",
           u_von(e) - u_start);

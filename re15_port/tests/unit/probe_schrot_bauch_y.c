@@ -178,6 +178,8 @@ int main(int argc, char **argv)
      * dem Aushaengen - sie muss null sein, sonst laeuft die Unterhaelfte noch mit dem
      * Rumpf mit. */
     int32_t bein_lok_min = 999999, bein_lok_max = -999999; int bein_n = 0;
+    /* getrennt nach Phase: vor Zustand 7 laeuft die eigene Animation, ab 7 haelt sie */
+    int32_t bein_end_min = 999999, bein_end_max = -999999; int bein_end_n = 0;
     int y_max_clip = -1, y_max_st = -1;
     for (int f = 0; f < budget && e->hp > 25 && reaktionen < 6; f++) {
         pl->hp = 100;
@@ -231,6 +233,11 @@ int main(int argc, char **argv)
                 if (lok < bein_lok_min) bein_lok_min = lok;
                 if (lok > bein_lok_max) bein_lok_max = lok;
                 bein_n++;
+                if (e->re2z_low_state >= 7u) {    /* Endzustaende: Bild 0, uninterpoliert */
+                    if (lok < bein_end_min) bein_end_min = lok;
+                    if (lok > bein_end_max) bein_end_max = lok;
+                    bein_end_n++;
+                }
             }
             if (b4[1] > beiny_max) beiny_max = b4[1];
             if (b4[1] < beiny_min) beiny_min = b4[1];
@@ -262,9 +269,26 @@ int main(int argc, char **argv)
     printf("Bein-Pose nach dem Aushaengen: %d Bilder, Spanne %d (min %d max %d)\n",
            bein_n, (bein_n ? bein_lok_max - bein_lok_min : 0),
            (bein_n ? bein_lok_min : 0), (bein_n ? bein_lok_max : 0));
-    if (bein_n > 4 && bein_lok_max - bein_lok_min > 40) {
-        printf("FAIL: die abgetrennten Beine bewegen sich noch (Spanne %d) - die Pose "
-               "muss ab dem Aushaengen stehen\n", (int)(bein_lok_max - bein_lok_min));
+    if (bein_end_n > 4)
+        printf("Bein-Pose im ENDZUSTAND (7/8): %d Bilder, Spanne %d\n",
+               bein_end_n, bein_end_max - bein_end_min);
+    /* ⛔ HIER STAND `if (bein_n > 4 && Spanne > 40) FAIL` - "die Pose muss ab dem
+     * Aushaengen stehen". Das zementierte die falsche Haelfte des Pendels: in Runde 9
+     * liefen die Beine mit dem RUMPF-Clip (Nutzer: "bewegen sich noch"), daraufhin wurden
+     * sie eingefroren (Nutzer jetzt: "bleiben einfach stehen"). Das Original tut beides
+     * nicht - es posiert die Parts 1..6 aus der EIGENEN Bank (Maske 0x7E @0x8010024C),
+     * und Clip 1 (@0x8010B9B0) kippt sie ueber 60 Bilder um.
+     * Geprueft wird jetzt, was das Original tatsaechlich macht: */
+    if (bein_end_n > 4 && bein_end_max - bein_end_min > 40) {
+        printf("FAIL: die Unterhaelfte wandert noch im ENDZUSTAND 7/8 (Spanne %d) - dort "
+               "haelt das Original Bild 0 (c1=0 @0x8010BBB8 / @0x8010BBFC)\n",
+               (int)(bein_end_max - bein_end_min));
+        return 1;
+    }
+    if (bein_n > 60 && bein_lok_max - bein_lok_min <= 40) {
+        printf("FAIL: die abgetrennte Unterhaelfte steht (Spanne %d) - sie muss ueber "
+               "ihren EIGENEN Clip 1 umkippen (60 Bilder, @0x8010B9B0)\n",
+               (int)(bein_lok_max - bein_lok_min));
         return 1;
     }
     if (trenn_max < 200) {
