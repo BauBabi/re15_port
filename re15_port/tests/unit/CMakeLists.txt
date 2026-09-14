@@ -3830,3 +3830,50 @@ target_link_libraries(probe_gegen_hundsperre2 PRIVATE re15_engine re15_test_supp
 target_include_directories(probe_gegen_hundsperre2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_gegen_hundsperre2 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- DIAGNOSE-SONDE (temporaer): wo haengt test_re2_hit_repeat mit RE15_DIAG_1D3GATE=1? ---
+add_executable(probe_1d3gate_hang probe_1d3gate_hang.c)
+target_link_libraries(probe_1d3gate_hang PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1d3gate_hang PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1d3gate_hang PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# MESSPROBE +0x1D3-Zensus (2026-09-14): laeuft die RE2-Trefferpause in JEDEM Zustand ab?
+add_executable(probe_1d3_zensus probe_1d3_zensus.c)
+target_link_libraries(probe_1d3_zensus PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1d3_zensus PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1d3_zensus PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG (Verifier-Agent, temporaer): zweite Variable +0x1D3 unabhaengig setzen ---
+add_executable(probe_1d3gate_verify probe_1d3gate_verify.c)
+target_link_libraries(probe_1d3gate_verify PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1d3gate_verify PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1d3gate_verify PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# MESSPROBE: warum lief das +0x1D3-Ausschluss-Gate in Timeouts? (Aufloeser-Rueckgriff)
+add_executable(probe_1d3_gate_hang probe_1d3_gate_hang.c)
+target_link_libraries(probe_1d3_gate_hang PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1d3_gate_hang PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1d3_gate_hang PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_hund_takt_nachmessung probe_hund_takt_nachmessung.c)
+target_link_libraries(probe_hund_takt_nachmessung PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hund_takt_nachmessung PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_hund_takt_nachmessung PRIVATE
+    RE15_ASSETS_PATH=${CMAKE_SOURCE_DIR}/shared_assets/PSX)
+
+add_executable(probe_skept_kraehe_takt probe_skept_kraehe_takt.c)
+target_link_libraries(probe_skept_kraehe_takt PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_skept_kraehe_takt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_skept_kraehe_takt PRIVATE
+    RE15_ASSETS_PATH=${CMAKE_SOURCE_DIR}/shared_assets/PSX)
+
+# --- VERIFIER-GEGENPROBE (2026-09-14): welcher Mechanismus erzeugt 15/5? Reine Messsonde. ---
+add_executable(probe_v_einbauweg_93 probe_v_einbauweg_93.c)
+target_link_libraries(probe_v_einbauweg_93 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_v_einbauweg_93 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_v_einbauweg_93 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
