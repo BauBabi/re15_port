@@ -144,6 +144,45 @@ Mauerwerk stecken. Zupacken, Loslassen, Treffer und Ausfahren haben ihre eigenen
 *Noch offen:* die Opfer-Animation des Tentakel-Zugs auf dem RE2-Rig, und einige
 Feinheiten der Original-Verformung.
 
+## Vordergrund-Masken STAGE1: neu aus den Freistellungen
+
+> "Es gibt diverse PRIs die sind unglaublich kaputt. Sie sind komplett ueberdeckend, oder
+> halb Transparent wo sie es nicht sein sollen, oder funktionieren gleich mal garnicht.
+> Verstehe ich garnicht, wo ich dir doch SAEMTLICHE PRIs die wir haben wollen fuer STAGE1
+> in den pri Ordner zur Verfuegung gestellt habe ... Ausserdem hast du teilweise meine
+> perfekten Ausschnitte aus dem pri Ordner ueberschrieben mit eigenen / loechrigen."
+
+Der Vorwurf war berechtigt, und zwar dreifach.
+
+**Erstens** wurden die gelieferten Freistellungen nicht punktgenau verwendet: das Werkzeug
+weitete jede Maske um vier Zeilen nach oben und einen Punkt ringsum auf. Dadurch bekamen
+bis zu 62 % zusaetzliche Hintergrundpunkte die Tiefe des Objekts und wurden ueber die Figur
+gemalt. Jetzt gilt die Freistellung punktgenau, und der Bau bricht ab, wenn auch nur ein
+Punkt abweicht — geprueft ueber die Leser der Engine, nicht nur im Werkzeug.
+
+**Zweitens** war die Tiefe zu nah gerechnet: ein Abschlag von zehn Prozent liess Masken
+Figuren verdecken, vor denen man steht. Der Abschlag ist weg, die Tiefe kommt aus der
+Raumgeometrie, und jedes Rechteck traegt nur noch eine Tiefenstufe statt eines Mittelwerts
+ueber eine ganze Kachel — das Schachbrett, das wie Transparenz aussah, entsteht dadurch
+nicht mehr. Dazu kam eine echte Engine-Korrektur: die Schwelle, ab der eine Maske verdeckt,
+lag im Port eine Stufe zu frueh.
+
+**Drittens** wurden Ihre Dateien zurueckgeholt, wo ich sie ueberschrieben hatte. Bei
+ROOM10D0 war Ihre 30x46-Freistellung eines Blattes durch eine eigene 65x120-Fassung ersetzt
+worden, waehrend die eingemessene Lage fuer Ihre Datei stehen blieb — daher der Boden, der
+ueber Leons Bein gezeichnet wurde. Drei weitere Dateien sahen nach Ueberschreibung aus,
+waren aber Ihre eigenen Neulieferungen; die blieben unangetastet.
+
+76 Cuts sind neu gebaut, jeder mit punktgenauer Deckung und der Zusage, dass kein
+begehbarer Platz VOR dem Gegenstand verdeckt wird. Im Spiel geprueft: vor dem Gegenstand
+ist die Figur sichtbar, dahinter verschwindet sie.
+
+*Drei Cuts wurden bewusst NICHT geschrieben, statt sie schoenzurechnen:* ROOM10D0 Cut 1
+(Ihre Marke verlangt 16 Einheiten mehr, als die Geometrie hergibt), ROOM1000 Cut 3 und
+ROOM10E0 Cut 7 (die Freistellung passt nicht ins Texturblatt). Dort bleibt die bisherige
+Maske. Offen ist auch, ob die drei Freistellungen im vierfachen Massstab so gemeint waren —
+sie treffen nur zu 85 bis 93 Prozent und verlieren duenne Teile.
+
 ## Android-Paket: dasselbe Spiel, bedient ueber ein On-Screen-Pad
 
 > "Erstelle mir zusaetzlich zum Windows/Linux Package ein einfaches Android Package, was
