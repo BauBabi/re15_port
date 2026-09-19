@@ -450,9 +450,28 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         out->skel = banks->pl00_skel;
         out->anim = banks->pl00_anim;
         out->clip_override = 0;          /* PL00.EDD Clip 0, 34 Bilder */
-    } else if (m == 200) {
-        /* IDLE neutral fallback when PL00W01 is unavailable: idle-bank clip 6
-         * (1-frame static rest pose). */
-        out->clip_override = 6;
+    } else if (m == 200 || m == 210 || m == 211 || m == 212) {
+        /* RUECKFALL OHNE W-BANK (reine Port-Absicherung: das Original haelt das PLW-Paar
+         * DAT_800acbc4/8 ab dem Spieler-Load, FUN_800314b0 @0x800316f0 -> FUN_80036b68; PC und
+         * PSX laden ihre W-Baenke beim Boot). Der alte Rueckfall "def-Bank Clip 6" war GEMESSEN
+         * keine Idle-Pose (probe_r16_tuer1040 N, Runde 16): bei def=PL00 ist Clip 6 der
+         * 50-Bild-Sturz (L1 7409 zur W-Idle kf 22), in den 47 Raeumen mit RDT-Block @0x5C ist
+         * def die Cinematic-Bank (ROOM1040: 5 Clips) und 6 % 5 = Cutscene-Clip 1, 210 % 5 =
+         * Cutscene-Clip 0 = genau die gemeldete "komische" Pose. Ohne PLW-Paar bleibt die
+         * COMMON-Bank, und deren Idle-Clip im Original ist der des Idle-Falls 9/a:
+         *     80032284  ori v0,zero,0x16          ; Clip 22
+         *     8003228c  sb  v0,DAT_800acae8       ; +0x94 := 22
+         *     800322c0  lw  a0,DAT_800acad8       ; PL00.EMR
+         *     800322c8  lw  a1,DAT_800acbc0       ; PL00.EDD
+         *     800322cc  jal FUN_8001f314
+         * (Bild 0 von Clip 22 = kf 652; Leons Idle-Caution-Stand, 30 Bilder.) */
+        if (banks->pl00_ok) {
+            out->skel = banks->pl00_skel;
+            out->anim = banks->pl00_anim;
+            out->clip_override = 22;
+        } else if (banks->def_anim && banks->def_anim->clip_count > 22) {
+            out->clip_override = 22;     /* def == PL00-Basis (kein Raum-Block) */
+        }
+        /* sonst (nur Cinematic-def, keine COMMON-Bank): kein Idle-Clip vorhanden — unveraendert */
     }
 }

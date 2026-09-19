@@ -1,0 +1,133 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/wf_074e2f88-24e-1/re15_port/build_p2/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/wf_074e2f88-24e-1/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1240.RDT (163744 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1240: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[audio] RE15_NOAUDIO set -> audio disabled
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[elliot] PL05 loaded: 15 meshes, 15 bones, 24 clips
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[tim] elliot TIM in slot 1: 256x256
+[md1] loaded elliot mesh: 15 meshes
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1240.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1240 = (-26214,0,-3861) yaw=0
+[scd] thread start slot=0 first_op=0x3B
+[setflag] flag(9,142/0x8e) = 1
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(0)
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x3C0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 167)
+[walk] F0 cut=8 mo=200 af=0 frz=0 | pl pos=(-26214,0,-3861) rot=0
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[debug-menu] AUTO-JUMP -> ROOM1010 (Frame 5)
+[debug-menu] JUMP -> 101 INTERROG. ROOM (ROOM1010) spawn=(3650,0,6900) cut=0
+[room] PC loaded room1010.rdt (168808 bytes)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x2D
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(200,-1600,5500) rot=(0,3084,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(1800,-1600,5750) rot=(0,2513,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1800,-1600,-1900) rot=(0,3084,0)
+[esp] room 1010: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[rbj] room 1010 has no RBJ (RBJ/ROOM1010.RBJ) — Leon auf PL00-Basis zurueckgesetzt (Arena-Reset @0x80039738)
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[prop-render] pi=0 oid=0x00 pos=(200,-1600,5500) rot=(0,3084,0) meshes=1
+[prop-render] pi=1 oid=0x01 pos=(1800,-1600,5750) rot=(0,2513,0) meshes=1
+[light] cut 8 tint=(128,128,128)
+[pri] cut=8 pri_offset=0x478 masks=82 fg_atlas=1
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[walk] F30 cut=8 mo=200 af=24 frz=0 | pl pos=(3650,0,6900) rot=0
+[goto] queued room change -> ROOM11F0 at F30
+[room] PC loaded room11f0.rdt (152588 bytes)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=0 pos=(11040,-16200,-15084) rot=(0,1656,0)
+[scd] Obj_model_set[1] id=0x00 type=4 pos=(-19554,0,22684) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-25975,10,26000) rot=(0,0,512)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25975,10,24000) rot=(0,0,512)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(-25975,10,22000) rot=(0,0,512)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(-25975,10,19800) rot=(0,0,512)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(-25975,10,17800) rot=(0,0,512)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(-18775,10,26000) rot=(0,0,512)
+[scd] Obj_model_set[8] id=0x08 type=0 pos=(-18775,10,24000) rot=(0,0,512)
+[scd] Obj_model_set[9] id=0x09 type=0 pos=(-18775,10,22000) rot=(0,0,512)
+[scd] Obj_model_set[10] id=0x0A type=0 pos=(-18775,10,19800) rot=(0,0,512)
+[scd] Obj_model_set[11] id=0x0B type=0 pos=(-18775,10,17800) rot=(0,0,512)
+[esp] room 11F0: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[rbj] room 11F0 has no RBJ (RBJ/ROOM11F0.RBJ) — Leon auf PL00-Basis zurueckgesetzt (Arena-Reset @0x80039738)
+[enemy] RE2 EM010 loaded: 17 meshes, 15 bones, 31 clips -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[enemy] RE2 EM011 loaded: 17 meshes, 15 bones, 31 clips -> slot 12
+[enemy] Hybrid EM11: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 12
+[light] cut 10 tint=(128,128,128)
+[pri] cut=10 pri_offset=0x808 masks=0 fg_atlas=0
+[prop-render] pi=2 oid=0x02 pos=(-25975,10,26000) rot=(0,0,512) meshes=1
+[prop-render] pi=3 oid=0x03 pos=(-25975,10,24000) rot=(0,0,512) meshes=1
+[prop-render] pi=4 oid=0x04 pos=(-25975,10,22000) rot=(0,0,512) meshes=1
+[prop-render] pi=5 oid=0x05 pos=(-25975,10,19800) rot=(0,0,512) meshes=1
+[prop-render] pi=6 oid=0x06 pos=(-25975,10,17800) rot=(0,0,512) meshes=1
+[prop-render] pi=7 oid=0x07 pos=(-18775,10,26000) rot=(0,0,512) meshes=1
+[prop-render] pi=8 oid=0x08 pos=(-18775,10,24000) rot=(0,0,512) meshes=1
+[prop-render] pi=9 oid=0x09 pos=(-18775,10,22000) rot=(0,0,512) meshes=1
+[prop-render] pi=10 oid=0x0A pos=(-18775,10,19800) rot=(0,0,512) meshes=1
+[prop-render] pi=11 oid=0x0B pos=(-18775,10,17800) rot=(0,0,512) meshes=1
+[walk] F30 cut=10 mo=200 af=24 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F60 cut=10 mo=200 af=54 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F90 cut=10 mo=200 af=84 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F120 cut=10 mo=200 af=114 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F150 cut=10 mo=211 af=12 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F180 cut=10 mo=211 af=42 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F210 cut=10 mo=211 af=72 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F240 cut=10 mo=211 af=102 frz=0 | pl pos=(250,0,250) rot=1024
+[framedump] 320x240 -> /workspace/git/reAi_v2/.claude/worktrees/wf_074e2f88-24e-1/analysis/befunde_2026-09-19/phase2_objekte-und-tuer/obj_11F0.ppm
+[walk] F270 cut=10 mo=211 af=132 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F300 cut=10 mo=211 af=162 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F330 cut=10 mo=211 af=192 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F360 cut=10 mo=212 af=3 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F390 cut=10 mo=212 af=33 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F420 cut=10 mo=211 af=13 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F450 cut=10 mo=211 af=43 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F480 cut=10 mo=211 af=73 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F510 cut=10 mo=211 af=103 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F540 cut=10 mo=211 af=133 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F570 cut=10 mo=211 af=163 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F600 cut=10 mo=211 af=193 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F630 cut=10 mo=211 af=223 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F660 cut=10 mo=212 af=19 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F690 cut=10 mo=212 af=49 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F720 cut=10 mo=211 af=29 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F750 cut=10 mo=211 af=59 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F780 cut=10 mo=211 af=89 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F810 cut=10 mo=211 af=119 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F840 cut=10 mo=211 af=149 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F870 cut=10 mo=211 af=179 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F900 cut=10 mo=211 af=209 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F930 cut=10 mo=211 af=239 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F960 cut=10 mo=212 af=5 frz=0 | pl pos=(250,0,250) rot=1024
+[walk] F990 cut=10 mo=212 af=35 frz=0 | pl pos=(250,0,250) rot=1024

@@ -1,0 +1,16 @@
+[aot] DOOR FIRE slot=2 rect=(-26900,-3650,hw=600,hh=1050) target_cut=0 spawn=(-20083,0,-3559)
+[mot] F115 cut=8 mo=200 af=0 flg=0x00 frac=7 pmode=0
+[mot] F1 cut=0 mo=210 af=0 flg=0x00 frac=0 pmode=0
+[mot] F2 cut=0 mo=210 af=0 flg=0x00 frac=0 pmode=0
+[mot] F3 cut=0 mo=210 af=0 flg=0x00 frac=0 pmode=0
+[mot] F4 cut=0 mo=210 af=0 flg=0x00 frac=0 pmode=0
+[mot] F5 cut=0 mo=210 af=0 flg=0x00 frac=0 pmode=0
+[mot] F6 cut=0 mo=200 af=0 flg=0x00 frac=7 pmode=0
+[mot] F7 cut=0 mo=200 af=1 flg=0x00 frac=6 pmode=0
+[mot] F8 cut=0 mo=200 af=2 flg=0x00 frac=5 pmode=0
+[mot] F9 cut=0 mo=200 af=3 flg=0x00 frac=4 pmode=0
+[mot] F10 cut=0 mo=200 af=4 flg=0x00 frac=3 pmode=0
+[mot] F11 cut=0 mo=200 af=5 flg=0x00 frac=2 pmode=0
+[mot] F12 cut=0 mo=200 af=6 flg=0x00 frac=1 pmode=0
+[mot] F13 cut=0 mo=200 af=7 flg=0x00 frac=0 pmode=0
+[mot] F14 cut=0 mo=200 af=8 flg=0x00 frac=0 pmode=0

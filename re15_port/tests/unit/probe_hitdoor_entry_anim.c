@@ -16,6 +16,20 @@
  *     motion / anim_frame / anim_frac / anim_flags / state / sub1-3 / hit_react / hp /
  *     pos / rot / victim_state / aim_active / grabbed.
  *
+ * STAND NACH RUNDE 16 / PHASE 2 (2026-09-19, Tuer-Eintrittspose, analysis/befunde_2026-09-19/
+ * tuer-animation-1040.md): VOR dem Fix protokollierte die Sonde am Zielraum
+ *     ENTRY (vor Tick 0): mo=0   af=0 frac=0      (Port-eigener motion=0-Reset)
+ *     DEST  t=0:          mo=200 af=0 frac=7      (Idle-FSM case 0, Crossfade aus def-Clip 0)
+ * NACH dem Fix (room_common.c ruft re15_player_room_entry_pose = cmd-0-Endzustand
+ * +0x94:=1 @0x80031c10 / +0x95:=0 @0x80031c18 / +0x8f:=0 @0x80031c20):
+ *     ENTRY (vor Tick 0): mo=210 af=0 frac=0      (W-Bank Clip 1 Bild 0, hart)
+ *     DEST  t=0:          mo=200 af=0 frac=7      (unveraendert)
+ * Diese Sonde spielt die Transitions-Blende NICHT ab (kein re15_room_transition_present/_tick),
+ * deshalb gibt es hier keinen Freeze t=0..4: die Idle-FSM laeuft sofort in Tick 0 und blendet
+ * 7 Bilder von Clip-1-Bild-0 nach Clip-3-Bild-0 (bei W01/W03 derselbe Keyframe 22 = keine
+ * sichtbare Bewegung). Alle uebrigen DEST-Zeilen (t=0..119) sind vor/nach dem Fix byte-gleich
+ * (gemessen 2026-09-19, Variante A). "mo=210 fuer t=0..4" gilt nur mit Blende (probe_r16_tuer1040).
+ *
  * ERWARTETER DIFF (Hypothese, zu MESSEN): re15_player_cmd_reset (game_step_common.c:118-124,
  * gerufen vom Raumwechsel room_common.c:148) setzt s_prev_hp = 100. Der HP-Drop-Detector
  * (game_step_common.c:418 `pl->hp < s_prev_hp`) sieht im ERSTEN Tick des Zielraums

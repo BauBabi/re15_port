@@ -242,3 +242,76 @@ Bild 0 = kf 22 → **Pose bleibt unveraendert**. Der Spieler steht vom ersten Bi
   irrelevant und nicht weiter verfolgt.
 - Der Autopilot kommt in ROOM1030/1040 nicht um Theke/Ecken herum (`[auto] fest bei …`); fuer Messlaeufe hier das
   Eingabeskript aus §1.1 verwenden.
+
+## 6. Umsetzung (Phase 2, 2026-09-19, Branch `worktree-wf_074e2f88-24e-1`, Thema objekte-und-tuer)
+
+Umgesetzt wie §4 mit den Korrekturen der Gegenpruefung (`tuer-animation-1040.skeptiker.md`):
+
+1. `engine/src/player_common.c`: `re15_player_room_entry_pose()` = Endzustand des cmd-0-Handlers
+   LAB_800318f8: `motion = 210` (+0x94 := 1 @0x80031c10 mit dem PLW-Paar @0x80031bfc/@0x80031c04),
+   `anim_frame = 0` (+0x95 @0x80031c18), `anim_frac = 0` (+0x8f @0x80031c20, f3bc-Zweig uVar5==0 =
+   hart), `anim_flags = 0` (+0x1C4 @0x8003197c; a2 = 0 @0x80031bf4 — damit ist auch das REVERSE-Bit
+   0x80 weg, Skeptiker-Punkt 5 erledigt sich, kein Flag-Name ausserhalb von player_common.c noetig),
+   `motion_init_delay = 0`, `anim_use_pl00 = 0`. Deklaration in `include/re15_player.h`.
+2. `engine/src/room_common.c` (`re15_room_apply_pending`, Schritt 4): die drei Stores durch den Aufruf
+   ersetzt, Position VOR `scd_room_reenter` beibehalten; `#include "re15_player.h"`.
+3. `engine/src/game_step_common.c` (Same-Room-Reenter, vor `scd_room_reenter`): derselbe Aufruf.
+4. `engine/src/anim_select_common.c`: der W-Bank-lose Rueckfall. **Gemessen** (Sonde Variante N, Renderer
+   ohne W-Bank): der alte Rueckfall `m == 200 -> def-Bank Clip 6` lieferte KEINE Idle-Pose — bei
+   def=PL00 ist Clip 6 der 50-Bild-Sturz (kf 184, L1 = 7409 zur W-Idle kf 22, alle Bones), in ROOM1040
+   (def = Cinematic-Bank, 5 Clips) posierte 210 % 5 = Cutscene-Clip 0 (b13 (309,-2273,434) = die
+   gemeldete Pose) und 6 % 5 = Cutscene-Clip 1. Skeptiker-Punkt 4 bestaetigt. Neuer Rueckfall fuer
+   200/210/211/212 ohne W-Bank: COMMON-Bank PL00 Clip 22 = der Idle-Clip, den das Original selbst aus
+   PL00 spielt (Idle-Fall 9/a: `ori v0,zero,0x16` @0x80032284, `sb v0,0x800acae8` @0x8003228c,
+   PL00-Paar @0x800322c0/@0x800322c8, f314 @0x800322cc). PL00-Keyframe-Scan (712 kf): der W-Idle am
+   naechsten liegen kf 183 und die Bild-0 der Clips 17/19/20/21 (L1 = 3) — alles Bewegungsclips
+   (Aim-Raise, Stairs); ein statischer Idle-Keyframe existiert in PL00 nicht, Clip 22 (kf 652, 30
+   Bilder, L1 2443) ist der einzige Clip, den das Original als Idle benutzt. Der Fall ist im Spiel
+   nicht erreichbar (PC laedt alle 21 PLW-Baenke beim Boot, PSX `re15_w01_ok` ebenso; das Original
+   haelt das PLW-Paar ab FUN_800314b0 @0x800316f0).
+
+Messwerte (Sonde `probe_r16_tuer1040`, jetzt Pin; Render-Pose mit Composite-Skelett wie main.c,
+Bone 13 = rechter Unterarm; Freeze-Bilder im Port t=0..4, Freigabe t=5 — an diese Bildnummern gepinnt):
+
+| Bild | vorher (§1.2) | nachher A (W01) / B (W03) |
+|---|---|---|
+| ENTRY | mo=0 af=0 frac=0, RENDER RDT@5C Clip 0 kf 0, b13 (309,-2273,434) | mo=210 af=0 frac=0, RENDER W01 Clip 1 kf 22, b13 (-122,-2083,406) |
+| t=0..4 (Freeze) | wie ENTRY | wie ENTRY, Pose == statisch Clip-1-Bild-0 (L1 = 0) |
+| t=5 | mo=200 frac=7, W01 Clip 3 kf 22, Crossfade ab (274,-2222,431) | mo=200 frac=7, W01 Clip 3 kf 22, b13 (-122,-2083,406) |
+| t=12 | frac=0, b13 (-122,-2083,406); L1 t4->t12 = 649 | frac=0, b13 (-122,-2083,406); **L1 t4->t12 = 0** |
+
+Bankabhaengiger Pin (Skeptiker-Punkt 1): Erwartung t=12 = statische Pose von W-Clip 3 am aktuellen
+Bild (bei W01/W03 Bild 0 = kf 22; bei W0F Clip 3 mit 50 Bildern Bild 7 = kf 79) — Variante F (Item
+0x0F, Bank W0F, c1f0 kf 22 != c3f0 kf 72, statisch L1 1760): t=0..4 kf 22 hart, t=5 Clip 3 kf 72 mit
+frac 7, t=12 kf 79, L1 t4->t12 = 3049 = der 7-Bild-Blend, den auch das Original zeigt. "t=4 == t=12"
+wird nur verlangt, wenn c1f0 == c3f0 UND Clip 3 ein Bild hat. Kontrolle Tuer zurueck nach ROOM1030
+(kein Block): identische Pins gruen. Variante N (ohne W-Bank): RENDER PL00common Clip 22 kf 652.
+Pins: `probe_r16_tuer1040_A/_B/_F/_N` (tests/unit/probes/p2_objekte-und-tuer.cmake).
+
+Regressionen (Binaries VOR dem Fix = re15_port/build vom 2026-09-14, NACH = build_p2):
+- `probe_hitdoor_entry_anim A`: einziger Unterschied `ENTRY mo=0` -> `mo=210`; alle 120 DEST-Zeilen
+  byte-gleich (t=0 `mo=200 frac=7` wie vorher — die Sonde spielt keine Blende ab, also kein Freeze;
+  im Sondenkopf dokumentiert). Skeptiker-Punkt 7: Erwartungstext vor dem Fix gelesen (es gibt in der
+  Sonde keine Zusicherung "mo=200 ab t=0", nur das Protokoll).
+- `probe_elliot_1170_run` (Self-Reenter 1170 -> sub14, Plc_motion des main00) und
+  `probe_1090_cutscene`: Ausgabe vor/nach byte-gleich (`PIN: OK`; Endstand (-77,-1997) yaw 111).
+  Damit ist Skeptiker-Punkt 7/Dossier-Punkt 2 ("Plc_motion gewinnt") gemessen, nicht angenommen.
+- Skeptiker-Punkt 2 (anim_prev_valid): nicht uebernommen; `re15_actor_init` nullt ihn (Sonde: ENTRY pv=0).
+- `unit_text_freeze`, `unit_load_after_death`, `probe_1140_reentry`, `unit_cam_1030_reentry`,
+  `unit_zombie_10d0_reentry_a/b`, `unit_elliot_1170_run`: gruen (ctest-Summe s. Rueckgabe).
+
+Sichtpruefung (echte Worktree-exe build_p2, Lauf wie §1.1: JUMP 1040@30, Skript ab Tick 600
+1040 -> 1030 -> 1040 ueber die echten Tueren slot 1 / slot 2, `RE15_FRAMEDUMP=0-30/1`, Software-Renderer
+320x240; Startweg RE15_TITLE_SHOT wie die Integrationstests, weil das Skript sonst im Titel steht):
+- `[mot]`-Spur nach der Tuer 1030 -> 1040 (`phase2_objekte-und-tuer/tuer1040_door_phase2_mot.log`):
+  F1..F5 `mo=210 af=0 frac=0`, F6 `mo=200 af=0 frac=7`, F7..F12 frac 6..1, F13 frac 0 — vorher (§1.1)
+  F1..F5 `mo=0`.
+- Bilder `tuer1040_door_phase2_F06/F08/F13.png` (+F01/F05/F10/F20): F06, F08 und F13 sind pixelgleich —
+  Leon steht ab dem ersten sichtbaren Bild in der Idle-Pose (Arme unten). Vorher (`tuer1040_door_F06.png`):
+  beide Arme seitlich ausgestreckt, F08 mitten im Crossfade.
+
+ctest (build_p2, 310 Tests): 309/310 im Gesamtlauf; der eine rote Test `integration_save_counter_pin`
+ist der in `tests/integration/test_save_counter_pin.cmake` dokumentierte Startfehler (exit=1 nach
+"[pad] kein Controller gefunden", debug.log 5 Zeilen, Lauf 3 nach einem Wiederholungsversuch) — allein
+wiederholt: gruen. Kein Bezug zu den Aenderungen (die exe des Hauptbaums vom 2026-09-14 zeigt in
+dieser Sitzung dieselbe Startklasse).

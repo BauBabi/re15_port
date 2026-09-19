@@ -186,6 +186,48 @@ static int      s_idle_timer = 0;
 static uint32_t s_frame_ctr  = 0;    /* free-running RNG feed — bewusst NICHT resettet (kein
                                       * Original-Gegenstueck fuer einen Zaehler-Reset) */
 void re15_player_idle_reset(void) { s_idle_phase = -1; s_idle_timer = 0; }
+
+/* RAUMEINTRITTS-POSE — der ENDZUSTAND des cmd-0-Handlers LAB_800318f8 (Tabelle @0x80073f90
+ * Eintrag 0), den die Transitions-FSM nach JEDEM Raumwechsel anstoesst (`sb zero,0x800aca58`
+ * @0x8001cbdc, State 3; der Dispatcher FUN_80031c44 laeuft noch im selben Bild, Pause=7).
+ * Runde 16 (2026-09-19), Dossier analysis/befunde_2026-09-19/tuer-animation-1040.md.
+ *
+ * Der Handler nullt +0x94 zuerst (@0x80031924) — das ist die Zeile, die der Port bisher zitierte
+ * und als motion=0 stehen liess — und ueberschreibt sie am Ende mit der WAFFENBANK:
+ *     80031bfc  lw   a0,DAT_800acbc4     ; PLW-EMR der ausgeruesteten Waffe (FUN_80036b68)
+ *     80031c04  lw   a1,DAT_800acbc8     ; PLW-EDD
+ *     80031c08  ori  v0,zero,0x1
+ *     80031c10  sb   v0,DAT_800acae8     ; +0x94 := 1   -> W-Bank Clip 1
+ *     80031c18  sb   zero,DAT_800acae9   ; +0x95 := 0   -> Bild 0
+ *     80031c20  sb   zero,DAT_800acae3   ; +0x8f := 0   -> KEIN Crossfade (f3bc-Zweig uVar5==0:
+ *                                        ;                Pose HART in den Puffer)
+ *     80031c24  jal  FUN_8001f314        ; anim_set(W-EMR, W-EDD, a2=0 (vorwaerts, geloescht
+ *                                        ;   @0x80031bf4), a3=0x200)
+ * Beide Handler-Zweige konvergieren @0x80031bf8 auf diesen Block (Skeptiker-Disasm
+ * dis 0x800318f8 212). Waehrend der Blende (State 4/5, Spieler-Freeze bltz @0x80031c78) steht
+ * der Spieler damit auf W-Bank Clip 1 Bild 0; die Freigabe blendet 7 Bilder (case 0
+ * @0x80032088/@0x8003209c) nach Clip 3 Bild 0 — bei 18 der 21 PLW-Baenke derselbe Keyframe,
+ * also ohne sichtbare Bewegung; bei W0F/W10/W11 (Items 15-17) blendet auch das Original.
+ *
+ * Port bisher: motion=0 ohne Sentinel -> anim_select posierte def-Bank Clip 0, in den 47 Raeumen
+ * mit RDT-Animationsblock @0x5C die Raum-Cinematic-Bank (ROOM1040: Cutscene-Keyframe mit
+ * ausgestreckten Armen, 431 Einheiten vom Idle entfernt) — die "komische Animation" ab 1040.
+ * Sentinel 210 = W-Bank Clip 1 (anim_select_common.c; die W-Bank in main.c ist die der
+ * ausgeruesteten Waffe wie DAT_800acbc4/8). Gerufen an der Stelle der cmd-0-Stores in
+ * room_common.c (Tuer/JUMP) und im Same-Room-Reenter (game_step_common.c) — VOR
+ * scd_room_reenter, damit ein Plc_motion des Raum-main00 wie im Original gewinnt (SCD-Tick
+ * @0x8001cdec liegt VOR dem Dispatcher @0x8001ce0c). */
+void re15_player_room_entry_pose(void)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->motion            = RE15_MOTION_IDLE_SETTLE;  /* +0x94 := 1 @0x80031c10 (W-Bank Clip 1) */
+    p->anim_frame        = 0;                        /* +0x95 := 0 @0x80031c18                  */
+    p->anim_frac         = 0;                        /* +0x8f := 0 @0x80031c20 (hart, kein Blend) */
+    p->anim_flags        = 0;                        /* +0x1C4 := 0 @0x8003197c; a2 = 0 @0x80031bf4
+                                                      * -> vorwaerts, REVERSE-Bit (0x80) geloescht */
+    p->motion_init_delay = 0;                        /* kein Port-Verzoegerungstick vor dem Set */
+    p->anim_use_pl00     = 0;                        /* Bank = PLW-Paar, nicht PL00 (@0x80031bfc) */
+}
 void re15_player_set_aim_clip_len(int fc)
 {
     for (int i = 0; i < RE15_AIM_CLIP_MAX; i++) s_aim_clip_fcs[i] = (uint16_t)fc;
