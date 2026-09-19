@@ -314,4 +314,5 @@ ctest (build_p2, 310 Tests): 309/310 im Gesamtlauf; der eine rote Test `integrat
 ist der in `tests/integration/test_save_counter_pin.cmake` dokumentierte Startfehler (exit=1 nach
 "[pad] kein Controller gefunden", debug.log 5 Zeilen, Lauf 3 nach einem Wiederholungsversuch) — allein
 wiederholt: gruen. Kein Bezug zu den Aenderungen (die exe des Hauptbaums vom 2026-09-14 zeigt in
-dieser Sitzung dieselbe Startklasse).
+dieser Sitzung dieselbe Startklasse). Zweiter Gesamtlauf nach den Commits 630e87d2/9a7d1ab0:
+`100% tests passed, 0 tests failed out of 310` (219,85 s).
