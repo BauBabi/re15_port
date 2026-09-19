@@ -34,10 +34,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <dirent.h>
 #include "re15_rdt.h"
 #include "re15_camera.h"
 #include "re15_collision.h"
 #include "re15_pri.h"
+#include "re15_tim.h"
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -84,6 +87,214 @@ static void bild_von(const re15_camera_view_t *v, int32_t x, int32_t y, int32_t 
         *sx = 160 + (int) (vx * v->fov_screen_dist / *vz);
         *sy = 120 + (int) (vy * v->fov_screen_dist / *vz);
     } else { *sx = 160; *sy = 120; }
+}
+
+/* =====================================================================================
+ * PHASE 2 (2026-09-19, pri-masken-audit.md §4.6/§4.8): VOR/HINTER-Standplaetze je Cut.
+ *
+ * Fuer jeden STAGE1-Cut, fuer den der Bau eine Ziel-Silhouette MASKS/ROOM####_PRI##.PBM und
+ * die Standlinie MASKS/ROOM####_PRI##.STAND (Kamera-z je Bildspalte) hinterlegt hat:
+ *   - BEGEHBARE Standplaetze ueber den SPIELER-Klemmpfad (re15_collision_constrain, Radius
+ *     PR=450, Band gesetzt): ein Punkt ist begehbar, wenn der Klemmpfad ihn nicht verschiebt.
+ *     ⛔ NICHT re15_collision_on_floor: das ist der Containment-Scan FUN_8003b7f0 und liefert
+ *     die Zell-INNENRAEUME (= Hindernisse; gemessen 2026-09-19: 3350/3350 "Bodenpunkte" der
+ *     alten Sonde in ROOM1010 lagen IN soliden Zellen, waehrend 1201 von 1416 echten
+ *     Nutzer-Standorten aus befund.log auf dem Klemmpfad-Komplement liegen, 46 im alten Satz).
+ *     Die Phase 1 dieses Tests oben rechnet noch mit on_floor — ihre Zahlen sind ein
+ *     Verhaeltnis-Pin und bleiben unveraendert stehen.
+ *   - Koerperkasten Fuss..Kopf (1500) und +-450, je Bildzeile die Kamera-z der SENKRECHTEN
+ *     durch den Standplatz (dieselbe Formel wie tools/maske/geometrie.profil_spalte), das
+ *     Urteil je Maskenpunkt nach der ORIGINAL-Regel re15_pri_mask_occludes.
+ *   - VOR = Spalten, in denen der Fuss NAEHER liegt als die Standlinie der Maske; ein
+ *     Standplatz, der dort zu >= 95 % verdeckt wird, ist ein FEHLER (VORverd). HINTER =
+ *     Fuss FERNER als die Standlinie; dort soll er zu >= 95 % verdeckt sein (HINTfrei wird
+ *     gezaehlt und ausgegeben, ist aber kein Riegel: eine Maske deckt nur ihre eigene
+ *     Silhouette, und ein Kopf, der ueber den Tisch ragt, ist richtig frei).
+ *   ⛔ Die 95 % sind eine Heuristik (Gegenpruefung #12), kein belegter Wert.
+ * Riegel: VORverd == 0 ueber ALLE Cuts mit PBM. */
+static uint8_t  p2_deck[240][320];
+static uint16_t p2_tief[240][320];
+static int      p2_col_lo[320], p2_col_hi[320];
+
+static int p2_pbm(const char *pfad, uint8_t soll[240][320])
+{
+    const char *kopf = "P4\n320 240\n"; size_t k = strlen(kopf), n = 0, y, x;
+    uint8_t *b = slurp(pfad, &n);
+    if (!b || n != k + 240 * 40 || memcmp(b, kopf, k) != 0) { free(b); return 0; }
+    for (y = 0; y < 240; y++) for (x = 0; x < 320; x++)
+        soll[y][x] = (b[k + y * 40 + x / 8] >> (7 - (x & 7))) & 1;
+    free(b); return 1;
+}
+
+/* Zeile 1 = Standlinie (Kamera-z je Spalte, -1 = keine), Zeile 2 = Bodenebene y0 je Spalte,
+ * auf der die Standlinie gilt — VOR/HINTER wird auf DIESER Ebene verglichen (der Standplatz
+ * wird mit seiner (x,z) auf y0 projiziert), sonst laege ein Standplatz auf einem hoeheren Band
+ * allein wegen seiner Hoehe "vor" der Standlinie (ROOM10C0 C2, Band 1, 2026-09-19). */
+static int p2_stand(const char *pfad, double stand[320], double ebene[320])
+{
+    FILE *f = fopen(pfad, "r"); char z[8192]; int i = 0, j = 0, zeile = 0;
+    if (!f) return 0;
+    while (fgets(z, sizeof z, f)) {
+        char *p = z; if (z[0] == '#') continue;
+        zeile++;
+        if (zeile == 1) { while (i < 320) { char *e; long v = strtol(p, &e, 10); if (e == p) break; stand[i++] = (double) v; p = e; } }
+        else if (zeile == 2) { while (j < 320) { char *e; long v = strtol(p, &e, 10); if (e == p) break; ebene[j++] = (double) v; p = e; } }
+    }
+    fclose(f);
+    return i == 320 && j == 320;
+}
+
+static void p2_rastern(const re15_pri_cut_t *pri, const re15_tim_t *tim)
+{
+    const uint8_t *idx = (const uint8_t *) tim->pixels; int i, x, y;
+    memset(p2_deck, 0, sizeof p2_deck); memset(p2_tief, 0, sizeof p2_tief);
+    for (i = 0; i < pri->draw_count; i++) {
+        const re15_pri_mask_t *m = &pri->masks[i];
+        int dx = (int16_t) m->dstX, dy = (int16_t) m->dstY;
+        for (y = 0; y < m->height; y++) {
+            int sy = m->srcY + y, ty = dy + y;
+            if (sy < 0 || sy >= tim->height || ty < 0 || ty >= 240) continue;
+            for (x = 0; x < m->width; x++) {
+                int sx = m->srcX + x, tx = dx + x;
+                if (sx < 0 || sx >= tim->width || tx < 0 || tx >= 320) continue;
+                if (!idx[sy * tim->width + sx]) continue;
+                p2_deck[ty][tx] = 1;
+                if (!p2_tief[ty][tx] || m->depth < p2_tief[ty][tx]) p2_tief[ty][tx] = m->depth;
+            }
+        }
+    }
+    for (x = 0; x < 320; x++) {
+        p2_col_lo[x] = 240; p2_col_hi[x] = -1;
+        for (y = 0; y < 240; y++) if (p2_deck[y][x]) { if (y < p2_col_lo[x]) p2_col_lo[x] = y; p2_col_hi[x] = y; }
+    }
+}
+
+/* Projektion mit Gleitkomma wie tools/maske/abnahme.proj (dieselbe Zaehlung wie der Bau). */
+static int p2_proj(const re15_camera_view_t *v, double x, double y, double z, double *sx, double *sy, double *vz)
+{
+    double vx = (x * v->rot[0] + y * v->rot[1] + z * v->rot[2]) / 4096.0 + v->trans[0];
+    double vy = (x * v->rot[3] + y * v->rot[4] + z * v->rot[5]) / 4096.0 + v->trans[1];
+    *vz = (x * v->rot[6] + y * v->rot[7] + z * v->rot[8]) / 4096.0 + v->trans[2];
+    if (*vz <= 64) return 0;
+    *sx = 160 + vx * v->fov_screen_dist / *vz; *sy = 120 + vy * v->fov_screen_dist / *vz;
+    return 1;
+}
+
+static double p2_vz_senkrechte(const re15_camera_view_t *v, double wx, double wz, int y, double fallback)
+{
+    double H = v->fov_screen_dist;
+    double a = v->rot[4] / 4096.0, b = (v->rot[3] * wx + v->rot[5] * wz) / 4096.0 + v->trans[1];
+    double c = v->rot[7] / 4096.0, d = (v->rot[6] * wx + v->rot[8] * wz) / 4096.0 + v->trans[2];
+    double sy = y + 0.5 - 120.0, n = sy * c - H * a, Y, vz;
+    if (fabs(n) < 1e-9) return fallback;
+    Y = (H * b - sy * d) / n; vz = c * Y + d;
+    return (vz > 1) ? vz : fallback;
+}
+
+static int p2_phase(void)
+{
+    char pfad[700]; DIR *d; struct dirent *e;
+    int n_cuts = 0, n_fehler = 0, sum_vorverd = 0, sum_hintfrei = 0, sum_vorn = 0, sum_hintn = 0;
+    static uint8_t soll[240][320];
+    snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS", RE15_PORT_SRC_DIR);
+    d = opendir(pfad);
+    printf("\n== Phase 2: VOR/HINTER-Standplaetze je Cut mit Ziel-Silhouette (Begehbarkeit = Klemmpfad) ==\n");
+    printf("  %-9s %-3s %7s %7s | %5s %7s %7s | %5s %8s\n", "Raum", "Cut", "Plaetze", "beruehr", "VORn", "VORverd", "VORteil", "HINTn", "HINTfrei");
+    if (!d) { printf("  FAIL: %s nicht lesbar\n", pfad); return 1; }
+    while ((e = readdir(d)) != NULL) {
+        unsigned raum; int cut; size_t sz = 0, msz = 0, tsz = 0;
+        uint8_t *roh, *msk, *tb; re15_rdt_t rdt; re15_camera_view_t view; re15_pri_cut_t pri; re15_tim_t tim;
+        uint32_t off; int n, lo = 0, hi = 0, b, s;
+        int X0 = 1 << 30, X1 = -(1 << 30), Z0 = 1 << 30, Z1 = -(1 << 30);
+        int plaetze = 0, beruehrt = 0, vorn = 0, vorverd = 0, vorteil = 0, hintn = 0, hintfrei = 0;
+        static double stand[320], ebene[320];
+        if (sscanf(e->d_name, "ROOM%4x_PRI%2d.PBM", &raum, &cut) != 2 || strlen(e->d_name) != 18) continue;
+        n_cuts++;
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/%s", RE15_PORT_SRC_DIR, e->d_name);
+        if (!p2_pbm(pfad, soll)) { printf("  FEHLER: %s\n", e->d_name); n_fehler++; continue; }
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/ROOM%04X_PRI%02d.STAND", RE15_PORT_SRC_DIR, raum, cut);
+        if (!p2_stand(pfad, stand, ebene)) { printf("  FEHLER: Standlinie fehlt: %s\n", pfad); n_fehler++; continue; }
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/STAGE%u/ROOM%04X.RDT", RE15_PORT_SRC_DIR, raum >> 12, raum);
+        roh = slurp(pfad, &sz);
+        if (!roh || re15_rdt_parse(roh, sz, &rdt) < 0 || cut >= rdt.cut_count
+            || re15_camera_build_view(&rdt.cuts[cut], &view) != 0) {
+            printf("  FEHLER: ROOM%04X Cut %d: RDT/Kamera\n", raum, cut); n_fehler++; free(roh); continue;
+        }
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/ROOM%04X.MSK", RE15_PORT_SRC_DIR, raum);
+        msk = slurp(pfad, &msz);
+        memset(&pri, 0, sizeof pri);
+        off = msk ? re15_pri_msk_section_offset(msk, msz, cut) : 0;
+        n = off ? re15_pri_parse_section(msk, msz, off, &pri) : 0;
+        snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/ROOM%04X_PRI%02d.TIM", RE15_PORT_SRC_DIR, raum, cut);
+        tb = slurp(pfad, &tsz);
+        if (n <= 0 || !tb || re15_tim_parse(tb, (int) tsz, &tim) != 0 || tim.bpp != 8) {
+            printf("  FEHLER: ROOM%04X Cut %d: Sektion/Atlas\n", raum, cut); n_fehler++;
+            free(roh); free(msk); free(tb); continue;
+        }
+        p2_rastern(&pri, &tim);
+        for (s = 0; s < rdt.sca_count; s++) {
+            const re15_sca_entry_t *c = &rdt.sca[s];
+            if ((int) c->x < X0) X0 = c->x; if ((int) c->z < Z0) Z0 = c->z;
+            if ((int) c->x + (int) c->width > X1) X1 = c->x + c->width;
+            if ((int) c->z + (int) c->density > Z1) Z1 = c->z + c->density;
+        }
+        re15_collision_reset_band();
+        re15_collision_band_range(&rdt, &lo, &hi);
+        for (b = lo; b <= hi; b++) {
+            int gx, gz, hat = 0;
+            for (s = 0; s < rdt.sca_count; s++) if ((rdt.sca[s].floor >> 4) == b) { hat = 1; break; }
+            if (!hat) continue;
+            re15_collision_set_band(b);
+            for (gx = X0; gx <= X1; gx += 200)
+                for (gz = Z0; gz <= Z1; gz += 200) {
+                    int32_t x2 = gx, z2 = gz; double yfoot = -(double) b * 0x708;
+                    double fsx, fsy, fvz, ksx, ksy, kvz, hw; int x0, x1, y0, y1, x, y, touch = 0;
+                    long bv = 0, bvor = 0, bhin = 0, vv = 0, vh = 0;
+                    re15_collision_constrain(&rdt, gx, gz, &x2, &z2);
+                    if (x2 != gx || z2 != gz) continue;
+                    if (!p2_proj(&view, gx, yfoot, gz, &fsx, &fsy, &fvz)) continue;
+                    if (!p2_proj(&view, gx, yfoot - KOPF_HOCH, gz, &ksx, &ksy, &kvz)) continue;
+                    plaetze++;
+                    hw = HALB_BREIT * (double) view.fov_screen_dist / fvz;
+                    x0 = (int) (fsx - hw); if (x0 < 0) x0 = 0;
+                    x1 = (int) (fsx + hw); if (x1 > 320) x1 = 320;
+                    y0 = (int) (ksy < fsy ? ksy : fsy); if (y0 < 0) y0 = 0;
+                    y1 = (int) (ksy < fsy ? fsy : ksy); if (y1 > 240) y1 = 240;
+                    if (x1 <= x0 || y1 <= y0) continue;
+                    for (x = x0; x < x1 && !touch; x++) if (p2_col_hi[x] >= y0 && p2_col_lo[x] < y1) touch = 1;
+                    if (!touch) continue;
+                    beruehrt++;
+                    (void) bv;
+                    for (y = y0; y < y1; y++) {
+                        double vz = p2_vz_senkrechte(&view, gx, gz, y, fvz);
+                        for (x = x0; x < x1; x++) {
+                            int occ; double ref;
+                            if (!p2_deck[y][x]) continue;
+                            occ = re15_pri_mask_occludes(p2_tief[y][x], (long) vz);
+                            if (stand[x] < 0) continue;
+                            /* Standplatz auf die Bodenebene der Spalte projiziert (s. p2_stand). */
+                            ref = ((double) gx * view.rot[6] + ebene[x] * view.rot[7] + (double) gz * view.rot[8]) / 4096.0 + view.trans[2];
+                            if (ref < stand[x] - 1)      { bvor++; vv += occ; }
+                            else if (ref > stand[x] + 1) { bhin++; vh += occ; }
+                        }
+                    }
+                    if (bvor) { double q = (double) vv / bvor; vorn++; if (q >= 0.95) vorverd++; else if (q > 0.05) vorteil++; }
+                    if (bhin) { double q = (double) vh / bhin; hintn++; if (q < 0.95) hintfrei++; }
+                }
+        }
+        re15_collision_reset_band();
+        printf("  ROOM%04X %-3d %7d %7d | %5d %7d %7d | %5d %8d%s\n", raum, cut, plaetze, beruehrt,
+               vorn, vorverd, vorteil, hintn, hintfrei, vorverd ? "   <<< VOR VERDECKT" : "");
+        sum_vorverd += vorverd; sum_hintfrei += hintfrei; sum_vorn += vorn; sum_hintn += hintn;
+        free(roh); free(msk); free(tb);
+    }
+    closedir(d);
+    printf("  %d Cuts mit Ziel-Silhouette, %d Fehler; VOR %d Standplaetze (%d verdeckt), HINTER %d (%d frei)\n",
+           n_cuts, n_fehler, sum_vorn, sum_vorverd, sum_hintn, sum_hintfrei);
+    CHECK("Phase 2: es gibt Cuts mit Ziel-Silhouette und Standlinie", n_cuts > 0 && n_fehler == 0);
+    CHECK("Phase 2: KEIN begehbarer Standplatz VOR der Standlinie wird zu >= 95 % verdeckt (VORverd == 0)",
+          sum_vorverd == 0);
+    return 0;
 }
 
 int main(void)
@@ -192,14 +403,16 @@ int main(void)
                             oben  = ksy < fsy ? ksy : fsy;
                             unten = ksy < fsy ? fsy : ksy;
                             for (i = 0; i < n && i < 128; i++) {
-                                long schwelle = (long) pri.masks[i].depth * 64;
+                                int dep = pri.masks[i].depth;
                                 int mx = (int16_t) pri.masks[i].dstX;
                                 int my = (int16_t) pri.masks[i].dstY;
                                 int mw = pri.masks[i].width, mh = pri.masks[i].height;
                                 if (mx + mw <= fsx - hw || mx >= fsx + hw) continue;
                                 if (my + mh <= oben     || my >= unten)    continue;
-                                if (kvz > schwelle)       voll[i]++;
-                                else if (fvz > schwelle) { schnitt[i]++;
+                                /* Original-Regel (re15_pri.h, 2026-09-19): verdeckt gdw.
+                                 * depth < (1023*vz)>>16 — strikt, gleicher Bucket = Figur obenauf. */
+                                if (re15_pri_mask_occludes(dep, kvz))       voll[i]++;
+                                else if (re15_pri_mask_occludes(dep, fvz)) { schnitt[i]++;
                                     if (aus_original) orig_geschnitten++; else ges_geschnitten++; }
                                 else                      frei[i]++;
                             }
@@ -255,9 +468,9 @@ int main(void)
     {   int k;
         printf("\n  Nachgezeichnete Masken mit hohem Schnitt-Anteil:\n");
         for (k = 0; k < n_schlimm; k++)
-            printf("     ROOM%04X Cut %-2d  Tiefe %3d (Kamera-z %5d)  %3d %%%% Schnitt-Anteil\n",
+            printf("     ROOM%04X Cut %-2d  Tiefe %3d (verdeckt ab Kamera-z %5d)  %3d %%%% Schnitt-Anteil\n",
                    (unsigned) schlimmste[k][0], schlimmste[k][1], schlimmste[k][2],
-                   schlimmste[k][2] * 64, schlimmste[k][3]);
+                   (int) re15_pri_mask_camera_z(schlimmste[k][2]), schlimmste[k][3]);
     }
 
     CHECK("es wurden ueberhaupt Standplaetze und Masken gefunden",
@@ -294,5 +507,6 @@ int main(void)
                  "Originals (gemessen %.2f)", r_orig > 0 ? r_uns / r_orig : 0.0);
         CHECK(t, r_orig > 0.0 && r_uns <= 1.70 * r_orig);
     }
+    p2_phase();
     return g_fail;
 }

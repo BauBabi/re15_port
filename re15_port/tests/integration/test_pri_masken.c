@@ -30,6 +30,7 @@
 #include "re15_pri.h"
 #include "re15_rdt.h"
 #include "re15_camera.h"
+#include "re15_tim.h"
 
 static int g_fail;
 #define CHECK(t, c) do { if (c) printf("  PASS: %s\n", t); \
@@ -67,6 +68,7 @@ int main(void)
      * leeres Gruen — er wuerde dann nur belegen, dass der Original-Parser nichts
      * findet, nicht dass keine Maske ein Original ueberschreibt. */
     int orig_mit_masken = 0, orig_geprueft = 0;
+    int atlanten = 0, clut_null = 0;
 
     /* ================= PHASE 1: der Container-Leser =========================
      * Ein gueltiger Container mit zwei Cuts; Cut 0 traegt eine Sektion bei 0x18,
@@ -207,6 +209,29 @@ int main(void)
                     }
                 }
 
+                /* --- PHASE 5 (2026-09-19): PSX-Farbschluessel des Atlas ------
+                 * Die GPU schluesselt den aufgeloesten Texel-WERT: 0x0000 = durchsichtig,
+                 * fuer das opake SPRT (Code 0x64) ist 0x8000 opakes Schwarz (psx-spx
+                 * graphicsprocessingunitgpu.md). Ein CLUT-Eintrag 0x0000 ausser Index 0
+                 * waere auf der PSX ein Loch in der Maske (Audit §4.7: 12556 Texel in
+                 * ROOM1000 C7). atlas.py schreibt seit Phase 2 0x8000. */
+                {
+                    char tp[600]; size_t tn = 0; unsigned char *tb;
+                    re15_tim_t tim;
+                    snprintf(tp, sizeof tp, "%s/MASKS/ROOM%04X_PRI%02d.TIM", RE15_ASSET_PSX_DIR, rid, c);
+                    tb = slurp(tp, &tn);
+                    if (tb && re15_tim_parse(tb, (int) tn, &tim) == 0 && tim.has_clut) {
+                        int ci, nulln = 0;
+                        for (ci = 1; ci < tim.clut_entries; ci++) if (tim.clut[ci] == 0) nulln++;
+                        atlanten++;
+                        if (nulln) {
+                            clut_null++;
+                            printf("     CLUT 0x0000: ROOM%04X Cut %d hat %d Eintraege ausser Index 0 mit Wert 0x0000\n", rid, c, nulln);
+                        }
+                    }
+                    free(tb);
+                }
+
                 /* --- PHASE 4: Geometrie im Rahmen -------------------------- */
                 if (n > RE15_PRI_MAX_MASKS_PER_CUT || nach.draw_count > n) {
                     unplausibel++;
@@ -262,6 +287,10 @@ int main(void)
           ueberschreibt == 0);
     CHECK("jede Maske liegt in Kapazitaet und Bildflaeche", unplausibel == 0);
     CHECK("zu jeder Maskendatei gibt es das RDT ihres Raums", roh_fehlt == 0);
+    printf("  [Atlas] %d nachgezeichnete Atlanten geprueft, %d mit CLUT-Eintrag 0x0000 ausser Index 0\n",
+           atlanten, clut_null);
+    CHECK("die nachgezeichneten Atlanten wurden ueberhaupt gelesen", atlanten > 0);
+    CHECK("kein CLUT-Eintrag ausser Index 0 ist 0x0000 (PSX: Loch statt opakes Schwarz)", clut_null == 0);
 
     printf(g_fail ? "FAIL\n" : "OK\n");
     return g_fail;
