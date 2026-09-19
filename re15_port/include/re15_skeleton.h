@@ -78,6 +78,21 @@ void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
  * query). void* to avoid an re15_actor.h dependency in this header. */
 extern void *g_anim_pose_actor;
 
+/* BONE-WINKEL-HAKEN (G5-Endkampf, Phase 2 birkin-g5.md): wird je Bone unmittelbar vor dem
+ * RotMatrix-Aufbau der lokalen Part-Matrix gerufen (nach Tween/Crossfade/Neck) und darf ay/az
+ * um einen Zuschlag aendern — das Gegenstueck zu RE2s "Winkel addieren, Matrix bauen"
+ * (EM036 @0x80100344-354, EM037 FUN_80104C30 @0x80104c30 nach den +0x6C-Schreibern).
+ * Installiert von re15_g5_boss_tick (engine/src/enemy_ai_boss_g5.c); NULL = aus. */
+extern void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az);
+/* QUERY-Modus (g_anim_pose_actor == NULL): wer den Haken trotzdem auf einen Aktor beziehen
+ * will (Tentakel-Kollision/Spitzensonde aus dem Engine-Tick), setzt hier den Aktor und
+ * danach wieder NULL. Kein Crossfade-Zugriff, nur Identitaet fuer den Haken. */
+extern void *g_anim_query_actor;
+
+/* RotMatrix (byte-true, s. skeleton_common.c mat3_from_euler) fuer Aufrufer ausserhalb des
+ * Pose-Builders: Entity-Matrix aus (rx, ry, rz) in PSX-Winkeleinheiten. */
+void re15_skel_euler_matrix(int ax, int ay, int az, int32_t m[9]);
+
 /* 0x8000 MARKER TWEEN (byte-true FUN_8001f8b4, trace wf_518cceff CONFIRMED): a marker anim frame
  * is a TWEEN — the original poses  ((0x1000-w)*A + w*B) >> 12  for the ROOT translation (GTE
  * GPF12/GPL12 @0x8001fa78-fae0) AND every bone angle (hidden-$a3 w -> FUN_8001fb94 ->

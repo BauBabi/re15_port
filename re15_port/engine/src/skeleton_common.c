@@ -160,6 +160,10 @@ static void mat3_from_euler(int ax, int ay, int az, int32_t m[9])
  * this to the actor being posed so the FRAC crossfade below can read its blend state;
  * NULL = no blend (pose QUERY, e.g. the stair foot-position probe). */
 void *g_anim_pose_actor = NULL;
+/* Bone-Winkel-Haken (G5-Endkampf, s. re15_skeleton.h); NULL = aus. */
+void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az) = NULL;
+/* Aktor-Identitaet fuer den Haken im QUERY-Modus (g_anim_pose_actor == NULL); s. Header. */
+void *g_anim_query_actor = NULL;
 
 /* 0x8000 marker TWEEN side channel (FUN_8001f8b4) — set by re15_compute_actor_kf, consumed +
  * cleared by the next re15_skel_compute_pose. See re15_skeleton.h. */
@@ -602,6 +606,15 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
         if (bact && bact->type == 0x23u)
             az = (int16_t)(az + re15_gator_spine_arc_vz(bact, b));
 
+        /* G5-ENDKAMPF (Phase 2, analysis/befunde_2026-09-19/birkin-g5.md): das RE2-Original
+         * addiert Zuschlaege DIREKT auf die Part-Winkel, bevor RotMatrix die Part-Matrix baut —
+         * Kopf-Tracking auf part1+0x6A (@0x80100344-354, EM036) und die Einrollwinkel der
+         * Tentakel auf part+0x6C je Part (sub9 ph5/7 @0x801023d4-2658, sub11 ph5/7
+         * @0x80102e70-3170, EM037). Der Haken ist NUR fuer die Typen 0x36/0x37 belegt
+         * (re15_g5_bone_angle_hook prueft den Typ) und sonst ein No-Op. */
+        if (g_anim_bone_angle_hook && (bact || g_anim_query_actor))
+            g_anim_bone_angle_hook(bact ? (const void *)bact : g_anim_query_actor, b, &ay, &az);
+
         int32_t local_rot[9];
         mat3_from_euler((int)ax, (int)ay, (int)az, local_rot);
 
@@ -749,6 +762,13 @@ void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
  * element-for-element, to an independent transliteration of RE_15_Quellcode_V2/RotMatrix.c. Not
  * used by the engine itself. */
 void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9])
+{
+    mat3_from_euler(ax, ay, az, m);
+}
+
+/* Oeffentlicher RotMatrix-Zwilling (G5-Endkampf: Entity-Matrix der Tentakel aus RotX/Yaw/RotZ,
+ * FUN_80104BA4 @0x80104bc4 `jal 0x8008e1f4` auf +0x74). Dieselbe Funktion wie oben. */
+void re15_skel_euler_matrix(int ax, int ay, int az, int32_t m[9])
 {
     mat3_from_euler(ax, ay, az, m);
 }
