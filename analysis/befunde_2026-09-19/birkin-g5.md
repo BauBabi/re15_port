@@ -618,3 +618,204 @@ ROOM5090 auf (300,5000) zeigt = der falsche Korridor).
    Umfangs (kein 5090-Gegenstueck).
 7. **Kein Parity-Vergleich gegen einen DuckStation-Savestate** dieses Kampfes — alle Zahlen sind
    gegen die disassemblierten RE2-Bytes geprueft, nicht gegen RAM einer laufenden Konsole.
+
+---
+
+## 7. Nacharbeit (Phase 3, Thema `birkin-rest`, 2026-09-20)
+
+Worktree `.claude/worktrees/wf_dcf50dba-3e5-3` (Branch `worktree-birkin-rest`), Build
+`re15_port/build_p3`, Suite **320/320**. Abgearbeitet werden die sechs Punkte aus §6.5.
+Alles hier ist selbst disassembliert (`re2_disasm.py` auf `CDEMD0_EM36_ai1.BIN` /
+`CDEMD0_EM37_ai1.BIN` und `info/re2leon/PSX.EXE`), selbst geparst (`CDEMD0_EM37_emd.EMD`,
+`shared_assets/PSX/PLD/PL00.EMR`) und gegen die Sonde `probe_p3_birkin_rest` gemessen.
+
+### 7.1 Zug-Griff-Opferanimation (§6.5 Punkt 1) — GEBAUT
+
+**Die Kette war nicht gefunden, weil im Dossier nur die Griff-STELLE stand.** Der
+Spieler-Dispatch haengt nicht am Gegner, sondern am Spieler:
+
+| Glied | Beleg |
+|---|---|
+| Griff-Stelle schreibt das Kommandowort | `sw v0,-1028(at)` = 0x800CFBFC, Wert `(!Blickkontakt << 8) + 5` @0x80102dc0-c8 (Zug), `+ 5`/`0x205` @0x80101710/@0x80101724 (Peitsche), `0x305` @0x80103760, `0x405` @0x80103818 |
+| dazu Greifer + Opferbank in den Spieler | `sw s1,-596(at)` = PL+0x1B4 @0x80102da0, `sw v0,-640/-636(at)` = PL+0x188/+0x18C @0x80102db8/@0x80102dd0, `sb v0,0(s0) \| 0x80` = PL+0x1D3 @0x80102da8 |
+| EXE-Routine 5 | 0x8004006C: `lw a2,436(a0)` (Greifer), `lbu v0,8(a2)` (dessen Typ), `lw v0,-6360(v1)` = **0x800CE300[typ]**, `jalr v0` @0x800400a8-b8 |
+| EM037 traegt sich dort selbst ein | `sw v1,-7424(at)` mit `v1 = 0x80104288` @0x801006ec-fc (zweite Tabelle 0x800CE400[0x37] = 0x80104b68 @0x80100708-18) |
+| der Haken faechert auf | 0x80104288: `lbu v0,5(a0)` -> `lw v0,22572(at)` = **Tabelle @0x8010582c** -> `jalr` @0x80104290-ac |
+
+**Vier Maschinen** (Tabelle @0x8010582c, Eintraege 0..4):
+
+| PL+0x05 | Handler | Anlass | Clipfolge (Clip/Bild/Blend aus `sw …,332(s1)`) |
+|---|---|---|---|
+| 0 / 1 | 0x801042c4 | Zug-Griff (Blickkontakt / von hinten) | **Leons EIGENE Bank**, Clip 3+(var&1) @0x80104338-50 |
+| 2 | 0x80104454 | Peitsche aus >= 6,0 m | 2/Bild 6 -> 0 -> 1 (@0x801044a0 / @0x80104584 / @0x801045e0) |
+| 3 | 0x801046ac | Spiess | 4/Bild 7 -> 3 -> 1 (@0x801046fc / @0x801047a8 / @0x80104830) |
+| 4 | 0x801048f4 | Spiess in einen SCHON Gehaltenen | 5 -> 3 -> 1 (@0x80104944 / @0x801049f0 / @0x80104aa4) |
+
+**Kein Leihgeber noetig — EM037 hat eine EIGENE Opferbank.** Selbst geparst aus
+`CDEMD0_EM37_emd.EMD` (dir_count 8): `dir[5] = 0x00AA68` (EDD, `u16@+2 / 4` = **6 Clips**),
+`dir[6] = 0x00ACCC` (Keyframe-Pool) = Paar 3. Genau diese sechs Clips benutzen die
+Maschinen 2/3/4 — die `re15_victim_donor_set`-Mechanik der ROOM1210-Arme bleibt
+unangetastet. (EM036 hat Paar 3 mit 1 Clip = die Devour-Opferanimation, @0x80101b50
+schreibt dort das Kommandowort 6.)
+
+Weitere byte-true Teile der Griff-Stellen, die dabei mitkamen:
+* Peitsche: Unterscheidung nah/fern ueber `lw v1,496(s0)` = **+0x1F0**, den Abstandscache,
+  den der Entity-Loop jedes Bild schreibt (`jal SquareRoot0` / `sw v0,496(s0)` @0x800265d4-e0);
+  `sltiu v1,v1,0x1771` @0x8010171c = ab 6001 Variante 2.
+* Peitsche dreht das Opfer ABSOLUT: `addiu v0,zero,3456` @0x80101730, bei `+0x218 < 2`
+  stattdessen 640 (@0x8010173c-54) — also nach der Seite, von der der Arm kommt.
+* Spiess: Zweittreffer-Riegel +0x16B (`sb v0=1,363(s0)` @0x8010378c, geoeffnet beim
+  Angriffsstart `sb zero,363(s0)` @0x801036a8); der zweite Spiess kostet 10 statt 15
+  (`addiu a0,zero,10` @0x801037e4).
+* Ruck: Peilung auf den BOSS (`lw v0,-484(v0)` = 0x800CFE1C = Gegnerliste[0]), Anschub
+  800 (Zug @0x801043b4) bzw. 600 (Spiess @0x80104780) laengs dieser Richtung, danach
+  Halbierung pro Bild (`sll 16 / sra 17` @0x801043fc-424).
+
+**Port-Entscheidung (als solche gekennzeichnet, mit Messung):** Die Varianten 0/1
+spielen im Original einen Clip aus LEONS EIGENER Bank (Advance ueber PL+0x108/+0x17C
+@0x801043c8-cc — der Gegenbeweis steht in derselben Funktion: die Variante-2-Maschine
+nimmt in den Phasen 0..4 die Opferbank aus a1/a2 und wechselt erst in Phase 5, NACH dem
+Loeschen der Opfer-Flags, auf +0x108/+0x17C @0x80104660-6c). RE2-PL0-Clip 3/4 hat im
+RE1.5-Rig kein belegtes Gegenstueck; der Port laesst dort seine eigene, byte-true
+cmd-2-Reaktion stehen und fuehrt nur Ruck und Blickdrehung. Das Ende der Maschine haengt
+im Original am Ablauf genau dieses Clips (`v1 = Phase + FUN_8002959C(...)` @0x801043d0-f8);
+im Port am Ablauf der Ersatzreaktion, mit dem Fixpunkt der Halbierung als Boden — die
+Halbierung laeuft wegen des arithmetischen Shifts auf +-1 und nie auf 0. Gemessen: 9
+Bilder je Ruck.
+
+### 7.2 Timer-Kante der Intro-Sender (§6.5 Punkt 2) — GEFIXT, mit einer Ueberraschung
+
+Die Vermutung des Dossiers stimmt fuer [T4]/[T5]/[T10], **aber nicht fuer [T1]** — dort
+erhoeht das Original tatsaechlich zuerst:
+
+| Zustand | Lesen | Erhoehen | Folge |
+|---|---|---|---|
+| [T1] | `lhu v0,344(s0)` @0x80101214 **vor** den Vergleichen 10/30/40/90 | `addiu v0,v0,1` @0x8010121c, Vergleich mit dem NEUEN Stand | Port war richtig |
+| [T4] | `lh v1,344(s0)` @0x801013a4 | erst @0x801013e8-f4 | Port feuerte ein Bild zu frueh |
+| [T5] | `lh v1,344(s0)` @0x80101430/58/7c/a4 | erst @0x801014c8-d4 | dito |
+| [T10] | `lh v1,344(s0)` @0x80101640/68/8c/b4 | erst @0x801016d8-e4 | dito |
+
+Zwei Befunde kamen dabei heraus, die im Dossier fehlten:
+
+1. **Der Boss schreibt seinen Armen nur das PHASENBYTE.** `sb v0,6(a2)` — [T1] Phase 1 an
+   die Arme 0/2/3 (@0x80101240/@0x80101268/@0x80101290) und Phase 6 an alle vier
+   (@0x801012b8-e0), [T4] **Phase 8 an alle vier** (@0x801013bc/c8/d4/e0). Kein ganzes
+   Routine-Wort: der Sub bleibt 8 und der Zeitgeber des Arms laeuft weiter. Der Port
+   schickte ein Wort (und nullte damit die Zaehler des Arms), und die vier
+   Phasenschreiber aus [T4] fehlten komplett. Neu: `re15_g5_tentakel_phase/_phase_alle`.
+2. **Der Arm hat nur EINEN Zaehler.** Phase 4, 5 und 6 des Austritts arbeiten alle auf
+   +0x158 (@0x80101e24/@0x80101e4c/@0x80101e74/@0x80101e94, Nullung in Phase 5
+   @0x80101e90, Erhoehung im gemeinsamen Schwanz @0x80101f9c). Der Port fuehrte zwei
+   Felder und nullte das falsche — unsichtbar, solange das Kommando-Wort beide nullte.
+   Nebenbefund: im Fenster von Phase 4 passiert bei Stand 5 NICHTS (`addiu v0,-6` /
+   `sltiu 0x1d` @0x80101e54-58); der Port schob dort.
+
+### 7.3 FUN_80034D0C (§6.5 Punkt 3) — Dreh-Zweig gebaut, Klemme beweisbar tot
+
+* **Vorzeichen-Dreh-Zweig portiert** (@0x80034ec4-0x80035044): zweiter Hoehentest gegen den
+  Positions-Spiegel des Ziels (`lh v0,70(s1)` = +0x46 plus `lh v1,20(s2)` = Segment+0x14,
+  fuer das einzige Spieler-Segment nie gesetzt), und pro Achse der Test, ob der Schieber
+  ZWISCHEN Spiegel und aktueller Position liegt (X @0x80034f18-5c, Z @0x80034fb0-f4); dann
+  `p = (+-2*r_a) - (-p)` (@0x80034f98-ac / @0x8003503c-44).
+* **Die 0x100000-Klemme kommt NICHT mit, und das ist kein Rest, sondern ein Befund:** sie
+  testet `param_1[0]`, also das Wort 0 des KIND-Entities. EM037 loescht das Bit dort beim
+  Sichtbarmachen (`lui v1,0xffef / ori 0xffff / and / sw` @0x80100444-5c auf
+  0x800CFE30[+0x218] = die Kind-Liste) und setzt es im ganzen Overlay nur ein einziges Mal,
+  naemlich auf dem ELTERN-Tentakel waehrend des Spiesses (@0x801035d4-dc, geloescht
+  @0x801038bc). Vollzensus ueber beide Overlays: das sind die einzigen drei Vorkommen der
+  Konstante 0x00100000 in EM037 und keines in EM036. Der Zweig laeuft in diesem Aufruf nie
+  — samt seiner Eigenheit, bei px > 100 statt px die Z-Achse auf 100 zu setzen
+  (`bgez a3 -> addiu a2,zero,100` @0x80035074-84).
+* OFFEN geblieben (benannt, nicht geraten): das Original vergleicht mit der POSITION des
+  Kind-Entities (`lw v1,56(s6)` @0x80034f1c, `lw v1,64(s6)` @0x80034fb4) — und 0x80104F64
+  schreibt dem Kind nur seine vier Segmente (@0x80104f9c-0x80105000), seine eigene Position
+  nie. Welchen Wert sie traegt, haengt am Allokator des Kindes. Der Port hat gar kein
+  Kind-Entity und nimmt den Ursprung des Arms.
+
+### 7.4 FUN_80017FDC (§6.5 / §5 Punkt 1) — Zielpunkt und Distanzgrenze aufgeloest
+
+* **Zielpunkt:** beide Seiten liefern die WELT-Translation ihres Parts +0x1C1: eigener Part
+  ueber `lbu a0,449(s1)` -> `parts + part*172 + 92` (@0x8010802c/@0x80018080-a4), Ziel ueber
+  `lw s3,436(s1)` (+0x1B4) und `lbu v1,449(s3)` -> dessen `parts + part*172 + 92`
+  (@0x80018030-7c). Fuer G5: eigener Part 1, Ziel = Spieler-Kopf (+0x1C1 = 8 @0x8003c268).
+* **Eine Distanzgrenze gibt es NICHT.** 0x8001820c rechnet den Abstand (`jal SquareRoot0`
+  @0x8001826c), benutzt ihn aber nur als Nenner der NEIGUNG (`div a0,s2` -> out+4); der Yaw
+  (out+2) entsteht allein aus dx/dz (@0x8001829c-0x800182e8), und der Aufrufer liest nur
+  out+2 (`sh v0,18(sp)`). Gegatet wird ausschliesslich ueber +0x1C0 Bit 0/Bit 1 und die
+  +-limit-Klemme.
+* Der Port peilt weiter den Spieler-URSPRUNG an (Leons Skelett ist engine-seitig nicht
+  posierbar). Der Fehler ist jetzt gemessen statt behauptet: `PL00.EMR` (selbst geparst)
+  gibt Bone 8 als direktes Kind der Wurzel mit rel = **(-98, -704, 0)** — 98 Einheiten
+  seitlich. Bei den in der Sonde gemessenen Kampfabstaenden (>= 5000) sind das <= 13 von
+  4096 Yaw-Einheiten gegen eine Klemme von +-212. Der alte Kommentar "<100 Einheiten" war
+  eine unbelegte Zahl.
+
+### 7.5 Normalen der Tentakel-Streckung (§6.5 Punkt 5) — Praemisse WIDERLEGT, Punkt zu
+
+`FUN_80019CD0` ist kein Vertex-Transformer, sondern der Zeichner, und er baut ZWEI
+Matrizen. Die Licht-Matrix entsteht VOR jeder Flag-Auswertung aus den globalen Bloecken
+(`FUN_8002ce94(0x8009db64, 0x8009db44, sp+48)` @0x80019d48-58) und wird von den Zweigen
+0x400/0x2000 nie angefasst — die gehen ausschliesslich auf sp+16. Die GTE bekommt die
+Skalierung deshalb nur in cop2c 0..7 (Rotation/Translation, `ctc2` aus sp+16
+@0x80019fdc-0x8001a018), waehrend die Lichtmatrix cop2c 8..12 unveraendert aus sp+48 kommt
+(`lw t4,0(s6)` / `ctc2` @0x8001a01c-40). **Das Original verzerrt die Normalen also nicht
+mit — der Port verhaelt sich schon byte-true.** Der irrefuehrende Kommentar in
+`re15_g5_skin.c` ist durch den Beleg ersetzt.
+
+### 7.6 Augen-UV im Zeichner (§6.5 Punkt 4) — als Port-Entscheidung dokumentiert
+
+Der Paket-Patch des Originals (`FUN_800171d0`/`FUN_800172f8`: `(char)delta` auf u und
+`(char)(delta>>16)` auf v der GT3/GT4-Offsets +0xC/+0x18/+0x24(/+0x30), Stride 0x50/0x68,
+dazu CLUT/TPage-Stempel) setzt residente Primitivpakete voraus. Der Port hat keine — er
+baut jedes Bild neu aus dem EMS, also fragt der Zeichner beim Zeichnen den STAND ab (die
+Summe aller Deltas ist genau `pos`, Start 0). Gleiches Bild, anderer Weg; ein Nachbau
+haette ohne Paketspeicher keinen Anker. Kosten: zwei Listen mit 11 bzw. 12 Eintraegen,
+lineare Suche je Primitiv von Mesh 2. Steht jetzt so im Code.
+
+### 7.7 Messwerte vorher/nachher (`probe_p3_birkin_rest`, ROOM5090, RNG 0x0badf00d)
+
+| Groesse | vorher (v0.8.5) | nachher |
+|---|---|---|
+| Boss-Zeitgeber beim Eintreffen des [T5]-Kommandos | 20 (ein Bild zu frueh) | **21** = Marke 20 + das nachgelagerte +1 |
+| dito [T10] | 20 | **21** |
+| dito [T4] (Phase 8) | Sender fehlte ganz | **31** |
+| [T1] (Gegenprobe, muss unveraendert bleiben) | 10 | **10** |
+| Arme, die [T4] aus der Warte-Phase holt | 0 von 4 | **4 von 4** |
+| Zitterphase des Austritts | Zaehler kam aus dem falschen Feld | **180 Bilder** (Stand 0..179 sichtbar) |
+| Opferbank des Tentakels | nicht benutzt | **victim_ok=1, 6 Clips** (EMD dir[5]/dir[6]) |
+| Griffe in 8000 Kampfbildern (6500 / 9000 oestlich) | 0 (nur Schaden) | **23 gestartet, 23 beendet**, laengster Lauf 9 Bilder |
+| Clipfolge Variante 2 / 3 / 4 | — | **2-0-1 (45 B.) / 4-3-1 (47 B.) / 5-3-1 (83 B.)** |
+| ctest (`re15_port/build_p3`) | 319/319 | **320/320** |
+
+### 7.8 Sichtpruefung (echte exe, FRAMEDUMP, Bilder in `phase3_birkin-rest/`)
+
+Rezept und Mess-Schiene: `phase3_birkin-rest/sicht_opfer.log`. Neu dafuer ist der
+env-gegatete Schalter `RE15_G5_OPFER=<0..4>` (Standard AUS, `enemy_ai_boss_g5.c`): er
+startet eine gewaehlte Griff-Opfermaschine 120 Bilder nach dem Kampfstart — im echten
+Spiel wuerfelt der Boss seine Angriffe selbst, Peitsche und Spiess sind also nicht auf
+Zuruf zu bekommen (die Zug-Variante dagegen kommt von allein, s. die 23 Griffe oben).
+
+* `sicht_opfer_var3_F246/F260/F288.png` — Spiess: Leon klappt vornueber (Opferclip 4),
+  geht in die Knie (Clip 3), steht am Ende wieder (Clip 1 ausgelaufen).
+* `sicht_opfer_var2_F252.png` — Peitsche aus Distanz: beide Arme fliegen heraus (Clip 2).
+* `sicht_opfer_var4_F258.png` — Spiess in den schon Gehaltenen: Leon liegt quer, das Blut
+  des Treffers ist im Bild (FX auf den Opferbildern 3 und 11, @0x80104a40-6c).
+* `sicht_tentakel_gestreckt_F1550/F1580.png` — zwei voll ausgefahrene Arme queren das Bild
+  an Leon vorbei, ueber die ganze gestreckte Laenge gleichmaessig beleuchtet (der Beleg zu
+  7.5 am Bild).
+
+An der Stelle dieser Opferbilder stand Leon vorher unveraendert in seiner Standpose.
+
+### 7.9 Offen (ehrlich)
+
+1. Die **Zug-Varianten 0/1** spielen weiter die Ersatzreaktion des Ports statt RE2-PL0-Clip
+   3/4 (§7.1). Zu schliessen waere das nur, indem man Leons RE2-Bank mit der RE1.5-Bank
+   Clip fuer Clip abgleicht — das ist eine eigene Arbeit und gehoert nicht in dieses Thema.
+2. Der **Zielpunkt des Kopf-Trackings** bleibt der Spieler-Ursprung statt seines
+   Kopf-Parts; der Fehler ist mit 98 Einheiten bzw. <= 13 Yaw-Einheiten gemessen (§7.4).
+   Fuer mehr braeuchte die Engine eine posierbare Spielerskelett-Abfrage.
+3. Die **Position des Kind-Entities** in FUN_80034D0C ist nicht aufgeloest (§7.3).
+4. Das Gate `PL+0x110 & 1` in der Variante-2-Maschine (`lw v0,272(s1)` @0x8010454c) hat im
+   Port kein Feld; der Uebergang haengt dort allein am Zaehler +0x16A.
+5. Wie in §6.5: **kein Parity-Vergleich gegen einen DuckStation-Savestate**. Alle Zahlen
+   sind gegen die disassemblierten RE2-Bytes und gegen die eigene Sonde geprueft.

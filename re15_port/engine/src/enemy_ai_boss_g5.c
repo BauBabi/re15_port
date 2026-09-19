@@ -108,6 +108,9 @@ extern void    re15_g5_tentakel_cmd(int idx, uint32_t wort);
 extern void    re15_g5_tentakel_broadcast(uint32_t wort);
 extern void    re15_g5_tentakel_phase(int idx, unsigned ph);
 extern void    re15_g5_tentakel_phase_alle(unsigned ph);
+extern int     re15_g5_opfer_variante(void);
+extern int     re15_g5_opfer_phase(void);
+extern void    re15_g5_opfer_start(re15_actor_t *pl, int variante);
 extern void    re15_g5_tentakel_spawn(const re15_actor_t *g5);
 extern void    re15_g5_tentakel_tick(const re15_actor_t *g5);
 extern void    re15_g5_tentakel_reset(void);
@@ -1141,7 +1144,42 @@ void re15_g5_boss_tick(int slot)
     g5_augen_und_kopf(e, pl);       /* Augen-Ziele/Wanderer + Kopf-Tracking (s.u.) */
     re15_g5_tentakel_tick(e);       /* die vier Arme haengen an der Blob-Matrix */
 
+    /* SICHTPRUEFUNGS-SCHALTER (env-gegated, Standard AUS): RE15_G5_OPFER=<0..4> startet die
+     * Griff-Opfermaschine dieser Variante EINMAL, sobald der Kampf laeuft. Im echten Spiel
+     * entscheidet der Boss selbst, welchen Angriff er wuerfelt — die Peitschen-/Spiess-
+     * Varianten 2/3/4 sind deshalb nicht auf Zuruf zu sehen. Fuer die Abnahme am Bild
+     * (analysis/befunde_2026-09-19/phase3_birkin-rest) braucht es genau das. */
+    {   static int opf_env = -2, opf_getan = 0;
+        if (opf_env == -2) { const char *s = getenv("RE15_G5_OPFER"); opf_env = s ? atoi(s) : -1; }
+        if (opf_env >= 0 && opf_env <= 4 && !opf_getan && g->gestartet) {
+            static int warte = 120;
+            if (--warte <= 0) { re15_g5_opfer_start(pl, opf_env); opf_getan = 1; }
+        }
+    }
+
     /* Mess-Schiene (env-gegated, birkin_dbg.log wie gehabt). */
+    if (getenv("RE15_BIRKIN_DBG")) {
+        /* GRIFF-OPFERMASCHINE (Spieler-Routine 5): jede Flanke mitschreiben — nur so ist
+         * im Bilderstrom zu finden, WANN ein Arm Leon haelt. */
+        static int letzte_var = -2, letzte_ph = -2;
+        int var = re15_g5_opfer_variante();
+        if (var != letzte_var || (var >= 0 && re15_g5_opfer_phase() != letzte_ph)) {
+            letzte_ph = re15_g5_opfer_phase();
+            FILE *bf = fopen("birkin_dbg.log", "a");
+            if (bf) {
+                re15_enemy_bank_t *vb = re15_enemy_find(0x37u);
+                fprintf(bf, "opfer var=%d ph=%d clip=%d af=%u plpos=(%d,%d) hp=%d"
+                            " vstate=%d vtyp=%02X bank(ok=%d clips=%d)\n",
+                        var, re15_g5_opfer_phase(), (int)pl->motion,
+                        (unsigned)pl->anim_frame, (int)pl->x, (int)pl->z, (int)pl->hp,
+                        re15_player_victim_state(), (unsigned)re15_player_victim_type(),
+                        vb ? (int)vb->victim_ok : -1,
+                        (vb && vb->victim_ok) ? vb->anim_victim.clip_count : -1);
+                fclose(bf);
+            }
+            letzte_var = var;
+        }
+    }
     if (getenv("RE15_BIRKIN_DBG")) {
         static unsigned n = 0;
         if ((n++ % 15u) == 0u) {
