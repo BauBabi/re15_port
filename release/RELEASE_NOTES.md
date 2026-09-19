@@ -1,3 +1,118 @@
+# v0.8.6 - 2026-09-20
+
+Die offenen Punkte aus v0.8.5, auf Zuruf des Nutzers: *"gehe die offenen Punkte an, bei den
+offenen pri findings sei kreativ, das es gut aussieht. Ausserdem beim apk, splitte es
+ebenfalls in mehrere Teile, das du es ins repo laden kannst."*
+
+## Der Alligator hat Leon jetzt wirklich ganz im Maul
+
+In v0.8.5 sass Leons Wurzel an der richtigen Stelle, aber er wurde in voller Groesse
+gezeichnet, waehrend der Alligator auf zwei Drittel verkleinert ist — Rumpf und Beine lagen
+quer ueber der Schnauze. Der Spieler-Zeichner ehrt jetzt waehrend der Fress-Phase denselben
+Verkleinerungs-Mechanismus, den der Gegner-Zeichner immer schon hatte.
+
+Gemessen im gator-lokalen Rahmen: von Leons 776 Modellpunkten liegen jetzt **alle 776** im
+Maulraum statt 620 — genau der Wert, den das Original erreicht, wenn beide in Originalgroesse
+stehen. Am Bild aus dem laufenden Spiel liegt er zwischen Ober- und Unterkiefer hinter den
+Zaehnen.
+
+## Zwei Untersuchungen, die bewusst nichts geaendert haben
+
+**Die "byte-naehere" Biss-Animation des Alligators bleibt draussen.** Naheliegend waere
+gewesen, den kurzen Zuschnapp durch die lange Original-Clipfolge zu ersetzen. Gemessen ueber
+72 Kampfverlaeufe: die Zeit vom Anlauf bis zum Treffer stiege von 8 auf 133 Bilder, und die
+Totzeit, in der der Alligator mit offenem Maul am Ziel steht, ohne dass das Trefferfenster
+offen ist, von 0 auf durchschnittlich 119 Bilder. Der Kampf wuerde spuerbar zaeher, ohne
+besser auszusehen. Der Messweg bleibt als Schalter im Code, ausgeliefert wird der bisherige.
+
+**Der Lauer-Zustand der Spinne startet gar keinen Angriff.** Die Annahme, dort fehle der
+Angriffs-Laut, war falsch: der Zustand dreht die Spinne nur und meldet zurueck. Der Angriff
+beginnt erst ab rund 1200 Einheiten Abstand — darunter passiert nichts, darueber kommen Biss
+und Laut zuverlaessig. Gemessen ueber neun Abstaende.
+
+## Kleinere Original-Treue nachgezogen
+
+- Messer und die uebrigen Schusswaffen laufen jetzt ebenfalls ueber die Teile-Maske; die
+  Geometrie-Daten aller Waffen wurden aus dem Original gedumpt statt nur der ersten.
+- Die Lebenspunkte frisch gespawnter Kriecher werden wie im Original halbiert.
+- Ein Zombie, den das Raumskript aufweckt, ist waehrend des Aufstehens wieder gesperrt — der
+  Port hatte ihn einen Moment zu frueh freigegeben.
+- Befund am Rande: zwei Gegner-Deskriptoren, die bisher als Liegende gefuehrt wurden, gehoeren
+  in Wahrheit zur Fresser-Familie.
+
+## Vordergrund-Masken: alle offenen Cuts gebaut — und ein Fehler von mir aufgeklaert
+
+In v0.8.5 waren vier Cuts NICHT geschrieben worden, weil sie die Abnahme nicht bestanden.
+Jetzt sind es **null**; 77 Cuts sind gebaut. Kein einziger begehbarer Platz VOR einem
+Gegenstand wird mehr verdeckt (vorher einer ganz und zwei teilweise), und hinter den
+Gegenstaenden bleiben nur noch 713 von 76015 Plaetzen unverdeckt statt 928.
+
+- **ROOM10E0 Cut 7** passte angeblich nicht ins Texturblatt. Es lag nicht an der Flaeche
+  (die belegt nur 78 %), sondern am Packverfahren: das alte legte Streifen regalweise ab
+  und wies sechs Kaesten ab. Mit einem Verfahren, das Luecken wiederverwendet, passt der
+  Cut bei feiner Tiefenstufung statt grober.
+- **ROOM10D0 Cut 1** (Ihre Marke F423) scheiterte an einer einzigen Bildspalte am oberen
+  Rand des Klapptischs, deren Sehstrahl den Boden erst 13,5 Meter hinter dem Tisch trifft.
+  Diese Spalte erbt ihre Tiefe jetzt von den Nachbarn, und die Freistellung ist in
+  Tischplatte und Gestell mit eigenen Tiefen zerlegt. Im Spiel nachgesehen: vor dem Tisch
+  steht Leon vollstaendig da, dahinter ist er weg.
+- **ROOM10A0 Cut 2** fiel an einem Platz durch, der 9 bis 63 Einheiten von der Standlinie
+  entfernt liegt. Die Schranke mass feiner, als der Zeichner ueberhaupt aufloesen kann:
+  eine Tiefenstufe des Originals ist 64 Einheiten breit. Mit dieser Toleranz gemessen,
+  bleibt kein Fall uebrig.
+
+**Und der Punkt, den ich Ihnen als Frage gestellt hatte, war mein Fehler.** Ich hatte
+gefragt, ob drei Freistellungen im vierfachen Massstab so gemeint waren, weil sie nur zu
+85 bis 93 Prozent passten. Sie sind nicht vergroessert — **neun Ihrer Freistellungen lagen
+schlicht am falschen Kamerawinkel.** Bei einfachem Massstab und richtigem Cut stimmen sie
+zu 100,0 Prozent: `1000/01_*` gehoert zu Cut 0, `1000/03_*` zu Cut 2, `11F0/01` zu Cut 0.
+Das alte Zuordnungsmass war selbstbestaetigend — es belohnte kleinere Objekte, weil die
+ueberall gut passen. Gegen ein Zufallsmodell geprueft hat eine richtig sitzende
+Freistellung genau EINE gute Lage, die falsch verkleinerten hatten hunderte. Alle 131
+STAGE1-Objekte sind jetzt gegen dieses Mass geprueft.
+
+*Zwei Winkel haben dadurch derzeit gar keine Maske:* ROOM1000 Cut 3 und ROOM11F0 Cut 1.
+Ihre bisherigen Sektionen waren aus den falsch verorteten Freistellungen gebaut. Beide
+Winkel haetten einen echten Vordergrund-Gegenstand (Schaltschraenke bzw. die rechte
+Kabinenwand des Waschraums) — dafuer braeuchte es je eine Freistellung.
+
+*Ebenfalls offen:* in ROOM1000 Cut 4 und ROOM10A0 Cut 5 liegt das Tiefenmodell systematisch
+zu fern, dort bleibt hinter dem Gegenstand mehr sichtbar als gewollt. Und ROOM10F0 Cut 4/5
+decken hinten schlecht ab, weil ihre Silhouetten noch aus meinen eigenen Quadern bestehen
+statt aus Freistellungen.
+
+## Birkin: der Tentakel packt Leon jetzt wirklich
+
+Bisher zog der Tentakel Leon heran, ohne dass an ihm etwas passierte — die Griffe kosteten
+nur Leben. Der Grund: die Opferanimationen haengen in Resident Evil 2 nicht am Gegner,
+sondern am Spieler, und diese Kette war im Port nicht nachgebaut. Sie ist jetzt
+reverse-engineert: der Tentakel meldet sich beim Zupacken selbst als Besitzer der
+Spieler-Routine an, und je nach Angriff laufen vier verschiedene Opfermaschinen ab. Bei der
+Peitsche aus der Distanz reisst es Leon die Arme hoch, beim Spiess klappt er vornueber und
+geht in die Knie, und wer schon festgehalten wird und einen zweiten Spiess abbekommt, liegt
+quer im Gang. Die Animationen bringt das Tentakelmodell selbst mit.
+
+Dazu drei kleinere Korrekturen: die Zeitgeber der Auftritts-Kommandos werden wieder gelesen,
+bevor sie hochzaehlen (die Sender feuerten ein Bild zu frueh), der Vorzeichen-Dreh-Zweig der
+Tentakel-Kollision ist nachgezogen, und die Kopf-Peilung ist vollstaendig aufgeloest — sie
+hat keine Distanzgrenze.
+
+**Zwei vermutete Fehler waren keine.** Die Behauptung, das Original verzerre die Normalen
+der gestreckten Tentakel mit, ist widerlegt: die betreffende Routine ist der Zeichner, und
+die Lichtmatrix entsteht dort vor jeder Streckung. Und eine Klemme in der Kollision, die ich
+nachziehen wollte, ist in diesem Aufruf beweisbar unerreichbar.
+
+## Android-Paket liegt jetzt im Repository
+
+Die APK faellt als eine Datei ueber GitHubs Dateigrenze. Sie wird deshalb mit derselben
+Volume-Groesse wie die Windows- und Linux-Pakete in einen Split-Satz geschnuert
+(`..._android.z01` und `..._android.zip`, zusammen 167 statt 358 MB). Zusammensetzen wie
+gewohnt mit `zip -s 0 ..._android.zip --out joined.zip`, dann `unzip joined.zip`; die
+Anleitung steht in `re15_port/platform/android/README.md`.
+
+Geprueft und nicht nur behauptet: die aus den Teilen wiederhergestellte APK ist bytegleich
+mit der gebauten (Pruefsumme identisch).
+
 # v0.8.5 - 2026-09-19
 
 Zwoelf Rueckmeldungen aus einem Durchlauf mit v0.8.4. Jede davon hat ein eigenes
