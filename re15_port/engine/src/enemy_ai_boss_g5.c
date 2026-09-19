@@ -738,6 +738,14 @@ static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
     re15_g5_bone_add_set(s_g5_slot, 1, g->head_delta, 0);   /* part1+0x6A += delta @0x80100354 */
 }
 
+/* Der Boss hat sich selbst platziert und laeuft sein Intro: solange darf das RE1.5-Skript
+ * seine Position nicht mehr anfassen (s. den Block an der Armierung; Leser: scd_vm.c
+ * op_pos_set). 0 = das Skript gilt wie ueberall sonst. */
+int re15_g5_boss_intro_haelt_position(int slot)
+{
+    return (s_g5_slot == slot && s_g5.aktiv && s_g5.gestartet && s_g5.sub == 2);
+}
+
 /* Diagnose (Sonden): Kopf-Tracking-Stand. */
 int16_t re15_g5_head_delta(void) { return s_g5.head_delta; }
 int     re15_g5_track_akku(void) { return (int)s_g5.track.akku; }

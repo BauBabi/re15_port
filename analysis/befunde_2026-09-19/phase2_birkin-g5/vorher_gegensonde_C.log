@@ -1,0 +1,34 @@
+﻿.\probe_r16_sk_birkin_g5.exe : [scd] thread start slot=0 first_op=0x3B
+In Zeile:1 Zeichen:547
++ ... e.log 2>&1; .\probe_r16_sk_birkin_g5.exe C > ..\..\..\..\analysis\bef ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([scd] thread start slot=0 first_op=0x3B:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(15)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(300,-23400) flag=32) walk_active=1
+[scd F0] Cut_chg(12)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+=== R16 SKEPTIKER birkin-g5: Modus C x0=0 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+-- C) 3000 Bilder, Spieler |dx|=6500 oestlich, HP je Bild zurueck; je Treffer alle Arme --
+   TREFFER f 519 hp=85 boss clip 0 x=24178 | arm0 c0 af0 s1 spitze-d=26925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=27593 arm2 c0 af0 s1 spitze-d=26200 anker-x=4627 arm3 c0 af0 s1920 spitze-d=22875 anker-x=4013
+   TREFFER f1628 hp=85 boss clip 0 x=36196 | arm0 c0 af0 s1 spitze-d=38925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=39611 arm2 c0 af0 s1 spitze-d=38175 anker-x=4627 arm3 c0 af0 s1 spitze-d=38750 anker-x=4013
+   TREFFER f2756 hp=85 boss clip 0 x=48214 | arm0 c0 af0 s1 spitze-d=50925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=51629 arm2 c21 af60 s3840 spitze-d=42425 anker-x=4627 arm3 c23 af16 s3328 spitze-d=44050 anker-x=4013
+   TREFFER f2852 hp=85 boss clip 0 x=48214 | arm0 c0 af0 s1 spitze-d=50925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=51629 arm2 c0 af0 s1920 spitze-d=46300 anker-x=4627 arm3 c23 af16 s3328 spitze-d=44050 anker-x=4013
+ERGEBNIS C: Treffer=4, davon Arm1 in c21=4, mit irgendeiner Spitze <1500=4; pending ab Bild -1

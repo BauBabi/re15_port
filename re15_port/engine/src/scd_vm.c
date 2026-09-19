@@ -2002,6 +2002,24 @@ static int op_pos_set(scd_thread_t *t)
     int16_t z = scd_read_le_s16(&t->pc[6]);
     int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
     if (ws >= 0 && ws < RE15_ACTOR_MAX) {
+        /* G5-ENDKAMPF (Phase 2, analysis/befunde_2026-09-19/birkin-g5.md 4.1.1): ROOM5090
+         * sub04 @0x12FE setzt `32 00 b0 04 00 00 ca a4` = Pos_set(1200,0,-23350). Dieser
+         * Wert gehoert dem RE1.5-HUMANOIDEN 0x30 (sub00 @0x124A spawnt Typ 0x30) und
+         * dessen Nahaufnahme Cut 15 (RID: Kamera bei x=46, 1,2 m hinter dem Punkt). Der
+         * Port setzt dort die RE2-MASSE 0x36 ein, und die platziert sich in RE2 beim
+         * Armieren SELBST - [T0] `addiu v0,zero,-9000 / sw v0,56(s0)` @0x801011d0 und
+         * `addiu v0,zero,-23400 / sw v0,64(s0)` @0x801011d8 (RE2 room7040 kennt ueberhaupt
+         * kein Pos_set fuer G5, sub00 @0x11AC parkt ihn auf -32000).
+         * GEMESSEN (echte exe, RE15_BIRKIN_DBG, ROOM5090): das Skript-Pos_set landet
+         * 45 Modul-Ticks NACH der Armierung und warf die Selbstplatzierung wieder weg
+         * (pos (-9000,-23400) -> (1200,-23350)) - die 7,3-m-Masse stand damit wieder
+         * mitten im Bild statt im Zug-Rechteck. Nur waehrend des Intros (sub 2); danach
+         * gilt das Skript wieder wie fuer jeden anderen Aktor. */
+        extern int re15_g5_boss_intro_haelt_position(int slot);
+        if (g_actors[ws].type == 0x36u && re15_g5_boss_intro_haelt_position((int)ws)) {
+            t->pc += 8;
+            return 1;
+        }
         g_actors[ws].x = (int32_t)x;
         g_actors[ws].y = (int32_t)y;
         g_actors[ws].z = (int32_t)z;

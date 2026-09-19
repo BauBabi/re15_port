@@ -6004,6 +6004,18 @@ re_title:;
                                         break;
                                     }
                             }
+                            /* MESS-HARNESS: RE15_PLAYER_POS gilt auch fuer den Sprung-Spawn.
+                             * Die DEBUG.BIN-Tabelle setzt je Raum EINEN festen Punkt (ROOM5090:
+                             * 300/5000) - fuer einen Sichtlauf im Kampfgang (z -23350) ist das
+                             * der falsche Korridor. Ohne das hier wirkte der Teleport aus
+                             * main.c:3626 nur beim Boot und wurde vom Sprung ueberschrieben. */
+                            {   const char *ppj = getenv("RE15_PLAYER_POS");
+                                int ppx = 0, ppz = 0, pprot = 0;
+                                if (ppj && *ppj && sscanf(ppj, "%d,%d,%d", &ppx, &ppz, &pprot) >= 2) {
+                                    dx = ppx; dz = ppz; dyaw = (int16_t)pprot;
+                                    fprintf(stderr, "[parity] JUMP-Spawn ersetzt durch "
+                                                    "RE15_PLAYER_POS (%d,%d) rot=%d\n", ppx, ppz, pprot);
+                                } }
                             re15_room_request_change(droom, dx, dy, dz, dyaw, dcut);
                             fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X) spawn=(%d,%d,%d) cut=%d\n",
                                     dm->load_room, re15_debug_menu_room_name(), droom,
