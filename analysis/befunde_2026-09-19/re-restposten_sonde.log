@@ -1,0 +1,67 @@
+RE2-Bank EM010: geladen
+
+=== [A] MESSER (RE2-Id 1) durch den Applier ===
+  Zombie STEHEND: st=1/1 Maske=3 rad9a=500
+  STEHEND  EBEN Bild  6 (Schritt 0): d 400:Rumpf d 900:Rumpf d1400:Rumpf d2000:Rumpf d2600:---- d3400:----
+  STEHEND  EBEN Bild  7 (Schritt 1): d 400:---- d 900:Rumpf d1400:Rumpf d2000:Rumpf d2600:Rumpf d3400:----
+  STEHEND  EBEN Bild  8 (Schritt 2): d 400:---- d 900:---- d1400:Rumpf d2000:Rumpf d2600:Rumpf d3400:----
+  STEHEND  EBEN Bild  9 (Schritt 3): d 400:---- d 900:---- d1400:Rumpf d2000:Rumpf d2600:Rumpf d3400:Rumpf
+  STEHEND  EBEN Bild 10 (Schritt 4): d 400:---- d 900:---- d1400:Rumpf d2000:Rumpf d2600:Rumpf d3400:----
+  STEHEND  EBEN Bild 11 (Schritt 0): d 400:Rumpf d 900:Rumpf d1400:Rumpf d2000:Rumpf d2600:---- d3400:----
+  STEHEND  TIEF Bild  6 (Schritt 0): d 400:Rumpf d 900:Rumpf d1400:Rumpf d2000:---- d2600:---- d3400:----
+  STEHEND  TIEF Bild  7 (Schritt 1): d 400:---- d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  STEHEND  TIEF Bild  8 (Schritt 2): d 400:Bein d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  STEHEND  TIEF Bild  9 (Schritt 3): d 400:---- d 900:---- d1400:Bein d2000:Bein d2600:Bein d3400:----
+  STEHEND  TIEF Bild 10 (Schritt 4): d 400:---- d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  STEHEND  TIEF Bild 11 (Schritt 0): d 400:Rumpf d 900:Rumpf d1400:Rumpf d2000:---- d2600:---- d3400:----
+  ok:   STEHEND: EBEN trifft (Maske 3 & Zeile 3 Satz2 `02 00 00`)
+  Zombie KRIECHER: Maske=1 rad9a=200
+  KRIECHER EBEN Bild  6 (Schritt 0): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER EBEN Bild  7 (Schritt 1): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER EBEN Bild  8 (Schritt 2): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER EBEN Bild  9 (Schritt 3): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER EBEN Bild 10 (Schritt 4): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER EBEN Bild 11 (Schritt 0): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER TIEF Bild  6 (Schritt 0): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  KRIECHER TIEF Bild  7 (Schritt 1): d 400:---- d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  KRIECHER TIEF Bild  8 (Schritt 2): d 400:Bein d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  KRIECHER TIEF Bild  9 (Schritt 3): d 400:---- d 900:---- d1400:Bein d2000:Bein d2600:Bein d3400:----
+  KRIECHER TIEF Bild 10 (Schritt 4): d 400:---- d 900:Bein d1400:Bein d2000:Bein d2600:---- d3400:----
+  KRIECHER TIEF Bild 11 (Schritt 0): d 400:---- d 900:---- d1400:---- d2000:---- d2600:---- d3400:----
+  ok:   KRIECHER: EBEN trifft in KEINEM Schlag-Bild (Zeile 3 Satz 2 `02 00 00` & Maske 1 = 0)
+  ok:   KRIECHER: TIEF trifft (Zeile 6 `01 02 04`, Beine zuerst)
+  ok:   KRIECHER: TIEF stempelt Zone 0 (Beine)
+
+=== [B] HP-Halbierung des Kriecher-INIT (@0x80100B3C-5C) ===
+  Deskriptor 0x85 -> hp 101 ; Deskriptor 0x81 (Kriecher) -> hp 50
+  ok:   Kriecher-INIT halbiert die HP (`sra v0,v0,1 / sh v0,342` @0x80100B58-5C)
+
+=== [D] Deskriptoren 0x84 / 0x85 (Fresser-Familie) ===
+  0x84 -> st=1 sub=8/0 f10e=4004 clip=18
+  0x85 -> st=1 sub=8/0 f10e=4004 clip=18
+  0x86 -> st=1 sub=8/0 f10e=4004 clip=18
+  ok:   0x84 und 0x85 landen im selben Executor wie 0x86 (Tabellenpaare identisch in allen fuenf Overlays, s. Dateikopf)
+
+=== [C] Treffbarkeit erst am Pose-Ausgang (Skript-Bump 0x88 -> 0x89) ===
+  liegend: st=1/7/1 1d3=80 10e=4002 +93=01
+  ok:   0x88 liegend: gesperrt (+0x1D3 |= 0x80 @0x80103804-14)
+    f0   st=1/7/2 grid=89 10e=0002 1d3=80 +93=01 clip=22 fr=0
+    f1   st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=5
+    f2   st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=6
+    f3   st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=7
+    f4   st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=8
+    f5   st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=9
+    f40  st=1/7/3 grid=89 10e=0002 1d3=80 +93=01 clip=9 fr=44
+    f80  st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=28
+    f120 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=3
+    f160 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=43
+    f200 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=18
+    f240 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=58
+    f280 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=33
+    f320 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=8
+    f360 st=1/1/1 grid=00 10e=0002 1d3=00 +93=00 clip=0 fr=48
+  nach dem Bump: frei ab Bild 76 ; Pose verlassen ab Bild 76 ; Ende st=1/1 1d3=00
+  ok:   Der Gebumpte ist NICHT schon im Bump-Bild treffbar
+  ok:   Freigabe erst mit dem Pose-Ausgang (EXEC[7] P4 `andi 0x7f` @0x80103914-18)
+
+probe_p3_restposten: 0 FAIL
