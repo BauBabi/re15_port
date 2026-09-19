@@ -446,8 +446,16 @@ static void gb_opfer_skalieren(const re15_actor_t *e, re15_actor_t *pl,
     if (kf >= 0) re15_emd_get_keyframe_position(&b->skel_victim, kf, &px, &py, &pz);
     pl->x = e->x + (int32_t)(((int64_t)(pl->x - e->x) * s) >> 12);
     pl->z = e->z + (int32_t)(((int64_t)(pl->z - e->z) * s) >> 12);
-    pl->y = e->y + (int32_t)(((int64_t)(pl->y - e->y) * s) >> 12)
-                 - (int32_t)(((int64_t)py * (4096 - s)) >> 12);
+    pl->y = e->y + (int32_t)(((int64_t)(pl->y - e->y) * s) >> 12);
+    /* POSy-AUSGLEICH nur noch, wenn Leon UNGESKALIERT gezeichnet wird. Er stand hier,
+     * weil der Renderer den Wurzel-POSE-Kanal 1x addiert, waehrend der Sitz s*POSy
+     * verlangt. Traegt Leon denselben Render-Scale wie der Gator (Phase 3, s.u.),
+     * skaliert der Renderer POSy selbst mit — dann ist der Ausgleich falsch.
+     * GEMESSEN (probe_p3_gator_maul): mit Scale+ohne Ausgleich trifft Leons
+     * Koerper-AABB im gator-lokalen Rahmen die Original-Relation auf +-2 Einheiten
+     * (P3 Laenge 2609 vs. Original 2609, 776/776 Vertices im Maulraum). */
+    if (!pl->render_scale_q12)
+        pl->y -= (int32_t)(((int64_t)py * (4096 - s)) >> 12);
 }
 
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
@@ -1127,6 +1135,8 @@ void re15_gator_boss_tick(int slot)
                                                * wieder sichtbar machen! */
         pl->no_draw = 0; g->gefressen = 0;
         pl->fress_skip_mask = 0; pl->rot_x = 0;
+        pl->render_scale_q12 = 0;             /* Maul-Massstab (P0) abraeumen, falls der
+                                               * Continue mitten im Fressen greift */
     }
     if (pl->hp < 0 && g->phase != GBP_DIE && g->phase != GBP_DEAD
         && g->phase != GBP_OFF && g->phase != GBP_FRESSEN) {
@@ -1995,6 +2005,28 @@ void re15_gator_boss_tick(int slot)
             int32_t vx = (int32_t)(((int64_t)10643 * s0) >> 12);
             pl->fress_skip_mask = 0;                   /* Halbkoerper-Trick entfaellt */
             pl->no_draw = 0;
+            /* ⛔ LEON IM MASSSTAB DES MAULS (Phase 3; Nutzer-Punkt "Rumpf und Beine ragen
+             * aus dem verkleinerten Maul"). Das ist eine DESIGN-Folge der Scale-
+             * Entscheidung GB_SCALE_Q12 (2731, Nutzer 2026-09-10, ohne @0x) — NICHT ein
+             * Original-Wert: RE2 zeichnet Gator UND Opfer 1x, dort stellt sich die Frage
+             * nicht. Der Mechanismus ist aber der byte-true Entity-Render-Scale (+0x166,
+             * Gate-Flag 0x800, ScaleMatrix VOR der Bone-Schleife @0x8001e904-40) —
+             * derselbe, mit dem der Gator gezeichnet wird; der Spieler-Zeichner ehrt ihn
+             * seit Phase 3 genauso (platform/pc/main.c, Spieler-Zweig).
+             * GEOMETRIE (exakt, keine Schaetzung): der Sitz ist bereits
+             * G + s*RotY*(off_v - off_g) (gb_opfer_skalieren). Skaliert man Leons Rig
+             * zusaetzlich um s, wird aus jedem Koerperpunkt p
+             *     G + s*RotY*((off_v-off_g) + p_rig)
+             * also die authored 1x-Relation, einmal uniform um G verkleinert.
+             * GEMESSEN (probe_p3_gator_maul, gator-lokaler Rahmen): P3-Kau-Loop
+             * Leon-Laenge 3915 -> 2609 (Original 2609), Hoehe 2880 -> 1921 (1920),
+             * Vertices im Maulraum 620/776 = 79,9 % -> 776/776 = 100,0 % (Original
+             * 776/776); P2 sf=0 73,5 % -> 76,0 % (Original 76,0 %).
+             * EIN-/AUSBLENDEN: ohne Rampe, weil BEIDE Raender ohnehin harte Schnitte
+             * sind — P0 ist ein Teleport (Leon springt an dieselbe Stelle) und das Ende
+             * der Fress-Phase faellt mit dem Tod/Phasenwechsel zusammen. Eine Rampe
+             * haette eine erfundene Bilderzahl gebraucht. */
+            pl->render_scale_q12 = e->render_scale_q12;
             pl->x = e->x + (int32_t)(((int64_t)fc0 * vx + (int64_t)fs0 * (-915)) >> 12);
             pl->z = e->z + (int32_t)((-(int64_t)fs0 * vx + (int64_t)fc0 * (-915)) >> 12);
             pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
@@ -2108,6 +2140,7 @@ void re15_gator_boss_tick(int slot)
             }
         } else {
             re15_player_victim_force_end();
+            pl->render_scale_q12 = 0;                  /* Maul-Massstab wieder ab (s. P0) */
             g->pitch_vz = 0; g->jaw_vz = 0;
             g->phase = GBP_CHASE;                      /* der pl->hp<0-Abzug uebernimmt */
             e->motion = 0; e->anim_frame = 0;
