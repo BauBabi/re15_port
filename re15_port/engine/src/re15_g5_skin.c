@@ -167,9 +167,17 @@ int re15_g5_tentakel_skin_mesh0(const re15_skel_pose_t poses[], int npose,
     skin_apply(&s_g5_tent_skin_tabs[0], &poses[0], &poses[1], m0, nv, nn);
     skin_apply(&s_g5_tent_skin_tabs[1], &poses[1], &poses[2], m0, nv, nn);
     skin_apply(&s_g5_tent_skin_tabs[2], &poses[2], &poses[3], m0, nv, nn);
-    /* Dann FUN_80019CD0 (@0x80104d44): Streckung um den Part-0-Rahmen (nur Vertices —
-     * die Normalen stehen im Original hinter derselben Matrix, S ist fuer sie eine
-     * Verzerrung, die der Zeichner nicht nachnormalisiert; hier unveraendert). */
+    /* Dann FUN_80019CD0 (@0x80104d44): Streckung um den Part-0-Rahmen — NUR die Vertices.
+     * ⛔ AUFGEKLAERT (Runde 16 Nacharbeit; die alte Notiz "im Original verzerrt die
+     * Streckung die Normalen mit" war FALSCH): FUN_80019CD0 ist kein Vertex-Transformer,
+     * sondern der ZEICHNER. Er baut ZWEI Matrizen. Die Licht-Matrix entsteht VOR jeder
+     * Flag-Auswertung aus den globalen Bloecken (`FUN_8002ce94(0x8009db64, 0x8009db44,
+     * sp+48)` @0x80019d48-58) und wird von den Zweigen 0x400/0x2000 nie angefasst — sie
+     * gehen ausschliesslich auf sp+16. Die GTE bekommt die Skalierung folglich nur in
+     * cop2c 0..7 (Rotation/Translation, `ctc2` aus sp+16 @0x80019fdc-0x8001a018), waehrend
+     * die Lichtmatrix cop2c 8..12 unveraendert aus sp+48 kommt (`lw t4,0(s6)` / `ctc2`
+     * @0x8001a01c-40). Die Normalen der gestreckten Arme sind im Original also GENAUSO
+     * unverzerrt wie hier — kein Nachbau noetig, keine offene Luecke. */
     if (scale_x_q12 != 0x1000) {
         for (v = 0; v < nv; v++) {
             int32_t p[3] = { s_skin_v[v].x, s_skin_v[v].y, s_skin_v[v].z };
@@ -248,6 +256,15 @@ void re15_g5_eye_tick(int idx)
      * liest den Stand ueber re15_g5_eye_uv_offset. */
 }
 
+/* PORT-ENTSCHEIDUNG (bewusst, nicht "noch offen"): das Original patcht den UV-Versatz
+ * AKKUMULIEREND in die schon gebauten GT3/GT4-Pakete des Doppelpuffers
+ * (FUN_800171d0/FUN_800172f8: `(char)delta` auf u, `(char)(delta>>16)` auf v der Offsets
+ * +0xC/+0x18/+0x24(/+0x30), Stride 0x50/0x68, dazu CLUT/TPage-Stempel). Der Port hat keine
+ * residenten Primitivpakete — er baut jedes Bild neu aus dem EMS. Deshalb fragt der
+ * Zeichner hier beim Zeichnen den STAND ab (die Summe aller Deltas ist genau pos, Start 0),
+ * statt Deltas in Pakete zu addieren. Gleiches Bild, anderer Weg; ein Nachbau des
+ * Paket-Patches haette ohne Paketspeicher keinen Anker. Kosten: zwei Listen mit 11 bzw. 12
+ * Eintraegen, lineare Suche je Primitiv von Mesh 2. */
 int re15_g5_eye_uv_offset(int mesh, int is_quad, int prim_index, int *du, int *dv)
 {
     int e, i;
