@@ -1855,14 +1855,11 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
         e->hp = -1;                                                /* sh -1,342(s1) @0x80102BFC */
         e->re2z_flags21a &= (uint16_t)~4u;                         /* andi 0xfffb / sh 538
                                                                     * @0x80102C08/@0x80102C14 */
-        /* ⛔ OPEN — die word0-Gruppe `(word0 & 0xF3FFFFFF) | 0x04000000` (`lui a0,0xf3ff /
-         * ori 0xffff` @0x80102BE8-EC, `and v1,v1,a0` @0x80102C0C, `lui a0,0x400 / or / sw`
-         * @0x80102C10-20) betrifft die BITS 24..27. Das Port-Feld re15_actor_t.flags ist ein
-         * uint8_t und modelliert ausdruecklich nur das NIEDRIGSTE Byte von word0
-         * (re15_actor.h:43) — ein Store dieser Maske wuerde stillschweigend auf 0 truncaten
-         * und "erledigt" vortaeuschen. Bewusst NICHT geschrieben, solange das High-Byte kein
-         * Feld hat; im Port haengt nichts daran (der CORPSE-Zustand wird ueber state 7 und
-         * hp < 0 gefuehrt). */
+        /* TEILE-MASKE NUR BEINE (Runde 16, war bis dahin OPEN): `lui a0,0xf3ff / ori 0xffff`
+         * @0x80102BE8-EC, `and v1,v1,a0` @0x80102C0C, `lui a0,0x400 / or v1,v1,a0 / sw v1,0(s1)`
+         * @0x80102C10-20. Seit Runde 16 traegt der Aktor das Feld re2z_parts (word0>>26&7,
+         * re15_actor.h); die Leiche ist ueber HP=-1 ohnehin kein Ziel (@0x80047148-50). */
+        e->re2z_parts = 1u;
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 / sb 467
                                                                     * @0x80102C24-2C */
         break;
@@ -1897,6 +1894,12 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
                                                                    /* &=~0x8 @0x80102D60-64, |=0x4
                                                                     * @0x80102DA8-B0, |=0x202 @0x80102DBC */
                 e->re2z_self1d3 |= 0x80u;                          /* ori 0x80 @0x80102D8C/DA0-A4 */
+                e->re2z_parts = 1u;                                /* NUR BEINE: `lui a1,0xf3ff`
+                                                                    * @0x80102D38, `lw v1,0(s1)`
+                                                                    * @0x80102D74, `lui v0,0x400 /
+                                                                    * and v1,v1,a1 / or v1,v1,v0`
+                                                                    * @0x80102D80-88, `sw v1,0(s1)`
+                                                                    * @0x80102D98 */
                 e->re2z_f10e |= 0x2000u;                           /* +0x10E|=0x2000 @0x80102DA8/DB8-C0 */
                 e->grid_id |= 0x80u;                               /* PORT-MAPPING (Review #18): der
                                                                     * flavor-blinde Damage-Resolver
@@ -1991,6 +1994,11 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         e->re2z_flag222 = 0;                                       /* @0x801032F4 */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x80103304/330C */
         e->re2z_f10e |= 0x2000u;                                   /* +0x10E|=0x2000 @0x80103308/3320 */
+        e->re2z_parts = 1u;                                        /* NUR BEINE: `lui a2,0xf3ff`
+                                                                    * @0x801032B8, `and v1,v1,a2`
+                                                                    * @0x801032DC, `lui v0,0x400 /
+                                                                    * or v1,v1,v0` @0x801032E8-EC,
+                                                                    * `sw v1,0(s2)` @0x801032FC */
         /* ⛔ BLEND-RATE = a3 DES ADVANCE, NICHT 0x200 (Nutzer-Report 2026-08-22: "Wenn der Zombie
          * zu Boden Richtung Leon springt, stimmt die Animation nicht ganz").
          * EXEC[5] advanced in JEDER seiner Phasen mit 256, selbst disassembliert aus
@@ -2041,6 +2049,10 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * P1 ruft AUSSCHLIESSLICH den Advance — kein Steer, keine Wurzelbewegung. */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
                                                                    /* +0x6 += ret @0x80103384-98 */
+        /* Zielradius +0x9A schrumpft mit dem Sturz: `lhu a0,154(s2)` @0x80103388, `sltiu v0,a0,
+         * 0x15 / bne` @0x80103390-94 (unter 21 bleibt er stehen), `addiu v0,a0,-10 / sh v0,154`
+         * @0x8010339C-A0 (+0x9C @0x801033A4-B0 gleich mit). */
+        if (e->re2z_rad9a >= 21u) e->re2z_rad9a = (uint16_t)(e->re2z_rad9a - 10u);
         break;
     case 2: {                                                      /* P2 @0x80103404: DER AUFSCHLAG */
         int side = (int)(e->re2z_dir16a & 1u);
@@ -2084,6 +2096,9 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         e->re2z_t158    = 0;                                       /* sh zero,344 — Teil der
                                                                     * Hitbox-Reset-Gruppe
                                                                     * @0x80103478/7C (+0x9A/+0x9C) */
+        e->re2z_rad9a   = 0u;                                      /* `sh zero,154(s2)` @0x80103478:
+                                                                    * am Boden KEINE Breiten-
+                                                                    * Erweiterung der Schuss-Boxen */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103484-90 —
                                                                     * ERST HIER faellt der Claim:
                                                                     * genau deshalb ist ein
@@ -2160,11 +2175,22 @@ static void re2z_exec_knockdown(re15_actor_t *e)
                                                                     * @0x801036A0-A4) — KEIN Timer
                                                                     * (der alte 90er war gemappt,
                                                                     * Review #6/[4]) */
+        /* Zielradius waechst mit dem Aufstehen: `lhu v1,154(s2) / sltiu v0,v1,0x1f4 / beq`
+         * @0x80103628-34 (ab 500 nicht mehr), `addiu v0,v1,10 / sh v0,154(s2)` @0x80103638-3C. */
+        if (e->re2z_rad9a < 500u) e->re2z_rad9a = (uint16_t)(e->re2z_rad9a + 10u);
         if (re2z_clip_done(e)) {
             e->re2z_flags21a &= (uint16_t)~0x10u;                  /* Kriech-Marker WEG @0x801036B8-BC */
             e->re2z_flags21a &= (uint16_t)~0x2u;                   /* @0x801036C8-CC */
             e->sub_state_2 = 8;                                    /* sb 8,6 @0x801036C4 */
         }
+        /* TEILE-MASKE zurueck auf Beine+Rumpf GENAU im Clip-Bild 55 — nach dem Advance
+         * (@0x801036A0) und unabhaengig vom Phasenende: `lbu v1,333(s2)` (+0x14D) @0x801036D0,
+         * `addiu v0,zero,55 / bne v1,v0` @0x801036D4-D8, `lui v1,0xc00` (Delay-Slot) @0x801036DC,
+         * `lw v0,0(s2) / or v0,v0,v1 / sw v0,0(s2)` @0x801036E0-F0. Port-Zaehler: der Renderer-
+         * Slot des laufenden Clips (re2z_frame_slot = +0x14D-Semantik; unit_r16_trefferhoehe_pin
+         * misst die Tick-Zahl bis zum Umschalten gegen die 55 Advances des Originals). Ist der
+         * Aufsteh-Clip kuerzer als 55 Bilder, greift erst P8 (@0x80103730). */
+        if (re2z_frame_slot(e) == 55) e->re2z_parts |= 3u;
         break;
     default:                                                       /* P8 @0x801036F4 */
         /* ⛔ OPEN (Batch B1, Folge-RE — VISUELL, nicht im State-Log sichtbar): P8 committet
@@ -2190,6 +2216,12 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * dem Original-Trefferfilter (@0x80047138-40) fuer immer untreffbar; der zweite nimmt
          * das in P0 gesetzte Bit 0x2000 (@0x80103308/3320) wieder zurueck. */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f  @0x80103718-28 */
+        e->re2z_rad9a    = 500u;                                   /* `addiu v0,zero,500 / sh v0,154`
+                                                                    * @0x801036FC-700 (Steh-Box
+                                                                    * -1500/+1500 @0x80103710-20) */
+        e->re2z_parts   |= 3u;                                     /* Beine+Rumpf: `lui v1,0xc00 /
+                                                                    * or v0,v0,v1 / sw v0,0(s2)`
+                                                                    * @0x80103730-38 (unbedingt) */
         e->re2z_f10e    &= (uint16_t)~0x2000u;                     /* andi 0xdfff @0x8010373C-4C */
         e->grid_id &= (uint8_t)0x7Fu;                              /* PORT-MAPPING (Review #18):
                                                                     * Downed-Band-Clear beim
@@ -2480,6 +2512,12 @@ static void re2z_exec_lying(re15_actor_t *e, const re15_actor_t *pl)
     default:                                                       /* P4 @0x80103900 */
         re15_ai_set_state_word(e, 0x101);                          /* addiu 257; sw @0x80103900-0C */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103914-18 */
+        e->re2z_parts |= 3u;                                       /* Beine+Rumpf: `lui a0,0xc00`
+                                                                    * @0x80103908, `lw v0,0(s0) / or
+                                                                    * v0,v0,a0 / sw v0,0(s0)`
+                                                                    * @0x8010391C/28/2C (Liege-Spawn
+                                                                    * kommt mit Maske 3 aus dem INIT,
+                                                                    * @0x80100A24-4C ohne Wechsel) */
         e->grid_id = 0;                                            /* PORT-MAPPING (Review #16): das
                                                                     * Liege-Nibble 0x88 muss beim
                                                                     * Aufstehen weg (RE1.5-Zwilling
@@ -2701,9 +2739,15 @@ static void re2z_exec_getup(re15_actor_t *e)
                                                                     * `sb v0,467` @0x801040BC */
                 e->re2z_f10e    |= 0x2000u;                        /* `ori 0x2000` @0x801040B8 /
                                                                     * `sh v1,270` @0x801040D0 */
-                /* word0 = (word0 & 0xF3FFFFFF) | 0x04000000 @0x80104068-AC — dieselbe Modell-/
-                 * Kollisions-Gruppe wie in re2z_exec_knockdown P0 und im Kriecher-Eintritt; im
-                 * Port ohne Feld (OPEN, mit Adresse). */
+                /* TEILE-MASKE NUR BEINE: `lui a2,0xf3ff / ori` @0x80104068-6C, `and v1,v1,a2`
+                 * @0x8010408C, `lui v0,0x400 / or v1,v1,v0` @0x80104098-9C, `sw v1,0(s1)`
+                 * @0x801040AC. Das Zustandswort ist an dieser Stelle schon 0x501 (`sw v0,4(s1)`
+                 * @0x80104028, Delay-Slot, v0 = 1281) — der Zweig endet in EXEC[5] P1, und der
+                 * Rueckbau auf Beine+Rumpf liegt in EXEC[5] P7 (Bild 55) / P8. EXEC[9]s eigener
+                 * Ausgang `sw 0x101` @0x80104148 (P2 @0x80104144) ist NUR aus dem Nicht-Sturz-
+                 * Zweig @0x8010411C erreichbar, der die Maske nicht anfasst (Runde 16,
+                 * trefferhoehe.skeptiker.md Punkt 3 — damit geklaert). */
+                e->re2z_parts = 1u;
                 e->grid_id |= 0x80u;                               /* PORT-MAPPING wie in
                                                                     * re2z_exec_knockdown P0
                                                                     * (Review #18): Downed-Band
@@ -2869,6 +2913,12 @@ void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub)
                                                                     * @0x80104590-98 */
     e->sca_mask = 8;                                               /* BRUECKE, s. Block oben:
                                                                     * RE1.5-Torzelle @0x801050F4 */
+    /* TEILE-MASKE NUR BEINE + Zielradius 200 = die Kriecher-INIT-Variante (`lui v1,0xf3ff`
+     * @0x80100AF0, `and a0,a0,v1 / lui v0,0x400 / or / sw a0,0(s2)` @0x80100B30-44;
+     * `addiu v0,zero,200 / sh v0,154(s2)` @0x80100B00-04). Ueber den Kriecher-HURT-P2-Eingang
+     * (@0x80107A54-58) ist die Maske bereits 1 (Ragdoll/Knockdown P2) — idempotent. */
+    e->re2z_parts = 1u;
+    e->re2z_rad9a = 200u;
     if (pl) pl->re2z_self1d3 |= 0x80u;                             /* @0x8010459C-B0 */
 }
 
@@ -2891,6 +2941,10 @@ static void re2z_exec_eleven(re15_actor_t *e, re15_actor_t *pl)
                                                                    /* andi 0xfffb + ori 0x2
                                                                     * @0x80104438-48 */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x8010444C-5C */
+        e->re2z_parts = 1u;                                        /* NUR BEINE: `lui a0,0xf3ff`
+                                                                    * @0x8010441C, `and v1,v1,a0`
+                                                                    * @0x80104440, `lui a0,0x400 /
+                                                                    * or / sw v1,0(s0)` @0x80104444-54 */
         e->re2z_f10e |= 0x2000u;                                   /* @0x80104460-70 */
         if (e->re2z_cd239 == 0) {                                  /* @0x80104464-6C */
             re2z_se((re2z_rand() & 1u) == 0u ? 11 : 10);           /* @0x80104474-90 */
@@ -3017,8 +3071,13 @@ static void re2z_exec_restyle(re15_actor_t *e)
                                                                     * @0x801049B4, `sb v0,337/338/
                                                                     * 339` @0x801049B8-C0 */
     e->re2z_hitdir1d0 = 0;                                         /* sh zero,464 @0x8010498C */
+    e->re2z_parts = 3u;                                            /* Beine+Rumpf als Bindeflags
+                                                                    * `lui a0,0xc00 / ori a0,a0,0x1`
+                                                                    * @0x801049F0-F4 */
+    e->re2z_rad9a = 500u;                                          /* `addiu v1,zero,500 / sh v1,154`
+                                                                    * @0x801049FC-A00 */
     /* nicht modelliert (dokumentiert): Re-Bind jal 0x80028794 @0x80104984, +0x219-Clear
-     * @0x801049E0, Schatten-Reset 500/-1500 @0x801049FC-0x80104A28 */
+     * @0x801049E0, Box-Reset -1500/+1500 @0x80104A1C-28 */
 }
 
 /* EXEC[14] @0x80104D74 — SNAP BITE (0x0E01, blocks A/B/J):
@@ -5943,8 +6002,12 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
         re15_ai_set_state_word(e, 0x1);                            /* sw 1,4 @0x80106B3C (WORT) */
         re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
                                                                     * treffbar (@0x80105f9c-fac) */
-        /* Hitbox-/word0-Felder @0x80106B14-50 sind Modell-/Kollisions-Praesentation ohne
-         * Port-Zwilling (OPEN). */
+        /* KRIECHER-EINTRITT: Zielradius 200 (`addiu v0,zero,200 / sh v0,154(a0)` @0x80106B14-18;
+         * Box -350/+350 @0x80106B28-34) und TEILE-MASKE NUR BEINE (`lui t1,0xf3ff` @0x80106AE0,
+         * `lui v0,0x400` @0x80106B38, `and v1,v1,t1 / or v1,v1,v0 / sw v1,0(a0)` @0x80106B44-50).
+         * Die uebrigen Modell-Felder der Gruppe bleiben Praesentation ohne Port-Zwilling. */
+        e->re2z_rad9a = 200u;
+        e->re2z_parts = 1u;
         return;                                                    /* j 0x80106F14 */
     }
 
@@ -6292,7 +6355,12 @@ static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl, int death)
         e->re2z_self1d3 &= 0x7fu;                                  /* andi 0x7f @0x80107850-5C */
         re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
                                                                     * treffbar (@0x80105f9c-fac) */
-        /* Hitbox-/word0-Felder @0x801077F8-838 = Modell-/Kollisions-Praesentation (OPEN). */
+        /* KRIECHER-AUSGANG: Zielradius 200 (`addiu v0,zero,200 / sh v0,154(s2)` @0x801077F8-FC;
+         * Box -350/+350 @0x8010780C-18) und TEILE-MASKE NUR BEINE (`lui a0,0xf3ff` @0x801077D8,
+         * `lw v0,0(s2)` @0x8010781C, `lui v1,0x400 / and v0,v0,a0 / or v0,v0,v1` @0x80107828-30,
+         * `sw v0,0(s2)` @0x80107838). Die Modell-Flagwoerter der Gruppe bleiben Praesentation. */
+        e->re2z_rad9a = 200u;
+        e->re2z_parts = 1u;
         return;
     }
 }
@@ -7665,6 +7733,12 @@ static void re2z_init(int slot, re15_actor_t *e)
         }
     }
     e->re2z_prev_hp = e->hp;
+    /* TEILE-MASKE Beine+Rumpf (`lui v1,0xc00 / or v0,v0,v1 / sw v0,0(s2)` @0x80100984-998) und
+     * Zielradius +0x9A = 500 (`addiu v1,zero,500` @0x8010096C / `sh v1,154(s2)` @0x80100970) —
+     * der gemeinsame INIT-Pfad VOR den Varianten; Kriecher (@0x80100B38-44 / 200 @0x80100B04)
+     * ueberschreibt unten ueber re15_re2z_enter_crawler. (Runde 16, trefferhoehe.md §2.3) */
+    e->re2z_parts = 3u;
+    e->re2z_rad9a = 500u;
     e->speed_h = 0;                                                /* +0x144 spawn-clean (kein Walk-
                                                                     * Writer; Attacken saeen 11) */
     e->root_prev_kf = -1;                                          /* move_root delta re-anchor */
@@ -7786,6 +7860,12 @@ int re15_re2z_tick(int slot)
      * Anwenden wird pro Tick neu bestellt. */
     e->re2_lean_on    = 0;
     e->re2_bone0_wgt  = 0;
+    /* Root-Sicherung der TEILE-MASKE: `lhu v0,270(s0) / andi 0x1 / bne` @0x80100374-80 (Kriecher)
+     * ODER `lhu v0,538(s0) / andi 0x2 / beq` @0x80100388-94 (Liege-Bit) -> `lw v0,0(s0) / lui
+     * v1,0x400 / or / sw v0,0(s0)` @0x8010039C-A8: das Beine-Bit wird jedes Bild gesetzt (nie
+     * geloescht; die Zweige unten pruefen danach `(word0 & 0x0C000000) == 0x04000000`
+     * @0x801003AC-BC). */
+    if ((e->re2z_f10e & 1u) || (e->re2z_flags21a & 0x2u)) e->re2z_parts |= 1u;
     /* BODEN-Zwilling pflegen (+0x1C2 @0x8003EE04-18): solange die Entity im
      * Grund-Gang steht/geht (state 0/1), IST e->y der Boden. */
     if (e->state == 0 || e->state == 1) e->re2z_ground_y = (int16_t)e->y;

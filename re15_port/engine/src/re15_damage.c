@@ -21,6 +21,7 @@
  *   80012ee8-efc  if (HP < 0) state=3 (death), +0x5=0, +0x6=0
  */
 #include <stdlib.h>          /* getenv — RE15_RE2_DMG_MODEL (Negativ-Test-Hebel) */
+#include <string.h>          /* memset — s_re2_probe je Schuss (RE2-Applier, Runde 16) */
 #include "re15_damage.h"
 #include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
@@ -1257,9 +1258,225 @@ static int re15_gun_wedge_inside(const re15_actor_t *pl, int32_t ex, int32_t ez,
         || re15_wedge_tri(Vx[2],Vz[2], Vx[3],Vz[3], Vx[4],Vz[4], relx, relz);   /* triangle (V3,V4,V5) */
 }
 
+/* ============================================================================================
+ * RUNDE 16 (2026-09-19, analysis/befunde_2026-09-19/trefferhoehe.md + .skeptiker.md):
+ * DER RE2-SCHUSS-APPLIER FUN_800410CC (info/re2leon/PSX.EXE) FUER RE2-OWNED ZOMBIES
+ * --------------------------------------------------------------------------------------------
+ * Nutzer: "Ich kann gerade schiessen und treffe Zombies am Boden. Das kann so nicht sein."
+ * GEMESSEN (probe_r16_trefferhoehe, 40 Divergenzen): der Port schickte den Kriecher
+ * (+0x10E = 0x2001) und den Aufsteher (EXEC[5] P6/P7) mit EBEN durch das RE1.5-Band bzw. das
+ * dy-Fenster und traf beide auf jeder Distanz; RE2 verwirft beide, weil der Applier je Kandidat
+ * die TEILE-MASKE word0>>26&7 gegen eine Prioritaetszeile prueft (Decompile
+ * RE2_Quellcode_V2/FUN_800410cc.c, Zeilen `uVar5 = *puVar9 >> 0x1a & 7` ... `pbVar6[2]/[1]/[0]`).
+ *
+ * Der Mechanismus je Kandidat (alle Tabellen selbst gedumpt, re15_port/tools/re2_gun_tables_dump.py):
+ *   Gates      word0&1, +0x1D3 == 0, HP >= 0, +0x10E & 0xC000 == 0 (@0x8004712C/38/48/60) — im
+ *              Port als Pausenfilter re15_re2z_hit_filter_apply (+0x93 Bit 0), NICHT hier.
+ *   Radien     rec+8 (Nah-Box-Tiefe) += +0x1EE >> 2 ; rec+10/+0x12/+0x1A (halbe Breiten) += +0x9A >> 2
+ *              (+0x1EE = 500: EINZIGER Schreiber INIT `sh v1,494(s2)` @0x80100980; +0x9A = Feld
+ *              re2z_rad9a, Setzer in re15_actor.h) — Skeptiker-Korrektur (1).
+ *   Gruppe     DAT_800A6F8C[word0>>29] = [FF 00 01 FF 02 00 00 00]: TIEF -> 0, EBEN -> 1, HOCH -> 2
+ *              (@0x80047D18 `srl s2,v0,29`, @0x80047EE0 `lbu a2,0x800a6f8c(at)`)
+ *   Geometrie  Record = *(0x800A68E8 + item*24 + grp*8) (@0x80047ECC-F8), 0x1C Byte:
+ *              Byte0, Flag[3], 3 x {start, b1, depth/4, halfw/4}
+ *   dy         = enemyY - playerY (`puVar9[0xf] - player[+0x3c]`), Fenster je Flag aus dem
+ *              Zombie-Record @0x800A412C + (id-1)*20 (+8 UP / +0xC LEVEL / +0x10 DOWN) ueber
+ *              FUN_80041B20: Flag 0x04 DOWN, 0x02 DOWN um ein Drittel, 0x01 um zwei Drittel
+ *              nach unten; 0x08 LEVEL; 0x10 UP, 0x20/0x40 ein/zwei Drittel nach oben;
+ *              third = (lo - hi) / 3 (negativ, C-Division)
+ *   Zeile      row = 6; if (hi + 2*third <= dy) row = 3; if (hi + third <= dy) row = 0;
+ *              pb = DAT_800A6DB4 + row + ((flag & 8) ? 9 : 0)
+ *   Teil       pb[2]&mask -> pb[1]&mask -> pb[0]&mask, der LETZTE Treffer gewinnt (pb[0] Vorrang)
+ *   XZ-Box     FUN_80041CE4: Ecke (start, 0, -4*halfw4 - b1) mit der Spielermatrix +0x24
+ *              komponiert und >> 2, Kanten R*(depth4,0,0) und R*(0,0,2*halfw4) UNskaliert,
+ *              Gegner +0x38/+0x40 >> 2; Vorzeichentest der Skalarprodukte -> vorwaerts in
+ *              [start, start + 4*depth4), seitlich in [-4*halfw4 - b1, 4*halfw4 - b1); die ferne
+ *              Kante zaehlt als aussen (Produkt 0 -> gleiche Vorzeichenbits -> false).
+ *              Skala-Gegenprobe: +0x9A = 500 -> 500 >> 2 = 125 auf halfw4 = 4*125 = 500 Welt-
+ *              Einheiten, also exakt der Radius; Luecken-Freiheit 100+4*1000 = 4100 (Sub-Box 2),
+ *              4100+4*1000 = 8100 (Sub-Box 3). Achsen-Gegenprobe: dieselbe PsyQ-RotMatrixY-
+ *              Konvention wie der byte-true RE1.5-Streifen re15_gun_wedge_inside oben (V5 =
+ *              lokal (650,0) -> Welt (c,-s) = lokal X ist die Blickrichtung), und die Messer-
+ *              Records @0x800A657C/63A8 (b1 = 500/800) versetzen die Box seitlich (lokal -Z)
+ *              zur Klingenhand — nur mit X = vorwaerts ergeben die Starts 100/4100/8100 einen
+ *              Schuss-Streifen (Skeptiker-Punkt 6).
+ *   Ergebnis   uVar7 = part*8 + (1 << subbox); Sub-Box 2/3 setzen uVar7 = 0 VOR der
+ *              Maskenpruefung, wenn ihre XZ-Box trifft (Skeptiker-Punkt 5) — die spaetere
+ *              Sub-Box gewinnt. Klammer = (uVar7&2) ? 1 : (uVar7&4) ? 2 : 0 (@0x80041834-48).
+ *   Schaden    (rec.w0 >> (Klammer*10)) & 0x3ff (@0x80041A?? ueber local_58), +0x1D2 = Teil +
+ *              3*Klammer (@0x800413CC-D4 / `sb v1,466` @0x80041A9C).
+ * ========================================================================================== */
+#define RE2Z_RAD1EE 500   /* +0x1EE des Zombies: `addiu v1,zero,500` @0x8010096C / `sh v1,494(s2)` @0x80100980 */
+
+/* dy-Fenster je RE2-Id: UPlo,UPhi, LVlo,LVhi, DNlo,DNhi (@0x800A412C + (id-1)*20 + 8/12/16). */
+static const int16_t s_re2z_fen[20][6] = {
+    [ 1] = {-3000, -500,-1900,1000, -300,2500},
+    [ 2] = {-5000,-2000,-3000,2000, -500,3000},
+    [ 3] = {-5000,-2000,-3000,2000, -500,3000},
+    [ 4] = {-5000,-2000,-3000,2000, -500,3000},
+    [ 5] = {-5000,-2000,-3000,2000, -500,3000},
+    [ 6] = {-5000,-2000,-3000,2000, -500,3000},
+    [ 7] = {-5000,  500,-3000,2000, -500,3000},
+    [ 8] = {-5000,  500,-3000,2000, -500,3000},
+    [ 9] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [10] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [11] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [12] = {-4000,-2000,-3000,2000, -500,3000},
+    [13] = {-5000,-2000,-3000,2000, -500,3000},
+    [14] = {-4000,-2000,-3000,2000, -500,3000},
+    [15] = {-5000,  500,-3000,2000, -500,3000},
+    [16] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [17] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [18] = {-5000,  500,-3000,2000, -500,3000},
+    [19] = {-5000,-2000,-3000,2000, -500,3000},
+};
+/* Zombie-Record Wort 0 je RE2-Id (Schaden je Klammer, 10 Bit): @0x800A412C + (id-1)*20 fuer die
+ * Typen 0x10/0x11/0x12/0x13/0x18 (PTR_DAT_800A6A88), @0x800A42A8 + (id-1)*20 fuer 0x15/0x16/0x17. */
+static const uint32_t s_re2z_rec_w0[20] = {
+    [ 1] = 0x00000003u, [ 2] = 0x00e03c10u, [ 3] = 0x00e03c10u, [ 4] = 0x00e03c10u,
+    [ 5] = 0x384e1384u, [ 6] = 0x384e1384u, [ 7] = 0x0280f0c8u, [ 8] = 0x03c1412cu,
+    [ 9] = 0x00a0c8c8u, [10] = 0x0050c8c8u, [11] = 0x00a0c8c8u, [12] = 0x01e0781eu,
+    [13] = 0x00e03c10u, [14] = 0x03c0f03cu, [15] = 0x00401004u, [16] = 0x00f03c0fu,
+    [17] = 0x384e1384u, [18] = 0x00802008u, [19] = 0x00e03c10u,
+};
+static const uint32_t s_re2z16_rec_w0[20] = {
+    [ 1] = 0x00000003u, [ 2] = 0x0090280bu, [ 3] = 0x0090280bu, [ 4] = 0x0090280bu,
+    [ 5] = 0x384e1384u, [ 6] = 0x384e1384u, [ 7] = 0x01e0a03cu, [ 8] = 0x0320f050u,
+    [ 9] = 0x00a0c850u, [10] = 0x0050c850u, [11] = 0x00a0c8c8u, [12] = 0x01906419u,
+    [13] = 0x0090280bu, [14] = 0x0290a429u, [15] = 0x00300c03u, [16] = 0x00c0300cu,
+    [17] = 0x384e1384u, [18] = 0x00601806u, [19] = 0x0090280bu,
+};
+/* Geometrie-Record (0x1C Byte) einer Gruppe: Flag je Sub-Box, dann {start, b1, depth/4, halfw/4}. */
+typedef struct { uint8_t flag[3]; int16_t box[3][4]; } re2_georec_t;
+typedef struct { uint32_t addr[3]; re2_georec_t grp[3]; } re2_geo_t;   /* [0] DOWN [1] LEVEL [2] UP */
+/* Pistolen-Familie: Items 2/3/4/13/19 zeigen alle auf @0x800A6618/6634/6650, Item 15 auf
+ * @0x800A6848/6864/6880 mit byte-identischem Inhalt (eigener Dump). */
+#define RE2_GEO_HANDGUN(a0,a1,a2) { {a0,a1,a2}, { \
+    { {0x04,0x02,0x01}, {{ 100,0,1000,375},{4100,0,1000,500},{8100,0,2500,625}} }, \
+    { {0x08,0x08,0x08}, {{ 200,0,1000,375},{4200,0,1000,500},{8200,0,7500,625}} }, \
+    { {0x10,0x20,0x40}, {{ 100,0,1000,375},{4100,0,1000,500},{8200,0,2500,625}} } } }
+/* Magnum-Familie: Item 5 @0x800A6670/668C/66A8, Item 6 @0x800A66C8/66E4/6700 (inhaltsgleich). */
+#define RE2_GEO_MAGNUM(a0,a1,a2) { {a0,a1,a2}, { \
+    { {0x04,0x02,0x01}, {{ 100,0,1000,125},{4100,0,1000,150},{8100,0,2500,175}} }, \
+    { {0x08,0x08,0x08}, {{ 200,0,1000,125},{4200,0,1000,150},{7200,0,7500,175}} }, \
+    { {0x10,0x20,0x40}, {{ 100,0,1000,125},{4100,0,1000,150},{8100,0,2500,175}} } } }
+static const re2_geo_t s_re2z_geo[20] = {
+    [ 2] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+    [ 3] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+    [ 4] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+    [ 5] = RE2_GEO_MAGNUM (0x800A6670u, 0x800A668Cu, 0x800A66A8u),
+    [ 6] = RE2_GEO_MAGNUM (0x800A66C8u, 0x800A66E4u, 0x800A6700u),
+    [ 7] = { {0x800A6724u, 0x800A6740u, 0x800A675Cu}, {          /* Pump-Schrot */
+        { {0x04,0x02,0x01}, {{ 100,0,1000, 500},{4100,0,1000, 750},{8100,0,2500,1000}} },
+        { {0x08,0x08,0x08}, {{ 200,0,1000, 625},{4200,0,1000, 875},{8200,0,7500,1125}} },
+        { {0x10,0x20,0x40}, {{ 100,0, 750, 500},{3100,0,1500, 750},{9100,0,2500,1000}} } } },
+    [ 8] = { {0x800A6788u, 0x800A67A4u, 0x800A67C0u}, {          /* Custom-Schrot */
+        { {0x04,0x02,0x01}, {{ 100,0,1000, 500},{4100,0,1000, 875},{8100,0,2500,1125}} },
+        { {0x08,0x08,0x08}, {{ 200,0,1000, 625},{4200,0,1000,1000},{8200,0,7500,1250}} },
+        { {0x10,0x20,0x40}, {{ 100,0, 750, 500},{3100,0,1000, 875},{7100,0,2500,1125}} } } },
+    [13] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+    [15] = RE2_GEO_HANDGUN(0x800A6848u, 0x800A6864u, 0x800A6880u),
+    [18] = { {0x800A68A4u, 0x800A68C0u, 0x800A68DCu}, {          /* Sparkshot: LEVEL prueft alle
+                                                                   * drei Fenster ueber EINER Box */
+        { {0x04,0x02,0x01}, {{ 100,0,1000, 500},{4100,0,1000, 625},{8100,0,2500, 625}} },
+        { {0x08,0x04,0x10}, {{ 200,0,7500, 500},{ 200,0,7500, 500},{ 200,0,7500, 500}} },
+        { {0x10,0x20,0x40}, {{ 100,0,1000, 375},{4100,0,1000, 500},{8200,0,2500, 625}} } } },
+    [19] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+};
+/* DAT_800A6DB4 (eigener Dump): Satz 1 (Flag ohne 8) row0/row3/row6, Satz 2 (Flag&8) ab +9. */
+static const uint8_t s_re2z_prio[18] = { 4,2,1, 2,1,4, 1,2,4,   4,2,0, 2,0,0, 1,2,0 };
+
+/* FUN_80041B20: Fenster (lo,hi) + Drittel aus dem Sub-Box-Flag. Rueckgabe third = (lo-hi)/3. */
+static int re15_re2_window(const int16_t *fw, uint8_t flag, int32_t *lo, int32_t *hi)
+{
+    int32_t l, h, third;
+    switch (flag) {
+    case 0x01: l = fw[4]; h = fw[5]; third = (l - h) / 3; l -= 2*third; h -= 2*third; break;  /* case 0 */
+    case 0x02: l = fw[4]; h = fw[5]; third = (l - h) / 3; l -= third;   h -= third;   break;  /* case 1 */
+    case 0x04: l = fw[4]; h = fw[5]; third = (l - h) / 3; break;                              /* case 2 */
+    case 0x08: l = fw[2]; h = fw[3]; third = (l - h) / 3; break;                              /* case 3 */
+    case 0x10: l = fw[0]; h = fw[1]; third = (l - h) / 3; break;                              /* case 4 */
+    case 0x20: l = fw[0]; h = fw[1]; third = (l - h) / 3; l += third;   h += third;   break;  /* case 5 */
+    case 0x40: l = fw[0]; h = fw[1]; third = (l - h) / 3; l += 2*third; h += 2*third; break;  /* case 6 */
+    default:   *lo = 1; *hi = 0; return 0;      /* kein Fall im switch -> kein definiertes Fenster */
+    }
+    *lo = l; *hi = h; return third;
+}
+
+/* FUN_80041CE4 im /4-Raum: Ecke = (R*(start,0,-4*halfw4-b1) + T) >> 2, Kanten R*(depth4,0,0) und
+ * R*(0,0,2*halfw4) unskaliert, Gegner >> 2; Skalarprodukt-Vorzeichentest (nahe Kante drin, ferne
+ * Kante draussen). R = PsyQ-RotMatrixY(yaw): lokal (x,0,z) -> Welt (c*x + s*z, -s*x + c*z) >> 12 —
+ * dieselbe Konvention wie re15_gun_wedge_inside (dort V5 = lokal (650,0)). */
+static int re15_re2_box_inside(const re15_actor_t *pl, const re15_actor_t *e, const int16_t *box,
+                               int32_t depth4, int32_t halfw4)
+{
+    int32_t c = re15_cos_q12(pl->rot_y), s = re15_sin_q12(pl->rot_y);
+    int32_t lx = box[0], lz = -4 * halfw4 - box[1];
+    int32_t cx = (int32_t)(((int64_t)c * lx + (int64_t)s * lz) >> 12) + pl->x;   /* CompMatrix t */
+    int32_t cz = (int32_t)((-(int64_t)s * lx + (int64_t)c * lz) >> 12) + pl->z;
+    cx >>= 2; cz >>= 2;                                                           /* local_78/74 */
+    int32_t e1x = (int32_t)(((int64_t)c * depth4) >> 12), e1z = (int32_t)((-(int64_t)s * depth4) >> 12);
+    int32_t e2x = (int32_t)(((int64_t)s * 2 * halfw4) >> 12), e2z = (int32_t)(((int64_t)c * 2 * halfw4) >> 12);
+    int32_t px = (e->x >> 2), pz = (e->z >> 2);
+    int64_t d0x = px - cx, d0z = pz - cz;
+    int64_t a0 = e1x * d0x + e1z * d0z, a1 = a0 - ((int64_t)e1x*e1x + (int64_t)e1z*e1z);   /* e1.d0 / e1.d1 */
+    int64_t b0 = e2x * d0x + e2z * d0z, b2 = b0 - ((int64_t)e2x*e2x + (int64_t)e2z*e2z);   /* e2.d0 / e2.d2 */
+    return ((a0 < 0) != (a1 < 0)) && ((b0 < 0) != (b2 < 0));
+}
+
+/* Ergebnis des Appliers je Kandidaten-Slot fuer den Stempel/Schaden nach der Auswahl. */
+static struct { uint8_t valid, zone, bracket; } s_re2_probe[RE15_ACTOR_MAX];
+
+/* FUN_800410CC-Kern fuer EINEN Kandidaten. Rueckgabe 1 = Treffer (zone/bracket gesetzt), 0 = kein
+ * Treffer (Fenster, XZ-Box oder Teile-Maske verworfen). */
+static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, const re15_actor_t *e,
+                              int *zone, int *bracket)
+{
+    if (rid >= 20u || s_re2z_geo[rid].addr[0] == 0u) return 0;
+    const re2_georec_t *g  = &s_re2z_geo[rid].grp[(elev < 0) ? 0 : (elev > 0) ? 2 : 1];
+    const int16_t      *fw = s_re2z_fen[rid];
+    unsigned mask = (unsigned)e->re2z_parts & 7u;                 /* uVar5 = word0 >> 0x1a & 7 */
+    int32_t  dy   = e->y - pl->y;                                 /* puVar9[0xf] - player[+0x3c] */
+    int32_t  r9a  = (int32_t)((int16_t)e->re2z_rad9a >> 2);      /* +0x9A >> 2 auf alle Breiten */
+    unsigned res  = 0;
+    if (mask == 0u) return 0;                                     /* `if (uVar5 != 0)` */
+    for (int b = 0; b < 3; b++) {
+        int32_t lo, hi, third;
+        if (g->flag[b] == 0u) continue;                           /* `*(char *)(iVar10 + 1+b) != 0` */
+        third = re15_re2_window(fw, g->flag[b], &lo, &hi);
+        if ((uint32_t)(dy - lo) > (uint32_t)(hi - lo)) continue; /* dy im Fenster */
+        int32_t depth4 = g->box[b][2] + ((b == 0) ? (RE2Z_RAD1EE >> 2) : 0);   /* rec+8 += +0x1EE>>2 */
+        int32_t halfw4 = g->box[b][3] + r9a;                                   /* rec+10/12/1A += +0x9A>>2 */
+        if (!re15_re2_box_inside(pl, e, g->box[b], depth4, halfw4)) continue;
+        int row = 6;
+        if (hi + 2*third <= dy) row = 3;
+        if (hi + third   <= dy) row = 0;
+        const uint8_t *pb = s_re2z_prio + row + ((g->flag[b] & 8u) ? 9 : 0);
+        if (b > 0) res = 0;                                       /* uVar7 = 0 in Sub-Box 2/3 */
+        int part = -1;
+        if (pb[2] & mask) part = pb[2] >> 1;
+        if (pb[1] & mask) part = pb[1] >> 1;
+        if (pb[0] & mask) part = pb[0] >> 1;
+        if (part >= 0) res = (unsigned)part * 8u + (1u << b);
+    }
+    if (res == 0u) return 0;
+    *zone    = (int)(res >> 3);
+    *bracket = (res & 4u) ? 2 : (res & 2u) ? 1 : 0;              /* @0x80041834-48 */
+    return 1;
+}
+
+/* Die RE2-Ids, die im Original durch FUN_800410CC laufen (Geometrie-Record != 0x800A6350). Die
+ * Bruecken-Ids 9/10/11/16/17 (Projektil-/Strahl-Waffen, NULL-Record) und das Messer (Id 1,
+ * Nahkampf-Kegel des Ports) bleiben auf dem bisherigen Pfad. */
+static int re15_re2_gun_probe_owns(unsigned rid)
+{
+    return rid < 20u && s_re2z_geo[rid].addr[0] != 0u;
+}
+
 int re15_player_weapon_fire(int weapon_id)
 {
     if (weapon_id < 0 || weapon_id >= 22) return 0;
+    memset(s_re2_probe, 0, sizeof s_re2_probe);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     uint32_t reach = s_player_wpn_reach[weapon_id];
     /* the melee hit-test ORIGIN = the blade/hand point (@0x800353a4-c8); guns = player pos */
@@ -1449,12 +1666,25 @@ retry_after_latch:
                          * in denen das Original das Bit haelt:
                          *   EXEC[5] P6 @0x80103568 (setzt) .. P7 @0x80103628 (loescht)
                          *   EXEC[8] P3 @0x80103d00 (setzt) .. P4 @0x80103d60 (loescht) */
-                        int re2_rising = re2_owned && e->state == 1 &&
-                            ((e->sub_state_1 == 5 &&
-                              (e->sub_state_2 == 6 || e->sub_state_2 == 7)) ||
-                             (e->sub_state_1 == 8 &&
-                              (e->sub_state_2 == 3 || e->sub_state_2 == 4)));
-                        int lying = !re2_rising &&
+                        /* ⛔ RUNDE 16 (trefferhoehe.md): der Sonderfall `re2_rising` (P6/P7 bzw.
+                         * EXEC[8] P3/P4 -> RE1.5-Band) ist GESTRICHEN. Im Original regelt diesen
+                         * Zustand die TEILE-MASKE (nur Beine bis Clip-Bild 55 @0x801036D0-F0), nicht
+                         * ein Band — fuer RE2-owned Zombies entscheidet jetzt der Applier unten
+                         * (re15_re2_gun_probe), die Liege-Regel gilt nur noch fuer RE1.5-owned
+                         * Zombies (grid&0x80) und fuer die Bruecken-Waffen/das Messer. */
+                        extern unsigned re15_re2z_weapon_id(unsigned w);
+                        unsigned rid = re15_re2z_weapon_id((unsigned)weapon_id);
+                        /* ⛔ LIEGE-SPAWN 0x88 (EXEC[7]) AUSGENOMMEN: in RE2 ist er KEIN Ziel
+                         * (HP = -1 @0x80100A3C-40, +0x1D3 |= 0x80 @0x80103804-14), seine Maske
+                         * bleibt 3 (Lyer-INIT @0x80100A24-4C ohne Wechsel). Der Port laesst ihn
+                         * per Nutzer-Auftrag 2026-08-27 (spawn_pose-Ausnahme im Pausenfilter)
+                         * trotzdem treffen — ueber die Maske 3 wuerde der Applier ihn dann mit
+                         * EBEN auf jeder Distanz treffen (gemessen: 18 neue Zellen). Die
+                         * Liege-Spawn-Entscheidung liegt beim Nachbar-Dossier liegende-zombies;
+                         * bis dahin bleibt EXEC[7] auf der bisherigen Liege-Regel (grid&0x80). */
+                        int re2_applier = re2_owned && re15_re2_gun_probe_owns(rid) &&
+                                          !(e->state == 1 && e->sub_state_1 == 7);
+                        int lying = !re2_applier &&
                                     ((e->grid_id & 0x80) ||
                                      (re2_owned &&
                                       (e->re2z_flags21a & 0x2u) &&
@@ -1464,7 +1694,19 @@ retry_after_latch:
                             if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388)
                                                                * @0x800129cc-f0 */
                         }
-                        if (re2_owned && !lying && !re2_rising) {
+                        if (re2_applier) {
+                            /* DER RE2-APPLIER (Block am Funktionskopf): Fenster x Sub-Box x
+                             * Drittel x Teile-Maske -> Treffer/Zone/Klammer. Kein Band, kein
+                             * Fenster, kein RE1.5-Streifen mehr fuer diesen Kandidaten. Der
+                             * Kriecher ist dort IMMER Kandidat (Gates ohne Hoehe), aber seine
+                             * Maske ist NUR BEINE — EBEN (`02 00 00`) verwirft ihn. */
+                            int zone = 0, bracket = 0;
+                            if (!re15_re2_gun_probe(rid, elev, pl, e, &zone, &bracket)) continue;
+                            s_re2_probe[s].valid   = 1u;
+                            s_re2_probe[s].zone    = (uint8_t)zone;
+                            s_re2_probe[s].bracket = (uint8_t)bracket;
+                        }
+                        if (re2_owned && !lying && !re2_applier) {
                             /* dy-Fenster des Zombie-Records je RE2-Waffen-Id und
                              * Elevation (Dump-Belege am Tabellenkopf unten). UP-
                              * Fenster gelten voll nur im NAH-Bereich: die Sub-Boxen
@@ -1475,31 +1717,10 @@ retry_after_latch:
                              * auf bodengleiche Ziele). Die Radius-Erweiterung der
                              * Boxgrenzen (FUN_80041ce4) ist noch un-RE'd - die
                              * rohen Box-Starts sind die faithful-line (SPEC §5). */
-                            extern unsigned re15_re2z_weapon_id(unsigned w);
-                            static const int16_t FEN[20][6] = {
-                                /* je RE2-Id: UPlo,UPhi, LVlo,LVhi, DNlo,DNhi
-                                 * (@0x800A412C + (id-1)*20 + 8/12/16) */
-                                [ 1] = {-3000, -500,-1900,1000, -300,2500},
-                                [ 2] = {-5000,-2000,-3000,2000, -500,3000},
-                                [ 3] = {-5000,-2000,-3000,2000, -500,3000},
-                                [ 4] = {-5000,-2000,-3000,2000, -500,3000},
-                                [ 5] = {-5000,-2000,-3000,2000, -500,3000},
-                                [ 6] = {-5000,-2000,-3000,2000, -500,3000},
-                                [ 7] = {-5000,  500,-3000,2000, -500,3000},
-                                [ 8] = {-5000,  500,-3000,2000, -500,3000},
-                                [ 9] = {-3000,-2000,-2000,-1000,-1000,3000},
-                                [10] = {-3000,-2000,-2000,-1000,-1000,3000},
-                                [11] = {-3000,-2000,-2000,-1000,-1000,3000},
-                                [12] = {-4000,-2000,-3000,2000, -500,3000},
-                                [13] = {-5000,-2000,-3000,2000, -500,3000},
-                                [14] = {-4000,-2000,-3000,2000, -500,3000},
-                                [15] = {-5000,  500,-3000,2000, -500,3000},
-                                [16] = {-3000,-2000,-2000,-1000,-1000,3000},
-                                [17] = {-3000,-2000,-2000,-1000,-1000,3000},
-                                [18] = {-5000,  500,-3000,2000, -500,3000},
-                                [19] = {-5000,-2000,-3000,2000, -500,3000},
-                            };
-                            unsigned rid = re15_re2z_weapon_id((unsigned)weapon_id);
+                            /* Fenster-Tabelle: s_re2z_fen am Funktionskopf (Runde 16 dorthin
+                             * gezogen, weil der Applier dieselben Paare liest). Dieser Zweig
+                             * bedient nur noch das Messer (Id 1) — alle Hitscan-Ids laufen
+                             * oben durch re15_re2_gun_probe. */
                             /* NUR fuer echte Hitscan-Klassen: die RE2-Ids 9/10/11
                              * (Granaten), 16 (Flammen-/Funkenstrahl) und 17 (Rakete)
                              * sind in RE2 PROJEKTIL-/STRAHL-Waffen - ihre Hitscan-
@@ -1512,7 +1733,7 @@ retry_after_latch:
                             if (rid >= 1 && rid <= 19 &&
                                 rid != 9 && rid != 10 && rid != 11 &&
                                 rid != 16 && rid != 17) {
-                                const int16_t *fw = FEN[rid];
+                                const int16_t *fw = s_re2z_fen[rid];
                                 int32_t lo, hi, drittel;
                                 if (elev > 0)      { lo = fw[0]; hi = fw[1]; }
                                 else if (elev < 0) { lo = fw[4]; hi = fw[5]; }
@@ -1667,7 +1888,10 @@ retry_after_latch:
                         eband = 0x40000000u;                           /* @0x801015f4-fc */
                 }
             }
-            if (re2_fenster) {
+            if (s_re2_probe[s].valid) {
+                /* RE2-Applier hat Fenster, Sub-Box und Maske bereits entschieden (Runde 16). */
+            }
+            else if (re2_fenster) {
                 /* dy = enemy_y - player_y (PSX-Y: negativ = oben), gegen das Fenster
                  * - ersetzt den Band-Schnitt (RE2 hat keinen, s.o.). */
                 int32_t fdy = e->y - pl->y;
@@ -1697,7 +1921,10 @@ retry_after_latch:
         int is_gun_strip = (weapon_id == 0 || (weapon_id >= 3 && weapon_id <= 8) ||
                             weapon_id == 12 || weapon_id == 13 || weapon_id == 19 ||
                             weapon_id == 21);
-        if (is_gun_strip) {
+        if (s_re2_probe[s].valid) {
+            /* RE2-owned Zombie: die XZ-Sub-Box des Appliers (FUN_80041CE4) IST der Streifen —
+             * der RE1.5-Keil gilt fuer diesen Kandidaten nicht mehr (Runde 16). */
+        } else if (is_gun_strip) {
             if (!re15_gun_wedge_inside(pl, e->x, e->z, (int32_t)reach,
                                        (int32_t)((uint32_t)e->hit_radius_min & 0xffffu))) continue;
         } else {
@@ -1738,6 +1965,18 @@ retry_after_latch:
         e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | stun);
     }
     int dmg = re15_enemy_dmg_row(e)[weapon_id];     /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
+    if (s_re2_probe[best].valid) {
+        /* RE2-Applier: Schaden nach KLAMMER aus dem Zombie-Record-Wort 0 —
+         * `(*local_58 >> (uVar7 * 10 & 0x1f)) & 0x3ff` (FUN_800410CC, local_58 = Record
+         * @0x800A412C bzw. @0x800A42A8 + (id-1)*20 ueber PTR_DAT_800A6A88[Typ]). Klammer 0 ist
+         * byte-identisch mit s_re2_wpn_dmg_zombie[16] (der Pin misst 16/200 fuer W3/W8 nach). */
+        extern unsigned re15_re2z_weapon_id(unsigned w);
+        unsigned rid = re15_re2z_weapon_id((unsigned)weapon_id);
+        const uint32_t *w0 = (e->type == 0x15u || e->type == 0x16u || e->type == 0x17u)
+                           ? s_re2z16_rec_w0 : s_re2z_rec_w0;
+        if (rid < 20u && w0[rid] != 0u)
+            dmg = (int)((w0[rid] >> (10u * s_re2_probe[best].bracket)) & 0x3ffu);
+    }
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
     /* ⛔ TREFFERBUDGET DES GITTER-ARMS (Nutzer 2026-08-26: "Ich wuerde die Haende auch gerne
      * anschiessen koennen, dass die danach nicht mehr rauskommen nach 2 Schuessen oder so").
@@ -1992,11 +2231,26 @@ static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
      * der Rumpf-Todeszelle (enemy_ai_re2_zombie.c re2z_hit_ragdoll case 0).
      * Der fruehere Stempel HOCH->2 war eine Fehldeutung; die Spalten-Klemmen
      * bleiben als Sicherung stehen. Kriecher/Liegende stempeln BEINE. */
+    /* ⛔ RUNDE 16 (trefferhoehe.md): fuer den Schuss-Pfad kommt +0x1D2 jetzt aus dem
+     * RE2-Applier — `+0x1D2 = Teil + 3*Klammer` (`sll v1,s1,1 / addu v1,v1,s1 / addu / sb v1,466`
+     * @0x800413CC-D4 bzw. @0x80041A88-9C): Teil aus der Prioritaetszeile gegen die Teile-Maske
+     * (Kriecher/Liegende -> Beine, Stehende EBEN -> Rumpf, TIEF -> Beine), Klammer = Sub-Box
+     * (nah 0 / mitte 1 / fern 2). Damit sind die Spalten 3..8 der Reaktionstabelle @0x8010C940
+     * erstmals erreichbar (Zeile 7: Spalte 4 = 0x80105BC0 Taumel statt 0x801066FC Ragdoll fuer
+     * den fernen Schrot-Rumpftreffer; Dump re15_port/tools + Dossier §6).
+     * Der Trefferbox-Pfad (row_src = 1, kein Applier-Ergebnis) behaelt die bisherige
+     * Elevations-Naeherung, jetzt mit der Maske: Beine-only -> Zone 0. */
     {
-        extern int re15_player_aim_elevation(void);
-        int elev = re15_player_aim_elevation();
-        int liegt = (e->re2z_f10e & 1u) || (e->re2z_flags21a & 0x2u);
-        e->re2z_hits1d2 = (uint8_t)((liegt || elev < 0) ? 0u : 1u);
+        int slot = (int)(e - g_actors);
+        if (slot >= 0 && slot < RE15_ACTOR_MAX && s_re2_probe[slot].valid) {
+            e->re2z_hits1d2 = (uint8_t)(s_re2_probe[slot].zone + 3u * s_re2_probe[slot].bracket);
+        } else {
+            extern int re15_player_aim_elevation(void);
+            int elev = re15_player_aim_elevation();
+            int liegt = (e->re2z_f10e & 1u) || (e->re2z_flags21a & 0x2u) ||
+                        (re15_re2z_owns_type(e->type) && (e->re2z_parts & 7u) == 1u);
+            e->re2z_hits1d2 = (uint8_t)((liegt || elev < 0) ? 0u : 1u);
+        }
     }
     e->sub_state_2  = 0u;   /* +0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290 */
     if (re15_re2z_owns_type(e->type)) {
