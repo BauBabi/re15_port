@@ -1,0 +1,216 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1216,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1216,0)
+=== probe_r16_arme_1210_re2 — Port-Ist der Gitterhaende, Flavor=1 ===
+  EM01A-Bank geladen=1: meshes=4 bones=4 clips=4 victim_ok=0 | Donor 0x10 victim_ok=1
+    EM01A clip 0: 30 Bilder
+    EM01A clip 1: 39 Bilder
+    EM01A clip 2: 30 Bilder
+    EM01A clip 3: 54 Bilder
+
+--- Teil B: Geometrie ROOM1210 (10 Arme) ---
+  slot  Spawn(x,z)         yaw   Flurkante(x) Abstand Ursprung->Kante  Lunge-Ende->Kante  Hand(+1671)->Kante  HitR
+   1    (-25000, -8847)     0    -20622        4378                   1958               287            300
+   2    (-25000,-10247)     0    -20622        4378                   1958               287            300
+   3    (-14000, -5897)  2048    -18164        4164                   1744                73            300
+   4    (-14000, -7297)  2048    -18164        4164                   1744                73            300
+   5    (-25000,-15747)     0    -20622        4378                   1958               287            300
+   6    (-25000,-17130)     0    -20622        4378                   1958               287            300
+   7    (-14000,-12797)  2048    -18164        4164                   1744                73            300
+   8    (-14000,-14197)  2048    -18164        4164                   1744                73            300
+   9    (-14000,-21158)  2048    -18164        4164                   1744                73            300
+  10    (-14000,-22365)  2048    -18164        4164                   1744                73            300
+  SCA-Zellen (Band 0):
+    [ 0] x  -28676.. -26876  z   -6140..    916  type 1
+    [ 1] x  -27560..  -9776  z    -434..   1366  type 1
+    [ 2] x  -25967.. -24392  z    -800..   1000  type 1
+    [ 3] x  -28676.. -26876  z   -6140..    916  type 1
+    [ 4] x  -27560..  -9776  z    -434..   1366  type 1
+    [ 5] x  -11738.. -10154  z   -5528..    232  type 1
+    [ 6] x  -22150.. -21090  z  -20746..  -4084  type 1
+    [ 7] x  -27920.. -21264  z   -6068..  -3920  type 1
+    [ 8] x  -28928.. -16328  z  -28496.. -26696  type 1
+    [ 9] x  -28908.. -27358  z  -27578.. -17930  type 1
+    [10] x  -27992.. -21368  z  -19898.. -17948  type 1
+    [11] x  -17696.. -16676  z  -28640..  -4664  type 1
+    [12] x  -17336.. -10352  z   -5996..  -3926  type 1
+    [13] x  -15014.. -12806  z   -2459..    493  type 1
+    [14] x  -23340.. -21540  z   -4894..  -4462  type 1
+    [15] x  -21674.. -21242  z  -20828.. -19280  type 1
+    [16] x  -22397.. -21185  z  -27560.. -22520  type 1
+    [17] x  -27235.. -26335  z  -21052.. -20152  type 3
+    [18] x  -25291.. -21644  z  -20795.. -18995  type 1
+    [19] x  -28208.. -25652  z  -27794.. -23402  type 1
+    [20] x  -26642.. -24242  z    -725..   1075  type 1
+
+--- Teil A0: Lauf durch den Flur, Ziel-x -19500 (Flurmitte), z -3500 -> -25000, 75/Bild, Constrain ---
+  f  0 pl=(-19500, -3575) CUT 0 (Viereck ja)
+  f  0 arm 1 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000, -8847) drift=    0  Bone1-Welt=(-25000,     0, -8847) origin- hand-  pl=(-19500, -3575) d=7611
+  f  0 arm 2 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-10247) drift=    0  Bone1-Welt=(-25000,     0,-10247) origin- hand-  pl=(-19500, -3575) d=8628
+  f  0 arm 3 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -5897) drift=    0  Bone1-Welt=(-14000,     0, -5897) origin- hand-  pl=(-19500, -3575) d=5948
+  f  0 arm 4 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -7297) drift=    0  Bone1-Welt=(-14000,     0, -7297) origin- hand-  pl=(-19500, -3575) d=6636
+  f  0 arm 5 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-15747) drift=    0  Bone1-Welt=(-25000,     0,-15747) origin- hand-  pl=(-19500, -3575) d=13350
+  f  0 arm 6 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-17130) drift=    0  Bone1-Welt=(-25000,     0,-17130) origin- hand-  pl=(-19500, -3575) d=14624
+  f  0 arm 7 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-12797) drift=    0  Bone1-Welt=(-14000,     0,-12797) origin- hand-  pl=(-19500, -3575) d=10690
+  f  0 arm 8 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-14197) drift=    0  Bone1-Welt=(-[scd] thread start slot=10 first_op=0x22
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1216,0)
+[scd] thread start slot=10 first_op=0x22
+14000,     0,-14197) origin- hand-  pl=(-19500, -3575) d=11940
+  f  0 arm 9 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-21158) drift=    0  Bone1-Welt=(-14000,     0,-21158) origin- hand-  pl=(-19500, -3575) d=18316
+  f  0 arm10 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-22365) drift=    0  Bone1-Welt=(-14000,     0,-22365) origin- hand-  pl=(-19500, -3575) d=19536
+  f131 pl=(-19500,-13400) sub02: grid_id=1 auf allen Armen
+
+  Zusammenfassung Lauf: Griff-Ereignisse=0, Bilder im Griff=0
+  slot  aktive Bilder  davon Ursprung+Hand ausserhalb Cut-Viereck  max. x-Drift
+   1       0              0                                           0
+   2       0              0                                           0
+   3       0              0                                           0
+   4       0              0                                           0
+   5       0              0                                           0
+   6       0              0                                           0
+   7       0              0                                           0
+   8       0              0                                           0
+   9       0              0                                           0
+  10       0              0                                           0
+
+--- Teil A1: Lauf durch den Flur, Ziel-x -23000 (an der WESTWAND), z -3500 -> -25000, 75/Bild, Constrain ---
+  f  0 pl=(-19575, -3575) CUT 0 (Viereck ja)
+  f  0 arm 1 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000, -8847) drift=    0  Bone1-Welt=(-25000,     0, -8847) origin- hand-  pl=(-19575, -3575) d=7559
+  f  0 arm 2 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-10247) drift=    0  Bone1-Welt=(-25000,     0,-10247) origin- hand-  pl=(-19575, -3575) d=8566
+  f  0 arm 3 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -5897) drift=    0  Bone1-Welt=(-14000,     0, -5897) origin- hand-  pl=(-19575, -3575) d=6036
+  f  0 arm 4 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -7297) drift=    0  Bone1-Welt=(-14000,     0, -7297) origin- hand-  pl=(-19575, -3575) d=6695
+  f  0 arm 5 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-15747) drift=    0  Bone1-Welt=(-25000,     0,-15747) origin- hand-  pl=(-19575, -3575) d=13312
+  f  0 arm 6 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-17130) drift=    0  Bone1-Welt=(-25000,     0,-17130) origin- hand-  pl=(-19575, -3575) d=14588
+  f  0 arm 7 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-12797) drift=    0  Bone1-Welt=(-14000,     0,-12797) origin- hand-  pl=(-19575, -3575) d=10738
+  f  0 arm 8 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-14197) drift=    0  Bone1-Welt=(-14000,     0,-14197) origin- hand-  pl=(-19575, -3575) d=11984
+  f  0 arm 9 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-21158) drift=    0  Bone1-Welt=(-14000,     0,-21158) origin- hand-  pl=(-19575, -3575) d=18432
+  f  0 arm10 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-22365) drift=    0  Bone1-Welt=(-14000,     0,-22365) origin- hand-  pl=(-19575, -3575) d=19536
+  f131 pl=(-20622,-13400) sub02: grid_id=1 auf allen Armen
+  f147 arm 5 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-25000,-15747) drift=    0  Bone1-Welt=(-25000,     0,-15747) origin- hand-  pl=(-20622,-14600) d=4521
+  f151 arm 5 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-22580,-15747) drift= 2420  Bone1-Welt=(-22580,     0,-15747) origin- hand-  pl=(-20622,-14900) d=2126
+  f165 arm 6 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-25000,-17130) drift=    0  Bone1-Welt=(-25000,     0,-17130) origin- hand-  pl=(-20622,-15950) d=4521
+  f169 arm 6 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-22580,-17130) drift= 2420  Bone1-Welt=(-22580,     0,-17130) origin- hand-  pl=(-20622,-16250) d=2141
+  f182 arm 5 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-23380,-15747) drift= 1620  Bone1-Welt=(-23380,     0,-15747) origin- hand-  pl=(-20622,-17225) d=3124
+  f186 arm 5 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-22580,-15747) drift= 2420  Bone1-Welt=(-22580,     0,-15747) origin- hand- [scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21750,0,-20760) rot=(0,1216,0)
+[scd] thread start slot=10 first_op=0x22
+ pl=(-20622,-17525) d=2635
+  f187 arm 5 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-22580,-15747) drift= 2420  Bone1-Welt=(-22580,     0,-15747) origin- hand-  pl=(-20622,-17600) d=2684
+  f188 arm 5 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-23380,-15747) drift= 1620  Bone1-Welt=(-23380,     0,-15747) origin- hand-  pl=(-20622,-17675) d=3357
+  f191 arm 5 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-25000,-15747) drift=    0  Bone1-Welt=(-25000,     0,-15747) origin- hand-  pl=(-20622,-17900) d=4857
+  f200 arm 6 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-23380,-17130) drift= 1620  Bone1-Welt=(-23380,     0,-17130) origin- hand-  pl=(-20622,-18575) d=3103
+  f204 arm 6 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-22580,-17130) drift= 2420  Bone1-Welt=(-22580,     0,-17130) origin- hand-  pl=(-20622,-18875) d=2610
+  f205 arm 6 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-22580,-17130) drift= 2420  Bone1-Welt=(-22580,     0,-17130) origin- hand-  pl=(-20622,-18950) d=2672
+  f206 arm 6 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-23380,-17130) drift= 1620  Bone1-Welt=(-23380,     0,-17130) origin- hand-  pl=(-20622,-19025) d=3337
+  f209 arm 6 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-25000,-17130) drift=    0  Bone1-Welt=(-25000,     0,-17130) origin- hand-  pl=(-20622,-19250) d=4857
+
+  Zusammenfassung Lauf: Griff-Ereignisse=0, Bilder im Griff=0
+  slot  aktive Bilder  davon Ursprung+Hand ausserhalb Cut-Viereck  max. x-Drift
+   1       0              0                                           0
+   2       0              0                                           0
+   3       0              0                                           0
+   4       0              0                                           0
+   5      44             44                                        2420
+   6      44             44                                        2420
+   7       0              0                                           0
+   8       0              0                                           0
+   9       0              0                                           0
+  10       0              0                                           0
+
+--- Teil A2: Lauf durch den Flur, Ziel-x -16000 (an der OSTWAND), z -3500 -> -25000, 75/Bild, Constrain ---
+  f  0 pl=(-19425, -3575) CUT 0 (Viereck ja)
+  f  0 arm 1 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000, -8847) drift=    0  Bone1-Welt=(-25000,     0, -8847) origin- hand-  pl=(-19425, -3575) d=7662
+  f  0 arm 2 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-10247) drift=    0  Bone1-Welt=(-25000,     0,-10247) origin- hand-  pl=(-19425, -3575) d=8688
+  f  0 arm 3 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -5897) drift=    0  Bone1-Welt=(-14000,     0, -5897) origin- hand-  pl=(-19425, -3575) d=5882
+  f  0 arm 4 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000, -7297) drift=    0  Bone1-Welt=(-14000,     0, -7297) origin- hand-  pl=(-19425, -3575) d=6576
+  f  0 arm 5 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-15747) drift=    0  Bone1-Welt=(-25000,     0,-15747) origin- hand-  pl=(-19425, -3575) d=13350
+  f  0 arm 6 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-25000,-17130) drift=    0  Bone1-Welt=(-25000,     0,-17130) origin- hand-  pl=(-19425, -3575) d=14624
+  f  0 arm 7 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-12797) drift=    0  Bone1-Welt=(-14000,     0,-12797) origin- hand-  pl=(-19425, -3575) d=10690
+  f  0 arm 8 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-14197) drift=    0  Bone1-Welt=(-14000,     0,-14197) origin- hand-  pl=(-19425, -3575) d=11896
+  f  0 arm 9 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-21158) drift=    0  Bone1-Welt=(-14000,     0,-21158) origin- hand-  pl=(-19425, -3575) d=18316
+  f  0 arm10 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  8 pos=(-14000,-22365) drift=    0  Bone1-Welt=(-14000,     0,-22365) origin- hand-  pl=(-19425, -3575) d=19536
+  f131 pl=(-18164,-13400) sub02: grid_id=1 auf allen Armen
+  f131 arm 7 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-14000,-12797) drift=    0  Bone1-Welt=(-14000,     0,-12797) origin- hand-  pl=(-18164,-13400) d=4190
+  f131 arm 8 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-14000,-14197) drift=    0  Bone1-Welt=(-14000,     0,-14197) origin- hand-  pl=(-18164,-13400) d=4222
+  f135 arm 7 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-16420,-12797) drift=-2420  Bone1-Welt=(-16420,     0,-12797) origin- hand-  pl=(-18164,-13700) d=1962
+  f135 arm 8 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-16420,-14197) drift=-2420  Bone1-Welt=(-16420,     0,-14197) origin- hand-  pl=(-18164,-13700) d=1810
+  f166 arm 7 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-15620,-12797) drift=-1620  Bone1-Welt=(-15620,     0,-12797) origin- hand-  pl=(-18164,-16025) d=4096
+  f166 arm 8 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-15620,-14197) drift=-1620  Bone1-Welt=(-15620,     0,-14197) origin- hand-  pl=(-18164,-16025) d=3124
+  f170 arm 7 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-16420,-12797) drift=-2420  Bone1-Welt=(-16420,     0,-12797) origin- hand-  pl=(-18164,-16325) d=3932
+  f170 arm 8 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-16420,-14197) drift=-2420  Bone1-Welt=(-16420,     0,-14197) origin- hand-  pl=(-18164,-16325) d=2745
+  f171 arm 7 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-16420,-12797) drift=-2420  Bone1-Welt=(-16420,     0,-12797) origin- hand-  pl=(-18164,-16400) d=3998
+  f171 arm 8 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-16420,-14197) drift=-2420  Bone1-Welt=(-16420,     0,-14197) origin- hand-  pl=(-18164,-16400) d=2804
+  f172 arm 7 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-15620,-12797) drift=-1620  Bone1-Welt=(-15620,     0,-12797) origin- hand-  pl=(-18164,-16475) d=4463
+  f172 arm 8 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-15620,-14197) drift=-1620  Bone1-Welt=(-15620,     0,-14197) origin- hand-  pl=(-18164,-16475) d=3405
+  f175 arm 7 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-14000,-12797) drift=    0  Bone1-Welt=(-14000,     0,-12797) origin- hand-  pl=(-18164,-16700) d=5701
+  f175 arm 8 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-14000,-14197) drift=    0  Bone1-Welt=(-14000,     0,-14197) origin- hand-  pl=(-18164,-16700) d=4857
+  f211 arm 9 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-14000,-21158) drift=    0  Bone1-Welt=(-14000,     0,-21158) origin- hand-  pl=(-18164,-19400) d=4492
+  f215 arm 9 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-16420,-21158) drift=-2420  Bone1-Welt=(-16420,     0,-21158) origin- hand-  pl=(-18164,-19700) d=2260
+  f227 arm10 st=1 sub=1(LUNGE    ) ph=0 clip=0 fr=  0 pos=(-14000,-22365) drift=    0  Bone1-Welt=(-14000,     0,-22365) origin- hand-  pl=(-18164,-20600) d=4521
+  f231 arm10 st=1 sub=1(LUNGE    ) ph=2 clip=2 fr=  0 pos=(-16420,-22365) drift=-2420  Bone1-Welt=(-16420,     0,-22365) origin- hand-  pl=(-18164,-20900) d=2275
+  f246 arm 9 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-15620,-21158) drift=-1620  Bone1-Welt=(-15620,     0,-21158) origin- hand-  pl=(-18164,-22025) d=2684
+  f250 arm 9 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-16420,-21158) drift=-2420  Bone1-Welt=(-16420,     0,-21158) origin- hand-  pl=(-18164,-22325) d=2095
+  f251 arm 9 st=1 sub=2(GREIFEN  ) ph=0 clip=1 fr=  0 pos=(-16420,-21158) drift=-2420  Bone1-Welt=(-16420,     0,-21158) origin- hand-  pl=(-18164,-22400) d=2126
+  f259 arm 9 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-16420,-21158) drift=-2420  Bone1-Welt=(-16420,     0,-21158) origin- hand-  pl=(-18164,-23000) d=2534
+  f260 arm 9 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-15620,-21158) drift=-1620  Bone1-Welt=(-15620,     0,-21158) origin- hand-  pl=(-18164,-23075) d=3176
+  f262 arm10 st=1 sub=1(LUNGE    ) ph=3 clip=0 fr=  0 pos=(-15620,-22365) drift=-1620  Bone1-Welt=(-15620,     0,-22365) origin- hand-  pl=(-18164,-23225) d=2684
+  f263 arm 9 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-14000,-21158) drift=    0  Bone1-Welt=(-14000,     0,-21158) origin- hand-  pl=(-18164,-23300) d=4664
+  f266 arm10 st=1 sub=2(GREIFEN  ) ph=0 clip=0 fr=  0 pos=(-16420,-22365) drift=-2420  Bone1-Welt=(-16420,     0,-22365) origin- hand-  pl=(-18164,-23525) d=2079
+  f267 arm10 st=1 sub=2(GREIFEN  ) ph=0 clip=1 fr=  0 pos=(-16420,-22365) drift=-2420  Bone1-Welt=(-16420,     0,-22365) origin- hand-  pl=(-18164,-23600) d=2126
+  f275 arm10 st=1 sub=3(ZURUECK  ) ph=0 clip=1 fr=  0 pos=(-16420,-22365) drift=-2420  Bone1-Welt=(-16420,     0,-22365) origin- hand-  pl=(-18164,-24200) d=2521
+  f276 arm10 st=1 sub=3(ZURUECK  ) ph=1 clip=0 fr=  0 pos=(-15620,-22365) drift=-1620  Bone1-Welt=(-15620,     0,-22365) origin- hand-  pl=(-18164,-24275) d=3176
+  f279 arm10 st=1 sub=0(RUHE     ) ph=0 clip=0 fr=  0 pos=(-14000,-22365) drift=    0  Bone1-Welt=(-14000,     0,-22365) origin- hand-  pl=(-18164,-24500) d=4664
+
+  Zusammenfassung Lauf: Griff-Ereignisse=0, Bilder im Griff=0
+  slot  aktive Bilder  davon Ursprung+Hand ausserhalb Cut-Viereck  max. x-Drift
+   1       0              0                                           0
+   2       0              0                                           0
+   3       0              0                                           0
+   4       0              0                                           0
+   5       0              0                                           0
+   6       0              0                                           0
+   7      44             44                                        2420
+   8      44             44                                        2420
+   9      52             52                                        2420
+  10      52             52                                        2420
+
+--- Teil C: RE2 EM2D (CDEMD0.EMS kind 0x2D) ---
+  re2_ems_load_bank(0x2D)=0 meshes=15 bones=15 clips(main)=6 loco=1/6 victim=1/2 tim=128x256
+    EM2D clip 0: 20 Bilder
+    EM2D clip 1: 25 Bilder
+    EM2D clip 2: 30 Bilder
+    EM2D clip 3: 15 Bilder
+    EM2D clip 4: 10 Bilder
+    EM2D clip 5: 19 Bilder
+    EM2D Opfer-Clip 0: 19 Bilder
+    EM2D Opfer-Clip 1: 20 Bilder
+  Bone-Eltern: 0:-1 1:0 2:1 3:2 4:3 5:3 6:3 7:3 8:0 9:8 10:9 11:10 12:10 13:10 14:10
+    clip 0: Bild0 Bone3=(159,241,-113) Bone7=(320,264,34) Bone10=(144,256,96) Bone14=(323,260,-32) | max x: Bone3 1082, Bone7 1300 (Bild 5, y -67), min x Bone7 320, Bone14 1300
+    clip 1: Bild0 Bone3=(1085,-69,-1) Bone7=(1305,-68,-1) Bone10=(1047,87,-246) Bone14=(1210,-58,-277) | max x: Bone3 1086, Bone7 1305 (Bild 0, y -68), min x Bone7 1234, Bone14 1297
+    clip 2: Bild0 Bone3=(1033,-325,80) Bone7=(1246,-376,100) Bone10=(567,490,-489) Bone14=(574,689,-581) | max x: Bone3 1065, Bone7 1282 (Bild 24, y -187), min x Bone7 1174, Bone14 1193
+    clip 3: Bild0 Bone3=(852,270,-389) Bone7=(1070,276,-366) Bone10=(871,284,330) Bone14=(1087,290,292) | max x: Bone3 1088, Bone7 1307 (Bild 6, y -33), min x Bone7 1070, Bone14 1293
+    clip 4: Bild0 Bone3=(1081,94,-18) Bone7=(1218,266,-12) Bone10=(1082,88,13) Bone14=(1211,266,4) | max x: Bone3 1081, Bone7 1228 (Bild 1, y 306), min x Bone7 606, Bone14 1217
+    clip 5: Bild0 Bone3=(1027,47,77) Bone7=(1244,17,92) Bone10=(1027,47,-75) Bone14=(1243,18,-103) | max x: Bone3 1056, Bone7 1269 (Bild 15, y -31), min x Bone7 1071, Bone14 1267
+    mesh  0:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh  1:  21 tri-verts  x -119..629  y -170..168  z -131..154
+    mesh  2:  17 tri-verts  x -41..572  y -125..107  z -99..94
+    mesh  3:  23 tri-verts  x -26..240  y -50..114  z -137..191
+    mesh  4:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh  5:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh  6:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh  7:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh  8:  21 tri-verts  x -119..629  y -170..168  z -154..131
+    mesh  9:  17 tri-verts  x -41..572  y -125..107  z -94..99
+    mesh 10:  23 tri-verts  x -26..240  y -50..114  z -191..137
+    mesh 11:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh 12:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh 13:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+    mesh 14:   0 tri-verts  x 99999..-99999  y 99999..-99999  z 99999..-99999
+
+OK

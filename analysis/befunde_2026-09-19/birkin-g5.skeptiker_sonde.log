@@ -1,0 +1,120 @@
+=== R16 birkin-g5: Auftritt / Animation / Tentakel (ROOM5090, RE2-EM036/EM037) ===
+Cut-12-Ankerviereck (RVD @0x04A4): has=1 (-5600,-29700) (-5475,-16975) (28100,-17100) (27900,-29700)
+  Start Skript Pos_set(1200) @0x12FE    : Ursprung x=  1200 (im Viereck=1)  Front x=  5694 (im Viereck=1)  Front-Abstand Westwand=11367  nach Intro (+10960) Ursprung=12160 Front=16654
+  Start Front am Westende (-5673-4494)  : Ursprung x=-10167 (im Viereck=0)  Front x= -5673 (im Viereck=0)  Front-Abstand Westwand=0  nach Intro (+10960) Ursprung=793 Front=5287
+EM036: 2 Bones 11 Clips 7 Meshes morph_ok=1 | EM037: 4 Bones 24 Clips 4 Meshes
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss-Slot 2, Boss pos=(1200,-23350) grid=13 clip=1
+
+-- A/B) 1500 Bilder ab Kampfgate, Spieler steht bei x=13399 --
+   Bild | boss x,z | yaw | clip/af | Urspr.imQ | Front x (imQ) | Front-Spieler | |dx| | morphMax(#>500) | bone1 rot[0],rot[2] trans | tent scale/rotx/rotz
+      0 |   1200,-23350 | 4095 |  1/  0 | 1 |   5694 (1) |  -7705 | 12199 |     3(  0) |  4093,    0 (2146,-3727,0) | [0 c14 s1 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c16 s1 rx0 rz0] [3 c15 s1 rx0 rz0]
+     30 |   1200,-23350 | 4095 |  1/  0 | 1 |   5694 (1) |  -7705 | 12199 |    21(  0) |  4093,    0 (2146,-3727,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c16 s768 rx0 rz0] [3 c15 s1 rx0 rz0]
+     60 |   1200,-23350 | 4095 |  1/  0 | 1 |   5694 (1) |  -7705 | 12199 |    40(  0) |  4093,    0 (2146,-3727,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+     90 |   1201,-23350 | 4095 |  1/  3 | 1 |   5695 (1) |  -7704 | 12198 |    64(  0) |  4093,    0 (2144,-3724,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    120 |   1392,-23350 | 4095 |  1/ 33 | 1 |   5886 (1) |  -7513 | 12007 |   247(  0) |  4060,    0 (2051,-3455,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    150 |   4631,-23350 | 4095 |  1/ 63 | 1 |   9125 (1) |  -4274 |  8768 |   468(  0) |  3844,    0 (2146,-2498,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    180 |   6248,-23350 | 4095 |  1/ 93 | 1 |  10742 (1) |  -2657 |  7151 |   694(336) |  4067,  264 (2146,-2394,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    210 |   6106,-23350 | 4095 |  1/123 | 1 |  10600 (1) |  -2799 |  7293 |   921(429) |  3933,-1044 (2146,-2398,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    240 |   6318,-23350 | 4095 |  1/153 | 1 |  10812 (1) |  -2587 |  7081 |  1146(486) |  3189,  -82 (2146,-2403,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    270 |   8214,-23350 | 4095 |  3/  2 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4096,    0 (2146,-2398,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    300 |   8214,-23350 | 4095 |  3/ 32 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4091,    0 (2152,-2449,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    330 |   8214,-23350 | 4095 |  3/ 62 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4081,    0 (2148,-2400,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    360 |   8214,-23350 | 4095 |  3/ 92 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4095,    0 (2146,-2397,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    390 |   8214,-23350 | 4095 |  3/ 22 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4084,    0 (2153,-2471,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    420 |   8214,-23350 | 4095 |  3/ 52 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4087,    0 (2149,-2406,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    450 |   8214,-23350 | 4095 |  3/ 82 | 1 |  12708 (1) |   -691 |  5185 |  1350(515) |  4093,    0 (2146,-2395,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    480 |   8227,-23350 | 4095 |  4/ 12 | 1 |  12721 (1) |   -678 |  5172 |   319(  0) |  4094,   74 (2146,-2385,-4) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    510 |   8525,-23350 | 4095 |  4/ 42 | 1 |  13019 (1) |   -380 |  4874 |   430(  0) |  4025, -746 (2144,-2322,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    527 |   8929,-23350 | 4095 |  4/ 59 | 1 |  13423 (1) |     24 |  4470 |   529(  5) |  3729, 1057 (2143,-2298,-82) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    540 |   8898,-23350 | 4095 |  4/ 72 | 1 |  13392 (1) |     -7 |  4501 |   605(158) |  4007,  834 (2144,-2316,-89) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    570 |   9858,-23350 | 4095 |  4/102 | 1 |  14352 (1) |    953 |  3541 |   778(396) |  3644, -487 (2152,-2623,-18) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    600 |  11617,-23350 | 4095 |  4/132 | 1 |  16111 (1) |   2712 |  1782 |   988(444) |  3740,  508 (2169,-3197,17) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    630 |  12341,-23350 | 4095 |  4/162 | 1 |  16835 (1) |   3042 |  1452 |  1214(498) |  3993, -333 (2163,-3691,2) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    660 |  12160,-23350 | 4095 |  2/ 11 | 1 |  16654 (1) |   2861 |  1633 |   409(  0) |  4084,  -69 (2147,-3720,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    690 |  12160,-23350 | 4095 |  2/ 41 | 1 |  16654 (1) |   2861 |  1633 |   427(  0) |  4035, -679 (2147,-3619,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    720 |  12160,-23350 | 4095 |  2/ 71 | 1 |  16654 (1) |   2861 |  1633 |   446(  0) |  4026,  730 (2147,-3601,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    750 |  12160,-23350 | 4095 |  2/101 | 1 |  16654 (1) |   2861 |  1633 |   464(  0) |  3841,  852 (2147,-3658,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    780 |  12160,-23350 | 4095 |  2/131 | 1 |  16654 (1) |   2861 |  1633 |   483(  0) |  4030, -290 (2147,-3719,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    810 |  12160,-23350 | 4095 |  0/ 10 | 1 |  16654 (1) |   2861 |  1633 |   501(  1) |  4084,   24 (2148,-3718,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    840 |  12160,-23350 | 4095 |  0/ 40 | 1 |  16654 (1) |   2861 |  1633 |   520(  1) |  4059, -234 (2150,-3611,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    870 |  12160,-23350 | 4095 |  0/ 70 | 1 |  16654 (1) |   2861 |  1633 |   538(  1) |  4086,  207 (2146,-3639,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    900 |  12160,-23350 | 4095 |  0/  0 | 1 |  16654 (1) |   2861 |  1633 |   556(  2) |  4096,    0 (2146,-3727,0) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    930 |  12160,-23350 | 4095 |  2/ 19 | 1 |  16654 (1) |   2861 |  1633 |   575(  2) |  4043, -370 (2147,-3697,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    960 |  12160,-23350 | 4095 |  2/ 49 | 1 |  16654 (1) |   2861 |  1633 |   593(  3) |  4052, -541 (2147,-3599,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+    990 |  12160,-23350 | 4095 |  2/ 79 | 1 |  16654 (1) |   2861 |  1633 |   612(  3) |  3938, 1104 (2147,-3612,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+   1020 |  12160,-23350 | 4095 |  2/109 | 1 |  16654 (1) |   2861 |  1633 |   630(  4) |  3683,  523 (2147,-3676,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+   1050 |  12160,-23350 | 4095 |  2/139 | 1 |  16654 (1) |   2861 |  1633 |   649(  6) |  4077, -296 (2147,-3729,-55) | [0 c14 s4096 rx0 rz0] [1 c14 s1 rx0 rz0] [2 c0 s3840 rx0 rz0] [3 c0 s3840 rx0 rz0]
+   1080 |  12160,-23350 | 4095 |  0/ 18 | 1 |  16654 (1) |   2861 |  1633 |   772( 18) |  4055,  146 (2153,-3703,0) | [0 c0 s2944 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s2688 rx0 rz0] [3 c0 s2688 rx0 rz0]
+   1110 |  12160,-23350 | 4095 |  0/ 48 | 1 |  16654 (1) |   2861 |  1633 |   975( 82) |  4062, -302 (2149,-3595,0) | [0 c0 s1024 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s768 rx0 rz0] [3 c0 s768 rx0 rz0]
+   1123 |  12160,-23350 | 4095 |  5/  0 | 1 |  16654 (1) |   2861 |  1633 |   887( 54) |  4096,    0 (2146,-3727,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1140 |  11938,-23350 | 4095 |  5/ 17 | 1 |  16432 (1) |   2639 |  1855 |   617(  4) |  3985,  196 (2153,-3681,0) | [0 c0 s2176 rx0 rz0] [1 c0 s2176 rx0 rz0] [2 c0 s2176 rx0 rz0] [3 c0 s2176 rx0 rz0]
+   1170 |  12783,-23350 | 4095 |  5/ 47 | 1 |  17277 (1) |   2969 |  1525 |    26(  0) |  4087,   45 (2152,-3415,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1200 |  12662,-23350 | 4095 |  5/ 77 | 1 |  17156 (1) |   2848 |  1646 |   297(  0) |  4025, -644 (2148,-3360,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1230 |  13421,-23350 | 4095 |  5/107 | 1 |  17915 (1) |   3120 |  1374 |    17(  0) |  3647,  626 (2146,-3589,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1260 |  16460,-23350 | 4095 |  5/137 | 1 |  20954 (1) |   3081 |  1413 |   515(  1) |  4062, -476 (2146,-3716,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1290 |  16166,-23350 | 4095 |  2/ 16 | 1 |  20660 (1) |   2724 |  1770 |   973( 81) |  4060, -264 (2147,-3706,-55) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1320 |  16166,-23350 | 4095 |  2/ 46 | 1 |  20660 (1) |   2724 |  1770 |   973( 81) |  4042, -616 (2147,-3605,-55) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1350 |  16166,-23350 | 4095 |  2/ 76 | 1 |  20660 (1) |   2724 |  1770 |   466(  0) |  3965, 1001 (2147,-3607,-55) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1380 |  15948,-23350 | 4095 |  5/ 18 | 1 |  20442 (1) |   2506 |  1988 |   120(  0) |  3987,  196 (2153,-3674,0) | [0 c0 s2304 rx0 rz0] [1 c0 s2304 rx0 rz0] [2 c0 s2304 rx0 rz0] [3 c0 s2304 rx0 rz0]
+   1410 |  16784,-23350 | 4095 |  5/ 48 | 1 |  21278 (1) |   2964 |  1530 |   258(  0) |  4081,  -24 (2152,-3410,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1440 |  16666,-23350 | 4095 |  5/ 78 | 1 |  21160 (1) |   2846 |  1648 |   157(  0) |  4031, -607 (2148,-3361,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+   1470 |  17512,-23350 | 4095 |  5/108 | 1 |  22006 (1) |   3127 |  1367 |   655(  6) |  3602,  725 (2146,-3600,0) | [0 c0 s1 rx0 rz0] [1 c0 s1 rx0 rz0] [2 c0 s1 rx0 rz0] [3 c0 s1 rx0 rz0]
+  ERGEBNIS A: Ursprung erstmals im Cut-12-Viereck bei Bild 0, Front bei 0; Intro fertig (Clip 5) bei 1123; Front ueberholt den Spieler bei Bild 527; kleinster |dx| Ursprung-Spieler = 1336
+  ERGEBNIS B: Morph-Puffer NULL in 0/1500 Bildern, groesste Vertex-Verschiebung im Lauf = 1350; Bone-1-Pose (rot[0]) aenderte sich in 1195 Bildern; Clip-Histogramm: c0=173 c1=268 c2=389 c3=200 c4=181 c5=289 c6=0 c7=0 c8=0 c9=0 c10=0 c11=0
+  Konsumenten im Port (Code-Befund, hier nur Felder): Boss rot_x=0 rot_z=0 render_scale=0 (Kopf-Tracking/Augen-UV/2-Bone-Naht: kein Feld, kein Konsument)
+
+-- C) 3000 Bilder, Spieler jedes Bild auf |dx|=6500 OESTLICH des Bosses gepinnt, HP je Bild zurueck --
+  Tentakel-Aktoren: 4
+   f   0 boss clip= 5 x= 20487 maske=00 | [0 c 0 af  0 s   1 rx    0 rz    0 y -2313] [1 c 0 af  0 s   1 rx    0 rz    0 y -1878] [2 c 0 af  0 s   1 rx    0 rz    0 y  -609] [3 c 0 af  0 s   1 rx    0 rz    0 y -2494]
+   f 100 boss clip= 0 x= 20172 maske=00 | [0 c 0 af  0 s   1 rx    0 rz    0 y -2313] [1 c 0 af  0 s   1 rx    0 rz    0 y -1886] [2 c 0 af  0 s   1 rx    0 rz    0 y  -609] [3 c 0 af  0 s   1 rx    0 rz    0 y -2494]
+   GEO f 149 arm3 c23 af 70 yaw4095 s4096 anker=(4013,-2494,-21426) spitze=(12274,-2494,-21426) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4392,-23350) spieler=(25024,-23350)
+   GEO f 197 arm2 c21 af 70 yaw4095 s4096 anker=(4627,-609,-20747) spitze=(12888,-609,-20747) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4533,-23350) spieler=(25024,-23350)
+   f 200 boss clip= 0 x= 20172 maske=70 | [0 c 8 af 11 s3456 rx  896 rz    0 y -2313] [1 c 8 af 42 s4096 rx 1088 rz   16 y -1886] [2 c21 af  0 s4096 rx    0 rz    0 y  -609] [3 c 0 af  0 s   1 rx    0 rz    0 y -2494]
+   GEO f 204 arm1 c 8 af 50 yaw4095 s4096 anker=(23587,-1882,-24570) spitze=(31848,-1882,-24570) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4529,-23350) spieler=(25024,-23350)
+   GEO f 214 arm1 c 8 af 70 yaw4095 s4096 anker=(23587,-1855,-24570) spitze=(31848,-1855,-24570) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4502,-23350) spieler=(25024,-23350)
+   GEO f 220 arm0 c 8 af 50 yaw4095 s4096 anker=(3839,-2313,-25319) spitze=(12100,-2313,-25319) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4478,-23350) spieler=(25024,-23350)
+   GEO f 224 arm1 c 8 af 90 yaw4095 s4096 anker=(23587,-1813,-24570) spitze=(31848,-1813,-24570) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4460,-23350) spieler=(25024,-23350)
+   GEO f 230 arm0 c 8 af 70 yaw4095 s4096 anker=(3839,-2313,-25319) spitze=(12100,-2313,-25319) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4435,-23350) spieler=(25024,-23350)
+   GEO f 240 arm0 c 8 af 90 yaw4095 s4096 anker=(3839,-2313,-25319) spitze=(12100,-2313,-25319) bossUrspr=(20172,0,-23350) bossBone0welt=(20172,-4402,-23350) spieler=(25024,-23350)
+   f 300 boss clip= 5 x= 20763 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1527] [2 c 0 af  0 s   1 rx    0 rz    0 y  -609] [3 c 0 af  0 s   1 rx    0 rz    0 y -2494]
+   f 400 boss clip= 2 x= 24178 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1881] [2 c 0 af  0 s   1 rx    0 rz    0 y  -609] [3 c 0 af  0 s   1 rx    0 rz    0 y -2494]
+   f 500 boss clip= 0 x= 24178 maske=80 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1831] [2 c 0 af  0 s   1 rx    0 rz    0 y  -609] [3 c 0 af  0 s 704 rx 3200 rz -576 y -2494]
+   GEO f 540 arm1 c21 af 70 yaw4095 s4096 anker=(27593,-1765,-24570) spitze=(35854,-1765,-24570) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4412,-23350) spieler=(30678,-23350)
+   GEO f 563 arm3 c 8 af 50 yaw4095 s4096 anker=(4013,-2494,-21426) spitze=(12274,-2494,-21426) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4503,-23350) spieler=(30678,-23350)
+   GEO f 572 arm0 c23 af 70 yaw4095 s4096 anker=(3839,-2313,-25319) spitze=(12100,-2313,-25319) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4528,-23350) spieler=(30678,-23350)
+   GEO f 573 arm3 c 8 af 70 yaw4095 s4096 anker=(4013,-2494,-21426) spitze=(12274,-2494,-21426) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4530,-23350) spieler=(30678,-23350)
+   GEO f 583 arm3 c 8 af 90 yaw4095 s4096 anker=(4013,-2494,-21426) spitze=(12274,-2494,-21426) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4531,-23350) spieler=(30678,-23350)
+   GEO f 595 arm2 c 8 af 50 yaw4095 s4096 anker=(4627,-609,-20747) spitze=(12888,-609,-20747) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4498,-23350) spieler=(30678,-23350)
+   f 600 boss clip= 0 x= 24178 maske=D0 | [0 c23 af 50 s1696 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1831] [2 c 8 af 60 s4096 rx 2976 rz   64 y  -609] [3 c 0 af  0 s3328 rx 3200 rz   64 y -2494]
+   GEO f 605 arm2 c 8 af 70 yaw4095 s4096 anker=(4627,-609,-20747) spitze=(12888,-609,-20747) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4456,-23350) spieler=(30678,-23350)
+   GEO f 615 arm2 c 8 af 90 yaw4095 s4096 anker=(4627,-609,-20747) spitze=(12888,-609,-20747) bossUrspr=(24178,0,-23350) bossBone0welt=(24178,-4416,-23350) spieler=(30678,-23350)
+   f 700 boss clip= 5 x= 24680 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz -576 y -1520] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f 800 boss clip= 2 x= 28184 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz -576 y -1803] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f 900 boss clip= 0 x= 28184 maske=E0 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s2880 rx 1088 rz -128 y -1746] [2 c 0 af  0 s 832 rx 2976 rz -576 y  -609] [3 c23 af 58 s3712 rx 3200 rz   64 y -2494]
+   f1000 boss clip= 5 x= 28184 maske=00 | [0 c 0 af  0 s 128 rx  896 rz   64 y -2313] [1 c 0 af  0 s 128 rx 1088 rz   64 y -1886] [2 c 0 af  0 s 128 rx 2976 rz   64 y  -609] [3 c 0 af  0 s 128 rx 3200 rz -576 y -2494]
+   f1100 boss clip= 5 x= 29010 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1644] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz -576 y -2494]
+   f1200 boss clip= 2 x= 32190 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   64 y -1751] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz -576 y -2494]
+   f1300 boss clip= 0 x= 32190 maske=F0 | [0 c23 af 50 s1696 rx  896 rz   64 y -2313] [1 c 0 af  0 s 960 rx 1088 rz -576 y -1775] [2 c21 af 18 s3232 rx 2976 rz   64 y  -609] [3 c 0 af  0 s1984 rx 3200 rz -576 y -2494]
+   f1400 boss clip= 5 x= 32882 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   96 y -1680] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f1500 boss clip= 5 x= 36378 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   96 y -1873] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f1600 boss clip= 2 x= 36196 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   96 y -1774] [2 c 0 af  0 s   1 rx 2976 rz   64 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f1700 boss clip= 0 x= 36196 maske=D0 | [0 c23 af 32 s2560 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz   96 y -1886] [2 c 7 af 42 s4096 rx 2976 rz   48 y  -609] [3 c23 af  0 s4096 rx 3200 rz   64 y -2494]
+   f1800 boss clip= 5 x= 36708 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz -576 y -1512] [2 c 0 af  0 s   1 rx 2976 rz  116 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f1900 boss clip= 2 x= 40202 maske=00 | [0 c 0 af  0 s   1 rx  896 rz   64 y -2313] [1 c 0 af  0 s   1 rx 1088 rz -576 y -1836] [2 c 0 af  0 s   1 rx 2976 rz  116 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f2000 boss clip= 0 x= 40202 maske=50 | [0 c 0 af  0 s 384 rx  896 rz -576 y -2313] [1 c 0 af  0 s   1 rx 1088 rz -576 y -1766] [2 c21 af 44 s2816 rx 2976 rz  116 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f2100 boss clip= 5 x= 40068 maske=00 | [0 c 0 af  0 s1280 rx  896 rz  116 y -2313] [1 c 0 af  0 s1280 rx 1088 rz    0 y -1861] [2 c 0 af  0 s1280 rx 2976 rz -576 y  -609] [3 c 0 af  0 s1280 rx 3200 rz   64 y -2494]
+   f2200 boss clip= 5 x= 41723 maske=00 | [0 c 0 af  0 s   1 rx  896 rz  116 y -2313] [1 c 0 af  0 s   1 rx 1088 rz    0 y -1774] [2 c 0 af  0 s   1 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f2300 boss clip= 2 x= 44208 maske=00 | [0 c 0 af  0 s   1 rx  896 rz  116 y -2313] [1 c 0 af  0 s   1 rx 1088 rz    0 y -1745] [2 c 0 af  0 s   1 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   64 y -2494]
+   f2400 boss clip= 0 x= 44208 maske=F0 | [0 c 0 af  0 s1856 rx  896 rz -576 y -2313] [1 c 0 af  0 s2880 rx 1088 rz -128 y -1811] [2 c21 af 46 s1888 rx 2976 rz -576 y  -609] [3 c 0 af  0 s 832 rx 3200 rz -576 y -2494]
+   f2500 boss clip= 5 x= 44883 maske=00 | [0 c 0 af  0 s4096 rx  896 rz  116 y -2313] [1 c 0 af  0 s4096 rx 1088 rz  116 y -1702] [2 c 0 af  0 s4096 rx 2976 rz -576 y  -609] [3 c 0 af  0 s4096 rx 3200 rz   96 y -2494]
+   f2600 boss clip= 5 x= 48218 maske=00 | [0 c 0 af  0 s   1 rx  896 rz  116 y -2313] [1 c 0 af  0 s   1 rx 1088 rz  116 y -1868] [2 c 0 af  0 s   1 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   96 y -2494]
+   f2700 boss clip= 2 x= 48214 maske=00 | [0 c 0 af  0 s   1 rx  896 rz  116 y -2313] [1 c 0 af  0 s   1 rx 1088 rz  116 y -1770] [2 c 0 af  0 s   1 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   96 y -2494]
+   f2800 boss clip= 0 x= 48214 maske=70 | [0 c23 af  8 s3712 rx  896 rz  116 y -2313] [1 c21 af 40 s2176 rx 1088 rz  116 y -1885] [2 c21 af 72 s 640 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   96 y -2494]
+   f2900 boss clip= 5 x= 48845 maske=00 | [0 c 0 af  0 s   1 rx  896 rz  116 y -2313] [1 c 0 af  0 s   1 rx 1088 rz  116 y -1564] [2 c 0 af  0 s   1 rx 2976 rz -576 y  -609] [3 c 0 af  0 s   1 rx 3200 rz   96 y -2494]
+  Boss-Clips in C: c0=1088 c1=0 c2=696 c3=0 c4=0 c5=1216 c6=0 c7=0 c8=0 c9=0 c10=0 c11=0
+  Spieler-HP-Treffer in 3000 Bildern: 4
+  Arm 0: Clips c0=2456 c7=94 c8=94 c23=356 | scale_max=4096 rot_x!=0 in 2854, rot_z!=0 in 2782 Bildern | Spitze min-Abstand Spieler 13100 | Treffer bei Clip: c0=4
+  Arm 1: Clips c0=2542 c7=81 c8=115 c21=262 | scale_max=4096 rot_x!=0 in 2870, rot_z!=0 in 2518 Bildern | Spitze min-Abstand Spieler 1250 | Treffer bei Clip: c21=4
+  Arm 2: Clips c0=2432 c7=47 c8=97 c21=424 | scale_max=4096 rot_x!=0 in 2479, rot_z!=0 in 2423 Bildern | Spitze min-Abstand Spieler 12450 | Treffer bei Clip: c0=3 c21=1
+  Arm 3: Clips c0=2402 c7=31 c8=97 c23=470 | scale_max=4096 rot_x!=0 in 2511, rot_z!=0 in 2455 Bildern | Spitze min-Abstand Spieler 12900 | Treffer bei Clip: c0=2 c23=2
+  Zustaende erreicht: Peitsche(sub3: c7/c8)=JA  Spiess(sub13: c21/c23)=JA  Wedeln(sub10: c9-11)=NEIN  Zug(sub11: nur c0 -> nicht am Clip erkennbar)  Speer(sub9: nur c0/c2)

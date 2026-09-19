@@ -1,0 +1,69 @@
+=== R16 SKEPTIKER birkin-g5: Modus A x0=0 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+   Bild    0 | boss x=  1200 | Urspr.imQ=1 | Front x=  5694 (imQ=1) | Spieler x=13399 | clip 1/0
+   Bild   90 | boss x=  1201 | Urspr.imQ=1 | Front x=  5695 (imQ=1) | Spieler x=13399 | clip 1/3
+   Bild  120 | boss x=  1392 | Urspr.imQ=1 | Front x=  5886 (imQ=1) | Spieler x=13399 | clip 1/33
+   Bild  150 | boss x=  4631 | Urspr.imQ=1 | Front x=  9125 (imQ=1) | Spieler x=13399 | clip 1/63
+   Bild  180 | boss x=  6248 | Urspr.imQ=1 | Front x= 10742 (imQ=1) | Spieler x=13399 | clip 1/93
+   Bild  270 | boss x=  8214 | Urspr.imQ=1 | Front x= 12708 (imQ=1) | Spieler x=13399 | clip 3/2
+   Bild  400 | boss x=  8214 | Urspr.imQ=1 | Front x= 12708 (imQ=1) | Spieler x=13399 | clip 3/32
+   Bild  527 | boss x=  8929 | Urspr.imQ=1 | Front x= 13423 (imQ=1) | Spieler x=13399 | clip 4/59
+   Bild  630 | boss x= 12341 | Urspr.imQ=1 | Front x= 16835 (imQ=1) | Spieler x=13793 | clip 4/162
+   Bild 1123 | boss x= 12160 | Urspr.imQ=1 | Front x= 16654 (imQ=1) | Spieler x=13793 | clip 5/0
+ERGEBNIS A(x0=0): Ursprung im Viereck ab Bild 0, Front ab Bild 0; Intro fertig (Clip 5) bei 1123 mit Ursprung 12160 und Spieler-Abstand 1633; Front ueberholt Spieler bei 527; min|dx|=1336; pending ab Bild -1
+=== R16 SKEPTIKER birkin-g5: Modus A x0=-9000 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+   Bild    0 | boss x= -9000 | Urspr.imQ=0 | Front x= -4506 (imQ=1) | Spieler x=13399 | clip 1/0
+   Bild   90 | boss x= -8999 | Urspr.imQ=0 | Front x= -4505 (imQ=1) | Spieler x=13399 | clip 1/3
+   Bild  120 | boss x= -8808 | Urspr.imQ=0 | Front x= -4314 (imQ=1) | Spieler x=13399 | clip 1/33
+   Bild  150 | boss x= -5569 | Urspr.imQ=0 | Front x= -1075 (imQ=1) | Spieler x=13399 | clip 1/63
+   Bild  180 | boss x= -3952 | Urspr.imQ=1 | Front x=   542 (imQ=1) | Spieler x=13399 | clip 1/93
+   Bild  270 | boss x= -1986 | Urspr.imQ=1 | Front x=  2508 (imQ=1) | Spieler x=13399 | clip 3/2
+   Bild  400 | boss x= -1986 | Urspr.imQ=1 | Front x=  2508 (imQ=1) | Spieler x=13399 | clip 3/32
+   Bild  527 | boss x= -1271 | Urspr.imQ=1 | Front x=  3223 (imQ=1) | Spieler x=13399 | clip 4/59
+   Bild  630 | boss x=  2141 | Urspr.imQ=1 | Front x=  6635 (imQ=1) | Spieler x=13399 | clip 4/162
+   Bild 1123 | boss x=  1960 | Urspr.imQ=1 | Front x=  6454 (imQ=1) | Spieler x=13399 | clip 5/0
+ERGEBNIS A(x0=-9000): Ursprung im Viereck ab Bild 151, Front ab Bild 0; Intro fertig (Clip 5) bei 1123 mit Ursprung 1960 und Spieler-Abstand 11439; Front ueberholt Spieler bei -1; min|dx|=7114; pending ab Bild -1
+=== R16 SKEPTIKER birkin-g5: Modus A x0=-10167 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+   Bild    0 | boss x=-10167 | Urspr.imQ=0 | Front x= -5673 (imQ=0) | Spieler x=13399 | clip 1/0
+   Bild   90 | boss x=-10166 | Urspr.imQ=0 | Front x= -5672 (imQ=0) | Spieler x=13399 | clip 1/3
+   Bild  120 | boss x= -9975 | Urspr.imQ=0 | Front x= -5481 (imQ=1) | Spieler x=13399 | clip 1/33
+   Bild  150 | boss x= -6736 | Urspr.imQ=0 | Front x= -2242 (imQ=1) | Spieler x=13399 | clip 1/63
+   Bild  180 | boss x= -5119 | Urspr.imQ=1 | Front x=  -625 (imQ=1) | Spieler x=13399 | clip 1/93
+   Bild  270 | boss x= -3153 | Urspr.imQ=1 | Front x=  1341 (imQ=1) | Spieler x=13399 | clip 3/2
+   Bild  400 | boss x= -3153 | Urspr.imQ=1 | Front x=  1341 (imQ=1) | Spieler x=13399 | clip 3/32
+   Bild  527 | boss x= -2438 | Urspr.imQ=1 | Front x=  2056 (imQ=1) | Spieler x=13399 | clip 4/59
+   Bild  630 | boss x=   974 | Urspr.imQ=1 | Front x=  5468 (imQ=1) | Spieler x=13399 | clip 4/162
+   Bild 1123 | boss x=   793 | Urspr.imQ=1 | Front x=  5287 (imQ=1) | Spieler x=13399 | clip 5/0
+ERGEBNIS A(x0=-10167): Ursprung im Viereck ab Bild 162, Front ab Bild 117; Intro fertig (Clip 5) bei 1123 mit Ursprung 793 und Spieler-Abstand 12606; Front ueberholt Spieler bei -1; min|dx|=8281; pending ab Bild -1
+=== R16 SKEPTIKER birkin-g5: Modus A x0=-5600 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+   Bild    0 | boss x= -5600 | Urspr.imQ=0 | Front x= -1106 (imQ=1) | Spieler x=13399 | clip 1/0
+   Bild   90 | boss x= -5599 | Urspr.imQ=0 | Front x= -1105 (imQ=1) | Spieler x=13399 | clip 1/3
+   Bild  120 | boss x= -5408 | Urspr.imQ=1 | Front x=  -914 (imQ=1) | Spieler x=13399 | clip 1/33
+   Bild  150 | boss x= -2169 | Urspr.imQ=1 | Front x=  2325 (imQ=1) | Spieler x=13399 | clip 1/63
+   Bild  180 | boss x=  -552 | Urspr.imQ=1 | Front x=  3942 (imQ=1) | Spieler x=13399 | clip 1/93
+   Bild  270 | boss x=  1414 | Urspr.imQ=1 | Front x=  5908 (imQ=1) | Spieler x=13399 | clip 3/2
+   Bild  400 | boss x=  1414 | Urspr.imQ=1 | Front x=  5908 (imQ=1) | Spieler x=13399 | clip 3/32
+   Bild  527 | boss x=  2129 | Urspr.imQ=1 | Front x=  6623 (imQ=1) | Spieler x=13399 | clip 4/59
+   Bild  630 | boss x=  5541 | Urspr.imQ=1 | Front x= 10035 (imQ=1) | Spieler x=13399 | clip 4/162
+   Bild 1123 | boss x=  5360 | Urspr.imQ=1 | Front x=  9854 (imQ=1) | Spieler x=13399 | clip 5/0
+ERGEBNIS A(x0=-5600): Ursprung im Viereck ab Bild 106, Front ab Bild 0; Intro fertig (Clip 5) bei 1123 mit Ursprung 5360 und Spieler-Abstand 8039; Front ueberholt Spieler bei 1252; min|dx|=3714; pending ab Bild -1
+=== R16 SKEPTIKER birkin-g5: Modus C x0=0 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+-- C) 3000 Bilder, Spieler |dx|=6500 oestlich, HP je Bild zurueck; je Treffer alle Arme --
+   TREFFER f 519 hp=85 boss clip 0 x=24178 | arm0 c0 af0 s1 spitze-d=26925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=27593 arm2 c0 af0 s1 spitze-d=26200 anker-x=4627 arm3 c0 af0 s1920 spitze-d=22875 anker-x=4013
+   TREFFER f1628 hp=85 boss clip 0 x=36196 | arm0 c0 af0 s1 spitze-d=38925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=39611 arm2 c0 af0 s1 spitze-d=38175 anker-x=4627 arm3 c0 af0 s1 spitze-d=38750 anker-x=4013
+   TREFFER f2756 hp=85 boss clip 0 x=48214 | arm0 c0 af0 s1 spitze-d=50925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=51629 arm2 c21 af60 s3840 spitze-d=42425 anker-x=4627 arm3 c23 af16 s3328 spitze-d=44050 anker-x=4013
+   TREFFER f2852 hp=85 boss clip 0 x=48214 | arm0 c0 af0 s1 spitze-d=50925 anker-x=3839 arm1 c21 af28 s1792 spitze-d=1350 anker-x=51629 arm2 c0 af0 s1920 spitze-d=46300 anker-x=4627 arm3 c23 af16 s3328 spitze-d=44050 anker-x=4013
+ERGEBNIS C: Treffer=4, davon Arm1 in c21=4, mit irgendeiner Spitze <1500=4; pending ab Bild -1
+=== R16 SKEPTIKER birkin-g5: Modus S x0=0 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(1200,-23350) clip=1 pending_vor_gate=-1
+-- S) 0xA01 (sub10) an alle vier Arme, dann 300 Bilder: Anker-x - Boss-x --
+   f  0 boss x= 20487 | arm0 anker-boss=-16648 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-15860 c0 arm3 anker-boss=-16474 c0
+   f 60 boss x= 20172 | arm0 anker-boss=-16333 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-15545 c0 arm3 anker-boss=-16159 c0
+   f120 boss x= 19966 | arm0 anker-boss=-16127 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-15339 c0 arm3 anker-boss=-15953 c0
+   f180 boss x= 20672 | arm0 anker-boss=-16833 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-16045 c0 arm3 anker-boss=-16659 c0
+   f240 boss x= 24497 | arm0 anker-boss=-20658 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-19870 c0 arm3 anker-boss=-20484 c0
+   f299 boss x= 24178 | arm0 anker-boss=-20339 c0 arm1 anker-boss=  3415 c0 arm2 anker-boss=-19551 c0 arm3 anker-boss=-20165 c0

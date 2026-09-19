@@ -1,0 +1,297 @@
+# Teil A: Leser-Verifikation (Python maskenbild.masken/lies_tim gegen Engine-Deckung)
+  verifiziert: 84 Cuts, Abweichungen: 0
+
+# Teil B: Pixelmenge je Cut — Maske (Engine) gegen PNG-Alpha>110 an der eingetragenen Lage
+Raum      Cut Rects MaskePx   PNGPx    Loch   Ueber  eigene  tMin  tMax    clut0 Quelle/Tiefenschluessel       
+ROOM1000  0     102   15703       0       0   15703   15703    55    55     1303 polygon | SPALTENREGEL;SPALTENREGEL
+ROOM1000  1      45    1973    1374       0     599       0    65   531        0 png | SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/01_01.png      s=4 Alpha>110 im PNG  14061 -> im Bild    877 | Loch     0 Ueber(um das Objekt, 2px)   157 | Alpha>0 statt >110: +35 px
+      STAGE1/1000/01_02.png      s=4 Alpha>110 im PNG   2934 -> im Bild    181 | Loch     0 Ueber(um das Objekt, 2px)    81 | Alpha>0 statt >110: +27 px
+      STAGE1/1000/01_03.png      s=4 Alpha>110 im PNG   2785 -> im Bild    167 | Loch     0 Ueber(um das Objekt, 2px)    78 | Alpha>0 statt >110: +17 px
+      STAGE1/1000/01_04.png      s=4 Alpha>110 im PNG   2409 -> im Bild    149 | Loch     0 Ueber(um das Objekt, 2px)    91 | Alpha>0 statt >110: +20 px
+ROOM1000  2     104   31566       0       0   31566   31566    63    74     3581 polygon | SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+ROOM1000  3      17     521    1076     719     164       0   216   496        0 png | SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/03_01.png      s=4 Alpha>110 im PNG  10464 -> im Bild    631 | Loch   631 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +31 px
+      STAGE1/1000/03_02.png      s=4 Alpha>110 im PNG   1258 -> im Bild     71 | Loch    71 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +6 px
+      STAGE1/1000/03_03.png      s=4 Alpha>110 im PNG   1386 -> im Bild     88 | Loch    88 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +8 px
+      STAGE1/1000/03_04.png      s=4 Alpha>110 im PNG   5753 -> im Bild    357 | Loch     0 Ueber(um das Objekt, 2px)   128 | Alpha>0 statt >110: +26 px
+ROOM1000  4     100   14948   14020       0     928       0    56   154      692 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/04_01.png      s=1 Alpha>110 im PNG   2386 -> im Bild   2386 | Loch     0 Ueber(um das Objekt, 2px)   315 | Alpha>0 statt >110: +82 px
+      STAGE1/1000/04_02.png      s=1 Alpha>110 im PNG  11658 -> im Bild  11658 | Loch     0 Ueber(um das Objekt, 2px)   678 | Alpha>0 statt >110: +261 px
+ROOM1000  5     102   28166   26881       0    1285       0    57   109      648 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/05_01.png      s=1 Alpha>110 im PNG  18048 -> im Bild  18048 | Loch     0 Ueber(um das Objekt, 2px)   549 | Alpha>0 statt >110: +201 px
+      STAGE1/1000/05_02.png      s=1 Alpha>110 im PNG   8833 -> im Bild   8833 | Loch     0 Ueber(um das Objekt, 2px)   505 | Alpha>0 statt >110: +245 px
+ROOM1000  6      93   23350   21799       0    1551       0    50    84     6384 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/06_01.png      s=1 Alpha>110 im PNG   8767 -> im Bild   8767 | Loch     0 Ueber(um das Objekt, 2px)   526 | Alpha>0 statt >110: +211 px
+      STAGE1/1000/06_02.png      s=1 Alpha>110 im PNG  13032 -> im Bild  13032 | Loch     0 Ueber(um das Objekt, 2px)   506 | Alpha>0 statt >110: +183 px
+ROOM1000  7     104   25716   23964       0    1752       0    56   499    12556 png | SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/07_01.png      s=1 Alpha>110 im PNG   8946 -> im Bild   8946 | Loch     0 Ueber(um das Objekt, 2px)   458 | Alpha>0 statt >110: +120 px
+      STAGE1/1000/07_02.png      s=1 Alpha>110 im PNG  12658 -> im Bild  12658 | Loch     0 Ueber(um das Objekt, 2px)   848 | Alpha>0 statt >110: +279 px
+      STAGE1/1000/07_03.png      s=1 Alpha>110 im PNG   2378 -> im Bild   2378 | Loch     0 Ueber(um das Objekt, 2px)   435 | Alpha>0 statt >110: +168 px
+ROOM1000  8      92   28051   26857       0    1194       0    55   113    13468 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/1000/08_01.png      s=1 Alpha>110 im PNG  17149 -> im Bild  17149 | Loch     0 Ueber(um das Objekt, 2px)   471 | Alpha>0 statt >110: +185 px
+      STAGE1/1000/08_02.png      s=1 Alpha>110 im PNG   9708 -> im Bild   9708 | Loch     0 Ueber(um das Objekt, 2px)   517 | Alpha>0 statt >110: +213 px
+ROOM1010  0      70   13471   12054       0    1417       0    52   119     1613 png | SPALTENREGEL
+      STAGE1/1010/00.png         s=1 Alpha>110 im PNG  12054 -> im Bild  12054 | Loch     0 Ueber(um das Objekt, 2px)   896 | Alpha>0 statt >110: +349 px
+ROOM1010  1      83    9470    8505       0     965       0    57    96      883 png | SPALTENREGEL
+      STAGE1/1010/01.png         s=1 Alpha>110 im PNG   8505 -> im Bild   8505 | Loch     0 Ueber(um das Objekt, 2px)   615 | Alpha>0 statt >110: +253 px
+ROOM1010  6      91   15895   13430       0    2465       0    58    91     3182 png | SPALTENREGEL
+      STAGE1/1010/06.png         s=1 Alpha>110 im PNG  13430 -> im Bild  13430 | Loch     0 Ueber(um das Objekt, 2px)  1641 | Alpha>0 statt >110: +634 px
+ROOM1010  8      82   14768   12592       0    2176       0    59   124     2198 png | SPALTENREGEL
+      STAGE1/1010/08.png         s=1 Alpha>110 im PNG  12592 -> im Bild  12592 | Loch     0 Ueber(um das Objekt, 2px)  1407 | Alpha>0 statt >110: +517 px
+ROOM1050  1      84    9908    8681       0    1227       0    55    90      735 png | SPALTENREGEL
+      STAGE1/1050/01.png         s=1 Alpha>110 im PNG   8681 -> im Bild   8681 | Loch     0 Ueber(um das Objekt, 2px)   758 | Alpha>0 statt >110: +310 px
+ROOM1050  3       9     385     237       0     148       0   119   134       12 png | SPALTENREGEL
+      STAGE1/1050/03.png         s=1 Alpha>110 im PNG    237 -> im Bild    237 | Loch     0 Ueber(um das Objekt, 2px)    97 | Alpha>0 statt >110: +48 px
+ROOM1050  5      73   36060   34653       0    1407       0    80   108     1591 png | SPALTENREGEL
+      STAGE1/1050/05.png         s=1 Alpha>110 im PNG  34653 -> im Bild  34653 | Loch     0 Ueber(um das Objekt, 2px)   864 | Alpha>0 statt >110: +280 px
+ROOM1050  6     101    9969    8844       0    1125       0    65   301     1941 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/1050/06_01.png      s=1 Alpha>110 im PNG   2915 -> im Bild   2915 | Loch     0 Ueber(um das Objekt, 2px)   302 | Alpha>0 statt >110: +109 px
+      STAGE1/1050/06_02.png      s=1 Alpha>110 im PNG   5929 -> im Bild   5929 | Loch     0 Ueber(um das Objekt, 2px)   533 | Alpha>0 statt >110: +202 px
+ROOM1060  0      81    2048    2048       0       0       0    58    90       19 png | ebene+spalten
+      STAGE1/1060/00.png         s=1 Alpha>110 im PNG   2048 -> im Bild   2048 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +586 px
+ROOM1060  1      93    2413    2413       0       0       0    58    73       28 png | ebene+spalten
+      STAGE1/1060/01.png         s=1 Alpha>110 im PNG   2413 -> im Bild   2413 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +538 px
+ROOM1060  2     101    2381    2381       0       0       0    77   102      115 png | ebene+spalten;ebene+spalten;ebene+spalten
+      STAGE1/1060/02_01.png      s=1 Alpha>110 im PNG   2111 -> im Bild   2111 | Loch     0 Ueber(um das Objekt, 2px)    87 | Alpha>0 statt >110: +402 px
+      STAGE1/1060/02_02.png      s=1 Alpha>110 im PNG    103 -> im Bild    103 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +23 px
+      STAGE1/1060/02_03.png      s=1 Alpha>110 im PNG    254 -> im Bild    254 | Loch     0 Ueber(um das Objekt, 2px)    77 | Alpha>0 statt >110: +78 px
+ROOM1060  4      55    1292    1292       0       0       0   132   240       17 png | ebene+spalten
+      STAGE1/1060/04.png         s=1 Alpha>110 im PNG   1292 -> im Bild   1292 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +383 px
+ROOM1060  7      97    2061    2061       0       0       0    79   246       72 png | ebene+spalten
+      STAGE1/1060/07.png         s=1 Alpha>110 im PNG   2061 -> im Bild   2061 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +628 px
+ROOM10A0  0     101   10868    9860       0    1008       0    72   138        0 png | ebene
+      STAGE1/10A0/00.png         s=1 Alpha>110 im PNG   9860 -> im Bild   9860 | Loch     0 Ueber(um das Objekt, 2px)   617 | Alpha>0 statt >110: +251 px
+ROOM10A0  1      77    3664    3180       0     484       0   105   125       14 png | ebene
+      STAGE1/10A0/01.png         s=1 Alpha>110 im PNG   3180 -> im Bild   3180 | Loch     0 Ueber(um das Objekt, 2px)   319 | Alpha>0 statt >110: +119 px
+ROOM10A0  2      80    9211    8377       0     834       0    80   100     4696 png | ebene
+      STAGE1/10A0/02.png         s=1 Alpha>110 im PNG   8377 -> im Bild   8377 | Loch     0 Ueber(um das Objekt, 2px)   456 | Alpha>0 statt >110: +194 px
+ROOM10A0  5      72   14163   13322       0     841       0    74   129     8939 png | ebene
+      STAGE1/10A0/05.png         s=1 Alpha>110 im PNG  13322 -> im Bild  13322 | Loch     0 Ueber(um das Objekt, 2px)   551 | Alpha>0 statt >110: +249 px
+ROOM10A0  7     104    8545    7754       0     791       0    75    86      208 png | ebene
+      STAGE1/10A0/07.png         s=1 Alpha>110 im PNG   7754 -> im Bild   7754 | Loch     0 Ueber(um das Objekt, 2px)   428 | Alpha>0 statt >110: +187 px
+ROOM10A0  8      90   18625   17794       0     831       0    56    67       96 png | ebene
+      STAGE1/10A0/08.png         s=1 Alpha>110 im PNG  17794 -> im Bild  17794 | Loch     0 Ueber(um das Objekt, 2px)   426 | Alpha>0 statt >110: +163 px
+ROOM10C0  2      90   15764   15764       0       0       0    65   115     1917 png | aufrecht;spalten;spalten
+      STAGE1/10C0/02_01.png      s=1 Alpha>110 im PNG   4186 -> im Bild   4186 | Loch     0 Ueber(um das Objekt, 2px)    98 | Alpha>0 statt >110: +118 px
+      STAGE1/10C0/02_02.png      s=1 Alpha>110 im PNG   3613 -> im Bild   3613 | Loch     0 Ueber(um das Objekt, 2px)   137 | Alpha>0 statt >110: +109 px
+      STAGE1/10C0/02_03.png      s=1 Alpha>110 im PNG   8019 -> im Bild   8019 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +175 px
+ROOM10C0  3     103    9771    9771       0       0       0    62   142      660 png | tiefe+spalten;spalten
+      STAGE1/10C0/03_01.png      s=1 Alpha>110 im PNG   2753 -> im Bild   2753 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +159 px
+      STAGE1/10C0/03_02.png      s=1 Alpha>110 im PNG   7018 -> im Bild   7018 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +220 px
+ROOM10C0  4      62    2992    2992       0       0       0    63    63       75 png | spalten
+      STAGE1/10C0/04.png         s=1 Alpha>110 im PNG   2992 -> im Bild   2992 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +85 px
+ROOM10D0  1      45    1021    1021       0       0       0   107   213       51 png | flach;spalten
+      STAGE1/10D0/01_01.png      s=1 Alpha>110 im PNG    331 -> im Bild    331 | Loch     0 Ueber(um das Objekt, 2px)   182 | Alpha>0 statt >110: +13 px
+      STAGE1/10D0/01_02.png      s=1 Alpha>110 im PNG    690 -> im Bild    690 | Loch     0 Ueber(um das Objekt, 2px)   230 | Alpha>0 statt >110: +234 px
+ROOM10D0  6      89    2030    2030       0       0       0    58   115       45 png | aufrecht;aufrecht
+      STAGE1/10D0/06_01.png      s=1 Alpha>110 im PNG   1797 -> im Bild    600 | Loch     0 Ueber(um das Objekt, 2px)   629 | Alpha>0 statt >110: +197 px
+      STAGE1/10D0/06_02.png      s=1 Alpha>110 im PNG   1997 -> im Bild   1997 | Loch     0 Ueber(um das Objekt, 2px)    31 | Alpha>0 statt >110: +0 px
+ROOM10D0  7     105    5435    3641       0    1794    1794    53    87     1746 png,quader | aufrecht;spalten;SPALTENREGEL
+      STAGE1/10D0/07_01.png      s=1 Alpha>110 im PNG   2677 -> im Bild   2677 | Loch     0 Ueber(um das Objekt, 2px)   475 | Alpha>0 statt >110: +0 px
+      STAGE1/10D0/07_02.png      s=1 Alpha>110 im PNG    986 -> im Bild    986 | Loch     0 Ueber(um das Objekt, 2px)   169 | Alpha>0 statt >110: +55 px
+ROOM10D0  8       6     295     295       0       0       0   227   255        0 png | spalten
+      STAGE1/10D0/08.png         s=1 Alpha>110 im PNG    295 -> im Bild    295 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +40 px
+ROOM10D0  9     105   14857   14857       0       0       0    61   155      915 png | spalten;spalten;aufrecht
+      STAGE1/10D0/09_01.png      s=1 Alpha>110 im PNG   8926 -> im Bild   8926 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +202 px
+      STAGE1/10D0/09_02.png      s=1 Alpha>110 im PNG   2142 -> im Bild   2142 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +112 px
+      STAGE1/10D0/09_03.png      s=1 Alpha>110 im PNG   3789 -> im Bild   3789 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +153 px
+ROOM10E0  0      96   13590   13590       0       0       0    38    80      436 png | aufrecht;spalten
+      STAGE1/10E0/00_01.png      s=1 Alpha>110 im PNG  12111 -> im Bild  12111 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +153 px
+      STAGE1/10E0/00_02.png      s=1 Alpha>110 im PNG   1479 -> im Bild   1479 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +101 px
+ROOM10E0  1     100    7587    7587       0       0       0    60   111      362 png | spalten
+      STAGE1/10E0/01.png         s=1 Alpha>110 im PNG   7587 -> im Bild   7587 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +267 px
+ROOM10E0  2      85   16117   16117       0       0       0    55    65      250 png | spalten
+      STAGE1/10E0/02.png         s=1 Alpha>110 im PNG  16117 -> im Bild  16117 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +170 px
+ROOM10E0  3      22     722     722       0       0       0    79    88       74 png | aufrecht
+      STAGE1/10E0/03.png         s=1 Alpha>110 im PNG    722 -> im Bild    722 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +124 px
+ROOM10E0  4     101   12673   12673       0       0       0    65    72     1108 png | spalten
+      STAGE1/10E0/04.png         s=1 Alpha>110 im PNG  12673 -> im Bild  12673 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +210 px
+ROOM10E0  5      69   13054   13054       0       0       0    61    77      919 png | spalten
+      STAGE1/10E0/05.png         s=1 Alpha>110 im PNG  13054 -> im Bild  13054 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +326 px
+ROOM10E0  6      39    1891    1891       0       0       0    60    65       91 png | aufrecht
+      STAGE1/10E0/06.png         s=1 Alpha>110 im PNG   1891 -> im Bild   1891 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +65 px
+ROOM10E0  7     101   41235   41235       0       0       0    50   167     1811 png | tiefe;tiefe+zelle;tiefe
+      STAGE1/10E0/07_01.png      s=1 Alpha>110 im PNG  14035 -> im Bild  14035 | Loch     0 Ueber(um das Objekt, 2px)   169 | Alpha>0 statt >110: +256 px
+      STAGE1/10E0/07_03.png      s=1 Alpha>110 im PNG  21554 -> im Bild  21554 | Loch     0 Ueber(um das Objekt, 2px)   418 | Alpha>0 statt >110: +413 px
+      STAGE1/10E0/07_04.png      s=1 Alpha>110 im PNG   5712 -> im Bild   5712 | Loch     0 Ueber(um das Objekt, 2px)   247 | Alpha>0 statt >110: +196 px
+ROOM10E0  8     102   14401   14401       0       0       0    54    76      159 png | spalten;spalten
+      STAGE1/10E0/08_01.png      s=1 Alpha>110 im PNG  10898 -> im Bild  10898 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +255 px
+      STAGE1/10E0/08_02.png      s=1 Alpha>110 im PNG   3503 -> im Bild   3503 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +170 px
+ROOM10E0  9      74   14772   14772       0       0       0    70    76      567 png | spalten
+      STAGE1/10E0/09.png         s=1 Alpha>110 im PNG  14772 -> im Bild  14772 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +157 px
+ROOM10F0  0      96   12268   12268       0       0       0    60    61      952 png | spalten
+      STAGE1/10F0/00.png         s=1 Alpha>110 im PNG  12268 -> im Bild  12268 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +109 px
+ROOM10F0  1      33    1041    1041       0       0       0    85    96      254 png | spalten
+      STAGE1/10F0/01.png         s=1 Alpha>110 im PNG   1041 -> im Bild   1041 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +129 px
+ROOM10F0  2      27     877     877       0       0       0    94   116      106 png | spalten
+      STAGE1/10F0/02.png         s=1 Alpha>110 im PNG    877 -> im Bild    877 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +122 px
+ROOM10F0  3      46    1900    1900       0       0       0    61    85      938 png | spalten
+      STAGE1/10F0/03.png         s=1 Alpha>110 im PNG   1900 -> im Bild   1900 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +193 px
+ROOM10F0  4     105   12068    2131       0    9937    9937    26   174     5354 png,quader | tiefe;tiefe;tiefe+spalten;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+      STAGE1/10F0/04_01.png      s=1 Alpha>110 im PNG    428 -> im Bild    428 | Loch     0 Ueber(um das Objekt, 2px)   182 | Alpha>0 statt >110: +78 px
+      STAGE1/10F0/04_02.png      s=1 Alpha>110 im PNG   1111 -> im Bild   1111 | Loch     0 Ueber(um das Objekt, 2px)   194 | Alpha>0 statt >110: +122 px
+      STAGE1/10F0/04_03.png      s=1 Alpha>110 im PNG    592 -> im Bild    592 | Loch     0 Ueber(um das Objekt, 2px)    12 | Alpha>0 statt >110: +44 px
+ROOM10F0  5     105    9285    3576       0    5709    5709    44   185     5036 png,quader | tiefe;tiefe;tiefe;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+      STAGE1/10F0/05_01.png      s=1 Alpha>110 im PNG   2629 -> im Bild   2629 | Loch     0 Ueber(um das Objekt, 2px)   100 | Alpha>0 statt >110: +143 px
+      STAGE1/10F0/05_02.png      s=1 Alpha>110 im PNG    679 -> im Bild    679 | Loch     0 Ueber(um das Objekt, 2px)    93 | Alpha>0 statt >110: +76 px
+      STAGE1/10F0/05_03.png      s=1 Alpha>110 im PNG    275 -> im Bild    275 | Loch     0 Ueber(um das Objekt, 2px)   108 | Alpha>0 statt >110: +48 px
+ROOM10F0  6     101    8197    8197       0       0       0    59    70     1228 png | spalten
+      STAGE1/10F0/06.png         s=1 Alpha>110 im PNG   8197 -> im Bild   8197 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +123 px
+ROOM1100  1     105   28160       0       0   28160   28160    45   158      142 quader | SPALTENREGEL;SPALTENREGEL;SPALTENREGEL
+ROOM1100  2     105   25211       0       0   25211   25211    48   163      122 quader | SPALTENREGEL;SPALTENREGEL
+ROOM1110  0     102    9586    9586       0       0       0    58    89     2290 png | spalten;spalten
+      STAGE1/1110/00_01.png      s=1 Alpha>110 im PNG   4360 -> im Bild   4360 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +169 px
+      STAGE1/1110/00_02.png      s=1 Alpha>110 im PNG   5226 -> im Bild   5226 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +138 px
+ROOM1110  2      78   17274   17274       0       0       0    60    67     2689 png | spalten
+      STAGE1/1110/02.png         s=1 Alpha>110 im PNG  17274 -> im Bild  17274 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +170 px
+ROOM1110  6      91   11369   11369       0       0       0    61    90     1378 png | spalten
+      STAGE1/1110/06.png         s=1 Alpha>110 im PNG  11369 -> im Bild  11369 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +144 px
+ROOM1120  2      81    4012    4012       0       0       0    84    95      139 png | tiefe
+      STAGE1/1120/02.png         s=1 Alpha>110 im PNG   4012 -> im Bild   4012 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +157 px
+ROOM1130  3      92   10289   10289       0       0       0    46    90      994 png | aufrecht+tiefe+bodenkante
+      STAGE1/1130/03.png         s=1 Alpha>110 im PNG  10289 -> im Bild  10289 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +233 px
+ROOM1140  0     100   27463   27463       0       0       0    52   112      136 png | ebene;ebene;ebene
+      STAGE1/1140/00_01.png      s=1 Alpha>110 im PNG  26526 -> im Bild  26526 | Loch     0 Ueber(um das Objekt, 2px)    71 | Alpha>0 statt >110: +209 px
+      STAGE1/1140/00_02.png      s=1 Alpha>110 im PNG    515 -> im Bild    515 | Loch     0 Ueber(um das Objekt, 2px)    47 | Alpha>0 statt >110: +42 px
+      STAGE1/1140/00_03.png      s=1 Alpha>110 im PNG    428 -> im Bild    428 | Loch     0 Ueber(um das Objekt, 2px)    29 | Alpha>0 statt >110: +42 px
+ROOM1140  2     104   17602   17602       0       0       0    56   122      104 png | ebene;fuss;fuss
+      STAGE1/1140/02_01.png      s=1 Alpha>110 im PNG  16440 -> im Bild  16440 | Loch     0 Ueber(um das Objekt, 2px)    14 | Alpha>0 statt >110: +233 px
+      STAGE1/1140/02_02.png      s=1 Alpha>110 im PNG    430 -> im Bild    430 | Loch     0 Ueber(um das Objekt, 2px)     8 | Alpha>0 statt >110: +74 px
+      STAGE1/1140/02_03.png      s=1 Alpha>110 im PNG    732 -> im Bild    732 | Loch     0 Ueber(um das Objekt, 2px)    10 | Alpha>0 statt >110: +142 px
+ROOM1140  3      98    5900    5900       0       0       0    94   101      794 png | fuss;fuss;fuss
+      STAGE1/1140/03_01.png      s=1 Alpha>110 im PNG   1222 -> im Bild   1222 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +106 px
+      STAGE1/1140/03_02.png      s=1 Alpha>110 im PNG   3555 -> im Bild   3555 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +147 px
+      STAGE1/1140/03_03.png      s=1 Alpha>110 im PNG   1123 -> im Bild   1123 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +116 px
+ROOM1140  5      89    7062    7062       0       0       0    52   102      180 png | ebene
+      STAGE1/1140/05_01.png      s=1 Alpha>110 im PNG   7062 -> im Bild   7062 | Loch     0 Ueber(um das Objekt, 2px)     0 | Alpha>0 statt >110: +140 px
+ROOM1160  3      62    3119    2694       0     425       0   111   178      655 png | SPALTENREGEL
+      STAGE1/1160/03.png         s=1 Alpha>110 im PNG   2694 -> im Bild   2694 | Loch     0 Ueber(um das Objekt, 2px)   272 | Alpha>0 statt >110: +109 px
+ROOM1180  2      75   25447   24996       0     451       0    65   123    12264 png | SPALTENREGEL
+      STAGE1/1180/02.png         s=1 Alpha>110 im PNG  24996 -> im Bild  24996 | Loch     0 Ueber(um das Objekt, 2px)   348 | Alpha>0 statt >110: +171 px
+ROOM1180  3      76   26231   25517       0     714       0    65   137     1918 png | SPALTENREGEL
+      STAGE1/1180/03.png         s=1 Alpha>110 im PNG  25517 -> im Bild  25517 | Loch     0 Ueber(um das Objekt, 2px)   416 | Alpha>0 statt >110: +212 px
+ROOM1180  5      59   14603   14446       0     157       0    42    51     2263 png | SPALTENREGEL
+      STAGE1/1180/05.png         s=1 Alpha>110 im PNG  14446 -> im Bild  14446 | Loch     0 Ueber(um das Objekt, 2px)   157 | Alpha>0 statt >110: +129 px
+ROOM1180  6      82   29249   28801       0     448       0    53   134     4432 png | SPALTENREGEL
+      STAGE1/1180/06.png         s=1 Alpha>110 im PNG  28801 -> im Bild  28801 | Loch     0 Ueber(um das Objekt, 2px)   358 | Alpha>0 statt >110: +149 px
+ROOM11B0  3      88   16449   14926       0    1523       0    82   220     3623 png | SPALTENREGEL
+      STAGE1/11B0/03.png         s=1 Alpha>110 im PNG  14926 -> im Bild  14926 | Loch     0 Ueber(um das Objekt, 2px)   928 | Alpha>0 statt >110: +355 px
+ROOM11D0  3      75    3874    3399       0     475       0   107   155       97 png | SPALTENREGEL
+      STAGE1/11D0/03.png         s=1 Alpha>110 im PNG   3399 -> im Bild   3399 | Loch     0 Ueber(um das Objekt, 2px)   295 | Alpha>0 statt >110: +115 px
+ROOM11F0  0     104   12626       0       0   12626   12626    44    80     1863 polygon | SPALTENREGEL;SPALTENREGEL
+ROOM11F0  1      26    1071     769       0     302       0    55    67        0 png | SPALTENREGEL
+      STAGE1/11F0/01.png         s=4 Alpha>110 im PNG  12213 -> im Bild    769 | Loch     0 Ueber(um das Objekt, 2px)   204 | Alpha>0 statt >110: +72 px
+ROOM11F0  6     104   19723   16783       0    2940       0    44    53     3024 png | SPALTENREGEL;SPALTENREGEL
+      STAGE1/11F0/06_01.png      s=1 Alpha>110 im PNG   2718 -> im Bild   2718 | Loch     0 Ueber(um das Objekt, 2px)   490 | Alpha>0 statt >110: +169 px
+      STAGE1/11F0/06_02.png      s=1 Alpha>110 im PNG  14065 -> im Bild  14065 | Loch     0 Ueber(um das Objekt, 2px)  1155 | Alpha>0 statt >110: +382 px
+ROOM11F0  7      69   21800   20072       0    1728       0    58    58     4086 png | SPALTENREGEL
+      STAGE1/11F0/07.png         s=1 Alpha>110 im PNG  20072 -> im Bild  20072 | Loch     0 Ueber(um das Objekt, 2px)  1094 | Alpha>0 statt >110: +354 px
+ROOM1220  0      74    6145    5243       0     902       0    62    62      118 png | SPALTENREGEL
+      STAGE1/1220/00.png         s=1 Alpha>110 im PNG   5243 -> im Bild   5243 | Loch     0 Ueber(um das Objekt, 2px)   542 | Alpha>0 statt >110: +223 px
+ROOM1220  2      93    5047    4312       0     735       0    60    60      137 png | SPALTENREGEL
+      STAGE1/1220/02.png         s=1 Alpha>110 im PNG   4312 -> im Bild   4312 | Loch     0 Ueber(um das Objekt, 2px)   335 | Alpha>0 statt >110: +109 px
+ROOM1220  4      77    6163    5324       0     839       0    54    54      167 png | SPALTENREGEL
+      STAGE1/1220/04.png         s=1 Alpha>110 im PNG   5324 -> im Bild   5324 | Loch     0 Ueber(um das Objekt, 2px)   366 | Alpha>0 statt >110: +114 px
+ROOM1220  6      83    4199    3507       0     692       0    58    76      224 png | SPALTENREGEL
+      STAGE1/1220/06.png         s=1 Alpha>110 im PNG   3507 -> im Bild   3507 | Loch     0 Ueber(um das Objekt, 2px)   397 | Alpha>0 statt >110: +162 px
+ROOM1220  8      82    6509    5873       0     636       0    61    91      419 png | SPALTENREGEL
+      STAGE1/1220/08.png         s=1 Alpha>110 im PNG   5873 -> im Bild   5873 | Loch     0 Ueber(um das Objekt, 2px)   361 | Alpha>0 statt >110: +154 px
+ROOM1230  2      84   29225   28820       0     405       0    49   125     1737 png | SPALTENREGEL
+      STAGE1/1230/02.png         s=1 Alpha>110 im PNG  28820 -> im Bild  28820 | Loch     0 Ueber(um das Objekt, 2px)   313 | Alpha>0 statt >110: +165 px
+ROOM1230  3      79   28179   27420       0     759       0    65   111      836 png | SPALTENREGEL
+      STAGE1/1230/03.png         s=1 Alpha>110 im PNG  27420 -> im Bild  27420 | Loch     0 Ueber(um das Objekt, 2px)   437 | Alpha>0 statt >110: +182 px
+ROOM1230  5      67   14681   14404       0     277       0    42    59     1105 png | SPALTENREGEL
+      STAGE1/1230/05.png         s=1 Alpha>110 im PNG  14404 -> im Bild  14404 | Loch     0 Ueber(um das Objekt, 2px)   271 | Alpha>0 statt >110: +114 px
+ROOM1230  6      84   29847   29397       0     450       0    50   143     2053 png | SPALTENREGEL
+      STAGE1/1230/06.png         s=1 Alpha>110 im PNG  29397 -> im Bild  29397 | Loch     0 Ueber(um das Objekt, 2px)   372 | Alpha>0 statt >110: +182 px
+
+# Teil C: Tiefen-Audit gegen die begehbaren Bodenpunkte der Engine (Koerper 1500 hoch, +-450 breit)
+#  je Standplatz, dessen Koerperkasten Maskenpixel beruehrt: Anteil der beruehrten Pixel, die verdeckt werden
+#  (Maske naeher: depth*64 < Koerper-vz in dieser Bildzeile). VOR = Fuss naeher als die PNG-Bodenlinie der
+#  Spalte (Objekt-Standlinie aus der untersten PNG-Zeile je Spalte auf der Bodenebene des Bands).
+Raum      Cut Plaetze beruehr   voll   teil   frei |   VORn VORverd VORteil |  HINTn HINTfrei
+ROOM1000  0     2042    507    447     15     45 |      0      0      0 |      0      0
+ROOM1000  1     5727    343     79     35    229 |    226     39     23 |    178    117
+ROOM1000  2     4601    645    514     71     60 |      0      0      0 |      0      0
+ROOM1000  3     5844     87     14      0     73 |     69      0      0 |      8      0
+ROOM1000  4     2450    394    290     81     23 |     47      1     16 |    372     73
+ROOM1000  5     5118    720    633     79      8 |    290    198     84 |    673      5
+ROOM1000  6     5687    524    432     25     67 |    104     12     24 |    436     12
+ROOM1000  7     2506    874    683    121     70 |    264     97     81 |    775     73
+ROOM1000  8     1618    684    571     97     16 |    297    180     97 |    625     41
+ROOM1010  0     2905    998    812     89     97 |    276     91     89 |    848     31
+ROOM1010  1     2830    380    298     41     41 |     90      8     41 |    320     14
+ROOM1010  6     3148   1055    969     83      3 |    210    120     81 |   1031     39
+ROOM1010  8     3127   1046    937    104      5 |    197     88    104 |   1014     32
+ROOM1050  1     1611    281    173     46     62 |    119      8     49 |    198      4
+ROOM1050  3     2814    189     97     27     65 |    122     33     28 |     98      0
+ROOM1050  5     4081   2754   2608     86     60 |    215     67     85 |   2597     21
+ROOM1050  6     1837    503    372     76     55 |    251    101     95 |    406      8
+ROOM1060  0    13384   1166   1137     26      3 |   1094   1065     26 |    700      0
+ROOM1060  1    13235   1286   1155     21    110 |   1153   1030      8 |    806     76
+ROOM1060  2    11500    842    690     19    133 |    760    621     15 |    452     61
+ROOM1060  4    10848    949    354    213    382 |    879    324    133 |    565    363
+ROOM1060  7     8646    616    295      2    319 |    523    247      2 |    361    194
+ROOM10A0  0    11173   1995   1819    131     45 |    774    593    133 |   1552     24
+ROOM10A0  1    11186    961    794     92     75 |    301    205     65 |    897    127
+ROOM10A0  2     9358   1101    837    116    148 |    296    144     77 |    958    190
+ROOM10A0  5     9282   2051   1460    211    380 |    740    410    107 |   1646    341
+ROOM10A0  7     5457    320    203      8    109 |     75      0      8 |    252     49
+ROOM10A0  8     5845    598    511     38     49 |     76      5     33 |    543     26
+ROOM10C0  2    12926   1342    942    132    268 |    326     95     94 |   1183    215
+ROOM10C0  3    11571   1173    998    142     33 |    426    317     87 |    991    103
+ROOM10C0  4     7046    178     29      7    142 |    126     13      7 |     52     36
+ROOM10D0  1     5796    807    432    145    230 |    493    128     50 |    535    124
+ROOM10D0  6    12883    186     76     23     87 |    106      4      1 |    130     38
+ROOM10D0  7     9263    384    298     49     37 |    103     23     43 |    344     49
+ROOM10D0  8    13435    770    483     57    230 |    473    185     58 |    436      4
+ROOM10D0  9     7328   1332   1167    122     43 |    288    125    118 |   1251     57
+ROOM10E0  0     4649    914    767     63     84 |    232     82     56 |    809     19
+ROOM10E0  1     5251    663    545     76     42 |    195     64     89 |    609      1
+ROOM10E0  2     4385    203     94     21     88 |    139     28     23 |     84      1
+ROOM10E0  3     5949     93     73      1     19 |     57     37      1 |     70      0
+ROOM10E0  4     4351    719    654     29     36 |     76      8     32 |    659      1
+ROOM10E0  5     5762    588    515     36     37 |     97     21     39 |    533      7
+ROOM10E0  6     3214     80     47      1     32 |     37      4      1 |     47      0
+ROOM10E0  7     5149   2129   1382    315    432 |    336     48     17 |   1896    562
+ROOM10E0  8     6300    663    539     53     71 |    123      1     51 |    563     10
+ROOM10E0  9     4026    438    331     68     39 |     73      0     34 |    377     46
+ROOM10F0  0     5812    534    301     40    193 |    143      6     27 |    403    102
+ROOM10F0  1     8128    156     97     21     38 |     74     22     21 |    105      7
+ROOM10F0  2     7740    273    210     35     28 |    125     58     41 |    226      7
+ROOM10F0  3     9172    123     59     24     40 |     78     21     22 |     86     12
+ROOM10F0  4     7456   2462   1548    465    449 |     76     26     30 |    695    365
+ROOM10F0  5     7841   1581    979    241    361 |    188    111     56 |   1019    352
+ROOM10F0  6     6418    181     88     33     60 |     66      5     27 |    135     39
+ROOM1100  1     3181   1249   1048    149     52 |      0      0      0 |      0      0
+ROOM1100  2     4900   1904   1750    134     20 |      0      0      0 |      0      0
+ROOM1110  0     3594    674    621     35     18 |    125     69     38 |    636      0
+ROOM1110  2     3171    393    368     18      7 |     55     30     18 |    369      1
+ROOM1110  6     3760    197    170     22      5 |     44     13     26 |    187      0
+ROOM1120  2    11427    779    775      4      0 |    139    135      4 |    772      3
+ROOM1130  3     5574    532    492     31      9 |    174    139     20 |    486     20
+ROOM1140  0     4886    875    772     40     63 |    248    142     43 |    654      0
+ROOM1140  2     8102   1180   1095     28     57 |    248    161     30 |    979      0
+ROOM1140  3     6470    344    332     12      0 |    135    123     12 |    309      0
+ROOM1140  5    10452    441    346     73     22 |    188     93     73 |    318      0
+ROOM1160  3     1082    287    188     38     61 |    107      9     37 |    214     16
+ROOM1180  2     2518    727    611     53     63 |    149     30     56 |    625      0
+ROOM1180  3     1705   1084    944    109     31 |    185     38    116 |   1010      4
+ROOM1180  5     2310    137    134      3      0 |     14     11      3 |    133      0
+ROOM1180  6     3398    571    548     23      0 |     87     62     25 |    553      0
+ROOM11B0  3     4659   1806   1153    302    351 |    845    186    295 |   1287     66
+ROOM11D0  3     1713    308    237     13     58 |     99     25     18 |    235      2
+ROOM11F0  0     5242    450    347     50     53 |      0      0      0 |      0      0
+ROOM11F0  1     5980      0      0      0      0 |      0      0      0 |      0      0
+ROOM11F0  6     3942    694    613      4     77 |     86      5      4 |    608      0
+ROOM11F0  7     5767    810    692     13    105 |    136     18     13 |    674      0
+ROOM1220  0     2015     77     13     26     38 |     52      0     14 |     25     12
+ROOM1220  2     3789     84     14      9     61 |     72      2      9 |     12      0
+ROOM1220  4     2694     90     14      6     70 |     81      6      6 |      8      0
+ROOM1220  6     2647    142     74     37     31 |     79      7     41 |     94      3
+ROOM1220  8     1747    180     99     65     16 |     76      1     59 |    150     42
+ROOM1230  2     4436   2203   2147     47      9 |    108     44     55 |   2185      0
+ROOM1230  3     3586   2499   2440     29     30 |     96     34     32 |   2457      1
+ROOM1230  5     2196    138    134      3      1 |     19     14      4 |    132      0
+ROOM1230  6     5248    978    947     31      0 |     97     61     36 |    978      0

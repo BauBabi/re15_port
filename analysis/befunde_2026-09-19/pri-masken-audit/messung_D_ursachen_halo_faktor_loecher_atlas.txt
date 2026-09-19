@@ -1,0 +1,154 @@
+# (6) Nutzer-PNGs STAGE1: 118 Dateien, davon in auswahl.json referenziert: 118
+
+# (1) Halo-Beweis: Region(PNG>110) mit oben/grow aus auswahl (Default 4/1) gegen die gelieferte Deckung
+Raum      Cut   oben   grow  Halo!=M   PNG!=M | rects kante atlasPx   draw
+ROOM1000  0                       -1    15703 |   102    16   17333    102 gemischt/eigene Quellen
+ROOM1000  1        4      1        0      599 |    45     8    2412     45 
+ROOM1000  2                       -1    31566 |   104    24   34713    104 gemischt/eigene Quellen
+ROOM1000  3        4      1     1020      883 |    17     8     696     17 
+ROOM1000  4        4      1        0      928 |   100    16   19060    100 
+ROOM1000  5        4      1        0     1285 |   102    20   32957    102 
+ROOM1000  6        4      1        0     1551 |    93    20   27512     93 
+ROOM1000  7        4      1        0     1752 |   104    24   34400    104 
+ROOM1000  8        4      1        0     1194 |    92    20   32600     92 
+ROOM1010  0        4      1        0     1417 |    70    16   17648     70 
+ROOM1010  1        4      1        0      965 |    83    12   11376     83 
+ROOM1010  6        4      1        0     2465 |    91    16   21856     91 
+ROOM1010  8        4      1        0     2176 |    82    16   19952     82 
+ROOM1050  1        4      1        0     1227 |    84    12   11742     84 
+ROOM1050  3        4      1        0      148 |     9     8     552      9 
+ROOM1050  5        4      1        0     1407 |    73    24   40208     73 
+ROOM1050  6        4      1        0     1125 |   101    12   12094    101 
+ROOM1060  0        0      0        0        0 |    81    10    7884     81 
+ROOM1060  1        0      0        0        0 |    93     8    5824     93 
+ROOM1060  2        0      0        0        0 |   101     8    6243    101 
+ROOM1060  4        0      0        0        0 |    55     8    3456     55 
+ROOM1060  7        0      0        0        0 |    97     8    6104     97 
+ROOM10A0  0        4      1        0     1008 |   101    12   13656    101 
+ROOM10A0  1        4      1        0      484 |    77     8    4502     77 
+ROOM10A0  2        4      1        0      834 |    80    12   11376     80 
+ROOM10A0  5        4      1        0      841 |    72    16   17610     72 
+ROOM10A0  7        4      1        0      791 |   104    10   10040    104 
+ROOM10A0  8        4      1        0      831 |    90    16   21024     90 
+ROOM10C0  2        0      0        0        0 |    90    16   20383     90 
+ROOM10C0  3        0      0        0        0 |   103    12   13944    103 
+ROOM10C0  4        0      0        0        0 |    62     8    3632     62 
+ROOM10D0  1        0      0        0        0 |    45     8    2496     45 
+ROOM10D0  6        0      0        0        0 |    89     8    5344     89 
+ROOM10D0  7        0      0       -1     1794 |   105    12   12640    105 gemischt/eigene Quellen
+ROOM10D0  8        0      0        0        0 |     6     8     384      6 
+ROOM10D0  9        0      0        0        0 |   105    16   19884    105 
+ROOM10E0  0        0      0        0        0 |    96    16   15936     96 
+ROOM10E0  1        0      0        0        0 |   100    10    9540    100 
+ROOM10E0  2        0      0        0        0 |    85    16   18228     85 
+ROOM10E0  3        0      0        0        0 |    22     8    1248     22 
+ROOM10E0  4        0      0        0        0 |   101    12   14198    101 
+ROOM10E0  5        0      0        0        0 |    69    16   16144     69 
+ROOM10E0  6        0      0        0        0 |    39     8    2287     39 
+ROOM10E0  7        0      0        0        0 |   101    32   58922    101 
+ROOM10E0  8        0      0        0        0 |   102    16   18339    102 
+ROOM10E0  9        0      0        0        0 |    74    16   17130     74 
+ROOM10F0  0        0      0        0        0 |    96    12   13048     96 
+ROOM10F0  1        0      0        0        0 |    33     8    1936     33 
+ROOM10F0  2        0      0        0        0 |    27     8    1528     27 
+ROOM10F0  3        0      0        0        0 |    46     8    2752     46 
+ROOM10F0  4        0      0       -1     9937 |   105    24   48102    105 gemischt/eigene Quellen
+ROOM10F0  5        0      0       -1     5709 |   105    24   40508    105 gemischt/eigene Quellen
+ROOM10F0  6        0      0        0        0 |   101    10    9312    101 
+ROOM1100  1                       -1    28160 |   105    32   56526    105 gemischt/eigene Quellen
+ROOM1100  2                       -1    25211 |   105    24   42820    105 gemischt/eigene Quellen
+ROOM1110  0        0      0        0        0 |   102    12   12228    102 
+ROOM1110  2        0      0        0        0 |    78    16   19568     78 
+ROOM1110  6        0      0        0        0 |    91    12   12588     91 
+ROOM1120  2        0      0        0        0 |    81     8    5018     81 
+ROOM1130  3        0      0        0        0 |    92    12   12888     92 
+ROOM1140  0        0      0        0        0 |   100    20   31496    100 
+ROOM1140  2        0      0        0        0 |   104    16   21224    104 
+ROOM1140  3        0      0        0        0 |    98    10    8250     98 
+ROOM1140  5        0      0        0        0 |    89    10    8120     89 
+ROOM1160  3        4      1        0      425 |    62     8    3808     62 
+ROOM1180  2        4      1        0      451 |    75    20   27780     75 
+ROOM1180  3        4      1        0      714 |    76    20   29920     76 
+ROOM1180  5        4      1      121      157 |    59    16   15104     59 
+ROOM1180  6        4      1        0      448 |    82    20   31320     82 
+ROOM11B0  3        4      1        0     1523 |    88    16   21568     88 
+ROOM11D0  3        4      1        0      475 |    75     8    4576     75 
+ROOM11F0  0                       -1    12626 |   104    20   16121    104 gemischt/eigene Quellen
+ROOM11F0  1        4      1        0      302 |    26     8    1336     26 
+ROOM11F0  6        4      1        0     2940 |   104    20   25500    104 
+ROOM11F0  7        4      1        0     1728 |    69    20   25200     69 
+ROOM1220  0        4      1        0      902 |    74    10    7140     74 
+ROOM1220  2        4      1        0      735 |    93     8    5622     93 
+ROOM1220  4        4      1        0      839 |    77    10    7071     77 
+ROOM1220  6        4      1        0      692 |    83     8    5128     83 
+ROOM1220  8        4      1        0      636 |    82    10    7980     82 
+ROOM1230  2        4      1        0      405 |    84    20   31780     84 
+ROOM1230  3        4      1        0      759 |    79    20   31600     79 
+ROOM1230  5        4      1        0      277 |    67    16   15616     67 
+ROOM1230  6        4      1        0      450 |    84    20   31660     84 
+
+# (3) ROOM1000 Cut 3: trifft der Sehstrahl der untersten PNG-Zeile den Boden (y=0)?
+   STAGE1/1000/03_01.png      Spalten  21: Bodentreffer   0, KEIN Treffer  21 | Maske deckt 0 von 631 px
+   STAGE1/1000/03_02.png      Spalten  10: Bodentreffer   0, KEIN Treffer  10 | Maske deckt 0 von 71 px
+   STAGE1/1000/03_03.png      Spalten  12: Bodentreffer   0, KEIN Treffer  12 | Maske deckt 0 von 88 px
+   STAGE1/1000/03_04.png      Spalten  15: Bodentreffer  14, KEIN Treffer   1  vz 16658..194855 -> Tiefe 234..2740 | Maske deckt 357 von 357 px
+   Bodenebene y=0 wird nur in den Bildzeilen 136..239 getroffen (Horizont darueber)
+   Hinweis: 1000 C1 tMax=531 / C3 tMax=496 = Spalten knapp UNTER dem Horizont (Sehstrahl fast parallel zum Boden)
+
+# (2) Faktor-Beweis: Spaltenregel-Tiefen aus PNG-Unterkante (Ebene y=-band*0x708 bzw. 'ebene') mit 0.90 und 1.00
+#    'Tile-Median==Maske' = Anteil der Maskenpixel, deren gelieferte Tiefe dem 0.90-Modell (Median je Kachel) entspricht
+#    VORverd = Standplaetze VOR der PNG-Standlinie, an denen der Koerper >=95%% verdeckt wird — mit 0.90 (geliefert) / mit 1.00 (Modell)
+Raum      Cut Modell0.90     VORn  VORverd  VORteil | VORv1.00 VORt1.00
+ROOM1000  1         0.3%      226       39       23 |        9       10
+ROOM1000  3         0.0%       69        0        0 |        0        0
+ROOM1000  4        77.0%       47        1       16 |        0        4
+ROOM1000  5        72.0%      290      198       84 |      155       88
+ROOM1000  6        98.6%      104       12       24 |        0        8
+ROOM1000  7        48.7%      264       97       81 |       47       68
+ROOM1000  8        63.4%      297      180       97 |      146       82
+ROOM1010  0        94.3%      276       91       89 |       31       88
+ROOM1010  1        94.0%       90        8       41 |        2       15
+ROOM1010  6       100.0%      210      120       81 |       81       68
+ROOM1010  8        99.9%      197       88      104 |       52       76
+ROOM1050  1        95.9%      119        8       49 |        0       25
+ROOM1050  3        95.6%      122       33       28 |        6       18
+ROOM1050  5        63.5%      215       67       85 |        1       38
+ROOM1050  6        88.6%      251      101       95 |       48      104
+ROOM10A0  0         0.0%      774      593      133 |      559       86
+ROOM10A0  1         5.0%      301      205       65 |      204       30
+ROOM10A0  2       100.0%      296      144       77 |      143        5
+ROOM10A0  5         0.0%      740      410      107 |      399       47
+ROOM10A0  7        43.3%       75        0        8 |        0        0
+ROOM10A0  8        88.8%       76        5       33 |        1       11
+ROOM1140  0        98.0%      248      142       43 |       73       66
+ROOM1140  5        84.1%      188       93       73 |       51       84
+ROOM1160  3        99.3%      107        9       37 |        0       39
+ROOM1180  2        97.7%      149       30       56 |        2       30
+ROOM1180  3       100.0%      185       38      116 |        5       72
+ROOM1180  5        74.0%       14       11        3 |        3        8
+ROOM1180  6       100.0%       87       62       25 |       20       34
+ROOM11B0  3        36.2%      845      186      295 |       68      277
+ROOM11D0  3        84.5%       99       25       18 |        2       35
+ROOM11F0  1        82.1%        0        0        0 |        0        0
+ROOM11F0  6       100.0%       86        5        4 |        0        0
+ROOM11F0  7       100.0%      136       18       13 |        0        0
+ROOM1220  0       100.0%       52        0       14 |        0        0
+ROOM1220  2       100.0%       72        2        9 |        0        0
+ROOM1220  4       100.0%       81        6        6 |        0        1
+ROOM1220  6        88.4%       79        7       41 |        0        8
+ROOM1220  8        86.2%       76        1       59 |        0        8
+ROOM1230  2        99.9%      108       44       55 |        9       54
+ROOM1230  3       100.0%       96       34       32 |       10       29
+ROOM1230  5       100.0%       19       14        4 |        3        8
+ROOM1230  6       100.0%       97       61       36 |       26       43
+
+# Bilder
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM1000_C3_loecher.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM10D0_C6_lage.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM10D0_C7_quader_eigene.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM10F0_C4_eigene_dunkel.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM1010_C6_halo.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM1050_C6_tiefenstaffel.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM1000_C5_faktor.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM10A0_C0_faktor.png
+   Bild: analysis/befunde_2026-09-19/pri-masken-audit\ROOM1000_C1_massstab4.png

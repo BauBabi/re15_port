@@ -1,0 +1,283 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+RE2-Bank EM010: geladen
+Spieler-Box r=450 h=1530 ofs_y=-1530 ; Zombie slot 2 typ 10 @(-1800,0,-19600)
+[A] Spawn-Pose verlassen nach 55 Bildern: st=1/1/0 f10e=0004 1d3=00
+--- Lage STEHEND: slot 2 st=1/1/0/0 grid=00 f10e=0004 21a=0000 1d3=00 93=00 y=0 hp=4000 box r=400 h=1440 ofs_y=-1440 | RE2-Maske=3 ---
+  STEHEND    W3 HOCH d=1500 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W3 HOCH d=2500 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W3 HOCH d=3600 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W3 HOCH d=5500 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W3 HOCH d=9000 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W3 EBEN d=1500 | IST HIT  dhp=  16 1d2=1 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W3 EBEN d=2500 | IST HIT  dhp=  16 1d2=1 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W3 EBEN d=3600 | IST HIT  dhp=  16 1d2=1 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W3 EBEN d=5500 | IST HIT  dhp=  16 1d2=1 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=1  
+  STEHEND    W3 EBEN d=9000 | IST HIT  dhp=  16 1d2=1 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=2  
+  STEHEND    W3 TIEF d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W3 TIEF d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W3 TIEF d=3600 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W3 TIEF d=5500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  STEHEND    W3 TIEF d=9000 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  STEHEND    W8 HOCH d=1500 | IST HIT  dhp=4001 1d2=1 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W8 HOCH d=2500 | IST HIT  dhp=4001 1d2=1 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W8 HOCH d=3600 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W8 HOCH d=5500 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W8 HOCH d=9000 | IST MISS dhp=   0 1d2=0 zeile=1 st=1 hnd=0 | SOLL(RE2) MISS             
+  STEHEND    W8 EBEN d=1500 | IST HIT  dhp=4001 1d2=1 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W8 EBEN d=2500 | IST HIT  dhp=4001 1d2=1 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W8 EBEN d=3600 | IST HIT  dhp= 200 1d2=1 zeile=7 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=0  
+  STEHEND    W8 EBEN d=5500 | IST HIT  dhp= 200 1d2=1 zeile=7 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=1  
+  STEHEND    W8 EBEN d=9000 | IST HIT  dhp= 200 1d2=1 zeile=7 st=2 hnd=0 | SOLL(RE2) HIT zone=1 br=2  
+  STEHEND    W8 TIEF d=1500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W8 TIEF d=2500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W8 TIEF d=3600 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=0 | SOLL(RE2) HIT zone=0 br=0  
+  STEHEND    W8 TIEF d=5500 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  STEHEND    W8 TIEF d=9000 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+--- Lage LIEGESPAWN: slot 1 st=1/7/1/0 grid=88 f10e=4002 21a=0004 1d3=80 93=00 y=0 hp=79 box r=400 h=1440 ofs_y=-1440 | RE2-Maske=3 ---
+  LIEGESPAWN W3 HOCH d=1500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 HOCH d=2500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 HOCH d=3600 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 HOCH d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 HOCH d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS            [scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+[scd] WARN: event 4 DROPPED (no free event slot)
+ 
+  LIEGESPAWN W3 EBEN d=1500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 EBEN d=2500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 EBEN d=3600 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 EBEN d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 EBEN d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 TIEF d=1500 | IST HIT  dhp=  11 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W3 TIEF d=2500 | IST HIT  dhp=  11 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W3 TIEF d=3600 | IST HIT  dhp=  11 1d2=0 zeile=3 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W3 TIEF d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W3 TIEF d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 HOCH d=1500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 HOCH d=2500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 HOCH d=3600 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 HOCH d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 HOCH d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 EBEN d=1500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 EBEN d=2500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 EBEN d=3600 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 EBEN d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 EBEN d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 TIEF d=1500 | IST HIT  dhp=  80 1d2=0 zeile=7 st=3 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W8 TIEF d=2500 | IST HIT  dhp=  80 1d2=0 zeile=7 st=3 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W8 TIEF d=3600 | IST HIT  dhp=  60 1d2=0 zeile=7 st=2 hnd=0 | SOLL(RE2) MISS             <-- DIVERGENZ
+  LIEGESPAWN W8 TIEF d=5500 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+  LIEGESPAWN W8 TIEF d=9000 | IST MISS dhp=   0 1d2=0 zeile=7 st=1 hnd=0 | SOLL(RE2) MISS             
+[B] F0000 Treffer: hp 4000->3800 Handler=3 zeile=7 1d2=1 st=2/7/1
+[B] F0000 st=2/7/1 f10e=0004 21a=0000 grid=00 y=0
+[B] F0040 st=2/7/1 f10e=0004 21a=0000 grid=00 y=1616
+[B] Kriecher ab F0044
+--- Lage KRIECHER: slot 2 st=1/0/1/0 grid=00 f10e=2001 21a=0001 1d3=00 93=00 y=0 hp=3800 box r=400 h=1440 ofs_y=-1440 | RE2-Maske=1 ---
+  KRIECHER   W3 HOCH d=1500 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W3 HOCH d=2500 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W3 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W3 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W3 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W3 EBEN d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 EBEN d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 EBEN d=3600 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 EBEN d=5500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 EBEN d=9000 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 TIEF d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W3 TIEF d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W3 TIEF d=3600 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W3 TIEF d=5500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W3 TIEF d=9000 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 HOCH d=1500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W8 HOCH d=2500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W8 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W8 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W8 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=0 st=1 hnd=3 | SOLL(RE2) MISS             
+  KRIECHER   W8 EBEN d=1500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 EBEN d=2500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 EBEN d=3600 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 EBEN d=5500 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 EBEN d=9000 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 TIEF d=1500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W8 TIEF d=2500 | IST HIT  dhp=3801 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W8 TIEF d=3600 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  KRIECHER   W8 TIEF d=5500 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  KRIECHER   W8 TIEF d=9000 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+[C] F0000 st=1/5/1 f10e=2000 21a=0203 grid=80
+[C] F0040 st=1/5/1 f10e=2000 21a=0203 grid=80
+[C] F0069 EXEC[5] Phase 3 (am Boden) seit 20 Bildern
+--- Lage LIEGEND-P3: slot 2 st=1/5/3/0 grid=80 f10e=2000 21a=0203 1d3=00 93=00 y=0 hp=4000 box r=400 h=1440 ofs_y=-1440 | RE2-Maske=1 ---
+  LIEGEND-P3 W3 HOCH d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 HOCH d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 EBEN d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 EBEN d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 EBEN d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 EBEN d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 EBEN d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 TIEF d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W3 TIEF d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W3 TIEF d=3600 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W3 TIEF d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W3 TIEF d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 HOCH d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  LIEGEND-P3 W8 HOCH d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  LIEGEND-P3 W8 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 EBEN d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 EBEN d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 EBEN d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 EBEN d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 EBEN d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 TIEF d=1500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W8 TIEF d=2500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W8 TIEF d=3600 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  LIEGEND-P3 W8 TIEF d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  LIEGEND-P3 W8 TIEF d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+[C] F0058 EXEC[5] Phase 6 (Aufstehen) erreicht
+--- Lage AUFSTEHEN-P6: slot 2 st=1/5/6/0 grid=80 f10e=2000 21a=0203 1d3=00 93=00 y=0 hp=4000 box r=400 h=1440 ofs_y=-1440 | RE2-Maske=1 ---
+  AUFSTEHEN-P6 W3 HOCH d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 HOCH d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 EBEN d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 EBEN d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 EBEN d=3600 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 EBEN d=5500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 EBEN d=9000 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 TIEF d=1500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  AUFSTEHEN-P6 W3 TIEF d=2500 | IST HIT  dhp=  16 1d2=0 zeile=3 st=2 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  AUFSTEHEN-P6 W3 TIEF d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  AUFSTEHEN-P6 W3 TIEF d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W3 TIEF d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W8 HOCH d=1500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 HOCH d=2500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 HOCH d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W8 HOCH d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W8 HOCH d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W8 EBEN d=1500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 EBEN d=2500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 EBEN d=3600 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 EBEN d=5500 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 EBEN d=9000 | IST HIT  dhp= 200 1d2=0 zeile=7 st=2 hnd=3 | SOLL(RE2) MISS             <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 TIEF d=1500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  AUFSTEHEN-P6 W8 TIEF d=2500 | IST HIT  dhp=4001 1d2=0 zeile=7 st=3 hnd=3 | SOLL(RE2) HIT zone=0 br=0  
+  AUFSTEHEN-P6 W8 TIEF d=3600 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) HIT zone=0 br=0  <-- DIVERGENZ
+  AUFSTEHEN-P6 W8 TIEF d=5500 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+  AUFSTEHEN-P6 W8 TIEF d=9000 | IST MISS dhp=   0 1d2=1 zeile=5 st=1 hnd=3 | SOLL(RE2) MISS             
+=== ENDE ===
