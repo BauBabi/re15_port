@@ -208,6 +208,13 @@ Abgenommen im Android-Emulator, und das war noetig: auf einem breiten Bildschirm
 SDL die Finger auf den 4:3-Ausschnitt um und klemmt sie an dessen Rand — alles in den
 schwarzen Streifen war unerreichbar, das D-Pad also genau dort, wo es sitzt.
 
+Die APK liegt als Split-Zip im Repo, weil sie als eine Datei ueber GitHubs Grenze faellt:
+`re15_port_v0.8.5_android.z01` und `...android.zip`, dieselbe Volume-Groesse wie bei den
+anderen Paketen. Zusammensetzen wie gewohnt mit `zip -s 0 ...android.zip --out joined.zip`
+und danach `unzip joined.zip`; die Anleitung steht in
+`re15_port/platform/android/README.md`. Geprueft: die so wiederhergestellte APK ist
+bytegleich mit der gebauten.
+
 *Grenzen:* APK und entpackte Daten belegen zusammen rund 730 MB; das Pad hat feste Groessen
 und keine Einstellungen; nur Querformat; mit Entwickler-Schluessel signiert (Sideload);
 bisher nur im Emulator getestet, nicht auf einem echten Geraet.

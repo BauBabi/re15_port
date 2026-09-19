@@ -504,6 +504,25 @@ if [[ $DO_ZIP -eq 1 ]]; then
         ( cd pkg-win && zip -q -s "$SPLIT" -r "../${NAME}_win64.zip" "$NAME" )
         verify_split "${NAME}_win64.zip" "$WIN_FILES"
     fi
+    # --- Android: die APK in denselben Split-Satz bringen ---------------------
+    # Nutzer-Vorgabe 2026-09-19: "Beim apk, splitte es ebenfalls in mehrere Teile,
+    # das du es ins repo laden kannst." Die APK selbst ist ~358 MB und liegt damit
+    # weit ueber GitHubs Dateigrenze (100 MB hart, 50 MB Warnung); als Split-Zip mit
+    # derselben Volume-Groesse wie die anderen Pakete passt sie hinein.
+    # Sie wird NICHT von diesem Skript gebaut (das macht release/build_android.sh) —
+    # fehlt sie, wird das gesagt und uebersprungen, nicht stillschweigend ausgelassen.
+    # -j (junk paths) legt die APK in die Archivwurzel, damit beim Entpacken keine
+    # release/-Schachtel entsteht.
+    APK="$HERE/${NAME}_android.apk"
+    if [[ -f "$APK" ]]; then
+        echo "== Zippen: ${NAME}_android (APK $(du -h "$APK" | cut -f1)) =="
+        rm -f "${NAME}_android".z*
+        zip -q -s "$SPLIT" -j "${NAME}_android.zip" "$APK"
+        verify_split "${NAME}_android.zip" 1
+        ANDROID_GEZIPPT=1
+    else
+        echo "   (kein Android-Paket: $(basename "$APK") fehlt — release/build_android.sh laeuft getrennt)"
+    fi
     sha256sum "${NAME}"_*.z* > SHA256SUMS.txt
     echo
     ls -la "${NAME}"_*.z*
@@ -531,6 +550,10 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
     plattformen=()
     [[ "$ONLY" == "both" || "$ONLY" == "linux" ]] && plattformen+=("linux_steamdeck_x64")
     [[ "$ONLY" == "both" || "$ONLY" == "win"   ]] && plattformen+=("win64")
+    # Android zaehlt nur als eigene "Plattform", wenn in DIESEM Lauf auch ein
+    # Android-Satz entstanden ist — sonst wuerde ein Lauf ohne APK den vorhandenen
+    # Android-Satz aus dem Repo werfen (dieselbe Falle wie frueher bei --only win).
+    [[ -n "${ANDROID_GEZIPPT:-}" ]] && plattformen+=("android")
     behalten() {                       # 0 = darf bleiben
         local b="$1" p
         case "$b" in "${NAME}"_*) return 0 ;; esac    # die AKTUELLE Version bleibt

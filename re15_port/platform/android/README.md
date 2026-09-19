@@ -48,6 +48,31 @@ Native Seite: `re15_port/CMakeLists.txt` mit `-DRE15_BUILD_PC=OFF -DRE15_BUILD_A
 -> `platform/android/jni/CMakeLists.txt` (SDL2 shared + `libmain.so`). ABIs: `arm64-v8a`
 (Geraete) und `x86_64` (Emulator).
 
+## Aus dem Repo holen (Split-Zip)
+
+Die APK ist rund 358 MB und liegt damit ueber GitHubs Dateigrenze. Im Repo liegt sie
+deshalb als Split-Zip mit derselben Volume-Groesse wie die Windows- und Linux-Pakete:
+
+```
+release/re15_port_<version>_android.z01     (90 MB)
+release/re15_port_<version>_android.zip     (letztes Volume, enthaelt den Katalog)
+```
+
+⛔ Die Volumes lassen sich NICHT einzeln entpacken und `unzip -t` bricht auf ihnen ab
+(„At least one error"). Erst zusammenfuegen, dann entpacken — genau wie bei den anderen
+Paketen:
+
+```bash
+cd release
+zip -s 0 re15_port_<version>_android.zip --out joined.zip   # Volumes zusammenfuegen
+unzip -t joined.zip                                          # sollte "No errors" sagen
+unzip joined.zip                                             # -> re15_port_<version>_android.apk
+sha256sum -c SHA256SUMS_android.txt                          # muss OK sagen
+```
+
+Geprueft 2026-09-19: die so wiederhergestellte APK ist bytegleich mit der gebauten
+(sha256 identisch).
+
 ## Installieren
 
 ```bash

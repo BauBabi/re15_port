@@ -54,8 +54,12 @@ re15_port/platform/android/app/build/
 re15_port/platform/android/app/.cxx/
 re15_port/platform/android/_deps/
 re15_port/platform/android/local.properties
-# Die Android-APK (~357 MB, eine Datei) passt nicht unter die GitHub-Dateigrenze und wird
-# NICHT eingecheckt (release/build_android.sh erzeugt sie; SHA256SUMS_android.txt bleibt).
+# Die Android-APK (~358 MB, eine Datei) passt nicht unter die GitHub-Dateigrenze und wird
+# als EINZELDATEI nicht eingecheckt (release/build_android.sh erzeugt sie). Im Repo liegt
+# sie seit v0.8.5 als Split-Zip release/re15_port_<version>_android.zip + .z01 …, das
+# release/make_package.sh mit derselben Volume-Groesse wie die uebrigen Pakete schnuert —
+# Nutzer-Vorgabe 2026-09-19 ("splitte es ebenfalls in mehrere Teile, das du es ins repo
+# laden kannst"). Die Pruefsumme der APK steht in SHA256SUMS_android.txt.
 release/*_android.apk
 
 # Streu-Bauverzeichnisse und -Protokolle der Untersuchungs-Sonden (Runde 16 ff.):
