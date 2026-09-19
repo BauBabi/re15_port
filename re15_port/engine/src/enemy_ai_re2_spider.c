@@ -135,16 +135,27 @@ extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int 
 
 static void (*s_re2s_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2s_bank_fn)(int bank) = 0;
+static int    s_re2s_bank = RE2SPIDER_ENEMSE_BANK;   /* die bei der Registrierung gewaehlte Bank */
 
 /* Kein env-Override mehr: der Wert ist belegt (s.o.), also gibt es nichts umzuschalten. */
 void re15_re2spider_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int), int baby)
 {
     s_re2s_se_fn   = se_fn;
     s_re2s_bank_fn = bank_fn;
-    if (s_re2s_bank_fn)
-        s_re2s_bank_fn(baby ? RE2SPIDER_BABY_ENEMSE_BANK : RE2SPIDER_ENEMSE_BANK);
+    s_re2s_bank    = baby ? RE2SPIDER_BABY_ENEMSE_BANK : RE2SPIDER_ENEMSE_BANK;
+    if (s_re2s_bank_fn) s_re2s_bank_fn(s_re2s_bank);
 }
-static void re2s_se(int id) { if (s_re2s_se_fn) s_re2s_se_fn(id, 0); }   /* erste Map-Haelfte */
+/* PORT-DESIGN Mehrbank-Cache (Phase 2 gator-und-audio, audio_pc.c): die eigene Bank vor
+ * JEDEM Ruf anmelden - ROOM2090 mischt Spinne (Bank 11) und Boss-Alligator (Bank 17); mit
+ * dem EINEN Latch spielte der Biss-SE 1 (@0x80105b34-38) aus Bank 17 (Gator-Sample) und die
+ * Schritte 8/9 waren dort SILENT (Dossier gator-finisher-sounds.md 1.3). RE2 selbst fuehrt
+ * EINEN Bank-Slot (FUN_8005bd6c `lw s0,0x800dbb84` @0x8005bdb4) und haette fuer diesen
+ * Mischraum gar keine Bank (FUN_80052b38 -> 0xFF). */
+static void re2s_se(int id)
+{
+    if (s_re2s_bank_fn) s_re2s_bank_fn(s_re2s_bank);
+    if (s_re2s_se_fn) s_re2s_se_fn(id, 0);                                  /* erste Map-Haelfte */
+}
 
 /* ---- kleine Helfer ------------------------------------------------------------------------ */
 

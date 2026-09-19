@@ -91,7 +91,13 @@ void re15_g5_audio_hook(void (*se)(int, int), void (*bank)(int))
     s_g5_se_fn = se; s_g5_bank_fn = bank;
     if (bank) bank(25);
 }
-static void g5_se(int id) { if (s_g5_se_fn) s_g5_se_fn(id, 0); }
+/* Bank vor JEDEM Ruf anmelden (PORT-DESIGN Mehrbank-Cache, Phase 2 gator-und-audio,
+ * audio_pc.c; RE2 fuehrt EINEN Bank-Slot @0x8005bdb4 - Mischraeume sind port-eigen). */
+static void g5_se(int id)
+{
+    if (s_g5_bank_fn) s_g5_bank_fn(25);
+    if (s_g5_se_fn) s_g5_se_fn(id, 0);
+}
 
 /* TENTAKEL (Runde 7, em037-tentakel.md): vier eigene 0x37-Entities, die G5 per
  * ganzem Routine-Wort kommandiert (Sender 0x80104E9C @0x80104E9C-B0 / Broadcast

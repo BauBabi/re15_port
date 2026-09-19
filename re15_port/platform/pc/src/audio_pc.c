@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdarg.h>   /* re2se_log (RE15_RE2SE_LOG-Dateilog, Phase 2) */
 #include <SDL.h>
 #include "re15_audio.h"
 #include "re15_scd.h"
@@ -998,14 +999,56 @@ void re15_audio_prime_weapon(int weapon_id)
  * u32 @edt[edt_size-8] (FUN_8005a09c: DAT_800d75ac = base + *(int*)(base-8+size);
  * Bank 0/11 real: vh_off=0x80, Bytes dort 70 42 41 56 = "pBAV" — selbst verifiziert).
  * VBD-Record = der VB-Body (Original: FUN_800132b0 in die SPU; hier ADPCM->PCM). */
-static int16_t   *s_re2se_decoded    [RE15_VAB_MAX_SAMPLES];
-static int        s_re2se_decoded_len[RE15_VAB_MAX_SAMPLES];
-static re15_vab_t s_re2se_vab;
-static uint8_t   *s_re2se_edt = NULL;       /* eigener EDT-Record-Puffer (SE-Map @0)   */
-static int        s_re2se_map_count = 0;    /* vh_off/4 = SE-Map-Eintraege (Bank11: 32) */
-static int        s_re2se_loaded = 0;
-static int        s_re2se_bank_sel  = -1;   /* gewaehlte Bank (re15_audio_re2_enemy_bank) */
-static int        s_re2se_bank_cur  = -1;   /* tatsaechlich geladene Bank               */
+/* ⛔ MEHRBANK-CACHE = REINES PORT-DESIGN (Phase 2 gator-und-audio, 2026-09-19; Dossier
+ * analysis/befunde_2026-09-19/gator-finisher-sounds.md 4C). RE2 fuehrt GENAU EINEN
+ * ENEMSE-Bank-Slot: FUN_8005bd6c liest die SE-Map ueber `lw s0,-17532(s0)` = 0x800dbb84
+ * @0x8005bdb4 und das VAB-Handle `lb s3,19531(s3)` = 0x800d4c4b @0x8005bdc8 (beide -1 ->
+ * `beq ..,0x8005c018` @0x8005bdcc/dd4 = stumm); die Bank wird PRO RAUM aus der kind-Paar-
+ * Tabelle @0x800a7400 bestimmt (FUN_80052b38) und per FUN_8005a09c nachgeladen. Ein Raum
+ * mit Gator (Sound-Id 0x16 -> Zeile 17) UND Spinne (0x10 -> Zeile 11) hat dort KEINE Zeile
+ * (Skeptiker #7: kein {0x16,0x10}) -> RE2 haette gar keine Bank. Der Port mischt beide in
+ * ROOM2090 (Boss = Port-Ergaenzung), also braucht er je Rufer die richtige Bank. Der EINE
+ * Latch (vorher s_re2se_bank_sel + Ein-Bank-Lader) stand nach dem Laden auf 17 (Gator
+ * zuletzt registriert): Spinnen-Biss SE 1 (@0x80105b34-38) spielte das Gator-Schuettel-
+ * Sample, Spinnen-Schritte 8/9 waren SILENT (Bank 17 id 6..31 = FFFFFFFF).
+ * Loesung: die Engine-Hooks melden vor JEDEM SE ihre Bank an (bank_fn), dieser Cache haelt
+ * bis zu RE2SE_CACHE_N dekodierte Baenke gleichzeitig, statt beim Wechsel die laufenden
+ * Stimmen der anderen Bank zu zerstoeren. Die KANAL-MASCHINE (s_re2se_prio/s_re2se_pend,
+ * Gate FUN_8005c92c @0x8005c92c-68, selbst nachgelesen: `lbu a0,0x800d4ca0[chan*2]`
+ * @0x8005c93c / `andi v1,a1,7` @0x8005c940 / `sltu` @0x8005c944 / Gleichstand-Bit 3
+ * @0x8005c960-64) bleibt EIN Satz - wie im Original ein Bank-Slot; das ist die verbleibende,
+ * benannte Port-Abweichung (zwei Baenke teilen sich die 8 Kanal-Prioritaeten). */
+#define RE2SE_CACHE_N 3
+typedef struct {
+    int         bank;                                   /* -1 = leer                         */
+    int         loaded;
+    unsigned    last_use;                               /* LRU-Stempel (Rufzaehler)          */
+    int16_t    *decoded    [RE15_VAB_MAX_SAMPLES];
+    int         decoded_len[RE15_VAB_MAX_SAMPLES];
+    re15_vab_t  vab;
+    uint8_t    *edt;                                    /* eigener EDT-Record-Puffer (SE-Map @0) */
+    int         map_count;                              /* vh_off/4 = SE-Map-Eintraege (Bank11: 32) */
+} re2se_bank_t;
+static re2se_bank_t  s_re2se_cache[RE2SE_CACHE_N];
+static re2se_bank_t *s_re2se_cur      = NULL;           /* die Bank des LETZTEN erfolgreichen Rufs */
+static unsigned      s_re2se_use_tick = 0;
+static int           s_re2se_bank_sel = -1;             /* vom Rufer gewaehlte Bank (re15_audio_re2_enemy_bank) */
+
+/* [re2se]-Dateilog nach dem RE15_VOICE_LOG-Muster: die exe ist ein GUI-Programm (PE-
+ * Subsystem 2), stderr ist beim Umleiten leer (gemessen 2026-09-04, 0 Byte). RE15_RE2SE_LOG=
+ * <Pfad> schreibt jeden Ruf (Bank-Wahl, Map-Eintrag, Gate, Kanal) zusaetzlich in die Datei.
+ * Ohne die Variable passiert nichts. */
+static void re2se_log(const char *fmt, ...)
+{
+    static const char *s_path = NULL; static int s_init = 0;
+    va_list ap;
+    if (!s_init) { s_init = 1; s_path = getenv("RE15_RE2SE_LOG"); if (s_path && !*s_path) s_path = NULL; }
+    if (!s_path) return;
+    { FILE *lf = fopen(s_path, "ab");
+      if (!lf) return;
+      va_start(ap, fmt); vfprintf(lf, fmt, ap); va_end(ap);
+      fclose(lf); }
+}
 
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
 static uint8_t *read_re2_enemse_vbs(int *out_sz)
@@ -1015,71 +1058,110 @@ static uint8_t *read_re2_enemse_vbs(int *out_sz)
     return re15_pc_read_re2("ENEMSE.VBS", out_sz);
 }
 
-static int load_re2_enemy_se_pc(int bank)
+/* Cache-Eintrag freigeben (Original-Analogon: SsVabClose @FUN_8005a09c-Kopf). Laufende
+ * Stimmen/Vormerkungen, die in DIESE Puffer zeigen, werden geloest - andere Baenke laufen weiter. */
+static void re2se_bank_free(re2se_bank_t *b)
 {
-    if (s_re2se_loaded && s_re2se_bank_cur == bank) return 0;
+    int n_slots = (int)(sizeof s_active / sizeof s_active[0]);
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        if (!b->decoded[i]) continue;
+        for (int s = 0; s < n_slots; s++)
+            if (s_active[s].pcm == b->decoded[i]) { s_active[s].active = 0; s_active[s].pcm = NULL; }
+        for (int c = 0; c < MIXER_RE2SE_CH_COUNT; c++)
+            if (s_re2se_pend[c].pcm == b->decoded[i]) {
+                s_re2se_pend[c].pending = 0; s_re2se_pend[c].pcm = NULL; s_re2se_pend[c].pcm_len = 0;
+                s_re2se_prio[c] = 0;
+            }
+        free(b->decoded[i]); b->decoded[i] = NULL; b->decoded_len[i] = 0;
+    }
+    free(b->edt); b->edt = NULL; b->map_count = 0;
+    b->loaded = 0; b->bank = -1;
+    if (s_re2se_cur == b) s_re2se_cur = NULL;
+}
+
+/* Bank aus dem Cache holen oder laden; NULL = nicht ladbar. Verdraengt bei vollem Cache den
+ * am laengsten unbenutzten Eintrag (nie den gerade aktiven). */
+static re2se_bank_t *load_re2_enemy_se_pc(int bank)
+{
+    re2se_bank_t *b = NULL, *victim = NULL;
+    for (int k = 0; k < RE2SE_CACHE_N; k++)
+        if (s_re2se_cache[k].loaded && s_re2se_cache[k].bank == bank) { b = &s_re2se_cache[k]; break; }
+    if (b) { b->last_use = ++s_re2se_use_tick; return b; }
+    for (int k = 0; k < RE2SE_CACHE_N; k++)
+        if (!s_re2se_cache[k].loaded) { b = &s_re2se_cache[k]; break; }
+    if (!b) {
+        for (int k = 0; k < RE2SE_CACHE_N; k++) {
+            re2se_bank_t *c = &s_re2se_cache[k];
+            if (c == s_re2se_cur) continue;
+            if (!victim || c->last_use < victim->last_use) victim = c;
+        }
+        if (!victim) return NULL;
+        re2se_log("[re2se] Cache voll: Bank %d verdraengt fuer Bank %d\n", victim->bank, bank);
+        re2se_bank_free(victim);
+        b = victim;
+    }
     re2_enemse_rec_t rec;
-    if (re2_enemse_toc_entry(bank, &rec) != 0) return -1;
+    if (re2_enemse_toc_entry(bank, &rec) != 0) return NULL;
     int vbs_sz = 0;
     uint8_t *vbs = read_re2_enemse_vbs(&vbs_sz);
     if (!vbs) {
         static int warned = 0;
         if (!warned) { warned = 1;
-            fprintf(stderr, "[re2se] shared_assets/RE2/ENEMSE.VBS fehlt -> RE2-Gegner-SEs stumm\n"); }
-        return -1;
+            fprintf(stderr, "[re2se] shared_assets/RE2/ENEMSE.VBS fehlt -> RE2-Gegner-SEs stumm\n");
+            re2se_log("[re2se] shared_assets/RE2/ENEMSE.VBS fehlt -> RE2-Gegner-SEs stumm\n"); }
+        return NULL;
     }
     if (rec.edt_off + rec.edt_size > (uint32_t)vbs_sz ||
         rec.vbd_off + rec.vbd_size > (uint32_t)vbs_sz || rec.edt_size < 12) {
-        free(vbs); return -1;
+        free(vbs); return NULL;
     }
-    /* Vorgaenger-Bank freigeben (Original: SsVabClose @FUN_8005a09c-Kopf). */
-    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
-        free(s_re2se_decoded[i]); s_re2se_decoded[i] = NULL; s_re2se_decoded_len[i] = 0;
-    }
-    free(s_re2se_edt); s_re2se_edt = NULL; s_re2se_map_count = 0;
-    s_re2se_loaded = 0; s_re2se_bank_cur = -1;
-    /* Die Samples der Vorgaenger-Bank sind weg -> laufende Kanal-Prioritaeten UND
-     * Vormerkungen (die auf die eben freigegebenen PCM-Puffer zeigen) mit freigeben. */
-    for (int c = 0; c < MIXER_RE2SE_CH_COUNT; c++) {
-        s_re2se_prio[c] = 0;
-        s_re2se_pend[c].pending = 0; s_re2se_pend[c].pcm = NULL; s_re2se_pend[c].pcm_len = 0;
-        s_active[MIXER_RE2SE_CH_FIRST + c].active = 0;
-        s_active[MIXER_RE2SE_CH_FIRST + c].pcm    = NULL;
-    }
-
     uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
-    if (!edt) { free(vbs); return -1; }
+    if (!edt) { free(vbs); return NULL; }
     memcpy(edt, vbs + rec.edt_off, rec.edt_size);
     /* VH-Offset = Trailer-u32 @[size-8] (FUN_8005a09c, s.o.). */
     uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]        | ((uint32_t)edt[rec.edt_size-7] << 8)
                     | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
     if (vh_off + 0x20u > rec.edt_size ||
-        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_re2se_vab) != 0) {
-        free(edt); free(vbs); return -1;
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &b->vab) != 0) {
+        free(edt); free(vbs); return NULL;
     }
     const uint8_t *vb = vbs + rec.vbd_off;
-    for (int i = 0; i < s_re2se_vab.vag_count; i++) {
-        uint32_t off = s_re2se_vab.samples[i].offset, sz = s_re2se_vab.samples[i].size;
+    for (int i = 0; i < b->vab.vag_count; i++) {
+        uint32_t off = b->vab.samples[i].offset, sz = b->vab.samples[i].size;
         if (off + sz > rec.vbd_size) continue;
         size_t cap = (sz / 16) * 28;
         int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
         if (!pcm) continue;
-        s_re2se_decoded[i]     = pcm;
-        s_re2se_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        b->decoded[i]     = pcm;
+        b->decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
     }
     free(vbs);                       /* VAGs dekodiert; nur der EDT-Record (SE-Map+VH) bleibt */
-    s_re2se_edt       = edt;
-    s_re2se_map_count = (int)(vh_off / 4);
-    s_re2se_loaded    = 1;
-    s_re2se_bank_cur  = bank;
+    b->edt       = edt;
+    b->map_count = (int)(vh_off / 4);
+    b->loaded    = 1;
+    b->bank      = bank;
+    b->last_use  = ++s_re2se_use_tick;
     fprintf(stderr, "[re2se] ENEMSE Bank %d geladen: %d VAGs, Map %d Eintraege\n",
-            bank, s_re2se_vab.vag_count, s_re2se_map_count);
-    return 0;
+            bank, b->vab.vag_count, b->map_count);
+    re2se_log("[re2se] ENEMSE Bank %d geladen: %d VAGs, Map %d Eintraege (Cache-Slot %d)\n",
+              bank, b->vab.vag_count, b->map_count, (int)(b - s_re2se_cache));
+    return b;
 }
 
 void re15_audio_re2_enemy_bank(int bank)
 {
-    s_re2se_bank_sel = bank;         /* lazy: geladen beim ersten re15_audio_re2_enemy_se */
+    s_re2se_bank_sel = bank;         /* lazy: geladen beim naechsten re15_audio_re2_enemy_se */
+}
+
+/* Testhaken/Diagnose (Phase 2): welche Bank spielte der letzte Ruf, welche ist gewaehlt,
+ * wie viele Baenke haelt der Cache. Nur lesend; kein Spielpfad. */
+int re15_audio_re2_se_bank_state(int *out_selected, int *out_cached)
+{
+    int n = 0;
+    for (int k = 0; k < RE2SE_CACHE_N; k++) if (s_re2se_cache[k].loaded) n++;
+    if (out_selected) *out_selected = s_re2se_bank_sel;
+    if (out_cached)   *out_cached   = n;
+    return s_re2se_cur ? s_re2se_cur->bank : -1;
 }
 
 /* RE2-Gegner-SE (byte-true FUN_8005bd6c-Dekodierung, PC-Wiedergabe wie se_play_layers):
@@ -1112,22 +1194,34 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
      * @LAB_80052c2c) und wird bei jedem Raumwechsel neu bestimmt.
      * `load_re2_enemy_se_pc` kann den Wechsel bereits (Frueh-Ausstieg :991 nur wenn die
      * GEWUENSCHTE Bank schon geladen ist) — es fehlte allein die Bedingung hier. */
-    if (!s_re2se_loaded || s_re2se_bank_cur != s_re2se_bank_sel) {
-        if (s_re2se_bank_sel < 0) {
-            static int warned = 0;
-            if (!warned) { warned = 1;
-                fprintf(stderr, "[re2se] keine ENEMSE-Bank gewaehlt (re15_audio_re2_enemy_bank) -> stumm\n"); }
-            return;
-        }
-        if (load_re2_enemy_se_pc(s_re2se_bank_sel) != 0) return;
+    /* Phase 2 (Mehrbank-Cache, s.o.): die vom RUFER angemeldete Bank holen - je Ruf, nicht
+     * je Ladevorgang; der Cache macht den Wechsel zwischen Gator (17) und Spinne (11) im
+     * selben Raum kostenfrei und laesst die laufenden Stimmen der anderen Bank stehen. */
+    if (s_re2se_bank_sel < 0) {
+        static int warned = 0;
+        if (!warned) { warned = 1;
+            fprintf(stderr, "[re2se] keine ENEMSE-Bank gewaehlt (re15_audio_re2_enemy_bank) -> stumm\n");
+            re2se_log("[re2se] keine ENEMSE-Bank gewaehlt -> stumm (se=%d)\n", se_id); }
+        return;
     }
+    if (!s_re2se_cur || s_re2se_cur->bank != s_re2se_bank_sel) {
+        re2se_bank_t *nb = load_re2_enemy_se_pc(s_re2se_bank_sel);
+        if (!nb) { re2se_log("[re2se] Bank %d nicht ladbar (se=%d)\n", s_re2se_bank_sel, se_id); return; }
+        s_re2se_cur = nb;
+    }
+    re2se_bank_t *cb = s_re2se_cur;
+    cb->last_use = ++s_re2se_use_tick;
     if (flag2000) se_id += 0x10;                       /* zweite Map-Haelfte (Raum-Paar) */
-    if (se_id < 0 || se_id >= s_re2se_map_count) return;
-    uint32_t entry = (uint32_t)s_re2se_edt[se_id*4]        | ((uint32_t)s_re2se_edt[se_id*4+1] << 8)
-                   | ((uint32_t)s_re2se_edt[se_id*4+2] << 16) | ((uint32_t)s_re2se_edt[se_id*4+3] << 24);
+    if (se_id < 0 || se_id >= cb->map_count) return;
+    uint32_t entry = (uint32_t)cb->edt[se_id*4]        | ((uint32_t)cb->edt[se_id*4+1] << 8)
+                   | ((uint32_t)cb->edt[se_id*4+2] << 16) | ((uint32_t)cb->edt[se_id*4+3] << 24);
     re2_enemse_se_t se;
     re2_enemse_decode_entry(entry, &se);
-    if (se.silent) return;
+    if (se.silent) {
+        re2se_log("[re2se] se=%d bank=%d (gewaehlt %d) Eintrag %08X SILENT\n",
+                  se_id, cb->bank, s_re2se_bank_sel, entry);
+        return;
+    }
     if (se.vab_override >= 0) {
         static int warned = 0;
         if (!warned) { warned = 1;
@@ -1145,6 +1239,8 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
                             "(laufend prio=%d) [FUN_8005c92c]\n",
                     se_id, se.chan, se.prio,
                     (se.chan >= 0 && se.chan < MIXER_RE2SE_CH_COUNT) ? s_re2se_prio[se.chan] : 0);
+        re2se_log("[re2se] se=%d bank=%d GATE chan=%d prio-nib=%d VERWORFEN (laufend %d)\n",
+                  se_id, cb->bank, se.chan, se.prio, (int)s_re2se_prio[se.chan]);
         return;
     }
 
@@ -1152,9 +1248,9 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
     for (int k = 0; k <= se.extra; k++) {              /* Basis-Tone + b3>>5 Extra-Layer */
         int tone_idx = se.prog * RE15_VAB_TONES_PER_PROGRAM + se.tone + k;
         if (tone_idx >= RE15_VAB_TOTAL_TONES) break;
-        const re15_vab_tone_t *t = &s_re2se_vab.tones[tone_idx];
+        const re15_vab_tone_t *t = &cb->vab.tones[tone_idx];
         int vag = (int)t->vag_index - 1;               /* VH-vag_index ist 1-basiert */
-        if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_re2se_decoded[vag]) continue;
+        if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !cb->decoded[vag]) continue;
         int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* wie se_play_layers */
         int pan = t->pan, vl = vol, vr = vol;
         if (pan < 0x40)      vr = vol * pan / 0x40;
@@ -1165,8 +1261,8 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         if (chan < 0 || chan >= MIXER_RE2SE_CH_COUNT) {
             /* Kanal ausserhalb des gemessenen 2..7-Fensters: alter freier Pool, kein Gate. */
             int slot = mixer_alloc_free_slot();
-            s_active[slot].pcm        = s_re2se_decoded[vag];
-            s_active[slot].pcm_len    = s_re2se_decoded_len[vag];
+            s_active[slot].pcm        = cb->decoded[vag];
+            s_active[slot].pcm_len    = cb->decoded_len[vag];
             s_active[slot].pos        = 0;
             s_active[slot].subpos     = 0;
             s_active[slot].step_q16   = (uint32_t)pitch << 4;
@@ -1179,15 +1275,23 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         s_re2se_prio[chan]         = (unsigned char)(se.prio & 0x7);  /* @0x8005be98 */
         s_re2se_pend[chan].pending = 1;                               /* @0x8005beb0 */
         s_re2se_pend[chan].se_id   = se_id;                           /* @0x8005beac */
-        s_re2se_pend[chan].pcm     = s_re2se_decoded[vag];
-        s_re2se_pend[chan].pcm_len = s_re2se_decoded_len[vag];
+        s_re2se_pend[chan].pcm     = cb->decoded[vag];
+        s_re2se_pend[chan].pcm_len = cb->decoded_len[vag];
         s_re2se_pend[chan].step_q16 = (uint32_t)pitch << 4;
         s_re2se_pend[chan].vl_q15  = vl;
         s_re2se_pend[chan].vr_q15  = vr;
         if (se_dbg)
             fprintf(stderr, "[re2se] se=%d layer=%d bank=%d prog=%d tone=%d vag=%d "
                             "-> Kanal %d (prio %d)\n",
-                    se_id, k, s_re2se_bank_cur, se.prog, se.tone + k, vag, chan, se.prio & 7);
+                    se_id, k, cb->bank, se.prog, se.tone + k, vag, chan, se.prio & 7);
+        /* Abspieldauer = dekodierte Samples / (Pitch-Rate): SPU-Pitch 0x1000 == 44100 Hz
+         * (SsUtKeyOnV-Semantik, s. step_q16), also rate = pitch * 44100 / 4096. */
+        re2se_log("[re2se] se=%d layer=%d bank=%d (gewaehlt %d) prog=%d tone=%d vag=%d "
+                  "samples=%d pitch=0x%03X (%d Hz, %.2f s) -> Kanal %d (prio %d)\n",
+                  se_id, k, cb->bank, s_re2se_bank_sel, se.prog, se.tone + k, vag,
+                  cb->decoded_len[vag], (unsigned)pitch, (int)((uint32_t)pitch * 44100u / 4096u),
+                  (double)cb->decoded_len[vag] * 4096.0 / (44100.0 * (double)pitch),
+                  chan, se.prio & 7);
     }
     SDL_UnlockAudioDevice(s_audio_dev);
 }

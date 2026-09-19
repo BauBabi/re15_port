@@ -141,7 +141,13 @@ void re15_re2dog_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
     s_re2d_bank_fn = bank_fn;
     if (s_re2d_bank_fn) s_re2d_bank_fn(RE2DOG_ENEMSE_BANK);
 }
-static void re2d_se(int id) { if (s_re2d_se_fn) s_re2d_se_fn(id, 0); }   /* flag2000 = 0 (s.o.) */
+/* Bank vor JEDEM Ruf anmelden (PORT-DESIGN Mehrbank-Cache, Phase 2 gator-und-audio,
+ * audio_pc.c; RE2 fuehrt EINEN Bank-Slot @0x8005bdb4 - Mischraeume sind port-eigen). */
+static void re2d_se(int id)
+{
+    if (s_re2d_bank_fn) s_re2d_bank_fn(RE2DOG_ENEMSE_BANK);
+    if (s_re2d_se_fn) s_re2d_se_fn(id, 0);                                  /* flag2000 = 0 (s.o.) */
+}
 
 /* ---- room-scoped globals (0x800CFBF4-Analog) --------------------------------------------
  * Bits the dog module reads/writes: 0x20 noise/lunge claim (set @0x8010135C, clear only in the
