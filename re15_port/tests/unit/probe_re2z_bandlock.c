@@ -270,20 +270,29 @@ int main(int argc, char **argv)
                 continue;
             }
             pin_checked++;
-            /* Der Nutzer-Befund selbst: ein LEBENDER, aufrecht laufender RE2-Zombie im
-             * Kriech-Root darf mit normal gehaltener Waffe nicht unverwundbar sein. Vor dem
-             * Fix stand hier LEVEL = 0 (gemessen 2026-08-27, alle sechs Faelle), danach 30. */
-            if (h_stale <= 0) {
-                printf("  FAIL Fall %d: LEVEL-Treffer = %d — der Kriecher ist wieder "
-                       "unverwundbar (Band-Sperre zurueck). RE2s eigener Kandidatenfilter "
-                       "FUN_800470C0 @0x80047124-64 hat KEIN Hoehen-Band.\n", i, h_stale);
+            /* ⛔ NEU VERANKERT (Runde 16, trefferhoehe.md — Fixture-Verschiebung, Memory
+             * reai-v2-pin-fixture-verschiebung): Der Nutzer-Befund 2026-08-27 ("unverwundbar,
+             * bis sie mich einmal gebissen haben") war eine BAND-Sperre: der Kriech-Root fiel
+             * durch den RE1.5-Band-Schnitt @0x800120d0-ec komplett heraus (LEVEL 0 UND DOWN 0).
+             * RE2s Kandidatenfilter hat kein Band (FUN_800470C0 @0x80047124-64), aber sein
+             * Applier FUN_800410CC prueft die TEILE-MASKE word0>>26&7: der Kriecher traegt NUR
+             * BEINE (`(word0 & 0xF3FFFFFF) | 0x04000000` @0x80106B38-50 / @0x80107828-38,
+             * Root-Sicherung @0x8010039C-A8), und die EBEN-Zeile bei dy=0 ist `02 00 00`
+             * (DAT_800A6DB4+12) — Rumpf only. Ein EBEN-Schuss auf den Kriecher geht in RE2 also
+             * INS LEERE; treffbar ist er mit TIEF (Zeile `01 02 04`, Beine) — und genau das
+             * misst h_down. Der alte Pin (LEVEL > 0) hielt den Port auf einem Nicht-RE2-Stand
+             * fest; jetzt: LEVEL = 0 (byte-true), DOWN > 0 (der Kriecher ist NICHT unverwundbar). */
+            if (h_stale != 0) {
+                printf("  FAIL Fall %d: LEVEL-Treffer = %d — der Kriecher (Maske NUR BEINE) darf "
+                       "mit EBEN nicht getroffen werden (DAT_800A6DB4+12 = 02 00 00 & 1 = 0).\n",
+                       i, h_stale);
                 pin_fail = 1;
             }
-            /* Gegenrichtung: nach unten zielen muss weiter treffen — sonst waere das Band
-             * nicht praezisiert, sondern kaputt. */
+            /* Nach unten zielen muss treffen — sonst waere der Kriecher wieder unverwundbar
+             * (der eigentliche Nutzer-Befund). */
             if (h_down <= 0) {
-                printf("  FAIL Fall %d: DOWN-Aim-Treffer = %d — Regression im Band-Stempel\n",
-                       i, h_down);
+                printf("  FAIL Fall %d: DOWN-Aim-Treffer = %d — der Kriecher ist unverwundbar "
+                       "(TIEF-Zeile 01 02 04 muss die Beine treffen)\n", i, h_down);
                 pin_fail = 1;
             }
         }
@@ -312,7 +321,8 @@ int main(int argc, char **argv)
                pin_checked, upright_frames, stale_frames, via_21a);
         free(buf);
         if (pin_fail) { printf("RE2Z BANDLOCK PIN: FAIL\n"); return 1; }
-        printf("RE2Z BANDLOCK PIN: Kriech-Root ist mit LEVEL-Zielen treffbar\n");
+        printf("RE2Z BANDLOCK PIN: Kriech-Root ist mit TIEF-Zielen treffbar (EBEN = Rumpf-Zeile, "
+               "Maske NUR BEINE -> kein Treffer, RE2 FUN_800410CC)\n");
         return 0;
     }
     free(buf);
