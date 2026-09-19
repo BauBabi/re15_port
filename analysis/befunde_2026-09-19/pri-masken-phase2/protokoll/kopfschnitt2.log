@@ -1,0 +1,103 @@
+== Masken, die eine Figur waagerecht durchschneiden ==
+  Suchpfad-Probe: C:/workspace/git/reAi_v2/.claude/worktrees/agent-a64f7cee4612465f5/re15_port/shared_assets/PSX/STAGE1/ROOM1000.RDT
+  -> lesbar (177032 Bytes)
+  -> geparst rc=0 cuts=9 sca=135
+  Raeume geladen: 103, Kamerawinkel: 1094, davon mit Masken: 442
+  Begehbare Standplaetze geprueft: 2052319
+  Masken insgesamt:                18329
+  Standplaetze mit SCHNITT durch eine NACHGEZEICHNETE Maske: 21208
+  ... durch eine ORIGINAL-Maske (Massstab, nicht unser Fehler): 13032
+
+  --- Masken, die an >= 80 % der Standplaetze SCHNEIDEN ---
+  ORIGINAL      :    1 von 5931 Masken (0.0 %)
+  NACHGEZEICHNET:    0 von 6010 Masken (0.0 %)
+
+  Nachgezeichnete Masken mit hohem Schnitt-Anteil:
+  PASS: es wurden ueberhaupt Standplaetze und Masken gefunden
+  PASS: alle Stages erreicht (>= 100 Raeume, >= 300 Winkel mit Masken)
+
+  Schnitte JE MASKE: nachgezeichnet 3.529 (21208/6010), Original 2.197 (13032/5931) -> Verhaeltnis 1.61
+  PASS: Schnitte je nachgezeichneter Maske hoechstens das 1,70-fache des Originals (gemessen 1.61)
+
+== Phase 2: VOR/HINTER-Standplaetze je Cut mit Ziel-Silhouette (Begehbarkeit = Klemmpfad) ==
+  Raum      Cut Plaetze beruehr |  VORn VORverd VORteil | HINTn HINTfrei
+  ROOM1000 0      3976     168 |    46       0       0 |   122        2
+  ROOM1000 1      9907       0 |     0       0       0 |     0        0
+  ROOM1000 2      7772    1078 |    62       0       0 |  1060       22
+  ROOM1000 4      3567     215 |    94       0       0 |   156       67
+  ROOM1000 5      9697    3312 |   398       0       0 |  3163       14
+  ROOM1000 6     11878     425 |   137       0       0 |   315       20
+  ROOM1000 7      2558     155 |   120       0       0 |    74       30
+  ROOM1000 8      4243     129 |   129       0       0 |     7        3
+  ROOM1010 0       994      96 |    28       0       0 |    68        2
+  ROOM1010 1       991     151 |    13       0       0 |   143        5
+  ROOM1010 6       994     428 |    76       0       0 |   357        6
+  ROOM1010 8       994     347 |    69       0       0 |   282        5
+  ROOM1050 1      2952     174 |    68       0       0 |   162        6
+  ROOM1050 3      5052      15 |    10       0       0 |    11        9
+  ROOM1050 5      7600    6548 |   199       0       0 |  6334        8
+  ROOM1050 6      2006     200 |   186       0       0 |    15        1
+  ROOM1060 0      2497     288 |     0       0       0 |   286        1
+  ROOM1060 1      2456      74 |     2       0       0 |    72        0
+  ROOM1060 2      2241     190 |     4       0       0 |   190        4
+  ROOM1060 4      2120     278 |    75       0       0 |   203       43
+  ROOM1060 7      1577     164 |   103       0       0 |    94        8
+  ROOM10A0 0      4741     825 |     0       0       0 |   825        0
+  ROOM10A0 1      4747     562 |     9       0       0 |   553        2
+  ROOM10A0 5      4226     483 |   262       0       0 |   259       41
+  ROOM10A0 7      2291     247 |    70       0       0 |   204       30
+  ROOM10A0 8      2365     137 |    22       0       0 |   115        0
+  ROOM10C0 2     10180     510 |   185       0       0 |   351       37
+  ROOM10C0 3      8410     679 |   492       0       0 |   203       41
+  ROOM10C0 4      4988      62 |     3       0       0 |    59        3
+  ROOM10D0 1     31734     548 |   301       0       0 |   416        1
+  ROOM10D0 6     31322      81 |    46       0       0 |    33       32
+  ROOM10D0 7      6838      49 |    21       0       0 |    29        3
+  ROOM10D0 8     33662     223 |   215       0       0 |    53       53
+  ROOM10D0 9     20426     563 |   160       0       0 |   425       17
+  ROOM10E0 0      4035     854 |    91       0       0 |   763        0
+  ROOM10E0 1      3476     477 |    67       0       0 |   410        0
+  ROOM10E0 2      2964     439 |     9       0       0 |   431        2
+  ROOM10E0 3      4242     156 |    29       0       0 |   130        5
+  ROOM10E0 4      2767     508 |    44       0       0 |   467        7
+  ROOM10E0 5      4657     651 |    28       0       0 |   625        3
+  ROOM10E0 6      2724      56 |    22       0       0 |    36        4
+  ROOM10E0 8      4240     115 |    26       0       0 |    89        0
+  ROOM10E0 9      3050      29 |     3       0       0 |    26        0
+  ROOM10F0 0      4817      81 |    24       0       0 |    66        9
+  ROOM10F0 1      6124     264 |   162       0       0 |   115       17
+  ROOM10F0 2      6424     197 |   179       0       0 |    27       16
+  ROOM10F0 3      5161     111 |    62       0       0 |    54       10
+  ROOM10F0 6      5436     420 |   125       0       0 |   310       16
+  ROOM1110 0      3492     531 |    91       0       0 |   440        0
+  ROOM1110 2      4013     464 |    71       0       0 |   393        0
+  ROOM1110 6      3691     779 |    66       0       0 |   713        0
+  ROOM1120 2      9424     348 |   285       0       0 |    63        0
+  ROOM1130 3      3912    1562 |    39       0       0 |  1507        0
+  ROOM1140 0      2792     871 |     0       0       0 |   871       59
+  ROOM1140 2      2348     576 |     6       0       0 |   570       51
+  ROOM1140 3      1692     407 |    55       0       0 |   358        6
+  ROOM1140 5      3127     198 |     5       0       0 |   193        0
+  ROOM1160 3      3185     449 |   279       0       0 |   319       55
+  ROOM1180 2     12594    1638 |   185       0       0 |  1473       26
+  ROOM1180 3      7318    2248 |    65       0       0 |  2183        0
+  ROOM1180 5      7543    1655 |    94       0       1 |  1570        3
+  ROOM1180 6     14624    2103 |   273       0       0 |  1834        3
+  ROOM11B0 3      3632    1222 |    95       0       0 |  1126        0
+  ROOM11D0 3      2532     546 |   259       0       0 |   420       57
+  ROOM11F0 0     32659      82 |    68       0       0 |    18       10
+  ROOM11F0 1     37539     160 |   103       0       0 |    76       10
+  ROOM11F0 6     23086     506 |   108       0       0 |   425       20
+  ROOM11F0 7     44188    4940 |     0       0       0 |  4940        0
+  ROOM1220 0      3958      50 |     0       0       0 |    50        3
+  ROOM1220 2      6065      60 |     1       0       0 |    59        1
+  ROOM1220 4      5353      89 |    12       0       0 |    77        1
+  ROOM1220 6      3313      89 |    41       0       0 |    55        7
+  ROOM1220 8      1828      44 |    19       0       0 |    36       12
+  ROOM1230 2     49476    9337 |   168       0       0 |  9169        0
+  ROOM1230 3     32537    9819 |   120       0       0 |  9699        0
+  ROOM1230 5     23042    3412 |   106       0       0 |  3275        2
+  ROOM1230 6     51480   13548 |   282       0       0 | 13197        0
+  77 Cuts mit Ziel-Silhouette, 0 Fehler; VOR 7372 Standplaetze (0 verdeckt), HINTER 75297 (931 frei)
+  PASS: Phase 2: es gibt Cuts mit Ziel-Silhouette und Standlinie
+  PASS: Phase 2: KEIN begehbarer Standplatz VOR der Standlinie wird zu >= 95 % verdeckt (VORverd == 0)

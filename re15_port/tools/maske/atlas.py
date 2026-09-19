@@ -211,6 +211,11 @@ def clut_aus(pal):
     b = q[:, 2].astype(np.uint16)
     werte = (r | (g << 5) | (b << 10)).astype(np.uint16)
     werte[werte == 0] = 0x8000
+    # ⛔ AUCH DER UNBENUTZTE REST. Gemessen an 40 Original-Atlanten (build/p2/atlas, ueber den
+    # Engine-Dekoder gezogen): KEIN einziger Eintrag ausser Index 0 traegt 0x0000 — Median 0,
+    # Maximum 0, auch jenseits der belegten Palette. Ein leerer Platz mit 0x0000 waere auf der
+    # PSX durchsichtiges Schwarz; Capcom laesst das nicht stehen, also wir auch nicht.
+    clut[1:] = 0x8000
     clut[1:1 + len(pal)] = werte
     return clut
 

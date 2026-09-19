@@ -66,6 +66,14 @@ P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
 # auf minimal andere Kastengrenzen: 805 gegen 811 VOR-Plaetze). Wo die beiden sich
 # widersprechen, gilt die strengere Zahl.
 P2_ABGELEHNT = {
+    ("ROOM10D0", 1): "unit_pri_eingemessen: die F9-Marke des Nutzers (F423, Welt 3228/-4568, "
+                     "er steht HINTER der Liege) verlangt eine wirksame Maske ueber x156..176. "
+                     "Das Nutzer-Original 01.png als EIN Objekt mit reiner Geometrie gibt der "
+                     "rechten Spalte 176 eine Tiefe >= 180; wirksam waere < 180 (Kopf-vz 11579). "
+                     "Das sind 16 Einheiten — genau der Restfehler der Kalibrierung (Modell "
+                     "median +5 Buckets zu FERN). Die alte Sektion (aus der Zerteilung "
+                     "01_01/01_02 mit den Handschluesseln flach/spalten) bleibt stehen, bis der "
+                     "Nutzer entscheidet.",
     ("ROOM1000", 3): "unit_pri_kopfschnitt: 1 von 805 begehbaren Standplaetzen VOR der "
                      "Standlinie wird voll verdeckt. Die drei Objekte 03_01/03_02/03_03 sind "
                      "Massstab-4-Freistellungen (Treffer 89-100 %), ihre unterste Zeile liegt "
