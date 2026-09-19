@@ -19,6 +19,7 @@
  */
 #include "re15_enemy_ai.h"
 #include "re15_ai_flavor.h"
+#include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm (Typ 0x2D) fuer die 0x1A-Gitterhaende */
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
@@ -14078,8 +14079,16 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * every tick (@0x8010c2e8-324): re15_body_push_player (game_step) pushes
                                  * the player out, body_push_tail here separates other enemies (audit
                                  * wf_efd92a2c writher #1). NO wall-clamp: it never advances its own X/Z. */
-            re15_writher_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);                  /* b544 body separation (root tail @0x8010c300) */
+            /* RE2-FLAVOR (Runde 16 / Phase 2, arme-1210-re2.md): der RE2-ZELLENARM (Typ 0x2D,
+             * ROOM2050) uebernimmt den GANZEN Dispatch — Root @0x80100018, Routinen-Tabelle
+             * @0x80101424, Per-Frame-Schleife @0x80026570-604 (enemy_ai_re2_zellenarm.c). Sein
+             * Root-Tail FUN_80035530 -> FUN_80034D0C steigt bei Entity-Bit 2 aus; der Port
+             * fuehrt den Koerper-Push ueber hit_radius (0 solange verborgen) und laesst den
+             * RE1.5-Tail hier weg. Der RE1.5-Writher bleibt der RE1.5-Default. */
+            if (!(re15_ai_re2_for_type(0x1Au) && re15_re2arm_tick(s))) {
+                re15_writher_ai_tick(s);
+                re15_enemy_body_push_tail(s, e);              /* b544 body separation (root tail @0x8010c300) */
+            }
         }
         else if (t == 0x23) {   /* ALLIGATOR boss (type 0x23, EM023, STAGE2) — giant ground walk-chaser +
                                  * grab-eat. SCA wall-clamp after the tick like the dog/zombie.

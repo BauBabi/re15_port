@@ -43,6 +43,7 @@
 #include "re15_camera.h"
 #include "re15_damage.h"
 #include "re15_math.h"
+#include "re15_ai_flavor.h"   /* re15_ai_flavor_set: Pin gilt dem RE1.5-Flavor (s. main) */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -135,7 +136,14 @@ static int aufsetzen(int *slots, int32_t *az)
 
 int main(void)
 {
-    printf("=== ROOM1210 Gitterhaende: Ausloeser, Staffelung, Einmal-Riegel ===\n");
+    /* NEU VERANKERT (Runde 16 / Phase 2, 2026-09-19): dieser Pin beschreibt die RE1.5-
+     * NACHRUESTUNG (Writher-Zwitter), die unter dem RE1.5-Flavor unveraendert weiterlaeuft.
+     * Unter dem RE2-Flavor besitzt seit Phase 2 der RE2-Zellenarm (Typ 0x2D, enemy_ai_re2_
+     * zellenarm.c) den Typ 0x1A — dafuer pinnt tests/unit/test_p2_1210_arme_re2.c die
+     * Original-Folge 0x101 -> 0x301 -> 0x401 -> 0x501 -> 0x701. Bisher lief dieser Test
+     * ueber den Port-Default (RE2-Flavor), weil 0x1A dort keinen RE2-Besitzer hatte. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    printf("=== ROOM1210 Gitterhaende: Ausloeser, Staffelung, Einmal-Riegel (RE1.5-Flavor) ===\n");
     int slots[RE15_ACTOR_MAX]; int32_t az[RE15_ACTOR_MAX];
     int n = aufsetzen(slots, az);
     if (n <= 0) { fprintf(stderr, "FAIL: keine Arme geladen\n"); return 1; }

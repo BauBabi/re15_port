@@ -1,0 +1,100 @@
+# Anker-Messung ROOM1210 (Phase 2, 2026-09-19) — Rohausgaben
+
+## 1. Kamera + Vorwaertsprojektion Cut 4 (anker_mess.c)
+cuts=9
+cut 0 pos=(-20142,-3348,-1512) tgt=(-25110,-1188,-2520) H=208
+cut 1 pos=(-13140,-2790,-1512) tgt=(-25110,-1188,-2520) H=208
+cut 2 pos=(-21024,-2970,-1512) tgt=(-13212,-1188,-2520) H=208
+cut 3 pos=(-19008,-3132,-14274) tgt=(-20070,-486,-2520) H=208
+cut 4 pos=(-18522,-1962,-24048) tgt=(-19422,-666,-2538) H=208
+cut 5 pos=(-18612,-3276,-15570) tgt=(-20106,-648,-25002) H=208
+cut 6 pos=(-26514,-4410,-26496) tgt=(-22662,504,-19422) H=208
+cut 7 pos=(-25704,-4410,-20430) tgt=(-23076,504,-28404) H=208
+cut 8 pos=(-17280,-1404,-21492) tgt=(-21978,-2484,-23076) H=208
+
+== Cut 4: Westwandflaeche x=-21090, Ostwandflaeche x=-16676 ==
+  z=-15747 :  y    0->(106,155)  y-1000->(106,131)  y-1500->(106,119)  y-2000->(105,107)  y-2513->(105, 94)  y-3000->(105, 82)  y-3500->(105, 69)
+  z=-17130 :  y    0->( 94,164)  y-1000->( 94,135)  y-1500->( 93,121)  y-2000->( 93,107)  y-2513->( 93, 91)  y-3000->( 92, 77)  y-3500->( 92, 62)
+  z=-12797 :  y    0->(122,143)  y-1000->(122,124)  y-1500->(122,116)  y-2000->(122,107)  y-2513->(122, 98)  y-3000->(122, 89)  y-3500->(122, 79)
+  z=-14197 :  y    0->(116,148)  y-1000->(116,127)  y-1500->(116,118)  y-2000->(115,107)  y-2513->(115, 96)  y-3000->(115, 86)  y-3500->(115, 75)
+  z=-21158 :  y    0->( -3,238)  y-1000->( -6,173)  y-1500->( -8,139)  y-2000->(-10,105)  y-2513->(-11, 69)  y-3000->(-13, 34)  y-3500->(-15, -3)
+  z=-22365 :  y    0->(-112,321)  y-1000->(-121,215)  y-1500->(-125,160)  y-2000->(-130,103)  y-2513->(-135, 42)  y-3000->(-140,-17)  y-3500->(-146,-81)
+  z= -8847 :  y    0->(134,133)  y-1000->(134,120)  y-1500->(134,114)  y-2000->(134,107)  y-2513->(134,100)  y-3000->(134, 94)  y-3500->(134, 87)
+  z=-10247 :  y    0->(131,136)  y-1000->(131,121)  y-1500->(131,115)  y-2000->(131,107)  y-2513->(131,100)  y-3000->(131, 92)  y-3500->(130, 85)
+
+== Rueckwaerts: Bildpixel -> Welt auf der Westwandebene x=-21090 ==
+  Pixel ( 55,104) -> West x=-21090 bei y=-2040 z=-19428
+  Pixel ( 75,104) -> West x=-21090 bei y=-2057 z=-18419
+  Pixel ( 95,104) -> West x=-21090 bei y=-2082 z=-16862
+  Pixel ( 75, 90) -> West x=-21090 bei y=-2440 z=-18397
+  Pixel ( 75, 60) -> West x=-21090 bei y=-3259 z=-18352
+
+## 2. Cut 3 (noerdliches Westfenster)
+cuts=9
+cut 0 pos=(-20142,-3348,-1512) tgt=(-25110,-1188,-2520) H=208
+cut 1 pos=(-13140,-2790,-1512) tgt=(-25110,-1188,-2520) H=208
+cut 2 pos=(-21024,-2970,-1512) tgt=(-13212,-1188,-2520) H=208
+cut 3 pos=(-19008,-3132,-14274) tgt=(-20070,-486,-2520) H=208
+cut 4 pos=(-18522,-1962,-24048) tgt=(-19422,-666,-2538) H=208
+cut 5 pos=(-18612,-3276,-15570) tgt=(-20106,-648,-25002) H=208
+cut 6 pos=(-26514,-4410,-26496) tgt=(-22662,504,-19422) H=208
+cut 7 pos=(-25704,-4410,-20430) tgt=(-23076,504,-28404) H=208
+cut 8 pos=(-17280,-1404,-21492) tgt=(-21978,-2484,-23076) H=208
+
+== Cut 3: Westwandflaeche x=-21090, Ostwandflaeche x=-16676 ==
+  z=-15747 :  y    0-> hinter  y-1000-> hinter  y-1500-> hinter  y-2000-> hinter  y-2513-> hinter  y-3000-> hinter  y-3500-> hinter
+  z=-17130 :  y    0-> hinter  y-1000-> hinter  y-1500-> hinter  y-2000-> hinter  y-2513-> hinter  y-3000-> hinter  y-3500-> hinter
+  z=-12797 :  y    0->(-15,362)  y-1000->(-34,290)  y-1500->(-44,248)  y-2000->(-56,202)  y-2513->(-70,148)  y-3000->(-85, 91)  y-3500->(-103, 23)
+  z=-14197 :  y    0->(-297,780)  y-1000->(-435,700)  y-1500->(-542,638)  y-2000->(-694,550)  y-2513->(-937,408)  y-3000->(-1348,171)  y-3500->(-2291,-372)
+  z=-21158 :  y    0-> hinter  y-1000-> hinter  y-1500-> hinter  y-2000-> hinter  y-2513-> hinter  y-3000-> hinter  y-3500-> hinter
+  z=-22365 :  y    0-> hinter  y-1000-> hinter  y-1500-> hinter  y-2000-> hinter  y-2513-> hinter  y-3000-> hinter  y-3500-> hinter
+  z= -8847 :  y    0->(107,181)  y-1000->(105,149)  y-1500->(104,132)  y-2000->(103,116)  y-2513->(101, 97)  y-3000->(100, 79)  y-3500->( 99, 59)
+  z=-10247 :  y    0->( 86,212)  y-1000->( 82,172)  y-1500->( 80,151)  y-2000->( 78,128)  y-2513->( 76,105)  y-3000->( 74, 81)  y-3500->( 72, 54)
+
+== Rueckwaerts: Bildpixel -> Welt auf der Westwandebene x=-21090 ==
+
+## 3. EM2D-Bone-Wolke am Anker y=-2500 / 400 hinter der Flaeche, Arm 6 (z=-17130) (anker_mess2.c)
+EM2D: 15 Bones, 6 Clips
+Arm-Ursprung=(-21490,-2500,-17130) yaw=0
+  Clip 0 (20 Bilder): Bild-Rechteck u  68..120  v  82..104 ; Hand-x max -20190 (900 vor der Flaeche)
+  Clip 1 (25 Bilder): Bild-Rechteck u  81..119  v  79.. 94 ; Hand-x max -20185 (905 vor der Flaeche)
+  Clip 2 (30 Bilder): Bild-Rechteck u  81..119  v  77.. 92 ; Hand-x max -20208 (882 vor der Flaeche)
+  Clip 3 (15 Bilder): Bild-Rechteck u  81..120  v  89..100 ; Hand-x max -20183 (907 vor der Flaeche)
+  Clip 4 (10 Bilder): Bild-Rechteck u  79..117  v  92..111 ; Hand-x max -20262 (828 vor der Flaeche)
+  Clip 5 (19 Bilder): Bild-Rechteck u  81..119  v  90..101 ; Hand-x max -20221 (869 vor der Flaeche)
+Bone-Welt-y gesamt: -2960 .. -1865 (Ursprung -2500)  -> 460 ueber / 635 unter dem Ursprung
+Vorderster Bone-x: -20183 (Wandflaeche -21090 -> 907 im Flur)
+Bild-Rechteck aller Bones: u 68..120  v 77..111
+
+## 4. Dieselbe Wolke am ALTEN Anker y=-2000 (Stand des Vorgaengers)
+EM2D: 15 Bones, 6 Clips
+Arm-Ursprung=(-21490,-2000,-17130) yaw=0
+  Clip 0 (20 Bilder): Bild-Rechteck u  69..120  v  97..120 ; Hand-x max -20190 (900 vor der Flaeche)
+  Clip 1 (25 Bilder): Bild-Rechteck u  81..120  v  94..109 ; Hand-x max -20185 (905 vor der Flaeche)
+  Clip 2 (30 Bilder): Bild-Rechteck u  81..119  v  93..107 ; Hand-x max -20208 (882 vor der Flaeche)
+  Clip 3 (15 Bilder): Bild-Rechteck u  81..120  v 104..116 ; Hand-x max -20183 (907 vor der Flaeche)
+  Clip 4 (10 Bilder): Bild-Rechteck u  79..117  v 107..125 ; Hand-x max -20262 (828 vor der Flaeche)
+  Clip 5 (19 Bilder): Bild-Rechteck u  81..119  v 105..116 ; Hand-x max -20221 (869 vor der Flaeche)
+Bone-Welt-y gesamt: -2460 .. -1365 (Ursprung -2000)  -> 460 ueber / 635 unter dem Ursprung
+Vorderster Bone-x: -20183 (Wandflaeche -21090 -> 907 im Flur)
+Bild-Rechteck aller Bones: u 69..120  v 93..125
+
+## 5. RE2 ROOM2050: die zehn Arm-Ursprünge im Original-Hintergrund (re2_mess.c)
+C:/workspace/git/reAi_v2/info/re2leon/PL0/RDT/room2050/camera.rid: 11 Eintraege
+  cut  0 pos=(-25848,-8046,-20214) tgt=(-23994,-684,-25830) fov=29623
+  cut  1 pos=(-25794,-2106,-26946) tgt=(-24606,-2070,-21240) fov=29623
+  cut  2 pos=(-25974,-5310,-18072) tgt=(-25164,144,-7938) fov=29623
+  cut  3 pos=(-14238,-3096,-7830) tgt=(-24084,-1368,-10062) fov=29623
+  cut  4 pos=(-15408,-7758,-7740) tgt=(-18792,5148,-12636) fov=29623
+  cut  5 pos=(-5346,-2358,-7992) tgt=(-23508,-1980,-13446) fov=29623
+  cut  6 pos=(-7848,-3204,-20268) tgt=(-11988,-1260,468) fov=29623
+  cut  7 pos=(-1458,-2898,-17676) tgt=(-17658,-396,-13806) fov=29623
+  cut  8 pos=(-10890,-2790,-17640) tgt=(-3024,-1512,-15696) fov=29623
+  cut  9 pos=(-24660,-3906,-15030) tgt=(-30510,468,-9504) fov=29623
+  cut 10 pos=(-10044,-1746,-9270) tgt=(-20358,-4392,-4176) fov=29623
+Cut 9 H=231
+  Arm 0 (-27150,-2580,-12350) -> Pixel (174,86)
+  Arm 1 (-27200,-2430,-13820) -> Pixel (95,121)
+  Arm 2 (-27150,-2180,-12050) -> Pixel (185,103)
+  Arm 3 (-27200,-1930,-13320) -> Pixel (128,138)
+  Arm 4 (-27130,-2200,-14000) -> Pixel (88,143)

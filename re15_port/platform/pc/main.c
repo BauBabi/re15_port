@@ -90,6 +90,7 @@ static inline int RNDI(float f) {
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
+#include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
@@ -529,7 +530,10 @@ static const uint8_t *pc_re2_cdemd(size_t *out_sz)
  * Generisch ueber den kind gebaut (Hund/Kraehe folgen in Welle C/D); der RE1.5-Typ IST der
  * RE2-kind fuer die Zombie-Familie (RE2 klemmt kinds 0x10..0x1F auf ein Overlay,
  * FUN_8001b710; EMD/TIM-Records sind per-kind). Rueckgabe 1 = Bank gefuellt. */
-static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
+/* `kind` = der RE2-TOC-kind, den die Bank fuer den RE1.5-Typ `type` liefert. Bis Runde 16 war
+ * das immer type == kind; die ROOM1210-Gitterhaende (RE1.5 0x1A) fahren seither das RE2-Modell
+ * EM2D (kind 0x2D, arme-1210-re2.md 2.1) — deshalb der getrennte Parameter. */
+static int pc_enemy_load_re2_kind(uint8_t type, int kind, re15_enemy_bank_t *eb)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     size_t ems_sz = 0;
@@ -544,8 +548,9 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
         return 0;
     }
     re15_tim_t tim = {0};
-    if (re2_ems_load_bank(ems, ems_sz, type, eb, &tim) != 0) {
-        fprintf(stderr, "[enemy] RE2 EM0%02X: kein TOC-Eintrag/Parse-Fehler -> RE1.5-Fallback\n", type);
+    if (re2_ems_load_bank(ems, ems_sz, kind, eb, &tim) != 0) {
+        fprintf(stderr, "[enemy] RE2 EM0%02X (kind 0x%02X): kein TOC-Eintrag/Parse-Fehler -> RE1.5-Fallback\n",
+                type, (unsigned)kind);
         return 0;
     }
     eb->buf = NULL;                                    /* Bank aliast das residente EMS */
@@ -567,6 +572,10 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
         }
     }
     return 1;
+}
+static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
+{
+    return pc_enemy_load_re2_kind(type, (int)type, eb);
 }
 
 /* Den RE1.5-EMD-Blob fuer `type` besorgen (Split-Datei oder Blob aus CDEMD0.EMS) — der
@@ -826,6 +835,32 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
             return;                                    /* REIN, kein Hybrid */
         }
         fprintf(stderr, "[enemy] RE2 EM0%02X nicht ladbar -> RE1.5-Modell\n", type);
+    }
+
+    /* ROOM1210-GITTERHAENDE IM RE2-FLAVOR (Runde 16 / Phase 2, arme-1210-re2.md 4.2): das
+     * RE2-Modell EM2D (CDEMD0.EMS kind 0x2D: TOC @0x8009ADF4, Sektoren 0x9B0/0x9B3 KI,
+     * 0x9B6 TIM 128x256, 0x9C7 EMD 0x6020 B; 15 Bones = 2 Arme x 7, Paar 1 = 6 Clips,
+     * Paar 3 = 2 Opfer-Clips fuer Leon) REIN, ohne Hybrid — wie Birkin EM36 oben. Die
+     * Opfer-Bank ist damit die EIGENE (Paar 3, victim_ok aus re2_emd_parse_bank); die
+     * Zombie-Leihgabe (re15_victim_donor_set 0x1A <- 0x10) bleibt zwar angemeldet, ist aber
+     * ohne Wirkung: re15_victim_bank_resolve nimmt die eigene Bank zuerst, und der Arm
+     * fuehrt Leon ohnehin im Victim-Modus 4 direkt (enemy_ai_re2_zellenarm.c arm_hook).
+     * Typ 0x1A kommt game-weit nur in ROOM1210/1211 vor (RDT-Zensus, enemy_ai_common.c),
+     * das Tor haengt deshalb allein am Flavor. Ohne RE2-Archiv: RE1.5-EM01A wie bisher. */
+    if (type == 0x1Au && allow_re2 && re15_ai_re2_for_type(0x1Au)) {
+        if (pc_enemy_load_re2_kind(type, 0x2D, eb)) {
+            /* ENEMSE-Bank 42, zweite Haelfte (Paar-Zeile {0x05,0x11} @0x800A7400 = Datei
+             * 0x97C54; em-Id 0x11 aus den ROOM2050-Records +7 -> +0x1FA @0x80057274-80).
+             * Der Hook ruft bank_fn vor jedem se_fn (Mehrbank-Cache in audio_pc.c kommt
+             * von anderer Hand). */
+            re15_re2arm_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+            fprintf(stderr, "[enemy] ROOM1210-Arme: RE2 EM2D (kind 0x2D) geladen, %d Bones, "
+                            "%d Clips, Opferbank %d Clips\n",
+                    eb->skel.bone_count, eb->anim.clip_count,
+                    eb->victim_ok ? eb->anim_victim.clip_count : 0);
+            return;                                    /* REIN, kein Hybrid */
+        }
+        fprintf(stderr, "[enemy] RE2 EM2D nicht ladbar -> RE1.5-EM01A fuer die Gitterhaende\n");
     }
 
     /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
@@ -7870,6 +7905,14 @@ re_title:;
                     continue;
                 }
 
+                /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
+                 * (0x80101164 mit a2 = 0: INIT @0x80100304, Rueckzug-Ende @0x80100E38), ist
+                 * der Arm ausgeblendet — Mesh UND Schatten (der Schatten-Record haengt im
+                 * Original an part[0]+0x5C, @0x80100378-A4, und ein verborgener Arm hat
+                 * keinen sichtbaren Part). Das generische no_draw darunter laesst den
+                 * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
+                if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
+
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
@@ -8397,7 +8440,14 @@ re_title:;
                         }
                     }
                 }
+                /* RE2-ZELLENARM: die sieben Parts des INAKTIVEN Arms tragen word0 = 0
+                 * (INIT `sw zero,0(v1)` @0x80100240 fuer Bones 1..7 bzw. @0x801002F8 fuer
+                 * 8..14) -> der Zeichner (Bit-0-Test @0x8001ECC4-C8-Muster) laesst sie aus.
+                 * Dieselbe flache Part-Maske wie beim Gore (kein Kaskaden-Effekt noetig: die
+                 * Kinder des inaktiven Arms stehen alle selbst in der Maske). */
+                const uint16_t arm_hide = re15_re2arm_part_hide_mask(npc);
                 for (int nbi = 0; nbi < npc_zeichen_n; nbi++) {
+                    if (arm_hide & (1u << nbi)) continue;
                     /* Bit 0 klar -> dieser Part wird nicht gezeichnet. Das `continue` ist
                      * flach wie im Original (`_addiu s2,s2,0xac` im Delay-Slot @0x800273A4 /
                      * @0x800273F8 / @0x8010740C) — die Kinder verschwinden NICHT automatisch

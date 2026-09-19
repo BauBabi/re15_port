@@ -350,3 +350,90 @@ ueber dem Boden (Tuer-Record @0x171E: next_y = 0).
    oder zusaetzlich ueber das Bit) — die Decompile-Treffer (§2.3) sind Scans, kein Zeichner.
 7. Sonde: der Kamera-Cut wird im Harness nicht getrieben (cam_id 0 in allen Bahnen); Sichtbarkeitsaussagen
    stuetzen sich auf probe_1210_cutcheck (aelter).
+
+## 6. Umsetzung (Phase 2)
+
+Stand 2026-09-19, Worktree `.claude/worktrees/wf_074e2f88-24e-5` (Branch `worktree-wf_074e2f88-24e-5`),
+Build `re15_port/build_p2`. Der Fix-Plan (§4) ist gebaut, die in §5.3 offene Anker-Messung ist
+nachgeholt — nicht per Screenshot-Augenmass, sondern durch Rueckprojektion des EXTRAHIERTEN
+Original-Hintergrunds durch die byte-true Kamera.
+
+### 6.1 Was gebaut wurde
+
+* **NEU `re15_port/engine/src/enemy_ai_re2_zellenarm.c`** (+ `include/re15_enemy_ai_re2_zellenarm.h`):
+  der RE2-Typ 0x2D als eigenes Gehirn — Root @0x80100018, Routinen-Tabelle @0x80101424,
+  A-/B-Dual-Dispatch (@0x8010144C / @0x8010146C), Sub 0..7 mit JEDER Konstante am `@0x` der
+  Disassembly `CDEMD0_EM2D_ai1.BIN` (Weckruf-Tor, 2500/3000 + Kegel 1024/760, Hand-Radien 900/600,
+  Teleport an die Hand @0x80100C18-38, Halte-Budget 150 @0x80100C8C, Mash -1-2x @0x80100D28-34,
+  raumweiter Cooldown 120 @0x80100D5C, Rueckzug 30/Bild @0x80100E64, Ende 0x701 + hp -1
+  @0x80100E40-50, HURT/DEATH -> 0x501). Der Spieler-Hook 0x8010121C (Spieler-Routine 5 ueber
+  PTR_LAB_800A4030[5] = 0x8004006C -> 0x800CE300[0x2D] = 0x800CE3B4) ist mitportiert; SE laufen
+  ueber ENEMSE-Bank 42, zweite Haelfte (Paar-Zeile {0x05,0x11} @0x800A7400 = EXE-Datei 0x97C54).
+  Zwei Skeptiker-Luecken sind dabei geschlossen: der Scheduler-Widerspruch (§5.1 — FUN_8004A694
+  ist der RAUMLADE-Tick, einziger Aufrufer FUN_80049E48 @0x8004A35C, also ist +0x158 danach ein
+  freier Zeitgeber) und der Griff-Schaden (§5.2 — weder Hook noch Overlay rufen FUN_800401D4,
+  der Griff kostet keine HP).
+* **`engine/src/enemy_ai_common.c`**: im 0x1A-Zweig (:14041) uebernimmt unter dem RE2-Flavor
+  `re15_re2arm_tick(slot)` den GANZEN Dispatch; der RE1.5-Writher bleibt der RE1.5-Default.
+* **`platform/pc/main.c`**: Lader `pc_enemy_load_re2_kind(type, kind, eb)` (der RE2-kind ist jetzt
+  vom RE1.5-Typ getrennt) laedt fuer 0x1A im RE2-Flavor das Modell EM2D (kind 0x2D) REIN, ohne
+  Hybrid — 15 Bones, 6 Clips, EIGENE Opferbank (Paar 3, 2 Clips). Zeichner: verborgener Arm
+  (Entity-Bit 2, 0x80101164 mit a2=0) ohne Mesh UND ohne Schatten; die sieben Bones des inaktiven
+  Arms fallen ueber eine flache Part-Maske weg (INIT `sw zero,0(part)` @0x80100240 / @0x801002F8).
+* **Pins**: neu `tests/unit/test_p2_1210_arme_re2.c` (Registrierung `probes/p2_arme-1210-re2.cmake`,
+  Test `unit_1210_arme_re2`), 22 Pruefungen, alle gruen. Die beiden alten Pins
+  `unit_1210_gitterhaende` / `unit_1210_arme` sind auf den RE1.5-Flavor neu verankert
+  (`re15_ai_flavor_set(RE15_AI_FLAVOR_RE15)`): sie beschreiben die RE1.5-Nachruestung, die dort
+  unveraendert weiterlaeuft.
+
+### 6.2 Anker-Messung am Original-Hintergrund (die offene §5.3)
+
+Werkzeuge + Rohausgaben: `analysis/befunde_2026-09-19/phase2_arme-1210-re2/anker_mess.c`,
+`anker_mess2.c`, `re2_mess.c`, Log `anker_mess.log`. Alle drei rechnen mit der Engine-Kamera
+(`re15_camera_build_view` = FUN_80053ca4) und der byte-true Projektion `sx = 160 + H*x/z`,
+`H = fov>>7 = 208`; gemessen wird auf den extrahierten Original-Hintergruenden
+(`extracted/PSX/STAGE1/ROOM121/ROOM1210{3,4}.bmp`, RE2: `info/re2leon/COMMON/BSS/ROOM205/ROOM20509.bmp`).
+
+| Messung | Ergebnis |
+|---|---|
+| Fensterbank des westlichen Gitterfensters, Cut 4 (pos -18522,-1962,-24048), Pixel v=104 bei u=55/75/95 auf der Ebene x=-21090 | y = **-2040 / -2057 / -2082** — eine waagerechte Kante. Bank **y ~ -2060**; zugleich der Beleg, dass die Kunst die SCA-Flaeche -21090 meint |
+| z-Ausdehnung desselben Fensters (u 95 -> u 55) | z **-16862 .. -19428** |
+| Noerdliches Westfenster, Cut 3 (pos -19008,-3132,-14274), Bankkante v~114 bei u=78 | y ~ **-2310** (zwischen den Vorwaertsproben y-2000 -> v128 und y-2513 -> v105) |
+| RE2-Gegenprobe: die zehn ROOM2050-Ursprünge (@0x1970..0x1A36) in den RE2-Hintergrund Cut 9 projiziert | alle fuenf Westarme liegen IN den dunklen Oeffnungen der vernagelten Fensterwand (`re2_2050_cut9_arme.png`) — RE2s Regel ist "Ursprung im Fensterloch", keine feste Hoehe |
+| EM2D-Bone-Wolke (alle 6 Clips, Bones 1..7) am ALTEN Anker y=-2000 | Bone-Welt-y **-2460..-1365**, also bis **695 unter** der gemessenen Bank -2060: der halbe Arm steckte im Mauerwerk (Bildrechteck Cut 4: v 93..125 gegen Bankzeile v=104) |
+| Dieselbe Wolke am NEUEN Anker y=-2500 | Bone-Welt-y **-2960..-1865**, Bildrechteck u 68..120 / v 77..111, Hand 907 vor der Wandflaeche (`anker_1210_cut4_arme_y2500.png`) |
+
+Daraus die beiden Portwerte in `enemy_ai_re2_zellenarm.c`:
+* `RE2ARM_1210_HINTER = 400` — im gemessenen RE2-Band 298..523 hinter der Wandflaeche (§2.6).
+* `RE2ARM_1210_Y = -2500` — im gemessenen RE2-Band -1930..-2700 UND ueber beiden gemessenen
+  ROOM1210-Fensterbaenken (-2060 / -2310). Der Vorgaengerwert -2000 ist damit **gemessen widerlegt**
+  und ersetzt.
+
+### 6.3 Was die Messung zusaetzlich zeigt (offen, NICHT weggeraten)
+
+Die z-Werte der zehn ROOM1210-Records treffen die Fensteroeffnungen der Raumkunst nur teilweise:
+das suedliche Westfenster reicht z -16862..-19428, die Arme dort stehen bei z -15747 / -17130 (Arm 6
+liegt an der rechten Fensterkante, Arm 5 rund 1100 noerdlich DANEBEN, vor geschlossener Wandkunst);
+noerdlich dasselbe Bild (Fenster z ~ -9875..-11757 gegen Arme -8847 / -10247). Im RE1.5-Original
+faellt das nicht auf, weil dort der Armkoerper IM Mauerwerk steht und nur die Hand ~181 Einheiten
+aus der Wandflaeche ragt (Skeptiker-Befund 2). Die Record-z sind Daten und werden nicht verschoben
+— wer sie verschiebt, erfindet Raumgeometrie. Naechster Weg, falls das Bild stoert: den PRI-/
+Masken-Stand des Cuts pruefen (verdeckt die Vordergrundmaske den Arm neben dem Fenster?) und die
+uebrigen sechs Arme derselben Messung unterziehen.
+
+Weiterhin offen aus §5: Hook-Aufrufer-Kette jenseits 0x800CE3B4 (geklaert, s. 6.1), Opcodes
+0x8A/0x8B in ROOM2050 sub03/04, die Frage nach einer Zeichner-Weiche auf +0x10E&0x8000, und der
+Kamera-Cut-Wechsel (ROOM1210 hat kein `cut_chg`-Gegenstueck zu RE2s 9/10).
+
+### 6.4 Sichtlauf im laufenden Spiel — warum er hier nicht zaehlt
+
+Der Vorgaenger hat zwei FRAMEDUMP-Serien (t0/t1) aufgenommen; beide zeigen Leon **am Raumeingang
+stehend** (HUD `R1210 C0 -25784 0 -3131`), kein Arm ist darin zu sehen — als Sichtpruefung der Arme
+taugen sie nicht, die Rohbilder sind entfernt (je ein Beispielbild bleibt). Eigene Laeufe
+(`RE15_DEBUG_JUMP=1210@gp` + Autopilot + FRAMEDUMP) sind in dieser Sitzung dreimal gescheitert: der
+Prozess bleibt nach der Pad-Initialisierung stehen bzw. bricht mit `Assertion failure at
+WIN_AddDisplay (SDL_windowsmodes.c:380)` ab — die RDP-Sitzung liefert gerade keine brauchbare
+Anzeige. Deshalb ist die Anker-Messung ueber die Kamera-Rueckprojektion gefahren (6.2); sie ist
+fuer die Frage "sitzt der Ursprung im Fensterloch" sogar genauer als ein Screenshot, weil sie
+Weltkoordinaten statt Pixel-Augenmass liefert. Der Durchlauf-Sichtlauf bleibt nachzuholen, sobald
+die Anzeige wieder da ist.
