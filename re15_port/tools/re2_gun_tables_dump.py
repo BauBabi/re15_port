@@ -51,3 +51,53 @@ for item in range(0, 20):
         b = exe[off(rec):off(rec) + 0x1c]
         boxes = [struct.unpack_from("<hhhh", b, 4 + 8 * k) for k in range(3)]
         print("    rec %08x: b0=%02x flags=%02x %02x %02x boxes=%s" % (rec, b[0], b[1], b[2], b[3], boxes))
+
+# ---------------------------------------------------------------------------------------------
+# ERWEITERUNG (Phase 3, Thema re-restposten): der Geometrie-Zeiger ist ein PAAR
+#   {rec_base, pattern}  (FUN_800410CC: `iVar10 = *param_3 + uVar7 * 0x1c`, uVar7 aus
+#   `param_3[1]`).  Das PATTERN ist eine Liste von Paaren {recIdx, count}: pro Aufruf des
+#   Appliers (= pro Bild des Angriffs) zaehlt +0x1EC herunter; bei 0 rueckt +0x1ED eine Stelle
+#   weiter und laedt die naechste count.  recIdx 0xFF = "kein Ziel in diesem Bild" (der Applier
+#   kehrt sofort zurueck), 0xFE = Sprung an den Listenanfang.
+#     @0x80041128-30  `lbu v0,492(t0)` (+0x1EC) / `bne v0,zero,0x80041168`
+#     @0x80041138-44  `lbu v0,493(t0); addiu v0,v0,1; sb v0,493(t0)`      (+0x1ED = Listenindex++)
+#     @0x8004114C-60  `lw v1,4(a2); sll v0,v0,1; addu; lbu v0,1(v0); sb v0,492(t0)`  (count)
+#     @0x8004116C-7C  `lbu v0,493(t0); lw v1,4(a2); sll; addu; lbu a1,0(v0)`         (recIdx)
+#     @0x80041180-9C  `addiu a0,zero,255; bne a1,a0` -> 0xFF-Zweig: `lbu v1,492; addiu v1,-1;
+#                     sb v1,492; j 0x80041aec` mit v0 = 0 = KEIN Ziel in diesem Bild
+#     @0x800411A0-E4  `addiu v0,zero,254; bne a1,v0` -> 0xFE-Zweig: `sb zero,493(t0)`, count =
+#                     list[1], recIdx = list[0], und bei 0xFF sofort raus
+# Das Listenende ist also NICHT 0xFF (das heisst nur "dieses Bild trifft nichts"), sondern eine
+# count von 255 (= haelt fuer den Rest des Angriffs) bzw. ein 0xFE-Ruecksprung.
+# Damit hat jede Waffe pro Zielhoehe EIN Record-ARRAY, nicht ein Record: das Messer (Item 1)
+# faehrt fuenf verschiedene Boxen durch die Klinge, alle Schusswaffen stehen auf Record 0.
+def _dump_patterns():
+    print("--- Geometrie-Record-ARRAYS + Pattern je Item (Gruppe 0 DOWN / 1 LEVEL / 2 UP)")
+    for item in range(0, 20):
+        head = []
+        for grp in range(3):
+            p = 0x800A68E8 + item * 24 + grp * 8
+            head.append((u32(p), u32(p + 4)))
+        if all(rec < t_addr for rec, _ in head):
+            print(" item%2d: (keine gueltigen Zeiger - Tabellenzeile 0 ist Datenwort)" % item)
+            continue
+        print(" item%2d:" % item)
+        for grp, (rec, kf) in enumerate(head):
+            pat = []
+            o = off(kf)
+            for k in range(0, 64, 2):
+                a, c = exe[o + k], exe[o + k + 1]
+                pat.append((a, c))
+                if a == 0xfe or c == 0xff:      # 0xFF in .a ist KEIN Ende (s. Kopf oben)
+                    break
+            nrec = max([a for a, _ in pat if a < 0xfe] + [0]) + 1
+            print("   grp%d rec@%08x pat@%08x = %s" % (
+                grp, rec, kf, " ".join("%02x/%d" % (a, c) for a, c in pat)))
+            for i in range(nrec):
+                a = rec + i * 0x1c
+                b = exe[off(a):off(a) + 0x1c]
+                boxes = [struct.unpack_from("<hhhh", b, 4 + 8 * k) for k in range(3)]
+                print("      [%d] %08x flags=%02x %02x %02x boxes=%s" % (
+                    i, a, b[1], b[2], b[3], boxes))
+
+_dump_patterns()
