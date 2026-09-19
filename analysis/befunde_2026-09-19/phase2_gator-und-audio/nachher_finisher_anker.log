@@ -1,0 +1,56 @@
+EM23.EMD 189208 B clips=12 victim_ok=1 vclips=2 meshes=23 bones=22
+OPFER-Bank: 680 kf; POSE x!=0: 515, POSE z!=0: 510, SPEED y!=0: 516
+GATOR-Bank (alle Clips/Frames): POSE x!=0: 0, POSE z!=0: 215, SPEED y!=0: 0
+
+=== TEIL A: analytisch, Anker Clip4 f13, Gator Clip5 sf / Clip11 f0, Leon Opfer-Clip1 ===
+Referenz (Original, kein Scale): LOKAL = (off_v-off_g)+POS_v je Frame; dRef = Abweichung davon
+-- P2 sf=  0  Original-LOKAL=(7157,-1642,0)
+  ORIGINAL s=4096 (y-Leitung)        G=( -5608, -1200,-22446) yaw= 113 s=4096 | Leon-Ent=(  1441, -1200,-23679) | LOKAL=(  7154, -1642,     0) dRef=(    -3,     0,     0) | 6=1/7=0 min6=513 min7=1162
+  T heute  s=2731 (pl.y=0)           G=( -5608, -1200,-22446) yaw= 113 s=2731 | Leon-Ent=(  1441,     0,-23679) | LOKAL=( 10729,  -662,     0) dRef=(  3572,   980,     0) | 6=0/7=0 min6=3028 min7=3806
+  Y heute+y-Leitung s=2731           G=( -5608, -1200,-22446) yaw= 113 s=2731 | Leon-Ent=(  1441, -1200,-23679) | LOKAL=( 10729, -2462,     0) dRef=(  3572,  -820,     0) | 6=0/7=0 min6=3073 min7=2963
+  S SKALIERT s=2731                  G=( -5608, -1200,-22446) yaw= 113 s=2731 | Leon-Ent=(  -909,  -652,-23269) | LOKAL=(  7152, -1640,    -1) dRef=(    -5,     2,    -1) | 6=1/7=0 min6=512 min7=1161
+-- P2 sf= 30  Original-LOKAL=(6486,-1235,-1176)
+  ORIGINAL s=4096 (y-Leitung)        G=( -4635, -1200,-22869) yaw= 113 s=4096 | Leon-Ent=(  1550, -1200,-25145) | LOKAL=(  6483, -1235, -1176) dRef=(    -3,     0,     0) | 6=1/7=1 min6=326 min7=186
+  T heute  s=2731 (pl.y=0)           G=( -4635, -1200,-22869) yaw= 113 s=2731 | Leon-Ent=(  1550,     0,-25145) | LOKAL=(  9723,   -52, -1763) dRef=(  3237,  1183,  -587) | 6=0/7=0 min6=1651 min7=1896
+  Y heute+y-Leitung s=2731           G=( -4635, -1200,-22869) yaw= 113 s=2731 | Leon-Ent=(  1550, -1200,-25145) | LOKAL=(  9723, -1852, -1763) dRef=(  3237,  -617,  -587) | 6=0/7=0 min6=2010 min7=1600
+  S SKALIERT s=2731                  G=( -4635, -1200,-22869) yaw= 113 s=2731 | Leon-Ent=(  -512,  -788,-24387) | LOKAL=(  6482, -1234, -1177) dRef=(    -4,     1,    -1) | 6=1/7=1 min6=325 min7=185
+-- P2 sf= 60  Original-LOKAL=(4732,-7784,-319)
+  ORIGINAL s=4096 (y-Leitung)        G=( -4640, -1200,-22617) yaw= 113 s=4096 | Leon-Ent=(   -35, -1200,-23747) | LOKAL=(  4730, -7784,  -320) dRef=(    -2,     0,    -1) | 6=0/7=0 min6=1328 min7=1315
+  T heute  s=2731 (pl.y=0)           G=( -4640, -1200,-22617) yaw= 113 s=2731 | Leon-Ent=(   -35,     0,-23747) | LOKAL=(  7094, -9874,  -479) dRef=(  2362, -2090,  -160) | 6=0/7=0 min6=3651 min7=4463
+  Y heute+y-Leitung s=2731           G=( -4640, -1200,-22617) yaw= 113 s=2731 | Leon-Ent=(   -35, -1200,-23747) | LOKAL=(  7094,-11674,  -479) dRef=(  2362, -3890,  -160) | 6=0/7=0 min6=5328 min7=5809
+  S SKALIERT s=2731                  G=( -4640, -1200,-22617) yaw= 113 s=2731 | Leon-Ent=( -1570,  1395,-23371) | LOKAL=(  4728, -7782,  -320) dRef=(    -4,     2,    -1) | 6=0/7=0 min6=1328 min7=1313
+-- P2 sf= 75  Original-LOKAL=(4691,-6102,-722)
+  ORIGINAL s=4096 (y-Leitung)        G=( -5189, -1200,-22035) yaw= 113 s=4096 | Leon-Ent=(  -693, -1200,-23554) | LOKAL=(  4689, -6102,  -722) dRef=(    -2,     0,     0) | 6=1/7=0 min6=280 min7=640
+  T heute  s=2731 (pl.y=0)           G=( -5189, -1200,-22035) yaw= 113 s=2731 | Leon-Ent=(  -693,     0,-23554) | LOKAL=(  7032, -7352, -1082) dRef=(  2341, -1250,  -360) | 6=0/7=0 min6=1947 min7=3056
+  Y heute+y-Leitung s=2731           G=( -5189, -1200,-22035) yaw= 113 s=2731 | Leon-Ent=(  -693, -1200,-23554) | LOKAL=(  7032, -9151, -1082) dRef=(  2341, -3049,  -360) | 6=0/7=0 min6=3232 min7=3896
+  S SKALIERT s=2731                  G=( -5189, -1200,-22035) yaw= 113 s=2731 | Leon-Ent=( -2192,   834,-23048) | LOKAL=(  4688, -6101,  -722) dRef=(    -3,     1,     0) | 6=1/7=0 min6=281 min7=639
+-- P2 sf= 90  Original-LOKAL=(5474,-3305,-2702)
+  ORIGINAL s=4096 (y-Leitung)        G=( -5233, -1200,-22214) yaw= 113 s=4096 | Leon-Ent=(  -308, -1200,-25818) | LOKAL=(  5471, -3305, -2701) dRef=(    -3,     0,     1) | 6=1/7=1 min6=139 min7=262
+  T heute  s=2731 (pl.y=0)           G=( -5233, -1200,-22214) yaw= 113 s=2731 | Leon-Ent=(  -308,     0,-25818) | LOKAL=(  8205, -3157, -4051) dRef=(  2731,   148, -1349) | 6=0/7=0 min6=2329 min7=2791
+  Y heute+y-Leitung s=2731           G=( -5233, -1200,-22214) yaw= 113 s=2731 | Leon-Ent=(  -308, -1200,-25818) | LOKAL=(  8205, -4956, -4051) dRef=(  2731, -1651, -1349) | 6=0/7=0 min6=2558 min7=2788
+  S SKALIERT s=2731                  G=( -5233, -1200,-22214) yaw= 113 s=2731 | Leon-Ent=( -1950,   -98,-24617) | LOKAL=(  5469, -3304, -2701) dRef=(    -5,     1,     1) | 6=1/7=1 min6=140 min7=263
+-- P2 sf=119  Original-LOKAL=(5264,-2403,198)
+  ORIGINAL s=4096 (y-Leitung)        G=( -5284, -1200,-22502) yaw= 113 s=4096 | Leon-Ent=(   -65, -1200,-23215) | LOKAL=(  5262, -2403,   197) dRef=(    -2,     0,    -1) | 6=1/7=1 min6=214 min7=393
+  T heute  s=2731 (pl.y=0)           G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=(   -65,     0,-23215) | LOKAL=(  7892, -1804,   295) dRef=(  2628,   599,    97) | 6=0/7=0 min6=1298 min7=1870
+  Y heute+y-Leitung s=2731           G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=(   -65, -1200,-23215) | LOKAL=(  7892, -3604,   295) dRef=(  2628, -1201,    97) | 6=0/7=0 min6=229 min7=706
+  S SKALIERT s=2731                  G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=( -1805,  -399,-22978) | LOKAL=(  5261, -2402,   194) dRef=(    -3,     1,    -4) | 6=1/7=1 min6=211 min7=391
+-- P3 Kau-Loop Clip11 f0 / Opfer f119  Original-LOKAL=(5264,-2403,198)
+  ORIGINAL s=4096 (y-Leitung)        G=( -5284, -1200,-22502) yaw= 113 s=4096 | Leon-Ent=(   -65, -1200,-23215) | LOKAL=(  5262, -2403,   197) dRef=(    -2,     0,    -1) | 6=1/7=1 min6=214 min7=393
+  T heute  s=2731 (pl.y=0)           G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=(   -65,     0,-23215) | LOKAL=(  7892, -1804,   295) dRef=(  2628,   599,    97) | 6=0/7=0 min6=1298 min7=1870
+  Y heute+y-Leitung s=2731           G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=(   -65, -1200,-23215) | LOKAL=(  7892, -3604,   295) dRef=(  2628, -1201,    97) | 6=0/7=0 min6=229 min7=706
+  S SKALIERT s=2731                  G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=( -1805,  -399,-22978) | LOKAL=(  5261, -2402,   194) dRef=(    -3,     1,    -4) | 6=1/7=1 min6=211 min7=391
+   Mesh6 (Oberkiefer) LOKAL-AABB x[4304..7785] y[-3884..-1044] z[-951..951]
+   Mesh7 (Unterkiefer) LOKAL-AABB x[4130..7381] y[-4527..-1776] z[-986..984]
+  S SKALIERT s=2731 bei yaw=0        G=( -4955, -1200,-22502) yaw=   0 s=2731 | Leon-Ent=( -1446,  -399,-22370) | LOKAL=(  5262, -2402,   197) dRef=(    -2,     1,    -1) | 6=1/7=1 min6=214 min7=393
+-- P0 Teleport (10643,-915): unskaliert = lokal (10643,-915); skaliert 2731 = (7096,-611)
+
+=== TEIL B: echter Boss-Tick ROOM2090 (RE15_GB_TEST=1), Metrik am Live-Zustand ===
+  LIVE P2 gaf=30 laf=30 vs=4         G=( -4635, -1200,-22869) yaw= 113 s=2731 | Leon-Ent=(  -512,  -788,-24387) | LOKAL=(  6482, -1234, -1177) dRef=(    -4,     1,    -1) | 6=1/7=1 min6=325 min7=185
+  LIVE P2 gaf=60 laf=60 vs=4         G=( -4640, -1200,-22617) yaw= 113 s=2731 | Leon-Ent=( -1570,  1395,-23371) | LOKAL=(  4728, -7782,  -320) dRef=(    -4,     2,    -1) | 6=0/7=0 min6=1328 min7=1313
+  LIVE P2 gaf=90 laf=90 vs=4         G=( -5233, -1200,-22214) yaw= 113 s=2731 | Leon-Ent=( -1950,   -98,-24617) | LOKAL=(  5469, -3304, -2701) dRef=(    -5,     1,     1) | 6=1/7=1 min6=140 min7=263
+  LIVE P2 gaf=119 laf=119 vs=4       G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=( -1805,  -399,-22978) | LOKAL=(  5261, -2402,   194) dRef=(    -3,     1,    -4) | 6=1/7=1 min6=211 min7=391
+  LIVE P2 gaf=120 laf=119 vs=4       G=( -5608, -1200,-22446) yaw= 113 s=2731 | Leon-Ent=( -1805,  -399,-22978) | LOKAL=(  5754, -2402,   196) dRef=(   161,     1,    -2) | 6=1/7=1 min6=254 min7=720
+  LIVE P3 gaf=0 laf=119              G=( -5284, -1200,-22502) yaw= 113 s=2731 | Leon-Ent=( -1805,  -399,-22978) | LOKAL=(  5261, -2402,   194) dRef=(    -3,     1,    -4) | 6=1/7=1 min6=211 min7=391
+   (Spielwerte zum Vergleich gator_boss.log 2026-09-14: FRESS-P2 Anker=(-8368,-21962) yaw=113, sf=120 pl=(-65,0,-23215))
+   LIVE: anker=(-8368,-21962) yaw=113 pl=(-1805,-399,-22978) scale=2731
+ENDE Teil B: Fress-Start F11

@@ -1,0 +1,95 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5750,-1800,-16300) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-9000,-1620,-5400) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1725,-1740,-21723) rot=(0,685,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25,-1740,-7423) rot=(0,1656,0)
+=== 2) ENEMSE-Maps ===
+BANK 17: EDT @0x128000 (3240 B) VBD @0x129000 (62512 B) map=32 vags=7
+   id  0: 04120000 prog=0 tone=1 chan=4 prio=2 extra=0 vabovr=-1 | vag=4 size=9328 B vol=127 pan=64
+   id  1: 02230000 prog=0 tone=2 chan=2 prio=3 extra=0 vabovr=-1 | vag=3 size=7728 B vol=90 pan=64
+   id  2: 03330000 prog=0 tone=3 chan=3 prio=3 extra=0 vabovr=-1 | vag=1 size=8224 B vol=120 pan=64
+   id  3: 02430000 prog=0 tone=4 chan=2 prio=3 extra=0 vabovr=-1 | vag=2 size=11888 B vol=90 pan=64
+   id  4: 04520000 prog=0 tone=5 chan=4 prio=2 extra=0 vabovr=-1 | vag=5 size=18032 B vol=127 pan=64
+   id  5: 04620000 prog=0 tone=6 chan=4 prio=2 extra=0 vabovr=-1 | vag=6 size=7264 B vol=127 pan=64
+   id  6: FFFFFFFF SILENT
+   id  7: FFFFFFFF SILENT
+   id  8: FFFFFFFF SILENT
+   id  9: FFFFFFFF SILENT
+   id 10: FFFFFFFF SILENT
+   id 11: FFFFFFFF SILENT
+   id 12: FFFFFFFF SILENT
+   id 13: FFFFFFFF SILENT
+   id 14: FFFFFFFF SILENT
+   id 15: FFFFFFFF SILENT
+   id 16: FFFFFFFF SILENT
+   id 17: FFFFFFFF SILENT
+   id 18: FFFFFFFF SILENT
+   id 19: FFFFFFFF SILENT
+   id 20: FFFFFFFF SILENT
+   id 21: FFFFFFFF SILENT
+   id 22: FFFFFFFF SILENT
+   id 23: FFFFFFFF SILENT
+   id 24: FFFFFFFF SILENT
+   id 25: FFFFFFFF SILENT
+   id 26: FFFFFFFF SILENT
+   id 27: FFFFFFFF SILENT
+   id 28: FFFFFFFF SILENT
+   id 29: FFFFFFFF SILENT
+   id 30: FFFFFFFF SILENT
+   id 31: FFFFFFFF SILENT
+BANK 11: EDT @0xC9800 (3240 B) VBD @0xCA800 (38608 B) map=32 vags=10
+   id  0: 02110000 prog=0 tone=1 chan=2 prio=1 extra=0 vabovr=-1 | vag=1 size=1984 B vol=40 pan=64
+   id  1: 03220000 prog=0 tone=2 chan=3 prio=2 extra=0 vabovr=-1 | vag=2 size=2016 B vol=127 pan=64
+   id  2: 04320000 prog=0 tone=3 chan=4 prio=2 extra=0 vabovr=-1 | vag=3 size=3040 B vol=90 pan=64
+   id  3: 04430000 prog=0 tone=4 chan=4 prio=3 extra=0 vabovr=-1 | vag=4 size=3536 B vol=127 pan=64
+   id  4: 04520000 prog=0 tone=5 chan=4 prio=2 extra=0 vabovr=-1 | vag=5 size=7488 B vol=127 pan=64
+   id  5: 02620000 prog=0 tone=6 chan=2 prio=2 extra=0 vabovr=-1 | vag=6 size=5616 B vol=115 pan=64
+   id  6: 02720000 prog=0 tone=7 chan=2 prio=2 extra=0 vabovr=-1 | vag=7 size=6304 B vol=127 pan=64
+   id  7: 03820000 prog=0 tone=8 chan=3 prio=2 extra=0 vabovr=-1 | vag=8 size=3648 B vol=110 pan=64
+   id  8: 02910000 prog=0 tone=9 chan=2 prio=1 extra=0 vabovr=-1 | vag=1 size=1984 B vol=50 pan=64
+   id  9: 02A10000 prog=0 tone=10 chan=2 prio=1 extra=0 vabovr=-1 | vag=1 size=1984 B vol=60 pan=64
+   id 10: 02B10000 prog=0 tone=11 chan=2 prio=1 extra=0 vabovr=-1 | vag=9 size=4928 B vol=30 pan=64
+   id 11: FFFFFFFF SILENT
+   id 12: FFFFFFFF SILENT
+   id 13: FFFFFFFF SILENT
+   id 14: FFFFFFFF SILENT
+   id 15: FFFFFFFF SILENT
+   id 16: FFFFFFFF SILENT
+   id 17: FFFFFFFF SILENT
+   id 18: FFFFFFFF SILENT
+   id 19: FFFFFFFF SILENT
+   id 20: FFFFFFFF SILENT
+   id 21: FFFFFFFF SILENT
+   id 22: FFFFFFFF SILENT
+   id 23: FFFFFFFF SILENT
+   id 24: FFFFFFFF SILENT
+   id 25: FFFFFFFF SILENT
+   id 26: FFFFFFFF SILENT
+   id 27: FFFFFFFF SILENT
+   id 28: FFFFFFFF SILENT
+   id 29: FFFFFFFF SILENT
+   id 30: FFFFFFFF SILENT
+   id 31: FFFFFFFF SILENT
+
+=== 1) ROOM2090 SCD-Spawn (main00 + sub00, 120 Ticks) ===
+   slot  1: type=0x25 pos=(-100,0,-8296) grid=0x00 state=0  -> Ladeposition 0
+   slot  2: type=0x25 pos=(-2300,0,-23896) grid=0x00 state=0  -> Ladeposition 1
+   Gator-Slot=-1 erste Spinne=1 -> kein Gator registriert ZULETZT (main.c pc_enemy_load_ex je Slot aufsteigend)
+
+=== 4) Frame-Flag-Zensus ===
+FRAME-FLAG-SEs EM23 (Gator) (Bit 0x08000000, id=Wort>>28): c0/f76:SE2 c0/f162:SE2 c1/f12:SE2 c1/f25:SE2 c2/f50:SE2 c2/f110:SE2 c3/f50:SE4 c3/f77:SE4 c5/f2:SE1 c5/f80:SE3 c6/f6:SE4 c6/f30:SE2 c6/f34:SE2 c7/f4:SE4 c7/f25:SE2 c7/f36:SE2 c7/f44:SE2 c7/f45:SE4 c7/f115:SE4 c8/f8:SE4 c8/f63:SE4 c8/f90:SE2  (22)
+FRAME-FLAG-SEs EMS25 (Spinne) (Bit 0x08000000, id=Wort>>28): c11/f5:SE3  (1)
+
+=== 3) Hook-Registrierung in Ladereihenfolge + SE-Protokoll ===
+   Hook SPINNE (Slot 1):   [bank_fn] Latch -1 -> 11
+   Kein Gator im RDT-Spawn -> main.c-Port-Ergaenzung: Slot 15 (letzter freier), Hook GATOR danach:   [bank_fn] Latch 11 -> 17
+   => Latch nach dem Laden: Bank 17 (= die Bank, aus der ALLE RE2-SEs des Raums spielen)
+   SE F0     kampf    GATOR  id=3 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   SE F11    kampf    GATOR  id=3 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   -- Fress-Finisher ab F11 (motion=4)
+   SE F28    FRESSEN  GATOR  id=1 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   SE F106   FRESSEN  GATOR  id=3 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   SE F343   kampf    GATOR  id=2 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   SE F429   kampf    GATOR  id=2 flag=0 | Latch=Bank 17 -> spielt | zustaendig Bank 17 -> spielt
+   Gator-SE-Rufe gesamt: 6, Spinnen-SE-Rufe: 0, Fress-Start F11

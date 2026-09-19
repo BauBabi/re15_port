@@ -51,16 +51,28 @@ static uint8_t *slurp(const char *path, size_t *n)
     return b;
 }
 
-static int s_bank_sel = -1, s_frame = 0, s_calls = 0;
+static int s_bank_sel = -1, s_frame = 0, s_calls = 0, s_mismatch = 0, s_bites_se1 = 0;
 static re15_actor_t *s_e = NULL, *s_pl = NULL;
-static void spy_bank(int bank) { printf("   [bank_fn] Latch %d -> %d\n", s_bank_sel, bank); s_bank_sel = bank; }
+static void spy_bank(int bank)
+{
+    if (bank != s_bank_sel) printf("   [bank_fn] Latch %d -> %d\n", s_bank_sel, bank);
+    s_bank_sel = bank;
+}
 static void spy_se(int id, int flag2000)
 {
+    int ok = (s_bank_sel == 11);         /* Phase 2: zustaendige Bank der Spinne = 11 */
     s_calls++;
-    printf("   SE F%-5d id=%d flag=%d Latch=Bank %d | spinne state=%d sub=%d/%d/%d mode=%d motion=%d af=%u pos=(%d,%d,%d) | pl hp=%d\n",
-           s_frame, id, flag2000, s_bank_sel, s_e->state, s_e->sub_state_1, s_e->sub_state_2, s_e->sub_state_3,
+    if (!ok) s_mismatch++;
+    if (id == 1 && !flag2000) s_bites_se1++;
+    printf("   SE F%-5d id=%d flag=%d Latch=Bank %d %s | spinne state=%d sub=%d/%d/%d mode=%d motion=%d af=%u pos=(%d,%d,%d) | pl hp=%d\n",
+           s_frame, id, flag2000, s_bank_sel, ok ? "(zustaendig)" : "MISMATCH",
+           s_e->state, s_e->sub_state_1, s_e->sub_state_2, s_e->sub_state_3,
            s_e->re2s_mode222, (int)s_e->motion, (unsigned)s_e->anim_frame, s_e->x, s_e->y, s_e->z, s_pl->hp);
 }
+/* Phase 2: der GATOR-Hook wird wie im Spiel NACH der Spinne registriert (main.c laedt den
+ * Boss im letzten Slot, Roster aufsteigend) - vor dem Fix stand der Latch dadurch auf 17. */
+extern void re15_gator_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int));
+static void spy_gator_se(int id, int flag2000) { (void)id; (void)flag2000; }
 
 static void run(const char *name, re15_actor_t *e, re15_actor_t *pl, int frames, int force_sub1)
 {
@@ -111,6 +123,8 @@ int main(void)
         printf("%s\n", nse ? "" : "  (keine Frame-SEs)");
     }
     re15_re2spider_audio_hook(spy_se, spy_bank, 0);
+    re15_gator_audio_hook(spy_gator_se, spy_bank);      /* Spiel-Reihenfolge: Gator zuletzt */
+    printf("Latch nach Registrierung (Spinne, dann Gator wie main.c): Bank %d\n", s_bank_sel);
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     slot = RE15_ACTOR_MAX - 2; e = &g_actors[slot];
     s_e = e; s_pl = pl;
@@ -141,6 +155,8 @@ int main(void)
             run("B2: erneut sub 7, Spieler 900 in Blickrichtung", e, pl, 300, 7);
         }
     }
-    printf("\nGESAMT SE-Rufe: %d (Latch Bank %d)\n", s_calls, s_bank_sel);
+    printf("\nGESAMT SE-Rufe: %d (Latch Bank %d) | PHASE 2: Latch==zustaendig(11) bei %d/%d Rufen, "
+           "MISMATCH %d, Biss-SE-1-Rufe %d\n", s_calls, s_bank_sel, s_calls - s_mismatch, s_calls,
+           s_mismatch, s_bites_se1);
     return 0;
 }

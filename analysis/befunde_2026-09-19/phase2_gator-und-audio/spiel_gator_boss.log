@@ -1,0 +1,98 @@
+F2 R2090 gator da
+WECHSEL zw=1 rt=1
+DREH rot=1089 soll=1029 dlt=-60 pos=(-7200,-9200) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7205,-9423) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7209,-9647) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7213,-9871) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7217,-10095) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7221,-10319) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7225,-10543) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7229,-10767) ziel=(-7300,-25400)
+TICK ph=2 pos=(-7230,-10823) y=-1200 dist=14802 mo=0 cd=0 rt=1 zw=1 ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7233,-10991) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7237,-11215) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7241,-11439) ziel=(-7300,-25400)
+DREH rot=1029 soll=1029 dlt=0 pos=(-7245,-11663) ziel=(-7300,-25400)
+TICK ph=2 pos=(-7260,-12503) y=-1200 dist=13468 mo=0 cd=0 rt=1 zw=1 ziel=(-7300,-25400)
+TICK ph=2 pos=(-7290,-14183) y=-1200 dist=12456 mo=0 cd=0 rt=1 zw=1 ziel=(-7300,-25400)
+WECHSEL zw=0 rt=0
+DREH rot=1027 soll=1027 dlt=0 pos=(-7296,-14519) ziel=(-7300,-25400)
+DREH rot=1027 soll=1024 dlt=-3 pos=(-7300,-14743) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-14967) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-15191) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-15415) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-15639) ziel=(-7300,-25400)
+TICK ph=2 pos=(-7300,-15863) y=-1200 dist=10738 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-15863) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-16087) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-16311) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-16535) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-16759) ziel=(-7300,-25400)
+DREH rot=1024 soll=1024 dlt=0 pos=(-7300,-16983) ziel=(-7300,-25400)
+TICK ph=2 pos=(-7300,-17543) y=-1200 dist=9100 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+BURST pos=(-7300,-17599) dist=8984
+TICK ph=2 pos=(-7300,-20499) y=-1200 dist=6228 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+BISS af=6 dist=4031 maul=1424 wand=0 hr=0
+BISS af=7 dist=3700 maul=1136 wand=0 hr=1
+BISS af=8 dist=3665 maul=1088 wand=0 hr=1
+BISS af=9 dist=3647 maul=1056 wand=0 hr=1
+BISS af=10 dist=3700 maul=1120 wand=0 hr=1
+BISS af=11 dist=3744 maul=1152 wand=0 hr=1
+BISS af=12 dist=3771 maul=1184 wand=0 hr=1
+BISS af=13 dist=3779 maul=1200 wand=0 hr=1
+BISS af=14 dist=3788 maul=1200 wand=0 hr=1
+BISS af=15 dist=3744 maul=1152 wand=0 hr=1
+TICK ph=3 pos=(-7327,-22338) y=-1200 dist=3744 mo=4 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+BISS af=16 dist=3415 maul=832 wand=0 hr=1
+BISS af=17 dist=3386 maul=800 wand=0 hr=1
+BISS af=18 dist=3347 maul=768 wand=0 hr=1
+BISS af=19 dist=3308 maul=720 wand=0 hr=1
+BISS af=20 dist=3278 maul=688 wand=0 hr=1
+BISS af=21 dist=3238 maul=656 wand=0 hr=1
+BISS af=22 dist=3207 maul=624 wand=0 hr=1
+BISS af=23 dist=3197 maul=608 wand=0 hr=1
+BISS af=24 dist=3444 maul=864 wand=0 hr=1
+BISS af=25 dist=3444 maul=864 wand=0 hr=1
+BISS af=26 dist=3444 maul=864 wand=0 hr=1
+BISS af=27 dist=3444 maul=864 wand=0 hr=1
+BISS af=28 dist=3444 maul=864 wand=0 hr=1
+BISS af=29 dist=3444 maul=864 wand=0 hr=1
+BISS af=30 dist=3444 maul=864 wand=0 hr=1
+BISS af=31 dist=3444 maul=864 wand=0 hr=1
+BISS af=32 dist=3444 maul=864 wand=0 hr=1
+BISS af=33 dist=3444 maul=864 wand=0 hr=1
+BISS af=34 dist=3444 maul=864 wand=0 hr=1
+TICK ph=2 pos=(-7314,-22503) y=-1200 dist=3453 mo=0 cd=0 rt=0 zw=0 ziel=(-5313,-25400)
+TICK ph=2 pos=(-7306,-24179) y=-1200 dist=2585 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=2 pos=(-7271,-25438) y=-1200 dist=1588 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+BISS af=6 dist=1688 maul=2336 wand=0 hr=0
+BISS af=7 dist=1693 maul=2128 wand=0 hr=0
+BISS af=8 dist=1693 maul=1920 wand=0 hr=0
+BISS af=9 dist=1688 maul=1712 wand=0 hr=0
+BISS af=10 dist=1673 maul=1504 wand=0 hr=0
+BISS af=11 dist=1654 maul=1280 wand=0 hr=0
+FRESS-P2 Anker=(-5784,-23056) yaw=1349
+TICK ph=8 pos=(-7217,-25954) y=-1200 dist=4802 mo=5 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+FSYNC2 sf=8 gaf=8 laf=8 pl=(-10463,-1012,-29310) b0y=-1012 y_vor=-1007
+FSYNC2 sf=16 gaf=16 laf=16 pl=(-9111,-798,-30477) b0y=-798 y_vor=-761
+FSYNC2 sf=24 gaf=24 laf=24 pl=(-10042,-759,-30176) b0y=-759 y_vor=-761
+FSYNC2 sf=32 gaf=32 laf=32 pl=(-10591,-799,-29713) b0y=-799 y_vor=-793
+TICK ph=8 pos=(-7809,-26316) y=-1200 dist=5246 mo=5 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+FSYNC2 sf=40 gaf=40 laf=40 pl=(-10366,-850,-29878) b0y=-850 y_vor=-844
+FSYNC2 sf=48 gaf=48 laf=48 pl=(-10003,-865,-30114) b0y=-865 y_vor=-868
+FSYNC2 sf=56 gaf=56 laf=56 pl=(-9923,-457,-30206) b0y=-457 y_vor=-625
+TICK ph=8 pos=(-7538,-26212) y=-1200 dist=3718 mo=5 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+FSYNC2 sf=64 gaf=64 laf=64 pl=(-9082,1819,-28634) b0y=1819 y_vor=1764
+FSYNC2 sf=72 gaf=72 laf=72 pl=(-8821,1389,-28513) b0y=1389 y_vor=1529
+FSYNC2 sf=80 gaf=80 laf=80 pl=(-9689,302,-28015) b0y=302 y_vor=395
+FSYNC2 sf=88 gaf=88 laf=88 pl=(-10285,-72,-28025) b0y=-72 y_vor=-60
+TICK ph=8 pos=(-7148,-25877) y=-1200 dist=4463 mo=5 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+FSYNC2 sf=96 gaf=96 laf=96 pl=(-10234,-152,-29088) b0y=-152 y_vor=-151
+FSYNC2 sf=104 gaf=104 laf=104 pl=(-8787,58,-28387) b0y=58 y_vor=114
+FSYNC2 sf=112 gaf=112 laf=112 pl=(-8809,-179,-28747) b0y=-179 y_vor=-133
+FSYNC2 sf=120 gaf=120 laf=119 pl=(-8844,-399,-28948) b0y=-399 y_vor=-399
+FSYNC3 P3 pl=(-8844,-399,-28948) y_vor=-399
+TICK ph=8 pos=(-7262,-25815) y=-1200 dist=3771 mo=11 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=8 pos=(-7313,-25787) y=-1200 dist=3753 mo=11 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=8 pos=(-7252,-25821) y=-1200 dist=3771 mo=11 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=8 pos=(-7326,-25780) y=-1200 dist=3753 mo=11 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
