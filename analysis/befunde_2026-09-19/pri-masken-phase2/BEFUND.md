@@ -102,10 +102,11 @@ Protokoll: `protokoll/bau2.log` (+ `bau_1000.log`), Pruefbilder `ROOM####_C<n>.p
 Alle geschriebenen Cuts haben **Deckung == PNG bitgenau** (fehlt 0 / zuviel 0) und
 **VORverd == 0**.
 
-77 Cuts geschrieben. Nicht geschrieben (alte Sektion bleibt):
+76 Cuts geschrieben. Nicht geschrieben (alte Sektion bleibt):
 
 | Cut | Grund |
 |---|---|
+| ROOM10D0 C1 | `unit_pri_eingemessen`: die F9-Marke F423 des Nutzers (er steht HINTER der Liege) verlangt eine wirksame Maske ueber x156..176. Das Nutzer-Original 01.png als EIN Objekt mit reiner Geometrie gibt der Spalte 176 eine Tiefe >= 180; wirksam waere < 180 (Kopf-vz 11579, Schwelle 11595). Es fehlen 16 Einheiten — genau der Restfehler der Kalibrierung. Ein eingemessener Nutzer-Punkt schlaegt das Modell. |
 | ROOM1000 C3 | 1 von 805 VOR-Standplaetzen voll verdeckt (`unit_pri_kopfschnitt`). Massstab-4-Freistellungen, unterste Zeile knapp unter dem Horizont -> Sehstrahl fast parallel zum Boden, Modelltiefen 249..394. |
 | ROOM10A0 C2 | 1 von 2 VOR-Standplaetzen (Treppenband 3, Welt 22250/22150) voll verdeckt. |
 | ROOM10E0 C7 | passt nicht in das 256x256-Atlasblatt: 41235 Sollpunkte, mindestens 51097 Atlaspunkte auch bei der groebsten Stufe. LAUT gemeldet statt vergroebert. |
@@ -113,7 +114,48 @@ Alle geschriebenen Cuts haben **Deckung == PNG bitgenau** (fehlt 0 / zuviel 0) u
 Unangetastet: ROOM10F0 C4/C5 (Nutzer-Lassos + Buerostuhl-Quader, vom Nutzer am 2026-09-09
 abgenommen) und ROOM1100 C1/C2 (reine Quader-Waende, kein Nutzer-PNG).
 
-## 5. Offen — Nachfragen an den Nutzer
+## 5. Sichtpruefung im laufenden Spiel
+
+13 Bilder `sicht_<ROOM>_C<n>_{vor,hinter}.png`, erzeugt mit `RE15_FORCE_CUT` +
+`RE15_POCC_TP` an einem gemessenen Standplatz (Protokoll `protokoll/sicht_alle2.log`).
+
+⛔ Drei Fallen, alle gemessen, keine geraten:
+1. Ein Tastenskript trifft die Stelle vor einem Moebel nicht — in ROOM10C0 blieb Leon im
+   Spawn-Winkel (337 Bilder, nur Cut 0), in ROOM1050 stand er hinter der Kamera.
+2. Ohne erzwungenen Winkel zeigt das Spiel an diesen Stellen einen NACHBAR-Winkel
+   (ROOM10C0: Winkel 0 statt 3) — die Kamerazone gehoert dort einem anderen Cut.
+3. `RE15_POCC_TP` setzt nur x, z und rot — die HOEHE behaelt der Spieler. Ein Standplatz
+   auf einem anderen Band ist unbrauchbar: ROOM10A0 C8, Kandidat auf Band 1, Spieler auf
+   y=-14400 -> `vz` -1144, also hinter der Kamera, und in beiden Bildern war niemand zu
+   sehen. Das Band wird jetzt in einem Probelauf gemessen.
+
+Das URTEIL wird ebenfalls gemessen (`protokoll/sicht_pruef.py`): Figurpunkte = Abweichung
+vom reinen Hintergrund > 40, dazu die Maskenpunkte im Koerperkasten, die an dieser Stelle
+nach der Original-Regel VERDECKEN.
+
+| Cut | Bild | Welt | Fuss-vz | Figurpunkte | Maskenpunkte im Kasten | davon verdeckend | Urteil |
+|---|---|---|---|---|---|---|---|
+| ROOM10C0 C3 | vor | 200/-5850 | 5606 | 7 | 551 | **0** | Maske verdeckt nicht |
+| ROOM10C0 C3 | hinter | -5400/-2250 | 10571 | 23 | 294 | 294 | verdeckt |
+| ROOM10D0 C6 | vor | 4700/25550 | 4498 | 69 | 500 | **0** | sichtbar |
+| ROOM10D0 C6 | hinter | 5300/25550 | 4957 | 85 | 487 | 179 | teils verdeckt |
+| ROOM1050 C6 | vor | 23100/-19950 | 8991 | 81 | 568 | **0** | sichtbar |
+| ROOM1050 C6 | hinter | 24300/-22550 | 11705 | 10 | 74 | 74 | verdeckt |
+| ROOM1000 C5 | vor | -600/-1450 | 3896 | 1028 | 1688 | **0** | sichtbar |
+| ROOM1000 C5 | hinter | 4200/-6050 | 8930 | 0 | 735 | 735 | ganz verdeckt |
+| ROOM11F0 C6 | vor | 3100/-100 | 3140 | 894 | 980 | **0** | sichtbar |
+| ROOM11F0 C6 | hinter | 4300/-900 | 3185 | 1140 | 3689 | 3417 | teils verdeckt |
+| ROOM11F0 C1 | vor | -1100/-8900 | 3886 | 513 | 769 | **0** | sichtbar |
+| ROOM11F0 C1 | hinter | -700/-8300 | 4570 | 301 | 431 | 424 | teils verdeckt |
+| ROOM1000 C0 | hinter | 17600/-10450 | 4112 | 605 | 2938 | 2938 | teils verdeckt |
+
+**In allen sechs VOR-Bildern verdeckt die Maske NULL Punkte**, in allen sieben
+HINTER-Bildern verdeckt sie. Zwei Cuts liefern kein Paar: ROOM1000 C0 hat keinen
+begehbaren Standplatz VOR seinen Spindbloecken (sie reichen bis an den Bildrand), und
+ROOM10A0 C8 keinen auf dem Band, auf dem der Spieler nach dem Sprung steht — dort ist mit
+diesem Aufbau NICHTS gezeigt, und es steht auch nichts Gegenteiliges im Bericht.
+
+## 6. Offen — Nachfragen an den Nutzer
 
 1. **Massstab-4-Freistellungen** ROOM1000 C1 (01_01..01_04), C3 (03_01..03_04) und
    ROOM11F0 C1 (01.png): sie passen nur zu 85-93 % auf den Hintergrund und verlieren beim
@@ -134,5 +176,14 @@ abgenommen) und ROOM1100 C1/C2 (reine Quader-Waende, kein Nutzer-PNG).
    (unangetastet). Freistellungen dafuer?
 5. **Alpha-Schwelle 110** und **Standplatz-Schranke 95 %** sind Heuristiken ohne Beleg.
 6. **ROOM10E0 C7** braucht eine kleinere Freistellung oder ein zweites Atlasblatt.
-7. Der PSX-Farbschluessel (CLUT 0x0000 -> 0x8000) ist aus psx-spx abgeleitet, nicht auf
-   Hardware gemessen — das PSX-Target baut hier nicht.
+7. Der PSX-Farbschluessel (CLUT 0x0000 -> 0x8000) ist aus psx-spx abgeleitet und gegen
+   40 Original-Atlanten gegengeprueft (dort 0 solche Eintraege), aber nicht auf Hardware
+   gemessen — das PSX-Target baut hier nicht.
+8. ROOM10A0 C8 und ROOM1000 C0 haben keine Sichtpruefung bekommen (kein Standplatz auf dem
+   Band des Spielers bzw. keiner VOR dem Objekt). Dort steht die Abnahme, aber kein Bild.
+
+## 7. Abnahme
+
+`ctest --test-dir re15_port/build_p2_pri --timeout 120`: **100% tests passed, 0 tests failed
+out of 307** (168 s). Darunter `unit_pri_hashes`, `unit_pri_silhouette`,
+`unit_pri_kopfschnitt` (Phase 2), `unit_pri_eingemessen`, `integration_pri_masken`.

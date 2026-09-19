@@ -1,0 +1,27 @@
+  Cut 1: ABGELEHNT, nicht geschrieben (unit_pri_eingemessen: die F9-Marke des Nutzers (F423, Welt 3228/-4568, er steht HINTER der Liege) verlangt eine wirksame Maske ueber x156..176. Das Nutzer-Original 01.png als EIN Objekt mit reiner Geometrie gibt der rechten Spalte 176 eine Tiefe >= 180; wirksam waere < 180 (Kopf-vz 11579). Das sind 16 Einheiten — genau der Restfehler der Kalibrierung (Modell median +5 Buckets zu FERN). Die alte Sektion (aus der Zerteilung 01_01/01_02 mit den Handschluesseln flach/spalten) bleibt stehen, bis der Nutzer entscheidet.)
+     "Stuhlkante (Nutzer-Original 06.png)" (png, ebene 0): standpunkte: 28 Spalten, davon 28 eigene, 0 geerbt; Profil-Tiefe 70..73
+     "Pflanze links" (png, ebene 0): standpunkte: 67 Spalten, davon 67 eigene, 0 geerbt; Profil-Tiefe 99..116
+     zerlegung Stufe 1: Stuhlkante (Nu=zeilen/8, Pflanze links=zeilen/8 -> 30 Rechtecke, 3472 Atlaspunkte
+  Cut 6: Soll 2009 px, Deckung fehlt 0 / zuviel 0 | 30 Rechtecke, 20 Tiefenstufen (70..116), 3472 Atlaspunkte | Standplaetze 31324, beruehrt 69 | VOR n=46 verdeckt=0 teil=0 | HINTER n=33 frei=32 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,4700,25350,0.00), (0,4900,25150,0.67), (0,4900,25350,0.18), (0,4900,25550,0.00), (0,5100,25350,0.25), (0,5100,25550,0.31), (0,5300,25150,0.93), (0,5300,25350,0.30), (0,5300,25550,0.37), (0,5500,25150,0.65), (0,5500,25350,0.39), (0,5500,25550,0.43) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM10D0_C6.png
+     "Stuhl" (png, ebene 0): standpunkte: 72 Spalten, davon 72 eigene, 0 geerbt; Profil-Tiefe 53..62
+     "Tischplattenecke" (png, ebene 0): zelle x-1400..4550 z27850..28850 (Typ 1, 100 % der Standpunkte): Hoehe -625 (IoU 0.28, Oberkante 6.6 px), Quader, 906 von 986 Punkten getroffen, Tiefe 80..105
+     "Holztisch mit Klappstuhl": quader x-1350..-50 z26300..27850 Hoehe -1100 auf y=0, 4057 Punkte
+     zerlegung Stufe 1: Stuhl=zeilen/16, Tischplattenec=zeilen/16, Holztisch mit =zeilen/12 -> 104 Rechtecke, 25887 Atlaspunkte
+  Cut 7: Soll 5435 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 53 Tiefenstufen (53..105), 25887 Atlaspunkte | Standplaetze 6841, beruehrt 49 | VOR n=21 verdeckt=0 teil=0 | HINTER n=29 frei=3 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-1700,24950,0.00), (0,-1500,24950,0.00), (0,-900,25750,0.85)
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM10D0_C7.png
+     "Tischkante" (png, ebene 0): zelle x-21495..5105 z7688..21888 (Typ 1, 100 % der Standpunkte): Hoehe -50 (IoU 0.02, Oberkante 0.8 px), Quader, 295 von 295 Punkten getroffen, Tiefe 243..356
+     zerlegung Stufe 1: Tischkante=zeilen/8 -> 16 Rechtecke, 295 Atlaspunkte
+  Cut 8: Soll 295 px, Deckung fehlt 0 / zuviel 0 | 16 Rechtecke, 16 Tiefenstufen (243..356), 295 Atlaspunkte | Standplaetze 33660, beruehrt 225 | VOR n=217 verdeckt=0 teil=0 | HINTER n=53 frei=53 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-14700,19550,0.00), (0,-14700,19750,0.00), (0,-14700,19950,0.00), (0,-14700,20150,0.00), (0,-14700,20350,0.00), (0,-14700,20550,0.00), (0,-14700,20750,0.00), (0,-14700,20950,0.00), (0,-14700,21150,0.00), (0,-14700,21350,0.00), (0,-14500,19550,0.00), (0,-14500,19750,0.00) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM10D0_C8.png
+     "Theke mit Papieren" (png, ebene 0): zelle x-12950..-10650 z25050..26050 (Typ 1, 55 % der Standpunkte): Hoehe -2275 (IoU 0.88, Oberkante 4.6 px), Quader, 8608 von 8926 Punkten getroffen, Tiefe 55..98
+     "Schreibtisch mit Stuhl" (png, ebene 0): zelle x-17550..-15250 z25050..26050 (Typ 1, 70 % der Standpunkte): Hoehe -2275 (IoU 0.79, Oberkante 4.4 px), Quader, 1981 von 2142 Punkten getroffen, Tiefe 119..164
+     "Schrankwand" (png, ebene 0): standpunkte: 46 Spalten, davon 46 eigene, 0 geerbt; Profil-Tiefe 59..79
+     zerlegung Stufe 2: Theke mit Papi=spalten/16, Schreibtisch m=spalten/16, Schrankwand=zeilen/16 -> 105 Rechtecke, 49715 Atlaspunkte
+  Cut 9: Soll 14857 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 52 Tiefenstufen (56..164), 49715 Atlaspunkte | Standplaetze 20424, beruehrt 587 | VOR n=157 verdeckt=0 teil=0 | HINTER n=450 frei=16 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-14700,25550,0.00), (0,-14500,25550,0.00), (0,-12500,21350,0.12), (0,-12500,21550,0.63), (0,-12300,21350,0.00), (0,-12300,21550,0.00), (0,-12300,21750,0.00), (0,-12300,21950,0.00), (0,-12300,22150,0.31), (0,-12100,21350,0.00), (0,-12100,21550,0.00), (0,-12100,21750,0.00) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM10D0_C9.png
+  ROOM10D0.MSK: 5 Cuts im Container (4 neu)

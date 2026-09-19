@@ -1,0 +1,619 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/agent-a64f7cee4612465f5/re15_port/build_p2_pri
+        Start   1: re15_tests
+  1/307 Test   #1: re15_tests ........................   Passed    0.03 sec
+        Start   2: prop_rdt_filename
+  2/307 Test   #2: prop_rdt_filename .................   Passed    0.02 sec
+        Start   3: prop_rdt_null_offset
+  3/307 Test   #3: prop_rdt_null_offset ..............   Passed    0.02 sec
+        Start   4: prop_scd_pc_advance
+  4/307 Test   #4: prop_scd_pc_advance ...............   Passed    0.02 sec
+        Start   5: prop_door_roundtrip
+  5/307 Test   #5: prop_door_roundtrip ...............   Passed    0.03 sec
+        Start   6: prop_fixpoint_precision
+  6/307 Test   #6: prop_fixpoint_precision ...........   Passed    0.02 sec
+        Start   7: prop_tank_controls
+  7/307 Test   #7: prop_tank_controls ................   Passed    0.02 sec
+        Start   8: prop_input_edge
+  8/307 Test   #8: prop_input_edge ...................   Passed    0.02 sec
+        Start   9: prop_sca_collision
+  9/307 Test   #9: prop_sca_collision ................   Passed    0.01 sec
+        Start  10: prop_point_in_poly
+ 10/307 Test  #10: prop_point_in_poly ................   Passed    0.02 sec
+        Start  11: prop_zone_dispatch
+ 11/307 Test  #11: prop_zone_dispatch ................   Passed    0.01 sec
+        Start  12: prop_bss_chunk
+ 12/307 Test  #12: prop_bss_chunk ....................   Passed    0.02 sec
+        Start  13: prop_spawn_entered
+ 13/307 Test  #13: prop_spawn_entered ................   Passed    0.02 sec
+        Start  14: prop_ot_sort
+ 14/307 Test  #14: prop_ot_sort ......................   Passed    0.07 sec
+        Start  15: prop_adpcm_decode
+ 15/307 Test  #15: prop_adpcm_decode .................   Passed    0.04 sec
+        Start  16: prop_json_roundtrip
+ 16/307 Test  #16: prop_json_roundtrip ...............   Passed    0.03 sec
+        Start  17: prop_savestate_cmp
+ 17/307 Test  #17: prop_savestate_cmp ................   Passed    0.02 sec
+        Start  18: unit_rdt_parser
+ 18/307 Test  #18: unit_rdt_parser ...................   Passed    0.02 sec
+        Start  19: unit_sca_parser
+ 19/307 Test  #19: unit_sca_parser ...................   Passed    0.02 sec
+        Start  20: unit_scd_opcodes
+ 20/307 Test  #20: unit_scd_opcodes ..................   Passed    0.03 sec
+        Start  21: unit_math_common
+ 21/307 Test  #21: unit_math_common ..................   Passed    0.02 sec
+        Start  22: unit_room_load
+ 22/307 Test  #22: unit_room_load ....................   Passed    0.02 sec
+        Start  23: unit_member
+ 23/307 Test  #23: unit_member .......................   Passed    0.01 sec
+        Start  24: unit_damage
+ 24/307 Test  #24: unit_damage .......................   Passed    0.02 sec
+        Start  25: unit_enemy_ai
+ 25/307 Test  #25: unit_enemy_ai .....................   Passed    0.02 sec
+        Start  26: unit_room1140_spawn
+ 26/307 Test  #26: unit_room1140_spawn ...............   Passed    0.03 sec
+        Start  27: unit_room1140_combat
+ 27/307 Test  #27: unit_room1140_combat ..............   Passed    0.03 sec
+        Start  28: unit_dog_ai
+ 28/307 Test  #28: unit_dog_ai .......................   Passed    0.02 sec
+        Start  29: unit_crow_ai
+ 29/307 Test  #29: unit_crow_ai ......................   Passed    0.02 sec
+        Start  30: unit_spider_ai
+ 30/307 Test  #30: unit_spider_ai ....................   Passed    0.01 sec
+        Start  31: unit_maggot_ai
+ 31/307 Test  #31: unit_maggot_ai ....................   Passed    0.04 sec
+        Start  32: unit_adult_spider_ai
+ 32/307 Test  #32: unit_adult_spider_ai ..............   Passed    0.03 sec
+        Start  33: unit_cockroach_ai
+ 33/307 Test  #33: unit_cockroach_ai .................   Passed    0.03 sec
+        Start  34: unit_npc_ai
+ 34/307 Test  #34: unit_npc_ai .......................   Passed    0.03 sec
+        Start  35: unit_npc_scd_pose
+ 35/307 Test  #35: unit_npc_scd_pose .................   Passed    0.02 sec
+        Start  36: unit_zgirl_ai
+ 36/307 Test  #36: unit_zgirl_ai .....................   Passed    0.02 sec
+        Start  37: unit_ems
+ 37/307 Test  #37: unit_ems ..........................   Passed    0.02 sec
+        Start  38: unit_esp_parse
+ 38/307 Test  #38: unit_esp_parse ....................   Passed    0.03 sec
+        Start  39: unit_audio_vab
+ 39/307 Test  #39: unit_audio_vab ....................   Passed    0.03 sec
+        Start  40: unit_weapon_select
+ 40/307 Test  #40: unit_weapon_select ................   Passed    0.02 sec
+        Start  41: unit_inv_fsm
+ 41/307 Test  #41: unit_inv_fsm ......................   Passed    0.02 sec
+        Start  42: unit_item_icon
+ 42/307 Test  #42: unit_item_icon ....................   Passed    0.02 sec
+        Start  43: unit_zombie_pose
+ 43/307 Test  #43: unit_zombie_pose ..................   Passed    0.03 sec
+        Start  44: unit_birkin_ai
+ 44/307 Test  #44: unit_birkin_ai ....................   Passed    0.02 sec
+        Start  45: unit_writher_ai
+ 45/307 Test  #45: unit_writher_ai ...................   Passed    0.02 sec
+        Start  46: unit_alligator_ai
+ 46/307 Test  #46: unit_alligator_ai .................   Passed    0.03 sec
+        Start  47: unit_fx_emitter_ai
+ 47/307 Test  #47: unit_fx_emitter_ai ................   Passed    0.02 sec
+        Start  48: unit_tyrant_ai
+ 48/307 Test  #48: unit_tyrant_ai ....................   Passed    0.02 sec
+        Start  49: unit_ivy_ai
+ 49/307 Test  #49: unit_ivy_ai .......................   Passed    0.02 sec
+        Start  50: unit_enemy_shootable
+ 50/307 Test  #50: unit_enemy_shootable ..............   Passed    0.02 sec
+        Start  51: unit_aot_edge
+ 51/307 Test  #51: unit_aot_edge .....................   Passed    0.02 sec
+        Start  52: unit_enemy_body_push
+ 52/307 Test  #52: unit_enemy_body_push ..............   Passed    0.03 sec
+        Start  53: unit_scd_aot_opcodes
+ 53/307 Test  #53: unit_scd_aot_opcodes ..............   Passed    0.03 sec
+        Start  54: unit_slope_collision
+ 54/307 Test  #54: unit_slope_collision ..............   Passed    0.02 sec
+        Start  55: unit_aim_all_around
+ 55/307 Test  #55: unit_aim_all_around ...............   Passed    0.01 sec
+        Start  56: unit_aim_lower_exit
+ 56/307 Test  #56: unit_aim_lower_exit ...............   Passed    0.06 sec
+        Start  57: unit_hit_reaction
+ 57/307 Test  #57: unit_hit_reaction .................   Passed    0.03 sec
+        Start  58: unit_se_bank_routing
+ 58/307 Test  #58: unit_se_bank_routing ..............   Passed    0.02 sec
+        Start  59: unit_scd_for2
+ 59/307 Test  #59: unit_scd_for2 .....................   Passed    0.03 sec
+        Start  60: unit_bleed_rng
+ 60/307 Test  #60: unit_bleed_rng ....................   Passed    0.02 sec
+        Start  61: unit_getup_advance
+ 61/307 Test  #61: unit_getup_advance ................   Passed    0.02 sec
+        Start  62: unit_rvd_scan_order
+ 62/307 Test  #62: unit_rvd_scan_order ...............   Passed    0.02 sec
+        Start  63: unit_scd_dir_set
+ 63/307 Test  #63: unit_scd_dir_set ..................   Passed    0.03 sec
+        Start  64: unit_em_status_persist
+ 64/307 Test  #64: unit_em_status_persist ............   Passed    0.02 sec
+        Start  65: unit_collision_layers
+ 65/307 Test  #65: unit_collision_layers .............   Passed    0.04 sec
+        Start  66: unit_anim_pose_order
+ 66/307 Test  #66: unit_anim_pose_order ..............   Passed    0.03 sec
+        Start  67: unit_audio_decode
+ 67/307 Test  #67: unit_audio_decode .................   Passed    0.02 sec
+        Start  68: unit_xa_decode
+ 68/307 Test  #68: unit_xa_decode ....................   Passed    0.02 sec
+        Start  69: unit_savedata
+ 69/307 Test  #69: unit_savedata .....................   Passed    0.02 sec
+        Start  70: unit_savepoint
+ 70/307 Test  #70: unit_savepoint ....................   Passed    0.02 sec
+        Start  71: unit_action_msg_gate
+ 71/307 Test  #71: unit_action_msg_gate ..............   Passed    0.03 sec
+        Start  72: unit_msg_dialog
+ 72/307 Test  #72: unit_msg_dialog ...................   Passed    0.02 sec
+        Start  73: unit_scd_flag_fade
+ 73/307 Test  #73: unit_scd_flag_fade ................   Passed    0.01 sec
+        Start  74: unit_flag_gate
+ 74/307 Test  #74: unit_flag_gate ....................   Passed    0.03 sec
+        Start  75: unit_scd_key_ck
+ 75/307 Test  #75: unit_scd_key_ck ...................   Passed    0.03 sec
+        Start  76: unit_camera_view
+ 76/307 Test  #76: unit_camera_view ..................   Passed    0.01 sec
+        Start  77: unit_rotmatrix
+ 77/307 Test  #77: unit_rotmatrix ....................   Passed    0.02 sec
+        Start  78: unit_inv_grant
+ 78/307 Test  #78: unit_inv_grant ....................   Passed    0.02 sec
+        Start  79: unit_catan
+ 79/307 Test  #79: unit_catan ........................   Passed    0.01 sec
+        Start  80: unit_squareroot0
+ 80/307 Test  #80: unit_squareroot0 ..................   Passed    0.02 sec
+        Start  81: unit_enemy_attack_reach
+ 81/307 Test  #81: unit_enemy_attack_reach ...........   Passed    0.03 sec
+        Start  82: unit_item_use
+ 82/307 Test  #82: unit_item_use .....................   Passed    0.02 sec
+        Start  83: unit_item_modal
+ 83/307 Test  #83: unit_item_modal ...................   Passed    0.04 sec
+        Start  84: unit_item_stack_press
+ 84/307 Test  #84: unit_item_stack_press .............   Passed    0.03 sec
+        Start  85: unit_dog_aim_band
+ 85/307 Test  #85: unit_dog_aim_band .................   Passed    0.01 sec
+        Start  86: unit_sherry_wall_pin
+ 86/307 Test  #86: unit_sherry_wall_pin ..............   Passed    0.13 sec
+        Start  87: unit_writher_hit_feedback
+ 87/307 Test  #87: unit_writher_hit_feedback .........   Passed    0.08 sec
+        Start  88: unit_weste_effekt
+ 88/307 Test  #88: unit_weste_effekt .................   Passed    0.04 sec
+        Start  89: unit_maggot_bone_square
+ 89/307 Test  #89: unit_maggot_bone_square ...........   Passed    0.02 sec
+        Start  90: unit_dormant_activation
+ 90/307 Test  #90: unit_dormant_activation ...........   Passed    0.05 sec
+        Start  91: unit_montage_fx
+ 91/307 Test  #91: unit_montage_fx ...................   Passed    0.02 sec
+        Start  92: unit_map_re2_system
+ 92/307 Test  #92: unit_map_re2_system ...............   Passed    0.03 sec
+        Start  93: unit_map_floor_visited
+ 93/307 Test  #93: unit_map_floor_visited ............   Passed    0.02 sec
+        Start  94: unit_map_mark_band
+ 94/307 Test  #94: unit_map_mark_band ................   Passed    0.03 sec
+        Start  95: unit_map_orient
+ 95/307 Test  #95: unit_map_orient ...................   Passed    0.05 sec
+        Start  96: unit_map_durchgang
+ 96/307 Test  #96: unit_map_durchgang ................   Passed    0.15 sec
+        Start  97: unit_map_marker_innen
+ 97/307 Test  #97: unit_map_marker_innen .............   Passed    0.02 sec
+        Start  98: unit_map_etagenzeile
+ 98/307 Test  #98: unit_map_etagenzeile ..............   Passed    0.03 sec
+        Start  99: unit_map_innenwand
+ 99/307 Test  #99: unit_map_innenwand ................   Passed    0.02 sec
+        Start 100: unit_map_teilbereich
+100/307 Test #100: unit_map_teilbereich ..............   Passed    0.04 sec
+        Start 101: unit_map_synth
+101/307 Test #101: unit_map_synth ....................   Passed    0.02 sec
+        Start 102: unit_map_zone_bits
+102/307 Test #102: unit_map_zone_bits ................   Passed    0.03 sec
+        Start 103: unit_room1150_itembox
+103/307 Test #103: unit_room1150_itembox .............   Passed    0.03 sec
+        Start 104: unit_itembox_transfer
+104/307 Test #104: unit_itembox_transfer .............   Passed    0.03 sec
+        Start 105: unit_itembox_screen
+105/307 Test #105: unit_itembox_screen ...............   Passed    0.01 sec
+        Start 106: unit_pad_remap
+106/307 Test #106: unit_pad_remap ....................   Passed    0.02 sec
+        Start 107: unit_aot_sce_census
+107/307 Test #107: unit_aot_sce_census ...............   Passed    0.04 sec
+        Start 108: unit_re2_zombie_ai
+108/307 Test #108: unit_re2_zombie_ai ................   Passed    0.03 sec
+        Start 109: unit_re2_room1140_ab
+109/307 Test #109: unit_re2_room1140_ab ..............   Passed    0.03 sec
+        Start 110: unit_re2_dog_ai
+110/307 Test #110: unit_re2_dog_ai ...................   Passed    0.04 sec
+        Start 111: unit_re2_room1190_ab
+111/307 Test #111: unit_re2_room1190_ab ..............   Passed    0.06 sec
+        Start 112: unit_re2_crow_ai
+112/307 Test #112: unit_re2_crow_ai ..................   Passed    0.03 sec
+        Start 113: unit_re2_room10c0_ab
+113/307 Test #113: unit_re2_room10c0_ab ..............   Passed    0.06 sec
+        Start 114: unit_wound_accumulator
+114/307 Test #114: unit_wound_accumulator ............   Passed    0.02 sec
+        Start 115: unit_se_pitch
+115/307 Test #115: unit_se_pitch .....................   Passed    0.03 sec
+        Start 116: unit_crow_fixes
+116/307 Test #116: unit_crow_fixes ...................   Passed    0.03 sec
+        Start 117: unit_zombie_hit_fixes
+117/307 Test #117: unit_zombie_hit_fixes .............   Passed    0.05 sec
+        Start 118: unit_elliot_1170_run
+118/307 Test #118: unit_elliot_1170_run ..............   Passed    0.09 sec
+        Start 119: unit_stair_1170_regression
+119/307 Test #119: unit_stair_1170_regression ........   Passed    0.04 sec
+        Start 120: unit_debug_menu
+120/307 Test #120: unit_debug_menu ...................   Passed    0.03 sec
+        Start 121: probe_crow_kill
+121/307 Test #121: probe_crow_kill ...................   Passed    0.05 sec
+        Start 122: unit_crow_death_corpse
+122/307 Test #122: unit_crow_death_corpse ............   Passed    0.05 sec
+        Start 123: unit_door_1170_lock
+123/307 Test #123: unit_door_1170_lock ...............   Passed    0.02 sec
+        Start 124: unit_marvin_spawn_bank
+124/307 Test #124: unit_marvin_spawn_bank ............   Passed    0.07 sec
+        Start 125: unit_zombie_10d0_reentry_a
+125/307 Test #125: unit_zombie_10d0_reentry_a ........   Passed    0.24 sec
+        Start 126: unit_zombie_10d0_reentry_b
+126/307 Test #126: unit_zombie_10d0_reentry_b ........   Passed    0.25 sec
+        Start 127: unit_marvin_render_pose
+127/307 Test #127: unit_marvin_render_pose ...........   Passed    0.03 sec
+        Start 128: unit_load_after_death
+128/307 Test #128: unit_load_after_death .............   Passed    0.03 sec
+        Start 129: unit_room1070_wake
+129/307 Test #129: unit_room1070_wake ................   Passed    0.05 sec
+        Start 130: unit_room1040_switch
+130/307 Test #130: unit_room1040_switch ..............   Passed    0.03 sec
+        Start 131: unit_cam_1030_reentry
+131/307 Test #131: unit_cam_1030_reentry .............   Passed    0.09 sec
+        Start 132: unit_stair_hwtruth_1060
+132/307 Test #132: unit_stair_hwtruth_1060 ...........   Passed    0.02 sec
+        Start 133: probe_elevator_1080
+133/307 Test #133: probe_elevator_1080 ...............   Passed    0.12 sec
+        Start 134: unit_gen_11f0_switches
+134/307 Test #134: unit_gen_11f0_switches ............   Passed    0.03 sec
+        Start 135: unit_1030_spawncap
+135/307 Test #135: unit_1030_spawncap ................   Passed    0.05 sec
+        Start 136: unit_crawl_toggle
+136/307 Test #136: unit_crawl_toggle .................   Passed    0.02 sec
+        Start 137: unit_re2_dog_hitwindow
+137/307 Test #137: unit_re2_dog_hitwindow ............   Passed    0.03 sec
+        Start 138: unit_gegenprobe_hund_luftzeile
+138/307 Test #138: unit_gegenprobe_hund_luftzeile ....   Passed    0.05 sec
+        Start 139: unit_dog_hit
+139/307 Test #139: unit_dog_hit ......................   Passed    0.03 sec
+        Start 140: unit_dog_devour
+140/307 Test #140: unit_dog_devour ...................   Passed    0.02 sec
+        Start 141: unit_espr_11e0
+141/307 Test #141: unit_espr_11e0 ....................   Passed    0.04 sec
+        Start 142: unit_re2_ems
+142/307 Test #142: unit_re2_ems ......................   Passed    0.06 sec
+        Start 143: unit_re2_enemse
+143/307 Test #143: unit_re2_enemse ...................   Passed    0.02 sec
+        Start 144: unit_neck_headlook
+144/307 Test #144: unit_neck_headlook ................   Passed    0.02 sec
+        Start 145: unit_lane_b1_t1_aligntick
+145/307 Test #145: unit_lane_b1_t1_aligntick .........   Passed    0.25 sec
+        Start 146: unit_lane_b1_t2_idleloop
+146/307 Test #146: unit_lane_b1_t2_idleloop ..........   Passed    0.03 sec
+        Start 147: unit_lane_b1_t3_sfxgate
+147/307 Test #147: unit_lane_b1_t3_sfxgate ...........   Passed    0.03 sec
+        Start 148: unit_lane_b1_t3b_getupsfx
+148/307 Test #148: unit_lane_b1_t3b_getupsfx .........   Passed    0.02 sec
+        Start 149: unit_lane_b1_t45_room1100
+149/307 Test #149: unit_lane_b1_t45_room1100 .........   Passed    0.06 sec
+        Start 150: unit_bss_room_source
+150/307 Test #150: unit_bss_room_source ..............   Passed    0.38 sec
+        Start 151: unit_text_freeze
+151/307 Test #151: unit_text_freeze ..................   Passed    0.04 sec
+        Start 152: unit_room_transition_cmd
+152/307 Test #152: unit_room_transition_cmd ..........   Passed    0.02 sec
+        Start 153: unit_re2_sfx_cadence
+153/307 Test #153: unit_re2_sfx_cadence ..............   Passed    0.04 sec
+        Start 154: unit_rotor_bgm_pin
+154/307 Test #154: unit_rotor_bgm_pin ................   Passed    0.59 sec
+        Start 155: unit_irons_neck_1150
+155/307 Test #155: unit_irons_neck_1150 ..............   Passed    0.04 sec
+        Start 156: unit_zombie_bank_rule
+156/307 Test #156: unit_zombie_bank_rule .............   Passed    0.03 sec
+        Start 157: unit_zombie_idle_clip
+157/307 Test #157: unit_zombie_idle_clip .............   Passed    0.01 sec
+        Start 158: unit_zombie_step_sfx
+158/307 Test #158: unit_zombie_step_sfx ..............   Passed    0.02 sec
+        Start 159: unit_zombie_knock_sfx
+159/307 Test #159: unit_zombie_knock_sfx .............   Passed    0.02 sec
+        Start 160: unit_zombie_se_ab_10d0
+160/307 Test #160: unit_zombie_se_ab_10d0 ............   Passed    0.07 sec
+        Start 161: unit_se_voice_machine
+161/307 Test #161: unit_se_voice_machine .............   Passed    0.02 sec
+        Start 162: unit_anim_rate
+162/307 Test #162: unit_anim_rate ....................   Passed    0.02 sec
+        Start 163: unit_anim_reverse_se
+163/307 Test #163: unit_anim_reverse_se ..............   Passed    0.03 sec
+        Start 164: unit_knockdown_frontback
+164/307 Test #164: unit_knockdown_frontback ..........   Passed    0.02 sec
+        Start 165: unit_re2_livepath
+165/307 Test #165: unit_re2_livepath .................   Passed    0.05 sec
+        Start 166: unit_re2_hit_reaction
+166/307 Test #166: unit_re2_hit_reaction .............   Passed    0.03 sec
+        Start 167: unit_re2_weapon_rows
+167/307 Test #167: unit_re2_weapon_rows ..............   Passed    0.03 sec
+        Start 168: unit_re2_enemse_bank
+168/307 Test #168: unit_re2_enemse_bank ..............   Passed    0.02 sec
+        Start 169: unit_knockdown_handoff_bank
+169/307 Test #169: unit_knockdown_handoff_bank .......   Passed    0.02 sec
+        Start 170: unit_knockdown_fall_seq
+170/307 Test #170: unit_knockdown_fall_seq ...........   Passed    0.02 sec
+        Start 171: unit_zombie_getup_se
+171/307 Test #171: unit_zombie_getup_se ..............   Passed    1.58 sec
+        Start 172: unit_re2_gore
+172/307 Test #172: unit_re2_gore .....................   Passed    0.05 sec
+        Start 173: unit_re2_gore_render
+173/307 Test #173: unit_re2_gore_render ..............   Passed    0.03 sec
+        Start 174: unit_re2_gore_fly
+174/307 Test #174: unit_re2_gore_fly .................   Passed    0.04 sec
+        Start 175: unit_re2_spider_ai
+175/307 Test #175: unit_re2_spider_ai ................   Passed    0.02 sec
+        Start 176: unit_re2_room1090_ab
+176/307 Test #176: unit_re2_room1090_ab ..............   Passed    0.04 sec
+        Start 177: unit_re2_spider_water_2090
+177/307 Test #177: unit_re2_spider_water_2090 ........   Passed    0.04 sec
+        Start 178: unit_re2_hit_repeat
+178/307 Test #178: unit_re2_hit_repeat ...............   Passed    0.14 sec
+        Start 179: unit_re2_hit_repeat_crow_spider
+179/307 Test #179: unit_re2_hit_repeat_crow_spider ...   Passed    0.10 sec
+        Start 180: unit_re2_hybrid_rig
+180/307 Test #180: unit_re2_hybrid_rig ...............   Passed    0.62 sec
+        Start 181: unit_re2_baby_spider_dmg
+181/307 Test #181: unit_re2_baby_spider_dmg ..........   Passed    0.11 sec
+        Start 182: unit_schrot_trennung
+182/307 Test #182: unit_schrot_trennung ..............   Passed    0.07 sec
+        Start 183: unit_re2_hp_model
+183/307 Test #183: unit_re2_hp_model .................   Passed    0.51 sec
+        Start 184: unit_re2_stagger_knockdown
+184/307 Test #184: unit_re2_stagger_knockdown ........   Passed    0.06 sec
+        Start 185: unit_re2_dog_hp_reroll
+185/307 Test #185: unit_re2_dog_hp_reroll ............   Passed    0.11 sec
+        Start 186: unit_re2_dog_playdead_gate
+186/307 Test #186: unit_re2_dog_playdead_gate ........   Passed    0.04 sec
+        Start 187: unit_re2_zombie_hitfilter
+187/307 Test #187: unit_re2_zombie_hitfilter .........   Passed    0.03 sec
+        Start 188: unit_re2_crow_se_bank
+188/307 Test #188: unit_re2_crow_se_bank .............   Passed    0.07 sec
+        Start 189: unit_re15_zombie_death_anim
+189/307 Test #189: unit_re15_zombie_death_anim .......   Passed    0.87 sec
+        Start 190: unit_re2_zombie_death_fall
+190/307 Test #190: unit_re2_zombie_death_fall ........   Passed    0.08 sec
+        Start 191: unit_re15_re2z_import
+191/307 Test #191: unit_re15_re2z_import .............   Passed    0.05 sec
+        Start 192: unit_re15_re2z_gore_se
+192/307 Test #192: unit_re15_re2z_gore_se ............   Passed    0.17 sec
+        Start 193: unit_re2_lyer_1140
+193/307 Test #193: unit_re2_lyer_1140 ................   Passed    2.86 sec
+        Start 194: unit_1140_straight_shot
+194/307 Test #194: unit_1140_straight_shot ...........   Passed    0.07 sec
+        Start 195: unit_1090_room_pin
+195/307 Test #195: unit_1090_room_pin ................   Passed    0.05 sec
+        Start 196: unit_re2_zombie_abc
+196/307 Test #196: unit_re2_zombie_abc ...............   Passed    5.90 sec
+        Start 197: unit_gen_11f0_cursor_view
+197/307 Test #197: unit_gen_11f0_cursor_view .........   Passed    0.05 sec
+        Start 198: unit_prop_texel_key_11f0
+198/307 Test #198: unit_prop_texel_key_11f0 ..........   Passed    0.02 sec
+        Start 199: unit_re2_victim_collapse
+199/307 Test #199: unit_re2_victim_collapse ..........   Passed    0.04 sec
+        Start 200: unit_1090_push_pin
+200/307 Test #200: unit_1090_push_pin ................   Passed    0.03 sec
+        Start 201: unit_re2_crawler
+201/307 Test #201: unit_re2_crawler ..................   Passed    0.04 sec
+        Start 202: unit_1090_fire_pin
+202/307 Test #202: unit_1090_fire_pin ................   Passed    0.03 sec
+        Start 203: unit_1030_crawl_live
+203/307 Test #203: unit_1030_crawl_live ..............   Passed    2.66 sec
+        Start 204: unit_1030_trigger_chain
+204/307 Test #204: unit_1030_trigger_chain ...........   Passed    2.12 sec
+        Start 205: unit_1030_stuck_who
+205/307 Test #205: unit_1030_stuck_who ...............   Passed    8.38 sec
+        Start 206: unit_1030_bandsweep
+206/307 Test #206: unit_1030_bandsweep ...............   Passed    0.04 sec
+        Start 207: unit_sca_contact90
+207/307 Test #207: unit_sca_contact90 ................   Passed    0.06 sec
+        Start 208: unit_sca_wall_hit
+208/307 Test #208: unit_sca_wall_hit .................   Passed    0.18 sec
+        Start 209: unit_1090_push_anim
+209/307 Test #209: unit_1090_push_anim ...............   Passed    0.03 sec
+        Start 210: unit_re2_zombie_teardeath
+210/307 Test #210: unit_re2_zombie_teardeath .........   Passed    0.14 sec
+        Start 211: unit_11f0_cut_after_puzzle
+211/307 Test #211: unit_11f0_cut_after_puzzle ........   Passed    0.11 sec
+        Start 212: unit_tim_texel_key_rule
+212/307 Test #212: unit_tim_texel_key_rule ...........   Passed    0.16 sec
+        Start 213: unit_dog_grab_anchor
+213/307 Test #213: unit_dog_grab_anchor ..............   Passed    0.02 sec
+        Start 214: unit_re2_zombie_pose_bank
+214/307 Test #214: unit_re2_zombie_pose_bank .........   Passed    0.02 sec
+        Start 215: unit_cam_selfheal
+215/307 Test #215: unit_cam_selfheal .................   Passed    0.10 sec
+        Start 216: unit_plc_back_yaw_1090
+216/307 Test #216: unit_plc_back_yaw_1090 ............   Passed    0.07 sec
+        Start 217: unit_re2z_death_getup
+217/307 Test #217: unit_re2z_death_getup .............   Passed    0.02 sec
+        Start 218: unit_npc_back_walk
+218/307 Test #218: unit_npc_back_walk ................   Passed    0.02 sec
+        Start 219: unit_re2z_corpse_pool
+219/307 Test #219: unit_re2z_corpse_pool .............   Passed    0.02 sec
+        Start 220: unit_re2_dog_jaw_contact
+220/307 Test #220: unit_re2_dog_jaw_contact ..........   Passed    0.03 sec
+        Start 221: unit_1090_climb_pin
+221/307 Test #221: unit_1090_climb_pin ...............   Passed    0.02 sec
+        Start 222: unit_re2_crow_shadow_release
+222/307 Test #222: unit_re2_crow_shadow_release ......   Passed    0.04 sec
+        Start 223: unit_re2_dog_grab_anchor
+223/307 Test #223: unit_re2_dog_grab_anchor ..........   Passed    0.05 sec
+        Start 224: unit_rvd_scan_oracle
+224/307 Test #224: unit_rvd_scan_oracle ..............   Passed   25.25 sec
+        Start 225: unit_cut_old_displayed
+225/307 Test #225: unit_cut_old_displayed ............   Passed    0.03 sec
+        Start 226: unit_rvd_scan_ungated_by_climb
+226/307 Test #226: unit_rvd_scan_ungated_by_climb ....   Passed    0.04 sec
+        Start 227: unit_fade_step0_hold
+227/307 Test #227: unit_fade_step0_hold ..............   Passed    0.06 sec
+        Start 228: unit_scd_zone2_pauseflags
+228/307 Test #228: unit_scd_zone2_pauseflags .........   Passed    0.05 sec
+        Start 229: unit_re15_poise_re2_import
+229/307 Test #229: unit_re15_poise_re2_import ........   Passed    0.05 sec
+        Start 230: unit_re2z_devour_anchor
+230/307 Test #230: unit_re2z_devour_anchor ...........   Passed    0.25 sec
+        Start 231: unit_re2z_pushoff_crawl
+231/307 Test #231: unit_re2z_pushoff_crawl ...........   Passed    0.12 sec
+        Start 232: unit_1090_stay_on_crate
+232/307 Test #232: unit_1090_stay_on_crate ...........   Passed    0.02 sec
+        Start 233: unit_re2z_bump_walk
+233/307 Test #233: unit_re2z_bump_walk ...............   Passed    0.03 sec
+        Start 234: unit_ai_flavor_mixed
+234/307 Test #234: unit_ai_flavor_mixed ..............   Passed    0.05 sec
+        Start 235: probe_1090_flame_touch
+235/307 Test #235: probe_1090_flame_touch ............   Passed    0.02 sec
+        Start 236: probe_10d0_situp_handoff
+236/307 Test #236: probe_10d0_situp_handoff ..........   Passed    0.04 sec
+        Start 237: probe_1090_flinch_anim
+237/307 Test #237: probe_1090_flinch_anim ............   Passed    0.03 sec
+        Start 238: probe_re2z_stomp
+238/307 Test #238: probe_re2z_stomp ..................   Passed    0.05 sec
+        Start 239: unit_re2z_grab_core_se
+239/307 Test #239: unit_re2z_grab_core_se ............   Passed    0.24 sec
+        Start 240: unit_re2z_finisher_bite
+240/307 Test #240: unit_re2z_finisher_bite ...........   Passed    0.46 sec
+        Start 241: unit_re2z_bandlock_pin
+241/307 Test #241: unit_re2z_bandlock_pin ............   Passed    3.39 sec
+        Start 242: unit_re2z_rise_hittable
+242/307 Test #242: unit_re2z_rise_hittable ...........   Passed    0.88 sec
+        Start 243: unit_writher_kill_flag
+243/307 Test #243: unit_writher_kill_flag ............   Passed    0.03 sec
+        Start 244: unit_rig_root_fix
+244/307 Test #244: unit_rig_root_fix .................   Passed    0.14 sec
+        Start 245: unit_1090_flame_out_pin
+245/307 Test #245: unit_1090_flame_out_pin ...........   Passed    0.06 sec
+        Start 246: unit_1090_nodraw_pin
+246/307 Test #246: unit_1090_nodraw_pin ..............   Passed    0.02 sec
+        Start 247: unit_1090_npc_prop_push
+247/307 Test #247: unit_1090_npc_prop_push ...........   Passed    0.01 sec
+        Start 248: unit_npc_wall_clamp
+248/307 Test #248: unit_npc_wall_clamp ...............   Passed    0.03 sec
+        Start 249: unit_writher_abtauchen
+249/307 Test #249: unit_writher_abtauchen ............   Passed    0.03 sec
+        Start 250: unit_stage6_hintergrund
+250/307 Test #250: unit_stage6_hintergrund ...........   Passed    0.36 sec
+        Start 251: unit_re2doc_bildebene
+251/307 Test #251: unit_re2doc_bildebene .............   Passed    0.06 sec
+        Start 252: unit_1210_gitterhaende
+252/307 Test #252: unit_1210_gitterhaende ............   Passed    0.06 sec
+        Start 253: unit_1190_weste
+253/307 Test #253: unit_1190_weste ...................   Passed    0.06 sec
+        Start 254: unit_1190_ruestung
+254/307 Test #254: unit_1190_ruestung ................   Passed    0.05 sec
+        Start 255: unit_synchro_stimme
+255/307 Test #255: unit_synchro_stimme ...............   Passed    0.02 sec
+        Start 256: unit_sld_atlas
+256/307 Test #256: unit_sld_atlas ....................   Passed    0.26 sec
+        Start 257: unit_audio_sperren
+257/307 Test #257: unit_audio_sperren ................   Passed    0.01 sec
+        Start 258: unit_map_marke_haengt_an
+258/307 Test #258: unit_map_marke_haengt_an ..........   Passed    0.03 sec
+        Start 259: unit_pri_inventar_riegel
+259/307 Test #259: unit_pri_inventar_riegel ..........   Passed    0.02 sec
+        Start 260: unit_map_marke_auf_kunst
+260/307 Test #260: unit_map_marke_auf_kunst ..........   Passed    0.03 sec
+        Start 261: unit_map_tuerachse
+261/307 Test #261: unit_map_tuerachse ................   Passed    0.20 sec
+        Start 262: unit_map_etagen_rect
+262/307 Test #262: unit_map_etagen_rect ..............   Passed    0.02 sec
+        Start 263: unit_re2_crow_kill_cmd3
+263/307 Test #263: unit_re2_crow_kill_cmd3 ...........   Passed    0.04 sec
+        Start 264: unit_re2z_spawn_seed
+264/307 Test #264: unit_re2z_spawn_seed ..............   Passed    0.03 sec
+        Start 265: unit_maggot_zone_leap
+265/307 Test #265: unit_maggot_zone_leap .............   Passed    0.03 sec
+        Start 266: unit_pri_kopfschnitt
+266/307 Test #266: unit_pri_kopfschnitt ..............   Passed    6.88 sec
+        Start 267: unit_pri_eingemessen
+267/307 Test #267: unit_pri_eingemessen ..............   Passed    0.02 sec
+        Start 268: unit_map_eingemessen
+268/307 Test #268: unit_map_eingemessen ..............   Passed    0.02 sec
+        Start 269: unit_gator_sweep
+269/307 Test #269: unit_gator_sweep ..................   Passed    5.33 sec
+        Start 270: unit_re2_gore_decoder
+270/307 Test #270: unit_re2_gore_decoder .............   Passed    0.02 sec
+        Start 271: unit_g5_tentakel
+271/307 Test #271: unit_g5_tentakel ..................   Passed    0.03 sec
+        Start 272: unit_g5_morph
+272/307 Test #272: unit_g5_morph .....................   Passed    0.03 sec
+        Start 273: unit_g5_boss
+273/307 Test #273: unit_g5_boss ......................   Passed    0.54 sec
+        Start 274: unit_gator_fress
+274/307 Test #274: unit_gator_fress ..................   Passed    0.04 sec
+        Start 275: unit_autofire_pin
+275/307 Test #275: unit_autofire_pin .................   Passed    0.02 sec
+        Start 276: probe_spinne_elevation
+276/307 Test #276: probe_spinne_elevation ............   Passed    0.10 sec
+        Start 277: unit_voice_ausreden
+277/307 Test #277: unit_voice_ausreden ...............   Passed    0.03 sec
+        Start 278: unit_1210_arme
+278/307 Test #278: unit_1210_arme ....................   Passed    0.03 sec
+        Start 279: unit_map_1090
+279/307 Test #279: unit_map_1090 .....................   Passed    0.07 sec
+        Start 280: unit_re2_stepsize
+280/307 Test #280: unit_re2_stepsize .................   Passed    0.03 sec
+        Start 281: unit_wallstep
+281/307 Test #281: unit_wallstep .....................   Passed    0.03 sec
+        Start 282: unit_wallstep_gegen
+282/307 Test #282: unit_wallstep_gegen ...............   Passed    0.02 sec
+        Start 283: unit_re2_kfjump
+283/307 Test #283: unit_re2_kfjump ...................   Passed    0.55 sec
+        Start 284: unit_verify_step_tunnel
+284/307 Test #284: unit_verify_step_tunnel ...........   Passed    2.77 sec
+        Start 285: probe_sperre_schiene
+285/307 Test #285: probe_sperre_schiene ..............   Passed    0.04 sec
+        Start 286: probe_abzug_takt
+286/307 Test #286: probe_abzug_takt ..................   Passed    0.03 sec
+        Start 287: unit_pri_hashes
+287/307 Test #287: unit_pri_hashes ...................   Passed    0.06 sec
+        Start 288: unit_pri_silhouette
+288/307 Test #288: unit_pri_silhouette ...............   Passed    0.15 sec
+        Start 289: integration_room_transition
+289/307 Test #289: integration_room_transition .......   Passed    0.02 sec
+        Start 290: integration_cross_stage
+290/307 Test #290: integration_cross_stage ...........   Passed    0.02 sec
+        Start 291: integration_headless_run
+291/307 Test #291: integration_headless_run ..........   Passed    2.15 sec
+        Start 292: integration_room_probe_sweep
+292/307 Test #292: integration_room_probe_sweep ......   Passed    0.12 sec
+        Start 293: integration_rvd_coverage
+293/307 Test #293: integration_rvd_coverage ..........   Passed    0.05 sec
+        Start 294: integration_map_uebergang
+294/307 Test #294: integration_map_uebergang .........   Passed    0.57 sec
+        Start 295: integration_map_raum_live
+295/307 Test #295: integration_map_raum_live .........   Passed    5.32 sec
+        Start 296: integration_door_traversal
+296/307 Test #296: integration_door_traversal ........   Passed    0.03 sec
+        Start 297: integration_door_lock
+297/307 Test #297: integration_door_lock .............   Passed    0.03 sec
+        Start 298: integration_flag_census
+298/307 Test #298: integration_flag_census ...........   Passed    0.25 sec
+        Start 299: integration_item_name_census
+299/307 Test #299: integration_item_name_census ......   Passed    0.59 sec
+        Start 300: integration_fx_region_cull
+300/307 Test #300: integration_fx_region_cull ........   Passed    0.60 sec
+        Start 301: integration_keydoor
+301/307 Test #301: integration_keydoor ...............   Passed    0.05 sec
+        Start 302: integration_keypad
+302/307 Test #302: integration_keypad ................   Passed    0.05 sec
+        Start 303: integration_boot_bg_pin
+303/307 Test #303: integration_boot_bg_pin ...........   Passed   17.92 sec
+        Start 304: integration_dark_start_pin
+304/307 Test #304: integration_dark_start_pin ........   Passed   17.84 sec
+        Start 305: integration_relatch_pin
+305/307 Test #305: integration_relatch_pin ...........   Passed   23.06 sec
+        Start 306: integration_save_counter_pin
+306/307 Test #306: integration_save_counter_pin ......   Passed   14.61 sec
+        Start 307: integration_pri_masken
+307/307 Test #307: integration_pri_masken ............   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 307
+
+Total Test time (real) = 168.33 sec

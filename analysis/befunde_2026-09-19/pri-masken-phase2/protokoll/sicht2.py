@@ -30,7 +30,46 @@ TP_FRAME = 400            # nach dem Sprung (@gp feuert ab Frame > 60, Raumladen
 SHOT = TP_FRAME + 260     # POCC_TP gleitet mit ~250 Einheiten/Bild; 260 Bilder reichen weit
 
 
-def kandidaten(room, cut, n=6):
+def spieler_band(room):
+    """⛔ RE15_POCC_TP setzt NUR x, z und rot — die Hoehe (und damit das Band) behaelt der
+    Spieler aus dem Raumsprung. Ein Standplatz auf einem anderen Band ist damit unbrauchbar:
+    gemessen ROOM10A0 C8, Kandidat auf Band 1, Spieler auf y=-14400 -> vz -1144, also hinter
+    der Kamera, und in beiden Bildern war niemand zu sehen. Deshalb zuerst einen Probelauf
+    OHNE Teleport und das Band aus befund.log lesen."""
+    bl = os.path.join(EXE_DIR, "befund.log")
+    if os.path.exists(bl):
+        os.remove(bl)
+    env = dict(os.environ)
+    env.update({"RE15_CONTINUE_TEST": "1", "RE15_CARD_AUTO": "1", "RE15_NOAUDIO": "1",
+                "RE15_DEBUG_JUMP": "%s@gp" % room[4:]})
+    import time
+    p = subprocess.Popen([EXE], cwd=EXE_DIR, env=env,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ys = []
+    t0 = time.time()
+    while time.time() - t0 < 120:
+        time.sleep(2)
+        if os.path.exists(bl):
+            for ln in open(bl, errors="replace"):
+                m = re.match(r"F(\d+)\s+R([0-9A-F]{4}) C\d+\s+hp=\S+\s+pos=\(\s*-?\d+,\s*(-?\d+)", ln)
+                if m and m.group(2) == room[4:] and int(m.group(1)) > TP_FRAME - 100:
+                    ys.append(int(m.group(3)))
+            if ys:
+                break
+        if p.poll() is not None:
+            break
+    p.terminate()
+    try:
+        p.wait(timeout=20)
+    except Exception:
+        p.kill()
+    if not ys:
+        return None
+    y = max(set(ys), key=ys.count)
+    return int(round(-y / float(0x708)))
+
+
+def kandidaten(room, cut, n=6, nur_band=None):
     """-> (vor, hinter): je Liste (x, z, band, Maskenpunkte am Koerper), beste zuerst."""
     rid = int(room[4:], 16)
     rdt, _ = load_rdt(os.path.join(WURZEL, "re15_port", "shared_assets", "PSX"), room)
@@ -45,6 +84,8 @@ def kandidaten(room, cut, n=6):
     floor = abnahme.floor_aus_dump(os.path.join(WURZEL, "build", "p2", "floor_p2.txt"), rid)
     vor, hin = [], []
     for band, pts in floor.items():
+        if nur_band is not None and band != nur_band:
+            continue
         yfoot = -band * 0x708
         for (wx, wz) in pts:
             pf = proj(R, t, H, wx, yfoot, wz); pk = proj(R, t, H, wx, yfoot - 1500, wz)
@@ -134,8 +175,10 @@ def lauf(room, cut, wx, wz, tag, cut_env=None):
 
 def main():
     room = sys.argv[1].upper(); cut = int(sys.argv[2])
-    vor, hin = kandidaten(room, cut)
-    print("%s C%d: %d VOR-Kandidaten, %d HINTER-Kandidaten" % (room, cut, len(vor), len(hin)))
+    band = spieler_band(room)
+    vor, hin = kandidaten(room, cut, nur_band=band)
+    print("%s C%d: Spieler-Band %s, %d VOR-Kandidaten, %d HINTER-Kandidaten"
+          % (room, cut, band, len(vor), len(hin)))
     os.makedirs(OUT, exist_ok=True)
     for tag, liste in (("vor", vor), ("hinter", hin)):
         if not liste:
