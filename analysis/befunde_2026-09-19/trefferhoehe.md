@@ -573,3 +573,99 @@ Alle Skeptiker-Korrekturen wurden vom Fortsetzungs-Agenten noch einmal unabhaeng
 Aufraeumung in diesem Schritt: im Applier folgte auf die Port-Mapping-Zeile
 `if (mask == 0u) { mask = 3u; … }` noch das Original-Gate `if (mask == 0u) return 0;` — nach der
 Zuweisung unerreichbar. Es steht jetzt als Zitat im Kommentar statt als toter Zweig.
+
+## 7. Nacharbeit (Phase 3, 2026-09-19, Thema re-restposten)
+
+Offener Punkt aus §5: *„Messer (RE2-Id 1) und die uebrigen Hitscan-Ids: Geometrie-Records nur als
+Zeiger gelesen (@0x800A6900/…), Inhalt nicht gedumpt."* — erledigt.
+
+### 7.1 Der Geometrie-Zeiger ist ein PAAR, und das Messer hat eine Record-REIHE
+
+`re15_port/tools/re2_gun_tables_dump.py` ist erweitert: es dumpt jetzt nicht nur den ERSTEN Record
+je Zielhoehe, sondern das ganze Record-ARRAY samt der Auswahl-Liste. Der Eintrag
+@0x800A68E8 + item*24 + grp*8 ist `{rec_base, pattern}`; `pattern` ist eine Liste von
+`{recIdx, count}`, die FUN_800410CC pro Angriffsbild abarbeitet (alles selbst disassembliert):
+
+```
+80041128  lbu v0,492(t0)      ; +0x1EC Restbilder   / 80041130 bne v0,zero,0x80041168
+80041138  lbu v0,493(t0) / addiu v0,v0,1 / sb v0,493(t0)          ; +0x1ED Listenindex++
+8004114c  lw v1,4(a2) / sll v0,v0,1 / addu / lbu v0,1(v0) / sb v0,492(t0)   ; count
+8004116c  lbu v0,493(t0) / lw v1,4(a2) / sll / addu / lbu a1,0(v0)          ; recIdx
+80041180  addiu a0,zero,255 / bne a1,a0 -> ...  ; recIdx 0xFF: `lbu v1,492; addiu v1,-1;
+          sb v1,492; j 0x80041aec` mit v0 = 0 = DIESES BILD TRIFFT NICHTS (kein Listenende)
+800411a0  addiu v0,zero,254 / bne a1,v0 -> ...  ; recIdx 0xFE: Ruecksprung an den Listenanfang
+```
+
+Ergebnis des Dumps (Protokoll `re-restposten_gun_records.log`):
+
+| Item | Pattern (recIdx/count) | Records |
+|---|---|---|
+| **1 Messer** | `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` | **fuenf** je Gruppe (DOWN @0x800A657C+n*0x1C, LEVEL @0x800A63A8+n*0x1C, UP @0x800A64E0+n*0x1C) |
+| 2/3/4/13/19 Pistolen | `00/1 00/255` | einer |
+| 5/6 Magnum | `00/1 …` | einer |
+| **7 Schrot** | `00/1 ff/1 00/1 ff/1 00/1 ff/1 00/255` | einer — **vier treffende Bilder**, exakt die vier Resolve-Aufrufe, die der Port aus RE1.5 @0x80033508-58 fuehrt |
+| 8 Custom-Schrot | `00/1 ff/1 …` (fuenf treffende Bilder) | einer |
+| 15 SMG | `00/1 ff/2 fe/255` | einer |
+| 18 | `00/2 ff/1 fe/255` | einer |
+| 9/10/11/12/16/17 | `00/255` auf dem NULL-Record @0x800A6350 (Flags 00 00 00) | **keiner** |
+
+Damit ist die §5-Frage beantwortet: **ausser dem Messer steht jede Waffe in jedem treffenden Bild
+auf Record 0** — die Tabelle in re15_damage.c war also vollstaendig, nur das Messer fehlte. Und die
+sechs Bruecken-Ids haben im Original *nachweislich keinen Record*; sie bleiben belegt auf dem
+bisherigen Weg (Granaten 9/10/11, Bowgun 12, Flammenwerfer 16, Rakete 17).
+
+Die fuenf Messer-Records sind der KLINGENBOGEN (LEVEL, `{start, seitlich, Tiefe/4, Halbbreite/4}`):
+
+```
+[0] @0x800A63A8 Flag 08  { 250, 800, 426, 121}      [3] @0x800A63FC Flag 08  {1250,    0, 426, 121}
+[1] @0x800A63C4 Flag 08  { 700, 800, 426, 121}      [4] @0x800A6418 Flag 08  {1050, -200, 426, 121}
+[2] @0x800A63E0 Flag 08  {1150, 300, 426, 121}
+```
+
+### 7.2 Port: das Messer laeuft jetzt durch den Applier
+
+`re15_damage.c` traegt die Reihe als `s_re2z_geo1[3][5]` (jeder Record mit seiner `@0x…`-Adresse)
+und waehlt den Schritt ueber `re15_re2_knife_step()`. **PORT-ABBILDUNG, als solche gekennzeichnet:**
+der Port ruft den Resolver im Schlag nur im RE1.5-Schadensfenster `anim_frame 6..11`
+(byte-true @0x80035388-cc) auf — und genau bei Bild 6 endet RE2s Ausholphase `ff/6`. Beide
+Originale legen den ersten Schadensframe auf 6; die Zuordnung ist Bild 6 → Record 0 … Bild 10 →
+Record 4, Bild 11 → Record 0 (Listeneintrag `00/255`).
+
+Zwei Entscheidungen sind ausdruecklich benannt, nicht geraten:
+
+* **Flag 0x80** (UP-Record [0] @0x800A64E0) hat in FUN_80041B20 KEINEN switch-Fall; `*param_3` /
+  `*param_4` bleiben unbeschrieben, der Aufrufer sieht den Wert des VORIGEN Aufrufs (die Locals
+  `local_80`/`local_7c` sind funktionsweit). Das Original hat dort also kein definiertes Fenster.
+  Der Port VERWIRFT diese Sub-Box. Messbare Folge: keine — die Bilder 7..10 tragen Flag 0x10
+  (UP-Fenster [-3000,-500] fuer Id 1), das dy = 0 ohnehin ausschliesst.
+* **Nur die echten Nahkampfwaffen** bekommen die Messer-Records. `re2z_row_from_weapon` bildet auch
+  w0 (unbewaffnet) und w21 (keine Waffe) auf RE2-Id 1 ab — beides [PORT-ZUORDNUNG]en fuer die
+  Schadenszeile. Welcher Tester eine Waffe fuehrt, sagt @0x8006E548: [0] = [21] = 0x80012574
+  (Streifen), [1] = [2] = 0x800127FC (Kegel). Ohne diese Schranke verfehlte w0 auf der Pin-Distanz
+  3500 jeden Schuss (die Messer-LEVEL-Box reicht bis ~2450) und verschob damit die ganze
+  RNG-Folge von `unit_re2_weapon_rows` — 9 Pins fielen. Mit der Schranke: 319/319.
+
+### 7.3 Messwerte (`probe_p3_restposten`, Abschnitt [A], Log `re-restposten_sonde.log`)
+
+Distanzen 400/900/1400/2000/2600/3400, je Schlag-Bild 6..11:
+
+| Lage (Maske) | EBEN | TIEF |
+|---|---|---|
+| STEHEND (3) | trifft, **Zone 1 = Rumpf** in jedem Bild (Reichweite wandert mit dem Bogen: Bild 6 bis 2000, Bild 9 bis 3400) | Bild 6 Rumpf (Record [0] traegt Flag 0x08 = LEVEL-Fenster!), Bilder 7..10 **Zone 0 = Beine** |
+| KRIECHER (1) | **0 Treffer in allen 6 Bildern x 6 Distanzen** | Bilder 7..10 treffen, **Zone 0** |
+
+Vorher (Stand §6): der Schlag lief am Applier vorbei durch den RE1.5-Nahkampfkegel und traf den
+Kriecher mit EBEN auf jeder Distanz im Kegel. Jetzt entscheidet dieselbe Teile-Maske wie beim
+Schuss: EBEN waehlt Zeile 3 Satz 2 `02 00 00` (nur Rumpf) und verwirft Maske 1.
+
+### 7.4 Offen (unveraendert / neu)
+
+* Die SEITE des Messer-Versatzes (`b1` = 500/800 nach lokal −Z) bleibt ohne RE2-Emulator
+  unbelegt. Fuer ein Ziel GENAU VORAUS ist sie folgenlos: alle fuenf Records enthalten die
+  seitliche 0 (Intervalle [-1784,184) … [-784,1184)) — nur seitlich versetzte Ziele haengen daran.
+* Item 14 hat einen echten Record (@0x800A67F0/680C/6828, Box (200,0,3500,500)) und steht jetzt in
+  der Tabelle, hat aber keinen Port-Konsumenten (`re2z_row_from_weapon` bildet auf 14 nicht ab).
+* Die Kommentar-Beschriftung „Sparkshot" an `s_re2z_geo[18]` ist irrefuehrend: laut der
+  Item-Definitionstabelle @0x800A9E1C und den PLW-Dateien (Block in enemy_ai_re2_zombie.c) ist
+  Item 14 der Spark Shot und Item 18 die Gatling. Nur ein Name, kein Wert — nicht angefasst, um den
+  Diff dieses Auftrags klein zu halten.

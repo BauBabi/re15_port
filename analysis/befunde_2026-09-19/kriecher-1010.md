@@ -374,3 +374,48 @@ Hinweis zu Teil B nachher: der Kriecher steht nach dem Wiedereintritt bei x ≈ 
 - **Gerader Schuss trifft den Liegenden nicht** (Risiko 2): unverändert, nicht Teil dieses Auftrags — mit F2 liegen die Kriecher länger, der Nutzer wird das öfter sehen. Die Sonde druckt die Gate-Kette weiterhin nicht.
 - **Körper-Push-Stopp bei dist ≈ 851** (6.2 Hinweis): Vorzustand, hier nur beobachtet.
 - **Nebenwirkungen von `+0x10E |= 0x2000` am Spawn** auf Nachbar-Zombies: im Port nur das Domino-Gate `!(pz->re2z_f10e & 0x2000)` (Kriecher dort ohnehin über Bit 0 ausgeschlossen); HURT-P2 wischt das Bit (`sh 1,270` @0x80107A54). Nicht weiter gemessen.
+
+## 7. Nacharbeit (Phase 3, 2026-09-19, Thema re-restposten)
+
+### 7.1 F3 — die HP-Halbierung des Kriecher-INIT ist eingebaut
+
+§6.6 fuehrte F3 als „bewusst nicht eingebaut" (Konsumenten nicht gemessen). Von den drei Teilen
+waren zwei zwischenzeitlich schon erledigt — Trefferbox-Halbwort +0x9A = 200 (@0x80100B00-04) und
+die word0-Teile-Maske (@0x80100B28-44) trug Runde 16 in `re15_re2z_enter_crawler` nach. Offen war
+die HP. Sie hat im Port einen Konsumenten (`e->hp`), also ist sie jetzt drin, mit der Instruktion:
+
+```
+80100b3c  lhu  v1,342(s2)      ; HP
+80100b48  sll  v1,v1,16 / 80100b4c sra v0,v1,16      ; vorzeichenbehaftet
+80100b50  srl  v1,v1,31 / 80100b54 addu v0,v0,v1     ; Rundung Richtung 0
+80100b58  sra  v0,v0,1
+80100b5c  sh   v0,342(s2)
+```
+
+Sie sitzt AUSSCHLIESSLICH im `+0x10E & 1`-Zweig des INIT (@0x80100AE0), **nicht** an den
+Kriecher-Eingaengen aus dem Treffer (Ragdoll-P2 @0x80106B38, Knockdown-P2 @0x80107828) — dort
+behaelt der Zombie seine Rest-HP. Im Port steht sie deshalb in `re2z_init` und nicht in
+`re15_re2z_enter_crawler`. Der Port-Schnappschuss `re2z_prev_hp` wird mitgezogen, sonst laese der
+HURT-Vergleich die Halbierung als Schaden.
+
+Nicht uebernommen, belegt: `+0x98 = -350` (@0x80100B14-18) und `+0x9E = +350` (@0x80100B20). Die
+beiden speisen im Original den ANGRIFFS-Volumen-Applier FUN_800470C0 (Zonenrechnung
+@0x800472AC-30C), nicht den Schuss; der Port fuehrt dafuer weiterhin den RE1.5-Kasten
+(`re15_enemy_apply_hitbox`) und hat kein Feld dafuer. Kein Konsument → weggelassen, nicht geraten.
+
+**Messung** (`probe_p3_restposten` Abschnitt [B], zwei INIT-Laeufe mit demselben RNG-Seed auf
+demselben Slot):
+
+```
+Deskriptor 0x85 -> hp 101 ; Deskriptor 0x81 (Kriecher) -> hp 50
+```
+
+### 7.2 Griff-Ausgang 0x501 — nachgeprueft, Pin vorhanden
+
+§6.3 ist gegen `kriecher-1010_grab_FUN_801025EC.dis` und die Kette
+@0x80102A64-80 → @0x80102BC4-C8 → @0x80102BE8-BFC nachgelesen: der Kriecher-Zweig (`s5 & 1`)
+nimmt den `bne` @0x80102BC8 und laeuft damit am Bild-7-Schnitt @0x80102BD0-E4 vorbei; P7/P8/P9
+(inkl. des 0x501-Wurfs @0x80102D2C) sind nur ueber `sb 7,6` @0x80102BE4 erreichbar. Es gibt keinen
++0x10E-gegateten Ersatz-Store. **Kein neuer Befund, kein neuer Pin noetig:**
+`unit_re2z_crawler_spawn_wait` (probes/p2_kriecher-1010.cmake) misst genau diesen Ausgang
+(Phasen 1..6 → Zustand 7, hp −1) und ist gruen.

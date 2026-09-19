@@ -437,3 +437,57 @@ Anzeige. Deshalb ist die Anker-Messung ueber die Kamera-Rueckprojektion gefahren
 fuer die Frage "sitzt der Ursprung im Fensterloch" sogar genauer als ein Screenshot, weil sie
 Weltkoordinaten statt Pixel-Augenmass liefert. Der Durchlauf-Sichtlauf bleibt nachzuholen, sobald
 die Anzeige wieder da ist.
+
+## 7. Nacharbeit (Phase 3, 2026-09-19, Thema re-restposten)
+
+Die beiden §5-Punkte 1 und 2 hat schon Phase 2 geschlossen (§6.1). Dieser Durchgang hat sie
+unabhaengig nachgeprueft und um zwei Belege ergaenzt. **Kein Code geaendert.**
+
+### 7.1 §5.1 — der Scheduler-Widerspruch um +0x158
+
+`FUN_8004A694` ist kein Per-Bild-Tick, sondern laeuft genau einmal je Raum-Eintritt. Eigener
+`jal`-Zensus ueber die ganze `info/re2leon/PSX.EXE` (Wortscan auf das Sprungziel):
+
+```
+0x8004A694  <- genau EIN Aufrufer: @0x8004A35C  (in FUN_80049E48)
+FUN_80049E48 <- genau EIN Aufrufer: @0x80026E1C  (in FUN_80026B7C)
+FUN_80026B7C <- genau EIN Aufrufer: @0x80025A70  (in FUN_80025794, der Zustandsautomat;
+                selbst hat er keinen jal-Aufrufer = Tabellen-Dispatch)
+```
+
+Was die Funktion tut, passt dazu: sie laeuft EINMAL ueber die Entity-Liste (s2 = 0x800CFE18 bis
+DAT_800CE334), loescht je Entity `+0x10E & 0x8000` (`andi v0,v1,0x7fff / sh v0,270(s0)`
+@0x8004A734-38), ruft den Typ-Root, und stellt bei `+0x158 != 0` die gespeicherte Startpose wieder
+her (`+0x4 = ((+0x158 & 0xFF00) - 0x100) | 4` @0x8004A75C-74, `sb s1,332` @0x8004A778,
+`sh a0,460` @0x8004A784). Das ist die Wiederherstellung nach dem Raumwechsel, kein Zeitgeber-Leser
+im Spielbetrieb — **+0x158 ist nach dem INIT frei**, und die drei Lesungen des Zellenarm-Moduls
+(rng&0xF im INIT, (rng&0x1F)+60 im REACH, (rng&0x1F)+30 im RUECKZUG) halten.
+
+### 7.2 §5.2 — kostet der Arm-Griff HP?
+
+Nein. Zwei unabhaengige Zensen auf dem ausgeschnittenen Overlay
+`build/extracted/re2_ems/CDEMD0_EM2D_ai1.BIN` (5416 Bytes, laedt @0x80100000):
+
+1. **`jal`-Zensus** ueber alle 19 Sprungziele — `0x800401D4` (der Spieler-Schadenseingang; er
+   rechnet `HP -= a0` auf 0x800CFD4E, `lhu v0,342(a2) / subu a0,v0,a0 / sh a0,342(a2)`
+   @0x80040248-5C) ist **nicht** darunter.
+2. **Immediat-Zensus** auf das HP-Offset `0xFD4E`: **genau ein Treffer**, und der ist tot —
+   ```
+   80100c94  lui  v0,0x800d
+   80100c98  lh   v0,-690(v0)        ; 0x800CFD4E = Spieler-HP
+   80100ca0  slti v0,v0,101
+   80100ca4  beq  v0,zero,0x80100d6c ;  HP >= 101 -> Ende
+   80100cac  j    0x80100d6c         ;  sonst AUCH Ende  -> das Ergebnis wird verworfen
+   ```
+   Beide Zweige laufen auf dieselbe Marke; die Abfrage ist ein Rest, kein Schadenspfad.
+
+Der Griff selbst steht direkt darueber: `addiu v0,zero,5 / sw v0,-1028(at)` @0x80100C4C-54 setzt
+PL+0x4 = 5 (Spieler-Basis 0x800CFBF8), und der EXE-Verteiler der Routine 5 (@0x8004006C, Zeile 5
+der Tabelle @0x800A4030) springt ueber `0x800CE300[kind]` (`lw v0,-6360(v1)` @0x800400B0 mit
+v1 = 0x800CFBD8 + kind*4) — fuer kind 0x2D also nach 0x800CE3B4, und genau dorthin schreibt der
+Arm-INIT seinen Hook (`sw v0,-7244(at)` @0x80100144 mit at = 0x800D0000). Der Hook 0x8010121C
+dispatcht ueber PL+0x5 und PL+0x6 durch Clip- und Advance-Aufrufe; ein Schadensaufruf ist dort
+nicht.
+
+**Befund fuer den Merge:** Modus 5 (Zellenarm) zieht keine HP ab. Der `birkin-rest`-Agent klaert
+die Tentakel-Griffmodi getrennt; diese Aussage gilt nur fuer den Arm-Hook 0x8010121C.

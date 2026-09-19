@@ -270,3 +270,78 @@ Alle drei Sperren stehen fuer den Schlaefer gleichzeitig; keine davon haengt am 
 ## 6. Umsetzung (Phase 2)
 
 Siehe `liegende-und-aufstehen.md` §6 (Umsetzung, Messwerte vorher/nachher, Pins, Offenes).
+
+## 7. Nacharbeit (Phase 3, 2026-09-19, Thema re-restposten)
+
+### 7.1 §5 Punkt 2 — Treffbarkeit WAEHREND des Aufstehens
+
+Beide Originale sperren den Gebumpten bis zum Ende der Pose; nur der Port gab ihn im Bump-Bild frei.
+
+* **RE1.5:** der Skript-Wecker FUN_801039FC setzt `+0x6 = 2` (@0x80103A1C) und fasst +0x93 nicht
+  an; der Riegel faellt erst in Phase 3 der Liege-Phasenmaschine (`andi 0xfe / sb v0,147(a1)`
+  @0x80103B64-68).
+* **RE2:** EXEC[7] loescht +0x1D3 Bit 7 erst in P4 (`lbu v0,467(s0) / andi 0x7f / sb v0,467(s0)`
+  @0x80103904-18, im selben Block wie `sw 0x101,4` @0x80103900-0C), EXEC[8] in P3 @0x80103CE4-FC.
+* Die bisher als „gepaarter Clear" zitierte Stelle @0x80104F00-04 gehoert **nicht** hierher: das
+  ist EXEC[15]s eigener Ausgang (Commit 0x60501 @0x80104EE8-EC), eine Reaktions-, keine Weckkette.
+
+Aenderungen (`enemy_ai_re2_zombie.c`): D15.2 loescht nur noch `+0x10E & 0x4000` (@0x80104F0C), und
+`passive_lyer` im Trefferfilter umfasst jetzt die Nibbles **7..10** statt nur 7/8 — 0x89/0x8A ist
+derselbe Koerper, nur mit gesetztem Wecker, und laeuft im Original durch dieselbe Phasenmaschine
+(Dispatcher @0x8011F80C[9]/[10] = 0x801019F0 laedt die ANIMATE-Zeile aus derselben Basis
+0x8011F9D4 wie [7]/[8]). Der Pose-Ausgang raeumt beide Bytes selbst, danach faellt die Ausnahme
+ueber `grid_id = 0` ohnehin weg.
+
+**Messung** (`probe_p3_restposten` Abschnitt [C], echter Game-Step, Spieler 12000 entfernt):
+
+| | vorher | nachher |
+|---|---|---|
+| 0x88 liegend | gesperrt (+0x93 Bit 0 = 1) | unveraendert gesperrt |
+| Bump auf 0x89, Bild 0 | **sofort treffbar** (+0x1D3 = 0x00) | gesperrt, +0x1D3 = 0x80 |
+| Aufsteh-Clip 9 (Bilder 1..75) | treffbar | gesperrt |
+| Pose-Ausgang | – | **Bild 76**: st 1/1, grid 0x00, +0x1D3 = 0x00, +0x93 = 0x00 = treffbar |
+
+Der Fresser (EXEC[8]) bleibt frueher dran als der Liegende — sein Clear steht im Original schon in
+P3 (@0x80103CE4-FC), nicht erst im Exit.
+
+### 7.2 §5 Punkt 1 — Nibble 5 (0x85) und Nibble 4 (0x84)
+
+Die Frage war „ungeprueftes Verhalten im RE2-Flavor". Der Befund ist staerker: **0x84 und 0x85
+gehoeren gar nicht zur Liege-, sondern zur FRESSER-Familie**, und zwar in JEDEM Stage-Overlay.
+
+Der Grid-Dispatcher @0x8011F80C[4] (= 0x8010187C) laedt seine DECIDE-Zeile aus 0x8011F9C8 und
+seine ANIMATE-Zeile aus 0x8011F9CC; [5]/[6] (= 0x801018F8) laden aus 0x8011F9D0 / 0x8011F9D4.
+Beide Paare zeigen auf dieselben zwei Funktionen — eigener Dump der `lui/addiu`-Paare beider
+Dispatcher und der Zielworte:
+
+```
+STAGE1  0x8011F9C8/CC == 0x8011F9D0/D4  ->  0x80103980 (Naehe-Wecker)  /  0x80103A58 (Phasen)
+STAGE2  0x80117ACC/D0 == 0x80117AD4/D8  ->  0x80103814 / 0x801038EC
+STAGE3  0x8011DB18/1C == 0x8011DB20/24  ->  0x80103A6C / 0x80103B44
+STAGE4  0x80118EF0/F4 == 0x80118EF8/FC  ->  0x80103934 / 0x80103A0C
+STAGE5  0x8011EA58/5C == 0x8011EA60/64  ->  0x80103AB4 / 0x80103B8C
+```
+
+Der Wecker 0x80103980 ist derselbe, den der Port fuer 5/6 bereits fuehrt
+(`lw v0,464(v1) / sltiu v0,v0,0xfa0 / beq` @0x80103990-9C, nur bei +0x6 == 0 @0x801039A4-AC, dann
+`sb v0,6` = Phase 1 und `+0x9C = rand&0xF` @0x801039B8-CC).
+
+Port-Ist davor und Aenderung:
+
+| | RE1.5-Lane (`enemy_ai_common.c`) | RE2-Lane (`enemy_ai_re2_zombie.c`) |
+|---|---|---|
+| vorher | Nibble 4 fiel in den deferrten `default`-Zweig → **gar kein Tick**; 5/6 → `live_feeding` | sel 4/5 in `lying_family` → EXEC[7] (Liegender); sel 6 → EXEC[8] (Fresser) |
+| nachher | `case 4:` faellt in denselben Zweig wie `case 5: case 6:` | sel 4/5/6 → EXEC[8] |
+
+**Messung** (Abschnitt [D], synthetischer Spawn auf demselben Slot, gleicher Seed):
+
+```
+0x84 -> st=1 sub=8/0 f10e=4004 clip=18
+0x85 -> st=1 sub=8/0 f10e=4004 clip=18
+0x86 -> st=1 sub=8/0 f10e=4004 clip=18
+```
+
+Reichweite: eigener Byte-Zensus der ausgelieferten RDTs — **0x84 = 28 Records** (ROOM2000/2001,
+ROOM3000/3001, ROOM3010/3011), **0x85 = 2 Records** (ROOM3010/3011). In STAGE1 kommt keiner von
+beiden vor; deshalb war die Zuordnung bis jetzt ungeprueft. Eine Sichtpruefung im Spiel steht aus
+(die betroffenen Raeume liegen in STAGE2/3).
