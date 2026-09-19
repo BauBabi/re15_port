@@ -1,0 +1,39 @@
+=== ROOM10F0 C4 (11 Objekte)
+    "10F0 Cut 4 Teil 01 (Nutzer-Lasso)" (png, ebene 0): zelle x-2650..11300 z14750..16800 (Typ 1, 64 % der Standpunkte): Hoehe -50 (IoU 0.08, Oberkante 10.2 px), Quader, 173 von 428 Punkten getroffen, Tiefe 179..209
+    "10F0 Cut 4 Teil 02 (Nutzer-Lasso)" (png, ebene 0): zelle x-1800..-300 z8200..9700 (Typ 3, 100 % der Standpunkte): Hoehe -925 (IoU 0.29, Oberkante 9.0 px), Quader, 959 von 1111 Punkten getroffen, Tiefe 80..104
+    "10F0 Cut 4 Teil 03 (Nutzer-Lasso)" (png, ebene 0): standpunkte: 36 Spalten, davon 36 eigene, 0 geerbt; Profil-Tiefe 57..59
+    "Buerostuhl x6600 z7500": quader x6600..8100 z7500..9000 Hoehe -1950 auf y=0, 744 Punkte
+    "Buerostuhl x6700 z10300": quader x6700..8200 z10300..11800 Hoehe -1950 auf y=0, 2538 Punkte
+    "Buerostuhl x4200 z11800": quader x4200..5700 z11800..13300 Hoehe -1950 auf y=0, 1818 Punkte
+    "Buerostuhl x1550 z11650": quader x1550..3050 z11650..13150 Hoehe -1950 auf y=0, 1839 Punkte
+    "Buerostuhl x-1600 z12200": quader x-1600..-100 z12200..13700 Hoehe -1950 auf y=0, 1785 Punkte
+    "Buerostuhl x-1800 z8200": quader x-1800..-300 z8200..9700 Hoehe -1950 auf y=0, 5537 Punkte
+    "Buerostuhl x-1900 z4300": quader x-1900..-400 z4300..5800 Hoehe -1950 auf y=0, 7468 Punkte
+    "Buerostuhl x1600 z5700": quader x1600..3100 z5700..7200 Hoehe -1950 auf y=0, 12649 Punkte
+    zerlegung Stufe 12: 10F0 Cut 4 Tei=zeilen/20, 10F0 Cut 4 Tei=zeilen/48, 10F0 Cut 4 Tei=zeilen/10, Buerostuhl x66=spalten/20, Buerostuhl x67=spalten/64, Buerostuhl x42=spalten/12, Buerostuhl x15=spalten/40, Buerostuhl x-1=zeilen/48, Buerostuhl x-1=zeilen/8, Buerostuhl x-1=zeilen/10, Buerostuhl x16=spalten/8 -> 98 Rechtecke, 53867 Atlaspunkte
+   Soll 31757 px, fehlt 0 / zuviel 0 | 98 Rechtecke, 51 Stufen (24..209) | VOR n=1009 verdeckt=0 teil=0 | HINTER n=1332 frei=1116 -> BESTEHT
+   Bild: build/p3/bilder_unangetastet\ROOM10F0_C4.png
+=== ROOM10F0 C5 (7 Objekte)
+    "10F0 Cut 5 Teil 01 (Nutzer-Lasso)" (png, ebene 0): zelle x1600..3100 z5700..7200 (Typ 3, 83 % der Standpunkte): Hoehe -675 (IoU 0.49, Oberkante 13.8 px), Quader, 2055 von 2629 Punkten getroffen, Tiefe 52..70
+    "10F0 Cut 5 Teil 02 (Nutzer-Lasso)" (png, ebene 0): zelle x1600..3100 z1900..3400 (Typ 3, 88 % der Standpunkte): Hoehe -1375 (IoU 0.27, Oberkante 6.8 px), Quader, 666 von 679 Punkten getroffen, Tiefe 102..124
+    "10F0 Cut 5 Teil 03 (Nutzer-Lasso)" (png, ebene 0): zelle x-600..11300 z-5400..-3400 (Typ 1, 100 % der Standpunkte): Hoehe -300 (IoU 0.10, Oberkante 4.7 px), Quader, 185 von 275 Punkten getroffen, Tiefe 208..238
+    "Buerostuhl x-1900 z4300": quader x-1900..-400 z4300..5800 Hoehe -1950 auf y=0, 7604 Punkte
+    "Buerostuhl x1600 z5700": quader x1600..3100 z5700..7200 Hoehe -1950 auf y=0, 11297 Punkte
+    "Buerostuhl x1600 z1900": quader x1600..3100 z1900..3400 Hoehe -1950 auf y=0, 3289 Punkte
+    "Buerostuhl x1500 z-2000": quader x1500..3000 z-2000..-500 Hoehe -1950 auf y=0, 1286 Punkte
+    zerlegung Stufe 4: 10F0 Cut 5 Tei=zeilen/32, 10F0 Cut 5 Tei=zeilen/40, 10F0 Cut 5 Tei=zeilen/16, Buerostuhl x-1=spalten/16, Buerostuhl x16=zeilen/8, Buerostuhl x16=zeilen/64, Buerostuhl x15=zeilen/40 -> 104 Rechtecke, 53907 Atlaspunkte
+   Soll 21469 px, fehlt 0 / zuviel 0 | 104 Rechtecke, 51 Stufen (44..238) | VOR n=585 verdeckt=0 teil=0 | HINTER n=1018 frei=292 -> BESTEHT
+   Bild: build/p3/bilder_unangetastet\ROOM10F0_C5.png
+=== ROOM1100 C1 (3 Objekte)
+    "Westwand": quader x-17600..-15600 z-23200..-12100 Hoehe -4000 auf y=0, 28160 Punkte
+    "Suedblock": quader x-22700..-15600 z-23201..-21304 Hoehe -4000 auf y=0, 14426 Punkte
+    "Suedwestwand": quader x-23105..-21158 z-28356..-21542 Hoehe -4000 auf y=0, 7566 Punkte
+    zerlegung Stufe 12: Westwand=spalten/8, Suedblock=spalten/8, Suedwestwand=spalten/8 -> 99 Rechtecke, 61026 Atlaspunkte
+   Soll 28160 px, fehlt 0 / zuviel 0 | 99 Rechtecke, 62 Stufen (41..256) | VOR n=170 verdeckt=0 teil=0 | HINTER n=1515 frei=0 -> BESTEHT
+   Bild: build/p3/bilder_unangetastet\ROOM1100_C1.png
+=== ROOM1100 C2 (2 Objekte)
+    "Westwand": quader x-17600..-15600 z-23200..-12100 Hoehe -4000 auf y=0, 25211 Punkte
+    "Nordwand": quader x-28900..-15600 z-14100..-12100 Hoehe -4000 auf y=0, 13633 Punkte
+    zerlegung Stufe 6: Westwand=spalten/8, Nordwand=spalten/8 -> 97 Rechtecke, 53516 Atlaspunkte
+   Soll 25211 px, fehlt 0 / zuviel 0 | 97 Rechtecke, 40 Stufen (42..162) | VOR n=188 verdeckt=0 teil=0 | HINTER n=9308 frei=0 -> BESTEHT
+   Bild: build/p3/bilder_unangetastet\ROOM1100_C2.png

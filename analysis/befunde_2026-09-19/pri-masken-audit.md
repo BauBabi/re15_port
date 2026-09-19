@@ -322,3 +322,51 @@ laufen in (4ii)/(4iii) und brauchen `fuss`/`ebene` wie heute; (5) kann fuer brei
   (`reai-v2-runde15`, 14,2 %). Zahlen sind Standplatz-Zaehlungen, keine Bild-Diffs.
 - Nicht gemessen: ob `massstab 4` fuer 1000 C1/C3 und 11F0 C1 wirklich der Wunsch des Nutzers war
   (Treffer 85-93 %) oder die PNGs als 1x gemeint sind — nachfragen.
+
+## 7. Nacharbeit (Phase 3, 2026-09-19/20)
+
+Nutzer-Auftrag: "gehe die offenen Punkte an, bei den offenen pri findings sei kreativ, das
+es gut aussieht." Vollstaendiges Dossier: `analysis/befunde_2026-09-19/phase3_pri-kreativ/BEFUND.md`,
+Messskripte und Protokolle in dessen `protokoll/`.
+
+**Commits** (Zweig `p3-pri-kreativ`):
+
+| Commit | Inhalt |
+|---|---|
+| `feat(maske): MaxRects statt Regalverfahren` | ROOM10E0 C7 passt, 16 Cuts feiner gestuft |
+| `fix(maske): VOR/HINTER mit der Toleranz EINES OT-Buckets` | ROOM10A0 C2 angenommen, VORverd 1 -> 0 |
+| `feat(maske): eine Freistellung, zwei Tiefen-Objekte; Zellsperre; Sektion entfernen` | ROOM10D0 C1 |
+| `fix(masken): neun Freistellungen lagen am falschen Cut` | STAGE1 neu gebaut, 77 Cuts |
+| `docs(pri): Dossier Phase 3` | dieser Abschnitt + Bilder |
+
+**Messwerte vorher / nachher** (72 Cuts, die es in beiden Phasen gibt; `pri-masken-phase2/protokoll/bau2.log`
+gegen `phase3_pri-kreativ/protokoll/bau_schreiben.log`):
+
+| | Rechtecke | Tiefenstufen | VOR voll verdeckt | HINTER frei |
+|---|---|---|---|---|
+| Phase 2 | 5462 | 2630 | 1 (+2 teilweise) | 928 von 75924 = 1,2 % |
+| Phase 3 | 5802 | 2855 | **0** (0 teilweise) | **713** von 76015 = 0,9 % |
+
+Nicht geschriebene Cuts: Phase 2 vier (10D0 C1, 1000 C3, 10A0 C2, 10E0 C7) — Phase 3 **keiner**.
+Entfernt: ROOM1000 C1, ROOM1000 C3, ROOM11F0 C1 (ihre Freistellungen gehoeren nachweislich
+zu ROOM1000 C0/C2 bzw. ROOM11F0 C0).
+
+**Was §5 "Offen" dieses Dossiers berichtigt:**
+
+* "11F0 C1 beruehrt 0 Standplaetze" — Artefakt der invertierten Bodensonde; die Freistellung
+  gehoert ueberhaupt nicht zu C1.
+* "Standlinie 10C0 C3 / 1130 C3 nicht entschieden" — entschieden: beide laufen ueber die
+  SCA-Zelle (Regel i), Abnahme VORverd 0 / HINTER frei 40 bzw. 0, im Spiel nachgesehen.
+* "Nicht gemessen: ob massstab 4 fuer 1000 C1/C3 und 11F0 C1 wirklich der Wunsch des Nutzers
+  war" — jetzt gemessen, und die Antwort ist NEIN: die alte Guete (Bestwert ueber alle Lagen)
+  ist eine selbstbestaetigende Metrik, die mit kleiner werdendem Objekt zwangslaeufig steigt.
+  Gegen ein Nullmodell haben diese Freistellungen 134..1709 gleich gute Lagen (Gipfel 1,9..2,9
+  sigma), waehrend eine richtig sitzende genau EINE hat (16,8 sigma).
+
+**Offen geblieben:** ROOM11F0 C1 und ROOM1000 C3 haben jetzt keine Maske (Vordergrund
+vorhanden, Freistellung fehlt); ROOM1000 C4 und ROOM10A0 C5 behalten einen grossen
+HINTER-Rest (Tiefenmodell systematisch zu fern — Preis der Statistik MAXIMUM);
+ROOM10F0 C4/C5 decken hinten schlecht ab, weil ihre Silhouetten aus meinen Buerostuhl-Quadern
+bestehen.
+
+`ctest --test-dir re15_port/build_p3 --timeout 120`: 100% tests passed, 0 tests failed out of 319.

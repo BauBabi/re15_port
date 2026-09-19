@@ -1,0 +1,414 @@
+=== ROOM1000 ===
+     "Spindblock links (Vordergrund)" (png, ebene 0): zelle x21950..22950 z-11350..-1750 (Typ 1, 60 % der Standpunkte): Hoehe -3450 (IoU 0.89, Oberkante 13.8 px), Quader, 14036 von 14061 Punkten getroffen, Tiefe 48..92
+     "Bank vorne, linke Haelfte" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 82 % der Standpunkte): Hoehe -375 (IoU 0.41, Oberkante 0.6 px), Quader, 2893 von 2934 Punkten getroffen, Tiefe 58..102
+     "Bank vorne, rechte Haelfte" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 98 % der Standpunkte): Hoehe -25 (IoU 0.40, Oberkante 19.3 px), Quader, 2446 von 2785 Punkten getroffen, Tiefe 65..100
+     "Spindblock rechts (Bildrand)" (png, ebene 0): zelle x16150..17150 z-11350..-1750 (Typ 1, 100 % der Standpunkte): Hoehe -1025 (IoU 0.72, Oberkante 12.7 px), Quader, 2008 von 2409 Punkten getroffen, Tiefe 48..75
+     zerlegung Stufe 2: Spindblock lin=spalten/10, Bank vorne, li=zeilen/8, Bank vorne, re=zeilen/12, Spindblock rec=spalten/10 -> 105 Rechtecke, 43002 Atlaspunkte
+  Cut 0: Soll 22189 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 31 Tiefenstufen (48..102), 43002 Atlaspunkte | Standplaetze 3977, beruehrt 119 | VOR n=55 verdeckt=0 teil=0 | HINTER n=72 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,16000,-11650,0.88), (0,16200,-11450,0.72), (0,16400,-11450,0.81), (0,16400,-11250,0.76), (0,16600,-11450,0.91), (0,16600,-11250,0.76), (0,16600,-11050,0.72)
+     Bild: build/p3/bilder\ROOM1000_C0.png
+  Cut 1: Sektion ENTFERNT (keine Freistellung des Nutzers fuer diesen Cut)
+     "Spindreihe links" (png, ebene 0): zelle x16150..17150 z-11350..-1750 (Typ 1, 55 % der Standpunkte): Hoehe -3475 (IoU 0.84, Oberkante 24.1 px), Quader, 10457 von 10464 Punkten getroffen, Tiefe 37..85
+     "Bank unten links" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 98 % der Standpunkte): Hoehe -450 (IoU 0.41, Oberkante 2.5 px), Quader, 1232 von 1258 Punkten getroffen, Tiefe 63..72
+     "Bank unten rechts" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 98 % der Standpunkte): Hoehe -450 (IoU 0.45, Oberkante 4.8 px), Quader, 1349 von 1386 Punkten getroffen, Tiefe 63..73
+     "Spindreihe rechts" (png, ebene 0): zelle x21950..22950 z-11350..-1750 (Typ 1, 97 % der Standpunkte): Hoehe -2650 (IoU 0.83, Oberkante 18.5 px), Quader, 5539 von 5753 Punkten getroffen, Tiefe 57..91
+     zerlegung Stufe 2: Spindreihe lin=spalten/8, Bank unten lin=zeilen/8, Bank unten rec=zeilen/8, Spindreihe rec=spalten/10 -> 79 Rechtecke, 34630 Atlaspunkte
+  Cut 2: Soll 18861 px, Deckung fehlt 0 / zuviel 0 | 79 Rechtecke, 32 Tiefenstufen (38..91), 34630 Atlaspunkte | Standplaetze 7772, beruehrt 644 | VOR n=35 verdeckt=0 teil=0 | HINTER n=611 frei=4 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,17600,-2450,0.00), (0,17600,-2250,0.00), (0,17600,-2050,0.06), (0,17600,-1850,0.33)
+     Bild: build/p3/bilder\ROOM1000_C2.png
+  Cut 3: Sektion ENTFERNT (keine Freistellung des Nutzers fuer diesen Cut)
+     "ROOM1000 Cut 4 Objekt 04_01" (png, ebene 0): standpunkte: 31 Spalten, davon 31 eigene, 0 geerbt; Profil-Tiefe 50..64
+     "ROOM1000 Cut 4 Objekt 04_02" (png, ebene 0): standpunkte: 96 Spalten, davon 87 eigene, 9 geerbt (0-8); Profil-Tiefe 65..163
+     zerlegung Stufe 2: ROOM1000 Cut 4=zeilen/10, ROOM1000 Cut 4=spalten/16 -> 105 Rechtecke, 45171 Atlaspunkte
+  Cut 4: Soll 14020 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 68 Tiefenstufen (50..163), 45171 Atlaspunkte | Standplaetze 3567, beruehrt 213 | VOR n=90 verdeckt=0 teil=0 | HINTER n=153 frei=63 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-6800,-9250,0.87), (0,-6800,-9050,0.70), (0,-6800,-8850,0.76), (0,-6800,-8650,0.82), (0,-6800,-8450,0.82), (0,-6800,-8250,0.87), (0,-6600,-9050,0.81), (0,-6600,-8850,0.71), (0,-6600,-8650,0.78), (0,-6600,-8450,0.83), (0,-6600,-8250,0.83), (0,-6600,-8050,0.86) ...
+     Bild: build/p3/bilder\ROOM1000_C4.png
+     "ROOM1000 Cut 5 Objekt 05_01" (png, ebene 0): zelle x-850..1600 z-5150..-2050 (Typ 1, 67 % der Standpunkte): Hoehe -3650 (IoU 0.80, Oberkante 14.4 px), Quader, 16794 von 18048 Punkten getroffen, Tiefe 54..102
+     "ROOM1000 Cut 5 Objekt 05_02" (png, ebene 0): standpunkte: 45 Spalten, davon 41 eigene, 4 geerbt (149, 191-193); Profil-Tiefe 47..258
+     zerlegung Stufe 3: ROOM1000 Cut 5=spalten/20, ROOM1000 Cut 5=spalten/12 -> 105 Rechtecke, 51749 Atlaspunkte
+  Cut 5: Soll 26881 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 52 Tiefenstufen (48..258), 51749 Atlaspunkte | Standplaetze 9700, beruehrt 3315 | VOR n=395 verdeckt=0 teil=0 | HINTER n=3165 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-3600,-2850,0.48), (0,-3200,-12050,0.94)
+     Bild: build/p3/bilder\ROOM1000_C5.png
+     "ROOM1000 Cut 6 Objekt 06_01" (png, ebene 0): standpunkte: 115 Spalten, davon 115 eigene, 0 geerbt; Profil-Tiefe 47..74
+     "ROOM1000 Cut 6 Objekt 06_02" (png, ebene 0): standpunkte: 90 Spalten, davon 90 eigene, 0 geerbt; Profil-Tiefe 54..95
+     zerlegung Stufe 2: ROOM1000 Cut 6=spalten/48, ROOM1000 Cut 6=spalten/12 -> 102 Rechtecke, 46158 Atlaspunkte
+  Cut 6: Soll 21799 px, Deckung fehlt 0 / zuviel 0 | 102 Rechtecke, 31 Tiefenstufen (48..95), 46158 Atlaspunkte | Standplaetze 11878, beruehrt 429 | VOR n=132 verdeckt=0 teil=0 | HINTER n=319 frei=5 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-1200,2350,0.75), (0,-1200,2550,0.88), (0,-1200,2750,0.84), (0,-1200,2950,0.94), (0,200,6550,0.87)
+     Bild: build/p3/bilder\ROOM1000_C6.png
+     "ROOM1000 Cut 7 Objekt 07_01" (png, ebene 0): standpunkte: 62 Spalten, davon 62 eigene, 0 geerbt; Profil-Tiefe 41..62
+     "ROOM1000 Cut 7 Objekt 07_02" (png, ebene 0): zelle x-5000..-2550 z5350..8400 (Typ 1, 87 % der Standpunkte): Hoehe -3650 (IoU 0.62, Oberkante 6.2 px), Quader, 12059 von 12658 Punkten getroffen, Tiefe 62..114
+     "ROOM1000 Cut 7 Objekt 07_03" (png, ebene 0): standpunkte: 61 Spalten, davon 61 eigene, 0 geerbt; Profil-Tiefe 79..127
+     zerlegung Stufe 2: ROOM1000 Cut 7=zeilen/32, ROOM1000 Cut 7=spalten/16, ROOM1000 Cut 7=spalten/40 -> 105 Rechtecke, 56737 Atlaspunkte
+  Cut 7: Soll 23964 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 43 Tiefenstufen (42..127), 56737 Atlaspunkte | Standplaetze 2558, beruehrt 154 | VOR n=119 verdeckt=0 teil=0 | HINTER n=70 frei=21 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-4000,1350,0.92), (0,-4000,1750,0.92), (0,-3600,1950,0.94), (0,-2000,5750,0.00), (0,-2000,5950,0.17), (0,-2000,6150,0.51), (0,-2000,6350,0.69), (0,-2000,6550,0.77), (0,-1800,5750,0.20), (0,-1800,5950,0.57), (0,-1800,6150,0.75), (0,-1800,6350,0.83) ...
+     Bild: build/p3/bilder\ROOM1000_C7.png
+     "ROOM1000 Cut 8 Objekt 08_01" (png, ebene 0): zelle x-5000..-2550 z5350..8400 (Typ 1, 69 % der Standpunkte): Hoehe -3750 (IoU 0.81, Oberkante 12.7 px), Quader, 16504 von 17149 Punkten getroffen, Tiefe 49..97
+     "ROOM1000 Cut 8 Objekt 08_02" (png, ebene 0): standpunkte: 49 Spalten, davon 41 eigene, 8 geerbt (140-142, 184-188); Profil-Tiefe 44..111
+     zerlegung Stufe 2: ROOM1000 Cut 8=spalten/20, ROOM1000 Cut 8=spalten/16 -> 103 Rechtecke, 55841 Atlaspunkte
+  Cut 8: Soll 26857 px, Deckung fehlt 0 / zuviel 0 | 103 Rechtecke, 40 Tiefenstufen (44..111), 55841 Atlaspunkte | Standplaetze 4242, beruehrt 125 | VOR n=125 verdeckt=0 teil=0 | HINTER n=7 frei=1 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,200,6150,0.91)
+     Bild: build/p3/bilder\ROOM1000_C8.png
+=== ROOM1010 ===
+     "ROOM1010 Cut 0 Objekt 00" (png, ebene 0): zelle x-50..2450 z1550..5900 (Typ 1, 85 % der Standpunkte): Hoehe -1625 (IoU 0.63, Oberkante 2.7 px), Quader, 11713 von 12054 Punkten getroffen, Tiefe 35..86
+     zerlegung Stufe 2: ROOM1010 Cut 0=zeilen/8 -> 100 Rechtecke, 32819 Atlaspunkte
+  Cut 0: Soll 12054 px, Deckung fehlt 0 / zuviel 0 | 100 Rechtecke, 33 Tiefenstufen (36..86), 32819 Atlaspunkte | Standplaetze 994, beruehrt 96 | VOR n=28 verdeckt=0 teil=0 | HINTER n=68 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,2400,6400,0.00), (0,2600,6400,0.11)
+     Bild: build/p3/bilder\ROOM1010_C0.png
+     "ROOM1010 Cut 1 Objekt 01" (png, ebene 0): zelle x-50..2450 z1550..5900 (Typ 1, 72 % der Standpunkte): Hoehe -1650 (IoU 0.75, Oberkante 5.6 px), Quader, 8085 von 8505 Punkten getroffen, Tiefe 33..71
+     zerlegung Stufe 1: ROOM1010 Cut 1=zeilen/16 -> 88 Rechtecke, 39812 Atlaspunkte
+  Cut 1: Soll 8505 px, Deckung fehlt 0 / zuviel 0 | 88 Rechtecke, 39 Tiefenstufen (33..71), 39812 Atlaspunkte | Standplaetze 991, beruehrt 151 | VOR n=13 verdeckt=0 teil=0 | HINTER n=142 frei=4 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,600,6400,0.00), (0,800,6400,0.00), (0,1000,6400,0.00), (0,1200,6400,0.00)
+     Bild: build/p3/bilder\ROOM1010_C1.png
+     "ROOM1010 Cut 6 Objekt 06" (png, ebene 0): zelle x-50..2450 z1550..5900 (Typ 1, 52 % der Standpunkte): Hoehe -1625 (IoU 0.68, Oberkante 2.1 px), Quader, 12721 von 13430 Punkten getroffen, Tiefe 48..118
+     zerlegung Stufe 4: ROOM1010 Cut 6=zeilen/16 -> 86 Rechtecke, 48245 Atlaspunkte
+  Cut 6: Soll 13430 px, Deckung fehlt 0 / zuviel 0 | 86 Rechtecke, 27 Tiefenstufen (48..118), 48245 Atlaspunkte | Standplaetze 994, beruehrt 430 | VOR n=76 verdeckt=0 teil=0 | HINTER n=355 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-600,6000,0.87), (0,3200,3800,0.00)
+     Bild: build/p3/bilder\ROOM1010_C6.png
+     "ROOM1010 Cut 8 Objekt 08" (png, ebene 0): zelle x-50..2450 z1550..5900 (Typ 1, 69 % der Standpunkte): Hoehe -1625 (IoU 0.64, Oberkante 3.1 px), Quader, 11948 von 12592 Punkten getroffen, Tiefe 49..116
+     zerlegung Stufe 3: ROOM1010 Cut 8=zeilen/16 -> 88 Rechtecke, 47783 Atlaspunkte
+  Cut 8: Soll 12592 px, Deckung fehlt 0 / zuviel 0 | 88 Rechtecke, 29 Tiefenstufen (51..116), 47783 Atlaspunkte | Standplaetze 994, beruehrt 348 | VOR n=69 verdeckt=0 teil=0 | HINTER n=282 frei=4 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-600,2000,0.00), (0,-600,2200,0.00), (0,-600,2400,0.00), (0,3000,6000,0.93)
+     Bild: build/p3/bilder\ROOM1010_C8.png
+=== ROOM1050 ===
+     "ROOM1050 Cut 1 Objekt 01" (png, ebene 0): standpunkte: 140 Spalten, davon 140 eigene, 0 geerbt; Profil-Tiefe 53..136
+     zerlegung Stufe 1: ROOM1050 Cut 1=spalten/12 -> 100 Rechtecke, 28007 Atlaspunkte
+  Cut 1: Soll 8681 px, Deckung fehlt 0 / zuviel 0 | 100 Rechtecke, 61 Tiefenstufen (53..136), 28007 Atlaspunkte | Standplaetze 2952, beruehrt 174 | VOR n=68 verdeckt=0 teil=0 | HINTER n=160 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1050_C1.png
+     "ROOM1050 Cut 3 Objekt 03" (png, ebene 0): zelle x15700..17200 z-7850..-5950 (Typ 1, 57 % der Standpunkte): Hoehe -950 (IoU 0.12, Oberkante 3.9 px), Quader, 221 von 237 Punkten getroffen, Tiefe 112..140
+     zerlegung Stufe 1: ROOM1050 Cut 3=zeilen/8 -> 20 Rechtecke, 340 Atlaspunkte
+  Cut 3: Soll 237 px, Deckung fehlt 0 / zuviel 0 | 20 Rechtecke, 19 Tiefenstufen (112..140), 340 Atlaspunkte | Standplaetze 5051, beruehrt 15 | VOR n=10 verdeckt=0 teil=0 | HINTER n=10 frei=8 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,16100,-6350,0.00), (0,16100,-6150,0.00), (0,16100,-5950,0.00), (0,16300,-6150,0.20), (0,16300,-5950,0.00), (0,16300,-5750,0.00), (0,16500,-5950,0.00), (0,16500,-5750,0.00)
+     Bild: build/p3/bilder\ROOM1050_C3.png
+     "ROOM1050 Cut 5 Objekt 05" (png, ebene 0): zelle x17450..23050 z-16550..-15500 (Typ 1, 85 % der Standpunkte): Hoehe -4100 (IoU 0.66, Oberkante 47.2 px), Saeule, 34393 von 34653 Punkten getroffen, Tiefe 69..107
+     zerlegung Stufe 3: ROOM1050 Cut 5=zeilen/16 -> 83 Rechtecke, 53879 Atlaspunkte
+  Cut 5: Soll 34653 px, Deckung fehlt 0 / zuviel 0 | 83 Rechtecke, 18 Tiefenstufen (69..107), 53879 Atlaspunkte | Standplaetze 7600, beruehrt 6531 | VOR n=197 verdeckt=0 teil=0 | HINTER n=6335 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,22900,-16350,0.77), (0,23100,-16550,0.00), (0,23100,-16350,0.75), (0,23300,-16550,0.00), (0,23300,-16350,0.55), (0,23500,-16550,0.00), (0,23500,-16350,0.30)
+     Bild: build/p3/bilder\ROOM1050_C5.png
+     "ROOM1050 Cut 6 Objekt 06_01" (png, ebene 0): zelle x23700..24950 z-21950..-17900 (Typ 1, 97 % der Standpunkte): Hoehe -3475 (IoU 0.40, Oberkante 4.2 px), Quader, 2903 von 2915 Punkten getroffen, Tiefe 127..166
+     "ROOM1050 Cut 6 Objekt 06_02" (png, ebene 0): zelle x15000..16100 z-23350..-19100 (Typ 1, 59 % der Standpunkte): Hoehe -1350 (IoU 0.79, Oberkante 7.0 px), Quader, 5127 von 5929 Punkten getroffen, Tiefe 63..116
+     zerlegung Stufe 1: ROOM1050 Cut 6=spalten/16, ROOM1050 Cut 6=zeilen/32 -> 105 Rechtecke, 47775 Atlaspunkte
+  Cut 6: Soll 8844 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 90 Tiefenstufen (63..166), 47775 Atlaspunkte | Standplaetze 2006, beruehrt 198 | VOR n=183 verdeckt=0 teil=0 | HINTER n=15 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1050_C6.png
+=== ROOM1060 ===
+     "Treppengelaender" (png, ebene -15400): standpunkte: 191 Spalten, davon 191 eigene, 0 geerbt; Profil-Tiefe 54..101
+     zerlegung Stufe 2: Treppengelaend=spalten/20 -> 105 Rechtecke, 23343 Atlaspunkte
+  Cut 0: Soll 2048 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 26 Tiefenstufen (54..101), 23343 Atlaspunkte | Standplaetze 2497, beruehrt 288 | VOR n=0 verdeckt=0 teil=0 | HINTER n=288 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1060_C0.png
+     "Treppengelaender" (png, ebene -13600): zelle x22900..27100 z20000..24100 (Typ 1, 91 % der Standpunkte): Hoehe -25 (IoU 0.12, Oberkante 62.0 px), Quader, 2190 von 2413 Punkten getroffen, Tiefe 63..87
+     zerlegung Stufe 1: Treppengelaend=zeilen/8 -> 30 Rechtecke, 6432 Atlaspunkte
+  Cut 1: Soll 2413 px, Deckung fehlt 0 / zuviel 0 | 30 Rechtecke, 25 Tiefenstufen (63..87), 6432 Atlaspunkte | Standplaetze 2456, beruehrt 76 | VOR n=2 verdeckt=0 teil=0 | HINTER n=74 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1060_C1.png
+     "Treppengelaender" (png, ebene -8200): standpunkte: 142 Spalten, davon 142 eigene, 0 geerbt; Profil-Tiefe 70..114
+     "Gelaenderstueck rechts aussen" (png, ebene -8200): standpunkte: 13 Spalten, davon 13 eigene, 0 geerbt; Profil-Tiefe 81..89
+     "Gelaenderpfosten links" (png, ebene -8200): standpunkte: 23 Spalten, davon 23 eigene, 0 geerbt; Profil-Tiefe 83..106
+     zerlegung Stufe 2: Treppengelaend=spalten/32, Gelaenderstuec=spalten/8, Gelaenderpfost=spalten/8 -> 98 Rechtecke, 31223 Atlaspunkte
+  Cut 2: Soll 2381 px, Deckung fehlt 0 / zuviel 0 | 98 Rechtecke, 25 Tiefenstufen (70..114), 31223 Atlaspunkte | Standplaetze 2241, beruehrt 190 | VOR n=3 verdeckt=0 teil=0 | HINTER n=190 frei=4 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (4,24000,24600,0.90), (4,24200,24600,0.93), (4,24200,24800,0.95), (4,24400,24600,0.93)
+     Bild: build/p3/bilder\ROOM1060_C2.png
+     "Treppengelaender" (png, ebene -2800): zelle x22900..27100 z20000..24100 (Typ 1, 58 % der Standpunkte): Hoehe -1475 (IoU 0.06, Oberkante 41.0 px), Quader, 656 von 1292 Punkten getroffen, Tiefe 115..151
+     zerlegung Stufe 1: Treppengelaend=zeilen/8 -> 57 Rechtecke, 2887 Atlaspunkte
+  Cut 4: Soll 1292 px, Deckung fehlt 0 / zuviel 0 | 57 Rechtecke, 37 Tiefenstufen (115..151), 2887 Atlaspunkte | Standplaetze 2120, beruehrt 277 | VOR n=75 verdeckt=0 teil=0 | HINTER n=202 frei=45 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (2,24400,24800,0.00), (2,24600,24600,0.00), (2,24600,24800,0.00), (2,24600,25000,0.00), (2,24800,24600,0.02), (2,24800,24800,0.10), (2,24800,25000,0.00), (2,24800,25200,0.00), (2,24800,25400,0.20), (2,25000,24600,0.23), (2,25000,24800,0.30), (2,25000,25000,0.18) ...
+     Bild: build/p3/bilder\ROOM1060_C4.png
+     "Treppengelaender" (png, ebene -1000): standpunkte: 163 Spalten, davon 131 eigene, 32 geerbt (288-319); Profil-Tiefe 78..172
+     zerlegung Stufe 2: Treppengelaend=spalten/24 -> 96 Rechtecke, 40990 Atlaspunkte
+  Cut 7: Soll 2061 px, Deckung fehlt 0 / zuviel 0 | 96 Rechtecke, 49 Tiefenstufen (78..172), 40990 Atlaspunkte | Standplaetze 1577, beruehrt 163 | VOR n=101 verdeckt=0 teil=0 | HINTER n=95 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1060_C7.png
+=== ROOM10A0 ===
+     "ROOM10A0 Cut 0 00" (png, ebene -14400): zelle x19500..23300 z19700..23600 (Typ 1, 54 % der Standpunkte): Hoehe -2700 (IoU 0.22, Oberkante 26.3 px), Quader, 7743 von 9860 Punkten getroffen, Tiefe 39..83
+     zerlegung Stufe 1: ROOM10A0 Cut 0=zeilen/8 -> 91 Rechtecke, 17934 Atlaspunkte
+  Cut 0: Soll 9860 px, Deckung fehlt 0 / zuviel 0 | 91 Rechtecke, 45 Tiefenstufen (39..83), 17934 Atlaspunkte | Standplaetze 4741, beruehrt 825 | VOR n=0 verdeckt=0 teil=0 | HINTER n=825 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10A0_C0.png
+     "ROOM10A0 Cut 1 01" (png, ebene -10800): zelle x19500..23300 z19700..23600 (Typ 1, 57 % der Standpunkte): Hoehe -25 (IoU 0.22, Oberkante 34.2 px), Quader, 1990 von 3180 Punkten getroffen, Tiefe 116..141
+     zerlegung Stufe 1: ROOM10A0 Cut 1=zeilen/8 -> 30 Rechtecke, 4718 Atlaspunkte
+  Cut 1: Soll 3180 px, Deckung fehlt 0 / zuviel 0 | 30 Rechtecke, 26 Tiefenstufen (116..141), 4718 Atlaspunkte | Standplaetze 4747, beruehrt 566 | VOR n=10 verdeckt=0 teil=0 | HINTER n=555 frei=1 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (6,24250,19350,0.00)
+     Bild: build/p3/bilder\ROOM10A0_C1.png
+     "ROOM10A0 Cut 2 02" (png, ebene -7200): standpunkte: 129 Spalten, davon 129 eigene, 0 geerbt; Profil-Tiefe 22..114
+     zerlegung Stufe 4: ROOM10A0 Cut 2=spalten/20 -> 97 Rechtecke, 45737 Atlaspunkte
+  Cut 2: Soll 8377 px, Deckung fehlt 0 / zuviel 0 | 97 Rechtecke, 25 Tiefenstufen (24..114), 45737 Atlaspunkte | Standplaetze 3856, beruehrt 589 | VOR n=0 verdeckt=0 teil=0 | HINTER n=589 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10A0_C2.png
+     "ROOM10A0 Cut 5 05" (png, ebene -5400): standpunkte: 152 Spalten, davon 152 eigene, 0 geerbt; Profil-Tiefe 62..146
+     zerlegung Stufe 3: ROOM10A0 Cut 5=spalten/20 -> 96 Rechtecke, 61089 Atlaspunkte
+  Cut 5: Soll 13322 px, Deckung fehlt 0 / zuviel 0 | 96 Rechtecke, 35 Tiefenstufen (63..146), 61089 Atlaspunkte | Standplaetze 4226, beruehrt 480 | VOR n=257 verdeckt=0 teil=0 | HINTER n=251 frei=30 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (3,25050,24950,0.63), (3,25050,25150,0.62), (3,25050,25350,0.63), (3,25050,25550,0.51), (3,25050,25750,0.49), (3,25050,26350,0.76), (3,25050,26550,0.73), (3,25050,26750,0.59), (3,25050,26950,0.53), (3,25050,27350,0.82), (3,25050,27550,0.62), (3,25050,27750,0.61) ...
+     Bild: build/p3/bilder\ROOM10A0_C5.png
+     "ROOM10A0 Cut 7 07" (png, ebene -1800): standpunkte: 123 Spalten, davon 123 eigene, 0 geerbt; Profil-Tiefe 63..96
+     zerlegung Stufe 2: ROOM10A0 Cut 7=spalten/16 -> 92 Rechtecke, 29648 Atlaspunkte
+  Cut 7: Soll 7754 px, Deckung fehlt 0 / zuviel 0 | 92 Rechtecke, 18 Tiefenstufen (64..96), 29648 Atlaspunkte | Standplaetze 2291, beruehrt 246 | VOR n=65 verdeckt=0 teil=0 | HINTER n=199 frei=3 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (1,22050,23550,0.74), (1,22450,23750,0.77), (1,23650,24950,0.73)
+     Bild: build/p3/bilder\ROOM10A0_C7.png
+     "ROOM10A0 Cut 8 08" (png, ebene -1800): zelle x23400..27200 z20250..24350 (Typ 1, 67 % der Standpunkte): Hoehe -2125 (IoU 0.85, Oberkante 14.2 px), Quader, 15817 von 17794 Punkten getroffen, Tiefe 37..90
+     zerlegung Stufe 3: ROOM10A0 Cut 8=zeilen/20 -> 87 Rechtecke, 37748 Atlaspunkte
+  Cut 8: Soll 17794 px, Deckung fehlt 0 / zuviel 0 | 87 Rechtecke, 22 Tiefenstufen (39..90), 37748 Atlaspunkte | Standplaetze 2365, beruehrt 136 | VOR n=21 verdeckt=0 teil=0 | HINTER n=115 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10A0_C8.png
+=== ROOM10C0 ===
+     "Spielautomat" (png, ebene 0): standpunkte: 65 Spalten, davon 65 eigene, 0 geerbt; Profil-Tiefe 90..105
+     "Tischplatte rechts" (png, ebene 0): zelle x-4000..550 z-6250..-5250 (Typ 1, 59 % der Standpunkte): Hoehe -1625 (IoU 0.73, Oberkante 3.9 px), Quader, 3473 von 3613 Punkten getroffen, Tiefe 41..85
+     "Sitzbankreihe" (png, ebene 0): zelle x-4850..1150 z-3300..-1300 (Typ 1, 77 % der Standpunkte): Hoehe -750 (IoU 0.88, Oberkante 3.0 px), Quader, 7600 von 8019 Punkten getroffen, Tiefe 57..113
+     zerlegung Stufe 2: Spielautomat=zeilen/20, Tischplatte re=zeilen/12, Sitzbankreihe=zeilen/16 -> 105 Rechtecke, 26060 Atlaspunkte
+  Cut 2: Soll 15764 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 47 Tiefenstufen (42..113), 26060 Atlaspunkte | Standplaetze 10180, beruehrt 515 | VOR n=185 verdeckt=0 teil=0 | HINTER n=354 frei=35 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-3000,-850,0.00), (0,-600,-4650,0.00), (1,-600,-4650,0.00), (1,-600,-4450,0.00), (1,-400,-4650,0.00), (1,-400,-4450,0.00), (1,-200,-4650,0.00), (1,0,-4650,0.00), (1,200,-5850,0.00), (1,200,-4650,0.00), (1,400,-6050,0.00), (1,400,-5850,0.00) ...
+     Bild: build/p3/bilder\ROOM10C0_C2.png
+     "Holzbank" (png, ebene 0): zelle x-9600..8750 z-8250..-6250 (Typ 1, 93 % der Standpunkte): Hoehe -800 (IoU 0.51, Oberkante 1.7 px), Quader, 2700 von 2753 Punkten getroffen, Tiefe 93..193
+     "Sitzreihen mit Trennwand" (png, ebene 0): zelle x-4850..1150 z-3300..-1300 (Typ 1, 89 % der Standpunkte): Hoehe -700 (IoU 0.75, Oberkante 2.5 px), Quader, 6818 von 7018 Punkten getroffen, Tiefe 63..152
+     zerlegung Stufe 2: Holzbank=zeilen/16, Sitzreihen mit=zeilen/12 -> 105 Rechtecke, 22775 Atlaspunkte
+  Cut 3: Soll 9771 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 78 Tiefenstufen (64..193), 22775 Atlaspunkte | Standplaetze 8411, beruehrt 682 | VOR n=490 verdeckt=0 teil=0 | HINTER n=207 frei=40 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-4600,-850,0.93), (0,-4400,-6450,0.34), (0,-4400,-6250,0.29), (0,-4400,-6050,0.19), (0,-4400,-5850,0.00), (0,-4400,-850,0.90), (0,-4200,-6250,0.28), (0,-4200,-6050,0.20), (0,-4200,-5850,0.00), (0,-4200,-850,0.83), (0,-4000,-6050,0.17), (0,-4000,-5850,0.00) ...
+     Bild: build/p3/bilder\ROOM10C0_C3.png
+     "Theke" (png, ebene 0): zelle x-4850..1150 z-3300..-1300 (Typ 1, 83 % der Standpunkte): Hoehe -625 (IoU 0.67, Oberkante 11.1 px), Quader, 2503 von 2992 Punkten getroffen, Tiefe 58..72
+     zerlegung Stufe 1: Theke=zeilen/8 -> 19 Rechtecke, 3744 Atlaspunkte
+  Cut 4: Soll 2992 px, Deckung fehlt 0 / zuviel 0 | 19 Rechtecke, 15 Tiefenstufen (58..72), 3744 Atlaspunkte | Standplaetze 4988, beruehrt 64 | VOR n=3 verdeckt=0 teil=0 | HINTER n=60 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-4400,-850,0.59), (0,-4200,-850,0.07)
+     Bild: build/p3/bilder\ROOM10C0_C4.png
+=== ROOM10D0 ===
+     "Klapptisch hinten — Platte (Nutzer-Original 01.png)" (png, ebene 0): standpunkte: 46 Spalten, davon 46 eigene, 0 geerbt; Profil-Tiefe 201..206
+     "Klapptisch hinten — Gestell (Nutzer-Original 01.png)" (png, ebene 0): standpunkte: 42 Spalten, davon 29 eigene, 13 geerbt (126-128, 132, 135-136, 139-140, 142-144, 146, 176); Profil-Tiefe 111..172
+     zerlegung Stufe 1: Klapptisch hin=zeilen/8, Klapptisch hin=spalten/8 -> 69 Rechtecke, 4024 Atlaspunkte
+  Cut 1: Soll 1021 px, Deckung fehlt 0 / zuviel 0 | 69 Rechtecke, 57 Tiefenstufen (111..206), 4024 Atlaspunkte | Standplaetze 31735, beruehrt 573 | VOR n=106 verdeckt=0 teil=0 | HINTER n=507 frei=93 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,2300,-4450,0.83), (0,2300,-4250,0.83), (0,2300,-4050,0.83), (0,2300,-3850,0.91), (0,2300,-3650,0.86), (0,2500,-5850,0.82), (0,2500,-5650,0.82), (0,2500,-5450,0.77), (0,2500,-5250,0.77), (0,2500,-5050,0.77), (0,2500,-4850,0.77), (0,2500,-4650,0.80) ...
+     Bild: build/p3/bilder\ROOM10D0_C1.png
+     "Stuhlkante (Nutzer-Original 06.png)" (png, ebene 0): standpunkte: 28 Spalten, davon 28 eigene, 0 geerbt; Profil-Tiefe 70..73
+     "Pflanze links" (png, ebene 0): standpunkte: 67 Spalten, davon 67 eigene, 0 geerbt; Profil-Tiefe 99..116
+     zerlegung Stufe 1: Stuhlkante (Nu=zeilen/8, Pflanze links=zeilen/8 -> 30 Rechtecke, 3472 Atlaspunkte
+  Cut 6: Soll 2009 px, Deckung fehlt 0 / zuviel 0 | 30 Rechtecke, 20 Tiefenstufen (70..116), 3472 Atlaspunkte | Standplaetze 31324, beruehrt 69 | VOR n=46 verdeckt=0 teil=0 | HINTER n=32 frei=31 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,4900,25150,0.67), (0,4900,25350,0.18), (0,4900,25550,0.00), (0,5100,25350,0.25), (0,5100,25550,0.31), (0,5300,25150,0.93), (0,5300,25350,0.30), (0,5300,25550,0.37), (0,5500,25150,0.65), (0,5500,25350,0.39), (0,5500,25550,0.43), (0,5700,25150,0.66) ...
+     Bild: build/p3/bilder\ROOM10D0_C6.png
+     "Stuhl" (png, ebene 0): standpunkte: 72 Spalten, davon 72 eigene, 0 geerbt; Profil-Tiefe 53..62
+     "Tischplattenecke" (png, ebene 0): zelle x-1400..4550 z27850..28850 (Typ 1, 100 % der Standpunkte): Hoehe -625 (IoU 0.28, Oberkante 6.6 px), Quader, 906 von 986 Punkten getroffen, Tiefe 80..105
+     "Holztisch mit Klappstuhl": quader x-1350..-50 z26300..27850 Hoehe -1100 auf y=0, 4057 Punkte
+     zerlegung Stufe 1: Stuhl=zeilen/16, Tischplattenec=zeilen/16, Holztisch mit =zeilen/12 -> 104 Rechtecke, 25887 Atlaspunkte
+  Cut 7: Soll 5435 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 53 Tiefenstufen (53..105), 25887 Atlaspunkte | Standplaetze 6841, beruehrt 49 | VOR n=21 verdeckt=0 teil=0 | HINTER n=28 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-1500,24950,0.00), (0,-900,25750,0.85)
+     Bild: build/p3/bilder\ROOM10D0_C7.png
+     "Tischkante" (png, ebene 0): zelle x-21495..5105 z7688..21888 (Typ 1, 100 % der Standpunkte): Hoehe -50 (IoU 0.02, Oberkante 0.8 px), Quader, 295 von 295 Punkten getroffen, Tiefe 243..356
+     zerlegung Stufe 1: Tischkante=zeilen/8 -> 16 Rechtecke, 295 Atlaspunkte
+  Cut 8: Soll 295 px, Deckung fehlt 0 / zuviel 0 | 16 Rechtecke, 16 Tiefenstufen (243..356), 295 Atlaspunkte | Standplaetze 33660, beruehrt 225 | VOR n=215 verdeckt=0 teil=0 | HINTER n=48 frei=48 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-14700,19550,0.00), (0,-14700,19750,0.00), (0,-14700,19950,0.00), (0,-14700,20150,0.00), (0,-14700,20350,0.00), (0,-14700,20550,0.00), (0,-14700,20750,0.00), (0,-14700,20950,0.00), (0,-14700,21150,0.00), (0,-14700,21350,0.00), (0,-14500,19550,0.00), (0,-14500,19750,0.00) ...
+     Bild: build/p3/bilder\ROOM10D0_C8.png
+     "Theke mit Papieren" (png, ebene 0): zelle x-12950..-10650 z25050..26050 (Typ 1, 55 % der Standpunkte): Hoehe -2275 (IoU 0.88, Oberkante 4.6 px), Quader, 8608 von 8926 Punkten getroffen, Tiefe 55..98
+     "Schreibtisch mit Stuhl" (png, ebene 0): zelle x-17550..-15250 z25050..26050 (Typ 1, 70 % der Standpunkte): Hoehe -2275 (IoU 0.79, Oberkante 4.4 px), Quader, 1981 von 2142 Punkten getroffen, Tiefe 119..164
+     "Schrankwand" (png, ebene 0): standpunkte: 46 Spalten, davon 46 eigene, 0 geerbt; Profil-Tiefe 59..79
+     zerlegung Stufe 2: Theke mit Papi=spalten/16, Schreibtisch m=spalten/16, Schrankwand=zeilen/16 -> 105 Rechtecke, 49715 Atlaspunkte
+  Cut 9: Soll 14857 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 52 Tiefenstufen (56..164), 49715 Atlaspunkte | Standplaetze 20424, beruehrt 587 | VOR n=156 verdeckt=0 teil=0 | HINTER n=448 frei=14 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-14700,25550,0.00), (0,-14500,25550,0.00), (0,-12500,21350,0.12), (0,-12500,21550,0.63), (0,-12300,21350,0.00), (0,-12300,21550,0.00), (0,-12300,21750,0.00), (0,-12300,21950,0.00), (0,-12300,22150,0.30), (0,-12100,21550,0.00), (0,-12100,21750,0.00), (0,-12100,21950,0.00) ...
+     Bild: build/p3/bilder\ROOM10D0_C9.png
+=== ROOM10E0 ===
+     "Schrankwand links" (png, ebene 0): zelle x-10250..-9250 z-5250..2150 (Typ 1, 78 % der Standpunkte): Hoehe -1075 (IoU 0.91, Oberkante 5.5 px), Quader, 12026 von 12111 Punkten getroffen, Tiefe 4..86
+     "Leiche am Boden" (png, ebene 0): zelle x-7050..-5500 z-300..1700 (Typ 1, 80 % der Standpunkte): Hoehe -675 (IoU 0.26, Oberkante 10.6 px), Quader, 1304 von 1479 Punkten getroffen, Tiefe 56..90
+     zerlegung Stufe 2: Schrankwand li=spalten/12, Leiche am Bode=zeilen/8 -> 85 Rechtecke, 18925 Atlaspunkte
+  Cut 0: Soll 13590 px, Deckung fehlt 0 / zuviel 0 | 85 Rechtecke, 49 Tiefenstufen (4..90), 18925 Atlaspunkte | Standplaetze 4034, beruehrt 855 | VOR n=92 verdeckt=0 teil=0 | HINTER n=763 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10E0_C0.png
+     "Trage mit Leiche" (png, ebene 0): zelle x-7050..-5500 z-4000..-300 (Typ 1, 82 % der Standpunkte): Hoehe -1625 (IoU 0.70, Oberkante 4.6 px), Quader, 7279 von 7587 Punkten getroffen, Tiefe 61..119
+     zerlegung Stufe 2: Trage mit Leic=zeilen/16 -> 99 Rechtecke, 32939 Atlaspunkte
+  Cut 1: Soll 7587 px, Deckung fehlt 0 / zuviel 0 | 99 Rechtecke, 34 Tiefenstufen (62..119), 32939 Atlaspunkte | Standplaetze 3476, beruehrt 478 | VOR n=66 verdeckt=0 teil=0 | HINTER n=412 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10E0_C1.png
+     "Schreibtisch mit Ordnern" (png, ebene 0): zelle x-500..6350 z-4050..-1450 (Typ 1, 67 % der Standpunkte): Hoehe -1475 (IoU 0.90, Oberkante 6.2 px), Quader, 15226 von 16117 Punkten getroffen, Tiefe 32..67
+     zerlegung Stufe 2: Schreibtisch m=zeilen/8 -> 104 Rechtecke, 22754 Atlaspunkte
+  Cut 2: Soll 16117 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 24 Tiefenstufen (32..67), 22754 Atlaspunkte | Standplaetze 2965, beruehrt 440 | VOR n=8 verdeckt=0 teil=0 | HINTER n=432 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-700,-900,0.60), (0,-500,-900,0.00)
+     Bild: build/p3/bilder\ROOM10E0_C2.png
+     "Drehstuhl" (png, ebene 0): standpunkte: 26 Spalten, davon 26 eigene, 0 geerbt; Profil-Tiefe 78..88
+     zerlegung Stufe 1: Drehstuhl=zeilen/8 -> 11 Rechtecke, 971 Atlaspunkte
+  Cut 3: Soll 722 px, Deckung fehlt 0 / zuviel 0 | 11 Rechtecke, 11 Tiefenstufen (78..88), 971 Atlaspunkte | Standplaetze 4242, beruehrt 156 | VOR n=28 verdeckt=0 teil=0 | HINTER n=128 frei=3 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,3900,-3900,0.85), (0,3900,-3700,0.14), (0,4100,-4500,0.00)
+     Bild: build/p3/bilder\ROOM10E0_C3.png
+     "Schreibtisch mit Rechner" (png, ebene 0): zelle x-500..6350 z-4050..-1450 (Typ 1, 85 % der Standpunkte): Hoehe -2000 (IoU 0.67, Oberkante 9.1 px), Quader, 12005 von 12673 Punkten getroffen, Tiefe 45..92
+     zerlegung Stufe 2: Schreibtisch m=zeilen/20 -> 99 Rechtecke, 56163 Atlaspunkte
+  Cut 4: Soll 12673 px, Deckung fehlt 0 / zuviel 0 | 99 Rechtecke, 30 Tiefenstufen (46..92), 56163 Atlaspunkte | Standplaetze 2767, beruehrt 510 | VOR n=42 verdeckt=0 teil=0 | HINTER n=470 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,4300,-1300,0.00), (0,4500,-1300,0.00), (0,6900,-4100,0.00), (0,6900,-3900,0.00), (0,6900,-3700,0.00), (0,6900,-3500,0.00), (0,6900,-3300,0.00)
+     Bild: build/p3/bilder\ROOM10E0_C4.png
+     "Schreibtisch mit Bildschirm" (png, ebene 0): zelle x-500..6350 z-4050..-1450 (Typ 1, 85 % der Standpunkte): Hoehe -2025 (IoU 0.82, Oberkante 8.2 px), Quader, 12814 von 13054 Punkten getroffen, Tiefe 42..89
+     zerlegung Stufe 2: Schreibtisch m=zeilen/20 -> 105 Rechtecke, 57762 Atlaspunkte
+  Cut 5: Soll 13054 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 26 Tiefenstufen (42..89), 57762 Atlaspunkte | Standplaetze 4657, beruehrt 656 | VOR n=28 verdeckt=0 teil=0 | HINTER n=629 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,4500,-4100,0.66), (0,6900,-2300,0.00)
+     Bild: build/p3/bilder\ROOM10E0_C5.png
+     "Stuhllehne" (png, ebene 0): standpunkte: 43 Spalten, davon 43 eigene, 0 geerbt; Profil-Tiefe 59..65
+     zerlegung Stufe 1: Stuhllehne=zeilen/8 -> 11 Rechtecke, 1992 Atlaspunkte
+  Cut 6: Soll 1891 px, Deckung fehlt 0 / zuviel 0 | 11 Rechtecke, 7 Tiefenstufen (59..65), 1992 Atlaspunkte | Standplaetze 2724, beruehrt 56 | VOR n=21 verdeckt=0 teil=0 | HINTER n=34 frei=2 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,3500,-1100,0.00), (0,3700,-1300,0.23)
+     Bild: build/p3/bilder\ROOM10E0_C6.png
+     "Rueckwand mit Tuer (ohne Liege)" (png, ebene 0): zelle x-5000..-600 z2300..3100 (Typ 1, 100 % der Standpunkte): Hoehe -4100 (IoU 0.28, Oberkante 18.8 px), Saeule, 9010 von 21554 Punkten getroffen, Tiefe 105..154
+     "Liege" (png, ebene 0): zelle x-3700..-850 z-1400..2300 (Typ 5, 59 % der Standpunkte): Hoehe -1775 (IoU 0.44, Oberkante 3.0 px), Quader, 5510 von 5712 Punkten getroffen, Tiefe 66..128
+     zerlegung Stufe 6: Pult mit Schre=spalten/20, Rueckwand mit =zeilen/8, Liege=zeilen/8 -> 103 Rechtecke, 58213 Atlaspunkte
+  Cut 7: Soll 41239 px, Deckung fehlt 0 / zuviel 0 | 103 Rechtecke, 32 Tiefenstufen (50..154), 58213 Atlaspunkte | Standplaetze 4163, beruehrt 1494 | VOR n=38 verdeckt=0 teil=0 | HINTER n=1477 frei=285 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-3100,-1700,0.00), (0,-3100,-1500,0.47), (0,-3100,-1300,0.95), (0,-2900,-1700,0.00), (0,-2900,-1500,0.08), (0,-2700,-1700,0.00), (0,-2700,-1500,0.00), (0,-2700,-1300,0.92), (0,-2500,-1700,0.00), (0,-2500,-1500,0.00), (0,-2500,-1300,0.51), (0,-2300,-1700,0.00) ...
+     Bild: build/p3/bilder\ROOM10E0_C7.png
+     "Bett vorn" (png, ebene 0): zelle x-150..1850 z5350..9250 (Typ 1, 84 % der Standpunkte): Hoehe -1725 (IoU 0.84, Oberkante 2.3 px), Quader, 10825 von 10898 Punkten getroffen, Tiefe 30..73
+     "Bettgestell rechts" (png, ebene 0): zelle x-5000..-3000 z5350..9250 (Typ 1, 59 % der Standpunkte): Hoehe -1725 (IoU 0.72, Oberkante 6.7 px), Quader, 3483 von 3503 Punkten getroffen, Tiefe 29..60
+     zerlegung Stufe 2: Bett vorn=zeilen/20, Bettgestell re=spalten/12 -> 103 Rechtecke, 38747 Atlaspunkte
+  Cut 8: Soll 14401 px, Deckung fehlt 0 / zuviel 0 | 103 Rechtecke, 25 Tiefenstufen (30..73), 38747 Atlaspunkte | Standplaetze 4239, beruehrt 113 | VOR n=25 verdeckt=0 teil=0 | HINTER n=88 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10E0_C8.png
+     "Bett" (png, ebene 0): zelle x-150..1850 z5350..9250 (Typ 1, 67 % der Standpunkte): Hoehe -2100 (IoU 0.79, Oberkante 12.0 px), Quader, 13485 von 14772 Punkten getroffen, Tiefe 46..96
+     zerlegung Stufe 1: Bett=zeilen/24 -> 96 Rechtecke, 61067 Atlaspunkte
+  Cut 9: Soll 14772 px, Deckung fehlt 0 / zuviel 0 | 96 Rechtecke, 51 Tiefenstufen (46..96), 61067 Atlaspunkte | Standplaetze 3050, beruehrt 30 | VOR n=2 verdeckt=0 teil=0 | HINTER n=28 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM10E0_C9.png
+=== ROOM10F0 ===
+     "10F0 Cut 0 (Nutzer-Lasso)" (png, ebene 0): zelle x7400..9300 z2500..14750 (Typ 1, 69 % der Standpunkte): Hoehe -2350 (IoU 0.78, Oberkante 22.4 px), Quader, 12053 von 12268 Punkten getroffen, Tiefe 25..65
+     zerlegung Stufe 2: 10F0 Cut 0 (Nu=zeilen/10 -> 86 Rechtecke, 16184 Atlaspunkte
+  Cut 0: Soll 12268 px, Deckung fehlt 0 / zuviel 0 | 86 Rechtecke, 23 Tiefenstufen (26..65), 16184 Atlaspunkte | Standplaetze 4815, beruehrt 86 | VOR n=25 verdeckt=0 teil=0 | HINTER n=68 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (1,6800,4400,0.00), (1,6800,4600,0.00), (1,6800,4800,0.00), (1,6800,5000,0.00), (1,6800,5200,0.00), (1,6800,5400,0.00), (1,6800,5600,0.00)
+     Bild: build/p3/bilder\ROOM10F0_C0.png
+     "10F0 Cut 1 (Nutzer-Lasso)" (png, ebene 0): zelle x6800..8300 z3800..5300 (Typ 3, 100 % der Standpunkte): Hoehe -1050 (IoU 0.31, Oberkante 11.3 px), Quader, 965 von 1041 Punkten getroffen, Tiefe 86..108
+     zerlegung Stufe 1: 10F0 Cut 1 (Nu=zeilen/8 -> 36 Rechtecke, 1795 Atlaspunkte
+  Cut 1: Soll 1041 px, Deckung fehlt 0 / zuviel 0 | 36 Rechtecke, 21 Tiefenstufen (86..108), 1795 Atlaspunkte | Standplaetze 6123, beruehrt 266 | VOR n=162 verdeckt=0 teil=0 | HINTER n=113 frei=13 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,6400,5000,0.35), (0,6400,5200,0.35), (0,6600,3800,0.06), (1,6400,4800,0.00), (1,6400,5000,0.00), (1,6400,5200,0.00), (1,6600,4800,0.00), (1,6600,5000,0.00), (1,6600,5200,0.00), (1,6800,4800,0.00), (1,6800,5000,0.00), (1,6800,5200,0.00) ...
+     Bild: build/p3/bilder\ROOM10F0_C1.png
+     "10F0 Cut 2 (Nutzer-Lasso)" (png, ebene 0): zelle x6600..8100 z7500..9000 (Typ 3, 86 % der Standpunkte): Hoehe -950 (IoU 0.29, Oberkante 9.7 px), Quader, 709 von 877 Punkten getroffen, Tiefe 97..119
+     zerlegung Stufe 1: 10F0 Cut 2 (Nu=zeilen/8 -> 27 Rechtecke, 1379 Atlaspunkte
+  Cut 2: Soll 877 px, Deckung fehlt 0 / zuviel 0 | 27 Rechtecke, 19 Tiefenstufen (97..119), 1379 Atlaspunkte | Standplaetze 6424, beruehrt 197 | VOR n=179 verdeckt=0 teil=0 | HINTER n=26 frei=15 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,6400,7400,0.00), (0,6400,9000,0.29), (1,6200,7600,0.00), (1,6400,7400,0.00), (1,6400,7600,0.00), (1,6400,7800,0.00), (1,6400,8000,0.00), (1,6600,7400,0.00), (1,6600,7600,0.00), (1,6600,7800,0.00), (1,6600,8000,0.00), (1,6800,7400,0.00) ...
+     Bild: build/p3/bilder\ROOM10F0_C2.png
+     "10F0 Cut 3 (Nutzer-Lasso)" (png, ebene 0): zelle x1550..3050 z11650..13150 (Typ 3, 91 % der Standpunkte): Hoehe -875 (IoU 0.29, Oberkante 5.2 px), Quader, 1741 von 1900 Punkten getroffen, Tiefe 59..82
+     zerlegung Stufe 1: 10F0 Cut 3 (Nu=zeilen/8 -> 35 Rechtecke, 2987 Atlaspunkte
+  Cut 3: Soll 1900 px, Deckung fehlt 0 / zuviel 0 | 35 Rechtecke, 24 Tiefenstufen (59..82), 2987 Atlaspunkte | Standplaetze 5161, beruehrt 111 | VOR n=62 verdeckt=0 teil=0 | HINTER n=54 frei=11 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,1400,11600,0.00), (0,2200,11200,0.00), (0,2400,11200,0.25), (0,2600,11200,0.43), (0,2800,11200,0.65), (0,3000,11200,0.94), (0,3000,11400,0.81), (1,1400,11600,0.00), (1,1400,11800,0.00), (1,1400,12000,0.00), (1,1600,12000,0.00)
+     Bild: build/p3/bilder\ROOM10F0_C3.png
+  Cut 4: UNANGETASTET (Nutzer-Lassos + 8 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09)
+  Cut 5: UNANGETASTET (Nutzer-Lassos + 4 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09)
+     "10F0 Cut 6 (Nutzer-Lasso)" (png, ebene 0): zelle x-2650..-950 z3150..16800 (Typ 1, 100 % der Standpunkte): Hoehe -1600 (IoU 0.87, Oberkante 7.9 px), Quader, 7967 von 8197 Punkten getroffen, Tiefe 46..81
+     zerlegung Stufe 1: 10F0 Cut 6 (Nu=spalten/8 -> 102 Rechtecke, 26016 Atlaspunkte
+  Cut 6: Soll 8197 px, Deckung fehlt 0 / zuviel 0 | 102 Rechtecke, 36 Tiefenstufen (46..81), 26016 Atlaspunkte | Standplaetze 5436, beruehrt 422 | VOR n=124 verdeckt=0 teil=0 | HINTER n=308 frei=12 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (1,-3200,4000,0.17), (1,-400,3800,0.00), (1,-400,4000,0.00), (1,-400,4200,0.00), (1,-400,4400,0.00), (1,-400,4600,0.00), (1,-400,4800,0.00), (1,-400,5000,0.00), (1,-400,5200,0.00), (1,-200,4800,0.00), (1,-200,5000,0.00), (1,-200,5200,0.00)
+     Bild: build/p3/bilder\ROOM10F0_C6.png
+=== ROOM1110 ===
+     "1110 Cut 0 Teil 01 (Nutzer-Lasso)" (png, ebene 0): zelle x-550..1950 z-5650..-4000 (Typ 1, 88 % der Standpunkte): Hoehe -1600 (IoU 0.58, Oberkante 18.9 px), Quader, 4143 von 4360 Punkten getroffen, Tiefe 70..109
+     "1110 Cut 0 Teil 02 (Nutzer-Lasso)" (png, ebene 0): zelle x1400..9650 z-950..1050 (Typ 1, 92 % der Standpunkte): Hoehe -3850 (IoU 0.75, Oberkante 29.4 px), Quader, 5182 von 5226 Punkten getroffen, Tiefe 50..70
+     zerlegung Stufe 1: 1110 Cut 0 Tei=zeilen/10, 1110 Cut 0 Tei=spalten/8 -> 102 Rechtecke, 31631 Atlaspunkte
+  Cut 0: Soll 9586 px, Deckung fehlt 0 / zuviel 0 | 102 Rechtecke, 53 Tiefenstufen (50..109), 31631 Atlaspunkte | Standplaetze 3492, beruehrt 531 | VOR n=92 verdeckt=0 teil=0 | HINTER n=439 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1110_C0.png
+     "1110 Cut 2 (Nutzer-Lasso)" (png, ebene 0): zelle x1400..9650 z-950..1050 (Typ 1, 98 % der Standpunkte): Hoehe -3850 (IoU 0.89, Oberkante 2.6 px), Quader, 17107 von 17274 Punkten getroffen, Tiefe 49..89
+     zerlegung Stufe 2: 1110 Cut 2 (Nu=spalten/8 -> 83 Rechtecke, 34891 Atlaspunkte
+  Cut 2: Soll 17274 px, Deckung fehlt 0 / zuviel 0 | 83 Rechtecke, 23 Tiefenstufen (50..89), 34891 Atlaspunkte | Standplaetze 4014, beruehrt 464 | VOR n=71 verdeckt=0 teil=0 | HINTER n=393 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1110_C2.png
+     "1110 Cut 6 (Nutzer-Lasso)" (png, ebene 0): zelle x1400..9650 z-950..1050 (Typ 1, 86 % der Standpunkte): Hoehe -4100 (IoU 0.79, Oberkante 26.4 px), Saeule, 11031 von 11369 Punkten getroffen, Tiefe 57..87
+     zerlegung Stufe 1: 1110 Cut 6 (Nu=spalten/8 -> 47 Rechtecke, 36955 Atlaspunkte
+  Cut 6: Soll 11369 px, Deckung fehlt 0 / zuviel 0 | 47 Rechtecke, 31 Tiefenstufen (57..87), 36955 Atlaspunkte | Standplaetze 3691, beruehrt 774 | VOR n=67 verdeckt=0 teil=0 | HINTER n=707 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1110_C6.png
+=== ROOM1120 ===
+     "Tresen mit Monitor" (png, ebene 0): zelle x1100..6650 z-3950..-2350 (Typ 1, 84 % der Standpunkte): Hoehe -1950 (IoU 0.68, Oberkante 9.9 px), Quader, 3650 von 4012 Punkten getroffen, Tiefe 85..168
+     zerlegung Stufe 1: Tresen mit Mon=zeilen/8 -> 79 Rechtecke, 5987 Atlaspunkte
+  Cut 2: Soll 4012 px, Deckung fehlt 0 / zuviel 0 | 79 Rechtecke, 32 Tiefenstufen (85..168), 5987 Atlaspunkte | Standplaetze 9424, beruehrt 348 | VOR n=285 verdeckt=0 teil=0 | HINTER n=63 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1120_C2.png
+=== ROOM1130 ===
+     "Wandkante mit Lampe (diagonal)" (png, ebene 0): zelle x-3950..6000 z4200..14700 (Typ 1, 100 % der Standpunkte): Hoehe -4100 (IoU 0.38, Oberkante 10.3 px), Saeule, 10258 von 10289 Punkten getroffen, Tiefe 42..89
+     zerlegung Stufe 1: Wandkante mit =spalten/8 -> 71 Rechtecke, 43409 Atlaspunkte
+  Cut 3: Soll 10289 px, Deckung fehlt 0 / zuviel 0 | 71 Rechtecke, 48 Tiefenstufen (42..89), 43409 Atlaspunkte | Standplaetze 3912, beruehrt 1545 | VOR n=39 verdeckt=0 teil=0 | HINTER n=1506 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1130_C3.png
+=== ROOM1140 ===
+     "Konferenztisch" (png, ebene -700): zelle x-4650..7450 z-17450..-11350 (Typ 1, 97 % der Standpunkte): Hoehe -225 (IoU 0.82, Oberkante 9.9 px), Quader, 23768 von 26526 Punkten getroffen, Tiefe 54..130
+     "Stuhl hinter dem Tisch" (png, ebene -1050): standpunkte: 23 Spalten, davon 23 eigene, 0 geerbt; Profil-Tiefe 106..127
+     "Karaffe auf dem Tisch" (png, ebene -700): standpunkte: 17 Spalten, davon 17 eigene, 0 geerbt; Profil-Tiefe 114..164
+     zerlegung Stufe 2: Konferenztisch=zeilen/16, Stuhl hinter d=spalten/8, Karaffe auf de=spalten/8 -> 104 Rechtecke, 40572 Atlaspunkte
+  Cut 0: Soll 27463 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 49 Tiefenstufen (54..164), 40572 Atlaspunkte | Standplaetze 2792, beruehrt 872 | VOR n=0 verdeckt=0 teil=0 | HINTER n=872 frei=62 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-7200,-13800,0.95), (0,-6000,-14200,0.91), (0,-6000,-14000,0.89), (0,-6000,-13800,0.89), (0,-6000,-13600,0.88), (0,-5800,-14400,0.89), (0,-5800,-14200,0.85), (0,-5800,-14000,0.80), (0,-5800,-13800,0.79), (0,-5800,-13600,0.87), (0,-5800,-13400,0.95), (0,-5600,-14600,0.88) ...
+     Bild: build/p3/bilder\ROOM1140_C0.png
+     "Konferenztisch" (png, ebene -700): zelle x-4650..7450 z-17450..-11350 (Typ 1, 99 % der Standpunkte): Hoehe -375 (IoU 0.85, Oberkante 2.2 px), Quader, 16322 von 16440 Punkten getroffen, Tiefe 55..125
+     "Stuhl vorne links (frueher falsch "Kamerastativ links")" (png, ebene 0): standpunkte: 31 Spalten, davon 31 eigene, 0 geerbt; Profil-Tiefe 85..89
+     "Kamerastativ rechts" (png, ebene 0): standpunkte: 37 Spalten, davon 37 eigene, 0 geerbt; Profil-Tiefe 125..135
+     zerlegung Stufe 1: Konferenztisch=zeilen/8, Stuhl vorne li=zeilen/8, Kamerastativ r=zeilen/8 -> 82 Rechtecke, 20080 Atlaspunkte
+  Cut 2: Soll 17602 px, Deckung fehlt 0 / zuviel 0 | 82 Rechtecke, 75 Tiefenstufen (55..135), 20080 Atlaspunkte | Standplaetze 2348, beruehrt 575 | VOR n=6 verdeckt=0 teil=0 | HINTER n=568 frei=50 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,5800,-18000,0.93), (0,6000,-18200,0.91), (0,6000,-18000,0.89), (0,6200,-18400,0.87), (0,6200,-18200,0.85), (0,6200,-18000,0.88), (0,6400,-18600,0.83), (0,6400,-18400,0.80), (0,6400,-18200,0.82), (0,6400,-18000,0.82), (0,6600,-18800,0.75), (0,6600,-18600,0.70) ...
+     Bild: build/p3/bilder\ROOM1140_C2.png
+     "US-Fahne" (png, ebene 0): standpunkte: 19 Spalten, davon 19 eigene, 0 geerbt; Profil-Tiefe 74..102
+     "Rednerpult" (png, ebene 0): standpunkte: 59 Spalten, davon 59 eigene, 0 geerbt; Profil-Tiefe 80..103
+     "Blaue Fahne" (png, ebene 0): standpunkte: 25 Spalten, davon 25 eigene, 0 geerbt; Profil-Tiefe 80..108
+     zerlegung Stufe 1: US-Fahne=zeilen/8, Rednerpult=zeilen/8, Blaue Fahne=zeilen/8 -> 82 Rechtecke, 6445 Atlaspunkte
+  Cut 3: Soll 5900 px, Deckung fehlt 0 / zuviel 0 | 82 Rechtecke, 35 Tiefenstufen (74..108), 6445 Atlaspunkte | Standplaetze 1692, beruehrt 405 | VOR n=54 verdeckt=0 teil=0 | HINTER n=352 frei=1 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,10000,-13800,0.00)
+     Bild: build/p3/bilder\ROOM1140_C3.png
+     "Konferenztisch" (png, ebene -700): zelle x-4650..7450 z-17450..-11350 (Typ 1, 93 % der Standpunkte): Hoehe -500 (IoU 0.77, Oberkante 0.3 px), Quader, 7058 von 7062 Punkten getroffen, Tiefe 49..117
+     zerlegung Stufe 1: Konferenztisch=zeilen/8 -> 64 Rechtecke, 8508 Atlaspunkte
+  Cut 5: Soll 7062 px, Deckung fehlt 0 / zuviel 0 | 64 Rechtecke, 64 Tiefenstufen (49..117), 8508 Atlaspunkte | Standplaetze 3127, beruehrt 198 | VOR n=5 verdeckt=0 teil=0 | HINTER n=193 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1140_C5.png
+=== ROOM1160 ===
+     "ROOM1160 Cut 3 03" (png, ebene 0): standpunkte: 52 Spalten, davon 50 eigene, 2 geerbt (77-78); Profil-Tiefe 109..242
+     zerlegung Stufe 1: ROOM1160 Cut 3=spalten/40 -> 103 Rechtecke, 56667 Atlaspunkte
+  Cut 3: Soll 2694 px, Deckung fehlt 0 / zuviel 0 | 103 Rechtecke, 87 Tiefenstufen (109..242), 56667 Atlaspunkte | Standplaetze 3185, beruehrt 447 | VOR n=276 verdeckt=0 teil=0 | HINTER n=313 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,6800,-12850,0.88), (0,6800,-12650,0.00), (0,7000,-12850,0.93), (0,7000,-12650,0.50), (0,7000,-12450,0.00), (0,7200,-13250,0.93), (0,7200,-13050,0.91)
+     Bild: build/p3/bilder\ROOM1160_C3.png
+=== ROOM1180 ===
+     "ROOM1180 Cut 2 02" (png, ebene 0): standpunkte: 147 Spalten, davon 147 eigene, 0 geerbt; Profil-Tiefe 61..140
+     zerlegung Stufe 3: ROOM1180 Cut 2=spalten/8 -> 104 Rechtecke, 50363 Atlaspunkte
+  Cut 2: Soll 24996 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 29 Tiefenstufen (63..140), 50363 Atlaspunkte | Standplaetze 12594, beruehrt 1636 | VOR n=182 verdeckt=0 teil=0 | HINTER n=1471 frei=23 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,1208,-8877,0.94), (0,1408,-8877,0.94), (0,1608,-9077,0.95), (0,1608,-8877,0.93), (0,1808,-9077,0.94), (0,1808,-8877,0.90), (0,2008,-9277,0.95), (0,2208,-9277,0.92), (0,2208,-9077,0.92), (0,2208,-8877,0.84), (0,2408,-9277,0.91), (0,2408,-9077,0.91) ...
+     Bild: build/p3/bilder\ROOM1180_C2.png
+     "ROOM1180 Cut 3 03" (png, ebene 0): zelle x976..2190 z-4188..12299 (Typ 1, 80 % der Standpunkte): Hoehe -4100 (IoU 0.76, Oberkante 31.5 px), Saeule, 25517 von 25517 Punkten getroffen, Tiefe 43..132
+     zerlegung Stufe 4: ROOM1180 Cut 3=spalten/8 -> 49 Rechtecke, 43856 Atlaspunkte
+  Cut 3: Soll 25517 px, Deckung fehlt 0 / zuviel 0 | 49 Rechtecke, 37 Tiefenstufen (44..132), 43856 Atlaspunkte | Standplaetze 7318, beruehrt 2248 | VOR n=65 verdeckt=0 teil=0 | HINTER n=2183 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1180_C3.png
+     "ROOM1180 Cut 5 05" (png, ebene 0): zelle x976..2190 z-4188..12299 (Typ 1, 56 % der Standpunkte): Hoehe -4000 (IoU 0.87, Oberkante 0.4 px), Saeule, 14446 von 14446 Punkten getroffen, Tiefe 43..64
+     zerlegung Stufe 1: ROOM1180 Cut 5=spalten/8 -> 22 Rechtecke, 18704 Atlaspunkte
+  Cut 5: Soll 14446 px, Deckung fehlt 0 / zuviel 0 | 22 Rechtecke, 22 Tiefenstufen (43..64), 18704 Atlaspunkte | Standplaetze 7543, beruehrt 1655 | VOR n=91 verdeckt=0 teil=0 | HINTER n=1567 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1180_C5.png
+     "ROOM1180 Cut 6 06" (png, ebene 0): zelle x-6296..2214 z10935..12311 (Typ 1, 90 % der Standpunkte): Hoehe -4100 (IoU 0.91, Oberkante 9.1 px), Saeule, 28801 von 28801 Punkten getroffen, Tiefe 53..168
+     zerlegung Stufe 1: ROOM1180 Cut 6=spalten/8 -> 105 Rechtecke, 34381 Atlaspunkte
+  Cut 6: Soll 28801 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 91 Tiefenstufen (53..168), 34381 Atlaspunkte | Standplaetze 14624, beruehrt 2103 | VOR n=271 verdeckt=0 teil=0 | HINTER n=1832 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1180_C6.png
+=== ROOM11B0 ===
+     "ROOM11B0 Cut 3 03" (png, ebene 0): zelle x-15500..-11800 z-23530..-14080 (Typ 1, 62 % der Standpunkte): Hoehe -4100 (IoU 0.47, Oberkante 17.3 px), Saeule, 14926 von 14926 Punkten getroffen, Tiefe 63..123
+     zerlegung Stufe 2: ROOM11B0 Cut 3=spalten/16 -> 94 Rechtecke, 49896 Atlaspunkte
+  Cut 3: Soll 14926 px, Deckung fehlt 0 / zuviel 0 | 94 Rechtecke, 33 Tiefenstufen (64..123), 49896 Atlaspunkte | Standplaetze 3632, beruehrt 1221 | VOR n=93 verdeckt=0 teil=0 | HINTER n=1128 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM11B0_C3.png
+=== ROOM11D0 ===
+     "ROOM11D0 Cut 3 03" (png, ebene 0): standpunkte: 60 Spalten, davon 58 eigene, 2 geerbt (69-70); Profil-Tiefe 106..214
+     zerlegung Stufe 1: ROOM11D0 Cut 3=spalten/32 -> 103 Rechtecke, 56363 Atlaspunkte
+  Cut 3: Soll 3399 px, Deckung fehlt 0 / zuviel 0 | 103 Rechtecke, 83 Tiefenstufen (106..214), 56363 Atlaspunkte | Standplaetze 2532, beruehrt 543 | VOR n=257 verdeckt=0 teil=0 | HINTER n=410 frei=7 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,5050,-13450,0.93), (0,5050,-13250,0.80), (0,5050,-13050,0.00), (0,5250,-13650,0.90), (0,5250,-13450,0.85), (0,5250,-13250,0.69), (0,5250,-13050,0.00)
+     Bild: build/p3/bilder\ROOM11D0_C3.png
+=== ROOM11F0 ===
+     "Schaltschraenke rechts (Vordergrund)" (png, ebene 0): zelle x800..4900 z-9750..-1650 (Typ 1, 100 % der Standpunkte): Hoehe -1550 (IoU 0.72, Oberkante 5.7 px), Quader, 11604 von 12213 Punkten getroffen, Tiefe 32..99
+     zerlegung Stufe 2: Schaltschraenk=zeilen/20 -> 105 Rechtecke, 52112 Atlaspunkte
+  Cut 0: Soll 12213 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 39 Tiefenstufen (32..99), 52112 Atlaspunkte | Standplaetze 32661, beruehrt 719 | VOR n=65 verdeckt=0 teil=0 | HINTER n=654 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM11F0_C0.png
+  Cut 1: Sektion ENTFERNT (keine Freistellung des Nutzers fuer diesen Cut)
+     "ROOM11F0 Cut 6 06_01" (png, ebene 0): standpunkte: 158 Spalten, davon 158 eigene, 0 geerbt; Profil-Tiefe 47..60
+     "ROOM11F0 Cut 6 06_02" (png, ebene 0): standpunkte: 142 Spalten, davon 142 eigene, 0 geerbt; Profil-Tiefe 44..48
+     zerlegung Stufe 1: ROOM11F0 Cut 6=spalten/8, ROOM11F0 Cut 6=zeilen/8 -> 53 Rechtecke, 20428 Atlaspunkte
+  Cut 6: Soll 16783 px, Deckung fehlt 0 / zuviel 0 | 53 Rechtecke, 17 Tiefenstufen (44..60), 20428 Atlaspunkte | Standplaetze 23088, beruehrt 505 | VOR n=106 verdeckt=0 teil=0 | HINTER n=420 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM11F0_C6.png
+     "ROOM11F0 Cut 7 07" (png, ebene 0): zelle x4900..9650 z-10950..300 (Typ 1, 87 % der Standpunkte): Hoehe -1175 (IoU 0.64, Oberkante 43.2 px), Quader, 13159 von 20072 Punkten getroffen, Tiefe 39..99
+     zerlegung Stufe 1: ROOM11F0 Cut 7=zeilen/12 -> 104 Rechtecke, 26977 Atlaspunkte
+  Cut 7: Soll 20072 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 56 Tiefenstufen (39..99), 26977 Atlaspunkte | Standplaetze 44188, beruehrt 4944 | VOR n=0 verdeckt=0 teil=0 | HINTER n=4944 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM11F0_C7.png
+=== ROOM1220 ===
+     "ROOM1220 Cut 0 00" (png, ebene 0): zelle x-27600..-25650 z-11700..-8050 (Typ 1, 70 % der Standpunkte): Hoehe -900 (IoU 0.84, Oberkante 6.8 px), Quader, 4549 von 5243 Punkten getroffen, Tiefe 55..72
+     zerlegung Stufe 1: ROOM1220 Cut 0=zeilen/8 -> 20 Rechtecke, 10534 Atlaspunkte
+  Cut 0: Soll 5243 px, Deckung fehlt 0 / zuviel 0 | 20 Rechtecke, 18 Tiefenstufen (55..72), 10534 Atlaspunkte | Standplaetze 3958, beruehrt 50 | VOR n=0 verdeckt=0 teil=0 | HINTER n=50 frei=3 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-25186,-9850,0.00), (0,-25186,-9650,0.63), (0,-25186,-9450,0.92)
+     Bild: build/p3/bilder\ROOM1220_C0.png
+     "ROOM1220 Cut 2 02" (png, ebene 0): standpunkte: 139 Spalten, davon 139 eigene, 0 geerbt; Profil-Tiefe 60..66
+     zerlegung Stufe 1: ROOM1220 Cut 2=zeilen/8 -> 7 Rechtecke, 4727 Atlaspunkte
+  Cut 2: Soll 4312 px, Deckung fehlt 0 / zuviel 0 | 7 Rechtecke, 7 Tiefenstufen (60..66), 4727 Atlaspunkte | Standplaetze 6065, beruehrt 60 | VOR n=1 verdeckt=0 teil=0 | HINTER n=57 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1220_C2.png
+     "ROOM1220 Cut 4 04" (png, ebene 0): standpunkte: 161 Spalten, davon 161 eigene, 0 geerbt; Profil-Tiefe 56..61
+     zerlegung Stufe 1: ROOM1220 Cut 4=zeilen/8 -> 10 Rechtecke, 5766 Atlaspunkte
+  Cut 4: Soll 5324 px, Deckung fehlt 0 / zuviel 0 | 10 Rechtecke, 6 Tiefenstufen (56..61), 5766 Atlaspunkte | Standplaetze 5353, beruehrt 91 | VOR n=10 verdeckt=0 teil=0 | HINTER n=77 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1220_C4.png
+     "ROOM1220 Cut 6 06" (png, ebene 0): zelle x-13475..-11350 z-15700..-11900 (Typ 1, 58 % der Standpunkte): Hoehe -1075 (IoU 0.49, Oberkante 1.6 px), Quader, 3499 von 3507 Punkten getroffen, Tiefe 47..79
+     zerlegung Stufe 1: ROOM1220 Cut 6=zeilen/8 -> 86 Rechtecke, 10909 Atlaspunkte
+  Cut 6: Soll 3507 px, Deckung fehlt 0 / zuviel 0 | 86 Rechtecke, 33 Tiefenstufen (47..79), 10909 Atlaspunkte | Standplaetze 3314, beruehrt 89 | VOR n=41 verdeckt=0 teil=0 | HINTER n=48 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1220_C6.png
+     "ROOM1220 Cut 8 08" (png, ebene 0): zelle x-13475..-11350 z-23600..-19800 (Typ 1, 80 % der Standpunkte): Hoehe -1075 (IoU 0.70, Oberkante 2.4 px), Quader, 5845 von 5873 Punkten getroffen, Tiefe 51..90
+     zerlegung Stufe 1: ROOM1220 Cut 8=zeilen/8 -> 87 Rechtecke, 14948 Atlaspunkte
+  Cut 8: Soll 5873 px, Deckung fehlt 0 / zuviel 0 | 87 Rechtecke, 40 Tiefenstufen (51..90), 14948 Atlaspunkte | Standplaetze 1828, beruehrt 43 | VOR n=15 verdeckt=0 teil=0 | HINTER n=32 frei=8 -> ok (nur geprueft)
+     HINTER-Rest (Band, x, z, verdeckt): (0,-13986,-23250,0.00), (0,-13986,-23050,0.00), (0,-13986,-22850,0.00), (0,-13986,-22650,0.00), (0,-13986,-22450,0.00), (0,-13986,-22250,0.00), (0,-13986,-21850,0.00), (0,-13986,-21650,0.00)
+     Bild: build/p3/bilder\ROOM1220_C8.png
+=== ROOM1230 ===
+     "ROOM1230 Cut 2 02" (png, ebene 0): zelle x-2611..6423 z-8426..-7359 (Typ 1, 100 % der Standpunkte): Hoehe -4100 (IoU 0.91, Oberkante 9.6 px), Saeule, 28820 von 28820 Punkten getroffen, Tiefe 40..133
+     zerlegung Stufe 4: ROOM1230 Cut 2=spalten/8 -> 49 Rechtecke, 48740 Atlaspunkte
+  Cut 2: Soll 28820 px, Deckung fehlt 0 / zuviel 0 | 49 Rechtecke, 29 Tiefenstufen (40..133), 48740 Atlaspunkte | Standplaetze 49476, beruehrt 9346 | VOR n=168 verdeckt=0 teil=0 | HINTER n=9178 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1230_C2.png
+     "ROOM1230 Cut 3 03" (png, ebene 0): zelle x976..2190 z-4188..12299 (Typ 1, 89 % der Standpunkte): Hoehe -4100 (IoU 0.84, Oberkante 30.5 px), Saeule, 27420 von 27420 Punkten getroffen, Tiefe 43..138
+     zerlegung Stufe 4: ROOM1230 Cut 3=spalten/8 -> 54 Rechtecke, 48068 Atlaspunkte
+  Cut 3: Soll 27420 px, Deckung fehlt 0 / zuviel 0 | 54 Rechtecke, 39 Tiefenstufen (44..138), 48068 Atlaspunkte | Standplaetze 32537, beruehrt 9819 | VOR n=120 verdeckt=0 teil=0 | HINTER n=9699 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1230_C3.png
+     "ROOM1230 Cut 5 05" (png, ebene 0): zelle x976..2190 z-4188..12299 (Typ 1, 99 % der Standpunkte): Hoehe -4000 (IoU 0.88, Oberkante 8.6 px), Saeule, 14404 von 14404 Punkten getroffen, Tiefe 43..65
+     zerlegung Stufe 1: ROOM1230 Cut 5=spalten/8 -> 23 Rechtecke, 19122 Atlaspunkte
+  Cut 5: Soll 14404 px, Deckung fehlt 0 / zuviel 0 | 23 Rechtecke, 23 Tiefenstufen (43..65), 19122 Atlaspunkte | Standplaetze 23045, beruehrt 3375 | VOR n=105 verdeckt=0 teil=0 | HINTER n=3278 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1230_C5.png
+     "ROOM1230 Cut 6 06" (png, ebene 0): zelle x-6296..2214 z10935..12311 (Typ 1, 93 % der Standpunkte): Hoehe -4100 (IoU 0.92, Oberkante 10.2 px), Saeule, 29397 von 29397 Punkten getroffen, Tiefe 53..172
+     zerlegung Stufe 1: ROOM1230 Cut 6=spalten/10 -> 105 Rechtecke, 35833 Atlaspunkte
+  Cut 6: Soll 29397 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 92 Tiefenstufen (53..172), 35833 Atlaspunkte | Standplaetze 51480, beruehrt 13476 | VOR n=282 verdeckt=0 teil=0 | HINTER n=13197 frei=0 -> ok (nur geprueft)
+     Bild: build/p3/bilder\ROOM1230_C6.png
+=== FERTIG ===
