@@ -186,6 +186,18 @@ fi
 GRADLE_TASK="assembleRelease"; APK_SUB="release/app-release.apk"
 if [[ "$BUILD_TYPE" == debug ]]; then GRADLE_TASK="assembleDebug"; APK_SUB="debug/app-debug.apk"; fi
 
+# ⛔ DEN GECACHTEN CMAKE-LAUF WEGWERFEN (2026-09-19, gemessen).
+# engine/CMakeLists.txt sammelt seine Quellen per `file(GLOB src/*.c)`. GLOB wird beim
+# CONFIGURE ausgewertet, und Gradle/AGP legt das Ergebnis in app/.cxx/<typ>/<hash>/ ab und
+# verwendet es wieder, solange sich Gradle-Eingaben (nicht: der Quellbaum) nicht aendern.
+# Folge: Quelldateien, die NACH dem letzten Configure dazukommen, fehlen still in
+# libmain.so — der Bau stirbt erst im Linker mit "undefined symbol" (hier: das G5-Haut-
+# Modul re15_g5_skin.c und enemy_ai_re2_zellenarm.c nach dem Zusammenfuehren von Runde 16),
+# und haette ohne Linker-Fehler ein stilles Loch ins Paket gerissen.
+# Der Desktop-Bau hat das Problem nicht, weil local_build.sh ohnehin neu konfiguriert.
+rm -rf "$PROJ/app/.cxx"
+echo "== CMake-Cache des NDK-Baus verworfen (GLOB neu auswerten) =="
+
 echo "== Gradle: fetchSdl2 ${GRADLE_TASK} (Version ${VERSION}) =="
 ( cd "$PROJ" && bash ./gradlew --no-daemon --console=plain \
       -Pre15Version="$VERSION" fetchSdl2 "$GRADLE_TASK" ) || die "Gradle-Bau fehlgeschlagen"
