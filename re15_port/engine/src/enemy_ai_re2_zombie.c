@@ -8185,8 +8185,38 @@ void re15_re2z_hit_filter_apply(int slot)
 {
     if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
-    {   int spawn_pose = (e->state == 1)
-                      && (e->sub_state_1 == 7 || e->sub_state_1 == 8);  /* EXEC[7]/EXEC[8] */
+    {   int in_pose = (e->state == 1)
+                   && (e->sub_state_1 == 7 || e->sub_state_1 == 8);     /* EXEC[7]/EXEC[8] */
+        /* ⛔ DIE AUSNAHME GILT NUR, WO DER RE1.5-ZWILLING TREFFBAR IST (Runde 16, 2026-09-19,
+         * Dossier liegende-zombies.md). Nutzer: "Die Zombies, die im Original nur am Boden
+         * liegen, und die man nicht anschiessen koennen sollte ... reagieren auf uns" (ROOM1140,
+         * ROOM10E0). GEMESSEN (probe_r16_liegende_zombies, echter Weg): der 0x88-Liegende war im
+         * RE2-Flavor mit DOWN-Band treffbar (1140: 7 Treffer, 10E0: 5) und stand beim ersten
+         * Treffer in EINEM Bild auf (topY -373 -> -2766) — Naehe allein weckt ihn nicht.
+         * Der passive Liegende (Sce_em_set-Deskriptor 0x87/0x88 = Nibble 7/8 + Bit 0x80) ist in
+         * BEIDEN Originalen unschiessbar:
+         *   RE1.5: Nibble-Dispatch @0x8011F80C[7]=[8]=0x80101974 -> Decide @0x8011F9D8[0] =
+         *          0x801039F4 `jr ra; nop` (KEIN Selbst-Wecker); ANIMATE FUN_80103A58 Phase 0
+         *          `lbu v0,147(a1) / ori v0,v0,0x1 / sb v0,147(a1)` @0x80103AAC-AB8 JEDEN Tick ->
+         *          Resolver-Latch @0x80012404-18 ueberspringt ihn. Freigabe erst Phase 3
+         *          `andi 0xfe / sb 147` @0x80103B64-68, und dorthin fuehrt nur das Skript
+         *          (Member_set(12,0x89/0x8A) -> `sb a2,9(a0)` @0x800411F8; ROOM1140/10E0/1110
+         *          haben keinen solchen Record — Byte-Zensus `34 0C 89|8A` = 0).
+         *   RE2  : EXEC[7] P0 `lbu 467 / ori 0x80 / sb` @0x80103804-14 (+0x1D3) und der Spawn-
+         *          Remap `sh 0x4002,270` @0x80100A34-38 (+0x10E); Gates (2) @0x80047138-40 und
+         *          (4) @0x80047158-64 der Kandidatenschleife FUN_800470C0 sperren ihn. Der
+         *          Decide @0x8010C88C[7] = 0x80103778 ist ebenfalls `jr ra`.
+         * Die 0x86/0x06-FRESSER (Nutzer-Entscheidung "Im Dining Room trifft man den am Boden
+         * fressenden Zombie nicht", s. Block im Tick-Epilog) haben in RE1.5 KEINEN Nibble-
+         * Dispatch (INIT-Decoder @0x80100E60/@0x80100EB0 -> +0x5=0xc) und keinen Tick-Guard —
+         * fuer sie bleibt die Ausnahme. Fuer Nibble 7/8 mit Bit 0x80 gelten (2)/(4) wieder,
+         * also `hit_react |= 1` jeden Tick = dieselbe Aussage wie @0x80103AAC-AB8. Nach dem
+         * Skript-Bump auf 0x89/0x8A (D15.2 im Tick loescht 0x4000 @0x80104F0C und +0x1D3 & 0x7f)
+         * faellt `passive_lyer` weg und die Gates oeffnen — wie RE1.5 Phase 3 @0x80103B64-68
+         * bzw. RE2 P4 `andi 0x7f` @0x80103914-18. */
+        unsigned nib = e->grid_id & 0x0fu;
+        int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib == 7u || nib == 8u);
+        int spawn_pose = in_pose && !passive_lyer;
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
          * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):
          *   [C-ANDERE] seed 4 slot 3 f257: st=1 s1=1 s2=1 hp=49 **1D3=80 10E=4004** clip=2
@@ -8203,7 +8233,10 @@ void re15_re2z_hit_filter_apply(int slot)
          * identifiziert den Zustand eindeutig: gesetzt wird es nur vom Spawn-Remap (@0x80100A34-38
          * / @0x80100A88-8C) und von EXEC[6] P2 (@0x80103A4C-50), und EXEC[6] P2 committet im
          * selben Tick 0x801, ist also im naechsten Tick wieder `spawn_pose`. */
-        if (!spawn_pose && (e->re2z_f10e & 0x4000u)) {
+        /* `in_pose`, NICHT `spawn_pose`: der passive Liegende HAELT die Pose, seine Latches
+         * muessen stehen bleiben (sonst wuerde dieser Nachzug die Gates (2)/(4) fuer ihn
+         * oeffnen — genau der Defekt). Der Nachzug gilt nur, wenn die Pose VERLASSEN ist. */
+        if (!in_pose && (e->re2z_f10e & 0x4000u)) {
             e->re2z_f10e    &= (uint16_t)~0x4000u;                 /* andi 0xbfff @0x80104F0C */
             e->re2z_self1d3 &= 0x7Fu;                              /* andi 0x7f   @0x80103914 /
                                                                     * @0x80103CE4-FC */
