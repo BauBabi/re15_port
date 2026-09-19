@@ -151,7 +151,14 @@ static int oracle_hits(int slot, int shots)
     return hits;
 }
 
-typedef struct { int seed, slot, frame; uint8_t grid; uint16_t f21a; uint8_t s1; } case_t;
+/* ⛔ NEU VERANKERT (Runde 16): der Fall traegt einen SCHNAPPSCHUSS des Aktors und des Spielers.
+ * Das Orakel spielte den Sweep bisher bis zum Fund-Bild nach — das war schon VOR dem
+ * Trefferhoehen-Fix nicht reproduzierbar (Lauf vom 19.09.: Fall 3 als st=1/s1=1 gefunden, im
+ * Nachspiel st=2/s1=3; Fall 5 als st=1/s1=1 gefunden, im Nachspiel st=1/s1=5), und nach dem
+ * Fix landeten beide Funde im Nachspiel bei st=0 (Slot neu belegt) = 0 Faelle geprueft. Das
+ * Orakel misst jetzt genau den Zustand, in dem der Sweep den Fund gemacht hat. */
+typedef struct { int seed, slot, frame; uint8_t grid; uint16_t f21a; uint8_t s1;
+                 re15_actor_t esnap, psnap; } case_t;
 static case_t s_cases[64]; static int s_ncase = 0;
 
 /* "pin"-Modus: feste Parameter + harte Zusicherungen, als ctest registriert
@@ -208,7 +215,10 @@ int main(int argc, char **argv)
                     if (s_ncase < 64) { s_cases[s_ncase].seed = seed; s_cases[s_ncase].slot = s;
                                         s_cases[s_ncase].frame = f; s_cases[s_ncase].grid = e->grid_id;
                                         s_cases[s_ncase].f21a = e->re2z_flags21a;
-                                        s_cases[s_ncase].s1 = e->sub_state_1; s_ncase++; }
+                                        s_cases[s_ncase].s1 = e->sub_state_1;
+                                        s_cases[s_ncase].esnap = *e;
+                                        s_cases[s_ncase].psnap = g_actors[RE15_ACTOR_SLOT_PLAYER];
+                                        s_ncase++; }
                 }
                 prev_stale[s] = 1;
             }
@@ -230,15 +240,11 @@ int main(int argc, char **argv)
     for (int i = 0; i < ncheck; i++) {
         case_t *c = &s_cases[i];
         re15_actor_t *pl = setup(c->seed);
-        int shot_period = 7 + (c->seed % 11), shot_first = 20 + (c->seed % 17);
-        for (int f = 0; f <= c->frame; f++) {
-            pl->hp = 100;
-            uint16_t cur = RE15_PAD_BIT_R1, edge = 0;
-            if (f >= shot_first && ((f - shot_first) % shot_period) == 0) {
-                cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE;
-            }
-            frame(cur, edge);
-        }
+        /* Fund-Zustand wiederherstellen (s. case_t): frischer Raum, alle anderen Gegner aus,
+         * der gefundene Aktor und der Spieler byte-genau wie im Sweep-Bild c->frame. */
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != c->slot) g_actors[s].active = 0;
+        g_actors[c->slot] = c->esnap;
+        *pl = c->psnap;
         re15_actor_t *e = &g_actors[c->slot];
         int16_t hp_save = e->hp; uint8_t g_save = e->grid_id; uint16_t a_save = e->re2z_flags21a;
         uint8_t st = e->state, s1 = e->sub_state_1;

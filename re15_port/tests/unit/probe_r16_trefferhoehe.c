@@ -333,6 +333,7 @@ int main(int argc, char **argv)
     expect(e->re2z_parts == 3u, "Fresser-Pose verlassen: Maske bleibt 3 (Exit sw 0x101 @0x80103D94 "
                                 "ohne Maskenwechsel - Skeptiker-Korrektur 2)");
     oracle_matrix("STEHEND", slot, 1);
+    re15_actor_t stand_snap = *e;          /* fuer Abschnitt E (Klammer-Dispatch) */
 
     /* ---- D LIEGE-SPAWN 0x88 (ohne Ticks, direkt nach dem Spawn) — NUR MESSUNG ---- */
     if (lyer >= 0) {
@@ -474,6 +475,42 @@ int main(int argc, char **argv)
             expect(rad_at_p8 == 500, "P8: +0x9A = 500 (@0x801036FC-700)");
             expect(z->re2z_parts == 3u, "P8: Maske Beine+Rumpf (@0x80103730-38)");
         }
+    }
+    /* ---- E KLAMMER-DISPATCH (Skeptiker-Punkt 7) ----------------------------------------
+     * Reaktionszeile 7 (Schrot) @0x8010CA3C, Stride 36 ab 0x8010C940 - eigener Dump:
+     *   80107438 801066FC 00000000 | 80107438 80105BC0 00000000 | 80107438 80105438 00000000
+     * Spalte = Zone + 3*Klammer (+0x1D2 @0x800413CC-D4). Ein Rumpf-Treffer (Zone 1) faellt also
+     * je Klammer auf einen ANDEREN Handler: 0 -> 0x801066FC (Ragdoll), 1 -> 0x80105BC0 (Taumel),
+     * 2 -> 0x80105438 (Haupt-Reaktion). Der Dispatch @0x801053E0-410 liegt im KI-Tick, nicht im
+     * Resolver - deshalb wird hier EIN Bild nach dem Schuss gemessen (in den Zeilen oben traegt
+     * die Spalte `hnd` noch den Stand des vorigen Ticks und ist nicht aussagekraeftig). */
+    {
+        static const int  DD[3]     = { 3600, 5500, 9000 };   /* Sub-Box 1 / 2 / 3 der EBEN-Box */
+        static const int  SOLL_H[3] = { 3, 2, 1 };            /* RE2ZH_66FC / _STAGGER / _MAIN */
+        static const char *NM[3] = { "0x801066FC", "0x80105BC0", "0x80105438" };
+        for (int i = 0; i < 3; i++) {
+            re15_actor_t ps = *pl;
+            *e = stand_snap;
+            e->hp = (int16_t)hp; e->hit_react = 0;
+            e->x &= ~3; e->z &= ~3;
+            pl->x = e->x + DD[i]; pl->z = e->z; pl->y = e->y; pl->hp = 100;
+            pl->rot_y = (int16_t)((re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff);
+            re15_player_set_aim_elevation_for_test(0);
+            int16_t hp0 = e->hp;
+            int ret = re15_player_weapon_fire(8);
+            int zone = e->re2z_hits1d2 % 3, br = e->re2z_hits1d2 / 3, dhp = (int)(hp0 - e->hp);
+            pl->hp = 100; frame(0, 0);                 /* der Dispatch laeuft im KI-Tick */
+            int h = re15_re2z_last_hit_handler();
+            printf("  [E] W8 EBEN d=%4d | %s dhp=%3d zone=%d klammer=%d zeile=%d -> Handler %d (%s)\n",
+                   DD[i], ret ? "HIT " : "MISS", dhp, zone, br, e->sub_state_1, h,
+                   (h >= 1 && h <= 3) ? NM[3 - h] : "?");
+            char what[128];
+            snprintf(what, sizeof what, "Klammer %d: Rumpf-Treffer dispatcht %s (Zeile 7 @0x8010CA3C)",
+                     i, NM[i]);
+            expect(ret && zone == 1 && br == i && h == SOLL_H[i], what);
+            *pl = ps;
+        }
+        *e = stand_snap;
     }
     printf("=== ENDE === Zellen geprueft: %d, Abweichungen: %d\n", s_cells, s_fail);
     if (s_pin) {
