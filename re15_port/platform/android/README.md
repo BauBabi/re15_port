@@ -104,7 +104,9 @@ Streifen. Layout in Fensterkoordinaten, u = Bildhoehe/12:
 
 Mehrere Finger gleichzeitig sind vorgesehen (z.B. Richtung + X = Rennen, R1 + [] = Schuss).
 Der Finger darf auf dem D-Pad gleiten; die Richtung folgt dem Winkel zum Zentrum
-(Totzone in der Mitte).
+(Totzone in der Mitte). Ein Blitz-Tipp (Finger kommt und geht zwischen zwei
+Eingabe-Ticks, z.B. `adb shell input tap`) wird genau einen Tick lang gemeldet — ohne diesen
+Latch ging im Emulator jeder zweite Tipp verloren.
 
 Umgebungsvariablen lassen sich auf Android nicht setzen; das Overlay ist dort immer an.
 Zurueck-Taste: wird abgefangen (beendet das Spiel nicht — Beenden ueber die App-Uebersicht).
@@ -114,8 +116,28 @@ Zurueck-Taste: wird abgefangen (beendet das Spiel nicht — Beenden ueber die Ap
 Das Overlay ist auch im Windows-/Linux-Bau enthalten, dort aber aus. Mit
 `RE15_TOUCH_OVERLAY=1` erscheint es, und die **Maus** wirkt als ein Finger
 (SDL-Hint `SDL_MOUSE_TOUCH_EVENTS`). `RE15_TOUCH_SELFTEST=1` drueckt zusaetzlich jeden Knopf
-synthetisch und schreibt `[touch] SELFTEST RESULT ok=<n> fail=<m>` ins `debug.log`;
-`RE15_FRAMEDUMP=<frame>:<datei.ppm>` liefert ein Bild mit Overlay.
+synthetisch (9 Knoepfe, 8 D-Pad-Richtungen, Totzone, zwei Finger, Loslassen, Blitz-Tipp)
+und schreibt `[touch] SELFTEST RESULT ok=21 fail=0` ins `debug.log`;
+`RE15_FRAMEDUMP=<frame>:<datei.ppm>` liefert ein Bild mit Overlay. Beispiel (PowerShell):
+
+```powershell
+$env:RE15_TOUCH_OVERLAY="1"; $env:RE15_TOUCH_SELFTEST="1"; $env:RE15_NO_INTRO="1"
+$env:RE15_TITLE_SHOT="title.bmp"; $env:RE15_INV_SHOT="exit34.bmp"; $env:RE15_FRAMEDUMP="33:overlay33.ppm"
+.\re15_pc.exe        # exit 0 bei Spielframe 34; debug.log + overlay33.ppm im Arbeitsverzeichnis
+```
+
+Nachweise der Abnahme vom 2026-09-19 liegen unter `release/android_verify/` (Desktop-Frame mit
+Overlay ueber dem Inventar, Selbsttest-Log, Emulator-Screenshots Titel/Charakterwahl).
+
+## Emulator
+
+Der Bau enthaelt x86_64; ein AVD mit API 24+ genuegt (getestet: Medium Phone, API 36,
+1080x2400). Ablauf: `adb install -r <apk>`, `adb shell am start -n de.re15.port/.RE15Activity`,
+`adb logcat -s re15` zeigt Speicherordner und Entpack-Fortschritt, `adb exec-out screencap -p
+> shot.png` das Bild, `adb shell input tap <x> <y>` drueckt einen Overlay-Knopf (Knopfmitten
+stehen im `debug.log` nicht; bei 2400x1080 mit u=90: D-Pad-Zentrum (243,801), START (1362,1008)).
+Android zeigt beim ersten Vollbild den Systemhinweis "Viewing full screen" ueber dem Spiel —
+einmal "Got it" antippen.
 
 ## Bekannte Grenzen
 

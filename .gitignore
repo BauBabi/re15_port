@@ -51,3 +51,6 @@ re15_port/platform/android/app/build/
 re15_port/platform/android/app/.cxx/
 re15_port/platform/android/_deps/
 re15_port/platform/android/local.properties
+# Die Android-APK (~357 MB, eine Datei) passt nicht unter die GitHub-Dateigrenze und wird
+# NICHT eingecheckt (release/build_android.sh erzeugt sie; SHA256SUMS_android.txt bleibt).
+release/*_android.apk

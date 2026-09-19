@@ -1,0 +1,68 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/.claude/worktrees/agent-a54e1d8e7abd08bfe/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/agent-a54e1d8e7abd08bfe/re15_port/shared_assets/PSX
+[window] windowed 1280x960
+[touch] Overlay-Controller AN (1280x960, u=80, 10 Knoepfe)
+[touch] selftest DREI   @(1048,588) bits=1000 marke=0 ok
+[touch] selftest KREIS  @(1172,712) bits=2000 marke=0 ok
+[touch] selftest KREUZ  @(1048,836) bits=4000 marke=0 ok
+[touch] selftest VIER   @(924,712) bits=8000 marke=0 ok
+[touch] selftest L1     @(136,78) bits=0400 marke=0 ok
+[touch] selftest R1     @(1144,78) bits=0800 marke=0 ok
+[touch] selftest SELECT @(496,896) bits=0001 marke=0 ok
+[touch] selftest START  @(784,896) bits=0008 marke=0 ok
+[touch] selftest F9     @(640,56) bits=0000 marke=1 ok
+[touch] selftest DPAD RECHTS       bits=0020 want=0020 ok
+[touch] selftest DPAD OBEN+RECHTS  bits=0030 want=0030 ok
+[touch] selftest DPAD OBEN         bits=0010 want=0010 ok
+[touch] selftest DPAD OBEN+LINKS   bits=0090 want=0090 ok
+[touch] selftest DPAD LINKS        bits=0080 want=0080 ok
+[touch] selftest DPAD UNTEN+LINKS  bits=00C0 want=00C0 ok
+[touch] selftest DPAD UNTEN        bits=0040 want=0040 ok
+[touch] selftest DPAD UNTEN+RECHTS bits=0060 want=0060 ok
+[touch] selftest DPAD ZENTRUM bits=0000 want=0000 ok
+[touch] selftest ZWEI FINGER (OBEN+KREUZ) bits=4010 want=4010 ok
+[touch] selftest LOSLASSEN bits=0000 want=0000 ok
+[touch] selftest BLITZ-TIPP (VIER) tick1=8000 tick2=0000 want=8000/0000 ok
+[touch] SELFTEST RESULT ok=21 fail=0 (Ausgabe 1280x960, u=80)
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1240.RDT (163744 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1240: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[audio] RE15_NOAUDIO set -> audio disabled
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[elliot] PL05 loaded: 15 meshes, 15 bones, 24 clips
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[tim] elliot TIM in slot 1: 256x256
+[md1] loaded elliot mesh: 15 meshes
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1240.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1240 = (-26214,0,-3861) yaw=0
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(0)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x3A0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 15)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(-26214,0,-3861) rot=0
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[walk] F30 cut=0 mo=200 af=29 frz=0 | pl pos=(-26214,0,-3861) rot=0
+[framedump] 1280x960 -> overlay33.ppm
+[inv] acceptance shot -> exit34.bmp

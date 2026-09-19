@@ -27,7 +27,13 @@ static SDL_Renderer *s_r        = NULL;
 static int           s_marke    = 0;       /* F9-Flanke, wird von take_marke() verbraucht */
 
 #define TP_MAX_FINGERS 10
-typedef struct { int active; SDL_FingerID id; SDL_TouchID dev; float x, y; } finger_t;
+/* seen/up_pending = EIN-TICK-LATCH (gemessen 2026-09-19 im Emulator): "adb shell input tap"
+ * liefert DOWN und UP ohne Pause, beide Events kommen im selben SDL_PollEvent-Durchlauf an,
+ * und beim naechsten re15_input_tick war der Finger schon wieder weg — der D-Pad-Tipp kam
+ * nie im Pad-Wort an (START traf zufaellig eine Bildgrenze). Ein Finger, der zwischen zwei
+ * Eingabe-Ticks kommt und geht, bleibt deshalb bis zum naechsten Tick aktiv und wird dort
+ * genau einmal gemeldet. */
+typedef struct { int active; int seen; int up_pending; SDL_FingerID id; SDL_TouchID dev; float x, y; } finger_t;
 static finger_t s_fingers[TP_MAX_FINGERS];
 
 /* Knopf-Arten */
@@ -187,14 +193,27 @@ static uint16_t tp_bits_for_point(float x, float y)
     return bits;
 }
 
-uint16_t re15_touch_pc_pad_bits(void)
+/* Bits aller aufliegenden Finger, OHNE den Latch zu verbrauchen (fuer das Zeichnen). */
+static uint16_t tp_bits_peek(void)
 {
-    if (!re15_touch_pc_enabled() || !s_r) return 0;
     int W, H; tp_output_size(&W, &H);
     tp_layout(W, H);
     uint16_t bits = 0;
     for (int i = 0; i < TP_MAX_FINGERS; i++)
         if (s_fingers[i].active) bits |= tp_bits_for_point(s_fingers[i].x, s_fingers[i].y);
+    return bits;
+}
+
+/* Einmal je Eingabe-Tick (input_pc.c): liefert die Bits und verbraucht den Ein-Tick-Latch. */
+uint16_t re15_touch_pc_pad_bits(void)
+{
+    if (!re15_touch_pc_enabled() || !s_r) return 0;
+    uint16_t bits = tp_bits_peek();
+    for (int i = 0; i < TP_MAX_FINGERS; i++) {
+        if (!s_fingers[i].active) continue;
+        s_fingers[i].seen = 1;
+        if (s_fingers[i].up_pending) { s_fingers[i].active = 0; s_fingers[i].up_pending = 0; }
+    }
     return bits;
 }
 
@@ -220,7 +239,7 @@ static void tp_finger_down(SDL_TouchID dev, SDL_FingerID id, float nx, float ny)
     finger_t *f = tp_find(dev, id);
     if (!f) for (int i = 0; i < TP_MAX_FINGERS; i++) if (!s_fingers[i].active) { f = &s_fingers[i]; break; }
     if (!f) return;
-    f->active = 1; f->id = id; f->dev = dev; f->x = x; f->y = y;
+    f->active = 1; f->seen = 0; f->up_pending = 0; f->id = id; f->dev = dev; f->x = x; f->y = y;
     /* F9-MARKE ist eine Flanke: nur beim Aufsetzen, nie beim Halten. */
     for (int i = 0; i < s_btn_n; i++)
         if (s_btn[i].kind == K_MARKE && tp_hit(&s_btn[i], x, y)) s_marke = 1;
@@ -231,18 +250,21 @@ static void tp_finger_move(SDL_TouchID dev, SDL_FingerID id, float nx, float ny)
     int W, H; tp_output_size(&W, &H);
     finger_t *f = tp_find(dev, id);
     if (!f) { tp_finger_down(dev, id, nx, ny); return; }
+    if (f->up_pending) return;                 /* schon losgelassen, nur noch im Latch */
     f->x = nx * (float)W; f->y = ny * (float)H;
 }
 
 static void tp_finger_up(SDL_TouchID dev, SDL_FingerID id)
 {
     finger_t *f = tp_find(dev, id);
-    if (f) f->active = 0;
+    if (!f) return;
+    if (f->seen) f->active = 0;                /* regulaer: mindestens ein Tick lang gemeldet */
+    else         f->up_pending = 1;            /* Blitz-Tipp: bis zum naechsten Tick halten */
 }
 
 static void tp_release_all(void)
 {
-    for (int i = 0; i < TP_MAX_FINGERS; i++) s_fingers[i].active = 0;
+    for (int i = 0; i < TP_MAX_FINGERS; i++) { s_fingers[i].active = 0; s_fingers[i].up_pending = 0; }
 }
 
 void re15_touch_pc_event(const SDL_Event *e)
@@ -417,7 +439,7 @@ void re15_touch_pc_draw(SDL_Renderer *r)
     SDL_GetRendererOutputSize(r, &W, &H);
     if (W <= 0 || H <= 0) return;
     tp_layout(W, H);
-    uint16_t held = re15_touch_pc_pad_bits();
+    uint16_t held = tp_bits_peek();            /* nur schauen — der Latch gehoert dem Eingabe-Tick */
 
     /* In Fensterkoordinaten zeichnen: logische 320x240-Skalierung kurz abschalten, damit die
      * Knoepfe auch in den schwarzen Letterbox-Streifen liegen duerfen. */
@@ -575,6 +597,21 @@ static void tp_selftest(void)
         got = re15_touch_pc_pad_bits();
         fprintf(stderr, "[touch] selftest LOSLASSEN bits=%04X want=0000 %s\n", got, got == 0 ? "ok" : "FAIL");
         if (got == 0) ok++; else fail++;
+    }
+    /* BLITZ-TIPP: DOWN und UP zwischen zwei Ticks (adb input tap) -> genau EIN Tick lang gemeldet. */
+    {
+        tp_release_all();
+        const btn_t *sq = NULL;
+        for (int i = 0; i < s_btn_n; i++) if (s_btn[i].kind == K_FACE && s_btn[i].bit == TP_SQUARE) sq = &s_btn[i];
+        if (sq) {
+            tp_finger_down(1, 303, (float)sq->cx / (float)W, (float)sq->cy / (float)H);
+            tp_finger_up(1, 303);
+            uint16_t t1 = re15_touch_pc_pad_bits();
+            uint16_t t2 = re15_touch_pc_pad_bits();
+            int good = (t1 == TP_SQUARE && t2 == 0);
+            fprintf(stderr, "[touch] selftest BLITZ-TIPP (VIER) tick1=%04X tick2=%04X want=8000/0000 %s\n", t1, t2, good ? "ok" : "FAIL");
+            if (good) ok++; else fail++;
+        }
     }
     tp_release_all(); s_marke = 0;
     fprintf(stderr, "[touch] SELFTEST RESULT ok=%d fail=%d (Ausgabe %dx%d, u=%d)\n", ok, fail, W, H, s_unit);
