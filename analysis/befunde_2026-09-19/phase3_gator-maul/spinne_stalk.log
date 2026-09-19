@@ -1,0 +1,26 @@
+=== Sub-0-Entscheidungsleiter der RE2-Spinne, Abstands-Raster ===
+Gates: Zweig1 3001 <= d < 7500 (@0x80100840/@0x8010084C-58) | Zweig2 1001 <= d < 6000 (@0x8010086C-80) | Stalk d < 8000 (@0x801007E4-F4)
+Ablauf je Zeile: natuerlich ab INIT, 1500 Bilder, keine erzwungenen Zustaende (= Szenario A des Vorgaengers, nur mit anderem Abstand)
+
+  Abstand | Sub7 ab Tick | Ticks in Sub7 | Sub5/6-Ticks | Bisse | Angriffs-SE | besuchte Sub-Zustaende
+  --------+--------------+---------------+--------------+-------+-------------+-----------------------
+      500 |          nie |             0 |          323 |     0 |           0 | 0,1,4,5   [SE 18]
+      900 |          nie |             0 |          143 |     0 |           0 | 0,1,4,5   [SE 13]
+     1000 |          nie |             0 |          179 |     0 |           0 | 0,1,4,5   [SE 17]
+     1001 |          nie |             0 |          156 |     0 |           0 | 0,1,4,5   [SE 17]
+     1200 |            1 |           143 |          265 |     2 |           2 | 0,1,4,5,7   [SE 17]
+     2000 |            1 |           399 |          157 |     3 |           3 | 0,1,4,5,7,8   [SE 14]
+     3000 |            1 |           107 |          189 |     1 |           1 | 0,1,4,5,7,8   [SE 16]
+     3001 |            1 |           111 |          147 |     2 |           2 | 0,1,4,5,7,8   [SE 17]
+     4000 |            1 |            43 |          123 |     1 |           1 | 0,1,4,5,7   [SE 14]
+     5000 |            1 |            46 |          229 |     1 |           1 | 0,1,4,5,7   [SE 19]
+     5999 |            1 |            49 |          273 |     1 |           1 | 0,1,4,5,7   [SE 20]
+     6000 |           97 |           412 |          191 |     5 |           5 | 0,1,4,5,7,8   [SE 16]
+     7000 |            1 |            53 |          308 |     1 |           1 | 0,1,4,5,7   [SE 18]
+     7499 |            1 |            54 |          252 |     1 |           1 | 0,1,4,5,7   [SE 17]
+     7500 |            1 |            54 |          301 |     1 |           1 | 0,1,4,5,7   [SE 20]
+     9000 |          358 |            53 |          287 |     1 |           1 | 0,1,4,5,7   [SE 20]
+
+LESART: unterhalb von d = 1001 (@0x8010086C-80 `sltiu`-Paar) kennt die
+Sub-0-Leiter KEINEN Angriffs-Zweig — die Spinne pirscht (Sub 5/6) und laeuft,
+beisst aber nicht. Szenario A des Vorgaengers stand bei d = 900.

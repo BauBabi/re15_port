@@ -7207,6 +7207,22 @@ re_title:;
                 yaw_rot_q12[7] = wsx;
                 yaw_rot_q12[8] = (int32_t)(((int64_t)face_c * wcx) >> 12);
             }
+            /* ENTITY-RENDER-SCALE +0x166 AUCH FUER DEN SPIELER (Phase 3, Dossier
+             * analysis/befunde_2026-09-19/gator-finisher-sounds.md "Offen": "Leon bleibt
+             * 1x gross im 2/3-Maul"). Derselbe Pfad wie beim NPC weiter unten
+             * (main.c NPC-Zweig: Gate Flag 0x800 @0x8001e904, `lh +0x166` @0x8001e91c/28/38,
+             * `jal ScaleMatrix` @0x8001e940 VOR der Translation @0x8001e94c) — die
+             * Skalierung liegt auf der Wurzel-3x3, also skalieren Bone-Offsets UND
+             * Vertices um pl->(x,y,z), die Weltposition selbst nicht.
+             * Gesetzt wird das Feld einzig vom Alligator-Finisher (enemy_ai_boss_gator.c,
+             * GBP_FRESSEN) und dort mit dem Gator-Scale; fuer jeden anderen Spielzustand
+             * ist es 0 und dieser Block wirkungslos. */
+            if (player_ref->render_scale_q12) {
+                int _k;
+                for (_k = 0; _k < 9; _k++)
+                    yaw_rot_q12[_k] = (yaw_rot_q12[_k]
+                                       * (int32_t)player_ref->render_scale_q12) >> 12;
+            }
 
             /* RE1.5 CHARACTER SHADOW (FUN_8001b064 + FUN_8001af5c, 2026-05-29).
              * A subtractive textured floor quad under the actor: 4 corners at

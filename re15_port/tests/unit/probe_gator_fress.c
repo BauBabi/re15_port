@@ -125,6 +125,16 @@ static void leon_local(re15_enemy_bank_t *B, const re15_actor_t *e, const re15_a
     int32_t P[3], w[3], d[3], cs, sn;
     int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
     pos(&B->skel_victim, vkf, P);
+    /* Phase 3: traegt der Spieler selbst den Render-Scale (+0x166, Fress-Finisher),
+     * dann legt der Zeichner den Wurzel-POSE-Kanal MIT diesem Faktor ab
+     * (platform/pc/main.c, Spieler-Zweig: yaw_rot_q12 *= render_scale_q12 — Original-
+     * Pfad ScaleMatrix VOR der Bone-Schleife @0x8001e904-40). Die Metrik muss dem
+     * Zeichner folgen, sonst misst sie ein Modell, das niemand zeichnet. */
+    if (pl->render_scale_q12) {
+        int _i;
+        for (_i = 0; _i < 3; _i++)
+            P[_i] = (int32_t)(((int64_t)P[_i] * pl->render_scale_q12) >> 12);
+    }
     re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, w);
     d[0] = w[0]-e->x; d[1] = w[1]-e->y; d[2] = w[2]-e->z;
     cs = re15_cos_q12((int)e->rot_y); sn = re15_sin_q12((int)e->rot_y);
@@ -154,6 +164,116 @@ static int pin_leon_im_maul(re15_enemy_bank_t *B, const re15_actor_t *e, const r
     if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 5 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
     if (!in7) { printf("FAIL: Leons Wurzel liegt nicht im Unterkiefer (Mesh 7) - 'er liegt darunter'\n"); ok = 0; }
     return ok;
+}
+
+/* ==== PIN Phase 3 (gator-maul): LEONS KOERPER im Maul, nicht nur seine Wurzel =========
+ * Die Wurzel sass seit Phase 2 richtig, Rumpf und Beine ragten trotzdem heraus, weil der
+ * Gator mit GB_SCALE_Q12 = 2731 (2/3) und Leon 1x gezeichnet wurde — im gator-lokalen
+ * Rahmen also 1,5x zu gross (GEMESSEN probe_p3_gator_maul: Laenge 3915 gegen Maulraum
+ * 3655, 620/776 Vertices drin). Seit Phase 3 traegt Leon waehrend der Fress-Phase
+ * denselben Render-Scale (+0x166-Pfad, ScaleMatrix @0x8001e904-40) und trifft damit die
+ * authored 1x-Relation auf +-2 Einheiten: Laenge 2609 (Original 2609), 776/776 Vertices
+ * im Maulraum. Der Pin verlangt >= 95 % — heute 100,0 %, vor dem Fix 79,9 %. */
+static re15_emd_skeleton_t s_pl00_skel;
+static re15_md1_t          s_pl00_md1;
+static int pl00_geladen(void)
+{
+    static int s_ok = -1;
+    size_t rsz = 0, msz = 0;
+    uint8_t *emr, *md1;
+    if (s_ok >= 0) return s_ok;
+    emr = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.EMR", &rsz);
+    md1 = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00.MD1", &msz);
+    s_ok = (emr && md1
+            && re15_emd_parse_skeleton(emr, rsz, &s_pl00_skel) == 0
+            && re15_md1_parse(md1, (int)msz, &s_pl00_md1) == 0);
+    return s_ok;
+}
+static int pin_leon_koerper_im_maul(re15_enemy_bank_t *B, const re15_actor_t *e,
+                                    const re15_actor_t *pl)
+{
+    int gkf = kf_of(&B->anim, 11, (int)e->anim_frame);
+    int vkf = kf_of(&B->anim_victim, 1, 119);
+    int32_t lo6[3], hi6[3], lo7[3], hi7[3], mlo[3], mhi[3];
+    int32_t yaw[9], cs, sn, s_g, s_pl;
+    int32_t Llo[3], Lhi[3];
+    re15_emd_skeleton_t vs;
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    int bi, nb, r, c, k, pass, i, ntot = 0, nin = 0;
+    if (!pl00_geladen()) { printf("FAIL: PL00.EMR/MD1 nicht ladbar\n"); return 0; }
+    if (mesh_local_aabb(B, gkf, 6, lo6, hi6) != 0 || mesh_local_aabb(B, gkf, 7, lo7, hi7) != 0) {
+        printf("FAIL: Kiefer-AABB nicht berechenbar\n"); return 0; }
+    for (i = 0; i < 3; i++) { mlo[i] = lo6[i] < lo7[i] ? lo6[i] : lo7[i];
+                              mhi[i] = hi6[i] > hi7[i] ? hi6[i] : hi7[i]; }
+    vs = s_pl00_skel;                                  /* Leons Knochen + Bind-Pose */
+    vs.keyframe_data       = B->skel_victim.keyframe_data;
+    vs.keyframe_data_size  = B->skel_victim.keyframe_data_size;
+    vs.keyframe_count      = B->skel_victim.keyframe_count;
+    vs.keyframe_size_bytes = B->skel_victim.keyframe_size_bytes;
+    {   void *sv = g_anim_pose_actor; g_anim_pose_actor = NULL;
+        r = re15_skel_compute_pose(&vs, vkf, poses);
+        g_anim_pose_actor = sv; }
+    if (r != 0) { printf("FAIL: Opfer-Pose nicht berechenbar\n"); return 0; }
+    cs = re15_cos_q12((int)pl->rot_y); sn = re15_sin_q12((int)pl->rot_y);
+    yaw[0]=cs; yaw[1]=0; yaw[2]=sn; yaw[3]=0; yaw[4]=0x1000; yaw[5]=0;
+    yaw[6]=-sn; yaw[7]=0; yaw[8]=cs;
+    s_pl = pl->render_scale_q12 ? pl->render_scale_q12 : 4096;
+    if (s_pl != 4096) for (k = 0; k < 9; k++) yaw[k] = (yaw[k] * s_pl) >> 12;
+    s_g = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    for (i = 0; i < 3; i++) { Llo[i] = 0x7fffffff; Lhi[i] = -0x7fffffff; }
+    nb = s_pl00_skel.bone_count;
+    if (nb > s_pl00_md1.mesh_count) nb = s_pl00_md1.mesh_count;
+    if (nb > 15) nb = 15;                              /* 15/16 = Waffen-Slots */
+    for (bi = 0; bi < nb; bi++) {
+        const re15_md1_mesh_t *m = &s_pl00_md1.meshes[bi];
+        int32_t yrot[9], ytr[3], bw[3];
+        for (r = 0; r < 3; r++) for (c = 0; c < 3; c++) {
+            int64_t s2 = 0;
+            for (k = 0; k < 3; k++) s2 += (int64_t)yaw[r*3+k] * (int64_t)poses[bi].rot[k*3+c];
+            yrot[r*3+c] = (int32_t)(s2 >> 12);
+        }
+        for (r = 0; r < 3; r++) {
+            int64_t s2 = 0;
+            for (k = 0; k < 3; k++) s2 += (int64_t)yaw[r*3+k] * (int64_t)poses[bi].trans[k];
+            ytr[r] = (int32_t)(s2 >> 12);
+        }
+        bw[0] = ytr[0] + pl->x; bw[1] = ytr[1] + pl->y; bw[2] = ytr[2] + pl->z;
+        for (pass = 0; pass < 2; pass++) {
+            const re15_md1_vertex_t *V = pass ? m->quad_vertices : m->tri_vertices;
+            int NV = pass ? m->quad_vertex_count : m->tri_vertex_count;
+            for (i = 0; i < NV; i++) {
+                int32_t v[3] = { V[i].x, V[i].y, V[i].z }, w[3], d[3], L[3];
+                int gc, gs, a;
+                for (r = 0; r < 3; r++) {
+                    int64_t s2 = 0;
+                    for (k = 0; k < 3; k++) s2 += (int64_t)yrot[r*3+k] * v[k];
+                    w[r] = (int32_t)(s2 >> 12) + bw[r];
+                }
+                d[0] = w[0]-e->x; d[1] = w[1]-e->y; d[2] = w[2]-e->z;
+                gc = re15_cos_q12((int)e->rot_y); gs = re15_sin_q12((int)e->rot_y);
+                L[0] = (int32_t)((int64_t)(((int64_t)gc*d[0] - (int64_t)gs*d[2]) >> 12) * 4096 / s_g);
+                L[2] = (int32_t)((int64_t)(((int64_t)gs*d[0] + (int64_t)gc*d[2]) >> 12) * 4096 / s_g);
+                L[1] = (int32_t)((int64_t)d[1] * 4096 / s_g);
+                for (a = 0; a < 3; a++) { if (L[a] < Llo[a]) Llo[a] = L[a];
+                                          if (L[a] > Lhi[a]) Lhi[a] = L[a]; }
+                ntot++;
+                if (L[0]>=mlo[0]&&L[0]<=mhi[0]&&L[1]>=mlo[1]&&L[1]<=mhi[1]
+                    && L[2]>=mlo[2]&&L[2]<=mhi[2]) nin++;
+            }
+        }
+    }
+    printf("PIN P3-KOERPER: s_pl=%d Leon-LOKAL x[%d..%d] y[%d..%d] z[%d..%d] "
+           "(Laenge %d Hoehe %d) | Maulraum x[%d..%d] y[%d..%d] z[%d..%d] -> %d/%d = %.1f%%\n",
+           s_pl, Llo[0],Lhi[0], Llo[1],Lhi[1], Llo[2],Lhi[2],
+           Lhi[0]-Llo[0], Lhi[1]-Llo[1],
+           mlo[0],mhi[0], mlo[1],mhi[1], mlo[2],mhi[2],
+           nin, ntot, ntot ? 100.0*nin/ntot : 0.0);
+    if (!ntot || nin * 100 < ntot * 95) {
+        printf("FAIL: Leons Koerper liegt nicht im Maul (< 95%% der Vertices) - "
+               "ragt er wieder heraus?\n");
+        return 0;
+    }
+    return 1;
 }
 
 int main(void)
@@ -282,6 +402,13 @@ int main(void)
         if (!pin_leon_im_maul(eb, e, pl)) return 1;
         /* y-Spur: die Sonde hat KEIN game_step; pl->y muss der Fix gesetzt haben (!= 0). */
         if (pl->y == 0) { printf("FAIL: pl->y blieb 0 - der Scale-Nachzug setzt die Hoehe nicht\n"); return 1; }
+        /* PIN Phase 3: auch der KOERPER liegt im Maul (Massstab), nicht nur die Wurzel. */
+        if (!pin_leon_koerper_im_maul(eb, e, pl)) return 1;
+        if (pl->render_scale_q12 != e->render_scale_q12) {
+            printf("FAIL: Leon traegt nicht den Gator-Render-Scale (pl=%d, gator=%d)\n",
+                   (int)pl->render_scale_q12, (int)e->render_scale_q12);
+            return 1;
+        }
     }
     printf("OK: FRESS-Sequenz komplett - FSYNC-Messreihe in gator_boss.log\n");
     return 0;

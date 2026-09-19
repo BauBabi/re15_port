@@ -1,0 +1,24 @@
+=== TEIL 0: Clip-Laengen (EM23.EMD EDD1) ===
+  Clip  0: 163 Bilder
+  Clip  1: 26 Bilder
+  Clip  2: 150 Bilder
+  Clip  3: 150 Bilder
+  Clip  4: 45 Bilder
+  Clip  5: 120 Bilder
+  Clip  6: 125 Bilder
+  Clip  7: 165 Bilder
+  Clip  8: 97 Bilder
+  Clip  9: 37 Bilder
+  Clip 10: 30 Bilder
+  Clip 11: 59 Bilder
+  HEUTE   (Clip 4): 45 Bilder = 45 Ticks; Fenster af 6..34 -> Treffer fruehestens Tick 6, spaetestens Tick 34
+  B2 einfach (Clip 2 + Clip 3, 1 Bild/Tick): 150 + 150 = 300 Ticks; Fenster Clip3 f>=114 -> Tick 264..299
+  B2 DOPPEL  (+0x22C != 0, 2 Bilder/Tick):   75 + 75 = 150 Ticks; Fenster -> Tick 132..149
+  Vortrieb im Anlauf (GB_LUNGE_SPEED 64/Tick): heute bis Treffer 384..2176 Einheiten; B2-doppelt 8448 Einheiten bis Fensterbeginn
+
+=== TEIL 1: Biss-Raster (72 Faelle a 2400 Bilder), RE15_GB_LUNGE_B2=(aus) ===
+
+ERGEBNIS  Faelle=72  Treffer=72 (100.0%)  Bilder bis Treffer im Mittel=201
+          Anlaeufe=64  davon mit Treffer=64 (100.0%)  Anlauf->Treffer: min 7 / Mittel 8 / max 23 Ticks
+          TOTZEIT im treffenden Anlauf (Maul <=1500 am Ziel, Fenster zu): Mittel 0 / max 7 Ticks (n=64)
+          Strecke je abgebrochenem Anlauf im Mittel=-1 Einheiten (n=0)
