@@ -33,6 +33,39 @@ ALPHA_SCHWELLE = 110     # ⛔ Heuristik (Audit §5, Gegenpruefung #10): schneid
                          # Anti-Alias-Saum weg; Nutzer-Entscheidung, nicht gemessen.
 
 
+def farbteil(r, bg, spec):
+    """EINE Freistellung in ZWEI Tiefen-Objekte teilen, entlang einer am HINTERGRUND
+    gemessenen Farbregel. Die Vereinigung beider Teile ist BITGENAU die Freistellung.
+
+    ⛔ WARUM (Nutzer-Auftrag 2026-09-19, "bei den offenen pri findings sei kreativ"):
+    Ein Klapptisch ist eine waagerechte PLATTE auf einem stehenden GESTELL. Die
+    Spaltenregel liest je Spalte die unterste Silhouettenzeile als Bodenkontakt — bei
+    der Platte ist das ihre EIGENE Kante, nicht der Boden. Gemessen an ROOM10D0 C1
+    (build/p3/mess_10d0c1f.py): die Platte bekommt so eine INVERTIERTE Tiefenrampe, ihr
+    NAHES rechtes Ende liest 319, ihr FERNES linkes Ende 234. Ein Gegenstand, ein
+    Tiefenmodell — das kann nie beides stimmen (vgl. RE2-Retail: ein Gegenstand = eine
+    Gruppe mit im Median 5 gestuften Tiefen, Memory reai-v2-re2-pri-vorbild).
+
+    spec: {"kanal": 1, "gegen": [0, 2], "abstand": 10, "weiten": 1, "nimm": "ja"|"nein"}
+      Punkt gehoert zur Farbe, wenn bg[kanal] > bg[g] + abstand fuer JEDES g in gegen;
+      "weiten" weitet diese Menge um n Punkte (der Antialias-Saum der Platte traegt die
+      Farbe nicht mehr — ohne das Weiten landeten in ROOM10D0 C1 die 21 Randspalten
+      x126..146 beim Gestell und schleppten dessen Fusslinie um 6958 Welteinheiten weg);
+      "nimm": "ja" = die Farbmenge, "nein" = ihr Rest.
+    """
+    from scipy import ndimage as _nd
+    b = np.asarray(bg, np.int32)
+    k = int(spec.get("kanal", 1))
+    ab = int(spec.get("abstand", 10))
+    m = np.ones(b.shape[:2], bool)
+    for g in spec.get("gegen", [0, 2]):
+        m &= b[:, :, k] > b[:, :, int(g)] + ab
+    w = int(spec.get("weiten", 0))
+    if w > 0:
+        m = _nd.binary_dilation(m, np.ones((2 * w + 1, 2 * w + 1), bool))
+    return (r & m) if spec.get("nimm", "ja") == "ja" else (r & ~m)
+
+
 def objekt_region(o, bg, ppm_bg_fn=None):
     """-> (region bool 240x320, quelle) fuer png / polygon / quader-Objekte."""
     if "png" in o:
@@ -40,7 +73,10 @@ def objekt_region(o, bg, ppm_bg_fn=None):
             raise SystemExit('   ⛔ "%s": Lage (x, y) fehlt — mit maske_aus_png.py messen und eintragen'
                              % o.get("name", "?"))
         r = maske_aus_png.setze(o["png"], o["x"], o["y"], o.get("massstab", 1), alpha_schwelle=ALPHA_SCHWELLE)
-        return (r if r is not None else np.zeros((240, 320), bool)), "png"
+        r = r if r is not None else np.zeros((240, 320), bool)
+        if o.get("teil"):
+            r = farbteil(r, bg, o["teil"])
+        return r, "png"
     if "polygon" in o:
         import raum as _raum
         return _raum.polygon_region(o["polygon"], o.get("loch")), "polygon"

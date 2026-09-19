@@ -65,21 +65,17 @@ P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
 # Spieler-Klemmpfad der Engine faehrt (die Python-Abnahme liest denselben Dump, kommt aber
 # auf minimal andere Kastengrenzen: 805 gegen 811 VOR-Plaetze). Wo die beiden sich
 # widersprechen, gilt die strengere Zahl.
-P2_ABGELEHNT = {
-    ("ROOM10D0", 1): "unit_pri_eingemessen: die F9-Marke des Nutzers (F423, Welt 3228/-4568, "
-                     "er steht HINTER der Liege) verlangt eine wirksame Maske ueber x156..176. "
-                     "Das Nutzer-Original 01.png als EIN Objekt mit reiner Geometrie gibt der "
-                     "rechten Spalte 176 eine Tiefe >= 180; wirksam waere < 180 (Kopf-vz 11579). "
-                     "Das sind 16 Einheiten — genau der Restfehler der Kalibrierung (Modell "
-                     "median +5 Buckets zu FERN). Die alte Sektion (aus der Zerteilung "
-                     "01_01/01_02 mit den Handschluesseln flach/spalten) bleibt stehen, bis der "
-                     "Nutzer entscheidet.",
-    ("ROOM1000", 3): "unit_pri_kopfschnitt: 1 von 805 begehbaren Standplaetzen VOR der "
-                     "Standlinie wird voll verdeckt. Die drei Objekte 03_01/03_02/03_03 sind "
-                     "Massstab-4-Freistellungen (Treffer 89-100 %), ihre unterste Zeile liegt "
-                     "knapp UNTER dem Horizont -> der Sehstrahl laeuft fast parallel zum Boden "
-                     "und das Modell gibt Tiefen 249..394. Offen beim Nutzer (1x-Freistellung).",
-}
+P2_ABGELEHNT = {}
+# ⛔ PHASE 3 (2026-09-19, Nutzer-Auftrag "gehe die offenen Punkte an, bei den offenen pri
+# findings sei kreativ, das es gut aussieht"): die zwei Eintraege von Phase 2 sind hier
+# WEG, weil die Ursachen behoben sind und die Cuts die Abnahme selbst bestehen muessen:
+#   ROOM10D0 C1 — die Freistellung 01.png traegt jetzt ZWEI Tiefen-Objekte (Platte
+#     waagerecht / Gestell mit gemessener Fusslinie x147..175); die Spalte 176 erbt damit
+#     Tiefe 172 statt 319 und liegt unter der von der Marke F423 verlangten Grenze 180.
+#   ROOM1000 C3 — die drei Objekte ohne Bodentreffer bekommen ihre Tiefe jetzt aus dem
+#     Spalten-Erbe ueber Objektgrenzen statt gar keine.
+# Faellt ein Cut trotzdem durch die Abnahme, wird er weiterhin NICHT geschrieben — die
+# Schranke bleibt, nur die Vorab-Sperre ist weg.
 # ⛔ SPALTENFUELLUNG STANDARDMAESSIG AUS (Nutzer-Befund 2026-09-03, Screenshot 233104:
 # "immer noch sehr viel ueberdeckende Transparenz, bei beiden Fahnen und beim Pult").
 # Die Fuellung schliesst je Bildspalte alles zwischen oberstem und unterstem Punkt EINER
@@ -742,6 +738,7 @@ def main_p2(a, room, rid, aus, rdt, cam, cuts):
     alt = _container_lesen(path)
     secs = {}
     bericht = {}
+    entfernt = []
     for cut in cuts:
         e = aus[room][str(cut)]
         if not isinstance(e, dict):
@@ -749,6 +746,23 @@ def main_p2(a, room, rid, aus, rdt, cam, cuts):
         if (room, cut) in P2_ABGELEHNT:
             print("  Cut %d: ABGELEHNT, nicht geschrieben (%s)" % (cut, P2_ABGELEHNT[(room, cut)]))
             bericht[cut] = {"ok": False, "fehler": "abgelehnt: " + P2_ABGELEHNT[(room, cut)], "alt": cut in alt}
+            continue
+        if isinstance(e.get("objekte"), list) and not e["objekte"]:
+            # ⛔ LEERE OBJEKTLISTE = die Sektion dieses Cuts wird ENTFERNT. Gebraucht in
+            # Phase 3: ROOM1000 C1/C3 und ROOM11F0 C1 trugen Masken aus Freistellungen,
+            # die nachweislich zu einem ANDEREN Cut gehoeren (Massstab 1 statt 4, Gipfel
+            # 100,0 % mit 1..4 gleich guten Lagen gegen 134..1709 bei der alten Zuordnung,
+            # build/p3/mess_lage_null.py / mess_lage_suche.py). Eine falsch verortete Maske
+            # stehen zu lassen waere schlechter als keine.
+            if cut in alt:
+                del alt[cut]
+                entfernt.append(cut)
+            for endung in ("TIM", "PBM", "STAND"):
+                pf = os.path.join(a.out, "%s_PRI%02d.%s" % (room, cut, endung))
+                if os.path.exists(pf) and not a.nur_pruefen:
+                    os.remove(pf)
+            print("  Cut %d: Sektion ENTFERNT (keine Freistellung des Nutzers fuer diesen Cut)" % cut)
+            bericht[cut] = {"entfernt": True}
             continue
         if (room, cut) in P2_UNANGETASTET:
             print("  Cut %d: UNANGETASTET (%s)%s" % (cut, P2_UNANGETASTET[(room, cut)],
@@ -785,11 +799,13 @@ def main_p2(a, room, rid, aus, rdt, cam, cuts):
         bericht[cut]["quellen"] = b["quellen"]
         if b["ok"] and not a.nur_pruefen:
             secs[cut] = b["sektion"]
-    if not a.nur_pruefen and secs:
+    if not a.nur_pruefen and (secs or entfernt):
         alt.update(secs)
         os.makedirs(a.out, exist_ok=True)
         open(path, "wb").write(geom.pack_container(alt, rdt[1]))
-        print("  %s: %d Cuts im Container (%d neu)" % (os.path.basename(path), len(alt), len(secs)))
+        print("  %s: %d Cuts im Container (%d neu%s)"
+              % (os.path.basename(path), len(alt), len(secs),
+                 "" if not entfernt else ", %d entfernt: %s" % (len(entfernt), entfernt)))
     os.makedirs("build/p2", exist_ok=True)
     json.dump(bericht, open("build/p2/bericht_%s.json" % room, "w"), indent=1, default=str)
     return 0

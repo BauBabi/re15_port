@@ -1,0 +1,134 @@
+Raum      Cut PNG                        s   best Gipfel Lagen95  dLage Urteil
+ROOM1000  0   01_01.png                  1 100.0%   5.0s       4      0 ok
+ROOM1000  0   01_02.png                  1 100.0%   6.9s       1      0 ok
+ROOM1000  0   01_03.png                  1 100.0%   5.7s       1      0 ok
+ROOM1000  0   01_04.png                  1 100.0%   2.7s       7      0 ok
+ROOM1000  2   03_01.png                  1 100.0%   5.3s       2      0 ok
+ROOM1000  2   03_02.png                  1 100.0%   9.0s       4      0 ok
+ROOM1000  2   03_03.png                  1 100.0%   9.7s       2      0 ok
+ROOM1000  2   03_04.png                  1 100.0%   3.5s       2      0 ok
+ROOM1000  4   04_01.png                  1 100.0%   5.6s       3      0 ok
+ROOM1000  4   04_02.png                  1 100.0%   5.4s       7      0 ok
+ROOM1000  5   05_01.png                  1 100.0%   4.1s       6      0 ok
+ROOM1000  5   05_02.png                  1 100.0%   2.6s       6      0 ok
+ROOM1000  6   06_01.png                  1 100.0%  10.6s       1      0 ok
+ROOM1000  6   06_02.png                  1 100.0%   5.5s       6      0 ok
+ROOM1000  7   07_01.png                  1 100.0%   4.5s       2      0 ok
+ROOM1000  7   07_02.png                  1 100.0%   5.4s       7      0 ok
+ROOM1000  7   07_03.png                  1 100.0%   9.4s       1      0 ok
+ROOM1000  8   08_01.png                  1 100.0%   4.1s       7      0 ok
+ROOM1000  8   08_02.png                  1 100.0%   3.0s       6      0 ok
+ROOM1010  0   00.png                     1 100.0%   8.5s       2      0 ok
+ROOM1010  1   01.png                     1 100.0%   7.8s       2      0 ok
+ROOM1010  6   06.png                     1 100.0%   6.8s       1      0 ok
+ROOM1010  8   08.png                     1 100.0%   8.6s       1      0 ok
+ROOM1050  1   01.png                     1 100.0%  11.2s       2      0 ok
+ROOM1050  3   03.png                     1 100.0%   3.8s       1      0 ok
+ROOM1050  5   05.png                     1 100.0%   4.4s       7      0 ok
+ROOM1050  6   06_01.png                  1 100.0%   5.6s       1      0 ok
+ROOM1050  6   06_02.png                  1 100.0%   8.8s       1      0 ok
+ROOM1060  0   00.png                     1 100.0%  11.9s       1      0 ok
+ROOM1060  1   01.png                     1 100.0%   7.3s       1      0 ok
+ROOM1060  2   02_01.png                  1 100.0%   6.9s       1      0 ok
+ROOM1060  2   02_02.png                  1 100.0%   2.2s      30      0 NICHT BESTIMMT
+ROOM1060  2   02_03.png                  1 100.0%  13.0s       1      0 ok
+ROOM1060  4   04.png                     1 100.0%  15.1s       1      0 ok
+ROOM1060  7   07.png                     1 100.0%  12.0s       1      0 ok
+ROOM10A0  0   00.png                     1 100.0%   3.9s      17      0 NICHT BESTIMMT
+ROOM10A0  1   01.png                     1 100.0%   1.8s     143      1 NICHT BESTIMMT
+ROOM10A0  2   02.png                     1 100.0%   5.4s      13      0 NICHT BESTIMMT
+ROOM10A0  5   05.png                     1 100.0%   4.1s      20      0 NICHT BESTIMMT
+ROOM10A0  7   07.png                     1 100.0%   2.8s      13      0 NICHT BESTIMMT
+ROOM10A0  8   08.png                     1 100.0%   2.9s      46      0 NICHT BESTIMMT
+ROOM10C0  2   02_01.png                  1 100.0%   3.3s       1      0 ok
+ROOM10C0  2   02_02.png                  1 100.0%   8.0s       6      0 ok
+ROOM10C0  2   02_03.png                  1 100.0%   7.4s       1      0 ok
+ROOM10C0  3   03_01.png                  1 100.0%   5.3s       5      0 ok
+ROOM10C0  3   03_02.png                  1 100.0%   6.2s       1      0 ok
+ROOM10C0  4   04.png                     1 100.0%   2.2s       1      0 ok
+ROOM10D0  1   01.png                     1 100.0%   3.3s       1      0 ok
+ROOM10D0  1   01.png                     1 100.0%   3.3s       1      0 ok
+ROOM10D0  6   06.png                     1 100.0%  10.8s       1      0 ok
+ROOM10D0  6   06_02.png                  1 100.0%   8.0s       1      0 ok
+ROOM10D0  7   07_01.png                  1  99.6%   4.4s       1      0 ok
+ROOM10D0  7   07_02.png                  1 100.0%   2.6s       2      0 ok
+ROOM10D0  8   08.png                     1 100.0%   3.3s       5      0 ok
+ROOM10D0  9   09_01.png                  1 100.0%   8.3s       1      0 ok
+ROOM10D0  9   09_02.png                  1 100.0%   4.8s       1      0 ok
+ROOM10D0  9   09_03.png                  1 100.0%   3.9s       2      0 ok
+ROOM10E0  0   00_01.png                  1 100.0%   4.3s       8      0 ok
+ROOM10E0  0   00_02.png                  1 100.0%   3.5s       1      0 ok
+ROOM10E0  1   01.png                     1 100.0%   5.0s       3      0 ok
+ROOM10E0  2   02.png                     1 100.0%  23.6s       1      0 ok
+ROOM10E0  3   03.png                     1 100.0%   6.6s       1      0 ok
+ROOM10E0  4   04.png                     1 100.0%  20.9s       1      0 ok
+ROOM10E0  5   05.png                     1 100.0%  15.1s       1      0 ok
+ROOM10E0  6   06.png                     1 100.0%   4.3s       1      0 ok
+ROOM10E0  7   07_01.png                  1 100.0%  15.6s       1      0 ok
+ROOM10E0  7   07_03.png                  1 100.0%   4.0s       1      0 ok
+ROOM10E0  7   07_04.png                  1 100.0%   8.5s       1      0 ok
+ROOM10E0  8   08_01.png                  1 100.0%   6.4s       3      0 ok
+ROOM10E0  8   08_02.png                  1 100.0%  15.5s       1      0 ok
+ROOM10E0  9   09.png                     1 100.0%   9.6s       1      0 ok
+ROOM10F0  0   00.png                     1 100.0%  11.8s       1      0 ok
+ROOM10F0  1   01.png                     1 100.0%   6.3s       1      0 ok
+ROOM10F0  2   02.png                     1 100.0%  11.7s       1      0 ok
+ROOM10F0  3   03.png                     1 100.0%   4.9s       1      0 ok
+ROOM10F0  4   04_01.png                  1 100.0%  11.4s       1      0 ok
+ROOM10F0  4   04_02.png                  1 100.0%   6.8s       1      0 ok
+ROOM10F0  4   04_03.png                  1 100.0%   3.9s       1      0 ok
+ROOM10F0  5   05_01.png                  1 100.0%   9.0s       1      0 ok
+ROOM10F0  5   05_02.png                  1 100.0%   3.4s       1      0 ok
+ROOM10F0  5   05_03.png                  1 100.0%  11.9s       1      0 ok
+ROOM10F0  6   06.png                     1 100.0%   6.5s       1      0 ok
+ROOM1110  0   00_01.png                  1 100.0%   5.2s       1      0 ok
+ROOM1110  0   00_02.png                  1 100.0%   8.5s       1      0 ok
+ROOM1110  2   02.png                     1 100.0%  12.2s       1      0 ok
+ROOM1110  6   06.png                     1 100.0%   5.8s       1      0 ok
+ROOM1120  2   02.png                     1 100.0%   4.0s       1      0 ok
+ROOM1130  3   03.png                     1 100.0%   3.6s       3      0 ok
+ROOM1140  0   00_01.png                  1 100.0%   3.8s       2      0 ok
+ROOM1140  0   00_02.png                  1 100.0%   2.9s       1      0 ok
+ROOM1140  0   00_03.png                  1 100.0%   2.8s       1      0 ok
+ROOM1140  2   02_01.png                  1 100.0%  12.0s       1      0 ok
+ROOM1140  2   02_02.png                  1 100.0%   2.5s       1      0 ok
+ROOM1140  2   02_03.png                  1 100.0%  18.1s       1      0 ok
+ROOM1140  3   03_01.png                  1 100.0%  12.7s       1      0 ok
+ROOM1140  3   03_02.png                  1 100.0%   1.9s       1      0 ok
+ROOM1140  3   03_03.png                  1 100.0%   2.9s       1      0 ok
+ROOM1140  5   05_01.png                  1 100.0%  12.0s       1      0 ok
+ROOM1160  3   03.png                     1 100.0%   2.9s     440      0 NICHT BESTIMMT
+ROOM1180  2   02.png                     1 100.0%   2.7s      53      0 NICHT BESTIMMT
+ROOM1180  3   03.png                     1 100.0%   1.9s      29      2 NICHT BESTIMMT
+ROOM1180  5   05.png                     1 100.0%   4.8s       2      0 ok
+ROOM1180  6   06.png                     1 100.0%   4.8s       5      0 ok
+ROOM11B0  3   03.png                     1 100.0%   5.3s       2      0 ok
+ROOM11D0  3   03.png                     1 100.0%   8.3s       1      0 ok
+ROOM11F0  0   01.png                     1 100.0%   4.1s       3      0 ok
+ROOM11F0  6   06_01.png                  1 100.0%   6.2s       6      0 ok
+ROOM11F0  6   06_02.png                  1 100.0%  13.8s       1      0 ok
+ROOM11F0  7   07.png                     1 100.0%  11.1s       1      0 ok
+ROOM1220  0   00.png                     1 100.0%   4.5s      11      1 NICHT BESTIMMT
+ROOM1220  2   02.png                     1 100.0%   5.0s      10      0 NICHT BESTIMMT
+ROOM1220  4   04.png                     1 100.0%   4.9s      13      0 NICHT BESTIMMT
+ROOM1220  6   06.png                     1 100.0%   5.3s       2      0 ok
+ROOM1220  8   08.png                     1 100.0%   5.5s       3      0 ok
+ROOM1230  2   02.png                     1 100.0%   3.4s       4      0 ok
+ROOM1230  3   03.png                     1 100.0%   2.8s       6      0 ok
+ROOM1230  5   05.png                     1  98.0%   4.7s       1      0 ok
+ROOM1230  6   06.png                     1  99.0%   6.7s       1      0 ok
+
+13 von den geprueften Objekten sind auffaellig:
+   ROOM1060 C2 pri/STAGE1/1060/02_02.png s=1 best 100.0% Lagen95 30 dLage 0
+   ROOM10A0 C0 pri/STAGE1/10A0/00.png s=1 best 100.0% Lagen95 17 dLage 0
+   ROOM10A0 C1 pri/STAGE1/10A0/01.png s=1 best 100.0% Lagen95 143 dLage 1
+   ROOM10A0 C2 pri/STAGE1/10A0/02.png s=1 best 100.0% Lagen95 13 dLage 0
+   ROOM10A0 C5 pri/STAGE1/10A0/05.png s=1 best 100.0% Lagen95 20 dLage 0
+   ROOM10A0 C7 pri/STAGE1/10A0/07.png s=1 best 100.0% Lagen95 13 dLage 0
+   ROOM10A0 C8 pri/STAGE1/10A0/08.png s=1 best 100.0% Lagen95 46 dLage 0
+   ROOM1160 C3 pri/STAGE1/1160/03.png s=1 best 100.0% Lagen95 440 dLage 0
+   ROOM1180 C2 pri/STAGE1/1180/02.png s=1 best 100.0% Lagen95 53 dLage 0
+   ROOM1180 C3 pri/STAGE1/1180/03.png s=1 best 100.0% Lagen95 29 dLage 2
+   ROOM1220 C0 pri/STAGE1/1220/00.png s=1 best 100.0% Lagen95 11 dLage 1
+   ROOM1220 C2 pri/STAGE1/1220/02.png s=1 best 100.0% Lagen95 10 dLage 0
+   ROOM1220 C4 pri/STAGE1/1220/04.png s=1 best 100.0% Lagen95 13 dLage 0

@@ -50,6 +50,8 @@ static int g_fail;
  * — dieselbe Zahl, die die Sonde RE15_POCC benutzt und mit der die drei Marken oben
  * gemessen wurden; halbe Schulterbreite 450. */
 #define KOPF_HOCH   1500
+/* Breite eines OT-Buckets in Kamera-z: 65536/1023 (ZSF3 = 341 @0x80066c70). */
+#define P2_BUCKET   (65536.0 / 1023.0)
 #define HALB_BREIT   450
 
 static uint8_t *slurp(const char *pfad, size_t *n)
@@ -278,8 +280,15 @@ static int p2_phase(void)
                             if (stand[x] < 0) continue;
                             /* Standplatz auf die Bodenebene der Spalte projiziert (s. p2_stand). */
                             ref = ((double) gx * view.rot[6] + ebene[x] * view.rot[7] + (double) gz * view.rot[8]) / 4096.0 + view.trans[2];
-                            if (ref < stand[x] - 1)      { bvor++; vv += occ; }
-                            else if (ref > stand[x] + 1) { bhin++; vh += occ; }
+                            /* Toleranz = EIN OT-Bucket (65536/1023 = 64,0625 vz), nicht
+                             * eine Einheit: der Zeichner kennt die Entfernung nur in
+                             * Buckets (Figur-OT = otz>>4 @0x8002565c, otz = (1023*vz)>>12
+                             * mit ZSF3 = 341 @0x80066c70/74). Im GLEICHEN Bucket
+                             * entscheidet die Reihenfolge, und die Masken haengen als
+                             * letzte Prims ein (@0x8001ce54) - die Figur liegt obenauf.
+                             * "VOR"/"HINTER" sind dort nicht definiert. */
+                            if (ref < stand[x] - P2_BUCKET)      { bvor++; vv += occ; }
+                            else if (ref > stand[x] + P2_BUCKET) { bhin++; vh += occ; }
                         }
                     }
                     if (bvor) { double q = (double) vv / bvor; vorn++; if (q >= 0.95) vorverd++; else if (q > 0.05) vorteil++; }
