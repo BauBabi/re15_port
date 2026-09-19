@@ -413,10 +413,51 @@ int scd_audio_queue_pop(scd_audio_event_t *out)
  * nie als "genommen" markieren. */
 static uint32_t s_prop_taken_hidden = 0;
 
+/* ⛔ DIE MASKE IST RAUMLOKAL — genau wie der Objekt-Pool des Originals (Runde 16, 2026-09-19,
+ * Dossier analysis/befunde_2026-09-19/objekte-paket.md). Sie lebte bisher PROZESSWEIT (einzige
+ * Nullung im Boot), und damit versteckte jeder Raum, dessen Item_aot_set ein schon genommenes
+ * Item traegt, in ALLEN Folgeraeumen die Props mit derselben obj_id: nach ROOM1000 (Items
+ * tk_prop 0/1 genommen) fehlten in ROOM1050 die Leichen-Haelften obj 0/1, in ROOM1090 die
+ * Kisten obj 0/1, nach ROOM1010 in ROOM11F0 der Schalter obj 2 (gemessen mit der Paket-exe
+ * v0.8.4 und probe_r16_objekte_paket: 5 Abweichungen).
+ * Das Original haelt den "versteckt"-Zustand nur im Pool @0x800b3f98 (Item_aot_set schreibt
+ * pool[tk_prop].flags = 0x80000000 @0x80040718), und der Raumlader nullt diesen Pool bei JEDEM
+ * Laden — FUN_8003ea7c, gerufen aus FUN_800396fc @0x800399a0 (einziger Caller, einziger
+ * Ladeweg 0x8001ca54 -> FUN_8001d600 -> FUN_800396fc):
+ *     8003eab0  lui   at,0x800b
+ *     8003eab4  addiu at,at,16280     ; 0x800b3f98 = Objekt-Pool
+ *     8003eab8  addu  at,at,v1
+ *     8003eabc  sw    zero,0(at)      ; pool[i].flags = 0
+ *     8003eac0  addiu s0,s0,1
+ *     8003eac4  sltiu v0,s0,0x20      ; 32 Eintraege
+ *     8003eac8  bne   v0,zero,0x8003eab0
+ *     8003eacc  addiu v1,v1,148       ; Schrittweite 148
+ * Es gibt keinen zweiten Speicherort: die Persistenz sitzt allein im Taken-Bit (Zone 9), und
+ * jeder Raum wendet sie ueber sein EIGENES Item_aot_set auf seinen EIGENEN Pool an. Deshalb
+ * wird die Maske hier bei jedem scd_room_reenter (= alle drei Ladewege des Ports, auch der
+ * Same-Room-Reenter — im Original geht auch eine Selbst-Tuer durch dieselbe Kette) genullt. */
+void scd_prop_taken_mask_reset(void)
+{
+    s_prop_taken_hidden = 0;
+}
+
+/* Prop ueber seine obj_id verstecken (Zeichen-Bit loeschen). Das Original indiziert den Pool
+ * mit tk_prop = obj_id (Schrittweite 148 @0x800406f8-0x80040708, Basis 0x800b3f98 @0x80040710,
+ * Store @0x80040718), NICHT mit der Installations-Reihenfolge — der Port-Slot-Index faellt nur
+ * zusammen, solange ein Raum seine Props in obj_id-Reihenfolge ab 0 anlegt (ROOM1190 sub14
+ * legt obj 7..16 auf die Slots 0..9). Die Live-Aufnahme nullt dasselbe Wort mit demselben
+ * Index (FUN_80021eb4: `lbu v0,6(s0)` = tk_prop @0x80021fa0, *148, `sw zero,0(at)`
+ * @0x80021fc8) — beide Schreiber laufen ueber diese Funktion. */
+void scd_prop_hide_by_obj_id(uint8_t obj_id)
+{
+    for (int k = 0; k < (int)g_scd.prop_count; k++)
+        if (g_scd.props[k].obj_id == obj_id) g_scd.props[k].active = 0;
+}
+
 void scd_vm_init(void)
 {
     memset(&g_scd, 0, sizeof(g_scd));   /* clears tick_count + all *_pending flags */
-    s_prop_taken_hidden = 0;
+    scd_prop_taken_mask_reset();
     /* Der memset wischt auch message_active/message_fsm_active — damit verschwindet der einzige
      * Weg, einen offenen Text zu schliessen. Ein noch gesetztes g_pauseflags wuerde die VM danach
      * fuer immer anhalten (Gate @0x8003f04c). Deshalb hier derselbe Voll-Clear wie in der
@@ -3693,8 +3734,8 @@ static int op_item_aot_set(scd_thread_t *t)
                 s_prop_taken_hidden |= (uint32_t)(1u << tk_prop);  /* merken: gilt auch, wenn
                                                                     * das Modell erst SPAETER
                                                                     * angelegt wird */
-            if (tk_prop < g_scd.prop_count)
-                g_scd.props[tk_prop].active = 0;           /* hide the pickup prop */
+            scd_prop_hide_by_obj_id((uint8_t)tk_prop);    /* Pool-Index = obj_id, nicht Slot:
+                                                            * @0x800406f8-718 (s. Helfer) */
             inert = 1;                                     /* @0x800406f4 rec[0]=0 */
         }
         if (inert)
