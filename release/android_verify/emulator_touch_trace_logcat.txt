@@ -1,0 +1,14 @@
+﻿09-19 13:25:08.293  6678  6698 I re15    : [android] Speicherordner (exe-Anker + cwd): /storage/emulated/0/Android/data/de.re15.port/files (extern=1)
+09-19 13:25:08.749  6678  6698 I re15    : [android] Entpacke 3363 Dateien (351686812 Bytes) nach /storage/emulated/0/Android/data/de.re15.port/files
+09-19 13:25:24.591  6678  6698 I re15    : [android] Entpacken fertig: 3363 geprueft, 3363 kopiert, 0 Fehler
+09-19 13:26:03.553  6678  6698 I re15    : [touch] down dev=-2 id=0 norm=(0.101,0.867) px=(243,936) bits=0040
+09-19 13:26:03.553  6678  6678 I re15    : [touch] up   dev=-2 id=0 bekannt seen=1
+09-19 13:26:05.960  6678  6698 I re15    : [touch] down dev=-2 id=0 norm=(0.101,0.867) px=(243,936) bits=0040
+09-19 13:26:05.982  6678  6678 I re15    : [touch] up   dev=-2 id=0 bekannt seen=1
+09-19 13:26:08.417  6678  6698 I re15    : [touch] down dev=-2 id=0 norm=(0.101,0.617) px=(243,666) bits=0010
+09-19 13:26:08.431  6678  6678 I re15    : [touch] up   dev=-2 id=0 bekannt seen=1
+09-19 13:26:10.907  6678  6678 I re15    : [touch] up   dev=-2 id=0 bekannt seen=0
+09-19 13:26:10.908  6678  6698 I re15    : [touch] down dev=-2 id=0 norm=(0.567,0.933) px=(1362,1008) bits=0008
+
+installiert: versionName=v0.8.4-4-g6f2833f7
+Emulator: Medium_Phone_API_36 (x86_64, 2400x1080, -no-window -gpu swiftshader_indirect)
