@@ -517,6 +517,9 @@ void re15_render_init(void)
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         exit(1);
     }
+    /* Finger-Watch VOR dem Renderer registrieren (SDLs Renderer-Watch klemmt Finger sonst auf den
+     * 4:3-Ausschnitt; No-op ohne Overlay). */
+    re15_touch_pc_attach_watch();
 
     /* WINDOWED by default, at the largest integer scale that FITS the screen (<=90% of the usable
      * desktop) — so a big monitor gets scale 4 but a small one shrinks instead of covering the whole

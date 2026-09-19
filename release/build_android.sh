@@ -79,6 +79,11 @@ esac
 if [[ -z "${VERSION}" ]]; then
     VERSION="$(git -C "$REPO" describe --tags --always 2>/dev/null || echo v0.0.0-dev)"
 fi
+# ⛔ Die Version MUSS x.y.z enthalten (gemessen 2026-09-19): app/build.gradle leitet daraus den
+# versionCode ab (v0.8.4 -> 80400); ohne Treffer wird er 1, und "adb install -r" lehnt die
+# APK dann als DOWNGRADE ab - waehrend ein Testskript, das die Meldung verschluckt, munter
+# das ALTE Binary weitertestet. Drei Diagnoselaeufe gingen so ins Leere.
+[[ "$VERSION" =~ [0-9]+\.[0-9]+\.[0-9]+ ]] || die "Version '$VERSION' enthaelt kein x.y.z (versionCode waere 1 -> Android-Downgrade-Sperre)"
 NAME="re15_port_${VERSION}_android"
 
 # --- SDK / JDK ----------------------------------------------------------------

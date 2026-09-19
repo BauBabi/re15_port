@@ -6,6 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__ANDROID__)
+#include <android/log.h>
+/* Diagnose-Ausgabe auf Android ZUSAETZLICH nach logcat: stderr (= debug.log) ist dort nicht
+ * verlaesslich (Emulator 2026-09-19: das Log endete in jedem Lauf nach den GL-Treiberzeilen). */
+#define TP_LOG(...) do { fprintf(stderr, __VA_ARGS__); __android_log_print(ANDROID_LOG_INFO, "re15", __VA_ARGS__); } while (0)
+#else
+#define TP_LOG(...) fprintf(stderr, __VA_ARGS__)
+#endif
+
 /* PSX-Pad-Bits — dasselbe Wort wie input_pc.c / include/re15_player.h (RE15_PAD_BIT_*). */
 #define TP_SELECT   0x0001
 #define TP_START    0x0008
@@ -33,8 +42,23 @@ static int           s_marke    = 0;       /* F9-Flanke, wird von take_marke() v
  * nie im Pad-Wort an (START traf zufaellig eine Bildgrenze). Ein Finger, der zwischen zwei
  * Eingabe-Ticks kommt und geht, bleibt deshalb bis zum naechsten Tick aktiv und wird dort
  * genau einmal gemeldet. */
-typedef struct { int active; int seen; int up_pending; SDL_FingerID id; SDL_TouchID dev; float x, y; } finger_t;
-static finger_t s_fingers[TP_MAX_FINGERS];
+/* ⛔ ROHE FENSTERKOORDINATEN (gemessen 2026-09-19, Emulator 2400x1080): SDLs Renderer haengt
+ * bei gesetzter logischer Groesse (320x240) einen Event-Watch ein, der Finger-Koordinaten auf
+ * den 4:3-Ausschnitt umrechnet UND auf [0,1] KLEMMT (SDL_render.c SDL_RendererEventWatch,
+ * "we just clamp these events to the edge"). Ein Tipp im linken Letterbox-Streifen (x=243)
+ * kam als norm.x=0.000 an, START (x=1362) als 0.613 = (1362-480)/1440 — das D-Pad war damit
+ * unerreichbar, START traf nur zufaellig. Auf dem Desktop (1280x960 = exakt 4:3) ist die
+ * Abbildung die Identitaet, deshalb fiel es dort nicht auf.
+ * Deshalb liest dieses Modul die Finger in einem EIGENEN Watch, der VOR dem Renderer
+ * registriert wird (SDL ruft Watcher in Einfuege-Reihenfolge) und damit die unveraenderten,
+ * fenster-normierten Werte sieht. Der Watch laeuft im Thread, der das Event einstellt (auf
+ * Android der UI-Thread) -> Mutex; Pixelrechnung/Layout nur im Hauptthread (pad_bits/draw).
+ * fresh = noch nie vom Hauptthread gesehen (F9-Flanke, Spur). */
+typedef struct { int active; int seen; int up_pending; int fresh; SDL_FingerID id; SDL_TouchID dev; float nx, ny; } finger_t;
+static finger_t   s_fingers[TP_MAX_FINGERS];
+static SDL_mutex *s_mx = NULL;
+static void tp_lock(void)   { if (s_mx) SDL_LockMutex(s_mx); }
+static void tp_unlock(void) { if (s_mx) SDL_UnlockMutex(s_mx); }
 
 /* Knopf-Arten */
 enum { K_RECT = 0, K_FACE = 1, K_DPAD = 2, K_MARKE = 3 };
@@ -193,14 +217,49 @@ static uint16_t tp_bits_for_point(float x, float y)
     return bits;
 }
 
-/* Bits aller aufliegenden Finger, OHNE den Latch zu verbrauchen (fuer das Zeichnen). */
+/* Die ersten Finger-Ereignisse ins debug.log (Android zusaetzlich logcat): ohne diese Spur
+ * laesst sich "Tipp kam nicht an" nicht von "Tipp kam am falschen Ort an" unterscheiden
+ * (genau so wurde die SDL-Klemmung gefunden). Gedeckelt, damit eine Sitzung das Log nicht flutet. */
+static int s_trace_n = 0;
+#define TP_TRACE_MAX 60
+
+/* Bits aller aufliegenden Finger (Hauptthread, Lock gehalten). consume=1 verbraucht den
+ * Ein-Tick-Latch und wertet frische Finger aus (F9-Flanke, Spur). */
+static uint16_t tp_bits_locked(int W, int H, int consume)
+{
+    uint16_t bits = 0;
+    for (int i = 0; i < TP_MAX_FINGERS; i++) {
+        finger_t *f = &s_fingers[i];
+        if (!f->active) continue;
+        float x = f->nx * (float)W, y = f->ny * (float)H;
+        uint16_t b = tp_bits_for_point(x, y);
+        bits |= b;
+        if (!consume) continue;
+        if (f->fresh) {
+            f->fresh = 0;
+            /* F9-MARKE ist eine Flanke: nur beim Aufsetzen, nie beim Halten. */
+            for (int k = 0; k < s_btn_n; k++)
+                if (s_btn[k].kind == K_MARKE && tp_hit(&s_btn[k], x, y)) s_marke = 1;
+            if (s_trace_n < TP_TRACE_MAX) {
+                s_trace_n++;
+                TP_LOG("[touch] down dev=%lld id=%lld norm=(%.3f,%.3f) px=(%d,%d) bits=%04X\n",
+                       (long long)f->dev, (long long)f->id, (double)f->nx, (double)f->ny, (int)x, (int)y, b);
+            }
+        }
+        f->seen = 1;
+        if (f->up_pending) { f->active = 0; f->up_pending = 0; }
+    }
+    return bits;
+}
+
+/* Fuer das Zeichnen: OHNE den Latch zu verbrauchen. */
 static uint16_t tp_bits_peek(void)
 {
     int W, H; tp_output_size(&W, &H);
     tp_layout(W, H);
-    uint16_t bits = 0;
-    for (int i = 0; i < TP_MAX_FINGERS; i++)
-        if (s_fingers[i].active) bits |= tp_bits_for_point(s_fingers[i].x, s_fingers[i].y);
+    tp_lock();
+    uint16_t bits = tp_bits_locked(W, H, 0);
+    tp_unlock();
     return bits;
 }
 
@@ -208,18 +267,20 @@ static uint16_t tp_bits_peek(void)
 uint16_t re15_touch_pc_pad_bits(void)
 {
     if (!re15_touch_pc_enabled() || !s_r) return 0;
-    uint16_t bits = tp_bits_peek();
-    for (int i = 0; i < TP_MAX_FINGERS; i++) {
-        if (!s_fingers[i].active) continue;
-        s_fingers[i].seen = 1;
-        if (s_fingers[i].up_pending) { s_fingers[i].active = 0; s_fingers[i].up_pending = 0; }
-    }
+    int W, H; tp_output_size(&W, &H);
+    tp_layout(W, H);
+    tp_lock();
+    uint16_t bits = tp_bits_locked(W, H, 1);
+    tp_unlock();
     return bits;
 }
 
 int re15_touch_pc_take_marke(void)
 {
-    int m = s_marke; s_marke = 0; return m;
+    tp_lock();
+    int m = s_marke; s_marke = 0;
+    tp_unlock();
+    return m;
 }
 
 /* ------------------------------------------------------------------------------ Events */
@@ -231,32 +292,33 @@ static finger_t *tp_find(SDL_TouchID dev, SDL_FingerID id)
     return NULL;
 }
 
+/* Die drei Finger-Funktionen erwarten das Lock (bzw. Einzel-Thread im Selbsttest); sie arbeiten
+ * NUR mit normierten Koordinaten — keine Renderer-Aufrufe, denn sie laufen im Event-Thread. */
 static void tp_finger_down(SDL_TouchID dev, SDL_FingerID id, float nx, float ny)
 {
-    int W, H; tp_output_size(&W, &H);
-    tp_layout(W, H);
-    float x = nx * (float)W, y = ny * (float)H;
     finger_t *f = tp_find(dev, id);
     if (!f) for (int i = 0; i < TP_MAX_FINGERS; i++) if (!s_fingers[i].active) { f = &s_fingers[i]; break; }
     if (!f) return;
-    f->active = 1; f->seen = 0; f->up_pending = 0; f->id = id; f->dev = dev; f->x = x; f->y = y;
-    /* F9-MARKE ist eine Flanke: nur beim Aufsetzen, nie beim Halten. */
-    for (int i = 0; i < s_btn_n; i++)
-        if (s_btn[i].kind == K_MARKE && tp_hit(&s_btn[i], x, y)) s_marke = 1;
+    f->active = 1; f->seen = 0; f->up_pending = 0; f->fresh = 1;
+    f->id = id; f->dev = dev; f->nx = nx; f->ny = ny;
 }
 
 static void tp_finger_move(SDL_TouchID dev, SDL_FingerID id, float nx, float ny)
 {
-    int W, H; tp_output_size(&W, &H);
     finger_t *f = tp_find(dev, id);
     if (!f) { tp_finger_down(dev, id, nx, ny); return; }
     if (f->up_pending) return;                 /* schon losgelassen, nur noch im Latch */
-    f->x = nx * (float)W; f->y = ny * (float)H;
+    f->nx = nx; f->ny = ny;
 }
 
 static void tp_finger_up(SDL_TouchID dev, SDL_FingerID id)
 {
     finger_t *f = tp_find(dev, id);
+    if (s_trace_n < TP_TRACE_MAX) {
+        s_trace_n++;
+        TP_LOG("[touch] up   dev=%lld id=%lld %s seen=%d\n", (long long)dev, (long long)id,
+               f ? "bekannt" : "UNBEKANNT", f ? f->seen : -1);
+    }
     if (!f) return;
     if (f->seen) f->active = 0;                /* regulaer: mindestens ein Tick lang gemeldet */
     else         f->up_pending = 1;            /* Blitz-Tipp: bis zum naechsten Tick halten */
@@ -267,19 +329,41 @@ static void tp_release_all(void)
     for (int i = 0; i < TP_MAX_FINGERS; i++) { s_fingers[i].active = 0; s_fingers[i].up_pending = 0; }
 }
 
+/* Der Watch: sieht jedes Event beim Einstellen, VOR dem Renderer-Watch (Registrierung in
+ * re15_touch_pc_attach_watch, vor SDL_CreateRenderer). Rueckgabe wird von SDL ignoriert. */
+static int SDLCALL tp_watch(void *userdata, SDL_Event *e)
+{
+    (void)userdata;
+    if (!e || !re15_touch_pc_enabled()) return 1;
+    switch (e->type) {
+    case SDL_FINGERDOWN:   tp_lock(); tp_finger_down(e->tfinger.touchId, e->tfinger.fingerId, e->tfinger.x, e->tfinger.y); tp_unlock(); break;
+    case SDL_FINGERMOTION: tp_lock(); tp_finger_move(e->tfinger.touchId, e->tfinger.fingerId, e->tfinger.x, e->tfinger.y); tp_unlock(); break;
+    case SDL_FINGERUP:     tp_lock(); tp_finger_up(e->tfinger.touchId, e->tfinger.fingerId); tp_unlock(); break;
+    default: break;
+    }
+    return 1;
+}
+
+void re15_touch_pc_attach_watch(void)
+{
+    static int attached = 0;
+    if (attached || !re15_touch_pc_enabled()) return;
+    attached = 1;
+    if (!s_mx) s_mx = SDL_CreateMutex();
+    SDL_AddEventWatch(tp_watch, NULL);
+}
+
 void re15_touch_pc_event(const SDL_Event *e)
 {
     if (!e || !re15_touch_pc_enabled()) return;
     switch (e->type) {
-    case SDL_FINGERDOWN:   tp_finger_down(e->tfinger.touchId, e->tfinger.fingerId, e->tfinger.x, e->tfinger.y); break;
-    case SDL_FINGERMOTION: tp_finger_move(e->tfinger.touchId, e->tfinger.fingerId, e->tfinger.x, e->tfinger.y); break;
-    case SDL_FINGERUP:     tp_finger_up(e->tfinger.touchId, e->tfinger.fingerId); break;
-    /* Fokus weg / App in den Hintergrund: kein Finger darf "haengen" bleiben. */
+    /* Finger-Events kommen ueber den Watch (rohe Koordinaten) — hier nur noch:
+     * Fokus weg / App in den Hintergrund -> kein Finger darf "haengen" bleiben. */
     case SDL_APP_WILLENTERBACKGROUND:
-    case SDL_APP_DIDENTERBACKGROUND: tp_release_all(); break;
+    case SDL_APP_DIDENTERBACKGROUND: tp_lock(); tp_release_all(); tp_unlock(); break;
     case SDL_WINDOWEVENT:
         if (e->window.event == SDL_WINDOWEVENT_FOCUS_LOST ||
-            e->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) tp_release_all();
+            e->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) { tp_lock(); tp_release_all(); tp_unlock(); }
         break;
     default: break;
     }

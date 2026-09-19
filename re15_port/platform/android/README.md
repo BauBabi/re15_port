@@ -105,8 +105,15 @@ Streifen. Layout in Fensterkoordinaten, u = Bildhoehe/12:
 Mehrere Finger gleichzeitig sind vorgesehen (z.B. Richtung + X = Rennen, R1 + [] = Schuss).
 Der Finger darf auf dem D-Pad gleiten; die Richtung folgt dem Winkel zum Zentrum
 (Totzone in der Mitte). Ein Blitz-Tipp (Finger kommt und geht zwischen zwei
-Eingabe-Ticks, z.B. `adb shell input tap`) wird genau einen Tick lang gemeldet — ohne diesen
-Latch ging im Emulator jeder zweite Tipp verloren.
+Eingabe-Ticks, z.B. `adb shell input tap`) wird genau einen Tick lang gemeldet.
+
+**Warum ein eigener SDL-Event-Watch (touch_overlay_pc.c):** SDLs Renderer rechnet bei
+gesetzter logischer Groesse (320x240) Finger-Koordinaten auf den 4:3-Ausschnitt um und
+**klemmt sie auf [0,1]** — alles in den Letterbox-Streifen landet am Rand (gemessen im
+Emulator: Tipp bei x=243 kam als 0.000 an, START bei x=1362 als 0.613 = (1362-480)/1440).
+Das Modul registriert deshalb VOR dem Renderer einen eigenen Watch und liest die rohen,
+fenster-normierten Werte. Auf dem Desktop (Fenster exakt 4:3) ist die Abbildung die
+Identitaet, dort faellt der Unterschied nicht auf.
 
 Umgebungsvariablen lassen sich auf Android nicht setzen; das Overlay ist dort immer an.
 Zurueck-Taste: wird abgefangen (beendet das Spiel nicht — Beenden ueber die App-Uebersicht).

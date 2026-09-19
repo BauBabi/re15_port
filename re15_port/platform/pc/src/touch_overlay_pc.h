@@ -37,6 +37,11 @@ extern "C" {
 /* VOR SDL_Init(): setzt auf dem Desktop den Maus->Finger-Hint, wenn das Overlay aktiv ist. */
 void re15_touch_pc_preinit(void);
 
+/* NACH SDL_Init(), VOR SDL_CreateRenderer(): registriert den Finger-Watch. Er muss vor dem
+ * Renderer-Watch in SDLs Liste stehen, sonst sieht er nur die auf den 4:3-Ausschnitt
+ * umgerechneten und auf [0,1] geklemmten Koordinaten (siehe touch_overlay_pc.c). */
+void re15_touch_pc_attach_watch(void);
+
 /* Nach SDL_CreateRenderer(): merkt sich den Renderer, laeuft ggf. den Selbsttest. */
 void re15_touch_pc_init(SDL_Renderer *r);
 
