@@ -1382,7 +1382,81 @@ static const re2_geo_t s_re2z_geo[20] = {
         { {0x08,0x04,0x10}, {{ 200,0,7500, 500},{ 200,0,7500, 500},{ 200,0,7500, 500}} },
         { {0x10,0x20,0x40}, {{ 100,0,1000, 375},{4100,0,1000, 500},{8200,0,2500, 625}} } } },
     [19] = RE2_GEO_HANDGUN(0x800A6618u, 0x800A6634u, 0x800A6650u),
+    /* ---- PHASE 3 (re-restposten): die restlichen Hitscan-Ids -----------------------------
+     * Item 1 MESSER: eigene Record-REIHE, s. s_re2z_geo1 unten. Hier steht Schritt 0, damit
+     * re15_re2_gun_probe_owns(1) greift.
+     * Item 14: EIN Record je Gruppe (@0x800A67F0/680C/6828, Box (200,0,3500,500), Flags
+     * 04/08/10) - im Port ueber re2z_row_from_weapon NICHT erreichbar (keine RE1.5-Waffe
+     * bildet auf 14 ab), also gedumpte Daten ohne Konsument.
+     * KEIN Record haben die Ids 9/10/11/12/16/17: ihr Zeiger steht auf dem NULL-Record
+     * @0x800A6350 (Flags 00 00 00, alle Boxen 0), Pattern @0x800A63A4 = `00/255` - der
+     * Applier kann sie nie treffen, sie bleiben auf dem bisherigen Weg (dokumentierte
+     * Hitscan-BRUECKE fuer Granaten/Flammenwerfer/Rakete). Eigener Dump:
+     * re15_port/tools/re2_gun_tables_dump.py, Protokoll
+     * analysis/befunde_2026-09-19/re-restposten_gun_records.log. */
+    [ 1] = { {0x800A657Cu, 0x800A63A8u, 0x800A64E0u}, {          /* Messer, Schritt 0 */
+        { {0x08,0x00,0x00}, {{  50,500, 326,121},{0,0,0,0},{0,0,0,0}} },
+        { {0x08,0x00,0x00}, {{ 250,800, 426,121},{0,0,0,0},{0,0,0,0}} },
+        { {0x80,0x00,0x00}, {{-500,800, 326,121},{0,0,0,0},{0,0,0,0}} } } },
+    [14] = { {0x800A67F0u, 0x800A680Cu, 0x800A6828u}, {          /* ohne Port-Konsument */
+        { {0x04,0x00,0x00}, {{ 200,0,3500,500},{0,0,0,0},{0,0,0,0}} },
+        { {0x08,0x00,0x00}, {{ 200,0,3500,500},{0,0,0,0},{0,0,0,0}} },
+        { {0x10,0x00,0x00}, {{ 200,0,3500,500},{0,0,0,0},{0,0,0,0}} } } },
 };
+/* ============================ DAS MESSER (RE2-Item 1) =======================================
+ * Der Geometrie-Zeiger @0x800A68E8 + item*24 + grp*8 ist ein PAAR {rec_base, pattern}; das
+ * zweite Wort ist eine Liste von {recIdx, count} und waehlt PRO ANGRIFFSBILD einen Record aus
+ * dem Array ab rec_base (Stride 0x1C):
+ *   @0x80041128-30  `lbu v0,492(t0)` (+0x1EC Restbilder) / `bne v0,zero,0x80041168`
+ *   @0x80041138-44  `lbu v0,493(t0); addiu v0,v0,1; sb v0,493(t0)`   (+0x1ED Listenindex++)
+ *   @0x8004114C-60  `lw v1,4(a2); sll v0,v0,1; addu; lbu v0,1(v0); sb v0,492(t0)`  (count)
+ *   @0x8004116C-7C  `lbu v0,493(t0); lw v1,4(a2); sll; addu; lbu a1,0(v0)`         (recIdx)
+ *   @0x80041180-9C  recIdx 0xFF -> `lbu v1,492; addiu v1,-1; sb v1,492; j 0x80041aec` mit
+ *                   v0 = 0: DIESES BILD TRIFFT NICHTS (kein Listenende!)
+ *   @0x800411A0-E4  recIdx 0xFE -> Ruecksprung an den Listenanfang
+ * Alle SCHUSSWAFFEN stehen in jedem treffenden Bild auf Record 0 (eigener Dump: Pistole
+ * `00/1 00/255`, Schrot `00/1 ff/1 00/1 ff/1 00/1 ff/1 00/255` - genau die vier Schrot-Resolves
+ * des Ports -, SMG `00/1 ff/2 fe/255`); fuer sie reicht die Tabelle oben. NUR das Messer faehrt
+ * eine Reihe:
+ *   Pattern @0x800A6608 (DOWN) / @0x800A6434 (LEVEL) / @0x800A656C (UP), alle drei gleich:
+ *   `ff/6 00/1 01/1 02/1 03/1 04/1 00/255`
+ *   = SECHS Bilder ohne Treffer (Ausholen), dann je EIN Bild die Records 0..4 (der Klingenbogen),
+ *   danach Record 0 bis zum Angriffsende.
+ * PORT-ABBILDUNG (benannt, nicht geraten): der Port ruft den Resolver fuer den Schlag nur im
+ * Schadensfenster des RE1.5-Clips auf - `anim_frame 6..11`, byte-true @0x80035388-cc
+ * (re15_player_slash_window, player_common.c:278). Dieses Fenster beginnt bei genau dem Bild 6,
+ * an dem RE2s Ausholphase `ff/6` endet - beide Originale legen den ersten Schadensframe auf 6.
+ * Zuordnung: Bild 6 -> Record 0 ... Bild 10 -> Record 4, Bild 11 und alles ausserhalb ->
+ * Record 0 (der Listeneintrag `00/255`).
+ * Das Messer laeuft damit ueber DIESELBE Teile-Maske wie die Schusswaffen: EBEN waehlt ueber
+ * Zeile 3 Satz 2 `02 00 00` nur den Rumpf (ein Kriecher mit Maske 1 = NUR BEINE faellt heraus),
+ * TIEF ueber Zeile 6 `01 02 04` zuerst die Beine. */
+static const re2_georec_t s_re2z_geo1[3][5] = {
+  { /* DOWN, rec_base @0x800A657C */
+    { {0x08,0,0}, {{  50, 500, 326,121},{0,0,0,0},{0,0,0,0}} },   /* [0] @0x800A657C */
+    { {0x04,0,0}, {{ 450, 350, 386,145},{0,0,0,0},{0,0,0,0}} },   /* [1] @0x800A6598 */
+    { {0x04,0,0}, {{ 400, 100, 386,145},{0,0,0,0},{0,0,0,0}} },   /* [2] @0x800A65B4 */
+    { {0x04,0,0}, {{ 950, -50, 396,161},{0,0,0,0},{0,0,0,0}} },   /* [3] @0x800A65D0 */
+    { {0x04,0,0}, {{ 500,-150, 266,121},{0,0,0,0},{0,0,0,0}} } }, /* [4] @0x800A65EC */
+  { /* LEVEL, rec_base @0x800A63A8 */
+    { {0x08,0,0}, {{ 250, 800, 426,121},{0,0,0,0},{0,0,0,0}} },   /* [0] @0x800A63A8 */
+    { {0x08,0,0}, {{ 700, 800, 426,121},{0,0,0,0},{0,0,0,0}} },   /* [1] @0x800A63C4 */
+    { {0x08,0,0}, {{1150, 300, 426,121},{0,0,0,0},{0,0,0,0}} },   /* [2] @0x800A63E0 */
+    { {0x08,0,0}, {{1250,   0, 426,121},{0,0,0,0},{0,0,0,0}} },   /* [3] @0x800A63FC */
+    { {0x08,0,0}, {{1050,-200, 426,121},{0,0,0,0},{0,0,0,0}} } }, /* [4] @0x800A6418 */
+  { /* UP, rec_base @0x800A64E0 */
+    { {0x80,0,0}, {{-500, 800, 326,121},{0,0,0,0},{0,0,0,0}} },   /* [0] @0x800A64E0, Flag 0x80 */
+    { {0x10,0,0}, {{   0,1100, 362,121},{0,0,0,0},{0,0,0,0}} },   /* [1] @0x800A64FC */
+    { {0x10,0,0}, {{ 700, 800, 410,157},{0,0,0,0},{0,0,0,0}} },   /* [2] @0x800A6518 */
+    { {0x10,0,0}, {{ 300,-100, 410,157},{0,0,0,0},{0,0,0,0}} },   /* [3] @0x800A6534 */
+    { {0x10,0,0}, {{1050,-550, 326,121},{0,0,0,0},{0,0,0,0}} } }, /* [4] @0x800A6550 */
+};
+/* Pattern-Schritt des Messers aus dem Bild des Schlag-Clips (s. Block oben). */
+static int re15_re2_knife_step(void)
+{
+    int f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
+    return (f >= 6 && f <= 10) ? (f - 6) : 0;
+}
 /* DAT_800A6DB4 (eigener Dump): Satz 1 (Flag ohne 8) row0/row3/row6, Satz 2 (Flag&8) ab +9. */
 static const uint8_t s_re2z_prio[18] = { 4,2,1, 2,1,4, 1,2,4,   4,2,0, 2,0,0, 1,2,0 };
 
@@ -1398,7 +1472,21 @@ static int re15_re2_window(const int16_t *fw, uint8_t flag, int32_t *lo, int32_t
     case 0x10: l = fw[0]; h = fw[1]; third = (l - h) / 3; break;                              /* case 4 */
     case 0x20: l = fw[0]; h = fw[1]; third = (l - h) / 3; l += third;   h += third;   break;  /* case 5 */
     case 0x40: l = fw[0]; h = fw[1]; third = (l - h) / 3; l += 2*third; h += 2*third; break;  /* case 6 */
-    default:   *lo = 1; *hi = 0; return 0;      /* kein Fall im switch -> kein definiertes Fenster */
+    default:
+        /* FLAG 0x80 (Messer-UP-Record @0x800A64E0) hat in FUN_80041B20 KEINEN Fall: die
+         * Bit-Suchschleife liefert iVar1 = 7, der switch faellt in `default: goto
+         * switchD_80041b6c_default`, und *param_3 / *param_4 werden NICHT beschrieben - der
+         * Aufrufer sieht die Werte des VORIGEN Aufrufs (local_80/local_7c sind
+         * funktionsweite Locals von FUN_800410CC, ueber alle Kandidaten und Sub-Boxen
+         * geteilt), im ersten Bild sogar unberuehrten Stack. Das Original hat hier also kein
+         * definiertes Fenster.
+         * PORT-ENTSCHEIDUNG (als solche gekennzeichnet): diese Sub-Box wird VERWORFEN. Sie
+         * zu uebernehmen hiesse, einen zufaelligen Stackwert nachzubauen; sie "sinnvoll" zu
+         * fuellen hiesse, ein Fenster zu erfinden. Messbare Folge: Messer + HOCH-Zielen
+         * trifft im ersten Schadensbild nichts - die Bilder 7..10 desselben Schlags tragen
+         * Flag 0x10 (UP-Fenster [-3000,-500] fuer Id 1 @0x800A412C+8), das dy = 0 ohnehin
+         * ausschliesst. Fuer bodengleiche Ziele aendert die Entscheidung damit NICHTS. */
+        *lo = 1; *hi = 0; return 0;
     }
     *lo = l; *hi = h; return third;
 }
@@ -1433,7 +1521,11 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
                               int *zone, int *bracket)
 {
     if (rid >= 20u || s_re2z_geo[rid].addr[0] == 0u) return 0;
-    const re2_georec_t *g  = &s_re2z_geo[rid].grp[(elev < 0) ? 0 : (elev > 0) ? 2 : 1];
+    unsigned grp = (elev < 0) ? 0u : (elev > 0) ? 2u : 1u;
+    /* Messer: Record aus der Pattern-Reihe des laufenden Schlag-Bildes (Block ueber
+     * s_re2z_geo1). Alle uebrigen Ids stehen in jedem treffenden Bild auf Record 0. */
+    const re2_georec_t *g  = (rid == 1u) ? &s_re2z_geo1[grp][re15_re2_knife_step()]
+                                         : &s_re2z_geo[rid].grp[grp];
     const int16_t      *fw = s_re2z_fen[rid];
     unsigned mask = (unsigned)e->re2z_parts & 7u;                 /* uVar5 = word0 >> 0x1a & 7 */
     int32_t  dy   = e->y - pl->y;                                 /* puVar9[0xf] - player[+0x3c] */
@@ -1450,6 +1542,7 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
     for (int b = 0; b < 3; b++) {
         int32_t lo, hi, third;
         if (g->flag[b] == 0u) continue;                           /* `*(char *)(iVar10 + 1+b) != 0` */
+        if (g->flag[b] == 0x80u) continue;         /* kein Fall in FUN_80041B20, s. dort */
         third = re15_re2_window(fw, g->flag[b], &lo, &hi);
         if ((uint32_t)(dy - lo) > (uint32_t)(hi - lo)) continue; /* dy im Fenster */
         int32_t depth4 = g->box[b][2] + ((b == 0) ? (RE2Z_RAD1EE >> 2) : 0);   /* rec+8 += +0x1EE>>2 */
@@ -1472,9 +1565,10 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
     return 1;
 }
 
-/* Die RE2-Ids, die im Original durch FUN_800410CC laufen (Geometrie-Record != 0x800A6350). Die
- * Bruecken-Ids 9/10/11/16/17 (Projektil-/Strahl-Waffen, NULL-Record) und das Messer (Id 1,
- * Nahkampf-Kegel des Ports) bleiben auf dem bisherigen Pfad. */
+/* Die RE2-Ids, die im Original durch FUN_800410CC laufen (Geometrie-Record != 0x800A6350).
+ * Das MESSER (Id 1) laeuft seit Phase 3 mit (eigene Record-Reihe, s.o.); ohne Record - und
+ * damit weiter auf dem bisherigen Pfad - bleiben nur die Bruecken-Ids 9/10/11/12/16/17, deren
+ * Zeiger auf den NULL-Record @0x800A6350 steht. */
 static int re15_re2_gun_probe_owns(unsigned rid)
 {
     return rid < 20u && s_re2z_geo[rid].addr[0] != 0u;
@@ -1689,7 +1783,19 @@ retry_after_latch:
                          * EBEN auf jeder Distanz treffen (gemessen: 18 neue Zellen). Die
                          * Liege-Spawn-Entscheidung liegt beim Nachbar-Dossier liegende-zombies;
                          * bis dahin bleibt EXEC[7] auf der bisherigen Liege-Regel (grid&0x80). */
+                        /* ⛔ DIE MESSER-GEOMETRIE GILT NUR FUER DIE ECHTEN NAHKAMPF-WAFFEN.
+                         * re2z_row_from_weapon bildet ausser dem Messer (w1) und dem Rohr (w2)
+                         * auch w0 (unbewaffnet) und w21 (keine Waffe) auf RE2-Id 1 ab — beides
+                         * ausdrueckliche [PORT-ZUORDNUNG]en fuer die SCHADENSZEILE ("schwaechste
+                         * gueltige Zeile" / "defensiver Default"), kein Nahkampf-Befund. Welcher
+                         * Tester eine RE1.5-Waffe fuehrt, sagt die Dispatch-Tabelle @0x8006E548
+                         * (selbst gedumpt): [0] = [21] = 0x80012574 = Schuss-STREIFEN,
+                         * [1] = [2] = 0x800127FC = Nahkampf-KEGEL. Nur die beiden Kegel-Waffen
+                         * bekommen deshalb die Messer-Records; w0/w21 behalten ihren Streifen.
+                         * (Gemessen: ohne diese Schranke verfehlte w0 auf der Pin-Distanz 3500
+                         * jeden Schuss, weil die Messer-LEVEL-Box nur bis ~2450 reicht.) */
                         int re2_applier = re2_owned && re15_re2_gun_probe_owns(rid) &&
+                                          (rid != 1u || weapon_id == 1 || weapon_id == 2) &&
                                           !(e->state == 1 && e->sub_state_1 == 7);
                         int lying = !re2_applier &&
                                     ((e->grid_id & 0x80) ||
