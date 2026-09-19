@@ -237,6 +237,10 @@ int main(int argc, char **argv)
     printf("\n=== TEIL 2: ORAKEL (LEVEL-Schuss aus 1200 Einheiten, 30 Schuss) ===\n");
     int ncheck = (s_ncase < 6) ? s_ncase : 6;
     int pin_fail = 0, pin_checked = 0;
+    /* Getrennt gezaehlt, weil der Sweep ZWEI Sorten findet (s. Neuverankerung unten):
+     * aufrechte Zombies mit stehengebliebenem grid-Bit (Maske mit Rumpf) und echte
+     * Kriecher (Maske nur Beine). Beide muessen vorkommen, sonst ist die Wache blind. */
+    int pin_upright = 0, pin_crawler = 0;
     for (int i = 0; i < ncheck; i++) {
         case_t *c = &s_cases[i];
         re15_actor_t *pl = setup(c->seed);
@@ -258,9 +262,13 @@ int main(int argc, char **argv)
         e->hp = hp_save; e->state = st; e->sub_state_1 = s1;
         e->grid_id = (uint8_t)(g_save & 0x7f); e->re2z_flags21a = (uint16_t)(a_save & ~2u);
         int h_clean = oracle_hits(c->slot, 30);
-        printf("  Fall %d: seed %2d slot %d f%-4d st=%u s1=%u grid=0x%02X 21A=%04X elev=%d "
-               "-> LEVEL = %2d | DOWN-Aim = %2d | ohne Liege-Bit = %2d\n",
-               i, c->seed, c->slot, c->frame, st, s1, g_save, a_save, elev, h_stale, h_down, h_clean);
+        /* Die TEILE-MASKE ist das RE2-Kriterium des Appliers (word0>>26&7, FUN_800410CC):
+         * Bit0 = Beine (0x04000000), Bit1 = Rumpf (0x08000000), Bit2 = Kopf (0x10000000). */
+        unsigned parts = c->esnap.re2z_parts;
+        printf("  Fall %d: seed %2d slot %d f%-4d st=%u s1=%u grid=0x%02X 21A=%04X 10E=%04X "
+               "parts=%u elev=%d -> LEVEL = %2d | DOWN-Aim = %2d | ohne Liege-Bit = %2d\n",
+               i, c->seed, c->slot, c->frame, st, s1, g_save, a_save, c->esnap.re2z_f10e,
+               parts, elev, h_stale, h_down, h_clean);
         if (pin) {
             /* ⛔ NUR LEBENDE, AUFRECHTE KANDIDATEN PRUEFEN (Runde 12). Der Kandidat wird
              * beim Sweep als aufrecht gefunden, das Orakel laeuft aber Hunderte Bilder
@@ -296,11 +304,37 @@ int main(int argc, char **argv)
              * INS LEERE; treffbar ist er mit TIEF (Zeile `01 02 04`, Beine) — und genau das
              * misst h_down. Der alte Pin (LEVEL > 0) hielt den Port auf einem Nicht-RE2-Stand
              * fest; jetzt: LEVEL = 0 (byte-true), DOWN > 0 (der Kriecher ist NICHT unverwundbar). */
-            if (h_stale != 0) {
-                printf("  FAIL Fall %d: LEVEL-Treffer = %d — der Kriecher (Maske NUR BEINE) darf "
-                       "mit EBEN nicht getroffen werden (DAT_800A6DB4+12 = 02 00 00 & 1 = 0).\n",
-                       i, h_stale);
-                pin_fail = 1;
+            /* ⛔ NEUVERANKERUNG 2026-09-19 (nach dem Zusammenfuehren von trefferhoehe mit
+             * liegende-und-aufstehen + kriecher-1010): Der Sweep sammelt AUFRECHTE Zombies
+             * (s1 <= 3) mit einem stehengebliebenen Liege-Bit — das sind ZWEI Sorten, nicht
+             * nur Kriecher:
+             *   (a) echte Kriecher   (+0x10E & 0x3F == 1, Maske = NUR BEINE = 1)
+             *   (b) aufrecht Laufende, deren grid noch 0x80 traegt (im Original byte-true:
+             *       der Skript-Wecker setzt 0x89/0x8A und BEHAELT Bit 0x80,
+             *       `sb a2,9(a0)` @0x800411F8) — Maske = BEINE+RUMPF = 3.
+             * Die vorige Fassung erklaerte pauschal ALLE Faelle zu Kriechern und verlangte
+             * LEVEL == 0; damit haette sie (b) rot gemeldet, obwohl dort genau das Gegenteil
+             * die Zusage ist (Nutzer-Befund 2026-08-27 "unverwundbar, bis sie mich gebissen
+             * haben"). Gepinnt wird deshalb das ECHTE RE2-Kriterium, die Teile-Maske:
+             * die EBEN-Zeile ist `02 00 00` (DAT_800A6DB4+12) = NUR RUMPF.
+             * GEMESSEN (dieser Lauf, 5 Faelle): parts==1 -> LEVEL 0/0/0, parts==3 -> LEVEL 30/30. */
+            if ((parts & 2u) != 0u) {
+                pin_upright++;
+                if (h_stale <= 0) {
+                    printf("  FAIL Fall %d: LEVEL-Treffer = %d — ein AUFRECHTER Zombie (Maske %u "
+                           "mit Rumpf) muss mit EBEN treffbar bleiben; das stehengebliebene "
+                           "Liege-Bit darf ihn NICHT sperren (Nutzer-Befund 2026-08-27).\n",
+                           i, h_stale, parts);
+                    pin_fail = 1;
+                }
+            } else {
+                pin_crawler++;
+                if (h_stale != 0) {
+                    printf("  FAIL Fall %d: LEVEL-Treffer = %d — Maske %u (NUR BEINE) darf mit "
+                           "EBEN nicht getroffen werden (DAT_800A6DB4+12 = 02 00 00 & 1 = 0).\n",
+                           i, h_stale, parts);
+                    pin_fail = 1;
+                }
             }
             /* Nach unten zielen muss treffen — sonst waere der Kriecher wieder unverwundbar
              * (der eigentliche Nutzer-Befund). */
@@ -322,13 +356,26 @@ int main(int argc, char **argv)
                    "Basis neu herleiten, nicht die Schranke senken.\n");
             pin_fail = 1;
         }
-        /* Der RE1.5-Kriecher (grid_id = 0x81, @0x801050d0 `ori v0,zero,0x81` /
-         * @0x801050d4 `sb v0,9(v1)`) darf NICHT betroffen sein — dort ist die Band-Sperre
-         * byte-true und bleibt bestehen. */
-        if (via_grid != 0 || via_both != 0) {
-            printf("FAIL: %ld via grid&0x80 / %ld via beide — der Fix haette den RE1.5-"
-                   "Kriecher angefasst, der byte-true gesperrt bleiben muss.\n",
-                   via_grid, via_both);
+        /* ⛔ ERSETZT 2026-09-19 die Zusage `via_grid == 0 && via_both == 0`.
+         * Sie stammte aus dem alten Modell, in dem der Treffer-Ausgang an den Bits
+         * grid&0x80 / +0x21A&2 hing, und verlangte, dass der Fix keine grid-Faelle
+         * anfasst. Seit der Applier ueber die TEILE-MASKE entscheidet (FUN_800410CC,
+         * word0>>26&7), spielen beide Bits fuer die Trefferaufloesung ueberhaupt keine
+         * Rolle mehr — `via_grid` zaehlt damit nur noch eine MESSGROESSE: aufrechte
+         * Zombies, deren grid noch Bit 0x80 traegt. Das ist im Original der Normalfall
+         * (Skript-Wecker `Member_set(12,0x89/0x8A)` -> `sb a2,9(a0)` @0x800411F8 BEHAELT
+         * Bit 0x80), also keine Fehlerbedingung. Gemessen nach dem Zusammenfuehren:
+         * 250 solcher Bilder, 156 via +0x21A&2 — und die grid-Faelle sind genau die,
+         * die mit EBEN treffbar sein MUESSEN (Maske 3).
+         * Die Nachfolge-Zusage ist strenger als die alte, weil sie beide Sorten verlangt:
+         * der Lauf muss sowohl einen aufrechten (Maske mit Rumpf) als auch einen
+         * kriechenden Fall (Maske nur Beine) ausgewertet haben. Fehlt eine Sorte, ist die
+         * Wache halb blind und die Basis gehoert neu hergeleitet. */
+        if (pin_upright == 0 || pin_crawler == 0) {
+            printf("FAIL: Wache halb blind — %d aufrechte (Maske mit Rumpf) / %d kriechende "
+                   "(Maske nur Beine) Faelle ausgewertet; es muessen BEIDE Sorten vorkommen "
+                   "(gemessen 2026-09-19: 2 aufrechte, 3 kriechende).\n",
+                   pin_upright, pin_crawler);
             pin_fail = 1;
         }
         printf("\n%d Faelle geprueft, %ld aufrechte Frames, %ld mit Liege-Bit (%ld via 21A&2).\n",
