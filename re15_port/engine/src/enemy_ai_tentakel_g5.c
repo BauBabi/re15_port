@@ -41,12 +41,22 @@
  *      Schlauch entlang lokal X (re15_g5_skin.h). Kein uniformer render_scale mehr.
  *   3. SPIELER-ZYLINDER fuer die Kind-Kollision: RE2-Spieler-Init r=450 (`li v1,0x1c2`
  *      @0x8003bdc0 -> +0x9A/9C/90/92 @0x8003bdc4-d0), Hoehe 1530 (+0x9E @0x8003bdec),
- *      ein Segment (+0x1E8=1 @0x8003bddc). Von FUN_80034D0C ist der Kreis-/Hoehentest und
- *      der radiale Push-out portiert; der Vorzeichen-Dreh-Zweig ueber +0x46/+0x44 des Ziels
- *      (Zeilen 45-70 des Decompiles) und die 0x100000-Klemme (Z.71-86) NICHT (dokumentiert).
- *   4. ZUG-GRIFF (sub11 ph3 @0x80102d4c-dec): Schaden 15 (FUN_800401d4(15,1) @0x80102d78)
- *      + Treffer-Latch; die Opfer-Animation (Griff-Modus 5/0x105.. auf dem RE2-PL0-Rig)
- *      bleibt DEFERRED (Dossier 4.3.6).
+ *      ein Segment (+0x1E8=1 @0x8003bddc). Von FUN_80034D0C sind Kreis-/Hoehentest, radialer
+ *      Push-out UND der Vorzeichen-Dreh-Zweig (@0x80034ec4-0x80035044) portiert; die
+ *      0x100000-Klemme (@0x80035048-ac) nicht — sie ist in genau diesem Aufruf beweisbar
+ *      unerreichbar (Beleg bei tent_kind_kollision).
+ *   4. GRIFF-OPFERANIMATION (Runde 16 Nacharbeit): EM037 registriert beim Armieren
+ *      0x800CE300[0x37] = 0x80104288 (@0x801006fc) = den SPIELER-Haken der Routine 5
+ *      (EXE-Verteiler 0x8004006C: `lbu v0,8(a2)` = Greifer-Typ -> 0x800CE300[typ]
+ *      @0x800400a8-b8). Der Haken faechert ueber PL+0x05 in vier Maschinen auf
+ *      (Tabelle @0x8010582c): Variante 0/1 = Zug-Ruck (0x801042c4), 2 = Peitsche aus
+ *      Distanz (0x80104454), 3 = Spiess (0x801046ac), 4 = Spiess auf einen SCHON
+ *      gehaltenen Spieler (0x801048f4). 2/3/4 posieren Leon aus der EIGENEN Opferbank
+ *      des Tentakels (EMD dir[5]/dir[6] = Paar 3, 6 Clips — selbst geparst, kein
+ *      Leihgeber noetig); 0/1 spielen einen Clip aus LEONS eigener Bank (RE2 PL0 Clip
+ *      3/4, `lw a1,264(s1)`/`lw a2,380(s1)` = PL+0x108/+0x17C @0x801043c8-cc) und haben
+ *      im RE1.5-Rig kein belegtes Gegenstueck — dort bleibt der Port-Stagger stehen
+ *      (dokumentierte Port-Entscheidung, s. re15_g5_opfer_start).
  * ========================================================================================== */
 #include <stdint.h>
 #include <stdio.h>
@@ -61,6 +71,9 @@
 #include "re15_skeleton.h"
 #include "re15_anim_select.h"
 #include "re15_math.h"
+#include "re15_audio.h"
+#include "re15_ai_flavor.h"
+#include "re15_esp.h"
 #include "re15_g5_skin.h"
 
 #define TENT_N 4
@@ -105,8 +118,7 @@ typedef struct {
     uint8_t  sub, ph;       /* +0x05 / +0x06                                        */
     uint8_t  ankermodus;    /* +0x219: 0 voll / 1 frei / 2 halb                     */
     uint8_t  variante;      /* +0x16B (Peitschen-Variante)                          */
-    int32_t  timer;         /* +0x158                                               */
-    int32_t  t;             /* Phasenzaehler (sub8 ph4/ph6)                         */
+    int32_t  timer;         /* +0x158 (auch sub8 ph4/ph5/ph6, s. dort)              */
     int32_t  scale_x;       /* part0+0x8C: 0..4096                                  */
     int32_t  rate;          /* +0x15A (s16)                                         */
     int8_t   dir;           /* +0x16A                                               */
@@ -119,6 +131,13 @@ typedef struct {
 static tent_t s_tent[TENT_N];
 static int    s_tent_bereit = 0;
 static uint8_t s_tent_maske = 0;       /* G5 +0x228: Bit i+4 = beschaeftigt */
+
+/* Spieler-Routine 5 (Griff-Opfermaschinen, s. den Block weiter unten). */
+static int8_t  s_opfer_var = -1;     /* PL+0x05, -1 = keine Opfermaschine aktiv */
+static uint8_t s_opfer_ph;           /* PL+0x06 */
+static int16_t s_opfer_t158;         /* PL+0x158 (Variante 3/4)                 */
+static int8_t  s_opfer_t16a;         /* PL+0x16A (Variante 2)                   */
+static int32_t s_opfer_vel[3];       /* PL+0x144/+0x146/+0x148                  */
 
 /* SE-Hook (dieselbe ENEMSE-Bank wie G5, Paar-Zeile 25). */
 static void (*s_tent_se_fn)(int, int) = 0;
@@ -135,13 +154,30 @@ void re15_g5_tentakel_cmd(int idx, uint32_t wort)
     t = &s_tent[idx];
     t->sub = (uint8_t)((wort >> 8) & 0xFFu);
     t->ph  = (uint8_t)((wort >> 16) & 0xFFu);
-    t->timer = 0; t->t = 0; t->getroffen = 0;
+    t->timer = 0; t->getroffen = 0;
 }
 
 void re15_g5_tentakel_broadcast(uint32_t wort)
 {
     int i;
     for (i = 0; i < TENT_N; i++) re15_g5_tentakel_cmd(i, wort);
+}
+
+/* NUR die Phase setzen (`sb v0,6(a2)` — der Boss schreibt in [T1]/[T4] KEIN ganzes
+ * Routine-Wort, sondern nur das Phasenbyte +0x06; Sub bleibt stehen und die Zaehler
+ * bleiben unberuehrt): [T1] t==10/30/40 Phase 1 (@0x80101240/@0x80101268/@0x80101290),
+ * t==90 Phase 6 an alle vier (@0x801012b8-e0), [T4] t==30 Phase 8 an alle vier
+ * (@0x801013bc/c8/d4/e0). */
+void re15_g5_tentakel_phase(int idx, unsigned ph)
+{
+    if (idx < 0 || idx >= TENT_N) return;
+    s_tent[idx].ph = (uint8_t)ph;
+}
+
+void re15_g5_tentakel_phase_alle(unsigned ph)
+{
+    int i;
+    for (i = 0; i < TENT_N; i++) re15_g5_tentakel_phase(i, ph);
 }
 
 /* ---- Spawn beim Kampfstart (Port-Entscheidung 1) ---------------------------------------- */
@@ -199,6 +235,237 @@ void re15_g5_tentakel_reset(void)
         s_tent[i].slot = -1;
     }
     s_tent_bereit = 0; s_tent_maske = 0;
+    s_opfer_var = -1; s_opfer_ph = 0;
+}
+
+/* ============================================================================================
+ * SPIELER-ROUTINE 5 — die vier Griff-Opfermaschinen des Tentakels
+ * --------------------------------------------------------------------------------------------
+ * Kette (selbst disassembliert, Runde 16 Nacharbeit):
+ *   Griff-Stelle schreibt PL+0x04 = (Variante << 8) | 5 und PL+0x1B4 = Greifer, PL+0x188/+0x18C
+ *   = Greifer+0x188/+0x18C (die Opferbank), PL+0x1D3 |= 0x80.
+ *   EXE-Routine 5 (0x8004006C): 0x800CFBD8 |= 0x40, Wort0 &= ~4, dann
+ *   `jalr 0x800CE300[Greifer.typ]` (@0x800400a8-b8) mit (Spieler, PL+0x188, PL+0x18C).
+ *   EM037-Haken 0x80104288: `lbu v0,5(a0)` -> Tabelle @0x8010582c[0..4]
+ *     [0]/[1] 0x801042c4  Zug-Ruck        [2] 0x80104454  Peitsche aus Distanz
+ *     [3]     0x801046ac  Spiess          [4] 0x801048f4  Spiess auf gehaltenen Spieler
+ *   Jede Maschine laeuft ueber PL+0x06 und beendet sich mit PL+0x04 = 1.
+ * Der Port setzt die Maschine ueber den Opfer-Shim um: re15_player_victim_force(0x37, Clip,
+ * Bild) = Victim-Modus 4 (extern gefuehrt) — derselbe Weg wie die ROOM1210-Zellenarme und der
+ * Gator-Finisher. Der Zeichner posiert Leon damit aus SEINEM Skelett mit den Keyframes der
+ * 0x37-Opferbank (main.c, s_victim_skel), und re15_player_is_grabbed() haelt ihn fest.
+ * Die Clip-Woerter sind (Blend<<16)|(Bild<<8)|Clip wie ueberall im Modul.
+ * ========================================================================================== */
+int re15_g5_opfer_variante(void) { return (int)s_opfer_var; }
+int re15_g5_opfer_phase(void)    { return (int)s_opfer_ph; }
+
+/* Die Opferbank des Tentakels (EMD dir[5]/dir[6], 6 Clips). */
+static int opfer_clip_len(int clip)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    if (!b || !b->victim_ok || clip < 0 || clip >= b->anim_victim.clip_count) return 0;
+    return b->anim_victim.clips[clip].frame_count;
+}
+
+/* 0x8002959C auf der Opferbank: +1, Wrap, Rueckgabe 1 am Clip-Ende (wie arm_hook in
+ * enemy_ai_re2_zellenarm.c). Der Blend-Zaehler +0x8F laeuft dabei ab (@0x800299C0-CC). */
+static int opfer_advance(re15_actor_t *pl)
+{
+    int fc = opfer_clip_len((int)pl->motion);
+    uint32_t nf;
+    if (pl->anim_frac > 0) pl->anim_frac--;
+    if (fc <= 0) return 1;
+    nf = pl->anim_frame + 1u;
+    if ((int)nf >= fc) { pl->anim_frame = 0; return 1; }
+    pl->anim_frame = (uint16_t)nf;
+    return 0;
+}
+
+/* Clip-Wort setzen (`sw <wort>,332(s1)` = PL+0x14C: Clip, Bild, Blend). */
+static void opfer_clip(re15_actor_t *pl, uint32_t wort)
+{
+    int fc;
+    re15_player_victim_force(0x37u, (int)(wort & 0xFFu), 0u);
+    fc = opfer_clip_len((int)(wort & 0xFFu));
+    pl->anim_frame = (fc > 0) ? (uint32_t)(((wort >> 8) & 0xFFu) % (unsigned)fc) : 0u;
+    pl->anim_frac  = (uint8_t)((wort >> 16) & 0xFFu);
+}
+
+/* Der Boss (Gegnerliste[0] = `lw v0,-484(v0)` 0x800CFE1C) — Blickziel und Zugrichtung. */
+static const re15_actor_t *opfer_boss(void)
+{
+    int i;
+    for (i = 0; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && g_actors[i].type == 0x36u) return &g_actors[i];
+    return NULL;
+}
+
+/* Peilung auf den Boss + Anschub laengs dieser Richtung (@0x80104370-c0: FUN_800154ac,
+ * RotMatrix(0,yaw,0), ApplyMatrixLV((speed,0,0)) -> PL+0x144). */
+static void opfer_schub(re15_actor_t *pl, int32_t speed)
+{
+    const re15_actor_t *b = opfer_boss();
+    int32_t yaw, cs, sn;
+    s_opfer_vel[0] = s_opfer_vel[1] = s_opfer_vel[2] = 0;
+    if (!b) return;
+    yaw = ((int32_t)re15_atan2_q12(b->z - pl->z, b->x - pl->x) - 0x400) & 0xfff;
+    pl->rot_y = (int16_t)yaw;                       /* der Zug dreht Leon zur Masse */
+    cs = re15_cos_q12((int)yaw); sn = re15_sin_q12((int)yaw);
+    s_opfer_vel[0] = (speed * cs) >> 12;            /* Rot(yaw)*(speed,0,0) */
+    s_opfer_vel[2] = (-speed * sn) >> 12;
+}
+
+/* Position += Geschwindigkeit, danach Geschwindigkeit halbieren (`sll 16 / sra 17`
+ * @0x801043fc-424 bzw. @0x801047c4-804). */
+static void opfer_zug(re15_actor_t *pl)
+{
+    pl->x += s_opfer_vel[0];
+    pl->z += s_opfer_vel[2];
+    s_opfer_vel[0] = (int32_t)(int16_t)s_opfer_vel[0] >> 1;
+    s_opfer_vel[2] = (int32_t)(int16_t)s_opfer_vel[2] >> 1;
+}
+
+static void opfer_ende(re15_actor_t *pl)
+{
+    /* PL+0x1C0 = 0, Wort0 &= ~2, PL+0x1D3 &= 0x7F, 0x800CFBD8 &= ~0x40 (@0x80104624-5c /
+     * @0x80104874-ac) und danach PL+0x04 = 1 nach dem eigenen Aufsteh-Clip 6
+     * (@0x80104660-80). PORT: Leons eigener RE2-Clip 6 hat im RE1.5-Rig kein belegtes
+     * Gegenstueck — der Port beendet den Opfer-Modus und laesst den Spieler-FSM
+     * uebernehmen (dokumentierte Port-Entscheidung). */
+    pl->re2z_self1d3 &= (uint8_t)0x7Fu;
+    re15_player_victim_force_end();
+    s_opfer_var = -1; s_opfer_ph = 0;
+    s_opfer_vel[0] = s_opfer_vel[1] = s_opfer_vel[2] = 0;
+}
+
+/* Griff-Stelle: Variante setzen und die Maschine in Phase 0 starten. */
+void re15_g5_opfer_start(re15_actor_t *pl, int variante)
+{
+    s_opfer_var = (int8_t)variante;
+    s_opfer_ph  = 0;
+    s_opfer_t158 = 0; s_opfer_t16a = 0;
+    s_opfer_vel[0] = s_opfer_vel[1] = s_opfer_vel[2] = 0;
+    pl->re2z_self1d3 |= 0x80u;                      /* `ori v0,v0,0x80` @0x80102da4-a8 */
+}
+
+/* Ist der Spieler frei fuer einen neuen Griff? (`lbu v0,0(s0)` 0x800CFDCB == 0
+ * @0x80102d68-70 / @0x801016a4-ac / @0x80103720-28). */
+static int opfer_frei(const re15_actor_t *pl)
+{
+    return pl->re2z_self1d3 == 0u && !re15_player_is_grabbed();
+}
+
+void re15_g5_opfer_tick(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_opfer_var < 0) return;
+    if (pl->hp < 0) { opfer_ende(pl); return; }     /* Tod hat Vorrang (Port) */
+
+    /* Alle vier Maschinen FALLEN im Original von Phase 0 in Phase 1 (und bei Variante 2
+     * weiter in Phase 2) DURCH — die Phasentabellen zeigen auf aufeinanderfolgende Bloecke
+     * ohne Sprung dazwischen (@0x801044a0 -> 0x80104508 -> 0x8010452c; @0x801046fc ->
+     * 0x80104790). Deshalb hier if-Ketten statt eines switch. */
+    if (s_opfer_var <= 1) {                          /* ZUG-RUCK 0x801042c4 */
+        re15_re2z_player_pin();                      /* Routine 5 liest kein Pad (Port-Pin) */
+        if (s_opfer_ph == 0) {                       /* @0x80104314 */
+            re15_audio_core_se((s_opfer_var & 1) + 1);  /* 0x4000001|((var&1)+1)<<16
+                                                         * @0x80104324-58 */
+            s_opfer_ph = 1;                          /* `sb v0,6(s1)` @0x8010432c */
+            /* PL+0x14C = 0x00030003 + (var&1) (@0x80104338-50): Clip 3/4 aus LEONS
+             * EIGENER Bank (Advance ueber PL+0x108/+0x17C @0x801043c8-cc) — im RE1.5-Rig
+             * nicht belegt; der Port laesst den laufenden Spieler-Stagger stehen und
+             * fuehrt nur Ruck und Blickrichtung (dokumentierte Port-Entscheidung). */
+            opfer_schub(pl, 800);                    /* `addiu v0,zero,800` @0x801043b4 */
+        }
+        opfer_zug(pl);                               /* @0x801043d8-424 */
+        /* ENDE: im Original zaehlt `v1 = Phase + FUN_8002959C(...)` (@0x801043d0-f8) — die
+         * Maschine geht nach Phase 2 (@0x80104428: PL+0x04 = 1), wenn LEONS EIGENER Clip 3/4
+         * durch ist. Genau dieser Clip hat im RE1.5-Rig kein Gegenstueck; der Port ersetzt
+         * ihn durch die eigene cmd-2-Reaktion und endet folglich, wenn DIESE durch ist.
+         * Zusaetzlicher Boden: der Ruck muss ausgelaufen sein. Die Halbierung des Originals
+         * laeuft dabei NICHT auf 0, sondern auf +-1 (`sll 16 / sra 17` @0x801043fc-424 ist
+         * ein arithmetischer Shift: -1 >> 1 bleibt -1) — deshalb ist der Fixpunkt +-1 die
+         * Abbruchschwelle und nicht die Null. */
+        {   int32_t ax = s_opfer_vel[0] < 0 ? -s_opfer_vel[0] : s_opfer_vel[0];
+            int32_t az = s_opfer_vel[2] < 0 ? -s_opfer_vel[2] : s_opfer_vel[2];
+            if (ax <= 1 && az <= 1 && !re15_player_hit_flinch_active())
+                opfer_ende(pl);                      /* ph2 @0x80104428: Routine 1 zurueck */
+        }
+        return;
+    }
+
+    if (s_opfer_var == 2) {                          /* PEITSCHE AUS DISTANZ 0x80104454 */
+        if (s_opfer_ph == 0) {                       /* @0x801044a0 */
+            opfer_clip(pl, 0x00030602u);             /* Clip 2, Bild 6, Blend 3 @0x801044a0-b0 */
+            s_opfer_ph = 1;                          /* `sb a2,6(s1)` @0x801044c0 */
+            s_opfer_vel[0] = 800; s_opfer_vel[2] = 0;   /* `sh 800,324` @0x801044c4-c8 */
+            pl->re2z_self1d3 |= 0x80u;               /* @0x801044dc-f4 */
+            re15_audio_core_se(1);                   /* 0x4010001 @0x801044a8-f8 */
+            s_opfer_t16a = 5;                        /* `sb v0=5,362(s1)` @0x80104500-04 */
+        }
+        if (s_opfer_ph == 1)                         /* @0x80104508: Advance, Phase += fertig */
+            s_opfer_ph = (uint8_t)(s_opfer_ph + opfer_advance(pl));
+        if (s_opfer_ph <= 2) {                       /* @0x8010452c (auch aus ph0/ph1 heraus) */
+            pl->x -= 100;                            /* `addiu v0,v0,-100` @0x80104534 */
+            if (s_opfer_t16a != 0) s_opfer_t16a--;   /* @0x8010453c-48 */
+            /* Das Original prueft hier zusaetzlich PL+0x110 & 1 (`lw v0,272(s1)`
+             * @0x8010454c-58) — ein Spieler-Zustandsbit, fuer das der Port kein Feld hat;
+             * der Uebergang haengt deshalb allein am Zaehler (dokumentiert). */
+            if (s_opfer_t16a == 0) {
+                s_opfer_ph = 3;                      /* @0x8010457c-80 */
+                opfer_clip(pl, 0x00030000u);         /* Clip 0, Blend 3 @0x80104584-88 */
+                s_opfer_vel[0] = 0;                  /* `sh zero,324` @0x80104590 */
+                re15_audio_core_se(2);               /* 0x4020001 @0x80104570-8c */
+            }
+        } else if (s_opfer_ph == 3) {                /* @0x801045c8 */
+            if (opfer_advance(pl)) {
+                opfer_clip(pl, 0x00030001u);         /* Clip 1, Blend 3 @0x801045e0-e8 */
+                s_opfer_ph = 4;                      /* @0x801045ec-f4 */
+            }
+        } else {                                     /* ph4 @0x801045f8 -> Aufstehen/Ende */
+            if (opfer_advance(pl)) opfer_ende(pl);   /* @0x80104610-5c */
+        }
+        return;
+    }
+
+    /* SPIESS: Variante 3 = 0x801046ac, Variante 4 = 0x801048f4 (identische Maschine, nur
+     * der Startclip unterscheidet sich). */
+    if (s_opfer_ph == 0) {
+        /* Variante 3: Clip 4 ab Bild 7, Blend 7 (@0x801046fc-710);
+         * Variante 4: Clip 5, Blend 7 (@0x80104944-58). */
+        opfer_clip(pl, (s_opfer_var == 3) ? 0x00070704u : 0x00070005u);
+        s_opfer_ph = 1;                              /* `sb v1,6(s1)` @0x8010471c */
+        pl->re2z_self1d3 |= 0x80u;                   /* @0x80104714-28 */
+        re15_audio_core_se(2);                       /* 0x4020001 @0x80104704-24 */
+        opfer_schub(pl, 600);                        /* `addiu v0,zero,600` @0x80104780 */
+    }
+    if (s_opfer_ph == 1) {                           /* @0x80104790 */
+        if (opfer_advance(pl)) {
+            opfer_clip(pl, 0x00030003u);             /* Clip 3, Blend 3 @0x801047a8-b0 */
+            s_opfer_ph = 2;                          /* @0x801047b4-b8 */
+            s_opfer_t158 = 15;                       /* `sh v0=15,344(s1)` @0x801047bc-c0 */
+        }
+        opfer_zug(pl);                               /* @0x801047c4-804 */
+        /* Variante 4 spritzt auf den Opferbildern 3 und 11 Blut
+         * (`lbu v1,333(s1)` @0x80104a40, Vergleiche @0x80104a50-5c,
+         * FUN_8005c040(2,0,Spieler) @0x80104a64-6c) — Port: Raumbank-Effekt am Spieler. */
+        if (s_opfer_var == 4 && (pl->anim_frame == 3u || pl->anim_frame == 11u)) {
+            const re15_esp_t *bank = re15_esp_room_bank();
+            if (bank) re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, pl->x, pl->y, pl->z, pl->rot_y);
+        }
+    } else if (s_opfer_ph == 2) {                    /* @0x80104808 / @0x80104a7c */
+        int16_t war = s_opfer_t158;
+        opfer_advance(pl);
+        s_opfer_t158 = (int16_t)(war - 1);           /* `addiu v0,v1,-1; sh` @0x80104824-2c */
+        if (war == 0) {
+            opfer_clip(pl, 0x00030001u);             /* Clip 1, Blend 3 @0x80104830-38 */
+            s_opfer_ph = 3;                          /* @0x8010483c-44 */
+        }
+    } else if (s_opfer_ph == 3) {                    /* @0x80104848 */
+        if (opfer_advance(pl)) s_opfer_ph = 4;       /* danach Aufsteh-Clip 6 (s. opfer_ende) */
+    } else {                                         /* ph4 @0x801048b0 */
+        opfer_ende(pl);
+    }
 }
 
 /* ---- Anker: Position aus G5s Part-2-(Blob-)Matrix (@0x801001E4-388) --------------------- */
@@ -343,9 +610,55 @@ static int tent_kind_kollision(re15_actor_t *e, re15_actor_t *pl)
         dy = pl->y - seg[k][1];
         hs = 0 + 1530;                                     /* Segment-Hoehe 0 (nicht gesetzt) + Spieler */
         if (!(-hs < dy && dy < hs)) continue;
-        {   /* radialer Push-out (Decompile Z.38-44), ohne Dreh-Zweig/Klemme (s. Kopf). */
+        {   /* radialer Push-out (@0x80034e7c-eb4 / @0x80034ec0-f00). */
             int32_t d1 = dist + 1;
             int32_t px = (dx * over) / d1, pz = (dz * over) / d1;
+            /* VORZEICHEN-DREH-ZWEIG (@0x80034ec4-f00 bis @0x80035044, Decompile Z.45-70):
+             * Das Original vergleicht die Hoehe ein ZWEITES Mal — diesmal mit dem
+             * POSITIONS-SPIEGEL des Ziels: `lh v0,70(s1)` = Spieler+0x46 (RE2) plus
+             * `lh v1,20(s2)` = Segment+0x14 (fuer das einzige Spieler-Segment nie gesetzt,
+             * also 0) minus der Segment-Hoehe des Schiebers. Liegt DIESE Hoehe AUSSERHALB
+             * des Bandes (`slt`-Paar @0x80034f04-10), ist das Ziel im letzten Bild noch
+             * darueber/darunter gewesen — dann wird pro Achse geprueft, ob der Schieber
+             * ZWISCHEN Spiegel und aktueller Position liegt (X @0x80034f18-5c,
+             * Z @0x80034fb0-f4), und der Schub umgekehrt: p = (+-2*r_a) - (-p)
+             * (`sll v0,s7,1` / `bgtz` / `subu` @0x80034f98-ac bzw. @0x8003503c-44).
+             * Der Spiegel ist im Port re15_actor_t.pos_s_x/y/z (RE1.5 +0x40/+0x42/+0x44 =
+             * RE2 +0x44/+0x46/+0x48); er wird nur vom Kletter-FSM gefuehrt, der Zweig
+             * greift also genau in dessen Lagen — wie im Original, wo er dieselbe Quelle
+             * liest.
+             * PORT-ENTSCHEIDUNG (kein Rateversuch, die Luecke ist benannt): das Original
+             * vergleicht mit param_1+0x38/+0x40, also der Position des KIND-Entities
+             * (`lw v1,56(s6)` @0x80034f1c, `lw v1,64(s6)` @0x80034fb4) — und 0x80104F64
+             * schreibt dem Kind NUR seine vier Segmente (+0x84/+0xA4/+0xC4/+0xE4,
+             * @0x80104f9c-0x80105000), seine EIGENE Position nie. Welchen Wert sie traegt,
+             * haengt am Allokator des Kindes und ist nicht aufgeloest. Der Port hat gar
+             * kein Kind-Entity (die Segmente haengen am Arm), und nimmt deshalb den
+             * Ursprung des ARMS.
+             * ⛔ NICHT portiert, weil BEWEISBAR unerreichbar: die 0x100000-Klemme auf +-100
+             * (@0x80035048-ac, Decompile Z.71-86) testet param_1[0] = das WORT 0 des
+             * KIND-Entities. EM037 loescht das Bit dort beim Sichtbarmachen
+             * (`lui v1,0xffef / ori 0xffff / and / sw` @0x80100444-5c auf 0x800CFE30[+0x218]
+             * = die Kind-Liste) und setzt es im ganzen Overlay nur EINMAL, naemlich auf dem
+             * ELTERN-Tentakel waehrend des Spiesses (`lui v1,0x10 / or / sw` @0x801035d4-dc,
+             * geloescht @0x801038bc). Vollzensus: das sind die einzigen drei Vorkommen von
+             * 0x00100000 in EM037 (und keines in EM036). Der Klemm-Zweig laeuft in diesem
+             * Aufruf also nie — samt seiner Eigenheit, bei px > 100 statt px die Z-Achse
+             * auf 100 zu setzen (`bgez a3 -> addiu a2,zero,100` @0x80035074-84). */
+            int32_t h2 = (int32_t)(int16_t)pl->pos_s_y + 0 - seg[k][1];
+            if (h2 <= -hs || hs <= h2) {
+                int32_t sx = (int32_t)(int16_t)pl->pos_s_x;
+                int32_t sz = (int32_t)(int16_t)pl->pos_s_z;
+                int32_t r2 = (int32_t)r[k] * 2;
+                if ((sx < e->x && e->x < pl->x) || (e->x < sx && pl->x < e->x)) {
+                    int32_t g = (-(dx * over)) / d1;
+                    px = ((g > 0) ? r2 : -r2) - g;   /* @0x80034f98-ac */
+                }
+                if ((sz < e->z && e->z < pl->z) || (e->z < sz && pl->z < e->z)) {
+                    int32_t g = (-(dz * over)) / d1;
+                    pz = ((g > 0) ? r2 : -r2) - g;   /* @0x8003503c-44 */
+                }
+            }
             pl->x += px; pl->z += pz;
         }
         hit = 1;
@@ -505,20 +818,29 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->timer = 0; t->ph = 4; tent_se(2);
             break;
         case 4:                                     /* @0x80101E24 */
-            if (t->t < 5)               e->x -= t->t * 10;
-            else if (t->t <= 34)        e->x += 10;
-            if (t->t == 36) t->ph = 5;
-            t->t++;
+            /* ⛔ EIN Zaehler, nicht zwei: ph4, ph5 und ph6 arbeiten im Original ALLE auf
+             * +0x158 (`lh v1,344(s1)` @0x80101e24/@0x80101e4c/@0x80101e74/@0x80101e94,
+             * Nullung in ph5 `sh zero,344(s1)` @0x80101e90, Erhoehung im gemeinsamen
+             * Schwanz @0x80101f9c). Der Port fuehrte hier t->t und nullte in ph5 t->timer —
+             * das hielt nur, solange der Boss die Phase per GANZEM Wort schickte (das
+             * re15_g5_tentakel_cmd t->t mitnullte). Seit [T1]/[T4] byte-true nur noch das
+             * Phasenbyte schreiben, laeuft alles auf t->timer.
+             * Fenster @0x80101e2c/@0x80101e54: t<5 -> x -= t*10; 6<=t<=34 -> x += 10
+             * (`addiu v0,-6 / sltiu 0x1d`) — bei t==5 passiert NICHTS. */
+            if (t->timer < 5)                             e->x -= t->timer * 10;
+            else if (t->timer >= 6 && t->timer <= 34)     e->x += 10;
+            if (t->timer == 36) t->ph = 5;
+            t->timer++;
             tent_anim(e, t);
             break;
-        case 5: t->timer = 0; break;               /* warten - G5 treibt */
+        case 5: t->timer = 0; break;               /* sh zero,344 @0x80101e90; G5 treibt */
         case 6: {                                   /* Zittern @0x80101E94 */
-            int32_t z = (int32_t)(re15_engine_rand8() & 0xF) * (1 - 2 * (t->t & 1));
-            if (t->t < 20) e->x -= t->t;
-            if (t->t >= 16 && t->t <= 179) { e->x += z; e->y += z; e->z += z; }
-            if (t->t >= 161) e->x += 5;
-            if (t->t == 180) t->ph = 7;
-            t->t++;
+            int32_t z = (int32_t)(re15_engine_rand8() & 0xF) * (1 - 2 * (t->timer & 1));
+            if (t->timer < 20) e->x -= t->timer;
+            if (t->timer >= 16 && t->timer <= 179) { e->x += z; e->y += z; e->z += z; }
+            if (t->timer >= 161) e->x += 5;
+            if (t->timer == 180) t->ph = 7;
+            t->timer++;
             tent_anim(e, t);
             break;
         }
@@ -571,8 +893,27 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             if (fr > F[2] && fr < F[3]) {           /* TREFFER-FENSTER @0x80101640-94 */
                 e->rot_z = (int16_t)(e->rot_z + 4);
                 /* `+0x220 & 4` @0x80101684-94 = die Kind-Kollision dieses Bildes. */
-                if (!t->getroffen && pl->hit_react == 0 && g5->hp >= 0 && (t->kontakt & 4u))
+                if (!t->getroffen && pl->hit_react == 0 && g5->hp >= 0 && (t->kontakt & 4u) &&
+                    opfer_frei(pl)) {                        /* 0x800CFDCB == 0 @0x801016a4-ac */
                     tent_treffer(pl, t, 15);                 /* 15 @0x801016D0 */
+                    if (pl->hp >= 0) {
+                        /* Variante = NICHT-Blickkontakt (`nor/andi 1/sll 8` @0x80101700-10 auf
+                         * FUN_80015910(Arm, Spieler) @0x801016f8); ab 6,0 m Distanz
+                         * (+0x1F0 = der Abstandscache des Entity-Loops @0x800265e0)
+                         * stattdessen Variante 2 = die Fernpeitsche
+                         * (`sltiu v1,v1,0x1771` @0x8010171c-2c). */
+                        int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
+                        int var = facing ? 0 : 1;
+                        int32_t dx = pl->x - e->x, dz = pl->z - e->z;
+                        int32_t dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                        if (dist >= 6001) var = 2;
+                        /* Blickrichtung des Opfers absolut, nach der Seite des Arms
+                         * (`addiu v0,zero,3456` @0x80101730, `+0x218 < 2 -> 640`
+                         * @0x8010173c-54). */
+                        pl->rot_y = (int16_t)((idx < 2) ? 640 : 3456);
+                        re15_g5_opfer_start(pl, var);
+                    }
+                }
             }
             if (t->ph == 2) tent_anim(e, t);
             break;
@@ -594,6 +935,8 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             tent_clip(e, t, (idx == 0 || idx == 3) ? 23 : 21, 0);
             e->rot_x = 0; e->rot_z = 0; e->rot_y = g5->rot_y;
             t->scale_x = 0; t->ph = 1;
+            t->variante = 0;                        /* `sb zero,363(s0)` @0x801036a8: der
+                                                     * Zweittreffer-Riegel +0x16B geht auf */
             s_tent_maske |= (uint8_t)(1u << (idx + 4));
             tent_se(0);
             break;
@@ -602,9 +945,22 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             if (t->scale_x > 4096) t->scale_x = 4096;
             {   int fr = (int)e->anim_frame;
                 /* `+0x220 & 4` @0x801036f4-fc im Fenster 27..31. */
-                if (fr > 26 && fr < 32 && !t->getroffen && pl->hit_react == 0 &&
-                    g5->hp >= 0 && (t->kontakt & 4u))
-                    tent_treffer(pl, t, 15);                 /* 15 @0x80103730 */
+                if (fr > 26 && fr < 32 && (t->kontakt & 4u)) {
+                    if (!t->getroffen && pl->hit_react == 0 && g5->hp >= 0 &&
+                        opfer_frei(pl)) {                    /* 0x800CFDCB == 0 @0x80103720-28 */
+                        tent_treffer(pl, t, 15);             /* 15 @0x80103730 */
+                        /* Routine-Wort 0x305 = Variante 3 (@0x80103760-68) + `sb 1,363`
+                         * (+0x16B, der Zweittreffer-Riegel) @0x8010378c. */
+                        if (pl->hp >= 0) { re15_g5_opfer_start(pl, 3); t->variante = 1; }
+                    } else if (!opfer_frei(pl) && t->variante == 0 && pl->hp >= 0) {
+                        /* ZWEITER Spiess in einen SCHON gehaltenen Spieler
+                         * (@0x801037a0-854): Schaden 10 (`addiu a0,zero,10` @0x801037e4,
+                         * FUN_800401d4(10,1) @0x801037e8), Routine-Wort 0x405 = Variante 4
+                         * (@0x80103818-20), Riegel +0x16B = 1 @0x80103844. */
+                        tent_treffer(pl, t, 10);
+                        if (pl->hp >= 0) { re15_g5_opfer_start(pl, 4); t->variante = 1; }
+                    }
+                }
             }
             if (tent_anim(e, t)) t->ph = 5;
             break;
@@ -787,10 +1143,19 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->rate = (int16_t)(t->rate - 4);
             tent_sonde(e, t);
         zug_griff:
-            /* GRIFF-Fenster @0x80102d4c-dec: `+0x220 & 2` und Spieler-Latch 0 -> Schaden 15
-             * (FUN_800401d4(15,1) @0x80102d78); Griff-Modus/Opfer-Anim DEFERRED. */
-            if ((t->kontakt & 2u) && !t->getroffen && pl->hit_react == 0 && g5->hp >= 0)
+            /* GRIFF-Fenster @0x80102d4c-dec: `+0x220 & 2` (@0x80102d4c-58) und Spieler-Latch
+             * 0x800CFDCB == 0 (@0x80102d68-70) -> Schaden 15 (FUN_800401d4(15,1)
+             * @0x80102d78), dann Routine-Wort (!Blickkontakt << 8) + 5
+             * (FUN_80015910(Arm, Spieler) @0x80102d84, `nor/andi 1/sll 8/addiu 5`
+             * @0x80102d90-c8) = Variante 0 oder 1. */
+            if ((t->kontakt & 2u) && !t->getroffen && pl->hit_react == 0 && g5->hp >= 0 &&
+                opfer_frei(pl)) {
                 tent_treffer(pl, t, 15);
+                if (pl->hp >= 0) {
+                    int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
+                    re15_g5_opfer_start(pl, facing ? 0 : 1);
+                }
+            }
             break;
         case 4:                                     /* @0x80102df4 */
             tent_se(2);
@@ -891,4 +1256,8 @@ void re15_g5_tentakel_tick(const re15_actor_t *g5)
     int i;
     if (!s_tent_bereit || !g5) return;
     for (i = 0; i < TENT_N; i++) tent_tick(i, g5, pl);
+    /* SPIELER-ROUTINE 5: im Original haengt sie am Spieler-Verteiler (0x8004006C), nicht am
+     * Gegner-Tick. Im Port faehrt das Tentakelmodul sie mit — es ist der einzige Besitzer
+     * des Hakens 0x800CE300[0x37], und der Opfer-Shim treibt Leon ohnehin von aussen. */
+    re15_g5_opfer_tick();
 }
