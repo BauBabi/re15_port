@@ -256,6 +256,9 @@ void re15_re2z_victim_devour(re15_actor_t *zombie, int behind);  /* Kill-Tick-Ri
 void re15_re2z_grab_anchor(re15_actor_t *e, re15_actor_t *pl, int clip);
 void re15_re2z_grab_rootmotion(re15_actor_t *e);
 void re15_re2z_move_root(re15_actor_t *e);        /* 0x80015e7c: per-frame clip root delta   */
+void re15_re2z_root_probe(re15_actor_t *e);       /* BARER 0x80015e7c ohne 0x800152c8: Momentaufnahme
+                                                   * + +0x144 ablegen, nicht bewegen (Kriecher-P0
+                                                   * @0x80103094 / @0x801030B8)                */
 void re15_re2z_se_play(int se_id);                /* ENEMSE-SE ueber den Audio-Hook (fuer den
                                                    * Frame-Flag-SFX-Pfad 0x801016c8)          */
 

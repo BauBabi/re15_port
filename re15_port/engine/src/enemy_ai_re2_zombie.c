@@ -3181,13 +3181,24 @@ static void re2z_crawl_exec_move(re15_actor_t *e)
                                                                     * @0x80103144) */
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80103070-78 */
         e->re2z_t158 = (int16_t)((re2z_rand() & 7u) + 7u);         /* @0x8010308C-98 */
-        /* @0x80103094 + @0x801030B8: ZWEI BARE FUN_80015E7C. Sie fuellen nur den Delta-Vektor;
-         * angewendet wird er erst durch das 152c8 am Ende von P1. Weil ZWISCHEN den beiden kein
-         * Advance liegt, ist der zweite Delta zwangslaeufig 0 (prev == current) — der Wert, den
-         * P1 unmittelbar danach als Torwaechter liest. Der Port haelt genau das fest, statt eine
-         * Bewegung zu erfinden (gleiche Konvention wie Knockdown-P0 @0x801074C4/@0x801074E8). */
-        e->re2z_root144 = 0;                                       /* sh +0x144 @0x80015FD8 */
+        /* @0x80103094 + @0x801030B8: ZWEI BARE FUN_80015E7C (kein 152c8 dazwischen). Sie
+         * VERANKERN DIE MOMENTAUFNAHME NEU — das ist seit Runde 12 (Momentaufnahme statt
+         * Bildnummern, re15_clip_root_motion_delta) kein "zwangslaeufig 0" mehr:
+         *   #1 bei Bild 0 (aus dem sw @0x80103064-6C): Momentaufnahme := 0 (@0x80015F14-1C),
+         *      dann := root(kf0)                       (@0x80015FC4/C8)
+         *   #2 bei Bild rand&0xF (sb 333 @0x801030BC = Delay-Slot VOR dem Sprungziel):
+         *      +0x144 = root(kf_r) - root(kf0)         (@0x80015FCC/FD8), Momentaufnahme := root(kf_r)
+         * Der P1-e7c @0x8010312C findet dann prev == r und liefert Delta 0. OHNE die beiden
+         * Aufrufe stand die Momentaufnahme nach dem Kriecher-HURT (Clip 6 ruft e7c nie,
+         * @0x80107888 jal-Zensus) noch auf dem Bild VOR dem Treffer (sx 787 bei Bild 34) und
+         * P1 rechnete dx = sx(7) - 787 = -830 in EINEM Bild (Nutzer: "werden wieder ein Stueck
+         * zurueckgesetzt", gemessen probe_r16_kriecher1010 Teil B f38: x 1598 -> 768).
+         * Dossier analysis/befunde_2026-09-19/kriecher-1010.md §2.1/§2.2, Fix F1. */
+        re15_re2z_root_probe(e);                                   /* e7c #1 @0x80103094 (Bild 0) */
         e->anim_frame = (uint16_t)(re2z_rand() & 0xfu);            /* +0x14D @0x8010309C-BC */
+        re15_re2z_root_probe(e);                                   /* e7c #2 @0x801030B8 (Bild r):
+                                                                    * +0x144 = sx(r) - sx(0), den
+                                                                    * P1 als Torwaechter liest */
         /* FALLTHROUGH nach P1 @0x801030C0 — das Original hat hier KEINEN Sprung. */
         /* FALLTHRU */
     }
