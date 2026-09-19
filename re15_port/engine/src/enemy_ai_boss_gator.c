@@ -277,12 +277,20 @@ static int s_gb_se_frameflag = 0;
 int re15_gator_se_aus_frameflag(void) { return s_gb_se_frameflag; }
 static void gb_se(int id)
 {
+    /* PORT-DESIGN Mehrbank-Cache (Phase 2 gator-und-audio, audio_pc.c): vor JEDEM Ruf die
+     * eigene Bank anmelden, weil ROOM2090 zwei RE2-Gegner mit verschiedenen ENEMSE-Baenken
+     * mischt (Spinne 11, Gator 17) und der Latch sonst beim zuletzt geladenen Gegner steht.
+     * RE2 selbst fuehrt EINEN Bank-Slot (FUN_8005bd6c `lw s0,0x800dbb84` @0x8005bdb4) und
+     * haette fuer Gator+Spinne gar keine Bank (Paar-Tabelle @0x800a7400 ohne {0x16,0x10}). */
+    if (s_gb_bank_fn) s_gb_bank_fn(GATOR_ENEMSE_BANK);
     if (s_gb_se_fn) s_gb_se_fn(id, 0);
-    /* Die 55-Frame-Sperre armt in RE2 NUR ein 0x48-Frame-Wort (`addiu v0,zero,55`
-     * @0x80100430 / `sb v0,562(s0)` @0x80100434), nicht der direkte Ruf. Im Port ist
-     * das ohne Unterschied: id 4 kommt ausschliesslich aus den Frame-Flags (die
-     * EM23-Daten fuehren nur 2/4), die sechs direkten Rufe tragen id 3. */
-    if (id == 4) s_gb_brull_cd = 55;  /* Biss/Bruell armt die Hurt-SE-Sperre */
+    /* Die 55-Frame-Sperre armt in RE2 NUR ein 0x48-Frame-Wort: `lui v1,0x4800` @0x80100424 /
+     * `and v0,v0,s1` @0x80100428 / `bne v0,v1` @0x8010042c / `addiu v0,zero,55` @0x80100430 /
+     * `sb v0,562(s0)` @0x80100434 - der direkte Ruf `addiu a0,zero,4` @0x80100d64 + `jal
+     * 0x8005bd6c` @0x80100d84 (Lunge-P0) armt sie NICHT. Seit Phase 2 traegt auch der
+     * direkte Lunge-Start-Ruf die id 4, deshalb ist die Sperre hier auf den Frame-Flag-Pfad
+     * begrenzt (gb_se_frameflag setzt s_gb_se_frameflag). */
+    if (id == 4 && s_gb_se_frameflag) s_gb_brull_cd = 55;  /* 0x4800-Frame-Wort armt die Hurt-SE-Sperre */
 }
 static void gb_se_frameflag(int id)
 {
@@ -393,6 +401,53 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
     }
     pl->hit_react |= 1;
     e->hit_stun = 0x64;                       /* byte-true Re-Attack-Sperre */
+}
+
+/* ==== OPFER-VERSATZ IM ENTITY-RENDER-SCALE (Phase 2 gator-und-audio, Dossier
+ * analysis/befunde_2026-09-19/gator-finisher-sounds.md 2.2/4A) ============================
+ * Das Original skaliert JEDEN modell-lokalen Versatz um die Entity-Position: FUN_8001e8c8
+ * `andi v0,v0,0x800` @0x8001e904, `lh v0,358(v1)` (+0x166 x3) @0x8001e91c/28/38, `jal
+ * ScaleMatrix` @0x8001e940 VOR der Translation `jal 0x80053fc0` @0x8001e94c und vor der
+ * Bone-Schleife; der Port zeichnet genauso (main.c: nyaw[k] *= render_scale_q12, auf jede
+ * Bone-Translation incl. Wurzel). Der Opfer-Versatz (off_v - off_g) + POS_v liegt im selben
+ * Rig-Raum wie die Gator-Bones (RE2 Anker-Paar FUN_80015B94: Identitaetsmatrix 0x8009db44
+ * @0x80015bd8-1c, RotMatrixY(yaw) @0x80015c28, ApplyMatrix @0x80015c38; Kopie in den Spieler
+ * @0x80015c7c/88/94) - er erscheint also in der Welt als s*RotY*v um G, waehrend die
+ * unskalierten Zwillinge re15_clip_root_motion_abs_(y3_)pub ihn 1x ablegen. Diese Funktion
+ * fuehrt den Faktor nach: Leon = G + s*(Leon_unskaliert - G). Leons EIGENES Rig bleibt 1x;
+ * der Renderer addiert seinen Wurzel-POSE-Kanal POS_v unskaliert (main.c: Victim-Keyframes
+ * im PL00-Skelett, root = pl->xyz + RotY(pl->rot_y)*POS_v), deshalb traegt pl->y den Rest:
+ *     Wurzel_y(soll) = G.y + s*((sy_v - sy_g) + POSy_v)
+ *     pl->y          = G.y + s*(sy_v - sy_g) - (4096 - s)*POSy_v   (Q12)
+ * Bei s = 4096 ist das die Identitaet (auch fuer einen spaeteren Scale-Verzicht korrekt).
+ * GEMESSEN (probe_r16_gator_finisher_anker, 121 Frames): Original-LOKAL (5264,-2403,198)
+ * bei P3, heute (7892,-1804,295) 6=0/7=0, skaliert (5261,-2402,194) 6=1/7=1, alle Frames
+ * +-5. Der Scale 2731 selbst ist Nutzer-Entscheidung (GB_SCALE_Q12), kein Original-Wert. */
+static int gb_clip_kf(const re15_emd_animation_t *anim, int clip, int frame)
+{
+    /* 0x8000-SKIP-Resolver wie re15_clip_anchor_set (RE2 FUN_80015db0 @0x80015e18-38,
+     * RE1.5 FUN_8001ae38 @0x8001ae7c-80 / @0x8001aec8-e0). */
+    const re15_emd_clip_t *c;
+    int fi, fend;
+    if (!anim || clip < 0 || clip >= anim->clip_count) return -1;
+    c = &anim->clips[clip];
+    if (c->frame_count <= 0) return -1;
+    fi = c->first_frame + (frame % c->frame_count);
+    fend = c->first_frame + c->frame_count - 1;
+    while ((anim->frames[fi] & 0x8000u) && fi < fend) fi++;
+    return (int)(anim->frames[fi] & 0xFFFu);
+}
+static void gb_opfer_skalieren(const re15_actor_t *e, re15_actor_t *pl,
+                               const re15_enemy_bank_t *b, int vclip, int vframe)
+{
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    int16_t px = 0, py = 0, pz = 0;
+    int kf = gb_clip_kf(&b->anim_victim, vclip, vframe);
+    if (kf >= 0) re15_emd_get_keyframe_position(&b->skel_victim, kf, &px, &py, &pz);
+    pl->x = e->x + (int32_t)(((int64_t)(pl->x - e->x) * s) >> 12);
+    pl->z = e->z + (int32_t)(((int64_t)(pl->z - e->z) * s) >> 12);
+    pl->y = e->y + (int32_t)(((int64_t)(pl->y - e->y) * s) >> 12)
+                 - (int32_t)(((int64_t)py * (4096 - s)) >> 12);
 }
 
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
@@ -1342,6 +1397,9 @@ void re15_gator_boss_tick(int slot)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
                     g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+                    gb_se(4);                          /* RE2 Lunge-P0 Angriffs-Brueller: `beq v1,zero,0x80100d84`
+                                                        * @0x80100d60 / `addiu a0,zero,4` @0x80100d64 / `jal
+                                                        * 0x8005bd6c` @0x80100d84 (Phase 2 Stufe B1) */
                     gb_se(3); e->motion = 4; e->anim_frame = 0;
                     break;
                 }
@@ -1406,6 +1464,7 @@ void re15_gator_boss_tick(int slot)
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
              * zeigte deshalb "keinerlei Beissanimation" (Nutzer-Befund). */
+            gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
             gb_se(3); e->motion = 4; e->anim_frame = 0;
         }
         break; }
@@ -1748,6 +1807,7 @@ void re15_gator_boss_tick(int slot)
         g->arc_vz   = (int16_t)(-(220 * g->guard_t) / 24);
         /* Hochbiss im Schnapp-Takt: Clip 4, Fenster = gemessene Maul-offen-Phase. */
         if (dist < 4200 && e->hit_stun == 0 && e->motion != 4) {
+            gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
             gb_se(3); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
         }
         if (e->motion == 4) {
@@ -1915,14 +1975,28 @@ void re15_gator_boss_tick(int slot)
          * SEs: Frame-Flags von Clip 5 (f2 SE1, f80 SE3) spielt der Frame-Flag-Spieler;
          * Clip 4 ist datenseitig stumm (SE-3-Zubeiss-Mapping bleibt separat, Runde 5). */
         re15_enemy_bank_t *gb23 = re15_enemy_find(e->type);
+        int32_t pl_y_vor = pl->y;                      /* Messung: liess game_step pl->y stehen? */
         g->timer++;
         e->y = GB_WATER_Y;
         if (g->timer == 1) {                           /* ---- P0 @0x80100FBC-10E4 ---- */
             int32_t fc0 = re15_cos_q12((int)e->rot_y), fs0 = re15_sin_q12((int)e->rot_y);
+            /* ⛔ ORIGINAL (selbst disassembliert, EM23_OVL_0000.BIN): `lw v0,56(s0)` @0x8010106c
+             * / `addiu v0,v0,10643` @0x8010107c / `sw v0,0x800cfc30` @0x80101084 = Spieler-x
+             * = Gator-x + 10643 (rig-lokal entlang der Kopfkette +X), und `addiu v1,zero,-915`
+             * @0x80101070 / `sw v1,0x800cfc38` @0x80101078 = Spieler-z = -915 ABSOLUT (die
+             * Korridor-Koordinate von RE2-room40A0). Die RotY-Form hier ist eine PORT-
+             * VERALLGEMEINERUNG fuer beliebigen Gator-Yaw; -915 als Seitenversatz ist damit
+             * Port-Entscheidung, KEIN Original-Versatz. Phase 2 (Dossier 4A.1): nur der
+             * rig-lokale 10643 wird mit dem Entity-Render-Scale mitgefuehrt (ScaleMatrix
+             * @0x8001e904-40, s. gb_opfer_skalieren) - im 2/3-Massstab 7096; der -915 bleibt
+             * als Port-Wert unskaliert stehen. Wirkung nur in P1 (13 Bilder, Opfer-Clip 0
+             * Hochheben), der P2/P3-Anker kommt aus dem Gator (@0x80101110-34). */
+            int32_t s0 = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+            int32_t vx = (int32_t)(((int64_t)10643 * s0) >> 12);
             pl->fress_skip_mask = 0;                   /* Halbkoerper-Trick entfaellt */
             pl->no_draw = 0;
-            pl->x = e->x + (int32_t)(((int64_t)fc0 * 10643 + (int64_t)fs0 * (-915)) >> 12);
-            pl->z = e->z + (int32_t)((-(int64_t)fs0 * 10643 + (int64_t)fc0 * (-915)) >> 12);
+            pl->x = e->x + (int32_t)(((int64_t)fc0 * vx + (int64_t)fs0 * (-915)) >> 12);
+            pl->z = e->z + (int32_t)((-(int64_t)fs0 * vx + (int64_t)fc0 * (-915)) >> 12);
             pl->rot_y = e->rot_y;                      /* Yaw-Kopie @0x80101154-5C */
             pl->rot_x = 0;
             /* Leon laeuft seit dem Biss-Abschluss im VICTIM-MODUS 4 auf Opfer-
@@ -1936,19 +2010,18 @@ void re15_gator_boss_tick(int slot)
             if (e->anim_frame == 13 && gb23 && gb23->ok) {   /* @0x801010FC-1104 */
                 /* Gemeinsames Anker-Paar am AKTUELLEN Gator-Frame (@0x80101110-34):
                  * erst der Gator mit SEINEM Clip, dann Kopie in den Spieler. */
-                re15_clip_anchor_set_pub(e, &gb23->skel, &gb23->anim, 4, 13);
-                pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
-                /* ⛔ DIE DRITTE ANKERKOMPONENTE BLEIBT HIER AUSSEN VOR - gemessen, nicht
-                 * aus Bequemlichkeit. Das Original kopiert sie sehr wohl (@0x80015c7c /
-                 * @0x80015c88 / @0x80015c94), und re15_clip_*_y3_pub bilden sie ab. Aber
-                 * der Port zeichnet den Gator mit GB_SCALE_Q12 = 2731 (2/3), und in DIESEM
-                 * Massstab senkt die y-Leitung Leons Wurzel-Bone auf -2403, waehrend das
-                 * geschrumpfte Maul-Mesh 6 nur y[-1991..-432] ueberdeckt: mit y-Leitung
-                 * faellt er unten heraus (gemessen 6=0/7=0), ohne sie sitzt er drin
-                 * (6=1/7=0). Erst OHNE die Skalierung passen beide zusammen (6=1/7=1) -
-                 * und die Skalierung selbst ist eine Port-Entscheidung aus drei
-                 * Nutzer-Meldungen vom 2026-09-10, kein Original-Wert. Beides gehoert in
-                 * EINEN Schritt, nicht halb. */
+                /* DREIKOMPONENTIG wie die RE2-Zwillinge: Anker `sh v0,356/358/360(s0)`
+                 * @0x80015c50/64/78, Kopie ins Ziel `sh ..(s3)` @0x80015c7c/88/94. Die
+                 * y-Leitung (SPEED y) ist in ALLEN Gator-/Opfer-Frames 0 (gemessen,
+                 * Skeptiker #4) - sie steht hier der Vollstaendigkeit wegen, die Hoehe
+                 * kommt aus dem Scale-Nachzug gb_opfer_skalieren (Phase 2). */
+                re15_clip_anchor_set_y3_pub(e, &gb23->skel, &gb23->anim, 4, 13);
+                pl->anchor_x = e->anchor_x; pl->anchor_y = e->anchor_y; pl->anchor_z = e->anchor_z;
+                /* Historie (Runde 15): die y-Leitung ALLEIN liess Leon im 2/3-Massstab
+                 * unten aus dem Maul fallen (gemessen 6=0/7=0), weil x/z NICHT mitskaliert
+                 * waren - der Punkt lag 2628 vor dem Kiefer (Dossier 1.1, Variante Y).
+                 * Der Schluss "erst ohne Skalierung passt es" war falsch: mit s*RotY*v um G
+                 * (Variante S) sitzt er bei s=2731 in beiden Kiefer-AABBs (6=1/7=1). */
                 if (gb23->victim_ok) {                 /* Opfer-Start (+0x158=1-Analogon):
                                                         * Umschalt auf Clip 1 (Rumschleudern) */
                     re15_player_victim_force(e->type, 1, 0);
@@ -1978,12 +2051,14 @@ void re15_gator_boss_tick(int slot)
             if (gb23 && gb23->ok) {
                 /* Absolute Platzierung BEIDER aus dem gemeinsamen Anker (@0x80101168-78):
                  * Gator mit Clip 5, Leon mit Opfer-Clip 1 (Victim-Skelett = kf-Traeger). */
-                re15_clip_root_motion_abs_pub(e, &gb23->skel, &gb23->anim, 5, sf);
+                re15_clip_root_motion_abs_y3_pub(e, &gb23->skel, &gb23->anim, 5, sf);
                 if (gb23->victim_ok && sf < 120) {
                     pl->rot_y = e->rot_y;              /* Yaw haelt die Drehbahn synchron */
                     pl->motion = 1; pl->anim_frame = (uint32_t)sf;
-                    re15_clip_root_motion_abs_pub(pl, &gb23->skel_victim,
-                                                  &gb23->anim_victim, 1, sf);
+                    re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
+                                                     &gb23->anim_victim, 1, sf);
+                    /* Phase 2: Opfer-Versatz im Entity-Render-Scale um G (s.o.). */
+                    gb_opfer_skalieren(e, pl, gb23, 1, sf);
                 }
             }
             if (!s_gb_stumm) {
@@ -1992,9 +2067,12 @@ void re15_gator_boss_tick(int slot)
                 if (s_ff && (sf & 7) == 0) {
                     int32_t vb0[3];
                     re15_enemy_bone_world_pos(pl, 0, vb0);
-                    fprintf(s_ff, "FSYNC2 sf=%d gaf=%u laf=%u pl=(%d,%d,%d) b0y=%d\n",
+                    /* y_vor = pl->y beim Eintritt in diesen Tick (= was der vorige Tick
+                     * abgelegt hat, falls game_step es NICHT ueberschrieb; Boden-Snap-Risiko
+                     * Dossier 4A (i)). */
+                    fprintf(s_ff, "FSYNC2 sf=%d gaf=%u laf=%u pl=(%d,%d,%d) b0y=%d y_vor=%d\n",
                             sf, (unsigned)e->anim_frame, (unsigned)pl->anim_frame,
-                            (int)pl->x, (int)pl->y, (int)pl->z, vb0[1]);
+                            (int)pl->x, (int)pl->y, (int)pl->z, vb0[1], (int)pl_y_vor);
                     fflush(s_ff);
                 }
             }
@@ -2014,12 +2092,19 @@ void re15_gator_boss_tick(int slot)
              * Original dauert dieser Ruecksprung genau EINEN Tick (Wrap
              * `sb zero,333(s2)` @0x80029b48 vor der 1-Rueckgabe). */
             if (gb23 && gb23->ok)
-                re15_clip_root_motion_abs_pub(e, &gb23->skel, &gb23->anim, 11,
-                                              (int)e->anim_frame);
+                re15_clip_root_motion_abs_y3_pub(e, &gb23->skel, &gb23->anim, 11,
+                                                 (int)e->anim_frame);
             if (gb23 && gb23->victim_ok) {             /* Leon im letzten Opfer-Frame parken */
                 pl->motion = 1; pl->anim_frame = 119;
-                re15_clip_root_motion_abs_pub(pl, &gb23->skel_victim,
-                                              &gb23->anim_victim, 1, 119);
+                re15_clip_root_motion_abs_y3_pub(pl, &gb23->skel_victim,
+                                                 &gb23->anim_victim, 1, 119);
+                gb_opfer_skalieren(e, pl, gb23, 1, 119);   /* Phase 2, s. P2 */
+                if (!s_gb_stumm && g->timer == 221) {
+                    FILE *fl = fopen("gator_boss.log", "a");
+                    if (fl) { fprintf(fl, "FSYNC3 P3 pl=(%d,%d,%d) y_vor=%d\n",
+                                      (int)pl->x, (int)pl->y, (int)pl->z, (int)pl_y_vor);
+                              fclose(fl); }
+                }
             }
         } else {
             re15_player_victim_force_end();
