@@ -208,7 +208,11 @@ static int p2_phase(void)
         int X0 = 1 << 30, X1 = -(1 << 30), Z0 = 1 << 30, Z1 = -(1 << 30);
         int plaetze = 0, beruehrt = 0, vorn = 0, vorverd = 0, vorteil = 0, hintn = 0, hintfrei = 0;
         static double stand[320], ebene[320];
-        if (sscanf(e->d_name, "ROOM%4x_PRI%2d.PBM", &raum, &cut) != 2 || strlen(e->d_name) != 18) continue;
+        /* Endung selbst pruefen: sscanf zaehlt nur die Umwandlungen und nimmt auch
+         * ROOM1000_PRI00.TIM an (gleich lang, s. test_pri_silhouette). */
+        {   size_t L = strlen(e->d_name);
+            if (L != 18 || strcmp(e->d_name + L - 4, ".PBM") != 0) continue; }
+        if (sscanf(e->d_name, "ROOM%4x_PRI%2d.PBM", &raum, &cut) != 2) continue;
         n_cuts++;
         snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/%s", RE15_PORT_SRC_DIR, e->d_name);
         if (!p2_pbm(pfad, soll)) { printf("  FEHLER: %s\n", e->d_name); n_fehler++; continue; }

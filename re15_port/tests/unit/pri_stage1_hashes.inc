@@ -64,7 +64,7 @@
     { "pri/STAGE1/10E0/04.png", "7d80ae9a55681814208aceb4fc6bd3b64fe0394d", "61607499" },
     { "pri/STAGE1/10E0/05.png", "a8b91be90404ddbb9dc5cdca1f0bb1aaf822fc3f", "61607499" },
     { "pri/STAGE1/10E0/06.png", "b943f228afb9081df04dcbfe8c120eae20bbd687", "61607499" },
-    { "pri/STAGE1/10E0/07_01.png", "bc883cd216049a00367671dee5909c5612d6b92e", "neu" },
+    { "pri/STAGE1/10E0/07_01.png", "bc883cd216049a00367671dee5909c5612d6b92e", "61607499:pri/10E0/07_01.png" },
     { "pri/STAGE1/10E0/07_03.png", "30997c5752a49efb88b7aa35d3eba87e63cb7072", "7d81703e" },
     { "pri/STAGE1/10E0/07_04.png", "d3c3fd82cf71ecad293286bef77ee433a663dd87", "7d81703e" },
     { "pri/STAGE1/10E0/08_01.png", "6e62eb990747b1ad4961bd70cb73e2ea54c75643", "61607499" },

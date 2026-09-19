@@ -31,6 +31,7 @@ def blob_sha1(pfad):
 HERKUNFT_FEST = {
     "pri/STAGE1/10D0/06.png": "61607499:pri/10D0/06.png",
     "pri/STAGE1/10D0/01.png": "61607499:pri/10D0/01.png",
+    "pri/STAGE1/10E0/07_01.png": "61607499:pri/10E0/07_01.png",
 }
 
 

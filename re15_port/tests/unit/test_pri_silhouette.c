@@ -95,8 +95,13 @@ int main(void)
         uint8_t *roh, *msk, *pbm, *tb;
         re15_rdt_t rdt; re15_pri_cut_t pri; re15_tim_t tim;
         uint32_t off; int n, y, x, fehlt = 0, zuviel = 0, soll = 0;
+        /* ⛔ sscanf zaehlt nur die UMWANDLUNGEN: "%4x_PRI%2d.PBM" liefert auch fuer
+         * ROOM1000_PRI00.TIM die 2 (der Suffix wird nicht geprueft, und .TIM/.PBM sind
+         * gleich lang). Die Endung deshalb selbst pruefen — sonst meldet der Test 180
+         * "PBM-Cuts" statt 78 und 102 davon als Fehler (gemessen 2026-09-19). */
+        {   size_t L = strlen(e->d_name);
+            if (L != strlen("ROOM0000_PRI00.PBM") || strcmp(e->d_name + L - 4, ".PBM") != 0) continue; }
         if (sscanf(e->d_name, "ROOM%4x_PRI%2d.PBM", &raum, &cut) != 2) continue;
-        if (strlen(e->d_name) != strlen("ROOM0000_PRI00.PBM")) continue;
         n_pbm++;
         snprintf(pfad, sizeof pfad, "%s/shared_assets/PSX/MASKS/%s", RE15_PORT_SRC_DIR, e->d_name);
         pbm = slurp(pfad, &psz);

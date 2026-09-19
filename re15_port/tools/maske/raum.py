@@ -59,6 +59,19 @@ P2_UNANGETASTET = {
     ("ROOM1100", 2): "nur Quader-Waende (kein Nutzer-PNG)",
 }
 P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
+
+# ⛔ ABGELEHNT und deshalb NICHT geschrieben (die alte Sektion bleibt stehen). Die Zahlen
+# kommen aus dem ctest unit_pri_kopfschnitt, der die Standplaetze SELBST ueber den
+# Spieler-Klemmpfad der Engine faehrt (die Python-Abnahme liest denselben Dump, kommt aber
+# auf minimal andere Kastengrenzen: 805 gegen 811 VOR-Plaetze). Wo die beiden sich
+# widersprechen, gilt die strengere Zahl.
+P2_ABGELEHNT = {
+    ("ROOM1000", 3): "unit_pri_kopfschnitt: 1 von 805 begehbaren Standplaetzen VOR der "
+                     "Standlinie wird voll verdeckt. Die drei Objekte 03_01/03_02/03_03 sind "
+                     "Massstab-4-Freistellungen (Treffer 89-100 %), ihre unterste Zeile liegt "
+                     "knapp UNTER dem Horizont -> der Sehstrahl laeuft fast parallel zum Boden "
+                     "und das Modell gibt Tiefen 249..394. Offen beim Nutzer (1x-Freistellung).",
+}
 # ⛔ SPALTENFUELLUNG STANDARDMAESSIG AUS (Nutzer-Befund 2026-09-03, Screenshot 233104:
 # "immer noch sehr viel ueberdeckende Transparenz, bei beiden Fahnen und beim Pult").
 # Die Fuellung schliesst je Bildspalte alles zwischen oberstem und unterstem Punkt EINER
@@ -724,6 +737,10 @@ def main_p2(a, room, rid, aus, rdt, cam, cuts):
     for cut in cuts:
         e = aus[room][str(cut)]
         if not isinstance(e, dict):
+            continue
+        if (room, cut) in P2_ABGELEHNT:
+            print("  Cut %d: ABGELEHNT, nicht geschrieben (%s)" % (cut, P2_ABGELEHNT[(room, cut)]))
+            bericht[cut] = {"ok": False, "fehler": "abgelehnt: " + P2_ABGELEHNT[(room, cut)], "alt": cut in alt}
             continue
         if (room, cut) in P2_UNANGETASTET:
             print("  Cut %d: UNANGETASTET (%s)%s" % (cut, P2_UNANGETASTET[(room, cut)],
