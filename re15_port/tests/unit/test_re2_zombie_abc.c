@@ -208,8 +208,20 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
 
                 /* (A) DOWN = der Sturz-Executor EXEC[5] */
                 int down = (e->state == 1 && e->sub_state_1 == 5);
+                /* NEUVERANKERUNG Runde 16 (2026-09-19, aufstehen-schuss.md): ein Treffer im
+                 * Boden-Aufsteher laeuft ueber FUN_80107A78 (Weiche `+0x21A & 0x10`
+                 * @0x80105014-38) — Zustand 2 mit Bit 0x10, der Aufsteh-Clip laeuft weiter,
+                 * der Exit stellt +0x22C wieder her (1/5/8 -> P8 -> 0x101 @0x801036F4-F8).
+                 * Ohne diese Zeile endete das DOWN-Fenster beim Treffer, begann mit 1/5/8
+                 * neu und endete ein Bild spaeter aufrecht = ein falscher "sofort
+                 * aufgestanden"-Vorfall mit Bodenzeit 1. Das Fenster laeuft deshalb durch
+                 * die Reaktion hindurch — aber nur ein SCHON OFFENES Fenster (der Fresser-
+                 * Aufsteher EXEC[8] traegt dasselbe Bit und ist kein Sturz). */
+                if (!down && down_start[s] >= 0 && e->state == 2 && (e->re2z_flags21a & 0x10u))
+                    down = 1;
                 if (down && down_start[s] < 0) { down_start[s] = f; saw_p2[s] = saw_p3[s] = 0; }
-                if (down) { if (e->sub_state_2 == 2) saw_p2[s] = 1;
+                if (down && e->state == 1) {      /* Phasen nur von EXEC[5] selbst zaehlen */
+                            if (e->sub_state_2 == 2) saw_p2[s] = 1;
                             if (e->sub_state_2 == 3) saw_p3[s] = 1; }
                 if (!down && down_start[s] >= 0) {
                     int dur = f - down_start[s];
@@ -259,6 +271,19 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
                  * sich also). Deshalb zaehlt jetzt nur noch, was wirklich haengt: cwin Bilder
                  * gesperrt UND in der ganzen Zeit kein einziger Zustandswechsel. */
                 int blocked = (e->hp >= 0) && (e->hit_react & 1u);
+                /* NEUVERANKERUNG Runde 16 (2026-09-19, liegende-zombies.md): der PASSIVE
+                 * Liegende (Sce_em_set-Deskriptor 0x88 = Nibble 8 + Bit 0x80, ROOM1140 slot 1)
+                 * ist im Original DAUERHAFT gesperrt, bis ein Skript ihn weckt — RE1.5 setzt
+                 * +0x93 Bit 0 JEDEN Tick (`lbu 147 / ori 0x1 / sb` @0x80103AAC-AB8, Decide-
+                 * Stub `jr ra` @0x801039F4), RE2 haelt +0x1D3 = 0x80 (@0x80103804-14) und
+                 * +0x10E & 0x4000 (@0x80100A34-38) gegen die Gates @0x80047138-64. ROOM1140
+                 * hat keinen Wecker (Byte-Zensus `34 0C 89|8A` = 0). Das ist kein haengender
+                 * Latch, sondern die Zusage des Originals — der Port nahm ihn bis Runde 16
+                 * faelschlich aus dem Filter aus (er war mit DOWN-Band treffbar). */
+                {   unsigned nib = e->grid_id & 0x0fu;
+                    if ((e->grid_id & 0x80u) && (nib == 7u || nib == 8u)
+                        && e->state == 1 && e->sub_state_1 == 7) blocked = 0;
+                }
                 if (!blocked) block_start[s] = -1;
                 else if (block_start[s] >= 0
                          && (e->state != block_st[s] || e->sub_state_1 != block_s1[s])) {

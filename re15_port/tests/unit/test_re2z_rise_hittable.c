@@ -179,6 +179,14 @@ static void run(unsigned seed, int budget, int *out_rise, int *out_hits, int *ou
         int rising = (e->state == 1) &&
                      ((e->sub_state_1 == 5 && (e->sub_state_2 == 6 || e->sub_state_2 == 7)) ||
                       (e->sub_state_1 == 8 && (e->sub_state_2 == 3 || e->sub_state_2 == 4)));
+        /* NEUVERANKERUNG Runde 16 (2026-09-19, aufstehen-schuss.md): ein Treffer im
+         * Aufsteher laeuft jetzt ueber FUN_80107A78 (Weiche `+0x21A & 0x10` @0x80105014-38),
+         * d.h. der Zombie traegt Zustand 2 mit gesetztem Bit 0x10, waehrend der Aufsteh-Clip
+         * UNGEBROCHEN weiterlaeuft (kein Store auf +0x14C/+0x14D, Exit @0x80107E70 stellt
+         * +0x22C wieder her). Diese Bilder SIND Aufstehen — vorher zaehlte die Wache sie nicht,
+         * weil der Port den Clip per 0x60501 neu startete und der Zombie dabei wieder in 1/5/6
+         * stand (die 400 Treffer der Messbasis waren zum Grossteil solche Neustarts). */
+        rising = rising || (e->state == 2 && (e->re2z_flags21a & 0x10u) && e->hp >= 0);
         /* MASH + RE-AIM-PAUSE (Fixture-Neuverankerung 2026-09-05, Welle B; Herleitung im
          * Kopf des Laufs): seit dem Draw-Strom-Umbau (F1/F3) verschob sich der Kampf so,
          * dass (a) der nie mashende Alt-Spieler in einer GRAB-Schleife hing und (b) mit
@@ -269,8 +277,17 @@ int main(void)
      *     OHNE Fix:  648 Aufsteh-Frames,   8 Treffer
      * ">0" waere hier KEINE Wache gewesen — auch ohne Fix kommen vereinzelt Treffer durch
      * (Zielhoehe zufaellig unten). Die Schranke liegt deshalb zwischen den beiden Messungen. */
-    CHECK(total_hits >= 100,
-          "%d Treffer waehrend des Aufstehens (mit Fix gemessen 400, ohne Fix 8). RE2s "
+    /* NEUVERANKERUNG Runde 16 (2026-09-19, aufstehen-schuss.md): seit Treffer im Aufsteher
+     * ueber FUN_80107A78 laufen und den Clip NICHT mehr neu starten, gibt es pro Aufsteher
+     * nur noch so viele Treffer, wie der Trefferpausen-Takt (+0x1D3 low-7, @0x80041ABC-AE8 /
+     * Dekrement @0x80100484-98) in EINEM Clip-Durchlauf zulaesst — die 400 der Messbasis
+     * stammten zum Grossteil aus den Neustarts. Gemessen 2026-09-19 (8 Seeds, deterministisch
+     * 749 Aufsteh-Bilder / 13 Treffer je Lauf): 104 Treffer; ohne die Zustand-2-Bilder der
+     * Reaktion gezaehlt 80. Die Schranke liegt wieder zwischen der Basis ohne Band-Fix (8)
+     * und der neuen Messung. */
+    CHECK(total_hits >= 50,
+          "%d Treffer waehrend des Aufstehens (mit Fix gemessen 400 (2026-08-27) bzw. 104 "
+          "(2026-09-19, FUN_80107A78), ohne Fix 8). RE2s "
           "Kandidatenfilter FUN_800470C0 (@0x80047124-64) hat KEIN Band-Gate und +0x1D3 ist "
           "seit EXEC[5] P2 (`andi v1,v1,0x7f` @0x80103484 / `sb v1,467(s2)` @0x80103490) frei",
           total_hits);
