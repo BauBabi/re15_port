@@ -309,10 +309,11 @@ static void part_d(const char *name)
     for (; f < 60; f++) { pin_player(); frame(0, 0); }
     line("  60", f, a, 950, -1700);
     /* Spieler in die Blickrichtung des Kriechers, 600 Einheiten: Blickwinkel = rot_y + 1024
-     * in atan2-Einheiten (re15_ai_arc_test: rel = atan2(dz,dx) - (rot_y + 1024)) */
+     * in atan2-Einheiten (re15_ai_arc_test: rel = atan2(dz,dx) - (rot_y + 1024); 0 = +Z, 1024 = +X) */
     {   int ang = ((int)e->rot_y + 1024) & 0xfff;
-        s_px = e->x + ((600 * re15_cos_q12(ang)) >> 12);
-        s_pz = e->z + ((600 * re15_sin_q12(ang)) >> 12);
+        s_px = e->x + ((600 * re15_sin_q12(ang)) >> 12);    /* atan2-Konvention 0 = +Z, 1024 = +X
+                                                              * (re15_actor.h: rot_y 0 = +X) */
+        s_pz = e->z + ((600 * re15_cos_q12(ang)) >> 12);
         pin_player();
         printf("  Spieler nach (%ld,%ld): arc512=%d\n", (long)s_px, (long)s_pz,
                re15_ai_arc_test(e, pl->x, pl->z, 512));
