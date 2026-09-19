@@ -266,3 +266,7 @@ Alle drei Sperren stehen fuer den Schlaefer gleichzeitig; keine davon haengt am 
    (Screenshot nicht im Repo). Gemessen: LEVEL trifft in keinem Flavor, DOWN trifft nur im RE2-Flavor;
    ein anderer Reaktionsweg (Naehe, wache Fresser, Griff-Abbruch) wurde in B/B2 ausgeschlossen.
 5. ROOM10E1/1141 (Alternativ-Spieler) nicht dynamisch geprobt — identische Spawn-Records (§1.1), derselbe Pfad.
+
+## 6. Umsetzung (Phase 2)
+
+Siehe `liegende-und-aufstehen.md` §6 (Umsetzung, Messwerte vorher/nachher, Pins, Offenes).

@@ -264,9 +264,17 @@ int main(int argc, char **argv)
              * (grid 0x80, 21A C016). Eine Leiche IST nicht mit LEVEL treffbar - der Pin
              * meldete also eine Regression, wo keine ist. Die Zusage gilt dem LEBENDEN
              * Kriecher; tote Kandidaten gehoeren uebersprungen, nicht gezaehlt. */
-            if (st != 1 || hp_save <= 0) {
+            /* NEUVERANKERUNG Runde 16 (2026-09-19, aufstehen-schuss.md): "aufrecht" heisst
+             * hier dasselbe wie im Sweep oben (`sub_state_1 <= 3`). Seit Treffer im Boden-
+             * Aufsteher ueber FUN_80107A78 laufen (Weiche @0x80105014-38, der Clip laeuft
+             * durch statt per 0x60501 neu zu starten), verschiebt sich der Kampf in seed 50
+             * so, dass der Kandidat beim Orakel in EXEC[5] LIEGT (st=1 s1=5, 21A&2) — dort
+             * ist LEVEL = 0 byte-true (Liege-Band @0x80101614-3C, DOWN-Aim = 30 Treffer).
+             * Die Zusage gilt dem LEBENDEN, AUFRECHTEN Kriecher; Liegende werden wie Leichen
+             * uebersprungen, nicht gezaehlt. */
+            if (st != 1 || s1 > 3 || hp_save <= 0) {
                 printf("      (uebersprungen: beim Orakel nicht mehr aufrecht/lebend - "
-                       "st=%u hp=%d)\n", st, (int)hp_save);
+                       "st=%u s1=%u hp=%d)\n", st, s1, (int)hp_save);
                 continue;
             }
             pin_checked++;

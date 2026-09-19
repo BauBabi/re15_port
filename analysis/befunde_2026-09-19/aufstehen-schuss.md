@@ -401,3 +401,7 @@ Datei: `re15_port/engine/src/enemy_ai_re2_zombie.c`, Header `re15_port/include/r
 - Nicht dynamisch gegen einen RE2-Savestate verifiziert (kein RE2-DuckStation-Lauf in dieser
   Runde); die Kette ist statisch vollstaendig belegt (Weiche @0x80105014-38, Bit-Produzenten,
   Handler, Schnappschuss, einziger +0x22C-Leser).
+
+## 6. Umsetzung (Phase 2)
+
+Siehe `liegende-und-aufstehen.md` §6 (Umsetzung, Messwerte vorher/nachher, Pins, Offenes).
