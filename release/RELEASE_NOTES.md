@@ -1,3 +1,178 @@
+# v0.8.5 - 2026-09-19
+
+Zwoelf Rueckmeldungen aus einem Durchlauf mit v0.8.4. Jede davon hat ein eigenes
+Dossier unter `analysis/befunde_2026-09-19/` bekommen: erst messen, dann den
+Original-Mechanismus im RE1.5- bzw. RE2-Code nachschlagen, dann bauen. Jede Zahl im
+Code traegt ihre Adresse im Original.
+
+## Zombies, die nur daliegen, bleiben liegen
+
+> "Die Zombies, die im Original nur am Boden liegen, und die man nicht anschiessen
+> koennen sollte und nicht auf uns reagieren sollten, reagieren auf uns."
+
+Diese Zombies (Besprechungsraum und der Raum davor) lassen sich mit der RE2-KI nicht mehr
+anschiessen und wachen davon auch nicht mehr auf. Beide Originale sperren sie dreifach
+gegen Treffer; der Port hatte die Sperre fuer alle liegenden Zombies aufgehoben, weil die
+am Boden FRESSENDEN Zombies treffbar sein muessen. Die bleiben es.
+
+## Ein Treffer wirft den Aufstehenden nicht mehr zurueck
+
+> "Wenn die Zombies im Prozess sind wieder aufzustehen, laesst man sie mit Schuss wieder
+> hin fallen, und dann probieren sie wieder aufzustehen usw. Das ist im Original Resident
+> Evil 2 anders."
+
+Wer einen Zombie beim Aufstehen trifft, wirft ihn nicht mehr in die Liegepose zurueck. Er
+zuckt, dreht den Oberkoerper weg und steht weiter auf. Resident Evil 2 hat dafuer einen
+eigenen Treffer-Handler, der die laufende Animation nicht unterbricht und danach den
+gesicherten Zustand wiederherstellt. Das gilt auch fuer Zombies, die vom Fressen
+aufstehen; die hatten bisher ihre Animation abgebrochen und danach ein falsches
+Todes-Verhalten.
+
+## Trefferzonen: was man trifft, haengt von Zielhoehe und Entfernung ab
+
+> "Ich kann gerade schiessen und treffe Zombies am Boden. Das kann so nicht sein, schaue
+> noch mal nach was ich wie treffen kann, wenn ich runter, mittel oder hoch ziele."
+
+Der Port hatte nur EINEN Treffertest auf Zielhoehe. Jetzt laeuft der Schuss durch dieselbe
+Kette wie in RE2: eine Teile-Maske am Gegner (Beine / Rumpf / Kopf), die beim Hinlegen und
+Kriechen auf "nur Beine" umschaltet, und ein Applier, der aus Zielhoehe und Entfernung die
+zulaessige Zone waehlt.
+
+- Wer am Boden liegt oder kriecht, ist nur noch mit gesenktem Lauf zu treffen. Geradeaus
+  geht ins Leere, weil dort nur die Beine im Schussfeld stehen.
+- Ein Zombie, der aufsteht, ist bis zur Mitte der Bewegung geradeaus nicht zu treffen,
+  mit gesenktem Lauf durchgehend.
+- Gesenkte Schuesse und Schrot nach oben reichen nicht mehr beliebig weit: bis 4600 bzw.
+  3600 Einheiten, darueber verfehlen sie. Das ist der Original-Stand, kein neues Limit.
+- Die Entfernung entscheidet ueber die Wirkung: Pistole 16 / 15 / 14 Schaden, Schrot
+  200 / 60 / 40. Nur ein Treffer aus kurzer Distanz wirft noch um, weiter weg taumelt der
+  Zombie.
+- Der fressende Zombie am Boden bleibt ein normales Ziel.
+
+## Kriecher in der Eingangshalle: kein Rueckversatz, und sie stellen sich tot
+
+> "Schiesse ich die kriechenden Zombies einmal an, werden sie wieder ein Stueck zurueck
+> gesetzt. Mal abgesehen davon kriechen die im Original nicht direkt los, sondern stellen
+> sich erst einmal tot!"
+
+- Ein Treffer setzt den Kriecher nicht mehr zurueck. Der Port hatte beim Wiedereinstieg in
+  die Kriech-Animation den Bewegungsanker nicht neu gesetzt und rechnete daraus einen
+  Sprung von 830 Einheiten in einem Bild; RE2 verankert dort zweimal neu.
+- Die beiden Kriecher an der Suedtuer stellen sich tot: sie liegen still, bis man direkt
+  vor ihnen steht (dann greifen sie nach dem Bein) oder bis man sie anschiesst (dann
+  kriechen sie los).
+- Der Beingriff endet wie im Original damit, dass Leon ihm den Kopf zertritt.
+
+## Gegenstaende bleiben da: Leiche, Kisten, Schalter
+
+> "In der paketierten Version fehlen diverse Dinge in ROOM 11F0 mindestens die Schalter vom
+> Raetsel, in ROOM 1050 die zerteilte Leiche, in ROOM 1090 die Kiste usw."
+
+Das war kein Fehler des Pakets: springt man direkt in den Raum, sind alle Objekte da. Der
+Defekt trat nur im Durchlauf auf. Der Vermerk "dieses Objekt ist schon aufgesammelt" galt
+prozessweit statt nur fuer den Raum, in dem das Item lag — und loeschte danach in JEDEM
+Raum das Objekt mit derselben Nummer. Das Original leert seine Objekt-Tabelle bei jedem
+Raumladen. Aufgesammelte Items verschwinden weiterhin sofort und bleiben weg.
+
+## Keine komische Pose mehr nach der Tuer
+
+> "Ab ROOM 1040, sobald man die Tueren durchlaeuft macht Leon immer am Start im Raum eine
+> ganz komische Animation."
+
+Der Port posierte in den ersten fuenf Bildern nach dem Raumwechsel den ersten Clip der
+Raum-Animationsbank. ROOM1040 ist der erste Raum der Kette, der so eine Bank hat — und ihr
+erstes Bild ist eine Zwischensequenz-Pose mit ausgestreckten Armen. Das Original setzt beim
+Eintritt hart die Ruhepose aus der Waffenbank. Leon steht jetzt vom ersten Bild an normal;
+bei drei Waffen gibt es wie im Original ein kurzes Ueberblenden.
+
+## Der Alligator hat Leon im Maul, und beide Gegner haben ihre Laute
+
+> "Der Aligator hat Leon immer noch nicht im Maul im Finisher, sondern er liegt darunter,
+> mal abgesehen davon, hat der Aligator immer noch nicht den Angriffs/Biss Sound. Und auch
+> die Spinne hat noch nicht ihren Angriffssound."
+
+- Leon sitzt im Finisher zwischen den Kiefern. Der Versatz zum Opfer wurde nicht im selben
+  Massstab mitgefuehrt wie das im Port verkleinerte Alligator-Modell; er lag dadurch 2628
+  Einheiten davor und 599 darunter auf dem Boden.
+- Der Alligator bruellt beim Losschnellen, zusaetzlich zum Zubeiss-Geraeusch.
+- Die Spinne hat wieder eigene Biss- und Schrittlaute. Das Spiel konnte bisher nur EINE
+  Gegner-Soundbank gleichzeitig halten; im Alligator-Raum spielte die Spinne deshalb
+  fremde Samples oder blieb stumm. Es haelt jetzt mehrere.
+
+*Noch nicht ganz:* Leon bleibt im verkleinerten Maul in Originalgroesse, Rumpf und Beine
+ragen heraus. Und der Biss laeuft weiter als kurzer Schnapp statt als lange RE2-Attacke.
+
+## Die Gitterhaende in ROOM1210 sind jetzt die RE2-Zellenarme
+
+> "Fuer die Arme die durch die Zellen durch kommen im ROOM 1210 MUSST du dich an ROOM
+> 205/2050 von Resident Evil 2 orientieren. Dort ist GENAU das gemacht in der Retail
+> Fassung, und NUR so funktioniert es."
+
+Genau das ist passiert: der Flur faehrt jetzt die Original-Maschine der RE2-Zellenarme
+samt deren eigenem Modell — zwei Arme pro Fenster, sechs eigene Bewegungen und eine eigene
+Opfer-Animation fuer Leon. Ein Arm ruht unsichtbar im Fenster, faehrt aus, tastet nach
+Leon, packt zu und zieht ihn an die Hand; wer sich losreisst, wird freigegeben, danach
+zieht der Arm sich endgueltig zurueck. Jeder Arm greift genau einmal, und solange einer
+zupackt, hat der naechste eine Sperrzeit. Die Hoehe stimmt jetzt auch: die Fensterbank
+wurde im Original-Hintergrund vermessen, der bisherige Wert liess den halben Arm im
+Mauerwerk stecken. Zupacken, Loslassen, Treffer und Ausfahren haben ihre eigenen Laute.
+
+## Birkin im Endkampf: Auftritt, Gesicht, Tentakel
+
+> "Bei Birkin das mit den Tentakeln usw. ist schon ein wenig besser, aber noch weit
+> entfernt von gut. 1. Muss er eigentlich hinten durch das Zug Rechteck rein kommen ...
+> 2. Sind weder die Augen, noch die Zaehne noch sonst irgendwas von ihm animiert.
+> 3. Sind die Tentakel nicht richtig animiert, greifen nicht an usw."
+
+- Er kommt jetzt wirklich von hinten durch das Zug-Rechteck herein und kriecht den Wagen
+  herunter auf Leon zu, statt von Anfang an mitten im Bild zu stehen. Das Raumskript
+  setzte ihn an eine Stelle, die fuer die RE1.5-Zwischensequenz gedacht war; RE2 setzt
+  ihn beim Kampfstart selbst ans Westende. Am Ende des Auftritts steht er auf exakt
+  derselben Entfernung wie in Resident Evil 2.
+- Sein Gesicht lebt: Kopf und Hals folgen der Animation und drehen sich zu Leon, und die
+  beiden Augen auf der Fleischmasse bewegen ihre Pupillen. Beides fehlte komplett — der
+  Kopf war starr an den Rumpf geheftet, weil die Verformung ueber zwei Knochen nicht
+  gerechnet wurde.
+- Die vier Tentakel haengen wieder an der Masse. Vorher schlugen drei von ihnen rund
+  16 Kilometer hinter ihm ins Leere, weil der Port den Anker nach dem Auftritt nie
+  zuruecksetzte. Sie biegen sich beim Einrollen, strecken sich nur in die Laenge statt
+  dick zu werden, und treffen ueber vier Punkte am ganzen Arm statt nur mit der Spitze.
+- Der Speer-Angriff kam durch einen vertauschten Vergleich nie vor und ist ab etwa sieben
+  Metern wieder dabei. Und Birkin biss nur zu, wenn Leon NICHT vor ihm stand — auch das
+  war verdreht.
+
+*Noch offen:* die Opfer-Animation des Tentakel-Zugs auf dem RE2-Rig, und einige
+Feinheiten der Original-Verformung.
+
+## Android-Paket: dasselbe Spiel, bedient ueber ein On-Screen-Pad
+
+> "Erstelle mir zusaetzlich zum Windows/Linux Package ein einfaches Android Package, was
+> einfach ueber Overlay Controller bedienbar ist."
+
+Neben Windows und Linux/Steam Deck gibt es jetzt eine Android-APK (arm64 fuer Geraete,
+x86_64 fuer den Emulator, ab Android 7.0). Es ist kein zweiter Port: dieselbe Engine und
+dieselben PC-Plattformquellen werden mit dem NDK uebersetzt und von SDL2 in derselben
+Version wie am PC gestartet. Der Windows- und Linux-Bau bleibt unveraendert.
+
+Die Assets liegen vollstaendig in der APK und werden beim ersten Start mit
+Fortschrittsbalken in den App-Speicherordner entpackt. Dieser Ordner ist auf Android das,
+was am PC das Verzeichnis neben der exe ist: dort liegen die Protokolle, die Memory-Card
+und die entpackten Daten.
+
+Bedient wird ueber ein halbtransparentes Pad ueber dem Bild: D-Pad links mit acht
+Richtungen, die vier Aktionstasten rechts, L1/R1 oben, SELECT und START in der Mitte, dazu
+ein kleiner Knopf, der wie F9 am PC eine Marke ins Protokoll setzt. Mehrere Finger
+gleichzeitig funktionieren; sie erzeugen dieselben Pad-Signale wie Tastatur und Gamepad.
+Ein angeschlossener Controller geht weiterhin. Querformat, Bild zentriert, Vollbild.
+
+Abgenommen im Android-Emulator, und das war noetig: auf einem breiten Bildschirm rechnet
+SDL die Finger auf den 4:3-Ausschnitt um und klemmt sie an dessen Rand — alles in den
+schwarzen Streifen war unerreichbar, das D-Pad also genau dort, wo es sitzt.
+
+*Grenzen:* APK und entpackte Daten belegen zusammen rund 730 MB; das Pad hat feste Groessen
+und keine Einstellungen; nur Querformat; mit Entwickler-Schluessel signiert (Sideload);
+bisher nur im Emulator getestet, nicht auf einem echten Geraet.
+
 # v0.8.4 - 2026-09-14
 
 ## Birkin kommt endlich, und die Beine kippen um
