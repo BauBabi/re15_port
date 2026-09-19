@@ -1,0 +1,51 @@
+Sichtpruefung der Griff-Opfermaschinen (Runde 16 Nacharbeit, birkin-rest)
+=========================================================================
+Lauf (je Variante einmal, echte exe re15_port/build_p3/platform/pc/re15_pc.exe):
+
+  RE15_TITLE_SHOT=<datei> RE15_NO_INTRO=1 RE15_DEBUG_JUMP=5090@30
+  RE15_PLAYER_POS="13600,-23350,1024" RE15_FORCE_EVENT=4@120
+  RE15_SOFTWARE_RENDER=1 RE15_BIRKIN_DBG=1
+  RE15_G5_OPFER=<2|3|4> RE15_FRAMEDUMP="240-300/6:<praefix>"
+
+RE15_G5_OPFER ist der Sichtpruefungs-Schalter aus enemy_ai_boss_g5.c (Standard AUS):
+er startet die genannte Griff-Opfermaschine 120 Bilder nach dem Kampfstart. Im echten
+Spiel wuerfelt der Boss seine Angriffe selbst - Peitsche (Variante 2) und Spiess
+(3/4) sind deshalb nicht auf Zuruf zu bekommen; die Zug-Variante 1 dagegen kommt von
+allein (in der Sonde 23 Griffe in 8000 Bildern).
+
+Mess-Schiene desselben Laufs (Variante 3), jede Phase eine Zeile:
+
+  opfer var=-1 ph=0 clip=211 af=9  plpos=(13600,-23350) hp=100 vstate=0 vtyp=00 bank(ok=1 clips=6)
+  opfer var=3  ph=0 clip=211 af=44 plpos=(13600,-23350) hp=100 vstate=0 vtyp=00 bank(ok=1 clips=6)
+  opfer var=3  ph=1 clip=4  af=8   plpos=(13000,-23350) hp=100 vstate=4 vtyp=37 bank(ok=1 clips=6)
+  opfer var=3  ph=2 clip=3  af=0   plpos=(12394,-23350) hp=100 vstate=4 vtyp=37 bank(ok=1 clips=6)
+  opfer var=3  ph=3 clip=1  af=0   plpos=(12394,-23350) hp=100 vstate=4 vtyp=37 bank(ok=1 clips=6)
+  opfer var=3  ph=4 clip=1  af=0   plpos=(12394,-23350) hp=100 vstate=4 vtyp=37 bank(ok=1 clips=6)
+  opfer var=-1 ph=0 clip=1  af=0   plpos=(12394,-23350) hp=100 vstate=0 vtyp=37 bank(ok=1 clips=6)
+
+  - vtyp=37 + bank(ok=1 clips=6): der Spieler wird aus der EIGENEN Opferbank des
+    Tentakels posiert (EMD dir[5]/dir[6], 6 Clips), nicht aus einer Leihgabe.
+  - Clipfolge 4 -> 3 -> 1 wie im Original (@0x801046fc/@0x801047a8/@0x80104830).
+  - plpos 13600 -> 12394: der Ruck zieht Leon 1206 Einheiten zur Masse hin
+    (Anschub 600 @0x80104780, danach Halbierung @0x801047c4-804).
+
+Bilder (alle selbst angesehen, 320x240 verdoppelt):
+  sicht_opfer_var2_F252.png  Peitsche aus Distanz: Leon reisst beide Arme heraus
+                             (Opferclip 2).
+  sicht_opfer_var3_F246.png  Spiess, Opferclip 4: Leon klappt vornueber.
+  sicht_opfer_var3_F260.png  Spiess, Opferclip 3: er geht in die Knie.
+  sicht_opfer_var3_F288.png  Spiess, Ende: er steht wieder (Opferclip 1 ausgelaufen,
+                             Routine 1 zurueck).
+  sicht_opfer_var4_F258.png  Spiess in den schon Gehaltenen (Opferclip 5): Leon liegt
+                             quer, das Blut des Treffers ist sichtbar
+                             (FX auf den Opferbildern 3 und 11 @0x80104a40-6c).
+  sicht_tentakel_gestreckt_F1550.png / _F1580.png
+                             Zwei voll ausgefahrene Arme queren das Bild an Leon
+                             vorbei. Die Schlaeuche sind ueber ihre ganze gestreckte
+                             Laenge gleichmaessig beleuchtet - genau das ist der
+                             Befund zu Punkt 5 (die Streckung fasst die Normalen im
+                             Original nicht an, die Lichtmatrix kommt scale-frei aus
+                             sp+48, @0x80019d48-58 / @0x8001a01c-40).
+
+Vorher (Stand v0.8.5): an der Stelle der drei Opferbilder stand Leon unveraendert in
+seiner Standpose - der Tentakel zog ihn, ohne dass an ihm etwas passierte.
