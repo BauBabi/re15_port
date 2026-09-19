@@ -7763,7 +7763,16 @@ static void re2z_init(int slot, re15_actor_t *e)
      * {4,5,7,8,9,0xa} auf den Liege-Executor EXEC[7] abgebildet (PORT-OPTION, dokumentiert) —
      * sonst faellt beh 0x81/0x83 in den finalen else-Zweig, `re15_ai_set_state_word(e, 0x1)`
      * ueberschreibt den vom RE1.5-Live-INIT geseedeten sub_state_1=5, und die Leiche steht auf. */
-    int lying_family = (sel == 1 || sel == 3 || sel == 4 || sel == 5 || sel == 7 ||
+    /* ⛔ SEL 4 UND 5 SIND RAUS (Phase 3, liegende-zombies.md §5 Punkt 1): ihr RE1.5-Zwilling
+     * ist nicht der Liegende, sondern der FRESSER. Der Grid-Dispatcher @0x8011F80C[4]
+     * (= 0x8010187C) laedt DECIDE aus 0x8011F9C8 und ANIMATE aus 0x8011F9CC, [5]/[6]
+     * (= 0x801018F8) aus 0x8011F9D0 / 0x8011F9D4 — und beide Paare zeigen auf dieselben zwei
+     * Funktionen 0x80103980 (Naehe-Wecker) / 0x80103A58 (Liege-Phasenmaschine); in allen fuenf
+     * Stage-Overlays (Adressen im Zwillingskommentar in enemy_ai_common.c, `case 4:`).
+     * 4/5/6 sind damit EINE Familie, und die bildet der Port auf EXEC[8] ab (Zweig unten).
+     * Ausgeliefert sind 0x84 (28 Records) und 0x85 (2 Records, ROOM3010/3011) — in STAGE1
+     * kommt keiner von beiden vor, deshalb war die Zuordnung bisher ungeprueft. */
+    int lying_family = (sel == 1 || sel == 3 || sel == 7 ||
                         sel == 8 || sel == 9 || sel == 0x0a);
     /* the RE1.5 live-init supplies the PORT spawn data (HP row @0x8011f034, steer seed) — RE2
      * room data does not exist in RE1.5 rooms, so this is the byte-true data source. Its RE1.5
@@ -7979,7 +7988,31 @@ static void re2z_init(int slot, re15_actor_t *e)
         e->re2z_f10e |= 0x2000u;                                   /* lhu/ori 0x2000/sh 270
                                                                     * @0x80100B24-34 (Kriecher-
                                                                     * Zweig der INIT) */
-    } else if (sel == 6) {                                         /* feeding -> ACTIVE sub 8 */
+        /* ⛔ F3 (Phase 3, kriecher-1010.md §6.6): DER KRIECHER STARTET MIT HALBER HP.
+         * Der Kriecher-Zweig des RE2-INIT schliesst mit einer vorzeichenrichtigen Division
+         * durch 2 auf +0x156 (EMOVL10_S0.BIN, selbst disassembliert):
+         *   80100b3c: lhu  v1,342(s2)          ; HP
+         *   80100b48: sll  v1,v1,16            ; auf 32 Bit vorzeichenbehaftet
+         *   80100b4c: sra  v0,v1,16
+         *   80100b50: srl  v1,v1,31            ; Vorzeichenbit
+         *   80100b54: addu v0,v0,v1            ; Rundung Richtung 0
+         *   80100b58: sra  v0,v0,1             ; / 2
+         *   80100b5c: sh   v0,342(s2)
+         * Er sitzt AUSSCHLIESSLICH hier (im `+0x10E & 1`-Zweig @0x80100AE0), nicht an den
+         * Kriecher-Eingaengen aus dem Treffer (Ragdoll-P2 @0x80106B38, Knockdown-P2
+         * @0x80107828) — dort behaelt der Zombie seine Rest-HP. Deshalb steht die Zeile in
+         * re2z_init und NICHT in re15_re2z_enter_crawler.
+         * Die Basis-HP kommt im Port aus der RE1.5-Zeile bzw. (mit RE2-Import) aus
+         * @0x8010C600/670/690[rand&0xF] — die Instruktion rechnet in beiden Faellen auf dem
+         * Feld, das davor steht, genau wie im Original. */
+        e->hp = (int16_t)(((int)e->hp + ((int)e->hp < 0 ? 1 : 0)) >> 1);
+        e->re2z_prev_hp = e->hp;                                   /* Port-Schnappschuss
+                                                                    * nachziehen: sonst sieht der
+                                                                    * HURT-Vergleich (:8104) die
+                                                                    * Halbierung als Schaden */
+    } else if (sel == 6 || sel == 4 || sel == 5) {                  /* feeding -> ACTIVE sub 8
+                                                                    * (4/5/6 = EINE Familie,
+                                                                    * s. lying_family oben) */
         e->re2z_f10e = 0x4004u;                                    /* sh 0x4004,270 @0x80100A88-8C */
         re15_ai_set_state_word(e, 0x801);                          /* @0x80100AD4 */
         re2z_clip(e, 0x12, 0, 0, 0x100, 0);                        /* INIT-Seed Clip 18 PLAIN
@@ -8210,9 +8243,21 @@ int re15_re2z_tick(int slot)
                                                                     * SELBEN Latch (@0x8010381C-28
                                                                     * bzw. @0x80103C94-A0) */
             e->re2z_f10e &= (uint16_t)~0x4000u;                    /* andi 0xbfff @0x80104F0C */
-            e->re2z_self1d3 &= 0x7Fu;                              /* andi 0x7f @0x80104F00-04 —
-                                                                    * gepaarter Clear, s.
-                                                                    * re2z_exec_lying-Wecker */
+            /* ⛔ HIER STAND `re2z_self1d3 &= 0x7F`. RAUS (Phase 3, liegende-zombies.md §5.2).
+             * Der Skript-Wecker macht den Liegenden im Original NICHT sofort treffbar: das
+             * 0x80-Bit von +0x1D3 faellt erst am POSE-AUSGANG —
+             *   EXEC[7] P4  `lbu v0,467(s0) / andi v0,v0,0x7f / sb v0,467(s0)` @0x80103904-18,
+             *               im selben Block wie `sw 0x101,4` @0x80103900-0C
+             *   EXEC[8] P3  @0x80103CE4-FC          EXEC[8] P5  @0x80103D98
+             * — also NACH dem Aufsteh-Clip (EXEC[7] P2/P3) bzw. an dessen Beginn (EXEC[8] P3).
+             * Der RE1.5-Zwilling sagt dasselbe: die Liege-Phasenmaschine FUN_80103A58 loescht
+             * ihren Ein-Treffer-Riegel erst in Phase 3 (`andi 0xfe / sb v0,147` @0x80103B64-68),
+             * und der Skript-Wecker FUN_801039FC setzt nur `+0x6 = 2` (@0x80103A1C) — er fasst
+             * +0x93 nicht an. Beide Originale lassen den Aufstehenden also bis zum Ende der
+             * Pose in Ruhe; nur der Port gab ihn im Bump-Bild frei.
+             * @0x80104F00-04 (die frueher zitierte Stelle) gehoert nicht hierher: das ist
+             * EXEC[15]s eigener Ausgang (Commit 0x60501 @0x80104EE8-EC), eine Reaktions-, keine
+             * Weckkette. */
         }
     }
 
@@ -8512,7 +8557,17 @@ void re15_re2z_hit_filter_apply(int slot)
          * faellt `passive_lyer` weg und die Gates oeffnen — wie RE1.5 Phase 3 @0x80103B64-68
          * bzw. RE2 P4 `andi 0x7f` @0x80103914-18. */
         unsigned nib = e->grid_id & 0x0fu;
-        int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib == 7u || nib == 8u);
+        /* ⛔ NIBBLE 9/10 GEHOERT DAZU (Phase 3, liegende-zombies.md §5.2): 0x89/0x8A ist der
+         * SKRIPT-GEBUMPTE Liegende (`Member_set(12, 0x89/0x8A)` -> `sb a2,9(a0)` @0x800411F8) —
+         * derselbe Koerper, nur mit gesetztem Wecker. Sein RE1.5-Zwilling laeuft danach durch
+         * DIESELBE Phasenmaschine FUN_80103A58 (Dispatcher @0x8011F80C[9]/[10] = 0x801019F0
+         * laedt die ANIMATE-Zeile aus derselben Basis 0x8011F9D4 wie [7]/[8]) und bleibt dort
+         * gesperrt, bis Phase 3 `andi 0xfe / sb v0,147(a1)` @0x80103B64-68 ausfuehrt. Der
+         * RE2-Zwilling ebenso: EXEC[7] loescht +0x1D3 Bit 7 erst in P4 @0x80103914-18, EXEC[8]
+         * in P3 @0x80103CE4-FC. Weil der Pose-Ausgang im Port beide Bytes selbst raeumt
+         * (re2z_exec_lying default / re2z_exec_feeding case 3), reicht es, die Ausnahme fuer
+         * 9/10 NICHT zu gewaehren — danach faellt sie ueber `grid_id = 0` ohnehin weg. */
+        int passive_lyer = (e->grid_id & 0x80u) != 0u && (nib >= 7u && nib <= 10u);
         int spawn_pose = in_pose && !passive_lyer;
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
          * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):

@@ -4802,6 +4802,25 @@ int re15_enemy_ai_live_active(int slot)
                 }
                 break;
             }
+            case 4:           /* ⛔ NIBBLE 4 GEHOERT HIER HIN (Phase 3, liegende-zombies.md §5
+                               * Punkt 1). Der Dispatcher @0x8011F80C[4] = 0x8010187C laedt seine
+                               * DECIDE-Zeile aus 0x8011F9C8 und seine ANIMATE-Zeile aus
+                               * 0x8011F9CC; [5]/[6] = 0x801018F8 laden aus 0x8011F9D0 /
+                               * 0x8011F9D4. Beide Paare zeigen auf DIESELBEN Funktionen
+                               * (eigener Tabellendump STAGE1.BIN): 0x80103980 = der Naehe-Wecker
+                               * (`lw v0,464(v1) / sltiu v0,v0,0xfa0 / beq` @0x80103990-9C, nur
+                               * bei +0x6 == 0 @0x801039A4-AC, dann `sb v0,6` = Phase 1 und
+                               * +0x9C = rand&0xF @0x801039B8-CC) und 0x80103A58 = die
+                               * Liege-Phasenmaschine. Dasselbe gilt in ALLEN fuenf Overlays
+                               * (eigener Dump der lui/addiu-Paare der beiden Dispatcher):
+                               *   STAGE1 0x8011F9C8/CC == 0x8011F9D0/D4 -> 80103980 / 80103A58
+                               *   STAGE2 0x80117ACC/D0 == 0x80117AD4/D8 -> 80103814 / 801038EC
+                               *   STAGE3 0x8011DB18/1C == 0x8011DB20/24 -> 80103A6C / 80103B44
+                               *   STAGE4 0x80118EF0/F4 == 0x80118EF8/FC -> 80103934 / 80103A0C
+                               *   STAGE5 0x8011EA58/5C == 0x8011EA60/64 -> 80103AB4 / 80103B8C
+                               * Deskriptor 0x84 (28 ausgelieferte Records: ROOM2000/2001,
+                               * ROOM3000/3001, ROOM3010/3011) fiel bisher in den deferrten
+                               * default-Zweig und bekam GAR KEINEN Tick. */
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
                 re15_enemy_ai_live_feeding(e);
                 break;
