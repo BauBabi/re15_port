@@ -192,7 +192,8 @@ int main(void)
             if (my1 <= sy_kopf || my0 > sy_fuss) continue;
             for (k = mx0; k < mx1; k++) {
                 beruehrt[k] = 1;
-                if (re15_pri_mask_camera_z(mk->depth) < vz_kopf) gedeckt[k] = 1;
+                /* Original-Regel (re15_pri.h, 2026-09-19): depth < (1023*vz)>>16, strikt. */
+                if (re15_pri_mask_occludes(mk->depth, vz_kopf)) gedeckt[k] = 1;
             }
         }
 
@@ -217,7 +218,7 @@ int main(void)
                  "Maske auf Koerperhoehe, vz Fuss %ld Kopf %ld (Maske wirkt bis Tiefe "
                  "%ld); %d Spalten ohne wirksame Maske",
                  m->woher, (int) m->wx, (int) m->wz, sx, sy_kopf, sy_fuss, x0, x1,
-                 n_beruehrt, vz_fuss, vz_kopf, (vz_kopf - 1) / 64, offen);
+                 n_beruehrt, vz_fuss, vz_kopf, (long) re15_pri_bucket_of_vz(vz_kopf) - 1, offen);
         if (offen) {
             char z[80];
             snprintf(z, sizeof z, " (x %d..%d)", erste, letzte);
