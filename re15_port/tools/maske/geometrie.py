@@ -498,13 +498,13 @@ def _zerlege_objekt(region, dep, tol, spalten, k, statistik):
 
 def _packbar(rects, budget, kap):
     """Haelt diese Rechteckliste die ENGINE-Grenzen wirklich? Zahl <= budget und das
-    Regalverfahren des Atlas (atlas.shelf_pack) bringt alle unter — die Flaechensumme allein
+    Packung des Atlas (atlas.packen: Regal, bei Abweisung MaxRects) bringt alle unter — die Flaechensumme allein
     reicht nicht (Verschnitt; gemessen 2026-09-19: 18 von 74 STAGE1-Cuts fielen mit
     Flaechensumme <= 65536 trotzdem durch die Packung)."""
     import atlas as _atlas
     if len(rects) > budget:
         return False
-    place, rejected = _atlas.shelf_pack([(r[0], r[1], r[2], r[3]) for r in rects])
+    place, rejected = _atlas.packen([(r[0], r[1], r[2], r[3]) for r in rects])
     return not rejected
 
 

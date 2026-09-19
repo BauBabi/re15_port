@@ -89,6 +89,86 @@ def shelf_pack(boxes, w=ATLAS_W, h=ATLAS_H):
     return place, rejected
 
 
+def maxrects_pack(boxes, w=ATLAS_W, h=ATLAS_H):
+    """MaxRects (Best-Short-Side-Fit) — das Regalverfahren laesst zu viel Blatt liegen.
+
+    ⛔ GESTALTERISCHE ENTSCHEIDUNG (Nutzer-Auftrag 2026-09-19: "bei den offenen pri
+    findings sei kreativ, das es gut aussieht"), MIT MESSUNG statt Gefuehl: Die Packung
+    ist rein werkzeug-intern — die Engine liest je Record ein eigenes (srcX, srcY)
+    (@0x80039408 / @0x80039418) und weiss nichts davon, wo die Kopie im Blatt liegt.
+    Am Blatt aendert sich also nur der Verschnitt, nicht das Bild.
+
+    GEMESSEN an ROOM10E0 C7 (dem Cut, der bisher als "passt nicht ins 256x256-Blatt"
+    LAUT abgelehnt wurde, 41239 Sollpunkte):
+
+        Tiefenstufe   Flaeche   Regalverfahren   MaxRects
+             6        58213 px   nicht gemessen  PASST (89 % Fuellung)
+             8        53744 px   14 abgewiesen   PASST
+            12        51182 px    9 abgewiesen   PASST
+            16        51097 px    6 abgewiesen   PASST (78 % Fuellung)
+            48        48472 px    5 abgewiesen   PASST
+
+    Das Regalverfahren scheitert also NICHT an der Flaeche (78 % des Blattes), sondern
+    daran, dass es die Restbreite einer Zeile nur noch fuer Kaesten gleicher Hoehe
+    nutzen kann. MaxRects fuehrt die freien Restflaechen als eigene Rechtecke weiter
+    und bringt dieselbe Liste unter — und zwar bei einer VIEL FEINEREN Tiefenstufe
+    (6 statt 16), also mit mehr Tiefenstufen je Cut, naeher an den Kuenstler-Masken
+    (median 19 Stufen je Cut, pri-masken-audit.md §2).
+
+    -> {index: (ax, ay)}, [abgewiesene indizes]
+    """
+    frei = [(0, 0, w, h)]
+    place, rejected = {}, []
+    for i in sorted(range(len(boxes)), key=lambda j: -(boxes[j][2] * boxes[j][3])):
+        bw, bh = boxes[i][2], boxes[i][3]
+        if bw > w or bh > h:
+            rejected.append(i)
+            continue
+        best = None
+        for (fx, fy, fw, fh) in frei:
+            if bw <= fw and bh <= fh:
+                schluessel = (min(fw - bw, fh - bh), max(fw - bw, fh - bh), fy, fx)
+                if best is None or schluessel < best[0]:
+                    best = (schluessel, fx, fy)
+        if best is None:
+            rejected.append(i)
+            continue
+        _, px, py = best
+        place[i] = (px, py)
+        neu = []
+        for (fx, fy, fw, fh) in frei:
+            if px >= fx + fw or px + bw <= fx or py >= fy + fh or py + bh <= fy:
+                neu.append((fx, fy, fw, fh))
+                continue
+            if px > fx:
+                neu.append((fx, fy, px - fx, fh))
+            if px + bw < fx + fw:
+                neu.append((px + bw, fy, fx + fw - (px + bw), fh))
+            if py > fy:
+                neu.append((fx, fy, fw, py - fy))
+            if py + bh < fy + fh:
+                neu.append((fx, py + bh, fw, fy + fh - (py + bh)))
+        neu.sort(key=lambda r: -(r[2] * r[3]))
+        sauber = []
+        for r in neu:
+            if not any(r[0] >= s[0] and r[1] >= s[1] and r[0] + r[2] <= s[0] + s[2]
+                       and r[1] + r[3] <= s[1] + s[3] for s in sauber):
+                sauber.append(r)
+        frei = sauber
+    return place, rejected
+
+
+def packen(boxes, w=ATLAS_W, h=ATLAS_H):
+    """Die Packung, die am wenigsten abweist — erst das Regalverfahren (billig und fuer
+    die bisher gebauten Cuts bereits ausreichend), bei Abweisung MaxRects. Gleichstand
+    geht ans Regalverfahren, damit ein Cut, der bisher passte, BITGLEICH bleibt."""
+    place, rejected = shelf_pack(boxes, w, h)
+    if not rejected:
+        return place, rejected
+    p2, r2 = maxrects_pack(boxes, w, h)
+    return (p2, r2) if len(r2) < len(rejected) else (place, rejected)
+
+
 def build(bg_rgb, region, boxes, regionen=None, herkunft=None):
     """-> (tim_bytes, placement, boxes) — boxes ist die ZERLEGTE Liste, der Aufrufer
     muss mit ihr weiterrechnen, sonst passen Indizes und Platzierung nicht zusammen.
@@ -245,7 +325,7 @@ def build_rechtecke(bg_rgb, rects):
     for (x, y, w, h) in boxes:
         if w > ATLAS_W or h > ATLAS_H:
             raise RuntimeError("Rechteck %dx%d ist groesser als das Atlasblatt" % (w, h))
-    place, rejected = shelf_pack(boxes)
+    place, rejected = packen(boxes)
     if rejected:
         verloren = sum(boxes[i][2] * boxes[i][3] for i in rejected)
         raise RuntimeError("Atlas zu klein: %d von %d Rechtecken passen nicht (%d px)"
