@@ -15,3 +15,14 @@ target_compile_definitions(test_r16_liegende_unschiessbar PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 add_test(NAME unit_r16_liegende_unschiessbar COMMAND test_r16_liegende_unschiessbar)
+
+# (2) Treffer WAEHREND des Boden-Aufstehers (EXEC[5] P7 Clip 8/9, EXEC[8] P4 Clip 0x15)
+#     laufen ueber FUN_80107A78 (Weiche @0x80105014-38): der Clip laeuft weiter, kein
+#     Neustart ueber 0x60501, kein Haupt-Treffer; der Exit stellt +0x22C wieder her (+0x6+1).
+add_executable(test_r16_aufstehen_schuss test_r16_aufstehen_schuss.c)
+target_link_libraries(test_r16_aufstehen_schuss PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r16_aufstehen_schuss PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r16_aufstehen_schuss PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_r16_aufstehen_schuss COMMAND test_r16_aufstehen_schuss)
