@@ -554,16 +554,53 @@
    "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n⛔ 2026-09-08 GETEILT (Nutzer-Marken F191 und F367, \"gruene liege wenn ich daneben stehe ueberdeckt noch immer\"). Die Freistellung 01.png enthielt den HINTEREN Klapptisch als EIN Objekt unter dem Namen \"Hocker\" - also eine waagerechte Platte UND ein senkrechtes Gestell zusammen. Nach dem RE2-Retail-Vorbild (4253 Maskengruppen: ein Gegenstand = eine Gruppe mit im Median 5 gestuften Tiefen) kann das nie beides stimmen. Getrennt am Hintergrundbild build/bg_ppm/ROOM10D01.ppm ueber die gruene Plattenfarbe (g > r+10 und g > b+10): 344 Punkte Platte, 924 Gestell, zusammen 1268 = die Vorlage.\n  * GESTELL \"spalten\": die Beine stehen auf dem Boden, ihre unterste Silhouettenkante IST der Bodenkontakt. Tiefe 106..292. Gemessen an den Marken: F191 481 -> 188 verdeckende Punkte, F367 497 -> 99.\n  * PLATTE \"flach\": alle drei Modelle geben 200..306, also weit HINTER dem Spieler (119 bzw. 112) - sie verdeckt ihn in keinem Fall (0 Punkte an beiden Marken) und deckt nur den Flur dahinter ab. Das ist richtig: eine Tischplatte auf Huefthoehe, fast von der Kante gesehen, trifft den Boden erst weit hinten.\n  ⛔ VORHER stand das Ganze auf \"aufrecht\", also EIN Standpunkt (der tiefste Silhouettenpunkt = das vorderste Bein) fuer Platte UND Gestell: pauschal Tiefe 97..106, damit naeher als der Spieler an JEDER seiner 248 Standorte in diesem Winkel. | PHASE 2 2026-09-19: Zerteilung zurueckgenommen, Nutzer-Original 01.png als EIN Objekt (Gegenpruefung: Nutzer-PNG hat Vorrang).",
    "objekte": [
     {
-     "name": "Klapptisch hinten (Nutzer-Original 01.png)",
+     "name": "Klapptisch hinten — Platte (Nutzer-Original 01.png)",
      "png": "pri/STAGE1/10D0/01.png",
      "x": 124,
      "y": 87,
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "grund": "Phase 2 (2026-09-19): das Nutzer-Original 01.png (54x61, 1021 px, Blob 13f2c9fb aus dem Commit der 27 neuen Masken) ersetzt meine Zerteilung 01_01/01_02. Lage nachgemessen: x=124 y=87, 100,0 %. Tiefe aus der Geometrie (geometrie.py), keine Handschluessel."
+     "teil": {
+      "kanal": 1,
+      "gegen": [
+       0,
+       2
+      ],
+      "abstand": 10,
+      "weiten": 1,
+      "nimm": "ja"
+     },
+     "aufrecht": true,
+     "grund": "Die gruene Tischplatte, am Hintergrundbild getrennt (g > r+10 und g > b+10, um 1 Punkt geweitet fuer den Antialias-Saum): 476 Punkte, x129..174. Sie ist WAAGERECHT — ihre unterste Silhouettenzeile ist nie der Boden. Gemessen gibt die Spaltenregel ihr deshalb eine INVERTIERTE Rampe: fernes linkes Ende 234, nahes rechtes Ende 319. 'aufrecht' nimmt EINEN Standpunkt am tiefsten Silhouettenpunkt und das Zeilenprofil darueber — gemessen 219..224 statt einer nachweislich verkehrten Rampe. Entscheidung, nicht Messwert: die Platte traegt EINE Tiefenstufe; nur ihre Richtung ist gemessen."
+    },
+    {
+     "name": "Klapptisch hinten — Gestell (Nutzer-Original 01.png)",
+     "png": "pri/STAGE1/10D0/01.png",
+     "x": 124,
+     "y": 87,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "teil": {
+      "kanal": 1,
+      "gegen": [
+       0,
+       2
+      ],
+      "abstand": 10,
+      "weiten": 1,
+      "nimm": "nein"
+     },
+     "zelle": false,
+     "bodenkante": [
+      147,
+      175
+     ],
+     "grund": "Das Metallgestell, 545 Punkte, x126..176. Die Fusslinie ist GEMESSEN: in den Spalten 147..175 liegt der groesste Schritt des Bodenpunkts zwischen Nachbarspalten bei 1044 Welteinheiten, bei 146->147 sind es 6958 und bei 175->176 sind es 9855 (6,7-fach) — dort ist die unterste Silhouettenzeile nicht der Boden, sondern die eigene Kante bzw. die oberste Ecke. Diese Spalten erben den naechsten eigenen Standpunkt (176 -> 175 mit Tiefe 172, wirksam unter der von der Marke F423 verlangten Grenze 180). Die Zellen-Zuordnung ist fuer dieses Objekt VERBOTEN (\"zelle\": false): die beste Zelle x2900..4200 z-4100..3800 trifft die Freistellung mit IoU 0,06 bei Hoehe -75 — ein 75 Einheiten hoher Quader fuer einen Klapptisch. Die tragenden Zellen-Objekte in STAGE1 liegen bei IoU 0,6..0,92 (69 Zuordnungen)."
     }
-   ]
+   ],
+   "_phase3": "Phase 3 (2026-09-19, Nutzer-Auftrag 'bei den offenen pri findings sei kreativ'): die EINE Nutzer-Freistellung 01.png (54x61, 1021 Punkte, Lage x=124 y=87, 100,0 %) traegt jetzt ZWEI Tiefen-Objekte. Die Silhouette bleibt bitgenau die des Nutzers: Platte 476 + Gestell 545 = 1021 Punkte. GEMESSEN (build/p3/mess_10d0c1c.py, mess_10d0c1f.py): als EIN Objekt liest die Spaltenregel je Spalte die unterste Silhouettenzeile als Bodenkontakt; der Weltpunkt springt zwischen den Spalten 146->147 um 6958 und 175->176 um 9855 Einheiten, waehrend der groesste Schritt INNERHALB von 147..175 bei 1044 liegt. Die Spalten 126..146 lesen die eigene Kante der Platte (Tiefe 225..234) und die Spalte 176 (2 Punkte, oberste Ecke) laeuft ueber den Horizont hinaus auf Welt z=-13512 und Tiefe 319 — das ist der Grund, warum die F9-Marke F423 des Nutzers fiel (sie verlangt wirksam < 180 in x156..176)."
   },
   "6": {
    "_warum": "Tiefenmodell je Gegenstand nach dem, WAS ER IST - an jeder Freistellung nachgesehen und mit dem gemessenen Tiefenbereich der Bodenregel abgeglichen:\n  * \"spalten\": die untere Silhouettenkante IST der Bodenkontakt (Beine, Rollen, Sockel sichtbar) und der Gegenstand laeuft in die Tiefe - dann hat jede Bildspalte ihre eigene Entfernung.\n  * \"aufrecht\": der Gegenstand steht senkrecht ODER seine Silhouette zeigt den Bodenkontakt nicht (eine Tischplattenecke endet an ihrer eigenen Kante, nicht am Boden). Dann liefert die Bodenregel eine viel zu ferne Tiefe - gemessen z.B. an ROOM10D0 08 (223..290) und ROOM10C0 02_01 (95..192 ueber 65 Spalten). \"aufrecht\" nimmt NUR den tiefsten Punkt der Silhouette als Standpunkt und rechnet das Zeilenprofil der senkrechten Weltlinie (geom.vz_der_senkrechten).\n  * \"aufrecht\": \"spalten\" fuer WAENDE: je Spalte der Bodenkontakt, je Zeile das Profil.\n⛔ 2026-09-08 PFLANZE NACHGETRAGEN (Nutzer: \"bei der Pflanze sieht man ein kleines Stueck von Leon durchblitzen\"). Der Winkel hatte nur die 797 Punkte grosse \"Stuhlkante\" (x34..98) - der Strauch links davon war GAR NICHT freigestellt. Gemessen am Hintergrundbild build/bg_ppm/ROOM10D06.ppm: die groesste Blattgruppe (558 Punkte, x1..59 y165..211) war zu 22 % gedeckt, und in seinem Koerperkasten hatten 126 von 194 gruenen Punkten keine Maske - genau das Durchblitzen.\n  DIE HUELLE STATT DER BLATTKONTUR: die duennen Blaetter sind farblich kaum vom Putz zu trennen (Gruenueberschuss dort Median 2, Maximum 30 - die Wand liegt bei 0..4). Eine exakte Kontur ist daraus nicht zu gewinnen, eine LOECHRIGE Maske ist aber genau der gemeldete Fehler. Deshalb die Huelle: Gruenkomponenten mit xmax <= 60 (der NAHE Strauch; die Blaetter ueber der Pinnwand gehoeren zur hinteren Pflanze), 5x5 geschlossen, Loecher gefuellt.\n  DAS DARF MAN HIER: die Maske malt HINTERGRUNDPUNKTE ueber die Figur. Ein gefuellter Zwischenraum zwischen zwei Blaettern zeigt also genau das, was man dort durch die Pflanze saehe. 1997 Punkte statt 797; im Koerperkasten 126 ungedeckte Blattpunkte -> 0.\n  \"aufrecht\" (48..56): eine Topfpflanze steht senkrecht, ihr tiefster Silhouettenpunkt ist der Topf auf dem Boden. \"spalten\" gaebe 56..102 - fuer eine Blattspitze ist die untere Silhouettenkante aber kein Bodenkontakt. An Marke F3385 (Spieler Tiefe 91,6): 142 -> 361 verdeckende Punkte.\n⛔ 2026-09-08 MARKE F898 (\"Hintergrund der Pflanze ueberdeckt Leon, aber Pflanze steht hinten\"): der aufrecht-Standpunkt kam aus der BILDRAND-geklippten untersten Regionszeile 237 und lag bei Welt(4564,26152) -> Tiefe 53..62, weit VOR dem Spieler. Der Topf steht auf der Typ-3-KREISZELLE x7600..8600 z25200..26200 (RDT-Kollision); ihre Mitte (8100,25700) projiziert in C6 auf Bild(33,170), Kamera-z 7006 = Tiefe 109. \"aufrecht\": 170 setzt die Bodenzeile auf die gemessene Topfzeile; das Profil liegt damit bei ~105..112, hinter dem Spieler an der Marke (Fuss 6863 = Tiefe 107). | PHASE 2 2026-09-19: Stuhlkante = Nutzer-Original 06.png (30x46) an x=34,y=172. Die Pflanze 06_02.png ist MEINE Huelle (kein Nutzer-PNG) und bleibt als Nachfrage.",
@@ -1295,76 +1332,12 @@
  },
  "ROOM1000": {
   "1": {
-   "objekte": [
-    {
-     "name": "ROOM1000 Cut 1 Objekt 01_01",
-     "png": "pri/STAGE1/1000/01_01.png",
-     "x": 188,
-     "y": 54,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 92.6 %, 877 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 1 Objekt 01_02",
-     "png": "pri/STAGE1/1000/01_02.png",
-     "x": 181,
-     "y": 207,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 87.8 %, 181 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 1 Objekt 01_03",
-     "png": "pri/STAGE1/1000/01_03.png",
-     "x": 179,
-     "y": 151,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 97.0 %, 167 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 1 Objekt 01_04",
-     "png": "pri/STAGE1/1000/01_04.png",
-     "x": 296,
-     "y": 130,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 149 Maskenpixel."
-    }
-   ]
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Fuer diesen Cut gibt es damit KEINE Freistellung des Nutzers mehr; die bisherige Sektion war aus den falsch verorteten PNGs gebaut und wird ENTFERNT statt stehengelassen.",
+   "objekte": []
   },
   "3": {
-   "objekte": [
-    {
-     "name": "ROOM1000 Cut 3 Objekt 03_01",
-     "png": "pri/STAGE1/1000/03_01.png",
-     "x": 139,
-     "y": 91,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 89.5 %, 631 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 3 Objekt 03_02",
-     "png": "pri/STAGE1/1000/03_02.png",
-     "x": 108,
-     "y": 108,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 71 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 3 Objekt 03_03",
-     "png": "pri/STAGE1/1000/03_03.png",
-     "x": 107,
-     "y": 107,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 88 Maskenpixel."
-    },
-    {
-     "name": "ROOM1000 Cut 3 Objekt 03_04",
-     "png": "pri/STAGE1/1000/03_04.png",
-     "x": 163,
-     "y": 106,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 98.0 %, 357 Maskenpixel."
-    }
-   ]
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Fuer diesen Cut gibt es damit KEINE Freistellung des Nutzers mehr; die bisherige Sektion war aus den falsch verorteten PNGs gebaut und wird ENTFERNT statt stehengelassen.",
+   "objekte": []
   },
   "4": {
    "objekte": [
@@ -1475,35 +1448,92 @@
    ]
   },
   "0": {
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Cut 0 trug bis hierher MEINE zwei Polygone (Spindblock vorne links/rechts, 14730 Punkte) — die vier Freistellungen des Nutzers standen faelschlich unter Cut 1 bei Massstab 4.",
    "objekte": [
     {
-     "name": "Spindblock vorne links",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Zauberstab statt getipptem Polygon, weil die Spindkante im Bild scharf ist und meine Schaetzung sie nur auf +-4 px traefe. Zauberstab flutete hier den Teppich (Spind und Boden liegen farblich zu nah) - deshalb Polygon entlang der sichtbaren Spindkante.",
-     "polygon": "0,141 52,157 94,187 94,240 0,240"
+     "name": "Spindblock links (Vordergrund)",
+     "png": "pri/STAGE1/1000/01_01.png",
+     "x": 0,
+     "y": 47,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=0 y=47, 14061 Punkte, 1 Gipfel-Umgebung mit 4 Lagen, 5,0 sigma, 100,0 %."
     },
     {
-     "name": "Spindblock vorne rechts",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Zauberstab statt getipptem Polygon, weil die Spindkante im Bild scharf ist und meine Schaetzung sie nur auf +-4 px traefe. dito Polygon.",
-     "polygon": "248,163 320,119 320,240 248,240"
+     "name": "Bank vorne, linke Haelfte",
+     "png": "pri/STAGE1/1000/01_02.png",
+     "x": 99,
+     "y": 155,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=99 y=155, 2934 Punkte, EINE Lage >= 95 % des Bestwerts, 6,9 sigma, 100,0 %."
+    },
+    {
+     "name": "Bank vorne, rechte Haelfte",
+     "png": "pri/STAGE1/1000/01_03.png",
+     "x": 152,
+     "y": 159,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=152 y=159, 2785 Punkte, EINE Lage >= 95 % des Bestwerts, 5,7 sigma, 100,0 %."
+    },
+    {
+     "name": "Spindblock rechts (Bildrand)",
+     "png": "pri/STAGE1/1000/01_04.png",
+     "x": 280,
+     "y": 112,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=280 y=112, 2409 Punkte, 7 Lagen, 2,7 sigma, 100,0 %."
     }
    ]
   },
   "2": {
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Cut 2 trug bis hierher MEINE drei Polygone (Spindreihe links/rechts, Bank unten, 29892 Punkte) — die vier Freistellungen des Nutzers standen faelschlich unter Cut 3 bei Massstab 4.",
    "objekte": [
     {
      "name": "Spindreihe links",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. Polygon entlang der Spindkante (Cut 2 blickt von oben, die Reihe laeuft schraeg nach unten aus dem Bild).",
-     "polygon": "0,44 86,92 80,240 0,240"
+     "png": "pri/STAGE1/1000/03_01.png",
+     "x": 0,
+     "y": 62,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=0 y=62, 10464 Punkte, 2 Lagen, 5,3 sigma, 100,0 %."
+    },
+    {
+     "name": "Bank unten links",
+     "png": "pri/STAGE1/1000/03_02.png",
+     "x": 147,
+     "y": 206,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=147 y=206, 1258 Punkte, 4 Lagen, 9,0 sigma, 100,0 %."
+    },
+    {
+     "name": "Bank unten rechts",
+     "png": "pri/STAGE1/1000/03_03.png",
+     "x": 185,
+     "y": 204,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=185 y=204, 1386 Punkte, 2 Lagen, 9,7 sigma, 100,0 %."
     },
     {
      "name": "Spindreihe rechts",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. dito.",
-     "polygon": "252,92 320,44 320,240 258,240"
-    },
-    {
-     "name": "Bank unten",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer: \"du hast mittlerweile schon 800x Masken selber entwickelt ... warum raffst du das jetzt ploetzlich nicht mehr?\"). Fuer ROOM1000 Cut 0 und Cut 2 gab es keine Freistellung, das Log meldete an allen sechs Marken des Spiellaufs masken=0. die Sitzbank im Vordergrund.",
-     "polygon": "146,196 232,196 240,240 138,240"
+     "png": "pri/STAGE1/1000/03_04.png",
+     "x": 259,
+     "y": 64,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=259 y=64, 5753 Punkte, 2 Lagen, 3,5 sigma, 100,0 %."
     }
    ]
   }
@@ -1638,16 +1668,8 @@
    ]
   },
   "1": {
-   "objekte": [
-    {
-     "name": "ROOM11F0 Cut 1 01",
-     "png": "pri/STAGE1/11F0/01.png",
-     "x": 99,
-     "y": 161,
-     "massstab": 4,
-     "grund": "Freistellung des Nutzers (2026-09-13, Boiler Room). Lage gemessen: Uebereinstimmung 85.2 %, 769 Maskenpunkte."
-    }
-   ]
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Fuer diesen Cut gibt es damit KEINE Freistellung des Nutzers mehr; die bisherige Sektion war aus den falsch verorteten PNGs gebaut und wird ENTFERNT statt stehengelassen.",
+   "objekte": []
   },
   "7": {
    "objekte": [
@@ -1662,16 +1684,17 @@
    ]
   },
   "0": {
+   "_phase3": "⛔ PHASE 3 (2026-09-19): DIESE FREISTELLUNGEN LAGEN AM FALSCHEN CUT UND IM FALSCHEN MASSSTAB. Die alte Lagemessung nahm den BESTWERT der Farb-Uebereinstimmung ueber alle Verschiebungen — und der waechst zwangslaeufig, je kleiner das Objekt wird (gemessen build/p3/mess_lage_null.py: 03_01 bei s=1 54 %, s=2 80 %, s=3 87 %, s=4 89 %). Die Zahl war also eine selbstbestaetigende Metrik und hat 'Massstab 4' erzwungen. Gegen ein NULLMODELL gemessen (Verteilung der Uebereinstimmung ueber ALLE Lagen) sieht man es sofort: eine richtig sitzende 1x-Freistellung hat GENAU EINEN Gipfel (10E0/07_01: 1 Lage >= 95 % des Bestwerts von 10878, Gipfel 16,8 sigma; 11F0/06_02: 1 von 10858, 14,7 sigma), waehrend die Massstab-4-Kandidaten 134 bis 1709 gleich gute Lagen hatten und nur 1,9..2,9 sigma erreichten — ihre Lage war durch die Daten gar nicht bestimmt. Die Suche ueber ALLE Cuts des Raums bei Massstab 1 (build/p3/mess_lage_suche.py) findet sie eindeutig wieder, und die Sichtpruefung (build/p3/neulage_*.png) zeigt sie genau auf den Vordergrund-Moebeln. Cut 0 trug bis hierher MEINE zwei Polygone (Tank/Sockel rechts unten, Rohr links unten) — die Freistellung des Nutzers stand faelschlich unter Cut 1 bei Massstab 4.",
    "objekte": [
     {
-     "name": "Tank/Sockel rechts unten",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer-Marke ROOM11F0 F789: \"PRI bei 11F0 sieht gut aus, bis auf der eine\"). Fuer Cut 0 gab es keine Freistellung - das Log meldete dort masken=0, waehrend der Spieler bei (1926,0,-1182) mit den Beinen vor Tank und Rohr stand.",
-     "polygon": "212,168 266,154 320,145 320,240 194,240"
-    },
-    {
-     "name": "Rohr links unten",
-     "grund": "Selbst freigestellt 2026-09-13 (Nutzer-Marke ROOM11F0 F789: \"PRI bei 11F0 sieht gut aus, bis auf der eine\"). Fuer Cut 0 gab es keine Freistellung - das Log meldete dort masken=0, waehrend der Spieler bei (1926,0,-1182) mit den Beinen vor Tank und Rohr stand.",
-     "polygon": "0,190 42,163 62,146 74,155 52,176 18,206 0,222"
+     "name": "Schaltschraenke rechts (Vordergrund)",
+     "png": "pri/STAGE1/11F0/01.png",
+     "x": 191,
+     "y": 88,
+     "massstab": 1,
+     "oben": 0,
+     "grow": 0,
+     "grund": "Freistellung des Nutzers, Lage in Phase 3 neu gemessen: Massstab 1, x=191 y=88, 12213 Punkte, 3 Lagen, 4,1 sigma, 100,0 %."
     }
    ]
   }
