@@ -123,7 +123,13 @@ void re15_re2crow_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
 }
 /* flag2000 = 0: Zeile 7 = {0x0D, 0x00} — die zweite Haelfte ist leer, die Entity-Schleife
  * @0x80052C4C-88 setzt word0|0x2000 nur fuer die ZWEITE Haelfte. */
-static void re2c_se(int id) { if (s_re2c_se_fn) s_re2c_se_fn(id, 0); }
+/* Bank vor JEDEM Ruf anmelden (PORT-DESIGN Mehrbank-Cache, Phase 2 gator-und-audio,
+ * audio_pc.c; RE2 fuehrt EINEN Bank-Slot @0x8005bdb4 - Mischraeume sind port-eigen). */
+static void re2c_se(int id)
+{
+    if (s_re2c_bank_fn) s_re2c_bank_fn(RE2CROW_ENEMSE_BANK);
+    if (s_re2c_se_fn) s_re2c_se_fn(id, 0);
+}
 /* Testhaken (Muster: re15_re2z_se_play): feuert einen SE ueber GENAU den Pfad des Brains,
  * damit in der Unit messbar ist, welche Bank-Haelfte (flag2000) benutzt wird. */
 void re15_re2crow_se_play(int se_id) { re2c_se(se_id); }

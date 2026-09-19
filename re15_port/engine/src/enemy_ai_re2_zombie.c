@@ -737,13 +737,15 @@ static void (*s_re2z_se_bank_fn)(int bank) = 0;
  * tauschen. */
 #define RE2Z_ENEMSE_BANK 0
 
+static int s_re2z_se_bank = RE2Z_ENEMSE_BANK;      /* die bei der Registrierung gewaehlte Bank */
 void re15_re2z_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
 {
     s_re2z_se_fn      = se_fn;
     s_re2z_se_bank_fn = bank_fn;
     if (s_re2z_se_bank_fn) {
         const char *ov = getenv("RE15_RE2_SE_BANK");
-        s_re2z_se_bank_fn(ov ? atoi(ov) : RE2Z_ENEMSE_BANK);
+        s_re2z_se_bank = ov ? atoi(ov) : RE2Z_ENEMSE_BANK;
+        s_re2z_se_bank_fn(s_re2z_se_bank);
     }
 }
 /* ⛔ NUTZER-MANDAT (2026-08-23): "Bei RE2AI haben die Zombies nicht den Sound von RE1.5 AI.
@@ -770,7 +772,13 @@ void re15_re2z_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
  * (ENEMSE-Id -> RE1.5-snd1-SE), im RE1.5-Flavor weiter den ENEMSE-Player (Abriss-Import).
  * Die Engine behaelt damit die byte-true RE2-Trigger + Id-Semantik (Tests messen ueber
  * DIESEN Hook), nur die Sample-Quelle wechselt. */
-static void re2z_se(int id) { if (s_re2z_se_fn) s_re2z_se_fn(id, 0); }
+/* Bank vor JEDEM Ruf anmelden (PORT-DESIGN Mehrbank-Cache, Phase 2 gator-und-audio,
+ * audio_pc.c; RE2 fuehrt EINEN Bank-Slot @0x8005bdb4 - Mischraeume sind port-eigen). */
+static void re2z_se(int id)
+{
+    if (s_re2z_se_bank_fn) s_re2z_se_bank_fn(s_re2z_se_bank);
+    if (s_re2z_se_fn) s_re2z_se_fn(id, 0);
+}
 void re15_re2z_se_play(int se_id) { re2z_se(se_id); }   /* Frame-Flag-SFX 0x801016c8-Pfad */
 
 /* ---- FUN_800401d4 — the grab-bite player damage (decompile-read; port of the mechanism) ----

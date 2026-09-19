@@ -30,12 +30,17 @@
 #include "re15_damage.h"
 #include "re15_collision.h"
 #include "re15_boss_gator.h"
+#include "re15_emd.h"
+#include "re15_md1.h"
+#include "re15_skeleton.h"
+#include "re15_anim_select.h"
 #include "re2_ems.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -68,6 +73,87 @@ static int load_re2_bank(uint8_t type)
         eb->buf = NULL; eb->ok = 1; return 1;
     }
     eb->type = 0; return 0;
+}
+
+/* ==== PIN Phase 2 (gator-und-audio, 2026-09-19): LEONS WURZEL IM MAUL ==================
+ * Metrik wie probe_r16_gator_finisher_anker: Leons GERENDERTE Wurzel (pl->xyz + RotY(yaw)*
+ * POSE_v, exakt re15_skel_bone_to_world) zurueck in den GATOR-LOKALEN Rahmen,
+ * local = RotY(-yaw)*(root - G) / s. Im Original (kein Scale) ist das exakt
+ * (off_v - off_g) + POS_v (RE2 Anker-Paar FUN_80015B94/CB8). Bestehen: bei P3 (Clip 11 f0
+ * / Opfer f119) |local - Original| <= 5 je Achse UND local liegt in der lokalen AABB von
+ * MD1-Mesh 7 (Unterkiefer) der geposten Kette (heute vor dem Fix: (7892,-1804,295), dRef
+ * (2628,599,97), ausserhalb beider Kiefer - "er liegt darunter"). */
+static int kf_of(const re15_emd_animation_t *an, int clip, int fr)
+{
+    const re15_emd_clip_t *c = &an->clips[clip];
+    int fi = c->first_frame + (fr % c->frame_count);
+    int fend = c->first_frame + c->frame_count - 1;
+    while ((an->frames[fi] & 0x8000u) && fi < fend) fi++;
+    return (int)(an->frames[fi] & 0xFFFu);
+}
+static void spd(const re15_emd_skeleton_t *sk, int kf, int32_t o[3])
+{ int16_t x=0,y=0,z=0; re15_emd_get_keyframe_speed(sk, kf, &x,&y,&z); o[0]=x;o[1]=y;o[2]=z; }
+static void pos(const re15_emd_skeleton_t *sk, int kf, int32_t o[3])
+{ int16_t x=0,y=0,z=0; re15_emd_get_keyframe_position(sk, kf, &x,&y,&z); o[0]=x;o[1]=y;o[2]=z; }
+static int mesh_local_aabb(re15_enemy_bank_t *B, int kf, int mesh, int32_t lo[3], int32_t hi[3])
+{
+    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    const re15_md1_mesh_t *m; int pass, i, r, k, n = 0;
+    void *sv = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    r = re15_skel_compute_pose(&B->skel, kf, poses);
+    g_anim_pose_actor = sv;
+    if (r != 0 || mesh < 0 || mesh >= B->md1.mesh_count) return -1;
+    m = &B->md1.meshes[mesh];
+    lo[0]=lo[1]=lo[2]=0x7fffffff; hi[0]=hi[1]=hi[2]=-0x7fffffff;
+    for (pass = 0; pass < 2; pass++) {
+        const re15_md1_vertex_t *V = pass ? m->quad_vertices : m->tri_vertices;
+        int NV = pass ? m->quad_vertex_count : m->tri_vertex_count;
+        for (i = 0; i < NV; i++) {
+            int32_t v[3] = { V[i].x, V[i].y, V[i].z }, w[3];
+            for (r = 0; r < 3; r++) { int64_t s = 0;
+                for (k = 0; k < 3; k++) s += (int64_t)poses[mesh].rot[r*3+k] * v[k];
+                w[r] = (int32_t)(s >> 12) + poses[mesh].trans[r]; }
+            for (r = 0; r < 3; r++) { if (w[r] < lo[r]) lo[r] = w[r]; if (w[r] > hi[r]) hi[r] = w[r]; }
+            n++;
+        }
+    }
+    return n ? 0 : -1;
+}
+static void leon_local(re15_enemy_bank_t *B, const re15_actor_t *e, const re15_actor_t *pl,
+                       int vkf, int32_t out[3])
+{
+    int32_t P[3], w[3], d[3], cs, sn;
+    int32_t s = e->render_scale_q12 ? e->render_scale_q12 : 4096;
+    pos(&B->skel_victim, vkf, P);
+    re15_skel_bone_to_world(P, (int16_t)pl->rot_y, pl->x, pl->y, pl->z, w);
+    d[0] = w[0]-e->x; d[1] = w[1]-e->y; d[2] = w[2]-e->z;
+    cs = re15_cos_q12((int)e->rot_y); sn = re15_sin_q12((int)e->rot_y);
+    out[0] = (int32_t)((int64_t)(((int64_t)cs*d[0] - (int64_t)sn*d[2]) >> 12) * 4096 / s);
+    out[2] = (int32_t)((int64_t)(((int64_t)sn*d[0] + (int64_t)cs*d[2]) >> 12) * 4096 / s);
+    out[1] = (int32_t)((int64_t)d[1] * 4096 / s);
+}
+static int pin_leon_im_maul(re15_enemy_bank_t *B, const re15_actor_t *e, const re15_actor_t *pl)
+{
+    int gkf = kf_of(&B->anim, 11, (int)e->anim_frame), vkf = kf_of(&B->anim_victim, 1, 119);
+    int32_t L[3], ref[3], og[3], ov[3], P[3], lo7[3], hi7[3], lo6[3], hi6[3];
+    int in7, in6, ok = 1, i;
+    spd(&B->skel, gkf, og); spd(&B->skel_victim, vkf, ov); pos(&B->skel_victim, vkf, P);
+    for (i = 0; i < 3; i++) ref[i] = ov[i] - og[i] + P[i];
+    leon_local(B, e, pl, vkf, L);
+    if (mesh_local_aabb(B, gkf, 7, lo7, hi7) != 0 || mesh_local_aabb(B, gkf, 6, lo6, hi6) != 0) {
+        printf("FAIL: Kiefer-AABB nicht berechenbar\n"); return 0; }
+    in7 = L[0]>=lo7[0]&&L[0]<=hi7[0]&&L[1]>=lo7[1]&&L[1]<=hi7[1]&&L[2]>=lo7[2]&&L[2]<=hi7[2];
+    in6 = L[0]>=lo6[0]&&L[0]<=hi6[0]&&L[1]>=lo6[1]&&L[1]<=hi6[1]&&L[2]>=lo6[2]&&L[2]<=hi6[2];
+    printf("PIN P3: G=(%d,%d,%d) yaw=%d s=%d pl=(%d,%d,%d) | LOKAL=(%d,%d,%d) Original=(%d,%d,%d) "
+           "dRef=(%d,%d,%d) | Mesh7 x[%d..%d] y[%d..%d] z[%d..%d] -> 6=%d/7=%d\n",
+           e->x, e->y, e->z, (int)e->rot_y, e->render_scale_q12 ? e->render_scale_q12 : 4096,
+           pl->x, pl->y, pl->z, L[0], L[1], L[2], ref[0], ref[1], ref[2],
+           L[0]-ref[0], L[1]-ref[1], L[2]-ref[2],
+           lo7[0], hi7[0], lo7[1], hi7[1], lo7[2], hi7[2], in6, in7);
+    for (i = 0; i < 3; i++) if (L[i]-ref[i] > 5 || L[i]-ref[i] < -5) ok = 0;
+    if (!ok) printf("FAIL: Leons lokale Wurzel weicht > 5 vom Original-Sitz ab (Scale-Nachzug fehlt?)\n");
+    if (!in7) { printf("FAIL: Leons Wurzel liegt nicht im Unterkiefer (Mesh 7) - 'er liegt darunter'\n"); ok = 0; }
+    return ok;
 }
 
 int main(void)
@@ -190,6 +276,13 @@ int main(void)
     if (pl->motion != 1 || pl->anim_frame != 119) {
         printf("FAIL: Leon nicht im letzten Opfer-Frame geparkt (clip=%d af=%u)\n",
                (int)pl->motion, (unsigned)pl->anim_frame); return 1; }
+    /* PIN Phase 2: Leons Wurzel sitzt im Maul (Original-Relation +-5, in Mesh 7). */
+    {   re15_enemy_bank_t *eb = re15_enemy_find(0x23u);
+        if (!eb || !eb->victim_ok) { printf("FAIL: Opfer-Bank fehlt\n"); return 1; }
+        if (!pin_leon_im_maul(eb, e, pl)) return 1;
+        /* y-Spur: die Sonde hat KEIN game_step; pl->y muss der Fix gesetzt haben (!= 0). */
+        if (pl->y == 0) { printf("FAIL: pl->y blieb 0 - der Scale-Nachzug setzt die Hoehe nicht\n"); return 1; }
+    }
     printf("OK: FRESS-Sequenz komplett - FSYNC-Messreihe in gator_boss.log\n");
     return 0;
 }

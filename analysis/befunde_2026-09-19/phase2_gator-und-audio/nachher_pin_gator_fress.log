@@ -1,0 +1,4 @@
+EM23-Bank: bones=22 clips=12
+Praesentation: Fressen ab F11, Gate ab F25, Kau-Loop ab F146, schwarzer Grund bei F102
+PIN P3: G=(-5284,-1200,-22502) yaw=113 s=2731 pl=(-1805,-399,-22978) | LOKAL=(5261,-2402,194) Original=(5264,-2403,198) dRef=(-3,1,-4) | Mesh7 x[4130..7381] y[-4527..-1776] z[-986..984] -> 6=1/7=1
+OK: FRESS-Sequenz komplett - FSYNC-Messreihe in gator_boss.log

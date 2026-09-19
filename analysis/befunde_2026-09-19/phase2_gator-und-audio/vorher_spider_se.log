@@ -1,0 +1,86 @@
+EMS25-Bank: clips=16 bones=20
+   clip  0:  16 F  (keine Frame-SEs)
+   clip  1:   8 F  (keine Frame-SEs)
+   clip  2:  16 F  (keine Frame-SEs)
+   clip  3:  31 F  (keine Frame-SEs)
+   clip  4:  21 F  (keine Frame-SEs)
+   clip  5:   6 F  (keine Frame-SEs)
+   clip  6:  10 F  (keine Frame-SEs)
+   clip  7:  17 F  (keine Frame-SEs)
+   clip  8:   5 F  (keine Frame-SEs)
+   clip  9:  29 F  (keine Frame-SEs)
+   clip 10:  55 F  (keine Frame-SEs)
+   clip 11:  42 F f5:SE3
+   clip 12: 206 F  (keine Frame-SEs)
+   clip 13:  68 F  (keine Frame-SEs)
+   clip 14:  32 F  (keine Frame-SEs)
+   clip 15:  32 F  (keine Frame-SEs)
+   [bank_fn] Latch -1 -> 11
+owns=1 flavor-re2-for-type=1
+
+--- A: natuerlich ab INIT, Spieler 900 vor der Spinne, 1500 Frames ---
+   F0     state=1 sub=0/0/0 mode=0 motion=1 af=1 pos=(-700,-1800,-17800) dist=898
+   F1     state=1 sub=0/1/0 mode=0 motion=0 af=0 pos=(-700,-1800,-17800) dist=898
+   F2     state=1 sub=0/1/0 mode=0 motion=0 af=1 pos=(-700,-1800,-17800) dist=898
+   SE F94    id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-600,-1800,-17800) | pl hp=200
+   SE F196   id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-501,-1800,-17795) | pl hp=200
+   F300   state=1 sub=0/0/0 mode=0 motion=2 af=11 pos=(-462,-1800,-17886) dist=665
+   SE F573   id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-69,-1800,-17832) | pl hp=200
+   F600   state=1 sub=0/0/0 mode=0 motion=3 af=27 pos=(-69,-1800,-17832) dist=269
+   SE F757   id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(30,-1800,-17824) | pl hp=200
+   SE F887   id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(30,-1800,-17824) | pl hp=200
+   F900   state=1 sub=5/1/0 mode=0 motion=2 af=9 pos=(30,-1800,-17824) dist=171
+   SE F983   id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(129,-1800,-17814) | pl hp=200
+   SE F1057  id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=5/2/0 mode=0 motion=2 af=0 pos=(227,-1800,-17798) | pl hp=200
+   SE F1101  id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=5/2/0 mode=0 motion=2 af=0 pos=(127,-1800,-17801) | pl hp=200
+   SE F1185  id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(226,-1800,-17809) | pl hp=200
+   F1200  state=1 sub=4/1/0 mode=0 motion=3 af=15 pos=(226,-1800,-17809) dist=27
+   SE F1262  id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(226,-1800,-17809) | pl hp=200
+   SE F1434  id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(133,-1800,-17847) | pl hp=200
+   => SE-Rufe: 11, Frames in sub7(Angriff): 0, Bisse: 0, hp 200->200
+
+--- B: sub_state_1 = 7 (ANGRIFF) erzwungen, Spieler 900 davor, 600 Frames ---
+   F0     state=1 sub=7/1/0 mode=0 motion=4 af=1 pos=(-600,-1800,-17800) dist=898
+   F1     state=1 sub=7/1/0 mode=0 motion=4 af=2 pos=(-500,-1800,-17800) dist=799
+   F2     state=1 sub=7/1/0 mode=0 motion=4 af=3 pos=(-400,-1800,-17800) dist=698
+   SE F54    id=1 flag=0 Latch=Bank 11 | spinne state=1 sub=7/5/0 mode=0 motion=5 af=1 pos=(1100,-1800,-17800) | pl hp=180
+   BISS F54: hp 200 -> 180 (sub=7/6)
+   SE F89    id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=5/2/0 mode=0 motion=2 af=0 pos=(-600,-1800,-17800) | pl hp=180
+   SE F159   id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-600,-1800,-17800) | pl hp=180
+   F300   state=1 sub=4/1/0 mode=0 motion=3 af=4 pos=(-428,-1800,-17899) dist=633
+   SE F327   id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-428,-1800,-17899) | pl hp=180
+   SE F447   id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(-231,-1800,-17876) | pl hp=180
+   => SE-Rufe: 5, Frames in sub7(Angriff): 72, Bisse: 1, hp 200->180
+
+--- B2: erneut sub 7, Spieler 900 in Blickrichtung ---
+   F0     state=1 sub=7/1/0 mode=0 motion=4 af=1 pos=(-119,-1800,-17725) dist=898
+   F1     state=1 sub=7/1/0 mode=0 motion=4 af=2 pos=(-32,-1800,-17773) dist=812
+   F2     state=1 sub=7/1/0 mode=0 motion=4 af=3 pos=(55,-1800,-17821) dist=729
+   SE F50    id=1 flag=0 Latch=Bank 11 | spinne state=1 sub=7/5/0 mode=0 motion=5 af=1 pos=(1427,-1800,-18455) | pl hp=180
+   BISS F50: hp 200 -> 180 (sub=7/6)
+   SE F85    id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=5/2/0 mode=0 motion=2 af=0 pos=(322,-1800,-17146) | pl hp=180
+   SE F190   id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(322,-1800,-17146) | pl hp=180
+   => SE-Rufe: 3, Frames in sub7(Angriff): 68, Bisse: 1, hp 200->180
+
+--- B2: erneut sub 7, Spieler 900 in Blickrichtung ---
+   F0     state=1 sub=7/1/0 mode=0 motion=4 af=1 pos=(416,-1800,-17113) dist=898
+   F1     state=1 sub=7/1/0 mode=0 motion=4 af=2 pos=(510,-1800,-17080) dist=804
+   F2     state=1 sub=7/1/0 mode=0 motion=4 af=3 pos=(604,-1800,-17047) dist=712
+   SE F51    id=1 flag=0 Latch=Bank 11 | spinne state=1 sub=7/5/0 mode=0 motion=5 af=1 pos=(2048,-1800,-16622) | pl hp=180
+   BISS F51: hp 200 -> 180 (sub=7/6)
+   SE F86    id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=5/1/0 mode=0 motion=2 af=0 pos=(637,-1800,-17574) | pl hp=180
+   SE F141   id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(719,-1800,-17517) | pl hp=180
+   SE F224   id=9 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(719,-1800,-17517) | pl hp=180
+   => SE-Rufe: 4, Frames in sub7(Angriff): 69, Bisse: 1, hp 200->180
+
+--- B2: erneut sub 7, Spieler 900 in Blickrichtung ---
+   F0     state=1 sub=7/1/0 mode=0 motion=4 af=1 pos=(830,-1800,-17361) dist=898
+   F1     state=1 sub=7/1/0 mode=0 motion=4 af=2 pos=(862,-1800,-17266) dist=872
+   F2     state=1 sub=7/1/0 mode=0 motion=4 af=3 pos=(894,-1800,-17171) dist=856
+   SE F51    id=1 flag=0 Latch=Bank 11 | spinne state=1 sub=7/5/0 mode=0 motion=5 af=3 pos=(1576,-1800,-16354) | pl hp=180
+   BISS F51: hp 200 -> 180 (sub=7/6)
+   SE F86    id=0 flag=0 Latch=Bank 11 | spinne state=1 sub=5/1/0 mode=0 motion=2 af=0 pos=(1763,-1800,-18037) | pl hp=180
+   SE F178   id=8 flag=0 Latch=Bank 11 | spinne state=1 sub=4/1/0 mode=0 motion=3 af=0 pos=(1727,-1800,-17737) | pl hp=180
+   => SE-Rufe: 3, Frames in sub7(Angriff): 69, Bisse: 1, hp 200->180
+
+GESAMT SE-Rufe: 26 (Latch Bank 11)

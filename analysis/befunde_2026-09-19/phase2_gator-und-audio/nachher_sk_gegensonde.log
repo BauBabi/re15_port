@@ -1,0 +1,23 @@
+EM23.EMD 189208 B gator clips=12 victim clips=2 kf_victim=680 kfsize=80
+  victim clip 0: first_frame=0 frame_count=30
+  victim clip 1: first_frame=30 frame_count=120
+
+=== (1) Zensus Opfer-Clip 0/1: POSE x/z != 0 ? SPEED y != 0 ? (nur Verletzer gelistet) ===
+  OPFER clip 0 (30 F): POSE x!=0: 0, POSE z!=0: 0, SPEED x!=0: 30, SPEED y!=0: 0 [0..0], SPEED z!=0: 0, 0x8000-Woerter: 0
+  OPFER clip 1 (120 F): POSE x!=0: 0, POSE z!=0: 0, SPEED x!=0: 120, SPEED y!=0: 0 [0..0], SPEED z!=0: 117, 0x8000-Woerter: 0
+  GATOR clip 4 (45 F): SPEED y!=0: 0, POSE x!=0: 0, POSE z!=0: 0
+  GATOR clip 5 (120 F): SPEED y!=0: 0, POSE x!=0: 0, POSE z!=0: 0
+  GATOR clip 11 (59 F): SPEED y!=0: 0, POSE x!=0: 0, POSE z!=0: 0
+
+=== (2)/(3) alle P2-Frames sf=0..119 + P3: |F-O|max, |S-O|max, Kiefer-Treffer O/S/F ===
+   P2 sf=  0 ref=(  7157, -1642,     0) O=(  7154, -1642,     0) 1/0  S=(  7152, -1640,    -1) 1/0  F=(  7152, -1640,    -1) 1/0
+   P2 sf= 20 ref=(  6556, -1247,  1080) O=(  6553, -1247,  1080) 1/1  S=(  6552, -1246,  1078) 1/1  F=(  6552, -1246,  1078) 1/1
+   P2 sf= 40 ref=(  6530, -1048,  -941) O=(  6527, -1048,  -942) 1/1  S=(  6525, -1046,  -941) 1/1  F=(  6525, -1046,  -941) 1/1
+   P2 sf= 60 ref=(  4732, -7784,  -319) O=(  4730, -7784,  -320) 0/0  S=(  4728, -7782,  -320) 0/0  F=(  4728, -7782,  -320) 0/0
+   P2 sf= 80 ref=(  4641, -4505, -2406) O=(  4639, -4505, -2405) 1/1  S=(  4638, -4503, -2405) 1/1  F=(  4638, -4503, -2405) 1/1
+   P2 sf=100 ref=(  6284, -3336,  -772) O=(  6282, -3336,  -773) 1/1  S=(  6279, -3335,  -773) 1/1  F=(  6279, -3335,  -773) 1/1
+   P2 sf=119 ref=(  5264, -2403,   198) O=(  5262, -2403,   197) 1/1  S=(  5261, -2402,   194) 1/1  F=(  5261, -2402,   194) 1/1
+   P3 sf=120 ref=(  5264, -2403,   198) O=(  5262, -2403,   197) 1/1  S=(  5261, -2402,   194) 1/1  F=(  5261, -2402,   194) 1/1
+  Original-Treffer ueber 121 Frames: 6=1: 94, 7=1: 102, 6=1&&7=1: 91
+  S vs O: max|dx|=3 max|dy|=2 max|dz|=3, Kiefer-6-Abweichungen=0, Kiefer-7-Abweichungen=0
+  F(Fix-Plan, ohne s*(ov-og)) vs O: max|dx|=3 max|dy|=2 max|dz|=3, Kiefer-6-Abweichungen=0, Kiefer-7-Abweichungen=0

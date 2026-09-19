@@ -91,9 +91,18 @@ static int bank_load(int bank, bankmap_t *bm)
         if (bm->se[i].silent) { printf("   id %2d: %08X SILENT\n", i, bm->entry[i]); continue; }
         {   int ti = bm->se[i].prog * RE15_VAB_TONES_PER_PROGRAM + bm->se[i].tone;
             const re15_vab_tone_t *t = &bm->vab.tones[ti];
-            printf("   id %2d: %08X prog=%d tone=%d chan=%d prio=%d extra=%d vabovr=%d | vag=%d size=%u B vol=%u pan=%u\n",
+            /* Phase 2 (Skeptiker-Anmerkung "SE-4-Dauer 1,43 s vs 2,40 s"): die Abspielrate ist
+             * KEIN VH-Feld, sondern der SPU-Pitch aus dem Tone (note2pitch2 wie audio_pc.c /
+             * SsUtKeyOnV; 0x1000 == 44100 Hz). Dauer = Samples / (pitch*44100/4096). */
+            uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift, t->center_note, t->pitch_shift);
+            unsigned samples = (bm->vagsize[i] / 16u) * 28u;
+            double rate = (double)pitch * 44100.0 / 4096.0;
+            printf("   id %2d: %08X prog=%d tone=%d chan=%d prio=%d extra=%d vabovr=%d | vag=%d size=%u B vol=%u pan=%u"
+                   " | center=%u min=%u shift=%u pitch=0x%03X = %.0f Hz -> %u Samples = %.2f s\n",
                    i, bm->entry[i], bm->se[i].prog, bm->se[i].tone, bm->se[i].chan, bm->se[i].prio,
-                   bm->se[i].extra, bm->se[i].vab_override, (int)t->vag_index - 1, bm->vagsize[i], t->vol, t->pan); }
+                   bm->se[i].extra, bm->se[i].vab_override, (int)t->vag_index - 1, bm->vagsize[i], t->vol, t->pan,
+                   t->center_note, t->min_note, t->pitch_shift, (unsigned)pitch, rate, samples,
+                   rate > 0 ? samples / rate : 0.0); }
     }
     bm->ok = 1;
     return 0;
@@ -104,16 +113,25 @@ static int s_bank_sel = -1;              /* == s_re2se_bank_sel (audio_pc.c:1007
 static int s_frame = 0; static const char *s_phase = "";
 static bankmap_t s_b17, s_b11;
 static int s_n_gator = 0, s_n_spider = 0;
-static void spy_bank(int bank) { printf("   [bank_fn] Latch %d -> %d\n", s_bank_sel, bank); s_bank_sel = bank; }
+static int s_n_bank = 0, s_n_mismatch = 0, s_n_se4 = 0;   /* Phase 2: Latch == zustaendig je Ruf? */
+static void spy_bank(int bank)
+{
+    if (bank != s_bank_sel) printf("   [bank_fn] Latch %d -> %d\n", s_bank_sel, bank);
+    s_bank_sel = bank; s_n_bank++;
+}
 static void spy_common(const char *src, int intended_bank, int id, int flag2000)
 {
     int eid = id + (flag2000 ? 0x10 : 0);
     bankmap_t *lat = (s_bank_sel == 17) ? &s_b17 : (s_bank_sel == 11) ? &s_b11 : NULL;
     bankmap_t *want = (intended_bank == 17) ? &s_b17 : &s_b11;
-    printf("   SE F%-5d %-8s %-6s id=%d flag=%d | Latch=Bank %d -> %s | zustaendig Bank %d -> %s\n",
+    int ok = (s_bank_sel == intended_bank);
+    if (!ok) s_n_mismatch++;
+    if (id == 4 && !flag2000) s_n_se4++;
+    printf("   SE F%-5d %-8s %-6s id=%d flag=%d | Latch=Bank %d -> %s | zustaendig Bank %d -> %s | %s\n",
            s_frame, s_phase, src, id, flag2000, s_bank_sel,
            !lat ? "KEINE BANK (stumm)" : (eid >= lat->map_count || lat->se[eid].silent) ? "SILENT/leer" : "spielt",
-           intended_bank, (eid >= want->map_count || want->se[eid].silent) ? "SILENT/leer" : "spielt");
+           intended_bank, (eid >= want->map_count || want->se[eid].silent) ? "SILENT/leer" : "spielt",
+           ok ? "Latch==zustaendig" : "MISMATCH");
 }
 static void spy_gator_se(int id, int flag2000)  { s_n_gator++;  spy_common("GATOR", 17, id, flag2000); }
 static void spy_spider_se(int id, int flag2000) { s_n_spider++; spy_common("SPINNE", 11, id, flag2000); }
@@ -236,6 +254,39 @@ int main(void)
             if (e->motion == 11 && ++p3 > 130) break;
         }
         printf("   Gator-SE-Rufe gesamt: %d, Spinnen-SE-Rufe: %d, Fress-Start F%d\n", s_n_gator, s_n_spider, fress_f0);
+        printf("   PHASE 2: bank_fn-Rufe=%d, SE-Rufe mit Latch==zustaendig: %d/%d (MISMATCH %d), "
+               "direkte SE-4-Rufe (Lunge-Start @0x80100d64/d84): %d\n",
+               s_n_bank, s_n_gator + s_n_spider - s_n_mismatch, s_n_gator + s_n_spider, s_n_mismatch, s_n_se4);
+    }
+
+    /* ---- 5) Kieferkurve der RE2-Lunge-Clips 2/3 (Stufe B2 - MESSUNG, kein Umbau) ----
+     * Bone 7 = Unterkiefer (Memory reai-v2-gator-bosskampf); Winkel je Frame aus dem EMR-
+     * Keyframe (12-bit gepackt, 4096 = 360 Grad). "Maul offen ab ~f54" (Runde 4/6) wird hier
+     * durch die Daten ersetzt: Frame des ersten Ausschlags > 64 (1/64 Umdrehung) und Peak. */
+    {   static const int clips[] = { 2, 3, 4 }; unsigned ci;
+        printf("\n=== 5) Kiefer-Kurve (Bone 7 Rot-X/Y/Z, Q12-Winkel) je Frame, Clips 2/3/4 ===\n");
+        for (ci = 0; ci < sizeof clips / sizeof clips[0]; ci++) {
+            int c = clips[ci], fr, first = -1, peakf = -1; int peak = 0;
+            const re15_emd_clip_t *cl = &eb23->anim.clips[c];
+            int16_t ax0 = 0, ay0 = 0, az0 = 0;
+            {   int kf0 = cl->first_frame < 0 ? 0 : (int)(eb23->anim.frames[cl->first_frame] & 0xFFFu);
+                re15_emd_get_keyframe_angles(&eb23->skel, kf0, 7, &ax0, &ay0, &az0); }
+            printf("   Clip %d (%d F): f0 Kiefer=(%d,%d,%d)", c, cl->frame_count, ax0, ay0, az0);
+            for (fr = 0; fr < cl->frame_count; fr++) {
+                int fi = cl->first_frame + fr, fend = cl->first_frame + cl->frame_count - 1, kf, d;
+                int16_t ax = 0, ay = 0, az = 0;
+                while ((eb23->anim.frames[fi] & 0x8000u) && fi < fend) fi++;
+                kf = (int)(eb23->anim.frames[fi] & 0xFFFu);
+                re15_emd_get_keyframe_angles(&eb23->skel, kf, 7, &ax, &ay, &az);
+                d = ((int)az - (int)az0 + 0x800) & 0xFFF; d -= 0x800; if (d < 0) d = -d;
+                {   int dy = ((int)ay - (int)ay0 + 0x800) & 0xFFF; dy -= 0x800; if (dy < 0) dy = -dy; if (dy > d) d = dy; }
+                {   int dx = ((int)ax - (int)ax0 + 0x800) & 0xFFF; dx -= 0x800; if (dx < 0) dx = -dx; if (dx > d) d = dx; }
+                if (first < 0 && d > 64) first = fr;
+                if (d > peak) { peak = d; peakf = fr; }
+                if ((fr % 6) == 0) printf("%s f%d:(%d,%d,%d)", (fr % 60) == 0 ? "\n      " : " ", fr, ax, ay, az);
+            }
+            printf("\n      => erster Ausschlag > 64 bei f%d, Peak %d bei f%d\n", first, peak, peakf);
+        }
     }
     return 0;
 }

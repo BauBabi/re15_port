@@ -272,3 +272,113 @@ mitten im Kampf auf 11 — mit dem Cache/Per-Ruf-Latch erledigt.
 - Spinnen-Szenario A erreicht Sub 7 in 1500 F nicht — die Stalk→Angriff-Bedingungen (Sub 5/6
   @0x80100B80) sind hier nicht vermessen; der Angriffs-SE-Pfad selbst ist über Szenario B belegt.
 - RE2s Chan/Prio-Maschine bei zwei gleichzeitig aktiven Bänken hat kein Original-Vorbild.
+
+## 6. Umsetzung (Phase 2, 2026-09-19, Branch worktree-wf_074e2f88-24e-3)
+
+Korrekturen der Gegenpruefung (Skeptiker-Datei) galten vor dem Fix-Plan. Alle Adressen in
+diesem Abschnitt wurden mit `re2_disasm.py` aus `EM23_OVL_0000.BIN` / `info/re2leon/PSX.EXE`
+selbst nachgelesen. Messlogs: `analysis/befunde_2026-09-19/phase2_gator-und-audio/`.
+
+### Commits
+
+- `e3fb82bb fix(gator)`: Opfer-Versatz im Entity-Render-Scale (Helfer `gb_opfer_skalieren`),
+  P1-Anker/P2/P3 ueber die dreikomponentigen y3-Zwillinge, P0-Teleport nur 10643 skaliert
+  (-915 als Port-Wert kommentiert, Original `sw v1,0x800cfc38` @0x80101078 = absolut),
+  `gb_se(4)` an den drei LUNGE-Starts (@0x80100d60/d64/d84), 55-F-Sperre nur noch aus dem
+  0x4800-Frame-Wort (@0x80100424-34), FSYNC2/FSYNC3-Log mit `y_vor`.
+- `31bd06e3 fix(audio)`: Mehrbank-Cache (3 Eintraege, LRU, nie der aktive) in audio_pc.c,
+  Bank je Ruf vom Rufer, `RE15_RE2SE_LOG=<Pfad>`-Dateilog; Hooks Gator/Spinne/Hund/Kraehe/
+  Zombie/G5 rufen `bank_fn` vor jedem SE (Tentakel unveraendert, teilt G5s Bank).
+- Sonden/Pin/Doku (dritter Commit): `probe_gator_fress` (Pin, add_test unit_gator_fress)
+  prueft jetzt Leons lokale Wurzel bei P3 (+-5 zum Original, in Mesh-7-AABB, pl->y != 0);
+  `probe_r16_gator_se` zaehlt Latch==zustaendig, SE-4-Rufe, misst VAG-Dauer und die
+  Kieferkurve der Clips 2/3/4; `probe_r16_spider_se` registriert den Gator-Hook nach der
+  Spinne (Spiel-Reihenfolge) und zaehlt Latch==zustaendig.
+
+### Messwerte vorher / nachher
+
+| Messung | vorher | nachher |
+|---|---|---|
+| Leon-Wurzel gator-lokal bei P3 (probe_r16_gator_finisher_anker Teil B, echter Boss-Tick) | (7892,-1804,295), dRef (2628,599,97), 6=0/7=0 | (5261,-2402,194), dRef (-3,1,-4), 6=1/7=1 |
+| P2 sf 30/60/90/119 dRef (Teil B LIVE) | +2341..+3572 / -2090..+1183 | (-4,1,-1) / (-4,2,-1) / (-5,1,1) / (-3,1,-4); sf=120 = 1-Tick-Wrap (+161, wie Original 1 Tick) |
+| Gegen-Sonde Skeptiker (121 Frames, S/F vs O) | - | max dx/dy/dz 3/2/3, Kiefer-6/7-Abweichungen 0/0 (unveraendert bitgleich) |
+| pl->y bei P3 | 0 | -399 (Sonde UND Spiel) |
+| Spiel (RE15_DEBUG_JUMP=2090@gp, GB_TEST=1, AI_FLAVOR=re2): FSYNC2 y_vor | - | jede Zeile y_vor == Wert des Vortick-Ticks der Sonde (-1007, -761, -761, -793, -844, -868, -625, 1764, 1529, 395, -60, -151, 114, -133, -399) -> game_step ueberschreibt pl->y im Victim-Modus 4 NICHT (Risiko 4A(i) ausgeraeumt; RE15_STATE_LOG traegt kein y, darum die Engine-Zeile) |
+| probe_r16_gator_se: SE-Rufe Latch==zustaendig | Ein-Latch (17 fuer alle) | 7/7, MISMATCH 0, bank_fn-Rufe 9, direkte SE-4-Rufe 1 je Lunge |
+| probe_r16_spider_se (Gator-Hook NACH Spinne registriert) | Latch 17 -> id 1 = Gator-Sample, 8/9 SILENT | Latch nach Registrierung 17, danach 26/26 Rufe mit Latch 11, Biss-SE 1 x4 |
+| Spiel re2se.log | (kein Dateilog) | Bank 11 Cache-Slot 0, Bank 17 Slot 1; jeder Ruf `bank == gewaehlt` (Spinne 0/8/9/1 aus 11, Gator 2/4/1/3 aus 17); SE 4 an beiden Lunges (F199, F306) |
+| SE-4-Dauer (Bank 17 id 4, 18032 B) | "2,40 s" vs "1,43 s @22050" | Tone center 85 / min 64 -> Pitch 0x4C1 = 13103 Hz, 31556 Samples = **2,41 s** (Port-Wiedergabe, note2pitch2); die 22050-Hz-Annahme war falsch |
+| ctest | 224/224 (Basis) | **305/305 gruen, 226 s** (`100% tests passed, 0 tests failed out of 305`), unit_gator_sweep und unit_gator_fress gruen |
+
+Kieferkurve (Bone 7, Rot-Z, Q12) aus den EM23-Daten, probe_r16_gator_se Teil 5:
+Clip 2 (150 F) erster Ausschlag > 64 bei f7, Peak 341 bei f104; Clip 3 (150 F): kleines
+Oeffnen f9..f42 (max -131 @f18), das GROSSE Oeffnen ab f54 (-153) -> f60 -329 -> Peak -477
+@f96 -> zu bei f132; RE2-Bissfenster f >= 114 (@0x80100e8c `sltiu v0,v0,0x72`) liegt im
+Schliessen (-285 @f114 -> -18 @f132). "Maul offen ab ~f54" ist damit als Beginn des grossen
+Oeffnens gemessen, nicht mehr geschaetzt. Clip 4 (45 F): Peak -591 @f13, zu @f24.
+
+Prioritaets-Gate FUN_8005c92c selbst nachgelesen (@0x8005c93c lbu 0x800d4ca0[chan*2],
+@0x8005c940 andi 7, @0x8005c944 sltu, @0x8005c958 bne, @0x8005c960-64 andi 8/sltu) —
+zeilengleich mit dem Port-Kommentar. Sichtbare Folge des EINEN Prioritaetssatzes im Spiel:
+`se=0 bank=11 GATE chan=2 prio-nib=1 VERWORFEN (laufend 3)` — ein Spinnen-Schritt wird
+verworfen, waehrend Gator-SE 1/3 (Kanal 2, Prio 3) laeuft. Port-Abweichung, benannt.
+
+### Sichtpruefung am FRAMEDUMP (Skeptiker-Abschnitt-4-Punkt 3)
+
+Der offene Gegenpruefungs-Punkt "Renderer-Annahme: Leons Wurzel = pl->(x,y,z) +
+RotY(pl->rot_y)*POSE_v ist nur aus main.c belegt, ein Live-Bild fehlt" ist jetzt am Bild
+erledigt. Lauf `run2/` (`RE15_DEBUG_JUMP=2090@gp`, `RE15_GB_TEST=1`, `RE15_AI_FLAVOR=re2`,
+`RE15_FRAMEDUMP` alle 20 Bilder, `RE15_BOOT_EXIT_AT=2`); die Bildnummer IST der Spiel-Frame
+(debug.log `[scd F594]` und state.log tragen denselben Zaehler). Gator-Modus je Frame aus
+state.log Slot 15: F199..F241 und F306..F332 mo=4 (Lunge), **F333..F452 mo=5 (FRESSEN P1/P2)**,
+**F453..F572 mo=11 (P3 Kau-Loop)**, danach mo=0.
+
+- **`run2/fd_000460.png` (F460 = P3, gaf=7): Leon liegt ZWISCHEN Ober- und Unterkiefer** —
+  blaue Jeans und Jacke sind im offenen Maul sichtbar. `run2/fd_000520.png` (Todes-Kamera von
+  oben) zeigt dasselbe aus der Gegenrichtung: Jeans direkt an der Schnauze. Das ist genau der
+  Zustand des Nutzer-Befunds ("er liegt darunter") — und Leon liegt jetzt drin. Damit ist die
+  Renderer-Annahme nicht mehr nur aus main.c hergeleitet, sondern am Bild bestaetigt.
+- In P2 (`fd_000340/360/400`) steht der Gator mit dem KOPF am linken Bildrand; Leon haengt am
+  Maul und ist dadurch groesstenteils ausserhalb des Bildes. Dort bleibt nur die lokale
+  Relation messbar (Sonde, Tabelle oben) — sichtbar wird der Sitz erst in der P3-Nahkamera.
+- Gegenprobe zur naheliegenden Fehldeutung: die liegende Gestalt in der Bildmitte ist NICHT
+  Leon. Sie liegt schon in `fd_000200` (F200, Spieler lebt, steht sichtbar links am Kopf des
+  Gators) an derselben Stelle und ist zwischen F200 und F360 **pixelgleich** (Regionen-Diff
+  x 520..820 / y 300..460: 0 abweichende Pixel), waehrend sich die Spielerposition zwischen
+  diesen Bildern um ueber 3000 Einheiten aendert (state.log F200 PL(-8432,-26538) vs F360
+  PL(-10543,-29779)).
+
+Die drei Belegbilder liegen versioniert unter
+`analysis/befunde_2026-09-19/phase2_gator-und-audio/bilder/` (`F460_P3_leon_im_maul.png`,
+`F520_todeskamera_jeans_an_der_schnauze.png`, `F200_spieler_lebt_links_am_kopf.png`), die
+Spiel-Logs desselben Laufs als `spiel_gator_boss.log` / `spiel_re2se.log`; die vollstaendigen
+Laufverzeichnisse `run1..run4` (Savestates der Karte, state.log, alle 20 Bilder) bleiben
+unversioniert.
+
+Zwei Zahlen-Praezisierungen zur Tabelle oben: SE 4 sind **31556 Samples nominal**
+(18032 B / 16 * 28, Sonde) bzw. **31528 Samples tatsaechlich dekodiert** (re2se.log des
+Spiels) — beide bei Pitch 0x4C1 = 2,41 s. Und die ctest-Summe: der Lauf des Vorgaengers war
+305/305 (build_p2_ctest1.log); die erste Wiederholung in dieser Sitzung lief 304/305, weil
+`integration_save_counter_pin` nach 5,7 s abbrach und allein wiederholt in 28,9 s gruen war —
+der Pin startet drei `re15_pc.exe`-Laeufe, und parallel arbeitende Agenten beenden
+`re15_pc.exe` ueber den IMAGE-NAMEN. `run_gator.sh` beendet deshalb nur noch die EIGENE PID
+(vorher `taskkill //F //IM re15_pc.exe`); der abschliessende Gesamtlauf danach ist wieder
+**305/305 gruen in 208 s** (`100% tests passed, 0 tests failed out of 305`,
+`integration_save_counter_pin` 30,3 s).
+
+### Offen
+
+- **Stufe B2 (Lunge = Clip 2 frac 16 -> Clip 3, Bissfenster f >= 114, Yaw += 0x400) NICHT
+  umgesetzt.** Das Original faehrt bei +0x22C != 0 den Clip-Advance 0x8001a330 ZWEIMAL pro
+  Tick (@0x80100da4-dd0 Clip 2, @0x80100e18-e4c Clip 3) — der Doppelschritt gehoert zum
+  Umbau. Damit wuerden 300 authored Frames (150+150, bei Doppelschritt 150) den 45-F-Clip-4-
+  Schnapp ersetzen, an dem alle Trefferfenster des Nutzer-Bosskampfs (gb_maul_dist, Fenster
+  6..34, Commit-Gates) und unit_gator_sweep haengen. Das ist ein eigener Umbau mit neuer
+  Fenster-Messung; hier bewusst nur Stufe 1 (SE 4 am Lunge-Start, 2,41 s, Ende ~1 s nach
+  dem 45-F-Schnapp) — hoerbar als Angriff, zeitlich nicht wie RE2.
+- Leon bleibt 1x gross im 2/3-Maul (Scale 2731 = Nutzer-Entscheidung ohne @0x); der SITZ der
+  Wurzel ist jetzt die Original-Relation, die Proportion nicht.
+- Kanal-Prioritaeten bleiben EIN Satz fuer beide Baenke (s.o., Gate-Zeile im re2se.log).
+- Tentakel (0x37) rufen kein bank_fn (kein eigener Hook); im Endkampf nur Bank 25 aktiv.
+- P0-Teleport: -915 als Seitenversatz ist Port-Entscheidung (Original absolut), Wirkung nur
+  in P1 (13 Bilder).
