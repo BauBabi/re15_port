@@ -1,0 +1,64 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(15)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(300,-23400) flag=32) walk_active=1
+[scd F0] Cut_chg(12)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+=== P2 birkin-g5 PIN: Auftritt / Gesicht / Tentakel (ROOM5090, RE2-EM036/EM037) ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(-9000,-23400) clip=1
+-- A) Auftritt --
+  PIN ok: Kampfstart-Position (-9000,-23400) @0x801011d0/d8: ist (-9000,-23400)
+  Ursprung im Viereck ab 151, Front ab 0, Clip 5 bei 1123 (Ursprung 1960, Spieler 16766 -> Abstand 12414, Spieler am Gate 13399), Front ueberholt bei -1, min|dx|=6024
+  PIN ok: Massenfront ab Bild 0 im Cut-12-Viereck (ist ab 0)
+  PIN ok: Ursprung bis Bild 160 im Viereck (gemessen 151; ist 151)
+  PIN ok: Intro-Ende Ursprung 1960 +-60 = RE2 -9000+7014+3946 (ist 1960 bei Bild 1123)
+  PIN ok: Front ueberholt den Spieler IM INTRO nie (ist Bild -1)
+-- B) Gesicht/Koerper --
+  PIN ok: Kopf-Tracking nach dem Intro EIN (+0x1C0 = 0 @0x801017d4)
+  PIN ok: Kopf-Tracking liefert ein Delta != 0 (in 370 Bildern nach dem Intro)
+  Kopf-Tracking: Delta != 0 in 370 Bildern, groesster |Akku| = 203
+  Klemme: Ziel -Z -> 212, Ziel +Z -> -211, Ziel +Z mit head_kf=500 -> -711 (Blick -211)
+  PIN ok: Ziel-Klemme +212 um (Yaw+Root) (limit @0x8010045c, @0x80018118-160): ist 212
+  PIN ok: Gegenrichtung -211 (u16-Akku + `addiu -4095` @0x80100330): ist -211
+  PIN ok: Klemme gilt der BLICKRICHTUNG head_kf+Delta, nicht dem Akku (@0x800181b8-cc): 500-711 = -211
+  Skinning: rv=0 Kopf 0/30 falsch, Rumpf 0/122 falsch, 186/186 Vertices bewegt; Bone1 trans=(2146,-3716,0)
+  PIN ok: Kopf-Vertices (w=4096, 30) exakt an der Bone-1-Pose (R1*(v+off_a)+t1)
+  PIN ok: Rumpf-Vertices (w=0, 122) exakt an der Bone-0-Pose (R0*v+t0)
+  PIN ok: geskinntes Mesh 0 weicht von der Bind-Pose ab (186 Vertices)
+  Augen: im Bereich=1, Auge 0 aenderte sich in 99/160 Bildern, Stand (5,2)
+  PIN ok: Augen-UV-Wanderer bleibt in [-15,15] (Klemmen @0x80105624)
+  PIN ok: Augen-UV bewegt sich in >= 1 von 16 Bildern (ist 99/160)
+-- C) Tentakel --
+  PIN ok: vier 0x37-Arme gespawnt (ist 4)
+  Arm 0: Anker-x - Boss-x = 2765, y=-2152
+  Arm 1: Anker-x - Boss-x = 3415, y=-615
+  Arm 2: Anker-x - Boss-x = 3209, y=-592
+  Arm 3: Anker-x - Boss-x = 2757, y=-2335
+  PIN ok: alle vier Anker innerhalb 6000 vom Boss-Ursprung (nach dem Intro; 0 weit weg)
+  3000 Bilder: Treffer=15, Peitschen-Bilder=1395, Spiess-Bilder=0, Kontakt-Bilder=249; Boss-Clips: c0=1496 c1=0 c2=900 c3=0 c4=0 c5=604 c6=0 c7=0 c8=0 c9=0 c10=0 c11=0
+  Arm 0: scale_max=4096, Spitze min-Abstand Spieler=1825
+  Arm 1: scale_max=4096, Spitze min-Abstand Spieler=1725
+  Arm 2: scale_max=4096, Spitze min-Abstand Spieler=2200
+  Arm 3: scale_max=4096, Spitze min-Abstand Spieler=1900
+  PIN ok: mit dem Spieler 6500 oestlich >= 1 Treffer je 300 Bilder (ist 15 in 3000)
+  PIN ok: Peitsche (sub3) im Nahbereich erreicht (1395 Bilder)
+  PIN ok: Spiess (0xD01) im Nahbereich NIE: dist < 7000 setzt +0x16A = 0 (`sltiu 0x1b58` @0x80100a78/@0x80100b48) -> Musterzeile 0 @0x80105674 = {0x301,0x301} (ist 0)
+  Spieler 9000 oestlich, 2000 Bilder: Peitschen-Bilder=500, Spiess-Bilder=738, Treffer=5
+  PIN ok: Spiess (sub13) bei dist >= 7000 erreicht (738 Bilder)
+  PIN ok: jede Spitze kommt dem Spieler < 3000 nahe (4/4)
+  PIN ok: Kind-Kollision meldet Kontakt (+0x220 & 6) in 249 Arm-Bildern
+=== OK (0 Pins verletzt) ===

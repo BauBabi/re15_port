@@ -76,6 +76,8 @@
 #include "re15_damage.h"
 #include "re15_room.h"
 #include "re15_skeleton.h"
+#include "re15_g5_skin.h"
+#include "re15_anim_select.h"
 
 /* re15_enemy_player_dist / re15_ai_arc_test / re15_engine_rand8 /
  * re15_player_equipped_weapon kommen aus re15_damage.h. Spieler-Schaden laeuft
@@ -122,15 +124,50 @@ static int g5_tentakel_frei(int *liste)
     return n;
 }
 
-/* Muster-Kommandos der sub0-Schlagkaskade (@0x80100bc0-c8): nur 0x301/0xD01. */
-static void g5_tentakel_schlag(void)
+/* Angreifende Arme (@0x80100c0c-40): Bit i CLEAR und Bit i+4 GESETZT. */
+static int g5_tentakel_busy(void)
+{
+    uint8_t maske = re15_g5_tentakel_maske();
+    int i, n = 0;
+    for (i = 0; i < 4; i++)
+        if (!((maske >> i) & 1) && ((maske >> (i + 4)) & 1)) n++;
+    return n;
+}
+
+/* Muster-Tabelle @0x80105674 (8 Zeilen x 2 Woerter, selbst dekodiert): Zeile = +0x16A,
+ * Spalte = ((rng1&0xff) >> (rng2&3)) & 1 (@0x80100b84-a8, srav-Idiom). */
+static const uint32_t s_g5_muster[8][2] = {
+    { 0x301u, 0x301u }, { 0xD01u, 0xD01u }, { 0x301u, 0x301u }, { 0xD01u, 0x301u },
+    { 0xD01u, 0x301u }, { 0xD01u, 0xD01u }, { 0xD01u, 0xD01u }, { 0x301u, 0xD01u },
+};
+
+/* RE2-Idiom "zwei Wuerfel": ((rng1 & 0xff) >> (rng2 & 3)) & maske (srav @0x80100a6c /
+ * @0x80100ba4 / @0x80100e0c). */
+static unsigned g5_wuerfel(unsigned maske)
+{
+    unsigned r1 = re15_engine_rand8() & 0xFFu;
+    unsigned r2 = re15_engine_rand8() & 3u;
+    return (r1 >> r2) & maske;
+}
+
+/* Schlagkaskade der sub0-Phase 1 (@0x80100ac0-bc8): alle 16 Timer-Ticks, solange +0x16B
+ * Bit 0 nicht gesetzt ist, ein FREIER Arm (Bits i und i+4 clear) mit dem Muster-Wort. */
+static void g5_tentakel_schlag(uint8_t *m16a, int32_t dist)
 {
     int liste[4], n = g5_tentakel_frei(liste);
     if (n <= 0) return;
-    {   int idx = liste[(int)(re15_engine_rand8() % (unsigned)n)];
-        g5_tentakel_cmd(idx, (re15_engine_rand8() & 1u) ? 0xD01u : 0x301u);
+    if (dist < 7000) *m16a = 0;                                      /* @0x80100b48-54 */
+    {   int idx = liste[(int)((re15_engine_rand8() & 0xFFu) % (unsigned)n)];   /* @0x80100b58-80 */
+        unsigned col = g5_wuerfel(1u);
+        g5_tentakel_cmd(idx, s_g5_muster[*m16a & 7u][col]);
     }
 }
+
+/* Arm-Reihenfolge des Zugs (Tabelle @0x80100004, 4 Zeilen x 4 Bytes = `00 02 01 03 | 01 02
+ * 03 00 | 03 00 02 01 | 03 01 02 00`, selbst gelesen); Zeile = +0x16B. */
+static const uint8_t s_g5_zug_reihe[4][4] = {
+    { 0, 2, 1, 3 }, { 1, 2, 3, 0 }, { 3, 0, 2, 1 }, { 3, 1, 2, 0 },
+};
 
 /* ---- Modul-Zustand (ein Boss je Raum) ------------------------------------------------- */
 typedef struct {
@@ -162,6 +199,14 @@ typedef struct {
                               * Vorwaertsrichtung ist also konstant. Je Frame neu aus der
                               * Relativlage abgeleitet wuerde er beim Ueberholen umdrehen. */
     int32_t  clip_prev;
+    /* KOPF-TRACKING (Phase 2, birkin-g5.md 2.2c / FUN_80017FDC): part1+0x98/9C/A0 und das
+     * Flag-Byte +0x1C0 (Bit 0 = aus, Bit 1 = Ziel = Keyframe). */
+    re15_g5_track_t track;
+    uint8_t  track_flags;    /* +0x1C0: Ctor 1 @0x80100438; [T0] &= 0xFD @0x80101178;
+                              * Intro-Ende (-> sub1) 0 @0x801017d4; Tod |= 2 @0x801030f0 */
+    int16_t  head_delta;     /* der Zuschlag dieses Bildes auf part1+0x6A (@0x80100354) */
+    uint8_t  m16a;           /* +0x16A: Muster-Zeile der Schlagkaskade / Zug-Variante */
+    uint8_t  m16b;           /* +0x16B: Bit 0 = keine neuen Schlaege mehr (Entscheidung) */
 } g5_state_t;
 
 static g5_state_t s_g5;
@@ -203,16 +248,23 @@ static void g5_morph_bauen(const g5_state_t *g)
     }
 }
 
-/* u-Achse SPIELER-RELATIV (s. Kopf): u = 12000 - |dx|, dx entlang des Korridors (X). */
 static int32_t g5_dx(const re15_actor_t *e)
 {
     return (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x - (int32_t)e->x;
 }
+/* u-ACHSE = ABSOLUTES X (Phase 2, Skeptiker 4.1.3): RE2 liest fuer JEDE Schwelle das absolute
+ * Entity-X (`lw a0,56(s1); slti a0,a0,12000` @0x80100fd0 Zug-Kappe, `slti v0,v1,12001`
+ * @0x80104074 Lunge, `slti v1,v1,9001` @0x801008a0 Devour, Rueckzug `X>4000` @0x801018a8),
+ * die Kappe wandert NICHT mit dem Spieler. Der 5090-Kampfstreifen ist mit dem RE2-Wagen
+ * x-identisch (SCA-Eckbloecke [21]/[25] x=-5683 == RE2 room7040 [2]/[4] x=-5683, Skeptiker
+ * #9), der Boss startet bei -9000 (@0x801011d0) wie in RE2 -> die absoluten X-Werte sind
+ * 1:1 uebertragbar; gemessen (probe_p2_birkin_g5): Intro-Ende Ursprung 1960 = RE2.
+ * ⛔ HIER STAND `u = 12000 - |x_spieler - x_boss|` (spielerrelativ) - ein Port-Konstrukt,
+ * das die Kappe an den Spieler haengte. `vor` bleibt das Bewegungs-Vorzeichen; mit dem
+ * festen Start bei -9000 und dem Spieler oestlich ist es immer +1 (RE2: Yaw 0 = +X). */
 static int32_t g5_u(const re15_actor_t *e)
 {
-    int32_t d = g5_dx(e);
-    if (d < 0) d = -d;
-    return 12000 - d;
+    return (int32_t)e->x;
 }
 /* Vorwaerts-Vorzeichen auf der Korridor-X-Achse. Beim Kampfstart eingefroren (s.
  * g5_state_t.vor); davor die Live-Ableitung, damit das Einfrieren selbst sie nutzen kann. */
@@ -348,9 +400,15 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
             else if (g->blob_speed < 192) g->blob_speed += 6;
             if (g->blob_speed <= 0) { g->blob_ph = 1; g->blob_speed = 6; }
         }
-        /* Trigger jeden Frame (@0x80103e08-ec): Biss / zweiter Devour-Pfad. */
+        /* Trigger jeden Frame (@0x80103e00-54): dist < 6000 (`sltiu 0x1770` @0x80103e08),
+         * +0x229 == 0 (@0x80103e1c), Spieler IM 128er-Bogen und Griff-Latch frei.
+         * ⛔ ARC-POLARITAET (Phase 2, selbst nachdisassembliert): das Original springt bei
+         * `bne v0,zero,0x80103ee4` (@0x80103e3c) WEG - der Trigger verlangt also
+         * arc_test == 0, und 0x80015614 liefert 0 genau dann, wenn der Spieler INNERHALB
+         * des Bogens steht (`slt v1,cone*2` @0x80015668 -> v0=0). Der Port pruefte hier
+         * auf != 0, biss also nur, wenn der Spieler NICHT vor ihm stand. */
         if (dist < 6000 && g->biss_cd == 0 &&
-            re15_ai_arc_test(e, pl->x, pl->z, 128) && !(g->busy & 4u)) {
+            re15_ai_arc_test(e, pl->x, pl->z, 128) == 0 && !(g->busy & 4u)) {
             if (pl->hp >= 0 && g5_u(e) >= 9001) {
                 /* DEVOUR-Pfad 2 (@0x80103ea0-ec4): 500 Schaden = sicherer Kill. */
                 pl->hp = -1; pl->hit_react |= 1;
@@ -382,12 +440,20 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
                 g->blob_ph = 3; g5_se(6);              /* @0x80104040-5c */
                 g->blob_timer = 15;                    /* +0x21E */
             }
-            /* Lunge: X += Speed>>3, Kappe 12000 (@0x80104060-94) — Weltachse, s.
-             * g5_schiebe. */
-            if (g5_u(e) < 12000) g5_schiebe(e, g->blob_speed >> 3, 0);
-            if (g->hitbox_b < 3700) g->hitbox_b += 500;   /* @0x801040b8-e0 */
-            /* Treffer: Punkt u+900 vorgehalten, Radius 1500 (@0x801040ec-f4). */
-            {   int32_t px = 1200 - ((g5_u(e) + 900) - 8000);
+            /* Lunge (@0x80104060-94): X += (s16)Speed>>3 (sra 19), und wenn danach
+             * NICHT X < 12001, wird der Schritt wieder abgezogen — d.h. nur solange
+             * das Ergebnis <= 12000 bleibt (absolutes X, s. g5_u). Weltachse, s. g5_schiebe. */
+            {   int32_t s3 = (int32_t)((int16_t)g->blob_speed) >> 3;
+                if (g5_u(e) + s3 < 12001) g5_schiebe(e, s3, 0);
+            }
+            if (g->hitbox_b < 3700) g->hitbox_b += 500;   /* @0x801040b8-e0: +0xB4 = X-VERSATZ
+                                                            * des Kollisionssegments 1 (FUN_80035408
+                                                            * liest +0x94/+0xB4 als lokales x),
+                                                            * 2200 -> 3700 */
+            /* Treffer (@0x801040ec-f8): Segment-1-Welt-X (+0xA4 = X + R(yaw)*Versatz) + 900,
+             * Radius 1500 gegen die Spielerposition (FUN_800157d4 a2=1500). RE2 Yaw 0 = +X;
+             * im Port die eingefrorene Vorwaertsachse `vor`. */
+            {   int32_t px = e->x + (int32_t)g5_vor(e) * (g->hitbox_b + 900);
                 int64_t dx = (int64_t)pl->x - px, dz = (int64_t)pl->z - e->z;
                 if (dx*dx + dz*dz < (int64_t)1500*1500 && pl->hit_react == 0) {
                     pl->hp = (int16_t)(pl->hp - 40);   /* 40 @0x8010416c-70 */
@@ -520,7 +586,14 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 5:                                            /* [T5] 110 T, dann Clip 4 */
         g5_anim(e); g->timer++;
-        if (g->timer == 20 || g->timer == 40 || g->timer == 45 || g->timer == 56) g5_se(0);
+        /* [T5] (Phase 2, Skeptiker #8): SPEER 0x901 an alle vier Arme - t=20 Arm 0
+         * (@0x8010144c, Slot 0x800d3c38), t=40 Arm 1 (@0x80101470), t=45 Arm 2
+         * (@0x80101498), t=56 Arm 3 (@0x801014bc); jeder Sender spielt SE 0
+         * (`jal 0x8005bd6c` a0=0). Der Port sendete hier bisher NUR die SE. */
+        if (g->timer == 20) { g5_tentakel_cmd(0, 0x901u); g5_se(0); }
+        if (g->timer == 40) { g5_tentakel_cmd(1, 0x901u); g5_se(0); }
+        if (g->timer == 45) { g5_tentakel_cmd(2, 0x901u); g5_se(0); }
+        if (g->timer == 56) { g5_tentakel_cmd(3, 0x901u); g5_se(0); }
         if (g->timer >= 110) { g5_clip(e, 4, 0); g->ph = 6; g5_se(11);
                                g5_root_motion(e, 1, 4096, 0); }
         break;
@@ -537,9 +610,24 @@ static void g5_intro_tick(re15_actor_t *e)
     case 9: g5_clip(e, 0, 0); g->ph = 10; g->timer = 0; g5_se(9); break;       /* [T9] */
     case 10:                                           /* [T10] 110 T */
         g5_anim(e); g->timer++;
+        /* [T10] (Phase 2, Skeptiker #8): WEDELN 0xA01 - t=20 Arm 0 (@0x8010165c, Slot
+         * 0x800d3c38), t=35 Arm 2 (@0x80101680, 0x800d3c40), t=40 Arm 1 (@0x801016a8,
+         * 0x800d3c3c), t=50 Arm 3 (@0x801016cc, 0x800d3c44); je SE 0. sub10 ph0 setzt den
+         * Ankermodus 0 (@0x801027f4) - DAS holt die drei "freien" Arme aus sub8 ph1 zurueck
+         * an die Masse (Dossier 3.3). */
+        if (g->timer == 20) { g5_tentakel_cmd(0, 0xA01u); g5_se(0); }
+        if (g->timer == 35) { g5_tentakel_cmd(2, 0xA01u); g5_se(0); }
+        if (g->timer == 40) { g5_tentakel_cmd(1, 0xA01u); g5_se(0); }
+        if (g->timer == 50) { g5_tentakel_cmd(3, 0xA01u); g5_se(0); }
         if (g->timer >= 110) g->ph = 11;
         break;
-    case 11: g5_clip(e, 2, 0); g->ph = 12; g5_se(10); break;                   /* [T11] */
+    case 11:                                           /* [T11] */
+        g5_clip(e, 2, 0); g->ph = 12;
+        /* 0x40A01 (sub10 ph4 = einmal Peitsche 7/8, dann Wedeln) an Arm 0 und 2
+         * (@0x8010170c-30, Slots 0x800d3c38/0x800d3c40), SE 10. */
+        g5_tentakel_cmd(0, 0x40A01u); g5_tentakel_cmd(2, 0x40A01u);
+        g5_se(10);
+        break;
     case 12: if (g5_anim(e)) g->ph = 13; break;        /* [T12] Clip 2 */
     case 13:                                           /* [T13]: Puls an, Timer 60 */
         g5_clip(e, 0, 0); g->ph = 14; g->timer = 60; g5_se(9);
@@ -548,7 +636,11 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     default:                                           /* [T14] -> Kampf (sub1) */
         g5_anim(e);
-        if (--g->timer <= 0) { g->sub = 1; g->ph = 0; g5_se(10); }
+        if (--g->timer <= 0) {
+            g->sub = 1; g->ph = 0; g5_se(10);
+            g->track_flags = 0;                        /* sb zero,448(s0) @0x801017d4: Kopf-
+                                                        * Tracking ab dem Kampf EIN */
+        }
         break;
     }
 }
@@ -562,6 +654,8 @@ static void g5_tod_tick(re15_actor_t *e)
         e->hp = -1;                                    /* @0x80103060 */
         g5_clip(e, 6, 0); g5_se(10);
         g->blob = 5; g->blob_ph = 0;                   /* +0x218=5 @0x801030e4 */
+        g->track_flags |= 2u;                          /* ori v1,v1,0x2 @0x801030f0: der Kopf
+                                                        * kehrt zum Keyframe zurueck */
         g5_se(13);
         g->ph = 1; g->tod_timer = 0;
         break;
@@ -574,6 +668,8 @@ static void g5_tod_tick(re15_actor_t *e)
         if (--g->tod_timer <= 0) {
             g->ph = 3;
             g->busy |= 8u;                             /* Tracking/Kollision aus */
+            re15_g5_eye_set_target(0, 0, 0);           /* @0x80103478 (idx 0, 0, 0) */
+            re15_g5_eye_set_target(1, 0, 0);           /* @0x80103488 (idx 1, 0, 0) */
             g5_clip(e, 10, 0);                         /* Clip-Wort 0x1F000A @0x801034c8 */
         }
         break;
@@ -595,6 +691,71 @@ static void g5_tod_tick(re15_actor_t *e)
     default: break;                                    /* [T21] Kadaver-Ruhe */
     }
 }
+
+/* ---- AUGEN + KOPF-TRACKING (Per-Frame-Main 0x801000BC, Phase 2 birkin-g5.md 2.2c/d) ----
+ * Reihenfolge im Original: Augen-Ziele (@0x801001b0-2b0, Gate !(+0x226&8) @0x801001a4) ->
+ * beide Wanderer (@0x801002bc/c8, ungegated) -> Routine-Dispatch (jal 0x80016028
+ * @0x801002e0) -> Blob-Maschine (@0x801002f0) -> FUN_80017FDC (@0x80100310) -> Matrizen.
+ * Hier laeuft es NACH dem Zustandsautomaten desselben Bildes (die Ziele haengen nur am
+ * anim_frame-Nibble, die Reihenfolge Ziel/Wanderer ist im selben Bild egal). */
+static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
+{
+    g5_state_t *g = &s_g5;
+    if (!(g->busy & 8u)) {                             /* andi 0x8 @0x801001a4 */
+        unsigned nib = (unsigned)e->anim_frame & 0xFu; /* lbu 333(s3) = +0x14D & 0xF */
+        if (nib == 0u) {                               /* @0x801001bc: Auge 0 */
+            int v = 15 - (int)((re15_engine_rand8() & 0xFFu) % 15u);   /* @0x801001c4-f8 */
+            int u = 15 - (int)((re15_engine_rand8() & 0xFFu) % 15u);   /* @0x801001f8-230 */
+            re15_g5_eye_set_target(0, v, u);
+        }
+        if (nib == 7u) {                               /* @0x80100240: Auge 1 */
+            int v = 15 - (int)((re15_engine_rand8() & 0xFFu) % 15u);
+            int u = 15 - (int)((re15_engine_rand8() & 0xFFu) % 15u);
+            re15_g5_eye_set_target(1, v, u);
+        }
+    }
+    re15_g5_eye_tick(0);                               /* @0x801002bc */
+    re15_g5_eye_tick(1);                               /* @0x801002c8 */
+
+    /* KOPF-TRACKING: FUN_80017FDC(e, yaw, &delta) @0x80100310; Bit 0 von +0x1C0 = aus
+     * (`bne v0,zero,0x800181dc` @0x8001801c -> delta bleibt 0, `sh zero,24(sp)`
+     * @0x8010030c). Eigener Part = 1 (+0x1C1 @0x8010043c), Zielpart = Spieler-Kopf
+     * (+0x1C1 = 8 @0x8003c268; Port: der Spielerwurzel-XZ, der Kopf-Part-XZ des stehenden
+     * Spielers liegt <100 Einheiten daneben - dokumentierte Naeherung, das Skelett des
+     * Spielers ist engine-seitig nicht posierbar). Bit 1 (Tod, @0x801030f0): Ziel = Keyframe
+     * (`sh v0,18(sp)` @0x800180dc: yaw + part0.6A + part1.6A). */
+    g->head_delta = 0;
+    if (!(g->track_flags & 1u)) {
+        re15_enemy_bank_t *b = re15_enemy_find(e->type);
+        int16_t root_ay = 0, head_ay = 0, ax, az;
+        int32_t hw[3];
+        int32_t tx, tz;
+        if (b && b->ok) {
+            int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+            re15_emd_get_keyframe_angles(&b->skel, kf, 0, &ax, &root_ay, &az);
+            re15_emd_get_keyframe_angles(&b->skel, kf, 1, &ax, &head_ay, &az);
+        }
+        re15_enemy_bone_world_pos(e, 1, hw);           /* part1+0x5C/+0x64 */
+        tx = pl->x; tz = pl->z;
+        g->head_delta = re15_g5_track_tick(&g->track, (g->track_flags & 2u) ? 1 : 0,
+                                           e->rot_y, root_ay, head_ay,
+                                           hw[0], hw[2], tx, tz);
+    }
+    re15_g5_bone_add_set(s_g5_slot, 1, g->head_delta, 0);   /* part1+0x6A += delta @0x80100354 */
+}
+
+/* Der Boss hat sich selbst platziert und laeuft sein Intro: solange darf das RE1.5-Skript
+ * seine Position nicht mehr anfassen (s. den Block an der Armierung; Leser: scd_vm.c
+ * op_pos_set). 0 = das Skript gilt wie ueberall sonst. */
+int re15_g5_boss_intro_haelt_position(int slot)
+{
+    return (s_g5_slot == slot && s_g5.aktiv && s_g5.gestartet && s_g5.sub == 2);
+}
+
+/* Diagnose (Sonden): Kopf-Tracking-Stand. */
+int16_t re15_g5_head_delta(void) { return s_g5.head_delta; }
+int     re15_g5_track_akku(void) { return (int)s_g5.track.akku; }
+unsigned re15_g5_track_flags(void) { return s_g5.track_flags; }
 
 /* ---- HAUPT-TICK ------------------------------------------------------------------------- */
 int re15_g5_boss_active(const re15_actor_t *e)
@@ -624,6 +785,13 @@ void re15_g5_boss_tick(int slot)
         g->aktiv = 1; g->routine = 1; g->sub = 2; g->ph = 0;   /* Ctor: +0x05=2 @0x8010076C */
         g->hitbox_b = 2200;
         s_g5_slot = slot;
+        /* Ctor-Werte des Kopf-Trackings + Augen (birkin-g5.md 2.2c/d). */
+        re15_g5_track_init(&g->track);                 /* @0x80100440-68 */
+        g->track_flags = 1;                            /* sb v0=1,448(s0) @0x80100438 = AUS */
+        g->head_delta = 0;
+        re15_g5_eye_reset();                           /* @0x801004a4-51c */
+        re15_g5_bone_add_clear(slot);
+        g_anim_bone_angle_hook = re15_g5_bone_angle_hook;
         e->hp = 600;                                   /* @0x801003fc-418 (easy 400: das
                                                         * RE1.5-Spiel kennt kein easy-Bit) */
     }
@@ -651,9 +819,23 @@ void re15_g5_boss_tick(int slot)
              * Der Nutzer meldete das drei Runden lang als "Birkin taucht nicht auf" -
              * er kriecht 55 s laenger heran, die ersten 578 Bilder davon ausserhalb
              * jeder Cut-Ankerzone und damit ungezeichnet. */
+            /* SELBSTPLATZIERUNG (Phase 2, birkin-g5.md 4.1.1 + Skeptiker #9): RE2s [T0]
+             * ueberschreibt beim Armieren den Skript-/Spawnwert selbst -
+             *     801011d0: addiu v0,zero,-9000 / sw v0,56(s0)     (X)
+             *     801011d8: addiu v0,zero,-23400 / sw v0,64(s0)    (Z)
+             * Der Wert ist direkt uebertragbar: das Westende von ROOM5090 besteht aus den
+             * Eckbloecken SCA [21] x -5683..-503 / [25] x -5683..-463 (Luecke z -24974..
+             * -21990, Mitte -23482), RE2 room7040 SCA @0xF80 hat DIESELBEN Eckbloecke
+             * ([2]/[4] x=-5683); G5 kommt bei X=-9000 durch die Luecke = "hinten durch das
+             * Zug-Rechteck". Gemessen: Front (Ursprung+4494) ab Bild 0 im Cut-12-Viereck,
+             * Ursprung ab Bild 151, Intro-Ende Ursprung 1960 = exakt RE2 (Skeptiker-
+             * Gegensonde A x0=-9000). Pos_set(1200) @0x12FE galt dem RE1.5-Humanoiden 0x30. */
+            e->x = -9000;                              /* @0x801011d0 */
+            e->z = -23400;                             /* @0x801011d8 */
             /* Vorwaertsrichtung EINFRIEREN (s. g5_state_t.vor): ab hier bewegt sich der
              * Boss immer auf dieser Achse, auch wenn der Spieler ihn ueberholt. */
             g->vor = (int8_t)((g5_dx(e) >= 0) ? 1 : -1);
+            g->track_flags = (uint8_t)(g->track_flags & 0xFDu);   /* [T0] andi 0xfd @0x80101178 */
             re15_g5_tentakel_spawn(e);     /* vier 0x37-Arme (Port-Entscheidung, s. Modul) */
             /* Yaw EINMALIG auf den Spieler (danach konstant - RE2 dreht G5 im
              * Kampf nie, @0x8010044c ist der einzige Schreiber). */
@@ -693,6 +875,7 @@ void re15_g5_boss_tick(int slot)
         g5_tod_tick(e);
         g5_blob_tick(e, pl);
         g5_morph_bauen(g);
+        g5_augen_und_kopf(e, pl);
         re15_g5_tentakel_tick(e);
         return;
     }
@@ -725,6 +908,8 @@ void re15_g5_boss_tick(int slot)
         }
         g5_blob_tick(e, pl);
         g5_morph_bauen(g);
+        g5_augen_und_kopf(e, pl);
+        re15_g5_tentakel_tick(e);
         return;
     }
 
@@ -735,49 +920,91 @@ void re15_g5_boss_tick(int slot)
 
     case 0: {                                          /* IDLE/ENTSCHEIDEN (§2 sub0) */
         int32_t u = g5_u(e);
-        /* Devour-Check aus dem Stand (Phase A @0x801008a0-44). */
-        if (re15_ai_arc_test(e, pl->x, pl->z, 128) && u >= 9001 && dist < 6000 &&
+        /* Devour-Check aus dem Stand (Phase A @0x80100890-8bc): `jal 0x80015614(e, plX,
+         * plZ, 128)` @0x80100890, `slti v1,v1,9001` auf dem absoluten X @0x801008a0,
+         * `sltiu v0,s1,0x1770` @0x801008ac, und `sll v0,a0,16 / bne v0,zero` @0x801008b4-b8
+         * = weiter NUR bei arc_test == 0 (Spieler im Bogen). ⛔ Der Port pruefte != 0. */
+        if (re15_ai_arc_test(e, pl->x, pl->z, 128) == 0 && u >= 9001 && dist < 6000 &&
             pl->hit_react == 0 && !(g->busy & 4u) && pl->hp >= 0) {
             pl->hp = -1; pl->hit_react |= 1;           /* 500 @0x80100904 = Kill */
             g->sub = 4; g->ph = 0;
             g->blob = 4; g->blob_ph = 0;
             break;
         }
-        if (g->ph == 0) {
-            g5_clip(e, 0, 0);                          /* Clip-Wort 0x1F0000 */
-            g->timer = 120 + (re15_engine_rand8() & 0x1F);
-            g->ph = 1;
-            /* Tentakel-Scan: ohne 0x37-Entities sind ALLE 4 "frei" -> sofort sub1
-             * (@0x80100c44/0x80100ce0, byte-true erreichbarer Zweig). */
-            if (u >= 8000 || dist >= 11001) { g->sub = 1; g->ph = 0; break; }
+        /* PHASE 2 (selbst nachdisassembliert 0x80100960-0x80100d04): die alte ph0-Weiche
+         * `u >= 8000 || dist >= 11001 -> sub1` war INVERTIERT und ignorierte den
+         * Tentakel-Scan; die Entscheidung wartete nicht auf angreifende Arme. Jetzt 1:1. */
+        if (g->ph == 0) {                                  /* @0x801009a4 */
+            g5_clip(e, 0, 0);                              /* Clip-Wort 0x1F0000 */
+            g->timer = 120 + (re15_engine_rand8() & 0x1F); /* @0x801009b0-c4 */
+            g->ph = 1; g->m16b = 0;                        /* sb zero,363 @0x801009d0 */
+            if (u < 8000 || dist >= 11001) {               /* @0x801009c8-e0 -> A */
+                int liste[4], n = g5_tentakel_frei(liste); /* @0x801009e8-a38 */
+                if (n == 4) { g->sub = 1; g->ph = 0; break; }   /* @0x80100a40 -> 0x101 */
+                g->m16b = 1; g->timer = 10;                /* @0x80100a48-50 */
+            }
+            /* B @0x80100a54-84 laeuft in BEIDEN Wegen: der A-Zweig BRICHT NICHT AB, sondern
+             * faellt nach `sh v0=10,344(s2)` @0x80100a50 in die naechste Instruktion
+             * 0x80100a54 durch (nur `beq v1,v0(=4), 0x80100ce0` @0x80100a40 springt weg).
+             * ⛔ HIER STAND EIN `else` - der Musterwurf entfiel im A-Weg komplett. */
+            {   unsigned w = g5_wuerfel(7u);               /* @0x80100a54-6c (srav-Idiom) */
+                /* @0x80100a78 `sltiu v0,v0,0x1b58` (7000) + `beq v0,zero,0x80100a88`:
+                 * der Sprung UEBERSPRINGT `sb zero,362(s2)` - gezeichnet wird also
+                 * m16a = Wurf bei dist >= 7000 und m16a = 0 bei dist < 7000.
+                 * ⛔ HIER STAND DIE UMGEKEHRTE POLARITAET (`(dist < 7000) ? w : 0`) -
+                 * damit war im Nahbereich immer Zeile 0 = {0x301,0x301} und der Spiess
+                 * 0xD01 konnte NIE gewuerfelt werden (gemessen: 0 Spiess-Bilder/3000). */
+                g->m16a = (uint8_t)((dist < 7000) ? 0u : w);
+            }
         }
-        if (g5_anim(e) && (re15_engine_rand8() & 3) == 0) g5_se(9);   /* Grollen */
-        /* Alle 16 Ticks kommandiert G5 einen freien Tentakel auf den Spieler
-         * (@0x80100b4c-c8, Muster-Tabelle @0x80105674: nur 0x301/0xD01). */
-        if (dist < 7000 && (g->timer & 0xF) == 0) g5_tentakel_schlag();
-        if (--g->timer <= 0) {
-            /* Entscheidung @0x80100c44-ce4 (Reihenfolge = letzte trifft): */
-            uint8_t ziel = 3;                                        /* default Rueckzug */
-            if ((re15_engine_rand8() & 3) != 0 && u < 10000) ziel = 1;
-            if (dist < 10001) ziel = 1;
-            if (u >= 9001 && (re15_engine_rand8() & 1) == 0) ziel = 3;
-            if (u < 7000 && (re15_engine_rand8() & 1) == 0) ziel = 1;
+        if (g5_anim(e) && (re15_engine_rand8() & 3) == 0) g5_se(9);   /* Grollen @0x80100a9c-bc */
+        /* Schlagkaskade @0x80100ac0-bc8: (timer & 0xF) == 0 und +0x16B Bit 0 clear. */
+        if ((g->timer & 0xF) == 0 && !(g->m16b & 1u)) g5_tentakel_schlag(&g->m16a, dist);
+        /* Timer @0x80100bcc-e8: laeuft herunter; erst bei 0 (und danach jeden Tick) wird
+         * entschieden. */
+        if (g->timer != 0) {
+            g->timer--;
+            if (g->timer != 0) break;
+        }
+        g->m16b |= 1u;                                     /* @0x80100bfc-c08: Schlaege aus */
+        if (g5_tentakel_busy() != 0) break;                /* @0x80100c0c-40: auf Arme warten */
+        {
+            /* Entscheidung @0x80100c44-ce4 (Reihenfolge = letzte trifft), X absolut: */
+            uint8_t ziel = 3;                                        /* 0x301 = Rueckzug */
+            if ((re15_engine_rand8() & 3) != 0 && u < 10000) ziel = 1;   /* @0x80100c48-70 */
+            if (dist < 10001) ziel = 1;                              /* @0x80100c74-88 */
+            if (u >= 9001 && (re15_engine_rand8() & 1) == 0) ziel = 3;   /* @0x80100c8c-b4 */
+            if (u < 7000 && (re15_engine_rand8() & 1) == 0) ziel = 1;    /* @0x80100cb8-e4 */
             g->sub = ziel; g->ph = 0;
         }
         break;
     }
 
     case 1: {                                          /* TENTAKEL-ZUG (§2 sub1) */
+        const uint8_t *R = s_g5_zug_reihe[g->m16b & 3u];
         if (g->ph == 0) {
             g5_clip(e, 5, 0);                          /* Clip-Wort 0x1F0005 @0x80100dd8 */
-            g5_tentakel_broadcast(0xB01);
+            g5_tentakel_broadcast(0xB01);              /* 0x80104e5c @0x80100de0 */
             g5_se(10);                                 /* @0x80100dec */
             g->busy |= 2u;
             g->ph = 1;
+            g->m16b = (uint8_t)g5_wuerfel(3u);         /* +0x16B = Zeile @0x80100df4-e14 */
+            R = s_g5_zug_reihe[g->m16b & 3u];
             g5_root_motion(e, 1, 6144, 12000);         /* Anker; x1,5 ab jetzt */
+            /* ph1-Koerper laeuft im selben Bild (Bild 0 @0x80100e18-40 sendet sofort). */
+            g5_tentakel_cmd(R[0], 0xB01u);             /* Bild 0 @0x80100e3c */
         } else if (g->ph == 1) {
             uint32_t f = e->anim_frame;
-            if (f == 55) g5_se(9);                     /* @0x80100f18 */
+            /* Zug-Sender (Phase 2, @0x80100e18-f88): 0xB01 an die Arme der Reihe bei Bild
+             * 0/7/10/15, 0x70B01 (sub11 ph7 = ausrollen) bei 55 an [0]+[2] (+SE 9) und
+             * bei 61 an [1]+[3], SE 11 bei 90. */
+            if (f == 7)  g5_tentakel_cmd(R[1], 0xB01u);        /* @0x80100e68 */
+            if (f == 10) g5_tentakel_cmd(R[2], 0xB01u);        /* @0x80100e94 */
+            if (f == 15) g5_tentakel_cmd(R[3], 0xB01u);        /* @0x80100ec0 */
+            if (f == 55) { g5_tentakel_cmd(R[0], 0x70B01u); g5_tentakel_cmd(R[2], 0x70B01u);
+                           g5_se(9); }                         /* @0x80100ef0-f18 */
+            if (f == 61) { g5_tentakel_cmd(R[1], 0x70B01u); g5_tentakel_cmd(R[3], 0x70B01u); }
+                                                               /* @0x80100f48-68 */
             if (f == 90) g5_se(11);                    /* @0x80100f80 */
             /* Root-Spur Clip 5 x1,5 = +4050 ueber 150 F, Kappe u<12000
              * (@0x80100fa8-c0 / @0x80100fd0-e4). */
@@ -787,7 +1014,12 @@ void re15_g5_boss_tick(int slot)
             g5_clip(e, 2, 0); g5_se(10); g->ph = 3;    /* @0x80101000-0c */
         } else {
             uint32_t f = e->anim_frame;
-            if (f == 25) g5_se(9);                     /* @0x80101070-98 */
+            /* @0x80101024-e4: Bild 85 -> sub0; Bild 25 -> 0x90B01 (sub11 ph9 = loslassen)
+             * an [0]+[2] + SE 9; Bild 15 -> 0x90B01 an [1]+[3]. */
+            if (f == 25) { g5_tentakel_cmd(R[0], 0x90B01u); g5_tentakel_cmd(R[2], 0x90B01u);
+                           g5_se(9); }                 /* @0x80101070-98 */
+            if (f == 15) { g5_tentakel_cmd(R[1], 0x90B01u); g5_tentakel_cmd(R[3], 0x90B01u); }
+                                                       /* @0x801010c4-e4 */
             g5_anim(e);
             if (f >= 85) {                             /* Wort=1 -> sub0 @0x8010103c-44 */
                 g->sub = 0; g->ph = 0;
@@ -856,6 +1088,7 @@ void re15_g5_boss_tick(int slot)
 
     g5_blob_tick(e, pl);
     g5_morph_bauen(g);              /* Reihenfolge wie im Original (s. Block oben) */
+    g5_augen_und_kopf(e, pl);       /* Augen-Ziele/Wanderer + Kopf-Tracking (s.u.) */
     re15_g5_tentakel_tick(e);       /* die vier Arme haengen an der Blob-Matrix */
 
     /* Mess-Schiene (env-gegated, birkin_dbg.log wie gehabt). */

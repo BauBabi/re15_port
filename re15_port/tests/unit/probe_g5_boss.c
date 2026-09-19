@@ -42,13 +42,12 @@ static int g_fail = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { g_fail = 1; \
     fprintf(stderr, "FAIL: " __VA_ARGS__); fprintf(stderr, "\n"); } } while (0)
 
-/* u SPIELER-RELATIV wie im Modul (Runde 7): u = 12000 - |dx| entlang X. */
-static int32_t u_von(const re15_actor_t *e)
-{
-    int32_t d = (int32_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x - (int32_t)e->x;
-    if (d < 0) d = -d;
-    return 12000 - d;
-}
+/* u = ABSOLUTES X wie im Modul seit Phase 2 (analysis/befunde_2026-09-19/birkin-g5.md,
+ * Skeptiker 4.1.3): RE2 liest fuer jede Schwelle das Entity-X direkt
+ * (`lw a0,56(s1); slti a0,a0,12000` @0x80100fd0, `slti v0,v1,12001` @0x80104074,
+ * `slti v1,v1,9001` @0x801008a0) - die Kappe wandert NICHT mit dem Spieler.
+ * HIER STAND `12000 - |dx|` (spielerrelativ), das Port-Konstrukt der Runde 7. */
+static int32_t u_von(const re15_actor_t *e) { return (int32_t)e->x; }
 
 int main(void)
 {
@@ -122,15 +121,26 @@ int main(void)
     CHECK(saw_clip[1] && saw_clip[3] && saw_clip[4] && saw_clip[2] && saw_clip[0],
           "Intro-Choreo 1/3/4/2/0 nicht vollstaendig gesehen");
     CHECK(intro_fertig_t > 0, "der Tentakel-Zug (Clip 5) wurde nie erreicht");
-    /* ⛔ Hier stand `e->x <= -14000 || u_start <= -2500` ("Intro startet am RDT-Spawn").
-     * Das zementierte genau die Buehne, die den Nutzer-Befund erzeugte. Der Start liegt
-     * jetzt auf dem Skriptwert 1200; bei Spieler 13699 ist u_start = 12000 - 12499 = -499. */
-    CHECK(u_start < 0 && u_start > -3000,
-          "Intro startet nicht auf dem Skript-Pos_set (u_start=%d, erwartet ~-500)", u_start);
+    /* ⛔ Hier stand erst `e->x <= -14000 || u_start <= -2500` ("Intro startet am RDT-Spawn"),
+     * dann `u_start ~ -500` ("auf dem Skriptwert 1200"). BEIDES war eine Port-Buehne:
+     * RE2s [T0] UEBERSCHREIBT beim Armieren den Skript-/Spawnwert selbst -
+     * `addiu v0,zero,-9000 / sw v0,56(s0)` @0x801011d0 und `addiu v0,zero,-23400 /
+     * sw v0,64(s0)` @0x801011d8. Der Wert ist uebertragbar, weil das Westende von
+     * ROOM5090 (SCA-Eckbloecke [21]/[25] x=-5683) mit RE2 room7040 ([2]/[4] x=-5683)
+     * x-identisch ist; G5 kommt bei X=-9000 durch die Luecke ("hinten durch das
+     * Zug-Rechteck"). Pos_set(1200) @0x12FE galt dem RE1.5-Humanoiden 0x30. */
+    CHECK(u_start == -9000 && e->z == -23400,
+          "Kampfstart setzt die Position nicht selbst auf (-9000,-23400) @0x801011d0/d8"
+          " (ist x=%d z=%d)", u_start, (int)e->z);
     CHECK(u_von(e) > u_start + 8000,
-          "Root-Motion traegt nicht: u-Delta %d (erwartet > 8000: Intro 10960 + Zuege)",
+          "Root-Motion traegt nicht: X-Delta %d (erwartet > 8000: Intro 10960 + Zuege)",
           u_von(e) - u_start);
-    CHECK(u_von(e) <= 12000, "Zug-Kappe 12000 verletzt: u=%d", u_von(e));
+    /* ⛔ Hier stand `u_von(e) <= 12000`. Byte-true ist die Kappe ein VORAB-Test:
+     * `lw a0,56(s1); slti a0,a0,12000; beq a0,zero,<ueberspringen>` (@0x80100fc8-d4) -
+     * der Schritt wird nur ausgelassen, wenn X SCHON >= 12000 ist; der letzte Schritt
+     * darf also ueberschiessen. Im Hauptlauf ist die Kappe nicht messbar, weil der Boss
+     * vorher DEVOURt und byte-true fuer immer in sub4 stehen bleibt - der Kappen-Pin
+     * steht deshalb unten im Flucht-Lauf (Spieler auf Dauer-HP, kein Devour-Gate).
     CHECK(e->x < g_actors[RE15_ACTOR_SLOT_PLAYER].x,
           "der Boss muss WESTLICH des Spielers bleiben (x=%d, Spieler=%d) - er kommt "
           "von vorn aus dem Zug, nicht vom Eingang hinter dem Spieler",
@@ -140,8 +150,10 @@ int main(void)
      * Clip 9); der Hauptlauf resettet hp je Tick, das Ereignis wird VOR dem
      * Reset gezaehlt. Nach einem Devour haelt der Boss byte-true den
      * sub4-Endzustand ("kein Routine-Exit - der Spieler ist tot"). */
-    printf("Treffer-Ereignisse im Hauptlauf: %d, Devour-Clip 9 gesehen: %d\n",
-           treffer, saw_clip[9]);
+    printf("Treffer-Ereignisse im Hauptlauf: %d, Devour-Clip 9 gesehen: %d,"
+           " Boss-X am Ende %d, Abstand %d\n",
+           treffer, saw_clip[9], (int)e->x,
+           (int)(g_actors[RE15_ACTOR_SLOT_PLAYER].x - e->x));
     CHECK(treffer > 0 || saw_clip[9],
           "weder Biss-Schaden noch Devour im Hauptlauf gesehen");
 
@@ -224,7 +236,8 @@ int main(void)
             e3->x = -400; e3->z = -23350; e3->grid_id = 0x13;
             pl->x = 0; pl->z = -23350; pl->y = 0; pl->hp = 200; pl->hit_react = 0;
             int32_t d_min = 400; int treffer0 = 0;
-            for (int t = 0; t < 1500; t++) {
+            int32_t x_max = e3->x, x_wachs_nach_kappe = 0;
+            for (int t = 0; t < 2500; t++) {
                 pl->x = 0; pl->z = -23350;           /* Leon steht - nur der Boss bewegt sich */
                 pl->hp = 200; pl->hit_react = 0;
                 re15_g5_boss_tick(slot_a);
@@ -232,9 +245,16 @@ int main(void)
                 if (d < 0) d = -d;
                 if (d < d_min) d_min = d;
                 if (d == 0) treffer0++;
+                if (e3->x > x_max) { if (x_max >= 12000) x_wachs_nach_kappe++; x_max = e3->x; }
             }
-            printf("Kappe: kleinster Abstand %d, Frames mit Abstand 0: %d\n",
-                   (int)d_min, treffer0);
+            printf("Kappe: kleinster Abstand %d, Frames mit Abstand 0: %d, groesstes X %d,"
+                   " Wachstum NACH der Kappe: %d\n",
+                   (int)d_min, treffer0, (int)x_max, x_wachs_nach_kappe);
+            CHECK(x_max >= 12000, "Zug-Kappe nie erreicht (groesstes X %d)", (int)x_max);
+            CHECK(x_wachs_nach_kappe == 0,
+                  "X waechst noch, nachdem 12000 ueberschritten war (%d Schritte) - der"
+                  " Vorab-Test `slti a0,a0,12000` @0x80100fd0 greift nicht",
+                  x_wachs_nach_kappe);
             CHECK(treffer0 == 0,
                   "der Boss stand in %d Frames EXAKT auf der Spielerposition - die "
                   "u-Kappe darf die Bewegung aussetzen (@0x80100fd0-e4 \"nur solange "

@@ -1,0 +1,39 @@
+﻿.\probe_r16_sk_birkin_g5.exe : [scd] thread start slot=0 first_op=0x3B
+In Zeile:1 Zeichen:456
++ ... e.log 2>&1; .\probe_r16_sk_birkin_g5.exe A > ..\..\..\..\analysis\bef ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([scd] thread start slot=0 first_op=0x3B:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(15)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(300,-23400) flag=32) walk_active=1
+[scd F0] Cut_chg(12)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+=== R16 SKEPTIKER birkin-g5: Modus A x0=0 ===
+KAMPF-GATE: Kamera 12 bei Bild 180, Spieler x=13399, Boss pos=(-9000,-23400) clip=1 pending_vor_gate=-1
+   Bild    0 | boss x= -9000 | Urspr.imQ=0 | Front x= -4506 (imQ=1) | Spieler x=13399 | clip 1/0
+   Bild   90 | boss x= -8999 | Urspr.imQ=0 | Front x= -4505 (imQ=1) | Spieler x=13399 | clip 1/3
+   Bild  120 | boss x= -8808 | Urspr.imQ=0 | Front x= -4314 (imQ=1) | Spieler x=13399 | clip 1/33
+   Bild  150 | boss x= -5569 | Urspr.imQ=0 | Front x= -1075 (imQ=1) | Spieler x=13399 | clip 1/63
+   Bild  180 | boss x= -3952 | Urspr.imQ=1 | Front x=   542 (imQ=1) | Spieler x=13399 | clip 1/93
+   Bild  270 | boss x= -1986 | Urspr.imQ=1 | Front x=  2508 (imQ=1) | Spieler x=13399 | clip 3/2
+   Bild  400 | boss x= -1986 | Urspr.imQ=1 | Front x=  2508 (imQ=1) | Spieler x=13399 | clip 3/32
+   Bild  527 | boss x= -1271 | Urspr.imQ=1 | Front x=  3223 (imQ=1) | Spieler x=13399 | clip 4/59
+   Bild  630 | boss x=  2141 | Urspr.imQ=1 | Front x=  6635 (imQ=1) | Spieler x=13399 | clip 4/162
+   Bild 1123 | boss x=  1960 | Urspr.imQ=1 | Front x=  6454 (imQ=1) | Spieler x=14374 | clip 5/0
+ERGEBNIS A(x0=0): Ursprung im Viereck ab Bild 151, Front ab Bild 0; Intro fertig (Clip 5) bei 1123 mit Ursprung 1960 und Spieler-Abstand 12414; Front ueberholt Spieler bei -1; min|dx|=8437; pending ab Bild -1

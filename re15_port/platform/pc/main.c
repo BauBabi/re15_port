@@ -88,6 +88,8 @@ static inline int RNDI(float f) {
 #include "re15_room.h"
 #include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
+#include "re15_g5_skin.h"     /* G5-Endkampf: Skinning/Augen-UV (Phase 2 birkin-g5.md) */
+extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c */
 #include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
@@ -6065,6 +6067,18 @@ re_title:;
                                         break;
                                     }
                             }
+                            /* MESS-HARNESS: RE15_PLAYER_POS gilt auch fuer den Sprung-Spawn.
+                             * Die DEBUG.BIN-Tabelle setzt je Raum EINEN festen Punkt (ROOM5090:
+                             * 300/5000) - fuer einen Sichtlauf im Kampfgang (z -23350) ist das
+                             * der falsche Korridor. Ohne das hier wirkte der Teleport aus
+                             * main.c:3626 nur beim Boot und wurde vom Sprung ueberschrieben. */
+                            {   const char *ppj = getenv("RE15_PLAYER_POS");
+                                int ppx = 0, ppz = 0, pprot = 0;
+                                if (ppj && *ppj && sscanf(ppj, "%d,%d,%d", &ppx, &ppz, &pprot) >= 2) {
+                                    dx = ppx; dz = ppz; dyaw = (int16_t)pprot;
+                                    fprintf(stderr, "[parity] JUMP-Spawn ersetzt durch "
+                                                    "RE15_PLAYER_POS (%d,%d) rot=%d\n", ppx, ppz, pprot);
+                                } }
                             re15_room_request_change(droom, dx, dy, dz, dyaw, dcut);
                             fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X) spawn=(%d,%d,%d) cut=%d\n",
                                     dm->load_room, re15_debug_menu_room_name(), droom,
@@ -7902,7 +7916,22 @@ re_title:;
                 if (cam_has_region &&
                     !re15_aot_point_in_quad(npc->x, npc->z,
                                             cam_region_xs, cam_region_zs)) {
-                    continue;
+                    /* G5-ENDKAMPF (Phase 2, birkin-g5.md 4.1.2 + Skeptiker #9): der Boss
+                     * startet wie in RE2 bei X=-9000 (@0x801011d0), sein URSPRUNG liegt
+                     * damit die ersten 151 Bilder ausserhalb des Cut-12-Ankervierecks
+                     * (RVD @0x04A4 x ab -5600), seine 7,3-m-Masse aber ab Bild 0 darin
+                     * (gemessen, Gegensonde A x0=-9000: Front ab Bild 0). Zweiter Testpunkt =
+                     * die Massenfront: Ursprung + 4494 in Blickrichtung (Blob-Bind 1800
+                     * @0x80100680 + Mesh-2-Bbox x_max 2694, g5-morph.md 2.3). Port-
+                     * Entscheidung, nur Typ 0x36. */
+                    int g5_front_in = 0;
+                    if (npc->type == 0x36u) {
+                        int32_t fc_ = re15_cos_q12((int)npc->rot_y), fs_ = re15_sin_q12((int)npc->rot_y);
+                        int32_t fx_ = npc->x + (int32_t)(((int64_t)fc_ * 4494) >> 12);
+                        int32_t fz_ = npc->z - (int32_t)(((int64_t)fs_ * 4494) >> 12);
+                        g5_front_in = re15_aot_point_in_quad(fx_, fz_, cam_region_xs, cam_region_zs);
+                    }
+                    if (!g5_front_in) continue;
                 }
 
                 /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
@@ -8319,6 +8348,13 @@ re_title:;
                 int32_t nfs = re15_sin_q12(npc_yaw_eff);
                 int32_t nfc = re15_cos_q12(npc_yaw_eff);
                 int32_t nyaw[9] = { nfc, 0, nfs, 0, 0x1000, 0, -nfs, 0, nfc };
+                /* G5-TENTAKEL (Typ 0x37, Phase 2 birkin-g5.md 4.3.3): die Entity-Matrix ist
+                 * die volle Euler-Matrix aus RotX/Yaw/RotZ (+0x74/76/78) — FUN_80104BA4
+                 * @0x80104bc4 `jal 0x8008e1f4` (RotMatrix) auf e+0x74, Peitsche setzt +0x74/+0x78
+                 * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
+                 * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
+                if (npc->type == 0x37u)
+                    re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
                  * @0x8001e904 andi 0x800; lh +0x166 @0x8001e91c/28/38; jal ScaleMatrix
@@ -8513,6 +8549,40 @@ re_title:;
                                   r0->rot[rr*3+2]*g5o[2]) >> 12);
                         np = &np_kind;
                     }
+                    /* ---- G5-ENDKAMPF: 2-BONE-SKINNING (Phase 2, birkin-g5.md 2.2b/4.2.1) ----
+                     * Mesh 0 des Bosses (Kopf+Rumpf) haengt im Original NICHT starr an Bone 0:
+                     * FUN_800197f4 (@0x80103b70/84) schreibt je Frame die gewichtete Mischung
+                     * der Bone-1-/Bone-0-/Arm-Posen ins Vertexarray und Part 0 traegt Flag
+                     * 0x4000 (@0x80100628) = der Zeichner laesst die Part-Matrix weg. Ebenso
+                     * der Tentakel-Schlauch (EM037 Mesh 0, Callback 0x80104CF0: drei Naehte +
+                     * FUN_80019CD0-Streckung um den Part-0-Rahmen). Port: Puffer im Modellraum,
+                     * Bone-Pose = Identitaet, Vertex-/Normalen-Zeiger werden unten getauscht. */
+                    re15_skel_pose_t np_ident;
+                    const re15_md1_vertex_t *g5_skin_v = NULL, *g5_skin_n = NULL;
+                    if ((npc->type == 0x36u || npc->type == 0x37u) && nbi == 0 && !npc_remap &&
+                        npc_md1->mesh_count > 0 && npc_bones >= 2) {
+                        int rv = (npc->type == 0x36u)
+                            ? re15_g5_skin_mesh0(npc_poses, npc_bones, &npc_md1->meshes[0],
+                                                 &g5_skin_v, &g5_skin_n)
+                            : re15_g5_tentakel_skin_mesh0(npc_poses, npc_bones, &npc_md1->meshes[0],
+                                                          re15_g5_tentakel_scale_x(npc_i),
+                                                          &g5_skin_v, &g5_skin_n);
+                        if (rv == 0) {
+                            memset(&np_ident, 0, sizeof np_ident);
+                            np_ident.rot[0] = np_ident.rot[4] = np_ident.rot[8] = 0x1000;
+                            np = &np_ident;
+                        } else {
+                            g5_skin_v = NULL; g5_skin_n = NULL;
+                        }
+                    }
+                    /* Tentakel-Stummel (Meshes 1..3) an die gestreckten Schlauch-Enden
+                     * (Port-Entscheidung 2 in enemy_ai_tentakel_g5.c). */
+                    if (npc->type == 0x37u && nbi >= 1 && nbi <= 3 && nbi < npc_bones) {
+                        np_kind = npc_poses[nbi];
+                        re15_g5_tentakel_stretch_point(&npc_poses[0], re15_g5_tentakel_scale_x(npc_i),
+                                                       np_kind.trans);
+                        np = &np_kind;
+                    }
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
@@ -8670,9 +8740,15 @@ re_title:;
                      * Vertexarray (EMD 0x118FC), ein Zeiger genuegt fuer beide. */
                     const re15_md1_vertex_t *nmv = nm->tri_vertices;
                     const re15_md1_vertex_t *nmq = nm->quad_vertices;
+                    const re15_md1_vertex_t *nmn = nm->tri_normals;
+                    const re15_md1_vertex_t *nmqn = nm->quad_normals;
                     if (npc->type == 0x36u) {
                         const re15_md1_vertex_t *mv = re15_g5_morph_verts(npc->type, nmi);
                         if (mv) { nmv = mv; nmq = mv; }
+                    }
+                    if (g5_skin_v && nmi == 0) {   /* geskinntes Mesh 0 (s. oben) */
+                        nmv = g5_skin_v; nmq = g5_skin_v;
+                        nmn = g5_skin_n; nmqn = g5_skin_n;
                     }
                     /* TIM-Bind pro Part (per-Tri gecaptured, render_pc.c s_textri_slot):
                      * Stumpf-Parts sampeln die RE2-TIM, alle anderen ihre normale. */
@@ -8700,9 +8776,9 @@ re_title:;
                         };
                         int ok = 1;
                         int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;
-                        if (nburst && nm->tri_normals &&
+                        if (nburst && nmn &&
                             tri->n0 < (uint32_t)nm->tri_normal_count) {
-                            const re15_md1_vertex_t *bn = &nm->tri_normals[tri->n0];
+                            const re15_md1_vertex_t *bn = &nmn[tri->n0];
                             bofs_x = ((int32_t)bn->x >> 10) * nburst_scale; /* sll16/sra26
                                                                              * @0x8002D490-A4 */
                             bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
@@ -8733,13 +8809,13 @@ re_title:;
                         int npc_avg_z = (int)((wz[0] + wz[1] + wz[2]) * (1.0f / 3.0f));
                         /* BF-round: per-vertex NCCT shading for NPC. */
                         uint8_t nr0, ng0, nb0, nr1, ng1, nb1, nr2, ng2, nb2;
-                        if (nm->tri_normals &&
+                        if (nmn &&
                             tri->n0 < (uint32_t)nm->tri_normal_count &&
                             tri->n1 < (uint32_t)nm->tri_normal_count &&
                             tri->n2 < (uint32_t)nm->tri_normal_count) {
-                            const re15_md1_vertex_t *nn0 = &nm->tri_normals[tri->n0];
-                            const re15_md1_vertex_t *nn1 = &nm->tri_normals[tri->n1];
-                            const re15_md1_vertex_t *nn2 = &nm->tri_normals[tri->n2];
+                            const re15_md1_vertex_t *nn0 = &nmn[tri->n0];
+                            const re15_md1_vertex_t *nn1 = &nmn[tri->n1];
+                            const re15_md1_vertex_t *nn2 = &nmn[tri->n2];
                             re15_light_shade_vertex(&lctx_npc, nn0->x, nn0->y, nn0->z, &nr0, &ng0, &nb0);
                             re15_light_shade_vertex(&lctx_npc, nn1->x, nn1->y, nn1->z, &nr1, &ng1, &nb1);
                             re15_light_shade_vertex(&lctx_npc, nn2->x, nn2->y, nn2->z, &nr2, &ng2, &nb2);
@@ -8757,10 +8833,15 @@ re_title:;
                             ng0 = ng1 = ng2 = (uint8_t)((nburst_tint >> 8) & 0xFFu);
                             nb0 = nb1 = nb2 = (uint8_t)((nburst_tint >> 16) & 0xFFu);
                         }
+                        /* G5-AUGEN (Phase 2, birkin-g5.md 2.2d): die Primitive der Augen-
+                         * Listen (Mesh 2 @0x801055EC/F8/FC/0x80105608) bekommen den Wanderer-
+                         * Stand als UV-Versatz (FUN_800171d0: (char)delta auf u/v, akkumuliert). */
+                        int eye_du = 0, eye_dv = 0;
+                        if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 0, ti, &eye_du, &eye_dv);
                         re15_render_textured_tri_lit(
-                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
-                            (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
-                            (int)ax[2], (int)ay[2], (int)uv->u2 + page_off, (int)uv->v2,
+                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_du, (int)uv->v0 + eye_dv,
+                            (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_du, (int)uv->v1 + eye_dv,
+                            (int)ax[2], (int)ay[2], (int)uv->u2 + page_off + eye_du, (int)uv->v2 + eye_dv,
                             0, (int)uv->clut, npc_avg_z,
                             nr0, ng0, nb0, nr1, ng1, nb1, nr2, ng2, nb2);
                     }
@@ -8777,9 +8858,9 @@ re_title:;
                         };
                         int ok = 1;
                         int32_t bofs_x = 0, bofs_y = 0, bofs_z = 0;
-                        if (nburst && nm->quad_normals &&
+                        if (nburst && nmqn &&
                             qd->n0 < (uint32_t)nm->quad_normal_count) {
-                            const re15_md1_vertex_t *bn = &nm->quad_normals[qd->n0];
+                            const re15_md1_vertex_t *bn = &nmqn[qd->n0];
                             bofs_x = ((int32_t)bn->x >> 10) * nburst_scale; /* FUN_8002d718.c:
                                                                              * dieselbe n0-Regel */
                             bofs_y = ((int32_t)bn->y >> 10) * nburst_scale;
@@ -8809,15 +8890,15 @@ re_title:;
                         /* BF-round: per-vertex shading for NPC quad. */
                         uint8_t nqr0, nqg0, nqb0, nqr1, nqg1, nqb1;
                         uint8_t nqr2, nqg2, nqb2, nqr3, nqg3, nqb3;
-                        if (nm->quad_normals &&
+                        if (nmqn &&
                             qd->n0 < (uint32_t)nm->quad_normal_count &&
                             qd->n1 < (uint32_t)nm->quad_normal_count &&
                             qd->n2 < (uint32_t)nm->quad_normal_count &&
                             qd->n3 < (uint32_t)nm->quad_normal_count) {
-                            const re15_md1_vertex_t *qn0 = &nm->quad_normals[qd->n0];
-                            const re15_md1_vertex_t *qn1 = &nm->quad_normals[qd->n1];
-                            const re15_md1_vertex_t *qn2 = &nm->quad_normals[qd->n2];
-                            const re15_md1_vertex_t *qn3 = &nm->quad_normals[qd->n3];
+                            const re15_md1_vertex_t *qn0 = &nmqn[qd->n0];
+                            const re15_md1_vertex_t *qn1 = &nmqn[qd->n1];
+                            const re15_md1_vertex_t *qn2 = &nmqn[qd->n2];
+                            const re15_md1_vertex_t *qn3 = &nmqn[qd->n3];
                             re15_light_shade_vertex(&lctx_npc, qn0->x, qn0->y, qn0->z, &nqr0, &nqg0, &nqb0);
                             re15_light_shade_vertex(&lctx_npc, qn1->x, qn1->y, qn1->z, &nqr1, &nqg1, &nqb1);
                             re15_light_shade_vertex(&lctx_npc, qn2->x, qn2->y, qn2->z, &nqr2, &nqg2, &nqb2);
@@ -8836,16 +8917,18 @@ re_title:;
                             nqg0 = nqg1 = nqg2 = nqg3 = (uint8_t)((nburst_tint >> 8) & 0xFFu);
                             nqb0 = nqb1 = nqb2 = nqb3 = (uint8_t)((nburst_tint >> 16) & 0xFFu);
                         }
+                        int eye_qdu = 0, eye_qdv = 0;
+                        if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 1, qi, &eye_qdu, &eye_qdv);
                         re15_render_textured_tri_lit(
-                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
-                            (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
-                            (int)ax[3], (int)ay[3], (int)uv->u3 + page_off, (int)uv->v3,
+                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv,
+                            (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_qdu, (int)uv->v1 + eye_qdv,
+                            (int)ax[3], (int)ay[3], (int)uv->u3 + page_off + eye_qdu, (int)uv->v3 + eye_qdv,
                             0, (int)uv->clut, npc_qz1,
                             nqr0, nqg0, nqb0, nqr1, nqg1, nqb1, nqr3, nqg3, nqb3);
                         re15_render_textured_tri_lit(
-                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
-                            (int)ax[3], (int)ay[3], (int)uv->u3 + page_off, (int)uv->v3,
-                            (int)ax[2], (int)ay[2], (int)uv->u2 + page_off, (int)uv->v2,
+                            (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv,
+                            (int)ax[3], (int)ay[3], (int)uv->u3 + page_off + eye_qdu, (int)uv->v3 + eye_qdv,
+                            (int)ax[2], (int)ay[2], (int)uv->u2 + page_off + eye_qdu, (int)uv->v2 + eye_qdv,
                             0, (int)uv->clut, npc_qz2,
                             nqr0, nqg0, nqb0, nqr3, nqg3, nqb3, nqr2, nqg2, nqb2);
                     }

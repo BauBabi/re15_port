@@ -34,6 +34,10 @@ extern void    re15_g5_tentakel_cmd(int idx, uint32_t wort);
 extern void    re15_g5_tentakel_reset(void);
 extern uint8_t re15_g5_tentakel_maske(void);
 extern int     re15_g5_tentakel_spitze(int idx, int32_t out[3]);
+/* Phase 2 (analysis/befunde_2026-09-19/birkin-g5.md): die Streckung steht nicht mehr im
+ * uniformen render_scale_q12 des Aktors, sondern ist part0+0x8C und wirkt ueber
+ * FUN_80019CD0 (Flag 0x400) nur entlang lokal X auf die geskinnten Schlauch-Vertices. */
+extern int32_t re15_g5_tentakel_scale_x(int slot);
 
 static int g_fail = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { g_fail = 1; \
@@ -149,7 +153,9 @@ int main(void)
         for (int f = 0; f < 400; f++) {
             re15_g5_boss_tick(2);
             for (int i = 0; i < 4; i++) {
-                int32_t s = g_actors[slots[i]].render_scale_q12;
+                /* ⛔ HIER STAND `g_actors[slots[i]].render_scale_q12` - der ist seit Phase 2
+                 * fest 0 (der Zeichner streckt ueber das Skinning, nicht uniform). */
+                int32_t s = re15_g5_tentakel_scale_x(slots[i]);
                 if (s > scale_max) scale_max = s;
             }
         }
@@ -169,10 +175,17 @@ int main(void)
             if (re15_g5_tentakel_maske() & (1u << 4)) maske_gesetzt = 1;
             if (pl->hp < 100) { getroffen = 100 - pl->hp; break; }
             pl->hit_react = 0;                     /* nur den ersten Treffer messen */
-            {   /* Spieler AN DIE SPITZE stellen - das Original prueft dort ueber ein
-                 * Kind-Entity, der Port ueber die Spitzen-Geometrie (Port-Entscheidung 3). */
+            {   /* Spieler AN DIE SPITZE stellen - SEIT PHASE 2 AUCH IN DER HOEHE:
+                 * der Port fuehrt jetzt die vier Kollisionssegmente des Kind-Entities
+                 * (0x80104F64; Radius +0x9A = 800/600 @0x80100674-c4, HOEHE +0x9E bleibt
+                 * ungesetzt = 0, der Spieler bringt 1530 @0x8003bdec mit). FUN_80034D0C
+                 * prueft `-h < (spieler.y - segment.y) < h` (Decompile Z.44-47) - die
+                 * Arme haengen 2 m ueber dem Boden, ein Spieler auf y=0 wird also nie
+                 * getroffen. Der alte Pin stellte ihn nur in x/z und traf deshalb. */
                 int32_t sp[3];
-                if (re15_g5_tentakel_spitze(0, sp) == 0) { pl->x = sp[0]; pl->z = sp[2]; }
+                if (re15_g5_tentakel_spitze(0, sp) == 0) {
+                    pl->x = sp[0]; pl->z = sp[2]; pl->y = sp[1];
+                }
             }
         }
         printf("Peitsche: Maske gesetzt=%d (vorher 0x%02X), Schaden %d\n",

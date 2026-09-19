@@ -504,3 +504,117 @@ Reihenfolge nach Sichtbarkeit fuer den Nutzer; jede Konstante mit Beleg.
   verifiziert.
 * RE2-Deckenplatte/Dach-Tentakel/Tunnel-Tafeln (Obj 2/3/4, sub03/sub11/sub12) sind bewusst nicht
   Teil des Plans (kein 5090-Gegenstueck).
+
+---
+
+## 6. Umsetzung (Phase 2)
+
+Worktree `.claude/worktrees/wf_074e2f88-24e-4` (Branch `worktree-wf_074e2f88-24e-4`), Build
+`re15_port/build_p2`. Uebernommener Stand des abgebrochenen Vorgaengers: Code fuer 4.1/4.2/4.3
+lag UNCOMMITTED, die Pin-Sonde `tests/unit/probe_p2_birkin_g5.c` war geschrieben, aber **nicht
+registriert** (keine `probes/*.cmake`), nie gebaut und nie gelaufen. Dieser Abschnitt haelt fest,
+was davon haelt, was korrigiert werden musste und was offen bleibt.
+
+### 6.1 Korrekturen an der Vorlage (jede mit eigener Disassemblierung)
+
+| # | Was im Plan/Code stand | Was die Bytes sagen | Folge |
+|---|---|---|---|
+| a | Fix 4.1.1 `X0 = -5673 - 4494 = -10167` | Die "Wandebene -5673" existiert nicht (Skeptiker #9). Uebernommen wurde der byte-true Wert **-9000** (`addiu v0,zero,-9000 / sw v0,56(s0)` @0x801011d0, Z -23400 @0x801011d8) | Intro-Ende Ursprung **1960 = exakt RE2**; Front ab Bild 0 im Cut-12-Viereck |
+| b | u-Achse spielerrelativ (`12000 - abs(dx)`, Runde 7) | RE2 liest ueberall das ABSOLUTE X: `lw a0,56(s1); slti a0,a0,12000` @0x80100fd0, `slti v0,v1,12001` @0x80104074, `slti v1,v1,9001` @0x801008a0 | u = `e->x`; alle Schwellen wandern nicht mehr mit dem Spieler |
+| c | sub0 ph0: `if (A) {...} else {B}` | Der A-Zweig BRICHT NICHT AB: nach `sh v0=10,344(s2)` @0x80100a50 faellt er in **0x80100a54 = B** durch; nur `beq v1,v0(=4),0x80100ce0` @0x80100a40 springt weg | Musterwurf lief im A-Weg gar nicht |
+| d | `m16a = (dist < 7000) ? wurf : 0` | `sltiu v0,v0,0x1b58` + **`beq v0,zero,0x80100a88`** @0x80100a78-7c: der Sprung UEBERSPRINGT `sb zero,362(s2)` — also Wurf bei dist >= 7000, 0 bei dist < 7000 | Polaritaet war invertiert; der Spiess 0xD01 (Zeilen 1/3/4/5/6/7 @0x80105674) konnte NIE gewuerfelt werden (gemessen 0 Spiess-Bilder/3000) |
+| e | Biss/Devour: `re15_ai_arc_test(...) != 0` (seit Runde 6) | RE2 springt bei `bne v0,zero,0x80103ee4` @0x80103e3c bzw. `sll v0,a0,16 / bne v0,zero` @0x801008b4-b8 WEG — verlangt also **== 0**, und 0x80015614 liefert 0 genau INNERHALB des Bogens (`slt v1,cone*2` @0x80015668, sonst +-cone) | Der Port biss nur, wenn der Spieler NICHT vor ihm stand. Nach dem Fix: 3 Treffer + Devour im probe_g5_boss-Hauptlauf (vorher 0) |
+| f | Fix 4.1.1 allein (Selbstplatzierung im Modul) | GEMESSEN an der echten exe (`RE15_BIRKIN_DBG`): das RE1.5-Skript-`Pos_set(1200,0,-23350)` @0x12FE landet **45 Modul-Ticks nach** der Armierung und warf die Selbstplatzierung wieder weg — pos `(-9000,-23400)` -> `(1200,-23350)` | Riegel in `scd_vm.c op_pos_set`: waehrend des G5-Intros (sub 2) gilt fuer Typ 0x36 die Selbstplatzierung. RE2 room7040 hat ueberhaupt kein Pos_set fuer G5 (sub00 @0x11AC parkt ihn auf -32000) |
+
+**FUN_80017FDC ist jetzt vollstaendig disassembliert** (Dossier §5 Punkt 1 damit geschlossen):
+
+```
+80018010: lbu v0,448(s1); andi 1; bne -> return    ; +0x1C0 Bit 0 = aus, out bleibt 0
+80018024: lw s3,436(s1)   ; +0x1B4 = Zielstruktur
+8001802c: lbu a0,449(s1)  ; +0x1C1 = eigener Part ; 80018030: lbu v1,449(s3) = Ziel-Part
+80018034: lhu s5,106(a1)  ; parts[0]+0x6A (Root-Winkel)   ; Part-Stride 172 (@0x80018038-50)
+800180b0: jal 0x8001820c(&ownPart+92, &targetPart+92, sp+16, (s16)(yaw+root))
+   -> 0x800182d0-e8: yaw = (4096 - ratan((dz<<12)/dx) - (dx<0 ? 0x800 : 0)) & 0xfff
+      (dx==0: 3072 bzw. 1024 @0x8001827c-90)  == re15_atan2_q12(dz,dx) - 0x400
+800180c0: andi 0x2 -> Ziel = yaw + part0.6A + part1.6A    ; 800180e0: Ziel==Selbst ebenso
+80018100/04: a2 = +0x9C (Schritt), a0 = +0xA0 (Klemme); +0x1C0 & 0x80 -> Schritt aus +0xA4
+80018118-60: rel = Ziel - yaw - root ; ((rel+limit)&0xfff) > limit*2 -> Ziel = (yaw+root) -+ limit
+80018164-a0: delta = Ziel - (akku + yaw + head_kf + root); akku -+= Schritt (Vorzeichen aus Bit 0x800)
+800181a4-cc: ((Schritt+delta)&0xfff) < Schritt*2 -> akku = Ziel - (yaw + head_kf + root)
+800181d0-d8: *out = (u16)akku
+```
+Damit ist auch belegt, dass die **Klemme dem ZIEL gilt, nicht dem Akku** — der Akku traegt den
+Keyframe-Winkel des Kopfes mit. Der urspruengliche Pin "|Akku| <= 212" war ein Pin auf ein
+falsches Modell (gemessen 4161) und ist durch einen Pin auf den Mechanismus ersetzt.
+Nebenbefund: die Klemme ist **asymmetrisch** (+212 / **-211**), weil der Akku als u16 im Part
+steht und der Aufrufer ihn mit `addiu v0,v1,-4095` @0x80100330 wickelt (nicht -4096) — dieselbe
+Klasse wie SquareRoot0/catan, wird nachgebaut statt geglaettet.
+
+### 6.2 Was gebaut wurde
+
+* **4.1 Auftritt** — Selbstplatzierung (-9000/-23400), absolute u-Achse, Front-Cull fuer 0x36
+  (Ursprung + 4494 gegen das Cut-Viereck, `main.c`), Skript-Pos_set-Riegel waehrend des Intros.
+* **4.2 Gesicht/Koerper** — 2-Bone-Skinning von Mesh 0 (`re15_g5_skin.c`, Tabellen
+  `engine/src/gen/g5_skin_tables.inc` aus `tools/gen_g5_skin_tables.py`), Augen-UV-Wanderer,
+  Kopf-Tracking; dafuer ein Bone-Winkel-Haken im Pose-Builder (`skeleton_common.c`), der die
+  Zuschlaege wie im Original VOR dem RotMatrix-Aufbau auf die Part-Winkel legt. Nur fuer
+  0x36/0x37 belegt.
+* **4.3 Tentakel** — sub9/sub10/sub11 als echte Phasen-Zustaende inkl. Ankermodus, Rotations-
+  tabellen, Per-Part-Einrollwinkel mit Gesamtwinkel-Klemme, Ausroll-/Zitterfolge, Zug-Laengen-
+  formel und Spitzensonde; Kind-Kollision (4 Segmente) statt Spitzenradius; volle Euler-Matrix
+  und Schlauch-Skinning mit Streckung NUR entlang lokal X im Zeichner; die Intro-/Zug-Sender
+  des Bosses ([T5] 0x901, [T10] 0xA01, [T11] 0x40A01, sub1 0xB01/0x70B01/0x90B01).
+
+### 6.3 Messwerte vorher/nachher (`probe_p2_birkin_g5`, ROOM5090, RNG 0x0badf00d)
+
+| Groesse | vorher (§1) | nachher |
+|---|---|---|
+| Boss-Position beim Kampfstart | 1200 (Skript) | **-9000 / -23400** (@0x801011d0/d8) |
+| Massenfront im Cut-12-Viereck ab Bild | steht ab Bild 0 mitten im Bild | **0** (Ursprung ab 151) |
+| Ursprung am Intro-Ende | 12160 | **1960** = RE2 (-9000+7014+3946) |
+| Front ueberholt den Spieler im Intro | Bild 527 | **nie** |
+| Mesh-0-Vertices an ihrer Bone-Pose | 0 (starr an Bone 0) | **30/30 Kopf + 122/122 Rumpf exakt**, 186/186 bewegt |
+| Augen-UV | nicht vorhanden | aendert sich in **99/160** Bildern, immer in [-15,15] |
+| Kopf-Delta | nicht vorhanden | != 0 in **370** Bildern, |Akku| 203 |
+| Anker-Abstand der vier Arme zum Boss | 3 von 4 rund 16 km entfernt | **alle <= 3415** |
+| Treffer in 3000 Bildern bei 6,5 m | 4 (nur Arm 1) | **15**, Kontaktbits in 249 Arm-Bildern |
+| Spiess (sub13) bei 9 m | 0 | **738 Bilder** |
+| ctest (`re15_port/build_p2`) | — | **306/306** |
+
+### 6.4 Sichtpruefung (echte exe, FRAMEDUMP, Bilder in `phase2_birkin-g5/`)
+
+Lauf: `RE15_NO_INTRO=1 RE15_PLAYER_POS="<x>,-23350,1024" RE15_DEBUG_JUMP=5090@30
+RE15_FORCE_EVENT=4@120 RE15_FRAMEDUMP=...` (beschleunigter Renderer, kein SOFTWARE_RENDER;
+`RE15_PLAYER_POS` gilt jetzt auch fuer den Sprung-Spawn, weil die DEBUG.BIN-Tabelle fuer
+ROOM5090 auf (300,5000) zeigt = der falsche Korridor).
+
+* `sicht_auftritt_F300/F450/F900.png` — die Masse kommt vom WESTENDE den Wagen herunter auf
+  Leon zu (Cut 12), statt wie bisher ab Bild 0 in der Bildmitte zu stehen.
+* `sicht_tentakel_F1450/F1600.png` — vier Schlaeuche haengen an der Masse und greifen nach
+  Leon; der Kriecherkopf sitzt oben auf, die beiden Augenwuelste links/rechts davon.
+* `sicht_auge_rechts_F2200-2250.png` — sechs aufeinanderfolgende Bilder des rechten Auges bei
+  STEHENDEM Boss (x=12098, Kappe): die Schlitzpupille wandert sichtbar im Augenfenster.
+* `sicht_birkin_dbg.log` — die Mess-Schiene desselben Laufs (pos bleibt (-9000,-23400) bis die
+  Root-Motion einsetzt; Intro-Ende 1960; Devour bei u=9678 / dist=5970 = `u>=9001 && dist<6000`).
+
+### 6.5 Offen (ehrlich)
+
+1. **Zug-Griff-Opferanimation** (sub11 ph3 @0x80102d4c-dec): Schaden 15 und der Treffer-Latch
+   sind portiert, die Griff-Modi 5/0x105/0x205/0x305/0x405 auf dem RE2-PL0-Rig bleiben DEFERRED
+   (wie Devour, Dossier 4.3.6).
+2. **Timer-Kante der Intro-Sender**: das Original prueft `lh v1,344(s0)` VOR dem `+1`
+   (@0x801014c8-d4), der Port erhoeht zuerst und vergleicht dann — die Sender feuern ein Bild
+   frueher. Betrifft [T5]/[T10] und die schon vorhandenen SE-Ausloeser gleichermassen; nicht
+   angefasst, weil es eine alte, durchgaengige Konvention des Moduls ist.
+3. **`FUN_80034D0C` nur teilportiert**: Kreis-/Hoehentest und radialer Push-out sind drin, der
+   Vorzeichen-Dreh-Zweig ueber +0x46/+0x44 des Ziels (Decompile Z.45-70) und die 0x100000-Klemme
+   (Z.71-86) nicht.
+4. **Augen-Primitivsuche im Zeichner** ist eine lineare Liste je Dreieck/Quad
+   (`re15_g5_eye_uv_offset`) statt des Paket-Patches des Originals (`FUN_800171d0/2f8`). Gleiches
+   Ergebnis auf dem Bildschirm, aber nicht derselbe Codeweg.
+5. **Normalen der Tentakel-Streckung**: `FUN_80019CD0` verzerrt sie im Original mit; der Port
+   laesst sie unveraendert (dokumentiert in `re15_g5_skin.c`).
+6. **RE2-Cuts 3/4/9/10/5/6 samt Deckenplatte/Tunnel-Tafeln** bleiben wie im Plan ausserhalb des
+   Umfangs (kein 5090-Gegenstueck).
+7. **Kein Parity-Vergleich gegen einen DuckStation-Savestate** dieses Kampfes — alle Zahlen sind
+   gegen die disassemblierten RE2-Bytes geprueft, nicht gegen RAM einer laufenden Konsole.
