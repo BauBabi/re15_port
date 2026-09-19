@@ -21,6 +21,15 @@
 #include <windows.h>      /* AttachConsole — GUI-Subsystem-Begleiter, siehe main() */
 #endif
 #include <SDL_timer.h>   /* SDL_GetTicks/SDL_Delay — Frame-Timing (ohne main-Umleitung) */
+#if defined(__ANDROID__)
+/* Android: SDLActivity sucht in libmain.so das Symbol SDL_main (nativeRunMain). SDL_main.h
+ * benennt unser main() per Makro um — auf Windows/Linux bleibt es das rohe C-main(). */
+#include <SDL_main.h>
+/* Bootstrap aus platform/android/jni/android_glue.c: Speicherordner als Anker + chdir, dann
+ * die Assets aus der APK entpacken (mit Fortschrittsanzeige). */
+extern void re15_android_bootstrap_paths(void);
+extern void re15_android_bootstrap_assets(void);
+#endif
 #include "re15_engine.h"
 #include "re15_tim.h"
 #include "re15_scd.h"
@@ -2226,6 +2235,24 @@ static void pc_edit_build_remap(uint16_t remap[16])
     }
 }
 
+/* PORT EXTENSION — the "AI  <flavor>" row in the free strip under the bottom box (y=220..240).
+ * `lit` draws the same blue 50%-ABE cursor tile the byte-true tabs use, so it reads as one UI.
+ * (2026-09-19: war eine in pc_config_draw_overlay VERSCHACHTELTE Funktion — eine GCC-Erweiterung,
+ * die Clang/NDK ablehnt ("function definition is not allowed here"). Auf Dateiebene gehoben,
+ * Verhalten unveraendert.) */
+static void pc_config_draw_ai_row(int lit)
+{
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
+    unsigned char b[20]; int n = 0;
+    static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  MIXED" };
+    int mode = pc_ai_mode(); if (mode < 0 || mode > 2) mode = 0;
+    const char *s = k_ai_top[mode];
+    for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
+    re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
+}
+
 /* Draw the current sub-screen's CONFIG.TIM tiles + selected-item highlight + text over the backdrop
  * (called after re15_render_pc_config_clear + the backdrop + the 16 action labels). */
 static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
@@ -2235,17 +2262,6 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     extern void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
     extern void re15_render_pc_config_rect_ov(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
-    /* PORT EXTENSION — the "AI  <flavor>" row in the free strip under the bottom box (y=220..240).
-     * `lit` draws the same blue 50%-ABE cursor tile the byte-true tabs use, so it reads as one UI. */
-    void pc_config_draw_ai_row(int lit) {
-        if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
-        unsigned char b[20]; int n = 0;
-        static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  MIXED" };
-        int mode = pc_ai_mode(); if (mode < 0 || mode > 2) mode = 0;
-        const char *s = k_ai_top[mode];
-        for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
-        re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
-    }
     if (screen == CFG_TOP) {
         pc_config_draw_ai_row(cur == 3);          /* PORT EXTENSION, below the byte-true panel */
         if (cur < 3)
@@ -2510,6 +2526,11 @@ static void re15_testhaken_ende(void)
 
 int main(int argc, char *argv[])
 {
+#if defined(__ANDROID__)
+    /* ZUERST: App-Speicherordner als exe-Anker + Arbeitsverzeichnis. Alles darunter
+     * (re2_ki.log, debug.log, befund.log, re15_card.mcr) landet damit dort. */
+    re15_android_bootstrap_paths();
+#endif
     /* RE2-KI-TRACE neben die exe umleiten (wie befund.log, main.c:4753). Diese exe ist
      * GUI-Subsystem: stderr ist tot, der Trace kam beim Nutzer bisher nirgendwo an. */
     re15_re2_trace_dir_set(re15_pc_exe_dir());
@@ -2537,6 +2558,13 @@ int main(int argc, char *argv[])
      * exact numerical state. */
     freopen("debug.log", "w", stderr);
     setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for live tail */
+
+#if defined(__ANDROID__)
+    /* Assets aus der APK in den Speicherordner entpacken (nur beim ersten Start bzw. nach einem
+     * Update) — VOR der Wurzel-Aufloesung, die den Baum sonst nicht faende. Initialisiert dafuer
+     * schon den Renderer (Fortschrittsanzeige); re15_render_init() unten ist dann ein No-op. */
+    re15_android_bootstrap_assets();
+#endif
 
     /* Erste Zeile im Log: WO die Assets herkommen. Genau diese Auskunft fehlte beim
      * 0.3.19-Report — das Paket suchte still an einem Pfad, den es nicht gibt. */

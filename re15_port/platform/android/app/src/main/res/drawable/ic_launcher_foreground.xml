@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher-Vordergrund: rote Scheibe mit weissem "1.5"-artigem Strichmotiv (reine Formen). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#B4161B"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,38 L46,38 L46,70 L40,70 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,64 L56,64 L56,70 L51,70 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,38 L74,38 L74,44 L66,44 L66,50 L74,50 L74,70 L60,70 L60,64 L68,64 L68,56 L60,56 Z" />
+</vector>

@@ -92,6 +92,19 @@ static void rr_add_ancestors(char (*arr)[RR_PATH], int *n, const char *dir, int 
 
 /* -------------------------------------------------------------------------- exe-Verzeichnis */
 
+#if defined(__ANDROID__)
+/* Android hat kein "Verzeichnis neben der exe" (/proc/self/exe = /system/bin/app_process64).
+ * Der Bootstrap (platform/android/jni/android_glue.c) setzt hier den App-Speicherordner
+ * (<external>/Android/data/<pkg>/files bzw. den internen files-Ordner) als Anker: dort liegen
+ * die entpackten shared_assets/ + synchro/, und dort landen befund.log, re2_ki.log und — ueber
+ * chdir — auch debug.log und re15_card.mcr. Muss VOR dem ersten re15_pc_exe_dir() laufen. */
+void re15_pc_set_exe_dir(const char *dir)
+{
+    rr_norm(s_exe_dir, sizeof s_exe_dir, dir);
+    s_exe_done = 1;
+}
+#endif
+
 const char *re15_pc_exe_dir(void)
 {
     if (s_exe_done) return s_exe_dir;

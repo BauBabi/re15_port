@@ -42,3 +42,12 @@ release/wbuild_rel/
 release/wxbuild/
 release/lbuild/
 *.stackdump
+
+# Android-Bau (platform/android): Gradle-/CMake-Arbeitsverzeichnisse, SDL2-Quelltarball,
+# sdk.dir-Datei. Die APK selbst liegt als release/re15_port_<version>_android.apk.
+re15_port/platform/android/.gradle/
+re15_port/platform/android/build/
+re15_port/platform/android/app/build/
+re15_port/platform/android/app/.cxx/
+re15_port/platform/android/_deps/
+re15_port/platform/android/local.properties
