@@ -106,12 +106,16 @@ static void g5_se(int id)
  * 0x80104E5C). Modul: enemy_ai_tentakel_g5.c. */
 extern void    re15_g5_tentakel_cmd(int idx, uint32_t wort);
 extern void    re15_g5_tentakel_broadcast(uint32_t wort);
+extern void    re15_g5_tentakel_phase(int idx, unsigned ph);
+extern void    re15_g5_tentakel_phase_alle(unsigned ph);
 extern void    re15_g5_tentakel_spawn(const re15_actor_t *g5);
 extern void    re15_g5_tentakel_tick(const re15_actor_t *g5);
 extern void    re15_g5_tentakel_reset(void);
 extern uint8_t re15_g5_tentakel_maske(void);
 static void g5_tentakel_cmd(int idx, uint32_t wort) { re15_g5_tentakel_cmd(idx, wort); }
 static void g5_tentakel_broadcast(uint32_t wort) { re15_g5_tentakel_broadcast(wort); }
+static void g5_tentakel_phase(int idx, unsigned ph) { re15_g5_tentakel_phase(idx, ph); }
+static void g5_tentakel_phase_alle(unsigned ph) { re15_g5_tentakel_phase_alle(ph); }
 
 /* Kandidatenwahl wie im Original (@0x801009E8-A50): Bit i+4 der +0x228-Maske =
  * beschaeftigt (Bits 0..3 werden nirgends gesetzt, em037-tentakel.md 5.2). */
@@ -553,14 +557,20 @@ static void g5_intro_tick(re15_actor_t *e)
         g->blob = 3; g->blob_ph = 0;                   /* Vorkampf-Puls an */
         break;
     case 1:                                            /* [T1] 90 T Tentakel wecken */
+        /* ⛔ TIMER-KANTE: [T1] ist der EINE Intro-Zustand, der ZUERST erhoeht und dann den
+         * NEUEN Stand vergleicht (`lhu v0,344(s0); addiu v0,v0,1; sh v0,344(s0); bne v0,10`
+         * @0x80101214-2c) — [T4]/[T5]/[T10] lesen vor dem +1 (s. dort). Reihenfolge hier
+         * also unveraendert richtig. */
         g->timer++;
-        /* t=10/30/40: Tentakel 0/2/3 wecken (+0x06 = 1), t=90: alle vier auf +0x06 = 6
-         * (@0x80101214ff). Das Wort traegt Sub 8 (Austritt) und die Phase. */
-        if (g->timer == 10) { g5_tentakel_cmd(0, 0x10801u); g5_se(9); }
-        if (g->timer == 30) { g5_tentakel_cmd(2, 0x10801u); g5_se(9); }
-        if (g->timer == 40) { g5_tentakel_cmd(3, 0x10801u); g5_se(9); }
+        /* t=10/30/40: Tentakel 0/2/3 wecken, t=90: alle vier auf Phase 6. Der Boss schreibt
+         * NUR das Phasenbyte +0x06 (`sb v0,6(a2)` @0x80101240 / @0x80101268 / @0x80101290 /
+         * @0x801012b8-e0) — kein ganzes Routine-Wort: Sub bleibt 8 (Austritt) und der
+         * Zeitgeber +0x158 des Arms laeuft ungebrochen weiter. */
+        if (g->timer == 10) { g5_tentakel_phase(0, 1); g5_se(9); }
+        if (g->timer == 30) { g5_tentakel_phase(2, 1); g5_se(9); }
+        if (g->timer == 40) { g5_tentakel_phase(3, 1); g5_se(9); }
         if (g->timer >= 90) {
-            g5_tentakel_broadcast(0x60801u);           /* alle vier +0x06 = 6 */
+            g5_tentakel_phase_alle(6);                 /* alle vier +0x06 = 6 */
             g->ph = 2; g5_se(11); g5_root_motion(e, 1, 4096, 0);
         }
         break;
@@ -580,20 +590,31 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 3: g5_clip(e, 3, 0); g5_se(9); g->ph = 4; g->timer = 0; break;   /* [T3] */
     case 4:                                            /* [T4] 90 T */
-        g5_anim(e); g->timer++;
-        if (g->timer == 30) g5_se(0);
+        g5_anim(e);
+        /* ⛔ TIMER-KANTE (@0x801013a4 `lh v1,344(s0)` VOR dem +1 @0x801013e8-f4): der
+         * Sender liest den Stand des VORIGEN Bildes. Der Port erhoehte bisher zuerst und
+         * feuerte damit ein Bild zu frueh. t==30 setzt ALLE VIER Arme auf Phase 8
+         * (`sb v0=8,6(a2)` @0x801013bc/c8/d4/e0 = Einzug) und spielt SE 0
+         * (`jal 0x8005bd6c` a0=0 @0x801013e0) — die vier Phasenschreiber fehlten im Port. */
+        if (g->timer == 30) { g5_tentakel_phase_alle(8); g5_se(0); }
+        g->timer++;
         if (g->timer >= 90) { g->ph = 5; g->timer = 0; g5_se(10); }
         break;
     case 5:                                            /* [T5] 110 T, dann Clip 4 */
-        g5_anim(e); g->timer++;
+        g5_anim(e);
         /* [T5] (Phase 2, Skeptiker #8): SPEER 0x901 an alle vier Arme - t=20 Arm 0
          * (@0x8010144c, Slot 0x800d3c38), t=40 Arm 1 (@0x80101470), t=45 Arm 2
          * (@0x80101498), t=56 Arm 3 (@0x801014bc); jeder Sender spielt SE 0
          * (`jal 0x8005bd6c` a0=0). Der Port sendete hier bisher NUR die SE. */
+        /* ⛔ TIMER-KANTE: alle vier Vergleiche lesen `lh v1,344(s0)` VOR dem +1
+         * (@0x80101430/@0x80101458/@0x8010147c/@0x801014a4); erhoeht wird erst danach
+         * (@0x801014c8-d4 `lhu/addiu 1/sh`), und NUR die 110 vergleicht den neuen Stand
+         * (@0x801014d8-e0). Der Port erhoehte zuerst = ein Bild zu frueh. */
         if (g->timer == 20) { g5_tentakel_cmd(0, 0x901u); g5_se(0); }
         if (g->timer == 40) { g5_tentakel_cmd(1, 0x901u); g5_se(0); }
         if (g->timer == 45) { g5_tentakel_cmd(2, 0x901u); g5_se(0); }
         if (g->timer == 56) { g5_tentakel_cmd(3, 0x901u); g5_se(0); }
+        g->timer++;
         if (g->timer >= 110) { g5_clip(e, 4, 0); g->ph = 6; g5_se(11);
                                g5_root_motion(e, 1, 4096, 0); }
         break;
@@ -609,16 +630,20 @@ static void g5_intro_tick(re15_actor_t *e)
     case 8: if (g5_anim(e)) g->ph = 9; break;          /* [T8] Clip 2, 150 F */
     case 9: g5_clip(e, 0, 0); g->ph = 10; g->timer = 0; g5_se(9); break;       /* [T9] */
     case 10:                                           /* [T10] 110 T */
-        g5_anim(e); g->timer++;
+        g5_anim(e);
         /* [T10] (Phase 2, Skeptiker #8): WEDELN 0xA01 - t=20 Arm 0 (@0x8010165c, Slot
          * 0x800d3c38), t=35 Arm 2 (@0x80101680, 0x800d3c40), t=40 Arm 1 (@0x801016a8,
          * 0x800d3c3c), t=50 Arm 3 (@0x801016cc, 0x800d3c44); je SE 0. sub10 ph0 setzt den
          * Ankermodus 0 (@0x801027f4) - DAS holt die drei "freien" Arme aus sub8 ph1 zurueck
          * an die Masse (Dossier 3.3). */
+        /* ⛔ TIMER-KANTE wie [T5]: `lh v1,344(s0)` VOR dem +1 (@0x80101640/@0x80101668/
+         * @0x8010168c/@0x801016b4), erhoeht wird erst @0x801016d8-e4, und nur die 110
+         * vergleicht den neuen Stand. */
         if (g->timer == 20) { g5_tentakel_cmd(0, 0xA01u); g5_se(0); }
         if (g->timer == 35) { g5_tentakel_cmd(2, 0xA01u); g5_se(0); }
         if (g->timer == 40) { g5_tentakel_cmd(1, 0xA01u); g5_se(0); }
         if (g->timer == 50) { g5_tentakel_cmd(3, 0xA01u); g5_se(0); }
+        g->timer++;
         if (g->timer >= 110) g->ph = 11;
         break;
     case 11:                                           /* [T11] */
@@ -719,11 +744,27 @@ static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
 
     /* KOPF-TRACKING: FUN_80017FDC(e, yaw, &delta) @0x80100310; Bit 0 von +0x1C0 = aus
      * (`bne v0,zero,0x800181dc` @0x8001801c -> delta bleibt 0, `sh zero,24(sp)`
-     * @0x8010030c). Eigener Part = 1 (+0x1C1 @0x8010043c), Zielpart = Spieler-Kopf
-     * (+0x1C1 = 8 @0x8003c268; Port: der Spielerwurzel-XZ, der Kopf-Part-XZ des stehenden
-     * Spielers liegt <100 Einheiten daneben - dokumentierte Naeherung, das Skelett des
-     * Spielers ist engine-seitig nicht posierbar). Bit 1 (Tod, @0x801030f0): Ziel = Keyframe
-     * (`sh v0,18(sp)` @0x800180dc: yaw + part0.6A + part1.6A). */
+     * @0x8010030c). Bit 1 (Tod, @0x801030f0): Ziel = Keyframe (`sh v0,18(sp)` @0x800180dc:
+     * yaw + part0.6A + part1.6A).
+     * ⛔ ZIELPUNKT + DISTANZGRENZE — ausdisassembliert (Runde 16 Nacharbeit, damit die
+     * Dossier-Luecke "welche Punkte, gilt eine Distanzgrenze" zu ist):
+     *   FUN_80017FDC nimmt BEIDE Punkte als WELT-Translation des jeweiligen Parts
+     *   +0x1C1: eigener Part `lbu a0,449(s1)` @0x8010802c -> `parts + part*172 + 92`
+     *   (@0x80018080-a4), Zielstruktur `lw s3,436(s1)` (+0x1B4) mit `lbu v1,449(s3)`
+     *   @0x80018030 -> deren `parts + part*172 + 92` (@0x80018038-7c, nach sp+24 kopiert).
+     *   G5: eigener Part 1 (+0x1C1 @0x8010043c), Ziel = Spieler-Kopf (+0x1C1 = 8
+     *   @0x8003c268).
+     *   EINE DISTANZGRENZE GIBT ES NICHT: 0x8001820c rechnet zwar den Abstand
+     *   (SquareRoot0 @0x8001826c), benutzt ihn aber AUSSCHLIESSLICH als Nenner der
+     *   Neigung (`div a0,s2` @0x80104310 -> out+4); der Yaw (out+2) entsteht allein aus
+     *   dx/dz (@0x8001829c-0x800182e8), und der Aufrufer liest nur out+2. Gegatet wird nur
+     *   ueber +0x1C0 Bit 0/Bit 1 und die +-limit-Klemme.
+     * PORT: Leons Skelett ist engine-seitig nicht posierbar, das Ziel bleibt der
+     * Spieler-URSPRUNG. Der Fehler ist GEMESSEN, nicht geschaetzt: PL00.EMR (selbst
+     * geparst) gibt Bone 8 als direktes Kind der Wurzel mit rel = (-98, -704, 0), der
+     * Kopf steht also 98 Einheiten seitlich ueber dem Ursprung; bei den in der Sonde
+     * gemessenen Kampfabstaenden (>= 5000) sind das <= 13 von 4096 Yaw-Einheiten
+     * (98 * 4096 / (2*pi*5000)) gegen eine Klemme von +-212. */
     g->head_delta = 0;
     if (!(g->track_flags & 1u)) {
         re15_enemy_bank_t *b = re15_enemy_find(e->type);
@@ -753,6 +794,15 @@ int re15_g5_boss_intro_haelt_position(int slot)
 }
 
 /* Diagnose (Sonden): Kopf-Tracking-Stand. */
+/* Diagnose (Sonden): Zustandswort des Bosses — Sub, Phase, Zeitgeber +0x158. */
+int re15_g5_boss_zustand(int *sub, int *ph, int *timer)
+{
+    if (sub)   *sub   = (int)s_g5.sub;
+    if (ph)    *ph    = (int)s_g5.ph;
+    if (timer) *timer = (int)s_g5.timer;
+    return s_g5.aktiv ? 1 : 0;
+}
+
 int16_t re15_g5_head_delta(void) { return s_g5.head_delta; }
 int     re15_g5_track_akku(void) { return (int)s_g5.track.akku; }
 unsigned re15_g5_track_flags(void) { return s_g5.track_flags; }
