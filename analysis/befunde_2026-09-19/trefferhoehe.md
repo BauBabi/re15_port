@@ -357,3 +357,219 @@ Reihenfolge = Abhaengigkeit. Jede Konstante traegt ihre Adresse aus §2.
   (@0x800A6900/…), Inhalt nicht gedumpt.
 * Keine RE1.5-Flavor-Messung (dort ist das Band byte-true, §2.1); keine DuckStation-Gegenprobe
   (die RE2-Seite ist statisch vollstaendig, RE2 laeuft hier nicht im Emulator).
+
+## 6. Umsetzung (Phase 2, 2026-09-19)
+
+Branch `worktree-wf_074e2f88-24e-2` (auf aaf06c9b), Build `re15_port/build_p2`.
+Commits: `182453a0 fix(gegner): RE2-Trefferzonen - Teile-Maske und Schuss-Applier FUN_800410CC
+fuer RE2-Zombies`, `e34f6094 test(gegner): Pin unit_r16_trefferhoehe_pin und Bandlock-Pin auf den
+RE2-Applier verankert`. Die Skeptiker-Korrekturen (1)-(7) gelten und sind unten je Punkt belegt.
+
+### 6.1 Was gebaut wurde
+
+* **`re15_actor_t.re2z_parts`** (word0>>26&7) und **`re2z_rad9a`** (+0x9A) — re15_actor.h, jeder
+  Setzer mit Adresse im Feld-Kommentar. +0x1EE = 500 ist im Overlay ein EINZIGER Schreiber
+  (INIT `sh v1,494(s2)` @0x80100980, eigener sh-Scan `re15_port/tools/re2_zombie_mask_scan.py`)
+  und deshalb Konstante `RE2Z_RAD1EE` in re15_damage.c, kein Feld.
+* **Setzer in enemy_ai_re2_zombie.c** (Vollscan aller `lui 0xc00/0x400/0xf3ff` + `sw ...,0(rX)`:
+  16 Maskenschreiber, davon 2 Bindeflag-Argumente @0x8010AAE8/@0x8010B048 = SE-Aufrufe, kein
+  word0):
+  | Maske | Stelle | Port |
+  |---|---|---|
+  | 3 | INIT @0x80100984-998 (+0x9A 500 @0x8010096C-70) | re2z_init |
+  | 1 | Kriecher-INIT @0x80100B38-44 (+0x9A 200 @0x80100B00-04) | re15_re2z_enter_crawler |
+  | 1 | EXEC[5] P0 @0x801032E8-FC | re2z_exec_knockdown case 0 |
+  | – | EXEC[5] P1 +0x9A -= 10 solange >= 21 @0x80103388-A0 | case 1 |
+  | – | EXEC[5] P2 +0x9A = 0 @0x80103478 | case 2 |
+  | – | EXEC[5] P7 +0x9A += 10 bis 500 @0x80103628-3C | case 7 |
+  | 3 | EXEC[5] P7 NUR bei +0x14D == 55 @0x801036D0-F0 | case 7, `re2z_frame_slot(e) == 55` |
+  | 3 | EXEC[5] P8 @0x80103730-38 (+0x9A 500 @0x801036FC-700) | default |
+  | 3 | EXEC[7] P4 @0x80103908-2C | re2z_exec_lying default |
+  | 1 | EXEC[9] Sturzzweig @0x80104098-AC | re2z_exec_getup (Zeile ~2704, war OPEN) |
+  | 1 | EXEC[11] P0 @0x80104444-54 | re2z_exec_eleven |
+  | 1 | Ragdoll P2 @0x80106B38-50 (+0x9A 200 @0x80106B14-18) | re2z_hit_ragdoll default |
+  | 1 | Knockdown P2 @0x80107828-38 (+0x9A 200 @0x801077F8-FC) | Kriecher-Ausgang |
+  | 1 | Tod->Leiche @0x80102C10-20 | re2z_death_main (war OPEN) |
+  | 1 | Todeszweig @0x80102D80-98 | Zeile ~1899 |
+  | 3 | Re-INIT @0x801049F0 (+0x9A 500 @0x801049FC-A00) | re2z_exec_restyle |
+  | \|=1 | Root @0x8010039C-A8 (+0x10E&1 \|\| +0x21A&2) | re15_re2z_tick Prolog |
+  Ohne Port-Zwilling (dokumentiert, nicht erfunden): INIT-Variante `sw 0xF01` @0x80100C0C-1C
+  (kein Port-Zustand 0xF01), Leiche->Kriecher @0x801089B4-C4, Kriech-Umbau-Tail
+  FUN_80107A78 @0x80107EA8-B0 (Port ruft den Handler nicht, enemy_ai_re2_zombie.c "OPEN
+  (unveraendert): +0x21A & 0x10 -> Kriecher-Umbau").
+  **Skeptiker (2)**: EXEC[8] (Fresser) setzt NICHT auf 1 — Exit `sw 0x101` @0x80103D94 ohne
+  Maskenwechsel; der Pin prueft nach dem Verlassen der Fresser-Pose `Maske == 3`.
+  **Skeptiker (3) geklaert**: der EXEC[9]-Sturzzweig committet `sw v0,4(s1)` @0x80104028
+  (Delay-Slot des `jal 0x80015fe8` @0x80104024, v0 = 1281 = 0x501) VOR dem Maskenwechsel
+  @0x80104068-AC und `sb 1,6` @0x80104084 — er endet in EXEC[5] P1, der Rueckbau ist P7/P8.
+  EXEC[9]s eigener `sw 0x101` @0x80104148 (P2 @0x80104144) ist nur aus dem Nicht-Sturz-Zweig
+  @0x8010411C-40 erreichbar (`beq s0,zero,0x8010411c` @0x8010401C), der die Maske nicht anfasst.
+* **Applier `re15_re2_gun_probe`** (re15_damage.c, Block am Funktionskopf): Gruppe aus
+  DAT_800A6F8C, Geometrie-Records fuer die Hitscan-Ids 2/3/4/5/6/7/8/13/15/18/19 aus den
+  Zeigern @0x800A68E8 + item*24 + grp*8 (**alle selbst gedumpt**, `re15_port/tools/
+  re2_gun_tables_dump.py`; Pistole 2/3/4/13/19 -> @0x800A6618/6634/6650, 15 -> @0x800A6848/
+  6864/6880 (inhaltsgleich), Magnum 5 -> @0x800A6670/668C/66A8, 6 -> @0x800A66C8/66E4/6700,
+  Schrot 7 -> @0x800A6724/6740/675C, 8 -> @0x800A6788/67A4/67C0, Sparkshot 18 -> @0x800A68A4/
+  68C0/68DC — dessen LEVEL-Record hat Flags 08/04/10 ueber EINER Box (200, 7500, 500)),
+  Fenster FUN_80041B20, Zeile 6/3/0, DAT_800A6DB4, Radien (**Skeptiker (1)**: rec+8 +=
+  +0x1EE>>2 nur Nah-Box, rec+10/+0x12/+0x1A += +0x9A>>2), XZ-Box FUN_80041CE4 im /4-Raum,
+  Sub-Box-Reset (**Skeptiker (5)**). Der Applier ersetzt fuer RE2-owned Zombies Band, dy-Fenster
+  UND den RE1.5-Keil `re15_gun_wedge_inside`; `re2_rising` ist gestrichen. Nicht ueber den
+  Applier: das Messer (Id 1, Nahkampf-Kegel des Ports; seine Records @0x800A657C/63A8/64E0
+  tragen b1 = 500/800 als seitlichen Versatz zur Klingenhand — Seite im Port nicht belegbar,
+  s. §6.4), die Bruecken-Ids 9/10/11/16/17 (NULL-Record @0x800A6350) und der Liege-Spawn 0x88
+  (EXEC[7], s. 6.3).
+  **Skeptiker (6) Achse/Skala**: (a) Skala — +0x9A = 500 wird als 500>>2 = 125 auf halfw4
+  addiert = 4*125 = 500 Welt-Einheiten, also exakt der Radius (nur die /4-Skala liefert das);
+  Luecken-Freiheit 100+4*1000 = 4100 = Start Sub-Box 2. (b) Achse — der byte-true RE1.5-Keil
+  im selben Port (re15_gun_wedge_inside, gegen Savestate 4 bewiesen) rechnet mit derselben
+  PsyQ-RotMatrixY-Konvention: V5 = lokal (650,0) -> Welt (c,-s), lokal X = Blickrichtung; die
+  Messer-Records versetzen die Box ueber t[2] = -4*b3 - b1 seitlich (lokal -Z) — nur mit X =
+  vorwaerts sind die Starts 100/4100/8100 ein Schuss-Streifen. Der Pin bestaetigt: STEHEND
+  trifft bis 4599 und verfehlt ab 4600 (TIEF), Schrot-HOCH 3599/3600.
+  Rundung: FUN_80041CE4 rundet Ecke `(R*v + T) >> 2` und Gegner `+0x38 >> 2` beide ab — die
+  ferne Kante liegt auf einem 4er-Raster, das von den absoluten Positionen abhaengt (Gegner-x
+  = 4k+3: 4599 faellt wie 4600 nach aussen). Der Port bildet das ab; der Pin stellt den Zombie
+  fuer die Grenzzellen auf ein Vielfaches von 4.
+* **Schaden nach Klammer** `(rec.w0 >> (Klammer*10)) & 0x3ff` — Id 3 @0x800A4154 w0 =
+  0x00E03C10 = 16/15/14, Id 7 @0x800A41A4 w0 = 0x0280F0C8 = 200/60/40; Typ 0x15/0x16/0x17 aus
+  @0x800A42A8 (Id 3: 11/10/9, Id 7: 60/40/30). Klammer 0 ist byte-identisch mit der bisherigen
+  Zeile s_re2_wpn_dmg_zombie (Pin: 16 / 200).
+* **Stempel** `+0x1D2 = Teil + 3*Klammer` (@0x800413CC-D4) aus dem Applier-Ergebnis; der
+  Trefferbox-Pfad (row_src 1) behaelt die Elevations-Naeherung, jetzt mit Maske (Beine-only ->
+  Zone 0). Die Poise-Reserve (re2z_stamp_hit_row) liest die Klammer bereits aus +0x1D2/3.
+  **Skeptiker (7)** — Tabellen-Dump @0x8010C940 (Stride 36, eigener Dump VOR dem Umschalten):
+  ```
+  Zeile 3 @0x8010C9AC: 80105438 80105438 00000000 | 80105438 80105438 00000000 | 80105438 80105438 00000000
+  Zeile 7 @0x8010CA3C: 80107438 801066FC 00000000 | 80107438 80105BC0 00000000 | 80107438 80105438 00000000
+  ```
+  = Port-Zeilen 3 {1,1,0,1,1,0,1,1,0} und 7 {5,3,0,5,2,0,5,1,0}; beide Zeilen lagen bereits
+  byte-identisch in `re2z_hit_tbl` (enemy_ai_re2_zombie.c), der Dump bestaetigt sie. Folge:
+  Schrot-Rumpftreffer in Sub-Box 2 (ab 4200) dispatcht 0x80105BC0 (Taumel) statt 0x801066FC
+  (Ragdoll), in Sub-Box 3 (ab 8200) 0x80105438; Beintreffer bleiben in allen Klammern
+  0x80107438. **Das ist jetzt GEMESSEN, nicht nur aus der Tabelle gefolgert** — Pin-Abschnitt
+  [E] (s. 6.2) feuert dreimal W8 EBEN auf denselben stehenden Zombie und liest den tatsaechlich
+  dispatchten Handler EIN Bild nach dem Schuss (der Dispatch @0x801053E0-410 liegt im KI-Tick,
+  nicht im Resolver; die Spalte `hnd` der Zeilenausgabe traegt darum den Stand des VORIGEN
+  Ticks und taugt nicht als Beleg).
+
+### 6.2 Messwerte vorher/nachher (`probe_r16_trefferhoehe pin`, Log build_p2/probe_r16_pin.log)
+
+| Zelle | vorher (Dossier §1) | nachher | RE2-SOLL |
+|---|---|---|---|
+| KRIECHER W3/W8 EBEN, alle d | HIT (16 / 200 bzw. Crit), Zone 0 | **MISS** | MISS |
+| KRIECHER W3 TIEF 4599 / 4600 | HIT / HIT | HIT Zone 0 / **MISS** | HIT / MISS |
+| KRIECHER W8 HOCH 1500 / 3599 / 3600 | HIT Crit / MISS / MISS | HIT Zone 0 / HIT Zone 0 / MISS | dito |
+| LIEGEND-P3 W3 EBEN | MISS | MISS | MISS |
+| LIEGEND-P3 W8 HOCH 1500 | MISS | HIT Zone 0 | HIT Zone 0 |
+| AUFSTEHEN-P6 W3/W8 EBEN, alle d | HIT | **MISS** | MISS |
+| AUFSTEHEN-P6 W3 TIEF 3600 | MISS (RE1.5-Ring) | HIT Zone 0 | HIT |
+| STEHEND W3 TIEF 4599 / 4600 / 5500 | HIT / HIT / HIT | HIT / **MISS** / MISS | HIT / MISS / MISS |
+| STEHEND W8 HOCH 3599 / 3600 | MISS / MISS | **HIT** Zone 1 / MISS | HIT / MISS |
+| STEHEND W3 EBEN 4599 / 5500 / 9000 | 16 / 16 / 16, +0x1D2 = 1 | 15 / 15 / 14, +0x1D2 = 4 / 4 / 7 | Klammer 1 / 1 / 2 |
+| STEHEND W8 EBEN 3600 / 5500 / 9000 | 200 / 200 / 200, Ragdoll | 200 Ragdoll / **60 Taumel** / 40 | 200 / 60 / 40 |
+| P7 Rueckbau | – (Maske gab es nicht) | Clip 8 (80 Bilder), Wechsel bei Zaehler 55 (davor 54); EBEN aus 1500 davor MISS, danach HIT | +0x14D == 55 |
+
+Abschnitt [E] (Klammer-Dispatch, Skeptiker-Punkt 7) — derselbe stehende Zombie, W8 EBEN,
+Handler EIN Bild nach dem Schuss:
+
+```
+  [E] W8 EBEN d=3600 | HIT  dhp=200 zone=1 klammer=0 zeile=7 -> Handler 3 (0x801066FC)
+  [E] W8 EBEN d=5500 | HIT  dhp= 60 zone=1 klammer=1 zeile=7 -> Handler 2 (0x80105BC0)
+  [E] W8 EBEN d=9000 | HIT  dhp= 40 zone=1 klammer=2 zeile=7 -> Handler 1 (0x80105438)
+```
+
+
+192 Zellen, 0 Abweichungen; Divergenzen vorher: 40 (§1) — jetzt 0 in den gepinnten Lagen. Die
+12 Zellen des Liege-Spawns 0x88 (TIEF <= 4600 trifft) sind unveraendert gegenueber vorher (nur
+Messung, s. 6.3).
+**Skeptiker (4)**: der Port-Advancer laeuft im Game-Step VOR `re15_enemy_ai_run_all`
+(game_step_common.c:1936 vs :1956); der P7-Tick sieht deshalb den schon advancten Zaehler —
+gemessen faellt der Wechsel auf den Tick mit anim_frame 55 (P7-Tick 56 ab Bild 0 in P6), das
+Bild davor ist 54; die Zusicherung gilt dem Bild-Wert (das ist die Instruktion `addiu v0,zero,55
+/ bne v1,v0` @0x801036D4-D8), nicht der Tick-Nummer.
+
+### 6.3 Pins
+
+* NEU `unit_r16_trefferhoehe_pin` (probes/r16_trefferhoehe.cmake): 192 Zellen + 13 Zusicherungen
+  (INIT-Maske, Fresser-Exit, Kriecher/P3/P6-Maske und +0x9A, P7 Bild 55, P8) + 3 Zusicherungen
+  im Abschnitt [E] (Klammer-Dispatch je Sub-Box gegen Zeile 7 @0x8010CA3C).
+* `unit_re2z_bandlock_pin` NEU VERANKERT (Fixture-Verschiebung): LEVEL-Treffer auf den
+  Kriech-Root = 0 (Maske NUR BEINE, EBEN-Zeile `02 00 00`), DOWN > 0 (der Kriecher ist NICHT
+  unverwundbar = der Nutzer-Befund 2026-08-27 bleibt erfuellt, jetzt auf dem RE2-Weg).
+  Zweite Verschiebung im selben Pin: das Orakel spielte den Sweep bis zum Fund-Bild nach; das
+  war schon VOR dem Fix nicht reproduzierbar (Lauf 19.09. auf dem Hauptbaum: Fall 3 als
+  st=1/s1=1 gefunden, im Nachspiel st=2/s1=3; Fall 5 st=1/s1=5) und lief nach dem Fix in
+  0 pruefbare Faelle (Sweep-Funde landeten im Nachspiel bei st=0). Der Fall traegt jetzt einen
+  Schnappschuss von Aktor + Spieler aus dem Fund-Bild, das Orakel misst genau diesen Zustand:
+  2 Faelle (Seeds 24/26), LEVEL 0 / DOWN 30 / ohne Liege-Bit 0 — die dritte Spalte zeigt, dass
+  jetzt die Maske entscheidet, nicht +0x21A&2. Der Sweep selbst findet weniger Funde
+  (223 statt 737 Bilder mit Liege-Bit), weil EBEN-Schuesse den Kriecher nicht mehr treffen und
+  er den Spieler erreicht.
+* `re2z_parts == 0` (Aktor ohne RE2-INIT, z.B. umgetypte Test-Slots in test_re2_baby_spider_dmg /
+  test_re2_hp_model) zaehlt im Applier als INIT-Wert 3 / Radius 500 — benanntes Port-Mapping:
+  in RE2 laeuft der INIT (@0x80100984-998) im Spawn-Bild, das Fenster existiert dort nicht.
+  Der Klammer-Schaden folgt dem Schadensmodell-Schalter (nur wenn re15_enemy_dmg_row die
+  RE2-Zeile liefert; RE2 AUS = RE1.5-Zeile, Wache test_re2_hp_model Abschnitt 7).
+* Unveraendert gruen: `unit_re2_weapon_rows`, `unit_re2_hp_model`, `unit_re2_hit_repeat`,
+  `unit_re2z_pushoff_crawl`, `unit_re2_crawler`, `unit_schrot_trennung` (EBEN aus 3600 = Nah-Box
+  [200, 4700) -> Klammer 0 -> Ragdoll), `probe_spinne_elevation`.
+* ctest (`re15_port/build_p2`, Worktree-Basis aaf06c9b): **306/306 gruen** — zweimal gelaufen,
+  vor dem Abschnitt [E] (206,7 s) und mit ihm (183,7 s), beide Male 0 Fehlschlaege.
+
+### 6.4 Offen
+
+* Liege-Spawn 0x88 (EXEC[7]): in RE2 kein Ziel (HP = -1 @0x80100A3C-40, +0x1D3 |= 0x80
+  @0x80103804-14), Maske bleibt 3. Der Port laesst ihn per spawn_pose-Ausnahme treffen; mit
+  Maske 3 traefe der Applier ihn dann mit EBEN auf jeder Distanz (gemessen: 18 Zellen). Deshalb
+  bleibt EXEC[7] auf der bisherigen Liege-Regel (grid&0x80: TIEF < 5000) — Entscheidung beim
+  Nachbar-Dossier liegende-zombies.
+* Messer (Id 1): laeuft weiter ueber Nahkampf-Kegel + dy-Fenster ohne Maske; in RE2 verwirft
+  die EBEN-Zeile den Kriecher auch fuer das Messer (LEVEL[-1900,1000] -> row 3 -> `02 00 00`).
+  Die seitliche Lage der Messer-Box (b1 = 500/800, lokal -Z) ist ohne RE2-Emulator nicht
+  belegbar; UP-Record Flag 0x80 hat in FUN_80041B20 keinen Fall (lo/hi undefiniert).
+* Kriech-Umbau-Tail FUN_80107A78 (@0x80107E70-EC0, Rueckbau @0x80107EA8) und Leiche->Kriecher
+  @0x801089B4 haben keinen Port-Zwilling; INIT-Variante `sw 0xF01` @0x80100C0C ebenso.
+* RE1.5-Crit-Regel (Schrot < 3000 -> hp = -1 fuer Typ < 0x20) wirkt weiter auch auf RE2-owned
+  Zombies (Port-Bestand, nicht Teil dieses Themas).
+* Der 16-Bit-Vorzeichentest von FUN_80041CE4 (MulMatrix0 >> 12 in shorts) ist im Port ein
+  exakter Vergleich; Ueberlauf tritt erst jenseits ~32k Einheiten auf.
+
+### 6.5 Nachpruefung (Fortsetzung nach API-Abbruch, selbst disassembliert)
+
+Alle Skeptiker-Korrekturen wurden vom Fortsetzungs-Agenten noch einmal unabhaengig gegen
+`info/re2leon/COMMON/BIN/EMOVL10_S0.BIN` und `RE2_Quellcode_V2/FUN_800410cc.c` geprueft:
+
+* **(1) Radien** — `dis 0x80100960`: `addiu v1,zero,500` @0x8010096C, `sh v1,154(s2)` (+0x9A)
+  @0x80100970, `sh v1,156` @0x80100974, `sh v1,144/146` @0x80100978-7C, `sh v1,494(s2)` (+0x1EE)
+  @0x80100980, `lui v1,0xc00 / or / sw v0,0(s2)` @0x80100984-998. Kriecher-INIT
+  `addiu v0,zero,200 / sh v0,154(s2)` @0x80100B00-04, Maske `lui v0,0x400` @0x80100B38;
+  Ragdoll `addiu v0,zero,200 / sh v0,154(a0)` @0x80106B14-18, Maske `lui v0,0x400` @0x80106B38.
+  Im Applier: `*(short*)(iVar10+8) += *(short*)(puVar9+0x1ee) >> 2` (NUR die Nah-Box-Tiefe) und
+  `+10 / +0x12 / +0x1A += (short)(+0x9A >> 2)` (alle drei Breiten) — beides je einmal vor und
+  einmal nach der Schleife, also ein Leihwert, kein dauerhafter Schreibzugriff.
+* **(2) Fresser** — `dis 0x80103B74 182` gefiltert auf `lui …,0x(c00|400|f3ff)` und `sw …,0(rX)`:
+  **ein einziger Treffer**, `sw v0,4(s1)` @0x80103D94 mit `addiu v0,zero,257` @0x80103D90.
+  EXEC[8] aendert die Maske also nicht. Phasentabelle @0x801000B4 = {0x80103BE8, 0x80103C18,
+  0x80103CB0, 0x80103CD8, 0x80103D60, 0x80103D90} — P5 ist der Exit.
+* **(3) EXEC[9]** — `dis 0x80103E48`: Phasenverteiler `beq v1,v0(1),0x80103FB8` @0x80103EB8 und
+  `beq v1,v0(2),0x80104144 / addiu v1,zero,257` @0x80103EE0-E4. Der Sturzzweig
+  `beq s0,zero,0x8010411C` @0x8010401C nimmt den Fall-Pfad nur bei s0 != 0; dort steht
+  `addiu v0,zero,1281` @0x80104020 und `sw v0,4(s1)` @0x80104028 im Delay-Slot von
+  `jal 0x80015FE8` — der Zustandswechsel auf 0x501 (EXEC[5] P1) passiert VOR dem Maskenwechsel
+  `lui a2,0xf3ff / … / lui v0,0x400 / sw v1,0(s1)` @0x80104068-AC. Der Nicht-Sturz-Pfad
+  @0x8010411C-40 faehrt ueber `j 0x80104154` am Handler-Ende vorbei und fasst die Maske nie an.
+  Der Rueckbau liegt damit wie beschrieben in EXEC[5] P7/P8 — **keine offene Luecke**.
+* **(4) P7-Bildwert** — `lbu v1,333(s2) / addiu v0,zero,55 / bne v1,v0,0x80103754 / lui v1,0xc00`
+  @0x801036D0-DC; P8 `addiu v0,zero,500 / sh v0,154(s2)` @0x801036FC-700 und `lui v1,0xc00`
+  @0x80103730. Der Port liest +0x14D ueber `re2z_frame_slot`, dieselbe Abbildung, die
+  enemy_ai_re2_zombie.c an 12 weiteren byte-belegten Stellen benutzt.
+* **(5) Sub-Box-Reset** — im Decompilat steht `uVar7 = 0;` nur in den Bloecken fuer Box 2 und
+  Box 3, jeweils INNERHALB von `if (iVar4 != 0)` (also erst nach bestandenem XZ-Test). Der Port
+  macht es an derselben Stelle (`if (b > 0) res = 0;` nach `re15_re2_box_inside`).
+* **(7) Zeilen 3 und 7** — eigener `table`-Dump @0x8010C9AC / @0x8010CA3C, byte-identisch zu
+  §6.1; zusaetzlich jetzt am laufenden Port gemessen (Abschnitt [E]).
+
+Aufraeumung in diesem Schritt: im Applier folgte auf die Port-Mapping-Zeile
+`if (mask == 0u) { mask = 3u; … }` noch das Original-Gate `if (mask == 0u) return 0;` — nach der
+Zuweisung unerreichbar. Es steht jetzt als Zitat im Kommentar statt als toter Zweig.

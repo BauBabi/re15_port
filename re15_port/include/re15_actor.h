@@ -269,6 +269,34 @@ typedef struct {
                                  * FUN_80041CE4 und die Volumen-Tabelle 0x800A68E8 nicht — 1/2
                                  * sind daher nicht erzeugbar. Volle Kette in re15_damage.c.
                                  * Konsumenten: Zombie-Blut %3==0 (=Zone 0), Hunde-Gore /3 (=Bracket)  */
+    /* ---- Runde 16 (trefferhoehe.md): die TEILE-MASKE des RE2-Schuss-Appliers ---------------
+     * word0 Bits 26..28 (`uVar5 = *puVar9 >> 0x1a & 7` FUN_800410CC): Bit0 Beine 0x04000000,
+     * Bit1 Rumpf 0x08000000, Bit2 Kopf 0x10000000. Der Applier prueft die Prioritaetszeile
+     * DAT_800A6DB4 gegen diese Maske — OHNE passendes Bit KEIN Treffer (EBEN-Zeile `02 00 00`
+     * & Beine = 0: Kriecher/Liegende sind mit EBEN unsichtbar). Setzer (EMOVL10_S0.BIN, alle
+     * selbst disassembliert, Scan re15_port/tools/re2_zombie_mask_scan.py):
+     *   = 3 (|= 0x0C000000)  INIT @0x80100984-998, EXEC[5] P7 bei +0x14D == 55 @0x801036D0-F0,
+     *                        EXEC[5] P8 @0x80103730-38, EXEC[7] P4 @0x80103908-2C,
+     *                        Kriech-Umbau-Tail @0x80107EA8-B0 (FUN_80107A78, im Port OHNE Zwilling),
+     *                        Voll-Re-INIT @0x801049F0 (Bindeflags 0x0C000001)
+     *   = 1 ((&0xF3FFFFFF)|0x04000000)  EXEC[5] P0 @0x801032E8-FC, EXEC[9] Sturzzweig
+     *                        @0x80104098-AC, EXEC[11] P0 @0x80104444-54, Ragdoll P2 @0x80106B38-50,
+     *                        Knockdown P2 @0x80107828-38, Tod->Leiche @0x80102C10-20, Todeszweig
+     *                        @0x80102D80-98, INIT-Kriecher @0x80100B38-44, INIT-0xF01 @0x80100C0C-1C,
+     *                        Leiche->Kriecher @0x801089B4-C4 (im Port ohne Zwilling)
+     *   |= 1 jedes Bild im Root, wenn +0x10E&1 || +0x21A&2 (@0x8010039C-A8).
+     * Der Zombie traegt NIE das Kopf-Bit (kein 0x10000000-Setzer im Overlay). */
+    uint8_t  re2z_parts;
+    /* +0x9A Zielradius (u16) des RE2-Applier-Boxtests: FUN_800410CC addiert `+0x9A >> 2` auf die
+     * halben Breiten aller drei Sub-Boxen (rec+10/+0x12/+0x1A) VOR dem Test FUN_80041CE4.
+     * Setzer (Scan s.o., alle sh ...,154(rX) im Overlay): INIT 500 @0x8010096C-70, Kriecher-INIT
+     * 200 @0x80100B00-04, INIT-0xF01 0 @0x80100BF0, EXEC[5] P1 -10/Bild solange >= 21
+     * @0x80103388-A0, EXEC[5] P2 0 @0x80103478, EXEC[5] P7 +10/Bild solange < 500 @0x80103628-3C,
+     * EXEC[5] P8 500 @0x801036FC-700, Ragdoll P2 200 @0x80106B14-18, Knockdown P2 200
+     * @0x801077F8-FC, Umbau-Tail 500 @0x80107E78-7C, Re-INIT 500 @0x801049FC-A00,
+     * Leiche->Kriecher 200 @0x80108984-88. (+0x1EE = 500 hat im Overlay GENAU EINEN Schreiber,
+     * INIT @0x80100980 — als Konstante in re15_damage.c gefuehrt, kein Feld noetig.) */
+    uint16_t re2z_rad9a;
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98);
                                  * im WALK derselbe Offset als PULS-TIMER (Seed (rand&0x1f)+30

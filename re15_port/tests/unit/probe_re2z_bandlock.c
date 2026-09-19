@@ -151,7 +151,14 @@ static int oracle_hits(int slot, int shots)
     return hits;
 }
 
-typedef struct { int seed, slot, frame; uint8_t grid; uint16_t f21a; uint8_t s1; } case_t;
+/* ⛔ NEU VERANKERT (Runde 16): der Fall traegt einen SCHNAPPSCHUSS des Aktors und des Spielers.
+ * Das Orakel spielte den Sweep bisher bis zum Fund-Bild nach — das war schon VOR dem
+ * Trefferhoehen-Fix nicht reproduzierbar (Lauf vom 19.09.: Fall 3 als st=1/s1=1 gefunden, im
+ * Nachspiel st=2/s1=3; Fall 5 als st=1/s1=1 gefunden, im Nachspiel st=1/s1=5), und nach dem
+ * Fix landeten beide Funde im Nachspiel bei st=0 (Slot neu belegt) = 0 Faelle geprueft. Das
+ * Orakel misst jetzt genau den Zustand, in dem der Sweep den Fund gemacht hat. */
+typedef struct { int seed, slot, frame; uint8_t grid; uint16_t f21a; uint8_t s1;
+                 re15_actor_t esnap, psnap; } case_t;
 static case_t s_cases[64]; static int s_ncase = 0;
 
 /* "pin"-Modus: feste Parameter + harte Zusicherungen, als ctest registriert
@@ -208,7 +215,10 @@ int main(int argc, char **argv)
                     if (s_ncase < 64) { s_cases[s_ncase].seed = seed; s_cases[s_ncase].slot = s;
                                         s_cases[s_ncase].frame = f; s_cases[s_ncase].grid = e->grid_id;
                                         s_cases[s_ncase].f21a = e->re2z_flags21a;
-                                        s_cases[s_ncase].s1 = e->sub_state_1; s_ncase++; }
+                                        s_cases[s_ncase].s1 = e->sub_state_1;
+                                        s_cases[s_ncase].esnap = *e;
+                                        s_cases[s_ncase].psnap = g_actors[RE15_ACTOR_SLOT_PLAYER];
+                                        s_ncase++; }
                 }
                 prev_stale[s] = 1;
             }
@@ -230,15 +240,11 @@ int main(int argc, char **argv)
     for (int i = 0; i < ncheck; i++) {
         case_t *c = &s_cases[i];
         re15_actor_t *pl = setup(c->seed);
-        int shot_period = 7 + (c->seed % 11), shot_first = 20 + (c->seed % 17);
-        for (int f = 0; f <= c->frame; f++) {
-            pl->hp = 100;
-            uint16_t cur = RE15_PAD_BIT_R1, edge = 0;
-            if (f >= shot_first && ((f - shot_first) % shot_period) == 0) {
-                cur |= RE15_PAD_BIT_SQUARE; edge = RE15_PAD_BIT_SQUARE;
-            }
-            frame(cur, edge);
-        }
+        /* Fund-Zustand wiederherstellen (s. case_t): frischer Raum, alle anderen Gegner aus,
+         * der gefundene Aktor und der Spieler byte-genau wie im Sweep-Bild c->frame. */
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != c->slot) g_actors[s].active = 0;
+        g_actors[c->slot] = c->esnap;
+        *pl = c->psnap;
         re15_actor_t *e = &g_actors[c->slot];
         int16_t hp_save = e->hp; uint8_t g_save = e->grid_id; uint16_t a_save = e->re2z_flags21a;
         uint8_t st = e->state, s1 = e->sub_state_1;
@@ -278,20 +284,29 @@ int main(int argc, char **argv)
                 continue;
             }
             pin_checked++;
-            /* Der Nutzer-Befund selbst: ein LEBENDER, aufrecht laufender RE2-Zombie im
-             * Kriech-Root darf mit normal gehaltener Waffe nicht unverwundbar sein. Vor dem
-             * Fix stand hier LEVEL = 0 (gemessen 2026-08-27, alle sechs Faelle), danach 30. */
-            if (h_stale <= 0) {
-                printf("  FAIL Fall %d: LEVEL-Treffer = %d — der Kriecher ist wieder "
-                       "unverwundbar (Band-Sperre zurueck). RE2s eigener Kandidatenfilter "
-                       "FUN_800470C0 @0x80047124-64 hat KEIN Hoehen-Band.\n", i, h_stale);
+            /* ⛔ NEU VERANKERT (Runde 16, trefferhoehe.md — Fixture-Verschiebung, Memory
+             * reai-v2-pin-fixture-verschiebung): Der Nutzer-Befund 2026-08-27 ("unverwundbar,
+             * bis sie mich einmal gebissen haben") war eine BAND-Sperre: der Kriech-Root fiel
+             * durch den RE1.5-Band-Schnitt @0x800120d0-ec komplett heraus (LEVEL 0 UND DOWN 0).
+             * RE2s Kandidatenfilter hat kein Band (FUN_800470C0 @0x80047124-64), aber sein
+             * Applier FUN_800410CC prueft die TEILE-MASKE word0>>26&7: der Kriecher traegt NUR
+             * BEINE (`(word0 & 0xF3FFFFFF) | 0x04000000` @0x80106B38-50 / @0x80107828-38,
+             * Root-Sicherung @0x8010039C-A8), und die EBEN-Zeile bei dy=0 ist `02 00 00`
+             * (DAT_800A6DB4+12) — Rumpf only. Ein EBEN-Schuss auf den Kriecher geht in RE2 also
+             * INS LEERE; treffbar ist er mit TIEF (Zeile `01 02 04`, Beine) — und genau das
+             * misst h_down. Der alte Pin (LEVEL > 0) hielt den Port auf einem Nicht-RE2-Stand
+             * fest; jetzt: LEVEL = 0 (byte-true), DOWN > 0 (der Kriecher ist NICHT unverwundbar). */
+            if (h_stale != 0) {
+                printf("  FAIL Fall %d: LEVEL-Treffer = %d — der Kriecher (Maske NUR BEINE) darf "
+                       "mit EBEN nicht getroffen werden (DAT_800A6DB4+12 = 02 00 00 & 1 = 0).\n",
+                       i, h_stale);
                 pin_fail = 1;
             }
-            /* Gegenrichtung: nach unten zielen muss weiter treffen — sonst waere das Band
-             * nicht praezisiert, sondern kaputt. */
+            /* Nach unten zielen muss treffen — sonst waere der Kriecher wieder unverwundbar
+             * (der eigentliche Nutzer-Befund). */
             if (h_down <= 0) {
-                printf("  FAIL Fall %d: DOWN-Aim-Treffer = %d — Regression im Band-Stempel\n",
-                       i, h_down);
+                printf("  FAIL Fall %d: DOWN-Aim-Treffer = %d — der Kriecher ist unverwundbar "
+                       "(TIEF-Zeile 01 02 04 muss die Beine treffen)\n", i, h_down);
                 pin_fail = 1;
             }
         }
@@ -320,7 +335,8 @@ int main(int argc, char **argv)
                pin_checked, upright_frames, stale_frames, via_21a);
         free(buf);
         if (pin_fail) { printf("RE2Z BANDLOCK PIN: FAIL\n"); return 1; }
-        printf("RE2Z BANDLOCK PIN: Kriech-Root ist mit LEVEL-Zielen treffbar\n");
+        printf("RE2Z BANDLOCK PIN: Kriech-Root ist mit TIEF-Zielen treffbar (EBEN = Rumpf-Zeile, "
+               "Maske NUR BEINE -> kein Treffer, RE2 FUN_800410CC)\n");
         return 0;
     }
     free(buf);
