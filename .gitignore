@@ -42,3 +42,7 @@ release/wbuild_rel/
 release/wxbuild/
 release/lbuild/
 *.stackdump
+
+# Python-Bytecode ueberall (2026-09-19: 32 versehentlich versionierte .pyc entfernt)
+__pycache__/
+*.pyc

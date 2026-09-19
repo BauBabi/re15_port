@@ -3558,6 +3558,18 @@ target_compile_definitions(test_g5_morph PRIVATE
 add_test(NAME unit_g5_morph COMMAND test_g5_morph)
 set_tests_properties(unit_g5_morph PROPERTIES TIMEOUT 60)
 
+add_executable(probe_5090_birkin_verify probe_5090_birkin_verify.c)
+target_link_libraries(probe_5090_birkin_verify PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_5090_birkin_verify PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_5090_birkin_verify PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_5090_birkin probe_5090_birkin.c)
+target_link_libraries(probe_5090_birkin PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_5090_birkin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_5090_birkin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 add_executable(probe_g5_boss probe_g5_boss.c)
 target_link_libraries(probe_g5_boss PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_g5_boss PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -3573,6 +3585,13 @@ target_compile_definitions(probe_gator_fress PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_gator_fress COMMAND probe_gator_fress)
 set_tests_properties(unit_gator_fress PROPERTIES TIMEOUT 120)
+
+# MESS-SONDE (Auftrag 2026-09-14): wo steht Leon waehrend des Fress-Finishers?
+add_executable(probe_gator_maul probe_gator_maul.c)
+target_link_libraries(probe_gator_maul PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_maul PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_maul PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # DAUERFEUER-KADENZ-PIN (Disasm 2026-09-12, analysis/waffen_fsm_2026-09-12/):
 # Hold 9/12/15, Schuesse (f&4)==0 auf dem 9-Frame-Loop (5 je Zyklus), Abklingen 8,
@@ -3877,3 +3896,158 @@ target_link_libraries(probe_v_einbauweg_93 PRIVATE re15_engine re15_test_support
 target_include_directories(probe_v_einbauweg_93 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_v_einbauweg_93 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): Nutzer-Befund 2026-09-14 "Zombiehunde laufen nicht aus, wenn sie
+#     tot sind" (ROOM1230). Bild-fuer-Bild-Protokoll der RE2-Todeskette (state/sub/clip/frame/
+#     speed_h/Weg) bis CORPSE. ---
+add_executable(probe_1230_hundetod probe_1230_hundetod.c)
+target_link_libraries(probe_1230_hundetod PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1230_hundetod PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1230_hundetod PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# DIAGNOSE (kein ctest, Runde 11 Auftrag 4): die abgetrennte Unterhaelfte - Clip-Laengen
+# der Baenke, Bone-Weg ueber Clip 22, und die Zustandsfolge, die der Port heute faehrt.
+add_executable(probe_re2z_unterhaelfte probe_re2z_unterhaelfte.c)
+target_link_libraries(probe_re2z_unterhaelfte PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_unterhaelfte PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_unterhaelfte PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Nutzer-Befund 2026-09-14: "Leon ist teilweise transparent bei den PRI
+#     Overlays", ROOM1050 Cut 6). Reine Diagnose ohne add_test: misst, welche der
+#     nachgezeichneten Kacheln den Spieler decken und welche nicht. ---
+add_executable(probe_1050_maskentiefe probe_1050_maskentiefe.c)
+target_link_libraries(probe_1050_maskentiefe PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1050_maskentiefe PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1050_maskentiefe PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# GEGENPRUEFUNG zur Maul-Sonde (Verifikationsauftrag 2026-09-14)
+add_executable(probe_gator_maul_gegen probe_gator_maul_gegen.c)
+target_link_libraries(probe_gator_maul_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_maul_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_maul_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# GEGENMESSUNG (Verifikation 2026-09-14): Renderer-Kette MIT +0x166-Scale + Pose-Hook
+add_executable(probe_maul_gegen probe_maul_gegen.c)
+target_link_libraries(probe_maul_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_maul_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_maul_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+add_executable(probe_gator_maul_lokal probe_gator_maul_lokal.c)
+target_link_libraries(probe_gator_maul_lokal PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_maul_lokal PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_maul_lokal PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# X-LUECKE (Auftrag 2026-09-14): Leon im Gator-MODELLRAUM gegen die posierten
+# Maul-Meshes, roh und mit render_scale_q12. Reine Messung, kein add_test.
+add_executable(probe_gator_maul_x probe_gator_maul_x.c)
+target_link_libraries(probe_gator_maul_x PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_maul_x PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_maul_x PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# GEGENPRUEFUNG (Verifikation 2026-09-14): ROOM1050 Cut-6 Maskensektion roh ausgeben
+add_executable(probe_1050_gegen probe_1050_gegen.c)
+target_link_libraries(probe_1050_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1050_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1050_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): RE2-Hund Todespose — welches Bild haelt der Port am Ende? ---
+add_executable(probe_re2_dog_deathpose probe_re2_dog_deathpose.c)
+target_link_libraries(probe_re2_dog_deathpose PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_dog_deathpose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_dog_deathpose PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# GEGENPRUEFUNG birkin-start (Verifikationsauftrag 2026-09-14): Langlauf-Variante von
+# probe_5090_birkin (Argumente: possetzt | pin | n=<Bilder>). Reine Diagnose, kein ctest.
+add_executable(probe_5090_lang probe_5090_lang.c)
+target_link_libraries(probe_5090_lang PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_5090_lang PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_5090_lang PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Auftrag B, 2026-09-14): Gator-Fress-Finisher P2/P3-Platzierung
+#     gegen die echte EM23-Bank. Kein add_test - reine Diagnose. ---
+add_executable(probe_gator_fress_anker probe_gator_fress_anker.c)
+target_link_libraries(probe_gator_fress_anker PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_fress_anker PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_fress_anker PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# --- NACHMESS-SONDE (Gegenpruefung Befund anker-y, 2026-09-14) ---
+# --- GEGENPRUEFUNG GB_SCALE_Q12 (Verifikationsauftrag 2026-09-14): misst die
+#     Bindpose-Ausdehnung des RE2-EM23 ohne/mit Skalierung. Kein add_test. ---
+add_executable(probe_verify_gator_scale probe_verify_gator_scale.c)
+target_link_libraries(probe_verify_gator_scale PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_gator_scale PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_gator_scale PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+add_executable(probe_gator_anker_nachmess probe_gator_anker_nachmess.c)
+target_link_libraries(probe_gator_anker_nachmess PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gator_anker_nachmess PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_gator_anker_nachmess PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# --- GEGENPRUEFUNG anker-y (Verifikationsauftrag 2026-09-14): misst die dritte
+#     Ankerkomponente y nach der ECHTEN RE2-Formel. Kein add_test. ---
+add_executable(probe_verify_ankery probe_verify_ankery.c)
+target_link_libraries(probe_verify_ankery PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_ankery PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_ankery PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# VERIFIKATION x-luecke (2026-09-14): unabhaengige Gegenprobe, Renderer-Kette im WELTRAUM.
+add_executable(probe_v_maul_gegen probe_v_maul_gegen.c)
+target_link_libraries(probe_v_maul_gegen PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_v_maul_gegen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_v_maul_gegen PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- GEGENPRUEFUNG anker-y Teil 2 (2026-09-14): der echte P3-Stand. Kein add_test. ---
+add_executable(probe_verify_p3stand probe_verify_p3stand.c)
+target_link_libraries(probe_verify_p3stand PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_p3stand PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_p3stand PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# --- GEGENPRUEFUNG "zweiter Taeter" (Verifikation 2026-09-14): faehrt die
+#     ORIGINAL-Tickfolge P2/P3 des EM23-Finishers nach (Advance-Wrap
+#     @0x80029B28-B4C) und stellt sie der Port-Tickfolge gegenueber.
+#     Kein add_test - reine Diagnose. ---
+add_executable(probe_p3_clip11_check probe_p3_clip11_check.c)
+target_link_libraries(probe_p3_clip11_check PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_p3_clip11_check PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_p3_clip11_check PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# --- GEGENPRUEFUNG anker-y Teil 3 (2026-09-14): Renderer-KF-Pfad. Kein add_test. ---
+add_executable(probe_verify_kfpfad probe_verify_kfpfad.c)
+target_link_libraries(probe_verify_kfpfad PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_verify_kfpfad PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_verify_kfpfad PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+
+# --- PARALLELE SONDEN (2026-09-19): jede Untersuchung registriert ihre Sonden in einer EIGENEN
+#     Datei probes/<thema>.cmake, damit parallel arbeitende Agenten nicht dieselbe CMakeLists
+#     editieren (Konfliktklasse "fremde add -A + halbfertige Staende"). GLOB -> neue Dateien
+#     werden beim naechsten Configure erfasst (wie engine/src/*.c). Reine Sonden brauchen
+#     kein add_test; gepinnte Tests registrieren sich dort ganz normal mit add_test. ---
+file(GLOB _re15_probe_cmakes "${CMAKE_CURRENT_SOURCE_DIR}/probes/*.cmake")
+foreach(_pc ${_re15_probe_cmakes})
+    include("${_pc}")
+endforeach()
