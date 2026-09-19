@@ -114,6 +114,176 @@ static const char *sub_name(int s)
                  case 6: return "ABTAUCHEN"; case 7: return "VERGRABEN"; default: return "?"; }
 }
 
+/* =====================================================================================
+ * Teil D (Phase 2, 2026-09-19): der RE2-ZELLENARM (enemy_ai_re2_zellenarm.c) auf dem
+ * RE2-Modell EM2D in ROOM1210 — dieselben Bahnen wie die Gegen-Sonde des Skeptikers
+ * (Flurmitte hin, Westwand hin+zurueck, Parken), Bank NACH re15_enemy_reset geladen.
+ * Ausgabe je Bild bei Zustandswechsel: Zustandswort, Clip, Ursprung (Drift zur Heimat),
+ * verborgen, Hand-Weltpunkt (Bone 3/10), Griff-Ereignisse, SE-Aufrufe, Teleport-Punkt und
+ * seine Begehbarkeit (Constrain vom Standpunkt vor dem Griff -> Versatz).
+ * ===================================================================================== */
+#include "re15_enemy_ai_re2_zellenarm.h"
+
+static uint8_t *s_re2_ems = NULL; static size_t s_re2_ems_n = 0;
+static int load_re2_bank_1A(void)
+{
+    if (!s_re2_ems) s_re2_ems = slurp(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", &s_re2_ems_n);
+    if (!s_re2_ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x1A);
+    if (!eb) eb = re15_enemy_alloc(0x1A);
+    if (!eb) return 0;
+    re15_tim_t tim = {0};
+    if (re2_ems_load_bank(s_re2_ems, s_re2_ems_n, 0x2D, eb, &tim) != 0) return 0;
+    eb->ok = 1; eb->buf = NULL;
+    return 1;
+}
+static int s_se_log[64]; static int s_se_n = 0;
+static void se_cap(int id, int flag2000) { if (s_se_n < 64) s_se_log[s_se_n++] = id | (flag2000 << 8); }
+static void bank_cap(int bank) { (void)bank; }
+
+static const char *re2_sub_name(int s)
+{
+    switch (s) { case 0: return "RUHE"; case 1: return "REACH"; case 3: return "ZUGRIFF";
+                 case 4: return "HALTEN"; case 5: return "RUECKZUG"; case 6: return "WARTEN";
+                 case 7: return "ENDE"; default: return "?"; }
+}
+
+typedef struct { int32_t zx; int32_t zz; int park; } d_etappe_t;
+
+static re15_actor_t *d_room_setup(int *n, int *slots)
+{
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_player_victim_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    g_current_room_id = 0x1210;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->y = 0;
+    re15_collision_set_band(0);
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
+    scd_register_room_events(&s_rdt);
+    scd_room_reenter(&s_rdt, 0, 0, 0);
+    int ok = load_re2_bank_1A();                    /* NACH dem Reset (Skeptiker-Sondenkritik) */
+    printf("  EM2D unter Typ 0x1A geladen=%d\n", ok);
+    re15_re2arm_audio_hook(se_cap, bank_cap);
+    pl->x = -19500; pl->z = 5000;
+    for (int f = 0; f < 8; f++) frame_step();
+    *n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x1A) slots[(*n)++] = s;
+    return pl;
+}
+
+static void d_lane(const char *name, const d_etappe_t *et, int net, int maxf)
+{
+    printf("\n--- Teil D %s ---\n", name);
+    int slots[RE15_ACTOR_MAX], n = 0;
+    re15_actor_t *pl = d_room_setup(&n, slots);
+    int32_t hx[RE15_ACTOR_MAX], hz[RE15_ACTOR_MAX];
+    for (int i = 0; i < n; i++) {
+        int16_t hy; re15_re2arm_home(slots[i], &hy, &hx[i], &hz[i]);
+        printf("  arm%2d Heimat=(%ld,%ld) y=%ld yaw=%d f10e=0x%02x hidden=%d hand-bone=%d\n", slots[i],
+               (long)hx[i], (long)hz[i], (long)g_actors[slots[i]].y, (int)hy,
+               (unsigned)g_actors[slots[i]].re2z_f10e, (int)g_actors[slots[i]].no_draw,
+               re15_re2arm_hand_bone(&g_actors[slots[i]]));
+    }
+    int32_t px = -19500, pz = -3500;
+    uint32_t last_word[RE15_ACTOR_MAX]; memset(last_word, 0xff, sizeof last_word);
+    int active_frames[RE15_ACTOR_MAX]; memset(active_frames, 0, sizeof active_frames);
+    int32_t maxdrift[RE15_ACTOR_MAX]; memset(maxdrift, 0, sizeof maxdrift);
+    uint16_t reached[RE15_ACTOR_MAX]; memset(reached, 0, sizeof reached);
+    int grabbed_prev = 0, grab_events = 0, grab_frames = 0, sub02_f = -1, e_i = 0;
+    int32_t pre_x = px, pre_z = pz;
+    s_se_n = 0;
+    for (int f = 0; f < maxf; f++) {
+        re15_collision_set_band(0);
+        if (!re15_player_is_grabbed()) {
+            const d_etappe_t *cur = &et[e_i];
+            int32_t nx = px, nz = pz;
+            if (!cur->park) {
+                nx = (px < cur->zx) ? px + 75 : (px > cur->zx) ? px - 75 : px;
+                if ((px < cur->zx && nx > cur->zx) || (px > cur->zx && nx < cur->zx)) nx = cur->zx;
+                nz = (pz < cur->zz) ? pz + 75 : (pz > cur->zz) ? pz - 75 : pz;
+                if ((pz < cur->zz && nz > cur->zz) || (pz > cur->zz && nz < cur->zz)) nz = cur->zz;
+            }
+            re15_collision_constrain(&s_rdt, px, pz, &nx, &nz);
+            if (!cur->park && nz == cur->zz && e_i + 1 < net) {
+                e_i++; printf("  f%3d Etappe %d erreicht pl=(%ld,%ld)\n", f, e_i, (long)nx, (long)nz);
+            }
+            px = nx; pz = nz; pl->x = px; pl->z = pz;
+            pre_x = px; pre_z = pz;
+        } else { px = pl->x; pz = pl->z; }
+        pl->hp = 100;
+        frame_step();
+        if (sub02_f < 0)
+            for (int i = 0; i < n; i++)
+                if ((g_actors[slots[i]].grid_id & 0x1f) == 1) {
+                    sub02_f = f; printf("  f%3d pl=(%ld,%ld) sub02: grid_id=1 (Weckruf)\n", f, (long)px, (long)pz); break; }
+        int g = re15_player_is_grabbed();
+        if (g && !grabbed_prev) {
+            grab_events++;
+            int hs = re15_re2arm_holder_slot();
+            int32_t cx = pl->x, cz = pl->z;
+            re15_collision_constrain(&s_rdt, pre_x, pre_z, &cx, &cz);
+            printf("  f%3d GRIFF beginnt: Arm %d, pl=(%ld,%ld) vorher (%ld,%ld) victim_state=%d "
+                   "Teleport-Constrain-Versatz=(%ld,%ld) cd=%u\n", f, hs,
+                   (long)pl->x, (long)pl->z, (long)pre_x, (long)pre_z, re15_player_victim_state(),
+                   (long)(cx - pl->x), (long)(cz - pl->z), (unsigned)g_re2_room_gflags);
+        }
+        if (!g && grabbed_prev)
+            printf("  f%3d GRIFF endet:   pl=(%ld,%ld) hp=%d rot=%d cd=%u\n", f, (long)pl->x, (long)pl->z,
+                   pl->hp, (int)pl->rot_y, (unsigned)g_re2_room_gflags);
+        if (g) grab_frames++;
+        grabbed_prev = g;
+        for (int i = 0; i < n; i++) {
+            re15_actor_t *e = &g_actors[slots[i]];
+            uint32_t word = ((uint32_t)e->state) | ((uint32_t)e->sub_state_1 << 8) | ((uint32_t)e->sub_state_2 << 16);
+            if (e->state == 1 && e->sub_state_1 != 0) active_frames[i]++;
+            if (e->state == 1 && e->sub_state_1 < 8) reached[i] |= (uint16_t)(1u << e->sub_state_1);
+            {   int32_t d = labs(e->x - hx[i]); int32_t dz = labs(e->z - hz[i]); if (dz > d) d = dz;
+                if (d > maxdrift[i]) maxdrift[i] = d; }
+            if (word != last_word[i]) {
+                int32_t h[3]; re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), h);
+                int32_t dx = pl->x - e->x, dz = pl->z - e->z;
+                printf("  f%3d arm%2d 0x%06X %-8s clip=%d fr=%d pos=(%ld,%ld) drift=%ld hidden=%d hp=%d "
+                       "Hand=(%ld,%ld,%ld) pl=(%ld,%ld) d=%ld\n",
+                       f, slots[i], (unsigned)word, e->state == 1 ? re2_sub_name(e->sub_state_1) :
+                       (e->state == 2 ? "HURT" : e->state == 3 ? "DEATH" : "?"),
+                       (int)e->motion, (int)e->anim_frame, (long)e->x, (long)e->z,
+                       (long)(e->x - hx[i]), (int)e->no_draw, (int)e->hp,
+                       (long)h[0], (long)h[1], (long)h[2], (long)pl->x, (long)pl->z,
+                       (long)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz)));
+                last_word[i] = word;
+            }
+        }
+    }
+    printf("  Zusammenfassung: Griff-Ereignisse=%d, Bilder im Griff=%d, Ende pl=(%ld,%ld), cd=%u\n",
+           grab_events, grab_frames, (long)pl->x, (long)pl->z, (unsigned)g_re2_room_gflags);
+    printf("  SE-Aufrufe (%d):", s_se_n);
+    for (int i = 0; i < s_se_n; i++) printf(" %d/%d", s_se_log[i] & 0xff, s_se_log[i] >> 8);
+    printf("\n  slot aktive-Bilder max-Drift erreichte-Subs Endzustand\n");
+    for (int i = 0; i < n; i++) {
+        re15_actor_t *e = &g_actors[slots[i]];
+        printf("  %2d   %4d   %5ld   ", slots[i], active_frames[i], (long)maxdrift[i]);
+        for (int s = 0; s < 8; s++) if (reached[i] & (1u << s)) printf("%d ", s);
+        printf("  -> 0x%02X%02X hidden=%d hp=%d\n", e->sub_state_1, e->state, (int)e->no_draw, (int)e->hp);
+    }
+}
+
+static void teil_d_re2(void)
+{
+    printf("\n=== Teil D: RE2-ZELLENARM (enemy_ai_re2_zellenarm.c) auf EM2D in ROOM1210 ===\n");
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    {   static const d_etappe_t et[] = { { -19500, -25500, 0 }, { -19500, -25500, 1 } };
+        d_lane("D1: Flurmitte x=-19500, z -3500 -> -25500, 75/Bild", et, 2, 520); }
+    {   static const d_etappe_t et[] = { { -19500, -18000, 0 }, { -19500, -3500, 0 }, { -19500, -3500, 1 } };
+        d_lane("D2: Flurmitte bis z=-18000, dann ZURUECK nach -3500 (Arme 1-4 hinter dem Spieler)", et, 3, 560); }
+    {   static const d_etappe_t et[] = { { -19500, -14000, 0 }, { -19500, -15747, 0 }, { -19500, -15747, 1 } };
+        d_lane("D3: Flurmitte bis -14000, dann auf z=-15747 (Arm 5) PARKEN, ohne Mash", et, 3, 420); }
+    {   static const d_etappe_t et[] = { { -23000, -14000, 0 }, { -23000, -15747, 0 }, { -23000, -15747, 1 } };
+        d_lane("D4: Westwand bis -14000, dann auf z=-15747 PARKEN (Spieler an der Wand)", et, 3, 420); }
+}
+
 int main(void)
 {
     char path[600];
@@ -124,8 +294,11 @@ int main(void)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
 
-    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
-    printf("=== probe_r16_arme_1210_re2 — Port-Ist der Gitterhaende, Flavor=%d ===\n", (int)re15_ai_flavor());
+    /* Teil A/B/C = das "VORHER" des Dossiers: der RE1.5-Writher-Zwitter. Seit Phase 2 besitzt
+     * unter dem RE2-Flavor der RE2-Zellenarm den Typ 0x1A (Teil D unten); die Vorher-Messung
+     * laeuft deshalb explizit im RE1.5-Flavor, wo die alte Maschine unveraendert steht. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    printf("=== probe_r16_arme_1210_re2 — Port-Ist der Gitterhaende (VORHER = RE1.5-Writher), Flavor=%d ===\n", (int)re15_ai_flavor());
 
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
@@ -358,6 +531,7 @@ int main(void)
             printf("    EM01A clip %d: max Bone-x %ld (Bild %d)\n", c, (long)mx, argf);
         }
     }
+    teil_d_re2();
     printf("\nOK\n");
     return 0;
 }

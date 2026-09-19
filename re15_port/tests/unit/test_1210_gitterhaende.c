@@ -43,6 +43,7 @@
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_skeleton.h" /* re15_sin_q12/cos_q12 */
 #include "re15_math.h"   /* re15_squareroot0 */
+#include "re15_ai_flavor.h"   /* re15_ai_flavor_set: Pin gilt dem RE1.5-Flavor (s. main) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -122,7 +123,11 @@ int main(void)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
 
-    printf("=== ROOM1210: die Gitterhaende reagieren einzeln ===\n");
+    /* NEU VERANKERT (Runde 16 / Phase 2, 2026-09-19): Pin der RE1.5-NACHRUESTUNG, die unter dem
+     * RE1.5-Flavor unveraendert weiterlaeuft. Der RE2-Flavor fuehrt seit Phase 2 den RE2-
+     * Zellenarm (Typ 0x2D) fuer 0x1A — Pin dafuer: tests/unit/test_p2_1210_arme_re2.c. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    printf("=== ROOM1210: die Gitterhaende reagieren einzeln (RE1.5-Flavor) ===\n");
 
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
