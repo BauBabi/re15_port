@@ -102,8 +102,21 @@ def standplatz_schiene(R, t, H, deck, tief, stand_vz, floor_by_band, voll=VOLL, 
             basis = (wx * R[6] + wz * R[8]) / 4096.0 + t[2]
             ref = basis + stand_y0[x0:x1] * R[7] / 4096.0
             colmask = box.any(0) & np.isfinite(sv)
-            vor_cols = colmask & (ref < sv - 1)
-            hin_cols = colmask & (ref > sv + 1)
+            # ⛔ TOLERANZ = EIN OT-BUCKET, nicht eine Einheit. Der Zeichner kennt die
+            # Entfernung nur in Buckets: Figur-OT = otz>>4 (@0x8002565c sra v1,v1,4) mit
+            # otz = (1023*vz)>>12 (ZSF3 = 341, @0x80066c70 addiu t0,zero,341 /
+            # @0x80066c74 ctc2 t0,cr29) -> ein Bucket ist 65536/1023 = 64,0625 vz breit.
+            # Liegen Standplatz und Standlinie im GLEICHEN Bucket, entscheidet nicht die
+            # Tiefe, sondern die Reihenfolge — und die Masken haengen als LETZTE Prims ein
+            # (@0x8001ce54 jal 0x80039590, AddPrim haengt vorne ein), die Figur liegt also
+            # obenauf. "VOR" und "HINTER" sind dort schlicht nicht definiert.
+            # Gemessen ROOM10A0 C2: der einzige beanstandete Standplatz (Band 3,
+            # 22250/22150) liegt 9..63 Einheiten von der Standlinie entfernt, also
+            # INNERHALB eines Buckets; die alte Toleranz von 1 machte daraus 3 "VOR"-
+            # Spalten, von denen zwei ueberhaupt keine Maske haben, und ein einziger
+            # Maskenpunkt in Spalte 77 ergab die Quote 1,00.
+            vor_cols = colmask & (ref < sv - geometrie.BUCKET)
+            hin_cols = colmask & (ref > sv + geometrie.BUCKET)
             if vor_cols.any():
                 aus["VORn"] += 1
                 q = verd[:, vor_cols].sum() / max(1, box[:, vor_cols].sum())
