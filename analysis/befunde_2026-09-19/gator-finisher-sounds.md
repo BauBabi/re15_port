@@ -382,3 +382,191 @@ der Pin startet drei `re15_pc.exe`-Laeufe, und parallel arbeitende Agenten beend
 - Tentakel (0x37) rufen kein bank_fn (kein eigener Hook); im Endkampf nur Bank 25 aktiv.
 - P0-Teleport: -915 als Seitenversatz ist Port-Entscheidung (Original absolut), Wirkung nur
   in P1 (13 Bilder).
+
+## 7. Nacharbeit (Phase 3, 2026-09-19, Branch worktree-wf_dcf50dba-3e5-2)
+
+Die drei offenen Punkte aus §6 "Offen" und §5. Messlogs und Bilder:
+`analysis/befunde_2026-09-19/phase3_gator-maul/`, Bau `re15_port/build_p3`.
+
+### Commits
+
+- `c0f98034 fix(gator)`: Leon im Massstab des Mauls — der Entity-Render-Scale +0x166 gilt
+  jetzt auch fuer den SPIELER-Zeichner (platform/pc/main.c), gesetzt einzig im
+  Fress-Finisher (GBP_FRESSEN P0), geloescht am Phasenende und beim Continue-Respawn.
+  Der POSy-Ausgleich in `gb_opfer_skalieren` entfaellt dadurch, weil der Zeichner den
+  Wurzel-POSE-Kanal nun selbst mit s ablegt. Pin `unit_gator_fress` prueft zusaetzlich den
+  KOERPER (>= 95 % der Vertices im Maulraum) und dass Leon den Gator-Scale traegt.
+- `0f490937 mess(gator)`: Stufe B2 vermessen und BEGRUENDET NICHT eingebaut (s. u.).
+  Der Schalter `RE15_GB_LUNGE_B2` bleibt Default AUS und ist als reiner Mess-Schalter
+  gekennzeichnet; der ausgelieferte Kampf ist unveraendert Clip 4.
+- `4b16d12d mess(spinne)`: Szenario A erreicht den Angriff — die Sonde des Vorgaengers
+  stand nur zu nah (s. u.). Reine Sonde, kein add_test.
+
+### Punkt 1 — "Rumpf und Beine ragen aus dem verkleinerten Maul" (ERLEDIGT)
+
+Die WURZEL sass seit Phase 2 richtig (Original-Relation +-5), aber der Gator wird mit
+`GB_SCALE_Q12` = 2731 (2/3) gezeichnet und Leon 1x — im gator-lokalen Rahmen also 1,5x zu
+gross. Mechanismus (byte-true, kein geratener Wert): der Entity-Render-Scale +0x166 mit
+Gate-Flag 0x800, ScaleMatrix VOR der Bone-Schleife — FUN_8001e8c8 `andi v0,v0,0x800`
+@0x8001e904, `lh v0,358(v1)` @0x8001e91c/28/38, `jal 0x80065ff0` @0x8001e940, Translation
+erst danach `jal 0x80053fc0` @0x8001e94c. Der NPC-Zeichner ehrt das Feld laengst; der
+Spieler-Zeichner jetzt ebenso. Geometrisch ist das die exakte Folge des bereits
+byte-treuen Sitzes G + s*RotY*(off_v - off_g): skaliert man Leons Rig zusaetzlich um s,
+wird aus jedem Koerperpunkt p die authored 1x-Relation, uniform um G verkleinert.
+
+Gemessen (`probe_p3_gator_maul`, gator-lokaler Rahmen, P3-Kau-Loop Clip 11 f0 / Opfer f119,
+Anteil der 776 Leon-Vertices im Maulraum):
+
+| Zustand | Laenge / Hoehe | Vertices im Maulraum |
+|---|---|---|
+| [O] Original (Gator und Leon 1x) | 2609 / 1920 | 776/776 = 100,0 % |
+| [T] vorher (Gator 2731, Leon 1x) | 3915 / 2880 | 620/776 = **79,9 %** |
+| [N] nachher (beide 2731) | 2609 / 1921 | 776/776 = **100,0 %** |
+
+P2 sf=0: [O] 76,0 % / [T] 73,5 % / [N] 76,0 %. P2 sf=60: [O] 23,1 % / [T] 18,0 % /
+[N] 23,1 % (sf=60 ist die Schleuderspitze — Leon fliegt auch im Original ueber dem Maul).
+Echter Boss-Tick ROOM2090 (Teil 3): 776/776 = 100,0 %, Wurzel weiter (5261,-2404,194)
+gegen Original (5264,-2403,198).
+
+**Sichtpruefung am laufenden Spiel** (`RE15_DEBUG_JUMP=2090@30`, `RE15_GB_TEST=1`,
+`RE15_AI_FLAVOR=re2`, `RE15_FRAMEDUMP`, `RE15_SOFTWARE_RENDER=1`; vorher-Lauf mit derselben
+Bildnummer aus dem Stand vor dem Fix). Bilder unter
+`analysis/befunde_2026-09-19/phase3_gator-maul/bilder/`, selbst angesehen:
+
+- `F452_vorher_leon_ragt_heraus.png` — blaue Jeans und Jacke stehen quer ueber der Schnauze,
+  Rumpf und Beine liegen ausserhalb des Kopfes. Das ist der Nutzer-Befund.
+- `F452_nachher_leon_ganz_im_maul.png` — derselbe Frame nach dem Fix: der Kopf ist frei,
+  nichts ragt heraus.
+- `F452_nachher_maul_zoom_x6.png` — sechsfacher Ausschnitt desselben Bildes: Leon liegt
+  zwischen Ober- und Unterkiefer HINTER den Zaehnen, Jeans und Jacke im Maulraum sichtbar.
+  Das ist der eigentliche Beleg (das Vollbild allein wuerde auch zu "Leon fehlt" passen).
+- `vergleich_F452_vorher_nachher.png` — beide Staende nebeneinander.
+
+Die Design-Kennzeichnung bleibt bestehen: `GB_SCALE_Q12` = 2731 ist die Nutzer-Entscheidung
+vom 2026-09-10 OHNE @0x (RE2 zeichnet Gator und Opfer 1x, dort stellt sich die Frage nicht).
+Byte-true ist nur der MECHANISMUS, mit dem der Port diese Entscheidung umsetzt. Kein
+Ein-/Ausblenden ueber eine Rampe: beide Raender sind ohnehin harte Schnitte (P0 = Teleport,
+Ende = Tod/Phasenwechsel) — eine Rampe haette eine erfundene Bilderzahl gebraucht.
+
+### Punkt 2 — Stufe B2 (Lunge Clip 2 -> 3): VERMESSEN, NICHT EINGEBAUT
+
+Der Auftrag: erst die heutigen Trefferfenster messen, dann belegen, dass der Kampf gleich
+schwer bleibt — und wenn die Messung zeigt, dass B2 den Kampf kaputt macht, nicht einbauen
+und die Messung berichten. Genau das ist eingetreten.
+
+`probe_p3_gator_lunge` faehrt BEIDE Varianten am echten Boss-Tick auf dem Raster von
+`probe_gator_sweep` (3 Leon-Verhalten x 4 Gator-Startpunkte x 6 Leon-Standorte = 72 Faelle
+a 2400 Bilder, `RE15_GB_TEST=1` wie probe_gator_sweep.c:81, Abbruch beim ERSTEN Treffer):
+
+| Messung | HEUTE (Clip 4) | B2 (Clip 2->3, Doppelschritt) |
+|---|---|---|
+| Treffer | 72/72 = 100,0 % | 72/72 = 100,0 % |
+| Bilder bis zum 1. Treffer | 201 im Mittel | 311 im Mittel |
+| Anlaeufe / davon mit Treffer | 64 / 64 | 64 / 64 |
+| Anlauf -> Treffer (min/Mittel/max) | 7 / 8 / 23 Ticks | **133 / 133 / 133 Ticks** |
+| TOTZEIT im treffenden Anlauf | 0 im Mittel, max 7 | **119 im Mittel, max 133 Ticks** |
+
+TOTZEIT = Ticks, in denen das Maul schon am Ziel steht (Trefferkriterium
+`gb_maul_dist <= 1500`, :1543/:1562), das Bissfenster aber noch zu ist. B2 haelt den Gator
+im Mittel 119 Ticks — rund zwei Sekunden — mit offenem Maul auf Leon, bevor er zubeisst.
+Die Trefferquote bleibt bei 100 %, der Angriff wird aber zum Stillstand. Das ist kein
+gleich schwerer Kampf, sondern ein eingefrorener Boss.
+
+**Die Ursache, in dieser Sitzung selbst nachdisassembliert — und sie korrigiert §4 B2:**
+
+1. Die RE2-Lunge-Routine bewegt den Gator mit KEINER eigenen Zeile. Der einzige `jal` vor
+   der Phasen-Weiche ist FUN_801012fc (@0x80100d40), und das ist ein Routinen-Wechsel-Gate
+   (`sb v0,548(a0)` @0x8010137c), kein Vortrieb; die Phasen 0/1/2 rufen nur 0x8005bd6c (SE)
+   und 0x8001a330 (Clip). **RE2s Ansturm IST die Wurzelbewegung der Clips 2/3** — 300
+   authored Bilder, bei Doppelschritt 150 Ticks.
+2. Der Port faehrt statt dessen eine ZIELSUCHENDE Hatz: jeden Tick
+   `re15_enemy_steer_point(..., 0x50)` (:1505) plus `re15_ai_advance(GB_LUNGE_SPEED)` bis
+   `gb_maul_dist <= 1400` (:1509-1519). B2s 150-Tick-Taktung auf diese Hatz gepfropft ergibt
+   kein Zuschnappen, sondern das gemessene Stehen am Ziel.
+3. Ein ehrliches B2 muesste also auch Steuerung und `GB_LUNGE_SPEED` durch die
+   Wurzelbewegung der Clips 2/3 ersetzen — authored fuer RE2s Arena, nicht fuer den auf 2/3
+   verkleinerten Gator in ROOM2090. Das ist der eigene Umbau, den §6 "Offen" angekuendigt
+   hat, und er faengt bei der BEWEGUNG an, nicht beim Clip.
+
+**Zweite Korrektur an §4 B2:** das dritte Argument von FUN_8001a330 (16 bzw. 0) ist KEIN
+"frac" und kein Frame-Schritt. Es landet bei Clip-Wechsel in +0x14E (`sb s1,334(s0)`
+@0x8001a364) und wird dort vom Pose-Bauer als Blend-Zaehler gelesen (`lbu t3,334(s2)`
+@0x800296a8, `beq t3,zero,0x8002973c` @0x800296b0). Der daraus gerechnete Wert 4096/(a2+1)
+(@0x8001a37c-94) reist in der unteren Haelfte von a3 mit, und FUN_8002959c maskiert genau
+die weg (`lui v0,0xffff` / `and v0,a3,v0` @0x800295b8-c4) — gelesen wird nur die obere
+Haelfte (Rueckwaerts-Flag). Das Tempo steckt allein im Doppelruf. BESTAETIGT ist dagegen
+der Doppelschritt selbst: +0x14D wird je Ruf um genau 1 erhoeht (@0x80029b28-34) und meldet
+den Wrap mit 1 (@0x80029b38-4c) — zwei Rufe = zwei Bilder je Tick.
+
+Daten-Messung aus EM23.EMD (Teil 0 der Sonde): Clip 2 = 150, Clip 3 = 150, Clip 4 = 45
+Bilder. B2 einfach = 300 Ticks (Fenster Tick 264..299), B2 doppelt = 150 Ticks (Fenster
+Tick 132..149) — die gemessenen 133 Ticks sind der erste Tick des Fensters. Heute: 45 Ticks,
+Fenster af 6..34.
+
+Logs: `phase3_gator-maul/lunge_heute.log`, `lunge_b2.log`.
+
+### Punkt 3 — Spinnen-Szenario A (§5): GELOEST, die Sonde stand zu nah
+
+Die Fragestellung von §5 war falsch gestellt. **Sub 5/6 startet den Angriff gar nicht.** Die
+Anpirsch-Zustaende drehen nur (`re2s_m0_stalk`, enemy_ai_re2_spider.c:578) und geben mit
+`re2s_word(e, 1u)` (@0x80100CC0) an SUB 0 zurueck. Den Angriff startet allein die
+Entscheidungsleiter in Sub 0 (`re2s_m0_sub0` :461, @0x80100784) — ueber ein ABSTANDS-BAND
+mit einer MINDEST-Distanz:
+
+```
+Vor-Gate @0x80100830-38 : +0x218 (re2s_t218) muss 0 sein
+Zweig 1  @0x80100840-64 : d < 0x1d4c (7500) && arc(128) == 0 && d >= 0xbb9 (3001) -> Sub 7
+Zweig 2  @0x8010086C-AC : d < 0x1770 (6000) && arc(128) == 0 && d >= 0x3e9 (1001)
+                          -> `srav 832,rand&0xF` (@0x80100898): 3/16 auf Sub 8, sonst Sub 7
+Stalk    @0x801007E4-FC : arc(1024) != 0 && d < 0x1f40 (8000) -> Sub 5
+```
+
+Szenario A des Vorgaengers stellte den Spieler 900 Einheiten vor die Spinne — unter BEIDE
+Mindest-Distanzen. Die Spinne hatte keinen Defekt, sie stand zu nah.
+
+Gemessen (`probe_p3_spider_stalk`, natuerlicher Ablauf ab INIT wie Szenario A, nur mit
+anderem Abstand, je 1500 Bilder, Spieler steht still in Blickrichtung):
+
+| Abstand | Sub 7 ab Tick | Ticks in Sub 7 | Sub-5/6-Ticks | Bisse | Angriffs-SE |
+|---|---|---|---|---|---|
+| 500 | nie | 0 | 323 | 0 | 0 |
+| 900 | nie | 0 | 143 | 0 | 0 |
+| 1000 | nie | 0 | 179 | 0 | 0 |
+| 1001 | nie | 0 | 156 | 0 | 0 |
+| 1200 | 1 | 143 | 265 | 2 | 2 |
+| 2000 | 1 | 399 | 157 | 3 | 3 |
+| 3001 | 1 | 111 | 147 | 2 | 2 |
+| 4000 | 1 | 43 | 123 | 1 | 1 |
+| 5999 | 1 | 49 | 273 | 1 | 1 |
+| 7499 | 1 | 54 | 252 | 1 | 1 |
+| 9000 | 358 | 53 | 287 | 1 | 1 |
+
+Ab 1200 Einheiten erreicht der natuerliche Ablauf den Angriff, beisst und ruft den
+Angriffs-SE 1 (@0x80105B34-38) — den Pfad, den Szenario B bisher nur erzwungen erreicht hat.
+Bei 9000 laeuft die Spinne erst ins Band hinein (Tick 358). Sub 5/6 wird in JEDER Zeile
+besucht (143 bis 323 Ticks), auch ohne Angriff: das Anpirschen funktioniert, es fuehrt nur
+nicht selbst zum Biss.
+
+Die Bandkante nicht ueberinterpretieren: die Sonde misst die Kante zwischen 1001 (kein
+Angriff) und 1200 (Angriff ab Tick 1), nicht den Einzelwert 1001 — die Spinne bewegt sich
+waehrend des Laufs, und d wird jeden Tick neu gebildet.
+
+Log: `phase3_gator-maul/spinne_stalk.log`.
+
+### Tests
+
+`ctest --test-dir re15_port/build_p3 --timeout 120`:
+**100% tests passed, 0 tests failed out of 319** (210,3 s). `unit_gator_sweep` und
+`unit_gator_fress` gruen, `unit_gator_fress` jetzt mit der Koerper-Pruefung aus Punkt 1.
+
+### Offen nach Phase 3
+
+- **Stufe B2 bleibt bewusst draussen** — mit Messung und Begruendung (s. o.). Ein echter
+  RE2-Lunge braucht zuerst den Ersatz von Steuerung und `GB_LUNGE_SPEED` durch die
+  Wurzelbewegung der Clips 2/3; erst danach ergibt die Clip-Folge Sinn. Das ist ein eigener
+  Umbau mit eigener Fenster-Messung, kein Nachziehen.
+- Der Gator-Scale 2731 bleibt eine Design-Entscheidung ohne @0x. Neu ist nur, dass Leon ihn
+  jetzt MITTRAEGT — die Relation im Maul ist damit die authored Original-Relation.
+- Die uebrigen Punkte aus §6 "Offen" sind unveraendert: EIN Prioritaetssatz fuer beide
+  SE-Baenke, Tentakel ohne eigenen `bank_fn`, P0-Teleport-Seitenversatz -915 als
+  Port-Entscheidung, 1-Tick-Wrap bei sf=120.
