@@ -1439,7 +1439,14 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
     int32_t  dy   = e->y - pl->y;                                 /* puVar9[0xf] - player[+0x3c] */
     int32_t  r9a  = (int32_t)((int16_t)e->re2z_rad9a >> 2);      /* +0x9A >> 2 auf alle Breiten */
     unsigned res  = 0;
-    if (mask == 0u) return 0;                                     /* `if (uVar5 != 0)` */
+    /* PORT-MAPPING (benannt): re2z_parts == 0 heisst "RE2-INIT noch nicht gelaufen" (der Aktor
+     * wurde ohne re2z_init aufgesetzt, z.B. Test-Fixtures, die einen Slot umtypen). In RE2 gibt es
+     * dieses Fenster nicht — der INIT (@0x80100984-998) laeuft im Spawn-Bild vor jedem Schuss.
+     * Deshalb zaehlt hier der INIT-Wert (Beine+Rumpf, Radius 500 @0x8010096C-70); eine echte
+     * Null-Maske erzeugt kein Zombie-Zustand (alle Setzer schreiben 1 oder 3). */
+    if (mask == 0u) { mask = 3u; r9a = 500 >> 2; }
+    /* Das Original-Gate `if (uVar5 != 0)` (FUN_800410CC, `uVar5 = *puVar9 >> 0x1a & 7`) ist nach
+     * der Zeile darueber immer wahr - es steht hier als Zitat, nicht als toter Zweig. */
     for (int b = 0; b < 3; b++) {
         int32_t lo, hi, third;
         if (g->flag[b] == 0u) continue;                           /* `*(char *)(iVar10 + 1+b) != 0` */
@@ -1964,16 +1971,19 @@ retry_after_latch:
         uint8_t stun = re15_re2_stun_frames(e->type, weapon_id);
         e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | stun);
     }
-    int dmg = re15_enemy_dmg_row(e)[weapon_id];     /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
-    if (s_re2_probe[best].valid) {
+    const uint16_t *dmg_row = re15_enemy_dmg_row(e);
+    int dmg = dmg_row[weapon_id];                   /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
+    if (s_re2_probe[best].valid &&
+        (dmg_row == s_re2_wpn_dmg_zombie || dmg_row == s_re2_wpn_dmg_zombie16)) {
         /* RE2-Applier: Schaden nach KLAMMER aus dem Zombie-Record-Wort 0 —
          * `(*local_58 >> (uVar7 * 10 & 0x1f)) & 0x3ff` (FUN_800410CC, local_58 = Record
          * @0x800A412C bzw. @0x800A42A8 + (id-1)*20 ueber PTR_DAT_800A6A88[Typ]). Klammer 0 ist
-         * byte-identisch mit s_re2_wpn_dmg_zombie[16] (der Pin misst 16/200 fuer W3/W8 nach). */
+         * byte-identisch mit s_re2_wpn_dmg_zombie[16] (der Pin misst 16/200 fuer W3/W8 nach).
+         * NUR wenn re15_enemy_dmg_row die RE2-Zeile liefert — der Schadensmodell-Schalter
+         * (RE2 AUS -> RE1.5-Zeile @0x8006E0D0, Wache test_re2_hp_model) gilt unveraendert. */
         extern unsigned re15_re2z_weapon_id(unsigned w);
         unsigned rid = re15_re2z_weapon_id((unsigned)weapon_id);
-        const uint32_t *w0 = (e->type == 0x15u || e->type == 0x16u || e->type == 0x17u)
-                           ? s_re2z16_rec_w0 : s_re2z_rec_w0;
+        const uint32_t *w0 = (dmg_row == s_re2_wpn_dmg_zombie16) ? s_re2z16_rec_w0 : s_re2z_rec_w0;
         if (rid < 20u && w0[rid] != 0u)
             dmg = (int)((w0[rid] >> (10u * s_re2_probe[best].bracket)) & 0x3ffu);
     }
