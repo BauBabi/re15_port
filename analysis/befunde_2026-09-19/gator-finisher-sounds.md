@@ -358,11 +358,13 @@ unversioniert.
 Zwei Zahlen-Praezisierungen zur Tabelle oben: SE 4 sind **31556 Samples nominal**
 (18032 B / 16 * 28, Sonde) bzw. **31528 Samples tatsaechlich dekodiert** (re2se.log des
 Spiels) — beide bei Pitch 0x4C1 = 2,41 s. Und die ctest-Summe: der Lauf des Vorgaengers war
-305/305 (build_p2_ctest1.log); die Wiederholung in dieser Sitzung lief 304/305, weil
-`integration_save_counter_pin` nach 5,7 s abbrach und allein wiederholt in 28,9 s gruen ist —
+305/305 (build_p2_ctest1.log); die erste Wiederholung in dieser Sitzung lief 304/305, weil
+`integration_save_counter_pin` nach 5,7 s abbrach und allein wiederholt in 28,9 s gruen war —
 der Pin startet drei `re15_pc.exe`-Laeufe, und parallel arbeitende Agenten beenden
-`re15_pc.exe` ueber den IMAGE-NAMEN. `run_gator.sh` beendet deshalb ab jetzt nur noch die
-EIGENE PID (vorher `taskkill //F //IM re15_pc.exe`).
+`re15_pc.exe` ueber den IMAGE-NAMEN. `run_gator.sh` beendet deshalb nur noch die EIGENE PID
+(vorher `taskkill //F //IM re15_pc.exe`); der abschliessende Gesamtlauf danach ist wieder
+**305/305 gruen in 208 s** (`100% tests passed, 0 tests failed out of 305`,
+`integration_save_counter_pin` 30,3 s).
 
 ### Offen
 
