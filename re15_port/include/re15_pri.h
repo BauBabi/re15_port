@@ -97,14 +97,42 @@ typedef struct {
  *   A mask occludes a character poly iff it draws LATER, i.e. depth < otz>>4:
  *       tris : depth < (1023*vz)>>16  → vz ≥ (depth+1) * 65536/1023 = ×64.0625
  *       quads: depth < vz>>6          → vz ≥ (depth+1) * 64        (exactly)
- *   The PC has no GTE/OT; its painter's-sort key is the raw view-space Z, so the
- *   PC threshold camera-Z = depth*64. (K=32 — from the void otz>>3 analogy — was
- *   measured wrong against the ROOM1170 helipad lamp and reverted in e848b677.) */
+ *
+ *   ⛔ BERICHTIGT 2026-09-19 (Gegenpruefung analysis/befunde_2026-09-19/
+ *   pri-masken-audit.skeptiker.md #3): die Bedingung ist STRIKT, und die alte PC-Schwelle
+ *   "camera-Z = depth*64" lag EINEN OT-Bucket vor dem Original.
+ *     - Die Masken sind die LETZTEN Prims des Bilds: @0x8001ce54 `jal 0x80039590`
+ *       (FUN_80039590 = Masken-Zeichner), danach nur noch 0x8004ee38; AddPrim
+ *       (0x8006b538, @0x80039660) haengt VORNE in den Bucket ein -> im GLEICHEN Bucket
+ *       wird die Maske VOR der Figur gezeichnet, die Figur liegt obenauf.
+ *     - Also verdeckt die Maske genau dann, wenn depth < bucket(vz) mit
+ *       bucket(vz) = (1023*vz)>>16 (@0x8002565c otz>>4, otz=(1023*vz)>>12, ZSF3=341
+ *       @0x80066c70 addiu t0,zero,341 / @0x80066c74 ctc2 t0,cr29), d.h. ab
+ *       vz >= (depth+1)*65536/1023. Bucket-Breite 64,0625, nicht 64.
+ *     - Beispiel depth=100: Original ab vz 6471, alte PC-Regel (vz > 6400) ab 6401;
+ *       depth=500: 32096 gegen 32001.
+ *   Der PC hat keine GTE/OT; sein Maler-Sortierschluessel ist die rohe View-Z. Der
+ *   Schluessel einer Maske ist deshalb die KLEINSTE Kamera-z, die sie verdeckt:
+ *   (depth+1)*65536/1023, und ein Dreieck ist verdeckt gdw. tri_z >= Schluessel.
+ *   (K=32 — from the void otz>>3 analogy — was measured wrong against the ROOM1170
+ *   helipad lamp and reverted in e848b677.) */
 #define RE15_PRI_MASK_OT_BUCKET(depth) (depth)              /* PSX OT word index @0x80039658 */
 #define RE15_PRI_CHAR_OT_BUCKET(otz)   ((otz) >> 4)         /* PSX OT word index @0x8002565c */
 #define RE15_PRI_OTZ_NEAR_DROP         64                   /* otz<64 drops the poly @0x80025654 */
-static inline int re15_pri_mask_camera_z(int depth) {       /* PC painter's sort key = vz */
-    return depth * 64;                /* depth < otz>>4 = (1023*vz)>>16 (ZSF3=341) */
+#define RE15_PRI_OT_BUCKET_VZ          (65536.0f / 1023.0f) /* vz-Breite eines Buckets (ZSF3=341) */
+/* Figur-Bucket fuer Kamera-z vz: (1023*vz)>>16 (@0x8002565c, ZSF3 @0x80066c70). */
+static inline int re15_pri_bucket_of_vz(long vz) {
+    return (int)((1023L * vz) >> 16);
+}
+/* Original-Urteil: verdeckt die Maske `depth` einen Figurpunkt der Kamera-z vz?
+ * STRIKT depth < bucket(vz) (gleicher Bucket = Figur obenauf, @0x8001ce54). */
+static inline int re15_pri_mask_occludes(int depth, long vz) {
+    return depth < re15_pri_bucket_of_vz(vz);
+}
+/* PC-Maler-Sortierschluessel = kleinste Kamera-z, die `depth` verdeckt:
+ * (depth+1)*65536/1023. Ein Dreieck mit tri_z >= Schluessel liegt HINTER der Maske. */
+static inline float re15_pri_mask_camera_z(int depth) {
+    return (float)(depth + 1) * RE15_PRI_OT_BUCKET_VZ;
 }
 
 /* Parse a sprite priority section at `data + offset` into out. Returns

@@ -395,7 +395,8 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * @0x800395e0 `addiu s5,s5,-13772` / @0x800395e4 `addiu s6,s5,-9052` = dieselbe Basis).
          * Die Buckets: Effekt = SZ3>>6 (@0x80053620 `sra v0,a0,6`), Maske = depth
          * (@0x80039658 `sll a0,a0,2` = Wort-Index). Der PC sortiert nach View-Z und bildet
-         * Masken auf depth*64 ab (re15_pri.h:107); damit die RELATIVE Ordnung stimmt, muss
+         * Masken auf ihre Bucket-Schwelle (depth+1)*65536/1023 ab (re15_pri.h,
+         * re15_pri_mask_camera_z); damit die RELATIVE Ordnung stimmt, muss
          * key(Effekt)/64 == SZ3>>6 gelten, also key = vz. Mesh-Dreiecke benutzen bereits
          * avgz = vz (main.c PROJECT_VERT `(out_wz) = (float)_vz`).
          * Vorher stand hier `vz >> 4` = Faktor 16 zu klein: jeder Effekt landete damit vor
@@ -5002,8 +5003,9 @@ re_title:;
                  * Vorbereitung entstehen.
                  *
                  * WAS DRINSTEHT, und warum genau das: der Zeichner vergleicht je
-                 * DREIECK die Kamera-Tiefe gegen `depth*64` der Maske
-                 * (re15_pri.h: verdeckt, solange vz > depth*64). Um zu entscheiden, ob
+                 * DREIECK die Kamera-Tiefe gegen die Schwelle der Maske
+                 * (re15_pri.h: verdeckt gdw. depth < (1023*vz)>>16, d.h. ab
+                 * vz >= (depth+1)*65536/1023 — berichtigt 2026-09-19). Um zu entscheiden, ob
                  * eine Maske zu nah oder zu fern liegt, braucht es also BEIDE Seiten am
                  * selben Bild: die Tiefe der Figur (Fuss/Huefte/Kopf — bei erhoehter
                  * Kamera sind das drei verschiedene Werte) UND jede Maske, die ihren
@@ -5077,8 +5079,9 @@ re_title:;
 "#   kasten=...  geschaetzter Bildkasten der Figur (Messgroesse)" ZN
 "#   masken=n    geladene Vordergrund-Masken dieses Winkels" ZN
 "#   [i:(x,y)wxh t=T z=Z DECKT|frei]  jede Maske, die den Kasten beruehrt." ZN
-"#       Der Zeichner verdeckt, solange die Figur-Tiefe GROESSER als z ist" ZN
-"#       (z = T*64). 'frei' heisst: die Figur steht VOR dieser Maske." ZN
+"#       Der Zeichner verdeckt, sobald die Figur-Tiefe >= z ist" ZN
+"#       (z = (T+1)*65536/1023, Original-Regel depth < (1023*vz)>>16, strikt)." ZN
+"#       'frei' heisst: die Figur steht VOR dieser Maske." ZN
 "# ---------------------------------------------------------------" ZN,
                                         __DATE__, __TIME__);
                             }
@@ -5154,8 +5157,9 @@ re_title:;
                                     if (gezeigt == 0) bl_bytes += fprintf(bl, " |");
                                     bl_bytes += fprintf(bl,
                                         " [%d:(%d,%d)%dx%d t=%d z=%d %s]",
-                                        q, rx[q], ry[q], rw[q], rh[q], rd[q], rd[q] * 64,
-                                        (pvz > (long)rd[q] * 64) ? "DECKT" : "frei");
+                                        q, rx[q], ry[q], rw[q], rh[q], rd[q],
+                                        (int)re15_pri_mask_camera_z(rd[q]),
+                                        re15_pri_mask_occludes(rd[q], pvz) ? "DECKT" : "frei");
                                     if (++gezeigt >= 12) { bl_bytes += fprintf(bl, " ..."); break; }
                                 }
                                 if (gezeigt == 0) bl_bytes += fprintf(bl, " | keine Maske am Koerper");
@@ -5174,7 +5178,8 @@ re_title:;
                                 for (q = 0; q < rn; q++) {
                                     if ((q % 4) == 0) bl_bytes += fprintf(bl, "   ");
                                     bl_bytes += fprintf(bl, " %3d:(%3d,%3d)%3dx%-3d t=%-3d z=%-5d",
-                                                        q, rx[q], ry[q], rw[q], rh[q], rd[q], rd[q] * 64);
+                                                        q, rx[q], ry[q], rw[q], rh[q], rd[q],
+                                                        (int)re15_pri_mask_camera_z(rd[q]));
                                     if ((q % 4) == 3) bl_bytes += fprintf(bl, "\n");
                                 }
                                 if ((rn % 4) != 0) bl_bytes += fprintf(bl, "\n");
@@ -5408,16 +5413,16 @@ re_title:;
                                 for (int r = 0; r < rn; r++) {
                                     if (ssx >= rx[r] && ssx < rx[r] + rw[r] &&
                                         ssy >= ry[r] && ssy < ry[r] + rh[r]) {
-                                        /* Der Zeichner verdeckt, solange die Figur-Kamera-Z
-                                         * GROESSER als die Schwelle ist (re15_pri.h:
-                                         * depth < otz>>4  <=>  vz > depth*64). */
-                                        int occ = (int)(vz > (long)rd[r] * 64);
+                                        /* Der Zeichner verdeckt genau dann, wenn
+                                         * depth < (1023*vz)>>16 (re15_pri.h, Original-Regel,
+                                         * strikt; berichtigt 2026-09-19). */
+                                        int occ = re15_pri_mask_occludes(rd[r], vz);
                                         int flr = re15_collision_on_floor(&g_room_rdt, wx, wz);
                                         n_in++; n_occ += occ;
                                         fprintf(stderr, "[poccscan] cut=%d world=(%d,%d) scr=(%d,%d) "
-                                                "vz=%ld maskdepth=%d k64=%d occ64=%d boden=%d\n",
+                                                "vz=%ld maskdepth=%d schwelle=%d occ=%d boden=%d\n",
                                                 active_cut_idx, wx, wz, ssx, ssy, vz, rd[r],
-                                                rd[r] * 64, occ, flr);
+                                                (int)re15_pri_mask_camera_z(rd[r]), occ, flr);
                                         break;
                                     }
                                 }
@@ -5442,10 +5447,10 @@ re_title:;
                         if (pvz > 64 && psx >= rx[r] && psx < rx[r] + rw[r] &&
                             psy >= ry[r] && psy < ry[r] + rh[r]) {
                             fprintf(stderr, "[poccsweep] cut=%d world=(%d,%d) scr=(%d,%d) vz=%ld "
-                                    "maskdepth=%d k32=%d k64=%d occ32=%d occ64=%d floor=%d\n",
+                                    "maskdepth=%d schwelle=%d occ=%d floor=%d\n",
                                     active_cut_idx, plz->x, plz->z, psx, psy, pvz, rd[r],
-                                    rd[r] * 32, rd[r] * 64,
-                                    (int)(pvz > rd[r] * 32), (int)(pvz > rd[r] * 64),
+                                    (int)re15_pri_mask_camera_z(rd[r]),
+                                    re15_pri_mask_occludes(rd[r], pvz),
                                     re15_collision_on_floor(&g_room_rdt, plz->x, plz->z));
                             /* RE15_POCC_SHOT: photograph the qualifying spots so the
                              * occlusion can be judged on PIXELS, not on the model. */
@@ -5489,9 +5494,10 @@ re_title:;
                             (unsigned)g_engine.frame_count, active_cut_idx, plz->x, plz->y, plz->z,
                             pvz, pvz_huft, pvz_kopf, psx, psy, mn);
                     for (int mi2 = 0; mi2 < mn; mi2++)
-                        fprintf(stderr, " | d=%d k32=%d k64=%d occ32=%d occ64=%d",
-                                md[mi2], md[mi2] * 32, md[mi2] * 64,
-                                (int)(pvz > md[mi2] * 32), (int)(pvz > md[mi2] * 64));
+                        fprintf(stderr, " | d=%d schwelle=%d occFuss=%d occKopf=%d",
+                                md[mi2], (int)re15_pri_mask_camera_z(md[mi2]),
+                                re15_pri_mask_occludes(md[mi2], pvz),
+                                re15_pri_mask_occludes(md[mi2], pvz_kopf));
                     fprintf(stderr, "\n");
                 }
             }

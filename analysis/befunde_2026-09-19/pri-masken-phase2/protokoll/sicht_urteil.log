@@ -1,0 +1,78 @@
+ROOM10C0 C3 vor: Welt(200,-5850) Fuss-vz 5606, Kasten x9..43 y140..192
+  gezeichnete Figurpunkte im Kasten: 7 von 1768 Kastenpunkten
+  Maskenpunkte im Kasten: 551
+  Figurpunkte UNTER der Maske: 5  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 551
+  -> Urteil: Figur an dieser Stelle NICHT gezeichnet
+ROOM10C0 C3 hinter: Welt(-5400,-2250) Fuss-vz 10571, Kasten x161..179 y98..127
+  gezeichnete Figurpunkte im Kasten: 23 von 522 Kastenpunkten
+  Maskenpunkte im Kasten: 294
+  Figurpunkte UNTER der Maske: 0  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 294 von 294
+  -> Urteil: Figur an dieser Stelle NICHT gezeichnet
+ROOM10D0 C6 vor: Welt(4700,25550) Fuss-vz 4498, Kasten x45..87 y154..220
+  gezeichnete Figurpunkte im Kasten: 69 von 2772 Kastenpunkten
+  Maskenpunkte im Kasten: 500
+  Figurpunkte UNTER der Maske: 38  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 500
+  -> Urteil: Figur sichtbar, Maske verdeckt sie NICHT
+ROOM10D0 C6 hinter: Welt(5300,25550) Fuss-vz 4957, Kasten x40..78 y146..207
+  gezeichnete Figurpunkte im Kasten: 85 von 2318 Kastenpunkten
+  Maskenpunkte im Kasten: 487
+  Figurpunkte UNTER der Maske: 77  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 179 von 487
+  -> Urteil: Figur teils verdeckt
+ROOM1050 C6 vor: Welt(23100,-19950) Fuss-vz 8991, Kasten x51..72 y115..148
+  gezeichnete Figurpunkte im Kasten: 81 von 693 Kastenpunkten
+  Maskenpunkte im Kasten: 568
+  Figurpunkte UNTER der Maske: 3  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 568
+  -> Urteil: Figur sichtbar, Maske verdeckt sie NICHT
+ROOM1050 C6 hinter: Welt(24300,-22550) Fuss-vz 11705, Kasten x80..96 y100..126
+  gezeichnete Figurpunkte im Kasten: 10 von 416 Kastenpunkten
+  Maskenpunkte im Kasten: 74
+  Figurpunkte UNTER der Maske: 0  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 74 von 74
+  -> Urteil: Figur an dieser Stelle NICHT gezeichnet
+ROOM1000 C5 vor: Welt(-600,-1450) Fuss-vz 3896, Kasten x20..68 y167..239
+  gezeichnete Figurpunkte im Kasten: 1028 von 3456 Kastenpunkten
+  Maskenpunkte im Kasten: 1688
+  Figurpunkte UNTER der Maske: 34  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 1688
+  -> Urteil: Figur sichtbar, Maske verdeckt sie NICHT
+ROOM1000 C5 hinter: Welt(4200,-6050) Fuss-vz 8930, Kasten x3..24 y105..140
+  gezeichnete Figurpunkte im Kasten: 0 von 735 Kastenpunkten
+  Maskenpunkte im Kasten: 735
+  Figurpunkte UNTER der Maske: 0  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 735 von 735
+  -> Urteil: Figur an dieser Stelle NICHT gezeichnet
+ROOM11F0 C6 vor: Welt(3100,-100) Fuss-vz 3140, Kasten x80..139 y141..239
+  gezeichnete Figurpunkte im Kasten: 894 von 5782 Kastenpunkten
+  Maskenpunkte im Kasten: 980
+  Figurpunkte UNTER der Maske: 199  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 980
+  -> Urteil: Figur sichtbar, Maske verdeckt sie NICHT
+ROOM11F0 C6 hinter: Welt(4300,-900) Fuss-vz 3185, Kasten x175..234 y140..237
+  gezeichnete Figurpunkte im Kasten: 1140 von 5723 Kastenpunkten
+  Maskenpunkte im Kasten: 3689
+  Figurpunkte UNTER der Maske: 861  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 3417 von 3689
+  -> Urteil: Figur teils verdeckt
+ROOM11F0 C1 vor: Welt(-1100,-8900) Fuss-vz 3886, Kasten x89..137 y120..199
+  gezeichnete Figurpunkte im Kasten: 513 von 3792 Kastenpunkten
+  Maskenpunkte im Kasten: 769
+  Figurpunkte UNTER der Maske: 18  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 0 von 769
+  -> Urteil: Figur sichtbar, Maske verdeckt sie NICHT
+ROOM11F0 C1 hinter: Welt(-700,-8300) Fuss-vz 4570, Kasten x110..151 y116..184
+  gezeichnete Figurpunkte im Kasten: 301 von 2788 Kastenpunkten
+  Maskenpunkte im Kasten: 431
+  Figurpunkte UNTER der Maske: 0  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 424 von 431
+  -> Urteil: Figur teils verdeckt
+ROOM1000 C0 hinter: Welt(17600,-10450) Fuss-vz 4112, Kasten x245..290 y162..232
+  gezeichnete Figurpunkte im Kasten: 605 von 3150 Kastenpunkten
+  Maskenpunkte im Kasten: 2938
+  Figurpunkte UNTER der Maske: 591  (dort ist die Maske gewonnen)
+  Maskenpunkte, die an dieser Stelle VERDECKEN: 2938 von 2938
+  -> Urteil: Figur teils verdeckt

@@ -1,0 +1,53 @@
+     "Spindblock vorne links" (polygon, ebene 0): standpunkte: 95 Spalten, davon 95 eigene, 0 geerbt; Profil-Tiefe 53..61
+     "Spindblock vorne rechts" (polygon, ebene 0): standpunkte: 72 Spalten, davon 72 eigene, 0 geerbt; Profil-Tiefe 51..61
+     zerlegung Stufe 1: Spindblock vor=zeilen/8, Spindblock vor=zeilen/8 -> 27 Rechtecke, 15366 Atlaspunkte
+  Cut 0: Soll 14730 px, Deckung fehlt 0 / zuviel 0 | 27 Rechtecke, 11 Tiefenstufen (51..61), 15366 Atlaspunkte | Standplaetze 3977, beruehrt 167 | VOR n=46 verdeckt=0 teil=0 | HINTER n=120 frei=1 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,17800,-10250,0.77)
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C0.png
+     "ROOM1000 Cut 1 Objekt 01_01": KEINE Tiefe (keine) — Objekt bleibt ohne Maske
+     "ROOM1000 Cut 1 Objekt 01_02" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 100 % der Standpunkte): Hoehe -25 (IoU 0.03, Oberkante 57.5 px), Quader, 181 von 181 Punkten getroffen, Tiefe 72..80
+     "ROOM1000 Cut 1 Objekt 01_03" (png, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 93 % der Standpunkte): Hoehe -100 (IoU 0.03, Oberkante 9.1 px), Quader, 163 von 167 Punkten getroffen, Tiefe 111..132
+     "ROOM1000 Cut 1 Objekt 01_04" (png, ebene 0): zelle x22800..24800 z-16850..1650 (Typ 1, 100 % der Standpunkte): Hoehe -775 (IoU 0.02, Oberkante 7.4 px), Quader, 137 von 149 Punkten getroffen, Tiefe 97..121
+     zerlegung Stufe 1: ROOM1000 Cut 1=zeilen/8, ROOM1000 Cut 1=zeilen/8, ROOM1000 Cut 1=zeilen/8 -> 45 Rechtecke, 521 Atlaspunkte
+  Cut 1: Soll 497 px, Deckung fehlt 0 / zuviel 0 | 45 Rechtecke, 40 Tiefenstufen (72..132), 521 Atlaspunkte | Standplaetze 9906, beruehrt 0 | VOR n=0 verdeckt=0 teil=0 | HINTER n=0 frei=0 -> GESCHRIEBEN
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C1.png
+     "Spindreihe links" (polygon, ebene 0): zelle x16150..17150 z-11350..-1750 (Typ 1, 54 % der Standpunkte): Hoehe -3600 (IoU 0.85, Oberkante 24.0 px), Quader, 12580 von 14502 Punkten getroffen, Tiefe 37..83
+     "Spindreihe rechts" (polygon, ebene 0): standpunkte: 68 Spalten, davon 68 eigene, 0 geerbt; Profil-Tiefe 36..152
+     "Bank unten" (polygon, ebene 0): zelle x18800..20650 z-12450..-2750 (Typ 1, 83 % der Standpunkte): Hoehe -800 (IoU 0.87, Oberkante 2.3 px), Quader, 3867 von 4172 Punkten getroffen, Tiefe 57..69
+     zerlegung Stufe 6: Spindreihe lin=spalten/8, Spindreihe rec=spalten/8, Bank unten=zeilen/8 -> 63 Rechtecke, 39985 Atlaspunkte
+  Cut 2: Soll 29892 px, Deckung fehlt 0 / zuviel 0 | 63 Rechtecke, 27 Tiefenstufen (36..152), 39985 Atlaspunkte | Standplaetze 7772, beruehrt 1098 | VOR n=60 verdeckt=0 teil=0 | HINTER n=1080 frei=19 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,16600,-2050,0.84), (0,16600,-1850,0.88), (0,16600,-1650,0.88), (0,17600,-3250,0.00), (0,17600,-3050,0.00), (0,17600,-2850,0.00), (0,17600,-2650,0.00), (0,17600,-2450,0.00), (0,17600,-2250,0.00), (0,17600,-2050,0.00), (0,17600,-1850,0.00), (0,18200,-3850,0.00) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C2.png
+  Cut 3: ABGELEHNT, nicht geschrieben (unit_pri_kopfschnitt: 1 von 805 begehbaren Standplaetzen VOR der Standlinie wird voll verdeckt. Die drei Objekte 03_01/03_02/03_03 sind Massstab-4-Freistellungen (Treffer 89-100 %), ihre unterste Zeile liegt knapp UNTER dem Horizont -> der Sehstrahl laeuft fast parallel zum Boden und das Modell gibt Tiefen 249..394. Offen beim Nutzer (1x-Freistellung).)
+     "ROOM1000 Cut 4 Objekt 04_01" (png, ebene 0): standpunkte: 31 Spalten, davon 31 eigene, 0 geerbt; Profil-Tiefe 50..64
+     "ROOM1000 Cut 4 Objekt 04_02" (png, ebene 0): standpunkte: 96 Spalten, davon 87 eigene, 9 geerbt (0-8); Profil-Tiefe 65..163
+     zerlegung Stufe 3: ROOM1000 Cut 4=zeilen/12, ROOM1000 Cut 4=spalten/8 -> 105 Rechtecke, 26487 Atlaspunkte
+  Cut 4: Soll 14020 px, Deckung fehlt 0 / zuviel 0 | 105 Rechtecke, 52 Tiefenstufen (51..163), 26487 Atlaspunkte | Standplaetze 3567, beruehrt 213 | VOR n=96 verdeckt=0 teil=0 | HINTER n=154 frei=68 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-7000,-8650,0.91), (0,-7000,-8450,0.91), (0,-6800,-9250,0.83), (0,-6800,-9050,0.69), (0,-6800,-8850,0.76), (0,-6800,-8650,0.82), (0,-6800,-8450,0.82), (0,-6800,-8250,0.87), (0,-6600,-9050,0.81), (0,-6600,-8850,0.71), (0,-6600,-8650,0.78), (0,-6600,-8450,0.83) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C4.png
+     "ROOM1000 Cut 5 Objekt 05_01" (png, ebene 0): zelle x-850..1600 z-5150..-2050 (Typ 1, 67 % der Standpunkte): Hoehe -3650 (IoU 0.80, Oberkante 14.4 px), Quader, 16794 von 18048 Punkten getroffen, Tiefe 54..102
+     "ROOM1000 Cut 5 Objekt 05_02" (png, ebene 0): standpunkte: 45 Spalten, davon 41 eigene, 4 geerbt (149, 191-193); Profil-Tiefe 47..258
+     zerlegung Stufe 16: ROOM1000 Cut 5=spalten/8, ROOM1000 Cut 5=spalten/8 -> 50 Rechtecke, 32268 Atlaspunkte
+  Cut 5: Soll 26881 px, Deckung fehlt 0 / zuviel 0 | 50 Rechtecke, 23 Tiefenstufen (48..258), 32268 Atlaspunkte | Standplaetze 9700, beruehrt 3315 | VOR n=398 verdeckt=0 teil=0 | HINTER n=3166 frei=14 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-3600,-12050,0.76), (0,-3600,-7650,0.91), (0,-3600,-3450,0.51), (0,-3600,-3250,0.07), (0,-3600,-3050,0.00), (0,-3600,-2850,0.00), (0,-3400,-12050,0.87), (0,-3200,-12050,0.92), (0,-200,-14850,0.95), (0,-200,-14650,0.84), (0,0,-14850,0.94), (0,0,-14650,0.78) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C5.png
+     "ROOM1000 Cut 6 Objekt 06_01" (png, ebene 0): standpunkte: 115 Spalten, davon 115 eigene, 0 geerbt; Profil-Tiefe 47..74
+     "ROOM1000 Cut 6 Objekt 06_02" (png, ebene 0): standpunkte: 90 Spalten, davon 90 eigene, 0 geerbt; Profil-Tiefe 54..95
+     zerlegung Stufe 6: ROOM1000 Cut 6=spalten/8, ROOM1000 Cut 6=spalten/8 -> 71 Rechtecke, 27405 Atlaspunkte
+  Cut 6: Soll 21799 px, Deckung fehlt 0 / zuviel 0 | 71 Rechtecke, 22 Tiefenstufen (48..95), 27405 Atlaspunkte | Standplaetze 11878, beruehrt 429 | VOR n=139 verdeckt=0 teil=0 | HINTER n=319 frei=22 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-1200,2350,0.19), (0,-1200,2550,0.25), (0,-1200,2750,0.33), (0,-1200,2950,0.47), (0,-1000,2350,0.83), (0,-1000,2550,0.94), (0,-800,550,0.45), (0,-800,750,0.55), (0,-600,350,0.80), (0,-600,550,0.90), (0,-400,150,0.40), (0,-400,350,0.90) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C6.png
+     "ROOM1000 Cut 7 Objekt 07_01" (png, ebene 0): standpunkte: 62 Spalten, davon 62 eigene, 0 geerbt; Profil-Tiefe 41..62
+     "ROOM1000 Cut 7 Objekt 07_02" (png, ebene 0): zelle x-5000..-2550 z5350..8400 (Typ 1, 87 % der Standpunkte): Hoehe -3650 (IoU 0.62, Oberkante 6.2 px), Quader, 12059 von 12658 Punkten getroffen, Tiefe 62..114
+     "ROOM1000 Cut 7 Objekt 07_03" (png, ebene 0): standpunkte: 61 Spalten, davon 61 eigene, 0 geerbt; Profil-Tiefe 79..127
+     zerlegung Stufe 3: ROOM1000 Cut 7=zeilen/40, ROOM1000 Cut 7=spalten/12, ROOM1000 Cut 7=spalten/8 -> 104 Rechtecke, 40898 Atlaspunkte
+  Cut 7: Soll 23964 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 40 Tiefenstufen (42..127), 40898 Atlaspunkte | Standplaetze 2558, beruehrt 154 | VOR n=119 verdeckt=0 teil=0 | HINTER n=73 frei=28 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,-4000,950,0.09), (0,-4000,1150,0.42), (0,-4000,1350,0.51), (0,-4000,1750,0.84), (0,-3800,1350,0.93), (0,-3600,1350,0.20), (0,-3600,1750,0.74), (0,-3600,1950,0.83), (0,-3600,2150,0.94), (0,-3400,2150,0.03), (0,-2000,5750,0.00), (0,-2000,5950,0.17) ...
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C7.png
+     "ROOM1000 Cut 8 Objekt 08_01" (png, ebene 0): zelle x-5000..-2550 z5350..8400 (Typ 1, 69 % der Standpunkte): Hoehe -3750 (IoU 0.81, Oberkante 12.7 px), Quader, 16504 von 17149 Punkten getroffen, Tiefe 49..97
+     "ROOM1000 Cut 8 Objekt 08_02" (png, ebene 0): standpunkte: 49 Spalten, davon 41 eigene, 8 geerbt (140-142, 184-188); Profil-Tiefe 44..111
+     zerlegung Stufe 12: ROOM1000 Cut 8=spalten/8, ROOM1000 Cut 8=spalten/8 -> 43 Rechtecke, 32413 Atlaspunkte
+  Cut 8: Soll 26857 px, Deckung fehlt 0 / zuviel 0 | 43 Rechtecke, 16 Tiefenstufen (48..111), 32413 Atlaspunkte | Standplaetze 4242, beruehrt 125 | VOR n=125 verdeckt=0 teil=0 | HINTER n=7 frei=3 -> GESCHRIEBEN
+     HINTER-Rest (Band, x, z, verdeckt): (0,200,6150,0.00), (0,200,6350,0.40), (0,200,6550,0.90)
+     Bild: analysis/befunde_2026-09-19/pri-masken-phase2\ROOM1000_C8.png
+  ROOM1000.MSK: 9 Cuts im Container (8 neu)

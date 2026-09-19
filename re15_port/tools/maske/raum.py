@@ -40,6 +40,46 @@ from geom import load_bg, load_rdt
 
 AUSWAHL = "analysis/esp_masken_2026-09-03/auswahl.json"
 CD = "re15_port/shared_assets/PSX"
+
+# ⛔ PHASE 2 (2026-09-19, analysis/befunde_2026-09-19/pri-masken-audit.md §4 + Gegenpruefung):
+# STAGE1 wird ausschliesslich ueber bau_p2.py gebaut — Silhouette = Freistellung punktgenau
+# (oben=0, grow=0, fuellen=aus), Tiefe aus der Geometrie (geometrie.py), Rechtecke je
+# Tiefenstufe, Abnahme VOR dem Schreiben. Die alte Kette (STD oben=4/grow=1,
+# DEPTH_FACTOR 0,90, Kachel-Median) bleibt nur fuer die uebrigen Stages.
+#
+# UNANGETASTET (Gegenpruefung Punkt 4): Cuts, deren Masken ganz oder ueberwiegend aus
+# EIGENEN Quellen bestehen und die der Nutzer abgenommen hat bzw. fuer die er kein PNG
+# geliefert hat, werden NICHT neu gebaut — ihre Sektionen bleiben, wie sie sind, und stehen
+# im Bericht als Nachfrage. (10F0 C4/C5: Nutzer 2026-09-09 "Ok, einwandfrei"; 1100 C1/C2:
+# reine Quader-Waende ohne Nutzer-PNG.)
+P2_UNANGETASTET = {
+    ("ROOM10F0", 4): "Nutzer-Lassos + 8 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09",
+    ("ROOM10F0", 5): "Nutzer-Lassos + 4 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09",
+    ("ROOM1100", 1): "nur Quader-Waende (kein Nutzer-PNG)",
+    ("ROOM1100", 2): "nur Quader-Waende (kein Nutzer-PNG)",
+}
+P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
+
+# ⛔ ABGELEHNT und deshalb NICHT geschrieben (die alte Sektion bleibt stehen). Die Zahlen
+# kommen aus dem ctest unit_pri_kopfschnitt, der die Standplaetze SELBST ueber den
+# Spieler-Klemmpfad der Engine faehrt (die Python-Abnahme liest denselben Dump, kommt aber
+# auf minimal andere Kastengrenzen: 805 gegen 811 VOR-Plaetze). Wo die beiden sich
+# widersprechen, gilt die strengere Zahl.
+P2_ABGELEHNT = {
+    ("ROOM10D0", 1): "unit_pri_eingemessen: die F9-Marke des Nutzers (F423, Welt 3228/-4568, "
+                     "er steht HINTER der Liege) verlangt eine wirksame Maske ueber x156..176. "
+                     "Das Nutzer-Original 01.png als EIN Objekt mit reiner Geometrie gibt der "
+                     "rechten Spalte 176 eine Tiefe >= 180; wirksam waere < 180 (Kopf-vz 11579). "
+                     "Das sind 16 Einheiten — genau der Restfehler der Kalibrierung (Modell "
+                     "median +5 Buckets zu FERN). Die alte Sektion (aus der Zerteilung "
+                     "01_01/01_02 mit den Handschluesseln flach/spalten) bleibt stehen, bis der "
+                     "Nutzer entscheidet.",
+    ("ROOM1000", 3): "unit_pri_kopfschnitt: 1 von 805 begehbaren Standplaetzen VOR der "
+                     "Standlinie wird voll verdeckt. Die drei Objekte 03_01/03_02/03_03 sind "
+                     "Massstab-4-Freistellungen (Treffer 89-100 %), ihre unterste Zeile liegt "
+                     "knapp UNTER dem Horizont -> der Sehstrahl laeuft fast parallel zum Boden "
+                     "und das Modell gibt Tiefen 249..394. Offen beim Nutzer (1x-Freistellung).",
+}
 # ⛔ SPALTENFUELLUNG STANDARDMAESSIG AUS (Nutzer-Befund 2026-09-03, Screenshot 233104:
 # "immer noch sehr viel ueberdeckende Transparenz, bei beiden Fahnen und beim Pult").
 # Die Fuellung schliesst je Bildspalte alles zwischen oberstem und unterstem Punkt EINER
@@ -563,6 +603,13 @@ def main():
     ap.add_argument("--blatt", default="build/blaetter")
     ap.add_argument("--out", default=os.path.join(CD, "MASKS"))
     ap.add_argument("--bild", default="build/maskenbild")
+    # Phase-2-Parameter (STAGE1): Tiefenstufe und Rechteck-Statistik = die in
+    # kalib_geometrie.py gemessenen Werte (build/p2/kalib_gruppe_*.txt).
+    ap.add_argument("--stufe", type=int, default=None)
+    ap.add_argument("--statistik", choices=("max", "med", "min"), default=None)
+    ap.add_argument("--dump", default="build/p2/dump_vorher.txt",
+                    help="Engine-Dump der Sonde probe_r16_pri_masken_audit (Bodenpunkte je Band)")
+    ap.add_argument("--nur-pruefen", action="store_true", help="bauen und pruefen, nichts schreiben")
     a = ap.parse_args()
 
     room = a.room.upper()
@@ -576,6 +623,8 @@ def main():
     cuts = sorted(int(c) for c in aus[room] if not c.startswith("_"))
     if a.cut is not None:
         cuts = [a.cut]
+    if rid < 0x2000:
+        return main_p2(a, room, rid, aus, rdt, cam, cuts)
     secs = {}
     for cut in cuts:
         e = eintrag(aus[room][str(cut)])
@@ -621,13 +670,17 @@ def main():
             _fehlt = int((r & ~_deck).sum())
             _zuviel = int((_deck & ~r).sum())
             if _fehlt or _zuviel:
-                print("     ⛔ TREUE: %d Punkte der gewollten Flaeche FEHLEN, %d zuviel"
-                      % (_fehlt, _zuviel))
-            else:
-                print("     Treue: die Maske deckt die gewollte Flaeche punktgenau (%d px)"
-                      % int(r.sum()))
+                # ⛔ ABBRUCH statt Meldung (Phase 2, Audit §4.3): eine Maske, die nicht die
+                # gewollte Flaeche ist, wird nicht geschrieben.
+                raise SystemExit("     ⛔ TREUE: %d Punkte der gewollten Flaeche FEHLEN, %d zuviel — "
+                                 "Cut %d wird NICHT geschrieben" % (_fehlt, _zuviel, cut))
+            print("     Treue: die Maske deckt die gewollte Flaeche punktgenau (%d px)"
+                  % int(r.sum()))
+        except SystemExit:
+            raise
         except Exception as _e:
-            print("     (Treuepruefung nicht moeglich: %s)" % _e)
+            raise SystemExit("     ⛔ Treuepruefung nicht moeglich (%s) — Cut %d wird NICHT geschrieben"
+                             % (_e, cut))
         print("  Cut %d: %5.1f %% Bildflaeche, %3d Rechtecke%s"
               % (cut, 100 * r.mean(), n,
                  ("  [%s]" % ", ".join("%s%s%s" % (e[0], "" if e[2] is None else " Fuss y=%d" % e[2],
@@ -656,6 +709,90 @@ def main():
         r = maskenbild.bild(room, cut, a.ppm, a.bild)
         if r:
             print("  %s" % r[0])
+
+
+def _container_lesen(path):
+    alt = {}
+    if os.path.exists(path):
+        b = open(path, "rb").read()
+        if b[:4] == b"R15M":
+            _, nc = struct.unpack_from("<II", b, 4)
+            offs = struct.unpack_from("<%dI" % nc, b, 12)
+            ends = sorted([o for o in offs if o] + [len(b)])
+            for c in range(nc):
+                if offs[c]:
+                    alt[c] = b[offs[c]:min(x for x in ends if x > offs[c])]
+    return alt
+
+
+def main_p2(a, room, rid, aus, rdt, cam, cuts):
+    """STAGE1-Bau nach Phase 2 (s. Kopf: P2_UNANGETASTET, bau_p2.py, abnahme.py)."""
+    import abnahme
+    import bau_p2
+    if a.stufe is None or a.statistik is None:
+        raise SystemExit("⛔ --stufe und --statistik sind Pflicht (gemessene Werte aus kalib_geometrie.py, "
+                         "s. build/p2/kalib_gruppe_*.txt)")
+    if not os.path.exists(a.dump):
+        raise SystemExit("⛔ Engine-Dump fehlt: %s (probe_r16_pri_masken_audit 1000 2000 > dump)" % a.dump)
+    floor = abnahme.floor_aus_dump(a.dump, rid)
+    if not floor:
+        raise SystemExit("⛔ keine Bodenpunkte fuer %s im Dump %s" % (room, a.dump))
+    bild_dir = a.bild if a.bild != "build/maskenbild" else "analysis/befunde_2026-09-19/pri-masken-phase2"
+    path = os.path.join(a.out, "%s.MSK" % room)
+    alt = _container_lesen(path)
+    secs = {}
+    bericht = {}
+    for cut in cuts:
+        e = aus[room][str(cut)]
+        if not isinstance(e, dict):
+            continue
+        if (room, cut) in P2_ABGELEHNT:
+            print("  Cut %d: ABGELEHNT, nicht geschrieben (%s)" % (cut, P2_ABGELEHNT[(room, cut)]))
+            bericht[cut] = {"ok": False, "fehler": "abgelehnt: " + P2_ABGELEHNT[(room, cut)], "alt": cut in alt}
+            continue
+        if (room, cut) in P2_UNANGETASTET:
+            print("  Cut %d: UNANGETASTET (%s)%s" % (cut, P2_UNANGETASTET[(room, cut)],
+                                                    "" if cut in alt else " — hat auch bisher keine Sektion"))
+            bericht[cut] = {"unangetastet": P2_UNANGETASTET[(room, cut)], "alt": cut in alt}
+            continue
+        bg = load_bg(a.ppm, rid, cut)
+        if bg is None:
+            print("  Cut %d: Hintergrund fehlt" % cut); continue
+        b = bau_p2.bau_cut(room, cut, e, rdt, cam, bg, floor, a.stufe, P2_STATISTIK[a.statistik],
+                           None if a.nur_pruefen else a.out, bild_dir, schreiben=not a.nur_pruefen)
+        for z in b.get("zeilen", []):
+            print("     %s" % z)
+        if "fehler" in b:
+            print("  Cut %d: ⛔ %s — nicht geschrieben%s" % (cut, b["fehler"], ", alte Sektion bleibt" if cut in alt else ""))
+            bericht[cut] = {"ok": False, "fehler": b["fehler"], "alt": cut in alt}
+            continue
+        s = b["schiene"]
+        print("  Cut %d: Soll %d px, Deckung fehlt %d / zuviel %d | %d Rechtecke, %d Tiefenstufen (%d..%d), %d Atlaspunkte | "
+              "Standplaetze %d, beruehrt %d | VOR n=%d verdeckt=%d teil=%d | HINTER n=%d frei=%d -> %s"
+              % (cut, b["soll_px"], b["fehlt"], b["zuviel"], b["rects"], b["stufen"], b["tmin"], b["tmax"], b["atlas_px"],
+                 s["plaetze"], s["beruehrt"], s["VORn"], s["VORverd"], s["VORteil"], s["HINTn"], s["HINTfrei"],
+                 "GESCHRIEBEN" if (b["ok"] and not a.nur_pruefen) else ("ok (nur geprueft)" if b["ok"] else "ABGELEHNT")))
+        if s["vor_rest"]:
+            print("     VOR-Rest (Band, x, z, verdeckt): %s" % ", ".join("(%d,%d,%d,%.2f)" % q for q in s["vor_rest"][:12]))
+        if s["hint_rest"]:
+            print("     HINTER-Rest (Band, x, z, verdeckt): %s%s" % (", ".join("(%d,%d,%d,%.2f)" % q for q in s["hint_rest"][:12]),
+                                                                    " ..." if len(s["hint_rest"]) > 12 else ""))
+        if b.get("bild"):
+            print("     Bild: %s" % b["bild"])
+        bericht[cut] = {k: v for k, v in b.items() if k not in ("sektion", "zeilen", "wahl")}
+        bericht[cut]["schiene"] = {k: v for k, v in s.items() if k not in ("vor_rest", "hint_rest")}
+        bericht[cut]["vor_rest"] = s["vor_rest"][:20]; bericht[cut]["hint_rest"] = s["hint_rest"][:20]
+        bericht[cut]["quellen"] = b["quellen"]
+        if b["ok"] and not a.nur_pruefen:
+            secs[cut] = b["sektion"]
+    if not a.nur_pruefen and secs:
+        alt.update(secs)
+        os.makedirs(a.out, exist_ok=True)
+        open(path, "wb").write(geom.pack_container(alt, rdt[1]))
+        print("  %s: %d Cuts im Container (%d neu)" % (os.path.basename(path), len(alt), len(secs)))
+    os.makedirs("build/p2", exist_ok=True)
+    json.dump(bericht, open("build/p2/bericht_%s.json" % room, "w"), indent=1, default=str)
+    return 0
 
 
 if __name__ == "__main__":

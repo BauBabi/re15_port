@@ -186,19 +186,88 @@ def build(bg_rgb, region, boxes, regionen=None, herkunft=None):
     # gezeichnet wird — ein sichtbarer dunkler Fleck genau dort, wo die Maske liegt.
     # Mit +4 vor der Verschiebung liegt der Fehler bei +0.41. Kostet nichts: es sind
     # nur 115 der 256 CLUT-Plaetze belegt, die Zwischenwerte sind vorhanden.
+    tim = tim_aus(idx, pal)
+    if herkunft is not None:
+        return bytes(tim), place, boxes, origin
+    return bytes(tim), place, boxes
+
+
+def clut_aus(pal):
+    """256 CLUT-Eintraege BGR555 aus einer RGB-Palette (Index 1..). Index 0 = 0x0000.
+
+    ⛔ PSX-FARBSCHLUESSEL (2026-09-19, pri-masken-audit.md §2/§4.7): die GPU schluesselt
+    den aufgeloesten TEXEL-WERT, nicht den Palettenindex — psx-spx
+    graphicsprocessingunitgpu.md: "Color 0000h = Fully-transparent", "0001h..7FFFh =
+    Non-transparent", und fuer opake Kommandos (die Maske ist ein SPRT mit Code 0x64,
+    kein ABE) ist "8000h = Non-Transparent Black". Ein schwarzer Palettenplatz, der als
+    0x0000 geschrieben wird, waere auf der PSX ein LOCH in der Maske (gemessen: 12556
+    Texel in ROOM1000 C7). Deshalb bekommt jeder Eintrag ausser Index 0, der auf 0x0000
+    faellt, das STP-Bit: 0x8000 = opakes Schwarz. Der PC-Zeichner (bg_pc.c
+    pri_publish_tim) schluesselt weiter Index 0 und maskiert das Bit ohnehin weg."""
     clut = np.zeros(256, np.uint16)
     q = np.minimum(pal.astype(np.int32) + 4, 255) >> 3
     r = q[:, 0].astype(np.uint16)
     g = q[:, 1].astype(np.uint16)
     b = q[:, 2].astype(np.uint16)
-    clut[1:1 + len(pal)] = r | (g << 5) | (b << 10)
+    werte = (r | (g << 5) | (b << 10)).astype(np.uint16)
+    werte[werte == 0] = 0x8000
+    # ⛔ AUCH DER UNBENUTZTE REST. Gemessen an 40 Original-Atlanten (build/p2/atlas, ueber den
+    # Engine-Dekoder gezogen): KEIN einziger Eintrag ausser Index 0 traegt 0x0000 — Median 0,
+    # Maximum 0, auch jenseits der belegten Palette. Ein leerer Platz mit 0x0000 waere auf der
+    # PSX durchsichtiges Schwarz; Capcom laesst das nicht stehen, also wir auch nicht.
+    clut[1:] = 0x8000
+    clut[1:1 + len(pal)] = werte
+    return clut
 
+
+def tim_aus(idx, pal):
+    """8-bpp-Sony-TIM (CLUT bei 0/480 wie im Original, Bild 256x256) aus Index + Palette."""
+    clut = clut_aus(pal)
     tim = bytearray()
     tim += struct.pack("<II", 0x10, 0x09)                     # Magic, 8 bpp + CLUT
     tim += struct.pack("<IHHHH", 12 + 512, CLUT_X, CLUT_Y, 256, 1)
     tim += clut.tobytes()
     tim += struct.pack("<IHHHH", 12 + ATLAS_W * ATLAS_H, 0, 0, ATLAS_W // 2, ATLAS_H)
     tim += idx.tobytes()
-    if herkunft is not None:
-        return bytes(tim), place, boxes, origin
-    return bytes(tim), place, boxes
+    return bytes(tim)
+
+
+def build_rechtecke(bg_rgb, rects):
+    """Atlas fuer Rechtecke mit EIGENER Deckung (Phase 2, geometrie.zerlegung).
+
+    rects: [(x, y, w, h, tiefe, opak)] — opak ist ein (240x320)-Bool-Bild mit den Punkten,
+    die GENAU DIESES Rechteck undurchsichtig zeichnen soll (seine Tiefenstufe). Rechtecke
+    duerfen sich auf dem Bildschirm ueberlappen; im Atlas bekommt jedes seine eigene
+    Kopie der Hintergrundpixel, undurchsichtig nur an seinen eigenen Punkten.
+    -> (tim_bytes, place {i: (ax, ay)}) oder RuntimeError, wenn das Blatt nicht reicht
+    (LAUT, nicht vergroebern)."""
+    boxes = [(r[0], r[1], r[2], r[3]) for r in rects]
+    for (x, y, w, h) in boxes:
+        if w > ATLAS_W or h > ATLAS_H:
+            raise RuntimeError("Rechteck %dx%d ist groesser als das Atlasblatt" % (w, h))
+    place, rejected = shelf_pack(boxes)
+    if rejected:
+        verloren = sum(boxes[i][2] * boxes[i][3] for i in rejected)
+        raise RuntimeError("Atlas zu klein: %d von %d Rechtecken passen nicht (%d px)"
+                           % (len(rejected), len(boxes), verloren))
+    idx = np.zeros((ATLAS_H, ATLAS_W), np.uint8)
+    rgb = np.zeros((ATLAS_H, ATLAS_W, 3), np.uint8)
+    opaque = np.zeros((ATLAS_H, ATLAS_W), bool)
+    for i, (ax, ay) in place.items():
+        x, y, w, h = boxes[i]
+        rgb[ay:ay + h, ax:ax + w] = bg_rgb[y:y + h, x:x + w]
+        opaque[ay:ay + h, ax:ax + w] = rects[i][5][y:y + h, x:x + w]
+    pix = rgb[opaque]
+    if len(pix) == 0:
+        raise RuntimeError("Atlas ohne undurchsichtige Punkte")
+    tmp = Image.fromarray(pix.reshape(-1, 1, 3))
+    pal_img = tmp.quantize(colors=255, method=Image.MEDIANCUT)
+    _roh = pal_img.getpalette() or []
+    _n = min(255, len(_roh) // 3)
+    if _n == 0:
+        raise RuntimeError("Atlas ohne Palette")
+    pal = np.array(_roh[:_n * 3], np.uint8).reshape(_n, 3)
+    flat = rgb[opaque].astype(np.int32)
+    d = ((flat[:, None, :] - pal[None, :, :].astype(np.int32)) ** 2).sum(2)
+    idx[opaque] = (np.argmin(d, 1) + 1).astype(np.uint8)
+    return tim_aus(idx, pal), place

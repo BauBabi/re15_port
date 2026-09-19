@@ -32,7 +32,10 @@ def lies_tim(p):
     """-> (idx 256x256 uint8, clut 256 uint16) oder None"""
     if not os.path.exists(p):
         return None
-    b = open(p, "rb").read()
+    return lies_tim_bytes(open(p, "rb").read())
+
+
+def lies_tim_bytes(b):
     magic, flag = struct.unpack_from("<II", b, 0)
     if magic != 0x10:
         return None

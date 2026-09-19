@@ -863,7 +863,7 @@ void re15_render_end_frame(void)
         for (int i = 0; i < mask_n; i++) mask_order[i] = i;
         for (int i = 1; i < mask_n; i++) {
             int k  = mask_order[i];
-            int kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);
+            float kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);
             int j  = i - 1;
             while (j >= 0 && re15_pri_mask_camera_z(s_pri_rects[mask_order[j]].depth) < kd) {
                 mask_order[j + 1] = mask_order[j];
@@ -893,7 +893,8 @@ void re15_render_end_frame(void)
                         int d = s_pri_rects[mask_order[q]].depth;
                         if (d < dmin) dmin = d;
                         if (d > dmax) dmax = d;
-                        if ((float)re15_pri_mask_camera_z(d) < md) verdeckend++;
+                        /* Original-Regel (re15_pri.h): verdeckt gdw. vz >= Schluessel. */
+                        if (re15_pri_mask_camera_z(d) <= md) verdeckend++;
                     }
                     fprintf(lf, "Raum %04X Cut %d | Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | Atlas %d Sektion %d | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
                             (unsigned)g_current_room_id, re15_pri_log_cut(),
@@ -902,15 +903,23 @@ void re15_render_end_frame(void)
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                             lo, hi, md, s_pri_log_fg, s_pri_log_n, mask_n,
                             mask_n ? dmin : -1, mask_n ? dmax : -1,
-                            mask_n ? dmin * 64 : -1, mask_n ? dmax * 64 : -1, verdeckend);
+                            mask_n ? (int)re15_pri_mask_camera_z(dmin) : -1,
+                            mask_n ? (int)re15_pri_mask_camera_z(dmax) : -1, verdeckend);
                     fclose(lf);
                 }
             }
         }
         /* Merge-walk: emit consecutive same-slot tri batches; whenever the next mask
-         * is farther than (or equal to) the next tri, flush the pending batch and blit
-         * that mask first (it belongs UNDER the nearer tri). I5-round GLOBAL z-sort is
-         * preserved (batches by slot within the global depth order). */
+         * is farther than the next tri, flush the pending batch and blit that mask
+         * first (it belongs UNDER the nearer tri). I5-round GLOBAL z-sort is
+         * preserved (batches by slot within the global depth order).
+         * ⛔ STRIKT (2026-09-19, re15_pri.h): der Schluessel einer Maske ist die KLEINSTE
+         * Kamera-z, die sie verdeckt ((depth+1)*65536/1023). Ein Dreieck mit
+         * tri_depth >= Schluessel liegt HINTER der Maske (Original: depth < (1023*vz)>>16,
+         * gleicher Bucket = Figur obenauf @0x8001ce54). Die Maske ist also erst dann
+         * "faellig" (wird VOR dem Dreieck gemalt = liegt darunter), wenn ihr Schluessel
+         * GROESSER als tri_depth ist — bei Gleichheit gewinnt die Figur. Das alte ">="
+         * mit depth*64 verdeckte einen Bucket zu frueh. */
         int mi = 0;
         if (s_textri_count > 0 && s_tim_texture) {
             /* ABR2 (B - F) subtraktiv wie der Shadow-Blob (einmal komponiert). */
@@ -927,7 +936,7 @@ void re15_render_end_frame(void)
                 uint8_t s  = (i < s_textri_count) ? s_textri_slot [order[i]] : 0xFF;
                 uint8_t bl = (i < s_textri_count) ? s_textri_blend[order[i]] : 0;
                 int mask_due = (mi < mask_n) &&
-                    ((float) re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) >= tri_depth);
+                    (re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth);
                 if (i == s_textri_count || s != cur_slot || bl != cur_blend || mask_due) {
                     int n = i - batch_start;
                     if (n > 0 && s_tim_slots[cur_slot].loaded) {
@@ -956,7 +965,7 @@ void re15_render_end_frame(void)
                     cur_slot = s;
                     cur_blend = bl;
                     while (mi < mask_n &&
-                           (float) re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) >= tri_depth) {
+                           re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth) {
                         const re15_pri_rect_t *r = &s_pri_rects[mask_order[mi++]];
                         SDL_Rect src = { r->src_x, r->src_y, r->w, r->h };
                         SDL_Rect dst = { r->dst_x, r->dst_y, r->w, r->h };
