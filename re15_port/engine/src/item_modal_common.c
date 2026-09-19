@@ -293,8 +293,11 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
              * (Der Installer schreibt an derselben Stelle 0x80000000 statt 0 — beide loeschen
              * Bit 0; der Unterschied ist im Port-Modell nicht abbildbar und folgenlos.)
              * prop >= prop_count (insbesondere 0xFF = "kein Modell") bleibt folgenlos. */
-            if (s_taken_prop < g_scd.prop_count)
-                g_scd.props[s_taken_prop].active = 0;          /* sw zero,0(at) @0x80021fc8 */
+            /* Index = obj_id (tk_prop), NICHT der Port-Slot: `lbu v0,6(s0)` @0x80021fa0 ->
+             * *148 -> `sw zero,0(at)` @0x80021fc8 — derselbe Pool-Index wie der Installer
+             * @0x800406f8-718. Slot == obj_id gilt nur, wenn ein Raum seine Props in
+             * obj_id-Reihenfolge ab 0 anlegt (ROOM1190 sub14: obj 7..16 auf Slots 0..9). */
+            scd_prop_hide_by_obj_id(s_taken_prop);             /* sw zero,0(at) @0x80021fc8 */
             s_visible = 0;
             s_state   = 0;           /* sb zero,DAT_80072d3b @0x8001e0e0 = DONE */
             return;

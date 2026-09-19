@@ -10,3 +10,7 @@ target_include_directories(probe_r16_objekte_paket PRIVATE ${CMAKE_SOURCE_DIR}/i
 target_compile_definitions(probe_r16_objekte_paket PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+# Phase 2 (2026-09-19): nach dem Fix (scd_prop_taken_mask_reset in scd_room_reenter, Verstecken per
+# obj_id) ist die Sonde der Pin — A (frisch), B/C/D (Folgeraum sichtbar), E (gleicher Raum versteckt).
+add_test(NAME probe_r16_objekte_paket COMMAND probe_r16_objekte_paket)
+set_tests_properties(probe_r16_objekte_paket PROPERTIES TIMEOUT 60)

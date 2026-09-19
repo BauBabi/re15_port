@@ -1821,6 +1821,13 @@ void re15_game_step(const re15_game_ctx_t *c)
          * memset(&g_scd) is about to WIPE it. Capture the door's entry cut now. */
         uint8_t entry_cut = g_scd.cam_id;
         g_scd_pending_scenario = -1;
+        /* Eintritts-Pose wie beim Tuer-/JUMP-Pfad (room_common.c): State 3 der Transitions-FSM
+         * gilt fuer JEDE Transition (`sb zero,0x800aca58` @0x8001cbdc; FUN_8001d600 verzweigt nur
+         * am Tuer-Record @0x8001d618), der cmd-0-Handler endet mit W-Bank Clip 1 Bild 0 hart
+         * (@0x80031c10-c24). Bisher blieb hier der Vorraum-Clip (Pad-Walk 105) stehen. VOR
+         * scd_room_reenter, damit ein Plc_motion des Szenario-main00 gewinnt (SCD @0x8001cdec
+         * vor Dispatcher @0x8001ce0c) — gemessen mit unit_elliot_1170_run / probe_1090_cutscene. */
+        re15_player_room_entry_pose();
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
         /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).
          * The intro's single Aot_on(3) is the ONLY reenter the original performs; the PC

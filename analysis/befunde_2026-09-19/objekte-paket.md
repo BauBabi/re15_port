@@ -232,3 +232,54 @@ Nullung in 2.2 die Voraussetzung dafuer, dass ein neuer Raum seine Props ueberha
   mit obj_id <= 14 in jedem Raum ab.
 - Die Zweitinstallations-Regel (2.3, `reinstall -> AUS`) wurde hier nicht neu geprueft; sie ist
   fuer die drei Raeume irrelevant (keine doppelte obj_id).
+
+## 6. Umsetzung (Phase 2, 2026-09-19, Branch `worktree-wf_074e2f88-24e-1`, Thema objekte-und-tuer)
+
+Umgesetzt wie Abschnitt 4 plus die Korrekturen der Gegenpruefung (`objekte-paket.skeptiker.md` §3):
+
+1. `re15_port/engine/src/scd_vm.c`: `scd_prop_taken_mask_reset()` (= Pool-Nullung FUN_8003ea7c
+   @0x8003eab0-cc, 32 Eintraege, Schritt 148; Aufruf aus FUN_800396fc @0x800399a0) und
+   `scd_prop_hide_by_obj_id()` (Pool-Index = tk_prop = obj_id, @0x800406f8-0x80040718; die
+   Live-Aufnahme nutzt denselben Index @0x80021fa0-fc8). `scd_vm_init` ruft die Reset-Funktion.
+   `op_item_aot_set` versteckt ueber die obj_id statt ueber den Slot-Index.
+2. `re15_port/engine/src/scd_room_setup.c` (`scd_room_reenter`, direkt nach dem `memset(&g_scd)`):
+   `scd_prop_taken_mask_reset()`. Gilt damit fuer alle drei Ladewege des Ports, auch den
+   Same-Room-Reenter (game_step_common.c) — konsistent mit dem einzigen Ladeweg des Originals
+   (0x8001ca54 -> FUN_8001d600 -> FUN_800396fc -> FUN_8003ea7c), im Kommentar so begruendet.
+3. Skeptiker §3.4 (Live-Aufnahme im selben Raum): `engine/src/item_modal_common.c` versteckte den
+   Prop ebenfalls ueber den Slot-Index (`g_scd.props[s_taken_prop]`), nicht ueber die obj_id —
+   dieselbe Fehlerklasse wie 4.3 (ROOM1190 sub14: obj 7..16 auf Slots 0..9). Auf den Helfer
+   `scd_prop_hide_by_obj_id` umgestellt (`sw zero,0(at)` @0x80021fc8, Index `lbu v0,6(s0)` @0x80021fa0).
+4. Deklarationen in `include/re15_scd.h`; `tests/unit/probes/r16_objekte-paket.cmake` traegt jetzt
+   `add_test(probe_r16_objekte_paket)` (TIMEOUT 60) — die Sonde ist der Pin.
+
+Messwerte (Sonde `probe_r16_objekte_paket`, deterministisch, ohne Renderer):
+
+| Fall | vorher (1.4) | nachher |
+|---|---|---|
+| A 1050 frisch | obj0/1 AN | obj0/1 AN |
+| E 1000 mit Taken-Bits 166/167 (gleicher Raum) | obj0/1 aus | obj0/1 aus (erhalten) |
+| B 1050 nach 1000 | obj0/1 **aus** (FAIL) | obj01=AN obj00=AN |
+| C 11F0 nach 1010 (Bits 140/141/142) | obj0/1/2 **aus** (FAIL x3) | obj00..0B alle AN |
+| D 1090 nach 1000 | obj0/1 **aus** (FAIL) | obj00=AN obj01=AN obj03=AN |
+| Summe | `DEFEKT: 5 Abweichung(en)`, rc=1 | `OK: 0 Abweichung(en)`, rc=0 |
+
+`probe_item_model_1020` (kein add_test, von Hand): Ausgabe vor/nach dem Fix byte-gleich
+(Abschnitt C: nach Neuladen prop[0]/prop[1] active=1, AOT-Slots 3/4/5 aktiv) — die Maske
+"Item_aot_set VOR Obj_model_set" im selben Raum bleibt wirksam. `unit_gen_11f0_switches` gruen.
+
+Gegenmessung 4.6 mit der Worktree-exe (build_p2, Startweg RE15_TITLE_SHOT + RE15_DEBUG_JUMP +
+RE15_GOTO_ROOM, Bilder/Logs unter `analysis/befunde_2026-09-19/phase2_objekte-und-tuer/`):
+
+| Lauf | vorher (1.3, Paket-exe) | nachher (Worktree-exe) |
+|---|---|---|
+| Flags 9:166/167, 1000@5 -> 1050 Cut 3 | 0 `[prop-render]`, Leiche/Rolltor fehlen | `[prop-render] pi=0 oid=0x01`, `pi=1 oid=0x00` (`obj_1050.log`), Bild `obj_1050_F250.png` |
+| Flag 9:142, 1010@5 -> 11F0 Cut 10 | Schalter obj 2 fehlt (leerer Sockel) | `pi=2 oid=0x02` … `pi=11 oid=0x0B` — alle 10 Schalter (`obj_11F0.log`, `obj_11F0_F250.png`) |
+
+(In ROOM1000/1010 selbst bleiben die genommenen Items unsichtbar: dort erscheinen die Slots 0/1
+bzw. 0/1/2 im ersten Raum nicht als `[prop-render]` — 1000: keine Zeile; 1010: nur die zwei
+nicht genommenen Props, obj 2 fehlt korrekt.)
+
+Offen: kein DuckStation-Gegenlauf (statischer Beweis geschlossen, s. Skeptiker Befund 2);
+das Release-Paket ist nach dem Merge ueber docker_win_build.sh neu zu bauen (die Paket-exe
+selbst wurde nicht neu gebaut).

@@ -209,6 +209,16 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     int16_t keep_player_model = g_scd.work_vars[0x10];
 
     memset(&g_scd, 0, sizeof(g_scd));   /* reset threads/props/cam/modes/audio-queue */
+    /* ...und die "Item schon genommen"-Prop-Maske, die AUSSERHALB von g_scd lebt. Sie ist das
+     * Port-Gegenstueck zum Zeichen-Bit im Objekt-Pool @0x800b3f98, und den nullt der Raumlader
+     * FUN_8003ea7c @0x8003eab0-cc (32 Eintraege, Schritt 148) bei JEDEM Laden — Aufruf aus
+     * FUN_800396fc @0x800399a0, dem einzigen Ladeweg (0x8001ca54 -> FUN_8001d600 ->
+     * FUN_800396fc), durch den auch eine Selbst-Tuer (Same-Room-Reenter, game_step_common.c)
+     * geht. Ohne diese Nullung versteckte ein einziger Raum mit genommenem Item in jedem
+     * Folgeraum die Props derselben obj_id (Leiche 1050, Kisten 1090, Schalter 11F0 —
+     * Runde 16, analysis/befunde_2026-09-19/objekte-paket.md). Das Item_aot_set des Raums
+     * setzt die Maske beim Laden neu, wenn SEIN Item genommen ist (@0x80040718). */
+    scd_prop_taken_mask_reset();
     g_scd.work_vars[0x10] = keep_player_model;   /* s.o. — 0x800b0ff0 wird nicht gewischt */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
     g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-

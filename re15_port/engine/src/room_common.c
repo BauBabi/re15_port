@@ -16,6 +16,7 @@
 #include "re15_actor.h"
 #include "re15_enemy.h"   /* re15_enemy_reset on room change */
 #include "re15_enemy_ai.h"    /* re15_player_cmd_reset — Kommandoregister @0x8001CBDC/@0x80031518 */
+#include "re15_player.h"      /* re15_player_room_entry_pose — cmd-0-Endzustand @0x80031c10-c24 */
 #include "re15_savepoint.h"   /* re15_savepoint_reset on room change */
 #include "re15_itembox.h"     /* re15_itembox_reset on room change (box pending) */
 #include "re15_scd.h"
@@ -276,9 +277,13 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * das das Original nicht hat. Mit diesem Reset ist der Fall gar nicht mehr erreichbar. */
     {
         re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        p->motion      = 0;    /* +0x94 @0x80031924 */
-        p->anim_frame  = 0;    /* +0x95 @0x80031954 */
-        p->anim_flags  = 0;    /* +0x1C4 @0x8003197C */
+        /* Motion/Bild/Flags: der erste Store +0x94 := 0 @0x80031924 wird im SELBEN Handler
+         * @0x80031c10 mit der Waffenbank (Clip 1, Bild 0, +0x8f := 0 = hart) ueberschrieben —
+         * wirksam ist der ENDZUSTAND. Bisher blieb hier motion=0 stehen, und der Renderer
+         * posierte def-Bank Clip 0 (in Raeumen mit RDT-Block @0x5C die Raum-Cinematic-Bank:
+         * die "komische Animation" ab ROOM1040, Runde 16). Die Funktion setzt +0x94/+0x95/+0x8f/
+         * +0x1C4 (@0x80031c10/@0x80031c18/@0x80031c20/@0x8003197C), s. player_common.c. */
+        re15_player_room_entry_pose();
         p->sub_state_1 = 0;
         p->sub_state_2 = 0;
         p->sub_state_3 = 0;

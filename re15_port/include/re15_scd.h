@@ -493,6 +493,13 @@ extern scd_vm_t g_scd;
 /* VM control */
 void scd_vm_init(void);
 void scd_vm_tick(void);    /* call once per 30Hz tick (every 2nd vsync) */
+/* "Item schon genommen"-Prop-Maske nullen = Objekt-Pool-Nullung des Raumladers FUN_8003ea7c
+ * @0x8003eab0-cc (gerufen aus FUN_800396fc @0x800399a0 bei JEDEM Raumladen). Gerufen von
+ * scd_vm_init und scd_room_reenter; die Maske gilt nur fuer den gerade geladenen Raum. */
+void scd_prop_taken_mask_reset(void);
+/* Prop-Zeichen-Bit ueber die obj_id loeschen (Pool-Index = tk_prop = obj_id, @0x800406f8-718 /
+ * Live-Aufnahme @0x80021fa0-fc8). Installer (Item_aot_set) und Live-Aufnahme (Item-Modal). */
+void scd_prop_hide_by_obj_id(uint8_t obj_id);
 
 /* ===========================================================================================
  *  re15_cam_present_tick — der SELBSTHEILENDE Kamera-Apply des Originals

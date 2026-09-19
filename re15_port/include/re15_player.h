@@ -69,6 +69,13 @@
  * view is rebuilt for the current cut. */
 void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits);
 
+/* Raumeintritts-Pose = Endzustand des cmd-0-Handlers LAB_800318f8: W-Bank Clip 1 (+0x94 := 1
+ * @0x80031c10), Bild 0 (+0x95 @0x80031c18), hart ohne Crossfade (+0x8f := 0 @0x80031c20),
+ * vorwaerts (a2 = 0 @0x80031bf4). Gerufen vom Tuer-/JUMP-Pfad (room_common.c) und vom
+ * Same-Room-Reenter (game_step_common.c), jeweils VOR scd_room_reenter. Runde 16, Dossier
+ * analysis/befunde_2026-09-19/tuer-animation-1040.md. */
+void re15_player_room_entry_pose(void);
+
 /* Shared per-frame NPC animation advance — runs in EVERY game_step branch (unlike the player anim,
  * which is frozen when player_tick is skipped). Keeps zombies animating while the player is grabbed/
  * dead and lets a dying zombie's death clip complete to CORPSE. Byte-true: entity anim advances in
