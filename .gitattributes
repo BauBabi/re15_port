@@ -11,3 +11,6 @@ original/** -text
 # (NUL-Bytes in den ersten 8000 Byte) — bei einer Aufnahme, die zufaellig ohne fruehe
 # NULs beginnt, wuerde autocrlf sie beim Ein-/Auschecken VERAENDERN und damit zerstoeren.
 synchro/** -text
+# Gradle-Wrapper-Skript des Android-Baus hat keine .sh-Endung; core.autocrlf=true wuerde es
+# beim Auschecken auf CRLF ziehen, und "bash ./gradlew" stirbt dann am \r. Immer LF.
+re15_port/platform/android/gradlew text eol=lf

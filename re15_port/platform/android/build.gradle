@@ -1,0 +1,5 @@
+// RE1.5 Port — Android (Gradle-Wurzel). Der eigentliche Bau steht in app/build.gradle.
+// AGP 8.7.x verlangt Gradle >= 8.9 (gradle/wrapper: 8.11.1) und JDK 17.
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+}

@@ -21,6 +21,7 @@
 #include <windows.h>   /* GetSystemMetrics(SM_REMOTESESSION) — RDP-Erkennung fuer die Pad-Diagnose */
 #endif
 #include "re15_engine.h"
+#include "touch_overlay_pc.h"   /* On-Screen-Pad: Finger -> dieselben Pad-Bits */
 
 #define RE15_PAD_UP       0x0010
 #define RE15_PAD_RIGHT    0x0020
@@ -341,6 +342,11 @@ void re15_input_tick(void)
     /* GAMEPAD: OR the Steam Deck / Xbox-style controller bits into the same pad word (before the
      * scripted override, exactly like the keyboard) so a controller drives every screen. */
     bits |= pad_read_bits();
+
+    /* TOUCH-OVERLAY (Android / RE15_TOUCH_OVERLAY=1): Finger auf dem On-Screen-Pad liefern
+     * dieselben Bits; der F9-Knopf setzt die befund.log-MARKE ueber den Debug-Kanal (Flanke). */
+    bits |= re15_touch_pc_pad_bits();
+    if (re15_touch_pc_take_marke()) s_dbg_pressed |= (uint16_t)(1u << 8);   /* F9 = Bit 8 */
 
     /* SELECT+START held together = toggle fullscreen (the controller equivalent of F11); consume the
      * two bits while the combo is held so it does not also open the inventory / motion-debug. */

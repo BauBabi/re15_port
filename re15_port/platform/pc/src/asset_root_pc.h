@@ -40,6 +40,11 @@ extern "C" {
 /* Verzeichnis der laufenden exe, ohne abschliessenden Trenner ("" wenn nicht ermittelbar). */
 const char *re15_pc_exe_dir(void);
 
+#if defined(__ANDROID__)
+/* Android: den App-Speicherordner als "exe-Verzeichnis" verankern (siehe asset_root_pc.c). */
+void re15_pc_set_exe_dir(const char *dir);
+#endif
+
 /* Geordnete Wurzel-Listen. i ab 0; NULL hinter dem letzten Eintrag. Pfade OHNE End-Trenner. */
 const char *re15_pc_cd_root(int i);      /* .../shared_assets/PSX          */
 const char *re15_pc_shared_root(int i);  /* .../shared_assets              */

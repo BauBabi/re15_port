@@ -12,6 +12,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 # =============================================================================
 option(RE15_BUILD_PSX "Build PSX target via PSn00bSDK" OFF)
 option(RE15_BUILD_PC  "Build PC target (SDL2/OpenGL)"  ON)
+# Android (2026-09-19): dieselbe Engine + dieselben PC-Plattformquellen als libmain.so fuer
+# SDLActivity. Wird NUR vom Gradle-Projekt platform/android/ gesetzt (mit RE15_BUILD_PC=OFF);
+# Windows/Linux-Builds bleiben davon unberuehrt.
+option(RE15_BUILD_ANDROID "Build Android target (libmain.so, SDL2 shared)" OFF)
 
 # =============================================================================
 # CMake Module Path
@@ -87,6 +91,13 @@ endif()
 # =============================================================================
 if(RE15_BUILD_PC)
     add_subdirectory(platform/pc)
+endif()
+
+# =============================================================================
+# Android-Target (Gradle -> externalNativeBuild -> diese Datei)
+# =============================================================================
+if(RE15_BUILD_ANDROID)
+    add_subdirectory(platform/android/jni)
 endif()
 
 # =============================================================================

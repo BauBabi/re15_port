@@ -16,7 +16,8 @@ target_include_directories(re15_engine PUBLIC ${CMAKE_SOURCE_DIR}/include)
 # Lib ist (nicht flach ins Target kompiliert wie in psx_dev), muss die Definition
 # explizit gesetzt werden — passend zum aktiven Target. PUBLIC, damit sie auch an
 # die Plattform-Backends propagiert, die die Lib linken.
-if(RE15_BUILD_PC)
+if(RE15_BUILD_PC OR RE15_BUILD_ANDROID)
+    # Android nutzt die PC-Codepfade der Engine (stdio, fopen-Assets) — es ist derselbe Port.
     target_compile_definitions(re15_engine PUBLIC RE15_PLATFORM_PC=1)
 endif()
 if(RE15_BUILD_PSX)

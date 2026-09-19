@@ -1,0 +1,237 @@
+// =============================================================================
+// RE1.5 Port — Android-App (SDLActivity + libmain.so) — 2026-09-19
+// =============================================================================
+// Bauweg (release/build_android.sh ruft genau das):
+//   ./gradlew -Pre15Version=v0.8.4 fetchSdl2 assembleRelease
+//
+// Was dieses Skript ausser dem ueblichen AGP-Bau tut:
+//   fetchSdl2          laedt SDL2-2.28.5.tar.gz (sha256-geprueft, dieselbe Version wie der
+//                      PC-Bau per FetchContent) nach platform/android/_deps/ und entpackt es.
+//                      Daraus kommen die Java-Klassen org.libsdl.app.* (SDLActivity) und
+//                      der C-Quellbaum fuer libSDL2.so (jni/CMakeLists.txt).
+//   stageAssets        kopiert (Sync) die vier Asset-Baeume in app/build/re15_assets/:
+//                      shared_assets/PSX, shared_assets/extracted_fx, shared_assets/RE2,
+//                      synchro/STAGE* — dieselbe Liste wie release/make_package.sh
+//                      (copy_common), synchro/unused bleibt draussen.
+//   writeAssetManifest schreibt dort re15_assets.txt ("<bytes>\t<pfad>"); android_glue.c
+//                      entpackt danach beim ersten Start in den App-Speicherordner.
+//   noCompress         JEDE Endung der Asset-Baeume -> die APK speichert die Assets
+//                      unkomprimiert (Entpacken = reines Kopieren, ~365 MB APK).
+// =============================================================================
+plugins {
+    id 'com.android.application'
+}
+
+def repoRoot    = file("$projectDir/../../../..").canonicalFile
+def portRoot    = new File(repoRoot, "re15_port")
+def sdlVersion  = "2.28.5"
+def sdlSha256   = "332cb37d0be20cb9541739c61f79bae5a477427d79ae85e352089afdaf6666e4"
+def depsDir     = new File(projectDir.parentFile, "_deps")
+def sdlSrc      = new File(depsDir, "SDL2-${sdlVersion}")
+def assetStage  = layout.buildDirectory.dir("re15_assets").get().asFile
+def re15Version = (project.findProperty("re15Version") ?: "v0.0.0-dev").toString()
+
+// Hilfsfunktionen als CLOSURES, nicht als Script-Methoden: nur Closures sehen die
+// script-lokalen def-Variablen (portRoot, repoRoot, ...) — eine Methode nicht
+// ("Could not get unknown property 'portRoot'", gemessen 2026-09-19).
+// v0.8.4 -> 80400 (Major*1000000 + Minor*10000 + Patch*100); Suffixe (-3-gabc) zaehlen nicht.
+def computeVersionCode = { String v ->
+    def m = (v =~ /(\d+)\.(\d+)\.(\d+)/)
+    if (m.find()) {
+        return m.group(1).toInteger() * 1000000 + m.group(2).toInteger() * 10000 + m.group(3).toInteger() * 100
+    }
+    return 1
+}
+
+def sha256 = { File f ->
+    def md = java.security.MessageDigest.getInstance("SHA-256")
+    f.withInputStream { is ->
+        byte[] buf = new byte[1 << 20]
+        int n
+        while ((n = is.read(buf)) > 0) md.update(buf, 0, n)
+    }
+    return md.digest().collect { String.format("%02x", it) }.join()
+}
+
+// Alle Endungen (bzw. ganze Namen ohne Endung) der Asset-Baeume — fuer noCompress.
+def noCompressList = { ->
+    def exts = new TreeSet<String>()
+    [new File(portRoot, "shared_assets"), new File(repoRoot, "synchro")].each { root ->
+        if (!root.isDirectory()) return
+        root.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+            def n = f.name
+            def i = n.lastIndexOf('.')
+            def e = (i > 0 && i < n.length() - 1) ? n.substring(i + 1) : n
+            exts << e
+            exts << e.toLowerCase()
+            exts << e.toUpperCase()
+        }
+    }
+    return exts as List
+}
+
+tasks.register("fetchSdl2") {
+    description = "SDL2 ${sdlVersion} laden (sha256-geprueft) und nach _deps/ entpacken"
+    outputs.dir(sdlSrc)
+    doLast {
+        if (new File(sdlSrc, "CMakeLists.txt").exists()) {
+            logger.lifecycle("SDL2 ${sdlVersion} liegt bereits unter ${sdlSrc}")
+            return
+        }
+        depsDir.mkdirs()
+        def tgz = new File(depsDir, "SDL2-${sdlVersion}.tar.gz")
+        if (!tgz.exists() || sha256(tgz) != sdlSha256) {
+            def url = "https://github.com/libsdl-org/SDL/releases/download/release-${sdlVersion}/SDL2-${sdlVersion}.tar.gz"
+            logger.lifecycle("Lade ${url}")
+            tgz.withOutputStream { out -> new URL(url).openStream().withStream { inp -> out << inp } }
+        }
+        def got = sha256(tgz)
+        if (got != sdlSha256) throw new GradleException("SDL2-Tarball: sha256 ${got} != erwartet ${sdlSha256}")
+        copy {
+            from tarTree(resources.gzip(tgz))
+            into depsDir
+        }
+        if (!new File(sdlSrc, "CMakeLists.txt").exists())
+            throw new GradleException("SDL2-Tarball entpackt, aber ${sdlSrc}/CMakeLists.txt fehlt")
+    }
+}
+
+tasks.register("stageAssets", Sync) {
+    description = "Asset-Baeume nach app/build/re15_assets/ spiegeln (dieselbe Liste wie make_package.sh)"
+    into(assetStage)
+    from(new File(portRoot, "shared_assets/PSX"))          { into "shared_assets/PSX" }
+    from(new File(portRoot, "shared_assets/extracted_fx")) { into "shared_assets/extracted_fx" }
+    from(new File(portRoot, "shared_assets/RE2"))          { into "shared_assets/RE2" }
+    from(new File(repoRoot, "synchro")) {
+        into "synchro"
+        include "STAGE*/**"        // synchro/unused/ + README bleiben draussen (kein Codepfad liest sie)
+    }
+    preserve { include "re15_assets.txt" }
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    doFirst {
+        ["shared_assets/PSX/STAGE1", "shared_assets/extracted_fx/effect0_blood.tim",
+         "shared_assets/RE2/CDEMD0.EMS", "shared_assets/RE2/ENEMSE.VBS"].each { rel ->
+            if (!new File(portRoot, rel).exists())
+                throw new GradleException("Asset fehlt im Repo: re15_port/${rel}")
+        }
+        if (!new File(repoRoot, "synchro/STAGE1/room1170/main00.wav").exists())
+            throw new GradleException("Voiceover fehlt im Repo: synchro/STAGE1/room1170/main00.wav")
+    }
+}
+
+tasks.register("writeAssetManifest") {
+    description = "re15_assets.txt (Groesse + Pfad je Datei) fuer das Entpacken auf dem Geraet"
+    dependsOn "stageAssets"
+    def manifest = new File(assetStage, "re15_assets.txt")
+    inputs.files(fileTree(assetStage) { exclude "re15_assets.txt" })
+    outputs.file(manifest)
+    doLast {
+        def lines = []
+        long total = 0
+        fileTree(assetStage) { exclude "re15_assets.txt" }.visit { d ->
+            if (!d.isDirectory()) {
+                def len = d.file.length()
+                lines << "${len}\t${d.relativePath.pathString}"
+                total += len
+            }
+        }
+        lines.sort()
+        manifest.text = "# re15 assets ${lines.size()} ${total}\n" + lines.join("\n") + "\n"
+        logger.lifecycle("re15_assets.txt: ${lines.size()} Dateien, ${total} Bytes")
+        if (lines.size() < 3000) throw new GradleException("Asset-Liste zu kurz (${lines.size()} < 3000) — Staging unvollstaendig?")
+    }
+}
+
+android {
+    namespace "de.re15.port"
+    compileSdk 35
+    buildToolsVersion "35.0.0"       // = BUILD_TOOLS_PKG in release/build_android.sh (sonst zieht AGP 34.0.0 nach)
+    ndkVersion "27.2.12479018"       // = NDK_PKG in release/build_android.sh
+
+    defaultConfig {
+        applicationId "de.re15.port"
+        minSdk 24
+        targetSdk 35
+        versionCode computeVersionCode(re15Version)
+        versionName re15Version
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"    // x86_64 = Emulator
+        }
+        externalNativeBuild {
+            cmake {
+                arguments "-DRE15_BUILD_PC=OFF",
+                          "-DRE15_BUILD_ANDROID=ON",
+                          "-DRE15_BUILD_TESTS=OFF",
+                          "-DRE15_BUILD_TOOLS=OFF",
+                          "-DRE15_SDL2_SRC=" + sdlSrc.absolutePath.replace('\\', '/'),
+                          "-DRE15_ASSETS_PATH=" + new File(portRoot, "shared_assets/PSX").absolutePath.replace('\\', '/'),
+                          "-DANDROID_STL=c++_static",
+                          "-DANDROID_PLATFORM=android-24"
+                targets "main", "SDL2"
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path new File(portRoot, "CMakeLists.txt")
+            version "3.22.1"
+        }
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs += new File(sdlSrc, "android-project/app/src/main/java")
+            assets.srcDirs += assetStage
+        }
+    }
+
+    androidResources {
+        noCompress += noCompressList()
+    }
+
+    signingConfigs {
+        // Standard: der Android-Debug-Schluessel (~/.android/debug.keystore) — fuer Sideload
+        // ausreichend. Ein eigener Schluessel per RE15_KEYSTORE/RE15_KEYSTORE_PASS/
+        // RE15_KEY_ALIAS/RE15_KEY_PASS (Umgebung) ueberschreibt das.
+        release {
+            def ks = System.getenv("RE15_KEYSTORE")
+            if (ks && new File(ks).exists()) {
+                storeFile file(ks)
+                storePassword System.getenv("RE15_KEYSTORE_PASS") ?: ""
+                keyAlias System.getenv("RE15_KEY_ALIAS") ?: "re15"
+                keyPassword System.getenv("RE15_KEY_PASS") ?: (System.getenv("RE15_KEYSTORE_PASS") ?: "")
+            } else {
+                initWith debug
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
+}
+
+preBuild.dependsOn("fetchSdl2", "writeAssetManifest")

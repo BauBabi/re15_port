@@ -27,6 +27,7 @@
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
+#include "touch_overlay_pc.h" /* On-Screen-Pad (Android: an; Desktop: RE15_TOUCH_OVERLAY=1) */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -500,10 +501,25 @@ int re15_render_pc_dbg_max_sy(void)          { return s_dbg_last_max_sy; }
 
 void re15_render_init(void)
 {
+#if defined(__ANDROID__)
+    /* Android: der Bootstrap (android_glue.c) initialisiert den Renderer schon VOR dem
+     * Entpacken der Assets (Fortschrittsanzeige); der reguläre Aufruf in main() ist dann ein
+     * No-op. Nur hier — auf Windows/Linux gibt es genau einen Aufruf. */
+    if (s_window) return;
+    /* Querformat erzwingen, bevor das Fenster (= die Surface) entsteht. */
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    /* Zurueck-Taste NICHT als Activity-Ende: sie kaeme als SDL_SCANCODE_AC_BACK an und
+     * wuerde sonst das Spiel ohne Speichern beenden. */
+    SDL_SetHint(SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "1");
+#endif
+    re15_touch_pc_preinit();   /* Maus->Finger-Hint (nur mit RE15_TOUCH_OVERLAY=1 auf dem Desktop) */
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER) != 0) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         exit(1);
     }
+    /* Finger-Watch VOR dem Renderer registrieren (SDLs Renderer-Watch klemmt Finger sonst auf den
+     * 4:3-Ausschnitt; No-op ohne Overlay). */
+    re15_touch_pc_attach_watch();
 
     /* WINDOWED by default, at the largest integer scale that FITS the screen (<=90% of the usable
      * desktop) — so a big monitor gets scale 4 but a small one shrinks instead of covering the whole
@@ -519,6 +535,11 @@ void re15_render_init(void)
     { const char *ws = getenv("RE15_WINDOW_SCALE"); if (ws && *ws) { int s = atoi(ws); if (s >= 1 && s <= 8) scale = s; } }
     Uint32 win_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
     if (getenv("RE15_FULLSCREEN")) win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#if defined(__ANDROID__)
+    /* Immer Vollbild/Immersive (SDL ruft dafuer SDLActivity.setWindowStyle(true)); die
+     * logische 320x240-Groesse unten letterboxt das 4:3-Bild in jedes Panel. */
+    win_flags |= SDL_WINDOW_FULLSCREEN;
+#endif
     fprintf(stderr, "[window] %s %dx%d\n",
             (win_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ? "FULLSCREEN (RE15_FULLSCREEN set)" : "windowed",
             SCREEN_XRES * scale, SCREEN_YRES * scale);
@@ -583,7 +604,15 @@ void re15_render_init(void)
             SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE,  SDL_BLENDOPERATION_ADD);          /* A: keep dst */
         SDL_SetTextureBlendMode(s_shadow_tex, s_shadow_blend);
     }
+
+    /* On-Screen-Pad: kennt ab jetzt den Renderer (Ausgabegroesse fuer Layout + Treffer). */
+    re15_touch_pc_init(s_renderer);
 }
+
+#if defined(__ANDROID__)
+/* Fuer die Entpack-Fortschrittsanzeige des Android-Bootstraps (android_glue.c). */
+SDL_Renderer *re15_render_pc_renderer(void) { return s_renderer; }
+#endif
 
 /* Toggle windowed <-> (desktop) fullscreen. Bound to F11 / Alt+Enter (event loop below) and to a
  * SELECT+START controller combo (input_pc.c). Desktop fullscreen + the logical render size scales
@@ -649,6 +678,7 @@ void re15_render_begin_frame(void)
     /* Pump events so the window stays responsive (close button, etc.) */
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
+        re15_touch_pc_event(&e);   /* Finger-Events -> On-Screen-Pad (inert ohne Overlay) */
         if (e.type == SDL_QUIT) {
             exit(0);
         } else if (e.type == SDL_KEYDOWN &&
@@ -1358,6 +1388,11 @@ void re15_render_end_frame(void)
             SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
         }
     }
+
+    /* ON-SCREEN-PAD (Touch-Overlay) — die oberste Ebene, in FENSTER-Koordinaten (auch in den
+     * Letterbox-Streifen). VOR dem Mess-Readback, damit RE15_FRAMEDUMP das Overlay mit
+     * abbildet (Desktop-Nachweis mit RE15_TOUCH_OVERLAY=1). Ohne Overlay ein No-op. */
+    re15_touch_pc_draw(s_renderer);
 
     /* MESS-HAKEN (2026-08-21): den KOMPLETT komponierten Frame lesen, solange der
      * Backbuffer noch gueltig ist — also VOR SDL_RenderPresent. Genau daran scheitern
