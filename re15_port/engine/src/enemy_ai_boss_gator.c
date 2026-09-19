@@ -458,6 +458,51 @@ static void gb_opfer_skalieren(const re15_actor_t *e, re15_actor_t *pl,
         pl->y -= (int32_t)(((int64_t)py * (4096 - s)) >> 12);
 }
 
+/* ==== MESS-VARIANTE "Stufe B2" (Dossier gator-finisher-sounds.md §4 B2 / "Offen") =====
+ * RE2 faehrt seinen LUNGE als Clip-Folge 2 -> 3, nicht als 45-Bilder-Clip-4-Schnapp:
+ *   Phase 0 @0x80100d60-84: SE 4 (`beq v1,zero,0x80100d84` / `addiu a0,zero,4`), Phase++
+ *   Phase 1 @0x80100d9c-e0c: `lbu v0,556(s1)` (+0x22C); != 0 -> FUN_8001a330(e,2,16,0)
+ *            ZWEIMAL je Tick (@0x80100db4 + @0x80100dcc), sonst EINMAL (@0x80100de4);
+ *            s0 = ODER der Wrap-Rueckgaben -> Phase++ (@0x80100df0-e00), +0x225 = 1
+ *   Phase 2 @0x80100e10-e60: dasselbe mit Clip 3, frac 0 (@0x80100e20/e28)
+ *            Bissfenster @0x80100e64-a4: +0x21A == 2 && +0x14C == 3 && +0x14D >= 0x72
+ *            (`sltiu v0,v0,0x72` @0x80100e8c) -> +0x218 |= 0x10
+ *            Ende (Wrap) @0x80100ea8-c0: +0x225 = 0, Yaw +0x400 (`addiu v0,v0,1024`)
+ * FUN_8001a330 erhoeht den Clip-Frame je Ruf um genau 1 (`lbu v0,333(s2)` /
+ * `addiu v0,v0,1` / `sb v0,333(s2)` @0x80029b28-34) und meldet den Wrap mit 1
+ * (@0x80029b3c-4c) — zwei Rufe = zwei Bilder je Tick.
+ *
+ * DREI KORREKTUREN, in dieser Sitzung selbst nachdisassembliert:
+ * (1) Das dritte Argument (16 bzw. 0) ist KEIN Frame-Schritt und kein "frac":
+ *     FUN_8001a330 legt es bei Clip-Wechsel nach +0x14E ab (`sb s1,334(s0)`
+ *     @0x8001a364); dort liest es der Pose-Bauer als Blend-Zaehler
+ *     (`lbu t3,334(s2)` @0x800296a8, `beq t3,zero,0x8002973c` @0x800296b0).
+ *     Der daraus gerechnete Wert 4096/(a2+1) (@0x8001a37c-94) reist in der
+ *     UNTEREN Haelfte von a3 mit, und FUN_8002959c maskiert genau die weg
+ *     (`lui v0,0xffff` / `and v0,a3,v0` @0x800295b8-c4) — gelesen wird nur die
+ *     obere Haelfte (Rueckwaerts-Flag). Das Tempo steht also allein im
+ *     Doppelruf, nicht im Argument.
+ * (2) Die RE2-Lunge-Routine bewegt den Gator mit KEINER eigenen Zeile. Der
+ *     einzige jal vor der Phasen-Weiche ist FUN_801012fc (@0x80100d40), und das
+ *     ist ein Routinen-Wechsel-Gate (setzt +0x224 = 1, `sb v0,548(a0)`
+ *     @0x8010137c) — kein Vortrieb. Die Phasen 0/1/2 rufen nur 0x8005bd6c (SE)
+ *     und 0x8001a330 (Clip). RE2s Ansturm IST die Wurzelbewegung der Clips 2/3.
+ * (3) Der Port faehrt statt dessen eine ZIELSUCHENDE Hatz: jeden Tick
+ *     re15_enemy_steer_point(..., 0x50) (:1505) und re15_ai_advance(
+ *     GB_LUNGE_SPEED) bis gb_maul_dist <= 1400 (:1509-1519). B2s 150-Tick-
+ *     Taktung auf diese Hatz gepfropft ergibt kein Zuschnappen, sondern ein
+ *     Stehen mit offenem Maul am Ziel (Messung s. Dossier §7).
+ *
+ * DEFAULT AUS — und bleibt aus. Der Schalter existiert allein, damit die
+ * Messung reproduzierbar bleibt (probe_p3_gator_lunge); das Ergebnis und die
+ * Begruendung stehen im Dossier §7. */
+static int gb_lunge_b2(void)
+{
+    static int s = -1;
+    if (s < 0) { const char *v = getenv("RE15_GB_LUNGE_B2"); s = (v && *v && *v != '0'); }
+    return s;
+}
+
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
 {
     int32_t fc = re15_cos_q12((int)e->rot_y);
@@ -1410,7 +1455,7 @@ void re15_gator_boss_tick(int slot)
                     gb_se(4);                          /* RE2 Lunge-P0 Angriffs-Brueller: `beq v1,zero,0x80100d84`
                                                         * @0x80100d60 / `addiu a0,zero,4` @0x80100d64 / `jal
                                                         * 0x8005bd6c` @0x80100d84 (Phase 2 Stufe B1) */
-                    gb_se(3); e->motion = 4; e->anim_frame = 0;
+                    gb_se(3); e->motion = (uint8_t)(gb_lunge_b2() ? 2 : 4); e->anim_frame = 0;
                     break;
                 }
                 /* RUECKWAERTSGANG (Nutzer: "wenn es dem Alligator hilft mal
@@ -1475,7 +1520,7 @@ void re15_gator_boss_tick(int slot)
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
              * zeigte deshalb "keinerlei Beissanimation" (Nutzer-Befund). */
             gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
-            gb_se(3); e->motion = 4; e->anim_frame = 0;
+            gb_se(3); e->motion = (uint8_t)(gb_lunge_b2() ? 2 : 4); e->anim_frame = 0;
         }
         break; }
 
@@ -1508,6 +1553,28 @@ void re15_gator_boss_tick(int slot)
                         gb_wand_dazwischen(e, pl), (int)pl->hit_react);
                 fflush(s_bl);
             }
+        }
+        if (gb_lunge_b2()) {
+            /* MESS-VARIANTE B2 (s. gb_lunge_b2): Clip 2 -> Clip 3, je Tick ZWEI Bilder
+             * (Doppel-Advance @0x80100da4-dd0 / @0x80100e18-e4c), Bissfenster Clip 3
+             * f >= 114 (@0x80100e8c), zum Schluss Yaw += 0x400 (@0x80100eb0-c0). */
+            if (e->motion == 2) {
+                e->anim_frame += 2;
+                if (e->anim_frame >= 150) { e->motion = 3; e->anim_frame = 0; }
+            } else {
+                if (!g->bite_done && e->anim_frame >= 114 && pl->hit_react == 0
+                    && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
+                    && !gb_wand_dazwischen(e, pl))
+                    gb_biss_abschluss(e, g, pl);
+                e->anim_frame += 2;
+                if (e->anim_frame >= 150) {
+                    e->rot_y = (int16_t)((e->rot_y + 0x400) & 0x0fff);
+                    if (e->hit_stun == 0) e->hit_stun = 0x14;
+                    g->phase = GBP_CHASE;
+                    e->motion = 0; e->anim_frame = 0;
+                }
+            }
+            break;
         }
         if (!g->bite_done
             && e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet

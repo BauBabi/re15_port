@@ -29,6 +29,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"
 #include "re15_ai_flavor.h"
+#include "re15_skeleton.h"   /* re15_cos_q12/sin_q12 fuer die Maul-Distanz-Kopie */
 #include "re15_player.h"
 #include "re15_damage.h"
 #include "re15_collision.h"
@@ -60,6 +61,23 @@ static uint8_t *slurp(const char *path, size_t *n)
     return b;
 }
 
+/* Kopie von gb_maul_dist (enemy_ai_boss_gator.c:483, dort static): Abstand Leons zum
+ * Maul-Punkt 2600 Einheiten vor der Entity. Das Trefferkriterium beider Varianten ist
+ * `<= 1500` (:1543 B2 / :1562 heute) — die Sonde misst damit, wie viele Ticks eines
+ * Anlaufs das Maul AM ZIEL steht, ohne dass das Bissfenster offen ist ("Totzeit"). */
+static int32_t p_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    int32_t fc = re15_cos_q12((int)e->rot_y);
+    int32_t fs = re15_sin_q12((int)e->rot_y);
+    int32_t kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);
+    int32_t kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);
+    int64_t dx = pl->x - kx, dz = pl->z - kz;
+    int64_t d2 = dx * dx + dz * dz;
+    int32_t d = 0;
+    while ((int64_t)d * d < d2 && d < 30000) d += 16;
+    return d;
+}
+
 static const struct { int32_t x, z; const char *wo; } BSTART[] = {
     { -6900, -24700, "Lauerplatz" }, {  5000, -24000, "SO" },
     { -6000,  -8000, "NW" },         {  3000,  -7000, "NO" },
@@ -81,6 +99,7 @@ int main(void)
     long sum_bis_treffer = 0, sum_fenster = 0, fenster_n = 0;
     int max_fenster = 0, min_fenster = 99999;
     long sum_strecke = 0; int strecke_n = 0;
+    long sum_totzeit = 0; int totzeit_n = 0; int max_totzeit = 0;
     const char *b2 = getenv("RE15_GB_LUNGE_B2");
 
     /* ---- Teil 0: Clip-Laengen + B2-Fenster aus den Daten ---- */
@@ -115,8 +134,11 @@ int main(void)
            b2 ? b2 : "(aus)");
 #ifdef _WIN32
     _putenv("RE15_GB_STUMM=1");
+    _putenv("RE15_GB_TEST=1");     /* aggro sofort - identisch zu probe_gator_sweep.c:81,
+                                    * damit ALLE 72 Faelle einen aktiven Boss haben */
 #else
     setenv("RE15_GB_STUMM", "1", 1);
+    setenv("RE15_GB_TEST", "1", 1);
 #endif
     buf = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2090.RDT", &n);
     if (!buf || re15_rdt_parse(buf, n, &g_room_rdt) != 0) { printf("FAIL RDT\n"); return 1; }
@@ -141,6 +163,7 @@ int main(void)
         int32_t lx = BLEON[lj].x, lz = BLEON[lj].z;
         int f, treffer = 0, tf = -1;
         int in_lunge = 0, lunge_start = -1, lunge_case = 0, lunge_case_hit = 0;
+        int totzeit = 0;   /* Ticks im Anlauf: Maul am Ziel (<=1500), Fenster noch zu */
         int32_t lstart_x = 0, lstart_z = 0;
         uint8_t prev_motion = 0;
         memset(e, 0, sizeof *e);
@@ -168,7 +191,7 @@ int main(void)
             /* Anlauf-Erkennung: Eintritt in den Angriffs-Clip (heute 4, B2 Clip 2). */
             if ((e->motion == 4 || e->motion == 2) && prev_motion != e->motion
                 && e->anim_frame <= 1) {
-                in_lunge = 1; lunge_start = f; lunge_case++;
+                in_lunge = 1; lunge_start = f; lunge_case++; totzeit = 0;
                 lstart_x = e->x; lstart_z = e->z;
             } else if (in_lunge && e->motion != 4 && e->motion != 2 && e->motion != 3) {
                 in_lunge = 0;
@@ -178,6 +201,9 @@ int main(void)
                     sum_strecke += d; strecke_n++; }
             }
             prev_motion = e->motion;
+            /* TOTZEIT: das Maul steht schon am Ziel (Trefferkriterium <=1500,
+             * enemy_ai_boss_gator.c:1543/:1562), das Bissfenster ist aber noch zu. */
+            if (in_lunge && p_maul_dist(e, pl) <= 1500) totzeit++;
             if (pl->hp < 100 || (pl->hit_react & 1)) {
                 treffer = 1; tf = f;
                 if (in_lunge && lunge_start >= 0) {
@@ -186,6 +212,8 @@ int main(void)
                     sum_fenster += w; fenster_n++;
                     if (w > max_fenster) max_fenster = w;
                     if (w < min_fenster) min_fenster = w;
+                    sum_totzeit += totzeit - 1; totzeit_n++;   /* -1: der Treffertick selbst */
+                    if (totzeit - 1 > max_totzeit) max_totzeit = totzeit - 1;
                 }
                 break;
             }
@@ -236,6 +264,9 @@ int main(void)
            lunge_n, lunge_treffer, lunge_n ? 100.0 * lunge_treffer / lunge_n : 0.0,
            fenster_n ? min_fenster : -1, fenster_n ? sum_fenster / fenster_n : -1,
            max_fenster);
+    printf("          TOTZEIT im treffenden Anlauf (Maul <=1500 am Ziel, Fenster zu): "
+           "Mittel %ld / max %d Ticks (n=%d)\n",
+           totzeit_n ? sum_totzeit / totzeit_n : -1, max_totzeit, totzeit_n);
     printf("          Strecke je abgebrochenem Anlauf im Mittel=%ld Einheiten (n=%d)\n",
            strecke_n ? sum_strecke / strecke_n : -1, strecke_n);
     free(emd);
