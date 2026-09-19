@@ -312,3 +312,65 @@ Wandklemme (die wiederkehrende x = −1982 riecht nach Zellenkante). Nicht in di
 - **RE1.5-Flavor-Teleport** (§1 Nebenbefund): gemessen, Ursache nicht RE't.
 - **Gerader Schuss vs. Liegender** (Risiko 2): welches Tor blockt (Elevations-Band / Trefferbox-
   Höhe), nicht protokolliert — die Sonde druckt die Gate-Kette nicht.
+
+---
+
+## 6. Umsetzung (Phase 2)
+
+**Stand:** 2026-09-19 · Branch `worktree-wf_c201ced4-02e-2` (Basis master 6692c9cd) · Build `re15_port/build_p2`
+
+### 6.1 Commits
+
+| Commit | Inhalt |
+|---|---|
+| `ae1844d6` fix(kriecher): Momentaufnahme im Kriech-P0 neu verankern | **F1.** `re15_clip_root_motion_delta` bekommt `apply` (0 = barer e7c); neuer Helfer `re15_re2z_root_probe` (enemy_ai_common.c, Header re15_ai_flavor.h); `re2z_crawl_exec_move` P0 ruft ihn an den zwei Originalstellen (@0x80103094 bei Bild 0, @0x801030B8 nach `sb 333` @0x801030BC); `re2z_root144 = 0` + falscher Kommentar entfernt. Sonde repariert (eigener Puffer je RE1.5-Bank, Skeptiker-Korrektur) + Teil D (Griff-Ausgang). |
+| `3c7e70cd` fix(kriecher): RE2-Deskriptor 1 stellt sich tot (0x201 WAIT) | **F2.** `re2z_init`: sel 1 → `enter_crawler(sub 2)` (`sw 513,4` @0x80100B74), sel 3 → sub 0 (`sw a1,4` @0x80100B8C), `+0x10E |= 0x2000` (@0x80100B24-34, selbst nachdisassembliert). Risiko 1 geklärt (6.3). Pins `unit_re2z_crawl_hurt_reentry`, `unit_re2z_crawler_spawn_wait` (tests/unit/test_p2_kriecher1010.c, probes/p2_kriecher-1010.cmake). |
+
+### 6.2 Messwerte vorher / nachher (probe_r16_kriecher1010, RE2-Bank EM010, echte ROOM1010.RDT)
+
+| Messung | vorher (§1) | nachher |
+|---|---|---|
+| Teil B, Wiedereintritts-Tick nach dem Treffer | f38 `dx = −830` (x 1598 → 768), `rp_x` stand auf 787 (Bild 34 vor dem Treffer), `r144 = −830` | f37 `dx = 0`, Bild r = 12, `rp_kf = 12`, `rp_x = −36 = sx(12)`, `r144 = 0`; danach r144 = 15/21/29/39/46/51/56/59 (= Tabelle C `sx(f+1) − sx(f)`) |
+| Pin hurt_reentry (Bild r = 2) | — | Wiedereintritt `dx = dz = 0`; Gegenprobe alte Rechnung `sx(2) − 787 = −793` > Schranke 62 (Schranke = `max_f |root(f+1) − root(f)|` aus der Bank, Clip 5, 50 Bilder); 5 Folgebilder −6/−8/−8/−8/−7 (Bank-Werte) |
+| Teil A, RE2, 150 Bilder ab Spawn (Spieler am Tür-Ziel) | Kriecher A 1631 / B 2011 Einheiten, `st=1/0/1` Clip 5 ab Bild 1 | A und B `st=1/2/1`, Clip 0x17, `10E=0x2001`, **0 Einheiten**, f0..f149 |
+| Teil D, Griff-Ausgang (Riegel nicht gesetzt) | (vorher: Lokomotion → Griff f360 → Phasen 1..6 → Zustand 7 nach f487) | WAIT → Spieler im 512er-Sektor (dist 853, LOS) → `0x101` im selben Tick (f60) → Phasen 1..6 → **Zustand 7, hp −1** nach f187; keine Phase 7/8, kein Sub 5 (0x501) |
+| Teil B, RE1.5-Flavor (Nebenbefund §1) | „Teleport" x −1982 → −7638 … | nach der Sonden-Reparatur kriecht der RE1.5-Kriecher glatt 950 → 1253 → 1597 und greift (st=1/1, Clip 0x1B/0x1C). **Der Teleport war das Sonden-Artefakt** (geteilter `s_blob` für zwei Bänke), kein Engine-Defekt — Skeptiker bestätigt, kein Engine-Fix. |
+
+Hinweis zu Teil B nachher: der Kriecher steht nach dem Wiedereintritt bei x ≈ 1598 (dist ≈ 851) am Körper-Push des Spielers an — die Vorwärts-Deltas 15…59 werden dort von der Kollision geschluckt; das ist Vorzustand (auch im Vorher-Log „Netto nach 90 Bildern dx=+1"), nicht Teil dieses Fixes. Der Pin misst deshalb den Wiedereintritts-Tick (Rückversatz) und die Gegenprobe, nicht den Vortrieb.
+
+### 6.3 Risiko 1 (Griff-Ausgang) — geklärt vor F2
+
+`FUN_801025EC` unter `s5 & 1` (EMZ0.BIN = EMOVL10_S0.BIN, byte-identisch, selbst disassembliert; `analysis/befunde_2026-09-19/kriecher-1010_grab_FUN_801025EC.dis`):
+
+```
+80102a64: jal  0x8002959c          ; Advance (a3 = 512)
+80102a6c: lbu  v1,6(s1)
+80102a74: addu v1,v1,v0            ; +0x6 += Rueckgabe
+80102a78: andi v0,s5,0x1
+80102a7c: beq  v0,zero,0x80102bd0  ; aufrecht -> Bild-7-Schnitt
+80102a80: sb   v1,6(s1)            ; Delay-Slot: Store in BEIDEN Zweigen
+...   Kriecher-Zweig 0x80102A84-0x80102BC0 (Kopf ab / Hals-Stumpf, s. Port-Kommentar)
+80102bc4: andi v0,s5,0x1
+80102bc8: bne  v0,zero,0x80102ebc  ; Kriecher: KEIN Bild-7-Schnitt -> Epilog
+80102bd0: lbu  v1,333(s1) / 80102bd4: addiu v0,zero,7 / 80102bd8: bne -> Epilog / 80102be4: sb 7,6(s1)   ; nur aufrecht
+80102be8: (P6)  80102bf0: addiu v0,zero,7 / 80102bf4: sw v0,4(s1)   ; Zustand 7 = TOD
+80102bfc: sh   -1,342(s1)          ; hp = -1
+80102c2c: sb   v0,467(s1)          ; +0x1D3 |= 0x80
+```
+`sw …,4(s1)`-Zensus der ganzen Funktion: @0x80102938 (P3, `0x601` nur bei Spielertod `r & 2`), @0x80102BF4 (P6, 7), @0x80102D2C (P8, `0x501`), @0x80102EB8 (P9, 1). P7/P8/P9 sind nur über `sb 7,6` @0x80102BE4 erreichbar, und das steht hinter dem `bne` @0x80102BC8, den der Kriecher nimmt. **Es gibt keinen `+0x10E`-gegateten Ersatz-Store — der Kriecher-Griff endet im Original immer im Tod (Kopf zertreten) oder im Spielertod.** Der Port modellierte P5 → P6 für den Kriecher bereits so (`case 5` Kriecher-Zweig `break` ohne Bild-7-Schnitt, `case 6` Zustand 7); gemessen Teil D und gepinnt in `unit_re2z_crawler_spawn_wait`. Der „OFFEN"-Block über `re2z_crawl` (`+0x5 > 2` → aufrechte Tabelle) bleibt als Rückfall für Sub 6 (0x601, Spielertod) stehen — dort friert das Original den Gegner-Tick über den Game-Over ein (Memory `reai-v2-global-ai-freeze`), was hier nicht Gegenstand war.
+
+### 6.4 Zensus (F1 Punkt 5): Clip-Wiedereintritte mit Zufallsbild
+
+`anim_frame = rand…` nach `re2z_clip` in enemy_ai_re2_zombie.c: (a) `:1568` Aufrecht-Verfolgung P0 @0x80102300-20 — setzt `root_prev_kf = -1` (= zweiter e7c @0x8010231C), Wirkung identisch (Delta 0 im nächsten Tick); (b) `:3198` Kriecher-P0 — jetzt zwei `re15_re2z_root_probe`; (c) `:6260` Knockdown-P0 @0x801074CC-EC — kein expliziter Re-Anker, verlässt sich auf den Clip-Wechsel (`root_prev_motion != 1`). Ein Wiedereintritt in denselben Clip 1 ohne Wechsel dazwischen wäre dieselbe Fehlerklasse; EXEC[5]/[7]/[8] gehören dem parallelen Umbau eines anderen Agenten und wurden hier **nicht angefasst** (nur benannt).
+
+### 6.5 ctest
+
+`ctest --test-dir re15_port/build_p2 --timeout 120`: **`100% tests passed, 0 tests failed out of 307` (inkl. der zwei neuen Pins; probe_1010_kriecher, unit_re2_zombie_abc, unit_1030_crawl_live, unit_re2z_bandlock_pin unverändert grün, keine Szenario-Verschiebung).**
+
+### 6.6 Offen
+
+- **F3 (optional) nicht umgesetzt:** RE2-INIT-Rest — HP-Halbierung @0x80100B3C-5C (Skeptiker: die RE2-Kriecher-HP kommt aus den Tabellen @0x8010C600/670/690[rand&0xF] >> 1, nicht 47/37), Trefferbox-Halbworte @0x80100B00-20, word0-Flags @0x80100B28-44. Konsumenten im Port nicht gemessen → bewusst nicht eingebaut.
+- **Hardware-Gegenprobe** (DuckStation/PCSX, RE2-Disc) für Rückversatz und Totstellen weiterhin nicht gefahren; die RE2-Seite ist statisch lückenlos (§2, 6.3).
+- **Gerader Schuss trifft den Liegenden nicht** (Risiko 2): unverändert, nicht Teil dieses Auftrags — mit F2 liegen die Kriecher länger, der Nutzer wird das öfter sehen. Die Sonde druckt die Gate-Kette weiterhin nicht.
+- **Körper-Push-Stopp bei dist ≈ 851** (6.2 Hinweis): Vorzustand, hier nur beobachtet.
+- **Nebenwirkungen von `+0x10E |= 0x2000` am Spawn** auf Nachbar-Zombies: im Port nur das Domino-Gate `!(pz->re2z_f10e & 0x2000)` (Kriecher dort ohnehin über Bit 0 ausgeschlossen); HURT-P2 wischt das Bit (`sh 1,270` @0x80107A54). Nicht weiter gemessen.

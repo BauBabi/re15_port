@@ -3181,13 +3181,24 @@ static void re2z_crawl_exec_move(re15_actor_t *e)
                                                                     * @0x80103144) */
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80103070-78 */
         e->re2z_t158 = (int16_t)((re2z_rand() & 7u) + 7u);         /* @0x8010308C-98 */
-        /* @0x80103094 + @0x801030B8: ZWEI BARE FUN_80015E7C. Sie fuellen nur den Delta-Vektor;
-         * angewendet wird er erst durch das 152c8 am Ende von P1. Weil ZWISCHEN den beiden kein
-         * Advance liegt, ist der zweite Delta zwangslaeufig 0 (prev == current) — der Wert, den
-         * P1 unmittelbar danach als Torwaechter liest. Der Port haelt genau das fest, statt eine
-         * Bewegung zu erfinden (gleiche Konvention wie Knockdown-P0 @0x801074C4/@0x801074E8). */
-        e->re2z_root144 = 0;                                       /* sh +0x144 @0x80015FD8 */
+        /* @0x80103094 + @0x801030B8: ZWEI BARE FUN_80015E7C (kein 152c8 dazwischen). Sie
+         * VERANKERN DIE MOMENTAUFNAHME NEU — das ist seit Runde 12 (Momentaufnahme statt
+         * Bildnummern, re15_clip_root_motion_delta) kein "zwangslaeufig 0" mehr:
+         *   #1 bei Bild 0 (aus dem sw @0x80103064-6C): Momentaufnahme := 0 (@0x80015F14-1C),
+         *      dann := root(kf0)                       (@0x80015FC4/C8)
+         *   #2 bei Bild rand&0xF (sb 333 @0x801030BC = Delay-Slot VOR dem Sprungziel):
+         *      +0x144 = root(kf_r) - root(kf0)         (@0x80015FCC/FD8), Momentaufnahme := root(kf_r)
+         * Der P1-e7c @0x8010312C findet dann prev == r und liefert Delta 0. OHNE die beiden
+         * Aufrufe stand die Momentaufnahme nach dem Kriecher-HURT (Clip 6 ruft e7c nie,
+         * @0x80107888 jal-Zensus) noch auf dem Bild VOR dem Treffer (sx 787 bei Bild 34) und
+         * P1 rechnete dx = sx(7) - 787 = -830 in EINEM Bild (Nutzer: "werden wieder ein Stueck
+         * zurueckgesetzt", gemessen probe_r16_kriecher1010 Teil B f38: x 1598 -> 768).
+         * Dossier analysis/befunde_2026-09-19/kriecher-1010.md §2.1/§2.2, Fix F1. */
+        re15_re2z_root_probe(e);                                   /* e7c #1 @0x80103094 (Bild 0) */
         e->anim_frame = (uint16_t)(re2z_rand() & 0xfu);            /* +0x14D @0x8010309C-BC */
+        re15_re2z_root_probe(e);                                   /* e7c #2 @0x801030B8 (Bild r):
+                                                                    * +0x144 = sx(r) - sx(0), den
+                                                                    * P1 als Torwaechter liest */
         /* FALLTHROUGH nach P1 @0x801030C0 — das Original hat hier KEINEN Sprung. */
         /* FALLTHRU */
     }
@@ -7856,8 +7867,36 @@ static void re2z_init(int slot, re15_actor_t *e)
          * RE2-Byte-Befund — hier gewinnt der RDT-Deskriptor.
          * re15_re2z_enter_crawler ist der bereits byte-belegte Einstieg (+0x10E Bit 0,
          * `sw 1,4` @0x80107A54-58, sca_mask 8) und wurde bisher nur von der ROOM1030-
-         * Skript-Bruecke benutzt. Dossier: analysis/nutzer_batch_2026-08-26/room1010-kriecher.md */
-        re15_re2z_enter_crawler(e, NULL, 0);
+         * Skript-Bruecke benutzt. Dossier: analysis/nutzer_batch_2026-08-26/room1010-kriecher.md
+         *
+         * ⛔ TOTSTELLEN (Phase 2, 2026-09-19, Nutzer: "kriechen die im Original nicht direkt
+         * los, sondern stellen sich erst einmal tot! ... in RE2 auf jeden Fall auch").
+         * RE2-INIT (EMZ0.BIN, selbst disassembliert), Kriecher-Zweig @0x80100AE0 (+0x10E & 1):
+         *   80100b60: lhu v0,270(s2) / andi v0,v0,0x3f
+         *   80100b6c: bne v0,a1,0x80100b78      ; (+0x10E & 0x3F) == 1 ?  (a1 = 1 @0x801009B8)
+         *   80100b70: addiu v0,zero,513         ;   Delay-Slot
+         *   80100b74: sw v0,4(s2)               ;   +0x4 = 0x201 = Zustand 1 / Sub 2 = KRIECHER-WAIT
+         *   80100b78-84: ... andi 0x3f / bne v0,v1(=3),0x80100b90
+         *   80100b8c: sw a1,4(s2)               ; (+0x10E & 0x3F) == 3 -> +0x4 = 1 = Lokomotion sofort
+         * Deskriptor 1 = liegender Kriecher, der sich totstellt; 3 = kriecht sofort. Port-Mapping:
+         * RE1.5-sel {1,3} unter dem 0x80-Gate == RE2-Deskriptor {1,3} (Dossier 08-26 §2d /
+         * 09-19 §2.4). Bisher nahm der Port fuer BEIDE den 3er-Zweig (Sonde Teil A: 1631
+         * Einheiten in 150 Bildern ab Bild 1).
+         * Das Warten: EXEC[2] @0x80103B48 (Clip 23, Rate 0, kein Ausgang, re2z_crawl_exec_wait).
+         * Die Wecker: NUR DECIDE[2] @0x80103A70 (512er-Sektor, dist < 0x514, Riegel frei, LOS,
+         * gleiche Etage -> 0x101 GRIFF @0x80103B10-14, re2z_crawl_decide_wait) und der Treffer
+         * (HURT-P2 @0x80107A54-58 -> Lokomotion). Keinen Distanz-Wecker in die Lokomotion gibt
+         * es in RE2 nicht (RE1.5 weckt bei dist < 0xBB8 @0x80104718 — das ist der RE1.5-Flavor).
+         * Griff-Ausgang (Risiko 1 des Dossiers, geklaert): FUN_801025EC P5 advanct +0x6 in
+         * BEIDEN Zweigen (@0x80102A6C-80), der Kriecher (s5&1) ueberspringt den Bild-7-Schnitt
+         * (@0x80102BC4-C8) -> P6 @0x80102BE8 = TOD (sw 7,4 @0x80102BF4, sh -1,342 @0x80102BFC).
+         * P7/P8 und der 0x501-Wurf (@0x80102D2C) sind fuer den Kriecher unerreichbar; gemessen
+         * probe_r16_kriecher1010 Teil D: Phasen 1..6 -> Zustand 7, hp -1. */
+        re15_re2z_enter_crawler(e, NULL, (sel == 1) ? 2u : 0u);   /* sw 0x201 @0x80100B74 bzw.
+                                                                    * sw 1 @0x80100B8C */
+        e->re2z_f10e |= 0x2000u;                                   /* lhu/ori 0x2000/sh 270
+                                                                    * @0x80100B24-34 (Kriecher-
+                                                                    * Zweig der INIT) */
     } else if (sel == 6) {                                         /* feeding -> ACTIVE sub 8 */
         e->re2z_f10e = 0x4004u;                                    /* sh 0x4004,270 @0x80100A88-8C */
         re15_ai_set_state_word(e, 0x801);                          /* @0x80100AD4 */

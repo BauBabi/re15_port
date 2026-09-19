@@ -688,10 +688,14 @@ static void re15_clip_root_motion_abs(re15_actor_t *a,
  * Auf den Re-Anchor-Pfaden (Clip-Wechsel/Wrap) kann der Port keinen Delta bilden; dort wird 0
  * abgelegt — das ist derselbe Wert, den das Original nach zwei e7c-Aufrufen OHNE dazwischen
  * liegenden Advance liefert (prev == current -> dx == 0, s. Kriecher-P0 @0x80103094/@0x801030B8). */
+/* `apply`: 1 = das PAAR e7c+152c8 (Delta ablegen UND auf +0x38/+0x40 anwenden, @0x80015314-34);
+ *          0 = NUR der bare FUN_80015E7C (Momentaufnahme + +0x144 ablegen, nichts bewegen) —
+ *              der Kriecher-P0 ruft e7c zweimal OHNE 152c8 (@0x80103094 / @0x801030B8),
+ *              s. re15_re2z_root_probe. */
 static void re15_clip_root_motion_delta(re15_actor_t *a,
                                         const re15_emd_skeleton_t *skel,
                                         const re15_emd_animation_t *anim,
-                                        int clip, int fr_now, int fr_prev)
+                                        int clip, int fr_now, int fr_prev, int apply)
 {
     a->re2z_root144 = 0;                                           /* sh +0x144 @0x80015FD8 */
     if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
@@ -750,6 +754,7 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     }
     a->root_prev_x = sx; a->root_prev_y = sy; a->root_prev_z = sz; /* sw/sh @0x80015FC4/C8 */
     a->re2z_root144 = (int16_t)dx;                                 /* sh v1,324(t0) @0x80015FD8 */
+    if (!apply) return;                      /* barer e7c: kein FUN_800152C8 hinterher */
     if (dx == 0 && dz == 0) return;
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
     a->x += (int32_t)(( (int64_t)cs * dx + (int64_t)sn * dz) >> 12);
@@ -2715,7 +2720,40 @@ void re15_re2z_move_root(re15_actor_t *e)
      * dem Stand des ALTEN Clips stehen und der naechste Tick rechnete einen Delta ueber die
      * Clip-Grenze hinweg. Sie legt in diesem Fall Delta 0 ab und verankert nur neu. */
     {   int prev = (e->root_prev_motion == e->motion) ? (int)e->root_prev_kf : -1;
-        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, prev);
+        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, prev, 1);
+    }
+    e->root_prev_kf = (int16_t)fr;
+    e->root_prev_motion = e->motion;
+}
+
+/* BARER FUN_80015E7C — ohne das FUN_800152C8 dahinter: legt Momentaufnahme (+0x20C/+0x210,
+ * `sw v0,524(t0)` / `sh t3,528(t0)` @0x80015FC4/C8) und Delta (+0x144, `sh v1,324(t0)`
+ * @0x80015FD8) ab, BEWEGT ABER NICHT (die Anwendung ist erst 152c8 @0x80015314-34).
+ * Der Kriecher-Lokomotion-P0 (FUN_80103024) ruft e7c genau so ZWEIMAL:
+ *   80103094: jal 0x80015e7c        ; #1 bei +0x14D = 0 (aus `sw 0x000F0005,332` @0x80103064-6C)
+ *   80103098: sh  v0,344(s0)        ;    Delay-Slot: +0x158 = (rand&7)+7
+ *   801030b4: andi v0,v0,0xf
+ *   801030b8: jal 0x80015e7c        ; #2 bei +0x14D = rand&0xF, weil ...
+ *   801030bc: sb  v0,333(s0)        ;    ... der Delay-Slot VOR dem Sprungziel laeuft
+ * Wirkung (durchgerechnet, Dossier analysis/befunde_2026-09-19/kriecher-1010.md §2.2):
+ * #1 (Bild 0) Momentaufnahme := 0 (@0x80015F14-1C), dann := root(kf0); #2 (Bild r) +0x144 =
+ * root(kf_r) - root(kf0), Momentaufnahme := root(kf_r). Der P1-Aufruf @0x8010312C liefert im
+ * Wiedereintritts-Tick dann Delta 0 — KEIN Sprung. Ohne diese beiden Aufrufe rechnete der Port
+ * nach dem Kriecher-HURT (Clip 6, ruft e7c nie) gegen die ALTE Momentaufnahme (Bild 34 vor
+ * dem Treffer, sx 787) und versetzte den Kriecher um sx(r) - 787 = -830 in EINEM Bild
+ * (gemessen probe_r16_kriecher1010 Teil B f38). Dieselbe Bankwahl wie re15_re2z_move_root. */
+void re15_re2z_root_probe(re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) { e->root_prev_kf = -1; return; }
+    const re15_emd_skeleton_t  *s = &b->skel;
+    const re15_emd_animation_t *a = &b->anim;
+    if (b->loco_ok && re15_re2z_poses_loco_bank(e)) {
+        s = &b->skel_loco; a = &b->anim_loco;
+    }
+    int fr = (int)e->anim_frame;
+    {   int prev = (e->root_prev_motion == e->motion) ? (int)e->root_prev_kf : -1;
+        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, prev, 0);
     }
     e->root_prev_kf = (int16_t)fr;
     e->root_prev_motion = e->motion;
@@ -9699,7 +9737,7 @@ static void re15_npc_executor(re15_actor_t *e)
          * gate is kept byte-true for actors whose clips DO carry per-frame root translation. */
         re15_enemy_bank_t *bank = re15_enemy_find(e->type);
         if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim,
-                                              (int)e->motion, (int)e->anim_frame, fr_prev);
+                                              (int)e->motion, (int)e->anim_frame, fr_prev, 1);
     }
 }
 
@@ -11022,7 +11060,7 @@ static void re15_cockroach_ai_tick(int slot)
             { int fr_prev = (int)e->anim_frame;                                        /* locator root-motion 0x80115b68 (OPEN: exact speed = EM029 locator bank) */
               re15_enemy_bank_t *bank = re15_enemy_find(e->type);
               re15_roach_anim(e);
-              if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim, (int)e->motion, (int)e->anim_frame, fr_prev); }
+              if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim, (int)e->motion, (int)e->anim_frame, fr_prev, 1); }
             break;
         }
         case 4:  /* A[4] decide 0x80111ac0 + B[4] SCURRY 0x80111c08: clip 6, +0x8c re-rolled 180-211 EVERY frame */

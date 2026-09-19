@@ -27,6 +27,8 @@
  *            Gerader Schuss (ohne D-Pad) traf den Kriecher NICHT; erst mit DOWN.
  *   C) Clip 5 (50 Bilder) sx: 0,-1,-6,...,-51 (f9/10), 0 (f14), 29, 68, ... 790 (f35/36),
  *            ... 728 (f49). Clip 6 (HURT, 20 Bilder) und Clip 23 (Liegen): alle sx = 0. */
+/* PHASE 2 (2026-09-19): der RE1.5-"Teleport" (Nebenbefund) war ein Sonden-Artefakt — geteilter
+ * s_blob-Puffer fuer zwei Baenke (s. load_bank_re15). Teil D (Griff-Ausgang) ergaenzt. */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -92,7 +94,11 @@ static int load_bank_re2(uint8_t type)
 }
 
 static uint8_t *s_re15_ems = NULL; static size_t s_re15_n = 0;
-static uint8_t  s_blob[0x80000];
+/* SKEPTIKER-KORREKTUR (Phase 2): der frueher hier geteilte statische Puffer s_blob liess die
+ * 0x10-Bank (Kriecher) auf die Bytes der DANACH geladenen 0x11-Bank zeigen — der im Dossier §1
+ * gemessene RE1.5-Flavor-"Teleport" (x -1982 -> -7638 ...) war DIESES Sonden-Artefakt, kein
+ * Engine-Defekt. Jede Bank bekommt jetzt ihren eigenen Puffer (eb->buf, re15_enemy_reset gibt
+ * ihn frei, enemy_common.c:130). */
 static int load_bank_re15(uint8_t type)
 {
     if (!s_re15_ems) s_re15_ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &s_re15_n);
@@ -102,18 +108,19 @@ static int load_bank_re15(uint8_t type)
     int idx = re15_ems_index_for_type(type);
     size_t off = 0, len = 0;
     if (idx < 0 || re15_ems_get_entry(s_re15_ems, s_re15_n, idx, &off, &len) != 0) return 0;
-    if (len > sizeof s_blob) return 0;
     if (!eb) eb = re15_enemy_alloc(type);
     if (!eb) return 0;
-    memcpy(s_blob, s_re15_ems + off, len);
+    uint8_t *blob = (uint8_t *)malloc(len);
+    if (!blob) return 0;
+    memcpy(blob, s_re15_ems + off, len);
     re15_tim_t tim = (re15_tim_t){0};
-    if (re15_emd_parse_container(s_blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) {
-        eb->type = 0; return 0;
+    if (re15_emd_parse_container(blob, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) {
+        eb->type = 0; free(blob); return 0;
     }
-    eb->ok = 1; eb->buf = NULL;
-    re15_emd_parse_own_bank(s_blob, len, &eb->skel_own, &eb->anim_own);
+    eb->ok = 1; eb->buf = blob;
+    re15_emd_parse_own_bank(blob, len, &eb->skel_own, &eb->anim_own);
     eb->own_ok = (eb->anim_own.clip_count > 0);
-    eb->loco_ok = (re15_emd_parse_loco_bank(s_blob, len, &eb->skel_loco, &eb->anim_loco) == 0);
+    eb->loco_ok = (re15_emd_parse_loco_bank(blob, len, &eb->skel_loco, &eb->anim_loco) == 0);
     return 1;
 }
 
@@ -276,6 +283,61 @@ static void part_b(re15_ai_flavor_t fl, const char *name, int pre_frames, int us
     } else printf("  KEIN TREFFER registriert\n");
 }
 
+/* D) GRIFF-AUSGANG (Dossier Risiko 1, Phase 2): Riegel NICHT gesetzt. Spieler zuerst am
+ *    Tuer-Ziel (Kriecher soll liegen bleiben, wenn F2 aktiv ist), dann VOR den Kriecher A in
+ *    den 512er-Sektor (dist < 0x514) — protokolliert jede Aenderung von Zustandswort/Phase/Clip
+ *    bis der Kriecher Zustand 1 verlaesst. Sollseite (EMZ0.BIN, selbst disassembliert):
+ *    DECIDE[2] @0x80103B10 -> 0x101; GRIFF FUN_801025EC P5 advanct +0x6 in BEIDEN Zweigen
+ *    (@0x80102A6C-80), der Kriecher (s5&1) ueberspringt den Bild-7-Schnitt (@0x80102BC4-C8)
+ *    -> P6 @0x80102BE8: `sw 7,4(s1)` @0x80102BF4 (TOD), `sh -1,342` @0x80102BFC. P7/P8 (0x501
+ *    @0x80102D2C) sind fuer den Kriecher unerreichbar. */
+static void part_d(const char *name)
+{
+    printf("\n===== D) %s  Griff-Ausgang des Kriechers (Riegel NICHT gesetzt) =====\n", name);
+    bringup(RE15_AI_FLAVOR_RE2, 4, 3650, -3950);
+    int a = -1, bslot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+        if (!g_actors[s].active) continue;
+        if (g_actors[s].x == 950 && a < 0) a = s; else if (bslot < 0) bslot = s;
+    }
+    if (a < 0) { printf("  FAIL: Kriecher A nicht gefunden\n"); return; }
+    if (bslot >= 0) { g_actors[bslot].x = 30000; g_actors[bslot].z = 30000; }
+    re15_actor_t *e = &g_actors[a];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_latch = 0;
+    int f = 0;
+    for (; f < 60; f++) { pin_player(); frame(0, 0); }
+    line("  60", f, a, 950, -1700);
+    /* Spieler in die Blickrichtung des Kriechers, 600 Einheiten: Blickwinkel = rot_y + 1024
+     * in atan2-Einheiten (re15_ai_arc_test: rel = atan2(dz,dx) - (rot_y + 1024); 0 = +Z, 1024 = +X) */
+    {   int ang = ((int)e->rot_y + 1024) & 0xfff;
+        s_px = e->x + ((600 * re15_sin_q12(ang)) >> 12);    /* atan2-Konvention 0 = +Z, 1024 = +X
+                                                              * (re15_actor.h: rot_y 0 = +X) */
+        s_pz = e->z + ((600 * re15_cos_q12(ang)) >> 12);
+        pin_player();
+        printf("  Spieler nach (%ld,%ld): arc512=%d\n", (long)s_px, (long)s_pz,
+               re15_ai_arc_test(e, pl->x, pl->z, 512));
+    }
+    uint32_t last = 0xffffffffu; int seen[16] = {0};
+    for (int k = 0; k < 900; k++, f++) {
+        pin_player(); frame(0, 0);
+        uint32_t key = ((uint32_t)e->state << 24) | ((uint32_t)e->sub_state_1 << 16)
+                     | ((uint32_t)e->sub_state_2 << 8) | ((uint32_t)e->motion & 0xffu);
+        if (e->state == 1 && e->sub_state_1 == 1 && e->sub_state_2 < 16) seen[e->sub_state_2] = 1;
+        if (key != last) {
+            printf("  f%-4d st=%u/%u/%u mo=0x%02X fr=%3u hp=%d pl_st=%u pl_hp=%d pl_1d3=0x%02X dist=%u x=%ld z=%ld\n",
+                   f, e->state, e->sub_state_1, e->sub_state_2, (unsigned)e->motion,
+                   (unsigned)e->anim_frame, (int)e->hp, pl->state, (int)pl->hp,
+                   (unsigned)pl->re2z_self1d3, (unsigned)e->ai_dist, (long)e->x, (long)e->z);
+            last = key;
+        }
+        if (e->state != 1 && e->state != 0) { printf("  AUSGANG: Zustand %u nach f%d\n", e->state, f); break; }
+    }
+    printf("  Griff-Phasen gesehen:");
+    for (int i = 0; i < 16; i++) if (seen[i]) printf(" %d", i);
+    printf("\n");
+}
+
 int main(void)
 {
     printf("== probe_r16_kriecher1010: Totstellen + Rueckversatz bei Treffer ==\n");
@@ -303,6 +365,7 @@ int main(void)
         part_b(RE15_AI_FLAVOR_RE2,  "RE2 ", 200, 1);
         part_b(RE15_AI_FLAVOR_RE15, "RE15", 200, 0);
     }
+    if (!only || strstr(only, "D")) part_d("RE2 ");
     printf("\n(Sonde: reine Messung, kein PASS/FAIL)\n");
     return 0;
 }
