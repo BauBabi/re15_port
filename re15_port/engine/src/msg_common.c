@@ -388,6 +388,7 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
     g_scd.message_choice      = 0;
     g_scd.message_blink       = 0;
     g_scd.message_query       = blocking ? 1 : 0;
+    g_scd.message_nachhall    = 0;     /* Nutzer-Nachhall gehoert der VORIGEN Zeile (s. re15_scd.h) */
     g_scd.message_display_frames = 2;  /* keep the box alive while the FSM owns the lifetime */
 }
 
@@ -396,6 +397,37 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
 void re15_dialog_open(int msg_id, int blocking)
 {
     re15_dialog_open_mask(msg_id, blocking, 0u);
+}
+
+/* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20) — UNTERTITEL-NACHHALL. KEINE byte-true Regel.
+ *
+ * Nutzer: "dann haben wir die voiceovers zum teil angepasst das es passt. das ist gut.
+ * koennen wir einfach die Untertitel Einblendung So lange ebenfalls verlaengern?"
+ *
+ * AUSGANGSLAGE (Runde 10/11): op_message_on haelt das NAECHSTE Message_on zurueck, solange
+ * eine Aufnahme laeuft (scd_vm.c, Riegel gegen g_re15_voice_restbilder). Die ANZEIGEDAUER des
+ * Untertitels folgte aber weiter dem SCD-Sleep bzw. dem .msg-Endcode — der Text verschwand
+ * also, waehrend die Stimme noch sprach, und danach stand bis zur naechsten Zeile nichts da.
+ *
+ * NACHHALL schliesst genau diese Luecke: laeuft beim regulaeren Ende der Zeile noch eine
+ * Aufnahme, bleibt der bereits aufgedeckte Text stehen, bis die Aufnahme fertig ist, der
+ * Spieler die Taste drueckt, oder der Deckel greift.
+ *
+ * DER SPIELER WIRD DABEI NICHT LAENGER BLOCKIERT ALS HEUTE — begruendet bei
+ * scd_vm_t.message_nachhall: der Eintritt loest den Freeze (re15_pauseflags_close) und nullt
+ * message_display_frames/message_query, also beide Quellen von msg_block.
+ *
+ * DECKEL = derselbe wie der Riegel in op_message_on (RE15_VOICE_NOTBREMSE = 300 Bilder = 10 s
+ * > laengste Aufnahme des Bestands, ROOM1150 main09 mit 242,5 Bildern). Er ist Notbremse fuer
+ * einen haengenden Kanal, keine geschaetzte Anzeigedauer — gewartet wird gegen die ECHTE
+ * Restlaenge g_re15_voice_restbilder, die die Plattform je Bild stempelt (audio_pc.c). */
+#define RE15_UNTERTITEL_NACHHALL_DECKEL 300
+
+static int re15_stimme_rest(void)
+{
+    extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
+    if (!g_re15_voice_laeuft) return 0;
+    return (g_re15_voice_restbilder > 0) ? g_re15_voice_restbilder : 0;
 }
 
 /* Advance the dialog FSM one frame (byte-true FUN_80028134). Reads the press EDGE
@@ -526,6 +558,16 @@ static void re15_dialog_step(void)
         if (g_scd.message_timer > 1) g_scd.message_timer--;
         else g_scd.message_fsm = 6;
         break;
+    case 7:  /* ⛔ NACHHALL (Nutzer-Entscheidung, nicht byte-true) — die Zeile ist fertig, der
+              * Freeze ist bereits geloest, der Text steht nur noch. Ende, sobald die Aufnahme
+              * durch ist, der Spieler drueckt, oder der Deckel leer ist. */
+        if (g_scd.message_nachhall) g_scd.message_nachhall--;
+        if (dismiss_edge || re15_stimme_rest() == 0 || g_scd.message_nachhall == 0) {
+            g_scd.message_active     = 0;
+            g_scd.message_fsm_active = 0;
+            g_scd.message_nachhall   = 0;
+        }
+        break;
     }
     if (g_scd.message_fsm == 6) {          /* DONE — fully reset so the player UNFREEZES */
         /* CLOSE = SNAPSHOT-RESTORE (byte-true FUN_80028134). Das Original hat drei
@@ -538,13 +580,24 @@ static void re15_dialog_step(void)
          * 0xff000000-Freeze bereits gesetzt haben kann (@0x8001dbb8/@0x8001dbc8) und der
          * Text-Close ihn nicht mitloeschen darf. */
         re15_pauseflags_close();
-        g_scd.message_active         = 0;
         g_scd.message_select         = 0;
-        g_scd.message_fsm_active     = 0;
         g_scd.message_display_frames = 0;  /* msg_block (player_common.c) gates the player on
                                             * this — leaving it >0 froze Leon forever after a
                                             * dialog. The FSM owns the lifetime via the states,
                                             * not the countdown, so zero it on dismissal. */
+        /* ⛔ NUTZER-ENTSCHEIDUNG: laeuft die Aufnahme noch, geht die Zeile NICHT aus, sondern
+         * in den NACHHALL (Zustand 7). Der Freeze ist oben schon geloest und
+         * message_display_frames/message_query stehen auf 0 — der Spieler ist ab HIER frei,
+         * genau wie heute beim Dismiss. Nur der Text bleibt stehen. */
+        if (re15_stimme_rest() > 0) {
+            g_scd.message_query    = 0;
+            g_scd.message_fsm      = 7;
+            g_scd.message_nachhall = (uint16_t)RE15_UNTERTITEL_NACHHALL_DECKEL;
+        } else {
+            g_scd.message_active     = 0;
+            g_scd.message_fsm_active = 0;
+            g_scd.message_nachhall   = 0;
+        }
     }
 }
 
@@ -581,8 +634,22 @@ int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id)
 
     /* Legacy all-at-once timed display — kept ONLY for the verified VOICED cinematic
      * subtitles (intro) so their tuned timing is untouched. */
-    if (g_scd.message_display_frames <= 0)
-        return 0;
+    if (g_scd.message_display_frames <= 0) {
+        /* ⛔ NACHHALL des Full-Text-Zweigs (Nutzer-Entscheidung, nicht byte-true; Herleitung
+         * ueber re15_stimme_rest). Der Zaehler ist bereits abgelaufen — msg_block ist also
+         * schon aus, der Spieler frei. Steht noch Aufnahme an, bleibt nur die Einblendung. */
+        if (g_scd.message_nachhall == 0) return 0;
+        g_scd.message_nachhall--;
+        if (re15_stimme_rest() == 0 || g_scd.message_nachhall == 0) {
+            g_scd.message_nachhall = 0;
+            return 0;
+        }
+        int nlen = 0;
+        const unsigned char *nraw = re15_msg_get_raw((int)g_scd.message_id, &nlen);
+        if (out_raw) *out_raw = nraw;
+        if (out_len) *out_len = nlen;
+        return 1;
+    }
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
     if (out_raw)    *out_raw = raw;
@@ -590,6 +657,11 @@ int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id)
     /* Decrement AFTER latching the body so the message is shown on its final tick
      * too (matches the original count-then-clear order). */
     g_scd.message_display_frames--;
+    /* ⛔ NUTZER-ENTSCHEIDUNG: laeuft beim Ablauf des Zaehlers noch eine Aufnahme, geht die
+     * Einblendung in den Nachhall. Deckel = derselbe wie der Riegel in op_message_on. */
+    if (g_scd.message_display_frames <= 0 && g_scd.message_nachhall == 0
+        && re15_stimme_rest() > 0)
+        g_scd.message_nachhall = (uint16_t)RE15_UNTERTITEL_NACHHALL_DECKEL;
     return 1;
 }
 

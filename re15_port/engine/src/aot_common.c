@@ -33,9 +33,15 @@
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
 
+/* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20) — KLICK-LAUT AM CURSOR-RAETSEL. Zaehler + Einschwing-
+ * Sperre stehen hier, Herleitung bei re15_object_notch_update(). */
+static int s_cursor_klick_einschwingen = 1;   /* 1 = erster Notch-Stempel nach Raumwechsel */
+unsigned g_re15_cursor_klick_zaehler = 0;     /* Messschiene (Sonde r17_cursor_klick)       */
+
 void re15_aot_init(void)
 {
     memset(&g_aot, 0, sizeof(g_aot));
+    s_cursor_klick_einschwingen = 1;   /* Raumwechsel: der erste Stempel klickt nicht */
 }
 
 int re15_aot_set(int slot, uint8_t type, uint8_t event_id,
@@ -439,8 +445,44 @@ void re15_object_notch_update(void)
             }
             if (hit) notch = i;                               /* LAST-WINS */
         }
-        g_scd.props[p].member_0b = (notch >= 0) ? (uint8_t)notch : 0;   /* Clear @0x80043788 */
+        /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20), KEINE byte-true Regel.
+         *
+         * Nutzer: "dann will ich bei den raetseln wo man etwas mit Cursor auswaehlt und klickt
+         * einen click Sound. den gibt es, wenn nicht in resident evil 1.5 - auf jeden fall in
+         * resident evil 2."
+         *
+         * RE2-VORBILD (disassembliert, nicht angenommen) — FUN_8006b358, RE2 PSX.EXE:
+         *   @0x8006b574  lbu v0,13(s1)        ; NEUER Cursor-Index
+         *   @0x8006b57c  beq a2,v0,0x8006b58c ; ALTER == NEUER  -> KEIN Laut
+         *   @0x8006b580  lui a0,0x404         ; Se_on(0x04040000) = CORE-Bank 4, Satz 4
+         *   @0x8006b584  jal 0x8005ba28       ; RE2-SE-Spieler
+         * Der Laut haengt also an der AENDERUNG des Cursor-Index, nicht am Tastendruck.
+         * Dieselbe Bank/Nummer benutzt RE1.5 in seinem EIGENEN Inventar-Cursor:
+         *   @0x8004a478  lui a0,0x404 / @0x8004a47c jal 0x80045024  (Se_on(0x04040000))
+         * — die Nummer ist damit auf BEIDEN Seiten belegt, gehalbiert/erfunden wird nichts.
+         * Der Port faehrt sie ueber re15_audio_core_se(4) (menu_common.c se4, itembox bse).
+         *
+         * PORT-SEITE: das RE1.5-Cursor-Raetsel hat keinen Listen-Index, sondern einen
+         * WELT-Cursor — ein Obj_model_set-Prop, das das Skript per Speed_set/Add_speed unter
+         * dem D-Pad bewegt (ROOM11F0 sub02..05 @0x12F6/0x1302/0x130E/0x131A), und dessen
+         * "Index" genau dieses member_0b ist (Zelle, ueber der es steht; Stempel
+         * @0x80042f5c, Clear @0x80043788). Der RE2-Vergleich `beq a2,v0` ist hier also
+         * `neu != alt`.
+         * ZUSATZBEDINGUNG `neu != 0`: 0 heisst im Port "ueber KEINER Zelle" (der Clear-Wert),
+         * nicht "Zelle 0" — die ausgelieferten Zellen liegen auf den Slots 1..17. Ohne diese
+         * Bedingung klickte es auch beim VERLASSEN des Rasters, was RE2 nicht tut (dort kann
+         * der Cursor das Raster nicht verlassen).
+         * EINSCHWING-SPERRE: der allererste Stempel nach einem Raumwechsel geht von 0 auf die
+         * Startzelle — das ist keine Cursor-Bewegung, sondern der Aufbau. */
+        uint8_t klick_alt = g_scd.props[p].member_0b;
+        uint8_t klick_neu = (notch >= 0) ? (uint8_t)notch : 0;
+        g_scd.props[p].member_0b = klick_neu;   /* Clear @0x80043788 */
+        if (!s_cursor_klick_einschwingen && klick_neu != 0 && klick_neu != klick_alt) {
+            g_re15_cursor_klick_zaehler++;
+            re15_audio_core_se(4);              /* CORE-Bank 4, Satz 4 (s.o.) */
+        }
     }
+    s_cursor_klick_einschwingen = 0;
 }
 
 /* Phase 4.5.12: initialize edge-trigger state from a spawn position

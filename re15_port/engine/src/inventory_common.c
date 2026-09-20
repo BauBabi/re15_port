@@ -239,6 +239,24 @@ int re15_item_is_weapon(uint8_t id) { return id < 0x15; }              /* 0x00..
 int re15_item_is_ammo(uint8_t id)   { return id >= 0x15 && id < 0x22; }/* 0x15..0x21                          */
 int re15_item_is_key(uint8_t id)    { return id >= 0x22; }             /* max_stack 1, outside the icon bound  */
 
+/* ⛔ NUTZER-ENTSCHEIDUNG, NICHT BYTE-TRUE — Herleitung + Gueltigkeitsbereich stehen ueber der
+ * Deklaration in re15_inventory.h. Halbiert die Stueckzahl EINER aufgesammelten Munitions-
+ * Packung; alles andere gibt die Menge unveraendert zurueck.
+ *
+ * Die Id-Schranke selbst ist byte-true (re15_item_is_ammo: `sltiu id,0x15` @0x80047d54 /
+ * `sltiu id,0x22` @0x80049124) — GEHALBIERT wird auf Nutzer-Wunsch, nicht weil das Original
+ * das taete. Abrundung + Mindestmenge 1: eine 1er-Packung (die es im Auslieferungsstand bei
+ * Munition nicht gibt — kleinste gemessene Packung ist 6) darf nicht auf 0 fallen, weil
+ * re15_inv_grant amount==0 zurueckweist (test_inv_grant "reject amount 0") und der Gegenstand
+ * dann spurlos verschwaende. */
+uint8_t re15_pickup_menge_nutzer(uint8_t item_id, uint8_t menge)
+{
+    if (!re15_item_is_ammo(item_id)) return menge;   /* Waffen/Kraeuter/Schluessel unveraendert */
+    if (menge <= 1)                  return menge;   /* 0 bleibt 0 (Grant weist es ohnehin ab) */
+    uint8_t h = (uint8_t)(menge / 2u);
+    return h ? h : (uint8_t)1;
+}
+
 /* Byte-true item name catalog 0x00..0x2f (DAT_800c4a28 glyph blob, decoded via the item-prompt font
  * map). The HUD uses this ASCII form (port convention: caps for the 6x8 debug font); the byte-true
  * Title-Case glyphs the GAME draws come from the blob directly in the prompt (item_prompt_common.c).

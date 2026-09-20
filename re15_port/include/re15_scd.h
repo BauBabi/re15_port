@@ -319,6 +319,22 @@ typedef struct {
      * (kept for the verified VOICED cinematic subtitles so the intro timing is untouched). */
     uint8_t  message_fsm_active;
 
+    /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20), KEINE byte-true Regel — "koennen wir einfach die
+     * Untertitel Einblendung So lange ebenfalls verlaengern?" (naemlich so lange wie die
+     * angepasste Sprachaufnahme laeuft).
+     *
+     * NACHHALL = die Bilder, die der Untertitel NACH seinem regulaeren Ende noch stehen
+     * bleibt, weil die Aufnahme noch laeuft. Der Wert ist das RESTGUTHABEN (Deckel beim
+     * Eintritt, dann herunterzaehlend); 0 = kein Nachhall.
+     *
+     * WICHTIG — der Nachhall BLOCKIERT DEN SPIELER NICHT: beim Eintritt werden
+     * re15_pauseflags_close() gefahren und message_display_frames/message_query auf 0
+     * gesetzt, also genau die beiden Werte, an denen msg_block haengt (player_common.c:756,
+     * aot_common.c:845). Der Text steht nur noch da; Laufen, Examine und der naechste
+     * Message_on sind frei wie heute. Genau deshalb ist das KEINE Verlaengerung der
+     * Text-Sperre, sondern nur der Einblendung. */
+    uint16_t message_nachhall;
+
     /* Phase 4.4.3: audio events queue (ring buffer). */
     scd_audio_event_t audio_queue[SCD_AUDIO_QUEUE_SIZE];
     uint8_t           audio_head;     /* next free slot */

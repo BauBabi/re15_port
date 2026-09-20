@@ -136,7 +136,16 @@ void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
     if (s_state != 0) return;        /* byte-true guard @0x80043334 (don't restart while running) */
     s_state    = 1;                  /* sb 1,DAT_80072d3b @0x8004334c */
     s_type     = item_type;          /* DAT_800afbb6 @0x8004335c      */
-    s_amount   = amount;
+    /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20), KEINE byte-true Regel: aufgesammelte MUNITION wird
+     * halbiert (Abrundung, Mindestmenge 1). Genau hier, weil das der EINZIGE Produktiv-Pfad
+     * einer Welt-Aufnahme ist: beide Aufrufer von re15_item_modal_start sind die Item-AOT
+     * (aot_common.c:648 Aot_on-Sofortzuendung / aot_common.c:1303 Scan-Zuendung, Original-
+     * Handler[9] @0x80043328), und der Grant selbst passiert erst unten in Zustand 7 aus
+     * s_amount. Damit zeigt AUCH die Aufnahme-Meldung ("WILL YOU TAKE THE ...") schon die
+     * halbierte Menge, statt eine andere Zahl zu versprechen als sie eintraegt.
+     * NICHT betroffen: das Nachladen aus der Reserve (re15_ammo_reload_exec, FUN_8004ebdc
+     * @0x8004ebdc) und die Startausruestung (re15_inv_load_briefing). */
+    s_amount   = re15_pickup_menge_nutzer(item_type, amount);
     s_taken    = taken_bit;
     s_aot_slot = aot_slot;
     s_taken_prop = taken_prop;
