@@ -68,3 +68,35 @@ release/*_android.apk
 # die Baeume nicht — sie sind regenerierbar und belegen schnell Gigabytes.
 re15_port/build_*/
 re15_port/build_*.log
+
+# Streu-Artefakte von Werkzeug-Laeufen im Repo-Wurzelverzeichnis. Alle drei Gruppen sind
+# regenerierbar und gehoeren laut CLAUDE.md ohnehin nach build/extracted/, nicht in den Baum:
+#  - extracted/    Ausgabe des Java-Extraktors (~1,4 GB, 28935 Dateien)
+#  - MAP0*.PIX/TIM/bmp   Einzelkonvertate der Karten-Bildchen; die Quellen liegen in
+#                        re15_port/shared_assets/PSX/DATA/ (bytegleich geprueft)
+#  - --help        827 KB Hilfetext, den ein Aufruf versehentlich in eine Datei geschrieben hat
+extracted/
+/MAP0[0-9A-F].PIX
+/MAP0[0-9A-F].TIM
+/MAP0[0-9A-F].bmp
+/--help
+
+# Laufprotokolle: regenerierbar, teils riesig (.agent_refs/gh_STAGE2.log allein 418 MB
+# Ghidra-Headless-Ausgabe). Die Disassemblat-DUMPS in .agent_refs/*.txt bleiben versioniert,
+# sie sind RE-Belege.
+.agent_refs/gh_*.log
+/debug.log
+/er.log
+/gator_boss.log
+/pri.log
+/re2_ki.log
+/re15_card.mcr
+re15_port/*.log
+psx_dev/re15_reborn_pc/build/
+psx_dev/re15_reborn_pc/build_mingw/
+.claude/skills/re15-parity-verify/parity_net/out/
+
+# shots/ ist der Ablagepunkt fuer Mess-Screenshots waehrend eines Laufs (662 MB, 1283 Stueck).
+# Die 79 bereits versionierten Bilder bleiben versioniert — sie haengen als Beleg an Dossiers;
+# neue Mess-Bilder gehoeren zum Befund-Ordner analysis/befunde_*/, nicht hierher.
+shots/
