@@ -979,6 +979,12 @@ void re15_audio_core_se(int se_id)
  *    (siehe den OFFEN-Block an se_play_layers). */
 void re15_audio_weapon_se(int se_id)
 {
+    {   /* Mess-Log (Debug-Harness, RE15_WAFFEN_LOG) */
+        extern FILE *re15_waffen_log(void);
+        FILE *wl = re15_waffen_log();
+        if (wl) fprintf(wl, "    SE  arms_rec=%d bank=%d(geladen=%d) count=%d\n",
+                        se_id, s_weap_id, s_weap_loaded, s_weap_edt_count);
+    }
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
     /* LAYERED (byte-true): ARMS record 0 (the gunshot) = 00 00 13 30 -> byte3 0x30 = 1 extra tone,
      * so the original keys VAG2 AND VAG3 simultaneously; every ARMS bank layers record 0. */

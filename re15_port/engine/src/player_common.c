@@ -17,6 +17,8 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "re15_player.h"
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
@@ -186,6 +188,28 @@ static int      s_idle_timer = 0;
 static uint32_t s_frame_ctr  = 0;    /* free-running RNG feed — bewusst NICHT resettet (kein
                                       * Original-Gegenstueck fuer einen Zaehler-Reset) */
 void re15_player_idle_reset(void) { s_idle_phase = -1; s_idle_timer = 0; }
+
+/* MESS-LOG (Debug-Harness, kein Spielverhalten): RE15_WAFFEN_LOG=<datei> sammelt je Bild
+ * den Waffen-/Feuer-Zustand, jeden Effekt-Spawn und jeden Waffen-SE-Aufruf. Die GUI-exe hat
+ * kein nutzbares stderr, darum Datei. */
+static int aim_cur_fc(void);
+FILE *re15_waffen_log(void)
+{
+    static FILE *s_wl = NULL; static int s_init = 0;
+    if (!s_init) { s_init = 1;
+        const char *e = getenv("RE15_WAFFEN_LOG");
+        if (e && *e) s_wl = fopen(e, "w"); }
+    return s_wl;
+}
+int re15_player_aim_dbg(int *phase, int *recoil, int *autof, int *auto_cls, int *takt)
+{
+    if (phase) *phase = s_player_aim_phase;
+    if (recoil) *recoil = s_aim_recoil;
+    if (autof)  *autof  = s_auto_firing;
+    if (auto_cls) *auto_cls = s_aim_auto;
+    if (takt)   *takt   = (int)s_feuertakt;
+    return aim_cur_fc();
+}
 
 /* RAUMEINTRITTS-POSE — der ENDZUSTAND des cmd-0-Handlers LAB_800318f8 (Tabelle @0x80073f90
  * Eintrag 0), den die Transitions-FSM nach JEDEM Raumwechsel anstoesst (`sb zero,0x800aca58`

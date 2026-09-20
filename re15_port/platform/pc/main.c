@@ -3547,6 +3547,34 @@ re_title:;
     /* RE15_EQUIP=<item> (debug harness): equip an item at boot without the menu — input scripts
      * have no START/menu tokens, so deterministic gun probes (ammo chain, discharge fx) need this.
      * The byte-true default stays the briefing knife (aca5d=1, slot 0). */
+    /* RE15_GIVE="<item>:<qty>,<item>:<qty>,..." (DEBUG-HARNESS, kein Spielverhalten):
+     * legt Gegenstaende direkt in freie Inventarplaetze, damit ein Skript-Lauf eine Waffe
+     * fuehren kann, die die Briefing-Ausruestung nicht enthaelt (RE15_EQUIP setzt nur
+     * DAT_800aca5d, nicht den Platz — ohne Platz ist das Magazin -1 und der Feuer-Pfad
+     * gesperrt). Nur fuer Messlaeufe. */
+    {
+        const char *gv = getenv("RE15_GIVE");
+        if (gv && *gv) {
+            const char *p2 = gv;
+            while (*p2) {
+                long it = strtol(p2, (char **)&p2, 0);
+                long qt = 0;
+                if (*p2 == ':') { p2++; qt = strtol(p2, (char **)&p2, 0); }
+                while (*p2 == ',' || *p2 == ' ') p2++;
+                if (it > 0 && it < 256) {
+                    extern int re15_inv_find_item(uint8_t id);
+                    int s2 = re15_inv_find_item((uint8_t)it);
+                    if (s2 < 0) { for (s2 = 0; s2 < RE15_INV_MAX_SLOTS; s2++)
+                                      if (g_inv.slots[s2].id == 0) break; }
+                    if (s2 >= 0 && s2 < RE15_INV_MAX_SLOTS) {
+                        g_inv.slots[s2].id  = (uint8_t)it;
+                        g_inv.slots[s2].qty = (uint8_t)qt;
+                        fprintf(stderr, "[give] item %ld x%ld -> slot %d\n", it, qt, s2);
+                    }
+                }
+            }
+        }
+    }
     {
         const char *eqe = getenv("RE15_EQUIP");
         if (eqe && *eqe) {
