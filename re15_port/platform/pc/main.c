@@ -3794,6 +3794,37 @@ re_title:;
           extern int  re15_player_equipped_weapon(void);
           int wid = re15_player_equipped_weapon();
           if (wid >= 1) re15_audio_prime_weapon(wid); }
+        /* ⛔ SPIELERMODELL NACH DEM LADEN NACHZIEHEN (Nutzer-Befund 2026-09-20: "dann sammelt
+         * man die weste ein speichert und laedt den Spielstand — ist die weste weg").
+         *
+         * GEMESSEN (echte exe, Speicherkarte mit Flag(3,0x75)=1 aus probe_r17_weste_karte,
+         * RE15_CONTINUE_TEST/RE15_CARD_AUTO, debug.log des Laufs): der Ladevorgang meldet
+         * `[save] CONTINUE: resumed in room 1190 (hp=105)` — also Save-Block samt Flag und
+         * Westen-Bonus korrekt zurueck — aber im GANZEN Log steht KEINE `[pld]`-Zeile: der
+         * Modellwechsel lief nie, Leon stand in PL00 (ohne Weste) im Raum.
+         *
+         * URSACHE: re15_savedata_restore rekonstruiert work_vars[0x10] aus Flag(3,0x75)
+         * (re15_savedata.c), aber der Plattform-Lader pc_sync_player_model haengt nur an den
+         * beiden RAUM-Wegen (Raumwechsel main.c, Rueckruf aus scd_room_reenter). Der
+         * CONTINUE-Boot geht durch KEINEN von beiden — er startet die Threads direkt.
+         *
+         * ORIGINAL: der LOAD ist ein Wholesale-memcpy des Save-Blocks
+         *     80026294  addiu a0,a0,3516      ; a0 = 0x800b0dbc
+         *     8002629c  jal   0x8004ee38      ; memcpy
+         *     800262a0  ori   a2,zero,0x1430  ; 0x1430 Bytes
+         * und DAT_800b0ff0 (= work_vars[0x10], die Modell-Variante) liegt bei Block+0x234,
+         * also MITTEN drin. Danach laeuft der Raumlader FUN_800396fc, und der zieht das
+         * Modell unbedingt nach:
+         *     80039760  lbu  a0,0x0(s0)=>DAT_800aca5c   ; Modell/Waffen-Byte
+         *     80039768  lh   v1,DAT_800b0ff0            ; work_vars[0x10]
+         *     8003976c  andi v0,a0,0xf                  ; untere Nibble = Modell-Index
+         *     80039770  beq  v0,v1,LAB_80039790         ; unveraendert -> nichts tun
+         *     80039788  jal  FUN_800314b0               ; sonst Spielermodell NEU LADEN
+         * Genau dieser Zug fehlte im Port am Lade-Weg; er steht hier an seiner Stelle
+         * (nach dem Restore, vor dem ersten Spiel-Tick). Der `beq`-Vergleich steckt in
+         * pc_sync_player_model selbst, ein Neues Spiel (work_vars[0x10]=0) ist also ein
+         * No-op. Eingefroren von integration_weste_load_pin. */
+        pc_player_model_sync_cb();                 /* @0x80039760-8c am Lade-Weg */
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
     }
 
