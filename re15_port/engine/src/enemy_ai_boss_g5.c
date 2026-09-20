@@ -78,6 +78,7 @@
 #include "re15_skeleton.h"
 #include "re15_g5_skin.h"
 #include "re15_anim_select.h"
+#include "re15_math.h"
 
 /* re15_enemy_player_dist / re15_ai_arc_test / re15_engine_rand8 /
  * re15_player_equipped_weapon kommen aus re15_damage.h. Spieler-Schaden laeuft
@@ -794,6 +795,139 @@ static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
 int re15_g5_boss_intro_haelt_position(int slot)
 {
     return (s_g5_slot == slot && s_g5.aktiv && s_g5.gestartet && s_g5.sub == 2);
+}
+
+/* ==========================================================================================
+ *  KOERPER-KOLLISION: G5 IST SOLIDE (Nutzer-Befund "Birkin ist nicht solid")
+ * ==========================================================================================
+ * RE2 gibt G5 im Ctor ZWEI Kollisionssegmente (+0x84 und +0xA4, Stride 32, Anzahl
+ * +0x1E8 = 2 @0x8010052c-30) — nicht einen +0x78-Kasten wie die kleinen Gegner:
+ *
+ *   8010052c: addiu v0,zero,2      / 80100530: sw   v0,488(s0)   ; +0x1E8 = 2 Segmente
+ *   80100534: addiu v0,zero,-2000  / 80100538: sh   v0,148(s0)   ; Seg0 +0x10 = lokal X
+ *   8010053c: addiu v0,zero,6000   / 80100540: sh   v0,154(s0)   ; Seg0 +0x16 = RADIUS 6000
+ *   80100550: addiu v0,zero,2200   / 80100554: sh   v0,180(s0)   ; Seg1 +0x10 = lokal X
+ *   80100558: addiu v0,zero,1300   / 8010055c: sh   v0,186(s0)   ; Seg1 +0x16 = RADIUS 1300
+ *   80100470: addiu v1,zero,-1500  / 80100520: sh   v1,152(s0)   ; Seg0 +0x14 = lokal Y
+ *                                    80100524: sh   v1,184(s0)   ; Seg1 +0x14 = lokal Y
+ *   80100448: addiu t0,zero,1500   / 80100580: sh   t0,158(s0)   ; Seg0 +0x1A = HALBHOEHE
+ *                                    80100588: sh   t0,190(s0)   ; Seg1 +0x1A = HALBHOEHE
+ *
+ * Die Weltlage rechnet FUN_80035408: `seg.pos = entity.pos + RotMatrix(yaw) * (seg+0x10,
+ * seg+0x14, seg+0x12)` (Decompile RE2_Quellcode_V2/FUN_80035408.c). RE2 haelt G5s Yaw im
+ * ganzen Kampf auf 0 (= +X), deshalb hier — wie beim Biss-Treffer oben — die eingefrorene
+ * Vorwaertsachse `vor` statt einer Matrix.
+ *
+ * GESCHOBEN wird der SPIELER, und zwar aus seinem EIGENEN Tick heraus: FUN_800355C4
+ * (@0x80026628, direkt nach der SCA-Klemme 0x8003bfac) laeuft die Entity-Liste
+ * 0x800CFE14..*(0x800CE334) durch und ruft fuer jeden aktiven Eintrag
+ * `FUN_80034D0C(entity, spieler)` (@0x80035630); der Rueckgabewert setzt ein Kontaktbit in
+ * Spieler+0x0E (`sh s3,14(s1)` @0x80035658). Der Spieler traegt dabei GENAU EIN Segment,
+ * r 450 / lokal Y -1530 / Halbhoehe 1530 (Spieler-Ctor: `addiu v1,zero,450 / sh v1,154(s2)`
+ * @0x8003bdc0-c4, `sw v0=1,488(s2)` @0x8003bddc, `addiu v0,zero,-1530 / sh v0,152(s2)`
+ * @0x8003bde0-e4, `addiu v0,zero,1530 / sh v0,158(s2)` @0x8003bde8-ec) — dieselben Masse,
+ * die der Port schon als RE15_BODY_R_PLAYER/H fuehrt.
+ *
+ * SCHARF wird die Kollision erst mit der ARMIERUNG: der Ctor setzt Bit 0x2 im Entity-Wort 0
+ * (`ori v1,v1,0x2 / sw v1,0(s0)` @0x80100594-98), und FUN_80034D0C steigt bei
+ * `((*param_1 | *param_2) & 2) != 0` sofort aus. [T0] loescht genau dieses Bit beim
+ * Armieren:
+ *   801011e4: addiu v1,zero,-3      ; = ~0x2
+ *   801011ec: and   v0,v0,v1        ; Wort0 &= ~0x2
+ *   801011f0: sw    v0,0(s0)
+ * Das Bit 0x4 (`ori v0,v0,0x4` @0x80100604) bleibt dagegen stehen — es sperrt nur den
+ * PUSHEE-Weg (`(uVar4 & 4) == 0`), G5 selbst wird also nie geschoben. Im Port ist die
+ * Armierung `g->gestartet`.
+ *
+ * PHASENABHAENGIG ist nur Segment 1: seine lokale X-Lage +0xB4 faehrt im Massen-Biss von
+ * 2200 auf 3700 aus (`lhu v0,180(s2) / addiu v0,v0,500 / sh v0,180(s2)`, Kappe 3700
+ * @0x801040b8-e0) und danach mit -15 je Bild auf 2200 zurueck (@0x801042b0-d4) — im Port
+ * seit jeher `g->hitbox_b`. Segment 0 ist unveraenderlich.
+ */
+#define RE15_G5_SEG_R0      6000   /* @0x8010053c-40 */
+#define RE15_G5_SEG_X0     (-2000) /* @0x80100534-38 */
+#define RE15_G5_SEG_R1      1300   /* @0x80100558-5c */
+#define RE15_G5_SEG_Y      (-1500) /* @0x80100470 + @0x80100520/@0x80100524 */
+#define RE15_G5_SEG_H       1500   /* @0x80100448 + @0x80100580/@0x80100588 */
+#define RE15_G5_PL_R         450   /* @0x8003bdc0-c4 */
+#define RE15_G5_PL_Y       (-1530) /* @0x8003bde0-e4 */
+#define RE15_G5_PL_H        1530   /* @0x8003bde8-ec */
+
+/* Ein Segment des Bosses in WELTkoordinaten (FUN_80035408 mit Yaw 0). */
+int re15_g5_body_segment(int idx, int32_t *wx, int32_t *wy, int32_t *wz, int32_t *r)
+{
+    const re15_actor_t *e;
+    int32_t lx;
+    if (idx < 0 || idx > 1) return 0;
+    if (!s_g5.aktiv || !s_g5.gestartet || s_g5_slot < 0) return 0;   /* Wort0-Bit 0x2, s.o. */
+    e = &g_actors[s_g5_slot];
+    if (!e->active) return 0;
+    lx = (idx == 0) ? (int32_t)RE15_G5_SEG_X0 : s_g5.hitbox_b;
+    if (wx) *wx = e->x + (int32_t)s_g5.vor * lx;
+    if (wy) *wy = e->y + RE15_G5_SEG_Y;
+    if (wz) *wz = e->z;
+    if (r)  *r  = (idx == 0) ? (int32_t)RE15_G5_SEG_R0 : (int32_t)RE15_G5_SEG_R1;
+    return 1;
+}
+
+/* FUN_80034D0C(G5, Spieler) — byte-true Kreis-/Hoehentest + radialer Push-out ueber beide
+ * Segmente. Rueckgabe 1 = Kontakt (im Original das Bit in Spieler+0x0E). */
+int re15_g5_body_push_player(re15_actor_t *pl)
+{
+    int k, hit = 0;
+    if (!pl || !pl->active) return 0;
+    if (pl->hp < 0) return 0;                       /* tot: wie re15_body_push_player */
+    for (k = 0; k < 2; k++) {
+        int32_t sx = 0, sy = 0, sz = 0, sr = 0;
+        int32_t rs, dx, dz, dy, hs, dist, over, d1, px, pz;
+        if (!re15_g5_body_segment(k, &sx, &sy, &sz, &sr)) return 0;
+        rs = sr + RE15_G5_PL_R;                     /* radSum (Decompile Z.36) */
+        dx = pl->x - sx;
+        dz = pl->z - sz;
+        if ((uint32_t)(dx + rs) > (uint32_t)(rs * 2)) continue;      /* Broadphase X */
+        if ((uint32_t)(dz + rs) > (uint32_t)(rs * 2)) continue;      /* Broadphase Z */
+        dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        over = rs - dist;
+        if (over <= 0) continue;                    /* `if (0 < iVar10)` */
+        dy = (pl->y + RE15_G5_PL_Y) - sy;           /* Segment-Y beider Seiten */
+        hs = RE15_G5_SEG_H + RE15_G5_PL_H;          /* 1500 + 1530 */
+        if (!(-hs < dy && dy < hs)) continue;
+        d1 = dist + 1;
+        px = (dx * over) / d1;
+        pz = (dz * over) / d1;
+        /* VORZEICHEN-DREH-ZWEIG (Decompile Z.45-70, @0x80034ec4-0x80035044): zweiter
+         * Hoehentest gegen den POSITIONS-SPIEGEL des Ziels (RE2 Spieler+0x46 = Port
+         * pos_s_y) plus dessen Segment-Lokal-Y; liegt er ausserhalb des Bandes, wird
+         * pro Achse geprueft, ob der Schieber ZWISCHEN Spiegel und aktueller Position
+         * liegt, und der Schub umgekehrt: p = (+-2*r_a) - (-p).
+         * ⛔ Das Spieler-Segment-Lokal-Y ist hier -1530 (`sh v0,152(s2)` @0x8003bde4) —
+         * NICHT 0. (Der Tentakel-Port in enemy_ai_tentakel_g5.c setzt an dieser Stelle 0;
+         * das ist als offener Punkt im Dossier vermerkt, nicht stillschweigend geaendert.)
+         * Die 0x100000-Klemme (Z.71-86) prueft Wort 0 des SCHIEBERS: G5 setzt das Bit im
+         * ganzen Overlay nie (Vollzensus 0x00100000 in CDEMD0_EM36_ai1.BIN = 0 Treffer),
+         * der Zweig ist hier beweisbar tot. */
+        {
+            int32_t h2 = (int32_t)(int16_t)pl->pos_s_y + RE15_G5_PL_Y - sy;
+            if (h2 <= -hs || hs <= h2) {
+                int32_t mx = (int32_t)(int16_t)pl->pos_s_x;
+                int32_t mz = (int32_t)(int16_t)pl->pos_s_z;
+                int32_t r2 = sr * 2;
+                const re15_actor_t *e = &g_actors[s_g5_slot];
+                if ((mx < e->x && e->x < pl->x) || (e->x < mx && pl->x < e->x)) {
+                    int32_t g = (-(dx * over)) / d1;
+                    px = ((g > 0) ? r2 : -r2) - g;              /* @0x80034f98-ac */
+                }
+                if ((mz < e->z && e->z < pl->z) || (e->z < mz && pl->z < e->z)) {
+                    int32_t g = (-(dz * over)) / d1;
+                    pz = ((g > 0) ? r2 : -r2) - g;              /* @0x8003503c-44 */
+                }
+            }
+        }
+        pl->x += px;
+        pl->z += pz;
+        hit = 1;
+    }
+    return hit;
 }
 
 /* Diagnose (Sonden): Kopf-Tracking-Stand. */
