@@ -338,18 +338,21 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * Szenen, die im Auslieferungsstand vollstaendig vorliegen, aber nie gerufen werden
      * (Kartierung + Offsets: analysis/nutzer_batch_2026-08-29/schlafender-content.md):
      *  - ROOM1150/1151 sub04 (@0x0F96-0x10B6, in beiden Szenarien identisch verwaist):
-     *    das in main00 @0x0E00 unter der Welt geparkte Objekt 0 faehrt mit Motor-Sounds
-     *    (Se_on Bank2 0x0a/0x0c/0x0d) auf y=-305 herab, arbeitet und parkt sich selbst
-     *    zurueck — in sich geschlossen (setzt/loest die Cutscene-Klammern selbst).
-     *    Trigger: ACTION-EXAMINE am Geraeteort (Pos_set-Ziel @0x0FB4: -20700,-17460),
-     *    Slot 60 (Raum belegt 0-6 + RVD@16ff), Event 4. Wiederholbar per Konstruktion.
+     *    das in main00 @0x0E00 ausserhalb des Raums geparkte Objekt 0 faehrt mit
+     *    Geraeteklang (Se_on Bank2 0x0a/0x0c/0x0d) auf y=-305 in den Raum, arbeitet und
+     *    parkt sich selbst zurueck — in sich geschlossen (setzt/loest die Klammern selbst).
+     *    ⛔ VERSCHOBEN 2026-09-20 (Nutzer-Rueckfrage "wie triggert man das?"): die hier
+     *    stehende Fassung `re15_aot_set(60, GENERIC, 4, -20700,-17460, 900,900)` war
+     *    GEMESSEN unerreichbar (0 von 196 Standorten; der MESSAGE-Record slot 4 @0x0DBA
+     *    liegt davor und verbraucht den Tastendruck) UND sie ueberschrieb die
+     *    RVD-Kamerazone in Slot 60 (der Raum hat 16 Zonen auf 48..63, rdt_common.c:441).
+     *    Das Armieren sitzt jetzt am AUTORISIERTEN Record slot 1 (@0x0D7E) in
+     *    scd_vm.c op_aot_set, sce-0-Zweig — mit dessen eigenem Rechteck und Nutzlast.
      *  - ROOM20A0/20A1 sub02 (@0x1BF0-0x1CB0): deaktivierte Ambient-Effektschleife
      *    (11x Sce_espr_on Effekt-Id 6, Sleep 5, Endlos-Goto) im Adult-Spider-Kanalraum —
      *    beim Betreten gestartet (Thread endet mit dem Raum). */
     {
         uint16_t rid = (uint16_t)g_current_room_id;
-        if (rid == 0x1150 || rid == 0x1151)
-            re15_aot_set(60, RE15_AOT_TYPE_GENERIC, 4, -20700, -17460, 900, 900);
         if (rid == 0x20A0 || rid == 0x20A1)
             scd_event_fire(2);
         /* ROOM6020/6021 (STAGE6-Save-Raum): der EINZIGE der 8 Box-Raum-Paare, dessen

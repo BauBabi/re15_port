@@ -2797,6 +2797,45 @@ static int op_aot_set(scd_thread_t *t)
              * ev=pc[17] heuristic ARMED them at install (they fired their subs live).
              * Register with geometry + band so a later re15_aot_retype can arm. */
             re15_aot_set(slot, RE15_AOT_TYPE_NONE, 0, cx, cz, hw, hh);
+            /* ⛔ SCHLAFENDER CONTENT — ROOM1150/1151 Slot 1 = die Geraete-Szene sub04.
+             * Nutzer-Auftrag 2026-08-30 ("Wenn schlafender Content einfach und sinnvoll zu
+             * aktivieren ist, aktiviere ihn"); KORRIGIERT 2026-09-20 nach der Nutzer-
+             * Rueckfrage "wie triggert man das?" — die erste Umsetzung war unerreichbar.
+             *
+             * DER AUTORISIERTE RECORD (ROOM1150.RDT @0x0D7E, identisch in ROOM1151 @0x0D7E):
+             *     2c 01 00 31 00 00  d8 aa e0 b1 dc 05 e4 0c  ff 00 18 04 00 00
+             *   slot=1, sce=0, flags=0x31, band=0, Rect Ecke(-21800,-20000) Groesse(1500,3300),
+             *   Nutzlast {ff 00 18 04 00 00}. sce=0 -> Handler[0] @0x8004305C ist inert, der
+             *   ACTION-Scan ueberspringt sce-0-Records (@0x80042f48-50) — der Auslöser ist
+             *   im Auslieferungsstand ABGESCHALTET, sein Rechteck + seine Nutzlast aber
+             *   vollstaendig vorhanden und zeigen auf sub 4.
+             *
+             * ARMIEREN = exakt das, was ein Aot_reset(1, 3, 0x31, ff 00 18 04 00 00) taete
+             * (LAB_80040738): rec[0]=3 -> Handler[3] EVENT @0x800430F0, rec[1] = flags
+             * @0x8004076c-78, Nutzlast-Halbwoerter @0x80040788-a8; sub = p1>>8 (@0x80043100).
+             * Rect und Bank bleiben unangetastet — beides kommt weiter aus dem RDT-Record.
+             *
+             * ⛔ WARUM NICHT MEHR SLOT 60 (die Fassung vom 2026-08-30):
+             *   (a) GEMESSEN (probe_irons_mittelmodell): 0 von 196 Standort/Richtungs-
+             *       Kombinationen loesten sub04 aus; 182 zeigten stattdessen Text 0. Der
+             *       grosse MESSAGE-Record slot 4 (@0x0DBA, x[-21900..-17700] z[-21000..-15800])
+             *       umschliesst den ganzen Bereich, liegt in der Scan-Reihenfolge VOR 60 und
+             *       verbraucht den Tastendruck (action_fired, aot_common.c:1288).
+             *   (b) GEMESSEN: Slot 60 ist in ROOM1150 gar nicht frei — der Raum hat 16
+             *       RVD-Kamerazonen, und die werden von OBEN nach unten belegt
+             *       (rdt_common.c:441 `slot = RE15_AOT_MAX-1-installed`), also 48..63.
+             *       Slot 60 war die Kamerazone cam 1->0 ueber x[-19205..-18005]
+             *       z[-12398..-9998] (direkt am Eingang) — der Einbau hat sie geloescht.
+             * Slot 1 hat beide Probleme nicht: er liegt VOR slot 4 und ist der Record,
+             * den die Autoren selbst dafuer angelegt haben. */
+            if ((g_current_room_id == 0x1150 || g_current_room_id == 0x1151) && slot == 1) {
+                int pb = long_form ? 22 : 14;                 /* Nutzlast-Basis = rec+0x14 / rec+0xC */
+                uint16_t p0 = (uint16_t)(t->pc[pb]     | ((uint16_t)t->pc[pb + 1] << 8));
+                uint16_t p1 = (uint16_t)(t->pc[pb + 2] | ((uint16_t)t->pc[pb + 3] << 8));
+                uint16_t p2 = (uint16_t)(t->pc[pb + 4] | ((uint16_t)t->pc[pb + 5] << 8));
+                if ((uint8_t)(p1 >> 8) == 4)                  /* Nutzlast zeigt wirklich auf sub04 */
+                    re15_aot_retype(slot, 3, t->pc[3], p0, p1, p2);
+            }
         } else if (type == 5) {
             /* sce=5 marker/examine (aot_sce_census fix 4): handler[5] @0x8004318C is a
              * pure NOP — the effect is the SCAN's work-var latch (centre -> work_vars[1]
@@ -3904,6 +3943,19 @@ static int op_obj_model_set(scd_thread_t *t)
                                              * sb v0,130(a1)`) — read by the AOT scan's
                                              * per-entity band gate in the OBJECT-pool
                                              * pass (sce-5 markers, @0x80042cac) */
+        /* ELTERNOBJEKT aus pc[5] (Anhaenge-Form). Byte-true LAB_80040914 @0x80040a04
+         * `andi v1,a0,0xc0` mit a0 = pc[5] (`lbu a0,5(a2)` @0x8004097c); der 0xC0-Zweig
+         * @0x80040a84-9c rechnet 0x800ad0e0 + 148*a0 und legt das nach pool+116
+         * (@0x80040aa0). Fuer a0 = 0xC0|n ist das 0x800b3fe0 + 148*n = Pooleintrag n + 0x48
+         * = die WELTMATRIX des Objekts n, und genau die nimmt der Zeichner FUN_8002c18c als
+         * Elternmatrix (FUN_80022da0(pool+116, lokale Matrix pool+0x20, Weltmatrix pool+0x48)).
+         * 0x00 @0x80040a48 = Einheitsmatrix 0x80072d4c (nachgelesen: 4096-Diagonale, t=0) —
+         * das ist der Weltraum-Fall und damit das bisherige Port-Verhalten.
+         * NICHT umgesetzt: 0x40 (globaler Anker 0x800aca74) und 0x80 (Figuren-Pool
+         * 0x8009d24c + 500*a0). Zensus ueber alle 240 RDTs: 0x40 kommt NIE vor, 0x80 genau
+         * zweimal (ROOM4030/4031 Objekt 0) — beides ausserhalb dieses Auftrags. */
+        g_scd.props[i].parent_obj = ((t->pc[5] & 0xC0) == 0xC0)
+                                    ? (int8_t)(t->pc[5] & 0x3F) : (int8_t)-1;
         g_scd.props[i].x = (int32_t)px;
         g_scd.props[i].y = (int32_t)py;
         g_scd.props[i].z = (int32_t)pz;

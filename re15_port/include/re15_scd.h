@@ -406,6 +406,23 @@ typedef struct {
          * FUN_8002d474 @0x8002d59c/@0x8002d680 und FUN_8002d100 @0x8002d170
          * (`& 1` = aktiv). */
         uint16_t flags;
+        /* ELTERN-OBJEKT = Obj_model_set pc[5], Anhaenge-Form. Byte-true LAB_80040914:
+         *     80040a04  andi v1,a0,0xc0        ; a0 = pc[5] (gelesen @0x8004097c)
+         *     80040a48  -> 0x80072d4c          ; 0x00 = Einheitsmatrix (Weltraum)
+         *     80040a58  -> 0x800aca74          ; 0x40 = globaler Anker
+         *     80040a68  -> 0x8009d24c + 500*a0 ; 0x80 = Figuren-Pool
+         *     80040a84  -> 0x800ad0e0 + 148*a0 ; 0xC0 = OBJEKT-Pool 0x800b3f98 + 0x48
+         * Der so gewaehlte Zeiger landet in pool+116 (@0x80040aa0 `sw v0,116(a1)`) und ist
+         * das ERSTE Argument von FUN_80022da0 im Objekt-Zeichner FUN_8002c18c: die
+         * ELTERNMATRIX, mit der die lokale Matrix des Objekts (pool+0x20 = RotMatrix(rot),
+         * Translation pool+52/56/60) zur Weltmatrix pool+0x48 verkettet wird.
+         * Fuer 0xC0 gilt 0x800ad0e0 + 148*0xC0 = 0x800b3fe0 = Pooleintrag 0 + 0x48, also
+         * Elternmatrix = Weltmatrix des Objekts (pc[5] - 0xC0).
+         * ZENSUS ueber alle 240 RDTs (672 Obj_model_set): 666x 0x00, 2x 0x80
+         * (ROOM4030/4031 Objekt 0), 4x 0xC0 — und das sind GENAU ROOM1150/1151 Objekt 1
+         * und 2 (die beiden Deckelhaelften auf dem Hebetisch, sub04).
+         * -1 = kein Elternteil (Weltraum). 0x40/0x80 sind NICHT umgesetzt (s. Dossier). */
+        int8_t   parent_obj;
     } props[RE15_SCD_MAX_PROPS];
     uint8_t  prop_count;
     /* When Work_set kind=3 selects a script slot that has NO active
