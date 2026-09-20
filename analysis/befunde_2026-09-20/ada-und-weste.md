@@ -62,6 +62,14 @@ Lauf **nach** dem Fix, derselbe Aufruf:
     43:[pld] Spielermodell -> PLD/PL01.PLD (Mesh 17 Teile, Textur 384x256)  [R.P.D.-Ruestung an]
     44:[save] CONTINUE: resumed in room 1190 (hp=105)
 
+**Sichtprüfung** (echter Renderpfad, Vollbild-Readback vor `SDL_RenderPresent`, kein
+`AUTOSHOT`, kein Softwarerenderer; gleiche Karte, gleiche Stelle, Kamerawinkel 13):
+
+* `ada-und-weste/weste_vor_fix.png` — Leon in der dunkelblauen Uniform (PL00).
+* `ada-und-weste/weste_nach_fix.png` — Leon in der roten R.P.D.-Weste (PL01).
+
+Beide Bilder selbst angesehen; der Unterschied ist der Oberkörper.
+
 ### 1.2 Zensus: Wunden, Waffe, Kamera
 
 Dieselbe Karte, zusätzlich mit Waffe 3 und allen acht Wund-Panels auf Level 2
@@ -283,4 +291,5 @@ unbedingt und für jeden Slot an der Stelle von @0x80041c4c.
    nicht geschlossen worden.
 3. **Sichtprüfung der Ada-Szene fehlt.** Ich habe die Zustandsspur gemessen, aber keine
    Bilderfolge der Szene angesehen; die Zustandsspur allein kann Vorwärts von Rückwärts
-   nicht unterscheiden (`+0x95` zählt in beide Richtungen hoch).
+   nicht unterscheiden (`+0x95` zählt in beide Richtungen hoch). Für die Weste ist die
+   Sichtprüfung gefahren (§1.1), für Ada nicht.
