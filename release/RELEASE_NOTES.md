@@ -1,3 +1,116 @@
+# v0.8.7 - 2026-09-20
+
+Acht Rueckmeldungen aus dem Spieltest mit v0.8.6. Sieben sind umgesetzt, eine braucht
+noch eine Angabe von Ihnen.
+
+## Die Mehrfachschuss-Pistole verstopfte den ganzen Raum
+
+> "nehme ich die mehrfach schuss Pistole mit in stage 1, bleibt dort die Kugel Animation
+> und Sound im loop haengen." — "Ausserdem bleibt genau in diesem Raum der Sound haengen."
+
+Beide Punkte hatten **eine** Ursache. Betroffen sind die Beretta M93R und die Glock 18,
+die einzigen beiden Waffen mit Drei-Schuss-Salve. Ihre Effektkette meldet sich im Original
+nach dem dritten Schuss selbst ab; im Port blieb der Platz belegt, und die Kette schob in
+JEDEM Bild ein weiteres Muendungsfeuer samt Rauch, Huelse und Knall nach — bis alle 96
+Effektplaetze voll waren und blieben. Danach war in diesem Raum ueberhaupt kein Effekt mehr
+moeglich, und der Knall wurde bis zu achtmal pro Bild auf derselben Stimme neu angestossen.
+
+Gemessen im Vergleichslauf: statt 15 Effekt-Kindern und 30 Knallen entstanden 100 Kinder und
+946 Knalle, der letzte davon 300 Bilder nach dem Loslassen des Abzugs und mit leerem
+Magazin. Der Effektpool wird nur beim Raumladen geleert — daher hoerte es erst beim
+Raumwechsel auf, genau wie Sie es beschrieben haben.
+
+## Munition: nur noch die Haelfte
+
+> "dann ist die Munition die man findet viel zu viel. ich will Das du die Munition auf
+> maximal die haelfte begrenzt die man findet."
+
+Was in der Welt liegt, kommt jetzt zur Haelfte im Beutel an, abgerundet, mindestens eine
+Einheit. Ueber das ganze Spiel sind das 532 statt 1108 Schuss, in Stage 1 allein 458 statt
+950. Kraeuter, Schluessel, Dokumente und die Startausruestung bleiben unangetastet.
+
+Wichtig und bewusst ausgenommen: **das Nachladen aus der Reserve gibt weiter das volle
+Magazin** — sonst waere bei jedem Nachladen die Haelfte verschwunden. Ebenfalls nicht
+angefasst sind Waffen, die geladen herumliegen (etwa die Ingram mit 100 Schuss): das ist
+die Waffe, keine Munitionspackung. Sagen Sie Bescheid, wenn die auch halbiert werden soll.
+
+*Das ist ausdruecklich keine Original-Treue, sondern Ihre Entscheidung.*
+
+## Klick-Laut an den Cursor-Raetseln
+
+> "dann will ich bei den raetseln wo man etwas mit Cursor auswaehlt und klickt einen click
+> Sound. den gibt es, wenn nicht in resident evil 1.5 - auf jeden fall in resident evil 2."
+
+In Resident Evil 2 nachgeschlagen: der Laut haengt dort nicht am Tastendruck, sondern
+daran, dass der Cursor wirklich auf ein anderes Feld wechselt. Genau so ist es gebaut —
+ein Klick beim Feldwechsel, ein zweiter beim Bestaetigen. Beide Laute sind die, die
+Resident Evil 1.5 in seinem eigenen Inventar ohnehin benutzt; es ist also nichts erfunden.
+
+Damit es nicht an falschen Stellen klappert, wurden alle zwoelf Raetsel-Raeume je zehn
+Sekunden ohne Eingabe laufen gelassen: kein einziger Fehl-Klick. Ein gehaltener Knopf
+rattert nicht.
+
+## Untertitel bleiben stehen, solange gesprochen wird
+
+> "koennen wir einfach die Untertitel Einblendung So lange ebenfalls verlaengern?"
+
+Ja. Bisher wartete zwar die naechste Zeile, bis die Aufnahme zu Ende war, aber der
+Untertitel selbst verschwand schon vorher. Er bleibt jetzt so lange stehen, wie die
+Aufnahme noch laeuft. Der Spieler wird dadurch nicht laenger blockiert als vorher — das
+Nachwirken haelt nur die Schrift, nicht die Steuerung.
+
+## Die R.P.D.-Weste bleibt nach dem Laden an
+
+> "dann sammelt man die weste ein speichert und laedt den Spielstand Ist die weste weg."
+
+Der Spielstand kam vollstaendig zurueck, auch die zusaetzliche Energie der Weste — nur das
+Modell wurde nicht nachgezogen, Leon stand wieder in der normalen Uniform da. Der Port zog
+den Modellwechsel nur beim Betreten eines Raums nach, und das Laden geht an dieser Stelle
+vorbei. Im Original haengt der Wechsel am Raumlader, der nach jedem Laden mitlaeuft; so ist
+es jetzt auch hier. Nachgesehen an zwei Bildern, und ein Riegel prueft es beim Bauen
+automatisch mit.
+
+Bei der Gelegenheit nachgemessen, ob weitere Ausruestung betroffen ist: Blutspuren am
+Modell, angelegte Waffe und Kamerawinkel kommen korrekt zurueck. Die Weste war der einzige
+Fall.
+
+## Birkin ist jetzt solide
+
+> "Birkin ist nicht solid."
+
+Man konnte drei Meter weit in die Fleischmasse hineinlaufen. Der Port benutzte fuer den
+Koerper einen einzelnen Ein-Meter-Zylinder am Ursprung. Resident Evil 2 gibt G5 dort gar
+keinen Zylinder, sondern **zwei** Kollisionskoerper: einen grossen fuer die Masse (Radius
+sechs Meter, zwei Meter hinter dem Ursprung) und einen kleinen fuer den Kriecher-Oberkoerper
+davor, der beim Massen-Biss mitfaehrt. Beide sind gebaut, samt der Regel, dass sie erst
+scharf werden, wenn der Kampf beginnt, und dass der Boss selbst nie geschoben wird.
+Gemessen: der Spieler wird statt auf 1451 jetzt auf 4451 Einheiten vor dem Ursprung
+gehalten — also vor der Masse statt darin.
+
+**Dazu ein vollstaendiger Abgleich des Endkampfs.** Alle Zustandstabellen des
+Original-Overlays sind Eintrag fuer Eintrag gegen den Port gestellt: 25 lebende Eintraege,
+der Port hat 22. Zwei vermeintliche Luecken sind keine — ein Zustand des Originals wird von
+keiner Stelle im Spiel je eingeschaltet, und die Treffer-Routine kommt gar nicht aus dem
+Boss-Code, sondern aus dem Waffen-Code des Spiels. **Drei echte Luecken bleiben** und sind
+mit Adresse benannt: die Opferanimation beim Verschlungenwerden auf dem RE2-Spielerskelett,
+der Blutauswurf an der Trefferstelle, und die Vibrations-Kaskaden. Sie sind nicht
+geschlossen, weil dafuer jeweils noch eine Original-Funktion fehlt — geraten wird nichts.
+
+## Ada: ein Fehler gefunden, der gemeldete aber noch nicht
+
+> "dann im Raum der cutscene wo man ada aus dem feuer rettet, und dann mit ihr den Raum
+> wechselt, spielt ihre Animation am Anfang doppelt ab."
+
+Beide in Frage kommenden Raeume wurden nachgespielt und Adas Bewegungen Bild fuer Bild
+aufgezeichnet. Dabei ist **ein eigener Fehler aufgefallen und behoben**: der Port liess nach
+einer Skript-Bewegungsanweisung das Rueckwaerts-Kennzeichen stehen, wodurch die naechste
+Animation verkehrt herum lief.
+
+Die gemeldete Doppelung selbst liess sich dagegen **nicht als Fehler nachweisen**: an beiden
+Stellen, an denen eine Wiederholung gemessen wurde, macht das Originalskript dasselbe.
+*Dafuer braeuchte ich eine Angabe:* passiert es im Raum mit dem Feuer (ROOM1090) oder erst
+im naechsten (ROOM1050) — und vor oder nach dem Raumwechsel?
+
 # v0.8.6 - 2026-09-20
 
 Die offenen Punkte aus v0.8.5, auf Zuruf des Nutzers: *"gehe die offenen Punkte an, bei den
