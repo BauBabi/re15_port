@@ -5904,10 +5904,25 @@ re_title:;
                      * geloescht, player_mode blieb 2 und der Spieler wurde nie frei. Ohne Klicken
                      * endet die Flag-Spur sauber mit "z2/7 = 0" und "z1/27 = 0".
                      * Im Gameplay (Examine-Dialoge) darf und soll der Autopilot dagegen weiterklicken. */
-                    if (ap_mode && g_scd.message_active && g_scd.player_mode != 2) {
+                    /* RE15_AP_CUTSCENE_CLICK=1: Messhaken — der Regler bestaetigt Dialoge
+                     * AUCH waehrend player_mode 2. Gebraucht fuer Messlaeufe durch eine
+                     * Cutscene, die mitten drin auf einen Tastendruck wartet (ROOM1090 sub03
+                     * @0x2502 Message_on 09 FF FF setzt pause_mask 0xFFFF0000 -> RE15_PAUSE_SCD,
+                     * die ganze VM steht bis zur Bestaetigung). Nur env-gegated, kein
+                     * Spielverhalten. NICHT fuer das Helipad-Intro verwenden (s. oben). */
+                    if (ap_mode && g_scd.message_active &&
+                        (g_scd.player_mode != 2 || getenv("RE15_AP_CUTSCENE_CLICK"))) {
                         int ph = ap_msgwait++ % 24;
                         if (ph == 0)  gctx.pad_current |= RE15_PAD_BIT_SQUARE;
                         if (ph == 12) gctx.pad_current |= RE15_PAD_BIT_CROSS;
+                        /* Messhaken (RE15_AP_CUTSCENE_CLICK): der Dialog-FSM braucht die
+                         * DRUCK-FLANKE (pad_pressed), nicht nur das Halte-Wort. Ohne sie
+                         * bleibt eine Cutscene-Zeile stehen und der Message_on-Freeze
+                         * (pause_mask 0xFFFF0000 -> RE15_PAUSE_SCD) haelt die VM an. */
+                        if (getenv("RE15_AP_CUTSCENE_CLICK")) {
+                            if (ph == 0)  gctx.pad_pressed |= RE15_PAD_BIT_SQUARE;
+                            if (ph == 12) gctx.pad_pressed |= RE15_PAD_BIT_CROSS;
+                        }
                     }
                     /* GESTEUERT wird dagegen nur im echten Gameplay. Waehrend Intro/Cutscene haelt
                      * player_mode 2 den Spieler ohnehin fest, und seine Koordinaten sind dort
@@ -6433,6 +6448,10 @@ re_title:;
                                 re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
                                 re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23),
                                 (int)g_scd.cam_id);
+                        fprintf(s_state_log, " msg(a=%d fsm=%d id=%d q=%d) pf=%08X pm=%d",
+                                (int)g_scd.message_active, (int)g_scd.message_fsm_active,
+                                (int)g_scd.message_id, (int)g_scd.message_query,
+                                (unsigned)g_re15_pauseflags, (int)g_scd.player_mode);
                     }
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
@@ -6559,6 +6578,30 @@ re_title:;
                             s_fe_id, (unsigned)g_engine.frame_count);
                     scd_event_fire((uint8_t)s_fe_id);
                     s_fe_done = 1;
+                }
+            }
+            /* MESSHAKEN RE15_FIRE_AOT="<slot>@<frame>#<hexraum>": feuert den AOT-Slot des
+             * aktuellen Raums ueber re15_aot_fire_slot() — exakt der Pfad, den auch das
+             * Hineinlaufen nimmt (Scan -> aot_fire_door) und den `Aot_on` @0x800407bc nutzt.
+             * Gebraucht, um eine TUER nach einer langen Cutscene deterministisch zu nehmen,
+             * ohne den Regler durch den halben Raum zu zirkeln. Env-gegated, feuert einmal. */
+            {
+                static int s_fa_init = 0, s_fa_slot = -1, s_fa_frame = 30, s_fa_done = 0;
+                static unsigned s_fa_room = 0;
+                if (!s_fa_init) { const char *fa = getenv("RE15_FIRE_AOT");
+                    if (fa && *fa) { s_fa_slot = atoi(fa);
+                        const char *at = strchr(fa, 0x40); if (at) s_fa_frame = atoi(at + 1);
+                        const char *hs = strchr(fa, 0x23);
+                        if (hs) s_fa_room = (unsigned)strtol(hs + 1, NULL, 16); }
+                    s_fa_init = 1; }
+                if (s_fa_slot >= 0 && !s_fa_done &&
+                    g_engine.frame_count >= (uint32_t)s_fa_frame &&
+                    (s_fa_room == 0 || g_current_room_id == s_fa_room)) {
+                    extern void re15_aot_fire_slot(int slot);
+                    fprintf(stderr, "[fire-aot] slot=%d at F%u (Raum %04X)\n",
+                            s_fa_slot, (unsigned)g_engine.frame_count, g_current_room_id);
+                    re15_aot_fire_slot(s_fa_slot);
+                    s_fa_done = 1;
                 }
             }
             /* DEBUG: RE15_SUBSTART="N@F" — startet sub_scd[N] des AKTUELLEN Raums direkt als
