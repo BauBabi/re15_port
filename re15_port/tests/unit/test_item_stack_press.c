@@ -189,12 +189,17 @@ int main(void)
     CHECK("Prompt wird eingabebereit", run_to_prompt_ready());
     frame(0, RE15_PAD_BIT_SQUARE);        /* Confirm=Yes — Modal endet 6->7->0 in diesem Bild */
     CHECK("Confirm beendet das Modal im selben Bild", !re15_item_modal_active());
-    CHECK("genau EIN Grant (+15)", qty_sum(0x15) == q0 + 15);
+    /* ⛔ ERWARTUNG ANGEPASST 2026-09-20 (NUTZER-ENTSCHEIDUNG "Munition halbieren",
+     * re15_pickup_menge_nutzer): der Record traegt weiter x15 (main00 @0x1d6a/@0x1d80 —
+     * daran aendert sich nichts), aufgenommen wird davon die HAELFTE. Dieser Test prueft die
+     * DRUCK-ORDNUNG (ein Druck = ein Gegenstand), nicht die Stueckzahl; die Zahl ist hier
+     * nur Beleg dafuer, dass genau EINE Aufnahme passiert ist. */
+    CHECK("genau EIN Grant (+7 = die Haelfte von 15)", qty_sum(0x15) == q0 + 7);
 
     /* --- KERN-PIN: ohne neuen Druck darf NICHTS mehr feuern --- */
     for (int f = 0; f < 20; f++) frame(0, 0);
     CHECK("KEIN Auto-Pickup des 2. Items ohne neuen Druck (20 Bilder)",
-          qty_sum(0x15) == q0 + 15 && !re15_item_modal_active());
+          qty_sum(0x15) == q0 + 7 && !re15_item_modal_active());
     CHECK("das 2. Stapel-AOT ist noch scharf", g_aot.slots[3].active || g_aot.slots[4].active);
 
     /* --- 2. Druck: jetzt (und erst jetzt) kommt das 2. Item --- */
@@ -202,7 +207,7 @@ int main(void)
     CHECK("2. Druck armt das Modal erneut", re15_item_modal_active());
     CHECK("Prompt 2 wird eingabebereit", run_to_prompt_ready());
     frame(0, RE15_PAD_BIT_SQUARE);
-    CHECK("2. Grant (+15) nach neuem Druck", qty_sum(0x15) == q0 + 30);
+    CHECK("2. Grant (+7) nach neuem Druck", qty_sum(0x15) == q0 + 14);
     CHECK("beide Stapel-AOTs verbraucht", !g_aot.slots[3].active && !g_aot.slots[4].active);
     CHECK("beide taken-Bits gesetzt (zone 9: 2 + 227)",
           re15_game_flag_get(9, 2) && re15_game_flag_get(9, 227));

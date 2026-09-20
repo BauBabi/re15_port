@@ -92,6 +92,25 @@ int  re15_item_is_weapon(uint8_t id);
 int  re15_item_is_ammo(uint8_t id);
 int  re15_item_is_key(uint8_t id);
 
+/* ===== NUTZER-ENTSCHEIDUNG (KEINE byte-true Regel) ==================================
+ * Nutzer-Auftrag 2026-09-20: "dann ist die Munition die man findet viel zu viel. ich will
+ * Das du die Munition auf maximal die haelfte begrenzt die man findet."
+ *
+ * Diese Funktion HALBIERT die Stueckzahl EINER AUFGESAMMELTEN MUNITIONS-Packung (Abrundung,
+ * Mindestmenge 1). Sie ist BEWUSST eine Abweichung vom Original und wird nirgends als
+ * byte-true ausgegeben. Der Gueltigkeitsbereich ist eng gezogen:
+ *   - NUR Munition im byte-true Id-Fenster 0x15..0x21 (re15_item_is_ammo; `sltiu id,0x15`
+ *     @0x80047d54 / `sltiu id,0x22` @0x80049124). Kraeuter (0x22..0x2e), Schluessel/Dokumente
+ *     (>= 0x22) und die Startausruestung (re15_inv_load_briefing) bleiben unberuehrt.
+ *   - NUR der WELT-AUFNAHME-Pfad (re15_item_modal_start). Das NACHLADEN aus der Reserve
+ *     (re15_ammo_reload_exec, FUN_8004ebdc @0x8004ebdc) laeuft NICHT hier durch — sonst
+ *     verschwaende jedes Nachladen die Haelfte des Magazins.
+ *   - Eine WAFFE mit geladenem Magazin (Id < 0x15, z.B. INGRAM M10 x100) ist keine
+ *     Munitions-Packung und bleibt ebenfalls unberuehrt.
+ * Zensus (tools/aot_sce_census.py, 240 RDTs, 100 % Walker-Abdeckung): 75 Munitions-Records,
+ * 1108 Stueck gesamt -> 532 nachher; STAGE1 allein 54 Records / 950 Stueck -> 458. */
+uint8_t re15_pickup_menge_nutzer(uint8_t item_id, uint8_t menge);
+
 /* Byte-true item NAME for the inventory display (catalog 0x00..0x21, from the DAT_800c4a28 string blob
  * via DAT_800c495c offsets). Returns "" for ids outside the proven catalog. See RE15_INVENTORY_SUBSYSTEM.md §3. */
 const char *re15_item_name(uint8_t id);
