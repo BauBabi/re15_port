@@ -2357,7 +2357,24 @@ static int op_plc_dest(scd_thread_t *t)
             a->walk_dest_x = x; a->walk_dest_z = z;       /* dest gestasht (+0x1bc/+0x1be) */
             a->steer_x = x; a->steer_z = z;               /* Sub-VM-Steer-Felder (= dieselben
                                                            * Original-Bytes +0x1bc/+0x1be) */
-            a->walk_flag_bit = flag_bit;                  /* +0x1c3 */
+            a->walk_flag_bit = flag_bit;                  /* +0x1c3 @0x80041c24 */
+            /* ⛔ +0x1c4 := 0 GILT UNBEDINGT — fuer JEDEN Slot und AUCH bei gegriffenem
+             * Re-Init-Guard. Der Store liegt im Original HINTER dem Zusammenfluss der
+             * Guard-Zweige (der Guard springt nach 0x80041c24, der Store steht danach):
+             *     80041c24  sb   v1,451(a1)     ; +0x1c3 = pc[3]   <- Guard-Ziel
+             *     80041c4c  sh   zero,452(a1)   ; +0x1c4 = 0       <- UNBEDINGT
+             * Der Port loeschte bisher nur im !skip_init-Zweig und nur fuer Nicht-Spieler.
+             * GEMESSEN, was das kostet (ROOM1090-Rettungsszene, debug.log des Messlaufs):
+             *     [scd F139] Plc_flg(subop=0, mask=0x0080) -> slot=0 anim_flags=0x0080
+             *     [scd] Plc_dest(slot=0 mode=0x06 ...) -> state4/sub6
+             * Der Spieler betrat den Mode-6-Event-Reach also mit stehengebliebenem
+             * REVERSE-Bit 0x80. Das Bit ist im Port der Aktor-Zustand fuer die
+             * Abspielrichtung (anim_select_common.c: Index = laenge-1-frame, Original
+             * @0x8001f34c/@0x8001f354), also liefen dessen Clips RUECKWAERTS — im Original
+             * unmoeglich, weil +0x1c4 hier genullt wird und der Motion-Sub die Richtung
+             * pro anim_set-Aufruf aus dem (dann leeren) Wort zieht (`srl a2,a2,7`
+             * @0x80050d50). */
+            a->anim_flags = 0;                            /* @0x80041c4c sh zero,452(a1) */
             if (is_walk)                                  /* Port-Bookkeeping (R9): Ck(5,bit)-Polls
                                                            * duerfen keine stale Ankunft sehen */
                 re15_game_flag_set(5, flag_bit, 0);
@@ -2400,7 +2417,13 @@ static int op_plc_dest(scd_thread_t *t)
         a->walk_dest_x   = x;
         a->walk_dest_z   = z;
         a->walk_mode     = mode;
-        a->walk_flag_bit = flag_bit;
+        a->walk_flag_bit = flag_bit;                  /* +0x1c3 @0x80041c24 */
+        a->anim_flags    = 0;                         /* +0x1c4 = 0 @0x80041c4c — derselbe
+                                                       * unbedingte Store wie im Zweig oben;
+                                                       * der Original-Handler kennt an dieser
+                                                       * Stelle keinen Walk/Nicht-Walk-Unter-
+                                                       * schied (die Mode-Verzweigung beginnt
+                                                       * erst @0x80041c50). */
         a->walk_active   = 1;
         /* BO-round (Tier-3 A5): start the PSX 3-state walker FSM in state 0
          * (LAB_80030AF0 / DAT_800aca5a). The variable-length align phase
