@@ -21,6 +21,7 @@
 #include <windows.h>   /* GetSystemMetrics(SM_REMOTESESSION) — RDP-Erkennung fuer die Pad-Diagnose */
 #endif
 #include "re15_engine.h"
+#include "re15_rumble.h"        /* die zwei RE2-Rumble-Ringe -> DualShock-Aktuatoren */
 #include "touch_overlay_pc.h"   /* On-Screen-Pad: Finger -> dieselben Pad-Bits */
 
 #define RE15_PAD_UP       0x0010
@@ -280,9 +281,33 @@ int re15_input_debug_fkey(int n)
     return (n >= 1 && n <= 12) ? (int)((s_dbg_pressed >> (n - 1)) & 1u) : 0;
 }
 
+/* ---- RUMBLE (Runde 18) --------------------------------------------------------------------
+ * Das Original tickt die zwei Rumble-Ringe IM PAD-HANDLER (`FUN_80038BBC`: `jal 0x800396fc`
+ * @0x80038da4 und @0x80038db4) und legt die beiden Maxima in die Aktuator-Tabelle
+ * DAT_800CBC20/21 (`sb v0,0(s0)` @0x80038db8 / `sb v0,1(s0)` @0x80038dc0), die es einmalig
+ * per PadSetAct(port 0, Tabelle, 2) registriert (`jal 0x800960e4` @0x80038c90). Der Port
+ * macht genau dasselbe an derselben Stelle und schiebt die Werte an SDL weiter.
+ * Aktuator 0 = kleiner Motor (an/aus) -> SDL high_frequency; Aktuator 1 = grosser Motor
+ * (0..255) -> SDL low_frequency. Die Dauer ist ein Bild bei 30 Hz (34 ms), weil der
+ * naechste Tick den Wert ohnehin neu setzt. */
+static void pad_rumble_tick(void)
+{
+    static uint8_t s_last0 = 0xFF, s_last1 = 0xFF;
+    uint8_t a0 = 0, a1 = 0;
+    re15_rumble_tick(&a0, &a1);
+    if (!s_pad) { s_last0 = s_last1 = 0xFF; return; }
+    if (a0 == s_last0 && a1 == s_last1) return;        /* nur bei Aenderung an SDL */
+    s_last0 = a0; s_last1 = a1;
+    SDL_GameControllerRumble(s_pad,
+                             (Uint16)(a1 * 257u),      /* grosser Motor  -> low  */
+                             (Uint16)(a0 ? 0xFFFFu : 0u), /* kleiner Motor -> high (an/aus) */
+                             34u);
+}
+
 void re15_input_tick(void)
 {
     g_engine.pad_previous = g_engine.pad_current;
+    pad_rumble_tick();
 
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
     uint16_t bits = 0;

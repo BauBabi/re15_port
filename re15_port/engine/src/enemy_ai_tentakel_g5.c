@@ -581,6 +581,17 @@ int re15_g5_tentakel_zustand(int idx, int *sub, int *ph, int *ankermodus, int32_
  * Segmente: 0 = part3-Welt (r 800), 1 = part2 (600), 2 = part1 (600), 3 = Mitte(part1,part2)
  * (600) (@0x80104f94-5074, Ctor @0x80100674-c4). Spieler r 450 / h 1530 (Port-Entscheidung 3).
  * Rueckgabe = FUN_80034D0C-Ergebnis (1 = Kontakt, Spieler herausgeschoben). */
+/* Lokal-Y des EINZIGEN Spieler-Kollisionssegments: `addiu v0,zero,-1530` @0x8003bde0 +
+ * `sh v0,152(s2)` @0x8003bde4. 152 = 0x98 = seg0-Basis 0x84 + 0x14 — belegt durch
+ * `FUN_80035408`: `local_58.vy = (short)puVar1[3]` mit puVar1 = param_1 + 0x23 = Byte 0x8C,
+ * also 0x8C + 12 = 0x98. */
+#define RE15_PL_SEG_LOKAL_Y (-1530)
+
+/* Messschiene Runde 18: [0] wie oft der Dreh-Zweig mit -1530 feuert, [1] wie oft er mit der
+ * alten 0 gefeuert haette, [2] wie oft die Hoehenpruefung ueberhaupt erreicht wurde. */
+static int32_t s_dreh_mess[3];
+int32_t re15_g5_tent_dreh_mess(int idx) { return (idx >= 0 && idx < 3) ? s_dreh_mess[idx] : 0; }
+
 static int tent_kind_kollision(re15_actor_t *e, re15_actor_t *pl)
 {
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
@@ -645,8 +656,17 @@ static int tent_kind_kollision(re15_actor_t *e, re15_actor_t *pl)
              * 0x00100000 in EM037 (und keines in EM036). Der Klemm-Zweig laeuft in diesem
              * Aufruf also nie — samt seiner Eigenheit, bei px > 100 statt px die Z-Achse
              * auf 100 zu setzen (`bgez a3 -> addiu a2,zero,100` @0x80035074-84). */
-            int32_t h2 = (int32_t)(int16_t)pl->pos_s_y + 0 - seg[k][1];
+            /* KORREKTUR (Runde 18): `lh v1,20(s2)` liest Segment+0x14 = das LOKAL-Y des
+             * GESCHOBENEN Segments. Der Kommentar oben behauptete, das sei fuer das einzige
+             * Spieler-Segment nie gesetzt. Das ist FALSCH — siehe RE15_PL_SEG_LOKAL_Y
+             * (@0x8003bde0/@0x8003bde4). Der Boss-Pfad benutzt den Wert seit Runde 17
+             * richtig, dieser Zweig stand noch auf 0. */
+            int32_t h2 = (int32_t)(int16_t)pl->pos_s_y + RE15_PL_SEG_LOKAL_Y - seg[k][1];
+            int32_t h2_alt = (int32_t)(int16_t)pl->pos_s_y + 0 - seg[k][1];
+            s_dreh_mess[2]++;
+            if (h2_alt <= -hs || hs <= h2_alt) s_dreh_mess[1]++;
             if (h2 <= -hs || hs <= h2) {
+                s_dreh_mess[0]++;
                 int32_t sx = (int32_t)(int16_t)pl->pos_s_x;
                 int32_t sz = (int32_t)(int16_t)pl->pos_s_z;
                 int32_t r2 = (int32_t)r[k] * 2;

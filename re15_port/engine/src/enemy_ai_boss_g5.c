@@ -75,10 +75,13 @@
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
 #include "re15_room.h"
+#include "re15_scd.h"        /* g_scd.cam_id fuer die Mess-Schiene */
 #include "re15_skeleton.h"
 #include "re15_g5_skin.h"
 #include "re15_anim_select.h"
 #include "re15_math.h"
+#include "re15_esp.h"        /* Blut-Spawns der Trefferroutine (Runde 18, §Blut)   */
+#include "re15_rumble.h"     /* die zwei RE2-Rumble-Ringe    (Runde 18, §Rumble)   */
 
 /* re15_enemy_player_dist / re15_ai_arc_test / re15_engine_rand8 /
  * re15_player_equipped_weapon kommen aus re15_damage.h. Spieler-Schaden laeuft
@@ -509,13 +512,39 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
         /* KORRIGIERT (g5-morph.md 3.3 Punkt 7): Rampe += 32 (nicht 256), ph2
          * addiert die LAUFENDE Geschwindigkeit (nicht konstant 512), Schwelle
          * 10001. */
-        if (g->blob_ph == 0) { g->blob_speed = 1024; g->blob_ph = 1; }
+        if (g->blob_ph == 0) {
+            g->blob_speed = 1024; g->blob_ph = 1;
+            /* RUMBLE-KASKADE 4a (Runde 18) — einmalig beim Zuschnappen, Sub-Zustand
+             * +0x219 == 0 (`beq v1,zero,0x801048b0` @0x80104884). */
+            re15_rumble_small(30, 0);                  /* @0x801048c4 (a0 @0x80104888) */
+            re15_rumble_large(35, 250, 15);            /* @0x801048d4 */
+        }
         else if (g->blob_ph == 1) {
             g->gewicht[0] -= g->blob_speed; g->blob_speed += 32;
             if (g->gewicht[0] < -4048) g->blob_ph = 2;
         } else if (g->blob_ph == 2) {
             g->gewicht[0] += g->blob_speed;
-            if (g->gewicht[0] > 10001) { g->blob_ph = 3; g->blob_timer = 0; }
+            /* KORREKTUR (Runde 18): das Original klemmt mit `slti v0,v0,10001`
+             * @0x80104978 — es bleibt also bei GENAU 10001 NICHT mehr stehen. Der Port
+             * stand auf `> 10001` und war damit ein Bild zu spaet, wenn das Gewicht den
+             * Wert exakt trifft. */
+            if (g->gewicht[0] >= 10001) {              /* @0x80104978 */
+                g->blob_ph = 3; g->blob_timer = 0;     /* +0x219=3 @0x80104988 */
+                /* Blut-Serie des Verschlingens: +0x21B = (rng & 0x3f) + 64
+                 * (`andi v0,v0,0x3f` @0x8010498c, `addiu v0,v0,64` @0x80104990,
+                 * `sb v0,539(s4)` @0x80104994) — deutlich laenger als die 10 des
+                 * Biss-Treffers (@0x801041a8). */
+                g->blut_serie = (int32_t)((re15_engine_rand8() & 0x3Fu) + 64u);
+                /* RUMBLE-KASKADE 4b: zufaellige Kurzstoesse beim Zubeissen. Die
+                 * Wuerfel-Reihenfolge ist die des Originals (vier `jal 0x80015fe8`). */
+                {   unsigned d0 = (re15_engine_rand8() & 3u) + 2u;   /* @0x80104ac8/d0 */
+                    unsigned p0 = (re15_engine_rand8() & 3u);        /* @0x80104adc     */
+                    unsigned d1 = (re15_engine_rand8() & 3u) + 3u;   /* @0x80104ae8/f0 */
+                    unsigned p1 = (re15_engine_rand8() & 3u);        /* @0x80104b00     */
+                    re15_rumble_small((int)d0, (int)p0);             /* @0x80104ad8 */
+                    re15_rumble_large((int)d1, 250, (int)p1);        /* @0x80104afc */
+                }
+            }
         } else {
             if ((g->blob_timer++ & 15) == 0) g5_se((re15_engine_rand8() & 1) ? 14 : 6);
         }
@@ -675,6 +704,332 @@ static void g5_intro_tick(re15_actor_t *e)
 }
 
 /* ---- TODES-SEQUENZ ([T16..T21], Dossier §2 r0=3) ---------------------------------------- */
+/* ============================================================================================
+ * BLUT-SPAWNS DER TREFFERROUTINE (RE2-Routine 2, 0x801025BC) — Runde 18
+ * --------------------------------------------------------------------------------------------
+ * ⛔ KORREKTUR am Vorbefund (Runde 17 §5.2). Dort stand, der Blut-Spawner sei
+ *    `jal 0x800154ac` @0x80102888. Das ist FALSCH: 0x800154AC ist der RE2-`atan2`.
+ *    Beleg, beides selbst gelesen:
+ *      `subu s0,a2,a0` @0x800154c8 (dx) / `subu a0,a3,a1` @0x800154dc (dz) /
+ *      `sll a0,a0,12` @0x800154f0 / `div a0,s0` @0x800154f4 / `jal 0x8008d190` (BIOS-catan)
+ *      @0x80015520 / Quadrant 4096 bzw. 2048 @0x80015534/@0x80015538 / `andi v0,v0,0xfff`
+ *      @0x80015540. Decompilat RE2_Quellcode_V2/FUN_800154ac.c ruft woertlich `catan`.
+ *    Der ECHTE Spawner ist `FUN_8001BF10` @0x8001bf10 (der ESP-Effekt-Spawner) und er wird
+ *    VIERMAL gerufen: @0x801027ec, @0x80102848, @0x801028f0, @0x80102928.
+ *
+ * ARGUMENT-PACKUNG von FUN_8001BF10 (Decompilat FUN_8001bf10.c):
+ *      Bits 24..31  `param_1 >> 0x18`        = Effekt-Id      -> hier 0x00 = BLUT
+ *      Bits 16..23  `param_1 >> 0x10 & 0xff` = Sub-Index      -> 0 oder 1
+ *      Bits  0..15  `param_1 << 0x10`        = scale16
+ *      param_2      -> Slot+0x0A             = Dreh-Parameter (Winkel)
+ *      param_4      -> Slot+0x14/+0x18       = die SVECTOR-Position
+ *    Das ist Feld fuer Feld die Signatur von re15_esp_fx_spawn_ex(bank, id, sub, scale16,
+ *    x,y,z, param) — der Port dekodiert dieselbe Packung schon fuer ROOM1090
+ *    (`a0 = 0x09031800` = Id 0x09, sub 3, scale 0x1800, re15_esp.h). Effekt-Id 0 ist in
+ *    BEIDEN Engines das Blut (CORE00.ESP Idx 0 id 0x00, re15_esp.h) — keine Zuordnung
+ *    geraten, sondern dieselbe Zahl.
+ *
+ * ⛔ Ebenfalls korrigiert: von den "Versaetzen -1400/-700/-2000" ist nur -1400 LEBENDIG.
+ *    -1400 ist das Y der Spawns 1+2 (`sh v1,26(sp)` @0x801026d0 = die Y-Komponente der
+ *    Positions-SVECTOR ab sp+24). -700 (@0x8010270c) und -2000 (@0x80102740) schreiben
+ *    dagegen `18(sp)` — die Y-Komponente des RICHTUNGS-Vektors ab sp+16, der nach dem
+ *    ApplyMatrix nie wieder gelesen wird. Beides sind tote Speicherstellen (Rest einer
+ *    kopierten Vorlage; dieselbe Sorte Rest ist `lhu v0,16(sp)`/`sh v0,16(sp)`
+ *    @0x801028f8/@0x80102908 vor Spawn 4, das die falsche Stelle inkrementiert).
+ *    Der Port bildet die LEBENDEN Werte ab und laesst die toten weg.
+ * ========================================================================================== */
+
+int re15_g5_body_segment(int idx, int32_t *wx, int32_t *wy, int32_t *wz, int32_t *r);
+
+/* `FUN_800154AC` @0x800154ac: Winkel von (x0,z0) nach (x1,z1), 0..4095. */
+static int32_t g5_catan2(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    int32_t dx = x1 - x0;                              /* `subu s0,a2,a0` @0x800154c8 */
+    int32_t dz = z1 - z0;                              /* `subu a0,a3,a1` @0x800154dc */
+    int32_t q;
+    if (dx == 0)                                       /* `beq s0,zero` @0x801054ec */
+        return (dz > 0) ? 0xC00 : 0x400;               /* @0x800154e8 / @0x800154b0 */
+    q = (dx < 0) ? 0x800 : 0;                          /* @0x80015530-38 */
+    return (q - (int32_t)(int16_t)re15_catan((dz * 4096) / dx)) & 0xFFF;   /* @0x8001553c-40 */
+}
+
+/* `lhu v0,-914(v0)` @0x80102604 liest 0x800CFC6E. Das ist NICHT die Kamera, sondern die
+ * GIERUNG DES SPIELERS. Beleg: die Spielerbasis ist 0x800CFBF8 (`addiu a0,s0,-436`
+ * @0x80101b20 mit s0 = 0x800CFDAC = PL+0x1B4), und der Spieler-Zustandslader schreibt in
+ * EINEM Block genau die vier Entity-Felder:
+ *     `sw v0,-976(at)` @0x80026ccc -> 0x800CFC30 = PL+0x38 = X
+ *     `sw v0,-972(at)` @0x80026ce8 -> 0x800CFC34 = PL+0x3C = Y
+ *     `sw v0,-968(at)` @0x80026d0c -> 0x800CFC38 = PL+0x40 = Z
+ *     `sh v0,-914(at)` @0x80026d18 -> 0x800CFC6E = PL+0x76 = YAW
+ * (Quelle `a1+0/+2/+4/+6`.) Dieselben Globalen 0x800CFC30/0x800CFC38 benutzt die
+ * Trefferroutine als Spieler-X/Z (@0x80102670/@0x80102748/@0x8010287c/@0x80102884), was nur
+ * mit dem Spieler aufgeht. */
+static int g5_spieler_yaw(int32_t *out, const re15_actor_t *pl)
+{
+    if (!pl) return 0;
+    *out = (int32_t)((uint16_t)pl->rot_y & 0xFFF);
+    return 1;
+}
+
+/* Zaehler fuer die Sonde: [0] Treffer-Zweig betreten, [1] g5_treffer_blut gerufen,
+ * [2] Blick-Wache passiert, [3] Spawns abgesetzt. */
+static int s_blut_zaehler[4];
+static int32_t s_blut_diag[4];
+static int32_t s_blut_ort[3];
+int32_t re15_g5_blut_diag(int idx) { return (idx >= 0 && idx < 4) ? s_blut_diag[idx] : 0; }
+int re15_g5_blut_zaehler(int idx) { return (idx >= 0 && idx < 4) ? s_blut_zaehler[idx] : -1; }
+
+/* Diagnose fuer die Sonde: Spieler-Gierung + die beiden gedrehten Komponenten. */
+int re15_g5_blut_kamera(int32_t *yaw, int32_t *dirx, int32_t *dirz)
+{
+    int32_t y;
+    if (!g5_spieler_yaw(&y, &g_actors[RE15_ACTOR_SLOT_PLAYER])) return 0;
+    if (yaw)  *yaw  = y;
+    if (dirx) *dirx = (4096 * re15_rcos(y)) >> 12;
+    if (dirz) *dirz = -((4096 * re15_rsin(y)) >> 12);
+    return 1;
+}
+
+/* Die vier Spawns. `e` = der Boss, `pl` = der Spieler. */
+static void g5_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    const re15_esp_t *bank = re15_esp_room_bank();
+    int32_t plyaw, dirx, dirz, zz, px, py, pz, r;
+    int im_korridor;
+
+    s_blut_zaehler[1]++;
+    if (!g5_spieler_yaw(&plyaw, pl)) return;
+    s_blut_diag[0] = plyaw; s_blut_diag[1] = (int32_t)g_scd.cam_id;
+
+    /* RotMatrix({0,plyaw,0}) * (4096,0,0)  (@0x80102614 RotMatrix, @0x80102630 ApplyMatrix,
+     * Eingangsvektor `addiu v0,zero,4096` @0x80102628 / `sh zero,18(sp)` @0x80102634).
+     * Die Y-Drehung bildet (x,0,0) auf (x*cos, 0, -x*sin) ab. */
+    dirx = (4096 * re15_rcos(plyaw)) >> 12;
+    dirz = -((4096 * re15_rsin(plyaw)) >> 12);
+
+    /* `slti v0,a1,-64` @0x80102640: nur wenn die X-Komponente unter -64 liegt, also der
+     * Spieler ungefaehr von +X weg blickt. */
+    s_blut_diag[2] = dirx; s_blut_diag[3] = dirz;
+    if (!(dirx < -64)) return;
+    s_blut_zaehler[2]++;
+
+    /* Z der Spawns 1+2: Strahl-Schnitt entlang der Blickachse auf die Ebene des Bosses.
+     *   `addiu v1,v1,-3183` @0x8010267c  (Spieler-X minus 3183)
+     *   `subu v0,v0,v1`     @0x80102680  (Boss-X minus dieser Wert)
+     *   `mult a0,v0`        @0x80102684  (mal der Z-Komponente)
+     *   `div v0,a1`         @0x80102694  (durch die X-Komponente)
+     *   `addu v0,a2,v0`     @0x80102750  (plus Spieler-Z, 0x800CFC38) */
+    zz = ((int32_t)(((int64_t)dirz * (e->x - (pl->x - 3183))) / dirx)) + pl->z;
+    if (zz >= -20499) zz = -20500;                     /* @0x80102760-6c */
+    if (zz <  -26000) zz = -26000;                     /* @0x80102778-84 */
+
+    px = e->x + 3183;                                  /* @0x801026d4-d8 */
+    py = -1400;                                        /* @0x801026cc-d0 */
+    pz = zz;
+
+    /* SPAWN 1 @0x801027ec — scale16 = 8096 + (rng&0xff)*8, Sub = rng&1.
+     * Reihenfolge der Wuerfel: `jal 0x80015fe8` @0x801027b0 (Sub) und @0x801027b8 (Skala). */
+    {   unsigned rsub = re15_engine_rand8() & 1u;      /* @0x801027c0 */
+        unsigned rsc  = re15_engine_rand8() & 0xFFu;   /* @0x801027c8 */
+        s_blut_zaehler[3]++; s_blut_ort[0]=px; s_blut_ort[1]=py; s_blut_ort[2]=pz; re15_esp_fx_spawn_ex(bank, 0u, (uint8_t)rsub,
+                             (uint16_t)(8096 + rsc * 8), px, py, pz, 0);
+    }
+
+    /* SPAWN 2 @0x80102848 — X += 500 (@0x801027fc), Z -= ((rng&0xff) - 128) (@0x80102810-14),
+     * scale16 = 8096 + (rng&0xff)*4 (`sll v0,v0,2` @0x80102834). */
+    px += 500;
+    {   unsigned rz = re15_engine_rand8() & 0xFFu;     /* @0x80102800/@0x80102808 */
+        pz -= (int32_t)rz - 128;
+    }
+    {   unsigned rsub = re15_engine_rand8() & 1u;      /* @0x80102818/@0x80102828 */
+        unsigned rsc  = re15_engine_rand8() & 0xFFu;   /* @0x80102820/@0x80102830 */
+        s_blut_zaehler[3]++; re15_esp_fx_spawn_ex(bank, 0u, (uint8_t)rsub,
+                             (uint16_t)(8096 + rsc * 4), px, py, pz, 0);
+    }
+
+    /* Korridor-Wache der Spawns 3+4: `addiu v0,v0,23999` @0x80102858 +
+     * `sltiu v0,v0,0x5db` @0x80102860 (1499) auf dem GEKLEMMTEN Z, also Z in
+     * [-23999, -22501]. `bne s4,v0,0x80102948` @0x80102898 springt sonst darueber hinweg. */
+    im_korridor = ((uint32_t)(pz + 23999) & 0xFFFFu) < 1499u;
+    if (!im_korridor) return;
+
+    /* SPAWN 3/4 sitzen auf KOLLISIONSSEGMENT 1: `lw v0,164(s3)` / `168` / `172`
+     * @0x801028a0/b0/bc. Beleg, dass +0xA4/+0xA8/+0xAC die WELTLAGE von Segment 1 sind:
+     * `FUN_80035408` schreibt sie als `*puVar3 = param_2[0] + vx` (puVar3 = param_1 + 0x21
+     * = Byte 0x84, Schrittweite 8 Woerter = 32 Byte), `puVar1[-1] = param_2[1] + vy`
+     * (Byte 0x88) und `*puVar1 = param_2[2] + vz` (Byte 0x8C) — Segment 1 liegt also bei
+     * 0x84+32 / 0x88+32 / 0x8C+32 = 164/168/172. Das ist genau das, was
+     * re15_g5_body_segment(1, ...) liefert. */
+    if (!re15_g5_body_segment(1, &px, &py, &pz, &r)) return;
+    px += 500;                                         /* @0x801028a8 */
+
+    /* Der Dreh-Parameter beider Spawns ist der atan2 Boss -> Spieler (@0x80102870-90). */
+    {   int16_t winkel = (int16_t)g5_catan2(e->x, e->z, pl->x, pl->z);
+        unsigned rsc3 = re15_engine_rand8() & 0xFFu;   /* @0x801028c0/@0x801028c8 */
+        s_blut_zaehler[3]++; re15_esp_fx_spawn_ex(bank, 0u, 0u,             /* Sub 0 @0x801028d0 (kein Bit 16) */
+                             (uint16_t)(8096 + rsc3 * 8), px, py, pz, winkel);
+        {   unsigned rsc4 = re15_engine_rand8() & 0xFFu;   /* @0x80102904/@0x8010290c */
+            s_blut_zaehler[3]++; re15_esp_fx_spawn_ex(bank, 0u, 1u,         /* Sub 1: `lui a0,0x1` @0x80102918 */
+                                 (uint16_t)(8096 + rsc4 * 8), px, py, pz, winkel);
+        }
+    }
+}
+
+/* ============================================================================================
+ * DEVOUR-OPFERMASCHINE — Spieler-Routine 6 auf dem PL0-Rig (Runde 18, Luecke 1)
+ * --------------------------------------------------------------------------------------------
+ * KETTE, in Runde 18 Glied fuer Glied selbst disassembliert:
+ *
+ *  1. Der Devour-Sub des Bosses uebergibt den Spieler:
+ *       `sw v0=6,-1028(at)`   @0x80101b50  -> PL+0x04 = 6           (PL-Basis = 0x800CFBF8,
+ *                                             belegt durch `addiu a0,s0,-436` @0x80101b20
+ *                                             mit s0 = 0x800CFDAC = PL+0x1B4)
+ *       `sw v1,-640(at)`      @0x80101b60  -> PL+0x188 = Boss+0x188  (Opfer-MODELL)
+ *       `sw v1,-636(at)`      @0x80101b78  -> PL+0x18C = Boss+0x18C  (Opfer-CLIPTABELLE)
+ *       `sb v0,-565(at)`      @0x80101b70  -> PL+0x1D3 |= 0x80       (Griff-Latch)
+ *       `sw s2,0(s0)`         @0x80101b40  -> PL+0x1B4 = der Boss    (Greifer)
+ *       `sh v0,-686(at)`      @0x80101bb4  -> PL+0x15A = Boss-Yaw + 2048 (@0x80101bac)
+ *     Paar 3 (dir[5]/dir[6]) IST die Opferbank — der Port parst sie fuer jede RE2-Bank
+ *     bereits als skel_victim/anim_victim (re2_ems.c:149-151, "Entity+0x18C/+0x188
+ *     @0x8001abe0/abf0"). Fuer 0x36 ist das also dieselbe Mechanik wie beim Tentakel 0x37.
+ *
+ *  2. EXE-Routine 6 `FUN_8004006C` @0x8004006c, selbst gelesen:
+ *       `lw a2,436(a0)`  @0x80040090  = PL+0x1B4 (Greifer)
+ *       `lbu v0,8(a2)`   @0x8004009c  = Greifer-Typ
+ *       `lw a1,392(a0)`  @0x800400a0  = PL+0x188   (a1)
+ *       `lw a2,396(a0)`  @0x800400a4  = PL+0x18C   (a2)
+ *       `lw v0,-6360(v1)`@0x800400b0  = *(0x800CE300 + Typ*4)   (0x800cfbd8-6360 = 0x800CE300)
+ *       `jalr v0`        @0x800400b8
+ *     Fuer Typ 0x36 steht dort 0x80103880 (Ctor-Eintrag @0x801005dc). 0x80103880 faechert
+ *     ueber `lbu v0,5(a0)` @0x80103888 in die Tabelle @0x801056E8 auf; Eintrag 1 = 0x80103908.
+ *
+ *  3. 0x80103908 — die Maschine selbst, ueber PL+0x06:
+ *     PHASE 0 @0x80103968-a4 (faellt danach in Phase 1 durch):
+ *       `lui v0,0x7` @0x80103968 + `sw v0,332(s1)` @0x80103978
+ *            -> PL+0x14C = 0x00070000 = Clip 0, Bild 0, BLEND-ZAEHLER 7
+ *            (dass +0x14E der Blend-Zaehler ist, steht in `FUN_80029614`:
+ *             `uVar10 = *(byte *)(iVar15 + 0x14e)` und `gte_ldIR0(0x1000 - blend*uVar10)`
+ *             -> 8 Bilder Ueberblendung mit Schrittweite 512)
+ *       `sb a2=1,6(s1)`   @0x8010397c -> PL+0x06 = 1
+ *       `sb a2=1,448(s1)` @0x80103998 -> PL+0x1C0 = 1
+ *       `ori v0,v0,0x80`  @0x8010399c -> PL+0x1D3 |= 0x80
+ *       `*(u32*)0x800CFBD8 |= 0x40`   @0x80103988
+ *       `jal 0x8005ba28`  @0x801039a0 mit a0 = 0x04010001 (`lui a0,0x401`/`ori a0,a0,0x1`
+ *            @0x80103948/@0x80103984), a1 = &PL.x. 0x8005BA28 ist der SE-Spieler
+ *            (Decompilat: Bank-Tabellen DAT_800D4C48/DAT_800DBB78/DAT_800D75A0, Kanal
+ *            DAT_800D4F18 + ch*0x20, param_2 = die 3D-Position fuers Panning).
+ *     PHASE 1 @0x801039a8-2c:
+ *       Zug zum Anker : `PL.x += (PL+0x164 - PL.x) >> 1` @0x801039c4-dc,
+ *                       `PL.z += (PL+0x168 - PL.z) >> 1`
+ *       Drehen        : `jal 0x8001569c` @0x801039e0 mit a1 = PL+0x15A (@0x801039b8),
+ *                       a2 = 256 (@0x801039ac)
+ *       Anim          : `jal 0x8002959c` @0x801039f4 mit a3 = 512 (@0x801039f8)
+ *       Uebergang     : `lbu v1,333(s1)` == 8 (@0x801039fc-04) -> PL+0x06 = 2
+ *                       (@0x80103a1c), PL+0x76 = PL+0x15A (@0x80103a24), SE erneut
+ *     PHASE 2 @0x80103a30-7c:
+ *       Spieler-Gierung +2048 (@0x80103a48) um `jal 0x80015cb8` (@0x80103a4c), danach
+ *       -2048 (@0x80103a68); `jal 0x8002959c` mit a3 = 512; Clip-Ende -> PL+0x06 = 3
+ *       (@0x80103a7c).
+ *
+ * ⛔ EHRLICH OFFEN — der Zug-ANKER. PL+0x164/+0x168 setzt `FUN_80015B94` @0x80015b94
+ *    (gerufen @0x80101b3c) als GREIFER-Position minus der um den Greifer-Yaw gedrehten
+ *    WURZEL-TRANSLATION des Opfer-Clips:
+ *      `jal 0x80015db0` @0x80015bd0 (Wurzel-Translation nach sp+48),
+ *      `jal 0x8008e8b4` @0x80015c28 (RotMatrix mit `lh a0,118(s0)` = Greifer-Yaw),
+ *      `jal 0x8008dba4` @0x80015c38 (ApplyMatrix),
+ *      `sh v0,356(s0)` @0x80015c50 / `sh v0,358(s0)` @0x80015c64 / `sh v0,360(s0)`
+ *      @0x80015c78, danach nach PL kopiert @0x80015c7c/@0x80015c88/@0x80015c94.
+ *    Die Wurzel-Translation eines Opfer-Clips ist aus dem KI-Code des Ports nicht
+ *    erreichbar (sie entsteht erst im Zeichner). Der Zugschritt ist deshalb NICHT
+ *    umgesetzt — benannt statt geraten. Alles andere dieser Maschine ist oben belegt.
+ * ========================================================================================== */
+
+static int8_t s_devour_ph = -1;        /* PL+0x06; -1 = Maschine aus */
+static int16_t s_devour_ziel_yaw;      /* PL+0x15A */
+
+/* `FUN_8001569C` @0x8001569c — Drehen auf einen Zielwinkel mit fester Schrittweite. */
+static void g5_yaw_toward(re15_actor_t *pl, int32_t ziel, int32_t schritt)
+{
+    uint32_t d;
+    int16_t zurueck;
+    if ((int16_t)schritt < 0) { schritt = -(int16_t)schritt; ziel = (ziel + 0x800) & 0xFFF; }
+    d = (uint32_t)((schritt + (ziel - (int32_t)(uint16_t)pl->rot_y)) & 0xFFF);
+    zurueck = (int16_t)(pl->rot_y - (int16_t)schritt);
+    if ((int32_t)d < schritt * 2) { pl->rot_y = (int16_t)ziel; return; }
+    pl->rot_y = zurueck;
+    if (d < 0x801u) pl->rot_y = (int16_t)(zurueck + (int16_t)schritt * 2);
+}
+
+/* Clip-Laenge in der Opferbank des Bosses (EMD dir[5]/dir[6], Typ 0x36). */
+static int g5_devour_clip_len(int clip)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x36u);
+    if (!b || !b->victim_ok || clip < 0 || clip >= b->anim_victim.clip_count) return 0;
+    return b->anim_victim.clips[clip].frame_count;
+}
+
+/* `FUN_8002959C` @0x8002959c auf der Opferbank: Bild +1, der Blend-Zaehler +0x14E laeuft
+ * dabei ab. Rueckgabe 1 am Clip-Ende. */
+static int g5_devour_advance(re15_actor_t *pl)
+{
+    int fc = g5_devour_clip_len((int)pl->motion);
+    uint32_t nf;
+    if (pl->anim_frac > 0) pl->anim_frac--;
+    if (fc <= 0) return 1;
+    nf = pl->anim_frame + 1u;
+    if ((int)nf >= fc) { pl->anim_frame = 0; return 1; }
+    pl->anim_frame = (uint16_t)nf;
+    return 0;
+}
+
+/* Griff-Stelle: was der Devour-Sub des Bosses an den Spieler uebergibt (§1 oben). */
+void re15_g5_devour_opfer_start(re15_actor_t *pl, const re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x36u);
+    if (!b || !b->victim_ok || b->anim_victim.clip_count <= 0) return;   /* keine Opferbank */
+    s_devour_ziel_yaw = (int16_t)((e->rot_y + 2048) & 0xFFF);            /* @0x80101bac-b4 */
+    s_devour_ph = 0;
+}
+
+static void g5_devour_opfer_ende(re15_actor_t *pl)
+{
+    s_devour_ph = -1;
+    re15_player_victim_force_end();
+}
+
+static void g5_devour_opfer_tick(re15_actor_t *pl)
+{
+    if (s_devour_ph < 0) return;
+
+    if (s_devour_ph == 0) {                            /* PHASE 0 @0x80103968-a4 */
+        re15_player_victim_force(0x36u, 0, 0u);        /* Clip 0 aus PL+0x18C */
+        pl->anim_frame = 0;
+        pl->anim_frac  = 7;                            /* Blend-Zaehler @0x80103968 */
+        pl->hit_react |= 1;                            /* PL+0x1D3 |= 0x80 @0x8010399c */
+        g5_se(1);                                      /* SE 0x04010001 @0x801039a0 */
+        s_devour_ph = 1;                               /* @0x8010397c, faellt durch */
+    }
+
+    if (s_devour_ph == 1) {                            /* PHASE 1 @0x801039a8-2c */
+        g5_yaw_toward(pl, s_devour_ziel_yaw, 256);     /* @0x801039e0, a2 = 256 */
+        if (g5_devour_advance(pl)) { /* Clip-Ende vor Bild 8 -> direkt fertig */ }
+        if (pl->anim_frame == 8u) {                    /* `lbu v1,333(s1)` == 8 @0x801039fc */
+            pl->rot_y = s_devour_ziel_yaw;             /* `sh v1,118(s1)` @0x80103a24 */
+            g5_se(1);                                  /* @0x80103a20 */
+            s_devour_ph = 2;                           /* @0x80103a1c */
+        }
+        return;
+    }
+
+    /* PHASE 2 @0x80103a30-7c: nur noch den Clip auslaufen lassen. Die 180-Grad-Drehung der
+     * Spieler-Gierung (@0x80103a48/@0x80103a68) umklammert im Original `FUN_80015CB8`
+     * (Posen-Aufbau) und ist reine Zeichner-Mechanik — sie veraendert keinen Spielzustand. */
+    if (g5_devour_advance(pl)) s_devour_ph = 3;        /* @0x80103a7c */
+}
+
+/* Diagnose fuer die Sonden. */
+int re15_g5_devour_opfer_phase(void) { return (int)s_devour_ph; }
+
 static void g5_tod_tick(re15_actor_t *e)
 {
     g5_state_t *g = &s_g5;
@@ -686,6 +1041,19 @@ static void g5_tod_tick(re15_actor_t *e)
         g->track_flags |= 2u;                          /* ori v1,v1,0x2 @0x801030f0: der Kopf
                                                         * kehrt zum Keyframe zurueck */
         g5_se(13);
+        /* RUMBLE-KASKADE 1 (Runde 18) — einmalig beim Uebergang +0x06: 0 -> 1
+         * (`sb v1,6(s3)` @0x80103074). Grosser Motor 250 Bilder auf 180, danach 150
+         * Bilder Ausblendung 180 -> 0; darueber acht 10-Bild-Pulse auf 220. */
+        re15_rumble_large(250, 180, 0);                /* @0x80103104 */
+        re15_rumble_ramp(150, 180, 0, 250);            /* @0x80103118 */
+        re15_rumble_ramp(10, 180, 220, 20);            /* @0x8010312c */
+        re15_rumble_ramp(10, 220, 180, 30);            /* @0x80103140 */
+        re15_rumble_ramp(10, 180, 220, 40);            /* @0x80103154 */
+        re15_rumble_ramp(10, 220, 180, 50);            /* @0x80103168 */
+        re15_rumble_ramp(10, 180, 220, 65);            /* @0x8010317c */
+        re15_rumble_ramp(10, 220, 180, 75);            /* @0x80103190 */
+        re15_rumble_ramp(10, 180, 220, 230);           /* @0x801031a4 */
+        re15_rumble_ramp(10, 220, 180, 240);           /* @0x801031b8 */
         g->ph = 1; g->tod_timer = 0;
         break;
     case 1:                                            /* [T17]: Clip 6 -> Clip 7 + 250 T */
@@ -700,9 +1068,45 @@ static void g5_tod_tick(re15_actor_t *e)
             re15_g5_eye_set_target(0, 0, 0);           /* @0x80103478 (idx 0, 0, 0) */
             re15_g5_eye_set_target(1, 0, 0);           /* @0x80103488 (idx 1, 0, 0) */
             g5_clip(e, 10, 0);                         /* Clip-Wort 0x1F000A @0x801034c8 */
+            /* RUMBLE-KASKADE 2 (Runde 18) — einmalig beim Uebergang +0x06: 2 -> 3
+             * (`sb v1,6(s3)` @0x80103470). Grosser Motor 5 Bilder auf 200, dann 200
+             * Bilder Ausblendung 200 -> 0; kleiner Motor als Stakkato aus zwoelf
+             * kurzen Stoessen. */
+            re15_rumble_large(5, 200, 0);              /* @0x801034c4 */
+            re15_rumble_ramp(200, 200, 0, 5);          /* @0x801034d8 */
+            re15_rumble_small(3, 0);                   /* @0x801034e4 */
+            re15_rumble_small(3, 5);                   /* @0x801034f0 */
+            re15_rumble_small(2, 15);                  /* @0x801034fc */
+            re15_rumble_small(3, 60);                  /* @0x80103508 */
+            re15_rumble_small(3, 65);                  /* @0x80103514 */
+            re15_rumble_small(2, 75);                  /* @0x80103520 */
+            re15_rumble_small(3, 90);                  /* @0x8010352c */
+            re15_rumble_small(3, 95);                  /* @0x80103538 */
+            re15_rumble_small(2, 105);                 /* @0x80103544 */
+            re15_rumble_small(2, 110);                 /* @0x80103550 */
+            re15_rumble_small(2, 115);                 /* @0x8010355c */
+            re15_rumble_small(1, 120);                 /* @0x80103568 */
         }
         break;
     case 3:                                            /* [T19]: Clip 10 halbe Rate */
+        /* [T19b] GLIEDMASSEN-TOD @0x80103570-@0x80103628 (Runde 18). Gate: jedes 4. Bild
+         * des Clips (`lbu v0,333(s3)` = +0x14D, `andi v0,v0,0x3` @0x80103578,
+         * `bne v0,zero,0x8010380c` @0x8010357c). Dann werden die vier Arme durchlaufen
+         * (`addiu s1,zero,4` @0x80103580) und die noch lebenden gesammelt — Bit i UND
+         * Bit i+4 der +0x228-Maske clear (`srlv` @0x80103598/@0x801035a8, genau das, was
+         * g5_tentakel_frei prueft). Aus den Kandidaten waehlt `rng % n` einen aus
+         * (@0x801035dc-f8) und bekommt das Todes-Wort 0xE01 = 3585
+         * (`jal 0x80104e9c` @0x80103608, `addiu a1,zero,3585` @0x8010360c). */
+        if ((e->anim_frame & 3u) == 0u) {
+            int liste[4], n = g5_tentakel_frei(liste);
+            if (n > 0) {                               /* `beq s0,zero` @0x801035d4 */
+                int idx = liste[(int)((re15_engine_rand8() & 0xFFu) % (unsigned)n)];
+                g5_tentakel_cmd(idx, 0xE01u);          /* @0x80103608/@0x8010360c */
+                /* RUMBLE-KASKADE 3: je getoetetem Arm ein kurzer Doppelschlag. */
+                re15_rumble_small(3, 0);               /* @0x80103614 (a1 @0x80103618) */
+                re15_rumble_large(15, 250, 0);         /* @0x80103624 (a2 @0x80103628) */
+            }
+        }
         g->tod_timer++;
         if ((g->tod_timer & 1) == 0 && g5_anim(e)) { g->ph = 4; g->absink_t = 0; }
         break;
@@ -969,6 +1373,8 @@ void re15_g5_boss_tick(int slot)
          * -1176084, und die Todes-Rampe stand danach auf 2694951 statt 2950. */
         re15_g5_tentakel_reset();
         memset(g, 0, sizeof *g);
+        s_devour_ph = -1;                              /* Opfermaschine aus */
+        re15_rumble_reset();                           /* `FUN_80039694` @0x80039694 */
         g->aktiv = 1; g->routine = 1; g->sub = 2; g->ph = 0;   /* Ctor: +0x05=2 @0x8010076C */
         g->hitbox_b = 2200;
         s_g5_slot = slot;
@@ -1072,6 +1478,13 @@ void re15_g5_boss_tick(int slot)
      * Schrot/Bogen 14, Magnum/Granate 20, Messer 1); Schwelle 15 -> STAGGER Clip 8. */
     if (e->hit_react & 1u) {
         e->hit_react &= (uint8_t)~1u;
+        /* BLUT-AUSWURF an der Trefferstelle (RE2-Routine 2). Wache `lbu v0,6(s3)` +
+         * `bne v0,zero,0x80102a94` @0x801025e8-f0: nur in Phase 0. Die beiden weiteren
+         * RE2-Wachen auf `+0x05` (== 16 @0x80102658, 9..12 @0x80102660-64) betreffen
+         * Sub-Zustaende, die der Port nicht fuehrt (seine Menge ist {0..4, 0xF}); der
+         * Flinch-Pseudo-Sub 0xF ist hier das einzige Gegenstueck und wird gesperrt. */
+        s_blut_zaehler[0]++;
+        if (g->ph == 0 && g->sub != 0xF) g5_treffer_blut(e, pl);
         if (!(g->busy & 2u)) {
             int w = re15_player_equipped_weapon();
             int add = (w == 1) ? 1 : (w == 5 || w == 6 || w == 9 || w == 15 || w == 18) ? 20
@@ -1250,10 +1663,15 @@ void re15_g5_boss_tick(int slot)
         if (g->ph == 0) {
             g5_clip(e, 9, 1);                          /* Clip-Wort 0x70009 (weich) */
             g5_se(6);
-            /* Grab-Latch: Spieler einfrieren, Yaw = Boss-Yaw + 2048 (@0x80101ba4-b4).
-             * Victim-Anim (EDD-Paar 3, 15-Bone-PL0-Rig) DEFERRED — Dossier §7. */
-            pl->rot_y = (int16_t)((e->rot_y + 2048) & 0xfff);
-            pl->hit_react |= 1;
+            /* Grab-Latch + OPFERMASCHINE (Runde 18). Das Original setzt NICHT den Yaw des
+             * Spielers, sondern sein ZIEL PL+0x15A = Boss-Yaw + 2048 (@0x80101bac-b4);
+             * gedreht wird erst in Phase 1 der Maschine mit 256/Bild, und der Schnapp auf
+             * den Zielwert faellt auf den Uebergang 1->2 (@0x80103a24). */
+            re15_g5_devour_opfer_start(pl, e);
+            if (re15_g5_devour_opfer_phase() < 0) {    /* keine Opferbank -> alter Latch */
+                pl->rot_y = (int16_t)((e->rot_y + 2048) & 0xfff);
+                pl->hit_react |= 1;
+            }
             g->ph = 1;
         } else if (g->ph == 1) {
             if (e->anim_frame == 10) g5_se(7);
@@ -1263,7 +1681,10 @@ void re15_g5_boss_tick(int slot)
             /* Devour-Ende-Gate Gewicht[0]<6000 (@0x80101d04-14); die Gewichte laufen
              * in der Blob-Simulation — der 150er-Timer ist die Ersatzschranke
              * fuer den (noch) fehlenden Morph-Zeitverlauf (dokumentierte Abweichung). */
-            if (--g->timer <= 0 && g->gewicht[0] < 6000) { g->blob = 0; g->blob_ph = 0; }
+            if (--g->timer <= 0 && g->gewicht[0] < 6000) {
+                g->blob = 0; g->blob_ph = 0;
+                g5_devour_opfer_ende(pl);              /* PL+0x04 zurueck auf 1 */
+            }
         }
         break;
     }
@@ -1277,6 +1698,20 @@ void re15_g5_boss_tick(int slot)
     g5_morph_bauen(g);              /* Reihenfolge wie im Original (s. Block oben) */
     g5_augen_und_kopf(e, pl);       /* Augen-Ziele/Wanderer + Kopf-Tracking (s.u.) */
     re15_g5_tentakel_tick(e);       /* die vier Arme haengen an der Blob-Matrix */
+    g5_devour_opfer_tick(pl);       /* Spieler-Routine 6 (0x80103908), s. Block oben */
+
+    /* SICHTPRUEFUNGS-SCHALTER (env-gegated, Standard AUS): RE15_G5_TREFFER=<n> setzt ab dem
+     * Kampfstart alle n Bilder EINEN Treffer auf den Boss. Runde 17 §5 Punkt 5 hielt fest,
+     * dass der gescriptete Spieler vom Devour gefressen wird, bevor er 600 HP herunter-
+     * schiessen kann (drei Pistolen-Laeufe = 0 Treffer) — damit war die Treffer-Reaktion am
+     * Bild NICHT pruefbar. Dieser Haken schliesst genau diese Messluecke; er aendert nichts
+     * am Spiel, solange die Variable nicht gesetzt ist. */
+    {   static int trf_env = -2; static int trf_takt = 0;
+        if (trf_env == -2) { const char *s = getenv("RE15_G5_TREFFER"); trf_env = s ? atoi(s) : 0; }
+        if (trf_env > 0 && g->gestartet && g->routine == 1) {
+            if (++trf_takt >= trf_env) { trf_takt = 0; e->hit_react |= 1u; }
+        }
+    }
 
     /* SICHTPRUEFUNGS-SCHALTER (env-gegated, Standard AUS): RE15_G5_OPFER=<0..4> startet die
      * Griff-Opfermaschine dieser Variante EINMAL, sobald der Kampf laeuft. Im echten Spiel
@@ -1320,10 +1755,15 @@ void re15_g5_boss_tick(int slot)
             FILE *bf = fopen("birkin_dbg.log", "a");
             if (bf) {
                 fprintf(bf, "g5 tick=%u sub=%u ph=%u clip=%d af=%u u=%d dist=%d hp=%d "
-                            "blob=%u/%u gw0=%d akku=%d pos=(%d,%d)\n",
+                            "blob=%u/%u gw0=%d akku=%d pos=(%d,%d) "
+                            "blut=%d/%d/%d/%d esp=%d plyaw=%d dirx=%d letzte=(%d,%d,%d)\n",
                         n - 1, g->sub, g->ph, (int)e->motion, (unsigned)e->anim_frame,
                         (int)g5_u(e), (int)dist, (int)e->hp, g->blob, g->blob_ph,
-                        (int)g->gewicht[0], (int)g->flinch_akku, (int)e->x, (int)e->z);
+                        (int)g->gewicht[0], (int)g->flinch_akku, (int)e->x, (int)e->z,
+                        s_blut_zaehler[0], s_blut_zaehler[1], s_blut_zaehler[2],
+                        s_blut_zaehler[3], re15_esp_fx_count(),
+                        (int)((uint16_t)pl->rot_y & 0xFFF), (int)s_blut_diag[2],
+                        (int)s_blut_ort[0], (int)s_blut_ort[1], (int)s_blut_ort[2]);
                 fclose(bf);
             }
         }
