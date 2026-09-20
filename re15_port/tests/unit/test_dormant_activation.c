@@ -1,9 +1,17 @@
 /* test_dormant_activation.c — PIN (Nutzer-Auftrag 2026-08-30 "Wenn schlafender Content
  * einfach und sinnvoll zu aktivieren ist, aktiviere ihn"):
- *  (1) ROOM1150: der Port installiert den Examine-Trigger (Slot 60, Event 4) am
- *      Geraeteort; das Feuern von sub04 (@0x0F96-0x10B6) hebt Objekt 0 aus der
- *      Unter-Welt-Parkposition (main00 @0x0E00: y=-20324) auf Arbeitshoehe (Pos_set
- *      y=-305 @0x0FB4) und parkt es am Ende selbst zurueck.
+ *  (1) ROOM1150: der Port ARMIERT den Record, den die Autoren selbst dafuer angelegt
+ *      haben — Slot 1 @0x0D7E (`2c 01 00 31 ... ff 00 18 04 00 00`: sce=0 = abgeschaltet,
+ *      Nutzlast aber unveraendert die Event-Form auf sub 4). Das Feuern von sub04
+ *      (@0x0F96-0x10B6) holt Objekt 0 aus der Parkposition ueber dem Raum
+ *      (main00 @0x0E00: y=-20324) auf Arbeitshoehe (Pos_set y=-305 @0x0FB4) und parkt
+ *      es am Ende selbst zurueck.
+ *      ⛔ GEAENDERT 2026-09-20 (Nutzer-Rueckfrage "wie triggert man das?"): bis dahin
+ *      stand hier ein ERFUNDENER Record in Slot 60. Der war GEMESSEN unerreichbar
+ *      (probe_irons_mittelmodell: 0 von 2816 Standort/Richtungs-Kombinationen; der
+ *      grosse MESSAGE-Record Slot 4 @0x0DBA umschliesst den Bereich und verbraucht den
+ *      Tastendruck) UND er ueberschrieb die vierte RVD-Kamerazone des Raums, die dort
+ *      liegt (16 Zonen auf Slot 48..63, rdt_common.c:441). Mit Slot 1: 472 Treffer.
  *  (2) ROOM20A0: die Ambient-Effektschleife sub02 (@0x1BF0-0x1CB0, 11x Sce_espr_on
  *      Effekt-Id 6) laeuft ab Raum-Eintritt.
  * Die RDT-Bytes bleiben unangetastet (kein Asset-Patch) — nur Trigger kommen dazu. */
@@ -71,12 +79,26 @@ int main(void)
     /* --- (1) ROOM1150: Trigger installiert + Szene hebt das Geraet --- */
     if (!enter("STAGE1/ROOM1150.RDT", 0x1150)) { printf("SKIP: 1150 fehlt\n"); return 77; }
     for (int f = 0; f < 30; f++) scd_vm_tick();
-    CHECK("Examine-Trigger Slot 60 installiert (GENERIC, Event 4)",
-          g_aot.slots[60].active && g_aot.slots[60].type == RE15_AOT_TYPE_GENERIC
-          && g_aot.slots[60].event_id == 4);
-    CHECK("Objekt 0 startet unter der Welt geparkt (main00 @0x0E00: y=-20324)",
+    /* Der AUTORISIERTE Record: Slot 1 @0x0D7E, armiert wie ein Aot_reset(1,3,…) es taete
+     * (LAB_80040738) — Event 4, Rechteck und Bank unveraendert aus dem RDT-Record. */
+    CHECK("Slot 1 (@0x0D7E) auf Event 4 armiert",
+          g_aot.slots[1].active && g_aot.slots[1].event_id == 4);
+    CHECK("Rechteck des Records unveraendert (Ecke -21800,-20000, Groesse 1500x3300)",
+          g_aot.slots[1].x - g_aot.slots[1].half_w == -21800 &&
+          g_aot.slots[1].x + g_aot.slots[1].half_w == -20300 &&
+          g_aot.slots[1].z - g_aot.slots[1].half_h == -20000 &&
+          g_aot.slots[1].z + g_aot.slots[1].half_h == -16700);
+    CHECK("Slot 60 bleibt die RVD-Kamerazone des Raums (kein erfundener Record mehr)",
+          g_aot.slots[60].active && g_aot.slots[60].type == RE15_AOT_TYPE_CAM_SWITCH);
+    CHECK("Objekt 0 startet ueber dem Raum geparkt (main00 @0x0E00: y=-20324)",
           g_scd.prop_count > 0 && g_scd.props[0].y == -20324);
     CHECK("Raum-Slots 0-6 unangetastet (kein Kollisionsschaden)", g_aot.slots[4].active);
+    /* ANHAENGE-FORM pc[5]=0xC0 (LAB_80040914 @0x80040a84): Objekt 1 und 2 haengen an
+     * Objekt 0. Ohne das standen die beiden Deckelhaelften bei (0,0,0). */
+    CHECK("Objekt 1 und 2 haengen an Objekt 0 (pc[5]=0xC0)",
+          g_scd.prop_count >= 3 &&
+          g_scd.props[1].parent_obj == 0 && g_scd.props[2].parent_obj == 0 &&
+          g_scd.props[0].parent_obj == -1);
     scd_event_fire(4);                                   /* = der Examine-Fire */
     int seen_up = 0;
     for (int f = 0; f < 600; f++) {
