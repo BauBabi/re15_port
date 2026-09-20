@@ -491,6 +491,99 @@ static uint8_t *pc_read_shared(const char *rel, int *size)
     return re15_pc_read_any(rel, size);
 }
 
+/* ═══ OBJEKT-WELTMATRIX (Prop) — inkl. der ANHAENGE-FORM Obj_model_set pc[5]&0xC0==0xC0 ═══
+ *
+ * Der Objekt-Zeichner FUN_8002c18c macht je Pool-Eintrag GENAU DREI Schritte:
+ *     RotMatrix(pool+104 = rot, pool+0x20)                 ; lokale Drehmatrix
+ *     FUN_80022da0(pool+116, pool+0x20, pool+0x48)         ; Weltmatrix = ELTERN o LOKAL
+ *     if (pool+0x08 == 4) pool+0x48.t[1] -= 900            ; @0x8002c23c/4c (Schiebekisten)
+ * FUN_80022da0(eltern, lokal, aus) verkettet sauber: jede SPALTE der lokalen Matrix wird
+ * mit der Elternmatrix gedreht (gte_SetRotMatrix(eltern) + 3x rtir), und die lokale
+ * Translation (pool+52/56/60, von FUN_80022da0 als lokal+20 gelesen) wird mit
+ * gte_SetTransMatrix(eltern)+rt zu  aus.t = eltern.rot * lokal.t + eltern.t.
+ * pool+116 kommt aus Obj_model_set pc[5] (LAB_80040914 @0x80040a04-aa0):
+ *     0x00 -> 0x80072d4c = Einheitsmatrix (nachgelesen: Diagonale 4096, t = 0) = Weltraum
+ *     0x40 -> 0x800aca74                          (im ganzen Bestand NIE benutzt)
+ *     0x80 -> 0x8009d24c + 500*pc[5]              (2 Faelle: ROOM4030/4031 Objekt 0)
+ *     0xC0 -> 0x800ad0e0 + 148*pc[5] = Objektpool 0x800b3f98 + 148*(pc[5]-0xC0) + 0x48
+ *             = die WELTMATRIX des Objekts (pc[5]-0xC0)   (4 Faelle: ROOM1150/1151 Obj 1+2)
+ * Der Port kannte nur den Weltraum-Fall; die beiden Deckelhaelften des Hebetischs im
+ * Buero des Chefs standen deshalb bei (0,0,0) — 27 000 Einheiten neben dem Raum.
+ * Die Drehmatrix baut dieselbe Entwicklung wie bisher an der Aufrufstelle (Ry*Rx*Rz). */
+static void pc_prop_rot_q12(int16_t rx, int16_t ry, int16_t rz, int32_t m[9])
+{
+    int32_t rsx = re15_sin_q12((int)rx), rcx = re15_cos_q12((int)rx);
+    int32_t rsy = re15_sin_q12((int)ry), rcy = re15_cos_q12((int)ry);
+    int32_t rsz = re15_sin_q12((int)rz), rcz = re15_cos_q12((int)rz);
+    #define Q12_MUL(a,b)   ((int32_t)(((int64_t)(a) * (int64_t)(b)) >> 12))
+    m[0] = Q12_MUL(rcz, rcy);
+    m[1] = -Q12_MUL(rsz, rcy);
+    m[2] = rsy;
+    { int64_t t1 = ((int64_t)rsz * (int64_t)rcx) << 12;
+      int64_t t2 = (int64_t)rcz * (int64_t)rsy * (int64_t)rsx;
+      m[3] = (int32_t)((t1 + t2) >> 24); }
+    { int64_t t1 = ((int64_t)rcz * (int64_t)rcx) << 12;
+      int64_t t2 = (int64_t)rsz * (int64_t)rsy * (int64_t)rsx;
+      m[4] = (int32_t)((t1 - t2) >> 24); }
+    m[5] = -Q12_MUL(rcy, rsx);
+    { int64_t t1 = ((int64_t)rsz * (int64_t)rsx) << 12;
+      int64_t t2 = (int64_t)rcz * (int64_t)rsy * (int64_t)rcx;
+      m[6] = (int32_t)((t1 - t2) >> 24); }
+    { int64_t t1 = ((int64_t)rcz * (int64_t)rsx) << 12;
+      int64_t t2 = (int64_t)rsz * (int64_t)rsy * (int64_t)rcx;
+      m[7] = (int32_t)((t1 + t2) >> 24); }
+    m[8] = Q12_MUL(rcy, rcx);
+    #undef Q12_MUL
+}
+
+/* Weltmatrix + Weltposition EINES Prop-Slots, Elternkette aufgeloest.
+ * Tiefe 4 als Riegel — im Bestand gibt es nur Tiefe 1 (ROOM1150/1151), und das Original
+ * kann gar nicht tiefer als "Eltern schon in derselben Zeichenschleife berechnet". */
+static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
+{
+    int32_t r[9], t[3];
+    pc_prop_rot_q12(g_scd.props[slot].rot_x, g_scd.props[slot].rot_y,
+                    g_scd.props[slot].rot_z, r);
+    t[0] = g_scd.props[slot].x; t[1] = g_scd.props[slot].y; t[2] = g_scd.props[slot].z;
+    int cur = slot, tiefe = 0;
+    while (tiefe++ < 4) {
+        int pid = g_scd.props[cur].parent_obj;
+        if (pid < 0) break;
+        int pslot = -1;
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == (uint8_t)pid) { pslot = k; break; }
+        if (pslot < 0 || pslot == cur) break;
+        int32_t pr[9], pt[3];
+        pc_prop_rot_q12(g_scd.props[pslot].rot_x, g_scd.props[pslot].rot_y,
+                        g_scd.props[pslot].rot_z, pr);
+        /* Die Eltern-Translation traegt IHRE eigene Typ-4-Absenkung, weil das Original die
+         * -900 auf die Weltmatrix des Elternteils schreibt, BEVOR ein spaeterer Kind-Eintrag
+         * sie liest (FUN_8002c18c, Schleifenreihenfolge = Pool-Reihenfolge). */
+        pt[0] = g_scd.props[pslot].x;
+        pt[1] = re15_prop_render_y((int)g_scd.props[pslot].obj_type, g_scd.props[pslot].y);
+        pt[2] = g_scd.props[pslot].z;
+        int32_t nr[9], nt[3];
+        for (int row = 0; row < 3; row++)
+            for (int col = 0; col < 3; col++) {
+                int64_t s = 0;
+                for (int k = 0; k < 3; k++)
+                    s += (int64_t)pr[row*3+k] * (int64_t)r[k*3+col];
+                nr[row*3+col] = (int32_t)(s >> 12);
+            }
+        for (int row = 0; row < 3; row++)
+            nt[row] = (int32_t)(((int64_t)pr[row*3+0]*t[0] + (int64_t)pr[row*3+1]*t[1] +
+                                 (int64_t)pr[row*3+2]*t[2]) >> 12) + pt[row];
+        for (int k = 0; k < 9; k++) r[k] = nr[k];
+        for (int k = 0; k < 3; k++) t[k] = nt[k];
+        cur = pslot;
+    }
+    for (int k = 0; k < 9; k++) rot_q12[k] = r[k];
+    /* Typ-4-Absenkung des Objekts SELBST zuletzt — @0x8002c23c nach der Verkettung. */
+    pos[0] = t[0];
+    pos[1] = re15_prop_render_y((int)g_scd.props[slot].obj_type, t[1]);
+    pos[2] = t[2];
+}
+
 /* Scratch for re15_apply_room_cinematic (the shared overlay parses into this before copying
  * to the real destination). File-scope static so it's NOT a ~7 KB stack local; PC RAM is
  * unconstrained. (The PSX caller instead reuses its CD staging buffer — see asset_psx.c.) */
@@ -9037,8 +9130,16 @@ re_title:;
                  * cull, with a sink-gate (x<-25000) fallback for region-less cinematic
                  * cuts. This PC loop already renders all active props (no type gate),
                  * so only the cull rule changed; both ports now cull identically. */
+                /* ⛔ DER CULL LIEST DIE WELTPOSITION, NICHT DAS ROHE POS-FELD. Das Original
+                 * gibt FUN_80014368 den Zeiger &DAT_800b3ff4+i = die TRANSLATION DER
+                 * WELTMATRIX pool+0x48 (FUN_8002c18c), also das Ergebnis der Verkettung mit
+                 * der Elternmatrix — nicht pool+52/56/60. Fuer die 666 Weltraum-Objekte ist
+                 * das dasselbe; fuer ein angehaengtes Objekt NICHT: ROOM1150 Objekt 1/2
+                 * tragen roh (0,0,0) und waeren hier immer weggeschnitten worden. */
+                int32_t prop_rot_q12[9], prop_w[3];
+                pc_prop_world(pi, prop_rot_q12, prop_w);
                 if (re15_prop_culled((int)g_scd.props[pi].obj_type,
-                                     g_scd.props[pi].x, g_scd.props[pi].z,
+                                     prop_w[0], prop_w[2],
                                      cam_has_region, cam_region_xs, cam_region_zs))
                     continue;
                 int oid = (int)g_scd.props[pi].obj_id;
@@ -9061,17 +9162,18 @@ re_title:;
 
                 /* Render prop's MD1 mesh as TEXTURED triangles. */
                 if (prop_md1_ok) {
-                    int32_t prop_x = g_scd.props[pi].x;
-                    /* Typ-4-Props (schiebbare Kisten) zeichnet das Original 900 hoeher —
-                     * byte-true FUN_8002c18c @0x8002c23c/@0x8002c24c, siehe
-                     * re15_prop_render_y() in re15_aot.h. Nur die DARSTELLUNG; die
-                     * Kollisions-/Push-Position g_scd.props[pi].y bleibt roh. */
-                    int32_t prop_y = re15_prop_render_y((int)g_scd.props[pi].obj_type,
-                                                        g_scd.props[pi].y);
-                    int32_t prop_z = g_scd.props[pi].z;
+                    /* Weltmatrix + Weltposition in EINEM Schritt (pc_prop_world oben):
+                     * Drehmatrix wie bisher, dazu die ELTERNKETTE aus Obj_model_set pc[5]
+                     * (LAB_80040914 @0x80040a84-9c) und die Typ-4-Absenkung an der Stelle,
+                     * an der FUN_8002c18c sie macht (@0x8002c23c, NACH der Verkettung). */
+                    int32_t prot_q12[9];
+                    for (int k = 0; k < 9; k++) prot_q12[k] = prop_rot_q12[k];
+                    int32_t prop_x = prop_w[0];
+                    int32_t prop_y = prop_w[1];
+                    int32_t prop_z = prop_w[2];
                     int16_t prop_rx = g_scd.props[pi].rot_x;
                     int16_t prop_ry = g_scd.props[pi].rot_y;
-                    int16_t prop_rz = g_scd.props[pi].rot_z;
+                    int16_t prop_rz = g_scd.props[pi].rot_z;   /* nur fuer die Diagnosezeile */
 
                     /* BM-round 2026-05-29: REMOVED the BA-round whole-prop
                      * view_z>32000 far-clip. It was added on a FALSE premise —
@@ -9095,48 +9197,10 @@ re_title:;
                                 pi, oid, prop_x, prop_y, prop_z,
                                 prop_rx, prop_ry, prop_rz, prop_md1->mesh_count);
                     }
-                    /* Build full Euler rotation matrix (RE2 stock RotMatrix
-                     * convention = Ry * Rx * Rz, per skeleton_common.c
-                     * mat3_from_euler). Without rot_x the tail rotor (Obj
-                     * 0x04, rot_x=1024 = 90°) would render flat-horizontal
-                     * instead of vertical-on-the-side. Local names rsx/rcx/
-                     * etc. avoid shadowing the outer-scope `cx,cy` which
-                     * are the screen center used by projection below. */
-                    int32_t rsx = re15_sin_q12((int)prop_rx), rcx = re15_cos_q12((int)prop_rx);
-                    int32_t rsy = re15_sin_q12((int)prop_ry), rcy = re15_cos_q12((int)prop_ry);
-                    int32_t rsz = re15_sin_q12((int)prop_rz), rcz = re15_cos_q12((int)prop_rz);
-                    #define Q12_MUL(a,b)   ((int32_t)(((int64_t)(a) * (int64_t)(b)) >> 12))
-                    /* M = Ry * Rx * Rz (PSX YXZ Euler). Direct expansion: */
-                    int32_t prot_q12[9];
-                    /* Row 0 */
-                    prot_q12[0] = Q12_MUL(rcz, rcy);
-                    prot_q12[1] = -Q12_MUL(rsz, rcy);
-                    prot_q12[2] = rsy;
-                    /* Row 1 — 2-term int64-accumulated to mirror M-round Q12 fix. */
-                    {
-                        int64_t t1 = ((int64_t)rsz * (int64_t)rcx) << 12;
-                        int64_t t2 = (int64_t)rcz * (int64_t)rsy * (int64_t)rsx;
-                        prot_q12[3] = (int32_t)((t1 + t2) >> 24);
-                    }
-                    {
-                        int64_t t1 = ((int64_t)rcz * (int64_t)rcx) << 12;
-                        int64_t t2 = (int64_t)rsz * (int64_t)rsy * (int64_t)rsx;
-                        prot_q12[4] = (int32_t)((t1 - t2) >> 24);
-                    }
-                    prot_q12[5] = -Q12_MUL(rcy, rsx);
-                    /* Row 2 */
-                    {
-                        int64_t t1 = ((int64_t)rsz * (int64_t)rsx) << 12;
-                        int64_t t2 = (int64_t)rcz * (int64_t)rsy * (int64_t)rcx;
-                        prot_q12[6] = (int32_t)((t1 - t2) >> 24);
-                    }
-                    {
-                        int64_t t1 = ((int64_t)rcz * (int64_t)rsx) << 12;
-                        int64_t t2 = (int64_t)rsz * (int64_t)rsy * (int64_t)rcx;
-                        prot_q12[7] = (int32_t)((t1 + t2) >> 24);
-                    }
-                    prot_q12[8] = Q12_MUL(rcy, rcx);
-                    #undef Q12_MUL
+                    /* Die volle Euler-Drehmatrix (RotMatrix-Konvention Ry*Rx*Rz — ohne rot_x
+                     * laege z.B. der Heckrotor aus ROOM1170, Obj 0x04 mit rot_x=1024,
+                     * waagerecht statt senkrecht) baut jetzt pc_prop_rot_q12(), und die
+                     * Elternkette pc_prop_world() — beide oben in dieser Datei. */
 
                     /* CANONICAL per-bone (2026-06-02): a rigid prop is ONE "bone"
                      * with world rotation prot_q12. Build the world-space ctx
