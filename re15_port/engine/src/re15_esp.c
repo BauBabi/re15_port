@@ -14,6 +14,7 @@
 #include "re15_scd.h"   /* g_re15_pauseflags + RE15_PAUSE_ACTION — Selbst-Gate @0x80019e40 */
 #include "re15_actor.h" /* g_actors — Follow-Anker (Flags-Bit 0x04, @0x80019f44-f94) */
 #include <string.h>
+#include <stdio.h>
 
 extern uint8_t re15_engine_rand8(void);   /* the shared FUN_8001af20 draw (re15_damage.c) */
 
@@ -502,6 +503,23 @@ static void esp_fx_row_advance(re15_esp_fx_t *f)
  *   5  anim-record index := row[0x0e], advance if row[0x26] (@0x80017430-...)
  * Unsupported selectors (the muzzle/shell/room chains — stage 3) act as noop here; the
  * physics/anim layers still run them faithfully enough for the ballistic droplets. */
+/* SLOT FREIGEBEN — das Flags-Byte slot+0x6c IST im Original zugleich die Belegung.
+ * Beleg (selbst disassembliert, info/Re1.5/PSX.EXE):
+ *   Spawner-Suche FUN_80019700: 800197a8 lbu v0,108(t0) / 800197b0 beq v0,zero,0x800197d0
+ *                               -> ein Platz mit Flags==0 wird neu vergeben (0x60 Plaetze,
+ *                                  Schrittweite 132 @0x800197c4)
+ *   Tick-Schleife 1 (Routine A): 80019e70 lbu v0,108(v1) / 80019e78 andi v0,v0,0x1 /
+ *                                80019e7c beq v0,zero -> Dispatch uebersprungen
+ *   Tick-Hauptschleife:          80019f44 lbu v1,108(a3) / 80019f4c andi v0,v1,0x1 /
+ *                                80019f50 beq v0,zero,0x8001a480 -> ganzer Slot-Rumpf aus
+ * Der Port fuehrt die Belegung getrennt in `active`; ein `flags = 0` allein liess den Platz
+ * deshalb ewig im Dispatch stehen. */
+static void esp_fx_kill(re15_esp_fx_t *f)
+{
+    f->flags  = 0;    /* byte-true: slot+0x6c := 0 */
+    f->active = 0;    /* Port-Belegung nachziehen (im Original dasselbe Byte) */
+}
+
 static void esp_fx_dispatch(re15_esp_fx_t *f)
 {
     if (!f->rows_base) return;
@@ -564,7 +582,7 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             re15_esp_fx_spawn_rows(f->bank, f->row[0x17], f->row[0x16], f->scale16,
                                    f->x, f->y, f->z, f->floor_y, f->param);
             if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
-            else f->flags = 0;
+            else esp_fx_kill(f);   /* @0x80017b6c sb zero,108(v1) = Flags-Byte 0 = Platz FREI */
             break;
         }
         case 38: {  /* @0x800188b8: SCHROTHUELSEN-INIT (Ein-Schuss-Routine; Dispatch-
@@ -751,6 +769,12 @@ int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t su
     if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
     int streams = (ei >= 0) ? re15_esp_row_streams(rb, ei, sub) : -1;
     int spawned = 0;
+    {   /* Mess-Log (Debug-Harness) */
+        extern FILE *re15_waffen_log(void);
+        FILE *wl = re15_waffen_log();
+        if (wl) fprintf(wl, "    SPAWN id=%u sub=%u scale=%#x streams=%d\n",
+                        (unsigned)effect_id, (unsigned)sub, (unsigned)scale16, streams);
+    }
     for (int s = 0; s < streams; s++) {
         int nrows = 0;
         const uint8_t *rows = re15_esp_row_stream(rb, ei, sub, s, &nrows);
@@ -855,6 +879,12 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
          * BEFORE the physics, exactly like the PSX tick order. An advance re-seeds accel/velocity
          * = the multi-phase ballistics (blood st0 switches to (60,14,0) after its 7-tick count). */
         if (f->rows_base) {
+            /* LEBEND-GATE des Flags-Bytes (nur Row-VM-Plaetze - die tragen, wie im Original,
+             * IMMER ein datengetriebenes Flags-Byte). Original: 80019e70 lbu v0,108(v1) /
+             * 80019e78 andi v0,v0,0x1 / 80019e7c beq v0,zero -> Routine-A-Dispatch aus;
+             * 80019f44-50 dasselbe fuer den ganzen Slot-Rumpf; Spawner 800197a8-b0 vergibt
+             * genau so einen Platz neu. */
+            if (!(f->flags & 0x01)) { f->active = 0; continue; }
             esp_fx_dispatch(f);                  /* loop-1 routineA */
             esp_fx_dispatch_b(f);                /* main-loop routineB (the shell bounce) */
             if (!f->active) continue;            /* B may despawn (2nd floor contact) */

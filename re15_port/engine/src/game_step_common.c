@@ -1417,6 +1417,20 @@ void re15_game_step(const re15_game_ctx_t *c)
          * re15_audio_weapon_se(8) stand-in was the WRONG record;
          * RE15_COMBAT_SE_SUBSYSTEM.md §3). Aiming suppresses g_aot_action_pressed (no door/stair
          * while the weapon is raised). 1170-SAFE: needs R1+Square input; hits only live zombies. */
+        {   /* MESS-LOG (Debug-Harness RE15_WAFFEN_LOG): je Bild der komplette Waffenzustand. */
+            extern FILE *re15_waffen_log(void);
+            extern int  re15_player_aim_dbg(int*,int*,int*,int*,int*);
+            extern int  re15_player_aim_clip(void);
+            FILE *wl = re15_waffen_log();
+            if (wl) {
+                int ph=0,rc=0,af=0,ac=0,tk=0;
+                int fc = re15_player_aim_dbg(&ph,&rc,&af,&ac,&tk);
+                fprintf(wl, "F%u pad=%04x w=%d clip=%d fc=%d frame=%d ph=%d rec=%d auto=%d/%d takt=%d mag=%d fx=%d\n",
+                        g_engine.frame_count, c->pad_current, re15_player_equipped_weapon(),
+                        re15_player_aim_clip(), fc, (int)pl->anim_frame, ph, rc, ac, af, tk,
+                        re15_ammo_mag_nonzero(), re15_esp_fx_count());
+            }
+        }
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
             /* THE HOLD FIRE GATE (@0x80033300-84, byte-true): Square HELD + FUN_8004ea6c
              * (mag>0) -> DISCHARGE. Mag EMPTY: only on the Square PRESS-EDGE (@0x80033338
