@@ -4412,6 +4412,19 @@ void re15_body_push_player(void)
          * @0x80102bb8 = its sub_state_1 stays 3..6 for exactly that window. */
         if (pl_locked && e->state == 1 &&
             e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
+        /* G5-ENDBOSS (Typ 0x36): RE2 gibt ihm KEINEN +0x78-Zylinder, sondern ZWEI
+         * Kollisionssegmente (+0x1E8 = 2 @0x80100530, r 6000 @0x80100540 und r 1300
+         * @0x8010055c) und schiebt den Spieler ueber FUN_80034D0C statt FUN_8002AEC4
+         * heraus (Spieler-Tick @0x80026628 -> FUN_800355C4 -> @0x80035630). Der
+         * 1000er-Kasten aus re15_enemy_apply_hitbox (RE1.5-EM036-Box @0x8011ee64) bleibt
+         * der SCHADENS-Kasten; als Koerper ist er viel zu klein — der Spieler lief 3 m
+         * weit in die sichtbare Masse hinein (Nutzer-Befund "Birkin ist nicht solid",
+         * gemessen in probe_r17_birkin_1zu1 A). Belege im Modulkopf von
+         * enemy_ai_boss_g5.c. */
+        if (e->type == 0x36u) {
+            extern int re15_g5_body_push_player(re15_actor_t *pl);
+            re15_g5_body_push_player(pl); continue;
+        }
         re15_body_push(e, (int32_t)e->hit_radius_min, pl, RE15_BODY_R_PLAYER);
     }
 }

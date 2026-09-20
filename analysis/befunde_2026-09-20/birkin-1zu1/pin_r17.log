@@ -1,0 +1,18 @@
+[scd F0] Cut_chg(15)
+[scd F0] Cut_chg(12)
+=== R17 birkin-1zu1 PIN: Koerper-Kollision des G5 ("nicht solid") ===
+-- C) Armierungs-Gate --
+  PIN ok: vor der Armierung liefert G5 keine Kollisionssegmente (Ctor `ori v1,v1,0x2` @0x80100594; FUN_80034D0C steigt bei (*p1|*p2)&2 aus)
+-- A) Soliditaet (Sweep 8000 -> 100 auf der X-Achse, z = Boss-z) --
+  Boss (1960,0,-23400)  Seg0 Welt-x -40 r 6000  Seg1 Welt-x 4160 r 1300  (Seg-y -1500)
+  kleinster Abstand Spieler-Ursprung zum Boss-Ursprung: ALT (1 Zylinder r1000) = 1451,  NEU (RE2 2 Segmente) = 4451
+  PIN ok: RE2-Segmente halten den Spieler ~4450 vor dem Boss-Ursprung (Seg0 -2000 + 6000 + 450 @0x80100534-40/@0x8003bdc0): gemessen 4451
+  PIN ok: das alte Ein-Zylinder-Modell hielt nur ~1450 (1000 + 450) — 3 m INNERHALB der sichtbaren Masse (Front = Ursprung + 4494): gemessen 1451
+  PIN ok: der Spieler steht jetzt vor statt in der Masse (Differenz 3000)
+  Seitlicher Durchlauf: 0 von 57 Punkten bleiben im Segment 0
+  PIN ok: auch quer bleibt kein Punkt in Segment 0 stecken (der Punkt exakt auf der Achse hat dist 0 und ist im Original genauso schubfrei): 0
+-- B) Phasenabhaengigkeit --
+  Segment 0 lokal X: -2000..-2000   Segment 1 lokal X: 2200..3700
+  PIN ok: Segment 0 steht fest bei -2000 (@0x80100534-38): -2000..-2000
+  PIN ok: Segment 1 faehrt im Massen-Biss von 2200 auf 3700 aus (+500 @0x801040c0, Kappe 3700 @0x801040dc-e0; zurueck -15 @0x801042b8, Boden 2200 @0x801042d0-d4): 2200..3700
+=== ALLE PINS OK (0 Pins fehlen) ===
