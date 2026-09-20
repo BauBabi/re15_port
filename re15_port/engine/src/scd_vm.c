@@ -37,6 +37,7 @@
                               * (save-phone precedent, shots/itembox_spec.md §6) */
 #include "re15_room.h"       /* g_current_room_id (save-point room match) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
+#include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 
 scd_vm_t g_scd;
@@ -613,6 +614,10 @@ int scd_event_fire(uint8_t event_id)
 static int s_vm_room_init = 0;
 void scd_vm_set_room_init(int on) { s_vm_room_init = on ? 1 : 0; }
 
+static int s_cursor_ok_vorframe = 0;
+static int s_cursor_ok_jetzt    = 0;
+unsigned   g_re15_cursor_ok_zaehler = 0;   /* Messschiene (Sonde r17_cursor_klick) */
+
 void scd_vm_tick(void)
 {
     /* SKRIPT-FREEZE (Bit 0x02000000) — byte-true am KOPF des Frame-Runners selbst,
@@ -625,6 +630,10 @@ void scd_vm_tick(void)
      * (der Port fuehrt einen geparkten Opcode sonst jeden Frame erneut aus — 2200x gemessen).
      * Der tick_count laeuft bewusst NICHT weiter: das Original erreicht @0x8003f05c gar nicht. */
     if (g_re15_pauseflags & RE15_PAUSE_SCD) return;
+    /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20) — Flankenspeicher des Raetsel-BESTAETIGUNGS-Lauts.
+     * Herleitung bei op_sce_key_ck. Hier, weil der Vorframe-Wert genau ein Bild alt sein muss. */
+    s_cursor_ok_vorframe = s_cursor_ok_jetzt;
+    s_cursor_ok_jetzt    = 0;
     g_scd.tick_count++;
     /* SUB01-RESEED — byte-true FUN_8003f038: JEDEN Gameplay-Frame wird Thread-Slot 1 auf sub_scd[1]
      * zurueckgesetzt (@0x8003f064 `ori a0,zero,0x1`, @0x8003f070 `lw v0,68(v0)` = RDT+0x44,
@@ -1395,6 +1404,7 @@ static void msg_show(scd_thread_t *t)
     g_scd.message_arg2   = t->pc[2];
     g_scd.message_arg3   = t->pc[3];
     g_scd.message_active = 1;
+    g_scd.message_nachhall = 0;   /* Nutzer-Nachhall gehoert der VORIGEN Zeile (s. re15_scd.h) */
     /* NOTE: the dialogue voiceover is NO LONGER queued here. msg_show is shared by the
      * plain-subtitle path AND the YES/NO query prompt (the ROOM1130 switch), and a UI
      * prompt must NOT speak. Voice is queued ONLY by the plain-subtitle caller, gated to
@@ -4522,6 +4532,11 @@ int op_kage_set(scd_thread_t *t)          { t->pc += 14; return 1; }
 int op_cut_be_set(scd_thread_t *t)        { t->pc += 4; return 1; }
 /* Xa_vol (0x5F) — 2 bytes. XA volume. */
 int op_xa_vol(scd_thread_t *t)            { t->pc += 2; return 1; }
+/* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20) — BESTAETIGUNGS-LAUT AM CURSOR-RAETSEL.
+ * Flankenspeicher: sce_key_ck liest den GEHALTENEN Pad-Zustand (DAT_800ac768, s.u.), feuert
+ * also jedes Bild erneut, solange der Knopf liegt. Ohne Flanke wuerde der Laut rattern.
+ * s_cursor_ok_jetzt wird waehrend des Ticks gesetzt, scd_vm_tick schiebt ihn zu Beginn des
+ * NAECHSTEN Ticks nach s_cursor_ok_vorframe. */
 /* Sce_key_ck (0x51) — 4 bytes. */
 int op_sce_key_ck(scd_thread_t *t)
 {
@@ -4541,6 +4556,45 @@ int op_sce_key_ck(scd_thread_t *t)
     uint8_t  param = t->pc[1];
     uint16_t mask  = (uint16_t)(t->pc[2] | (t->pc[3] << 8));   /* LE u16 @pc[2] */
     int      cond  = (mask & g_scd_pad_held) != 0 ? (param != 0) : ((param ^ 1) != 0);
+    /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20), KEINE byte-true Regel — der BESTAETIGUNGS-Laut des
+     * Cursor-Raetsels. Gegenstueck zum Bewegungs-Klick in re15_object_notch_update().
+     *
+     * RE2-VORBILD (disassembliert) — FUN_8006b358, RE2 PSX.EXE, Bestaetigungs-Zweig:
+     *   @0x8006b5a0  jal 0x800695b0        ; ist die Auswahl gueltig?
+     *   @0x8006b5b0  beq v0,zero,0x8006b5bc
+     *   @0x8006b5b4  lui a0,0x407          ; ungueltig -> Se_on(0x04070000)
+     *   @0x8006b5b8  lui a0,0x406          ; gueltig   -> Se_on(0x04060000)
+     *   @0x8006b5bc  jal 0x8005ba28
+     * RE1.5 benutzt dieselbe Bank/Nummer in seinem eigenen Inventar-Bestaetigen
+     * (@0x8004a51c-20, vgl. menu_common.c se4) — 0x0406 ist damit beidseitig belegt.
+     *
+     * DIE STELLE IM PORT ist der Bestaetigungs-Test des Raetsels selbst. ROOM11F0 sub01 baut
+     * ihn so (eigener opcode-exakter Walk der RDT-Bytes, Datei-Offsets):
+     *   @0x10f0  21 05 01 01     Ck(5,1,1)              ; Schalter 1 noch offen?
+     *   @0x10f4  2e 03 00        Work_set(3,0)          ; Arbeits-Entitaet = CURSOR-Objekt 0
+     *   @0x10fc  3e 00 0f 00 02 00  Member_cmp(15 == 2) ; steht er ueber Zelle 2?
+     *   @0x1106  51 01 40 00     Sce_key_ck(1, 0x0040)  ; und liegt BESTAETIGEN an?
+     *   @0x110a  04 ff 18 06     Evt_exec(sub06)        ; dann Schalter umlegen
+     * Maske 0x0040 = virtuelles Bit 6 = SQUARE (re15_pad_virtual_word vtbl[6],
+     * Preset-Tabelle @0x80073dbc). Der Laut haengt deshalb an genau drei Bedingungen:
+     * Praedikat WAHR, Arbeits-Entitaet ist ein OBJEKT (Work_set kind 3), und dieses Objekt
+     * steht ueber einer Zelle (member_0b != 0 — 0 ist der Clear-Wert "ueber keiner Zelle",
+     * @0x80043788). Damit kann der Laut ausserhalb eines Cursor-Raetsels nicht anspringen:
+     * ohne Work_set(3,..) gibt es keinen work_prop_idx, ohne Raster keinen Notch.
+     * Die UNGUELTIG-Variante 0x0407 hat im Port keine Entsprechung: RE1.5 prueft die Zelle
+     * gar nicht erst zu Ende, es gibt hier kein "falsch bestaetigt" — deshalb wird 0x0407
+     * NICHT erfunden. */
+    if (cond) {
+        int wp = (t->work_prop_idx >= 0) ? t->work_prop_idx : g_scd.work_prop_idx;
+        int ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+        if (ws < 0 && wp >= 0 && wp < (int)g_scd.prop_count && g_scd.props[wp].member_0b != 0) {
+            s_cursor_ok_jetzt = 1;
+            if (!s_cursor_ok_vorframe) {
+                g_re15_cursor_ok_zaehler++;
+                re15_audio_core_se(6);   /* CORE-Bank 4, Satz 6 (s.o.) */
+            }
+        }
+    }
     t->pc += 4;
     return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
