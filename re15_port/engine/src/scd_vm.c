@@ -3467,6 +3467,50 @@ static uint8_t re15_enemy_spawn_action(uint8_t type, uint8_t behavior)
      * em45's skeleton — the straight-leg discrepancy vs the original is NOT a clip choice
      * (see [[enemy_position_anim_pipeline_re_2026_06_15]] — unresolved leg source). */
     if (type == 0x45) return 3;
+    /* NPC-FAMILIE (0x40/0x42/0x47/0x49/0x4b) — IHRE EIGENEN STATE-0-INITs SETZEN CLIP 2.
+     *
+     * NUTZER-BEFUND (2026-09-21): "nach der feuer cutscene der raum danach direkt am Anfang
+     * [ROOM1050] spielt ihre [Adas] Animation doppelt ab."
+     *
+     * GEMESSEN (echte exe, echter Uebergang ROOM1090 -> Tuer-Slot 0 -> ROOM1050,
+     * RE15_ANIM_TRACE): Ada (Typ 0x42) wird die ersten FUENF Bilder — die Tuer-Blende, in der
+     * die Pausemaske 0xFF000000 KI und Skript einfriert — mit EM42-Clip 0 Bild 0 posiert.
+     * Clip 0 ist ihr 22-Bild-LAUFZYKLUS: der Raum blendet auf und Ada steht bereits mitten im
+     * Weglauf-Schritt (Bein in der Luft), schnappt dann in den Stand und laeuft ~30 Bilder
+     * spaeter dieselbe Animation noch einmal — genau die gemeldete Doppelung.
+     *
+     * ORIGINAL (selbst disassembliert, alle Adressen aus PSX.EXE bzw. STAGE1.BIN):
+     *   1. `Sce_em_set` (FUN_800420a0) schreibt +0x94 NIE — der ganze Handler 0x800420a0..
+     *      0x8004262c hat keinen Store auf 148(s0). Er nullt nur +0x4..+0x7 als WORT
+     *      (@0x800421e0 `sw zero,4(s0)`) und +0x1c4 (@0x8004216c `sh zero,452(s0)`).
+     *   2. Der Raumwechsel raeumt den Entity-Pool NICHT flaechig: FUN_8001a4c0 laeuft 20 Slots
+     *      ab 0x800acc2c (Stride 0x1f4) und nullt ausschliesslich Feld +0x00
+     *      (@0x8001a4e8 `sw zero,0(at)`). +0x94 ueberlebt also den Raumwechsel.
+     *   3. Die Pose kommt aus dem State-0-INIT der TYP-EIGENEN Overlay-Wurzel, und die setzt
+     *      bei ALLEN sechs STAGE1-NPC-Wurzeln denselben Wert:
+     *        Typ 0x40 Wurzel 0x8011c5a0 -> INIT @0x8011c7c0 `sb v0,148(v1)`, v0 = 2
+     *        Typ 0x42 Wurzel 0x8011cb70 -> INIT @0x8011cd90 `sb v0,148(v1)`, v0 = 2
+     *                                      (davor @0x8011cd8c `ori v0,zero,0x2`; verzweigungsfrei
+     *                                       ab INIT-Eintritt 0x8011ccac)
+     *        Typ 0x45 Wurzel 0x8011d140 -> INIT @0x8011d39c, v0 = 2   (Port haelt hier bewusst 3,
+     *                                      s. Kommentar oben — ROOM1150-Cutscene)
+     *        Typ 0x47 Wurzel 0x8011d6d4 -> INIT @0x8011d930, v0 = 2
+     *        Typ 0x49 Wurzel 0x8011dc68 -> INIT @0x8011de7c, v0 = 2
+     *        Typ 0x4b Wurzel 0x8011e22c -> INIT @0x8011e454, v0 = 2
+     *      Die Typ->Wurzel-Zuordnung steht im Installer FUN_8011e864: z.B.
+     *        @0x8011e924 `addiu v0,v0,-13456` (= 0x8011cb70) / @0x8011e92c `sw v0,11444(at)`
+     *        -> 0x80072cb4 = Dispatch-Tabelle 0x80072bac + 0x42*4.
+     *
+     * In ROOM1050 laeuft der INIT NIE: sub00 spawnt Ada und startet im SELBEN VM-Tick
+     * `Evt_exec sub03`, dessen `Plc_dest` (@RDT 0x0DAA) +0x4 sofort auf 4 setzt
+     * (@0x80041c14) — der State-0-Zweig ist damit uebersprungen. Im Original bleibt +0x94
+     * trotzdem ein Steh-Clip (Punkt 2), im Port dagegen memset-t der Raumwechsel den Aktor
+     * und dieser Saat-Wert war 0 = Laufzyklus. Deshalb traegt der Spawn-Saat-Wert jetzt den
+     * INIT-Literal der jeweiligen Wurzel.
+     * (Die Port-Seite des INIT setzt denselben Wert bereits: enemy_ai_common.c case 0
+     *  `e->motion = 2`.) */
+    if (type == 0x40 || type == 0x42 || type == 0x47 || type == 0x49 || type == 0x4b)
+        return 2;
     if (type == 0x10 || type == 0x11 || type == 0x12 || type == 0x16 ||
         type == 0x18 || (type >= 0x1c && type <= 0x1f)) {
         int flags = behavior & 0x80;
