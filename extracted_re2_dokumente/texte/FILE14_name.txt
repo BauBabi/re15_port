@@ -1,0 +1,5 @@
+Dokument 14   Item-Id 0x76
+Name (Bank EN @0x8009EA92): Patrol report
+  Rohbytes: 2C 3D 50 4E 4B 48 00 4E 41 4C 4B 4E 50 F7
+Name (Bank 2 @0x8009E350, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: E9 BA D1 3B CF EF 89 EF 8B EF 00 F7

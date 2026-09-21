@@ -1,0 +1,39 @@
+RE2 (Retail, Leon) — Dokument 14: Patrol report
+Item-Id 0x76   Dokument-Index 14
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE14_*.png   (Rohdaten: hintergruende/seiten_roh/FILE14_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE14_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+PATROL REPORT
+
+=== S01 ===
+        -Patrol Report-
+  September 20th 9:30 PM
+  Reporter:Sgt.Neil Carlsen
+
+We received a report of a
+suspicious individual
+skulking around the sewers
+in the outskirts of Raccoon
+City. I searched the area
+
+=== S02 ===
+and located the individual,
+but he ran away before I
+was able to question him.
+
+=== S03 ===
+I recovered the following items:
+
+ *A small amount of C4
+  plastic explosive.
+ *An electronic detonator.
+ *9x19 parabellum rounds.
+ *Infrared scope [broken].
+
+          End of report.

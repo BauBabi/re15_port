@@ -1,0 +1,85 @@
+RE2 (Retail, Leon) — Dokument 20: Vaccine synthesis
+Item-Id 0x7C   Dokument-Index 20
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE20_*.png   (Rohdaten: hintergruende/seiten_roh/FILE20_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE20_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+INSTRUCTIONS FOR SYNTHESIS
+   OF THE G-VIRUS ANTIGEN:
+G-VACCINE. CODE NAMED "DEVIL."
+
+=== S01 ===
+Any beings infected by the
+G-virus will reproduce
+through the impregnation of
+an embryo within another
+living being.
+Unless rejected by the host,
+the embryo will undertake
+a process of gradual cellular
+invasion, infecting the host's
+cells on a molecular level as
+it rewrites their DNA.
+
+=== S02 ===
+Once the metamorphosis is
+complete, the host will be
+capable of continuing this
+cycle of self-replication.
+The duration of time for the
+process to run its course will
+vary from subject to subject.
+In the early stages of
+cellular invasion, it is
+possible to halt progression
+of the metamorphosis through
+
+=== S03 ===
+the administration of the
+G-virus antigen.
+The following procedure
+details its synthesis.
+
+=== S04 ===
+The vaccine creation requires
+the base vaccine. This can be
+arranged by the activator
+VAM. First set the empty
+cartridge to the VAM and
+activate it. After several
+moments the process will be
+complete and the white-colored
+base vaccine will be set in the
+cartridge automatically.
+Then confirm the green light
+
+=== S05 ===
+is on, remove the cartridge,
+and proceed to the next step.
+Once the base vaccine has been
+prepared, set it in the vaccine
+synthesis machine located in
+the P-4 level experiment room.
+The machine is fully automated
+and only requires the user to
+push the sequence start
+switch. At this point,
+the program will run
+
+=== S06 ===
+automatically and synthesis
+will be complete within
+approximately 10seconds.
+
+As the synthesis of DEVIL is
+an extremely delicate process,
+the quality will vary with
+slight shocks or changes in
+temperature. Careful handling
+is required for the proper
+results.

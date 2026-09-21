@@ -1,0 +1,5 @@
+Dokument 15   Item-Id 0x77
+Name (Bank EN @0x8009EAA0): Watchman^s diary
+  Rohbytes: 33 3D 50 3F 44 49 3D 4A 3A 4F 00 40 45 3D 4E 55 F7
+Name (Bank 2 @0x8009E35C, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: DB EE 0B 3B DB 6F EF 5F EF 45 F7

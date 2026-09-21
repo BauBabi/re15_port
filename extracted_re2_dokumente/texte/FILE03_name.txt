@@ -1,0 +1,5 @@
+Dokument 3   Item-Id 0x6B
+Name (Bank EN @0x8009E9E7): Police memorandum
+  Rohbytes: 2C 4B 48 45 3F 41 00 49 41 49 4B 4E 3D 4A 40 51 49 F7
+Name (Bank 2 @0x8009E2DD, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 56 EF 36 EF 30 EF 8C F7

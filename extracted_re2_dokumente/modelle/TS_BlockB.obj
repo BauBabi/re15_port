@@ -1,0 +1,7 @@
+# ST_FILE.TS, Block TS_BlockB -> OBJ (re15_port/tools/re2_tm2_obj.py)
+# PSX-Koordinaten unveraendert (Y zeigt nach unten wie auf der PSX).
+v 0 22 29
+v 0 22 -29
+v 0 -22 29
+v 0 -22 -29
+f 3 1 2 4

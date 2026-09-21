@@ -1,0 +1,83 @@
+RE2 (Retail, Leon) — Dokument 9: Operation report 2
+Item-Id 0x71   Dokument-Index 9
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE09_*.png   (Rohdaten: hintergruende/seiten_roh/FILE09_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE09_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+OPERATION REPORT 2
+
+=== S01 ===
+         -Operation Report-
+               September 28th
+Early Morning 2:30AM. Zombies
+overran the operation room
+and another battle broke out.
+We lost four more people,
+including David.
+We're down to four people,
+including myself. We failed to
+secure the weapons cache and
+hope for our survival
+
+=== S02 ===
+continues to diminish.
+We won't last much longer...
+We agreed upon a plan to
+escape through the sewer.
+There's a path leading from
+the precinct underground to
+the sewage disposal plant.
+We should be able to access
+the sewers through there.
+The only drawback is that
+there is no guarantee the
+
+=== S03 ===
+sewage disposal plant is free
+of any possible dangers.
+We know our chances in the
+sewers are slim, but anything
+is better than simply waiting
+here to die.
+In order to buy more time, we
+locked the only door leading
+to the underground, which is
+located in the eastern office.
+We left the key behind in the
+
+=== S04 ===
+western office since it's
+unlikely that any of those
+creatures have the
+intelligence to find it and
+unlock the door.
+
+I pray that this operation
+report will be helpful to
+whoever may find it.
+
+     Recorder: Elliot Edward
+
+=== S05 ===
+In order to buy more time, we
+locked the only door leading
+to the underground, which is
+located in the eastern office.
+We left the key behind in the
+western office since it's
+unlikely that any of those
+creatures have the
+intelligence to find it and
+unlock the door.
+
+=== S06 ===
+I pray that this operation
+report will be helpful to
+whoever may find it.
+
+     Recorder: David Ford

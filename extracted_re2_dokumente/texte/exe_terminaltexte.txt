@@ -1,0 +1,27 @@
+RE2 (Retail, Leon) — Klartext-Texte des Computer-Terminals aus PSX.EXE
+Block Datei 0x13CC..0x1694  =  RAM 0x80010BCC..0x80010E94
+Referenz: `addiu a1,a1,0xbcc` @0x8003AB98 laedt 0x80010BCC.
+
+Steuerzeichen, wie sie in den Bytes stehen (NICHT ersetzt):
+  ]        Zeilenumbruch
+  |<n>     Farbwechsel (|0 = zurueck, |1, |2 ...)
+  [0nn.    Pause um nn Einheiten, dann ein Punkt
+
+@0x80010BCC  DOOR LOCK SERVICE]------------------------------
+@0x80010C00  Hall side doors:      |2RELEASED|0]
+@0x80010C24  Hall side doors:      |2LOCKED|0]
+@0x80010C48  ]The doors can be unlocked]by a |2CARD KEY|0.]
+@0x80010C7C  ]Checking up ID CARD[025.[025.[025.[025.
+@0x80010CA8  ]OK!]Hall side doors lock released.
+@0x80010CCC  press any key]>
+@0x80010D0C  Register your fingerprint.]
+@0x80010D28  UMBRELLA "RODEM" SYSTEM]                      Ver 5.0]
+@0x80010D60  Culture Experiment Room Staff Registry.]]
+@0x80010D8C  Accessing[020.[020.[020.[020.[020.]]
+@0x80010DB4  Enter your user name.]>
+@0x80010DCC  GUEST
+@0x80010DD4  |1This name is not in the]researcher data base.|0]
+@0x80010E08  Register your fingerprint.
+@0x80010E24  Please wait[025.[025.[025.[025.[025.]
+@0x80010E4C  Registration complete.]]
+@0x80010E68  Guest registration is valid]for 24 hours.]

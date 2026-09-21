@@ -1,0 +1,5 @@
+Dokument 23   Item-Id 0x7F
+Name (Bank EN @0x8009EB23): Rookie files
+  Rohbytes: 2E 4B 4B 47 45 41 00 42 45 48 41 4F F7
+Name (Bank 2 @0x8009E3CE, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: CF 3B AD 3B C2 EE 04 A8 CF F7

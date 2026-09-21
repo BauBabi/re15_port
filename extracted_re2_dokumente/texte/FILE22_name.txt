@@ -1,0 +1,5 @@
+Dokument 22   Item-Id 0x7E
+Name (Bank EN @0x8009EB12): P_epsilon report
+  Rohbytes: 2C 3B 41 4C 4F 45 48 4B 4A 00 4E 41 4C 4B 4E 50 F7
+Name (Bank 2 @0x8009E3BE, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: D5 B3 6C EF 9E 63 7F EF 6A EF 77 EF 89 EF 8B F7

@@ -1,0 +1,74 @@
+RE2 (Retail, Leon) — Dokument 18: Sewer manager fax
+Item-Id 0x7A   Dokument-Index 18
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE18_*.png   (Rohdaten: hintergruende/seiten_roh/FILE18_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE18_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SEWER MANAGER FAX
+
+=== S01 ===
+      -User List of the
+       Connecting Facility-
+
+On the first and third
+Wednesdays of the month,
+Angelica Margaret, chief of
+maintenance, will make use
+of the facilities. Be sure
+to reduce the moisture levels
+in the facility by activating
+the fan, as the equipment she
+
+=== S02 ===
+will be using is susceptible
+to the effects of water
+vapors.
+
+On the 28th of every month,
+the chemical transporter
+Don Weller will use the
+facility. The chemicals he
+will be transporting are
+extremely volatile.
+Extreme caution should be
+
+=== S03 ===
+observed throughout their
+transport.
+
+On the 6th and 16th of every
+month, police chief Brian Irons
+will visit the facility to
+attend the regular meetings
+that take place in the lab.
+
+On the fourth Friday of every
+other month, William Birkin will
+
+=== S04 ===
+use the facility to conduct a
+training seminar for the
+Chicago branch of Umbrella Inc.
+As the probability of an
+attack upon Dr. Birkin will
+be high, take every measure
+conceivable to guard his life.
+
+You will be informed of all
+other potential visitors and
+the times they will arrive as
+
+=== S05 ===
+needed. Guide these individuals
+to their destination safely.
+We expect nothing but the
+best from you.
+
+       Charles Coleman
+       Secretary Chief
+       Umbrella Headquarters

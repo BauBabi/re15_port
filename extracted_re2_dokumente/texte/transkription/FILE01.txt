@@ -1,0 +1,74 @@
+RE2 (Retail, Leon) — Dokument 1: Mail to Chris
+Item-Id 0x69   Dokument-Index 1
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE01_*.png   (Rohdaten: hintergruende/seiten_roh/FILE01_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE01_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FEDERAL POLICE DEPT.
+-INTERNAL INVESTIGATION
+REPORT
+
+=== S01 ===
+Mr. Chris Redfield
+Raccoon City Police Dept.
+S.T.A.R.S. division
+
+As per your request, we
+have conducted our
+internal investigation and
+discovered the following
+information:
+
+=== S02 ===
+1) Regarding the G-virus
+currently under development
+by Umbrella Inc.
+
+So far it is unconfirmed that
+the G-virus even exists.
+We're continuing with our
+investigation.
+
+=== S03 ===
+2) Regarding Mr. Brian Irons,
+Chief of the Raccoon City
+Police Dept.
+
+Mr.Irons has allegedly
+received a large sum of funds
+in bribes from Umbrella Inc.
+over the last five years.
+He was apparently involved in
+the cover up of the mansion
+lab case along with several
+
+=== S04 ===
+other incidents in which
+Umbrella appears to have
+direct involvement.
+Mr.Irons had been arrested
+under suspicion of rape on
+two separate counts during
+his years as a university
+student. He underwent
+psychiatric evaluation as a
+result of the charges but was
+released due to circumstantial
+
+=== S05 ===
+evidence as well as his
+phenomenal academic standing.
+
+As such, extreme caution is
+advised when dealing with him.
+
+        Jack Hamilton,
+        Section Chief
+        Internal Investigations
+        United States Federal
+        Police Department

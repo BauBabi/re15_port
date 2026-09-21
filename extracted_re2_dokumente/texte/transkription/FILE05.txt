@@ -1,0 +1,115 @@
+RE2 (Retail, Leon) — Dokument 5: Mail to the chief
+Item-Id 0x6D   Dokument-Index 5
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE05_*.png   (Rohdaten: hintergruende/seiten_roh/FILE05_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE05_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+MAIL TO THE CHIEF
+
+=== S01 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have lost the mansion lab
+facility due to the actions
+of the renegade operative,
+Albert Wesker.
+Fortunately, his interference
+will have no lasting effects
+upon our continued virus
+research.
+
+=== S02 ===
+Our only present concern is
+the presence of the remaining
+S.T.A.R.S. members: Redfield,
+Valentine, Burton, Chambers
+and Vickers.
+If it comes to light that the
+S.T.A.R.S. have any evidence
+as to the activities of our
+research, dispose of them in
+such a manner that would
+appear to be purely accidental.
+
+=== S03 ===
+Continue to monitor their
+progress and make certain
+their knowledge does not go
+public.
+Annette will continue to be
+your contact throughout this
+affair.
+
+              William Birkin
+
+=== S04 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+I have deposited the amount of
+US $10,000 to the account for
+your services this term as per
+our agreement.
+The development of the G-virus
+scheduled to replace the
+T-virus, is near completion.
+Once completed, I am certain
+
+=== S05 ===
+that I will be appointed to
+be a member of the executive
+board for Umbrella Inc.
+It is imperative that we
+proceed with extreme caution.
+Redfield and the remaining
+S.T.A.R.S. members are still
+attempting to uncover
+information on the project.
+Continue to monitor their
+activities and block all
+
+=== S06 ===
+attempts to investigate the
+underground research
+facilities.
+
+              William Birkin
+
+=== S07 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have a problem. I have
+received information informing
+me that Umbrella HQ has sent
+spies to recover my research
+on the G-virus. There are an
+unknown number of agents
+involved. They must not be
+allowed to take this project
+
+=== S08 ===
+away from me as it represents
+my entire life's work.
+Search the city thoroughly
+for any suspicious persons.
+Detain any such individuals by
+whatever means deemed
+necessary and contact me
+immediately through Annette.
+With these precautions, any
+possible threat should be
+eliminated.
+
+=== S09 ===
+I will not allow anyone to
+steal my work on the G-virus.
+Not even Umbrella...
+
+              William Birkin

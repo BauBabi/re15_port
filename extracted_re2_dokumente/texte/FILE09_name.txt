@@ -1,0 +1,5 @@
+Dokument 9   Item-Id 0x71
+Name (Bank EN @0x8009EA58): Operation report 2
+  Rohbytes: 2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0E F7
+Name (Bank 2 @0x8009E322, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 43 EF 90 EF 89 EF 8B EF 00 0E F7

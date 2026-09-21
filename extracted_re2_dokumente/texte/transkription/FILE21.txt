@@ -1,0 +1,69 @@
+RE2 (Retail, Leon) — Dokument 21: Lab security manual
+Item-Id 0x7D   Dokument-Index 21
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE21_*.png   (Rohdaten: hintergruende/seiten_roh/FILE21_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE21_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+LABORATORY SECURITY MANUAL
+
+=== S01 ===
+Laboratory Security Manual
+-Security measures in case of
+an emergency-
+
+In the instance of an
+uncontainable biohazardous
+breakout, all security
+measures will be directed
+toward the underground
+transport facility.
+
+=== S02 ===
+In the instance that  any
+abnormalities are detected
+among cargo in transit,
+all materials will
+automatically be transported
+from the loading zone to
+the designated high-speed
+train. At which point, all
+materials will be isolated
+and disposed of immediately.
+
+=== S03 ===
+In the instance of a Class I
+emergency, the entire train
+will be purged and disposed
+of without delay.
+
+In the instance that the lab
+itself becomes contaminated,
+the northern most route
+currently used to transport
+materials to and from the
+facility will be designated
+
+=== S04 ===
+as the emergency escape route.
+This route will secure passage
+to the relay point outside
+the city limits.
+
+Disclosure about any
+information regarding
+research conducted
+here, or the existence of
+this facility, is strictly
+prohibited.
+
+=== S05 ===
+Since it is top priority
+to keep all research
+classified, escape access
+may be denied under certain
+extenuating circumstances.

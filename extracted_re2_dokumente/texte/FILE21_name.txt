@@ -1,0 +1,5 @@
+Dokument 21   Item-Id 0x7D
+Name (Bank EN @0x8009EAFE): Lab security manual
+  Rohbytes: 28 3D 3E 00 4F 41 3F 51 4E 45 50 55 00 49 3D 4A 51 3D 48 F7
+Name (Bank 2 @0x8009E3AB, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 80 EF 81 EF 91 EF 92 EF 8E EF 8F C5 BC EE 0A A7 CF F7

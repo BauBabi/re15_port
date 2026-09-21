@@ -1,0 +1,5 @@
+Dokument 1   Item-Id 0x69
+Name (Bank EN @0x8009E9CC): Mail to Chris
+  Rohbytes: 29 3D 45 48 00 50 4B 00 1F 44 4E 45 4F F7
+Name (Bank 2 @0x8009E2C3, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: AE CE B3 57 69 6F EF 6A EF 77 EF 89 EF 8B EF 00 F7

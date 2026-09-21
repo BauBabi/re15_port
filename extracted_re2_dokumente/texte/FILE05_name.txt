@@ -1,0 +1,5 @@
+Dokument 5   Item-Id 0x6D
+Name (Bank EN @0x8009EA0C): Mail to the chief
+  Rohbytes: 29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42 F7
+Name (Bank 2 @0x8009E2F2, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 56 EF 07 57 69 6F C8 3B CF F7

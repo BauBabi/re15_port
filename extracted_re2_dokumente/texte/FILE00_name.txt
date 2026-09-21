@@ -1,0 +1,5 @@
+Dokument 0   Item-Id 0x68
+Name (Bank EN @0x8009E9BE): CHRIS^s diary
+  Rohbytes: 1F 24 2E 25 2F 3A 4F 00 40 45 3D 4E 55 F7
+Name (Bank 2 @0x8009E2BA, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: AE CE B3 6F EF 5F EF 45 F7

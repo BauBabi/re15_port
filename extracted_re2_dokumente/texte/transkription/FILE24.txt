@@ -1,0 +1,186 @@
+RE2 (Retail, Leon) — Dokument 24: Rookie files (B)
+Item-Id 0x80   Dokument-Index 24
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE24_*.png   (Rohdaten: hintergruende/seiten_roh/FILE24_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE24_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+HINT FILES FOR THE ROOKIE MODE
+
+=== S01 ===
+A statue of a woman bearing a
+water vessel.
+
+There's an inscription and a
+hole on the pedestal...
+
+The statue holding a red jewel...
+
+The two statues against each
+wall appear to have been moved
+before. Police staff have been
+
+=== S02 ===
+told not to move either unless
+necessary.
+
+The water tank on the roof.
+
+The tank ruptured on one
+occasion when the regulator
+valve was tightened too much.
+The valve handle was removed
+after the accident.
+
+=== S03 ===
+The door that has been
+destroyed by the helicopter.
+
+The only way to open the
+sealed door is with explosives.
+There is a report that
+recently confiscated
+explosives have been stored
+on the premises.
+
+=== S04 ===
+A picture in the chief's room.
+
+Word around the campfire is
+that there is a reason why the
+chief collects all these morose
+pictures other than as a hobby.
+He supposedly becomes furious
+if anyone touches them. He's
+even erupted at the cleaning
+staff.
+
+=== S05 ===
+A gas light in the press room.
+
+The main fire must be lit before
+turning on the gas lights.
+Turn them on in the correct
+order or they'll go out.
+
+Clock tower
+
+The ladder must be lowered to
+gain access to the upper level.
+
+=== S06 ===
+The clock has not been
+functioning since one of the
+gears was lost.
+
+A waterfall blocking the sewer.
+
+The water flow must be blocked
+to allow access to the other
+side of the waterfall.
+The small device on the wall off
+to the side is probably the key...
+
+=== S07 ===
+The ventilation fan and mobile
+bridge in the sewer.
+
+Both devices are operated with
+the use of special handles
+that are usually detached.
+
+The train turn table at the
+factory site.
+
+The control panel for the turn
+
+=== S08 ===
+table is set on the turn
+table itself.
+A custom key is required to
+activate it. Access is
+strictly prohibited.
+
+Restoring the power to the lab.
+
+The shutter can't be opened
+unless the breaker system
+has been restored.
+
+=== S09 ===
+The fuse consists of super
+conductive materials that can
+withstand high electrical
+output and must operate at
+extremely low temperatures.
+An insulated case is required
+during its transport.
+Low temperature conditions
+must be maintained during
+their installation.
+
+=== S10 ===
+How to use the computer in
+the lab.
+
+When typing the letter "A",
+move the cursor to "A" and
+then push the action button.
+When typing multiple letters,
+move the cursor over "*" and
+then push the action button.
+
+=== S11 ===
+Vaccine synthesis.
+
+Vaccine synthesis is a
+delicate process.
+Find the "cartridge"
+containing the vaccine
+precursor components and
+create the "base vaccine"
+using the activator -VAM-
+
+Place this into the synthesis
+
+=== S12 ===
+machine in the lab to prepare
+the completed vaccine.
+
+Elevator leading to the
+transport facility on the
+bottom floor.
+
+The transport facility and the
+lab are connected by a large
+elevator lift located at the
+warehouse.
+
+=== S13 ===
+It can be reached from the
+passageway to the south of the
+control room [downward on the
+map]. A key is needed to
+open the shutter.
+
+Transport train on the bottom
+floor of the lab.
+
+The emergency power has not
+been activated. The high
+
+=== S14 ===
+output generator will require
+the appropriate plug before
+it can be operated.
+The tunnel gate can't be
+raised until power has been
+supplied.
+
+=== S15 ===
+machine in the lab to prepare
+the completed vaccine.

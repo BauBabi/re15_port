@@ -1,0 +1,46 @@
+RE2 (Retail, Leon) — Dokument 8: Secretary's diary B
+Item-Id 0x70   Dokument-Index 8
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE08_*.png   (Rohdaten: hintergruende/seiten_roh/FILE08_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE08_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SECRETARY'S DIARY B
+
+=== S01 ===
+June 8th
+As I was straightening up
+the chief's room, he burst
+through the door with a
+furious look on his face.
+It's only been 2 months since
+I've started working here,
+but that's the second time
+I've seen him like this.
+
+=== S02 ===
+The last time was when I
+bumped into that statue, only
+this time he looked even more
+agitated than ever. I
+seriously thought for a
+moment that he was going to
+hurt me.
+
+=== S03 ===
+June 15th
+I finally discovered what the
+chief has been hiding all
+along... If he finds out that
+I know, my life will be in
+serious danger.
+It's getting late already.
+I'm just going to have to take
+this one day at a time...
+
+=== S04 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)

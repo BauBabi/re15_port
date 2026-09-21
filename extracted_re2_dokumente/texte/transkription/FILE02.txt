@@ -1,0 +1,25 @@
+RE2 (Retail, Leon) — Dokument 2: Memo to LEON
+Item-Id 0x6A   Dokument-Index 2
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE02_*.png   (Rohdaten: hintergruende/seiten_roh/FILE02_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE02_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+MEMO TO LEON
+
+=== S01 ===
+To Leon S. Kennedy,
+Congratulations on your
+assignment to the Raccoon City
+police department.
+We all look forward to having
+you as a part of our team and
+promise to take good care of
+you.
+Welcome aboard!
+        From all the guys
+          at the R.P.D.

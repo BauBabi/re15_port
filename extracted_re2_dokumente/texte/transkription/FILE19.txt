@@ -1,0 +1,15 @@
+RE2 (Retail, Leon) — Dokument 19: Film D
+Item-Id 0x7B   Dokument-Index 19
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE19_*.png   (Rohdaten: hintergruende/seiten_roh/FILE19_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE19_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+RECRUIT
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)

@@ -1,0 +1,5 @@
+Dokument 18   Item-Id 0x7A
+Name (Bank EN @0x8009EAD3): Sewer manager fax
+  Rohbytes: 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 42 3D 54 F7
+Name (Bank 2 @0x8009E381, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EE 20 EF 7D EF 47 EF 3D EF 9D C3 6F 22 1D 34 F7

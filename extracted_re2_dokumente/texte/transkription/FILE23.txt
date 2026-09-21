@@ -1,0 +1,151 @@
+RE2 (Retail, Leon) — Dokument 23: Rookie files (A)
+Item-Id 0x7F   Dokument-Index 23
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE23_*.png   (Rohdaten: hintergruende/seiten_roh/FILE23_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE23_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+HINT FILES FOR THE ROOKIE MODE
+
+=== S01 ===
+A statue of a woman bearing a
+water vessel.
+
+There's an inscription and a
+hole on the pedestal...
+
+=== S02 ===
+The statue holding a red jewel...
+
+The two statues against each
+wall appear to have been moved
+before. Police staff have been
+told not to move either unless
+necessary.
+
+=== S03 ===
+The water tank on the roof.
+
+The tank ruptured on one
+occasion when the regulator
+valve was tightened too much.
+The valve handle was removed
+after the accident.
+
+=== S04 ===
+A gas light in the press room.
+
+The main fire must be lit before
+turning on the gas lights.
+Turn them on in the correct
+order or they'll go out.
+
+=== S05 ===
+Clock tower
+
+The ladder must be lowered to
+gain access to the upper level.
+The clock has not been
+functioning since one of the
+gears was lost.
+
+=== S06 ===
+Sewage disposal plant door.
+
+The lock device is supposedly
+shaped like a chess board
+because the manager loves
+chess obsessively.
+
+=== S07 ===
+A waterfall blocking the sewer.
+
+The water flow must be blocked
+to allow access to the other
+side of the waterfall.
+The small device on the wall
+off to the side is probably
+the key...
+
+=== S08 ===
+The ventilation fan and mobile
+bridge in the sewer.
+
+Both devices are operated with
+the use of special handles
+that are usually detached.
+
+=== S09 ===
+The train turn table at the
+factory site.
+
+The control panel for the turn
+table is set on the turn
+table itself.
+A custom key is required to
+activate it. Access is
+strictly prohibited.
+
+=== S10 ===
+Restoring the power to the lab.
+
+The shutter can't be opened
+unless the breaker system
+has been restored.
+The fuse consists of super
+conductive materials that can
+withstand high electrical
+output and must operate at
+extremely low temperatures.
+
+=== S11 ===
+An insulated case is required
+during its transport.
+Low temperature conditions
+must be maintained during
+their installation.
+
+=== S12 ===
+How to use the computer in
+the lab.
+
+When typing the letter "A",
+move the cursor to "A" and
+then push the action button.
+When typing multiple letters,
+move the cursor over "*" and
+then push the action button.
+
+=== S13 ===
+Elevator leading to the
+transport facility on the
+bottom floor.
+
+The transport facility and the
+lab are connected by a large
+elevator lift located at the
+warehouse.
+It can be reached from the
+passageway to the south of the
+control room [downward on the
+
+=== S14 ===
+map]. A key is needed to
+open the shutter.
+
+=== S15 ===
+Transport train on the bottom
+floor of the lab.
+
+The emergency power has not
+been activated. The high
+output generator will require
+the appropriate plug before
+it can be operated.
+The tunnel gate can't be
+raised until power has been
+supplied.

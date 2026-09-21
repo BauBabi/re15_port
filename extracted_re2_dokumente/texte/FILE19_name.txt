@@ -1,0 +1,5 @@
+Dokument 19   Item-Id 0x7B
+Name (Bank EN @0x8009EAE5): Film D
+  Rohbytes: 22 45 48 49 00 20 F7
+Name (Bank 2 @0x8009E391, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: C2 EE 05 CF C7 20 F7

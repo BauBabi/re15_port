@@ -1,0 +1,33 @@
+RE2 (Retail, Leon) — Dokument 3: Police memorandum
+Item-Id 0x6B   Dokument-Index 3
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE03_*.png   (Rohdaten: hintergruende/seiten_roh/FILE03_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE03_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+POLICE MEMORANDUM
+
+=== S01 ===
+8/23/1998
+This letter is just to inform
+everyone about the recent
+movement of equipment that
+has happened during the
+precinct's rearrangement.
+
+
+The safe with four digit lock
+has been moved from the
+S.T.A.R.S. office on the second
+floor, to the eastern office
+
+=== S02 ===
+on the first floor.
+
+          "2236"
+
+   Raccoon Police Liaison Dept.

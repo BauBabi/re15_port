@@ -1,0 +1,100 @@
+RE2 (Retail, Leon) — Dokument 15: Watchman's diary
+Item-Id 0x77   Dokument-Index 15
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE15_*.png   (Rohdaten: hintergruende/seiten_roh/FILE15_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE15_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+WATCHMAN'S DIARY
+
+=== S01 ===
+August 11th
+I finally had the chance to
+see blue skies for the first
+time in ages, but it did
+little to lift my spirits.
+I was reprimanded by the
+chief for neglecting my
+duties while I was up on the
+clock tower.
+There's only one thing I
+still don't understand:
+
+=== S02 ===
+the chief seemed to be more
+concerned about the fact
+that I was up on the tower
+rather than that I was
+neglecting my duties.
+Why was access to the tower
+prohibited in the first
+place anyway?
+
+=== S03 ===
+September 5th
+I recently talked to the old
+man who works in the scrap
+yard out back. His name is
+Thomas. He's a quiet man and
+really seems to enjoy chess.
+He even went so far as to
+design a special key and lock
+engraved with chess pieces on
+them for one of the doors in
+the disposal yard.
+
+=== S04 ===
+We made plans to play chess
+tomorrow night. I can't help
+but wonder how good he is.
+One thing that's been
+bothering me about him is the
+way that he's always
+scratching himself... Does
+he have some sort of
+skin disease or he is just
+rude?
+
+=== S05 ===
+September 9th
+Thomas was a much better
+player than I had imagined.
+I used to think of myself as
+a fairly decent player, but
+he did a pretty good job of
+humbling me.
+About the only thing I imagine
+that could match his skills in
+chess is his appetite. All the
+guy did was talk about
+
+=== S06 ===
+food throughout the entire
+game. He sounded fairly
+healthy, but he didn't look
+quite right...
+I wonder if he's okay.
+
+=== S07 ===
+September 12th
+I was supposed to play
+another game of chess with
+Thomas, but we had to cancel
+it because he hasn't been
+feeling too well.
+He stopped by to see me, but
+I told him to go back and rest
+since he literally looked like
+the walking dead.
+
+=== S08 ===
+He insisted that he was just
+fine, but I could tell he was
+really having problems.
+Come to think of it, I haven't
+been feeling too good myself
+lately...

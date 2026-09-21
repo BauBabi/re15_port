@@ -1,0 +1,5 @@
+Dokument 13   Item-Id 0x75
+Name (Bank EN @0x8009EA8B): Film C
+  Rohbytes: 22 45 48 49 00 1F F7
+Name (Bank 2 @0x8009E349, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: C2 EE 05 CF C7 1F F7
