@@ -1,0 +1,10646 @@
+[
+{
+"file": "ROOM1000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 51
+},
+"omdl_tbl": 388,
+"size": 114320,
+"ents": []
+},
+{
+"file": "ROOM1010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 516,
+"size": 199360,
+"ents": [
+{
+"idx": 0,
+"tim_off": 173216,
+"md1_off": 11364,
+"md1_len": 1228,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 173216,
+"md1_off": 12592,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 173216,
+"md1_off": 12592,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 173216,
+"md1_off": 13204,
+"md1_len": 2180,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM1020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 356,
+"size": 184396,
+"ents": [
+{
+"idx": 0,
+"tim_off": 158764,
+"md1_off": 7892,
+"md1_len": 3716,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 158764,
+"md1_off": 11608,
+"md1_len": 612,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 158764,
+"md1_off": 11608,
+"md1_len": 612,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM1030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 612,
+"size": 68264,
+"ents": []
+},
+{
+"file": "ROOM1040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 31
+},
+"omdl_tbl": 324,
+"size": 112452,
+"ents": []
+},
+{
+"file": "ROOM1050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 324,
+"size": 59504,
+"ents": [
+{
+"idx": 0,
+"tim_off": 50768,
+"md1_off": 5464,
+"md1_len": 140,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 47
+},
+"omdl_tbl": 292,
+"size": 150996,
+"ents": [
+{
+"idx": 0,
+"tim_off": 82836,
+"md1_off": 5496,
+"md1_len": 2548,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 82836,
+"md1_off": 8044,
+"md1_len": 2772,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 82836,
+"md1_off": 8044,
+"md1_len": 2772,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 116148,
+"md1_off": 10816,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 116148,
+"md1_off": 12044,
+"md1_len": 2116,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 116148,
+"md1_off": 14160,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 116148,
+"md1_off": 14772,
+"md1_len": 484,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM1070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 48
+},
+"omdl_tbl": 356,
+"size": 42732,
+"ents": []
+},
+{
+"file": "ROOM1080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 612,
+"size": 262624,
+"ents": [
+{
+"idx": 0,
+"tim_off": 253888,
+"md1_off": 10004,
+"md1_len": 2116,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 70
+},
+"omdl_tbl": 612,
+"size": 287656,
+"ents": [
+{
+"idx": 0,
+"tim_off": 236392,
+"md1_off": 13404,
+"md1_len": 2396,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 236392,
+"md1_off": 15800,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 236392,
+"md1_off": 15800,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 236392,
+"md1_off": 15800,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 4,
+"tim_off": 236392,
+"md1_off": 16932,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 5,
+"tim_off": 236392,
+"md1_off": 16932,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 6,
+"tim_off": 236392,
+"md1_off": 16932,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 7,
+"tim_off": 262024,
+"md1_off": 18040,
+"md1_len": 4164,
+"tim_len": 25632
+},
+{
+"idx": 8,
+"tim_off": 262024,
+"md1_off": 18040,
+"md1_len": 4164,
+"tim_len": 25632
+},
+{
+"idx": 9,
+"tim_off": 262024,
+"md1_off": 22204,
+"md1_len": 612,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM10A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 65
+},
+"omdl_tbl": 612,
+"size": 142564,
+"ents": []
+},
+{
+"file": "ROOM10B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 612,
+"size": 165228,
+"ents": [
+{
+"idx": 0,
+"tim_off": 121644,
+"md1_off": 10440,
+"md1_len": 4228,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 121644,
+"md1_off": 10440,
+"md1_len": 4228,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 121644,
+"md1_off": 14668,
+"md1_len": 1644,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 121644,
+"md1_off": 16312,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 121644,
+"md1_off": 16548,
+"md1_len": 140,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 156492,
+"md1_off": 16688,
+"md1_len": 484,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM10C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 71
+},
+"omdl_tbl": 420,
+"size": 165848,
+"ents": [
+{
+"idx": 0,
+"tim_off": 90488,
+"md1_off": 7744,
+"md1_len": 4228,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 99224,
+"md1_off": 11972,
+"md1_len": 8860,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 132536,
+"md1_off": 20832,
+"md1_len": 8860,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM10D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 25
+},
+"omdl_tbl": 260,
+"size": 24656,
+"ents": [
+{
+"idx": 0,
+"tim_off": 15920,
+"md1_off": 2416,
+"md1_len": 500,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM10E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 86
+},
+"omdl_tbl": 548,
+"size": 104004,
+"ents": [
+{
+"idx": 0,
+"tim_off": 86564,
+"md1_off": 8992,
+"md1_len": 372,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 86564,
+"md1_off": 9364,
+"md1_len": 2036,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM10F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 22
+},
+"omdl_tbl": 228,
+"size": 171484,
+"ents": [
+{
+"idx": 0,
+"tim_off": 70012,
+"md1_off": 2300,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 103324,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 136636,
+"md1_off": 4112,
+"md1_len": 372,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 136636,
+"md1_off": 4484,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 136636,
+"md1_off": 5712,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 136636,
+"md1_off": 5948,
+"md1_len": 612,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM1100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 69
+},
+"omdl_tbl": 580,
+"size": 150308,
+"ents": [
+{
+"idx": 0,
+"tim_off": 108260,
+"md1_off": 13112,
+"md1_len": 6148,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 108260,
+"md1_off": 13112,
+"md1_len": 6148,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 108260,
+"md1_off": 13112,
+"md1_len": 6148,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 141572,
+"md1_off": 19260,
+"md1_len": 964,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 12,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 452,
+"size": 407508,
+"ents": [
+{
+"idx": 0,
+"tim_off": 280884,
+"md1_off": 13608,
+"md1_len": 10980,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 314196,
+"md1_off": 24588,
+"md1_len": 21364,
+"tim_len": 33824
+},
+{
+"idx": 2,
+"tim_off": 314196,
+"md1_off": 45952,
+"md1_len": 9396,
+"tim_len": 33824
+},
+{
+"idx": 3,
+"tim_off": 314196,
+"md1_off": 55348,
+"md1_len": 14572,
+"tim_len": 33824
+},
+{
+"idx": 4,
+"tim_off": 314196,
+"md1_off": 69920,
+"md1_len": 13452,
+"tim_len": 33824
+},
+{
+"idx": 5,
+"tim_off": 314196,
+"md1_off": 83372,
+"md1_len": 18420,
+"tim_len": 33824
+},
+{
+"idx": 6,
+"tim_off": 314196,
+"md1_off": 101792,
+"md1_len": 16836,
+"tim_len": 33824
+},
+{
+"idx": 7,
+"tim_off": 314196,
+"md1_off": 118628,
+"md1_len": 10100,
+"tim_len": 33824
+},
+{
+"idx": 8,
+"tim_off": 348020,
+"md1_off": 128728,
+"md1_len": 1028,
+"tim_len": 17440
+},
+{
+"idx": 9,
+"tim_off": 348020,
+"md1_off": 129756,
+"md1_len": 1708,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 365460,
+"md1_off": 131464,
+"md1_len": 556,
+"tim_len": 33312
+},
+{
+"idx": 11,
+"tim_off": 398772,
+"md1_off": 132020,
+"md1_len": 484,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 16,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 612,
+"size": 458232,
+"ents": [
+{
+"idx": 0,
+"tim_off": 290608,
+"md1_off": 19132,
+"md1_len": 2052,
+"tim_len": 33332
+},
+{
+"idx": 1,
+"tim_off": 290608,
+"md1_off": 19132,
+"md1_len": 2052,
+"tim_len": 33332
+},
+{
+"idx": 2,
+"tim_off": 290608,
+"md1_off": 19132,
+"md1_len": 2052,
+"tim_len": 33332
+},
+{
+"idx": 3,
+"tim_off": 323940,
+"md1_off": 21184,
+"md1_len": 2052,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 357252,
+"md1_off": 23236,
+"md1_len": 1084,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 390564,
+"md1_off": 24320,
+"md1_len": 1708,
+"tim_len": 34336
+},
+{
+"idx": 6,
+"tim_off": 390564,
+"md1_off": 26028,
+"md1_len": 2396,
+"tim_len": 34336
+},
+{
+"idx": 7,
+"tim_off": 390564,
+"md1_off": 28424,
+"md1_len": 1132,
+"tim_len": 34336
+},
+{
+"idx": 8,
+"tim_off": 390564,
+"md1_off": 28424,
+"md1_len": 1132,
+"tim_len": 34336
+},
+{
+"idx": 9,
+"tim_off": 390564,
+"md1_off": 28424,
+"md1_len": 1132,
+"tim_len": 34336
+},
+{
+"idx": 10,
+"tim_off": 390564,
+"md1_off": 29556,
+"md1_len": 1108,
+"tim_len": 34336
+},
+{
+"idx": 11,
+"tim_off": 390564,
+"md1_off": 29556,
+"md1_len": 1108,
+"tim_len": 34336
+},
+{
+"idx": 12,
+"tim_off": 390564,
+"md1_off": 29556,
+"md1_len": 1108,
+"tim_len": 34336
+},
+{
+"idx": 13,
+"tim_off": 424900,
+"md1_off": 30664,
+"md1_len": 2084,
+"tim_len": 33332
+},
+{
+"idx": 14,
+"tim_off": 424900,
+"md1_off": 30664,
+"md1_len": 2084,
+"tim_len": 33332
+},
+{
+"idx": 15,
+"tim_off": 424900,
+"md1_off": 30664,
+"md1_len": 2084,
+"tim_len": 33332
+}
+]
+},
+{
+"file": "ROOM1130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 59
+},
+"omdl_tbl": 356,
+"size": 188932,
+"ents": [
+{
+"idx": 0,
+"tim_off": 145348,
+"md1_off": 9564,
+"md1_len": 1268,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 145348,
+"md1_off": 10832,
+"md1_len": 684,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 145348,
+"md1_off": 11516,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 145348,
+"md1_off": 12128,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 180196,
+"md1_off": 12612,
+"md1_len": 236,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 324,
+"size": 49724,
+"ents": []
+},
+{
+"file": "ROOM1150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 548,
+"size": 347152,
+"ents": [
+{
+"idx": 0,
+"tim_off": 277456,
+"md1_off": 164156,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 277456,
+"md1_off": 164156,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 277456,
+"md1_off": 164768,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 277456,
+"md1_off": 167164,
+"md1_len": 964,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 277456,
+"md1_off": 168128,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 312304,
+"md1_off": 168740,
+"md1_len": 2260,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 312304,
+"md1_off": 171000,
+"md1_len": 828,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 312304,
+"md1_off": 171828,
+"md1_len": 372,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 312304,
+"md1_off": 171828,
+"md1_len": 372,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 312304,
+"md1_off": 172200,
+"md1_len": 1268,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM1160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 71
+},
+"omdl_tbl": 196,
+"size": 48784,
+"ents": [
+{
+"idx": 0,
+"tim_off": 40048,
+"md1_off": 2976,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 40048,
+"md1_off": 2976,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 40048,
+"md1_off": 2976,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM1170.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 44
+},
+"omdl_tbl": 356,
+"size": 49408,
+"ents": []
+},
+{
+"file": "ROOM1180.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 484,
+"size": 76560,
+"ents": []
+},
+{
+"file": "ROOM1190.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 87
+},
+"omdl_tbl": 292,
+"size": 43452,
+"ents": []
+},
+{
+"file": "ROOM11A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 39
+},
+"omdl_tbl": 228,
+"size": 43964,
+"ents": [
+{
+"idx": 0,
+"tim_off": 35228,
+"md1_off": 1484,
+"md1_len": 612,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 35228,
+"md1_off": 1484,
+"md1_len": 612,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM11B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 42
+},
+"omdl_tbl": 260,
+"size": 99452,
+"ents": []
+},
+{
+"file": "ROOM11C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 19
+},
+"omdl_tbl": 516,
+"size": 186416,
+"ents": [
+{
+"idx": 0,
+"tim_off": 127472,
+"md1_off": 4072,
+"md1_len": 37980,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 160784,
+"md1_off": 42052,
+"md1_len": 5988,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 160784,
+"md1_off": 48040,
+"md1_len": 3652,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 160784,
+"md1_off": 51692,
+"md1_len": 844,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM11D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 92
+},
+"omdl_tbl": 452,
+"size": 142220,
+"ents": []
+},
+{
+"file": "ROOM2000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 82
+},
+"omdl_tbl": 612,
+"size": 448820,
+"ents": [
+{
+"idx": 0,
+"tim_off": 305844,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 66080
+},
+{
+"idx": 1,
+"tim_off": 371924,
+"md1_off": 166080,
+"md1_len": 236,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 371924,
+"md1_off": 166316,
+"md1_len": 964,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 371924,
+"md1_off": 167280,
+"md1_len": 1228,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 398068,
+"md1_off": 168508,
+"md1_len": 6148,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 431380,
+"md1_off": 174656,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 431380,
+"md1_off": 175268,
+"md1_len": 2260,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM2010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 50
+},
+"omdl_tbl": 324,
+"size": 196852,
+"ents": [
+{
+"idx": 0,
+"tim_off": 104084,
+"md1_off": 4848,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 137396,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 170708,
+"md1_off": 6660,
+"md1_len": 372,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 170708,
+"md1_off": 7032,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 170708,
+"md1_off": 7516,
+"md1_len": 612,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM2020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 93
+},
+"omdl_tbl": 484,
+"size": 167840,
+"ents": [
+{
+"idx": 0,
+"tim_off": 106848,
+"md1_off": 12884,
+"md1_len": 404,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 106848,
+"md1_off": 13288,
+"md1_len": 140,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 106848,
+"md1_off": 13428,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 106848,
+"md1_off": 13664,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 141696,
+"md1_off": 16060,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 141696,
+"md1_off": 16060,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 6,
+"tim_off": 141696,
+"md1_off": 16672,
+"md1_len": 236,
+"tim_len": 26144
+},
+{
+"idx": 7,
+"tim_off": 141696,
+"md1_off": 16908,
+"md1_len": 2396,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM2030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 17
+},
+"omdl_tbl": 260,
+"size": 121804,
+"ents": [
+{
+"idx": 0,
+"tim_off": 53644,
+"md1_off": 2652,
+"md1_len": 4828,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 86956,
+"md1_off": 7480,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 86956,
+"md1_off": 8708,
+"md1_len": 2180,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 86956,
+"md1_off": 10888,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 86956,
+"md1_off": 11500,
+"md1_len": 2036,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM2040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 420,
+"size": 196792,
+"ents": [
+{
+"idx": 0,
+"tim_off": 121432,
+"md1_off": 10224,
+"md1_len": 3076,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 154744,
+"md1_off": 13300,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 154744,
+"md1_off": 13300,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 154744,
+"md1_off": 13300,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 188056,
+"md1_off": 15384,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 9,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 452,
+"size": 129352,
+"ents": [
+{
+"idx": 0,
+"tim_off": 103720,
+"md1_off": 9452,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 103720,
+"md1_off": 10584,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 103720,
+"md1_off": 11692,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 103720,
+"md1_off": 12824,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 4,
+"tim_off": 103720,
+"md1_off": 13932,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 5,
+"tim_off": 103720,
+"md1_off": 15064,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 6,
+"tim_off": 103720,
+"md1_off": 16172,
+"md1_len": 1132,
+"tim_len": 25632
+},
+{
+"idx": 7,
+"tim_off": 103720,
+"md1_off": 17304,
+"md1_len": 1108,
+"tim_len": 25632
+},
+{
+"idx": 8,
+"tim_off": 103720,
+"md1_off": 18412,
+"md1_len": 2396,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM2060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 516,
+"size": 97664,
+"ents": [
+{
+"idx": 0,
+"tim_off": 62784,
+"md1_off": 7828,
+"md1_len": 4228,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 62784,
+"md1_off": 12056,
+"md1_len": 236,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 0,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 0
+},
+{
+"idx": 3,
+"tim_off": 0,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 0
+},
+{
+"idx": 4,
+"tim_off": 0,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 0
+},
+{
+"idx": 5,
+"tim_off": 80224,
+"md1_off": 12292,
+"md1_len": 236,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 80224,
+"md1_off": 12528,
+"md1_len": 612,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM2070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 82
+},
+"omdl_tbl": 292,
+"size": 89304,
+"ents": [
+{
+"idx": 0,
+"tim_off": 80568,
+"md1_off": 5268,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 80568,
+"md1_off": 5268,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 452,
+"size": 185264,
+"ents": [
+{
+"idx": 0,
+"tim_off": 101200,
+"md1_off": 7624,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 134512,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 167824,
+"md1_off": 9436,
+"md1_len": 1228,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 167824,
+"md1_off": 10664,
+"md1_len": 236,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM2090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 56
+},
+"omdl_tbl": 356,
+"size": 78944,
+"ents": [
+{
+"idx": 0,
+"tim_off": 61504,
+"md1_off": 4916,
+"md1_len": 484,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 61504,
+"md1_off": 5400,
+"md1_len": 844,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM20A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 30
+},
+"omdl_tbl": 324,
+"size": 74824,
+"ents": [
+{
+"idx": 0,
+"tim_off": 57384,
+"md1_off": 3428,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 57384,
+"md1_off": 5824,
+"md1_len": 2396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM20B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 100
+},
+"omdl_tbl": 612,
+"size": 191432,
+"ents": [
+{
+"idx": 0,
+"tim_off": 88904,
+"md1_off": 15872,
+"md1_len": 1124,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 88904,
+"md1_off": 15872,
+"md1_len": 1124,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 88904,
+"md1_off": 16996,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 88904,
+"md1_off": 16996,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 88904,
+"md1_off": 16996,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 88904,
+"md1_off": 17608,
+"md1_len": 484,
+"tim_len": 34336
+},
+{
+"idx": 6,
+"tim_off": 123240,
+"md1_off": 18092,
+"md1_len": 236,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 123240,
+"md1_off": 18328,
+"md1_len": 2116,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 140680,
+"md1_off": 20444,
+"md1_len": 1428,
+"tim_len": 33312
+},
+{
+"idx": 9,
+"tim_off": 173992,
+"md1_off": 21872,
+"md1_len": 1228,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 173992,
+"md1_off": 23100,
+"md1_len": 612,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM20C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 484,
+"size": 122020,
+"ents": [
+{
+"idx": 0,
+"tim_off": 104580,
+"md1_off": 8476,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 104580,
+"md1_off": 10872,
+"md1_len": 484,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM20D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 57
+},
+"omdl_tbl": 356,
+"size": 159828,
+"ents": [
+{
+"idx": 0,
+"tim_off": 133684,
+"md1_off": 7944,
+"md1_len": 10100,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 133684,
+"md1_off": 18044,
+"md1_len": 844,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 133684,
+"md1_off": 18888,
+"md1_len": 612,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM20E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 324,
+"size": 142220,
+"ents": [
+{
+"idx": 0,
+"tim_off": 89932,
+"md1_off": 7992,
+"md1_len": 1268,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 89932,
+"md1_off": 9260,
+"md1_len": 1644,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 89932,
+"md1_off": 10904,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 89932,
+"md1_off": 11140,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 124780,
+"md1_off": 11624,
+"md1_len": 1628,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 124780,
+"md1_off": 13252,
+"md1_len": 2180,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM20F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 72
+},
+"omdl_tbl": 388,
+"size": 137536,
+"ents": [
+{
+"idx": 0,
+"tim_off": 86784,
+"md1_off": 9224,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 86784,
+"md1_off": 9224,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 86784,
+"md1_off": 9224,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 86784,
+"md1_off": 9224,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 86784,
+"md1_off": 9224,
+"md1_len": 2084,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 120096,
+"md1_off": 11308,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 120096,
+"md1_off": 11308,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 120096,
+"md1_off": 13704,
+"md1_len": 484,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM2100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 93
+},
+"omdl_tbl": 260,
+"size": 84128,
+"ents": [
+{
+"idx": 0,
+"tim_off": 57984,
+"md1_off": 5620,
+"md1_len": 468,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 57984,
+"md1_off": 6088,
+"md1_len": 828,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 57984,
+"md1_off": 6916,
+"md1_len": 500,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM2110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 516,
+"size": 108496,
+"ents": []
+},
+{
+"file": "ROOM2120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 36
+},
+"omdl_tbl": 260,
+"size": 65340,
+"ents": [
+{
+"idx": 0,
+"tim_off": 56604,
+"md1_off": 2860,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 388,
+"size": 139448,
+"ents": [
+{
+"idx": 0,
+"tim_off": 62552,
+"md1_off": 7552,
+"md1_len": 1428,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 95864,
+"md1_off": 8980,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 95864,
+"md1_off": 9592,
+"md1_len": 124,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 95864,
+"md1_off": 9716,
+"md1_len": 332,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 95864,
+"md1_off": 9716,
+"md1_len": 332,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 95864,
+"md1_off": 9716,
+"md1_len": 332,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 95864,
+"md1_off": 9716,
+"md1_len": 332,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 95864,
+"md1_off": 9716,
+"md1_len": 332,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 95864,
+"md1_off": 10048,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 130712,
+"md1_off": 10284,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 260,
+"size": 88224,
+"ents": [
+{
+"idx": 0,
+"tim_off": 44640,
+"md1_off": 3056,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 44640,
+"md1_off": 3056,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 44640,
+"md1_off": 3668,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 44640,
+"md1_off": 3668,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 44640,
+"md1_off": 3668,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 44640,
+"md1_off": 4152,
+"md1_len": 396,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 44640,
+"md1_off": 4548,
+"md1_len": 780,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 79488,
+"md1_off": 5328,
+"md1_len": 500,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 81
+},
+"omdl_tbl": 324,
+"size": 124684,
+"ents": [
+{
+"idx": 0,
+"tim_off": 91372,
+"md1_off": 7316,
+"md1_len": 2604,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 91372,
+"md1_off": 7316,
+"md1_len": 2604,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM2160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 484,
+"size": 341304,
+"ents": [
+{
+"idx": 0,
+"tim_off": 266488,
+"md1_off": 163020,
+"md1_len": 4980,
+"tim_len": 66080
+},
+{
+"idx": 1,
+"tim_off": 266488,
+"md1_off": 168000,
+"md1_len": 3668,
+"tim_len": 66080
+},
+{
+"idx": 2,
+"tim_off": 332568,
+"md1_off": 171668,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM2190.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 26
+},
+"omdl_tbl": 388,
+"size": 138460,
+"ents": [
+{
+"idx": 0,
+"tim_off": 121020,
+"md1_off": 5752,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 121020,
+"md1_off": 6364,
+"md1_len": 844,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM21A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 79
+},
+"omdl_tbl": 356,
+"size": 185672,
+"ents": [
+{
+"idx": 0,
+"tim_off": 109288,
+"md1_off": 10664,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 118024,
+"md1_off": 13060,
+"md1_len": 3740,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 118024,
+"md1_off": 13060,
+"md1_len": 3740,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 151336,
+"md1_off": 16800,
+"md1_len": 1860,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 151336,
+"md1_off": 18660,
+"md1_len": 1116,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 151336,
+"md1_off": 19776,
+"md1_len": 2396,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOM21B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 612,
+"size": 280496,
+"ents": [
+{
+"idx": 0,
+"tim_off": 136976,
+"md1_off": 12412,
+"md1_len": 2740,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 170288,
+"md1_off": 15152,
+"md1_len": 2844,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 203600,
+"md1_off": 17996,
+"md1_len": 852,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 236912,
+"md1_off": 18848,
+"md1_len": 1188,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 236912,
+"md1_off": 20036,
+"md1_len": 1188,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 236912,
+"md1_off": 21224,
+"md1_len": 1188,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 236912,
+"md1_off": 22412,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 271760,
+"md1_off": 23024,
+"md1_len": 468,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM3000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 72
+},
+"omdl_tbl": 484,
+"size": 149788,
+"ents": [
+{
+"idx": 0,
+"tim_off": 107740,
+"md1_off": 7216,
+"md1_len": 5900,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 141052,
+"md1_off": 13116,
+"md1_len": 468,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM3010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 73
+},
+"omdl_tbl": 580,
+"size": 300372,
+"ents": [
+{
+"idx": 0,
+"tim_off": 239892,
+"md1_off": 16544,
+"md1_len": 2868,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 239892,
+"md1_off": 19412,
+"md1_len": 404,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 239892,
+"md1_off": 19816,
+"md1_len": 1268,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 274228,
+"md1_off": 21084,
+"md1_len": 1116,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 274228,
+"md1_off": 22200,
+"md1_len": 2396,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 274228,
+"md1_off": 24596,
+"md1_len": 2396,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM3020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 34
+},
+"omdl_tbl": 292,
+"size": 120932,
+"ents": [
+{
+"idx": 0,
+"tim_off": 104004,
+"md1_off": 3268,
+"md1_len": 3452,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 104004,
+"md1_off": 6720,
+"md1_len": 7324,
+"tim_len": 16928
+},
+{
+"idx": 2,
+"tim_off": 104004,
+"md1_off": 14044,
+"md1_len": 4804,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM3030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 74
+},
+"omdl_tbl": 420,
+"size": 146156,
+"ents": [
+{
+"idx": 0,
+"tim_off": 94380,
+"md1_off": 9088,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 94380,
+"md1_off": 10484,
+"md1_len": 1644,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 94380,
+"md1_off": 12128,
+"md1_len": 1708,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 94380,
+"md1_off": 13836,
+"md1_len": 1740,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 129228,
+"md1_off": 15576,
+"md1_len": 1444,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM3040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 87
+},
+"omdl_tbl": 356,
+"size": 261920,
+"ents": [
+{
+"idx": 0,
+"tim_off": 236288,
+"md1_off": 8188,
+"md1_len": 1900,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 236288,
+"md1_off": 10088,
+"md1_len": 1268,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM3050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 292,
+"size": 162884,
+"ents": [
+{
+"idx": 0,
+"tim_off": 112132,
+"md1_off": 6700,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 145444,
+"md1_off": 11560,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 145444,
+"md1_off": 11560,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 145444,
+"md1_off": 11560,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 145444,
+"md1_off": 13956,
+"md1_len": 2396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM3060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 97
+},
+"omdl_tbl": 420,
+"size": 198900,
+"ents": [
+{
+"idx": 0,
+"tim_off": 123028,
+"md1_off": 11136,
+"md1_len": 5556,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 123028,
+"md1_off": 11136,
+"md1_len": 5556,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 123028,
+"md1_off": 11136,
+"md1_len": 5556,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 156340,
+"md1_off": 16692,
+"md1_len": 748,
+"tim_len": 25632
+},
+{
+"idx": 4,
+"tim_off": 156340,
+"md1_off": 17440,
+"md1_len": 188,
+"tim_len": 25632
+},
+{
+"idx": 5,
+"tim_off": 156340,
+"md1_off": 17440,
+"md1_len": 188,
+"tim_len": 25632
+},
+{
+"idx": 6,
+"tim_off": 156340,
+"md1_off": 17628,
+"md1_len": 236,
+"tim_len": 25632
+},
+{
+"idx": 7,
+"tim_off": 181972,
+"md1_off": 17864,
+"md1_len": 236,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM3070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 420,
+"size": 151196,
+"ents": [
+{
+"idx": 0,
+"tim_off": 100412,
+"md1_off": 6388,
+"md1_len": 236,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 109148,
+"md1_off": 6624,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 142460,
+"md1_off": 11484,
+"md1_len": 484,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM3080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 48
+},
+"omdl_tbl": 388,
+"size": 60532,
+"ents": []
+},
+{
+"file": "ROOM3090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 324,
+"size": 100796,
+"ents": [
+{
+"idx": 0,
+"tim_off": 67484,
+"md1_off": 5180,
+"md1_len": 6148,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM30A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 78
+},
+"omdl_tbl": 356,
+"size": 117768,
+"ents": [
+{
+"idx": 0,
+"tim_off": 100840,
+"md1_off": 6452,
+"md1_len": 452,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 100840,
+"md1_off": 6904,
+"md1_len": 420,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM30B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 37
+},
+"omdl_tbl": 388,
+"size": 307900,
+"ents": [
+{
+"idx": 0,
+"tim_off": 231004,
+"md1_off": 7764,
+"md1_len": 236,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 231004,
+"md1_off": 8000,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 231004,
+"md1_off": 8484,
+"md1_len": 1268,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 257148,
+"md1_off": 9752,
+"md1_len": 7996,
+"tim_len": 33824
+},
+{
+"idx": 4,
+"tim_off": 257148,
+"md1_off": 17748,
+"md1_len": 4260,
+"tim_len": 33824
+},
+{
+"idx": 5,
+"tim_off": 257148,
+"md1_off": 22008,
+"md1_len": 8388,
+"tim_len": 33824
+},
+{
+"idx": 6,
+"tim_off": 290972,
+"md1_off": 30396,
+"md1_len": 1812,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM30C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 17,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 644,
+"size": 141344,
+"ents": [
+{
+"idx": 0,
+"tim_off": 57280,
+"md1_off": 1336,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 90592,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 123904,
+"md1_off": 3148,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 123904,
+"md1_off": 5544,
+"md1_len": 1228,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM30D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 2,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 164,
+"size": 119644,
+"ents": [
+{
+"idx": 0,
+"tim_off": 53020,
+"md1_off": 700,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 86332,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM4000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 63
+},
+"omdl_tbl": 452,
+"size": 195780,
+"ents": [
+{
+"idx": 0,
+"tim_off": 153220,
+"md1_off": 7072,
+"md1_len": 1068,
+"tim_len": 33824
+},
+{
+"idx": 1,
+"tim_off": 153220,
+"md1_off": 8140,
+"md1_len": 540,
+"tim_len": 33824
+},
+{
+"idx": 2,
+"tim_off": 153220,
+"md1_off": 8680,
+"md1_len": 428,
+"tim_len": 33824
+},
+{
+"idx": 3,
+"tim_off": 187044,
+"md1_off": 9108,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 4,
+"tim_off": 187044,
+"md1_off": 9108,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM4010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 80
+},
+"omdl_tbl": 452,
+"size": 335276,
+"ents": [
+{
+"idx": 0,
+"tim_off": 158444,
+"md1_off": 12472,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 191756,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 225068,
+"md1_off": 14284,
+"md1_len": 708,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 258380,
+"md1_off": 14992,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 291692,
+"md1_off": 19852,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 291692,
+"md1_off": 21080,
+"md1_len": 468,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 291692,
+"md1_off": 21548,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 291692,
+"md1_off": 22032,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 326540,
+"md1_off": 22532,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 9,
+"tim_off": 326540,
+"md1_off": 22532,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 10,
+"tim_off": 326540,
+"md1_off": 22532,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM4020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 47
+},
+"omdl_tbl": 260,
+"size": 148832,
+"ents": [
+{
+"idx": 0,
+"tim_off": 123200,
+"md1_off": 2916,
+"md1_len": 1156,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 123200,
+"md1_off": 4072,
+"md1_len": 2396,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 123200,
+"md1_off": 4072,
+"md1_len": 2396,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM4030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 77
+},
+"omdl_tbl": 580,
+"size": 375584,
+"ents": [
+{
+"idx": 0,
+"tim_off": 165440,
+"md1_off": 12832,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 198752,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 232064,
+"md1_off": 14644,
+"md1_len": 1788,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 265376,
+"md1_off": 16432,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 298688,
+"md1_off": 21292,
+"md1_len": 708,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 332000,
+"md1_off": 22000,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 332000,
+"md1_off": 23228,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 332000,
+"md1_off": 23840,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 332000,
+"md1_off": 23840,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 332000,
+"md1_off": 24324,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 366848,
+"md1_off": 24824,
+"md1_len": 468,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM4040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 53
+},
+"omdl_tbl": 452,
+"size": 185172,
+"ents": [
+{
+"idx": 0,
+"tim_off": 134932,
+"md1_off": 7172,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 134932,
+"md1_off": 7172,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 168244,
+"md1_off": 12032,
+"md1_len": 236,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM4050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 84
+},
+"omdl_tbl": 420,
+"size": 170064,
+"ents": [
+{
+"idx": 0,
+"tim_off": 144432,
+"md1_off": 6784,
+"md1_len": 1516,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 144432,
+"md1_off": 8300,
+"md1_len": 1156,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 144432,
+"md1_off": 9456,
+"md1_len": 828,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM4070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 20
+},
+"omdl_tbl": 324,
+"size": 224484,
+"ents": [
+{
+"idx": 0,
+"tim_off": 190148,
+"md1_off": 4376,
+"md1_len": 1772,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 190148,
+"md1_off": 6148,
+"md1_len": 964,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 190148,
+"md1_off": 7112,
+"md1_len": 964,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOM4080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 82
+},
+"omdl_tbl": 612,
+"size": 299740,
+"ents": [
+{
+"idx": 0,
+"tim_off": 181308,
+"md1_off": 16096,
+"md1_len": 3180,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 181308,
+"md1_off": 19276,
+"md1_len": 2116,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 206940,
+"md1_off": 21392,
+"md1_len": 556,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 240252,
+"md1_off": 21948,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 240252,
+"md1_off": 21948,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 240252,
+"md1_off": 24344,
+"md1_len": 484,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 257692,
+"md1_off": 24828,
+"md1_len": 3012,
+"tim_len": 33312
+},
+{
+"idx": 7,
+"tim_off": 291004,
+"md1_off": 27840,
+"md1_len": 1228,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM4090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 76
+},
+"omdl_tbl": 612,
+"size": 417152,
+"ents": [
+{
+"idx": 0,
+"tim_off": 305920,
+"md1_off": 17196,
+"md1_len": 3180,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 305920,
+"md1_off": 20376,
+"md1_len": 1804,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 305920,
+"md1_off": 22180,
+"md1_len": 828,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 331552,
+"md1_off": 23008,
+"md1_len": 7996,
+"tim_len": 33824
+},
+{
+"idx": 4,
+"tim_off": 331552,
+"md1_off": 31004,
+"md1_len": 4260,
+"tim_len": 33824
+},
+{
+"idx": 5,
+"tim_off": 331552,
+"md1_off": 35264,
+"md1_len": 8388,
+"tim_len": 33824
+},
+{
+"idx": 6,
+"tim_off": 365376,
+"md1_off": 43652,
+"md1_len": 1812,
+"tim_len": 34336
+},
+{
+"idx": 7,
+"tim_off": 365376,
+"md1_off": 45464,
+"md1_len": 964,
+"tim_len": 34336
+},
+{
+"idx": 8,
+"tim_off": 365376,
+"md1_off": 46428,
+"md1_len": 236,
+"tim_len": 34336
+},
+{
+"idx": 9,
+"tim_off": 399712,
+"md1_off": 46664,
+"md1_len": 2116,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 399712,
+"md1_off": 48780,
+"md1_len": 1492,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM40A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 77
+},
+"omdl_tbl": 580,
+"size": 262972,
+"ents": [
+{
+"idx": 0,
+"tim_off": 195836,
+"md1_off": 14616,
+"md1_len": 1804,
+"tim_len": 33824
+},
+{
+"idx": 1,
+"tim_off": 195836,
+"md1_off": 16420,
+"md1_len": 4964,
+"tim_len": 33824
+},
+{
+"idx": 2,
+"tim_off": 229660,
+"md1_off": 21384,
+"md1_len": 1604,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM40B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 50852,
+"ents": [
+{
+"idx": 0,
+"tim_off": 17540,
+"md1_off": 1948,
+"md1_len": 1740,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 17540,
+"md1_off": 1948,
+"md1_len": 1740,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM40C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 121984,
+"ents": []
+},
+{
+"file": "ROOM40D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 260,
+"size": 40624,
+"ents": []
+},
+{
+"file": "ROOM40E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 612,
+"size": 240484,
+"ents": [
+{
+"idx": 0,
+"tim_off": 156964,
+"md1_off": 17084,
+"md1_len": 9156,
+"tim_len": 66080
+},
+{
+"idx": 1,
+"tim_off": 223044,
+"md1_off": 26240,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 223044,
+"md1_off": 26852,
+"md1_len": 484,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM40F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 14608,
+"ents": []
+},
+{
+"file": "ROOM4100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 45
+},
+"omdl_tbl": 356,
+"size": 279252,
+"ents": [
+{
+"idx": 0,
+"tim_off": 229012,
+"md1_off": 8124,
+"md1_len": 1804,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 245940,
+"md1_off": 9928,
+"md1_len": 21484,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 245940,
+"md1_off": 9928,
+"md1_len": 21484,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM5000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 420,
+"size": 219888,
+"ents": [
+{
+"idx": 0,
+"tim_off": 153808,
+"md1_off": 10784,
+"md1_len": 9156,
+"tim_len": 66080
+}
+]
+},
+{
+"file": "ROOM5010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 516,
+"size": 181120,
+"ents": [
+{
+"idx": 0,
+"tim_off": 106304,
+"md1_off": 6816,
+"md1_len": 236,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 115040,
+"md1_off": 7052,
+"md1_len": 9156,
+"tim_len": 66080
+}
+]
+},
+{
+"file": "ROOM5020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 76
+},
+"omdl_tbl": 516,
+"size": 62720,
+"ents": [
+{
+"idx": 0,
+"tim_off": 45280,
+"md1_off": 5708,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 45280,
+"md1_off": 5708,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 45280,
+"md1_off": 8104,
+"md1_len": 684,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM5030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 39
+},
+"omdl_tbl": 196,
+"size": 229884,
+"ents": [
+{
+"idx": 0,
+"tim_off": 119676,
+"md1_off": 4564,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 152988,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 186300,
+"md1_off": 6376,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 186300,
+"md1_off": 6876,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 186300,
+"md1_off": 7360,
+"md1_len": 2180,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 186300,
+"md1_off": 9540,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 221148,
+"md1_off": 9776,
+"md1_len": 1228,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM5040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 63
+},
+"omdl_tbl": 420,
+"size": 127532,
+"ents": [
+{
+"idx": 0,
+"tim_off": 101900,
+"md1_off": 9116,
+"md1_len": 612,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 101900,
+"md1_off": 9728,
+"md1_len": 236,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM5050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 44
+},
+"omdl_tbl": 548,
+"size": 206076,
+"ents": [
+{
+"idx": 0,
+"tim_off": 179932,
+"md1_off": 9584,
+"md1_len": 492,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 179932,
+"md1_off": 10076,
+"md1_len": 2180,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 179932,
+"md1_off": 12256,
+"md1_len": 500,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM5060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 324,
+"size": 132796,
+"ents": [
+{
+"idx": 0,
+"tim_off": 73852,
+"md1_off": 4436,
+"md1_len": 4300,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 107164,
+"md1_off": 8736,
+"md1_len": 612,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 107164,
+"md1_off": 9348,
+"md1_len": 236,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM5070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 388,
+"size": 126236,
+"ents": [
+{
+"idx": 0,
+"tim_off": 66760,
+"md1_off": 10492,
+"md1_len": 236,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 66760,
+"md1_off": 10728,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 66760,
+"md1_off": 11212,
+"md1_len": 140,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 92904,
+"md1_off": 11352,
+"md1_len": 140,
+"tim_len": 33332
+},
+{
+"idx": 4,
+"tim_off": 92904,
+"md1_off": 11352,
+"md1_len": 140,
+"tim_len": 33332
+},
+{
+"idx": 5,
+"tim_off": 92904,
+"md1_off": 11352,
+"md1_len": 140,
+"tim_len": 33332
+}
+]
+},
+{
+"file": "ROOM5080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 51
+},
+"omdl_tbl": 516,
+"size": 64532,
+"ents": [
+{
+"idx": 0,
+"tim_off": 47092,
+"md1_off": 5808,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 47092,
+"md1_off": 5808,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 47092,
+"md1_off": 8204,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 47092,
+"md1_off": 8204,
+"md1_len": 2396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM5090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 17,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 388,
+"size": 98244,
+"ents": [
+{
+"idx": 0,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 4,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 5,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 6,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 7,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 8,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 9,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 10,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 11,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 12,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 13,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 14,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 15,
+"tim_off": 72612,
+"md1_off": 13424,
+"md1_len": 2004,
+"tim_len": 25632
+},
+{
+"idx": 16,
+"tim_off": 72612,
+"md1_off": 15428,
+"md1_len": 1444,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM6000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 69
+},
+"omdl_tbl": 388,
+"size": 29452,
+"ents": []
+},
+{
+"file": "ROOM6010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 16
+},
+"omdl_tbl": 292,
+"size": 122344,
+"ents": []
+},
+{
+"file": "ROOM6020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 388,
+"size": 237704,
+"ents": [
+{
+"idx": 0,
+"tim_off": 203368,
+"md1_off": 8532,
+"md1_len": 564,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 203368,
+"md1_off": 8532,
+"md1_len": 564,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 203368,
+"md1_off": 8532,
+"md1_len": 564,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 203368,
+"md1_off": 9096,
+"md1_len": 2444,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 203368,
+"md1_off": 11540,
+"md1_len": 500,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOM6030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 94
+},
+"omdl_tbl": 612,
+"size": 446516,
+"ents": [
+{
+"idx": 0,
+"tim_off": 236372,
+"md1_off": 15636,
+"md1_len": 2868,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 269684,
+"md1_off": 18504,
+"md1_len": 5556,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 302996,
+"md1_off": 24060,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 336308,
+"md1_off": 28920,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 369620,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 402932,
+"md1_off": 30732,
+"md1_len": 1268,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 402932,
+"md1_off": 32000,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 402932,
+"md1_off": 34396,
+"md1_len": 1228,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 402932,
+"md1_off": 35624,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 437780,
+"md1_off": 36108,
+"md1_len": 468,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM6040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 612,
+"size": 322456,
+"ents": [
+{
+"idx": 0,
+"tim_off": 287608,
+"md1_off": 20692,
+"md1_len": 1532,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 287608,
+"md1_off": 22224,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 287608,
+"md1_off": 22460,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 287608,
+"md1_off": 22944,
+"md1_len": 388,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM6050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 75
+},
+"omdl_tbl": 420,
+"size": 114156,
+"ents": [
+{
+"idx": 0,
+"tim_off": 80844,
+"md1_off": 8616,
+"md1_len": 4860,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM6060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 420,
+"size": 62660,
+"ents": []
+},
+{
+"file": "ROOM6070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 47
+},
+"omdl_tbl": 548,
+"size": 200540,
+"ents": [
+{
+"idx": 0,
+"tim_off": 107772,
+"md1_off": 6060,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 141084,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 174396,
+"md1_off": 7872,
+"md1_len": 2396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 174396,
+"md1_off": 10268,
+"md1_len": 1228,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 174396,
+"md1_off": 11496,
+"md1_len": 500,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM6080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 612,
+"size": 137360,
+"ents": [
+{
+"idx": 0,
+"tim_off": 128624,
+"md1_off": 11776,
+"md1_len": 1988,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM6090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 10
+},
+"omdl_tbl": 228,
+"size": 61080,
+"ents": [
+{
+"idx": 0,
+"tim_off": 43640,
+"md1_off": 1904,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 43640,
+"md1_off": 1904,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 43640,
+"md1_off": 4300,
+"md1_len": 484,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 43640,
+"md1_off": 4300,
+"md1_len": 484,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOM60A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 9,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 36
+},
+"omdl_tbl": 196,
+"size": 278852,
+"ents": [
+{
+"idx": 0,
+"tim_off": 193764,
+"md1_off": 6996,
+"md1_len": 1420,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 193764,
+"md1_off": 6996,
+"md1_len": 1420,
+"tim_len": 16928
+},
+{
+"idx": 2,
+"tim_off": 193764,
+"md1_off": 6996,
+"md1_len": 1420,
+"tim_len": 16928
+},
+{
+"idx": 3,
+"tim_off": 193764,
+"md1_off": 6996,
+"md1_len": 1420,
+"tim_len": 16928
+},
+{
+"idx": 4,
+"tim_off": 210692,
+"md1_off": 8416,
+"md1_len": 3012,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 244004,
+"md1_off": 11428,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 244004,
+"md1_off": 12040,
+"md1_len": 404,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 244004,
+"md1_off": 12444,
+"md1_len": 1956,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 244004,
+"md1_off": 14400,
+"md1_len": 468,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOM60B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 388,
+"size": 133672,
+"ents": [
+{
+"idx": 0,
+"tim_off": 100360,
+"md1_off": 6824,
+"md1_len": 1852,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM60C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 420,
+"size": 351208,
+"ents": [
+{
+"idx": 0,
+"tim_off": 275336,
+"md1_off": 10920,
+"md1_len": 1852,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 308648,
+"md1_off": 12772,
+"md1_len": 4164,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 308648,
+"md1_off": 16936,
+"md1_len": 2444,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 334280,
+"md1_off": 19380,
+"md1_len": 4164,
+"tim_len": 16928
+},
+{
+"idx": 4,
+"tim_off": 334280,
+"md1_off": 19380,
+"md1_len": 4164,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOM60D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 41
+},
+"omdl_tbl": 292,
+"size": 196068,
+"ents": [
+{
+"idx": 0,
+"tim_off": 127876,
+"md1_off": 3800,
+"md1_len": 1356,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 127876,
+"md1_off": 3800,
+"md1_len": 1356,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 127876,
+"md1_off": 5156,
+"md1_len": 3676,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 127876,
+"md1_off": 8832,
+"md1_len": 1988,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 154020,
+"md1_off": 10820,
+"md1_len": 9076,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 154020,
+"md1_off": 19896,
+"md1_len": 8052,
+"tim_len": 33312
+},
+{
+"idx": 6,
+"tim_off": 154020,
+"md1_off": 27948,
+"md1_len": 7908,
+"tim_len": 33312
+},
+{
+"idx": 7,
+"tim_off": 187332,
+"md1_off": 35856,
+"md1_len": 2180,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM60E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 2,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 8
+},
+"omdl_tbl": 164,
+"size": 64980,
+"ents": [
+{
+"idx": 0,
+"tim_off": 56244,
+"md1_off": 2296,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 56244,
+"md1_off": 2296,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 56244,
+"md1_off": 2296,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 56244,
+"md1_off": 2296,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM60F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 28
+},
+"omdl_tbl": 260,
+"size": 76432,
+"ents": [
+{
+"idx": 0,
+"tim_off": 50288,
+"md1_off": 2768,
+"md1_len": 780,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 50288,
+"md1_off": 3548,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 50288,
+"md1_off": 4032,
+"md1_len": 772,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM6100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 452,
+"size": 135312,
+"ents": [
+{
+"idx": 0,
+"tim_off": 109168,
+"md1_off": 5896,
+"md1_len": 236,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 109168,
+"md1_off": 6132,
+"md1_len": 2180,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 109168,
+"md1_off": 8312,
+"md1_len": 500,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM6110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 98
+},
+"omdl_tbl": 612,
+"size": 234008,
+"ents": [
+{
+"idx": 0,
+"tim_off": 207864,
+"md1_off": 17928,
+"md1_len": 1988,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 207864,
+"md1_off": 19916,
+"md1_len": 1492,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 207864,
+"md1_off": 21408,
+"md1_len": 2444,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOM6120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 13,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 34
+},
+"omdl_tbl": 484,
+"size": 193932,
+"ents": [
+{
+"idx": 0,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 109868,
+"md1_off": 6776,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 109868,
+"md1_off": 6940,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 109868,
+"md1_off": 6940,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 109868,
+"md1_off": 6940,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 9,
+"tim_off": 109868,
+"md1_off": 6940,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 109868,
+"md1_off": 6940,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 11,
+"tim_off": 127308,
+"md1_off": 7104,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 12,
+"tim_off": 160620,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM6130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 62
+},
+"omdl_tbl": 324,
+"size": 189268,
+"ents": [
+{
+"idx": 0,
+"tim_off": 89856,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 66080
+},
+{
+"idx": 1,
+"tim_off": 155936,
+"md1_off": 5108,
+"md1_len": 316,
+"tim_len": 33332
+},
+{
+"idx": 2,
+"tim_off": 155936,
+"md1_off": 5108,
+"md1_len": 316,
+"tim_len": 33332
+},
+{
+"idx": 3,
+"tim_off": 155936,
+"md1_off": 5108,
+"md1_len": 316,
+"tim_len": 33332
+},
+{
+"idx": 4,
+"tim_off": 155936,
+"md1_off": 5108,
+"md1_len": 316,
+"tim_len": 33332
+}
+]
+},
+{
+"file": "ROOM6140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 62
+},
+"omdl_tbl": 548,
+"size": 112008,
+"ents": [
+{
+"idx": 0,
+"tim_off": 103272,
+"md1_off": 4512,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM6150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 97
+},
+"omdl_tbl": 548,
+"size": 243124,
+"ents": [
+{
+"idx": 0,
+"tim_off": 131892,
+"md1_off": 13984,
+"md1_len": 468,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 131892,
+"md1_off": 13984,
+"md1_len": 468,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 165204,
+"md1_off": 14452,
+"md1_len": 1132,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 165204,
+"md1_off": 15584,
+"md1_len": 1956,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 165204,
+"md1_off": 17540,
+"md1_len": 684,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 199540,
+"md1_off": 18224,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 199540,
+"md1_off": 18724,
+"md1_len": 844,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 199540,
+"md1_off": 19568,
+"md1_len": 844,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 199540,
+"md1_off": 20412,
+"md1_len": 236,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 234388,
+"md1_off": 20648,
+"md1_len": 2180,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM6160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 91
+},
+"omdl_tbl": 484,
+"size": 184204,
+"ents": [
+{
+"idx": 0,
+"tim_off": 125260,
+"md1_off": 9756,
+"md1_len": 1508,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 158572,
+"md1_off": 11264,
+"md1_len": 564,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 158572,
+"md1_off": 11264,
+"md1_len": 564,
+"tim_len": 25632
+},
+{
+"idx": 3,
+"tim_off": 158572,
+"md1_off": 11828,
+"md1_len": 2396,
+"tim_len": 25632
+},
+{
+"idx": 4,
+"tim_off": 158572,
+"md1_off": 11828,
+"md1_len": 2396,
+"tim_len": 25632
+},
+{
+"idx": 5,
+"tim_off": 158572,
+"md1_off": 11828,
+"md1_len": 2396,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOM6170.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 612,
+"size": 208000,
+"ents": [
+{
+"idx": 0,
+"tim_off": 124448,
+"md1_off": 18440,
+"md1_len": 3068,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 124448,
+"md1_off": 21508,
+"md1_len": 3116,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 157760,
+"md1_off": 24624,
+"md1_len": 708,
+"tim_len": 16928
+},
+{
+"idx": 3,
+"tim_off": 157760,
+"md1_off": 24624,
+"md1_len": 708,
+"tim_len": 16928
+},
+{
+"idx": 4,
+"tim_off": 157760,
+"md1_off": 25332,
+"md1_len": 1956,
+"tim_len": 16928
+},
+{
+"idx": 5,
+"tim_off": 157760,
+"md1_off": 27288,
+"md1_len": 1980,
+"tim_len": 16928
+},
+{
+"idx": 6,
+"tim_off": 157760,
+"md1_off": 29268,
+"md1_len": 1980,
+"tim_len": 16928
+},
+{
+"idx": 7,
+"tim_off": 174688,
+"md1_off": 31248,
+"md1_len": 1508,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOM7000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 78
+},
+"omdl_tbl": 580,
+"size": 175544,
+"ents": [
+{
+"idx": 0,
+"tim_off": 137592,
+"md1_off": 6992,
+"md1_len": 6300,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 137592,
+"md1_off": 6992,
+"md1_len": 6300,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 170904,
+"md1_off": 13292,
+"md1_len": 1404,
+"tim_len": 4640
+},
+{
+"idx": 3,
+"tim_off": 170904,
+"md1_off": 13292,
+"md1_len": 1404,
+"tim_len": 4640
+},
+{
+"idx": 4,
+"tim_off": 170904,
+"md1_off": 13292,
+"md1_len": 1404,
+"tim_len": 4640
+},
+{
+"idx": 5,
+"tim_off": 170904,
+"md1_off": 13292,
+"md1_len": 1404,
+"tim_len": 4640
+}
+]
+},
+{
+"file": "ROOM7010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 484,
+"size": 215824,
+"ents": [
+{
+"idx": 0,
+"tim_off": 114864,
+"md1_off": 9400,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 148176,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 6,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 7,
+"tim_off": 181488,
+"md1_off": 11212,
+"md1_len": 820,
+"tim_len": 34336
+},
+{
+"idx": 8,
+"tim_off": 181488,
+"md1_off": 12032,
+"md1_len": 500,
+"tim_len": 34336
+},
+{
+"idx": 9,
+"tim_off": 181488,
+"md1_off": 12532,
+"md1_len": 2180,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOM7020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 42
+},
+"omdl_tbl": 612,
+"size": 160188,
+"ents": [
+{
+"idx": 0,
+"tim_off": 151452,
+"md1_off": 8260,
+"md1_len": 1860,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM7030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 91
+},
+"omdl_tbl": 548,
+"size": 255092,
+"ents": [
+{
+"idx": 0,
+"tim_off": 179220,
+"md1_off": 13468,
+"md1_len": 1284,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 179220,
+"md1_off": 13468,
+"md1_len": 1284,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 212532,
+"md1_off": 14752,
+"md1_len": 7828,
+"tim_len": 33824
+},
+{
+"idx": 3,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 4,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 5,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 6,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 7,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 8,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 9,
+"tim_off": 212532,
+"md1_off": 22580,
+"md1_len": 2012,
+"tim_len": 33824
+},
+{
+"idx": 10,
+"tim_off": 246356,
+"md1_off": 24592,
+"md1_len": 500,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOM7040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 580,
+"size": 245348,
+"ents": [
+{
+"idx": 0,
+"tim_off": 111076,
+"md1_off": 7644,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 144388,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 177700,
+"md1_off": 9456,
+"md1_len": 948,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 211012,
+"md1_off": 10404,
+"md1_len": 2012,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 211012,
+"md1_off": 10404,
+"md1_len": 2012,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 211012,
+"md1_off": 12416,
+"md1_len": 1228,
+"tim_len": 34336
+},
+{
+"idx": 6,
+"tim_off": 211012,
+"md1_off": 13644,
+"md1_len": 140,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOMA000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 51
+},
+"omdl_tbl": 388,
+"size": 98304,
+"ents": []
+},
+{
+"file": "ROOMA010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 516,
+"size": 90332,
+"ents": [
+{
+"idx": 0,
+"tim_off": 46748,
+"md1_off": 6148,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 46748,
+"md1_off": 6632,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 46748,
+"md1_off": 6632,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 46748,
+"md1_off": 6632,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 46748,
+"md1_off": 7244,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 46748,
+"md1_off": 8640,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 81596,
+"md1_off": 10036,
+"md1_len": 1788,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 356,
+"size": 140516,
+"ents": [
+{
+"idx": 0,
+"tim_off": 106180,
+"md1_off": 6272,
+"md1_len": 3716,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 106180,
+"md1_off": 9988,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 106180,
+"md1_off": 10600,
+"md1_len": 1788,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOMA030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 612,
+"size": 61912,
+"ents": []
+},
+{
+"file": "ROOMA040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 31
+},
+"omdl_tbl": 324,
+"size": 3008,
+"ents": []
+},
+{
+"file": "ROOMA050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 324,
+"size": 57804,
+"ents": [
+{
+"idx": 0,
+"tim_off": 49068,
+"md1_off": 5064,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 47
+},
+"omdl_tbl": 292,
+"size": 57032,
+"ents": [
+{
+"idx": 0,
+"tim_off": 48296,
+"md1_off": 3180,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 48296,
+"md1_off": 3180,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 48
+},
+"omdl_tbl": 356,
+"size": 39932,
+"ents": []
+},
+{
+"file": "ROOMA080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 612,
+"size": 35880,
+"ents": []
+},
+{
+"file": "ROOMA090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 70
+},
+"omdl_tbl": 612,
+"size": 49204,
+"ents": []
+},
+{
+"file": "ROOMA0A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 65
+},
+"omdl_tbl": 612,
+"size": 60652,
+"ents": []
+},
+{
+"file": "ROOMA0B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 612,
+"size": 55648,
+"ents": [
+{
+"idx": 0,
+"tim_off": 38208,
+"md1_off": 6128,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 38208,
+"md1_off": 6128,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 38208,
+"md1_off": 6128,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 38208,
+"md1_off": 6128,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 38208,
+"md1_off": 6740,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 38208,
+"md1_off": 6740,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMA0C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 71
+},
+"omdl_tbl": 420,
+"size": 72100,
+"ents": []
+},
+{
+"file": "ROOMA0D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 25
+},
+"omdl_tbl": 260,
+"size": 26668,
+"ents": []
+},
+{
+"file": "ROOMA0E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 86
+},
+"omdl_tbl": 548,
+"size": 57796,
+"ents": [
+{
+"idx": 0,
+"tim_off": 49060,
+"md1_off": 7596,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA0F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 22
+},
+"omdl_tbl": 228,
+"size": 144864,
+"ents": [
+{
+"idx": 0,
+"tim_off": 69504,
+"md1_off": 1844,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 102816,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 136128,
+"md1_off": 3656,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 136128,
+"md1_off": 3656,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 4,
+"tim_off": 136128,
+"md1_off": 3656,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 69
+},
+"omdl_tbl": 580,
+"size": 103956,
+"ents": [
+{
+"idx": 0,
+"tim_off": 70624,
+"md1_off": 11516,
+"md1_len": 6148,
+"tim_len": 33332
+},
+{
+"idx": 1,
+"tim_off": 70624,
+"md1_off": 11516,
+"md1_len": 6148,
+"tim_len": 33332
+},
+{
+"idx": 2,
+"tim_off": 70624,
+"md1_off": 11516,
+"md1_len": 6148,
+"tim_len": 33332
+}
+]
+},
+{
+"file": "ROOMA110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 452,
+"size": 235732,
+"ents": [
+{
+"idx": 0,
+"tim_off": 160372,
+"md1_off": 8436,
+"md1_len": 10980,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 193684,
+"md1_off": 19416,
+"md1_len": 556,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 226996,
+"md1_off": 19972,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 12,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 612,
+"size": 95480,
+"ents": [
+{
+"idx": 0,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 78040,
+"md1_off": 11928,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 78040,
+"md1_off": 12540,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 9,
+"tim_off": 78040,
+"md1_off": 12540,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 78040,
+"md1_off": 12540,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 11,
+"tim_off": 78040,
+"md1_off": 12540,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMA130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 59
+},
+"omdl_tbl": 356,
+"size": 60344,
+"ents": [
+{
+"idx": 0,
+"tim_off": 34200,
+"md1_off": 3972,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 34200,
+"md1_off": 3972,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 34200,
+"md1_off": 4456,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 34200,
+"md1_off": 4456,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 34200,
+"md1_off": 5852,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 34200,
+"md1_off": 5852,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMA140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 324,
+"size": 62340,
+"ents": []
+},
+{
+"file": "ROOMA150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 548,
+"size": 59648,
+"ents": [
+{
+"idx": 0,
+"tim_off": 50912,
+"md1_off": 4936,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 71
+},
+"omdl_tbl": 196,
+"size": 70896,
+"ents": [
+{
+"idx": 0,
+"tim_off": 62160,
+"md1_off": 2840,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 62160,
+"md1_off": 2840,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 62160,
+"md1_off": 2840,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA170.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 44
+},
+"omdl_tbl": 356,
+"size": 54576,
+"ents": []
+},
+{
+"file": "ROOMA180.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 484,
+"size": 94968,
+"ents": []
+},
+{
+"file": "ROOMA190.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 87
+},
+"omdl_tbl": 292,
+"size": 39340,
+"ents": []
+},
+{
+"file": "ROOMA1A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 39
+},
+"omdl_tbl": 228,
+"size": 44052,
+"ents": [
+{
+"idx": 0,
+"tim_off": 35316,
+"md1_off": 1572,
+"md1_len": 612,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMA1B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 42
+},
+"omdl_tbl": 260,
+"size": 96392,
+"ents": []
+},
+{
+"file": "ROOMA1C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 19
+},
+"omdl_tbl": 516,
+"size": 2264,
+"ents": []
+},
+{
+"file": "ROOMA1D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 92
+},
+"omdl_tbl": 452,
+"size": 6668,
+"ents": []
+},
+{
+"file": "ROOMB000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 16,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 82
+},
+"omdl_tbl": 612,
+"size": 194948,
+"ents": [
+{
+"idx": 0,
+"tim_off": 84740,
+"md1_off": 10964,
+"md1_len": 6148,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 118052,
+"md1_off": 17112,
+"md1_len": 3012,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 151364,
+"md1_off": 20124,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 151364,
+"md1_off": 20124,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 151364,
+"md1_off": 20624,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 151364,
+"md1_off": 20624,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 151364,
+"md1_off": 21108,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 151364,
+"md1_off": 21108,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 151364,
+"md1_off": 21108,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 151364,
+"md1_off": 21108,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 151364,
+"md1_off": 22504,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 11,
+"tim_off": 151364,
+"md1_off": 22504,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 12,
+"tim_off": 151364,
+"md1_off": 22504,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 13,
+"tim_off": 151364,
+"md1_off": 22504,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 14,
+"tim_off": 186212,
+"md1_off": 24292,
+"md1_len": 484,
+"tim_len": 8736
+},
+{
+"idx": 15,
+"tim_off": 186212,
+"md1_off": 24292,
+"md1_len": 484,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 50
+},
+"omdl_tbl": 324,
+"size": 139816,
+"ents": [
+{
+"idx": 0,
+"tim_off": 73192,
+"md1_off": 3420,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 106504,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMB020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 93
+},
+"omdl_tbl": 484,
+"size": 80196,
+"ents": [
+{
+"idx": 0,
+"tim_off": 54052,
+"md1_off": 7752,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 54052,
+"md1_off": 7752,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 54052,
+"md1_off": 8236,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 54052,
+"md1_off": 8236,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 54052,
+"md1_off": 9632,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 54052,
+"md1_off": 9632,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMB030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 9,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 17
+},
+"omdl_tbl": 260,
+"size": 57108,
+"ents": [
+{
+"idx": 0,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 39668,
+"md1_off": 3156,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 39668,
+"md1_off": 3768,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 39668,
+"md1_off": 3768,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 39668,
+"md1_off": 3768,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMB040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 420,
+"size": 61852,
+"ents": []
+},
+{
+"file": "ROOMB050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 452,
+"size": 56768,
+"ents": []
+},
+{
+"file": "ROOMB060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 52
+},
+"omdl_tbl": 516,
+"size": 51380,
+"ents": [
+{
+"idx": 0,
+"tim_off": 42644,
+"md1_off": 5388,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 82
+},
+"omdl_tbl": 292,
+"size": 48932,
+"ents": []
+},
+{
+"file": "ROOMB080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 452,
+"size": 161696,
+"ents": [
+{
+"idx": 0,
+"tim_off": 77632,
+"md1_off": 5116,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 110944,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 144256,
+"md1_off": 6928,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 144256,
+"md1_off": 6928,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 144256,
+"md1_off": 9324,
+"md1_len": 2396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMB090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 9,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 56
+},
+"omdl_tbl": 356,
+"size": 111128,
+"ents": [
+{
+"idx": 0,
+"tim_off": 67544,
+"md1_off": 4956,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 67544,
+"md1_off": 4956,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 67544,
+"md1_off": 5456,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 67544,
+"md1_off": 5456,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 67544,
+"md1_off": 6852,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 67544,
+"md1_off": 6852,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 67544,
+"md1_off": 8640,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 67544,
+"md1_off": 8640,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 102392,
+"md1_off": 9124,
+"md1_len": 684,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB0A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 30
+},
+"omdl_tbl": 324,
+"size": 44432,
+"ents": []
+},
+{
+"file": "ROOMB0B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 11,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 100
+},
+"omdl_tbl": 612,
+"size": 88152,
+"ents": [
+{
+"idx": 0,
+"tim_off": 53816,
+"md1_off": 13092,
+"md1_len": 1124,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 53816,
+"md1_off": 13092,
+"md1_len": 1124,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 6,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 7,
+"tim_off": 53816,
+"md1_off": 14216,
+"md1_len": 612,
+"tim_len": 34336
+},
+{
+"idx": 8,
+"tim_off": 53816,
+"md1_off": 14828,
+"md1_len": 1396,
+"tim_len": 34336
+},
+{
+"idx": 9,
+"tim_off": 53816,
+"md1_off": 14828,
+"md1_len": 1396,
+"tim_len": 34336
+},
+{
+"idx": 10,
+"tim_off": 53816,
+"md1_off": 14828,
+"md1_len": 1396,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOMB0C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 484,
+"size": 56912,
+"ents": []
+},
+{
+"file": "ROOMB0D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 57
+},
+"omdl_tbl": 356,
+"size": 54248,
+"ents": [
+{
+"idx": 0,
+"tim_off": 45512,
+"md1_off": 4460,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB0E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 15,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 324,
+"size": 119792,
+"ents": [
+{
+"idx": 0,
+"tim_off": 50096,
+"md1_off": 7540,
+"md1_len": 1268,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 50096,
+"md1_off": 8808,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 50096,
+"md1_off": 8808,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 50096,
+"md1_off": 9292,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 50096,
+"md1_off": 9292,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 50096,
+"md1_off": 10688,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 50096,
+"md1_off": 10688,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 84944,
+"md1_off": 12476,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 84944,
+"md1_off": 12476,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 84944,
+"md1_off": 13088,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 84944,
+"md1_off": 13088,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 11,
+"tim_off": 84944,
+"md1_off": 13572,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 12,
+"tim_off": 84944,
+"md1_off": 13572,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 13,
+"tim_off": 84944,
+"md1_off": 14968,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 14,
+"tim_off": 84944,
+"md1_off": 14968,
+"md1_len": 1788,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOMB0F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 72
+},
+"omdl_tbl": 388,
+"size": 71952,
+"ents": []
+},
+{
+"file": "ROOMB100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 93
+},
+"omdl_tbl": 260,
+"size": 46420,
+"ents": [
+{
+"idx": 0,
+"tim_off": 37684,
+"md1_off": 4936,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 516,
+"size": 53164,
+"ents": []
+},
+{
+"file": "ROOMB120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 36
+},
+"omdl_tbl": 260,
+"size": 43148,
+"ents": []
+},
+{
+"file": "ROOMB130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 388,
+"size": 83720,
+"ents": [
+{
+"idx": 0,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 4,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 5,
+"tim_off": 74984,
+"md1_off": 4164,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 14,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 260,
+"size": 119224,
+"ents": [
+{
+"idx": 0,
+"tim_off": 49528,
+"md1_off": 2432,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 49528,
+"md1_off": 2432,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 49528,
+"md1_off": 2932,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 49528,
+"md1_off": 4328,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 49528,
+"md1_off": 5724,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 49528,
+"md1_off": 5724,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 49528,
+"md1_off": 5724,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 49528,
+"md1_off": 5724,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 84376,
+"md1_off": 6336,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 84376,
+"md1_off": 6336,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 84376,
+"md1_off": 6820,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 11,
+"tim_off": 84376,
+"md1_off": 8216,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 12,
+"tim_off": 84376,
+"md1_off": 9612,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 13,
+"tim_off": 84376,
+"md1_off": 9612,
+"md1_len": 1788,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOMB150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 81
+},
+"omdl_tbl": 324,
+"size": 51848,
+"ents": [
+{
+"idx": 0,
+"tim_off": 43112,
+"md1_off": 5320,
+"md1_len": 612,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 43112,
+"md1_off": 5320,
+"md1_len": 612,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 484,
+"size": 149244,
+"ents": [
+{
+"idx": 0,
+"tim_off": 49852,
+"md1_off": 4632,
+"md1_len": 4980,
+"tim_len": 66080
+},
+{
+"idx": 1,
+"tim_off": 49852,
+"md1_off": 9612,
+"md1_len": 3668,
+"tim_len": 66080
+},
+{
+"idx": 2,
+"tim_off": 115932,
+"md1_off": 13280,
+"md1_len": 3012,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMB190.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 26
+},
+"omdl_tbl": 388,
+"size": 58928,
+"ents": [
+{
+"idx": 0,
+"tim_off": 50192,
+"md1_off": 2812,
+"md1_len": 612,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMB1A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 79
+},
+"omdl_tbl": 356,
+"size": 36188,
+"ents": []
+},
+{
+"file": "ROOMB1B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 612,
+"size": 103236,
+"ents": [
+{
+"idx": 0,
+"tim_off": 68388,
+"md1_off": 10500,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 68388,
+"md1_off": 10500,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 68388,
+"md1_off": 11000,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 68388,
+"md1_off": 11000,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 68388,
+"md1_off": 12396,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 68388,
+"md1_off": 12396,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 68388,
+"md1_off": 14184,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 68388,
+"md1_off": 14184,
+"md1_len": 484,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOMC000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 72
+},
+"omdl_tbl": 484,
+"size": 68360,
+"ents": [
+{
+"idx": 0,
+"tim_off": 42216,
+"md1_off": 6072,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 42216,
+"md1_off": 6072,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 42216,
+"md1_off": 6556,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 42216,
+"md1_off": 6556,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 42216,
+"md1_off": 7952,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 42216,
+"md1_off": 7952,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMC010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 73
+},
+"omdl_tbl": 580,
+"size": 103180,
+"ents": [
+{
+"idx": 0,
+"tim_off": 77548,
+"md1_off": 7028,
+"md1_len": 2868,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 77548,
+"md1_off": 7028,
+"md1_len": 2868,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 77548,
+"md1_off": 9896,
+"md1_len": 1436,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOMC020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 34
+},
+"omdl_tbl": 292,
+"size": 130700,
+"ents": [
+{
+"idx": 0,
+"tim_off": 113772,
+"md1_off": 3372,
+"md1_len": 3452,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 113772,
+"md1_off": 6824,
+"md1_len": 7324,
+"tim_len": 16928
+},
+{
+"idx": 2,
+"tim_off": 113772,
+"md1_off": 14148,
+"md1_len": 4804,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOMC030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 74
+},
+"omdl_tbl": 420,
+"size": 67124,
+"ents": []
+},
+{
+"file": "ROOMC040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 87
+},
+"omdl_tbl": 356,
+"size": 153024,
+"ents": [
+{
+"idx": 0,
+"tim_off": 127392,
+"md1_off": 4272,
+"md1_len": 1900,
+"tim_len": 25632
+},
+{
+"idx": 1,
+"tim_off": 127392,
+"md1_off": 6172,
+"md1_len": 2396,
+"tim_len": 25632
+},
+{
+"idx": 2,
+"tim_off": 127392,
+"md1_off": 6172,
+"md1_len": 2396,
+"tim_len": 25632
+}
+]
+},
+{
+"file": "ROOMC050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 292,
+"size": 71612,
+"ents": []
+},
+{
+"file": "ROOMC060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 420,
+"size": 2120,
+"ents": []
+},
+{
+"file": "ROOMC070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 420,
+"size": 172688,
+"ents": [
+{
+"idx": 0,
+"tim_off": 121904,
+"md1_off": 6780,
+"md1_len": 236,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 130640,
+"md1_off": 7016,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 163952,
+"md1_off": 11876,
+"md1_len": 484,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMC080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 48
+},
+"omdl_tbl": 388,
+"size": 55616,
+"ents": []
+},
+{
+"file": "ROOMC090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 324,
+"size": 90896,
+"ents": [
+{
+"idx": 0,
+"tim_off": 57584,
+"md1_off": 5296,
+"md1_len": 6148,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMC0A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 78
+},
+"omdl_tbl": 356,
+"size": 110168,
+"ents": [
+{
+"idx": 0,
+"tim_off": 93240,
+"md1_off": 6104,
+"md1_len": 452,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 93240,
+"md1_off": 6556,
+"md1_len": 420,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOMC0B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 37
+},
+"omdl_tbl": 388,
+"size": 115936,
+"ents": []
+},
+{
+"file": "ROOMC0C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 17,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 644,
+"size": 150408,
+"ents": [
+{
+"idx": 0,
+"tim_off": 57640,
+"md1_off": 1652,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 90952,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 124264,
+"md1_off": 3464,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 124264,
+"md1_off": 3464,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 124264,
+"md1_off": 3948,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 124264,
+"md1_off": 3948,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 6,
+"tim_off": 124264,
+"md1_off": 5344,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 7,
+"tim_off": 124264,
+"md1_off": 5344,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMC0D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 2,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 0
+},
+"omdl_tbl": 164,
+"size": 130952,
+"ents": [
+{
+"idx": 0,
+"tim_off": 55592,
+"md1_off": 876,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 88904,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 122216,
+"md1_off": 2688,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 122216,
+"md1_off": 2688,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMD000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 63
+},
+"omdl_tbl": 452,
+"size": 140580,
+"ents": [
+{
+"idx": 0,
+"tim_off": 123652,
+"md1_off": 6016,
+"md1_len": 1068,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 123652,
+"md1_off": 7084,
+"md1_len": 540,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOMD010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 16,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 80
+},
+"omdl_tbl": 452,
+"size": 255704,
+"ents": [
+{
+"idx": 0,
+"tim_off": 103480,
+"md1_off": 11504,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 136792,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 170104,
+"md1_off": 13316,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 203416,
+"md1_off": 18176,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 203416,
+"md1_off": 18176,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 203416,
+"md1_off": 20572,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 203416,
+"md1_off": 20572,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 203416,
+"md1_off": 20572,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 203416,
+"md1_off": 22968,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 203416,
+"md1_off": 22968,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 203416,
+"md1_off": 23468,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 11,
+"tim_off": 203416,
+"md1_off": 23468,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 12,
+"tim_off": 238264,
+"md1_off": 24864,
+"md1_len": 1788,
+"tim_len": 17440
+},
+{
+"idx": 13,
+"tim_off": 238264,
+"md1_off": 24864,
+"md1_len": 1788,
+"tim_len": 17440
+},
+{
+"idx": 14,
+"tim_off": 238264,
+"md1_off": 26652,
+"md1_len": 484,
+"tim_len": 17440
+},
+{
+"idx": 15,
+"tim_off": 238264,
+"md1_off": 26652,
+"md1_len": 484,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMD020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 47
+},
+"omdl_tbl": 260,
+"size": 141872,
+"ents": [
+{
+"idx": 0,
+"tim_off": 124944,
+"md1_off": 2408,
+"md1_len": 1156,
+"tim_len": 16928
+}
+]
+},
+{
+"file": "ROOMD030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 16,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 77
+},
+"omdl_tbl": 580,
+"size": 257984,
+"ents": [
+{
+"idx": 0,
+"tim_off": 105760,
+"md1_off": 12372,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 139072,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 172384,
+"md1_off": 14184,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 205696,
+"md1_off": 19044,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 205696,
+"md1_off": 19044,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 205696,
+"md1_off": 19044,
+"md1_len": 612,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 205696,
+"md1_off": 19656,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 205696,
+"md1_off": 19656,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 205696,
+"md1_off": 20140,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 9,
+"tim_off": 205696,
+"md1_off": 20140,
+"md1_len": 2396,
+"tim_len": 34848
+},
+{
+"idx": 10,
+"tim_off": 205696,
+"md1_off": 22536,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 11,
+"tim_off": 205696,
+"md1_off": 22536,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 12,
+"tim_off": 240544,
+"md1_off": 23932,
+"md1_len": 1788,
+"tim_len": 17440
+},
+{
+"idx": 13,
+"tim_off": 240544,
+"md1_off": 23932,
+"md1_len": 1788,
+"tim_len": 17440
+},
+{
+"idx": 14,
+"tim_off": 240544,
+"md1_off": 25720,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 15,
+"tim_off": 240544,
+"md1_off": 25720,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMD040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 53
+},
+"omdl_tbl": 452,
+"size": 133536,
+"ents": [
+{
+"idx": 0,
+"tim_off": 100224,
+"md1_off": 4100,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 100224,
+"md1_off": 4100,
+"md1_len": 4860,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMD050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 84
+},
+"omdl_tbl": 420,
+"size": 190168,
+"ents": [
+{
+"idx": 0,
+"tim_off": 129688,
+"md1_off": 6256,
+"md1_len": 1516,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 129688,
+"md1_off": 7772,
+"md1_len": 1156,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 129688,
+"md1_off": 8928,
+"md1_len": 828,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 129688,
+"md1_off": 9756,
+"md1_len": 484,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 164024,
+"md1_off": 10240,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 164024,
+"md1_off": 11636,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 6,
+"tim_off": 164024,
+"md1_off": 13424,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 7,
+"tim_off": 164024,
+"md1_off": 13424,
+"md1_len": 612,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMD070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 3,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 20
+},
+"omdl_tbl": 324,
+"size": 178544,
+"ents": [
+{
+"idx": 0,
+"tim_off": 144208,
+"md1_off": 1884,
+"md1_len": 1772,
+"tim_len": 34336
+},
+{
+"idx": 1,
+"tim_off": 144208,
+"md1_off": 3656,
+"md1_len": 964,
+"tim_len": 34336
+},
+{
+"idx": 2,
+"tim_off": 144208,
+"md1_off": 4620,
+"md1_len": 964,
+"tim_len": 34336
+}
+]
+},
+{
+"file": "ROOMD080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 9,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 82
+},
+"omdl_tbl": 612,
+"size": 187420,
+"ents": [
+{
+"idx": 0,
+"tim_off": 102332,
+"md1_off": 11408,
+"md1_len": 3180,
+"tim_len": 16928
+},
+{
+"idx": 1,
+"tim_off": 119260,
+"md1_off": 14588,
+"md1_len": 3012,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 152572,
+"md1_off": 17600,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 152572,
+"md1_off": 17600,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 152572,
+"md1_off": 18084,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 152572,
+"md1_off": 18084,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 152572,
+"md1_off": 19872,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 152572,
+"md1_off": 19872,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 8,
+"tim_off": 152572,
+"md1_off": 21268,
+"md1_len": 684,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOMD090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 76
+},
+"omdl_tbl": 612,
+"size": 105308,
+"ents": [
+{
+"idx": 0,
+"tim_off": 96572,
+"md1_off": 8848,
+"md1_len": 1860,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMD0A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 77
+},
+"omdl_tbl": 580,
+"size": 113260,
+"ents": [
+{
+"idx": 0,
+"tim_off": 79948,
+"md1_off": 9812,
+"md1_len": 1604,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMD0B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 36520,
+"ents": [
+{
+"idx": 0,
+"tim_off": 3208,
+"md1_off": 1468,
+"md1_len": 1740,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 3208,
+"md1_off": 1468,
+"md1_len": 1740,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMD0C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 34372,
+"ents": []
+},
+{
+"file": "ROOMD0D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 260,
+"size": 40972,
+"ents": [
+{
+"idx": 0,
+"tim_off": 32236,
+"md1_off": 4068,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 32236,
+"md1_off": 4068,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMD0E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 612,
+"size": 167700,
+"ents": [
+{
+"idx": 0,
+"tim_off": 101620,
+"md1_off": 14788,
+"md1_len": 9156,
+"tim_len": 66080
+}
+]
+},
+{
+"file": "ROOMD0F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 0
+},
+"omdl_tbl": 228,
+"size": 756,
+"ents": []
+},
+{
+"file": "ROOMD100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 8,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 45
+},
+"omdl_tbl": 356,
+"size": 99680,
+"ents": [
+{
+"idx": 0,
+"tim_off": 90944,
+"md1_off": 4792,
+"md1_len": 332,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOME000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 89
+},
+"omdl_tbl": 420,
+"size": 97524,
+"ents": []
+},
+{
+"file": "ROOME010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 516,
+"size": 130168,
+"ents": [
+{
+"idx": 0,
+"tim_off": 64088,
+"md1_off": 5712,
+"md1_len": 9156,
+"tim_len": 66080
+}
+]
+},
+{
+"file": "ROOME020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 76
+},
+"omdl_tbl": 516,
+"size": 79144,
+"ents": [
+{
+"idx": 0,
+"tim_off": 44296,
+"md1_off": 6232,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 44296,
+"md1_off": 6232,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 44296,
+"md1_off": 6732,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 44296,
+"md1_off": 6732,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 44296,
+"md1_off": 8128,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 44296,
+"md1_off": 8128,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 44296,
+"md1_off": 9916,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 44296,
+"md1_off": 9916,
+"md1_len": 484,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOME030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 5,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 39
+},
+"omdl_tbl": 196,
+"size": 137008,
+"ents": [
+{
+"idx": 0,
+"tim_off": 52944,
+"md1_off": 2644,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 86256,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 119568,
+"md1_off": 4456,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 119568,
+"md1_off": 4456,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 119568,
+"md1_off": 5068,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOME040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 63
+},
+"omdl_tbl": 420,
+"size": 86996,
+"ents": [
+{
+"idx": 0,
+"tim_off": 69556,
+"md1_off": 7336,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 69556,
+"md1_off": 7336,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 69556,
+"md1_off": 9732,
+"md1_len": 2396,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 69556,
+"md1_off": 9732,
+"md1_len": 2396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOME050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 44
+},
+"omdl_tbl": 548,
+"size": 120092,
+"ents": []
+},
+{
+"file": "ROOME060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 49
+},
+"omdl_tbl": 324,
+"size": 3428,
+"ents": []
+},
+{
+"file": "ROOME070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 96
+},
+"omdl_tbl": 388,
+"size": 59824,
+"ents": []
+},
+{
+"file": "ROOME080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 13,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 51
+},
+"omdl_tbl": 516,
+"size": 72496,
+"ents": [
+{
+"idx": 0,
+"tim_off": 46352,
+"md1_off": 6192,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 46352,
+"md1_off": 6192,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 46352,
+"md1_off": 6676,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 46352,
+"md1_off": 6676,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 46352,
+"md1_off": 8072,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 46352,
+"md1_off": 8072,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOME090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 388,
+"size": 6432,
+"ents": []
+},
+{
+"file": "ROOMF000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 69
+},
+"omdl_tbl": 388,
+"size": 5572,
+"ents": []
+},
+{
+"file": "ROOMF010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 16
+},
+"omdl_tbl": 292,
+"size": 95980,
+"ents": []
+},
+{
+"file": "ROOMF020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 388,
+"size": 49128,
+"ents": []
+},
+{
+"file": "ROOMF030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 7,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 94
+},
+"omdl_tbl": 612,
+"size": 347604,
+"ents": [
+{
+"idx": 0,
+"tim_off": 172308,
+"md1_off": 14076,
+"md1_len": 2868,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 205620,
+"md1_off": 16944,
+"md1_len": 5556,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 238932,
+"md1_off": 22500,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 272244,
+"md1_off": 27360,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 4,
+"tim_off": 305556,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 5,
+"tim_off": 338868,
+"md1_off": 29172,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 6,
+"tim_off": 338868,
+"md1_off": 29172,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 83
+},
+"omdl_tbl": 612,
+"size": 45396,
+"ents": [
+{
+"idx": 0,
+"tim_off": 36660,
+"md1_off": 8348,
+"md1_len": 780,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF050.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 75
+},
+"omdl_tbl": 420,
+"size": 123316,
+"ents": [
+{
+"idx": 0,
+"tim_off": 63860,
+"md1_off": 8308,
+"md1_len": 4860,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 97172,
+"md1_off": 13168,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 97172,
+"md1_off": 13168,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 97172,
+"md1_off": 13168,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 97172,
+"md1_off": 13652,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 97172,
+"md1_off": 13652,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 6,
+"tim_off": 97172,
+"md1_off": 13652,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 7,
+"tim_off": 97172,
+"md1_off": 15048,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 8,
+"tim_off": 97172,
+"md1_off": 15048,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 9,
+"tim_off": 97172,
+"md1_off": 15048,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMF060.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 420,
+"size": 86680,
+"ents": [
+{
+"idx": 0,
+"tim_off": 77944,
+"md1_off": 4340,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 77944,
+"md1_off": 4340,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF070.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 47
+},
+"omdl_tbl": 548,
+"size": 209556,
+"ents": [
+{
+"idx": 0,
+"tim_off": 100884,
+"md1_off": 3664,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 134196,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 167508,
+"md1_off": 5476,
+"md1_len": 3012,
+"tim_len": 33312
+},
+{
+"idx": 3,
+"tim_off": 200820,
+"md1_off": 8488,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 4,
+"tim_off": 200820,
+"md1_off": 8488,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 5,
+"tim_off": 200820,
+"md1_off": 8488,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF080.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 90
+},
+"omdl_tbl": 612,
+"size": 100436,
+"ents": [
+{
+"idx": 0,
+"tim_off": 67124,
+"md1_off": 10840,
+"md1_len": 3012,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMF090.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 4,
+"nOmodel": 8,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 10
+},
+"omdl_tbl": 228,
+"size": 74632,
+"ents": [
+{
+"idx": 0,
+"tim_off": 39784,
+"md1_off": 2016,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 1,
+"tim_off": 39784,
+"md1_off": 2016,
+"md1_len": 500,
+"tim_len": 34848
+},
+{
+"idx": 2,
+"tim_off": 39784,
+"md1_off": 2516,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 3,
+"tim_off": 39784,
+"md1_off": 2516,
+"md1_len": 1396,
+"tim_len": 34848
+},
+{
+"idx": 4,
+"tim_off": 39784,
+"md1_off": 3912,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 5,
+"tim_off": 39784,
+"md1_off": 3912,
+"md1_len": 1788,
+"tim_len": 34848
+},
+{
+"idx": 6,
+"tim_off": 39784,
+"md1_off": 5700,
+"md1_len": 484,
+"tim_len": 34848
+},
+{
+"idx": 7,
+"tim_off": 39784,
+"md1_off": 5700,
+"md1_len": 484,
+"tim_len": 34848
+}
+]
+},
+{
+"file": "ROOMF0A0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 3,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 36
+},
+"omdl_tbl": 196,
+"size": 120472,
+"ents": [
+{
+"idx": 0,
+"tim_off": 94328,
+"md1_off": 2136,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 94328,
+"md1_off": 2136,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 94328,
+"md1_off": 2136,
+"md1_len": 612,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 94328,
+"md1_off": 2748,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 94328,
+"md1_off": 2748,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 94328,
+"md1_off": 4144,
+"md1_len": 684,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMF0B0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 9,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 388,
+"size": 42048,
+"ents": []
+},
+{
+"file": "ROOMF0C0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 10,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 67
+},
+"omdl_tbl": 420,
+"size": 58872,
+"ents": []
+},
+{
+"file": "ROOMF0D0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 6,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 1,
+"b7": 41
+},
+"omdl_tbl": 292,
+"size": 60724,
+"ents": [
+{
+"idx": 0,
+"tim_off": 43284,
+"md1_off": 2948,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 43284,
+"md1_off": 2948,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 43284,
+"md1_off": 2948,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 43284,
+"md1_off": 2948,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 43284,
+"md1_off": 3560,
+"md1_len": 1396,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 43284,
+"md1_off": 3560,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMF0E0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 2,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 8
+},
+"omdl_tbl": 164,
+"size": 59812,
+"ents": []
+},
+{
+"file": "ROOMF0F0.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 5,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 28
+},
+"omdl_tbl": 260,
+"size": 57012,
+"ents": [
+{
+"idx": 0,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 4,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+},
+{
+"idx": 5,
+"tim_off": 48276,
+"md1_off": 2424,
+"md1_len": 2396,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF100.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 11,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 33
+},
+"omdl_tbl": 452,
+"size": 78592,
+"ents": [
+{
+"idx": 0,
+"tim_off": 52448,
+"md1_off": 4632,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 52448,
+"md1_off": 4632,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 52448,
+"md1_off": 5116,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 52448,
+"md1_off": 5116,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 52448,
+"md1_off": 6512,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 52448,
+"md1_off": 6512,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMF110.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 1,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 98
+},
+"omdl_tbl": 612,
+"size": 106728,
+"ents": [
+{
+"idx": 0,
+"tim_off": 97992,
+"md1_off": 12884,
+"md1_len": 1988,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMF120.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 13,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 34
+},
+"omdl_tbl": 484,
+"size": 213460,
+"ents": [
+{
+"idx": 0,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 1,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 2,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 3,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 4,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 5,
+"tim_off": 129396,
+"md1_off": 5344,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 129396,
+"md1_off": 5508,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 129396,
+"md1_off": 5508,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 129396,
+"md1_off": 5508,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 9,
+"tim_off": 129396,
+"md1_off": 5508,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 10,
+"tim_off": 129396,
+"md1_off": 5508,
+"md1_len": 164,
+"tim_len": 17440
+},
+{
+"idx": 11,
+"tim_off": 146836,
+"md1_off": 5672,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 12,
+"tim_off": 180148,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMF130.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 7,
+"nOmodel": 6,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 62
+},
+"omdl_tbl": 324,
+"size": 71916,
+"ents": [
+{
+"idx": 0,
+"tim_off": 45772,
+"md1_off": 4224,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 1,
+"tim_off": 45772,
+"md1_off": 4224,
+"md1_len": 484,
+"tim_len": 26144
+},
+{
+"idx": 2,
+"tim_off": 45772,
+"md1_off": 4708,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 3,
+"tim_off": 45772,
+"md1_off": 4708,
+"md1_len": 1396,
+"tim_len": 26144
+},
+{
+"idx": 4,
+"tim_off": 45772,
+"md1_off": 6104,
+"md1_len": 1788,
+"tim_len": 26144
+},
+{
+"idx": 5,
+"tim_off": 45772,
+"md1_off": 6104,
+"md1_len": 1788,
+"tim_len": 26144
+}
+]
+},
+{
+"file": "ROOMF140.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 62
+},
+"omdl_tbl": 548,
+"size": 46232,
+"ents": []
+},
+{
+"file": "ROOMF150.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 10,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 97
+},
+"omdl_tbl": 548,
+"size": 139724,
+"ents": [
+{
+"idx": 0,
+"tim_off": 54636,
+"md1_off": 12780,
+"md1_len": 468,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 54636,
+"md1_off": 12780,
+"md1_len": 468,
+"tim_len": 33312
+},
+{
+"idx": 2,
+"tim_off": 87948,
+"md1_off": 13248,
+"md1_len": 1132,
+"tim_len": 34336
+},
+{
+"idx": 3,
+"tim_off": 87948,
+"md1_off": 14380,
+"md1_len": 500,
+"tim_len": 34336
+},
+{
+"idx": 4,
+"tim_off": 87948,
+"md1_off": 14880,
+"md1_len": 1396,
+"tim_len": 34336
+},
+{
+"idx": 5,
+"tim_off": 122284,
+"md1_off": 16276,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 6,
+"tim_off": 122284,
+"md1_off": 16276,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 7,
+"tim_off": 122284,
+"md1_off": 16276,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 8,
+"tim_off": 122284,
+"md1_off": 16276,
+"md1_len": 612,
+"tim_len": 17440
+},
+{
+"idx": 9,
+"tim_off": 122284,
+"md1_off": 16888,
+"md1_len": 1396,
+"tim_len": 17440
+}
+]
+},
+{
+"file": "ROOMF160.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 91
+},
+"omdl_tbl": 484,
+"size": 55764,
+"ents": []
+},
+{
+"file": "ROOMF170.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 99
+},
+"omdl_tbl": 612,
+"size": 110560,
+"ents": [
+{
+"idx": 0,
+"tim_off": 77248,
+"md1_off": 13724,
+"md1_len": 3068,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 77248,
+"md1_off": 16792,
+"md1_len": 3116,
+"tim_len": 33312
+}
+]
+},
+{
+"file": "ROOMG000.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 4,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 78
+},
+"omdl_tbl": 580,
+"size": 213712,
+"ents": [
+{
+"idx": 0,
+"tim_off": 204976,
+"md1_off": 6620,
+"md1_len": 1436,
+"tim_len": 8736
+},
+{
+"idx": 1,
+"tim_off": 204976,
+"md1_off": 6620,
+"md1_len": 1436,
+"tim_len": 8736
+},
+{
+"idx": 2,
+"tim_off": 204976,
+"md1_off": 6620,
+"md1_len": 1436,
+"tim_len": 8736
+},
+{
+"idx": 3,
+"tim_off": 204976,
+"md1_off": 6620,
+"md1_len": 1436,
+"tim_len": 8736
+}
+]
+},
+{
+"file": "ROOMG010.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 12,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 95
+},
+"omdl_tbl": 484,
+"size": 7756,
+"ents": []
+},
+{
+"file": "ROOMG020.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 16,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 42
+},
+"omdl_tbl": 612,
+"size": 133828,
+"ents": []
+},
+{
+"file": "ROOMG030.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 14,
+"nOmodel": 0,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 91
+},
+"omdl_tbl": 548,
+"size": 161276,
+"ents": []
+},
+{
+"file": "ROOMG040.RDT",
+"hdr": {
+"nSprite": 0,
+"nCut": 15,
+"nOmodel": 2,
+"nItem": 0,
+"nDoor": 0,
+"nRoom_at": 0,
+"Reverb": 0,
+"b7": 41
+},
+"omdl_tbl": 580,
+"size": 162808,
+"ents": [
+{
+"idx": 0,
+"tim_off": 96184,
+"md1_off": 7604,
+"md1_len": 1812,
+"tim_len": 33312
+},
+{
+"idx": 1,
+"tim_off": 129496,
+"md1_off": 0,
+"md1_len": 0,
+"tim_len": 33312
+}
+]
+}
+]

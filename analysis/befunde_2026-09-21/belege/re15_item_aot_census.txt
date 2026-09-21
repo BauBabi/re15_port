@@ -1,0 +1,35 @@
+Item_aot_set records found : 189
+  sat 0x31 : 160   sat 0x51 : 29   long form : 0
+  with tk_prop 0xFF (no world model) : 43
+  with a real tk_prop                : 146
+
+id    name                       count noModel rooms (prop)
+0x04  SIG P228                       1       1  ROOM1051@0xC22/pFF
+0x05  Beretta M93R                   2       2  ROOM11D0@0x16C8/pFF ROOM11D1@0x16C8/pFF
+0x07  Super Redhawk                  2       0  ROOM3050@0x1EC6/p2 ROOM3051@0x1EC6/p2
+0x08  Remington M870                 2       0  ROOM10F0@0x103E/p3 ROOM10F1@0x103E/p3
+0x0C  Ingram M10                     2       0  ROOM1190@0x2BFC/p14 ROOM1191@0x2BFC/p14
+0x0D  SPAS-12                        2       0  ROOM2030@0x1BD6/p3 ROOM2031@0x1BD6/p3
+0x11  Grenade Launcher               1       0  ROOM6001@0x1043/p0
+0x13  H<64>K MC51                    2       0  ROOM1110@0xB5A/p3 ROOM1111@0xB5A/p3
+0x15  H<57> Gun Bullets             38      12  ROOM1001@0xC24/pFF ROOM1010@0x9AC/p1 ROOM1011@0x96A/p1 ROOM1020@0x1D6A/p4 ROOM1020@0x1D80/p5 ROOM1021@0x1D6A/p4
+0x16  Shotgun Shells                28       6  ROOM1010@0x9C2/p2 ROOM1011@0x980/p2 ROOM1110@0xB02/p0 ROOM1111@0xB02/p0 ROOM1190@0x2BBA/p11 ROOM1190@0x2BD0/p12
+0x17  Magnum Bullets                 9       1  ROOM30E0@0xB10/p2 ROOM30E1@0xA8C/p2 ROOM40B0@0x724/p0 ROOM40B0@0x73A/p1 ROOM40B1@0x724/p0 ROOM40B1@0x73A/p1
+0x22  First Aid Spray               19      10  ROOM1010@0x996/p0 ROOM10E0@0xC4E/pFF ROOM10E1@0xC4E/pFF ROOM10F0@0x1054/pFF ROOM10F1@0x1054/pFF ROOM1110@0xB44/pFF
+0x23  Antidote Spray                 8       4  ROOM10E0@0xC64/pFF ROOM10E1@0xC64/pFF ROOM2040@0x14F8/pFF ROOM2041@0x14F8/pFF ROOM4050@0x1F1C/p3 ROOM4050@0x1FB0/p4
+0x24  Green Medicine                10       0  ROOM1000@0xC3A/p0 ROOM1001@0xC3A/p0 ROOM1220@0xED8/p0 ROOM1221@0xED8/p0 ROOM30E0@0xAFA/p1 ROOM30E1@0xA76/p1
+0x25  Red Medicine                   8       0  ROOM1000@0xC50/p1 ROOM1001@0xC50/p1 ROOM1220@0xEEE/p1 ROOM1221@0xEEE/p1 ROOM4050@0x1F70/p2 ROOM4051@0x1F70/p2
+0x26  Blue Medicine                  8       2  ROOM1220@0xF04/p2 ROOM1221@0xF04/p2 ROOM4050@0x1EC8/p1 ROOM4051@0x1EC8/p1 ROOM40A0@0xE78/pFF ROOM40A1@0xE78/pFF
+0x30  Pliers                         2       0  ROOM11B0@0xFF2/p1 ROOM11B1@0xFE4/p1
+0x31  Fire Extinguisher              1       1  ROOM1000@0xC24/pFF
+0x32  Head of Akuma                  2       2  ROOM2040@0x1364/pFF ROOM2041@0x1364/pFF
+0x36  Green Keycard                  2       0  ROOM3040@0x14B2/p1 ROOM3041@0x14B2/p1
+0x37  Red Keycard                    4       0  ROOM1190@0x2A30/p6 ROOM1190@0x2AA2/p6 ROOM1191@0x2A30/p6 ROOM1191@0x2AA2/p6
+0x38  Blue Keycard                   2       0  ROOM1110@0xB2E/p2 ROOM1111@0xB2E/p2
+0x39  Yellow Keycard                 1       0  ROOM1011@0x954/p0
+0x3F  Pocket Watch                   2       0  ROOM2090@0xA12/p0 ROOM2091@0xA12/p0
+0x40  Fuse                          22       0  ROOM1021@0x3DB2/p0 ROOM1031@0x4842/p0 ROOM1050@0x8EAA/p0 ROOM1090@0xA40A/p0 ROOM1141@0x30A2/p0 ROOM11C0@0x990A/p0
+0x41  Spark Plug                     4       0  ROOM30A0@0xA6A/p0 ROOM30A1@0xA6A/p0 ROOM4040@0xF66/p3 ROOM4041@0xF66/p3
+0x44  Minidisc Player w/ Disc        2       2  ROOM1200@0x932/pFF ROOM1201@0x932/pFF
+0x46  Red Master Keycard             2       0  ROOM30A0@0x742/p1 ROOM30A1@0x742/p1
+0x47  Blue Master Keycard            1       0  ROOM4010@0x592/p1
