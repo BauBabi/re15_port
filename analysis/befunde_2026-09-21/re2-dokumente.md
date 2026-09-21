@@ -1,5 +1,43 @@
 # RE2-Dokumente vollständig extrahiert — Hintergründe, Texte, Modelle
 
+> # ⛔ NACHTRAG 2026-09-22 — SATZ 4 UND ABSCHNITT 5 SIND IN EINEM PUNKT WIDERLEGT
+>
+> Die Aussage **„Ein 3D-Modell je Dokument existiert nicht, und es kann keines geben"**
+> (Kurzfassung Satz 4, ausgeführt in Abschnitt 5) ist **FALSCH, soweit sie die WELT
+> betrifft.** Sie stimmt nur für das **Inventar**.
+>
+> **Was stimmt:** im Inventar/in der Nahansicht hat kein Gegenstand ein Mesh, und die
+> Dokument-Ids sind aus den Item-Grafiken ausgeschlossen (`sltiu v0,a3,0x68`
+> **@0x80071BBC**). Das bleibt so.
+>
+> **Was falsch war:** in der WELT liegen RE2-Dokumente sehr wohl als sichtbares
+> 3D-Objekt herum. Der Träger ist das Feld **`md1` (+20) des `Item_aot_set`-Records
+> (Opcode 0x4E)**: `lbu s2,0x14(s0)` **@0x80054CF8**. `md1` ist der Slot in der
+> **Modelltabelle des Raums** (`RDT+0x30`, Anzahl `RDT+0x02`) — belegt im Lader
+> `FUN_80052D14`: `lbu s2,0x2(v0)` **@0x80052D70**, `lw s4,0x30(v0)` **@0x80052D74**,
+> `addiu s4,s4,0x8` **@0x80052DF4**. Es gibt also kein Mesh *je Dokument-Id* (insofern war
+> die halbe Beobachtung richtig), aber ein Mesh *je Platzierung*, und der Raum liefert es.
+>
+> **Gemessen (`tools/re2_sicherung/re2_doc_worldmodels.py`, über alle 495 RDTs):**
+> 269 Item-AOT-Records, davon **22 Dokument-Platzierungen** (Id ≥ 104 = 0x68),
+> davon **15 mit Weltmodell** (`md1 != 255`) und **7 ohne**. Die 15 zerfallen in
+> **12 verschiedene Meshes** (md5 der MD1-Bytes).
+>
+> **Ebenfalls zu relativieren — offener Punkt 2 („Dass das sichtbare Boden-Objekt selbst
+> im vorgerenderten Hintergrund steckt, ist ein Schluss aus Abwesenheit"):** das gilt nur
+> noch für die Platzierungen mit `md1 == 255`, und für eine davon (Patrol report,
+> room2030) ist es inzwischen am Bild belegt statt erschlossen.
+>
+> **Der Satz „Am Boden liegende Gegenstände tragen nur einen Effekt-Marker … kein
+> item-spezifisches Mesh" in Abschnitt 5 ist ebenfalls unvollständig:** derselbe
+> `md1`-Slot, an dem der Glitzer hängt, trägt auch das Mesh — `FUN_80053394` liest das
+> Zustandswort **@0x800533D4** und das action-Byte **@0x800533E8** aus **demselben**
+> Pool-Eintrag `0x800D0324 + md1*0x1F8`.
+>
+> **Vollständige Richtigstellung mit Belegen, Extrakten und Kontaktbogen:**
+> `analysis/befunde_2026-09-22/re2-dokumente-weltmodelle.md`,
+> Extrakte in `extracted_re2_dokumente/weltmodelle/`.
+
 **Auftrag.** Alle Dokumenten-Assets von Resident Evil 2 (Retail, Leon) unverändert
 extrahieren, damit auswählbar ist, welches als Vorlage für die RE1.5-Dokumente dient.
 
@@ -365,6 +403,13 @@ feste Zeilenumbrüche im Bild.
 
 ## 5. „Modelle" — meine Auslegung, mit Beleg
 
+> ⛔ **DIESER ABSCHNITT IST IN SEINER KERNAUSSAGE WIDERLEGT** — siehe den Nachtrag am
+> Kopf dieser Datei und `analysis/befunde_2026-09-22/re2-dokumente-weltmodelle.md`.
+> Richtig bleibt alles über das **Inventar** und den **FILE-Bildschirm**. Falsch ist die
+> Verallgemeinerung auf die **Welt**: dort tragen 15 der 22 Dokument-Platzierungen ein
+> Weltmodell über das Feld `md1` (+20) des `Item_aot_set`-Records
+> (`lbu s2,0x14(s0)` **@0x80054CF8**), 12 verschiedene Meshes.
+
 **Kein Gegenstand in RE2 hat ein 3D-Mesh — Dokumente schon gar nicht.**
 
 * Die Nahansicht eines Gegenstands ist **ein einziges texturiertes Rechteck 112×72**:
@@ -483,11 +528,13 @@ Textseite und die Frage nach Item-Modellen — sind inzwischen belegt (Abschnitt
    `jal SetDrawMode` im ganzen Image trifft sie. Aus der VRAM-Ablage *muss* die Textseite
    tpage 0x17 (4bpp @448,256) und das Bild tpage 0x97 (8bpp @448,256) tragen — am
    Initialisierungscode zeigen lässt es sich nicht. Für die Extraktion ohne Belang.
-2. **Dass das sichtbare Boden-Objekt selbst im vorgerenderten Hintergrund steckt**, ist
-   ein Schluss aus Abwesenheit, nicht aus Code: belegt ist nur der Effekt-Marker.
-   Durchsucht wurden die SCD-Opcode-Tabelle (`0x800A74C8`, 0x76 Einträge), alle
-   `FUN_8001BF10`-Aufrufer, die AOT-Handler 0x38/0x4E und alle `DAT_800D4CD8`-Nutzer;
-   kein Pfad schlägt pro Item-Id ein Modell nach.
+2. ⛔ **ERLEDIGT / WIDERLEGT 2026-09-22.** „Dass das sichtbare Boden-Objekt selbst im
+   vorgerenderten Hintergrund steckt" war ein Schluss aus Abwesenheit — und die
+   Abwesenheit war ein Suchfehler: der Pfad schlägt **nicht pro Item-Id** ein Modell
+   nach (das stimmte), sondern **pro Platzierung**, über `md1` (+20) des
+   `Item_aot_set`-Records in den Pool `0x800D0324 + md1*0x1F8`
+   (`sltiu v0,s2,0x20` **@0x80054D98**, `sw` **@0x80054DB4**, `sb` **@0x80054DBC**).
+   Siehe `analysis/befunde_2026-09-22/re2-dokumente-weltmodelle.md`.
 3. **Die zweite Namensbank** (`0x8009DF3C` / `0x8009E438`) ist nur als Hex mitgegeben. Ihr
    Zeichensatz (Bytes 0xA0…0xEF) ist nicht aufgelöst; dafür müsste der zugehörige Font
    identifiziert werden. Für lateinische Dokumentnamen ist sie ohne Belang.
