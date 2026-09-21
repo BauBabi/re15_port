@@ -464,6 +464,11 @@ void re15_game_state_init(void);
 int  re15_game_flag_get(uint8_t zone, uint8_t idx);     /* 0 or 1 */
 void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
 
+/* "Es laeuft eine Szene" = flag(1,27) || flag(2,7) — das Fenster, in das sich ein
+ * skript-gefuehrtes Unterprogramm klammert. Herleitung + Zensus ueber alle 206 RDTs im
+ * Block bei re15_cine_active (engine/src/game_state.c). */
+int  re15_cine_active(void);
+
 /*=========================================================================
  * GLOBALE PAUSE-FLAGS = DAT_800aca40 (byte-true, RE 2026-08-17).
  *

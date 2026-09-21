@@ -112,7 +112,10 @@
  * Wirkung: steht (room, msg) in discard_sites.inc UND liegt der Gegenstand noch im
  * Inventar, wird sein Zaehler heruntergezaehlt (@0x80051810) und die Abfrage vorgemerkt,
  * falls er dabei Null erreicht (@0x80051824). Sonst passiert nichts. */
-void re15_discard_notice_message(unsigned room_id, uint8_t msg_id);
+/* `thread_slot` = der SCD-Faden, der die Nachricht ausgegeben hat (Index in
+ * g_scd.threads). Die Abfrage wartet, bis GENAU DIESER Faden sein Unterprogramm beendet
+ * hat — sonst friert sie ein Unterprogramm ein, das noch laeuft. Siehe re15_discard_tick. */
+void re15_discard_notice_message(unsigned room_id, uint8_t msg_id, int thread_slot);
 
 /* Ein 30-Hz-Spieltakt der Abfrage-FSM. `pad_edge`/`pad_held` sind die VIRTUELLEN
  * Pad-Woerter (re15_pad_virtual_word), wie beim Item-Modal. Nur aufrufen, solange
@@ -130,6 +133,7 @@ int re15_discard_prompt(uint8_t *out_item, int *out_choice);
 int re15_discard_reveal(void);        /* Schreibmaschinen-Budget (Glyphen bisher)       */
 int re15_discard_reveal_total(void);  /* Glyphenzahl des offenen Skripts                */
 int re15_discard_ready(void);         /* Text fertig getippt -> Yes/No waehlbar         */
+uint8_t re15_discard_blink(void);     /* Blink-Zaehler DAT_800b8525 (@0x800285e8)       */
 
 /* Raumwechsel / Spielstand laden: eine offene Abfrage verwerfen und den Zaehler
  * zuruecksetzen, damit kein Slot mit Anzahl 0 zurueckbleibt. */

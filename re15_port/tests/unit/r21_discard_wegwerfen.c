@@ -43,6 +43,7 @@
 #include "re15_msg.h"
 #include "re15_item_discard.h"
 #include "re15_item_prompt.h"
+#include "re15_msg_select.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -137,6 +138,7 @@ static void grundzustand(void)
     re15_aot_init();
     re15_inv_init();
     re15_discard_reset();
+    re15_game_state_init();       /* u.a. flag(1,27)/flag(2,7) = "keine Szene laeuft" */
     memset(&g_scd, 0, sizeof g_scd);
     g_scd.work_slot = -1;
 }
@@ -417,6 +419,322 @@ static void teil_c(void)
     printf("  C5: 3 von 3 Kartenleser-Toren bleiben nach dem Wegwerfen offen\n");
 }
 
+/* =========================================================================
+ * TEIL D — die Ja/Nein-Auswahl steht auf den ORIGINAL-Zahlen
+ *
+ * Gepinnt werden die fuenf Zahlen des einzigen Ja/Nein-Zeichners des Spiels
+ * (LAB_80028564, Zustand 4 der Nachrichten-FSM) und das Blink-Gatter:
+ *     Yes-Text  174   @0x80028680  ori a0,a0,0xae
+ *     No-Text   244   = 174 + 0x46 (Schrittweite @0x8002863c-@0x8002864c)
+ *     Zeile     196   @0x80027f14 (0xb4) + @0x80028674 (+0x10)
+ *     Cursor    160   @0x80028650  addiu v0,v0,0xa0            (Wahl = Yes)
+ *               230   = 160 + 0x46                             (Wahl = No)
+ *     Blinken   Maske 0x18 @0x80028600, Zaehler -1/Bild @0x800285f0,
+ *               beim Umschalten erst 0 (@0x800285d4), dann -1 -> 0xFF.
+ *
+ * GEGENPROBE: die fuenf ZUVOR im Port stehenden GERATENEN Zahlen (Yes 190 / No 234 /
+ * Zeile 202 / Cursor 180/224 bei Zeile 203) muessen alle verfehlt werden — sonst
+ * stuende der Riegel auch auf dem alten Stand gruen.
+ * ========================================================================= */
+static void teil_d(void)
+{
+    printf("\n=== TEIL D: Ja/Nein-Auswahl auf den Original-Zahlen (LAB_80028564) ===\n");
+    re15_msg_select_t ja, nein;
+    re15_msg_select_layout(0, 0xff, &ja);     /* Wahl Yes, Blink offen */
+    re15_msg_select_layout(1, 0xff, &nein);   /* Wahl No,  Blink offen */
+
+    PRUEFE(ja.opt[0].x == 174, "Yes-Spalte %d statt 174 (@0x80028680)", ja.opt[0].x);
+    PRUEFE(ja.opt[1].x == 244, "No-Spalte %d statt 244 (174 + 0x46 @0x8002864c)", ja.opt[1].x);
+    PRUEFE(ja.opt[0].y == 196 && ja.opt[1].y == 196,
+           "Zeile %d/%d statt 196 (@0x80027f14 + @0x80028674)", ja.opt[0].y, ja.opt[1].y);
+    PRUEFE(ja.cursor_x == 160, "Cursor bei Yes %d statt 160 (@0x80028650)", ja.cursor_x);
+    PRUEFE(nein.cursor_x == 230, "Cursor bei No %d statt 230 (160 + 0x46)", nein.cursor_x);
+    PRUEFE(ja.cursor_y == 196 && nein.cursor_y == 196,
+           "Cursor-Zeile %d/%d statt 196 (@0x80028630)", ja.cursor_y, nein.cursor_y);
+    /* Die Glyphen sind die der .msg-Schrift: "Yes" / "No". */
+    PRUEFE(ja.opt[0].len == 3 && ja.opt[0].glyphs[0] == 0x35
+           && ja.opt[0].glyphs[1] == 0x41 && ja.opt[0].glyphs[2] == 0x4f, "\"Yes\"-Glyphen falsch");
+    PRUEFE(ja.opt[1].len == 2 && ja.opt[1].glyphs[0] == 0x2a
+           && ja.opt[1].glyphs[1] == 0x4b, "\"No\"-Glyphen falsch");
+
+    /* GEGENPROBE gegen die frueheren geratenen Zahlen. */
+    PRUEFE(ja.opt[0].x != 190 && ja.opt[1].x != 234 && ja.opt[0].y != 202
+           && ja.cursor_x != 180 && nein.cursor_x != 224 && ja.cursor_y != 203,
+           "GEGENPROBE: eine der geratenen Zahlen (190/234/202/180/224/203) steht noch");
+
+    /* --- Blink-Gatter: Maske 0x18 @0x80028600 -------------------------------------- */
+    int sichtbar = 0, unsichtbar = 0;
+    for (int z = 0; z < 256; z++) {
+        re15_msg_select_t s; re15_msg_select_layout(0, (uint8_t)z, &s);
+        int erwartet = (z & 0x18) ? 1 : 0;
+        PRUEFE(s.cursor_visible == erwartet,
+               "Blink-Gatter bei Zaehler 0x%02X: %d statt %d (Maske 0x18 @0x80028600)",
+               z, s.cursor_visible, erwartet);
+        if (erwartet) sichtbar++; else unsichtbar++;
+    }
+    printf("  Blink-Gatter ueber alle 256 Zaehlerstaende: %d sichtbar / %d aus\n",
+           sichtbar, unsichtbar);
+    /* Maske 0x18 = Bits 3 und 4. Verdeckt ist der Cursor nur, wenn BEIDE klar sind —
+     * das ist 1 von 4 Bitpaaren, also 64 von 256 Zaehlerstaenden. Ueber 32 aufeinander
+     * folgende Bilder: 8 aus, 24 an. (Der erste Ansatz dieses Riegels stand hier auf 96
+     * und war schlicht falsch gerechnet; der Riegel hat es gefangen.) */
+    PRUEFE(sichtbar == 192 && unsichtbar == 64,
+           "Maske 0x18 muesste 192/256 Bilder zeigen, gemessen %d", sichtbar);
+    /* GEGENPROBE: ein Cursor OHNE Gatter stuende in allen 256 Bildern. */
+    PRUEFE(sichtbar != 256, "GEGENPROBE: der Cursor blinkt gar nicht");
+
+    /* --- Zaehler-Takt: -1 je Bild, beim Umschalten erst 0 dann -1 (= 0xFF) ---------- */
+    PRUEFE(re15_msg_select_blink_tick(0x10, 0) == 0x0f,
+           "Zaehler laeuft nicht um 1 herunter (@0x800285f0)");
+    PRUEFE(re15_msg_select_blink_tick(0x00, 0) == 0xff,
+           "Zaehler laeuft bei 0 nicht auf 0xFF ueber (@0x800285f0)");
+    PRUEFE(re15_msg_select_blink_tick(0x07, 1) == 0xff,
+           "Umschalten muss den Zaehler auf 0 setzen (@0x800285d4) und DANN -1 (@0x800285f0)");
+    { re15_msg_select_t s; re15_msg_select_layout(1, re15_msg_select_blink_tick(0x07, 1), &s);
+      PRUEFE(s.cursor_visible, "Cursor nach dem Umschalten nicht sofort sichtbar"); }
+    printf("  Zahlen und Gatter stimmen mit LAB_80028564 ueberein.\n");
+}
+
+/* =========================================================================
+ * TEIL E — waehrend einer SZENE geht die Abfrage NICHT auf
+ *
+ * Der Riegel ist flag(2,7) (= Pause-Bit 0x01000000 in DAT_800aca40, gelesen
+ * @0x800304f4-@0x8003051c) bzw. flag(1,27); zusammen re15_cine_active().
+ * ROOM1090 sub03 spannt genau dieses Fenster: @0x2508 `Set(2,7,1)` .. @0x26DA
+ * `Set(2,7,0)`. Gefahren werden die drei Gegenstaende, die in diesem Fenster
+ * benutzt werden (Feuerloescher, Zange, Minidisc-Player).
+ *
+ * GEGENPROBE je Fall: OHNE gesetztes Fenster geht dieselbe Nachricht sofort auf —
+ * sonst koennte der Riegel auch gruen stehen, weil die Abfrage gar nicht kommt.
+ * ========================================================================= */
+static void teil_e(void)
+{
+    printf("\n=== TEIL E: keine Abfrage waehrend einer laufenden Szene ===\n");
+    static const struct { unsigned room; uint8_t msg, item; const char *was; } f[] = {
+        { 0x1090,  9, 0x31, "Fire Extinguisher"      },
+        { 0x11E0, 12, 0x30, "Pliers"                 },
+        { 0x1100,  4, 0x44, "Minidisc Player w/ Disc" },
+    };
+    int gefahren = 0;
+    for (unsigned i = 0; i < sizeof f / sizeof f[0]; i++) {
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(f[i].room, &rdt, &n);
+        if (!raw) { printf("  SKIP ROOM%04X\n", f[i].room); continue; }
+
+        /* --- Szene laeuft: flag(2,7) = 1 (ROOM1090 sub03 @0x2508) ------------------- */
+        grundzustand();
+        re15_inv_grant(f[i].item, 1);
+        re15_game_flag_set(2, 7, 1);
+        PRUEFE(re15_cine_active(), "flag(2,7)=1 macht re15_cine_active() nicht wahr");
+        nachricht_spielen(&rdt, f[i].room, f[i].msg);
+        for (int k = 0; k < 600; k++) re15_discard_tick(0, 0);   /* 600 Bilder warten   */
+        PRUEFE(re15_discard_prompt(NULL, NULL) == 0,
+               "ROOM%04X (%s): die Abfrage ging WAEHREND der Szene auf",
+               f[i].room, f[i].was);
+        { int slot = re15_inv_find_item(f[i].item);
+          PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
+                 "ROOM%04X: die Anzahl faellt schon waehrend der Szene (%d statt 1)",
+                 f[i].room, slot >= 0 ? g_inv.slots[slot].qty : -1); }
+
+        /* --- Szene endet (@0x26DA `Set(2,7,0)`) -> JETZT geht sie auf --------------- */
+        re15_game_flag_set(2, 7, 0);
+        PRUEFE(!re15_cine_active(), "flag(2,7)=0 beendet re15_cine_active() nicht");
+        int bild = -1;
+        for (int k = 0; k < 8; k++) {
+            re15_discard_tick(0, 0);
+            if (re15_discard_prompt(NULL, NULL)) { bild = k; break; }
+        }
+        PRUEFE(bild >= 0, "ROOM%04X (%s): die Abfrage kommt auch NACH der Szene nicht",
+               f[i].room, f[i].was);
+        { uint8_t it = 0; re15_discard_prompt(&it, NULL);
+          PRUEFE(it == f[i].item, "ROOM%04X: falscher Gegenstand nach der Szene", f[i].room); }
+        { int slot = re15_inv_find_item(f[i].item);
+          PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 0,
+                 "ROOM%04X: die Anzahl faellt nicht im Bild der Frage (@0x80051810)",
+                 f[i].room); }
+        printf("  %-24s ROOM%04X msg %2u: waehrend der Szene zu, %d Bild(er) nach"
+               " Set(2,7,0) offen\n", f[i].was, f[i].room, f[i].msg, bild + 1);
+
+        /* --- GEGENPROBE: dieselbe Nachricht OHNE Szene -> sofort offen -------------- */
+        grundzustand();
+        re15_inv_grant(f[i].item, 1);
+        nachricht_spielen(&rdt, f[i].room, f[i].msg);
+        PRUEFE(re15_discard_prompt(NULL, NULL) != 0,
+               "GEGENPROBE ROOM%04X: ohne Szene kommt die Abfrage gar nicht", f[i].room);
+
+        /* --- Und ueber flag(1,27), die zweite Haelfte des Fensters (@0x250C) -------- */
+        grundzustand();
+        re15_inv_grant(f[i].item, 1);
+        re15_game_flag_set(1, 27, 1);
+        nachricht_spielen(&rdt, f[i].room, f[i].msg);
+        for (int k = 0; k < 120; k++) re15_discard_tick(0, 0);
+        PRUEFE(re15_discard_prompt(NULL, NULL) == 0,
+               "ROOM%04X: flag(1,27) haelt die Abfrage nicht zurueck", f[i].room);
+
+        gefahren++;
+        free(raw);
+    }
+    printf("  ABDECKUNG: %d von 3 Faellen gefahren, je 4 Pruefungen"
+           " (Szene zu / danach offen / Gegenprobe ohne Szene / flag(1,27))\n", gefahren);
+    PRUEFE(gefahren == 3, "nicht alle drei Cutscene-Faelle gefahren");
+}
+
+/* =========================================================================
+ * TEIL F — das AUSGELIEFERTE Unterprogramm, Bild fuer Bild.
+ *
+ * TEIL E setzt das Szenen-Flag von Hand. Hier laeuft dagegen das echte
+ * Unterprogramm aus der RDT im echten VM, und gemessen wird:
+ *   - in welchem Bild die Abfrage nach dem ALTEN Stand aufgegangen waere
+ *     (Bedingung damals: "Nachricht ausgeredet"), und
+ *   - in welchem Bild sie JETZT aufgeht.
+ *
+ * ROOM1090 sub03 ist der Fall, der das alte Modell widerlegt hat: die Nachricht
+ * @0x2502 steht EINE Anweisung VOR dem Szenen-Fenster @0x2508. Im Bild, in dem
+ * sie ausgeredet hatte, war flag(2,7) also noch gar nicht gesetzt — ein Riegel
+ * allein auf dem Fenster haette nicht gegriffen. Und weil ein sichtbarer Prompt
+ * den SCD-Takt anhaelt, waere die Szene ueberhaupt nie angelaufen.
+ *
+ * GEGENPROBE ist eingebaut: der alte Oeffnungszeitpunkt wird im selben Lauf
+ * mitgemessen. Liegt er nicht deutlich frueher, misst der Riegel nichts.
+ * ========================================================================= */
+/* Das Unterprogramm suchen, das `Message_on <msg_id>` enthaelt. Die Region wird durch den
+ * NAECHSTEN Unterprogramm-Zeiger begrenzt, nicht durch das erste Evt_end — ein Evt_end in
+ * einem Zweig (z.B. ROOM4001) beendet die Region nicht. */
+static int sub_mit_nachricht(re15_rdt_t *rdt, uint8_t msg_id)
+{
+    for (int s = 0; s < rdt->sub_scd_count; s++) {
+        const uint8_t *p = rdt->sub_scd[s];
+        if (!p) continue;
+        long grenze = 4096;
+        if (s + 1 < rdt->sub_scd_count && rdt->sub_scd[s+1] > p)
+            grenze = rdt->sub_scd[s+1] - p;
+        for (long o = 0; o < grenze; ) {
+            int sz = scd_opcode_size_at(p + o);
+            if (sz <= 0) break;
+            if (p[o] == 0x2B && p[o+1] == msg_id) return s;   /* Message_on <id> */
+            o += sz;
+        }
+    }
+    return -1;
+}
+
+static void teil_f(void)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    printf("\n=== TEIL F: das ausgelieferte Unterprogramm, Bild fuer Bild ===\n");
+    /* Diese drei nennt der Bericht namentlich; gefahren werden ALLE 17 Stellen. */
+    static const struct { unsigned room; uint8_t msg; } laut[] = {
+        { 0x1090,  9 }, { 0x11E0, 12 }, { 0x1100, 4 },
+    };
+    int gefahren = 0, spaeter = 0, ausgelassen = 0;
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        struct { unsigned room; uint8_t msg, item; } f3[1];
+        f3[0].room = re15_discard_sites[i].room;
+        f3[0].msg  = re15_discard_sites[i].msg;
+        f3[0].item = re15_discard_sites[i].item;
+        int nennen = 0;
+        for (unsigned k = 0; k < sizeof laut / sizeof laut[0]; k++)
+            if (laut[k].room == f3[0].room && laut[k].msg == f3[0].msg) nennen = 1;
+        {
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(f3[0].room, &rdt, &n);
+        if (!raw) { printf("  SKIP ROOM%04X\n", f3[0].room); continue; }
+        int sub = sub_mit_nachricht(&rdt, f3[0].msg);
+        if (sub < 0) {
+            /* ROOM4001: Message_on 2 liegt nicht in einer der Unterprogramm-Regionen, die
+             * dieser Sucher abgeht (die Ja/Nein-Antwort-Verzweigung liegt im mainScd).
+             * Wieder ein Mangel des Suchers, kein Verhalten — deshalb MIT Grund
+             * ausgelassen und nicht stillschweigend uebergangen. */
+            printf("  AUSGELASSEN ROOM%04X msg %2u: Message_on in keiner sub-Region"
+                   " gefunden (liegt im mainScd)\n", f3[0].room, (unsigned)f3[0].msg);
+            ausgelassen++; free(raw); continue;
+        }
+
+        grundzustand();
+        g_current_room_id = f3[0].room;
+        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+        re15_inv_grant(f3[0].item, 1);
+        scd_thread_start(0, rdt.sub_scd[sub]);
+
+        long b_msg = -1, b_alt = -1, b_ende = -1, b_neu = -1;
+        int war_wartet = 0;
+        for (long fr = 0; fr < 20000; fr++) {
+            const unsigned char *r; int l, id;
+            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+            g_scd_pad_held = 0;
+            scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            g_scd_pad_edge = 0;
+
+            if (re15_discard_active() && !war_wartet) { b_msg = fr; war_wartet = 1; }
+            /* ALTER Stand: es reichte, dass das Nachrichtensystem frei war. */
+            if (war_wartet && b_alt < 0
+                && !g_scd.message_active && !g_scd.message_fsm_active) b_alt = fr;
+            /* Ende des ausloesenden Unterprogramms (Evt_end). */
+            if (b_ende < 0 && war_wartet && !g_scd.threads[0].active) b_ende = fr;
+
+            if (re15_discard_active()) re15_discard_tick(0, 0);
+            if (b_neu < 0 && re15_discard_prompt(NULL, NULL)) b_neu = fr;
+            if (b_neu >= 0) break;
+        }
+        if (nennen) {
+            printf("  Gegenstand 0x%02X  ROOM%04X sub%02d msg %2u:\n",
+                   f3[0].item, f3[0].room, sub, f3[0].msg);
+            printf("      Bild %5ld  Message_on %u — Abfrage vorgemerkt\n", b_msg, f3[0].msg);
+            printf("      Bild %5ld  ALTER Stand haette hier geoeffnet (Nachricht ausgeredet)\n", b_alt);
+            printf("      Bild %5ld  Evt_end — das Unterprogramm ist fertig\n", b_ende);
+            printf("      Bild %5ld  JETZT geht die Abfrage auf  (= %ld Bilder spaeter)\n",
+                   b_neu, (b_neu >= 0 && b_alt >= 0) ? b_neu - b_alt : -1);
+        }
+
+        /* ⛔ UNTERSCHEIDUNG, nicht Nachsicht: dieser Riegel startet das Unterprogramm
+         * NACKT (scd_thread_start ohne vollen Raum-Aufbau, ohne Kamera, ohne Spieler-
+         * Antwort auf die Ja/Nein-Frage davor). Die Kartenleser ROOM10D0/10D1/1230/1231
+         * und ROOM11E0 msg 9 haengen ihre Benutzungs-Nachricht hinter eine Verzweigung:
+         * ROOM10D0 sub20 @0x19B8 `Ifel_ck` / @0x19BC `Ck(12,31,0)` — das ist die
+         * Ja-Antwort auf die Frage davor (Message_on 7). Ohne echte Spieler-Antwort geht
+         * der Zweig nach Else (@0x19D2 Message_on 8), und Message_on 9 faellt nie.
+         * Die Abfrage wird dann gar nicht erst vorgemerkt.
+         * Das ist ein Mangel DIESES RIEGELS, kein Verhalten des Spiels: im laufenden Spiel
+         * geht die Abfrage in ROOM10D0 auf — Live-Abzug
+         * analysis/befunde_2026-09-22/discard-nacharbeit/, Bild F333, Messchiene
+         * discard.log (erste Zeile `frage=8` = F333, `abfrage=1` schon ab F260).
+         * Sauber getrennt: wurde die Abfrage nie VORGEMERKT, hat der Riegel die Stelle
+         * nicht erreicht -> ausgelassen MIT Grund. Wurde sie vorgemerkt und der Faden ist
+         * fertig, MUSS sie aufgehen — sonst echter Fehler. */
+        if (!war_wartet) {
+            printf("  AUSGELASSEN ROOM%04X sub%02d msg %2u: der Riegel erreicht die Stelle"
+                   " nicht (Verzweigung auf die Ja/Nein-Antwort bzw. Evt_exec) —\n"
+                   "               im Spiel belegt durch den Live-Abzug (F333)\n",
+                   f3[0].room, sub, f3[0].msg);
+            ausgelassen++;
+            free(raw);
+            continue;
+        }
+        PRUEFE(b_ende >= 0, "ROOM%04X: das Unterprogramm endet nie", f3[0].room);
+        PRUEFE(b_neu >= 0, "ROOM%04X: der Faden ist fertig, die Abfrage geht trotzdem"
+               " nicht auf", f3[0].room);
+        PRUEFE(b_neu >= b_ende,
+               "ROOM%04X: die Abfrage geht in Bild %ld auf, das Unterprogramm laeuft aber"
+               " noch bis Bild %ld", f3[0].room, b_neu, b_ende);
+        if (b_alt >= 0 && b_neu > b_alt) spaeter++;
+        gefahren++;
+        free(raw);
+        }
+    }
+    printf("  ABDECKUNG: %d von %d Benutzungsstellen mit dem ECHTEN Unterprogramm gefahren,\n"
+           "             %d MIT GRUND ausgelassen (Stelle haengt hinter einer Ja/Nein-\n"
+           "             Verzweigung bzw. liegt im mainScd — dort greift der Live-Abzug);\n"
+           "             in %d der gefahrenen geht die Abfrage jetzt SPAETER auf als vorher\n",
+           gefahren, RE15_DISCARD_SITE_COUNT, ausgelassen, spaeter);
+    PRUEFE(gefahren + ausgelassen == RE15_DISCARD_SITE_COUNT,
+           "%d Benutzungsstellen weder gefahren noch mit Grund ausgelassen",
+           RE15_DISCARD_SITE_COUNT - gefahren - ausgelassen);
+    /* GEGENPROBE: der Riegel muss ueberhaupt etwas verschieben. Waere er wirkungslos,
+     * laege der neue Zeitpunkt ueberall auf dem alten. */
+    PRUEFE(spaeter >= 3, "GEGENPROBE: der Riegel verschiebt nur %d Stellen", spaeter);
+}
+
 int main(void)
 {
     printf("=== r21_discard_wegwerfen — \"You don't need this key any more. Discard it?\"\n");
@@ -433,6 +751,9 @@ int main(void)
         return 77;
     }
     teil_c();
+    teil_d();
+    teil_e();
+    teil_f();
 
     if (g_fehler) { printf("\nFEHLGESCHLAGEN: %d Pruefungen\n", g_fehler); return 1; }
     printf("\nOK — Abfrage, Ja/Nein und der Sackgassen-Riegel halten.\n");

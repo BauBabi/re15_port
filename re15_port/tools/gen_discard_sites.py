@@ -130,10 +130,24 @@ def main():
         else: kandidaten.append((room, room_id, mid, treffer[0], treffer[1], txt))
 
     # (C) Eindeutigkeit ueber BASISRAEUME (Variantenziffer einklappen)
+    #
+    # ⛔ VOLLSUCHE UEBER DEN NAMEN, nicht ueber die Zuordnung aus (A).
+    # Frueher zaehlte (C) nur die Nachrichten, die (A) dem Gegenstand ZUGESCHLAGEN hatte.
+    # (A) ordnet aber nach LAENGSTEM Treffer zu: eine Nachricht mit "Red Master Keycard"
+    # geht an den Master, und "Red Keycard" sieht sie nie — obwohl ihr Name woertlich darin
+    # steht. Haette ein Gegenstand zwei Benutzungsstellen, von denen eine so verschluckt
+    # wird, zaehlte (C) eine und wuerde faelschlich eine Wegwerf-Abfrage erlauben, obwohl
+    # der Gegenstand noch gebraucht wird. Deshalb wird jetzt fuer JEDEN Kandidaten der Name
+    # in ALLEN "used the"-Nachrichten gesucht, unabhaengig davon, wem (A) sie zugeschlagen
+    # hat. Die Regel kann dadurch nur noch STRENGER werden, nie lockerer.
     def basis(room): return room[:-1] + "x"
     stellen = collections.defaultdict(set)
-    for (room, room_id, mid, iid, nm, txt) in kandidaten:
-        stellen[iid].add((basis(room), mid))
+    kandidaten_ids = sorted(set(k[3] for k in kandidaten))
+    for iid in kandidaten_ids:
+        nm = names[iid]
+        for (room, room_id, mid, txt) in roh:
+            if len(nm) >= 4 and nm in txt:
+                stellen[iid].add((basis(room), mid))
 
     gewaehlt, verworfen = [], []
     for (room, room_id, mid, iid, nm, txt) in kandidaten:

@@ -75,6 +75,7 @@ static inline int RNDI(float f) {
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
 #include "re15_item_discard.h" /* re15_discard_* — "You don't need this key any more. Discard it?" */
+#include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
@@ -4562,7 +4563,7 @@ re_title:;
              * letterbox close ramp (FUN_80021a0c, 15 frames). Elliot/heli are hidden
              * by camera framing (cut 0x03), not a despawn — see the audit. */
             static int s_cine_was_active = 0;
-            int cine_active = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+            int cine_active = re15_cine_active();   /* flag(1,27) || flag(2,7) — game_state.c */
             /* Byte-true LETTERBOX counter (FUN_80021a0c @0x80020f34, once per frame): ramps
              * ±0x10 within [0, 0xF0] on the LIVE flag(1,27) bit — the bars' subtractive gray
              * level the renderer draws (bg - level). Replaces the binary 24/0 bar toggle;
@@ -4658,16 +4659,17 @@ re_title:;
              * glyph 0x26 = an 8×8 TEX.TIM sub-region we don't load) and blinks per the
              * state-4 timer (visible when message_blink & 0x18). */
             if (g_scd.message_select) {
-                /* Byte-true positions (FUN_80028134 state 4): cursor cell X =
-                 * choice*0x46 + 0xa0 = 160 (Yes) / 230 (No); options at 0xae=174 / 244;
-                 * row 196. Each option sits 14px right of its cursor. */
+                /* Byte-true Zahlen aus der EINEN Quelle (msg_select_common.c): Cursor
+                 * choice*0x46 + 0xa0 = 160/230 (@0x8002863c-50), Optionen 174/244
+                 * (@0x80028680 + Schrittweite @0x8002864c), Zeile 196 (@0x80028674),
+                 * Blink-Maske 0x18 (@0x80028600). Frueher standen sie hier inline — und
+                 * genau deshalb bekamen die beiden anderen Prompts eigene, geratene. */
                 extern void re15_render_pc_cursor(int x, int y);
-                static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4F };
-                static const unsigned char no_g[2]  = { 0x2A, 0x4B };
-                re15_render_pc_msg_text(174, 196, yes_g, 3);
-                re15_render_pc_msg_text(244, 196, no_g,  2);
-                if (g_scd.message_blink & 0x18)
-                    re15_render_pc_cursor((g_scd.message_choice ? 230 : 160), 196);
+                re15_msg_select_t sel;
+                re15_msg_select_layout(g_scd.message_choice, g_scd.message_blink, &sel);
+                re15_render_pc_msg_text(sel.opt[0].x, sel.opt[0].y, sel.opt[0].glyphs, sel.opt[0].len);
+                re15_render_pc_msg_text(sel.opt[1].x, sel.opt[1].y, sel.opt[1].glyphs, sel.opt[1].len);
+                if (sel.cursor_visible) re15_render_pc_cursor(sel.cursor_x, sel.cursor_y);
             }
         }
 
@@ -9593,21 +9595,27 @@ re_title:;
                 extern void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal);
                 re15_render_pc_item_prompt(34, 180, prompt, ptype, reveal);
                 if (prompt == 1 && re15_item_modal_prompt_ready()) {  /* Yes/No only after the text types out */
-                    static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4f };  /* "Yes" (game glyphs) */
-                    static const unsigned char no_g[2]  = { 0x2a, 0x4b };         /* "No"                */
+                    /* ⛔ Diese Auswahl trug bis 2026-09-22 fuenf GERATENE Zahlen
+                     * (Yes 190 / No 234 / Zeile 202, Cursor 180/224/203, kein Blinken).
+                     * Der Aufnahme-Prompt oeffnet mit a1 = 0x100 (@0x8001df6c-94) und wird
+                     * damit vom SELBEN Zustand 4 LAB_80028564 gezeichnet wie jede andere
+                     * Abfrage — er hat gar keine eigenen Koordinaten. Jetzt holt er sie, wie
+                     * alle anderen, aus re15_msg_select_layout (engine/src/msg_select_common.c,
+                     * Herleitung in include/re15_msg_select.h). */
                     extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
-                    re15_render_pc_msg_text(190, 202, yes_g, 3);
-                    re15_render_pc_msg_text(234, 202, no_g,  2);
-                    re15_render_pc_cursor(pchoice ? 224 : 180, 203);  /* ▶ on the current choice */
+                    re15_msg_select_t sel;
+                    re15_msg_select_layout(pchoice, re15_item_modal_blink(), &sel);
+                    re15_render_pc_msg_text(sel.opt[0].x, sel.opt[0].y, sel.opt[0].glyphs, sel.opt[0].len);
+                    re15_render_pc_msg_text(sel.opt[1].x, sel.opt[1].y, sel.opt[1].glyphs, sel.opt[1].len);
+                    if (sel.cursor_visible) re15_render_pc_cursor(sel.cursor_x, sel.cursor_y);
                 }
             }
 
             /* "You don't need this key any more. Discard it?" (@0x800C508B, Prompt-Skript [6]).
              * GLEICHE Box wie der Aufnahme-Prompt: beide werden im Original von demselben
-             * Oeffner FUN_80027e68 mit a1 = 0x100 aus derselben Tabelle @0x800C4FC6 gezogen,
-             * also sind es auch dieselben Bildschirmkoordinaten. Skript [6] hat wie Skript [0]
-             * einen Zeilenumbruch (0x08 @0x800C50A6), der Walker setzt die zweite Zeile 13 px
-             * tiefer — Yes/No bei 202 bleibt darunter frei. */
+             * Oeffner FUN_80027e68 mit a1 = 0x100 aus derselben Tabelle @0x800C4FC6 gezogen
+             * (@0x80027ee8 `beq a1,0x100`, Box 0x22/0xb4 @0x80027eec/@0x80027f14), also sind
+             * es auch dieselben Bildschirmkoordinaten und derselbe Zeichner LAB_80028564. */
             {
                 uint8_t ditem = 0; int dchoice = 0;
                 int dprompt = re15_discard_prompt(&ditem, &dchoice);
@@ -9616,13 +9624,15 @@ re_title:;
                                                            uint8_t item_id, int reveal);
                     re15_render_pc_item_prompt(34, 180, dprompt, ditem, re15_discard_reveal());
                     if (re15_discard_ready()) {
-                        static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4f };  /* "Yes" */
-                        static const unsigned char no_g[2]  = { 0x2a, 0x4b };        /* "No"  */
                         extern int re15_render_pc_msg_text(int x, int y,
                                                            const unsigned char *raw, int len);
-                        re15_render_pc_msg_text(190, 202, yes_g, 3);
-                        re15_render_pc_msg_text(234, 202, no_g,  2);
-                        re15_render_pc_cursor(dchoice ? 224 : 180, 203);
+                        re15_msg_select_t sel;
+                        re15_msg_select_layout(dchoice, re15_discard_blink(), &sel);
+                        re15_render_pc_msg_text(sel.opt[0].x, sel.opt[0].y,
+                                                sel.opt[0].glyphs, sel.opt[0].len);
+                        re15_render_pc_msg_text(sel.opt[1].x, sel.opt[1].y,
+                                                sel.opt[1].glyphs, sel.opt[1].len);
+                        if (sel.cursor_visible) re15_render_pc_cursor(sel.cursor_x, sel.cursor_y);
                     }
                 }
             }
