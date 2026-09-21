@@ -257,11 +257,19 @@ def zelle_zuordnen(region, eigene, R, t, H, y0, zellen, hull):
     return best, anteil
 
 
-def quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0):
+def quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0, typ=1):
     """geom.quader_tiefe mit BASIS y0: der Quader steht auf der Bodenebene y0 des Bands
     (PSX-Y nach unten, hoehe negativ), Deckel bei y0+hoehe. geom.quader_tiefe setzt die Basis
     fest auf y=0 — auf dem Podest y=-14400 (ROOM1060/10A0) traf so kein Sehstrahl den Quader
-    (gemessen 2026-09-19: IoU 0,00, 0 von 9860 Punkten, Tiefe 1)."""
+    (gemessen 2026-09-19: IoU 0,00, 0 von 9860 Punkten, Tiefe 1).
+
+    typ: der SCA-Zellentyp. 1 (Rechteck) ist der bisherige Weg und bleibt BITGLEICH —
+    geom.zellen_solid_test gibt fuer ihn None zurueck und keine Zeile unten greift.
+    Fuer Kreis (3) und Diagonalen (4/5/6/7) wird die Zelle als ihre ECHTE Form
+    geraycastet; die Bedingungen stehen mit ihren @-Adressen in geom.zellen_solid_test.
+    ⛔ Runde 19, Marke 2 (ROOM10E0 Cut 7 "Liege", Typ 5): das Huellrechteck lag an der
+    Spielerspalte 1739 Welteinheiten ZU NAH und zerschnitt die Figur — genau der Fehler,
+    vor dem sca_sperrzellen() im eigenen Docstring warnt (geom.py:575-578)."""
     _R = np.array(R, float).reshape(3, 3) / 4096.0
     _Ri = np.linalg.inv(_R)
     _c = _Ri.dot(-np.array(t, float))
@@ -269,11 +277,19 @@ def quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0):
     _d = np.stack([_sx, _sy, np.full_like(_sx, float(H))], -1) @ _Ri.T
     best = np.full((240, 320), np.inf)
     y_ob, y_un = y0 + hoehe, y0
+    solid = geom.zellen_solid_test(typ, X0, Z0, X1 - X0, Z1 - Z0)
+    mantel = geom.zellen_schnittflaechen(typ, X0, Z0, X1 - X0, Z1 - Z0) if solid else None
 
     def _eintragen(s, q):
         vz = (q[..., 0] * R[6] + q[..., 1] * R[7] + q[..., 2] * R[8]) / 4096.0 + t[2]
         ok = (s > 0) & np.isfinite(vz) & (vz > 64) & (vz < best)
         best[ok] = vz[ok]
+
+    def _in_form(q):
+        """Der Punkt liegt in der soliden Haelfte (Rechteck: immer)."""
+        if solid is None:
+            return True
+        return solid(q[..., 0], q[..., 2])
 
     for achse, wert, lo, hi, oa in ((0, X0, Z0, Z1, 2), (0, X1, Z0, Z1, 2),
                                     (2, Z0, X0, X1, 0), (2, Z1, X0, X1, 0)):
@@ -281,15 +297,46 @@ def quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0):
         with np.errstate(divide="ignore", invalid="ignore"):
             s = (wert - _c[achse]) / dd
             q = _c + s[..., None] * _d
+        qn = np.nan_to_num(q)
         gut = (np.isfinite(s) & (np.abs(dd) > 1e-9) & (q[..., oa] >= lo) & (q[..., oa] <= hi)
+               & (q[..., 1] <= y_un) & (q[..., 1] >= y_ob) & _in_form(qn))
+        _eintragen(np.where(gut, s, -1.0), qn)
+    # ZUSATZFLAECHE: die Schraege bzw. der Zylindermantel. Ohne sie fehlt der Zelle genau
+    # die Flaeche, die das Huellrechteck nicht hat, und der Sehstrahl faende nichts.
+    if mantel and mantel[0] == "diagonale":
+        _, nx, nz, konst = mantel
+        den = nx * _d[..., 0] + nz * _d[..., 2]
+        with np.errstate(divide="ignore", invalid="ignore"):
+            s = (konst - (nx * _c[0] + nz * _c[2])) / den
+            q = _c + s[..., None] * _d
+        qn = np.nan_to_num(q)
+        gut = (np.isfinite(s) & (np.abs(den) > 1e-9)
+               & (q[..., 0] >= X0) & (q[..., 0] <= X1) & (q[..., 2] >= Z0) & (q[..., 2] <= Z1)
                & (q[..., 1] <= y_un) & (q[..., 1] >= y_ob))
-        _eintragen(np.where(gut, s, -1.0), np.nan_to_num(q))
+        _eintragen(np.where(gut, s, -1.0), qn)
+    elif mantel and mantel[0] == "kreis":
+        _, cx, cz, cr = mantel
+        ox, oz = _c[0] - cx, _c[2] - cz
+        a = _d[..., 0] ** 2 + _d[..., 2] ** 2
+        b = 2.0 * (ox * _d[..., 0] + oz * _d[..., 2])
+        cc = ox * ox + oz * oz - cr * cr
+        disk = b * b - 4.0 * a * cc
+        with np.errstate(divide="ignore", invalid="ignore"):
+            wurz = np.sqrt(np.maximum(disk, 0.0))
+            for s in ((-b - wurz) / (2.0 * a), (-b + wurz) / (2.0 * a)):
+                q = _c + s[..., None] * _d
+                qn = np.nan_to_num(q)
+                gut = (np.isfinite(s) & (disk >= 0.0) & (a > 1e-12)
+                       & (q[..., 1] <= y_un) & (q[..., 1] >= y_ob))
+                _eintragen(np.where(gut, s, -1.0), qn)
     with np.errstate(divide="ignore", invalid="ignore"):
         s = (y_ob - _c[1]) / _d[..., 1]
         q = _c + s[..., None] * _d
+    qn = np.nan_to_num(q)
     gut = (np.isfinite(s) & (np.abs(_d[..., 1]) > 1e-9)
-           & (q[..., 0] >= X0) & (q[..., 0] <= X1) & (q[..., 2] >= Z0) & (q[..., 2] <= Z1))
-    _eintragen(np.where(gut, s, -1.0), np.nan_to_num(q))
+           & (q[..., 0] >= X0) & (q[..., 0] <= X1) & (q[..., 2] >= Z0) & (q[..., 2] <= Z1)
+           & _in_form(qn))
+    _eintragen(np.where(gut, s, -1.0), qn)
     treffer = np.isfinite(best)
     return np.where(treffer, best, 0.0), treffer
 
@@ -307,10 +354,14 @@ def hoehe_messen(region, R, t, H, z, y0=0):
     das Ding hoeher als jeder Quader hier (Wand bis zur Decke) und wird als Saeule
     ohne Deckel gerechnet."""
     X0, X1, Z0, Z1 = z[0], z[0] + z[2], z[1], z[1] + z[3]
+    # ⛔ Runde 19: die HOEHE wird an der ECHTEN Zellenform gemessen, nicht am
+    # Huellrechteck - sonst passt die beste Hoehe zu einer Silhouette, die spaeter
+    # gar nicht geraycastet wird (Typ 5 ROOM10E0 C7: IoU 0,44 Rechteck / 0,61 Dreieck).
+    ztyp = int(z[4]) if len(z) > 4 else 1
     reg = region.astype(bool)
 
     def iou(h):
-        _, tr = quader_auf_band(R, t, H, X0, X1, Z0, Z1, h, y0)
+        _, tr = quader_auf_band(R, t, H, X0, X1, Z0, Z1, h, y0, ztyp)
         u = float((tr & reg).sum())
         v = float((tr | reg).sum())
         return (u / v) if v else 0.0, tr
@@ -341,11 +392,16 @@ def tiefe_zelle(region, R, t, H, z, hoehe, saeule, y0=0):
     """Kamera-z je Bildpunkt (i): Sehstrahl gegen die Zelle; Fehltreffer erben vom
     naechsten Treffer. -> (vz float 240x320, Zahl der Treffer); (None, 0) ohne Treffer."""
     X0, X1, Z0, Z1 = z[0], z[0] + z[2], z[1], z[1] + z[3]
+    ztyp = int(z[4]) if len(z) > 4 else 1
     if saeule:
+        # ⛔ OFFEN UND LAUT: der Saeulen-Weg (kollisionstiefe_schnell) kennt nur
+        # Rechtecke. Fuer eine Saeule mit NICHT-rechteckiger Zelle bleibt es beim
+        # Huellrechteck; in STAGE1 tritt dieser Fall nicht auf (Zensus Runde 19:
+        # die 7 Nicht-Typ-1-Zellen sind alle Quader mit Deckel, saeule=False).
         vz = kollisionstiefe_schnell(R, t, H, [(z[0], z[1], z[2], z[3])]) * 64.0
         tr = vz > 0
     else:
-        vz, tr = quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0)
+        vz, tr = quader_auf_band(R, t, H, X0, X1, Z0, Z1, hoehe, y0, ztyp)
     vzm = np.zeros((240, 320), np.float64)
     hit = region & tr
     if not hit.any():
