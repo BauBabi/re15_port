@@ -1,3 +1,94 @@
+# v0.8.9 - 2026-09-21
+
+Ihre vier F9-Marken zu den Vordergrund-Masken. Drei sind behoben, eine braucht etwas von
+Ihnen. Dazu ein Befund an meiner eigenen Abnahme, der erklaert, warum keiner dieser Fehler
+vorher aufgefallen ist.
+
+## Drei Marken behoben — und es ist derselbe Fehler
+
+Marke 1, 2 und 3 sahen verschieden aus und hatten dieselbe Wurzel: **eine waagerechte
+Flaeche, deren eigene Kante als Bodenkontakt gelesen wird.** Das Werkzeug nimmt die unterste
+Zeile einer Freistellung und schaut, wo sie den Fussboden trifft. Bei einer Tischplatte ist
+diese Zeile aber nicht der Boden, sondern die Vorderkante der Platte. Der Sehstrahl laeuft
+darunter weiter und trifft den Boden weit dahinter — der Tisch landet hinter sich selbst.
+
+- **ROOM10D0, Bild 162.** Platte und Gestell **desselben** Klapptischs bekamen Entfernungen,
+  die 5,7 Meter auseinanderliegen. Leon stand genau dazwischen: das Gestell verdeckte ihn
+  vollstaendig, die Platte gar nicht. 133 von 255 gezeichneten Punkten seines Koerpers lagen
+  sichtbar auf der Tischplatte. Die Plattenhoehe ist jetzt dreifach gemessen eingetragen.
+- **ROOM1050, Bild 239.** Die Sperrzelle des Schreibtischs wurde verworfen, weil ihr Anteil
+  die Schwelle knapp verfehlte, und die Ersatzregel schob 21 Maskenspalten bis zu 3,7 Meter
+  hinter den Tisch, den sie darstellen. Ihr Bein wurde ueber Platte und Akten gemalt.
+- **ROOM10E0, Bild 185.** Andere Wurzel, verwandter Fehler: die Tiefe der Liege kam aus dem
+  **umschliessenden Rechteck** einer diagonalen Kollisionszelle und war damit 1,7 Meter zu
+  nah. Sie standen in der freien Haelfte und wurden in zwei Stuecke zerrissen, 43 Bildzeilen
+  am Stueck ohne einen einzigen sichtbaren Punkt von Ihnen. Das ist generisch behoben, fuer
+  alle fuenf schraegen und runden Zellformen, jede mit ihrer Adresse.
+
+## Marke 4, der Stuhl: ich brauche eine Freistellung von Ihnen
+
+> "Gerade der letzte zeigt jetzt fehlende Stuecke vom Stuhl auf der rechten Seite. Gerade da
+> bin ich mir SICHER das ich den Stuhl in meiner vorherigen PRI Implementierung richtig
+> ausgeschnitten habe...."
+
+Ihre Datei ist in Ordnung und vollstaendig angekommen: alle 2677 Punkte von `07_01.png`
+stehen in der ausgelieferten Maske, die Lage sitzt auf Rang 1 von 30752 geprueften Lagen,
+und in allen drei Fassungen der Git-Historie ist die Datei gleich gross.
+
+Das Problem ist ein anderes, und ich kann es nicht allein loesen: **diese eine Freistellung
+umfasst zwei Gegenstaende in sehr verschiedener Entfernung** — den nahen Stuhlrahmen und den
+blaugrauen Kasten am Tischende dahinter. Beide haengen als eine einzige zusammenhaengende
+Form zusammen. Ein Tiefenmodell kann dafuer nur **eine** Entfernung vergeben, also bekommt
+der ferne Kasten die des nahen Rahmens.
+
+Ich habe versucht, die beiden automatisch zu trennen, und das verworfen: die Farbregel, die
+ich dafuer gebraucht haette, ist dieselbe, die die Form erzeugt hat — sie bestaetigt sich
+selbst. Der dunkle Fuss des Kastens ist farblich nicht vom Boden zu unterscheiden.
+
+**Was ich brauche:** den Bereich im Bild bei x46 bis 72 und y126 bis 159 als **zwei**
+Freistellungen statt einer, also den fernen Kasten getrennt vom nahen Stuhlrahmen. Bis dahin
+bleibt dieser Winkel so, wie er ausgeliefert ist. Der vorbereitete Umbau liegt fertig auf
+einem Zweig und wartet.
+
+Ehrlich dazu: an Ihrem Abzug gemessen sind 240 der 273 Punkte dieses Gegenstands ohnehin von
+Ihrer Figur uebermalt. Der sichtbare Rest sind 18 Punkte. Mein Umbau haette genau diese 18
+entfernt und keinen einzigen hinzugefuegt — deshalb liefere ich ihn nicht aus.
+
+Ein zweiter offener Posten im selben Bild: ein Drittel der Maskenflaeche dieses Winkels
+(1794 von 5435 Punkten) ist kein Lasso von Ihnen, sondern ein Kasten von mir. Auch dafuer
+waere eine Freistellung die richtige Vorgabe.
+
+## Warum kein Riegel das gesehen hat
+
+Der unangenehmste Befund dieser Runde betrifft mein eigenes Pruefwerkzeug. Die Abnahme
+fragte, ob an den begehbaren Standplaetzen faelschlich etwas verdeckt wird — und bekam ihre
+Standplaetze aus der falschen Quelle. Sie las die **Innenraeume der Kollisionszellen**, und
+die Zellen sind die Hindernisse. In ROOM10D0 lagen 20081 von 20081 dieser "Bodenpunkte"
+innerhalb einer soliden Zelle, in ROOM1140 12915 von 12915. Die Abnahme mass also an Orten,
+an denen man gar nicht stehen kann.
+
+Das Bittere: das richtige Werkzeug liegt seit dem 19. September daneben, formatgleich
+gebaut, und wurde nie eingeschaltet. Weil beide Dateien identisch aussehen, war der
+Unterschied nicht zu sehen. Ab jetzt traegt die richtige Datei eine Herkunftsmarke, und die
+Abnahme bricht ohne sie ab.
+
+Dazu kommt: die Abnahme hatte ueberhaupt **kein Kriterium fuer fehlende Verdeckung**. Sie
+prueft nur, dass nichts faelschlich verdeckt wird. Genau die andere Richtung war aber Ihr
+Befund.
+
+## Was bewusst unveraendert bleibt
+
+Der Zensus hat Faelle geprueft, die Sie nicht gemeldet hatten, und die meisten davon sind
+nach Messung **keine** Fehler. Die Bueroraum-Kreiszellen in ROOM10F0 werden nicht umgebaut:
+kein zerrissener Bildstreifen an 4318 geprueften Spalten, und der Umbau wuerde in die
+falsche Richtung wirken. Der Alligatorkanal ROOM2090 bleibt ebenfalls, dort liegt die
+gesamte gemeldete Wirkung in soliden Zellen, und die beanstandete Tiefe ist durch die
+Blickhoehe des Kamerasatzes gedeckt. In ROOM1100 ist der Kasten fuer eine Wand die richtige
+Form, und der vorgeschlagene Beschnitt haette an 40 Standplaetzen 1323 Punkte Leck erzeugt —
+also genau die Fehlerklasse, gegen die dieser Kasten ueberhaupt gebaut wurde.
+
+---
+
 # v0.8.8 - 2026-09-21
 
 Die drei Punkte, die in v0.8.7 noch offen waren, sind abgearbeitet. Bei zweien davon hat
