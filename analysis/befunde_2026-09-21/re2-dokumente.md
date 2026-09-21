@@ -3,11 +3,19 @@
 **Auftrag.** Alle Dokumenten-Assets von Resident Evil 2 (Retail, Leon) unverändert
 extrahieren, damit auswählbar ist, welches als Vorlage für die RE1.5-Dokumente dient.
 
-**Ergebnis in einem Satz.** RE2 hat **genau 25 Dokumente** mit **191 Seitenbildern** und
-**25 Hintergrundbildern**; alle 216 sind als Roh-TIM und als PNG extrahiert, die
-Dokument-**Namen** liegen als echte Zeichenkette in der EXE, der Dokument-**Text** dagegen
-ist auf der PSX kein Zeichenstrom sondern in die Bilder gerastert, und ein **3D-Modell je
-Dokument existiert nicht** — es gibt nur einen Anzeige-Körper für den FILE-Bildschirm.
+**Ergebnis in vier Sätzen.**
+
+1. RE2 hat **genau 25 Dokumente** mit **191 Seitenbildern** und **25 Hintergrundbildern**;
+   alle 216 sind byte-true als Roh-TIM und als PNG extrahiert, und in der Quelldatei
+   bleibt **nichts** übrig (Abschnitt 2.1).
+2. Die Dokument-**Namen** sind echte Zeichenketten in der EXE; der Dokument-**Text** ist es
+   nicht — er ist auf der PSX in die Bilder gerastert.
+3. Der **Hintergrund**, auf dem der Text liegt, ist das 8bpp-Bild aus demselben Slot des
+   Dokuments — nicht ein Pergament aus einer anderen Datei (Abschnitt 1.6).
+4. Ein **3D-Modell je Dokument existiert nicht**, und es kann keines geben: kein
+   Gegenstand in RE2 hat ein Mesh, und die Dokument-Ids sind aus den Item-Grafiken sogar
+   ausdrücklich ausgeschlossen (Abschnitt 5). Geometrie gibt es nur für das Möbelstück des
+   FILE-Bildschirms.
 
 **Auswahlbogen:** `extracted_re2_dokumente/uebersicht.html` — im Browser öffnen
 (Doppelklick genügt, keine Serverfreigabe nötig; alle 457 Verweise sind relativ und
