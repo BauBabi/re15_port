@@ -1,0 +1,3 @@
+# main00.scd — 34 Byte, 2 Records, Walk: ok
++0x0000  0x3B Door_aot_se        3b 00 01 00 00 00 00 7d 80 0c 01 00 01 00 18 60 00 00 f8 ed 28 01 05 0c 00 00 31 00 00 00 00 00
++0x0020  0x01 op01               01 00

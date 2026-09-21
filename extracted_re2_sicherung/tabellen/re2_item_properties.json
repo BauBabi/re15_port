@@ -1,0 +1,2037 @@
+[
+ {
+  "id": 0,
+  "id_hex": "0x00",
+  "name_en": "",
+  "name_addr": "0x8009E550",
+  "name_bytes_hex": "",
+  "prop_addr": "0x800A9E1C",
+  "prop_raw_hex": "00000400e89c0a80",
+  "max": 0,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 1,
+  "id_hex": "0x01",
+  "name_en": "Knife",
+  "name_addr": "0x8009E551",
+  "name_bytes_hex": "274a454241",
+  "prop_addr": "0x800A9E24",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 2,
+  "id_hex": "0x02",
+  "name_en": "Hand Gun",
+  "name_addr": "0x8009E557",
+  "name_bytes_hex": "243d4a400023514a",
+  "prop_addr": "0x800A9E2C",
+  "prop_raw_hex": "12000002ec9c0a80",
+  "max": 18,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9CEC",
+  "mix": [
+   {
+    "partner": 20,
+    "result": 2,
+    "addr": "0x800A9CEC",
+    "raw_hex": "140502ff"
+   },
+   {
+    "partner": 32,
+    "result": 4,
+    "addr": "0x800A9CF0",
+    "raw_hex": "20040400"
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "id_hex": "0x03",
+  "name_en": "Hand Gun",
+  "name_addr": "0x8009E560",
+  "name_bytes_hex": "243d4a400023514a",
+  "prop_addr": "0x800A9E34",
+  "prop_raw_hex": "0d000001ec9c0a80",
+  "max": 13,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CEC",
+  "mix": [
+   {
+    "partner": 20,
+    "result": 2,
+    "addr": "0x800A9CEC",
+    "raw_hex": "140502ff"
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "id_hex": "0x04",
+  "name_en": "C. Hand Gun",
+  "name_addr": "0x8009E569",
+  "name_bytes_hex": "1f0100243d4a400023514a",
+  "prop_addr": "0x800A9E3C",
+  "prop_raw_hex": "12000001ec9c0a80",
+  "max": 18,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CEC",
+  "mix": [
+   {
+    "partner": 20,
+    "result": 2,
+    "addr": "0x800A9CEC",
+    "raw_hex": "140502ff"
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "id_hex": "0x05",
+  "name_en": "Magnum",
+  "name_addr": "0x8009E575",
+  "name_bytes_hex": "293d434a5149",
+  "prop_addr": "0x800A9E44",
+  "prop_raw_hex": "08000002f49c0a80",
+  "max": 8,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9CF4",
+  "mix": [
+   {
+    "partner": 22,
+    "result": 5,
+    "addr": "0x800A9CF4",
+    "raw_hex": "160505ff"
+   },
+   {
+    "partner": 33,
+    "result": 6,
+    "addr": "0x800A9CF8",
+    "raw_hex": "21040601"
+   }
+  ]
+ },
+ {
+  "id": 6,
+  "id_hex": "0x06",
+  "name_en": "C. Magnum",
+  "name_addr": "0x8009E57C",
+  "name_bytes_hex": "1f0100293d434a5149",
+  "prop_addr": "0x800A9E4C",
+  "prop_raw_hex": "08000001f49c0a80",
+  "max": 8,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CF4",
+  "mix": [
+   {
+    "partner": 22,
+    "result": 5,
+    "addr": "0x800A9CF4",
+    "raw_hex": "160505ff"
+   }
+  ]
+ },
+ {
+  "id": 7,
+  "id_hex": "0x07",
+  "name_en": "Shotgun",
+  "name_addr": "0x8009E586",
+  "name_bytes_hex": "2f444b5043514a",
+  "prop_addr": "0x800A9E54",
+  "prop_raw_hex": "05000002fc9c0a80",
+  "max": 5,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9CFC",
+  "mix": [
+   {
+    "partner": 21,
+    "result": 7,
+    "addr": "0x800A9CFC",
+    "raw_hex": "150507ff"
+   },
+   {
+    "partner": 34,
+    "result": 8,
+    "addr": "0x800A9D00",
+    "raw_hex": "22040802"
+   }
+  ]
+ },
+ {
+  "id": 8,
+  "id_hex": "0x08",
+  "name_en": "C. Shotgun",
+  "name_addr": "0x8009E58E",
+  "name_bytes_hex": "1f01002f444b5043514a",
+  "prop_addr": "0x800A9E5C",
+  "prop_raw_hex": "07000001fc9c0a80",
+  "max": 7,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CFC",
+  "mix": [
+   {
+    "partner": 21,
+    "result": 7,
+    "addr": "0x800A9CFC",
+    "raw_hex": "150507ff"
+   }
+  ]
+ },
+ {
+  "id": 9,
+  "id_hex": "0x09",
+  "name_en": "G. Launcher",
+  "name_addr": "0x8009E599",
+  "name_bytes_hex": "230100283d514a3f44414e",
+  "prop_addr": "0x800A9E64",
+  "prop_raw_hex": "fa000303109d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9D10",
+  "mix": [
+   {
+    "partner": 24,
+    "result": 9,
+    "addr": "0x800A9D10",
+    "raw_hex": "180509ff"
+   },
+   {
+    "partner": 25,
+    "result": 9,
+    "addr": "0x800A9D14",
+    "raw_hex": "19070903"
+   },
+   {
+    "partner": 26,
+    "result": 9,
+    "addr": "0x800A9D18",
+    "raw_hex": "1a070903"
+   }
+  ]
+ },
+ {
+  "id": 10,
+  "id_hex": "0x0A",
+  "name_en": "G. Launcher",
+  "name_addr": "0x8009E5A5",
+  "name_bytes_hex": "230100283d514a3f44414e",
+  "prop_addr": "0x800A9E6C",
+  "prop_raw_hex": "fa0001031c9d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 1,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9D1C",
+  "mix": [
+   {
+    "partner": 25,
+    "result": 10,
+    "addr": "0x800A9D1C",
+    "raw_hex": "19050aff"
+   },
+   {
+    "partner": 24,
+    "result": 10,
+    "addr": "0x800A9D20",
+    "raw_hex": "18070a04"
+   },
+   {
+    "partner": 26,
+    "result": 10,
+    "addr": "0x800A9D24",
+    "raw_hex": "1a070a04"
+   }
+  ]
+ },
+ {
+  "id": 11,
+  "id_hex": "0x0B",
+  "name_en": "G. Launcher",
+  "name_addr": "0x8009E5B1",
+  "name_bytes_hex": "230100283d514a3f44414e",
+  "prop_addr": "0x800A9E74",
+  "prop_raw_hex": "fa000203289d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 2,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9D28",
+  "mix": [
+   {
+    "partner": 26,
+    "result": 11,
+    "addr": "0x800A9D28",
+    "raw_hex": "1a050bff"
+   },
+   {
+    "partner": 24,
+    "result": 11,
+    "addr": "0x800A9D2C",
+    "raw_hex": "18070b05"
+   },
+   {
+    "partner": 25,
+    "result": 11,
+    "addr": "0x800A9D30",
+    "raw_hex": "19070b05"
+   }
+  ]
+ },
+ {
+  "id": 12,
+  "id_hex": "0x0C",
+  "name_en": "Bow Gun",
+  "name_addr": "0x8009E5BD",
+  "name_bytes_hex": "1e4b530023514a",
+  "prop_addr": "0x800A9E7C",
+  "prop_raw_hex": "120000010c9d0a80",
+  "max": 18,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9D0C",
+  "mix": [
+   {
+    "partner": 29,
+    "result": 12,
+    "addr": "0x800A9D0C",
+    "raw_hex": "1d050cff"
+   }
+  ]
+ },
+ {
+  "id": 13,
+  "id_hex": "0x0D",
+  "name_en": "Colt S.A.A.",
+  "name_addr": "0x8009E5C5",
+  "name_bytes_hex": "1f4b4850002f011d011d01",
+  "prop_addr": "0x800A9E84",
+  "prop_raw_hex": "06000001ec9c0a80",
+  "max": 6,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CEC",
+  "mix": [
+   {
+    "partner": 20,
+    "result": 2,
+    "addr": "0x800A9CEC",
+    "raw_hex": "140502ff"
+   }
+  ]
+ },
+ {
+  "id": 14,
+  "id_hex": "0x0E",
+  "name_en": "Spark Shot",
+  "name_addr": "0x8009E5D1",
+  "name_bytes_hex": "2f4c3d4e47002f444b50",
+  "prop_addr": "0x800A9E8C",
+  "prop_raw_hex": "64008001349d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 128,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9D34",
+  "mix": [
+   {
+    "partner": 28,
+    "result": 14,
+    "addr": "0x800A9D34",
+    "raw_hex": "1c050eff"
+   }
+  ]
+ },
+ {
+  "id": 15,
+  "id_hex": "0x0F",
+  "name_en": "S. Machine Gun",
+  "name_addr": "0x8009E5DC",
+  "name_bytes_hex": "2f0100293d3f44454a410023514a",
+  "prop_addr": "0x800A9E94",
+  "prop_raw_hex": "64008001049d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 128,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9D04",
+  "mix": [
+   {
+    "partner": 27,
+    "result": 15,
+    "addr": "0x800A9D04",
+    "raw_hex": "1b050fff"
+   }
+  ]
+ },
+ {
+  "id": 16,
+  "id_hex": "0x10",
+  "name_en": "Flamethrower",
+  "name_addr": "0x8009E5EB",
+  "name_bytes_hex": "22483d494150444e4b53414e",
+  "prop_addr": "0x800A9E9C",
+  "prop_raw_hex": "64008101089d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 129,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9D08",
+  "mix": [
+   {
+    "partner": 23,
+    "result": 16,
+    "addr": "0x800A9D08",
+    "raw_hex": "170510ff"
+   }
+  ]
+ },
+ {
+  "id": 17,
+  "id_hex": "0x11",
+  "name_en": "R. Launcher",
+  "name_addr": "0x8009E5F8",
+  "name_bytes_hex": "2e0100283d514a3f44414e",
+  "prop_addr": "0x800A9EA4",
+  "prop_raw_hex": "04000000e89c0a80",
+  "max": 4,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 18,
+  "id_hex": "0x12",
+  "name_en": "Gatling Gun",
+  "name_addr": "0x8009E604",
+  "name_bytes_hex": "233d5048454a430023514a",
+  "prop_addr": "0x800A9EAC",
+  "prop_raw_hex": "64008000e89c0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 128,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 19,
+  "id_hex": "0x13",
+  "name_en": "Hand Gun",
+  "name_addr": "0x8009E610",
+  "name_bytes_hex": "243d4a400023514a",
+  "prop_addr": "0x800A9EB4",
+  "prop_raw_hex": "0f000001ec9c0a80",
+  "max": 15,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9CEC",
+  "mix": [
+   {
+    "partner": 20,
+    "result": 2,
+    "addr": "0x800A9CEC",
+    "raw_hex": "140502ff"
+   }
+  ]
+ },
+ {
+  "id": 20,
+  "id_hex": "0x14",
+  "name_en": "H. Gun Bullets",
+  "name_addr": "0x8009E619",
+  "name_bytes_hex": "24010023514a001e51484841504f",
+  "prop_addr": "0x800A9EBC",
+  "prop_raw_hex": "fa000306389d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 6,
+  "mix_ptr": "0x800A9D38",
+  "mix": [
+   {
+    "partner": 2,
+    "result": 2,
+    "addr": "0x800A9D38",
+    "raw_hex": "020602ff"
+   },
+   {
+    "partner": 3,
+    "result": 3,
+    "addr": "0x800A9D3C",
+    "raw_hex": "030603ff"
+   },
+   {
+    "partner": 4,
+    "result": 4,
+    "addr": "0x800A9D40",
+    "raw_hex": "040604ff"
+   },
+   {
+    "partner": 13,
+    "result": 13,
+    "addr": "0x800A9D44",
+    "raw_hex": "0d060dff"
+   },
+   {
+    "partner": 19,
+    "result": 19,
+    "addr": "0x800A9D48",
+    "raw_hex": "130613ff"
+   },
+   {
+    "partner": 20,
+    "result": 20,
+    "addr": "0x800A9D4C",
+    "raw_hex": "140514ff"
+   }
+  ]
+ },
+ {
+  "id": 21,
+  "id_hex": "0x15",
+  "name_en": "Shotgun Shells",
+  "name_addr": "0x8009E628",
+  "name_bytes_hex": "2f444b5043514a002f444148484f",
+  "prop_addr": "0x800A9EC4",
+  "prop_raw_hex": "fa000303589d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9D58",
+  "mix": [
+   {
+    "partner": 7,
+    "result": 7,
+    "addr": "0x800A9D58",
+    "raw_hex": "070607ff"
+   },
+   {
+    "partner": 8,
+    "result": 8,
+    "addr": "0x800A9D5C",
+    "raw_hex": "080608ff"
+   },
+   {
+    "partner": 21,
+    "result": 21,
+    "addr": "0x800A9D60",
+    "raw_hex": "150515ff"
+   }
+  ]
+ },
+ {
+  "id": 22,
+  "id_hex": "0x16",
+  "name_en": "M. Bullets",
+  "name_addr": "0x8009E637",
+  "name_bytes_hex": "2901001e51484841504f",
+  "prop_addr": "0x800A9ECC",
+  "prop_raw_hex": "fa0003036c9d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9D6C",
+  "mix": [
+   {
+    "partner": 5,
+    "result": 5,
+    "addr": "0x800A9D6C",
+    "raw_hex": "050605ff"
+   },
+   {
+    "partner": 6,
+    "result": 6,
+    "addr": "0x800A9D70",
+    "raw_hex": "060606ff"
+   },
+   {
+    "partner": 22,
+    "result": 22,
+    "addr": "0x800A9D74",
+    "raw_hex": "160516ff"
+   }
+  ]
+ },
+ {
+  "id": 23,
+  "id_hex": "0x17",
+  "name_en": "Fuel",
+  "name_addr": "0x8009E642",
+  "name_bytes_hex": "22514148",
+  "prop_addr": "0x800A9ED4",
+  "prop_raw_hex": "64008102789d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 129,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9D78",
+  "mix": [
+   {
+    "partner": 16,
+    "result": 16,
+    "addr": "0x800A9D78",
+    "raw_hex": "100610ff"
+   },
+   {
+    "partner": 23,
+    "result": 23,
+    "addr": "0x800A9D7C",
+    "raw_hex": "170517ff"
+   }
+  ]
+ },
+ {
+  "id": 24,
+  "id_hex": "0x18",
+  "name_en": "G. Rounds",
+  "name_addr": "0x8009E647",
+  "name_bytes_hex": "2301002e4b514a404f",
+  "prop_addr": "0x800A9EDC",
+  "prop_raw_hex": "fa000304889d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 4,
+  "mix_ptr": "0x800A9D88",
+  "mix": [
+   {
+    "partner": 9,
+    "result": 9,
+    "addr": "0x800A9D88",
+    "raw_hex": "090609ff"
+   },
+   {
+    "partner": 10,
+    "result": 9,
+    "addr": "0x800A9D8C",
+    "raw_hex": "0a080904"
+   },
+   {
+    "partner": 11,
+    "result": 9,
+    "addr": "0x800A9D90",
+    "raw_hex": "0b080905"
+   },
+   {
+    "partner": 24,
+    "result": 24,
+    "addr": "0x800A9D94",
+    "raw_hex": "180518ff"
+   }
+  ]
+ },
+ {
+  "id": 25,
+  "id_hex": "0x19",
+  "name_en": "Flame Rounds",
+  "name_addr": "0x8009E651",
+  "name_bytes_hex": "22483d4941002e4b514a404f",
+  "prop_addr": "0x800A9EE4",
+  "prop_raw_hex": "fa000104989d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 1,
+  "n_mix": 4,
+  "mix_ptr": "0x800A9D98",
+  "mix": [
+   {
+    "partner": 10,
+    "result": 10,
+    "addr": "0x800A9D98",
+    "raw_hex": "0a060aff"
+   },
+   {
+    "partner": 9,
+    "result": 10,
+    "addr": "0x800A9D9C",
+    "raw_hex": "09080a03"
+   },
+   {
+    "partner": 11,
+    "result": 10,
+    "addr": "0x800A9DA0",
+    "raw_hex": "0b080a05"
+   },
+   {
+    "partner": 25,
+    "result": 25,
+    "addr": "0x800A9DA4",
+    "raw_hex": "190519ff"
+   }
+  ]
+ },
+ {
+  "id": 26,
+  "id_hex": "0x1A",
+  "name_en": "Acid Rounds",
+  "name_addr": "0x8009E65E",
+  "name_bytes_hex": "1d3f4540002e4b514a404f",
+  "prop_addr": "0x800A9EEC",
+  "prop_raw_hex": "fa000204a89d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 2,
+  "n_mix": 4,
+  "mix_ptr": "0x800A9DA8",
+  "mix": [
+   {
+    "partner": 11,
+    "result": 11,
+    "addr": "0x800A9DA8",
+    "raw_hex": "0b060bff"
+   },
+   {
+    "partner": 9,
+    "result": 11,
+    "addr": "0x800A9DAC",
+    "raw_hex": "09080b03"
+   },
+   {
+    "partner": 10,
+    "result": 11,
+    "addr": "0x800A9DB0",
+    "raw_hex": "0a080b04"
+   },
+   {
+    "partner": 26,
+    "result": 26,
+    "addr": "0x800A9DB4",
+    "raw_hex": "1a051aff"
+   }
+  ]
+ },
+ {
+  "id": 27,
+  "id_hex": "0x1B",
+  "name_en": "M.G. Bullets",
+  "name_addr": "0x8009E66A",
+  "name_bytes_hex": "29012301001e51484841504f",
+  "prop_addr": "0x800A9EF4",
+  "prop_raw_hex": "64008302509d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 131,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9D50",
+  "mix": [
+   {
+    "partner": 15,
+    "result": 15,
+    "addr": "0x800A9D50",
+    "raw_hex": "0f060fff"
+   },
+   {
+    "partner": 27,
+    "result": 27,
+    "addr": "0x800A9D54",
+    "raw_hex": "1b051bff"
+   }
+  ]
+ },
+ {
+  "id": 28,
+  "id_hex": "0x1C",
+  "name_en": "S. Shot Bullets",
+  "name_addr": "0x8009E677",
+  "name_bytes_hex": "2f01002f444b50001e51484841504f",
+  "prop_addr": "0x800A9EFC",
+  "prop_raw_hex": "64008302809d0a80",
+  "max": 100,
+  "variant": 0,
+  "cls": 131,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9D80",
+  "mix": [
+   {
+    "partner": 14,
+    "result": 14,
+    "addr": "0x800A9D80",
+    "raw_hex": "0e060eff"
+   },
+   {
+    "partner": 28,
+    "result": 28,
+    "addr": "0x800A9D84",
+    "raw_hex": "1c051cff"
+   }
+  ]
+ },
+ {
+  "id": 29,
+  "id_hex": "0x1D",
+  "name_en": "Bow Gun Bolts",
+  "name_addr": "0x8009E687",
+  "name_bytes_hex": "1e4b530023514a001e4b48504f",
+  "prop_addr": "0x800A9F04",
+  "prop_raw_hex": "f0000302649d0a80",
+  "max": 240,
+  "variant": 0,
+  "cls": 3,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9D64",
+  "mix": [
+   {
+    "partner": 12,
+    "result": 12,
+    "addr": "0x800A9D64",
+    "raw_hex": "0c060cff"
+   },
+   {
+    "partner": 29,
+    "result": 29,
+    "addr": "0x800A9D68",
+    "raw_hex": "1d051dff"
+   }
+  ]
+ },
+ {
+  "id": 30,
+  "id_hex": "0x1E",
+  "name_en": "Ink Ribbon",
+  "name_addr": "0x8009E695",
+  "name_bytes_hex": "254a47002e453e3e4b4a",
+  "prop_addr": "0x800A9F0C",
+  "prop_raw_hex": "fa000001b89d0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9DB8",
+  "mix": [
+   {
+    "partner": 30,
+    "result": 30,
+    "addr": "0x800A9DB8",
+    "raw_hex": "1e051eff"
+   }
+  ]
+ },
+ {
+  "id": 31,
+  "id_hex": "0x1F",
+  "name_en": "Small Key",
+  "name_addr": "0x8009E6A0",
+  "name_bytes_hex": "2f493d484800274155",
+  "prop_addr": "0x800A9F14",
+  "prop_raw_hex": "fa000000e89c0a80",
+  "max": 250,
+  "variant": 0,
+  "cls": 0,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 32,
+  "id_hex": "0x20",
+  "name_en": "H. Gun Parts",
+  "name_addr": "0x8009E6AA",
+  "name_bytes_hex": "24010023514a002c3d4e504f",
+  "prop_addr": "0x800A9F1C",
+  "prop_raw_hex": "01000401bc9d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9DBC",
+  "mix": [
+   {
+    "partner": 2,
+    "result": 4,
+    "addr": "0x800A9DBC",
+    "raw_hex": "02040400"
+   }
+  ]
+ },
+ {
+  "id": 33,
+  "id_hex": "0x21",
+  "name_en": "Magnum Parts",
+  "name_addr": "0x8009E6B7",
+  "name_bytes_hex": "293d434a5149002c3d4e504f",
+  "prop_addr": "0x800A9F24",
+  "prop_raw_hex": "01000401c09d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9DC0",
+  "mix": [
+   {
+    "partner": 5,
+    "result": 6,
+    "addr": "0x800A9DC0",
+    "raw_hex": "05040601"
+   }
+  ]
+ },
+ {
+  "id": 34,
+  "id_hex": "0x22",
+  "name_en": "Shotgun Parts",
+  "name_addr": "0x8009E6C4",
+  "name_bytes_hex": "2f444b5043514a002c3d4e504f",
+  "prop_addr": "0x800A9F2C",
+  "prop_raw_hex": "01000401c49d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9DC4",
+  "mix": [
+   {
+    "partner": 7,
+    "result": 8,
+    "addr": "0x800A9DC4",
+    "raw_hex": "07040802"
+   }
+  ]
+ },
+ {
+  "id": 35,
+  "id_hex": "0x23",
+  "name_en": "F. Aid Spray",
+  "name_addr": "0x8009E6D2",
+  "name_bytes_hex": "2201001d4540002f4c4e3d55",
+  "prop_addr": "0x800A9F34",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 36,
+  "id_hex": "0x24",
+  "name_en": "Antivirus bomb",
+  "name_addr": "0x8009E6DF",
+  "name_bytes_hex": "1d4a504552454e514f003e4b493e",
+  "prop_addr": "0x800A9F3C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 37,
+  "id_hex": "0x25",
+  "name_en": "Chemical AC-W24",
+  "name_addr": "0x8009E6EE",
+  "name_bytes_hex": "1f444149453f3d48001d1f3b330e10",
+  "prop_addr": "0x800A9F44",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 38,
+  "id_hex": "0x26",
+  "name_en": "Green Herb",
+  "name_addr": "0x8009E6FE",
+  "name_bytes_hex": "234e41414a0024414e3e",
+  "prop_addr": "0x800A9F4C",
+  "prop_raw_hex": "01000405d09d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 5,
+  "mix_ptr": "0x800A9DD0",
+  "mix": [
+   {
+    "partner": 39,
+    "result": 42,
+    "addr": "0x800A9DD0",
+    "raw_hex": "270b2a08"
+   },
+   {
+    "partner": 38,
+    "result": 41,
+    "addr": "0x800A9DD4",
+    "raw_hex": "260b2909"
+   },
+   {
+    "partner": 40,
+    "result": 43,
+    "addr": "0x800A9DD8",
+    "raw_hex": "280b2b0a"
+   },
+   {
+    "partner": 41,
+    "result": 44,
+    "addr": "0x800A9DDC",
+    "raw_hex": "290b2c0b"
+   },
+   {
+    "partner": 43,
+    "result": 45,
+    "addr": "0x800A9DE0",
+    "raw_hex": "2b0b2d0c"
+   }
+  ]
+ },
+ {
+  "id": 39,
+  "id_hex": "0x27",
+  "name_en": "Red Herb",
+  "name_addr": "0x8009E709",
+  "name_bytes_hex": "2e41400024414e3e",
+  "prop_addr": "0x800A9F54",
+  "prop_raw_hex": "01000402e49d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9DE4",
+  "mix": [
+   {
+    "partner": 38,
+    "result": 42,
+    "addr": "0x800A9DE4",
+    "raw_hex": "260b2a08"
+   },
+   {
+    "partner": 43,
+    "result": 46,
+    "addr": "0x800A9DE8",
+    "raw_hex": "2b0b2e0d"
+   }
+  ]
+ },
+ {
+  "id": 40,
+  "id_hex": "0x28",
+  "name_en": "Blue Herb",
+  "name_addr": "0x8009E712",
+  "name_bytes_hex": "1e4851410024414e3e",
+  "prop_addr": "0x800A9F5C",
+  "prop_raw_hex": "01000403ec9d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 3,
+  "mix_ptr": "0x800A9DEC",
+  "mix": [
+   {
+    "partner": 38,
+    "result": 43,
+    "addr": "0x800A9DEC",
+    "raw_hex": "260b2b0a"
+   },
+   {
+    "partner": 42,
+    "result": 46,
+    "addr": "0x800A9DF0",
+    "raw_hex": "2a0b2e0d"
+   },
+   {
+    "partner": 41,
+    "result": 45,
+    "addr": "0x800A9DF4",
+    "raw_hex": "290b2d0c"
+   }
+  ]
+ },
+ {
+  "id": 41,
+  "id_hex": "0x29",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E71C",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F64",
+  "prop_raw_hex": "01000402fc9d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9DFC",
+  "mix": [
+   {
+    "partner": 40,
+    "result": 45,
+    "addr": "0x800A9DFC",
+    "raw_hex": "280b2d0c"
+   },
+   {
+    "partner": 38,
+    "result": 44,
+    "addr": "0x800A9E00",
+    "raw_hex": "260b2c0b"
+   }
+  ]
+ },
+ {
+  "id": 42,
+  "id_hex": "0x2A",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E727",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F6C",
+  "prop_raw_hex": "01000401f89d0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9DF8",
+  "mix": [
+   {
+    "partner": 40,
+    "result": 46,
+    "addr": "0x800A9DF8",
+    "raw_hex": "280b2e0d"
+   }
+  ]
+ },
+ {
+  "id": 43,
+  "id_hex": "0x2B",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E732",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F74",
+  "prop_raw_hex": "01000402049e0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 2,
+  "mix_ptr": "0x800A9E04",
+  "mix": [
+   {
+    "partner": 39,
+    "result": 46,
+    "addr": "0x800A9E04",
+    "raw_hex": "270b2e0d"
+   },
+   {
+    "partner": 38,
+    "result": 45,
+    "addr": "0x800A9E08",
+    "raw_hex": "260b2d0c"
+   }
+  ]
+ },
+ {
+  "id": 44,
+  "id_hex": "0x2C",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E73D",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F7C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 45,
+  "id_hex": "0x2D",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E748",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F84",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 46,
+  "id_hex": "0x2E",
+  "name_en": "Mixed Herb",
+  "name_addr": "0x8009E753",
+  "name_bytes_hex": "29455441400024414e3e",
+  "prop_addr": "0x800A9F8C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 47,
+  "id_hex": "0x2F",
+  "name_en": "Lighter",
+  "name_addr": "0x8009E75E",
+  "name_bytes_hex": "2845434450414e",
+  "prop_addr": "0x800A9F94",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 48,
+  "id_hex": "0x30",
+  "name_en": "Lockpick",
+  "name_addr": "0x8009E766",
+  "name_bytes_hex": "284b3f474c453f47",
+  "prop_addr": "0x800A9F9C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 49,
+  "id_hex": "0x31",
+  "name_en": "Picture",
+  "name_addr": "0x8009E76F",
+  "name_bytes_hex": "2c453f50514e41",
+  "prop_addr": "0x800A9FA4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 50,
+  "id_hex": "0x32",
+  "name_en": "Valve Handle",
+  "name_addr": "0x8009E777",
+  "name_bytes_hex": "323d48524100243d4a404841",
+  "prop_addr": "0x800A9FAC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 51,
+  "id_hex": "0x33",
+  "name_en": "Red Jewel",
+  "name_addr": "0x8009E784",
+  "name_bytes_hex": "2e4140002641534148",
+  "prop_addr": "0x800A9FB4",
+  "prop_raw_hex": "01060400e89c0a80",
+  "max": 1,
+  "variant": 6,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 52,
+  "id_hex": "0x34",
+  "name_en": "Red Card Key",
+  "name_addr": "0x8009E78E",
+  "name_bytes_hex": "2e4140001f3d4e4000274155",
+  "prop_addr": "0x800A9FBC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 53,
+  "id_hex": "0x35",
+  "name_en": "Blue Card Key",
+  "name_addr": "0x8009E79B",
+  "name_bytes_hex": "1e485141001f3d4e4000274155",
+  "prop_addr": "0x800A9FC4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 54,
+  "id_hex": "0x36",
+  "name_en": "Serpent Stone",
+  "name_addr": "0x8009E7A9",
+  "name_bytes_hex": "2f414e4c414a50002f504b4a41",
+  "prop_addr": "0x800A9FCC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 55,
+  "id_hex": "0x37",
+  "name_en": "Jaguar Stone",
+  "name_addr": "0x8009E7B7",
+  "name_bytes_hex": "263d43513d4e002f504b4a41",
+  "prop_addr": "0x800A9FD4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 56,
+  "id_hex": "0x38",
+  "name_en": "Blue Stone",
+  "name_addr": "0x8009E7C4",
+  "name_bytes_hex": "1e485141002f504b4a41",
+  "prop_addr": "0x800A9FDC",
+  "prop_raw_hex": "01000401149e0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9E14",
+  "mix": [
+   {
+    "partner": 57,
+    "result": 55,
+    "addr": "0x800A9E14",
+    "raw_hex": "39043707"
+   }
+  ]
+ },
+ {
+  "id": 57,
+  "id_hex": "0x39",
+  "name_en": "Blue Stone",
+  "name_addr": "0x8009E7CF",
+  "name_bytes_hex": "1e485141002f504b4a41",
+  "prop_addr": "0x800A9FE4",
+  "prop_raw_hex": "01000401189e0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9E18",
+  "mix": [
+   {
+    "partner": 56,
+    "result": 55,
+    "addr": "0x800A9E18",
+    "raw_hex": "38043707"
+   }
+  ]
+ },
+ {
+  "id": 58,
+  "id_hex": "0x3A",
+  "name_en": "Eagle Stone",
+  "name_addr": "0x8009E7DA",
+  "name_bytes_hex": "213d434841002f504b4a41",
+  "prop_addr": "0x800A9FEC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 59,
+  "id_hex": "0x3B",
+  "name_en": "Bishop Plug",
+  "name_addr": "0x8009E7E6",
+  "name_bytes_hex": "1e454f444b4c002c485143",
+  "prop_addr": "0x800A9FF4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 60,
+  "id_hex": "0x3C",
+  "name_en": "Rook Plug",
+  "name_addr": "0x8009E7F2",
+  "name_bytes_hex": "2e4b4b47002c485143",
+  "prop_addr": "0x800A9FFC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 61,
+  "id_hex": "0x3D",
+  "name_en": "Knight Plug",
+  "name_addr": "0x8009E7FC",
+  "name_bytes_hex": "274a45434450002c485143",
+  "prop_addr": "0x800AA004",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 62,
+  "id_hex": "0x3E",
+  "name_en": "King Plug",
+  "name_addr": "0x8009E808",
+  "name_bytes_hex": "27454a43002c485143",
+  "prop_addr": "0x800AA00C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 63,
+  "id_hex": "0x3F",
+  "name_en": "W. Box Key",
+  "name_addr": "0x8009E812",
+  "name_bytes_hex": "3301001e4b5400274155",
+  "prop_addr": "0x800AA014",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 64,
+  "id_hex": "0x40",
+  "name_en": "Detonator",
+  "name_addr": "0x8009E81D",
+  "name_bytes_hex": "2041504b4a3d504b4e",
+  "prop_addr": "0x800AA01C",
+  "prop_raw_hex": "01000401109e0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9E10",
+  "mix": [
+   {
+    "partner": 65,
+    "result": 66,
+    "addr": "0x800A9E10",
+    "raw_hex": "41044206"
+   }
+  ]
+ },
+ {
+  "id": 65,
+  "id_hex": "0x41",
+  "name_en": "Plastic Bomb",
+  "name_addr": "0x8009E827",
+  "name_bytes_hex": "2c483d4f50453f001e4b493e",
+  "prop_addr": "0x800AA024",
+  "prop_raw_hex": "010004010c9e0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 1,
+  "mix_ptr": "0x800A9E0C",
+  "mix": [
+   {
+    "partner": 64,
+    "result": 66,
+    "addr": "0x800A9E0C",
+    "raw_hex": "40044206"
+   }
+  ]
+ },
+ {
+  "id": 66,
+  "id_hex": "0x42",
+  "name_en": "Bomb {EE}6 Det.",
+  "name_addr": "0x8009E834",
+  "name_bytes_hex": "1e4b493e00ee120020415001",
+  "prop_addr": "0x800AA02C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 67,
+  "id_hex": "0x43",
+  "name_en": "Crank",
+  "name_addr": "0x8009E841",
+  "name_bytes_hex": "1f4e3d4a47",
+  "prop_addr": "0x800AA034",
+  "prop_raw_hex": "01070400e89c0a80",
+  "max": 1,
+  "variant": 7,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 68,
+  "id_hex": "0x44",
+  "name_en": "Film",
+  "name_addr": "0x8009E847",
+  "name_bytes_hex": "22454849",
+  "prop_addr": "0x800AA03C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 69,
+  "id_hex": "0x45",
+  "name_en": "Film",
+  "name_addr": "0x8009E84C",
+  "name_bytes_hex": "22454849",
+  "prop_addr": "0x800AA044",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 70,
+  "id_hex": "0x46",
+  "name_en": "Film",
+  "name_addr": "0x8009E851",
+  "name_bytes_hex": "22454849",
+  "prop_addr": "0x800AA04C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 71,
+  "id_hex": "0x47",
+  "name_en": "Unicorn Medal",
+  "name_addr": "0x8009E856",
+  "name_bytes_hex": "314a453f4b4e4a002941403d48",
+  "prop_addr": "0x800AA054",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 72,
+  "id_hex": "0x48",
+  "name_en": "Eagle Medal",
+  "name_addr": "0x8009E864",
+  "name_bytes_hex": "213d434841002941403d48",
+  "prop_addr": "0x800AA05C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 73,
+  "id_hex": "0x49",
+  "name_en": "Wolf Medal",
+  "name_addr": "0x8009E870",
+  "name_bytes_hex": "334b4842002941403d48",
+  "prop_addr": "0x800AA064",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 74,
+  "id_hex": "0x4A",
+  "name_en": "G. Cogwheel",
+  "name_addr": "0x8009E87B",
+  "name_bytes_hex": "2301001f4b435344414148",
+  "prop_addr": "0x800AA06C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 75,
+  "id_hex": "0x4B",
+  "name_en": "Manhole Opener",
+  "name_addr": "0x8009E887",
+  "name_bytes_hex": "293d4a444b4841002b4c414a414e",
+  "prop_addr": "0x800AA074",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 76,
+  "id_hex": "0x4C",
+  "name_en": "Main Fuse",
+  "name_addr": "0x8009E896",
+  "name_bytes_hex": "293d454a0022514f41",
+  "prop_addr": "0x800AA07C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 77,
+  "id_hex": "0x4D",
+  "name_en": "Fuse Case",
+  "name_addr": "0x8009E8A0",
+  "name_bytes_hex": "22514f41001f3d4f41",
+  "prop_addr": "0x800AA084",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 78,
+  "id_hex": "0x4E",
+  "name_en": "Vaccine",
+  "name_addr": "0x8009E8AA",
+  "name_bytes_hex": "323d3f3f454a41",
+  "prop_addr": "0x800AA08C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 79,
+  "id_hex": "0x4F",
+  "name_en": "Vaccine Cart.",
+  "name_addr": "0x8009E8B2",
+  "name_bytes_hex": "323d3f3f454a41001f3d4e5001",
+  "prop_addr": "0x800AA094",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 80,
+  "id_hex": "0x50",
+  "name_en": "Film",
+  "name_addr": "0x8009E8C0",
+  "name_bytes_hex": "22454849",
+  "prop_addr": "0x800AA09C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 81,
+  "id_hex": "0x51",
+  "name_en": "Base Vaccine",
+  "name_addr": "0x8009E8C5",
+  "name_bytes_hex": "1e3d4f4100323d3f3f454a41",
+  "prop_addr": "0x800AA0A4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 82,
+  "id_hex": "0x52",
+  "name_en": "G-virus",
+  "name_addr": "0x8009E8D2",
+  "name_bytes_hex": "233b52454e514f",
+  "prop_addr": "0x800AA0AC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 83,
+  "id_hex": "0x53",
+  "name_en": "Special Key",
+  "name_addr": "0x8009E8DA",
+  "name_bytes_hex": "2f4c413f453d4800274155",
+  "prop_addr": "0x800AA0B4",
+  "prop_raw_hex": "010a0400e89c0a80",
+  "max": 1,
+  "variant": 10,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 84,
+  "id_hex": "0x54",
+  "name_en": "Joint S Plug",
+  "name_addr": "0x8009E8E6",
+  "name_bytes_hex": "264b454a50002f002c485143",
+  "prop_addr": "0x800AA0BC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 85,
+  "id_hex": "0x55",
+  "name_en": "Joint N Plug",
+  "name_addr": "0x8009E8F3",
+  "name_bytes_hex": "264b454a50002a002c485143",
+  "prop_addr": "0x800AA0C4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 86,
+  "id_hex": "0x56",
+  "name_en": "Cord",
+  "name_addr": "0x8009E900",
+  "name_bytes_hex": "1f4b4e40",
+  "prop_addr": "0x800AA0CC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 87,
+  "id_hex": "0x57",
+  "name_en": "Picture",
+  "name_addr": "0x8009E905",
+  "name_bytes_hex": "2c453f50514e41",
+  "prop_addr": "0x800AA0D4",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 88,
+  "id_hex": "0x58",
+  "name_en": "Cabin Key",
+  "name_addr": "0x8009E90D",
+  "name_bytes_hex": "1f3d3e454a00274155",
+  "prop_addr": "0x800AA0DC",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 89,
+  "id_hex": "0x59",
+  "name_en": "Precinct Key",
+  "name_addr": "0x8009E917",
+  "name_bytes_hex": "2c4e413f454a3f5000274155",
+  "prop_addr": "0x800AA0E4",
+  "prop_raw_hex": "01010400e89c0a80",
+  "max": 1,
+  "variant": 1,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 90,
+  "id_hex": "0x5A",
+  "name_en": "Precinct Key",
+  "name_addr": "0x8009E924",
+  "name_bytes_hex": "2c4e413f454a3f5000274155",
+  "prop_addr": "0x800AA0EC",
+  "prop_raw_hex": "01020400e89c0a80",
+  "max": 1,
+  "variant": 2,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 91,
+  "id_hex": "0x5B",
+  "name_en": "Precinct Key",
+  "name_addr": "0x8009E931",
+  "name_bytes_hex": "2c4e413f454a3f5000274155",
+  "prop_addr": "0x800AA0F4",
+  "prop_raw_hex": "01040400e89c0a80",
+  "max": 1,
+  "variant": 4,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 92,
+  "id_hex": "0x5C",
+  "name_en": "Precinct Key",
+  "name_addr": "0x8009E93E",
+  "name_bytes_hex": "2c4e413f454a3f5000274155",
+  "prop_addr": "0x800AA0FC",
+  "prop_raw_hex": "01050400e89c0a80",
+  "max": 1,
+  "variant": 5,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 93,
+  "id_hex": "0x5D",
+  "name_en": "C. Panel Key",
+  "name_addr": "0x8009E94B",
+  "name_bytes_hex": "1f01002c3d4a414800274155",
+  "prop_addr": "0x800AA104",
+  "prop_raw_hex": "01080400e89c0a80",
+  "max": 1,
+  "variant": 8,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 94,
+  "id_hex": "0x5E",
+  "name_en": "C. Panel Key",
+  "name_addr": "0x8009E958",
+  "name_bytes_hex": "1f01002c3d4a414800274155",
+  "prop_addr": "0x800AA10C",
+  "prop_raw_hex": "01090400e89c0a80",
+  "max": 1,
+  "variant": 9,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 95,
+  "id_hex": "0x5F",
+  "name_en": "P. Room Key",
+  "name_addr": "0x8009E965",
+  "name_bytes_hex": "2c01002e4b4b4900274155",
+  "prop_addr": "0x800AA114",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 96,
+  "id_hex": "0x60",
+  "name_en": "MO disk",
+  "name_addr": "0x8009E971",
+  "name_bytes_hex": "292b0040454f47",
+  "prop_addr": "0x800AA11C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 97,
+  "id_hex": "0x61",
+  "name_en": "Lab Card Key",
+  "name_addr": "0x8009E979",
+  "name_bytes_hex": "283d3e001f3d4e4000274155",
+  "prop_addr": "0x800AA124",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 98,
+  "id_hex": "0x62",
+  "name_en": "Master Key",
+  "name_addr": "0x8009E986",
+  "name_bytes_hex": "293d4f50414e00274155",
+  "prop_addr": "0x800AA12C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 99,
+  "id_hex": "0x63",
+  "name_en": "Platform Key",
+  "name_addr": "0x8009E991",
+  "name_bytes_hex": "2c483d50424b4e4900274155",
+  "prop_addr": "0x800AA134",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ },
+ {
+  "id": 100,
+  "id_hex": "0x64",
+  "name_en": "no item",
+  "name_addr": "0x8009E99E",
+  "name_bytes_hex": "4a4b0045504149",
+  "prop_addr": "0x800AA13C",
+  "prop_raw_hex": "01000400e89c0a80",
+  "max": 1,
+  "variant": 0,
+  "cls": 4,
+  "n_mix": 0,
+  "mix_ptr": "0x800A9CE8",
+  "mix": []
+ }
+]

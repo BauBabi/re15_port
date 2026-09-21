@@ -1,0 +1,71 @@
+{
+ "spiel": "Resident Evil 2 (Retail), Leon-Disc SLUS-00748",
+ "item_id": 77,
+ "item_id_hex": "0x4D",
+ "name_en": "Fuse Case",
+ "name_en_adresse": "0x8009E8A0",
+ "name_en_bytes_hex": "22514f41001f3d4f41",
+ "name_jp_adresse": "0x8009E1D7",
+ "name_jp_bytes_hex": "c1ee0a3bdcaf3bb3",
+ "eigenschaften": {
+  "adresse": "0x800AA084",
+  "roh_hex": "01000400e89c0a80",
+  "max_stapel": 1,
+  "varianten_nibble": 0,
+  "klassenbyte": 4,
+  "anzahl_rezepte": 0,
+  "rezeptzeiger": "0x800A9CE8"
+ },
+ "symbol": {
+  "quelle": "COMMON/DATA/ITEMALL.PIX",
+  "kachel": 77,
+  "datei_offset": "0x168F0",
+  "format": "40x30, 8 bpp, CLUT 256 x u16 BGR555 (VRAM y=496)"
+ },
+ "platzierung": {
+  "raum": "ROOM60D0",
+  "block": "sub02",
+  "offset_im_block": "0x0016",
+  "offset_in_der_RDT": "0x0008FC",
+  "opcode": "0x69",
+  "opcode_name": "Item_aot_set_4p",
+  "roh_hex": "69020231000041b9cec8a1bd7accbfc2d0c647bdfcc24d0001003d000100",
+  "aot": 2,
+  "sce": 2,
+  "sat": 49,
+  "anzahl": 1,
+  "flag": 61,
+  "md1_slot": 1,
+  "action": 0
+ },
+ "weltmodell": {
+  "quelle": "PL0/RDT/ROOM60D0.RDT",
+  "prop_slot": 1,
+  "md1_offset": "0x000ED8",
+  "md1_bytes": 1356,
+  "tim_offset": "0x01F384",
+  "tim_bytes": 26144,
+  "md1_header": {
+   "length": 964,
+   "unknown": 0,
+   "object_count": 2,
+   "meshes": 1
+  },
+  "tris": 6,
+  "quads": 20,
+  "bbox": {
+   "x": [
+    -68,
+    68
+   ],
+   "y": [
+    -180,
+    324
+   ],
+   "z": [
+    -62,
+    62
+   ]
+  }
+ }
+}
