@@ -692,6 +692,83 @@ def kollisionstiefe_schnell(R, t, H, wandzellen, hoehe=None):
             aus[sy, sx] = best / 64.0 if best else 0.0
     return aus
 
+
+# ----------------------------------------------------------------------------
+# FORM einer SCA-Zelle (Runde 19, Marke 2 ROOM10E0 Cut 7)
+# ----------------------------------------------------------------------------
+# ⛔ WARUM ES DAS GIBT. sca_sperrzellen() liefert Kreise, Diagonalen und Kapseln als
+# ihr UMSCHLIESSENDES RECHTECK und warnt dazu in ihrem eigenen Docstring (geom.py:575-578):
+# "fuer TIEFEN-Raycasts weiter sca_wandzellen benutzen (eine Diagonale als volles
+# Rechteck geraycastet waere ZU NAH)". geometrie.tiefe_geometrie hat sie trotzdem in den
+# Tiefen-Raycast gegeben (geometrie.py:397) — und genau der vorhergesagte Fehler trat ein:
+#
+#   ROOM10E0 Cut 7 "Liege", Zelle x-3700..-850 z-1400..2300, SCA-Eintrag 21
+#   @ROOM10E0.RDT Datei-Offset 0x758, 12 Bytes  22 0b 74 0e 8c f1 88 fa 05 ff 00 03
+#   (width=0x0b22=2850, density=0x0e74=3700, x=0xf18c=-3700, z=0xfa88=-1400, type=0x05).
+#   Typ 5 ist eine "/"-Diagonale; solide ist nur die HAELFTE. An der Spielerspalte
+#   px=-2360 beginnt die solide Flaeche bei z=+340, die Nahkante des Huellrechtecks
+#   liegt bei z=-1400 — 1739 Einheiten ZU NAH. Die Maske bekam dadurch Tiefe 67..96
+#   statt 93..108 und zerschnitt die Figur in zwei Stuecke.
+#
+# DIE FORMEN SIND NICHT GERATEN, sondern die Kollisionsbedingungen des Originals mit
+# Spielerradius r=0, aus re15_port/engine/src/re15_collision.c:
+#   Typ 3 push_circle  @FUN_8003d6a8           : Mittelpunkt (x+w/2, z+w/2), Radius w/2
+#   Typ 4 push_diag4   @LAB_8003beb0           : pz > z_max - (D/W)*(px-X0)
+#   Typ 5 push_diag5   @LAB_8003c734           : pz > Z0    + (D/W)*(px-X0)
+#   Typ 6 push_diag6   @LAB_8003cb9c           : pz < Z0    + (D/W)*(px-X0)
+#   Typ 7 push_diag7   @LAB_8003c2cc           : pz < z_max - (D/W)*(px-X0)
+# Typ 2 (@LAB_8003d00c) ist KEINE Halbebene, sondern ein Viererkonus um den Zellenmittel-
+# punkt, Typ 8/9 (@LAB_8003d7e8/@LAB_8003d930) sind Kapseln und im Port selbst noch als
+# unverifiziert markiert. Fuer die bleibt es beim Huellrechteck — sichtbar gemeldet,
+# nicht heimlich, und in STAGE1 tritt keine davon als Tiefenzelle auf (Zensus Runde 19:
+# 82 Zellen-Objekte, davon 1x Typ 5 und 6x Typ 3, sonst nur Typ 1).
+ZELLENFORM_MODELLIERT = (1, 3, 4, 5, 6, 7)
+
+
+def zellen_solid_test(typ, X0, Z0, W, D):
+    """-> f(px, pz) -> bool-Array: liegt der WELTPUNKT in der soliden Haelfte der Zelle?
+
+    typ 1 (Rechteck) gibt None zuerueck = "keine Einschraenkung", damit der Aufrufer
+    bitgleich bleibt. typ 2/8/9 gibt ebenfalls None (Form hier nicht modelliert)."""
+    typ = int(typ)
+    X1, Z1 = X0 + W, Z0 + D
+    if typ == 3:
+        cr = W / 2.0
+        cx, cz = X0 + cr, Z0 + cr          # push_circle: BEIDE Mitten aus width
+        return lambda px, pz: (px - cx) ** 2 + (pz - cz) ** 2 <= cr * cr + 1e-6
+    if W <= 0:
+        return None
+    m = D / float(W)
+    if typ == 5:
+        return lambda px, pz: pz >= Z0 + m * (px - X0) - 1e-6
+    if typ == 6:
+        return lambda px, pz: pz <= Z0 + m * (px - X0) + 1e-6
+    if typ == 4:
+        return lambda px, pz: pz >= Z1 - m * (px - X0) - 1e-6
+    if typ == 7:
+        return lambda px, pz: pz <= Z1 - m * (px - X0) + 1e-6
+    return None
+
+
+def zellen_schnittflaechen(typ, X0, Z0, W, D):
+    """Die zusaetzliche SCHRAEGE bzw. RUNDE Mantelflaeche der Zelle, die das Huellrechteck
+    nicht hat. -> ("diagonale", nx, nz, konst) fuer die Ebene nx*px + nz*pz = konst,
+    ("kreis", cx, cz, r), oder None. Gleiche Belege wie zellen_solid_test."""
+    typ = int(typ)
+    X1, Z1 = X0 + W, Z0 + D
+    if typ == 3:
+        cr = W / 2.0
+        return ("kreis", X0 + cr, Z0 + cr, cr)
+    if W <= 0:
+        return None
+    m = D / float(W)
+    if typ in (5, 6):
+        return ("diagonale", -m, 1.0, Z0 - m * X0)
+    if typ in (4, 7):
+        return ("diagonale", m, 1.0, Z1 + m * X0)
+    return None
+
+
 def quader_tiefe(R, t, H, X0, X1, Z0, Z1, hoehe):
     """Sehstrahl gegen eine Kollisionszelle als QUADER - vier Seiten UND eine Deckflaeche.
 
