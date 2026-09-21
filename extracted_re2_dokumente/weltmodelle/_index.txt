@@ -1,0 +1,114 @@
+# RE2-Dokument-Weltmodelle
+# 269 Item-AOTs gesamt, 22 Dokument-Platzierungen, 15 mit Modell, 7 ohne, 12 VERSCHIEDENE Meshes
+# SCD: 2553 Bloecke, 45 desynchron; 331419 Bytes gesamt / 313356 gewalkt = 94.55%
+# Brute-Force-Gegenprobe ueber JEDE Byte-Position: 22 Treffer, davon neu 0
+
+## alle Dokument-Platzierungen
+Raum      Block   RDT-Off  Id   Name                        x      z  flag  md1  act  mesh md5
+room1150  sub00   0x015A2 104  CHRIS's diary               0      0    20    7    0 mesh00 0541704e
+room1150  sub00   0x0169C 104  CHRIS's diary               0      0    20    7    0 mesh00 0541704e
+room2020  sub00   0x01D3E 106  Memo to LEON           -12500 -15300   111    0    0 mesh01 ae2d0a30
+room2060  sub00   0x01626 108  Operation report 1     -18353  -8594    19    1    0 mesh02 ca09c4ac
+room2060  sub00   0x01666 108  Operation report 1     -25422 -20122    19    1    0 mesh02 ca09c4ac
+room3010  sub00   0x01B90 110  Mail to the chief           0      0    44  255    0     - -
+room3010  sub00   0x01CC0 110  Mail to the chief           0      0    44  255    0     - -
+room10E0  sub00   0x01D26 112  Secretary's diary B    -19550 -14000   105    0    0 mesh03 cf9f316d
+room2080  sub00   0x0148C 113  Operation report 2     -18492 -19982    25    3    0 mesh02 ca09c4ac
+room60A0  sub18   0x01470 114  User registration      -12591 -17759    62    6    0 mesh04 cab7b32d
+room2080  sub00   0x013E8 115  Film A                  20000  20000   125  255    0     - -
+room2080  sub00   0x013FE 116  Film B                  20000  20000   126  255    0     - -
+room2080  sub00   0x01414 117  Film C                  20000  20000   127  255    0     - -
+room2030  main00  0x006DE 118  Patrol report          -23098 -25955   153  255    0     - -
+room2100  sub03   0x0140C 119  Watchman's diary       -25216 -25895    91    0    0 mesh05 64f36fa9
+room21B0  sub02   0x026AE 120  Chief's diary          -22270 -21300   200    7    0 mesh06 3909288c
+room4090  main00  0x02288 121  Sewer manager diary    -11982    681   183    8    0 mesh07 bfc30e27
+room4090  main00  0x022C8 121  Sewer manager diary    -11982    681   183    5    0 mesh08 61be2721
+room4030  sub25   0x02CF8 122  Sewer manager fax      -21417 -16773   192   10    0 mesh09 722734a1
+room2080  sub00   0x0151E 123  Film D                  20000  20000   160  255    0     - -
+room60A0  sub18   0x01434 125  Lab security manual     -7011 -13369    50    8    0 mesh10 494cb230
+room6030  sub00   0x02DD4 126  P-epsilon report       -12900 -27200    63    9    1 mesh11 6f2c45d4
+
+## die verschiedenen Meshes
+mesh00 md5=0541704ee41d6445b718ee0b1b8abb3b   372 B  nObj=2  0 Tri 6 Quad  bbox=(-137, 137, -13, 13, -189, 189)
+        room1150 Slot 7 (von 10)  Id 104 CHRIS's diary  MD1 @0x029F34 372 B  TIM @0x04C3F0 34848 B
+        room1150 Slot 7 (von 10)  Id 104 CHRIS's diary  MD1 @0x029F34 372 B  TIM @0x04C3F0 34848 B
+mesh01 md5=ae2d0a30a18ed9cb9f089c21839ca61e   404 B  nObj=2  8 Tri 0 Quad  bbox=(-144, 142, -98, 0, -225, 211)
+        room2020 Slot 0 (von 8)  Id 106 Memo to LEON  MD1 @0x003254 404 B  TIM @0x01A160 34848 B
+mesh02 md5=ca09c4ac36447a5f0f0a801390677615   236 B  nObj=2  4 Tri 0 Quad  bbox=(-540, 0, 0, 0, 0, 360)
+        room2060 Slot 1 (von 7)  Id 108 Operation report 1  MD1 @0x002F18 236 B  TIM @0x00F540 17440 B
+        room2060 Slot 1 (von 7)  Id 108 Operation report 1  MD1 @0x002F18 236 B  TIM @0x00F540 17440 B
+        room2080 Slot 3 (von 4)  Id 113 Operation report 2  MD1 @0x0029A8 236 B  TIM @0x028F90 17440 B
+mesh03 md5=cf9f316dd6ba0ecf599bea18a83c36d1   372 B  nObj=2  0 Tri 6 Quad  bbox=(-137, 137, -13, 13, -189, 189)
+        room10E0 Slot 0 (von 2)  Id 112 Secretary's diary B  MD1 @0x002320 372 B  TIM @0x015224 17440 B
+mesh04 md5=cab7b32d230a19728221ffb6b1d75104   404 B  nObj=2  8 Tri 0 Quad  bbox=(-144, 142, -98, 0, -225, 211)
+        room60A0 Slot 6 (von 9)  Id 114 User registration  MD1 @0x002F08 404 B  TIM @0x03B924 34848 B
+mesh05 md5=64f36fa9cc73e4625f82c4ce5c93b410   468 B  nObj=2  4 Tri 5 Quad  bbox=(-450, 0, -9, 0, 0, 324)
+        room2100 Slot 0 (von 3)  Id 119 Watchman's diary  MD1 @0x0015F4 468 B  TIM @0x00E280 26144 B
+mesh06 md5=3909288c68bcf5e61ac2112787f4851b   468 B  nObj=2  4 Tri 5 Quad  bbox=(-270, 0, -9, 0, 0, 180)
+        room21B0 Slot 7 (von 8)  Id 120 Chief's diary  MD1 @0x0059F0 468 B  TIM @0x042590 8736 B
+mesh07 md5=bfc30e27139d42ff1fb17b44aa4cce9c   236 B  nObj=2  4 Tri 0 Quad  bbox=(-540, 0, 0, 0, 0, 360)
+        room4090 Slot 8 (von 11)  Id 121 Sewer manager diary  MD1 @0x00B55C 236 B  TIM @0x059340 34336 B
+mesh08 md5=61be27214e730e2393f8aae52a1a3df6  8388 B  nObj=2  16 Tri 113 Quad  bbox=(-129, 2, -21, 2, -62, 62)
+        room4090 Slot 5 (von 11)  Id 121 Sewer manager diary  MD1 @0x0089C0 8388 B  TIM @0x050F20 33824 B
+mesh09 md5=722734a1efdcabcfa438bb560c832021   468 B  nObj=2  0 Tri 8 Quad  bbox=(0, 0, -535, 0, 0, 378)
+        room4030 Slot 10 (von 11)  Id 122 Sewer manager fax  MD1 @0x0060F8 468 B  TIM @0x059900 8736 B
+mesh10 md5=494cb230481caa150c5b86630a82d881   468 B  nObj=2  0 Tri 8 Quad  bbox=(0, 0, -535, 0, 0, 378)
+        room60A0 Slot 8 (von 9)  Id 125 Lab security manual  MD1 @0x003840 468 B  TIM @0x03B924 34848 B
+mesh11 md5=6f2c45d4b6065e661e56ed6c56198d9d   468 B  nObj=2  4 Tri 5 Quad  bbox=(-450, 0, -9, 0, 0, 324)
+        room6030 Slot 9 (von 10)  Id 126 P-epsilon report  MD1 @0x008D0C 468 B  TIM @0x06AE14 8736 B
+
+## Dokument-Platzierungen OHNE Weltmodell (md1 == 255)
+room3010  sub00   0x01B90 Id 110  Mail to the chief      x=0      z=0      flag=44   act=0
+room3010  sub00   0x01CC0 Id 110  Mail to the chief      x=0      z=0      flag=44   act=0
+room2080  sub00   0x013E8 Id 115  Film A                 x=20000  z=20000  flag=125  act=0
+room2080  sub00   0x013FE Id 116  Film B                 x=20000  z=20000  flag=126  act=0
+room2080  sub00   0x01414 Id 117  Film C                 x=20000  z=20000  flag=127  act=0
+room2030  main00  0x006DE Id 118  Patrol report          x=-23098 z=-25955 flag=153  act=0
+room2080  sub00   0x0151E Id 123  Film D                 x=20000  z=20000  flag=160  act=0
+
+## desynchrone SCD-Bloecke (nicht gewalkt, Dunkelziffer)
+  room1000 sub04 desync@0x4 op=0xB6
+  room1020 sub17 desync@0x4 op=0xD2
+  room1030 sub06 desync@0x2 op=0xF4
+  room1030 sub07 desync@0x2 op=0xD2
+  room1040 sub01 desync@0x2 op=0x9C
+  room1080 sub03 desync@0x18 op=0xE2
+  room1090 sub05 desync@0x2 op=0xCA
+  room10B0 sub07 desync@0x10 op=0xE2
+  room1110 sub02 desync@0x18 op=0x9A
+  room1110 sub03 desync@0x2 op=0x9C
+  room1180 sub02 desync@0x10 op=0xF2
+  room20B0 sub07 desync@0xA op=0xE2
+  room3020 sub02 desync@0x2 op=0x96
+  room4090 sub12 desync@0x82 op=0xB4
+  room4100 sub18 desync@0x2 op=0xAE
+  room5090 sub08 desync@0x6 op=0xD6
+  room5090 sub09 desync@0x2 op=0xB2
+  room6010 sub17 desync@0x44 op=0xFC
+  room6010 sub19 desync@0x44 op=0xFC
+  room6030 sub26 desync@0x35 op=0xBF
+  room6040 sub10 desync@0x2D2 op=0x3A
+  room6040 sub25 desync@0x10 op=0xE2
+  room60A0 sub02 desync@0x4C op=0x81
+  room6150 sub10 desync@0x2 op=0xC6
+  roomA030 sub03 desync@0x2 op=0xD4
+  roomA070 main00 desync@0x6C op=0xFF
+  roomA0B0 main00 desync@0xAC op=0xAA
+  roomA130 main00 desync@0x78 op=0xAC
+  roomA180 main00 desync@0x42 op=0x9C
+  roomA1A0 main00 desync@0x7E op=0xFE
+  roomB020 main00 desync@0x6C op=0xAC
+  roomB090 main00 desync@0xD6 op=0xAE
+  roomB0A0 main00 desync@0x62 op=0x90
+  roomC000 main00 desync@0x6C op=0xAC
+  roomC020 sub02 desync@0x2 op=0x96
+  roomC0C0 main00 desync@0x9A op=0xAC
+  roomD000 sub03 desync@0x2 op=0x94
+  roomD050 main00 desync@0x98 op=0xAC
+  roomE030 main00 desync@0x90 op=0xC6
+  roomF010 sub07 desync@0x44 op=0xFC
+  roomF030 sub21 desync@0x35 op=0xBF
+  roomF050 main00 desync@0x10A op=0xBA
+  roomF0D0 main00 desync@0x4C op=0xAA
+  roomF130 main00 desync@0x58 op=0xAC
+  roomF150 sub03 desync@0x34 op=0xAA
