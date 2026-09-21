@@ -5,9 +5,10 @@
 Vorlage fuer eigene RE1.5-Dokumente auswaehlen kann.
 
 Was rauskommt:
-  hintergruende/bilder_roh/   25 Original-TIMs, 8bpp 128x256 — das ANSCHAUUNGSBILD je
+  hintergruende/bilder_roh/   25 Original-TIMs, 8bpp 128x256 — das HINTERGRUNDBILD je
                               Dokument (vorgerenderter Gegenstand bzw., bei den Film-
                               Dokumenten, das Foto). Ein Bild je Dokument, im Titel-Slot.
+                              Der Text wird im Spiel DARUEBER gezeichnet (Beleg unten).
   hintergruende/bilder_png/   dieselben 25 als PNG, volle 128x256-Leinwand
   hintergruende/bilder_band/  dieselben 25, beschnitten auf das Band, das der Leser
                               zeichnet: Zeilen page_h..255, also 128 x (256 - page_h)
@@ -16,8 +17,9 @@ Was rauskommt:
   hintergruende/seiten_lesbar/ dieselben auf neutralem Grund — NUR Ansichtshilfe
   texte/                      Dokumentnamen je Dokument: Rohbytes (Hex) + dekodiert
   texte/transkription/        von Hand abgelesene Seitentexte (re2_dokumente_transkription.py)
-  modelle/                    ST_FILE.TM2 / .TIM / .TS im Rohzustand (Geometrie + Textur
-                              des FILE-Bildschirms) — siehe Hinweis unten
+  modelle/                    ST_FILE.TM2 / .TIM / .TS im Rohzustand + die Geometrie als
+                              OBJ (re2_tm2_obj.py). Das ist das Moebelstueck des
+                              FILE-Bildschirms, NICHT ein Modell je Dokument.
   toc.csv                     jede Zeile ein extrahiertes TIM, mit Byte-Offset in FILES.TIM
   dokumente.csv / .json       eine Zeile je Dokument (Name, Seiten, Hoehe, Item-Id)
   uebersicht.html             der Auswahlbogen: Bild + alle Seiten + Text je Dokument
@@ -66,9 +68,31 @@ Was rauskommt:
    existieren nur die Dokument-NAMEN (oben). Die Transkriptionen in texte/transkription/
    sind von Hand abgelesen und ausdruecklich KEINE Originalbytes.
 
+⛔ Der HINTERGRUND unter der durchsichtigen Textseite ist das 8bpp-Bild AUS DEMSELBEN
+   SLOT — nicht ein Pergament aus einer anderen Datei. Belegt am Oeffnen-Zustand
+   (caseD_b): beide TIMs des Titel-Slots gehen in DENSELBEN VRAM-Ausschnitt,
+       8006CF2C  li   v0,0x917   ; Slot 0x17, CLUT-Cursor 9  -> CLUT-Y 480+9  = 489
+       8006CF38  jal  FUN_80076A40 / _lui a0,0x801a          ; 0x801A0000 = 8bpp-Bild
+       8006CF44  li   v0,0xa17   ; derselbe Slot, Cursor 10  -> CLUT-Y 480+10 = 490
+       8006CF50  jal  FUN_80076A40
+       8006CF54  _ori a0=>DAT_801a8220,a0,0x8220             ; +33312 = 4bpp-Textseite
+   FUN_80076A40 rechnet die Lage aus dem Slot: `sll v0,v1,0x6` @0x80076A6C (x = slot*64),
+   `sll v0,v0,0x8` @0x80076AA4 (y = 0 oder 256), `addiu v0,v0,0x1e0` @0x80076B08
+   (CLUT-Y = 480 + Cursor). Slot 0x17 = VRAM (448,256).
+   Gezeichnet wird mit zwei SPRT (`li v0,0x66` @0x80076050 und @0x800760B0), CLUT
+   (0,490) fuer den Text (`li a1,0x1ea` @0x8007604C) und (0,489) fuer das Bild
+   (`li a1,0x1e9` @0x800760AC). Eingereiht in FUN_800761B8: Textseite an Bildschirm-
+   (25,30) aus DAT_800D5C4C/4E (`lhu` @0x8007623C / `sh v0,0x8(s0)` @0x80076244), Bild an
+   (100,60) (`li v0,0x64` @0x80076288 / `li v0,0x3c` @0x80076290). AddPrim haengt vorn
+   an, also wird zuerst das Bild und darueber der Text gezeichnet.
+   ⛔ ST_FILE.TIM ist NICHT dieser Hintergrund: die EXE laedt CD-Id 221/222 nie. Der
+   Speicherblock "FILE TIM TM2" laedt Id 0xdf = 223 = ST_FILE.TS (`li a0,0xdf`
+   @0x8006C75C mit `addiu a3,a3,0x1c20` = der String) — das ist die Grafik der
+   FILE-LISTE (3D-Karteikarten), nicht der Seitenhintergrund.
+
 ⛔ Layout, gemessen (nicht modelliert): ein Dokument belegt einen 64-VRAM-Wort breiten
    Block von 256 Zeilen. Zeilen 0..page_h-1 nimmt die 4bpp-Textseite ein (256 px breit
-   = 64 VRAM-Worte), Zeilen page_h..255 das 8bpp-Anschauungsbild (128 px breit = ebenfalls
+   = 64 VRAM-Worte), Zeilen page_h..255 das 8bpp-Hintergrundbild (128 px breit = ebenfalls
    64 VRAM-Worte). Beweis aus den Daten (Bandzensus, laeuft bei jeder Extraktion mit):
    oberhalb des Bandes, also in den Zeilen 0..page_h-1 des 8bpp-Bildes, steht bei allen
    25 Dokumenten KEINE Kunst — 21 Dokumente sind dort vollstaendig durchsichtig, 4
@@ -225,7 +249,7 @@ h2{font-size:1.15rem;margin:0}
  border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px}
 .nr{font-family:ui-monospace,monospace;color:var(--acc);font-weight:700}
 .meta{color:var(--muted);font-size:.8rem;font-family:ui-monospace,monospace}
-.spalten{display:grid;grid-template-columns:150px 1fr;gap:16px}
+.spalten{display:grid;grid-template-columns:172px 1fr;gap:16px}
 @media(max-width:820px){.spalten{grid-template-columns:1fr}}
 .bild img{width:100%;max-width:140px;image-rendering:pixelated;background:#0d0e12;
  border:1px solid var(--line);border-radius:6px}
@@ -248,15 +272,24 @@ Vorlage fuer die RE1.5-Dokumente.</p>
 <div class="zahlen">
 <div><b>25</b><span>Dokumente (Soll = Ist)</span></div>
 <div><b>191</b><span>Seitenbilder 4bpp</span></div>
-<div><b>25</b><span>Anschauungsbilder 8bpp</span></div>
+<div><b>25</b><span>Hintergrundbilder 8bpp</span></div>
 <div><b>216</b><span>TIMs gesamt</span></div>
 <div><b>166</b><span>davon verschieden</span></div>
 </div>
 <div class="hinweis">
-<p><b>Aufbau eines Dokuments.</b> Links das <b>Anschauungsbild</b> (8bpp, 128&nbsp;px breit) &mdash;
-der vorgerenderte Gegenstand, bei den Film-Dokumenten das Foto selbst. Rechts die
-<b>Textseiten</b> (4bpp, 256&nbsp;px breit). Im VRAM liegen beide in einem Block von 256
-Zeilen: die Textseite in Zeile 0&hellip;H&minus;1, das Anschauungsbild in Zeile H&hellip;255.</p>
+<p><b>Aufbau eines Dokuments.</b> Links das <b>Hintergrundbild</b> (8bpp, 128&nbsp;px breit)
+&mdash; der vorgerenderte Gegenstand, bei den Film-Dokumenten das Foto selbst. Rechts die
+<b>Textseiten</b> (4bpp, 256&nbsp;px breit). Beide stecken im selben Slot derselben Datei,
+und das Spiel legt sie im VRAM absichtlich uebereinander: das Hintergrundbild belegt
+128&times;256, die Textseite ueberschreibt davon die oberen H&nbsp;Zeilen. Uebrig bleiben
+genau die unteren 256&minus;H&nbsp;Zeilen des Bildes &mdash; das ist der Ausschnitt, der
+hier gezeigt wird.</p>
+<p><b>Auf dem Bildschirm liegt der Text ueber dem Bild.</b> Der Leser zeichnet zwei
+Sprites: erst das Bild (128&times;(256&minus;H) an Position 100/60), dann darueber die
+Textseite (256&times;H an 25/30). Weil die Textseite durchsichtigen Grund hat, scheint das
+Bild hindurch. <b>Dieses 8bpp-Bild ist also der eigentliche &bdquo;Dokumenten-Hintergrund&ldquo;</b>
+&mdash; nicht ein Pergament aus einer anderen Datei; die Status-Bildschirm-Grafik
+<code>ST_FILE.TIM</code> laedt RE2 nie.</p>
 <p><b>Der Text ist ein Bild.</b> RE2 speichert den Dokumenttext auf der PSX nicht als
 Zeichen, sondern gerastert &mdash; die 16-Farben-Palette einer Seite hat Eintrag&nbsp;0 =
 <code>0x0000</code> (durchsichtig) und Eintrag&nbsp;9 = <code>0x7FFF</code> (weiss). Als echte
@@ -299,10 +332,10 @@ def uebersicht(out, docs):
                     d["slots"], d["textseiten"], d["page_h"]))
         L.append('<div class="spalten"><figure class="bild">'
                  '<a href="hintergruende/bilder_png/FILE%02d_title_paper.png">'
-                 '<img src="%s" alt="Anschauungsbild Dokument %d"></a>'
-                 '<figcaption>Anschauungsbild 128&times;%d<br>'
+                 '<img src="%s" alt="Hintergrundbild Dokument %d"></a>'
+                 '<figcaption>Hintergrundbild 128&times;%d<br>'
                  '<a class="roh" href="hintergruende/bilder_png/FILE%02d_title_paper.png">'
-                 'ganze Leinwand</a> &middot; '
+                 'ganzes Bild</a> &middot; '
                  '<a class="roh" href="hintergruende/bilder_roh/FILE%02d_title_paper.TIM">'
                  'roh (TIM)</a></figcaption></figure><div>'
                  % (d["doc"], d["icon"], d["doc"], 256 - d["page_h"], d["doc"], d["doc"]))

@@ -4,14 +4,14 @@
 extrahieren, damit auswählbar ist, welches als Vorlage für die RE1.5-Dokumente dient.
 
 **Ergebnis in einem Satz.** RE2 hat **genau 25 Dokumente** mit **191 Seitenbildern** und
-**25 Anschauungsbildern**; alle 216 sind als Roh-TIM und als PNG extrahiert, die
+**25 Hintergrundbildern**; alle 216 sind als Roh-TIM und als PNG extrahiert, die
 Dokument-**Namen** liegen als echte Zeichenkette in der EXE, der Dokument-**Text** dagegen
 ist auf der PSX kein Zeichenstrom sondern in die Bilder gerastert, und ein **3D-Modell je
 Dokument existiert nicht** — es gibt nur einen Anzeige-Körper für den FILE-Bildschirm.
 
 **Auswahlbogen:** `extracted_re2_dokumente/uebersicht.html` — im Browser öffnen
-(Doppelklick genügt, keine Serverfreigabe nötig; alle 432 Verweise sind relativ und
-wurden geprüft).
+(Doppelklick genügt, keine Serverfreigabe nötig; alle 457 Verweise sind relativ und
+wurden geprüft, 0 tote).
 
 ---
 
@@ -123,18 +123,82 @@ Als echte Zeichenkette existiert daher **nur der Name**. Die Texte in
 ausdrücklich **keine Originalbytes** und stehen im Bogen hinter einem Aufklapper, der das
 auch so benennt. Das Original bleibt immer das Bild.
 
-### 1.6 Das Layout je Dokument — durch Zensus belegt
+### 1.6 ⛔ Der Hintergrund unter der Textseite ist das 8bpp-Bild aus demselben Slot
+
+Das war zunächst offen und ist jetzt belegt. Meine beiden Vermutungen (die türkise Tafel
+aus `ST_FILE.TIM`; eine ungetexturierte Farbfläche) waren **beide falsch**.
+
+Der Titel-Slot eines Dokuments enthält **zwei** aneinandergehängte TIMs, und der
+Öffnen-Zustand lädt beide in **denselben** VRAM-Ausschnitt:
+
+```
+8006CF2C  li   v0,0x917                     ; Slot 0x17, CLUT-Cursor 9  -> CLUT-Y 489
+8006CF38  jal  FUN_80076A40 / _lui a0,0x801a ; 0x801A0000 = das 8bpp-Bild
+8006CF44  li   v0,0xa17                     ; DERSELBE Slot, Cursor 10  -> CLUT-Y 490
+8006CF50  jal  FUN_80076A40
+8006CF54  _ori a0=>DAT_801a8220,a0,0x8220   ; +33312 = die 4bpp-Textseite
+```
+
+`FUN_80076A40` rechnet die VRAM-Lage aus dem Slot: `sll v0,v1,0x6` @0x80076A6C (x =
+slot·64), `sll v0,v0,0x8` @0x80076AA4 (y = 0 oder 256), `addiu v0,v0,0x1e0` @0x80076B08
+(CLUT-Y = 480 + Cursor). Slot 0x17 = VRAM (448, 256). Die Textseite überschreibt dort die
+oberen H Zeilen des Bildes; es überleben genau die unteren 256−H.
+
+Gezeichnet wird mit **zwei SPRT** (`li v0,0x66` @0x80076050 und @0x800760B0), CLUT (0,490)
+für den Text (`li a1,0x1ea` @0x8007604C) und (0,489) für das Bild (`li a1,0x1e9`
+@0x800760AC). `FUN_800761B8` reiht sie ein: Textseite an Bildschirm-(25,30) aus
+`DAT_800D5C4C/4E` (`lhu` @0x8007623C, `sh v0,0x8(s0)` @0x80076244), Bild an (100,60)
+(`li v0,0x64` @0x80076288, `li v0,0x3c` @0x80076290). `AddPrim` hängt vorn an, also wird
+**zuerst das Bild, dann darüber der Text** gezeichnet — und weil die Textseite
+durchsichtigen Grund hat, scheint das Bild hindurch. Rechnerisch liegt das Bildrechteck
+(100,60)–(228,60+256−H) vollständig im Textrechteck (25,30)–(281,30+H).
+
+**Damit ist das 8bpp-Bild der „Dokumenten-Hintergrund" im wörtlichen Sinn.** Ich hatte es
+im ersten Durchgang „Anschauungsbild" genannt; das war zu vorsichtig und ist überall
+korrigiert.
+
+`ST_FILE.TIM` ist es ausdrücklich **nicht**: die EXE lädt die CD-Ids 221/222
+(`ST_FILE.TIM`/`.TM2`) nie. Der Speicherblock mit dem irreführenden Namen
+`"FILE TIM TM2"` (String @0x80011C20) lädt Id `0xdf` = 223 = **`ST_FILE.TS`**
+(`li a0,0xdf` @0x8006C75C zusammen mit `addiu a3,a3,0x1c20` = genau dieser String) — und
+das ist die Grafik der FILE-**Liste** (die 3D-Karteikarten), nicht der Seitenhintergrund.
+
+### 1.7 Nebenprodukt: die CD-Datei-Tabelle `0x800988A4`
+
+Für die Frage „welche Datei lädt der FILE-Bildschirm eigentlich" musste die
+Id→Datei-Zuordnung her. Sie steht in `FUN_80012FB8`:
+
+```c
+iVar2 = param_1 * 8;
+DAT_800d531e = (&DAT_800988ab)[iVar2];                       // +7
+DAT_800d5308 = *(int *)(&DAT_800988a4 + iVar2);              // +0  Größe
+DAT_800d5314 = (uint)(byte)(&DAT_800988aa)[iVar2] * 0x10000  // +6  LBA hi
+             + (uint)*(ushort *)(&DAT_800988a8 + iVar2);     // +4  LBA lo
+```
+
+Record = `{u32 size; u16 lba_lo; u8 lba_hi; u8 chk}`. Gegenprobe zum bekannten Anker:
+`0x800988A4 + 166·8 = 0x80098DD4`, LBA also `@0x80098DD8/DA` — genau die Adressen, die
+`re2_files_cut.py` schon nannte. Byte +7 ist **kein Pad, sondern eine XOR-Prüfsumme** über
+die Bytes an 0, 0x200, 0x400 … der auf 2048 gepolsterten Datei (`lw v0,0x0(s0)`
+@0x80013878, `addiu s0,s0,0x200` @0x8001387C, `xor v1,v1,v0` @0x8001388C).
+
+Relevante Ids: **166** = `FILES.TIM`, 169 = `ITEMALL.PIX`, 170 = `ITPS.ITP`,
+171 = `MAPS.PIX`, 221 = `ST_FILE.TIM`, 222 = `ST_FILE.TM2`, **223 = `ST_FILE.TS`**.
+Nur 223 wird geladen — das ist der Beleg dafür, dass `ST_FILE.TIM`/`.TM2` totes Gewicht
+auf der Disc sind (Abschnitt 5).
+
+### 1.8 Das Layout je Dokument — durch Zensus belegt
 
 Ein Dokument belegt im VRAM einen **64 VRAM-Worte breiten Block von 256 Zeilen**:
 
 | Zeilen | Inhalt | Breite |
 |---|---|---|
 | `0 … H-1` | die 4bpp-Textseite | 256 px = 64 Worte |
-| `H … 255` | das 8bpp-Anschauungsbild | 128 px = 64 Worte |
+| `H … 255` | das 8bpp-Hintergrundbild | 128 px = 64 Worte |
 
 Der Leser zeichnet dazu zwei Sprites — Textseite `u=0, v=0, w=256, h=H`
 (`sb zero,-2(s0)` **@0x80076068**, `sb zero,-1(s0)` **@0x8007606C**, `sh s1,2(s0)`
-**@0x80076070**, `sh s5,4(s0)` **@0x80076078**) und Anschauungsbild bei `v=H`
+**@0x80076070**, `sh s5,4(s0)` **@0x80076078**) und Hintergrundbild bei `v=H`
 (`subu v0,zero,s3` **@0x800760B8**, `sb v0,-1(s0)` **@0x800760D0**).
 
 **Gegenprobe an den Daten (Bandzensus, läuft bei jeder Extraktion mit):** oberhalb des
@@ -160,6 +224,7 @@ dieser Zensus jemals verletzt wird.
 | TIMs im Container | **216** = 191 × 4bpp + 25 × 8bpp | **216** | ✅ |
 | Dokument-Namen | **25** — Item-Ids 0x68…0x80 | **25** | ✅ |
 | Byte-Abdeckung `ST_FILE.TM2` | 372 Bytes | 372 lückenlos erklärt | ✅ |
+| Byte-Abdeckung `ST_FILE.TS` | 21 752 Bytes | 0x4E20 TIM + 0x64C Block A + 0x8C Block B | ✅ |
 | Byte-Abdeckung `FILES.TIM` | 5 257 216 Bytes | 4 891 872 in TIMs + 365 344 Nullfüllung | ✅ |
 
 Die 216 deckt sich mit den 216 `FILES_*.bmp`, die im Datensatz schon neben `FILES.TIM`
@@ -195,7 +260,7 @@ existiert nichts weiter als diese 216 Bilder**.
   Film-Leerseiten sind untereinander byte-identisch. Auch dieser Zensus läuft bei jeder
   Extraktion mit und wird gemeldet.
 * `FILE23_p12` == `FILE24_p10`.
-* Von den 25 Anschauungsbildern sind nur **14 verschieden**; acht Dokumente
+* Von den 25 Hintergrundbildern sind nur **14 verschieden**; acht Dokumente
   (1/5/18/20/21/22/23/24) teilen dasselbe Bild „loser Papierstapel".
 
 **Drei Dokumente haben mehr Bilddaten, als ihr `max_page`-Startwert meldet** —
@@ -226,7 +291,7 @@ extracted_re2_dokumente/
 │   ├── seiten_roh/     191 TIM  4bpp 256×H   — die Textseiten, byte-true geschnitten
 │   ├── seiten_png/     191 PNG  RGBA, Index 0 durchsichtig wie im Spiel
 │   ├── seiten_lesbar/  191 PNG  dieselben auf neutralem Grund (18,26,32) — Ansichtshilfe
-│   ├── bilder_roh/      25 TIM  8bpp 128×256 — das Anschauungsbild je Dokument
+│   ├── bilder_roh/      25 TIM  8bpp 128×256 — das Hintergrundbild je Dokument
 │   ├── bilder_png/      25 PNG  volle 128×256-Leinwand
 │   └── bilder_band/     25 PNG  auf das gezeichnete Band 128×(256−H) beschnitten
 ├── texte/
@@ -235,7 +300,9 @@ extracted_re2_dokumente/
 │   └── exe_terminaltexte.txt   Zugabe: 18 Klartext-Strings des Computer-Terminals
 └── modelle/
     ├── ST_FILE.TM2 / .TIM / .TS   Rohdateien des FILE-Bildschirms
-    └── ST_FILE.obj                die TM2-Geometrie als Wavefront-OBJ
+    ├── TM2.obj                    ST_FILE.TM2 (8 Vertices, 6 Vierecke) — vom Spiel UNGENUTZT
+    ├── TS_BlockA.obj              ST_FILE.TS @0x4E20 (36 Vertices, 3 Tri + 29 Quad) — das Regal
+    └── TS_BlockB.obj              ST_FILE.TS @0x546C (4 Vertices, 1 Quad) — die Karteikarte
 ```
 
 Gesamt **8,2 MB** — liegt im Arbeitsbaum und ist mitcommittet.
@@ -250,7 +317,7 @@ Retusche, keine Umfärbung, keine Skalierung.
 
 ## 4. Die 25 Dokumente
 
-| # | Item-Id | Name | Slots | Höhe | Anschauungsbild |
+| # | Item-Id | Name | Slots | Höhe | Hintergrundbild |
 |---|---|---|---|---|---|
 | 0 | 0x68 | CHRIS's diary | 7 | 144 | türkises Tagebuch mit Schloss |
 | 1 | 0x69 | Mail to Chris | 7 | 176 | loser Papierstapel |
@@ -282,7 +349,7 @@ Die Titelseite von Dokument 19 zeigt übrigens nicht „Film D", sondern „RECR
 Titelseiten von 23/24 lauten „HINT FILES FOR THE ROOKIE MODE".
 
 **Für die Übernahme nach RE1.5 sind gestalterisch die 14 verschiedenen
-Anschauungsbilder und die vier Seitenhöhen (112/128/144/176) die eigentliche Auswahl** —
+Hintergrundbilder und die vier Seitenhöhen (112/128/144/176) die eigentliche Auswahl** —
 die Textseiten selbst sind ein einheitliches Raster: 256 px breit, weiße Glyphen,
 feste Zeilenumbrüche im Bild.
 
@@ -290,10 +357,33 @@ feste Zeilenumbrüche im Bild.
 
 ## 5. „Modelle" — meine Auslegung, mit Beleg
 
-**Ein 3D-Modell je Dokument existiert in RE2 nicht.** Das Aussehen eines Dokuments steckt
-in seinem vorgerenderten 8bpp-Bild (siehe 1.6), nicht in Geometrie. Was es an Geometrie
-gibt, ist **ein** Anzeige-Körper für den FILE-Bildschirm: `COMMON/DATA/ST_FILE.TM2`,
-372 Bytes. Ich habe das Format lückenlos nachgerechnet (`re15_port/tools/re2_tm2_obj.py`):
+**Kein Gegenstand in RE2 hat ein 3D-Mesh — Dokumente schon gar nicht.**
+
+* Die Nahansicht eines Gegenstands ist **ein einziges texturiertes Rechteck 112×72**:
+  `FUN_80075A00` setzt `li v0,0x70` @0x80075A5C (w = 112) und `li v0,0x48` @0x80075A64
+  (h = 72), CLUT (0,488) via `li a1,0x1e8` @0x80075A50, und erzeugt genau zwei Quads
+  (Doppelpuffer) — kein Mesh, und nirgends ein Modell-Lookup je Item-Id.
+* Das Inventar-Icon ist eine rohe 40×30-Kachel aus `ITEMALL.PIX`, direkt über die Item-Id
+  indiziert: `&DAT_8019C000 + item_id * 0x4b0` (0x4B0 = 1200 B = 20 Worte × 30 Zeilen
+  @ 8bpp). 127 200 B = 106 × 1200 → 86 Haupt-Kacheln (Ids 0…85) + 20 zweite Hälften
+  für die Zweislot-Waffen.
+* **Die FILE-Items (Ids 0x68…0x80) sind explizit ausgeschlossen:**
+  ```
+  80071BBC  sltiu v0,a3,0x68          ; a3 = Item-Id
+  80071BC0  beq   v0,zero,LAB_80071D00 ; Id >= 0x68 -> Dokument-Pfad
+  80071BC8  li    a0,0xaa             ; nur fuer Id < 0x68: ITPS.ITP laden
+  ```
+  Dokumente sind in RE2 also gar keine Inventar-Gegenstände; sie gehen direkt in die
+  24-Byte-FILE-Liste. Passend dazu die Datenlage: `ITEMALL.PIX` hat 86 Haupt-Kacheln
+  (Ids 0…85), `ITPS.ITP` 100 Einträge — für Id 104 aufwärts existiert in keinem von
+  beiden ein Eintrag.
+* Am Boden liegende Gegenstände tragen nur einen **Effekt-Marker** aus dem *raumeigenen*
+  Modellsatz (`FUN_80053394` → `FUN_8001BF10`, Modell-Id 0x0F/0x17/0x1F, y − 0x5A über
+  dem AOT-Eintrag) — der bekannte Glitzer, **kein** item-spezifisches Mesh.
+
+Was es an Geometrie überhaupt gibt, ist das **Möbelstück des FILE-Bildschirms**. Ich habe
+das Format lückenlos nachgerechnet (`re15_port/tools/re2_tm2_obj.py`) — zuerst an
+`ST_FILE.TM2` (372 B):
 
 | Datei-Offset | Inhalt |
 |---|---|
@@ -314,17 +404,46 @@ Dateiende. Kein unerklärtes Byte.
 
 Die Vertices sind
 `(0,270,-204) (0,-270,-204) (-72,270,-204) (-72,-270,-204) (0,270,204) (0,-270,204)
-(-72,270,204) (-72,-270,204)` — ein **Kasten**, 72 dick × 540 hoch × 408 tief. Die sechs
-Primitive sind die sechs Seiten, jede mit einer eigenen Flächennormale (im Konverter
-per `assert` geprüft) und UVs innerhalb 0…127 — passend zur 128 px breiten Textur
-`ST_FILE.TIM` (8bpp 128×256, 3 CLUTs @VRAM (0,480); gerendert zeigt sie die Blenden,
-Pfeile und die türkise Tafel des Status-Bildschirms).
+(-72,270,204) (-72,-270,204)` — ein **Kasten**, 72 dick × 540 hoch × 408 tief.
+
+Zwei Dinge, die ich erst danach belegt habe und die das Bild korrigieren:
+
+1. Das 7. Objektwort ist **nicht** PsyQs `scale`, sondern der Zeiger auf die
+   GPU-Paket-Vorlagen. Maßstab ist die EXE selbst: `get_tmd_addr` (die Funktion mit den
+   PsyQ-Debug-Strings `"analizing TMD..."` @0x800126E8 und
+   `"\tid=%08X, flags=%d, nobj=%d, objid=%d"` @0x800126FC) rechnet
+   `piVar2 = param_1 + objid*7 + 3` und liest Vertices/Normalen/Index als
+   `base + piVar2[0|2|4] + 0xc`. RE2 hält Index und Paket in zwei **parallelen** Arrays
+   statt in einem verschränkten TMD-Record.
+2. **Gerade Objektnummer = Dreiecke, ungerade = Vierecke**, festgeschrieben in
+   `FUN_80076B60`: `iVar2 = (uVar8 & 1) + 3;`. Genau deshalb hat Objekt 0 `n_prim = 0`
+   und Objekt 1 `n_prim = 6` — der Kasten hat null Dreiecke und sechs Vierecke.
+
+**⛔ Und: `ST_FILE.TM2` wird von RE2 nie geladen.** Es ist ein auf der Disc
+liegengebliebenes Build-Zwischenprodukt. Die ausgelieferte Geometrie steckt in
+**`ST_FILE.TS`** (CD-Id 223 = `0xdf`, `li a0,0xdf` @0x8006C75C), und zwar als
+`[TIM 8bpp 128×144, 0x4E20 B][Block A 0x64C][Block B 0x8C]`. Selbst nachgerechnet:
+
+| Block | Vertices | Normalen | Primitive | Paketbytes | Gegenprobe |
+|---|---|---|---|---|---|
+| `ST_FILE.TM2` | 8 | 6 | 0 Tri + 6 Quad | 96 | endet exakt bei 0x174 = 372 B |
+| `ST_FILE.TS` A | 36 | 32 | 3 Tri + 29 Quad | 3·12+29·16 = 500 | = 0x64C − 0x458 ✓ |
+| `ST_FILE.TS` B | 4 | 1 | 0 Tri + 1 Quad | 16 | = 0x8C − 0x7C ✓ |
+
+und `0x4E20 + 0x64C + 0x8C = 0x54F8 = 21 752` = Dateilänge von `ST_FILE.TS`, kein
+unerklärtes Byte. Die **8 Vertices von `ST_FILE.TM2` sind byte-identisch die ersten 8 der
+36 von Block A** (im Konverter per `assert` geprüft) — TM2 ist die ältere, reine
+Quader-Fassung desselben Modells. Block A ist das Regal/die drei Reihen der FILE-Liste,
+Block B die einzelne Karteikarte, die 24-mal im Karussell steht.
+
+Exportiert liegen alle drei als OBJ in `modelle/` (`TM2.obj`, `TS_BlockA.obj`,
+`TS_BlockB.obj`), die Rohdateien daneben.
 
 **Meine Auslegung des Auftrags-Worts „Modelle" — ausdrücklich, damit widersprochen werden
-kann:** ich habe (a) diesen einen Anzeige-Körper als OBJ exportiert und (b) die 25
-Anschauungsbilder als das mitgegeben, was in RE2 die Rolle eines „Dokument-Modells"
-tatsächlich spielt. Wenn statt dessen die **Boden-Objekte** gemeint waren, die man beim
-Aufnehmen sieht, steht diese Frage noch offen (siehe Abschnitt 7).
+kann:** ich habe (a) die Geometrie des FILE-Bildschirms als OBJ exportiert und (b) die 25
+8bpp-Bilder als das mitgegeben, was in RE2 die Rolle eines „Dokument-Modells" tatsächlich
+spielt. Ein item-spezifisches Mesh gibt es nicht und kann es nicht geben — siehe die
+Belege oben.
 
 ---
 
@@ -345,19 +464,22 @@ Auszeichnung wie in den Bytes, nichts ersetzt: `]` = Zeilenumbruch, `|<n>` = Far
 
 ## 7. Was offen blieb
 
-1. **Der Papier-Hintergrund, auf dem die Textseite liegt.** Die Textseiten sind
-   durchsichtig; was RE2 darunter legt, ist **nicht** geklärt. `ST_FILE.TIM` ist gerendert
-   die UI-Blende des Status-Bildschirms (Blenden, Pfeile, türkise Tafel), nicht ein
-   Pergament. Wahrscheinlich ist die türkise Tafel genau dieser Grund, aber das ist
-   **nicht belegt** und steht darum hier und nicht im Bogen. Für die Übernahme nach RE1.5
-   ist es auch nicht kritisch: die 191 Textseiten und die 25 Anschauungsbilder sind
-   vollständig da; nur der Farbgrund hinter dem Text fehlt als Beleg.
-2. **Boden-Objekte / Inventar-Ikonen der FILE-Items.** Ob die Item-Ids 0x68…0x80 in
-   `ITEMALL.PIX` (127 200 B, 106 TIMs) oder `ITPS.ITP` (1 228 800 B, 250 TIMs, Namen
-   `ITPS<NN><0|1>.tim`) überhaupt einen Eintrag haben, und wie RE2 am Boden liegende
-   Gegenstände zeichnet (3D-Modell, Billboard oder Teil des vorgerenderten Hintergrunds),
-   ist **nicht belegt**. Beide Container liegen im Datensatz und sind extrahierbar, sobald
-   die Zuordnung Item-Id → Sprite belegt ist.
+*Die beiden großen offenen Punkte des ersten Durchgangs — der Hintergrund unter der
+Textseite und die Frage nach Item-Modellen — sind inzwischen belegt (Abschnitt 1.6 bzw.
+5). Es bleibt:*
+
+1. **Der Inhalt der beiden `DR_MODE`-Primitive** `0x800D6BA8` und `0x800D6C08`, die
+   `FUN_800761B8` vor den beiden Sprites einreiht (`addiu v0,s3,0x1018` @0x80076274,
+   `addiu v0,s3,0xfb8` @0x800762B0), ist **nicht belegt**. Gesucht wurde nach dem
+   Schreiber: alle 7 Treffer auf diese Offsets sind `AddPrim`-Aufrufe, und keiner der 15
+   `jal SetDrawMode` im ganzen Image trifft sie. Aus der VRAM-Ablage *muss* die Textseite
+   tpage 0x17 (4bpp @448,256) und das Bild tpage 0x97 (8bpp @448,256) tragen — am
+   Initialisierungscode zeigen lässt es sich nicht. Für die Extraktion ohne Belang.
+2. **Dass das sichtbare Boden-Objekt selbst im vorgerenderten Hintergrund steckt**, ist
+   ein Schluss aus Abwesenheit, nicht aus Code: belegt ist nur der Effekt-Marker.
+   Durchsucht wurden die SCD-Opcode-Tabelle (`0x800A74C8`, 0x76 Einträge), alle
+   `FUN_8001BF10`-Aufrufer, die AOT-Handler 0x38/0x4E und alle `DAT_800D4CD8`-Nutzer;
+   kein Pfad schlägt pro Item-Id ein Modell nach.
 3. **Die zweite Namensbank** (`0x8009DF3C` / `0x8009E438`) ist nur als Hex mitgegeben. Ihr
    Zeichensatz (Bytes 0xA0…0xEF) ist nicht aufgelöst; dafür müsste der zugehörige Font
    identifiziert werden. Für lateinische Dokumentnamen ist sie ohne Belang.
@@ -372,11 +494,11 @@ Auszeichnung wie in den Bytes, nichts ersetzt: `]` = Zeilenumbruch, `|<n>` = Far
 |---|---|
 | `re15_port/tools/re2_dokumente_extrakt.py` | die vollständige Extraktion + der Bogen; ein Aufruf, keine Argumente. Enthält alle `@0x`-Belege im Kopf und bricht bei verletztem Zensus ab. |
 | `re15_port/tools/re2_dokumente_transkription.py` | schreibt die 25 Transkriptionen (muss vor dem Extraktor laufen, damit der Bogen sie einbettet) |
-| `re15_port/tools/re2_tm2_obj.py` | `ST_FILE.TM2` → OBJ, mit dem lückenlosen Format-Nachweis im Kopf |
+| `re15_port/tools/re2_tm2_obj.py` | die RE2-TM2-Geometrie → OBJ: `ST_FILE.TM2` **und** die beiden Blöcke in `ST_FILE.TS`, mit dem lückenlosen Format-Nachweis im Kopf und drei Gegenproben als `assert` |
 
 Vorhanden waren schon `re2_files_cut.py` (Schnitt) und `re2_files_png.py` (PNG) — ich habe
 sie zur Gegenprobe laufen lassen (gleiche 216 TIMs, gleiche Maße) und ihre Tabellen
-nachgerechnet, den Rest aber neu gebaut, weil sie weder Namen, noch Anschauungsbilder als
+nachgerechnet, den Rest aber neu gebaut, weil sie weder Namen, noch Hintergrundbilder als
 solche, noch einen Auswahlbogen liefern.
 
 Aufruf:

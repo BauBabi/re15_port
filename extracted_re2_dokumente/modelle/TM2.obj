@@ -1,4 +1,4 @@
-# ST_FILE.TM2 -> OBJ, erzeugt von re15_port/tools/re2_tm2_obj.py
+# ST_FILE.TM2, Block TM2 -> OBJ (re15_port/tools/re2_tm2_obj.py)
 # PSX-Koordinaten unveraendert (Y zeigt nach unten wie auf der PSX).
 v 0 270 -204
 v 0 -270 -204

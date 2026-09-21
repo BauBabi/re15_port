@@ -32,7 +32,7 @@ h2{font-size:1.15rem;margin:0}
  border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px}
 .nr{font-family:ui-monospace,monospace;color:var(--acc);font-weight:700}
 .meta{color:var(--muted);font-size:.8rem;font-family:ui-monospace,monospace}
-.spalten{display:grid;grid-template-columns:150px 1fr;gap:16px}
+.spalten{display:grid;grid-template-columns:172px 1fr;gap:16px}
 @media(max-width:820px){.spalten{grid-template-columns:1fr}}
 .bild img{width:100%;max-width:140px;image-rendering:pixelated;background:#0d0e12;
  border:1px solid var(--line);border-radius:6px}
@@ -55,15 +55,24 @@ Vorlage fuer die RE1.5-Dokumente.</p>
 <div class="zahlen">
 <div><b>25</b><span>Dokumente (Soll = Ist)</span></div>
 <div><b>191</b><span>Seitenbilder 4bpp</span></div>
-<div><b>25</b><span>Anschauungsbilder 8bpp</span></div>
+<div><b>25</b><span>Hintergrundbilder 8bpp</span></div>
 <div><b>216</b><span>TIMs gesamt</span></div>
 <div><b>166</b><span>davon verschieden</span></div>
 </div>
 <div class="hinweis">
-<p><b>Aufbau eines Dokuments.</b> Links das <b>Anschauungsbild</b> (8bpp, 128&nbsp;px breit) &mdash;
-der vorgerenderte Gegenstand, bei den Film-Dokumenten das Foto selbst. Rechts die
-<b>Textseiten</b> (4bpp, 256&nbsp;px breit). Im VRAM liegen beide in einem Block von 256
-Zeilen: die Textseite in Zeile 0&hellip;H&minus;1, das Anschauungsbild in Zeile H&hellip;255.</p>
+<p><b>Aufbau eines Dokuments.</b> Links das <b>Hintergrundbild</b> (8bpp, 128&nbsp;px breit)
+&mdash; der vorgerenderte Gegenstand, bei den Film-Dokumenten das Foto selbst. Rechts die
+<b>Textseiten</b> (4bpp, 256&nbsp;px breit). Beide stecken im selben Slot derselben Datei,
+und das Spiel legt sie im VRAM absichtlich uebereinander: das Hintergrundbild belegt
+128&times;256, die Textseite ueberschreibt davon die oberen H&nbsp;Zeilen. Uebrig bleiben
+genau die unteren 256&minus;H&nbsp;Zeilen des Bildes &mdash; das ist der Ausschnitt, der
+hier gezeigt wird.</p>
+<p><b>Auf dem Bildschirm liegt der Text ueber dem Bild.</b> Der Leser zeichnet zwei
+Sprites: erst das Bild (128&times;(256&minus;H) an Position 100/60), dann darueber die
+Textseite (256&times;H an 25/30). Weil die Textseite durchsichtigen Grund hat, scheint das
+Bild hindurch. <b>Dieses 8bpp-Bild ist also der eigentliche &bdquo;Dokumenten-Hintergrund&ldquo;</b>
+&mdash; nicht ein Pergament aus einer anderen Datei; die Status-Bildschirm-Grafik
+<code>ST_FILE.TIM</code> laedt RE2 nie.</p>
 <p><b>Der Text ist ein Bild.</b> RE2 speichert den Dokumenttext auf der PSX nicht als
 Zeichen, sondern gerastert &mdash; die 16-Farben-Palette einer Seite hat Eintrag&nbsp;0 =
 <code>0x0000</code> (durchsichtig) und Eintrag&nbsp;9 = <code>0x7FFF</code> (weiss). Als echte
@@ -112,7 +121,7 @@ gemessen an den Seitenbildern, die dasselbe Wort mit <code>'</code> zeigen
 <main>
 <section class="dok" id="d0">
 <div class="kopf"><span class="nr">00</span><h2>CHRIS&#x27;s diary</h2><span class="meta">Item-Id 0x68 &middot; streng: CHRIS^s diary &middot; @0x8009E9BE 1F 24 2E 25 2F 3A 4F 00 40 45 3D 4E 55</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 144</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE00_title_paper.png"><img src="hintergruende/bilder_band/FILE00_title_paper.png" alt="Anschauungsbild Dokument 0"></a><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE00_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE00_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE00_title_paper.png"><img src="hintergruende/bilder_band/FILE00_title_paper.png" alt="Hintergrundbild Dokument 0"></a><figcaption>Hintergrundbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE00_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE00_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE00_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE00_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p00_page.TIM">TIM</a></figcaption></figure>
@@ -189,7 +198,7 @@ Please forgive me Claire.
 </div></div></section>
 <section class="dok" id="d1">
 <div class="kopf"><span class="nr">01</span><h2>Mail to Chris</h2><span class="meta">Item-Id 0x69 &middot; streng: Mail to Chris &middot; @0x8009E9CC 29 3D 45 48 00 50 4B 00 1F 44 4E 45 4F</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE01_title_paper.png"><img src="hintergruende/bilder_band/FILE01_title_paper.png" alt="Anschauungsbild Dokument 1"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE01_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE01_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE01_title_paper.png"><img src="hintergruende/bilder_band/FILE01_title_paper.png" alt="Hintergrundbild Dokument 1"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE01_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE01_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE01_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE01_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p00_page.TIM">TIM</a></figcaption></figure>
@@ -277,7 +286,7 @@ advised when dealing with him.
 </div></div></section>
 <section class="dok" id="d2">
 <div class="kopf"><span class="nr">02</span><h2>Memo to LEON</h2><span class="meta">Item-Id 0x6A &middot; streng: Memo to LEON &middot; @0x8009E9DA 29 41 49 4B 00 50 4B 00 28 21 2B 2A</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE02_title_paper.png"><img src="hintergruende/bilder_band/FILE02_title_paper.png" alt="Anschauungsbild Dokument 2"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE02_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE02_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE02_title_paper.png"><img src="hintergruende/bilder_band/FILE02_title_paper.png" alt="Hintergrundbild Dokument 2"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE02_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE02_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE02_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE02_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE02_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE02_p00_page.TIM">TIM</a></figcaption></figure>
@@ -312,7 +321,7 @@ Welcome aboard!
 </div></div></section>
 <section class="dok" id="d3">
 <div class="kopf"><span class="nr">03</span><h2>Police memorandum</h2><span class="meta">Item-Id 0x6B &middot; streng: Police memorandum &middot; @0x8009E9E7 2C 4B 48 45 3F 41 00 49 41 49 4B 4E 3D 4A 40 51 49</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE03_title_paper.png"><img src="hintergruende/bilder_band/FILE03_title_paper.png" alt="Anschauungsbild Dokument 3"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE03_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE03_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE03_title_paper.png"><img src="hintergruende/bilder_band/FILE03_title_paper.png" alt="Hintergrundbild Dokument 3"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE03_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE03_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE03_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE03_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_p00_page.TIM">TIM</a></figcaption></figure>
@@ -356,7 +365,7 @@ on the first floor.
 </div></div></section>
 <section class="dok" id="d4">
 <div class="kopf"><span class="nr">04</span><h2>Operation report 1</h2><span class="meta">Item-Id 0x6C &middot; streng: Operation report 1 &middot; @0x8009E9F9 2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0D</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE04_title_paper.png"><img src="hintergruende/bilder_band/FILE04_title_paper.png" alt="Anschauungsbild Dokument 4"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE04_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE04_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE04_title_paper.png"><img src="hintergruende/bilder_band/FILE04_title_paper.png" alt="Hintergrundbild Dokument 4"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE04_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE04_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE04_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE04_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p00_page.TIM">TIM</a></figcaption></figure>
@@ -498,7 +507,7 @@ this new threat.
 </div></div></section>
 <section class="dok" id="d5">
 <div class="kopf"><span class="nr">05</span><h2>Mail to the chief</h2><span class="meta">Item-Id 0x6D &middot; streng: Mail to the chief &middot; @0x8009EA0C 29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE05_title_paper.png"><img src="hintergruende/bilder_band/FILE05_title_paper.png" alt="Anschauungsbild Dokument 5"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE05_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE05_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE05_title_paper.png"><img src="hintergruende/bilder_band/FILE05_title_paper.png" alt="Hintergrundbild Dokument 5"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE05_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE05_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE05_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE05_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p00_page.TIM">TIM</a></figcaption></figure>
@@ -631,7 +640,7 @@ Not even Umbrella...
 </div></div></section>
 <section class="dok" id="d6">
 <div class="kopf"><span class="nr">06</span><h2>Mail to the chief</h2><span class="meta">Item-Id 0x6E &middot; streng: Mail to the chief &middot; @0x8009EA1E 29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE06_title_paper.png"><img src="hintergruende/bilder_band/FILE06_title_paper.png" alt="Anschauungsbild Dokument 6"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE06_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE06_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE06_title_paper.png"><img src="hintergruende/bilder_band/FILE06_title_paper.png" alt="Hintergrundbild Dokument 6"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE06_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE06_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE06_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE06_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p00_page.TIM">TIM</a></figcaption></figure>
@@ -764,7 +773,7 @@ Not even Umbrella...
 </div></div></section>
 <section class="dok" id="d7">
 <div class="kopf"><span class="nr">07</span><h2>Secretary&#x27;s diary A</h2><span class="meta">Item-Id 0x6F &middot; streng: Secretary^s diary A &middot; @0x8009EA30 2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1D</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 144</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE07_title_paper.png"><img src="hintergruende/bilder_band/FILE07_title_paper.png" alt="Anschauungsbild Dokument 7"></a><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE07_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE07_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE07_title_paper.png"><img src="hintergruende/bilder_band/FILE07_title_paper.png" alt="Hintergrundbild Dokument 7"></a><figcaption>Hintergrundbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE07_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE07_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE07_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE07_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p00_page.TIM">TIM</a></figcaption></figure>
@@ -844,7 +853,7 @@ comprehension...
 </div></div></section>
 <section class="dok" id="d8">
 <div class="kopf"><span class="nr">08</span><h2>Secretary&#x27;s diary B</h2><span class="meta">Item-Id 0x70 &middot; streng: Secretary^s diary B &middot; @0x8009EA44 2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1E</span><span class="meta">6 Slots &middot; 6 Textseiten &middot; Seitenhoehe 144</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE08_title_paper.png"><img src="hintergruende/bilder_band/FILE08_title_paper.png" alt="Anschauungsbild Dokument 8"></a><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE08_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE08_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE08_title_paper.png"><img src="hintergruende/bilder_band/FILE08_title_paper.png" alt="Hintergrundbild Dokument 8"></a><figcaption>Hintergrundbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE08_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE08_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE08_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE08_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p00_page.TIM">TIM</a></figcaption></figure>
@@ -903,7 +912,7 @@ this one day at a time...
 </div></div></section>
 <section class="dok" id="d9">
 <div class="kopf"><span class="nr">09</span><h2>Operation report 2</h2><span class="meta">Item-Id 0x71 &middot; streng: Operation report 2 &middot; @0x8009EA58 2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0E</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE09_title_paper.png"><img src="hintergruende/bilder_band/FILE09_title_paper.png" alt="Anschauungsbild Dokument 9"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE09_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE09_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE09_title_paper.png"><img src="hintergruende/bilder_band/FILE09_title_paper.png" alt="Hintergrundbild Dokument 9"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE09_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE09_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE09_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE09_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1001,7 +1010,7 @@ whoever may find it.
 </div></div></section>
 <section class="dok" id="d10">
 <div class="kopf"><span class="nr">10</span><h2>User registration</h2><span class="meta">Item-Id 0x72 &middot; streng: User registration &middot; @0x8009EA6B 31 4F 41 4E 00 4E 41 43 45 4F 50 4E 3D 50 45 4B 4A</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 128</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE10_title_paper.png"><img src="hintergruende/bilder_band/FILE10_title_paper.png" alt="Anschauungsbild Dokument 10"></a><figcaption>Anschauungsbild 128&times;128<br><a class="roh" href="hintergruende/bilder_png/FILE10_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE10_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE10_title_paper.png"><img src="hintergruende/bilder_band/FILE10_title_paper.png" alt="Hintergrundbild Dokument 10"></a><figcaption>Hintergrundbild 128&times;128<br><a class="roh" href="hintergruende/bilder_png/FILE10_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE10_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE10_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE10_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE10_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE10_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1033,7 +1042,7 @@ Valid for 24 hours.
 </div></div></section>
 <section class="dok" id="d11">
 <div class="kopf"><span class="nr">11</span><h2>Film A</h2><span class="meta">Item-Id 0x73 &middot; streng: Film A &middot; @0x8009EA7D 22 45 48 49 00 1D</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 112</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE11_title_paper.png"><img src="hintergruende/bilder_band/FILE11_title_paper.png" alt="Anschauungsbild Dokument 11"></a><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE11_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE11_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE11_title_paper.png"><img src="hintergruende/bilder_band/FILE11_title_paper.png" alt="Hintergrundbild Dokument 11"></a><figcaption>Hintergrundbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE11_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE11_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE11_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE11_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1063,7 +1072,7 @@ Code G Human Body Experiment
 </div></div></section>
 <section class="dok" id="d12">
 <div class="kopf"><span class="nr">12</span><h2>Film B</h2><span class="meta">Item-Id 0x74 &middot; streng: Film B &middot; @0x8009EA84 22 45 48 49 00 1E</span><span class="meta">5 Slots &middot; 5 Textseiten &middot; Seitenhoehe 112</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE12_title_paper.png"><img src="hintergruende/bilder_band/FILE12_title_paper.png" alt="Anschauungsbild Dokument 12"></a><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE12_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE12_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE12_title_paper.png"><img src="hintergruende/bilder_band/FILE12_title_paper.png" alt="Hintergrundbild Dokument 12"></a><figcaption>Hintergrundbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE12_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE12_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE12_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE12_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1108,7 +1117,7 @@ he lost consciousness.
 </div></div></section>
 <section class="dok" id="d13">
 <div class="kopf"><span class="nr">13</span><h2>Film C</h2><span class="meta">Item-Id 0x75 &middot; streng: Film C &middot; @0x8009EA8B 22 45 48 49 00 1F</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 112</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE13_title_paper.png"><img src="hintergruende/bilder_band/FILE13_title_paper.png" alt="Anschauungsbild Dokument 13"></a><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE13_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE13_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE13_title_paper.png"><img src="hintergruende/bilder_band/FILE13_title_paper.png" alt="Hintergrundbild Dokument 13"></a><figcaption>Hintergrundbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE13_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE13_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE13_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE13_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1143,7 +1152,7 @@ regenerative capabilities.
 </div></div></section>
 <section class="dok" id="d14">
 <div class="kopf"><span class="nr">14</span><h2>Patrol report</h2><span class="meta">Item-Id 0x76 &middot; streng: Patrol report &middot; @0x8009EA92 2C 3D 50 4E 4B 48 00 4E 41 4C 4B 4E 50</span><span class="meta">5 Slots &middot; 5 Textseiten &middot; Seitenhoehe 144</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE14_title_paper.png"><img src="hintergruende/bilder_band/FILE14_title_paper.png" alt="Anschauungsbild Dokument 14"></a><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE14_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE14_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE14_title_paper.png"><img src="hintergruende/bilder_band/FILE14_title_paper.png" alt="Hintergrundbild Dokument 14"></a><figcaption>Hintergrundbild 128&times;112<br><a class="roh" href="hintergruende/bilder_png/FILE14_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE14_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE14_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE14_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1194,7 +1203,7 @@ I recovered the following items:
 </div></div></section>
 <section class="dok" id="d15">
 <div class="kopf"><span class="nr">15</span><h2>Watchman&#x27;s diary</h2><span class="meta">Item-Id 0x77 &middot; streng: Watchman^s diary &middot; @0x8009EAA0 33 3D 50 3F 44 49 3D 4A 3A 4F 00 40 45 3D 4E 55</span><span class="meta">10 Slots &middot; 10 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE15_title_paper.png"><img src="hintergruende/bilder_band/FILE15_title_paper.png" alt="Anschauungsbild Dokument 15"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE15_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE15_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE15_title_paper.png"><img src="hintergruende/bilder_band/FILE15_title_paper.png" alt="Hintergrundbild Dokument 15"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE15_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE15_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE15_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE15_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1311,7 +1320,7 @@ lately...
 </div></div></section>
 <section class="dok" id="d16">
 <div class="kopf"><span class="nr">16</span><h2>Chief&#x27;s diary</h2><span class="meta">Item-Id 0x78 &middot; streng: Chief^s diary &middot; @0x8009EAB1 1F 44 45 41 42 3A 4F 00 40 45 3D 4E 55</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE16_title_paper.png"><img src="hintergruende/bilder_band/FILE16_title_paper.png" alt="Anschauungsbild Dokument 16"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE16_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE16_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE16_title_paper.png"><img src="hintergruende/bilder_band/FILE16_title_paper.png" alt="Hintergrundbild Dokument 16"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE16_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE16_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE16_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE16_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1404,7 +1413,7 @@ to give her.
 </div></div></section>
 <section class="dok" id="d17">
 <div class="kopf"><span class="nr">17</span><h2>Sewer manager diary</h2><span class="meta">Item-Id 0x79 &middot; streng: Sewer manager diary &middot; @0x8009EABF 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 40 45 3D 4E 55</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE17_title_paper.png"><img src="hintergruende/bilder_band/FILE17_title_paper.png" alt="Anschauungsbild Dokument 17"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE17_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE17_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE17_title_paper.png"><img src="hintergruende/bilder_band/FILE17_title_paper.png" alt="Hintergrundbild Dokument 17"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE17_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE17_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE17_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE17_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1523,7 +1532,7 @@ about this operation.
 </div></div></section>
 <section class="dok" id="d18">
 <div class="kopf"><span class="nr">18</span><h2>Sewer manager fax</h2><span class="meta">Item-Id 0x7A &middot; streng: Sewer manager fax &middot; @0x8009EAD3 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 42 3D 54</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE18_title_paper.png"><img src="hintergruende/bilder_band/FILE18_title_paper.png" alt="Anschauungsbild Dokument 18"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE18_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE18_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE18_title_paper.png"><img src="hintergruende/bilder_band/FILE18_title_paper.png" alt="Hintergrundbild Dokument 18"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE18_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE18_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE18_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE18_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1611,7 +1620,7 @@ best from you.
 </div></div></section>
 <section class="dok" id="d19">
 <div class="kopf"><span class="nr">19</span><h2>Film D</h2><span class="meta">Item-Id 0x7B &middot; streng: Film D &middot; @0x8009EAE5 22 45 48 49 00 20</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 112</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE19_title_paper.png"><img src="hintergruende/bilder_band/FILE19_title_paper.png" alt="Anschauungsbild Dokument 19"></a><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE19_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE19_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE19_title_paper.png"><img src="hintergruende/bilder_band/FILE19_title_paper.png" alt="Hintergrundbild Dokument 19"></a><figcaption>Hintergrundbild 128&times;144<br><a class="roh" href="hintergruende/bilder_png/FILE19_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE19_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE19_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE19_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE19_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE19_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1636,7 +1645,7 @@ RECRUIT
 </div></div></section>
 <section class="dok" id="d20">
 <div class="kopf"><span class="nr">20</span><h2>Vaccine synthesis</h2><span class="meta">Item-Id 0x7C &middot; streng: Vaccine synthesis &middot; @0x8009EAEC 32 3D 3F 3F 45 4A 41 00 4F 55 4A 50 44 41 4F 45 4F</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE20_title_paper.png"><img src="hintergruende/bilder_band/FILE20_title_paper.png" alt="Anschauungsbild Dokument 20"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE20_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE20_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE20_title_paper.png"><img src="hintergruende/bilder_band/FILE20_title_paper.png" alt="Hintergrundbild Dokument 20"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE20_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE20_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE20_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE20_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1736,7 +1745,7 @@ results.
 </div></div></section>
 <section class="dok" id="d21">
 <div class="kopf"><span class="nr">21</span><h2>Lab security manual</h2><span class="meta">Item-Id 0x7D &middot; streng: Lab security manual &middot; @0x8009EAFE 28 3D 3E 00 4F 41 3F 51 4E 45 50 55 00 49 3D 4A 51 3D 48</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE21_title_paper.png"><img src="hintergruende/bilder_band/FILE21_title_paper.png" alt="Anschauungsbild Dokument 21"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE21_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE21_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE21_title_paper.png"><img src="hintergruende/bilder_band/FILE21_title_paper.png" alt="Hintergrundbild Dokument 21"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE21_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE21_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE21_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE21_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1819,7 +1828,7 @@ extenuating circumstances.
 </div></div></section>
 <section class="dok" id="d22">
 <div class="kopf"><span class="nr">22</span><h2>P_epsilon report</h2><span class="meta">Item-Id 0x7E &middot; streng: P_epsilon report &middot; @0x8009EB12 2C 3B 41 4C 4F 45 48 4B 4A 00 4E 41 4C 4B 4E 50</span><span class="meta">6 Slots &middot; 6 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE22_title_paper.png"><img src="hintergruende/bilder_band/FILE22_title_paper.png" alt="Anschauungsbild Dokument 22"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE22_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE22_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE22_title_paper.png"><img src="hintergruende/bilder_band/FILE22_title_paper.png" alt="Hintergrundbild Dokument 22"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE22_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE22_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE22_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE22_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p00_page.TIM">TIM</a></figcaption></figure>
@@ -1893,7 +1902,7 @@ immediately.
 </div></div></section>
 <section class="dok" id="d23">
 <div class="kopf"><span class="nr">23</span><h2>Rookie files</h2><span class="meta">Item-Id 0x7F &middot; streng: Rookie files &middot; @0x8009EB23 2E 4B 4B 47 45 41 00 42 45 48 41 4F</span><span class="meta">17 Slots &middot; 17 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE23_title_paper.png"><img src="hintergruende/bilder_band/FILE23_title_paper.png" alt="Anschauungsbild Dokument 23"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE23_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE23_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE23_title_paper.png"><img src="hintergruende/bilder_band/FILE23_title_paper.png" alt="Hintergrundbild Dokument 23"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE23_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE23_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE23_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE23_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p00_page.TIM">TIM</a></figcaption></figure>
@@ -2068,7 +2077,7 @@ supplied.
 </div></div></section>
 <section class="dok" id="d24">
 <div class="kopf"><span class="nr">24</span><h2>Rookie files</h2><span class="meta">Item-Id 0x80 &middot; streng: Rookie files &middot; @0x8009EB30 2E 4B 4B 47 45 41 00 42 45 48 41 4F</span><span class="meta">17 Slots &middot; 17 Textseiten &middot; Seitenhoehe 176</span></div>
-<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE24_title_paper.png"><img src="hintergruende/bilder_band/FILE24_title_paper.png" alt="Anschauungsbild Dokument 24"></a><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE24_title_paper.png">ganze Leinwand</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE24_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="spalten"><figure class="bild"><a href="hintergruende/bilder_png/FILE24_title_paper.png"><img src="hintergruende/bilder_band/FILE24_title_paper.png" alt="Hintergrundbild Dokument 24"></a><figcaption>Hintergrundbild 128&times;80<br><a class="roh" href="hintergruende/bilder_png/FILE24_title_paper.png">ganzes Bild</a> &middot; <a class="roh" href="hintergruende/bilder_roh/FILE24_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
 <div class="seiten">
 <figure><img src="hintergruende/seiten_lesbar/FILE24_title_page.png" alt="TITEL"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_title_page.TIM">TIM</a></figcaption></figure>
 <figure><img src="hintergruende/seiten_lesbar/FILE24_p00_page.png" alt="S00"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p00_page.TIM">TIM</a></figcaption></figure>
