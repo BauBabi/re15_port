@@ -526,6 +526,11 @@ extern scd_vm_t g_scd;
 /* VM control */
 void scd_vm_init(void);
 void scd_vm_tick(void);    /* call once per 30Hz tick (every 2nd vsync) */
+
+/* Opcode-Laenge an `pc`, aus DERSELBEN Tabelle, mit der der VM vorschiebt (s_opcode_sizes
+ * + die vier disasm-verifizierten variablen Laengen). -1 = Opcode existiert in RE1.5
+ * nicht -> Walk ABBRECHEN. Fuer Pruefstaende, die SCD-Daten selbst ablaufen. */
+int scd_opcode_size_at(const uint8_t *pc);
 /* "Item schon genommen"-Prop-Maske nullen = Objekt-Pool-Nullung des Raumladers FUN_8003ea7c
  * @0x8003eab0-cc (gerufen aus FUN_800396fc @0x800399a0 bei JEDEM Raumladen). Gerufen von
  * scd_vm_init und scd_room_reenter; die Maske gilt nur fuer den gerade geladenen Raum. */

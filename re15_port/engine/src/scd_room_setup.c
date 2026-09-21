@@ -219,6 +219,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * Runde 16, analysis/befunde_2026-09-19/objekte-paket.md). Das Item_aot_set des Raums
      * setzt die Maske beim Laden neu, wenn SEIN Item genommen ist (@0x80040718). */
     scd_prop_taken_mask_reset();
+    /* ...und eine offen stehende "Discard it?"-Abfrage. Sie kann einen Inventar-Slot mit
+     * Anzahl 0 hinterlassen (RE2 zaehlt VOR der Frage herunter, @0x80051810); der Reset
+     * schreibt die 1 zurueck, genau wie RE2s Nein-Zweig @0x800517C4. Siehe
+     * include/re15_item_discard.h. */
+    { extern void re15_discard_reset(void); re15_discard_reset(); }
     g_scd.work_vars[0x10] = keep_player_model;   /* s.o. — 0x800b0ff0 wird nicht gewischt */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
     g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-
