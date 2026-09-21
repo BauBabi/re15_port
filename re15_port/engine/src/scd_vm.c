@@ -36,6 +36,7 @@
 #include "re15_itembox.h"    /* ITEM BOX: safe-room box-AOT registry + pending signal
                               * (save-phone precedent, shots/itembox_spec.md §6) */
 #include "re15_room.h"       /* g_current_room_id (save-point room match) */
+#include "re15_item_discard.h" /* "You don't need this key any more. Discard it?" (@0x800C508B) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
@@ -1732,6 +1733,15 @@ static int op_message_on(scd_thread_t *t)
         g_scd.message_arg2 = t->pc[2];
         g_scd.message_arg3 = t->pc[3];
     }
+    /* "You've used the <NAME>." — die Schluessel-BENUTZUNGSSTELLE von RE1.5. Genau hier
+     * haengt RE2 seine Wegwerf-Fortsetzung ein: der Tuer-Handler spielt Msg 5
+     * ("You have used the <Name>.", `li a2,0x5` @0x80051640) und traegt unmittelbar danach
+     * LAB_80051718 als Fortsetzung ein (`sw v0,[0x800D4498]` @0x80051670); die zaehlt dann
+     * herunter und fragt bei Null. Der Port macht dasselbe an derselben Stelle — die
+     * Tabelle (Raum, Nachricht) -> Gegenstand ist aus den ausgelieferten Daten abgeleitet
+     * (engine/src/gen/discard_sites.inc, tools/gen_discard_sites.py). Wer nicht drinsteht,
+     * loest gar nichts aus. Herleitung + Sackgassen-Beweis: include/re15_item_discard.h. */
+    re15_discard_notice_message(g_current_room_id, t->pc[1]);
     t->pc += 4;
     return 1;
 }
@@ -4056,6 +4066,27 @@ static int op_obj_model_set(scd_thread_t *t)
  * Side effects of skipping: any state the opcode would mutate stays
  * untouched, so e.g. an enemy that should spawn via a missing Plc_dest
  * just stays put. Better than thread death. */
+/* Laengen-Auskunft fuer PRUEFSTAENDE, die SCD-Daten selbst ablaufen (Riegel r21_discard).
+ * Sie liefert genau das, was der VM-Vorschub tut, aus DERSELBEN Tabelle s_opcode_sizes —
+ * damit ein Zensus nicht mit einer zweiten, driftenden Laengentabelle misst. Die vier
+ * variablen Laengen sind disasm-verifiziert:
+ *   0x2C Aot_set       20/28  (pc[3]&0x80)  @0x80040590
+ *   0x3B Door_aot_set  32/40                @0x80040618
+ *   0x50 Item_aot_set  22/30                @0x8004065c
+ *   0x2D Obj_model_set 34 fix               @0x80040aa4 (LAB_80040914)
+ * Rueckgabe -1 = Opcode existiert in RE1.5 nicht (>=0x5F oder 0x1F) -> der Aufrufer MUSS
+ * den Walk abbrechen; ein desynchronisierter Walk ist kein Befund. */
+int scd_opcode_size_at(const uint8_t *pc)
+{
+    uint8_t op = pc[0];
+    if (op >= 0x5F || op == 0x1F) return -1;
+    if (op == 0x2C) return (pc[3] & 0x80) ? 28 : 20;
+    if (op == 0x3B) return (pc[3] & 0x80) ? 40 : 32;
+    if (op == 0x50) return (pc[3] & 0x80) ? 30 : 22;
+    if (op == 0x2D) return 34;
+    { uint8_t s = s_opcode_sizes[op]; return s ? (int)s : -1; }
+}
+
 static int op_unknown(scd_thread_t *t)
 {
     uint8_t op   = *t->pc;

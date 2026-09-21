@@ -866,6 +866,15 @@ void re15_game_step(const re15_game_ctx_t *c)
      * gate takes over from the next tick. Unreachable outside an item pickup = no room regression. */
     if (re15_item_modal_active()) return;
 
+    /* "DISCARD IT?"-FREEZE — dieselbe Wirkung, derselbe Beleg: RE2 setzt waehrend der
+     * Abfrage `[0x800CFBDC] |= 0xFF000000` (@0x80051838 `lui a3,0xff00` / @0x80051850
+     * `sw v0,...`), also genau die Pausen-Maske, die auch das Item-Modal setzt. Ohne
+     * diese Zeile liefe der Spieler unter der stehenden Abfrage weiter und koennte sie
+     * z.B. im naechsten Raum beantworten. Nur die FRAGE friert ein, nicht das Warten auf
+     * das Ende der Raum-Nachricht (RE2 wartet dort ebenfalls nur, @0x800517F4).
+     * Siehe include/re15_item_discard.h. */
+    { extern int re15_discard_frozen(void); if (re15_discard_frozen()) return; }
+
     /* Spawn-Zeit-Neck-INIT der NPCs (Sce_em_set `jalr` @0x8004259c) — siehe den Block ueber
      * re15_npc_neck_spawn_init(). Steht hier, weil main.c den SCD-VM-Tick unmittelbar vor
      * re15_game_step faehrt: der Spawn ist gerade passiert, die Entity-Schleife
