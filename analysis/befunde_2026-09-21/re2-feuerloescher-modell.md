@@ -43,6 +43,13 @@ abgedeckt.
 * Derselbe Lauf ueber `info/Re1.5/` liefert **4 Treffer** fuer „extinguisher" —
   siehe §4.
 
+Sprachluecke geschlossen: ein Teil der RE2-US-Raumtexte ist noch japanisch
+(`room1010/msg/main*` ist reines Kana). `tools/find_kana.py` sucht deshalb
+zusaetzlich das japanische Wort — Hiragana `しょうかき` = `62 8C 59 5C 5D` und
+Katakana `ショウカキ` = `B2 DC A9 AC AD`, Codes aus derselben Tabelle in
+`MSGParser.java` (Hiragana-Block ab 0x57, Katakana-Block ab 0xA7). Ergebnis:
+**21 602 Dateien, 0 Treffer**, auch fuer die verkuerzte Form ohne letztes Zeichen.
+
 Haeufigkeitsprobe, die belegt, dass die Zeichentabelle fuer RE2-US stimmt
 (79 029 Byte aller ausgepackten Raum-Nachrichten): 0x41 3,25 % = `e`, 0x4B 2,13 % = `o`,
 0x50 2,10 % = `t`, 0x3D 1,50 % = `a`, 0x45 1,48 % = `i` — englische Buchstaben-
