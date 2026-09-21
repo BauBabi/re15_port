@@ -1,3 +1,77 @@
+# v0.8.10 - 2026-09-21
+
+Der Stuhl in ROOM10D0, und zwar nach Ihrer eigenen Markierung.
+
+## Ihr Saum ist drin
+
+> "So, ich habe dir jetzt im workspace bei 40_nutzerpng_auf_bg nochmal in gruen markiert
+> wo stuhl fehlt in etwa"
+
+Ihre gruene Markierung hat genau die Frage beantwortet, die ich selbst nicht entscheiden
+durfte. Aus 2651 gruenen Punkten in Ihrer Datei werden 190 in der Auflösung des Spiels,
+davon 187 neue. Alle liegen innerhalb des Fensters Ihrer Freistellung, 116 direkt an ihrem
+Rand, im Median einen Punkt daneben. Es ist also ein Saum und kein neuer Gegenstand.
+
+Die Silhouette waechst damit von 2677 auf 2864 Punkte. **Ihre Originaldatei ist
+unangetastet**; der Saum liegt als eigene, abgeleitete Datei daneben, und Ihre annotierte
+Vorlage ist als Beleg mit eingecheckt. Das ist ausdruecklich Ihre Entscheidung und keine
+Original-Treue.
+
+Die Wirkung geht in die Richtung, die Sie gemeldet hatten. Ueber die 6841 begehbaren
+Standplaetze dieses Kamerawinkels steigt die Verdeckung von 6912 auf 7429 Punkte. 21
+Standplaetze urteilen anders, und zwar alle 21 in Richtung "mehr verdeckt", keiner in die
+andere. Vor dem Stuhl wird weiterhin nichts verdeckt, und der Winkel bleibt bei 104 von
+105 moeglichen Rechtecken.
+
+Im laufenden Spiel nachgesehen, vorher und nachher: die helle Chromkante der Stuhllehne
+brach vorher an Leons linkem Bein ab, seine Hose war ueber die gemalte Strebe gezeichnet
+und die Kante endete mitten in der Luft. Jetzt laeuft sie durch. Nachgezaehlt statt
+behauptet: an 28 Bildpunkten stand vorher seine Hose, jetzt steht dort der Hintergrund, auf
+sieben Farbstufen genau.
+
+## Was ich dabei dreimal falsch erklaert habe
+
+Diese eine Stelle hat mich drei Erklaerungen gekostet, und alle drei waren falsch. Das
+gehoert hierher, weil Sie jede davon gelesen haben:
+
+1. Ich sagte, ein Kasten von mir sei die Ursache. Er ist ein eigener offener Posten, aber
+   nicht die Ursache.
+2. Ich sagte, Ihre Freistellung umfasse zwei Gegenstaende in verschiedener Entfernung.
+   Nachgemessen liegt der helle Behaelter mit **einem** Punkt darin.
+3. Ich sagte, vier Bildspalten trugen eine zu ferne Tiefe, und wollte das beheben. Das
+   Tiefenmodell dieses Objekts liest die betreffende Stelle gar nicht; meine Behebung waere
+   ein Nulleingriff gewesen, und die beiden Alternativen waren messbar schlechter.
+
+Dazu habe ich Ihnen eine Struktur als fehlende Rahmenschiene gezeigt, die keine ist: 30 von
+35 hellen Punkten dort sind blau wie der Behaelter dahinter, waehrend das Chrom in Ihrer
+Freistellung neutral ist. Sie hatten sie zu Recht weggelassen.
+
+Der Auslieferungsstand vor Ihrer Markierung war also **nicht defekt**. Die Silhouette war
+Ihnen nur einen Punkt zu schmal, und das konnten Sie entscheiden, ich nicht.
+
+## Ein Riegel, der die Form des Stuhls festhaelt
+
+Neu ist eine Pruefung, die beim Bauen mitlaeuft und festnagelt, dass der Stuhl als ein
+starrer stehender Gegenstand modelliert bleibt: in jeder seiner 117 Bildzeilen liegt eine
+Entfernung an allen Punkten, sie waechst monoton mit der Bildzeile, und zwischen benachbarten
+Punkten springt sie um hoechstens eine Stufe. Wer das Objekt kuenftig auf ein anderes Modell
+umstellt, muss hier vorbei.
+
+Der erste Versuch, diese Pruefung einzugrenzen, ist an ihrem eigenen Selbsttest gescheitert
+und hat das laut gemeldet: die Rechtecke des Texturblatts schneiden beide Objekte, also
+laesst sich keines davon eindeutig zuordnen. Die jetzige Fassung braucht die Zuordnung gar
+nicht.
+
+## Noch offen an dieser Stelle
+
+Vier Bildpunkte, die ich Ihnen gezeigt hatte, haben Sie nicht markiert. Die bleiben
+draussen. Ebenso das Chromrohr eines zweiten Stuhls rechts daneben und der helle Behaelter
+dahinter: beide stehen hinter dem Spieler und haben an dieser Stelle keinen
+Verdeckungsauftrag, weiter hinten im Raum aber schon. Und ein Drittel der Maskenflaeche
+dieses Winkels ist weiterhin ein Kasten von mir statt einer Freistellung.
+
+---
+
 # v0.8.9 - 2026-09-21
 
 Ihre vier F9-Marken zu den Vordergrund-Masken. Drei sind behoben, eine braucht etwas von
