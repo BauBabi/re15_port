@@ -1,3 +1,104 @@
+# v0.8.8 - 2026-09-21
+
+Die drei Punkte, die in v0.8.7 noch offen waren, sind abgearbeitet. Bei zweien davon hat
+sich herausgestellt, dass meine eigene Beschreibung der Luecke falsch war.
+
+## Ada spielt ihre Animation nicht mehr doppelt
+
+> "nach Der feuer cutscene der raum danach direkt am Anfang. Ich glaube 1050."
+
+Ihre Angabe war der Schluessel. In v0.8.7 hatte ich beide Raeume einzeln angesprungen und
+nichts gefunden. Der Fehler entsteht erst beim **echten Uebergang**, wenn Ada als
+Begleiterin mit durch die Tuer kommt. Genau so ist er jetzt nachgestellt worden, und er ist
+ein echter Fehler des Ports.
+
+Die Ursache: der Port hatte fuer die Einstiegspose der Gesprächsfiguren einen Platzhalter,
+der ausdruecklich als "noch nicht untersucht" gekennzeichnet war und schlicht eine Null
+zurueckgab. Fuer Ada ist die Null aber kein Stillstand, sondern ihr **Laufzyklus**. Der Raum
+blendete also auf, waehrend sie schon mitten im Weglauf-Schritt stand, mit dem Bein in der
+Luft. Dann schnappte sie in den Stand, und rund dreissig Bilder spaeter lief dieselbe
+Animation noch einmal ab. Das ist die Doppelung, die Sie gesehen haben.
+
+Im Original kommt die Pose aus der Startroutine der Figur selbst, nicht aus dem Aufsetz-Befehl
+des Raumskripts und auch nicht aus dem Raumwechsel. Sie ist dort bei **allen sechs**
+Gesprächsfiguren dieselbe. Nachgesehen an den Bildern aus dem laufenden Spiel: vorher steht
+Ada beim Aufblenden mit angehobenem Bein da, nachher mit beiden Fuessen am Boden, und der
+Weglauf laeuft genau einmal.
+
+Ausdruecklich **kein** Fehler ist dagegen, dass Ada zweimal dieselbe kurze Geste macht: das
+steht so im Raumskript, und der zweite Durchlauf liegt ausserhalb des Bildausschnitts. Auch
+Leons "Hey, wait!"-Geste laeuft korrekt, erst vorwaerts, dann rueckwaerts.
+
+## Der Endkampf: die drei offenen Luecken sind zu
+
+> "Auch sonst ist das Verhalten noch immer nicht wie in resident Evil 2, also beim Endboss.
+> ich will hier eine 1 zu 1 Umsetzung!"
+
+**Zwei der drei Luecken waren von mir falsch beschrieben.** Ich hatte in v0.8.6 und v0.8.7
+eine Adresse als "Blut-Erzeuger" gefuehrt. Sie ist nachgeprueft **kein** Erzeuger, sondern
+eine Winkelberechnung. Der echte Erzeuger ist der Effekt-Erzeuger des Spiels, und er wird in
+der Trefferroutine nicht einmal, sondern **viermal** gerufen. Ebenso war ein Wert, den ich
+fuer die Kamera-Blickrichtung gehalten hatte, in Wahrheit die Blickrichtung **des Spielers**.
+Beides habe ich diesmal an den Bytes des Original-Overlays selbst nachgezaehlt.
+
+- **Blut an der Trefferstelle.** Vier Spawns je Treffer: zwei an der Masse, zwei im Korridor
+  auf dem zweiten Kollisionskoerper. Alle Klemmen und Versaetze sind belegt. Von den drei
+  Versaetzen, die ich frueher zitiert hatte, ist uebrigens nur einer ueberhaupt lebendig;
+  die anderen beiden schreiben in einen Wert, den das Original danach nie wieder liest.
+- **Vibration.** Die Kaskaden sind keine Kamera-Erschuetterung, wie ich angenommen hatte,
+  sondern reine Controller-Vibration ueber die Aktuator-Tabelle des Pads. Alle 28 Ausloeser
+  der vier Ketten sind umgesetzt und laufen im Port an derselben Stelle wie im Original,
+  also im Pad-Takt.
+- **Die Opferanimation beim Verschlungenwerden** laeuft jetzt auf dem richtigen Skelett, mit
+  dem Ueberblend-Zaehler und dem Drehverhalten des Originals.
+
+Mitgenommen: ein Dreh-Zweig der Tentakel-Kollision war durch einen falschen Wert **komplett
+tot** und ist in 122 gemessenen Durchlaeufen kein einziges Mal gelaufen. Mit dem belegten
+Wert feuert er fuenfzehnmal.
+
+*Ehrlich zur Bildabnahme:* die Blutpartikel sind auf den Screenshots **nicht** zu sehen. Das
+ist kein Fehler, sondern die Geometrie. Die Spawns fielen in Momente, in denen der Boss am
+anderen Ende des Korridors stand. Der Nachweis liegt in der Messung und im Protokoll, nicht
+im Bild.
+
+## Der Tisch in Irons' Buero: er ist es doch nicht
+
+> "nein, nicht die item boxen. irgendwie konnte man in den modell in der mitte noch eine
+> animation ausloesen"
+
+Sie hatten recht, und meine Antwort in v0.8.7 war falsch. Das Modell in der Mitte ist **nicht**
+die Item-Box. Der Raum hat vier Objektmodelle: eine Hebeplattform mit Papierstapeln in der
+Mitte, zwei Deckelhaelften, die dazugehoeren, und die Item-Box am Rand, deren Textur woertlich
+"Baggage box" liest.
+
+Die Animation ist da. Der Deckel teilt sich in zwei Haelften, die Plattform faehrt etwa
+neunzig Zentimeter hoch und wieder herunter. Ausgeloest wird sie an der **Westseite des
+Mitteltisches** mit der Aktionstaste, also J auf der Tastatur oder X am Gamepad.
+
+Zwei Gruende, warum das bisher nicht ging. Meine Aenderung vom August sass auf einem Ausloese-
+Rechteck, das ich selbst erfunden hatte, und das traf **null** von 2816 geprueften Standorten
+im Raum; ausserdem ueberschrieb es einen Kamerazonen-Eintrag. Das autorisierte Rechteck, das
+in den Raumdaten steht, trifft **472** Standorte, davon 370 auf begehbarem Boden. Und der Port
+hatte die Anhaenge-Form des Modell-Befehls nie umgesetzt, weshalb die Deckelhaelften stehen
+blieben, waehrend die Plattform fuhr. Diese Form kommt im ganzen Spiel genau viermal vor, und
+alle vier sind diese Deckelhaelften.
+
+Zur Einordnung: im Original ist dieser Ausloeser **abgeschaltet**. Er steht in den Raumdaten,
+aber mit einem Typ, der nie scharf wird. Das war eine Entscheidung der Original-Autoren, kein
+Fehler des Ports.
+
+## Aufgeraeumt
+
+Ihre zusammengeschnittenen Sprachaufnahmen, die Fehlerbilder und die Marken-Protokolle aus
+den Spieltests sind jetzt eingecheckt. Ueber drei Gigabyte an Werkzeug-Abfall, der sich im
+Projektverzeichnis angesammelt hatte, wird ab sofort ignoriert, damit der Stand wieder
+lesbar ist.
+
+Nicht eingecheckt ist der Ordner `Cutscenes` mit 483 MB an generiertem Modellmaterial. Sagen
+Sie Bescheid, wenn er mit hinein soll.
+
+---
+
 # v0.8.7 - 2026-09-20
 
 Acht Rueckmeldungen aus dem Spieltest mit v0.8.6. Sieben sind umgesetzt, eine braucht
