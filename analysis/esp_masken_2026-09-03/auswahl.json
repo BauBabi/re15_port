@@ -1597,7 +1597,13 @@
      "x": 179,
      "y": 139,
      "massstab": 1,
-     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 8681 Maskenpixel."
+     "grund": "Freistellung des Nutzers (Runde 8). Lage gemessen: Uebereinstimmung 100.0 %, 8681 Maskenpixel. Tiefe aus der SCA-Sperrzelle x16100..17200 z1500..5900 (gemessen: Quaderhoehe -1575, IoU 0,809, Oberkante 1,3 px, 8651 von 8681 Freistellungspunkten im Quader) — die Spaltenregel liest bei einer Tischplatte die PLATTENKANTE als Bodenkontakt und legt die linke Haelfte des Tisches 659..3699 Welteinheiten HINTER den Tisch.",
+     "zelle": [
+      16100,
+      1500,
+      1100,
+      4400
+     ]
     }
    ]
   },
