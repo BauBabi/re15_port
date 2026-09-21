@@ -8,7 +8,10 @@
 # Spaltenregel, aus demselben Kamerasatz und derselben Silhouette, verletzt beide
 # Eigenschaften — sonst stuende der Riegel wirkungslos gruen.
 #
-# ABDECKUNG: 1 der 77 geschriebenen Cuts, darin 1 von 3 Objekten, 2677 Texel.
+# ABDECKUNG: 1 der 77 geschriebenen Cuts, darin 1 von 3 Objekten, 2864 Texel mit
+# 10396 Nachbarpaaren (2026-09-21 nachgezogen: die Silhouette traegt jetzt den vom
+# Nutzer gruen markierten Saum, 2677 -> 2864). Gemessen an 6841 von 43147
+# Band-0-Standplaetzen = 15,9 % des Raums.
 # Dossier: analysis/befunde_2026-09-21/pri-runde19b-marke4.md
 # EIGENE Datei (nicht die gemeinsame CMakeLists.txt), s. probes/README.md.
 add_executable(r19b_marke4_10d0_c7_zeilenmodell

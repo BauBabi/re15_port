@@ -129,7 +129,8 @@ Cut 7: Soll 5603 px, Deckung fehlt 0 / zuviel 0 | 104 Rechtecke, 53 Tiefenstufen
 | Soll-Punkte des Cuts | 5435 | **5603** (+168) |
 | Rechtecke | 104 | **104** |
 | Tiefenstufen | 53 (53..105) | 53 (**52**..105) |
-| Atlaspunkte | 25887 | **25838** |
+| Atlaspunkte (Summe der RECHTECKflaechen) | 25887 | **25838** |
+| opake Texel im Atlas | 7720 | **7907** (+187) |
 | MSK / TIM | `fcae4848…` / `84f25318…` | `acc6c806846fae3562653cb83ffab550` / `bf3553c22ce5036e8a377a67de86e082` |
 
 ⛔ **+168, nicht +187.** 19 der 187 Punkte waren schon vom Quader „Holztisch mit
@@ -436,3 +437,19 @@ mit ihrer Herkunft im Riegel, damit niemand sie fuer ein Original haelt.
 | `re15_port/tests/unit/r19b_marke4_10d0_c7_zeilenmodell.c` | `SOLL_PX` 2864, Herkunft im Kopf, Spalten-0-Pruefung, Fehler im Gegenprobe-Scan behoben (§5.1) |
 | `re15_port/tests/unit/pri_stage1_hashes.inc` | 117 → 118 Dateien |
 | `analysis/befunde_2026-09-21/pri-runde19c-saum{.md,/}` | dieses Dossier, Bilder, 12 Messskripte, 5 Laufskripte |
+
+
+## Nachtrag 2026-09-21 — zwei Berichtigungen aus dem Pruefurteil
+
+**Die Atlaszahl 25887 -> 25838 ist die Summe der RECHTECKflaechen, nicht der Inhalt.**
+Sie sinkt leicht, weil die Zeilenzerlegung auf der breiteren Silhouette laengere Streifen
+findet. Die OPAKEN Texel steigen dagegen genau um die Nutzer-Marken: 7720 -> 7907 = +187.
+Beide Zahlen zusammen nennen, sonst liest sich der Saum wie eine Verkleinerung.
+
+**Die Tiefentreppe wurde neu gegruendet, und das betrifft ausgelieferte Punkte.**
+An 1112 Punkten der BISHERIGEN Deckung in 55 Bildzeilen liegt die Tiefe jetzt einen Eimer
+NAEHER (y123..126: 53 -> 52; y136..141: 54 -> 53; y150..157: 55 -> 54; …), 0 Punkte wurden
+ferner. Ursache ist die um eine Zeile nach oben gewachsene Silhouette, die den Standpunkt
+und damit die Stufengrenzen verschiebt. Gemessene Wirkung an den Standplaetzen: null
+(0 Plaetze verlieren Verdeckung). Die Zeile "+168 Sollpunkte" allein verdeckt diesen Teil
+der Aenderung und darf nicht als vollstaendige Beschreibung zitiert werden.

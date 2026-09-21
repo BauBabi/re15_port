@@ -68,8 +68,12 @@
  *       Spalte 0 nach 1 (6521) ebenfalls — Spalte 0 ist die Saum-Spalte des Nutzers
  *       (nur y123..139 belegt), also ein ZWEITER Fall ohne Bodenkontakt. Die
  *       Messung, auf der die verworfene Deutung ruhte, bleibt als Zahl erhalten.
- *       (Werte VOR dem Saum, Runde 19b: 114 von 116 Zeilen, Naht 24 bei
- *       (68,189)=60 -> (69,189)=84, bodenkante 13, 1457 gegen 778.)
+ *       (⛔ BERICHTIGT: die in Runde 19b notierten Werte reproduzieren NICHT.
+ *       Mit derselben Schiene am alten Stand nachgemessen — mit alter UND neuer
+ *       Testquelle — sind es Naht 20 bei (68,181)=64 -> (69,182)=84 und
+ *       bodenkante 10, Weltsprung 1458 gegen 779. Mit dem Saum wird die
+ *       Gegenprobe STAERKER: 116 von 117 Zeilen mehrdeutig, groesster Eimer 145,
+ *       Naht-Sprung 79, mit bodenkante 11.)
  *
  *   ⛔ NICHT geprueft wird "keine Tiefe hinter dem eigenen Fussabdruck". Diese
  *   Schranke waere SELBSTBESTAETIGEND: sie ergibt nur mit dem EINEN Standpunkt die
