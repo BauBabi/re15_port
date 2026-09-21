@@ -129,7 +129,72 @@ static int pbm_lesen(const uint8_t *b, size_t n)
     return 1;
 }
 
-/* Blit wie bg_pc.c/render_pc.c: Atlas-Index != 0, je Punkt die NAECHSTE Tiefe. */
+/* Blit wie bg_pc.c/render_pc.c: Atlas-Index != 0, je Punkt die NAECHSTE Tiefe.
+ *
+/* ⛔ EINE ZUORDNUNG JE MASKE TRAEGT NICHT - gemessen, nicht angenommen.
+ * Der erste Verengungsversuch wollte jede Maske dem Stuhl oder einem Fremdobjekt
+ * zuordnen (Anteil ihrer Texel im Soll-Umriss). Das geht NICHT: der Atlas packt
+ * Rechtecke, die BEIDE Objekte schneiden. Gemessen an diesem Cut liegen die Anteile
+ * von neun Masken mitten im Graubereich (0,182 / 0,194 / 0,249 / 0,279 / 0,354 /
+ * 0,400 / 0,431 / 0,526 / 0,570) bei Tiefen 63..104. Eine Schwelle dort waere geraten.
+ *
+ * Dieser Riegel braucht deshalb GAR KEINE Zuordnung. Gepruefte Aussage ist:
+ *   "In JEDER Bildzeile der Silhouette gibt es EINE Tiefe, die an JEDEM
+ *    Silhouettenpunkt dieser Zeile geschrieben ist."
+ * Das ist genau die Modellklasse "ein Standpunkt => Tiefe = f(Zeile)". Fremde Masken
+ * koennen an einem Punkt nur Tiefen HINZUFUEGEN, niemals die des Stuhls entfernen -
+ * die Aussage ist gegen sie immun. Damit kann der weiterhin offene Quader
+ * "Holztisch mit Klappstuhl" diesen Riegel spaeter nicht zu Fall bringen.
+ * (Vorherige Fassung nahm je Punkt das MINIMUM ueber alle 104 Masken; 1362 der 2677
+ * Silhouettenpunkte tragen eine fremde Tiefe, kleinste Reserve 6 Eimer - die Aussagen
+ * waren damit Aussagen ueber das Komposit, nicht ueber den Stuhl.) */
+static uint8_t g_hat[240][320];   /* Arbeitsfeld: deckt EINE Tiefe diesen Punkt? */
+
+/* Markiert alle Punkte, die von einer Maske GENAU dieser Tiefe gedeckt werden. */
+static void deckung_der_tiefe(const re15_pri_cut_t *pri, const re15_tim_t *tim, int d)
+{
+    const uint8_t *idx = (const uint8_t *) tim->pixels;
+    int i, x, y;
+    memset(g_hat, 0, sizeof g_hat);
+    for (i = 0; i < pri->draw_count; i++) {
+        const re15_pri_mask_t *m = &pri->masks[i];
+        int dx, dy;
+        if ((int) m->depth != d) continue;
+        dx = (int16_t) m->dstX; dy = (int16_t) m->dstY;
+        for (y = 0; y < m->height; y++) {
+            int sy = m->srcY + y, ty = dy + y;
+            if (sy < 0 || sy >= tim->height || ty < 0 || ty >= 240) continue;
+            for (x = 0; x < m->width; x++) {
+                int sx = m->srcX + x, tx = dx + x;
+                if (sx < 0 || sx >= tim->width || tx < 0 || tx >= 320) continue;
+                if (!idx[(size_t) sy * tim->width + sx]) continue;
+                g_hat[ty][tx] = 1;
+            }
+        }
+    }
+}
+
+/* Die EINE Tiefe der Bildzeile y, oder -1, wenn keine an ALLEN Punkten liegt.
+ * Bei mehreren gueltigen die kleinste; *anzahl gibt zurueck, wie viele es waren. */
+static int zeilentiefe(const re15_pri_cut_t *pri, const re15_tim_t *tim, int y, int *anzahl)
+{
+    int kand[256], nk = 0, i, x, treffer = -1;
+    *anzahl = 0;
+    for (i = 0; i < pri->draw_count; i++) {
+        int d = (int) pri->masks[i].depth, j, neu = 1;
+        for (j = 0; j < nk; j++) if (kand[j] == d) { neu = 0; break; }
+        if (neu && nk < 256) kand[nk++] = d;
+    }
+    for (i = 0; i < nk; i++) {
+        int alle = 1;
+        deckung_der_tiefe(pri, tim, kand[i]);
+        for (x = 0; x < 320; x++)
+            if (g_soll[y][x] && !g_hat[y][x]) { alle = 0; break; }
+        if (alle) { (*anzahl)++; if (treffer < 0 || kand[i] < treffer) treffer = kand[i]; }
+    }
+    return treffer;
+}
+
 static void rastern(const re15_pri_cut_t *pri, const re15_tim_t *tim)
 {
     const uint8_t *idx = (const uint8_t *) tim->pixels;
@@ -264,7 +329,47 @@ int main(void)
     }
     printf("  ROOM10D0.MSK Cut %d: Sektion @0x%X, %d Masken, %d gezeichnet\n",
            CUT, (unsigned) sect, n, pri.draw_count);
+    /* Zuordnung VOR dem Rastern; der Riegel besteht nur, wenn sie eindeutig ist. */
     rastern(&pri, &tim);
+
+    /* --- (B) EINE Tiefe je Bildzeile, ohne Zuordnung der Masken ---
+     * Fremde Masken koennen an einem Punkt nur Tiefen hinzufuegen, nie die des
+     * Stuhls entfernen. Die Aussage ist deshalb gegen den offenen Nachbar-Quader
+     * immun; siehe den Kommentar bei deckung_der_tiefe(). */
+    {
+        int y, zeilen_b = 0, ohne = 0, mehrdeutig = 0;
+        int letzte = -1, rueck = 0, sprung_max = 0;
+        int erste_y = -1, letzte_y = -1;
+        for (y = 0; y < 240; y++) {
+            int x, hat = 0, anz = 0, d;
+            for (x = 0; x < 320; x++) if (g_soll[y][x]) { hat = 1; break; }
+            if (!hat) continue;
+            if (erste_y < 0) erste_y = y;
+            letzte_y = y;
+            zeilen_b++;
+            d = zeilentiefe(&pri, &tim, y, &anz);
+            if (d < 0) {
+                if (ohne < 6)
+                    printf("  ⛔ Zeile %d: KEINE Tiefe liegt an allen Silhouettenpunkten\n", y);
+                ohne++;
+                continue;
+            }
+            if (anz > 1) mehrdeutig++;
+            if (letzte >= 0) {
+                int s = d - letzte;
+                if (s < 0) rueck++;
+                if (s > sprung_max) sprung_max = s;
+            }
+            letzte = d;
+        }
+        printf("Zeilenmodell: %d Silhouettenzeilen (y%d..%d), %d ohne durchgehende Tiefe, "
+               "%d mehrdeutig, %d Monotonie-Rueckschritte, groesster Zeilensprung %d\n",
+               zeilen_b, erste_y, letzte_y, ohne, mehrdeutig, rueck, sprung_max);
+        CHECK("(B) jede Silhouettenzeile traegt EINE Tiefe an ALLEN ihren Punkten", ohne == 0);
+        CHECK("(C) die Zeilentiefe ist monoton (Vorzeichen aus R[7] geprueft)", rueck == 0);
+        CHECK("Abdeckung: der Riegel hat Zeilen zu pruefen", zeilen_b > 0);
+    }
+
 
     /* (A) ABDECKUNG — die Handarbeit des Nutzers kommt vollstaendig an. */
     for (y = 0; y < 240; y++)
