@@ -298,17 +298,23 @@ def uebersicht(out, docs):
                     _h.escape(d["name"]), d["name_addr"], d["name_hex"],
                     d["slots"], d["textseiten"], d["page_h"]))
         L.append('<div class="spalten"><figure class="bild">'
-                 '<img src="%s" alt="Anschauungsbild Dokument %d">'
+                 '<a href="hintergruende/bilder_png/FILE%02d_title_paper.png">'
+                 '<img src="%s" alt="Anschauungsbild Dokument %d"></a>'
                  '<figcaption>Anschauungsbild 128&times;%d<br>'
+                 '<a class="roh" href="hintergruende/bilder_png/FILE%02d_title_paper.png">'
+                 'ganze Leinwand</a> &middot; '
                  '<a class="roh" href="hintergruende/bilder_roh/FILE%02d_title_paper.TIM">'
                  'roh (TIM)</a></figcaption></figure><div>'
-                 % (d["icon"], d["doc"], 256 - d["page_h"], d["doc"]))
+                 % (d["doc"], d["icon"], d["doc"], 256 - d["page_h"], d["doc"], d["doc"]))
         L.append('<div class="seiten">')
         alle = [(d["titel"], "TITEL")] + [(p, "S%02d" % i)
                                           for i, p in enumerate(d["seiten"])]
         for p, tag in alle:
             roh = p.replace("seiten_lesbar", "seiten_roh").replace(".png", ".TIM")
-            L.append('<figure><img src="%s" alt="%s" loading="lazy">'
+            # kein loading="lazy": sonst fehlen die Bilder beim Drucken und in
+            # Bildschirmfotos (gemessen — ein Kopfloser-Browser-Schnappschuss der
+            # Dokument-19-Karte kam leer heraus).
+            L.append('<figure><img src="%s" alt="%s">'
                      '<figcaption>%s &middot; <a class="roh" href="%s">TIM</a></figcaption>'
                      '</figure>' % (p, tag, tag, roh))
         L.append('</div>')
