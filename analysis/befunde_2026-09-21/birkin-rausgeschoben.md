@@ -268,10 +268,15 @@ diesen Beleg NICHT — sie steht als offener Punkt in §6, nicht als Fix.
 Beide Punkte kamen als gesetzt in den Auftrag und sind falsch:
 
 1. **"@0x80026670 jal 0x8004c1bc = die RAUMKLEMME mit Radius 450."** Nein.
-   `FUN_8004c1bc` liest die Position nur (`lw s4,0(s6)` / `lw s2,8(s6)` @0x8004c210-14),
-   schreibt sie nirgends zurueck, und ihr Rueckgabewert landet als Halbwort in der OBEREN
-   Haelfte von Spieler+0x110 (`sll v0,v0,16` / `or` / `sw v1,15136(s3)` @0x8002667c-84). Sie
-   ist eine **Attribut-Abfrage**, das RE2-Gegenstueck zu RE1.5 FUN_8003b7f0/FUN_8003b93c.
+   `FUN_8004c1bc` fasst den uebergebenen Positionsvektor NUR LESEND an — im ganzen Rumpf
+   0x8004c1bc..0x8004c654 gibt es genau vier Zugriffe auf `s6` (= a0), alle `lw`:
+   @0x8004c210, @0x8004c214, @0x8004c35c, @0x8004c360, und **keinen einzigen Store**. Sie
+   laeuft ueber eine Tabelle mit 16-Byte-Eintraegen (`addiu s0,s0,16` @0x8004c610) und testet
+   je Eintrag ein Attribut-Halbwort (`lhu v0,10(s0)` / `and v0,v0,fp` @0x8004c270-78). Ihr
+   Rueckgabewert ist ein Flag-Halbwort (`lh v0,15208(v0)` = 0x800c3b68 @0x8004c620) und landet
+   in der OBEREN Haelfte von Spieler+0x110 (`sll v0,v0,16` / `or` / `sw v1,15136(s3)`
+   @0x8002667c-84). Sie ist eine **Attribut-Abfrage**, das RE2-Gegenstueck zu RE1.5
+   FUN_8003b7f0/FUN_8003b93c — keine Klemme.
 2. **"Zwischen Schub und Klemme stehen zwei Aufrufe, die der Port moeglicherweise nicht hat."**
    Sie sind keine Klemme:
    * `FUN_8003567c(entity, 0x8000)` nullt Spieler+0x110 (@0x8003569c), ruft dann dieselbe
@@ -330,6 +335,39 @@ gewonnen wurde, ist an solchen Ueberlappungs-Fixpunkten zu optimistisch.
 
 ---
 
+## 6b. Bilder aus dem laufenden Spiel — was gelang und was nicht
+
+`birkin-rausgeschoben/vorher_nutzer_F962.png` (= die Marke des Nutzers, sein eigener Lauf,
+sein eigener Renderpfad). **Selbst angesehen:** Leon steht rechts im Bild auf einer roten
+Kiste, ueber der gemalten Kulisse, deutlich neben dem Korridorboden; Birkins Masse schwebt
+links im Gang. Das ist exakt der Ort (11102,-19232) aus §1.2 — hinter der Korridorwand.
+
+`birkin-rausgeschoben/nachher_5090_eintritt.png`: ein echtes Bild meines Laufs NACH dem Fix
+(Vollbild-Readback vor `SDL_RenderPresent` ueber `RE15_FRAMEDUMP`, kein AUTOSHOT), ROOM5090
+ueber das Debug-Menue geladen (`RE15_DEBUG_JUMP=5090@gp`, AUTO-JUMP @Frame 1768).
+
+⛔ **Was NICHT gelang, und das ist wichtig:** ich habe den Spieler in dieser Sitzung nicht bis
+in den Kampfkorridor bekommen. Der Debug-Sprung setzt ihn auf (300,0,5000) im Waggon ab, und
+die Zeitleiste von `RE15_INPUT_SCRIPT` laeuft ab Bild 1 — sie ist nicht mit dem Sprung
+synchronisiert. **Das Nachher-Bild zeigt also NICHT die reparierte Stelle, sondern nur, dass
+der Raum nach dem Fix normal laeuft.** Der Beweis fuer den Fix sind die Messzahlen in §6,
+nicht dieses Bild.
+
+Zwei Umgebungs-Befunde, die dabei anfielen und die die naechste Sitzung spart:
+* Die Sitzung laeuft ueber RDP (`tasklist` zeigt Sitzungsname `RDP-Tcp#0`). Mit dem
+  beschleunigten Renderer blieb das Spiel mehrfach komplett im Titel stehen; mit
+  `RE15_SOFTWARE_RENDER=1` lief es durch. Genau dafuer existiert der Schalter — der
+  Kommentar an seiner Definition (`render_pc.c` bei `SDL_CreateRenderer`) nennt den Fall
+  woertlich: *"Needed to capture a CORRECT framebuffer in a headless / disconnected-session
+  context, where the accelerated renderer has no real display surface … no VSYNC stall."*
+  Der Skill `re15-port-visual-verify` erlaubt ihn fuer **Geometrie-/Pose-Fragen** und
+  verbietet ihn nur fuer Textur-/Upload-Fragen; dieser Befund ist eine Positionsfrage.
+* Ein Neu-Start bis zur Spielbarkeit dauert hier ~8 Minuten: Titel, ROOM1240-Montage,
+  ROOM1170-Intro; der Spieler wird erst bei Bild ~1640 freigegeben (`befund.log` springt dort
+  von der Parkposition (-31000,-7200,31000) auf (2664,-7200,-7336)).
+
+---
+
 ## 7. Gepruefte Kandidaten
 
 | Kandidat | Ergebnis |
@@ -361,7 +399,9 @@ gewonnen wurde, ist an solchen Ueberlappungs-Fixpunkten zu optimistisch.
    Messlauf direkt reproduziert.
 4. **Die RE2-seitige Wandklemme ist nicht lokalisiert.** Fuer diesen Befund war sie nicht
    noetig (der Port folgt der RE1.5-Kette), aber die Frage "wo klemmt RE2" bleibt unbeantwortet.
-5. **Der Objekt-Pass FUN_8002bd44 (@0x8001ce14) laeuft im Port weiter nur im Normal-Zweig.**
+5. **Ein Nachher-Bild AUS DEM KAMPFKORRIDOR fehlt** (§6b). Das ist der schwaechste Punkt
+   dieser Runde: die Wirkung ist gemessen, aber nicht bebildert.
+6. **Der Objekt-Pass FUN_8002bd44 (@0x8001ce14) laeuft im Port weiter nur im Normal-Zweig.**
    Im Original ist er ein eigener Top-Level-Aufruf neben dem Spieler-Dispatcher; ob und wie
    er je Kommandowort laeuft, ist nicht disassembliert. Ich habe ihn deshalb NICHT in den
    neuen Schwanz gezogen, obwohl das "plausibel" gewesen waere.
