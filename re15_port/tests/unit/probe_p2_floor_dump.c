@@ -41,6 +41,13 @@ int main(int argc, char **argv)
 {
     unsigned raum, von = 0x1000, bis = 0x2000;
     if (argc > 2) { von = (unsigned) strtoul(argv[1], NULL, 16); bis = (unsigned) strtoul(argv[2], NULL, 16); }
+    /* HERKUNFTSMARKE. ⛔ Nachtrag 2026-09-21 (Runde 19, Synthese §3 Schritt 4): diese Sonde
+     * ist seit 2026-09-19 formatgleich vorhanden, wurde aber NICHT benutzt — raum.py nahm
+     * weiter den Dump der alten Sonde (Containment-Scan = die HINDERNISSE), und weil beide
+     * Dateien gleich aussehen, ist das monatelang niemandem aufgefallen. Jede
+     * Standplatz-Zahl der Runden davor beschreibt deshalb unerreichbare Orte.
+     * tools/maske/abnahme.floor_aus_dump verlangt diese Zeile jetzt und bricht ohne sie ab. */
+    printf("# QUELLE klemmpfad re15_collision_constrain PR=450 solid=1\n");
     for (raum = von; raum < bis; raum++) {
         char pfad[600];
         size_t sz = 0;

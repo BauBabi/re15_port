@@ -178,11 +178,41 @@ def pbm_schreiben(pfad, soll):
         f.write(bits.tobytes())
 
 
+HERKUNFT = "# QUELLE klemmpfad"
+
+
 def floor_aus_dump(pfad, rid):
-    """Begehbare Bodenpunkte je Band EINES Raums aus dem Dump der Sonde
-    probe_r16_pri_masken_audit (Zeilen "ROOM <hex> ...", "B <band>", "F <x> <z>").
-    Die Punkte kommen aus re15_collision_on_floor mit gesetztem Band (Engine, kein
-    Nachbau). -> {band: [(x, z), ...]}"""
+    """BEGEHBARE Standplaetze je Band EINES Raums aus dem Dump der Sonde
+    probe_p2_floor_dump (Zeilen "ROOM <hex> ...", "B <band>", "F <x> <z>").
+
+    ⛔ BERICHTIGT 2026-09-21 (Runde 19, Synthese §3 Schritt 4). Diese Funktion las bis
+    dahin den Dump von probe_r16_pri_masken_audit und nannte seine Punkte "begehbar".
+    Das war FALSCH: jene Sonde nimmt re15_collision_on_floor = FUN_8003b7f0, den
+    Containment-Scan ("welche Zelle ENTHAELT (x,z)"), und die SCA-Zellen sind die
+    HINDERNISSE — der Spieler laeuft im bandgleichen KOMPLEMENT (Memory
+    reai-v2-kollisionszellen-sind-waende). Nachgezaehlt: 20081 von 20081 Dumppunkten in
+    ROOM10D0, 3350/3350 in ROOM1010, 12915/12915 in ROOM1140 und 6636/6636 in ROOM10E0
+    liegen INNERHALB einer soliden bandgleichen Zelle. Jede VORn/VORverd/HINTn/HINTfrei-
+    Zahl, die vor diesem Datum aus dem Bauwerkzeug kam, beschreibt also unerreichbare
+    Orte und ist als Beleg wertlos.
+
+    Richtig ist die Regel des Spielers selbst: begehbar ist ein Punkt, den
+    re15_collision_constrain (FUN_8003b0a4, Radius PR=450, Solid-Maske 1, Band gesetzt)
+    NICHT verschiebt. Genau das liefert probe_p2_floor_dump.
+
+    Weil beide Dumps gleich AUSSEHEN, wird die Herkunft jetzt verlangt statt geglaubt:
+    fehlt die Marke "# QUELLE klemmpfad" in der ersten Zeile, bricht diese Funktion ab.
+    -> {band: [(x, z), ...]}"""
+    with open(pfad, "r") as f:
+        kopf = f.readline()
+    if not kopf.startswith(HERKUNFT):
+        raise SystemExit(
+            "ABBRUCH: %s traegt keine Herkunftsmarke '%s'.\n"
+            "  Dieser Dump stammt vermutlich aus probe_r16_pri_masken_audit, und dessen\n"
+            "  'Bodenpunkte' liegen IN den Hindernis-Zellen, nicht auf begehbarem Boden\n"
+            "  (s. Docstring). Erzeuge den Dump mit der Klemmpfad-Sonde:\n"
+            "      <build>/tests/unit/probe_p2_floor_dump 1000 7000 > build/p2/dump_klemmpfad.txt"
+            % (pfad, HERKUNFT))
     out = {}
     cur = None; band = None
     with open(pfad, "r") as f:

@@ -603,8 +603,16 @@ def main():
     # kalib_geometrie.py gemessenen Werte (build/p2/kalib_gruppe_*.txt).
     ap.add_argument("--stufe", type=int, default=None)
     ap.add_argument("--statistik", choices=("max", "med", "min"), default=None)
-    ap.add_argument("--dump", default="build/p2/dump_vorher.txt",
-                    help="Engine-Dump der Sonde probe_r16_pri_masken_audit (Bodenpunkte je Band)")
+    # ⛔ BERICHTIGT 2026-09-21 (Runde 19, Synthese §3 Schritt 4): der Default stand auf
+    # build/p2/dump_vorher.txt, dem Dump der Sonde probe_r16_pri_masken_audit. Deren
+    # "Bodenpunkte" kommen aus dem Containment-Scan und liegen damit IN den Hindernis-
+    # Zellen (20081 von 20081 in ROOM10D0). Jede Standplatz-Zahl dieses Werkzeugs war
+    # deshalb an unerreichbaren Orten gemessen. Richtig ist der Klemmpfad-Dump der Sonde
+    # probe_p2_floor_dump; abnahme.floor_aus_dump verlangt jetzt dessen Herkunftsmarke.
+    ap.add_argument("--dump", default="build/p2/dump_klemmpfad.txt",
+                    help="Engine-Dump der Sonde probe_p2_floor_dump (BEGEHBARE Standplaetze "
+                         "je Band, Klemmpfad re15_collision_constrain). Der alte Dump von "
+                         "probe_r16_pri_masken_audit wird ABGEWIESEN.")
     ap.add_argument("--nur-pruefen", action="store_true", help="bauen und pruefen, nichts schreiben")
     a = ap.parse_args()
 
