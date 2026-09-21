@@ -11,9 +11,24 @@
  * (Dossier analysis/befunde_2026-09-21/pri-runde19b-marke4.md):
  *
  *   (a) "Die Freistellung des Nutzers kommt nicht vollstaendig an."  Nein:
- *       2677 von 2677 Punkten sind gedeckt, gelesen auf dem ECHTEN Ladeweg
+ *       2864 von 2864 Punkten sind gedeckt, gelesen auf dem ECHTEN Ladeweg
  *       (re15_pri_msk_section_offset -> re15_pri_parse_section -> re15_tim_parse ->
  *       Blit mit Palettenindex != 0).
+ *
+ * ⛔ NACHGEZOGEN 2026-09-21 (Runde 19c, Dossier pri-runde19c-saum.md): der Nutzer hat
+ *   den fehlenden Rahmensaum SELBST in gruen markiert (Beleg
+ *   analysis/befunde_2026-09-21/pri-runde19c-saum/nutzer_gruen_2026-09-21.png). Die
+ *   Silhouette dieses Objekts ist seitdem 07_01_mit_saum.png = seine Freistellung
+ *   VEREINIGT mit seinen 187 neuen Punkten: 2677 -> 2864 Texel. Die Referenz
+ *   probes/r19b_marke4_stuhl.pbm und SOLL_PX sind mitgezogen; die GEPRUEFTE
+ *   MODELLKLASSE ist unveraendert und haelt auf der neuen Silhouette (gemessen:
+ *   0 Zeilen mit mehreren Tiefen, 0 Monotonie-Rueckschritte, groesster Naht-Sprung 1
+ *   bei 10396 Nachbarpaaren und 0 Paaren darueber). Nebenwirkung, benannt statt
+ *   verschwiegen: der Saum erreicht Bildzeile 239 (vorher 238) und Bildspalte 0
+ *   (vorher 1), womit der EINE
+ *   Standpunkt des aufrecht-Zweigs (Schwerpunkt der belegten Spalten, tiefste
+ *   Silhouettenzeile; geometrie.py:125-127) von Welt (-1669,26016) auf (-1691,26008)
+ *   wandert — Kamera-z 3985 -> 3962, also EIN OT-Eimer naeher (Profil 53..62 -> 52..61).
  *
  *   (b) "Die Spaltenregel liest in den Spalten 69..72 eine Strebe als Bodenkontakt
  *       und setzt sie zu weit weg, dagegen hilft bodenkante."  Nein: dieses Objekt
@@ -43,19 +58,24 @@
  *   GEGENPROBE, im Test selbst gerechnet — aus DEMSELBEN Kamerasatz und DERSELBEN
  *   Silhouette, damit der Riegel nicht wirkungslos gruen stehen kann (Memory
  *   reai-v2-schwaches-mass):
- *     * die Spaltenregel verletzt (B) in 114 von 116 Zeilen und (D) mit einem Sprung
- *       von 24 Eimern an der Naht (68,189)=60 -> (69,189)=84;
+ *     * die Spaltenregel verletzt (B) in 116 von 117 Zeilen und (D) mit einem Sprung
+ *       von 79 Eimern an der Naht (0,123)=145 -> (1,123)=66;
  *     * die Spaltenregel MIT bodenkante 1..68 verletzt (B) und (D) ebenfalls
- *       (Sprung 13 Eimer) — bodenkante ist hier also nicht die Abhilfe, sondern
+ *       (Sprung 11 Eimer) — bodenkante ist hier also nicht die Abhilfe, sondern
  *       verschiebt den Bruch nur;
- *     * der Weltsprung des Bodenpunkts von Spalte 68 nach 69 (1457 Einheiten) ist
- *       groesser als jeder Sprung innerhalb der Spalten 1..68 (778) — die Messung,
- *       auf der die verworfene Deutung ruhte, bleibt als Zahl erhalten.
+ *     * der Weltsprung des Bodenpunkts von Spalte 68 nach 69 (1458 Einheiten) ist
+ *       groesser als jeder Sprung innerhalb der Spalten 1..68 (805), und der von
+ *       Spalte 0 nach 1 (6521) ebenfalls — Spalte 0 ist die Saum-Spalte des Nutzers
+ *       (nur y123..139 belegt), also ein ZWEITER Fall ohne Bodenkontakt. Die
+ *       Messung, auf der die verworfene Deutung ruhte, bleibt als Zahl erhalten.
+ *       (Werte VOR dem Saum, Runde 19b: 114 von 116 Zeilen, Naht 24 bei
+ *       (68,189)=60 -> (69,189)=84, bodenkante 13, 1457 gegen 778.)
  *
  *   ⛔ NICHT geprueft wird "keine Tiefe hinter dem eigenen Fussabdruck". Diese
  *   Schranke waere SELBSTBESTAETIGEND: sie ergibt nur mit dem EINEN Standpunkt die
- *   Zahl 62; modellfrei (der Fussabdruck liegt irgendwo unter der Silhouette) lautet
- *   sie 185 und hat gegen die Spaltenregel (max 86) keine Trennkraft. Gemessen in
+ *   Zahl 62 (mit dem Saum 61); modellfrei (der Fussabdruck liegt irgendwo unter der
+ *   Silhouette) lautet sie 185 und hat gegen die Spaltenregel (max 86, mit dem Saum
+ *   145) keine Trennkraft. Gemessen in
  *   build/r19b/mess_17_naht.py, im Dossier §6 festgehalten.
  *
  *   ⛔ Wer dieses Objekt kuenftig auf ein Spalten- oder Zellenmodell umstellt, muss
@@ -64,7 +84,7 @@
  *
  * ABDECKUNG (⛔ Pflicht, Memory reai-v2-schiene-abdeckung): dieser Riegel sieht GENAU
  *   EINEN Cut (ROOM10D0 Cut 7) von 77 geschriebenen, darin GENAU EIN Objekt von drei,
- *   und in ihm 2677 Texel mit 9638 Nachbarpaaren. Ein Pin gegen den Rueckfall dieses
+ *   und in ihm 2864 Texel mit 10396 Nachbarpaaren. Ein Pin gegen den Rueckfall dieses
  *   einen Tiefenmodells, keine Flaechendeckung.
  *
  * Tiefenmodell und Original-Adressen: re15_pri.h (Masken-OT = depth*1
@@ -90,7 +110,9 @@
 #endif
 
 #define CUT       7
-#define SOLL_PX   2677     /* opake Punkte von pri/STAGE1/10D0/07_01.png bei Alpha > 110 */
+#define SOLL_PX   2864     /* opake Punkte von pri/STAGE1/10D0/07_01_mit_saum.png bei
+                            * Alpha > 110: die 2677 der Nutzer-Freistellung 07_01.png
+                            * PLUS die 187 Punkte seiner gruenen Markierung 2026-09-21 */
 #define BK_X0     1        /* bodenkante-Variante der Gegenprobe: Spalten mit eigenem  */
 #define BK_X1     68       /* Bodenkontakt; 69..72 erben den naechsten (Spalte 68)     */
 
@@ -283,7 +305,7 @@ int main(void)
     static double gp_wx[320], gp_wz[320];
     static int gp_yb[320];
     int gp_zeilen_mehrfach, gp_max, bk_zeilen_mehrfach;
-    double schritt_innen = 0.0, schritt_6869 = 0.0;
+    double schritt_innen = 0.0, schritt_6869 = 0.0, schritt_0001 = 0.0;
 
     printf("=== RIEGEL ROOM10D0 C7 — der Stuhl traegt EIN Zeilenmodell ===\n");
 
@@ -378,8 +400,10 @@ int main(void)
             soll++;
             if (g_deck[y][x]) gedeckt++; else fehlt++;
         }
-    printf("  Freistellung 07_01: %d Punkte, gedeckt %d, ungedeckt %d\n", soll, gedeckt, fehlt);
-    CHECK("die Referenz-Silhouette hat die erwarteten 2677 Punkte", soll == SOLL_PX);
+    printf("  Freistellung 07_01_mit_saum: %d Punkte, gedeckt %d, ungedeckt %d\n",
+           soll, gedeckt, fehlt);
+    CHECK("die Referenz-Silhouette hat die erwarteten 2864 Punkte "
+          "(2677 Freistellung + 187 gruene Marken des Nutzers)", soll == SOLL_PX);
     CHECK("jeder Punkt der Nutzer-Freistellung ist gedeckt", fehlt == 0);
     if (fehlt) { free(msk); free(tb); free(rdt); return 1; }
 
@@ -434,7 +458,17 @@ int main(void)
             gp_wz[x] = (view.rot[2] * ax + view.rot[5] * ay + view.rot[8] * az) / 4096.0;
         }
     }
-    /* Weltsprung der Standpunkte zwischen Nachbarspalten. */
+    /* Weltsprung der Standpunkte zwischen Nachbarspalten.
+     *
+     * ⛔ NUR PAARE GANZ INNERHALB BK_X0..BK_X1 zaehlen als "innen". Bis 2026-09-21
+     * stand hier `x <= BK_X1`, was auch das Paar (0 -> 1) mitnahm — solange Spalte 0
+     * leer war, war das wirkungslos. Der Saum des Nutzers belegt Spalte 0 jetzt mit
+     * 17 Punkten in den Zeilen 123..139; ihre unterste Zeile ist damit KEIN
+     * Bodenkontakt, sondern die Spitze des Saums hoch im Bild, und ihr Sehstrahl
+     * landet 6521 Einheiten von Spalte 1 entfernt. Spalte 0 gehoert also zu DERSELBEN
+     * Gruppe wie 69..72 (keine Bodenberuehrung) — sie ist kein Gegenbeispiel zur
+     * Aussage, sondern ein weiterer Fall von ihr, und die Gegenprobe wird dadurch
+     * STRENGER (groesster Eimer der Spaltenregel 86 -> 145, Naht-Sprung 24 -> 79). */
     {
         int vor = -1;
         for (x = 0; x < 320; x++) {
@@ -443,7 +477,8 @@ int main(void)
                 double dx = gp_wx[x] - gp_wx[vor], dz = gp_wz[x] - gp_wz[vor];
                 double s = sqrt(dx * dx + dz * dz);
                 if (x == 69 && vor == 68) schritt_6869 = s;
-                else if (x <= BK_X1 && s > schritt_innen) schritt_innen = s;
+                else if (vor == 0 && x == BK_X0) schritt_0001 = s;
+                else if (vor >= BK_X0 && x <= BK_X1 && s > schritt_innen) schritt_innen = s;
             }
             vor = x;
         }
@@ -500,6 +535,10 @@ int main(void)
            "innerhalb %d..%d = %.0f\n", schritt_6869, BK_X0, BK_X1, schritt_innen);
     CHECK("der Weltsprung 68->69 ist groesser als jeder Sprung innerhalb 1..68 "
           "(dort ist die unterste Zeile kein Bodenkontakt)", schritt_6869 > schritt_innen);
+    printf("  Weltsprung 0->1 (die Saum-Spalte des Nutzers) = %.0f Einheiten\n", schritt_0001);
+    CHECK("auch Spalte 0 hat keinen Bodenkontakt: ihr Sprung nach 1 ist groesser als "
+          "jeder Sprung innerhalb 1..68 (der Saum belegt dort nur y123..139)",
+          schritt_0001 > schritt_innen);
 
     /* Der konkrete Pin der Marke: 69..72 tragen die Tiefe ihrer Zeilennachbarn. */
     {

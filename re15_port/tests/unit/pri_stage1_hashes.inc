@@ -1,4 +1,4 @@
-/* ERZEUGT von re15_port/tools/maske/pri_hashes.py (117 Dateien) — nicht von Hand aendern.
+/* ERZEUGT von re15_port/tools/maske/pri_hashes.py (118 Dateien) — nicht von Hand aendern.
  * Jede Zeile: Pfad (Repo-Wurzel), Git-Blob-SHA1, aeltester Commit mit genau diesem Blob. */
     { "pri/STAGE1/1000/01_01.png", "a19d74b9d390d5f0632230f70645f09c3a94eda9", "7b24600f" },
     { "pri/STAGE1/1000/01_02.png", "36e30b9822fc322e67ddf13d477bccda75416be8", "7b24600f" },
@@ -51,6 +51,7 @@
     { "pri/STAGE1/10D0/06.png", "2204ab8c33b49c1b5d05587766e5b1d277771f38", "61607499:pri/10D0/06.png" },
     { "pri/STAGE1/10D0/06_02.png", "eb64b2b8c5b48e9244ee79f6b565c1b8fa1a52a3", "c6839487" },
     { "pri/STAGE1/10D0/07_01.png", "36175c6153f5ecb01469da39fb8d2b092fbd5340", "a56cff68" },
+    { "pri/STAGE1/10D0/07_01_mit_saum.png", "d2bdaca0f348ca5dba542673c42fb96929bb37da", "neu" },
     { "pri/STAGE1/10D0/07_02.png", "132297294187d5d3874732e59f87369787a78abb", "61607499" },
     { "pri/STAGE1/10D0/08.png", "4d0dfc5a130ad0c5a4ec0b078a4067cade03d1a8", "61607499" },
     { "pri/STAGE1/10D0/09_01.png", "c4553d3391a3fc0a9e5ea1d3cd9b719dce83b9ef", "61607499" },

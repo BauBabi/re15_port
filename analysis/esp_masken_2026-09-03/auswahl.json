@@ -634,13 +634,14 @@
    "objekte": [
     {
      "name": "Stuhl",
-     "png": "pri/STAGE1/10D0/07_01.png",
+     "png": "pri/STAGE1/10D0/07_01_mit_saum.png",
      "x": 0,
      "y": 123,
      "massstab": 1,
      "oben": 0,
      "grow": 0,
-     "aufrecht": true
+     "aufrecht": true,
+     "grund": "NUTZER-ENTSCHEIDUNG vom 2026-09-21, KEINE byte-true Herleitung. Der Nutzer: 'Na, der Stuhl ist doch fast korrekt erkannt, aber es fehlt noch minimal was von den Rahmen' und dann 'ich habe dir jetzt im workspace bei 40_nutzerpng_auf_bg nochmal in gruen markiert wo stuhl fehlt in etwa'. Beleg-Datei: analysis/befunde_2026-09-21/pri-runde19c-saum/nutzer_gruen_2026-09-21.png (1280x960 = 4x 320x240, md5 9e9eee6da292da33c75ecf34f4fa3778, bitgleich mit seiner Arbeitsdatei 40_nutzerpng_auf_bg.png). Seine Marken tragen genau EINE Farbe (34,177,76), 2651 Quellpunkte -> 190 Zielpunkte in 320x240 (ein Zielpunkt gilt als markiert, wenn mindestens einer seiner 4x4 Quellpunkte gruen ist; Zahl stabil fuer jede Schwelle g>r+30..+100). 3 davon lagen schon in der Deckung, 187 sind neu; alle 190 liegen INNERHALB seines 73x117-Fensters bei x=0/y=123, keiner ausserhalb. 07_01_mit_saum.png = seine Freistellung 07_01.png VEREINIGT mit diesen 187 Punkten (Farbe aus dem Hintergrundbild build/bg_ppm/ROOM10D07.ppm, md5 9890da5a1457d5f647ca73563be6cdb4, Alpha 255): 2677 -> 2864 opake Punkte, seine 2677 Punkte BITGLEICH unangetastet. Es ist ein SAUM, kein neuer Gegenstand: 116 der 187 sind direkte 8er-Nachbarn der bisherigen Silhouette, Abstand zur Form Median 1,0 / 90-%-Quantil 3,2 / Maximum 5,0 Punkte. Die Zuordnung ist SEINE (das Lasso ist die Zuordnung); die Farbe stuetzt sie nur: b-r Quartile +0/+3/+3 (die hellen darunter +1/+3/+4), also dieselbe neutrale Klasse wie das Chrom INNERHALB seiner Freistellung (hell >= 150: -1/+1/+3) und NICHT die des hellblauen Behaelters dahinter (+15/+21/+25). Von den 12 Punkten, die 2026-09-21 als offene Rueckfrage im Dossier pri-runde19b-marke4.md §3.3 standen, hat er 8 markiert (x61 y142..145, x60 y148..151) und die 4 oberen (x55..57 y132..133) NICHT — sie bleiben draussen, weil er sie nicht getroffen hat. Modell unveraendert aufrecht:true (Lage/Massstab/oben/grow bleiben). Dossier: analysis/befunde_2026-09-21/pri-runde19c-saum.md"
     },
     {
      "name": "Tischplattenecke",
