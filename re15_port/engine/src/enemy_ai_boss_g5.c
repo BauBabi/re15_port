@@ -1274,20 +1274,57 @@ int re15_g5_body_segment(int idx, int32_t *wx, int32_t *wy, int32_t *wz, int32_t
     return 1;
 }
 
+/* Diagnose-Zaehler (Sonden, Runde 20): wie oft wurde der Schub GERUFEN, wie oft hat er
+ * gewirkt, und wie gross war der groesste Ein-Bild-Schub. Keine Verhaltenswirkung. */
+static int      s_push_rufe, s_push_wirkungen, s_push_flips;
+static int32_t  s_push_max;
+void re15_g5_push_stats(int *rufe, int *wirkungen, int32_t *maxschub)
+{
+    if (rufe)     *rufe      = s_push_rufe;
+    if (wirkungen)*wirkungen = s_push_wirkungen;
+    if (maxschub) *maxschub  = s_push_max;
+}
+int  re15_g5_push_flips(void) { return s_push_flips; }
+void re15_g5_push_stats_reset(void)
+{ s_push_rufe = s_push_wirkungen = s_push_flips = 0; s_push_max = 0; }
+
+/* Mess-Schiene RE15_PUSH_LOG — EINMAL gelesen, nicht je Bild (heisser Pfad). */
+static int g5_push_log(void)
+{
+    static int s_an = -1;
+    if (s_an < 0) s_an = getenv("RE15_PUSH_LOG") ? 1 : 0;
+    return s_an;
+}
+
 /* FUN_80034D0C(G5, Spieler) — byte-true Kreis-/Hoehentest + radialer Push-out ueber beide
  * Segmente. Rueckgabe 1 = Kontakt (im Original das Bit in Spieler+0x0E). */
 int re15_g5_body_push_player(re15_actor_t *pl)
 {
     int k, hit = 0;
+    int32_t roh_x = pl ? pl->x : 0, roh_z = pl ? pl->z : 0;
+    s_push_rufe++;
     if (!pl || !pl->active) return 0;
     if (pl->hp < 0) return 0;                       /* tot: wie re15_body_push_player */
     for (k = 0; k < 2; k++) {
         int32_t sx = 0, sy = 0, sz = 0, sr = 0;
         int32_t rs, dx, dz, dy, hs, dist, over, d1, px, pz;
-        if (!re15_g5_body_segment(k, &sx, &sy, &sz, &sr)) return 0;
+        if (!re15_g5_body_segment(k, &sx, &sy, &sz, &sr)) {
+            if (g5_push_log())
+                fprintf(stderr, "[g5push] seg%d NICHT VERFUEGBAR (aktiv=%d gestartet=%d slot=%d)\n",
+                        k, (int)s_g5.aktiv, (int)s_g5.gestartet, s_g5_slot);
+            return 0;
+        }
         rs = sr + RE15_G5_PL_R;                     /* radSum (Decompile Z.36) */
         dx = pl->x - sx;
         dz = pl->z - sz;
+        if (g5_push_log())
+            fprintf(stderr, "[g5push] seg%d mitte=(%d,%d,%d) r=%d rs=%d dx=%d dz=%d"
+                            " bpX=%d bpZ=%d dist=%d over=%d\n",
+                    k, (int)sx, (int)sy, (int)sz, (int)sr, (int)rs, (int)dx, (int)dz,
+                    (int)((uint32_t)(dx + rs) <= (uint32_t)(rs * 2)),
+                    (int)((uint32_t)(dz + rs) <= (uint32_t)(rs * 2)),
+                    (int)re15_squareroot0((uint32_t)(dx * dx + dz * dz)),
+                    (int)(rs - (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz))));
         if ((uint32_t)(dx + rs) > (uint32_t)(rs * 2)) continue;      /* Broadphase X */
         if ((uint32_t)(dz + rs) > (uint32_t)(rs * 2)) continue;      /* Broadphase Z */
         dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
@@ -1320,16 +1357,24 @@ int re15_g5_body_push_player(re15_actor_t *pl)
                 if ((mx < e->x && e->x < pl->x) || (e->x < mx && pl->x < e->x)) {
                     int32_t g = (-(dx * over)) / d1;
                     px = ((g > 0) ? r2 : -r2) - g;              /* @0x80034f98-ac */
+                    s_push_flips++;
                 }
                 if ((mz < e->z && e->z < pl->z) || (e->z < mz && pl->z < e->z)) {
                     int32_t g = (-(dz * over)) / d1;
                     pz = ((g > 0) ? r2 : -r2) - g;              /* @0x8003503c-44 */
+                    s_push_flips++;
                 }
             }
         }
         pl->x += px;
         pl->z += pz;
         hit = 1;
+    }
+    if (hit) {
+        int32_t d = (pl->x > roh_x ? pl->x - roh_x : roh_x - pl->x)
+                  + (pl->z > roh_z ? pl->z - roh_z : roh_z - pl->z);
+        if (d > 0) s_push_wirkungen++;
+        if (d > s_push_max) s_push_max = d;
     }
     return hit;
 }

@@ -100,3 +100,8 @@ psx_dev/re15_reborn_pc/build_mingw/
 # Die 79 bereits versionierten Bilder bleiben versioniert — sie haengen als Beleg an Dossiers;
 # neue Mess-Bilder gehoeren zum Befund-Ordner analysis/befunde_*/, nicht hierher.
 shots/
+
+# Agenten-Worktrees. Sie sind Arbeitskopien des Repos und gehoeren nie hinein; ein
+# verwaister Rest (agent-a54e1d8e7abd08bfe) liess am 2026-09-22 ein `git add -A`
+# scheitern, weil ein Android-Zwischenpfad die Windows-Pfadlaenge sprengt.
+.claude/worktrees/
