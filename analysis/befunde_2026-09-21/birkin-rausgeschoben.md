@@ -28,8 +28,9 @@ laufen laesst.**
    geschrieben.** Das Original schreibt ihn in jedem Bild aus der Spielerposition
    (@0x8001d0d4/@0x8001d0dc/@0x8001d0e4). Genau diesen Spiegel liest der
    Vorzeichen-Dreh-Zweig von FUN_80034D0C (@0x80034ec4-0x80035044); dreht er, ist der Schub
-   nicht `over`, sondern **+-2*r = +-12000**. Mit einem stehengebliebenen Leiter-Wert dreht er
-   an 741 von 494 gepruefeten Punkten und erreicht **23911 Einheiten**.
+   nicht `over`, sondern **+-2*r = +-12000**. Mit einem stehengebliebenen Leiter-Wert zaehle
+   ich an 494 gepruefeten Kontaktpunkten **741 Drehungen** (je Punkt bis zu zwei, X und Z
+   getrennt) und einen groessten Ein-Bild-Schub von **23911 Einheiten**.
 3. **Die Wand, die ueberquert wurde, ist mit Spielerradius und Saum nur 2936 dick** (SCA-Zelle
    #28 `z -21700..-19700`, `density 2000`, plus 2x(450+0x12)). Beide Defekte liefern Spruenge
    in dieser Groessenordnung oder darueber — und ein Sprung ueber die Wand landet dort, wo die
