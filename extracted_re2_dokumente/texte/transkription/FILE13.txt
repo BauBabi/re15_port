@@ -1,0 +1,24 @@
+RE2 (Retail, Leon) — Dokument 13: Film C
+Item-Id 0x75   Dokument-Index 13
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE13_*.png   (Rohdaten: hintergruende/seiten_roh/FILE13_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE13_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FILM C
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+
+=== S02 ===
+Development Code:T-103
+ Due to accelerated metabolism
+relative to the earlier 00
+series, this subject
+possesses exemplary
+regenerative capabilities.
+           PH-X016 File Data

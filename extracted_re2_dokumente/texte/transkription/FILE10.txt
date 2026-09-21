@@ -1,0 +1,22 @@
+RE2 (Retail, Leon) — Dokument 10: User registration
+Item-Id 0x72   Dokument-Index 10
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE10_*.png   (Rohdaten: hintergruende/seiten_roh/FILE10_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE10_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+USER REGISTRATION
+
+=== S01 ===
+Temporary User Registration
+for the Culture Experiment
+Room.
+
+User Name:"GUEST"
+Password:None
+
+Valid for 24 hours.

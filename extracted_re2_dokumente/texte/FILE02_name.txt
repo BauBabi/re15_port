@@ -1,0 +1,5 @@
+Dokument 2   Item-Id 0x6A
+Name (Bank EN @0x8009E9DA): Memo to LEON
+  Rohbytes: 29 41 49 4B 00 50 4B 00 28 21 2B 2A F7
+Name (Bank 2 @0x8009E2D4, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: D0 AB D4 57 69 6F C8 C9 F7

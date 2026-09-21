@@ -1,0 +1,33 @@
+RE2 (Retail, Leon) — Dokument 12: Film B
+Item-Id 0x74   Dokument-Index 12
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE12_*.png   (Rohdaten: hintergruende/seiten_roh/FILE12_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE12_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FILM B
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+
+=== S02 ===
+Pictured in front of the
+Arukas tailor.
+Regressed into a zombie
+within two hours.
+
+Subject repeatedly
+complained about severe
+
+=== S03 ===
+agitation of the
+epidermis in addition to
+feelings of nausea.
+This happened up to the moment
+he lost consciousness.
+
+     Picture by R.Lambert

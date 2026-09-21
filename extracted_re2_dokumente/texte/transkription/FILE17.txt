@@ -1,0 +1,101 @@
+RE2 (Retail, Leon) — Dokument 17: Sewer manager diary
+Item-Id 0x79   Dokument-Index 17
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE17_*.png   (Rohdaten: hintergruende/seiten_roh/FILE17_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE17_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SEWER MANAGER DIARY
+
+=== S01 ===
+June 28th
+It's been a while, but I saw
+Don today and we talked
+after completing our work.
+He told me he had been sick
+in bed until yesterday.
+It really doesn't come as much
+of a surprise given how long
+he's been working here.
+He was sweating like a horse
+and kept scratching his body
+
+=== S02 ===
+while we were talking. I
+asked if he was hot, but he
+just looked at me funny.
+What's wrong with him anyway?
+
+=== S03 ===
+July 7th
+Chief Irons has been
+visiting the lab quite often
+lately. I don't know what
+he's doing over there but he
+always looks grim.
+The expression on his face
+has been even more unsettling
+than usual...
+My guess is that it's because
+of Dr.Birkin's impossible
+
+=== S04 ===
+requests. The chief has my
+sympathies though. After all
+he's done for the town, he
+doesn't deserve this.
+
+=== S05 ===
+July 21st
+I rarely drink because I'm
+on the graveyard shift, but I
+don't suppose I have much
+to complain about since
+this is how I make my living.
+
+=== S06 ===
+August 16th
+Chief Irons came in late
+today, looking grimmer than
+his usual self. I tried to
+joke with him to cheer him
+up but he wasn't amused. He
+pulled his gun and threatened
+to shoot me! I was able to
+calm him down, but that guy
+must have some serious
+problems. He knows he can't
+
+=== S07 ===
+enter the lab without my
+help and my medal.
+This is what it means for
+the chief "to serve
+and protect"!?
+
+=== S08 ===
+August 21st
+William informed me that the
+police and media have begun
+their investigation on
+Umbrella's affairs. He said
+that the investigation will
+be citywide and that there is
+a possibility they'll even
+search through the sewers.
+He asked me to suspend all
+Umbrella sewer facility
+
+=== S09 ===
+operations until the
+investigation has concluded.
+The sewer will still be used
+for passage, but he stressed
+that I have to be extremely
+cautious and that I'd lose
+my job if anyone finds out
+about this operation.

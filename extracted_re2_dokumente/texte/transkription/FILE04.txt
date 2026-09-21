@@ -1,0 +1,124 @@
+RE2 (Retail, Leon) — Dokument 4: Operation report 1
+Item-Id 0x6C   Dokument-Index 4
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE04_*.png   (Rohdaten: hintergruende/seiten_roh/FILE04_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE04_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+OPERATION REPORT
+
+=== S01 ===
+         -Operation Report-
+               September 26th
+The Raccoon Police Dept. was
+unexpectedly attacked by
+zombies. Many have been
+injured. Even more were killed.
+During the attack, our
+communications equipment was
+destroyed and we no longer
+have contact with the outside.
+
+=== S02 ===
+We have decided to carry out
+an operation with the intent
+of rescuing any possible
+survivors as well as to
+prevent this disaster from
+spreading beyond Raccoon City.
+The details of the operation
+are as follows:
+
+=== S03 ===
+Security of armaments and
+ammunition.
+
+Chief Irons has voiced concern
+regarding the issue of
+terrorism due to a series of
+recent unresolved incidents.
+On the very day before the
+zombies' attack, he made the
+decision to relocate all
+weapons to scattered
+
+=== S04 ===
+intervals throughout the
+building as a temporary
+measure to prevent their
+possible seizure.
+Unfortunately, this decision
+has made it extremely
+difficult for us to locate all
+ammunition caches.
+It has become our top priority
+to recover these scattered
+munitions.
+
+=== S05 ===
+To unlock the weapon storage.
+
+As stated earlier, it will be
+extremely difficult to
+secure all the ammunition.
+However, a considerable supply
+still remains in the
+underground weapon storage.
+Unfortunately, the person in
+charge of the card key used to
+access the weapon storage is
+
+=== S06 ===
+missing and we have been
+unable to locate the key.
+One of the breakers went
+down during the battle and the
+electronic locks are not
+functioning in certain areas.
+It has become a top priority to
+restore the power in the power
+room and secure those locks.
+
+     Recorder: David Ford
+
+=== S07 ===
+         -Operation Report-
+               September 27th
+1:00PM. The west barricade
+has been broken through and
+another exchange ensued.
+We sheltered the injured in
+the confiscation room on the
+first floor temporarily.
+Twelve more people were
+injured in the battle.
+     Recorder: David Ford
+
+=== S08 ===
+      -Additional Report-
+Three additional people were
+killed following the sudden
+appearance of an as of yet
+unknown creature.
+This creature is identified
+by missing patches of skin
+and razor-like claws.
+However, its most
+distinguishing characteristic
+is its lance-like tongue,
+
+=== S09 ===
+capable of piercing a human
+torso in an instant.
+Their numbers as well as
+their location remains
+unknown. We have tentatively
+named this creature the
+"licker" and are currently
+in the process of developing
+countermeasures to deal with
+this new threat.

@@ -1,0 +1,26 @@
+doc,item_id,name_anzeige,name_streng,name_bytes_hex,name_addr,slots,textseiten,max_page_startwert,seitenhoehe,titelbild_gleich_seite0
+0,0x68,CHRIS's diary,CHRIS^s diary,1F 24 2E 25 2F 3A 4F 00 40 45 3D 4E 55,0x8009E9BE,7,7,5,144,ja
+1,0x69,Mail to Chris,Mail to Chris,29 3D 45 48 00 50 4B 00 1F 44 4E 45 4F,0x8009E9CC,7,7,5,176,ja
+2,0x6A,Memo to LEON,Memo to LEON,29 41 49 4B 00 50 4B 00 28 21 2B 2A,0x8009E9DA,3,3,1,176,ja
+3,0x6B,Police memorandum,Police memorandum,2C 4B 48 45 3F 41 00 49 41 49 4B 4E 3D 4A 40 51 49,0x8009E9E7,4,4,2,176,ja
+4,0x6C,Operation report 1,Operation report 1,2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0D,0x8009E9F9,11,11,9,176,ja
+5,0x6D,Mail to the chief,Mail to the chief,29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42,0x8009EA0C,11,11,9,176,ja
+6,0x6E,Mail to the chief,Mail to the chief,29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42,0x8009EA1E,11,11,9,176,ja
+7,0x6F,Secretary's diary A,Secretary^s diary A,2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1D,0x8009EA30,8,8,6,144,ja
+8,0x70,Secretary's diary B,Secretary^s diary B,2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1E,0x8009EA44,6,6,4,144,ja
+9,0x71,Operation report 2,Operation report 2,2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0E,0x8009EA58,8,8,4,176,ja
+10,0x72,User registration,User registration,31 4F 41 4E 00 4E 41 43 45 4F 50 4E 3D 50 45 4B 4A,0x8009EA6B,3,3,1,128,ja
+11,0x73,Film A,Film A,22 45 48 49 00 1D,0x8009EA7D,4,4,2,112,ja
+12,0x74,Film B,Film B,22 45 48 49 00 1E,0x8009EA84,5,5,3,112,ja
+13,0x75,Film C,Film C,22 45 48 49 00 1F,0x8009EA8B,4,4,2,112,ja
+14,0x76,Patrol report,Patrol report,2C 3D 50 4E 4B 48 00 4E 41 4C 4B 4E 50,0x8009EA92,5,5,3,144,ja
+15,0x77,Watchman's diary,Watchman^s diary,33 3D 50 3F 44 49 3D 4A 3A 4F 00 40 45 3D 4E 55,0x8009EAA0,10,10,8,176,ja
+16,0x78,Chief's diary,Chief^s diary,1F 44 45 41 42 3A 4F 00 40 45 3D 4E 55,0x8009EAB1,8,8,6,176,ja
+17,0x79,Sewer manager diary,Sewer manager diary,2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 40 45 3D 4E 55,0x8009EABF,11,11,9,176,ja
+18,0x7A,Sewer manager fax,Sewer manager fax,2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 42 3D 54,0x8009EAD3,7,7,5,176,ja
+19,0x7B,Film D,Film D,22 45 48 49 00 20,0x8009EAE5,3,3,1,112,ja
+20,0x7C,Vaccine synthesis,Vaccine synthesis,32 3D 3F 3F 45 4A 41 00 4F 55 4A 50 44 41 4F 45 4F,0x8009EAEC,8,8,6,176,ja
+21,0x7D,Lab security manual,Lab security manual,28 3D 3E 00 4F 41 3F 51 4E 45 50 55 00 49 3D 4A 51 3D 48,0x8009EAFE,7,7,5,176,ja
+22,0x7E,P_epsilon report,P_epsilon report,2C 3B 41 4C 4F 45 48 4B 4A 00 4E 41 4C 4B 4E 50,0x8009EB12,6,6,4,176,ja
+23,0x7F,Rookie files,Rookie files,2E 4B 4B 47 45 41 00 42 45 48 41 4F,0x8009EB23,17,17,2,176,ja
+24,0x80,Rookie files,Rookie files,2E 4B 4B 47 45 41 00 42 45 48 41 4F,0x8009EB30,17,17,2,176,ja

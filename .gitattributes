@@ -14,3 +14,7 @@ synchro/** -text
 # Gradle-Wrapper-Skript des Android-Baus hat keine .sh-Endung; core.autocrlf=true wuerde es
 # beim Auschecken auf CRLF ziehen, und "bash ./gradlew" stirbt dann am \r. Immer LF.
 re15_port/platform/android/gradlew text eol=lf
+# RE2-Dokument-Extrakte: geschnittene Original-TIMs und PNGs NIE normalisieren.
+# core.autocrlf ist hier true; heute retten nur Gits NUL-Heuristik und die TIM-Kopfbytes.
+# Die Text-Beigaben (csv/txt/html/obj) werden bereits mit LF geschrieben, -text haelt sie so.
+extracted_re2_dokumente/** -text

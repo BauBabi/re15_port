@@ -1,0 +1,78 @@
+RE2 (Retail, Leon) — Dokument 16: Chief's diary
+Item-Id 0x78   Dokument-Index 16
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE16_*.png   (Rohdaten: hintergruende/seiten_roh/FILE16_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE16_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+CHIEF'S DIARY
+
+=== S01 ===
+September 23rd
+It's all over. Those imbeciles
+from Umbrella have finally
+done it... Despite all their
+promises, they've ruined my
+town. Soon the streets will
+be infested with zombies. I'm
+beginning to think that I may
+even be infected myself.
+I'll kill everyone in town if
+this turns out to be true!!!
+
+=== S02 ===
+September 24th
+I was successful in spreading
+confusion among the police as
+planned. I've made sure that
+no one from the outside
+will come to help.
+With the delays in police
+actions, no one will have the
+chance to escape my city alive.
+I've seen to it personally
+that all escape routes from
+
+=== S03 ===
+inside the precinct have been
+cut off as well.
+There are several survivors
+still attempting to escape
+through the lower levels, but
+I'll make sure no one gets
+out.
+
+=== S04 ===
+September 26th
+I've had a change of heart
+about the remaining survivors
+inside the precinct. I've
+decided to hunt them down
+myself.
+I shot Ed in the back through
+the heart less than an hour
+ago. I watched him writhe
+in pain upon the floor in a
+pool of his own blood. The
+
+=== S05 ===
+expression on his face was
+positively exquisite. He died
+with his eyes wide open,
+staring up at me. It was
+beautiful.
+I wonder if the mayor's
+daughter is still alive?
+I let her escape so I could
+enjoy hunting her down
+later...
+I'm going to enjoy my new
+
+=== S06 ===
+trophy. Yes, frozen forever
+in the pose I choose
+to give her.

@@ -1,0 +1,5 @@
+Dokument 20   Item-Id 0x7C
+Name (Bank EN @0x8009EAEC): Vaccine synthesis
+  Rohbytes: 32 3D 3F 3F 45 4A 41 00 4F 55 4A 50 44 41 4F 45 4F F7
+Name (Bank 2 @0x8009E398, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: 23 D2 AE B7 D4 20 21 32 25 28 EF 69 EF 9A EF 96 EF 97 F7

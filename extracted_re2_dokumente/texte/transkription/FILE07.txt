@@ -1,0 +1,65 @@
+RE2 (Retail, Leon) — Dokument 7: Secretary's diary A
+Item-Id 0x6F   Dokument-Index 7
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE07_*.png   (Rohdaten: hintergruende/seiten_roh/FILE07_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE07_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SECRETARY'S DIARY A
+
+=== S01 ===
+April 6th
+I accidentally moved one of
+the stone statues on the
+second floor when I leaned
+against it. When the chief
+found out about it, he was
+furious. I swear the guy
+nearly bit my head off,
+screaming at me never to
+
+=== S02 ===
+touch the statue again.
+If it's so important,
+then maybe he shouldn't
+have put it out in the open
+like that...
+
+=== S03 ===
+April 7th
+I heard that all the art
+pieces from the chief's
+collection are rare items,
+literally worth hundreds of
+thousands of dollars.
+I don't know which is the
+bigger mystery: where he
+finds those tacky things,
+
+=== S04 ===
+or where he's getting the
+money to pay for them.
+
+=== S05 ===
+May 10th
+I wasn't surprised to see
+the chief come in today
+with yet another large
+picture frame in his hands.
+This time it was a really
+disturbing painting depicting
+a nude person being hanged.
+I was appalled by the
+
+=== S06 ===
+expression on the chief's
+face as he leered at that
+painting.
+ Why anyone would consider
+something like that to be
+a work of art is beyond my
+comprehension...

@@ -1,0 +1,61 @@
+RE2 (Retail, Leon) — Dokument 22: P_epsilon report
+Item-Id 0x7E   Dokument-Index 22
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE22_*.png   (Rohdaten: hintergruende/seiten_roh/FILE22_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE22_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+INVESTIGATIVE REPORT ON
+     P-EPSILON GAS
+
+=== S01 ===
+ -This report demands
+  immediate attention-
+
+The P-epsilon gas has been
+proven capable of
+incapacitating all known
+B.O.W.s (Bio Organic Weapon).
+As such, it has been designated
+for emergency usage in the
+event of a B.O.W. escape.
+Reports based upon data
+
+=== S02 ===
+collected during prior incidents
+indicate the potential for
+negative side effects.
+
+The P-epsilon gas has been
+proven to weaken B.O.W.s'
+cellular functions. However,
+prolonged or repeated
+exposures will result in the
+creation of adaptive antibodies
+to the agent.
+
+=== S03 ===
+Furthermore, some species
+have been observed to absorb
+the P-epsilon gas as a source
+of nutrition and use the
+toxins extracted against
+anything perceived as a threat.
+
+Use of the P-epsilon gas should
+be severely limited to extreme
+cases only.
+
+=== S04 ===
+We strongly request the
+authority to re-evaluate the
+P-epsilon gas deployment
+system. We would like this
+re-evaluation to take place
+immediately.
+
+   2nd R&D Room/Security Team

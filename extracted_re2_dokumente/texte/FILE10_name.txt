@@ -1,0 +1,5 @@
+Dokument 10   Item-Id 0x72
+Name (Bank EN @0x8009EA6B): User registration
+  Rohbytes: 31 4F 41 4E 00 4E 41 43 45 4F 50 4E 3D 50 45 4B 4A F7
+Name (Bank 2 @0x8009E32E, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: CB 3B DA 3B EF 95 EF 39 EF 96 EF 97 F7

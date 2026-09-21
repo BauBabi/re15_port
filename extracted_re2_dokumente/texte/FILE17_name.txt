@@ -1,0 +1,5 @@
+Dokument 17   Item-Id 0x79
+Name (Bank EN @0x8009EABF): Sewer manager diary
+  Rohbytes: 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 40 45 3D 4E 55 F7
+Name (Bank 2 @0x8009E371, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EE 20 EF 7D EF 47 EF 3D EF 9D 6F EF 5F EF 89 F7

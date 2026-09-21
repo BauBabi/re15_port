@@ -1,0 +1,5 @@
+Dokument 7   Item-Id 0x6F
+Name (Bank EN @0x8009EA30): Secretary^s diary A
+  Rohbytes: 2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1D F7
+Name (Bank 2 @0x8009E30C, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 8D EF 00 6F EF 5F EF 45 1D F7

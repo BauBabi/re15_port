@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>RE2-Dokumente</title>
+<style>
+:root{--bg:#f7f5ef;--fg:#1d1d1f;--card:#fff;--line:#d8d3c6;--muted:#6b6355;--acc:#8a2b2b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#14151a;--fg:#e9e6df;--card:#1c1e25;--line:#31343d;--muted:#9a958a;--acc:#e0736f}}
+:root[data-theme="dark"]{--bg:#14151a;--fg:#e9e6df;--card:#1c1e25;--line:#31343d;
+ --muted:#9a958a;--acc:#e0736f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+ font:15px/1.55 "Iowan Old Style",Georgia,serif;padding:0 16px 64px}
+header,main{max-width:1180px;margin:0 auto}
+h1{font-size:1.9rem;margin:2rem 0 .3rem}
+h2{font-size:1.15rem;margin:0}
+.sub{color:var(--muted);margin:0 0 1.2rem}
+.zahlen{display:flex;flex-wrap:wrap;gap:10px;margin:1.2rem 0 1.6rem}
+.zahlen div{background:var(--card);border:1px solid var(--line);border-radius:10px;
+ padding:8px 14px}
+.zahlen b{display:block;font-size:1.5rem;font-family:ui-monospace,monospace}
+.zahlen span{color:var(--muted);font-size:.82rem}
+.hinweis{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);
+ border-radius:8px;padding:12px 16px;margin:0 0 1.6rem}
+.hinweis p{margin:.4rem 0}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 2rem;padding:0;list-style:none}
+.toc a{display:block;background:var(--card);border:1px solid var(--line);border-radius:6px;
+ padding:4px 9px;text-decoration:none;color:var(--fg);font-size:.86rem}
+.toc a:hover{border-color:var(--acc)}
+.dok{background:var(--card);border:1px solid var(--line);border-radius:12px;
+ padding:16px;margin:0 0 20px;scroll-margin-top:16px}
+.kopf{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;
+ border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px}
+.nr{font-family:ui-monospace,monospace;color:var(--acc);font-weight:700}
+.meta{color:var(--muted);font-size:.8rem;font-family:ui-monospace,monospace}
+.spalten{display:grid;grid-template-columns:150px 1fr;gap:16px}
+@media(max-width:820px){.spalten{grid-template-columns:1fr}}
+.bild img{width:100%;max-width:140px;image-rendering:pixelated;background:#0d0e12;
+ border:1px solid var(--line);border-radius:6px}
+.bild figcaption{color:var(--muted);font-size:.76rem;margin-top:4px}
+.seiten{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.seiten figure{margin:0}
+.seiten img{width:256px;max-width:100%;image-rendering:pixelated;
+ border:1px solid var(--line);border-radius:4px;display:block}
+.seiten figcaption{color:var(--muted);font-size:.74rem;font-family:ui-monospace,monospace}
+details{margin-top:6px}
+summary{cursor:pointer;color:var(--acc);font-size:.88rem}
+pre{white-space:pre-wrap;font:12.5px/1.5 ui-monospace,monospace;background:var(--bg);
+ border:1px solid var(--line);border-radius:6px;padding:10px;overflow-x:auto;margin:6px 0 0}
+a.roh{font-size:.74rem;font-family:ui-monospace,monospace;color:var(--muted)}
+</style>
+<header>
+<h1>Resident&nbsp;Evil&nbsp;2 &mdash; alle 25 Dokumente</h1>
+<p class="sub">Unveraendert aus <code>info/re2leon/</code> extrahiert, zur Auswahl als
+Vorlage fuer die RE1.5-Dokumente.</p>
+<div class="zahlen">
+<div><b>25</b><span>Dokumente (Soll = Ist)</span></div>
+<div><b>191</b><span>Seitenbilder 4bpp</span></div>
+<div><b>25</b><span>Anschauungsbilder 8bpp</span></div>
+<div><b>216</b><span>TIMs gesamt</span></div>
+<div><b>166</b><span>davon verschieden</span></div>
+</div>
+<div class="hinweis">
+<p><b>Aufbau eines Dokuments.</b> Links das <b>Anschauungsbild</b> (8bpp, 128&nbsp;px breit) &mdash;
+der vorgerenderte Gegenstand, bei den Film-Dokumenten das Foto selbst. Rechts die
+<b>Textseiten</b> (4bpp, 256&nbsp;px breit). Im VRAM liegen beide in einem Block von 256
+Zeilen: die Textseite in Zeile 0&hellip;H&minus;1, das Anschauungsbild in Zeile H&hellip;255.</p>
+<p><b>Der Text ist ein Bild.</b> RE2 speichert den Dokumenttext auf der PSX nicht als
+Zeichen, sondern gerastert &mdash; die 16-Farben-Palette einer Seite hat Eintrag&nbsp;0 =
+<code>0x0000</code> (durchsichtig) und Eintrag&nbsp;9 = <code>0x7FFF</code> (weiss). Als echte
+Zeichenkette existiert nur der <b>Name</b>. Die aufklappbaren Texte unten sind daher eine
+<b>von Hand abgelesene Transkription</b>, kein Originalbyte.</p>
+<p><b>Ansichtshilfe.</b> Die gezeigten Seiten-PNGs haben einen neutralen dunklen Grund
+untergelegt, weil die Originale durchsichtig sind. Byte-true liegen sie in
+<code>hintergruende/seiten_roh/</code> (TIM) und <code>seiten_png/</code> (RGBA).</p>
+<p><b>TITEL und S00 sind dasselbe Bild</b> &mdash; in allen 25 Dokumenten byte-identisch.
+Das Titelbild liegt einmal im Titel-Slot und einmal als Seite&nbsp;0. Beide sind unten
+gezeigt, damit nichts unterschlagen wirkt.</p>
+<p><b>Zum Namen.</b> Der Balken zeigt den Namen doppelt: als <i>Anzeige</i> und als
+<i>strenge Dekodierung</i> <code>chr(byte+0x24)</code> samt Rohbytes. Wo die strenge
+Dekodierung <code>^</code> ergibt, zeichnet der RE2-Zeichensatz einen Apostroph &mdash;
+gemessen an den Seitenbildern, die dasselbe Wort mit <code>'</code> zeigen
+(&bdquo;CHRIS'S&nbsp;DIARY&ldquo;). Sonst ist nichts ersetzt.</p>
+</div>
+
+<ul class="toc">
+<li><a href="#d0">0&nbsp;CHRIS&#x27;s diary</a></li>
+<li><a href="#d1">1&nbsp;Mail to Chris</a></li>
+<li><a href="#d2">2&nbsp;Memo to LEON</a></li>
+<li><a href="#d3">3&nbsp;Police memorandum</a></li>
+<li><a href="#d4">4&nbsp;Operation report 1</a></li>
+<li><a href="#d5">5&nbsp;Mail to the chief</a></li>
+<li><a href="#d6">6&nbsp;Mail to the chief</a></li>
+<li><a href="#d7">7&nbsp;Secretary&#x27;s diary A</a></li>
+<li><a href="#d8">8&nbsp;Secretary&#x27;s diary B</a></li>
+<li><a href="#d9">9&nbsp;Operation report 2</a></li>
+<li><a href="#d10">10&nbsp;User registration</a></li>
+<li><a href="#d11">11&nbsp;Film A</a></li>
+<li><a href="#d12">12&nbsp;Film B</a></li>
+<li><a href="#d13">13&nbsp;Film C</a></li>
+<li><a href="#d14">14&nbsp;Patrol report</a></li>
+<li><a href="#d15">15&nbsp;Watchman&#x27;s diary</a></li>
+<li><a href="#d16">16&nbsp;Chief&#x27;s diary</a></li>
+<li><a href="#d17">17&nbsp;Sewer manager diary</a></li>
+<li><a href="#d18">18&nbsp;Sewer manager fax</a></li>
+<li><a href="#d19">19&nbsp;Film D</a></li>
+<li><a href="#d20">20&nbsp;Vaccine synthesis</a></li>
+<li><a href="#d21">21&nbsp;Lab security manual</a></li>
+<li><a href="#d22">22&nbsp;P_epsilon report</a></li>
+<li><a href="#d23">23&nbsp;Rookie files</a></li>
+<li><a href="#d24">24&nbsp;Rookie files</a></li>
+</ul></header>
+<main>
+<section class="dok" id="d0">
+<div class="kopf"><span class="nr">00</span><h2>CHRIS&#x27;s diary</h2><span class="meta">Item-Id 0x68 &middot; streng: CHRIS^s diary &middot; @0x8009E9BE 1F 24 2E 25 2F 3A 4F 00 40 45 3D 4E 55</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 144</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE00_title_paper.png" alt="Anschauungsbild Dokument 0"><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_roh/FILE00_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE00_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE00_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE00_p05_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 0: CHRIS&#x27;s diary
+Item-Id 0x68   Dokument-Index 0
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE00_*.png   (Rohdaten: hintergruende/seiten_roh/FILE00_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE00_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+CHRIS&#x27;S DIARY
+
+=== S01 ===
+August 8th
+I talked to the chief today
+once again, but he refused to
+listen to me. I know for
+certain that Umbrella
+conducted T-virus research
+in that mansion.
+Anyone infected turns into
+a zombie.
+
+=== S02 ===
+But the entire mansion went up
+in that explosion; along with
+any incriminating evidence.
+Since Umbrella employs so many
+people in town, no one is
+willing to talk about
+the incident.
+It looks like I&#x27;m running out
+of options.
+
+=== S03 ===
+August 17th
+We&#x27;ve been receiving a lot of
+local reports about strange
+monsters appearing at
+random throughout the city.
+This must be the work
+of Umbrella.
+
+=== S04 ===
+August 24th
+With the help of Jill and
+Barry, I finally obtained
+information vital to this case.
+Umbrella has begun research
+on the new G-virus, a variation
+of the original T-virus.
+Haven&#x27;t they done enough
+damage already?!
+
+=== S05 ===
+We talked it over, and have
+decided to fly to the main
+Umbrella HQ in Europe. I won&#x27;t
+tell my sister about this trip
+because doing so could put her
+in danger.
+Please forgive me Claire.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d1">
+<div class="kopf"><span class="nr">01</span><h2>Mail to Chris</h2><span class="meta">Item-Id 0x69 &middot; streng: Mail to Chris &middot; @0x8009E9CC 29 3D 45 48 00 50 4B 00 1F 44 4E 45 4F</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE01_title_paper.png" alt="Anschauungsbild Dokument 1"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE01_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE01_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE01_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE01_p05_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 1: Mail to Chris
+Item-Id 0x69   Dokument-Index 1
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE01_*.png   (Rohdaten: hintergruende/seiten_roh/FILE01_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE01_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FEDERAL POLICE DEPT.
+-INTERNAL INVESTIGATION
+REPORT
+
+=== S01 ===
+Mr. Chris Redfield
+Raccoon City Police Dept.
+S.T.A.R.S. division
+
+As per your request, we
+have conducted our
+internal investigation and
+discovered the following
+information:
+
+=== S02 ===
+1) Regarding the G-virus
+currently under development
+by Umbrella Inc.
+
+So far it is unconfirmed that
+the G-virus even exists.
+We&#x27;re continuing with our
+investigation.
+
+=== S03 ===
+2) Regarding Mr. Brian Irons,
+Chief of the Raccoon City
+Police Dept.
+
+Mr.Irons has allegedly
+received a large sum of funds
+in bribes from Umbrella Inc.
+over the last five years.
+He was apparently involved in
+the cover up of the mansion
+lab case along with several
+
+=== S04 ===
+other incidents in which
+Umbrella appears to have
+direct involvement.
+Mr.Irons had been arrested
+under suspicion of rape on
+two separate counts during
+his years as a university
+student. He underwent
+psychiatric evaluation as a
+result of the charges but was
+released due to circumstantial
+
+=== S05 ===
+evidence as well as his
+phenomenal academic standing.
+
+As such, extreme caution is
+advised when dealing with him.
+
+        Jack Hamilton,
+        Section Chief
+        Internal Investigations
+        United States Federal
+        Police Department
+</pre></details>
+</div></div></section>
+<section class="dok" id="d2">
+<div class="kopf"><span class="nr">02</span><h2>Memo to LEON</h2><span class="meta">Item-Id 0x6A &middot; streng: Memo to LEON &middot; @0x8009E9DA 29 41 49 4B 00 50 4B 00 28 21 2B 2A</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE02_title_paper.png" alt="Anschauungsbild Dokument 2"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE02_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE02_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE02_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE02_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE02_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE02_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE02_p01_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 2: Memo to LEON
+Item-Id 0x6A   Dokument-Index 2
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE02_*.png   (Rohdaten: hintergruende/seiten_roh/FILE02_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE02_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+MEMO TO LEON
+
+=== S01 ===
+To Leon S. Kennedy,
+Congratulations on your
+assignment to the Raccoon City
+police department.
+We all look forward to having
+you as a part of our team and
+promise to take good care of
+you.
+Welcome aboard!
+        From all the guys
+          at the R.P.D.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d3">
+<div class="kopf"><span class="nr">03</span><h2>Police memorandum</h2><span class="meta">Item-Id 0x6B &middot; streng: Police memorandum &middot; @0x8009E9E7 2C 4B 48 45 3F 41 00 49 41 49 4B 4E 3D 4A 40 51 49</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE03_title_paper.png" alt="Anschauungsbild Dokument 3"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE03_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE03_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE03_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE03_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE03_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE03_p02_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 3: Police memorandum
+Item-Id 0x6B   Dokument-Index 3
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE03_*.png   (Rohdaten: hintergruende/seiten_roh/FILE03_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE03_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+POLICE MEMORANDUM
+
+=== S01 ===
+8/23/1998
+This letter is just to inform
+everyone about the recent
+movement of equipment that
+has happened during the
+precinct&#x27;s rearrangement.
+
+
+The safe with four digit lock
+has been moved from the
+S.T.A.R.S. office on the second
+floor, to the eastern office
+
+=== S02 ===
+on the first floor.
+
+          &quot;2236&quot;
+
+   Raccoon Police Liaison Dept.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d4">
+<div class="kopf"><span class="nr">04</span><h2>Operation report 1</h2><span class="meta">Item-Id 0x6C &middot; streng: Operation report 1 &middot; @0x8009E9F9 2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0D</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE04_title_paper.png" alt="Anschauungsbild Dokument 4"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE04_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE04_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE04_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE04_p09_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 4: Operation report 1
+Item-Id 0x6C   Dokument-Index 4
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE04_*.png   (Rohdaten: hintergruende/seiten_roh/FILE04_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE04_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+OPERATION REPORT
+
+=== S01 ===
+         -Operation Report-
+               September 26th
+The Raccoon Police Dept. was
+unexpectedly attacked by
+zombies. Many have been
+injured. Even more were killed.
+During the attack, our
+communications equipment was
+destroyed and we no longer
+have contact with the outside.
+
+=== S02 ===
+We have decided to carry out
+an operation with the intent
+of rescuing any possible
+survivors as well as to
+prevent this disaster from
+spreading beyond Raccoon City.
+The details of the operation
+are as follows:
+
+=== S03 ===
+Security of armaments and
+ammunition.
+
+Chief Irons has voiced concern
+regarding the issue of
+terrorism due to a series of
+recent unresolved incidents.
+On the very day before the
+zombies&#x27; attack, he made the
+decision to relocate all
+weapons to scattered
+
+=== S04 ===
+intervals throughout the
+building as a temporary
+measure to prevent their
+possible seizure.
+Unfortunately, this decision
+has made it extremely
+difficult for us to locate all
+ammunition caches.
+It has become our top priority
+to recover these scattered
+munitions.
+
+=== S05 ===
+To unlock the weapon storage.
+
+As stated earlier, it will be
+extremely difficult to
+secure all the ammunition.
+However, a considerable supply
+still remains in the
+underground weapon storage.
+Unfortunately, the person in
+charge of the card key used to
+access the weapon storage is
+
+=== S06 ===
+missing and we have been
+unable to locate the key.
+One of the breakers went
+down during the battle and the
+electronic locks are not
+functioning in certain areas.
+It has become a top priority to
+restore the power in the power
+room and secure those locks.
+
+     Recorder: David Ford
+
+=== S07 ===
+         -Operation Report-
+               September 27th
+1:00PM. The west barricade
+has been broken through and
+another exchange ensued.
+We sheltered the injured in
+the confiscation room on the
+first floor temporarily.
+Twelve more people were
+injured in the battle.
+     Recorder: David Ford
+
+=== S08 ===
+      -Additional Report-
+Three additional people were
+killed following the sudden
+appearance of an as of yet
+unknown creature.
+This creature is identified
+by missing patches of skin
+and razor-like claws.
+However, its most
+distinguishing characteristic
+is its lance-like tongue,
+
+=== S09 ===
+capable of piercing a human
+torso in an instant.
+Their numbers as well as
+their location remains
+unknown. We have tentatively
+named this creature the
+&quot;licker&quot; and are currently
+in the process of developing
+countermeasures to deal with
+this new threat.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d5">
+<div class="kopf"><span class="nr">05</span><h2>Mail to the chief</h2><span class="meta">Item-Id 0x6D &middot; streng: Mail to the chief &middot; @0x8009EA0C 29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE05_title_paper.png" alt="Anschauungsbild Dokument 5"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE05_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE05_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE05_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE05_p09_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 5: Mail to the chief
+Item-Id 0x6D   Dokument-Index 5
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE05_*.png   (Rohdaten: hintergruende/seiten_roh/FILE05_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE05_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+MAIL TO THE CHIEF
+
+=== S01 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have lost the mansion lab
+facility due to the actions
+of the renegade operative,
+Albert Wesker.
+Fortunately, his interference
+will have no lasting effects
+upon our continued virus
+research.
+
+=== S02 ===
+Our only present concern is
+the presence of the remaining
+S.T.A.R.S. members: Redfield,
+Valentine, Burton, Chambers
+and Vickers.
+If it comes to light that the
+S.T.A.R.S. have any evidence
+as to the activities of our
+research, dispose of them in
+such a manner that would
+appear to be purely accidental.
+
+=== S03 ===
+Continue to monitor their
+progress and make certain
+their knowledge does not go
+public.
+Annette will continue to be
+your contact throughout this
+affair.
+
+              William Birkin
+
+=== S04 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+I have deposited the amount of
+US $10,000 to the account for
+your services this term as per
+our agreement.
+The development of the G-virus
+scheduled to replace the
+T-virus, is near completion.
+Once completed, I am certain
+
+=== S05 ===
+that I will be appointed to
+be a member of the executive
+board for Umbrella Inc.
+It is imperative that we
+proceed with extreme caution.
+Redfield and the remaining
+S.T.A.R.S. members are still
+attempting to uncover
+information on the project.
+Continue to monitor their
+activities and block all
+
+=== S06 ===
+attempts to investigate the
+underground research
+facilities.
+
+              William Birkin
+
+=== S07 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have a problem. I have
+received information informing
+me that Umbrella HQ has sent
+spies to recover my research
+on the G-virus. There are an
+unknown number of agents
+involved. They must not be
+allowed to take this project
+
+=== S08 ===
+away from me as it represents
+my entire life&#x27;s work.
+Search the city thoroughly
+for any suspicious persons.
+Detain any such individuals by
+whatever means deemed
+necessary and contact me
+immediately through Annette.
+With these precautions, any
+possible threat should be
+eliminated.
+
+=== S09 ===
+I will not allow anyone to
+steal my work on the G-virus.
+Not even Umbrella...
+
+              William Birkin
+</pre></details>
+</div></div></section>
+<section class="dok" id="d6">
+<div class="kopf"><span class="nr">06</span><h2>Mail to the chief</h2><span class="meta">Item-Id 0x6E &middot; streng: Mail to the chief &middot; @0x8009EA1E 29 3D 45 48 00 50 4B 00 50 44 41 00 3F 44 45 41 42</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE06_title_paper.png" alt="Anschauungsbild Dokument 6"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE06_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE06_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE06_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE06_p09_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 6: Mail to the chief
+Item-Id 0x6E   Dokument-Index 6
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE06_*.png   (Rohdaten: hintergruende/seiten_roh/FILE06_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE06_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+MAIL TO THE CHIEF
+
+=== S01 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have lost the mansion lab
+facility due to the actions
+of the renegade operative,
+Albert Wesker.
+Fortunately, his interference
+will have no lasting effects
+upon our continued virus
+research.
+
+=== S02 ===
+Our only present concern is
+the presence of the remaining
+S.T.A.R.S. members: Redfield,
+Valentine, Burton, Chambers
+and Vickers.
+If it comes to light that the
+S.T.A.R.S. have any evidence
+as to the activities of our
+research, dispose of them in
+such a manner that would
+appear to be purely accidental.
+
+=== S03 ===
+Continue to monitor their
+progress and make certain
+their knowledge does not go
+public.
+Annette will continue to be
+your contact throughout this
+affair.
+
+              William Birkin
+
+=== S04 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+I have deposited the amount of
+US $10,000 to the account for
+your services this term as per
+our agreement.
+The development of the G-virus
+scheduled to replace the
+T-virus, is near completion.
+Once completed, I am certain
+
+=== S05 ===
+that I will be appointed to
+be a member of the executive
+board for Umbrella Inc.
+It is imperative that we
+proceed with extreme caution.
+Redfield and the remaining
+S.T.A.R.S. members are still
+attempting to uncover
+information on the project.
+Continue to monitor their
+activities and block all
+
+=== S06 ===
+attempts to investigate the
+underground research
+facilities.
+
+              William Birkin
+
+=== S07 ===
+To:Mr. Brian Irons, Chief of
+the Raccoon City Police Dept.
+
+We have a problem. I have
+received information informing
+me that Umbrella HQ has sent
+spies to recover my research
+on the G-virus. There are an
+unknown number of agents
+involved. They must not be
+allowed to take this project
+
+=== S08 ===
+away from me as it represents
+my entire life&#x27;s work.
+Search the city thoroughly
+for any suspicious persons.
+Detain any such individuals by
+whatever means deemed
+necessary and contact me
+immediately through Annette.
+With these precautions, any
+possible threat should be
+eliminated.
+
+=== S09 ===
+I will not allow anyone to
+steal my work on the G-virus.
+Not even Umbrella...
+
+              William Birkin
+</pre></details>
+</div></div></section>
+<section class="dok" id="d7">
+<div class="kopf"><span class="nr">07</span><h2>Secretary&#x27;s diary A</h2><span class="meta">Item-Id 0x6F &middot; streng: Secretary^s diary A &middot; @0x8009EA30 2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1D</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 144</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE07_title_paper.png" alt="Anschauungsbild Dokument 7"><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_roh/FILE07_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE07_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE07_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE07_p06_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 7: Secretary&#x27;s diary A
+Item-Id 0x6F   Dokument-Index 7
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE07_*.png   (Rohdaten: hintergruende/seiten_roh/FILE07_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE07_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SECRETARY&#x27;S DIARY A
+
+=== S01 ===
+April 6th
+I accidentally moved one of
+the stone statues on the
+second floor when I leaned
+against it. When the chief
+found out about it, he was
+furious. I swear the guy
+nearly bit my head off,
+screaming at me never to
+
+=== S02 ===
+touch the statue again.
+If it&#x27;s so important,
+then maybe he shouldn&#x27;t
+have put it out in the open
+like that...
+
+=== S03 ===
+April 7th
+I heard that all the art
+pieces from the chief&#x27;s
+collection are rare items,
+literally worth hundreds of
+thousands of dollars.
+I don&#x27;t know which is the
+bigger mystery: where he
+finds those tacky things,
+
+=== S04 ===
+or where he&#x27;s getting the
+money to pay for them.
+
+=== S05 ===
+May 10th
+I wasn&#x27;t surprised to see
+the chief come in today
+with yet another large
+picture frame in his hands.
+This time it was a really
+disturbing painting depicting
+a nude person being hanged.
+I was appalled by the
+
+=== S06 ===
+expression on the chief&#x27;s
+face as he leered at that
+painting.
+ Why anyone would consider
+something like that to be
+a work of art is beyond my
+comprehension...
+</pre></details>
+</div></div></section>
+<section class="dok" id="d8">
+<div class="kopf"><span class="nr">08</span><h2>Secretary&#x27;s diary B</h2><span class="meta">Item-Id 0x70 &middot; streng: Secretary^s diary B &middot; @0x8009EA44 2F 41 3F 4E 41 50 3D 4E 55 3A 4F 00 40 45 3D 4E 55 00 1E</span><span class="meta">6 Slots &middot; 6 Textseiten &middot; Seitenhoehe 144</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE08_title_paper.png" alt="Anschauungsbild Dokument 8"><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_roh/FILE08_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE08_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE08_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE08_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE08_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE08_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE08_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE08_p04_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 8: Secretary&#x27;s diary B
+Item-Id 0x70   Dokument-Index 8
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE08_*.png   (Rohdaten: hintergruende/seiten_roh/FILE08_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE08_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SECRETARY&#x27;S DIARY B
+
+=== S01 ===
+June 8th
+As I was straightening up
+the chief&#x27;s room, he burst
+through the door with a
+furious look on his face.
+It&#x27;s only been 2 months since
+I&#x27;ve started working here,
+but that&#x27;s the second time
+I&#x27;ve seen him like this.
+
+=== S02 ===
+The last time was when I
+bumped into that statue, only
+this time he looked even more
+agitated than ever. I
+seriously thought for a
+moment that he was going to
+hurt me.
+
+=== S03 ===
+June 15th
+I finally discovered what the
+chief has been hiding all
+along... If he finds out that
+I know, my life will be in
+serious danger.
+It&#x27;s getting late already.
+I&#x27;m just going to have to take
+this one day at a time...
+
+=== S04 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+</pre></details>
+</div></div></section>
+<section class="dok" id="d9">
+<div class="kopf"><span class="nr">09</span><h2>Operation report 2</h2><span class="meta">Item-Id 0x71 &middot; streng: Operation report 2 &middot; @0x8009EA58 2B 4C 41 4E 3D 50 45 4B 4A 00 4E 41 4C 4B 4E 50 00 0E</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE09_title_paper.png" alt="Anschauungsbild Dokument 9"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE09_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE09_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE09_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE09_p06_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 9: Operation report 2
+Item-Id 0x71   Dokument-Index 9
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE09_*.png   (Rohdaten: hintergruende/seiten_roh/FILE09_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE09_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+OPERATION REPORT 2
+
+=== S01 ===
+         -Operation Report-
+               September 28th
+Early Morning 2:30AM. Zombies
+overran the operation room
+and another battle broke out.
+We lost four more people,
+including David.
+We&#x27;re down to four people,
+including myself. We failed to
+secure the weapons cache and
+hope for our survival
+
+=== S02 ===
+continues to diminish.
+We won&#x27;t last much longer...
+We agreed upon a plan to
+escape through the sewer.
+There&#x27;s a path leading from
+the precinct underground to
+the sewage disposal plant.
+We should be able to access
+the sewers through there.
+The only drawback is that
+there is no guarantee the
+
+=== S03 ===
+sewage disposal plant is free
+of any possible dangers.
+We know our chances in the
+sewers are slim, but anything
+is better than simply waiting
+here to die.
+In order to buy more time, we
+locked the only door leading
+to the underground, which is
+located in the eastern office.
+We left the key behind in the
+
+=== S04 ===
+western office since it&#x27;s
+unlikely that any of those
+creatures have the
+intelligence to find it and
+unlock the door.
+
+I pray that this operation
+report will be helpful to
+whoever may find it.
+
+     Recorder: Elliot Edward
+
+=== S05 ===
+In order to buy more time, we
+locked the only door leading
+to the underground, which is
+located in the eastern office.
+We left the key behind in the
+western office since it&#x27;s
+unlikely that any of those
+creatures have the
+intelligence to find it and
+unlock the door.
+
+=== S06 ===
+I pray that this operation
+report will be helpful to
+whoever may find it.
+
+     Recorder: David Ford
+</pre></details>
+</div></div></section>
+<section class="dok" id="d10">
+<div class="kopf"><span class="nr">10</span><h2>User registration</h2><span class="meta">Item-Id 0x72 &middot; streng: User registration &middot; @0x8009EA6B 31 4F 41 4E 00 4E 41 43 45 4F 50 4E 3D 50 45 4B 4A</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 128</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE10_title_paper.png" alt="Anschauungsbild Dokument 10"><figcaption>Anschauungsbild 128&times;128<br><a class="roh" href="hintergruende/bilder_roh/FILE10_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE10_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE10_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE10_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE10_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE10_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE10_p01_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 10: User registration
+Item-Id 0x72   Dokument-Index 10
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE10_*.png   (Rohdaten: hintergruende/seiten_roh/FILE10_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE10_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+USER REGISTRATION
+
+=== S01 ===
+Temporary User Registration
+for the Culture Experiment
+Room.
+
+User Name:&quot;GUEST&quot;
+Password:None
+
+Valid for 24 hours.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d11">
+<div class="kopf"><span class="nr">11</span><h2>Film A</h2><span class="meta">Item-Id 0x73 &middot; streng: Film A &middot; @0x8009EA7D 22 45 48 49 00 1D</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 112</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE11_title_paper.png" alt="Anschauungsbild Dokument 11"><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_roh/FILE11_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE11_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE11_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE11_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE11_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE11_p02_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 11: Film A
+Item-Id 0x73   Dokument-Index 11
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE11_*.png   (Rohdaten: hintergruende/seiten_roh/FILE11_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE11_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FILM A
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+
+=== S02 ===
+Code G Human Body Experiment
+              9/15 15:24
+</pre></details>
+</div></div></section>
+<section class="dok" id="d12">
+<div class="kopf"><span class="nr">12</span><h2>Film B</h2><span class="meta">Item-Id 0x74 &middot; streng: Film B &middot; @0x8009EA84 22 45 48 49 00 1E</span><span class="meta">5 Slots &middot; 5 Textseiten &middot; Seitenhoehe 112</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE12_title_paper.png" alt="Anschauungsbild Dokument 12"><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_roh/FILE12_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE12_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE12_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE12_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE12_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE12_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE12_p03_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 12: Film B
+Item-Id 0x74   Dokument-Index 12
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE12_*.png   (Rohdaten: hintergruende/seiten_roh/FILE12_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE12_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FILM B
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+
+=== S02 ===
+Pictured in front of the
+Arukas tailor.
+Regressed into a zombie
+within two hours.
+
+Subject repeatedly
+complained about severe
+
+=== S03 ===
+agitation of the
+epidermis in addition to
+feelings of nausea.
+This happened up to the moment
+he lost consciousness.
+
+     Picture by R.Lambert
+</pre></details>
+</div></div></section>
+<section class="dok" id="d13">
+<div class="kopf"><span class="nr">13</span><h2>Film C</h2><span class="meta">Item-Id 0x75 &middot; streng: Film C &middot; @0x8009EA8B 22 45 48 49 00 1F</span><span class="meta">4 Slots &middot; 4 Textseiten &middot; Seitenhoehe 112</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE13_title_paper.png" alt="Anschauungsbild Dokument 13"><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_roh/FILE13_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE13_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE13_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE13_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE13_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE13_p02_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 13: Film C
+Item-Id 0x75   Dokument-Index 13
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE13_*.png   (Rohdaten: hintergruende/seiten_roh/FILE13_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE13_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+FILM C
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+
+=== S02 ===
+Development Code:T-103
+ Due to accelerated metabolism
+relative to the earlier 00
+series, this subject
+possesses exemplary
+regenerative capabilities.
+           PH-X016 File Data
+</pre></details>
+</div></div></section>
+<section class="dok" id="d14">
+<div class="kopf"><span class="nr">14</span><h2>Patrol report</h2><span class="meta">Item-Id 0x76 &middot; streng: Patrol report &middot; @0x8009EA92 2C 3D 50 4E 4B 48 00 4E 41 4C 4B 4E 50</span><span class="meta">5 Slots &middot; 5 Textseiten &middot; Seitenhoehe 144</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE14_title_paper.png" alt="Anschauungsbild Dokument 14"><figcaption>Anschauungsbild 128&times;112<br><a class="roh" href="hintergruende/bilder_roh/FILE14_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE14_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE14_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE14_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE14_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE14_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE14_p03_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 14: Patrol report
+Item-Id 0x76   Dokument-Index 14
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE14_*.png   (Rohdaten: hintergruende/seiten_roh/FILE14_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE14_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+PATROL REPORT
+
+=== S01 ===
+        -Patrol Report-
+  September 20th 9:30 PM
+  Reporter:Sgt.Neil Carlsen
+
+We received a report of a
+suspicious individual
+skulking around the sewers
+in the outskirts of Raccoon
+City. I searched the area
+
+=== S02 ===
+and located the individual,
+but he ran away before I
+was able to question him.
+
+=== S03 ===
+I recovered the following items:
+
+ *A small amount of C4
+  plastic explosive.
+ *An electronic detonator.
+ *9x19 parabellum rounds.
+ *Infrared scope [broken].
+
+          End of report.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d15">
+<div class="kopf"><span class="nr">15</span><h2>Watchman&#x27;s diary</h2><span class="meta">Item-Id 0x77 &middot; streng: Watchman^s diary &middot; @0x8009EAA0 33 3D 50 3F 44 49 3D 4A 3A 4F 00 40 45 3D 4E 55</span><span class="meta">10 Slots &middot; 10 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE15_title_paper.png" alt="Anschauungsbild Dokument 15"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE15_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE15_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE15_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE15_p08_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 15: Watchman&#x27;s diary
+Item-Id 0x77   Dokument-Index 15
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE15_*.png   (Rohdaten: hintergruende/seiten_roh/FILE15_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE15_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+WATCHMAN&#x27;S DIARY
+
+=== S01 ===
+August 11th
+I finally had the chance to
+see blue skies for the first
+time in ages, but it did
+little to lift my spirits.
+I was reprimanded by the
+chief for neglecting my
+duties while I was up on the
+clock tower.
+There&#x27;s only one thing I
+still don&#x27;t understand:
+
+=== S02 ===
+the chief seemed to be more
+concerned about the fact
+that I was up on the tower
+rather than that I was
+neglecting my duties.
+Why was access to the tower
+prohibited in the first
+place anyway?
+
+=== S03 ===
+September 5th
+I recently talked to the old
+man who works in the scrap
+yard out back. His name is
+Thomas. He&#x27;s a quiet man and
+really seems to enjoy chess.
+He even went so far as to
+design a special key and lock
+engraved with chess pieces on
+them for one of the doors in
+the disposal yard.
+
+=== S04 ===
+We made plans to play chess
+tomorrow night. I can&#x27;t help
+but wonder how good he is.
+One thing that&#x27;s been
+bothering me about him is the
+way that he&#x27;s always
+scratching himself... Does
+he have some sort of
+skin disease or he is just
+rude?
+
+=== S05 ===
+September 9th
+Thomas was a much better
+player than I had imagined.
+I used to think of myself as
+a fairly decent player, but
+he did a pretty good job of
+humbling me.
+About the only thing I imagine
+that could match his skills in
+chess is his appetite. All the
+guy did was talk about
+
+=== S06 ===
+food throughout the entire
+game. He sounded fairly
+healthy, but he didn&#x27;t look
+quite right...
+I wonder if he&#x27;s okay.
+
+=== S07 ===
+September 12th
+I was supposed to play
+another game of chess with
+Thomas, but we had to cancel
+it because he hasn&#x27;t been
+feeling too well.
+He stopped by to see me, but
+I told him to go back and rest
+since he literally looked like
+the walking dead.
+
+=== S08 ===
+He insisted that he was just
+fine, but I could tell he was
+really having problems.
+Come to think of it, I haven&#x27;t
+been feeling too good myself
+lately...
+</pre></details>
+</div></div></section>
+<section class="dok" id="d16">
+<div class="kopf"><span class="nr">16</span><h2>Chief&#x27;s diary</h2><span class="meta">Item-Id 0x78 &middot; streng: Chief^s diary &middot; @0x8009EAB1 1F 44 45 41 42 3A 4F 00 40 45 3D 4E 55</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE16_title_paper.png" alt="Anschauungsbild Dokument 16"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE16_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE16_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE16_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE16_p06_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 16: Chief&#x27;s diary
+Item-Id 0x78   Dokument-Index 16
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE16_*.png   (Rohdaten: hintergruende/seiten_roh/FILE16_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE16_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+CHIEF&#x27;S DIARY
+
+=== S01 ===
+September 23rd
+It&#x27;s all over. Those imbeciles
+from Umbrella have finally
+done it... Despite all their
+promises, they&#x27;ve ruined my
+town. Soon the streets will
+be infested with zombies. I&#x27;m
+beginning to think that I may
+even be infected myself.
+I&#x27;ll kill everyone in town if
+this turns out to be true!!!
+
+=== S02 ===
+September 24th
+I was successful in spreading
+confusion among the police as
+planned. I&#x27;ve made sure that
+no one from the outside
+will come to help.
+With the delays in police
+actions, no one will have the
+chance to escape my city alive.
+I&#x27;ve seen to it personally
+that all escape routes from
+
+=== S03 ===
+inside the precinct have been
+cut off as well.
+There are several survivors
+still attempting to escape
+through the lower levels, but
+I&#x27;ll make sure no one gets
+out.
+
+=== S04 ===
+September 26th
+I&#x27;ve had a change of heart
+about the remaining survivors
+inside the precinct. I&#x27;ve
+decided to hunt them down
+myself.
+I shot Ed in the back through
+the heart less than an hour
+ago. I watched him writhe
+in pain upon the floor in a
+pool of his own blood. The
+
+=== S05 ===
+expression on his face was
+positively exquisite. He died
+with his eyes wide open,
+staring up at me. It was
+beautiful.
+I wonder if the mayor&#x27;s
+daughter is still alive?
+I let her escape so I could
+enjoy hunting her down
+later...
+I&#x27;m going to enjoy my new
+
+=== S06 ===
+trophy. Yes, frozen forever
+in the pose I choose
+to give her.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d17">
+<div class="kopf"><span class="nr">17</span><h2>Sewer manager diary</h2><span class="meta">Item-Id 0x79 &middot; streng: Sewer manager diary &middot; @0x8009EABF 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 40 45 3D 4E 55</span><span class="meta">11 Slots &middot; 11 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE17_title_paper.png" alt="Anschauungsbild Dokument 17"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE17_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE17_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE17_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE17_p09_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 17: Sewer manager diary
+Item-Id 0x79   Dokument-Index 17
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE17_*.png   (Rohdaten: hintergruende/seiten_roh/FILE17_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE17_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SEWER MANAGER DIARY
+
+=== S01 ===
+June 28th
+It&#x27;s been a while, but I saw
+Don today and we talked
+after completing our work.
+He told me he had been sick
+in bed until yesterday.
+It really doesn&#x27;t come as much
+of a surprise given how long
+he&#x27;s been working here.
+He was sweating like a horse
+and kept scratching his body
+
+=== S02 ===
+while we were talking. I
+asked if he was hot, but he
+just looked at me funny.
+What&#x27;s wrong with him anyway?
+
+=== S03 ===
+July 7th
+Chief Irons has been
+visiting the lab quite often
+lately. I don&#x27;t know what
+he&#x27;s doing over there but he
+always looks grim.
+The expression on his face
+has been even more unsettling
+than usual...
+My guess is that it&#x27;s because
+of Dr.Birkin&#x27;s impossible
+
+=== S04 ===
+requests. The chief has my
+sympathies though. After all
+he&#x27;s done for the town, he
+doesn&#x27;t deserve this.
+
+=== S05 ===
+July 21st
+I rarely drink because I&#x27;m
+on the graveyard shift, but I
+don&#x27;t suppose I have much
+to complain about since
+this is how I make my living.
+
+=== S06 ===
+August 16th
+Chief Irons came in late
+today, looking grimmer than
+his usual self. I tried to
+joke with him to cheer him
+up but he wasn&#x27;t amused. He
+pulled his gun and threatened
+to shoot me! I was able to
+calm him down, but that guy
+must have some serious
+problems. He knows he can&#x27;t
+
+=== S07 ===
+enter the lab without my
+help and my medal.
+This is what it means for
+the chief &quot;to serve
+and protect&quot;!?
+
+=== S08 ===
+August 21st
+William informed me that the
+police and media have begun
+their investigation on
+Umbrella&#x27;s affairs. He said
+that the investigation will
+be citywide and that there is
+a possibility they&#x27;ll even
+search through the sewers.
+He asked me to suspend all
+Umbrella sewer facility
+
+=== S09 ===
+operations until the
+investigation has concluded.
+The sewer will still be used
+for passage, but he stressed
+that I have to be extremely
+cautious and that I&#x27;d lose
+my job if anyone finds out
+about this operation.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d18">
+<div class="kopf"><span class="nr">18</span><h2>Sewer manager fax</h2><span class="meta">Item-Id 0x7A &middot; streng: Sewer manager fax &middot; @0x8009EAD3 2F 41 53 41 4E 00 49 3D 4A 3D 43 41 4E 00 42 3D 54</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE18_title_paper.png" alt="Anschauungsbild Dokument 18"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE18_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE18_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE18_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE18_p05_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 18: Sewer manager fax
+Item-Id 0x7A   Dokument-Index 18
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE18_*.png   (Rohdaten: hintergruende/seiten_roh/FILE18_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE18_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+SEWER MANAGER FAX
+
+=== S01 ===
+      -User List of the
+       Connecting Facility-
+
+On the first and third
+Wednesdays of the month,
+Angelica Margaret, chief of
+maintenance, will make use
+of the facilities. Be sure
+to reduce the moisture levels
+in the facility by activating
+the fan, as the equipment she
+
+=== S02 ===
+will be using is susceptible
+to the effects of water
+vapors.
+
+On the 28th of every month,
+the chemical transporter
+Don Weller will use the
+facility. The chemicals he
+will be transporting are
+extremely volatile.
+Extreme caution should be
+
+=== S03 ===
+observed throughout their
+transport.
+
+On the 6th and 16th of every
+month, police chief Brian Irons
+will visit the facility to
+attend the regular meetings
+that take place in the lab.
+
+On the fourth Friday of every
+other month, William Birkin will
+
+=== S04 ===
+use the facility to conduct a
+training seminar for the
+Chicago branch of Umbrella Inc.
+As the probability of an
+attack upon Dr. Birkin will
+be high, take every measure
+conceivable to guard his life.
+
+You will be informed of all
+other potential visitors and
+the times they will arrive as
+
+=== S05 ===
+needed. Guide these individuals
+to their destination safely.
+We expect nothing but the
+best from you.
+
+       Charles Coleman
+       Secretary Chief
+       Umbrella Headquarters
+</pre></details>
+</div></div></section>
+<section class="dok" id="d19">
+<div class="kopf"><span class="nr">19</span><h2>Film D</h2><span class="meta">Item-Id 0x7B &middot; streng: Film D &middot; @0x8009EAE5 22 45 48 49 00 20</span><span class="meta">3 Slots &middot; 3 Textseiten &middot; Seitenhoehe 112</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE19_title_paper.png" alt="Anschauungsbild Dokument 19"><figcaption>Anschauungsbild 128&times;144<br><a class="roh" href="hintergruende/bilder_roh/FILE19_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE19_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE19_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE19_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE19_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE19_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE19_p01_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 19: Film D
+Item-Id 0x7B   Dokument-Index 19
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE19_*.png   (Rohdaten: hintergruende/seiten_roh/FILE19_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE19_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+RECRUIT
+
+=== S01 ===
+(leer — Seitenbild enthaelt nur Index 0, also nichts Sichtbares)
+</pre></details>
+</div></div></section>
+<section class="dok" id="d20">
+<div class="kopf"><span class="nr">20</span><h2>Vaccine synthesis</h2><span class="meta">Item-Id 0x7C &middot; streng: Vaccine synthesis &middot; @0x8009EAEC 32 3D 3F 3F 45 4A 41 00 4F 55 4A 50 44 41 4F 45 4F</span><span class="meta">8 Slots &middot; 8 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE20_title_paper.png" alt="Anschauungsbild Dokument 20"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE20_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE20_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE20_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE20_p06_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 20: Vaccine synthesis
+Item-Id 0x7C   Dokument-Index 20
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE20_*.png   (Rohdaten: hintergruende/seiten_roh/FILE20_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE20_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+INSTRUCTIONS FOR SYNTHESIS
+   OF THE G-VIRUS ANTIGEN:
+G-VACCINE. CODE NAMED &quot;DEVIL.&quot;
+
+=== S01 ===
+Any beings infected by the
+G-virus will reproduce
+through the impregnation of
+an embryo within another
+living being.
+Unless rejected by the host,
+the embryo will undertake
+a process of gradual cellular
+invasion, infecting the host&#x27;s
+cells on a molecular level as
+it rewrites their DNA.
+
+=== S02 ===
+Once the metamorphosis is
+complete, the host will be
+capable of continuing this
+cycle of self-replication.
+The duration of time for the
+process to run its course will
+vary from subject to subject.
+In the early stages of
+cellular invasion, it is
+possible to halt progression
+of the metamorphosis through
+
+=== S03 ===
+the administration of the
+G-virus antigen.
+The following procedure
+details its synthesis.
+
+=== S04 ===
+The vaccine creation requires
+the base vaccine. This can be
+arranged by the activator
+VAM. First set the empty
+cartridge to the VAM and
+activate it. After several
+moments the process will be
+complete and the white-colored
+base vaccine will be set in the
+cartridge automatically.
+Then confirm the green light
+
+=== S05 ===
+is on, remove the cartridge,
+and proceed to the next step.
+Once the base vaccine has been
+prepared, set it in the vaccine
+synthesis machine located in
+the P-4 level experiment room.
+The machine is fully automated
+and only requires the user to
+push the sequence start
+switch. At this point,
+the program will run
+
+=== S06 ===
+automatically and synthesis
+will be complete within
+approximately 10seconds.
+
+As the synthesis of DEVIL is
+an extremely delicate process,
+the quality will vary with
+slight shocks or changes in
+temperature. Careful handling
+is required for the proper
+results.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d21">
+<div class="kopf"><span class="nr">21</span><h2>Lab security manual</h2><span class="meta">Item-Id 0x7D &middot; streng: Lab security manual &middot; @0x8009EAFE 28 3D 3E 00 4F 41 3F 51 4E 45 50 55 00 49 3D 4A 51 3D 48</span><span class="meta">7 Slots &middot; 7 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE21_title_paper.png" alt="Anschauungsbild Dokument 21"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE21_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE21_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE21_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE21_p05_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 21: Lab security manual
+Item-Id 0x7D   Dokument-Index 21
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE21_*.png   (Rohdaten: hintergruende/seiten_roh/FILE21_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE21_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+LABORATORY SECURITY MANUAL
+
+=== S01 ===
+Laboratory Security Manual
+-Security measures in case of
+an emergency-
+
+In the instance of an
+uncontainable biohazardous
+breakout, all security
+measures will be directed
+toward the underground
+transport facility.
+
+=== S02 ===
+In the instance that  any
+abnormalities are detected
+among cargo in transit,
+all materials will
+automatically be transported
+from the loading zone to
+the designated high-speed
+train. At which point, all
+materials will be isolated
+and disposed of immediately.
+
+=== S03 ===
+In the instance of a Class I
+emergency, the entire train
+will be purged and disposed
+of without delay.
+
+In the instance that the lab
+itself becomes contaminated,
+the northern most route
+currently used to transport
+materials to and from the
+facility will be designated
+
+=== S04 ===
+as the emergency escape route.
+This route will secure passage
+to the relay point outside
+the city limits.
+
+Disclosure about any
+information regarding
+research conducted
+here, or the existence of
+this facility, is strictly
+prohibited.
+
+=== S05 ===
+Since it is top priority
+to keep all research
+classified, escape access
+may be denied under certain
+extenuating circumstances.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d22">
+<div class="kopf"><span class="nr">22</span><h2>P_epsilon report</h2><span class="meta">Item-Id 0x7E &middot; streng: P_epsilon report &middot; @0x8009EB12 2C 3B 41 4C 4F 45 48 4B 4A 00 4E 41 4C 4B 4E 50</span><span class="meta">6 Slots &middot; 6 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE22_title_paper.png" alt="Anschauungsbild Dokument 22"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE22_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE22_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE22_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE22_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE22_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE22_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE22_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE22_p04_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 22: P_epsilon report
+Item-Id 0x7E   Dokument-Index 22
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE22_*.png   (Rohdaten: hintergruende/seiten_roh/FILE22_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE22_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+INVESTIGATIVE REPORT ON
+     P-EPSILON GAS
+
+=== S01 ===
+ -This report demands
+  immediate attention-
+
+The P-epsilon gas has been
+proven capable of
+incapacitating all known
+B.O.W.s (Bio Organic Weapon).
+As such, it has been designated
+for emergency usage in the
+event of a B.O.W. escape.
+Reports based upon data
+
+=== S02 ===
+collected during prior incidents
+indicate the potential for
+negative side effects.
+
+The P-epsilon gas has been
+proven to weaken B.O.W.s&#x27;
+cellular functions. However,
+prolonged or repeated
+exposures will result in the
+creation of adaptive antibodies
+to the agent.
+
+=== S03 ===
+Furthermore, some species
+have been observed to absorb
+the P-epsilon gas as a source
+of nutrition and use the
+toxins extracted against
+anything perceived as a threat.
+
+Use of the P-epsilon gas should
+be severely limited to extreme
+cases only.
+
+=== S04 ===
+We strongly request the
+authority to re-evaluate the
+P-epsilon gas deployment
+system. We would like this
+re-evaluation to take place
+immediately.
+
+   2nd R&amp;D Room/Security Team
+</pre></details>
+</div></div></section>
+<section class="dok" id="d23">
+<div class="kopf"><span class="nr">23</span><h2>Rookie files</h2><span class="meta">Item-Id 0x7F &middot; streng: Rookie files &middot; @0x8009EB23 2E 4B 4B 47 45 41 00 42 45 48 41 4F</span><span class="meta">17 Slots &middot; 17 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE23_title_paper.png" alt="Anschauungsbild Dokument 23"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE23_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE23_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p09_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p10_page.png" alt="S10" loading="lazy"><figcaption>S10 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p10_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p11_page.png" alt="S11" loading="lazy"><figcaption>S11 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p11_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p12_page.png" alt="S12" loading="lazy"><figcaption>S12 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p12_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p13_page.png" alt="S13" loading="lazy"><figcaption>S13 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p13_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p14_page.png" alt="S14" loading="lazy"><figcaption>S14 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p14_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE23_p15_page.png" alt="S15" loading="lazy"><figcaption>S15 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE23_p15_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 23: Rookie files (A)
+Item-Id 0x7F   Dokument-Index 23
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE23_*.png   (Rohdaten: hintergruende/seiten_roh/FILE23_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE23_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+HINT FILES FOR THE ROOKIE MODE
+
+=== S01 ===
+A statue of a woman bearing a
+water vessel.
+
+There&#x27;s an inscription and a
+hole on the pedestal...
+
+=== S02 ===
+The statue holding a red jewel...
+
+The two statues against each
+wall appear to have been moved
+before. Police staff have been
+told not to move either unless
+necessary.
+
+=== S03 ===
+The water tank on the roof.
+
+The tank ruptured on one
+occasion when the regulator
+valve was tightened too much.
+The valve handle was removed
+after the accident.
+
+=== S04 ===
+A gas light in the press room.
+
+The main fire must be lit before
+turning on the gas lights.
+Turn them on in the correct
+order or they&#x27;ll go out.
+
+=== S05 ===
+Clock tower
+
+The ladder must be lowered to
+gain access to the upper level.
+The clock has not been
+functioning since one of the
+gears was lost.
+
+=== S06 ===
+Sewage disposal plant door.
+
+The lock device is supposedly
+shaped like a chess board
+because the manager loves
+chess obsessively.
+
+=== S07 ===
+A waterfall blocking the sewer.
+
+The water flow must be blocked
+to allow access to the other
+side of the waterfall.
+The small device on the wall
+off to the side is probably
+the key...
+
+=== S08 ===
+The ventilation fan and mobile
+bridge in the sewer.
+
+Both devices are operated with
+the use of special handles
+that are usually detached.
+
+=== S09 ===
+The train turn table at the
+factory site.
+
+The control panel for the turn
+table is set on the turn
+table itself.
+A custom key is required to
+activate it. Access is
+strictly prohibited.
+
+=== S10 ===
+Restoring the power to the lab.
+
+The shutter can&#x27;t be opened
+unless the breaker system
+has been restored.
+The fuse consists of super
+conductive materials that can
+withstand high electrical
+output and must operate at
+extremely low temperatures.
+
+=== S11 ===
+An insulated case is required
+during its transport.
+Low temperature conditions
+must be maintained during
+their installation.
+
+=== S12 ===
+How to use the computer in
+the lab.
+
+When typing the letter &quot;A&quot;,
+move the cursor to &quot;A&quot; and
+then push the action button.
+When typing multiple letters,
+move the cursor over &quot;*&quot; and
+then push the action button.
+
+=== S13 ===
+Elevator leading to the
+transport facility on the
+bottom floor.
+
+The transport facility and the
+lab are connected by a large
+elevator lift located at the
+warehouse.
+It can be reached from the
+passageway to the south of the
+control room [downward on the
+
+=== S14 ===
+map]. A key is needed to
+open the shutter.
+
+=== S15 ===
+Transport train on the bottom
+floor of the lab.
+
+The emergency power has not
+been activated. The high
+output generator will require
+the appropriate plug before
+it can be operated.
+The tunnel gate can&#x27;t be
+raised until power has been
+supplied.
+</pre></details>
+</div></div></section>
+<section class="dok" id="d24">
+<div class="kopf"><span class="nr">24</span><h2>Rookie files</h2><span class="meta">Item-Id 0x80 &middot; streng: Rookie files &middot; @0x8009EB30 2E 4B 4B 47 45 41 00 42 45 48 41 4F</span><span class="meta">17 Slots &middot; 17 Textseiten &middot; Seitenhoehe 176</span></div>
+<div class="spalten"><figure class="bild"><img src="hintergruende/bilder_band/FILE24_title_paper.png" alt="Anschauungsbild Dokument 24"><figcaption>Anschauungsbild 128&times;80<br><a class="roh" href="hintergruende/bilder_roh/FILE24_title_paper.TIM">roh (TIM)</a></figcaption></figure><div>
+<div class="seiten">
+<figure><img src="hintergruende/seiten_lesbar/FILE24_title_page.png" alt="TITEL" loading="lazy"><figcaption>TITEL &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_title_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p00_page.png" alt="S00" loading="lazy"><figcaption>S00 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p00_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p01_page.png" alt="S01" loading="lazy"><figcaption>S01 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p01_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p02_page.png" alt="S02" loading="lazy"><figcaption>S02 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p02_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p03_page.png" alt="S03" loading="lazy"><figcaption>S03 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p03_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p04_page.png" alt="S04" loading="lazy"><figcaption>S04 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p04_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p05_page.png" alt="S05" loading="lazy"><figcaption>S05 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p05_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p06_page.png" alt="S06" loading="lazy"><figcaption>S06 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p06_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p07_page.png" alt="S07" loading="lazy"><figcaption>S07 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p07_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p08_page.png" alt="S08" loading="lazy"><figcaption>S08 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p08_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p09_page.png" alt="S09" loading="lazy"><figcaption>S09 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p09_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p10_page.png" alt="S10" loading="lazy"><figcaption>S10 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p10_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p11_page.png" alt="S11" loading="lazy"><figcaption>S11 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p11_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p12_page.png" alt="S12" loading="lazy"><figcaption>S12 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p12_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p13_page.png" alt="S13" loading="lazy"><figcaption>S13 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p13_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p14_page.png" alt="S14" loading="lazy"><figcaption>S14 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p14_page.TIM">TIM</a></figcaption></figure>
+<figure><img src="hintergruende/seiten_lesbar/FILE24_p15_page.png" alt="S15" loading="lazy"><figcaption>S15 &middot; <a class="roh" href="hintergruende/seiten_roh/FILE24_p15_page.TIM">TIM</a></figcaption></figure>
+</div>
+<details><summary>Transkription anzeigen (abgelesen, keine Originalbytes)</summary><pre>RE2 (Retail, Leon) — Dokument 24: Rookie files (B)
+Item-Id 0x80   Dokument-Index 24
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE24_*.png   (Rohdaten: hintergruende/seiten_roh/FILE24_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE24_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+HINT FILES FOR THE ROOKIE MODE
+
+=== S01 ===
+A statue of a woman bearing a
+water vessel.
+
+There&#x27;s an inscription and a
+hole on the pedestal...
+
+The statue holding a red jewel...
+
+The two statues against each
+wall appear to have been moved
+before. Police staff have been
+
+=== S02 ===
+told not to move either unless
+necessary.
+
+The water tank on the roof.
+
+The tank ruptured on one
+occasion when the regulator
+valve was tightened too much.
+The valve handle was removed
+after the accident.
+
+=== S03 ===
+The door that has been
+destroyed by the helicopter.
+
+The only way to open the
+sealed door is with explosives.
+There is a report that
+recently confiscated
+explosives have been stored
+on the premises.
+
+=== S04 ===
+A picture in the chief&#x27;s room.
+
+Word around the campfire is
+that there is a reason why the
+chief collects all these morose
+pictures other than as a hobby.
+He supposedly becomes furious
+if anyone touches them. He&#x27;s
+even erupted at the cleaning
+staff.
+
+=== S05 ===
+A gas light in the press room.
+
+The main fire must be lit before
+turning on the gas lights.
+Turn them on in the correct
+order or they&#x27;ll go out.
+
+Clock tower
+
+The ladder must be lowered to
+gain access to the upper level.
+
+=== S06 ===
+The clock has not been
+functioning since one of the
+gears was lost.
+
+A waterfall blocking the sewer.
+
+The water flow must be blocked
+to allow access to the other
+side of the waterfall.
+The small device on the wall off
+to the side is probably the key...
+
+=== S07 ===
+The ventilation fan and mobile
+bridge in the sewer.
+
+Both devices are operated with
+the use of special handles
+that are usually detached.
+
+The train turn table at the
+factory site.
+
+The control panel for the turn
+
+=== S08 ===
+table is set on the turn
+table itself.
+A custom key is required to
+activate it. Access is
+strictly prohibited.
+
+Restoring the power to the lab.
+
+The shutter can&#x27;t be opened
+unless the breaker system
+has been restored.
+
+=== S09 ===
+The fuse consists of super
+conductive materials that can
+withstand high electrical
+output and must operate at
+extremely low temperatures.
+An insulated case is required
+during its transport.
+Low temperature conditions
+must be maintained during
+their installation.
+
+=== S10 ===
+How to use the computer in
+the lab.
+
+When typing the letter &quot;A&quot;,
+move the cursor to &quot;A&quot; and
+then push the action button.
+When typing multiple letters,
+move the cursor over &quot;*&quot; and
+then push the action button.
+
+=== S11 ===
+Vaccine synthesis.
+
+Vaccine synthesis is a
+delicate process.
+Find the &quot;cartridge&quot;
+containing the vaccine
+precursor components and
+create the &quot;base vaccine&quot;
+using the activator -VAM-
+
+Place this into the synthesis
+
+=== S12 ===
+machine in the lab to prepare
+the completed vaccine.
+
+Elevator leading to the
+transport facility on the
+bottom floor.
+
+The transport facility and the
+lab are connected by a large
+elevator lift located at the
+warehouse.
+
+=== S13 ===
+It can be reached from the
+passageway to the south of the
+control room [downward on the
+map]. A key is needed to
+open the shutter.
+
+Transport train on the bottom
+floor of the lab.
+
+The emergency power has not
+been activated. The high
+
+=== S14 ===
+output generator will require
+the appropriate plug before
+it can be operated.
+The tunnel gate can&#x27;t be
+raised until power has been
+supplied.
+
+=== S15 ===
+machine in the lab to prepare
+the completed vaccine.
+</pre></details>
+</div></div></section>
+</main>

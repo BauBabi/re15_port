@@ -1,0 +1,5 @@
+Dokument 16   Item-Id 0x78
+Name (Bank EN @0x8009EAB1): Chief^s diary
+  Rohbytes: 1F 44 45 41 42 3A 4F 00 40 45 3D 4E 55 F7
+Name (Bank 2 @0x8009E367, nicht-lateinischer Zeichensatz, nur Hex):
+  Rohbytes: EF 56 EF 07 6F EF 8A EF 45 F7

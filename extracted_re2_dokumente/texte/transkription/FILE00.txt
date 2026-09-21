@@ -1,0 +1,63 @@
+RE2 (Retail, Leon) — Dokument 0: CHRIS's diary
+Item-Id 0x68   Dokument-Index 0
+
+⛔ TRANSKRIPTION — von Hand aus den Seitenbildern abgelesen, KEINE Originalbytes.
+   Das Original ist das Bild: extracted_re2_dokumente/hintergruende/seiten_lesbar/
+   FILE00_*.png   (Rohdaten: hintergruende/seiten_roh/FILE00_*.TIM)
+   In RE2 ist der Dokumenttext auf der PSX kein Zeichenstrom, sondern in 4bpp-Bilder
+   gerastert. Nur der Dokument-NAME existiert als Zeichenkette (texte/FILE00_name.txt).
+   `TITEL` ist byte-identisch mit Seite S00 und daher nur einmal aufgefuehrt.
+
+=== TITEL ===
+CHRIS'S DIARY
+
+=== S01 ===
+August 8th
+I talked to the chief today
+once again, but he refused to
+listen to me. I know for
+certain that Umbrella
+conducted T-virus research
+in that mansion.
+Anyone infected turns into
+a zombie.
+
+=== S02 ===
+But the entire mansion went up
+in that explosion; along with
+any incriminating evidence.
+Since Umbrella employs so many
+people in town, no one is
+willing to talk about
+the incident.
+It looks like I'm running out
+of options.
+
+=== S03 ===
+August 17th
+We've been receiving a lot of
+local reports about strange
+monsters appearing at
+random throughout the city.
+This must be the work
+of Umbrella.
+
+=== S04 ===
+August 24th
+With the help of Jill and
+Barry, I finally obtained
+information vital to this case.
+Umbrella has begun research
+on the new G-virus, a variation
+of the original T-virus.
+Haven't they done enough
+damage already?!
+
+=== S05 ===
+We talked it over, and have
+decided to fly to the main
+Umbrella HQ in Europe. I won't
+tell my sister about this trip
+because doing so could put her
+in danger.
+Please forgive me Claire.
