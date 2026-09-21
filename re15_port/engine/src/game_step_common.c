@@ -461,6 +461,67 @@ static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int 
     return wall;
 }
 
+/* ---------------------------------------------------------------------------------------
+ * DER SCHWANZ DES SPIELER-DISPATCHERS — FUN_80031c44 @0x80031cbc + @0x80031d70
+ * ---------------------------------------------------------------------------------------
+ * ⛔ NUTZER-BEFUND Runde 20 ("Jetzt wurde ich von birkin rausgeschoben ausserhalb des
+ * begehbaren BEreiches", ROOM5090 Marke F962): der Port hatte den Koerper-Schub und die
+ * Wandklemme IN den Normal-Zweig gehaengt. Waehrend Treffer-Reaktion, Knockdown, Grab und
+ * Tod lief also KEIN Schub — der Boss lief dem stehenden Spieler in den Koerper, die
+ * Ueberdeckung wuchs unbemerkt an, und im ersten Normal-Bild danach entlud sie sich als
+ * EIN Sprung von 2112 Einheiten (gemessen, probe_r20_birkin_push mess: 22 Bilder ohne
+ * Schub-Aufruf, groesster Ein-Bild-Weg 2112). Die Band-0-Wand zwischen dem Kampfkorridor
+ * und der Halle ist mit Spielerradius+Saum nur 2936 dick (SCA-Zelle #28 z -21700..-19700,
+ * Nachbarzelle #23 z -19870..-16864) — ein solcher Sprung setzt den Spieler dahinter, wo
+ * die Klemme ihn nicht mehr loest.
+ *
+ * DAS ORIGINAL kennt diese Bindung an das Kommandowort NICHT. FUN_80031c44, selbst
+ * disassembliert:
+ *   80031c78  bltz a0,0x80031da8        a0 = g_pauseflags (0x800aca40) -> NUR das
+ *                                        Vorzeichenbit ueberspringt den ganzen Block
+ *   80031ca4  addiu at,at,16272         at = 0x80073f90 = Kommando-Tabelle
+ *   80031cac  lw   v0,0(at)             v0 = Tabelle[cmd]
+ *   80031cb4  jalr v0                   <- der KOMMANDO-HANDLER (cmd 0..7) laeuft hier
+ *   80031cbc  jal  0x8002b544           <- KOERPER-SCHUB, ausserhalb jedes Handlers
+ *   80031d4c  andi v0,v0,0x4000         0x800aca3c-Latch (auf einem Objekt stehend)
+ *   80031d50  bne  v0,zero,0x80031d78   -> nur DANN faellt die Wandklemme aus
+ *   80031d58  jal  0x8002b498           (Kollisions-Vorbereitung)
+ *   80031d68  addiu a0,s0,52            a0 = Spieler+0x34 = Positionsvektor
+ *   80031d6c  lhu  a1,6(v0)             a1 = Radius aus 0x800acacc[+6]
+ *   80031d70  jal  0x8003b0a4           <- WANDKLEMME, ebenfalls ausserhalb der Handler
+ *   80031d74  ori  a2,zero,0x1          a2 = Solid-Maske 1
+ * Die Tabelle @0x80073f90 (selbst ausgelesen) ist [0]=0x800318f8 [1]=0x80031de8
+ * [2]=0x80035af0 (Treffer/Knockdown) [3]=0x800366bc (Tod) [4]=0x80030660 (Treppe)
+ * [5]=0x80036834 (Grab) [6]=0x800368c0 [7]=0x8003694c (Tod) — alle acht kehren zum
+ * `jal 0x8002b544` zurueck.
+ * FUN_8002b544 selbst (@0x8002b544) hat KEINE Spieler-Zustands-Schranke: es laeuft ueber
+ * das Gegner-Array (Stride 500 @0x8002b5ac) und prueft je Eintrag nur `word0 & 1`
+ * (@0x8002b578) und `other != g_entity(cur)` (@0x8002b590), dann `jal 0x8002aec4`
+ * (@0x8002b598).
+ *
+ * `alt_x/alt_z` = der Bezugspunkt, den FUN_8003bca8 als "vorher" liest: der
+ * Positions-SPIEGEL Spieler+0x40/+0x44 (`addiu a2,a2,64` im Delay-Slot des
+ * Handler-Dispatchs @0x8003b4ac, gelesen als `lh v0,0(a2)`/`lh v1,4(a2)` @0x8003bd44-48).
+ * Den schreibt die Haupt-Entity-Schleife am ENDE jedes Entity-Ticks
+ * (`lhu v1,52(v0)`/`sh v1,64(v0)` @0x8001d11c-24, dito +0x38->+0x42 und +0x3c->+0x44
+ * @0x8001d134-54) — er haelt also die Position vom Bildende davor, genau das, was der
+ * Port hier als `alt_x/alt_z` hereingibt. */
+static void re15_player_body_and_walls(const re15_game_ctx_t *c, re15_actor_t *pl,
+                                       int32_t alt_x, int32_t alt_z)
+{
+    re15_body_push_player();                                   /* @0x80031cbc */
+    if (!c->rdt_ok) return;
+    {   int32_t nx = pl->x, nz = pl->z;
+        re15_collision_ensure_band(pl->y);
+        re15_collision_constrain(c->rdt, alt_x, alt_z, &nx, &nz);   /* @0x80031d70 */
+        pl->x = nx; pl->z = nz;
+    }
+    /* ⛔ BEWUSST NICHT MIT HIER: der Objekt-Pass FUN_8002bd44 (@0x8001ce14) ist im Original
+     * ein EIGENER Top-Level-Aufruf neben dem Spieler-Dispatcher, kein Teil dieses Schwanzes.
+     * Ob und wie er je Kommandowort laeuft, ist nicht disassembliert — er bleibt deshalb da,
+     * wo der Port ihn hat (Normal-Zweig), und steht als offener Punkt im Dossier. */
+}
+
 static int kd_adv(re15_actor_t *pl, int fc)
 {
     if (pl->motion_init_delay > 0) { pl->motion_init_delay--; return 0; }
@@ -848,6 +909,38 @@ void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
+    /* ---- POSITIONS-SPIEGEL Spieler+0x40/+0x42/+0x44 --------------------------------------
+     * Das Original schreibt ihn am ANFANG jedes Bildes aus der aktuellen Spielerposition,
+     * unbedingt, im Kopf der Haupt-Entity-Schleife (selbst disassembliert 2026-09-21):
+     *   8001d0b4  lhu v1,-13688(v1)     v1 = *(u16*)0x800aca88 = Spieler+0x34  (X)
+     *   8001d0bc  lhu a0,-13684(a0)     a0 = *(u16*)0x800aca8c = Spieler+0x38  (Y)
+     *   8001d0c4  lhu a1,-13680(a1)     a1 = *(u16*)0x800aca90 = Spieler+0x3c  (Z)
+     *   8001d0d4  sh  v1,-13676(at)     -> 0x800aca94 = Spieler+0x40
+     *   8001d0dc  sh  a0,-13674(at)     -> 0x800aca96 = Spieler+0x42
+     *   8001d0e4  sh  a1,-13672(at)     -> 0x800aca98 = Spieler+0x44
+     * (Die Entity-Schleife danach macht dasselbe je Aktor NACH seinem Tick:
+     *  `lhu v1,52(v0)`/`sh v1,64(v0)` @0x8001d11c-24, +0x38->+0x42 @0x8001d134-3c,
+     *  +0x3c->+0x44 @0x8001d14c-54. Dafuer hat der Port noch keinen Leser — offener Punkt
+     *  im Dossier, nicht stillschweigend mit erfunden.)
+     *
+     * ⛔ WARUM DAS HIER STEHEN MUSS (Runde 20, gemessen): im Port schrieb den Spiegel
+     * BISHER NUR climb_common.c (@0x80038210/@0x800384a0/@0x80038638) — also nur beim
+     * Leiter-Steigen, und er wurde nie zurueckgesetzt. Genau diesen Spiegel liest der
+     * Vorzeichen-Dreh-Zweig von FUN_80034D0C (Birkin-Koerper, enemy_ai_boss_g5.c
+     * @0x80034ec4-0x80035044) und der des Tentakel-Schubs; dreht er, ist der Schub
+     * NICHT `over`, sondern +-2*r. Mit r 6000 sind das +-12000 Einheiten in EINEM Bild.
+     * Messung (probe_r20_birkin_push, Abschnitt D, 494 begehbare Kontaktpunkte):
+     *   Spiegel = Bildanfang (dieser Fix) ...... 0 Drehungen, groesster Schub  2297
+     *   Spiegel = 0 (frisches Spiel) ........... 0 Drehungen, groesster Schub  2297
+     *   Spiegel = alter Leiter-Wert ............ 741 Drehungen, groesster Schub 23911
+     * Die duennste Band-0-Wand im Kampfstreifen ist mit Radius+Saum 2936 dick — ein
+     * 23911er-Schub setzt den Spieler beliebig weit dahinter. Ebenso liest
+     * FUN_8002cfd4 (re15_collision.c prop_contain @0x8002d074-94) diesen Spiegel als
+     * Vorposition; der las bis hier ebenfalls 0 statt der Vorposition. */
+    pl->pos_s_x = (uint16_t)(int32_t)pl->x;      /* @0x8001d0d4 */
+    pl->pos_s_y = (uint16_t)(int32_t)pl->y;      /* @0x8001d0dc */
+    pl->pos_s_z = (uint16_t)(int32_t)pl->z;      /* @0x8001d0e4 */
+
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
     re15_player_set_pl00_banks(c->pl00_skel, c->pl00_anim);
@@ -1182,6 +1275,9 @@ void re15_game_step(const re15_game_ctx_t *c)
                                                           * the presentation is the FSM below) */
         g_aot_action_pressed = 0;    /* cmd 3/6/7 (LAB_800366bc/LAB_800368c0/LAB_8003694c):
                                       * kein cmd-1-Dispatcher -> kein ACTION-Scan (Gate oben) */
+        /* @0x80031cbc/@0x80031d70 laufen auch im Tod — der Koerper-Schub selbst steigt bei
+         * HP < 0 aus (FUN_8002AEC4-Gate, re15_body_push_player), die Wandklemme bleibt. */
+        re15_player_body_and_walls(c, pl, pl->x, pl->z);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
         /* (re15_gameover_fsm_tick() ist HERAUSGEZOGEN — sie ist im Original der eigene
          *  Top-Level-Aufruf @0x8001cdfc VOR dem Spieler-Dispatcher @0x8001ce0c und darf
@@ -1203,13 +1299,20 @@ void re15_game_step(const re15_game_ctx_t *c)
          * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
          * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
         g_aot_action_pressed = 0;    /* cmd 5 (LAB_80036834): kein DECIDE -> kein ACTION-Scan */
+        /* @0x80031cbc/@0x80031d70: der GRAB haelt den Spieler, aber der Koerper-Schub laeuft
+         * weiter (das Paar selbst ist per +0x1000-AND ausgenommen, FUN_8002af14 — ein DRITTER
+         * Gegner schiebt sehr wohl). */
+        re15_player_body_and_walls(c, pl, pl->x, pl->z);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_knockdown) {
         /* KNOCKDOWN-Klasse (cmd-2 [4]/[5], 0x800360e8/0x8003644c): engine-getrieben wie
          * Stair/Grab — kein Pad, kein Steer; RVD-Scan laeuft weiter. i-Frames halten
          * (+0x93 bleibt gesetzt bis zum Exit). analysis/player_knockdown.md F1. */
         g_aot_action_pressed = 0;    /* cmd 2 (LAB_80035af0): kein DECIDE -> kein ACTION-Scan */
-        re15_player_knockdown_tick(c, pl);
+        {   int32_t kx = pl->x, kz = pl->z;
+            re15_player_knockdown_tick(c, pl);
+            re15_player_body_and_walls(c, pl, kx, kz);    /* @0x80031cbc/@0x80031d70 */
+        }
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_hit_flinch > 0) {
         /* HIT-FLINCH branch: root the player + play the directional flinch clip (0x8/0x9/0xa, set at
@@ -1221,6 +1324,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * DAT_800acae0 -= DAT_800acaf2 (50), clamp at 0 (@0x80035f20) -> 200,150,100,50 over 4 frames.
          * When the clip plays out (timer -> 0) motion returns to idle. Unreachable unless a non-lethal
          * hit landed, so a room with no combat never enters it = no 1170 regression. */
+        int32_t fl_ax = pl->x, fl_az = pl->z;    /* Bezugspunkt fuer @0x80031d70 (Spiegel +0x40) */
         if (pl->motion_init_delay > 0) pl->motion_init_delay--;   /* seed tick: render frame 0 first */
         else pl->anim_frame++;
         if (pl->anim_frac > 0) pl->anim_frac--;   /* Crossfade-Abbau (Spiegel anim_set
@@ -1264,6 +1368,9 @@ void re15_game_step(const re15_game_ctx_t *c)
             pl->sub_state_2 = 0;
         }
         g_aot_action_pressed = 0;    /* cmd 2 (LAB_80035af0): kein DECIDE -> kein ACTION-Scan */
+        /* @0x80031cbc/@0x80031d70 — NACH dem cmd-2-Handler, genau wie im Original. Ohne das
+         * lief der Boss dem flinchenden Spieler 22 Bilder lang in den Koerper (gemessen). */
+        re15_player_body_and_walls(c, pl, fl_ax, fl_az);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original
@@ -1377,6 +1484,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
          * push-out -> FUN_8003b0a4 walls, so the WALLS win): push the player out of every live
          * enemy cylinder (450 + 400) — the "walk through zombies" fix. */
+        int32_t dbg_tx = pl->x, dbg_tz = pl->z;      /* nach player_tick, VOR dem Koerper-Schub */
         re15_body_push_player();
         if (c->rdt_ok) {
             /* Room SCA collision then object collision: push the player out of
@@ -1385,6 +1493,17 @@ void re15_game_step(const re15_game_ctx_t *c)
             int32_t nx = pl->x, nz = pl->z;
             re15_collision_ensure_band(pl->y);
             re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+            /* MESS-SCHIENE RE15_PUSH_LOG (Runde 20, Befund "von birkin rausgeschoben"):
+             * je Bild die vier Stationen des Spieler-Schritts — Pos vor player_tick,
+             * nach player_tick, nach dem Koerper-Schub, nach der Wandklemme. Nur lesend. */
+            static int s_push_log = -1;
+            if (s_push_log < 0) s_push_log = getenv("RE15_PUSH_LOG") ? 1 : 0;
+            if (s_push_log)
+                fprintf(stderr, "[push] F%u vor=(%d,%d) tick=(%d,%d) schub=(%d,%d) d=(%d,%d)"
+                                " klemme=(%d,%d) dk=(%d,%d)\n",
+                        g_engine.frame_count, (int)ox, (int)oz, (int)dbg_tx, (int)dbg_tz,
+                        (int)pl->x, (int)pl->z, (int)(pl->x - dbg_tx), (int)(pl->z - dbg_tz),
+                        (int)nx, (int)nz, (int)(nx - pl->x), (int)(nz - pl->z));
             /* KISTEN SCHIEBEN — der Objekt-Update-Loop FUN_8002bd44 (@0x8001ce14, NACH dem
              * Spieler-FSM @0x8001ce0c und VOR dem AUTO-Scan @0x8001ce1c). Seine INNERE
              * Reihenfolge ist zwingend: erst der SCHUB FUN_8002cabc(player,obj,1) @0x8002bfa4,
