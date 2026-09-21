@@ -1,0 +1,50 @@
+=== ROOM10F0 C4 — Doppel-Objekte [7, 8, 9]
+  Tiefenfeld gleich auf 76707 von 76800 Punkten (99.8789 %); ungleich: 93
+  gedeckte Flaeche: mit Doppeln 12068 px, ohne 12068 px, Unterschied 0 px
+    (108,104): mit=158 ohne=163
+    (109,104): mit=158 ohne=163
+    (110,104): mit=158 ohne=163
+    (111,104): mit=158 ohne=163
+    (112,104): mit=158 ohne=163
+    (113,104): mit=158 ohne=163
+    (114,104): mit=158 ohne=163
+    (115,104): mit=158 ohne=163
+    (108,105): mit=158 ohne=163
+    (109,105): mit=158 ohne=163
+    (110,105): mit=158 ohne=163
+    (111,105): mit=158 ohne=163
+    (112,105): mit=158 ohne=163
+    (113,105): mit=158 ohne=163
+    (114,105): mit=158 ohne=163
+    (115,105): mit=158 ohne=163
+    (108,106): mit=158 ohne=163
+    (109,106): mit=158 ohne=163
+    (110,106): mit=158 ohne=163
+    (111,106): mit=158 ohne=163
+  Figurkasten x99..121 y81..118, Eimer 173 (Fuss): verdeckte Punkte mit Doppeln 561, ohne Doppel 561
+  Figurkasten x99..121 y81..118, Eimer 169 (Mitte): verdeckte Punkte mit Doppeln 561, ohne Doppel 561
+  Figurkasten x99..121 y81..118, Eimer 165 (Kopf): verdeckte Punkte mit Doppeln 561, ohne Doppel 561
+
+=== ROOM10F0 C5 — Doppel-Objekte [4, 5, 6]
+  Tiefenfeld gleich auf 75704 von 76800 Punkten (98.5729 %); ungleich: 1096
+  gedeckte Flaeche: mit Doppeln 9285 px, ohne 9285 px, Unterschied 0 px
+    (127,131): mit=125 ohne=126
+    (128,131): mit=125 ohne=126
+    (127,132): mit=125 ohne=126
+    (128,132): mit=125 ohne=126
+    (130,132): mit=125 ohne=126
+    (131,132): mit=125 ohne=126
+    (127,133): mit=125 ohne=126
+    (127,134): mit=125 ohne=126
+    (127,135): mit=125 ohne=126
+    (128,135): mit=125 ohne=126
+    (127,136): mit=125 ohne=126
+    (127,137): mit=125 ohne=126
+    (127,138): mit=125 ohne=126
+    (96,148): mit=60 ohne=63
+    (96,149): mit=60 ohne=63
+    (96,150): mit=60 ohne=63
+    (97,150): mit=60 ohne=63
+    (98,150): mit=60 ohne=63
+    (99,150): mit=60 ohne=63
+    (96,151): mit=60 ohne=63

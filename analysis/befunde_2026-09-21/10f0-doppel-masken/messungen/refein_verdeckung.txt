@@ -1,0 +1,29 @@
+=== ROOM10F0 C4 — Eichung der nachgerechneten Tiefen gegen die geschriebenen
+  Obj  0: Kante 16   9 Kacheln  Tiefen abweichend (4/9 gleich)
+  Obj  1: Kante 24  11 Kacheln  Tiefen abweichend (5/11 gleich)
+  Obj  2: Kante 24  15 Kacheln  Tiefen abweichend (13/15 gleich)
+  Obj  3: Kante 12   4 Kacheln  Tiefen IDENTISCH (4/4 gleich)
+  Obj  4: Kante 24   4 Kacheln  Tiefen IDENTISCH (4/4 gleich)
+  Obj  5: Kante 24   4 Kacheln  Tiefen IDENTISCH (4/4 gleich)
+  Obj  6: Kante 24   4 Kacheln  Tiefen IDENTISCH (4/4 gleich)
+  Obj  7: Kante 24   4 Kacheln  Tiefen IDENTISCH (4/4 gleich)
+  Obj  8: Kante 24  11 Kacheln  Tiefen IDENTISCH (11/11 gleich)
+  Obj  9: Kante 24  15 Kacheln  Tiefen IDENTISCH (15/15 gleich)
+  Obj 10: Kante 24  24 Kacheln  Tiefen IDENTISCH (24/24 gleich)
+  Summe: 92 von 105 Kacheltiefen nachgerechnet == geschrieben
+  Figurkasten x99..121 y81..118 (874 Punkte)
+    Eimer 173 (Fuss ): IST  561 verdeckt  ->  entdoppelt+verfeinert  561  (+0)
+    Eimer 169 (Mitte): IST  561 verdeckt  ->  entdoppelt+verfeinert  561  (+0)
+    Eimer 165 (Kopf ): IST  561 verdeckt  ->  entdoppelt+verfeinert  561  (+0)
+  Kanten neu: [12, 12, 24, 24, 24, 24, 24, 24] -> 105 Masken
+  Bildweit verdeckte Flaeche (Tiefe < 173): IST 11478  neu 11478
+  Tiefenfeld IST vs. entdoppelt+verfeinert: 1830 Punkte verschieden
+    Ta-Tb Verteilung: naeher(neu kleiner) 1590, ferner 240, groesster Betrag 53
+      Schwelle 120: IST   9016 verdeckte Punkte, neu   9136
+      Schwelle 140: IST   9149 verdeckte Punkte, neu   9235
+      Schwelle 160: IST  10659 verdeckte Punkte, neu  10746
+      Schwelle 165: IST  11478 verdeckte Punkte, neu  11478
+      Schwelle 169: IST  11478 verdeckte Punkte, neu  11478
+      Schwelle 173: IST  11478 verdeckte Punkte, neu  11478
+      Schwelle 200: IST  12068 verdeckte Punkte, neu  12068
+      Schwelle 300: IST  12068 verdeckte Punkte, neu  12068
