@@ -54,6 +54,18 @@ static uint8_t *slurp(const char *pfad, size_t *n)
 
 /* ---------- Maskenkarte: kleinste Tiefe je Bildpunkt, TEXELGENAU ---------- */
 static int32_t g_mtief[H][W];          /* INT32_MAX = kein Masken-Texel */
+/* ⛔ RUNDE 22 - UNBELEGTE Maskentexel. Ein Texel ist BELEGT, wenn er in einer
+ * Freistellung des Nutzers (oder in deren Loechern) liegt ODER ausserhalb jeder
+ * Quader-Silhouette einer Zelle, fuer die eine Freistellung vorliegt. UNBELEGT heisst:
+ * er liegt in der Silhouette einer Zelle MIT Freistellung, aber ausserhalb dieser
+ * Freistellung - dort ist BEKANNT, wie der Gegenstand aussieht, und der Texel gehoert
+ * nicht dazu. Das Feld kommt aus dem Beiblatt ROOM####_PRI##.BELEG (P4-PBM, von
+ * raum.alte_kette geschrieben) und haengt NUR an der Freistellung und der
+ * Raumgeometrie - nicht an den Dunkel-Regeln, die es beschraenken soll. */
+static int32_t g_mtief_unb[H][W];      /* nur die UNBELEGTEN Texel */
+static uint8_t g_belegt[H][W];         /* 1 = an dieser Stelle darf eine Maske stehen */
+static int     g_beleg_da;             /* 0 = Beiblatt fehlt -> Riegel schlaegt an */
+static int     g_riegelmodus;          /* 1 = als ctest gestartet ("riegel") */
 
 static int maskenkarte(unsigned raum, int cut)
 {
@@ -67,7 +79,14 @@ static int maskenkarte(unsigned raum, int cut)
 
     for (y = 0; y < H; y++) for (x = 0; x < W; x++) g_mtief[y][x] = INT32_MAX;
 
-    snprintf(pfad, sizeof pfad, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, raum);
+    /* ⛔ GEGENMODELL-VERZEICHNIS (Runde 22, Umsetzung): R22_MASKEN_DIR zeigt auf einen
+     * BAUM mit ROOM####.MSK + ROOM####_PRI##.TIM. Ohne die Variable liest die Sonde das
+     * ausgelieferte Asset. Nur so laesst sich eine UMGEBAUTE Maske mit derselben Figur
+     * und demselben Urteil messen, ohne das Asset anzufassen. */
+    {   const char *md = getenv("R22_MASKEN_DIR");
+        if (md) snprintf(pfad, sizeof pfad, "%s/ROOM%04X.MSK", md, raum);
+        else    snprintf(pfad, sizeof pfad, "%s/MASKS/ROOM%04X.MSK", RE15_ASSET_PSX_DIR, raum);
+    }
     blob = slurp(pfad, &sz);
     if (!blob) return -1;
     off = re15_pri_msk_section_offset(blob, sz, cut);
@@ -75,7 +94,10 @@ static int maskenkarte(unsigned raum, int cut)
     n = re15_pri_parse_section(blob, sz, off, &pc);
     if (n <= 0) { free(blob); return -3; }
 
-    snprintf(pfad, sizeof pfad, "%s/MASKS/ROOM%04X_PRI%02d.TIM", RE15_ASSET_PSX_DIR, raum, cut);
+    {   const char *md = getenv("R22_MASKEN_DIR");
+        if (md) snprintf(pfad, sizeof pfad, "%s/ROOM%04X_PRI%02d.TIM", md, raum, cut);
+        else    snprintf(pfad, sizeof pfad, "%s/MASKS/ROOM%04X_PRI%02d.TIM", RE15_ASSET_PSX_DIR, raum, cut);
+    }
     timbuf = slurp(pfad, &tsz);
     if (!timbuf) { free(blob); return -4; }
     if (re15_tim_parse(timbuf, tsz, &tim) != 0 || tim.bpp != 8) {
@@ -119,6 +141,41 @@ static int maskenkarte(unsigned raum, int cut)
                 }
                 fclose(f);
             }
+        }
+    }
+    /* --- Beiblatt .BELEG lesen und die UNBELEGTE Maskenkarte bilden --- */
+    {   char bp[600];
+        const char *md = getenv("R22_MASKEN_DIR");
+        size_t bn = 0; uint8_t *bb;
+        if (md) snprintf(bp, sizeof bp, "%s/ROOM%04X_PRI%02d.BELEG", md, raum, cut);
+        else    snprintf(bp, sizeof bp, "%s/MASKS/ROOM%04X_PRI%02d.BELEG",
+                         RE15_ASSET_PSX_DIR, raum, cut);
+        for (y = 0; y < H; y++) for (x = 0; x < W; x++) { g_belegt[y][x] = 1; g_mtief_unb[y][x] = INT32_MAX; }
+        g_beleg_da = 0;
+        bb = slurp(bp, &bn);
+        if (bb) {
+            /* P4, 320x240: Kopf "P4
+320 240
+", danach 40 Bytes je Zeile, MSB links */
+            size_t kopf = 0;
+            int zeilen = 0;
+            while (kopf < bn && zeilen < 2) { if (bb[kopf++] == 0x0A) zeilen++; }
+            if (bn - kopf >= (size_t)(40 * H)) {
+                const uint8_t *bits = bb + kopf;
+                for (y = 0; y < H; y++) for (x = 0; x < W; x++)
+                    g_belegt[y][x] = (uint8_t)((bits[y * 40 + (x >> 3)] >> (7 - (x & 7))) & 1);
+                g_beleg_da = 1;
+            }
+            free(bb);
+        }
+        {   int unb = 0;
+            for (y = 0; y < H; y++) for (x = 0; x < W; x++)
+                if (!g_belegt[y][x]) {
+                    g_mtief_unb[y][x] = g_mtief[y][x];
+                    if (g_mtief[y][x] != INT32_MAX) unb++;
+                }
+            printf("BELEG cut=%d datei=%s gelesen=%d unbelegte_texel=%d\n",
+                   cut, bp, g_beleg_da, unb);
         }
     }
     return pc.draw_count;
@@ -280,6 +337,128 @@ static int zone_des_cuts(const re15_rdt_t *rdt, int cut, int x, int z)
     return 0;
 }
 
+/* ================= RIEGEL (Runde 22) =====================================
+ *
+ * ERKENNUNGSMASS "UNBELEGTE VERDECKUNG":
+ *   Ein Figurpunkt gilt als UNBELEGT VERDECKT, wenn ihn ein Maskentexel nach dem
+ *   Original-Urteil (depth < (1023*vz)>>16, re15_pri.h:104/120) verdeckt UND dieser
+ *   Texel ausserhalb des BELEGT-Feldes des Winkels liegt, also in der Silhouette
+ *   einer Moebelzelle, fuer die eine Freistellung des Nutzers vorliegt, aber
+ *   ausserhalb dieser Freistellung.
+ *   SCHRANKE = 0. Kein freier Parameter: die Schranke heisst nicht "hoechstens x %",
+ *   sondern "gar nicht" - wo BEKANNT ist, wie der Gegenstand aussieht, darf nichts
+ *   ausserhalb davon die Figur verdecken. (Der Nutzer-Fall waren 154 solcher Punkte
+ *   an einem einzigen Standplatz, 50,9 % statt 32,5 % verdeckte Figur.)
+ *
+ * ABDECKUNG - damit die Zahl nicht fuer mehr genommen wird, als sie traegt:
+ *   - die Winkel ROOM10F0 C4 und C5. Das sind GENAU die Winkel, in denen die
+ *     Dunkel-Regeln ueberhaupt wirken: sie wirken nur ueber "nur_kunst" und
+ *     tiefe="szene", und die stehen in der ganzen auswahl.json nur dort
+ *     (2 von 439 Winkeln mit Masken, 0,46 %).
+ *   - je Winkel ALLE begehbaren Standplaetze des Raums im 200er-Raster
+ *     (Klemmpfad re15_collision_constrain), die der Anker-Zone getrennt gezaehlt.
+ *   - die Nutzer-Marke F335 und, mit Pfaddatei, jedes protokollierte Bild.
+ *   - Fehlt das Beiblatt .BELEG, schlaegt der Riegel an - kein stilles Gruen.
+ */
+static int riegel(const re15_rdt_t *rdt, const char *pfaddatei, int keyframe)
+{
+    static const int CUTS[2] = { 4, 5 };
+    int ci, fehler = 0;
+    for (ci = 0; ci < 2; ci++) {
+        int cut = CUTS[ci];
+        re15_camera_view_t view;
+        int lo = 0, hi = 0, s, b, y, x;
+        int plaetze = 0, schlecht = 0, zplaetze = 0;
+        long summe = 0;
+        int X0 = 1 << 30, X1 = -(1 << 30), Z0 = 1 << 30, Z1 = -(1 << 30);
+        if (cut >= rdt->cut_count) { printf("RIEGEL cut=%d FEHLT\n", cut); return 1; }
+        if (re15_camera_build_view(&rdt->cuts[cut], &view) != 0) return 1;
+        if (maskenkarte(0x10F0, cut) <= 0) {
+            printf("RIEGEL cut=%d keine Maske\n", cut); return 1;
+        }
+        if (!g_beleg_da) {
+            printf("RIEGEL cut=%d Beiblatt .BELEG fehlt oder ist unlesbar\n", cut);
+            fehler = 1;
+            continue;
+        }
+        if (cut == 4) {
+            int yo, yu, xl, xr, n, unb = 0;
+            n = figur(&view, -448, 0, 14087, (int16_t) 13040, keyframe, &yo, &yu, &xl, &xr);
+            for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (g_fz[y][x])
+                if (g_mtief_unb[y][x] < re15_pri_bucket_of_vz(g_fz[y][x])) unb++;
+            printf("RIEGEL MARKE cut=4 F335 punkte=%d unbelegt_verdeckt=%d\n", n, unb);
+            if (unb) fehler = 1;
+        }
+        if (pfaddatei) {
+            FILE *f = fopen(pfaddatei, "r");
+            char zeile[256];
+            int n_cut = 0, n_bad = 0, s_unb = 0;
+            if (f) {
+                while (fgets(zeile, sizeof zeile, f)) {
+                    int fr, c, px, py, pz, prot, yo, yu, xl, xr, n, unb = 0;
+                    if (sscanf(zeile, "%d %d %d %d %d %d", &fr, &c, &px, &py, &pz, &prot) != 6)
+                        continue;
+                    if (c != cut) continue;
+                    n_cut++;
+                    n = figur(&view, px, py, pz, (int16_t) prot, keyframe, &yo, &yu, &xl, &xr);
+                    if (n <= 0) continue;
+                    for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (g_fz[y][x])
+                        if (g_mtief_unb[y][x] < re15_pri_bucket_of_vz(g_fz[y][x])) unb++;
+                    if (unb) { n_bad++; s_unb += unb; }
+                }
+                fclose(f);
+            }
+            printf("RIEGEL PFAD cut=%d bilder=%d mit_unbelegter_verdeckung=%d punkte=%d\n",
+                   cut, n_cut, n_bad, s_unb);
+            if (n_bad) fehler = 1;
+        }
+        re15_collision_reset_band();
+        re15_collision_band_range(rdt, &lo, &hi);
+        for (s = 0; s < rdt->sca_count; s++) {
+            const re15_sca_entry_t *e = &rdt->sca[s];
+            if ((int) e->x < X0) X0 = e->x;
+            if ((int) e->z < Z0) Z0 = e->z;
+            if ((int) e->x + (int) e->width   > X1) X1 = e->x + e->width;
+            if ((int) e->z + (int) e->density > Z1) Z1 = e->z + e->density;
+        }
+        for (b = lo; b <= hi; b++) {
+            int gx, gz, hat = 0;
+            for (s = 0; s < rdt->sca_count; s++)
+                if ((rdt->sca[s].floor >> 4) == b) { hat = 1; break; }
+            if (!hat) continue;
+            re15_collision_set_band(b);
+            for (gx = X0; gx <= X1; gx += 200)
+                for (gz = Z0; gz <= Z1; gz += 200) {
+                    int32_t x2 = gx, z2 = gz;
+                    int yo, yu, xl, xr, n, unb = 0;
+                    re15_collision_constrain(rdt, gx, gz, &x2, &z2);
+                    if (x2 != gx || z2 != gz) continue;
+                    n = figur(&view, gx, (int32_t)(-b * 0x708), gz, 0, keyframe,
+                              &yo, &yu, &xl, &xr);
+                    if (n <= 0) continue;
+                    if (xr < 0 || xl >= W || yu < 0 || yo >= H) continue;
+                    plaetze++;
+                    if (zone_des_cuts(rdt, cut, gx, gz)) zplaetze++;
+                    for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (g_fz[y][x])
+                        if (g_mtief_unb[y][x] < re15_pri_bucket_of_vz(g_fz[y][x])) unb++;
+                    if (unb) {
+                        if (schlecht < 8)
+                            printf("RIEGEL PLATZ cut=%d band=%d x=%d z=%d punkte=%d "
+                                   "unbelegt_verdeckt=%d\n", cut, b, gx, gz, n, unb);
+                        schlecht++; summe += unb;
+                    }
+                }
+        }
+        re15_collision_reset_band();
+        printf("RIEGEL STAND cut=%d plaetze=%d davon_ankerzone=%d "
+               "mit_unbelegter_verdeckung=%d punkte=%ld\n",
+               cut, plaetze, zplaetze, schlecht, summe);
+        if (schlecht) fehler = 1;
+    }
+    printf("RIEGEL r22_10f0: %s\n", fehler ? "GEFALLEN" : "GEHALTEN");
+    return fehler;
+}
+
 int main(int argc, char **argv)
 {
     unsigned raum = 0x10F0;
@@ -291,9 +470,14 @@ int main(int argc, char **argv)
     int mn, i;
     const char *pfaddatei = NULL;
 
-    if (argc > 1) cut = atoi(argv[1]);
-    if (argc > 2) keyframe = atoi(argv[2]);
-    if (argc > 3) pfaddatei = argv[3];
+    {   int i2, ist_riegel = 0;
+        for (i2 = 1; i2 < argc; i2++) if (!strcmp(argv[i2], "riegel")) ist_riegel = 1;
+        g_riegelmodus = ist_riegel;
+    }
+    if (!g_riegelmodus && argc > 1) cut = atoi(argv[1]);
+    if (!g_riegelmodus && argc > 2) keyframe = atoi(argv[2]);
+    if (g_riegelmodus) { if (argc > 2) pfaddatei = argv[2]; }
+    else if (argc > 3) pfaddatei = argv[3];
 
     {   char p[600];
         size_t n = 0;
@@ -313,6 +497,7 @@ int main(int argc, char **argv)
         rdtbuf = slurp(p, &sz);
         if (!rdtbuf || re15_rdt_parse(rdtbuf, sz, &rdt) < 0) { printf("FEHLER RDT\n"); return 1; }
     }
+    if (g_riegelmodus) return riegel(&rdt, pfaddatei, keyframe);
     if (cut >= rdt.cut_count) { printf("FEHLER cut\n"); return 1; }
     if (re15_camera_build_view(&rdt.cuts[cut], &view) != 0) { printf("FEHLER view\n"); return 1; }
     printf("KAMERA cut=%d H=%d\n", cut, view.fov_screen_dist);

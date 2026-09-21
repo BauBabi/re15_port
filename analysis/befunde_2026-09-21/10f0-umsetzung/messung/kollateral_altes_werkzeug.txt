@@ -1,0 +1,8 @@
+Cut | Sektion alt/neu (Bytes)  gleich | TIM alt/neu (Bytes)  gleich
+  0 |   1724   1724   True |  66080  66080   True
+  1 |    724    824  False |  66080  66080  False
+  2 |    544    684  False |  66080  66080  False
+  3 |    704   1004  False |  66080  66080  False
+  4 |   2084      -  False |  66080      -  False
+  5 |   2104      -  False |  66080      -  False
+  6 |   2044   2044   True |  66080  66080   True

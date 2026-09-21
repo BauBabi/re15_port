@@ -1,0 +1,5 @@
+EICHUNG quader_flaechen == geom.quader_tiefe: bestanden (alle Typ-3-Zellen)
+CUT 4: Tiefschwarz in irgendeiner Stuhl-Silhouette 10751 px, davon auf dem DECKEL  3627 (33.7 %) | Kunst auf dem Deckel 540
+CUT 5: Tiefschwarz in irgendeiner Stuhl-Silhouette  7664 px, davon auf dem DECKEL  2627 (34.3 %) | Kunst auf dem Deckel 302
+
+MARKE F335: verdeckt 426, davon Zugabe 154, davon auf DECKEL-Bildpunkten 57 (37 %)
