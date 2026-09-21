@@ -1,0 +1,24 @@
+=== ROOM10F0 C4
+  Kante   n (alle)      Atlas | n (ohne D)      Atlas
+      8        652      40438 |        454      28029
+     10        445      42406 |        312      29565
+     12        332      44483 |        232      31050
+     16        209      46931 |        146      32722
+     20        135      47023 |         95      32962  <- passt ohne Doppel
+     24         98      48102 |         68      33637  <- passt ohne Doppel  (passt auch mit)
+     32         74      50886 |         52      35605  <- passt ohne Doppel  (passt auch mit)
+     40         45      49686 |         32      35005  <- passt ohne Doppel  (passt auch mit)
+     48         32      50886 |         23      35605  <- passt ohne Doppel  (passt auch mit)
+     64         26      50886 |         17      35605  <- passt ohne Doppel  (passt auch mit)
+=== ROOM10F0 C5
+  Kante   n (alle)      Atlas | n (ohne D)      Atlas
+      8        563      34680 |        343      21192
+     10        369      35050 |        225      21410
+     12        284      37080 |        171      22476
+     16        172      38636 |        104      23398  <- passt ohne Doppel
+     20        113      39408 |         68      23794  <- passt ohne Doppel
+     24         96      41276 |         57      24838  <- passt ohne Doppel  (passt auch mit)
+     32         54      41756 |         32      25070  <- passt ohne Doppel  (passt auch mit)
+     40         40      41548 |         24      24934  <- passt ohne Doppel  (passt auch mit)
+     48         34      41811 |         20      25125  <- passt ohne Doppel  (passt auch mit)
+     64         16      41811 |         10      25125  <- passt ohne Doppel  (passt auch mit)

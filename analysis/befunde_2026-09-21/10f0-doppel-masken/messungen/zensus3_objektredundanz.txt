@@ -1,0 +1,28 @@
+Sektionen gesamt 323;  mit Atlas (zeichnen etwas) 99;  Phase-2-Bau (.PBM) 77
+Masken gesamt 14281
+Cuts mit REDUNDANTEM OBJEKTBLOCK (Jaccard >= 0,99): 2 von 99
+  ROOM10F0  C5   105 Masken,  7 Bloecke, 3 Doppelpaare, 39 redundante Masken (37 %)  [(0, 4, 1.0, 31, 26), (1, 5, 0.994, 13, 9), (2, 6, 0.9969, 4, 4)]
+  ROOM10F0  C4   105 Masken, 11 Bloecke, 3 Doppelpaare, 30 redundante Masken (29 %)  [(0, 7, 1.0, 9, 4), (1, 8, 1.0, 11, 11), (2, 9, 1.0, 15, 15)]
+
+Cuts AN der Engine-Grenze 105 Masken: 20
+  ROOM1000  C0   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM1000  C4   Atlas ja  Phase2 ja  Bloecke 103  redundant 0
+  ROOM1000  C5   Atlas ja  Phase2 ja  Bloecke 88  redundant 0
+  ROOM1000  C7   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM1050  C6   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM1060  C0   Atlas ja  Phase2 ja  Bloecke 104  redundant 0
+  ROOM10C0  C2   Atlas ja  Phase2 ja  Bloecke 104  redundant 0
+  ROOM10C0  C3   Atlas ja  Phase2 ja  Bloecke 101  redundant 0
+  ROOM10D0  C9   Atlas ja  Phase2 ja  Bloecke 104  redundant 0
+  ROOM10E0  C5   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM10E0  C7   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM10F0  C4   Atlas ja  Phase2 nein  Bloecke 11  redundant 30
+  ROOM10F0  C5   Atlas ja  Phase2 nein  Bloecke  7  redundant 39
+  ROOM1100  C1   Atlas ja  Phase2 nein  Bloecke  3  redundant 0
+  ROOM1100  C2   Atlas ja  Phase2 nein  Bloecke  2  redundant 0
+  ROOM1180  C6   Atlas ja  Phase2 ja  Bloecke 94  redundant 0
+  ROOM11F0  C0   Atlas ja  Phase2 ja  Bloecke 105  redundant 0
+  ROOM1230  C6   Atlas ja  Phase2 ja  Bloecke 95  redundant 0
+  ROOM2090  C6   Atlas ja  Phase2 nein  Bloecke  1  redundant 0
+  ROOM2091  C6   Atlas ja  Phase2 nein  Bloecke  1  redundant 0
+Cuts 95..104 Masken: 22

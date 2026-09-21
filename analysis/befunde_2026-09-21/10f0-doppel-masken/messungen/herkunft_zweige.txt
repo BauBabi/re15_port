@@ -1,0 +1,27 @@
+SCA-Sperrzellen (Band 0): 23
+davon Typ 3 (Moebel): 11 -> [(12, 6600, 7500), (13, 6800, 3800), (14, 6700, 10300), (15, 4200, 11800), (16, 1550, 11650), (17, -1600, 12200), (18, -1800, 8200), (19, -1900, 4300), (20, 1600, 5700), (21, 1600, 1900), (22, 1500, -2000)]
+
+=== ROOM10F0 C4
+  Zweig S: Objekt 0 (pri/STAGE1/10F0/04_01.png) Komponente -> Zelle 17 (x-1600 z12200), 428 px, Jaccard 1.000
+  Zweig S: Objekt 1 (pri/STAGE1/10F0/04_02.png) Komponente -> Zelle 18 (x-1800 z8200), 1111 px, Jaccard 1.000
+  Zweig S: Objekt 2 (pri/STAGE1/10F0/04_03.png) Komponente -> Zelle 19 (x-1900 z4300), 592 px, Jaccard 1.000
+
+  Zweig Q: Objekt  3 Buerostuhl x6600 z7500     -> Zelle 12
+  Zweig Q: Objekt  4 Buerostuhl x6700 z10300    -> Zelle 14
+  Zweig Q: Objekt  5 Buerostuhl x4200 z11800    -> Zelle 15
+  Zweig Q: Objekt  6 Buerostuhl x1550 z11650    -> Zelle 16
+  Zweig Q: Objekt  7 Buerostuhl x-1600 z12200   -> Zelle 17  <<< DOPPELT zu Zweig S: |S|=428 |Q|=428  S\Q=0  Q\S=0
+  Zweig Q: Objekt  8 Buerostuhl x-1800 z8200    -> Zelle 18  <<< DOPPELT zu Zweig S: |S|=1111 |Q|=1111  S\Q=0  Q\S=0
+  Zweig Q: Objekt  9 Buerostuhl x-1900 z4300    -> Zelle 19  <<< DOPPELT zu Zweig S: |S|=592 |Q|=592  S\Q=0  Q\S=0
+  Zweig Q: Objekt 10 Buerostuhl x1600 z5700     -> Zelle 20
+
+=== ROOM10F0 C5
+  Zweig S: Objekt 0 (pri/STAGE1/10F0/05_01.png) Komponente -> Zelle 20 (x1600 z5700), 2629 px, Jaccard 1.000
+  Zweig S: Objekt 1 (pri/STAGE1/10F0/05_02.png) Komponente -> Zelle 21 (x1600 z1900), 679 px, Jaccard 1.000
+  Zweig S: Objekt 2 (pri/STAGE1/10F0/05_03.png) Komponente -> Zelle 22 (x1500 z-2000), 275 px, Jaccard 0.993
+
+  Zweig Q: Objekt  3 Buerostuhl x-1900 z4300    -> Zelle 19
+  Zweig Q: Objekt  4 Buerostuhl x1600 z5700     -> Zelle 20  <<< DOPPELT zu Zweig S: |S|=2629 |Q|=2629  S\Q=0  Q\S=0
+  Zweig Q: Objekt  5 Buerostuhl x1600 z1900     -> Zelle 21  <<< DOPPELT zu Zweig S: |S|=679 |Q|=672  S\Q=7  Q\S=0
+  Zweig Q: Objekt  6 Buerostuhl x1500 z-2000    -> Zelle 22  <<< DOPPELT zu Zweig S: |S|=275 |Q|=273  S\Q=2  Q\S=0
+
