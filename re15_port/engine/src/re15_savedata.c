@@ -154,9 +154,11 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
      * waere sinnlos, und RE2 braucht es auch nicht: dort ist "vorgemerkt" genau die Spanne,
      * in der die Nachricht 0xFF000000 haelt (@0x800517f4 gegen LAB_800307e0), da kommt
      * niemand an einen Speicherpunkt. Der Port fuehrt deshalb nicht den Zeiger, sondern die
-     * GEGENSTANDS-ID mit, und auch nur als Rueckhalt: durch den Pad-Riegel
-     * (re15_discard_pad_locked) ist das Feld im Auslieferungsstand praktisch immer 0.
-     * Voller Beleg samt Abgrenzung an der Definition von re15_discard_room_change. */
+     * GEGENSTANDS-ID mit, und auch nur als Rueckhalt: das Feld ist im Auslieferungsstand
+     * BEWEISBAR immer 0, weil die Spanne "vorgemerkt" vollstaendig im Freeze der
+     * ausloesenden Nachricht liegt (Maske 0xFFFF0000 an allen 16 Benutzungsstellen: Pad
+     * 0x01000000 @0x800304f4 UND Skript 0x02000000 @0x8003f044) — dort kommt niemand an
+     * einen Speicherpunkt. Beleg an der Definition von re15_discard_reset. */
     { extern uint8_t re15_discard_pending_item(void);
       out->discard_pending_item = re15_discard_pending_item(); }
 

@@ -17,6 +17,26 @@
  *      schreibt im Nein-Zweig die 1 zurueck (@0x800517C4) — sonst liefe sie beim naechsten
  *      Gebrauch auf 0xFF unter und es wuerde nie wieder gefragt.
  *
+ *  TEIL I — WORAUS DIE PORT-WARTEZEIT BESTAND, und dass sie es nicht mehr tut:
+ *      je Benutzungsstelle wird die Spanne "vorgemerkt" in ihre Anteile zerlegt
+ *      (Nachricht / Szene / Faden-Ende) und gegen die Spanne "die Nachricht haelt
+ *      den Spieler" gestellt. Verlangt wird GLEICHHEIT — RE2s Regel (@0x800517f0
+ *      `andi v0,v0,0x80` / @0x800517f4). Der frueher gemessene UEBERHANG wird im
+ *      selben Lauf mit protokolliert; waere er 0, wuerde der Riegel nichts messen.
+ *
+ *  TEIL J — WAS DER SPIELER SPUERT: das px/pz-Delta hinter dem ECHTEN
+ *      re15_game_step, nicht ein Praedikat gegen sich selbst. Drei Spalten im
+ *      selben Lauf: JETZT (muss 0 sein), GEGENPROBE ueber die Ueberhang-Spanne des
+ *      Runde-22-Modells (muss > 0 sein) und STUB ohne re15_game_step (muss 0
+ *      sein — so ist belegt, dass eine 0 nicht schon aus dem Messaufbau folgt).
+ *      Je Stelle zusaetzlich: die Abfrage geht wirklich auf, und nach der Antwort
+ *      laeuft der Spieler wieder.
+ *
+ *  TEIL K — der SICHTBARE Prompt friert das Skript ein (byte-true @0x80051844/
+ *      @0x80051850 mit 0xFF000000, SCD-Bit 0x02000000) und es laeuft nach der
+ *      Antwort WEITER. ROOM1090 sub03 ist der Fall, an dem Runde 21 den
+ *      Gegenbeweis zu sehen glaubte — dort wurde die Frage nie beantwortet.
+ *
  *  TEIL C — SACKGASSEN-RIEGEL: ein weggeworfener Gegenstand kann keinen Skript-Zweig
  *      veraendern. Vollzensus ueber ALLE RDTs mit dem Laengen-Vorschub des Motors selbst
  *      (scd_opcode_size_at):
@@ -44,6 +64,13 @@
 #include "re15_item_discard.h"
 #include "re15_item_prompt.h"
 #include "re15_msg_select.h"
+#include "re15_game_step.h"     /* der ECHTE Spielschritt — TEIL J misst px/pz dahinter */
+#include "re15_player.h"        /* RE15_PAD_BIT_UP                                     */
+#include "re15_collision.h"     /* Boden-Band aus dem Spawn-Y                          */
+#include "re15_enemy_ai.h"      /* re15_player_cmd_reset                               */
+#include "re15_camera.h"
+#include "re15_room_spawns.h"   /* der Tuer-Spawn je Raum (begehbarer Punkt)           */
+#include "re15_room_list.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -498,20 +525,27 @@ static void teil_d(void)
 }
 
 /* =========================================================================
- * TEIL E — waehrend einer SZENE geht die Abfrage NICHT auf
+ * TEIL E — DIE NACHRICHT haelt die Abfrage zurueck, NICHT die Szene.
  *
- * Der Riegel ist flag(2,7) (= Pause-Bit 0x01000000 in DAT_800aca40, gelesen
- * @0x800304f4-@0x8003051c) bzw. flag(1,27); zusammen re15_cine_active().
- * ROOM1090 sub03 spannt genau dieses Fenster: @0x2508 `Set(2,7,1)` .. @0x26DA
- * `Set(2,7,0)`. Gefahren werden die drei Gegenstaende, die in diesem Fenster
- * benutzt werden (Feuerloescher, Zange, Minidisc-Player).
- *
- * GEGENPROBE je Fall: OHNE gesetztes Fenster geht dieselbe Nachricht sofort auf —
- * sonst koennte der Riegel auch gruen stehen, weil die Abfrage gar nicht kommt.
+ * ⛔ DIESER TEIL PRUEFT SEIT RUNDE 23 DAS GEGENTEIL VON VORHER, und zwar mit
+ * Beleg: RE2s Fortsetzung kennt GENAU EINE Schranke, das Belegt-Bit des
+ * Nachrichtensystems —
+ *     800517e0  lbu  v0,-0x78c4(v0)        DAT_800e873c
+ *     800517f0  andi v0,v0,0x80
+ *     800517f4  bne  v0,zero,LAB_80051870
+ * — und ein Szenen-Fenster gibt es dort nicht. Der Riegel von Runde 22 hielt die
+ * Abfrage zusaetzlich waehrend flag(2,7)/flag(1,27) zurueck; GENAU DAS hat die
+ * Spanne "vorgemerkt" ueber den Nachrichten-Freeze hinaus verlaengert und das
+ * Loch aufgerissen (TEIL I zerlegt es). Gefragt wird jetzt also:
+ *   (1) offene Nachricht -> Abfrage bleibt zu, EGAL ob eine Szene laeuft;
+ *   (2) Nachricht ausgeredet -> Abfrage geht auf, EGAL ob eine Szene laeuft.
+ * Der Pad ist in beiden Faellen gesperrt (die Nachricht hat Maske 0xFFFF0000, die
+ * Szene setzt 0x01000000 selbst) — es entsteht also kein Loch.
  * ========================================================================= */
 static void teil_e(void)
 {
-    printf("\n=== TEIL E: keine Abfrage waehrend einer laufenden Szene ===\n");
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    printf("\n=== TEIL E: die NACHRICHT haelt zurueck, nicht die Szene ===\n");
     static const struct { unsigned room; uint8_t msg, item; const char *was; } f[] = {
         { 0x1090,  9, 0x31, "Fire Extinguisher"      },
         { 0x11E0, 12, 0x30, "Pliers"                 },
@@ -523,88 +557,79 @@ static void teil_e(void)
         uint8_t *raw = raum_laden(f[i].room, &rdt, &n);
         if (!raw) { printf("  SKIP ROOM%04X\n", f[i].room); continue; }
 
-        /* --- Szene laeuft: flag(2,7) = 1 (ROOM1090 sub03 @0x2508) ------------------- */
+        /* --- (1) Nachricht OFFEN (und Szene laeuft): Abfrage bleibt zu -------------- */
         grundzustand();
         re15_inv_grant(f[i].item, 1);
         re15_game_flag_set(2, 7, 1);
         PRUEFE(re15_cine_active(), "flag(2,7)=1 macht re15_cine_active() nicht wahr");
-        nachricht_spielen(&rdt, f[i].room, f[i].msg);
-        for (int k = 0; k < 600; k++) re15_discard_tick(0, 0);   /* 600 Bilder warten   */
+        g_current_room_id = f[i].room;
+        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+        s_prog[1] = f[i].msg;
+        scd_thread_start(0, s_prog);
+        g_scd_pad_edge = 0; g_scd_pad_held = 0;
+        scd_vm_tick();                                   /* Message_on oeffnet          */
+        { const unsigned char *r; int l, id; re15_msg_tick(&r, &l, &id); }
+        PRUEFE(re15_discard_active(), "ROOM%04X: die Abfrage wird nicht vorgemerkt", f[i].room);
+        PRUEFE(re15_pauseflags_belegt(),
+               "ROOM%04X: die Nachricht setzt das Belegt-Bit nicht", f[i].room);
+        for (int k = 0; k < 20; k++) re15_discard_tick(0, 0);
         PRUEFE(re15_discard_prompt(NULL, NULL) == 0,
-               "ROOM%04X (%s): die Abfrage ging WAEHREND der Szene auf",
+               "ROOM%04X (%s): die Abfrage ging auf, waehrend die Nachricht noch stand",
                f[i].room, f[i].was);
         { int slot = re15_inv_find_item(f[i].item);
           PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
-                 "ROOM%04X: die Anzahl faellt schon waehrend der Szene (%d statt 1)",
+                 "ROOM%04X: die Anzahl faellt schon vor der Frage (%d statt 1)",
                  f[i].room, slot >= 0 ? g_inv.slots[slot].qty : -1); }
+        PRUEFE((g_re15_pauseflags & 0x01000000u) != 0,
+               "ROOM%04X: waehrend der Nachricht ist der Pad frei", f[i].room);
 
-        /* --- Szene endet (@0x26DA `Set(2,7,0)`) -> JETZT geht sie auf --------------- */
-        re15_game_flag_set(2, 7, 0);
-        PRUEFE(!re15_cine_active(), "flag(2,7)=0 beendet re15_cine_active() nicht");
+        /* --- (2) Nachricht ausgeredet, Szene laeuft WEITER: Abfrage geht auf -------- */
+        for (int k = 0; k < 4000 && re15_pauseflags_belegt(); k++) {
+            const unsigned char *r; int l, id;
+            g_scd_pad_edge = ((k % 4) == 0) ? 0x4000u : 0u;
+            if (!re15_discard_frozen()) scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            g_scd_pad_edge = 0;
+            if (re15_discard_active()) re15_discard_tick(0, 0);
+        }
+        PRUEFE(re15_cine_active(), "ROOM%04X: die Szene ist zwischendurch ausgegangen",
+               f[i].room);
         int bild = -1;
         for (int k = 0; k < 8; k++) {
-            re15_discard_tick(0, 0);
             if (re15_discard_prompt(NULL, NULL)) { bild = k; break; }
+            re15_discard_tick(0, 0);
         }
-        PRUEFE(bild >= 0, "ROOM%04X (%s): die Abfrage kommt auch NACH der Szene nicht",
+        PRUEFE(bild >= 0, "ROOM%04X (%s): die Abfrage kommt nach der Nachricht nicht",
                f[i].room, f[i].was);
         { uint8_t it = 0; re15_discard_prompt(&it, NULL);
-          PRUEFE(it == f[i].item, "ROOM%04X: falscher Gegenstand nach der Szene", f[i].room); }
+          PRUEFE(it == f[i].item, "ROOM%04X: falscher Gegenstand", f[i].room); }
         { int slot = re15_inv_find_item(f[i].item);
           PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 0,
                  "ROOM%04X: die Anzahl faellt nicht im Bild der Frage (@0x80051810)",
                  f[i].room); }
-        printf("  %-24s ROOM%04X msg %2u: waehrend der Szene zu, %d Bild(er) nach"
-               " Set(2,7,0) offen\n", f[i].was, f[i].room, f[i].msg, bild + 1);
+        printf("  %-24s ROOM%04X msg %2u: waehrend der Nachricht zu, %d Bild(er) nach"
+               " dem Belegt-Bit offen — MIT laufender Szene\n",
+               f[i].was, f[i].room, f[i].msg, bild);
 
-        /* --- GEGENPROBE: dieselbe Nachricht OHNE Szene -> sofort offen -------------- */
+        /* --- GEGENPROBE: derselbe Ablauf OHNE Szene -> genauso ---------------------- */
         grundzustand();
         re15_inv_grant(f[i].item, 1);
         nachricht_spielen(&rdt, f[i].room, f[i].msg);
         PRUEFE(re15_discard_prompt(NULL, NULL) != 0,
                "GEGENPROBE ROOM%04X: ohne Szene kommt die Abfrage gar nicht", f[i].room);
-
-        /* --- Und ueber flag(1,27), die zweite Haelfte des Fensters (@0x250C) -------- */
-        grundzustand();
-        re15_inv_grant(f[i].item, 1);
-        re15_game_flag_set(1, 27, 1);
-        nachricht_spielen(&rdt, f[i].room, f[i].msg);
-        for (int k = 0; k < 120; k++) re15_discard_tick(0, 0);
-        PRUEFE(re15_discard_prompt(NULL, NULL) == 0,
-               "ROOM%04X: flag(1,27) haelt die Abfrage nicht zurueck", f[i].room);
+        PRUEFE(!re15_cine_active(), "GEGENPROBE ROOM%04X: die Szene laeuft doch", f[i].room);
 
         gefahren++;
         free(raw);
     }
-    printf("  ABDECKUNG: %d von 3 Faellen gefahren, je 4 Pruefungen"
-           " (Szene zu / danach offen / Gegenprobe ohne Szene / flag(1,27))\n", gefahren);
-    PRUEFE(gefahren == 3, "nicht alle drei Cutscene-Faelle gefahren");
+    printf("  ABDECKUNG: %d von 3 Faellen gefahren, je 3 Pruefungen (Nachricht haelt /"
+           " danach offen TROTZ Szene / Gegenprobe ohne Szene)\n", gefahren);
+    PRUEFE(gefahren == 3, "nicht alle drei Faelle gefahren");
 }
 
 /* =========================================================================
- * TEIL F — das AUSGELIEFERTE Unterprogramm, Bild fuer Bild.
- *
- * TEIL E setzt das Szenen-Flag von Hand. Hier laeuft dagegen das echte
- * Unterprogramm aus der RDT im echten VM, und gemessen wird:
- *   - in welchem Bild die Abfrage nach dem ALTEN Stand aufgegangen waere
- *     (Bedingung damals: "Nachricht ausgeredet"), und
- *   - in welchem Bild sie JETZT aufgeht.
- *
- * ROOM1090 sub03 ist der Fall, der das alte Modell widerlegt hat: die Nachricht
- * @0x2502 steht EINE Anweisung VOR dem Szenen-Fenster @0x2508. Im Bild, in dem
- * sie ausgeredet hatte, war flag(2,7) also noch gar nicht gesetzt — ein Riegel
- * allein auf dem Fenster haette nicht gegriffen. Und weil ein sichtbarer Prompt
- * den SCD-Takt anhaelt, waere die Szene ueberhaupt nie angelaufen.
- *
- * GEGENPROBE ist eingebaut: der alte Oeffnungszeitpunkt wird im selben Lauf
- * mitgemessen. Liegt er nicht deutlich frueher, misst der Riegel nichts.
- *
- * ⛔ BERICHTIGUNG (Urteil 2026-09-22): dieser Teil rief FRUEHER kein
- * scd_register_current_rdt. Ohne das hat der VM keine sub_scd[]-Tabelle, und
- * `Gosub`/`Evt_exec` sind stille No-Ops (scd_vm.c: op_evt_exec gibt ohne
- * registriertes RDT auf) — gemessen wurde also ein VERKUERZTES Skript. Die
- * Bildzahlen des alten Berichts (ROOM1090: 677) sind damit hinfaellig; sie
- * werden hier mit registriertem RDT NEU erhoben.
+ * Werkzeuge fuer TEIL I/J/K: das ausgelieferte Unterprogramm finden und im
+ * echten VM fahren.
  * ========================================================================= */
 /* Das Unterprogramm suchen, das `Message_on <msg_id>` enthaelt. Die Region wird durch den
  * NAECHSTEN Unterprogramm-Zeiger begrenzt, nicht durch das erste Evt_end — ein Evt_end in
@@ -627,329 +652,95 @@ static int sub_mit_nachricht(re15_rdt_t *rdt, uint8_t msg_id)
     return -1;
 }
 
-/* In WELCHEM Unterprogramm steht der Faden gerade, und ist das eine Warteschleife?
- * Gemessen mit dem Laengen-Vorschub des Motors selbst (scd_opcode_size_at):
- * `Do` (0x11) / `Edwhile` (0x12) im selben Unterprogramm = Warteschleife. */
-static int faden_region(re15_rdt_t *rdt, const uint8_t *pc, int *out_schleife,
-                        uint8_t *out_ck_zone, uint8_t *out_ck_bit)
+/* Den Tuer-Spawn des Raums holen (re15_room_spawns[] parallel zu re15_room_ids[]) —
+ * ein Punkt, an dem der Spieler im Spiel wirklich steht und laufen kann. */
+static const re15_room_spawn_t *spawn_von(unsigned room)
 {
-    *out_schleife = 0;
-    for (int s = 0; s < rdt->sub_scd_count; s++) {
-        const uint8_t *a = rdt->sub_scd[s];
-        if (!a) continue;
-        const uint8_t *e = (s + 1 < rdt->sub_scd_count && rdt->sub_scd[s+1] > a)
-                         ? rdt->sub_scd[s+1] : a + 4096;
-        if (pc < a || pc >= e) continue;
-        for (const uint8_t *q = a; q < e; ) {
-            int sz = scd_opcode_size_at(q);
-            if (sz <= 0) break;
-            if (*q == 0x11 || *q == 0x12) *out_schleife = 1;
-            if (*q == 0x21 && out_ck_zone) { *out_ck_zone = q[1]; *out_ck_bit = q[2]; }
-            q += sz;
-        }
-        return s;
-    }
-    return -1;
+    for (int i = 0; i < RE15_ROOM_COUNT; i++)
+        if (re15_room_ids[i] == room) return &re15_room_spawns[i];
+    return NULL;
 }
 
-static void teil_f(void)
+/* Raum wie im Spiel aufbauen, damit re15_game_step echte Wege rechnet. */
+static int raum_booten(re15_rdt_t *rdt, unsigned room, re15_game_ctx_t *ctx,
+                       re15_camera_view_t *cam)
 {
-    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
-    printf("\n=== TEIL F: das ausgelieferte Unterprogramm, Bild fuer Bild ===\n");
-    /* Diese drei nennt der Bericht namentlich; gefahren werden ALLE 16 Stellen. */
-    static const struct { unsigned room; uint8_t msg; } laut[] = {
-        { 0x1090,  9 }, { 0x11E0, 12 }, { 0x1100, 4 },
-    };
-    int gefahren = 0, spaeter = 0, ausgelassen = 0;
-    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
-        struct { unsigned room; uint8_t msg, item; } f3[1];
-        f3[0].room = re15_discard_sites[i].room;
-        f3[0].msg  = re15_discard_sites[i].msg;
-        f3[0].item = re15_discard_sites[i].item;
-        int nennen = 0;
-        for (unsigned k = 0; k < sizeof laut / sizeof laut[0]; k++)
-            if (laut[k].room == f3[0].room && laut[k].msg == f3[0].msg) nennen = 1;
-        {
-        re15_rdt_t rdt; size_t n = 0;
-        uint8_t *raw = raum_laden(f3[0].room, &rdt, &n);
-        if (!raw) { printf("  SKIP ROOM%04X\n", f3[0].room); continue; }
-        int sub = sub_mit_nachricht(&rdt, f3[0].msg);
-        if (sub < 0) {
-            /* ⛔ BERICHTIGUNG (Urteil 2026-09-22): hier stand frueher, ROOM4001s
-             * Message_on 2 "liege im mainScd". Das war falsch — nachgemessen
-             * (tools/scd_dump_room.py) gibt ROOM4001 ueberhaupt nur die Nachrichten
-             * 3..12 aus; ein `Message_on 2` existiert dort WEDER im mainScd NOCH in
-             * einem sub. Der Eintrag war tot und ist seit Aufnahmebedingung (D) des
-             * Generators gar nicht mehr in discard_sites.inc. Dieser Zweig bleibt als
-             * Netz stehen — und sagt jetzt nur noch, was er wirklich weiss. */
-            printf("  AUSGELASSEN ROOM%04X msg %2u: kein Message_on %u in einer"
-                   " sub-Region dieses Raums\n",
-                   f3[0].room, (unsigned)f3[0].msg, (unsigned)f3[0].msg);
-            ausgelassen++; free(raw); continue;
-        }
-
-        grundzustand();
-        g_current_room_id = f3[0].room;
-        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
-        /* ⛔ DAS RDT MUSS REGISTRIERT SEIN, sonst laufen Gosub/Evt_exec ins Leere und
-         * das gemessene Skript ist kuerzer als das ausgelieferte (Berichtigung oben). */
-        scd_register_current_rdt(&rdt);
-        re15_inv_grant(f3[0].item, 1);
-        scd_thread_start(0, rdt.sub_scd[sub]);
-
-        long b_msg = -1, b_alt = -1, b_ende = -1, b_neu = -1;
-        int war_wartet = 0;
-        for (long fr = 0; fr < 20000; fr++) {
-            const unsigned char *r; int l, id;
-            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
-            g_scd_pad_held = 0;
-            scd_vm_tick();
-            re15_msg_tick(&r, &l, &id);
-            g_scd_pad_edge = 0;
-
-            if (re15_discard_active() && !war_wartet) { b_msg = fr; war_wartet = 1; }
-            /* ALTER Stand: es reichte, dass das Nachrichtensystem frei war. */
-            if (war_wartet && b_alt < 0
-                && !g_scd.message_active && !g_scd.message_fsm_active) b_alt = fr;
-            /* Ende des ausloesenden Unterprogramms (Evt_end). */
-            if (b_ende < 0 && war_wartet && !g_scd.threads[0].active) b_ende = fr;
-
-            if (re15_discard_active()) re15_discard_tick(0, 0);
-            if (b_neu < 0 && re15_discard_prompt(NULL, NULL)) b_neu = fr;
-            if (b_neu >= 0) break;
-        }
-        if (nennen) {
-            printf("  Gegenstand 0x%02X  ROOM%04X sub%02d msg %2u:\n",
-                   f3[0].item, f3[0].room, sub, f3[0].msg);
-            printf("      Bild %5ld  Message_on %u — Abfrage vorgemerkt\n", b_msg, f3[0].msg);
-            printf("      Bild %5ld  ALTER Stand haette hier geoeffnet (Nachricht ausgeredet)\n", b_alt);
-            printf("      Bild %5ld  Evt_end — das Unterprogramm ist fertig\n", b_ende);
-            printf("      Bild %5ld  JETZT geht die Abfrage auf  (= %ld Bilder spaeter)\n",
-                   b_neu, (b_neu >= 0 && b_alt >= 0) ? b_neu - b_alt : -1);
-        }
-
-        /* ⛔ UNTERSCHEIDUNG, nicht Nachsicht: dieser Riegel startet das Unterprogramm
-         * NACKT (scd_thread_start ohne vollen Raum-Aufbau, ohne Kamera, ohne Spieler-
-         * Antwort auf die Ja/Nein-Frage davor). Die Kartenleser ROOM10D0/10D1/1230/1231
-         * und ROOM11E0 msg 9 haengen ihre Benutzungs-Nachricht hinter eine Verzweigung:
-         * ROOM10D0 sub20 @0x19B8 `Ifel_ck` / @0x19BC `Ck(12,31,0)` — das ist die
-         * Ja-Antwort auf die Frage davor (Message_on 7). Ohne echte Spieler-Antwort geht
-         * der Zweig nach Else (@0x19D2 Message_on 8), und Message_on 9 faellt nie.
-         * Die Abfrage wird dann gar nicht erst vorgemerkt.
-         * Das ist ein Mangel DIESES RIEGELS, kein Verhalten des Spiels: im laufenden Spiel
-         * geht die Abfrage in ROOM10D0 auf — Live-Abzug
-         * analysis/befunde_2026-09-22/discard-nacharbeit/, Bild F333, Messchiene
-         * discard.log (erste Zeile `frage=8` = F333, `abfrage=1` schon ab F260).
-         * Sauber getrennt: wurde die Abfrage nie VORGEMERKT, hat der Riegel die Stelle
-         * nicht erreicht -> ausgelassen MIT Grund. Wurde sie vorgemerkt und der Faden ist
-         * fertig, MUSS sie aufgehen — sonst echter Fehler. */
-        if (!war_wartet) {
-            printf("  AUSGELASSEN ROOM%04X sub%02d msg %2u: der Riegel erreicht die Stelle"
-                   " nicht (Verzweigung auf die Ja/Nein-Antwort bzw. Evt_exec) —\n"
-                   "               im Spiel belegt durch den Live-Abzug (F333)\n",
-                   f3[0].room, sub, f3[0].msg);
-            ausgelassen++;
-            scd_register_current_rdt(NULL);
-            free(raw);
-            continue;
-        }
-        /* ⛔ ZWEITE AUSLASSUNG MIT GRUND, und der Grund ist GEMESSEN, nicht behauptet:
-         * mit registriertem RDT laeuft `Gosub` wirklich, und ROOM1090 sub03 tut
-         * @0x261C `Plc_dest(mode 9, flag 33)` + @0x2624 `Gosub 5`; sub05 ist
-         * @0x26F4 `Do` / @0x26FA `Edwhile` / @0x26FC `Ck(5,33,0)`, also eine
-         * Warteschleife auf das ANKUNFTS-Flag des Spieler-Wegs. Dieser Riegel faehrt
-         * keinen Spieler-Schritt (kein re15_game_step), das Flag faellt nie, der Faden
-         * bleibt stehen. Das ist ein Mangel DIESES Riegels, kein Verhalten des Spiels —
-         * und er wird hier mit der Stelle belegt, an der der Faden steht. */
-        if (b_ende < 0) {
-            long pc_off = g_scd.threads[0].active
-                        ? (long)(g_scd.threads[0].pc - raw) : -1;
-            int  schleife = 0; uint8_t ckz = 0xFF, ckb = 0xFF; int wo = -1;
-            if (g_scd.threads[0].active)
-                wo = faden_region(&rdt, g_scd.threads[0].pc, &schleife, &ckz, &ckb);
-            printf("  AUSGELASSEN ROOM%04X sub%02d msg %2u: der Faden endet nicht —"
-                   " er steht in sub%02d @Datei 0x%04lX%s\n",
-                   f3[0].room, sub, (unsigned)f3[0].msg, wo, pc_off,
-                   schleife ? "" : " (KEINE Warteschleife!)");
-            if (schleife)
-                printf("               sub%02d ist eine Do/Edwhile-Schleife auf"
-                       " Ck(%u,%u) — das Ankunftsflag des Spieler-Weges, das dieser\n"
-                       "               Riegel nicht faehrt (kein re15_game_step)\n",
-                       wo, ckz, ckb);
-            PRUEFE(schleife,
-                   "ROOM%04X: der Faden endet nicht UND steht in keiner"
-                   " Warteschleife (sub%02d @0x%04lX)", f3[0].room, wo, pc_off);
-            ausgelassen++;
-            scd_register_current_rdt(NULL);
-            free(raw);
-            continue;
-        }
-        PRUEFE(b_neu >= 0, "ROOM%04X: der Faden ist fertig, die Abfrage geht trotzdem"
-               " nicht auf", f3[0].room);
-        PRUEFE(b_neu >= b_ende,
-               "ROOM%04X: die Abfrage geht in Bild %ld auf, das Unterprogramm laeuft aber"
-               " noch bis Bild %ld", f3[0].room, b_neu, b_ende);
-        if (b_alt >= 0 && b_neu > b_alt) spaeter++;
-        gefahren++;
-        scd_register_current_rdt(NULL);   /* rdt/raw wird gleich freigegeben */
-        free(raw);
-        }
+    const re15_room_spawn_t *sp = spawn_von(room);
+    if (!sp || (sp->x == 0 && sp->z == 0)) return 0;
+    grundzustand();
+    re15_player_cmd_reset();
+    memset(cam, 0, sizeof *cam);
+    memset(ctx, 0, sizeof *ctx);
+    ctx->rdt = rdt; ctx->rdt_ok = 1; ctx->cam_view = cam; ctx->active_cut = sp->cut;
+    g_current_room_id = room; g_room_change.pending = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100;
+    pl->x = sp->x; pl->y = sp->y; pl->z = sp->z; pl->rot_y = sp->yaw;
+    re15_collision_set_band(re15_collision_band_from_y(pl->y));
+    re15_msg_load_room_block(rdt->messages, rdt->messages_size);
+    scd_register_current_rdt(rdt);
+    scd_register_room_events(rdt);
+    scd_room_reenter(rdt, pl->x, pl->z, sp->cut);
+    g_scd.cut_auto_enabled = 1;
+    for (int f = 0; f < 20; f++) {                 /* Raum einschwingen lassen          */
+        const unsigned char *r; int l, id;
+        scd_vm_tick(); re15_msg_tick(&r, &l, &id);
+        ctx->pad_current = 0; ctx->pad_pressed = 0;
+        re15_game_step(ctx);
     }
-    printf("  ABDECKUNG: %d von %d Benutzungsstellen mit dem ECHTEN, REGISTRIERTEN\n"
-           "             Unterprogramm gefahren, %d MIT GRUND ausgelassen (Stelle haengt\n"
-           "             hinter der Ja/Nein-Verzweigung, oder der Faden wartet auf ein\n"
-           "             Flag, das nur der Spieler-Schritt setzt — dort greift der\n"
-           "             Live-Abzug); in %d der gefahrenen geht die Abfrage jetzt\n"
-           "             SPAETER auf als vorher\n",
-           gefahren, RE15_DISCARD_SITE_COUNT, ausgelassen, spaeter);
-    PRUEFE(gefahren + ausgelassen == RE15_DISCARD_SITE_COUNT,
-           "%d Benutzungsstellen weder gefahren noch mit Grund ausgelassen",
-           RE15_DISCARD_SITE_COUNT - gefahren - ausgelassen);
-    /* GEGENPROBE: der Riegel muss ueberhaupt etwas verschieben. Waere er wirkungslos,
-     * laege der neue Zeitpunkt ueberall auf dem alten. */
-    PRUEFE(spaeter >= 3, "GEGENPROBE: der Riegel verschiebt nur %d Stellen", spaeter);
+    return 1;
 }
 
 /* =========================================================================
- * TEIL G — DER RIEGEL GEGEN DAS LOCH:
- *         kein Bild mit VORGEMERKT und PAD FREI und UNSICHTBAR.
+ * TEIL I — WORAUS DIE PORT-WARTEZEIT BESTAND, Anteil fuer Anteil.
  *
- * Das ist die Eigenschaft, die RE2 ueber diese ganze Spanne hat, und sie ist
- * disassembliert, nicht gewaehlt: die ausloesende Nachricht "You have used the
- * <X>." wird mit der Freeze-Maske 0xFF000000 geoeffnet (@0x80051650
- * `lui a3,0xff00`), FUN_8002fe38 legt sie @0x8002fe90 nach DAT_800e8760 und
- * sichert das Steuerwort @0x8002fea4 nach DAT_800e875c; der Nachrichten-Takt
- * FUN_8003027c legt sie im OEFFNEN-Zweig an (`DAT_800cfbdc |= *(p+0x5cb0)`) und
- * nimmt sie erst beim Schliessen zurueck (LAB_800307e0 `DAT_800cfbdc = *(p+0x5cac)`),
- * und die Abfrage legt sie @0x80051850 sofort wieder an. Der Spieler ist dort also
- * durchgehend festgesetzt.
+ * Gemessen wird ZWEIMAL dasselbe Unterprogramm aus der RDT, im echten VM, mit
+ * registriertem RDT (ohne das sind Gosub/Evt_exec stille No-Ops):
  *
- * Im Port heisst dieselbe Lage: Pad-Bit 0x01000000 (@0x800304f4-@0x8003051c,
- * Eingabe auf 0xf000) — entweder aus g_re15_pauseflags (solange die Nachricht
- * laeuft) oder aus re15_discard_pad_locked() (solange vorgemerkt ist).
+ *  Lauf 1 — MIT dem Gegenstand. Die Abfrage wird vorgemerkt; gemessen wird, in
+ *      welchem Bild das Belegt-Bit des Nachrichtensystems frei wird
+ *      (re15_pauseflags_belegt, = RE2 @0x800517f0 `andi v0,v0,0x80`) und in
+ *      welchem Bild die Abfrage aufgeht. VERLANGT WIRD: dasselbe Bild.
+ *      Danach friert der sichtbare Prompt das Skript ein (byte-true
+ *      @0x80051850 mit 0xFF000000, SCD-Bit 0x02000000 @0x8003f044), der Lauf
+ *      kann also nicht weiterlaufen — deshalb der zweite Lauf.
  *
- * GEGENPROBE IM SELBEN LAUF: dieselbe Zaehlung mit der ALTEN Bedingung (nur
- * g_re15_pauseflags) muss Loecher finden — sonst misst der Riegel nichts.
+ *  Lauf 2 — OHNE den Gegenstand. Nichts wird vorgemerkt, das Unterprogramm
+ *      laeuft unbehindert durch, und die drei Schranken des Runde-22-Modells
+ *      werden Bild fuer Bild mitgeschrieben:
+ *          NACHRICHT  re15_pauseflags_belegt()        (die EINE echte Schranke)
+ *          SZENE      re15_cine_active()              (Port-Zutat, Runde 21)
+ *          FADEN      g_scd.threads[0].active         (Port-Zutat, Runde 21)
+ *      Der UEBERHANG ist die Spanne vom Ende der Nachricht bis zu dem Bild, in
+ *      dem alle drei frei sind — genau die Spanne, in der der Spieler frei lief,
+ *      waehrend die Abfrage armiert und unsichtbar war. Je Anteil wird die
+ *      Bildzahl ausgewiesen; die Bilder mit FREIEM Pad sind das Loch.
+ *
+ * GEGENPROBE IM SELBEN LAUF: waere der Ueberhang 0, wuerde dieser Riegel nichts
+ * messen. Zwei PRUEFE erzwingen, dass er da ist (Summe > 0, groesster >= 20).
  * ========================================================================= */
-static void teil_g(void)
+typedef struct {
+    long b_msgende;      /* erstes Bild mit freiem Belegt-Bit                      */
+    long b_alt;          /* erstes Bild, in dem ALLE DREI Schranken frei sind      */
+    long n_nachricht;    /* Bilder mit gehaltenem Belegt-Bit (Anteil NACHRICHT)    */
+    long n_szene;        /* Ueberhang-Bilder, die die SZENE hielt                  */
+    long n_faden;        /* Ueberhang-Bilder, die nur der FADEN hielt              */
+    long n_msg2;         /* Ueberhang-Bilder, die eine FOLGE-Nachricht hielt       */
+    long loch;           /* Ueberhang-Bilder mit FREIEM Pad                        */
+} spanne_t;
+
+/* Lauf 2: das Unterprogramm OHNE Vormerkung fahren und die Anteile zaehlen. */
+static int spanne_messen(re15_rdt_t *rdt, unsigned room, uint8_t msg, int sub, spanne_t *out)
 {
     extern uint16_t g_scd_pad_edge, g_scd_pad_held;
-    printf("\n=== TEIL G: kein Bild mit vorgemerkt + Pad frei + unsichtbar ===\n");
-
-    int gefahren = 0, ausgelassen = 0;
-    long loecher_neu_gesamt = 0, loecher_alt_gesamt = 0, groesstes_altes_loch = 0;
-    unsigned loch_raum = 0; uint8_t loch_msg = 0;
-
-    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
-        unsigned room = re15_discard_sites[i].room;
-        uint8_t  msg  = re15_discard_sites[i].msg;
-        uint8_t  item = re15_discard_sites[i].item;
-        re15_rdt_t rdt; size_t n = 0;
-        uint8_t *raw = raum_laden(room, &rdt, &n);
-        if (!raw) { printf("  SKIP ROOM%04X\n", room); continue; }
-        int sub = sub_mit_nachricht(&rdt, msg);
-        if (sub < 0) { printf("  AUSGELASSEN ROOM%04X msg %2u: Message_on in keiner"
-                              " sub-Region\n", room, (unsigned)msg);
-                       ausgelassen++; free(raw); continue; }
-
-        grundzustand();
-        g_current_room_id = room;
-        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
-        scd_register_current_rdt(&rdt);
-        re15_inv_grant(item, 1);
-        scd_thread_start(0, rdt.sub_scd[sub]);
-
-        long loch_neu = 0, loch_alt = 0;
-        int  war_wartet = 0;
-        for (long fr = 0; fr < 20000; fr++) {
-            const unsigned char *r; int l, id;
-            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
-            g_scd_pad_held = 0;
-            scd_vm_tick();
-            re15_msg_tick(&r, &l, &id);
-            g_scd_pad_edge = 0;
-            if (re15_discard_active()) { war_wartet = 1; re15_discard_tick(0, 0); }
-
-            int vorgemerkt = re15_discard_active();
-            int sichtbar   = re15_discard_prompt(NULL, NULL) != 0;
-            int pad_alt    = !(g_re15_pauseflags & 0x01000000u);          /* frueherer Stand */
-            int pad_neu    = pad_alt && !re15_discard_pad_locked();       /* jetziger Stand  */
-            if (vorgemerkt && !sichtbar && pad_neu) loch_neu++;
-            if (vorgemerkt && !sichtbar && pad_alt) loch_alt++;
-            if (sichtbar) break;                    /* ab hier friert die Abfrage ohnehin ein */
-        }
-        if (!war_wartet) {
-            printf("  AUSGELASSEN ROOM%04X sub%02d msg %2u: die Stelle wird nicht"
-                   " erreicht (Verzweigung auf die Ja/Nein-Antwort)\n",
-                   room, sub, (unsigned)msg);
-            ausgelassen++;
-            scd_register_current_rdt(NULL); free(raw); continue;
-        }
-        PRUEFE(loch_neu == 0,
-               "ROOM%04X msg %2u: %ld Bild(er) mit vorgemerkter, unsichtbarer Abfrage"
-               " und FREIEM Pad", room, (unsigned)msg, loch_neu);
-        loecher_neu_gesamt += loch_neu;
-        loecher_alt_gesamt += loch_alt;
-        if (loch_alt > groesstes_altes_loch) {
-            groesstes_altes_loch = loch_alt; loch_raum = room; loch_msg = msg;
-        }
-        gefahren++;
-        scd_register_current_rdt(NULL);
-        free(raw);
-    }
-
-    printf("  ABDECKUNG: %d von %d Benutzungsstellen gefahren, %d mit Grund ausgelassen\n",
-           gefahren, RE15_DISCARD_SITE_COUNT, ausgelassen);
-    printf("  Loecher JETZT: %ld — Loecher VORHER (nur g_re15_pauseflags): %ld,"
-           " groesstes ROOM%04X msg %u mit %ld Bildern\n",
-           loecher_neu_gesamt, loecher_alt_gesamt, loch_raum, (unsigned)loch_msg,
-           groesstes_altes_loch);
-    PRUEFE(gefahren + ausgelassen == RE15_DISCARD_SITE_COUNT,
-           "%d Stellen weder gefahren noch mit Grund ausgelassen",
-           RE15_DISCARD_SITE_COUNT - gefahren - ausgelassen);
-    /* GEGENPROBE: haette der Riegel nichts zu tun, faende die alte Bedingung auch nichts. */
-    PRUEFE(loecher_alt_gesamt > 0,
-           "GEGENPROBE: die alte Bedingung findet gar kein Loch — der Riegel misst nichts");
-    PRUEFE(groesstes_altes_loch >= 20,
-           "GEGENPROBE: groesstes altes Loch nur %ld Bilder", groesstes_altes_loch);
-}
-
-/* =========================================================================
- * TEIL H — RAUMWECHSEL IM WARTEFENSTER: die Abfrage geht NICHT verloren.
- *
- * ⛔ WAS HIER GEPRUEFT WIRD, IST EINE PORT-ENTSCHEIDUNG — mit Absicht, und die
- * Abgrenzung steht voll an re15_discard_room_change(): In RE2 kann die Lage gar
- * nicht entstehen, weil "vorgemerkt" dort GENAU die Spanne ist, in der die
- * ausloesende Nachricht die Freeze-Maske 0xFF000000 haelt (Aufschub der
- * Fortsetzung = Belegt-Bit 0x80 @0x800517f4, das auch den Freeze haelt,
- * LAB_800307e0 @0x800307e8/@0x800307f4). Messbar ist aus RE2 nur die DATENLAGE:
- * zwei Zellen im raum-uebergreifenden Block (DAT_800d4498 = 0x800cc1e8+0x82b0,
- * DAT_800d4249 = +0x8061; Inventar +0x8854), Byte-Muster-Suche ueber den ganzen
- * Ghidra-Dump nach `98 44 ?? ac` und `b0 82 ?? ac` findet genau sechs
- * Schreibstellen — @0x80051670, @0x800517d0, @0x80051860, @0x80052168,
- * @0x80052294, @0x800524e8 (Ghidra beschriftet nur fuenf; @0x800524e8 laeuft
- * ueber s1) —, KEINE auf dem Raumwechsel-Pfad, und LAB_80051718 ist residente
- * EXE, kein Overlay. Die Zellen WUERDEN es also ueberstehen. Und der Zaehler ist
- * dabei unversehrt: @0x800517f4 kehrt VOR dem Dekrement @0x80051810 um.
- * Der Port braucht das Ueberleben fuer den einen Fall, den der Pad-Riegel nicht
- * abdeckt: einen Raumwechsel durch das SKRIPT.
- *
- * Gefahren wird der ECHTE Ladeweg scd_room_reenter (dort sitzt der Aufruf von
- * re15_discard_room_change, scd_room_setup.c).
- * GEGENPROBE: derselbe Lauf mit re15_discard_reset() an der Stelle — also der
- * Stand VOR dieser Runde — muss die Abfrage verlieren.
- * ========================================================================= */
-static int h_bis_wartefenster(re15_rdt_t *rdt, unsigned room, uint8_t msg, uint8_t item)
-{
-    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
-    int sub = sub_mit_nachricht(rdt, msg);
-    if (sub < 0) return -1;
+    memset(out, 0, sizeof *out);
+    out->b_msgende = out->b_alt = -1;
     grundzustand();
     g_current_room_id = room;
     re15_msg_load_room_block(rdt->messages, rdt->messages_size);
     scd_register_current_rdt(rdt);
-    re15_inv_grant(item, 1);
     scd_thread_start(0, rdt->sub_scd[sub]);
+    long b_start = -1;
     for (long fr = 0; fr < 20000; fr++) {
         const unsigned char *r; int l, id;
         g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
@@ -957,81 +748,458 @@ static int h_bis_wartefenster(re15_rdt_t *rdt, unsigned room, uint8_t msg, uint8
         scd_vm_tick();
         re15_msg_tick(&r, &l, &id);
         g_scd_pad_edge = 0;
-        if (re15_discard_active()) re15_discard_tick(0, 0);
-        /* Wartefenster = vorgemerkt, Nachricht ausgeredet, noch unsichtbar. */
-        if (re15_discard_active() && !re15_discard_prompt(NULL, NULL)
-            && !g_scd.message_active && !g_scd.message_fsm_active) return sub;
-        if (re15_discard_prompt(NULL, NULL)) return -2;   /* zu frueh offen */
-    }
-    return -3;
-}
-
-static void teil_h(void)
-{
-    printf("\n=== TEIL H: Raumwechsel im Wartefenster — die Abfrage bleibt ===\n");
-    const unsigned quelle = 0x1100; const uint8_t msg = 4, item = 0x44;
-    const unsigned ziel   = 0x1110;          /* Nachbarraum, ohne eigene Szene */
-
-    re15_rdt_t rq, rz; size_t nq = 0, nz = 0;
-    uint8_t *aq = raum_laden(quelle, &rq, &nq);
-    uint8_t *az = raum_laden(ziel,   &rz, &nz);
-    if (!aq || !az) { printf("  SKIP: ROOM%04X/ROOM%04X nicht ladbar\n", quelle, ziel);
-                      free(aq); free(az); return; }
-
-    /* ---------- JETZIGER STAND: die Vormerkung ueberlebt ---------------------- */
-    int sub = h_bis_wartefenster(&rq, quelle, msg, item);
-    PRUEFE(sub >= 0, "ROOM%04X: Wartefenster nicht erreicht (%d)", quelle, sub);
-    if (sub >= 0) {
-        int slot = re15_inv_find_item(item);
-        PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
-               "im Wartefenster ist die Anzahl schon %d (RE2: erst @0x80051810)",
-               slot >= 0 ? g_inv.slots[slot].qty : -1);
-        PRUEFE(!(g_re15_pauseflags & 0x01000000u) ? re15_discard_pad_locked() : 1,
-               "im Wartefenster ist das Pad frei");
-
-        /* Der ECHTE Raumwechsel. */
-        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        pl->active = 1; pl->type = 0; pl->hp = 100;
-        g_current_room_id = ziel;
-        re15_msg_load_room_block(rz.messages, rz.messages_size);
-        scd_register_room_events(&rz);
-        scd_room_reenter(&rz, 0, 0, 0);
-
-        PRUEFE(re15_discard_active(),
-               "nach dem Raumwechsel ist die Vormerkung WEG (das war das Loch)");
-        { int s2 = re15_inv_find_item(item);
-          PRUEFE(s2 >= 0 && g_inv.slots[s2].qty == 1,
-                 "nach dem Raumwechsel ist der Gegenstand kaputt (Anzahl %d)",
-                 s2 >= 0 ? g_inv.slots[s2].qty : -1); }
-
-        long bild = -1;
-        for (long fr = 0; fr < 4000; fr++) {
-            const unsigned char *r; int l, id;
-            scd_vm_tick();
-            re15_msg_tick(&r, &l, &id);
-            if (re15_discard_active()) re15_discard_tick(0, 0);
-            if (re15_discard_prompt(NULL, NULL)) { bild = fr; break; }
+        int belegt = re15_pauseflags_belegt();
+        /* Startmarke: DIE Nachricht dieser Benutzungsstelle steht. */
+        if (b_start < 0 && belegt && g_scd.message_id == msg) b_start = fr;
+        if (b_start < 0) continue;
+        if (out->b_msgende < 0) {
+            if (belegt) { out->n_nachricht++; continue; }
+            out->b_msgende = fr;
         }
-        PRUEFE(bild >= 0, "im NEUEN Raum geht die Abfrage nicht auf");
-        { uint8_t it = 0; re15_discard_prompt(&it, NULL);
-          PRUEFE(it == item, "im neuen Raum fragt sie nach 0x%02X statt 0x%02X", it, item); }
-        printf("  ROOM%04X sub%02d msg %u → Raumwechsel nach ROOM%04X:"
-               " Abfrage %ld Bild(er) spaeter offen, Gegenstand unversehrt\n",
-               quelle, sub, (unsigned)msg, ziel, bild + 1);
-    }
-
-    /* ---------- GEGENPROBE: der Stand VOR dieser Runde verliert sie ----------- */
-    sub = h_bis_wartefenster(&rq, quelle, msg, item);
-    if (sub >= 0) {
-        re15_discard_reset();                 /* genau das tat scd_room_setup.c:226 */
-        PRUEFE(!re15_discard_active(),
-               "GEGENPROBE: re15_discard_reset() wirft die Vormerkung gar nicht weg"
-               " — dann misst TEIL H nichts");
-        printf("  GEGENPROBE: mit dem alten, unbedingten re15_discard_reset() ist die"
-               " Vormerkung nach dem Raumwechsel weg\n");
+        int szene = re15_cine_active();
+        int faden = g_scd.threads[0].active;
+        if (!belegt && !szene && !faden) { out->b_alt = fr; break; }
+        if (belegt)      out->n_msg2++;
+        else if (szene)  out->n_szene++;
+        else             out->n_faden++;
+        if (!(g_re15_pauseflags & 0x01000000u)) out->loch++;
     }
     scd_register_current_rdt(NULL);
-    free(aq); free(az);
+    return b_start >= 0;
+}
+
+static spanne_t s_spanne[RE15_DISCARD_SITE_COUNT];
+static int      s_spanne_ok[RE15_DISCARD_SITE_COUNT];
+static int      s_sub_idx[RE15_DISCARD_SITE_COUNT];
+
+static void teil_i(void)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    printf("\n=== TEIL I: die Spanne \"vorgemerkt\", Anteil fuer Anteil ===\n");
+    printf("  %-22s %8s | %9s %6s %6s %6s | %6s %7s\n",
+           "Stelle", "Nachr.", "UEBERH.", "Szene", "Faden", "Msg2", "Loch", "Frage");
+    int gefahren = 0, ausgelassen = 0;
+    long ueberhang_summe = 0, loch_summe = 0, groesster = 0, bruecke_summe = 0;
+    unsigned gr_raum = 0; uint8_t gr_msg = 0;
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+        s_spanne_ok[i] = 0; s_sub_idx[i] = -1;
+
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(room, &rdt, &n);
+        if (!raw) { printf("  SKIP ROOM%04X\n", room); continue; }
+        int sub = sub_mit_nachricht(&rdt, msg);
+        if (sub < 0) {
+            printf("  AUSGELASSEN ROOM%04X msg %2u: kein Message_on %u in einer sub-Region\n",
+                   room, (unsigned)msg, (unsigned)msg);
+            ausgelassen++; free(raw); continue;
+        }
+        s_sub_idx[i] = sub;
+
+        /* ---------- Lauf 1: MIT Gegenstand — wann geht die Abfrage auf? ------------ */
+        grundzustand();
+        g_current_room_id = room;
+        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+        scd_register_current_rdt(&rdt);
+        re15_inv_grant(item, 1);
+        scd_thread_start(0, rdt.sub_scd[sub]);
+        long b_vor = -1, b_frei = -1, b_frage = -1;
+        long ohne_pad = 0, ohne_scd = 0, spanne = 0, ohne_bruecke = 0;
+        for (long fr = 0; fr < 20000; fr++) {
+            const unsigned char *r; int l, id;
+            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+            g_scd_pad_held = 0;
+            if (!re15_discard_frozen()) scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            g_scd_pad_edge = 0;
+            if (b_vor < 0 && re15_discard_active()) b_vor = fr;
+            if (b_vor >= 0 && b_frei < 0 && !re15_pauseflags_belegt()) b_frei = fr;
+            /* ⛔ DIE EIGENSCHAFT, AUF DER DER GANZE FIX RUHT: solange vorgemerkt und
+             * unsichtbar, haelt die ausloesende Nachricht BEIDE Pause-Bits — Pad
+             * 0x01000000 (@0x800304f4-@0x8003051c, Eingabe auf 0xf000) UND Skript
+             * 0x02000000 (@0x8003f044 `lui v1,0x200` / @0x8003f04c). Damit kann in der
+             * Spanne weder der Spieler noch das Skript etwas tun; das eine SCHLIESS-Bild,
+             * in dem die Maske schon weg ist, deckt re15_discard_frozen() ab (RE2 legt sie
+             * im selben Aufruf wieder an, @0x80051844/@0x80051850).
+             * Zensus der Daten dahinter: tools/discard_maskenzensus.py — 16 von 16
+             * Benutzungsstellen oeffnen mit 0xFFFF0000. */
+            if (re15_discard_active() && !re15_discard_prompt(NULL, NULL)) {
+                spanne++;
+                if (!(g_re15_pauseflags & 0x01000000u) && !re15_discard_frozen()) ohne_pad++;
+                if (!(g_re15_pauseflags & 0x02000000u) && !re15_discard_frozen()) ohne_scd++;
+                /* GEGENPROBE zur Bruecke: dieselbe Zaehlung OHNE den frozen()-Ausweg.
+                 * Sie MUSS Bilder finden — sonst waere die Zeile
+                 * `s_zustand == D_WARTET && !re15_pauseflags_belegt()` in
+                 * re15_discard_frozen() wirkungslos und die Masken-Pruefung darueber
+                 * eine Tautologie. */
+                if (!(g_re15_pauseflags & 0x01000000u)) ohne_bruecke++;
+            }
+            if (re15_discard_active()) re15_discard_tick(0, 0);
+            if (b_frage < 0 && re15_discard_prompt(NULL, NULL)) { b_frage = fr; break; }
+        }
+        scd_register_current_rdt(NULL);
+        if (b_vor < 0) {
+            /* ⛔ UNTERSCHEIDUNG, NICHT NACHSICHT: die Kartenleser (ROOM10D0/10D1/1230/
+             * 1231, ROOM11E0/11E1 msg 9) haengen ihre Benutzungs-Nachricht hinter eine
+             * Verzweigung auf die Ja/Nein-Antwort davor (ROOM10D0 sub20 @0x19B8 `Ifel_ck`
+             * / @0x19BC `Ck(12,31,0)`). Ohne Spieler-Antwort geht der Zweig nach Else, die
+             * Abfrage wird also gar nicht erst vorgemerkt — die Stelle ist NICHT ERREICHT,
+             * nicht "gruen". Im Spiel belegt der Live-Abzug, dass sie dort aufgeht. */
+            printf("  AUSGELASSEN ROOM%04X sub%02d msg %2u: nicht erreicht (Verzweigung auf"
+                   " die Ja/Nein-Antwort)\n", room, sub, (unsigned)msg);
+            ausgelassen++; free(raw); continue;
+        }
+        /* ⛔ EIN FALL MIT sichtbar=0 DARF NICHT ALS ERFOLG ZAEHLEN. */
+        PRUEFE(b_frage >= 0, "ROOM%04X msg %2u: die Abfrage geht GAR NICHT auf",
+               room, (unsigned)msg);
+        PRUEFE(b_frei >= 0 && b_frage == b_frei,
+               "ROOM%04X msg %2u: Belegt-Bit frei in Bild %ld, Abfrage erst in Bild %ld"
+               " (RE2: dasselbe Bild, @0x800517f4)", room, (unsigned)msg, b_frei, b_frage);
+        PRUEFE(spanne > 0, "ROOM%04X msg %2u: die Spanne \"vorgemerkt+unsichtbar\" ist LEER"
+               " — dann prueft die Masken-Pruefung nichts", room, (unsigned)msg);
+        PRUEFE(ohne_pad == 0, "ROOM%04X msg %2u: %ld von %ld Spannen-Bildern OHNE Pad-Bit"
+               " 0x01000000", room, (unsigned)msg, ohne_pad, spanne);
+        PRUEFE(ohne_scd == 0, "ROOM%04X msg %2u: %ld von %ld Spannen-Bildern OHNE Skript-Bit"
+               " 0x02000000", room, (unsigned)msg, ohne_scd, spanne);
+        bruecke_summe += ohne_bruecke;
+
+        /* ---------- Lauf 2: OHNE Gegenstand — die Anteile des Ueberhangs ----------- */
+        spanne_t sp;
+        int ok = spanne_messen(&rdt, room, msg, sub, &sp);
+        PRUEFE(ok, "ROOM%04X msg %2u: Lauf 2 findet die Nachricht nicht", room, (unsigned)msg);
+        if (ok) {
+            s_spanne[i] = sp; s_spanne_ok[i] = 1;
+            long ueberhang = (sp.b_alt >= 0 && sp.b_msgende >= 0)
+                           ? sp.b_alt - sp.b_msgende : -1;
+            char nam[24], ue[12];
+            snprintf(nam, sizeof nam, "ROOM%04X sub%02d m%u", room, sub, (unsigned)msg);
+            /* ⛔ Ueberhang "NIE" = das Runde-22-Modell haette hier ueberhaupt nicht
+             * gefragt: der Faden endet in diesem Pruefstand nicht (ROOM1090 sub03 laeuft
+             * @0x261C `Plc_dest(mode 9, flag 33)` + @0x2624 `Gosub 5` in eine
+             * Do/Edwhile-Schleife auf das Ankunftsflag des Spieler-Weges), und das
+             * Szenen-Fenster bleibt offen. Genau das war Runde 22s eigener Befund. */
+            if (ueberhang > 0) snprintf(ue, sizeof ue, "%ld", ueberhang);
+            else               snprintf(ue, sizeof ue, "NIE");
+            printf("  %-22s %8ld | %9s %6ld %6ld %6ld | %6ld %7ld\n",
+                   nam, sp.n_nachricht, ue, sp.n_szene, sp.n_faden, sp.n_msg2,
+                   sp.loch, b_frage - b_vor);
+            if (ueberhang > 0) {
+                ueberhang_summe += ueberhang;
+                loch_summe      += sp.loch;
+                if (sp.loch > groesster) { groesster = sp.loch; gr_raum = room; gr_msg = msg; }
+            }
+        }
+        gefahren++;
+        free(raw);
+    }
+    printf("  ABDECKUNG: %d von %d Benutzungsstellen gefahren, %d mit Grund ausgelassen\n",
+           gefahren, RE15_DISCARD_SITE_COUNT, ausgelassen);
+    printf("  Die Spanne \"vorgemerkt\" endet JETZT an allen %d gefahrenen Stellen im\n"
+           "  Bild, in dem das Belegt-Bit frei wird (RE2 @0x800517f4).\n", gefahren);
+    printf("  Der UEBERHANG des Runde-22-Modells betrug zusammen %ld Bilder, davon\n"
+           "  %ld mit FREIEM Pad; groesstes Loch ROOM%04X msg %u mit %ld Bildern.\n",
+           ueberhang_summe, loch_summe, gr_raum, (unsigned)gr_msg, groesster);
+    PRUEFE(gefahren + ausgelassen == RE15_DISCARD_SITE_COUNT,
+           "%d Stellen weder gefahren noch mit Grund ausgelassen",
+           RE15_DISCARD_SITE_COUNT - gefahren - ausgelassen);
+    /* GEGENPROBE: der Ueberhang MUSS messbar gewesen sein, sonst misst der Riegel nichts. */
+    PRUEFE(loch_summe > 0,
+           "GEGENPROBE: das Runde-22-Modell hat gar kein Loch hinterlassen — dann prueft"
+           " dieser Riegel nichts");
+    PRUEFE(groesster >= 20, "GEGENPROBE: groesstes Loch nur %ld Bilder", groesster);
+    printf("  Das SCHLIESS-Bild: ohne den frozen()-Ausweg waeren %ld Spannen-Bilder ohne"
+           " Pad-Bit — die Bruecke in re15_discard_frozen() traegt also wirklich.\n",
+           bruecke_summe);
+    PRUEFE(bruecke_summe > 0,
+           "GEGENPROBE: ohne die Bruecke gibt es kein Bild ohne Pad-Bit — dann prueft die"
+           " Masken-Pruefung sich selbst");
+}
+
+/* =========================================================================
+ * TEIL J — WAS DER SPIELER SPUERT: px/pz hinter dem ECHTEN re15_game_step.
+ *
+ * ⛔ WARUM NICHT MEHR UEBER EIN PRAEDIKAT: der Riegel von Runde 22 prueft
+ * `vorgemerkt && !sichtbar && (pad_alt && !pad_locked)`, und
+ * re15_discard_pad_locked() gab WOERTLICH dasselbe zurueck wie
+ * re15_discard_active() (beide `s_zustand != D_AUS`). Die Bedingung war damit
+ * `x && !x` = konstant 0 — gruen auch ohne jede Aenderung. Hier wird stattdessen
+ * gemessen, was der Spieler spuert: die Summe |dx|+|dz| des Spielers hinter dem
+ * echten re15_game_step, in genau den Bildern, in denen die Abfrage vorgemerkt
+ * und unsichtbar ist. Gefahren wird mit gehaltenem VORWAERTS.
+ *
+ * DREI SPALTEN IM SELBEN LAUF:
+ *   JETZT       — der ausgelieferte Stand. Muss 0 sein.
+ *   GEGENPROBE  — dieselbe Strecke, aber ueber die UEBERHANG-Spanne des
+ *                 Runde-22-Modells (aus TEIL I), gefahren ohne Vormerkung, damit
+ *                 das Skript nicht einfriert. Muss > 0 sein: das ist das Loch in
+ *                 Einheiten, die der Spieler spuert.
+ *   STUB        — dieselbe Schleife, aber OHNE re15_game_step. Muss 0 sein — so
+ *                 ist belegt, dass eine 0 aus dem Stillstand kommt und nicht
+ *                 schon aus dem Messaufbau.
+ * Und je Stelle: die Abfrage geht auf, und nach der Antwort laeuft der Spieler
+ * wieder (der Riegel geht also wieder auf).
+ * ========================================================================= */
+static long j_weg_ueberhang(re15_rdt_t *rdt, unsigned room, int sub,
+                            long b_von, long b_bis, int mit_step)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    re15_game_ctx_t ctx; re15_camera_view_t cam;
+    if (!raum_booten(rdt, room, &ctx, &cam)) return -1;
+    scd_thread_start(0, rdt->sub_scd[sub]);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    long weg = 0, b_start = -1;
+    for (long fr = 0; fr < 20000; fr++) {
+        const unsigned char *r; int l, id;
+        g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+        g_scd_pad_held = 0;
+        scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        g_scd_pad_edge = 0;
+        if (b_start < 0 && re15_pauseflags_belegt()) b_start = fr;
+        int32_t x0 = pl->x, z0 = pl->z;
+        ctx.pad_current = RE15_PAD_BIT_UP;
+        ctx.pad_pressed = (fr == 0) ? RE15_PAD_BIT_UP : 0;
+        if (mit_step) re15_game_step(&ctx);
+        if (b_start >= 0) {
+            long rel = fr - b_start;
+            if (rel >= b_von && rel < b_bis) {
+                long dx = (long)pl->x - x0, dz = (long)pl->z - z0;
+                weg += (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+            }
+            if (rel >= b_bis) break;
+        }
+    }
+    scd_register_current_rdt(NULL);
+    return weg;
+}
+
+static void teil_j(void)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    printf("\n=== TEIL J: das px/pz-Delta hinter dem ECHTEN re15_game_step ===\n");
+    printf("  %-22s %8s %12s %8s %8s\n",
+           "Stelle", "JETZT", "GEGENPROBE", "STUB", "wieder");
+    int gefahren = 0, mit_bewegung = 0, wieder_frei = 0;
+    long jetzt_summe = 0, gegen_summe = 0, stub_summe = 0;
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        if (!s_spanne_ok[i] || s_sub_idx[i] < 0) continue;
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+        int      sub  = s_sub_idx[i];
+        spanne_t sp   = s_spanne[i];
+        if (sp.b_msgende < 0 || sp.b_alt < 0) continue;
+
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(room, &rdt, &n);
+        if (!raw) continue;
+
+        re15_game_ctx_t ctx; re15_camera_view_t cam;
+        if (!raum_booten(&rdt, room, &ctx, &cam)) {
+            printf("  AUSGELASSEN ROOM%04X: kein Tuer-Spawn in re15_room_spawns[]\n", room);
+            free(raw); continue;
+        }
+        /* ---------- JETZT: vorgemerkt + unsichtbar, VORWAERTS gehalten ------------- */
+        re15_inv_grant(item, 1);
+        scd_thread_start(0, rdt.sub_scd[sub]);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        long weg_jetzt = 0, gesperrt = 0, b_frage = -1;
+        for (long fr = 0; fr < 20000; fr++) {
+            const unsigned char *r; int l, id;
+            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+            g_scd_pad_held = 0;
+            if (!re15_discard_frozen()) scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            g_scd_pad_edge = 0;
+            int vorgemerkt = re15_discard_active();
+            int sichtbar   = re15_discard_prompt(NULL, NULL) != 0;
+            int32_t x0 = pl->x, z0 = pl->z;
+            ctx.pad_current = RE15_PAD_BIT_UP;
+            ctx.pad_pressed = (fr == 0) ? RE15_PAD_BIT_UP : 0;
+            re15_game_step(&ctx);
+            if (vorgemerkt && !sichtbar) {
+                long dx = (long)pl->x - x0, dz = (long)pl->z - z0;
+                weg_jetzt += (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+                gesperrt++;
+            }
+            /* Die Abfrage wird bewusst NICHT bedient (0 statt der Pad-Woerter), damit
+             * die gesperrte Spanne ueberhaupt messbar bleibt. */
+            if (re15_discard_active()) re15_discard_tick(0, 0);
+            if (re15_discard_prompt(NULL, NULL)) { b_frage = fr; break; }
+        }
+        PRUEFE(b_frage >= 0, "ROOM%04X msg %2u: die Abfrage geht im echten Raum nicht auf",
+               room, (unsigned)msg);
+        PRUEFE(gesperrt > 0, "ROOM%04X msg %2u: es gab gar kein Bild mit vorgemerkter,"
+               " unsichtbarer Abfrage — dann misst TEIL J hier nichts",
+               room, (unsigned)msg);
+        PRUEFE(weg_jetzt == 0,
+               "ROOM%04X msg %2u: der Spieler legt %ld Einheiten zurueck, waehrend die"
+               " Abfrage vorgemerkt und unsichtbar ist", room, (unsigned)msg, weg_jetzt);
+
+        /* ---------- WIEDER AUF: antworten, dann laeuft der Spieler --------------- */
+        for (long f = 0; f < 4000 && !re15_discard_ready(); f++) re15_discard_tick(0, 0);
+        re15_discard_tick(0x4000, 0);                    /* SQUARE = Ja               */
+        PRUEFE(!re15_discard_active(), "ROOM%04X: Abfrage nach der Antwort nicht beendet",
+               room);
+        long weg_wieder = 0;
+        for (int f = 0; f < 30; f++) {
+            const unsigned char *r; int l, id;
+            if (!re15_discard_frozen()) scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            int32_t x0 = pl->x, z0 = pl->z;
+            ctx.pad_current = RE15_PAD_BIT_UP;
+            ctx.pad_pressed = (f == 0) ? RE15_PAD_BIT_UP : 0;
+            re15_game_step(&ctx);
+            long dx = (long)pl->x - x0, dz = (long)pl->z - z0;
+            weg_wieder += (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+        }
+        /* ⛔ "DER RIEGEL GEHT WIEDER AUF" heisst NICHT "der Spieler laeuft immer
+         * wieder": an manchen Stellen haelt ihn danach das SKRIPT (Szenen-Fenster
+         * flag(2,7)/flag(1,27) = Pad-Bit 0x01000000 @0x800304f4) oder eine
+         * FOLGE-Nachricht (Belegt-Bit). Verlangt wird deshalb: entweder er laeuft, oder
+         * es ist eine der beiden ANDEREN Schranken, die ihn haelt — nie die Abfrage. */
+        int gehalten_von_szene = re15_cine_active();
+        int gehalten_von_msg   = re15_pauseflags_belegt();
+        PRUEFE(weg_wieder > 0 || gehalten_von_szene || gehalten_von_msg,
+               "ROOM%04X msg %2u: nach der Antwort laeuft der Spieler nicht, und weder"
+               " Szene noch Nachricht halten ihn", room, (unsigned)msg);
+        if (weg_wieder > 0) wieder_frei++;
+        scd_register_current_rdt(NULL);
+
+        /* ---------- GEGENPROBE + STUB ueber die Ueberhang-Spanne ------------------ */
+        long b_von = sp.b_msgende - 0, b_bis = sp.b_alt;
+        long weg_gegen = j_weg_ueberhang(&rdt, room, sub, b_von, b_bis, 1);
+        long weg_stub  = j_weg_ueberhang(&rdt, room, sub, b_von, b_bis, 0);
+        PRUEFE(weg_stub == 0, "ROOM%04X: der STUB-Lauf (ohne re15_game_step) bewegt den"
+               " Spieler um %ld — dann misst der Aufbau sich selbst", room, weg_stub);
+        if (weg_gegen > 0) mit_bewegung++;
+
+        char nam[24];
+        snprintf(nam, sizeof nam, "ROOM%04X sub%02d m%u", room, sub, (unsigned)msg);
+        printf("  %-22s %8ld %12ld %8ld %8ld\n",
+               nam, weg_jetzt, weg_gegen, weg_stub, weg_wieder);
+        jetzt_summe += weg_jetzt;
+        if (weg_gegen > 0) gegen_summe += weg_gegen;
+        if (weg_stub  > 0) stub_summe  += weg_stub;
+        gefahren++;
+        free(raw);
+    }
+    printf("  ABDECKUNG: %d Stellen mit echtem Tuer-Spawn und echtem re15_game_step\n",
+           gefahren);
+    printf("  Summe JETZT %ld Einheiten / GEGENPROBE %ld / STUB %ld;\n"
+           "  in %d Stellen bewegte sich der Spieler im Ueberhang des Runde-22-Modells,\n"
+           "  in %d Stellen laeuft er nach der Antwort sofort wieder (sonst haelt ihn\n"
+           "  Szene oder Folge-Nachricht, je Stelle geprueft).\n",
+           jetzt_summe, gegen_summe, stub_summe, mit_bewegung, wieder_frei);
+    PRUEFE(gefahren > 0, "TEIL J hat keine einzige Stelle gefahren");
+    PRUEFE(jetzt_summe == 0, "TEIL J: %ld Einheiten Bewegung im gesperrten Fenster",
+           jetzt_summe);
+    /* ⛔ DIE GEGENPROBE IST DER KERN: ohne sie waere die 0 oben wertlos. */
+    PRUEFE(mit_bewegung > 0,
+           "GEGENPROBE: in KEINER Stelle bewegte sich der Spieler im Ueberhang — dann"
+           " kann dieser Riegel eine Bewegung gar nicht sehen");
+    PRUEFE(gegen_summe > stub_summe,
+           "GEGENPROBE: die Gegenprobe (%ld) liegt nicht ueber dem Stub (%ld)",
+           gegen_summe, stub_summe);
+    PRUEFE(wieder_frei > 0,
+           "in KEINER Stelle laeuft der Spieler nach der Antwort wieder — dann ist nicht"
+           " gezeigt, dass der Riegel wieder aufgeht");
+}
+
+/* =========================================================================
+ * TEIL K — der SICHTBARE Prompt friert das Skript ein, und es laeuft NACH der
+ *          Antwort WEITER.
+ *
+ * Das ist byte-true: RE2 legt beim Fragen sofort wieder die ganze Maske an
+ *     80051844  lui v1,0xff00
+ *     80051850  sw  v0,DAT_800cfbdc
+ * und 0xFF000000 enthaelt das Skript-Bit 0x02000000, dessen Gate am Kopf des
+ * SCD-Runners sitzt (@0x8003f044 `lui v1,0x200` / @0x8003f04c).
+ *
+ * ⛔ UND ES IST DER FALL, AN DEM RUNDE 21 SICH GEIRRT HAT. Dort wurde
+ * gemessen: "die Abfrage erwischte das Bild zwischen Nachricht und Szene, und
+ * weil ein sichtbarer Prompt den SCD-Takt anhaelt, kam die Szene danach gar
+ * nicht mehr in Gang — sub03 stand auf @0x2508 fest". Das war ein Befund des
+ * PRUEFSTANDS, nicht des Spiels: dort wurde die Frage NIE beantwortet (getickt
+ * wurde mit pad = 0). Hier wird sie beantwortet, und das Unterprogramm laeuft
+ * weiter — gemessen am Programmzeiger und am Szenen-Fenster @0x2508.
+ * ========================================================================= */
+static void teil_k(void)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    printf("\n=== TEIL K: sichtbarer Prompt friert das Skript ein — und es laeuft weiter ===\n");
+    const unsigned room = 0x1090; const uint8_t msg = 9, item = 0x31;
+    re15_rdt_t rdt; size_t n = 0;
+    uint8_t *raw = raum_laden(room, &rdt, &n);
+    if (!raw) { printf("  SKIP ROOM%04X\n", room); return; }
+    int sub = sub_mit_nachricht(&rdt, msg);
+    PRUEFE(sub >= 0, "ROOM%04X: Message_on %u in keiner sub-Region", room, (unsigned)msg);
+    if (sub < 0) { free(raw); return; }
+
+    grundzustand();
+    g_current_room_id = room;
+    re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+    scd_register_current_rdt(&rdt);
+    re15_inv_grant(item, 1);
+    scd_thread_start(0, rdt.sub_scd[sub]);
+
+    long b_frage = -1;
+    for (long fr = 0; fr < 20000; fr++) {
+        const unsigned char *r; int l, id;
+        g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+        g_scd_pad_held = 0;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        g_scd_pad_edge = 0;
+        if (re15_discard_active()) re15_discard_tick(0, 0);
+        if (re15_discard_prompt(NULL, NULL)) { b_frage = fr; break; }
+    }
+    PRUEFE(b_frage >= 0, "ROOM%04X: die Abfrage geht nicht auf", room);
+    long pc_bei_frage = g_scd.threads[0].active
+                      ? (long)(g_scd.threads[0].pc - raw) : -1;
+    PRUEFE(!re15_cine_active(),
+           "ROOM%04X: das Szenen-Fenster @0x2508 steht schon, bevor die Abfrage aufgeht",
+           room);
+
+    /* EINGEFROREN: 200 Bilder ohne Antwort — der Programmzeiger darf sich NICHT ruehren. */
+    for (int f = 0; f < 200; f++) {
+        const unsigned char *r; int l, id;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+    }
+    long pc_eingefroren = g_scd.threads[0].active
+                        ? (long)(g_scd.threads[0].pc - raw) : -1;
+    PRUEFE(pc_eingefroren == pc_bei_frage,
+           "ROOM%04X: der Faden laeuft unter der stehenden Abfrage weiter"
+           " (0x%04lX -> 0x%04lX)", room, pc_bei_frage, pc_eingefroren);
+
+    /* ANTWORTEN — und danach MUSS das Unterprogramm weiterlaufen. */
+    for (long f = 0; f < 4000 && !re15_discard_ready(); f++) re15_discard_tick(0, 0);
+    re15_discard_tick(0x4000, 0);
+    PRUEFE(!re15_discard_active(), "ROOM%04X: Abfrage nach JA nicht beendet", room);
+    int szene = 0; long pc_danach = pc_bei_frage;
+    for (int f = 0; f < 120; f++) {
+        const unsigned char *r; int l, id;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        if (re15_cine_active()) szene = 1;
+        if (g_scd.threads[0].active) pc_danach = (long)(g_scd.threads[0].pc - raw);
+    }
+    PRUEFE(pc_danach != pc_bei_frage,
+           "ROOM%04X: das Unterprogramm laeuft nach der Antwort NICHT weiter"
+           " (steht weiter auf 0x%04lX)", room, pc_bei_frage);
+    PRUEFE(szene, "ROOM%04X: das Szenen-Fenster @0x2508 geht nach der Antwort nicht auf",
+           room);
+    printf("  ROOM%04X sub%02d msg %u: Abfrage in Bild %ld, Faden parkt 200 Bilder auf"
+           " 0x%04lX,\n           nach der Antwort laeuft er bis 0x%04lX und das"
+           " Szenen-Fenster @0x2508 geht auf.\n",
+           room, sub, (unsigned)msg, b_frage, pc_bei_frage, pc_danach);
+    scd_register_current_rdt(NULL);
+    free(raw);
 }
 
 int main(void)
@@ -1052,9 +1220,9 @@ int main(void)
     teil_c();
     teil_d();
     teil_e();
-    teil_f();
-    teil_g();
-    teil_h();
+    teil_i();
+    teil_j();
+    teil_k();
 
     if (g_fehler) { printf("\nFEHLGESCHLAGEN: %d Pruefungen\n", g_fehler); return 1; }
     printf("\nOK — Abfrage, Ja/Nein und der Sackgassen-Riegel halten.\n");

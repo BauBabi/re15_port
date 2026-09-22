@@ -110,22 +110,28 @@
  * Aufrufer: op_message_on (scd_vm.c), unmittelbar beim Oeffnen — das ist die Stelle, an
  * der RE2 seine Fortsetzung einhaengt (@0x80051670).
  * Wirkung: steht (room, msg) in discard_sites.inc UND liegt der Gegenstand noch im
- * Inventar, wird sein Zaehler heruntergezaehlt (@0x80051810) und die Abfrage vorgemerkt,
- * falls er dabei Null erreicht (@0x80051824). Sonst passiert nichts. */
-/* `thread_slot` = der SCD-Faden, der die Nachricht ausgegeben hat (Index in
- * g_scd.threads). Die Abfrage wartet, bis GENAU DIESER Faden sein Unterprogramm beendet
- * hat — sonst friert sie ein Unterprogramm ein, das noch laeuft. Siehe re15_discard_tick. */
-void re15_discard_notice_message(unsigned room_id, uint8_t msg_id, int thread_slot);
+ * Inventar, wird die Abfrage VORGEMERKT. Der Zaehler faellt hier NICHT — RE2 haengt an
+ * dieser Stelle nur die Fortsetzung ein (@0x80051670); dekrementiert (@0x80051810) und
+ * gefragt (@0x80051834) wird erst hinter der Warte-Schranke (@0x800517f4), also im
+ * selben Bild wie die Frage. Sonst passiert nichts. */
+/* Die Abfrage wartet danach auf GENAU EINE Schranke: das Belegt-Bit des
+ * Nachrichtensystems (RE2 @0x800517f0 `andi v0,v0,0x80` / @0x800517f4). Damit deckt sich
+ * die Spanne "vorgemerkt" mit der Spanne "die Nachricht haelt den Spieler" — wie in RE2. */
+void re15_discard_notice_message(unsigned room_id, uint8_t msg_id);
 
 /* Ein 30-Hz-Spieltakt der Abfrage-FSM. `pad_edge`/`pad_held` sind die VIRTUELLEN
  * Pad-Woerter (re15_pad_virtual_word), wie beim Item-Modal. Nur aufrufen, solange
  * re15_discard_active() — der Aufrufer friert die uebrige Welt ein (RE2 @0x80051850). */
 void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held);
 
-/* Nicht-null, solange die Abfrage laeuft oder auf das Ende der Raum-Nachricht wartet.
- * Der Warte-Zustand friert NICHT ein (RE2 wartet dort ebenfalls nur, @0x800517F4). */
+/* Nicht-null, solange die Abfrage laeuft oder auf das Ende der Raum-Nachricht wartet. */
 int re15_discard_active(void);
-int re15_discard_frozen(void);   /* nur waehrend die Abfrage sichtbar ist */
+/* Die Welt steht: die Abfrage ist sichtbar (RE2 @0x80051850 `sw v0,DAT_800cfbdc` mit
+ * 0xFF000000) ODER sie geht in DIESEM Bild auf — das eine Bild, in dem der Port den
+ * Nachrichten-Freeze schon geloest, die Abfrage aber noch nicht aufgemacht hat. RE2 hat
+ * dieses Bild nicht, weil Dekrement, Frage und neuer Freeze in EINEM Aufruf liegen
+ * (@0x80051810 / @0x80051834 / @0x80051844). Beleg an der Definition. */
+int re15_discard_frozen(void);
 
 /* RENDER-Abfrage: 0 = nichts, sonst der Port-Prompt-Schluessel 8 (= BSS-Skript [6]).
  * *out_item = der Gegenstand (fuer den 0x06-Namen-Einsatz), *out_choice: 0 = Yes, 1 = No. */
@@ -135,41 +141,24 @@ int re15_discard_reveal_total(void);  /* Glyphenzahl des offenen Skripts        
 int re15_discard_ready(void);         /* Text fertig getippt -> Yes/No waehlbar         */
 uint8_t re15_discard_blink(void);     /* Blink-Zaehler DAT_800b8525 (@0x800285e8)       */
 
-/* HART: neues Spiel / Spielstand laden. Verwirft die Abfrage und dreht einen schon
- * gefallenen Zaehler zurueck, damit kein Slot mit Anzahl 0 zurueckbleibt. */
+/* HART: Raumwechsel, neues Spiel, Spielstand laden, Game-Over, Rueckkehr zum Titel.
+ * Verwirft die Abfrage und dreht einen schon gefallenen Zaehler zurueck, damit kein Slot
+ * mit Anzahl 0 zurueckbleibt.
+ * ⛔ BEIM RAUMWECHSEL IST DAS JETZT GEFAHRLOS, und zwar gemessen: die Spanne
+ * "vorgemerkt" liegt vollstaendig im Freeze der ausloesenden Nachricht, und alle 16
+ * ausgelieferten Benutzungsstellen oeffnen mit Maske 0xFFFF0000 — die enthaelt sowohl das
+ * Pad-Bit 0x01000000 (@0x800304f4) als auch das Skript-Bit 0x02000000 (@0x8003f044), es
+ * kann in dieser Spanne also weder der Spieler noch das Skript einen Raum wechseln.
+ * Die frueher noetige Port-Entscheidung "darf die Vormerkung den Raumwechsel ueberleben?"
+ * ist damit ersatzlos entfallen (Riegel TEIL I misst es je Stelle). */
 void re15_discard_reset(void);
 
-/* RAUMWECHSEL — und ausdruecklich KEIN Reset; nur Faden-Index und Inventar-Platz werden
- * fallengelassen und beim Fragen neu bestimmt.
- * ⛔ EHRLICH, und an der Definition voll belegt: In RE2 kann die Lage GAR NICHT entstehen.
- * Die Spanne "vorgemerkt" ist dort GENAU die Spanne, in der die ausloesende Nachricht die
- * Freeze-Maske 0xFF000000 haelt (@0x80051650 -> FUN_8002fe38; Aufschub der Fortsetzung ist
- * genau das Belegt-Bit 0x80 @0x800517f4, das auch den Freeze haelt, LAB_800307e0), und beim
- * Schliessen stopft die Nachricht sogar das Pad-Vorwort (@0x800307b8). Ein Raumwechsel des
- * SPIELERS ist dort in diesem Fenster unmoeglich; das Loch war eine PORT-Eigenschaft.
- * Messbar ist aus RE2 nur die DATENLAGE: zwei Zellen im raum-uebergreifenden Block
- * (DAT_800d4498 = Basis 0x800cc1e8 +0x82b0, DAT_800d4249 = +0x8061; Inventar +0x8854),
- * Vollzensus per Byte-Muster = 6 Schreibstellen (@0x80051670 / @0x800517d0 / @0x80051860 /
- * @0x80052168 / @0x80052294 / @0x800524e8 — Ghidra beschriftet nur fuenf), keine auf dem
- * Raum-Pfad, und die Fortsetzung LAB_80051718 ist residente EXE, kein Overlay. Die Zellen
- * WUERDEN es also ueberstehen. Dass die Vormerkung ueberlebt, ist danach eine
- * PORT-ENTSCHEIDUNG fuer den einzig verbleibenden Fall (Raumwechsel durch das SKRIPT) —
- * nicht gemessenes RE2-Verhalten. Sie ist noetig, weil ein stumm liegenbleibender
- * Gegenstand sonst nie wieder abgefragt wuerde (eine Benutzungsstelle je Gegenstand). */
-void re15_discard_room_change(void);
-
-/* ⛔ PAD-RIEGEL: solange vorgemerkt ist, hat der Spieler keine Kontrolle — dieselbe
- * Lage, in der RE2 waehrend derselben Spanne ist (Maske 0xFF000000, von der ausloesenden
- * Nachricht gehalten: @0x80051650 `lui a3,0xff00` -> @0x8002fe90 -> FUN_8003027c case 0,
- * zurueckgenommen erst LAB_800307e0, sofort wieder gesetzt @0x80051850). Der Port haelt
- * davon genau das Pad-Bit 0x01000000 (@0x800304f4-@0x8003051c: Eingabe auf 0xf000),
- * nicht die ganze Maske — RE15_PAUSE_SCD wuerde das Unterprogramm anhalten, auf dessen
- * Ende gewartet wird. Voller Beleg an der Definition. */
-int re15_discard_pad_locked(void);
-
 /* Spielstand: der vorgemerkte Gegenstand (0 = nichts vorgemerkt) und sein Zurueckholen.
- * RE2 legt die Fortsetzung in denselben Arbeitsblock wie das Inventar (Basis 0x800cc1e8,
- * Zeiger +0x82b0, Inventar +0x884c) — der Port fuehrt sie deshalb im Save-Record mit. */
+ * ⛔ Das Feld ist im Auslieferungsstand BEWEISBAR immer 0: die Spanne "vorgemerkt"
+ * liegt komplett im Nachrichten-Freeze (Maske 0xFFFF0000 an allen 16 Benutzungsstellen),
+ * und der sperrt Pad UND Skript — es gibt darin keinen Weg zu einem Speicherpunkt.
+ * re15_discard_restore bleibt als HARTER Reset stehen: ein Load darf nie eine Abfrage
+ * des vorigen Laufs erben. */
 uint8_t re15_discard_pending_item(void);
 void    re15_discard_restore(uint8_t item);
 

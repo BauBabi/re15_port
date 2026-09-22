@@ -1741,11 +1741,12 @@ static int op_message_on(scd_thread_t *t)
      * Tabelle (Raum, Nachricht) -> Gegenstand ist aus den ausgelieferten Daten abgeleitet
      * (engine/src/gen/discard_sites.inc, tools/gen_discard_sites.py). Wer nicht drinsteht,
      * loest gar nichts aus. Herleitung + Sackgassen-Beweis: include/re15_item_discard.h. */
-    /* Der Faden-Index wird mitgegeben: die Abfrage darf erst aufgehen, wenn GENAU DIESES
-     * Unterprogramm zu Ende ist — sonst friert sie es mitten im Lauf ein (gemessen an
-     * ROOM1090 sub03, Herleitung in item_discard_common.c). */
-    re15_discard_notice_message(g_current_room_id, t->pc[1],
-                                (int)(t - g_scd.threads));
+    /* Danach wartet die Abfrage auf GENAU EINE Schranke: das Belegt-Bit des
+     * Nachrichtensystems (RE2 @0x800517f0/@0x800517f4). Der Faden-Index wird NICHT mehr
+     * mitgegeben — die Schranke "warte auf das Ende des Unterprogramms" war eine
+     * Port-Zutat und hat die Spanne ueber den Nachrichten-Freeze hinaus verlaengert
+     * (Herleitung in item_discard_common.c). */
+    re15_discard_notice_message(g_current_room_id, t->pc[1]);
     t->pc += 4;
     return 1;
 }

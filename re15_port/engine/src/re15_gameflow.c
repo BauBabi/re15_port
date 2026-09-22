@@ -50,16 +50,29 @@ void re15_gameflow_new_game(int character)
             extern void re15_map_visited_reset(void);
             re15_map_visited_reset();
         }
+        {   /* ⛔ EINE VORGEMERKTE "Discard it?"-ABFRAGE DARF NICHT IN DEN NAECHSTEN LAUF
+             * REITEN. Sie wuerde dort die erste echte Abfrage verschlucken
+             * (re15_discard_notice_message kehrt bei s_zustand != D_AUS sofort um). Das
+             * Original hat den Fall nicht, weil sein armierter Zustand ein CODE-Zeiger
+             * ist, den der Antwort-Zweig aushaengt (@0x800517d0 `sw zero,DAT_800d4498`);
+             * der Port fuehrt eine FSM und muss sie hier ausdruecklich raeumen. */
+            extern void re15_discard_reset(void);
+            re15_discard_reset();
+        }
     }
 }
 
 void re15_gameflow_to_gameover(void)
 {
     g_gameflow.mode = RE15_MODE_GAMEOVER;
+    /* Tod = Ende dieses Laufs. Eine vorgemerkte Wegwerf-Abfrage faellt mit weg, sonst
+     * stuende sie beim CONTINUE noch da (Begruendung bei re15_gameflow_new_game). */
+    { extern void re15_discard_reset(void); re15_discard_reset(); }
 }
 
 void re15_gameflow_to_title(void)
 {
     /* attract handoff (@0x80015838 clears the INGAME flag) -> back to the title. */
     g_gameflow.mode = RE15_MODE_TITLE;
+    { extern void re15_discard_reset(void); re15_discard_reset(); }
 }

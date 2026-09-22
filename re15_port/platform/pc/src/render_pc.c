@@ -2677,7 +2677,9 @@ static void pc_prompt_glyph_cb(void *v, unsigned char code, int attr, int newlin
     int w = s_msgfont_w[code];
     p->penx += (w > 0) ? w : 6;                               /* space / unmeasured -> fixed advance */
 }
-void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal)
+/* Gemeinsamer Name auf BEIDEN Plattformen (Deklaration in re15_engine.h; das PSX-
+ * Gegenstueck steht in platform/psx/src/render.c). Der Skript-Lauf selbst ist geteilt. */
+void re15_render_item_prompt(int x, int y, int prompt_type, unsigned char item_id, int reveal)
 {
     re15_msgfont_ensure();
     if (!s_msgfont_ok) return;

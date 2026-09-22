@@ -61,6 +61,47 @@ void re15_pauseflags_clear(void)
     s_pause_open            = 0;
 }
 
+int re15_pauseflags_belegt(void)
+{
+    /* DAS BELEGT-BIT DES NACHRICHTENSYSTEMS — und damit die EINZIGE Schranke, die RE2s
+     * Wegwerf-Fortsetzung kennt:
+     *     800517e0  lbu  v0,-0x78c4(v0)         DAT_800e873c
+     *     800517f0  andi v0,v0,0x80             >>> genau dieses Bit <<<
+     *     800517f4  bne  v0,zero,LAB_80051870   belegt -> return, NICHTS angefasst
+     * s_pause_open ist im Port dasselbe Bit: gesetzt vom Open-Guard @0x80027e74
+     * `lbu v0,DAT_800b8520` / @0x80027e7c `andi v0,v0,0x80`, geloescht an den DREI
+     * Dismiss-Stellen @0x80028598 / @0x800286c0 / @0x8002870c (`andi v0,v0,0x7f`) —
+     * dieselben drei, die auch den Freeze zuruecknehmen (RE2: LAB_800307e0
+     * @0x800307e8 `andi v0,v0,0x7f` + @0x800307f4 `sw v1,DAT_800cfbdc`).
+     *
+     * ⛔ NICHT g_scd.message_active/message_fsm_active abfragen: der Port haelt im
+     * UNTERTITEL-NACHHALL (msg_common.c Zustand 7) beide Woerter weiter auf 1, obwohl
+     * re15_pauseflags_close() den Freeze dort schon geloest hat — eine Schranke darauf
+     * wuerde den Spieler freigeben und die Abfrage trotzdem zurueckhalten.
+     *
+     * ⛔ ZWEI BERICHTIGUNGEN AUS DEM URTEIL, damit hier nichts Falsches steht:
+     * (1) RE2s Nachricht schliesst NICHT "nur auf die Bestaetigungstaste". LAB_800307e0
+     *     hat ZWEI Eingaenge, und nur der erste ist die Taste:
+     *       case 5  @0x8003079c  lui v0,0x800d / @0x800307a0 lw DAT_800ce310
+     *               @0x800307a8  andi v0,v0,0x3000      Bestaetigen?
+     *               @0x800307b0  _ori v0,zero,0xffff / @0x800307b8 sw DAT_800ce30c
+     *                                                   (Pad-Vorwort gestopft)
+     *               @0x800307bc  j   LAB_800307e0
+     *       case 6  @0x800307c4  lbu   v0,0x5c91(s1)    HALTE-ZAEHLER
+     *               @0x800307cc  addiu v0,v0,-0x1
+     *               @0x800307d0  sb    v0,0x5c91(s1)
+     *               @0x800307d8  bne   v0,zero,default  0 -> FALLT nach LAB_800307e0
+     *     Der zweite Ausgang laeuft OHNE Tastendruck ab und stopft das Pad-Vorwort
+     *     NICHT. Ein Bild mit geloestem Freeze und lebendiger Flanke ist in RE2 also
+     *     moeglich — genau darum nimmt re15_discard_frozen() im Port das Schliess-Bild
+     *     mit (Beleg dort).
+     * (2) Dass der Port damit "byte-true dieselbe Spanne" haette, ist NICHT behauptet:
+     *     die Spanne haengt am PORT-Nachrichtensystem (eigene FSM, eigene Standzeiten,
+     *     eigener Untertitel-Nachhall). Uebernommen ist die REGEL — "die Abfrage wartet
+     *     auf genau dieses eine Bit" — nicht die Bildzahl. */
+    return s_pause_open;
+}
+
 void re15_game_state_init(void)
 {
     /* Phase 4.5.9-D: g_game only holds flags[] now — player lives in

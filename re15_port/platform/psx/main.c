@@ -20,6 +20,8 @@
 #include "re15_engine.h"
 #include "re15_scd.h"
 #include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
+#include "re15_item_discard.h" /* "You don't need this key any more. Discard it?" @0x800C508B */
+#include "re15_item_prompt.h"  /* Glyphen-Lauf des Prompt-Skripts [6] (FUN_80028134) */
 #include "re15_md1.h"
 #include "re15_bg.h"
 #include "re15_room.h"   /* multi-room: re15_room_load, g_room_change, g_current_room_id */
@@ -291,7 +293,17 @@ int main(int argc, const char **argv)
          * is paced to 30 Hz by VSync(2) in re15_render_end_frame, so SCD/walker/
          * anim all run at the canonical 30 Hz. */
         {
-            scd_vm_tick();
+            /* "DISCARD IT?"-FREEZE — dieselbe Zeile wie im PC-Port. RE2 legt beim Fragen
+             * 0xFF000000 an (@0x80051844 `lui v1,0xff00` / @0x80051850
+             * `sw v0,DAT_800cfbdc`), und darin steckt das Skript-Bit 0x02000000
+             * (SCD-Runner-Gate @0x8003f044 `lui v1,0x200` / @0x8003f04c). Das
+             * ausloesende Unterprogramm parkt also, solange die Abfrage steht, und laeuft
+             * nach der Antwort weiter.
+             * ⛔ BIS RUNDE 22 FEHLTE DIESE PLATTFORM KOMPLETT: platform/psx hatte
+             * KEINEN einzigen Discard-Aufruf, also wurde D_WARTET hier NIE verlassen —
+             * die Abfrage kam nie, und der Pad-Riegel von Runde 22 sperrte Pad und
+             * Statusschirm fuer immer. */
+            if (!re15_discard_frozen()) scd_vm_tick();
             /* Phase 4.5.13 L-FINAL (2026-05-21): single walker emulating
              * RE1.5's FUN_800245d8 (player_move_by_rotation): per-tick
              * compute target yaw from dest, slew rot_y, translate by
@@ -531,6 +543,14 @@ int main(int argc, const char **argv)
             gctx.pad_pressed = (uint16_t)g_engine.pad_pressed;
             re15_game_step(&gctx);
         }
+        /* "Discard it?" — an DERSELBEN Stelle wie im PC-Port: NACH re15_game_step, mit den
+         * VIRTUELLEN Pad-Woertern (re15_pad_virtual_word, Preset-Tabelle @0x80073dbc via
+         * FUN_80030444). RE2 ruft seine Fortsetzung LAB_80051718 aus der Hauptschleife
+         * (@0x80026370 `lw v1,-0x7d50(at)` -> @0x80026384 `jalr v1` auf DAT_800d4498);
+         * die volle Gatter-Kette dieses Aufrufs steht im PC-Gegenstueck. */
+        if (re15_discard_active())
+            re15_discard_tick(re15_pad_virtual_word((uint16_t) g_engine.pad_pressed),
+                              re15_pad_virtual_word((uint16_t) g_engine.pad_current));
         /* (Same-room door teleports now set the floor band at their source in
          * aot_common.c from the door spawn Y — no position-diff inference here.) */
 
@@ -747,7 +767,10 @@ int main(int argc, const char **argv)
             const unsigned char *raw = 0;
             int rlen = 0;
             int _tk = re15_msg_tick(&raw, &rlen, 0);
-            if (_tk && raw && rlen > 0)
+            /* Die Wegwerf-Abfrage schreibt in DIESELBE Box (34,180) — solange sie steht,
+             * weicht die Nachricht, sonst lagen zwei Texte uebereinander. Gleiche Regel
+             * wie im PC-Port. */
+            if (_tk && raw && rlen > 0 && !re15_discard_prompt(NULL, NULL))
                 re15_render_msg_text(34, 180, raw, rlen);
             /* PAGE BREAK (FSM state 1): blinking down-arrow = "press action for the next
              * page" (byte-true FUN_80028134 state 2 draws DAT_80010938 when timer&0x18). */
@@ -771,6 +794,27 @@ int main(int argc, const char **argv)
                 re15_render_msg_text(sel.opt[0].x, sel.opt[0].y, sel.opt[0].glyphs, sel.opt[0].len);
                 re15_render_msg_text(sel.opt[1].x, sel.opt[1].y, sel.opt[1].glyphs, sel.opt[1].len);
                 if (sel.cursor_visible) re15_render_msg_cursor(sel.cursor_x, sel.cursor_y);
+            }
+            /* "You don't need this key any more. Discard it?" — dieselbe Box (34,180) wie
+             * der Aufnahme-Prompt, weil es derselbe Oeffner-Modus 0x100 ist (@0x80027eec
+             * `ori v0,zero,0x22` = 34 / @0x80027f14 `ori v0,zero,0xb4` = 180), und
+             * dieselbe Ja/Nein-Auswahl aus msg_select_common.c wie oben. Der Glyphen-Lauf
+             * ist der geteilte re15_item_prompt_walk (Skript [6] der Tabelle @0x800C4FC6). */
+            {   uint8_t d_item = 0; int d_choice = 0;
+                int d_prompt = re15_discard_prompt(&d_item, &d_choice);
+                if (d_prompt) {
+                    re15_render_item_prompt(34, 180, d_prompt, d_item, re15_discard_reveal());
+                    if (re15_discard_ready()) {
+                        re15_msg_select_t sel;
+                        re15_msg_select_layout(d_choice, re15_discard_blink(), &sel);
+                        re15_render_msg_text(sel.opt[0].x, sel.opt[0].y,
+                                             sel.opt[0].glyphs, sel.opt[0].len);
+                        re15_render_msg_text(sel.opt[1].x, sel.opt[1].y,
+                                             sel.opt[1].glyphs, sel.opt[1].len);
+                        if (sel.cursor_visible)
+                            re15_render_msg_cursor(sel.cursor_x, sel.cursor_y);
+                    }
+                }
             }
         }
         /* #1e: inventory pickup-echo countdown still ticks (HUD text removed). */

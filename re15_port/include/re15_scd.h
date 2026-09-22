@@ -520,6 +520,10 @@ extern uint32_t g_re15_pauseflags_saved;  /* DAT_800b853c — Snapshot fuer den 
 void re15_pauseflags_open(uint32_t mask);  /* @0x80027eb4-ed0 (mit Open-Guard @0x80027e74) */
 void re15_pauseflags_close(void);          /* @0x800285a4 / @0x800286cc / @0x8002871c */
 void re15_pauseflags_clear(void);          /* @0x8001ca44 / @0x8001caec (Raumwechsel) */
+/* Das BELEGT-Bit des Nachrichtensystems (DAT_800b8520 & 0x80, Open-Guard @0x80027e7c,
+ * Loeschen @0x80028598/@0x800286c0/@0x8002870c). Es ist RE2s DAT_800e873c & 0x80 und damit
+ * die EINZIGE Schranke der Wegwerf-Fortsetzung (@0x800517f0 `andi 0x80` / @0x800517f4). */
+int  re15_pauseflags_belegt(void);
 
 /* Object (prop) work-entity member access — Work_set kind 3. member 15 = member_0b = the
  * combination-lock NOTCH (S1-4 PROG-3 keypad dial). */

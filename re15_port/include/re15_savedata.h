@@ -102,7 +102,13 @@ typedef struct {
                                 * "vorgemerkt" genau die eingefrorene Nachrichten-Spanne
                                 * (@0x800517f4 / LAB_800307e0), also nie ein
                                 * Speicherpunkt. Der Port fuehrt die Gegenstands-Id als
-                                * Rueckhalt mit; das Feld ist praktisch immer 0.
+                                * Rueckhalt mit; seit Runde 23 ist das Feld BEWEISBAR
+                                * immer 0 — die Spanne "vorgemerkt" liegt vollstaendig im
+                                * Freeze der ausloesenden Nachricht, und alle 16
+                                * Benutzungsstellen oeffnen mit Maske 0xFFFF0000 (Pad-Bit
+                                * 0x01000000 @0x800304f4 UND Skript-Bit 0x02000000
+                                * @0x8003f044, Zensus tools/discard_maskenzensus.py).
+                                * re15_discard_restore bleibt als HARTER Reset.
                                 * Haelt inv[]/flags[] weiterhin 4-aligned
                                 * (deterministische Summe). */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */

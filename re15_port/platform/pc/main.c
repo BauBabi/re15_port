@@ -6431,8 +6431,19 @@ re_title:;
                                          re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_current)));
                 }
                 /* "Discard it?" — an derselben Stelle und mit denselben virtuellen Pad-Woertern
-                 * wie das Item-Modal. RE2 fuehrt seine Fortsetzung LAB_80051718 ebenfalls pro
-                 * Bild aus, nachdem der Spieler-Dispatcher gelaufen ist. */
+                 * wie das Item-Modal, und NACH re15_game_step (damit die Bestaetigungs-
+                 * Flanke nicht zusaetzlich den AOT-Scan feuert).
+                 * ⛔ BERICHTIGUNG (Urteil Runde 22): RE2 ruft seine Fortsetzung LAB_80051718
+                 * NICHT "jedes Bild", sondern auf dem regulaeren Spielpfad der Hauptschleife,
+                 * und der ist gegatet:
+                 *     800262ac  lh   v0,-0x79b6(at)   at = s3+0x10000, s3 = 0x800cc1e8
+                 *                                     -> das Halbwort 0x800d4832
+                 *     800262b4  bgez v0,LAB_8002632c  negativ -> der Zweig 0x800262bc..
+                 *                                     0x80026328 endet mit `j LAB_80026738`
+                 *                                     und UEBERSPRINGT die Fortsetzung
+                 * Dahinter koennen @0x80026338/@0x80026348/@0x80026358 ebenfalls abbiegen;
+                 * erst LAB_80026364 laedt den Zeiger (@0x80026370 `lw v1,-0x7d50(at)`) und
+                 * ruft ihn (@0x80026384 `jalr v1`). */
                 if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_discard_active()) {
                     re15_discard_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)),
                                       re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_current)));
@@ -6535,7 +6546,13 @@ re_title:;
                      * death FSM self-clears when the re-entered game revives the player (game_step:142). */
                     memset(&g_inv,  0, sizeof g_inv);
                     memset(&g_game, 0, sizeof g_game);
-                    g_gameflow.mode = RE15_MODE_TITLE;
+                    /* ⛔ UND DIE ABFRAGE-FSM MIT. Sie ist KEIN Feld von g_inv/g_game,
+                     * die beiden memset erreichen sie also nicht — eine vorgemerkte
+                     * "Discard it?"-Abfrage ritt bisher in den naechsten Lauf und
+                     * verschluckte dort die erste echte (notice_message kehrt bei
+                     * s_zustand != D_AUS sofort um). re15_gameflow_to_title() raeumt sie
+                     * jetzt, deshalb hier der Funktionsaufruf statt der Zuweisung. */
+                    re15_gameflow_to_title();
                     running = 0;
                 }
             }
@@ -9488,23 +9505,25 @@ re_title:;
                   if (dl) {
                       uint8_t di = 0; int dc = -1;
                       int dp = re15_discard_prompt(&di, &dc);
-                      /* padsperre/px/pz: der Riegel aus RE2 (0xFF000000 ueber die ganze
-                       * Spanne — @0x80051650 -> @0x8002fe90 -> FUN_8003027c case 0,
-                       * zurueck erst LAB_800307e0, sofort wieder @0x80051850) ist im Port
-                       * das Pad-Bit 0x01000000 (@0x800304f4-@0x8003051c). Mit den beiden
-                       * Spielerkoordinaten in derselben Zeile ist am Protokoll ABLESBAR,
-                       * dass der Spieler waehrend der Vormerkung nicht laeuft. */
+                      /* belegt/pausepad/px/pz: RE2s einzige Schranke ist das Belegt-Bit
+                       * des Nachrichtensystems (@0x800517f0 `andi v0,v0,0x80` /
+                       * @0x800517f4), und WEIL es dasselbe Bit ist, das den Freeze haelt
+                       * (LAB_800307e0 @0x800307e8/@0x800307f4), deckt sich die Spanne
+                       * "vorgemerkt" mit der Spanne "Spieler eingefroren". Im Port heisst
+                       * das: `belegt` (re15_pauseflags_belegt) und `pausepad`
+                       * (Bit 0x01000000, @0x800304f4-@0x8003051c) stehen waehrend der
+                       * ganzen Vormerkung, und px/pz aendern sich nicht. Genau das ist am
+                       * Protokoll ABLESBAR, nicht behauptet. */
                       extern uint32_t g_re15_pauseflags;
-                      extern int re15_discard_pad_locked(void);
                       fprintf(dl, "F%u raum=%04x msg_aktiv=%d msg_fsm=%d | abfrage=%d frage=%d "
                                   "gegenstand=0x%02x wahl=%d text=%d/%d gefragt=%d weg=%d"
-                                  " padsperre=%d pausepad=%d px=%d pz=%d\n",
+                                  " belegt=%d frost=%d pausepad=%d px=%d pz=%d\n",
                               g_engine.frame_count, g_current_room_id,
                               (int)g_scd.message_active, (int)g_scd.message_fsm_active,
                               re15_discard_active(), dp, di, dc,
                               re15_discard_reveal(), re15_discard_reveal_total(),
                               re15_discard_gefragt(), re15_discard_weggeworfen(),
-                              re15_discard_pad_locked(),
+                              re15_pauseflags_belegt(), re15_discard_frozen(),
                               (g_re15_pauseflags & 0x01000000u) ? 1 : 0,
                               (int)g_actors[0].x, (int)g_actors[0].z);
                       fflush(dl);
@@ -9524,7 +9543,7 @@ re_title:;
          * "WILL YOU TAKE THE <item>." with a Yes/No cursor when there's room, or "YOU CAN'T CARRY ANY
          * MORE ITEMS" when full. Box origin (34,180) is byte-true (DAT_800b8534=0x22 / 8536=0xb4); the
          * text glyphs + item name render in the real TEX.TIM message font via byte-true glyph replay
-         * (re15_render_pc_item_prompt, render_pc.c:1681, using re15_msgfont_glyph; the prompt's own
+         * (re15_render_item_prompt, render_pc.c, using re15_msgfont_glyph; the prompt's own
          * glyph bytes come from the BSS scripts @0x800c4fc6 + name blob) — byte-true end-to-end, no
          * longer a 6×8-overlay faithful-line. */
         /* ORIGINAL-DEBUG-MENUE ZEICHNEN — Layout byte-true aus PSX.EXE @0x80014AB4..0x80014C08.
@@ -9604,8 +9623,7 @@ re_title:;
                 /* Byte-true GAME-FONT render: replay the prompt's own glyph bytes (BSS scripts + name
                  * blob) through the TEX.TIM message font — "Will you take the <Item>." / "You can't
                  * carry any more items", exact font + Title-Case, typewritered to `reveal` glyphs. */
-                extern void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal);
-                re15_render_pc_item_prompt(34, 180, prompt, ptype, reveal);
+                re15_render_item_prompt(34, 180, prompt, ptype, reveal);
                 if (prompt == 1 && re15_item_modal_prompt_ready()) {  /* Yes/No only after the text types out */
                     /* ⛔ Diese Auswahl trug bis 2026-09-22 fuenf GERATENE Zahlen
                      * (Yes 190 / No 234 / Zeile 202, Cursor 180/224/203, kein Blinken).
@@ -9632,9 +9650,7 @@ re_title:;
                 uint8_t ditem = 0; int dchoice = 0;
                 int dprompt = re15_discard_prompt(&ditem, &dchoice);
                 if (dprompt) {
-                    extern void re15_render_pc_item_prompt(int x, int y, int prompt_type,
-                                                           uint8_t item_id, int reveal);
-                    re15_render_pc_item_prompt(34, 180, dprompt, ditem, re15_discard_reveal());
+                    re15_render_item_prompt(34, 180, dprompt, ditem, re15_discard_reveal());
                     if (re15_discard_ready()) {
                         extern int re15_render_pc_msg_text(int x, int y,
                                                            const unsigned char *raw, int len);
