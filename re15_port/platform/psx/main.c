@@ -19,6 +19,7 @@
 #include <psxapi.h>          /* GetRCnt — perf sub-phase timers */
 #include "re15_engine.h"
 #include "re15_scd.h"
+#include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
 #include "re15_md1.h"
 #include "re15_bg.h"
 #include "re15_room.h"   /* multi-room: re15_room_load, g_room_change, g_current_room_id */
@@ -314,7 +315,7 @@ int main(int argc, const char **argv)
              * hidden because the gameplay cut (Cut_chg 0x03, the railing) does not
              * frame the helipad centre. The former type==0x47 deactivate sweep was a
              * stand-in and is removed; visibility is left to camera framing + cull. */
-            int cine_active = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+            int cine_active = re15_cine_active();   /* flag(1,27) || flag(2,7) — game_state.c */
             if (cine_active) {
                 g_scd.player_mode         = 2;    /* scripted */
                 g_scd.letterbox_countdown = -1;   /* bars held while scripted */
@@ -761,16 +762,15 @@ int main(int argc, const char **argv)
              * TEX.TIM sub-region we don't load) and blinks per the state-4 timer
              * (visible when message_blink & 0x18 — counter decremented each frame). */
             if (g_scd.message_select) {
-                /* Byte-true positions (FUN_80028134 state 4): cursor cell X =
-                 * choice*0x46 + 0xa0 = 160 (Yes) / 230 (No); options string at 0xae=174;
-                 * row (0xb4+0x10)=196. So each option sits 14px right of its cursor —
-                 * Yes@174 (cursor 160), No@244 (cursor 230, = 174+0x46). */
-                static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4F };
-                static const unsigned char no_g[2]  = { 0x2A, 0x4B };
-                re15_render_msg_text(174, 196, yes_g, 3);
-                re15_render_msg_text(244, 196, no_g,  2);
-                if (g_scd.message_blink & 0x18)
-                    re15_render_msg_cursor((g_scd.message_choice ? 230 : 160), 196);
+                /* Byte-true Zahlen aus der EINEN Quelle (engine/src/msg_select_common.c):
+                 * Cursor choice*0x46 + 0xa0 = 160/230 (@0x8002863c-50), Optionen 174/244
+                 * (@0x80028680 + Schrittweite @0x8002864c), Zeile (0xb4+0x10) = 196
+                 * (@0x80027f14 + @0x80028674), Blink-Maske 0x18 (@0x80028600). */
+                re15_msg_select_t sel;
+                re15_msg_select_layout(g_scd.message_choice, g_scd.message_blink, &sel);
+                re15_render_msg_text(sel.opt[0].x, sel.opt[0].y, sel.opt[0].glyphs, sel.opt[0].len);
+                re15_render_msg_text(sel.opt[1].x, sel.opt[1].y, sel.opt[1].glyphs, sel.opt[1].len);
+                if (sel.cursor_visible) re15_render_msg_cursor(sel.cursor_x, sel.cursor_y);
             }
         }
         /* #1e: inventory pickup-echo countdown still ticks (HUD text removed). */

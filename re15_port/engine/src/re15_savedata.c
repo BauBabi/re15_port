@@ -110,7 +110,7 @@ int re15_savedata_validate(re15_savedata_t *sd)
         sd->weapon_id     = old.weapon_id;
         sd->camera_cut    = old.camera_cut;
         sd->loc_idx       = old.loc_idx;
-        sd->reserved1     = old.reserved1;
+        sd->discard_pending_item = old.discard_pending_item;
         memcpy(sd->inv,     old.inv,     sizeof sd->inv);
         memcpy(sd->flags,   old.flags,   sizeof sd->flags);
         /* Die alten 32 Plaetze behalten ihre Reihenfolge (frueher Seite*8+i, jetzt
@@ -147,6 +147,18 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     out->camera_cut    = (uint8_t)g_scd.cam_id;                    /* active fixed-camera cut */
     out->loc_idx       = re15_savepoint_loc();   /* Ortsnamen-Index, gelatcht am Save-Trigger
                                                   * (Patch-Analog: 0x800B0FBF -> Karte +0x203) */
+    /* Eine vorgemerkte "Discard it?"-Abfrage wandert MIT in den Spielstand.
+     * ⛔ PORT-ENTSCHEIDUNG, nicht RE2 nachgebaut, und der Unterschied ist wichtig: RE2s
+     * armierter Zustand ist ein CODE-Zeiger (DAT_800d4498 = LAB_80051718) plus ein
+     * Phasen-Byte (DAT_800d4249) — einen Code-Zeiger in einen Spielstand zu schreiben
+     * waere sinnlos, und RE2 braucht es auch nicht: dort ist "vorgemerkt" genau die Spanne,
+     * in der die Nachricht 0xFF000000 haelt (@0x800517f4 gegen LAB_800307e0), da kommt
+     * niemand an einen Speicherpunkt. Der Port fuehrt deshalb nicht den Zeiger, sondern die
+     * GEGENSTANDS-ID mit, und auch nur als Rueckhalt: durch den Pad-Riegel
+     * (re15_discard_pad_locked) ist das Feld im Auslieferungsstand praktisch immer 0.
+     * Voller Beleg samt Abgrenzung an der Definition von re15_discard_room_change. */
+    { extern uint8_t re15_discard_pending_item(void);
+      out->discard_pending_item = re15_discard_pending_item(); }
 
     memcpy(out->inv,   g_inv.slots, sizeof(out->inv));
     memcpy(out->flags, g_game.flags, sizeof(out->flags));
@@ -215,6 +227,11 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
      * wieder her (SI-1; der Generation-Bump laesst den Platform-Wound-Sync nach dem
      * naechsten TIM-Upload automatisch re-stempeln). */
     re15_wound_load(in->wounds);
+    /* Vorgemerkte Wegwerf-Abfrage zurueckholen (0 = keine; aeltere Staende tragen hier
+     * die alte Fuellung des Reserve-Bytes, also 0 — kein Versions-Bump noetig). re15_discard_restore setzt vorher hart zurueck, damit ein Load
+     * nie eine Abfrage des vorigen Laufs erbt. */
+    { extern void re15_discard_restore(uint8_t item);
+      re15_discard_restore(in->discard_pending_item); }
     /* v6 RE2-Kartensystem: Besucht-Bits laden; der geladene Raum wird beim folgenden
      * scd_room_reenter ohnehin markiert (Choke-Point), das Import genuegt hier. */
     /* BITS AUS v<8 BEDEUTEN ETWAS ANDERES UND WERDEN VERWORFEN.

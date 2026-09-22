@@ -162,3 +162,54 @@ int re15_flag_trace_enabled(void)
     if (on < 0) on = getenv("RE15_FLAG_TRACE") ? 1 : 0;
     return on;
 }
+
+/* ================= "ES LAEUFT EINE SZENE" — der Riegel, byte-true ======================
+ *
+ * Ein Unterprogramm, das die Spielfigur selbst fuehrt, klammert sich in ein FENSTER aus
+ * zwei Set-Opcodes. ROOM1090 sub03 (die Szene, in der die Wegwerf-Abfrage hineinplatzte)
+ * ist der Musterfall — Datei-Offsets aus tools/scd_dump_room.py:
+ *     @0x2508  Set 22 02 07 01   flag(2,7) := 1   <-- AUF
+ *     @0x250C  Set 22 01 1b 01   flag(1,27) := 1
+ *       ... 577 Bilder Szene (Plc_dest/Plc_motion/Plc_neck/Message_on 3,4,5,6) ...
+ *     @0x26C4  Plc_ret                            Spielfigur frei
+ *     @0x26D8  Plc_ret
+ *     @0x26DA  Set 22 02 07 00   flag(2,7) := 0   <-- ZU
+ *     @0x26DE  Set 22 01 1b 00   flag(1,27) := 0
+ *     @0x26E2  Cut_auto 3c 01                     Kamera frei
+ *
+ * WARUM genau diese zwei Zellen — gemessen, nicht gewaehlt (tools/cutscene_latch_zensus.py
+ * ueber alle 206 ausgelieferten RDTs, 0 Desync):
+ *
+ *     Zone:Bit   Fenster  davon +Plc_ret  +Cut_auto   Set!=0  Set==0   Ck
+ *        2:7        141         103          125        193     153     0
+ *       1:27        106          84          100        141     106     0
+ *       1:28         24           4            4         44      38     0
+ *        5:0         13           0            0        131     169   125
+ *
+ * Die beiden Kopfzeilen sind die einzigen Zellen mit hunderten Fenstern, die fast immer
+ * ein Plc_ret/Cut_auto einschliessen — und die KEIN Skript jemals liest (Ck = 0). Zone 5
+ * ist der Gegenbeweis: dort steht der Fortschritt, und der wird staendig ge-Ck-t.
+ *
+ * Ck = 0 heisst: die Zellen sind fuer das Skript unbeobachtbar, sie schreiben in die
+ * ENGINE. Zone 2 ist naemlich gar kein Flag-Speicher, sondern das Pause-Wort
+ * DAT_800aca40 (Zeigertabelle @0x80074664[2], Aufloesung in re15_game_flag_set oben).
+ * Bit 7 ist Maske 0x80000000>>7 = 0x01000000, und DAS liest die Eingabe-Aufbereitung:
+ *     @0x800304f4  lw   v0,DAT_800aca40
+ *     @0x800304f8  lui  v1,0x100              v1 = 0x01000000
+ *     @0x800304fc  and  v0,v0,v1
+ *     @0x80030500  beq  v0,zero,LAB_80030520  Bit klar -> Eingabe unveraendert
+ *     @0x80030514  andi v0,v0,0xf000          Bit gesetzt -> nur noch die 4 Menuebits
+ *     @0x8003051c  sw   v0,DAT_800ac768
+ * "flag(2,7) steht" heisst also woertlich: der Spieler hat keine Kontrolle, es laeuft
+ * etwas. Genau das ist die Bedingung, unter der keine Abfrage aufgehen darf.
+ *
+ * ⛔ GELESEN WIRD DER SCHATTEN, NICHT DAS ECHTE WORT. g_re15_pauseflags traegt Bit
+ * 0x01000000 auch dann, wenn nur eine Nachricht laeuft oder das Aufnahme-Modal offen ist
+ * (Masken 0xffff0000 / 0xff000000, siehe den Block bei re15_game_flag_set). Ein Riegel auf
+ * dem echten Wort wuerde die Abfrage deshalb NIE aufgehen lassen — sie wird ja gerade von
+ * einer Nachricht ausgeloest. g_game.flags[2][0] sieht dagegen nur, was das SKRIPT gesetzt
+ * hat, und das ist das Szenen-Fenster. */
+int re15_cine_active(void)
+{
+    return re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+}

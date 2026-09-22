@@ -464,6 +464,11 @@ void re15_game_state_init(void);
 int  re15_game_flag_get(uint8_t zone, uint8_t idx);     /* 0 or 1 */
 void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
 
+/* "Es laeuft eine Szene" = flag(1,27) || flag(2,7) — das Fenster, in das sich ein
+ * skript-gefuehrtes Unterprogramm klammert. Herleitung + Zensus ueber alle 206 RDTs im
+ * Block bei re15_cine_active (engine/src/game_state.c). */
+int  re15_cine_active(void);
+
 /*=========================================================================
  * GLOBALE PAUSE-FLAGS = DAT_800aca40 (byte-true, RE 2026-08-17).
  *
@@ -526,6 +531,11 @@ extern scd_vm_t g_scd;
 /* VM control */
 void scd_vm_init(void);
 void scd_vm_tick(void);    /* call once per 30Hz tick (every 2nd vsync) */
+
+/* Opcode-Laenge an `pc`, aus DERSELBEN Tabelle, mit der der VM vorschiebt (s_opcode_sizes
+ * + die vier disasm-verifizierten variablen Laengen). -1 = Opcode existiert in RE1.5
+ * nicht -> Walk ABBRECHEN. Fuer Pruefstaende, die SCD-Daten selbst ablaufen. */
+int scd_opcode_size_at(const uint8_t *pc);
 /* "Item schon genommen"-Prop-Maske nullen = Objekt-Pool-Nullung des Raumladers FUN_8003ea7c
  * @0x8003eab0-cc (gerufen aus FUN_800396fc @0x800399a0 bei JEDEM Raumladen). Gerufen von
  * scd_vm_init und scd_room_reenter; die Maske gilt nur fuer den gerade geladenen Raum. */

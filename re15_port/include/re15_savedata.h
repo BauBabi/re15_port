@@ -93,7 +93,18 @@ typedef struct {
                                 * camera_cut (v3) — alle aelteren Blocks tragen hier 0 und
                                 * zeigen unveraendert sysmes 0x1a; Layout+Checksumme identisch,
                                 * kein Versions-Bump noetig. */
-    uint8_t  reserved1;        /* keep inv[]/flags[] 4-aligned (deterministic sum) */
+    uint8_t  discard_pending_item; /* vorgemerkte Wegwerf-Abfrage (0 = keine).
+                                * War bis v8 `reserved1` und immer 0 — alte Staende
+                                * laden damit automatisch "nichts vorgemerkt".
+                                * ⛔ PORT-ENTSCHEIDUNG: RE2s armierter Zustand ist ein
+                                * CODE-Zeiger (DAT_800d4498) + Phasen-Byte
+                                * (DAT_800d4249) und wird NICHT gespeichert — dort ist
+                                * "vorgemerkt" genau die eingefrorene Nachrichten-Spanne
+                                * (@0x800517f4 / LAB_800307e0), also nie ein
+                                * Speicherpunkt. Der Port fuehrt die Gegenstands-Id als
+                                * Rueckhalt mit; das Feld ist praktisch immer 0.
+                                * Haelt inv[]/flags[] weiterhin 4-aligned
+                                * (deterministische Summe). */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
     re15_inv_slot_t box[RE15_BOX_SLOTS];   /* v4 ITEM BOX; seit v7 = RE2s 64-Platz-RING
@@ -131,7 +142,7 @@ typedef struct {
     uint8_t  weapon_id;        
     uint8_t  camera_cut;       
     uint8_t  loc_idx;          
-    uint8_t  reserved1;        
+    uint8_t  discard_pending_item;        
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       
     re15_inv_slot_t box[RE15_SAVE_V6_BOX_SLOTS];   
