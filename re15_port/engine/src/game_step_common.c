@@ -1032,10 +1032,18 @@ void re15_game_step(const re15_game_ctx_t *c)
      * genau die 4 Menue-Bits: virt. 0x1000/0x2000 (Yes/No-Toggle), 0x4000 (Confirm +
      * Typewriter-Fast-Forward, phys. SQUARE) und 0x8000 (Cancel). Deshalb laesst sich
      * ein Text im eingefrorenen Zustand weiterhin beschleunigen und wegdruecken. */
-    if (g_re15_pauseflags & RE15_PAUSE_PAD) {
+    /* ⛔ ZWEITE QUELLE DESSELBEN BITS: eine vorgemerkte Wegwerf-Abfrage. RE2 haelt
+     * waehrend GENAU dieser Spanne 0xFF000000 in DAT_800cfbdc (die ausloesende Nachricht
+     * legt die Maske an — @0x80051650 `lui a3,0xff00` -> @0x8002fe90 `sw a3,DAT_800e8760`
+     * -> FUN_8003027c case 0 `DAT_800cfbdc |= *(param_1+0x5cb0)`; zurueck erst
+     * LAB_800307e0, und die Abfrage setzt sie @0x80051850 sofort wieder). Ohne das lief
+     * der Spieler im Port 81 Bilder lang frei herum, waehrend die Abfrage armiert und
+     * unsichtbar war. Beleg vollstaendig bei re15_discard_pad_locked(). */
+    { extern int re15_discard_pad_locked(void);
+      if ((g_re15_pauseflags & RE15_PAUSE_PAD) || re15_discard_pad_locked()) {
         g_scd_pad_held = (uint16_t)(g_scd_pad_held & 0xf000u);
         g_scd_pad_edge = (uint16_t)(g_scd_pad_edge & 0xf000u);
-    }
+      } }
     /* NICHT maskiert (byte-true): der ROHE Pad (c->pad_pressed / DAT_800ac75c) — FUN_80030444
      * fasst nur die VIRTUELLEN Woerter 0x800ac768/0x800ac76c an (@0x8003051c).
      * KORREKTUR 2026-08-17 (Fix-Runde Cluster 1, Fund 2): der alte Text schloss daraus, der
@@ -1103,7 +1111,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * sobald der Spieler wieder frei ist — genau die Bauart des Originals.
      * in_cinematic ist dieselbe Bedingung, die der AOT-Scan schon benutzt
      * (aot_common.c:821: player_mode == 2 oder laufender Letterbox-Countdown). */
-    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD)) {
+    { extern int re15_discard_pad_locked(void);
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD) && !re15_discard_pad_locked()) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
         s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&
@@ -1111,7 +1120,7 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_menu_start_poll(c->pad_pressed, s_inv_open_allowed);
     } else {
         s_inv_open_allowed = 0;
-    }
+    } }
     if (re15_menu_gameplay_frozen()) {
         re15_menu_fsm_tick(c->pad_pressed, c->pad_current);
         return;

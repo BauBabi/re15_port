@@ -38,17 +38,150 @@ static int     s_faden     = -1;   /* SCD-Faden, der die Nachricht ausgab       
 static int     s_gefragt   = 0;
 static int     s_weggeworfen = 0;
 
-void re15_discard_reset(void)
+/* Anzahl 0 zurueckdrehen — dasselbe, was RE2 im Nein-Zweig tut (@0x800517C4 `sb v1,count`
+ * mit v1 = 1). Seit die Anzahl erst beim Fragen faellt (siehe re15_discard_tick), kann das
+ * nur noch den Zustand D_FRAGT betreffen; in D_WARTET ist die Anzahl unberuehrt
+ * (@0x800517f4 verlaesst die Routine VOR dem Dekrement @0x80051810). */
+static void anzahl_zurueck(void)
 {
-    /* Eine abgebrochene Abfrage darf keinen Slot mit Anzahl 0 hinterlassen — dasselbe,
-     * was RE2 im Nein-Zweig tut (@0x800517C4 `sb v1,count` mit v1 = 1). Seit die Anzahl
-     * erst beim Fragen faellt (siehe re15_discard_tick), kann das nur noch den Zustand
-     * D_FRAGT betreffen; in D_WARTET ist die Anzahl unberuehrt. */
     if (s_zustand != D_AUS && s_slot >= 0 && s_slot < RE15_INV_MAX_SLOTS
         && g_inv.slots[s_slot].id == s_item && g_inv.slots[s_slot].qty == 0)
         g_inv.slots[s_slot].qty = 1;
+}
+
+void re15_discard_reset(void)
+{
+    /* HART: neues Spiel / Spielstand laden. Alles faellt weg.
+     * ⛔ NICHT beim Raumwechsel — dafuer gibt es re15_discard_room_change(). */
+    anzahl_zurueck();
     s_zustand = D_AUS; s_item = 0; s_slot = -1; s_choice = 0; s_faden = -1;
     s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0;
+}
+
+void re15_discard_room_change(void)
+{
+    /* ⛔ DER RAUMWECHSEL DARF DIE VORMERKUNG NICHT WEGWERFEN.
+     *
+     * ============================================================================
+     * ZUERST DIE EHRLICHE ANTWORT: IN RE2 KANN DIESE LAGE GAR NICHT ENTSTEHEN
+     * ============================================================================
+     * Die Frage "was tut RE2, wenn der Spieler nach dem Aufschliessen den Raum wechselt,
+     * bevor die Abfrage kam?" hat in RE2 keinen Fall — und DAS ist disassembliert:
+     *
+     *  (1) Die Vormerkung entsteht in DERSELBEN Routine, die die ausloesende Nachricht
+     *      "You have used the <X>." mit der Freeze-Maske 0xFF000000 oeffnet:
+     *          @0x8005164c  jal  FUN_8002fe38
+     *          @0x80051650  _lui a3,0xff00          (Delay-Slot = 4. Argument)
+     *          @0x80051670  sw   v0,DAT_800d4498    Fortsetzung einhaengen
+     *  (2) Ab da ruft die HAUPTSCHLEIFE die Fortsetzung JEDES Bild:
+     *          @0x80026370  lw   v1,-0x7d50(at)     at = s3+0x10000, s3 = 0x800cc1e8
+     *          @0x8002637c  beq  v1,zero,LAB_8002638c
+     *          @0x80026384  jalr v1
+     *  (3) Ihr EINZIGER Aufschub ist das Belegt-Bit 0x80 von DAT_800e873c:
+     *          @0x800517e0  lbu  v0,-0x78c4(v0)     DAT_800e873c
+     *          @0x800517f0  andi v0,v0,0x80
+     *          @0x800517f4  bne  v0,zero,LAB_80051870   -> return, NICHTS angefasst
+     *  (4) Genau dieses Bit haelt auch den Freeze. FUN_8002fe38 setzt beim Oeffnen
+     *      DAT_800e873c = 0x80, legt die Maske nach DAT_800e8760 und sichert das
+     *      Steuerwort nach DAT_800e875c (Decompile RE2_Quellcode_V2/FUN_8002fe38.c,
+     *      Modus-Zweig 0x100); FUN_8003027c legt sie an und nimmt sie erst beim
+     *      SCHLIESSEN zurueck:
+     *          @0x800307e0  lbu  v0,0x5c8c(s1)      s1 = 0x800e2ab0 -> DAT_800e873c
+     *          @0x800307e8  andi v0,v0,0x7f         Belegt-Bit WEG
+     *          @0x800307ec  sb   v0,0x5c8c(s1)
+     *          @0x800307e4  lw   v1,0x5cac(s1)      DAT_800e875c (Steuerwort vorher)
+     *          @0x800307f4  sw   v1,DAT_800cfbdc    Freeze ZURUECK
+     *  (5) Und die Nachricht schliesst nur auf die Bestaetigungstaste — wobei sie im
+     *      SELBEN Bild das Pad-Vorwort stopft, es gibt dort also keine zweite Flanke:
+     *          @0x800307a0  lw   v0,DAT_800ce310
+     *          @0x800307a8  andi v0,v0,0x3000       Bestaetigen?
+     *          @0x800307ac  beq  v0,zero,default    nein -> Nachricht bleibt offen
+     *          @0x800307b0  _ori v0,zero,0xffff
+     *          @0x800307b8  sw   v0,DAT_800ce30c    Pad-Vorwort gestopft
+     *  (6) Im naechsten Durchgang dekrementiert die Fortsetzung (@0x80051810), fragt
+     *      (@0x80051834) und legt die Maske sofort wieder an (@0x80051844 `lui v1,0xff00`
+     *      / @0x80051850 `sw v0,DAT_800cfbdc`).
+     *
+     * => Die Spanne "vorgemerkt" ist in RE2 GENAU die Spanne "Nachricht haelt 0xFF000000".
+     *    Ein Bild mit vorgemerkter Abfrage UND freiem Spieler gibt es dort nicht, also
+     *    kann der Spieler in diesem Fenster auch keinen Raum wechseln. Das Loch, das
+     *    dieser Port hatte, ist eine PORT-Eigenschaft — es entsteht erst durch die
+     *    laengere Port-Wartezeit (Ende des ausloesenden Unterprogramms statt Ende der
+     *    Nachricht; Begruendung im Kopf von re15_discard_tick).
+     *
+     * ============================================================================
+     * WAS AUS RE2 TROTZDEM MESSBAR IST — UND NUR DAS
+     * ============================================================================
+     * Der armierte Zustand sind ZWEI Zellen im raum-UEBERGREIFENDEN Arbeitsblock
+     * (Basis 0x800cc1e8, @0x8005172c `addiu s0,s0,-0x3e18`):
+     *     +0x82b0 = DAT_800d4498   der Fortsetzungs-Zeiger
+     *     +0x8061 = DAT_800d4249   Phase/Platz (0 = Antwort-Zweig, sonst Platz+1;
+     *                              @0x8005171c `lbu v1` / @0x800517e4 `addiu v1,v1,-1`)
+     * Im SELBEN Block liegt das Inventar: +0x8854 = DAT_800d4a3c (@0x80051774/@0x80051808).
+     *
+     * Vollzensus per Byte-Muster ueber den ganzen Ghidra-Dump nach beiden Adressierungs-
+     * formen des Zeigers (`b0 82 ?? ac` = +0x82b0 und `98 44 ?? ac` = DAT_800d4498(at)) —
+     * 6 Schreib- und 2 Lesestellen im GANZEN Programm:
+     *     @0x80051670  sw v0,...   LAB_80051718 einhaengen (Schluessel benutzt)
+     *     @0x800517d0  sw zero,... nach der ANTWORT aushaengen
+     *     @0x80051860  sw zero,... Zaehler != 0 -> keine Frage, aushaengen
+     *     @0x80052168  sw v0,...   DAT_800522cc einhaengen (die andere AOT-Klasse)
+     *     @0x80052294  sw v0,...   dito
+     *     @0x800524e8  sw zero,... deren eigenes Aushaengen
+     *     @0x80026370  lw v1,...   HAUPTSCHLEIFE (Punkt 2 oben)
+     *     @0x80052048  lw v0,...   "haengt schon eine Fortsetzung?" -> dann nicht starten
+     * ⛔ Ghidras eigene XREF-Liste nennt nur FUENF Schreibstellen: @0x800524e8 adressiert
+     * ueber s1 (@0x800524e4 `addu at,s1,at`) und ist dort unbeschriftet. Ohne die
+     * Byte-Muster-Suche faehrt man mit einer unvollstaendigen Liste.
+     * KEINE der sechs liegt auf einem Raumwechsel-, Tuer- oder Lade-Pfad. Dazu:
+     *   - Die Fortsetzung selbst ist RESIDENT — LAB_80051718 liegt in der EXE (0x8005xxxx),
+     *     nicht in einem Stage-Overlay (0x80100000); sie bliebe ueber einen Raumwechsel
+     *     hinweg aufrufbar. Laege sie im Overlay, waere Ueberleben unmoeglich.
+     *   - Der Gegenstand ist im Wartezustand unversehrt: @0x800517f4 kehrt VOR dem
+     *     Dekrement @0x80051810 um, ohne die Anzahl anzufassen.
+     * => Die Zellen WUERDEN einen Raumwechsel ueberstehen. Dass RE2 das nutzt, ist damit
+     *    NICHT gezeigt — es braucht es nie (siehe oben).
+     *
+     * ============================================================================
+     * DIE PORT-ENTSCHEIDUNG, ALS SOLCHE BENANNT
+     * ============================================================================
+     * Der Port schliesst das Fenster dort, wo RE2 es nicht hat: solange vorgemerkt ist,
+     * haelt re15_discard_pad_locked() den Pad-Riegel (Beleg dort). Damit kann der SPIELER
+     * in diesem Fenster keinen Raum wechseln — dieselbe Lage wie RE2.
+     * Ein SKRIPT kann es weiterhin (gerade das Unterprogramm, auf dessen Ende gewartet
+     * wird, darf einen Raumwechsel enthalten). Fuer diesen Fall faellt die Vormerkung
+     * NICHT weg, weil das der einzige Ausgang ohne stummen Verlust ist: Item 0x44
+     * "Minidisc Player w/ Disc" hat genau EINE Benutzungsstelle (discard_sites.inc), es
+     * wuerde also nie wieder gefragt und der Gegenstand bliebe fuer immer liegen. Die
+     * Wahl folgt der RE2-Datenlage (Zellen im raum-uebergreifenden Block, kein Schreiber
+     * auf dem Raum-Pfad, residente Fortsetzung), ist aber eine PORT-Entscheidung und
+     * keine gemessene RE2-Verhaltensweise.
+     *
+     * Was NICHT mitgenommen wird: der Faden-Index (die Faeden des alten Raums gibt es
+     * nicht mehr) und der Inventar-Platz (das Inventar kann nachgerueckt sein) — der
+     * Platz wird beim Fragen neu gesucht. */
+    if (s_zustand == D_AUS) return;
+    if (s_zustand == D_FRAGT) {
+        /* Kann der Spieler im Auslieferungsstand nicht ausloesen (die sichtbare Abfrage
+         * friert den Spielschritt ein, game_step_common.c), ein Skript-Raumwechsel aber
+         * schon: die bereits gefallene Anzahl zurueck und auf WARTEN zurueckstufen. */
+        anzahl_zurueck();
+        s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0; s_choice = 0;
+        s_zustand = D_WARTET;
+    }
+    s_faden = -1;
+    s_slot  = -1;
+}
+
+uint8_t re15_discard_pending_item(void) { return (uint8_t)(s_zustand == D_AUS ? 0 : s_item); }
+
+void re15_discard_restore(uint8_t item)
+{
+    re15_discard_reset();
+    if (!item) return;
+    if (re15_inv_find_item(item) < 0) return;   /* nicht mehr dabei -> nichts vorzumerken */
+    s_item = item; s_slot = -1; s_faden = -1; s_choice = 0;
+    s_zustand = D_WARTET;
 }
 
 void re15_discard_notice_message(unsigned room_id, uint8_t msg_id, int thread_slot)
@@ -135,8 +268,14 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
          * hat keine Kontrolle". Herleitung + Zensus ueber 206 RDTs: re15_cine_active
          * (engine/src/game_state.c). Greift, wenn ein ANDERER Faden die Szene haelt. */
         if (re15_cine_active()) return;
-        /* Der Gegenstand kann in der Zwischenzeit verschwunden sein (Itembox o.ae.). */
-        if (s_slot < 0 || s_slot >= RE15_INV_MAX_SLOTS || g_inv.slots[s_slot].id != s_item) {
+        /* Den Platz JETZT (neu) suchen: nach einem Raumwechsel ist der alte Index
+         * ungueltig (s_slot == -1, siehe re15_discard_room_change), und das Inventar kann
+         * zwischendurch nachgerueckt sein. Ist der Gegenstand ganz weg (Itembox o.ae.),
+         * gibt es nichts mehr wegzuwerfen. */
+        if (s_slot < 0 || s_slot >= RE15_INV_MAX_SLOTS || g_inv.slots[s_slot].id != s_item)
+            s_slot = re15_inv_find_item(s_item);
+        if (s_slot < 0 || s_slot >= RE15_INV_MAX_SLOTS || g_inv.slots[s_slot].id != s_item
+            || g_inv.slots[s_slot].qty == 0) {
             re15_discard_reset(); return;
         }
         /* JETZT erst faellt der Zaehler — byte-true die Reihenfolge von LAB_80051718:
@@ -217,6 +356,57 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
 
 int re15_discard_active(void) { return s_zustand != D_AUS; }
 int re15_discard_frozen(void) { return s_zustand == D_FRAGT; }
+
+int re15_discard_pad_locked(void)
+{
+    /* ⛔ SOLANGE VORGEMERKT IST, HAT DER SPIELER KEINE KONTROLLE — byte-true die Lage,
+     * in der RE2 sich waehrend derselben Spanne befindet.
+     *
+     * RE2 oeffnet die ausloesende Nachricht "You have used the <X>." mit der Freeze-Maske
+     * 0xFF000000 als viertem Wort (@0x8005164c `jal FUN_8002fe38` / @0x80051650
+     * `_lui a3,0xff00`). FUN_8002fe38 legt sie weg und sichert das aktuelle Steuerwort:
+     *     @0x8002fe90  sw a3,-0x78a0(at)   -> DAT_800e8760  (die Maske)
+     *     @0x8002fea4  sw v1,-0x78a4(at)   -> DAT_800e875c  (Steuerwort vorher)
+     * Der Nachrichten-Takt FUN_8003027c legt sie beim OEFFNEN an und nimmt sie erst beim
+     * SCHLIESSEN wieder weg (Decompile RE2_Quellcode_V2/FUN_8003027c.c, param_1 = 0x800e2ab0):
+     *     case 0:       DAT_800cfbdc |= *(param_1 + 0x5cb0)   ; = DAT_800e8760
+     *     LAB_800307e0: *(param_1 + 0x5c8c) &= 0x7f           ; Belegt-Bit weg
+     *                   DAT_800cfbdc  = *(param_1 + 0x5cac)   ; = DAT_800e875c
+     * Und die Abfrage legt dieselbe Maske sofort wieder an
+     *     @0x80051844  lui v1,0xff00
+     *     @0x80051850  sw  v0,DAT_800cfbdc
+     * Zwischen Nachrichten-Ende und Abfrage liegt in RE2 hoechstens EIN Bild, denn der
+     * Aufschub der Fortsetzung ist GENAU dasselbe Belegt-Bit, das den Freeze haelt
+     * (@0x800517f0/@0x800517f4 gegen LAB_800307e0). Und in diesem einen Bild gibt es keine
+     * Tastenflanke, weil das Schliessen der Nachricht das Pad-Vorwort stopft — selbst
+     * disassembliert, FUN_8003027c case 5:
+     *     @0x800307a0  lw   v0,DAT_800ce310
+     *     @0x800307a8  andi v0,v0,0x3000     Bestaetigungstaste?
+     *     @0x800307ac  beq  v0,zero,default  nein -> Nachricht bleibt offen
+     *     @0x800307b0  _ori v0,zero,0xffff
+     *     @0x800307b8  sw   v0,DAT_800ce30c  >>> Pad-Vorwort gestopft <<<
+     * (Die Reihenfolge Fortsetzung/Nachrichten-Takt INNERHALB des Bildes ist dafuer
+     * nicht noetig und deshalb hier auch nicht behauptet.)
+     *
+     * Der Port wartet an dieser Stelle laenger als RE2 (auf das Ende des ausloesenden
+     * Unterprogramms — Begruendung im Kopf von re15_discard_tick). Genau diese
+     * Verlaengerung hat das Loch aufgerissen: 81 Bilder mit freiem Pad und unsichtbarer,
+     * armierter Abfrage (ROOM1100 sub02). Solange die Vormerkung steht, haelt der Port
+     * deshalb denselben Riegel wie RE2 — Bit 0x01000000, dessen WIRKUNG in RE1.5
+     * woertlich disassembliert ist:
+     *     @0x800304f4  lw   v0,DAT_800aca40
+     *     @0x800304f8  lui  v1,0x100
+     *     @0x80030500  beq  v0,zero,LAB_80030520
+     *     @0x80030514  andi v0,v0,0xf000      nur noch die vier Menuebits
+     *     @0x8003051c  sw   v0,DAT_800ac768
+     * Die vier Menuebits bleiben offen — die Abfrage selbst muss ja bedienbar sein.
+     *
+     * ⛔ NUR das Pad-Bit, NICHT die ganze 0xFF000000: RE15_PAUSE_SCD (0x02000000) wuerde
+     * das ausloesende Unterprogramm anhalten, auf dessen Ende der Port gerade wartet —
+     * das waere eine Verklemmung. RE2 hat das Problem nicht, weil seine Wartezeit die
+     * Nachricht selbst ist. */
+    return s_zustand != D_AUS;
+}
 
 int re15_discard_prompt(uint8_t *out_item, int *out_choice)
 {

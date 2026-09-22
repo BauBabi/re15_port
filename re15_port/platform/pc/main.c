@@ -9488,13 +9488,25 @@ re_title:;
                   if (dl) {
                       uint8_t di = 0; int dc = -1;
                       int dp = re15_discard_prompt(&di, &dc);
+                      /* padsperre/px/pz: der Riegel aus RE2 (0xFF000000 ueber die ganze
+                       * Spanne — @0x80051650 -> @0x8002fe90 -> FUN_8003027c case 0,
+                       * zurueck erst LAB_800307e0, sofort wieder @0x80051850) ist im Port
+                       * das Pad-Bit 0x01000000 (@0x800304f4-@0x8003051c). Mit den beiden
+                       * Spielerkoordinaten in derselben Zeile ist am Protokoll ABLESBAR,
+                       * dass der Spieler waehrend der Vormerkung nicht laeuft. */
+                      extern uint32_t g_re15_pauseflags;
+                      extern int re15_discard_pad_locked(void);
                       fprintf(dl, "F%u raum=%04x msg_aktiv=%d msg_fsm=%d | abfrage=%d frage=%d "
-                                  "gegenstand=0x%02x wahl=%d text=%d/%d gefragt=%d weg=%d\n",
+                                  "gegenstand=0x%02x wahl=%d text=%d/%d gefragt=%d weg=%d"
+                                  " padsperre=%d pausepad=%d px=%d pz=%d\n",
                               g_engine.frame_count, g_current_room_id,
                               (int)g_scd.message_active, (int)g_scd.message_fsm_active,
                               re15_discard_active(), dp, di, dc,
                               re15_discard_reveal(), re15_discard_reveal_total(),
-                              re15_discard_gefragt(), re15_discard_weggeworfen());
+                              re15_discard_gefragt(), re15_discard_weggeworfen(),
+                              re15_discard_pad_locked(),
+                              (g_re15_pauseflags & 0x01000000u) ? 1 : 0,
+                              (int)g_actors[0].x, (int)g_actors[0].z);
                       fflush(dl);
                   } }
                 if (ml && re15_item_modal_active()) {

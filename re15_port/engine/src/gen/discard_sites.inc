@@ -1,16 +1,17 @@
 /* ERZEUGT von tools/gen_discard_sites.py - NICHT von Hand aendern.
  *
  * Die Benutzungsstellen der Schluessel-Gegenstaende, aus den ausgelieferten Daten
- * ABGELEITET (Aufnahmebedingungen A/B/C siehe Generator-Kopf), nicht gewaehlt.
+ * ABGELEITET (Aufnahmebedingungen A/B/C/D siehe Generator-Kopf), nicht gewaehlt.
  *
  * ABDECKUNG DIESES LAUFS:
  *   206 RDTs mit Header gelesen (+34 Stummel <0x48 B), 0 Desync-Stopps
  *   164 Item_aot_set-Records insgesamt
  *   20 Nachrichten "...used the X..." in 18 Raeumen
  *   19 davon namentlich aufgeloest, 1 nicht (You've used the Latch Key.)
- *   17 Eintraege aufgenommen = 9 Gegenstaende x ihre Raumvarianten
+ *   16 Eintraege aufgenommen = 9 Gegenstaende x ihre Raumvarianten
  *   VERWORFEN ROOM2060 msg 5  0x40 Fuse                     B: keine Item_aot_set-Ausgabe
  *   VERWORFEN ROOM2061 msg 5  0x40 Fuse                     B: keine Item_aot_set-Ausgabe
+ *   VERWORFEN ROOM4001 msg 2  0x47 Blue Master Keycard      D: kein Message_on 2 im SCD (nur [3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
  *   VERWORFEN ROOM3091 msg 32  (A: kein Name der 102er-Tabelle)  "You've used the Latch Key."
  *
  * AUFGENOMMENE GEGENSTAENDE (Id, Name, Ausgaben, Mengen je Ausgabe):
@@ -44,9 +45,8 @@ static const re15_discard_site_t re15_discard_sites[] = {
     { 0x3050,  5, 0x46 },   /* ROOM3050: "You've used the Red Master Keycard." */
     { 0x3051,  5, 0x46 },   /* ROOM3051: "You've used the Red Master Keycard." */
     { 0x4000,  2, 0x47 },   /* ROOM4000: "You've used the Blue Master Keycard." */
-    { 0x4001,  2, 0x47 },   /* ROOM4001: "You've used the Blue Master Keycard." */
 };
-#define RE15_DISCARD_SITE_COUNT 17
+#define RE15_DISCARD_SITE_COUNT 16
 
 /* Die ausgelieferte Stueckzahl je aufgenommenem Gegenstand (Item_aot_set Byte 16).
  * Sie ist der RE1.5-Gegenwert zu RE2s Zaehlerfeld und wird beim Gebrauch

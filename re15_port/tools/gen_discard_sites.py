@@ -22,6 +22,16 @@ Drei Messungen, jede eine Aufnahmebedingung; wer eine nicht erfuellt, faellt rau
       eingeklappt). Mehr als eine Stelle hiesse: nach der ersten Benutzung ist er noch
       nicht ueberfluessig - dann darf nicht gefragt werden.
 
+  (D) AUSGEGEBEN - der Raum fuehrt die Nachricht ueberhaupt aus: sein SCD enthaelt
+      mindestens ein `Message_on <mid>` (Opcode 0x2B, pc[1] == mid; Handler @0x800404f4,
+      `ori a1,zero,0x300` @0x80040500). Der TEXT allein genuegt NICHT - er steht im
+      Nachrichtenblock, auch wenn kein Opcode ihn je aufmacht, und der Port haengt die
+      Abfrage an op_message_on. Gemessen mit demselben Laengen-Vorschub wie (B).
+      (Faellt damit raus: ROOM4001 msg 2 "You've used the Blue Master Keycard." - der
+      Text ist da, der Raum sagt aber nur die Nachrichten 3..12; das ausgeloeste
+      Message_on 2 gibt es nur in ROOM4000 sub02. Die frueher dafuer genannte
+      Begruendung "liegt im mainScd" war falsch: im mainScd steht es auch nicht.)
+
 Das ist der RE1.5-Ersatz fuer RE2s Zaehlerfeld: RE2 traegt die Zahl der Tueren im
 Item_aot_set (Byte 16-17) und zaehlt sie beim Aufschliessen herunter (@0x80051810),
 Abfrage erst bei Null (@0x80051824). RE1.5 hat kein solches Feld - die Zahl steckt
@@ -91,6 +101,7 @@ def main():
     rdts = sorted(glob.glob(os.path.join(root, "STAGE*", "ROOM*.RDT")))
     platzierungen = collections.Counter()        # (B) Item_aot_set je Typ
     mengen        = collections.defaultdict(set)
+    ausgegeben    = collections.defaultdict(set)  # (D) Message_on-Ids je Raum
     roh           = []                           # (room, room_id, msg_id, text)
     n_rdt = n_stub = 0
 
@@ -112,6 +123,8 @@ def main():
                         t  = d[pc+22] if lf else d[pc+14]
                         a  = d[pc+24] if lf else d[pc+16]
                         platzierungen[t] += 1; mengen[t].add(a)
+                    elif op == 0x2B:                 # (D) Message_on <id>
+                        ausgegeben[room].add(d[pc+1])
         msgs = messages(d)
         for mid, (txt, ctrl) in msgs.items():
             if "ve used the" in txt or "have used the" in txt:
@@ -156,6 +169,10 @@ def main():
         if len(stellen[iid]) != 1:
             verworfen.append((room, mid, iid, nm,
                               "C: %d Benutzungsstellen" % len(stellen[iid]))); continue
+        if mid not in ausgegeben[room]:
+            verworfen.append((room, mid, iid, nm,
+                              "D: kein Message_on %d im SCD (nur %s)"
+                              % (mid, sorted(ausgegeben[room])))); continue
         gewaehlt.append((room, room_id, mid, iid, nm))
     gewaehlt.sort(key=lambda r: (r[1], r[2]))
 
@@ -165,7 +182,7 @@ def main():
     w("/* ERZEUGT von tools/gen_discard_sites.py - NICHT von Hand aendern.")
     w(" *")
     w(" * Die Benutzungsstellen der Schluessel-Gegenstaende, aus den ausgelieferten Daten")
-    w(" * ABGELEITET (Aufnahmebedingungen A/B/C siehe Generator-Kopf), nicht gewaehlt.")
+    w(" * ABGELEITET (Aufnahmebedingungen A/B/C/D siehe Generator-Kopf), nicht gewaehlt.")
     w(" *")
     w(" * ABDECKUNG DIESES LAUFS:")
     w(" *   %d RDTs mit Header gelesen (+%d Stummel <0x48 B), 0 Desync-Stopps" % (n_rdt, n_stub))

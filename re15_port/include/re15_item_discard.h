@@ -135,9 +135,43 @@ int re15_discard_reveal_total(void);  /* Glyphenzahl des offenen Skripts        
 int re15_discard_ready(void);         /* Text fertig getippt -> Yes/No waehlbar         */
 uint8_t re15_discard_blink(void);     /* Blink-Zaehler DAT_800b8525 (@0x800285e8)       */
 
-/* Raumwechsel / Spielstand laden: eine offene Abfrage verwerfen und den Zaehler
- * zuruecksetzen, damit kein Slot mit Anzahl 0 zurueckbleibt. */
+/* HART: neues Spiel / Spielstand laden. Verwirft die Abfrage und dreht einen schon
+ * gefallenen Zaehler zurueck, damit kein Slot mit Anzahl 0 zurueckbleibt. */
 void re15_discard_reset(void);
+
+/* RAUMWECHSEL — und ausdruecklich KEIN Reset; nur Faden-Index und Inventar-Platz werden
+ * fallengelassen und beim Fragen neu bestimmt.
+ * ⛔ EHRLICH, und an der Definition voll belegt: In RE2 kann die Lage GAR NICHT entstehen.
+ * Die Spanne "vorgemerkt" ist dort GENAU die Spanne, in der die ausloesende Nachricht die
+ * Freeze-Maske 0xFF000000 haelt (@0x80051650 -> FUN_8002fe38; Aufschub der Fortsetzung ist
+ * genau das Belegt-Bit 0x80 @0x800517f4, das auch den Freeze haelt, LAB_800307e0), und beim
+ * Schliessen stopft die Nachricht sogar das Pad-Vorwort (@0x800307b8). Ein Raumwechsel des
+ * SPIELERS ist dort in diesem Fenster unmoeglich; das Loch war eine PORT-Eigenschaft.
+ * Messbar ist aus RE2 nur die DATENLAGE: zwei Zellen im raum-uebergreifenden Block
+ * (DAT_800d4498 = Basis 0x800cc1e8 +0x82b0, DAT_800d4249 = +0x8061; Inventar +0x8854),
+ * Vollzensus per Byte-Muster = 6 Schreibstellen (@0x80051670 / @0x800517d0 / @0x80051860 /
+ * @0x80052168 / @0x80052294 / @0x800524e8 — Ghidra beschriftet nur fuenf), keine auf dem
+ * Raum-Pfad, und die Fortsetzung LAB_80051718 ist residente EXE, kein Overlay. Die Zellen
+ * WUERDEN es also ueberstehen. Dass die Vormerkung ueberlebt, ist danach eine
+ * PORT-ENTSCHEIDUNG fuer den einzig verbleibenden Fall (Raumwechsel durch das SKRIPT) —
+ * nicht gemessenes RE2-Verhalten. Sie ist noetig, weil ein stumm liegenbleibender
+ * Gegenstand sonst nie wieder abgefragt wuerde (eine Benutzungsstelle je Gegenstand). */
+void re15_discard_room_change(void);
+
+/* ⛔ PAD-RIEGEL: solange vorgemerkt ist, hat der Spieler keine Kontrolle — dieselbe
+ * Lage, in der RE2 waehrend derselben Spanne ist (Maske 0xFF000000, von der ausloesenden
+ * Nachricht gehalten: @0x80051650 `lui a3,0xff00` -> @0x8002fe90 -> FUN_8003027c case 0,
+ * zurueckgenommen erst LAB_800307e0, sofort wieder gesetzt @0x80051850). Der Port haelt
+ * davon genau das Pad-Bit 0x01000000 (@0x800304f4-@0x8003051c: Eingabe auf 0xf000),
+ * nicht die ganze Maske — RE15_PAUSE_SCD wuerde das Unterprogramm anhalten, auf dessen
+ * Ende gewartet wird. Voller Beleg an der Definition. */
+int re15_discard_pad_locked(void);
+
+/* Spielstand: der vorgemerkte Gegenstand (0 = nichts vorgemerkt) und sein Zurueckholen.
+ * RE2 legt die Fortsetzung in denselben Arbeitsblock wie das Inventar (Basis 0x800cc1e8,
+ * Zeiger +0x82b0, Inventar +0x884c) — der Port fuehrt sie deshalb im Save-Record mit. */
+uint8_t re15_discard_pending_item(void);
+void    re15_discard_restore(uint8_t item);
 
 /* Pruefstand: wie oft wurde bisher gefragt / weggeworfen (Riegel-Messgroessen). */
 int re15_discard_gefragt(void);
