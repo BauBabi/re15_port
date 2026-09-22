@@ -2158,8 +2158,11 @@ static void teil_q(void)
  *
  * VIER FAELLE JE PANEL-RAUM, alle am AUSGELIEFERTEN Unterprogramm gefahren, mit einem
  * Spieler, der jede Ja/Nein-Frage mit JA beantwortet (virtuelles Bit 0x4000):
- *   R1 Gate 0, LESER-Sub, Karte im Inventar, JA  -> KEINE Abfrage (der gemeldete Fehler).
+ *   R1 LESER-Sub, Karte im Inventar, JA  -> KEINE Abfrage (der gemeldete Fehler).
  *      Mit Nachweis, dass die alte Stelle ERREICHT wurde — sonst misst die Null nichts.
+ *   R1b DASSELBE UNTERPROGRAMM WIE R2, dieselbe Karte, EIN Unterschied: das Erfolgs-Bit
+ *      steht NICHT -> KEINE Abfrage. Das ist die Messung des Gates selbst; R1 allein misst
+ *      nur das Umhaengen (belegt: Rueckbau A traf R1 nicht).
  *   R2 Gate 1, ERFOLGS-Sub, Karte im Inventar    -> GENAU EINE Abfrage, und sie zeigt
  *      genau diese Karte. Gefahren bis zum Ende des Unterprogramms, mit NEIN beantwortet;
  *      der Zaehler re15_discard_gefragt() muss um genau 1 steigen.
@@ -2279,23 +2282,40 @@ static void teil_r(void)
         int e_alt = 0;
         int a_alt = r_lauf(&rdt, p, p->leser_sub, p->vorzeitig_msg, 0, 1, &e_alt, NULL);
 
-        printf("  ROOM%04X item 0x%02X | R1 Leser sub%02d m%u Gate=0: erreicht=%d"
-               " abfragen=%d | R2 Erfolg sub%02d m%u Gate=1: erreicht=%d abfragen=%d"
+        /* --- R1b: DAS GATE SELBST. Derselbe Erfolgs-Sub wie R2, dieselbe Karte, EIN
+         * EINZIGER Unterschied: das Erfolgs-Bit steht NICHT. Ohne diesen Lauf misst TEIL R
+         * das Gate gar nicht — R1 faehrt eine Nachricht, die ueberhaupt keine Stelle mehr
+         * ist, und bliebe auch mit ausgebautem Gate gruen (gemessen: Rueckbau A, 0 Fehler,
+         * bevor dieser Lauf dazukam). Das Gate ist die fail-closed-Sicherung gegen die
+         * 22 Raeume, die dieselbe Zeile fuehren. */
+        int e_fc = 0;
+        int a_fc = r_lauf(&rdt, p, p->erfolg_sub, p->ausloeser_msg, 0, 1, &e_fc, NULL);
+
+        printf("  ROOM%04X item 0x%02X | R1 Leser sub%02d m%u: erreicht=%d"
+               " abfragen=%d | R1b Erfolg sub%02d m%u flag(%d,%d)=0: erreicht=%d"
+               " abfragen=%d | R2 dasselbe mit flag=1: erreicht=%d abfragen=%d"
                " zeigt 0x%02X\n",
                p->room, p->item, p->leser_sub, (unsigned)p->vorzeitig_msg, e_alt, a_alt,
-               p->erfolg_sub, (unsigned)p->ausloeser_msg, e_neu, a_neu, pit);
+               p->erfolg_sub, (unsigned)p->ausloeser_msg, p->gate_zone, p->gate_bit,
+               e_fc, a_fc, e_neu, a_neu, pit);
 
         PRUEFE(e_alt, "ROOM%04X: die Einsteck-Zeile msg %u wurde nicht erreicht — dann"
                " misst die 0 daneben nichts", p->room, (unsigned)p->vorzeitig_msg);
         PRUEFE(a_alt == 0, "ROOM%04X: %d Abfrage(n) beim EINSTECKEN, also vor dem Code"
                " — genau der gemeldete Fehler", p->room, a_alt);
+        PRUEFE(e_fc, "ROOM%04X: die Erfolgs-Zeile msg %u wurde im Gate-0-Lauf nicht"
+               " erreicht — dann misst die 0 daneben nichts",
+               p->room, (unsigned)p->ausloeser_msg);
+        PRUEFE(a_fc == 0, "ROOM%04X: %d Abfrage(n) an der Erfolgs-Zeile, obwohl"
+               " flag(%d,%d)=0 — das Gate greift nicht (fail-closed verletzt)",
+               p->room, a_fc, p->gate_zone, p->gate_bit);
         PRUEFE(e_neu, "ROOM%04X: die Erfolgs-Zeile msg %u wurde nicht erreicht",
                p->room, (unsigned)p->ausloeser_msg);
         PRUEFE(a_neu == 1, "ROOM%04X: %d Abfragen an der Erfolgs-Zeile, erwartet genau 1",
                p->room, a_neu);
         PRUEFE(pit == p->item, "ROOM%04X: die Abfrage zeigt 0x%02X statt 0x%02X",
                p->room, pit, p->item);
-        if (a_alt == 0 && e_alt) r1++;
+        if (a_alt == 0 && e_alt && a_fc == 0 && e_fc) r1++;
         if (a_neu == 1) r2++;
         lebend++;
         free(raw);
