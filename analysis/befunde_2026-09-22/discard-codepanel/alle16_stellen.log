@@ -1,0 +1,755 @@
+====================================================================================================
+ROOM1090  msg 9  Gegenstand 0x31 Fire Extinguisher
+  Datei: STAGE1\ROOM1090.RDT   336440 B
+  msgScd@0x2748  mainScd@0x2118  subScd@0x21B4
+  Text[9] = "You've used the Fire Extinguisher."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x1
+     0x23 Cmp             : sub01@0x2400
+
+  --- sub03  Subroutine 0x024CE..0x026E6   Message_on 9 @0x02502 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x024CE  Set              22 03 84 00                                      bank=3 bit=132 val=0
+    0x024D2  Set              22 03 bb 01                                      bank=3 bit=187 val=1
+    0x024D6  Set              22 03 6e 01                                      bank=3 bit=110 val=1
+    0x024DA  Sce_bgm_control  54 00 00 01 01 41                                
+    0x024E0  Sce_bgm_control  54 00 02 00 00 00                                
+    0x024E6  Cut_chg          29 05                                            
+    0x024E8  Work_set         2e 01 00                                         kind=1 idx=0
+    0x024EB  Nop              00                                               
+    0x024EC  Plc_dest         40 00 06 3f 00 00 00 00                          
+    0x024F4  Plc_neck         41 01 2a 0a 00 00 47 f7 64 00                    
+    0x024FE  Sleep            09 0a 02 00                                      
+  * 0x02502  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x02506  Evt_next         02                                               
+    0x02507  Nop              00                                               
+    0x02508  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x0250C  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x02510  Cut_chg          29 06                                            
+    0x02512  Work_set         2e 03 02                                         kind=3 idx=2
+    0x02515  Nop              00                                               
+    0x02516  Speed_set        2f 00 ce ff                                      
+    0x0251A  For              0d 00 04 00 02 00                                
+    0x02520  op30             30                                               
+    0x02521  Evt_next         02                                               
+    0x02522  Next             0e 00                                            
+    0x02524  Speed_set        2f 00 f6 ff                                      
+    0x02528  Speed_set        2f 01 fe ff                                      
+    0x0252C  Speed_set        2f 02 0a 00                                      
+    0x02530  For              0d 00 04 00 02 00                                
+    0x02536  op30             30                                               
+    0x02537  Evt_next         02                                               
+    0x02538  Next             0e 00                                            
+    0x0253A  Speed_set        2f 00 00 00                                      
+    0x0253E  Speed_set        2f 01 fe ff                                      
+    0x02542  Speed_set        2f 02 32 00                                      
+    0x02546  For              0d 00 04 00 17 00                                
+    0x0254C  op30             30                                               
+    0x0254D  Evt_next         02                                               
+    0x0254E  Next             0e 00                                            
+    0x02550  Work_set         2e 02 00                                         kind=2 idx=0
+    0x02553  Nop              00                                               
+    0x02554  Member_set       34 00 2a 0a                                      member=0 wert=2602
+    0x02558  Member_set       34 01 f8 f8                                      member=1 wert=63736
+    0x0255C  Member_set       34 02 47 f7                                      member=2 wert=63303
+    0x02560  Member_set       34 04 fa f7                                      member=4 wert=63482
+    0x02564  Plc_dest         40 00 06 3f 00 00 00 00                          
+    0x0256C  Plc_neck         41 01 e4 04 00 00 1f f6 64 00                    
+    0x02576  Sleep            09 0a 02 00                                      
+    0x0257A  Plc_motion       3f 01 17 00                                      
+    0x0257E  Plc_flg          43 00 04 00                                      
+    0x02582  Sleep            09 0a 05 00                                      
+    0x02586  Message_on       2b 03 00 00                                      msg=3 typ=0x00 ?=0
+    0x0258A  Work_set         2e 01 00                                         kind=1 idx=0
+    0x0258D  Nop              00                                               
+    0x0258E  Plc_motion       3f 00 0f 00                                      
+    0x02592  Sleep            09 0a 32 00                                      
+    0x02596  Plc_motion       3f 00 0f 00                                      
+    0x0259A  Plc_flg          43 00 80 00                                      
+    0x0259E  Sleep            09 0a 33 00                                      
+    0x025A2  Cut_chg          29 07                                            
+    0x025A4  Work_set         2e 01 00                                         kind=1 idx=0
+    0x025A7  Nop              00                                               
+    0x025A8  Member_set       34 00 e4 04                                      member=0 wert=1252
+    0x025AC  Member_set       34 02 1f f6                                      member=2 wert=63007
+    0x025B0  Member_set       34 04 dd 14                                      member=4 wert=5341
+    0x025B4  Plc_dest         40 00 06 3f 00 00 00 00                          
+    0x025BC  Plc_neck         41 01 7b 02 f8 f8 08 f2 64 64                    
+    0x025C6  Work_set         2e 02 00                                         kind=2 idx=0
+    0x025C9  Nop              00                                               
+    0x025CA  Plc_neck         41 00 00 00 00 00 00 00 64 00                    
+    0x025D4  Member_set       34 00 7b 02                                      member=0 wert=635
+    0x025D8  Member_set       34 02 08 f2                                      member=2 wert=61960
+    0x025DC  Member_set       34 04 0d 18                                      member=4 wert=6157
+    0x025E0  Plc_motion       3f 01 0b 00                                      
+    0x025E4  Sleep            09 0a 3c 00                                      
+    0x025E8  Message_on       2b 04 00 00                                      msg=4 typ=0x00 ?=0
+    0x025EC  Plc_neck         41 04 04 00 00 00 00 00 5e 5e                    
+    0x025F6  Sleep            09 0a 64 00                                      
+    0x025FA  Plc_motion       3f 01 0b 00                                      
+    0x025FE  Plc_flg          43 00 80 00                                      
+    0x02602  Sleep            09 0a 1e 00                                      
+    0x02606  Work_set         2e 01 00                                         kind=1 idx=0
+    0x02609  Nop              00                                               
+    0x0260A  Plc_neck         41 01 7b 02 00 00 08 f2 64 00                    
+    0x02614  Sleep            09 0a 02 00                                      
+    0x02618  Work_set         2e 02 00                                         kind=2 idx=0
+    0x0261B  Nop              00                                               
+    0x0261C  Plc_dest         40 00 09 21 e4 04 1f f6                          
+    0x02624  Gosub            18 05                                            sub=5
+    0x02626  Plc_neck         41 01 e4 04 00 00 1f f6 64 00                    
+    0x02630  Sleep            09 0a 02 00                                      
+    0x02634  Plc_motion       3f 01 17 00                                      
+    0x02638  Plc_flg          43 00 04 00                                      
+    0x0263C  Sleep            09 0a 14 00                                      
+    0x02640  Message_on       2b 05 00 00                                      msg=5 typ=0x00 ?=0
+    0x02644  Work_set         2e 01 00                                         kind=1 idx=0
+    0x02647  Nop              00                                               
+    0x02648  Plc_motion       3f 00 12 00                                      
+    0x0264C  Sleep            09 0a 19 00                                      
+    0x02650  Plc_motion       3f 00 12 00                                      
+    0x02654  Plc_flg          43 00 80 00                                      
+    0x02658  Sleep            09 0a 19 00                                      
+    0x0265C  Plc_motion       3f 00 13 00                                      
+    0x02660  Sleep            09 0a 19 00                                      
+    0x02664  Plc_motion       3f 00 13 00                                      
+    0x02668  Plc_flg          43 00 80 00                                      
+    0x0266C  Sleep            09 0a 1a 00                                      
+    0x02670  Message_on       2b 06 00 00                                      msg=6 typ=0x00 ?=0
+    0x02674  Plc_motion       3f 00 0f 00                                      
+    0x02678  Sleep            09 0a 19 00                                      
+    0x0267C  Plc_motion       3f 00 0f 00                                      
+    0x02680  Plc_flg          43 00 80 00                                      
+    0x02684  Sleep            09 0a 19 00                                      
+    0x02688  Plc_motion       3f 00 10 00                                      
+    0x0268C  Sleep            09 0a 19 00                                      
+    0x02690  Plc_motion       3f 00 10 00                                      
+    0x02694  Plc_flg          43 00 80 00                                      
+    0x02698  Sleep            09 0a 19 00                                      
+    0x0269C  Plc_motion       3f 00 17 00                                      
+    0x026A0  Sleep            09 0a 14 00                                      
+    0x026A4  Work_set         2e 02 00                                         kind=2 idx=0
+    0x026A7  Nop              00                                               
+    0x026A8  Plc_neck         41 00 00 00 00 00 00 00 64 00                    
+    0x026B2  Sleep            09 0a 02 00                                      
+    0x026B6  Plc_neck         41 03 01 00 00 00 00 00 00 3c                    
+    0x026C0  Sleep            09 0a 1e 00                                      
+    0x026C4  Plc_ret          42                                               
+    0x026C5  Nop              00                                               
+    0x026C6  Work_set         2e 01 00                                         kind=1 idx=0
+    0x026C9  Nop              00                                               
+    0x026CA  Plc_neck         41 00 00 00 00 00 00 00 64 00                    
+    0x026D4  Sleep            09 0a 02 00                                      
+    0x026D8  Plc_ret          42                                               
+    0x026D9  Nop              00                                               
+    0x026DA  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x026DE  Set              22 01 1b 00                                      bank=1 bit=27 val=0
+    0x026E2  Cut_auto         3c 01                                            
+    0x026E4  Evt_end          01 00                                            
+====================================================================================================
+ROOM10D0  msg 9  Gegenstand 0x38 Blue Keycard
+  Datei: STAGE1\ROOM10D0.RDT   286320 B
+  msgScd@0x1E50  mainScd@0x1020  subScd@0x120C
+  Text[9] = "You've used the Blue Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x11  Sce_key_ck(0x51)x15
+     0x3E Member_cmp      : sub01@0x1354, sub01@0x137C, sub01@0x13A4, sub01@0x13CC, sub01@0x13F4, sub01@0x141C, sub01@0x1444, sub01@0x146C, sub01@0x1494, sub01@0x14BC, sub01@0x14E4
+     0x51 Sce_key_ck      : sub01@0x12F0, sub01@0x1308, sub01@0x1320, sub01@0x1338, sub01@0x135E, sub01@0x1386, sub01@0x13AE, sub01@0x13D6, sub01@0x13FE, sub01@0x1426, sub01@0x144E, sub01@0x1476, sub01@0x149E, sub01@0x14C6, sub01@0x14EE
+
+  --- sub20  Subroutine 0x019AE..0x019DE   Message_on 9 @0x019C4 ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x019B8 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x19B4, Block bis 0x19DC)
+     0x019C0 Ck               bank=9 bit=52 val=1                      (Ifel_ck@0x19B4, Block bis 0x19DC)
+    0x019AE  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x019B2  Evt_next         02                                               
+    0x019B3  Nop              00                                               
+    0x019B4  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x19DC
+    0x019B8  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x019BC  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x19D2
+    0x019C0  Ck               21 09 34 01                                      bank=9 bit=52 val=1
+  * 0x019C4  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x019C8  Evt_next         02                                               
+    0x019C9  Nop              00                                               
+    0x019CA  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x019CE  Else_ck          07 00 0c 00                                      -> 0x19DA
+    0x019D2  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x019D6  Evt_next         02                                               
+    0x019D7  Nop              00                                               
+    0x019D8  Nop              00                                               
+    0x019D9  Nop              00                                               
+    0x019DA  Endif            08 00                                            
+    0x019DC  Evt_end          01 00                                            
+====================================================================================================
+ROOM10D1  msg 9  Gegenstand 0x38 Blue Keycard
+  Datei: STAGE1\ROOM10D1.RDT   240364 B
+  msgScd@0x1AAC  mainScd@0x1020  subScd@0x120C
+  Text[9] = "You've used the Blue Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x11  Sce_key_ck(0x51)x15
+     0x3E Member_cmp      : sub01@0x133E, sub01@0x1366, sub01@0x138E, sub01@0x13B6, sub01@0x13DE, sub01@0x1406, sub01@0x142E, sub01@0x1456, sub01@0x147E, sub01@0x14A6, sub01@0x14CE
+     0x51 Sce_key_ck      : sub01@0x12DA, sub01@0x12F2, sub01@0x130A, sub01@0x1322, sub01@0x1348, sub01@0x1370, sub01@0x1398, sub01@0x13C0, sub01@0x13E8, sub01@0x1410, sub01@0x1438, sub01@0x1460, sub01@0x1488, sub01@0x14B0, sub01@0x14D8
+
+  --- sub20  Subroutine 0x01998..0x019C8   Message_on 9 @0x019AE ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x019A2 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x199E, Block bis 0x19C6)
+     0x019AA Ck               bank=9 bit=52 val=1                      (Ifel_ck@0x199E, Block bis 0x19C6)
+    0x01998  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x0199C  Evt_next         02                                               
+    0x0199D  Nop              00                                               
+    0x0199E  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x19C6
+    0x019A2  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x019A6  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x19BC
+    0x019AA  Ck               21 09 34 01                                      bank=9 bit=52 val=1
+  * 0x019AE  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x019B2  Evt_next         02                                               
+    0x019B3  Nop              00                                               
+    0x019B4  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x019B8  Else_ck          07 00 0c 00                                      -> 0x19C4
+    0x019BC  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x019C0  Evt_next         02                                               
+    0x019C1  Nop              00                                               
+    0x019C2  Nop              00                                               
+    0x019C3  Nop              00                                               
+    0x019C4  Endif            08 00                                            
+    0x019C6  Evt_end          01 00                                            
+====================================================================================================
+ROOM1100  msg 4  Gegenstand 0x44 Minidisc Player w/ Disc
+  Datei: STAGE1\ROOM1100.RDT   181704 B
+  msgScd@0xD9C  mainScd@0x998  subScd@0x9DC
+  Text[4] = "You've used the Minidisc Player w/ Disc."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x2  Sce_key_ck(0x51)x6
+     0x3E Member_cmp      : sub01@0xC14, sub01@0xC3C
+     0x51 Sce_key_ck      : sub01@0xBB0, sub01@0xBC8, sub01@0xBE0, sub01@0xBF8, sub01@0xC1E, sub01@0xC46
+
+  --- sub02  Subroutine 0x00C68..0x00D20   Message_on 4 @0x00C90 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x00C68  Set              22 04 e8 01                                      bank=4 bit=232 val=1
+    0x00C6C  Set              22 05 00 00                                      bank=5 bit=0 val=0
+    0x00C70  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x00C74  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x00C78  Set              22 05 03 00                                      bank=5 bit=3 val=0
+    0x00C7C  Set              22 05 05 00                                      bank=5 bit=5 val=0
+    0x00C80  Set              22 05 06 00                                      bank=5 bit=6 val=0
+    0x00C84  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x00C88  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x00C8C  Set              22 02 07 01                                      bank=2 bit=7 val=1
+  * 0x00C90  Message_on       2b 04 ff ff                                      msg=4 typ=0xFF ?=255
+    0x00C94  Evt_next         02                                               
+    0x00C95  Nop              00                                               
+    0x00C96  Cut_chg          29 0c                                            
+    0x00C98  Sleep            09 0a 05 00                                      
+    0x00C9C  Cut_chg          29 0b                                            
+    0x00C9E  Sleep            09 0a 05 00                                      
+    0x00CA2  Cut_chg          29 0c                                            
+    0x00CA4  Sleep            09 0a 05 00                                      
+    0x00CA8  Cut_chg          29 0b                                            
+    0x00CAA  Sleep            09 0a 05 00                                      
+    0x00CAE  Cut_chg          29 0c                                            
+    0x00CB0  Sleep            09 0a 05 00                                      
+    0x00CB4  Cut_chg          29 0b                                            
+    0x00CB6  Sleep            09 0a 05 00                                      
+    0x00CBA  Message_on       2b 02 ff ff                                      msg=2 typ=0xFF ?=255
+    0x00CBE  Evt_next         02                                               
+    0x00CBF  Nop              00                                               
+    0x00CC0  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x00CC4  Cut_chg          29 06                                            
+    0x00CC6  Cut_auto         3c 01                                            
+    0x00CC8  Aot_reset        46 01 02 31 a0 f6 00 00 78 ec                    
+    0x00CD2  Aot_reset        46 02 01 31 05 00 ff ff 00 00                    
+    0x00CDC  Aot_reset        46 03 00 00 00 00 00 00 00 00                    
+    0x00CE6  Work_set         2e 02 00                                         kind=2 idx=0
+    0x00CE9  Nop              00                                               
+    0x00CEA  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00CEE  Sleep            09 0a 14 00                                      
+    0x00CF2  Work_set         2e 02 01                                         kind=2 idx=1
+    0x00CF5  Nop              00                                               
+    0x00CF6  Member_set       34 0c 89 00                                      member=12 wert=137
+    0x00CFA  Sleep            09 0a 14 00                                      
+    0x00CFE  Work_set         2e 02 02                                         kind=2 idx=2
+    0x00D01  Nop              00                                               
+    0x00D02  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00D06  Sleep            09 0a 14 00                                      
+    0x00D0A  Work_set         2e 02 03                                         kind=2 idx=3
+    0x00D0D  Nop              00                                               
+    0x00D0E  Member_set       34 0c 89 00                                      member=12 wert=137
+    0x00D12  Sleep            09 0a 14 00                                      
+    0x00D16  Work_set         2e 02 04                                         kind=2 idx=4
+    0x00D19  Nop              00                                               
+    0x00D1A  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00D1E  Evt_end          01 00                                            
+====================================================================================================
+ROOM1101  msg 4  Gegenstand 0x44 Minidisc Player w/ Disc
+  Datei: STAGE1\ROOM1101.RDT   181704 B
+  msgScd@0xD9C  mainScd@0x998  subScd@0x9DC
+  Text[4] = "You've used the Minidisc Player w/ Disc."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x2  Sce_key_ck(0x51)x6
+     0x3E Member_cmp      : sub01@0xC14, sub01@0xC3C
+     0x51 Sce_key_ck      : sub01@0xBB0, sub01@0xBC8, sub01@0xBE0, sub01@0xBF8, sub01@0xC1E, sub01@0xC46
+
+  --- sub02  Subroutine 0x00C68..0x00D20   Message_on 4 @0x00C90 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x00C68  Set              22 04 e8 01                                      bank=4 bit=232 val=1
+    0x00C6C  Set              22 05 00 00                                      bank=5 bit=0 val=0
+    0x00C70  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x00C74  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x00C78  Set              22 05 03 00                                      bank=5 bit=3 val=0
+    0x00C7C  Set              22 05 05 00                                      bank=5 bit=5 val=0
+    0x00C80  Set              22 05 06 00                                      bank=5 bit=6 val=0
+    0x00C84  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x00C88  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x00C8C  Set              22 02 07 01                                      bank=2 bit=7 val=1
+  * 0x00C90  Message_on       2b 04 ff ff                                      msg=4 typ=0xFF ?=255
+    0x00C94  Evt_next         02                                               
+    0x00C95  Nop              00                                               
+    0x00C96  Cut_chg          29 0c                                            
+    0x00C98  Sleep            09 0a 05 00                                      
+    0x00C9C  Cut_chg          29 0b                                            
+    0x00C9E  Sleep            09 0a 05 00                                      
+    0x00CA2  Cut_chg          29 0c                                            
+    0x00CA4  Sleep            09 0a 05 00                                      
+    0x00CA8  Cut_chg          29 0b                                            
+    0x00CAA  Sleep            09 0a 05 00                                      
+    0x00CAE  Cut_chg          29 0c                                            
+    0x00CB0  Sleep            09 0a 05 00                                      
+    0x00CB4  Cut_chg          29 0b                                            
+    0x00CB6  Sleep            09 0a 05 00                                      
+    0x00CBA  Message_on       2b 02 ff ff                                      msg=2 typ=0xFF ?=255
+    0x00CBE  Evt_next         02                                               
+    0x00CBF  Nop              00                                               
+    0x00CC0  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x00CC4  Cut_chg          29 06                                            
+    0x00CC6  Cut_auto         3c 01                                            
+    0x00CC8  Aot_reset        46 01 02 31 a0 f6 00 00 78 ec                    
+    0x00CD2  Aot_reset        46 02 01 31 05 00 ff ff 00 00                    
+    0x00CDC  Aot_reset        46 03 00 00 00 00 00 00 00 00                    
+    0x00CE6  Work_set         2e 02 00                                         kind=2 idx=0
+    0x00CE9  Nop              00                                               
+    0x00CEA  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00CEE  Sleep            09 0a 14 00                                      
+    0x00CF2  Work_set         2e 02 01                                         kind=2 idx=1
+    0x00CF5  Nop              00                                               
+    0x00CF6  Member_set       34 0c 89 00                                      member=12 wert=137
+    0x00CFA  Sleep            09 0a 14 00                                      
+    0x00CFE  Work_set         2e 02 02                                         kind=2 idx=2
+    0x00D01  Nop              00                                               
+    0x00D02  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00D06  Sleep            09 0a 14 00                                      
+    0x00D0A  Work_set         2e 02 03                                         kind=2 idx=3
+    0x00D0D  Nop              00                                               
+    0x00D0E  Member_set       34 0c 89 00                                      member=12 wert=137
+    0x00D12  Sleep            09 0a 14 00                                      
+    0x00D16  Work_set         2e 02 04                                         kind=2 idx=4
+    0x00D19  Nop              00                                               
+    0x00D1A  Member_set       34 0c 8a 00                                      member=12 wert=138
+    0x00D1E  Evt_end          01 00                                            
+====================================================================================================
+ROOM11E0  msg 9  Gegenstand 0x39 Yellow Keycard
+  Datei: STAGE1\ROOM11E0.RDT   209684 B
+  msgScd@0x210C  mainScd@0x1510  subScd@0x175C
+  Text[9] = "You've used the Yellow Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x12  Sce_key_ck(0x51)x20
+     0x3E Member_cmp      : sub01@0x18B4, sub01@0x18DC, sub01@0x1904, sub01@0x192C, sub01@0x1954, sub01@0x197C, sub01@0x19A4, sub01@0x19CC, sub01@0x19F4, sub01@0x1A1C, sub01@0x1A44, sub01@0x1B00
+     0x51 Sce_key_ck      : sub01@0x1850, sub01@0x1868, sub01@0x1880, sub01@0x1898, sub01@0x18BE, sub01@0x18E6, sub01@0x190E, sub01@0x1936, sub01@0x195E, sub01@0x1986, sub01@0x19AE, sub01@0x19D6, sub01@0x19FE, sub01@0x1A26, sub01@0x1A4E, sub01@0x1A9C, sub01@0x1AB4, sub01@0x1ACC, sub01@0x1AE4, sub01@0x1B0A
+
+  --- sub20  Subroutine 0x01F96..0x01FC6   Message_on 9 @0x01FAC ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x01FA0 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x1F9C, Block bis 0x1FC4)
+     0x01FA8 Ck               bank=9 bit=138 val=1                     (Ifel_ck@0x1F9C, Block bis 0x1FC4)
+    0x01F96  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x01F9A  Evt_next         02                                               
+    0x01F9B  Nop              00                                               
+    0x01F9C  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x1FC4
+    0x01FA0  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x01FA4  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x1FBA
+    0x01FA8  Ck               21 09 8a 01                                      bank=9 bit=138 val=1
+  * 0x01FAC  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x01FB0  Evt_next         02                                               
+    0x01FB1  Nop              00                                               
+    0x01FB2  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x01FB6  Else_ck          07 00 0c 00                                      -> 0x1FC2
+    0x01FBA  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x01FBE  Evt_next         02                                               
+    0x01FBF  Nop              00                                               
+    0x01FC0  Nop              00                                               
+    0x01FC1  Nop              00                                               
+    0x01FC2  Endif            08 00                                            
+    0x01FC4  Evt_end          01 00                                            
+====================================================================================================
+ROOM11E0  msg 12  Gegenstand 0x30 Pliers
+  Datei: STAGE1\ROOM11E0.RDT   209684 B
+  msgScd@0x210C  mainScd@0x1510  subScd@0x175C
+  Text[12] = "You've used the Pliers."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x12  Sce_key_ck(0x51)x20
+     0x3E Member_cmp      : sub01@0x18B4, sub01@0x18DC, sub01@0x1904, sub01@0x192C, sub01@0x1954, sub01@0x197C, sub01@0x19A4, sub01@0x19CC, sub01@0x19F4, sub01@0x1A1C, sub01@0x1A44, sub01@0x1B00
+     0x51 Sce_key_ck      : sub01@0x1850, sub01@0x1868, sub01@0x1880, sub01@0x1898, sub01@0x18BE, sub01@0x18E6, sub01@0x190E, sub01@0x1936, sub01@0x195E, sub01@0x1986, sub01@0x19AE, sub01@0x19D6, sub01@0x19FE, sub01@0x1A26, sub01@0x1A4E, sub01@0x1A9C, sub01@0x1AB4, sub01@0x1ACC, sub01@0x1AE4, sub01@0x1B0A
+
+  --- sub21  Subroutine 0x01FC6..0x0207C   Message_on 12 @0x01FEE ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x01FC6  Set              22 04 24 01                                      bank=4 bit=36 val=1
+    0x01FCA  Set              22 05 15 00                                      bank=5 bit=21 val=0
+    0x01FCE  Set              22 05 16 00                                      bank=5 bit=22 val=0
+    0x01FD2  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x01FD6  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x01FDA  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x01FDE  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x01FE2  Cut_chg          29 06                                            
+    0x01FE4  For              0d 00 04 00 1e 00                                
+    0x01FEA  Evt_next         02                                               
+    0x01FEB  Nop              00                                               
+    0x01FEC  Next             0e 00                                            
+  * 0x01FEE  Message_on       2b 0c ff ff                                      msg=12 typ=0xFF ?=255
+    0x01FF2  Evt_next         02                                               
+    0x01FF3  Nop              00                                               
+    0x01FF4  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x01FF8  Cut_chg          29 07                                            
+    0x01FFA  Evt_next         02                                               
+    0x01FFB  Nop              00                                               
+    0x01FFC  Work_set         2e 03 00                                         kind=3 idx=0
+    0x01FFF  Nop              00                                               
+    0x02000  Speed_set        2f 01 00 00                                      
+    0x02004  Speed_set        2f 07 fe ff                                      
+    0x02008  For              0d 00 06 00 14 00                                
+    0x0200E  op31             31                                               
+    0x0200F  op30             30                                               
+    0x02010  Evt_next         02                                               
+    0x02011  Nop              00                                               
+    0x02012  Next             0e 00                                            
+    0x02014  For              0d 00 2c 00 0a 00                                
+    0x0201A  For              0d 00 04 00 0a 00                                
+    0x02020  op30             30                                               
+    0x02021  Evt_next         02                                               
+    0x02022  Next             0e 00                                            
+    0x02024  Speed_set        2f 07 03 00                                      
+    0x02028  For              0d 00 06 00 03 00                                
+    0x0202E  op31             31                                               
+    0x0202F  op30             30                                               
+    0x02030  Evt_next         02                                               
+    0x02031  Nop              00                                               
+    0x02032  Next             0e 00                                            
+    0x02034  Speed_set        2f 07 fd ff                                      
+    0x02038  For              0d 00 06 00 03 00                                
+    0x0203E  op31             31                                               
+    0x0203F  op30             30                                               
+    0x02040  Evt_next         02                                               
+    0x02041  Nop              00                                               
+    0x02042  Next             0e 00                                            
+    0x02044  Next             0e 00                                            
+    0x02046  Sca_id_set       37 00 00 00                                      
+    0x0204A  Sca_id_set       37 01 00 00                                      
+    0x0204E  Sca_id_set       37 02 00 00                                      
+    0x02052  Sca_id_set       37 03 00 00                                      
+    0x02056  Sca_id_set       37 04 00 00                                      
+    0x0205A  Sca_floor_set    39 00 00 00                                      
+    0x0205E  Sca_floor_set    39 01 00 00                                      
+    0x02062  Sca_floor_set    39 02 00 00                                      
+    0x02066  Sca_floor_set    39 03 00 00                                      
+    0x0206A  Sca_floor_set    39 04 00 00                                      
+    0x0206E  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x02072  Set              22 01 1b 00                                      bank=1 bit=27 val=0
+    0x02076  Cut_chg          29 05                                            
+    0x02078  Cut_auto         3c 01                                            
+    0x0207A  Evt_end          01 00                                            
+====================================================================================================
+ROOM11E1  msg 9  Gegenstand 0x39 Yellow Keycard
+  Datei: STAGE1\ROOM11E1.RDT   209684 B
+  msgScd@0x210C  mainScd@0x1510  subScd@0x175C
+  Text[9] = "You've used the Yellow Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x12  Sce_key_ck(0x51)x20
+     0x3E Member_cmp      : sub01@0x18B4, sub01@0x18DC, sub01@0x1904, sub01@0x192C, sub01@0x1954, sub01@0x197C, sub01@0x19A4, sub01@0x19CC, sub01@0x19F4, sub01@0x1A1C, sub01@0x1A44, sub01@0x1B00
+     0x51 Sce_key_ck      : sub01@0x1850, sub01@0x1868, sub01@0x1880, sub01@0x1898, sub01@0x18BE, sub01@0x18E6, sub01@0x190E, sub01@0x1936, sub01@0x195E, sub01@0x1986, sub01@0x19AE, sub01@0x19D6, sub01@0x19FE, sub01@0x1A26, sub01@0x1A4E, sub01@0x1A9C, sub01@0x1AB4, sub01@0x1ACC, sub01@0x1AE4, sub01@0x1B0A
+
+  --- sub20  Subroutine 0x01F96..0x01FC6   Message_on 9 @0x01FAC ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x01FA0 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x1F9C, Block bis 0x1FC4)
+     0x01FA8 Ck               bank=9 bit=138 val=1                     (Ifel_ck@0x1F9C, Block bis 0x1FC4)
+    0x01F96  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x01F9A  Evt_next         02                                               
+    0x01F9B  Nop              00                                               
+    0x01F9C  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x1FC4
+    0x01FA0  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x01FA4  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x1FBA
+    0x01FA8  Ck               21 09 8a 01                                      bank=9 bit=138 val=1
+  * 0x01FAC  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x01FB0  Evt_next         02                                               
+    0x01FB1  Nop              00                                               
+    0x01FB2  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x01FB6  Else_ck          07 00 0c 00                                      -> 0x1FC2
+    0x01FBA  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x01FBE  Evt_next         02                                               
+    0x01FBF  Nop              00                                               
+    0x01FC0  Nop              00                                               
+    0x01FC1  Nop              00                                               
+    0x01FC2  Endif            08 00                                            
+    0x01FC4  Evt_end          01 00                                            
+====================================================================================================
+ROOM11E1  msg 12  Gegenstand 0x30 Pliers
+  Datei: STAGE1\ROOM11E1.RDT   209684 B
+  msgScd@0x210C  mainScd@0x1510  subScd@0x175C
+  Text[12] = "You've used the Pliers."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x12  Sce_key_ck(0x51)x20
+     0x3E Member_cmp      : sub01@0x18B4, sub01@0x18DC, sub01@0x1904, sub01@0x192C, sub01@0x1954, sub01@0x197C, sub01@0x19A4, sub01@0x19CC, sub01@0x19F4, sub01@0x1A1C, sub01@0x1A44, sub01@0x1B00
+     0x51 Sce_key_ck      : sub01@0x1850, sub01@0x1868, sub01@0x1880, sub01@0x1898, sub01@0x18BE, sub01@0x18E6, sub01@0x190E, sub01@0x1936, sub01@0x195E, sub01@0x1986, sub01@0x19AE, sub01@0x19D6, sub01@0x19FE, sub01@0x1A26, sub01@0x1A4E, sub01@0x1A9C, sub01@0x1AB4, sub01@0x1ACC, sub01@0x1AE4, sub01@0x1B0A
+
+  --- sub21  Subroutine 0x01FC6..0x0207C   Message_on 12 @0x01FEE ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x01FC6  Set              22 04 24 01                                      bank=4 bit=36 val=1
+    0x01FCA  Set              22 05 15 00                                      bank=5 bit=21 val=0
+    0x01FCE  Set              22 05 16 00                                      bank=5 bit=22 val=0
+    0x01FD2  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x01FD6  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x01FDA  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x01FDE  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x01FE2  Cut_chg          29 06                                            
+    0x01FE4  For              0d 00 04 00 1e 00                                
+    0x01FEA  Evt_next         02                                               
+    0x01FEB  Nop              00                                               
+    0x01FEC  Next             0e 00                                            
+  * 0x01FEE  Message_on       2b 0c ff ff                                      msg=12 typ=0xFF ?=255
+    0x01FF2  Evt_next         02                                               
+    0x01FF3  Nop              00                                               
+    0x01FF4  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x01FF8  Cut_chg          29 07                                            
+    0x01FFA  Evt_next         02                                               
+    0x01FFB  Nop              00                                               
+    0x01FFC  Work_set         2e 03 00                                         kind=3 idx=0
+    0x01FFF  Nop              00                                               
+    0x02000  Speed_set        2f 01 00 00                                      
+    0x02004  Speed_set        2f 07 fe ff                                      
+    0x02008  For              0d 00 06 00 14 00                                
+    0x0200E  op31             31                                               
+    0x0200F  op30             30                                               
+    0x02010  Evt_next         02                                               
+    0x02011  Nop              00                                               
+    0x02012  Next             0e 00                                            
+    0x02014  For              0d 00 2c 00 0a 00                                
+    0x0201A  For              0d 00 04 00 0a 00                                
+    0x02020  op30             30                                               
+    0x02021  Evt_next         02                                               
+    0x02022  Next             0e 00                                            
+    0x02024  Speed_set        2f 07 03 00                                      
+    0x02028  For              0d 00 06 00 03 00                                
+    0x0202E  op31             31                                               
+    0x0202F  op30             30                                               
+    0x02030  Evt_next         02                                               
+    0x02031  Nop              00                                               
+    0x02032  Next             0e 00                                            
+    0x02034  Speed_set        2f 07 fd ff                                      
+    0x02038  For              0d 00 06 00 03 00                                
+    0x0203E  op31             31                                               
+    0x0203F  op30             30                                               
+    0x02040  Evt_next         02                                               
+    0x02041  Nop              00                                               
+    0x02042  Next             0e 00                                            
+    0x02044  Next             0e 00                                            
+    0x02046  Sca_id_set       37 00 00 00                                      
+    0x0204A  Sca_id_set       37 01 00 00                                      
+    0x0204E  Sca_id_set       37 02 00 00                                      
+    0x02052  Sca_id_set       37 03 00 00                                      
+    0x02056  Sca_id_set       37 04 00 00                                      
+    0x0205A  Sca_floor_set    39 00 00 00                                      
+    0x0205E  Sca_floor_set    39 01 00 00                                      
+    0x02062  Sca_floor_set    39 02 00 00                                      
+    0x02066  Sca_floor_set    39 03 00 00                                      
+    0x0206A  Sca_floor_set    39 04 00 00                                      
+    0x0206E  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x02072  Set              22 01 1b 00                                      bank=1 bit=27 val=0
+    0x02076  Cut_chg          29 05                                            
+    0x02078  Cut_auto         3c 01                                            
+    0x0207A  Evt_end          01 00                                            
+====================================================================================================
+ROOM1230  msg 9  Gegenstand 0x37 Red Keycard
+  Datei: STAGE1\ROOM1230.RDT   166268 B
+  msgScd@0x14F4  mainScd@0xAE4  subScd@0xD7C
+  Text[9] = "You've used the Red Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x11  Sce_key_ck(0x51)x15
+     0x3E Member_cmp      : sub01@0xE1C, sub01@0xE44, sub01@0xE6C, sub01@0xE94, sub01@0xEBC, sub01@0xEE4, sub01@0xF0C, sub01@0xF34, sub01@0xF5C, sub01@0xF84, sub01@0xFAC
+     0x51 Sce_key_ck      : sub01@0xDB8, sub01@0xDD0, sub01@0xDE8, sub01@0xE00, sub01@0xE26, sub01@0xE4E, sub01@0xE76, sub01@0xE9E, sub01@0xEC6, sub01@0xEEE, sub01@0xF16, sub01@0xF3E, sub01@0xF66, sub01@0xF8E, sub01@0xFB6
+
+  --- sub20  Subroutine 0x01476..0x014A6   Message_on 9 @0x0148C ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x01480 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x147C, Block bis 0x14A4)
+     0x01488 Ck               bank=9 bit=136 val=1                     (Ifel_ck@0x147C, Block bis 0x14A4)
+    0x01476  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x0147A  Evt_next         02                                               
+    0x0147B  Nop              00                                               
+    0x0147C  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x14A4
+    0x01480  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x01484  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x149A
+    0x01488  Ck               21 09 88 01                                      bank=9 bit=136 val=1
+  * 0x0148C  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x01490  Evt_next         02                                               
+    0x01491  Nop              00                                               
+    0x01492  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x01496  Else_ck          07 00 0c 00                                      -> 0x14A2
+    0x0149A  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x0149E  Evt_next         02                                               
+    0x0149F  Nop              00                                               
+    0x014A0  Nop              00                                               
+    0x014A1  Nop              00                                               
+    0x014A2  Endif            08 00                                            
+    0x014A4  Evt_end          01 00                                            
+====================================================================================================
+ROOM1231  msg 9  Gegenstand 0x37 Red Keycard
+  Datei: STAGE1\ROOM1231.RDT   166268 B
+  msgScd@0x14F4  mainScd@0xAE4  subScd@0xD7C
+  Text[9] = "You've used the Red Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Member_cmp(0x3E)x11  Sce_key_ck(0x51)x15
+     0x3E Member_cmp      : sub01@0xE1C, sub01@0xE44, sub01@0xE6C, sub01@0xE94, sub01@0xEBC, sub01@0xEE4, sub01@0xF0C, sub01@0xF34, sub01@0xF5C, sub01@0xF84, sub01@0xFAC
+     0x51 Sce_key_ck      : sub01@0xDB8, sub01@0xDD0, sub01@0xDE8, sub01@0xE00, sub01@0xE26, sub01@0xE4E, sub01@0xE76, sub01@0xE9E, sub01@0xEC6, sub01@0xEEE, sub01@0xF16, sub01@0xF3E, sub01@0xF66, sub01@0xF8E, sub01@0xFB6
+
+  --- sub20  Subroutine 0x01476..0x014A6   Message_on 9 @0x0148C ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x01480 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x147C, Block bis 0x14A4)
+     0x01488 Ck               bank=9 bit=136 val=1                     (Ifel_ck@0x147C, Block bis 0x14A4)
+    0x01476  Message_on       2b 07 ff ff                                      msg=7 typ=0xFF ?=255
+    0x0147A  Evt_next         02                                               
+    0x0147B  Nop              00                                               
+    0x0147C  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x14A4
+    0x01480  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x01484  Ifel_ck          06 00 12 00                                      ueberspringe 18 B -> 0x149A
+    0x01488  Ck               21 09 88 01                                      bank=9 bit=136 val=1
+  * 0x0148C  Message_on       2b 09 ff ff                                      msg=9 typ=0xFF ?=255
+    0x01490  Evt_next         02                                               
+    0x01491  Nop              00                                               
+    0x01492  Evt_exec         04 ff 18 11                                      sub=17 (cond=0xff typ=0x18)
+    0x01496  Else_ck          07 00 0c 00                                      -> 0x14A2
+    0x0149A  Message_on       2b 08 ff ff                                      msg=8 typ=0xFF ?=255
+    0x0149E  Evt_next         02                                               
+    0x0149F  Nop              00                                               
+    0x014A0  Nop              00                                               
+    0x014A1  Nop              00                                               
+    0x014A2  Endif            08 00                                            
+    0x014A4  Evt_end          01 00                                            
+====================================================================================================
+ROOM3010  msg 1  Gegenstand 0x36 Green Keycard
+  Datei: STAGE3\ROOM3010.RDT   166992 B
+  msgScd@0x2318  mainScd@0x1FD0  subScd@0x2204
+  Text[1] = "You've used the Green Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x2
+     0x23 Cmp             : main00@0x2162, sub01@0x22D8
+
+  --- sub02  Subroutine 0x02302..0x02310   Message_on 1 @0x02306 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x02302  Set              22 03 3c 01                                      bank=3 bit=60 val=1
+  * 0x02306  Message_on       2b 01 ff ff                                      msg=1 typ=0xFF ?=255
+    0x0230A  Evt_next         02                                               
+    0x0230B  Nop              00                                               
+    0x0230C  Aot_on           47 02                                            
+    0x0230E  Evt_end          01 00                                            
+====================================================================================================
+ROOM3011  msg 1  Gegenstand 0x36 Green Keycard
+  Datei: STAGE3\ROOM3011.RDT   167044 B
+  msgScd@0x234C  mainScd@0x1FD0  subScd@0x2204
+  Text[1] = "You've used the Green Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x2
+     0x23 Cmp             : main00@0x2162, sub01@0x230C
+
+  --- sub02  Subroutine 0x02336..0x02344   Message_on 1 @0x0233A ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x02336  Set              22 03 3c 01                                      bank=3 bit=60 val=1
+  * 0x0233A  Message_on       2b 01 ff ff                                      msg=1 typ=0xFF ?=255
+    0x0233E  Evt_next         02                                               
+    0x0233F  Nop              00                                               
+    0x02340  Aot_on           47 02                                            
+    0x02342  Evt_end          01 00                                            
+====================================================================================================
+ROOM3050  msg 5  Gegenstand 0x46 Red Master Keycard
+  Datei: STAGE3\ROOM3050.RDT   262652 B
+  msgScd@0x2638  mainScd@0x1E84  subScd@0x201C
+  Text[5] = "You've used the Red Master Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x4  Member_cmp(0x3E)x2  Sce_key_ck(0x51)x5
+     0x23 Cmp             : sub01@0x224C, sub01@0x226E, sub01@0x2290, sub01@0x22B2
+     0x3E Member_cmp      : sub01@0x2190, sub01@0x220E
+     0x51 Sce_key_ck      : sub01@0x21AA, sub01@0x21C2, sub01@0x21DA, sub01@0x21F2, sub01@0x2218
+
+  --- sub15  Subroutine 0x025E4..0x02630   Message_on 5 @0x02608 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x025E4  Set              22 05 00 00                                      bank=5 bit=0 val=0
+    0x025E8  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x025EC  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x025F0  Set              22 05 03 00                                      bank=5 bit=3 val=0
+    0x025F4  Set              22 05 04 00                                      bank=5 bit=4 val=0
+    0x025F8  Set              22 05 05 00                                      bank=5 bit=5 val=0
+    0x025FC  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x02600  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x02604  Set              22 02 07 01                                      bank=2 bit=7 val=1
+  * 0x02608  Message_on       2b 05 ff ff                                      msg=5 typ=0xFF ?=255
+    0x0260C  Evt_next         02                                               
+    0x0260D  Nop              00                                               
+    0x0260E  Set              22 03 b3 01                                      bank=3 bit=179 val=1
+    0x02612  Set              22 03 b0 01                                      bank=3 bit=176 val=1
+    0x02616  Message_on       2b 06 ff ff                                      msg=6 typ=0xFF ?=255
+    0x0261A  Evt_next         02                                               
+    0x0261B  Nop              00                                               
+    0x0261C  Aot_reset        46 0a 01 31 07 00 ff ff 00 00                    
+    0x02626  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x0262A  Cut_chg          29 02                                            
+    0x0262C  Cut_auto         3c 01                                            
+    0x0262E  Evt_end          01 00                                            
+====================================================================================================
+ROOM3051  msg 5  Gegenstand 0x46 Red Master Keycard
+  Datei: STAGE3\ROOM3051.RDT   262652 B
+  msgScd@0x2638  mainScd@0x1E84  subScd@0x201C
+  Text[5] = "You've used the Red Master Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x4  Member_cmp(0x3E)x2  Sce_key_ck(0x51)x5
+     0x23 Cmp             : sub01@0x224C, sub01@0x226E, sub01@0x2290, sub01@0x22B2
+     0x3E Member_cmp      : sub01@0x2190, sub01@0x220E
+     0x51 Sce_key_ck      : sub01@0x21AA, sub01@0x21C2, sub01@0x21DA, sub01@0x21F2, sub01@0x2218
+
+  --- sub15  Subroutine 0x025E4..0x02630   Message_on 5 @0x02608 ---
+  Bedingungskette: KEINE (unbedingt erreichbar in dieser Subroutine)
+    0x025E4  Set              22 05 00 00                                      bank=5 bit=0 val=0
+    0x025E8  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x025EC  Set              22 05 02 00                                      bank=5 bit=2 val=0
+    0x025F0  Set              22 05 03 00                                      bank=5 bit=3 val=0
+    0x025F4  Set              22 05 04 00                                      bank=5 bit=4 val=0
+    0x025F8  Set              22 05 05 00                                      bank=5 bit=5 val=0
+    0x025FC  Set              22 02 00 00                                      bank=2 bit=0 val=0
+    0x02600  Set              22 02 02 00                                      bank=2 bit=2 val=0
+    0x02604  Set              22 02 07 01                                      bank=2 bit=7 val=1
+  * 0x02608  Message_on       2b 05 ff ff                                      msg=5 typ=0xFF ?=255
+    0x0260C  Evt_next         02                                               
+    0x0260D  Nop              00                                               
+    0x0260E  Set              22 03 b3 01                                      bank=3 bit=179 val=1
+    0x02612  Set              22 03 b0 01                                      bank=3 bit=176 val=1
+    0x02616  Message_on       2b 06 ff ff                                      msg=6 typ=0xFF ?=255
+    0x0261A  Evt_next         02                                               
+    0x0261B  Nop              00                                               
+    0x0261C  Aot_reset        46 0a 01 31 07 00 ff ff 00 00                    
+    0x02626  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x0262A  Cut_chg          29 02                                            
+    0x0262C  Cut_auto         3c 01                                            
+    0x0262E  Evt_end          01 00                                            
+====================================================================================================
+ROOM4000  msg 2  Gegenstand 0x47 Blue Master Keycard
+  Datei: STAGE4\ROOM4000.RDT   288632 B
+  msgScd@0x1B8C  mainScd@0x1058  subScd@0x127C
+  Text[2] = "You've used the Blue Master Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x6
+     0x23 Cmp             : sub01@0x137C, sub01@0x1396, sub01@0x13C6, sub01@0x13E0, sub01@0x13FA, sub01@0x1414
+
+  --- sub02  Subroutine 0x01426..0x0146C   Message_on 2 @0x0144A ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x0142A Ck               bank=3 bit=32 val=0                      (Ifel_ck@0x1426, Block bis 0x1456)
+     0x01446 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x1426, Block bis 0x1456)
+    0x01426  Ifel_ck          06 00 2c 00                                      ueberspringe 44 B -> 0x1456
+    0x0142A  Ck               21 03 20 00                                      bank=3 bit=32 val=0
+    0x0142E  Se_on            36 02 0f 00 03 00 00 00 00 00 00 00              
+    0x0143A  Message_on       2b 00 ff ff                                      msg=0 typ=0xFF ?=255
+    0x0143E  Evt_next         02                                               
+    0x0143F  Nop              00                                               
+    0x01440  Message_on       2b 01 ff ff                                      msg=1 typ=0xFF ?=255
+    0x01444  Evt_next         02                                               
+    0x01445  Nop              00                                               
+    0x01446  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+  * 0x0144A  Message_on       2b 02 ff ff                                      msg=2 typ=0xFF ?=255
+    0x0144E  Evt_next         02                                               
+    0x0144F  Nop              00                                               
+    0x01450  Set              22 03 20 01                                      bank=3 bit=32 val=1
+    0x01454  Endif            08 00                                            
+    0x01456  Ifel_ck          06 00 10 00                                      ueberspringe 16 B -> 0x146A
+    0x0145A  Ck               21 03 20 01                                      bank=3 bit=32 val=1
+    0x0145E  Set              22 05 00 01                                      bank=5 bit=0 val=1
+    0x01462  Set              22 05 01 01                                      bank=5 bit=1 val=1
+    0x01466  Gosub            18 03                                            sub=3
+    0x01468  Endif            08 00                                            
+    0x0146A  Evt_end          01 00                                            
+====================================================================================================
+Stellen mit ausfuehrendem Message_on gefunden: 16

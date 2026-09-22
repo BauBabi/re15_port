@@ -1,0 +1,55 @@
+=== Erfolgs-Schranke der sechs Code-Panels, rohe Datei-Bytes ===
+== ROOM10D0  286320 B   Muster @0x01516   (STAGE1\ROOM10D0.RDT)
+   0x0150E  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x01512  21 03 32 00   Ck(3,50,0)   = Schloss noch NICHT offen
+   0x01516  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x0151A  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x0151E  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x01522  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x01526  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x0152A  22 03 32 01   Set(3,50,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
+== ROOM10D1  240364 B   Muster @0x01500   (STAGE1\ROOM10D1.RDT)
+   0x014F8  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x014FC  21 03 32 00   Ck(3,50,0)   = Schloss noch NICHT offen
+   0x01500  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x01504  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x01508  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x0150C  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x01510  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x01514  22 03 32 01   Set(3,50,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
+== ROOM11E0  209684 B   Muster @0x01A76   (STAGE1\ROOM11E0.RDT)
+   0x01A6E  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x01A72  21 03 8b 00   Ck(3,139,0)   = Schloss noch NICHT offen
+   0x01A76  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x01A7A  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x01A7E  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x01A82  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x01A86  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x01A8A  22 03 8b 01   Set(3,139,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
+== ROOM11E1  209684 B   Muster @0x01A76   (STAGE1\ROOM11E1.RDT)
+   0x01A6E  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x01A72  21 03 8b 00   Ck(3,139,0)   = Schloss noch NICHT offen
+   0x01A76  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x01A7A  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x01A7E  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x01A82  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x01A86  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x01A8A  22 03 8b 01   Set(3,139,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
+== ROOM1230  166268 B   Muster @0x00FDE   (STAGE1\ROOM1230.RDT)
+   0x00FD6  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x00FDA  21 03 89 00   Ck(3,137,0)   = Schloss noch NICHT offen
+   0x00FDE  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x00FE2  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x00FE6  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x00FEA  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x00FEE  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x00FF2  22 03 89 01   Set(3,137,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
+== ROOM1231  166268 B   Muster @0x00FDE   (STAGE1\ROOM1231.RDT)
+   0x00FD6  06 00 1e 00   Ifel_ck  (Block 30 B)
+   0x00FDA  21 03 89 00   Ck(3,137,0)   = Schloss noch NICHT offen
+   0x00FDE  21 05 0d 01   Ck(5,13,1)   = Ziffer 1 richtig
+   0x00FE2  21 05 0e 01   Ck(5,14,1)   = Ziffer 2 richtig
+   0x00FE6  21 05 0f 01   Ck(5,15,1)   = Ziffer 3 richtig
+   0x00FEA  21 05 10 01   Ck(5,16,1)   = Ziffer 4 richtig
+   0x00FEE  04 ff 18 13   Evt_exec sub=19   = Erfolgs-Ereignis ("You've opened the lock.")
+   0x00FF2  22 03 89 01   Set(3,137,1)   = ERFOLGS-BIT  <<< die gesuchte Bedingung
