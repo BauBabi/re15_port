@@ -4,6 +4,21 @@ Runde 24, 2026-09-22. Vorgänger: `discard-umsetzung.md` (Bau), `discard-loch.md
 `discard-nacharbeit.md`, `discard-fenster.md` (Runde 23 — dort steht jetzt ein
 Berichtigungs-Banner).
 
+> ⛔ **BERICHTIGUNGS-BANNER (Runde 25, `discard-riegel.md`).** Zwei Sätze dieses Dossiers
+> waren zu stark formuliert und sind hier korrigiert:
+> 1. „das einzige Tor `Ck(3,32,0)`" (§0, Zeile 22) widersprach §1 („`Ck(3,32,0)` ist NICHT
+>    das einzige Tor"). Richtig: es ist das einzige **endgültig geschlossene** Tor; auf dem
+>    Pfad liegen **fünf** (`tools/discard_verlustwege.py`). Die Zeile ist berichtigt.
+> 2. „das Flag hat **einen** Schreiber und **keinen** Löscher" war nur über `Set` (0x22)
+>    gemessen. Runde 25 misst es über **alle drei** Flag-Opcodes (Riegel `TEIL C7`):
+>    0x59 (Flag-Set2, der zweite Schreiber) kommt 2× im ganzen Bestand vor, **beide auf
+>    Bank 5**, also 0× auf Bank 3 und 0× auf Bank 9; 0x58 ist ein reiner Leser und kommt
+>    0× vor. Erst damit trägt der Satz.
+>
+> Außerdem hatte die **Hauptbehauptung** dieses Dossiers — die fail-closed-Kopplung —
+> keinen Riegel: sie war vollständig zurückbaubar, ohne dass etwas rot wurde. Runde 25
+> baut `TEIL O` dafür (Rückbau R-A: 68 Prüfungen rot).
+
 Suite: **337/337** grün, `bash re15_port/tools/local_build.sh all` →
 `=== LOCAL-BUILD-OK (all) — Tests 337/337`.
 Bild aus dem laufenden Spiel: `discard-besitz/bild/bild000476.png` (ROOM1100, echter
@@ -19,7 +34,7 @@ kein `RE15_AUTOSHOT`, kein Softwarerenderer), selbst angesehen.
 | **Der Sperrgrund** | „Ein Ja kann den Spielstand töten": die Abfrage erscheine an 2 von 16 Stellen **ohne Besitz**, Ursache sei das Besitz-Gate `item_discard_common.c:93/94`. |
 | **Gemessen** | Die **Zahl ist 0**, vorher wie nachher: an **0 von 10** im Prüfstand erreichbaren Stellen kommt die Abfrage ohne Besitz. Das Gate liegt seit dem ersten Commit des Merkmals (`df154e0f`) vor der Vormerkung. |
 | **Was WIRKLICH falsch war** | Die **Kettenposition**. RE2 entscheidet die Besitzfrage **vor** dem Öffnen der Nachricht (`@0x80051628` / `@0x80051634`), der Port entschied sie **dahinter**. Rückbau-Messung: **20 von 20** Vorentscheiden fielen bei belegtem Nachrichtensystem, jetzt **0 von 20**. |
-| **Was der Sperrgrund richtig gesehen hat** | ROOM4000 ist ein Sonderfall — aber ein **Daten**-Sonderfall, kein Port-Defekt: `Set(3,32,1)` `@0x01450` schließt das einzige Tor `Ck(3,32,0)` `@0x0142A`, und das Flag hat im ganzen Bestand **einen** Schreiber und **keinen** Löscher. Die Karte 0x47 liegt in **ROOM4010**, also hinter dieser Tür. |
+| **Was der Sperrgrund richtig gesehen hat** | ROOM4000 ist ein Sonderfall — aber ein **Daten**-Sonderfall, kein Port-Defekt: `Set(3,32,1)` `@0x01450` schließt **das einzige ENDGÜLTIG geschlossene** Tor `Ck(3,32,0)` `@0x0142A` (das Flag hat im ganzen Bestand **einen** Schreiber und **keinen** Löscher). Die Stelle hat aber **fünf** Tore auf ihrem Pfad — §1/§8 unten und `TEIL N` zählen sie auf, u.a. `Ck(12,31,0)` `@0x01446`, die Ja-Antwort. Die Karte 0x47 liegt in **ROOM4010**, also hinter dieser Tür. |
 | **Neu gebaut** | Besitz-Gate als zweistufige Kette (Vorentscheid + Fail-closed-Einhängen), `re15_discard_restore` hart, Nachhall-Überlapp geschlossen, Riegel-Teile L / M / N / C6, `tools/discard_verlustwege.py`. |
 
 ---

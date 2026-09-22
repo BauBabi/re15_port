@@ -53,6 +53,21 @@
  *      C5  Und der Beweis am lebenden Objekt: Gegenstand ins Inventar, "genommen"-Bit
  *          setzen (wie der Aufnahme-Modal, item_modal_common.c:289), Gegenstand
  *          wegwerfen — das Tor-Bit steht danach immer noch.
+ *      C6  die Schreiber von flag(3,32) (ROOM4000s Tor) per Set (0x22): 1 / 0.
+ *      C7  und dieselbe Frage fuer die ANDEREN zwei Flag-Opcodes, damit C2/C6 nicht
+ *          nur ueber Set gemessen sind: 0x59 (Flag-Set2, der zweite Schreiber) und
+ *          0x58 (Flag-Ck2, nur Leser).
+ *
+ *  TEIL O — DIE FAIL-CLOSED-KOPPLUNG, die Hauptbehauptung der Runde 24: ein
+ *      Direktaufruf von re15_discard_notice_message OHNE vorher gefallenen
+ *      Vorentscheid darf NICHTS vormerken (RE2s Nicht-Treffer-Zweig haengt nichts ein,
+ *      @0x800516C0). Mit POSITIVFALL, sonst waere der Riegel durch Nichtstun gruen.
+ *
+ *  TEIL P — re15_discard_restore: ein Laden belebt NIE eine Abfrage, und es laesst
+ *      keinen Platz mit Anzahl 0 zurueck. Mit Gegenprobe (ohne restore steht sie).
+ *
+ *  TEIL Q — der JA-Zweig, wenn der gemerkte Platz den Gegenstand nicht mehr traegt:
+ *      die Anzahl muss zurueck (@0x800517C4), sonst bleibt ein Platz mit Anzahl 0.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -282,6 +297,7 @@ typedef struct {
     long item_aot_set;          /* C4 */
     long ck_10d0_52, ck_1230_136, ck_11e0_138;   /* C4 */
     long set332_setzt, set332_loescht;           /* C6: die Schreiber von flag(3,32) */
+    long op59, op59_bank3, op59_bank9, op58;     /* C7: die ANDEREN Flag-Opcodes */
     uint8_t menge1[256];        /* C3 */
 } zensus_t;
 
@@ -326,6 +342,22 @@ static void walk(zensus_t *z, const uint8_t *d, size_t n, uint32_t start, uint32
         z->opcodes++;
         uint8_t op = d[pc];
         if (op == 0x5E) z->keep_item_ck++;                        /* C1 */
+        /* C7 — DIE ANDEREN ZWEI FLAG-OPCODES. C2/C6 zaehlen nur Set (0x22); RE1.5 hat
+         * aber noch 0x59 (Flag-Set2, der indizierte SCHREIBER, LAB_8003fe90 ->
+         * @0x8003ff3c or / @0x8003ff24 nor+and / @0x8003ff50 xor) und 0x58 (Flag-Ck2,
+         * das LESENDE Praedikat, LAB_8003fd54 -> nur `and`, kein Store). Ohne sie waere
+         * "flag(3,32) hat genau einen Schreiber" nur ueber EINEN Opcode gemessen.
+         * Die BANK von 0x59 steht statisch in pc[1] (`lw` ueber die Zeigertabelle
+         * @0x80074664, pc[1]*4 @0x8003fed0); der INDEX kommt erst zur Laufzeit aus
+         * work_vars[pc[2]] (`lhu` @0x8003feb8, DAT_800b0fd0) und ist statisch NICHT
+         * bestimmbar. Darum wird die Bank gezaehlt: trifft kein einziges 0x59 die
+         * Bank 3 bzw. 9, kann auch kein Index darin etwas schreiben. */
+        if (op == 0x59) {
+            z->op59++;
+            if (d[pc + 1] == 3) z->op59_bank3++;
+            if (d[pc + 1] == 9) z->op59_bank9++;
+        }
+        if (op == 0x58) z->op58++;
         if (op == 0x22 && d[pc + 1] == 3 && d[pc + 2] == 32) {    /* C6 */
             if (d[pc + 3] == 1)                     z->set332_setzt++;
             else if (d[pc + 3] == 0 || d[pc + 3] == 7) z->set332_loescht++;
@@ -459,11 +491,32 @@ static void teil_c(void)
      * zwar endgueltig. Das ist keine Port-Eigenschaft, sondern die der Daten; ausgewiesen
      * wird sie, damit niemand sie fuer einen Port-Defekt haelt.
      * Vollstaendige Liste aller 16 Stellen: tools/discard_verlustwege.py. */
-    printf("  C6 Schreiber von flag(3,32): %ld x setzen, %ld x loeschen/umschalten\n",
-           z.set332_setzt, z.set332_loescht);
+    printf("  C6 Schreiber von flag(3,32) per Set (0x22): %ld x setzen,"
+           " %ld x loeschen/umschalten\n", z.set332_setzt, z.set332_loescht);
     PRUEFE(z.set332_setzt == 1 && z.set332_loescht == 0,
            "flag(3,32): %ld Setzer / %ld Loescher — erwartet 1 / 0",
            z.set332_setzt, z.set332_loescht);
+
+    /* C7 — UND DIE ANDEREN ZWEI FLAG-OPCODES, damit "genau EIN Schreiber" nicht nur
+     * fuer Set (0x22) gilt. Gemessen ueber denselben Vollzensus:
+     *   0x59 (Flag-Set2, der zweite SCHREIBER): 2 Vorkommen im ganzen Bestand, BEIDE
+     *        auf Bank 5 — 0 auf Bank 3 (C6) und 0 auf Bank 9 (C2). Die 2 ist zugleich
+     *        die GEGENPROBE: der Zaehler sieht diesen Opcode ueberhaupt.
+     *   0x58 (Flag-Ck2): 0 Vorkommen, und er ist ohnehin ein LESER — op_flag_ck2
+     *        (scd_vm.c) ruft nur re15_game_flag_get, LAB_8003fd54 hat keinen Store.
+     * Damit gilt C2 und C6 ueber ALLE Flag-Opcodes der Maschine, nicht nur ueber Set. */
+    printf("  C7 Flag-Set2 (0x59): %ld Vorkommen, davon Bank 3: %ld, Bank 9: %ld"
+           " | Flag-Ck2 (0x58, nur LESER): %ld\n",
+           z.op59, z.op59_bank3, z.op59_bank9, z.op58);
+    PRUEFE(z.op59 == 2, "C7: %ld x 0x59 statt 2 — der Zaehler sieht den Opcode nicht"
+           " (dann sind die zwei Nullen darunter wertlos)", z.op59);
+    PRUEFE(z.op59_bank3 == 0,
+           "C7: %ld x 0x59 auf Bank 3 — flag(3,32) haette einen zweiten Schreiber",
+           z.op59_bank3);
+    PRUEFE(z.op59_bank9 == 0,
+           "C7: %ld x 0x59 auf Bank 9 — ein zone-9-Bit koennte doch geloescht werden",
+           z.op59_bank9);
+    PRUEFE(z.op58 == 0, "C7: %ld x 0x58 — erwartet 0", z.op58);
 }
 
 /* =========================================================================
@@ -1331,6 +1384,15 @@ static void teil_l(void)
     PRUEFE(re15_discard_vorentscheid_belegt() - vz0 == 0,
            "%d Vorentscheide sitzen HINTER dem Oeffnen der Nachricht - falsche Stelle"
            " der Kette", re15_discard_vorentscheid_belegt() - vz0);
+    /* ⛔ ABDECKUNGS-SCHRANKE. Ohne sie zaehlt ein Lauf, der KEINE Stelle erreicht, als
+     * Erfolg: ohne_abfrage waere 0, und "0 von 0" liest sich wie "0 von 10". Und die
+     * Gleichheit mit_abfrage == gefahren faengt das NICHT — sie bleibt wahr, wenn beide
+     * Zahlen zusammen fallen (Rueckbau R-D1: 1 von 16 erreicht, alter Riegel gruen).
+     * Gemessen werden 10 von 16; die 6 anderen haengen an AOTs/Kartenlesern, die der
+     * Pruefstand nicht betritt, und stehen mit Grund in der Tabelle oben. */
+    PRUEFE(gefahren >= 10,
+           "ABDECKUNG: nur %d von %d Stellen erreicht (erwartet >= 10) — dann messen die"
+           " Nullen darunter nichts", gefahren, RE15_DISCARD_SITE_COUNT);
     PRUEFE(ohne_abfrage == 0, "%d erreichte Stellen fragen OHNE Besitz", ohne_abfrage);
     PRUEFE(mit_abfrage > 0, "GEGENPROBE: MIT Besitz kommt NIRGENDS eine Abfrage — dann"
            " kann dieser Riegel eine Abfrage gar nicht sehen");
@@ -1369,26 +1431,21 @@ static void teil_l(void)
  *   NACHHALL   Bilder im Zustand 7 im Lauf OHNE Abfrage. Muss > 0 sein — sonst
  *              hat der Aufbau gar keinen Nachhall erzeugt und die 0 oben waere wertlos.
  * ========================================================================= */
-static void teil_m(void)
+/* Ein Lauf von TEIL M. `mit_besitz` ist der EINZIGE Unterschied zwischen den beiden
+ * Laeufen: mit Besitz geht die Abfrage auf (und beendet den Nachhall), ohne Besitz
+ * nicht — dann laeuft der Nachhall ungestoert und ist ZAEHLBAR. */
+static int m_lauf(re15_rdt_t *rdt, unsigned room, uint8_t msg, int sub, uint8_t item,
+                  int mit_besitz, long *out_prompt, long *out_nachhall, long *out_ueberlapp)
 {
     extern uint16_t g_scd_pad_edge, g_scd_pad_held;
     extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
-    printf("\n=== TEIL M: Nachhall-Ueberlapp mit der Abfrage ===\n");
-
-    const unsigned room = 0x4000; const uint8_t msg = 2, item = 0x47;
-    re15_rdt_t rdt; size_t n = 0;
-    uint8_t *raw = raum_laden(room, &rdt, &n);
-    if (!raw) { printf("  SKIP ROOM%04X\n", room); return; }
-    int sub = sub_mit_nachricht(&rdt, msg);
-    if (sub < 0) { printf("  SKIP: kein Message_on %u\n", (unsigned)msg); free(raw); return; }
-
-    long ueberlapp = 0, nachhall_bilder = 0, prompt_bilder = 0;
+    long ueberlapp = 0, nachhall_bilder = 0, prompt_bilder = 0, nach_zeile = 0;
     grundzustand();
     g_current_room_id = room;
-    re15_msg_load_room_block(rdt.messages, rdt.messages_size);
-    scd_register_current_rdt(&rdt);
-    re15_inv_grant(item, 1);
-    scd_thread_start(0, rdt.sub_scd[sub]);
+    re15_msg_load_room_block(rdt->messages, rdt->messages_size);
+    scd_register_current_rdt(rdt);
+    if (mit_besitz) re15_inv_grant(item, 1);
+    scd_thread_start(0, rdt->sub_scd[sub]);
     g_re15_voice_laeuft = 0; g_re15_voice_restbilder = 0;
     int scharf = 0;
     for (long fr = 0; fr < 4000; fr++) {
@@ -1414,18 +1471,63 @@ static void teil_m(void)
         if (prompt) prompt_bilder++;
         if (prompt && g_scd.message_active) ueberlapp++;
         if (prompt && prompt_bilder > 120) break;
+        /* Der Lauf OHNE Besitz hat keinen Prompt, der ihn beendet: er laeuft 200 Bilder
+         * ueber das Ende der ausloesenden Zeile hinaus, damit der Nachhall gezaehlt
+         * werden kann. */
+        if (!mit_besitz && scharf && !re15_pauseflags_belegt() && ++nach_zeile > 200) break;
     }
     g_re15_voice_laeuft = 0; g_re15_voice_restbilder = 0;
-    printf("  Prompt-Bilder %ld, Nachhall-Bilder %ld, UEBERLAPP %ld\n",
-           prompt_bilder, nachhall_bilder, ueberlapp);
-    PRUEFE(prompt_bilder > 0,
+    scd_register_current_rdt(NULL);
+    if (out_prompt)    *out_prompt    = prompt_bilder;
+    if (out_nachhall)  *out_nachhall  = nachhall_bilder;
+    if (out_ueberlapp) *out_ueberlapp = ueberlapp;
+    return scharf;
+}
+
+static void teil_m(void)
+{
+    printf("\n=== TEIL M: Nachhall-Ueberlapp mit der Abfrage ===\n");
+
+    const unsigned room = 0x4000; const uint8_t msg = 2, item = 0x47;
+    re15_rdt_t rdt; size_t n = 0;
+    uint8_t *raw = raum_laden(room, &rdt, &n);
+    if (!raw) { printf("  SKIP ROOM%04X\n", room); return; }
+    int sub = sub_mit_nachricht(&rdt, msg);
+    if (sub < 0) { printf("  SKIP: kein Message_on %u\n", (unsigned)msg); free(raw); return; }
+
+    /* LAUF 1 — MIT Besitz: die Abfrage geht auf. Gemessen wird der UEBERLAPP. */
+    long p1 = 0, nh1 = 0, ue1 = 0;
+    int scharf1 = m_lauf(&rdt, room, msg, sub, item, 1, &p1, &nh1, &ue1);
+    /* LAUF 2 — OHNE Besitz: KEINE Abfrage, also beendet auch nichts den Nachhall.
+     * ⛔ DAS IST DIE GEGENPROBE, DIE BIS RUNDE 24 FEHLTE. Der Lauf mit Besitz meldet
+     * "Nachhall-Bilder 0" — genau den Zustand, den der Kommentar dieses Teils selbst
+     * wertlos nennt, denn eine 0 kann zwei Ursachen haben: der Nachhall wurde beendet
+     * (das WILL der Riegel zeigen) ODER er ist im Aufbau nie entstanden (dann zeigt er
+     * nichts). Erst dieser zweite Lauf trennt die beiden: derselbe Raum, dieselbe Zeile,
+     * dieselbe erzwungene Aufnahme, EIN Unterschied (der Besitz). Hier MUSS der Nachhall
+     * entstehen. */
+    long p2 = 0, nh2 = 0, ue2 = 0;
+    int scharf2 = m_lauf(&rdt, room, msg, sub, item, 0, &p2, &nh2, &ue2);
+    (void)ue2;
+
+    printf("  LAUF 1 MIT  Besitz: Prompt-Bilder %ld, Nachhall-Bilder %ld, UEBERLAPP %ld\n",
+           p1, nh1, ue1);
+    printf("  LAUF 2 OHNE Besitz: Prompt-Bilder %ld, Nachhall-Bilder %ld"
+           "  (GEGENPROBE: hier MUSS Nachhall entstehen)\n", p2, nh2);
+    PRUEFE(p1 > 0,
            "GEGENPROBE: die Abfrage geht in diesem Aufbau gar nicht auf — dann prueft"
            " der Ueberlapp nichts");
-    PRUEFE(scharf, "GEGENPROBE: die Benutzungs-Nachricht stand nie");
-    PRUEFE(ueberlapp == 0,
+    PRUEFE(scharf1, "GEGENPROBE: die Benutzungs-Nachricht stand im Lauf 1 nie");
+    PRUEFE(scharf2, "GEGENPROBE: die Benutzungs-Nachricht stand im Lauf 2 nie");
+    PRUEFE(p2 == 0, "LAUF 2: %ld Prompt-Bilder OHNE Besitz — dann ist der Lauf kein"
+           " Vergleichsfall", p2);
+    PRUEFE(nh2 > 0,
+           "GEGENPROBE: der Aufbau erzeugt GAR KEINEN Nachhall (%ld Bilder im Lauf ohne"
+           " Abfrage) — dann ist die 0 aus Lauf 1 wertlos", nh2);
+    PRUEFE(ue1 == 0,
            "%ld Bilder Nachhall-Ueberlapp — RE2 hat diesen Zustand nicht"
            " (@0x800307e8/@0x800307f4 sind ein Paar, @0x80051834 = @0x8005164C)",
-           ueberlapp);
+           ue1);
     free(raw);
 }
 
@@ -1505,6 +1607,12 @@ static void teil_n_fall(unsigned room, uint8_t msg, uint8_t item,
                    " Abfrage=%s, %s %d->%d\n",
                    room, sub, (unsigned)msg, erreicht, prompt ? "JA" : "nein",
                    fname, f_vor, f_nach);
+            /* ⛔ ABDECKUNGS-SCHRANKE: "keine Abfrage" ist nur dann ein Befund, wenn die
+             * Stelle ueberhaupt erreicht wurde. Ohne diese Zeile stuende (a) auch dann
+             * gruen, wenn das Unterprogramm gar nicht bis zur Benutzungs-Nachricht kam
+             * (Rueckbau R-D2). */
+            PRUEFE(erreicht, "ROOM%04X: die Benutzungsstelle wurde im OHNE-Lauf gar nicht"
+                   " erreicht — dann prueft (a) nichts", room);
             PRUEFE(!prompt, "ROOM%04X: Abfrage OHNE Besitz", room);
             PRUEFE(re15_inv_find_item(item) < 0,
                    "ROOM%04X: 0x%02X liegt im Inventar, obwohl nichts gewaehrt wurde",
@@ -1638,6 +1746,373 @@ static void teil_k(void)
     free(raw);
 }
 
+/* =========================================================================
+ * TEIL O — DIE FAIL-CLOSED-KOPPLUNG, gefahren statt behauptet.
+ *
+ * Die Hauptbehauptung der Runde 24 lautet: re15_discard_notice_message merkt NUR vor,
+ * wenn fuer GENAU DIESELBE (Raum, Nachricht) vorher ein Vorentscheid MIT TREFFER
+ * gefallen ist. Bis Runde 25 stand diese Behauptung in KEINEM Riegel — sie war
+ * vollstaendig zurueckbaubar, ohne dass etwas rot wurde (Rueckbau R6 des Skeptikers:
+ * exit 0). Genau das schliesst dieser Teil.
+ *
+ * DAS VORBILD IST RE2s NICHT-TREFFER-ZWEIG. Dort wird die Fortsetzung NUR im
+ * Treffer-Zweig eingehaengt:
+ *     80051628  jal   FUN_800696cc      ; Platz suchen
+ *     80051634  bltz  s1,LAB_800516a0   ; kein Treffer -> anderer Zweig
+ *     80051670  sw    v0=>LAB_80051718,-0x7d50(at)   ; NUR hier eingehaengt
+ *   Nicht-Treffer-Zweig:
+ *     800516B4  addiu a2,s0,-0x4c       ; andere Nachrichten-Id
+ *     800516B8  jal   FUN_8002fe38      ; andere Zeile oeffnen
+ *     800516C0  j     LAB_800516f8      ; return — NICHTS eingehaengt
+ * Ein Oeffnungsweg, der an @0x80051628 vorbeikommt, kann in RE2 also keine Abfrage
+ * armieren. Im Port heisst das: ohne gueltigen Vorentscheid passiert nichts.
+ *
+ * SECHS FAELLE JE STELLE, alle ueber die Kopplung selbst (keine RDT noetig — genau das
+ * ist der Punkt: ein FREMDER Oeffnungsweg ruft eben nicht op_message_on):
+ *   O1 DIREKT        Gegenstand da, notice() OHNE jeden Vorentscheid      -> nichts
+ *   O2 FREMDE STELLE Vorentscheid mit Treffer fuer eine ANDERE Stelle     -> nichts
+ *   O3 FREMDE MSG    Vorentscheid fuer (Raum, andere Nachricht)           -> nichts
+ *   O4 OHNE BESITZ   Vorentscheid fuer die richtige Stelle, Inventar leer -> nichts
+ *   O5 POSITIV       Vorentscheid mit Treffer + notice() derselben Stelle -> VORGEMERKT
+ *   O6 VERBRAUCHT    nach O5 ein zweites notice() ohne neuen Vorentscheid -> nichts
+ * O5 ist die Gegenprobe: ohne ihn stuende dieser Riegel auch dann gruen, wenn
+ * re15_discard_notice_message NIE etwas vormerkt (also das Merkmal ganz ausgebaut ist).
+ * ========================================================================= */
+static void teil_o(void)
+{
+    printf("\n=== TEIL O: fail-closed — ohne Vorentscheid wird NICHTS vorgemerkt ===\n");
+    int o1 = 0, o2 = 0, o3 = 0, o4 = 0, o5 = 0, o6 = 0, gefahren = 0;
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+
+        /* Eine ANDERE Benutzungsstelle (fuer O2) und eine Nachrichten-Id desselben
+         * Raums, die KEINE Benutzungsstelle ist (fuer O3). */
+        int j = -1;
+        for (int k = 1; k < RE15_DISCARD_SITE_COUNT; k++) {
+            int c = (i + k) % RE15_DISCARD_SITE_COUNT;
+            if (re15_discard_sites[c].room != room || re15_discard_sites[c].msg != msg) {
+                j = c; break;
+            }
+        }
+        uint8_t fremd_msg = 0xFF;
+        for (int k = 0; k < 64; k++) {
+            int belegt = 0;
+            for (int c = 0; c < RE15_DISCARD_SITE_COUNT; c++)
+                if (re15_discard_sites[c].room == room
+                    && re15_discard_sites[c].msg == (uint8_t)k) belegt = 1;
+            if (!belegt) { fremd_msg = (uint8_t)k; break; }
+        }
+
+        /* --- O1: der Direktaufruf. KEIN Vorentscheid, Gegenstand liegt im Inventar. --- */
+        grundzustand();
+        re15_inv_grant(item, 1);
+        re15_discard_notice_message(room, msg);
+        PRUEFE(re15_discard_pending_item() == 0 && !re15_discard_active(),
+               "O1 ROOM%04X msg %u: der DIREKTAUFRUFER hat vorgemerkt (0x%02X) —"
+               " die fail-closed-Kopplung greift nicht (Vorbild @0x800516C0)",
+               room, (unsigned)msg, re15_discard_pending_item());
+        if (re15_discard_pending_item() == 0 && !re15_discard_active()) o1++;
+        { int slot = re15_inv_find_item(item);
+          PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
+                 "O1 ROOM%04X: der Direktaufruf hat die Anzahl angefasst", room); }
+
+        /* --- O2: Vorentscheid mit Treffer, aber fuer eine ANDERE Stelle. ------------ */
+        if (j >= 0) {
+            grundzustand();
+            re15_inv_grant(item, 1);
+            if (re15_discard_sites[j].item != item)
+                re15_inv_grant(re15_discard_sites[j].item, 1);
+            int v = re15_discard_besitz_vor_nachricht(re15_discard_sites[j].room,
+                                                      re15_discard_sites[j].msg);
+            PRUEFE(v == 1, "O2 ROOM%04X: der Vorentscheid der FREMDEN Stelle ROOM%04X"
+                   " msg %u traf nicht — dann ist O2 kein Fall", room,
+                   re15_discard_sites[j].room, (unsigned)re15_discard_sites[j].msg);
+            re15_discard_notice_message(room, msg);
+            PRUEFE(re15_discard_pending_item() == 0 && !re15_discard_active(),
+                   "O2 ROOM%04X msg %u: ein Vorentscheid fuer ROOM%04X msg %u hat DIESE"
+                   " Stelle armiert", room, (unsigned)msg,
+                   re15_discard_sites[j].room, (unsigned)re15_discard_sites[j].msg);
+            if (v == 1 && re15_discard_pending_item() == 0 && !re15_discard_active()) o2++;
+        }
+
+        /* --- O3: Vorentscheid fuer (derselbe Raum, FREMDE Nachricht). --------------- */
+        if (fremd_msg != 0xFF) {
+            grundzustand();
+            re15_inv_grant(item, 1);
+            (void)re15_discard_besitz_vor_nachricht(room, fremd_msg);
+            re15_discard_notice_message(room, msg);
+            PRUEFE(re15_discard_pending_item() == 0 && !re15_discard_active(),
+                   "O3 ROOM%04X: ein Vorentscheid fuer msg %u hat msg %u armiert",
+                   room, (unsigned)fremd_msg, (unsigned)msg);
+            if (re15_discard_pending_item() == 0 && !re15_discard_active()) o3++;
+        }
+
+        /* --- O4: richtige Stelle, aber der Gegenstand fehlt (@0x80051634). ---------- */
+        grundzustand();
+        int v4 = re15_discard_besitz_vor_nachricht(room, msg);
+        PRUEFE(v4 == 0, "O4 ROOM%04X msg %u: der Vorentscheid traf OHNE Gegenstand",
+               room, (unsigned)msg);
+        re15_discard_notice_message(room, msg);
+        PRUEFE(re15_discard_pending_item() == 0 && !re15_discard_active(),
+               "O4 ROOM%04X msg %u: vorgemerkt ohne Besitz", room, (unsigned)msg);
+        if (v4 == 0 && re15_discard_pending_item() == 0 && !re15_discard_active()) o4++;
+
+        /* --- O5: DER POSITIVFALL. Ohne ihn ist der ganze Teil durch Nichtstun gruen. */
+        grundzustand();
+        re15_inv_grant(item, 1);
+        int v5 = re15_discard_besitz_vor_nachricht(room, msg);
+        PRUEFE(v5 == 1, "O5 ROOM%04X msg %u: der Vorentscheid traf MIT Gegenstand nicht",
+               room, (unsigned)msg);
+        re15_discard_notice_message(room, msg);
+        PRUEFE(re15_discard_pending_item() == item && re15_discard_active(),
+               "O5 ROOM%04X msg %u: MIT Vorentscheid wurde NICHT vorgemerkt"
+               " (pending 0x%02X, erwartet 0x%02X) — dann messen O1..O4 nichts",
+               room, (unsigned)msg, re15_discard_pending_item(), item);
+        if (v5 == 1 && re15_discard_pending_item() == item && re15_discard_active()) o5++;
+        /* Und die Anzahl darf beim Einhaengen NICHT gefallen sein (@0x800517f4 verlaesst
+         * die Routine vor dem Dekrement @0x80051810). */
+        { int slot = re15_inv_find_item(item);
+          PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
+                 "O5 ROOM%04X: die Anzahl fiel schon beim Einhaengen", room); }
+
+        /* --- O6: der Vorentscheid ist VERBRAUCHT. Zweites notice() ohne neuen. ------ */
+        re15_discard_reset();
+        re15_discard_notice_message(room, msg);
+        PRUEFE(re15_discard_pending_item() == 0 && !re15_discard_active(),
+               "O6 ROOM%04X msg %u: der verbrauchte Vorentscheid hat ein zweites Mal"
+               " armiert", room, (unsigned)msg);
+        if (re15_discard_pending_item() == 0 && !re15_discard_active()) o6++;
+        gefahren++;
+    }
+    re15_discard_reset();
+
+    printf("  ABDECKUNG: %d von %d Benutzungsstellen, je 6 Faelle\n",
+           gefahren, RE15_DISCARD_SITE_COUNT);
+    printf("  O1 Direktaufruf %d | O2 fremde Stelle %d | O3 fremde Nachricht %d |"
+           " O4 ohne Besitz %d\n", o1, o2, o3, o4);
+    printf("  O5 POSITIV (vorgemerkt) %d | O6 verbrauchter Vorentscheid %d\n", o5, o6);
+    PRUEFE(gefahren == RE15_DISCARD_SITE_COUNT,
+           "ABDECKUNG: nur %d von %d Stellen gefahren", gefahren, RE15_DISCARD_SITE_COUNT);
+    PRUEFE(gefahren >= 10, "ABDECKUNG: nur %d Stellen (erwartet >= 10)", gefahren);
+    PRUEFE(o1 == gefahren, "O1: nur %d von %d Stellen halten den Direktaufruf",
+           o1, gefahren);
+    PRUEFE(o2 == gefahren, "O2: nur %d von %d", o2, gefahren);
+    PRUEFE(o3 == gefahren, "O3: nur %d von %d", o3, gefahren);
+    PRUEFE(o4 == gefahren, "O4: nur %d von %d", o4, gefahren);
+    PRUEFE(o5 == gefahren,
+           "O5 (GEGENPROBE): nur %d von %d Stellen merken MIT Vorentscheid vor — ohne"
+           " diese Zahl waere der ganze Teil durch Nichtstun gruen", o5, gefahren);
+    PRUEFE(o6 == gefahren, "O6: nur %d von %d", o6, gefahren);
+}
+
+/* =========================================================================
+ * TEIL P — re15_discard_restore: EIN LADEN BELEBT NIE EINE ABFRAGE.
+ *
+ * Pflicht-Korrektur 5 der Vorrunde: die Funktion hatte gar keinen Riegel. Bis Runde 23
+ * stellte sie bei vorhandenem Gegenstand wieder auf D_WARTET — ein Wiederbeleben ohne
+ * Beleg. Sie ist seither ein HARTER Reset, und das ist hier gemessen:
+ *
+ *   P1 aus D_WARTET  : restore(item) -> nichts aktiv, Anzahl unberuehrt (1)
+ *   P2 aus D_FRAGT   : restore(item) -> nichts aktiv, die schon gefallene Anzahl
+ *                      wieder 1 (@0x800517C4 `sb v1,count`)
+ *   P3 aus D_AUS     : restore(item) mit einem Gegenstand im Inventar darf NICHTS
+ *                      erzeugen — das ist der Wiederbelebungs-Fall von Runde 23
+ *   P4 GEGENPROBE    : dieselbe Vorgeschichte OHNE restore -> die Abfrage STEHT.
+ *                      Ohne P4 waere P1/P2 auch dann gruen, wenn nie etwas vorgemerkt
+ *                      wuerde.
+ * Herleitung, warum ein harter Reset byte-true ist: RE2s Fortsetzungs-Zeiger
+ * DAT_800D4498 (@0x80051670 `sw v0,-0x7d50(at)`) liegt im RAM und in KEINEM
+ * Speicherformat; der Auslieferungsstand von RE1.5 kann ohnehin nicht speichern
+ * (21 RDTs sagen woertlich "Save is not available in this preview").
+ * ========================================================================= */
+
+/* Bis D_FRAGT fahren, ohne RDT: Vorentscheid + Einhaengen + ein freier Takt.
+ * Das ist DIESELBE Reihenfolge, die op_message_on nimmt (scd_vm.c), nur ohne den Raum. */
+static int bis_frage(unsigned room, uint8_t msg, uint8_t item)
+{
+    grundzustand();
+    re15_inv_grant(item, 1);
+    if (re15_discard_besitz_vor_nachricht(room, msg) != 1) return 0;
+    re15_discard_notice_message(room, msg);
+    if (!re15_discard_active()) return 0;
+    for (int f = 0; f < 8 && !re15_discard_prompt(NULL, NULL); f++) re15_discard_tick(0, 0);
+    return re15_discard_prompt(NULL, NULL) != 0;
+}
+
+static void teil_p(void)
+{
+    printf("\n=== TEIL P: ein Laden belebt NIE eine Abfrage (re15_discard_restore) ===\n");
+    int p1 = 0, p2 = 0, p3 = 0, p4 = 0, gefahren = 0, erreicht_frage = 0;
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+
+        /* --- P1: aus D_WARTET (vorgemerkt, Anzahl noch 1). ------------------------- */
+        grundzustand();
+        re15_inv_grant(item, 1);
+        if (re15_discard_besitz_vor_nachricht(room, msg) == 1)
+            re15_discard_notice_message(room, msg);
+        int war_aktiv = re15_discard_active();
+        uint8_t gemerkt = re15_discard_pending_item();
+        PRUEFE(war_aktiv && gemerkt == item,
+               "P1 ROOM%04X msg %u: die Vorgeschichte steht nicht (aktiv=%d,"
+               " gemerkt=0x%02X)", room, (unsigned)msg, war_aktiv, gemerkt);
+        re15_discard_restore(gemerkt);
+        PRUEFE(!re15_discard_active() && re15_discard_pending_item() == 0,
+               "P1 ROOM%04X msg %u: das Laden hat die Abfrage BELEBT", room, (unsigned)msg);
+        { int slot = re15_inv_find_item(item);
+          PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
+                 "P1 ROOM%04X: Anzahl nach dem Laden %d statt 1",
+                 room, slot >= 0 ? g_inv.slots[slot].qty : -1); }
+        if (war_aktiv && !re15_discard_active() && re15_discard_pending_item() == 0) p1++;
+
+        /* --- P2: aus D_FRAGT (sichtbarer Prompt, Anzahl schon auf 0 @0x80051810). --- */
+        if (bis_frage(room, msg, item)) {
+            erreicht_frage++;
+            int slot0 = re15_inv_find_item(item);
+            PRUEFE(slot0 >= 0 && g_inv.slots[slot0].qty == 0,
+                   "P2 ROOM%04X: die Anzahl ist beim offenen Prompt %d statt 0"
+                   " (@0x80051810)", room, slot0 >= 0 ? g_inv.slots[slot0].qty : -1);
+            re15_discard_restore(re15_discard_pending_item());
+            PRUEFE(!re15_discard_active() && re15_discard_prompt(NULL, NULL) == 0,
+                   "P2 ROOM%04X: der Prompt steht nach dem Laden weiter", room);
+            int slot = re15_inv_find_item(item);
+            PRUEFE(slot >= 0 && g_inv.slots[slot].qty == 1,
+                   "P2 ROOM%04X: Anzahl nach dem Laden %d statt 1 (@0x800517C4)",
+                   room, slot >= 0 ? g_inv.slots[slot].qty : -1);
+            if (!re15_discard_active() && slot >= 0 && g_inv.slots[slot].qty == 1) p2++;
+        }
+
+        /* --- P3: aus D_AUS. restore darf aus einem Spielstand-Feld NICHTS bauen. ---- */
+        grundzustand();
+        re15_inv_grant(item, 1);
+        re15_discard_restore(item);
+        PRUEFE(!re15_discard_active() && re15_discard_pending_item() == 0,
+               "P3 ROOM%04X: restore(0x%02X) hat aus dem Nichts eine Abfrage erzeugt"
+               " — genau das Wiederbeleben von Runde 23", room, item);
+        if (!re15_discard_active() && re15_discard_pending_item() == 0) p3++;
+
+        /* --- P4: GEGENPROBE. Dieselbe Vorgeschichte, KEIN restore -> sie steht. ----- */
+        if (bis_frage(room, msg, item)) {
+            PRUEFE(re15_discard_active() && re15_discard_prompt(NULL, NULL) == 8,
+                   "P4 ROOM%04X: die Gegenprobe zeigt keine stehende Abfrage", room);
+            if (re15_discard_active() && re15_discard_prompt(NULL, NULL) == 8) p4++;
+        }
+        gefahren++;
+    }
+    re15_discard_reset();
+
+    printf("  ABDECKUNG: %d von %d Stellen | P1 aus D_WARTET %d | P2 aus D_FRAGT %d"
+           " | P3 aus D_AUS %d\n", gefahren, RE15_DISCARD_SITE_COUNT, p1, p2, p3);
+    printf("  P4 GEGENPROBE (ohne restore steht die Abfrage): %d von %d\n",
+           p4, erreicht_frage);
+    PRUEFE(gefahren >= 10, "ABDECKUNG: nur %d Stellen (erwartet >= 10)", gefahren);
+    PRUEFE(erreicht_frage >= 10,
+           "ABDECKUNG: nur %d Stellen erreichen den offenen Prompt (erwartet >= 10) —"
+           " dann messen P2/P4 nichts", erreicht_frage);
+    PRUEFE(p1 == gefahren, "P1: nur %d von %d", p1, gefahren);
+    PRUEFE(p2 == erreicht_frage, "P2: nur %d von %d", p2, erreicht_frage);
+    PRUEFE(p3 == gefahren, "P3: nur %d von %d", p3, gefahren);
+    PRUEFE(p4 == erreicht_frage,
+           "P4 (GEGENPROBE): nur %d von %d — ohne eine stehende Abfrage koennte P1/P2"
+           " gar kein Beleben sehen", p4, erreicht_frage);
+}
+
+/* =========================================================================
+ * TEIL Q — DER JA-ZWEIG, WENN DER GEMERKTE PLATZ DEN GEGENSTAND NICHT MEHR TRAEGT.
+ *
+ * Beim Uebergang auf die Abfrage faellt die Anzahl auf 0 (@0x80051810 `addiu v0,v0,-1`).
+ * Weggeworfen wird im JA-Zweig aber nur, wenn der gemerkte PLATZ den Gegenstand noch
+ * traegt — und re15_inv_remove_slot kompaktiert das Inventar (FUN_8004dadc), ein Index
+ * kann danach auf einen fremden Platz zeigen. Vor Runde 25 fiel dieser Zweig ohne
+ * anzahl_zurueck() durch: der Gegenstand blieb mit ANZAHL 0 im Inventar liegen, sichtbar
+ * und unbenutzbar. RE2 schreibt die 1 in JEDEM Zweig zurueck, der nicht wegwirft
+ * (@0x800517C4 `sb v1,count` mit v1 = 1).
+ *
+ * GEFAHREN wird die Verschiebung: zwei Plaetze, der Gegenstand auf dem hinteren; nach dem
+ * Aufgehen der Abfrage wird der VORDERE Platz geleert, die Kompaktierung zieht den
+ * Gegenstand nach vorn, der gemerkte Index zeigt ins Leere. Dann JA.
+ *   Q1 VERLANGT   : kein Platz traegt den Gegenstand mit Anzahl 0.
+ *   Q2 GEGENPROBE : derselbe Ablauf OHNE die Verschiebung wirft wirklich weg — sonst
+ *                   waere "kein Platz mit Anzahl 0" auch dann wahr, wenn die Abfrage
+ *                   ueberhaupt nichts tut.
+ * ========================================================================= */
+static void teil_q(void)
+{
+    printf("\n=== TEIL Q: JA-Zweig nach Inventar-Verschiebung (@0x800517C4) ===\n");
+    const uint8_t fremd = 0x34;      /* ein anderer Gegenstand fuer den vorderen Platz */
+    int gefahren = 0, ok_null = 0, weg_gegenprobe = 0;
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+        if (item == fremd) continue;
+
+        /* --- Q1: die Verschiebung. ------------------------------------------------- */
+        grundzustand();
+        PRUEFE(re15_inv_grant(fremd, 1) == 0, "Q1: Platzhalter 0x%02X nicht gewaehrt",
+               fremd);
+        re15_inv_grant(item, 1);
+        if (re15_discard_besitz_vor_nachricht(room, msg) != 1) continue;
+        re15_discard_notice_message(room, msg);
+        for (int f = 0; f < 8 && !re15_discard_prompt(NULL, NULL); f++)
+            re15_discard_tick(0, 0);
+        if (!re15_discard_prompt(NULL, NULL)) continue;
+        int slot_item  = re15_inv_find_item(item);
+        int slot_fremd = re15_inv_find_item(fremd);
+        PRUEFE(slot_item > slot_fremd,
+               "Q1 ROOM%04X: der Gegenstand liegt nicht HINTER dem Platzhalter"
+               " (%d vs %d) — dann verschiebt die Kompaktierung nichts",
+               room, slot_item, slot_fremd);
+        if (slot_fremd >= 0) re15_inv_remove_slot(slot_fremd);  /* kompaktiert FUN_8004dadc */
+        int nach = re15_inv_find_item(item);
+        PRUEFE(nach >= 0 && nach != slot_item,
+               "Q1 ROOM%04X: der Gegenstand ist nicht nachgerueckt (%d -> %d)",
+               room, slot_item, nach);
+        /* Und JETZT die Antwort JA. */
+        for (int f = 0; f < 4000 && !re15_discard_ready(); f++) re15_discard_tick(0, 0);
+        re15_discard_tick(0x4000, 0);
+        int rest = re15_inv_find_item(item);
+        int qty  = rest >= 0 ? g_inv.slots[rest].qty : -1;
+        PRUEFE(!(rest >= 0 && qty == 0),
+               "Q1 ROOM%04X msg %u: 0x%02X liegt auf Platz %d mit ANZAHL 0 — ein"
+               " Gegenstand, den der Spieler sieht und nicht benutzen kann"
+               " (@0x800517C4 schreibt die 1 zurueck)", room, (unsigned)msg, item, rest);
+        PRUEFE(!re15_discard_active(), "Q1 ROOM%04X: Abfrage nach JA nicht beendet", room);
+        if (!(rest >= 0 && qty == 0) && !re15_discard_active()) ok_null++;
+
+        /* --- Q2 GEGENPROBE: OHNE Verschiebung wirft JA wirklich weg. --------------- */
+        grundzustand();
+        re15_inv_grant(fremd, 1);
+        re15_inv_grant(item, 1);
+        if (re15_discard_besitz_vor_nachricht(room, msg) == 1)
+            re15_discard_notice_message(room, msg);
+        for (int f = 0; f < 8 && !re15_discard_prompt(NULL, NULL); f++)
+            re15_discard_tick(0, 0);
+        for (int f = 0; f < 4000 && !re15_discard_ready(); f++) re15_discard_tick(0, 0);
+        re15_discard_tick(0x4000, 0);
+        PRUEFE(re15_inv_find_item(item) < 0,
+               "Q2 ROOM%04X: 0x%02X liegt nach JA immer noch im Inventar", room, item);
+        if (re15_inv_find_item(item) < 0) weg_gegenprobe++;
+        gefahren++;
+    }
+    re15_discard_reset();
+
+    printf("  ABDECKUNG: %d Stellen gefahren | Q1 ohne Platz mit Anzahl 0: %d"
+           " | Q2 GEGENPROBE weggeworfen: %d\n", gefahren, ok_null, weg_gegenprobe);
+    PRUEFE(gefahren >= 10, "ABDECKUNG: nur %d Stellen (erwartet >= 10)", gefahren);
+    PRUEFE(ok_null == gefahren, "Q1: nur %d von %d", ok_null, gefahren);
+    PRUEFE(weg_gegenprobe == gefahren,
+           "Q2 (GEGENPROBE): nur %d von %d Stellen werfen ohne Verschiebung wirklich weg"
+           " — dann ist Q1 kein Befund", weg_gegenprobe, gefahren);
+}
+
 int main(void)
 {
     printf("=== r21_discard_wegwerfen — \"You don't need this key any more. Discard it?\"\n");
@@ -1656,6 +2131,9 @@ int main(void)
     teil_c();
     teil_d();
     teil_e();
+    teil_o();      /* die fail-closed-Kopplung — ohne Vorentscheid nichts, mit: alles */
+    teil_p();      /* re15_discard_restore belebt nie eine Abfrage                    */
+    teil_q();      /* JA-Zweig nach Inventar-Verschiebung (@0x800517C4)               */
     teil_l();
     teil_n();
     teil_m();

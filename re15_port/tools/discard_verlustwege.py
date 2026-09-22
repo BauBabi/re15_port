@@ -159,38 +159,98 @@ def item_ausgaben(root):
 
 
 def alle_sets(root):
-    """(zone, idx, op) -> [(raum, pc)] ueber ALLE RDTs. Damit laesst sich fragen, ob ein
-    geschlossenes Tor irgendwo im Spiel WIEDER geoeffnet wird - der Unterschied zwischen
-    "einmalig" und "endgueltig tot"."""
+    """(zone, idx, op) -> [(raum, tag, idx_region, pc)] ueber ALLE RDTs, plus die
+    Umkehr-Tabelle je Region.
+
+    Damit laesst sich fragen, ob ein geschlossenes Tor irgendwo im Spiel WIEDER geoeffnet
+    wird - der Unterschied zwischen "einmalig" und "endgueltig tot" - UND von WEM
+    (Raum + Unterprogramm + Datei-Offset), und was derselbe Wiederoeffner NEBENBEI
+    schreibt.
+
+    ⛔ WARUM DIE REGION MITGEZAEHLT WIRD (Runde 25, ROOM1090):
+    Der Wiederoeffner ist selbst ein Glied einer KETTE, und ohne das Unterprogramm laesst
+    sich die Kette nicht aufschreiben. ROOM1090 ist das Beispiel, an dem das aufgefallen
+    ist - ein DREIGLIED:
+        sub00 @0x022A6  Ck(3,132,1)   das Tor
+        sub00 @0x022E0  Evt_exec 3    und der Aufruf dahinter
+        sub03 @0x024CE  Set(3,132,0)  loescht das Tor als ERSTE Anweisung
+        sub06 @0x0271E  Set(3,129,1)  ... und sub06 setzt es wieder
+        sub06 @0x02722  Set(3,132,1)
+    sub06 hat KEINEN Evt_exec/Gosub-Aufrufer; es haengt an einem AOT, den sub00 nur im
+    Zweig `Ck(3,129,0)` @0x02332 installiert:
+        0x02336  Aot_set 2c 02 03 b1 01 00 ... ff 00 18 06 00 00   (LANGE Form)
+    pc[25] = 0x06 ist die eventId, also sub06 (scd_vm.c:2823; gleiche Nutzlast-Form
+    {0xFF,0x18,sub} wie ROOM1150 @0x0D7E mit `... ff 00 18 04`). sub06 nimmt sich mit
+    seinem eigenen `Set(3,129,1)` @0x0271E also SELBST vom Netz. Ob die Stelle damit
+    wiederholbar ist, haengt an der UMKEHRBARKEIT von flag(3,129), und die steht in einem
+    anderen Raum: ROOM10B1 sub02 @0x01832 `Set(3,129,1)` setzt, ROOM10B1 sub03 @0x01954
+    `Set(3,129,0)` LOESCHT. Genau diese zwei Zeilen gibt die Spalte NEBENWIRK jetzt aus.
+    Rueckgabe: (sets, regions) - regions[(raum, tag, idx)] = alle Sets dieser Region.
+    """
     out = collections.defaultdict(list)
+    regions = collections.defaultdict(list)
     for p in sorted(glob.glob(os.path.join(root, "STAGE*", "ROOM*.RDT"))):
         d = open(p, "rb").read()
         if len(d) < 0x48:
             continue
         room = os.path.basename(p).split(".")[0]
         ms, ss = u32(d, 0x40), u32(d, 0x44)
-        for sec in (ms, ss):
+        for sec, tag in ((ms, "main"), (ss, "sub")):
             if sec == 0 or sec >= len(d):
                 continue
             se = rdt_section_end(d, sec)
             for (o, e, idx) in section_regions(d, sec, se):
                 for (pc, op, sz) in region_ops(d, sec + o, sec + e):
                     if op == 0x22:
-                        out[(d[pc + 1], d[pc + 2], d[pc + 3])].append((room, pc))
-    return out
+                        out[(d[pc + 1], d[pc + 2], d[pc + 3])].append((room, tag, idx, pc))
+                        regions[(room, tag, idx)].append((d[pc + 1], d[pc + 2], d[pc + 3], pc))
+    return out, regions
+
+
+def umkehr(sets_global, z, i, v):
+    """Wer schreibt flag(z,i) auf den GEGENWERT von v? Liste (raum, tag, idx, pc)."""
+    return list(sets_global.get((z, i, 0 if v == 1 else 1), []))
+
+
+def rufkette(d, ziel_sub, tiefe=3):
+    """Die Aufrufkette zu ziel_sub, bis `tiefe` Ebenen hoch - als Liste von Gliedern
+    (tag, region_idx, pc, gerufenes_sub). `aufrufer_tore` geht nur EINE Ebene; fuer ein
+    Dreiglied wie ROOM1090 (sub00 -> sub03, sub06 setzt das Tor) reicht das nicht."""
+    ms, ss = u32(d, 0x40), u32(d, 0x44)
+    kette, offen, gesehen = [], [ziel_sub], set([ziel_sub])
+    while offen and tiefe > 0:
+        tiefe -= 1
+        neu = []
+        for ziel in offen:
+            for sec, tag in ((ms, "main"), (ss, "sub")):
+                if sec == 0 or sec >= len(d):
+                    continue
+                se = rdt_section_end(d, sec)
+                for (o, e, idx) in section_regions(d, sec, se):
+                    for (pc, op, sz) in region_ops(d, sec + o, sec + e):
+                        ruft = (op == 0x04 and d[pc + 3] == ziel) \
+                            or (op == 0x18 and d[pc + 1] == ziel)
+                        if ruft:
+                            kette.append((tag, idx, pc, ziel))
+                            if tag == "sub" and idx not in gesehen:
+                                gesehen.add(idx)
+                                neu.append(idx)
+        offen = neu
+    return kette
 
 
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "shared_assets", "PSX")
     sites = sites_aus_inc()
     ausg = item_ausgaben(root)
-    sets_global = alle_sets(root)
+    sets_global, regionen = alle_sets(root)
 
     print("=== VERLUSTWEGE je Benutzungsstelle (ausgelieferte Daten) ===")
     n_ohne_besitztor = 0
     n_toetend = 0
     n_toetend_und_einzig = 0
     n_toetend_ohne_besitztor = 0
+    n_neben_fest = 0
     zeilen = []
     for (room, msg, item) in sites:
         p = os.path.join(root, stage_dir(room), "ROOM%04X.RDT" % room)
@@ -237,14 +297,17 @@ def main():
         # geoeffnet wird. Der Wiederoeffner zu Ck(z,i,v) ist Set(z,i,1) fuer v==1 bzw.
         # Set(z,i,0) fuer v==0 - an einer ANDEREN Stelle als der toetenden.
         endgueltig = []
+        wiederoeffner = []       # (gz, gi, raum, tag, ridx, rpc)
         for t in toetend:
             gz, gi = t[1], t[2]
             gv = [c[3] for c in tore if c[1] == gz and c[2] == gi]
             gv = gv[0] if gv else 0
             auf = 1 if gv == 1 else 0
-            andere = [s for s in sets_global.get((gz, gi, auf), []) if s[1] != t[0]]
+            andere = [s for s in sets_global.get((gz, gi, auf), []) if s[3] != t[0]]
             if not andere:
                 endgueltig.append(t)
+            for (rraum, rtag, ridx, rpc) in andere:
+                wiederoeffner.append((gz, gi, rraum, rtag, ridx, rpc))
         einzig = (len(vorkommen) == 1)
         if not besitztor:
             n_ohne_besitztor += 1
@@ -270,12 +333,46 @@ def main():
         print("    ENDGUELTIG: " + (", ".join(
             "Ck(%d,%d)@0x%05X wird nirgends wieder geoeffnet" % (t[1], t[2], t[3])
             for t in endgueltig) or "keins - jedes geschlossene Tor hat einen Wiederoeffner"))
+        # ⛔ WER oeffnet wieder - mit Raum UND Unterprogramm, nicht nur "es gibt einen".
+        print("    WIEDEROEFF: " + (", ".join(
+            "flag(%d,%d) von %s %s%02d@0x%05X" % (w[0], w[1], w[2], w[3], w[4], w[5])
+            for w in wiederoeffner) or "keiner"))
+        # ⛔ UND WAS DERSELBE WIEDEROEFFNER NEBENBEI SCHREIBT - samt Umkehrbarkeit.
+        # Das ist der ROOM1090-Fall: sub06 setzt neben flag(3,132) auch flag(3,129), und
+        # flag(3,129) entscheidet, ob sub06 ueberhaupt noch aufgerufen wird.
+        neben = []
+        for w in wiederoeffner:
+            for (nz, ni, nv, npc) in regionen.get((w[2], w[3], w[4]), []):
+                if npc == w[5]:
+                    continue
+                um = umkehr(sets_global, nz, ni, nv)
+                # Die Umkehr-Liste wird GEKAPPT: Zonen wie flag(2,7) (das Szenen-Bit)
+                # haben dreistellig viele Schreiber, und dann ist nicht mehr die Liste
+                # die Auskunft, sondern ihre LAENGE. Drei Beispiele + Anzahl.
+                if um:
+                    wie = "umkehrbar (%d Stellen): %s" % (
+                        len(um), ", ".join("%s %s%02d@0x%05X" % (u[0], u[1], u[2], u[3])
+                                           for u in um[:3]))
+                    if len(um) > 3:
+                        wie += ", ..."
+                else:
+                    wie = "NICHT umkehrbar"
+                neben.append("%s %s%02d@0x%05X Set(%d,%d,%d) -> %s"
+                             % (w[2], w[3], w[4], npc, nz, ni, nv, wie))
+        print("    NEBENWIRK : " + (",\n                ".join(neben) or "keine"))
+        if [x for x in neben if "NICHT umkehrbar" in x]:
+            n_neben_fest += 1
         print("    EINZIG    : %s (%d Message_on %d im Raum)"
               % ("ja" if einzig else "NEIN", len(vorkommen), msg))
         print("    AUFRUFER  : " + (", ".join(
             "%s%02d@0x%05X [%s]" % (r[0], r[1], r[2], ";".join(
                 "Ck(%d,%d,%d)" % (c[1], c[2], c[3]) for c in r[3]) or "-")
             for r in ruf) or "keiner (nur AOT/Ereignis)"))
+        if tag == "sub":
+            kette = rufkette(d, idx)
+            print("    RUFKETTE  : " + (" | ".join(
+                "%s%02d@0x%05X ruft sub%02d" % (k[0], k[1], k[2], k[3])
+                for k in kette) or "keine (nur AOT/Ereignis)"))
         print("    AUSGABE   : " + (", ".join(
             "%s n=%d tk=%d" % a for a in ausg.get(item, [])) or "keine"))
 
@@ -285,6 +382,8 @@ def main():
     print("  davon Tor = EINZIGER Weg zu dieser Stelle          : %d" % n_toetend_und_einzig)
     print("  davon OHNE Besitztor (fragt + toetet ohne Besitz)  : %d"
           % n_toetend_ohne_besitztor)
+    print("  Stellen, deren WIEDEROEFFNER eine NICHT umkehrbare Nebenwirkung hat: %d"
+          % n_neben_fest)
 
 
 if __name__ == "__main__":

@@ -84,7 +84,57 @@
 # 0 x Keep_Item_ck (der einzige Inventar-Leser), 0 x Zone-9-Bit geloescht. Gegenprobe
 # gegen einen stehenbleibenden Walker: die 164 Item_aot_set und die drei Kartenleser-Tore
 # Ck(9,52)/Ck(9,136)/Ck(9,138) muessen gesehen werden.
-# Dossier: analysis/befunde_2026-09-22/discard-besitz.md   (Runde 24, GUELTIG),
+# --------------------------------------------------------------------------------------
+# RUNDE 25 — DIE LUECKEN DER RUNDE 24. Der Sperrgrund war NICHT das Verhalten, sondern
+# dass fuenf Rueckbauten Riegel rot machten und EINER nicht: die HAUPTBEHAUPTUNG (die
+# fail-closed-Kopplung) stand in keinem Riegel und war vollstaendig zurueckbaubar.
+#
+# TEIL O: die fail-closed-Kopplung, an allen 16 Stellen, je 6 Faelle. Ein Direktaufruf von
+# re15_discard_notice_message ohne gefallenen Vorentscheid darf NICHTS vormerken - Vorbild
+# ist RE2s Nicht-Treffer-Zweig, der ebenfalls nichts einhaengt (@0x800516C0
+# `j LAB_800516f8` gegen @0x80051670 `sw v0=>LAB_80051718,-0x7d50(at)` im Treffer-Zweig).
+# O1 Direktaufruf / O2 Vorentscheid einer FREMDEN Stelle / O3 fremde Nachricht desselben
+# Raums / O4 richtige Stelle ohne Besitz / O5 POSITIVFALL (16 von 16 merken MIT
+# Vorentscheid vor - ohne diese Zahl waere der Teil durch Nichtstun gruen) /
+# O6 verbrauchter Vorentscheid. RUECKBAU R-A (Kopplung aus): 68 Pruefungen ROT.
+#
+# TEIL P: re15_discard_restore belebt NIE eine Abfrage (Pflicht-Korrektur 5 der Vorrunde -
+# die Funktion hatte gar keinen Riegel). P1 aus D_WARTET, P2 aus D_FRAGT (Anzahl zurueck
+# auf 1, @0x800517C4), P3 aus D_AUS (der Wiederbelebungs-Fall von Runde 23), P4 GEGENPROBE
+# ohne restore. 16/16/16 und 16 Gegenproben. RUECKBAU R-C (Runde-23-Form von restore):
+# 51 Pruefungen ROT.
+#
+# TEIL Q: der JA-Zweig, wenn der gemerkte Platz den Gegenstand nach einer Kompaktierung
+# (FUN_8004dadc) nicht mehr traegt. Vorher blieb ein Platz mit ANZAHL 0 stehen; RE2
+# schreibt die 1 in JEDEM Zweig zurueck, der nicht wegwirft (@0x800517C4 `sb v1,count`).
+# Q1 16 von 16 ohne Platz mit Anzahl 0, Q2 GEGENPROBE 16 von 16 wirklich weggeworfen.
+# RUECKBAU R-E (JA-Zweig ohne anzahl_zurueck): 17 Pruefungen ROT.
+#
+# TEIL M ZWEITER LAUF: der Teil war gruen bei "Nachhall-Bilder 0" - dem Zustand, den sein
+# eigener Kommentar wertlos nennt (eine 0 kann heissen "beendet" ODER "nie entstanden").
+# Jetzt zwei Laeufe, EIN Unterschied (der Besitz): MIT Besitz 121 Prompt-Bilder /
+# UEBERLAPP 0, OHNE Besitz 0 Prompt-Bilder / 4 Nachhall-Bilder. RUECKBAU R-B1 (die
+# erzwungene Aufnahme im 2. Lauf weg -> Nachhall 0): ROT; mit der Schranke weg (R-B1+F3):
+# exit 0 - die Schranke ist also der Riegel. RUECKBAU R-B2 (re15_msg_nachhall_beenden weg):
+# 4 Bilder Ueberlapp, ROT.
+#
+# ABDECKUNGS-SCHRANKEN: `PRUEFE(gefahren >= 10)` in TEIL L und `PRUEFE(erreicht)` in
+# TEIL N (a). Ohne sie zaehlt ein Lauf, der die Stellen NICHT erreicht, als Erfolg - und
+# die schon vorhandene Gleichheit mit_abfrage == gefahren faengt das nicht, weil beide
+# Zahlen zusammen fallen. Gemessen: RUECKBAU R-D1 (Pruefstand erreicht nur 8 von 16) ->
+# ROT nur durch die neue Schranke; R-D1+F (Schranke weg) -> exit 0. R-D2 (der OHNE-Lauf
+# von TEIL N erreicht die Stelle nicht) -> ROT; R-D2+F2 -> exit 0.
+#
+# TEIL C7: C2/C6 waren nur ueber Set (0x22) gemessen. Jetzt auch ueber die anderen zwei
+# Flag-Opcodes: 0x59 (Flag-Set2, der zweite SCHREIBER, LAB_8003fe90 - Bank statisch in
+# pc[1] @0x8003fed0, Index erst zur Laufzeit aus work_vars[pc[2]] @0x8003feb8) kommt
+# 2x vor, BEIDE auf Bank 5 - 0x auf Bank 3, 0x auf Bank 9; 0x58 (Flag-Ck2, LAB_8003fd54,
+# nur LESER) 0x. Die 2 ist die Gegenprobe, dass der Zaehler den Opcode ueberhaupt sieht.
+#
+# Rueckbau-Werkzeug: analysis/befunde_2026-09-22/discard-riegel/rueckbau.sh (jeder Riegel
+# einzeln zurueckgebaut, gebaut, gemessen, zurueckgenommen).
+# Dossier: analysis/befunde_2026-09-22/discard-riegel.md   (Runde 25, GUELTIG),
+#          analysis/befunde_2026-09-22/discard-besitz.md   (Runde 24, mit Banner),
 #          analysis/befunde_2026-09-22/discard-fenster.md  (Runde 23),
 #          analysis/befunde_2026-09-22/discard-loch.md     (Runde 22),
 #          analysis/befunde_2026-09-21/discard-umsetzung.md (Ursprung)

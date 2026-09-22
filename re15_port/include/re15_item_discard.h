@@ -153,6 +153,10 @@ void re15_discard_notice_message(unsigned room_id, uint8_t msg_id);
  * (Raum, Nachricht) vorher ein Vorentscheid mit Treffer gefallen ist. Ohne Vorentscheid
  * passiert nichts — ein neuer Oeffnungsweg fuer Nachrichten kann die Abfrage also nicht
  * versehentlich ohne Besitzpruefung armieren.
+ * GEMESSEN: Riegel r21_discard_wegwerfen TEIL O, alle 16 Stellen, sechs Faelle je Stelle
+ * (Direktaufruf / fremde Stelle / fremde Nachricht / ohne Besitz / POSITIVFALL /
+ * verbrauchter Vorentscheid). Rueckbau der Kopplung: 68 Pruefungen rot
+ * (analysis/befunde_2026-09-22/discard-riegel/rueckbau.sh A).
  *
  * Rueckgabe: 1 = (Raum, Nachricht) ist eine Benutzungsstelle UND der Gegenstand liegt mit
  * Anzahl > 0 im Inventar. 0 = alles andere (keine Stelle, nicht getragen, Anzahl 0,
@@ -213,7 +217,10 @@ void re15_discard_reset(void);
  * liegt im RAM und ist in KEINEM Speicherformat, und der Auslieferungsstand von RE1.5
  * kann ohnehin nicht speichern (21 RDTs sagen woertlich "Save is not available in this
  * preview"). Das Feld im Spielstand bleibt erhalten (Formatstabilitaet), wird beim Laden
- * aber verworfen. */
+ * aber verworfen.
+ * GEMESSEN: Riegel TEIL P, alle 16 Stellen — aus D_WARTET, aus D_FRAGT (die schon
+ * gefallene Anzahl kommt zurueck, @0x800517C4) und aus D_AUS, dazu die GEGENPROBE, dass
+ * die Abfrage ohne restore steht. Rueckbau auf die Runde-23-Form: 51 Pruefungen rot. */
 uint8_t re15_discard_pending_item(void);
 void    re15_discard_restore(uint8_t item);
 

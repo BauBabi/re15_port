@@ -44,15 +44,26 @@ static int     s_weggeworfen = 0;
 static struct { unsigned room; uint8_t msg; uint8_t item; int slot; int gilt; } s_vor;
 static int s_vorentscheide = 0, s_vorentscheide_besitz = 0, s_vorentscheid_belegt = 0;
 
-/* Anzahl 0 zurueckdrehen — dasselbe, was RE2 im Nein-Zweig tut (@0x800517C4 `sb v1,count`
- * mit v1 = 1). Seit die Anzahl erst beim Fragen faellt (siehe re15_discard_tick), kann das
- * nur noch den Zustand D_FRAGT betreffen; in D_WARTET ist die Anzahl unberuehrt
- * (@0x800517f4 verlaesst die Routine VOR dem Dekrement @0x80051810). */
+/* Anzahl 0 zurueckdrehen — dasselbe, was RE2 in JEDEM Zweig tut, der NICHT wegwirft
+ * (@0x800517C4 `sb v1,count` mit v1 = 1). Seit die Anzahl erst beim Fragen faellt (siehe
+ * re15_discard_tick), kann das nur noch den Zustand D_FRAGT betreffen; in D_WARTET ist die
+ * Anzahl unberuehrt (@0x800517f4 verlaesst die Routine VOR dem Dekrement @0x80051810).
+ *
+ * ⛔ DER PLATZ WIRD NACHGEZOGEN, DIE ID ENTSCHEIDET. Dasselbe Argument wie an den zwei
+ * anderen Stellen dieser Datei (Einhaengen und Fragen): re15_inv_remove_slot kompaktiert
+ * das Inventar (FUN_8004dadc), ein gemerkter INDEX kann danach auf einen fremden Platz
+ * zeigen. Ohne das Nachziehen blieb genau in diesem Fall ein Platz mit Anzahl 0 stehen —
+ * ein Gegenstand, den der Spieler sieht und nicht mehr benutzen kann. Riegel TEIL Q faehrt
+ * den Fall samt Gegenprobe. */
 static void anzahl_zurueck(void)
 {
-    if (s_zustand != D_AUS && s_slot >= 0 && s_slot < RE15_INV_MAX_SLOTS
-        && g_inv.slots[s_slot].id == s_item && g_inv.slots[s_slot].qty == 0)
-        g_inv.slots[s_slot].qty = 1;
+    if (s_zustand == D_AUS || s_item == 0) return;
+    int slot = s_slot;
+    if (slot < 0 || slot >= RE15_INV_MAX_SLOTS || g_inv.slots[slot].id != s_item)
+        slot = re15_inv_find_item(s_item);
+    if (slot >= 0 && slot < RE15_INV_MAX_SLOTS
+        && g_inv.slots[slot].id == s_item && g_inv.slots[slot].qty == 0)
+        g_inv.slots[slot].qty = 1;
 }
 
 void re15_discard_reset(void)
@@ -180,7 +191,19 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
          * Nachrichten-Freezes hinaus, und in dem Ueberhang lief der Spieler frei
          * (ROOM1100 sub02 msg 4: 80 Bilder, ROOM4000 sub02 msg 2: 29 Bilder; Zerlegung
          * im Riegel TEIL I). Mit der Belegt-Bit-Schranke allein deckt sich die Spanne
-         * mit dem Freeze, so wie in RE2 — es gibt keinen Ueberhang mehr zu sichern.
+         * mit dem Freeze, so wie in RE2.
+         *
+         * ⛔ ABER KEIN ABSOLUTSATZ: das Fenster ist ABGESICHERT, nicht verschwunden.
+         * Aus 161 Bildern Ueberhang (ROOM1100/ROOM1101, Runde-22-Modell) ist GENAU
+         * 1 BILD JE STELLE geworden — das Schliess-Bild, in dem re15_msg_tick den
+         * Freeze schon geloest und re15_discard_tick die Abfrage noch nicht aufgemacht
+         * hat. Gehalten wird es von der PORT-Zeile re15_discard_frozen() (s. deren
+         * Definition weiter unten), gemessen je Stelle vom Riegel TEIL I
+         * (`ohne_bruecke == 1` an 10 von 10 gefahrenen Stellen) und in seiner Wirkung
+         * von TEIL J (Rueckbau dieses einen Bildes: 680 Einheiten Bewegung).
+         * RE2 hat hier 0 solche Bilder, weil Dekrement und neuer Freeze im SELBEN
+         * Aufruf liegen: @0x80051810 `addiu v0,v0,-1`, @0x80051834 `jal FUN_8002fe38`,
+         * @0x80051844 `lui v1,0xff00` / @0x80051850 `sw v0,DAT_800cfbdc`.
          *
          * Dass ein SICHTBARER Prompt das ausloesende Unterprogramm anhaelt, ist dabei
          * KEIN Defekt, sondern byte-true: RE2 legt beim Fragen sofort wieder die ganze
@@ -280,9 +303,20 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
         if (s_slot >= 0 && s_slot < RE15_INV_MAX_SLOTS && g_inv.slots[s_slot].id == s_item) {
             re15_inv_remove_slot(s_slot);
             s_weggeworfen++;
+            s_zustand = D_AUS; s_item = 0; s_slot = -1;
+            s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0;
+            return;
         }
-        s_zustand = D_AUS; s_item = 0; s_slot = -1;
-        s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0;
+        /* ⛔ DER PLATZ TRAEGT DEN GEGENSTAND NICHT MEHR — also wird NICHTS weggeworfen,
+         * und dann muss die schon gefallene Anzahl zurueck. RE2 schreibt die 1 in JEDEM
+         * Zweig zurueck, der nicht wegwirft (@0x800517C4 `sb v1,count`, v1 = 1); bis
+         * Runde 24 fiel dieser Zweig hier ohne anzahl_zurueck() durch und liess einen
+         * Platz mit Anzahl 0 stehen. Dass der Fall im Spiel nicht auftreten SOLL (der
+         * sichtbare Prompt friert die Welt ein, @0x80051844/@0x80051850 mit 0xFF000000),
+         * ist kein Grund, ihn offen zu lassen: der Freeze ist eine PORT-Zeile
+         * (re15_discard_frozen), also wird hier fail-closed ausgestiegen.
+         * Riegel TEIL Q faehrt den Fall mit Gegenprobe. */
+        re15_discard_reset();
         return;
     }
     /* NEIN: Anzahl auf 1 zurueck (@0x800517C4) — sonst liefe sie beim naechsten
