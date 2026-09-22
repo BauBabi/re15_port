@@ -24,12 +24,23 @@ endif()
 # Compiler-Pfade (PSn00bSDK gcc-mipsel)
 set(PSN00BSDK_TC "${PSN00BSDK_PATH}/bin")
 
-set(CMAKE_C_COMPILER   "${PSN00BSDK_TC}/mipsel-none-elf-gcc")
-set(CMAKE_ASM_COMPILER "${PSN00BSDK_TC}/mipsel-none-elf-gcc")
-set(CMAKE_AR           "${PSN00BSDK_TC}/mipsel-none-elf-ar")
-set(CMAKE_RANLIB       "${PSN00BSDK_TC}/mipsel-none-elf-ranlib")
-set(CMAKE_LINKER       "${PSN00BSDK_TC}/mipsel-none-elf-ld")
-set(CMAKE_OBJCOPY      "${PSN00BSDK_TC}/mipsel-none-elf-objcopy")
+# Auf Windows liegen die Werkzeuge als .exe. CMake prueft CMAKE_ASM_COMPILER anders als
+# CMAKE_C_COMPILER: die C-Pruefung findet "mipsel-none-elf-gcc" noch (GNU 12.3.0 wird
+# erkannt), die ASM-Pruefung verlangt einen VOLLEN Pfad auf eine EXISTIERENDE Datei und
+# bricht mit "is not a full path to an existing compiler tool" ab. Deshalb wird die
+# Endung hier bestimmt, statt sie zu raten. (Gemessen 2026-09-22 mit PSn00bSDK 0.24-win32
+# unter C:/PSn00bSDK/sdk/PSn00bSDK-0.24-win32.)
+set(_psx_exe "")
+if(EXISTS "${PSN00BSDK_TC}/mipsel-none-elf-gcc.exe")
+    set(_psx_exe ".exe")
+endif()
+
+set(CMAKE_C_COMPILER   "${PSN00BSDK_TC}/mipsel-none-elf-gcc${_psx_exe}")
+set(CMAKE_ASM_COMPILER "${PSN00BSDK_TC}/mipsel-none-elf-gcc${_psx_exe}")
+set(CMAKE_AR           "${PSN00BSDK_TC}/mipsel-none-elf-ar${_psx_exe}")
+set(CMAKE_RANLIB       "${PSN00BSDK_TC}/mipsel-none-elf-ranlib${_psx_exe}")
+set(CMAKE_LINKER       "${PSN00BSDK_TC}/mipsel-none-elf-ld${_psx_exe}")
+set(CMAKE_OBJCOPY      "${PSN00BSDK_TC}/mipsel-none-elf-objcopy${_psx_exe}")
 
 # PSX-spezifische Compiler-Flags
 set(CMAKE_C_FLAGS_INIT "-march=r3000 -mabi=32 -mno-abicalls -fno-pic -msoft-float -fno-builtin")

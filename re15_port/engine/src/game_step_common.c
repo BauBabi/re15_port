@@ -957,7 +957,32 @@ void re15_game_step(const re15_game_ctx_t *c)
      * modal FSM (ticked at 30 Hz from the platform loop) + rendering advance. The modal is armed from
      * inside re15_aot_scan on the TRIGGER frame (its tail still runs that frame, byte-true), then this
      * gate takes over from the next tick. Unreachable outside an item pickup = no room regression. */
+    /* ⛔ GAME-OVER-FSM VOR JEDEM FREEZE-RETURN — byte-true, und der Beleg stand schon
+     * unten im Datei: der Hauptloop ruft sie UNBEDINGT und VOR dem Spieler-Dispatcher
+     *   8001cdfc  jal 0x8001500c      GAME-OVER-FSM
+     *   8001ce0c  jal 0x80031c44      Spieler-Dispatcher
+     * und FUN_8001500c hat KEIN Pause-Gate (wortweiser EXE-Scan nach `lw rX,-13760(rY)`,
+     * der einzigen Ladeform von 0x800aca40: genau 9 Leser — 0x800144a4, 0x80019e28,
+     * 0x8001cbcc, 0x8001cc9c, 0x8001cd14, 0x8001cdd8, 0x800304f4, 0x80031c54, 0x8003f040 —
+     * KEINER in 0x8001500c..0x80015840). Ihr einziges Gate ist das Kommando-Wort
+     * (@0x80015014 `lbu v1,DAT_800aca58`, @0x8001501c/@0x80015028/@0x80015030: cmd 3/6/7).
+     * Sie stand bisher UNTER den beiden Freeze-Returns darunter — ein Item-Modal oder eine
+     * sichtbare Wegwerf-Abfrage haette den Todes-Ablauf also eingesperrt. Jetzt oben. */
+    if (c->rdt_ok && re15_death_presentation_active())
+        re15_gameover_fsm_tick();                 /* @0x8001cdfc, vor @0x8001ce0c */
+
     if (re15_item_modal_active()) return;
+
+    /* "DISCARD IT?"-FREEZE — dieselbe Wirkung, derselbe Beleg: RE2 setzt waehrend der
+     * Abfrage `[0x800CFBDC] |= 0xFF000000` (@0x80051838 `lui a3,0xff00` / @0x80051850
+     * `sw v0,...`), also genau die Pausen-Maske, die auch das Item-Modal setzt. Ohne
+     * diese Zeile liefe der Spieler unter der stehenden Abfrage weiter und koennte sie
+     * z.B. im naechsten Raum beantworten. Die WARTE-Spanne friert hier nicht extra ein —
+     * sie liegt vollstaendig im Freeze der ausloesenden Nachricht (RE2 wartet dort
+     * ebenfalls nur, @0x800517F4); re15_discard_frozen() nimmt allein noch das eine
+     * SCHLIESS-Bild mit, in dem der Port den Nachrichten-Freeze schon geloest und die
+     * Abfrage noch nicht aufgemacht hat. Siehe include/re15_item_discard.h. */
+    { extern int re15_discard_frozen(void); if (re15_discard_frozen()) return; }
 
     /* Spawn-Zeit-Neck-INIT der NPCs (Sce_em_set `jalr` @0x8004259c) — siehe den Block ueber
      * re15_npc_neck_spawn_init(). Steht hier, weil main.c den SCD-VM-Tick unmittelbar vor
@@ -1023,6 +1048,16 @@ void re15_game_step(const re15_game_ctx_t *c)
      * genau die 4 Menue-Bits: virt. 0x1000/0x2000 (Yes/No-Toggle), 0x4000 (Confirm +
      * Typewriter-Fast-Forward, phys. SQUARE) und 0x8000 (Cancel). Deshalb laesst sich
      * ein Text im eingefrorenen Zustand weiterhin beschleunigen und wegdruecken. */
+    /* ⛔ EINE QUELLE, NAEMLICH DAS PAUSE-WORT SELBST. Hier stand in Runde 22 ein
+     * zweiter Term `re15_discard_pad_locked()` fuer die vorgemerkte Wegwerf-Abfrage. Er
+     * ist WEG, und das aus zwei gemessenen Gruenden:
+     *   (a) er ist unnoetig geworden — die Spanne "vorgemerkt" liegt jetzt vollstaendig
+     *       im Freeze der ausloesenden Nachricht, und alle 16 Benutzungsstellen oeffnen
+     *       mit Maske 0xFFFF0000, die Bit 0x01000000 enthaelt (item_discard_common.c);
+     *   (b) er war FALSCH an dieser Stelle — er maskierte die SCD-Pad-Woerter, aus denen
+     *       `Sce_key_ck` (0x51/0x52) seine Tasten liest (op_sce_key_ck), und faelschte
+     *       damit die ausgelieferten Raetsel-Eingaben. Den SPIELER-Pad hat er ohnehin
+     *       nicht angefasst (der rohe c->pad_current geht direkt an re15_player_tick). */
     if (g_re15_pauseflags & RE15_PAUSE_PAD) {
         g_scd_pad_held = (uint16_t)(g_scd_pad_held & 0xf000u);
         g_scd_pad_edge = (uint16_t)(g_scd_pad_edge & 0xf000u);
@@ -1190,9 +1225,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * `re15_player_is_dead()` (hp<0). Der bltz @0x80031c78 deckt diese Funktion NICHT ab, sie
      * laeuft also auch im eingefrorenen Text weiter: die Game-Over-Kette kommt aus jedem
      * Freeze heraus. (`c->rdt_ok` bleibt als Port-Vorbedingung stehen — im Original ist immer
-     * ein Raum geladen; die Bedingungsmenge des alten Zweigs bleibt damit unveraendert.) */
-    if (c->rdt_ok && re15_death_presentation_active())
-        re15_gameover_fsm_tick();                 /* @0x8001cdfc, vor @0x8001ce0c */
+     * ein Raum geladen; die Bedingungsmenge des alten Zweigs bleibt damit unveraendert.)
+     *
+     * ⛔ NACHTRAG RUNDE 23: derselbe Beleg (`FUN_8001500c` hat KEIN Pause-Gate) gilt auch
+     * gegen die beiden FREEZE-RETURNS am Kopf dieser Funktion — Item-Modal und sichtbare
+     * Wegwerf-Abfrage. Der Aufruf steht deshalb jetzt DORT, oberhalb von beiden; hier
+     * steht nur noch die Herleitung. */
 
     /* ===== ACTION-ZUSTANDS-GATE (Nutzer-Report 2026-08-08: "waehrend einer Aktion kann man
      * weiter untersuchen") — byte-true: der ACTION-Scan FUN_80042bac(player,1,0x10) hat im

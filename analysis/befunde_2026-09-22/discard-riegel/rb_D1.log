@@ -1,0 +1,138 @@
+=== r21_discard_wegwerfen — "You don't need this key any more. Discard it?"
+    Wortlaut: DEBUG.BIN @0x800C508B, Prompt-Skript [6] der Tabelle @0x800C4FC6
+    Regel:    RE2 LAB_80051718 (Zaehler @0x80051810, Frage @0x80051834)
+    Prompt-Skript [6] + Name "Blue Keycard" = 44 Glyphen
+
+=== TEIL A+B: je Gegenstand — Abfrage nach dem Gebrauch, vorher nicht ===
+  ABDECKUNG: 16 von 16 Benutzungsstellen gefahren, 9 verschiedene Gegenstaende,
+             je 3 Faelle (Ja / Nein / nicht getragen) + 16 Gegenproben
+
+=== TEIL C: Sackgassen-Riegel (Vollzensus ueber alle RDTs) ===
+  ABDECKUNG: 206 RDTs mit Header (+34 Stummel), 40674 Opcodes, 0 Desync-Stopps
+  C1 Keep_Item_ck (0x5E, einziger Inventar-Leser): 0
+  C2 Set auf Zone 9 mit loeschen/umschalten:       0
+  C4 Item_aot_set-Records: 164 | Kartenleser-Tore 10D0/1230/11E0: 1/1/1
+  C5: 3 von 3 Kartenleser-Toren bleiben nach dem Wegwerfen offen
+  C6 Schreiber von flag(3,32) per Set (0x22): 1 x setzen, 0 x loeschen/umschalten
+  C7 Flag-Set2 (0x59): 2 Vorkommen, davon Bank 3: 0, Bank 9: 0 | Flag-Ck2 (0x58, nur LESER): 0
+
+=== TEIL D: Ja/Nein-Auswahl auf den Original-Zahlen (LAB_80028564) ===
+  Blink-Gatter ueber alle 256 Zaehlerstaende: 192 sichtbar / 64 aus
+  Zahlen und Gatter stimmen mit LAB_80028564 ueberein.
+
+=== TEIL E: die NACHRICHT haelt zurueck, nicht die Szene ===
+  Fire Extinguisher        ROOM1090 msg  9: waehrend der Nachricht zu, 0 Bild(er) nach dem Belegt-Bit offen — MIT laufender Szene
+  Pliers                   ROOM11E0 msg 12: waehrend der Nachricht zu, 0 Bild(er) nach dem Belegt-Bit offen — MIT laufender Szene
+  Minidisc Player w/ Disc  ROOM1100 msg  4: waehrend der Nachricht zu, 0 Bild(er) nach dem Belegt-Bit offen — MIT laufender Szene
+  ABDECKUNG: 3 von 3 Faellen gefahren, je 3 Pruefungen (Nachricht haelt / danach offen TROTZ Szene / Gegenprobe ohne Szene)
+
+=== TEIL O: fail-closed — ohne Vorentscheid wird NICHTS vorgemerkt ===
+  ABDECKUNG: 16 von 16 Benutzungsstellen, je 6 Faelle
+  O1 Direktaufruf 16 | O2 fremde Stelle 16 | O3 fremde Nachricht 16 | O4 ohne Besitz 16
+  O5 POSITIV (vorgemerkt) 16 | O6 verbrauchter Vorentscheid 16
+
+=== TEIL P: ein Laden belebt NIE eine Abfrage (re15_discard_restore) ===
+  ABDECKUNG: 16 von 16 Stellen | P1 aus D_WARTET 16 | P2 aus D_FRAGT 16 | P3 aus D_AUS 16
+  P4 GEGENPROBE (ohne restore steht die Abfrage): 16 von 16
+
+=== TEIL Q: JA-Zweig nach Inventar-Verschiebung (@0x800517C4) ===
+  ABDECKUNG: 16 Stellen gefahren | Q1 ohne Platz mit Anzahl 0: 16 | Q2 GEGENPROBE weggeworfen: 16
+
+=== TEIL L: Besitz-Gate an den ausgelieferten Unterprogrammen ===
+  Stelle                   item | OHNE Besitz            | MIT Besitz    
+  ROOM1090 sub03 m9        0x31 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM10D0 sub20 m9        0x38 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM10D1 sub20 m9        0x38 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM1100 sub02 m4        0x44 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM1101 sub02 m4        0x44 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM11E0 sub20 m9        0x39 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM11E0 sub21 m12       0x30 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM11E1 sub20 m9        0x39 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM11E1 sub21 m12       0x30 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM1230 sub20 m9        0x37 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM1231 sub20 m9        0x37 | erreicht=0 abfrage=nein | abfrage=nein   (Stelle im Pruefstand nicht erreicht)
+  ROOM3010 sub02 m1        0x36 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM3011 sub02 m1        0x36 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM3050 sub15 m5        0x46 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM3051 sub15 m5        0x46 | erreicht=1 abfrage=nein | abfrage=JA  
+  ROOM4000 sub02 m2        0x47 | erreicht=1 abfrage=nein | abfrage=JA  
+  ABDECKUNG: 8 von 16 Benutzungsstellen im Pruefstand erreicht (8 nicht erreicht)
+  OHNE BESITZ eine Abfrage: 0 von 8 erreichten Stellen
+  MIT  BESITZ eine Abfrage: 8 von 16 Stellen (GEGENPROBE)
+  Das Gate selbst: 16 Vorentscheide, davon 8 mit Besitz (@0x80051628 gesucht, @0x80051634 verzweigt)
+  KETTENPOSITION: 0 von 16 Vorentscheiden fielen, waehrend das Nachrichtensystem
+  schon BELEGT war (verlangt 0 - RE2 entscheidet VOR @0x8005164C).
+  FEHLER: ABDECKUNG: nur 8 von 16 Stellen erreicht (erwartet >= 10) — dann messen die Nullen darunter nichts
+
+=== TEIL N: ROOM4000 und ROOM1090, beide Faelle im echten VM ===
+  (a) ROOM4000 sub02 m2  OHNE Besitz : Stelle erreicht=1, Abfrage=nein, flag(3,32) 0->1
+  (b) ROOM4000 sub02 m2  MIT  Besitz : Abfrage=JA auf 0x47 (Auswahl 0), flag(3,32) 0->0, Ja -> Gegenstand WEG
+  (a) ROOM1090 sub03 m9  OHNE Besitz : Stelle erreicht=1, Abfrage=nein, flag(3,132) 0->0
+  (b) ROOM1090 sub03 m9  MIT  Besitz : Abfrage=JA auf 0x31 (Auswahl 0), flag(3,132) 0->0, Ja -> Gegenstand WEG
+  Die Tuer-/Tor-Flags des SKRIPTS werden ausgewiesen, nicht verlangt: sub02 bzw.
+  sub03 haben keine Besitzpruefung, und die Karte 0x47 liegt HINTER ihrer Tuer
+  (ROOM4010). Verlangt wird nur, was der Port verantwortet: keine Abfrage ohne
+  Besitz, und mit Besitz die richtige.
+
+=== TEIL M: Nachhall-Ueberlapp mit der Abfrage ===
+  LAUF 1 MIT  Besitz: Prompt-Bilder 121, Nachhall-Bilder 0, UEBERLAPP 0
+  LAUF 2 OHNE Besitz: Prompt-Bilder 0, Nachhall-Bilder 4  (GEGENPROBE: hier MUSS Nachhall entstehen)
+
+=== TEIL I: die Spanne "vorgemerkt", Anteil fuer Anteil ===
+  Stelle                   Nachr. |   UEBERH.  Szene  Faden   Msg2 |   Loch   Frage
+  ROOM1090 sub03 m9            70 |       NIE  19727      1    200 |      1      70
+  AUSGELASSEN ROOM10D0 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  AUSGELASSEN ROOM10D1 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  ROOM1100 sub02 m4            84 |       161     32     80     49 |     80      84
+  ROOM1101 sub02 m4            84 |       161     32     80     49 |     80      84
+  AUSGELASSEN ROOM11E0 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  ROOM11E0 sub21 m12           50 |       182    182      0      0 |      0      50
+  AUSGELASSEN ROOM11E1 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  ROOM11E1 sub21 m12           50 |       182    182      0      0 |      0      50
+  AUSGELASSEN ROOM1230 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  AUSGELASSEN ROOM1231 sub20 msg  9: nicht erreicht (Verzweigung auf die Ja/Nein-Antwort)
+  ROOM3010 sub02 m1            64 |         1      0      1      0 |      1      64
+  ROOM3011 sub02 m1            64 |         1      0      1      0 |      1      64
+  ROOM3050 sub15 m5            72 |        85      2      0     83 |      0      72
+  ROOM3051 sub15 m5            72 |        85      2      0     83 |      0      72
+  ROOM4000 sub02 m2            74 |        29      0     29      0 |     29      74
+  ABDECKUNG: 10 von 16 Benutzungsstellen gefahren, 6 mit Grund ausgelassen
+  Die Spanne "vorgemerkt" endet JETZT an allen 10 gefahrenen Stellen im
+  Bild, in dem das Belegt-Bit frei wird (RE2 @0x800517f4).
+  Der UEBERHANG des Runde-22-Modells betrug zusammen 887 Bilder, davon
+  191 mit FREIEM Pad; groesstes Loch ROOM1100 msg 4 mit 80 Bildern.
+  Das SCHLIESS-Bild: ohne den frozen()-Ausweg waeren 10 Spannen-Bilder ohne
+  das Spieler-Bit 0x80000000 (@0x80031c78) — 1 Bild an 10 von 10 Stellen.
+  RE2 hat 0 solche Bilder (@0x80051810 dekrementiert, @0x80051844 friert im
+  SELBEN Aufruf wieder ein). Das Fenster ist damit ABGESICHERT, nicht weg:
+  aus 161 Bildern Ueberhang (ROOM1100/1101, Runde-22-Modell) ist 1 Bild je
+  Stelle geworden, und das haelt die Port-Zeile re15_discard_frozen().
+
+=== TEIL J: das px/pz-Delta hinter dem ECHTEN re15_game_step ===
+  Stelle                    JETZT   RUECKBAU   GEGENPROBE     STUB   wieder
+  ROOM1090 sub03 m9             0         75            -        -     2250   (UEBERHANG AUSGELASSEN: Faden endet nicht, Warteschleife Ck(5,33,0) @0x26FC)
+  ROOM1100 sub02 m4             0         92         1479        0     1479
+  ROOM1101 sub02 m4             0         92         1479        0     1479
+  ROOM11E0 sub21 m12            0          0            0        0        0
+  ROOM11E1 sub21 m12            0          0            0        0        0
+  ROOM3010 sub02 m1             0         85           85        0     2550
+  ROOM3011 sub02 m1             0         85           85        0     2550
+  ROOM3050 sub15 m5             0         75          150        0        0
+  ROOM3051 sub15 m5             0         75          150        0        0
+  ROOM4000 sub02 m2             0        101         2929        0     3030
+  ABDECKUNG: 10 Stellen mit echtem Tuer-Spawn und echtem re15_game_step,
+             davon 1 ohne UEBERHANG-Spanne (mit Grund ausgelassen)
+  RUECKBAU des SCHLIESS-Bildes: 680 Einheiten an 8 von 10 Stellen — so viel
+  Weg traegt die eine Zeile re15_discard_frozen() je Stelle in EINEM Bild.
+  Davon 605 Einheiten an den 9 Stellen MIT Ueberhang-Spanne (die Zahl, die ohne
+  das jetzt ausgewiesene ROOM1090 herauskommt) und 75 allein in ROOM1090.
+  Summe JETZT 0 Einheiten / GEGENPROBE 6357 / STUB 0;
+  in 7 Stellen bewegte sich der Spieler im Ueberhang des Runde-22-Modells,
+  in 6 Stellen laeuft er nach der Antwort sofort wieder (sonst haelt ihn
+  Szene oder Folge-Nachricht, je Stelle geprueft).
+
+=== TEIL K: sichtbarer Prompt friert das Skript ein — und es laeuft weiter ===
+  ROOM1090 sub03 msg 9: Abfrage in Bild 72, Faden parkt 200 Bilder auf 0x2507,
+           nach der Antwort laeuft er bis 0x259F und das Szenen-Fenster @0x2508 geht auf.
+
+FEHLGESCHLAGEN: 1 Pruefungen

@@ -4,7 +4,7 @@
  * The hardcoded RE1.5 item-pickup presentation (state byte DAT_80072d3b, 9-case jump table
  * @0x800106b4). Ported from the raw disasm (workflow wq41xdnn2, 3 finders + self-verified). Every
  * behavioural constant cites its address. Shared PC+PSX (engine tier). See re15_item_modal.h for the
- * flow. The modal is byte-true END-TO-END: the Yes/No prompt renders in the real TEX.TIM game font (re15_render_pc_item_prompt, render_pc.c L1681); the only residual is that the prompt strings are savestate-derived from BSS @0x800c4fc6.
+ * flow. The modal is byte-true END-TO-END: the Yes/No prompt renders in the real TEX.TIM game font (re15_render_item_prompt, render_pc.c); the only residual is that the prompt strings are savestate-derived from BSS @0x800c4fc6.
  *
  * FLOW (normal): 1 INIT -> 2 ZOOM-IN (17f) -> 3 gate -> 4 FLIP (9f) -> 5 grant-check+SE -> 6 fade gate
  *   -> 7 INSERT (state=0 DONE).   FULL-inventory: state 7 branches -> 8 SHRINK-away (17f, no grant).
@@ -20,6 +20,7 @@
 #include "re15_aot.h"        /* g_aot — deactivate the item AOT on confirm                          */
 #include "re15_scd.h"        /* re15_game_flag_set — the taken-bit (zone 9)                         */
 #include "re15_item_prompt.h"/* re15_item_prompt_walk — byte-true prompt glyph count (typewriter total) */
+#include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter der Ja/Nein-Auswahl @0x80028600 */
 
 /* ---- byte-true corner tables (FUN_8001e1c8 @0x80072d3c / @0x80072d44) ---- */
 static const int16_t s_corner_x[4] = { -56, +56, -56, +56 };
@@ -63,6 +64,11 @@ static int     s_msg_no   = 0;
 static int     s_reveal       = 0;
 static int     s_reveal_total = 0;
 static int     s_reveal_timer = 0;
+/* Blink-Zaehler DAT_800b8525 der Ja/Nein-Auswahl (@0x800285e8). Der Aufnahme-Prompt oeffnet
+ * mit a1 = 0x100 (@0x8001df6c-94) und wird damit vom SELBEN Zustand 4 LAB_80028564 gezeichnet
+ * wie jede andere Abfrage — er blinkt also genauso. Ohne diesen Zaehler stand der Cursor
+ * dauerhaft. Herleitung: include/re15_msg_select.h. */
+static uint8_t s_blink        = 0;
 
 /* current-frame quad (screen space), recomputed each tick */
 static int  s_qx[4], s_qy[4];
@@ -227,6 +233,7 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
                 s_grant = -1;
             s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
+            s_blink   = 0;                        /* Blink-Zaehler beim Oeffnen (@0x80027eb0) */
             s_msg_no  = 0;
             s_reveal       = 0;                   /* start the typewriter */
             s_reveal_timer = 1;                   /* SEED = 1<<s1 @0x800281a0-ac (NOT the reload: the
@@ -271,6 +278,9 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
                 if (!(pad_edge & 0xc000)) return;                 /* virtual 0xc000 (raw SQUARE/CROSS) */
                 s_prompt = 0; s_state = 7; again = 1; break;
             }
+            /* Blink-Zaehler des Cursors (@0x800285d4 VOR @0x800285f0) — erst nullen, dann
+             * dekrementieren, damit der Cursor nach einem Tastendruck im SELBEN Bild steht. */
+            s_blink = re15_msg_select_blink_tick(s_blink, (pad_edge & 0x3000) != 0);
             if (pad_edge & 0x3000) s_choice ^= 1;                 /* virt menu-L/R (raw d-pad) toggle -> No-flag ^=1 */
             if (!(pad_edge & 0x4000)) return;                     /* wait for virtual confirm (raw SQUARE) */
             s_msg_no = s_choice;                                  /* No selected -> case7 leaves the item */
@@ -351,3 +361,4 @@ int re15_item_modal_prompt(uint8_t *out_type, int *out_choice)
 int re15_item_modal_reveal(void)       { return s_reveal; }
 int re15_item_modal_reveal_total(void) { return s_reveal_total; }
 int re15_item_modal_prompt_ready(void) { return s_prompt != 0 && s_reveal >= s_reveal_total; }
+uint8_t re15_item_modal_blink(void)    { return s_blink; }

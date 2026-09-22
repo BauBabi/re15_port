@@ -10,6 +10,7 @@
  */
 #include "re15_msg.h"
 #include "re15_scd.h"   /* g_scd — shared subtitle-tick state */
+#include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter @0x800285d4/f0 */
 #include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
 
 #define DIALOG_BASE_SCROLL_SPEED  2  /* "g_dialogBasisGeschwindigkeit = 2 << istZweiterPuffer" */
@@ -544,8 +545,13 @@ static void re15_dialog_step(void)
                g_scd.message_fsm = 0; g_scd.message_timer = g_scd.message_scroll; }  /* [#36e] DAT_800b8525=DAT_800b8524 @0x80028538 */
         break;
     case 3:  /* SELECT — YES/NO (left/right toggles, action confirms) */
-        g_scd.message_blink--;
-        if (lr_edge) { g_scd.message_choice ^= 1; g_scd.message_blink = 0; }
+        /* Reihenfolge byte-true: ZUERST nullen (@0x800285d4, nur im Links/Rechts-Zweig),
+         * DANN dekrementieren (@0x800285f0, immer). Der alte Code machte es umgekehrt und
+         * liess den Cursor nach jedem Umschalten ein Bild lang verschwinden; das Original
+         * laesst den Zaehler auf 0xFF laufen, also sofort sichtbar. Gemeinsame Quelle:
+         * engine/src/msg_select_common.c. */
+        g_scd.message_blink = re15_msg_select_blink_tick(g_scd.message_blink, lr_edge);
+        if (lr_edge) g_scd.message_choice ^= 1;   /* @0x800285d8 xori v0,v0,0x1 */
         if (act_edge) {
             re15_game_flag_set(12, 31, g_scd.message_choice);  /* 0=YES → Ck(12,31,0) true */
             g_scd.message_fsm = 6;
@@ -599,6 +605,17 @@ static void re15_dialog_step(void)
             g_scd.message_nachhall   = 0;
         }
     }
+}
+
+/* Den NACHHALL sofort beenden — Herleitung an der Deklaration (re15_msg.h). Wirkt nur im
+ * Zustand 7; der Freeze ist dort schon geloest (re15_pauseflags_close lief bei fsm==6),
+ * es wird also KEIN Pause-Bit angefasst, nur der stehende Text weggenommen. */
+void re15_msg_nachhall_beenden(void)
+{
+    if (g_scd.message_fsm != 7) return;
+    g_scd.message_active     = 0;
+    g_scd.message_fsm_active = 0;
+    g_scd.message_nachhall   = 0;
 }
 
 /* Shared cross-port subtitle tick / dismiss FSM. Mirrors FUN_80028134's end-wait:

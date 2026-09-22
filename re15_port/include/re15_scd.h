@@ -464,6 +464,11 @@ void re15_game_state_init(void);
 int  re15_game_flag_get(uint8_t zone, uint8_t idx);     /* 0 or 1 */
 void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
 
+/* "Es laeuft eine Szene" = flag(1,27) || flag(2,7) — das Fenster, in das sich ein
+ * skript-gefuehrtes Unterprogramm klammert. Herleitung + Zensus ueber alle 206 RDTs im
+ * Block bei re15_cine_active (engine/src/game_state.c). */
+int  re15_cine_active(void);
+
 /*=========================================================================
  * GLOBALE PAUSE-FLAGS = DAT_800aca40 (byte-true, RE 2026-08-17).
  *
@@ -515,6 +520,10 @@ extern uint32_t g_re15_pauseflags_saved;  /* DAT_800b853c — Snapshot fuer den 
 void re15_pauseflags_open(uint32_t mask);  /* @0x80027eb4-ed0 (mit Open-Guard @0x80027e74) */
 void re15_pauseflags_close(void);          /* @0x800285a4 / @0x800286cc / @0x8002871c */
 void re15_pauseflags_clear(void);          /* @0x8001ca44 / @0x8001caec (Raumwechsel) */
+/* Das BELEGT-Bit des Nachrichtensystems (DAT_800b8520 & 0x80, Open-Guard @0x80027e7c,
+ * Loeschen @0x80028598/@0x800286c0/@0x8002870c). Es ist RE2s DAT_800e873c & 0x80 und damit
+ * die EINZIGE Schranke der Wegwerf-Fortsetzung (@0x800517f0 `andi 0x80` / @0x800517f4). */
+int  re15_pauseflags_belegt(void);
 
 /* Object (prop) work-entity member access — Work_set kind 3. member 15 = member_0b = the
  * combination-lock NOTCH (S1-4 PROG-3 keypad dial). */
@@ -526,6 +535,11 @@ extern scd_vm_t g_scd;
 /* VM control */
 void scd_vm_init(void);
 void scd_vm_tick(void);    /* call once per 30Hz tick (every 2nd vsync) */
+
+/* Opcode-Laenge an `pc`, aus DERSELBEN Tabelle, mit der der VM vorschiebt (s_opcode_sizes
+ * + die vier disasm-verifizierten variablen Laengen). -1 = Opcode existiert in RE1.5
+ * nicht -> Walk ABBRECHEN. Fuer Pruefstaende, die SCD-Daten selbst ablaufen. */
+int scd_opcode_size_at(const uint8_t *pc);
 /* "Item schon genommen"-Prop-Maske nullen = Objekt-Pool-Nullung des Raumladers FUN_8003ea7c
  * @0x8003eab0-cc (gerufen aus FUN_800396fc @0x800399a0 bei JEDEM Raumladen). Gerufen von
  * scd_vm_init und scd_room_reenter; die Maske gilt nur fuer den gerade geladenen Raum. */

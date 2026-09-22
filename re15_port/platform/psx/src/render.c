@@ -18,6 +18,7 @@
 #include "re15_bg.h"   /* Phase 4.5.6.3: BG blit before OT walk */
 #include "re15_pri.h"  /* sprite.pri foreground-occlusion masks (FUN_800392d4) */
 #include "re15_msg.h"  /* shared .msg text layout walk (re15_msg_layout) */
+#include "re15_item_prompt.h" /* geteilter Prompt-Skript-Lauf (@0x800C4FC6, FUN_80028134) */
 
 /* OT_LENGTH = 1024 matches RE2 retail (RE2_Quellcode/main.c:23
  * ClearOTagR(DAT_800ce22c, 0x400)). With ~8 OTZ units per bucket this
@@ -399,6 +400,27 @@ void re15_render_msg_cursor(int x, int y)
     s_ctx.next_packet += sizeof(DR_TPAGE);
     setDrawTPage(tp, 0, 1, re15_font_tpage);
     addPrim(&s_ctx.buffers[s_ctx.active_buffer].ot[0], tp);
+}
+
+/* Aufnahme-/Wegwerf-Prompt im Spiel-Font (Gegenstueck zur PC-Fassung von re15_render_item_prompt in
+ * platform/pc/src/render_pc.c). Der Skript-Lauf ist der GETEILTE re15_item_prompt_walk
+ * (Skripte @0x800C4FC6 + Namensblob @0x800C4A28); hier laeuft nur der Stift und gibt jede
+ * Glyphe an denselben SPRT-Zeichner wie der Untertitel-Text. Zeilenabstand 13 wie im
+ * PC-Zeichner (dieselbe 16x16-Font, dieselbe Box). */
+typedef struct { int x, penx, peny; } psx_prompt_pen_t;
+static void psx_prompt_glyph_cb(void *v, unsigned char code, int attr, int newline)
+{
+    psx_prompt_pen_t *p = (psx_prompt_pen_t *) v;
+    if (newline) { p->penx = p->x; p->peny += 13; return; }
+    if (code != 0x00) psx_msg_glyph_cb(p->penx, p->peny, code, attr, NULL);
+    int w = re15_font_width[code];
+    p->penx += (w > 0) ? w : 6;
+}
+void re15_render_item_prompt(int x, int y, int prompt_type, unsigned char item_id, int reveal)
+{
+    if (!re15_font_ok) return;
+    psx_prompt_pen_t p; p.x = x; p.penx = x; p.peny = y;
+    re15_item_prompt_walk(prompt_type, item_id, reveal, psx_prompt_glyph_cb, &p);
 }
 
 /* Dialog page-break indicator: a small DOWN-pointing triangle (byte-true FUN_80028134

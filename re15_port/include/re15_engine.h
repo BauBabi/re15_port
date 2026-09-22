@@ -230,6 +230,10 @@ void re15_render_msg_text(int x, int y, const unsigned char *raw, int len);
 void re15_render_msg_cursor(int x, int y);
 /* Dialog page-break down-arrow (FUN_80028134 state 2 "press for next page"). */
 void re15_render_msg_down_arrow(int x, int y);
+/* Aufnahme-/Wegwerf-Prompt im Spiel-Font: der Skript-Lauf ist geteilt
+ * (re15_item_prompt_walk, Tabelle @0x800C4FC6), nur die Glyphen-Ausgabe ist je Plattform.
+ * `reveal` = Schreibmaschinen-Budget (FUN_80028134 @0x800281d8). */
+void re15_render_item_prompt(int x, int y, int prompt_type, unsigned char item_id, int reveal);
 extern int re15_font_tpage;       /* 4bpp glyph-font tpage (getTPage(0,0,..)) */
 extern int re15_font_ok;
 extern int re15_font_clut_id[8];  /* clut id per 0x05 speaker attribute 0..7 */

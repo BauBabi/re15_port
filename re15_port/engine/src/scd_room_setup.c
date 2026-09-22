@@ -219,6 +219,15 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * Runde 16, analysis/befunde_2026-09-19/objekte-paket.md). Das Item_aot_set des Raums
      * setzt die Maske beim Laden neu, wenn SEIN Item genommen ist (@0x80040718). */
     scd_prop_taken_mask_reset();
+    /* RAUMWECHSEL: eine vorgemerkte Wegwerf-Abfrage faellt HART weg.
+     * ⛔ Und das ist seit Runde 23 nicht mehr die Frage, die es einmal war: die Spanne
+     * "vorgemerkt" liegt vollstaendig im Freeze der ausloesenden Nachricht (Maske
+     * 0xFFFF0000 an allen 16 Benutzungsstellen), und der haelt Pad (0x01000000,
+     * @0x800304f4) UND Skript-Runner (0x02000000, @0x8003f044). In dieser Spanne kann
+     * also niemand einen Raumwechsel ausloesen; dieser Aufruf ist der Aufraeumer fuer
+     * Debug-Spruenge und Lade-Pfade, nicht mehr eine Verhaltens-Entscheidung.
+     * Voller Beleg an der Definition von re15_discard_reset. */
+    { extern void re15_discard_reset(void); re15_discard_reset(); }
     g_scd.work_vars[0x10] = keep_player_model;   /* s.o. — 0x800b0ff0 wird nicht gewischt */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
     g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-
