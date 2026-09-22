@@ -1,0 +1,502 @@
+==== Abdeckung: 206 RDTs mit Header, 230 verschiedene (bank,bit) beschrieben, 260 geprueft ====
+
+### ROOM1090 msg  9  0x31 Fire Extinguisher         Raum: KEIN PANEL  (Sce_key_ck 0x)
+    Text: "You've used the Fire Extinguisher."
+    Stelle: sub03 @0x02502
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(3,187,1) @0x024D2, Set(3,110,1) @0x024D6
+    Umgebung:
+         0x024EB Nop            00
+         0x024EC Plc_dest       40 00 06 3f 00 00 00 00
+         0x024F4 Plc_neck       41 01 2a 0a 00 00 47 f7 64 00
+         0x024FE Sleep          09 0a 02 00
+      -> 0x02502 Message_on     2b 09 ff ff  msg=9
+         0x02506 Evt_next       02
+         0x02507 Nop            00
+         0x02508 Set            22 02 07 01  bank=2 bit=7 val=1
+         0x0250C Set            22 01 1b 01  bank=1 bit=27 val=1
+         0x02510 Cut_chg        29 06
+
+### ROOM10D0 msg  9  0x38 Blue Keycard              Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 15x)
+    Text: "You've used the Blue Keycard."
+    Stelle: sub20 @0x019C4
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x019CA Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x019B4 Ifel_ck        06 00 24 00
+         0x019B8 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x019BC Ifel_ck        06 00 12 00
+         0x019C0 Ck             21 09 34 01  bank=9 bit=52 val=1
+      -> 0x019C4 Message_on     2b 09 ff ff  msg=9
+         0x019C8 Evt_next       02
+         0x019C9 Nop            00
+         0x019CA Evt_exec       04 ff 18 11  sub=17
+         0x019CE Else_ck        07 00 0c 00
+         0x019D2 Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x01512 Ck             21 03 32 00  bank=3 bit=50 val=0
+        0x01516 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x0151A Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x0151E Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x01522 Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01526 Evt_exec       04 ff 18 13  sub=19
+        0x0152A Set            22 03 32 01  bank=3 bit=50 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,50,1) @0x0152A
+
+### ROOM10D1 msg  9  0x38 Blue Keycard              Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 15x)
+    Text: "You've used the Blue Keycard."
+    Stelle: sub20 @0x019AE
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x019B4 Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x0199E Ifel_ck        06 00 24 00
+         0x019A2 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x019A6 Ifel_ck        06 00 12 00
+         0x019AA Ck             21 09 34 01  bank=9 bit=52 val=1
+      -> 0x019AE Message_on     2b 09 ff ff  msg=9
+         0x019B2 Evt_next       02
+         0x019B3 Nop            00
+         0x019B4 Evt_exec       04 ff 18 11  sub=17
+         0x019B8 Else_ck        07 00 0c 00
+         0x019BC Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x014FC Ck             21 03 32 00  bank=3 bit=50 val=0
+        0x01500 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x01504 Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x01508 Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x0150C Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01510 Evt_exec       04 ff 18 13  sub=19
+        0x01514 Set            22 03 32 01  bank=3 bit=50 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,50,1) @0x01514
+
+### ROOM1100 msg  4  0x44 Minidisc Player w/ Disc   Raum: CURSOR-PANEL  (Sce_key_ck 6x)
+    Text: "You've used the Minidisc Player w/ Disc."
+    Stelle: sub02 @0x00C90
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(4,232,1) @0x00C68
+    Umgebung:
+         0x00C80 Set            22 05 06 00  bank=5 bit=6 val=0
+         0x00C84 Set            22 02 00 00  bank=2 bit=0 val=0
+         0x00C88 Set            22 02 02 00  bank=2 bit=2 val=0
+         0x00C8C Set            22 02 07 01  bank=2 bit=7 val=1
+      -> 0x00C90 Message_on     2b 04 ff ff  msg=4
+         0x00C94 Evt_next       02
+         0x00C95 Nop            00
+         0x00C96 Cut_chg        29 0c
+         0x00C98 Sleep          09 0a 05 00
+         0x00C9C Cut_chg        29 0b
+
+### ROOM1101 msg  4  0x44 Minidisc Player w/ Disc   Raum: CURSOR-PANEL  (Sce_key_ck 6x)
+    Text: "You've used the Minidisc Player w/ Disc."
+    Stelle: sub02 @0x00C90
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(4,232,1) @0x00C68
+    Umgebung:
+         0x00C80 Set            22 05 06 00  bank=5 bit=6 val=0
+         0x00C84 Set            22 02 00 00  bank=2 bit=0 val=0
+         0x00C88 Set            22 02 02 00  bank=2 bit=2 val=0
+         0x00C8C Set            22 02 07 01  bank=2 bit=7 val=1
+      -> 0x00C90 Message_on     2b 04 ff ff  msg=4
+         0x00C94 Evt_next       02
+         0x00C95 Nop            00
+         0x00C96 Cut_chg        29 0c
+         0x00C98 Sleep          09 0a 05 00
+         0x00C9C Cut_chg        29 0b
+
+### ROOM11E0 msg  9  0x39 Yellow Keycard            Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 20x)
+    Text: "You've used the Yellow Keycard."
+    Stelle: sub20 @0x01FAC
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x01FB2 Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x01F9C Ifel_ck        06 00 24 00
+         0x01FA0 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x01FA4 Ifel_ck        06 00 12 00
+         0x01FA8 Ck             21 09 8a 01  bank=9 bit=138 val=1
+      -> 0x01FAC Message_on     2b 09 ff ff  msg=9
+         0x01FB0 Evt_next       02
+         0x01FB1 Nop            00
+         0x01FB2 Evt_exec       04 ff 18 11  sub=17
+         0x01FB6 Else_ck        07 00 0c 00
+         0x01FBA Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x01A72 Ck             21 03 8b 00  bank=3 bit=139 val=0
+        0x01A76 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x01A7A Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x01A7E Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x01A82 Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01A86 Evt_exec       04 ff 18 13  sub=19
+        0x01A8A Set            22 03 8b 01  bank=3 bit=139 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,139,1) @0x01A8A
+
+### ROOM11E0 msg 12  0x30 Pliers                    Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 20x)
+    Text: "You've used the Pliers."
+    Stelle: sub21 @0x01FEE
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(4,36,1) @0x01FC6
+    Umgebung:
+         0x01FE4 For            0d 00 04 00 1e 00
+         0x01FEA Evt_next       02
+         0x01FEB Nop            00
+         0x01FEC Next           0e 00
+      -> 0x01FEE Message_on     2b 0c ff ff  msg=12
+         0x01FF2 Evt_next       02
+         0x01FF3 Nop            00
+         0x01FF4 Set            22 01 1b 01  bank=1 bit=27 val=1
+         0x01FF8 Cut_chg        29 07
+         0x01FFA Evt_next       02
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x01A72 Ck             21 03 8b 00  bank=3 bit=139 val=0
+        0x01A76 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x01A7A Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x01A7E Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x01A82 Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01A86 Evt_exec       04 ff 18 13  sub=19
+        0x01A8A Set            22 03 8b 01  bank=3 bit=139 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,139,1) @0x01A8A
+
+### ROOM11E1 msg  9  0x39 Yellow Keycard            Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 20x)
+    Text: "You've used the Yellow Keycard."
+    Stelle: sub20 @0x01FAC
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x01FB2 Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x01F9C Ifel_ck        06 00 24 00
+         0x01FA0 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x01FA4 Ifel_ck        06 00 12 00
+         0x01FA8 Ck             21 09 8a 01  bank=9 bit=138 val=1
+      -> 0x01FAC Message_on     2b 09 ff ff  msg=9
+         0x01FB0 Evt_next       02
+         0x01FB1 Nop            00
+         0x01FB2 Evt_exec       04 ff 18 11  sub=17
+         0x01FB6 Else_ck        07 00 0c 00
+         0x01FBA Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x01A72 Ck             21 03 8b 00  bank=3 bit=139 val=0
+        0x01A76 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x01A7A Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x01A7E Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x01A82 Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01A86 Evt_exec       04 ff 18 13  sub=19
+        0x01A8A Set            22 03 8b 01  bank=3 bit=139 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,139,1) @0x01A8A
+
+### ROOM11E1 msg 12  0x30 Pliers                    Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 20x)
+    Text: "You've used the Pliers."
+    Stelle: sub21 @0x01FEE
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(4,36,1) @0x01FC6
+    Umgebung:
+         0x01FE4 For            0d 00 04 00 1e 00
+         0x01FEA Evt_next       02
+         0x01FEB Nop            00
+         0x01FEC Next           0e 00
+      -> 0x01FEE Message_on     2b 0c ff ff  msg=12
+         0x01FF2 Evt_next       02
+         0x01FF3 Nop            00
+         0x01FF4 Set            22 01 1b 01  bank=1 bit=27 val=1
+         0x01FF8 Cut_chg        29 07
+         0x01FFA Evt_next       02
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x01A72 Ck             21 03 8b 00  bank=3 bit=139 val=0
+        0x01A76 Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x01A7A Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x01A7E Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x01A82 Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x01A86 Evt_exec       04 ff 18 13  sub=19
+        0x01A8A Set            22 03 8b 01  bank=3 bit=139 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,139,1) @0x01A8A
+
+### ROOM1230 msg  9  0x37 Red Keycard               Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 15x)
+    Text: "You've used the Red Keycard."
+    Stelle: sub20 @0x0148C
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x01492 Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x0147C Ifel_ck        06 00 24 00
+         0x01480 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x01484 Ifel_ck        06 00 12 00
+         0x01488 Ck             21 09 88 01  bank=9 bit=136 val=1
+      -> 0x0148C Message_on     2b 09 ff ff  msg=9
+         0x01490 Evt_next       02
+         0x01491 Nop            00
+         0x01492 Evt_exec       04 ff 18 11  sub=17
+         0x01496 Else_ck        07 00 0c 00
+         0x0149A Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x00FDA Ck             21 03 89 00  bank=3 bit=137 val=0
+        0x00FDE Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x00FE2 Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x00FE6 Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x00FEA Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x00FEE Evt_exec       04 ff 18 13  sub=19
+        0x00FF2 Set            22 03 89 01  bank=3 bit=137 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,137,1) @0x00FF2
+
+### ROOM1231 msg  9  0x37 Red Keycard               Raum: CODE-PANEL (4 Ziffern)  (Sce_key_ck 15x)
+    Text: "You've used the Red Keycard."
+    Stelle: sub20 @0x0148C
+    Ziffern-Nachrichten des Raums: [0, 1, 2, 3, 4]
+    !! REIHENFOLGE: Code-Eingabe wird ERST NACH der Meldung gestartet - @0x01492 Evt_exec sub17, von dort Ziffern-Nachrichten [0]
+    KEIN bestaendiges Set im Block dieser Stelle
+    Umgebung:
+         0x0147C Ifel_ck        06 00 24 00
+         0x01480 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+         0x01484 Ifel_ck        06 00 12 00
+         0x01488 Ck             21 09 88 01  bank=9 bit=136 val=1
+      -> 0x0148C Message_on     2b 09 ff ff  msg=9
+         0x01490 Evt_next       02
+         0x01491 Nop            00
+         0x01492 Evt_exec       04 ff 18 11  sub=17
+         0x01496 Else_ck        07 00 0c 00
+         0x0149A Message_on     2b 08 ff ff  msg=8
+    RIEGEL-KETTE sub01 (vier richtige Ziffern -> aufschliessen):
+        0x00FDA Ck             21 03 89 00  bank=3 bit=137 val=0
+        0x00FDE Ck             21 05 0d 01  bank=5 bit=13 val=1
+        0x00FE2 Ck             21 05 0e 01  bank=5 bit=14 val=1
+        0x00FE6 Ck             21 05 0f 01  bank=5 bit=15 val=1
+        0x00FEA Ck             21 05 10 01  bank=5 bit=16 val=1
+        0x00FEE Evt_exec       04 ff 18 13  sub=19
+        0x00FF2 Set            22 03 89 01  bank=3 bit=137 val=1
+    => BESTAENDIGER CODE-MARKER: Set(3,137,1) @0x00FF2
+
+### ROOM3010 msg  1  0x36 Green Keycard             Raum: KEIN PANEL  (Sce_key_ck 0x)
+    Text: "You've used the Green Keycard."
+    Stelle: sub02 @0x02306
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(3,60,1) @0x02302
+    Umgebung:
+         0x02302 Set            22 03 3c 01  bank=3 bit=60 val=1
+      -> 0x02306 Message_on     2b 01 ff ff  msg=1
+         0x0230A Evt_next       02
+         0x0230B Nop            00
+         0x0230C Aot_on         47 02
+         0x0230E Evt_end        01 00
+
+### ROOM3011 msg  1  0x36 Green Keycard             Raum: KEIN PANEL  (Sce_key_ck 0x)
+    Text: "You've used the Green Keycard."
+    Stelle: sub02 @0x0233A
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set VOR der Meldung:  Set(3,60,1) @0x02336
+    Umgebung:
+         0x02336 Set            22 03 3c 01  bank=3 bit=60 val=1
+      -> 0x0233A Message_on     2b 01 ff ff  msg=1
+         0x0233E Evt_next       02
+         0x0233F Nop            00
+         0x02340 Aot_on         47 02
+         0x02342 Evt_end        01 00
+
+### ROOM3050 msg  5  0x46 Red Master Keycard        Raum: CURSOR-PANEL  (Sce_key_ck 5x)
+    Text: "You've used the Red Master Keycard."
+    Stelle: sub15 @0x02608
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set NACH der Meldung: Set(3,179,1) @0x0260E, Set(3,176,1) @0x02612
+    Umgebung:
+         0x025F8 Set            22 05 05 00  bank=5 bit=5 val=0
+         0x025FC Set            22 02 00 00  bank=2 bit=0 val=0
+         0x02600 Set            22 02 02 00  bank=2 bit=2 val=0
+         0x02604 Set            22 02 07 01  bank=2 bit=7 val=1
+      -> 0x02608 Message_on     2b 05 ff ff  msg=5
+         0x0260C Evt_next       02
+         0x0260D Nop            00
+         0x0260E Set            22 03 b3 01  bank=3 bit=179 val=1
+         0x02612 Set            22 03 b0 01  bank=3 bit=176 val=1
+         0x02616 Message_on     2b 06 ff ff  msg=6
+
+### ROOM3051 msg  5  0x46 Red Master Keycard        Raum: CURSOR-PANEL  (Sce_key_ck 5x)
+    Text: "You've used the Red Master Keycard."
+    Stelle: sub15 @0x02608
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set NACH der Meldung: Set(3,179,1) @0x0260E, Set(3,176,1) @0x02612
+    Umgebung:
+         0x025F8 Set            22 05 05 00  bank=5 bit=5 val=0
+         0x025FC Set            22 02 00 00  bank=2 bit=0 val=0
+         0x02600 Set            22 02 02 00  bank=2 bit=2 val=0
+         0x02604 Set            22 02 07 01  bank=2 bit=7 val=1
+      -> 0x02608 Message_on     2b 05 ff ff  msg=5
+         0x0260C Evt_next       02
+         0x0260D Nop            00
+         0x0260E Set            22 03 b3 01  bank=3 bit=179 val=1
+         0x02612 Set            22 03 b0 01  bank=3 bit=176 val=1
+         0x02616 Message_on     2b 06 ff ff  msg=6
+
+### ROOM4000 msg  2  0x47 Blue Master Keycard       Raum: KEIN PANEL  (Sce_key_ck 0x)
+    Text: "You've used the Blue Master Keycard."
+    Stelle: sub02 @0x0144A
+    REIHENFOLGE: auf dem Weg dieser Stelle liegt KEINE Ziffern-Eingabe
+    Bestaendiges Set NACH der Meldung: Set(3,32,1) @0x01450
+    Umgebung:
+         0x01440 Message_on     2b 01 ff ff  msg=1
+         0x01444 Evt_next       02
+         0x01445 Nop            00
+         0x01446 Ck             21 0c 1f 00  bank=12 bit=31 val=0
+      -> 0x0144A Message_on     2b 02 ff ff  msg=2
+         0x0144E Evt_next       02
+         0x0144F Nop            00
+         0x01450 Set            22 03 20 01  bank=3 bit=32 val=1
+         0x01454 Endif          08 00
+         0x01456 Ifel_ck        06 00 10 00
+
+
+==== UMKEHRBARKEIT der gefundenen Marker (Vollzensus 206 RDTs) ====
+
+-- flag(3,32)   1 Set, davon 0 mit val=0   |   2 Ck
+     Set ROOM4000 @0x01450 val=1
+     Ck  ROOM4000 @0x0142A val=0
+     Ck  ROOM4000 @0x0145A val=1
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(3,50)   2 Set, davon 0 mit val=0   |   24 Ck
+     Set ROOM10D0 @0x0152A val=1
+     Set ROOM10D1 @0x01514 val=1
+     Ck  ROOM10D0 @0x01026 val=0
+     Ck  ROOM10D0 @0x01512 val=0
+     Ck  ROOM10D0 @0x0158E val=0
+     Ck  ROOM10D0 @0x015DA val=0
+     Ck  ROOM10D0 @0x01626 val=0
+     Ck  ROOM10D0 @0x01672 val=0
+     Ck  ROOM10D0 @0x016BE val=0
+     Ck  ROOM10D0 @0x0170A val=0
+     Ck  ROOM10D0 @0x01756 val=0
+     Ck  ROOM10D0 @0x017A2 val=0
+     Ck  ROOM10D0 @0x017EE val=0
+     Ck  ROOM10D0 @0x0183A val=0
+     Ck  ROOM10D1 @0x01026 val=0
+     Ck  ROOM10D1 @0x014FC val=0
+     Ck  ROOM10D1 @0x01578 val=0
+     Ck  ROOM10D1 @0x015C4 val=0
+     Ck  ROOM10D1 @0x01610 val=0
+     Ck  ROOM10D1 @0x0165C val=0
+     Ck  ROOM10D1 @0x016A8 val=0
+     Ck  ROOM10D1 @0x016F4 val=0
+     Ck  ROOM10D1 @0x01740 val=0
+     Ck  ROOM10D1 @0x0178C val=0
+     Ck  ROOM10D1 @0x017D8 val=0
+     Ck  ROOM10D1 @0x01824 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(3,60)   2 Set, davon 0 mit val=0   |   2 Ck
+     Set ROOM3010 @0x02302 val=1
+     Set ROOM3011 @0x02336 val=1
+     Ck  ROOM3010 @0x020CE val=0
+     Ck  ROOM3011 @0x020CE val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(3,110)   2 Set, davon 1 mit val=0   |   1 Ck
+     Set ROOM1050 @0x00D88 val=0
+     Set ROOM1090 @0x024D6 val=1
+     Ck  ROOM1050 @0x00C8A val=1
+     URTEIL: WIRD ZURUECKGESTELLT - taugt NICHT
+
+-- flag(3,137)   2 Set, davon 0 mit val=0   |   24 Ck
+     Set ROOM1230 @0x00FF2 val=1
+     Set ROOM1231 @0x00FF2 val=1
+     Ck  ROOM1230 @0x00B98 val=0
+     Ck  ROOM1230 @0x00FDA val=0
+     Ck  ROOM1230 @0x01056 val=0
+     Ck  ROOM1230 @0x010A2 val=0
+     Ck  ROOM1230 @0x010EE val=0
+     Ck  ROOM1230 @0x0113A val=0
+     Ck  ROOM1230 @0x01186 val=0
+     Ck  ROOM1230 @0x011D2 val=0
+     Ck  ROOM1230 @0x0121E val=0
+     Ck  ROOM1230 @0x0126A val=0
+     Ck  ROOM1230 @0x012B6 val=0
+     Ck  ROOM1230 @0x01302 val=0
+     Ck  ROOM1231 @0x00B98 val=0
+     Ck  ROOM1231 @0x00FDA val=0
+     Ck  ROOM1231 @0x01056 val=0
+     Ck  ROOM1231 @0x010A2 val=0
+     Ck  ROOM1231 @0x010EE val=0
+     Ck  ROOM1231 @0x0113A val=0
+     Ck  ROOM1231 @0x01186 val=0
+     Ck  ROOM1231 @0x011D2 val=0
+     Ck  ROOM1231 @0x0121E val=0
+     Ck  ROOM1231 @0x0126A val=0
+     Ck  ROOM1231 @0x012B6 val=0
+     Ck  ROOM1231 @0x01302 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(3,139)   3 Set, davon 0 mit val=0   |   24 Ck
+     Set ROOM11E0 @0x01A8A val=1
+     Set ROOM11E1 @0x01A8A val=1
+     Set ROOM1240 @0x0055A val=1
+     Ck  ROOM11E0 @0x01576 val=0
+     Ck  ROOM11E0 @0x01A72 val=0
+     Ck  ROOM11E0 @0x01B76 val=0
+     Ck  ROOM11E0 @0x01BC2 val=0
+     Ck  ROOM11E0 @0x01C0E val=0
+     Ck  ROOM11E0 @0x01C5A val=0
+     Ck  ROOM11E0 @0x01CA6 val=0
+     Ck  ROOM11E0 @0x01CF2 val=0
+     Ck  ROOM11E0 @0x01D3E val=0
+     Ck  ROOM11E0 @0x01D8A val=0
+     Ck  ROOM11E0 @0x01DD6 val=0
+     Ck  ROOM11E0 @0x01E22 val=0
+     Ck  ROOM11E1 @0x01576 val=0
+     Ck  ROOM11E1 @0x01A72 val=0
+     Ck  ROOM11E1 @0x01B76 val=0
+     Ck  ROOM11E1 @0x01BC2 val=0
+     Ck  ROOM11E1 @0x01C0E val=0
+     Ck  ROOM11E1 @0x01C5A val=0
+     Ck  ROOM11E1 @0x01CA6 val=0
+     Ck  ROOM11E1 @0x01CF2 val=0
+     Ck  ROOM11E1 @0x01D3E val=0
+     Ck  ROOM11E1 @0x01D8A val=0
+     Ck  ROOM11E1 @0x01DD6 val=0
+     Ck  ROOM11E1 @0x01E22 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(3,179)   2 Set, davon 0 mit val=0   |   2 Ck
+     Set ROOM3050 @0x0260E val=1
+     Set ROOM3051 @0x0260E val=1
+     Ck  ROOM3050 @0x01FB0 val=0
+     Ck  ROOM3051 @0x01FB0 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(4,36)   2 Set, davon 0 mit val=0   |   4 Ck
+     Set ROOM11E0 @0x01FC6 val=1
+     Set ROOM11E1 @0x01FC6 val=1
+     Ck  ROOM11E0 @0x017CC val=0
+     Ck  ROOM11E0 @0x020E0 val=0
+     Ck  ROOM11E1 @0x017CC val=0
+     Ck  ROOM11E1 @0x020E0 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- flag(4,232)   2 Set, davon 0 mit val=0   |   4 Ck
+     Set ROOM1100 @0x00C68 val=1
+     Set ROOM1101 @0x00C68 val=1
+     Ck  ROOM1100 @0x009F2 val=0
+     Ck  ROOM1100 @0x00B06 val=0
+     Ck  ROOM1101 @0x009F2 val=0
+     Ck  ROOM1101 @0x00B06 val=0
+     URTEIL: EINMALIG (kein Set mit val=0 im Bestand)
+
+-- Gegenprobe Bank 5 (Panel-Arbeitsspeicher DAT_800b1028): 1647 Set, davon 960 mit val=0  => nicht bestaendig, taugt NICHT als "einmalig eingegeben"
+
+
+==== ERGEBNISTABELLE (16 Stellen) ====
+Raum       msg Gegenstand               Raum-Panel             Reihenfolge              Code-Marker   Bedingung
+ROOM1090     9 Fire Extinguisher        KEIN PANEL             kein Code auf diesem Weg -             unveraendert (Marker flag(3,110) steht schon)
+ROOM10D0     9 Blue Keycard             CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,50)    flag(3,50)==1
+ROOM10D1     9 Blue Keycard             CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,50)    flag(3,50)==1
+ROOM1100     4 Minidisc Player w/ Disc  CURSOR-PANEL           kein Code auf diesem Weg -             unveraendert (Marker flag(4,232) steht schon)
+ROOM1101     4 Minidisc Player w/ Disc  CURSOR-PANEL           kein Code auf diesem Weg -             unveraendert (Marker flag(4,232) steht schon)
+ROOM11E0     9 Yellow Keycard           CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,139)   flag(3,139)==1
+ROOM11E0    12 Pliers                   CODE-PANEL (4 Ziffern) kein Code auf diesem Weg flag(3,139)   unveraendert (Marker flag(4,36) steht schon)
+ROOM11E1     9 Yellow Keycard           CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,139)   flag(3,139)==1
+ROOM11E1    12 Pliers                   CODE-PANEL (4 Ziffern) kein Code auf diesem Weg flag(3,139)   unveraendert (Marker flag(4,36) steht schon)
+ROOM1230     9 Red Keycard              CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,137)   flag(3,137)==1
+ROOM1231     9 Red Keycard              CODE-PANEL (4 Ziffern) Meldung VOR Code         flag(3,137)   flag(3,137)==1
+ROOM3010     1 Green Keycard            KEIN PANEL             kein Code auf diesem Weg -             unveraendert (Marker flag(3,60) steht schon)
+ROOM3011     1 Green Keycard            KEIN PANEL             kein Code auf diesem Weg -             unveraendert (Marker flag(3,60) steht schon)
+ROOM3050     5 Red Master Keycard       CURSOR-PANEL           kein Code auf diesem Weg -             unveraendert (Marker flag(3,179) folgt unmittelbar)
+ROOM3051     5 Red Master Keycard       CURSOR-PANEL           kein Code auf diesem Weg -             unveraendert (Marker flag(3,179) folgt unmittelbar)
+ROOM4000     2 Blue Master Keycard      KEIN PANEL             kein Code auf diesem Weg -             unveraendert (Marker flag(3,32) folgt unmittelbar)
