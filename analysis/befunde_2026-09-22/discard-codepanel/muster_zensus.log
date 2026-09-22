@@ -1,0 +1,48 @@
+=== ABDECKUNG === 206 RDTs mit Header gelesen, 34 Stummel (<0x48 B), 240 Dateien insgesamt
+
+=== (1) TEXT-ZENSUS ===
+  'Enter the first number.'          6 Nachrichten in 6 Raeumen: ROOM10D0, ROOM10D1, ROOM11E0, ROOM11E1, ROOM1230, ROOM1231
+  'Wrong code, try again.'           6 Nachrichten in 6 Raeumen: ROOM10D0, ROOM10D1, ROOM11E0, ROOM11E1, ROOM1230, ROOM1231
+  "You've opened the lock."         22 Nachrichten in 22 Raeumen: ROOM10D0, ROOM10D1, ROOM1100, ROOM1101, ROOM1140, ROOM1141, ROOM11E0, ROOM11E1, ROOM1230, ROOM1231, ROOM2020, ROOM2021, ROOM2070, ROOM2071, ROOM20A0, ROOM20A1, ROOM3040, ROOM3041, ROOM30C0, ROOM30C1, ROOM6010, ROOM6011
+  'insert four digits'               6 Nachrichten in 6 Raeumen: ROOM10D0, ROOM10D1, ROOM11E0, ROOM11E1, ROOM1230, ROOM1231
+
+=== (2) MUSTER-ZENSUS  Ck(5,13..16,1) = alle vier Ziffern richtig ===
+  rohe Byte-Treffer: 6
+    ROOM10D0  Datei-Offset 0x01516   im Opcode-Walk BESTAETIGT
+    ROOM10D1  Datei-Offset 0x01500   im Opcode-Walk BESTAETIGT
+    ROOM11E0  Datei-Offset 0x01A76   im Opcode-Walk BESTAETIGT
+    ROOM11E1  Datei-Offset 0x01A76   im Opcode-Walk BESTAETIGT
+    ROOM1230  Datei-Offset 0x00FDE   im Opcode-Walk BESTAETIGT
+    ROOM1231  Datei-Offset 0x00FDE   im Opcode-Walk BESTAETIGT
+
+=== (3) EINGABE-ZENSUS  Raeume mit Sce_key_ck(0x51)/Sce_espr_control(0x52) ===
+  29 Raeume
+    ROOM1080  0x51 x8   0x52 x0
+    ROOM1081  0x51 x8   0x52 x0
+    ROOM10D0  0x51 x15  0x52 x0
+    ROOM10D1  0x51 x15  0x52 x0
+    ROOM1100  0x51 x6   0x52 x0
+    ROOM1101  0x51 x6   0x52 x0
+    ROOM11B0  0x51 x2   0x52 x0
+    ROOM11B1  0x51 x1   0x52 x0
+    ROOM11E0  0x51 x20  0x52 x0
+    ROOM11E1  0x51 x20  0x52 x0
+    ROOM11F0  0x51 x15  0x52 x0
+    ROOM11F1  0x51 x15  0x52 x0
+    ROOM1230  0x51 x15  0x52 x0
+    ROOM1231  0x51 x15  0x52 x0
+    ROOM1240  0x51 x1   0x52 x0
+    ROOM1241  0x51 x1   0x52 x0
+    ROOM2040  0x51 x5   0x52 x0
+    ROOM2041  0x51 x5   0x52 x0
+    ROOM2050  0x51 x5   0x52 x0
+    ROOM2051  0x51 x5   0x52 x0
+    ROOM2060  0x51 x14  0x52 x0
+    ROOM2061  0x51 x14  0x52 x0
+    ROOM3050  0x51 x5   0x52 x0
+    ROOM3051  0x51 x5   0x52 x0
+    ROOM30E0  0x51 x6   0x52 x0
+    ROOM4020  0x51 x9   0x52 x0
+    ROOM4021  0x51 x9   0x52 x0
+    ROOM5050  0x51 x5   0x52 x0
+    ROOM5051  0x51 x5   0x52 x0

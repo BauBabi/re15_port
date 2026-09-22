@@ -1,0 +1,703 @@
+====================================================================================================
+ROOM4000  msg 2  Gegenstand 0x47 Blue Master Keycard
+  Datei: STAGE4\ROOM4000.RDT   288632 B
+  msgScd@0x1B8C  mainScd@0x1058  subScd@0x127C
+  Text[2] = "You've used the Blue Master Keycard."   Steuerbytes=['04:02', '05:01', '05:00', '01']
+  Raum-Zensus: Cmp(0x23)x6
+     0x23 Cmp             : sub01@0x137C, sub01@0x1396, sub01@0x13C6, sub01@0x13E0, sub01@0x13FA, sub01@0x1414
+
+  --- sub02  Subroutine 0x01426..0x0146C   Message_on 2 @0x0144A ---
+  Bedingungskette (Praedikate, die diesen Message_on gaten):
+     0x0142A Ck               bank=3 bit=32 val=0                      (Ifel_ck@0x1426, Block bis 0x1456)
+     0x01446 Ck               bank=12 bit=31 val=0                     (Ifel_ck@0x1426, Block bis 0x1456)
+    0x01426  Ifel_ck          06 00 2c 00                                      ueberspringe 44 B -> 0x1456
+    0x0142A  Ck               21 03 20 00                                      bank=3 bit=32 val=0
+    0x0142E  Se_on            36 02 0f 00 03 00 00 00 00 00 00 00              
+    0x0143A  Message_on       2b 00 ff ff                                      msg=0 typ=0xFF ?=255
+    0x0143E  Evt_next         02                                               
+    0x0143F  Nop              00                                               
+    0x01440  Message_on       2b 01 ff ff                                      msg=1 typ=0xFF ?=255
+    0x01444  Evt_next         02                                               
+    0x01445  Nop              00                                               
+    0x01446  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+  * 0x0144A  Message_on       2b 02 ff ff                                      msg=2 typ=0xFF ?=255
+    0x0144E  Evt_next         02                                               
+    0x0144F  Nop              00                                               
+    0x01450  Set              22 03 20 01                                      bank=3 bit=32 val=1
+    0x01454  Endif            08 00                                            
+    0x01456  Ifel_ck          06 00 10 00                                      ueberspringe 16 B -> 0x146A
+    0x0145A  Ck               21 03 20 01                                      bank=3 bit=32 val=1
+    0x0145E  Set              22 05 00 01                                      bank=5 bit=0 val=1
+    0x01462  Set              22 05 01 01                                      bank=5 bit=1 val=1
+    0x01466  Gosub            18 03                                            sub=3
+    0x01468  Endif            08 00                                            
+    0x0146A  Evt_end          01 00                                            
+
+  === GANZER RAUM ===
+
+  -- main00 0x0105A..0x0127C
+    0x0105A  Ifel_ck          06 00 1c 00                                      ueberspringe 28 B -> 0x107A
+    0x0105E  Ck               21 03 4e 00                                      bank=3 bit=78 val=0
+    0x01062  Aot_set          2c 00 01 31 00 00 30 94 08 d5 d0 07 04 10 09...  
+    0x01076  Else_ck          07 00 26 00                                      -> 0x109C
+    0x0107A  Door_aot_set     3b 00 02 31 00 00 30 94 08 d5 d0 07 04 10 68...  slot=0 -> stage=3
+    0x0109A  Nop              00                                               
+    0x0109B  Nop              00                                               
+    0x0109C  Door_aot_set     3b 01 02 31 00 00 34 bd 08 ee 40 06 98 08 cc...  slot=1 -> stage=3
+    0x010BC  Aot_set          2c 02 05 31 00 00 47 c6 fe ac 14 05 8c 0a 00...  
+    0x010D0  Aot_set          2c 03 05 41 00 00 e9 c4 b0 aa d0 07 a0 0f 00...  
+    0x010E4  Door_aot_set     3b 04 02 31 00 00 4a c5 c0 95 08 07 78 05 e6...  slot=4 -> stage=3
+    0x01104  Door_aot_set     3b 05 02 31 00 00 9e e9 f4 e8 cc 10 d8 0e 53...  slot=5 -> stage=2
+    0x01124  Ifel_ck          06 00 24 00                                      ueberspringe 36 B -> 0x114C
+    0x01128  Ck               21 03 65 00                                      bank=3 bit=101 val=0
+    0x0112C  Aot_set          2c 06 01 31 00 00 47 c6 fe ac 14 05 8c 0a 00...  
+    0x01140  Aot_reset        46 02 00 00 00 00 00 00 00 00                    
+    0x0114A  Endif            08 00                                            
+    0x0114C  Door_aot_set     3b 07 02 31 00 00 00 00 00 00 00 00 00 00 01...  slot=7 -> stage=3
+    0x0116C  Obj_model_set    2d 00 00 00 01 00 0a 00 10 00 ac cc 00 00 10...  
+    0x0118E  Obj_model_set    2d 01 00 00 01 00 0a 00 10 00 a8 df 8a fd 12...  
+    0x011B0  Obj_model_set    2d 02 00 00 01 00 0a 00 10 00 40 b1 8a fd c2...  
+    0x011D2  Obj_model_set    2d 03 00 00 01 00 0a 00 00 00 44 f8 00 00 44...  
+    0x011F4  Obj_model_set    2d 04 00 00 01 00 0a 00 10 00 00 00 00 00 00...  
+    0x01216  Obj_model_set    2d 05 00 00 01 00 0a 00 10 00 00 00 00 00 00...  
+    0x01238  Obj_model_set    2d 06 00 00 01 00 0a 00 10 00 00 00 00 00 00...  
+    0x0125A  Ifel_ck          06 00 1a 00                                      ueberspringe 26 B -> 0x1278
+    0x0125E  Ck               21 04 14 01                                      bank=4 bit=20 val=1
+    0x01262  Sce_em_set       44 02 29 00 00 00 00 9a 14 d3 00 00 bc e9 00...  
+    0x01276  Endif            08 00                                            
+    0x01278  Evt_end          01 00                                            
+
+  -- sub00 0x0129A..0x01370
+    0x0129A  Ifel_ck          06 00 3a 00                                      ueberspringe 58 B -> 0x12D8
+    0x0129E  Ck               21 04 26 00                                      bank=4 bit=38 val=0
+    0x012A2  Sce_em_set       44 00 42 40 00 01 00 ff bd f9 00 00 d9 a8 00...  
+    0x012B6  Sce_em_set       44 01 40 40 00 01 00 ff bd f9 00 00 d9 a8 00...  
+    0x012CA  Evt_exec         04 0a 18 05                                      sub=5 (cond=0xa typ=0x18)
+    0x012CE  Sce_bgm_control  54 00 01 00 00 00                                
+    0x012D4  Else_ck          07 00 3c 00                                      -> 0x1310
+    0x012D8  Ifel_ck          06 00 32 00                                      ueberspringe 50 B -> 0x130E
+    0x012DC  Ck               21 03 3f 01                                      bank=3 bit=63 val=1
+    0x012E0  Sce_em_set       44 00 42 40 00 01 00 ff bd f9 00 00 d9 a8 00...  
+    0x012F4  Sce_em_set       44 01 40 40 00 01 00 ff bd f9 00 00 d9 a8 00...  
+    0x01308  Evt_exec         04 ff 18 09                                      sub=9 (cond=0xff typ=0x18)
+    0x0130C  Endif            08 00                                            
+    0x0130E  Nop              00                                               
+    0x0130F  Nop              00                                               
+    0x01310  Ifel_ck          06 00 1e 00                                      ueberspringe 30 B -> 0x1332
+    0x01314  Ck               21 03 e8 01                                      bank=3 bit=232 val=1
+    0x01318  Sce_em_set       44 03 29 61 00 00 00 c5 ec c8 00 00 30 ad 00...  
+    0x0132C  Evt_exec         04 ff 18 0d                                      sub=13 (cond=0xff typ=0x18)
+    0x01330  Endif            08 00                                            
+    0x01332  Ifel_ck          06 00 38 00                                      ueberspringe 56 B -> 0x136E
+    0x01336  Ck               21 03 e7 01                                      bank=3 bit=231 val=1
+    0x0133A  Sce_em_set       44 03 29 00 00 00 00 c5 00 ce 00 00 6c d5 00...  
+    0x0134E  Aot_reset        46 02 00 00 00 00 00 00 00 00                    
+    0x01358  Work_set         2e 03 00                                         kind=3 idx=0
+    0x0135B  Nop              00                                               
+    0x0135C  Member_set       34 00 00 00                                      member=0 wert=0
+    0x01360  Member_set       34 02 00 00                                      member=2 wert=0
+    0x01364  Sca_id_set       37 03 08 04                                      
+    0x01368  Sca_floor_set    39 03 08 02                                      
+    0x0136C  Endif            08 00                                            
+    0x0136E  Evt_end          01 00                                            
+
+  -- sub01 0x01370..0x01426
+    0x01370  Ifel_ck          06 00 1e 00                                      ueberspringe 30 B -> 0x1392
+    0x01374  Ck               21 03 65 01                                      bank=3 bit=101 val=1
+    0x01378  Ifel_ck          06 00 14 00                                      ueberspringe 20 B -> 0x1390
+    0x0137C  Cmp              23 00 00 00 02 00                                bank=0 var=0 op=0 wert=2
+    0x01382  Ck               21 05 00 00                                      bank=5 bit=0 val=0
+    0x01386  Ck               21 05 01 00                                      bank=5 bit=1 val=0
+    0x0138A  Evt_exec         04 0a 18 02                                      sub=2 (cond=0xa typ=0x18)
+    0x0138E  Endif            08 00                                            
+    0x01390  Endif            08 00                                            
+    0x01392  Ifel_ck          06 00 1c 00                                      ueberspringe 28 B -> 0x13B2
+    0x01396  Cmp              23 00 01 05 03 00                                bank=0 var=1 op=5 wert=3
+    0x0139C  Ck               21 05 00 01                                      bank=5 bit=0 val=1
+    0x013A0  Ck               21 05 01 00                                      bank=5 bit=1 val=0
+    0x013A4  Set              22 05 00 00                                      bank=5 bit=0 val=0
+    0x013A8  Set              22 05 01 01                                      bank=5 bit=1 val=1
+    0x013AC  Evt_exec         04 0a 18 04                                      sub=4 (cond=0xa typ=0x18)
+    0x013B0  Endif            08 00                                            
+    0x013B2  Ifel_ck          06 00 6e 00                                      ueberspringe 110 B -> 0x1424
+    0x013B6  Ck               21 03 4e 01                                      bank=3 bit=78 val=1
+    0x013BA  Ifel_ck          06 00 16 00                                      ueberspringe 22 B -> 0x13D4
+    0x013BE  Ck               21 03 93 00                                      bank=3 bit=147 val=0
+    0x013C2  Ifel_ck          06 00 0c 00                                      ueberspringe 12 B -> 0x13D2
+    0x013C6  Cmp              23 00 0a 00 02 00                                bank=0 var=10 op=0 wert=2
+    0x013CC  Set              22 03 93 01                                      bank=3 bit=147 val=1
+    0x013D0  Endif            08 00                                            
+    0x013D2  Endif            08 00                                            
+    0x013D4  Ifel_ck          06 00 16 00                                      ueberspringe 22 B -> 0x13EE
+    0x013D8  Ck               21 03 94 01                                      bank=3 bit=148 val=1
+    0x013DC  Ifel_ck          06 00 0c 00                                      ueberspringe 12 B -> 0x13EC
+    0x013E0  Cmp              23 00 0a 00 02 00                                bank=0 var=10 op=0 wert=2
+    0x013E6  Set              22 03 94 00                                      bank=3 bit=148 val=0
+    0x013EA  Endif            08 00                                            
+    0x013EC  Endif            08 00                                            
+    0x013EE  Ifel_ck          06 00 16 00                                      ueberspringe 22 B -> 0x1408
+    0x013F2  Ck               21 03 95 01                                      bank=3 bit=149 val=1
+    0x013F6  Ifel_ck          06 00 0c 00                                      ueberspringe 12 B -> 0x1406
+    0x013FA  Cmp              23 00 0a 00 02 00                                bank=0 var=10 op=0 wert=2
+    0x01400  Set              22 03 95 00                                      bank=3 bit=149 val=0
+    0x01404  Endif            08 00                                            
+    0x01406  Endif            08 00                                            
+    0x01408  Ifel_ck          06 00 16 00                                      ueberspringe 22 B -> 0x1422
+    0x0140C  Ck               21 03 96 01                                      bank=3 bit=150 val=1
+    0x01410  Ifel_ck          06 00 0c 00                                      ueberspringe 12 B -> 0x1420
+    0x01414  Cmp              23 00 0a 00 02 00                                bank=0 var=10 op=0 wert=2
+    0x0141A  Set              22 03 96 00                                      bank=3 bit=150 val=0
+    0x0141E  Endif            08 00                                            
+    0x01420  Endif            08 00                                            
+    0x01422  Endif            08 00                                            
+    0x01424  Evt_end          01 00                                            
+
+  -- sub02 0x01426..0x0146C
+    0x01426  Ifel_ck          06 00 2c 00                                      ueberspringe 44 B -> 0x1456
+    0x0142A  Ck               21 03 20 00                                      bank=3 bit=32 val=0
+    0x0142E  Se_on            36 02 0f 00 03 00 00 00 00 00 00 00              
+    0x0143A  Message_on       2b 00 ff ff                                      msg=0 typ=0xFF ?=255
+    0x0143E  Evt_next         02                                               
+    0x0143F  Nop              00                                               
+    0x01440  Message_on       2b 01 ff ff                                      msg=1 typ=0xFF ?=255
+    0x01444  Evt_next         02                                               
+    0x01445  Nop              00                                               
+    0x01446  Ck               21 0c 1f 00                                      bank=12 bit=31 val=0
+    0x0144A  Message_on       2b 02 ff ff                                      msg=2 typ=0xFF ?=255
+    0x0144E  Evt_next         02                                               
+    0x0144F  Nop              00                                               
+    0x01450  Set              22 03 20 01                                      bank=3 bit=32 val=1
+    0x01454  Endif            08 00                                            
+    0x01456  Ifel_ck          06 00 10 00                                      ueberspringe 16 B -> 0x146A
+    0x0145A  Ck               21 03 20 01                                      bank=3 bit=32 val=1
+    0x0145E  Set              22 05 00 01                                      bank=5 bit=0 val=1
+    0x01462  Set              22 05 01 01                                      bank=5 bit=1 val=1
+    0x01466  Gosub            18 03                                            sub=3
+    0x01468  Endif            08 00                                            
+    0x0146A  Evt_end          01 00                                            
+
+  -- sub03 0x0146C..0x014DE
+    0x0146C  Work_set         2e 03 00                                         kind=3 idx=0
+    0x0146F  Nop              00                                               
+    0x01470  Se_on            36 02 10 00 03 00 00 00 00 00 00 00              
+    0x0147C  Speed_set        2f 01 ec ff                                      
+    0x01480  For              0d 00 04 00 01 00                                
+    0x01486  op30             30                                               
+    0x01487  Evt_next         02                                               
+    0x01488  Next             0e 00                                            
+    0x0148A  Speed_set        2f 01 d8 ff                                      
+    0x0148E  For              0d 00 04 00 02 00                                
+    0x01494  op30             30                                               
+    0x01495  Evt_next         02                                               
+    0x01496  Next             0e 00                                            
+    0x01498  Speed_set        2f 01 b0 ff                                      
+    0x0149C  For              0d 00 04 00 01 00                                
+    0x014A2  op30             30                                               
+    0x014A3  Evt_next         02                                               
+    0x014A4  Next             0e 00                                            
+    0x014A6  Speed_set        2f 01 6a ff                                      
+    0x014AA  For              0d 00 04 00 14 00                                
+    0x014B0  op30             30                                               
+    0x014B1  Evt_next         02                                               
+    0x014B2  Next             0e 00                                            
+    0x014B4  Sca_id_set       37 03 08 04                                      
+    0x014B8  Sca_floor_set    39 03 08 02                                      
+    0x014BC  Speed_set        2f 01 d8 ff                                      
+    0x014C0  For              0d 00 04 00 02 00                                
+    0x014C6  op30             30                                               
+    0x014C7  Evt_next         02                                               
+    0x014C8  Next             0e 00                                            
+    0x014CA  Speed_set        2f 01 ec ff                                      
+    0x014CE  For              0d 00 04 00 02 00                                
+    0x014D4  op30             30                                               
+    0x014D5  Evt_next         02                                               
+    0x014D6  Next             0e 00                                            
+    0x014D8  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x014DC  Evt_end          01 00                                            
+
+  -- sub04 0x014DE..0x01550
+    0x014DE  Work_set         2e 03 00                                         kind=3 idx=0
+    0x014E1  Nop              00                                               
+    0x014E2  Se_on            36 02 10 00 03 00 00 00 00 00 00 00              
+    0x014EE  Speed_set        2f 01 14 00                                      
+    0x014F2  For              0d 00 04 00 01 00                                
+    0x014F8  op30             30                                               
+    0x014F9  Evt_next         02                                               
+    0x014FA  Next             0e 00                                            
+    0x014FC  Speed_set        2f 01 28 00                                      
+    0x01500  For              0d 00 04 00 02 00                                
+    0x01506  op30             30                                               
+    0x01507  Evt_next         02                                               
+    0x01508  Next             0e 00                                            
+    0x0150A  Speed_set        2f 01 50 00                                      
+    0x0150E  For              0d 00 04 00 01 00                                
+    0x01514  op30             30                                               
+    0x01515  Evt_next         02                                               
+    0x01516  Next             0e 00                                            
+    0x01518  Speed_set        2f 01 96 00                                      
+    0x0151C  For              0d 00 04 00 14 00                                
+    0x01522  op30             30                                               
+    0x01523  Evt_next         02                                               
+    0x01524  Next             0e 00                                            
+    0x01526  Sca_id_set       37 03 08 ff                                      
+    0x0152A  Sca_floor_set    39 03 08 03                                      
+    0x0152E  Speed_set        2f 01 28 00                                      
+    0x01532  For              0d 00 04 00 02 00                                
+    0x01538  op30             30                                               
+    0x01539  Evt_next         02                                               
+    0x0153A  Next             0e 00                                            
+    0x0153C  Speed_set        2f 01 14 00                                      
+    0x01540  For              0d 00 04 00 02 00                                
+    0x01546  op30             30                                               
+    0x01547  Evt_next         02                                               
+    0x01548  Next             0e 00                                            
+    0x0154A  Set              22 05 01 00                                      bank=5 bit=1 val=0
+    0x0154E  Evt_end          01 00                                            
+
+  -- sub05 0x01550..0x016B2
+    0x01550  Set              22 04 26 01                                      bank=4 bit=38 val=1
+    0x01554  Set              22 04 14 01                                      bank=4 bit=20 val=1
+    0x01558  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x0155C  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x01560  Evt_exec         04 0a 18 06                                      sub=6 (cond=0xa typ=0x18)
+    0x01564  Evt_exec         04 0b 18 07                                      sub=7 (cond=0xb typ=0x18)
+    0x01568  Evt_exec         04 0c 18 08                                      sub=8 (cond=0xc typ=0x18)
+    0x0156C  Cut_chg          29 01                                            
+    0x0156E  Work_set         2e 02 00                                         kind=2 idx=0
+    0x01571  Nop              00                                               
+    0x01572  Pos_set          32 00 5d ef 54 f2 88 ee                          
+    0x0157A  Dir_set          33 00 00 00 e3 06 00 00                          
+    0x01582  Speed_set        2f 01 46 00                                      
+    0x01586  For              0d 00 04 00 28 00                                
+    0x0158C  op30             30                                               
+    0x0158D  Evt_next         02                                               
+    0x0158E  Next             0e 00                                            
+    0x01590  Speed_set        2f 01 23 00                                      
+    0x01594  For              0d 00 04 00 14 00                                
+    0x0159A  op30             30                                               
+    0x0159B  Evt_next         02                                               
+    0x0159C  Next             0e 00                                            
+    0x0159E  Sleep            09 0a 0a 00                                      
+    0x015A2  Plc_dest         40 00 04 21 32 dd bb ee                          
+    0x015AA  Gosub            18 0b                                            sub=11
+    0x015AC  Plc_dest         40 00 09 21 be e2 5c f6                          
+    0x015B4  Gosub            18 0b                                            sub=11
+    0x015B6  Plc_neck         41 01 9d f2 00 00 15 f6 3c 00                    
+    0x015C0  Sleep            09 0a 02 00                                      
+    0x015C4  Message_on       2b 03 00 00                                      msg=3 typ=0x00 ?=0
+    0x015C8  Work_set         2e 01 00                                         kind=1 idx=0
+    0x015CB  Nop              00                                               
+    0x015CC  Plc_neck         41 01 32 dd 00 00 bb ee 3c 00                    
+    0x015D6  Sleep            09 0a 01 00                                      
+    0x015DA  Plc_motion       3f 00 0f 00                                      
+    0x015DE  Sleep            09 0a 19 00                                      
+    0x015E2  Plc_motion       3f 00 0f 00                                      
+    0x015E6  Plc_flg          43 00 80 00                                      
+    0x015EA  Sleep            09 0a 19 00                                      
+    0x015EE  Plc_motion       3f 00 13 00                                      
+    0x015F2  Sleep            09 0a 19 00                                      
+    0x015F6  Plc_motion       3f 00 13 00                                      
+    0x015FA  Plc_flg          43 00 80 00                                      
+    0x015FE  Sleep            09 0a 19 00                                      
+    0x01602  Plc_motion       3f 00 17 00                                      
+    0x01606  Sleep            09 0a 14 00                                      
+    0x0160A  Message_on       2b 04 00 00                                      msg=4 typ=0x00 ?=0
+    0x0160E  Work_set         2e 02 00                                         kind=2 idx=0
+    0x01611  Nop              00                                               
+    0x01612  Plc_motion       3f 00 10 00                                      
+    0x01616  Sleep            09 0a 19 00                                      
+    0x0161A  Plc_motion       3f 00 10 00                                      
+    0x0161E  Plc_flg          43 00 80 00                                      
+    0x01622  Sleep            09 0a 19 00                                      
+    0x01626  Plc_motion       3f 00 14 00                                      
+    0x0162A  Sleep            09 0a 19 00                                      
+    0x0162E  Plc_motion       3f 00 14 00                                      
+    0x01632  Plc_flg          43 00 80 00                                      
+    0x01636  Sleep            09 0a 1a 00                                      
+    0x0163A  Cut_chg          29 00                                            
+    0x0163C  Work_set         2e 01 00                                         kind=1 idx=0
+    0x0163F  Nop              00                                               
+    0x01640  Pos_set          32 00 8f e3 00 00 e0 f2                          
+    0x01648  Dir_set          33 00 00 00 80 07 00 00                          
+    0x01650  Plc_neck         41 01 62 c3 00 00 e1 f2 3c 00                    
+    0x0165A  Work_set         2e 02 01                                         kind=2 idx=1
+    0x0165D  Nop              00                                               
+    0x0165E  Pos_set          32 00 d4 e4 00 00 db ef                          
+    0x01666  Dir_set          33 00 00 00 e0 07 00 00                          
+    0x0166E  Plc_neck         41 01 62 c3 00 00 e1 f2 3c 00                    
+    0x01678  Work_set         2e 02 00                                         kind=2 idx=0
+    0x0167B  Nop              00                                               
+    0x0167C  Pos_set          32 00 7e d0 00 00 04 ef                          
+    0x01684  Dir_set          33 00 00 00 00 0f 00 00                          
+    0x0168C  Plc_neck         41 00 00 00 00 00 00 00 3c 00                    
+    0x01696  Sleep            09 0a 05 00                                      
+    0x0169A  Plc_dest         40 00 09 21 62 c3 e1 f2                          
+    0x016A2  Gosub            18 0b                                            sub=11
+    0x016A4  Plc_dest         40 00 04 21 62 c3 e1 f2                          
+    0x016AC  Gosub            18 0b                                            sub=11
+    0x016AE  Aot_on           47 01                                            
+    0x016B0  Evt_end          01 00                                            
+
+  -- sub06 0x016B2..0x016E4
+    0x016B2  Work_set         2e 03 03                                         kind=3 idx=3
+    0x016B5  Nop              00                                               
+    0x016B6  Pos_set          32 00 44 f8 54 f2 44 f8                          
+    0x016BE  Dir_set          33 00 00 00 00 08 00 00                          
+    0x016C6  Speed_set        2f 01 46 00                                      
+    0x016CA  For              0d 00 04 00 28 00                                
+    0x016D0  op30             30                                               
+    0x016D1  Evt_next         02                                               
+    0x016D2  Next             0e 00                                            
+    0x016D4  Speed_set        2f 01 23 00                                      
+    0x016D8  For              0d 00 04 00 14 00                                
+    0x016DE  op30             30                                               
+    0x016DF  Evt_next         02                                               
+    0x016E0  Next             0e 00                                            
+    0x016E2  Evt_end          01 00                                            
+
+  -- sub07 0x016E4..0x01720
+    0x016E4  Work_set         2e 01 00                                         kind=1 idx=0
+    0x016E7  Nop              00                                               
+    0x016E8  Pos_set          32 00 9d f2 54 f2 15 f6                          
+    0x016F0  Dir_set          33 00 00 00 c0 06 00 00                          
+    0x016F8  Plc_neck         41 04 04 00 00 00 00 00 3c 00                    
+    0x01702  Speed_set        2f 01 46 00                                      
+    0x01706  For              0d 00 04 00 28 00                                
+    0x0170C  op30             30                                               
+    0x0170D  Evt_next         02                                               
+    0x0170E  Next             0e 00                                            
+    0x01710  Speed_set        2f 01 23 00                                      
+    0x01714  For              0d 00 04 00 14 00                                
+    0x0171A  op30             30                                               
+    0x0171B  Evt_next         02                                               
+    0x0171C  Next             0e 00                                            
+    0x0171E  Evt_end          01 00                                            
+
+  -- sub08 0x01720..0x0176C
+    0x01720  Work_set         2e 02 01                                         kind=2 idx=1
+    0x01723  Nop              00                                               
+    0x01724  Pos_set          32 00 43 f4 54 f2 bf f1                          
+    0x0172C  Dir_set          33 00 00 00 38 06 00 00                          
+    0x01734  Speed_set        2f 01 46 00                                      
+    0x01738  For              0d 00 04 00 28 00                                
+    0x0173E  op30             30                                               
+    0x0173F  Evt_next         02                                               
+    0x01740  Next             0e 00                                            
+    0x01742  Speed_set        2f 01 23 00                                      
+    0x01746  For              0d 00 04 00 14 00                                
+    0x0174C  op30             30                                               
+    0x0174D  Evt_next         02                                               
+    0x0174E  Next             0e 00                                            
+    0x01750  Plc_neck         41 01 32 dd 00 00 bb ee 3c 00                    
+    0x0175A  Sleep            09 0a 01 00                                      
+    0x0175E  Plc_motion       3f 01 17 00                                      
+    0x01762  Plc_flg          43 00 04 00                                      
+    0x01766  Sleep            09 0a 05 00                                      
+    0x0176A  Evt_end          01 00                                            
+
+  -- sub09 0x0176C..0x01A1C
+    0x0176C  Set              22 03 3f 00                                      bank=3 bit=63 val=0
+    0x01770  Set              22 03 48 01                                      bank=3 bit=72 val=1
+    0x01774  Set              22 03 e8 01                                      bank=3 bit=232 val=1
+    0x01778  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x0177C  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x01780  Cut_chg          29 00                                            
+    0x01782  Work_set         2e 01 00                                         kind=1 idx=0
+    0x01785  Nop              00                                               
+    0x01786  Member_set       34 00 c1 c3                                      member=0 wert=50113
+    0x0178A  Member_set       34 02 b0 f1                                      member=2 wert=61872
+    0x0178E  Member_set       34 04 00 00                                      member=4 wert=0
+    0x01792  Sleep            09 0a 01 00                                      
+    0x01796  Work_set         2e 02 00                                         kind=2 idx=0
+    0x01799  Nop              00                                               
+    0x0179A  Member_set       34 00 b2 c1                                      member=0 wert=49586
+    0x0179E  Member_set       34 02 a5 de                                      member=2 wert=56997
+    0x017A2  Member_set       34 04 a2 07                                      member=4 wert=1954
+    0x017A6  Sleep            09 0a 01 00                                      
+    0x017AA  Work_set         2e 02 01                                         kind=2 idx=1
+    0x017AD  Nop              00                                               
+    0x017AE  Member_set       34 00 a4 c2                                      member=0 wert=49828
+    0x017B2  Member_set       34 02 b0 db                                      member=2 wert=56240
+    0x017B6  Member_set       34 04 a5 07                                      member=4 wert=1957
+    0x017BA  Sleep            09 0a 01 00                                      
+    0x017BE  Plc_motion       3f 01 17 00                                      
+    0x017C2  Plc_flg          43 00 04 00                                      
+    0x017C6  Sleep            09 0a 14 00                                      
+    0x017CA  Cut_chg          29 07                                            
+    0x017CC  Sleep            09 0a 32 00                                      
+    0x017D0  Se_on            36 02 0a 00 00 00 ac cc 00 00 10 b4              
+    0x017DC  Sleep            09 0a 0a 00                                      
+    0x017E0  Work_set         2e 01 00                                         kind=1 idx=0
+    0x017E3  Nop              00                                               
+    0x017E4  Plc_neck         41 01 01 c9 00 00 76 bf 3c 00                    
+    0x017EE  Sleep            09 0a 01 00                                      
+    0x017F2  Plc_dest         40 00 09 20 01 c9 76 bf                          
+    0x017FA  Sleep            09 0a 0a 00                                      
+    0x017FE  Work_set         2e 02 00                                         kind=2 idx=0
+    0x01801  Nop              00                                               
+    0x01802  Plc_neck         41 01 01 c9 00 00 76 bf 3c 00                    
+    0x0180C  Sleep            09 0a 01 00                                      
+    0x01810  Plc_dest         40 00 09 21 01 c9 76 bf                          
+    0x01818  Sleep            09 0a 0a 00                                      
+    0x0181C  Work_set         2e 02 01                                         kind=2 idx=1
+    0x0181F  Nop              00                                               
+    0x01820  Plc_neck         41 01 01 c9 00 00 76 bf 3c 00                    
+    0x0182A  Sleep            09 0a 01 00                                      
+    0x0182E  Plc_dest         40 00 09 22 01 c9 76 bf                          
+    0x01836  Gosub            18 0c                                            sub=12
+    0x01838  Plc_motion       3f 01 17 00                                      
+    0x0183C  Plc_flg          43 00 04 00                                      
+    0x01840  Sleep            09 0a 28 00                                      
+    0x01844  Cut_chg          29 05                                            
+    0x01846  Sleep            09 0a 05 00                                      
+    0x0184A  Se_on            36 02 0a 00 00 00 ac cc 00 00 10 b4              
+    0x01856  Work_set         2e 03 00                                         kind=3 idx=0
+    0x01859  Nop              00                                               
+    0x0185A  Member_set       34 00 00 00                                      member=0 wert=0
+    0x0185E  Member_set       34 02 00 00                                      member=2 wert=0
+    0x01862  Work_set         2e 03 04                                         kind=3 idx=4
+    0x01865  Nop              00                                               
+    0x01866  Member_set       34 00 ac cc                                      member=0 wert=52396
+    0x0186A  Member_set       34 02 10 b4                                      member=2 wert=46096
+    0x0186E  Sleep            09 0a 46 00                                      
+    0x01872  Se_on            36 02 0a 00 00 00 ac cc 00 00 10 b4              
+    0x0187E  Member_set       34 00 00 00                                      member=0 wert=0
+    0x01882  Member_set       34 02 00 00                                      member=2 wert=0
+    0x01886  Work_set         2e 03 05                                         kind=3 idx=5
+    0x01889  Nop              00                                               
+    0x0188A  Member_set       34 00 ac cc                                      member=0 wert=52396
+    0x0188E  Member_set       34 02 10 b4                                      member=2 wert=46096
+    0x01892  Sleep            09 0a 46 00                                      
+    0x01896  Cut_chg          29 07                                            
+    0x01898  Work_set         2e 01 00                                         kind=1 idx=0
+    0x0189B  Nop              00                                               
+    0x0189C  Plc_neck         41 00 00 00 00 00 00 00 3c 00                    
+    0x018A6  Sleep            09 0a 01 00                                      
+    0x018AA  Plc_dest         40 00 05 20 09 c7 b5 e1                          
+    0x018B2  Gosub            18 0a                                            sub=10
+    0x018B4  Plc_dest         40 00 05 20 01 c9 e6 d6                          
+    0x018BC  Gosub            18 0a                                            sub=10
+    0x018BE  Work_set         2e 02 00                                         kind=2 idx=0
+    0x018C1  Nop              00                                               
+    0x018C2  Plc_neck         41 01 01 c9 00 00 e6 d6 3c 00                    
+    0x018CC  Sleep            09 0a 01 00                                      
+    0x018D0  Plc_dest         40 00 09 21 01 c9 e6 d6                          
+    0x018D8  Sleep            09 0a 0a 00                                      
+    0x018DC  Work_set         2e 02 01                                         kind=2 idx=1
+    0x018DF  Nop              00                                               
+    0x018E0  Plc_neck         41 01 01 c9 00 00 e6 d6 3c 00                    
+    0x018EA  Sleep            09 0a 01 00                                      
+    0x018EE  Plc_dest         40 00 09 22 01 c9 e6 d6                          
+    0x018F6  Gosub            18 0c                                            sub=12
+    0x018F8  Plc_motion       3f 01 17 00                                      
+    0x018FC  Plc_flg          43 00 04 00                                      
+    0x01900  Sleep            09 0a 02 00                                      
+    0x01904  Message_on       2b 05 00 00                                      msg=5 typ=0x00 ?=0
+    0x01908  Work_set         2e 01 00                                         kind=1 idx=0
+    0x0190B  Nop              00                                               
+    0x0190C  Plc_neck         41 01 b2 c1 00 00 a5 de 3c 00                    
+    0x01916  Sleep            09 0a 01 00                                      
+    0x0191A  Plc_motion       3f 00 11 00                                      
+    0x0191E  Sleep            09 0a 32 00                                      
+    0x01922  Plc_motion       3f 00 12 00                                      
+    0x01926  Sleep            09 0a 19 00                                      
+    0x0192A  Plc_motion       3f 00 12 00                                      
+    0x0192E  Plc_flg          43 00 80 00                                      
+    0x01932  Sleep            09 0a 1a 00                                      
+    0x01936  Message_on       2b 06 00 00                                      msg=6 typ=0x00 ?=0
+    0x0193A  Work_set         2e 02 00                                         kind=2 idx=0
+    0x0193D  Nop              00                                               
+    0x0193E  Plc_motion       3f 00 0f 00                                      
+    0x01942  Sleep            09 0a 32 00                                      
+    0x01946  Plc_motion       3f 00 0f 00                                      
+    0x0194A  Plc_flg          43 00 80 00                                      
+    0x0194E  Sleep            09 0a 33 00                                      
+    0x01952  Message_on       2b 07 00 00                                      msg=7 typ=0x00 ?=0
+    0x01956  Work_set         2e 01 00                                         kind=1 idx=0
+    0x01959  Nop              00                                               
+    0x0195A  Plc_motion       3f 00 0f 00                                      
+    0x0195E  Sleep            09 0a 32 00                                      
+    0x01962  Plc_motion       3f 00 0f 00                                      
+    0x01966  Plc_flg          43 00 80 00                                      
+    0x0196A  Sleep            09 0a 33 00                                      
+    0x0196E  Message_on       2b 08 00 00                                      msg=8 typ=0x00 ?=0
+    0x01972  Plc_motion       3f 00 14 00                                      
+    0x01976  Sleep            09 0a 32 00                                      
+    0x0197A  Plc_motion       3f 00 14 00                                      
+    0x0197E  Plc_flg          43 00 80 00                                      
+    0x01982  Sleep            09 0a 33 00                                      
+    0x01986  Work_set         2e 02 00                                         kind=2 idx=0
+    0x01989  Nop              00                                               
+    0x0198A  Plc_neck         41 00 00 00 00 00 00 00 3c 00                    
+    0x01994  Sleep            09 0a 01 00                                      
+    0x01998  Plc_neck         41 03 01 00 00 00 00 00 00 32                    
+    0x019A2  Sleep            09 0a 28 00                                      
+    0x019A6  Plc_dest         40 00 09 21 32 9c a5 de                          
+    0x019AE  Sleep            09 0a 0a 00                                      
+    0x019B2  Work_set         2e 02 01                                         kind=2 idx=1
+    0x019B5  Nop              00                                               
+    0x019B6  Plc_neck         41 00 00 00 00 00 00 00 3c 00                    
+    0x019C0  Sleep            09 0a 01 00                                      
+    0x019C4  Plc_dest         40 00 09 22 24 9d b0 db                          
+    0x019CC  Gosub            18 0c                                            sub=12
+    0x019CE  Plc_dest         40 00 05 22 24 9d b0 db                          
+    0x019D6  Sleep            09 0a 0a 00                                      
+    0x019DA  Work_set         2e 02 00                                         kind=2 idx=0
+    0x019DD  Nop              00                                               
+    0x019DE  Plc_dest         40 00 05 21 32 9c a5 de                          
+    0x019E6  Gosub            18 0b                                            sub=11
+    0x019E8  Cut_chg          29 06                                            
+    0x019EA  Member_set       34 00 24 9d                                      member=0 wert=40228
+    0x019EE  Member_set       34 02 98 43                                      member=2 wert=17304
+    0x019F2  Sleep            09 0a 01 00                                      
+    0x019F6  Work_set         2e 02 01                                         kind=2 idx=1
+    0x019F9  Nop              00                                               
+    0x019FA  Member_set       34 00 14 a8                                      member=0 wert=43028
+    0x019FE  Member_set       34 02 98 43                                      member=2 wert=17304
+    0x01A02  Sleep            09 0a 14 00                                      
+    0x01A06  Work_set         2e 01 00                                         kind=1 idx=0
+    0x01A09  Nop              00                                               
+    0x01A0A  Plc_neck         41 00 00 00 00 00 00 00 3c 00                    
+    0x01A14  Sleep            09 0a 1e 00                                      
+    0x01A18  Aot_on           47 07                                            
+    0x01A1A  Evt_end          01 00                                            
+
+  -- sub10 0x01A1C..0x01A2A
+    0x01A1C  Do               11 00 08 00                                      
+    0x01A20  Evt_next         02                                               
+    0x01A21  Nop              00                                               
+    0x01A22  Edwhile          12 04                                            
+    0x01A24  Ck               21 05 20 00                                      bank=5 bit=32 val=0
+    0x01A28  Evt_end          01 00                                            
+
+  -- sub11 0x01A2A..0x01A38
+    0x01A2A  Do               11 00 08 00                                      
+    0x01A2E  Evt_next         02                                               
+    0x01A2F  Nop              00                                               
+    0x01A30  Edwhile          12 04                                            
+    0x01A32  Ck               21 05 21 00                                      bank=5 bit=33 val=0
+    0x01A36  Evt_end          01 00                                            
+
+  -- sub12 0x01A38..0x01A46
+    0x01A38  Do               11 00 08 00                                      
+    0x01A3C  Evt_next         02                                               
+    0x01A3D  Nop              00                                               
+    0x01A3E  Edwhile          12 04                                            
+    0x01A40  Ck               21 05 22 00                                      bank=5 bit=34 val=0
+    0x01A44  Evt_end          01 00                                            
+
+  -- sub13 0x01A46..0x01AEE
+    0x01A46  Set              22 03 e8 00                                      bank=3 bit=232 val=0
+    0x01A4A  Set              22 03 e7 01                                      bank=3 bit=231 val=1
+    0x01A4E  Set              22 04 14 01                                      bank=4 bit=20 val=1
+    0x01A52  Set              22 02 07 01                                      bank=2 bit=7 val=1
+    0x01A56  Set              22 01 1b 01                                      bank=1 bit=27 val=1
+    0x01A5A  Cut_chg          29 05                                            
+    0x01A5C  Work_set         2e 01 00                                         kind=1 idx=0
+    0x01A5F  Nop              00                                               
+    0x01A60  Member_set       34 00 01 c9                                      member=0 wert=51457
+    0x01A64  Member_set       34 02 e6 d6                                      member=2 wert=55014
+    0x01A68  Member_set       34 04 00 04                                      member=4 wert=1024
+    0x01A6C  Work_set         2e 03 00                                         kind=3 idx=0
+    0x01A6F  Nop              00                                               
+    0x01A70  Member_set       34 00 00 00                                      member=0 wert=0
+    0x01A74  Member_set       34 02 00 00                                      member=2 wert=0
+    0x01A78  Work_set         2e 03 05                                         kind=3 idx=5
+    0x01A7B  Nop              00                                               
+    0x01A7C  Member_set       34 00 ac cc                                      member=0 wert=52396
+    0x01A80  Member_set       34 02 10 b4                                      member=2 wert=46096
+    0x01A84  Sleep            09 0a 46 00                                      
+    0x01A88  Sleep            09 0a 05 00                                      
+    0x01A8C  Se_on            36 02 0a 00 00 00 ac cc 00 00 10 b4              
+    0x01A98  Member_set       34 00 00 00                                      member=0 wert=0
+    0x01A9C  Member_set       34 02 00 00                                      member=2 wert=0
+    0x01AA0  Work_set         2e 03 06                                         kind=3 idx=6
+    0x01AA3  Nop              00                                               
+    0x01AA4  Member_set       34 00 ac cc                                      member=0 wert=52396
+    0x01AA8  Member_set       34 02 10 b4                                      member=2 wert=46096
+    0x01AAC  Sleep            09 0a 46 00                                      
+    0x01AB0  Evt_exec         04 ff 18 0e                                      sub=14 (cond=0xff typ=0x18)
+    0x01AB4  Sleep            09 0a 14 00                                      
+    0x01AB8  Aot_reset        46 02 00 00 00 00 00 00 00 00                    
+    0x01AC2  Sca_id_set       37 03 08 04                                      
+    0x01AC6  Sca_floor_set    39 03 08 02                                      
+    0x01ACA  Cut_chg          29 00                                            
+    0x01ACC  Work_set         2e 02 03                                         kind=2 idx=3
+    0x01ACF  Nop              00                                               
+    0x01AD0  Member_set       34 00 ec c8                                      member=0 wert=51436
+    0x01AD4  Member_set       34 02 08 bc                                      member=2 wert=48136
+    0x01AD8  Sleep            09 0a 01 00                                      
+    0x01ADC  Work_set         2e 01 00                                         kind=1 idx=0
+    0x01ADF  Nop              00                                               
+    0x01AE0  Plc_ret          42                                               
+    0x01AE1  Nop              00                                               
+    0x01AE2  Set              22 02 07 00                                      bank=2 bit=7 val=0
+    0x01AE6  Set              22 01 1b 00                                      bank=1 bit=27 val=0
+    0x01AEA  Cut_auto         3c 01                                            
+    0x01AEC  Evt_end          01 00                                            
+
+  -- sub14 0x01AEE..0x01B84
+    0x01AEE  Work_set         2e 02 03                                         kind=2 idx=3
+    0x01AF1  Nop              00                                               
+    0x01AF2  Member_set       34 0c 41 00                                      member=12 wert=65
+    0x01AF6  Work_set         2e 03 06                                         kind=3 idx=6
+    0x01AF9  Nop              00                                               
+    0x01AFA  Se_on            36 02 12 00 03 01 00 00 00 00 00 00              
+    0x01B06  Speed_set        2f 02 00 00                                      
+    0x01B0A  Speed_set        2f 01 5a 00                                      
+    0x01B0E  Speed_set        2f 08 82 00                                      
+    0x01B12  Speed_set        2f 04 00 00                                      
+    0x01B16  Speed_set        2f 05 92 00                                      
+    0x01B1A  For              0d 00 06 00 07 00                                
+    0x01B20  op30             30                                               
+    0x01B21  op31             31                                               
+    0x01B22  Nop              00                                               
+    0x01B23  Evt_next         02                                               
+    0x01B24  Next             0e 00                                            
+    0x01B26  Speed_set        2f 01 00 00                                      
+    0x01B2A  Speed_set        2f 02 00 00                                      
+    0x01B2E  Speed_set        2f 04 28 00                                      
+    0x01B32  Speed_set        2f 08 00 00                                      
+    0x01B36  For              0d 00 0c 00 02 00                                
+    0x01B3C  Speed_set        2f 03 5a 00                                      
+    0x01B40  Speed_set        2f 05 a6 ff                                      
+    0x01B44  op30             30                                               
+    0x01B45  Evt_next         02                                               
+    0x01B46  Next             0e 00                                            
+    0x01B48  For              0d 00 04 00 03 00                                
+    0x01B4E  Evt_next         02                                               
+    0x01B4F  Nop              00                                               
+    0x01B50  Next             0e 00                                            
+    0x01B52  For              0d 00 0c 00 02 00                                
+    0x01B58  Speed_set        2f 03 a6 ff                                      
+    0x01B5C  Speed_set        2f 05 5a 00                                      
+    0x01B60  op30             30                                               
+    0x01B61  Evt_next         02                                               
+    0x01B62  Next             0e 00                                            
+    0x01B64  Speed_set        2f 03 14 00                                      
+    0x01B68  Speed_set        2f 05 ec ff                                      
+    0x01B6C  op30             30                                               
+    0x01B6D  Evt_next         02                                               
+    0x01B6E  For              0d 00 04 00 01 00                                
+    0x01B74  Evt_next         02                                               
+    0x01B75  Nop              00                                               
+    0x01B76  Next             0e 00                                            
+    0x01B78  Speed_set        2f 03 ec ff                                      
+    0x01B7C  Speed_set        2f 05 14 00                                      
+    0x01B80  op30             30                                               
+    0x01B81  Evt_next         02                                               
+    0x01B82  Evt_end          01 00                                            
+
+  === NACHRICHTEN ===
+   [ 0] 'The door is locked. The text on the / panel reads:Door is under emergency lockdown. / An ID card is required to unlock it."'  ctrl=['04:02', '02:00', '?61', '01']
+   [ 1] 'Will you use the Blue Master Keycard? '  ctrl=['04:02', '05:01', '05:00', '03', '02:01']
+   [ 2] "You've used the Blue Master Keycard."  ctrl=['04:02', '05:01', '05:00', '01']
+   [ 3] 'Leon: Ada, what is this place...?'  ctrl=['04:00', '05:01', '05:00', '04:01', '01']
+   [ 4] "Ada: Just hurry up, okay?! / Let's get him to this room here!"  ctrl=['04:00', '05:02', '05:00', '04:01', '01']
+   [ 5] "Leon: Go on ahead! / I'll take care of this!"  ctrl=['04:00', '05:01', '05:00', '04:01', '01']
+   [ 6] 'Ada: Leon...!'  ctrl=['04:00', '05:02', '05:00', '04:01', '01']
+   [ 7] 'Leon: Just get going already!'  ctrl=['04:00', '05:01', '05:00', '04:01', '01']
+   [ 8] 'Leon: Take care of Marvin!'  ctrl=['04:00', '05:01', '05:00', '04:01', '01']
+   [ 9] "An elevator. Pressing the / button has no effect.It hasn't been used for a / long time."  ctrl=['04:02', '02:00', '01']
+====================================================================================================
+Stellen mit ausfuehrendem Message_on gefunden: 1
