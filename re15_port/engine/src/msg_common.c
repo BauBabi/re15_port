@@ -607,6 +607,17 @@ static void re15_dialog_step(void)
     }
 }
 
+/* Den NACHHALL sofort beenden — Herleitung an der Deklaration (re15_msg.h). Wirkt nur im
+ * Zustand 7; der Freeze ist dort schon geloest (re15_pauseflags_close lief bei fsm==6),
+ * es wird also KEIN Pause-Bit angefasst, nur der stehende Text weggenommen. */
+void re15_msg_nachhall_beenden(void)
+{
+    if (g_scd.message_fsm != 7) return;
+    g_scd.message_active     = 0;
+    g_scd.message_fsm_active = 0;
+    g_scd.message_nachhall   = 0;
+}
+
 /* Shared cross-port subtitle tick / dismiss FSM. Mirrors FUN_80028134's end-wait:
  * a subtitle lives for exactly its own duration countdown and is dismissed only when
  * that hits 0 — no Cut_chg / Plc_ret / letterbox-close shortcut (the PSX-vs-PC

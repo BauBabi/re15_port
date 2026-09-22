@@ -119,6 +119,56 @@
  * die Spanne "vorgemerkt" mit der Spanne "die Nachricht haelt den Spieler" — wie in RE2. */
 void re15_discard_notice_message(unsigned room_id, uint8_t msg_id);
 
+/* ============================================================================
+ * DAS BESITZ-GATE — AN DERSELBEN STELLE DER KETTE WIE IM ORIGINAL
+ * ============================================================================
+ * RE2s Tuer-Handler entscheidet die Besitzfrage SELBST und VOR der Nachricht. Die
+ * vier Instruktionen (ghidra_re2_Leon.txt, nachdisassembliert 2026-09-22):
+ *
+ *     80051628  jal   FUN_800696cc      ; Inventarplatz des Schluessels SUCHEN
+ *     8005162C  _move a0,s0             ;   a0 = Gegenstands-Id (s0)
+ *     80051630  move  s1,v0             ;   s1 = gefundener Platz, < 0 = kein Treffer
+ *     80051634  bltz  s1,LAB_800516a0   ; KEIN TREFFER -> ANDERER ZWEIG
+ *
+ * Und erst DANACH, im Treffer-Zweig:
+ *     8005164C  jal   FUN_8002fe38      ; die Nachricht "You have used the <Name>." OEFFNEN
+ *     80051670  sw    v0=>LAB_80051718,-0x7d50(at)   ; die Wegwerf-Fortsetzung EINHAENGEN
+ *     80051680  sb    v0,-0x7f9f(at)=>DAT_800d4249   ; Platz+1 merken
+ *
+ * Der Nicht-Treffer-Zweig oeffnet eine ANDERE Nachricht und haengt NICHTS ein:
+ *     800516B4  addiu a2,s0,-0x4c       ; andere Nachrichten-Id (item_id - 0x4C)
+ *     800516B8  jal   FUN_8002fe38
+ *     800516C0  j     LAB_800516f8      ; return — keine Fortsetzung, also nie eine Abfrage
+ *
+ * REIHENFOLGE ALSO: (1) Platz suchen, (2) ohne Treffer abzweigen, (3) Nachricht oeffnen,
+ * (4) Fortsetzung einhaengen. Der Port macht genau das:
+ *   (1)+(2) re15_discard_besitz_vor_nachricht(), gerufen von op_message_on UNMITTELBAR
+ *           VOR re15_dialog_open_mask/msg_show;
+ *   (3)     re15_dialog_open_mask / msg_show;
+ *   (4)     re15_discard_notice_message(), gerufen direkt danach.
+ * RE1.5 waehlt die Nachricht im SKRIPT, der Port darf sie also nicht tauschen — der
+ * Nicht-Treffer-Zweig besteht hier nur aus "nichts einhaengen", genau wie @0x800516C0.
+ *
+ * ⛔ FAIL-CLOSED: re15_discard_notice_message merkt NUR vor, wenn fuer dieselbe
+ * (Raum, Nachricht) vorher ein Vorentscheid mit Treffer gefallen ist. Ohne Vorentscheid
+ * passiert nichts — ein neuer Oeffnungsweg fuer Nachrichten kann die Abfrage also nicht
+ * versehentlich ohne Besitzpruefung armieren.
+ *
+ * Rueckgabe: 1 = (Raum, Nachricht) ist eine Benutzungsstelle UND der Gegenstand liegt mit
+ * Anzahl > 0 im Inventar. 0 = alles andere (keine Stelle, nicht getragen, Anzahl 0,
+ * oder es laeuft schon eine Abfrage). */
+int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id);
+
+/* Pruefstand: wie oft ist der Vorentscheid gefallen und wie oft mit Treffer. Damit laesst
+ * sich messen, dass das Gate wirklich gefragt wurde und nicht bloss nichts passierte. */
+int re15_discard_vorentscheide(void);
+/* Wie viele Vorentscheide fielen, obwohl das Nachrichtensystem schon BELEGT war? Das ist
+ * die Messgroesse fuer die KETTENPOSITION: RE2 entscheidet vor @0x8005164C, also bevor die
+ * Nachricht offen ist. Jeder Treffer hier heisst "die Pruefung sitzt hinter dem Oeffnen".
+ * Verlangt wird 0 (Riegel r21_discard_wegwerfen TEIL L). */
+int re15_discard_vorentscheid_belegt(void);
+int re15_discard_vorentscheide_mit_besitz(void);
+
 /* Ein 30-Hz-Spieltakt der Abfrage-FSM. `pad_edge`/`pad_held` sind die VIRTUELLEN
  * Pad-Woerter (re15_pad_virtual_word), wie beim Item-Modal. Nur aufrufen, solange
  * re15_discard_active() — der Aufrufer friert die uebrige Welt ein (RE2 @0x80051850). */
@@ -157,8 +207,13 @@ void re15_discard_reset(void);
  * ⛔ Das Feld ist im Auslieferungsstand BEWEISBAR immer 0: die Spanne "vorgemerkt"
  * liegt komplett im Nachrichten-Freeze (Maske 0xFFFF0000 an allen 16 Benutzungsstellen),
  * und der sperrt Pad UND Skript — es gibt darin keinen Weg zu einem Speicherpunkt.
- * re15_discard_restore bleibt als HARTER Reset stehen: ein Load darf nie eine Abfrage
- * des vorigen Laufs erben. */
+ * re15_discard_restore IST ein HARTER Reset: es liest `item` NICHT und merkt nie etwas
+ * vor. Bis Runde 23 hat es bei vorhandenem Gegenstand wieder auf D_WARTET gestellt — das
+ * war ein Wiederbeleben ohne Beleg: RE2s Fortsetzungs-Zeiger DAT_800D4498 (@0x80051670)
+ * liegt im RAM und ist in KEINEM Speicherformat, und der Auslieferungsstand von RE1.5
+ * kann ohnehin nicht speichern (21 RDTs sagen woertlich "Save is not available in this
+ * preview"). Das Feld im Spielstand bleibt erhalten (Formatstabilitaet), wird beim Laden
+ * aber verworfen. */
 uint8_t re15_discard_pending_item(void);
 void    re15_discard_restore(uint8_t item);
 

@@ -1,4 +1,18 @@
-# Das Fenster der Wegwerf-Abfrage — geschlossen, nicht abgesichert
+# Das Fenster der Wegwerf-Abfrage — abgesichert (Titel berichtigt)
+
+> ⛔ **BERICHTIGUNG, Runde 24 (2026-09-22).** Der ursprüngliche Titel dieses Dossiers
+> lautete „geschlossen, nicht abgesichert“, und der Text sagte an mehreren Stellen, das
+> Fenster sei **weg**. Das ist widerlegt und gemessen: es bleibt **1 Bild je Stelle** —
+> das Schließ-Bild, in dem der Nachrichten-Freeze schon gelöst und die Abfrage noch
+> nicht offen ist. Es wird von der Port-Zeile `re15_discard_frozen()` gehalten; RE2 hat
+> dieses Bild nicht (`@0x80051810` dekrementiert, `@0x80051844 lui v1,0xff00` friert im
+> **selben Aufruf** wieder ein, also 0 Bilder). Ebenfalls berichtigt: die hier genannte
+> Zahl **4** Brücken-Bilder stammt vom **falschen Zeugen** (`RE15_PAUSE_PAD 0x01000000`,
+> das nur die SCD-Pad-Wörter maskiert und zusätzlich vom Szenen-Fenster gehalten wird).
+> Mit `RE15_PAUSE_PLAYER 0x80000000` (`@0x80031c54` / `@0x80031c78 bltz`) sind es
+> **1 Bild an 10 von 10 Stellen**. Und ROOM1090 wurde in Teil J stillschweigend
+> übersprungen statt als **AUSGELASSEN** ausgewiesen.
+> **Gültig ist `discard-besitz.md` (Runde 24).**
 
 Runde 23, 2026-09-22. Vorgänger: `discard-umsetzung.md` (Bau), `discard-nacharbeit.md`
 (zwei Sperrgründe), `discard-loch.md` (Runde 22 — der Pad-Riegel, der eine Tautologie war).

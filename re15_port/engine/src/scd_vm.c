@@ -1714,6 +1714,21 @@ static int op_message_on(scd_thread_t *t)
      * VOICE haengt NICHT mehr an dieser Unterscheidung und an keiner Raumliste — sie wird auf
      * JEDEM Oeffnungsweg gequeued und laeuft ins Leere, wenn fuer (Raum, Message-Id) keine
      * Datei unter synchro/ liegt. Herleitung s. scd_queue_voice weiter oben. */
+    /* ⛔ (1)+(2) VON RE2s REIHENFOLGE — DAS BESITZ-GATE, VOR DEM OEFFNEN.
+     * RE2s Tuer-Handler sucht den Inventarplatz und verzweigt ohne Treffer, BEVOR er die
+     * Nachricht aufmacht:
+     *     80051628  jal   FUN_800696cc     ; Platz suchen
+     *     80051630  move  s1,v0
+     *     80051634  bltz  s1,LAB_800516a0  ; kein Treffer -> anderer Zweig
+     *     8005164C  jal   FUN_8002fe38     ; ERST HIER die Nachricht
+     *     80051670  sw    LAB_80051718,... ; und DANACH die Fortsetzung
+     * Genau diese Stelle ist hier: unmittelbar vor msg_show/re15_dialog_open_mask und
+     * damit vor re15_discard_notice_message weiter unten (= @0x80051670). RE1.5 waehlt
+     * die Nachricht im Skript, der Port darf sie nicht tauschen — der Nicht-Treffer-Zweig
+     * besteht deshalb nur aus "nichts einhaengen" (RE2 @0x800516C0 `j LAB_800516f8`).
+     * Herleitung: include/re15_item_discard.h. */
+    re15_discard_besitz_vor_nachricht(g_current_room_id, t->pc[1]);
+
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
          * die beiden Full-Text-Raeume tragen in ALLEN ihren Message_on die Maske 0x0000

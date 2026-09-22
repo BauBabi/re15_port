@@ -281,6 +281,7 @@ typedef struct {
     long zone9_clear;           /* C2 */
     long item_aot_set;          /* C4 */
     long ck_10d0_52, ck_1230_136, ck_11e0_138;   /* C4 */
+    long set332_setzt, set332_loescht;           /* C6: die Schreiber von flag(3,32) */
     uint8_t menge1[256];        /* C3 */
 } zensus_t;
 
@@ -325,6 +326,10 @@ static void walk(zensus_t *z, const uint8_t *d, size_t n, uint32_t start, uint32
         z->opcodes++;
         uint8_t op = d[pc];
         if (op == 0x5E) z->keep_item_ck++;                        /* C1 */
+        if (op == 0x22 && d[pc + 1] == 3 && d[pc + 2] == 32) {    /* C6 */
+            if (d[pc + 3] == 1)                     z->set332_setzt++;
+            else if (d[pc + 3] == 0 || d[pc + 3] == 7) z->set332_loescht++;
+        }
         else if (op == 0x22 && d[pc + 1] == 9 && (d[pc + 3] == 0 || d[pc + 3] == 7))
             z->zone9_clear++;                                     /* C2 */
         else if (op == 0x50) {                                    /* C3 + C4 */
@@ -446,6 +451,19 @@ static void teil_c(void)
                k[i].tor_raum, (unsigned)k[i].tk_bit);
     }
     printf("  C5: 3 von 3 Kartenleser-Toren bleiben nach dem Wegwerfen offen\n");
+    /* C6 — DIE EINE STELLE, DIE EIN TOR ENDGUELTIG SCHLIESST.
+     * ROOM4000 sub02 setzt mit `Set(3,32,1)` @0x01450 das Tor `Ck(3,32,0)` @0x0142A,
+     * durch das seine Benutzungsstelle (Message_on 2) allein erreichbar ist. Gemessen
+     * wird hier, dass dieses Flag im GANZEN ausgelieferten Bestand genau EINEN Schreiber
+     * hat und NIE geloescht oder umgeschaltet wird — die Stelle ist also einmalig, und
+     * zwar endgueltig. Das ist keine Port-Eigenschaft, sondern die der Daten; ausgewiesen
+     * wird sie, damit niemand sie fuer einen Port-Defekt haelt.
+     * Vollstaendige Liste aller 16 Stellen: tools/discard_verlustwege.py. */
+    printf("  C6 Schreiber von flag(3,32): %ld x setzen, %ld x loeschen/umschalten\n",
+           z.set332_setzt, z.set332_loescht);
+    PRUEFE(z.set332_setzt == 1 && z.set332_loescht == 0,
+           "flag(3,32): %ld Setzer / %ld Loescher — erwartet 1 / 0",
+           z.set332_setzt, z.set332_loescht);
 }
 
 /* =========================================================================
@@ -778,7 +796,7 @@ static void teil_i(void)
     printf("\n=== TEIL I: die Spanne \"vorgemerkt\", Anteil fuer Anteil ===\n");
     printf("  %-22s %8s | %9s %6s %6s %6s | %6s %7s\n",
            "Stelle", "Nachr.", "UEBERH.", "Szene", "Faden", "Msg2", "Loch", "Frage");
-    int gefahren = 0, ausgelassen = 0;
+    int gefahren = 0, ausgelassen = 0, bruecke_stellen = 0;
     long ueberhang_summe = 0, loch_summe = 0, groesster = 0, bruecke_summe = 0;
     unsigned gr_raum = 0; uint8_t gr_msg = 0;
 
@@ -828,14 +846,24 @@ static void teil_i(void)
              * Benutzungsstellen oeffnen mit 0xFFFF0000. */
             if (re15_discard_active() && !re15_discard_prompt(NULL, NULL)) {
                 spanne++;
-                if (!(g_re15_pauseflags & 0x01000000u) && !re15_discard_frozen()) ohne_pad++;
-                if (!(g_re15_pauseflags & 0x02000000u) && !re15_discard_frozen()) ohne_scd++;
+                /* ⛔ DER ZEUGE IST DAS BIT, DAS DEN SPIELER WIRKLICH HAELT:
+                 * RE15_PAUSE_PLAYER 0x80000000 = FUN_80031c44s Vorzeichen-Gate
+                 * (@0x80031c54 `lw a0,g_pauseflags` / @0x80031c78 `bltz a0,0x80031da8`),
+                 * das den GANZEN Spieler-Dispatch ueberspringt.
+                 * HIER STAND BIS RUNDE 23 RE15_PAUSE_PAD 0x01000000 — der FALSCHE Zeuge:
+                 * der maskiert nur die SCD-Pad-Woerter (game_step_common.c:1061-65,
+                 * @0x800304f4-@0x8003051c) und wird ZUSAETZLICH vom Szenen-Fenster
+                 * flag(1,27)/flag(2,7) gehalten. An den Stellen mit laufender Szene war er
+                 * gesetzt, obwohl der Nachrichten-Freeze schon weg war — genau deshalb
+                 * meldete der Riegel 4 Bruecken-Bilder statt eines je Stelle. */
+                if (!(g_re15_pauseflags & RE15_PAUSE_PLAYER) && !re15_discard_frozen()) ohne_pad++;
+                if (!(g_re15_pauseflags & RE15_PAUSE_SCD)    && !re15_discard_frozen()) ohne_scd++;
                 /* GEGENPROBE zur Bruecke: dieselbe Zaehlung OHNE den frozen()-Ausweg.
                  * Sie MUSS Bilder finden — sonst waere die Zeile
                  * `s_zustand == D_WARTET && !re15_pauseflags_belegt()` in
                  * re15_discard_frozen() wirkungslos und die Masken-Pruefung darueber
                  * eine Tautologie. */
-                if (!(g_re15_pauseflags & 0x01000000u)) ohne_bruecke++;
+                if (!(g_re15_pauseflags & RE15_PAUSE_PLAYER)) ohne_bruecke++;
             }
             if (re15_discard_active()) re15_discard_tick(0, 0);
             if (b_frage < 0 && re15_discard_prompt(NULL, NULL)) { b_frage = fr; break; }
@@ -860,11 +888,24 @@ static void teil_i(void)
                " (RE2: dasselbe Bild, @0x800517f4)", room, (unsigned)msg, b_frei, b_frage);
         PRUEFE(spanne > 0, "ROOM%04X msg %2u: die Spanne \"vorgemerkt+unsichtbar\" ist LEER"
                " — dann prueft die Masken-Pruefung nichts", room, (unsigned)msg);
-        PRUEFE(ohne_pad == 0, "ROOM%04X msg %2u: %ld von %ld Spannen-Bildern OHNE Pad-Bit"
-               " 0x01000000", room, (unsigned)msg, ohne_pad, spanne);
+        PRUEFE(ohne_pad == 0, "ROOM%04X msg %2u: %ld von %ld Spannen-Bildern OHNE"
+               " Spieler-Bit 0x80000000 (@0x80031c78)",
+               room, (unsigned)msg, ohne_pad, spanne);
         PRUEFE(ohne_scd == 0, "ROOM%04X msg %2u: %ld von %ld Spannen-Bildern OHNE Skript-Bit"
                " 0x02000000", room, (unsigned)msg, ohne_scd, spanne);
+        /* ⛔ JE STELLE GENAU EIN BILD. Das ist das SCHLIESS-Bild, in dem der Port den
+         * Nachrichten-Freeze schon geloest und die Abfrage noch nicht aufgemacht hat;
+         * re15_discard_frozen() traegt es. RE2 hat dieses Bild NICHT — dort liegen
+         * Dekrement (@0x80051810), Frage (@0x80051834) und neuer Freeze (@0x80051844
+         * `lui v1,0xff00` / @0x80051850 `sw v0,DAT_800cfbdc`) in EINEM Aufruf, also
+         * 0 Bilder. Eine andere Zahl als 1 heisst: die Bruecke deckt nicht genau das
+         * eine Bild, sondern mehr oder gar nichts. */
+        PRUEFE(ohne_bruecke == 1,
+               "ROOM%04X msg %2u: %ld Bruecken-Bilder statt genau 1 (RE2 hat 0,"
+               " @0x80051844 friert im selben Aufruf wieder ein)",
+               room, (unsigned)msg, ohne_bruecke);
         bruecke_summe += ohne_bruecke;
+        bruecke_stellen++;
 
         /* ---------- Lauf 2: OHNE Gegenstand — die Anteile des Ueberhangs ----------- */
         spanne_t sp;
@@ -910,12 +951,19 @@ static void teil_i(void)
            "GEGENPROBE: das Runde-22-Modell hat gar kein Loch hinterlassen — dann prueft"
            " dieser Riegel nichts");
     PRUEFE(groesster >= 20, "GEGENPROBE: groesstes Loch nur %ld Bilder", groesster);
-    printf("  Das SCHLIESS-Bild: ohne den frozen()-Ausweg waeren %ld Spannen-Bilder ohne"
-           " Pad-Bit — die Bruecke in re15_discard_frozen() traegt also wirklich.\n",
-           bruecke_summe);
+    printf("  Das SCHLIESS-Bild: ohne den frozen()-Ausweg waeren %ld Spannen-Bilder ohne\n"
+           "  das Spieler-Bit 0x80000000 (@0x80031c78) — 1 Bild an %d von %d Stellen.\n"
+           "  RE2 hat 0 solche Bilder (@0x80051810 dekrementiert, @0x80051844 friert im\n"
+           "  SELBEN Aufruf wieder ein). Das Fenster ist damit ABGESICHERT, nicht weg:\n"
+           "  aus 161 Bildern Ueberhang (ROOM1100/1101, Runde-22-Modell) ist 1 Bild je\n"
+           "  Stelle geworden, und das haelt die Port-Zeile re15_discard_frozen().\n",
+           bruecke_summe, bruecke_stellen, gefahren);
     PRUEFE(bruecke_summe > 0,
-           "GEGENPROBE: ohne die Bruecke gibt es kein Bild ohne Pad-Bit — dann prueft die"
-           " Masken-Pruefung sich selbst");
+           "GEGENPROBE: ohne die Bruecke gibt es kein Bild ohne Spieler-Bit — dann"
+           " prueft die Masken-Pruefung sich selbst");
+    PRUEFE(bruecke_stellen == gefahren && bruecke_summe == gefahren,
+           "Bruecken-Bilder: %ld an %d Stellen, erwartet je 1 an allen %d gefahrenen",
+           bruecke_summe, bruecke_stellen, gefahren);
 }
 
 /* =========================================================================
@@ -980,10 +1028,10 @@ static void teil_j(void)
 {
     extern uint16_t g_scd_pad_edge, g_scd_pad_held;
     printf("\n=== TEIL J: das px/pz-Delta hinter dem ECHTEN re15_game_step ===\n");
-    printf("  %-22s %8s %12s %8s %8s\n",
-           "Stelle", "JETZT", "GEGENPROBE", "STUB", "wieder");
-    int gefahren = 0, mit_bewegung = 0, wieder_frei = 0;
-    long jetzt_summe = 0, gegen_summe = 0, stub_summe = 0;
+    printf("  %-22s %8s %10s %12s %8s %8s\n",
+           "Stelle", "JETZT", "RUECKBAU", "GEGENPROBE", "STUB", "wieder");
+    int gefahren = 0, mit_bewegung = 0, wieder_frei = 0, ohne_ueberhang = 0, rueck_stellen = 0;
+    long jetzt_summe = 0, gegen_summe = 0, stub_summe = 0, rueck_summe = 0, rueck_ohne_span = 0;
 
     for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
         if (!s_spanne_ok[i] || s_sub_idx[i] < 0) continue;
@@ -992,7 +1040,19 @@ static void teil_j(void)
         uint8_t  item = re15_discard_sites[i].item;
         int      sub  = s_sub_idx[i];
         spanne_t sp   = s_spanne[i];
-        if (sp.b_msgende < 0 || sp.b_alt < 0) continue;
+        /* ⛔ KEIN STILLES UEBERSPRINGEN MEHR. Bis Runde 23 fiel hier jede Stelle
+         * ohne b_alt per `continue` heraus und wurde damit als Erfolg GEZAEHLT, obwohl sie
+         * gar nicht gefahren war — ROOM1090 ist genau so eine: sein Faden endet im
+         * Pruefstand NICHT, weil sub03 `Gosub 5` macht und sub05 eine Warteschleife auf das
+         * Ankunftsflag des Spieler-Weges ist:
+         *     0x026F4  Do  11 00 08 00
+         *     0x026F8  Evt_next
+         *     0x026FC  Ck  21 05 21 00      ; Ck(5,33,0) — Edwhile-Bedingung
+         * Ohne einen laufenden Plc_dest-Weg wird flag(5,33) nie gesetzt, die Schleife
+         * laeuft ewig, und die UEBERHANG-Spanne (b_alt) existiert nicht. Die Stelle wird
+         * deshalb mit GRUND ausgelassen — der RUECKBAU wird trotzdem gemessen, der
+         * braucht nur b_msgende. */
+        if (sp.b_msgende < 0) continue;
 
         re15_rdt_t rdt; size_t n = 0;
         uint8_t *raw = raum_laden(room, &rdt, &n);
@@ -1070,26 +1130,60 @@ static void teil_j(void)
         if (weg_wieder > 0) wieder_frei++;
         scd_register_current_rdt(NULL);
 
+        /* ---------- RUECKBAU: das EINE Bruecken-Bild ohne die Bruecke -------------- */
+        /* ⛔ DAS IST DER RUECKBAU ZUR ZAHL AUS TEIL I. Dort steht: ohne
+         * re15_discard_frozen() waere an jeder Stelle GENAU EIN Bild offen — das
+         * Bild, in dem der Nachrichten-Freeze schon geloest und die Abfrage noch nicht
+         * aufgemacht ist (RE2 hat es nicht, @0x80051844 friert im selben Aufruf wieder
+         * ein). Was dieses eine Bild WERT ist, wird hier in Einheiten gemessen: derselbe
+         * Raum, derselbe Weg, gehaltenes VORWAERTS, aber im Lauf OHNE Vormerkung —
+         * dort ist der Spieler in genau diesem Bild frei. Eine Zahl > 0 belegt, dass die
+         * Bruecke etwas traegt; die 0 in der Spalte JETZT waere sonst wertlos. */
+        long weg_rueck = j_weg_ueberhang(&rdt, room, sub,
+                                         sp.b_msgende, sp.b_msgende + 1, 1);
+        long rueck_stub = j_weg_ueberhang(&rdt, room, sub,
+                                          sp.b_msgende, sp.b_msgende + 1, 0);
+        PRUEFE(rueck_stub == 0, "ROOM%04X: der RUECKBAU-STUB (ohne re15_game_step) bewegt"
+               " den Spieler um %ld", room, rueck_stub);
+        if (weg_rueck > 0) { rueck_summe += weg_rueck; rueck_stellen++; }
+
         /* ---------- GEGENPROBE + STUB ueber die Ueberhang-Spanne ------------------ */
-        long b_von = sp.b_msgende - 0, b_bis = sp.b_alt;
-        long weg_gegen = j_weg_ueberhang(&rdt, room, sub, b_von, b_bis, 1);
-        long weg_stub  = j_weg_ueberhang(&rdt, room, sub, b_von, b_bis, 0);
-        PRUEFE(weg_stub == 0, "ROOM%04X: der STUB-Lauf (ohne re15_game_step) bewegt den"
-               " Spieler um %ld — dann misst der Aufbau sich selbst", room, weg_stub);
-        if (weg_gegen > 0) mit_bewegung++;
+        long weg_gegen = -1, weg_stub = -1;
+        if (sp.b_alt >= 0) {
+            weg_gegen = j_weg_ueberhang(&rdt, room, sub, sp.b_msgende, sp.b_alt, 1);
+            weg_stub  = j_weg_ueberhang(&rdt, room, sub, sp.b_msgende, sp.b_alt, 0);
+            PRUEFE(weg_stub == 0, "ROOM%04X: der STUB-Lauf (ohne re15_game_step) bewegt den"
+                   " Spieler um %ld — dann misst der Aufbau sich selbst", room, weg_stub);
+            if (weg_gegen > 0) mit_bewegung++;
+            if (weg_gegen > 0) gegen_summe += weg_gegen;
+            if (weg_stub  > 0) stub_summe  += weg_stub;
+        } else {
+            ohne_ueberhang++;
+            rueck_ohne_span += (weg_rueck > 0) ? weg_rueck : 0;
+        }
 
         char nam[24];
         snprintf(nam, sizeof nam, "ROOM%04X sub%02d m%u", room, sub, (unsigned)msg);
-        printf("  %-22s %8ld %12ld %8ld %8ld\n",
-               nam, weg_jetzt, weg_gegen, weg_stub, weg_wieder);
+        if (sp.b_alt >= 0)
+            printf("  %-22s %8ld %10ld %12ld %8ld %8ld\n",
+                   nam, weg_jetzt, weg_rueck, weg_gegen, weg_stub, weg_wieder);
+        else
+            printf("  %-22s %8ld %10ld %12s %8s %8ld   (UEBERHANG AUSGELASSEN:"
+                   " Faden endet nicht, Warteschleife Ck(5,33,0) @0x26FC)\n",
+                   nam, weg_jetzt, weg_rueck, "-", "-", weg_wieder);
         jetzt_summe += weg_jetzt;
-        if (weg_gegen > 0) gegen_summe += weg_gegen;
-        if (weg_stub  > 0) stub_summe  += weg_stub;
         gefahren++;
         free(raw);
     }
-    printf("  ABDECKUNG: %d Stellen mit echtem Tuer-Spawn und echtem re15_game_step\n",
-           gefahren);
+    printf("  ABDECKUNG: %d Stellen mit echtem Tuer-Spawn und echtem re15_game_step,\n"
+           "             davon %d ohne UEBERHANG-Spanne (mit Grund ausgelassen)\n",
+           gefahren, ohne_ueberhang);
+    printf("  RUECKBAU des SCHLIESS-Bildes: %ld Einheiten an %d von %d Stellen — so viel\n"
+           "  Weg traegt die eine Zeile re15_discard_frozen() je Stelle in EINEM Bild.\n"
+           "  Davon %ld Einheiten an den %d Stellen MIT Ueberhang-Spanne (die Zahl, die ohne\n"
+           "  das jetzt ausgewiesene ROOM1090 herauskommt) und %ld allein in ROOM1090.\n",
+           rueck_summe, rueck_stellen, gefahren,
+           rueck_summe - rueck_ohne_span, gefahren - ohne_ueberhang, rueck_ohne_span);
     printf("  Summe JETZT %ld Einheiten / GEGENPROBE %ld / STUB %ld;\n"
            "  in %d Stellen bewegte sich der Spieler im Ueberhang des Runde-22-Modells,\n"
            "  in %d Stellen laeuft er nach der Antwort sofort wieder (sonst haelt ihn\n"
@@ -1108,6 +1202,348 @@ static void teil_j(void)
     PRUEFE(wieder_frei > 0,
            "in KEINER Stelle laeuft der Spieler nach der Antwort wieder — dann ist nicht"
            " gezeigt, dass der Riegel wieder aufgeht");
+    /* ⛔ DER RUECKBAU MUSS ETWAS WERT SEIN. Waere er 0, haette das eine
+     * Bruecken-Bild aus TEIL I keine Wirkung, und die Zeile re15_discard_frozen()
+     * waere Zierde. */
+    PRUEFE(rueck_summe > 0,
+           "RUECKBAU: das Bruecken-Bild ist 0 Einheiten wert — dann traegt"
+           " re15_discard_frozen() nichts");
+}
+
+/* =========================================================================
+ * TEIL L — DAS BESITZ-GATE, AN DEN AUSGELIEFERTEN UNTERPROGRAMMEN.
+ *
+ * Gefragt wird: erscheint die Wegwerf-Abfrage je Benutzungsstelle auch dann, wenn der
+ * Spieler den Gegenstand GAR NICHT traegt? Gefahren wird NICHT die 6-Byte-Ersatzfolge aus
+ * TEIL A, sondern das AUSGELIEFERTE Unterprogramm des Raums, mit einem Spieler, der jede
+ * Ja/Nein-Frage des Skripts mit JA beantwortet (virtuelles Bestaetigen-Bit 0x4000). Denn
+ * genau so kommt man an die Stelle: ROOM4000 sub02 fragt zuerst "Will you use the Blue
+ * Master Keycard?" (Message_on 1 @0x01440), latcht die Antwort nach flag(12,31) und gibt
+ * erst dahinter "You've used the Blue Master Keycard." aus:
+ *     0x0142A  Ck  21 03 20 00     ; Ck(3,32,0)   Tuer noch verschlossen
+ *     0x01440  Message_on 1        ; "Will you use the Blue Master Keycard?"  (0x03)
+ *     0x01446  Ck  21 0c 1f 00     ; Ck(12,31,0)  Antwort JA
+ *     0x0144A  Message_on 2        ; "You've used the Blue Master Keycard."  <== die Stelle
+ *     0x01450  Set 22 03 20 01     ; Set(3,32,1)  Tuer ab jetzt benutzt
+ *
+ * DIE REGEL, GEGEN DIE GEPRUEFT WIRD, IST RE2s TUER-HANDLER:
+ *     80051628  jal   FUN_800696cc      ; Inventarplatz suchen
+ *     80051630  move  s1,v0
+ *     80051634  bltz  s1,LAB_800516a0   ; kein Treffer -> anderer Zweig
+ *     8005164C  jal   FUN_8002fe38      ; ERST DANN die Nachricht
+ *     80051670  sw    LAB_80051718,...  ; und DANACH die Fortsetzung einhaengen
+ *     800516B4/B8/C0 : der Nicht-Treffer-Zweig oeffnet eine andere Nachricht und
+ *                      haengt NICHTS ein — also nie eine Abfrage.
+ *
+ * ZWEI LAEUFE JE STELLE, EIN EINZIGER UNTERSCHIED (der Besitz):
+ *   OHNE  — Inventar leer.       VERLANGT: kein Prompt, kein Vorentscheid mit Treffer.
+ *   MIT   — Gegenstand, Anzahl 1. VERLANGT: Prompt.
+ * Der MIT-Lauf IST die Gegenprobe: ohne ihn stuende dieser Riegel auch dann gruen, wenn
+ * die Abfrage nie kommt (etwa weil der Pruefstand die Stelle nicht erreicht).
+ * Zusaetzlich wird der Zaehler des Gates selbst ausgewertet
+ * (re15_discard_vorentscheide / _mit_besitz): so ist belegt, dass das Gate GEFRAGT wurde
+ * und nicht bloss nichts passierte.
+ * ========================================================================= */
+static int l_lauf(re15_rdt_t *rdt, unsigned room, uint8_t msg, int sub,
+                  int mit_gegenstand, uint8_t item, int *out_erreicht)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    grundzustand();
+    g_current_room_id = room;
+    re15_msg_load_room_block(rdt->messages, rdt->messages_size);
+    scd_register_current_rdt(rdt);
+    if (mit_gegenstand) re15_inv_grant(item, 1);
+    scd_thread_start(0, rdt->sub_scd[sub]);
+    int erreicht = 0, abfrage = 0;
+    for (long fr = 0; fr < 6000; fr++) {
+        const unsigned char *r; int l, id;
+        g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+        g_scd_pad_held = 0;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        g_scd_pad_edge = 0;
+        if (re15_pauseflags_belegt() && g_scd.message_id == msg) erreicht = 1;
+        if (re15_discard_active()) { abfrage = 1; re15_discard_tick(0, 0); }
+        if (re15_discard_prompt(NULL, NULL)) break;
+    }
+    scd_register_current_rdt(NULL);
+    if (out_erreicht) *out_erreicht = erreicht;
+    return abfrage;
+}
+
+static void teil_l(void)
+{
+    printf("\n=== TEIL L: Besitz-Gate an den ausgelieferten Unterprogrammen ===\n");
+    printf("  %-22s %6s | %-22s | %-14s\n",
+           "Stelle", "item", "OHNE Besitz", "MIT Besitz");
+    int gefahren = 0, unerreicht = 0, ohne_abfrage = 0, mit_abfrage = 0;
+    int v0 = re15_discard_vorentscheide(), vb0 = re15_discard_vorentscheide_mit_besitz();
+    int vz0 = re15_discard_vorentscheid_belegt();
+
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
+        unsigned room = re15_discard_sites[i].room;
+        uint8_t  msg  = re15_discard_sites[i].msg;
+        uint8_t  item = re15_discard_sites[i].item;
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(room, &rdt, &n);
+        if (!raw) { printf("  SKIP ROOM%04X (RDT fehlt)\n", room); continue; }
+        int sub = sub_mit_nachricht(&rdt, msg);
+        if (sub < 0) {
+            printf("  AUSGELASSEN ROOM%04X msg %2u: kein Message_on %u in einer sub-Region\n",
+                   room, (unsigned)msg, (unsigned)msg);
+            free(raw); continue;
+        }
+        int e_ohne = 0, e_mit = 0;
+        int a_ohne = l_lauf(&rdt, room, msg, sub, 0, item, &e_ohne);
+        int a_mit  = l_lauf(&rdt, room, msg, sub, 1, item, &e_mit);
+        char nam[24];
+        snprintf(nam, sizeof nam, "ROOM%04X sub%02d m%u", room, sub, (unsigned)msg);
+        printf("  %-22s   0x%02X | erreicht=%d abfrage=%-4s | abfrage=%-4s%s\n",
+               nam, item, e_ohne, a_ohne ? "JA" : "nein", a_mit ? "JA" : "nein",
+               e_ohne ? "" : "   (Stelle im Pruefstand nicht erreicht)");
+        /* ⛔ HART: an einer ERREICHTEN Stelle darf ohne Besitz NICHTS kommen. */
+        PRUEFE(!a_ohne, "%s: Abfrage OHNE Besitz — das Gate @0x80051634 greift nicht", nam);
+        if (e_ohne) { gefahren++; if (a_ohne) ohne_abfrage++; } else unerreicht++;
+        if (a_mit)  mit_abfrage++;
+        /* Erreicht + Besitz muss die Abfrage bringen — sonst misst der OHNE-Lauf nichts. */
+        if (e_mit) PRUEFE(a_mit, "%s: MIT Besitz kommt die Abfrage NICHT — dann ist die 0"
+                          " im OHNE-Lauf wertlos", nam);
+        free(raw);
+    }
+    int v = re15_discard_vorentscheide() - v0;
+    int vb = re15_discard_vorentscheide_mit_besitz() - vb0;
+    printf("  ABDECKUNG: %d von %d Benutzungsstellen im Pruefstand erreicht"
+           " (%d nicht erreicht)\n", gefahren, RE15_DISCARD_SITE_COUNT, unerreicht);
+    printf("  OHNE BESITZ eine Abfrage: %d von %d erreichten Stellen\n",
+           ohne_abfrage, gefahren);
+    printf("  MIT  BESITZ eine Abfrage: %d von %d Stellen (GEGENPROBE)\n",
+           mit_abfrage, RE15_DISCARD_SITE_COUNT);
+    printf("  Das Gate selbst: %d Vorentscheide, davon %d mit Besitz"
+           " (@0x80051628 gesucht, @0x80051634 verzweigt)\n", v, vb);
+    /* KETTENPOSITION, gemessen statt behauptet: RE2 entscheidet die Besitzfrage VOR
+     * @0x8005164C, die Nachricht ist dann noch nicht offen. Jeder Vorentscheid, der das
+     * Belegt-Bit schon gesetzt findet (@0x800517f0 `andi v0,v0,0x80`), saesse HINTER dem
+     * Oeffnen. Vor Runde 24 war das der Fall: die Pruefung stand in
+     * re15_discard_notice_message, also hinter re15_dialog_open_mask. */
+    printf("  KETTENPOSITION: %d von %d Vorentscheiden fielen, waehrend das"
+           " Nachrichtensystem\n  schon BELEGT war (verlangt 0 - RE2 entscheidet VOR"
+           " @0x8005164C).\n", re15_discard_vorentscheid_belegt() - vz0, v);
+    PRUEFE(re15_discard_vorentscheid_belegt() - vz0 == 0,
+           "%d Vorentscheide sitzen HINTER dem Oeffnen der Nachricht - falsche Stelle"
+           " der Kette", re15_discard_vorentscheid_belegt() - vz0);
+    PRUEFE(ohne_abfrage == 0, "%d erreichte Stellen fragen OHNE Besitz", ohne_abfrage);
+    PRUEFE(mit_abfrage > 0, "GEGENPROBE: MIT Besitz kommt NIRGENDS eine Abfrage — dann"
+           " kann dieser Riegel eine Abfrage gar nicht sehen");
+    PRUEFE(mit_abfrage == gefahren,
+           "GEGENPROBE: %d Stellen fragen mit Besitz, aber %d sind erreichbar",
+           mit_abfrage, gefahren);
+    /* ⛔ UND DER ZAEHLER: das Gate MUSS gefragt worden sein, und zwar OEFTER als es
+     * Treffer gab — sonst waere "keine Abfrage ohne Besitz" nur die Abwesenheit von
+     * Ereignissen und kein Beweis fuer eine wirkende Pruefung. */
+    PRUEFE(v > vb && vb > 0,
+           "Gate-Zaehler unplausibel: %d Vorentscheide, %d mit Besitz", v, vb);
+}
+
+/* =========================================================================
+ * TEIL M — DER NACHHALL-UEBERLAPP: steht der Untertitel der ausloesenden Zeile
+ *          noch, waehrend die Wegwerf-Abfrage schon offen ist?
+ *
+ * RE2 kennt den Zustand "Text steht, Freeze geloest" NICHT. Belegt an zwei Stellen:
+ *   (a) das Belegt-Bit loeschen und den Pause-Schnappschuss zuruecklegen ist EIN Paar im
+ *       selben Block — @0x800307e8 `andi v0,v0,0x7f` / @0x800307f4
+ *       `sw v1,DAT_800cfbdc`, keine Bildgrenze dazwischen;
+ *   (b) die Abfrage wird mit DERSELBEN Nachrichten-Routine geoeffnet wie die Zeile davor
+ *       — @0x80051834 `jal FUN_8002fe38` (a1=0x100 @0x8005182C, a2=9 @0x80051830)
+ *       gegen @0x8005164C `jal FUN_8002fe38` (a1=0x100, a2=5 @0x80051640). EIN Kanal:
+ *       die neue Zeile legt sich auf die alte, die alte kann nicht daneben stehenbleiben.
+ *
+ * Der Port hat einen solchen Zustand: den UNTERTITEL-NACHHALL (msg-FSM Zustand 7,
+ * ausdrueckliche Nutzer-Entscheidung 2026-09-20, msg_common.c). Er BLEIBT — er ist die
+ * Nutzer-Entscheidung und haelt den Spieler nicht auf. Aber er darf die Abfrage nicht
+ * ueberlappen; dafuer ruft re15_discard_tick beim Aufgehen re15_msg_nachhall_beenden().
+ *
+ * GEMESSEN WIRD MIT ERZWUNGENEM NACHHALL: der Pruefstand hat keine Tonausgabe, also
+ * werden die beiden Plattform-Globalen der Aufnahme (audio_pc.c stempelt sie je Bild)
+ * von Hand gesetzt. Zwei Zahlen im selben Lauf:
+ *   UEBERLAPP  Bilder mit stehendem Text UND sichtbarer Abfrage. Verlangt: 0.
+ *   NACHHALL   Bilder im Zustand 7 im Lauf OHNE Abfrage. Muss > 0 sein — sonst
+ *              hat der Aufbau gar keinen Nachhall erzeugt und die 0 oben waere wertlos.
+ * ========================================================================= */
+static void teil_m(void)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
+    printf("\n=== TEIL M: Nachhall-Ueberlapp mit der Abfrage ===\n");
+
+    const unsigned room = 0x4000; const uint8_t msg = 2, item = 0x47;
+    re15_rdt_t rdt; size_t n = 0;
+    uint8_t *raw = raum_laden(room, &rdt, &n);
+    if (!raw) { printf("  SKIP ROOM%04X\n", room); return; }
+    int sub = sub_mit_nachricht(&rdt, msg);
+    if (sub < 0) { printf("  SKIP: kein Message_on %u\n", (unsigned)msg); free(raw); return; }
+
+    long ueberlapp = 0, nachhall_bilder = 0, prompt_bilder = 0;
+    grundzustand();
+    g_current_room_id = room;
+    re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+    scd_register_current_rdt(&rdt);
+    re15_inv_grant(item, 1);
+    scd_thread_start(0, rdt.sub_scd[sub]);
+    g_re15_voice_laeuft = 0; g_re15_voice_restbilder = 0;
+    int scharf = 0;
+    for (long fr = 0; fr < 4000; fr++) {
+        const unsigned char *r; int l, id;
+        g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+        g_scd_pad_held = 0;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        g_scd_pad_edge = 0;
+        /* ⛔ DIE AUFNAHME WIRD ERST SCHARF, WENN DIE ZEILE SCHON STEHT.
+         * Wuerde g_re15_voice_laeuft von Anfang an 1 sein, parkte der Riegel gegen die
+         * Aufnahme in op_message_on (scd_vm.c, RE15_VOICE_NOTBREMSE = 300 Bilder) und
+         * die Stelle waere nie erreicht — gemessen: 0 Bilder Prompt, also gar kein
+         * Fall. Hier laeuft die Aufnahme ab dem Bild, in dem die Benutzungs-Nachricht
+         * steht; ihr regulaeres Ende geht dann in den Nachhall
+         * (msg_common.c: `if (re15_stimme_rest() > 0) fsm = 7`). */
+        if (!scharf && re15_pauseflags_belegt() && g_scd.message_id == msg) {
+            scharf = 1; g_re15_voice_laeuft = 1; g_re15_voice_restbilder = 600;
+        }
+        if (re15_discard_active()) re15_discard_tick(0, 0);
+        int prompt = re15_discard_prompt(NULL, NULL) != 0;
+        if (g_scd.message_fsm == 7 && g_scd.message_active) nachhall_bilder++;
+        if (prompt) prompt_bilder++;
+        if (prompt && g_scd.message_active) ueberlapp++;
+        if (prompt && prompt_bilder > 120) break;
+    }
+    g_re15_voice_laeuft = 0; g_re15_voice_restbilder = 0;
+    printf("  Prompt-Bilder %ld, Nachhall-Bilder %ld, UEBERLAPP %ld\n",
+           prompt_bilder, nachhall_bilder, ueberlapp);
+    PRUEFE(prompt_bilder > 0,
+           "GEGENPROBE: die Abfrage geht in diesem Aufbau gar nicht auf — dann prueft"
+           " der Ueberlapp nichts");
+    PRUEFE(scharf, "GEGENPROBE: die Benutzungs-Nachricht stand nie");
+    PRUEFE(ueberlapp == 0,
+           "%ld Bilder Nachhall-Ueberlapp — RE2 hat diesen Zustand nicht"
+           " (@0x800307e8/@0x800307f4 sind ein Paar, @0x80051834 = @0x8005164C)",
+           ueberlapp);
+    free(raw);
+}
+
+/* =========================================================================
+ * TEIL N — DIE ZWEI FAELLE VON ROOM4000 UND ROOM1090, GEFAHREN.
+ *
+ * ROOM4000 sub02 ist der Fall, an dem die Runde-23-Beurteilung "ein Ja kann den
+ * Spielstand toeten" haengt. Das ausgelieferte Unterprogramm (Datei-Offsets, mit dem
+ * Laengen-Vorschub des Motors ausgelesen):
+ *     0x01426  Ifel_ck      06 00 2c 00
+ *     0x0142A  Ck           21 03 20 00     ; Ck(3,32,0)  Tuer noch unbenutzt
+ *     0x0142E  Se_on        36 02 0f 00 ...
+ *     0x0143A  Message_on   2b 00 ff ff     ; "The door is locked ... An ID card is required"
+ *     0x01440  Message_on   2b 01 ff ff     ; "Will you use the Blue Master Keycard?"  (0x03)
+ *     0x01446  Ck           21 0c 1f 00     ; Ck(12,31,0)  Antwort JA
+ *     0x0144A  Message_on   2b 02 ff ff     ; "You've used the Blue Master Keycard."  <== Stelle
+ *     0x01450  Set          22 03 20 01     ; Set(3,32,1)  Tuer ab jetzt benutzt
+ *     0x0145A  Ck           21 03 20 01     ; und der Zweig dahinter oeffnet sie
+ *
+ * ⛔ ZWEI BERICHTIGUNGEN ZUR BEURTEILUNG, beide am Byte gemessen:
+ *   (1) `Ck(3,32,0)` ist NICHT das einzige Tor. Zwischen der Frage und der
+ *       Benutzungs-Nachricht steht `Ck(12,31,0)` @0x01446 — die JA-ANTWORT des
+ *       Spielers auf Message_on 1. Und `Set(3,32,1)` @0x01450 liegt HINTER diesem Ck,
+ *       faellt also nur bei JA (op_ck gibt bei falsch SCD_R_IF_FALSE zurueck und der
+ *       Dispatcher springt auf das block_end des umgebenden Ifel_ck, scd_vm.c:1992-2011).
+ *   (2) Die Forderung "ohne Besitz faellt Set(3,32,1) nicht" ist im Auslieferungsstand
+ *       NICHT erfuellbar, ohne dem Skript eine Besitzpruefung anzudichten: sub02 hat
+ *       keine. Und das ist KEIN Versehen — der Blue Master Keycard 0x47 wird im ganzen
+ *       Spiel genau EINMAL ausgegeben, und zwar in ROOM4010, also HINTER dieser Tuer
+ *       (Item_aot_set 0x50, tools/discard_verlustwege.py). Wer die Tuer ohne Karte nicht
+ *       oeffnen koennte, kaeme nie an die Karte. Der Port darf das also nicht "reparieren".
+ *   Was der Port verhindern MUSS und hier verhindert: die WEGWERF-ABFRAGE ohne Besitz.
+ *   Ein Ja kann damit nichts wegwerfen, was der Spieler nicht hat.
+ *
+ * GEFAHREN werden je Raum zwei Faelle im ECHTEN VM:
+ *   (a) OHNE Besitz: keine Abfrage. Das Tuer-Flag des Skripts wird MITGEMESSEN und
+ *       ausgewiesen — nicht behauptet.
+ *   (b) MIT Besitz: die Abfrage kommt, zeigt GENAU diesen Gegenstand, und ein Ja nimmt
+ *       ihn aus dem Inventar.
+ * ========================================================================= */
+static void teil_n_fall(unsigned room, uint8_t msg, uint8_t item,
+                        uint8_t fz, uint8_t fi, const char *fname)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    re15_rdt_t rdt; size_t n = 0;
+    uint8_t *raw = raum_laden(room, &rdt, &n);
+    if (!raw) { printf("  SKIP ROOM%04X\n", room); return; }
+    int sub = sub_mit_nachricht(&rdt, msg);
+    if (sub < 0) { printf("  SKIP ROOM%04X: kein Message_on %u\n", room, (unsigned)msg);
+                   free(raw); return; }
+
+    for (int mit = 0; mit < 2; mit++) {
+        grundzustand();
+        g_current_room_id = room;
+        re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+        scd_register_current_rdt(&rdt);
+        if (mit) re15_inv_grant(item, 1);
+        int f_vor = re15_game_flag_get(fz, fi);
+        scd_thread_start(0, rdt.sub_scd[sub]);
+        int erreicht = 0;
+        for (long fr = 0; fr < 6000; fr++) {
+            const unsigned char *r; int l, id;
+            g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+            g_scd_pad_held = 0;
+            if (!re15_discard_frozen()) scd_vm_tick();
+            re15_msg_tick(&r, &l, &id);
+            g_scd_pad_edge = 0;
+            if (re15_pauseflags_belegt() && g_scd.message_id == msg) erreicht = 1;
+            if (re15_discard_active()) re15_discard_tick(0, 0);
+            if (re15_discard_prompt(NULL, NULL)) break;
+        }
+        uint8_t pitem = 0; int pchoice = -1;
+        int prompt = re15_discard_prompt(&pitem, &pchoice);
+        int f_nach = re15_game_flag_get(fz, fi);
+        if (!mit) {
+            printf("  (a) ROOM%04X sub%02d m%-2u OHNE Besitz : Stelle erreicht=%d,"
+                   " Abfrage=%s, %s %d->%d\n",
+                   room, sub, (unsigned)msg, erreicht, prompt ? "JA" : "nein",
+                   fname, f_vor, f_nach);
+            PRUEFE(!prompt, "ROOM%04X: Abfrage OHNE Besitz", room);
+            PRUEFE(re15_inv_find_item(item) < 0,
+                   "ROOM%04X: 0x%02X liegt im Inventar, obwohl nichts gewaehrt wurde",
+                   room, item);
+        } else {
+            printf("  (b) ROOM%04X sub%02d m%-2u MIT  Besitz : Abfrage=%s auf 0x%02X"
+                   " (Auswahl %d), %s %d->%d",
+                   room, sub, (unsigned)msg, prompt ? "JA" : "nein", pitem, pchoice,
+                   fname, f_vor, f_nach);
+            PRUEFE(prompt == 8, "ROOM%04X: MIT Besitz keine Abfrage", room);
+            PRUEFE(pitem == item, "ROOM%04X: Abfrage zeigt 0x%02X statt 0x%02X",
+                   room, pitem, item);
+            if (prompt) {
+                antworten(0x4000);                     /* SQUARE = Ja, Auswahl steht auf Yes */
+                printf(", Ja -> Gegenstand %s\n",
+                       re15_inv_find_item(item) < 0 ? "WEG" : "NOCH DA");
+                PRUEFE(re15_inv_find_item(item) < 0,
+                       "ROOM%04X: 0x%02X liegt nach JA immer noch im Inventar", room, item);
+            } else {
+                printf("\n");
+            }
+        }
+        scd_register_current_rdt(NULL);
+    }
+    free(raw);
+}
+
+static void teil_n(void)
+{
+    printf("\n=== TEIL N: ROOM4000 und ROOM1090, beide Faelle im echten VM ===\n");
+    /* ROOM4000: das Tuer-Flag ist flag(3,32) (`Set(3,32,1)` @0x01450). */
+    teil_n_fall(0x4000, 2, 0x47, 3, 32, "flag(3,32)");
+    /* ROOM1090: das Tor von sub03 ist flag(3,132) (`Ck(3,132,1)` @0x022A6 im Aufrufer
+     * sub00, von sub03 selbst geloescht: `Set(3,132,0)` @0x024CE). */
+    teil_n_fall(0x1090, 9, 0x31, 3, 132, "flag(3,132)");
+    printf("  Die Tuer-/Tor-Flags des SKRIPTS werden ausgewiesen, nicht verlangt: sub02 bzw.\n"
+           "  sub03 haben keine Besitzpruefung, und die Karte 0x47 liegt HINTER ihrer Tuer\n"
+           "  (ROOM4010). Verlangt wird nur, was der Port verantwortet: keine Abfrage ohne\n"
+           "  Besitz, und mit Besitz die richtige.\n");
 }
 
 /* =========================================================================
@@ -1220,6 +1656,9 @@ int main(void)
     teil_c();
     teil_d();
     teil_e();
+    teil_l();
+    teil_n();
+    teil_m();
     teil_i();
     teil_j();
     teil_k();

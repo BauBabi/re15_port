@@ -118,6 +118,16 @@ void re15_msg_clear_room_block(void);
  * one place. */
 int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id);
 
+/* UNTERTITEL-NACHHALL (msg-FSM Zustand 7, Nutzer-Entscheidung 2026-09-20) sofort beenden.
+ * Der Nachhall ist der EINZIGE Zustand, in dem Text steht, obwohl der Freeze schon geloest
+ * ist. RE2 hat diesen Zustand nicht: @0x800307e8 `andi v0,v0,0x7f` (Belegt-Bit weg) und
+ * @0x800307f4 `sw v1,DAT_800cfbdc` (Pause-Schnappschuss zurueck) liegen als PAAR im selben
+ * Block. Aufgerufen wird das dort, wo RE2 mit DEMSELBEN Nachrichten-Aufruf eine neue Zeile
+ * ueber die alte legt — @0x80051834 `jal FUN_8002fe38` fuer die Wegwerf-Abfrage, derselbe
+ * Aufruf wie @0x8005164C fuer "You have used the <Name>.". Ein Kanal, eine Zeile.
+ * Steht die FSM nicht im Nachhall, ist der Aufruf wirkungslos. */
+void re15_msg_nachhall_beenden(void);
+
 /* Shared .msg text LAYOUT walk (the cross-port glyph-placement loop).
  *
  * The control-code parsing is byte-identical to FUN_80028868 and was duplicated

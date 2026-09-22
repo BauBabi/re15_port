@@ -10,6 +10,7 @@
 #include "re15_inventory.h"    /* g_inv, re15_inv_find_item, re15_inv_remove_slot        */
 #include "re15_scd.h"          /* re15_pauseflags_belegt — RE2s Belegt-Bit @0x800517f0   */
 #include "re15_item_prompt.h"  /* re15_item_prompt_walk — Glyphenzahl des Skripts        */
+#include "re15_msg.h"          /* re15_msg_nachhall_beenden — @0x80051834 = @0x8005164C  */
 #include "re15_msg_select.h"   /* re15_msg_select_blink_tick — Blink-Gatter @0x80028600  */
 
 #include "gen/discard_sites.inc"
@@ -37,6 +38,12 @@ static uint8_t s_blink     = 0;    /* DAT_800b8525 dieser Abfrage (@0x800285e8) 
 static int     s_gefragt   = 0;
 static int     s_weggeworfen = 0;
 
+/* DER VORENTSCHEID = RE2s @0x80051628 `jal FUN_800696cc` + @0x80051634 `bltz s1`.
+ * Er faellt VOR dem Oeffnen der Nachricht; re15_discard_notice_message merkt danach nur
+ * noch vor, wenn er fuer DIESELBE (Raum, Nachricht) mit Treffer gefallen ist. */
+static struct { unsigned room; uint8_t msg; uint8_t item; int slot; int gilt; } s_vor;
+static int s_vorentscheide = 0, s_vorentscheide_besitz = 0, s_vorentscheid_belegt = 0;
+
 /* Anzahl 0 zurueckdrehen — dasselbe, was RE2 im Nein-Zweig tut (@0x800517C4 `sb v1,count`
  * mit v1 = 1). Seit die Anzahl erst beim Fragen faellt (siehe re15_discard_tick), kann das
  * nur noch den Zustand D_FRAGT betreffen; in D_WARTET ist die Anzahl unberuehrt
@@ -63,35 +70,80 @@ void re15_discard_reset(void)
     anzahl_zurueck();
     s_zustand = D_AUS; s_item = 0; s_slot = -1; s_choice = 0;
     s_reveal = s_reveal_total = s_reveal_timer = 0; s_blink = 0;
+    s_vor.gilt = 0;                /* ein halb gefallener Vorentscheid gilt nicht weiter */
 }
 
 uint8_t re15_discard_pending_item(void) { return (uint8_t)(s_zustand == D_AUS ? 0 : s_item); }
 
+/* ⛔ HARTER RESET. `item` wird ABSICHTLICH nicht gelesen: ein Load darf keine Abfrage
+ * des vorigen Laufs erben. Herleitung (RE2s Fortsetzungs-Zeiger liegt im RAM und in
+ * keinem Speicherformat; der Auslieferungsstand kann nicht speichern) im Header. */
 void re15_discard_restore(uint8_t item)
 {
+    (void)item;
     re15_discard_reset();
-    if (!item) return;
-    if (re15_inv_find_item(item) < 0) return;   /* nicht mehr dabei -> nichts vorzumerken */
-    s_item = item; s_slot = -1; s_choice = 0;
-    s_zustand = D_WARTET;
 }
 
-void re15_discard_notice_message(unsigned room_id, uint8_t msg_id)
+/* (1)+(2) von RE2s Reihenfolge: Platz suchen (@0x80051628 `jal FUN_800696cc`,
+ * @0x80051630 `move s1,v0`) und ohne Treffer abzweigen (@0x80051634 `bltz s1`).
+ * Gerufen von op_message_on UNMITTELBAR VOR dem Oeffnen der Nachricht. */
+int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id)
 {
-    if (s_zustand != D_AUS) return;            /* eine Abfrage laeuft schon              */
+    s_vor.gilt = 0;
+    if (s_zustand != D_AUS) return 0;          /* eine Abfrage laeuft schon              */
     uint8_t item = 0;
     for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
         if (re15_discard_sites[i].room == (uint16_t)room_id
             && re15_discard_sites[i].msg == msg_id) { item = re15_discard_sites[i].item; break; }
     }
-    if (!item) return;                         /* keine Benutzungsstelle                 */
+    if (!item) return 0;                       /* keine Benutzungsstelle                 */
+    s_vorentscheide++;
+    /* MESSGROESSE FUER DIE KETTENPOSITION: RE2 entscheidet VOR @0x8005164C, die Nachricht
+     * ist zu diesem Zeitpunkt also noch nicht offen. Jeder Vorentscheid, der das
+     * Belegt-Bit schon gesetzt findet (@0x800517f0 `andi v0,v0,0x80`), saesse hinter dem
+     * Oeffnen also an der falschen Stelle der Kette. Der Riegel TEIL L verlangt 0. */
+    if (re15_pauseflags_belegt()) s_vorentscheid_belegt++;
 
-    /* Der Gegenstand muss WIRKLICH getragen werden. RE1.5 prueft das im Skript NICHT
-     * (ROOM4000 sub02 z.B. fragt gar nicht nach Besitz) — der Port darf deshalb nicht
-     * anbieten, etwas wegzuwerfen, was gar nicht da ist. */
+    /* @0x80051628 — den Platz SUCHEN. re15_inv_find_item ist der Port-Gegenwert zu
+     * FUN_800696cc (lineare Slot-Suche nach der Id, inventory_common.c:144-149). */
     int slot = re15_inv_find_item(item);
-    if (slot < 0 || slot >= RE15_INV_MAX_SLOTS) return;
-    if (g_inv.slots[slot].qty == 0) return;    /* schon verbraucht -> nichts zu tun      */
+    /* @0x80051634 `bltz s1,LAB_800516a0` — KEIN Treffer, also der andere Zweig. Dort
+     * haengt RE2 keine Fortsetzung ein (@0x800516C0 `j LAB_800516f8`), es kann also nie
+     * eine Abfrage folgen. Im Port heisst dieser Zweig: Vorentscheid ungueltig. */
+    if (slot < 0 || slot >= RE15_INV_MAX_SLOTS) return 0;
+    if (g_inv.slots[slot].qty == 0) return 0;  /* schon verbraucht -> nichts zu tun      */
+
+    s_vor.room = room_id; s_vor.msg = msg_id;
+    s_vor.item = item;    s_vor.slot = slot;   s_vor.gilt = 1;
+    s_vorentscheide_besitz++;
+    return 1;
+}
+
+int re15_discard_vorentscheide(void)             { return s_vorentscheide; }
+int re15_discard_vorentscheid_belegt(void)       { return s_vorentscheid_belegt; }
+int re15_discard_vorentscheide_mit_besitz(void)  { return s_vorentscheide_besitz; }
+
+/* (4) von RE2s Reihenfolge: die Fortsetzung EINHAENGEN (@0x80051670
+ * `sw v0=>LAB_80051718,-0x7d50(at)`), unmittelbar nachdem die Nachricht offen ist. */
+void re15_discard_notice_message(unsigned room_id, uint8_t msg_id)
+{
+    if (s_zustand != D_AUS) { s_vor.gilt = 0; return; }   /* eine Abfrage laeuft schon   */
+
+    /* ⛔ FAIL-CLOSED. Vorgemerkt wird NUR, was der Vorentscheid von @0x80051628/
+     * @0x80051634 fuer GENAU DIESE (Raum, Nachricht) mit Treffer freigegeben hat. Ohne
+     * ihn passiert nichts — ein neuer Oeffnungsweg fuer Nachrichten kann die Abfrage
+     * also nicht ohne Besitzpruefung armieren. */
+    if (!s_vor.gilt || s_vor.room != room_id || s_vor.msg != msg_id) { s_vor.gilt = 0; return; }
+    uint8_t item = s_vor.item;
+    int     slot = s_vor.slot;
+    s_vor.gilt = 0;
+
+    /* Den Platz nachziehen: zwischen Vorentscheid und Einhaengen liegt das Oeffnen der
+     * Nachricht; ein Nachruecken (re15_inv_remove_slot, FUN_8004dadc) kann den Platz
+     * verschoben haben. Die Id entscheidet, nicht der Index. */
+    if (slot < 0 || slot >= RE15_INV_MAX_SLOTS || g_inv.slots[slot].id != item)
+        slot = re15_inv_find_item(item);
+    if (slot < 0 || slot >= RE15_INV_MAX_SLOTS || g_inv.slots[slot].qty == 0) return;
 
     /* ⛔ HIER wird NICHT dekrementiert. RE2 haengt an dieser Stelle nur die Fortsetzung
      * LAB_80051718 ein (`sw v0,[0x800D4498]` @0x80051670); der Zaehler faellt erst in der
@@ -163,6 +215,21 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
         uint8_t n = (uint8_t)(g_inv.slots[s_slot].qty - 1);   /* @0x80051810 */
         g_inv.slots[s_slot].qty = n;                          /* @0x8005181C */
         if (n != 0) { re15_discard_reset(); return; }         /* @0x80051824 */
+        /* ⛔ DER NACHHALL DER AUSLOESENDEN ZEILE ENDET HIER. RE2 oeffnet die Abfrage mit
+         * DERSELBEN Nachrichten-Routine, mit der es die Zeile "You have used the <Name>."
+         * geoeffnet hat:
+         *     8005182C  li   a1,0x100
+         *     80051830  li   a2,0x9          ; Prompt-Skript 9
+         *     80051834  jal  FUN_8002fe38    ; = derselbe Aufruf wie @0x8005164C
+         * Ein Kanal, eine Zeile: die vorige kann den Prompt nicht ueberleben. Der
+         * UNTERTITEL-NACHHALL des Ports (msg-FSM Zustand 7, Nutzer-Entscheidung
+         * 2026-09-20, msg_common.c:565-575) ist der einzige Zustand, in dem Text steht,
+         * waehrend der Freeze schon geloest ist — in RE2 gibt es den nicht, dort sind
+         * @0x800307e8 `andi v0,v0,0x7f` (Belegt-Bit loeschen) und @0x800307f4
+         * `sw v1,DAT_800cfbdc` (Pause-Schnappschuss zuruecklegen) EIN Paar im selben
+         * Block. Der Nachhall bleibt ueberall sonst erhalten (er ist die
+         * Nutzer-Entscheidung), aber er ueberlappt die Abfrage nicht mehr. */
+        re15_msg_nachhall_beenden();
         s_reveal       = 0;
         s_reveal_total = re15_item_prompt_walk(RE15_DISCARD_PROMPT_KEY, s_item,
                                                0, 0, 0);   /* nur zaehlen */
