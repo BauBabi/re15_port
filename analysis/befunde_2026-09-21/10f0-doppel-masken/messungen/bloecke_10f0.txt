@@ -1,0 +1,34 @@
+=== ROOM10F0 C4: 105 Masken -> 11 Bloecke (= Objekte)
+  Obj  0: Masken   0..8   n= 9  Kante 16 Anker( 76, 80)  Deckung   997 px  Tiefen 140..163 (7 Stufen)
+  Obj  1: Masken   9..19  n=11  Kante 24 Anker( 39, 98)  Deckung  2169 px  Tiefen 80..97 (9 Stufen)
+  Obj  2: Masken  20..34  n=15  Kante 24 Anker(  0,161)  Deckung  2506 px  Tiefen 26..43 (7 Stufen)
+  Obj  3: Masken  35..38  n= 4  Kante 12 Anker(308,112)  Deckung    84 px  Tiefen 110..116 (3 Stufen)
+  Obj  4: Masken  39..42  n= 4  Kante 24 Anker(258, 81)  Deckung   112 px  Tiefen 142..159 (4 Stufen)
+  Obj  5: Masken  43..46  n= 4  Kante 24 Anker(198, 79)  Deckung  1010 px  Tiefen 157..174 (4 Stufen)
+  Obj  6: Masken  47..50  n= 4  Kante 24 Anker(149, 80)  Deckung  1068 px  Tiefen 147..164 (4 Stufen)
+  Obj  7: Masken  51..54  n= 4  Kante 24 Anker( 76, 80)  Deckung   997 px  Tiefen 142..163 (4 Stufen)
+  Obj  8: Masken  55..65  n=11  Kante 24 Anker( 39, 98)  Deckung  2169 px  Tiefen 80..97 (9 Stufen)
+  Obj  9: Masken  66..80  n=15  Kante 24 Anker(  0,161)  Deckung  2506 px  Tiefen 26..43 (7 Stufen)
+  Obj 10: Masken  81..104 n=24  Kante 24 Anker(195,113)  Deckung  4122 px  Tiefen 54..75 (14 Stufen)
+  --- identische / enthaltene Deckungen ---
+    Obj  0 ( 9 Masken,   997 px) <-> Obj  7 ( 4 Masken,   997 px): Jaccard IDENTISCH  nurA=0 nurB=0
+    Obj  1 (11 Masken,  2169 px) <-> Obj  8 (11 Masken,  2169 px): Jaccard IDENTISCH  nurA=0 nurB=0
+    Obj  2 (15 Masken,  2506 px) <-> Obj  9 (15 Masken,  2506 px): Jaccard IDENTISCH  nurA=0 nurB=0
+  Gesamtdeckung: 12068 px (15.71 % des Bildes);  redundante Masken (billigere Seite): 30
+
+=== ROOM10F0 C5: 105 Masken -> 7 Bloecke (= Objekte)
+  Obj  0: Masken   0..30  n=31  Kante 20 Anker( 20,142)  Deckung  4860 px  Tiefen 44..70 (14 Stufen)
+  Obj  1: Masken  31..43  n=13  Kante 16 Anker( 79,107)  Deckung  1165 px  Tiefen 103..126 (9 Stufen)
+  Obj  2: Masken  44..47  n= 4  Kante 20 Anker(105, 94)  Deckung   639 px  Tiefen 164..185 (4 Stufen)
+  Obj  3: Masken  48..65  n=18  Kante 24 Anker(199,120)  Deckung  2628 px  Tiefen 71..91 (11 Stufen)
+  Obj  4: Masken  66..91  n=26  Kante 24 Anker(  0,142)  Deckung  4860 px  Tiefen 44..70 (12 Stufen)
+  Obj  5: Masken  92..100 n= 9  Kante 24 Anker( 79,107)  Deckung  1158 px  Tiefen 105..126 (7 Stufen)
+  Obj  6: Masken 101..104 n= 4  Kante 20 Anker(105, 94)  Deckung   637 px  Tiefen 164..185 (4 Stufen)
+  --- identische / enthaltene Deckungen ---
+    Obj  0 (31 Masken,  4860 px) <-> Obj  4 (26 Masken,  4860 px): Jaccard IDENTISCH  nurA=0 nurB=0
+    Obj  1 (13 Masken,  1165 px) <-> Obj  2 ( 4 Masken,   639 px): Jaccard 0.0039  nurA=1158 nurB=632
+    Obj  1 (13 Masken,  1165 px) <-> Obj  5 ( 9 Masken,  1158 px): Jaccard 0.9940  nurA=7 nurB=0
+    Obj  1 (13 Masken,  1165 px) <-> Obj  6 ( 4 Masken,   637 px): Jaccard 0.0039  nurA=1158 nurB=630
+    Obj  2 ( 4 Masken,   639 px) <-> Obj  6 ( 4 Masken,   637 px): Jaccard 0.9969  nurA=2 nurB=0
+  Gesamtdeckung: 9285 px (12.09 % des Bildes);  redundante Masken (billigere Seite): 26
+

@@ -1,0 +1,11 @@
+Cuts mit Atlas: 99;  davon mit entfernbaren Masken: 7
+Entfernbare Masken gesamt: 97 von 7672 (1.26 %)
+
+Raum       Cut Masken  Bloecke entfernb.  Anteil  an der Grenze
+ROOM1100     1    105        3        39     37 %  JA (105)
+ROOM10F0     4    105       11        26     25 %  JA (105)
+ROOM10D0     7    104      101        24     23 %  
+ROOM10F0     5    105        7         4      4 %  JA (105)
+ROOM1060     2     98       98         2      2 %  
+ROOM1000     4    105      103         1      1 %  JA (105)
+ROOM10C0     2    105      104         1      1 %  JA (105)

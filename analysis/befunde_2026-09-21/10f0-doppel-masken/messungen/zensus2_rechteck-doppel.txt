@@ -1,0 +1,12 @@
+Cuts geschrieben: 323 (Raeume 54)   Masken 14281   Geometrie-Doppel 31 (0.22 %)
+davon mit GLEICHEM src (bitgleiche Maske): 0
+
+Cuts MIT Doppeln: 2 von 323
+Raum      Cut  geb.  uniq  dopp   frei  amLim
+---------------------------------------------
+ROOM10F0    4   105    79    26     26     JA
+ROOM10F0    5   105   100     5      5     JA
+
+Cuts AN der Grenze 105: 20
+  davon mit Doppeln: 2
+Cuts NAHE der Grenze (95..104): 22
