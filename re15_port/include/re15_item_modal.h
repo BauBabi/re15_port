@@ -64,6 +64,7 @@ int re15_item_modal_prompt(uint8_t *out_type, int *out_choice);
 int re15_item_modal_reveal(void);
 int re15_item_modal_reveal_total(void);
 int re15_item_modal_prompt_ready(void);
+uint8_t re15_item_modal_blink(void);   /* Blink-Zaehler DAT_800b8525 (@0x800285e8) */
 
 /* Inspection (tests): the raw state byte (0..8, mirrors DAT_80072d3b) + counters. */
 uint8_t re15_item_modal_state(void);
