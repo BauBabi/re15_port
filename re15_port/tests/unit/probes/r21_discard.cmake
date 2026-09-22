@@ -7,7 +7,20 @@
 # von RE2 uebernommen (LAB_80051718: Zaehler @0x80051810, Frage @0x80051834, Nein-Zweig
 # @0x800517C4). Herleitung: include/re15_item_discard.h.
 #
-# ABDECKUNG: alle 16 erzeugten Benutzungsstellen (= 9 Gegenstaende x ihre Raumvarianten,
+# RUNDE 25, Nutzer-Befund 2026-09-22: "das Problem das ich Bei dir sah, war das du die
+# discard Abfrage auch bei Toren mit Raetsel panels machst, also wo man einen Code eingeben
+# muss. Da ist das natuerlich erst dann korrekt, wenn man den zugriffscode den man braucht
+# einmalig richtig eingegeben hat." -> TEIL R. Die Stellen-Tabelle traegt jetzt
+# {gate_zone, gate_bit}; vier Stellen sind von der Einsteck-Zeile (`Message_on 9`
+# "You've used the <Karte>.", ROOM10D0 @0x019C4 - sie faellt 47 Bilder VOR der ersten
+# Ziffern-Aufforderung) auf die Erfolgs-Zeile des Panels umgehaengt (`Message_on 5`
+# "You've opened the lock.", sub19 @0x0199E) und an das Erfolgs-Bit gebunden
+# (@0x0152A `22 03 32 01` Set(3,50,1), gesetzt hinter der Vier-Ziffern-Schranke
+# @0x01516 `21 05 0d 01 21 05 0e 01 21 05 0f 01 21 05 10 01`). Zwei Stellen sind
+# GESTRICHEN (ROOM11E0/11E1 msg 9: ihr Bit flag(3,139) steht ab Bild 0 eines neuen Spiels,
+# ROOM1240 @0x0055A - den Kartenleser gibt es dort nie). Aus 16 Stellen wurden 14.
+#
+# ABDECKUNG: alle 14 erzeugten Benutzungsstellen (= 8 Gegenstaende x ihre Raumvarianten,
 # engine/src/gen/discard_sites.inc; ROOM4001 msg 2 ist seit Runde 22 draussen - der Text
 # steht im Nachrichtenblock, aber KEIN Message_on-Opcode gibt ihn aus, Aufnahmebedingung D
 # des Generators), je 3 Faelle (Ja / Nein / Gegenstand nicht getragen) plus je eine

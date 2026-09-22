@@ -103,11 +103,29 @@ int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id)
     s_vor.gilt = 0;
     if (s_zustand != D_AUS) return 0;          /* eine Abfrage laeuft schon              */
     uint8_t item = 0;
+    const re15_discard_site_t *s = NULL;
     for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++) {
         if (re15_discard_sites[i].room == (uint16_t)room_id
-            && re15_discard_sites[i].msg == msg_id) { item = re15_discard_sites[i].item; break; }
+            && re15_discard_sites[i].msg == msg_id) { s = &re15_discard_sites[i]; break; }
     }
-    if (!item) return 0;                       /* keine Benutzungsstelle                 */
+    if (!s) return 0;                          /* keine Benutzungsstelle                 */
+
+    /* ⛔ DAS CODE-PANEL-GATE, und zwar VOR der Besitzpruefung. Es entscheidet nicht, OB
+     * gefragt werden darf, sondern ob (Raum, Nachricht) ueberhaupt eine Wegwerf-Stelle
+     * IST: an einem Tor mit Zifferncode ist der Schluessel erst erledigt, wenn der Code
+     * einmal richtig eingegeben wurde. Die Stelle haengt deshalb an der Erfolgs-Nachricht
+     * des Panels ("You've opened the lock."), und diese Zeile steht in 22 Raeumen — das
+     * Gate-Bit trennt die vier gemeinten von den uebrigen. Fail-closed: kein Flag, keine
+     * Stelle. Bit und Ausloeser sind GEMESSEN (Generator-Bedingung E, gen_discard_sites.py):
+     *   ROOM10D0 sub01 @0x01512 Ck(3,50,0) + @0x01516 Ck(5,13..16,1) (die vier Ziffern)
+     *                  @0x01526 Evt_exec sub19  -> @0x0152A Set(3,50,1) = ERFOLG
+     *   sub19          @0x0199E Message_on 5    = der neue Ausloeser
+     * `Evt_exec` gibt die Kontrolle nicht ab (op_evt_exec, byte-true @0x8003f2b8), das
+     * Bit steht also bereits, wenn sub19 seine Nachricht oeffnet.
+     * Die Besitzpruefung darunter bleibt unveraendert an der RE2-Kettenposition
+     * (@0x80051628 suchen / @0x80051634 verzweigen, beide VOR @0x8005164C). */
+    if (s->gate_zone && !re15_game_flag_get(s->gate_zone, s->gate_bit)) return 0;
+    item = s->item;
     s_vorentscheide++;
     /* MESSGROESSE FUER DIE KETTENPOSITION: RE2 entscheidet VOR @0x8005164C, die Nachricht
      * ist zu diesem Zeitpunkt also noch nicht offen. Jeder Vorentscheid, der das

@@ -185,6 +185,16 @@ static void grundzustand(void)
     re15_game_state_init();       /* u.a. flag(1,27)/flag(2,7) = "keine Szene laeuft" */
     memset(&g_scd, 0, sizeof g_scd);
     g_scd.work_slot = -1;
+    /* ⛔ DAS CODE-PANEL-GATE STELLEN. Seit Runde 25 ist eine Stelle mit gate_zone != 0
+     * erst dann eine Stelle, wenn der Zifferncode einmal richtig eingegeben wurde
+     * (ROOM10D0 @0x0152A `22 03 32 01` Set(3,50,1) hinter der Vier-Ziffern-Schranke
+     * @0x01516). Der Pruefstand stellt hier genau diesen Zustand her — die Stellen OHNE
+     * Gate aendern sich dadurch nicht. Den Gegenfall (Gate offen) fasst TEIL R an, und
+     * zwar indem er das Bit gezielt wieder LOESCHT. */
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++)
+        if (re15_discard_sites[i].gate_zone)
+            re15_game_flag_set(re15_discard_sites[i].gate_zone,
+                               re15_discard_sites[i].gate_bit, 1);
 }
 
 static int teil_a_b(void)
@@ -281,7 +291,11 @@ static int teil_a_b(void)
            "             je 3 Faelle (Ja / Nein / nicht getragen) + %d Gegenproben\n",
            faelle, RE15_DISCARD_SITE_COUNT, items, mit_gegenprobe);
     PRUEFE(faelle == RE15_DISCARD_SITE_COUNT, "nicht alle Benutzungsstellen gefahren");
-    PRUEFE(items == 9, "erwartet 9 Gegenstaende, gezaehlt %d", items);
+    /* 8 seit Runde 25: die Yellow Keycard 0x39 ist raus. Ihre einzige Benutzungsstelle
+     * (ROOM11E0/11E1 msg 9) haengt an einem Kartenleser, den der ausgelieferte Stand nie
+     * installiert — flag(3,139) steht ab Bild 0 eines neuen Spiels (ROOM1240 @0x0055A),
+     * also nimmt main00 @0x01576 den Else-Zweig und setzt @0x016C0 eine fertige Tuer. */
+    PRUEFE(items == 8, "erwartet 8 Gegenstaende, gezaehlt %d", items);
     PRUEFE(mit_gegenprobe == faelle, "nicht jeder Fall hatte eine Gegenprobe");
     return faelle;
 }
@@ -1393,9 +1407,11 @@ static void teil_l(void)
      * Erfolg: ohne_abfrage waere 0, und "0 von 0" liest sich wie "0 von 10". Und die
      * Gleichheit mit_abfrage == gefahren faengt das NICHT — sie bleibt wahr, wenn beide
      * Zahlen zusammen fallen (Rueckbau R-D1: 1 von 16 erreicht, alter Riegel gruen).
-     * Gemessen werden 10 von 16; die 6 anderen haengen an AOTs/Kartenlesern, die der
-     * Pruefstand nicht betritt, und stehen mit Grund in der Tabelle oben. */
-    PRUEFE(gefahren >= 10,
+     * Gemessen wurden vor Runde 25: 10 von 16. Seit dem Umhaengen der Panel-Stellen auf
+     * die Erfolgs-Nachricht (msg 5 in sub19, einem geradlinigen Unterprogramm) sind es
+     * 14 von 14 — die frueher unerreichbaren Kartenleser-Zeilen sind entweder umgehaengt
+     * oder gestrichen. */
+    PRUEFE(gefahren >= 14,
            "ABDECKUNG: nur %d von %d Stellen erreicht (erwartet >= 10) — dann messen die"
            " Nullen darunter nichts", gefahren, RE15_DISCARD_SITE_COUNT);
     PRUEFE(ohne_abfrage == 0, "%d erreichte Stellen fragen OHNE Besitz", ohne_abfrage);
@@ -2121,6 +2137,236 @@ static void teil_q(void)
            " — dann ist Q1 kein Befund", weg_gegenprobe, gefahren);
 }
 
+/* =========================================================================
+ * TEIL R — DIE TORE MIT ZIFFERNCODE (Nutzer-Befund 2026-09-22).
+ *
+ *   "das Problem das ich Bei dir sah, war das du die discard Abfrage auch bei Toren mit
+ *    Raetsel panels machst, also wo man einen Code eingeben muss. Da ist das natuerlich
+ *    erst dann korrekt, wenn man den zugriffscode den man braucht einmalig richtig
+ *    eingegeben hat. erst dann darf die Abfrage kommen"
+ *
+ * Die sechs Kartenleser geben "You've used the <Karte>." BEIM EINSTECKEN aus, 47 Bilder
+ * vor der ersten Ziffern-Aufforderung. ROOM10D0 sub20, unverzweigt hintereinander:
+ *     @0x019C4  2b 09 ff ff   Message_on 9    "You've used the Blue Keycard."
+ *     @0x019CA  04 ff 18 11   Evt_exec sub17  <- HIER erst geht das Tastenfeld auf
+ * Erst die Vier-Ziffern-Schranke in sub01 setzt das Erfolgs-Bit:
+ *     @0x01512  21 03 32 00   Ck(3,50,0)      Schloss noch zu
+ *     @0x01516  21 05 0d 01 21 05 0e 01 21 05 0f 01 21 05 10 01   die vier Ziffern
+ *     @0x01526  04 ff 18 13   Evt_exec sub19
+ *     @0x0152A  22 03 32 01   Set(3,50,1)     ERFOLG
+ * und sub19 gibt @0x0199E `Message_on 5` = "You've opened the lock." aus.
+ *
+ * VIER FAELLE JE PANEL-RAUM, alle am AUSGELIEFERTEN Unterprogramm gefahren, mit einem
+ * Spieler, der jede Ja/Nein-Frage mit JA beantwortet (virtuelles Bit 0x4000):
+ *   R1 Gate 0, LESER-Sub, Karte im Inventar, JA  -> KEINE Abfrage (der gemeldete Fehler).
+ *      Mit Nachweis, dass die alte Stelle ERREICHT wurde — sonst misst die Null nichts.
+ *   R2 Gate 1, ERFOLGS-Sub, Karte im Inventar    -> GENAU EINE Abfrage, und sie zeigt
+ *      genau diese Karte. Gefahren bis zum Ende des Unterprogramms, mit NEIN beantwortet;
+ *      der Zaehler re15_discard_gefragt() muss um genau 1 steigen.
+ *   R3 Die GESTRICHENEN Panels (tot=1): weder die Einsteck- noch die Erfolgs-Zeile ist
+ *      eine Stelle, und zwar auch dann nicht, wenn ihr Bit steht — flag(3,139) steht im
+ *      ausgelieferten Stand ab Bild 0 (ROOM1240 sub02 @0x0055A `22 03 8b 01`).
+ *   R4 KOLLISION: "You've opened the lock." steht in vielen Raeumen (in ROOM1100 sogar
+ *      als msg 2, 0x2A Byte hinter der dortigen Wegwerf-Stelle msg 4). Gezaehlt wird ueber
+ *      ALLE ausgelieferten RDTs: eine Stelle auf dieser Zeile gibt es NUR in den Raeumen
+ *      mit Zifferncode-Panel.
+ *   R5 NICHT-REGRESSION: die Stellen OHNE Gate sind unveraendert 10, und keine von ihnen
+ *      hat ein Gate bekommen.
+ * ========================================================================= */
+static int r_stelle_index(unsigned room, uint8_t msg)
+{
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++)
+        if (re15_discard_sites[i].room == (uint16_t)room && re15_discard_sites[i].msg == msg)
+            return i;
+    return -1;
+}
+
+/* Ein Lauf auf einem AUSGELIEFERTEN Unterprogramm. `gate` = Sollwert des Erfolgs-Bits,
+ * `karte` = liegt die Karte im Inventar. Rueckgabe: wie oft die Abfrage aufging; ueber
+ * `*erreicht` wird gemeldet, ob die beobachtete Nachricht ueberhaupt aufgemacht wurde. */
+static int r_lauf(re15_rdt_t *rdt, const re15_discard_panel_t *p, int sub, uint8_t beobachte,
+                  int gate, int karte, int *erreicht, uint8_t *prompt_item)
+{
+    extern uint16_t g_scd_pad_edge, g_scd_pad_held;
+    grundzustand();                             /* setzt die Gates aller Stellen auf 1  */
+    re15_game_flag_set(p->gate_zone, p->gate_bit, gate ? 1 : 0);   /* ... und hier gezielt */
+    re15_game_flag_set(9, p->taken_bit, 1);     /* Taken-Bit: der Leser prueft es
+                                                 * (ROOM10D0 @0x019C0 `21 09 34 01`)    */
+    g_current_room_id = p->room;
+    re15_msg_load_room_block(rdt->messages, rdt->messages_size);
+    scd_register_current_rdt(rdt);
+    if (karte) re15_inv_grant(p->item, 1);
+    scd_thread_start(0, rdt->sub_scd[sub]);
+    int gefragt0 = re15_discard_gefragt(), gesehen = 0, beantwortet = 0;
+    if (erreicht) *erreicht = 0;
+    if (prompt_item) *prompt_item = 0;
+    for (long fr = 0; fr < 8000; fr++) {
+        const unsigned char *r; int l, id;
+        g_scd_pad_edge = (fr > 2 && (fr % 4) == 0) ? 0x4000u : 0u;
+        g_scd_pad_held = 0;
+        if (!re15_discard_frozen()) scd_vm_tick();
+        re15_msg_tick(&r, &l, &id);
+        g_scd_pad_edge = 0;
+        if (re15_pauseflags_belegt() && g_scd.message_id == beobachte && erreicht) *erreicht = 1;
+        if (re15_discard_active()) {
+            if (!gesehen && re15_discard_prompt(prompt_item, NULL)) gesehen = 1;
+            re15_discard_tick(0, 0);
+            /* Mit NEIN beantworten, sobald der Text steht: der Lauf geht weiter, damit
+             * eine ZWEITE Abfrage im selben Unterprogramm auffiele. */
+            if (!beantwortet && re15_discard_ready()) {
+                re15_discard_tick(0x1000, 0);   /* Auswahl auf No                        */
+                re15_discard_tick(0x4000, 0);   /* bestaetigen                           */
+                beantwortet = 1;
+            }
+        }
+        if (!g_scd.threads[0].active && !g_scd.message_active && !g_scd.message_fsm_active
+            && !re15_discard_active() && fr > 64) break;
+    }
+    scd_register_current_rdt(NULL);
+    return re15_discard_gefragt() - gefragt0;
+}
+
+static void teil_r(void)
+{
+    printf("\n=== TEIL R: Tore mit Zifferncode — die Abfrage erst NACH dem Code ===\n");
+    int lebend = 0, tot = 0, r1 = 0, r2 = 0;
+
+    for (int i = 0; i < RE15_DISCARD_PANEL_COUNT; i++) {
+        const re15_discard_panel_t *p = &re15_discard_panels[i];
+        re15_rdt_t rdt; size_t n = 0;
+        uint8_t *raw = raum_laden(p->room, &rdt, &n);
+        if (!raw) { printf("  SKIP ROOM%04X (RDT fehlt)\n", p->room); continue; }
+
+        int i_alt  = r_stelle_index(p->room, p->vorzeitig_msg);
+        int i_neu  = r_stelle_index(p->room, p->ausloeser_msg);
+        /* Die EINSTECK-Zeile darf NIRGENDS mehr eine Wegwerf-Stelle sein. */
+        PRUEFE(i_alt < 0, "ROOM%04X: msg %u (Einstecken) ist immer noch eine Stelle",
+               p->room, (unsigned)p->vorzeitig_msg);
+
+        if (p->tot) {
+            /* --- R3: gestrichenes Panel ------------------------------------------- */
+            PRUEFE(i_neu < 0, "ROOM%04X: msg %u ist eine Stelle, obwohl das Panel"
+                   " gestrichen ist (flag(%d,%d) steht ab Bild 0, ROOM1240 @0x0055A)",
+                   p->room, (unsigned)p->ausloeser_msg, p->gate_zone, p->gate_bit);
+            int e1 = 0, e2 = 0;
+            int a1 = r_lauf(&rdt, p, p->leser_sub, p->vorzeitig_msg, 1, 1, &e1, NULL);
+            int a2 = r_lauf(&rdt, p, p->erfolg_sub, p->ausloeser_msg, 1, 1, &e2, NULL);
+            printf("  ROOM%04X GESTRICHEN  Leser sub%02d m%u erreicht=%d abfragen=%d |"
+                   " Erfolg sub%02d m%u erreicht=%d abfragen=%d\n",
+                   p->room, p->leser_sub, (unsigned)p->vorzeitig_msg, e1, a1,
+                   p->erfolg_sub, (unsigned)p->ausloeser_msg, e2, a2);
+            PRUEFE(a1 == 0 && a2 == 0, "ROOM%04X: gestrichenes Panel fragt trotzdem"
+                   " (%d + %d Abfragen)", p->room, a1, a2);
+            PRUEFE(e1 || e2, "ROOM%04X: keine der beiden Zeilen wurde erreicht — dann"
+                   " messen die Nullen nichts", p->room);
+            tot++; free(raw); continue;
+        }
+
+        /* --- R2 zuerst: der POSITIVFALL. Ohne ihn waere R1 nur Abwesenheit. -------- */
+        PRUEFE(i_neu >= 0, "ROOM%04X: msg %u (Erfolg) ist KEINE Stelle",
+               p->room, (unsigned)p->ausloeser_msg);
+        if (i_neu >= 0) {
+            PRUEFE(re15_discard_sites[i_neu].gate_zone == p->gate_zone
+                   && re15_discard_sites[i_neu].gate_bit == p->gate_bit,
+                   "ROOM%04X: die Stelle traegt Gate flag(%d,%d) statt flag(%d,%d)",
+                   p->room, re15_discard_sites[i_neu].gate_zone,
+                   re15_discard_sites[i_neu].gate_bit, p->gate_zone, p->gate_bit);
+        }
+        int e_neu = 0; uint8_t pit = 0;
+        int a_neu = r_lauf(&rdt, p, p->erfolg_sub, p->ausloeser_msg, 1, 1, &e_neu, &pit);
+
+        /* --- R1: der gemeldete Fehler. Gate offen, Karte im Inventar, JA. --------- */
+        int e_alt = 0;
+        int a_alt = r_lauf(&rdt, p, p->leser_sub, p->vorzeitig_msg, 0, 1, &e_alt, NULL);
+
+        printf("  ROOM%04X item 0x%02X | R1 Leser sub%02d m%u Gate=0: erreicht=%d"
+               " abfragen=%d | R2 Erfolg sub%02d m%u Gate=1: erreicht=%d abfragen=%d"
+               " zeigt 0x%02X\n",
+               p->room, p->item, p->leser_sub, (unsigned)p->vorzeitig_msg, e_alt, a_alt,
+               p->erfolg_sub, (unsigned)p->ausloeser_msg, e_neu, a_neu, pit);
+
+        PRUEFE(e_alt, "ROOM%04X: die Einsteck-Zeile msg %u wurde nicht erreicht — dann"
+               " misst die 0 daneben nichts", p->room, (unsigned)p->vorzeitig_msg);
+        PRUEFE(a_alt == 0, "ROOM%04X: %d Abfrage(n) beim EINSTECKEN, also vor dem Code"
+               " — genau der gemeldete Fehler", p->room, a_alt);
+        PRUEFE(e_neu, "ROOM%04X: die Erfolgs-Zeile msg %u wurde nicht erreicht",
+               p->room, (unsigned)p->ausloeser_msg);
+        PRUEFE(a_neu == 1, "ROOM%04X: %d Abfragen an der Erfolgs-Zeile, erwartet genau 1",
+               p->room, a_neu);
+        PRUEFE(pit == p->item, "ROOM%04X: die Abfrage zeigt 0x%02X statt 0x%02X",
+               p->room, pit, p->item);
+        if (a_alt == 0 && e_alt) r1++;
+        if (a_neu == 1) r2++;
+        lebend++;
+        free(raw);
+    }
+
+    /* --- R4: KOLLISION. Die Erfolgs-Zeile steht in vielen Raeumen. ---------------- */
+    int mit_text = 0, mit_stelle = 0, panelraum = 0;
+    for (int s = 1; s <= 6; s++) {
+        for (unsigned r = 0; r < 0x1000; r++) {
+            unsigned room = (unsigned)(s << 12) | r;
+            char pth[600];
+            snprintf(pth, sizeof pth, "%s/STAGE%d/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, s, room);
+            size_t n = 0;
+            uint8_t *raw = slurp(pth, &n);
+            if (!raw) continue;
+            re15_rdt_t rdt;
+            if (re15_rdt_parse(raw, n, &rdt) >= 0 && rdt.messages && rdt.messages_size) {
+                /* ⛔ ERST LEEREN. re15_msg_load_room_block ueberschreibt nur so viele
+                 * Eintraege, wie der neue Raum mitbringt (msg_common.c:247) — ohne den
+                 * Clear zaehlte dieser Zensus Texte des VORIGEN Raums mit. Gemessen:
+                 * mit Clear 22 Vorkommen, ohne 29. */
+                re15_msg_clear_room_block();
+                re15_msg_load_room_block(rdt.messages, rdt.messages_size);
+                for (int m = 0; m < 32; m++) {
+                    const char *txt = re15_msg_get_text(m);
+                    if (!txt || !strstr(txt, "opened the lock")) continue;
+                    mit_text++;
+                    int idx = r_stelle_index(room, (uint8_t)m);
+                    if (idx >= 0) {
+                        mit_stelle++;
+                        int ist_panel = 0;
+                        for (int q = 0; q < RE15_DISCARD_PANEL_COUNT; q++)
+                            if (re15_discard_panels[q].room == room
+                                && re15_discard_panels[q].ausloeser_msg == (uint8_t)m
+                                && !re15_discard_panels[q].tot) ist_panel = 1;
+                        if (ist_panel) panelraum++;
+                        PRUEFE(ist_panel, "ROOM%04X msg %d traegt \"opened the lock\" UND"
+                               " eine Wegwerf-Stelle, ist aber kein Zifferncode-Panel",
+                               room, m);
+                        PRUEFE(re15_discard_sites[idx].gate_zone != 0,
+                               "ROOM%04X msg %d haengt an \"opened the lock\" OHNE Gate",
+                               room, m);
+                    }
+                }
+            }
+            free(raw);
+        }
+    }
+    printf("  R4 KOLLISION: \"...opened the lock...\" steht in %d Raum-Nachrichten,"
+           " davon %d mit Wegwerf-Stelle — alle %d in Panel-Raeumen\n",
+           mit_text, mit_stelle, panelraum);
+    PRUEFE(mit_text > 10, "nur %d Vorkommen der Erfolgs-Zeile gefunden — der"
+           " Kollisions-Riegel misst dann nichts", mit_text);
+    PRUEFE(mit_stelle == panelraum && panelraum == lebend,
+           "R4: %d Stellen auf der Erfolgs-Zeile, %d davon in Panel-Raeumen, %d Panels",
+           mit_stelle, panelraum, lebend);
+
+    /* --- R5: NICHT-REGRESSION. Die Stellen ohne Zifferncode bleiben, wie sie waren. - */
+    int ohne_gate = 0, mit_gate = 0;
+    for (int i = 0; i < RE15_DISCARD_SITE_COUNT; i++)
+        { if (re15_discard_sites[i].gate_zone) mit_gate++; else ohne_gate++; }
+    printf("  R5 NICHT-REGRESSION: %d Stellen ohne Gate (unveraendert), %d mit Gate,"
+           " %d Panels gestrichen\n", ohne_gate, mit_gate, tot);
+    PRUEFE(ohne_gate == 10, "erwartet 10 Stellen ohne Gate, gezaehlt %d", ohne_gate);
+    PRUEFE(mit_gate == 4, "erwartet 4 Stellen mit Gate, gezaehlt %d", mit_gate);
+    PRUEFE(lebend == 4 && tot == 2, "erwartet 4 lebende + 2 gestrichene Panels,"
+           " gezaehlt %d + %d", lebend, tot);
+    PRUEFE(r1 == lebend, "nur %d von %d Panels haben den Gate-0-Fall belegt", r1, lebend);
+    PRUEFE(r2 == lebend, "nur %d von %d Panels haben den Gate-1-Fall belegt", r2, lebend);
+}
+
 int main(void)
 {
     printf("=== r21_discard_wegwerfen — \"You don't need this key any more. Discard it?\"\n");
@@ -2143,6 +2389,7 @@ int main(void)
     teil_p();      /* re15_discard_restore belebt nie eine Abfrage                    */
     teil_q();      /* JA-Zweig nach Inventar-Verschiebung (@0x800517C4)               */
     teil_l();
+    teil_r();      /* die Tore mit Zifferncode — Abfrage erst NACH dem Code           */
     teil_n();
     teil_m();
     teil_i();
