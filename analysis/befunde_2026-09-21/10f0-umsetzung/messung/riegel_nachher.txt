@@ -1,0 +1,9 @@
+MODELL meshes=17 bones=15
+BELEG cut=4 datei=C:/workspace/git/reAi_v2/.claude/worktrees/wf_b4972d66-6b5-3/re15_port/shared_assets/PSX/MASKS/ROOM10F0_PRI04.BELEG gelesen=1 unbelegte_texel=0
+RIEGEL MARKE cut=4 F335 punkte=837 unbelegt_verdeckt=0
+RIEGEL PFAD cut=4 bilder=30 mit_unbelegter_verdeckung=0 punkte=0
+RIEGEL STAND cut=4 plaetze=2788 davon_ankerzone=1287 mit_unbelegter_verdeckung=0 punkte=0
+BELEG cut=5 datei=C:/workspace/git/reAi_v2/.claude/worktrees/wf_b4972d66-6b5-3/re15_port/shared_assets/PSX/MASKS/ROOM10F0_PRI05.BELEG gelesen=1 unbelegte_texel=0
+RIEGEL PFAD cut=5 bilder=20 mit_unbelegter_verdeckung=0 punkte=0
+RIEGEL STAND cut=5 plaetze=4441 davon_ankerzone=2301 mit_unbelegter_verdeckung=0 punkte=0
+RIEGEL r22_10f0: GEHALTEN

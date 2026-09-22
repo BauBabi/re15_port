@@ -1,0 +1,25 @@
+MODELL meshes=17 bones=15
+BELEG cut=4 datei=C:/workspace/git/reAi_v2/.claude/worktrees/wf_b4972d66-6b5-3/build/r22/gegenprobe_alt/ROOM10F0_PRI04.BELEG gelesen=1 unbelegte_texel=3541
+RIEGEL MARKE cut=4 F335 punkte=837 unbelegt_verdeckt=154
+RIEGEL PFAD cut=4 bilder=30 mit_unbelegter_verdeckung=17 punkte=2213
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=15600 punkte=571 unbelegt_verdeckt=3
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=15800 punkte=552 unbelegt_verdeckt=4
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=16000 punkte=532 unbelegt_verdeckt=4
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=16200 punkte=517 unbelegt_verdeckt=1
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=16400 punkte=502 unbelegt_verdeckt=2
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=16600 punkte=483 unbelegt_verdeckt=2
+RIEGEL PLATZ cut=4 band=0 x=-4400 z=16800 punkte=472 unbelegt_verdeckt=1
+RIEGEL PLATZ cut=4 band=0 x=-4200 z=14200 punkte=731 unbelegt_verdeckt=2
+RIEGEL STAND cut=4 plaetze=2788 davon_ankerzone=1287 mit_unbelegter_verdeckung=158 punkte=5480
+BELEG cut=5 datei=C:/workspace/git/reAi_v2/.claude/worktrees/wf_b4972d66-6b5-3/build/r22/gegenprobe_alt/ROOM10F0_PRI05.BELEG gelesen=1 unbelegte_texel=3080
+RIEGEL PFAD cut=5 bilder=20 mit_unbelegter_verdeckung=11 punkte=560
+RIEGEL PLATZ cut=5 band=0 x=1200 z=-2800 punkte=376 unbelegt_verdeckt=2
+RIEGEL PLATZ cut=5 band=0 x=1200 z=-2600 punkte=391 unbelegt_verdeckt=3
+RIEGEL PLATZ cut=5 band=0 x=1200 z=-2400 punkte=400 unbelegt_verdeckt=5
+RIEGEL PLATZ cut=5 band=0 x=1200 z=-2200 punkte=408 unbelegt_verdeckt=6
+RIEGEL PLATZ cut=5 band=0 x=1200 z=-2000 punkte=422 unbelegt_verdeckt=7
+RIEGEL PLATZ cut=5 band=0 x=1400 z=-2800 punkte=376 unbelegt_verdeckt=18
+RIEGEL PLATZ cut=5 band=0 x=1400 z=-2600 punkte=383 unbelegt_verdeckt=19
+RIEGEL PLATZ cut=5 band=0 x=1400 z=-2400 punkte=387 unbelegt_verdeckt=20
+RIEGEL STAND cut=5 plaetze=4441 davon_ankerzone=2301 mit_unbelegter_verdeckung=244 punkte=14107
+RIEGEL r22_10f0: GEFALLEN

@@ -934,6 +934,45 @@
      "nur_kunst": true
     },
     {
+     "name": "Buerostuhl x-1600 z12200",
+     "quader": [
+      -1600,
+      12200,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
+    },
+    {
+     "name": "Buerostuhl x-1800 z8200",
+     "quader": [
+      -1800,
+      8200,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
+    },
+    {
+     "name": "Buerostuhl x-1900 z4300",
+     "quader": [
+      -1900,
+      4300,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
+    },
+    {
      "name": "Buerostuhl x1600 z5700",
      "quader": [
       1600,
@@ -947,7 +986,7 @@
      "nur_kunst": true
     }
    ],
-   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze.\n⛔ 2026-09-09 dritte Runde (F1039/F1195/F1321/F1451): die schwarzen Lehnen laufen bis h~-1950 (an den Schwarz-Saeulen aufgeloest, drei Spalten: -1970/-1927/-1970) UND das Nutzer-Lasso hat dort schwarz-auf-schwarz-Luecken. Hoehe -1950 und Region = Kunst ODER Tiefschwarz (Summe<45; der Boden dieses Raums ist hell).\n⛔ 2026-09-09 vierte Runde (F1254/F1476): die Jaccard-Kollisionstiefe gab dem ganzen Lasso das Feld EINER Zelle; die Hintergrund-Stuehle im Lasso trugen zu nahe Tiefen und deckten den davorstehenden Spieler (15x t126 / 54x t103+97, ohne naehere Zellflaeche am Pixel). Lassos rechnen jetzt mit tiefe=szene: jedes Pixel bekommt die Flaeche seines eigenen Moebels (Rechteckzellen als Saeulen, Kreiszellen als -1950-Quader, naechste gewinnt, Luecken erben).\n⛔ 2026-09-21 Nutzer-Marke befund_10F0_F335_marke1.bmp (\"Leon ist da grossteils transparent\"), Runde 22: an der Marke waren 426 von 837 gezeichneten Figurpunkten verdeckt. 272 davon durch die Freistellung des Stuhls (richtig, er steht davor), 154 durch Tiefschwarz - und ALLE 154 trugen das Etikett von Zelle 17, also der Zelle MIT Freistellung. Zwei Aenderungen, beide gemessen (analysis/befunde_2026-09-21/10f0-umsetzung.md):\n  (1) Die Quader-Eintraege der drei Zellen, die schon ein szene-Lasso tragen, sind WEG. Sie bauten dasselbe Objekt ein zweites Mal (C4 30 von 105 Maskenplaetzen, C5 39 von 105); die gedeckte Flaeche bleibt punktgenau gleich.\n  (2) raum.py: Regel 1 ist jetzt woertlich das, was ihr Kommentar sagt - nur die LOECHER der eigenen Kunst statt eines Saums von 7 Bildpunkten (gemessen hat die Freistellung in C4 GENAU 0 und in C5 GENAU 1 dunkles Loch, die Saum-Begruendung trug also nicht); Regel 2 bedient nur noch Zellen OHNE Freistellung. Wirkung: Marke 50,9 -> 32,5 % (Zugabe 0), gespielter Weg C4 12 von 30 Bildern ueber der Haelfte -> 0, Beruehrung an begehbaren Standplaetzen 152 -> 153 (Pulte und Konsolenbank behalten ihre Maske)."
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze.\n⛔ 2026-09-09 dritte Runde (F1039/F1195/F1321/F1451): die schwarzen Lehnen laufen bis h~-1950 (an den Schwarz-Saeulen aufgeloest, drei Spalten: -1970/-1927/-1970) UND das Nutzer-Lasso hat dort schwarz-auf-schwarz-Luecken. Hoehe -1950 und Region = Kunst ODER Tiefschwarz (Summe<45; der Boden dieses Raums ist hell).\n⛔ 2026-09-09 vierte Runde (F1254/F1476): die Jaccard-Kollisionstiefe gab dem ganzen Lasso das Feld EINER Zelle; die Hintergrund-Stuehle im Lasso trugen zu nahe Tiefen und deckten den davorstehenden Spieler (15x t126 / 54x t103+97, ohne naehere Zellflaeche am Pixel). Lassos rechnen jetzt mit tiefe=szene: jedes Pixel bekommt die Flaeche seines eigenen Moebels (Rechteckzellen als Saeulen, Kreiszellen als -1950-Quader, naechste gewinnt, Luecken erben)."
   },
   "5": {
    "objekte": [
@@ -993,9 +1032,48 @@
      "oben": 0,
      "grow": 0,
      "nur_kunst": true
+    },
+    {
+     "name": "Buerostuhl x1600 z5700",
+     "quader": [
+      1600,
+      5700,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
+    },
+    {
+     "name": "Buerostuhl x1600 z1900",
+     "quader": [
+      1600,
+      1900,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
+    },
+    {
+     "name": "Buerostuhl x1500 z-2000",
+     "quader": [
+      1500,
+      -2000,
+      1500,
+      1500,
+      -1950
+     ],
+     "oben": 0,
+     "grow": 0,
+     "nur_kunst": true
     }
    ],
-   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze.\n⛔ 2026-09-09 dritte Runde (F1039/F1195/F1321/F1451): die schwarzen Lehnen laufen bis h~-1950 (an den Schwarz-Saeulen aufgeloest, drei Spalten: -1970/-1927/-1970) UND das Nutzer-Lasso hat dort schwarz-auf-schwarz-Luecken. Hoehe -1950 und Region = Kunst ODER Tiefschwarz (Summe<45; der Boden dieses Raums ist hell).\n⛔ 2026-09-09 vierte Runde (F1254/F1476): die Jaccard-Kollisionstiefe gab dem ganzen Lasso das Feld EINER Zelle; die Hintergrund-Stuehle im Lasso trugen zu nahe Tiefen und deckten den davorstehenden Spieler (15x t126 / 54x t103+97, ohne naehere Zellflaeche am Pixel). Lassos rechnen jetzt mit tiefe=szene: jedes Pixel bekommt die Flaeche seines eigenen Moebels (Rechteckzellen als Saeulen, Kreiszellen als -1950-Quader, naechste gewinnt, Luecken erben).\n⛔ 2026-09-21 Nutzer-Marke befund_10F0_F335_marke1.bmp (\"Leon ist da grossteils transparent\"), Runde 22: an der Marke waren 426 von 837 gezeichneten Figurpunkten verdeckt. 272 davon durch die Freistellung des Stuhls (richtig, er steht davor), 154 durch Tiefschwarz - und ALLE 154 trugen das Etikett von Zelle 17, also der Zelle MIT Freistellung. Zwei Aenderungen, beide gemessen (analysis/befunde_2026-09-21/10f0-umsetzung.md):\n  (1) Die Quader-Eintraege der drei Zellen, die schon ein szene-Lasso tragen, sind WEG. Sie bauten dasselbe Objekt ein zweites Mal (C4 30 von 105 Maskenplaetzen, C5 39 von 105); die gedeckte Flaeche bleibt punktgenau gleich.\n  (2) raum.py: Regel 1 ist jetzt woertlich das, was ihr Kommentar sagt - nur die LOECHER der eigenen Kunst statt eines Saums von 7 Bildpunkten (gemessen hat die Freistellung in C4 GENAU 0 und in C5 GENAU 1 dunkles Loch, die Saum-Begruendung trug also nicht); Regel 2 bedient nur noch Zellen OHNE Freistellung. Wirkung: Marke 50,9 -> 32,5 % (Zugabe 0), gespielter Weg C4 12 von 30 Bildern ueber der Haelfte -> 0, Beruehrung an begehbaren Standplaetzen 152 -> 153 (Pulte und Konsolenbank behalten ihre Maske)."
+   "_warum": "⛔ 2026-09-09 Marken F721/F1260/F1534: die Spaltenregel-Standards bissen den davorstehenden Spieler (F721: 159+61 Punkte, F1260: 560, F1534: 30+121 - sein Koerper liegt jeweils IM Silhouetten-Tiefenband). Die fuenf betroffenen Nutzer-Lassos rechnen jetzt mit der Kollisionstiefe (Raycast gegen die Jaccard-gepinnte Zelle, Kachel-Maximum) - dasselbe Modell wie Rueckwand/Liege/Holzbank.\n⛔ 2026-09-09 Marken F607/F813/F998/F1101/F1193 (\"ganz viele Stuehle decken mich nicht\"): die Buerostuehle stehen auf eigenen Typ-3-KREISZELLEN (11 Stueck im RDT) - je sichtbarer Zelle ein Quader. Hoehe -700: das Kantenmass hat in C4 seinen einzigen sauberen BINNEN-Gipfel bei -700 (22,53 gegen 19,84/-600 und 15,20/-800); der Anstieg zu -1300/-1400 laeuft monoton in den Messbereichsrand (Schreibtischkanten) und ist kein Gipfel. Die Dunkel-Spalten-Messung der Lehnenkante ist im dunklen Raum unbrauchbar (alle Treffer am Suchfensterrand).\n⛔ 2026-09-09 zweite Runde (Marken F307/F460/F954/F1090/F1223): die Quader-Silhouetten der Stuehle re-blitteten BODEN ueber die Figur (Box breiter als die Kunst) und die Lehnenspitzen ueber -700 blieben ungedeckt. Jetzt: nur_kunst=true (Silhouette ∩ Nutzer-Lassos des Winkels) und Hoehe -1100 - decken kann nur noch, was der Nutzer als Vordergrund geliefert hat, und davon alles bis zur Lehnenspitze.\n⛔ 2026-09-09 dritte Runde (F1039/F1195/F1321/F1451): die schwarzen Lehnen laufen bis h~-1950 (an den Schwarz-Saeulen aufgeloest, drei Spalten: -1970/-1927/-1970) UND das Nutzer-Lasso hat dort schwarz-auf-schwarz-Luecken. Hoehe -1950 und Region = Kunst ODER Tiefschwarz (Summe<45; der Boden dieses Raums ist hell).\n⛔ 2026-09-09 vierte Runde (F1254/F1476): die Jaccard-Kollisionstiefe gab dem ganzen Lasso das Feld EINER Zelle; die Hintergrund-Stuehle im Lasso trugen zu nahe Tiefen und deckten den davorstehenden Spieler (15x t126 / 54x t103+97, ohne naehere Zellflaeche am Pixel). Lassos rechnen jetzt mit tiefe=szene: jedes Pixel bekommt die Flaeche seines eigenen Moebels (Rechteckzellen als Saeulen, Kreiszellen als -1950-Quader, naechste gewinnt, Luecken erben)."
   },
   "6": {
    "objekte": [

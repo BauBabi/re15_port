@@ -1,0 +1,26 @@
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     10F0 Cut 4 Teil 01 ( [Stuhl -1600,12200]: quader x-1600..-100 z12200..13700 Hoehe -1950: 428 von 428 Bildpunkten, Tiefe 137..146
+     10F0 Cut 4 Teil 02 ( [Stuhl -1800,8200]: quader x-1800..-300 z8200..9700 Hoehe -1950: 1111 von 1111 Bildpunkten, Tiefe 79..87
+     10F0 Cut 4 Teil 03 ( [Stuhl -1900,4300]: quader x-1900..-400 z4300..5800 Hoehe -1950: 592 von 592 Bildpunkten, Tiefe 25..42
+     Buerostuhl x6600 z7500: quader x6600..8100 z7500..9000 Hoehe -1950: 84 von 84 Bildpunkten, Tiefe 110..116
+     Buerostuhl x6700 z10300: quader x6700..8200 z10300..11800 Hoehe -1950: 112 von 112 Bildpunkten, Tiefe 138..159
+     Buerostuhl x4200 z11800: quader x4200..5700 z11800..13300 Hoehe -1950: 1010 von 1010 Bildpunkten, Tiefe 147..174
+     Buerostuhl x1550 z11650: quader x1550..3050 z11650..13150 Hoehe -1950: 1068 von 1068 Bildpunkten, Tiefe 136..164
+     Buerostuhl x1600 z5700: quader x1600..3100 z5700..7200 Hoehe -1950: 4122 von 4122 Bildpunkten, Tiefe 49..75
+     Kachelung: 10F0 Cut 4 Tei=10, 10F0 Cut 4 Tei=12, 10F0 Cut 4 Tei=12, Buerostuhl x66=12, Buerostuhl x67=12, Buerostuhl x42=12, Buerostuhl x15=12, Buerostuhl x16=24 -> 104 Rechtecke, 22536 von 65536 Atlaspunkten
+CUT 4: Rechtecke 104 | Sollflaeche 8527 px
+   Sektion  ausgeliefert 2084 B, nachgebaut 2084 B, BITGLEICH=True
+   TIM      ausgeliefert 66080 B, nachgebaut 66080 B, BITGLEICH=True
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     Bodenebene y=0 aus dem Blickziel des Cuts (Guete 0.00, begehbare Baender [0])
+     10F0 Cut 5 Teil 01 ( [Stuhl 1600,5700]: quader x1600..3100 z5700..7200 Hoehe -1950: 2630 von 2630 Bildpunkten, Tiefe 44..58
+     10F0 Cut 5 Teil 02 ( [Stuhl 1600,1900]: quader x1600..3100 z1900..3400 Hoehe -1950: 679 von 679 Bildpunkten, Tiefe 102..108
+     10F0 Cut 5 Teil 03 ( [Stuhl 1500,-2000]: quader x1500..3000 z-2000..-500 Hoehe -1950: 273 von 275 Bildpunkten, Tiefe 160..185
+     Buerostuhl x-1900 z4300: quader x-1900..-400 z4300..5800 Hoehe -1950: 2628 von 2628 Bildpunkten, Tiefe 68..91
+     Kachelung: 10F0 Cut 5 Tei=12, 10F0 Cut 5 Tei=12, 10F0 Cut 5 Tei=12, Buerostuhl x-1=12 -> 105 Rechtecke, 13297 von 65536 Atlaspunkten
+CUT 5: Rechtecke 105 | Sollflaeche 6205 px
+   Sektion  ausgeliefert 2104 B, nachgebaut 2104 B, BITGLEICH=True
+   TIM      ausgeliefert 66080 B, nachgebaut 66080 B, BITGLEICH=True

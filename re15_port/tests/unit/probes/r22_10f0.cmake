@@ -13,3 +13,25 @@ target_link_libraries(probe_r22_10f0_figur PRIVATE re15_engine re15_test_support
 target_include_directories(probe_r22_10f0_figur PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_r22_10f0_figur PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# ⛔ RIEGEL (Runde 22, Nutzer-Marke befund_10F0_F335_marke1.bmp). Erkennungsmass
+# "UNBELEGTE VERDECKUNG": kein Figurpunkt darf von einem Maskentexel verdeckt werden,
+# der ausserhalb des BELEGT-Feldes des Winkels liegt — also in der Silhouette einer
+# Moebelzelle MIT Freistellung, aber ausserhalb dieser Freistellung. Schranke 0, kein
+# freier Parameter. Geprueft ueber die Nutzer-Marke, alle protokollierten Bilder aus
+# befund.log und alle begehbaren Standplaetze beider Winkel (Klemmpfad, 200er-Raster).
+# GEGENPROBE (Dossier analysis/befunde_2026-09-21/10f0-umsetzung.md §7): mit dem
+# Auslieferungsstand vom 2026-09-21 faellt der Riegel. Zahlen BERICHTIGT 2026-09-22 nach
+# dem Pruefurteil — im Kommentar standen zuvor PFAD 22, STAND 152 und C5 STAND 516, das
+# Protokoll (messung/riegel_gegenprobe_auslieferung.txt) sagt:
+#   C4  unbelegte Texel 3541,  MARKE 154 Punkte,  PFAD 17 von 30 Bildern,
+#       STAND 158 von 2788 Plaetzen
+#   C5  unbelegte Texel 3080,                     PFAD 11 von 20 Bildern,
+#       STAND 244 von 4441 Plaetzen
+# Nach dem Umbau ueberall 0.
+# ⛔ NICHT als Gegenprobe zaehlt der Satz "nichts Noetiges geht verloren": er waere
+# zirkulaer, denn entfernt werden gerade die 5412 von 5480 unbelegten Punkten.
+add_test(NAME unit_r22_10f0_figur
+         COMMAND probe_r22_10f0_figur riegel
+                 ${CMAKE_SOURCE_DIR}/../analysis/befunde_2026-09-21/10f0-quader-silhouette/messung/pfad_10f0_aus_befundlog.txt)
+set_tests_properties(unit_r22_10f0_figur PROPERTIES TIMEOUT 300)

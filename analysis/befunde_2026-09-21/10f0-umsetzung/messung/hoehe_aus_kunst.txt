@@ -1,0 +1,51 @@
+Typ-3-Zellen (Buerostuhl-Kreiszellen) im RDT:
+   Zelle 12  x  6600..  8100  z  7500..  9000
+   Zelle 13  x  6800..  8300  z  3800..  5300
+   Zelle 14  x  6700..  8200  z 10300.. 11800
+   Zelle 15  x  4200..  5700  z 11800.. 13300
+   Zelle 16  x  1550..  3050  z 11650.. 13150
+   Zelle 17  x -1600..  -100  z 12200.. 13700
+   Zelle 18  x -1800..  -300  z  8200..  9700
+   Zelle 19  x -1900..  -400  z  4300..  5800
+   Zelle 20  x  1600..  3100  z  5700..  7200
+   Zelle 21  x  1600..  3100  z  1900..  3400
+   Zelle 22  x  1500..  3000  z -2000..  -500
+
+=== CUT 4 ===
+  "10F0 Cut 4 Teil 01 (Nutzer-Lasso)"
+     Kunst 428 px, Kasten x88..112 y85..124, Zelle 17 (Deckung 1.000)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: -1675
+        h=-1675: Silhouette  1564 px (y85..129), Kunst darin 428/428, Tiefschwarz darin 592
+        h=-1100: Silhouette  1118 px (y97..129), Kunst darin 294/428, Tiefschwarz darin 378
+        h=-1950: Silhouette  1785 px (y80..129), Kunst darin 428/428, Tiefschwarz darin 752
+  "10F0 Cut 4 Teil 02 (Nutzer-Lasso)"
+     Kunst 1111 px, Kasten x69..108 y110..176, Zelle 18 (Deckung 1.000)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: -1550
+        h=-1550: Silhouette  4582 px (y109..185), Kunst darin 1111/1111, Tiefschwarz darin 956
+        h=-1100: Silhouette  3581 px (y123..185), Kunst darin 1014/1111, Tiefschwarz darin 639
+        h=-1950: Silhouette  5537 px (y97..185), Kunst darin 1111/1111, Tiefschwarz darin 1425
+  "10F0 Cut 4 Teil 03 (Nutzer-Lasso)"
+     Kunst 592 px, Kasten x59..94 y219..239, Zelle 19 (Deckung 1.000)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: -975
+        h= -975: Silhouette  1655 px (y216..239), Kunst darin 592/592, Tiefschwarz darin 188
+        h=-1100: Silhouette  2359 px (y209..239), Kunst darin 592/592, Tiefschwarz darin 355
+        h=-1950: Silhouette  7468 px (y158..239), Kunst darin 592/592, Tiefschwarz darin 2266
+
+=== CUT 5 ===
+  "10F0 Cut 5 Teil 01 (Nutzer-Lasso)"
+     Kunst 2629 px, Kasten x53..118 y167..239, Zelle 20 (Deckung 1.000)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: -1375
+        h=-1375: Silhouette  7582 px (y166..239), Kunst darin 2629/2629, Tiefschwarz darin 809
+        h=-1100: Silhouette  5877 px (y178..239), Kunst darin 2523/2629, Tiefschwarz darin 363
+        h=-1950: Silhouette 11297 px (y140..239), Kunst darin 2629/2629, Tiefschwarz darin 2526
+  "10F0 Cut 5 Teil 02 (Nutzer-Lasso)"
+     Kunst 679 px, Kasten x103..128 y119..168, Zelle 21 (Deckung 1.000)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: -1450
+        h=-1450: Silhouette  2601 px (y119..173), Kunst darin 679/679, Tiefschwarz darin 703
+        h=-1100: Silhouette  2134 px (y128..173), Kunst darin 560/679, Tiefschwarz darin 578
+        h=-1950: Silhouette  3289 px (y106..173), Kunst darin 679/679, Tiefschwarz darin 1013
+  "10F0 Cut 5 Teil 03 (Nutzer-Lasso)"
+     Kunst 275 px, Kasten x114..136 y98..120, Zelle 22 (Deckung 0.993)
+     KLEINSTE Hoehe, die die Kunst ganz enthaelt: None
+        h=-1100: Silhouette   806 px (y108..135), Kunst darin 195/275, Tiefschwarz darin 351
+        h=-1950: Silhouette  1286 px (y94..135), Kunst darin 273/275, Tiefschwarz darin 644

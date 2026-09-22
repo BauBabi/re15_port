@@ -1,0 +1,43 @@
+MARKE: gezeichnet 837, verdeckt 426, davon ohne Nutzer-Kunst 154
+
+Zugabe nach ETIKETT:
+   Zelle 17 (x -1600 z 12200, MIT Nutzer-Kunst)  154 Punkte, Zeilen 80..113, Regel1 146 / Regel2 8
+
+Zugabe nach ZEILE (ges = Figurpunkte der Zeile):
+   y= 80  Zugabe 10  Zellen [17]
+   y= 81  Zugabe 15  Zellen [17]
+   y= 82  Zugabe 13  Zellen [17]
+   y= 83  Zugabe 10  Zellen [17]
+   y= 84  Zugabe 16  Zellen [17]
+   y= 85  Zugabe 10  Zellen [17]
+   y= 86  Zugabe  8  Zellen [17]
+   y= 87  Zugabe  6  Zellen [17]
+   y= 88  Zugabe  6  Zellen [17]
+   y= 89  Zugabe  6  Zellen [17]
+   y= 90  Zugabe  4  Zellen [17]
+   y= 91  Zugabe  2  Zellen [17]
+   y= 92  Zugabe  2  Zellen [17]
+   y= 93  Zugabe  3  Zellen [17]
+   y= 94  Zugabe  2  Zellen [17]
+   y= 95  Zugabe  1  Zellen [17]
+   y= 96  Zugabe  1  Zellen [17]
+   y= 97  Zugabe  1  Zellen [17]
+   y= 98  Zugabe  1  Zellen [17]
+   y= 99  Zugabe  1  Zellen [17]
+   y=100  Zugabe  1  Zellen [17]
+   y=101  Zugabe  1  Zellen [17]
+   y=102  Zugabe  1  Zellen [17]
+   y=103  Zugabe  1  Zellen [17]
+   y=104  Zugabe  1  Zellen [17]
+   y=105  Zugabe  1  Zellen [17]
+   y=106  Zugabe  2  Zellen [17]
+   y=107  Zugabe  2  Zellen [17]
+   y=108  Zugabe  3  Zellen [17]
+   y=109  Zugabe  3  Zellen [17]
+   y=110  Zugabe  4  Zellen [17]
+   y=111  Zugabe  5  Zellen [17]
+   y=112  Zugabe  6  Zellen [17]
+   y=113  Zugabe  5  Zellen [17]
+
+Liegt die Zugabe UEBER der Kunst ihrer eigenen Zelle?
+   Zelle 17: Kunst beginnt y=85, Zugabe-Zeilen 80..113, davon ueber der Kunst 64 von 154

@@ -1,0 +1,11 @@
+Stuhl   Zelle   Kunst-Kasten    Eichung (Hoehe 0 -> Zeile)   gemessene Hoehe
+c4 4 Teil 01 (Nutz    Z17  x88..112 y85..124   Boden y= 122.7 (Kunst 124, Abweichung  -1.3)   h=-1800 
+c4 4 Teil 02 (Nutz    Z18  x69..108 y110..176   Boden y= 167.0 (Kunst 176, Abweichung  -9.0)   h=-1765 
+c4 4 Teil 03 (Nutz    Z19  x59..94 y219..239   Boden y= 332.7 (Kunst 239, Abweichung  93.7)   h=-1775 ⛔ Kunst am Bildrand abgeschnitten
+c5 5 Teil 01 (Nutz    Z20  x53..118 y167..239   Boden y= 251.5 (Kunst 239, Abweichung  12.5)   h=-1760 ⛔ Kunst am Bildrand abgeschnitten
+c5 5 Teil 02 (Nutz    Z21  x103..128 y119..168   Boden y= 162.4 (Kunst 168, Abweichung  -5.6)   h=-1640 
+c5 5 Teil 03 (Nutz    Z22  x114..136 y98..120   Boden y= 130.6 (Kunst 120, Abweichung  10.6)   h=-1795 
+
+Eichung bestanden (|Abweichung| <= 3 Bildzeilen) bei 1 von 4 Stuehlen
+gemessene Stuhlhoehen: -1800
+Median -1800 | Mittel -1800 | Spanne -1800..-1800

@@ -53,12 +53,27 @@ CD = "re15_port/shared_assets/PSX"
 # im Bericht als Nachfrage. (10F0 C4/C5: Nutzer 2026-09-09 "Ok, einwandfrei"; 1100 C1/C2:
 # reine Quader-Waende ohne Nutzer-PNG.)
 P2_UNANGETASTET = {
-    ("ROOM10F0", 4): "Nutzer-Lassos + 8 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09",
-    ("ROOM10F0", 5): "Nutzer-Lassos + 4 Buerostuhl-Quader, vom Nutzer abgenommen 2026-09-09",
     ("ROOM1100", 1): "nur Quader-Waende (kein Nutzer-PNG)",
     ("ROOM1100", 2): "nur Quader-Waende (kein Nutzer-PNG)",
 }
+
+# ⛔ ALTE KETTE, ABER NEU GEBAUT (Runde 22, 2026-09-21). ROOM10F0 C4/C5 standen bis hierher
+# in P2_UNANGETASTET mit der Begruendung "vom Nutzer abgenommen 2026-09-09". Diese Abnahme ist
+# durch die Marke befund_10F0_F335_marke1.bmp ("Leon ist da grossteils transparent") hinfaellig.
+# bau_p2 kann diese beiden Cuts NICHT bauen - es kennt weder tiefe="szene" noch "nur_kunst"
+# (grep: nur_kunst steht allein in raum.py, bau_p2.objekt_region nimmt png/polygon/quader).
+# Sie laufen deshalb weiter ueber objekt_regionen + anwenden.bau_objektweise, werden aber bei
+# jedem Lauf NEU geschrieben, damit eine Aenderung der Dunkel-Regeln auch ankommt. Der Weg ist
+# geeicht: mit dem Stand vom 2026-09-21 reproduziert er Sektion UND TIM beider Cuts bitgenau
+# (analysis/befunde_2026-09-21/10f0-umsetzung/werkzeug/nachbau.py).
+P2_ALTE_KETTE = {
+    ("ROOM10F0", 4): "Nutzer-Lassos (tiefe=szene) + Buerostuhl-Quader (nur_kunst)",
+    ("ROOM10F0", 5): "Nutzer-Lassos (tiefe=szene) + Buerostuhl-Quader (nur_kunst)",
+}
 P2_STATISTIK = {"max": np.max, "med": np.median, "min": np.min}
+
+# Von objekt_regionen beim letzten Lauf gesetzt: das BELEGT-Feld des Cuts (s. dort).
+LETZTES_BELEGT = None
 
 # ⛔ ABGELEHNT und deshalb NICHT geschrieben (die alte Sektion bleibt stehen). Die Zahlen
 # kommen aus dem ctest unit_pri_kopfschnitt, der die Standplaetze SELBST ueber den
@@ -325,37 +340,73 @@ def objekt_regionen(room, cut, e, ppm, blattdir):
     _dunkel_label = _np.full((240, 320), -1, int)
     if _bgL is not None and _sil:
         _dk = _bgL.astype(int).sum(2) < 45
-        # 1) KUNST-SAUM: ein Dunkel-Pixel im Abstand <= 7 zur Kunst einer Zelle
-        #    ist deren Lehnen-Luecke (schwarz auf schwarz im Lasso-Loch).
-        #    GEMESSEN (2026-09-09, ROOM10F0): Luecken-Dunkel der F697-Klasse
-        #    liegt bei Distanz 1..7 zur eigenen Kunst (60/52/31/19/12/3/2),
-        #    Schreibtisch-Dunkel der F1195-Klasse beginnt bei 7 (7..18+).
-        #    Beim Konflikt (genau 7) gewinnt die Luecken-Klasse: die Kosten
-        #    sind unsichtbare Speckles ueber dunklem Pult statt sichtbarer
-        #    Ueber-Deckung auf der Figur.
-        #    Bedingung ZUSAETZLICH: das Pixel liegt in der Silhouette DERSELBEN
-        #    Zelle - sonst wird Boden-SCHATTEN neben der Kunst etikettiert und
-        #    deckt mit Stuhltiefe (gemessen F1451: 0 -> 77 ungerechtfertigt).
-        _naechste = _np.full((240, 320), _np.inf)
+        # ⛔ WO DER NUTZER FREIGESTELLT HAT, IST DIE FREISTELLUNG DIE WAHRHEIT
+        #    (Nutzer-Marke 2026-09-21, befund_10F0_F335_marke1.bmp: "Leon ist da
+        #    grossteils transparent"). Gemessen an dieser Marke: von 837 gezeichneten
+        #    Figurpunkten waren 426 verdeckt; 272 davon durch die Freistellung des
+        #    Stuhls (richtig, er steht davor), 154 durch Tiefschwarz — und ALLE 154
+        #    trugen das Etikett EINER Zelle, naemlich 17, also genau der Zelle, fuer
+        #    die eine Freistellung vorliegt (146 aus Regel 1, 8 aus Regel 2;
+        #    werkzeug/herkunft_marke.py im Dossier 10f0-umsetzung).
+        #
+        #    Der SAUM der alten Regel 1 war als "Lehnen-Luecke, schwarz auf schwarz
+        #    im Lasso-LOCH" begruendet. Nachgemessen hat die Freistellung des Nutzers
+        #    in ROOM10F0 C4 GENAU 0 und in C5 GENAU 1 dunkles Loch (Gegenmodell
+        #    "nurloch": 2131 statt 2131 bzw. 3577 statt 3576 Texel) — die Begruendung
+        #    traegt also nicht; der Saum hat die Kunst nur um ihren Antialias-Rand in
+        #    die dunkle Wand hinein aufgeweitet. Deshalb jetzt woertlich das, was der
+        #    Kommentar sagt: nur die LOECHER der eigenen Kunst.
+        #
+        #    Regel 2 bleibt fuer Zellen OHNE Freistellung — sie ist dort die einzige
+        #    Quelle der Maske (in C4 Pulte, Konsolenbank und die schwarzen Stuehle,
+        #    8527 von 12068 Texeln). Fuer Zellen MIT Freistellung ist sie gesperrt:
+        #    dort ist bekannt, wie der Gegenstand aussieht.
+        #    Wirkung, mit derselben posierten Figur gemessen (probe_r22_10f0_figur):
+        #      Marke F335   426/837 = 50,9 %  ->  272/837 = 32,5 %  (Zugabe 0)
+        #      gespielter Weg C4  12 von 30 Bildern ueber der Haelfte -> 0; 17,00 -> 11,22 %
+        #      begehbare Standplaetze C4  1 ueber der Haelfte -> 0; Beruehrung 152 -> 153
+        #    ⛔ Diese beiden Regeln wirken NUR ueber "nur_kunst" und tiefe="szene", und
+        #    die stehen in der ganzen auswahl.json ausschliesslich in ROOM10F0 C4/C5.
+        # 1) EIGENE LOECHER: ein Dunkel-Pixel, das die Kunst DERSELBEN Zelle
+        #    umschliesst, ist ihre Lehnen-Luecke.
         for _ki in sorted(set(int(v) for v in _kunst_label[_kunst_label >= 0])):
             if _ki not in _sil:
                 continue
-            _dist = _nd.distance_transform_edt(~(_kunst_label == _ki))
-            _m = _dk & _sil[_ki][1] & (_dist <= 7) & (_dist < _naechste)
-            _naechste[_m] = _dist[_m]
+            _eigen = _kunst_label == _ki
+            _loch = _nd.binary_fill_holes(_eigen) & ~_eigen
+            _m = _dk & _sil[_ki][1] & _loch
             _dunkel_label[_m] = _ki
-        # 2) Sonst: die NAECHSTE enthaltende Zelle - der vorgerenderte
-        #    Hintergrund zeigt an einem Pixel die vorderste Flaeche; dunkles
-        #    Pult-Zeug in der Silhouette eines nahen Stuhls deckte schon in
+        # 2) Sonst: die NAECHSTE enthaltende Zelle OHNE Freistellung - der
+        #    vorgerenderte Hintergrund zeigt an einem Pixel die vorderste Flaeche;
+        #    dunkles Pult-Zeug in der Silhouette eines nahen Stuhls deckte schon in
         #    der dritten (abgenommenen) Runde mit dessen Tiefe. Der Tiefste-
         #    Bias hier war falsch (Schwarz-ungedeckt 960 -> 2888, F1195/F954
         #    je 700 - Pult-Dunkel wanderte in die fernere Silhouette).
         _rest = _dk & (_dunkel_label < 0)
         _naechstes = _np.full((240, 320), _np.inf)
         for _ki, (_vzq, _trq) in _sil.items():
+            if (_kunst_label == _ki).any():
+                continue
             _m = _rest & _trq & (_vzq < _naechstes)
             _naechstes[_m] = _vzq[_m]
             _dunkel_label[_m] = _ki
+    # ⛔ BELEGT-FELD fuer die Abnahme (Runde 22). Ein Maskentexel ist BELEGT, wenn er in
+    # einer Freistellung des Nutzers liegt ODER ausserhalb jeder Quader-Silhouette einer
+    # Zelle, fuer die eine Freistellung vorliegt. Er ist UNBELEGT, wenn er in der
+    # Silhouette einer Zelle MIT Freistellung, aber ausserhalb dieser Freistellung liegt:
+    # dort ist bekannt, wie der Gegenstand aussieht, und der Texel gehoert nicht dazu.
+    # Das Feld haengt NUR von der Freistellung und der Raumgeometrie ab, nicht von den
+    # Dunkel-Regeln - deshalb taugt es als Schranke fuer sie.
+    global LETZTES_BELEGT
+    _mitkunst = _np.zeros((240, 320), bool)
+    _erlaubt = _kunst_label >= 0
+    for _ki in set(int(v) for v in _kunst_label[_kunst_label >= 0]):
+        if _ki in _sil:
+            _mitkunst |= _sil[_ki][1]
+        # die LOECHER der eigenen Kunst gehoeren dazu (Regel 1); sie haengen allein an
+        # der Freistellung, nicht an der Dunkel-Schwelle.
+        _erlaubt |= _nd.binary_fill_holes(_kunst_label == _ki)
+    LETZTES_BELEGT = _erlaubt | ~_mitkunst
     for o in e.get("objekte") or []:
         if "png" in o:
             # ⛔ DER BESTE WEG (Nutzer, 2026-09-04): ein von Hand freigestelltes PNG.
@@ -729,6 +780,99 @@ def _container_lesen(path):
     return alt
 
 
+def alte_kette(a, room, cut, e_roh, rdt, cam):
+    """Einen P2_ALTE_KETTE-Cut bauen, pruefen und die Beiblaetter schreiben.
+
+    Geprueft wird DREIFACH, alles VOR dem Schreiben:
+      (a) TREUE  — die fertige Maske deckt die gewollte Flaeche punktgenau
+                   (dieselbe Pruefung wie in main(), Nutzer-Befund 2026-09-04).
+      (b) BELEGT — kein Texel liegt in der Silhouette einer Zelle MIT Freistellung,
+                   aber ausserhalb dieser Freistellung (Runde 22, s. objekt_regionen).
+      (c) das .PBM wird geschrieben, damit der Cut unter test_pri_silhouette faellt —
+          bis 2026-09-21 standen genau diese beiden Cuts ausserhalb jedes Riegels.
+    """
+    import maskenbild as _MB
+    rid = int(room[4:], 16)
+    e = eintrag(e_roh)
+    bg = load_bg(a.ppm, rid, cut)
+    if bg is None:
+        return {"ok": False, "fehler": "Hintergrund fehlt", "zeilen": [], "rects": 0,
+                "soll_px": 0, "fehlt": -1, "zuviel": -1, "unbelegt": -1}
+    objekte = objekt_regionen(room, cut, e, a.ppm, a.blatt)
+    belegt = LETZTES_BELEGT
+    soll = np.zeros((240, 320), bool)
+    for x in objekte:
+        soll |= x[1]
+    # ⛔ ERST IN EIN NEBENVERZEICHNIS: bau_objektweise schreibt das TIM sofort. Faellt der
+    # Cut durch die Abnahme, duerfen die Assets NICHT angefasst sein - sonst stuende ein
+    # neues TIM neben der alten Sektion.
+    roh = os.path.join("build", "p2", "roh_%s_C%d" % (room, cut))
+    os.makedirs(roh, exist_ok=True)
+    res = anwenden.bau_objektweise(rdt, cam, cut, objekte, bg, roh, room)
+    if not res:
+        return {"ok": False, "fehler": "nichts erzeugt", "zeilen": [], "rects": 0,
+                "soll_px": int(soll.sum()), "fehlt": -1, "zuviel": -1, "unbelegt": -1}
+    sec, n = res
+    blob = geom.pack_container({cut: sec}, rdt[1])
+    ms = _MB.masken(blob, cut) or []
+    idx = _MB.lies_tim(os.path.join(roh, "%s_PRI%02d.TIM" % (room, cut)))[0]
+    deck = np.zeros((240, 320), bool)
+    for (sx, sy, X, Y, w, h, dep) in ms:
+        x0, x1 = max(0, X), min(320, X + w)
+        y0, y1 = max(0, Y), min(240, Y + h)
+        if x1 <= x0 or y1 <= y0:
+            continue
+        sub = idx[sy + (y0 - Y):sy + (y1 - Y), sx + (x0 - X):sx + (x1 - X)]
+        if sub.shape == (y1 - y0, x1 - x0):
+            deck[y0:y1, x0:x1] |= (sub != 0)
+    fehlt = int((soll & ~deck).sum())
+    zuviel = int((deck & ~soll).sum())
+    unbelegt = int((deck & ~belegt).sum()) if belegt is not None else -1
+    ok = (fehlt == 0 and zuviel == 0 and unbelegt == 0)
+    ber = {"ok": ok, "zeilen": [], "rects": n, "soll_px": int(soll.sum()),
+           "fehlt": fehlt, "zuviel": zuviel, "unbelegt": unbelegt, "sektion": sec}
+    if not ok:
+        ber["fehler"] = ("Treue fehlt %d / zuviel %d, unbelegt %d"
+                         % (fehlt, zuviel, unbelegt))
+        return ber
+    # ⛔ STANDLINIE. test_pri_kopfschnitt verlangt zu JEDEM .PBM ein .STAND; ohne das
+    # waere das Schreiben des PBM eine Verschlechterung (der Test bricht ab). Alle
+    # Objekte dieser Cuts sind quaderbasiert, die Kamera-z-Karte kommt also exakt aus
+    # geom.quader_tiefe - nicht aus der gerasterten Tiefe zurueckgerechnet.
+    import abnahme
+    v = geom.cut_view(rdt, cam, cut)
+    dep_obj = []
+    for x in objekte:
+        q = x[9]
+        if not q:
+            ber["ok"] = False
+            ber["fehler"] = ('Objekt "%s" ohne Quader — Standlinie nicht exakt '
+                             'bestimmbar, kein .PBM/.STAND' % x[0])
+            return ber
+        qq = [int(t) for t in q]
+        vz, _tr = geom.quader_tiefe(v[0], v[1], v[2], qq[0], qq[0] + qq[2],
+                                    qq[1], qq[1] + qq[3], qq[4])
+        dep_obj.append((x[1], vz, 0))
+    stand, stand_y0 = abnahme.standlinie(dep_obj)
+    if not a.nur_pruefen:
+        import shutil
+        os.makedirs(a.out, exist_ok=True)
+        shutil.copyfile(os.path.join(roh, "%s_PRI%02d.TIM" % (room, cut)),
+                        os.path.join(a.out, "%s_PRI%02d.TIM" % (room, cut)))
+        abnahme.pbm_schreiben(os.path.join(a.out, "%s_PRI%02d.PBM" % (room, cut)), soll)
+        abnahme.pbm_schreiben(os.path.join(a.out, "%s_PRI%02d.BELEG" % (room, cut)), belegt)
+        with open(os.path.join(a.out, "%s_PRI%02d.STAND" % (room, cut)), "w") as f:
+            f.write("# Zeile 1: Standlinie je Bildspalte (Kamera-z des untersten opaken "
+                    "Punkts im Tiefenmodell), -1 = keine Maske\n")
+            f.write(" ".join("-1" if np.isnan(s) else "%d" % int(round(s)) for s in stand) + "\n")
+            f.write("# Zeile 2: Bodenebene y0 je Bildspalte, auf der die Standlinie gilt\n")
+            f.write(" ".join("%d" % int(t) for t in stand_y0) + "\n")
+        ber["zeilen"].append("Beiblaetter geschrieben: %s_PRI%02d.PBM (test_pri_silhouette), "
+                             ".STAND (test_pri_kopfschnitt) und .BELEG (Runde 22)"
+                             % (room, cut))
+    return ber
+
+
 def main_p2(a, room, rid, aus, rdt, cam, cuts):
     """STAGE1-Bau nach Phase 2 (s. Kopf: P2_UNANGETASTET, bau_p2.py, abnahme.py)."""
     import abnahme
@@ -771,6 +915,20 @@ def main_p2(a, room, rid, aus, rdt, cam, cuts):
                     os.remove(pf)
             print("  Cut %d: Sektion ENTFERNT (keine Freistellung des Nutzers fuer diesen Cut)" % cut)
             bericht[cut] = {"entfernt": True}
+            continue
+        if (room, cut) in P2_ALTE_KETTE:
+            b = alte_kette(a, room, cut, e, rdt, cam)
+            for z in b.get("zeilen", []):
+                print("     %s" % z)
+            print("  Cut %d: ALTE KETTE (%s) — %d Rechtecke, Soll %d px, Deckung fehlt %d / "
+                  "zuviel %d, unbelegt %d -> %s"
+                  % (cut, P2_ALTE_KETTE[(room, cut)], b["rects"], b["soll_px"], b["fehlt"],
+                     b["zuviel"], b["unbelegt"],
+                     "GESCHRIEBEN" if (b["ok"] and not a.nur_pruefen) else
+                     ("ok (nur geprueft)" if b["ok"] else "ABGELEHNT")))
+            bericht[cut] = {k: v for k, v in b.items() if k != "sektion"}
+            if b["ok"] and not a.nur_pruefen:
+                secs[cut] = b["sektion"]
             continue
         if (room, cut) in P2_UNANGETASTET:
             print("  Cut %d: UNANGETASTET (%s)%s" % (cut, P2_UNANGETASTET[(room, cut)],
