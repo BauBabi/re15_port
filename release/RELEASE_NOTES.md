@@ -1,3 +1,95 @@
+# v0.8.11 - 2026-09-22
+
+Zwei Spieltest-Befunde und drei Extraktionen aus Resident Evil 2. Bei beiden Befunden war
+meine erste Erklaerung falsch, und in einem Fall weiss ich die Ursache noch nicht.
+
+## Leon ist im Kommunikationsraum nicht mehr durchsichtig
+
+> "Und ich habe dir noch einen marker hinterlassen aus dem communication room. Das ist das
+> letzte pri aus stage 1 das noch falsch ist. Leon ist da grossteils transparent."
+
+Die Ursache war keine der drei Sachen, die ich vermutet hatte. Es war die **Tiefschwarz-Regel
+des Maskenbaus**: sie gab jedem dunklen Bildpunkt innerhalb der Kastenflaeche eines
+Moebelstuecks dessen Entfernung. Im dunklen Kommunikationsraum traf das die holzvertaefelte
+Rueckwand hinter dem Buerostuhl, und die bekam dadurch eine Entfernung, die VOR Leon liegt
+statt dahinter. Genau an der Guertellinie schnitt sie ihn ab.
+
+An Ihrer Marke sind statt 426 von 837 gezeichneten Figurpunkten nur noch 272 verdeckt, und
+diese 272 sind die weisse Stuhllehne, die wirklich vor ihm steht. Auf dem Weg, den Sie
+gespielt haben, war in 12 von 30 protokollierten Bildern mehr als die halbe Figur weg; jetzt
+in keinem.
+
+Meine drei Vermutungen, alle durch Messung gefallen: der Buerostuhl-Kasten traegt in genau
+den Bildzeilen, wo die Figur abreisst, null Punkte bei. Die 26 doppelten Masken sind
+wirkungslos, die Deckung ist mit und ohne sie identisch. Und die Kapazitaetsgrenze erzwingt
+keine groben Kaesten, denn die Gegenstaende sind sehr wohl Silhouetten.
+
+Die doppelten Masken sind trotzdem raus, sie waren Ballast. Die Atlasflaeche dieses Winkels
+faellt dadurch auf weniger als die Haelfte.
+
+*Was ich mir ankreiden muss:* Runde 19 hat diesen Raum untersucht und stehen gelassen. Der
+Raum kam in ueber elftausend protokollierten Bildern nicht ein einziges Mal vor, gemessen
+wurde rein rechnerisch. Und die Abnahme kennt hinter der Standlinie nur "zu WENIG verdeckt"
+und fordert dort mindestens 95 Prozent — Leons 64 Prozent haette sie genau andersherum
+gemeldet. Neu ist deshalb ein Mass fuer die andere Richtung, mit Schranke null und ohne
+freien Parameter.
+
+## Birkin: ein echter Fehler behoben, Ihr Fall aber noch nicht erklaert
+
+> "Jetzt wurde ich von birkin rausgeschoben ausserhalb des begehbaren BEreiches - siehe
+> Marker. Das darf nicht passieren."
+
+Sie stehen 2882 Einheiten ausserhalb, im Umkreis von 200 Einheiten gibt es keinen einzigen
+begehbaren Punkt. Das ist gemessen, und Sie haben recht.
+
+Behoben ist ein echter, unabhaengig gefundener Fehler: im Original laufen der
+Koerper-Ausschub und die Wandklemme hinter **jedem** Kommando des Spielers, der Port hatte
+sie nur im Normalfall. Waehrend Treffer, Knockdown, Griff und Tod lief deshalb 22 Bilder
+lang kein Ausschub, und danach entlud sich alles als ein Sprung von 2112 Einheiten. Dazu ein
+zweiter, versteckter Fehler: ein Positionsspiegel, den das Original jedes Bild schreibt,
+wurde im Port nur an einer Stelle gepflegt; mit einem stehengebliebenen Wert dreht der
+Ausschub das Vorzeichen und wird zehnmal so gross.
+
+**Aber das erklaert Ihren Fall nicht**, und ich sage es lieber, als es zu verschweigen. In
+allen 131 Zeilen Ihrer Sitzung steht die Lebensenergie auf 100, Sie wurden also nie
+getroffen. Genau die reparierten Zweige koennen bei Ihnen nicht gelaufen sein. Drei von vier
+Pruefern haben meine Ursachenerzaehlung deshalb gekippt, zu Recht. Die Suche geht weiter;
+die naechsten Kandidaten sind der Tentakel-Ausschub, der seinen eigenen Weg hat, und die
+Textpausen.
+
+Ein Riegel haette das uebrigens fast durchgelassen: er verglich den groessten Ein-Bild-Weg
+mit der duennsten Wand und meldete am kaputten Stand woertlich "ok". Er rechnet die richtige
+Schwelle jetzt selbst aus.
+
+## Drei Extraktionen aus Resident Evil 2
+
+**Alle 25 Dokumente**, mit Hintergrundbild, allen Seiten und Abschrift, plus einem
+Auswahlbogen, den Sie im Browser oeffnen koennen. Der Dokumenttext ist dort ein Bild und
+kein Text; als echte Zeichenkette existiert nur der Name.
+
+**Die 12 Weltmodelle der Dokumente.** Meine erste Auskunft, es gebe keine, war fuer das
+Inventar richtig und fuer die Welt falsch — Sie hatten recht. Fuenfzehn der 22 Platzierungen
+tragen ein Weltmodell, und die entdoppeln sich zu zwoelf verschiedenen. Der Ablauf, den Sie
+beschrieben haben, ist von der Untersuchung bis zum Verschwinden an jeder Station belegt.
+In RE1.5 ist kein einziges Dokument in der Welt aufgestellt, obwohl der Mechanismus da ist.
+
+**Die Sicherung gibt es in RE2 zweimal**, mit Symbol und Weltmodell, beide fuer Leon
+erreichbar. Einen Feuerloescher hat RE2 dagegen gar nicht, nachgezaehlt gegen 140 Namen,
+106 Symbole, 252 Requisitenmodelle und 21602 Dateien. Den Gegenstand hat dafuer RE1.5
+selbst, allerdings ohne Weltmodell. Und ein Fund, der Arbeit erspart: das Modell, das RE2
+fuer die Hauptsicherung benutzt, ist byte-gleich dasselbe, das RE1.5 fuer die Zuendkerze
+verwendet — importieren muss man dafuer nichts.
+
+## Noch nicht drin
+
+Die Abfrage "You don't need this key any more. Discard it?" ist gebaut, aber noch gesperrt.
+Zwei Sperrgruende sind weg, ein dritter ist aufgetaucht: die Abfrage kann bei einem
+Raumwechsel im Wartefenster stillschweigend verschwinden, und dann bleibt der Gegenstand
+fuer immer im Inventar. Das waere schlimmer als der Fehler davor, weil man es nicht sieht.
+Kommt, sobald das belegt geschlossen ist.
+
+---
+
 # v0.8.10 - 2026-09-21
 
 Der Stuhl in ROOM10D0, und zwar nach Ihrer eigenen Markierung.
