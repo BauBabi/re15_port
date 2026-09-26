@@ -3835,16 +3835,9 @@ target_compile_definitions(probe_abzug_takt PRIVATE
 add_test(NAME probe_abzug_takt COMMAND probe_abzug_takt)
 set_tests_properties(probe_abzug_takt PROPERTIES TIMEOUT 120)
 
-# --- MESSSONDE Runde 26: M93R laedt nicht automatisch nach. Faehrt game_step+Pad
-#     (R1 halten -> zielbereit -> Abzugsbursts) und protokolliert je Bild Magazin,
-#     Munition 0x15, s_aim_melee, Phase/Recoil, Dauerfeuer-FSM, Nachlade-Zweig.
-#     Original-Gate @0x80033300-94 (5 Bedingungen, KEIN Melee-Flag); Klassen-Dispatch
-#     liest 0x800aca5d JEDES BILD (@0x80032e60). Reine Messsonde, KEIN add_test. ---
-add_executable(probe_m93r_nachladen probe_m93r_nachladen.c)
-target_link_libraries(probe_m93r_nachladen PRIVATE re15_engine re15_test_support)
-target_include_directories(probe_m93r_nachladen PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(probe_m93r_nachladen PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+# --- Runde 26: die M93R-Nachladesonde liegt jetzt in probes/r26_m93r-nachladen.cmake
+#     (dort MIT add_test m93r_nachladen). Das doppelte add_executable hier ist
+#     entfernt, es brach den Configure mit CMP0002. ---
 
 # --- GEGENPRUEFUNG (Befundpruefung 2026-09-14): Dauer der Hunde-Sperre unter RE2-KI.
 #     Waffen-Sweep + HURT-Zeilen-Sweep + Pin/Ohne-Pin. Reine Messsonde, KEIN add_test. ---
