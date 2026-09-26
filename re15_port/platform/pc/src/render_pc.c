@@ -23,6 +23,7 @@
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
+#include "re15_abtastphase.h"   /* Abtastphase der texturierten Dreiecke (PSX-geeicht) */
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
@@ -2199,41 +2200,17 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
  * the texture page; we divide by texture dimensions to get the [0..1] range
  * SDL_Vertex.tex_coord expects. */
 /* ===== ABTASTPHASE der texturierten Dreiecke ================================
- * GEMESSEN, nicht vermutet. Der Nutzer meldet: "hat der Cursor immer so einen
- * verzerrten/versetzten Schatten" (ROOM11F0, Cut 10).
- *
- * WAS DER FEHLER IST. Der Cursor-Schlagschatten ist in die TEXTUR gebacken
- * (ROOM11F0.RDT TIM @Datei 0x018DAC, 8bpp 128x256, CLUT 256x1: Index 4 = (216,208,0)
- * hell, Index 2 = (64,56,0) Schatten, Versatz +5u/+3v). Der senkrechte Kreuzarm ist
- * genau 5 Texel breit, sein Schatten liegt die naechsten 5 Texel daneben, und die
- * Oberseite wird von 126 Texeln auf 24 Bildschirmspalten verkleinert (5,25 Texel je
- * Pixel). Welche der beiden Bahnen die EINE verbleibende Spalte trifft, entscheidet
- * damit allein die Abtastphase.
- *
- * WARUM DIE PHASE IM PORT FALSCH WAR. SDL_RenderGeometry (GPU, NEAREST) tastet an der
- * PIXELMITTE ab: ein Scheitel auf ganzzahligem (x,y) ist dort die ECKE des Pixels, die
- * erste Abtastung liegt also auf (x+0,5 / y+0,5) und damit 0,5*du/dx = 2,6 Texel weiter.
- * Die PSX macht es anders: Scheitel-Texcoord und Scheitel-Pixel gehoeren zusammen und
- * werden im Gleichschritt hochgezaehlt --
- *   psx-spx, docs/graphicsprocessingunitgpu.md:303-305 (selbst gelesen):
- *   "Vertex & Texcoord specify the upper-left edge of the rectangle. And, normally,
- *    screen coords and texture coords are both incremented during rendering".
- * Also: -0,5 auf die SDL-Scheitelposition ruecken heisst, die Abtastung wieder auf das
- * ganzzahlige Pixelraster zu legen -- dorthin, wo die PSX sie hat.
- *
- * DIE MESSUNG (RE15_FRAMEDUMP, ROOM11F0 Cut 10, Klassifikation strikt gegen die beiden
- * Paletteneintraege oben, senkrechter Kreuzarm x 158..162):
- *   Phase  0,00 (alter Stand) -> HELL auf  1 Zeile  (nur y 118)
- *   Phase -0,50 (dieser Wert) -> HELL auf  9 Zeilen (y 112-115, 117, 120-123)
- *   Phase +0,50               -> HELL auf  8 Zeilen
- *   Phase -0,25 / +0,25       -> HELL auf  8 Zeilen
- * Die fehlenden Zeilen 118/119 sind der waagerechte Kreuzarm samt eigenem Schatten.
+ * Der Wert und seine VOLLSTAENDIGE Herleitung stehen in include/re15_abtastphase.h:
+ * PSX-Grundwahrheit (DuckStation-Lauf ROOM11F0 Cut 10, Abzug unter
+ * analysis/grundwahrheit/), Phasen-Fahrt -1.0 .. +0.75 mit zwei unabhaengigen Massen,
+ * Optimum +0.375 = pixelgleich mit der PSX. Der frueher hier stehende Wert -0.5
+ * (v0.8.13) ist dort als SCHLECHTER-als-nichts widerlegt und zurueckgebaut.
  *
  * RE15_UVPHASE bleibt als MESSSCHIENE stehen (Gegenprobe ohne Neubau); ohne die
- * Variable gilt der belegte Wert. */
+ * Variable gilt der gemessene Wert. */
 static float re15_render_pc_abtastphase(void)
 {
-    static float s_phase = -0.5f;   /* psx-spx:303-305, s.o. */
+    static float s_phase = RE15_UV_ABTASTPHASE;   /* include/re15_abtastphase.h */
     static int   s_init  = 0;
     if (!s_init) { s_init = 1; const char *e = getenv("RE15_UVPHASE");
                    if (e && *e) s_phase = (float)atof(e); }
