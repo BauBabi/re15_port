@@ -989,6 +989,17 @@ void re15_re2z_last_fx_pos(int32_t out[3])
 }
 
 static int re2z_part_to_bone(const re15_actor_t *e, int part);   /* fwd: Part -> Bank-Bone-Slot */
+static int re2z_bearing_to(const re15_actor_t *e, const re15_actor_t *pl);  /* fwd: FUN_800154AC */
+
+/* Die TRIGGER-Zahl des ERERBTEN Port-Blutauftritts (Pistolen-Emitter re2z_blood_fx_dir).
+ * ⛔ OPEN, unveraendert uebernommen: die 8 traegt KEIN @0x… — sie ist die bereits abgenommene
+ * RE1.5-Praesentation (dieselbe offene Marke steht in re15_damage.c:1743). Hier nur an EINE
+ * Stelle gezogen, nicht neu erfunden, nicht verstellt, und BEWUSST NICHT auf den MG-Emitter
+ * uebertragen: gemessen kostet ein Treffer damit 31 Slots, und unter dem Dauerfeuer-Takt des
+ * Ports laeuft der 96-Slot-Pool (`addiu t2,zero,96` @0x8001BF10 = RE15_ESP_FX_MAX) voll
+ * (Spitzenbelegung 96/96 in 30 Bildern, probe_r26_mg_blut). Der MG-Emitter nimmt stattdessen
+ * den byte-true Zwilling der Klon-Schleife, s. re2z_gore_fx_ex. */
+#define RE2Z_BLOOD_TRIGGERS 8
 
 static void re2z_blood_fx_scaled(re15_actor_t *e, int part, int16_t yaw, uint16_t scale16,
                                  int splatter_n)
@@ -1121,7 +1132,7 @@ static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
     /* scale16 = 0x2000 (@0x80105c54 / @0x80105cbc, RE1.5-Praesentation) statt der RE2-eigenen
      * 6096 = 0x17D0 (@0x8010567C) — Mandats-Entscheidung, beide Werte oben zitiert.
      * Der ANKER bleibt die RE2-Entscheidung (Zone aus +0x1D2 % 3, @0x80105650-78). */
-    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, 8);
+    re2z_blood_fx_scaled(e, re2z_blood_anchor(e), yaw, 0x2000, RE2Z_BLOOD_TRIGGERS);
 }
 
 static void re2z_blood_fx(re15_actor_t *e)
@@ -4939,10 +4950,104 @@ static void re2z_hit_light(re15_actor_t *e, re15_actor_t *pl)
         e->sub_state_2 = 1;                                        /* @0x80107F98 */
         re2z_clip(e, clip, 0, 7, 0x200, 0);                        /* @0x80107FAC (Blend 512
                                                                     * @0x80108194) */
-        re2z_blood_fx_at(e, 1, (int16_t)e->rot_y);                 /* @0x801080C4; Anker
-                                                                    * `addiu a2,s1,244` @0x801080C0
-                                                                    * = Part 1 (Brust), OHNE
-                                                                    * Zonen-Verzweigung */
+        /* ===== DER MG-/GATLING-BLUTSTOSS — FUN_80107EF0 @0x80107FC8-0x801080C4 ==============
+         * Nutzer 2026-09-26: "Das Maschinengewehr sorgt in Resident Evil 2 fuer viel viel mehr
+         * Blut bei den Zombies bei treffern." Dossier analysis/befunde_2026-09-26/mg-mehr-blut.md
+         * + pruefung-mg-mehr-blut.md; alle hier zitierten Adressen in dieser Runde selbst aus
+         * info/re2leon/COMMON/BIN/EMZ0.BIN gelesen (roh @0x80100000, kein Header).
+         * ⛔ Bisheriger Stand war `re2z_blood_fx_at(e, 1, e->rot_y)` = fester scale 0x1500 OHNE
+         *    @0x…-Beleg, fester sub 0, kein Versatz, fester Anker Part 1, kein RNG.
+         *
+         * WARUM RE2 UND NICHT RE1.5: der Auslieferungsstand von RE1.5 hat fuer die Ingram
+         * (Zeile 12 der 2D-Tabelle @0x8011FB90 in STAGE1.BIN) eine KOMPLETT NULL-Zeile, also
+         * gar keine eigene Trefferreaktion — hier ist RE1.5 nachweislich unfertig, damit ist
+         * RE2-Retail massgeblich (Projektregel). In RE2 waehlt die 2D-Tabelle @0x8010C940
+         * (Zeile = +0x5 = Waffen-Id, `lbu v1,5(a0)` @0x801053E0, `id*36` @0x801053EC-F4) nur
+         * fuer die Zeilen 15 (SMG) und 18 (Gatling) diesen Handler.
+         *
+         * GROESSE — Original-Werte ROH, OHNE Umrechnungsfaktor:
+         *   Zweig A 7000 + (rand<<3)  (`sll v0,v0,3` @0x8010804C, `addiu v0,v0,7000` @0x80108050)
+         *   Zweig B 6096 + (rand<<3)  (@0x801080AC / `addiu v0,v0,6096` @0x801080B0)
+         * ⛔ KEIN Praesentations-Faktor. Der frueher vorgeschlagene Quotient 0x2000/6096 stand
+         *    auf zwei Adressen aus ZWEI VERSCHIEDENEN BINAERDATEIEN: @0x80105C54 ist in EMZ0.BIN
+         *    `lhu v0,464(s4)` (selbst gelesen) und erst in RE1.5 STAGE1.BIN `ori a0,zero,0x2000`.
+         *    Der Quotient selbst steht in keiner der beiden Dateien -> Rate-Zahl, kommt nicht rein.
+         * VERHAELTNIS ZUR PRAESENTATION DES PORTS, ausdruecklich benannt: der Pistolen-Emitter
+         *    des Ports rendert mit 0x2000 = 8192, weil er per abgenommener Mandats-Entscheidung
+         *    die RE1.5-Praesentation traegt (@0x80105C54/@0x80105CBC in STAGE1.BIN), waehrend
+         *    RE2 der Pistole 6096 gibt. Der MG-Stoss laeuft hier auf den ROHEN RE2-Zahlen. Damit
+         *    bildet der Port das RE2-Verhaeltnis MG:Pistole (im Original 8020:6096 = 1,32x) NICHT
+         *    nach — der MG liegt im Port bei 7000..9040 gegen 8192. Das ist bewusst so: lieber
+         *    zwei belegte Zahlen aus zwei Engines als eine erfundene Bruecke dazwischen.
+         *
+         * MENGE — NICHT geraten, sondern aus den ESP-DATEN: das Original setzt EINEN Aufruf von
+         *    FUN_8001BF10 ab, und der klont `uVar1` Slots aus dem SUB-RECORD der Bank
+         *    (`iVar13 = uVar1 - 1`, `uVar1 = *puVar14`, `puVar14 = base + tbl[(a0>>16)&7]*4`).
+         *    Der Port-Zwilling dieser Klon-Schleife ist re15_esp_fx_spawn_rows (ein Slot je
+         *    Strom des Sub-Records) — er steckt in re2z_gore_fx_ex. Damit kommt die Sprite-Zahl
+         *    aus der Bank statt aus einer Konstante, und der sub-Wechsel des MG traegt echte
+         *    Wirkung: GEMESSEN an ROOM1140 liefert Id 0 fuer sub 0 DREI und fuer sub 1 VIER
+         *    Stroeme (probe_r26_mg_blut) — der Stoss wechselt also je Patrone seine Groesse UND
+         *    seine Sprite-Zahl. Der Pistolen-Emitter bleibt auf seinem ererbten 8er-Faecher
+         *    (RE2Z_BLOOD_TRIGGERS, dort begruendet); ihn anzufassen war nicht Auftrag.
+         *    Der Mengen-Unterschied des
+         *    Originals kommt aus der KADENZ, nicht aus der Slot-Zahl: RE2 zieht SMG/Gatling alle
+         *    8 Aufrufe von FUN_8006A0CC eine Patrone (`addiu v0,v0,1` @0x8006A144,
+         *    `slti v0,v0,8` @0x8006A158, Zaehler 0x800D5C1C), und der Applier nullt bei JEDEM
+         *    Treffer das ganze Zustandswort (`sw v0,4(s1)` @0x80047288, im Delay-Slot des
+         *    `bgez v1` @0x80047284 -> laeuft IMMER; Little-Endian nullt es +0x5/+0x6/+0x7),
+         *    also startet Phase 0 und damit dieser Stoss pro Patrone neu.
+         * ⛔ NEBENBEFUND, hier NICHT repariert: der Port feuert das Dauerfeuer mit dem
+         *    RE1.5-Takt `(anim_frame & 4) == 0` (player_common.c:423, @0x800349BC) = 5 Schuss je
+         *    9-Bilder-Clip, gemessen von test_autofire_pin (B): 15 Schuesse in 27 Ticks. Das ist
+         *    das 4,4-fache der RE2-Kadenz. Die Blutmenge je Sekunde ist im Port deshalb um
+         *    denselben Faktor hoeher als in RE2 — nicht wegen dieser Zeilen.
+         *
+         * RNG: die WURFZAHL ist Verhalten. Phase 0 zieht insgesamt SECHS Wuerfe — einen fuer
+         * die Clip-Wahl (@0x80107F80, oben) und FUENF fuer diesen Stoss, in der Reihenfolge
+         * X, Y, Z, sub, scale. RNG FUN_80015FE8 liefert 0..255 (`andi v0,v0,0xff` @0x80016004). */
+        {
+            unsigned zone3 = (unsigned)e->re2z_hits1d2 % 3u;   /* Magic 0xAAAAAAAB @0x80107FCC-FF0 */
+            int32_t  ox, oy, oz;
+            uint32_t r_sub, r_sc;
+            uint16_t basis;
+            int      anker;
+            if (zone3 != 0u) {                             /* `beq a0,zero,0x80108068` @0x80107FF4 */
+                ox = 256 - 2 * (int32_t)re2z_rand();       /* @0x80108000 + @0x80108004/08/0C */
+                oy = 312 - 4 * (int32_t)re2z_rand();       /* @0x80108010 + @0x80108018/1C/20 */
+                oz = 256 - 2 * (int32_t)re2z_rand();       /* @0x80108024 + @0x8010802C/30 */
+                r_sub = re2z_rand();                       /* @0x80108034, gefangen @0x80108040 */
+                r_sc  = re2z_rand();                       /* @0x8010803C */
+                basis = 7000;                              /* @0x80108050 */
+                anker = 0;                                 /* `addiu a2,s1,72`  @0x80108064 */
+            } else {                                       /* Zweig B @0x80108068-801080C0 */
+                ox = 127 - (int32_t)re2z_rand();           /* @0x8010806C + @0x80108070/74 */
+                oy = 927 - (int32_t)re2z_rand();           /* @0x80108078 + @0x80108080/84 */
+                oz = 127 - (int32_t)re2z_rand();           /* @0x80108088 + @0x80108090 */
+                r_sub = re2z_rand();                       /* @0x80108094, gefangen @0x801080A0 */
+                r_sc  = re2z_rand();                       /* @0x8010809C */
+                basis = 6096;                              /* @0x801080B0 */
+                anker = 1;                                 /* `addiu a2,s1,244` @0x801080C0 */
+            }
+            /* Der Anker folgt derselben Regel wie re2z_blood_anchor() (Zone 0 -> Part 1).
+             * Gepacktes Wort wie das Original: `sll s0,s0,16` @0x80108048/@0x801080A8 und
+             * `or a0,s0,v0` @0x80108054/@0x801080B4; Id-Byte 0 = Blut (a0 hat kein Bit >= 24). */
+            re2z_gore_fx_ex(e, anker,
+                               ((uint32_t)(r_sub & 1u) << 16)   /* `andi s0,s0,0x1` @0x80108044 */
+                                   | (uint32_t)(uint16_t)(basis + (r_sc << 3)),
+                               (int16_t)re2z_bearing_to(e, pl),
+                               /* a1 = `lh a1,344(s2)` = +0x158 @0x8010805C/@0x801080BC. Der Wert
+                                * wird zwei Befehle vorher FRISCH geschrieben: `jal 0x800154ac`
+                                * @0x80107FC0 (Peilung Zombie->Spieler aus +0x38/+0x40 gegen
+                                * 0x800CFC30/0x800CFC38) -> `sh v0,344(s2)` @0x80107FD8. Dazwischen
+                                * schreibt nichts auf +0x158, also IST der gelesene Wert die
+                                * Peilung — re2z_bearing_to ist deren byte-true Zwilling
+                                * (FUN_800154AC, Herleitung in seinem Kopf). Das Port-Feld re2z_t158
+                                * traegt +0x158 als Budget/Timer; diese Ueberladung wird hier
+                                * bewusst NICHT persistiert, der Winkel nur berechnet. NICHT
+                                * e->rot_y: das ist die Eigen-Blickrichtung und weicht bis 180 ab. */
+                               ox, oy, oz);   /* a3 = Versatzvektor @0x80108058/@0x801080B8 */
+        }
         if (e->re2z_cd239 == 0) {                                  /* @0x801080CC-D4 */
             re2z_se(12);                                           /* @0x801080D8-E0 */
             e->re2z_cd239 = 150;                                   /* @0x801080E4-E8 */
@@ -6904,6 +7009,11 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
 /* Port-Diagnose: welche Tabellenzelle zuletzt dispatcht wurde (0 = NULL/keine). Nur fuer die
  * Tests — die Engine liest das nicht. */
 int re15_re2z_last_hit_handler(void) { return s_re2z_last_handler; }
+
+/* Test-Export (Runde 26, MG-Blutstoss): EIN Treffer-Frame der HURT-Wurzel FUN_80104F40 mit
+ * bereits gestempelter Zeile/Spalte — die Riegel-Sonde vergleicht damit MG gegen Pistole
+ * (Blutmenge je Treffer + Zahl der RNG-Zuege) ohne Raumlauf. Die Engine ruft das nie. */
+void re15_re2z_hurt_test(re15_actor_t *e, re15_actor_t *pl) { re2z_hurt(e, pl); }
 
 /* ============================================================================================
  * DEATH @0x80108250 — DIE STURZ-KETTE
