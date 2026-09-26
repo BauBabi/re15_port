@@ -232,6 +232,16 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
              * room, i.e. s_grant < capacity-1. (audit wf_8cc15b53) */
             if (s_type >= 0x0e && s_type <= 0x13 && s_grant >= INV_CAPACITY - 1)
                 s_grant = -1;
+            /* ⛔ NUTZER-ENTSCHEIDUNG 2026-09-26 (Stapeln, s. re15_inventory.h): bei VOLLEM
+             * Inventar darf die Aufnahme trotzdem weitergehen, WENN die ganze Menge auf einen
+             * schon vorhandenen Platz derselben Munition passt — sonst sagte das Spiel
+             * "kann ich nicht tragen", obwohl gestapelt werden koennte. Der byte-true
+             * Voll-Zweig (@0x8001df14 Vorpruefung, @0x8001e054 bltz -> Zustand 8) bleibt fuer
+             * jeden anderen Fall unveraendert, und s_prompt (der byte-true Glyphen-Zaehler der
+             * Prompt-Schreibmaschine, @0x8001df40-48) wird NICHT umgebogen: er folgt weiterhin
+             * allein s_grant. */
+            if (s_grant < 0 && re15_pickup_passt_nutzer(s_type, s_amount))
+                s_grant = re15_inv_find_item(s_type);
             s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
             s_blink   = 0;                        /* Blink-Zaehler beim Oeffnen (@0x80027eb0) */
@@ -317,7 +327,11 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
                   * else INSERT (FUN_8004dc4c) + taken-bit + deactivate the AOT, state=0 (DONE). The
                   * byte-true gate is `if ((char)DAT_8008f62c < 0 || (DAT_800b8520 & 1)) -> state 8`
                   * (@0x8001e054 bltz + @0x8001e068 andi 0x1) — the second term is the Yes/No "No". */
-            if (s_grant < 0 || s_msg_no || re15_inv_grant(s_type, s_amount) != 0) {
+            /* ⛔ NUTZER-ENTSCHEIDUNG 2026-09-26: re15_inv_grant_stapeln_nutzer ist der byte-true
+             * Insert PLUS der markierten Stapelregel (re15_inventory.h). Sie schreibt die Menge
+             * in JEDEM Zweig genau einmal gut und ist atomar: scheitert der Rest-Platz, ist
+             * nichts veraendert und der byte-true Voll-Zweig (Zustand 8) greift unveraendert. */
+            if (s_grant < 0 || s_msg_no || re15_inv_grant_stapeln_nutzer(s_type, s_amount) != 0) {
                 s_f630  = 0;         /* @0x8001e0f0 */
                 s_f634  = 0;         /* @0x8001e0f8 */
                 s_state = 8;         /* sb 8,DAT_80072d3b @0x8001e100 (state 8 runs next tick) */

@@ -111,6 +111,31 @@ int  re15_item_is_key(uint8_t id);
  * 1108 Stueck gesamt -> 532 nachher; STAGE1 allein 54 Records / 950 Stueck -> 458. */
 uint8_t re15_pickup_menge_nutzer(uint8_t item_id, uint8_t menge);
 
+/* ===== NUTZER-ENTSCHEIDUNG (KEINE byte-true Regel) ==================================
+ * Nutzer-Auftrag 2026-09-26: "Munition gleicher Sorte kannst du bitte gleich Stapeln,
+ * wenn du sie aufnimmst." — bestaetigt als bewusste Abweichung.
+ *
+ * ⛔ GEMESSEN: weder RE1.5 noch RE2 stapelt beim Aufnehmen. RE1.5 hat genau EINEN
+ * Insert (FUN_8004dc4c @0x8004dc4c) mit genau EINEM Aufrufer (@0x8001e0c4); er schreibt
+ * die Menge roh (`sb s1,0(at)` @0x8004def4) statt zu addieren und liest die
+ * Obergrenzen-Tabelle @0x80074da8 im ganzen Insert-Bereich nicht. RE2 ebenso
+ * (jal 0x80069adc @0x80058864 / @0x80072320).
+ *
+ * Die ARITHMETIK ist byte-true aus der Menue-Zusammenlegung FUN_8004e054 geborgt:
+ *   Summe   = Ziel.qty + Menge                    @0x8004e13c/@0x8004e14c/@0x8004e160
+ *   cap     = u8 @0x80074da8 + Id*12              lbu @0x8004e338
+ *   cap < Summe ?                                 sltu @0x8004e340
+ *     ja  -> Ziel = cap @0x8004e3f4, Rest = Summe-cap @0x8004e410 (neuer Platz)
+ *     nein-> Ziel = Summe @0x8004e398-3a8
+ *
+ * Gueltigkeitsbereich: NUR der WELT-AUFNAHME-Pfad (item_modal_common.c Zustand 5/7),
+ * NUR Munition mit eigenem Kombinations-Satz (s. re15_pickup_stapelt_nutzer — die
+ * Memory Card 0x21 faellt datengetrieben heraus). Die Item-Box und das Nachladen sind
+ * NICHT beruehrt. */
+int re15_pickup_stapelt_nutzer(uint8_t item_id);
+int re15_pickup_passt_nutzer(uint8_t item_id, uint8_t menge);
+int re15_inv_grant_stapeln_nutzer(uint8_t item_id, uint8_t menge);
+
 /* Byte-true item NAME for the inventory display (catalog 0x00..0x21, from the DAT_800c4a28 string blob
  * via DAT_800c495c offsets). Returns "" for ids outside the proven catalog. See RE15_INVENTORY_SUBSYSTEM.md §3. */
 const char *re15_item_name(uint8_t id);
