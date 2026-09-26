@@ -1,0 +1,189 @@
+﻿probe_r26_pose80.exe : [scd] thread start slot=0 first_op=0x06
+In Zeile:1 Zeichen:323
++ ... _NOAUDIO=1; & C:/workspace/git/reAi_v2/.claude/worktrees/wf_19e49a69- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([scd] thread start slot=0 first_op=0x06:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[scd] thread start slot=1 first_op=0x13
+[scd] thread start slot=2 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21340,-4446,-24516) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21340,-4446,-20916) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-21340,-4446,-17316) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-21340,-4446,-13716) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(310,-4500,-26946) rot=(-2048,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(3920,0,-25952) rot=(0,3072,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(4304,-1340,-26600) rot=(0,2912,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-19800,-900,10800) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-25200,-900,-19800) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(-22450,-5400,16600) rot=(0,2048,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(4412,0,-6772) rot=(0,3072,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-2250,-300,-6875) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-2550,-300,-6875) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=0 pos=(2850,-1400,6125) rot=(0,457,0)
+[scd] Obj_model_set[4] id=0x03 type=0 pos=(2950,-1400,-1075) rot=(0,1885,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-3950,-900,-225) rot=(0,1024,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-1452,-1784,-584) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x54
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x01 type=4 pos=(-16575,-5400,1700) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x02 type=4 pos=(22925,-5400,-5400) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x03 type=3 pos=(5025,-5000,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x04 type=3 pos=(-18275,-5000,850) rot=(0,1024,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x13
+[scd] thread start slot=2 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21340,-4446,-24516) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21340,-4446,-20916) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-21340,-4446,-17316) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-21340,-4446,-13716) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(310,-4500,-26946) rot=(-2048,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(3920,0,-25952) rot=(0,3072,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(4304,-1340,-26600) rot=(0,2912,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x06 type=4 pos=(-1600,-5400,-9348) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x00 type=0 pos=(-6625,-16200,-1850) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x01 type=4 pos=(2052,0,-5552) rot=(0,1024,0)
+[scd] Obj_model_set[3] id=0x02 type=4 pos=(-1256,0,-64) rot=(0,1024,0)
+[scd] Obj_model_set[4] id=0x03 type=4 pos=(4248,0,1400) rot=(0,1024,0)
+[scd] Obj_model_set[5] id=0x04 type=3 pos=(7996,-16200,4450) rot=(0,2048,0)
+[scd] Obj_model_set[6] id=0x05 type=3 pos=(2975,-16200,-13950) rot=(0,0,0)
+[scd] Obj_model_set[7] id=0x07 type=0 pos=(5475,-16200,-13050) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x13
+[scd] thread start slot=2 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21340,-4446,-24516) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21340,-4446,-20916) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-21340,-4446,-17316) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-21340,-4446,-13716) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(310,-4500,-26946) rot=(-2048,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(3920,0,-25952) rot=(0,3072,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(4304,-1340,-26600) rot=(0,2912,0)
+[scd] thread start slot=0 first_op=0x06
+[scd] thread start slot=1 first_op=0x13
+[scd] thread start slot=2 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-21340,-4446,-24516) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-21340,-4446,-20916) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-21340,-4446,-17316) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-21340,-4446,-13716) rot=(0,0,0)
+[scd] Obj_model_set[4] id=0x04 type=0 pos=(310,-4500,-26946) rot=(-2048,1024,0)
+[scd] Obj_model_set[5] id=0x05 type=0 pos=(3920,0,-25952) rot=(0,3072,0)
+[scd] Obj_model_set[6] id=0x06 type=0 pos=(4304,-1340,-26600) rot=(0,2912,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x01
+
+############ PASS A - DAUERFEUER, ganzes Byte +0x1D3 beobachtet ############
+  [HUND   0x20 R1190] Abdeckung 900 Bilder, Treffer-Stempel 82x | Bit0x80: 0 Bilder, 0x gesetzt, 0x freigegeben, laengster Lauf 0, Endlauf 0, Endwert 0x00
+      => Bit 0x80 wurde in diesem Fenster NIE gesetzt (Riegel spielt hier keine Rolle)
+  [KRAEHE 0x21 R10C0] Abdeckung 900 Bilder, Treffer-Stempel 55x | Bit0x80: 0 Bilder, 0x gesetzt, 0x freigegeben, laengster Lauf 0, Endlauf 0, Endwert 0x06
+      => Bit 0x80 wurde in diesem Fenster NIE gesetzt (Riegel spielt hier keine Rolle)
+  [BABY   0x26 R1090] Abdeckung 900 Bilder, Treffer-Stempel 41x | Bit0x80: 0 Bilder, 0x gesetzt, 0x freigegeben, laengster Lauf 0, Endlauf 0, Endwert 0x00
+      => Bit 0x80 wurde in diesem Fenster NIE gesetzt (Riegel spielt hier keine Rolle)
+  [FEUER  0x26 R1090 (ohne Baby)] Abdeckung 900 Bilder, Treffer-Stempel 0x | Bit0x80: 0 Bilder, 0x gesetzt, 0x freigegeben, laengster Lauf 0, Endlauf 0, Endwert 0x00
+      => Bit 0x80 wurde in diesem Fenster NIE gesetzt (Riegel spielt hier keine Rolle)
+  [SPINNE 0x25] Abdeckung 900 Bilder, Treffer-Stempel 82x | Bit0x80: 0 Bilder, 0x gesetzt, 0x freigegeben, laengster Lauf 0, Endlauf 0, Endwert 0x06
+      => Bit 0x80 wurde in diesem Fenster NIE gesetzt (Riegel spielt hier keine Rolle)
+
+
+########### PASS B - ZWANGSRIEGEL: faellt Bit 0x80 auf dem echten Pfad? ####
+  [HUND   0x20 R1190] Abdeckung 24 Bilder (Start st=4/0): Riegel fiel bei Bild 23 (st=1/2, Byte 0x00)
+  [KRAEHE 0x21 R10C0] Abdeckung 600 Bilder (Start st=1/0): ⛔ Riegel fiel NIE (Ende st=1/0, Byte 0x80) - Ganz-Byte-Gate = DAUERHAFT unverwundbar
+  [BABY   0x26 R1090] Abdeckung 600 Bilder (Start st=1/0): ⛔ Riegel fiel NIE (Ende st=1/0, Byte 0x80) - Ganz-Byte-Gate = DAUERHAFT unverwundbar
+  [FEUER  0x26 R1090 (ohne Baby)] Abdeckung 600 Bilder (Start st=1/0): ⛔ Riegel fiel NIE (Ende st=1/0, Byte 0x80) - Ganz-Byte-Gate = DAUERHAFT unverwundbar
+  [SPINNE 0x25] Abdeckung 600 Bilder (Start st=1/4): ⛔ Riegel fiel NIE (Ende st=1/4, Byte 0x80) - Ganz-Byte-Gate = DAUERHAFT unverwundbar
+
+########### PASS C - HUND: gewoehnlicher Kugeltreffer #####################
+  [HUND-KUGEL] Treffer bei f0: Byte 0x0D (low7=13 bit80=0), st=2/3/2
+  [HUND-KUGEL] Abdeckung 240 Bilder nach dem Treffer: low7 erreichte 0 bei f7 (Bit0x80 dort = 0), Bit0x80 stand in 0 von 240 Bildern, Endbyte 0x00 (st=1/0/1)
+
+########### PASS D - ZUSTAND ERZWUNGEN: setzt der Port Bit 0x80? ##########
+  HUND 0x20 (ROOM1190):
+      ACTIVE sub 14 (Sprung @0x80102C28) Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    freigegeben , 27 Bilder verriegelt, Ende st=1/0 Byte 0x00
+                                           -> Freigabe bei f27 (Dauer 27 Bilder)
+      ACTIVE sub 15 (Satz  @0x80102E58)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    freigegeben , 27 Bilder verriegelt, Ende st=1/13 Byte 0x00
+                                           -> Freigabe bei f27 (Dauer 27 Bilder)
+      ACTIVE sub 16 (      @0x801030FC)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+      HURT Zeile 10 (Feuer @0x80103D9C)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+      HURT Zeile 16 (Feuer @0x80103D9C)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+      HURT Zeile  1 (Kugel @0x80103308)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+      HURT Zeile  0 (      @0x8010321C)  Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+  KRAEHE 0x21 (ROOM10C0):
+      state 7 (Leichen-Router)           Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    NIE freigegeben, 300 Bilder verriegelt, Ende st=7/0 Byte 0x80
+      state 7 sub 1 (GIB)                Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    NIE freigegeben, 300 Bilder verriegelt, Ende st=7/1 Byte 0x80
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=4 pos=(-8136,-1800,4753) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=4 pos=(-5960,-9000,-15482) rot=(0,0,0)
+[scd F0] Cut_chg(8)
+[scd] Obj_model_set[2] id=0x03 type=0 pos=(3060,-2754,-1560) rot=(80,1878,0)
+      state 7 sub 2 (Wand-Splat)         Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    NIE freigegeben, 300 Bilder verriegelt, Ende st=7/2 Byte 0x80
+      state 7 sub 3 (Launch)             Abdeckung 300 Bilder | Bit0x80: gesetzt ab f0    NIE freigegeben, 300 Bilder verriegelt, Ende st=7/3 Byte 0x80
+      state 3 (DEATH)                    Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+  BABY 0x26 (ROOM1090):
+      state 1 sub 0                      Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=1/0 Byte 0x00
+      state 2 (HURT)                     Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=2/0 Byte 0x00
+      state 3 (DEATH)                    Abdeckung   2 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=3/0 Byte 0x00
+      state 7 (CORPSE)                   Abdeckung 300 Bilder | Bit0x80: gesetzt ab f-1   (NIE gesetzt)   , 0 Bilder verriegelt, Ende st=7/0 Byte 0x00
+
+PROBE-OK (Messschiene gelaufen)
