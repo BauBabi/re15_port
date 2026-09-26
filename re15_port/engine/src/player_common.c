@@ -241,6 +241,21 @@ int re15_player_aim_dbg(int *phase, int *recoil, int *autof, int *auto_cls, int 
  * room_common.c (Tuer/JUMP) und im Same-Room-Reenter (game_step_common.c) — VOR
  * scd_room_reenter, damit ein Plc_motion des Raum-main00 wie im Original gewinnt (SCD-Tick
  * @0x8001cdec liegt VOR dem Dispatcher @0x8001ce0c). */
+/* EINTRITTS-POSE = EINMAL-EREIGNIS (cmd-0-Handler @0x800318f8).
+ * 0 = aus, 1 = das cmd-0-Bild steht noch aus, 2 = das Uebergabe-Bild steht noch aus.
+ * Das Original laeuft den cmd-0-Handler GENAU EINMAL: derselbe Durchlauf stellt das
+ * Kommandowort schon auf 1 (sw v0,-13736(at) = 0x800aca58 @0x8003192c; v0 = 1 aus
+ * ori v0,zero,0x1 @0x8003191c), ab dem naechsten Bild dispatcht 0x80073f90[1].
+ * Der Port parkte die Pose dagegen als DAUER-Motion 210 und spielte sie ueber
+ * cur % frame_count zyklisch ab - gemessen ROOM1050 3,5 Durchlaeufe
+ * (analysis/befunde_2026-09-26/cutscene-erste-anim-wiederholt.md).
+ * Waehrend der Tuer-Blende steht der Spieler komplett still (bltz a0 @0x80031c78 auf
+ * g_pauseflags); der Port ueberspringt dort ebenfalls den player_tick
+ * (game_step_common.c, RE15_PAUSE_PLAYER) - der Latch wird also erst im ersten Bild NACH
+ * dem Fallen der 0xFF000000-Maske abgearbeitet, genau wie im Original. */
+static uint8_t s_entry_pose_step = 0;
+int re15_player_entry_pose_latch(void) { return (int)s_entry_pose_step; }
+
 void re15_player_room_entry_pose(void)
 {
     re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -251,6 +266,9 @@ void re15_player_room_entry_pose(void)
                                                       * -> vorwaerts, REVERSE-Bit (0x80) geloescht */
     p->motion_init_delay = 0;                        /* kein Port-Verzoegerungstick vor dem Set */
     p->anim_use_pl00     = 0;                        /* Bank = PLW-Paar, nicht PL00 (@0x80031bfc) */
+    /* EINMAL-Ereignis scharf schalten: Bild 1 = diese Pose (@0x80031c10-c24),
+     * Bild 2 = Uebergabe an Idle-FSM Fall 0 (@0x80032074-b4). Siehe s_entry_pose_step. */
+    s_entry_pose_step    = 1;
 }
 void re15_player_set_aim_clip_len(int fc)
 {
@@ -787,6 +805,48 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         }
     }
 
+    /* ===== EINTRITTS-POSE: ZWEI Bilder, dann vorbei =========================
+     * Bild 1 (Latch 1) = der cmd-0-Handler. Er setzt W-Bank Clip 1 Bild 0 hart:
+     *   @0x80031bf4  addu a2,zero,zero      vorwaerts (Reverse-Bit geloescht)
+     *   @0x80031c10  sb v0(=1),-13592(at)   0x800acae8 = +0x94 = 1  (W-Bank CLIP 1)
+     *   @0x80031c18  sb zero,-13591(at)     0x800acae9 = +0x95 = 0  (Bild 0)
+     *   @0x80031c20  sb zero,-13597(at)     0x800acae3 = +0x8f = 0  (kein Crossfade)
+     *   @0x80031c24  jal 0x8001f314         anim_set(...)
+     * und stellt im SELBEN Durchlauf das Kommandowort auf 1 (@0x8003192c).
+     * Bild 2 (Latch 2) = die Uebergabe an den Idle-FSM Fall 0 (switchD_8003206c):
+     *   @0x8003207c  sb v0(=1),-13734(at)   0x800aca5a = +0x06 = 1
+     *   @0x80032088  sb v0(=3),-13592(at)   0x800acae8 = +0x94 = 3 (W-Bank CLIP 3, Idle)
+     *   @0x80032094  sb zero,-13591(at)     0x800acae9 = +0x95 = 0
+     *   @0x8003209c  sb v0(=7),-13597(at)   0x800acae3 = +0x8f = 7 (Crossfade-Saat)
+     *   @0x800320a4  sh zero,-13600(at)     0x800acae0 = 0
+     *   @0x800320b0  andi v0,v0,0x1f / @0x800320b4 addiu v0,v0,90  Haltezeit 90 + (rng & 0x1f)
+     * Das gilt UNABHAENGIG von player_mode: das Original gated hier nichts am
+     * Skript-Modus, die Szene uebernimmt erst mit ihrem eigenen Plc_motion
+     * (Kommandowort 4, sb v1(=4),4(v0) @0x80041bb0). Genau deshalb fiel der Defekt nur
+     * bei einer Cutscene nach dem Raumwechsel auf - dort ersetzt kein Pad-/Idle-Zweig
+     * die Pose (player_common.c pm-2-Zweig holt nur 105/100 zurueck). */
+    if (s_entry_pose_step == 1) {
+        p->motion            = RE15_MOTION_IDLE_SETTLE;   /* +0x94 = 1 @0x80031c10 */
+        p->anim_frame        = 0;                         /* +0x95 = 0 @0x80031c18 */
+        p->anim_frac         = 0;                         /* +0x8f = 0 @0x80031c20 */
+        p->anim_flags        = 0;                         /* a2   = 0 @0x80031bf4 */
+        p->anim_freeze       = 0;
+        p->anim_use_pl00     = 0;                         /* PLW-Paar @0x80031bfc */
+        p->motion_init_delay = 0;   /* Der Latch sitzt HINTER dem Clip-Advance dieses Ticks
+                                     * (Port-Ordnung "advance -> seed -> pose"), setzt also
+                                     * +0x95 = 0 NACH dem Advance - genau wie der Handler
+                                     * es unmittelbar vor seinem einzigen anim_set tut
+                                     * (@0x80031c18 vor jal @0x80031c24). */
+        s_entry_pose_step    = 2;
+    } else if (s_entry_pose_step == 2) {
+        s_entry_pose_step    = 0;
+        p->motion            = RE15_MOTION_IDLE;          /* +0x94 = 3 @0x80032088 */
+        p->anim_frame        = 0;                         /* +0x95 = 0 @0x80032094 */
+        p->anim_frac         = 7;                         /* +0x8f = 7 @0x8003209c */
+        p->motion_init_delay = 0;
+        s_idle_phase         = -1;  /* Wiedereintritt in Fall 0 mit der byte-treuen Haltezeit
+                                     * 90 + (rng & 0x1f) @0x800320b0/@0x800320b4 */
+    }
     /* BL-round 2026-05-29: player-mode FSM input gate. While SCRIPTED
      * (player_mode==2, the cinematic) the SCD owns the actor — ignore PAD
      * MOVEMENT only (PSX gates input on player_mode≠0). CRITICAL: the anim_frame

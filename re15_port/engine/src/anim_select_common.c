@@ -90,7 +90,17 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
      * wraps the frame counter to 0 + freezes at clip-end → the arms-down walk-start pose.
      * Freeze at frame 0 here (the next Plc_motion's set_motion clears anim_freeze). This is
      * NOT the pad-walk (which never sets anim_freeze and keeps looping below). */
-    if (a->anim_freeze) {
+    /* EINTRITTS-POSE: solange der cmd-0-Latch laeuft, posiert der Spieler HART Bild 0.
+     * Regel = der Store "+0x95 := 0" (sb zero,-13591(at) @0x80031c18) unmittelbar vor dem
+     * einzigen anim_set des Handlers (jal 0x8001f314 @0x80031c24) - dort gibt es keine
+     * Modulo-Wiederholung. Ohne diese Ausnahme liefe der Sentinel 210 ueber clip_override
+     * in den Modulo-Zweig unten (cur % frame_count) und spielte die Eintritts-Pose im
+     * Kreis (gemessen ROOM1050: cur 0 -> 50 auf motion 210, 3,5 Durchlaeufe). Der
+     * LOOP-Zweig des Originals haengt dagegen am Flag +0x1C4 & 0x04 (andi @0x80050dbc)
+     * und nicht an der Eintritts-Pose. */
+    extern int re15_player_entry_pose_latch(void);
+    int entry_latch = (a == &g_actors[RE15_ACTOR_SLOT_PLAYER]) && re15_player_entry_pose_latch();
+    if (a->anim_freeze || entry_latch) {
         slot = 0;
     } else if (a->walk_active || clip_override >= 0) {
         slot = re15_actor_playback_slot(a, cur, clip->frame_count);
