@@ -2198,6 +2198,48 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
  * already holds decoded pixels. UVs are interpreted as pixel offsets within
  * the texture page; we divide by texture dimensions to get the [0..1] range
  * SDL_Vertex.tex_coord expects. */
+/* ===== ABTASTPHASE der texturierten Dreiecke ================================
+ * GEMESSEN, nicht vermutet. Der Nutzer meldet: "hat der Cursor immer so einen
+ * verzerrten/versetzten Schatten" (ROOM11F0, Cut 10).
+ *
+ * WAS DER FEHLER IST. Der Cursor-Schlagschatten ist in die TEXTUR gebacken
+ * (ROOM11F0.RDT TIM @Datei 0x018DAC, 8bpp 128x256, CLUT 256x1: Index 4 = (216,208,0)
+ * hell, Index 2 = (64,56,0) Schatten, Versatz +5u/+3v). Der senkrechte Kreuzarm ist
+ * genau 5 Texel breit, sein Schatten liegt die naechsten 5 Texel daneben, und die
+ * Oberseite wird von 126 Texeln auf 24 Bildschirmspalten verkleinert (5,25 Texel je
+ * Pixel). Welche der beiden Bahnen die EINE verbleibende Spalte trifft, entscheidet
+ * damit allein die Abtastphase.
+ *
+ * WARUM DIE PHASE IM PORT FALSCH WAR. SDL_RenderGeometry (GPU, NEAREST) tastet an der
+ * PIXELMITTE ab: ein Scheitel auf ganzzahligem (x,y) ist dort die ECKE des Pixels, die
+ * erste Abtastung liegt also auf (x+0,5 / y+0,5) und damit 0,5*du/dx = 2,6 Texel weiter.
+ * Die PSX macht es anders: Scheitel-Texcoord und Scheitel-Pixel gehoeren zusammen und
+ * werden im Gleichschritt hochgezaehlt --
+ *   psx-spx, docs/graphicsprocessingunitgpu.md:303-305 (selbst gelesen):
+ *   "Vertex & Texcoord specify the upper-left edge of the rectangle. And, normally,
+ *    screen coords and texture coords are both incremented during rendering".
+ * Also: -0,5 auf die SDL-Scheitelposition ruecken heisst, die Abtastung wieder auf das
+ * ganzzahlige Pixelraster zu legen -- dorthin, wo die PSX sie hat.
+ *
+ * DIE MESSUNG (RE15_FRAMEDUMP, ROOM11F0 Cut 10, Klassifikation strikt gegen die beiden
+ * Paletteneintraege oben, senkrechter Kreuzarm x 158..162):
+ *   Phase  0,00 (alter Stand) -> HELL auf  1 Zeile  (nur y 118)
+ *   Phase -0,50 (dieser Wert) -> HELL auf  9 Zeilen (y 112-115, 117, 120-123)
+ *   Phase +0,50               -> HELL auf  8 Zeilen
+ *   Phase -0,25 / +0,25       -> HELL auf  8 Zeilen
+ * Die fehlenden Zeilen 118/119 sind der waagerechte Kreuzarm samt eigenem Schatten.
+ *
+ * RE15_UVPHASE bleibt als MESSSCHIENE stehen (Gegenprobe ohne Neubau); ohne die
+ * Variable gilt der belegte Wert. */
+static float re15_render_pc_abtastphase(void)
+{
+    static float s_phase = -0.5f;   /* psx-spx:303-305, s.o. */
+    static int   s_init  = 0;
+    if (!s_init) { s_init = 1; const char *e = getenv("RE15_UVPHASE");
+                   if (e && *e) s_phase = (float)atof(e); }
+    return s_phase;
+}
+
 void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                               int x1, int y1, int u1, int v1,
                               int x2, int y2, int u2, int v2,
@@ -2258,20 +2300,22 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
 
     SDL_Color tint = { r, g, b, (Uint8)s_tri_alpha };
 
-    t->v[0].position.x = (float)x0;
-    t->v[0].position.y = (float)y0;
+    const float ab = re15_render_pc_abtastphase();
+
+    t->v[0].position.x = (float)x0 + ab;
+    t->v[0].position.y = (float)y0 + ab;
     t->v[0].color      = tint;
     t->v[0].tex_coord.x =  (float)u0                 * inv_w;
     t->v[0].tex_coord.y = ((float)v0 + (float)v_offset) * inv_h;
 
-    t->v[1].position.x = (float)x1;
-    t->v[1].position.y = (float)y1;
+    t->v[1].position.x = (float)x1 + ab;
+    t->v[1].position.y = (float)y1 + ab;
     t->v[1].color      = tint;
     t->v[1].tex_coord.x =  (float)u1                 * inv_w;
     t->v[1].tex_coord.y = ((float)v1 + (float)v_offset) * inv_h;
 
-    t->v[2].position.x = (float)x2;
-    t->v[2].position.y = (float)y2;
+    t->v[2].position.x = (float)x2 + ab;
+    t->v[2].position.y = (float)y2 + ab;
     t->v[2].color      = tint;
     t->v[2].tex_coord.x =  (float)u2                 * inv_w;
     t->v[2].tex_coord.y = ((float)v2 + (float)v_offset) * inv_h;
@@ -2345,24 +2389,26 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     const float inv_w = 1.0f / (float)s_tim_w;
     const float inv_h = 1.0f / (float)s_tim_h;
 
-    t->v[0].position.x = (float)x0;
-    t->v[0].position.y = (float)y0;
+    const float ab = re15_render_pc_abtastphase();
+
+    t->v[0].position.x = (float)x0 + ab;
+    t->v[0].position.y = (float)y0 + ab;
     t->v[0].color      = (SDL_Color){psx_prim_to_sdl_vert(r0),
                                      psx_prim_to_sdl_vert(g0),
                                      psx_prim_to_sdl_vert(b0), 0xFF};
     t->v[0].tex_coord.x =  (float)u0                 * inv_w;
     t->v[0].tex_coord.y = ((float)v0 + (float)v_offset) * inv_h;
 
-    t->v[1].position.x = (float)x1;
-    t->v[1].position.y = (float)y1;
+    t->v[1].position.x = (float)x1 + ab;
+    t->v[1].position.y = (float)y1 + ab;
     t->v[1].color      = (SDL_Color){psx_prim_to_sdl_vert(r1),
                                      psx_prim_to_sdl_vert(g1),
                                      psx_prim_to_sdl_vert(b1), 0xFF};
     t->v[1].tex_coord.x =  (float)u1                 * inv_w;
     t->v[1].tex_coord.y = ((float)v1 + (float)v_offset) * inv_h;
 
-    t->v[2].position.x = (float)x2;
-    t->v[2].position.y = (float)y2;
+    t->v[2].position.x = (float)x2 + ab;
+    t->v[2].position.y = (float)y2 + ab;
     t->v[2].color      = (SDL_Color){psx_prim_to_sdl_vert(r2),
                                      psx_prim_to_sdl_vert(g2),
                                      psx_prim_to_sdl_vert(b2), 0xFF};
