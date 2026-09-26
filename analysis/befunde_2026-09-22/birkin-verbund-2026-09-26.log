@@ -1,0 +1,157 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(15)
+[scd] Plc_dest(slot=0 mode=0x09 dest=(300,-23400) flag=32) walk_active=1
+[scd F0] Cut_chg(12)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+[aot] DOOR FIRE slot=5 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-26214,0,-3861)
+=== R21 Tentakel-Schub (verbund): ROOM5090, Spur A zum Nutzer-Befund ===
+  Boss bereit: slot 2 pos=(1960,0,-23400) clip=5
+-- VB) VERBUND: Yaw-Nord 3072 ; 4 Tastenbilder x 4 Blickrichtungen je Startspalte, je 600 Bilder ------
+  >> EINTRITT x=12000 yaw=3072 pad=0010 Bild 115: ( 11852,-22168)->( 11852,-22168) B=0 T=0 seg=10 begehbar
+       n1 ( 11852,-22168)->( 11886,-22168) d=(   +34,    +0) B=1 T=0 begehbar
+       n2 ( 11886,-22168)->( 11960,-22168) d=(   +74,    +0) B=1 T=1 begehbar
+       n3 ( 11960,-22168)->( 11994,-22168) d=(   +34,    +0) B=1 T=0 begehbar
+       n4 ( 11994,-22168)->( 12028,-22168) d=(   +34,    +0) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=3072 pad=0010 Bild 186: ( 12070,-22168)->( 12070,-22168) B=0 T=0 seg=10 begehbar
+       n1 ( 12070,-22168)->( 12104,-22168) d=(   +34,    +0) B=1 T=0 begehbar
+       n2 ( 12104,-22168)->( 12138,-22168) d=(   +34,    +0) B=1 T=0 begehbar
+       n3 ( 12138,-22168)->( 12192,-22168) d=(   +54,    +0) B=1 T=0 begehbar
+       n4 ( 12192,-22168)->( 12266,-22168) d=(   +74,    +0) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=3072 pad=0010 Bild 575: ( 15700,-22168)->( 15700,-22168) B=0 T=0 seg=10 begehbar
+       n1 ( 15700,-22168)->( 15700,-22168) d=(    +0,    +0) B=0 T=0 begehbar
+       n2 ( 15700,-22168)->( 15795,-22168) d=(   +95,    +0) B=1 T=0 begehbar
+       n3 ( 15795,-22168)->( 15890,-22168) d=(   +95,    +0) B=1 T=0 begehbar
+       n4 ( 15890,-22168)->( 15964,-22168) d=(   +74,    +0) B=1 T=1 begehbar
+  >> EINTRITT x=12000 yaw=0 pad=0010 Bild 0: ( 12000,-24750)->( 12000,-24750) B=1 T=0 seg=10 begehbar
+       n1 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n2 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n3 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n4 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=1024 pad=0010 Bild 0: ( 12000,-24750)->( 12000,-24750) B=1 T=0 seg=10 begehbar
+       n1 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n2 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n3 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n4 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=2048 pad=0010 Bild 0: ( 12000,-24750)->( 12000,-24750) B=1 T=0 seg=10 begehbar
+       n1 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n2 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n3 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+       n4 ( 12000,-24750)->( 12000,-24750) d=(    +0,    +0) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=2048 pad=0010 Bild 237: ( 13844,-24747)->( 13823,-24732) B=1 T=0 seg=10 begehbar
+       n1 ( 13823,-24732)->( 13822,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n2 ( 13822,-24747)->( 13821,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n3 ( 13821,-24732)->( 13820,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+  >> EINTRITT x=12000 yaw=2048 pad=0010 Bild 241: ( 13820,-24747)->( 13819,-24732) B=1 T=0 seg=10 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13819,-24732)->( 13818,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13817,-24732)->( 13837,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13837,-24732)->( 13836,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13836,-24747)->( 13835,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n4 ( 13835,-24732)->( 13834,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 13609,-24732)->( 13629,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 13629,-24732)->( 13628,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 13628,-24747)->( 13667,-24732) d=(   +39,   +15) B=1 T=0 begehbar
+       n4 ( 13667,-24732)->( 13747,-24732) d=(   +80,    +0) B=1 T=0 begehbar
+       n1 ( 14507,-24747)->( 14527,-24732) d=(   +20,   +15) B=1 T=0 begehbar
+       n2 ( 14527,-24732)->( 14526,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 14526,-24747)->( 14525,-24732) d=(    -1,   +15) B=1 T=1 begehbar
+       n4 ( 14525,-24732)->( 14524,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 14319,-24732)->( 14339,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 14339,-24732)->( 14338,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n3 ( 14338,-24747)->( 14337,-24732) d=(    -1,   +15) B=1 T=0 begehbar
+       n1 ( 14336,-24747)->( 14356,-24732) d=(   +20,   +15) B=1 T=0 begehbar
+       n2 ( 14356,-24732)->( 14355,-24747) d=(    -1,   -15) B=1 T=0 begehbar
+       n1 ( 14354,-24732)->( 14374,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n2 ( 14374,-24732)->( 14394,-24732) d=(   +20,    +0) B=1 T=0 begehbar
+       n1 ( 14238,-24732)->( 14424,-24698) d=(  +186,   +34) B=1 T=0 begehbar
+       n2 ( 14424,-24698)->( 14463,-24635) d=(   +39,   +63) B=1 T=0 begehbar
+       n3 ( 14463,-24635)->( 14497,-24574) d=(   +34,   +61) B=1 T=0 begehbar
+       n4 ( 14497,-24574)->( 14545,-24518) d=(   +48,   +56) B=1 T=0 begehbar
+       n1 ( 16396,-24732)->( 16386,-24732) d=(   -10,    +0) B=1 T=0 begehbar
+       n2 ( 16386,-24732)->( 16400,-24732) d=(   +14,    +0) B=1 T=0 begehbar
+       n1 ( 16399,-24732)->( 16403,-24732) d=(    +4,    +0) B=1 T=0 begehbar
+       n1 ( 16392,-24732)->( 16387,-24732) d=(    -5,    +0) B=1 T=0 begehbar
+       n2 ( 16387,-24732)->( 16387,-24732) d=(    +0,    +0) B=1 T=0 begehbar
+       n3 ( 16387,-24732)->( 16392,-24732) d=(    +5,    +0) B=1 T=0 begehbar
+       n4 ( 16392,-24732)->( 16403,-24732) d=(   +11,    +0) B=1 T=0 begehbar
+  VB) verworfene Spalten: 0 ohne begehbare Zelle, 32 weil der Boss 400 Bilder lang keinen freien Platz liess
+  VB) Laeufe 16 (Startspalten verworfen 32) ; gemessene Bilder 2584 (Griff/Maul 7016)
+  VB) Bilder UNBEGEHBAR: 0 ; laengste Serie: 0 ; noerdlichste Lage z=-2147483647 (x=0)
+  VB) Bilder EXAKT auf dem Klemm-Fixpunkt z=-19232 und unbegehbar: 0
+  VB) EINTRITTE in einen Boss-Zylinder: 43 (nur Tentakel 0, nur Koerper 40, beides 0, keins 3)
+  VB) davon binnen 12 Bildern UNBEGEHBAR: 0 ; davon auf dem Fixpunkt: 0
+  VB) ⛔ EINTRITTE JA, LANDUNG NEIN — das zweite Glied der Kette (Koerper-Schub des Folgebildes auf den Fixpunkt) ist in dieser Stichprobe NICHT eingetreten.
+=== R21 FERTIG ===

@@ -169,6 +169,7 @@ int main(int argc, char **argv)
     int do_druckfix = !strcmp(mode, "druckfix");
     int do_kettefix = !strcmp(mode, "kettefix");
     int do_kette    = !strcmp(mode, "kette") || do_kettefix;
+    int do_verbund  = !strcmp(mode, "verbund");
 
     uint8_t *raw = slurp(RE15_ASSET_PSX_DIR "/STAGE5/ROOM5090.RDT", &rsz);
     if (!raw) { printf("FEHLT: ROOM5090.RDT\n"); return 77; }
@@ -1519,6 +1520,212 @@ int main(int argc, char **argv)
         printf("  KE) Bilder, in denen ein REINER Tentakel-Schub in einem Boss-Zylinder"
                " endete: %d\n", tent_in_zylinder);
         printf("  KE) Nachlauf nach dem ersten Aussen-Bild: %d weitere Aussen-Bilder, %d Bilder EXAKT auf dem Klemm-Fixpunkt z=-19232\n", raus_nachlauf, fixpunkt_erreicht);
+    }
+
+    /* ====================================================================== *
+     * VB) DIE VERBUND-MESSUNG — offener Punkt 8.1 des Dossiers
+     *
+     *     Behauptet war die Kette: ungeklemmter Tentakel-Schub setzt den
+     *     Spieler IN den Boss-Zylinder -> der Koerper-Schub des FOLGEBILDES
+     *     wirft ihn ueber die Wand -> die Klemme desselben Bildes landet auf
+     *     dem Fixpunkt z=-19232 (der Marke des Nutzers).
+     *
+     *     `kette` hat davon nur das erste Glied gesehen (3 Bilder im Zylinder)
+     *     und nie die Landung. Das lag an der Stichprobe: EIN Yaw, EIN
+     *     Tastenbild (nur VORWAERTS), 6 ueberlebende Startspalten.
+     *
+     *     Hier wird dieselbe Kette mit einer BREITEREN Fuehrung gefahren und
+     *     jedes EINTRITTS-Ereignis in den Zylinder einzeln verfolgt:
+     *       - Ursache des Eintritts (nur Tentakel / nur Koerper / beides / keins)
+     *       - die naechsten VB_NACH Bilder: wird der Spieler unbegehbar?
+     *         landet er EXAKT auf z=-19232?
+     *
+     *     ⛔ SELBSTPRUEFUNG: sind die Eintritte 0, ist die Kette an ihrem
+     *     ERSTEN Glied widerlegt und nicht etwa "nicht gemessen". Das steht
+     *     dann so in der Ausgabe.
+     * ====================================================================== */
+    if (do_verbund) {
+        enum { VB_NACH = 12 };
+        int32_t yaw_nord = 0; int32_t best_dz = -0x7fffffff;
+        for (int32_t y = 0; y < 4096; y += 256) {
+            int32_t z0;
+            pl->x = 9000; pl->z = -23550; pl->y = 0; pl->hp = 400; pl->rot_y = (int16_t)y;
+            z0 = pl->z;
+            s_pad = RE15_PAD_BIT_UP;
+            for (int f = 0; f < 12; f++) frame();
+            s_pad = 0;
+            if (pl->z - z0 > best_dz) { best_dz = pl->z - z0; yaw_nord = y; }
+        }
+        static const uint16_t pads[] = {
+            RE15_PAD_BIT_UP,
+            (uint16_t)(RE15_PAD_BIT_UP | RE15_PAD_BIT_LEFT),
+            (uint16_t)(RE15_PAD_BIT_UP | RE15_PAD_BIT_RIGHT),
+            0
+        };
+        const int npad = (int)(sizeof pads / sizeof pads[0]);
+        printf("-- VB) VERBUND: Yaw-Nord %d ; %d Tastenbilder x 4 Blickrichtungen"
+               " je Startspalte, je %d Bilder ------\n", (int)yaw_nord, npad, 600);
+
+        long bilder = 0, gegriffen = 0, raus = 0, fix = 0;
+        long eintritte = 0, e_tent = 0, e_body = 0, e_beides = 0, e_keins = 0;
+        long e_zu_raus = 0, e_zu_fix = 0;
+        int  maxserie = 0, serie = 0;
+        int  laeufe = 0, verworfen = 0, gezeigt = 0;
+        int32_t weitester = -0x7fffffff, w_x = 0;
+        long vb_ohne_zelle = 0, vb_boss_drauf = 0;
+
+        for (int32_t sx = 5500; sx <= 13500; sx += 250) {
+            int32_t z0 = 0; int have = 0;
+            int32_t g0x = 0, g0z = 0, g0r = 0, g1x = 0, g1z = 0, g1r = 0;
+            /* ⛔ ERSTER LAUF DIESES MODUS: 17 von 17 Spalten verworfen, 0 Bilder gemessen.
+             * Ursache war diese Suche: sie nahm NUR den LETZTEN begehbaren z-Wert der Spalte
+             * und wartete dann darauf, dass GENAU DER ausserhalb beider Boss-Segmente liegt.
+             * Der Boss patrouilliert den Nordrand, also war gerade dieser Platz meist belegt.
+             * Jetzt werden ALLE begehbaren z der Spalte gesammelt und je Wartebild ALLE
+             * geprueft; der erste freie gewinnt. */
+            {
+                int32_t kand[96]; int nk = 0;
+                for (int32_t sz = -25000; sz <= -21000; sz += 50)
+                    if (begehbar(sx, sz, 0) && nk < 96) kand[nk++] = sz;
+                have = (nk > 0);
+                if (!have) { verworfen++; vb_ohne_zelle++; continue; }
+                int frei = 0;
+                for (int w = 0; w < 400 && !frei; w++) {
+                    if (!re15_g5_body_segment(0, &g0x, NULL, &g0z, &g0r)) { frame(); continue; }
+                    re15_g5_body_segment(1, &g1x, NULL, &g1z, &g1r);
+                    int64_t r0 = (int64_t)(g0r + 450) * (g0r + 450);
+                    int64_t r1 = (int64_t)(g1r + 450) * (g1r + 450);
+                    for (int ki = 0; ki < nk && !frei; ki++) {
+                        int64_t d0 = (int64_t)(sx - g0x) * (sx - g0x)
+                                   + (int64_t)(kand[ki] - g0z) * (kand[ki] - g0z);
+                        int64_t d1 = (int64_t)(sx - g1x) * (sx - g1x)
+                                   + (int64_t)(kand[ki] - g1z) * (kand[ki] - g1z);
+                        if (d0 >= r0 && d1 >= r1) { z0 = kand[ki]; frei = 1; }
+                    }
+                    if (frei) break;
+                    pl->x = sx; pl->z = kand[nk - 1]; pl->y = 0; pl->hp = 400;
+                    frame();
+                    if (pl->hp < 100) pl->hp = 400;
+                }
+                if (!frei) { verworfen++; vb_boss_drauf++; continue; }
+            }
+            for (int pi = 0; pi < npad; pi++) {
+                for (int yi = 0; yi < 4; yi++) {
+                    int32_t yaw = (yaw_nord + yi * 1024) & 0xfff;
+                    int im_zyl_vorher = 0;
+                    int verfolge = -1;              /* Bilder seit dem letzten Eintritt */
+                    int v_raus = 0, v_fix = 0;
+                    laeufe++;
+                    serie = 0;
+                    pl->x = sx; pl->z = z0; pl->y = 0; pl->hp = 400;
+                    pl->rot_y = (int16_t)yaw; pl->hit_react = 0;
+                    for (int f = 0; f < 600; f++) {
+                        int rufe0 = 0, wirk0 = 0, rufe1 = 0, wirk1 = 0;
+                        int32_t vx = pl->x, vz = pl->z;
+                        int B, T = 0, I0 = 0, I1 = 0, ok, im_zyl;
+                        re15_g5_push_stats(&rufe0, &wirk0, NULL);
+                        s_pad = pads[pi];
+                        frame();
+                        s_pad = 0;
+                        re15_g5_push_stats(&rufe1, &wirk1, NULL);
+                        if (pl->hp < 100) pl->hp = 400;
+                        if (re15_g5_devour_opfer_phase() > 0 || re15_player_is_grabbed()) {
+                            gegriffen++; serie = 0; im_zyl_vorher = 0; continue;
+                        }
+                        bilder++;
+                        B = (wirk1 != wirk0);
+                        for (int i = 0; i < 4; i++) {
+                            uint16_t k = 0;
+                            re15_g5_tentakel_zustand(i, NULL, NULL, NULL, NULL, &k);
+                            if (k & 6u) T = 1;
+                        }
+                        if (re15_g5_body_segment(0, &g0x, NULL, &g0z, &g0r)) {
+                            int64_t d = (int64_t)(pl->x - g0x) * (pl->x - g0x)
+                                      + (int64_t)(pl->z - g0z) * (pl->z - g0z);
+                            I0 = (d < (int64_t)(g0r + 450) * (g0r + 450));
+                        }
+                        if (re15_g5_body_segment(1, &g1x, NULL, &g1z, &g1r)) {
+                            int64_t d = (int64_t)(pl->x - g1x) * (pl->x - g1x)
+                                      + (int64_t)(pl->z - g1z) * (pl->z - g1z);
+                            I1 = (d < (int64_t)(g1r + 450) * (g1r + 450));
+                        }
+                        im_zyl = (I0 || I1);
+                        re15_collision_set_band(0);
+                        ok = begehbar(pl->x, pl->z, 0);
+                        if (!ok) {
+                            raus++; serie++;
+                            if (serie > maxserie) maxserie = serie;
+                            if (pl->z > weitester) { weitester = pl->z; w_x = pl->x; }
+                        } else serie = 0;
+                        if (pl->z == -19232 && !ok) fix++;
+
+                        /* --- EINTRITT in den Zylinder --- */
+                        if (im_zyl && !im_zyl_vorher) {
+                            eintritte++;
+                            if (T && B) e_beides++; else if (T) e_tent++;
+                            else if (B)  e_body++;  else e_keins++;
+                            verfolge = 0; v_raus = 0; v_fix = 0;
+                            if (gezeigt < 8) {
+                                gezeigt++;
+                                printf("  >> EINTRITT x=%d yaw=%d pad=%04x Bild %d:"
+                                       " (%6d,%6d)->(%6d,%6d) B=%d T=%d seg=%d%d %s\n",
+                                       (int)sx, (int)yaw, (unsigned)pads[pi], f,
+                                       (int)vx, (int)vz, (int)pl->x, (int)pl->z,
+                                       B, T, I0, I1, ok ? "begehbar" : "RAUS");
+                            }
+                        }
+                        im_zyl_vorher = im_zyl;
+
+                        /* --- die naechsten VB_NACH Bilder nach einem Eintritt --- */
+                        if (verfolge >= 0) {
+                            if (!ok) v_raus = 1;
+                            if (pl->z == -19232 && !ok) v_fix = 1;
+                            if (gezeigt <= 8 && verfolge > 0 && verfolge <= 4)
+                                printf("       n%d (%6d,%6d)->(%6d,%6d) d=(%+6d,%+6d)"
+                                       " B=%d T=%d %s\n", verfolge,
+                                       (int)vx, (int)vz, (int)pl->x, (int)pl->z,
+                                       (int)(pl->x - vx), (int)(pl->z - vz), B, T,
+                                       ok ? "begehbar" : "RAUS");
+                            verfolge++;
+                            if (verfolge > VB_NACH) {
+                                if (v_raus) e_zu_raus++;
+                                if (v_fix)  e_zu_fix++;
+                                verfolge = -1;
+                            }
+                        }
+                    }
+                    if (verfolge >= 0) {            /* Lauf endete im Verfolgungsfenster */
+                        if (v_raus) e_zu_raus++;
+                        if (v_fix)  e_zu_fix++;
+                    }
+                }
+            }
+        }
+        printf("  VB) verworfene Spalten: %ld ohne begehbare Zelle, %ld weil der Boss 400 Bilder lang keinen freien Platz liess\n", vb_ohne_zelle, vb_boss_drauf);
+        printf("  VB) Laeufe %d (Startspalten verworfen %d) ; gemessene Bilder %ld"
+               " (Griff/Maul %ld)\n", laeufe, verworfen, bilder, gegriffen);
+        printf("  VB) Bilder UNBEGEHBAR: %ld ; laengste Serie: %d ; noerdlichste Lage"
+               " z=%d (x=%d)\n", raus, maxserie, (int)weitester, (int)w_x);
+        printf("  VB) Bilder EXAKT auf dem Klemm-Fixpunkt z=-19232 und unbegehbar: %ld\n", fix);
+        printf("  VB) EINTRITTE in einen Boss-Zylinder: %ld"
+               " (nur Tentakel %ld, nur Koerper %ld, beides %ld, keins %ld)\n",
+               eintritte, e_tent, e_body, e_beides, e_keins);
+        printf("  VB) davon binnen %d Bildern UNBEGEHBAR: %ld ; davon auf dem Fixpunkt: %ld\n",
+               (int)VB_NACH, e_zu_raus, e_zu_fix);
+        /* ⛔ DIE SCHIENE DARF NICHT LUEGEN: 0 Eintritte bei 0 gemessenen Bildern ist
+         * KEINE Widerlegung, sondern ein Fehllauf. Genau das ist im ersten Lauf dieses
+         * Modus passiert (17/17 Spalten verworfen) — und die alte Fassung dieser Zeile
+         * meldete dazu woertlich "die Kette ist widerlegt". */
+        if (laeufe == 0 || bilder == 0)
+            printf("  VB) ⛔ FEHLLAUF: %d Laeufe, %ld Bilder — dieser Lauf sagt NICHTS"
+                   " ueber die Kette, weder dafuer noch dagegen.\n", laeufe, bilder);
+        else if (eintritte == 0)
+            printf("  VB) ⛔ KEIN EINZIGER EINTRITT in %ld gemessenen Bildern — die"
+                   " behauptete Kette ist an ihrem ERSTEN Glied widerlegt.\n", bilder);
+        else if (e_zu_fix == 0)
+            printf("  VB) ⛔ EINTRITTE JA, LANDUNG NEIN — das zweite Glied der Kette"
+                   " (Koerper-Schub des Folgebildes auf den Fixpunkt) ist in dieser"
+                   " Stichprobe NICHT eingetreten.\n");
     }
 
     printf("=== R21 FERTIG ===\n");

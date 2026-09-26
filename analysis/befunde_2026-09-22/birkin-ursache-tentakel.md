@@ -425,3 +425,60 @@ dazu „`kette`: Starts, die außerhalb endeten = 0" — aktueller Stand **1 von
    eine Aussage über 162 Schübe, nicht über den Schub.
 3. Die vier weiteren Kandidaten des Prüfurteils (Treppe, Klettern, Text-Freeze
    `RE15_PAUSE_PLAYER`, die 360 Bilder Stillstand F451..F811) sind hier nicht berührt.
+
+---
+
+## 9. Nachtrag 2026-09-26 — offener Punkt 8.1 gemessen, die Kette faellt
+
+Neuer Sondenmodus `verbund` (`probe_r21_tentakel_schub verbund`). Er faehrt dieselbe
+Vorschrift wie `kette` (Start AUSSERHALB beider Boss-Segmente), aber mit breiterer
+Fuehrung — 4 Tastenbilder (VOR, VOR+LINKS, VOR+RECHTS, nichts) x 4 Blickrichtungen je
+Startspalte, je 600 Bilder — und verfolgt JEDEN Eintritt in einen Boss-Zylinder ueber die
+naechsten 12 Bilder.
+
+```
+  VB) verworfene Spalten: 0 ohne begehbare Zelle,
+                          32 weil der Boss 400 Bilder lang keinen freien Platz liess
+  VB) Laeufe 16 (Startspalten verworfen 32) ; gemessene Bilder 2584 (Griff/Maul 7016)
+  VB) Bilder UNBEGEHBAR: 0 ; laengste Serie: 0
+  VB) Bilder EXAKT auf dem Klemm-Fixpunkt z=-19232 und unbegehbar: 0
+  VB) EINTRITTE in einen Boss-Zylinder: 43 (nur Tentakel 0, nur Koerper 40, beides 0, keins 3)
+  VB) davon binnen 12 Bildern UNBEGEHBAR: 0 ; davon auf dem Fixpunkt: 0
+```
+
+**Das erste Glied der Kette aus §5 tritt hier NICHT auf.** Von 43 Eintritten in einen
+Boss-Zylinder geht **kein einziger** auf einen reinen Tentakel-Schub zurueck (40 auf den
+Koerper-Schub selbst, 3 auf keinen von beiden). `kette` hatte 3 solche Bilder gesehen —
+bei EINEM Tastenbild und EINER Blickrichtung. Und in keinem der 2584 Bilder verlaesst der
+Spieler den begehbaren Bereich ueberhaupt.
+
+Damit ist die in §5 vorgeschlagene Kette nicht bestaetigt, sondern an ihrem ersten Glied
+bestritten — und der Fix-Vorschlag **F1 (Entitaeten-Durchgang vor den Spieler-Schritt)
+bleibt deshalb ungebaut.** Er waere mit dieser Messlage auf eine Vermutung gebaut.
+
+**⛔ Die Stichprobe ist weiter duenn und das ist keine Entwarnung:** 32 von 33
+Startspalten fielen aus, weil der Boss 400 Bilder lang keinen freien Platz liess; gemessen
+wurde faktisch eine Spalte (x=12000). 7016 von 9600 Bildern fielen als Griff/Maul aus. Der
+erste Lauf dieses Modus war sogar ein reiner Fehllauf (17 von 17 Spalten verworfen, 0
+Bilder) — und die Schiene meldete dazu zunaechst woertlich „die Kette ist widerlegt". Diese
+Zeile ist berichtigt: 0 Laeufe heissen jetzt ausdruecklich „sagt NICHTS".
+
+**Zwei Bausteine selbst nachgeprueft** (statt der Runde-20-Behauptung zu vertrauen):
+
+* Die Wandklemme hat wirklich **kein** `break`. Der Schleifenfuss ist
+  `@0x8003b518 bne v0,zero,0x8003b224` hinter `@0x8003b510 addiu s4,s4,12`; der Treffer
+  setzt nur ein Sammelbit (`@0x8003b500 ori s7,s7,0x1`). Die letzte treffende Zelle
+  gewinnt — der Fixpunkt zwischen zwei ueberlappenden Zellen ist Original-Verhalten.
+* Der Boss-Zylinder hat wirklich **r = 6000**. Im Overlay
+  `build/extracted/re2_ems/CDEMD0_EM36_ai1.BIN`:
+  `@0x8010053C 24021770` = `addiu v0,zero,0x1770` (6000),
+  `@0x80100540 a602009a` = `sh v0,154(s0)` (Seg0 +0x16).
+
+**Was daraus folgt.** Der Spieler kann die Falle nur betreten, wenn ihn etwas dorthin
+SETZT; hinlaufen kann er nicht, weil die Klemme ihn vorher haelt. Der Koerper-Schub ist
+stark genug (bis 8760 in einem Bild), aber in 2584 legalen Bildern hat er es nicht getan.
+Die naechsten Wege sind deshalb die vier bislang unberuehrten Kandidaten des Pruefurteils
+— Treppe, Klettern, der Text-Freeze `RE15_PAUSE_PLAYER` und die 360 Bilder Stillstand
+F451..F811 im Protokoll des Nutzers — und das Protokoll selbst: die Zeilen F826 (9044,
+-24943) -> F841 (11436,-22142) -> F856 (9688,-19232) sehen nach LAUFEN aus (je 15 Bilder
+Abstand, rund 190 Einheiten je Bild), nicht nach einem Schub.
