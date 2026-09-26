@@ -511,9 +511,6 @@ static int aot_fire_door(int i)
 {
     re15_aot_t *a = &g_aot.slots[i];
     const re15_aot_door_params_t *d = &g_aot.door_params[i];
-    { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-      re15_elev_log("FIRE_DOOR slot=%d dest=st%u rm0x%02X cut=%u", i,
-                    (unsigned)d->dest_stage, (unsigned)d->dest_room, (unsigned)d->target_cut); }
 #ifndef RE15_PLATFORM_PC
     printf("[AOT] DOOR slot=%d destroom=%u cut=%u spawn=(%d,%d)\n",
            i, d->dest_room, d->target_cut, d->spawn_x, d->spawn_z);
@@ -931,31 +928,47 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * (Die alte Beispielliste nannte 5070 s1-2 als „permanently dead" — die werden in
          * Wahrheit zu sce-1 retyped; korrigiert.) */
         if (a->type == RE15_AOT_TYPE_NONE) continue;
-        /* INTRO-HANDOFF / AUTO-ADVANCE-TÜR: ein cross-room DOOR-AOT mit
-         * degeneriertem (0×0) Rechteck am Player-Spawn ist eine Auto-Advance-Tür
-         * (z.B. ROOM1240-Pre-Intro → ROOM1170). Das Original gated Türen NICHT an
-         * den Script-Cinematic-Flags (FUN_8002bd44 @0x8002bf38 liest (1,27)/(2,7)
-         * nicht); diese Tür wird erst per Aot_on am Intro-ENDE scharf, der Spieler
-         * steht exakt im Punkt-Trigger. Sie darf daher auch während des (vom Intro
-         * absichtlich nie geklärten) Cinematic feuern und braucht KEINEN Action-Press.
-         * Normale Lauf-Türen (echtes Rechteck) bleiben Cinematic-unterdrückt + Action-
-         * gated. */
-        int is_auto_door = 0;
-        if (a->type == RE15_AOT_TYPE_DOOR && a->half_w == 0 && a->half_h == 0) {
-            /* Ziel-Raum-ID byte-true (wie im Door-Fire-Handler): dest muss ein
-             * ANDERER Raum sein — ein Null-Rechteck-„Tür", deren dest zum aktuellen
-             * Raum auflöst, ist ein Same-Room-Teleport (z.B. ROOM1170 slot3) und darf
-             * NICHT als Auto-Advance ausgelöst werden. Raum-Index 0 ist ein GÜLTIGES
-             * Ziel (ROOM_x00; FUN_8001d600 liest struct+9 ohne ==0-Sonderfall) — der
-             * alte `dest_room != 0`-Vorfilter warf ROOM1000-Ziele weg.
-             * [audit wf_559c230f DOOR-DESTROOM-ZERO] */
-            unsigned dd = (((unsigned)g_aot.door_params[i].dest_stage + 1u) << 12)
-                        | ((unsigned)g_aot.door_params[i].dest_room << 4)
-                        | (g_current_room_id & 0x000Fu);
-            is_auto_door = (dd != g_current_room_id);
-        }
-        /* Suppress non-RVD AOTs during cinematic (außer der Auto-Advance-Tür). */
-        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH && !is_auto_door) continue;
+        /* ENTFERNT 2026-09-26 — der Zweig `is_auto_door` war eine PORT-ERFINDUNG und
+         * der Taeter des Fahrstuhl-Defekts (Nutzer: "bin ich auf 1F und druecke 2F oder
+         * 3F ..., bleibt er immer bei 1F"). Er liess jede Null-Rect-Tuer OHNE
+         * Tastendruck und OHNE Rechteck-Treffer feuern, sobald Cinematic lief und die
+         * SCD-Threads leer waren; weil diese Schleife bei i=0 beginnt, gewann immer der
+         * NIEDRIGSTE Slot. In ROOM1080 ueberschrieb der Scan damit im SELBEN Bild die
+         * per Aot_on korrekt angemeldete Etage (g_room_change ist EIN Datensatz ohne
+         * Warteschlange, room_common.c).
+         *
+         * DAS ORIGINAL KANN DIESEN PFAD NICHT NEHMEN — selbst disassembliert
+         * (info/Re1.5/PSX.EXE):
+         *   @0x80043778 ori  a1,zero,0x4        ; der druckfreie AUTO-Pass ruft den
+         *   @0x8004378C jal  0x80042bac         ;   Scanner mit Pool-Maske = 4 = OBJEKT
+         *   @0x80043790 addu a2,zero,zero       ;   und ACTION = 0 (Delay-Slot)
+         *   @0x80042BBC addu s6,a2,zero         ; s6 = ACTION-Parameter
+         *   @0x80042C70 lw   a3,64(sp)          ; a3 = Pool-Maske (a1 vom Aufrufer)
+         *   @0x80042C84 lbu  v0,1(s0)           ; rec[1] = sce_flags
+         *   @0x80042C8C and  v0,v0,a3           ; 0x31 & 0x04 = 0
+         *   @0x80042C90 beq  v0,zero,0x80043018 ;   -> Satz uebersprungen  (Gate 1)
+         *   @0x80042CA0 andi v0,v0,0x10         ; 0x31 & 0x10 = 0x10
+         *   @0x80042CA4 bne  v0,s6,0x8004301C   ;   != 0 -> uebersprungen  (Gate 2)
+         *   @0x80042CAC lbu  v0,2(s0)           ; erst HIER der sce-Typ
+         * Die Fahrstuhl-Tueren tragen rec[1] = 0x31 (ROOM1080.RDT @0x0485/@0x04A5/
+         * @0x04C5, ROOM4020.RDT @0x063D/@0x065D/@0x067D) — beide Gates dicht.
+         *
+         * Der Zweig existierte allein fuer die Intro-Uebergabe ROOM1240 -> ROOM1170.
+         * Die braucht ihn nicht: ROOM1240.RDT haelt den Handoff als Skript-Opcode
+         * `47 00 01 00` = Aot_on(0) + Evt_end @Datei 0x0618 und @0x0620 (sub02/sub03),
+         * und Aot_on laeuft byte-true ueber LAB_800407BC -> @0x8004082C `jalr v0`
+         * (Port: scd_vm.c Aot_on-Fall).
+         *
+         * Tueren feuern damit wieder ausschliesslich ueber
+         *   door_inside && g_aot_action_pressed   (unten; byte-true: die ACTION-Pruefung
+         *     @0x80042F40 `beq s6,zero,0x80042FC4` steht VOR @0x80042F48 `lbu v0,0(s0)` /
+         *     @0x80042F50 `beq v0,zero` — der Tuer-Zweig ist hinter dem Druck-Gate)
+         * oder ueber Aot_on aus dem Skript.
+         * RE1.5 ist hier VOLLSTAENDIG (Panel-Cursor sub01-06, Fahrt-Subs sub07-09,
+         * Tuer-Sub sub10, Etagen-Flags, eigene Panel-Kamera) — also bleibt RE1.5
+         * massgeblich, RE2-Retail ist NICHT das Ziel. */
+        /* Suppress non-RVD AOTs during cinematic. */
+        if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH) continue;
         /* cam_from filter: RVD CAM_SWITCH zones only fire when the
          * active cut matches. Other types use 0xFF (always active).
          *
@@ -1067,8 +1080,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
             /* BAND GATE (byte-true FUN_80042cac): player floor-band (DAT_800acad6) == door
              * band (door_params band, from Door_aot_set pc[4]) unless bit 0x80 / a pre-band
              * (-1) room. Keeps floors separate (ROOM1170 courtyard band4 vs pit band0). */
+            /* 2026-09-26: die Ausnahme `&& !is_auto_door` ist mit dem Zweig weggefallen —
+             * das Band-Gate gilt damit wieder ausnahmslos, so wie @0x80042cac es liest. */
             int pb = re15_collision_debug_band();
-            if (pb >= 0 && (int)g_aot.door_params[i].band != pb && !is_auto_door)
+            if (pb >= 0 && (int)g_aot.door_params[i].band != pb)
                 door_inside = 0;
         }
         /* GENERIC event AOT (e.g. the ROOM1130 roller-door SWITCH "tableau") fires on an
@@ -1257,16 +1272,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                          a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
                          a->type == RE15_AOT_TYPE_ITEM ||
                          (a->type == RE15_AOT_TYPE_FLAG_CHG && (a->sce_flags & 0x10)));
-        int fire = is_auto_door
-                       /* Auto-Advance-Tür: das Rechteck ist ein (0,0)-Sentinel (nie
-                        * positions-erreichbar) → KEIN Forward-Reach/Action-Press. Feuert,
-                        * sobald das Intro-Skript fertig ist (alle SCD-Threads idle).
-                        * NUR während in_cinematic: das Intro lässt die Cinematic-Flags
-                        * (1,27)/(2,7) absichtlich gesetzt (Hand-off mit aktivem Cinematic).
-                        * Normale Räume klären sie via Plc_ret → in_cinematic=false → diese
-                        * Tür wird dort NICHT spurious ausgelöst. */
-                       ? (in_cinematic && scd_idle && scd_ran && !msg_block && !action_fired)
-                 : (a->type == RE15_AOT_TYPE_DOOR)
+        /* ENTFERNT 2026-09-26 zusammen mit `is_auto_door` oben: der erste Ternaer-Zweig
+         * war `is_auto_door ? (in_cinematic && scd_idle && scd_ran && !msg_block &&
+         * !action_fired)`. Er hat den Fahrstuhl zerstoert (Belege und Adressen im
+         * Kommentar oben, sowie analysis/befunde_2026-09-26/messung-fahrstuhl.md). */
+        int fire = (a->type == RE15_AOT_TYPE_DOOR)
                        /* SQUARE press-edge (byte-true: the 5 ground command-states [8..12] of the
                         * player-cmd FSM @0x80073f90 test DAT_800ac76c & 0x80 = virtual edge = raw
                         * SQUARE, then run the ACTION scan FUN_80042bac(kind=0x10) -> sce-2 handler
@@ -1327,8 +1337,6 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                                      * to 0 is the safe equivalent — the door is gone after the pass) */
                 /* Fire body extracted to aot_fire_door() — shared with Aot_on
                  * fire-now (both dispatch the SAME sce-2 handler @0x800430BC). */
-                { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-                  re15_elev_log("SCAN-FIRE-DOOR slot=%d action=%d inside=%d", i, (int)g_aot_action_pressed, (int)door_inside); }
                 if (!aot_fire_door(i)) {
                     a->was_inside = (uint8_t)inside;   /* invalid spawn — keep scanning */
                     break;

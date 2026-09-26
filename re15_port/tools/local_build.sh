@@ -66,7 +66,9 @@
 #                   unit_re2z_bandlock_pin, unit_re2z_rise_hittable, unit_writher_kill_flag, unit_rig_root_fix, unit_1090_flame_out_pin, unit_1210_gitterhaende); wird
 #                   die Suite absichtlich kleiner, hier BEWUSST senken. WER TESTS
 #                   HINZUFUEGT, HEBT DIESE ZAHL MIT — sonst waechst die Suite und die
-#                   Wache bleibt zurueck.)
+#                   Wache bleibt zurueck.
+#                   2026-09-26: +2 (unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen)
+#                   -> 249. Gemessener Ist-Stand dieses Laufs: 339/339.)
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------

@@ -9584,39 +9584,6 @@ re_title:;
             {
                 static FILE *ml = NULL; static int mli = 0;
                 if (!mli) { mli = 1; const char *p = getenv("RE15_MODAL_LOG"); if (p && *p) ml = fopen(p, "w"); }
-                /* ===== MESSHAKEN RE15_ELEV_LOG (Fahrstuhl-Messung 2026-09-26, KEIN FIX) =====
-                 * Eine Zeile JE BILD, nicht nur bei Erfolg — eine Schiene, die nur im
-                 * Erfolgsfall schreibt, liesse im Misserfolg eine leere Datei zurueck. */
-                { extern void re15_elev_log(const char *fmt, ...);
-                  extern int  re15_elev_log_on(void);
-                  extern uint16_t g_scd_pad_held;
-                  extern uint32_t g_re15_pauseflags;
-                  static int eli = -1;
-                  if (eli < 0) eli = re15_elev_log_on();
-                  if (eli) {
-                      int cp = -1;
-                      for (int i = 0; i < (int)g_scd.prop_count; i++)
-                          if (g_scd.props[i].active && g_scd.props[i].obj_id == 0) { cp = i; break; }
-                      unsigned f5 = 0;
-                      for (int b = 0; b <= 8; b++) if (re15_game_flag_get(5, (uint8_t)b)) f5 |= (1u << b);
-                      unsigned thr = 0;
-                      for (int i = 0; i < SCD_THREAD_COUNT && i < 32; i++)
-                          if (g_scd.threads[i].active) thr |= (1u << i);
-                      re15_elev_log("F%u raum=%04X cut=%d pmode=%d pause=%08X pad=%04X "
-                                    "f5=%03X f3_54=%d f3_55=%d f3_56=%d thr=%08X "
-                                    "cursor=%d(%d,%d)notch=%u spieler=(%d,%d,%d) pend=%d->%04X",
-                                    g_engine.frame_count, g_current_room_id, (int)g_scd.cam_id,
-                                    (int)g_scd.player_mode, (unsigned)g_re15_pauseflags,
-                                    (unsigned)g_scd_pad_held, f5,
-                                    re15_game_flag_get(3, 54), re15_game_flag_get(3, 55),
-                                    re15_game_flag_get(3, 56), thr,
-                                    cp,
-                                    cp >= 0 ? (int)g_scd.props[cp].x : 0,
-                                    cp >= 0 ? (int)g_scd.props[cp].z : 0,
-                                    cp >= 0 ? (unsigned)g_scd.props[cp].member_0b : 0u,
-                                    (int)g_actors[0].x, (int)g_actors[0].y, (int)g_actors[0].z,
-                                    (int)g_room_change.pending, (unsigned)g_room_change.room_id);
-                  } }
                 /* MESSCHIENE RE15_DISCARD_LOG=<datei> — die "Discard it?"-Abfrage im LAUFENDEN
                  * Spiel. Die GUI-exe hat kein brauchbares stderr, deshalb eine Datei. Sie
                  * schreibt in JEDEM Bild ab dem Raumeintritt eine Zeile, nicht nur wenn die
