@@ -74,3 +74,39 @@ Diese drei Stellen als GEGNER-Selbstschreiber zu bauen wäre ein Defekt.
   dokumentiert das bereits als ohne Produzenten. Zudem ist der Store eine ZUWEISUNG
   (`addiu v1,zero,128` @0x801004A0), die die low-7-Trefferpause jedes Bild löschen würde.
   ⇒ **wird NICHT gebaut** (toter Zweig + Risiko ohne Messnutzen).
+
+## Zensus selbst nachgezählt (Teil 2 des Pakets)
+
+`re15_port/shared_assets/PSX` enthält **240** RDTs (STAGE1 80, STAGE2 32, STAGE3 32,
+STAGE4 32, STAGE5 48, STAGE6 16) — die 206 des Dossiers sind falsch, die 240 des Prüfers
+stimmen.
+
+Muster `44 [00-1f] 20 41` (Sce_em_set Typ 0x20 grid 0x41) und `34 0c 42 00`
+(Member_set(0x0C,66)):
+
+```
+ROOM11D0 em41=5 ms42=5      ROOM2060 em41=0 ms42=2
+ROOM11D1 em41=5 ms42=5      ROOM2061 em41=0 ms42=2
+ROOM3060 em41=3 ms42=3      ROOM20A0 em41=0 ms42=2
+ROOM3061 em41=1 ms42=1      ROOM20A1 em41=0 ms42=2
+                            ROOM4001 em41=0 ms42=2
+SUMME em41=14  ms42=32      ROOM5040/5041/5070/5071 je ms42=2
+```
+⇒ **vier** betroffene Räume, **14** Hunde. STAGE3 trägt dieselbe Freigabe:
+`STAGE3.BIN` @0x801101EC-0x8011020C ist Instruktion für Instruktion dieselbe Folge wie
+`STAGE1.BIN` @0x8011170C-0x8011172C (selbst disassembliert).
+
+Die Blut-Behauptung des Dossiers ("spritzt pro Bild") ist falsch: der Schwanz von
+0x80102608 ist EDD-gegatet — `lw v0,376(s0)` @0x801027DC / `lw s1,0(v0)` @0x801027E4 /
+`lui v0,0x3` @0x801027E8 / `and v0,s1,v0` @0x801027EC / `beq v0,zero,0x8010284C`
+@0x801027F0; der zweite Spritzer zusätzlich hinter @0x80102814 und dem 1/4-Würfel
+@0x80102828. Der Kommentar im Code sagt das jetzt so.
+
+## Nebenbefund (NICHT repariert)
+
+Der Hund zieht seine Trefferpause **zweimal je Bild** ab: einmal in `enemy_ai_common.c`
+(die Zeile vor der 4/5/6-Weiche) und noch einmal im RE2-Root
+`enemy_ai_re2_dog.c:2224` (@0x80100028-3C). Gemessen im Riegel-Lauf: +0x1D3 geht in EINEM
+Tick von 0x85 auf 0x83. Für die Zustände 4..6 ist die erste Zeile richtig (dort kehrt der
+Port vor dem Root zurück), für alle anderen Zustände halbiert sie die Pause. Das Original
+zieht genau einmal ab.
