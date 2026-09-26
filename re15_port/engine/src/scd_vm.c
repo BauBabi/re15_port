@@ -1102,9 +1102,6 @@ static int op_evt_exec(scd_thread_t *t)
     }
 
     scd_thread_start(slot, target_pc);
-    { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-      re15_elev_log("EVT_EXEC sub=%u cond=0x%02x -> slot %d  raum=0x%04X",
-                    (unsigned)sub_id, (unsigned)cond, slot, g_current_room_id); }
 #ifdef RE15_PLATFORM_PC
     /* MESS-HAKEN RE15_EVT_TRACE=1 (env-gegated, reine Ausgabe): JEDER Evt_exec mit Bild,
      * Sub-Nummer, Bedingungsbyte, vergebenem Slot und der Zahl der danach aktiven Event-
@@ -4147,9 +4144,6 @@ static int op_unknown(scd_thread_t *t)
 int op_aot_on(scd_thread_t *t)
 {
     uint8_t slot = t->pc[1];
-    { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-      re15_elev_log("AOT_ON slot=%u typ=%u", (unsigned)slot,
-                    slot < RE15_AOT_MAX ? (unsigned)g_aot.slots[slot].type : 255u); }
     if (slot < RE15_AOT_MAX) {
         g_aot.slots[slot].active = 1;
         re15_aot_fire_slot((int)slot);

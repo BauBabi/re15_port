@@ -1,0 +1,18 @@
+EVT_EXEC sub=2 cond=0xff -> slot 10  raum=0x1240
+AOT_ON slot=0 typ=1
+FIRE_DOOR slot=0 dest=st0 rm0x17 cut=0
+REQ  room=0x1170 spawn=(-26214,0,-3861) yaw=0 cut=0  (von=0x1240)
+APPLY-START ziel=0x1170 aktuell=0x1240
+APPLY-LOAD ok -> g_current_room_id=0x1170
+EVT_EXEC sub=11 cond=0xff -> slot 10  raum=0x1170
+APPLY-ENDE  raum=0x1170 cut=7 spieler=(-26214,0,-3861)
+AOT_ON slot=3 typ=1
+FIRE_DOOR slot=3 dest=st0 rm0x17 cut=0
+EVT_EXEC sub=2 cond=0xff -> slot 10  raum=0x1170
+EVT_EXEC sub=4 cond=0xff -> slot 11  raum=0x1170
+EVT_EXEC sub=5 cond=0xff -> slot 12  raum=0x1170
+EVT_EXEC sub=6 cond=0xff -> slot 13  raum=0x1170
+EVT_EXEC sub=7 cond=0xff -> slot 14  raum=0x1170
+EVT_EXEC sub=8 cond=0xff -> slot 15  raum=0x1170
+EVT_EXEC sub=12 cond=0xff -> slot 13  raum=0x1170
+EVT_EXEC sub=13 cond=0xff -> slot 14  raum=0x1170

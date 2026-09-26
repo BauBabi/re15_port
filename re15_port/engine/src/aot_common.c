@@ -511,9 +511,6 @@ static int aot_fire_door(int i)
 {
     re15_aot_t *a = &g_aot.slots[i];
     const re15_aot_door_params_t *d = &g_aot.door_params[i];
-    { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-      re15_elev_log("FIRE_DOOR slot=%d dest=st%u rm0x%02X cut=%u", i,
-                    (unsigned)d->dest_stage, (unsigned)d->dest_room, (unsigned)d->target_cut); }
 #ifndef RE15_PLATFORM_PC
     printf("[AOT] DOOR slot=%d destroom=%u cut=%u spawn=(%d,%d)\n",
            i, d->dest_room, d->target_cut, d->spawn_x, d->spawn_z);
@@ -1340,8 +1337,6 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                                      * to 0 is the safe equivalent — the door is gone after the pass) */
                 /* Fire body extracted to aot_fire_door() — shared with Aot_on
                  * fire-now (both dispatch the SAME sce-2 handler @0x800430BC). */
-                { extern void re15_elev_log(const char *fmt, ...);   /* MESSHAKEN, kein Fix */
-                  re15_elev_log("SCAN-FIRE-DOOR slot=%d action=%d inside=%d", i, (int)g_aot_action_pressed, (int)door_inside); }
                 if (!aot_fire_door(i)) {
                     a->was_inside = (uint8_t)inside;   /* invalid spawn — keep scanning */
                     break;
