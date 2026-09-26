@@ -275,7 +275,7 @@ int main(void)
     int rD2=-1;
     int nD2 = lauf("D2 M93R, Magazin 15, mit dem Messer angezielt (melee-Latch) - feuert sie?",
                    5, 15, 50, FC_W05, 7, 1, &rD2);
-    (void)nD2; (void)rD2;
+    (void)nD2;
     int nE = lauf_E(&rE);
 
     printf("\n================ ZUSAMMENFASSUNG ================\n");
@@ -286,5 +286,29 @@ int main(void)
     printf("C M93R leer von Start : Nachlade-Phase in Bild %d %s\n", rC, rC>0?"":"(NIE)");
     printf("D M93R, melee-Latch   : Nachlade-Phase in Bild %d %s\n", rD, rD>0?"":"(NIE)");
     printf("E M93R ueber das Menue: Nachlade-Phase in Bild %d %s\n", rE, rE>0?"":"(NIE)");
+
+    /* ---- RIEGEL (add_test) ----------------------------------------------------
+     * Das Original kennt im Nachlade-Zweig KEIN Klassen-Flag: der Block
+     * @0x80033338-78 traegt genau fuenf Bedingungen (SQUARE gehalten @0x80033308,
+     * Magazin==0 @0x8003331c, SQUARE-FLANKE @0x80033344, Reserve @0x80033354,
+     * Waffen-Id < 9 @0x80033368 sltiu) und setzt dann "sh 4 -> 0x800aca5a"
+     * @0x80033378. Die Klassentrennung macht der Dispatch, der 0x800aca5d JEDES BILD
+     * frisch liest (lbu @0x80032e60 / Tabelle 0x80074030 @0x80032e74 / jalr @0x80032e84).
+     * Also MUSS die M93R auch dann nachladen, wenn der Port-Latch s_aim_melee noch vom
+     * Messer-Zieleintritt steht (Laeufe D und D2). Am alten Stand (player_common.c mit
+     * "|| s_aim_melee" im Nachlade-Eintritt) sind rD und rD2 beide -1 = NIE.
+     * A/B/C sind die Gegenprobe: der saubere Weg muss weiterhin nachladen. */
+    int fehler = 0;
+    if (rA <= 0) { printf("RIEGEL-ROT: A (M93R normal) laedt NICHT nach (rA=%d)\n", rA); fehler = 1; }
+    if (rB <= 0) { printf("RIEGEL-ROT: B (Browning) laedt NICHT nach (rB=%d)\n", rB); fehler = 1; }
+    if (rC <= 0) { printf("RIEGEL-ROT: C (M93R leer) laedt NICHT nach (rC=%d)\n", rC); fehler = 1; }
+    if (rD <= 0) { printf("RIEGEL-ROT: D (Messer-Latch, Magazin 0) laedt NICHT nach (rD=%d)"
+                          " -- verbotene Zusatzbedingung im Nachlade-Gate; das Original"
+                          " @0x80033338-78 hat keine\n", rD); fehler = 1; }
+    if (rD2 <= 0) { printf("RIEGEL-ROT: D2 (Messer-Latch, Magazin 15 leergeschossen) laedt"
+                           " NICHT nach (rD2=%d) -- exakt der gemeldete Nutzerfall\n", rD2); fehler = 1; }
+    if (fehler) return 1;
+    printf("RIEGEL-GRUEN: alle fuenf Laeufe erreichen die Nachlade-Phase"
+           " (A=%d B=%d C=%d D=%d D2=%d)\n", rA, rB, rC, rD, rD2);
     return 0;
 }

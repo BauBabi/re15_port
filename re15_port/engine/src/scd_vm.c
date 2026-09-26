@@ -2279,6 +2279,16 @@ static int op_plc_motion(scd_thread_t *t)
      * The second Plc_motion seeds the reverse phase from a clean cur=0.
      * Per agent verification (ghidra1_V2.txt:152125-152146). */
     g_actors[slot].anim_frame = 0;
+    /* AUCH BEI GLEICHER CLIP-NUMMER (Runde 26): der Handler schreibt +0x06 = 0 UNBEDINGT
+     * (sb zero,6(v0) @0x80041bb4), und die Pose-FSM faehrt daraufhin die verzweigungsfreie
+     * Phase-0-Kette @0x80050cec..@0x80050d0c (sb v0(=1),6(a0) @0x80050cec = +0x06 := 1,
+     * sb v0(=7),143(v1) @0x80050cfc = +0x8f := 7, sb zero,149(v0) @0x80050d0c = +0x95 := 0)
+     * und posiert im selben Bild Bild 0. re15_actor_set_motion (re15_actor.h) steigt
+     * dagegen bei motion == m komplett aus, so dass dem WIEDERHOLTEN Plc_motion mit
+     * gleicher Clip-Nummer der Vorhalte-Tick fehlte: gemessen ROOM1170 sub02 F358 =
+     * cur 1 / Slot 18 statt cur 0 / Slot 19 (Dossier §1.2 Lauf C). */
+    g_actors[slot].motion_init_delay = 1;
+    g_actors[slot].anim_freeze       = 0;
     /* Plc_motion → state=4 → the per-frame motion FSM seeds the FRAC crossfade
      * (FUN_8001f3bc +0x8f=7), UNLESS the no-blend bit 0x40 is set. BYTE-TRUE: the bit is in
      * the FLAGS word +0x1c4 (= pc[3] = anim_flags, ghidra1_V2.txt:176982/152140), NOT the
