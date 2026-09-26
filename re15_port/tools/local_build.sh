@@ -68,7 +68,8 @@
 #                   HINZUFUEGT, HEBT DIESE ZAHL MIT — sonst waechst die Suite und die
 #                   Wache bleibt zurueck.
 #                   2026-09-26: +2 (unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen)
-#                   -> 249. Gemessener Ist-Stand dieses Laufs: 339/339.)
+#                   -> 249. Gemessener Ist-Stand dieses Laufs: 339/339.
+#                   2026-09-27: +1 (unit_abtastphase_11f0) -> 347.)
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------
