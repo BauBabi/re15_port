@@ -1412,7 +1412,7 @@ static void teil_l(void)
      * 14 von 14 — die frueher unerreichbaren Kartenleser-Zeilen sind entweder umgehaengt
      * oder gestrichen. */
     PRUEFE(gefahren >= 14,
-           "ABDECKUNG: nur %d von %d Stellen erreicht (erwartet >= 10) — dann messen die"
+           "ABDECKUNG: nur %d von %d Stellen erreicht (erwartet >= 14) — dann messen die"
            " Nullen darunter nichts", gefahren, RE15_DISCARD_SITE_COUNT);
     PRUEFE(ohne_abfrage == 0, "%d erreichte Stellen fragen OHNE Besitz", ohne_abfrage);
     PRUEFE(mit_abfrage > 0, "GEGENPROBE: MIT Besitz kommt NIRGENDS eine Abfrage — dann"
