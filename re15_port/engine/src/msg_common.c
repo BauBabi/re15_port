@@ -10,6 +10,7 @@
  */
 #include "re15_msg.h"
 #include "re15_scd.h"   /* g_scd — shared subtitle-tick state */
+#include "re15_audio.h"     /* re15_audio_core_se -- die Toene der Ja/Nein-Auswahl */
 #include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter @0x800285d4/f0 */
 #include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
 
@@ -551,8 +552,29 @@ static void re15_dialog_step(void)
          * laesst den Zaehler auf 0xFF laufen, also sofort sichtbar. Gemeinsame Quelle:
          * engine/src/msg_select_common.c. */
         g_scd.message_blink = re15_msg_select_blink_tick(g_scd.message_blink, lr_edge);
+        /* RE2-ERGAENZUNG (2026-09-26) -- die Ja/Nein-Auswahl war im Port STUMM.
+         * Nutzer: "Der Bewegungs- und Bestaetigungssound des Cursors bei Raetseln etc.
+         * ist grundlegend falsch."
+         * RE2 haengt an jeder Cursorbewegung des Auswahlkaestchens einen Ton -- selbst
+         * disassembliert, info/re2leon/PSX.EXE (Zustand 4 der Message-Statemaschine):
+         *   @0x80030968  lui a0,0x404      Se_on(0x04040000) = Bank 4 / Satz 4, Cursor VOR
+         *   @0x8003096c  jal 0x8005ba28
+         *   @0x8003099c  lui a0,0x404      dieselbe Nummer, Cursor ZURUECK
+         *   @0x800309a0  jal 0x8005ba28
+         * und an der Bestaetigung einen zweiten, je nach Option (@0x80030918 ff.):
+         *   @0x80030944 / @0x80030950  lui a0,0x406 -> Se_on(0x04060000)  Option 0 (Ja)
+         *   @0x8003093c                lui a0,0x405 -> Se_on(0x04050000)  Option 1 (Nein)
+         * Bank 4 = die CORE-Bank. Die RE1.5-Gegenstuecke sind NACHGELESEN, bevor sie
+         * benutzt werden: shared_assets/PSX/SOUND/CORE00.EDH (VAB-Zeiger im Trailer
+         * @[len-8] = 0x40 -> 16 Records) hat 4/5/6 BELEGT --
+         *   [4] = 00 00 53 00 (prog 0, Ton 5)
+         *   [5] = 00 00 63 01 (prog 0, Ton 6)
+         *   [6] = 00 00 73 01 (prog 0, Ton 7)
+         * also dieselbe Dreiergruppe wie RE2s CORE10/11. Kein Record ist leer. */
+        if (lr_edge) re15_audio_core_se(4);       /* RE2 @0x80030968 / @0x8003099c */
         if (lr_edge) g_scd.message_choice ^= 1;   /* @0x800285d8 xori v0,v0,0x1 */
         if (act_edge) {
+            re15_audio_core_se(g_scd.message_choice ? 5 : 6);  /* RE2 @0x8003093c / @0x80030944 */
             re15_game_flag_set(12, 31, g_scd.message_choice);  /* 0=YES → Ck(12,31,0) true */
             g_scd.message_fsm = 6;
         }

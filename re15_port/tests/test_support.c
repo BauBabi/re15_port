@@ -63,6 +63,12 @@ void re15_audio_room_se_snd0(int se_id) { g_test_snd0_se_last = se_id; g_test_sn
 int g_test_core_se_last = -1;
 int g_test_core_se_count = 0;
 void re15_audio_core_se(int se_id) { g_test_core_se_last = se_id; g_test_core_se_count++; }
+/* RE2-Ergaenzung: die Panel-Klick-Bank (RE2 ROOM2130 snd0, Gruppe 2 / 0x0A + 0x0C).
+ * Belege in include/re15_audio.h; hier nur der Spion, damit die Sonden die Aufrufstellen
+ * pruefen koennen. */
+int g_test_panel_se_last = -1;
+int g_test_panel_se_count = 0;
+void re15_audio_re2_panel_se(int se_id) { g_test_panel_se_last = se_id; g_test_panel_se_count++; }
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
 /* game_step_common.c haengt seit der Knockdown-Klasse an den Test-Links (enemy_ai_common
  * ruft re15_player_knockdown_begin) — die zwei restlichen Plattform-Audio-Symbole stubben. */

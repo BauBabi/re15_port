@@ -173,6 +173,40 @@ void re15_audio_weapon_se(int se_id);
  * @0x801fbd00; Se_on(0x40NN0001) = record NN). Used by the devour-collapse SEs. */
 void re15_audio_core_se(int se_id);
 
+/* ===== RE2-ERGAENZUNG: der PANEL-KLICK der Schalter-/Tasten-Raetsel ===================
+ * WARUM RE1.5 HIER NICHT MASSGEBLICH IST (selbst gemessen, kein Decompilat):
+ *   ROOM11F0 (Boiler-Room-Raetsel) fuehrt in seinem GANZEN SCD KEIN EINZIGES Se_on (0x36) —
+ *   opcode-exakter Walk ueber main00 + 20 Subs (0xCC4..0x1810 der Datei
+ *   shared_assets/PSX/STAGE1/ROOM11F0.RDT, 671 Zeilen, 0 Treffer). Das Raetsel ist im
+ *   Auslieferungsstand STUMM.
+ *   Und die RE2-Ids liegen in RE1.5s eigener Raum-Bank NICHT vor: ROOM11F0s snd0-EDT
+ *   @Datei 0x03794 (32 Records a 4 Byte, Grenze = snd1-EDT @0x04434) traegt auf
+ *   Index 0x0A und 0x0C jeweils `00 00 00 00` — re15_edt_decode meldet dafuer rec.empty,
+ *   es gibt dort also gar keine Wellenform. Belegt sind nur 0x00/0x01/0x02/0x05/0x06 und
+ *   0x1A..0x1F.
+ * ALSO: RE2-Retail ist hier das Ziel (Projektziel: RE1.5 ist eine 40%-Beta).
+ *
+ * RE2-VORBILD, selbst aus den Bytes gelesen (info/re2leon/PL0/RDT/ROOM2130.RDT, sub04-Basis
+ * @Datei 0x01110):
+ *   sub04+0x0082 (@Datei 0x01192)  36 02 0a 01 00 00 9b a0 00 fc f4 d3  = se_on(Gruppe 2,
+ *       Index 0x0A) -> der KLICK, unmittelbar bevor der Schalter abgefragt wird
+ *   sub04+0x0652 (@Datei 0x01762)  36 02 0c 01 ...                      = se_on(Gruppe 2,
+ *       Index 0x0C) -> die BESTAETIGUNG, direkt nach `22 04 3c 01` (Raetsel geloest,
+ *       sub04+0x064E @Datei 0x0175E)
+ *   Gruppe 2 = die RAUMEIGENE EDT/VAB (Se_on-Bankwaehler, s.o. bank 2 = snd0).
+ *   ROOM2130s snd0-EDT @Datei 0x0339C: [0x0A] = 00 00 74 00 (prog 0, Ton 7),
+ *   [0x0C] = 00 00 93 01 (prog 0, Ton 9).  VH @Datei 0x0345C (3104 B),
+ *   VB @Datei 0x0407C (41744 B) — alle drei sind RDT-Kopfworte +0x08/+0x0C/+0x10.
+ *
+ * Der Port fuehrt die Bank deshalb als eigenes RE2-Asset:
+ *   shared_assets/RE2/PANEL2130.EDT / .VH / .VB  (bytegleiche Schnitte, md5 der VB
+ *   c934f1bcec21e2942c262cce13d44668). Gespielt wird ueber denselben
+ *   EDT->prog/tone->VAG-Pfad wie jede andere Bank (se_play_layers).
+ * PC-only; PSX = Folge-Stub wie bei den uebrigen SE-Baenken. */
+#define RE15_PANEL_SE_KLICK    0x0A   /* RE2 sub04+0x0082 @ROOM2130.RDT 0x01192 */
+#define RE15_PANEL_SE_BESTAET  0x0C   /* RE2 sub04+0x0652 @ROOM2130.RDT 0x01762 */
+void re15_audio_re2_panel_se(int se_id);
+
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the
  * weapon-select menu on EQUIP so re15_audio_weapon_se then plays the newly-equipped weapon's SEs.

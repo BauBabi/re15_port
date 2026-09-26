@@ -8,6 +8,7 @@
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
 #include "re15_game_step.h"
+#include "re15_panel_zeiger.h"
 #include "re15_engine.h"        /* re15_pad_virtual_word — the virtual pad-word builder
                                  * (pad_common.c; wave-6 finding 4) */
 #include "re15_actor.h"
@@ -2229,6 +2230,10 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_aot_stamp_entities();
         re15_object_notch_update();
     }
+    /* Der rote Leistungs-Zeiger des Boiler-Room-Bedienfelds (ROOM11F0). Laeuft NACH dem
+     * Notch-Stempel, damit die Schalterbits des laufenden Bildes schon stehen.
+     * Belege: include/re15_panel_zeiger.h. */
+    re15_panel_zeiger_tick();
 }
 
 /* SHARED helicopter-rotor spatialization driver — see re15_game_step.h. Was inline

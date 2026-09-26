@@ -850,3 +850,10 @@ void re15_audio_core_se(int se_id)
 {
     (void)se_id;   /* TODO(psx): load CORE00.EDH/.VB to SPU + play se_id */
 }
+
+/* RE2-Ergaenzung: Panel-Klick-Bank (RE2 ROOM2130 snd0, Belege in re15_audio.h).
+ * PSX-SPU-Pfad = Folge-Stub wie bei den uebrigen SE-Baenken. */
+void re15_audio_re2_panel_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): shared_assets/RE2/PANEL2130.* in den SPU laden */
+}
