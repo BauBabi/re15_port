@@ -63,6 +63,10 @@ void re15_audio_room_se_snd0(int se_id) { g_test_snd0_se_last = se_id; g_test_sn
 int g_test_core_se_last = -1;
 int g_test_core_se_count = 0;
 void re15_audio_core_se(int se_id) { g_test_core_se_last = se_id; g_test_core_se_count++; }
+/* RE2-ERGAENZUNG Fahrstuhl-Fahrton (engine/src/scd_elev_se.c) — Spion fuer den Riegel. */
+int g_test_elev_se_last = -1;
+int g_test_elev_se_count = 0;
+void re15_audio_re2_elevator_se(int se_id) { g_test_elev_se_last = se_id; g_test_elev_se_count++; }
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
 /* game_step_common.c haengt seit der Knockdown-Klasse an den Test-Links (enemy_ai_common
  * ruft re15_player_knockdown_begin) — die zwei restlichen Plattform-Audio-Symbole stubben. */

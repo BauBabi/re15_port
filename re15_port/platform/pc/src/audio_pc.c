@@ -31,6 +31,7 @@
 #include "re15_room.h"
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
+#include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -1054,6 +1055,91 @@ static void re2se_log(const char *fmt, ...)
       if (!lf) return;
       va_start(ap, fmt); vfprintf(lf, fmt, ap); va_end(ap);
       fclose(lf); }
+}
+
+/* ===== 5a. Bank-Slot: RE2-FAHRSTUHL (ELEVSE.VBS) ============================
+ * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL. Begruendung + alle Belege im Kopf von
+ * engine/src/scd_elev_se.c. Kurz: RE1.5 faehrt in ROOM1080/1081/4020/4021 exakt
+ * dasselbe Fahrskript wie RE2 in ROOM21B0/ROOMB1B0 (32 bitgleiche Bytes), aber ohne
+ * die zwei Se_on, die RE2 unmittelbar davor setzt (ROOM21B0.RDT @0x2756
+ * `36 02 11 01 01 ...` / @0x2784 `36 02 12 01 01 ...`; bank 2 = SND0).
+ *
+ * Der Satz liegt in shared_assets/RE2/ELEVSE.VBS im GLEICHEN Satzformat wie ein
+ * ENEMSE.VBS-Bank-Satz (s. Kommentar bei read_re2_enemse_vbs / FUN_8005a09c):
+ * [SE-Map @0 .. vh_off) [VH "pBAV" @vh_off] [Trailer, u32 vh_off @edt_size-8] [VBD].
+ * Deshalb braucht der Port hier KEINEN neuen Parser — nur einen eigenen Ein-Bank-Slot
+ * (2 Wellen, kein LRU). Die Satz-Groessen liefert re15_elev_bank_rec()
+ * (engine/src/gen/re2_elev_bank.inc, erzeugt von tools/re2_elevator_cut.py).
+ * Dekodiert wird mit demselben VAB-Code wie RE1.5: re15_vab_parse / re15_edt_decode /
+ * re15_edt_resolve_layers_ex / re15_vab_note2pitch2. */
+static int        s_elev_loaded = 0;
+static int        s_elev_failed = 0;
+static re15_vab_t s_elev_vab;
+static uint8_t   *s_elev_edt = NULL;
+static int16_t   *s_elev_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_elev_decoded_len[RE15_VAB_MAX_SAMPLES];
+
+static uint8_t *read_re2_elev_vbs(int *out_sz)
+{
+    /* Wie read_re2_enemse_vbs: env RE15_RE2_ASSET_ROOT hat Vorrang, sonst <shared>/RE2/. */
+    return re15_pc_read_re2("ELEVSE.VBS", out_sz);
+}
+
+static int load_re2_elev_se_pc(void)
+{
+    if (s_elev_loaded) return 1;
+    if (s_elev_failed) return 0;
+    s_elev_failed = 1;                      /* nur EIN Versuch, danach still stumm */
+
+    re15_elev_bank_rec_t rec;
+    re15_elev_bank_rec(&rec);
+
+    int sz = 0;
+    uint8_t *vbs = read_re2_elev_vbs(&sz);
+    if (!vbs) {
+        fprintf(stderr, "[elevse] shared_assets/RE2/ELEVSE.VBS fehlt -> Fahrstuhl stumm\n");
+        return 0;
+    }
+    if ((unsigned)sz < rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }
+
+    uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
+    if (!edt) { free(vbs); return 0; }
+    memcpy(edt, vbs + rec.edt_off, rec.edt_size);
+
+    /* VH-Offset = Trailer-u32 @[edt_size-8] (FUN_8005a09c, s.o.). */
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]         | ((uint32_t)edt[rec.edt_size-7] << 8)
+                    | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
+    if (vh_off + 0x20u > rec.edt_size ||
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_elev_vab) != 0) {
+        free(edt); free(vbs); return 0;
+    }
+
+    const uint8_t *vb = vbs + rec.vbd_off;
+    for (int i = 0; i < s_elev_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_elev_vab.samples[i].offset, vsz = s_elev_vab.samples[i].size;
+        if (off + vsz > rec.vbd_size) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+        s_elev_decoded[i]     = pcm;
+        s_elev_decoded_len[i] = n;
+    }
+    free(vbs);
+    s_elev_edt    = edt;
+    s_elev_loaded = 1;
+    s_elev_failed = 0;
+    return 1;
+}
+
+/* Der Fahrstuhl-SE. se_id ist 0x11 (Fahrt) bzw. 0x12 (Ankunft) — die zwei Ids, die RE2
+ * in ROOM21B0.RDT @0x2756 / @0x2784 vor die bit28-Pulse setzt. Gerufen aus
+ * engine/src/scd_elev_se.c. */
+void re15_audio_re2_elevator_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (!load_re2_elev_se_pc()) return;
+    se_play_layers(s_elev_edt, &s_elev_vab, s_elev_decoded, s_elev_decoded_len, se_id);
 }
 
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
