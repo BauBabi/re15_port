@@ -6125,6 +6125,61 @@ re_title:;
                 ap_skip: ;
                 }
 
+                /* MESS-HAKEN RE15_PRESS="<taste>@<bild>[,...]" - legt an genau diesen Bildern
+                 * eine DRUCK-FLANKE an (pad_pressed UND pad_current, weil die Dialog-FSM die
+                 * Flanke braucht und die Menues das Halte-Wort). Tasten: square circle cross
+                 * triangle start select up down left right.
+                 * Gebraucht fuer Messlaeufe, die einen Dialog weiterschalten muessen, OHNE den
+                 * Autopiloten anzuwerfen: dessen Klick-Schleife haengt an einem Fahrziel
+                 * (ap_mode != 0, oben), und ein Fahrziel bewegt den Spieler. Reiner Messhaken,
+                 * env-gegated, kein Spielverhalten. */
+                {
+                    static int pr_read = 0, pr_n = 0;
+                    static long pr_frame[32]; static uint16_t pr_bit[32];
+                    if (!pr_read) {
+                        pr_read = 1;
+                        const char *e = getenv("RE15_PRESS");
+                        if (e && *e) {
+                            static const struct { const char *n; uint16_t b; } tab[] = {
+                                { "square",   RE15_PAD_BIT_SQUARE   },
+                                { "circle",   RE15_PAD_BIT_CIRCLE   },
+                                { "cross",    RE15_PAD_BIT_CROSS    },
+                                { "triangle", RE15_PAD_BIT_TRIANGLE },
+                                { "start",    RE15_PAD_BIT_START    },
+                                { "select",   RE15_PAD_BIT_SELECT   },
+                                { "up",       RE15_PAD_BIT_UP       },
+                                { "down",     RE15_PAD_BIT_DOWN     },
+                                { "left",     RE15_PAD_BIT_LEFT     },
+                                { "right",    RE15_PAD_BIT_RIGHT    },
+                            };
+                            const char *q = e;
+                            while (*q && pr_n < 32) {
+                                while (*q == ',' || *q == ' ') q++;
+                                if (!*q) break;
+                                uint16_t bit = 0;
+                                for (unsigned t = 0; t < sizeof tab / sizeof tab[0]; t++) {
+                                    size_t ln = strlen(tab[t].n);
+                                    if (!strncmp(q, tab[t].n, ln) && q[ln] == '@') {
+                                        bit = tab[t].b; q += ln + 1; break;
+                                    }
+                                }
+                                if (!bit) { while (*q && *q != ',') q++; continue; }
+                                pr_frame[pr_n] = atol(q); pr_bit[pr_n] = bit; pr_n++;
+                                while (*q && *q != ',') q++;
+                            }
+                            fprintf(stderr, "[press] %d Eintraege aus RE15_PRESS\n", pr_n);
+                        }
+                    }
+                    for (int i = 0; i < pr_n; i++) {
+                        if ((long)g_engine.frame_count == pr_frame[i]) {
+                            gctx.pad_pressed |= pr_bit[i];
+                            gctx.pad_current |= pr_bit[i];
+                            g_engine.pad_pressed |= pr_bit[i];
+                            g_engine.pad_current |= pr_bit[i];
+                        }
+                    }
+                }
+
                 /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
                  * engine/src/debug_menu_common.c, jede Konstante dort mit ihrer Adresse.
                  *
@@ -6191,6 +6246,43 @@ re_title:;
                             } else {
                                 fprintf(stderr, "[debug-menu] AUTO-JUMP: ROOM%04X steht nicht in der "
                                                 "JUMP-Tabelle\n", (unsigned)dj_room);
+                            }
+                        }
+                    }
+                    /* MESS-HAKEN RE15_SET_FLAG_AT="<bank>:<bit>[,...]@<frame>" - wie
+                     * RE15_SET_FLAG, aber NACH dem Raum-Start. Notwendig, weil Bank 5 die
+                     * RAUM-LOKALE Bank ist und beim Raum-Aufbau geloescht wird: im Original
+                     * `sw zero,0x800b1028` (scd_room_setup.c:276) und `sw zero,0x800b102c`
+                     * @0x8003ec1c (scd_vm.c:761). Ein Bank-5-Bit, das RE15_SET_FLAG beim
+                     * Spielstart setzt, ist nach RE15_DEBUG_JUMP also wieder 0 - gemessen:
+                     * Lauf vom 2026-09-22 mit RE15_SET_FLAG="5:13,5:14,5:15,5:16" ergab in
+                     * 1959 Bildern in ROOM10D0 msg_aktiv=0, es feuerte nichts.
+                     * Reiner Messhaken, env-gegated, kein Spielverhalten. */
+                    {
+                        static int sfa_read = 0, sfa_done = 0, sfa_frame = 0;
+                        static const char *sfa_spec = NULL;
+                        if (!sfa_read) {
+                            sfa_read = 1;
+                            const char *e = getenv("RE15_SET_FLAG_AT");
+                            if (e && *e) {
+                                const char *at = strrchr(e, '@');
+                                if (at) { sfa_frame = atoi(at + 1); sfa_spec = e; }
+                            }
+                        }
+                        if (sfa_spec && !sfa_done && (int)g_engine.frame_count >= sfa_frame) {
+                            sfa_done = 1;
+                            const char *p2 = sfa_spec;
+                            while (*p2 && *p2 != '@') {
+                                int bank = (int)strtol(p2, (char **)&p2, 0);
+                                while (*p2 == ':' || *p2 == ' ') p2++;
+                                int bit = (int)strtol(p2, (char **)&p2, 0);
+                                if (bank >= 0 && bank < 32 && bit >= 0 && bit < 256) {
+                                    re15_game_flag_set((uint8_t)bank, (uint8_t)bit, 1);
+                                    fprintf(stderr, "[setflag-at] Frame %u: flag(%d,%d/0x%02x) = 1\n",
+                                            g_engine.frame_count, bank, bit, bit);
+                                }
+                                while (*p2 && *p2 != ',' && *p2 != '@') p2++;
+                                while (*p2 == ',' || *p2 == ' ') p2++;
                             }
                         }
                     }
