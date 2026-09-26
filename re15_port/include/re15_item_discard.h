@@ -158,9 +158,31 @@ void re15_discard_notice_message(unsigned room_id, uint8_t msg_id);
  * verbrauchter Vorentscheid). Rueckbau der Kopplung: 68 Pruefungen rot
  * (analysis/befunde_2026-09-22/discard-riegel/rueckbau.sh A).
  *
- * Rueckgabe: 1 = (Raum, Nachricht) ist eine Benutzungsstelle UND der Gegenstand liegt mit
- * Anzahl > 0 im Inventar. 0 = alles andere (keine Stelle, nicht getragen, Anzahl 0,
- * oder es laeuft schon eine Abfrage). */
+ * ⛔ DAS CODE-PANEL-GATE (Nutzer-Befund 2026-09-22 "bei Toren mit Raetsel panels ... erst
+ * dann korrekt, wenn man den zugriffscode ... einmalig richtig eingegeben hat"):
+ * Jede Stelle traegt zwei Bytes {gate_zone, gate_bit} (0/0 = kein Gate), und die Pruefung
+ * `if (s->gate_zone && !re15_game_flag_get(...)) return 0;` steht VOR der Besitzpruefung.
+ * Grund: das Gate entscheidet nicht, ob gefragt werden darf, sondern ob (Raum, Nachricht)
+ * ueberhaupt eine Wegwerf-Stelle IST. Die Besitzpruefung bleibt dadurch unangetastet an
+ * RE2s Kettenposition (@0x80051628 / @0x80051634 vor @0x8005164C).
+ * An den vier Kartenlesern ROOM10D0/10D1/1230/1231 faellt "You've used the <Karte>."
+ * naemlich SCHON BEIM EINSTECKEN, 47 Bilder vor der ersten Ziffern-Aufforderung
+ * (ROOM10D0 sub20: @0x019C4 `2b 09 ff ff` Message_on 9, @0x019CA `04 ff 18 11`
+ * Evt_exec sub17 = Tastenfeld auf). Die Stelle haengt deshalb an der Erfolgs-Nachricht
+ * des Panels (@0x0199E `Message_on 5` "You've opened the lock.") und am Erfolgs-Bit
+ * (@0x0152A `22 03 32 01` Set(3,50,1), gesetzt hinter der Vier-Ziffern-Schranke
+ * @0x01516 `21 05 0d 01 21 05 0e 01 21 05 0f 01 21 05 10 01`).
+ * ⛔ NICHT "Bit gesetzt UND msg 9" — das waere NIE wahr: sub19 setzt die Leser-Slots
+ * zurueck (@0x01974/@0x0197E) und retypt Slot 2 zur Tuer (@0x01988), beim Wiedereintritt
+ * nimmt main00 den Else-Zweig (@0x01174). Die Abfrage waere dauerhaft tot.
+ * Das Gate-Bit ist nicht redundant: "You've opened the lock." steht in 22 Raeumen.
+ * ROOM11E0/11E1 msg 9 sind GESTRICHEN, nicht gegatet: ihr Bit flag(3,139) wird schon im
+ * Neuspiel-Startraum ROOM1240 @0x0055A gesetzt, der Kartenleser existiert dort also nie
+ * (main00 @0x01576 -> Else-Zweig @0x016C0 = fertige Tuer).
+ *
+ * Rueckgabe: 1 = (Raum, Nachricht) ist eine Benutzungsstelle (Gate erfuellt) UND der
+ * Gegenstand liegt mit Anzahl > 0 im Inventar. 0 = alles andere (keine Stelle, Gate
+ * offen, nicht getragen, Anzahl 0, oder es laeuft schon eine Abfrage). */
 int re15_discard_besitz_vor_nachricht(unsigned room_id, uint8_t msg_id);
 
 /* Pruefstand: wie oft ist der Vorentscheid gefallen und wie oft mit Treffer. Damit laesst
