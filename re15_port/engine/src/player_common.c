@@ -337,7 +337,21 @@ int re15_player_schrot_fenster(void)
 void re15_player_reload_start(void)
 {
     extern re15_actor_t g_actors[];
-    if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil || s_aim_melee) return;
+    /* KEIN Klassen-Gate hier - im Original traegt der Nachlade-Zweig @0x80033338-78
+     * GENAU fuenf Bedingungen (SQUARE gehalten @0x80033308, Magazin==0 @0x8003331c,
+     * SQUARE-FLANKE @0x80033344, Reserve @0x80033354, Waffen-Id < 9 @0x80033368 sltiu)
+     * und KEIN Melee-Flag: zwischen dem sltiu @0x80033368 und dem Store
+     * "sh 4 -> 0x800aca5a" @0x80033378 liegen nur beq @0x8003336c, ori @0x80033370
+     * und lui @0x80033374. Die Klassentrennung macht dort der Dispatch, der die
+     * angelegte Waffe JEDES BILD frisch liest (lbu 0x800aca5d @0x80032e60 -> Tabelle
+     * 0x80074030 @0x80032e74 -> jalr @0x80032e84); der Port latcht sie dagegen einmalig
+     * beim Zieleintritt (s_aim_melee, :916), und ein alter Messer-Latch verschluckte
+     * das Nachladen der M93R stumm (gemessen Lauf D2, 312 Bilder,
+     * analysis/befunde_2026-09-26/messung-m93r.md). Ein Messer kann diese Stelle
+     * trotzdem nicht erreichen: der einzige Aufrufer verlangt bereits eq_item >= 3
+     * (game_step_common.c:1597, Spiegel des Dispatch-Splits 0..2 -> 0x80034E70) und
+     * eq_item < 9 (game_step_common.c:1602, Spiegel des sltiu @0x80033368). */
+    if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil) return;
     s_player_aim_phase = RE15_AIM_RELOAD;
     s_aim_cur_clip = 0x0d;
     s_aim_elev = 0;                                       /* acaec -> 0x4000 LEVEL */
@@ -447,6 +461,11 @@ int re15_player_granate_frame(void)
 /* Test-Sichtfenster (nur Diagnose, kein Spiel-Code liest das): Phase im Low-Nibble,
  * Recoil-Flag in Bit 4. */
 int re15_player_aim_phase_debug(void) { return (int)s_player_aim_phase | (s_aim_recoil ? 0x10 : 0); }
+/* Test-Sichtfenster auf den Klassen-Latch s_aim_melee (NUR lesend, kein Spiel-Code liest
+ * das). Das Original hat diesen Latch nicht - es liest die angelegte Waffe jedes Bild frisch
+ * (lbu 0x800aca5d @0x80032e60); die Sonde probe_m93r_nachladen misst damit, dass ein
+ * stehengebliebener Messer-Latch das Nachladen NICHT mehr verschluckt. */
+int re15_player_aim_melee_dbg(void) { return (int)s_aim_melee; }
 /* One-shot phase durations = the clip's exact frame_count (compute_actor_kf maps
  * anim_frame 1:1, so one cycle = frame_count ticks; a longer timer replays it —
  * that was the "hair 2x" bug). Timer-gated phases use the byte-exact pseudo-random
