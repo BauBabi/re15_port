@@ -447,6 +447,10 @@ int re15_player_granate_frame(void)
 /* Test-Sichtfenster (nur Diagnose, kein Spiel-Code liest das): Phase im Low-Nibble,
  * Recoil-Flag in Bit 4. */
 int re15_player_aim_phase_debug(void) { return (int)s_player_aim_phase | (s_aim_recoil ? 0x10 : 0); }
+/* MESSHAKEN (Runde 26, Sonde probe_m93r_nachladen) - NUR LESEND, kein Spielverhalten:
+ * die beim Zieleintritt gelatchte Klasse s_aim_melee (player_common.c:916). Das Original
+ * hat keinen Latch, es dispatcht jedes Bild neu aus 0x800aca5d (@0x80032e60). */
+int re15_player_aim_melee_dbg(void) { return s_aim_melee; }
 /* One-shot phase durations = the clip's exact frame_count (compute_actor_kf maps
  * anim_frame 1:1, so one cycle = frame_count ticks; a longer timer replays it —
  * that was the "hair 2x" bug). Timer-gated phases use the byte-exact pseudo-random
