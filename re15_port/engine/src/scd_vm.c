@@ -4737,6 +4737,12 @@ int op_xa_vol(scd_thread_t *t)            { t->pc += 2; return 1; }
  * s_cursor_ok_jetzt wird waehrend des Ticks gesetzt, scd_vm_tick schiebt ihn zu Beginn des
  * NAECHSTEN Ticks nach s_cursor_ok_vorframe. */
 /* Sce_key_ck (0x51) — 4 bytes. */
+/* Die AKTIONSTASTE der Cursor-Raetsel, aus den ausgelieferten RDT-Bytes gelesen:
+ * ROOM11F0.RDT sub01 @0x01106 `51 01 40 00` (und zehn weitere Bloecke, s. op_sce_key_ck).
+ * Virtuelles Bit 6 = SQUARE (Preset-Tabelle @0x80073dbc). Die vier BEWEGUNGS-Polls
+ * @0x01098/@0x010B0/@0x010C8/@0x010E0 tragen 0x0001/0x0004/0x0002/0x0008. */
+#define RE15_SCD_AKTIONSMASKE 0x0040u
+
 int op_sce_key_ck(scd_thread_t *t)
 {
     /* byte-true predicate LAB_80042920: param=pc[1], mask=LE u16 @pc[2]; cond = (mask &
@@ -4782,8 +4788,31 @@ int op_sce_key_ck(scd_thread_t *t)
      * ohne Work_set(3,..) gibt es keinen work_prop_idx, ohne Raster keinen Notch.
      * Die UNGUELTIG-Variante 0x0407 hat im Port keine Entsprechung: RE1.5 prueft die Zelle
      * gar nicht erst zu Ende, es gibt hier kein "falsch bestaetigt" — deshalb wird 0x0407
-     * NICHT erfunden. */
-    if (cond) {
+     * NICHT erfunden.
+     *
+     * ⛔ GEMESSEN UND REPARIERT 2026-09-26 — DIE MASKE MUSS DIE AKTIONSTASTE SEIN.
+     * Befund (Sonde r27_panel_schalterwerte Teil E, 320 Bilder nur D-Pad, KEIN Quadrat):
+     * 5 Panel-SE. Ursache: der Laut hing an JEDEM Sce_key_ck, dessen Arbeits-Entitaet ein
+     * Objekt ueber einer Zelle war — und sub01 pollt VOR den Bestaetigungs-Bloecken die
+     * vier BEWEGUNGS-Tasten, waehrend work_prop_idx noch auf dem Cursor steht. Damit toente
+     * das Bewegen. Genau die Nutzer-Beschwerde 2026-09-26: "wenn ich den cursor bewege
+     * kommt die ganze zeit sound. das will ich aber keinen sound. nur beim druecken eines
+     * Schalters soll es den Schalter sound geben."
+     * DIE TRENNUNG STEHT IN DEN AUSGELIEFERTEN BYTES. ROOM11F0.RDT sub01, selbst gelesen:
+     *   @0x01098  51 01 01 00  Sce_key_ck(1,0x0001) -> 04 ff 18 02  Evt_exec sub02  BEWEGEN
+     *   @0x010B0  51 01 04 00  Sce_key_ck(1,0x0004) -> 04 ff 18 03  Evt_exec sub03  BEWEGEN
+     *   @0x010C8  51 01 02 00  Sce_key_ck(1,0x0002) -> 04 ff 18 04  Evt_exec sub04  BEWEGEN
+     *   @0x010E0  51 01 08 00  Sce_key_ck(1,0x0008) -> 04 ff 18 05  Evt_exec sub05  BEWEGEN
+     *   @0x01106  51 01 40 00  Sce_key_ck(1,0x0040) -> 04 ff 18 06  Evt_exec sub06  SCHALTEN
+     *   (elf Bloecke mit Maske 0x0040 @0x01106/0x0112E/0x01156/0x0117E/0x011A6/0x011CE/
+     *    0x011F6/0x0121E/0x01246/0x0126E/0x01296)
+     * Dieselbe Aufteilung in ALLEN elf Cursor-Raster-Raeumen nachgezaehlt (Zensus ueber die
+     * RDTs: 1080/10D0/1100/11E0/11F0/1230/2050/2060/3050/30E0/4020 haben je genau ein
+     * Sce_key_ck je D-Pad-Maske 0x01/0x02/0x04/0x08 und N Stueck mit 0x0040).
+     * Auch RE2 haengt den Laut an die BETAETIGUNG, nicht an eine Tastenabfrage:
+     * ROOM2130.RDT sub04+0x0082 (@Datei 0x01192) `36 02 0a 01 ...` steht im Schalt-Zweig.
+     * Maske 0x0040 = virtuelles Bit 6 = SQUARE (Preset-Tabelle @0x80073dbc). */
+    if (cond && mask == RE15_SCD_AKTIONSMASKE) {
         int wp = (t->work_prop_idx >= 0) ? t->work_prop_idx : g_scd.work_prop_idx;
         int ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
         if (ws < 0 && wp >= 0 && wp < (int)g_scd.prop_count && g_scd.props[wp].member_0b != 0) {
