@@ -28,9 +28,16 @@
  * Belege mit Adresse: include/re15_panel_zeiger.h (Kopf) und
  * analysis/befunde_2026-09-26/re2-schalterraetsel-2130.md.
  *
- * RUECKBAU-NACHWEIS (in dieser Runde wirklich gefahren, Zahlen im Ergebnisfeld):
- *   A/B/C/D  die zehn Gewichte auf {16,16,...} zurueckgedreht  => A/C/D ROT
- *   E        re15_audio_core_se(4) in aot_common.c wieder rein => E ROT
+ * RUECKBAU-NACHWEIS — in dieser Runde WIRKLICH gefahren (Aenderung zurueckgenommen,
+ * gebaut, gemessen, wiederhergestellt); die Zahlen sind die gemessenen:
+ *   (1) die zehn Gewichte auf {16,...,16} zurueckgedreht
+ *       => 13 FEHLER. Statt EINER Kombination erreichen 252 von 1024 die Anzeige 80,
+ *          Rohbereich 0..160 statt -210..90, und die 80er-Maske ist 0x3E0 statt 0x155.
+ *   (2) re15_audio_core_se(4) in aot_common.c wieder eingesetzt
+ *       => 1 FEHLER, Teil E: 320 Bilder Cursor fahren geben 16 CORE-SE statt 0
+ *          (16 Zellenwechsel, also ein Ton je Zellenwechsel).
+ *   (3) das Gate `mask == RE15_SCD_AKTIONSMASKE` in scd_vm.c op_sce_key_ck entfernt
+ *       => 1 FEHLER, Teil E: 5 Panel-SE, obwohl in dem Lauf NIE Quadrat gedrueckt wird.
  */
 #include <stdint.h>
 #include <stdio.h>
