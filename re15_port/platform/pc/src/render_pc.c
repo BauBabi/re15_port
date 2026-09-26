@@ -2240,6 +2240,51 @@ static float re15_render_pc_abtastphase(void)
     return s_phase;
 }
 
+/* ===== MESSSCHIENE RE15_TRILOG ==============================================
+ * "<datei>[@x0,y0,x1,y1]" -- protokolliert JEDES eingereihte texturierte Dreieck,
+ * dessen Scheitel-Bbox das Fenster schneidet (Standardfenster = ganzer Schirm),
+ * mit Reihenfolge-Nummer, TIM-Slot, Scheitel- und UV-Koordinaten.
+ *
+ * WOZU: die Frage "wird dieses Objekt vielleicht ZWEIMAL gezeichnet?" ist ohne
+ * Zaehlung nicht zu beantworten; die SDL-GUI-exe hat kein brauchbares stderr
+ * (Memory reai-v2-re2-trace-datei), also in eine DATEI. Rein env-gegatet: ohne
+ * RE15_TRILOG kostet das einen Zeigervergleich je Dreieck. */
+static FILE *s_trilog_fp = NULL;
+static int   s_trilog_init = 0;
+static int   s_trilog_win[4] = { -100000, -100000, 100000, 100000 };
+static unsigned s_trilog_seq = 0;
+
+static void re15_trilog(const char *fn, int slot,
+                        int x0, int y0, int u0, int v0,
+                        int x1, int y1, int u1, int v1,
+                        int x2, int y2, int u2, int v2, int clut, int z)
+{
+    if (!s_trilog_init) {
+        s_trilog_init = 1;
+        const char *e = getenv("RE15_TRILOG");
+        if (e && *e) {
+            char path[256]; const char *at = strchr(e, '@');
+            size_t n = at ? (size_t)(at - e) : strlen(e);
+            if (n >= sizeof path) n = sizeof path - 1;
+            memcpy(path, e, n); path[n] = 0;
+            if (at) sscanf(at + 1, "%d,%d,%d,%d", &s_trilog_win[0], &s_trilog_win[1],
+                           &s_trilog_win[2], &s_trilog_win[3]);
+            s_trilog_fp = fopen(path, "w");
+        }
+    }
+    if (!s_trilog_fp) return;
+    int mnx = x0 < x1 ? (x0 < x2 ? x0 : x2) : (x1 < x2 ? x1 : x2);
+    int mxx = x0 > x1 ? (x0 > x2 ? x0 : x2) : (x1 > x2 ? x1 : x2);
+    int mny = y0 < y1 ? (y0 < y2 ? y0 : y2) : (y1 < y2 ? y1 : y2);
+    int mxy = y0 > y1 ? (y0 > y2 ? y0 : y2) : (y1 > y2 ? y1 : y2);
+    if (mxx < s_trilog_win[0] || mnx > s_trilog_win[2] ||
+        mxy < s_trilog_win[1] || mny > s_trilog_win[3]) return;
+    fprintf(s_trilog_fp,
+            "%u %s slot=%d clut=0x%04X z=%d  (%d,%d)uv(%d,%d) (%d,%d)uv(%d,%d) (%d,%d)uv(%d,%d)\n",
+            s_trilog_seq++, fn, slot, clut, z, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2);
+    fflush(s_trilog_fp);
+}
+
 void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                               int x1, int y1, int u1, int v1,
                               int x2, int y2, int u2, int v2,
@@ -2290,6 +2335,8 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
     if (y0 > s_dbg_max_sy) s_dbg_max_sy = y0;
     if (y1 > s_dbg_max_sy) s_dbg_max_sy = y1;
     if (y2 > s_dbg_max_sy) s_dbg_max_sy = y2;
+
+    re15_trilog("tri", s_active_slot, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, clut, z);
 
     textri_verts_t *t = &s_textri_queue[s_textri_count++];
 
@@ -2383,6 +2430,8 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
     if (y0 > s_dbg_max_sy) s_dbg_max_sy = y0;
     if (y1 > s_dbg_max_sy) s_dbg_max_sy = y1;
     if (y2 > s_dbg_max_sy) s_dbg_max_sy = y2;
+
+    re15_trilog("tri_lit", s_active_slot, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, clut, z);
 
     textri_verts_t *t = &s_textri_queue[s_textri_count++];
 
