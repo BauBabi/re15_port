@@ -7,6 +7,13 @@
 # in aot_common.c feuerte im selben Bild Tuer-Slot 0 nach und ueberschrieb die per Aot_on
 # angemeldete Etage. Slot 0 IST 1F. Ein Riegel, der nur 1F prueft, waere gruen geblieben —
 # deshalb pinnen diese Sonden alle DREI Etagen.
+#
+# GEGENPROBE nachgefahren (2026-09-26): den Zweig `is_auto_door` samt seinen drei
+# Verwendungen wieder eingebaut, neu gebaut, `ctest -R unit_fahrstuhl` gelaufen ->
+#   287 - unit_fahrstuhl_1080_etagen (Failed)
+#   288 - unit_fahrstuhl_4020_etagen (Failed)
+# danach den Fix wiederhergestellt -> beide gruen. Die Riegel messen also wirklich
+# diesen Defekt und nicht bloss sich selbst.
 add_executable(probe_elevator_1080_full probe_elevator_1080_full.c)
 target_link_libraries(probe_elevator_1080_full PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_elevator_1080_full PRIVATE ${CMAKE_SOURCE_DIR}/include)
