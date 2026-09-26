@@ -12,6 +12,7 @@
 #include "re15_item_prompt.h"  /* re15_item_prompt_walk — Glyphenzahl des Skripts        */
 #include "re15_msg.h"          /* re15_msg_nachhall_beenden — @0x80051834 = @0x8005164C  */
 #include "re15_msg_select.h"   /* re15_msg_select_blink_tick — Blink-Gatter @0x80028600  */
+#include "re15_audio.h"        /* re15_audio_core_se — CORE-Bank 4 (Se_on 0x04NN0000) */
 
 #include "gen/discard_sites.inc"
 
@@ -315,6 +316,27 @@ void re15_discard_tick(uint16_t pad_edge, uint16_t pad_held)
      * worden. Wer abbricht, behaelt den Gegenstand — der sichere Ausgang. */
     if (pad_edge & 0x8000) { s_choice = 1; }
     else if (!(pad_edge & 0x4000)) return;
+
+    /* ⛔ NUTZER-ENTSCHEIDUNG vom 2026-09-26, ausdruecklich GEGEN das gemessene RE2:
+     *   "und bei discard von eines item, wenn es nicht mehr benoetigt wird fehlt der
+     *    bestaetigungssound."
+     * RE2 ist an DIESER Stelle STUMM, und das ist gemessen, nicht vermutet: seine
+     * Wegwerf-Abfrage ist Systemsatz A Eintrag 9, ihr Flagbyte hinter dem Auswahlcode
+     * 0xFB ist 00, und geoeffnet wird sie mit a1=0x100 @0x80051834 — der Ton-Zweig
+     * @0x80030948-54 in FUN_80030844 wird damit nicht betreten. (Zensus in
+     * analysis/befunde_2026-09-26/messung-re2-tonregel.md: von 128 Ja/Nein-Abfragen
+     * toenen 49; es gibt in RE2 KEINE Regel, das Flag steht je Nachricht im Text.)
+     * Der Nutzer will den Ton trotzdem, damit sich Aufnehmen und Wegwerfen gleich
+     * anfuehlen. Gebaut wird deshalb NUR die Kopplung; die SATZNUMMERN sind byte-belegt
+     * und stammen aus RE1.5 selbst:
+     *   Satz 6 = Bestaetigen  `lui a0,0x406` @0x8004a51c
+     *   Satz 5 = Abbrechen    `lui a0,0x405` @0x8004a660
+     * Dieselbe Zeile wie beim Aufnehmen (item_modal_common.c:322) — DORT ist sie
+     * RE2-belegt (Aufnahme-Box SET-B Idx 0, Flagbyte 0x80), hier nicht.
+     * Der CROSS-Abbruch oben setzt s_choice = 1 und faellt in dieselbe Zeile, spielt
+     * also Satz 5. */
+    re15_audio_core_se(s_choice == 0 ? 6 : 5);
+
 
     if (s_choice == 0) {
         /* JA: Slot leeren + nachruecken. RE2: `sb zero,id` @0x80051774,

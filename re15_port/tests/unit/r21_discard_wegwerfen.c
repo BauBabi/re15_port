@@ -80,6 +80,10 @@
 #include "re15_item_prompt.h"
 #include "re15_msg_select.h"
 #include "re15_game_step.h"     /* der ECHTE Spielschritt — TEIL J misst px/pz dahinter */
+
+/* Spione aus tests/test_support.c: dort ist re15_audio_core_se durch eine Zaehl-
+ * Fassung ersetzt. TEIL S misst damit den Bestaetigungston der Wegwerf-Abfrage. */
+extern int g_test_core_se_last, g_test_core_se_count;
 #include "re15_player.h"        /* RE15_PAD_BIT_UP                                     */
 #include "re15_collision.h"     /* Boden-Band aus dem Spawn-Y                          */
 #include "re15_enemy_ai.h"      /* re15_player_cmd_reset                               */
@@ -2387,6 +2391,79 @@ static void teil_r(void)
     PRUEFE(r2 == lebend, "nur %d von %d Panels haben den Gate-1-Fall belegt", r2, lebend);
 }
 
+/* ======================================================================
+ * TEIL S — DER BESTAETIGUNGSTON DER WEGWERF-ABFRAGE.
+ *
+ * ⛔ NUTZER-ENTSCHEIDUNG vom 2026-09-26, ausdruecklich GEGEN das gemessene RE2:
+ *   "und bei discard von eines item, wenn es nicht mehr benoetigt wird fehlt der
+ *    bestaetigungssound."
+ * RE2s Wegwerf-Abfrage ist STUMM (Systemsatz A Eintrag 9, Flagbyte hinter dem
+ * Auswahlcode 0xFB = 00, geoeffnet mit a1=0x100 @0x80051834; Zensus in
+ * analysis/befunde_2026-09-26/messung-re2-tonregel.md). Die SATZNUMMERN dagegen sind
+ * byte-belegt und stammen aus RE1.5 selbst — selbst nachgelesen:
+ *   @0x8004a51c  lui a0,0x406   Satz 6 = Bestaetigen
+ *   @0x8004a660  lui a0,0x405   Satz 5 = Abbrechen
+ *
+ * Gemessen wird am ECHTEN Ablauf (dieselbe Fahrt wie TEIL A/B), nicht an einem
+ * nachgebauten Zustand: Abfrage aufmachen, austippen lassen, antworten, und die
+ * Spione aus test_support.c auswerten. Geprueft werden VIER Faelle:
+ *   S1  JA (SQUARE)  -> genau EIN Ton, Satz 6
+ *   S2  NEIN (Menue-rechts, dann SQUARE) -> genau EIN Ton, Satz 5
+ *   S3  ABBRUCH (CROSS) -> genau EIN Ton, Satz 5 (der CROSS-Zweig setzt s_choice = 1)
+ *   S4  GEGENPROBE: waehrend die Schreibmaschine laeuft und waehrend des Blinkens
+ *       kommt KEIN Ton — sonst waere es dieselbe Beschwerde wie beim Panel-Cursor
+ *       ("kommt die ganze zeit sound").
+ * ====================================================================== */
+static void teil_s_fall(const char *name, uint16_t vorlauf, uint16_t edge,
+                        int soll_satz)
+{
+    const re15_discard_site_t *st = &re15_discard_sites[0];
+    re15_rdt_t rdt; size_t n = 0;
+    uint8_t *raw = raum_laden(st->room, &rdt, &n);
+    if (!raw) { printf("  %s: RDT fehlt - uebersprungen\n", name); return; }
+    grundzustand();
+    re15_inv_grant(st->item, 1);
+    nachricht_spielen(&rdt, st->room, st->msg);
+    free(raw);
+    if (!re15_discard_prompt(NULL, NULL)) { PRUEFE(0, "%s: keine Abfrage offen", name); return; }
+
+    /* Austippen lassen und dabei ZAEHLEN — waehrend der Schreibmaschine darf nichts
+     * toenen (Fall S4). */
+    int vor = g_test_core_se_count;
+    for (int f = 0; f < 4000 && !re15_discard_ready(); f++) re15_discard_tick(0, 0);
+    PRUEFE(re15_discard_ready(), "%s: Prompt wurde nicht fertig getippt", name);
+    PRUEFE(g_test_core_se_count == vor,
+           "%s: S4 — waehrend des Tippens kamen %d Toene, erwartet 0",
+           name, g_test_core_se_count - vor);
+
+    /* Ein paar Leerbilder mit stehendem Prompt: auch das Blinken darf nicht toenen. */
+    vor = g_test_core_se_count;
+    for (int f = 0; f < 30; f++) re15_discard_tick(0, 0);
+    PRUEFE(g_test_core_se_count == vor,
+           "%s: S4 — der stehende Prompt toente %d mal, erwartet 0",
+           name, g_test_core_se_count - vor);
+
+    if (vorlauf) { re15_discard_tick(vorlauf, 0); }   /* Auswahl umstellen */
+
+    vor = g_test_core_se_count;
+    g_test_core_se_last = -1;
+    re15_discard_tick(edge, 0);
+    PRUEFE(g_test_core_se_count - vor == 1,
+           "%s: erwartet genau EIN Ton, gezaehlt %d", name, g_test_core_se_count - vor);
+    PRUEFE(g_test_core_se_last == soll_satz,
+           "%s: erwartet Satz %d (@0x8004a51c / @0x8004a660), gespielt %d",
+           name, soll_satz, g_test_core_se_last);
+    printf("  %s: Toene %d, Satz %d (erwartet %d)\n", name,
+           g_test_core_se_count - vor, g_test_core_se_last, soll_satz);
+}
+
+static void teil_s(void)
+{
+    printf("\n=== TEIL S: Bestaetigungston der Wegwerf-Abfrage (Nutzer-Entscheidung) ===\n");
+    teil_s_fall("S1 JA     (SQUARE)", 0,      0x4000, 6);
+    teil_s_fall("S2 NEIN   (rechts+SQUARE)", 0x1000, 0x4000, 5);
+    teil_s_fall("S3 ABBRUCH(CROSS)", 0,      0x8000, 5);
+}
 int main(void)
 {
     printf("=== r21_discard_wegwerfen — \"You don't need this key any more. Discard it?\"\n");
@@ -2415,6 +2492,7 @@ int main(void)
     teil_i();
     teil_j();
     teil_k();
+    teil_s();      /* Bestaetigungston der Abfrage (Nutzer-Entscheidung 2026-09-26) */
 
     if (g_fehler) { printf("\nFEHLGESCHLAGEN: %d Pruefungen\n", g_fehler); return 1; }
     printf("\nOK — Abfrage, Ja/Nein und der Sackgassen-Riegel halten.\n");
