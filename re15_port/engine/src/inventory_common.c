@@ -5,6 +5,8 @@
  */
 #include <string.h>
 #include "re15_inventory.h"
+#include "re15_inv_ui.h"       /* die VERBATIM ausgelieferten EXE-Bytes [0x80074a8c,0x800762a0):
+                               * hier gebraucht fuer die Eigenschaftstabelle @0x80074da8 */
 #include "re15_inv_screen.h"   /* wave 5: icon-cache cell art maintenance (the original's
                                 * FUN_80049390 copies / FUN_8004947c blanks are part of the
                                 * slot ops FUN_8004dadc/FUN_8004dc4c — see the disasm cites
@@ -255,6 +257,129 @@ uint8_t re15_pickup_menge_nutzer(uint8_t item_id, uint8_t menge)
     if (menge <= 1)                  return menge;   /* 0 bleibt 0 (Grant weist es ohnehin ab) */
     uint8_t h = (uint8_t)(menge / 2u);
     return h ? h : (uint8_t)1;
+}
+
+/* ================= NUTZER-ENTSCHEIDUNG: Munition gleicher Sorte beim Aufnehmen stapeln ========
+ * Nutzer-Auftrag 2026-09-26: "Munition gleicher Sorte kannst du bitte gleich Stapeln, wenn du
+ * sie aufnimmst." — bestaetigt als BEWUSSTE Abweichung ("stapeln und sound ist fertiges
+ * resident evil 2 und will ich bewusst haben").
+ *
+ * ⛔ GEMESSEN UND UNABHAENGIG NACHGEPRUEFT: WEDER RE1.5 NOCH RE2 stapelt beim Aufnehmen.
+ *   RE1.5 hat genau EINEN Einfuege-Pfad fuer Welt-Items, FUN_8004dc4c @0x8004dc4c, mit genau
+ *   EINEM Aufrufer (@0x8001e0c4, Item-Get-FSM Zustand 7) und keinem Datenwort-Zeiger; er
+ *   sucht den ersten FREIEN Platz (jal 0x8004df2c @0x8004debc) und SCHREIBT die Menge roh:
+ *     8004dee4: sb s0,0(at)   ; slot.id
+ *     8004def4: sb s1,0(at)   ; slot.qty  <- ZUWEISUNG, keine Addition
+ *     8004df04: sb zero,0(at) ; slot.flag
+ *   Die Obergrenzen-Tabelle @0x80074da8 wird im ganzen Insert-Bereich
+ *   0x8004dc4c..0x8004df28 nicht gelesen. RE2 ebenso (Insert FUN_80069adc, Aufrufer
+ *   jal 0x80069adc @0x80058864 / @0x80072320, kein Gleiche-Id-Sucher).
+ * Also: NUTZER-ENTSCHEIDUNG, hier klar gekennzeichnet und NIE als byte-true ausgegeben.
+ *
+ * ERFUNDEN wird trotzdem nichts: die Arithmetik ist woertlich aus der einzigen Stelle des
+ * Originals geborgt, die ueberhaupt stapelt — der MENUE-Zusammenlegung FUN_8004e054
+ * (manuelle Aktion, Aufrufer @0x8004b3b8 hinter `andi v0,v1,0x4000` = Bestaetigen):
+ *     8004e13c: lbu a0,0(at)          ; qty[Ziel]
+ *     8004e14c: lbu v0,0(at)          ; qty[Quelle]
+ *     8004e160: addu s0,a0,v0         ; SUMME (32 Bit, kein Byte-Ueberlauf)
+ *     8004e330: addiu at,at,19880     ; 0x80074da8
+ *     8004e338: lbu  v1,0(at)         ; OBERGRENZE(Id) als u8
+ *     8004e340: sltu v0,v1,s0         ; Obergrenze < Summe ?
+ *   ja  -> 8004e3f4: sb v1,0(at)      ; Ziel = Obergrenze
+ *          8004e410: subu v0,s0,v0    ; Rest = Summe - Obergrenze
+ *   nein-> 8004e398: addu v0,v0,a2 / 8004e3a8: sb v0,0(at)   ; Ziel = Summe
+ * Die Zahlen 250/100 stehen NICHT im Code — sie werden aus der ausgelieferten Tabelle
+ * gelesen (re15_inv_ui_blob deckt [0x80074a8c,0x800762a0), also auch 0x80074da8). */
+
+#define INV_PROP_TBL   0x80074DA8u   /* Eigenschaftstabelle, Schrittweite 12:
+                                      * {+0 u32 Obergrenze, +4 u32 Kombinations-Satz,
+                                      *  +8 u8 Art, +9 u8 Anzahl} — Leser des Originals
+                                      * @0x8004e330-38 (+0) und @0x8004e9d8/@0x8004e9e8 (+4) */
+#define INV_PROP_NULL  0x80074C88u   /* der ALL-NULL-Satz `00 00 00 00` @0x80074c88, auf den
+                                      * alle Posten OHNE eigenen Kombinations-Satz zeigen */
+
+static uint32_t inv_prop_u32(uint32_t addr)
+{
+    const unsigned char *p = RE15_INV_PTR(addr);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+/* Obergrenze wie das Original sie liest: als EIN BYTE (`lbu v1,0(at)` @0x8004e338),
+ * nicht als u32 — deshalb hier ebenfalls u8. */
+static int inv_obergrenze(uint8_t id)
+{
+    return (int)*RE15_INV_PTR(INV_PROP_TBL + (uint32_t)id * 12u);
+}
+
+/* Gilt die Nutzer-Stapelregel fuer diese Id?
+ * (a) byte-true Id-Fenster 0x15..0x21 (re15_item_is_ammo: `sltiu id,0x15` @0x80047d54 /
+ *     `sltiu id,0x22` @0x80049124) — das ist aber nur eine KLASSE, kein Munitionsbeweis,
+ * (b) GESCHNITTEN mit "hat einen EIGENEN Kombinations-Satz", Feld +4 der ausgelieferten
+ *     Tabelle @0x80074da8 (dasselbe Feld liest das Original @0x8004e9d8).
+ * GEMESSEN ueber das ganze Fenster: 0x15..0x20 tragen eigene Saetze (0x80074ccc, 0x80074ce8,
+ * 0x80074cf4, 0x80074cfc, 0x80074d04, 0x80074d08, 0x80074d0c, 0x80074d10, 0x80074d20,
+ * 0x80074d30, 0x80074d3c, 0x80074d48) — NUR 0x21 zeigt auf den Null-Satz @0x80074c88.
+ * 0x21 ist im ausgelieferten Namens-Blob "Memory Card" (@0x800c4a28 + Offset[0x21]), also
+ * keine Munition. Genau diese eine Id faellt damit datengetrieben heraus, ohne Id-Liste.
+ * (re15_item_is_ammo selbst bleibt unangetastet — sie ist byte-true und wird anderswo
+ *  gebraucht.) */
+int re15_pickup_stapelt_nutzer(uint8_t item_id)
+{
+    if (!re15_item_is_ammo(item_id)) return 0;
+    return inv_prop_u32(INV_PROP_TBL + (uint32_t)item_id * 12u + 4u) != INV_PROP_NULL;
+}
+
+/* Passt die GANZE Menge auf einen schon vorhandenen Platz, ohne dass ein freier Platz
+ * gebraucht wird? Nur dann darf die Aufnahme bei VOLLEM Inventar weitergehen
+ * (item_modal_common.c Zustand 5). Sonst bleibt der byte-true "kann ich nicht tragen"-Zweig
+ * (@0x8001df14 Vorpruefung + @0x8001e054 bltz) unveraendert. */
+int re15_pickup_passt_nutzer(uint8_t item_id, uint8_t menge)
+{
+    if (!re15_pickup_stapelt_nutzer(item_id) || menge == 0) return 0;
+    int ziel = re15_inv_find_item(item_id);            /* FUN_8004dfec @0x8004dfec */
+    if (ziel < 0) return 0;
+    return ((int)g_inv.slots[ziel].qty + (int)menge) <= inv_obergrenze(item_id);
+}
+
+/* Gutschrift MIT Nutzer-Stapelung. Rueckgabe wie re15_inv_grant: 0 = die GANZE Menge ist
+ * gutgeschrieben, -1 = NICHTS ist gutgeschrieben.
+ *
+ * ⛔ DIE MENGE WIRD IN JEDEM ZWEIG GENAU EINMAL GUTGESCHRIEBEN, und jeder Zweig ist
+ * ATOMAR: der Teiluebertrag ruft ERST re15_inv_grant fuer den Rest und schreibt die
+ * Obergrenze in den Zielplatz erst danach. Scheitert der Grant (kein freier Platz), ist
+ * kein Byte des Inventars veraendert und die Aufnahme faellt sauber auf den byte-true
+ * Voll-Zweig zurueck — sonst laege die Packung weiter in der Welt, waehrend ein Teil schon
+ * im Beutel waere (unbegrenzte Munition durch wiederholtes Ansprechen).
+ * re15_inv_grant kann den Zielplatz dabei nicht verschieben: der 2-Zell-Schub gilt nur fuer
+ * Ids 0x0e..0x13 (`sltiu v0,v0,0x6` @0x8004dc78), Munition liegt darueber. */
+int re15_inv_grant_stapeln_nutzer(uint8_t item_id, uint8_t menge)
+{
+    if (item_id == 0 || menge == 0) return -1;              /* wie re15_inv_grant */
+    if (!re15_pickup_stapelt_nutzer(item_id))
+        return re15_inv_grant(item_id, menge);              /* byte-true Insert, unveraendert */
+
+    int ziel = re15_inv_find_item(item_id);                 /* FUN_8004dfec @0x8004dfec */
+    if (ziel < 0)
+        return re15_inv_grant(item_id, menge);              /* nichts zum Stapeln da */
+
+    int cap   = inv_obergrenze(item_id);                    /* lbu @0x8004e338 */
+    int summe = (int)g_inv.slots[ziel].qty + (int)menge;    /* addu @0x8004e160 */
+
+    if (cap < summe) {                                      /* sltu @0x8004e340 */
+        int rest = summe - cap;                             /* subu @0x8004e410 */
+        if (rest > 255) return -1;                          /* passt nicht in ein qty-Byte;
+                                                             * im Auslieferungsstand
+                                                             * unerreichbar (groesste Packung
+                                                             * 30, davor halbiert) */
+        if (re15_inv_grant(item_id, (uint8_t)rest) != 0) return -1;  /* ATOMAR: nichts getan */
+        g_inv.slots[ziel].qty = (uint8_t)cap;               /* sb @0x8004e3f4 */
+    } else {
+        g_inv.slots[ziel].qty = (uint8_t)summe;             /* addu/sb @0x8004e398-3a8 */
+    }
+    g_inv.last_pickup_type           = item_id;
+    g_inv.last_pickup_amount         = menge;               /* die GANZE aufgenommene Menge */
+    g_inv.last_pickup_display_frames = HUD_PICKUP_DISPLAY_FRAMES;
+    return 0;
 }
 
 /* Byte-true item name catalog 0x00..0x2f (DAT_800c4a28 glyph blob, decoded via the item-prompt font

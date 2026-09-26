@@ -21,6 +21,7 @@
 #include "re15_scd.h"        /* re15_game_flag_set — the taken-bit (zone 9)                         */
 #include "re15_item_prompt.h"/* re15_item_prompt_walk — byte-true prompt glyph count (typewriter total) */
 #include "re15_msg_select.h" /* re15_msg_select_blink_tick — Blink-Gatter der Ja/Nein-Auswahl @0x80028600 */
+#include "re15_audio.h"      /* re15_audio_core_se — Bank 4: Satz 6 Ja @0x8004a51c / Satz 5 Nein @0x8004a660 */
 
 /* ---- byte-true corner tables (FUN_8001e1c8 @0x80072d3c / @0x80072d44) ---- */
 static const int16_t s_corner_x[4] = { -56, +56, -56, +56 };
@@ -231,6 +232,16 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
              * room, i.e. s_grant < capacity-1. (audit wf_8cc15b53) */
             if (s_type >= 0x0e && s_type <= 0x13 && s_grant >= INV_CAPACITY - 1)
                 s_grant = -1;
+            /* ⛔ NUTZER-ENTSCHEIDUNG 2026-09-26 (Stapeln, s. re15_inventory.h): bei VOLLEM
+             * Inventar darf die Aufnahme trotzdem weitergehen, WENN die ganze Menge auf einen
+             * schon vorhandenen Platz derselben Munition passt — sonst sagte das Spiel
+             * "kann ich nicht tragen", obwohl gestapelt werden koennte. Der byte-true
+             * Voll-Zweig (@0x8001df14 Vorpruefung, @0x8001e054 bltz -> Zustand 8) bleibt fuer
+             * jeden anderen Fall unveraendert, und s_prompt (der byte-true Glyphen-Zaehler der
+             * Prompt-Schreibmaschine, @0x8001df40-48) wird NICHT umgebogen: er folgt weiterhin
+             * allein s_grant. */
+            if (s_grant < 0 && re15_pickup_passt_nutzer(s_type, s_amount))
+                s_grant = re15_inv_find_item(s_type);
             s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
             s_blink   = 0;                        /* Blink-Zaehler beim Oeffnen (@0x80027eb0) */
@@ -283,6 +294,32 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
             s_blink = re15_msg_select_blink_tick(s_blink, (pad_edge & 0x3000) != 0);
             if (pad_edge & 0x3000) s_choice ^= 1;                 /* virt menu-L/R (raw d-pad) toggle -> No-flag ^=1 */
             if (!(pad_edge & 0x4000)) return;                     /* wait for virtual confirm (raw SQUARE) */
+            /* ⛔ NUTZER-WUNSCH 2026-09-26 ("beim yes fuer das aufnehmen von Items/Munitions
+             * moechte ich den normalen Bestaetigungssound") — BELEGTE RE2-ANGLEICHUNG,
+             * KEINE RE1.5-Zeile. RE1.5 ist an dieser Stelle nachweislich STUMM: im ganzen
+             * Aufnahme-Teilbaum ab FUN_8001db28 steht kein `jal 0x80045024` (Se_on), und die
+             * Prompt-Aufloesung FUN_8002877c -> LAB_80021f6c (@0x80021f6c..0x80021ffc)
+             * enthaelt genau einen jal (0x8004ef90 @0x80021fd8), kein Se_on.
+             * RE2 toent hier: die Ja/Nein-Box FUN_80030844 spielt fuer Index 0 (Ja)
+             *   80030948: andi v0,s1,0x20        ; Gate B
+             *   8003094c: bne  v0,zero,0x80030b68
+             *   80030950: lui  a0,0x406          ; Bank 4 / Satz 6 = Bestaetigung
+             *   80030954: jal  0x8005ba28        ; Se_on
+             * und fuer Index 1 (Nein) `lui a0,0x405` @0x8003093c (Bank 4 / Satz 5 = Abbruch).
+             * Die FREIGABE traegt genau RE2s AUFNAHME-Abfrage (SET-B Idx 0 "Will you take
+             * the <item>?", Flagbyte 0xFB 0x80): ihr Oeffner ruft mit `ori a1,zero,0xe400`
+             * @0x80071ff8 -> `jal 0x8002fe38` @0x80072000; Bit 0x2000 umgeht Gate A
+             * (@0x80030910), Gate B (0x20) ist nicht gesetzt -> Ja toent.
+             * Die SATZNUMMERN sind RE1.5-eigen und ausgeliefert: Ja `lui a0,0x406`
+             * @0x8004a51c, Nein `lui a0,0x405` @0x8004a660 (beide `jal 0x80045024` = Se_on,
+             * Bank-/Satz-Zerlegung @0x80045028 / @0x80045078-7c — identisch zu RE2s
+             * FUN_8005ba28 @0x8005ba30 / @0x8005ba7c-80).
+             * ⛔ BEWUSST NICHT AUSGEWEITET: der can't-carry-Zweig oben (RE2s Gegenstueck
+             * SET-B Idx 1 hat gar keine Auswahlbox - kein 0xFB - und macht keinen Ton), die
+             * Wegwerf-Abfrage (RE2 SET-A Idx 9, `FB 00`, a1=0x100 @0x80051834 -> STUMM) und
+             * die allgemeine SCD-Ja/Nein-Abfrage (RE2 teilt seine 122 Raum-Boxen 47 tonend /
+             * 75 stumm — es gibt keine Regel, ein pauschaler Ton waere erfunden). */
+            re15_audio_core_se(s_choice == 0 ? 6 : 5);
             s_msg_no = s_choice;                                  /* No selected -> case7 leaves the item */
             s_prompt = 0; s_state = 7; again = 1; break;
 
@@ -290,7 +327,11 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
                   * else INSERT (FUN_8004dc4c) + taken-bit + deactivate the AOT, state=0 (DONE). The
                   * byte-true gate is `if ((char)DAT_8008f62c < 0 || (DAT_800b8520 & 1)) -> state 8`
                   * (@0x8001e054 bltz + @0x8001e068 andi 0x1) — the second term is the Yes/No "No". */
-            if (s_grant < 0 || s_msg_no || re15_inv_grant(s_type, s_amount) != 0) {
+            /* ⛔ NUTZER-ENTSCHEIDUNG 2026-09-26: re15_inv_grant_stapeln_nutzer ist der byte-true
+             * Insert PLUS der markierten Stapelregel (re15_inventory.h). Sie schreibt die Menge
+             * in JEDEM Zweig genau einmal gut und ist atomar: scheitert der Rest-Platz, ist
+             * nichts veraendert und der byte-true Voll-Zweig (Zustand 8) greift unveraendert. */
+            if (s_grant < 0 || s_msg_no || re15_inv_grant_stapeln_nutzer(s_type, s_amount) != 0) {
                 s_f630  = 0;         /* @0x8001e0f0 */
                 s_f634  = 0;         /* @0x8001e0f8 */
                 s_state = 8;         /* sb 8,DAT_80072d3b @0x8001e100 (state 8 runs next tick) */
