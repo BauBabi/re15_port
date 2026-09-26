@@ -850,3 +850,12 @@ void re15_audio_core_se(int se_id)
 {
     (void)se_id;   /* TODO(psx): load CORE00.EDH/.VB to SPU + play se_id */
 }
+
+/* ⛔ RE2-ERGAENZUNG (kein RE1.5-Original): der Fahrstuhl-Fahrton aus
+ * shared_assets/RE2/ELEVSE.VBS, se_id 0x11 (Fahrt) / 0x12 (Ankunft) — die zwei Ids,
+ * die RE2 in ROOM21B0.RDT @0x2756 / @0x2784 vor die bit28-Pulse setzt.
+ * PSX-SPU-Pfad = Folge-Stub wie re15_audio_core_se; audio_pc.c hat die echte Impl. */
+void re15_audio_re2_elevator_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): ELEVSE.VBS in die SPU + se_id spielen */
+}

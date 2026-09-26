@@ -200,4 +200,15 @@ void re15_audio_re2_enemy_bank(int bank);
  * (vertauschtes Raum-Paar -> +0x10 in die zweite Map-Haelfte). PC-only; PSX: no-op. */
 void re15_audio_re2_enemy_se(int se_id, int flag2000);
 
+/* ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL: der Fahrstuhl-Fahrton.
+ * RE1.5 faehrt in ROOM1080/1081/4020/4021 dasselbe Fahrskript wie RE2 in
+ * ROOM21B0/ROOMB1B0 (32 bitgleiche Bytes), setzt aber die zwei Se_on nicht, die RE2
+ * unmittelbar davor hat: ROOM21B0.RDT @0x2756 `36 02 11 01 01 ...` und @0x2784
+ * `36 02 12 01 01 ...` (bank 2 = SND0, id 0x11 = Fahrt / 0x12 = Ankunft; Operanden
+ * aus LAB_80041624 @0x80041644/48). Die zwei Wellen kommen aus ROOM21B0.RDT
+ * @0x1BA34 (16400 B) und @0x1FA44 (6336 B) und liegen als Mini-Bank in
+ * shared_assets/RE2/ELEVSE.VBS (tools/re2_elevator_cut.py).
+ * Gerufen aus engine/src/scd_elev_se.c. PSX: Folge-Stub wie die anderen SE-Baenke. */
+void re15_audio_re2_elevator_se(int se_id);
+
 #endif /* RE15_AUDIO_H */
