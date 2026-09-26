@@ -34,6 +34,7 @@
 #include "re15_anim_select.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
+#include "re15_math.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -332,9 +333,17 @@ static void lauf(int32_t sx, int32_t sz, int16_t yaw, int nframes, int ausfuehrl
             for (int i = 0; i < nh; i++) {
                 re15_actor_t *d = &g_actors[hs[i]];
                 if (!d->active) continue;
-                printf("        hund%d slot%-2d st=%d s1=%-2d s2=%d pos=(%6d,%6d,%6d) hp=%d\n",
+                /* Ueberdeckung GEGEN DIE LAGE AM BILDANFANG — das ist der Zustand, den
+                 * der Koerper-Schub FUN_8002b544 @0x80031cbc aufloest. */
+                int32_t ddx = vx - d->x, ddz = vz - d->z;
+                int32_t dist = (int32_t)(re15_squareroot0((uint32_t)((int64_t)ddx * ddx +
+                                                                     (int64_t)ddz * ddz)));
+                int32_t R = (int32_t)d->hit_radius_min + 450;   /* +RE15_BODY_R_PLAYER */
+                printf("        hund%d slot%-2d st=%d s1=%-2d s2=%d pos=(%6d,%6d,%6d) hp=%d"
+                       " d=%d R=%d pen=%d\n",
                        i, hs[i], d->state, d->sub_state_1, d->sub_state_2,
-                       (int)d->x, (int)d->y, (int)d->z, d->hp);
+                       (int)d->x, (int)d->y, (int)d->z, d->hp, (int)dist, (int)R,
+                       (int)(R - dist));
             }
         }
         if (ausfuehrlich && (f % 100) == 0) {
