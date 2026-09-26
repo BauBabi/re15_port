@@ -535,6 +535,7 @@ int re15_schritt_station_hole(int idx, int32_t *x, int32_t *z)
 static void re15_player_body_and_walls(const re15_game_ctx_t *c, re15_actor_t *pl,
                                        int32_t alt_x, int32_t alt_z)
 {
+    schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);   /* Lage NACH dem Kommando-Handler */
     re15_body_push_player();                                   /* @0x80031cbc */
     schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
     if (!c->rdt_ok) return;
