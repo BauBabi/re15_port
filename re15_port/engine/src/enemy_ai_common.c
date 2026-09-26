@@ -13567,9 +13567,90 @@ static void re15_ivy_ai_tick(int slot)
  * (hit_radius_min is the DAMAGE box: maggot 1600 / alligator 2200 -> the enemy is shoved out of
  * attack range), so we do only the b544 enemy-vs-enemy loop. No grab-freeze exemption needed here
  * (that gate is for the zombie's own aec4-vs-player, which this does not do). */
+/* ⛔ DIE ERSTE HAELFTE DES ORIGINAL-SCHWANZES, DIE IM PORT GEFEHLT HAT — Nutzer-Befund
+ * Runde 27 ("der Spieler wurde durch den BISS der Hunde in die Wand getrieben. Nicht die
+ * hunde durch den Spieler").
+ *
+ * Der Hunde-Root schiebt in SEINEM Tick ZUERST SICH SELBST aus dem Spieler und erst danach
+ * aus den anderen Entitaeten (STAGE1.BIN, selbst disassembliert):
+ *   8010d800  lui   s0,0x800b
+ *   8010d804  addiu s0,s0,-13760      s0 = 0x800ACA40  (Kopf des Spielerblocks)
+ *   8010d868  lui   a0,0x800b
+ *   8010d86c  lw    a0,-14460(a0)     a0 = g_entity(cur) = DER HUND
+ *   8010d870  jal   0x8002b498        Hitbox-Ausrichtung des Hundes
+ *   8010d878  lui   a1,0x800b
+ *   8010d87c  lw    a1,-14460(a1)     a1 = DER HUND        (= PUSHEE)
+ *   8010d880  jal   0x8002aec4        <-- DIESER AUFRUF FEHLTE
+ *   8010d884  addiu a0,s0,20          a0 = 0x800ACA54 = DER SPIELER (= PUSHER)
+ *   8010d890  jal   0x8002b544        Hund aus den ANDEREN Entitaeten (das hatte der Port)
+ *   8010d894  sh    v0,466(v1)        +0x1d2 = Rueckgabe von aec4
+ *   8010d8b0  jal   0x8003b0a4        Wandklemme des Hundes
+ * FUN_8002aec4 BEWEGT DEN PUSHEE (Beleg im Kopf von re15_body_push) — der Hund weicht dem
+ * Spieler also in seinem eigenen Tick aus. Ohne den Aufruf trug AUSSCHLIESSLICH der Spieler
+ * die Trennung: sein eigener Schub FUN_8002b544 @0x80031cbc musste die ganze Ueberdeckung
+ * aufloesen, und an einer Wand loest ihn das in die Wand hinein.
+ *
+ * GEMESSEN (probe_r27_hund_biss raster, ROOM11D0, freier Hunde-Satz, 123 Startplaetze,
+ * ~27000 Bilder): 467 -> 25 Bilder mit dem Spieler IN einer soliden Zelle, betroffene
+ * Plaetze 19/68 -> 2/69, Weg durch den Koerper-Schub 6759592 -> 301893 (-96%), Bisse
+ * 571 -> 721 (die Hunde greifen weiter an).
+ *
+ * ⛔ NUR DER HUND. Denselben Aufruf tragen auch die anderen Gegner-Roots (der Kommentar
+ * ueber re15_body_push zitiert ihn seit jeher fuer den Zombie, FUN_8010a8c8), aber DIESE
+ * Adresse hier ist der HUNDE-Root; fuer die uebrigen Typen ist sie nicht nachgeschlagen,
+ * und der Birkin-Kampf haengt am selben Schwanz. Die Ausweitung gehoert in eine eigene
+ * Runde MIT eigenen Adressen und eigener Messung (Nebenbefund).
+ *
+ * Die Ausnahmen sind dieselben wie auf der Spielerseite (re15_body_push_player): toter
+ * Spieler (der Frass ueberdeckt die Leiche) und das GREIFENDE PAAR (beide 0x1000,
+ * `and v0,a0,v1; andi 0x1000` @0x8002af14) — waehrend des Griffs haelt die
+ * Opfer-Platzierung die Lage, ein Schub wuerde sie zerreissen. */
+static void re15_enemy_selfpush_from_player(int s, re15_actor_t *e)
+{
+    if (e->state == (uint8_t)RE15_AI_STATE_CORPSE || e->hit_radius_min == 0) return;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!pl->active || pl->hp < 0) return;
+    if (re15_player_is_grabbed() && s == g_player_victim_zombie) return;
+    re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);   /* @0x8010d880 */
+}
+
 static void re15_enemy_body_push_tail(int s, re15_actor_t *e)
 {
     if (e->state == (uint8_t)RE15_AI_STATE_CORPSE || e->hit_radius_min == 0) return;
+    /* ⛔ DIE ERSTE HAELFTE DES ORIGINAL-SCHWANZES HAT HIER GEFEHLT — Nutzer-Befund Runde 27
+     * ("der Spieler wurde durch den BISS der Hunde in die Wand getrieben. Nicht die hunde
+     * durch den Spieler").
+     *
+     * Der Hunde-Root schiebt in SEINEM Tick ZUERST SICH SELBST aus dem Spieler und erst
+     * danach aus den anderen Entitaeten (STAGE1.BIN, selbst disassembliert):
+     *   8010d800  lui   s0,0x800b
+     *   8010d804  addiu s0,s0,-13760      s0 = 0x800ACA40  (Kopf des Spielerblocks)
+     *   8010d868  lui   a0,0x800b
+     *   8010d86c  lw    a0,-14460(a0)     a0 = g_entity(cur) = DER HUND
+     *   8010d870  jal   0x8002b498        Hitbox-Ausrichtung des Hundes
+     *   8010d878  lui   a1,0x800b
+     *   8010d87c  lw    a1,-14460(a1)     a1 = DER HUND        (= PUSHEE)
+     *   8010d880  jal   0x8002aec4        <-- DIESER AUFRUF FEHLTE
+     *   8010d884  addiu a0,s0,20          a0 = 0x800ACA54 = DER SPIELER (= PUSHER)
+     *   8010d890  jal   0x8002b544        Hund aus den ANDEREN Entitaeten (das hatte der Port)
+     *   8010d894  sh    v0,466(v1)        +0x1d2 = Rueckgabe von aec4
+     *   8010d8b0  jal   0x8003b0a4        Wandklemme des Hundes
+     * FUN_8002aec4 BEWEGT DEN PUSHEE (Beleg im Kopf von re15_body_push) — der Hund weicht
+     * dem Spieler also in seinem eigenen Tick aus. Derselbe Aufruf steht im Zombie-Root
+     * (FUN_8010a8c8, im Kommentar ueber re15_body_push seit jeher als "aec4(&player,
+     * zombie) + b544" zitiert) und in den uebrigen Gegner-Roots.
+     *
+     * OHNE ihn trug AUSSCHLIESSLICH der Spieler die Trennung: sein eigener Schub
+     * FUN_8002b544 @0x80031cbc musste die ganze Ueberdeckung aufloesen, und an einer Wand
+     * loest ihn das in die Wand hinein. GEMESSEN (probe_r27_hund_biss raster, ROOM11D0,
+     * 123 Startplaetze / 68 mit Biss / 27200 Bilder / 571 Bisse):
+     *   ohne diesen Aufruf .... 467 Bilder mit dem Spieler IN einer soliden Zelle
+     *   mit diesem Aufruf ..... s. Commit-Message
+     *
+     * Die Ausnahmen sind dieselben wie auf der Spielerseite (re15_body_push_player):
+     * toter Spieler (der Frass ueberdeckt die Leiche) und das GREIFENDE PAAR
+     * (beide 0x1000, `and v0,a0,v1; andi 0x1000` @0x8002af14) — waehrend des Griffs haelt
+     * die Opfer-Platzierung die Lage, ein Schub wuerde sie zerreissen. */
     for (int o = RE15_ACTOR_SLOT_PLAYER + 1; o < RE15_ACTOR_MAX; o++) {          /* b544: vs every other enemy */
         if (o == s) continue;
         re15_actor_t *z2 = &g_actors[o];
@@ -13991,7 +14072,8 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Ground enemy: SCA wall-clamp after the tick (byte-true 0x8003b0a4). */
             int32_t dog_ox = e->x, dog_oz = e->z;
             re15_dog_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);                  /* aec4+b544 body separation (dog root tail) */
+            re15_enemy_selfpush_from_player(s, e);            /* aec4(Spieler, Hund) @0x8010d880 */
+            re15_enemy_body_push_tail(s, e);                  /* b544 @0x8010d890 (Hund vs. Gegner) */
             /* the SCA resolver clears the contact bit at ITS start (@0x8003b1dc), i.e. AFTER the AI
              * dispatch in the same frame — so the AI reads LAST frame's +0x90 contact. The port used
              * to clear BEFORE the tick, which zeroed bit0 for every AI read and killed the reroute

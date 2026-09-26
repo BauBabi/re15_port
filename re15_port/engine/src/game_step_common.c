@@ -507,15 +507,43 @@ static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int 
  * (`lhu v1,52(v0)`/`sh v1,64(v0)` @0x8001d11c-24, dito +0x38->+0x42 und +0x3c->+0x44
  * @0x8001d134-54) — er haelt also die Position vom Bildende davor, genau das, was der
  * Port hier als `alt_x/alt_z` hereingibt. */
+/* ---------------------------------------------------------------------------------------
+ * MESS-SCHIENE "STATIONEN" (Runde 27) — reine AUFZEICHNUNG, kein Verhalten.
+ * Sie haelt je Bild die Spielerlage an den festen Stationen des Schritts fest, damit eine
+ * Sonde belegen kann, WELCHER Pfad den Spieler bewegt hat (Biss/Opfer-Platzierung,
+ * Koerper-Schub, Wandklemme, Gegner-Durchgang). Ohne sie bleibt nur die Differenz ueber
+ * das ganze Bild, und die kann jeden der Pfade meinen.
+ * ------------------------------------------------------------------------------------- */
+static struct { int32_t x, z; uint8_t da; } s_station[RE15_SCHRITT_STATIONEN];
+void re15_schritt_station_reset(void)
+{
+    for (int i = 0; i < RE15_SCHRITT_STATIONEN; i++) s_station[i].da = 0;
+}
+static void schritt_station(int idx, int32_t x, int32_t z)
+{
+    if (idx < 0 || idx >= RE15_SCHRITT_STATIONEN) return;
+    s_station[idx].x = x; s_station[idx].z = z; s_station[idx].da = 1;
+}
+int re15_schritt_station_hole(int idx, int32_t *x, int32_t *z)
+{
+    if (idx < 0 || idx >= RE15_SCHRITT_STATIONEN || !s_station[idx].da) return 0;
+    if (x) *x = s_station[idx].x;
+    if (z) *z = s_station[idx].z;
+    return 1;
+}
+
 static void re15_player_body_and_walls(const re15_game_ctx_t *c, re15_actor_t *pl,
                                        int32_t alt_x, int32_t alt_z)
 {
+    schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);   /* Lage NACH dem Kommando-Handler */
     re15_body_push_player();                                   /* @0x80031cbc */
+    schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
     if (!c->rdt_ok) return;
     {   int32_t nx = pl->x, nz = pl->z;
         re15_collision_ensure_band(pl->y);
         re15_collision_constrain(c->rdt, alt_x, alt_z, &nx, &nz);   /* @0x80031d70 */
         pl->x = nx; pl->z = nz;
+        schritt_station(RE15_SCHRITT_KLEMME, pl->x, pl->z);
     }
     /* ⛔ BEWUSST NICHT MIT HIER: der Objekt-Pass FUN_8002bd44 (@0x8001ce14) ist im Original
      * ein EIGENER Top-Level-Aufruf neben dem Spieler-Dispatcher, kein Teil dieses Schwanzes.
@@ -941,6 +969,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     pl->pos_s_x = (uint16_t)(int32_t)pl->x;      /* @0x8001d0d4 */
     pl->pos_s_y = (uint16_t)(int32_t)pl->y;      /* @0x8001d0dc */
     pl->pos_s_z = (uint16_t)(int32_t)pl->z;      /* @0x8001d0e4 */
+    schritt_station(RE15_SCHRITT_ANFANG, pl->x, pl->z);   /* Mess-Schiene, s. Kopf */
 
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
@@ -1524,7 +1553,9 @@ void re15_game_step(const re15_game_ctx_t *c)
          * push-out -> FUN_8003b0a4 walls, so the WALLS win): push the player out of every live
          * enemy cylinder (450 + 400) — the "walk through zombies" fix. */
         int32_t dbg_tx = pl->x, dbg_tz = pl->z;      /* nach player_tick, VOR dem Koerper-Schub */
+        schritt_station(RE15_SCHRITT_TICK, pl->x, pl->z);
         re15_body_push_player();
+        schritt_station(RE15_SCHRITT_SCHUB, pl->x, pl->z);
         if (c->rdt_ok) {
             /* Room SCA collision then object collision: push the player out of
              * his band's perimeter wall cells, then out of solid Obj_model_set
@@ -1552,6 +1583,7 @@ void re15_game_step(const re15_game_ctx_t *c)
              * Definition nie bewegen (buendig -> Schub ist ein No-Op). Deshalb steht der
              * Objekt-Pass HIER zwischen Wandklemme und Ausschiebung, nicht am Frame-Ende. */
             pl->x = nx; pl->z = nz;                      /* Wandklemme steht (FUN_8003b0a4) */
+            schritt_station(RE15_SCHRITT_KLEMME, pl->x, pl->z);
             re15_prop_push_tick(c->rdt, c->pad_current); /* @0x8002bd44 (Schub + Zaehler + Bit) */
             re15_collision_objects(&nx, &nz);            /* @0x8002c0d8 (Spieler aus der Kiste) */
             pl->x = nx;
@@ -1952,6 +1984,8 @@ void re15_game_step(const re15_game_ctx_t *c)
             g_aot_action_pressed = 0;               /* Treppe = AOT-Handler sce 12/13, konsumiert die Aktion */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);   /* RVD immer: @0x8001ccec */
     }
+    schritt_station(RE15_SCHRITT_ZWEIG, pl->x, pl->z);
+
     /* Per-Frame-Standobjekt @0x80031cd8-0x80031d2c (DAT_800ac788 / aca3c bit 0x4000) —
      * laeuft im Original DIREKT nach dem Spieler-FSM-Dispatch, also auch im normalen
      * Gameplay-Zweig (nicht nur waehrend des Kletterns). */
@@ -2133,6 +2167,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
         re15_enemy_ai_run_all(g_scd.combat_active);
+    schritt_station(RE15_SCHRITT_NACHKI, pl->x, pl->z);
 
     /* OBJEKT-AUSSCHIEBUNG DER AKTOREN — die zweite Haelfte von FUN_8002bd44 (@0x8002be0c-4c).
      * Im Original steht sie im Objekt-Tick @0x8001ce14, also NACH der Entitaeten-Schleife
@@ -2187,6 +2222,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+    schritt_station(RE15_SCHRITT_OPFER, pl->x, pl->z);
 
     /* cmd 3 = der GENERISCHE Spieler-Tod (Todes-Animation, PL00.EDD Clip 7) — derselbe
      * Dispatch-Tisch @0x80073F90 wie die cmd-5/6-Handler oben, deshalb derselbe Tick-Platz.
@@ -2219,6 +2255,7 @@ void re15_game_step(const re15_game_ctx_t *c)
             pl->z = nz;
         }
     }
+    schritt_station(RE15_SCHRITT_GRIFF, pl->x, pl->z);
 
     /* GLIED-1-STEMPEL + OBJEKT-NOTCH ALS LETZTER ZUSTANDS-TICK DES FRAMES. Frame-Position
      * byte-true: der AUTO-Pool-Scan FUN_800436a8 laeuft @0x8001ce1c NACH Gegner-AI
@@ -2234,6 +2271,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Notch-Stempel, damit die Schalterbits des laufenden Bildes schon stehen.
      * Belege: include/re15_panel_zeiger.h. */
     re15_panel_zeiger_tick();
+    schritt_station(RE15_SCHRITT_ENDE, pl->x, pl->z);
 }
 
 /* SHARED helicopter-rotor spatialization driver — see re15_game_step.h. Was inline
