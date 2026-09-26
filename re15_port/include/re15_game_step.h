@@ -50,4 +50,36 @@ void re15_game_step(const re15_game_ctx_t *ctx);
  * called it). `active_cut` = the current cut's camera record. */
 void re15_rotor_drive(const re15_camera_cut_t *active_cut);
 
+/* ---------------------------------------------------------------------------------------
+ * MESS-SCHIENE "STATIONEN" (Runde 27) — reine AUFZEICHNUNG der Spielerlage an den festen
+ * Stationen EINES Schritts. Sie aendert kein Verhalten; sie beantwortet die Frage, WELCHER
+ * Pfad den Spieler bewegt hat. Eine Sonde ruft re15_schritt_station_reset() vor
+ * re15_game_step() und liest danach die Stationen.
+ *
+ * Die Stationen sind die Glieder des Original-Schritts:
+ *   ANFANG  Bildanfang (der Positions-Spiegel @0x8001d0b4 ist gerade geschrieben)
+ *   TICK    nach dem Kommando-Handler (`jalr v0` @0x80031cb4) bzw. nach dem Rueckstoss
+ *   SCHUB   nach dem Koerper-Schub FUN_8002b544 (@0x80031cbc)
+ *   KLEMME  nach der Wandklemme FUN_8003b0a4 (@0x80031d70)
+ *   ZWEIG   nach dem gesamten Spieler-Zweig
+ *   NACHKI  nach dem Gegner-Durchgang (im Original @0x8001ce04, im Port am Step-Ende)
+ *   OPFER   nach der Opfer-Platzierung (re15_player_victim_tick)
+ *   GRIFF   nach dem Koerper-Schub im gehaltenen Zustand
+ *   ENDE    Bildende
+ * ------------------------------------------------------------------------------------- */
+enum {
+    RE15_SCHRITT_ANFANG = 0,
+    RE15_SCHRITT_TICK   = 1,
+    RE15_SCHRITT_SCHUB  = 2,
+    RE15_SCHRITT_KLEMME = 3,
+    RE15_SCHRITT_ZWEIG  = 4,
+    RE15_SCHRITT_NACHKI = 5,
+    RE15_SCHRITT_OPFER  = 6,
+    RE15_SCHRITT_GRIFF  = 7,
+    RE15_SCHRITT_ENDE   = 8,
+    RE15_SCHRITT_STATIONEN = 9
+};
+void re15_schritt_station_reset(void);
+int  re15_schritt_station_hole(int idx, int32_t *x, int32_t *z);
+
 #endif /* RE15_GAME_STEP_H */
