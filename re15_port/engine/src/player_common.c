@@ -840,12 +840,22 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         s_entry_pose_step    = 2;
     } else if (s_entry_pose_step == 2) {
         s_entry_pose_step    = 0;
-        p->motion            = RE15_MOTION_IDLE;          /* +0x94 = 3 @0x80032088 */
-        p->anim_frame        = 0;                         /* +0x95 = 0 @0x80032094 */
-        p->anim_frac         = 7;                         /* +0x8f = 7 @0x8003209c */
-        p->motion_init_delay = 0;
-        s_idle_phase         = -1;  /* Wiedereintritt in Fall 0 mit der byte-treuen Haltezeit
-                                     * 90 + (rng & 0x1f) @0x800320b0/@0x800320b4 */
+        /* Uebergabe NUR, wenn die Eintritts-Pose ueberhaupt noch steht. Im gewoehnlichen
+         * Spiel hat der Pad-/Idle-Zweig weiter unten sie schon im Latch-1-Bild durch genau
+         * diesen Fall-0-Zustand ersetzt (want_motion = 200, anim_frame 0, anim_frac 7) -
+         * die Uebergabe ist dann bereits passiert, und ein zweiter Store wuerde die
+         * 7-Bild-Blende (+0x8f = 7 @0x8003209c) um ein Bild neu starten (gemessen:
+         * probe_r16_tuer1040 ROOM1030 t=12 frac 1 statt 0). Byte-true relevant ist der
+         * Fall, in dem NICHTS die Pose ersetzt: die Skript-Szene (player_mode 2) - genau
+         * der gemeldete Nutzer-Befund. */
+        if (p->motion == RE15_MOTION_IDLE_SETTLE) {
+            p->motion            = RE15_MOTION_IDLE;      /* +0x94 = 3 @0x80032088 */
+            p->anim_frame        = 0;                     /* +0x95 = 0 @0x80032094 */
+            p->anim_frac         = 7;                     /* +0x8f = 7 @0x8003209c */
+            p->motion_init_delay = 0;
+            s_idle_phase         = -1;  /* Fall 0 mit der byte-treuen Haltezeit
+                                         * 90 + (rng & 0x1f) @0x800320b0/@0x800320b4 */
+        }
     }
     /* BL-round 2026-05-29: player-mode FSM input gate. While SCRIPTED
      * (player_mode==2, the cinematic) the SCD owns the actor — ignore PAD
