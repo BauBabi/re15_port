@@ -9481,12 +9481,37 @@ static int re15_npc_motion_clip_len(const re15_actor_t *e)
     else          fc = (c < 14) ? s_em040_own_clip_len[c] : 1;
     return (fc < 1) ? 1 : fc;
 }
-static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
-static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the ENTITY channel's clip length */
+/* CLIP-START im Executor-Sub = `+0x94 = clip` + `+0x95 = 0` + `+0x8f = 7`, und der SELBE Tick
+ * posiert danach Bild 0 (die Phase-0-Zweige fallen ohne Verzweigung in ihren Body durch, z.B.
+ * Sub 5 @0x800514d4-38 -> Body @0x8005153c, Sub 9 @0x80051d28-5c -> Body @0x80051d60). Der
+ * Saat-Tick darf deshalb NICHT vorschieben — dafuer dient motion_init_delay (dieselbe Rolle wie
+ * beim Spieler, game_step_common.c:335). */
+static void re15_npc_seed_clip(re15_actor_t *e) { e->anim_frame = 0; e->anim_frac = 7; e->motion_init_delay = 1; }
+static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; re15_npc_seed_clip(e); }
+/* POSE-DANN-VORSCHUB (byte-true, selbst disassembliert aus info/Re1.5/PSX.EXE):
+ * anim_set FUN_8001f314 POSIERT den Bildzeiger aus dem AKTUELLEN +0x95 —
+ *   8001f35c  lbu v0,149(t0)      ; Index = +0x95, UNVERAENDERT
+ *   8001f368  addu a2,v1,v0
+ *   8001f36c  sw   a2,360(t0)     ; +0x168 = Zeiger auf das Frame-Wort  <<< das ist die POSE
+ * und erst der Keyframe-Integrator FUN_8001f3bc erhoeht ihn an seinem ENDE:
+ *   8001f610  lbu v0,149(v1) / 8001f618 addiu v0,v0,1 / 8001f61c sb v0,149(v1)
+ *   8001f624  sltu v0,v0,s4  (s4 = Bildzahl) / 8001f628 bne -> weiter
+ *   8001f63c  sb  zero,149(v1)    ; sonst +0x95 = 0 und RUECKGABE 1 = "Clip zu Ende"
+ * Die Rueckgabe 1 kommt also in dem Tick, der das LETZTE Bild (fc-1) posiert hat.
+ * Der Port schob VOR dem Posieren vor: der Renderer sah fc-1 nie am Clip-Ende, sondern das
+ * bereits gewrappte Bild 0 — eine Abspiel-einmal-Animation sprang im letzten Bild sichtbar auf
+ * ihre ANFANGSPOSE zurueck und begann danach erst die naechste (gemessen am echten Weg
+ * ROOM1090 -> Tuer-Slot 0 -> ROOM1050, RE15_ANIM_TRACE: Ada Typ 0x42, Clip 1 (Sub 6
+ * EVENT-REACH, 16 Bilder) lief F9..F24 als 1,2,...,15,**0** statt 0,1,...,15; ebenso Clip 5
+ * (Sub-9-Turn) F6..F8 als 1,2,3 statt 0,1,2 und der Laufzyklus Clip 0 ab F35 als 1.. statt 0..).
+ * Jetzt: Saat-Tick posiert Bild 0 ohne Vorschub, danach ein Vorschub je Tick, und die Rueckgabe
+ * prueft das GERADE posierte Bild gegen fc-1. */
+static int re15_npc_anim(re15_actor_t *e)
 {
     int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;
-    int done = (e->anim_frame + 1 >= fc);
-    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    if (e->motion_init_delay > 0) e->motion_init_delay--;          /* Saat-Tick: +0x95 bleibt stehen */
+    else e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    int done = (e->anim_frame + 1 >= fc);   /* posiertes Bild == fc-1 -> @0x8001f63c Rueckgabe 1 */
     /* CROSSFADE-DECAY +0x8f: anim_set zieht den Blend-Zaehler in JEDEM Aufruf um 1 herunter
      *   8001f5a8  lbu  v0,143(v1)      v0 = +0x8f
      *   8001f5b0  addiu v0,v0,-1
@@ -9582,7 +9607,7 @@ static void re15_npc_sub_turn(re15_actor_t *e)
 {
     if (e->sub_state_2 > 1) return;                          /* >1 -> exit (@0x80051d20) */
     if (e->sub_state_2 == 0) {                               /* INIT (@0x80051d2c-5c) */
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
+        e->sub_state_2 = 1; e->motion = 5; re15_npc_seed_clip(e);  /* +0x94=5 @0x80051d3c, +0x95=0 @0x80051d4c */
     }
     uint8_t cone = re15_npc_type_cone(e->type);              /* @0x80076c41 */
     if (re15_ai_arc_test(e, e->steer_x, e->steer_z, cone) == 0) {   /* ALIGNED (@0x80051d90-98) */
@@ -9679,7 +9704,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
                            : (sub == 8) ? s_npc_walk8_param : s_npc_walk_param;
         e->crow_speed  = (int16_t)re15_npc_tbl(tbl, e->type);   /* +0x8c (sh) */
         e->motion      = (uint8_t)(backward ? 1 : 5);
-        e->anim_frame  = 0; e->anim_frac = 7;
+        re15_npc_seed_clip(e);                 /* +0x95=0 @0x80051528, +0x8f=7 @0x80051538 */
         e->sub_state_2 = 1;
     }
     if (!backward && e->sub_state_2 == 1) {                  /* Phase 1: TURN-TO-FACE */
@@ -9703,7 +9728,7 @@ static void re15_npc_sub_walk(re15_actor_t *e)
         if (aligned) {
             e->sub_state_2 = 2;                              /* aligned @0x80051230/@0x8005156c */
             if (sub == 5) {                                  /* RUN-Gait: Clip 0 (@0x8005157c-9c) */
-                e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
+                e->motion = 0; re15_npc_seed_clip(e);  /* +0x94=0 @0x8005157c, +0x95=0 @0x8005158c */
             }
         }
         /* PHASE-1-BODY — laeuft in BEIDEN Faellen (aligned wie nicht-aligned) und beendet den Tick. */
@@ -9754,10 +9779,10 @@ static void re15_npc_sub_walk(re15_actor_t *e)
 static void re15_npc_sub_event_reach(re15_actor_t *e)
 {
     switch (e->sub_state_2) {
-    case 0: e->motion = 1; e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;  /* @0x80051844 setup clip 1 */
+    case 0: e->motion = 1; re15_npc_seed_clip(e); e->sub_state_2 = 1;  /* @0x80051844 setup clip 1 */
         /* fall through: same tick plays clip 1 (@0x80051878) */
     case 1: if (re15_npc_anim(e)) e->sub_state_2 = 2; break;                          /* @0x80051878 play; done -> 2 */
-    case 2: e->motion = 2; e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 3;  /* @0x800518b4 setup clip 2 idle */
+    case 2: e->motion = 2; re15_npc_seed_clip(e); e->sub_state_2 = 3;  /* @0x800518b4 setup clip 2 idle */
         /* fall through: same tick plays clip 2 (@0x800518dc) */
     default: re15_npc_anim(e); break;                                                 /* @0x800518dc idle loop */
     }
