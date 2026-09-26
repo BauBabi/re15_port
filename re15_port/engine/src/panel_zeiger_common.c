@@ -18,6 +18,7 @@
  * evt_next innerhalb der Nachfuehrschleife). */
 static int s_wert      = 0;
 static int s_ziel      = 0;
+static int s_roh       = 0;   /* ungeklemmte Summe — darf negativ sein (Nutzer-Vorgabe) */
 static int s_aktiv     = 0;
 static int s_geloest_vorframe = 0;
 static int s_eingeschwungen   = 0;   /* erster Tick im Raum: ohne Nachfuehr-Animation */
@@ -33,6 +34,17 @@ unsigned g_re15_panel_bestaet_zaehler = 0;
 #define PANEL_BIT0   13
 #define PANEL_BITS   10
 
+/* Die zehn Schalterstellungen als Bitmaske: Bit 0 = Schalter 1 (Bank 5 Bit 13) .. Bit 9 =
+ * Schalter 10 (Bank 5 Bit 22). Dieselbe Reihenfolge wie die Loesungskette
+ * ROOM11F0.RDT @0x012BE..0x012E2 (`21 05 0d 01` .. `21 05 16 00`). */
+static unsigned panel_maske(void)
+{
+    unsigned m = 0;
+    for (int i = 0; i < PANEL_BITS; i++)
+        if (re15_game_flag_get(5, (uint8_t)(PANEL_BIT0 + i))) m |= 1u << i;
+    return m;
+}
+
 static int panel_ein_zaehlen(void)
 {
     int n = 0;
@@ -41,12 +53,38 @@ static int panel_ein_zaehlen(void)
     return n;
 }
 
-int re15_panel_zeiger_ziel_aus_bits(int ein_schalter)
+/* ⛔ WOERTLICHE NUTZER-VORGABE vom 2026-09-26 (Wortlaut im Kopf von re15_panel_zeiger.h),
+ * KEIN Original und kein RE-Beleg:
+ *   Schalter :  1    2    3    4    5    6    7    8    9   10
+ *   Wert     : +20  -20  -10  -30  +20  -40  +20  -50  +30  -60          */
+static const int s_gewicht[RE15_PANEL_SCHALTER] = RE15_PANEL_GEWICHTE;
+
+int re15_panel_zeiger_gewicht(int nr)
 {
-    /* ⛔ NUTZER-ENTSCHEIDUNG: RE15_PANEL_GEWICHT (16). Deckel/Boden dagegen sind RE2:
-     * sub04+0x00B8 (@ROOM2130.RDT 0x011C8) `23 00 05 02 64 00` -> var5 = 100, und
-     * sub04+0x0130 (@0x01240) `23 00 05 04 00 00` -> var5 = 0. */
-    int v = ein_schalter * RE15_PANEL_GEWICHT;
+    if (nr < 1 || nr > RE15_PANEL_SCHALTER) return 0;
+    return s_gewicht[nr - 1];
+}
+
+int re15_panel_zeiger_roh_aus_maske(unsigned maske)
+{
+    /* ⛔ ROHWERT — hier wird NICHT geklemmt. Nutzer: "Die Schalterwerte bleiben erhalten,
+     * ein Schalter kann jederzeit wieder AUS." Ein an der Null klemmender Akkumulator
+     * wuerde genau das brechen: das Ergebnis haenge dann am WEG (wie in RE2) statt am
+     * ZUSTAND, und die zustandsbasierte RE1.5-Loesungspruefung @0x012BE..0x012E2 wuerde
+     * dieselbe Schalterstellung mal auf 80 bringen und mal nicht. */
+    int v = 0;
+    for (int i = 0; i < RE15_PANEL_SCHALTER; i++)
+        if (maske & (1u << i)) v += s_gewicht[i];
+    return v;
+}
+
+int re15_panel_zeiger_ziel_aus_maske(unsigned maske)
+{
+    /* ⛔ ANZEIGE = max(0, Rohwert) — Nutzer-Vorgabe. Boden und Deckel sind deckungsgleich
+     * mit RE2: sub04+0x0130 (@ROOM2130.RDT 0x01240) `23 00 05 04 00 00` -> var5 = 0 und
+     * sub04+0x00B8 (@0x011C8) `23 00 05 02 64 00` -> var5 = 100. Der Deckel greift mit
+     * diesen Gewichten nie (Maximum 90 = 20+20+20+30), steht aber, weil er belegt ist. */
+    int v = re15_panel_zeiger_roh_aus_maske(maske);
     if (v > RE15_PANEL_MAX) v = RE15_PANEL_MAX;
     if (v < RE15_PANEL_MIN) v = RE15_PANEL_MIN;
     return v;
@@ -54,7 +92,7 @@ int re15_panel_zeiger_ziel_aus_bits(int ein_schalter)
 
 void re15_panel_zeiger_reset(void)
 {
-    s_wert = 0; s_ziel = 0; s_aktiv = 0;
+    s_wert = 0; s_ziel = 0; s_roh = 0; s_aktiv = 0;
     s_geloest_vorframe = 0; s_eingeschwungen = 0;
 }
 
@@ -77,9 +115,12 @@ void re15_panel_zeiger_tick(void)
      * Darum: ab dem Geloest-Flag steht das Ziel FEST auf 80. Das ist genau RE2s Verhalten —
      * dort wird var5 nach dem "Power supply OK."-Zweig (sub04+0x0642 @ROOM2130.RDT 0x01752)
      * NICHT zurueckgesetzt, der Zeiger bleibt auf 80 stehen. */
-    s_ziel = re15_game_flag_get(4, 238)
-           ? RE15_PANEL_ZIEL
-           : re15_panel_zeiger_ziel_aus_bits(panel_ein_zaehlen());
+    {
+        unsigned maske = panel_maske();
+        int geloest_jetzt = re15_game_flag_get(4, 238);
+        s_roh  = geloest_jetzt ? RE15_PANEL_ZIEL : re15_panel_zeiger_roh_aus_maske(maske);
+        s_ziel = geloest_jetzt ? RE15_PANEL_ZIEL : re15_panel_zeiger_ziel_aus_maske(maske);
+    }
 
     if (!s_eingeschwungen) {           /* Aufbau: sofort auf den Stand, keine Fahrt */
         s_eingeschwungen = 1;
@@ -109,14 +150,16 @@ void re15_panel_zeiger_tick(void)
     { static FILE *lf = (FILE *)0; static int init = 0;
       if (!init) { init = 1; const char *e = getenv("RE15_PANEL_LOG");
                    if (e && *e) lf = fopen(e, "w"); }
-      if (lf) { fprintf(lf, "raum=%04X cut=%d aktiv=%d ein=%d ziel=%d wert=%d geloest=%d\n",
+      if (lf) { fprintf(lf, "raum=%04X cut=%d aktiv=%d maske=%03X ein=%d roh=%d ziel=%d wert=%d geloest=%d\n",
                         g_current_room_id, g_re15_active_cut, s_aktiv,
-                        panel_ein_zaehlen(), s_ziel, s_wert, geloest);
+                        panel_maske(), panel_ein_zaehlen(), s_roh, s_ziel,
+                        s_wert, geloest);
                 fflush(lf); } }
 }
 
 int re15_panel_zeiger_wert(void) { return s_wert; }
 int re15_panel_zeiger_ziel(void) { return s_ziel; }
+int re15_panel_zeiger_roh(void)  { return s_roh;  }
 
 int re15_panel_zeiger_sicht(int *sx, int *sy)
 {

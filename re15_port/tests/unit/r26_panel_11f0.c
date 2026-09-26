@@ -14,7 +14,7 @@
  *
  * RUECKBAU-NACHWEIS (in dieser Runde wirklich gefahren, Ergebnis im Ergebnisfeld):
  *   A  re15_audio_re2_panel_se(0x0A) -> re15_audio_core_se(6)        => A ROT
- *   B  RE15_PANEL_GEWICHT 16 -> 36 (RE2s Rohwert)                    => B ROT
+ *   B  die zehn Nutzer-Gewichte alle auf +16 zurueckgedreht           => B ROT
  *   B  ein Punkt je Bild -> Sprung auf den Zielwert                  => B ROT
  *   D  die drei re15_audio_core_se-Zeilen in msg_common.c entfernt   => D ROT
  */
@@ -177,17 +177,24 @@ static void teil_b(void)
                      s_raw[0x012EC] == 0xEE && s_raw[0x012ED] == 0x01;
     CHECK("ROOM11F0 Loesungskette unveraendert (@0x012BE..0x012ED)", kette);
 
-    /* B1: die Wertbildung. 5 EIN = 80 ist die vom Nutzer geforderte Zahl, und 5 EIN ist
-     * genau das belegte Loesungsmuster. */
-    CHECK("0 Schalter -> Wert 0",                re15_panel_zeiger_ziel_aus_bits(0) == 0);
-    CHECK("5 Schalter (Loesung) -> Wert 80",     re15_panel_zeiger_ziel_aus_bits(5) == RE15_PANEL_ZIEL);
-    CHECK("1 Schalter -> Wert 16",               re15_panel_zeiger_ziel_aus_bits(1) == 16);
-    CHECK("6 Schalter -> 96 (noch unter dem Deckel)",
-          re15_panel_zeiger_ziel_aus_bits(6) == 96);
-    CHECK("7 Schalter (7*16 = 112) -> Deckel 100 (RE2 @0x011C8)",
-          re15_panel_zeiger_ziel_aus_bits(7) == RE15_PANEL_MAX);
-    CHECK("10 Schalter -> immer noch 100, nicht 160",
-          re15_panel_zeiger_ziel_aus_bits(10) == RE15_PANEL_MAX);
+    /* B1: die Wertbildung nach der NUTZER-VORGABE vom 2026-09-26
+     * (+20 -20 -10 -30 +20 -40 +20 -50 +30 -60; Kopf von re15_panel_zeiger.h).
+     * Das vollstaendige Durchzaehlen aller 1024 Kombinationen steht in der eigenen Sonde
+     * r27_panel_schalterwerte; hier nur die Eckpunkte. */
+    CHECK("kein Schalter -> Anzeige 0", re15_panel_zeiger_ziel_aus_maske(0) == 0);
+    CHECK("Loesungsmaske 1+3+5+7+9 -> Anzeige 80",
+          re15_panel_zeiger_ziel_aus_maske(RE15_PANEL_LOESUNGSMASKE) == RE15_PANEL_ZIEL);
+    CHECK("Schalter 1 allein -> 20",  re15_panel_zeiger_ziel_aus_maske(1u << 0) == 20);
+    CHECK("Schalter 10 allein -> Rohwert -60", re15_panel_zeiger_roh_aus_maske(1u << 9) == -60);
+    CHECK("Schalter 10 allein -> ANZEIGE 0 (max(0,Roh))",
+          re15_panel_zeiger_ziel_aus_maske(1u << 9) == 0);
+    CHECK("alle zehn EIN -> Rohwert -120 (Summe aller zehn Gewichte)",
+          re15_panel_zeiger_roh_aus_maske(0x3FFu) == -120);
+    CHECK("alle zehn EIN -> Anzeige 0",    re15_panel_zeiger_ziel_aus_maske(0x3FFu) == 0);
+    /* Der kleinste erreichbare Rohwert: nur die sechs negativen Schalter (2,3,4,6,8,10
+     * = Maske 0x2AE) -> -20-10-30-40-50-60 = -210. */
+    CHECK("nur die sechs negativen -> Rohwert -210 (Minimum)",
+          re15_panel_zeiger_roh_aus_maske(0x2AEu) == -210);
 
     /* B2: die Fahrt — RE2 rueckt GENAU EINEN Punkt je Bild vor
      * (sub04+0x0106 @ROOM2130.RDT 0x01216 `02` evt_next in der Nachfuehrschleife). */
@@ -196,6 +203,7 @@ static void teil_b(void)
     frame(0, 0);                                  /* Einschwingen: Wert = Ziel = 0 */
     CHECK("Startwert 0", re15_panel_zeiger_wert() == 0);
 
+    /* Die Loesungsmenge: Schalter 1,3,5,7,9 = Bank 5 Bits 13,15,17,19,21 (@0x012BE ff.). */
     re15_game_flag_set(5, 13, 1); re15_game_flag_set(5, 15, 1); re15_game_flag_set(5, 17, 1);
     re15_game_flag_set(5, 19, 1); re15_game_flag_set(5, 21, 1);
     int schritte = 0, vorher = re15_panel_zeiger_wert(), max_schritt = 0;
