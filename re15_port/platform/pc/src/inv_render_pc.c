@@ -69,7 +69,9 @@ static uint8_t  s_map4[256][256];   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,2
                                      * 256 rows, upload rect @0x8004c1a0-b0; loaded
                                      * synchronously off g_inv_screen.map_page)       */
 static int      s_map_loaded = -1;  /* CD file id resident in s_map4 (-1 = none)      */
-static uint16_t s_clut[17][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+static uint16_t s_clut[20][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+                                     * [17..19] = die drei KARTEN-ZUSTANDSREIHEN,
+                                     * aus [13] abgeleitet (s. karten_cluts_bauen);
                                      * [10]=TEX.TIM CLUT row 0 (256,480) id 0x7810 —
                                      * the grid item-NAME font (wave 2);
                                      * [11]=TEX.TIM CLUT row 16 (256,496) id 0x7c10 —
@@ -118,6 +120,71 @@ static int      s_itps_size = 0;
 static uint8_t *load_cd(const char *rel, int *size)
 {
     return re15_pc_read_cd(rel, size);
+}
+
+/*=========================================================================
+ * DIE VIER KACHEL-ZUSTAENDE DER KARTE — RE2s CLUT-ZEILENWAHL, nachgebaut.
+ *
+ * RE2 faerbt eine Raumkachel NICHT per Modulation, sondern waehlt je Zustand
+ * eine andere CLUT-ZEILE und blittet dieselbe Kunst hindurch. Selbst
+ * disassembliert in FUN_8006e120 (RE2-PSX.EXE):
+ *     8006e614  addiu s5,zero,501     Grundzeile = BESUCHT
+ *     8006e648  addiu s5,s5,1         AKTUELLER RAUM = Grundzeile + 1  (=502)
+ *     8006e71c  addiu s5,zero,498     KARTE VORHANDEN + RAUM UNBESUCHT
+ *     8006e744  beq v0,zero,0x8006e768   KEINE KARTE + unbesucht -> GAR NICHTS
+ *     8006e750  jal 0x8008f828        GetClut(256, s5)
+ *
+ * Die drei Zeilen selbst habe ich aus RE2s Palette gelesen — ST0.TIM
+ * (info/re2leon/COMMON/DATA/ST0.TIM), zweites TIM @Datei-Offset 0x10820,
+ * CLUT-Block x=256 y=480 w=16 h=21, Zeilenindex k = CLUT-Y - 490 (Slot/Cursor
+ * `addiu v0,zero,2587` = 0x0A1B @0x80068588 -> CLUT-Cursor 10, CLUT-Y = 480+10;
+ * `addiu v0,v0,480` @0x80076B08 setzt CLUT-Y = 480 + Cursor):
+ *     CLUT-Y 498 (k= 8): Eintrag 1 = 0x0000            (durchsichtig)
+ *     CLUT-Y 501 (k=11): Eintrag 1 = 1040b0, STP gesetzt
+ *     CLUT-Y 502 (k=12): Eintrag 1 = 680808, STP gesetzt
+ * Die drei Zeilen unterscheiden sich untereinander in GENAU den Eintraegen
+ * {1,12,13,14}; alle zwoelf uebrigen sind bitgleich.
+ *
+ * ⛔ UEBERNOMMEN WIRD NUR EINTRAG 1 — GEMESSEN, NICHT GEWAEHLT.
+ * Die Kunst auf dem Schirm ist RE1.5s MAP*.PIX, nicht RE2s MAPS.PIX. Ein
+ * Index-Histogramm ueber alle 13 RE1.5-Blaetter zeigt dieselbe Grundstruktur —
+ * 0 durchsichtig (54-89 %), 1 = RAUMKOERPER (8-53 %), 4 = Wandlinie (0,9-6 %) —
+ * ABER der Rest weicht ab: 5..9 sind in RE1.5 die Graustufen-Kanten und
+ * 10..15 die farbigen Legenden-Symbole, und ihre Texelzahlen sind auf JEDEM
+ * Blatt gleich (5:~670, 8:~200, 12:72, 14:75) — also die feste Legendenleiste.
+ * RE2s Zeile wuerde 5..8 durchsichtig schalten und 12/13/14 mit der Raumfarbe
+ * ueberschreiben: die Legende und die Kantenglaettung wuerden zerstoert.
+ * Deshalb: RE1.5s eigene Zeile 21 (TEX.TIM CLUT x=256 y=480 w=32, Zeile 21 =
+ * VRAM-Y 501 = Clut-Id 0x7d50 = GetClut(0x100,0x1f5) @0x80046fdc-fe8) bleibt
+ * die Grundlage, und getauscht wird allein Eintrag 1 — genau der Eintrag, den
+ * auch RE2 je Zustand tauscht.
+ *
+ * ⛔ ZUR EINORDNUNG FUER DEN NUTZER: RE1.5s eigener Raumkoerper ist
+ * 0x206800 (GRUEN, STP gesetzt) und seine Wandlinie 0xb0b0b0 — die vom Nutzer
+ * beschriebene gruene Karte ist also NICHT erfunden, sondern RE1.5-Original.
+ * Blau ist RE2s Wert. Auftrag war "nach RE2 nachbauen", also steht hier RE2s
+ * Blau; ein Zurueck ist genau eine Zeile (RE15_KARTE_BESUCHT).
+ *=======================================================================*/
+/* Die drei Halbwoerter sind AUS DER DATEI GELESEN, nicht gerechnet — mein erster
+ * von Hand umgerechneter Wurf war in beiden Faellen falsch:
+ *   ST0.TIM Datei-Offset 0x10996 = 0xD902 = 1040b0, STP  (CLUT-Y 501, k=11) */
+#define RE15_KARTE_BESUCHT   ((uint16_t)0xD902u)
+/*   ST0.TIM Datei-Offset 0x109B6 = 0x842D = 680808, STP  (CLUT-Y 502, k=12) */
+#define RE15_KARTE_AKTUELL   ((uint16_t)0x842Du)
+/*   ST0.TIM Datei-Offset 0x10936 = 0x0000 = durchsichtig (CLUT-Y 498, k= 8) */
+#define RE15_KARTE_UNBESUCHT ((uint16_t)0x0000u)
+
+static void karten_cluts_bauen(void)
+{
+    int i;
+    for (i = 0; i < 16; i++) {
+        s_clut[RE15_INV_CLUT_MAP_BESUCHT][i]   = s_clut[RE15_INV_CLUT_TEXROW21][i];
+        s_clut[RE15_INV_CLUT_MAP_AKTUELL][i]   = s_clut[RE15_INV_CLUT_TEXROW21][i];
+        s_clut[RE15_INV_CLUT_MAP_UNBESUCHT][i] = s_clut[RE15_INV_CLUT_TEXROW21][i];
+    }
+    s_clut[RE15_INV_CLUT_MAP_BESUCHT][1]   = RE15_KARTE_BESUCHT;
+    s_clut[RE15_INV_CLUT_MAP_AKTUELL][1]   = RE15_KARTE_AKTUELL;
+    s_clut[RE15_INV_CLUT_MAP_UNBESUCHT][1] = RE15_KARTE_UNBESUCHT;
 }
 
 static int inv_assets_init(void)
@@ -189,6 +256,7 @@ static int inv_assets_init(void)
         memcpy(s_clut[16], tim.clut + 6 * 32, 16 * sizeof(uint16_t));
         /* [12] photo CLUT starts ZERO (savestate (0,489) idle census). */
         memset(s_clut[12], 0, 256 * sizeof(uint16_t));
+        karten_cluts_bauen();
         s_photo_seq = 0;
     }
     free(buf);

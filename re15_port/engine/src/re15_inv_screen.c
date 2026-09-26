@@ -264,6 +264,7 @@ int re15_map_rect_geometry(unsigned page, unsigned rect, int *x, int *y, int *w,
 }
 
 #include "re15_map_zeilen.h"
+#include "re15_map_owned.h"   /* RE2-Kartenbesitz (Bank 33 = 0x800D4924) */
 
 /* DIE WIRKSAME MARKER-ZEILE EINES RAUMS.
  * Ausgeliefert schlaegt hergeleitet: wo die Tabelle @0x800768b0 eine echte Zeile fuehrt
@@ -506,18 +507,37 @@ void re15_inv_map_stage_init(int stage, int room)
  *     ihre hellen Linien     (176,80,0)      270 Punkte
  * (Zum Vergleich: die alte Schema-Fuellung stand als (24,56,136) mit 1760 Punkten im
  * selben Bild - das war der blaue Fremdkoerper.) */
+/* ⛔ NACHTRAG 2026-09-27, RE2-KARTENSYSTEM: DIE MESSUNG OBEN IST UEBERHOLT,
+ * WEIL IHRE URSACHE WEGGEFALLEN IST. Die Zahlen (0,64,40)/(80,16,0) waren am
+ * Bildschirm-Ergebnis der MODULIERTEN Kachel gemessen — und genau diese
+ * Modulation gibt es nicht mehr: der Zeichner blittet die Kunst jetzt wie RE2
+ * durch eine Zustands-CLUT (`jal 0x8008f828` = GetClut(256,s5) @0x8006E750,
+ * s5 = 501/502/498 @0x8006E614 / @0x8006E648 / @0x8006E71C). Der Raumkoerper
+ * traegt damit exakt RE2s Palettenwert, halbtransparent ueber den Untergrund:
+ *   besucht  1040b0 = (16,64,176)  ST0.TIM Datei-Offset 0x10996 (0xD902, STP)
+ *   aktuell  680808 = (104,8,8)    ST0.TIM Datei-Offset 0x109B6 (0x842D, STP)
+ * Die Schema-Fuellung (Port-Ergaenzung fuer Raeume ohne Kachelkunst) traegt
+ * deshalb JETZT dieselben Werte und blendet ebenfalls halb — sie passt damit
+ * per Konstruktion zur Kachel statt per Nachmessung. */
 static void re2_ton(int rs, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r =  80; *g =  16; *b =   0; }
-    else if (rs == RE15_MAP_RECT_VISITED) { *r =   0; *g =  64; *b =  40; }
+    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 104; *g =   8; *b =   8; }
+    else if (rs == RE15_MAP_RECT_VISITED) { *r =  16; *g =  64; *b = 176; }
     else                                  { *r =  34; *g =  34; *b =  38; }
 }
 
 /* Die Kante der Schema-Zeichnung - die hellen Linien derselben Kacheln (s. re2_ton). */
 static void re2_ton_kante(int rs, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 176; *g =  80; *b =   0; }
-    else                                  { *r =  48; *g = 192; *b =  48; }
+    /* ⛔ EINE Wandlinie fuer JEDEN Zustand — das ist RE2s Modell, nicht meins:
+     * seine drei Kachelzeilen 498/501/502 unterscheiden sich in GENAU den
+     * Eintraegen {1,12,13,14}; Eintrag 4 (die Wandlinie) ist in allen dreien
+     * bitgleich 888888 (ST0.TIM @0x10820, Zeilen k=8/11/12 selbst gelesen).
+     * Die Kachelkunst des Ports ist RE1.5s, deren Wandlinie b0b0b0 heisst
+     * (TEX.TIM CLUT-Zeile 21 Eintrag 4) — die Schema-Zeichnung nimmt diese,
+     * damit sie neben einer echten Kachel nicht auffaellt. */
+    (void)rs;
+    *r = 0xb0; *g = 0xb0; *b = 0xb0;
 }
 
 /* Spielerradius fuer den Kollisions-Klemmer: 450 (DAT_80073e94[6], code-verifiziert,
@@ -2273,13 +2293,25 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 int rs = re15_map_stock_mode() ? RE15_MAP_RECT_UNMAPPED
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
+                int clut_kachel = RE15_INV_CLUT_TEXROW21;   /* RE2: Zeile = Zustand */
                 /* Ein Rechteck mit TEILBEREICHEN traegt gemischte Zustaende - es
                  * muss deshalb in BEIDEN Durchgaengen drankommen, damit der rote Teil
                  * frueh (= oben) und die gruenen spaeter eingetragen werden. Das Gate
                  * je Teil steht unten. */
                 if (re15_map_teil_count((unsigned)st->map_page, (unsigned)i) <= 0 &&
                     (rs == RE15_MAP_RECT_CURRENT) != (durchgang_r == 0)) continue;
-                if (rs == RE15_MAP_RECT_UNVISITED) continue;    /* schwarz */
+                /* ⛔ RE2-KARTENSYSTEM: UNBESUCHT HEISST NICHT MEHR "GAR NICHT".
+                 * RE2 kennt VIER Kachelzustaende, nicht drei. Ohne die Karte
+                 * dieses Bereichs springt sein Zeichner ueber jeden Raum ohne
+                 * Besucht-Bit hinweg (`beq v0,zero,0x8006e768` @0x8006E744) —
+                 * das ist der Zustand, den der Port bisher als einzigen kannte.
+                 * MIT der Karte (Bank-33-Bit, Test @0x8006E66C) wird der
+                 * unbesuchte Raum sehr wohl gezeichnet, nur in der Zeile
+                 * CLUT-Y 498 (`addiu s5,zero,498` @0x8006E71C): dort ist der
+                 * Raumkoerper durchsichtig und nur die Wandlinie steht — also
+                 * ein schwarzer Raum mit heller Umrandung. */
+                if (rs == RE15_MAP_RECT_UNVISITED &&
+                    !re15_map_owned_page((unsigned)st->map_page)) continue;
                 /* ⛔ KORREKTUR 2026-09-03, instruktions-verifiziert: DAS ORIGINAL HAT
                  * GAR KEIN BESUCHT-GATE. Hier stand, es zeichne ein Rechteck nur bei
                  * gesetztem Besucht-Bit. Das ist FALSCH. Der Aufbau FUN_80046fd8 legt
@@ -2304,8 +2336,24 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                  * ausgenommen - dort ist genau das erwuenscht. */
                 if (rs == RE15_MAP_RECT_UNMAPPED && !re15_map_stock_mode()) continue;
                 if (!re15_map_ebene_kachel()) continue;      /* Messschiene */
-                if (rs == RE15_MAP_RECT_VISITED)      { cr = 40;  cg = 144; cb = 40; }
-                else if (rs == RE15_MAP_RECT_CURRENT) { cr = 192; cg = 24;  cb = 24; }
+                /* ⛔ KEINE MODULATIONS-FAKTOREN MEHR. Hier standen (40,144,40) und
+                 * (192,24,24) — Tint-Faktoren, mit denen die Kachelkunst
+                 * MULTIPLIZIERT wurde. Das war eine Port-Erfindung und hat zwei
+                 * Runden Farbaerger gekostet (s. re2_ton oben). RE2 moduliert
+                 * NICHT: es blittet dieselbe Kunst durch eine andere CLUT-ZEILE
+                 * (`jal 0x8008f828` = GetClut(256,s5) @0x8006E750, s5 = 501/502/498
+                 * @0x8006E614 / @0x8006E648 / @0x8006E71C). Der Port macht das jetzt
+                 * genauso: neutraler Tint 128 (mod5(t5,128) == t5, exakt identisch)
+                 * und die Zustandszeile als CLUT. */
+                { (void)cr; (void)cg; (void)cb; }
+                clut_kachel = (rs == RE15_MAP_RECT_CURRENT)
+                                  ? RE15_INV_CLUT_MAP_AKTUELL
+                            : (rs == RE15_MAP_RECT_VISITED)
+                                  ? RE15_INV_CLUT_MAP_BESUCHT
+                            : (rs == RE15_MAP_RECT_UNVISITED)
+                                  ? RE15_INV_CLUT_MAP_UNBESUCHT
+                                  : RE15_INV_CLUT_TEXROW21;   /* UNMAPPED: Stock */
+                if (rs != RE15_MAP_RECT_UNMAPPED) { cr = 128; cg = 128; cb = 128; }
                 /* (Die Etagen-Zweitzeichnung war hier bis 2026-09-02 ein
                  * Notbehelf: der Grundriss des Ortes, gleichmaessig in das Rechteck
                  * des Kuenstlers eingepasst. Sie ist entfallen - der Loeser setzt den
@@ -2327,57 +2375,26 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                     int nteil = re15_map_teil_count((unsigned)st->map_page,
                                                     (unsigned)i);
                     if (nteil <= 0) {
-                        /* ⛔ CURRENT NICHT MULTIPLIKATIV ROT (Nutzer 2026-09-09 spaet:
-                         * "statt dass ein neues Kartenstueck freigeschaltet wird").
-                         * Die Kachel-Kunst ist GRUEN-dominiert (Raumfarbe Index 1);
-                         * mod5 mit (192,24,24) loescht den Gruenkanal -> die Zeichnung
-                         * wird fast schwarz und liest sich als "nicht aufgedeckt".
-                         * RE2s Vorlage traegt dunkelrote FUELLUNG auf sichtbarer
-                         * Zeichnung. Deshalb: Kunst im Besucht-Ton blitten und einen
-                         * halbtransparenten roten Schleier darueberlegen. */
-                        if (rs == RE15_MAP_RECT_CURRENT) {
-                            /* ⛔ SCHLEIER-OP ZUERST einreihen: die Op-Liste wird von
-                             * HINTEN gerastert (inv_render_pc.c; Memory reai-v2-
-                             * zeichenreihenfolge-invers) - eine nach der Kachel
-                             * eingereihte Op laege UNTER ihr. */
-                            /* DER SCHLEIER GEHOERT AUF DIE KACHEL, NICHT AUF DAS
-                             * RECHTECK (Nutzer 2026-09-11: "das Treppenhaus in der
-                             * Map ist jetzt viel breiter als sein Viereck auf allen
-                             * Etagen", "so gut wie alles rot"). Ein FILL ueber
-                             * (rx,ry,rw,rh) faerbt das GANZE Kaestchen des
-                             * Kuenstlers rot - auch die unbemalten Ecken darin.
-                             * GEMESSEN am 3F-Abzug des Nutzer-Spielstands
-                             * (ROOM1120, Rect 5 = 40x40): rot lag auf
-                             * x120..159/y119..158, die gemalte L-Form nur auf
-                             * x121..152 - der Rest war Fuellung ohne Zeichnung.
-                             * Jetzt wird DIESELBE Kachel ein zweites Mal rot und
-                             * halbdurchlaessig geblittet: wo die Kachel nichts
-                             * malt, bleibt auch der Schleier weg. (Zuerst
-                             * einreihen = OBEN, die Op-Liste wird von HINTEN
-                             * gerastert.) */
-                            if (e.n < e.max) {   /* Schleier NUR auf bemalten
-                                                  * Texeln - s. re15_inv_screen.h,
-                                                  * RE15_INV_OP_FILLMASK */
-                                re15_inv_op_t *qs = &e.ops[e.n++];
-                                qs->kind = RE15_INV_OP_FILLMASK;
-                                qs->page = RE15_INV_PAGE_MAP4;
-                                qs->clut = RE15_INV_CLUT_TEXROW21;
-                                qs->abe = 1;
-                                qs->u = (uint8_t)ru; qs->v = (uint8_t)rv;
-                                qs->x = (int16_t)rx; qs->y = (int16_t)ry;
-                                qs->w = (int16_t)rw; qs->h = (int16_t)rh;
-                                qs->r = 200; qs->g = 16; qs->b = 16;
-                            }
-                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
-                                 rx, ry, rw, rh, ru, rv, 40, 144, 40, 1);
-                        } else
-                        sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                        /* ⛔ DER ROTE SCHLEIER IST ENTFALLEN — RE2 BRAUCHT IHN NICHT.
+                         * Er war der Notbehelf gegen die multiplikative Modulation:
+                         * mod5 mit (192,24,24) loeschte den Gruenkanal der Kachelkunst
+                         * und machte den aktuellen Raum fast schwarz (Nutzer
+                         * 2026-09-09). RE2 moduliert gar nicht, es tauscht die
+                         * CLUT-ZEILE — `addiu s5,s5,1` @0x8006E648 macht aus der
+                         * Besucht-Zeile 501 die Aktuell-Zeile 502, und deren Eintrag 1
+                         * ist 680808 mit gesetztem STP-Bit. Der halbtransparente
+                         * dunkelrote Raumkoerper kommt damit direkt aus der Palette,
+                         * auf genau den bemalten Texeln — dasselbe Ergebnis wie der
+                         * Schleier, aber mit RE2s Mechanismus statt einer zweiten Op.
+                         * (Tint 128 ist neutral: mod5(t5,128) == t5.) */
+                        sprt(&e, RE15_INV_PAGE_MAP4, clut_kachel,
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
                         int k2;
                         for (k2 = 0; k2 < nteil; k2++) {
                             int tx, ty, tw, th, ts;
-                            int tr = 40, tg = 144, tb = 40;
+                            int tr = 128, tg = 128, tb = 128;   /* neutral, s.u. */
+                            int clut_teil = RE15_INV_CLUT_MAP_BESUCHT;
                             if (!re15_map_teil_get((unsigned)st->map_page,
                                                    (unsigned)i, k2,
                                                    &tx, &ty, &tw, &th, &ts)) continue;
@@ -2406,10 +2423,17 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             } else if (durchgang_r != 1) {
                                 continue;
                             }
-                            if (ts == RE15_MAP_RECT_UNVISITED) continue;
-                            /* wie oben: current = Kunst im Besucht-Ton + Schleier */
-                            if (ts == RE15_MAP_RECT_CURRENT)
-                                { tr = 40; tg = 144; tb = 40; }
+                            /* Besitz-Gatter wie beim ganzen Rechteck (RE2
+                             * @0x8006E744 / @0x8006E66C). */
+                            if (ts == RE15_MAP_RECT_UNVISITED &&
+                                !re15_map_owned_page((unsigned)st->map_page)) continue;
+                            /* RE2 waehlt die CLUT-ZEILE, nicht den Tint
+                             * (@0x8006E614 / @0x8006E648 / @0x8006E71C). */
+                            clut_teil = (ts == RE15_MAP_RECT_CURRENT)
+                                            ? RE15_INV_CLUT_MAP_AKTUELL
+                                      : (ts == RE15_MAP_RECT_UNVISITED)
+                                            ? RE15_INV_CLUT_MAP_UNBESUCHT
+                                            : RE15_INV_CLUT_MAP_BESUCHT;
                             /* auf das Rechteck klemmen - der Ausschnitt kommt aus
                              * einem Weltraster und darf nicht darueber hinausragen */
                             if (tx < rx) { tw -= (rx - tx); tx = rx; }
@@ -2417,19 +2441,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             if (tx + tw > rx + rw) tw = rx + rw - tx;
                             if (ty + th > ry + rh) th = ry + rh - ty;
                             if (tw <= 0 || th <= 0) continue;
-                            if (ts == RE15_MAP_RECT_CURRENT && e.n < e.max) {
-                                re15_inv_op_t *qs = &e.ops[e.n++];   /* s.o. */
-                                qs->kind = RE15_INV_OP_FILLMASK;
-                                qs->page = RE15_INV_PAGE_MAP4;
-                                qs->clut = RE15_INV_CLUT_TEXROW21;
-                                qs->abe = 1;
-                                qs->u = (uint8_t)(ru + (tx - rx));
-                                qs->v = (uint8_t)(rv + (ty - ry));
-                                qs->x = (int16_t)tx; qs->y = (int16_t)ty;
-                                qs->w = (int16_t)tw; qs->h = (int16_t)th;
-                                qs->r = 200; qs->g = 16; qs->b = 16;
-                            }
-                            sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                            /* Schleier entfaellt auch hier — die Aktuell-Zeile
+                             * 502 traegt 680808+STP selbst (s. ganzes Rechteck). */
+                            sprt(&e, RE15_INV_PAGE_MAP4, clut_teil,
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
                                  tr, tg, tb, 1);

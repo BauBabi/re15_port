@@ -132,7 +132,18 @@ enum {
      * census.) */
     RE15_INV_CLUT_TEXROW2 = 14,
     RE15_INV_CLUT_TEXROW4 = 15,
-    RE15_INV_CLUT_TEXROW6 = 16
+    RE15_INV_CLUT_TEXROW6 = 16,
+    /* KARTEN-ZUSTANDSREIHEN (RE2-Kartensystem). RE2 waehlt je Kachelzustand eine
+     * andere CLUT-ZEILE statt zu modulieren — `addiu s5,zero,501` @0x8006E614
+     * (besucht), `addiu s5,s5,1` @0x8006E648 (aktueller Raum = 502),
+     * `addiu s5,zero,498` @0x8006E71C (Karte da, Raum unbesucht), Auswahl
+     * `jal 0x8008f828` = GetClut(256,s5) @0x8006E750.
+     * Die drei Zeilen werden im Renderer aus RE15_INV_CLUT_TEXROW21 abgeleitet;
+     * getauscht wird nur Eintrag 1 = der Raumkoerper (Herleitung + Messung an
+     * karten_cluts_bauen in platform/pc/src/inv_render_pc.c). */
+    RE15_INV_CLUT_MAP_BESUCHT   = 17,
+    RE15_INV_CLUT_MAP_AKTUELL   = 18,
+    RE15_INV_CLUT_MAP_UNBESUCHT = 19
 };
 
 typedef struct {
