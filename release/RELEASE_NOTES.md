@@ -1,71 +1,110 @@
-# v0.8.12 - 2026-09-26
+# v0.8.13 - 2026-09-26
 
-Die Wegwerf-Abfrage ist drin — mit der Sperre, die Sie verlangt haben. Beim Birkin-Befund
-bin ich einen Schritt weiter, aber noch nicht am Ziel, und das sage ich auch so.
+Ihr Zwoelfer-Batch. Neun Befunde sind behoben, einer ist ausdruecklich nicht gebaut
+worden, und bei einem weiss ich die Ursache noch nicht — das sage ich lieber, als es zu
+verschweigen. Suite 346/346.
 
-## "You don't need this key any more. Discard it?" — jetzt aktiv
+## Was Sie sofort merken
 
-> "das Problem das ich Bei dir sah, war das du die discard Abfrage auch bei Toren mit
-> Raetsel panels machst, also wo man einen Code eingeben muss. Da ist das natuerlich erst
-> dann korrekt, wenn man den zugriffscode den man braucht einmalig richtig eingegeben hat.
-> erst dann darf die Abfrage kommen."
+**Der Fahrstuhl faehrt.** Der Knopf war nie das Problem: 2F stempelt die Etage, startet
+das richtige Unterprogramm und meldet den Zielraum an. Im *selben Bild* hat der Port
+zusaetzlich die 1F-Tuer gefeuert und die Anforderung ueberschrieben. Schuld war ein
+Zweig, den der Port erfunden hatte und den das Original nicht kennt: er liess jede
+rechteckslose Tuer ohne Tastendruck losgehen, sobald eine Zwischensequenz lief — und die
+Schleife nahm immer die erste, also 1F. Der Zweig ist raus. Der zweite Fahrstuhl hatte
+denselben Defekt und faehrt jetzt auch.
 
-Sie hatten recht, und der Grund steht woertlich in den Raumdaten: an den Kartenlesern faellt
-die Zeile "You've used the Blue Keycard." **beim Einstecken**, nicht beim Erledigen. Direkt
-dahinter geht erst das Tastenfeld auf. Die Abfrage hing an der falschen Zeile.
+**Die Beretta M93R laedt wieder nach.** Der Port hatte im Nachlade-Tor eine Bedingung,
+die es im Original nicht gibt: er merkte sich beim Zieleintritt, ob Sie ein Messer in der
+Hand hatten, und diese Merkung blieb haengen. Danach verschluckte er jedes Nachladen
+stumm — die Waffe feuerte 15, 12, 9, 6, 3, 0 und dann passierte gar nichts mehr. Das
+Original merkt sich nichts, es liest die angelegte Waffe jedes Bild neu.
 
-Sie haengt jetzt an der Zeile "You've opened the lock.", die das Schloss ausgibt, **nachdem**
-die vier Ziffern stimmen — und zusaetzlich an dem Bit, das genau dieses Schloss setzt.
-Betroffen sind vier Tueren (zweimal Blaue Keycard, zweimal Rote Keycard). Zwei weitere
-Tastenfelder, die ich zuerst mitgezaehlt hatte, sind wieder raus: ihr Erfolgs-Bit steht schon
-beim Start eines neuen Spiels, der Leser existiert dort also nie. Die uebrigen zehn Stellen
-ohne Tastenfeld sind unveraendert.
+**Die erste Cutscene-Animation wiederholt sich nicht mehr.** Der Port parkte die
+Raum-Eintritts-Pose als Dauerbewegung und spielte sie im Kreis. Das Original setzt sie
+genau einmal und gibt im selben Durchlauf weiter. Sichtbar war es nur bei Cutscenes, weil
+der Spieler dort die Pose nicht selbst ersetzt — deshalb genau Ihre beiden Faelle,
+ROOM1170 nach der Tuer und ROOM1050 beim Eintritt.
 
-Belegt ist das nicht nur auf dem Pruefstand, sondern im laufenden Spiel: nach richtigem Code
-steht die Abfrage ab Bild 251, zeigt die Blaue Keycard, tippt ihre 44 Zeichen aus und wirft
-die Karte auf "Yes" weg. Mit **einer Ziffer falsch** passiert in 2341 Bildern gar nichts —
-kein Schloss, keine Zeile, keine Abfrage.
+**Die komischen Bluteffekte in ROOM11D0 sind weg.** Die Kaefig-Freigabe der Hunde
+schreibt einen Zustand, den es in der RE1.5-Tabelle als "aufstehen, dann jagen" gibt — in
+der RE2-Tabelle steht an derselben Stelle aber ein Zustand, der Blut spritzt. Der Port
+faehrt fuer Hunde die RE2-Tabelle und landete deshalb im falschen Eintrag. Betroffen war
+nicht nur der Zwinger, sondern auch zwei Raeume in Stage 3.
 
-Der erste Abzugsversuch hatte uebrigens nichts gezeigt, und schuld war nicht die Sperre,
-sondern mein Messhaken: die Ziffern-Bits liegen in der raumlokalen Flag-Bank, und die wird
-beim Betreten des Raums geloescht. Ich hatte sie beim Spielstart gesetzt — sie waren schon
-weg, bevor der Raum stand.
+**Munition stapelt beim Aufnehmen**, und beim Ja der Aufnahme kommt der
+Bestaetigungston.
 
-Was ich offen lasse, damit Sie es entscheiden koennen: drei Gegenstaende sind keine
-Schluessel (Feuerloescher, Zange, Minidisc-Player). Der Text sagt "this key". Gefragt wird
-dort trotzdem, weil die Regel an der Benutzung haengt und nicht am Namen — sagen Sie Bescheid,
-wenn die drei draussen bleiben sollen.
+**Das Maschinengewehr macht deutlich mehr Blut.** RE2 gibt SMG und Gatling einen eigenen
+Trefferhandler mit zufaelliger Groesse statt der festen der Pistole; der Port hatte dort
+den kleinsten Blutstoss des Spiels.
 
-## Birkin: die Spur ist enger, die Ursache noch nicht bewiesen
+**Der Fahrstuhl hat seinen Fahrton** — aus RE2 importiert, weil RE1.5 ihn nachweislich
+nirgends hat. Und das Tastenfeld im Heizungsraum klickt jetzt wie RE2s Schalterraetsel,
+mit rotem Leistungszeiger, der bei richtiger Loesung auf 80 steht.
 
-> "Jetzt wurde ich von birkin rausgeschoben ausserhalb des begehbaren BEreiches - siehe
-> Marker. Das darf nicht passieren."
+## Wo ich Ihnen widersprechen muss
 
-Zwei Abweichungen in der Reihenfolge sind jetzt belegt, beide mit Adresse:
+**Der Bestaetigungston ist keine Regel in RE2.** Sie hatten gesagt: wenn RE2 das so macht,
+machen wir das auch — und genau das habe ich nachgezaehlt. Ergebnis: von 128 Ja/Nein-
+Abfragen toenen beim Ja nur **49**. Der Ton haengt nicht an der Abfrage-Routine, sondern
+an einem Byte, das *pro Nachricht im Text* steht. Der Beweis ist huebsch: "A police
+station map. Will you take it?" ist stumm, das wortgleiche "A police B2 map. Will you
+take it?" toent.
 
-1. **Der Tentakel-Schub endet ungeklemmt.** Im Original laeuft die Gegner-Schleife **vor**
-   dem Spieler-Schritt, und dessen Wandklemme raeumt den Schub im selben Bild auf. Im Port
-   laufen die Gegner danach. Gemessen: 6 von 162 reinen Tentakel-Schueben enden auf einem
-   unbegehbaren Punkt und werden so gezeichnet — mit der Original-Reihenfolge null.
-2. **Der Positionsspiegel ist verseucht.** Das Original schreibt ihn am Bildende, also immer
-   wandaufgeloest; der Port schreibt ihn am Bildanfang, also nach dem Gegner-Durchgang des
-   Vorbildes. Steht dort eine Lage in der Wand, haelt die Klemme den Spieler darin fest.
+Fuer Ihre Stelle ist RE2 aber eindeutig: die Aufnahme-Abfrage toent, also toent sie jetzt
+auch bei uns. Die Wegwerf-Abfrage ist in RE2 stumm und bleibt es. Und die uebrigen 90
+Abfragen im Spiel bekommen nichts — dafuer gibt es kein Vorbild, das waere erfunden.
 
-**Und trotzdem ist der Tentakel nicht der Taeter.** Um Ihre Marke zu erreichen, braucht es
-1460 Einheiten; der groesste gemessene Tentakel-Schub ist 1331. Ueber rund siebentausend
-gemessene Bilder liegt kein einziges auf Ihrer Endlage.
+**Munition stapelt in RE2 auch nicht.** Ich habe es zweimal unabhaengig nachgezaehlt: es
+gibt genau einen Einfuegepfad, und der nimmt stur den ersten freien Platz — in RE1.5 wie
+in RE2. Sie wollen es trotzdem, das ist voellig in Ordnung, und es ist gebaut. Aber im
+Code steht es als Ihre Entscheidung und nicht als Original, und die Rechnung dahinter
+(Summe, Deckel, Rest auf einen neuen Platz) ist aus RE2s Menue-Zusammenlegung geborgt
+statt erfunden.
 
-Was Ihre Endlage **exakt** reproduziert, ist der Koerper-Schub aus dem Boss-Zylinder: ein
-einziges Bild von (5500,-22600) nach (9083,-19232), danach 1200 Bilder unveraendert —
-dasselbe z wie Ihre Marke, dasselbe Kleben. Die Luecke, die bleibt: in keinem meiner Laeufe
-ist der Spieler auf natuerlichem Weg in diesen Zylinder geraten **und** im Folgebild dort
-gelandet. Drei Bilder im Zylinder habe ich, die Verbindung zur Endlage nicht. Solange die
-fehlt, baue ich den grossen Umbau der Bild-Reihenfolge nicht ein — der hat Folgen an vier
-weiteren Stellen, und ich will ihn nicht auf eine Vermutung stuetzen.
+**Die Wegwerf-Zeile "item" gibt es nirgends.** Weder RE1.5 noch RE2 haben eine Variante
+ohne "key". Gebaut ist sie, aber ueber einen Test am ausgelieferten Namen — keine Liste
+von Gegenstandsnummern im Code.
 
-## Kleinigkeiten
+## Was ich nicht gebaut habe, und warum
 
-Zwei neue Messhaken fuer Abzuege aus dem laufenden Spiel (Flags nach dem Raum-Aufbau setzen,
-Tastendruck an einem bestimmten Bild). Reine Pruefstands-Schalter, im Spiel ohne Wirkung.
+**Die Hunde bleiben, wie sie sind.** Ihr Befund lautete: erst wieder verwundbar, sobald
+sie stehen. Ich hatte einen Riegel im RE2-Hund gefunden, der genau das tut — und war
+ueberzeugt, dass er Ihren Fall trifft. **Er tut es nicht.** Gemessen: der Hund geht beim
+gewoehnlichen Kugeltreffer sehr wohl zu Boden, traegt dabei aber kein Riegel-Bit; in 240
+Bildern nach einem Pistolentreffer steht es kein einziges Mal. Der Riegel gehoert zum
+Sprung und zu Feuertreffern.
 
-Suite 337/337.
+Haette ich ihn trotzdem scharf geschaltet, waere es schlimm geworden: im Zwangstest loest
+er sich nur beim Hund. Bei Kraehe und beiden Spinnen in je 600 Bildern nie — die drei
+waeren dauerhaft unverwundbar geworden. Genau in diese Falle ist dieses Projekt schon
+einmal gelaufen.
+
+Behoben sind stattdessen drei echte Luecken im Hunde-Verhalten gegenueber RE2. Drei
+weitere, die ich einbauen wollte, waren **falsch verortet** — ihr Schreibzugriff geht gar
+nicht auf den Gegner, sondern auf sein Opfer bzw. auf den Spieler. Als Gegner-Code gebaut
+haetten sie die Unverwundbarkeit selbst erzeugt.
+
+**Ihre Beobachtung ist damit nicht erklaert, nur eine falsche Erklaerung ausgeschlossen.**
+Der naechste Verdacht ist die Laenge der Hinfall- und Aufsteh-Animation gegenueber dem
+13-Bilder-Zaehler: ist unsere laenger als RE2s, wird der Hund sichtbar im Liegen wieder
+verwundbar, obwohl der Zaehler stimmt. Das messe ich als Naechstes.
+
+## Zwei Fragen an Sie
+
+1. **Der Fahrstuhl-Ton toent auch im zweiten Fahrstuhl** (A-2 ELEVATOR). Der Ausloeser
+   kommt aus den Daten, nicht aus einer Raumnummer, und die Signatur ist dort bitgleich.
+   Im Original ist er an beiden Stellen stumm. Soll er dort spielen oder nicht?
+2. **Der Zeiger im Heizungsraum** ist eine 2D-Marke, kein 3D-Objekt wie in RE2 — RE1.5
+   hat dort kein passendes Modell, es haette erfunden werden muessen. Die Mechanik (ein
+   Punkt je Bild, Ziel 80) ist 1:1 RE2. Die Gewichtung je Schalter musste ich waehlen,
+   weil RE1.5 die Loesung ganz anders prueft als RE2. Sagen Sie Bescheid, wenn es anders
+   aussehen soll.
+
+## Nebenbefunde, nicht repariert
+
+Drei Integrationstests, die die echte Spiel-exe starten, fallen in Volllaeufen sporadisch
+aus — jedes Mal ein anderer, einzeln laufen sie durch. Sieht nach einem Wettlauf beim
+Fensteraufbau aus. Ausserdem: die Munitions-Halbierung erfasst auch die Memory Card, und
+Ada startet in ROOM1050 ihren Laufzyklus mittendrin neu.
