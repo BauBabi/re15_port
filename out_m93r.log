@@ -1,0 +1,162 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+
+===== A  M93R (Id 5), Magazin 15, Munition 50 - der Nutzerfall =====
+Start: Waffe=5 Magazin=15 Munition0x15=50 eqSlot=1
+ZIELBEREIT nach 10 R1-Bildern (melee_latch=0)
+  B | pad    | w | mag | 0x15 | melee | ph rec | magNZ | res | clip fr/fc
+  11 | R1+SQ^ | 5 |  12 |   50 |   0   | 22 01 |   1   |  2  |  7  0/22
+  32 | R1+SQ  | 5 |   9 |   50 |   0   | 22 11 |   1   |  2  |  7  0/22
+  51 | R1+SQ^ | 5 |   9 |   50 |   0   | 22 11 |   1   |  2  |  7 19/22
+  53 | R1+SQ  | 5 |   6 |   50 |   0   | 22 11 |   1   |  2  |  7  0/22
+  74 | R1+SQ  | 5 |   3 |   50 |   0   | 22 11 |   1   |  2  |  7  0/22
+  91 | R1+SQ^ | 5 |   3 |   50 |   0   | 22 11 |   1   |  2  |  7 17/22
+  95 | R1+SQ  | 5 |   0 |   50 |   0   | 22 11 |   0   |  2  |  7  0/22
+ 131 | R1+SQ^ | 5 |   0 |   50 |   0   | 23 00 |   0   |  2  | 13  0/32
+ 162 | R1+SQ  | 5 |  12 |   35 |   0   | 32 01 |   1   |  2  |  7  0/22
+ 171 | R1+SQ^ | 5 |  12 |   35 |   0   | 22 11 |   1   |  2  |  7  9/22
+ 183 | R1+SQ  | 5 |   9 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+ 204 | R1+SQ  | 5 |   6 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+ 211 | R1+SQ^ | 5 |   6 |   35 |   0   | 22 11 |   1   |  2  |  7  7/22
+ 225 | R1+SQ  | 5 |   3 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+ 251 | R1+SQ^ | 5 |   0 |   35 |   0   | 22 01 |   0   |  2  |  7  0/22
+ABDECKUNG: 290 Bilder gefahren; Nachlade-Phase(3) zuerst in Bild 131; Nachfuellung in Bild 162
+ENDE: Magazin=0 Munition0x15=35 melee_latch=0
+
+===== B  BROWNING (Id 3), Magazin 15, Munition 50 - Gegenprobe (1 Schuss/Abzug) =====
+Start: Waffe=3 Magazin=15 Munition0x15=50 eqSlot=1
+ZIELBEREIT nach 10 R1-Bildern (melee_latch=0)
+  B | pad    | w | mag | 0x15 | melee | ph rec | magNZ | res | clip fr/fc
+  11 | R1+SQ^ | 3 |  14 |   50 |   0   | 22 01 |   1   |  2  |  7  0/23
+  33 | R1+SQ  | 3 |  13 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+  51 | R1+SQ^ | 3 |  13 |   50 |   0   | 22 11 |   1   |  2  |  7 18/23
+  55 | R1+SQ  | 3 |  12 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+  77 | R1+SQ  | 3 |  11 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+  91 | R1+SQ^ | 3 |  11 |   50 |   0   | 22 11 |   1   |  2  |  7 14/23
+  99 | R1+SQ  | 3 |  10 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 121 | R1+SQ  | 3 |   9 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 131 | R1+SQ^ | 3 |   9 |   50 |   0   | 22 11 |   1   |  2  |  7 10/23
+ 143 | R1+SQ  | 3 |   8 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 171 | R1+SQ^ | 3 |   7 |   50 |   0   | 22 01 |   1   |  2  |  7  0/23
+ 193 | R1+SQ  | 3 |   6 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 211 | R1+SQ^ | 3 |   6 |   50 |   0   | 22 11 |   1   |  2  |  7 18/23
+ 215 | R1+SQ  | 3 |   5 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 237 | R1+SQ  | 3 |   4 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 251 | R1+SQ^ | 3 |   4 |   50 |   0   | 22 11 |   1   |  2  |  7 14/23
+ 259 | R1+SQ  | 3 |   3 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 281 | R1+SQ  | 3 |   2 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 291 | R1+SQ^ | 3 |   2 |   50 |   0   | 22 11 |   1   |  2  |  7 10/23
+ 303 | R1+SQ  | 3 |   1 |   50 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 331 | R1+SQ^ | 3 |   0 |   50 |   0   | 22 01 |   0   |  2  |  7  0/23
+ 371 | R1+SQ^ | 3 |   0 |   50 |   0   | 23 00 |   0   |  2  | 13  0/32
+ 402 | R1+SQ  | 3 |  14 |   35 |   0   | 32 01 |   1   |  2  |  7  0/23
+ 411 | R1+SQ^ | 3 |  14 |   35 |   0   | 22 11 |   1   |  2  |  7  9/23
+ 424 | R1+SQ  | 3 |  13 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 451 | R1+SQ^ | 3 |  12 |   35 |   0   | 22 01 |   1   |  2  |  7  0/23
+ 473 | R1+SQ  | 3 |  11 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 491 | R1+SQ^ | 3 |  11 |   35 |   0   | 22 11 |   1   |  2  |  7 18/23
+ 495 | R1+SQ  | 3 |  10 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 517 | R1+SQ  | 3 |   9 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 531 | R1+SQ^ | 3 |   9 |   35 |   0   | 22 11 |   1   |  2  |  7 14/23
+ 539 | R1+SQ  | 3 |   8 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 561 | R1+SQ  | 3 |   7 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+ 571 | R1+SQ^ | 3 |   7 |   35 |   0   | 22 11 |   1   |  2  |  7 10/23
+ 583 | R1+SQ  | 3 |   6 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 611 | R1+SQ^ | 3 |   5 |   35 |   0   | 22 01 |   1   |  2  |  7  0/23
+ 633 | R1+SQ  | 3 |   4 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 651 | R1+SQ^ | 3 |   4 |   35 |   0   | 22 11 |   1   |  2  |  7 18/23
+ 655 | R1+SQ  | 3 |   3 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 677 | R1+SQ  | 3 |   2 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 691 | R1+SQ^ | 3 |   2 |   35 |   0   | 22 11 |   1   |  2  |  7 14/23
+ 699 | R1+SQ  | 3 |   1 |   35 |   0   | 22 11 |   1   |  2  |  7  0/23
+ 721 | R1+SQ  | 3 |   0 |   35 |   0   | 22 11 |   0   |  2  |  7  0/23
+ABDECKUNG: 730 Bilder gefahren; Nachlade-Phase(3) zuerst in Bild 371; Nachfuellung in Bild 402
+ENDE: Magazin=0 Munition0x15=35 melee_latch=0
+
+===== C  M93R, Magazin SCHON 0 - nur das Gate =====
+Start: Waffe=5 Magazin=0 Munition0x15=50 eqSlot=1
+ZIELBEREIT nach 10 R1-Bildern (melee_latch=0)
+  B | pad    | w | mag | 0x15 | melee | ph rec | magNZ | res | clip fr/fc
+  11 | R1+SQ^ | 5 |   0 |   50 |   0   | 23 00 |   0   |  2  | 13  0/32
+  42 | R1+SQ  | 5 |  12 |   35 |   0   | 32 01 |   1   |  2  |  7  0/22
+  51 | R1+SQ^ | 5 |  12 |   35 |   0   | 22 11 |   1   |  2  |  7  9/22
+  63 | R1+SQ  | 5 |   9 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+  84 | R1+SQ  | 5 |   6 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+  91 | R1+SQ^ | 5 |   6 |   35 |   0   | 22 11 |   1   |  2  |  7  7/22
+ 105 | R1+SQ  | 5 |   3 |   35 |   0   | 22 11 |   1   |  2  |  7  0/22
+ 131 | R1+SQ^ | 5 |   0 |   35 |   0   | 22 01 |   0   |  2  |  7  0/22
+ 171 | R1+SQ^ | 5 |   0 |   35 |   0   | 23 00 |   0   |  2  | 13  0/32
+ 202 | R1+SQ  | 5 |  12 |   20 |   0   | 32 01 |   1   |  2  |  7  0/22
+ABDECKUNG: 210 Bilder gefahren; Nachlade-Phase(3) zuerst in Bild 11; Nachfuellung in Bild 42
+ENDE: Magazin=12 Munition0x15=20 melee_latch=0
+
+===== D  M93R, Magazin 0, aber mit dem Messer angezielt (melee-Latch) =====
+Start: Waffe=1 Magazin=0 Munition0x15=50 eqSlot=0
+ZIELBEREIT nach 32 R1-Bildern (melee_latch=1)
+  -> Waffe im Zielen auf 5 gewechselt; melee_latch bleibt 1
+  B | pad    | w | mag | 0x15 | melee | ph rec | magNZ | res | clip fr/fc
+  33 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  8  0/1
+  73 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  8  0/1
+ 113 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  8  0/1
+ 153 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  8  0/1
+ 193 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  8  0/1
+ABDECKUNG: 232 Bilder gefahren; Nachlade-Phase(3) zuerst in Bild -1; Nachfuellung in Bild -1
+ENDE: Magazin=0 Munition0x15=50 melee_latch=1
+
+===== D2 M93R, Magazin 15, mit dem Messer angezielt (melee-Latch) - feuert sie? =====
+Start: Waffe=1 Magazin=0 Munition0x15=50 eqSlot=0
+ZIELBEREIT nach 32 R1-Bildern (melee_latch=1)
+  -> Waffe im Zielen auf 5 gewechselt; melee_latch bleibt 1
+  B | pad    | w | mag | 0x15 | melee | ph rec | magNZ | res | clip fr/fc
+  33 | R1+SQ^ | 5 |  12 |   50 |   1   | 22 01 |   1   |  2  |  7  0/22
+  54 | R1+SQ  | 5 |   9 |   50 |   1   | 22 11 |   1   |  2  |  7  0/22
+  73 | R1+SQ^ | 5 |   9 |   50 |   1   | 22 11 |   1   |  2  |  7 19/22
+  75 | R1+SQ  | 5 |   6 |   50 |   1   | 22 11 |   1   |  2  |  7  0/22
+  96 | R1+SQ  | 5 |   3 |   50 |   1   | 22 11 |   1   |  2  |  7  0/22
+ 113 | R1+SQ^ | 5 |   3 |   50 |   1   | 22 11 |   1   |  2  |  7 17/22
+ 117 | R1+SQ  | 5 |   0 |   50 |   1   | 22 11 |   0   |  2  |  7  0/22
+ 153 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  7 21/22
+ 193 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  7 21/22
+ 233 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  7 21/22
+ 273 | R1+SQ^ | 5 |   0 |   50 |   1   | 22 00 |   0   |  2  |  7 21/22
+ABDECKUNG: 312 Bilder gefahren; Nachlade-Phase(3) zuerst in Bild -1; Nachfuellung in Bild -1
+ENDE: Magazin=0 Munition0x15=50 melee_latch=1
+
+===== E  ECHTER WEG: Messer zielen -> Inventar -> M93R anlegen -> Abzug =====
+ZIELBEREIT (Messer) nach 32 R1-Bildern: melee_latch=1 Waffe=1
+nach START-Flanke: menue_eingefroren=1
+im Menue (20 Bilder): Zielphase=2 recoil=0 melee_latch=1 (eingefroren erhalten)
+Menue-Zustand: stage=2 phase=0 substate=0
+Menue zu nach 254 Bildern gesamt; eingefroren=1
+nach Menue-Schliessen: Waffe=1 eqSlot=1 melee_latch=1 Zielphase=2
+  B | pad    | w | mag | 0x15 | melee | ph | magNZ | res
+ 255 | R1+SQ^ | 1 |   0 |   50 |   1   | 2  |   0   |  2
+ 295 | R1+SQ^ | 1 |   0 |   50 |   1   | 2  |   0   |  2
+ 335 | R1+SQ^ | 1 |   0 |   50 |   1   | 2  |   0   |  2
+ 375 | R1+SQ^ | 1 |   0 |   50 |   1   | 2  |   0   |  2
+ABDECKUNG E: 414 Bilder; Nachlade-Phase(3) zuerst in Bild -1   <== NIE (stumm verschluckt)
+ENDE E: Magazin=0 Munition0x15=50
+
+================ ZUSAMMENFASSUNG ================
+Abdeckung gesamt: 1876 Bilder (A=290 B=730 C=210 D=232 E=414)
+A M93R normal         : Nachlade-Phase in Bild 131 
+B Browning normal     : Nachlade-Phase in Bild 371 
+C M93R leer von Start : Nachlade-Phase in Bild 11 
+D M93R, melee-Latch   : Nachlade-Phase in Bild -1 (NIE)
+E M93R ueber das Menue: Nachlade-Phase in Bild -1 (NIE)
