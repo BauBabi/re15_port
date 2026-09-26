@@ -15,10 +15,12 @@
  * Ohne ihn trug allein der Spieler-Schub FUN_8002b544 @0x80031cbc die Trennung und drueckte
  * den Spieler an der Wand hinein.
  *
- * ZAHLEN (probe_r27_hund_biss raster, dieselben Plaetze):
+ * ZAHLEN (probe_r27_hund_biss raster, 123 Startplaetze, ~27000 Bilder):
  *   ohne den Aufruf: 467 harte Bilder ueber 19 von 68 Plaetzen
- *   mit dem Aufruf :  25 harte Bilder ueber  2 von 69 Plaetzen
- * Der Riegel laeuft auf den unten gelisteten Plaetzen, die am alten Stand ROT waren.
+ *   mit dem Aufruf :  25 harte Bilder ueber  2 von 69 Plaetzen (Rest: (-3500,-13500), offen)
+ * DIESER RIEGEL auf den acht unten gelisteten Plaetzen, nachgemessen:
+ *   ohne den Aufruf: 393 harte Bilder ueber 5 der 8 Plaetze, 91 Bisse   -> ROT
+ *   mit dem Aufruf :   0 harte Bilder,                      106 Bisse  -> GRUEN
  *
  * Braucht die RE2-Bank shared_assets/RE2/CDEMD0.EMS (Auslieferungs-Default ist RE2-KI) —
  * ohne sie SKIP 77.
@@ -119,8 +121,14 @@ static void bringup(void)
 /* Die Plaetze, an denen der alte Stand den Spieler in die Wand getrieben hat (alle aus
  * probe_r27_hund_biss raster, Schrittweite 1000 ueber den begehbaren Raum). */
 static const int32_t k_platz[][2] = {
-    { -3500, -13500 }, { -7500, -12500 }, { -8500, -14500 }, { -7500, -14500 },
-    { -6500, -12500 }, { -5500, -13500 }, { -6500, -13500 }, { -4500, -13500 },
+    {   500, -17500 },   /* alt: 296 unbegehbare Bilder */
+    {  2500, -17500 },   /* alt: 247 */
+    {  1500, -17500 },   /* alt: 207 */
+    { -6500, -18500 },   /* alt: 141 */
+    { -5500, -18500 },   /* alt:  99 */
+    { -5500, -19500 },   /* alt:  65 */
+    { -5500, -15500 },   /* alt:  51 */
+    { -6500, -17500 },   /* alt:  37 */
 };
 #define PLAETZE ((int)(sizeof k_platz / sizeof k_platz[0]))
 
@@ -152,6 +160,17 @@ int main(void)
         pl->x = k_platz[p][0]; pl->z = k_platz[p][1]; pl->y = 0; pl->rot_y = 1024;
         pl->hp = 100; pl->floor = 0;
         re15_collision_set_band(0);
+        /* ⛔ Der Startplatz MUSS begehbar sein — sonst misst der Riegel einen Spieler, der
+         * schon vor dem ersten Bild in der Wand steht (passiert: (-4500,-13500) lieferte so
+         * 337 "harte" Bilder ohne jeden Hundekontakt). */
+        {   int32_t nx = pl->x, nz = pl->z;
+            re15_collision_constrain(&s_rdt, pl->x, pl->z, &nx, &nz);
+            if (re15_collision_on_floor(&s_rdt, pl->x, pl->z) || nx != pl->x || nz != pl->z) {
+                printf("FAIL: Startplatz (%d,%d) ist nicht begehbar — Sonde misst Unsinn\n",
+                       (int)pl->x, (int)pl->z);
+                return 1;
+            }
+        }
         int p_hart = 0, p_bisse = 0;
         for (int f = 0; f < 400; f++) {
             int hp0 = pl->hp;
@@ -175,8 +194,8 @@ int main(void)
            hart, plaetze_rot);
 
     int fehler = 0;
-    /* (1) DER RIEGEL: kein Bild im Wandinneren. Am alten Stand (ohne aec4 @0x8010d880):
-     *     113 Bilder ueber 6 dieser 8 Plaetze. */
+    /* (1) DER RIEGEL: kein Bild im Wandinneren. Am alten Stand (ohne aec4 @0x8010d880)
+     *     NACHGEMESSEN: 393 Bilder ueber 5 dieser 8 Plaetze. */
     if (hart != 0) { printf("FAIL: %d Bilder im Wandinneren (erwartet 0)\n", hart); fehler = 1; }
     /* (2) GEGEN-RIEGEL: die Hunde greifen weiter an. Ohne ihn waere (1) auch mit einem
      *     kaputten Hund gruen. */
