@@ -938,6 +938,14 @@ typedef struct {
     int16_t  dog_floor_y;    /* +0x1ba: the dog's floor Y (ground level). The original's +0x1ba is
                               * maintained by the engine floor probe; the port seeds it at INIT from
                               * the spawn Y and moves it with the reroute level hops (+-0x708). */
+    uint8_t  dog_cage_rel0c;  /* ⛔ PORT-MARKE, KEIN Original-Feld (Nutzer-/Port-Entscheidung, nicht
+                               * byte-true). Herkunftsmerkmal fuer den Sub-Index 0x0C: gesetzt EINZIG
+                               * von der RE1.5-Kaefig-Freigabe (`ori v0,zero,0xc01` @0x80111718 /
+                               * `sw v0,4(v1)` @0x8011172c), verbraucht beim Verlassen von Sub 0x0C.
+                               * Notwendig, weil der Port unter dem RE2-Geschmack ZWEI Produzenten
+                               * desselben Zustands hat: die RE1.5-Freigabe und den echten RE2-Abwurf
+                               * (`addiu v0,zero,12` @0x80102218 / `sb v0,5(s1)` @0x8010221c). Ohne
+                               * Marke traefe eine Weiche auf state==1 && sub==0x0c beide. */
 
     /* ---- Maggot (type 0x27, EM027) — byte-true 0x80116db8 family work bytes (audit wf_827f186d).
      * All four are INIT-cleared/-seeded by FUN_80116f50 (@0x8011707c/8c/98-9c/ac). */
