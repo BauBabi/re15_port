@@ -64,10 +64,36 @@
  * Hebel sitzt nur eine gruene Lampe) und eine rein ZUSTANDSabhaengige Loesungspruefung
  * (@0x012BE..0x012E2 liest nur Bits). Ein wegabhaengiger RE2-Zaehler wuerde der
  * RE1.5-Pruefung widersprechen: dieselbe Schalterstellung kaeme mal auf 80, mal nicht.
- * Deshalb: wert = 16 * (Zahl der EIN-Schalter), geklemmt auf [0,100].
- * Die 16 ist die EINDEUTIGE gleichmaessige Gewichtung, die den belegten Loesungszustand
- * (5 EIN, @0x012BE..0x012E2) auf die vom Nutzer geforderten 80 bringt. Sie ist NICHT
- * byte-true und wird auch nicht so verkauft.
+ * Deshalb bleibt die Wertbildung ZUSTANDSabhaengig: wert = Summe der Gewichte der
+ * EIN-Schalter.
+ *
+ * ⛔ DIE ZEHN GEWICHTE SIND WOERTLICHE NUTZER-VORGABE vom 2026-09-26 — KEIN Original,
+ *    kein RE-Beleg, und sie werden auch nicht als byte-true verkauft. Wortlaut:
+ *
+ *        Schalter :  1    2    3    4    5    6    7    8    9   10
+ *        Wert     : +20  -20  -10  -30  +20  -40  +20  -50  +30  -60
+ *
+ *        Loesung: Schalter 1 + 3 + 5 + 7 + 9  ->  0 -> 20 -> 10 -> 30 -> 50 -> 80
+ *        Anzeige: cursor = max(0, Summe der AKTIVEN Schalter)
+ *        Die Schalterwerte bleiben erhalten, ein Schalter kann jederzeit wieder AUS.
+ *
+ *    Der Nutzer hat die Werte selbst gegen alle 1024 Kombinationen geprueft; die Sonde
+ *    r27_panel_schalterwerte zaehlt sie NOCHMALS durch (genau eine Kombination erreicht
+ *    80, und das ist 1+3+5+7+9 = Maske 0x155).
+ *
+ *    (VORHER stand hier eine gleichmaessige Gewichtung 16 je EIN-Schalter. Sie war
+ *    ebenfalls Nutzer-Entscheidung und ist durch die Vorgabe oben ersetzt.)
+ *
+ * WICHTIG — ROHWERT vs. ANZEIGE: der ROHWERT darf negativ werden (Minimum −210 bei
+ * allen zehn Schaltern EIN), nur die ANZEIGE wird bei 0 abgeschnitten. Deckel und Boden
+ * sind weiterhin RE2 (sub04+0x00B8 @0x011C8 bzw. +0x0130 @0x01240); der Deckel 100
+ * greift mit diesen Gewichten nie, weil die vier positiven Schalter zusammen nur 90
+ * ergeben (20+20+20+30).
+ *
+ * DIE LOESUNGSPRUEFUNG BLEIBT RE1.5. Sie liest die zehn Bits @0x012BE..0x012E2 gegen
+ * 1,0,1,0,1,0,1,0,1,0 auf Bank 5 / Bits 13..22 — also Schalter 1,3,5,7,9 EIN. Das ist
+ * DIESELBE Menge, die die Nutzer-Gewichte auf 80 bringen; beide Seiten decken sich, es
+ * gibt hier keinen Konflikt. Der Zeiger zeigt, das SCD entscheidet.
  */
 #ifndef RE15_PANEL_ZEIGER_H
 #define RE15_PANEL_ZEIGER_H
@@ -79,8 +105,15 @@
 #define RE15_PANEL_RAUM        0x11F0u
 #define RE15_PANEL_CUT         10
 
-/* Gewicht je EIN-Schalter — ⛔ NUTZER-ENTSCHEIDUNG, siehe Kopf. */
-#define RE15_PANEL_GEWICHT     16
+/* Die zehn Gewichte — ⛔ WOERTLICHE NUTZER-VORGABE 2026-09-26, siehe Kopf.
+ * Reihenfolge = Schalter 1..10 = Bank 5 / Bits 13..22 (ROOM11F0.RDT @0x012BE..0x012E2,
+ * `21 05 0d 01` .. `21 05 16 00`), also obj 0x02..0x0B. */
+#define RE15_PANEL_SCHALTER    10
+#define RE15_PANEL_GEWICHTE  { 20, -20, -10, -30, 20, -40, 20, -50, 30, -60 }
+/* Die Maske, die die Gewichte oben auf genau 80 bringt (Schalter 1,3,5,7,9 = Bit 0,2,4,6,8)
+ * UND die RE1.5 @0x012BE..0x012E2 als Loesung prueft. Nur Doku/Riegel, keine Spiellogik —
+ * geloest wird weiterhin durch das SCD. */
+#define RE15_PANEL_LOESUNGSMASKE 0x155u
 /* Deckel/Boden: RE2 sub04+0x00B8 (@0x011C8) bzw. +0x0130 (@0x01240). */
 #define RE15_PANEL_MAX         100
 #define RE15_PANEL_MIN         0
@@ -129,11 +162,19 @@ void re15_panel_zeiger_reset(void);
  * Rueckgabe 1 = zeichnen, 0 = nichts. `*sx` = Spitze x, `*sy` = Spitze y. */
 int  re15_panel_zeiger_sicht(int *sx, int *sy);
 
-/* Zielwert aus der Zahl der EIN-Schalter (fuer Sonden direkt pruefbar). */
-int  re15_panel_zeiger_ziel_aus_bits(int ein_schalter);
+/* Gewicht eines einzelnen Schalters, `nr` = 1..10 (0 ausserhalb). */
+int  re15_panel_zeiger_gewicht(int nr);
 
-/* Messhaken (Sonden): der ANIMIERTE und der ANGESTREBTE Wert. */
+/* ROHWERT aus der Schaltermaske (Bit 0 = Schalter 1 .. Bit 9 = Schalter 10).
+ * DARF NEGATIV WERDEN — hier wird nichts geklemmt. */
+int  re15_panel_zeiger_roh_aus_maske(unsigned maske);
+
+/* ANZEIGEWERT aus derselben Maske: max(0, Rohwert), oben bei RE15_PANEL_MAX gedeckelt. */
+int  re15_panel_zeiger_ziel_aus_maske(unsigned maske);
+
+/* Messhaken (Sonden): der ANIMIERTE, der ANGESTREBTE und der ROHE Wert. */
 int  re15_panel_zeiger_wert(void);
 int  re15_panel_zeiger_ziel(void);
+int  re15_panel_zeiger_roh(void);
 
 #endif /* RE15_PANEL_ZEIGER_H */

@@ -445,8 +445,25 @@ void re15_object_notch_update(void)
             }
             if (hit) notch = i;                               /* LAST-WINS */
         }
-        /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20), KEINE byte-true Regel.
+        /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-26) — DER BEWEGUNGS-LAUT IST WIEDER WEG.
          *
+         * Nutzer 2026-09-26: "bei den Schalter raetsel wenn ich den cursor bewege kommt die
+         * ganze zeit sound. das will ich aber keinen sound. nur beim druecken eines Schalters
+         * soll es den Schalter sound geben."
+         * Das WIDERRUFT die Vorgabe vom 2026-09-20 (Wortlaut unten), die den CORE-Satz 4 an
+         * JEDEN Zellenwechsel des Welt-Cursors gehaengt hat. Der Zellenwechsel-ZAEHLER bleibt
+         * (Messschiene + Gegenprobe der Sonden r17_cursor_klick / r27_panel_schalterwerte:
+         * er belegt, dass der Cursor im Riegel-Lauf wirklich ueber Zellen gefahren ist) —
+         * nur der Tonaufruf faellt.
+         * ⛔ NUR HIER, NICHT GLOBAL: der CORE-Satz 4 des INVENTAR-Cursors (menu_common.c se4
+         * @0x8004a478 `lui a0,0x404` / @0x8004a47c `jal 0x80045024`, itembox bse) und der der
+         * Ja/Nein-Auswahl (msg_common.c:574, RE2 @0x80030968/@0x8003099c) bleiben unangetastet
+         * — Riegel r27 Teil B misst genau das.
+         * Der Laut beim DRUECKEN eines Schalters bleibt ebenfalls: das ist ein RE2-RAUM-SE
+         * (Gruppe 2 / Index 0x0A, ROOM2130.RDT sub04+0x0082 @Datei 0x01192) und haengt in
+         * scd_vm.c op_sce_key_ck, nicht hier.
+         *
+         * ===== HISTORIE: die widerrufene Vorgabe vom 2026-09-20 =========================
          * Nutzer: "dann will ich bei den raetseln wo man etwas mit Cursor auswaehlt und klickt
          * einen click Sound. den gibt es, wenn nicht in resident evil 1.5 - auf jeden fall in
          * resident evil 2."
@@ -478,8 +495,7 @@ void re15_object_notch_update(void)
         uint8_t klick_neu = (notch >= 0) ? (uint8_t)notch : 0;
         g_scd.props[p].member_0b = klick_neu;   /* Clear @0x80043788 */
         if (!s_cursor_klick_einschwingen && klick_neu != 0 && klick_neu != klick_alt) {
-            g_re15_cursor_klick_zaehler++;
-            re15_audio_core_se(4);              /* CORE-Bank 4, Satz 4 (s.o.) */
+            g_re15_cursor_klick_zaehler++;  /* nur noch MESSSCHIENE — KEIN Ton (s.o.) */
         }
     }
     s_cursor_klick_einschwingen = 0;
