@@ -29,6 +29,33 @@
 #include "re15_audio.h"
 #include "re15_fade.h"        /* re15_fade_config/kick/done — die Transitions-Blende */
 
+/* ======================= MESSHAKEN (KEIN FIX) =========================
+ * RE15_ELEV_LOG=<datei> — Messchiene fuer den Fahrstuhl-Befund 2026-09-26.
+ * Die SDL-GUI-exe hat kein brauchbares stderr, deshalb eine Datei. Rein
+ * env-gegated; ohne die Variable passiert nichts. Wird nach der Messung
+ * wieder entfernt. */
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+static FILE *s_elev_log = NULL;
+static int   s_elev_log_init = 0;
+void re15_elev_log(const char *fmt, ...)
+{
+    if (!s_elev_log_init) {
+        s_elev_log_init = 1;
+        const char *p = getenv("RE15_ELEV_LOG");
+        if (p && *p) s_elev_log = fopen(p, "w");
+    }
+    if (!s_elev_log) return;
+    va_list ap; va_start(ap, fmt);
+    vfprintf(s_elev_log, fmt, ap);
+    va_end(ap);
+    fputc(10, s_elev_log);
+    fflush(s_elev_log);
+}
+int re15_elev_log_on(void) { return s_elev_log != NULL || getenv("RE15_ELEV_LOG") != NULL; }
+/* ===================== ENDE MESSHAKEN ================================= */
+
 /*=========================================================================
  * SELBSTHEILENDER KAMERA-APPLY — byte-true FUN_8002137c @0x800214dc-0x80021514
  * (Vergleich + Dirty) und FUN_80021bbc @0x80021be0-0x80021bfc (Apply-Kopf).
@@ -191,12 +218,15 @@ void re15_room_request_change(unsigned room_id, int32_t x, int32_t y, int32_t z,
     g_room_change.x = x; g_room_change.y = y; g_room_change.z = z;
     g_room_change.yaw_4096   = yaw;
     g_room_change.target_cut = target_cut;
+    re15_elev_log("REQ  room=0x%04X spawn=(%d,%d,%d) yaw=%d cut=%d  (von=0x%04X)",
+                  room_id, (int)x, (int)y, (int)z, (int)yaw, target_cut, g_current_room_id);
 }
 
 int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 {
     if (!g_room_change.pending) return 0;
     g_room_change.pending = 0;
+    re15_elev_log("APPLY-START ziel=0x%04X aktuell=0x%04X", g_room_change.room_id, g_current_room_id);
     re15_savepoint_reset();   /* new room: drop any stale save pending/latched-cut from the old room */
     /* GLOBALE PAUSE-FLAGS beim Raumwechsel loeschen — byte-true: die Transitions-FSM schreibt
      * `sw zero,-13760(at)` auf 0x800aca40 an ZWEI Stellen, @0x8001ca44 und @0x8001caec. Ohne
@@ -209,7 +239,12 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 
     /* (1) ARCH: load the destination ROOM####.RDT (CD on PSX / file on PC) into
      * g_room_rdt. Abort the transition if it fails (player stays put). */
-    if (c->load_rdt(g_room_change.room_id) != 0) return 0;
+    if (c->load_rdt(g_room_change.room_id) != 0) {
+        re15_elev_log("APPLY-ABBRUCH load_rdt(0x%04X) FEHLGESCHLAGEN — aktuell bleibt 0x%04X",
+                      g_room_change.room_id, g_current_room_id);
+        return 0;
+    }
+    re15_elev_log("APPLY-LOAD ok -> g_current_room_id=0x%04X", g_current_room_id);
 
     /* (2) PER-RAUM-TEARDOWN — VOR dem Re-Aliasing, denn ab hier zeigt *c->rdt auf den neuen Raum
      * und jede Aufraeum-Entscheidung, die noch den alten Zustand braucht, kaeme zu spaet.
@@ -420,5 +455,7 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * Beide Baenke sind aus dem RDT geschnitten, gelten also nur fuer DIESEN Raum. */
     re15_audio_load_room_banks();
 
+    re15_elev_log("APPLY-ENDE  raum=0x%04X cut=%d spieler=(%d,%d,%d)", g_current_room_id, cut,
+                  (int)pl->x, (int)pl->y, (int)pl->z);
     return 1;
 }

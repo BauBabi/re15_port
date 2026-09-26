@@ -1,0 +1,64 @@
+# Auszug aus press2fb.log — Ereigniszeilen
+1:EVT_EXEC sub=2 cond=0xff -> slot 10  raum=0x1240
+102:REQ  room=0x1080 spawn=(-12050,0,-670) yaw=3072 cut=0  (von=0x1240)
+103:APPLY-START ziel=0x1080 aktuell=0x1240
+104:APPLY-LOAD ok -> g_current_room_id=0x1080
+105:APPLY-ENDE  raum=0x1080 cut=0 spieler=(-12050,0,-670)
+407:EVT_EXEC sub=2 cond=0xff -> slot 10  raum=0x1080
+409:EVT_EXEC sub=2 cond=0xff -> slot 11  raum=0x1080
+411:EVT_EXEC sub=2 cond=0xff -> slot 10  raum=0x1080
+413:EVT_EXEC sub=2 cond=0xff -> slot 11  raum=0x1080
+451:EVT_EXEC sub=8 cond=0xff -> slot 10  raum=0x1080
+614:AOT_ON slot=1 typ=1
+615:FIRE_DOOR slot=1 dest=st0 rm0x0C cut=0
+616:REQ  room=0x10C0 spawn=(1450,0,7300) yaw=3072 cut=0  (von=0x1080)
+617:SCAN-FIRE-DOOR slot=0 action=0 inside=0
+618:FIRE_DOOR slot=0 dest=st0 rm0x04 cut=5
+619:REQ  room=0x1040 spawn=(-21936,0,-11000) yaw=1024 cut=5  (von=0x1080)
+620:APPLY-START ziel=0x1040 aktuell=0x1080
+621:APPLY-LOAD ok -> g_current_room_id=0x1040
+622:APPLY-ENDE  raum=0x1040 cut=5 spieler=(-21936,0,-11000)
+# Bildzeilen F490..F519 (Umfeld des Feuer-Bildes)
+601:F490 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1575) pend=0->1080
+602:F491 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1500) pend=0->1080
+603:F492 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1425) pend=0->1080
+604:F493 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1350) pend=0->1080
+605:F494 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1275) pend=0->1080
+606:F495 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1200) pend=0->1080
+607:F496 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1125) pend=0->1080
+608:F497 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-1050) pend=0->1080
+609:F498 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-975) pend=0->1080
+610:F499 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-900) pend=0->1080
+611:F500 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-825) pend=0->1080
+612:F501 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-750) pend=0->1080
+613:F502 raum=1080 cut=0 pmode=2 pause=01000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000400 cursor=0(-19554,23484)notch=5 spieler=(-13650,0,-675) pend=0->1080
+1113:F490 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1114:F491 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1115:F492 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1116:F493 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1117:F494 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1118:F495 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1119:F496 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1120:F497 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1121:F498 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1122:F499 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1123:F500 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1124:F501 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1125:F502 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1126:F503 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1127:F504 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1128:F505 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1129:F506 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1130:F507 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1131:F508 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1132:F509 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1133:F510 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1134:F511 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1135:F512 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1136:F513 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1137:F514 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1138:F515 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1139:F516 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1140:F517 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1141:F518 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
+1142:F519 raum=1040 cut=5 pmode=0 pause=00000007 pad=0000 f5=000 f3_54=0 f3_55=0 f3_56=0 thr=00000000 cursor=0(-25200,-360)notch=0 spieler=(-21936,0,-11300) pend=0->1040
