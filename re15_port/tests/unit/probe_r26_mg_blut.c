@@ -174,11 +174,11 @@ int main(void)
     /* (1) BLUTMENGE: mindestens die Stroeme des kleineren Sub-Records. Alter Stand: 1. */
     {
         int minstr = (str0 < str1) ? str0 : str1;
-        CHECK(blut_mg >= minstr,
-              "(1) MG-Blutstoss belegt %d Slots, die Bank traegt aber mindestens %d Stroeme je "
-              "Spawner-Aufruf (FUN_8001BF10 klont uVar1 aus dem Sub-Record)", blut_mg, minstr);
-        CHECK(blut_mg > 1, "(1) MG-Blutstoss ist %d Slot — das ist der alte 0x1500-Stand-in",
-              blut_mg);
+        (void)minstr;
+        CHECK(blut_mg == str0 || blut_mg == str1,
+              "(1) MG-Blutstoss belegt %d Slots, die Bank traegt aber %d (sub0) bzw. %d (sub1) "
+              "Stroeme je Spawner-Aufruf (FUN_8001BF10 klont uVar1 aus dem Sub-Record) — die "
+              "Slot-Zahl kommt also nicht aus den ESP-Daten", blut_mg, str0, str1);
     }
 
     /* (2) RNG-WURFZAHL: gepinnt wird die DIFFERENZ zur Pistole, damit der Pin nicht an den
