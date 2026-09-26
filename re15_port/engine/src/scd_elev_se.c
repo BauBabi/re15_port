@@ -83,6 +83,14 @@
  * (`uint8_t op = *t->pc;`), und zwar hinter dem Wachposten
  * `if (g_re15_elev_anchor_n)`. Der ist in 236 von 240 Raeumen 0 — ein
  * Global-Load und ein Sprung, und die Flag-Logik bleibt unberuehrt.
+ *
+ * 5. OFFEN (Nutzer-Entscheidung, bewusst NICHT entschieden)
+ * ----------------------------------------------------------
+ * Weil der Anker aus den Daten kommt, toent der Ton AUCH in den drei Fahrten von
+ * ROOM4020/4021 (A-2 ELEVATOR) - die Skript-Signatur ist dort bitgleich, und das
+ * Original ist dort ebenfalls stumm. Ob das gewollt ist, ist eine Nutzer-Frage.
+ * Ein Ausschluss waere ein Raum-Gate im Code, also genau das, was hier vermieden
+ * werden sollte; deshalb bleibt es vorerst so.
  * ==========================================================================*/
 
 #include <string.h>
