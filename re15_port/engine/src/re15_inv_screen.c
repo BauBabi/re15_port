@@ -2155,9 +2155,14 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             q->x = (int16_t)lauf0; q->y = (int16_t)fest;
                             q->w = (int16_t)(s - lauf0); q->h = 1;
                         }
-                        if (vorher == RE15_MAP_RECT_CURRENT)
-                            { q->r = 192; q->g =  24; q->b =  24; }
-                        else { q->r =  40; q->g = 144; q->b =  40; }
+                        /* ⛔ DIE INNENWAND FOLGT DEN NEUEN KACHELTOENEN.
+                         * Hier standen die alten Modulations-Faktoren (192,24,24)/
+                         * (40,144,40) als FILL-Farben. Seit die Kacheln RE2s
+                         * Zustandszeilen tragen (blau 1040b0 / dunkelrot 680808)
+                         * waeren gruene Trennwaende ein Fremdkoerper. re2_ton
+                         * fuehrt dieselben Werte. */
+                        { int wr, wg, wb; re2_ton(vorher, &wr, &wg, &wb);
+                          q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb; }
                     }
                     vorher = zu; lauf0 = s;
                 }
@@ -2206,9 +2211,8 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                         }
                         _rs = best;
                     }
-                    if (_rs == RE15_MAP_RECT_CURRENT)
-                        { q->r = 192; q->g =  24; q->b =  24; }
-                    else { q->r =  40; q->g = 144; q->b =  40; }
+                    { int wr, wg, wb; re2_ton(_rs, &wr, &wg, &wb);   /* s.o. */
+                      q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb; }
                 }
             }
         }

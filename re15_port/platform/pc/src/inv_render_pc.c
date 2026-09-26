@@ -165,14 +165,8 @@ static uint8_t *load_cd(const char *rel, int *size)
  * Blau ist RE2s Wert. Auftrag war "nach RE2 nachbauen", also steht hier RE2s
  * Blau; ein Zurueck ist genau eine Zeile (RE15_KARTE_BESUCHT).
  *=======================================================================*/
-/* Die drei Halbwoerter sind AUS DER DATEI GELESEN, nicht gerechnet — mein erster
- * von Hand umgerechneter Wurf war in beiden Faellen falsch:
- *   ST0.TIM Datei-Offset 0x10996 = 0xD902 = 1040b0, STP  (CLUT-Y 501, k=11) */
-#define RE15_KARTE_BESUCHT   ((uint16_t)0xD902u)
-/*   ST0.TIM Datei-Offset 0x109B6 = 0x842D = 680808, STP  (CLUT-Y 502, k=12) */
-#define RE15_KARTE_AKTUELL   ((uint16_t)0x842Du)
-/*   ST0.TIM Datei-Offset 0x10936 = 0x0000 = durchsichtig (CLUT-Y 498, k= 8) */
-#define RE15_KARTE_UNBESUCHT ((uint16_t)0x0000u)
+/* Die drei Halbwoerter stehen in re15_inv_screen.h (RE15_KARTE_*) — dieselbe
+ * Quelle, die der Riegel unit_karte_besitz gegen RE2s ST0.TIM nachmisst. */
 
 static void karten_cluts_bauen(void)
 {
