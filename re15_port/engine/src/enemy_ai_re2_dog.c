@@ -690,6 +690,11 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
         e->re2d_air219 = 0;                                /* sb zero,537 @0x801005DC */
         e->re2d_wound22d = 0;                              /* sb zero,557 @0x801005E0 (Review-Fix
                                                             * #10: war Selbstzuweisung) */
+        /* FEHLSTELLE C1 (Runde 26, selbst nachgelesen): Phase 0 raeumt auch den Pose-Riegel ab —
+         * `lbu v0,467(s0)` @0x801005F4 / `andi v0,v0,0x7f` @0x80100600 / `sb v0,467(s0)`
+         * @0x80100608. Der Store geht auf s0 (= dieser Hund, `addu s0,a0,zero` @0x80100550),
+         * ist also ein echter Selbst-Freigeber und fehlte im Port. */
+        e->re2z_self1d3 &= 0x7fu;                          /* @0x801005F4-0x80100608 */
         break;
     case 1:
         re2d_move(e, 0);                                   /* 0x800152C8(0) @0x80100610 */

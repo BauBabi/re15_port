@@ -7407,6 +7407,26 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
     }
 }
 
+/* RE1.5-Sub 0x0C — ACT-Tabelle @0x80120FD4[12] (Rohwort @0x80121004) = 0x801101E4, selbst
+ * disassembliert. Phasen-Automat auf +0x6, EINZIGER `jal` ist anim_set 0x8001f314 @0x80110288;
+ * NULL Effekt-Aufrufe:
+ *   Phase 0 @0x80110230: +0x6=1, +0x94=8 (Clip 8) @0x8011023c-40, +0x95=0 @0x80110250,
+ *                        +0x96=0 @0x80110260, +0x8f=7 @0x8011026c-70
+ *   Phase 1 @0x80110274: anim_set(+0x84,+0x16c,0,0x200) @0x80110288; +0x6 += Rueckgabe
+ *                        @0x801102a4-ac
+ *   Phase 2 @0x801102b0: +0x5 = 2 (CHASE), +0x6 = 0 @0x801102c0
+ * (re15_dog_clip setzt +0x94/+0x95/+0x8f in einem — die 7 ist genau die `ori v0,zero,0x7`
+ * @0x8011026c.) */
+static void re15_dog_release0c(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) { re15_dog_clip(e, 8); e->sub_state_2 = 1; }   /* @0x80110230-70 */
+    else if (e->sub_state_2 == 1) { if (re15_dog_anim(e)) e->sub_state_2 = 2; }  /* @0x80110288-ac */
+    else {
+        re15_dog_sub(e, 2);                                 /* Ausgang -> CHASE @0x801102b0-c0 */
+        e->dog_cage_rel0c = 0;                              /* Herkunftsmarke verbraucht */
+    }
+}
+
 /* STATE 4/5/6 (0x80111350) — the SCRIPTED dog states. Sub-dispatch on +0x5 (table @0x801210c8,
  * raw dump): [0]=0x80111398 scripted pounce (grid-0x40 spawn), [1]=0x80111658 window hold
  * (grid-0x41 spawn), [2]/[3]=0x80111764/6c stubs, [4/5]=0x80111984 kill machine A,
@@ -7480,6 +7500,9 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
         if (e->grid_id == 0x42) {                        /* SCD release mark 'B' @0x8011170c-14 */
             e->grid_id = 0;                              /* consumed @0x80111718 */
             e->state = 1; e->sub_state_1 = 0x0c; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* word 0xc01 @0x8011172c */
+            e->dog_cage_rel0c = 1;                       /* PORT-MARKE (kein Original-Feld): nur
+                                                          * DIESE Herkunft darf unter dem RE2-
+                                                          * Geschmack in die RE1.5-ACT[12] laufen */
             /* +0xbc/+0xbe -= 300 (@0x8011173c-50) — shadow pair, see above */
         }
         break;
@@ -7580,6 +7603,24 @@ static void re15_dog_ai_tick(int slot)
             e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
                                       | ((e->re2z_self1d3 & 0x7fu) - 1u));
         if (e->state >= 4 && e->state <= 6) { re15_dog_state456(e, pl); return; }
+        /* ⛔ ROOM11D0/11D1 + ROOM3060/3061: der RE1.5-Kaefig-Ausgang @0x8011172c schreibt das
+         * Zustandswort 0x0C01 (`ori v0,zero,0xc01` @0x80111718). Sub 0x0C existiert NUR in der
+         * RE1.5-ACT-Tabelle @0x80120FD4[12] = 0x801101E4 (Clip 8 aufstehen -> Sub 2, null
+         * Effekte). In RE2 ist @0x80105464[12] = 0x80102608 der Post-Latch, dessen Schwanz
+         * Blut zieht (`jal 0x80105070` @0x80102804 und @0x80102844) — daher die Blutflut, die
+         * der Nutzer sieht. Das Blut kommt NICHT bedingungslos jedes Bild: es haengt am
+         * EDD-Frame-Wort (`lw s1,0(v0)` @0x801027e4 / `lui v0,0x3` @0x801027e8 /
+         * `and v0,s1,v0` @0x801027ec / `beq v0,zero,0x8010284c` @0x801027f0), der zweite
+         * Spritzer zusaetzlich an @0x80102814 und am 1/4-Wuerfel @0x80102828 — Sub-12-Phase 0
+         * zieht aber den Schuettel-Clip auf, dessen Frames diese Bits tragen.
+         * Die Weiche fragt die HERKUNFTSMARKE ab, nicht den Zustand: der ECHTE RE2-Abwurf
+         * (`addiu v0,zero,12` @0x80102218 / `sb v0,5(s1)` @0x8010221c, Port
+         * enemy_ai_re2_dog.c re2d_sub7_latch) erzeugt denselben Zustand und muss weiterhin in
+         * re2d_sub12_postlatch laufen. */
+        if (e->dog_cage_rel0c) {
+            if (e->state == 1 && e->sub_state_1 == 0x0c) { re15_dog_release0c(e); return; }
+            e->dog_cage_rel0c = 0;                       /* Zustand verlassen -> Marke fallen */
+        }
         re15_re2dog_tick(slot);
         return;
     }
@@ -8016,9 +8057,7 @@ static void re15_dog_ai_tick(int slot)
             break;
 
         case 0x0c:   /* RELEASE 0x801101e4 (clip 0x08): the player broke free -> recover to CHASE */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 8); e->sub_state_2 = 1; }   /* stand-up clip 8 @0x8011023c */
-            else if (e->sub_state_2 == 1) { if (re15_dog_anim(e)) e->sub_state_2 = 2; }
-            else re15_dog_sub(e, 2);                          /* exit -> CHASE @0x801102b0 */
+            re15_dog_release0c(e);                            /* @0x801101e4, s. dort */
             break;
 
         case 13:  /* OBSTACLE-REROUTE 13: leap OVER (one level UP) -> CHASE */
