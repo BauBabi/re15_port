@@ -625,6 +625,9 @@ void scd_vm_set_room_init(int on) { s_vm_room_init = on ? 1 : 0; }
 static int s_cursor_ok_vorframe = 0;
 static int s_cursor_ok_jetzt    = 0;
 unsigned   g_re15_cursor_ok_zaehler = 0;   /* Messschiene (Sonde r17_cursor_klick) */
+/* Messschiene fuer den RE2-Panel-Klick (Sonde panel_klick_11f0): zaehlt, wie oft der
+ * Tastendruck am Cursor-Raetsel den RE2-Raum-SE Gruppe 2 / Index 0x0A ausloest. */
+unsigned   g_re15_panel_klick_zaehler = 0;
 
 void scd_vm_tick(void)
 {
@@ -4787,7 +4790,18 @@ int op_sce_key_ck(scd_thread_t *t)
             s_cursor_ok_jetzt = 1;
             if (!s_cursor_ok_vorframe) {
                 g_re15_cursor_ok_zaehler++;
-                re15_audio_core_se(6);   /* CORE-Bank 4, Satz 6 (s.o.) */
+                /* ⛔ RE2-ERGAENZUNG (2026-09-26), NICHT byte-true RE1.5 — der Nutzer:
+                 * "Dieser Klick Sound, den moechte ich auch fuer die Panel Raetsel haben,
+                 * wenn ich da eine Taste gedrueckt habe."
+                 * Vorher stand hier re15_audio_core_se(6) = der UI-Bestaetigungston.
+                 * RE2 fuehrt den Tastendruck am Schalterfeld dagegen als RAUM-SE:
+                 *   ROOM2130.RDT sub04+0x0082 (@Datei 0x01192)
+                 *   36 02 0a 01 00 00 9b a0 00 fc f4 d3 = se_on(Gruppe 2, Index 0x0A)
+                 * und Gruppe 2 ist die raumeigene snd0-Bank. RE1.5 hat dafuer NICHTS:
+                 * ROOM11F0s SCD enthaelt 0 Se_on-Opcodes, und sein snd0-EDT @Datei 0x03794
+                 * ist auf 0x0A leer (`00 00 00 00`). Darum die RE2-Bank (re15_audio.h). */
+                g_re15_panel_klick_zaehler++;
+                re15_audio_re2_panel_se(RE15_PANEL_SE_KLICK);   /* RE2 Gruppe 2 / 0x0A */
             }
         }
     }

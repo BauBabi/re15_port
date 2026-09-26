@@ -75,6 +75,7 @@ static inline int RNDI(float f) {
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
 #include "re15_item_discard.h" /* re15_discard_* — "You don't need this key any more. Discard it?" */
+#include "re15_panel_zeiger.h"  /* der rote Leistungs-Zeiger, ROOM11F0 Cut 10 */
 #include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
@@ -4438,6 +4439,27 @@ re_title:;
             } else {
                 re15_bg_blit(0, 0);
             }
+            /* DER ROTE LEISTUNGS-ZEIGER des Boiler-Room-Bedienfelds (ROOM11F0, Cut 10).
+             * Direkt nach dem Hintergrund und vor dem 3D-Pass, weil er zur ANZEIGE des
+             * Bedienfelds gehoert (die Skala selbst steckt im BSS). Er liegt bei x 282,
+             * die 3D-Props des Raetsels bei x 64..172 - sie ueberdecken sich nicht.
+             * Belege (RE2-Offsets + die selbst vermessene Skalen-Eichung):
+             * include/re15_panel_zeiger.h. */
+            { int zx = 0, zy = 0;
+              if (re15_panel_zeiger_sicht(&zx, &zy)) {
+                  /* Pfeilspitze nach LINKS, auf die Teilstrich-Saeule (x 280) zu — das
+                   * 90-Grad-Bild von RE2s Dreieck (0,-18,-7)/(0,-18,6)/(0,18,0), das dort
+                   * mit der SPITZE zur Skala und der flachen Grundkante von ihr weg steht.
+                   * Zeile k beginnt |k| Pixel weiter rechts und ist entsprechend kuerzer;
+                   * die rechte Kante bleibt buendig (= die Grundkante des Dreiecks). */
+                  for (int k = -RE15_PANEL_HALB_H; k <= RE15_PANEL_HALB_H; k++) {
+                      int ab = (k < 0) ? -k : k;
+                      int laenge = RE15_PANEL_TIEFE - ab;
+                      if (laenge <= 0) continue;
+                      re15_render_tile(zx + ab, zy + k, laenge, 1, 0,
+                                       RE15_PANEL_ROT_R, RE15_PANEL_ROT_G, RE15_PANEL_ROT_B);
+                  }
+              } }
         } else {
             /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
              * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,

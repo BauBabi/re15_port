@@ -859,3 +859,10 @@ void re15_audio_re2_elevator_se(int se_id)
 {
     (void)se_id;   /* TODO(psx): ELEVSE.VBS in die SPU + se_id spielen */
 }
+
+/* RE2-Ergaenzung: Panel-Klick-Bank (RE2 ROOM2130 snd0, Belege in re15_audio.h).
+ * PSX-SPU-Pfad = Folge-Stub wie bei den uebrigen SE-Baenken. */
+void re15_audio_re2_panel_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): shared_assets/RE2/PANEL2130.* in den SPU laden */
+}

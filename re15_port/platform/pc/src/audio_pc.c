@@ -964,6 +964,60 @@ void re15_audio_core_se(int se_id)
     se_play_layers(s_core_edt, &s_core_vab, s_core_decoded, s_core_decoded_len, se_id);
 }
 
+/* ===== RE2-ERGAENZUNG: die PANEL-KLICK-Bank (RE2 ROOM2130 snd0) ======================
+ * Herleitung + Belege: re15_audio.h bei re15_audio_re2_panel_se. Kurz:
+ * ROOM11F0s SCD hat 0 Se_on-Opcodes und ROOM11F0s snd0-EDT @Datei 0x03794 traegt auf
+ * 0x0A/0x0C `00 00 00 00` (leer) — RE1.5 ist hier unfertig, also gilt RE2.
+ * Die Bank ist der bytegleiche snd0-Schnitt aus ROOM2130.RDT
+ * (EDT @0x0339C / VH @0x0345C / VB @0x0407C), ausgeliefert als
+ * shared_assets/RE2/PANEL2130.EDT/.VH/.VB. Geladen wird sie GENAU WIE die CORE-Bank
+ * (derselbe EDT->prog/tone->VAG-Pfad, dieselbe se_play_layers). */
+static re15_vab_t s_panel_vab;
+static int16_t  *s_panel_decoded[RE15_VAB_MAX_SAMPLES];
+static int       s_panel_decoded_len[RE15_VAB_MAX_SAMPLES];
+static uint8_t  *s_panel_edt = NULL;
+static int       s_panel_edt_count = 0;
+static int       s_panel_state = 0;          /* 0 = ungeprueft, 1 = geladen, -1 = fehlt */
+
+static int load_re2_panel_se_pc(void)
+{
+    if (s_panel_state) return (s_panel_state == 1) ? 0 : -1;
+    s_panel_state = -1;
+    int edt_sz = 0, vh_sz = 0, vb_sz = 0;
+    uint8_t *edt = re15_pc_read_re2("PANEL2130.EDT", &edt_sz);
+    uint8_t *vh  = re15_pc_read_re2("PANEL2130.VH",  &vh_sz);
+    uint8_t *vb  = re15_pc_read_re2("PANEL2130.VB",  &vb_sz);
+    if (!edt || !vh || !vb || edt_sz < 4 ||
+        re15_vab_parse(vh, (size_t)vh_sz, &s_panel_vab) != 0) {
+        static int warned = 0;
+        if (!warned) { warned = 1;
+            fprintf(stderr, "[panelse] shared_assets/RE2/PANEL2130.* fehlt -> Panel-Klick stumm\n"); }
+        free(edt); free(vh); free(vb); return -1;
+    }
+    for (int i = 0; i < s_panel_vab.vag_count; i++) {
+        uint32_t off = s_panel_vab.samples[i].offset, sz = s_panel_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_panel_decoded[i]     = pcm;
+        s_panel_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vh); free(vb);
+    s_panel_edt       = edt;
+    s_panel_edt_count = edt_sz / 4;
+    s_panel_state     = 1;
+    return 0;
+}
+
+void re15_audio_re2_panel_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (load_re2_panel_se_pc() != 0) return;
+    if (se_id < 0 || se_id >= s_panel_edt_count) return;
+    se_play_layers(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
+}
+
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
  * EDT (bank1) maps se_id -> program+tone -> VAG (identical to re15_footstep_vag). The GUNSHOT is
  * se_id 8. Stimme + Prioritaets-Gate laufen jetzt in se_play_layers (Adressen dort;
