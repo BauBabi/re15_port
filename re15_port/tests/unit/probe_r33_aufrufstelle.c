@@ -142,6 +142,7 @@ static uint16_t elev_pad_for(const re15_actor_t *e)
     return 0;
 }
 
+static uint32_t s_last_gate5, s_last_class;
 static uint8_t *s_ems2 = NULL; static size_t s_ems2_n = 0;
 static re15_enemy_bank_t *load_re2_bank(uint8_t type)
 {
@@ -250,11 +251,22 @@ static int teil1_haltung(int budget, int *saw_lying, int *saw_standing, int *bad
     return 0;
 }
 
-/* ===== TEIL 2: TREFFERZENSUS + KONTROLLE ===================================================
- * null_box != 0 setzt die Trefferbox JEDES Bild kuenstlich auf b=h=0 und markiert sie als
- * gueltig. Das fuenfte Tor hat dann das Fenster [-100,100) — die Muendung liegt gemessen bei
- * ~1665 ueber den Fuessen, also MUSS die Trefferzahl auf 0 fallen. Tut sie das nicht, laeuft
- * das Tor an dieser Messung vorbei und die Spalte "Treffer" sagt nichts ueber das Tor aus. */
+/* ===== TEIL 2: TREFFERZENSUS + KONTROLLEN ==================================================
+ * ⛔ RUNDE 34 UMGESTELLT. Bis Runde 33 sperrte den liegenden Hund das FUENFTE TOR
+ * (@0x8004716C-A4, +0x98/+0x9E gegen die Muendungshoehe), und die Kontrolle nullte genau
+ * diese Box. Seit Runde 34 laeuft der Schuss ueber die HALTUNGSKLASSE (word0>>26)&7
+ * (FUN_800410CC @0x800413C4-D8) gegen die Maskentabelle @0x800A6DB4; das fuenfte Tor
+ * gehoert nur noch dem MESSER (@0x80042F94) und dem Bolzen (@0x800467C0).
+ * Deshalb gibt es jetzt ZWEI Kontrollen, und beide messen den MECHANISMUS:
+ *   null_box == 1  Trefferbox jedes Bild b=h=0 und gueltig. FRUEHER musste die Trefferzahl
+ *                  darauf auf 0 fallen; JETZT darf sie sich NICHT MEHR AENDERN — genau das
+ *                  ist der Beweis, dass das Tor nicht mehr im Schuss-Pfad liegt.
+ *   null_box == 3  Haltungsklasse jedes Bild = 4 (nur Bit 2). Die EBEN-Zeile 3 der
+ *                  Maskentabelle lautet `2,0,0` und fragt allein Bit 1 ab -> die Trefferzahl
+ *                  MUSS bei jedem Applier-Typ auf 0 fallen. (Klasse 0 taugt als Kontrolle
+ *                  nicht: fuer die Zombie-Familie faengt sie die Port-Ersatzmaske
+ *                  "parts==0 -> 3" ab, gemessen 70 Treffer trotz Klasse 0.)
+ * Jeder Lauf zaehlt zusaetzlich die Tor-Urteile und die Klassen-Lesungen mit. */
 static int zensus(const char *tag, uint8_t type, int kriecher, const char *room, int room_id,
                   int fire_sub, int baby_force, int budget, int null_box, int *box_set_out)
 {
@@ -267,6 +279,7 @@ static int zensus(const char *tag, uint8_t type, int kriecher, const char *room,
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *e  = &g_actors[slot];
     aim_up(slot, 2000);
+    re15_dmg_mech_reset();
     int treffer = 0, box_set = 0;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100; e->hp = 30000;
@@ -275,16 +288,19 @@ static int zensus(const char *tag, uint8_t type, int kriecher, const char *room,
         if (null_box == 1) { e->re2_hit_b98 = 0; e->re2_hit_h9e = 0; e->re2_hit_box_set = 1; }
         else if (null_box == 2) { /* KRIECHER-Box des RE2-Zombies, @0x80100B14-20 / @0x80103460-6C */
             e->re2_hit_b98 = -350; e->re2_hit_h9e = 350; e->re2_hit_box_set = 1; }
+        else if (null_box == 3) { e->re2z_parts = 4u; }   /* nur Bit 2, s. Blockkopf */
         frame((uint16_t)(RE15_PAD_BIT_R1 | elev_pad_for(e) | RE15_PAD_BIT_SQUARE),
               (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
         if (e->re2_hit_box_set) box_set = 1;
         if (e->hp < 30000) treffer++;
     }
     if (box_set_out) *box_set_out = box_set;
-    printf("  [%-22s] Treffer %4d in %4d Bildern | box_set=%d%s\n",
-           tag, treffer, budget, box_set,
-           null_box == 1 ? "  (KONTROLLE: Box genullt)" :
-           null_box == 2 ? "  (Box erzwungen: Kriecher -350/350 @0x80100B14-20)" : "");
+    re15_dmg_mech_counts(&s_last_gate5, &s_last_class, NULL);
+    printf("  [%-22s] Treffer %4d in %4d Bildern | box_set=%d | Tor5 %u / Klasse %u%s\n",
+           tag, treffer, budget, box_set, s_last_gate5, s_last_class,
+           null_box == 1 ? "  (KONTROLLE Box genullt — darf NICHTS aendern)" :
+           null_box == 2 ? "  (Box erzwungen: Kriecher -350/350 @0x80100B14-20)" :
+           null_box == 3 ? "  (KONTROLLE Klasse 4 — muss auf 0 fallen)" : "");
     return treffer;
 }
 
@@ -337,10 +353,73 @@ int main(int argc, char **argv)
     tb[5] = zensus("BABY 0x26",            0x26, 0, "STAGE1/ROOM1090.RDT", 0x1090, -1, 1, 900, 0, &bs[5]);
     tb[6] = -2;   /* Platzhalter, s. Kontrolle */
 
-    printf("\n=== TEIL 3: KONTROLLE — TREFFERBOX KUENSTLICH GENULLT ===\n");
+    printf("\n=== TEIL 3a: KONTROLLE — TREFFERBOX KUENSTLICH GENULLT ===\n");
+    printf("  (Seit Runde 34 ist das die GEGENPROBE: die Zahlen muessen den Zeilen aus Teil 2\n"
+           "   gleichen und Tor5 muss 0 sein — das Tor liegt nicht mehr im Schuss-Pfad.)\n");
     int kc_dummy = 0;
     int kz = zensus("ZOMBIE 0x10 stehend",  0x10, 0, "STAGE1/ROOM1140.RDT", 0x1140, -1, 0, 300, 1, &kc_dummy);
+    uint32_t kz_g5 = s_last_gate5;
     int kh = zensus("HUND 0x20",            0x20, 0, "STAGE1/ROOM1190.RDT", 0x1190, 13, 0, 300, 1, &kc_dummy);
+    uint32_t kh_g5 = s_last_gate5;
+    printf("\n=== TEIL 3b: KONTROLLE — HALTUNGSKLASSE AUF 4 (nur Bit 2) ===\n");
+    int kz4 = zensus("ZOMBIE 0x10 stehend",  0x10, 0, "STAGE1/ROOM1140.RDT", 0x1140, -1, 0, 300, 3, &kc_dummy);
+    uint32_t kz4_cls = s_last_class;
+    int kh4 = zensus("HUND 0x20",            0x20, 0, "STAGE1/ROOM1190.RDT", 0x1190, 13, 0, 300, 3, &kc_dummy);
+    uint32_t kh4_cls = s_last_class;
+
+    /* ===== TEIL 4: DER NUTZER-BEFUND ALS BILDERZAHL, JETZT UEBER DIE KLASSE ===============
+     * "Im Original sind die Hunde erst wieder verwundbar, sobald sie stehen" (Runde 26).
+     * Gemessen wird der volle Ablauf am STUECK: stehend treffen -> er geht nieder -> waehrend
+     * er liegt darf KEIN Schaden fallen -> er steht auf -> es faellt wieder Schaden.
+     * Dazu je Abschnitt die Haltungsklasse, damit die Ursache mitgemessen ist. */
+    int b_stand_hits = 0, b_lie_frames = 0, b_lie_hits = 0, b_up_frames = 0, b_up_hits = 0;
+    int b_kette = -1, b_cls_lie_bad = 0, b_cls_up_ok = 0;
+    uint32_t b_g5 = 0, b_cls = 0;
+    if (load_room("STAGE1/ROOM1190.RDT", 0x1190, 13)) {
+        int slot = setup_target(0x20, 0, 3, 0);
+        if (slot >= 0) {
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            re15_actor_t *e  = &g_actors[slot];
+            aim_up(slot, 2000);
+            e->re2z_self1d3 = 0;
+            re15_dmg_mech_reset();
+            int nieder = -1, wieder = -1;
+            for (int f = 0; f < 600; f++) {
+                pl->hp = 100; e->hp = 30000;
+                if (!e->active) break;
+                track(slot, 2000);
+                int schuss = (f >= 10);
+                frame((uint16_t)(RE15_PAD_BIT_R1 | (schuss ? RE15_PAD_BIT_SQUARE : 0u)),
+                      (uint16_t)((schuss && (f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+                int hit = (e->hp < 30000);
+                unsigned k = (unsigned)e->re2z_parts & 7u;
+                if (nieder < 0) { if (hit) b_stand_hits++;
+                                  if (e->state == 2) nieder = f;
+                                  continue; }
+                if (wieder < 0 && e->state != 2) wieder = f;
+                if (wieder < 0) { b_lie_frames++; if (hit) b_lie_hits++;
+                                  if (k != 1u) b_cls_lie_bad++; }
+                else            { b_up_frames++;  if (hit) b_up_hits++;
+                                  /* ⛔ NICHT "in JEDEM Bild Bit 1": der Hund wird hier weiter
+                                   * beschossen und geht dabei erneut nieder — dann IST die
+                                   * Klasse wieder 1 (`and 0xE7FFFFFF` @0x80104090-B4), und das
+                                   * ist richtig. Gezaehlt wird, ob er nach dem Aufstehen
+                                   * ueberhaupt wieder Bit 1 traegt. Die strenge Zuordnung
+                                   * Box <-> Klasse prueft Teil 1 (0 Abweichungen/400 Bilder). */
+                                  if (k & 2u) b_cls_up_ok++;
+                                  if (b_up_frames >= 60) break; }
+            }
+            if (nieder >= 0 && wieder >= 0) b_kette = wieder - nieder;
+            re15_dmg_mech_counts(&b_g5, &b_cls, NULL);
+        }
+    }
+    printf("\n=== TEIL 4: DER NUTZER-BEFUND, GEMESSEN UEBER DIE HALTUNGSKLASSE ===\n");
+    printf("  stehend getroffen: %d | Kette bis er wieder steht: %d Bilder\n"
+           "  waehrend er LIEGT: %d Treffer in %d Bildern (Klasse != 1 in %d Bildern)\n"
+           "  nach dem AUFSTEHEN: %d Treffer in %d Bildern (Klasse MIT Bit 1 in %d Bildern)\n"
+           "  MECHANISMUS: Tor5-Urteile %u | Klassen-Lesungen %u\n",
+           b_stand_hits, b_kette, b_lie_hits, b_lie_frames, b_cls_lie_bad,
+           b_up_hits, b_up_frames, b_cls_up_ok, b_g5, b_cls);
 
     printf("\n=== URTEIL ===\n");
     printf("  Haltungsklasse Hund: %s\n",
@@ -351,9 +430,10 @@ int main(int argc, char **argv)
         for (int i = 0; i < 6; i++)
             printf("  %-38s %s\n", N[i],
                    tb[i] < 0 ? "FEHLLAUF" : (tb[i] > 0 ? "treffbar" : "⛔ NIE GETROFFEN")); }
-    printf("  (Zeile 2 ist eine WARNUNG, kein Live-Zustand: der Port setzt die Kriecher-Box\n"
-           "   heute fuer KEINEN Typ. Wer sie setzt, macht den Kriecher ueber das fuenfte Tor\n"
-           "   dauerhaft untreffbar — 0 Treffer in 900 Bildern, Fenster [-100,800).)\n");
+    printf("  (Zeile 2 war bis Runde 33 eine WARNUNG: mit der Kriecher-Box -350/350 sperrte das\n"
+           "   fuenfte Tor den Kandidaten dauerhaft. Seit Runde 34 liegt das Tor nicht mehr im\n"
+           "   Schuss-Pfad, die Zeile trifft wieder und ist damit KEINE Warnung mehr — die\n"
+           "   Kriech-Frage haengt jetzt an der Haltungsklasse, nicht an der Box.)\n");
 
     if (!riegel) return 0;
 
@@ -375,24 +455,68 @@ int main(int argc, char **argv)
             int i = LIVE[k];
             if (tb[i] == 0) { printf("RIEGEL-FAIL: Typ #%d ist in 900 Bildern NIE getroffen worden\n", i);
                               fail = 1; } } }
-    /* RIEGEL 2b: der ZUSTAND der Warnung wird festgenagelt, nicht der Weg. Mit der
-     * Kriecher-Box -350/350 ist das Fenster [-100,800) und die Muendung liegt ~1665 darueber;
-     * gemessen 0 Treffer in 900 Bildern. Wird diese Zahl > 0, hat jemand entweder das Tor
-     * oder die Muendungshoehe geaendert — dann MUSS zweite-aufrufstelle.md neu gelesen
-     * werden, bevor die Kriecher-Box irgendwo scharf geschaltet wird. */
-    if (tb[1] != 0) {
-        printf("RIEGEL-FAIL: erzwungene Kriecher-Box traf %d mal (erwartet 0) - Tor oder\n"
-               "             Muendungshoehe hat sich geaendert, Dossier neu lesen\n", tb[1]);
+    /* ⛔ RIEGEL 2b GESTRICHEN (Runde 34), und hier steht warum statt einer angepassten Zahl:
+     * er nagelte "erzwungene Kriecher-Box -350/350 -> 0 Treffer" fest. Diese 0 kam
+     * AUSSCHLIESSLICH vom fuenften Tor (Fenster [-100,800) gegen Muendung ~1665). Das Tor
+     * liegt nicht mehr im Schuss-Pfad (FUN_800470C0 hat nur die Aufrufstellen @0x80042F94
+     * Messer und @0x800467C0 Bolzen; jede Schusswaffe geht ueber `jal 0x800410CC`
+     * @0x80043AFC), also misst die Zeile nichts mehr ueber den Schuss. Gemessen steht sie
+     * jetzt auf 82 Treffern = derselbe Wert wie die Zeile ohne erzwungene Box. Die Schranke
+     * wurde NICHT auf 82 "nachgezogen" — sie ist ersatzlos weg und durch die Tor-Zaehler
+     * unten ersetzt, die den MECHANISMUS pruefen statt eine Nebenwirkung.
+     *
+     * RIEGEL 3 (Runde 34 UMGEDREHT): die Box-Kontrolle beweist jetzt das Gegenteil. Das
+     * kuenstliche Nullen von +0x98/+0x9E darf die Trefferzahl NICHT mehr veraendern, und das
+     * Tor darf kein einziges Urteil faellen. */
+    if (kz_g5 != 0u || kh_g5 != 0u) {
+        printf("RIEGEL-FAIL: das fuenfte Tor faellte beim SCHUSS noch Urteile (Zombie %u, "
+               "Hund %u) - es gehoert nur zum Messer (@0x80042F94)\n", kz_g5, kh_g5);
         fail = 1; }
-    /* RIEGEL 3: die Kontrolle. Mit b=h=0 ist das Fenster [-100,100) und die Muendung liegt
-     * ~1665 darueber — faellt die Trefferzahl NICHT auf 0, misst die Sonde das Tor nicht. */
-    if (kz != 0) {
-        printf("RIEGEL-FAIL: KONTROLLE Zombie mit genullter Box traf %d mal - das fuenfte Tor\n"
-               "             liegt nicht im gemessenen Pfad, die Zahlen oben sagen nichts\n", kz);
+    if (kz <= 0 || kh <= 0) {
+        printf("RIEGEL-FAIL: mit genullter Box fiel gar kein Schaden mehr (Zombie %d, Hund %d)"
+               " - dann haengt der Schuss doch am Tor\n", kz, kh);
         fail = 1; }
-    if (kh != 0) {
-        printf("RIEGEL-FAIL: KONTROLLE Hund mit genullter Box traf %d mal - s.o.\n", kh);
+    /* RIEGEL 3b: DIE KLASSEN-KONTROLLE. Klasse 4 (nur Bit 2) faellt an der EBEN-Zeile 3
+     * `2,0,0` @0x800A6DB4+9+3 durch -> beide Applier-Typen MUESSEN auf 0 fallen, und die
+     * Klasse muss ueberhaupt gelesen worden sein. Faellt das nicht, laeuft der Applier an
+     * der Messung vorbei und alle Zahlen oben sagen nichts. */
+    if (kz4 != 0) {
+        printf("RIEGEL-FAIL: KONTROLLE Zombie mit Klasse 4 traf %d mal - der Applier liegt "
+               "nicht im gemessenen Pfad\n", kz4); fail = 1; }
+    if (kh4 != 0) {
+        printf("RIEGEL-FAIL: KONTROLLE Hund mit Klasse 4 traf %d mal - s.o.\n", kh4); fail = 1; }
+    if (kz4_cls == 0u || kh4_cls == 0u) {
+        printf("RIEGEL-FAIL: Haltungsklasse nie gelesen (Zombie %u, Hund %u)\n",
+               kz4_cls, kh4_cls); fail = 1; }
+    /* ===== RIEGEL 4: DER NUTZER-BEFUND, UEBER DEN NEUEN MECHANISMUS ======================
+     * getroffen -> liegt -> NICHT treffbar -> steht auf -> wieder treffbar, als Bilderzahl. */
+    if (b_kette < 0) {
+        printf("RIEGEL-FAIL: die Hunde-Kette wurde nicht durchlaufen - Riegel 4 prueft nichts\n");
         fail = 1; }
+    if (b_stand_hits <= 0) {
+        printf("RIEGEL-FAIL: der STEHENDE Hund wurde nicht getroffen (Ueberkorrektur)\n");
+        fail = 1; }
+    if (b_lie_frames <= 0) {
+        printf("RIEGEL-FAIL: der Hund lag in keinem Bild - Riegel 4 prueft nichts\n"); fail = 1; }
+    if (b_lie_hits != 0) {
+        printf("RIEGEL-FAIL: der LIEGENDE Hund wurde %d mal getroffen (erwartet 0)\n",
+               b_lie_hits); fail = 1; }
+    if (b_up_hits <= 0) {
+        printf("RIEGEL-FAIL: nach dem Aufstehen faellt kein Schaden (%d in %d Bildern) - das "
+               "waere die Dauersperre\n", b_up_hits, b_up_frames); fail = 1; }
+    if (b_cls_lie_bad != 0) {
+        printf("RIEGEL-FAIL: waehrend er lag trug die Klasse in %d Bildern nicht genau 1 "
+               "(FUN_80104088(0) @0x80104090-B4)\n", b_cls_lie_bad); fail = 1; }
+    if (b_cls_up_ok <= 0) {
+        printf("RIEGEL-FAIL: nach dem Aufstehen trug die Klasse in keinem Bild Bit 1 "
+               "(FUN_80104088(1) @0x801040CC) - dann traegt der Befund einen anderen Grund\n");
+        fail = 1; }
+    if (b_g5 != 0u) {
+        printf("RIEGEL-FAIL: waehrend der Hunde-Kette faellte das fuenfte Tor %u Urteile\n",
+               b_g5); fail = 1; }
+    if (b_cls == 0u) {
+        printf("RIEGEL-FAIL: waehrend der Hunde-Kette wurde die Klasse nie gelesen - der "
+               "Befund haengt dann an einem anderen Mechanismus\n"); fail = 1; }
     printf(fail ? "PROBE-FAIL\n" : "PROBE-OK\n");
     return fail;
 }
