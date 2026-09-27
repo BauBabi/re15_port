@@ -100,4 +100,5 @@ def main():
             mark = ">>" if j == i else "  "
             print(f"  {mark} {pc:08x}: {words[j]:08x}  {dis(words[j], pc)}")
 
-main()
+if __name__ == "__main__":
+    main()
