@@ -421,6 +421,43 @@ int main(int argc, char **argv)
            b_stand_hits, b_kette, b_lie_hits, b_lie_frames, b_cls_lie_bad,
            b_up_hits, b_up_frames, b_cls_up_ok, b_g5, b_cls);
 
+    /* ===== TEIL 5: DAS MESSER — DAS TOR IST NICHT WEG, ES IST UMGEZOGEN ==================
+     * Runde 34 nimmt das fuenfte Tor aus dem Schuss-Pfad. Damit es nicht STILL verschwindet,
+     * wird hier die Gegenrichtung gemessen: mit dem MESSER (RE2-Waffe 1, Aufrufstelle
+     * @0x80042F94) MUSS es Urteile faellen, und das Messer muss weiter treffen.
+     * Reichweite 900 wie in probe_r31_boxen (Nahkampf-Kegel FUN_800127FC, Dispatch
+     * @0x8006E548[1] = 0x800127FC). */
+    int m_hits[2] = { -1, -1 }; uint32_t m_g5[2] = { 0, 0 };
+    {   static const struct { const char *tag; uint8_t type; const char *room; int id; int sub; }
+            MZ[2] = { { "ZOMBIE 0x10", 0x10, "STAGE1/ROOM1140.RDT", 0x1140, -1 },
+                      { "HUND   0x20", 0x20, "STAGE1/ROOM1190.RDT", 0x1190, 13 } };
+        printf("\n=== TEIL 5: MESSER (Waffe 1) — das Tor MUSS hier laufen ===\n");
+        for (int i = 0; i < 2; i++) {
+            if (!load_room(MZ[i].room, MZ[i].id, MZ[i].sub)) {
+                printf("  [%s] FEHLLAUF: Raum fehlt - sagt NICHTS\n", MZ[i].tag); continue; }
+            int slot = setup_target(MZ[i].type, 0, 1, 0);
+            if (slot < 0) { printf("  [%s] FEHLLAUF: kein Ziel - sagt NICHTS\n", MZ[i].tag);
+                            continue; }
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            re15_actor_t *e  = &g_actors[slot];
+            aim_up(slot, 900);
+            re15_dmg_mech_reset();
+            int hits = 0;
+            for (int f = 0; f < 300; f++) {
+                pl->hp = 100; e->hp = 30000;
+                if (!e->active) break;
+                track(slot, 900);
+                frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+                      (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+                if (e->hp < 30000) hits++;
+            }
+            re15_dmg_mech_counts(&m_g5[i], &s_last_class, NULL);
+            m_hits[i] = hits;
+            printf("  [%s] Messer-Treffer %3d in 300 Bildern | Tor5-Urteile %u\n",
+                   MZ[i].tag, hits, m_g5[i]);
+        }
+    }
+
     printf("\n=== URTEIL ===\n");
     printf("  Haltungsklasse Hund: %s\n",
            (t1 == 0 && bad == 0 && lie > 0 && stand > 0) ? "byte-true (liegend 1, stehend 3)"
@@ -517,6 +554,19 @@ int main(int argc, char **argv)
     if (b_cls == 0u) {
         printf("RIEGEL-FAIL: waehrend der Hunde-Kette wurde die Klasse nie gelesen - der "
                "Befund haengt dann an einem anderen Mechanismus\n"); fail = 1; }
+    /* ===== RIEGEL 5: das Tor ist UMGEZOGEN, nicht geloescht ==============================
+     * Mit dem Messer MUSS es Urteile faellen (@0x80042F94), und das Messer muss treffen. */
+    for (int i = 0; i < 2; i++) {
+        if (m_hits[i] < 0) {
+            printf("RIEGEL-FAIL: Messer-Lauf %d gar nicht gelaufen\n", i); fail = 1; continue; }
+        if (m_hits[i] == 0) {
+            printf("RIEGEL-FAIL: das MESSER traf Ziel %d in 300 Bildern nicht - der Keil "
+                   "{-200,0,250,125} @0x8001101C bzw. die Reichweite ist kaputt\n", i);
+            fail = 1; }
+        if (m_g5[i] == 0u) {
+            printf("RIEGEL-FAIL: beim MESSER faellte das fuenfte Tor kein Urteil (Ziel %d) - "
+                   "es ist geloescht statt umgezogen (@0x80042F94)\n", i); fail = 1; }
+    }
     printf(fail ? "PROBE-FAIL\n" : "PROBE-OK\n");
     return fail;
 }
