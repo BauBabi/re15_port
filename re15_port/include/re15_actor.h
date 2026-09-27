@@ -309,13 +309,22 @@ typedef struct {
      *   0x21 Kraehe    -350/530  @0x801003B8-DC
      *   0x25 Spinne       0/1400 (Tabelle @0x801063A0+20/24, +0x98=0 @0x8010276C)
      *   0x26 Baby        -10/10  @0x80100168-78
-     * ⛔ GEFUEHRT, ABER NOCH NICHT GELESEN: das fuenfte Gate ist im Port NICHT gebaut, weil
-     * ihm die dritte Groesse fehlt (die Muendungshoehe; der Port rechnet heute gegen pl->y,
-     * dann ist Hgun = 0 und das Gate laesst gemessen 1200/1200 Bilder durch). Erst die
-     * Muendungshoehe, dann das Gate — sonst ist es ein wirkungsloser Platzhalter.
-     * Gesetzt werden die Felder bisher nur vom HUND (re2d_init + re2d_hitbox). */
+     * SEIT RUNDE 30 / WELLE 2 WERDEN SIE GELESEN — aber nur, wo re2_hit_box_set steht.
+     * Die Muendungshoehe gibt es jetzt engine-seitig (re15_player_muzzle_world, Bone 11 der
+     * Kette @0x80042E60-94); das fuenfte Gate @0x8004716C-A4 rechnet damit
+     *     DURCH  <=>  (uint32)(eY + b + 100 + h - MuendungY) < (uint32)(2*(h+100)).
+     * ⛔ re2_hit_box_set IST DIE RUNDE-14-SICHERUNG: ein Tor auf einem Feld, das niemand
+     * fuellt, sperrt DAUERHAFT. b/h = 0/0 ergaebe das Fenster [-100,100) — jeder Gegner waere
+     * fuer immer untreffbar. Deshalb gaten NUR Aktoren, deren Overlay-Gegenstueck die Werte
+     * im Port wirklich schreibt. Das ist heute AUSSCHLIESSLICH der HUND 0x20
+     * (re2d_init @0x8010028C-9C + re2d_hitbox @0x80104090-D8). Wer einen weiteren Typ
+     * verdrahtet, MUSS vorher messen, dass er nicht dauerhaft aus dem Fenster faellt —
+     * gemessen sind Kraehe 0x21 (0/240 durch) und Baby 0x26 (0/240 durch) genau so ein Fall,
+     * s. analysis/befunde_2026-09-27/muendungshoehe-und-fuenftes-tor.md. */
     int16_t  re2_hit_b98;       /* +0x98 Unterkante (signed)  */
     uint16_t re2_hit_h9e;       /* +0x9E Halbhoehe  (unsigned) */
+    uint8_t  re2_hit_box_set;   /* [PORT-ZUORDNUNG] 1 = b98/h9e werden byte-true gefuehrt,
+                                 * nur dann wertet das fuenfte Gate @0x8004716C-A4 sie aus */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98);
                                  * im WALK derselbe Offset als PULS-TIMER (Seed (rand&0x1f)+30

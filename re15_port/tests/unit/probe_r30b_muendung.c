@@ -331,6 +331,91 @@ static void pass_dog_chain(int budget)
     printf("  NACH DEM AUFSTEHEN:      Tor DURCH in %d/%d Bildern\n", s_nach_durch, s_nach_bilder);
 }
 
+/* ===== TEIL 3: DER BEFUND SELBST — wird der LIEGENDE Hund noch GETROFFEN? ================
+ * Gemessen werden ECHTE Treffer (HP-Abzug je Bild), nicht die Tor-Formel. Zwei Laeufe:
+ *   "ALT"  = re2_hit_box_set jedes Bild auf 0 zurueckgesetzt -> das Gate ist inert, also
+ *            exakt der Code-Pfad von VOR dieser Runde (kein Env-Schalter im Spielcode).
+ *   "NEU"  = so, wie der Port jetzt laeuft.
+ * Der Hund wird dauerhaft beschossen; gezaehlt wird getrennt nach STEHEND (state != 2),
+ * LIEGEND (state == 2, also waehrend der HURT-Kette) und NACH DEM AUFSTEHEN. */
+typedef struct { int treffer_stehend, treffer_liegend, treffer_danach;
+                 int bilder_liegend, bilder_danach, kette; } befund_t;
+
+static void pass_befund(befund_t *r, int alt, int budget)
+{
+    memset(r, 0, sizeof *r); r->kette = -1;
+    if (!load_room("STAGE1/ROOM1190.RDT", 0x1190, 13)) { printf("  FEHLLAUF: ROOM1190 fehlt\n"); return; }
+    int slot = setup_target(0x20, 3, 0);
+    if (slot < 0) { printf("  FEHLLAUF: kein Hund 0x20 in 1190 - sagt NICHTS\n"); return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e  = &g_actors[slot];
+    aim_up(slot, 2000);
+    e->re2z_self1d3 = 0;
+    int getroffen = -1;          /* Bild, in dem der Hund niedergeht (state -> 2) */
+    int steht_wieder = -1;       /* erstes Bild nach der Kette mit state != 2 */
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100;
+        e->hp = 30000;                         /* der Hund soll die ganze Kette ueberleben */
+        if (!e->active) break;
+        if (alt) e->re2_hit_box_set = 0;       /* ALT-Lauf: Gate inert = Stand vor Welle 2 */
+        track(slot, 2000);
+        /* Erst ab Bild 10 schiessen, damit die STEHENDE Phase messbar ist (Gegenprobe
+         * gegen Ueberkorrektur: der stehende Hund muss weiter getroffen werden). */
+        int schuss = (f >= 10);
+        frame((uint16_t)(RE15_PAD_BIT_R1 | (schuss ? RE15_PAD_BIT_SQUARE : 0u)),
+              (uint16_t)((schuss && (f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        int hit = (e->hp < 30000);
+        if (getroffen < 0) {
+            /* Der Niederschlag-Treffer zaehlt als Treffer am STEHENDEN Hund — genau er ist
+             * die Gegenprobe gegen Ueberkorrektur (der Hund stand, als der Schuss kam). */
+            if (hit) r->treffer_stehend++;
+            if (e->state == 2) getroffen = f;
+            continue;
+        }
+        if (steht_wieder < 0 && e->state != 2) steht_wieder = f;
+        if (steht_wieder < 0) { r->bilder_liegend++; if (hit) r->treffer_liegend++; }
+        else                  { r->bilder_danach++;  if (hit) r->treffer_danach++;
+                                if (r->bilder_danach >= 60) break; }
+    }
+    if (getroffen >= 0 && steht_wieder >= 0) r->kette = steht_wieder - getroffen;
+    printf("  [%s] Treffer am STEHENDEN Hund: %d | Niederschlag bei f%d, "
+           "wieder auf den Beinen nach %d Bildern | "
+           "TREFFER waehrend er LIEGT: %d in %d Bildern | nach dem Aufstehen: %d in %d Bildern\n",
+           alt ? "ALT" : "NEU", r->treffer_stehend, getroffen, r->kette,
+           r->treffer_liegend, r->bilder_liegend, r->treffer_danach, r->bilder_danach);
+}
+
+/* ===== TEIL 4: KEIN TYP DAUERHAFT UNTREFFBAR ============================================
+ * Fuer JEDEN der fuenf RE2-Typen: faellt mit dem neuen Gate noch Schaden? */
+static int pass_treffbar(const char *tag, uint8_t type, const char *room, int room_id,
+                         int fire_sub, int weapon, int baby_force, int budget)
+{
+    if (!load_room(room, room_id, fire_sub)) {
+        printf("  [%-12s] FEHLLAUF: Raum %s fehlt - sagt NICHTS\n", tag, room); return -1; }
+    int slot = setup_target(type, weapon, baby_force);
+    if (slot < 0) {
+        printf("  [%-12s] FEHLLAUF: kein Gegner Typ 0x%02X in %04X - sagt NICHTS\n",
+               tag, type, room_id); return -1; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e  = &g_actors[slot];
+    const int32_t back = (weapon < 3) ? 900 : 2000;
+    aim_up(slot, back);
+    int treffer = 0, box_set = 0;
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100; e->hp = 30000;
+        if (!e->active) break;
+        track(slot, back);
+        frame((uint16_t)(RE15_PAD_BIT_R1 | elev_pad_for(e) | RE15_PAD_BIT_SQUARE),
+              (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        if (e->re2_hit_box_set) box_set = 1;
+        if (e->hp < 30000) treffer++;
+    }
+    printf("  [%-12s] Treffer %3d in %3d Bildern | re2_hit_box_set=%d -> %s\n",
+           tag, treffer, budget, box_set,
+           treffer > 0 ? "treffbar" : "⛔ NIE GETROFFEN");
+    return treffer;
+}
+
 /* ======================================================================================== */
 static re15_emd_skeleton_t  s_pl00_skel;
 static re15_emd_animation_t s_pl00_anim;
@@ -366,6 +451,30 @@ int main(int argc, char **argv)
     printf("\n=== TEIL 2: DIE HUNDE-KETTE, TOR GEGEN DIE ECHTE MUENDUNG ===\n");
     pass_dog_chain(400);
 
+    printf("\n=== TEIL 3: DER BEFUND — ECHTE TREFFER AM LIEGENDEN HUND ===\n");
+    befund_t alt, neu;
+    pass_befund(&alt, 1, 400);
+    pass_befund(&neu, 0, 400);
+
+    printf("\n=== TEIL 4: KEIN TYP DAUERHAFT UNTREFFBAR ===\n");
+    int tb[5];
+    tb[0] = pass_treffbar("ZOMBIE 0x10", 0x10, "STAGE1/ROOM1140.RDT", 0x1140, -1, 3, 0, 200);
+    tb[1] = pass_treffbar("HUND 0x20",   0x20, "STAGE1/ROOM1190.RDT", 0x1190, 13, 3, 0, 200);
+    tb[2] = pass_treffbar("KRAEHE 0x21", 0x21, "STAGE1/ROOM10C0.RDT", 0x10c0, -1, 3, 0, 200);
+    {   static const struct { const char *sub; int id; } SPK[] = {
+            { "STAGE1/ROOM1090.RDT", 0x1090 }, { "STAGE2/ROOM2000.RDT", 0x2000 },
+            { "STAGE2/ROOM2010.RDT", 0x2010 }, { "STAGE2/ROOM2020.RDT", 0x2020 },
+            { "STAGE2/ROOM2040.RDT", 0x2040 }, { "STAGE2/ROOM2050.RDT", 0x2050 },
+            { "STAGE2/ROOM2060.RDT", 0x2060 }, { "STAGE1/ROOM10D0.RDT", 0x10d0 },
+            { "STAGE1/ROOM1260.RDT", 0x1260 }, { "STAGE3/ROOM3010.RDT", 0x3010 } };
+        const char *sp = NULL; int spid = 0;
+        for (unsigned i = 0; i < sizeof SPK / sizeof SPK[0]; i++) {
+            if (!load_room(SPK[i].sub, SPK[i].id, -1)) continue;
+            if (setup_target(0x25, 3, 0) >= 0) { sp = SPK[i].sub; spid = SPK[i].id; break; } }
+        tb[3] = sp ? pass_treffbar("SPINNE 0x25", 0x25, sp, spid, -1, 3, 0, 200) : -1;
+        if (!sp) printf("  [SPINNE 0x25 ] FEHLLAUF: kein Raum mit lebender 0x25 - sagt NICHTS\n"); }
+    tb[4] = pass_treffbar("BABY 0x26",   0x26, "STAGE1/ROOM1090.RDT", 0x1090, -1, 3, 1, 200);
+
     printf("\n=== URTEIL ===\n");
     int mues_ok = (m[1].gueltig > 0);
     printf("  Muendung headless verfuegbar: %s (%d/%d Bilder beim Hund)\n",
@@ -382,6 +491,26 @@ int main(int argc, char **argv)
     int fail = 0;
     if (!mues_ok) { printf("RIEGEL-FAIL: Muendung headless nicht verfuegbar\n"); fail = 1; }
     if (s_kette < 0 || s_pause < 0) { printf("RIEGEL-FAIL: Hunde-Kette nicht gemessen\n"); fail = 1; }
+    /* DER BEFUND: am ALTEN Stand wird der liegende Hund getroffen, am NEUEN nicht mehr. */
+    if (alt.treffer_liegend <= 0) {
+        printf("RIEGEL-FAIL: ALT-Lauf traf den liegenden Hund gar nicht - der Riegel waere\n"
+               "             am alten Stand nicht rot gewesen und beweist nichts\n"); fail = 1; }
+    if (neu.treffer_liegend != 0) {
+        printf("RIEGEL-FAIL: der liegende Hund ist immer noch treffbar (%d Treffer)\n",
+               neu.treffer_liegend); fail = 1; }
+    if (neu.treffer_stehend <= 0) {
+        printf("RIEGEL-FAIL: der STEHENDE Hund wird nicht mehr getroffen - Ueberkorrektur\n");
+        fail = 1; }
+    if (neu.treffer_danach <= 0) {
+        printf("RIEGEL-FAIL: nach dem Aufstehen wieder treffbar? NEIN (%d) - das waere die\n"
+               "             Runde-14-Dauersperre\n", neu.treffer_danach); fail = 1; }
+    /* GEGEN-UEBERKORREKTUR: kein RE2-Typ darf dauerhaft untreffbar werden. */
+    for (int i = 0; i < 5; i++)
+        if (tb[i] == 0) { printf("RIEGEL-FAIL: Typ #%d ist NIE getroffen worden\n", i); fail = 1; }
+    /* Das Tor darf den STEHENDEN Hund nicht aussperren. */
+    if (m[1].ok && m[1].durch_s != m[1].gueltig) {
+        printf("RIEGEL-FAIL: stehender Hund faellt aus dem Fenster (%d/%d)\n",
+               m[1].durch_s, m[1].gueltig); fail = 1; }
     printf(fail ? "PROBE-FAIL\n" : "PROBE-OK\n");
     return fail;
 }

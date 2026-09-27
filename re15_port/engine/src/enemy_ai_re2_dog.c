@@ -667,13 +667,18 @@ static int re2d_landing(re15_actor_t *e)
  * MATRIX.t[1] der Waffen-Bone-Kette, @0x80042E60-94 / @0x80042F8C) prueft. Beides einzeln
  * einzubauen bringt NICHTS: ohne das Gate liest niemand die Felder, und ohne eine echte
  * Muendungshoehe steht Hgun im Port auf 0 und das Gate laesst JEDEN durch (gemessen,
- * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md). */
+ * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md).
+ * BEIDE HAELFTEN STEHEN SEIT WELLE 2: die Muendungshoehe kommt aus
+ * re15_player_muzzle_world (Bone 11 der Kette @0x80042E60-94), das Gate aus
+ * re15_damage.c (Kandidatenschleife). Gemessen auf dem echten Weg: stehender Hund
+ * DURCH, ab Bild +1 nach dem Treffer SPERRT, ab Bild +71 wieder DURCH. */
 static void re2d_hitbox(re15_actor_t *e, int restore)
 {
     if (!e) return;
     if (restore == 0) {                 /* `bne a1,zero,0x801040b8` @0x80104088 faellt durch */
         e->re2_hit_b98 = -500;          /* addiu v0,zero,-500 @0x80104098 / sh v0,152(a2) @0x8010409C */
         e->re2_hit_h9e =  500;          /* addiu v1,zero,500  @0x801040A4 / sh v1,158(a2) @0x801040A8 */
+        e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
         /* Das Flagwort +0x0 raeumt im a1==0-Zweig zusaetzlich zwei Bits
          * (`lui a0,0xe7ff / ori a0,a0,0xffff` @0x80104090-94, `and v0,v0,a0` @0x801040B4)
          * und setzt dann 0x04000000 (`lui v1,0x400` @0x801040AC, `or`/`sw` @0x801040D0-D8).
@@ -683,6 +688,7 @@ static void re2d_hitbox(re15_actor_t *e, int restore)
     } else {
         e->re2_hit_b98 = -1000;         /* addiu v0,zero,-1000 @0x801040B8 / sh @0x801040BC */
         e->re2_hit_h9e =  1000;         /* addiu v0,zero,1000  @0x801040C0 / sh @0x801040C4 */
+        e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
     }
 }
 
@@ -2195,6 +2201,8 @@ static void re2d_init(re15_actor_t *e)
                                                             * sh v0,152(s0) @0x80100294 */
     e->re2_hit_h9e =  1000;                                /* addiu v0,zero,1000  @0x80100298 /
                                                             * sh v0,158(s0) @0x8010029C */
+    e->re2_hit_box_set = 1;              /* [PORT-ZUORDNUNG] ab hier fuehrt der Port die Box
+                                          * byte-true -> das fuenfte Gate darf sie lesen */
     /* (+0x94 = 500 @0x80100284-88 und +0x96 = 0 @0x801002B0 bleiben ungefuehrt.) Die
      * 2-Part-Schleife @0x801002D0-F8 (Parts 2..3: +0x9C=32/+0xA0=384/+0xA2=128 — Lane-D sagte
      * „4 Parts", der Loop läuft a0=2..3, selbst nachgelesen) ist Part-Hitbox-Metadaten. */
