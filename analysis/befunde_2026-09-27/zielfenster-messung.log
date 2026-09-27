@@ -1,0 +1,143 @@
+=== TEIL 0: DAS TOR ALS ZAHL (reine Rechnung aus @0x8004717C-A4) ===
+  DURCH  <=>  -(b+h+100) <= Hgun < (h-b+100)      [Hgun = eY - Zielhoehe]
+  ZOMBIE 0x10 stehend    b= -1500 h= 1500  =>  Fenster Hgun in [  -100 ,   3100)   EMZ0 INIT @0x8010095C/64
+  ZOMBIE 0x10 Kriecher   b=  -350 h=  350  =>  Fenster Hgun in [  -100 ,    800)   EMZ0 @0x80100B14-20 / @0x80103460-6C
+  HUND   0x20 stehend    b= -1000 h= 1000  =>  Fenster Hgun in [  -100 ,   2100)   EMD0G INIT @0x8010028C-9C / F80104088(1) @0x801040B8-C4
+  HUND   0x20 liegend    b=  -500 h=  500  =>  Fenster Hgun in [  -100 ,   1100)   FUN_80104088(0) @0x80104098-A8
+  KRAEHE 0x21            b=  -350 h=  530  =>  Fenster Hgun in [  -280 ,    980)   EMOVL21_S0 @0x801003B8-DC
+  SPINNE 0x25            b=     0 h= 1400  =>  Fenster Hgun in [ -1500 ,   1500)   EMS25 Tab @0x801063A0+20/24, +0x98=0 @0x8010276C
+  BABY   0x26            b=   -10 h=   10  =>  Fenster Hgun in [  -100 ,    120)   EMS26 @0x80100168-78 (einziger Schreiber)
+
+=== TEIL 1: FELD-INVENTUR IM PORT ===
+  re15_actor_t traegt WEDER +0x98 (Unterkante) NOCH +0x9E (Halbhoehe) als
+  Trefferzonen-Felder. Vorhanden ist nur der NACHBAR +0x9A: `re2z_rad9a`
+  (re15_actor.h:299) — die XZ-Halbbreite, und die nur fuer die Zombie-Familie.
+  Der heutige RE2-Trefferpfad (re15_re2_gun_probe, re15_damage.c:1520) rechnet
+  senkrecht mit `dy = e->y - pl->y` gegen die Waffen-Fenster — die Zielhoehe ist
+  dort also die FUSSHOEHE des Spielers, nicht die Muendung.
+
+  [ZOMBIE 0x10 R1140] 240 Bilder | eY 0..0 | plY 0..0 | Hgun(Ziel=plY) 0..0 | Muendung gueltig 0/240 (Renderer hat Bone 11 nie gestellt) | liegend 0
+  [HUND   0x20 R1190] 240 Bilder | eY -3680..-530 | plY -3680..-530 | Hgun(Ziel=plY) -20..420 | Muendung gueltig 0/240 (Renderer hat Bone 11 nie gestellt) | liegend 0
+  [KRAEHE 0x21 R10C0] 240 Bilder | eY -250..0 | plY -250..0 | Hgun(Ziel=plY) -250..0 | Muendung gueltig 0/240 (Renderer hat Bone 11 nie gestellt) | liegend 0
+  [BABY   0x26 R1090] 240 Bilder | eY -1800..-1800 | plY -1800..-1800 | Hgun(Ziel=plY) 0..0 | Muendung gueltig 0/240 (Renderer hat Bone 11 nie gestellt) | liegend 0
+  [SPINNE 0x25] 240 Bilder | eY -5400..-5400 | plY -5400..-5400 | Hgun(Ziel=plY) 0..0 | Muendung gueltig 0/240 (Renderer hat Bone 11 nie gestellt) | liegend 0
+
+=== TEIL 2: TOR-URTEIL MIT DEM GEMESSENEN Hgun (Zielhoehe = pl->y, Port-Stand) ===
+  ZOMBIE 0x10 stehend    Hgun gemessen 0..0  =>  Tor DURCH / DURCH
+  ZOMBIE 0x10 Kriecher   Hgun gemessen 0..0  =>  Tor DURCH / DURCH
+  HUND   0x20 stehend    Hgun gemessen -20..420  =>  Tor DURCH / DURCH
+  HUND   0x20 liegend    Hgun gemessen -20..420  =>  Tor DURCH / DURCH
+  KRAEHE 0x21            Hgun gemessen -250..0  =>  Tor DURCH / DURCH
+  SPINNE 0x25            Hgun gemessen 0..0  =>  Tor DURCH / DURCH
+  BABY   0x26            Hgun gemessen 0..0  =>  Tor DURCH / DURCH
+
+=== TEIL 2b: DIE DREI ZIELHOEHEN-KANDIDATEN DES PORTS ===
+  A pl->y (heutiger Trefferpfad)   : Hgun =    0  => ZOMBIE 0x10 stehend=ja ZOMBIE 0x10 Kriecher=ja HUND   0x20 stehend=ja HUND   0x20 liegend=ja KRAEHE 0x21=ja SPINNE 0x25=ja BABY   0x26=ja
+      (re15_re2_gun_probe: `dy = e->y - pl->y`, re15_damage.c:1520)
+  B pl->y - 2083 (Hand-Bone b13)   : Hgun = 2083  => ZOMBIE 0x10 stehend=ja ZOMBIE 0x10 Kriecher=NEIN HUND   0x20 stehend=ja HUND   0x20 liegend=NEIN KRAEHE 0x21=NEIN SPINNE 0x25=NEIN BABY   0x26=NEIN
+      (game_step_common.c:1762 `pl->y - 2083`, Quelle shots/pose_aim.txt.leon b13 y=-2083)
+  C re15_player_gunbone_world      : headless NIE verfuegbar (gemessen 0/240 je Typ) — re15_damage.c:1134 — braucht s_hand_world/s_hand_rot vom PC-Renderer
+
+=== TEIL 3: SCHWELLEN-SWEEP — ab welcher Muendungshoehe sperrt das Tor? ===
+  (Hgun = Hoehe der Muendung UEBER dem Gegner-Ursprung, PSX-Y zeigt nach unten)
+  Hgun :     0   200   400   600   800  1000  1200  1400  1600  1800  2000  2200  2400
+  ZOMBIE 0x10 stehend      ja    ja    ja    ja    ja    ja    ja    ja    ja    ja    ja    ja    ja 
+  ZOMBIE 0x10 Kriecher     ja    ja    ja    ja   NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN
+  HUND   0x20 stehend      ja    ja    ja    ja    ja    ja    ja    ja    ja    ja    ja   NEIN  NEIN
+  HUND   0x20 liegend      ja    ja    ja    ja    ja    ja   NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN
+  KRAEHE 0x21              ja    ja    ja    ja    ja   NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN
+  SPINNE 0x25              ja    ja    ja    ja    ja    ja    ja    ja   NEIN  NEIN  NEIN  NEIN  NEIN
+  BABY   0x26              ja   NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN  NEIN
+
+=== TEIL 4: HUND-KETTE MIT RE2-BANK ===
+  EM020-Bank (RE2 CDEMD0.EMS): 27 Clips.
+    Clip 17  P0 Treffer-Zucken @0x80103460 (Wort 0x00070011)  = 13 Bilder
+    Clip 18  P2 +0x7=0 Hinfallen @0x801036B0 (addiu v1,v1,18) = 9 Bilder
+    Clip  7  P2 +0x7=1 Aufstehen @0x801036D0 (Wort 0x000F0007) = 50 Bilder
+    Clip 22  P3 weiche Landung @0x8010378C (Wort 0x00030F16)  = 20 Bilder
+    => P0+P2.0+P2.1 = 72 Clip-Bilder
+    FUN_80104088(1) ruft das Original an GENAU ZWEI Stellen:
+      @0x801036F0  HURT-P2, Zweig +0x7 == 2 (`beq v1,v0,0x801036f0`
+                   @0x80103698), und NUR wenn der Clip-Vorschub
+                   `jal 0x8002959c` @0x8010365C != 0 zurueckgab —
+                   also im Bild NACH dem Ende des Aufsteh-Clips 7.
+      @0x801037C0  HURT-P3, nach `jal 0x8002959c` @0x801037B0 != 0,
+                   gefolgt von `sw 0x201,4(s0)` @0x801037C8-D0 = zurueck
+                   nach ACTIVE/Sub 2.
+    Gestaucht wird mit FUN_80104088(0) @0x80103458 (HURT-P0) und
+      @0x8010352C (HURT-P1).
+      TREFFER f0: 1D3=14 st=2/3/2/0 clip=17 eY=-3600 plY=-3600
+      +1  1D3=13 | st=2/3/2/0 | clip=17 f= 2 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +2  1D3=12 | st=2/3/2/0 | clip=17 f= 3 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +3  1D3=11 | st=2/3/2/0 | clip=17 f= 4 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +4  1D3=10 | st=2/3/2/0 | clip=17 f= 5 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +5  1D3= 9 | st=2/3/2/0 | clip=17 f= 6 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +6  1D3= 8 | st=2/3/2/0 | clip=17 f= 7 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +7  1D3= 7 | st=2/3/2/0 | clip=17 f= 8 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +8  1D3= 6 | st=2/3/2/0 | clip=17 f= 9 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +9  1D3= 5 | st=2/3/2/0 | clip=17 f=10 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +10 1D3= 4 | st=2/3/2/0 | clip=17 f=11 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +11 1D3= 3 | st=2/3/2/0 | clip=17 f=12 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +12 1D3= 2 | st=2/3/2/1 | clip=18 f= 0 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +13 1D3= 1 | st=2/3/2/1 | clip=18 f= 1 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +14 1D3= 0 | st=2/3/2/1 | clip=18 f= 2 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH    <== PAUSE ENDE
+      +15 1D3= 0 | st=2/3/2/1 | clip=18 f= 3 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +16 1D3= 0 | st=2/3/2/1 | clip=18 f= 4 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +17 1D3= 0 | st=2/3/2/1 | clip=18 f= 5 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +18 1D3= 0 | st=2/3/2/1 | clip=18 f= 6 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +19 1D3= 0 | st=2/3/2/1 | clip=18 f= 7 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +20 1D3= 0 | st=2/3/2/1 | clip=18 f= 8 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +21 1D3= 0 | st=2/3/2/2 | clip= 7 f= 0 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +22 1D3= 0 | st=2/3/2/2 | clip= 7 f= 1 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +23 1D3= 0 | st=2/3/2/2 | clip= 7 f= 2 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +24 1D3= 0 | st=2/3/2/2 | clip= 7 f= 3 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +25 1D3= 0 | st=2/3/2/2 | clip= 7 f= 4 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +26 1D3= 0 | st=2/3/2/2 | clip= 7 f= 5 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +27 1D3= 0 | st=2/3/2/2 | clip= 7 f= 6 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +28 1D3= 0 | st=2/3/2/2 | clip= 7 f= 7 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +29 1D3= 0 | st=2/3/2/2 | clip= 7 f= 8 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +30 1D3= 0 | st=2/3/2/2 | clip= 7 f= 9 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +31 1D3= 0 | st=2/3/2/2 | clip= 7 f=10 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +32 1D3= 0 | st=2/3/2/2 | clip= 7 f=11 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +33 1D3= 0 | st=2/3/2/2 | clip= 7 f=12 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +34 1D3= 0 | st=2/3/2/2 | clip= 7 f=13 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +35 1D3= 0 | st=2/3/2/2 | clip= 7 f=14 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +36 1D3= 0 | st=2/3/2/2 | clip= 7 f=15 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +37 1D3= 0 | st=2/3/2/2 | clip= 7 f=16 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +38 1D3= 0 | st=2/3/2/2 | clip= 7 f=17 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +39 1D3= 0 | st=2/3/2/2 | clip= 7 f=18 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +40 1D3= 0 | st=2/3/2/2 | clip= 7 f=19 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +41 1D3= 0 | st=2/3/2/2 | clip= 7 f=20 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +42 1D3= 0 | st=2/3/2/2 | clip= 7 f=21 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +43 1D3= 0 | st=2/3/2/2 | clip= 7 f=22 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +44 1D3= 0 | st=2/3/2/2 | clip= 7 f=23 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +45 1D3= 0 | st=2/3/2/2 | clip= 7 f=24 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +46 1D3= 0 | st=2/3/2/2 | clip= 7 f=25 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +47 1D3= 0 | st=2/3/2/2 | clip= 7 f=26 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +48 1D3= 0 | st=2/3/2/2 | clip= 7 f=27 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +49 1D3= 0 | st=2/3/2/2 | clip= 7 f=28 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +50 1D3= 0 | st=2/3/2/2 | clip= 7 f=29 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +51 1D3= 0 | st=2/3/2/2 | clip= 7 f=30 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +52 1D3= 0 | st=2/3/2/2 | clip= 7 f=31 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +53 1D3= 0 | st=2/3/2/2 | clip= 7 f=32 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +54 1D3= 0 | st=2/3/2/2 | clip= 7 f=33 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +55 1D3= 0 | st=2/3/2/2 | clip= 7 f=34 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +56 1D3= 0 | st=2/3/2/2 | clip= 7 f=35 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +57 1D3= 0 | st=2/3/2/2 | clip= 7 f=36 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +58 1D3= 0 | st=2/3/2/2 | clip= 7 f=37 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +59 1D3= 0 | st=2/3/2/2 | clip= 7 f=38 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +60 1D3= 0 | st=2/3/2/2 | clip= 7 f=39 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +61 1D3= 0 | st=2/3/2/2 | clip= 7 f=40 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +62 1D3= 0 | st=2/3/2/2 | clip= 7 f=41 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +63 1D3= 0 | st=2/3/2/2 | clip= 7 f=42 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +64 1D3= 0 | st=2/3/2/2 | clip= 7 f=43 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +65 1D3= 0 | st=2/3/2/2 | clip= 7 f=44 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +66 1D3= 0 | st=2/3/2/2 | clip= 7 f=45 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +67 1D3= 0 | st=2/3/2/2 | clip= 7 f=46 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +68 1D3= 0 | st=2/3/2/2 | clip= 7 f=47 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +69 1D3= 0 | st=2/3/2/2 | clip= 7 f=48 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +70 1D3= 0 | st=2/3/2/2 | clip= 7 f=49 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH 
+      +71 1D3= 0 | st=1/6/0/0 | clip= 7 f= 0 | Hgun=0 | Tor(liegend)=DURCH  Tor(stehend)=DURCH    <== WIEDER ACTIVE
+  HUND: Pause endete nach 14 Bildern, HURT-Kette endete nach 71 Bildern  => 57 Bilder treffbar im Liegen
+
+MESSSCHIENE GELAUFEN (Welle 1 — kein Verhalten geaendert, kein Riegel).
