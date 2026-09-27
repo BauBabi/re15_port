@@ -206,10 +206,28 @@ Flacker-Rhythmus einer Fahrt: gemessen eindeutig, aber keine Semantik.
    Todes-Wiederbelebung). Adressen stehen im Quelltext.
 2. **Spinne: fünf der neun Blockkopien** (@0x80101AD4, @0x80101D44, @0x80102594, @0x80103690,
    @0x80104378) brauchen je eine eigene Zustands-Zuordnung.
-3. **word0-Bits von `FUN_80104088`** (Maske 0xE7FFFFFF @0x80104090-B4 + 0x04000000
-   @0x801040AC im a1==0-Zweig, 0x0C000000 @0x801040CC im a1!=0-Zweig) bleiben unumgesetzt —
-   der Port führt diese beiden word0-Bits nicht, und im Zensus ist kein Leser aufgetaucht.
-   Dieselben 0x0C000000 kommen beim Zombie @0x80103730 und @0x80107EA8 vor.
+3. **word0-Bits von `FUN_80104088`** — der **Leser ist jetzt gefunden**, gebaut ist es
+   trotzdem nicht. Die Funktion setzt `(word0 & 0x0C000000) == 0x04000000` für die
+   gestauchte Box (Maske 0xE7FFFFFF @0x80104090-B4 + 0x04000000 @0x801040AC) und
+   `== 0x0C000000` für die volle (@0x801040CC). Vollscan aller `lui reg,0x400|0x800|0xc00`
+   mit nachfolgendem `and` über PSX.EXE und die Overlays: der einzige Leser, der auf das
+   **Entity**-word0 zeigt, steht in `EMZ0.BIN`:
+
+   ```
+   80100388: lhu  v0,538(s0)     ; +0x21A des Gegners SELBST
+   80100390: andi v0,v0,0x2      ; Liege-Bit
+   8010039c: lw   v0,0(s0)       ; word0
+   801003a4: or   v0,v0,v1       ; |= 0x04000000
+   801003b4: and  v1,a0,0x0C000000
+   801003bc: bne  v1,0x04000000 -> 0x8010045C
+   ```
+
+   Das Bit-Paar ist also der **zweite, redundante Träger** derselben Aussage wie
+   +0x21A Bit 0x2 („dieser Gegner liegt"). Der Port führt diese Aussage bereits über
+   `re2z_flags21a & 0x2` (`re15_damage.c` liest sie für die Liege-Klassifikation). Ein
+   zweites paralleles Bitpaar wäre eine zweite Kopie derselben Regel — deshalb bewusst
+   nicht gebaut. Für den **Hund** gibt es im Port gar keinen Leser; dort wäre es ein Store
+   ins Leere. Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und @0x80107EA8.
 4. **Der Seiteneffekt des Tores** (`andi v1,v1,0xff00` @0x80047178 + `sh v1,464(s0)`
    @0x80047184 löscht das untere Byte von +0x1D0 bei JEDEM Kandidaten) bleibt unumgesetzt —
    der Port führt +0x1D0 nicht.
@@ -219,3 +237,24 @@ Flacker-Rhythmus einer Fahrt: gemessen eindeutig, aber keine Semantik.
    (nur XZ, kein Y: `lw 0(s5)/lw 56(s0)` @0x80047764-68, `jal 0x8008D2F4` @0x80047794,
    `sltu v0,v0,a3` @0x800477A4), ist weiterhin eine Spur, keine Feststellung — wer diesen
    Pfad ruft, ist nicht aufgelöst.
+
+---
+
+## 6. Sichtprüfung — NICHT zustande gekommen, ehrlich gemeldet
+
+Das Skript liegt fertig unter `analysis/befunde_2026-09-27/r31_sichtpruefung.sh`
+(ROOM1140, R1 + Feuer-Flanken über 30 s, `RE15_FRAMEDUMP="300-1100/40"`, kein
+`RE15_AUTOSHOT`, kein Softwarerenderer). In dieser Sitzung liefert es **nichts**:
+
+* `re15_pc.exe` öffnet das Fenster — `debug.log` endet nach
+  `[window] windowed 960x720` / `[asset] cannot open DATA/TEST.VH` /
+  `[pad] kein Controller gefunden (Tastatur bleibt aktiv)`.
+* Danach kommt in **drei Läufen** (130 s mit Skript, 75 s nur `RE15_TITLE_SHOT`,
+  60 s mit `RE15_FRAMEDUMP="1-200/20"` ab dem ERSTEN Bild) **kein einziges PPM** und
+  kein Titel-Abzug. Auch `--headless` gab in 180 s keine Zeile aus.
+
+Die Renderschleife läuft in dieser Umgebung also gar nicht an. Es wird deshalb **kein Bild
+als Beleg behauptet**. Belegt ist alles oben über den echten Spielweg (`re15_game_step` +
+Pad-Wort, echte RDTs, echte RE2-Bank, RE2-KI) — dieselbe Zustandsmaschine wie im Fenster,
+nur ohne Renderer. Das Skript ist so abgelegt, dass es an einer Sitzung mit laufender
+Renderschleife in einem Zug durchläuft.

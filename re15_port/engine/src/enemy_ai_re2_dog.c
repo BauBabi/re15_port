@@ -679,12 +679,44 @@ static void re2d_hitbox(re15_actor_t *e, int restore)
         e->re2_hit_b98 = -500;          /* addiu v0,zero,-500 @0x80104098 / sh v0,152(a2) @0x8010409C */
         e->re2_hit_h9e =  500;          /* addiu v1,zero,500  @0x801040A4 / sh v1,158(a2) @0x801040A8 */
         e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
-        /* Das Flagwort +0x0 raeumt im a1==0-Zweig zusaetzlich zwei Bits
-         * (`lui a0,0xe7ff / ori a0,a0,0xffff` @0x80104090-94, `and v0,v0,a0` @0x801040B4)
-         * und setzt dann 0x04000000 (`lui v1,0x400` @0x801040AC, `or`/`sw` @0x801040D0-D8).
-         * Im a1!=0-Zweig wird NICHT maskiert, nur 0x0C000000 geodert (`lui v1,0xc00`
-         * @0x801040CC). Der Port fuehrt diese beiden Bits von word0 (noch) nicht —
-         * ausdruecklich als Fehlstelle vermerkt, NICHT auf ein fremdes Feld gebogen. */
+        /* ===== DIE ZWEI word0-BITS — WELLE 2: DER LESER IST GEFUNDEN ==================
+         * Was die Funktion setzt:
+         *   a1 == 0 (gestauchte Box): word0 &= 0xE7FFFFFF (`lui a0,0xe7ff / ori a0,a0,0xffff`
+         *            @0x80104090-94, `and v0,v0,a0` @0x801040B4) — loescht 0x18000000 —
+         *            und dann word0 |= 0x04000000 (`lui v1,0x400` @0x801040AC,
+         *            `or`/`sw` @0x801040D0-D8).
+         *   a1 != 0 (volle Box):      word0 |= 0x0C000000 OHNE Maskierung
+         *            (`lui v1,0xc00` @0x801040CC).
+         * Ergebnis: (word0 & 0x0C000000) ist nach a1==0 genau 0x04000000 und nach a1!=0
+         * genau 0x0C000000 — ein ZWEI-BIT-ZUSTAND "gestaucht / voll".
+         *
+         * Und genau dieses Paar wird gelesen. Vollscan aller `lui reg,0x400|0x800|0xc00`
+         * mit nachfolgendem `and` (PSX.EXE + die Overlays, selbst gefahren): der einzige
+         * Leser, der dabei auf das ENTITY-word0 zeigt, steht im ZOMBIE-Overlay EMZ0.BIN:
+         *   80100388: lhu  v0,538(s0)        ; +0x21A des Gegners SELBST
+         *   80100390: andi v0,v0,0x2         ; Liege-Bit
+         *   80100394: beq  v0,zero,0x801003ac
+         *   8010039c: lw   v0,0(s0)          ; word0
+         *   801003a0: lui  v1,0x400
+         *   801003a4: or   v0,v0,v1          ; word0 |= 0x04000000
+         *   801003ac: lw   a0,0(s0)
+         *   801003b0: lui  v0,0xc00
+         *   801003b4: and  v1,a0,v0          ; word0 & 0x0C000000
+         *   801003b8: lui  v0,0x400
+         *   801003bc: bne  v1,v0,0x8010045c  ; != 0x04000000 -> Kurzschluss in den
+         *                                      +0x239-Nachlauf @0x8010045C
+         * s0 ist SELF (es liest +0x21A desselben Objekts, das der Root bearbeitet).
+         * Das Bit-Paar ist also der ZWEITE, redundante Traeger derselben Aussage wie
+         * +0x21A Bit 0x2 — "dieser Gegner liegt".
+         *
+         * ⛔ IM PORT NICHT GEBAUT, und zwar bewusst: der Port fuehrt die Liege-Aussage
+         * bereits ueber re2z_flags21a & 0x2 (re15_damage.c liest sie fuer die
+         * Liege-Klassifikation der RE2-Zombies). Ein zweites, paralleles Bitpaar in word0
+         * waere eine zweite Kopie derselben Regel — genau das, was hier schon einmal
+         * auseinandergedriftet ist. Fuer den HUND gibt es im Port ueberhaupt keinen Leser;
+         * dort waere es ein Store ins Leere. Beides bleibt als Fehlstelle benannt, mit den
+         * Adressen oben. Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und
+         * @0x80107EA8. */
     } else {
         e->re2_hit_b98 = -1000;         /* addiu v0,zero,-1000 @0x801040B8 / sh @0x801040BC */
         e->re2_hit_h9e =  1000;         /* addiu v0,zero,1000  @0x801040C0 / sh @0x801040C4 */
