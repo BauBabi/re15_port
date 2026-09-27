@@ -10,9 +10,24 @@
 
 re15_gameflow_t g_gameflow;
 
-/* Byte-true NEW-GAME start room: the RE1.5 prototype boots the intro at ROOM1240
- * (pre-intro narrator montage -> ROOM1170 helipad cutscene -> handoff to play).
- * This is the current default boot room, so NEW GAME reproduces the real opening. */
+/* NEW-GAME start room, OHNE Spielervariante — die haengt re15_gameflow_new_game an.
+ * Der Port bootet das Spiel in die Vorspann-Montage ROOM124x; ROOM1240 uebergibt an
+ * ROOM1170 (Helipad, Leon), ROOM1241 an ROOM1031 (Lobby, Elza).
+ *
+ * ⛔ DAS IST KEINE ERFINDUNG, SONDERN IN DEN DATEN GEMESSEN. Beide Montage-RDT tragen
+ * genau EINEN Door_aot_set in main00, und sie unterscheiden sich in genau EINEM Byte —
+ * dem Zielraum-Index bei +23 (Datei-Offset 0x0531):
+ *   ROOM1240.RDT @0x0531 = 0x17   -> Raum 0x17 = ROOM1170  "HELIPORT"
+ *   ROOM1241.RDT @0x0531 = 0x03   -> Raum 0x03 = ROOM1031  "LOBBY"
+ * Das sind Zeichen fuer Zeichen die beiden Raumindizes, die der Original-Einstieg
+ * FUN_8001d22c fest verdrahtet hat: `bltz v0,0x8001d324` @0x8001d2a4 auf
+ * DAT_800ACA3C Bit 31, Leon `ori v0,zero,0x17` @0x8001d2a8 + `sh` @0x8001d2b0,
+ * Elza `ori v0,zero,0x3` @0x8001d324 + `sh` @0x8001d32c (beide Stage 0). Die Montage
+ * setzt also nur den Raumindex, den die EXE ohnehin gesetzt haette — die Variante
+ * fuehrt den Spieler von selbst in seine eigene Kette.
+ * (Raumnamen aus DEBUG.BIN @0x800c263c, 26-Byte-Satz je Raum, Index
+ *  (637*stage + 13*raum)*2 aus @0x8001d39c-3c8: 0x03 "LOBBY", 0x17 "HELIPORT",
+ *  0x24 "OPENING".) */
 #define RE15_NEWGAME_ROOM 0x1240
 
 /* KEIN Raum-Sprung-Parameter mehr. Es gab hier einen RE15_START_ROOM-Schnellweg, der direkt
@@ -29,14 +44,20 @@ void re15_gameflow_init(void)
     g_gameflow.mode         = RE15_MODE_TITLE;
     g_gameflow.start_room   = RE15_NEWGAME_ROOM;
     g_gameflow.enter_ingame = 0;
-    g_gameflow.character    = 0;          /* Leon (PL00) */
+    g_gameflow.character    = 0;          /* Leon = PLD-Index 0 = PL00 (@0x801024c0) */
     g_gameflow.boot_movie   = 0;          /* dormant, byte-true to the MZD build (see header) */
 }
 
-void re15_gameflow_new_game(int character)
+void re15_gameflow_new_game(int char_index)
 {
-    g_gameflow.character    = character;
-    g_gameflow.start_room   = RE15_NEWGAME_ROOM;
+    /* CURSOR -> CHARAKTER-BYTE: `sll v0,v0,2` @0x801016a4, Store @0x801016ac.
+     * Der Zwei-Zweig-Schreiber desselben Schirms kommt auf dieselben Werte
+     * (@0x801024c0 `sb zero` = 0, @0x801024cc `ori v0,zero,0x4` + @0x801024d4 = 4). */
+    g_gameflow.character    = (char_index & 3) << 2;
+    /* STARTRAUM MIT VARIANTE: `srl a0,a0,31` @0x800397e4 + `addu a0,a0,v0` @0x800397ec
+     * — im Port ist der Dateiindex die Raum-Id, also `| Elza-Bit`. Leon 0x1240,
+     * Elza 0x1241 (Herleitung + Bytebeleg oben bei RE15_NEWGAME_ROOM). */
+    g_gameflow.start_room   = re15_room_for_char(RE15_NEWGAME_ROOM);
     g_gameflow.enter_ingame = 1;         /* platform enters INGAME + loads the start room */
     g_gameflow.mode         = RE15_MODE_INGAME;
     {   /* Blut-Decal-Reset: der Wund-Builder FUN_80037c1c laeuft NUR im Spieler-Load-Pfad

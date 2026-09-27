@@ -18,7 +18,7 @@
  *   [PATCH]  = Vorprojekt-Patch definiert den Wert: 1150/1151 -> 0 (SCD_SAVE_RET @0x800708c0
  *              sb zero), 1070 -> 1 (AOT_TYPE1_HOOK @0x8007087c sb v0=1; RDT-Sentinel
  *              ROOM1070.RDT @0x1568). Mehr kennt der Patch game-weit nicht.
- *   [PORT-S] = PORT-Entscheidung, semantisch gestuetzt: 1071 = Elza-Spiegel des Telefons;
+ *   [PORT-S] = PORT-Entscheidung, semantisch gestuetzt:
  *              1120/1121 = der Vorraum des Treppenhauses (sysmes 0x1c "West Staircase 1F");
  *              4010/4011 = Debug-Raumname "SECURITY ROOM" (DEBUG.BIN @0x2642-Tabelle)
  *              == sysmes 0x20; 5010/5011 -> sysmes 0x21 "Monitor Room".
@@ -31,7 +31,13 @@
  * (@0x80026830) -> byte-true auf 16 Glyphen gekappt; die SJIS-Kartentitel-Tabelle hat nur
  * die Eintraege 0..6 -> loc 7 clampt dort auf 0 (re15_mc_title.c, nur externes Metadatum). */
 static const struct { unsigned room; uint8_t msg; uint8_t loc; } s_savepoints[] = {
-    { 0x1070, 0x14, 1 }, { 0x1071, 0x14, 1 },   /* STAGE1 main20 — Telefon [PATCH; 1071 PORT-S] */
+    /* ⛔ 1071 ist KEINE Port-Annahme mehr (stand hier bis Runde 35 als [PORT-S]).
+     * Die ungerade Id IST derselbe Raum in Elzas Dateivariante: der Raumlader
+     * addiert das Elza-Bit auf den CD-Dateiindex (`srl a0,a0,31` @0x800397e4,
+     * `addu a0,a0,v0` @0x800397ec), und die Stage-0-Tabelle @0x8007429c laeuft in
+     * Schritten von 3 — Elza-RDT = Leon-RDT + 1. Derselbe Ort, derselbe
+     * Ortsnamen-Index. */
+    { 0x1070, 0x14, 1 }, { 0x1071, 0x14, 1 },   /* STAGE1 main20 — Telefon [PATCH] */
     { 0x1120, 0x06, 2 }, { 0x1121, 0x06, 2 },   /* STAGE1 main06 — Treppenhaus-Vorraum [PORT-S] */
     { 0x1150, 0x01, 0 }, { 0x1151, 0x01, 0 },   /* STAGE1 main01 — Schreibmaschine [PATCH] */
     { 0x2010, 0x03, 3 }, { 0x2011, 0x03, 3 },   /* STAGE2 main03 — [PORT-L] Sewer Maintainance */

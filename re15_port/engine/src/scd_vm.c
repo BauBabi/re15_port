@@ -36,6 +36,7 @@
 #include "re15_itembox.h"    /* ITEM BOX: safe-room box-AOT registry + pending signal
                               * (save-phone precedent, shots/itembox_spec.md §6) */
 #include "re15_room.h"       /* g_current_room_id (save-point room match) */
+#include "re15_gameflow.h"   /* RE15_ROOM_BASE — Raum-Id ohne Spielervariante */
 #include "re15_item_discard.h" /* "You don't need this key any more. Discard it?" (@0x800C508B) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 #include "re15_elev_se.h"   /* RE2-ERGAENZUNG: Fahrstuhl-Fahrton (engine/src/scd_elev_se.c) */
@@ -1559,9 +1560,13 @@ static void scd_queue_voice(uint8_t msg_id)
  * unter synchro/ eine Datei fuer (Raum, Message-Id) liegt (s. scd_queue_voice). */
 int re15_room_full_text(unsigned room_id)
 {
+    /* Basis-Ids OHNE Spielervariante: die niedrigste Hex-Ziffer ist die RDT-Variante
+     * (Leon 0 / Elza 1, @0x800397e4 `srl a0,a0,31` + @0x800397ec `addu`), nicht ein
+     * anderer Raum. ROOM1241 ist dieselbe Vorspann-Montage wie ROOM1240 — gleicher
+     * Aufbau, 9 Cuts, eigene Message-Ids in sub02 — also gilt dieselbe Darstellung. */
     static const unsigned ft[] = { 0x1170, 0x1240 };
     for (unsigned k = 0; k < sizeof(ft)/sizeof(ft[0]); k++)
-        if (ft[k] == room_id) return 1;
+        if (ft[k] == RE15_ROOM_BASE(room_id)) return 1;
     return 0;
 }
 

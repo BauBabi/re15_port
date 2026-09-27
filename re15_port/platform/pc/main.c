@@ -495,6 +495,54 @@ static uint8_t *pc_read_shared(const char *rel, int *size)
     return re15_pc_read_any(rel, size);
 }
 
+/* ═══ SPIELER-TEILDATEI JE CHARAKTER ═══════════════════════════════════════════════
+ * Das Original laedt den Spieler NICHT aus vier Einzeldateien, sondern aus EINEM
+ * Container: FUN_800314b0 liest DAT_800ACA5C @0x800314d4, `sll v0,v0,1` @0x800314d8,
+ * `lhu a0,0x80073f70[v0]` (16 u16 = CD-Index 60..75) und laedt CD-Datei 60+Index =
+ * PL0<Index>.PLD. Die vier Teile stehen in dessen Verzeichnis (u32 @0 = Tabellenanfang,
+ * danach 4 u32: EDD, EMR, MD1, TIM) — genau die Regel, die re15_pld_part fuehrt.
+ * Dieselbe Bauform haben die Waffen-Container: FUN_80036b68 laedt CD-Datei
+ * base_table[charid] + Waffen-Id (Tabelle @0x800741e8, `lbu` @0x80036df8) und nimmt
+ * dir[0] -> 0x800acbc8 @0x80036be4 (EDD) und dir[1] -> 0x800acbc4 @0x80036c04 (EMR).
+ *
+ * WARUM DER UMWEG UEBER DIE TEILDATEI ZUERST: Leons Satz liegt unter shared_assets als
+ * vorextrahierte PL00.EDD/.EMR/.MD1/.TIM, Elzas Satz NICHT vollstaendig — PL04.EDD,
+ * PL04W01.EDD und PL04W01.EMR fehlen im entpackten Baum. Beides ist derselbe Inhalt:
+ * fuer ALLE 13 vorhandenen Teildateien ist der Containerschnitt byte-gleich mit der
+ * ausgelieferten Datei (sha256, eigene Messung 2026-09-27; z.B. PL00.EDD 3160 B
+ * 26198800…, PL00W03.EMR 19848 B 490debdb…). Erst die Datei, dann der Schnitt heisst
+ * also: Leon laedt weiterhin exakt dieselben Bytes wie bisher, und Elza bekommt die
+ * fehlenden drei Teile aus ihrem eigenen Container statt gar keine.
+ *
+ * ⛔ Der Rueckgabezeiger kann IN den Containerpuffer zeigen — nicht freigeben. Das ist
+ * dieselbe Lebensdauer-Regel wie bei allen Spieler-Assets hier (skel.keyframe_data
+ * aliast den EMR-Puffer; keiner davon wird je freigegeben). */
+static uint8_t *pc_read_pl_part(const char *stem, int part, int *out_size)
+{
+    static const char *const k_ext[4] = { "EDD", "EMR", "MD1", "TIM" };
+    char p[64];
+    int sz = 0;
+    *out_size = 0;
+    if (part < 0 || part > 3) return NULL;
+    snprintf(p, sizeof p, "PLD/%s.%s", stem, k_ext[part]);
+    uint8_t *b = pc_read_shared(p, &sz);
+    if (b && sz > 0) { *out_size = sz; return b; }
+    free(b);
+    /* Container: PLxx -> .PLD, PLxxWyy -> .PLW (identische Verzeichnisform). */
+    snprintf(p, sizeof p, "PLD/%s.%s", stem, strchr(stem, 'W') ? "PLW" : "PLD");
+    int csz = 0;
+    uint8_t *cb = pc_read_shared(p, &csz);   /* bleibt resident, der Schnitt aliast ihn */
+    unsigned long off = 0, len = 0;
+    if (!cb || !re15_pld_part(cb, (long)csz, part, &off, &len) || len == 0) {
+        fprintf(stderr, "[pl-part] %s Teil %s nicht auffindbar\n", stem, k_ext[part]);
+        return NULL;
+    }
+    fprintf(stderr, "[pl-part] %s.%s aus %s geschnitten (+%lu, %lu B)\n",
+            stem, k_ext[part], p, off, len);
+    *out_size = (int)len;
+    return cb + off;
+}
+
 /* ═══ OBJEKT-WELTMATRIX (Prop) — inkl. der ANHAENGE-FORM Obj_model_set pc[5]&0xC0==0xC0 ═══
  *
  * Der Objekt-Zeichner FUN_8002c18c macht je Pool-Eintrag GENAU DREI Schritte:
@@ -2996,7 +3044,8 @@ re_title:;
                     /* Game-Start laedt die CHARAKTER-CORE-Bank: FUN_800440c4(DAT_800aca5c)
                      * @0x800316d8-e8 (0 = Leon -> CORE00, 4 = Elza -> CORE04). Die noch spielende
                      * Announcer-Voice liest ihre alte Generation weiter (audio_pc.c). */
-                    { extern void re15_audio_prime_core(int idx); re15_audio_prime_core(ch ? 4 : 0); }
+                    { extern void re15_audio_prime_core(int idx);
+                      re15_audio_prime_core(g_gameflow.character); }
                     /* NEW GAME setzt den Save-Zaehler zurueck (Nutzer-Report 2026-08-03; analysis/
                      * save_counter.md SC-2): der Zaehler DAT_800b0fbd ist Teil des LIVE-Game-State-
                      * Blocks — ein frisches Spiel startet mit 0 (EXE-Image-Byte @Datei 0xa17bd = 00;
@@ -3019,7 +3068,7 @@ re_title:;
                         /* Charakter-CORE-Bank wie der Game-Start (FUN_800440c4(DAT_800aca5c)
                          * @0x800316d8-e8): 0 = Leon -> CORE00, 4 = Elza -> CORE04. */
                         { extern void re15_audio_prime_core(int idx);
-                          re15_audio_prime_core(s_resume_sd.character ? 4 : 0); }
+                          re15_audio_prime_core(g_gameflow.character); }
                     } else {
                         tblink = 0;   /* zurueck zum Titel: Fade-in erneut (Sub-Screen-Exit +0x400
                                        * @0x801024f0-500 laeuft im Original im Sub-Screen selbst) */
@@ -3241,8 +3290,19 @@ re_title:;
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
+    /* ═══ SPIELER-FAMILIE = DER CHARAKTER ═══════════════════════════════════════
+     * PLD-Datei = 60 + DAT_800ACA5C (Tabelle 0x80073f70, Leser FUN_800314b0
+     * @0x800314d4): Leon 0 -> 60 = PL00.PLD, Elza 4 -> 64 = PL04.PLD. Die Datenlage
+     * bestaetigt den Schnitt unabhaengig — in shared_assets/PSX/PLD/ haben genau PL00
+     * und PL04 den vollen Waffensatz W00..W14 (21 PLW je Familie). */
+    char pl_fam[8];
+    snprintf(pl_fam, sizeof pl_fam, "PL%02X", (unsigned)(g_gameflow.character & 0x0F));
+    fprintf(stderr, "[pl] Spieler-Familie %s (character=%d, Elza-Bit=%d)\n",
+            pl_fam, g_gameflow.character, re15_char_variant());
     int tim_size = 0;
-    uint8_t *tim_buf = pc_read_shared("PLD/PL00.TIM", &tim_size);
+    char pl_part_name[16];
+    snprintf(pl_part_name, sizeof pl_part_name, "%s", pl_fam);
+    uint8_t *tim_buf = pc_read_pl_part(pl_part_name, RE15_PLD_TIM, &tim_size);
     re15_tim_t tim;
     int tim_ok = 0;
     if (tim_buf && re15_tim_parse(tim_buf, tim_size, &tim) == 0) {
@@ -3258,7 +3318,7 @@ re_title:;
 
     /* Phase 4.5: load MD1 mesh — same path-search pattern */
     int md1_size = 0;
-    uint8_t *md1_buf = pc_read_shared("PLD/PL00.MD1", &md1_size);
+    uint8_t *md1_buf = pc_read_pl_part(pl_part_name, RE15_PLD_MD1, &md1_size);
     /* Zero-init avoids "possibly uninitialised" warnings on toolchains that
      * can't see the md1_ok guard implies md1 is populated. The fields the
      * renderer reads later (mesh_count, meshes[]) are then well-defined. */
@@ -3269,6 +3329,20 @@ re_title:;
      * SELBST-Tuer der R.P.D.-Ruestung in ROOM1190, die keinen Raumwechsel ausloest. */
     s_player_md1_ref = &md1;
     re15_scd_set_player_model_sync(pc_player_model_sync_cb);
+    /* ⛔ SITZUNGSSTART: DER ANGEFORDERTE PL-INDEX MUSS AUF DEN CHARAKTER STEHEN.
+     * Das Original fuellt 0x800b0ff0 (= work_vars[0x10]) beim Einstieg aus dem
+     * Charakter-Byte: `lbu a0,DAT_800aca5c` @0x8001d51c -> `sh a0,4080(at)` @0x8001d558.
+     * Der Raumlader vergleicht danach die untere Nibble von aca5c gegen genau diesen
+     * Wert und laedt bei Abweichung neu:
+     *     8003976c  andi v0,a0,0xf
+     *     80039770  beq  v0,v1,0x80039790     ; gleich -> nichts tun
+     *     80039788  jal  0x800314b0           ; sonst Spielermodell NEU LADEN
+     * Ohne den Gleichstand haette der erste Raumwechsel Elzas eben geladenes PL04 gegen
+     * work_vars[0x10] == 0 = PL00 zurueckgetauscht. Der Westen-Spiegel wird mitgezogen,
+     * damit re15_vest_hp_on_model_reload den Start nicht als Modellwechsel liest. */
+    s_player_model_idx    = g_gameflow.character & 0x0F;
+    g_scd.work_vars[0x10] = (int16_t)(g_gameflow.character & 0x0F);
+    re15_vest_model_mark((int16_t)(g_gameflow.character & 0x0F));
     if (md1_ok) {
         fprintf(stderr, "[md1] loaded test.md1: %d meshes\n", md1.mesh_count);
     }
@@ -3355,8 +3429,11 @@ re_title:;
      * PL00W01.edd verified: 14 clips, clip 5 = 30 frames (Walk_Forward),
      * clip 0 = 22 frames (Run). */
     int w01_edd_size = 0, w01_emr_size = 0;
-    uint8_t *w01_edd_buf = pc_read_shared("PLD/PL00W01.EDD", &w01_edd_size);
-    uint8_t *w01_emr_buf = pc_read_shared("PLD/PL00W01.EMR", &w01_emr_size);
+    char pl_w01[16], pl_w03[16];
+    snprintf(pl_w01, sizeof pl_w01, "%sW01", pl_fam);
+    snprintf(pl_w03, sizeof pl_w03, "%sW03", pl_fam);
+    uint8_t *w01_edd_buf = pc_read_pl_part(pl_w01, RE15_PLD_EDD, &w01_edd_size);
+    uint8_t *w01_emr_buf = pc_read_pl_part(pl_w01, RE15_PLD_EMR, &w01_emr_size);
     re15_emd_animation_t w01_anim = {0};
     re15_emd_skeleton_t  w01_skel_raw = {0};   /* W01-owned bind+keyframes */
     re15_emd_skeleton_t  w01_skel = {0};        /* composite used by renderer */
@@ -3365,8 +3442,9 @@ re_title:;
         if (re15_emd_parse_animation(w01_edd_buf, w01_edd_size, &w01_anim) == 0 &&
             re15_emd_parse_skeleton (w01_emr_buf, w01_emr_size, &w01_skel_raw) == 0) {
             w01_ok = 1;
-            fprintf(stderr, "[w01] PL00W01 weapon-track: %d bones, %d clips, %d kf\n",
-                    w01_skel_raw.bone_count, w01_anim.clip_count, w01_skel_raw.keyframe_count);
+            fprintf(stderr, "[w01] %s weapon-track: %d bones, %d clips, %d kf\n",
+                    pl_w01, w01_skel_raw.bone_count, w01_anim.clip_count,
+                    w01_skel_raw.keyframe_count);
         }
     }
     /* PL00W03 = the GUN carry set (byte-true item->bank map: the equip loader @0x80036b80 loads
@@ -3375,8 +3453,8 @@ re_title:;
      * recoils 7/9/11=23/24/24f, reload 0xD=32f). W03.EDD/.EMR = byte-true slices of PL00W03.PLW
      * (dir[0]/dir[1]), extracted the same way as the vendored W01 pair (slice==vendored verified). */
     int w03_edd_size = 0, w03_emr_size = 0;
-    uint8_t *w03_edd_buf = pc_read_shared("PLD/PL00W03.EDD", &w03_edd_size);
-    uint8_t *w03_emr_buf = pc_read_shared("PLD/PL00W03.EMR", &w03_emr_size);
+    uint8_t *w03_edd_buf = pc_read_pl_part(pl_w03, RE15_PLD_EDD, &w03_edd_size);
+    uint8_t *w03_emr_buf = pc_read_pl_part(pl_w03, RE15_PLD_EMR, &w03_emr_size);
     re15_emd_animation_t w03_anim = {0};
     re15_emd_skeleton_t  w03_skel_raw = {0};
     re15_emd_skeleton_t  w03_skel = {0};
@@ -3385,8 +3463,9 @@ re_title:;
         if (re15_emd_parse_animation(w03_edd_buf, w03_edd_size, &w03_anim) == 0 &&
             re15_emd_parse_skeleton (w03_emr_buf, w03_emr_size, &w03_skel_raw) == 0) {
             w03_ok = 1;
-            fprintf(stderr, "[w03] PL00W03 gun-track: %d bones, %d clips, %d kf\n",
-                    w03_skel_raw.bone_count, w03_anim.clip_count, w03_skel_raw.keyframe_count);
+            fprintf(stderr, "[w03] %s gun-track: %d bones, %d clips, %d kf\n",
+                    pl_w03, w03_skel_raw.bone_count, w03_anim.clip_count,
+                    w03_skel_raw.keyframe_count);
         }
     }
     /* WEAPON-IN-HAND MODELS (room-fix #3, byte-true mechanism: the melee DRAW's anim-event
@@ -3404,7 +3483,11 @@ re_title:;
      * "shared PL04W03 dir[2] + PL04.TIM slot 25" model drew ELZA'S dark-gun assets on Leon -> black gun;
      * the char-select's PL04W03 buffer was a select-screen quirk, not the in-game per-character load.) */
     #define RE15_WPN_MDL_MAX 21   /* W00..W14 for the current character's family */
-    const char *wpn_fam = (g_gameflow.character == 0) ? "PL00" : "PL04";  /* base_table charid split */
+    /* base_table charid split: @0x800741e8 = {76,76,76,76,97,97,97,97,…}, Index
+     * DAT_800ACA5C (`lbu` @0x80036df8). Charid 0-3 -> Basis 76 = PL00-Familie,
+     * 4-7 -> Basis 97 = PL04-Familie. Der Test ist also Bit 2, genau wie ueberall
+     * sonst — und die Familie ist dieselbe wie die des Koerpers (pl_fam). */
+    const char *wpn_fam = pl_fam;
     re15_md1_t wpn_md1[RE15_WPN_MDL_MAX]; int wpn_md1_ok[RE15_WPN_MDL_MAX] = {0};
     /* ANIMATIONSBANK JE WAFFE (byte-true FUN_80036b68: CD-Datei =
      * base_table[charid] + item, Basis @0x800741e8; dir[0] -> 0x800acbc8
@@ -3468,8 +3551,8 @@ re_title:;
      * skeletal renderer. The EMR pointer is held by skel.keyframe_data
      * — keep emr_buf alive for the program's lifetime. */
     int edd_size = 0, emr_size = 0;
-    uint8_t *edd_buf = pc_read_shared("PLD/PL00.EDD", &edd_size);
-    uint8_t *emr_buf = pc_read_shared("PLD/PL00.EMR", &emr_size);
+    uint8_t *edd_buf = pc_read_pl_part(pl_part_name, RE15_PLD_EDD, &edd_size);
+    uint8_t *emr_buf = pc_read_pl_part(pl_part_name, RE15_PLD_EMR, &emr_size);
 
     re15_emd_animation_t anim = {0};
     re15_emd_skeleton_t  skel = {0};
@@ -3478,8 +3561,8 @@ re_title:;
         && re15_emd_parse_animation(edd_buf, (size_t)edd_size, &anim) == 0
         && re15_emd_parse_skeleton (emr_buf, (size_t)emr_size, &skel) == 0) {
         skel_ok = 1;
-        fprintf(stderr, "[skel] PL00: %d bones, %d clips, %d keyframes\n",
-                skel.bone_count, anim.clip_count, skel.keyframe_count);
+        fprintf(stderr, "[skel] %s: %d bones, %d clips, %d keyframes\n",
+                pl_fam, skel.bone_count, anim.clip_count, skel.keyframe_count);
     }
 
     /* Phase 4.5.13-B2: try to load room-local animation.rbj (cinematic
@@ -4444,7 +4527,11 @@ re_title:;
              * TPAGE-ABR=1 @0x801c1b94-c24) waehrend das vorige ausblendet, mit vertikalem
              * Wandern bzw. zentriertem Zoom je Bild (re15_montage_fx.c). RE15_MONTAGE_STOCK=1
              * = byte-true Hartschnitt. Der Erzaehler-Raum 1170 bleibt unberuehrt. */
-            re15_montage_fx_set_active(g_current_room_id == 0x1240);
+            /* Die Vorspann-Montage gibt es in BEIDEN Varianten (ROOM1240 = Leon,
+             * ROOM1241 = Elza; die beiden RDT unterscheiden sich in genau einem Byte,
+             * dem Tuerziel @0x0531 = 0x17 bzw. 0x03). Die Variante ist die niedrigste
+             * Hex-Ziffer, also gegen die BASIS vergleichen. */
+            re15_montage_fx_set_active(RE15_ROOM_BASE(g_current_room_id) == 0x1240);
             if (re15_montage_fx_active()) {
                 re15_montage_fx_tick();
                 re15_bg_blit_montage(re15_montage_fx_level_new(),
@@ -4925,7 +5012,7 @@ re_title:;
                 /* MONTAGE: vor dem Laden das noch stehende Bild als AUSBLENDENDE Ebene
                  * sichern (RE2 haelt beide Elemente gleichzeitig aktiv, hide_others=0 —
                  * die Ueberlappung der 48-Frame-Rampen IST die Kreuzblende). */
-                if (g_current_room_id == 0x1240 && !re15_montage_fx_stock()) {
+                if (RE15_ROOM_BASE(g_current_room_id) == 0x1240 && !re15_montage_fx_stock()) {
                     re15_bg_snapshot_prev();
                     re15_montage_fx_on_cut(active_cut_idx, re15_bg_prev_ready());
                 }
@@ -8168,7 +8255,7 @@ re_title:;
                 }
                 unsigned wsg = re15_render_pc_slot0_generation();
                 if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
-                    int chr = (g_gameflow.character == 0) ? 0 : 1;
+                    int chr = (g_gameflow.character & 4) ? 1 : 0;   /* @0x80104008 andi 0x4 */
                     int ok = 1, any = 0;
                     for (int p = 0; p < 8; p++) {
                         int lv = re15_wound_level(p);
@@ -8209,7 +8296,8 @@ re_title:;
                  * baked-in weapon), and RETRY next frame whenever the composite could not apply yet
                  * (e.g. the skin base is not uploaded at this point in the boot/resume order). */
                 if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && (key != s_wpn_key || gen != s_wpn_gen)) {
-                    const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
+                    char fam[8];   /* base_table @0x800741e8, Index aca5c (`lbu` @0x80036df8) */
+                    snprintf(fam, sizeof fam, "PL%02X", (unsigned)(g_gameflow.character & 0x0F));
                     char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
                     int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
                     if (plw && psz > 16) {

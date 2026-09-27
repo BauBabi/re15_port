@@ -75,7 +75,14 @@ typedef struct {
     int16_t  player_rot;       /* g_actors[0].rot_y (RE1.5 +0x6a)                 */
     int16_t  player_hp;        /* g_actors[0].hp   (RE1.5 +0x1ba)                 */
     uint16_t player_status;    /* g_actors[0].status_flags (RE1.5 +0x98)          */
-    uint8_t  character;        /* g_gameflow.character (RE1.5 DAT_800aca5c bit0)  */
+    uint8_t  character;        /* g_gameflow.character = DAT_800ACA5C: 0 = Leon (PL00),
+                                * 4 = Elza (PL04). Das Original speichert genau dieses
+                                * Byte: `lbu v0,0x800aca5c` @0x80026f4c -> `sb v0,4030(at)`
+                                * = 0x800b0fbe @0x80026f6c, Rueckweg `lbu` @0x8001d4c8 ->
+                                * `sb` @0x8001d4f4. Bis Runde 34 trug das Feld 0/1; ein
+                                * Altstand mit 1 laedt jetzt als Leon (1 & 4 == 0) — was
+                                * er de facto immer war, denn Elza hatte bis dahin weder
+                                * eigenes Modell noch eigene Raumkette. */
     uint8_t  equipped_slot;    /* re15_inv_equipped_slot()  (DAT_800b25c8)        */
     uint8_t  weapon_id;        /* re15_player_equipped_weapon() (DAT_800aca5d) —
                                 * the ACTIVE weapon id; separate global from the
