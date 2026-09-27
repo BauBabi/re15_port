@@ -169,6 +169,20 @@ im Port immer wieder neu getroffen und kam nie mehr hoch.
 Die Trefferpause +0x1D3 endet schon bei **+14** — sie war nie die Erklärung. Die restlichen
 **57 Bilder** deckt jetzt das Tor ab.
 
+### 4.4 Gegenprobe: hat die Y-Klammer der Sonde den Befund erzeugt?
+
+Alle Messungen oben setzen `pl->y = e->y` (die `track()`-Klammer, ohne die die Sonde den
+Gegner gar nicht trifft — der Sondenfehler aus Welle 1). Das **könnte** den Befund erzeugen
+statt ihn zu messen. Also derselbe Lauf **ohne** die Y-Klammer, nur X/Z geklammert:
+
+```
+OHNE Y-Klammer: eY-plY 0..0 | Hgun 1667..1671 | Tor(stehende Box) DURCH 200/200 | echte Treffer 3
+```
+
+Der Spieler steht in ROOM1190 von selbst auf der Ebene des Hundes (`eY − plY = 0` in allen
+200 Bildern). Die Klammer ändert an dieser Messung **nichts** — sie hält die Sonde nur in
+Schussweite.
+
 ---
 
 ## 5. ⛔ Die Runde-14-Sicherung: `re2_hit_box_set`

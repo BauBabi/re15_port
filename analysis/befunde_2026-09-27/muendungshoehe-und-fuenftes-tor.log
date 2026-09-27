@@ -98,6 +98,9 @@ PL00: 15 Bones, 24 Clips (Bone 11 = Waffen-Bone, Kettenende @0x80042E94)
   [ALT] Treffer am STEHENDEN Hund: 1 | Niederschlag bei f10, wieder auf den Beinen nach -1 Bildern | TREFFER waehrend er LIEGT: 17 in 389 Bildern | nach dem Aufstehen: 0 in 0 Bildern
   [NEU] Treffer am STEHENDEN Hund: 1 | Niederschlag bei f10, wieder auf den Beinen nach 78 Bildern | TREFFER waehrend er LIEGT: 0 in 77 Bildern | nach dem Aufstehen: 1 in 60 Bildern
 
+=== TEIL 5: GEGENPROBE OHNE Y-KLAMMER ===
+  OHNE Y-Klammer: eY-plY 0..0 | Hgun 1667..1671 | Tor(stehende Box) DURCH 200/200 | echte Treffer 3
+
 === TEIL 4: KEIN TYP DAUERHAFT UNTREFFBAR ===
   [ZOMBIE 0x10 ] Treffer  19 in 200 Bildern | re2_hit_box_set=0 -> treffbar
   [HUND 0x20   ] Treffer   3 in 200 Bildern | re2_hit_box_set=1 -> treffbar

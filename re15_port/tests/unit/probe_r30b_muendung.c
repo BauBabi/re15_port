@@ -416,6 +416,48 @@ static int pass_treffbar(const char *tag, uint8_t type, const char *room, int ro
     return treffer;
 }
 
+/* ===== TEIL 5: OHNE Y-KLAMMER — steht der Spieler im Raum von selbst auf der Hundeebene? =
+ * ⛔ Alle Messungen oben setzen `pl->y = e->y` (track()). Das ist noetig, damit die Sonde den
+ * Gegner ueberhaupt trifft, aber es KOENNTE den Befund erzeugen, statt ihn zu messen. Dieser
+ * Durchgang klammert nur X/Z und laesst pl->y in Ruhe — so, wie der Spieler im Raum steht. */
+static void pass_ohne_yklammer(int budget)
+{
+    if (!load_room("STAGE1/ROOM1190.RDT", 0x1190, 13)) { printf("  FEHLLAUF: ROOM1190 fehlt\n"); return; }
+    int slot = setup_target(0x20, 3, 0);
+    if (slot < 0) { printf("  FEHLLAUF: kein Hund 0x20 in 1190 - sagt NICHTS\n"); return; }
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e  = &g_actors[slot];
+    aim_up(slot, 2000);
+    int32_t hg_min = 0x7fffffff, hg_max = -0x7fffffff;
+    int32_t dy_min = 0x7fffffff, dy_max = -0x7fffffff;
+    int durch_steh = 0, gueltig = 0, treffer = 0;
+    for (int f = 0; f < budget; f++) {
+        pl->hp = 100; e->hp = 30000;
+        if (!e->active) break;
+        /* NUR X/Z klammern — pl->y bleibt, wo der Raum ihn hat. */
+        {   int32_t dx = e->x - pl->x, dz = e->z - pl->z;
+            int64_t q = (int64_t)dx*dx + (int64_t)dz*dz;
+            double d = q > 0 ? __builtin_sqrt((double)q) : 0.0;
+            if (d > 1.0) { pl->x = e->x - (int32_t)((double)dx / d * 2000);
+                           pl->z = e->z - (int32_t)((double)dz / d * 2000); }
+            pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff); }
+        frame((uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE),
+              (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
+        int32_t m[3];
+        if (e->y - pl->y < dy_min) dy_min = e->y - pl->y;
+        if (e->y - pl->y > dy_max) dy_max = e->y - pl->y;
+        if (!re15_player_muzzle_world(m)) continue;
+        gueltig++;
+        int32_t hg = e->y - m[1];
+        if (hg < hg_min) hg_min = hg;
+        if (hg > hg_max) hg_max = hg;
+        if (tor(e->y, -1000, 1000, m[1])) durch_steh++;       /* STEHENDE Box */
+        if (e->hp < 30000) treffer++;
+    }
+    printf("  OHNE Y-Klammer: eY-plY %d..%d | Hgun %d..%d | Tor(stehende Box) DURCH %d/%d | "
+           "echte Treffer %d\n", dy_min, dy_max, hg_min, hg_max, durch_steh, gueltig, treffer);
+}
+
 /* ======================================================================================== */
 static re15_emd_skeleton_t  s_pl00_skel;
 static re15_emd_animation_t s_pl00_anim;
@@ -455,6 +497,9 @@ int main(int argc, char **argv)
     befund_t alt, neu;
     pass_befund(&alt, 1, 400);
     pass_befund(&neu, 0, 400);
+
+    printf("\n=== TEIL 5: GEGENPROBE OHNE Y-KLAMMER ===\n");
+    pass_ohne_yklammer(200);
 
     printf("\n=== TEIL 4: KEIN TYP DAUERHAFT UNTREFFBAR ===\n");
     int tb[5];
