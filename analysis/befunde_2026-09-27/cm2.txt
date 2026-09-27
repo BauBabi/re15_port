@@ -1,0 +1,55 @@
+RE(elza): Riegel unit_elza_zweig + Messungen + zwei berichtigte Herkunftsmarken
+
+DER RIEGEL (tests/unit/test_elza_zweig.c, probes/r35_elza-zweig.cmake)
+  A  character ist der PLD-Index 0/4 (@0x801016a4 sll 2 / @0x801024c0 /
+     @0x801024cc + @0x801024d4), nicht 0/1.
+  B  der Original-Diskriminator andi 0x4 @0x80104008 schlaegt fuer Elza an und
+     fuer Leon nicht - MIT Gegenprobe, dass der alte Port-Wert 1 auf Leons Seite
+     faellt. Ohne die Gegenprobe wuerde der Haken nur bestaetigen, dass 4 Bit 2
+     gesetzt hat.
+  C  Variantenregel @0x800397e4 srl 31 / @0x800397ec addu: Basis unveraendert,
+     niederste Hex-Ziffer = Spieler (0x1170/0x1171, 0x1030/0x1031).
+  D  der Startraum wird aus den AUSGELIEFERTEN Bytes gelesen: ROOM1240.RDT
+     @0x0531 = 0x17 (ROOM1170 "HELIPORT"), ROOM1241.RDT @0x0531 = 0x03
+     (ROOM1031 "LOBBY"). Faellt die Belegstelle weg, faellt der Haken.
+  E  Tuer-Zielformel bleibt in der Variante, und Save/Load bringt Elza samt
+     work_vars[0x10] (= DAT_800B0FF0) zurueck - ohne den letzten Punkt haette der
+     erste Raumwechsel nach dem Laden PL00 nachgeladen (@0x80039770 beq /
+     @0x80039788 jal 0x800314b0).
+
+MESSUNGEN (analysis/befunde_2026-09-27/elza-zweig.md, Laeufe im selben Baum:
+erst der Stand VOR der Aenderung gebaut, dann der danach)
+  LEON VORHER == LEON NACHHER, 7 Bilder (200/400/600/800/1000/1200/1400):
+    je 0 abweichende Pixel von 691200, Summe 0.
+    Alle Logzahlen gleich: ROOM1240.RDT 163744 B, Spawn (-26214,0,-3861) yaw=0,
+    17 Meshes, PL00 15 bones/24 clips/712 kf, PL00W01 222 kf, PL00W03 248 kf,
+    21/21 PL00W** Meshes und Baenke, Kette room1240 -> room1170. Im Leon-Lauf
+    kommt KEINE [pl-part]-Zeile vor - er liest dieselben Dateien wie vorher.
+  LEON GEGEN ELZA, dieselben 7 Bilder: 549591 bis 691147 abweichende Pixel von
+    691200 (Summe 4542033). VORHER waren es 0 in allen verglichenen Bildern.
+  ELZA: character=4 Elza-Bit=1, ROOM1241.RDT 163748 B, Kette
+    room1241 -> room1031, 21 Meshes, PL04 15 bones/24 clips/705 kf,
+    PL04W01 217 kf, PL04W03 243 kf, 21/21 PL04W**; drei Containerschnitte
+    (PL04W01.EDD +8/1336 B, PL04W01.EMR +1344/17368 B, PL04.EDD +8/3156 B) -
+    genau die drei Teildateien, die im entpackten Baum fehlen.
+  SICHTPRUEFUNG: elza_zweig_bilder/nachher_leon_f1400.png (Leon auf dem Helipad)
+    und elza_zweig_bilder/elza_lobby_f4000.png (Elza in der Lobby ROOM1031).
+
+SUITE  360/360 gruen, 161 s, inklusive der vier GUI-Haken (boot_bg 3.60 s,
+  dark_start 2.71 s, relatch 24.65 s, save_counter 27.78 s). 359 -> 360 ist der
+  NEUE Haken; RE15_MIN_TESTS in local_build.sh ist mitgehoben, wie der Kommentar
+  dort verlangt. test_savedata.c speichert jetzt 4 statt 1 - derselbe
+  Rundlauf-Pin, aber mit einem Wert, den das Spiel wirklich annimmt.
+
+ZWEI BERICHTIGTE HERKUNFTSMARKEN
+  * re15_savepoint.c: 1071 war als [PORT-S] gefuehrt ("Elza-Spiegel des
+    Telefons", also eine Port-Annahme). Das ist es nicht mehr - die ungerade Id
+    IST derselbe Raum in Elzas Dateivariante (@0x800397e4 / @0x800397ec,
+    Stage-0-Tabelle @0x8007429c in Schritten von 3). Marke auf [PATCH] gezogen.
+  * re15_gameflow.h: RE15_MODE_CHARSELECT sagte "PL00 / PL01-04". Richtig ist
+    PL00 / PL04; zugleich vermerkt, dass der Modus eine tote Deklaration ist -
+    die Auswahl laeuft als Unterschleife in RE15_MODE_TITLE, und das Original
+    hat dort ebenfalls keinen eigenen Zustand, sondern eine Task-Ersetzung
+    (@0x80102c9c).
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

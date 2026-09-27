@@ -172,4 +172,155 @@ Ihn auf die Basis-Id zu oeffnen haette Elza einen Leon-Flag untergeschoben.
 
 ## 3. MESSUNGEN
 
-(folgt — Bau laeuft)
+Werkzeug: `analysis/befunde_2026-09-27/elza_run.sh` (ein Vollstart, Auswahlschirm per
+`RE15_PSELECT_AUTO`, mit `RE15_PSELECT_AUTO_SWITCH` = rechts = Elza) und
+`elza_cmp.py` (Pixelvergleich der PPM-Reihen). Beide Staende wurden im SELBEN
+Arbeitsbaum gebaut: erst der Stand VOR der Aenderung (Commit 617fef68 in re15_port/),
+Lauf, dann der Stand danach (04e8694d), Lauf.
+
+### 3.1 DER WICHTIGSTE RIEGEL: Leon vorher == Leon nachher
+
+| Messgroesse | Leon VORHER | Leon NACHHER |
+|---|---|---|
+| Auswahl | `pselect done ch=0` | `pselect done ch=0` |
+| Startraum | `STAGE1/ROOM1240.RDT (163744 bytes)` | `STAGE1/ROOM1240.RDT (163744 bytes)` |
+| Spieler-Spawn | `(-26214,0,-3861) yaw=0` | `(-26214,0,-3861) yaw=0` |
+| Koerper-TIM | `384x256 bpp=8 clut=1` | `384x256 bpp=8 clut=1` |
+| Koerper-Mesh | `17 meshes` | `17 meshes` |
+| Skelett | `PL00: 15 bones, 24 clips, 712 keyframes` | `PL00: 15 bones, 24 clips, 712 keyframes` |
+| W01-Spur | `PL00W01: 15 bones, 14 clips, 222 kf` | `PL00W01: 15 bones, 14 clips, 222 kf` |
+| W03-Spur | `PL00W03: 15 bones, 14 clips, 248 kf` | `PL00W03: 15 bones, 14 clips, 248 kf` |
+| Waffenmeshes | `21/21 PL00W**` | `21/21 PL00W**` |
+| Waffenbaenke | `21/21 aus PL00W**.PLW` | `21/21 aus PL00W**.PLW` |
+| Raumkette im Lauf | room1240 -> room1170 | room1240 -> room1170 |
+| Containerschnitte | — | **keine** (`[pl-part]` kommt im Log nicht vor) |
+
+Die letzte Zeile ist der Grund, warum das bitgenau sein MUSS: fuer Leon liegen alle
+Teildateien vor, der neue Helfer nimmt sie und kommt nie zum Schnitt — er liest
+buchstaeblich dieselben Dateien wie vorher.
+
+**Bildvergleich, 7 Bilder (Nr. 200/400/600/800/1000/1200/1400):**
+
+```
+000200  abweichende Pixel 0 von 691200
+000400  abweichende Pixel 0 von 691200
+000600  abweichende Pixel 0 von 691200
+000800  abweichende Pixel 0 von 691200
+001000  abweichende Pixel 0 von 691200
+001200  abweichende Pixel 0 von 691200
+001400  abweichende Pixel 0 von 691200
+SUMME abweichende Pixel: 0
+```
+
+### 3.2 Die Wahl hat jetzt Folgen
+
+| Messgroesse | Leon (ch=0) | Elza (ch=1) |
+|---|---|---|
+| Charakter-Byte | `character=0, Elza-Bit=0` | `character=4, Elza-Bit=1` |
+| Startraum | `STAGE1/ROOM1240.RDT (163744 B)` | **`STAGE1/ROOM1241.RDT (163748 B)`** |
+| Folgeraum (Tuer der Montage) | **room1170** | **room1031** |
+| Koerper-Mesh | 17 meshes | **21 meshes** |
+| Skelett | `PL00: 15 bones, 24 clips, 712 kf` | **`PL04: 15 bones, 24 clips, 705 kf`** |
+| W01-Spur | `PL00W01: 14 clips, 222 kf` | **`PL04W01: 14 clips, 217 kf`** |
+| W03-Spur | `PL00W03: 14 clips, 248 kf` | **`PL04W03: 14 clips, 243 kf`** |
+| Waffenmeshes / -baenke | 21/21 PL00W\*\* | **21/21 PL04W\*\*** |
+| Containerschnitte | keine | `PL04W01.EDD (+8, 1336 B)`, `PL04W01.EMR (+1344, 17368 B)`, `PL04.EDD (+8, 3156 B)` |
+
+Die drei Schnitte sind genau die drei Teildateien, die im entpackten Baum fehlen —
+gemessen, nicht angenommen.
+
+**Bildvergleich Leon gegen Elza, dieselben 7 Bildnummern:**
+
+```
+000200  abweichende Pixel 677349 von 691200
+000400  abweichende Pixel 687087 von 691200
+000600  abweichende Pixel 691147 von 691200
+000800  abweichende Pixel 691147 von 691200
+001000  abweichende Pixel 690979 von 691200
+001200  abweichende Pixel 549591 von 691200
+001400  abweichende Pixel 554733 von 691200
+SUMME abweichende Pixel: 4542033
+```
+
+**Vorher stand hier 0 von 691200 in allen fuenf verglichenen Bildern**
+(elza-portzustand.md). Das ist die eigentliche Zahl dieser Runde.
+
+### 3.3 Der Tuer-Uebergang bleibt ungerade
+
+Der Riegel verlangt ausdruecklich, dass der Versatz nicht nur beim Start greift.
+Gemessen im Elza-Vollstart:
+
+```
+[boot] room RDT: STAGE1/ROOM1241.RDT (163748 bytes)
+[room] PC loaded room1031.rdt (219120 bytes)
+```
+
+Der Uebergang laeuft ueber den Door_aot_set der Montage, also ueber
+`aot_common.c:572-575`, der die Variante aus `g_current_room_id & 0x000F`
+mitschleppt. Leon im selben Aufbau: room1240 -> room1170, beide gerade.
+
+### 3.4 Sichtpruefung
+
+`analysis/befunde_2026-09-27/elza_zweig_bilder/`
+
+| Bild | was darauf zu sehen ist |
+|---|---|
+| `nachher_leon_f1400.png` | Leon auf dem Helipad (ROOM1170), blaue R.P.D.-Uniform, PL00 |
+| `elza_lobby_f4000.png` | **Elza in der Lobby (ROOM1031)** vor dem Drehkreuz, PL04 — anderes Modell (21 statt 17 Meshes), andere Haarfarbe, andere Silhouette |
+| `nachher_elza_f1400.png` | Elzas Vorspann-Montage (ROOM1241) laeuft zu diesem Zeitpunkt noch (Umbrella-Blende) — ihre Montage ist laenger als Leons |
+
+### 3.5 Testsuite
+
+`bash re15_port/tools/local_build.sh all`:
+
+```
+100% tests passed, 0 tests failed out of 360
+Total Test time (real) = 161.29 sec
+=== LOCAL-BUILD-OK (all) — Tests 360/360
+```
+
+Die vier GUI-Haken liefen im selben Durchlauf durch: `integration_boot_bg_pin`
+3.60 s, `integration_dark_start_pin` 2.71 s, `integration_relatch_pin` 24.65 s,
+`integration_save_counter_pin` 27.78 s — alle *Passed*.
+
+**359 -> 360 ist ein NEUER Haken, keine gesenkte Schranke.** `unit_elza_zweig`
+(Test #340, `tests/unit/test_elza_zweig.c`, registriert in
+`tests/unit/probes/r35_elza-zweig.cmake`) haelt die fuenf Stellen dieser Runde
+fest; `RE15_MIN_TESTS` in `local_build.sh` ist mit angehoben, wie es der
+Kommentar dort verlangt. Seine Ausgabe:
+
+```
+A  Leon: character=0 variante=0 start=1240
+A  Elza: character=4 variante=1 start=1241
+B  &4-Tor: Leon nimmt Zweig-A=1, Elza nimmt Zweig-A=0
+C  0x1170 -> Leon 1170 / Elza 1171 ; 0x1030 -> Leon 1030 / Elza 1031
+D  ROOM1240@0x0531=0x17 (Raum 0x17)  ROOM1241@0x0531=0x03 (Raum 0x03)
+E1 Tuer aus 1031 nach Stage 0 Raum 17 -> 1171
+E2 geladen: character=4 room=1031 work_vars[0x10]=4
+```
+
+Teil **B** traegt seine eigene Gegenprobe: der ALTE Port-Wert 1 muss auf Leons
+Seite fallen (`(1 & 4) == 0`). Ohne sie wuerde der Haken nur bestaetigen, dass 4
+das Bit hat. Teil **D** liest die beiden Bytes aus der echten ROOM124x.RDT —
+faellt der Beleg weg, faellt der Haken. Teil **E2** prueft nicht nur, dass der
+Charakter zurueckkommt, sondern auch `work_vars[0x10]`; ohne den waere der Load
+eine Taeuschung, weil der naechste Raumwechsel Elza gegen PL00 getauscht haette.
+
+Ein bestehender Haken wurde angepasst: `test_savedata.c` speicherte bisher
+`character = 1`. Es bleibt derselbe Rundlauf-Pin, prueft ihn jetzt aber mit 4 —
+einem Wert, den das Spiel wirklich annimmt.
+
+---
+
+## 4. WAS HINTER DEM ZWEIG NOCH FEHLT (gezaehlt, nicht geschaetzt)
+
+Der Auftrag war DER ZWEIG, nicht Elzas ganzes Szenario. Ehrliche Restliste:
+
+| # | offen | Zahl / Stelle |
+|---|---|---|
+| 1 | **Elzas Raum-Inhalte sind ungeprueft.** Die 120 ungeraden RDT existieren lueckenlos (120/120, elza-portzustand.md §5) und werden jetzt geladen — ob ihre Skripte, Gegner und Gegenstaende im Port durchlaufen, ist NICHT gemessen. Fuer Elzas Kette ist bisher genau ein Uebergang gefahren: ROOM1241 -> ROOM1031. | 119 von 120 Raeumen ungefahren |
+| 2 | **Vier ROOM1170-Sonderfaelle bleiben auf der geraden Id.** `main.c:3878` (Spawn-Ueberschreibung), `main.c:5886` (Cut 7 schwarz), `main.c:7137`, und der Flag-Vorlauf `main.c:3839`. Alle vier gehoeren zu Leons Helipad-Vorspann; Elzas Kette laeuft nicht darueber, deshalb sind sie hier KEIN Defekt — aber ein Debug-Sprung nach ROOM1171 wuerde sie vermissen. | 4 Stellen |
+| 3 | **Elzas Westen-Variante ist nicht ermittelt.** Leons R.P.D.-Weste ist PLD-Index 1 (Flag(3,0x75), ROOM1190/1191). Welchen Index Elza dort bekaeme, steht nirgends belegt; der Ladeweg laesst ihren Index deshalb unveraendert, statt zu raten. | 1 offener Index |
+| 4 | **Die Startposition aus DEBUG.BIN.** FUN_8001d22c ueberschreibt die fest verdrahtete Startpose unbedingt aus der Tabelle @0x800c263c (26 Byte je Raum). Ob DEBUG.BIN im Auslieferungsstand zu diesem Zeitpunkt resident ist, ist nicht gemessen (elza-original.md §3). Der RAUM ist davon unberuehrt, die POSE moeglicherweise nicht. | 1 offene Messung |
+| 5 | **0x800b0fbe Bit 0 (Elza-Kartentitel).** Im ORIGINAL setzt es keiner der fuenf Schreiber von 0x800aca5c — mit Werten 0/4 ist Bit 0 immer 0 und das Elza-Template @0x800107cc nie erreichbar. Der Port trifft mit `re15_mc_title.c:38` das offenbar Gemeinte; die Original-Luecke bleibt offen. | 1 Original-Luecke |
+| 6 | **Das PSX-Target hat keine Charakterwahl.** `RE15_BOOT_ROOM 0x1170` wird dort noch fest benutzt (`platform/psx/main.c:375`, `asset_psx.c:677/751`). Nicht angefasst — dieser Auftrag ist der PC-Zweig. | 3 Stellen |

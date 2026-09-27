@@ -15,7 +15,12 @@
 typedef enum {
     RE15_MODE_BOOT = 0,     /* cold init (SDL / PSX boot) -> TITLE (or INGAME debug fast-path) */
     RE15_MODE_TITLE,        /* DATA/TITLEU.TIM + PRESS START + NEW GAME/CONTINUE/OPTION menu     */
-    RE15_MODE_CHARSELECT,   /* Leon / Elza pick (PL00 / PL01-04)                                 */
+    RE15_MODE_CHARSELECT,   /* Leon / Elza pick (PL00 / PL04 — DAT_800ACA5C 0 bzw. 4).
+                             * ⛔ TOTE DEKLARATION: die Auswahl laeuft als Unterschleife IN
+                             * RE15_MODE_TITLE (pc_run_player_select), dieser Modus wird nirgends
+                             * gesetzt oder abgefragt. Byte-true ist das nicht falsch — das
+                             * Original hat dafuer ebenfalls keinen eigenen Lebenszyklus-Zustand,
+                             * sondern eine Task-Ersetzung (@0x80102c9c).                        */
     RE15_MODE_FMV,          /* CAPCOM.STR opening movie (opcode 0x6F Movie_on)                   */
     RE15_MODE_INGAME,       /* the shared game step (game_step_common.c) — byte-true, unchanged  */
     RE15_MODE_PAUSE,        /* START-pause                                                       */
