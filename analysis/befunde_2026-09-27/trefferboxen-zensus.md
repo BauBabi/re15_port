@@ -344,18 +344,27 @@ Die Mündungshöhe selbst, gemessen 240/240 gültig je Typ:
 reicht. Zombie (3000) und Hund (2000) tun das. Spinne (1400), Krähe (880) und Baby (20) nicht.
 Die Spinne verfehlt es um **168 Einheiten**.
 
-### 5.1 Ist die Mündungshöhe falsch? — **Nein, sie ist maßstabsgetreu**
+### 5.1 ⛔ ZURÜCKGEZOGEN (Runde 32): „1668 = 54,5 % der Körperhöhe" war kein Beleg
 
-Der Auftrag verlangt eine Entscheidung mit Beleg. Der Beleg ist ein Größenvergleich aus **RE2s
-eigenen Zahlen**:
+Hier stand: *„RE2 gibt dem Spieler die Box −1530/1530 (@0x8005742C / @0x80057434 /
+@0x80057438 / @0x8005743C) ⇒ Körperhöhe 3060; der Port misst die Mündung 1668; 1668/3060 =
+54,5 % = Brust-/Schulterhöhe, die Zahl ist also richtig."*
 
-* RE2 gibt dem Spieler die Box **−1530 / 1530** (@0x8005742C / @0x80057434 / @0x80057438 /
-  @0x8005743C) ⇒ Körperhöhe **3060**.
-* Der Port misst die Mündung **1668** über den Füßen.
-* **1668 / 3060 = 54,5 %** der Körperhöhe. Das ist Brust-/Schulterhöhe — genau dort, wo eine
-  im Anschlag gehaltene Pistole sitzt.
+**Das ist ein Prozentsatz, kein Mechanismus.** Berichtigt in zwei Punkten, beide gemessen:
 
-Die **Zahl** ist also richtig. ⛔ An ihr wird nicht herumgeraten.
+1. **1666/1668 ist die BINDPOSE von PL00**, nicht eine Zielhöhe: 1804 + 692 − 422 − 408 = 1666
+   (Bind-Offsets Bone 0/9/10/11, `analysis/befunde_2026-09-27/zielpose-ermittlung.md` §1.2).
+   Der Port las sie, weil `re15_player_muzzle_world` die Basis-Bank posierte. Die Deckung mit
+   „Brusthöhe" ist Zufall — RE2s eigene Bindpose ist **1563**, nicht 1666.
+2. **Die echte Zielpose liegt viel höher** (Runde 32, `probe_r30b_muendung` Teil 0, Waffe 3):
+   **HOCH 2751 · EBEN 2500 · TIEF 1988**; RE2s eigene Bank PL00W02 liefert **2805 / 2504 /
+   1921**. Der Anschlag sitzt also auf **Schulterhöhe** (RE1.5 Schulter = 1804 + 692 = 2496),
+   nicht auf 54,5 %.
+
+Folge für die Tabelle oben: die Spalte „gemessen Hgun" ist die Höhe der **Basis-Bank**. Mit
+der Zielpose kommt von den sieben Fällen **nur der stehende Zombie** bei allen drei Bändern
+durch, der stehende Hund **nur bei TIEF** — deshalb füttert das fünfte Tor die Zielpose
+bewusst **nicht** (Begründung mit Zahl im Kopf von `re15_player_muzzle_world`).
 
 ### 5.2 Was fehlt, ist die senkrechte ZIELPOSE des Spielers
 
