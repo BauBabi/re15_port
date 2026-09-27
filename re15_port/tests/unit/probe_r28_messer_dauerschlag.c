@@ -269,17 +269,17 @@ static void lauf(lauf_t *r, const char *name, int modus, int budget, int verbose
  *   RE2  : Geometrie-Records des Messers @0x800A63A8 (EBEN) / @0x800A657C (TIEF),
  *          Stride 0x1C, Muster `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` @0x800A6434.
  */
-static void reichweite_sweep(int elev_down)
+static int reichweite_sweep(int elev_down, int re2)
 {
-    printf("\n===== REICHWEITEN-SWEEP  (%s) =====\n", elev_down ? "TIEF/RUNTER" : "EBEN");
-    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    printf("\n===== REICHWEITEN-SWEEP  (%s, %s) =====\n", elev_down ? "TIEF/RUNTER" : "EBEN", re2 ? "RE2-KI" : "RE1.5-KI");
+    re15_ai_flavor_set(re2 ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15);
     bringup();
     re15_inv_load_briefing();
     re15_player_set_equipped_weapon(1);
     for (int f = 0; f < 60; f++) { g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100; frame(0, 0); }
     load_re2_bank(0x10);
     int slot = standing_zombie();
-    if (slot < 0) { printf("FEHLLAUF Sweep: kein Zombie\n"); return; }
+    if (slot < 0) { printf("FEHLLAUF Sweep: kein Zombie\n"); return -1; }
     for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *e  = &g_actors[slot];
@@ -304,9 +304,10 @@ static void reichweite_sweep(int elev_down)
         if (getroffen) { if (erster_treffer < 0) erster_treffer = d; letzter_treffer = d; }
         printf("  d=%4d  %s\n", d, getroffen ? "TREFFER" : "-");
     }
-    printf("REICHWEITE (%s): Treffer von %d bis %d\n",
-           elev_down ? "TIEF" : "EBEN", erster_treffer, letzter_treffer);
+    printf("REICHWEITE (%s, %s): Treffer von %d bis %d\n",
+           elev_down ? "TIEF" : "EBEN", re2 ? "RE2" : "RE1.5", erster_treffer, letzter_treffer);
     re15_enemy_ai_set_paused(0);
+    return letzter_treffer;
 }
 
 int main(int argc, char **argv)
@@ -322,7 +323,8 @@ int main(int argc, char **argv)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
 
-    if (getenv("RE15_R28_SWEEP")) { reichweite_sweep(1); reichweite_sweep(0); return 0; }
+    if (getenv("RE15_R28_SWEEP")) { reichweite_sweep(1,1); reichweite_sweep(0,1);
+                                    reichweite_sweep(1,0); reichweite_sweep(0,0); return 0; }
     lauf_t A, B, C, D;
     lauf(&A, "A  Messer, R1+RUNTER, DAUERSCHLAG", 0, budget, verbose);
     lauf(&B, "B  Messer, R1+RUNTER, KEIN Schlag", 1, budget, verbose);
@@ -338,6 +340,59 @@ int main(int argc, char **argv)
                r->name, r->bilder, r->schlaege, r->treffer, r->bisse, r->dmin,
                r->frames_dlt1200, r->grab_versuche, r->frames_1d3_nz);
     }
+
+    /* ============================ RIEGEL (add_test) ==========================================
+     * (1) REICHWEITE. Die RE1.5-Tester-Dispatch-Tabelle @0x8006E548 fuehrt GENAU die Ids 1/2
+     *     auf den Nahkampf-KEGEL FUN_800127FC; dessen Treffer-Bedingung ist
+     *     dist < Reichweite(@0x8006E5A0[1] = 1100) + Gegner-Radius (hbdata+6 = 400) = 1500.
+     *     Am ALTEN Stand (Messer durch die RE2-Applier-Sub-Box) sind es 3000 (TIEF) bzw.
+     *     3400 (EBEN) — der Riegel ist dort ROT.
+     * (2) GEGEN-RIEGEL "nicht kaputtgemacht": das Messer muss weiterhin treffen (Sweep-Beginn
+     *     bei 400) und die Reichweite darf nicht UNTER die RE1.5-Zahl fallen.
+     * (3) GEGEN-RIEGEL "nicht ueberkorrigiert": der geschlagene Zombie darf NICHT haeufiger
+     *     beissen als der unbehelligte (Bisse A <= Bisse B) — die Zombies duerfen nicht
+     *     ploetzlich aggressiver werden als im Original.
+     * (4) GEGEN-RIEGEL "nicht durch den Spieler": im Dauertreffer-Lauf D (kein Griff, also
+     *     keine aec4-Ausnahme) muss der kleinste Abstand >= 850 bleiben — der byte-true
+     *     Koerper-Standabstand Zombie 400 (STAGE1.BIN @file 0x1f778) + Spieler 450
+     *     (PSX.EXE @file 0x64694 = 0x1c2), FUN_8002aec4 radSum @0x8002b164.
+     * (5) Der Nicht-Schlag-Fall bleibt unveraendert: B muss weiterhin greifen und beissen. */
+    int fehler = 0;
+    int rw_t = reichweite_sweep(1, 1);        /* RE2-KI, TIEF  */
+    int rw_e = reichweite_sweep(0, 1);        /* RE2-KI, EBEN  */
+    int rw_5 = reichweite_sweep(1, 0);        /* RE1.5-KI, TIEF — die Sollzahl */
+    printf("\nRIEGEL-ZAHLEN: Reichweite RE2/TIEF=%d RE2/EBEN=%d RE1.5/TIEF=%d"
+           " | Bisse A=%d B=%d | Griffe A=%d B=%d | d_min D=%d\n",
+           rw_t, rw_e, rw_5, A.bisse, B.bisse, A.grab_versuche, B.grab_versuche, D.dmin);
+    if (rw_t > 1500 || rw_e > 1500) {
+        printf("RIEGEL-ROT (1): Messer reicht %d/%d statt 1500 — die RE1.5-Kegel-Grenze"
+               " (Reichweite 1100 @0x8006E5A0[1] + Radius 400) ist ausgehebelt\n", rw_t, rw_e);
+        fehler = 1;
+    }
+    if (rw_t < 1400 || rw_e < 1400 || rw_5 < 1400) {
+        printf("GEGEN-RIEGEL-ROT (2): Messer reicht nur noch %d/%d/%d — unter der"
+               " RE1.5-Kegel-Grenze 1500\n", rw_t, rw_e, rw_5);
+        fehler = 1;
+    }
+    if (A.bisse > B.bisse) {
+        printf("GEGEN-RIEGEL-ROT (3): der geschlagene Zombie beisst OEFTER (A=%d) als der"
+               " unbehelligte (B=%d) — Ueberkorrektur\n", A.bisse, B.bisse);
+        fehler = 1;
+    }
+    if (D.dmin < 850) {
+        printf("GEGEN-RIEGEL-ROT (4): d_min=%d < 850 — der Zombie laeuft in den Spieler"
+               " hinein (Koerper-Standabstand 400+450, FUN_8002aec4 @0x8002b164)\n", D.dmin);
+        fehler = 1;
+    }
+    if (B.grab_versuche < 1 || B.bisse < 1) {
+        printf("FEHLLAUF (5): der GRUNDFALL B (kein Schlag) liefert weder Griff noch Biss"
+               " (Griffe=%d Bisse=%d) — dann misst die Sonde nicht den Befund\n",
+               B.grab_versuche, B.bisse);
+        fehler = 1;
+    }
     free(buf);
+    if (fehler) return 1;
+    printf("RIEGEL-GRUEN: Messer-Reichweite %d/%d (RE1.5-Soll 1500), Bisse A=%d <= B=%d,"
+           " d_min(D)=%d >= 850\n", rw_t, rw_e, A.bisse, B.bisse, D.dmin);
     return 0;
 }
