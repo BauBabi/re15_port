@@ -909,6 +909,44 @@ static int re2z_clip_done(const re15_actor_t *e)
     return ((int)e->anim_frame >= fc - 1) ? 1 : 0;
 }
 
+/* ============ DIE TREFFERBOX +0x98 / +0x9E DES ZOMBIE-OVERLAYS (EMZ0.BIN, roh @0x80100000) ===
+ * Welle 2 (2026-09-27). Vollscan aller `sh rt,152(rs)` / `sh rt,158(rs)` in EMZ0.BIN, selbst
+ * gelesen: 26 Stores. Vierzehn davon gehen auf den Gegner SELBST (sieben Paare auf s2/s1/a0),
+ * zwoelf nicht — @0x80105EAC/B4 und @0x80105EE8/F0 schreiben ueber `lw v1,408(s4)` (+0x198,
+ * Teile-Pool, Stride 172) in ein MODELL-TEIL, wo +0x98 ein WINKEL ist, und werden deshalb
+ * ausdruecklich NICHT hierher gebogen.
+ *
+ * Die elf SELF-Paare, jedes einzeln disassembliert:
+ *   1  @0x8010095C/64  -1500/1500  INIT-Joinpunkt (nach `sw 1,488(s2)` @0x80100954)
+ *   2  @0x80100B18/20   -350/350   Kriecher-Eintritt (davor `sw 23,332` Clip, XZ 200 @0x80100B00-10)
+ *   3  @0x80100BCC/D4   -350/350   Spawn-Zweig (+0x10E & 0x3F)==10 @0x80100BAC, danach `sw 0x0F01,4`
+ *   4  @0x80103464/6C   -350/350   EXEC[5] P2 (Aufschlag; XZ 200 @0x80103454-5C)
+ *   5  @0x8010368C/94   RAMPE      EXEC[5] P7, je Bild b += -10 / h += +10 bis b <= -1500
+ *   6  @0x80103714/20  -1500/1500  EXEC[5] P8 (Ende der Aufricht-Kette)
+ *   7  @0x80104A20/28  -1500/1500  Wiedereinstieg/Reset (s1)
+ *   8  @0x80106B2C/34   -350/350   Kriecher-Eintritt aus der Treffer-Reaktion (a0)
+ *   9  @0x80107810/18   -350/350   Knockdown-P2, setzt danach +0x10E = 0x2001
+ *  10  @0x80107E90/98  -1500/1500  Aufsteher-EXIT (+0x21A &= 0xFFED, word0 |= 0x0C000000)
+ *  11  @0x8010899C/A4   -350/350   Todes-Wiederbelebung — im Port OPEN (kein Zwilling), s.
+ *                                  re2z_exec_corpse; die Stelle ist dort benannt.
+ *
+ * ⛔ WARUM box_set HIER NICHT GESETZT WIRD (das ist der Riegel, keine Vorsicht):
+ * das fuenfte Gate @0x8004716C-A4 vergleicht die Box gegen die MUENDUNGSHOEHE. Gemessen
+ * (probe_r31_boxen, echter Weg): Hgun = eY - MuendungY steht im Port bei 1665..1671 — auch
+ * wenn der Spieler nach unten zielt, weil der Port die senkrechte Zielpose (RE2-Bone-Kette
+ * 0->9->10->11 @0x80042E64/74/84/94) nicht fuehrt. Das Fenster des KRIECHERS ist
+ * [-100, 800) und das des Stehenden [-100, 3100): der stehende Zombie kaeme durch, der
+ * KRIECHER waere dauerhaft untreffbar. Die Setz-Stelle steht also byte-true hier, das Tor
+ * wertet sie fuer 0x10 aber erst, wenn die Zielpose gebaut ist. Zahlen: siehe
+ * analysis/befunde_2026-09-27/trefferboxen-welle2.md. */
+static void re2z_hitbox(re15_actor_t *e, int b, int h)
+{
+    if (!e) return;
+    e->re2_hit_b98 = (int16_t)b;
+    e->re2_hit_h9e = (uint16_t)h;
+    /* re2_hit_box_set BLEIBT UNBERUEHRT — s. Kopf. */
+}
+
 /* RE2-EDD-Frame-Flag-SE fuer Zustaende, in denen RE2-Retail selbst STUMM ist (Nutzer-Mandat:
  * RE1.5-Praesentation). Das RE2-EDD traegt an den Fress-/Kriech-Clips eigene Flag-Frames
  * (bit 0x08000000 + Nibble>>28 — dieselbe Kodierung wie der WALK/BUMP-Decoder 0x801016c8
@@ -2135,7 +2173,12 @@ static void re2z_exec_knockdown(re15_actor_t *e)
                                                                    /* srl 1 @0x801034D4, sh
                                                                     * @0x801034D8 */
         }
-        /* Hitbox 200/200/-350/350 (@0x80103454-6C) = Praesentation/Kollision, kein Port-Zwilling. */
+        /* XZ 200/200 (@0x80103454-5C) = Praesentation/Kollision, kein Port-Zwilling.
+         * +0x98/+0x9E FUEHRT DER PORT SEIT WELLE 2: */
+        re2z_hitbox(e, -350, 350);                                 /* addiu v1,zero,-350 @0x80103460 /
+                                                                    * sh v1,152(s2) @0x80103464 ;
+                                                                    * addiu v1,zero,350 @0x80103468 /
+                                                                    * sh v1,158(s2) @0x8010346C */
         break;
     }
     case 3:                                                        /* P3 @0x801034DC: Boden-Zucken */
@@ -2197,6 +2240,26 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         /* Zielradius waechst mit dem Aufstehen: `lhu v1,154(s2) / sltiu v0,v1,0x1f4 / beq`
          * @0x80103628-34 (ab 500 nicht mehr), `addiu v0,v1,10 / sh v0,154(s2)` @0x80103638-3C. */
         if (e->re2z_rad9a < 500u) e->re2z_rad9a = (uint16_t)(e->re2z_rad9a + 10u);
+        /* ⛔ DIE GEGENSTELLE ZU ALLEN -350/350-SETZERN — ohne sie waere die Kriecher-Box eine
+         * Sackgasse. Je Bild waechst die Box, bis die Unterkante den Deckel -1500 erreicht:
+         *   8010366c: lh v0,152(s2)        ; b
+         *   80103674: addu v1,v0,zero
+         *   80103678: slti v0,v0,-1499     ; b < -1499 ?
+         *   8010367c: bne v0,zero,0x80103698   ; ja -> fertig, nichts mehr aendern
+         *   80103684: lhu v0,158(s2)       ; h
+         *   80103688: addiu v1,v1,-10
+         *   8010368c: sh v1,152(s2)        ; b -= 10
+         *   80103690: addiu v0,v0,10
+         *   80103694: sh v0,158(s2)        ; h += 10
+         * Von -350 bis -1500 sind 1150 in 10er-Schritten = 115 Bilder. Der Block liegt im
+         * Kriecher-Tick, also zustandsunabhaengig erreichbar. */
+        if ((int32_t)e->re2_hit_b98 >= -1499) {                    /* slti v0,v0,-1499 @0x80103678 /
+                                                                    * bne @0x8010367C */
+            e->re2_hit_b98 = (int16_t)(e->re2_hit_b98 - 10);       /* addiu v1,v1,-10 @0x80103688 /
+                                                                    * sh v1,152(s2) @0x8010368C */
+            e->re2_hit_h9e = (uint16_t)(e->re2_hit_h9e + 10);      /* addiu v0,v0,10 @0x80103690 /
+                                                                    * sh v0,158(s2) @0x80103694 */
+        }
         if (re2z_clip_done(e)) {
             e->re2z_flags21a &= (uint16_t)~0x10u;                  /* Kriech-Marker WEG @0x801036B8-BC */
             e->re2z_flags21a &= (uint16_t)~0x2u;                   /* @0x801036C8-CC */
@@ -2236,8 +2299,12 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * das in P0 gesetzte Bit 0x2000 (@0x80103308/3320) wieder zurueck. */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f  @0x80103718-28 */
         e->re2z_rad9a    = 500u;                                   /* `addiu v0,zero,500 / sh v0,154`
-                                                                    * @0x801036FC-700 (Steh-Box
-                                                                    * -1500/+1500 @0x80103710-20) */
+                                                                    * @0x801036FC-700 */
+        re2z_hitbox(e, -1500, 1500);                               /* STEH-BOX: addiu v2,zero,-1500
+                                                                    * @0x80103710 / sh v2,152(s2)
+                                                                    * @0x80103714 ; addiu v3,zero,1500
+                                                                    * @0x8010371C / sh v3,158(s2)
+                                                                    * @0x80103720 */
         e->re2z_parts   |= 3u;                                     /* Beine+Rumpf: `lui v1,0xc00 /
                                                                     * or v0,v0,v1 / sw v0,0(s2)`
                                                                     * @0x80103730-38 (unbedingt) */
@@ -2938,6 +3005,13 @@ void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub)
      * (@0x80107A54-58) ist die Maske bereits 1 (Ragdoll/Knockdown P2) — idempotent. */
     e->re2z_parts = 1u;
     e->re2z_rad9a = 200u;
+    re2z_hitbox(e, -350, 350);                                     /* KRIECHER-BOX: addiu -350
+                                                                    * @0x80100B14 / sh 152(s2)
+                                                                    * @0x80100B18 ; addiu 350
+                                                                    * @0x80100B1C / sh 158(s2)
+                                                                    * @0x80100B20. Zwilling des
+                                                                    * zweiten Eingangs @0x80106B28-34
+                                                                    * (dort a0) — selber Wert. */
     if (pl) pl->re2z_self1d3 |= 0x80u;                             /* @0x8010459C-B0 */
 }
 
@@ -3095,8 +3169,13 @@ static void re2z_exec_restyle(re15_actor_t *e)
                                                                     * @0x801049F0-F4 */
     e->re2z_rad9a = 500u;                                          /* `addiu v1,zero,500 / sh v1,154`
                                                                     * @0x801049FC-A00 */
+    re2z_hitbox(e, -1500, 1500);                                   /* Box-Reset: addiu v0,zero,-1500
+                                                                    * @0x80104A1C / sh v0,152(s1)
+                                                                    * @0x80104A20 ; addiu 1500
+                                                                    * @0x80104A24 / sh v0,158(s1)
+                                                                    * @0x80104A28 */
     /* nicht modelliert (dokumentiert): Re-Bind jal 0x80028794 @0x80104984, +0x219-Clear
-     * @0x801049E0, Box-Reset -1500/+1500 @0x80104A1C-28 */
+     * @0x801049E0 */
 }
 
 /* EXEC[14] @0x80104D74 — SNAP BITE (0x0E01, blocks A/B/J):
@@ -6133,6 +6212,10 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
          * Die uebrigen Modell-Felder der Gruppe bleiben Praesentation ohne Port-Zwilling. */
         e->re2z_rad9a = 200u;
         e->re2z_parts = 1u;
+        re2z_hitbox(e, -350, 350);                                 /* addiu v0,zero,-350 @0x80106B28 /
+                                                                    * sh v0,152(a0) @0x80106B2C ;
+                                                                    * addiu v0,zero,350 @0x80106B30 /
+                                                                    * sh v0,158(a0) @0x80106B34 */
         return;                                                    /* j 0x80106F14 */
     }
 
@@ -6475,6 +6558,11 @@ static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl, int death)
         }
         /* +0x10C und 0x800CFBD8 (@0x801077B4-D4) haben im Port keinen Produzenten (OPEN) ->
          * der Original-Pfad faellt in den KRIECHER-Ausgang. */
+        re2z_hitbox(e, -350, 350);                                 /* KRIECHER-BOX vor dem 0x2001:
+                                                                    * addiu v0,zero,-350 @0x8010780C /
+                                                                    * sh v0,152(s2) @0x80107810 ;
+                                                                    * addiu v0,zero,350 @0x80107814 /
+                                                                    * sh v0,158(s2) @0x80107818 */
         e->re2z_f10e = 0x2001u;                                    /* sh 8193,270 @0x80107820-24 */
         re15_ai_set_state_word(e, (re2z_rand() & 1u) ? 1u : 0x201u);/* @0x80107834-4C */
         e->re2z_self1d3 &= 0x7fu;                                  /* andi 0x7f @0x80107850-5C */
@@ -6885,6 +6973,11 @@ static void re2z_getup_hurt(re15_actor_t *e, re15_actor_t *pl)
     return;                                                        /* +0x6 >= 4: j 0x80107ED0 */
 
 getup_exit:                                                        /* EXIT @0x80107E70-ECC */
+    re2z_hitbox(e, -1500, 1500);                                   /* STEH-BOX: addiu v0,zero,-1500
+                                                                    * @0x80107E8C / sh v0,152(s1)
+                                                                    * @0x80107E90 ; addiu 1500
+                                                                    * @0x80107E94 / sh v0,158(s1)
+                                                                    * @0x80107E98 */
     e->re2z_flags21a &= (uint16_t)~0x12u;                          /* andi 0xffed / sh 538
                                                                     * @0x80107EA0-A4 */
     re15_ai_set_state_word(e, e->re2z_word22c);                    /* lw a0,556 @0x80107E70 ->
@@ -7912,6 +8005,13 @@ static void re2z_init(int slot, re15_actor_t *e)
         e->re2z_walkclip = re2z_param_walk[(r1 >> (r2 & 3u)) & 7u];
     }
     e->re2z_res223 = (int8_t)(16 + (re2z_rand() & 0xfu));          /* @0x80100888-9C */
+    /* STEH-BOX am INIT-Joinpunkt: alle drei Zweige (@0x801008E8 / @0x80100928 -> 0x80100954)
+     * laufen hier zusammen, danach `sw 1,488(s2)` @0x80100954. */
+    re2z_hitbox(e, -1500, 1500);                                   /* addiu v0,zero,-1500
+                                                                    * @0x80100958 / sh v0,152(s2)
+                                                                    * @0x8010095C ; addiu 1500
+                                                                    * @0x80100960 / sh v0,158(s2)
+                                                                    * @0x80100964 */
     /* +0x21A Bit 0x8000 = "dieser Zombie laeuft mit Frame-Wort-SEs (und dem Extra-Turn)" —
      * eines der beiden Sub-Gates vor dem Drittel-Takt der WALK-/BUMP-Executoren
      * (@0x80101cf4-f8 / @0x80102414-18, siehe enemy_ai_common.c re15_enemy_anim_sfx).

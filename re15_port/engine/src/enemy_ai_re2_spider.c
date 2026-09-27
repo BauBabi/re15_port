@@ -1428,7 +1428,27 @@ static void re2s_m2_climb(re15_actor_t *e)
         e->speed_h      = 1225;                            /* +0x144 = 1225 @0x80102700-08 */
         e->y            = e->y - 475;                      /* @0x801026FC-14 */
         re2s_thrust(e, e->re2s_yaw21a);                    /* @0x80102710 */
-        /* Hitbox-Block @0x801063A0 -> +0x84..+0xA0 (@0x80102718-5C) — OPEN */
+        /* TREFFERBOX-BLOCKKOPIE @0x801063A0 -> +0x84..+0xA0: acht Woerter
+         * (`lui/addiu a1` @0x80102718-1C, `lw 0..28(a1)` / `sw 132..160(s0)` @0x80102720-5C).
+         * Tabellenbytes selbst gelesen (EMS25.BIN, roh @0x80100000):
+         *   801063a0: 00 00 00 00 00 00 00 00 00 00 00 00 20 03 20 03
+         *   801063b0: 00 00 00 00 88 fa e8 03 e8 03 78 05 00 00 00 00
+         * +20 = 0x03E8FA88 -> +0x98 = 0xFA88 = -1400, +0x9A = 0x03E8 = 1000
+         * +24 = 0x057803E8 -> +0x9C = 0x03E8 = 1000, +0x9E = 0x0578 = 1400
+         * (+12 = 0x03200320 -> XZ 800/800 nach +0x90/+0x92.)
+         * Direkt danach wird die Unterkante wieder genullt: `sh zero,152(s0)` @0x8010276C,
+         * unmittelbar vor `sw v0,4(s0)` @0x80102770. Endstand also b = 0, h = 1400.
+         * Dieselbe Null steht ein zweites Mal @0x8010049C (`sh zero,152(s2)`, davor
+         * `sh 2048,120(s2)`, danach word0 |= 0x10000000) — gleicher Wert, folgenlos.
+         * Nur +0x98/+0x9E haben im Port ein Feld; +0x84..+0x96 und +0xA0 bleiben OPEN. */
+        e->re2_hit_b98 = 0;                                /* sh zero,152(s0) @0x8010276C
+                                                            * (ueberschreibt die -1400 der
+                                                            * Blockkopie @0x8010274C) */
+        e->re2_hit_h9e = 1400;                             /* Tabelle @0x801063A0+26 -> +0x9E,
+                                                            * `sw a0,160(s0)` @0x8010275C */
+        /* re2_hit_box_set BLEIBT 0 — GEMESSEN: Fenster [-1500, 1500) gegen Hgun 1665..1671,
+         * DURCH in 0 von 240 Bildern; es fehlen 168 Einheiten. Erst mit der senkrechten
+         * Zielpose (@0x80042E64-94) darf das Tor die Spinne werten. */
         re2s_word(e, 1u);                                  /* @0x80102770 */
         e->re2s_f236    = 0;                               /* +0x236 = 0 @0x80102774 */
         g_re2_room_gflags &= (uint16_t)~0x20u;             /* Mutex FREI @0x80102778-84 */
@@ -2588,6 +2608,26 @@ static void re2sb_init(re15_actor_t *e)
     re2s_clip(e, 0x000f0000u);                             /* Clip 0, Rate 15 @0x80100120 */
     e->re2s_c21e   = 120;                                  /* +0x21E = 120 @0x80100128 */
     e->re2s_t21c   = (int16_t)(re2s_rand() & 0x1fu);       /* +0x21C @0x80100140-50 */
+    /* TREFFERBOX DES BABYS — der EINZIGE +0x98/+0x9E-Schreiber im ganzen Overlay (Vollscan
+     * EMS26.BIN: 2 von 2 Treffern liegen hier). Selbst disassembliert, roh @0x80100000:
+     *   80100168: addiu v0,zero,-10
+     *   8010016c: sh v0,152(s0)     ; +0x98 = -10
+     *   80100170: addiu v0,zero,10
+     *   80100174: sh v0,154(s0)     ; +0x9A = 10
+     *   80100178: sh v0,158(s0)     ; +0x9E = 10
+     *   8010017c: sh v0,156(s0)     ; +0x9C = 10
+     *   80100180: sh v0,144(s0)     ; +0x90 = 10
+     *   80100184: sh v0,146(s0)     ; +0x92 = 10
+     * Alle sechs Masse sind 10 — ein Wuerfel von 20 Einheiten Kantenlaenge. Nur +0x98/+0x9E
+     * haben im Port ein Feld. */
+    e->re2_hit_b98 = -10;                                  /* @0x80100168-6C */
+    e->re2_hit_h9e =  10;                                  /* @0x80100170/78 */
+    /* re2_hit_box_set BLEIBT 0 — GEMESSEN: Fenster [-100, 120) gegen Hgun 1665..1671, DURCH in
+     * 0 von 240 Bildern. Ein 20-Einheiten-Wuerfel ist ueber die Muendungshoehe ueberhaupt nicht
+     * zu treffen; RE2 toetet Baby-Spinnen mutmasslich ueber den RADIALEN Schadenspfad
+     * @0x800477CC (nur XZ-Abstand: `lw 0(s5)/lw 56(s0)` @0x80047764-68, `jal 0x8008D2F4`
+     * @0x80047794, `sltu v0,v0,a3` @0x800477A4 — kein Y). Wer diesen Pfad ruft, ist NICHT
+     * aufgeloest — Spur, keine Feststellung. */
     e->re2z_self1d3 = 6;                                   /* +0x1D3 = 6 @0x801001B0 */
     e->re2z_t158   = 0;                                    /* +0x158 = 0 @0x801001B4 */
     e->re2z_t15a   = 0;

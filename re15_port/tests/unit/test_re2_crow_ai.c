@@ -72,7 +72,8 @@ static void test_init_wake_takeoff(void)
     CHECK(CROW->crow_shadow_w == 200 || CROW->crow_shadow_w == 400,
           "Schatten-Init 200x200 (0x80016480 a2=0xC800C8 @0x80100408-18; Root-Tail setzt am Boden "
           "400 @0x801002E4-F0), w=%d", CROW->crow_shadow_w);
-    CHECK(CROW->target_z == -350, "INIT-Pitch +0x98=-350 (@0x801003B8-C4), tz=%d", CROW->target_z);
+    CHECK(CROW->re2_hit_b98 == -350, "INIT-Trefferbox +0x98=-350 (@0x801003B8-C4), b=%d", CROW->re2_hit_b98);
+    CHECK(CROW->re2_hit_h9e == 530, "INIT-Trefferbox +0x9E=530 (@0x801003C8/DC), h=%d", (int)CROW->re2_hit_h9e);
 
     /* fern: Idle haelt (DEC-Gates @0x80100704/0x80100728 zu) */
     for (int i = 0; i < 40; i++) tick();
