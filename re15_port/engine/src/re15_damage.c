@@ -1159,10 +1159,26 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
 }
 
 /* ======================= DIE MUENDUNGSHOEHE — `lw a0,4(s4)` @0x8004718C ====================
- * Das fuenfte Gate des RE2-Kandidatenfilters FUN_800470C0 vergleicht die senkrechte Lage des
- * SCHUSS-URSPRUNGS gegen die Trefferzone des Gegners. `s4` ist das erste Argument von
- * FUN_800470C0; am Schuss-Pfad @0x80042F94 (Funktion @0x80042C64, Rahmen -104) wird es so
- * gestellt — selbst disassembliert aus info/re2leon/PSX.EXE:
+ * ⛔ BERICHTIGT (Runde 33, Zuordnung selbst aufgeloest): dieser Block hiess bis hierher
+ * "am SCHUSS-Pfad". Das ist falsch. FUN_800470C0 hat auf der SPIELERSEITE genau ZWEI
+ * Aufrufstellen, und KEINE davon ist eine Schusswaffe:
+ *   (A) @0x80042F94 in FUN_80042C64 = der Eintrag [2] der Waffenzeile @0x800A702C. Diese Zeile
+ *       waehlt der Dispatcher FUN_80042C28 (`lbu v0,6(a0)` @0x80042C30, `lw v0,0x702c(at)`
+ *       @0x80042C44), und der Dispatcher selbst steht auf Index 1 der Waffentabelle
+ *       @0x800A6F38 (`lhu v0,270(s0)` / `andi 0xfff` / `sll 2` / `lw v0,0x6f38(at)`
+ *       @0x80043E20-40). Waffe 1 = MESSER (Schadenszeile @0x800A412C+0*20 = Wort 3/0/0, die
+ *       einzige Zeile mit Schaden 3; Feuer-SE-Eintrag @0x800A6F94 ist `jr ra` = kein Schuss).
+ *       Der Hitcode bestaetigt es: a3 = 0x00020001 / 0x00060001 @0x80042F64-88, low byte = 1.
+ *   (B) @0x800467C0 in FUN_80046304 = der BOLZEN der Waffe 12 (Aufruf aus dem Spieler-Root nur
+ *       bei `(+0x10E & 0xfff) == 0xC` @0x8003C1C8-DC; Hitcode a3 = 12 @0x800467C4).
+ * ALLE Schusswaffen laufen ueber FUN_80043908 -> `jal 0x800410CC` @0x80043AFC, und FUN_800410CC
+ * liest +0x98/+0x9E NIE (Vollscan `lh/lhu rt,152|158(rs)` ueber info/re2leon/PSX.EXE: im ganzen
+ * Bereich 0x8004xxxx nur @0x80047170/88 und @0x800472AC/@0x800474D0 in FUN_800470C0 selbst
+ * sowie @0x80047730/44 im AoE-Zwilling FUN_80047664).
+ * Die Kette unten ist damit die KLINGEN-Pose des Messerschlags, nicht die Muendung einer
+ * Schusswaffe; sie steht hier weiter, weil sie die Rechnung belegt, die der Port fuehrt.
+ * `s4` ist das erste Argument von FUN_800470C0; an (A) (Funktion @0x80042C64, Rahmen -104)
+ * wird es so gestellt — selbst disassembliert aus info/re2leon/PSX.EXE:
  *
  *   80042e14: addiu s0,s1,36        ; s0 = Spieler-MATRIX (+0x24)
  *   80042e18: lw    s2,408(s1)      ; s2 = Part-/Posen-Block (+0x198)
@@ -1231,18 +1247,37 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
  * (Welle 1 hatte das Gegenteil vermutet, weil sie RE2s PL00W03.PLW mass; das ist dort ein
  *  3436-B-Stummel. Die vollen RE2-Baenke sind W00-W02, W04-W08, W0D, W0F-W12.)
  *
- * ⛔ NICHT GEBAUT (Fehlstelle, nicht gebogen): die Waffen-Absenkung um 200.
+ * ⛔ NICHT GEBAUT (Fehlstelle, benannt): die Absenkung um 200.
  *   80042f48: lbu v0,333(s1)      ; +0x14D
  *   80042f50: addiu v0,v0,-7
  *   80042f54: sltiu v0,v0,0x5     ; nur (+0x14D)-7 in [0,4]
+ *   80042f58: beq v0,zero,0x80042fbc   ; sonst wird der GANZE Block inkl. `jal 0x800470c0`
+ *                                        uebersprungen
  *   80042f60: lw v0,56(sp) / 80042f68: addiu v0,v0,200 / 80042f6c: sw v0,56(sp)
  *   80042fac-b8: dieselbe Stelle wieder -200
  * Die Absenkung selbst ist eindeutig (PSX-Y zeigt nach unten, +200 = 200 Einheiten TIEFER).
- * Was NICHT aufgeloest ist, ist die Bedeutung von +0x14D: die 40 Leser und 20 Schreiber in
- * der RE2-EXE sind nicht deckungsgleich mit der Waffen-Id des Ports (ein Schreiber legt dort
- * `7*x` ab, @0x8003D790-B4). Ohne diese Zuordnung waere jede Portierung der [7,11]-Klammer
- * geraten. Wirkung auf die HEUTIGEN Urteile: keine — 200 Einheiten aendern bei keinem der
- * sieben gemessenen Faelle die Seite des Fensters (naechster Abstand 205, Hund stehend).
+ * ⛔ +0x14D IST JETZT AUFGELOEST (Runde 33) — und es ist KEINE Waffen-Id, wie hier bis
+ * Runde 32 vermutet wurde. +0x14C..+0x14F ist der ANIMATIONS-DESKRIPTOR des Aktors:
+ *   +0x14C = Clip, +0x14D = BILDNUMMER IM CLIP, +0x14E = Bank.
+ * Belege, selbst disassembliert aus info/re2leon/PSX.EXE:
+ *   80029b28: lbu v0,333(s2) / 80029b30: addiu v0,v0,1 / 80029b34: sb v0,333(s2)
+ *             — der Animationsschritt zaehlt das Byte JE BILD um eins hoch, direkt hinter
+ *               der Teil-Schleife (`addiu s0,s0,172` @0x80029B24);
+ *   80029b3c: sltu v0,v0,s3   — und vergleicht es mit der Clip-Laenge;
+ *   80015ddc: lbu v0,333(t1) / 80015dfc: sll v0,v0,2 / 80015e00: addu t0,v1,v0
+ *             — der Keyframe-Zugriff indiziert MIT diesem Byte;
+ *   80042d28: sw v0,332(s1) mit v0 = Clip | 0x00070000 (`lui a0,0x7` @0x80042D14) —
+ *             der Angriffsstart setzt Clip und Bank und NULLT damit die Bildnummer;
+ *   80042da4-b0: `lbu v0,28026(at)` & 0x7f  `sltu v0,v0,v1(=+0x14D)` -> +0x06 = 1 = ENDE:
+ *             die Tabelle haelt die Laenge, das Byte die Position;
+ *   80042e3c-4c: z = 300 - 15*((+0x14D)-5) — die Klinge faehrt mit der BILDNUMMER vor.
+ * `(+0x14D)-7 in [0,4]` heisst also: die Bilder 7..11 des MESSERSCHLAGS. Es ist das aktive
+ * Fenster des Schlags, kein Waffenfilter — und es passt zum RE2-Muster des Messers
+ * (@0x800A6608/6434/656C `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` = sechs Bilder Ausholen).
+ * NICHT portiert, weil die Absenkung zum MESSER-Pfad gehoert, den der Port ueber
+ * re15_re2_gun_probe/s_re2z_geo1 fuehrt, nicht ueber dieses Tor. Wirkung auf die heutigen
+ * Urteile: keine — 200 Einheiten aendern bei keinem der sieben gemessenen Faelle die Seite
+ * des Fensters (naechster Abstand 205, Hund stehend).
  */
 #define RE15_MUZZLE_BONE 11                 /* Kettenende 0->9->10->11, @0x80042E60-94 */
 /* Gemeinsamer Kern: Bone 11 in Weltkoordinaten, aus einer WAEHLBAREN Bank+Clip.
@@ -1879,7 +1914,26 @@ retry_after_latch:
          *
          * NICHT nachgebaut (Fehlstelle, nicht gebogen): der Seiteneffekt @0x80047178/84 loescht
          * das untere Byte von +0x1D0 bei JEDEM Kandidaten, auch bei einem, den es gleich darauf
-         * verwirft. Der Port fuehrt +0x1D0 nicht. */
+         * verwirft. Der Port fuehrt +0x1D0 nicht.
+         *
+         * ⛔ ZUR ZUORDNUNG — DER PORT SETZT DIESES TOR AN EINER STELLE, AN DER RE2 ES NICHT HAT
+         * (Runde 33, selbst aufgeloest; volle Herleitung im Kopf von muzzle_bone_world):
+         * FUN_800470C0 wird auf der Spielerseite nur von WAFFE 1 (Messer, @0x80042F94, Hitcode
+         * a3 low byte 1) und WAFFE 12 (Bolzen, @0x800467C0, a3 = 12) betreten. Jede Schusswaffe
+         * geht ueber FUN_80043908 -> `jal 0x800410CC` @0x80043AFC, und FUN_800410CC liest
+         * +0x98/+0x9E NIE (Vollscan `lh/lhu rt,152|158(rs)` ueber info/re2leon/PSX.EXE:
+         * im Bereich 0x8004xxxx nur @0x80047170/88 + @0x800472AC/@0x800474D0 in FUN_800470C0
+         * und @0x80047730/44 im AoE-Zwilling FUN_80047664). Dort entscheidet stattdessen die
+         * HALTUNGSKLASSE `(word0>>26)&7` (@0x800413CC-D8) gegen die Maskentabelle @0x800A6DB4 —
+         * genau das Feld, das der Port als `re2z_parts` fuehrt und das der Hund seit Runde 33
+         * byte-true setzt (re2d_hitbox, liegend 1 / stehend 3, @0x80104090-D8).
+         * DAS TOR BLEIBT TROTZDEM HIER STEHEN, und zwar mit Zahl statt Bauchgefuehl:
+         * re15_re2_gun_probe (der Port-Zwilling von FUN_800410CC) laeuft nur fuer
+         * re15_re2z_owns_type (0x10/0x11/0x12/0x13/0x16/0x18) — der HUND 0x20 ist nicht dabei.
+         * Nimmt man dem Hund dieses Tor weg, ohne ihn vorher an den Applier zu haengen, ist er
+         * im Liegen wieder beschiessbar: gemessen 17 Treffer in 389 Bildern (Runde 30 §4.2,
+         * Spalte ALT) gegen den Nutzer-Befund aus Runde 26. Der Wechsel des Mechanismus ist
+         * deshalb als OFFEN benannt (zweite-aufrufstelle.md §6), nicht heimlich halb gemacht. */
         if (e->re2_hit_box_set) {
             int32_t mz[3];
             if (re15_player_muzzle_world(mz)) {
