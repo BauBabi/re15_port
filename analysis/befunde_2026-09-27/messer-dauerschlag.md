@@ -165,3 +165,26 @@ durch den Spieler.
   haben ebenfalls ein eigenes Root-Dekrement; ob ihr Weg ueber die gemeinsame Zeile laeuft,
   ist nicht geprueft. Alles drei bleibt OFFEN — eine eigene Runde mit eigenen Messungen,
   weil dort Hunde-Pins aus Runde 13/14/27 haengen.
+
+## 6. Sichtpruefung — NICHT ZUSTANDE GEKOMMEN (ehrlich gemeldet)
+
+Das Skript liegt fertig unter `analysis/befunde_2026-09-27/r28_sichtpruefung.sh`
+(RE15_FRAMEDUMP-Serie, RE15_DEBUG_JUMP=1140@gp, RE15_TITLE_SHOT als Auto-Vorlauf,
+RE15_INPUT_SCRIPT="W2,MD1,MDA30" = R1 + RUNTER + Dauerschlag, RE15_NOAUDIO=1;
+KEIN RE15_AUTOSHOT, weil das visuelle Fehler nachweislich maskiert).
+
+In DIESER Sitzung liefert es nichts: `re15_pc.exe` startet, oeffnet das Fenster und bricht
+dann ab — `debug.log` endet nach
+```
+[window] windowed 320x240
+[audio] SDL_OpenAudioDevice failed: WASAPI can't find requested audio endpoint
+[pad] Diese Sitzung ist eine REMOTEDESKTOP-Sitzung.
+```
+und danach kommt in 200 Sekunden weder der Titel-Screenshot noch ein einziges
+FRAMEDUMP-PPM. Die Sitzung ist eine RDP-Sitzung ohne Audio-Endpunkt; die Hauptschleife
+laeuft hier nicht weiter. Es wird deshalb KEIN Bild als Beleg behauptet — das Skript ist so
+abgelegt, dass es an einer lokalen Sitzung in einem Zug durchlaeuft.
+
+Belegt ist der Befund stattdessen ueber den ECHTEN Spielweg: `re15_game_step` + Pad-Wort,
+echte ROOM1140.RDT, echte RE2-Bank EM010, RE2-KI — dieselbe Zustandsmaschine wie im Fenster,
+nur ohne Renderer.
