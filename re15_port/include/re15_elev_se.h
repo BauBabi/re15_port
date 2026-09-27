@@ -32,6 +32,8 @@ void re15_elev_se_reset_log(void);
  * gen/re15_elev_se.inc vom Generator uebernommen hat — nur fuer den Riegel. */
 int  re15_elev_se_hit_count(void);
 int  re15_elev_se_hit(int i, unsigned *out_room, unsigned *out_off);
+/* Welle 2: welche Fahrt-Gestalt hat diesen Treffer erzeugt (0 = SIG1, 1 = SIG2)? */
+int  re15_elev_se_hit_sig(int i);
 
 /* Satz-TOC der Mini-Bank shared_assets/RE2/ELEVSE.VBS — dasselbe Muster wie
  * re2_enemse_toc_entry (re2_ems.h): der Satz steht in der Datei, seine Groessen im

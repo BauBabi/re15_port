@@ -1140,6 +1140,74 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
     return 1;
 }
 
+/* ======================= DIE MUENDUNGSHOEHE — `lw a0,4(s4)` @0x8004718C ====================
+ * Das fuenfte Gate des RE2-Kandidatenfilters FUN_800470C0 vergleicht die senkrechte Lage des
+ * SCHUSS-URSPRUNGS gegen die Trefferzone des Gegners. `s4` ist das erste Argument von
+ * FUN_800470C0; am Schuss-Pfad @0x80042F94 (Funktion @0x80042C64, Rahmen -104) wird es so
+ * gestellt — selbst disassembliert aus info/re2leon/PSX.EXE:
+ *
+ *   80042e14: addiu s0,s1,36        ; s0 = Spieler-MATRIX (+0x24)
+ *   80042e18: lw    s2,408(s1)      ; s2 = Part-/Posen-Block (+0x198)
+ *   80042e60: addiu s0,sp,32        ; ZIEL-MATRIX auf dem Stack
+ *   80042e64: jal 0x8002ce94   (a0 = Spieler-MATRIX, a1 = s2+24,   a2 = sp+32)
+ *   80042e74: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1572, a2 = sp+32)
+ *   80042e84: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1744, a2 = sp+32)
+ *   80042e94: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1916, a2 = sp+32)
+ *   80042f8c: addiu a0,sp,52        ; a0 = &MATRIX.t[0]  -> s4 in FUN_800470C0
+ *   80042f94: jal   0x800470c0
+ *
+ * 0x8002ce94 ist das PsyQ-Matrix-Compose (selbst disassembliert @0x8002CE94-CF30): die
+ * ELTERN-Matrix geht ueber `ctc2` in die GTE-Kontrollregister 0..4 (R) und 5..7 (TR)
+ * (`lw 0/4/8/12/16(a0)` @0x8002CE94-CEB0 bzw. `lw 20/24/28(a0)` @0x8002CEBC-CED0), die
+ * Kind-Matrix spaltenweise ueber `mtc2` in IR1..IR3 (`lhu 0/6/12(a1)` @0x8002CED4-CEE8),
+ * dann `MVMVA` @0x8002CEF4 und `mfc2`/`sh` zurueck @0x8002CF00-14 — also
+ * out = Eltern x Kind fuer Rotation UND Translation.
+ *
+ * Die vier Kind-Offsets 24 / 1572 / 1744 / 1916 liegen 172 (0xAC) auseinander
+ * (1572 = 24 + 9*172, 1744 = +172, 1916 = +172) — das ist der Part-Stride 0xAC des
+ * Modell-Pools. Die Kette ist also Bone 0 -> 9 -> 10 -> 11, und der Endpunkt ist BONE 11,
+ * derselbe Knochen, den der Port schon als Waffen-/Handknochen fuehrt (kine +0x7b8 =
+ * 11*0xAC + 0x40 + 0x14, s. re15_player_set_hand_world oben).
+ *
+ * PsyQ-MATRIX = 3x3 short (18 B) + 2 Pad + long t[3]; bei einer Matrix @sp+32 liegt
+ * t[0] @sp+52, t[1] @sp+56, t[2] @sp+60 — genau die Slots, die die Funktion danach als
+ * Vektor weiterreicht (`lw 52/56/60(sp)` @0x80042FCC-EC). `lw a0,4(s4)` @0x8004718C liest
+ * mithin **t[1] = die WELT-Y-KOORDINATE DES WAFFEN-BONE**. Nicht die Fusshoehe des
+ * Spielers, nicht die Kamera, nicht der Zielpunkt.
+ *
+ * ⛔ WARUM DAS HIER STEHT UND NICHT IM RENDERER: re15_player_gunbone_world (oben) liefert
+ * denselben Punkt, aber nur, nachdem die PC-Plattform Bone 11 posiert hat — headless ist er
+ * GEMESSEN 0 von 1200 Bildern gueltig (analysis/befunde_2026-09-27/zielfenster-messung.md
+ * §4), und der PSX-Zweig fuettert ihn gar nicht. Ein Gate auf einem Feld, das nie gefuellt
+ * wird, sperrt dauerhaft — die Falle aus Runde 14. Darum wird die Kette hier im ENGINE-Teil
+ * selbst gestellt: Leons eigene Bank posieren (QUERY, ohne den Crossfade zu veraendern) und
+ * Bone 11 ueber re15_skel_bone_to_world in die Welt drehen — dieselbe Modell->Welt-Rechnung,
+ * die der Renderer je Bone anwendet.
+ *
+ * Rueckgabe 0 = keine Bank/keine Pose; dann bleibt out[] unberuehrt und der AUFRUFER
+ * darf NICHT gaten (sonst waere es wieder ein Tor auf einem leeren Feld). */
+#define RE15_MUZZLE_BONE 11                 /* Kettenende 0->9->10->11, @0x80042E60-94 */
+int re15_player_muzzle_world(int32_t out[3])
+{
+    extern const re15_emd_skeleton_t  *re15_player_pl00_skel(void);
+    extern const re15_emd_animation_t *re15_player_pl00_anim(void);
+    const re15_emd_skeleton_t  *sk = re15_player_pl00_skel();
+    const re15_emd_animation_t *an = re15_player_pl00_anim();
+    if (!sk || !an || an->clip_count <= 0) return 0;
+    if (sk->bone_count <= RE15_MUZZLE_BONE) return 0;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int kf = re15_compute_actor_kf(an, sk, pl, -1, (uint32_t)pl->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                       /* QUERY: Crossfade-Blend nicht anfassen */
+    int rv = re15_skel_compute_pose(sk, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    re15_skel_bone_to_world(poses[RE15_MUZZLE_BONE].trans, pl->rot_y,
+                            pl->x, pl->y, pl->z, out);
+    return 1;
+}
+
 /* Byte-true GUN hit-region — FUN_80012574 (@0x80012574), the predicate the weapon table @0x8006e548
  * dispatches for guns (weapon 0/3-8). It is a forward STRIP that is UNBOUNDED in range: FUN_800126c8
  * (@0x800126c8) tests the target against two semi-infinite triangles sharing apex V5 (the aim
@@ -1648,6 +1716,59 @@ retry_after_latch:
          * wo der Port sie fuer die Zombie-Familie schon fuehrt - als Neuberechnung von
          * +0x93 Bit 0 je Bild, s. re15_re2_pause_filter_apply am Dateiende. */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched -> excluded */
+        /* ===== GATE 5 — DAS SENKRECHTE ZIELFENSTER, @0x8004716C-A4 ==========================
+         * Bis Runde 30 fehlte dieses Gate im Port ganz (und der Kommentar weiter unten behauptete
+         * sogar, es gaebe es nicht — widerrufen, s. dort). Selbst disassembliert aus
+         * info/re2leon/PSX.EXE, in der Kandidatenschleife von FUN_800470C0 direkt hinter den
+         * vier bekannten Gates (@0x8004712C aktiv, @0x80047138 Trefferpause +0x1D3,
+         * @0x80047148 hp<0, @0x80047158 +0x10E & 0xC000):
+         *   8004716c: lhu v1,464(s0)      ; +0x1D0  (nur fuer den Seiteneffekt unten)
+         *   80047170: lh  a0,152(s0)      ; b = +0x98, SIGNED
+         *   80047174: lw  v0,60(s0)       ; eY = MATRIX.t[1] des Gegners (+0x3C)
+         *   80047178: andi v1,v1,0xff00
+         *   8004717c: addu v0,v0,a0       ; eY + b
+         *   80047180: addiu v0,v0,100     ; + 100
+         *   80047184: sh  v1,464(s0)      ; (Seiteneffekt, s. u.)
+         *   80047188: lhu v1,158(s0)      ; h = +0x9E, UNSIGNED
+         *   8004718c: lw  a0,4(s4)        ; ZIELHOEHE = MUENDUNGS-Y (s4+4 = MATRIX.t[1])
+         *   80047190: addu v0,v0,v1       ; + h
+         *   80047194: subu v0,v0,a0       ; - Muendung
+         *   80047198: addiu v1,v1,100     ; h + 100
+         *   8004719c: sll v1,v1,1         ; 2*(h+100)
+         *   800471a0: sltu v0,v0,v1       ; UNSIGNED
+         *   800471a4: beq v0,zero,0x8004740c   ; -> naechster Kandidat (addiu s2,s2,4 /
+         *                                        bne s2,v0,0x8004711c @0x80047418)
+         * Das ist kein Band, sondern die Frage "liegt die Muendung senkrecht ueberhaupt in der
+         * Trefferzone des Gegners (+-100 Schlupf)". Die Muendungshoehe liefert
+         * re15_player_muzzle_world (Bone 11 der Waffen-Bone-Kette @0x80042E60-94, t[1] @sp+56) —
+         * volle Herleitung dort.
+         *
+         * ⛔ ZWEI SICHERUNGEN, beide aus einer Messung, nicht aus Vorsicht:
+         * (a) `re2_hit_box_set`: ohne gefuellte b/h waere das Fenster [-100,100) und JEDER
+         *     Gegner fuer immer untreffbar — die Runde-14-Falle in ihrer Hitbox-Variante.
+         *     Heute fuehrt nur der HUND 0x20 die Werte byte-true (re2d_init @0x8010028C-9C,
+         *     re2d_hitbox @0x80104090-D8), also gatet auch nur er.
+         * (b) Liefert re15_player_muzzle_world 0 (PL00-Bank nicht gespiegelt), wird NICHT
+         *     gegatet. Ein Tor ohne Zielhoehe ist ein Tor auf einem leeren Feld.
+         *
+         * GEMESSEN (probe_r30b_muendung, echter Weg, RE2-Bank geladen): Hgun = eY - MuendungY
+         * liegt beim Hund bei ~1665; stehende Box -1000/1000 -> Fenster [-100,2100) -> DURCH,
+         * gestauchte Box -500/500 -> Fenster [-100,1100) -> SPERRT. Genau der Nutzer-Befund
+         * "im Original ist der Hund erst wieder verwundbar, sobald er steht".
+         *
+         * NICHT nachgebaut (Fehlstelle, nicht gebogen): der Seiteneffekt @0x80047178/84 loescht
+         * das untere Byte von +0x1D0 bei JEDEM Kandidaten, auch bei einem, den es gleich darauf
+         * verwirft. Der Port fuehrt +0x1D0 nicht. */
+        if (e->re2_hit_box_set) {
+            int32_t mz[3];
+            if (re15_player_muzzle_world(mz)) {
+                int32_t b   = (int32_t)e->re2_hit_b98;             /* lh  +0x98 @0x80047170 */
+                int32_t h   = (int32_t)e->re2_hit_h9e;             /* lhu +0x9E @0x80047188 */
+                uint32_t lhs = (uint32_t)((int32_t)e->y + b + 100 + h - mz[1]);
+                uint32_t rhs = (uint32_t)(2 * (h + 100));          /* addiu/sll @0x80047198-9C */
+                if (!(lhs < rhs)) continue;                        /* sltu/beq @0x800471A0-A4 */
+            }
+        }
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
          * UP bit31 / LEVEL bit30 / DOWN bit29).
@@ -1663,8 +1784,13 @@ retry_after_latch:
             uint32_t eband;
             /* RE2-VERTIKALFENSTER (statt Band-Schnitt) fuer STEHENDE RE2-owned
              * Zombies - Nutzer 2026-09-12: "nahe Headshots nach oben funktionieren
-             * nicht". RE2s Kandidatenfilter hat KEIN Hoehen-Band (FUN_800470C0,
-             * genau vier Gates @0x8004712c/38/48/60); die Hoehen-Selektivitaet ist
+             * nicht". ⛔ BERICHTIGT (Runde 30, selbst nachgelesen): hier stand "RE2s
+             * Kandidatenfilter hat KEIN Hoehen-Band (FUN_800470C0, genau vier Gates
+             * @0x8004712c/38/48/60)". Er hat FUENF Gates; das fuenfte @0x8004716C-A4 ist
+             * ein senkrechtes Zielfenster und steht seit Welle 2 oben in dieser Schleife.
+             * Es ist aber KEIN Band-Ersatz — es prueft die Muendungshoehe gegen +0x98/+0x9E,
+             * waehrend die Hoehen-Selektivitaet hier unten ein dy-Fenster je Waffe ist. Die
+             * Hoehen-Selektivitaet ist
              * ein dy-Fenster je Waffe+Elevation aus dem Zombie-Schadensrecord
              * @0x800A412C + (id-1)*20, Paare +8/+0xc/+0x10 (info/re2leon/PSX.EXE,
              * selbst gedumpt 2026-09-12, Tabelle unten). Das Schrot-UP-Fenster
@@ -1721,12 +1847,34 @@ retry_after_latch:
                      * sowie die beiden Init-Vollaustraege @0x8010087c/@0x801049dc loeschen es)
                      * — der laufende Kriecher erreicht keinen davon.
                      *
-                     * Warum die Ausnahme byte-true ist: RE2s EIGENER Kandidatenfilter hat
-                     * ueberhaupt kein Hoehen-Band (eigene Disasm info/re2leon/PSX.EXE,
-                     * FUN_800470C0 — genau vier Gates: @0x8004712c `andi v0,v0,0x1` aktiv,
+                     * Warum die Ausnahme byte-true ist: RE2s eigener Kandidatenfilter kennt
+                     * kein Band aus dem RE1.5-Elevationsstempel (FUN_800470C0, eigene Disasm
+                     * info/re2leon/PSX.EXE: @0x8004712c `andi v0,v0,0x1` aktiv,
                      * @0x80047138 `lbu v0,467(s0)` +0x1D3, @0x80047148 `lh v0,342(s0)` HP,
-                     * @0x80047160 `andi v0,v0,0xc000` +0x10E; @0x8004716c geht es direkt zur
-                     * Trefferpruefung). Ein RE2-Kriecher ist dort IMMER Kandidat.
+                     * @0x80047160 `andi v0,v0,0xc000` +0x10E). Ein RE2-Kriecher ist dort
+                     * nicht ueber ein Band ausgeschlossen.
+                     * ⛔ BERICHTIGUNG (Runde 30, selbst nachgelesen): hier stand bis 2026-09-27
+                     * "RE2s EIGENER Kandidatenfilter hat ueberhaupt kein Hoehen-Band ...
+                     * @0x8004716c geht es direkt zur Trefferpruefung". Das ist FALSCH.
+                     * @0x8004716C-A4 steht ein FUENFTES Gate, ein senkrechtes Zielfenster:
+                     *   8004716c lhu v1,464(s0) / 80047170 lh a0,152(s0)  ; +0x98
+                     *   80047174 lw  v0,60(s0)  / 8004717c addu v0,v0,a0  ; +0x3C
+                     *   80047180 addiu v0,v0,100/ 80047188 lhu v1,158(s0) ; +0x9E
+                     *   8004718c lw  a0,4(s4)   ; Muendungs-Y (MATRIX.t[1], s. u.)
+                     *   80047190 addu / 80047194 subu / 80047198 addiu v1,v1,100
+                     *   8004719c sll v1,v1,1 / 800471a0 sltu / 800471a4 beq 0x8004740c
+                     * = dieselbe Kandidatenschleife wie die vier anderen Gates
+                     * (addiu s2,s2,4 @0x8004740c, bne s2,v0,0x8004711c @0x80047418).
+                     * ⛔ NACHTRAG WELLE 2 (2026-09-27): das Gate IST jetzt gebaut — oben in
+                     * dieser Kandidatenschleife, hinter dem hit_react-Gate. Die Muendungshoehe
+                     * (s4 = sp+52 @0x80042F8C = MATRIX.t[] der Waffen-Bone-Kette
+                     * @0x80042E60-94) liefert re15_player_muzzle_world, die Felder +0x98/+0x9E
+                     * fuehrt re15_actor_t. Gewertet wird es nur fuer Aktoren mit
+                     * re2_hit_box_set — heute nur der HUND 0x20; Kraehe 0x21 und Baby 0x26
+                     * fielen gemessen 0/240 durch und sind darum ausdruecklich NICHT
+                     * verdrahtet.
+                     * Messung + Zahlen: analysis/befunde_2026-09-27/zielfenster-messung.md,
+                     * Sonde re15_port/tests/unit/probe_r30_zielfenster.c.
                      * Der RE1.5-Kriecher bleibt unberuehrt: der laeuft ueber grid_id = 0x81
                      * (@0x801050d0 `ori v0,zero,0x81` / @0x801050d4 `sb v0,9(v1)`), also ueber
                      * den ERSTEN Term.

@@ -660,8 +660,69 @@ static int re2d_landing(re15_actor_t *e)
 }
 
 /* 0x80104088(self, a1): Hitbox-Squash 0↔1 (@0x80104090-D8): a1==0 → +0x98=−500/+0x9E=500,
- * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP. */
-static void re2d_hitbox(re15_actor_t *e, int restore) { (void)e; (void)restore; }
+ * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP.
+ * ⛔ RUNDE 30, gemessen: dieser NOP ist die HALBE Antwort auf den Nutzer-Befund
+ * "im Original ist der Hund erst wieder verwundbar, sobald er steht". Die andere Haelfte ist
+ * das fuenfte Gate @0x8004716C-A4, das +0x98/+0x9E gegen die MUENDUNGSHOEHE (s4+4 =
+ * MATRIX.t[1] der Waffen-Bone-Kette, @0x80042E60-94 / @0x80042F8C) prueft. Beides einzeln
+ * einzubauen bringt NICHTS: ohne das Gate liest niemand die Felder, und ohne eine echte
+ * Muendungshoehe steht Hgun im Port auf 0 und das Gate laesst JEDEN durch (gemessen,
+ * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md).
+ * BEIDE HAELFTEN STEHEN SEIT WELLE 2: die Muendungshoehe kommt aus
+ * re15_player_muzzle_world (Bone 11 der Kette @0x80042E60-94), das Gate aus
+ * re15_damage.c (Kandidatenschleife). Gemessen auf dem echten Weg: stehender Hund
+ * DURCH, ab Bild +1 nach dem Treffer SPERRT, ab Bild +71 wieder DURCH. */
+static void re2d_hitbox(re15_actor_t *e, int restore)
+{
+    if (!e) return;
+    if (restore == 0) {                 /* `bne a1,zero,0x801040b8` @0x80104088 faellt durch */
+        e->re2_hit_b98 = -500;          /* addiu v0,zero,-500 @0x80104098 / sh v0,152(a2) @0x8010409C */
+        e->re2_hit_h9e =  500;          /* addiu v1,zero,500  @0x801040A4 / sh v1,158(a2) @0x801040A8 */
+        e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
+        /* ===== DIE ZWEI word0-BITS — WELLE 2: DER LESER IST GEFUNDEN ==================
+         * Was die Funktion setzt:
+         *   a1 == 0 (gestauchte Box): word0 &= 0xE7FFFFFF (`lui a0,0xe7ff / ori a0,a0,0xffff`
+         *            @0x80104090-94, `and v0,v0,a0` @0x801040B4) — loescht 0x18000000 —
+         *            und dann word0 |= 0x04000000 (`lui v1,0x400` @0x801040AC,
+         *            `or`/`sw` @0x801040D0-D8).
+         *   a1 != 0 (volle Box):      word0 |= 0x0C000000 OHNE Maskierung
+         *            (`lui v1,0xc00` @0x801040CC).
+         * Ergebnis: (word0 & 0x0C000000) ist nach a1==0 genau 0x04000000 und nach a1!=0
+         * genau 0x0C000000 — ein ZWEI-BIT-ZUSTAND "gestaucht / voll".
+         *
+         * Und genau dieses Paar wird gelesen. Vollscan aller `lui reg,0x400|0x800|0xc00`
+         * mit nachfolgendem `and` (PSX.EXE + die Overlays, selbst gefahren): der einzige
+         * Leser, der dabei auf das ENTITY-word0 zeigt, steht im ZOMBIE-Overlay EMZ0.BIN:
+         *   80100388: lhu  v0,538(s0)        ; +0x21A des Gegners SELBST
+         *   80100390: andi v0,v0,0x2         ; Liege-Bit
+         *   80100394: beq  v0,zero,0x801003ac
+         *   8010039c: lw   v0,0(s0)          ; word0
+         *   801003a0: lui  v1,0x400
+         *   801003a4: or   v0,v0,v1          ; word0 |= 0x04000000
+         *   801003ac: lw   a0,0(s0)
+         *   801003b0: lui  v0,0xc00
+         *   801003b4: and  v1,a0,v0          ; word0 & 0x0C000000
+         *   801003b8: lui  v0,0x400
+         *   801003bc: bne  v1,v0,0x8010045c  ; != 0x04000000 -> Kurzschluss in den
+         *                                      +0x239-Nachlauf @0x8010045C
+         * s0 ist SELF (es liest +0x21A desselben Objekts, das der Root bearbeitet).
+         * Das Bit-Paar ist also der ZWEITE, redundante Traeger derselben Aussage wie
+         * +0x21A Bit 0x2 — "dieser Gegner liegt".
+         *
+         * ⛔ IM PORT NICHT GEBAUT, und zwar bewusst: der Port fuehrt die Liege-Aussage
+         * bereits ueber re2z_flags21a & 0x2 (re15_damage.c liest sie fuer die
+         * Liege-Klassifikation der RE2-Zombies). Ein zweites, paralleles Bitpaar in word0
+         * waere eine zweite Kopie derselben Regel — genau das, was hier schon einmal
+         * auseinandergedriftet ist. Fuer den HUND gibt es im Port ueberhaupt keinen Leser;
+         * dort waere es ein Store ins Leere. Beides bleibt als Fehlstelle benannt, mit den
+         * Adressen oben. Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und
+         * @0x80107EA8. */
+    } else {
+        e->re2_hit_b98 = -1000;         /* addiu v0,zero,-1000 @0x801040B8 / sh @0x801040BC */
+        e->re2_hit_h9e =  1000;         /* addiu v0,zero,1000  @0x801040C0 / sh @0x801040C4 */
+        e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
+    }
+}
 
 /* FUN_8004AA50 mit dem RE2-Zufall (@0x8004aa7c `jal 0x80015fe8`), Knotenzahl aus dem
  * RE1.5-Zonengraphen - dieselbe deklarierte Ersetzung wie bei der Kraehe. */
@@ -2165,8 +2226,16 @@ static void re2d_init(re15_actor_t *e)
         uint32_t r1 = re15_re2_rand() & 3u;                /* @0x801001D0-E8 */
         e->hp = (int16_t)(re2d_hp_tbl_def[re15_re2_rand() & 0xfu] + r1);   /* @0x80100210-234 */
     }
-    /* Hitbox @0x80100284-C4: +0x94=500, +0x98=−1000, +0x9E=1000, 600er-Familie — der Port
-     * führt die Trefferhöhe über hit_radius/atk_pt (Damage-System); dokumentiert. Die
+    /* Hitbox @0x80100284-C4: +0x94=500, +0x98=−1000, +0x9E=1000, 600er-Familie. +0x98/+0x9E
+     * fuehrt der Port seit Runde 30 als echte Felder (s. re15_actor.h) — die Trefferauswahl
+     * liest sie noch nicht, weil ihr die Muendungshoehe fehlt. Die */
+    e->re2_hit_b98 = -1000;                                /* addiu v0,zero,-1000 @0x8010028C /
+                                                            * sh v0,152(s0) @0x80100294 */
+    e->re2_hit_h9e =  1000;                                /* addiu v0,zero,1000  @0x80100298 /
+                                                            * sh v0,158(s0) @0x8010029C */
+    e->re2_hit_box_set = 1;              /* [PORT-ZUORDNUNG] ab hier fuehrt der Port die Box
+                                          * byte-true -> das fuenfte Gate darf sie lesen */
+    /* (+0x94 = 500 @0x80100284-88 und +0x96 = 0 @0x801002B0 bleiben ungefuehrt.) Die
      * 2-Part-Schleife @0x801002D0-F8 (Parts 2..3: +0x9C=32/+0xA0=384/+0xA2=128 — Lane-D sagte
      * „4 Parts", der Loop läuft a0=2..3, selbst nachgelesen) ist Part-Hitbox-Metadaten. */
     e->dog_floor_y = (int16_t)(-(int32_t)e->floor * 1800); /* +0x1C2-Analog. Seed = der RE1.5-
@@ -2241,9 +2310,16 @@ int re15_re2dog_tick(int slot)
              * einen Rest hat (@0x80047138-40). Fuer den Hund sind das 15 Bilder (0,50 s) -
              * bei fast jeder Waffe; Ausnahmen: w5/w6 = 0, w12 = 3, w19 = 3, w14 = 5
              * (Zeile 0x800A4424, selbst ausgelesen).
-             * Ein Zustands-Gate gibt es in RE2 NICHT: FUN_800470C0 hat vier Gates
-             * (@0x8004712C aktiv, @0x80047138 Trefferpause, @0x80047148 hp<0, @0x80047158)
-             * und prueft die Hurt-Animation nirgends.
+             * Ein Zustands-Gate gibt es in RE2 NICHT: FUN_800470C0 prueft die Hurt-Animation
+             * nirgends. Es hat FUENF Gates — @0x8004712C aktiv, @0x80047138 Trefferpause,
+             * @0x80047148 hp<0, @0x80047158 (+0x10E & 0xC000) und, hier bis 2026-09-27
+             * uebersehen, @0x8004716C-A4 das senkrechte ZIELFENSTER
+             * (lh +0x98 / lw +0x3C / lhu +0x9E / lw 4(s4) / sltu / beq 0x8004740C).
+             * Ueber jenes Tor wirkt die Pose beim Hund dann DOCH — nicht als Zustands-Gate,
+             * sondern weil FUN_80104088(0) @0x80103458/@0x8010352C die Box auf -500/+500
+             * (@0x80104098-A8) staucht und erst @0x801036F0/@0x801037C0 mit 1 wieder auf
+             * -1000/+1000 (@0x801040B8-C4) oeffnet. Messung: analysis/befunde_2026-09-27/
+             * zielfenster-messung.md.
              *
              * DER PORT fuhr hier den RE1.5-Riegel +0x93, den RE2 gar nicht kennt (Voll-Scan
              * Offset 147: 0 Treffer in EMD0G_MOD0.BIN und in info/re2leon/PSX.EXE), und gab

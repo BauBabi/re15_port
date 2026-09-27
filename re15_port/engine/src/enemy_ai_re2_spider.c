@@ -405,6 +405,35 @@ static void re2s_init(re15_actor_t *e)
     re2s_clip(e, 0x00000001u);                             /* +0x14C = 1 @0x8010035C */
     (void)re2s_advance(e, 256);                            /* @0x80100358 */
 
+    /* ===== DIE TREFFERBOX +0x98 / +0x9E ===================================================
+     * EMS25.BIN kopiert sie als BLOCK von acht Woertern nach +0x84..+0xA0. Der Vollscan
+     * aller `sw rt,132..160(rs)` im Overlay (selbst gelesen) findet NEUN solche Kopien aus
+     * VIER Tabellen; die Tabellenbytes selbst gelesen (Reihenfolge +0x84,+0x86,... +0xA0):
+     *   @0x801063A0  XZ 800/800 | +0x98 = -1400  +0x9A = 1000  +0x9C = 1000  +0x9E = 1400
+     *   @0x801063C0  XZ  30/30  | +0x98 =  -100  +0x9A = 1000  +0x9C = 1000  +0x9E = 1400
+     *   @0x801063E0  XZ  30/30  | +0x98 =     0  +0x9A = 1000  +0x9C = 1000  +0x9E = 1400
+     *   @0x80106400  XZ   5/5   | +0x98 =    -1  +0x9A =    5  +0x9C =    5  +0x9E =    1
+     * Kopierstellen: @0x801003C0(A) @0x801004EC(C) @0x80101AD4(B) @0x80101D44(C)
+     *                @0x80102594(B) @0x80102718(A) @0x80103690(A) @0x80104378(A)
+     *                @0x80105E88(D, schreibt in das FRISCH GESPAWNTE BABY, nicht in self)
+     * Nur +0x98/+0x9E haben im Port ein Feld; +0x84..+0x96 und +0xA0 bleiben OPEN.
+     * ⛔ FEHLSTELLE, benannt statt gebogen: von den acht SELF-Kopien fuehrt der Port
+     * hier nur die des INIT (A) samt seinen zwei Zweig-Korrekturen und die des
+     * Deckensprungs (@0x80102718, s. dort). Die fuenf uebrigen (B/C/A in den
+     * Zustands-Handlern @0x80101AD4/@0x80101D44/@0x80102594/@0x80103690/@0x80104378)
+     * brauchen je eine eigene Zustands-Zuordnung und sind NICHT verdrahtet. */
+    e->re2_hit_b98 = -1400;                                /* Tabelle @0x801063A0+20, lw v0,20(a1)
+                                                            * @0x801003E8 / sw v0,144(s2)
+                                                            * @0x801003E8-F0 (Block @0x801003BC-400) */
+    e->re2_hit_h9e =  1400;                                /* Tabelle @0x801063A0+26, sw v0,156(s2)
+                                                            * @0x801003FC */
+    /* ⛔ DAS TOR IST FUER 0x25 SCHARF — GEMESSEN (probe_r31_boxen, 900 Bilder ROOM2050):
+     *     TOR AUS 82 echte Treffer / TOR SCHARF 82 / KONTROLLE (Box 0/0) 0.
+     * Und die Box traegt in JEDEM ausgelieferten Spinnenraum: ROOM2030/2050/2060/2070/20A0
+     * tragen alle Modus 0 (BODEN) mit -1400/1400, 0 Raeume mit Unterkante 0. Fenster
+     * [-100, 2900) gegen die gemessene Muendungshoehe Hgun 1665..1671. */
+    e->re2_hit_box_set = 1;
+
     /* Spawn-Sprungtabelle @0x80100004, Index (+0x10E & 0xF), Gate `sltiu v0,v1,0xc`
      * @0x8010043C. Eintraege (aus der Datei gelesen):
      *   [0]=0x80100460 [1]=0x8010058C(nichts) [2]=[3]=0x8010047C [4..11]=0x801004B4 */
@@ -417,6 +446,9 @@ static void re2s_init(re15_actor_t *e)
         e->re2s_mode222 = 1;                               /* @0x80100480 */
         e->re2s_yaw21a  = 2048;                            /* @0x80100488 */
         e->rot_z        = 2048;                            /* +0x78 = 2048 (kopfueber) @0x8010048C */
+        e->re2_hit_b98  = 0;                               /* sh zero,152(s2) @0x8010049C —
+                                                            * die Deckenspinne hat KEINE
+                                                            * Unterkante (Box 0/1400) */
         e->re2s_y22c    = e->y + 1250;                     /* @0x801004A4-B0 */
     } else if (k >= 4u) {                                  /* @0x801004B4 WAND */
         e->re2s_mode222 = 3;                               /* @0x801004C0 */
@@ -426,6 +458,13 @@ static void re2s_init(re15_actor_t *e)
         unsigned hi = (unsigned)((e->re2z_f10e & 0xf0u) >> 4);                 /* @0x80100548-58 */
         e->re2s_y22c    = hi ? (1250 - 1800 * (int32_t)hi) : -3960;            /* @0x8010055C-80 */
         e->re2s_gs225   = 1;                               /* +0x225 = 1 @0x80100584-88 */
+        /* ZWEITE Blockkopie, Tabelle @0x801063E0 (@0x801004EC-52C): XZ 30/30 und
+         * +0x98 = 0, +0x9E = 1400. Die WANDspinne hat also dieselbe Hoehe wie die
+         * Deckenspinne, aber einen viel kleineren XZ-Radius. */
+        e->re2_hit_b98  = 0;                               /* Tab @0x801063E0+20, sw v0,144(s2)
+                                                            * @0x80100514 */
+        e->re2_hit_h9e  = 1400;                            /* Tab @0x801063E0+26, sw v0,156(s2)
+                                                            * @0x80100528 */
     }
     /* k == 1: die Tabelle springt direkt auf den Epilog @0x8010058C — nichts zu tun. */
 }
@@ -1428,7 +1467,27 @@ static void re2s_m2_climb(re15_actor_t *e)
         e->speed_h      = 1225;                            /* +0x144 = 1225 @0x80102700-08 */
         e->y            = e->y - 475;                      /* @0x801026FC-14 */
         re2s_thrust(e, e->re2s_yaw21a);                    /* @0x80102710 */
-        /* Hitbox-Block @0x801063A0 -> +0x84..+0xA0 (@0x80102718-5C) — OPEN */
+        /* TREFFERBOX-BLOCKKOPIE @0x801063A0 -> +0x84..+0xA0: acht Woerter
+         * (`lui/addiu a1` @0x80102718-1C, `lw 0..28(a1)` / `sw 132..160(s0)` @0x80102720-5C).
+         * Tabellenbytes selbst gelesen (EMS25.BIN, roh @0x80100000):
+         *   801063a0: 00 00 00 00 00 00 00 00 00 00 00 00 20 03 20 03
+         *   801063b0: 00 00 00 00 88 fa e8 03 e8 03 78 05 00 00 00 00
+         * +20 = 0x03E8FA88 -> +0x98 = 0xFA88 = -1400, +0x9A = 0x03E8 = 1000
+         * +24 = 0x057803E8 -> +0x9C = 0x03E8 = 1000, +0x9E = 0x0578 = 1400
+         * (+12 = 0x03200320 -> XZ 800/800 nach +0x90/+0x92.)
+         * Direkt danach wird die Unterkante wieder genullt: `sh zero,152(s0)` @0x8010276C,
+         * unmittelbar vor `sw v0,4(s0)` @0x80102770. Endstand also b = 0, h = 1400.
+         * Dieselbe Null steht ein zweites Mal @0x8010049C (`sh zero,152(s2)`, davor
+         * `sh 2048,120(s2)`, danach word0 |= 0x10000000) — gleicher Wert, folgenlos.
+         * Nur +0x98/+0x9E haben im Port ein Feld; +0x84..+0x96 und +0xA0 bleiben OPEN. */
+        e->re2_hit_b98 = 0;                                /* sh zero,152(s0) @0x8010276C
+                                                            * (ueberschreibt die -1400 der
+                                                            * Blockkopie @0x8010274C) */
+        e->re2_hit_h9e = 1400;                             /* Tabelle @0x801063A0+26 -> +0x9E,
+                                                            * `sw v0,156(s0)` @0x80102758 */
+        /* re2_hit_box_set BLEIBT 0 — GEMESSEN: Fenster [-1500, 1500) gegen Hgun 1665..1671,
+         * DURCH in 0 von 240 Bildern; es fehlen 168 Einheiten. Erst mit der senkrechten
+         * Zielpose (@0x80042E64-94) darf das Tor die Spinne werten. */
         re2s_word(e, 1u);                                  /* @0x80102770 */
         e->re2s_f236    = 0;                               /* +0x236 = 0 @0x80102774 */
         g_re2_room_gflags &= (uint16_t)~0x20u;             /* Mutex FREI @0x80102778-84 */
@@ -2588,6 +2647,26 @@ static void re2sb_init(re15_actor_t *e)
     re2s_clip(e, 0x000f0000u);                             /* Clip 0, Rate 15 @0x80100120 */
     e->re2s_c21e   = 120;                                  /* +0x21E = 120 @0x80100128 */
     e->re2s_t21c   = (int16_t)(re2s_rand() & 0x1fu);       /* +0x21C @0x80100140-50 */
+    /* TREFFERBOX DES BABYS — der EINZIGE +0x98/+0x9E-Schreiber im ganzen Overlay (Vollscan
+     * EMS26.BIN: 2 von 2 Treffern liegen hier). Selbst disassembliert, roh @0x80100000:
+     *   80100168: addiu v0,zero,-10
+     *   8010016c: sh v0,152(s0)     ; +0x98 = -10
+     *   80100170: addiu v0,zero,10
+     *   80100174: sh v0,154(s0)     ; +0x9A = 10
+     *   80100178: sh v0,158(s0)     ; +0x9E = 10
+     *   8010017c: sh v0,156(s0)     ; +0x9C = 10
+     *   80100180: sh v0,144(s0)     ; +0x90 = 10
+     *   80100184: sh v0,146(s0)     ; +0x92 = 10
+     * Alle sechs Masse sind 10 — ein Wuerfel von 20 Einheiten Kantenlaenge. Nur +0x98/+0x9E
+     * haben im Port ein Feld. */
+    e->re2_hit_b98 = -10;                                  /* @0x80100168-6C */
+    e->re2_hit_h9e =  10;                                  /* @0x80100170/78 */
+    /* re2_hit_box_set BLEIBT 0 — GEMESSEN: Fenster [-100, 120) gegen Hgun 1665..1671, DURCH in
+     * 0 von 240 Bildern. Ein 20-Einheiten-Wuerfel ist ueber die Muendungshoehe ueberhaupt nicht
+     * zu treffen; RE2 toetet Baby-Spinnen mutmasslich ueber den RADIALEN Schadenspfad
+     * @0x800477CC (nur XZ-Abstand: `lw 0(s5)/lw 56(s0)` @0x80047764-68, `jal 0x8008D2F4`
+     * @0x80047794, `sltu v0,v0,a3` @0x800477A4 — kein Y). Wer diesen Pfad ruft, ist NICHT
+     * aufgeloest — Spur, keine Feststellung. */
     e->re2z_self1d3 = 6;                                   /* +0x1D3 = 6 @0x801001B0 */
     e->re2z_t158   = 0;                                    /* +0x158 = 0 @0x801001B4 */
     e->re2z_t15a   = 0;

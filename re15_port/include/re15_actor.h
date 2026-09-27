@@ -297,6 +297,51 @@ typedef struct {
      * Leiche->Kriecher 200 @0x80108984-88. (+0x1EE = 500 hat im Overlay GENAU EINEN Schreiber,
      * INIT @0x80100980 — als Konstante in re15_damage.c gefuehrt, kein Feld noetig.) */
     uint16_t re2z_rad9a;
+    /* +0x98 / +0x9E — die SENKRECHTE Trefferzone, die RE2s fuenftes Kandidaten-Gate liest:
+     *   80047170 lh  a0,152(s0)   ; b = +0x98, SIGNED
+     *   80047188 lhu v1,158(s0)   ; h = +0x9E, UNSIGNED
+     *   8004718c lw  a0,4(s4)     ; Muendungs-Y (MATRIX.t[1] der Waffen-Bone-Kette)
+     *   800471a0 sltu / 800471a4 beq 0x8004740c
+     * Original-Werte je Typ (Vollzaehlung aller `sh rt,152/158(rs)` im jeweiligen Overlay,
+     * analysis/befunde_2026-09-27/zielfenster-messung.md §3.1):
+     *   0x10 Zombie   -1500/1500 @0x8010095C-64 ; Kriecher -350/350 @0x80100B14-20 u.a.
+     *   0x20 Hund     -1000/1000 @0x8010028C-9C ; LIEGEND -500/500 @0x80104098-A8
+     *   0x21 Kraehe    -350/530  @0x801003B8-DC
+     *   0x25 Spinne       0/1400 (Tabelle @0x801063A0+20/24, +0x98=0 @0x8010276C)
+     *   0x26 Baby        -10/10  @0x80100168-78
+     * SEIT RUNDE 30 / WELLE 2 WERDEN SIE GELESEN — aber nur, wo re2_hit_box_set steht.
+     * Die Muendungshoehe gibt es jetzt engine-seitig (re15_player_muzzle_world, Bone 11 der
+     * Kette @0x80042E60-94); das fuenfte Gate @0x8004716C-A4 rechnet damit
+     *     DURCH  <=>  (uint32)(eY + b + 100 + h - MuendungY) < (uint32)(2*(h+100)).
+     * ⛔ re2_hit_box_set IST DIE RUNDE-14-SICHERUNG: ein Tor auf einem Feld, das niemand
+     * fuellt, sperrt DAUERHAFT. b/h = 0/0 ergaebe das Fenster [-100,100) — jeder Gegner waere
+     * fuer immer untreffbar. Deshalb gaten NUR Aktoren, deren Overlay-Gegenstueck die Werte
+     * im Port wirklich schreibt UND fuer die gemessen ist, dass das Tor nichts zumacht.
+     *
+     * STAND WELLE 2 (2026-09-27, probe_r31_boxen, echter Weg, 900 Bilder Dauerbeschuss je
+     * Typ, dazu je eine KONTROLLE mit kuenstlicher Box 0/0, die auf 0 Treffer fallen MUSS):
+     *   0x10 ZOMBIE  SCHARF  — TOR AUS 45 / TOR SCHARF 45 / KONTROLLE 0 Treffer
+     *   0x20 HUND    SCHARF  — TOR AUS 41 / TOR SCHARF 12 / KONTROLLE 0  (die Absenkung IST
+     *                          der Runde-30-Befund: der liegende Hund ist nicht treffbar)
+     *   0x25 SPINNE  SCHARF  — TOR AUS 82 / TOR SCHARF 82 / KONTROLLE 0; alle fuenf
+     *                          ausgelieferten Spinnenraeume (2030/2050/2060/2070/20A0)
+     *                          tragen Modus 0 mit -1400/1400
+     *   0x21 KRAEHE  UNSCHARF— TOR SCHARF 0 von 900 Treffern = DAUERHAFT untreffbar
+     *   0x26 BABY    UNSCHARF— TOR SCHARF 0 von 900 Treffern = DAUERHAFT untreffbar
+     * Die Boxen der beiden unscharfen Typen werden trotzdem byte-true GEFUEHRT (die Werte
+     * stehen mit Adresse in enemy_ai_re2_crow.c / enemy_ai_re2_spider.c); nur das Urteil
+     * bleibt aus, bis der Port die senkrechte Zielpose fuehrt (RE2-Bone-Kette 0->9->10->11
+     * @0x80042E64/74/84/94). Heute steht die Muendungshoehe unbeweglich bei Hgun 1665..1671,
+     * und das Fenster der Kraehe ist [-280,980) bzw. [-630,630), das des Babys [-100,120).
+     * ⛔ EINE BENANNTE RESTGEFAHR: die DECKEN-/WANDspinne (Spawn-Deskriptor 2/3 bzw. >=4,
+     * @0x8010049C / Tabelle @0x801063E0) traegt +0x98 = 0 und faellt damit rechnerisch aus
+     * dem Fenster. Kein ausgeliefertes RE1.5-Zimmer spawnt eine solche Spinne (5 von 5
+     * geprueft, alle Modus 0); der Versuch, sie im Port zu erzwingen, war ein FEHLLAUF und
+     * ist als solcher protokolliert. Zahlen: analysis/befunde_2026-09-27/trefferboxen-welle2.md. */
+    int16_t  re2_hit_b98;       /* +0x98 Unterkante (signed)  */
+    uint16_t re2_hit_h9e;       /* +0x9E Halbhoehe  (unsigned) */
+    uint8_t  re2_hit_box_set;   /* [PORT-ZUORDNUNG] 1 = b98/h9e werden byte-true gefuehrt,
+                                 * nur dann wertet das fuenfte Gate @0x8004716C-A4 sie aus */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98);
                                  * im WALK derselbe Offset als PULS-TIMER (Seed (rand&0x1f)+30

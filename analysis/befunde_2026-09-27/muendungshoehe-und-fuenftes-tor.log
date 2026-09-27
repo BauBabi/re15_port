@@ -1,0 +1,120 @@
+PL00: 15 Bones, 24 Clips (Bone 11 = Waffen-Bone, Kettenende @0x80042E94)
+
+=== TEIL 1: MUENDUNGSHOEHE + TOR-URTEIL JE TYP (echter Weg) ===
+  [ZOMBIE 0x10 ] 240 Bilder | Muendung gueltig 240/240 | MuendungY   -1671..  -1665 | Hgun   1665..  1671 | Tor(b=-1500,h=1500) DURCH 240/240
+  [HUND 0x20   ] 240 Bilder | Muendung gueltig 240/240 | MuendungY   -5349..  -2197 | Hgun   1649..  2085 | Tor(b=-1000,h=1000) DURCH 240/240
+  [KRAEHE 0x21 ] 240 Bilder | Muendung gueltig 240/240 | MuendungY   -1921..  -1665 | Hgun   1420..  1671 | Tor(b=-350,h=530) DURCH   0/240
+  [SPINNE 0x25] FEHLLAUF: kein Gegner Typ 0x25 in 2000 - sagt NICHTS
+[scd F0] Cut_chg(8)
+  [BABY 0x26   ] 240 Bilder | Muendung gueltig 240/240 | MuendungY   -3471..  -3465 | Hgun   1665..  1671 | Tor(b=-10,h=10) DURCH   0/240
+
+=== TEIL 2: DIE HUNDE-KETTE, TOR GEGEN DIE ECHTE MUENDUNG ===
+      TREFFER f0: 1D3=14 st=2 clip=17 eY=-3600 MuendungY=-5270 Hgun=1670 Box -500/500 Tor=SPERRT
+      +1  1D3=13 | st=2/3 | clip=17 f= 2 | Box -500/500 | Hgun   1671 | Tor=SPERRT
+      +2  1D3=12 | st=2/3 | clip=17 f= 3 | Box -500/500 | Hgun   1670 | Tor=SPERRT
+      +3  1D3=11 | st=2/3 | clip=17 f= 4 | Box -500/500 | Hgun   1670 | Tor=SPERRT
+      +4  1D3=10 | st=2/3 | clip=17 f= 5 | Box -500/500 | Hgun   1669 | Tor=SPERRT
+      +5  1D3= 9 | st=2/3 | clip=17 f= 6 | Box -500/500 | Hgun   1669 | Tor=SPERRT
+      +6  1D3= 8 | st=2/3 | clip=17 f= 7 | Box -500/500 | Hgun   1668 | Tor=SPERRT
+      +7  1D3= 7 | st=2/3 | clip=17 f= 8 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +8  1D3= 6 | st=2/3 | clip=17 f= 9 | Box -500/500 | Hgun   1668 | Tor=SPERRT
+      +9  1D3= 5 | st=2/3 | clip=17 f=10 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +10 1D3= 4 | st=2/3 | clip=17 f=11 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +11 1D3= 3 | st=2/3 | clip=17 f=12 | Box -500/500 | Hgun   1670 | Tor=SPERRT
+      +12 1D3= 2 | st=2/3 | clip=18 f= 0 | Box -500/500 | Hgun   1671 | Tor=SPERRT
+      +13 1D3= 1 | st=2/3 | clip=18 f= 1 | Box -500/500 | Hgun   1670 | Tor=SPERRT
+      +14 1D3= 0 | st=2/3 | clip=18 f= 2 | Box -500/500 | Hgun   1670 | Tor=SPERRT   <== PAUSE ENDE
+      +15 1D3= 0 | st=2/3 | clip=18 f= 3 | Box -500/500 | Hgun   1669 | Tor=SPERRT
+      +16 1D3= 0 | st=2/3 | clip=18 f= 4 | Box -500/500 | Hgun   1669 | Tor=SPERRT
+      +17 1D3= 0 | st=2/3 | clip=18 f= 5 | Box -500/500 | Hgun   1668 | Tor=SPERRT
+      +18 1D3= 0 | st=2/3 | clip=18 f= 6 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +19 1D3= 0 | st=2/3 | clip=18 f= 7 | Box -500/500 | Hgun   1668 | Tor=SPERRT
+      +20 1D3= 0 | st=2/3 | clip=18 f= 8 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +21 1D3= 0 | st=2/3 | clip= 7 f= 0 | Box -500/500 | Hgun   1667 | Tor=SPERRT
+      +22 1D3= 0 | st=2/3 | clip= 7 f= 1 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +23 1D3= 0 | st=2/3 | clip= 7 f= 2 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +24 1D3= 0 | st=2/3 | clip= 7 f= 3 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +25 1D3= 0 | st=2/3 | clip= 7 f= 4 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +26 1D3= 0 | st=2/3 | clip= 7 f= 5 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +27 1D3= 0 | st=2/3 | clip= 7 f= 6 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +28 1D3= 0 | st=2/3 | clip= 7 f= 7 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +29 1D3= 0 | st=2/3 | clip= 7 f= 8 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +30 1D3= 0 | st=2/3 | clip= 7 f= 9 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +31 1D3= 0 | st=2/3 | clip= 7 f=10 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +32 1D3= 0 | st=2/3 | clip= 7 f=11 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +33 1D3= 0 | st=2/3 | clip= 7 f=12 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +34 1D3= 0 | st=2/3 | clip= 7 f=13 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +35 1D3= 0 | st=2/3 | clip= 7 f=14 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +36 1D3= 0 | st=2/3 | clip= 7 f=15 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +37 1D3= 0 | st=2/3 | clip= 7 f=16 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +38 1D3= 0 | st=2/3 | clip= 7 f=17 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +39 1D3= 0 | st=2/3 | clip= 7 f=18 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +40 1D3= 0 | st=2/3 | clip= 7 f=19 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +41 1D3= 0 | st=2/3 | clip= 7 f=20 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +42 1D3= 0 | st=2/3 | clip= 7 f=21 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +43 1D3= 0 | st=2/3 | clip= 7 f=22 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +44 1D3= 0 | st=2/3 | clip= 7 f=23 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +45 1D3= 0 | st=2/3 | clip= 7 f=24 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +46 1D3= 0 | st=2/3 | clip= 7 f=25 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +47 1D3= 0 | st=2/3 | clip= 7 f=26 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +48 1D3= 0 | st=2/3 | clip= 7 f=27 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +49 1D3= 0 | st=2/3 | clip= 7 f=28 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +50 1D3= 0 | st=2/3 | clip= 7 f=29 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +51 1D3= 0 | st=2/3 | clip= 7 f=30 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +52 1D3= 0 | st=2/3 | clip= 7 f=31 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +53 1D3= 0 | st=2/3 | clip= 7 f=32 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +54 1D3= 0 | st=2/3 | clip= 7 f=33 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +55 1D3= 0 | st=2/3 | clip= 7 f=34 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +56 1D3= 0 | st=2/3 | clip= 7 f=35 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +57 1D3= 0 | st=2/3 | clip= 7 f=36 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +58 1D3= 0 | st=2/3 | clip= 7 f=37 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +59 1D3= 0 | st=2/3 | clip= 7 f=38 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +60 1D3= 0 | st=2/3 | clip= 7 f=39 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +61 1D3= 0 | st=2/3 | clip= 7 f=40 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +62 1D3= 0 | st=2/3 | clip= 7 f=41 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +63 1D3= 0 | st=2/3 | clip= 7 f=42 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +64 1D3= 0 | st=2/3 | clip= 7 f=43 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +65 1D3= 0 | st=2/3 | clip= 7 f=44 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +66 1D3= 0 | st=2/3 | clip= 7 f=45 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +67 1D3= 0 | st=2/3 | clip= 7 f=46 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +68 1D3= 0 | st=2/3 | clip= 7 f=47 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +69 1D3= 0 | st=2/3 | clip= 7 f=48 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +70 1D3= 0 | st=2/3 | clip= 7 f=49 | Box -500/500 | Hgun   1665 | Tor=SPERRT
+      +71 1D3= 0 | st=1/6 | clip= 7 f= 0 | Box -1000/1000 | Hgun   1665 | Tor=DURCH    <== WIEDER ACTIVE
+      +72 1D3= 0 | st=1/6 | clip= 9 f= 1 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +73 1D3= 0 | st=1/6 | clip= 9 f= 2 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +74 1D3= 0 | st=1/6 | clip= 9 f= 3 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +75 1D3= 0 | st=1/6 | clip= 9 f= 4 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +76 1D3= 0 | st=1/6 | clip= 9 f= 5 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +77 1D3= 0 | st=1/6 | clip= 9 f= 6 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +78 1D3= 0 | st=1/6 | clip= 9 f= 7 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +79 1D3= 0 | st=1/6 | clip= 9 f= 8 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+      +80 1D3= 0 | st=1/6 | clip= 9 f= 9 | Box -1000/1000 | Hgun   1665 | Tor=DURCH 
+  HUND: Pause endete +14 | HURT-Kette endete +71 | Tor SPERRT von +1 bis +70
+  STEHEND VOR DEM TREFFER: Tor DURCH in 0/1 Bildern
+  NACH DEM AUFSTEHEN:      Tor DURCH in 21/21 Bildern
+
+=== TEIL 3: DER BEFUND — ECHTE TREFFER AM LIEGENDEN HUND ===
+  [ALT] Treffer am STEHENDEN Hund: 1 | Niederschlag bei f10, wieder auf den Beinen nach -1 Bildern | TREFFER waehrend er LIEGT: 17 in 389 Bildern | nach dem Aufstehen: 0 in 0 Bildern
+  [NEU] Treffer am STEHENDEN Hund: 1 | Niederschlag bei f10, wieder auf den Beinen nach 78 Bildern | TREFFER waehrend er LIEGT: 0 in 77 Bildern | nach dem Aufstehen: 1 in 60 Bildern
+
+=== TEIL 5: GEGENPROBE OHNE Y-KLAMMER ===
+  OHNE Y-Klammer: eY-plY 0..0 | Hgun 1667..1671 | Tor(stehende Box) DURCH 200/200 | echte Treffer 3
+
+=== TEIL 4: KEIN TYP DAUERHAFT UNTREFFBAR ===
+  [ZOMBIE 0x10 ] Treffer  19 in 200 Bildern | re2_hit_box_set=0 -> treffbar
+  [HUND 0x20   ] Treffer   3 in 200 Bildern | re2_hit_box_set=1 -> treffbar
+  [KRAEHE 0x21 ] Treffer  10 in 200 Bildern | re2_hit_box_set=0 -> treffbar
+[scd F0] Cut_chg(8)
+  [SPINNE 0x25 ] Treffer  19 in 200 Bildern | re2_hit_box_set=0 -> treffbar
+[scd F0] Cut_chg(8)
+  [BABY 0x26   ] Treffer  10 in 200 Bildern | re2_hit_box_set=0 -> treffbar
+
+=== URTEIL ===
+  Muendung headless verfuegbar: JA (240/240 Bilder beim Hund)
+  Hgun beim Hund: 1649..2085  (Fenster stehend [-100,2100), liegend [-100,1100))
+  ZOMBIE 0x10  Tor DURCH 240/240 -> Kandidat bleibt erreichbar
+  HUND 0x20    Tor DURCH 240/240 -> Kandidat bleibt erreichbar
+  KRAEHE 0x21  Tor DURCH   0/240 -> DAUERHAFT GESPERRT (Gate fuer diesen Typ NICHT bauen)
+  BABY 0x26    Tor DURCH   0/240 -> DAUERHAFT GESPERRT (Gate fuer diesen Typ NICHT bauen)
+PROBE-OK
