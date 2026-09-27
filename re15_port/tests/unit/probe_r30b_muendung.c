@@ -214,6 +214,14 @@ static int tor(int32_t eY, int b, int h, int32_t zielY)
     return lhs < rhs;
 }
 
+/* Raumliste fuer die Suche nach einer LEBENDEN 0x25 — von Teil 1 und Teil 4 geteilt. */
+static const struct { const char *sub; int id; } SPINNENRAUM[] = {
+    { "STAGE1/ROOM1090.RDT", 0x1090 }, { "STAGE2/ROOM2000.RDT", 0x2000 },
+    { "STAGE2/ROOM2010.RDT", 0x2010 }, { "STAGE2/ROOM2020.RDT", 0x2020 },
+    { "STAGE2/ROOM2040.RDT", 0x2040 }, { "STAGE2/ROOM2050.RDT", 0x2050 },
+    { "STAGE2/ROOM2060.RDT", 0x2060 }, { "STAGE1/ROOM10D0.RDT", 0x10d0 },
+    { "STAGE1/ROOM1260.RDT", 0x1260 }, { "STAGE3/ROOM3010.RDT", 0x3010 } };
+
 typedef struct { const char *name; uint8_t type; int b, h; const char *quelle; } box_t;
 static const box_t BOXEN[] = {
   { "ZOMBIE 0x10 stehend", 0x10, -1500, 1500, "EMZ0 INIT @0x8010095C/64" },
@@ -487,7 +495,18 @@ int main(int argc, char **argv)
     pass_muendung(&m[0], "ZOMBIE 0x10", 0x10, -1500, 1500, "STAGE1/ROOM1140.RDT", 0x1140, -1, 3, 0, 240);
     pass_muendung(&m[1], "HUND 0x20",   0x20, -1000, 1000, "STAGE1/ROOM1190.RDT", 0x1190, 13, 3, 0, 240);
     pass_muendung(&m[2], "KRAEHE 0x21", 0x21,  -350,  530, "STAGE1/ROOM10C0.RDT", 0x10c0, -1, 3, 0, 240);
-    pass_muendung(&m[3], "SPINNE 0x25", 0x25,     0, 1400, "STAGE2/ROOM2000.RDT", 0x2000, -1, 3, 0, 240);
+    /* Runde 31: ROOM2000 traegt im Port KEINE lebende 0x25 — Teil 1 meldete dort nur
+     * "FEHLLAUF ... sagt NICHTS", weshalb die 0x25-Zeile im Welle-2-Dossier FEHLTE.
+     * Teil 4 sucht die Spinne ueber eine Raumliste; hier wird DIESELBE Suche gefahren
+     * und der gefundene Raum ausgegeben, damit die Muendungshoehe fuer 0x25 endlich
+     * gemessen ist. Reine MESS-Aenderung, keine Spiellogik. */
+    {   const char *sp = NULL; int spid = 0;
+        for (unsigned i = 0; i < sizeof SPINNENRAUM / sizeof SPINNENRAUM[0]; i++) {
+            if (!load_room(SPINNENRAUM[i].sub, SPINNENRAUM[i].id, -1)) continue;
+            if (setup_target(0x25, 3, 0) >= 0) { sp = SPINNENRAUM[i].sub; spid = SPINNENRAUM[i].id; break; } }
+        if (sp) { printf("  (0x25 gefunden in %s)\n", sp);
+                  pass_muendung(&m[3], "SPINNE 0x25", 0x25, 0, 1400, sp, spid, -1, 3, 0, 240); }
+        else      printf("  [SPINNE 0x25 ] FEHLLAUF: kein Raum mit lebender 0x25 - sagt NICHTS\n"); }
     pass_muendung(&m[4], "BABY 0x26",   0x26,   -10,   10, "STAGE1/ROOM1090.RDT", 0x1090, -1, 3, 1, 240);
 
     printf("\n=== TEIL 2: DIE HUNDE-KETTE, TOR GEGEN DIE ECHTE MUENDUNG ===\n");
@@ -506,16 +525,10 @@ int main(int argc, char **argv)
     tb[0] = pass_treffbar("ZOMBIE 0x10", 0x10, "STAGE1/ROOM1140.RDT", 0x1140, -1, 3, 0, 200);
     tb[1] = pass_treffbar("HUND 0x20",   0x20, "STAGE1/ROOM1190.RDT", 0x1190, 13, 3, 0, 200);
     tb[2] = pass_treffbar("KRAEHE 0x21", 0x21, "STAGE1/ROOM10C0.RDT", 0x10c0, -1, 3, 0, 200);
-    {   static const struct { const char *sub; int id; } SPK[] = {
-            { "STAGE1/ROOM1090.RDT", 0x1090 }, { "STAGE2/ROOM2000.RDT", 0x2000 },
-            { "STAGE2/ROOM2010.RDT", 0x2010 }, { "STAGE2/ROOM2020.RDT", 0x2020 },
-            { "STAGE2/ROOM2040.RDT", 0x2040 }, { "STAGE2/ROOM2050.RDT", 0x2050 },
-            { "STAGE2/ROOM2060.RDT", 0x2060 }, { "STAGE1/ROOM10D0.RDT", 0x10d0 },
-            { "STAGE1/ROOM1260.RDT", 0x1260 }, { "STAGE3/ROOM3010.RDT", 0x3010 } };
-        const char *sp = NULL; int spid = 0;
-        for (unsigned i = 0; i < sizeof SPK / sizeof SPK[0]; i++) {
-            if (!load_room(SPK[i].sub, SPK[i].id, -1)) continue;
-            if (setup_target(0x25, 3, 0) >= 0) { sp = SPK[i].sub; spid = SPK[i].id; break; } }
+    {   const char *sp = NULL; int spid = 0;
+        for (unsigned i = 0; i < sizeof SPINNENRAUM / sizeof SPINNENRAUM[0]; i++) {
+            if (!load_room(SPINNENRAUM[i].sub, SPINNENRAUM[i].id, -1)) continue;
+            if (setup_target(0x25, 3, 0) >= 0) { sp = SPINNENRAUM[i].sub; spid = SPINNENRAUM[i].id; break; } }
         tb[3] = sp ? pass_treffbar("SPINNE 0x25", 0x25, sp, spid, -1, 3, 0, 200) : -1;
         if (!sp) printf("  [SPINNE 0x25 ] FEHLLAUF: kein Raum mit lebender 0x25 - sagt NICHTS\n"); }
     tb[4] = pass_treffbar("BABY 0x26",   0x26, "STAGE1/ROOM1090.RDT", 0x1090, -1, 3, 1, 200);

@@ -1,0 +1,2813 @@
+
+=== [local_build] Preflight — Toolchain messen
+    PATH   = /c/msys64/mingw64/bin:/c/Program Files/CMake/bin:/c/Python310/Scripts:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem
+    CC     = C:/msys64/mingw64/bin/gcc.exe
+    cmake  = /c/Program Files/CMake/bin/cmake
+    ninja  = /c/Python310/Scripts/ninja
+    ctest  = /c/Program Files/CMake/bin/ctest
+    cc1    = C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/cc1.exe
+    cc1 --version EXIT=0  -> Toolchain OK
+    Mini-Compile OK (95539 Bytes exe)
+
+=== [local_build] configure — re15_port -> re15_port/build (Ninja, PC=ON TESTS=ON TOOLS=OFF)
+    Cache traegt Compiler 'C:/msys64/mingw64/bin/cc.exe' statt 'C:/msys64/mingw64/bin/gcc.exe' -> Reset
+-- The C compiler identification is GNU 16.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: C:/msys64/mingw64/bin/gcc.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/msys64/mingw64/bin/gcc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- RE15_ASSETS_PATH: C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/shared_assets/PSX
+CMake Warning (dev) at C:/Program Files/CMake/share/cmake-4.3/Modules/FetchContent.cmake:1386 (message):
+  The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+  not set.  The policy's OLD behavior will be used.  When using a URL
+  download, the timestamps of extracted files should preferably be that of
+  the time of extraction, otherwise code that depends on the extracted
+  contents might not be rebuilt if the URL changes.  The OLD behavior
+  preserves the timestamps from the archive instead, but this is usually not
+  what you want.  Update your project to the NEW behavior or specify the
+  DOWNLOAD_EXTRACT_TIMESTAMP option with a value of true to avoid this
+  robustness issue.
+Call Stack (most recent call first):
+  platform/pc/CMakeLists.txt:21 (FetchContent_Declare)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Deprecation Warning at build/_deps/sdl2-src/CMakeLists.txt:8 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- The CXX compiler identification is GNU 16.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/msys64/mingw64/bin/g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Looking for __GLIBC__
+-- Looking for __GLIBC__ - not found
+-- Performing Test CHECK_CPU_ARCHITECTURE_X86
+-- Performing Test CHECK_CPU_ARCHITECTURE_X86 - Failed
+-- Performing Test CHECK_CPU_ARCHITECTURE_X64
+-- Performing Test CHECK_CPU_ARCHITECTURE_X64 - Success
+-- Performing Test CHECK_CPU_ARCHITECTURE_ARM32
+-- Performing Test CHECK_CPU_ARCHITECTURE_ARM32 - Failed
+-- Performing Test CHECK_CPU_ARCHITECTURE_ARM64
+-- Performing Test CHECK_CPU_ARCHITECTURE_ARM64 - Failed
+-- Performing Test CHECK_CPU_ARCHITECTURE_LOONGARCH64
+-- Performing Test CHECK_CPU_ARCHITECTURE_LOONGARCH64 - Failed
+-- Performing Test HAVE_GCC_WALL
+-- Performing Test HAVE_GCC_WALL - Success
+-- Performing Test HAVE_GCC_NO_STRICT_ALIASING
+-- Performing Test HAVE_GCC_NO_STRICT_ALIASING - Success
+-- Performing Test HAVE_GCC_WDECLARATION_AFTER_STATEMENT
+-- Performing Test HAVE_GCC_WDECLARATION_AFTER_STATEMENT - Success
+-- Performing Test HAVE_GCC_ATOMICS
+-- Performing Test HAVE_GCC_ATOMICS - Success
+-- Performing Test HAVE_GCC_FVISIBILITY
+-- Performing Test HAVE_GCC_FVISIBILITY - Success
+-- Performing Test HAVE_GCC_WSHADOW
+-- Performing Test HAVE_GCC_WSHADOW - Success
+-- Performing Test HAVE_GCC_WUNUSED_LOCAL_TYPEDEFS
+-- Performing Test HAVE_GCC_WUNUSED_LOCAL_TYPEDEFS - Success
+-- Performing Test HAVE_NO_UNDEFINED
+-- Performing Test HAVE_NO_UNDEFINED - Success
+-- Performing Test HAVE_GDWARF_4
+-- Performing Test HAVE_GDWARF_4 - Success
+-- Performing Test HAVE_MMX
+-- Performing Test HAVE_MMX - Success
+-- Performing Test HAVE_3DNOW
+-- Performing Test HAVE_3DNOW - Success
+-- Performing Test HAVE_SSE
+-- Performing Test HAVE_SSE - Success
+-- Performing Test CPU_SUPPORTS_SSE2
+-- Performing Test CPU_SUPPORTS_SSE2 - Success
+-- Performing Test CPU_SUPPORTS_SSE3
+-- Performing Test CPU_SUPPORTS_SSE3 - Success
+-- Looking for immintrin.h
+-- Looking for immintrin.h - found
+-- Performing Test HAVE_ALTIVEC_H_HDR
+-- Performing Test HAVE_ALTIVEC_H_HDR - Failed
+-- Performing Test CPU_SUPPORTS_ALTIVEC
+-- Performing Test CPU_SUPPORTS_ALTIVEC - Failed
+-- Looking for ctype.h
+-- Looking for ctype.h - found
+-- Looking for float.h
+-- Looking for float.h - found
+-- Looking for iconv.h
+-- Looking for iconv.h - found
+-- Looking for inttypes.h
+-- Looking for inttypes.h - found
+-- Looking for limits.h
+-- Looking for limits.h - found
+-- Looking for malloc.h
+-- Looking for malloc.h - found
+-- Looking for math.h
+-- Looking for math.h - found
+-- Looking for memory.h
+-- Looking for memory.h - found
+-- Looking for signal.h
+-- Looking for signal.h - found
+-- Looking for stdarg.h
+-- Looking for stdarg.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stdio.h
+-- Looking for stdio.h - found
+-- Looking for stdlib.h
+-- Looking for stdlib.h - found
+-- Looking for string.h
+-- Looking for string.h - found
+-- Looking for strings.h
+-- Looking for strings.h - found
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for wchar.h
+-- Looking for wchar.h - found
+-- Looking for libunwind.h
+-- Looking for libunwind.h - not found
+-- Looking for linux/input.h
+-- Looking for linux/input.h - not found
+-- Looking for 7 include files stddef.h, ..., float.h
+-- Looking for 7 include files stddef.h, ..., float.h - found
+-- Looking for M_PI
+-- Looking for M_PI - found
+-- Performing Test HAVE_MPROTECT
+-- Performing Test HAVE_MPROTECT - Failed
+-- Looking for strtod
+-- Looking for strtod - found
+-- Looking for malloc
+-- Looking for malloc - found
+-- Looking for calloc
+-- Looking for calloc - found
+-- Looking for realloc
+-- Looking for realloc - found
+-- Looking for free
+-- Looking for free - found
+-- Looking for getenv
+-- Looking for getenv - found
+-- Looking for setenv
+-- Looking for setenv - not found
+-- Looking for putenv
+-- Looking for putenv - found
+-- Looking for unsetenv
+-- Looking for unsetenv - not found
+-- Looking for bsearch
+-- Looking for bsearch - found
+-- Looking for qsort
+-- Looking for qsort - found
+-- Looking for abs
+-- Looking for abs - found
+-- Looking for bcopy
+-- Looking for bcopy - not found
+-- Looking for memset
+-- Looking for memset - found
+-- Looking for memcpy
+-- Looking for memcpy - found
+-- Looking for memmove
+-- Looking for memmove - found
+-- Looking for memcmp
+-- Looking for memcmp - found
+-- Looking for strlen
+-- Looking for strlen - found
+-- Looking for strlcpy
+-- Looking for strlcpy - not found
+-- Looking for strlcat
+-- Looking for strlcat - not found
+-- Looking for _strrev
+-- Looking for _strrev - found
+-- Looking for _strupr
+-- Looking for _strupr - found
+-- Looking for _strlwr
+-- Looking for _strlwr - found
+-- Looking for index
+-- Looking for index - not found
+-- Looking for rindex
+-- Looking for rindex - not found
+-- Looking for strchr
+-- Looking for strchr - found
+-- Looking for strrchr
+-- Looking for strrchr - found
+-- Looking for strstr
+-- Looking for strstr - found
+-- Looking for strtok_r
+-- Looking for strtok_r - found
+-- Looking for itoa
+-- Looking for itoa - found
+-- Looking for _ltoa
+-- Looking for _ltoa - found
+-- Looking for _uitoa
+-- Looking for _uitoa - not found
+-- Looking for _ultoa
+-- Looking for _ultoa - found
+-- Looking for strtol
+-- Looking for strtol - found
+-- Looking for strtoul
+-- Looking for strtoul - found
+-- Looking for _i64toa
+-- Looking for _i64toa - found
+-- Looking for _ui64toa
+-- Looking for _ui64toa - found
+-- Looking for strtoll
+-- Looking for strtoll - found
+-- Looking for strtoull
+-- Looking for strtoull - found
+-- Looking for atoi
+-- Looking for atoi - found
+-- Looking for atof
+-- Looking for atof - found
+-- Looking for strcmp
+-- Looking for strcmp - found
+-- Looking for strncmp
+-- Looking for strncmp - found
+-- Looking for _stricmp
+-- Looking for _stricmp - found
+-- Looking for strcasecmp
+-- Looking for strcasecmp - found
+-- Looking for _strnicmp
+-- Looking for _strnicmp - found
+-- Looking for strncasecmp
+-- Looking for strncasecmp - found
+-- Looking for strcasestr
+-- Looking for strcasestr - not found
+-- Looking for wcscmp
+-- Looking for wcscmp - found
+-- Looking for _wcsdup
+-- Looking for _wcsdup - found
+-- Looking for wcsdup
+-- Looking for wcsdup - found
+-- Looking for wcslcat
+-- Looking for wcslcat - not found
+-- Looking for wcslcpy
+-- Looking for wcslcpy - not found
+-- Looking for wcslen
+-- Looking for wcslen - found
+-- Looking for wcsncmp
+-- Looking for wcsncmp - found
+-- Looking for wcsstr
+-- Looking for wcsstr - found
+-- Looking for wcscasecmp
+-- Looking for wcscasecmp - not found
+-- Looking for _wcsicmp
+-- Looking for _wcsicmp - found
+-- Looking for wcsncasecmp
+-- Looking for wcsncasecmp - not found
+-- Looking for _wcsnicmp
+-- Looking for _wcsnicmp - found
+-- Looking for sscanf
+-- Looking for sscanf - found
+-- Looking for vsscanf
+-- Looking for vsscanf - found
+-- Looking for vsnprintf
+-- Looking for vsnprintf - found
+-- Looking for fopen64
+-- Looking for fopen64 - found
+-- Looking for fseeko
+-- Looking for fseeko - found
+-- Looking for fseeko64
+-- Looking for fseeko64 - found
+-- Looking for _Exit
+-- Looking for _Exit - found
+-- Looking for sigaction
+-- Looking for sigaction - not found
+-- Looking for setjmp
+-- Looking for setjmp - found
+-- Looking for nanosleep
+-- Looking for nanosleep - found
+-- Looking for sysconf
+-- Looking for sysconf - not found
+-- Looking for sysctlbyname
+-- Looking for sysctlbyname - not found
+-- Looking for getauxval
+-- Looking for getauxval - not found
+-- Looking for elf_aux_info
+-- Looking for elf_aux_info - not found
+-- Looking for poll
+-- Looking for poll - not found
+-- Looking for pow in m
+-- Looking for pow in m - found
+-- Looking for atan
+-- Looking for atan - found
+-- Looking for atan2
+-- Looking for atan2 - found
+-- Looking for atanf
+-- Looking for atanf - found
+-- Looking for atan2f
+-- Looking for atan2f - found
+-- Looking for ceil
+-- Looking for ceil - found
+-- Looking for ceilf
+-- Looking for ceilf - found
+-- Looking for copysign
+-- Looking for copysign - found
+-- Looking for copysignf
+-- Looking for copysignf - found
+-- Looking for cos
+-- Looking for cos - found
+-- Looking for cosf
+-- Looking for cosf - found
+-- Looking for exp
+-- Looking for exp - found
+-- Looking for expf
+-- Looking for expf - found
+-- Looking for fabs
+-- Looking for fabs - found
+-- Looking for fabsf
+-- Looking for fabsf - found
+-- Looking for floor
+-- Looking for floor - found
+-- Looking for floorf
+-- Looking for floorf - found
+-- Looking for fmod
+-- Looking for fmod - found
+-- Looking for fmodf
+-- Looking for fmodf - found
+-- Looking for log
+-- Looking for log - found
+-- Looking for logf
+-- Looking for logf - found
+-- Looking for log10
+-- Looking for log10 - found
+-- Looking for log10f
+-- Looking for log10f - found
+-- Looking for lround
+-- Looking for lround - found
+-- Looking for lroundf
+-- Looking for lroundf - found
+-- Looking for pow
+-- Looking for pow - found
+-- Looking for powf
+-- Looking for powf - found
+-- Looking for round
+-- Looking for round - found
+-- Looking for roundf
+-- Looking for roundf - found
+-- Looking for scalbn
+-- Looking for scalbn - found
+-- Looking for scalbnf
+-- Looking for scalbnf - found
+-- Looking for sin
+-- Looking for sin - found
+-- Looking for sinf
+-- Looking for sinf - found
+-- Looking for sqrt
+-- Looking for sqrt - found
+-- Looking for sqrtf
+-- Looking for sqrtf - found
+-- Looking for tan
+-- Looking for tan - found
+-- Looking for tanf
+-- Looking for tanf - found
+-- Looking for acos
+-- Looking for acos - found
+-- Looking for acosf
+-- Looking for acosf - found
+-- Looking for asin
+-- Looking for asin - found
+-- Looking for asinf
+-- Looking for asinf - found
+-- Looking for trunc
+-- Looking for trunc - found
+-- Looking for truncf
+-- Looking for truncf - found
+-- Looking for iconv_open in iconv
+-- Looking for iconv_open in iconv - not found
+-- Looking for iconv_open in c
+-- Looking for iconv_open in c - not found
+-- Looking for alloca.h
+-- Looking for alloca.h - not found
+-- Looking for alloca
+-- Looking for alloca - not found
+-- Looking for alloca
+-- Looking for alloca - found
+-- Looking for alloca
+-- Looking for alloca - found
+-- Performing Test HAVE_SA_SIGACTION
+-- Performing Test HAVE_SA_SIGACTION - Failed
+-- Performing Test HAVE_WIN32_CC
+-- Performing Test HAVE_WIN32_CC - Success
+-- Looking for d3d9.h
+-- Looking for d3d9.h - found
+-- Looking for d3d11_1.h
+-- Looking for d3d11_1.h - found
+-- Performing Test HAVE_D3D12_H
+-- Performing Test HAVE_D3D12_H - Success
+-- Looking for ddraw.h
+-- Looking for ddraw.h - found
+-- Looking for dsound.h
+-- Looking for dsound.h - found
+-- Looking for dinput.h
+-- Looking for dinput.h - found
+-- Looking for dxgi.h
+-- Looking for dxgi.h - found
+-- Performing Test HAVE_XINPUT_H
+-- Performing Test HAVE_XINPUT_H - Success
+-- Performing Test HAVE_XINPUT_GAMEPAD_EX
+-- Performing Test HAVE_XINPUT_GAMEPAD_EX - Failed
+-- Performing Test HAVE_XINPUT_STATE_EX
+-- Performing Test HAVE_XINPUT_STATE_EX - Failed
+-- Performing Test HAVE_WINDOWS_GAMING_INPUT_H
+-- Performing Test HAVE_WINDOWS_GAMING_INPUT_H - Success
+-- Looking for tpcshrd.h
+-- Looking for tpcshrd.h - found
+-- Looking for roapi.h
+-- Looking for roapi.h - found
+-- Looking for mmdeviceapi.h
+-- Looking for mmdeviceapi.h - found
+-- Looking for audioclient.h
+-- Looking for audioclient.h - found
+-- Looking for sensorsapi.h
+-- Looking for sensorsapi.h - found
+-- Looking for shellscalingapi.h
+-- Looking for shellscalingapi.h - found
+-- Found Git: C:/Program Files/Git/mingw64/bin/git.exe (found version "2.46.0.windows.1")
+CMake Deprecation Warning at build/_deps/sdl2-src/CMakeLists.txt:3215 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- 
+-- SDL2 was configured with the following options:
+-- 
+-- Platform: Windows-10.0.26200
+-- 64-bit:   TRUE
+-- Compiler: C:/msys64/mingw64/bin/gcc.exe
+-- Revision: SDL-release-2.28.5-0-g15ead9a40
+-- 
+-- Subsystems:
+--   Atomic:	ON
+--   Audio:	ON
+--   Video:	ON
+--   Render:	ON
+--   Events:	ON
+--   Joystick:	ON
+--   Haptic:	ON
+--   Hidapi:	ON
+--   Power:	ON
+--   Threads:	ON
+--   Timers:	ON
+--   File:	ON
+--   Loadso:	ON
+--   CPUinfo:	ON
+--   Filesystem:	ON
+--   Sensor:	ON
+--   Locale:	ON
+--   Misc:	ON
+-- 
+-- Options:
+--   SDL2_DISABLE_INSTALL        (Wanted: ON): OFF
+--   SDL2_DISABLE_SDL2MAIN       (Wanted: OFF): OFF
+--   SDL2_DISABLE_UNINSTALL      (Wanted: OFF): OFF
+--   SDL_3DNOW                   (Wanted: ON): ON
+--   SDL_ALSA                    (Wanted: OFF): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: ON): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ARMSIMD                 (Wanted: OFF): OFF
+--   SDL_ARTS                    (Wanted: OFF): OFF
+--   SDL_ARTS_SHARED             (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: ON): ON
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: ON): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: OFF): OFF
+--   SDL_DIRECTFB                (Wanted: OFF): OFF
+--   SDL_DIRECTFB_SHARED         (Wanted: OFF): OFF
+--   SDL_DIRECTX                 (Wanted: ON): ON
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYVIDEO              (Wanted: ON): ON
+--   SDL_ESD                     (Wanted: OFF): OFF
+--   SDL_ESD_SHARED              (Wanted: OFF): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_FUSIONSOUND             (Wanted: OFF): OFF
+--   SDL_FUSIONSOUND_SHARED      (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: ON): ON
+--   SDL_HIDAPI                  (Wanted: ON): ON
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+--   SDL_HIDAPI_LIBUSB           (Wanted: OFF): OFF
+--   SDL_IBUS                    (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: OFF): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: OFF): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBSAMPLERATE           (Wanted: OFF): OFF
+--   SDL_LIBSAMPLERATE_SHARED    (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: ON): ON
+--   SDL_NAS                     (Wanted: OFF): OFF
+--   SDL_NAS_SHARED              (Wanted: OFF): OFF
+--   SDL_OFFSCREEN               (Wanted: ON): ON
+--   SDL_OPENGL                  (Wanted: ON): ON
+--   SDL_OPENGLES                (Wanted: ON): ON
+--   SDL_OSS                     (Wanted: OFF): OFF
+--   SDL_PIPEWIRE                (Wanted: OFF): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: ON): ON
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: OFF): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: OFF): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: ON): ON
+--   SDL_SSE2                    (Wanted: ON): ON
+--   SDL_SSE3                    (Wanted: ON): ON
+--   SDL_SSEMATH                 (Wanted: ON): ON
+--   SDL_STATIC_PIC              (Wanted: OFF): OFF
+--   SDL_SYSTEM_ICONV            (Wanted: ON): OFF
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_VENDOR_INFO             (Wanted: ): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: ON): ON
+--   SDL_WASAPI                  (Wanted: ON): ON
+--   SDL_WAYLAND                 (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_QT_TOUCH        (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: OFF): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+--   SDL_X11_XDBE                (Wanted: OFF): OFF
+--   SDL_X11_XFIXES              (Wanted: OFF): OFF
+--   SDL_X11_XINPUT              (Wanted: OFF): OFF
+--   SDL_X11_XRANDR              (Wanted: OFF): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+--   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+--   SDL_XINPUT                  (Wanted: ON): ON
+-- 
+--  CFLAGS:         -idirafter "C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/build/_deps/sdl2-src/src/video/khronos"
+--  EXTRA_CFLAGS:   -Wall -fno-strict-aliasing -Wdeclaration-after-statement -fvisibility=hidden -Wshadow -Wno-unused-local-typedefs -fdiagnostics-color=always -mmmx -m3dnow -msse -msse2 -msse3
+--  EXTRA_LDFLAGS:  -Wl,--no-undefined
+--  EXTRA_LIBS:    m;kernel32;user32;gdi32;winmm;imm32;ole32;oleaut32;version;uuid;advapi32;setupapi;shell32;dinput8
+-- 
+--  Build Shared Library: OFF
+--  Build Static Library: ON
+--  Build Static Library with Position Independent Code: OFF
+-- 
+-- Configuring done (86.5s)
+-- Generating done (1.2s)
+-- Build files have been written to: C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/build
+    configure OK
+
+=== [local_build] build — re15_port/build
+[1/1480] Generating include/SDL2/SDL.h
+[2/1480] Generating include/SDL2/SDL_audio.h
+[3/1480] Generating include/SDL2/SDL_assert.h
+[4/1480] Generating include/SDL2/SDL_atomic.h
+[5/1480] Generating include/SDL2/SDL_bits.h
+[6/1480] Generating include/SDL2/SDL_hidapi.h
+[7/1480] Generating include/SDL2/SDL_clipboard.h
+[8/1480] Generating include/SDL2/SDL_gamecontroller.h
+[9/1480] Generating include/SDL2/SDL_cpuinfo.h
+[10/1480] Generating include/SDL2/SDL_egl.h
+[11/1480] Generating include/SDL2/SDL_endian.h
+[12/1480] Generating include/SDL2/SDL_copying.h
+[13/1480] Generating include/SDL2/SDL_blendmode.h
+[14/1480] Generating include/SDL2/SDL_error.h
+[15/1480] Generating include/SDL2/SDL_filesystem.h
+[16/1480] Generating include/SDL2/SDL_events.h
+[17/1480] Generating include/SDL2/SDL_keyboard.h
+[18/1480] Generating include/SDL2/SDL_keycode.h
+[19/1480] Generating include/SDL2/SDL_hints.h
+[20/1480] Generating include/SDL2/SDL_joystick.h
+[21/1480] Generating include/SDL2/SDL_gesture.h
+[22/1480] Generating include/SDL2/SDL_guid.h
+[23/1480] Generating include/SDL2/SDL_haptic.h
+[24/1480] Generating include/SDL2/SDL_name.h
+[25/1480] Generating include/SDL2/SDL_log.h
+[26/1480] Generating include/SDL2/SDL_locale.h
+[27/1480] Generating include/SDL2/SDL_main.h
+[28/1480] Generating include/SDL2/SDL_loadso.h
+[29/1480] Generating include/SDL2/SDL_messagebox.h
+[30/1480] Generating include/SDL2/SDL_metal.h
+[31/1480] Generating include/SDL2/SDL_opengl.h
+[32/1480] Generating include/SDL2/SDL_misc.h
+[33/1480] Generating include/SDL2/SDL_mutex.h
+[34/1480] Generating include/SDL2/SDL_mouse.h
+[35/1480] Generating include/SDL2/SDL_opengles.h
+[36/1480] Generating include/SDL2/SDL_opengles2_gl2.h
+[37/1480] Generating include/SDL2/SDL_opengles2.h
+[38/1480] Generating include/SDL2/SDL_opengl_glext.h
+[39/1480] Generating include/SDL2/SDL_opengles2_gl2platform.h
+[40/1480] Generating include/SDL2/SDL_opengles2_gl2ext.h
+[41/1480] Generating include/SDL2/SDL_opengles2_khrplatform.h
+[42/1480] Generating include/SDL2/SDL_rect.h
+[43/1480] Generating include/SDL2/SDL_render.h
+[44/1480] Generating include/SDL2/SDL_pixels.h
+[45/1480] Generating include/SDL2/SDL_shape.h
+[46/1480] Generating include/SDL2/SDL_platform.h
+[47/1480] Generating include/SDL2/SDL_quit.h
+[48/1480] Generating include/SDL2/SDL_scancode.h
+[49/1480] Generating include/SDL2/SDL_rwops.h
+[50/1480] Generating include/SDL2/SDL_power.h
+[51/1480] Generating include/SDL2/SDL_sensor.h
+[52/1480] Generating include/SDL2/SDL_stdinc.h
+[53/1480] Generating include/SDL2/SDL_test_compare.h
+[54/1480] Generating include/SDL2/SDL_surface.h
+[55/1480] Generating include/SDL2/SDL_test_crc32.h
+[56/1480] Generating include/SDL2/SDL_system.h
+[57/1480] Generating include/SDL2/SDL_test.h
+[58/1480] Generating include/SDL2/SDL_test_assert.h
+[59/1480] Generating include/SDL2/SDL_test_common.h
+[60/1480] Generating include/SDL2/SDL_syswm.h
+[61/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/actor_common.c.obj
+[62/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/actor_locomotion.c.obj
+[63/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/anim_select_common.c.obj
+[64/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/aot_common.c.obj
+[65/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/bss_common.c.obj
+[66/1480] Generating include/SDL2/SDL_test_fuzzer.h
+[67/1480] Generating include/SDL2/SDL_test_random.h
+[68/1480] Generating include/SDL2/SDL_thread.h
+[69/1480] Generating include/SDL2/SDL_test_memory.h
+[70/1480] Generating include/SDL2/SDL_test_harness.h
+[71/1480] Generating include/SDL2/SDL_test_md5.h
+[72/1480] Generating include/SDL2/SDL_timer.h
+[73/1480] Generating include/SDL2/SDL_test_font.h
+[74/1480] Generating include/SDL2/SDL_test_images.h
+[75/1480] Generating include/SDL2/SDL_test_log.h
+[76/1480] Generating include/SDL2/SDL_vulkan.h
+[77/1480] Generating include/SDL2/SDL_version.h
+[78/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/camera_common.c.obj
+[79/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/bss_vlc.c.obj
+[80/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/bss_mdec.c.obj
+[81/1480] Generating include/SDL2/SDL_video.h
+[82/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/debug_menu_common.c.obj
+[83/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/emd_morph.c.obj
+[84/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/emd_common.c.obj
+[85/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/climb_common.c.obj
+[86/1480] Generating include/SDL2/SDL_types.h
+[87/1480] Generating include/SDL2/begin_code.h
+[88/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_boss_g5.c.obj
+[89/1480] Generating include/SDL2/close_code.h
+[90/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_boss_gator.c.obj
+[91/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_crow.c.obj
+[92/1480] Generating include/SDL2/SDL_touch.h
+[93/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/fade_common.c.obj
+[94/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/inventory_common.c.obj
+[95/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_zellenarm.c.obj
+[96/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_dog.c.obj
+[97/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/game_state.c.obj
+[98/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_common.c.obj
+[99/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/item_discard_common.c.obj
+[100/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/item_icon_common.c.obj
+[101/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_spider.c.obj
+[102/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/game_step_common.c.obj
+[103/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/item_prompt_common.c.obj
+[104/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_tentakel_g5.c.obj
+[105/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/item_modal_common.c.obj
+[106/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/md1_common.c.obj
+[107/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/item_use_common.c.obj
+[108/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/light_common.c.obj
+[109/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/itps_common.c.obj
+[110/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/msg_select_common.c.obj
+[111/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_re2_zombie.c.obj
+[112/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/menu_common.c.obj
+[113/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/pad_common.c.obj
+[114/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/nav_zone_common.c.obj
+[115/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/pri_common.c.obj
+[116/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/msg_common.c.obj
+[117/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/panel_zeiger_common.c.obj
+[118/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_ems.c.obj
+[119/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/rdt_common.c.obj
+[120/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_g5_skin.c.obj
+[121/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/player_common.c.obj
+[122/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_collision.c.obj
+[123/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_gameflow.c.obj
+[124/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_inv_ui_tables.c.obj
+[125/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_damage.c.obj
+[126/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_esp.c.obj
+[127/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/enemy_ai_common.c.obj
+[128/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_itembox.c.obj
+[129/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_math.c.obj
+[130/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_map_owned.c.obj
+[131/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_map_zones.c.obj
+[132/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_montage_fx.c.obj
+[133/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_memcard.c.obj
+[134/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_savepoint.c.obj
+[135/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_rumble.c.obj
+[136/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_mc_title.c.obj
+[137/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_savedata.c.obj
+[138/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_str.c.obj
+[139/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_trig_lut.c.obj
+[140/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_inv_screen.c.obj
+[141/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_to_re2.c.obj
+[142/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re15_xa.c.obj
+[143/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/scd_elev_se.c.obj
+[144/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/rotor_common.c.obj
+[145/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re2_ems.c.obj
+[146/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/scd_room_setup.c.obj
+[147/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/re2doc_common.c.obj
+[148/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/room_common.c.obj
+[149/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/sld_common.c.obj
+[150/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/tim_common.c.obj
+[151/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/skeleton_common.c.obj
+[152/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/vab_common.c.obj
+[153/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/stair_common.c.obj
+[154/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_guid.c.obj
+[155/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_error.c.obj
+[156/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_hints.c.obj
+[157/1480] Building C object engine/CMakeFiles/re15_engine.dir/src/scd_vm.c.obj
+[158/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_utils.c.obj
+[159/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/atomic/SDL_atomic.c.obj
+[160/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiodev.c.obj
+[161/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_wave.c.obj
+[162/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_dataqueue.c.obj
+[163/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_list.c.obj
+[164/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_mixer.c.obj
+[165/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_log.c.obj
+[166/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL_assert.c.obj
+[167/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiotypecvt.c.obj
+[168/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_keysym_to_scancode.c.obj
+[169/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/SDL.c.obj
+[170/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/atomic/SDL_spinlock.c.obj
+[171/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/cpuinfo/SDL_cpuinfo.c.obj
+[172/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_audiocvt.c.obj
+[173/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_displayevents.c.obj
+[174/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_dropevents.c.obj
+[175/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/SDL_audio.c.obj
+[176/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_clipboardevents.c.obj
+[177/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/imKStoUCS.c.obj
+[178/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_scancode_tables.c.obj
+[179/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/haptic/SDL_haptic.c.obj
+[180/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_events.c.obj
+[181/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/controller_type.c.obj
+[182/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_gesture.c.obj
+[183/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_fmod.c.obj
+[184/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_exp.c.obj
+[185/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_log10.c.obj
+[186/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_atan2.c.obj
+[187/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_keyboard.c.obj
+[188/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_log.c.obj
+[189/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_rem_pio2.c.obj
+[190/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_pow.c.obj
+[191/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/k_cos.c.obj
+[192/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/e_sqrt.c.obj
+[193/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/k_rem_pio2.c.obj
+[194/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_atan.c.obj
+[195/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/k_tan.c.obj
+[196/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/k_sin.c.obj
+[197/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_copysign.c.obj
+[198/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_mouse.c.obj
+[199/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/file/SDL_rwops.c.obj
+[200/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_windowevents.c.obj
+[201/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_cos.c.obj
+[202/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_quit.c.obj
+[203/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_fabs.c.obj
+[204/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/events/SDL_touch.c.obj
+[205/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/dynapi/SDL_dynapi.c.obj
+[206/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_scalbn.c.obj
+[207/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/hidapi/SDL_hidapi.c.obj
+[208/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_sin.c.obj
+[209/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_tan.c.obj
+[210/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/locale/SDL_locale.c.obj
+[211/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/libm/s_floor.c.obj
+[212/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/misc/SDL_url.c.obj
+[213/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/power/SDL_power.c.obj
+[214/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/SDL_d3dmath.c.obj
+[215/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/SDL_gamecontroller.c.obj
+[216/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/SDL_joystick.c.obj
+[217/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/opengles/SDL_render_gles.c.obj
+[218/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/ps2/SDL_render_ps2.c.obj
+[219/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/opengles2/SDL_shaders_gles2.c.obj
+[220/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/psp/SDL_render_psp.c.obj
+[221/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/SDL_yuv_sw.c.obj
+[222/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/SDL_render.c.obj
+[223/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendpoint.c.obj
+[224/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm.c.obj
+[225/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_drawline.c.obj
+[226/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/opengl/SDL_shaders_gl.c.obj
+[227/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d/SDL_shaders_d3d.c.obj
+[228/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_drawpoint.c.obj
+[229/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendfillrect.c.obj
+[230/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/opengl/SDL_render_gl.c.obj
+[231/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_render_sw.c.obj
+[232/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_blendline.c.obj
+[233/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d12/SDL_shaders_d3d12.c.obj
+[234/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d11/SDL_shaders_d3d11.c.obj
+[235/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d/SDL_render_d3d.c.obj
+[236/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_crc16.c.obj
+[237/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm_memory.c.obj
+[238/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/vitagxm/SDL_render_vita_gxm_tools.c.obj
+[239/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/opengles2/SDL_render_gles2.c.obj
+[240/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_qsort.c.obj
+[241/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_crc32.c.obj
+[242/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_mslibc.c.obj
+[243/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_iconv.c.obj
+[244/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_rotate.c.obj
+[245/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d12/SDL_render_d3d12.c.obj
+[246/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_malloc.c.obj
+[247/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/software/SDL_triangle.c.obj
+[248/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_stdlib.c.obj
+[249/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/render/direct3d11/SDL_render_d3d11.c.obj
+[250/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_string.c.obj
+[251/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_strtokr.c.obj
+[252/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/stdlib/SDL_getenv.c.obj
+[253/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/SDL_thread.c.obj
+[254/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/sensor/SDL_sensor.c.obj
+[255/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_0.c.obj
+[256/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit.c.obj
+[257/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_copy.c.obj
+[258/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_fillrect.c.obj
+[259/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_slow.c.obj
+[260/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/timer/SDL_timer.c.obj
+[261/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_RLEaccel.c.obj
+[262/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_bmp.c.obj
+[263/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_rect.c.obj
+[264/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_1.c.obj
+[265/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_clipboard.c.obj
+[266/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_A.c.obj
+[267/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_egl.c.obj
+[268/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_N.c.obj
+[269/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_pixels.c.obj
+[270/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/disk/SDL_diskaudio.c.obj
+[271/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_blit_auto.c.obj
+[272/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/dummy/SDL_dummyaudio.c.obj
+[273/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/virtual/SDL_virtualjoystick.c.obj
+[274/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_stretch.c.obj
+[275/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_vulkan_utils.c.obj
+[276/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_shape.c.obj
+[277/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_yuv.c.obj
+[278/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_surface.c.obj
+[279/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullframebuffer.c.obj
+[280/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullevents.c.obj
+[281/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/dummy/SDL_nullvideo.c.obj
+[282/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenframebuffer.c.obj
+[283/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenvideo.c.obj
+[284/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/SDL_video.c.obj
+[285/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenwindow.c.obj
+[286/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenevents.c.obj
+[287/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/offscreen/SDL_offscreenopengles.c.obj
+[288/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_hid.c.obj
+[289/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_xinput.c.obj
+[290/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_immdevice.c.obj
+[291/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/core/windows/SDL_windows.c.obj
+[292/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/misc/windows/SDL_sysurl.c.obj
+[293/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/winmm/SDL_winmm.c.obj
+[294/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/yuv2rgb/yuv_rgb.c.obj
+[295/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi.c.obj
+[296/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/directsound/SDL_directsound.c.obj
+[297/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsclipboard.c.obj
+[298/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/generic/SDL_syscond.c.obj
+[299/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsframebuffer.c.obj
+[300/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/audio/wasapi/SDL_wasapi_win32.c.obj
+[301/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsevents.c.obj
+[302/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmouse.c.obj
+[303/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmessagebox.c.obj
+[304/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowskeyboard.c.obj
+[305/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsmodes.c.obj
+[306/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsopengles.c.obj
+[307/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsopengl.c.obj
+[308/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsshape.c.obj
+[309/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsvulkan.c.obj
+[310/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowsvideo.c.obj
+[311/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_combined.c.obj
+[312/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_luna.c.obj
+[313/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps3.c.obj
+[314/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_gamecube.c.obj
+[315/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_syscond_cv.c.obj
+[316/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_syssem.c.obj
+[317/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_systls.c.obj
+[318/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_sysmutex.c.obj
+[319/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps4.c.obj
+[320/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/thread/windows/SDL_systhread.c.obj
+[321/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/power/windows/SDL_syspower.c.obj
+[322/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_ps5.c.obj
+[323/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/video/windows/SDL_windowswindow.c.obj
+[324/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_shield.c.obj
+[325/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_stadia.c.obj
+[326/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_steam.c.obj
+[327/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/locale/windows/SDL_syslocale.c.obj
+[328/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/timer/windows/SDL_systimer.c.obj
+[329/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xbox360w.c.obj
+[330/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_switch.c.obj
+[331/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xboxone.c.obj
+[332/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/loadso/windows/SDL_sysloadso.c.obj
+[333/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/sensor/windows/SDL_windowssensor.c.obj
+[334/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_xbox360.c.obj
+[335/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_wii.c.obj
+[336/1480] Building C object tests/CMakeFiles/re15_test_support.dir/__/platform/pc/src/skeleton_trig_pc.c.obj
+[337/1480] Building C object tests/CMakeFiles/re15_test_support.dir/test_support.c.obj
+[338/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/filesystem/windows/SDL_sysfilesystem.c.obj
+[339/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/asset_pc.c.obj
+[340/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapi_rumble.c.obj
+[341/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/asset_selftest_pc.c.obj
+[342/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/bg_pc.c.obj
+[343/1480] Linking C static library engine\libre15_engine.a
+[344/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/room_pc.c.obj
+[345/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/skeleton_trig_pc.c.obj
+[346/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/inv_render_pc.c.obj
+[347/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/hidapi/SDL_hidapijoystick.c.obj
+[348/1480] Building C object tests/CMakeFiles/re15_tests.dir/test_main.c.obj
+[349/1480] Building C object tests/property/CMakeFiles/prop_rdt_filename.dir/prop_rdt_filename.c.obj
+[350/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_dinputjoystick.c.obj
+[351/1480] Linking C static library tests\libre15_test_support.a
+[352/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_xinputjoystick.c.obj
+[353/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_windowsjoystick.c.obj
+[354/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_dinputhaptic.c.obj
+[355/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_windowshaptic.c.obj
+[356/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/haptic/windows/SDL_xinputhaptic.c.obj
+[357/1480] Building C object tests/property/CMakeFiles/prop_rdt_null_offset.dir/prop_rdt_null_offset.c.obj
+[358/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/asset_root_pc.c.obj
+[359/1480] Building C object tests/property/CMakeFiles/prop_scd_pc_advance.dir/prop_scd_pc_advance.c.obj
+[360/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_windows_gaming_input.c.obj
+[361/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/audio_pc.c.obj
+[362/1480] Building C object tests/property/CMakeFiles/prop_fixpoint_precision.dir/prop_fixpoint_precision.c.obj
+[363/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2-static.dir/src/joystick/windows/SDL_rawinputjoystick.c.obj
+[364/1480] Building C object tests/property/CMakeFiles/prop_door_roundtrip.dir/prop_door_roundtrip.c.obj
+[365/1480] Building C object tests/property/CMakeFiles/prop_tank_controls.dir/prop_tank_controls.c.obj
+[366/1480] Building C object tests/property/CMakeFiles/prop_input_edge.dir/prop_input_edge.c.obj
+[367/1480] Building C object tests/property/CMakeFiles/prop_bss_chunk.dir/prop_bss_chunk.c.obj
+[368/1480] Building C object tests/property/CMakeFiles/prop_zone_dispatch.dir/prop_zone_dispatch.c.obj
+[369/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/input_pc.c.obj
+[370/1480] Building C object tests/property/CMakeFiles/prop_sca_collision.dir/prop_sca_collision.c.obj
+[371/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/render_pc.c.obj
+[372/1480] Building C object tests/property/CMakeFiles/prop_point_in_poly.dir/prop_point_in_poly.c.obj
+[373/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/src/touch_overlay_pc.c.obj
+[374/1480] Building C object tests/property/CMakeFiles/prop_ot_sort.dir/prop_ot_sort.c.obj
+[375/1480] Building C object tests/unit/CMakeFiles/test_rdt_parser.dir/test_rdt_parser.c.obj
+[376/1480] Building C object _deps/sdl2-build/CMakeFiles/SDL2main.dir/src/main/windows/SDL_windows_main.c.obj
+[377/1480] Building C object tests/property/CMakeFiles/prop_spawn_entered.dir/prop_spawn_entered.c.obj
+[378/1480] Building C object tests/property/CMakeFiles/prop_adpcm_decode.dir/prop_adpcm_decode.c.obj
+[379/1480] Building C object tests/unit/CMakeFiles/test_sca_parser.dir/test_sca_parse.c.obj
+[380/1480] Building C object tests/property/CMakeFiles/prop_json_roundtrip.dir/prop_json_roundtrip.c.obj
+[381/1480] Building C object tests/property/CMakeFiles/prop_savestate_cmp.dir/prop_savestate_cmp.c.obj
+[382/1480] Building C object tests/unit/CMakeFiles/test_math_common.dir/test_math_common.c.obj
+[383/1480] Building C object tests/unit/CMakeFiles/test_scd_opcodes.dir/test_scd_opcodes.c.obj
+[384/1480] Building C object tests/unit/CMakeFiles/test_room_load.dir/test_room_load.c.obj
+[385/1480] Building C object tests/unit/CMakeFiles/test_enemy_ai.dir/test_enemy_ai.c.obj
+[386/1480] Building C object tests/unit/CMakeFiles/test_room1140_spawn.dir/test_room1140_spawn.c.obj
+[387/1480] Building C object tests/unit/CMakeFiles/test_damage.dir/test_damage.c.obj
+[388/1480] Building C object tests/unit/CMakeFiles/test_member.dir/test_member.c.obj
+[389/1480] Building C object tests/unit/CMakeFiles/test_dog_ai.dir/test_dog_ai.c.obj
+[390/1480] Building C object platform/pc/CMakeFiles/re15_pc.dir/main.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/platform/pc/main.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/platform/pc/main.c:7462:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 7462 |                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/platform/pc/main.c:8678:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 8678 |                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/platform/pc/main.c:9019:58: warning: passing argument 1 of 're15_re2z_gore_part_matrix' discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 9019 |                         (void)re15_re2z_gore_part_matrix(npc, nbi,
+      |                                                          ^~~
+In file included from C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/platform/pc/main.c:68:
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/include/re15_actor.h:1167:46: note: expected 're15_actor_t *' but argument is of type 'const re15_actor_t *'
+ 1167 | int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+      |                                ~~~~~~~~~~~~~~^
+[391/1480] Building C object tests/unit/CMakeFiles/test_crow_ai.dir/test_crow_ai.c.obj
+[392/1480] Building C object tests/unit/CMakeFiles/test_adult_spider_ai.dir/test_adult_spider_ai.c.obj
+[393/1480] Building C object tests/unit/CMakeFiles/test_spider_ai.dir/test_spider_ai.c.obj
+[394/1480] Building C object tests/unit/CMakeFiles/test_cockroach_ai.dir/test_cockroach_ai.c.obj
+[395/1480] Building C object tests/unit/CMakeFiles/test_maggot_ai.dir/test_maggot_ai.c.obj
+[396/1480] Building C object tests/unit/CMakeFiles/test_npc_scd_pose.dir/test_npc_scd_pose.c.obj
+[397/1480] Building C object tests/unit/CMakeFiles/test_npc_ai.dir/test_npc_ai.c.obj
+[398/1480] Building C object tests/unit/CMakeFiles/test_zgirl_ai.dir/test_zgirl_ai.c.obj
+[399/1480] Building C object tests/unit/CMakeFiles/test_ems.dir/test_ems.c.obj
+[400/1480] Building C object tests/unit/CMakeFiles/test_room1140_combat.dir/test_room1140_combat.c.obj
+[401/1480] Building C object tests/unit/CMakeFiles/test_zombie_pose.dir/test_zombie_pose.c.obj
+[402/1480] Building C object tests/unit/CMakeFiles/test_weapon_select.dir/test_weapon_select.c.obj
+[403/1480] Building C object tests/unit/CMakeFiles/test_audio_vab.dir/test_audio_vab.c.obj
+[404/1480] Building C object tests/unit/CMakeFiles/test_esp_parse.dir/test_esp_parse.c.obj
+[405/1480] Linking C static library _deps\sdl2-build\libSDL2.a
+[406/1480] Building C object tests/unit/CMakeFiles/test_item_icon.dir/test_item_icon.c.obj
+[407/1480] Building C object tests/unit/CMakeFiles/test_writher_ai.dir/test_writher_ai.c.obj
+[408/1480] Building C object tests/unit/CMakeFiles/test_fx_emitter_ai.dir/test_fx_emitter_ai.c.obj
+[409/1480] Building C object tests/unit/CMakeFiles/test_alligator_ai.dir/test_alligator_ai.c.obj
+[410/1480] Building C object tests/unit/CMakeFiles/test_birkin_ai.dir/test_birkin_ai.c.obj
+[411/1480] Building C object tests/unit/CMakeFiles/test_tyrant_ai.dir/test_tyrant_ai.c.obj
+[412/1480] Building C object tests/unit/CMakeFiles/test_ivy_ai.dir/test_ivy_ai.c.obj
+[413/1480] Building C object tests/unit/CMakeFiles/test_aot_edge.dir/test_aot_edge.c.obj
+[414/1480] Building C object tests/unit/CMakeFiles/test_enemy_shootable.dir/test_enemy_shootable.c.obj
+[415/1480] Building C object tests/unit/CMakeFiles/test_enemy_body_push.dir/test_enemy_body_push.c.obj
+[416/1480] Building C object tests/unit/CMakeFiles/test_slope_collision.dir/test_slope_collision.c.obj
+[417/1480] Building C object tests/unit/CMakeFiles/test_se_bank_routing.dir/test_se_bank_routing.c.obj
+[418/1480] Building C object tests/unit/CMakeFiles/test_bleed_rng.dir/test_bleed_rng.c.obj
+[419/1480] Building C object tests/unit/CMakeFiles/test_inv_fsm.dir/test_inv_fsm.c.obj
+[420/1480] Building C object tests/unit/CMakeFiles/test_aim_all_around.dir/test_aim_all_around.c.obj
+[421/1480] Building C object tests/unit/CMakeFiles/test_scd_for2.dir/test_scd_for2.c.obj
+[422/1480] Building C object tests/unit/CMakeFiles/test_aim_lower_exit.dir/test_aim_lower_exit.c.obj
+[423/1480] Building C object tests/unit/CMakeFiles/test_hit_reaction.dir/test_hit_reaction.c.obj
+[424/1480] Building C object tests/unit/CMakeFiles/test_scd_aot_opcodes.dir/test_scd_aot_opcodes.c.obj
+[425/1480] Building C object tests/unit/CMakeFiles/test_getup_advance.dir/test_getup_advance.c.obj
+[426/1480] Building C object tests/unit/CMakeFiles/test_collision_layers.dir/test_collision_layers.c.obj
+[427/1480] Building C object tests/unit/CMakeFiles/test_scd_dir_set.dir/test_scd_dir_set.c.obj
+[428/1480] Building C object tests/unit/CMakeFiles/test_audio_decode.dir/test_audio_decode.c.obj
+[429/1480] Building C object tests/unit/CMakeFiles/test_em_status_persist.dir/test_em_status_persist.c.obj
+[430/1480] Building C object tests/unit/CMakeFiles/test_rvd_scan_order.dir/test_rvd_scan_order.c.obj
+[431/1480] Building C object tests/unit/CMakeFiles/test_xa_decode.dir/test_xa_decode.c.obj
+[432/1480] Building C object tests/unit/CMakeFiles/test_anim_pose_order.dir/test_anim_pose_order.c.obj
+[433/1480] Building C object tests/unit/CMakeFiles/test_msg_dialog.dir/test_msg_dialog.c.obj
+[434/1480] Building C object tests/unit/CMakeFiles/test_savepoint.dir/test_savepoint.c.obj
+[435/1480] Building C object tests/unit/CMakeFiles/test_inv_grant.dir/test_inv_grant.c.obj
+[436/1480] Building C object tests/unit/CMakeFiles/test_savedata.dir/test_savedata.c.obj
+[437/1480] Building C object tests/unit/CMakeFiles/test_catan.dir/test_catan.c.obj
+[438/1480] Building C object tests/unit/CMakeFiles/test_camera_view.dir/test_camera_view.c.obj
+[439/1480] Building C object tests/unit/CMakeFiles/test_scd_flag_fade.dir/test_scd_flag_fade.c.obj
+[440/1480] Building C object tests/unit/CMakeFiles/test_rotmatrix.dir/test_rotmatrix.c.obj
+[441/1480] Building C object tests/unit/CMakeFiles/test_scd_key_ck.dir/test_scd_key_ck.c.obj
+[442/1480] Building C object tests/unit/CMakeFiles/test_action_msg_gate.dir/test_action_msg_gate.c.obj
+[443/1480] Building C object tests/unit/CMakeFiles/test_flag_gate.dir/test_flag_gate.c.obj
+[444/1480] Building C object tests/unit/CMakeFiles/test_enemy_attack_reach.dir/test_enemy_attack_reach.c.obj
+[445/1480] Building C object tests/unit/CMakeFiles/test_squareroot0.dir/test_squareroot0.c.obj
+[446/1480] Building C object tests/unit/CMakeFiles/test_item_use.dir/test_item_use.c.obj
+[447/1480] Building C object tests/unit/CMakeFiles/test_dog_aim_band.dir/test_dog_aim_band.c.obj
+[448/1480] Building C object tests/unit/CMakeFiles/test_item_modal.dir/test_item_modal.c.obj
+[449/1480] Building C object tests/unit/CMakeFiles/test_sherry_wall_pin.dir/test_sherry_wall_pin.c.obj
+[450/1480] Building C object tests/unit/CMakeFiles/test_item_stack_press.dir/test_item_stack_press.c.obj
+[451/1480] Building C object tests/unit/CMakeFiles/test_writher_hit_feedback.dir/test_writher_hit_feedback.c.obj
+[452/1480] Building C object tests/unit/CMakeFiles/test_maggot_bone_square.dir/test_maggot_bone_square.c.obj
+[453/1480] Building C object tests/unit/CMakeFiles/test_weste_effekt.dir/test_weste_effekt.c.obj
+[454/1480] Building C object tests/unit/CMakeFiles/test_map_re2_system.dir/test_map_re2_system.c.obj
+[455/1480] Building C object tests/unit/CMakeFiles/test_map_floor_visited.dir/test_map_floor_visited.c.obj
+[456/1480] Building C object tests/unit/CMakeFiles/test_map_mark_band.dir/test_map_mark_band.c.obj
+[457/1480] Building C object tests/unit/CMakeFiles/test_dormant_activation.dir/test_dormant_activation.c.obj
+[458/1480] Building C object tests/unit/CMakeFiles/test_map_etagenzeile.dir/test_map_etagenzeile.c.obj
+[459/1480] Building C object tests/unit/CMakeFiles/test_montage_fx.dir/test_montage_fx.c.obj
+[460/1480] Building C object tests/unit/CMakeFiles/test_map_synth.dir/test_map_synth.c.obj
+[461/1480] Building C object tests/unit/CMakeFiles/test_map_orient.dir/test_map_orient.c.obj
+[462/1480] Building C object tests/unit/CMakeFiles/test_map_marker_innen.dir/test_map_marker_innen.c.obj
+[463/1480] Building C object tests/unit/CMakeFiles/test_map_durchgang.dir/test_map_durchgang.c.obj
+[464/1480] Building C object tests/unit/CMakeFiles/test_map_zone_bits.dir/test_map_zone_bits.c.obj
+[465/1480] Building C object tests/unit/CMakeFiles/test_map_innenwand.dir/test_map_innenwand.c.obj
+[466/1480] Building C object tests/unit/CMakeFiles/test_map_teilbereich.dir/test_map_teilbereich.c.obj
+[467/1480] Building C object tests/unit/CMakeFiles/probe_re2z_hierarchie.dir/probe_re2z_hierarchie.c.obj
+[468/1480] Building C object tests/unit/CMakeFiles/test_room1150_itembox.dir/test_room1150_itembox.c.obj
+[469/1480] Building C object tests/unit/CMakeFiles/test_aot_sce_census.dir/test_aot_sce_census.c.obj
+[470/1480] Building C object tests/unit/CMakeFiles/test_itembox_transfer.dir/test_itembox_transfer.c.obj
+[471/1480] Building C object tests/unit/CMakeFiles/test_wound_accumulator.dir/test_wound_accumulator.c.obj
+[472/1480] Building C object tests/unit/CMakeFiles/test_re2_dog_ai.dir/test_re2_dog_ai.c.obj
+[473/1480] Building C object tests/unit/CMakeFiles/test_itembox_screen.dir/test_itembox_screen.c.obj
+[474/1480] Building C object tests/unit/CMakeFiles/test_re2_room1140_ab.dir/test_re2_room1140_ab.c.obj
+[475/1480] Building C object tests/unit/CMakeFiles/probe_bite_fx.dir/probe_bite_fx.c.obj
+[476/1480] Building C object tests/unit/CMakeFiles/test_zombie_hit_fixes.dir/test_zombie_hit_fixes.c.obj
+[477/1480] Building C object tests/unit/CMakeFiles/probe_zombie_hit.dir/probe_zombie_hit.c.obj
+[478/1480] Building C object tests/unit/CMakeFiles/test_se_pitch.dir/test_se_pitch.c.obj
+[479/1480] Building C object tests/unit/CMakeFiles/test_re2_crow_ai.dir/test_re2_crow_ai.c.obj
+[480/1480] Building C object tests/unit/CMakeFiles/test_pad_remap.dir/test_pad_remap.c.obj
+[481/1480] Building C object tests/unit/CMakeFiles/probe_stair_10a0.dir/probe_stair_10a0.c.obj
+[482/1480] Building C object tests/unit/CMakeFiles/test_crow_fixes.dir/test_crow_fixes.c.obj
+[483/1480] Building C object tests/unit/CMakeFiles/test_re2_room10c0_ab.dir/test_re2_room10c0_ab.c.obj
+[484/1480] Building C object tests/unit/CMakeFiles/probe_stair_cam_1060.dir/probe_stair_cam_1060.c.obj
+[485/1480] Building C object tests/unit/CMakeFiles/test_re2_room1190_ab.dir/test_re2_room1190_ab.c.obj
+[486/1480] Building C object tests/unit/CMakeFiles/probe_crow_1170.dir/probe_crow_1170.c.obj
+[487/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_ai.dir/test_re2_zombie_ai.c.obj
+[488/1480] Building C object tests/unit/CMakeFiles/probe_stair_cam_chain.dir/probe_stair_cam_chain.c.obj
+[489/1480] Building C object tests/unit/CMakeFiles/probe_elliot_1170_run.dir/probe_elliot_1170_run.c.obj
+[490/1480] Building C object tests/unit/CMakeFiles/probe_stair_cam_10a0.dir/probe_stair_cam_10a0.c.obj
+[491/1480] Building C object tests/unit/CMakeFiles/probe_zlyer_10d0.dir/probe_zlyer_10d0.c.obj
+[492/1480] Building C object tests/unit/CMakeFiles/test_debug_menu.dir/test_debug_menu.c.obj
+[493/1480] Building C object tests/unit/CMakeFiles/probe_marvin_10d0.dir/probe_marvin_10d0.c.obj
+[494/1480] Building C object tests/unit/CMakeFiles/probe_save_counter.dir/probe_save_counter.c.obj
+[495/1480] Building C object tests/unit/CMakeFiles/probe_headlook_10d0.dir/probe_headlook_10d0.c.obj
+[496/1480] Building C object tests/unit/CMakeFiles/probe_crow_death.dir/probe_crow_death.c.obj
+[497/1480] Building C object tests/unit/CMakeFiles/probe_save_room_name.dir/probe_save_room_name.c.obj
+[498/1480] Building C object tests/unit/CMakeFiles/probe_crow_flinch.dir/probe_crow_flinch.c.obj
+[499/1480] Building C object tests/unit/CMakeFiles/probe_crow_kill.dir/probe_crow_kill.c.obj
+[500/1480] Building C object tests/unit/CMakeFiles/probe_stair_1170.dir/probe_stair_1170.c.obj
+[501/1480] Building C object tests/unit/CMakeFiles/probe_save_injured.dir/probe_save_injured.c.obj
+[502/1480] Building C object tests/unit/CMakeFiles/probe_door_1170.dir/probe_door_1170.c.obj
+[503/1480] Building C object tests/unit/CMakeFiles/probe_marvin_spawn.dir/probe_marvin_spawn.c.obj
+[504/1480] Building C object tests/unit/CMakeFiles/probe_em40_gait.dir/probe_em40_gait.c.obj
+[505/1480] Building C object tests/unit/CMakeFiles/probe_zreentry_10d0.dir/probe_zreentry_10d0.c.obj
+[506/1480] Building C object tests/unit/CMakeFiles/probe_rvd_diff_10a0.dir/probe_rvd_diff_10a0.c.obj
+[507/1480] Building C object tests/unit/CMakeFiles/probe_lanee_chain_1060.dir/probe_lanee_chain_1060.c.obj
+[508/1480] Building C object tests/unit/CMakeFiles/probe_hitdoor_entry_anim.dir/probe_hitdoor_entry_anim.c.obj
+[509/1480] Building C object tests/unit/CMakeFiles/probe_room1040_switch.dir/probe_room1040_switch.c.obj
+[510/1480] Building C object tests/unit/CMakeFiles/probe_load_after_death.dir/probe_load_after_death.c.obj
+[511/1480] Building C object tests/unit/CMakeFiles/probe_cam_1030_reentry.dir/probe_cam_1030_reentry.c.obj
+[512/1480] Building C object tests/unit/CMakeFiles/probe_cut_1030.dir/probe_cut_1030.c.obj
+[513/1480] Building C object tests/unit/CMakeFiles/probe_stair_eject_10a0.dir/probe_stair_eject_10a0.c.obj
+[514/1480] Building C object tests/unit/CMakeFiles/probe_camload_1030.dir/probe_camload_1030.c.obj
+[515/1480] Building C object tests/unit/CMakeFiles/probe_marvin_render_pose.dir/probe_marvin_render_pose.c.obj
+[516/1480] Building C object tests/unit/CMakeFiles/probe_lane_d_traj1060.dir/probe_lane_d_traj1060.c.obj
+[517/1480] Building C object tests/unit/CMakeFiles/probe_lanea_1060_zonepath.dir/probe_lanea_1060_zonepath.c.obj
+[518/1480] Building C object tests/unit/CMakeFiles/probe_room1070_wake.dir/probe_room1070_wake.c.obj
+[519/1480] Building C object tests/unit/CMakeFiles/probe_cut_replace_1030.dir/probe_cut_replace_1030.c.obj
+[520/1480] Building C object tests/unit/CMakeFiles/probe_lanee_reach_1060.dir/probe_lanee_reach_1060.c.obj
+[521/1480] Building C object tests/unit/CMakeFiles/probe_lb_stairfsm.dir/probe_lb_stairfsm.c.obj
+[522/1480] Building C object tests/unit/CMakeFiles/probe_laneF_floor_1060.dir/probe_laneF_floor_1060.c.obj
+[523/1480] Building C object tests/unit/CMakeFiles/probe_laneF_floorgate_rooms.dir/probe_laneF_floorgate_rooms.c.obj
+[524/1480] Building C object tests/unit/CMakeFiles/probe_lanee_eject_census.dir/probe_lanee_eject_census.c.obj
+[525/1480] Building C object tests/unit/CMakeFiles/probe_lanec_camscan_1060.dir/probe_lanec_camscan_1060.c.obj
+[526/1480] Building C object tests/unit/CMakeFiles/probe_laneF_gap_1060.dir/probe_laneF_gap_1060.c.obj
+[527/1480] Building C object tests/unit/CMakeFiles/probe_advz_cause_1060.dir/probe_advz_cause_1060.c.obj
+[528/1480] Building C object tests/unit/CMakeFiles/probe_lanea_1060_margin.dir/probe_lanea_1060_margin.c.obj
+[529/1480] Building C object tests/unit/CMakeFiles/probe_advc_chain1060.dir/probe_advc_chain1060.c.obj
+[530/1480] Building C object tests/unit/CMakeFiles/probe_advF_ejectcam_1060.dir/probe_advF_ejectcam_1060.c.obj
+[531/1480] Building C object tests/unit/CMakeFiles/probe_adv_ejectcam_1060.dir/probe_adv_ejectcam_1060.c.obj
+[532/1480] Building C object tests/unit/CMakeFiles/probe_laneE_1030_visible.dir/probe_laneE_1030_visible.c.obj
+[533/1480] Building C object tests/unit/CMakeFiles/probe_stair_hwtruth_1060.dir/probe_stair_hwtruth_1060.c.obj
+[534/1480] Building C object tests/unit/CMakeFiles/probe_lanee_margin_1060.dir/probe_lanee_margin_1060.c.obj
+[535/1480] Building C object tests/unit/CMakeFiles/probe_objnotch_census.dir/probe_objnotch_census.c.obj
+[536/1480] Building C object tests/unit/CMakeFiles/probe_laneb_1030_horde.dir/probe_laneb_1030_horde.c.obj
+[537/1480] Building C object tests/unit/CMakeFiles/probe_lanea_1030_cap.dir/probe_lanea_1030_cap.c.obj
+[538/1480] Building C object tests/unit/CMakeFiles/probe_refA_gaitcause_1060.dir/probe_refA_gaitcause_1060.c.obj
+[539/1480] Building C object tests/unit/CMakeFiles/probe_adv_stairband_1060.dir/probe_adv_stairband_1060.c.obj
+[540/1480] Building C object tests/unit/CMakeFiles/probe_laned_1030_spawn.dir/probe_laned_1030_spawn.c.obj
+[541/1480] Building C object tests/unit/CMakeFiles/probe_gen_11f0.dir/probe_gen_11f0.c.obj
+[542/1480] Building C object tests/unit/CMakeFiles/probe_adv_1030_verify.dir/probe_adv_1030_verify.c.obj
+[543/1480] Building C object tests/unit/CMakeFiles/probe_gate_1030.dir/probe_gate_1030.c.obj
+[544/1480] Building C object tests/unit/CMakeFiles/probe_elevator_1080.dir/probe_elevator_1080.c.obj
+[545/1480] Building C object tests/unit/CMakeFiles/probe_laneE_gatemask.dir/probe_laneE_gatemask.c.obj
+[546/1480] Building C object tests/unit/CMakeFiles/probe_gegenprobe_hund_luftzeile.dir/probe_gegenprobe_hund_luftzeile.c.obj
+[547/1480] Building C object tests/unit/CMakeFiles/probe_re2_dog_hitwindow.dir/probe_re2_dog_hitwindow.c.obj
+[548/1480] Building C object tests/unit/CMakeFiles/probe_1030_spawncap.dir/probe_1030_spawncap.c.obj
+[549/1480] Building C object tests/unit/CMakeFiles/test_re2_enemse.dir/test_re2_enemse.c.obj
+[550/1480] Building C object tests/unit/CMakeFiles/test_crawl_toggle.dir/test_crawl_toggle.c.obj
+[551/1480] Building C object tests/unit/CMakeFiles/probe_dog_devour.dir/probe_dog_devour.c.obj
+[552/1480] Building C object tests/unit/CMakeFiles/probe_espr_11e0.dir/probe_espr_11e0.c.obj
+[553/1480] Building C object tests/unit/CMakeFiles/probe_dog_hit.dir/probe_dog_hit.c.obj
+[554/1480] Building C object tests/unit/CMakeFiles/probe_crawl_commit.dir/probe_crawl_commit.c.obj
+[555/1480] Building C object tests/unit/CMakeFiles/test_bss_room_source.dir/test_bss_room_source.c.obj
+[556/1480] Building C object tests/unit/CMakeFiles/test_neck_headlook.dir/test_neck_headlook.c.obj
+[557/1480] Building C object tests/unit/CMakeFiles/test_lane_b1_ai.dir/test_lane_b1_ai.c.obj
+[558/1480] Building C object tests/unit/CMakeFiles/test_re2_ems.dir/test_re2_ems.c.obj
+[559/1480] Building C object tests/unit/CMakeFiles/test_room_transition_cmd.dir/test_room_transition_cmd.c.obj
+[560/1480] Building C object tests/unit/CMakeFiles/test_rotor_bgm_pin.dir/test_rotor_bgm_pin.c.obj
+[561/1480] Building C object tests/unit/CMakeFiles/test_text_freeze.dir/test_text_freeze.c.obj
+[562/1480] Building C object tests/unit/CMakeFiles/test_re2_sfx_cadence.dir/test_re2_sfx_cadence.c.obj
+[563/1480] Building C object tests/unit/CMakeFiles/probe_irons_neck_1150.dir/probe_irons_neck_1150.c.obj
+[564/1480] Building C object tests/unit/CMakeFiles/probe_1140_reentry.dir/probe_1140_reentry.c.obj
+[565/1480] Building C object tests/unit/CMakeFiles/test_knockdown_frontback.dir/test_knockdown_frontback.c.obj
+[566/1480] Building C object tests/unit/CMakeFiles/probe_10d0_knockse.dir/probe_10d0_knockse.c.obj
+[567/1480] Building C object tests/unit/CMakeFiles/test_se_voice_machine.dir/test_se_voice_machine.c.obj
+[568/1480] Building C object tests/unit/CMakeFiles/test_anim_rate.dir/test_anim_rate.c.obj
+[569/1480] Building C object tests/unit/CMakeFiles/test_re2_enemse_bank.dir/test_re2_enemse_bank.c.obj
+[570/1480] Building C object tests/unit/CMakeFiles/test_irons_neck_1150.dir/test_irons_neck_1150.c.obj
+[571/1480] Building C object tests/unit/CMakeFiles/probe_ab_se_10d0_1140.dir/probe_ab_se_10d0_1140.c.obj
+[572/1480] Building C object tests/unit/CMakeFiles/test_anim_reverse_se.dir/test_anim_reverse_se.c.obj
+[573/1480] Building C object tests/unit/CMakeFiles/probe_stagger_fall_1140.dir/probe_stagger_fall_1140.c.obj
+[574/1480] Building C object tests/unit/CMakeFiles/test_zombie_se_ab_10d0.dir/test_zombie_se_ab_10d0.c.obj
+[575/1480] Building C object tests/unit/CMakeFiles/test_zombie_bank_sfx.dir/test_zombie_bank_sfx.c.obj
+[576/1480] Building C object tests/unit/CMakeFiles/test_re2_weapon_rows.dir/test_re2_weapon_rows.c.obj
+[577/1480] Building C object tests/unit/CMakeFiles/test_knockdown_handoff.dir/test_knockdown_handoff.c.obj
+[578/1480] Building C object tests/unit/CMakeFiles/test_re2_hit_reaction.dir/test_re2_hit_reaction.c.obj
+[579/1480] Building C object tests/unit/CMakeFiles/probe_re2_livepath.dir/test_re2_livepath.c.obj
+[580/1480] Building C object tests/unit/CMakeFiles/test_zombie_getup_se.dir/test_zombie_getup_se.c.obj
+[581/1480] Building C object tests/unit/CMakeFiles/test_re2_gore.dir/test_re2_gore.c.obj
+[582/1480] Building C object tests/unit/CMakeFiles/test_re2_gore_render.dir/test_re2_gore_render.c.obj
+[583/1480] Building C object tests/unit/CMakeFiles/test_re2_spider_ai.dir/test_re2_spider_ai.c.obj
+[584/1480] Building C object tests/unit/CMakeFiles/test_re2_spider_water_2090.dir/test_re2_spider_water_2090.c.obj
+[585/1480] Building C object tests/unit/CMakeFiles/test_re2_room1090_ab.dir/test_re2_room1090_ab.c.obj
+[586/1480] Building C object tests/unit/CMakeFiles/test_re2_hybrid_rig.dir/test_re2_hybrid_rig.c.obj
+[587/1480] Building C object tests/unit/CMakeFiles/test_re2_hit_repeat.dir/test_re2_hit_repeat.c.obj
+[588/1480] Building C object tests/unit/CMakeFiles/probe_re2_hit_crow_spider.dir/probe_re2_hit_crow_spider.c.obj
+[589/1480] Building C object tests/unit/CMakeFiles/probe_re2_hitpath.dir/probe_re2_hitpath.c.obj
+[590/1480] Building C object tests/unit/CMakeFiles/test_re2_hit_repeat_crow_spider.dir/test_re2_hit_repeat_crow_spider.c.obj
+[591/1480] Building C object tests/unit/CMakeFiles/probe_hund_ersttreffer2.dir/probe_hund_ersttreffer2.c.obj
+[592/1480] Building C object tests/unit/CMakeFiles/test_re2_gore_fly.dir/test_re2_gore_fly.c.obj
+[593/1480] Building C object tests/unit/CMakeFiles/probe_re2_baby_spider_hit.dir/probe_re2_baby_spider_hit.c.obj
+[594/1480] Building C object tests/unit/CMakeFiles/test_re2_baby_spider_dmg.dir/test_re2_baby_spider_dmg.c.obj
+[595/1480] Building C object tests/unit/CMakeFiles/probe_hund_ersttreffer.dir/probe_hund_ersttreffer.c.obj
+[596/1480] Building C object tests/unit/CMakeFiles/probe_schrot_bauch_y.dir/probe_schrot_bauch_y.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_schrot_bauch_y.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_schrot_bauch_y.c:136:71: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '999' to '231' [-Woverflow]
+  136 |         if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 999; }
+      |                                                                       ^~~
+[597/1480] Building C object tests/unit/CMakeFiles/probe_re2_stagger.dir/probe_re2_stagger.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re2_stagger.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re2_stagger.c:131:71: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '999' to '231' [-Woverflow]
+  131 |         if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 999; }
+      |                                                                       ^~~
+[598/1480] Building C object tests/unit/CMakeFiles/test_re2_stagger_knockdown.dir/test_re2_stagger_knockdown.c.obj
+[599/1480] Building C object tests/unit/CMakeFiles/probe_re2_hp_model.dir/probe_re2_hp_model.c.obj
+[600/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_hitfilter.dir/test_re2_zombie_hitfilter.c.obj
+[601/1480] Building C object tests/unit/CMakeFiles/test_re2_dog_playdead_gate.dir/test_re2_dog_playdead_gate.c.obj
+[602/1480] Building C object tests/unit/CMakeFiles/probe_re2_zfall.dir/probe_re2_zfall.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re2_zfall.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re2_zfall.c:142:71: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '999' to '231' [-Woverflow]
+  142 |         if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 999; }
+      |                                                                       ^~~
+[603/1480] Building C object tests/unit/CMakeFiles/test_re2_hp_model.dir/test_re2_hp_model.c.obj
+[604/1480] Building C object tests/unit/CMakeFiles/test_re2_crow_se_bank.dir/test_re2_crow_se_bank.c.obj
+[605/1480] Building C object tests/unit/CMakeFiles/test_re2_dog_hp_reroll.dir/test_re2_dog_hp_reroll.c.obj
+[606/1480] Building C object tests/unit/CMakeFiles/test_rotor_bgm_pin.dir/__/__/platform/pc/src/audio_pc.c.obj
+[607/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_death_fall.dir/test_re2_zombie_death_fall.c.obj
+[608/1480] Building C object tests/unit/CMakeFiles/test_re15_zombie_death_anim.dir/test_re15_zombie_death_anim.c.obj
+[609/1480] Building C object tests/unit/CMakeFiles/probe_re15_gore_import.dir/probe_re15_gore_import.c.obj
+[610/1480] Building C object tests/unit/CMakeFiles/probe_lyer_1140.dir/probe_lyer_1140.c.obj
+[611/1480] Building C object tests/unit/CMakeFiles/probe_re15_zdeath.dir/probe_re15_zdeath.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re15_zdeath.c: In function 'run_one':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/probe_re15_zdeath.c:196:69: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '999' to '231' [-Woverflow]
+  196 |       if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 999; }
+      |                                                                     ^~~
+[612/1480] Building C object tests/unit/CMakeFiles/test_re15_re2z_import.dir/test_re15_re2z_import.c.obj
+[613/1480] Building C object tests/unit/CMakeFiles/test_re2_lyer_1140.dir/test_re2_lyer_1140.c.obj
+[614/1480] Building C object tests/unit/CMakeFiles/test_re15_re2z_gore_se.dir/test_re15_re2z_gore_se.c.obj
+[615/1480] Building C object tests/unit/CMakeFiles/probe_re2z_abc.dir/probe_re2z_abc.c.obj
+[616/1480] Building C object tests/unit/CMakeFiles/probe_1090_objects.dir/probe_1090_objects.c.obj
+[617/1480] Building C object tests/unit/CMakeFiles/test_1140_straight_shot.dir/test_1140_straight_shot.c.obj
+[618/1480] Building C object tests/unit/CMakeFiles/test_1090_room_pin.dir/test_1090_room_pin.c.obj
+[619/1480] Building C object tests/unit/CMakeFiles/probe_1140_feeder_shot.dir/probe_1140_feeder_shot.c.obj
+[620/1480] Building C object tests/unit/CMakeFiles/probe_re2z_sperre29.dir/probe_re2z_sperre29.c.obj
+[621/1480] Building C object tests/unit/CMakeFiles/probe_re2_victim_pose.dir/probe_re2_victim_pose.c.obj
+[622/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_abc.dir/test_re2_zombie_abc.c.obj
+[623/1480] Building C object tests/unit/CMakeFiles/probe_gen_11f0_cursor_view.dir/probe_gen_11f0_cursor_view.c.obj
+[624/1480] Building C object tests/unit/CMakeFiles/test_rotor_bgm_pin.dir/__/__/platform/pc/src/asset_root_pc.c.obj
+[625/1480] Building C object tests/unit/CMakeFiles/probe_re2z_gegen13.dir/probe_re2z_gegen13.c.obj
+[626/1480] Building C object tests/unit/CMakeFiles/probe_1090_push.dir/probe_1090_push.c.obj
+[627/1480] Building C object tests/unit/CMakeFiles/test_prop_texel_key_11f0.dir/test_prop_texel_key_11f0.c.obj
+[628/1480] Building C object tests/unit/CMakeFiles/probe_re2_crawl_gate.dir/probe_re2_crawl_gate.c.obj
+[629/1480] Building C object tests/unit/CMakeFiles/test_re2_crawler.dir/test_re2_crawler.c.obj
+[630/1480] Building C object tests/unit/CMakeFiles/test_1090_push_pin.dir/test_1090_push_pin.c.obj
+[631/1480] Building C object tests/unit/CMakeFiles/test_re2_victim_collapse.dir/test_re2_victim_collapse.c.obj
+[632/1480] Building C object tests/unit/CMakeFiles/test_1030_trigger_chain.dir/test_1030_trigger_chain.c.obj
+[633/1480] Building C object tests/unit/CMakeFiles/probe_1030_stuck_who.dir/probe_1030_stuck_who.c.obj
+[634/1480] Building C object tests/unit/CMakeFiles/probe_1030_bandsweep.dir/probe_1030_bandsweep.c.obj
+[635/1480] Building C object tests/unit/CMakeFiles/test_1090_fire_pin.dir/test_1090_fire_pin.c.obj
+[636/1480] Building C object tests/unit/CMakeFiles/probe_1030_crawl_live.dir/probe_1030_crawl_live.c.obj
+[637/1480] Building C object tests/unit/CMakeFiles/probe_pruef_tempoursache.dir/probe_pruef_tempoursache.c.obj
+[638/1480] Building C object tests/unit/CMakeFiles/probe_1030_tempo_weiche.dir/probe_1030_tempo_weiche.c.obj
+[639/1480] Building C object tests/unit/CMakeFiles/probe_11f0_cut_after_puzzle.dir/probe_11f0_cut_after_puzzle.c.obj
+[640/1480] Building C object tests/unit/CMakeFiles/probe_1090_push_anim.dir/probe_1090_push_anim.c.obj
+[641/1480] Building C object tests/unit/CMakeFiles/probe_texel_key_census.dir/probe_texel_key_census.c.obj
+[642/1480] Building C object tests/unit/CMakeFiles/probe_sca_contact90.dir/probe_sca_contact90.c.obj
+[643/1480] Building C object tests/unit/CMakeFiles/probe_re2_ztear.dir/probe_re2_ztear.c.obj
+[644/1480] Building C object tests/unit/CMakeFiles/probe_sca_wall_hit.dir/probe_sca_wall_hit.c.obj
+[645/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_teardeath.dir/test_re2_zombie_teardeath.c.obj
+[646/1480] Building C object tests/unit/CMakeFiles/probe_1090_cutscene.dir/probe_1090_cutscene.c.obj
+[647/1480] Building C object tests/unit/CMakeFiles/probe_1090_trigger_walk.dir/probe_1090_trigger_walk.c.obj
+[648/1480] Building C object tests/unit/CMakeFiles/probe_dog_victim_pose.dir/probe_dog_victim_pose.c.obj
+[649/1480] Building C object tests/unit/CMakeFiles/test_tim_texel_key_rule.dir/test_tim_texel_key_rule.c.obj
+[650/1480] Building C object tests/unit/CMakeFiles/probe_1090_gate_selfdoor.dir/probe_1090_gate_selfdoor.c.obj
+[651/1480] Building C object tests/unit/CMakeFiles/test_dog_grab_anchor.dir/test_dog_grab_anchor.c.obj
+[652/1480] Building C object tests/unit/CMakeFiles/probe_re2z_fallstand.dir/probe_re2z_fallstand.c.obj
+[653/1480] Building C object tests/unit/CMakeFiles/test_re2_zombie_pose_bank.dir/test_re2_zombie_pose_bank.c.obj
+[654/1480] Building C object tests/unit/CMakeFiles/test_cam_selfheal.dir/test_cam_selfheal.c.obj
+[655/1480] Building C object tests/unit/CMakeFiles/probe_dog_attack_live.dir/probe_dog_attack_live.c.obj
+[656/1480] Building C object tests/unit/CMakeFiles/probe_re2z_deathgetup.dir/probe_re2z_deathgetup.c.obj
+[657/1480] Building C object tests/unit/CMakeFiles/test_npc_back_walk.dir/test_npc_back_walk.c.obj
+[658/1480] Building C object tests/unit/CMakeFiles/test_plc_back_yaw_1090.dir/test_plc_back_yaw_1090.c.obj
+[659/1480] Building C object tests/unit/CMakeFiles/test_re2z_corpse_pool.dir/test_re2z_corpse_pool.c.obj
+[660/1480] Building C object tests/unit/CMakeFiles/test_re2z_death_getup.dir/test_re2z_death_getup.c.obj
+[661/1480] Building C object tests/unit/CMakeFiles/probe_re2z_corpse.dir/probe_re2z_corpse.c.obj
+[662/1480] Building C object tests/unit/CMakeFiles/test_re2_dog_jaw_contact.dir/test_re2_dog_jaw_contact.c.obj
+[663/1480] Building C object tests/unit/CMakeFiles/probe_1090_climb.dir/probe_1090_climb.c.obj
+[664/1480] Building C object tests/unit/CMakeFiles/probe_re2_dog_kill.dir/probe_re2_dog_kill.c.obj
+[665/1480] Building C object tests/unit/CMakeFiles/test_1090_climb_pin.dir/test_1090_climb_pin.c.obj
+[666/1480] Building C object tests/unit/CMakeFiles/probe_re2_crow_shadow.dir/probe_re2_crow_shadow.c.obj
+[667/1480] Building C object tests/unit/CMakeFiles/test_rvd_scan_oracle.dir/test_rvd_scan_oracle.c.obj
+[668/1480] Building C object tests/unit/CMakeFiles/test_cut_old_displayed.dir/test_cut_old_displayed.c.obj
+[669/1480] Building C object tests/unit/CMakeFiles/test_re2_dog_grab_anchor.dir/test_re2_dog_grab_anchor.c.obj
+[670/1480] Building C object tests/unit/CMakeFiles/test_re2_crow_shadow_release.dir/test_re2_crow_shadow_release.c.obj
+[671/1480] Building C object tests/unit/CMakeFiles/probe_11f0_escape_sweep.dir/probe_11f0_escape_sweep.c.obj
+[672/1480] Building C object tests/unit/CMakeFiles/probe_re2_aim4.dir/probe_re2_aim4.c.obj
+[673/1480] Building C object tests/unit/CMakeFiles/probe_dogwound_zknock.dir/probe_dogwound_zknock.c.obj
+[674/1480] Building C object tests/unit/CMakeFiles/test_rvd_scan_ungated_by_climb.dir/test_rvd_scan_ungated_by_climb.c.obj
+[675/1480] Building C object tests/unit/CMakeFiles/test_fade_step0_hold.dir/test_fade_step0_hold.c.obj
+[676/1480] Building C object tests/unit/CMakeFiles/probe_11f0_escape_during.dir/probe_11f0_escape_during.c.obj
+[677/1480] Building C object tests/unit/CMakeFiles/test_re15_poise_re2_import.dir/test_re15_poise_re2_import.c.obj
+[678/1480] Building C object tests/unit/CMakeFiles/probe_11f0_puzzle_pos.dir/probe_11f0_puzzle_pos.c.obj
+[679/1480] Building C object tests/unit/CMakeFiles/probe_re15_poise_re2.dir/probe_re15_poise_re2.c.obj
+[680/1480] Building C object tests/unit/CMakeFiles/probe_re2z_crawl_attack.dir/probe_re2z_crawl_attack.c.obj
+[681/1480] Building C object tests/unit/CMakeFiles/probe_re2z_pushoff.dir/probe_re2z_pushoff.c.obj
+[682/1480] Building C object tests/unit/CMakeFiles/test_scd_zone2_pauseflags.dir/test_scd_zone2_pauseflags.c.obj
+[683/1480] Building C object tests/unit/CMakeFiles/test_re2z_devour_anchor.dir/test_re2z_devour_anchor.c.obj
+[684/1480] Building C object tests/unit/CMakeFiles/test_re2z_bump_walk.dir/test_re2z_bump_walk.c.obj
+[685/1480] Building C object tests/unit/CMakeFiles/probe_re2z_devour.dir/probe_re2z_devour.c.obj
+[686/1480] Building C object tests/unit/CMakeFiles/probe_re2_fatz_walkspot.dir/probe_re2_fatz_walkspot.c.obj
+[687/1480] Building C object tests/unit/CMakeFiles/test_1090_stay_on_crate.dir/test_1090_stay_on_crate.c.obj
+[688/1480] Building C object tests/unit/CMakeFiles/probe_1090_flame_touch.dir/probe_1090_flame_touch.c.obj
+[689/1480] Building C object tests/unit/CMakeFiles/test_re2z_pushoff_crawl.dir/test_re2z_pushoff_crawl.c.obj
+[690/1480] Building C object tests/unit/CMakeFiles/probe_plc_back_clip.dir/probe_plc_back_clip.c.obj
+[691/1480] Building C object tests/unit/CMakeFiles/probe_10d0_float_y.dir/probe_10d0_float_y.c.obj
+[692/1480] Building C object tests/unit/CMakeFiles/test_ai_flavor_mixed.dir/test_ai_flavor_mixed.c.obj
+[693/1480] Building C object tests/unit/CMakeFiles/probe_10d0_situp_re2.dir/probe_10d0_situp_re2.c.obj
+[694/1480] Building C object tests/unit/CMakeFiles/probe_rig_sohle.dir/probe_rig_sohle.c.obj
+[695/1480] Building C object tests/unit/CMakeFiles/probe_rig_root_y.dir/probe_rig_root_y.c.obj
+[696/1480] Building C object tests/unit/CMakeFiles/probe_re2z_stomp.dir/probe_re2z_stomp.c.obj
+[697/1480] Building C object tests/unit/CMakeFiles/probe_1090_flinch_anim.dir/probe_1090_flinch_anim.c.obj
+[698/1480] Building C object tests/unit/CMakeFiles/probe_1220_kriecher.dir/probe_1220_kriecher.c.obj
+[699/1480] Building C object tests/unit/CMakeFiles/probe_item_model_1020.dir/probe_item_model_1020.c.obj
+[700/1480] Building C object tests/unit/CMakeFiles/test_re2z_grab_core_se.dir/test_re2z_grab_core_se.c.obj
+[701/1480] Building C object tests/unit/CMakeFiles/test_re2z_finisher_bite.dir/test_re2z_finisher_bite.c.obj
+[702/1480] Building C object tests/unit/CMakeFiles/test_re2z_rise_hittable.dir/test_re2z_rise_hittable.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/test_re2z_rise_hittable.c: In function 'run':
+C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/tests/unit/test_re2z_rise_hittable.c:148:71: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '900' to '132' [-Woverflow]
+  148 |         if (es >= 0 && es < RE15_INV_MAX_SLOTS) g_inv.slots[es].qty = 900; }
+      |                                                                       ^~~
+[703/1480] Building C object tests/unit/CMakeFiles/test_writher_kill_flag.dir/test_writher_kill_flag.c.obj
+[704/1480] Building C object tests/unit/CMakeFiles/probe_1090_flame_out.dir/probe_1090_flame_out.c.obj
+[705/1480] Building C object tests/unit/CMakeFiles/test_rig_root_fix.dir/test_rig_root_fix.c.obj
+[706/1480] Building C object tests/unit/CMakeFiles/test_1090_nodraw_pin.dir/test_1090_nodraw_pin.c.obj
+[707/1480] Building C object tests/unit/CMakeFiles/probe_re2z_bandlock.dir/probe_re2z_bandlock.c.obj
+[708/1480] Building C object tests/unit/CMakeFiles/probe_1210_material.dir/probe_1210_material.c.obj
+[709/1480] Building C object tests/unit/CMakeFiles/test_1090_flame_out_pin.dir/test_1090_flame_out_pin.c.obj
+[710/1480] Building C object tests/unit/CMakeFiles/probe_1010_kriecher.dir/probe_1010_kriecher.c.obj
+[711/1480] Building C object tests/unit/CMakeFiles/test_1090_npc_prop_push.dir/test_1090_npc_prop_push.c.obj
+[712/1480] Building C object tests/unit/CMakeFiles/test_npc_wall_clamp.dir/test_npc_wall_clamp.c.obj
+[713/1480] Building C object tests/unit/CMakeFiles/test_writher_abtauchen.dir/test_writher_abtauchen.c.obj
+[714/1480] Building C object tests/unit/CMakeFiles/probe_1210_reach.dir/probe_1210_reach.c.obj
+[715/1480] Building C object tests/unit/CMakeFiles/probe_1210_masken.dir/probe_1210_masken.c.obj
+[716/1480] Building C object tests/unit/CMakeFiles/test_stage6_hintergrund.dir/test_stage6_hintergrund.c.obj
+[717/1480] Building C object tests/unit/CMakeFiles/test_re2doc_bildebene.dir/test_re2doc_bildebene.c.obj
+[718/1480] Building C object tests/unit/CMakeFiles/probe_1210_vakuanz.dir/probe_1210_vakuanz.c.obj
+[719/1480] Building C object tests/unit/CMakeFiles/probe_1210_griff.dir/probe_1210_griff.c.obj
+[720/1480] Building C object tests/unit/CMakeFiles/probe_1210_wandgriff.dir/probe_1210_wandgriff.c.obj
+[721/1480] Building C object tests/unit/CMakeFiles/probe_1210_trigger.dir/probe_1210_trigger.c.obj
+[722/1480] Building C object tests/unit/CMakeFiles/probe_1210_geo.dir/probe_1210_geo.c.obj
+[723/1480] Building C object tests/unit/CMakeFiles/probe_1210_cutcheck.dir/probe_1210_cutcheck.c.obj
+[724/1480] Building C object tests/unit/CMakeFiles/probe_1210_natur.dir/probe_1210_natur.c.obj
+[725/1480] Building C object tests/unit/CMakeFiles/probe_1210_sound.dir/probe_1210_sound.c.obj
+[726/1480] Building C object tests/unit/CMakeFiles/probe_ada_reach.dir/probe_ada_reach.c.obj
+[727/1480] Building C object tests/unit/CMakeFiles/probe_ada_escort_anim.dir/probe_ada_escort_anim.c.obj
+[728/1480] Building C object tests/unit/CMakeFiles/test_1210_gitterhaende.dir/test_1210_gitterhaende.c.obj
+[729/1480] Building C object tests/unit/CMakeFiles/probe_ada_kiste.dir/probe_ada_kiste.c.obj
+[730/1480] Building C object tests/unit/CMakeFiles/probe_ada_counter.dir/probe_ada_counter.c.obj
+[731/1480] Building C object tests/unit/CMakeFiles/probe_1090_bgdiff.dir/probe_1090_bgdiff.c.obj
+[732/1480] Building C object tests/unit/CMakeFiles/probe_1210_re2takt.dir/probe_1210_re2takt.c.obj
+[733/1480] Building C object tests/unit/CMakeFiles/probe_1210_vak.dir/probe_1210_vak.c.obj
+[734/1480] Building C object tests/unit/CMakeFiles/probe_1190_props.dir/probe_1190_props.c.obj
+[735/1480] Building C object tests/unit/CMakeFiles/probe_1190_texte.dir/probe_1190_texte.c.obj
+[736/1480] Building C object tests/unit/CMakeFiles/probe_ada_kiste_gegen.dir/probe_ada_kiste_gegen.c.obj
+[737/1480] Building C object tests/unit/CMakeFiles/probe_1210_vakgegen.dir/probe_1210_vakgegen.c.obj
+[738/1480] Building C object tests/unit/CMakeFiles/probe_1090_vakgegen.dir/probe_1090_vakgegen.c.obj
+[739/1480] Building C object tests/unit/CMakeFiles/test_1190_weste.dir/test_1190_weste.c.obj
+[740/1480] Building C object tests/unit/CMakeFiles/probe_1190_ruestung.dir/probe_1190_ruestung.c.obj
+[741/1480] Building C object tests/unit/CMakeFiles/probe_hund_bellen.dir/probe_hund_bellen.c.obj
+[742/1480] Building C object tests/unit/CMakeFiles/probe_bg_dump.dir/probe_bg_dump.c.obj
+[743/1480] Building C object tests/unit/CMakeFiles/test_synchro_stimme.dir/test_synchro_stimme.c.obj
+[744/1480] Building C object tests/unit/CMakeFiles/test_audio_sperren.dir/test_audio_sperren.c.obj
+[745/1480] Building C object tests/unit/CMakeFiles/probe_synchro_status.dir/probe_synchro_status.c.obj
+[746/1480] Building C object tests/unit/CMakeFiles/test_sld_atlas.dir/test_sld_atlas.c.obj
+[747/1480] Building C object tests/unit/CMakeFiles/test_1190_ruestung.dir/test_1190_ruestung.c.obj
+[748/1480] Building C object tests/unit/CMakeFiles/test_map_marke_haengt_an.dir/test_map_marke_haengt_an.c.obj
+[749/1480] Building C object tests/unit/CMakeFiles/test_map_marke_auf_kunst.dir/test_map_marke_auf_kunst.c.obj
+[750/1480] Building C object tests/unit/CMakeFiles/test_pri_inventar_riegel.dir/test_pri_inventar_riegel.c.obj
+[751/1480] Building C object tests/unit/CMakeFiles/test_map_etagen_rect.dir/test_map_etagen_rect.c.obj
+[752/1480] Building C object tests/unit/CMakeFiles/probe_re2_crow_kill.dir/probe_re2_crow_kill.c.obj
+[753/1480] Building C object tests/unit/CMakeFiles/test_re2z_spawn_seed.dir/test_re2z_spawn_seed.c.obj
+[754/1480] Building C object tests/unit/CMakeFiles/test_map_tuerachse.dir/test_map_tuerachse.c.obj
+[755/1480] Building C object tests/unit/CMakeFiles/probe_gorilla_11c0_stuck.dir/probe_gorilla_11c0_stuck.c.obj
+[756/1480] Building C object tests/unit/CMakeFiles/test_map_eingemessen.dir/test_map_eingemessen.c.obj
+[757/1480] Building C object tests/unit/CMakeFiles/probe_re2_crow_bank.dir/probe_re2_crow_bank.c.obj
+[758/1480] Building C object tests/unit/CMakeFiles/test_maggot_zone_leap.dir/test_maggot_zone_leap.c.obj
+[759/1480] Building C object tests/unit/CMakeFiles/test_pri_eingemessen.dir/test_pri_eingemessen.c.obj
+[760/1480] Building C object tests/unit/CMakeFiles/test_pri_kopfschnitt.dir/test_pri_kopfschnitt.c.obj
+[761/1480] Building C object tests/unit/CMakeFiles/probe_re2_crow_1120.dir/probe_re2_crow_1120.c.obj
+[762/1480] Building C object tests/unit/CMakeFiles/test_re2_crow_kill_cmd3.dir/test_re2_crow_kill_cmd3.c.obj
+[763/1480] Building C object tests/unit/CMakeFiles/probe_re2_crow_10c0.dir/probe_re2_crow_10c0.c.obj
+[764/1480] Building C object tests/unit/CMakeFiles/probe_los_divergenz.dir/probe_los_divergenz.c.obj
+[765/1480] Building C object tests/unit/CMakeFiles/probe_nav_wirkung.dir/probe_nav_wirkung.c.obj
+[766/1480] Building C object tests/unit/CMakeFiles/probe_gator_sweep.dir/probe_gator_sweep.c.obj
+[767/1480] Building C object tests/unit/CMakeFiles/probe_sichtregion.dir/probe_sichtregion.c.obj
+[768/1480] Building C object tests/unit/CMakeFiles/probe_g5_tentakel.dir/probe_g5_tentakel.c.obj
+[769/1480] Building C object tests/unit/CMakeFiles/probe_5090_birkin_verify.dir/probe_5090_birkin_verify.c.obj
+[770/1480] Building C object tests/unit/CMakeFiles/test_g5_morph.dir/test_g5_morph.c.obj
+[771/1480] Building C object tests/unit/CMakeFiles/probe_atlas_kollision.dir/probe_atlas_kollision.c.obj
+[772/1480] Building C object tests/unit/CMakeFiles/test_re2_gore_decoder.dir/test_re2_gore_decoder.c.obj
+[773/1480] Building C object tests/unit/CMakeFiles/probe_5090_birkin.dir/probe_5090_birkin.c.obj
+[774/1480] Building C object tests/unit/CMakeFiles/test_autofire_pin.dir/test_autofire_pin.c.obj
+[775/1480] Building C object tests/unit/CMakeFiles/probe_g5_boss.dir/probe_g5_boss.c.obj
+[776/1480] Building C object tests/unit/CMakeFiles/probe_gator_fress.dir/probe_gator_fress.c.obj
+[777/1480] Building C object tests/unit/CMakeFiles/test_1210_arme.dir/test_1210_arme.c.obj
+[778/1480] Building C object tests/unit/CMakeFiles/test_voice_ausreden.dir/test_voice_ausreden.c.obj
+[779/1480] Building C object tests/unit/CMakeFiles/probe_spinne_elevation.dir/probe_spinne_elevation.c.obj
+[780/1480] Building C object tests/unit/CMakeFiles/test_map_1090.dir/test_map_1090.c.obj
+[781/1480] Building C object tests/unit/CMakeFiles/probe_stimme_takt.dir/probe_stimme_takt.c.obj
+[782/1480] Building C object tests/unit/CMakeFiles/probe_gator_maul.dir/probe_gator_maul.c.obj
+[783/1480] Building C object tests/unit/CMakeFiles/probe_1030_grenzzyklus.dir/probe_1030_grenzzyklus.c.obj
+[784/1480] Building C object tests/unit/CMakeFiles/probe_res223_test.dir/probe_res223_test.c.obj
+[785/1480] Building C object tests/unit/CMakeFiles/probe_re2z_tempobit.dir/probe_re2z_tempobit.c.obj
+[786/1480] Building C object tests/unit/CMakeFiles/probe_wallstep.dir/probe_wallstep.c.obj
+[787/1480] Building C object tests/unit/CMakeFiles/probe_wallstep_gegen.dir/probe_wallstep_gegen.c.obj
+[788/1480] Building C object tests/unit/CMakeFiles/probe_re2_stepsize.dir/probe_re2_stepsize.c.obj
+[789/1480] Building C object tests/unit/CMakeFiles/probe_re2_kfjump.dir/probe_re2_kfjump.c.obj
+[790/1480] Building C object tests/unit/CMakeFiles/probe_verify_fatcadence.dir/probe_verify_fatcadence.c.obj
+[791/1480] Building C object tests/unit/CMakeFiles/probe_1030_gegenpruefung.dir/probe_1030_gegenpruefung.c.obj
+[792/1480] Building C object tests/unit/CMakeFiles/probe_verify_sperre_dauer.dir/probe_verify_sperre_dauer.c.obj
+[793/1480] Building C object tests/unit/CMakeFiles/probe_tempo_gegenpruefung.dir/probe_tempo_gegenpruefung.c.obj
+[794/1480] Building C object tests/unit/CMakeFiles/probe_sperre_schiene.dir/probe_sperre_schiene.c.obj
+[795/1480] Building C object tests/unit/CMakeFiles/probe_wrapgain_check.dir/probe_wrapgain_check.c.obj
+[796/1480] Building C object tests/unit/CMakeFiles/probe_verify_step_tunnel.dir/probe_verify_step_tunnel.c.obj
+[797/1480] Building C object tests/unit/CMakeFiles/probe_gegen_dkf2.dir/probe_gegen_dkf2.c.obj
+[798/1480] Building C object tests/unit/CMakeFiles/probe_verify_portklemme.dir/probe_verify_portklemme.c.obj
+[799/1480] Building C object tests/unit/CMakeFiles/probe_marke_treffbar.dir/probe_marke_treffbar.c.obj
+[800/1480] Building C object tests/unit/CMakeFiles/probe_gegen_1d3fenster.dir/probe_gegen_1d3fenster.c.obj
+[801/1480] Building C object tests/unit/CMakeFiles/probe_1030_gz_verify.dir/probe_1030_gz_verify.c.obj
+[802/1480] Building C object tests/unit/CMakeFiles/probe_hund_trefferluecke.dir/probe_hund_trefferluecke.c.obj
+[803/1480] Building C object tests/unit/CMakeFiles/probe_re2z_block.dir/probe_re2z_block.c.obj
+[804/1480] Building C object tests/unit/CMakeFiles/probe_verify_hund_abzugzaehlung.dir/probe_verify_hund_abzugzaehlung.c.obj
+[805/1480] Building C object tests/unit/CMakeFiles/probe_verify_hundsperre.dir/probe_verify_hundsperre.c.obj
+[806/1480] Building C object tests/unit/CMakeFiles/probe_gegen_hundsperre.dir/probe_gegen_hundsperre.c.obj
+[807/1480] Building C object tests/unit/CMakeFiles/probe_abzug_takt.dir/probe_abzug_takt.c.obj
+[808/1480] Building C object tests/unit/CMakeFiles/probe_1d3gate_hang.dir/probe_1d3gate_hang.c.obj
+[809/1480] Building C object tests/unit/CMakeFiles/probe_hund_takt_nachmessung.dir/probe_hund_takt_nachmessung.c.obj
+[810/1480] Building C object tests/unit/CMakeFiles/probe_1d3gate_verify.dir/probe_1d3gate_verify.c.obj
+[811/1480] Building C object tests/unit/CMakeFiles/probe_1d3_gate_hang.dir/probe_1d3_gate_hang.c.obj
+[812/1480] Building C object tests/unit/CMakeFiles/probe_gegen_hundsperre2.dir/probe_gegen_hundsperre2.c.obj
+[813/1480] Building C object tests/unit/CMakeFiles/probe_skept_kraehe_takt.dir/probe_skept_kraehe_takt.c.obj
+[814/1480] Building C object tests/unit/CMakeFiles/probe_v_einbauweg_93.dir/probe_v_einbauweg_93.c.obj
+[815/1480] Building C object tests/unit/CMakeFiles/probe_re2z_unterhaelfte.dir/probe_re2z_unterhaelfte.c.obj
+[816/1480] Building C object tests/unit/CMakeFiles/probe_1230_hundetod.dir/probe_1230_hundetod.c.obj
+[817/1480] Building C object tests/unit/CMakeFiles/probe_gator_maul_gegen.dir/probe_gator_maul_gegen.c.obj
+[818/1480] Building C object tests/unit/CMakeFiles/probe_1d3_zensus.dir/probe_1d3_zensus.c.obj
+[819/1480] Building C object tests/unit/CMakeFiles/probe_1050_maskentiefe.dir/probe_1050_maskentiefe.c.obj
+[820/1480] Building C object tests/unit/CMakeFiles/probe_1050_gegen.dir/probe_1050_gegen.c.obj
+[821/1480] Building C object tests/unit/CMakeFiles/probe_gator_fress_anker.dir/probe_gator_fress_anker.c.obj
+[822/1480] Building C object tests/unit/CMakeFiles/probe_gator_maul_x.dir/probe_gator_maul_x.c.obj
+[823/1480] Building C object tests/unit/CMakeFiles/probe_maul_gegen.dir/probe_maul_gegen.c.obj
+[824/1480] Building C object tests/unit/CMakeFiles/probe_re2_dog_deathpose.dir/probe_re2_dog_deathpose.c.obj
+[825/1480] Building C object tests/unit/CMakeFiles/probe_gator_maul_lokal.dir/probe_gator_maul_lokal.c.obj
+[826/1480] Building C object tests/unit/CMakeFiles/probe_gator_anker_nachmess.dir/probe_gator_anker_nachmess.c.obj
+[827/1480] Building C object tests/unit/CMakeFiles/probe_5090_lang.dir/probe_5090_lang.c.obj
+[828/1480] Building C object tests/unit/CMakeFiles/probe_verify_gator_scale.dir/probe_verify_gator_scale.c.obj
+[829/1480] Building C object tests/unit/CMakeFiles/probe_verify_ankery.dir/probe_verify_ankery.c.obj
+[830/1480] Building C object tests/unit/CMakeFiles/probe_verify_p3stand.dir/probe_verify_p3stand.c.obj
+[831/1480] Building C object tests/unit/CMakeFiles/probe_v_maul_gegen.dir/probe_v_maul_gegen.c.obj
+[832/1480] Building C object tests/unit/CMakeFiles/probe_verify_kfpfad.dir/probe_verify_kfpfad.c.obj
+[833/1480] Building C object tests/unit/CMakeFiles/probe_p3_clip11_check.dir/probe_p3_clip11_check.c.obj
+[834/1480] Building C object tests/unit/CMakeFiles/probe_elevator_1080_full.dir/probe_elevator_1080_full.c.obj
+[835/1480] Building C object tests/unit/CMakeFiles/probe_elevator_4020_full.dir/probe_elevator_4020_full.c.obj
+[836/1480] Building C object tests/unit/CMakeFiles/test_karte_besitz.dir/test_karte_besitz.c.obj
+[837/1480] Building C object tests/unit/CMakeFiles/test_p2_1210_arme_re2.dir/test_p2_1210_arme_re2.c.obj
+[838/1480] Building C object tests/unit/CMakeFiles/probe_p2_atlas_dump.dir/probe_p2_atlas_dump.c.obj
+[839/1480] Building C object tests/unit/CMakeFiles/test_r16_liegende_unschiessbar.dir/test_r16_liegende_unschiessbar.c.obj
+[840/1480] Building C object tests/unit/CMakeFiles/probe_p2_birkin_g5.dir/probe_p2_birkin_g5.c.obj
+[841/1480] Building C object tests/unit/CMakeFiles/test_p2_kriecher1010.dir/test_p2_kriecher1010.c.obj
+[842/1480] Building C object tests/unit/CMakeFiles/test_pri_hashes.dir/test_pri_hashes.c.obj
+[843/1480] Building C object tests/unit/CMakeFiles/probe_p3_gator_lunge.dir/probe_p3_gator_lunge.c.obj
+[844/1480] Building C object tests/unit/CMakeFiles/probe_p2_floor_dump.dir/probe_p2_floor_dump.c.obj
+[845/1480] Building C object tests/unit/CMakeFiles/test_r16_aufstehen_schuss.dir/test_r16_aufstehen_schuss.c.obj
+[846/1480] Building C object tests/unit/CMakeFiles/probe_p3_gator_maul.dir/probe_p3_gator_maul.c.obj
+[847/1480] Building C object tests/unit/CMakeFiles/probe_p3_birkin_rest.dir/probe_p3_birkin_rest.c.obj
+[848/1480] Building C object tests/unit/CMakeFiles/test_pri_silhouette.dir/test_pri_silhouette.c.obj
+[849/1480] Building C object tests/unit/CMakeFiles/probe_p3_spider_stalk.dir/probe_p3_spider_stalk.c.obj
+[850/1480] Building C object tests/unit/CMakeFiles/probe_p3_restposten.dir/probe_p3_restposten.c.obj
+[851/1480] Building C object tests/unit/CMakeFiles/probe_r16_arme_1210_re2.dir/probe_r16_arme_1210_re2.c.obj
+[852/1480] Building C object tests/unit/CMakeFiles/probe_r16_aufstehen_schuss.dir/probe_r16_aufstehen_schuss.c.obj
+[853/1480] Building C object tests/unit/CMakeFiles/probe_r16_birkin_g5.dir/probe_r16_birkin_g5.c.obj
+[854/1480] Building C object tests/unit/CMakeFiles/probe_r16_gator_se.dir/probe_r16_gator_se.c.obj
+[855/1480] Building C object tests/unit/CMakeFiles/probe_r16_gator_finisher_anker.dir/probe_r16_gator_finisher_anker.c.obj
+[856/1480] Building C object tests/unit/CMakeFiles/probe_r16_spider_se.dir/probe_r16_spider_se.c.obj
+[857/1480] Building C object tests/unit/CMakeFiles/probe_r16_objekte_paket.dir/probe_r16_objekte_paket.c.obj
+[858/1480] Building C object tests/unit/CMakeFiles/probe_r16_pri_masken_audit.dir/probe_r16_pri_masken_audit.c.obj
+[859/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_birkin_g5.dir/probe_r16_sk_birkin_g5.c.obj
+[860/1480] Building C object tests/unit/CMakeFiles/probe_r16_kriecher1010.dir/probe_r16_kriecher1010.c.obj
+[861/1480] Building C object tests/unit/CMakeFiles/probe_r16_liegende_zombies.dir/probe_r16_liegende_zombies.c.obj
+[862/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_arme_1210_re2.dir/probe_r16_sk_arme_1210_re2.c.obj
+[863/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_objekte_paket.dir/probe_r16_sk_objekte_paket.c.obj
+[864/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_gator_finisher_sounds.dir/probe_r16_sk_gator_finisher_sounds.c.obj
+[865/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_liegende_zombies.dir/probe_r16_sk_liegende_zombies.c.obj
+[866/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_kriecher_1010.dir/probe_r16_sk_kriecher_1010.c.obj
+[867/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_trefferhoehe.dir/probe_r16_sk_trefferhoehe.c.obj
+[868/1480] Building C object tests/unit/CMakeFiles/probe_r16_trefferhoehe.dir/probe_r16_trefferhoehe.c.obj
+[869/1480] Building C object tests/unit/CMakeFiles/probe_r16_skept2_liegende_zombies.dir/probe_r16_skept2_liegende_zombies.c.obj
+[870/1480] Building C object tests/unit/CMakeFiles/probe_r16_sk_tuer_animation_1040.dir/probe_r16_sk_tuer_animation_1040.c.obj
+[871/1480] Building C object tests/unit/CMakeFiles/probe_r17_weste_karte.dir/probe_r17_weste_karte.c.obj
+[872/1480] Building C object tests/unit/CMakeFiles/probe_r17_munition.dir/probe_r17_munition.c.obj
+[873/1480] Building C object tests/unit/CMakeFiles/probe_r16_tuer1040.dir/probe_r16_tuer1040.c.obj
+[874/1480] Building C object tests/unit/CMakeFiles/probe_r17_waffen_loop.dir/probe_r17_waffen_loop.c.obj
+[875/1480] Building C object tests/unit/CMakeFiles/probe_r17_untertitel.dir/probe_r17_untertitel.c.obj
+[876/1480] Building C object tests/unit/CMakeFiles/test_r18_ada_eintritt_1050.dir/test_r18_ada_eintritt_1050.c.obj
+[877/1480] Building C object tests/unit/CMakeFiles/probe_r17_birkin_1zu1.dir/probe_r17_birkin_1zu1.c.obj
+[878/1480] Building C object tests/unit/CMakeFiles/probe_r17_cursor_klick.dir/probe_r17_cursor_klick.c.obj
+[879/1480] Building C object tests/unit/CMakeFiles/probe_r18_birkin_rest.dir/probe_r18_birkin_rest.c.obj
+[880/1480] Building C object tests/unit/CMakeFiles/r19_marke3_1050_c1_tiefe.dir/r19_marke3_1050_c1_tiefe.c.obj
+[881/1480] Building C object tests/unit/CMakeFiles/probe_irons_mittelmodell.dir/probe_irons_mittelmodell.c.obj
+[882/1480] Building C object tests/unit/CMakeFiles/test_r19_zerreiss_10e0c7.dir/test_r19_zerreiss_10e0c7.c.obj
+[883/1480] Building C object tests/unit/CMakeFiles/r19b_marke4_10d0_c7_zeilenmodell.dir/r19b_marke4_10d0_c7_zeilenmodell.c.obj
+[884/1480] Building C object tests/unit/CMakeFiles/test_r19_marke1_10d0_c1.dir/test_r19_marke1_10d0_c1.c.obj
+[885/1480] Building C object tests/unit/CMakeFiles/probe_r22_codepanel_reihenfolge.dir/probe_r22_codepanel_reihenfolge.c.obj
+[886/1480] Building C object tests/unit/CMakeFiles/probe_besitz_zensus.dir/probe_besitz_zensus.c.obj
+[887/1480] Building C object tests/unit/CMakeFiles/test_r26_kaefig_release0c.dir/test_r26_kaefig_release0c.c.obj
+[888/1480] Building C object tests/unit/CMakeFiles/probe_eintritt_pose_einmal.dir/probe_eintritt_pose_einmal.c.obj
+[889/1480] Building C object tests/unit/CMakeFiles/probe_r26_inventar.dir/probe_r26_inventar.c.obj
+[890/1480] Building C object tests/unit/CMakeFiles/probe_r20_birkin_push.dir/probe_r20_birkin_push.c.obj
+[891/1480] Building C object tests/unit/CMakeFiles/probe_r26_mg_blut.dir/probe_r26_mg_blut.c.obj
+[892/1480] Building C object tests/unit/CMakeFiles/probe_r22_10f0_figur.dir/probe_r22_10f0_figur.c.obj
+[893/1480] Building C object tests/unit/CMakeFiles/probe_m93r_nachladen.dir/probe_m93r_nachladen.c.obj
+[894/1480] Building C object tests/unit/CMakeFiles/probe_r26_pose80.dir/probe_r26_pose80.c.obj
+[895/1480] Building C object tests/unit/CMakeFiles/test_r27_ada_cutscene_1050.dir/test_r27_ada_cutscene_1050.c.obj
+[896/1480] Building C object tests/unit/CMakeFiles/probe_r21_tentakel_schub.dir/probe_r21_tentakel_schub.c.obj
+[897/1480] Building C object tests/unit/CMakeFiles/r26_panel_11f0.dir/r26_panel_11f0.c.obj
+[898/1480] Building C object tests/unit/CMakeFiles/test_elev_se.dir/test_elev_se.c.obj
+[899/1480] Building C object tests/unit/CMakeFiles/test_r27_hund_wandtrieb.dir/test_r27_hund_wandtrieb.c.obj
+[900/1480] Building C object tests/unit/CMakeFiles/probe_abtastphase_11f0.dir/probe_abtastphase_11f0.c.obj
+[901/1480] Building C object tests/unit/CMakeFiles/r21_discard_wegwerfen.dir/r21_discard_wegwerfen.c.obj
+[902/1480] Building C object tests/unit/CMakeFiles/probe_r27_hund_biss.dir/probe_r27_hund_biss.c.obj
+[903/1480] Building C object tests/unit/CMakeFiles/r27_panel_schalterwerte.dir/r27_panel_schalterwerte.c.obj
+[904/1480] Building C object tests/integration/CMakeFiles/test_room_transition.dir/test_room_transition.c.obj
+[905/1480] Building C object tests/integration/CMakeFiles/test_cross_stage.dir/test_cross_stage.c.obj
+[906/1480] Building C object tests/unit/CMakeFiles/probe_r28_messer_dauerschlag.dir/probe_r28_messer_dauerschlag.c.obj
+[907/1480] Building C object tests/unit/CMakeFiles/probe_r29_1d3_doppelabzug.dir/probe_r29_1d3_doppelabzug.c.obj
+[908/1480] Building C object tests/integration/CMakeFiles/test_rvd_coverage.dir/test_rvd_coverage.c.obj
+[909/1480] Building C object tests/integration/CMakeFiles/test_door_traversal.dir/test_door_traversal.c.obj
+[910/1480] Building C object tests/integration/CMakeFiles/test_headless_run.dir/test_headless_run.c.obj
+[911/1480] Building C object tests/integration/CMakeFiles/test_map_uebergang.dir/test_map_uebergang.c.obj
+[912/1480] Building C object tests/integration/CMakeFiles/test_room_probe_sweep.dir/test_room_probe_sweep.c.obj
+[913/1480] Building C object tests/integration/CMakeFiles/test_door_lock.dir/test_door_lock.c.obj
+[914/1480] Building C object tests/unit/CMakeFiles/probe_r30b_muendung.dir/probe_r30b_muendung.c.obj
+[915/1480] Building C object tests/unit/CMakeFiles/probe_r30_zielfenster.dir/probe_r30_zielfenster.c.obj
+[916/1480] Building C object tests/integration/CMakeFiles/test_map_raum_live.dir/test_map_raum_live.c.obj
+[917/1480] Building C object tests/integration/CMakeFiles/test_flag_census.dir/test_flag_census.c.obj
+[918/1480] Building C object tests/integration/CMakeFiles/test_item_name_census.dir/test_item_name_census.c.obj
+[919/1480] Building C object tests/integration/CMakeFiles/test_keypad.dir/test_keypad.c.obj
+[920/1480] Building C object tests/integration/CMakeFiles/test_fx_region_cull.dir/test_fx_region_cull.c.obj
+[921/1480] Building C object tests/integration/CMakeFiles/test_pri_masken.dir/test_pri_masken.c.obj
+[922/1480] Building C object tests/integration/CMakeFiles/test_keydoor.dir/test_keydoor.c.obj
+[923/1480] Linking C executable tests\re15_tests.exe
+[924/1480] Linking C static library _deps\sdl2-build\libSDL2main.a
+[925/1480] Linking C executable tests\property\prop_rdt_null_offset.exe
+[926/1480] Linking C executable tests\property\prop_rdt_filename.exe
+[927/1480] Linking C executable tests\property\prop_fixpoint_precision.exe
+[928/1480] Linking C executable tests\property\prop_tank_controls.exe
+[929/1480] Linking C executable tests\property\prop_scd_pc_advance.exe
+[930/1480] Linking C executable tests\property\prop_sca_collision.exe
+[931/1480] Linking C executable tests\property\prop_spawn_entered.exe
+[932/1480] Linking C executable tests\property\prop_door_roundtrip.exe
+[933/1480] Linking C executable tests\property\prop_bss_chunk.exe
+[934/1480] Linking C executable tests\property\prop_input_edge.exe
+[935/1480] Linking C executable tests\property\prop_savestate_cmp.exe
+[936/1480] Linking C executable tests\property\prop_zone_dispatch.exe
+[937/1480] Linking C executable tests\property\prop_adpcm_decode.exe
+[938/1480] Linking C executable tests\property\prop_point_in_poly.exe
+[939/1480] Linking C executable tests\property\prop_ot_sort.exe
+[940/1480] Linking C executable tests\property\prop_json_roundtrip.exe
+[941/1480] Linking C executable tests\unit\test_rdt_parser.exe
+[942/1480] Linking C executable platform\pc\re15_pc.exe
+[943/1480] Linking C executable tests\unit\test_sca_parser.exe
+[944/1480] Linking C executable tests\unit\test_scd_opcodes.exe
+[945/1480] Linking C executable tests\unit\test_math_common.exe
+[946/1480] Linking C executable tests\unit\test_member.exe
+[947/1480] Linking C executable tests\unit\test_damage.exe
+[948/1480] Linking C executable tests\unit\test_room_load.exe
+[949/1480] Linking C executable tests\unit\test_room1140_combat.exe
+[950/1480] Linking C executable tests\unit\test_spider_ai.exe
+[951/1480] Linking C executable tests\unit\test_cockroach_ai.exe
+[952/1480] Linking C executable tests\unit\test_crow_ai.exe
+[953/1480] Linking C executable tests\unit\test_maggot_ai.exe
+[954/1480] Linking C executable tests\unit\test_room1140_spawn.exe
+[955/1480] Linking C executable tests\unit\test_dog_ai.exe
+[956/1480] Linking C executable tests\unit\test_enemy_ai.exe
+[957/1480] Linking C executable tests\unit\test_npc_ai.exe
+[958/1480] Linking C executable tests\unit\test_adult_spider_ai.exe
+[959/1480] Linking C executable tests\unit\test_npc_scd_pose.exe
+[960/1480] Linking C executable tests\unit\test_ems.exe
+[961/1480] Linking C executable tests\unit\test_zgirl_ai.exe
+[962/1480] Linking C executable tests\unit\test_esp_parse.exe
+[963/1480] Linking C executable tests\unit\test_audio_vab.exe
+[964/1480] Linking C executable tests\unit\test_item_icon.exe
+[965/1480] Linking C executable tests\unit\test_weapon_select.exe
+[966/1480] Linking C executable tests\unit\test_zombie_pose.exe
+[967/1480] Linking C executable tests\unit\test_inv_fsm.exe
+[968/1480] Linking C executable tests\unit\test_writher_ai.exe
+[969/1480] Linking C executable tests\unit\test_alligator_ai.exe
+[970/1480] Linking C executable tests\unit\test_birkin_ai.exe
+[971/1480] Linking C executable tests\unit\test_fx_emitter_ai.exe
+[972/1480] Linking C executable tests\unit\test_tyrant_ai.exe
+[973/1480] Linking C executable tests\unit\test_enemy_shootable.exe
+[974/1480] Linking C executable tests\unit\test_aot_edge.exe
+[975/1480] Linking C executable tests\unit\test_ivy_ai.exe
+[976/1480] Linking C executable tests\unit\test_slope_collision.exe
+[977/1480] Linking C executable tests\unit\test_enemy_body_push.exe
+[978/1480] Linking C executable tests\unit\test_aim_all_around.exe
+[979/1480] Linking C executable tests\unit\test_scd_aot_opcodes.exe
+[980/1480] Linking C executable tests\unit\test_aim_lower_exit.exe
+[981/1480] Linking C executable tests\unit\test_se_bank_routing.exe
+[982/1480] Linking C executable tests\unit\test_scd_for2.exe
+[983/1480] Linking C executable tests\unit\test_hit_reaction.exe
+[984/1480] Linking C executable tests\unit\test_bleed_rng.exe
+[985/1480] Linking C executable tests\unit\test_getup_advance.exe
+[986/1480] Linking C executable tests\unit\test_em_status_persist.exe
+[987/1480] Linking C executable tests\unit\test_anim_pose_order.exe
+[988/1480] Linking C executable tests\unit\test_scd_dir_set.exe
+[989/1480] Linking C executable tests\unit\test_rvd_scan_order.exe
+[990/1480] Linking C executable tests\unit\test_xa_decode.exe
+[991/1480] Linking C executable tests\unit\test_audio_decode.exe
+[992/1480] Linking C executable tests\unit\test_collision_layers.exe
+[993/1480] Linking C executable tests\unit\test_action_msg_gate.exe
+[994/1480] Linking C executable tests\unit\test_savedata.exe
+[995/1480] Linking C executable tests\unit\test_savepoint.exe
+[996/1480] Linking C executable tests\unit\test_msg_dialog.exe
+[997/1480] Linking C executable tests\unit\test_scd_flag_fade.exe
+[998/1480] Linking C executable tests\unit\test_flag_gate.exe
+[999/1480] Linking C executable tests\unit\test_rotmatrix.exe
+[1000/1480] Linking C executable tests\unit\test_inv_grant.exe
+[1001/1480] Linking C executable tests\unit\test_catan.exe
+[1002/1480] Linking C executable tests\unit\test_camera_view.exe
+[1003/1480] Linking C executable tests\unit\test_scd_key_ck.exe
+[1004/1480] Linking C executable tests\unit\test_squareroot0.exe
+[1005/1480] Linking C executable tests\unit\test_item_modal.exe
+[1006/1480] Linking C executable tests\unit\test_enemy_attack_reach.exe
+[1007/1480] Linking C executable tests\unit\test_item_use.exe
+[1008/1480] Linking C executable tests\unit\test_dog_aim_band.exe
+[1009/1480] Linking C executable tests\unit\test_item_stack_press.exe
+[1010/1480] Linking C executable tests\unit\test_sherry_wall_pin.exe
+[1011/1480] Linking C executable tests\unit\test_weste_effekt.exe
+[1012/1480] Linking C executable tests\unit\test_montage_fx.exe
+[1013/1480] Linking C executable tests\unit\test_map_re2_system.exe
+[1014/1480] Linking C executable tests\unit\test_dormant_activation.exe
+[1015/1480] Linking C executable tests\unit\test_maggot_bone_square.exe
+[1016/1480] Linking C executable tests\unit\test_writher_hit_feedback.exe
+[1017/1480] Linking C executable tests\unit\test_map_etagenzeile.exe
+[1018/1480] Linking C executable tests\unit\test_map_mark_band.exe
+[1019/1480] Linking C executable tests\unit\test_map_marker_innen.exe
+[1020/1480] Linking C executable tests\unit\test_map_floor_visited.exe
+[1021/1480] Linking C executable tests\unit\test_map_durchgang.exe
+[1022/1480] Linking C executable tests\unit\test_map_innenwand.exe
+[1023/1480] Linking C executable tests\unit\test_map_teilbereich.exe
+[1024/1480] Linking C executable tests\unit\test_map_synth.exe
+[1025/1480] Linking C executable tests\unit\test_map_orient.exe
+[1026/1480] Linking C executable tests\unit\probe_re2z_hierarchie.exe
+[1027/1480] Linking C executable tests\unit\test_room1150_itembox.exe
+[1028/1480] Linking C executable tests\unit\test_itembox_transfer.exe
+[1029/1480] Linking C executable tests\unit\test_aot_sce_census.exe
+[1030/1480] Linking C executable tests\unit\test_pad_remap.exe
+[1031/1480] Linking C executable tests\unit\test_map_zone_bits.exe
+[1032/1480] Linking C executable tests\unit\test_itembox_screen.exe
+[1033/1480] Linking C executable tests\unit\test_re2_room1190_ab.exe
+[1034/1480] Linking C executable tests\unit\test_re2_zombie_ai.exe
+[1035/1480] Linking C executable tests\unit\test_re2_room1140_ab.exe
+[1036/1480] Linking C executable tests\unit\test_re2_crow_ai.exe
+[1037/1480] Linking C executable tests\unit\test_wound_accumulator.exe
+[1038/1480] Linking C executable tests\unit\test_re2_dog_ai.exe
+[1039/1480] Linking C executable tests\unit\test_re2_room10c0_ab.exe
+[1040/1480] Linking C executable tests\unit\probe_bite_fx.exe
+[1041/1480] Linking C executable tests\unit\test_se_pitch.exe
+[1042/1480] Linking C executable tests\unit\test_crow_fixes.exe
+[1043/1480] Linking C executable tests\unit\test_zombie_hit_fixes.exe
+[1044/1480] Linking C executable tests\unit\probe_stair_cam_10a0.exe
+[1045/1480] Linking C executable tests\unit\probe_crow_1170.exe
+[1046/1480] Linking C executable tests\unit\probe_stair_10a0.exe
+[1047/1480] Linking C executable tests\unit\probe_zombie_hit.exe
+[1048/1480] Linking C executable tests\unit\probe_stair_cam_1060.exe
+[1049/1480] Linking C executable tests\unit\probe_zlyer_10d0.exe
+[1050/1480] Linking C executable tests\unit\probe_elliot_1170_run.exe
+[1051/1480] Linking C executable tests\unit\probe_stair_1170.exe
+[1052/1480] Linking C executable tests\unit\probe_marvin_10d0.exe
+[1053/1480] Linking C executable tests\unit\test_debug_menu.exe
+[1054/1480] Linking C executable tests\unit\probe_stair_cam_chain.exe
+[1055/1480] Linking C executable tests\unit\probe_crow_kill.exe
+[1056/1480] Linking C executable tests\unit\probe_crow_death.exe
+[1057/1480] Linking C executable tests\unit\probe_crow_flinch.exe
+[1058/1480] Linking C executable tests\unit\probe_headlook_10d0.exe
+[1059/1480] Linking C executable tests\unit\probe_save_counter.exe
+[1060/1480] Linking C executable tests\unit\probe_save_room_name.exe
+[1061/1480] Linking C executable tests\unit\probe_em40_gait.exe
+[1062/1480] Linking C executable tests\unit\probe_marvin_spawn.exe
+[1063/1480] Linking C executable tests\unit\probe_marvin_render_pose.exe
+[1064/1480] Linking C executable tests\unit\probe_room1040_switch.exe
+[1065/1480] Linking C executable tests\unit\probe_save_injured.exe
+[1066/1480] Linking C executable tests\unit\probe_zreentry_10d0.exe
+[1067/1480] Linking C executable tests\unit\probe_cut_1030.exe
+[1068/1480] Linking C executable tests\unit\probe_door_1170.exe
+[1069/1480] Linking C executable tests\unit\probe_cam_1030_reentry.exe
+[1070/1480] Linking C executable tests\unit\probe_room1070_wake.exe
+[1071/1480] Linking C executable tests\unit\probe_load_after_death.exe
+[1072/1480] Linking C executable tests\unit\probe_hitdoor_entry_anim.exe
+[1073/1480] Linking C executable tests\unit\probe_cut_replace_1030.exe
+[1074/1480] Linking C executable tests\unit\probe_camload_1030.exe
+[1075/1480] Linking C executable tests\unit\probe_rvd_diff_10a0.exe
+[1076/1480] Linking C executable tests\unit\probe_lane_d_traj1060.exe
+[1077/1480] Linking C executable tests\unit\probe_stair_eject_10a0.exe
+[1078/1480] Linking C executable tests\unit\probe_lanee_chain_1060.exe
+[1079/1480] Linking C executable tests\unit\probe_lanea_1060_zonepath.exe
+[1080/1480] Linking C executable tests\unit\probe_lanec_camscan_1060.exe
+[1081/1480] Linking C executable tests\unit\probe_lb_stairfsm.exe
+[1082/1480] Linking C executable tests\unit\probe_laneF_floorgate_rooms.exe
+[1083/1480] Linking C executable tests\unit\probe_lanee_reach_1060.exe
+[1084/1480] Linking C executable tests\unit\probe_laneF_floor_1060.exe
+[1085/1480] Linking C executable tests\unit\probe_advc_chain1060.exe
+[1086/1480] Linking C executable tests\unit\probe_lanee_eject_census.exe
+[1087/1480] Linking C executable tests\unit\probe_adv_ejectcam_1060.exe
+[1088/1480] Linking C executable tests\unit\probe_lanea_1060_margin.exe
+[1089/1480] Linking C executable tests\unit\probe_laneF_gap_1060.exe
+[1090/1480] Linking C executable tests\unit\probe_adv_stairband_1060.exe
+[1091/1480] Linking C executable tests\unit\probe_lanee_margin_1060.exe
+[1092/1480] Linking C executable tests\unit\probe_advF_ejectcam_1060.exe
+[1093/1480] Linking C executable tests\unit\probe_advz_cause_1060.exe
+[1094/1480] Linking C executable tests\unit\probe_refA_gaitcause_1060.exe
+[1095/1480] Linking C executable tests\unit\probe_laneb_1030_horde.exe
+[1096/1480] Linking C executable tests\unit\probe_stair_hwtruth_1060.exe
+[1097/1480] Linking C executable tests\unit\probe_objnotch_census.exe
+[1098/1480] Linking C executable tests\unit\probe_laned_1030_spawn.exe
+[1099/1480] Linking C executable tests\unit\probe_gate_1030.exe
+[1100/1480] Linking C executable tests\unit\probe_laneE_1030_visible.exe
+[1101/1480] Linking C executable tests\unit\probe_elevator_1080.exe
+[1102/1480] Linking C executable tests\unit\probe_lanea_1030_cap.exe
+[1103/1480] Linking C executable tests\unit\probe_re2_dog_hitwindow.exe
+[1104/1480] Linking C executable tests\unit\probe_laneE_gatemask.exe
+[1105/1480] Linking C executable tests\unit\probe_gen_11f0.exe
+[1106/1480] Linking C executable tests\unit\probe_adv_1030_verify.exe
+[1107/1480] Linking C executable tests\unit\probe_1030_spawncap.exe
+[1108/1480] Linking C executable tests\unit\test_crawl_toggle.exe
+[1109/1480] Linking C executable tests\unit\probe_crawl_commit.exe
+[1110/1480] Linking C executable tests\unit\probe_dog_devour.exe
+[1111/1480] Linking C executable tests\unit\probe_dog_hit.exe
+[1112/1480] Linking C executable tests\unit\probe_espr_11e0.exe
+[1113/1480] Linking C executable tests\unit\probe_gegenprobe_hund_luftzeile.exe
+[1114/1480] Linking C executable tests\unit\test_re2_ems.exe
+[1115/1480] Linking C executable tests\unit\test_re2_enemse.exe
+[1116/1480] Linking C executable tests\unit\test_bss_room_source.exe
+[1117/1480] Linking C executable tests\unit\test_neck_headlook.exe
+[1118/1480] Linking C executable tests\unit\test_text_freeze.exe
+[1119/1480] Linking C executable tests\unit\test_re2_sfx_cadence.exe
+[1120/1480] Linking C executable tests\unit\test_lane_b1_ai.exe
+[1121/1480] Linking C executable tests\unit\test_irons_neck_1150.exe
+[1122/1480] Linking C executable tests\unit\test_room_transition_cmd.exe
+[1123/1480] Linking C executable tests\unit\probe_1140_reentry.exe
+[1124/1480] Linking C executable tests\unit\probe_irons_neck_1150.exe
+[1125/1480] Linking C executable tests\unit\probe_10d0_knockse.exe
+[1126/1480] Linking C executable tests\unit\probe_ab_se_10d0_1140.exe
+[1127/1480] Linking C executable tests\unit\test_zombie_bank_sfx.exe
+[1128/1480] Linking C executable tests\unit\test_zombie_se_ab_10d0.exe
+[1129/1480] Linking C executable tests\unit\test_anim_reverse_se.exe
+[1130/1480] Linking C executable tests\unit\test_re2_hit_reaction.exe
+[1131/1480] Linking C executable tests\unit\test_anim_rate.exe
+[1132/1480] Linking C executable tests\unit\test_se_voice_machine.exe
+[1133/1480] Linking C executable tests\unit\test_knockdown_frontback.exe
+[1134/1480] Linking C executable tests\unit\probe_stagger_fall_1140.exe
+[1135/1480] Linking C executable tests\unit\probe_re2_livepath.exe
+[1136/1480] Linking C executable tests\unit\test_rotor_bgm_pin.exe
+[1137/1480] Linking C executable tests\unit\test_re2_enemse_bank.exe
+[1138/1480] Linking C executable tests\unit\test_re2_weapon_rows.exe
+[1139/1480] Linking C executable tests\unit\test_knockdown_handoff.exe
+[1140/1480] Linking C executable tests\unit\test_zombie_getup_se.exe
+[1141/1480] Linking C executable tests\unit\test_re2_gore_render.exe
+[1142/1480] Linking C executable tests\unit\test_re2_gore.exe
+[1143/1480] Linking C executable tests\unit\test_re2_gore_fly.exe
+[1144/1480] Linking C executable tests\unit\test_re2_spider_ai.exe
+[1145/1480] Linking C executable tests\unit\test_re2_room1090_ab.exe
+[1146/1480] Linking C executable tests\unit\test_re2_hit_repeat.exe
+[1147/1480] Linking C executable tests\unit\test_re2_spider_water_2090.exe
+[1148/1480] Linking C executable tests\unit\test_re2_hit_repeat_crow_spider.exe
+[1149/1480] Linking C executable tests\unit\probe_re2_hitpath.exe
+[1150/1480] Linking C executable tests\unit\probe_re2_hit_crow_spider.exe
+[1151/1480] Linking C executable tests\unit\test_re2_hybrid_rig.exe
+[1152/1480] Linking C executable tests\unit\probe_hund_ersttreffer2.exe
+[1153/1480] Linking C executable tests\unit\probe_hund_ersttreffer.exe
+[1154/1480] Linking C executable tests\unit\test_re2_baby_spider_dmg.exe
+[1155/1480] Linking C executable tests\unit\probe_schrot_bauch_y.exe
+[1156/1480] Linking C executable tests\unit\probe_re2_hp_model.exe
+[1157/1480] Linking C executable tests\unit\test_re2_hp_model.exe
+[1158/1480] Linking C executable tests\unit\probe_re2_baby_spider_hit.exe
+[1159/1480] Linking C executable tests\unit\probe_re2_stagger.exe
+[1160/1480] Linking C executable tests\unit\test_re2_stagger_knockdown.exe
+[1161/1480] Linking C executable tests\unit\test_re2_dog_hp_reroll.exe
+[1162/1480] Linking C executable tests\unit\probe_re2_zfall.exe
+[1163/1480] Linking C executable tests\unit\test_re2_dog_playdead_gate.exe
+[1164/1480] Linking C executable tests\unit\test_re15_zombie_death_anim.exe
+[1165/1480] Linking C executable tests\unit\test_re2_zombie_hitfilter.exe
+[1166/1480] Linking C executable tests\unit\probe_re15_zdeath.exe
+[1167/1480] Linking C executable tests\unit\test_re2_zombie_death_fall.exe
+[1168/1480] Linking C executable tests\unit\test_re15_re2z_gore_se.exe
+[1169/1480] Linking C executable tests\unit\probe_re15_gore_import.exe
+[1170/1480] Linking C executable tests\unit\test_re2_crow_se_bank.exe
+[1171/1480] Linking C executable tests\unit\test_re15_re2z_import.exe
+[1172/1480] Linking C executable tests\unit\test_1140_straight_shot.exe
+[1173/1480] Linking C executable tests\unit\test_re2_lyer_1140.exe
+[1174/1480] Linking C executable tests\unit\probe_1140_feeder_shot.exe
+[1175/1480] Linking C executable tests\unit\probe_lyer_1140.exe
+[1176/1480] Linking C executable tests\unit\probe_1090_objects.exe
+[1177/1480] Linking C executable tests\unit\probe_re2z_abc.exe
+[1178/1480] Linking C executable tests\unit\test_1090_room_pin.exe
+[1179/1480] Linking C executable tests\unit\probe_re2z_gegen13.exe
+[1180/1480] Linking C executable tests\unit\probe_re2z_sperre29.exe
+[1181/1480] Linking C executable tests\unit\test_re2_zombie_abc.exe
+[1182/1480] Linking C executable tests\unit\probe_re2_crawl_gate.exe
+[1183/1480] Linking C executable tests\unit\probe_gen_11f0_cursor_view.exe
+[1184/1480] Linking C executable tests\unit\test_1090_push_pin.exe
+[1185/1480] Linking C executable tests\unit\test_prop_texel_key_11f0.exe
+[1186/1480] Linking C executable tests\unit\test_re2_crawler.exe
+[1187/1480] Linking C executable tests\unit\probe_1090_push.exe
+[1188/1480] Linking C executable tests\unit\test_re2_victim_collapse.exe
+[1189/1480] Linking C executable tests\unit\probe_re2_victim_pose.exe
+[1190/1480] Linking C executable tests\unit\probe_1030_crawl_live.exe
+[1191/1480] Linking C executable tests\unit\probe_1030_stuck_who.exe
+[1192/1480] Linking C executable tests\unit\test_1030_trigger_chain.exe
+[1193/1480] Linking C executable tests\unit\test_1090_fire_pin.exe
+[1194/1480] Linking C executable tests\unit\probe_1030_bandsweep.exe
+[1195/1480] Linking C executable tests\unit\probe_pruef_tempoursache.exe
+[1196/1480] Linking C executable tests\unit\probe_1030_tempo_weiche.exe
+[1197/1480] Linking C executable tests\unit\probe_sca_contact90.exe
+[1198/1480] Linking C executable tests\unit\probe_sca_wall_hit.exe
+[1199/1480] Linking C executable tests\unit\probe_re2_ztear.exe
+[1200/1480] Linking C executable tests\unit\probe_texel_key_census.exe
+[1201/1480] Linking C executable tests\unit\probe_1090_push_anim.exe
+[1202/1480] Linking C executable tests\unit\probe_11f0_cut_after_puzzle.exe
+[1203/1480] Linking C executable tests\unit\test_re2_zombie_teardeath.exe
+[1204/1480] Linking C executable tests\unit\test_tim_texel_key_rule.exe
+[1205/1480] Linking C executable tests\unit\probe_1090_gate_selfdoor.exe
+[1206/1480] Linking C executable tests\unit\probe_1090_trigger_walk.exe
+[1207/1480] Linking C executable tests\unit\test_re2_zombie_pose_bank.exe
+[1208/1480] Linking C executable tests\unit\probe_re2z_fallstand.exe
+[1209/1480] Linking C executable tests\unit\probe_1090_cutscene.exe
+[1210/1480] Linking C executable tests\unit\test_dog_grab_anchor.exe
+[1211/1480] Linking C executable tests\unit\probe_dog_victim_pose.exe
+[1212/1480] Linking C executable tests\unit\probe_dog_attack_live.exe
+[1213/1480] Linking C executable tests\unit\test_plc_back_yaw_1090.exe
+[1214/1480] Linking C executable tests\unit\test_re2z_death_getup.exe
+[1215/1480] Linking C executable tests\unit\probe_re2z_deathgetup.exe
+[1216/1480] Linking C executable tests\unit\test_cam_selfheal.exe
+[1217/1480] Linking C executable tests\unit\test_npc_back_walk.exe
+[1218/1480] Linking C executable tests\unit\probe_re2z_corpse.exe
+[1219/1480] Linking C executable tests\unit\probe_re2_dog_kill.exe
+[1220/1480] Linking C executable tests\unit\test_re2z_corpse_pool.exe
+[1221/1480] Linking C executable tests\unit\test_1090_climb_pin.exe
+[1222/1480] Linking C executable tests\unit\test_re2_dog_jaw_contact.exe
+[1223/1480] Linking C executable tests\unit\probe_1090_climb.exe
+[1224/1480] Linking C executable tests\unit\probe_re2_aim4.exe
+[1225/1480] Linking C executable tests\unit\test_re2_crow_shadow_release.exe
+[1226/1480] Linking C executable tests\unit\probe_dogwound_zknock.exe
+[1227/1480] Linking C executable tests\unit\probe_11f0_escape_sweep.exe
+[1228/1480] Linking C executable tests\unit\test_rvd_scan_ungated_by_climb.exe
+[1229/1480] Linking C executable tests\unit\probe_re2_crow_shadow.exe
+[1230/1480] Linking C executable tests\unit\test_fade_step0_hold.exe
+[1231/1480] Linking C executable tests\unit\test_cut_old_displayed.exe
+[1232/1480] Linking C executable tests\unit\test_re2_dog_grab_anchor.exe
+[1233/1480] Linking C executable tests\unit\test_rvd_scan_oracle.exe
+[1234/1480] Linking C executable tests\unit\probe_11f0_escape_during.exe
+[1235/1480] Linking C executable tests\unit\test_scd_zone2_pauseflags.exe
+[1236/1480] Linking C executable tests\unit\probe_re15_poise_re2.exe
+[1237/1480] Linking C executable tests\unit\probe_11f0_puzzle_pos.exe
+[1238/1480] Linking C executable tests\unit\probe_re2z_pushoff.exe
+[1239/1480] Linking C executable tests\unit\probe_re2z_crawl_attack.exe
+[1240/1480] Linking C executable tests\unit\probe_re2z_devour.exe
+[1241/1480] Linking C executable tests\unit\test_re2z_devour_anchor.exe
+[1242/1480] Linking C executable tests\unit\test_re2z_pushoff_crawl.exe
+[1243/1480] Linking C executable tests\unit\probe_plc_back_clip.exe
+[1244/1480] Linking C executable tests\unit\probe_re2_fatz_walkspot.exe
+[1245/1480] Linking C executable tests\unit\test_re15_poise_re2_import.exe
+[1246/1480] Linking C executable tests\unit\test_re2z_bump_walk.exe
+[1247/1480] Linking C executable tests\unit\test_1090_stay_on_crate.exe
+[1248/1480] Linking C executable tests\unit\probe_10d0_situp_re2.exe
+[1249/1480] Linking C executable tests\unit\probe_rig_root_y.exe
+[1250/1480] Linking C executable tests\unit\probe_1090_flame_touch.exe
+[1251/1480] Linking C executable tests\unit\test_ai_flavor_mixed.exe
+[1252/1480] Linking C executable tests\unit\probe_10d0_float_y.exe
+[1253/1480] Linking C executable tests\unit\probe_rig_sohle.exe
+[1254/1480] Linking C executable tests\unit\probe_1090_flinch_anim.exe
+[1255/1480] Linking C executable tests\unit\test_re2z_finisher_bite.exe
+[1256/1480] Linking C executable tests\unit\probe_re2z_stomp.exe
+[1257/1480] Linking C executable tests\unit\test_re2z_grab_core_se.exe
+[1258/1480] Linking C executable tests\unit\probe_1010_kriecher.exe
+[1259/1480] Linking C executable tests\unit\probe_1220_kriecher.exe
+[1260/1480] Linking C executable tests\unit\probe_re2z_bandlock.exe
+[1261/1480] Linking C executable tests\unit\probe_item_model_1020.exe
+[1262/1480] Linking C executable tests\unit\test_writher_kill_flag.exe
+[1263/1480] Linking C executable tests\unit\test_1090_flame_out_pin.exe
+[1264/1480] Linking C executable tests\unit\test_npc_wall_clamp.exe
+[1265/1480] Linking C executable tests\unit\test_1090_npc_prop_push.exe
+[1266/1480] Linking C executable tests\unit\test_re2z_rise_hittable.exe
+[1267/1480] Linking C executable tests\unit\probe_1090_flame_out.exe
+[1268/1480] Linking C executable tests\unit\test_1090_nodraw_pin.exe
+[1269/1480] Linking C executable tests\unit\test_rig_root_fix.exe
+[1270/1480] Linking C executable tests\unit\probe_1210_reach.exe
+[1271/1480] Linking C executable tests\unit\probe_1210_material.exe
+[1272/1480] Linking C executable tests\unit\test_stage6_hintergrund.exe
+[1273/1480] Linking C executable tests\unit\test_writher_abtauchen.exe
+[1274/1480] Linking C executable tests\unit\test_re2doc_bildebene.exe
+[1275/1480] Linking C executable tests\unit\probe_1210_masken.exe
+[1276/1480] Linking C executable tests\unit\probe_1210_wandgriff.exe
+[1277/1480] Linking C executable tests\unit\probe_1210_trigger.exe
+[1278/1480] Linking C executable tests\unit\probe_1210_vakuanz.exe
+[1279/1480] Linking C executable tests\unit\test_1210_gitterhaende.exe
+[1280/1480] Linking C executable tests\unit\probe_1210_griff.exe
+[1281/1480] Linking C executable tests\unit\probe_1210_geo.exe
+[1282/1480] Linking C executable tests\unit\probe_1210_cutcheck.exe
+[1283/1480] Linking C executable tests\unit\probe_ada_kiste.exe
+[1284/1480] Linking C executable tests\unit\probe_1210_sound.exe
+[1285/1480] Linking C executable tests\unit\probe_1210_natur.exe
+[1286/1480] Linking C executable tests\unit\probe_ada_escort_anim.exe
+[1287/1480] Linking C executable tests\unit\probe_ada_counter.exe
+[1288/1480] Linking C executable tests\unit\probe_ada_reach.exe
+[1289/1480] Linking C executable tests\unit\probe_1210_vak.exe
+[1290/1480] Linking C executable tests\unit\probe_ada_kiste_gegen.exe
+[1291/1480] Linking C executable tests\unit\probe_1210_re2takt.exe
+[1292/1480] Linking C executable tests\unit\probe_1090_bgdiff.exe
+[1293/1480] Linking C executable tests\unit\probe_1090_vakgegen.exe
+[1294/1480] Linking C executable tests\unit\probe_1210_vakgegen.exe
+[1295/1480] Linking C executable tests\unit\probe_1190_props.exe
+[1296/1480] Linking C executable tests\unit\test_1190_weste.exe
+[1297/1480] Linking C executable tests\unit\probe_1190_texte.exe
+[1298/1480] Linking C executable tests\unit\probe_bg_dump.exe
+[1299/1480] Linking C executable tests\unit\probe_hund_bellen.exe
+[1300/1480] Linking C executable tests\unit\probe_1190_ruestung.exe
+[1301/1480] Linking C executable tests\unit\test_audio_sperren.exe
+[1302/1480] Linking C executable tests\unit\test_1190_ruestung.exe
+[1303/1480] Linking C executable tests\unit\test_synchro_stimme.exe
+[1304/1480] Linking C executable tests\unit\test_sld_atlas.exe
+[1305/1480] Linking C executable tests\unit\test_pri_inventar_riegel.exe
+[1306/1480] Linking C executable tests\unit\probe_synchro_status.exe
+[1307/1480] Linking C executable tests\unit\test_map_marke_haengt_an.exe
+[1308/1480] Linking C executable tests\unit\test_map_tuerachse.exe
+[1309/1480] Linking C executable tests\unit\test_map_etagen_rect.exe
+[1310/1480] Linking C executable tests\unit\test_map_marke_auf_kunst.exe
+[1311/1480] Linking C executable tests\unit\probe_gorilla_11c0_stuck.exe
+[1312/1480] Linking C executable tests\unit\test_re2_crow_kill_cmd3.exe
+[1313/1480] Linking C executable tests\unit\probe_re2_crow_kill.exe
+[1314/1480] Linking C executable tests\unit\test_re2z_spawn_seed.exe
+[1315/1480] Linking C executable tests\unit\test_pri_eingemessen.exe
+[1316/1480] Linking C executable tests\unit\test_maggot_zone_leap.exe
+[1317/1480] Linking C executable tests\unit\test_pri_kopfschnitt.exe
+[1318/1480] Linking C executable tests\unit\probe_re2_crow_10c0.exe
+[1319/1480] Linking C executable tests\unit\probe_nav_wirkung.exe
+[1320/1480] Linking C executable tests\unit\probe_sichtregion.exe
+[1321/1480] Linking C executable tests\unit\probe_re2_crow_bank.exe
+[1322/1480] Linking C executable tests\unit\test_map_eingemessen.exe
+[1323/1480] Linking C executable tests\unit\probe_re2_crow_1120.exe
+[1324/1480] Linking C executable tests\unit\probe_los_divergenz.exe
+[1325/1480] Linking C executable tests\unit\probe_atlas_kollision.exe
+[1326/1480] Linking C executable tests\unit\probe_g5_tentakel.exe
+[1327/1480] Linking C executable tests\unit\probe_gator_sweep.exe
+[1328/1480] Linking C executable tests\unit\test_re2_gore_decoder.exe
+[1329/1480] Linking C executable tests\unit\probe_5090_birkin_verify.exe
+[1330/1480] Linking C executable tests\unit\test_g5_morph.exe
+[1331/1480] Linking C executable tests\unit\probe_g5_boss.exe
+[1332/1480] Linking C executable tests\unit\probe_gator_fress.exe
+[1333/1480] Linking C executable tests\unit\probe_5090_birkin.exe
+[1334/1480] Linking C executable tests\unit\test_voice_ausreden.exe
+[1335/1480] Linking C executable tests\unit\test_autofire_pin.exe
+[1336/1480] Linking C executable tests\unit\probe_spinne_elevation.exe
+[1337/1480] Linking C executable tests\unit\test_1210_arme.exe
+[1338/1480] Linking C executable tests\unit\probe_gator_maul.exe
+[1339/1480] Linking C executable tests\unit\probe_stimme_takt.exe
+[1340/1480] Linking C executable tests\unit\probe_1030_grenzzyklus.exe
+[1341/1480] Linking C executable tests\unit\probe_res223_test.exe
+[1342/1480] Linking C executable tests\unit\test_map_1090.exe
+[1343/1480] Linking C executable tests\unit\probe_re2_stepsize.exe
+[1344/1480] Linking C executable tests\unit\probe_re2z_tempobit.exe
+[1345/1480] Linking C executable tests\unit\probe_wallstep.exe
+[1346/1480] Linking C executable tests\unit\probe_wrapgain_check.exe
+[1347/1480] Linking C executable tests\unit\probe_wallstep_gegen.exe
+[1348/1480] Linking C executable tests\unit\probe_tempo_gegenpruefung.exe
+[1349/1480] Linking C executable tests\unit\probe_re2_kfjump.exe
+[1350/1480] Linking C executable tests\unit\probe_verify_step_tunnel.exe
+[1351/1480] Linking C executable tests\unit\probe_1030_gegenpruefung.exe
+[1352/1480] Linking C executable tests\unit\probe_verify_fatcadence.exe
+[1353/1480] Linking C executable tests\unit\probe_verify_portklemme.exe
+[1354/1480] Linking C executable tests\unit\probe_gegen_dkf2.exe
+[1355/1480] Linking C executable tests\unit\probe_1030_gz_verify.exe
+[1356/1480] Linking C executable tests\unit\probe_re2z_block.exe
+[1357/1480] Linking C executable tests\unit\probe_marke_treffbar.exe
+[1358/1480] Linking C executable tests\unit\probe_sperre_schiene.exe
+[1359/1480] Linking C executable tests\unit\probe_verify_sperre_dauer.exe
+[1360/1480] Linking C executable tests\unit\probe_hund_trefferluecke.exe
+[1361/1480] Linking C executable tests\unit\probe_gegen_1d3fenster.exe
+[1362/1480] Linking C executable tests\unit\probe_verify_hund_abzugzaehlung.exe
+[1363/1480] Linking C executable tests\unit\probe_abzug_takt.exe
+[1364/1480] Linking C executable tests\unit\probe_verify_hundsperre.exe
+[1365/1480] Linking C executable tests\unit\probe_gegen_hundsperre2.exe
+[1366/1480] Linking C executable tests\unit\probe_1d3gate_hang.exe
+[1367/1480] Linking C executable tests\unit\probe_gegen_hundsperre.exe
+[1368/1480] Linking C executable tests\unit\probe_hund_takt_nachmessung.exe
+[1369/1480] Linking C executable tests\unit\probe_1d3_gate_hang.exe
+[1370/1480] Linking C executable tests\unit\probe_1d3gate_verify.exe
+[1371/1480] Linking C executable tests\unit\probe_re2z_unterhaelfte.exe
+[1372/1480] Linking C executable tests\unit\probe_1d3_zensus.exe
+[1373/1480] Linking C executable tests\unit\probe_1050_maskentiefe.exe
+[1374/1480] Linking C executable tests\unit\probe_skept_kraehe_takt.exe
+[1375/1480] Linking C executable tests\unit\probe_1230_hundetod.exe
+[1376/1480] Linking C executable tests\unit\probe_v_einbauweg_93.exe
+[1377/1480] Linking C executable tests\unit\probe_maul_gegen.exe
+[1378/1480] Linking C executable tests\unit\probe_1050_gegen.exe
+[1379/1480] Linking C executable tests\unit\probe_gator_maul_x.exe
+[1380/1480] Linking C executable tests\unit\probe_gator_maul_lokal.exe
+[1381/1480] Linking C executable tests\unit\probe_gator_maul_gegen.exe
+[1382/1480] Linking C executable tests\unit\probe_re2_dog_deathpose.exe
+[1383/1480] Linking C executable tests\unit\probe_5090_lang.exe
+[1384/1480] Linking C executable tests\unit\probe_gator_fress_anker.exe
+[1385/1480] Linking C executable tests\unit\probe_gator_anker_nachmess.exe
+[1386/1480] Linking C executable tests\unit\probe_verify_ankery.exe
+[1387/1480] Linking C executable tests\unit\probe_verify_gator_scale.exe
+[1388/1480] Linking C executable tests\unit\probe_v_maul_gegen.exe
+[1389/1480] Linking C executable tests\unit\probe_verify_p3stand.exe
+[1390/1480] Linking C executable tests\unit\test_karte_besitz.exe
+[1391/1480] Linking C executable tests\unit\probe_verify_kfpfad.exe
+[1392/1480] Linking C executable tests\unit\probe_elevator_1080_full.exe
+[1393/1480] Linking C executable tests\unit\probe_p3_clip11_check.exe
+[1394/1480] Linking C executable tests\unit\test_r16_aufstehen_schuss.exe
+[1395/1480] Linking C executable tests\unit\test_r16_liegende_unschiessbar.exe
+[1396/1480] Linking C executable tests\unit\probe_p2_birkin_g5.exe
+[1397/1480] Linking C executable tests\unit\probe_p2_atlas_dump.exe
+[1398/1480] Linking C executable tests\unit\probe_elevator_4020_full.exe
+[1399/1480] Linking C executable tests\unit\test_p2_1210_arme_re2.exe
+[1400/1480] Linking C executable tests\unit\test_p2_kriecher1010.exe
+[1401/1480] Linking C executable tests\unit\test_pri_hashes.exe
+[1402/1480] Linking C executable tests\unit\probe_p2_floor_dump.exe
+[1403/1480] Linking C executable tests\unit\test_pri_silhouette.exe
+[1404/1480] Linking C executable tests\unit\probe_p3_gator_lunge.exe
+[1405/1480] Linking C executable tests\unit\probe_p3_birkin_rest.exe
+[1406/1480] Linking C executable tests\unit\probe_p3_gator_maul.exe
+[1407/1480] Linking C executable tests\unit\probe_p3_restposten.exe
+[1408/1480] Linking C executable tests\unit\probe_r16_birkin_g5.exe
+[1409/1480] Linking C executable tests\unit\probe_p3_spider_stalk.exe
+[1410/1480] Linking C executable tests\unit\probe_r16_aufstehen_schuss.exe
+[1411/1480] Linking C executable tests\unit\probe_r16_spider_se.exe
+[1412/1480] Linking C executable tests\unit\probe_r16_gator_finisher_anker.exe
+[1413/1480] Linking C executable tests\unit\probe_r16_arme_1210_re2.exe
+[1414/1480] Linking C executable tests\unit\probe_r16_gator_se.exe
+[1415/1480] Linking C executable tests\unit\probe_r16_liegende_zombies.exe
+[1416/1480] Linking C executable tests\unit\probe_r16_pri_masken_audit.exe
+[1417/1480] Linking C executable tests\unit\probe_r16_sk_birkin_g5.exe
+[1418/1480] Linking C executable tests\unit\probe_r16_kriecher1010.exe
+[1419/1480] Linking C executable tests\unit\probe_r16_objekte_paket.exe
+[1420/1480] Linking C executable tests\unit\probe_r16_sk_gator_finisher_sounds.exe
+[1421/1480] Linking C executable tests\unit\probe_r16_sk_arme_1210_re2.exe
+[1422/1480] Linking C executable tests\unit\probe_r16_sk_kriecher_1010.exe
+[1423/1480] Linking C executable tests\unit\probe_r16_sk_objekte_paket.exe
+[1424/1480] Linking C executable tests\unit\probe_r16_sk_liegende_zombies.exe
+[1425/1480] Linking C executable tests\unit\probe_r16_sk_trefferhoehe.exe
+[1426/1480] Linking C executable tests\unit\probe_r16_skept2_liegende_zombies.exe
+[1427/1480] Linking C executable tests\unit\probe_r16_sk_tuer_animation_1040.exe
+[1428/1480] Linking C executable tests\unit\probe_r17_weste_karte.exe
+[1429/1480] Linking C executable tests\unit\probe_r17_birkin_1zu1.exe
+[1430/1480] Linking C executable tests\unit\probe_r16_tuer1040.exe
+[1431/1480] Linking C executable tests\unit\probe_r17_munition.exe
+[1432/1480] Linking C executable tests\unit\test_r18_ada_eintritt_1050.exe
+[1433/1480] Linking C executable tests\unit\probe_r16_trefferhoehe.exe
+[1434/1480] Linking C executable tests\unit\probe_r17_untertitel.exe
+[1435/1480] Linking C executable tests\unit\probe_irons_mittelmodell.exe
+[1436/1480] Linking C executable tests\unit\probe_r18_birkin_rest.exe
+[1437/1480] Linking C executable tests\unit\probe_r17_waffen_loop.exe
+[1438/1480] Linking C executable tests\unit\probe_r17_cursor_klick.exe
+[1439/1480] Linking C executable tests\unit\test_r19_zerreiss_10e0c7.exe
+[1440/1480] Linking C executable tests\unit\r19_marke3_1050_c1_tiefe.exe
+[1441/1480] Linking C executable tests\unit\test_r19_marke1_10d0_c1.exe
+[1442/1480] Linking C executable tests\unit\r19b_marke4_10d0_c7_zeilenmodell.exe
+[1443/1480] Linking C executable tests\unit\probe_r20_birkin_push.exe
+[1444/1480] Linking C executable tests\unit\r21_discard_wegwerfen.exe
+[1445/1480] Linking C executable tests\unit\probe_r21_tentakel_schub.exe
+[1446/1480] Linking C executable tests\unit\probe_r22_codepanel_reihenfolge.exe
+[1447/1480] Linking C executable tests\unit\probe_r22_10f0_figur.exe
+[1448/1480] Linking C executable tests\unit\probe_eintritt_pose_einmal.exe
+[1449/1480] Linking C executable tests\unit\probe_r26_mg_blut.exe
+[1450/1480] Linking C executable tests\unit\probe_besitz_zensus.exe
+[1451/1480] Linking C executable tests\unit\test_r26_kaefig_release0c.exe
+[1452/1480] Linking C executable tests\unit\probe_r26_pose80.exe
+[1453/1480] Linking C executable tests\unit\probe_r26_inventar.exe
+[1454/1480] Linking C executable tests\unit\r26_panel_11f0.exe
+[1455/1480] Linking C executable tests\unit\probe_m93r_nachladen.exe
+[1456/1480] Linking C executable tests\unit\probe_abtastphase_11f0.exe
+[1457/1480] Linking C executable tests\unit\test_elev_se.exe
+[1458/1480] Linking C executable tests\unit\probe_r27_hund_biss.exe
+[1459/1480] Linking C executable tests\unit\test_r27_ada_cutscene_1050.exe
+[1460/1480] Linking C executable tests\unit\test_r27_hund_wandtrieb.exe
+[1461/1480] Linking C executable tests\unit\r27_panel_schalterwerte.exe
+[1462/1480] Linking C executable tests\unit\probe_r29_1d3_doppelabzug.exe
+[1463/1480] Linking C executable tests\unit\probe_r28_messer_dauerschlag.exe
+[1464/1480] Linking C executable tests\unit\probe_r30_zielfenster.exe
+[1465/1480] Linking C executable tests\unit\probe_r30b_muendung.exe
+[1466/1480] Linking C executable tests\integration\test_cross_stage.exe
+[1467/1480] Linking C executable tests\integration\test_headless_run.exe
+[1468/1480] Linking C executable tests\integration\test_rvd_coverage.exe
+[1469/1480] Linking C executable tests\integration\test_room_transition.exe
+[1470/1480] Linking C executable tests\integration\test_room_probe_sweep.exe
+[1471/1480] Linking C executable tests\integration\test_map_raum_live.exe
+[1472/1480] Linking C executable tests\integration\test_door_lock.exe
+[1473/1480] Linking C executable tests\integration\test_map_uebergang.exe
+[1474/1480] Linking C executable tests\integration\test_keypad.exe
+[1475/1480] Linking C executable tests\integration\test_door_traversal.exe
+[1476/1480] Linking C executable tests\integration\test_fx_region_cull.exe
+[1477/1480] Linking C executable tests\integration\test_item_name_census.exe
+[1478/1480] Linking C executable tests\integration\test_flag_census.exe
+[1479/1480] Linking C executable tests\integration\test_keydoor.exe
+[1480/1480] Linking C executable tests\integration\test_pri_masken.exe
+    build OK
+
+=== [local_build] test — ctest in re15_port/build
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/wf_22e8e3e3-652-1/re15_port/build
+        Start   1: re15_tests
+  1/355 Test   #1: re15_tests ........................   Passed    0.01 sec
+        Start   2: prop_rdt_filename
+  2/355 Test   #2: prop_rdt_filename .................   Passed    0.02 sec
+        Start   3: prop_rdt_null_offset
+  3/355 Test   #3: prop_rdt_null_offset ..............   Passed    0.01 sec
+        Start   4: prop_scd_pc_advance
+  4/355 Test   #4: prop_scd_pc_advance ...............   Passed    0.02 sec
+        Start   5: prop_door_roundtrip
+  5/355 Test   #5: prop_door_roundtrip ...............   Passed    0.02 sec
+        Start   6: prop_fixpoint_precision
+  6/355 Test   #6: prop_fixpoint_precision ...........   Passed    0.01 sec
+        Start   7: prop_tank_controls
+  7/355 Test   #7: prop_tank_controls ................   Passed    0.01 sec
+        Start   8: prop_input_edge
+  8/355 Test   #8: prop_input_edge ...................   Passed    0.01 sec
+        Start   9: prop_sca_collision
+  9/355 Test   #9: prop_sca_collision ................   Passed    0.02 sec
+        Start  10: prop_point_in_poly
+ 10/355 Test  #10: prop_point_in_poly ................   Passed    0.02 sec
+        Start  11: prop_zone_dispatch
+ 11/355 Test  #11: prop_zone_dispatch ................   Passed    0.01 sec
+        Start  12: prop_bss_chunk
+ 12/355 Test  #12: prop_bss_chunk ....................   Passed    0.01 sec
+        Start  13: prop_spawn_entered
+ 13/355 Test  #13: prop_spawn_entered ................   Passed    0.01 sec
+        Start  14: prop_ot_sort
+ 14/355 Test  #14: prop_ot_sort ......................   Passed    0.05 sec
+        Start  15: prop_adpcm_decode
+ 15/355 Test  #15: prop_adpcm_decode .................   Passed    0.03 sec
+        Start  16: prop_json_roundtrip
+ 16/355 Test  #16: prop_json_roundtrip ...............   Passed    0.02 sec
+        Start  17: prop_savestate_cmp
+ 17/355 Test  #17: prop_savestate_cmp ................   Passed    0.01 sec
+        Start  18: unit_rdt_parser
+ 18/355 Test  #18: unit_rdt_parser ...................   Passed    0.01 sec
+        Start  19: unit_sca_parser
+ 19/355 Test  #19: unit_sca_parser ...................   Passed    0.01 sec
+        Start  20: unit_scd_opcodes
+ 20/355 Test  #20: unit_scd_opcodes ..................   Passed    0.01 sec
+        Start  21: unit_math_common
+ 21/355 Test  #21: unit_math_common ..................   Passed    0.02 sec
+        Start  22: unit_room_load
+ 22/355 Test  #22: unit_room_load ....................   Passed    0.01 sec
+        Start  23: unit_member
+ 23/355 Test  #23: unit_member .......................   Passed    0.01 sec
+        Start  24: unit_damage
+ 24/355 Test  #24: unit_damage .......................   Passed    0.02 sec
+        Start  25: unit_enemy_ai
+ 25/355 Test  #25: unit_enemy_ai .....................   Passed    0.02 sec
+        Start  26: unit_room1140_spawn
+ 26/355 Test  #26: unit_room1140_spawn ...............   Passed    0.01 sec
+        Start  27: unit_room1140_combat
+ 27/355 Test  #27: unit_room1140_combat ..............   Passed    0.02 sec
+        Start  28: unit_dog_ai
+ 28/355 Test  #28: unit_dog_ai .......................   Passed    0.03 sec
+        Start  29: unit_crow_ai
+ 29/355 Test  #29: unit_crow_ai ......................   Passed    0.01 sec
+        Start  30: unit_spider_ai
+ 30/355 Test  #30: unit_spider_ai ....................   Passed    0.02 sec
+        Start  31: unit_maggot_ai
+ 31/355 Test  #31: unit_maggot_ai ....................   Passed    0.02 sec
+        Start  32: unit_adult_spider_ai
+ 32/355 Test  #32: unit_adult_spider_ai ..............   Passed    0.02 sec
+        Start  33: unit_cockroach_ai
+ 33/355 Test  #33: unit_cockroach_ai .................   Passed    0.02 sec
+        Start  34: unit_npc_ai
+ 34/355 Test  #34: unit_npc_ai .......................   Passed    0.02 sec
+        Start  35: unit_npc_scd_pose
+ 35/355 Test  #35: unit_npc_scd_pose .................   Passed    0.01 sec
+        Start  36: unit_zgirl_ai
+ 36/355 Test  #36: unit_zgirl_ai .....................   Passed    0.01 sec
+        Start  37: unit_ems
+ 37/355 Test  #37: unit_ems ..........................   Passed    0.01 sec
+        Start  38: unit_esp_parse
+ 38/355 Test  #38: unit_esp_parse ....................   Passed    0.01 sec
+        Start  39: unit_audio_vab
+ 39/355 Test  #39: unit_audio_vab ....................   Passed    0.01 sec
+        Start  40: unit_weapon_select
+ 40/355 Test  #40: unit_weapon_select ................   Passed    0.02 sec
+        Start  41: unit_inv_fsm
+ 41/355 Test  #41: unit_inv_fsm ......................   Passed    0.01 sec
+        Start  42: unit_item_icon
+ 42/355 Test  #42: unit_item_icon ....................   Passed    0.01 sec
+        Start  43: unit_zombie_pose
+ 43/355 Test  #43: unit_zombie_pose ..................   Passed    0.02 sec
+        Start  44: unit_birkin_ai
+ 44/355 Test  #44: unit_birkin_ai ....................   Passed    0.01 sec
+        Start  45: unit_writher_ai
+ 45/355 Test  #45: unit_writher_ai ...................   Passed    0.02 sec
+        Start  46: unit_alligator_ai
+ 46/355 Test  #46: unit_alligator_ai .................   Passed    0.01 sec
+        Start  47: unit_fx_emitter_ai
+ 47/355 Test  #47: unit_fx_emitter_ai ................   Passed    0.02 sec
+        Start  48: unit_tyrant_ai
+ 48/355 Test  #48: unit_tyrant_ai ....................   Passed    0.01 sec
+        Start  49: unit_ivy_ai
+ 49/355 Test  #49: unit_ivy_ai .......................   Passed    0.01 sec
+        Start  50: unit_enemy_shootable
+ 50/355 Test  #50: unit_enemy_shootable ..............   Passed    0.01 sec
+        Start  51: unit_aot_edge
+ 51/355 Test  #51: unit_aot_edge .....................   Passed    0.01 sec
+        Start  52: unit_enemy_body_push
+ 52/355 Test  #52: unit_enemy_body_push ..............   Passed    0.04 sec
+        Start  53: unit_scd_aot_opcodes
+ 53/355 Test  #53: unit_scd_aot_opcodes ..............   Passed    0.04 sec
+        Start  54: unit_slope_collision
+ 54/355 Test  #54: unit_slope_collision ..............   Passed    0.02 sec
+        Start  55: unit_aim_all_around
+ 55/355 Test  #55: unit_aim_all_around ...............   Passed    0.06 sec
+        Start  56: unit_aim_lower_exit
+ 56/355 Test  #56: unit_aim_lower_exit ...............   Passed    0.01 sec
+        Start  57: unit_hit_reaction
+ 57/355 Test  #57: unit_hit_reaction .................   Passed    0.01 sec
+        Start  58: unit_se_bank_routing
+ 58/355 Test  #58: unit_se_bank_routing ..............   Passed    0.01 sec
+        Start  59: unit_scd_for2
+ 59/355 Test  #59: unit_scd_for2 .....................   Passed    0.01 sec
+        Start  60: unit_bleed_rng
+ 60/355 Test  #60: unit_bleed_rng ....................   Passed    0.01 sec
+        Start  61: unit_getup_advance
+ 61/355 Test  #61: unit_getup_advance ................   Passed    0.01 sec
+        Start  62: unit_rvd_scan_order
+ 62/355 Test  #62: unit_rvd_scan_order ...............   Passed    0.01 sec
+        Start  63: unit_scd_dir_set
+ 63/355 Test  #63: unit_scd_dir_set ..................   Passed    0.01 sec
+        Start  64: unit_em_status_persist
+ 64/355 Test  #64: unit_em_status_persist ............   Passed    0.01 sec
+        Start  65: unit_collision_layers
+ 65/355 Test  #65: unit_collision_layers .............   Passed    0.01 sec
+        Start  66: unit_anim_pose_order
+ 66/355 Test  #66: unit_anim_pose_order ..............   Passed    0.01 sec
+        Start  67: unit_audio_decode
+ 67/355 Test  #67: unit_audio_decode .................   Passed    0.01 sec
+        Start  68: unit_xa_decode
+ 68/355 Test  #68: unit_xa_decode ....................   Passed    0.01 sec
+        Start  69: unit_savedata
+ 69/355 Test  #69: unit_savedata .....................   Passed    0.01 sec
+        Start  70: unit_savepoint
+ 70/355 Test  #70: unit_savepoint ....................   Passed    0.01 sec
+        Start  71: unit_action_msg_gate
+ 71/355 Test  #71: unit_action_msg_gate ..............   Passed    0.01 sec
+        Start  72: unit_msg_dialog
+ 72/355 Test  #72: unit_msg_dialog ...................   Passed    0.01 sec
+        Start  73: unit_scd_flag_fade
+ 73/355 Test  #73: unit_scd_flag_fade ................   Passed    0.02 sec
+        Start  74: unit_flag_gate
+ 74/355 Test  #74: unit_flag_gate ....................   Passed    0.01 sec
+        Start  75: unit_scd_key_ck
+ 75/355 Test  #75: unit_scd_key_ck ...................   Passed    0.01 sec
+        Start  76: unit_camera_view
+ 76/355 Test  #76: unit_camera_view ..................   Passed    0.01 sec
+        Start  77: unit_rotmatrix
+ 77/355 Test  #77: unit_rotmatrix ....................   Passed    0.02 sec
+        Start  78: unit_inv_grant
+ 78/355 Test  #78: unit_inv_grant ....................   Passed    0.01 sec
+        Start  79: unit_catan
+ 79/355 Test  #79: unit_catan ........................   Passed    0.01 sec
+        Start  80: unit_squareroot0
+ 80/355 Test  #80: unit_squareroot0 ..................   Passed    0.02 sec
+        Start  81: unit_enemy_attack_reach
+ 81/355 Test  #81: unit_enemy_attack_reach ...........   Passed    0.02 sec
+        Start  82: unit_item_use
+ 82/355 Test  #82: unit_item_use .....................   Passed    0.02 sec
+        Start  83: unit_item_modal
+ 83/355 Test  #83: unit_item_modal ...................   Passed    0.01 sec
+        Start  84: unit_item_stack_press
+ 84/355 Test  #84: unit_item_stack_press .............   Passed    0.02 sec
+        Start  85: unit_dog_aim_band
+ 85/355 Test  #85: unit_dog_aim_band .................   Passed    0.01 sec
+        Start  86: unit_sherry_wall_pin
+ 86/355 Test  #86: unit_sherry_wall_pin ..............   Passed    0.06 sec
+        Start  87: unit_writher_hit_feedback
+ 87/355 Test  #87: unit_writher_hit_feedback .........   Passed    0.01 sec
+        Start  88: unit_weste_effekt
+ 88/355 Test  #88: unit_weste_effekt .................   Passed    0.03 sec
+        Start  89: unit_maggot_bone_square
+ 89/355 Test  #89: unit_maggot_bone_square ...........   Passed    0.02 sec
+        Start  90: unit_dormant_activation
+ 90/355 Test  #90: unit_dormant_activation ...........   Passed    0.05 sec
+        Start  91: unit_montage_fx
+ 91/355 Test  #91: unit_montage_fx ...................   Passed    0.01 sec
+        Start  92: unit_map_re2_system
+ 92/355 Test  #92: unit_map_re2_system ...............   Passed    0.02 sec
+        Start  93: unit_map_floor_visited
+ 93/355 Test  #93: unit_map_floor_visited ............   Passed    0.02 sec
+        Start  94: unit_map_mark_band
+ 94/355 Test  #94: unit_map_mark_band ................   Passed    0.01 sec
+        Start  95: unit_map_orient
+ 95/355 Test  #95: unit_map_orient ...................   Passed    0.01 sec
+        Start  96: unit_map_durchgang
+ 96/355 Test  #96: unit_map_durchgang ................   Passed    0.11 sec
+        Start  97: unit_map_marker_innen
+ 97/355 Test  #97: unit_map_marker_innen .............   Passed    0.02 sec
+        Start  98: unit_map_etagenzeile
+ 98/355 Test  #98: unit_map_etagenzeile ..............   Passed    0.01 sec
+        Start  99: unit_map_innenwand
+ 99/355 Test  #99: unit_map_innenwand ................   Passed    0.01 sec
+        Start 100: unit_map_teilbereich
+100/355 Test #100: unit_map_teilbereich ..............   Passed    0.02 sec
+        Start 101: unit_map_synth
+101/355 Test #101: unit_map_synth ....................   Passed    0.01 sec
+        Start 102: unit_map_zone_bits
+102/355 Test #102: unit_map_zone_bits ................   Passed    0.02 sec
+        Start 103: unit_room1150_itembox
+103/355 Test #103: unit_room1150_itembox .............   Passed    0.01 sec
+        Start 104: unit_itembox_transfer
+104/355 Test #104: unit_itembox_transfer .............   Passed    0.01 sec
+        Start 105: unit_itembox_screen
+105/355 Test #105: unit_itembox_screen ...............   Passed    0.02 sec
+        Start 106: unit_pad_remap
+106/355 Test #106: unit_pad_remap ....................   Passed    0.02 sec
+        Start 107: unit_aot_sce_census
+107/355 Test #107: unit_aot_sce_census ...............   Passed    0.02 sec
+        Start 108: unit_re2_zombie_ai
+108/355 Test #108: unit_re2_zombie_ai ................   Passed    0.01 sec
+        Start 109: unit_re2_room1140_ab
+109/355 Test #109: unit_re2_room1140_ab ..............   Passed    0.07 sec
+        Start 110: unit_re2_dog_ai
+110/355 Test #110: unit_re2_dog_ai ...................   Passed    0.02 sec
+        Start 111: unit_re2_room1190_ab
+111/355 Test #111: unit_re2_room1190_ab ..............   Passed    0.04 sec
+        Start 112: unit_re2_crow_ai
+112/355 Test #112: unit_re2_crow_ai ..................   Passed    0.02 sec
+        Start 113: unit_re2_room10c0_ab
+113/355 Test #113: unit_re2_room10c0_ab ..............   Passed    0.05 sec
+        Start 114: unit_wound_accumulator
+114/355 Test #114: unit_wound_accumulator ............   Passed    0.02 sec
+        Start 115: unit_se_pitch
+115/355 Test #115: unit_se_pitch .....................   Passed    0.01 sec
+        Start 116: unit_crow_fixes
+116/355 Test #116: unit_crow_fixes ...................   Passed    0.01 sec
+        Start 117: unit_zombie_hit_fixes
+117/355 Test #117: unit_zombie_hit_fixes .............   Passed    0.01 sec
+        Start 118: unit_elliot_1170_run
+118/355 Test #118: unit_elliot_1170_run ..............   Passed    0.04 sec
+        Start 119: unit_stair_1170_regression
+119/355 Test #119: unit_stair_1170_regression ........   Passed    0.02 sec
+        Start 120: unit_debug_menu
+120/355 Test #120: unit_debug_menu ...................   Passed    0.01 sec
+        Start 121: probe_crow_kill
+121/355 Test #121: probe_crow_kill ...................   Passed    0.03 sec
+        Start 122: unit_crow_death_corpse
+122/355 Test #122: unit_crow_death_corpse ............   Passed    0.04 sec
+        Start 123: unit_door_1170_lock
+123/355 Test #123: unit_door_1170_lock ...............   Passed    0.02 sec
+        Start 124: unit_marvin_spawn_bank
+124/355 Test #124: unit_marvin_spawn_bank ............   Passed    0.05 sec
+        Start 125: unit_zombie_10d0_reentry_a
+125/355 Test #125: unit_zombie_10d0_reentry_a ........   Passed    0.16 sec
+        Start 126: unit_zombie_10d0_reentry_b
+126/355 Test #126: unit_zombie_10d0_reentry_b ........   Passed    0.15 sec
+        Start 127: unit_marvin_render_pose
+127/355 Test #127: unit_marvin_render_pose ...........   Passed    0.03 sec
+        Start 128: unit_load_after_death
+128/355 Test #128: unit_load_after_death .............   Passed    0.04 sec
+        Start 129: unit_room1070_wake
+129/355 Test #129: unit_room1070_wake ................   Passed    0.03 sec
+        Start 130: unit_room1040_switch
+130/355 Test #130: unit_room1040_switch ..............   Passed    0.02 sec
+        Start 131: unit_cam_1030_reentry
+131/355 Test #131: unit_cam_1030_reentry .............   Passed    0.05 sec
+        Start 132: unit_stair_hwtruth_1060
+132/355 Test #132: unit_stair_hwtruth_1060 ...........   Passed    0.02 sec
+        Start 133: probe_elevator_1080
+133/355 Test #133: probe_elevator_1080 ...............   Passed    0.07 sec
+        Start 134: unit_gen_11f0_switches
+134/355 Test #134: unit_gen_11f0_switches ............   Passed    0.02 sec
+        Start 135: unit_1030_spawncap
+135/355 Test #135: unit_1030_spawncap ................   Passed    0.03 sec
+        Start 136: unit_crawl_toggle
+136/355 Test #136: unit_crawl_toggle .................   Passed    0.01 sec
+        Start 137: unit_re2_dog_hitwindow
+137/355 Test #137: unit_re2_dog_hitwindow ............   Passed    0.02 sec
+        Start 138: unit_gegenprobe_hund_luftzeile
+138/355 Test #138: unit_gegenprobe_hund_luftzeile ....   Passed    0.02 sec
+        Start 139: unit_dog_hit
+139/355 Test #139: unit_dog_hit ......................   Passed    0.02 sec
+        Start 140: unit_dog_devour
+140/355 Test #140: unit_dog_devour ...................   Passed    0.02 sec
+        Start 141: unit_espr_11e0
+141/355 Test #141: unit_espr_11e0 ....................   Passed    0.03 sec
+        Start 142: unit_re2_ems
+142/355 Test #142: unit_re2_ems ......................   Passed    0.02 sec
+        Start 143: unit_re2_enemse
+143/355 Test #143: unit_re2_enemse ...................   Passed    0.06 sec
+        Start 144: unit_neck_headlook
+144/355 Test #144: unit_neck_headlook ................   Passed    0.01 sec
+        Start 145: unit_lane_b1_t1_aligntick
+145/355 Test #145: unit_lane_b1_t1_aligntick .........   Passed    0.11 sec
+        Start 146: unit_lane_b1_t2_idleloop
+146/355 Test #146: unit_lane_b1_t2_idleloop ..........   Passed    0.04 sec
+        Start 147: unit_lane_b1_t3_sfxgate
+147/355 Test #147: unit_lane_b1_t3_sfxgate ...........   Passed    0.02 sec
+        Start 148: unit_lane_b1_t3b_getupsfx
+148/355 Test #148: unit_lane_b1_t3b_getupsfx .........   Passed    0.02 sec
+        Start 149: unit_lane_b1_t45_room1100
+149/355 Test #149: unit_lane_b1_t45_room1100 .........   Passed    0.05 sec
+        Start 150: unit_bss_room_source
+150/355 Test #150: unit_bss_room_source ..............   Passed    0.69 sec
+        Start 151: unit_text_freeze
+151/355 Test #151: unit_text_freeze ..................   Passed    0.02 sec
+        Start 152: unit_room_transition_cmd
+152/355 Test #152: unit_room_transition_cmd ..........   Passed    0.02 sec
+        Start 153: unit_re2_sfx_cadence
+153/355 Test #153: unit_re2_sfx_cadence ..............   Passed    0.02 sec
+        Start 154: unit_rotor_bgm_pin
+154/355 Test #154: unit_rotor_bgm_pin ................   Passed    0.37 sec
+        Start 155: unit_irons_neck_1150
+155/355 Test #155: unit_irons_neck_1150 ..............   Passed    0.03 sec
+        Start 156: unit_zombie_bank_rule
+156/355 Test #156: unit_zombie_bank_rule .............   Passed    0.01 sec
+        Start 157: unit_zombie_idle_clip
+157/355 Test #157: unit_zombie_idle_clip .............   Passed    0.01 sec
+        Start 158: unit_zombie_step_sfx
+158/355 Test #158: unit_zombie_step_sfx ..............   Passed    0.01 sec
+        Start 159: unit_zombie_knock_sfx
+159/355 Test #159: unit_zombie_knock_sfx .............   Passed    0.01 sec
+        Start 160: unit_zombie_se_ab_10d0
+160/355 Test #160: unit_zombie_se_ab_10d0 ............   Passed    0.04 sec
+        Start 161: unit_se_voice_machine
+161/355 Test #161: unit_se_voice_machine .............   Passed    0.02 sec
+        Start 162: unit_anim_rate
+162/355 Test #162: unit_anim_rate ....................   Passed    0.02 sec
+        Start 163: unit_anim_reverse_se
+163/355 Test #163: unit_anim_reverse_se ..............   Passed    0.02 sec
+        Start 164: unit_knockdown_frontback
+164/355 Test #164: unit_knockdown_frontback ..........   Passed    0.02 sec
+        Start 165: unit_re2_livepath
+165/355 Test #165: unit_re2_livepath .................   Passed    0.03 sec
+        Start 166: unit_re2_hit_reaction
+166/355 Test #166: unit_re2_hit_reaction .............   Passed    0.02 sec
+        Start 167: unit_re2_weapon_rows
+167/355 Test #167: unit_re2_weapon_rows ..............   Passed    0.02 sec
+        Start 168: unit_re2_enemse_bank
+168/355 Test #168: unit_re2_enemse_bank ..............   Passed    0.01 sec
+        Start 169: unit_knockdown_handoff_bank
+169/355 Test #169: unit_knockdown_handoff_bank .......   Passed    0.02 sec
+        Start 170: unit_knockdown_fall_seq
+170/355 Test #170: unit_knockdown_fall_seq ...........   Passed    0.01 sec
+        Start 171: unit_zombie_getup_se
+171/355 Test #171: unit_zombie_getup_se ..............   Passed    0.87 sec
+        Start 172: unit_re2_gore
+172/355 Test #172: unit_re2_gore .....................   Passed    0.03 sec
+        Start 173: unit_re2_gore_render
+173/355 Test #173: unit_re2_gore_render ..............   Passed    0.02 sec
+        Start 174: unit_re2_gore_fly
+174/355 Test #174: unit_re2_gore_fly .................   Passed    0.02 sec
+        Start 175: unit_re2_spider_ai
+175/355 Test #175: unit_re2_spider_ai ................   Passed    0.02 sec
+        Start 176: unit_re2_room1090_ab
+176/355 Test #176: unit_re2_room1090_ab ..............   Passed    0.03 sec
+        Start 177: unit_re2_spider_water_2090
+177/355 Test #177: unit_re2_spider_water_2090 ........   Passed    0.01 sec
+        Start 178: unit_re2_hit_repeat
+178/355 Test #178: unit_re2_hit_repeat ...............   Passed    0.06 sec
+        Start 179: unit_re2_hit_repeat_crow_spider
+179/355 Test #179: unit_re2_hit_repeat_crow_spider ...   Passed    0.04 sec
+        Start 180: unit_re2_hybrid_rig
+180/355 Test #180: unit_re2_hybrid_rig ...............   Passed    0.40 sec
+        Start 181: unit_re2_baby_spider_dmg
+181/355 Test #181: unit_re2_baby_spider_dmg ..........   Passed    0.07 sec
+        Start 182: unit_schrot_trennung
+182/355 Test #182: unit_schrot_trennung ..............   Passed    0.03 sec
+        Start 183: unit_re2_hp_model
+183/355 Test #183: unit_re2_hp_model .................   Passed    0.23 sec
+        Start 184: unit_re2_stagger_knockdown
+184/355 Test #184: unit_re2_stagger_knockdown ........   Passed    0.03 sec
+        Start 185: unit_re2_dog_hp_reroll
+185/355 Test #185: unit_re2_dog_hp_reroll ............   Passed    0.05 sec
+        Start 186: unit_re2_dog_playdead_gate
+186/355 Test #186: unit_re2_dog_playdead_gate ........   Passed    0.03 sec
+        Start 187: unit_re2_zombie_hitfilter
+187/355 Test #187: unit_re2_zombie_hitfilter .........   Passed    0.01 sec
+        Start 188: unit_re2_crow_se_bank
+188/355 Test #188: unit_re2_crow_se_bank .............   Passed    0.06 sec
+        Start 189: unit_re15_zombie_death_anim
+189/355 Test #189: unit_re15_zombie_death_anim .......   Passed    0.65 sec
+        Start 190: unit_re2_zombie_death_fall
+190/355 Test #190: unit_re2_zombie_death_fall ........   Passed    0.05 sec
+        Start 191: unit_re15_re2z_import
+191/355 Test #191: unit_re15_re2z_import .............   Passed    0.03 sec
+        Start 192: unit_re15_re2z_gore_se
+192/355 Test #192: unit_re15_re2z_gore_se ............   Passed    0.13 sec
+        Start 193: unit_re2_lyer_1140
+193/355 Test #193: unit_re2_lyer_1140 ................   Passed    1.81 sec
+        Start 194: unit_1140_straight_shot
+194/355 Test #194: unit_1140_straight_shot ...........   Passed    0.03 sec
+        Start 195: unit_1090_room_pin
+195/355 Test #195: unit_1090_room_pin ................   Passed    0.02 sec
+        Start 196: unit_re2_zombie_abc
+196/355 Test #196: unit_re2_zombie_abc ...............   Passed    5.02 sec
+        Start 197: unit_gen_11f0_cursor_view
+197/355 Test #197: unit_gen_11f0_cursor_view .........   Passed    0.02 sec
+        Start 198: unit_prop_texel_key_11f0
+198/355 Test #198: unit_prop_texel_key_11f0 ..........   Passed    0.02 sec
+        Start 199: unit_re2_victim_collapse
+199/355 Test #199: unit_re2_victim_collapse ..........   Passed    0.02 sec
+        Start 200: unit_1090_push_pin
+200/355 Test #200: unit_1090_push_pin ................   Passed    0.01 sec
+        Start 201: unit_re2_crawler
+201/355 Test #201: unit_re2_crawler ..................   Passed    0.02 sec
+        Start 202: unit_1090_fire_pin
+202/355 Test #202: unit_1090_fire_pin ................   Passed    0.02 sec
+        Start 203: unit_1030_crawl_live
+203/355 Test #203: unit_1030_crawl_live ..............   Passed    1.09 sec
+        Start 204: unit_1030_trigger_chain
+204/355 Test #204: unit_1030_trigger_chain ...........   Passed    1.04 sec
+        Start 205: unit_1030_stuck_who
+205/355 Test #205: unit_1030_stuck_who ...............   Passed    4.19 sec
+        Start 206: unit_1030_bandsweep
+206/355 Test #206: unit_1030_bandsweep ...............   Passed    0.02 sec
+        Start 207: unit_sca_contact90
+207/355 Test #207: unit_sca_contact90 ................   Passed    0.05 sec
+        Start 208: unit_sca_wall_hit
+208/355 Test #208: unit_sca_wall_hit .................   Passed    0.10 sec
+        Start 209: unit_1090_push_anim
+209/355 Test #209: unit_1090_push_anim ...............   Passed    0.01 sec
+        Start 210: unit_re2_zombie_teardeath
+210/355 Test #210: unit_re2_zombie_teardeath .........   Passed    0.06 sec
+        Start 211: unit_11f0_cut_after_puzzle
+211/355 Test #211: unit_11f0_cut_after_puzzle ........   Passed    0.05 sec
+        Start 212: unit_tim_texel_key_rule
+212/355 Test #212: unit_tim_texel_key_rule ...........   Passed    0.10 sec
+        Start 213: unit_dog_grab_anchor
+213/355 Test #213: unit_dog_grab_anchor ..............   Passed    0.02 sec
+        Start 214: unit_re2_zombie_pose_bank
+214/355 Test #214: unit_re2_zombie_pose_bank .........   Passed    0.01 sec
+        Start 215: unit_cam_selfheal
+215/355 Test #215: unit_cam_selfheal .................   Passed    0.06 sec
+        Start 216: unit_plc_back_yaw_1090
+216/355 Test #216: unit_plc_back_yaw_1090 ............   Passed    0.03 sec
+        Start 217: unit_re2z_death_getup
+217/355 Test #217: unit_re2z_death_getup .............   Passed    0.02 sec
+        Start 218: unit_npc_back_walk
+218/355 Test #218: unit_npc_back_walk ................   Passed    0.02 sec
+        Start 219: unit_re2z_corpse_pool
+219/355 Test #219: unit_re2z_corpse_pool .............   Passed    0.02 sec
+        Start 220: unit_re2_dog_jaw_contact
+220/355 Test #220: unit_re2_dog_jaw_contact ..........   Passed    0.02 sec
+        Start 221: unit_1090_climb_pin
+221/355 Test #221: unit_1090_climb_pin ...............   Passed    0.02 sec
+        Start 222: unit_re2_crow_shadow_release
+222/355 Test #222: unit_re2_crow_shadow_release ......   Passed    0.02 sec
+        Start 223: unit_re2_dog_grab_anchor
+223/355 Test #223: unit_re2_dog_grab_anchor ..........   Passed    0.03 sec
+        Start 224: unit_rvd_scan_oracle
+224/355 Test #224: unit_rvd_scan_oracle ..............   Passed   17.61 sec
+        Start 225: unit_cut_old_displayed
+225/355 Test #225: unit_cut_old_displayed ............   Passed    0.03 sec
+        Start 226: unit_rvd_scan_ungated_by_climb
+226/355 Test #226: unit_rvd_scan_ungated_by_climb ....   Passed    0.02 sec
+        Start 227: unit_fade_step0_hold
+227/355 Test #227: unit_fade_step0_hold ..............   Passed    0.04 sec
+        Start 228: unit_scd_zone2_pauseflags
+228/355 Test #228: unit_scd_zone2_pauseflags .........   Passed    0.02 sec
+        Start 229: unit_re15_poise_re2_import
+229/355 Test #229: unit_re15_poise_re2_import ........   Passed    0.02 sec
+        Start 230: unit_re2z_devour_anchor
+230/355 Test #230: unit_re2z_devour_anchor ...........   Passed    0.15 sec
+        Start 231: unit_re2z_pushoff_crawl
+231/355 Test #231: unit_re2z_pushoff_crawl ...........   Passed    0.07 sec
+        Start 232: unit_1090_stay_on_crate
+232/355 Test #232: unit_1090_stay_on_crate ...........   Passed    0.02 sec
+        Start 233: unit_re2z_bump_walk
+233/355 Test #233: unit_re2z_bump_walk ...............   Passed    0.02 sec
+        Start 234: unit_ai_flavor_mixed
+234/355 Test #234: unit_ai_flavor_mixed ..............   Passed    0.03 sec
+        Start 235: probe_1090_flame_touch
+235/355 Test #235: probe_1090_flame_touch ............   Passed    0.02 sec
+        Start 236: probe_10d0_situp_handoff
+236/355 Test #236: probe_10d0_situp_handoff ..........   Passed    0.02 sec
+        Start 237: probe_1090_flinch_anim
+237/355 Test #237: probe_1090_flinch_anim ............   Passed    0.02 sec
+        Start 238: probe_re2z_stomp
+238/355 Test #238: probe_re2z_stomp ..................   Passed    0.03 sec
+        Start 239: unit_re2z_grab_core_se
+239/355 Test #239: unit_re2z_grab_core_se ............   Passed    0.16 sec
+        Start 240: unit_re2z_finisher_bite
+240/355 Test #240: unit_re2z_finisher_bite ...........   Passed    0.41 sec
+        Start 241: unit_re2z_bandlock_pin
+241/355 Test #241: unit_re2z_bandlock_pin ............   Passed    2.53 sec
+        Start 242: unit_re2z_rise_hittable
+242/355 Test #242: unit_re2z_rise_hittable ...........   Passed    0.73 sec
+        Start 243: unit_writher_kill_flag
+243/355 Test #243: unit_writher_kill_flag ............   Passed    0.02 sec
+        Start 244: unit_rig_root_fix
+244/355 Test #244: unit_rig_root_fix .................   Passed    0.09 sec
+        Start 245: unit_1090_flame_out_pin
+245/355 Test #245: unit_1090_flame_out_pin ...........   Passed    0.03 sec
+        Start 246: unit_1090_nodraw_pin
+246/355 Test #246: unit_1090_nodraw_pin ..............   Passed    0.01 sec
+        Start 247: unit_1090_npc_prop_push
+247/355 Test #247: unit_1090_npc_prop_push ...........   Passed    0.01 sec
+        Start 248: unit_npc_wall_clamp
+248/355 Test #248: unit_npc_wall_clamp ...............   Passed    0.02 sec
+        Start 249: unit_writher_abtauchen
+249/355 Test #249: unit_writher_abtauchen ............   Passed    0.02 sec
+        Start 250: unit_stage6_hintergrund
+250/355 Test #250: unit_stage6_hintergrund ...........   Passed    0.31 sec
+        Start 251: unit_re2doc_bildebene
+251/355 Test #251: unit_re2doc_bildebene .............   Passed    0.15 sec
+        Start 252: unit_1210_gitterhaende
+252/355 Test #252: unit_1210_gitterhaende ............   Passed    0.05 sec
+        Start 253: unit_1190_weste
+253/355 Test #253: unit_1190_weste ...................   Passed    0.04 sec
+        Start 254: unit_1190_ruestung
+254/355 Test #254: unit_1190_ruestung ................   Passed    0.03 sec
+        Start 255: unit_synchro_stimme
+255/355 Test #255: unit_synchro_stimme ...............   Passed    0.04 sec
+        Start 256: unit_sld_atlas
+256/355 Test #256: unit_sld_atlas ....................   Passed    0.36 sec
+        Start 257: unit_audio_sperren
+257/355 Test #257: unit_audio_sperren ................   Passed    0.01 sec
+        Start 258: unit_map_marke_haengt_an
+258/355 Test #258: unit_map_marke_haengt_an ..........   Passed    0.03 sec
+        Start 259: unit_pri_inventar_riegel
+259/355 Test #259: unit_pri_inventar_riegel ..........   Passed    0.01 sec
+        Start 260: unit_map_marke_auf_kunst
+260/355 Test #260: unit_map_marke_auf_kunst ..........   Passed    0.02 sec
+        Start 261: unit_map_tuerachse
+261/355 Test #261: unit_map_tuerachse ................   Passed    0.14 sec
+        Start 262: unit_map_etagen_rect
+262/355 Test #262: unit_map_etagen_rect ..............   Passed    0.01 sec
+        Start 263: unit_re2_crow_kill_cmd3
+263/355 Test #263: unit_re2_crow_kill_cmd3 ...........   Passed    0.02 sec
+        Start 264: unit_re2z_spawn_seed
+264/355 Test #264: unit_re2z_spawn_seed ..............   Passed    0.01 sec
+        Start 265: unit_maggot_zone_leap
+265/355 Test #265: unit_maggot_zone_leap .............   Passed    0.01 sec
+        Start 266: unit_pri_kopfschnitt
+266/355 Test #266: unit_pri_kopfschnitt ..............   Passed    4.51 sec
+        Start 267: unit_pri_eingemessen
+267/355 Test #267: unit_pri_eingemessen ..............   Passed    0.02 sec
+        Start 268: unit_map_eingemessen
+268/355 Test #268: unit_map_eingemessen ..............   Passed    0.02 sec
+        Start 269: unit_gator_sweep
+269/355 Test #269: unit_gator_sweep ..................   Passed    2.74 sec
+        Start 270: unit_re2_gore_decoder
+270/355 Test #270: unit_re2_gore_decoder .............   Passed    0.01 sec
+        Start 271: unit_g5_tentakel
+271/355 Test #271: unit_g5_tentakel ..................   Passed    0.03 sec
+        Start 272: unit_g5_morph
+272/355 Test #272: unit_g5_morph .....................   Passed    0.02 sec
+        Start 273: unit_g5_boss
+273/355 Test #273: unit_g5_boss ......................   Passed    0.33 sec
+        Start 274: unit_gator_fress
+274/355 Test #274: unit_gator_fress ..................   Passed    0.03 sec
+        Start 275: unit_autofire_pin
+275/355 Test #275: unit_autofire_pin .................   Passed    0.01 sec
+        Start 276: probe_spinne_elevation
+276/355 Test #276: probe_spinne_elevation ............   Passed    0.06 sec
+        Start 277: unit_voice_ausreden
+277/355 Test #277: unit_voice_ausreden ...............   Passed    0.02 sec
+        Start 278: unit_1210_arme
+278/355 Test #278: unit_1210_arme ....................   Passed    0.02 sec
+        Start 279: unit_map_1090
+279/355 Test #279: unit_map_1090 .....................   Passed    0.05 sec
+        Start 280: unit_re2_stepsize
+280/355 Test #280: unit_re2_stepsize .................   Passed    0.03 sec
+        Start 281: unit_wallstep
+281/355 Test #281: unit_wallstep .....................   Passed    0.02 sec
+        Start 282: unit_wallstep_gegen
+282/355 Test #282: unit_wallstep_gegen ...............   Passed    0.02 sec
+        Start 283: unit_re2_kfjump
+283/355 Test #283: unit_re2_kfjump ...................   Passed    0.34 sec
+        Start 284: unit_verify_step_tunnel
+284/355 Test #284: unit_verify_step_tunnel ...........   Passed    1.59 sec
+        Start 285: probe_sperre_schiene
+285/355 Test #285: probe_sperre_schiene ..............   Passed    0.01 sec
+        Start 286: probe_abzug_takt
+286/355 Test #286: probe_abzug_takt ..................   Passed    0.01 sec
+        Start 287: unit_fahrstuhl_1080_etagen
+287/355 Test #287: unit_fahrstuhl_1080_etagen ........   Passed    0.05 sec
+        Start 288: unit_fahrstuhl_4020_etagen
+288/355 Test #288: unit_fahrstuhl_4020_etagen ........   Passed    0.07 sec
+        Start 289: unit_karte_besitz
+289/355 Test #289: unit_karte_besitz .................   Passed    0.02 sec
+        Start 290: unit_1210_arme_re2
+290/355 Test #290: unit_1210_arme_re2 ................   Passed    0.03 sec
+        Start 291: probe_p2_birkin_g5
+291/355 Test #291: probe_p2_birkin_g5 ................   Passed    0.47 sec
+        Start 292: unit_re2z_crawl_hurt_reentry
+292/355 Test #292: unit_re2z_crawl_hurt_reentry ......   Passed    0.02 sec
+        Start 293: unit_re2z_crawler_spawn_wait
+293/355 Test #293: unit_re2z_crawler_spawn_wait ......   Passed    0.03 sec
+        Start 294: unit_r16_liegende_unschiessbar
+294/355 Test #294: unit_r16_liegende_unschiessbar ....   Passed    0.16 sec
+        Start 295: unit_r16_aufstehen_schuss
+295/355 Test #295: unit_r16_aufstehen_schuss .........   Passed    0.03 sec
+        Start 296: probe_r16_tuer1040_A
+296/355 Test #296: probe_r16_tuer1040_A ..............   Passed    0.04 sec
+        Start 297: probe_r16_tuer1040_B
+297/355 Test #297: probe_r16_tuer1040_B ..............   Passed    0.05 sec
+        Start 298: probe_r16_tuer1040_F
+298/355 Test #298: probe_r16_tuer1040_F ..............   Passed    0.04 sec
+        Start 299: probe_r16_tuer1040_N
+299/355 Test #299: probe_r16_tuer1040_N ..............   Passed    0.03 sec
+        Start 300: unit_pri_hashes
+300/355 Test #300: unit_pri_hashes ...................   Passed    0.07 sec
+        Start 301: unit_pri_silhouette
+301/355 Test #301: unit_pri_silhouette ...............   Passed    0.11 sec
+        Start 302: probe_p3_birkin_rest
+302/355 Test #302: probe_p3_birkin_rest ..............   Passed    0.62 sec
+        Start 303: unit_p3_restposten_pin
+303/355 Test #303: unit_p3_restposten_pin ............   Passed    0.03 sec
+        Start 304: probe_r16_objekte_paket
+304/355 Test #304: probe_r16_objekte_paket ...........   Passed    0.03 sec
+        Start 305: unit_r16_trefferhoehe_pin
+305/355 Test #305: unit_r16_trefferhoehe_pin .........   Passed    0.03 sec
+        Start 306: integration_weste_load_pin
+306/355 Test #306: integration_weste_load_pin ........   Passed    6.60 sec
+        Start 307: unit_r17_birkin_1zu1_pin
+307/355 Test #307: unit_r17_birkin_1zu1_pin ..........   Passed    0.23 sec
+        Start 308: unit_r17_munition_pin
+308/355 Test #308: unit_r17_munition_pin .............   Passed    0.01 sec
+        Start 309: unit_r17_cursor_klick_pin
+309/355 Test #309: unit_r17_cursor_klick_pin .........   Passed    1.01 sec
+        Start 310: unit_r17_untertitel_pin
+310/355 Test #310: unit_r17_untertitel_pin ...........   Passed    0.02 sec
+        Start 311: unit_r17_waffen_loop_pin
+311/355 Test #311: unit_r17_waffen_loop_pin ..........   Passed    0.01 sec
+        Start 312: unit_ada_eintritt_1050
+312/355 Test #312: unit_ada_eintritt_1050 ............   Passed    0.01 sec
+        Start 313: unit_r18_birkin_restluecken_pin
+313/355 Test #313: unit_r18_birkin_restluecken_pin ...   Passed    0.18 sec
+        Start 314: unit_irons_mittelmodell
+314/355 Test #314: unit_irons_mittelmodell ...........   Passed    2.34 sec
+        Start 315: r19_marke1_10d0_c1
+315/355 Test #315: r19_marke1_10d0_c1 ................   Passed    0.03 sec
+        Start 316: unit_r19_zerreiss_10e0c7
+316/355 Test #316: unit_r19_zerreiss_10e0c7 ..........   Passed    0.01 sec
+        Start 317: unit_r19_marke3_1050_c1_tiefe
+317/355 Test #317: unit_r19_marke3_1050_c1_tiefe .....   Passed    0.01 sec
+        Start 318: unit_r19b_marke4_zeilenmodell
+318/355 Test #318: unit_r19b_marke4_zeilenmodell .....   Passed    0.06 sec
+        Start 319: unit_r20_birkin_push_pin
+319/355 Test #319: unit_r20_birkin_push_pin ..........   Passed    0.88 sec
+        Start 320: unit_r21_discard_wegwerfen
+320/355 Test #320: unit_r21_discard_wegwerfen ........   Passed    7.00 sec
+        Start 321: unit_r22_10f0_figur
+321/355 Test #321: unit_r22_10f0_figur ...............   Passed    8.26 sec
+        Start 322: eintritt_pose_einmal
+322/355 Test #322: eintritt_pose_einmal ..............   Passed    0.01 sec
+        Start 323: unit_r26_inventar
+323/355 Test #323: unit_r26_inventar .................   Passed    0.02 sec
+        Start 324: test_r26_kaefig_release0c
+324/355 Test #324: test_r26_kaefig_release0c .........   Passed    0.01 sec
+        Start 325: m93r_nachladen
+325/355 Test #325: m93r_nachladen ....................   Passed    0.03 sec
+        Start 326: unit_r26_mg_blut
+326/355 Test #326: unit_r26_mg_blut ..................   Passed    0.01 sec
+        Start 327: unit_r26_panel_11f0
+327/355 Test #327: unit_r26_panel_11f0 ...............   Passed    0.08 sec
+        Start 328: unit_abtastphase_11f0
+328/355 Test #328: unit_abtastphase_11f0 .............   Passed    0.02 sec
+        Start 329: unit_r27_ada_cutscene_1050
+329/355 Test #329: unit_r27_ada_cutscene_1050 ........   Passed    0.03 sec
+        Start 330: unit_elev_se
+330/355 Test #330: unit_elev_se ......................   Passed    0.03 sec
+        Start 331: unit_r27_hund_wandtrieb
+331/355 Test #331: unit_r27_hund_wandtrieb ...........   Passed    0.17 sec
+        Start 332: unit_r27_panel_schalterwerte
+332/355 Test #332: unit_r27_panel_schalterwerte ......   Passed    0.17 sec
+        Start 333: r28_messer_dauerschlag
+333/355 Test #333: r28_messer_dauerschlag ............   Passed    0.14 sec
+        Start 334: r29_1d3_doppelabzug
+334/355 Test #334: r29_1d3_doppelabzug ...............   Passed    0.07 sec
+        Start 335: r30_hund_hitbox_stauchung
+335/355 Test #335: r30_hund_hitbox_stauchung .........   Passed    0.08 sec
+        Start 336: r30b_muendungshoehe
+336/355 Test #336: r30b_muendungshoehe ...............   Passed    0.14 sec
+        Start 337: integration_room_transition
+337/355 Test #337: integration_room_transition .......   Passed    0.02 sec
+        Start 338: integration_cross_stage
+338/355 Test #338: integration_cross_stage ...........   Passed    0.01 sec
+        Start 339: integration_headless_run
+339/355 Test #339: integration_headless_run ..........   Passed    1.09 sec
+        Start 340: integration_room_probe_sweep
+340/355 Test #340: integration_room_probe_sweep ......   Passed    0.09 sec
+        Start 341: integration_rvd_coverage
+341/355 Test #341: integration_rvd_coverage ..........   Passed    0.01 sec
+        Start 342: integration_map_uebergang
+342/355 Test #342: integration_map_uebergang .........   Passed    0.52 sec
+        Start 343: integration_map_raum_live
+343/355 Test #343: integration_map_raum_live .........   Passed    3.68 sec
+        Start 344: integration_door_traversal
+344/355 Test #344: integration_door_traversal ........   Passed    0.02 sec
+        Start 345: integration_door_lock
+345/355 Test #345: integration_door_lock .............   Passed    0.01 sec
+        Start 346: integration_flag_census
+346/355 Test #346: integration_flag_census ...........   Passed    0.17 sec
+        Start 347: integration_item_name_census
+347/355 Test #347: integration_item_name_census ......   Passed    0.35 sec
+        Start 348: integration_fx_region_cull
+348/355 Test #348: integration_fx_region_cull ........   Passed    0.34 sec
+        Start 349: integration_keydoor
+349/355 Test #349: integration_keydoor ...............   Passed    0.02 sec
+        Start 350: integration_keypad
+350/355 Test #350: integration_keypad ................   Passed    0.02 sec
+        Start 351: integration_boot_bg_pin
+351/355 Test #351: integration_boot_bg_pin ...........   Passed    3.81 sec
+        Start 352: integration_dark_start_pin
+352/355 Test #352: integration_dark_start_pin ........   Passed    2.45 sec
+        Start 353: integration_relatch_pin
+353/355 Test #353: integration_relatch_pin ...........   Passed   23.87 sec
+        Start 354: integration_save_counter_pin
+354/355 Test #354: integration_save_counter_pin ......   Passed   24.32 sec
+        Start 355: integration_pri_masken
+355/355 Test #355: integration_pri_masken ............   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 355
+
+Total Test time (real) = 145.91 sec
+    test OK — 355/355 bestanden
+
+=== LOCAL-BUILD-OK (all) — Tests 355/355
