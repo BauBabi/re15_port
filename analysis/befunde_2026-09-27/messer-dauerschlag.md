@@ -11,7 +11,29 @@ Pad, ROOM1140, RE2-Bank EM010, RE2-KI = Auslieferungs-Default).
 Vier sonst identische Laeufe, 1400 Bilder, Startabstand 3400, gemeinsame Aufwaermphase
 (R1 halten bis zielbereit) — danach unterscheiden sie sich NUR im Schlag:
 
-<!-- ZAHLEN-PLATZHALTER: wird nach der Nachmessung ersetzt -->
+VORHER (alter Stand — Messer durch die RE2-Applier-Sub-Box):
+
+| Lauf | Schlaege | Treffer | Bisse | Griffe | d_min | Bilder mit d<1200 |
+|---|---|---|---|---|---|---|
+| A Dauerschlag TIEF (669 Bilder, Zombie tot) | 34 | 17 | **0** | **0** | 849 | 186 |
+| B nur zielen, kein Schlag |  0 | 0 | 6 | 3 | 387 | 285 |
+| C gar nicht zielen        |  0 | 0 | 6 | 3 | 387 | 285 |
+| D Schlag, Zombie unverwundbar (jeder Tick ein Treffer) | 70 | 0 | **0** | **0** | 938 | **16** |
+
+Das ist woertlich der Nutzer-Befund: beim Dauerschlag **kein einziger Biss und kein einziger
+Griff**, waehrend derselbe Zombie ohne Schlag 6x beisst und 3x greift. B == C bitgleich — der
+Klassen-Latch aendert nichts (siehe (a)).
+
+NACHHER (beide Fixes):
+
+| Lauf | Schlaege | Treffer | Bisse | Griffe | d_min | Bilder mit d<1200 |
+|---|---|---|---|---|---|---|
+| A Dauerschlag TIEF (1096 Bilder, Zombie tot) | 50 | 17 | 2 | 1 | 388 | 470 |
+| B nur zielen, kein Schlag |  0 | 0 | 6 | 3 | 387 | 285 |
+| C gar nicht zielen        |  0 | 0 | 6 | 3 | 387 | 285 |
+| D Schlag, Zombie unverwundbar | 64 | 0 | 2 | 1 | 387 | 312 |
+
+B und C sind unveraendert (Gegen-Riegel: der Nicht-Schlag-Fall darf sich nicht bewegen).
 
 Reichweiten-Sweep (`RE15_R28_SWEEP=1`, KI angehalten, Zombie auf festen Abstand):
 
@@ -80,10 +102,37 @@ RE2-Geometrie-Records (@0x800A63A8 EBEN / @0x800A657C TIEF, Stride 0x1C, Muster
 `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` @0x800A6434). Das war fuer die TEILE-MASKE gedacht,
 hat aber die Reichweite von 1500 auf 3000/3400 mehr als verdoppelt.
 
-Sollseite ist RE1.5 — dort ist das Nahkampf-System VOLLSTAENDIG: die Tester-Dispatch-Tabelle
-@0x8006E548 fuehrt GENAU die Ids 1 und 2 auf FUN_800127FC (den Nahkampf-KEGEL), und dessen
-Treffer-Bedingung ist `dist < Reichweite(@0x8006E5A0[1] = 1100) + Gegner-Radius (hbdata+6 =
-400)` = 1500, gemessen ab dem Klingen-Punkt.
+Sollseite ist RE1.5 — dort ist das Nahkampf-System VOLLSTAENDIG. Selbst nachgelesen in
+`info/Re1.5/PSX.EXE` (nicht aus Port-Kommentaren uebernommen):
+
+Dispatch-Tabelle @0x8006E548 (eigener Dump, 22 Zeiger): [0] und [3..8] und [12]/[13]/[19]/[21]
+= 0x80012574 (Schuss-Streifen), [9]/[10]/[11]/[14..18]/[20] = 0x800128A0, und **GENAU [1] und
+[2] = 0x800127FC** — der Nahkampf-KEGEL.
+
+Reichweiten-Tabelle @0x8006E5A0 (u32[22], eigener Dump):
+`1000, 1100, 1000, 1000, 1100, 1000, 1200, 1000, 1500, 1000, 1000, 1000, 1300, 1800, 1000,
+1000, 1000, 1000, 1000, 1100, 1000, 1000` — Index 1 (Messer) = **1100**.
+
+FUN_800127FC, selbst disassembliert:
+```
+80012808: lh   v1,0(a2)        ; Punkt.x
+8001280c: lw   v0,52(a1)       ; Gegner +0x34
+80012814: subu v0,v0,v1        ; dx
+80012818: mult v0,v0
+8001281c: lh   v1,4(a2)        ; Punkt.z
+80012820: lw   v0,60(a1)       ; Gegner +0x3c
+80012828: subu v0,v0,v1        ; dz
+8001282c: mult v0,v0
+80012830: lw   v0,120(a1)      ; Hitbox-Zeiger +0x78
+80012838: lhu  s0,6(v0)        ; Hitbox+6 = Gegner-Radius (Zombie 400)
+8001283c: andi a0,a0,0xffff    ; Reichweite & 0xffff
+80012840: addu s0,s0,a0        ; R = Radius + Reichweite
+80012848: jal  0x80065f60      ; SquareRoot0(dx*dx + dz*dz)
+80012854: sltu s0,v1,s0        ; TREFFER nur bei dist < R  (strikt, unsigned)
+80012858: beq  s0,zero,0x8001288c
+8001287c: sw   v1,-2592(at)    ; DAT_8008F5E0 = Naechster-Ziel-Latch
+```
+R = 1100 + 400 = **1500**, gemessen ab dem Klingen-Punkt.
 
 Mit 3000/3400 schlaegt der Port den Zombie 1800-2200 Einheiten VOR seinem einzigen
 erreichbaren Angriffstor (dist < 1200) in die Trefferreaktion — er kommt nie an.
