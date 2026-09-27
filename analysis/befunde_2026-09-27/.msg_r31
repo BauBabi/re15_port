@@ -1,6 +1,3 @@
-mess(r31): Vollscan-Werkzeug fuer sh rt,152/158(rs) in den RE2-Gegner-Overlays
-
-Findet ALLE Schreibstellen auf +0x98/+0x9E statt nur der bekannten.
-Gezaehlt: EMZ0 26, EMD0G_MOD0 10, EMOVL21_S0 6, EMS25 4, EMS26 2 = 48.
+mess(r31): Werkzeuge whereis/dumpmany/scan_op fuer den Trefferboxen-Zensus
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
