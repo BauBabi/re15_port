@@ -43,6 +43,7 @@
 #include "re15_collision.h"
 #include "re15_inventory.h"
 #include "re15_msg.h"
+#include "re2_ems.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -145,6 +146,22 @@ static uint16_t elev_pad_for(const re15_actor_t *e)
     return 0;
 }
 
+/* RE2-Bank (CDEMD0.EMS) - OHNE sie haben alle Clips Laenge 0 und jede Animation ist nach
+ * EINEM Bild "zu Ende": die Aufsteh-Kette misst sich dann selbst kaputt. */
+static uint8_t *s_ems2 = NULL; static size_t s_ems2_n = 0;
+static re15_enemy_bank_t *load_re2_bank(uint8_t type)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(type);
+    if (eb && eb->ok) return eb;
+    if (!eb) eb = re15_enemy_alloc(type);
+    if (!eb) return NULL;
+    if (!s_ems2) s_ems2 = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &s_ems2_n);
+    if (s_ems2 && re2_ems_load_bank(s_ems2, s_ems2_n, (int)type, eb, NULL) == 0) {
+        eb->buf = NULL; eb->ok = 1; return eb;
+    }
+    eb->type = 0; return NULL;
+}
+
 static int find_type(uint8_t type)
 {
     for (int s = 1; s < RE15_ACTOR_MAX; s++) {
@@ -159,6 +176,7 @@ static int setup_target(uint8_t type, int weapon, int baby_force)
 {
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     bringup();
+    load_re2_bank(type);     /* ECHTE Clip-Laengen - ohne Bank ist jede Animation nach 1 Bild um */
     re15_inv_load_briefing();
     re15_player_set_equipped_weapon(weapon);
     {   int es = re15_inv_equipped_slot();
@@ -391,10 +409,33 @@ int main(int argc, char **argv)
 
     printf("\n=== DURCHGANG 2: ECHTER PISTOLENTREFFER (Stun-Zeile 0x800A6A88[typ]) ===\n");
     shot_t sz, sd;
-    pass_shot(&sz, "ZOMBIE 0x10 R1140", 0x10, "STAGE1/ROOM1140.RDT", 0x1140, -1, 3, 0, 15, 400, 1);
+    pass_shot(&sz, "ZOMBIE 0x10 R1140", 0x10, "STAGE1/ROOM1140.RDT", 0x1140, -1, 3, 0,  5, 400, 1);
     pass_shot(&sd, "HUND   0x20 R1190", 0x20, "STAGE1/ROOM1190.RDT", 0x1190, 13, 3, 0, 15, 400, 1);
 
     printf("\n=== DURCHGANG 3: HUND - Pause gegen die Hinfall-/Aufsteh-Kette ===\n");
+    {   re15_enemy_bank_t *db = load_re2_bank(0x20);
+        if (db && db->ok) {
+            /* Clip-Nummern aus EMD0G_MOD0.BIN, selbst gelesen:
+             *   P0 @0x80103460-7C setzt Wort 0x00070011 -> Clip 17
+             *   P2 Unterphase 0 @0x801036B0-CC -> Clip 18 (`addiu v1,v1,18`)
+             *   P2 Unterphase 1 @0x801036D0-DC -> Wort 0x000F0007 -> Clip 7
+             *   P3 @0x8010378C-A0 -> Wort 0x00030F16 -> Clip 22 ab Bild 15 */
+            static const int cl[4] = { 17, 18, 7, 22 };
+            static const char *const nm[4] = { "P0 Treffer-Zucken @0x80103460",
+                                               "P2.0 Hinfallen    @0x801036B0",
+                                               "P2.1 Aufstehen    @0x801036D0",
+                                               "P3 weiche Landung @0x8010378C" };
+            printf("  EM020-Bank (RE2 CDEMD0.EMS): %d Clips.\n", db->anim.clip_count);
+            int summe = 0;
+            for (int i = 0; i < 4; i++) {
+                int fc = (cl[i] < db->anim.clip_count) ? db->anim.clips[cl[i]].frame_count : -1;
+                printf("    Clip %2d  %s  = %d Bilder\n", cl[i], nm[i], fc);
+                if (i < 3 && fc > 0) summe += fc;
+            }
+            printf("    => Kette P0+P2.0+P2.1 = %d Clip-Bilder (Vorschub 0x200 = 2 Bilder je "
+                   "Tick in P0/P2.0, 0x100 = 1 in P2.1, @0x80103654-60)\n", summe);
+        } else printf("  ACHTUNG: EM020-Bank FEHLT - die Clip-Laengen sagen NICHTS\n");
+    }
     int pause = -1, hurt = -1;
     pass_dog_chain(600, &pause, &hurt);
 
@@ -420,10 +461,12 @@ int main(int argc, char **argv)
     const shot_t *ss[2] = { &sz, &sd };
     for (int i = 0; i < 2; i++) {
         if (!ss[i]->ok) { printf("RIEGEL: [%s] kein Treffer - kein Urteil\n", ss[i]->tag); rot = 1; continue; }
-        if (ss[i]->bis_null != ss[i]->soll) {
+        /* bis_null zaehlt AB dem Treffer-Bild; in jenem Bild ist bereits einmal abgezogen
+         * worden, die Pause dauert also bis_null + 1 Bilder. */
+        if (ss[i]->bis_null + 1 != ss[i]->soll) {
             printf("RIEGEL ROT: [%s] Pause %d Bilder (SOLL %d)\n",
-                   ss[i]->tag, ss[i]->bis_null, ss[i]->soll); rot = 1; }
-        else printf("RIEGEL GRUEN: [%s] Pause genau %d Bilder\n", ss[i]->tag, ss[i]->bis_null);
+                   ss[i]->tag, ss[i]->bis_null + 1, ss[i]->soll); rot = 1; }
+        else printf("RIEGEL GRUEN: [%s] Pause genau %d Bilder\n", ss[i]->tag, ss[i]->bis_null + 1);
     }
     printf(rot ? "\nRIEGEL: ROT\n" : "\nRIEGEL: GRUEN\n");
     return rot;

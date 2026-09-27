@@ -7597,6 +7597,36 @@ static void re15_dog_fall_physics(re15_actor_t *e)
     }
 }
 
+/* ⛔ RUNDE 29 — DAS NACHZIEHEN DER TREFFERPAUSE (+0x1D3 low-7) FUER DEN RE2-HUND.
+ *
+ * Das Original zieht genau EINMAL je Bild ab, im Root-Prolog, VOR der Zustandsweiche
+ * (EMD0G_MOD0.BIN, selbst disassembliert):
+ *   80100028: lbu   v1,467(s0)     / 80100030: andi  v0,v1,0x7f
+ *   80100034: beq   v0,zero,0x80100040
+ *   80100038: addiu v0,v1,-1       / 8010003c: sb    v0,467(s0)
+ * Byte-genau uebernommen: das `andi 0x7f`-Gate (Bit 0x80 ueberlebt, es ist der Pose-Riegel)
+ * und das -1 nur auf der unteren Haelfte.
+ *
+ * `vor` ist der Wert VOR dem Dispatch. Hat der Dispatch das Byte angefasst — der Root hat
+ * abgezogen, ein Setzer hat gestempelt —, ist es jetzt ein anderes und hier passiert NICHTS.
+ * Nur wenn niemand es angefasst hat, zieht diese Zeile nach. Damit gilt auf JEDEM Weg:
+ * hoechstens ein Abzug (nie zu kurz) und mindestens ein Abzug (nie eingefroren = nie
+ * dauerhaft unverwundbar, die Falle aus Runde 14).
+ *
+ * Die Latch-Freigabe ist dieselbe wie im Root (enemy_ai_re2_dog.c, Ende der Pause): der
+ * flavor-blinde Resolver FUN_80011f50 wirft Kandidaten mit +0x93 Bit 0 heraus
+ * (Maske 0x03000000 @0x800120c0, Test @0x800120f4-0x80012100), und RE2 kennt +0x93 nicht —
+ * ohne Freigabe hier bliebe der Skript-Hund aus Zustand 4/5/6 dauerhaft aus der
+ * Kandidatenliste. */
+static void re15_dog_pause_nachziehen(re15_actor_t *e, uint8_t vor)
+{
+    if (e->re2z_self1d3 != vor) return;            /* jemand anders hat schon geschrieben */
+    if (!(e->re2z_self1d3 & 0x7fu)) return;        /* `andi 0x7f` + `beq` @0x80100030-34 */
+    e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
+                              | ((e->re2z_self1d3 & 0x7fu) - 1u));   /* @0x80100038-3C */
+    if ((e->re2z_self1d3 & 0x7fu) == 0u) e->hit_react &= (uint8_t)~1u;
+}
+
 static void re15_dog_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -7625,10 +7655,39 @@ static void re15_dog_ai_tick(int slot)
          * ist treffbar und blieb danach auf +0x1D3 = 14 stehen. state 4..6 sind reine
          * RE1.5-Zustaende, die RE2 gar nicht kennt - das Dekrement gehoert trotzdem davor,
          * genau wie im Original. */
-        if (re15_ai_re2_for_type(e->type) && (e->re2z_self1d3 & 0x7fu))
-            e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
-                                      | ((e->re2z_self1d3 & 0x7fu) - 1u));
-        if (e->state >= 4 && e->state <= 6) { re15_dog_state456(e, pl); return; }
+        /* ⛔ RUNDE 29 — DIESE ZEILE ZOG DOPPELT AB. Das Original hat GENAU EIN Dekrement je
+         * Bild, im Root-Prolog (EMD0G_MOD0.BIN, selbst disassembliert):
+         *   80100028: lbu   v1,467(s0)
+         *   80100030: andi  v0,v1,0x7f
+         *   80100034: beq   v0,zero,0x80100040
+         *   80100038: addiu v0,v1,-1
+         *   8010003c: sb    v0,467(s0)
+         * Der Port zog HIER ab UND noch einmal im Root (enemy_ai_re2_dog.c re15_re2dog_tick,
+         * derselbe Prolog). GEMESSEN (probe_r29_1d3_doppelabzug, ROOM1190, echter Weg
+         * game_step+Pad): +0x1D3 von aussen auf 40 gesetzt -> 0 nach 32 statt 40 Bildern,
+         * Delta 2 in 8 von 32 Bildern (die 24 Einzel-Abzuege fielen in Zustand 4, wo der Root
+         * gar nicht laeuft). Ein echter Pistolentreffer: Stempel 15 (Zeile
+         * 0x800A4424 + 0x14*2 = 0x800A444C, Wort1 0x078F1E0A, (>>9)&0x7F = 15, Stempel
+         * @0x80047338-4C) und 0 schon nach 8 statt 15 Bildern — die Trefferpause des Hundes
+         * war halb so lang wie im Original.
+         *
+         * ⛔ WARUM NICHT EINFACH WEG: Runde 14 hat sie eingezogen, weil die Pause auf den
+         * Wegen EINFROR, die den RE2-Root nie betreten (gemessen: wartender ROOM1190-
+         * Zwingerhund, grid 0x40, state 4/0/0, blieb auf +0x1D3 = 14 stehen). Eine
+         * eingefrorene Pause = DAUERHAFT unverwundbar.
+         *
+         * ⛔ WARUM KEIN NACHGEBAUTES GATE: die Weiche darunter ist verzweigt (Skript-Zustaende
+         * 4/5/6, Kaefig-Freigabe 0x0C, danach erst der Root). Ein Gate, das sie nachbildet,
+         * geht beim naechsten Zweig wieder auf. Stattdessen NACHZIEHEN: der Wert wird VOR dem
+         * Dispatch gemerkt und danach nur dann abgezogen, wenn ihn NIEMAND angefasst hat.
+         * Damit gibt es auf JEDEM Weg genau ein Dekrement — auf dem Root-Weg vom Root, auf
+         * allen anderen von hier. */
+        const uint8_t v1d3_vor = e->re2z_self1d3;
+        if (e->state >= 4 && e->state <= 6) {
+            re15_dog_state456(e, pl);
+            re15_dog_pause_nachziehen(e, v1d3_vor);
+            return;
+        }
         /* ⛔ ROOM11D0/11D1 + ROOM3060/3061: der RE1.5-Kaefig-Ausgang @0x8011172c schreibt das
          * Zustandswort 0x0C01 (`ori v0,zero,0xc01` @0x80111718). Sub 0x0C existiert NUR in der
          * RE1.5-ACT-Tabelle @0x80120FD4[12] = 0x801101E4 (Clip 8 aufstehen -> Sub 2, null
@@ -7644,10 +7703,15 @@ static void re15_dog_ai_tick(int slot)
          * enemy_ai_re2_dog.c re2d_sub7_latch) erzeugt denselben Zustand und muss weiterhin in
          * re2d_sub12_postlatch laufen. */
         if (e->dog_cage_rel0c) {
-            if (e->state == 1 && e->sub_state_1 == 0x0c) { re15_dog_release0c(e); return; }
+            if (e->state == 1 && e->sub_state_1 == 0x0c) {
+                re15_dog_release0c(e);
+                re15_dog_pause_nachziehen(e, v1d3_vor);
+                return;
+            }
             e->dog_cage_rel0c = 0;                       /* Zustand verlassen -> Marke fallen */
         }
-        re15_re2dog_tick(slot);
+        re15_re2dog_tick(slot);                          /* zieht +0x1D3 SELBST ab (@0x80100028-3C) */
+        re15_dog_pause_nachziehen(e, v1d3_vor);          /* -> hier dann NICHT mehr */
         return;
     }
 
