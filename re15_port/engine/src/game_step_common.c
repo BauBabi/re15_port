@@ -974,6 +974,10 @@ void re15_game_step(const re15_game_ctx_t *c)
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
     re15_player_set_pl00_banks(c->pl00_skel, c->pl00_anim);
+    /* Und die AKTIVE Waffen-Bank: aus ihr posiert das Original beim Zielen den Teile-Pool
+     * +0x198, dessen Kette @0x80042E60-94 die Muendungshoehe des fuenften Tores liefert
+     * (`lw a0,4(s4)` @0x8004718C). Ohne diesen Spiegel las die Engine die Bindpose. */
+    re15_player_set_w_banks(c->w_skel, c->w_anim);
 
     /* KARTEN-ZONE je Frame nachfuehren (Nutzer-Report 2026-08-30): ein Raum kann
      * mehrere getrennte Bereiche haben, und die SELBST-TUEREN (dest == eigener Raum,

@@ -42,6 +42,8 @@
 extern void    re15_player_aim_reset(void);
 extern void    re15_player_set_aim_clip_len(int fc);
 extern int     re15_player_aim_ready(void);
+extern int     re15_player_aim_clip(void);
+extern int     re15_player_aim_muzzle_world(int32_t out[3]);
 extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 extern void    re15_esp_fx_reset(void);
 extern int     re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]);
@@ -469,6 +471,63 @@ static void pass_ohne_yklammer(int budget)
 /* ======================================================================================== */
 static re15_emd_skeleton_t  s_pl00_skel;
 static re15_emd_animation_t s_pl00_anim;
+/* Runde 32: die AKTIVE Waffen-Bank. Alle Messlaeufe dieser Sonde fahren Waffe 3, also
+ * PL00W03 — dieselbe Bank, die der PC-Renderer beim Zielen aufsetzt (main.c:7423-7431).
+ * OHNE sie posiert die Engine die Bindpose, und die Sonde misst 1666 statt der Zielpose. */
+static re15_emd_skeleton_t  s_w03_skel;
+static re15_emd_animation_t s_w03_anim;
+
+/* MESSUNG: Muendungshoehe ueber den Fuessen je Zielband (HOCH / EBEN / TIEF), auf dem
+ * echten Weg gefahren. Das Band kommt aus den Pad-Bits (player_common.c:1034), die Pose
+ * aus der W-Bank ueber re15_player_aim_clip(). */
+static int32_t s_bandhoehe[3] = { -1, -1, -1 };   /* HOCH / EBEN / TIEF, gemessen */
+static void pass_bandhoehen(void)
+{
+    static const struct { const char *tag; uint16_t bit; } BAND[3] = {
+        { "HOCH", RE15_PAD_BIT_UP }, { "EBEN", 0 }, { "TIEF", RE15_PAD_BIT_DOWN } };
+    if (!load_room("STAGE1/ROOM1140.RDT", 0x1140, -1)) {
+        printf("  FEHLLAUF: ROOM1140 fehlt - sagt NICHTS\n"); return; }
+    for (int i = 0; i < 3; i++) {
+        int slot = setup_target(0x10, 3, 0);
+        if (slot < 0) { printf("  FEHLLAUF: kein 0x10 in 1140\n"); return; }
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->hp = 100;
+        re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
+        track(slot, 2000);
+        int32_t lo = 0x7fffffff, hi = -0x7fffffff, halten = -1; int n = 0, clip = -1;
+        for (int f = 0; f < 90; f++) {
+            pl->hp = 100; track(slot, 2000);
+            frame((uint16_t)(RE15_PAD_BIT_R1 | BAND[i].bit), 0);
+            int32_t m[3];
+            if (!re15_player_aim_muzzle_world(m)) continue;
+            int32_t hoehe = pl->y - m[1];             /* Hoehe ueber den Fuessen */
+            if (f >= 40) { if (hoehe < lo) lo = hoehe; if (hoehe > hi) hi = hoehe;
+                           halten = hoehe; clip = re15_player_aim_clip(); n++; }
+        }
+        s_bandhoehe[i] = halten;
+        printf("  [%s] Clip %2d | Muendung ueber den Fuessen %d..%d (haltend %d) | %d Bilder\n",
+               BAND[i].tag, clip, lo, hi, halten, n);
+    }
+}
+
+/* MESSUNG: wuerde die ZIELPOSE die heute ungegateten Typen oeffnen? Reine Arithmetik des
+ * fuenften Tores @0x8004717C-A4 gegen die drei gemessenen Halte-Hoehen. Kein Einbau. */
+static void pass_zielpose_urteil(void)
+{
+    static const char *TAG[3] = { "HOCH", "EBEN", "TIEF" };
+    printf("  %-24s %-20s %s\n", "Box", "Fenster Hgun", "DURCH bei HOCH/EBEN/TIEF");
+    for (unsigned i = 0; i < sizeof BOXEN / sizeof BOXEN[0]; i++) {
+        const box_t *B = &BOXEN[i];
+        char urteil[80]; urteil[0] = 0;
+        for (int k = 0; k < 3; k++) {
+            int d = (s_bandhoehe[k] > 0) ? tor(0, B->b, B->h, -s_bandhoehe[k]) : -1;
+            snprintf(urteil + strlen(urteil), sizeof urteil - strlen(urteil), "%s%s=%s",
+                     k ? " " : "", TAG[k], d < 0 ? "?" : (d ? "JA" : "nein"));
+        }
+        printf("  %-24s [%5d,%5d)        %s\n", B->name,
+               -(B->b + B->h + 100), B->h - B->b + 100, urteil);
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -486,9 +545,40 @@ int main(int argc, char **argv)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
+    {   size_t we = 0, wr = 0;
+        uint8_t *wedd = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00W03.EDD", &we);
+        uint8_t *wemr = slurp(RE15_ASSET_PSX_DIR "/PLD/PL00W03.EMR", &wr);
+        static re15_emd_skeleton_t w03_raw;
+        if (wedd && wemr &&
+            re15_emd_parse_animation(wedd, we, &s_w03_anim) == 0 &&
+            re15_emd_parse_skeleton (wemr, wr, &w03_raw) == 0) {
+            /* Die W-EMR traegt KEINE Hierarchie und KEINE Bind-Offsets (bones_table = 0,
+             * reiner Keyframe-Strom). Die Knochen kommen aus PL00, die Keyframes aus der
+             * W-Bank - exakt die Komposition, die der PC-Renderer baut
+             * (platform/pc/main.c:3534-3538) und die das Original im Teile-Pool +0x198
+             * stehen hat. Ohne sie posiert man PL00-Bind mit W-Keyframes falsch gepaart
+             * und misst Unsinn (erster Lauf 2026-09-27: Muendung 15821 UNTER den Fuessen). */
+            s_w03_skel = s_pl00_skel;
+            s_w03_skel.keyframe_data       = w03_raw.keyframe_data;
+            s_w03_skel.keyframe_data_size  = w03_raw.keyframe_data_size;
+            s_w03_skel.keyframe_count      = w03_raw.keyframe_count;
+            s_w03_skel.keyframe_size_bytes = w03_raw.keyframe_size_bytes;
+            s_ctx.w_skel = &s_w03_skel;
+            s_ctx.w_anim = &s_w03_anim;
+            printf("PL00W03: %d Bones (aus PL00), %d Clips, %d Keyframes (Zielpose-Bank, Waffe 3)\n",
+                   s_w03_skel.bone_count, s_w03_anim.clip_count, s_w03_skel.keyframe_count);
+        } else {
+            printf("WARN: PL00W03 fehlt - die Sonde misst dann die BINDPOSE, nicht die Zielpose\n");
+        } }
     printf("PL00: %d Bones, %d Clips (Bone 11 = Waffen-Bone, Kettenende @0x80042E94)\n",
            s_pl00_skel.bone_count, s_pl00_anim.clip_count);
     if (s_pl00_skel.bone_count <= 11) { printf("FAIL: PL00 hat keinen Bone 11\n"); return 1; }
+
+    printf("\n=== TEIL 0: MUENDUNGSHOEHE JE ZIELBAND (die Zielpose) ===\n");
+    pass_bandhoehen();
+
+    printf("\n=== TEIL 0b: WUERDE DIE ZIELPOSE DIE UNGEGATETEN TYPEN OEFFNEN? ===\n");
+    pass_zielpose_urteil();
 
     printf("\n=== TEIL 1: MUENDUNGSHOEHE + TOR-URTEIL JE TYP (echter Weg) ===\n");
     mess_t m[6];
@@ -547,6 +637,24 @@ int main(int argc, char **argv)
     if (!riegel) return 0;
 
     int fail = 0;
+    /* ===== RIEGEL RUNDE 32: DIE ZIELPOSE IST GEBAUT UND FESTGENAGELT ======================
+     * re15_player_aim_muzzle_world posiert die aktive Waffen-Bank mit dem Clip des Bandes
+     * +0x154 (Tabelle @0x80011010 = {0,14,10,0,12}, `srl v0,v0,13` @0x80042D08) ueber die
+     * Kette @0x80042E60-94. Die drei Halte-Hoehen sind damit keine freien Zahlen mehr:
+     * 2751 / 2500 / 1988 kommen unabhaengig auch aus der Vorwaertskinematik ausserhalb des
+     * Ports (analysis/befunde_2026-09-27/zielpose_fk.py auf PL00.EMR + PL00W03), und RE2s
+     * eigene Bank PL00W02 liegt mit 2805 / 2504 / 1921 um 54 / 4 / 67 daneben.
+     * Faellt einer dieser Werte, ist entweder die Bank-Wahl oder die Clip-Wahl kaputt. */
+    {   static const struct { const char *tag; int32_t soll; } SOLL[3] = {
+            { "HOCH", 2751 }, { "EBEN", 2500 }, { "TIEF", 1988 } };
+        for (int i = 0; i < 3; i++)
+            if (s_bandhoehe[i] != SOLL[i].soll) {
+                printf("RIEGEL-FAIL: Zielpose %s = %d, erwartet %d (Bank/Clip-Wahl kaputt)\n",
+                       SOLL[i].tag, s_bandhoehe[i], SOLL[i].soll); fail = 1; }
+        if (s_bandhoehe[1] <= s_bandhoehe[2] || s_bandhoehe[0] <= s_bandhoehe[1]) {
+            printf("RIEGEL-FAIL: Zielpose nicht monoton HOCH>EBEN>TIEF (%d/%d/%d)\n",
+                   s_bandhoehe[0], s_bandhoehe[1], s_bandhoehe[2]); fail = 1; }
+    }
     if (!mues_ok) { printf("RIEGEL-FAIL: Muendung headless nicht verfuegbar\n"); fail = 1; }
     if (s_kette < 0 || s_pause < 0) { printf("RIEGEL-FAIL: Hunde-Kette nicht gemessen\n"); fail = 1; }
     /* DER BEFUND: am ALTEN Stand wird der liegende Hund getroffen, am NEUEN nicht mehr. */

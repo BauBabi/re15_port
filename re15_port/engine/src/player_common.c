@@ -592,6 +592,24 @@ const re15_emd_skeleton_t *re15_player_pl00_skel(void) { return s_pl00_skel; }
  * @0x8004718C, das die verkettete Waffen-Bone-Matrix @0x80042E60-94 braucht und darum
  * Skelett UND Clips im ENGINE-Teil sehen muss (headless wie auf der PSX). */
 const re15_emd_animation_t *re15_player_pl00_anim(void) { return s_pl00_anim; }
+
+/* ===== DIE AKTIVE WAFFEN-BANK, engine-seitig ===============================================
+ * Das Original posiert beim Zielen aus dem Teile-Pool `lw 408(s1)` (+0x198), den der
+ * Aim-Clip der AKTIVEN Waffen-Bank fuellt (Tabelle @0x80011010 = {0,14,10,0,12}, indiziert
+ * `srl v0,v0,13` @0x80042D08 aus dem Band +0x154). Genau diese Kette liest der Schuss-Pfad
+ * @0x80042E60-94, und ihr Endpunkt t[1] @sp+56 ist die Zielhoehe des fuenften Tores
+ * (`lw a0,4(s4)` @0x8004718C, s4 = a0 @0x800470D0).
+ * Der Port hatte die Bank bisher NUR im PC-Renderer (platform/pc/main.c:7423-7431) — die
+ * Engine sah sie nicht und posierte darum die Bindpose. Hier dieselbe Spiegelung wie fuer
+ * PL00, damit re15_player_muzzle_world (re15_damage.c) sie headless und auf der PSX hat. */
+static const re15_emd_skeleton_t  *s_w_skel;
+static const re15_emd_animation_t *s_w_anim;
+void re15_player_set_w_banks(const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an)
+{
+    s_w_skel = sk; s_w_anim = an;
+}
+const re15_emd_skeleton_t  *re15_player_w_skel(void) { return s_w_skel; }
+const re15_emd_animation_t *re15_player_w_anim(void) { return s_w_anim; }
 /* Frame-Anzahl eines PL00-Clips (0 wenn Bank nicht gespiegelt / Clip ausser Bereich) —
  * Verbraucher: der Gorilla-Wurf-Opferhandler (Hook 0x8011c118 P3-P6 spielt Leons
  * EIGENE Clips 0x10/0xb, enemy_ai_common.c). */

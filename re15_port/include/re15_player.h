@@ -141,6 +141,14 @@ void re15_player_set_pl00_banks(const re15_emd_skeleton_t *skel,
  * nicht gespiegelt hat). Verbraucher: re15_player_muzzle_world (re15_damage.c). */
 const re15_emd_skeleton_t  *re15_player_pl00_skel(void);
 const re15_emd_animation_t *re15_player_pl00_anim(void);
+/* AKTIVE WAFFEN-BANK (PL00W<item>) — die Pose, aus der das Original beim Zielen die
+ * Muendung zieht (Kette @0x80042E60-94 ueber den Teile-Pool +0x198, Clip aus der Tabelle
+ * @0x80011010 via Band +0x154). NULL, solange die Plattform sie nicht gespiegelt hat;
+ * dann faellt re15_player_muzzle_world auf die Basis-Bank zurueck. */
+void re15_player_set_w_banks(const re15_emd_skeleton_t *skel,
+                             const re15_emd_animation_t *anim);
+const re15_emd_skeleton_t  *re15_player_w_skel(void);
+const re15_emd_animation_t *re15_player_w_anim(void);
 /* Frame-Anzahl eines PL00-Clips (0 = Bank fehlt/ausser Bereich) — Gorilla-Wurf-
  * Aufsteher (Hook 0x8011c118 P3-P6: Leons Clips 0x10/0xb, enemy_ai_common.c). */
 int re15_player_pl00_clip_frames(int clip);

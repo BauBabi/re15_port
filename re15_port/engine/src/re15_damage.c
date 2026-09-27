@@ -1131,12 +1131,30 @@ void re15_player_set_hand_rot(const int32_t r[9])
  * R_gunbone * offset + T_gunbone, where the gun-bone matrix is posebuf+0x7a4 (bone 11). The port
  * feeds R (s_hand_rot = yawed_rot) + T (s_hand_world = kine+0x7b8) from the render each frame
  * (1-frame stale, faithful-line). Returns 0 if the render hasn't posed bone 11 yet (leave out[]). */
+static int muzzle_bone_world(int aim, int32_t out[3], int32_t rot[9]);   /* fwd, s. unten */
 int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3])
 {
-    if (!s_hand_valid || !s_hand_rot_valid) return 0;
-    out[0] = (int32_t)(((int64_t)s_hand_rot[0]*ox + (int64_t)s_hand_rot[1]*oy + (int64_t)s_hand_rot[2]*oz) >> 12) + s_hand_world[0];
-    out[1] = (int32_t)(((int64_t)s_hand_rot[3]*ox + (int64_t)s_hand_rot[4]*oy + (int64_t)s_hand_rot[5]*oz) >> 12) + s_hand_world[1];
-    out[2] = (int32_t)(((int64_t)s_hand_rot[6]*ox + (int64_t)s_hand_rot[7]*oy + (int64_t)s_hand_rot[8]*oz) >> 12) + s_hand_world[2];
+    const int32_t *T = s_hand_world;
+    const int32_t *R = s_hand_rot;
+    int32_t fT[3], fR[9];
+    if (!s_hand_valid || !s_hand_rot_valid) {
+        /* ⛔ FRUEHER: Rueckgabe 0 - und damit war der Waffen-Bone GEMESSEN 0 von 1200
+         * Bildern gueltig, sobald kein PC-Renderer lief (zielfenster-messung.md Sec 4);
+         * der PSX-Zweig fuettert ihn ueberhaupt nicht. Alle daran haengenden
+         * Muendungsfeuer-, Rauch- und Huelsen-Anker (game_step_common.c:1771/1851-1861/1895)
+         * fielen dort still aus.
+         * JETZT: dieselbe Groesse engine-seitig aus der ZIELPOSE - die Kette
+         * @0x80042E60-94 ueber Bone 11, posiert aus der aktiven Waffen-Bank mit dem
+         * Clip des Bandes +0x154 (Tabelle @0x80011010). Das Original nimmt exakt diesen
+         * Knochen: `*(0x800acbdc)+0x7b8` = 11*0xAC + 0x40 + 0x14 (s. re15_player_set_hand_world).
+         * Der Renderer bleibt Vorrang, solange er liefert (1 Bild alt, faithful-line);
+         * die Pose springt nur ein, wo er fehlt. */
+        if (!muzzle_bone_world(1, fT, fR)) return 0;
+        T = fT; R = fR;
+    }
+    out[0] = (int32_t)(((int64_t)R[0]*ox + (int64_t)R[1]*oy + (int64_t)R[2]*oz) >> 12) + T[0];
+    out[1] = (int32_t)(((int64_t)R[3]*ox + (int64_t)R[4]*oy + (int64_t)R[5]*oz) >> 12) + T[1];
+    out[2] = (int32_t)(((int64_t)R[6]*ox + (int64_t)R[7]*oy + (int64_t)R[8]*oz) >> 12) + T[2];
     return 1;
 }
 
@@ -1186,17 +1204,81 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
  *
  * Rueckgabe 0 = keine Bank/keine Pose; dann bleibt out[] unberuehrt und der AUFRUFER
  * darf NICHT gaten (sonst waere es wieder ein Tor auf einem leeren Feld). */
+/* ===== DIE ZIELPOSE — warum hier die W-BANK steht und nicht die Basis-Bank ==================
+ * Bis Runde 32 posierte diese Funktion Leons BASIS-Bank PL00 mit dem Clip, in dem er sonst
+ * waere (`re15_compute_actor_kf(..., -1, pl->anim_frame)`). Beim Zielen steht `pl->motion`
+ * aber auf dem Sentinel RE15_MOTION_AIM_W, den NUR der Renderer ueber die Waffen-Bank
+ * aufloest (platform/pc/main.c:7423-7431) — die Engine las damit faktisch die BINDPOSE.
+ * GEMESSEN (probe_r30b_muendung, 240 Bilder x 4 Typen): MuendungY 1665..1671, und die
+ * PL00-Bindpose Bone 11 ueber den Fuessen rechnet sich zu 1666
+ * (analysis/befunde_2026-09-27/zielpose-ermittlung.md Sec 1.2). Dieselbe Zahl = kein Zufall.
+ *
+ * Das Original nimmt die Pose, nicht eine Konstante: die vier Verkettungen @0x80042E60-94
+ * lesen die LOKALEN Teilmatrizen `+24 + 172*k` des Pose-Blocks `lw 408(s1)` (+0x198) — also
+ * genau das, was der Animationsschritt gerade hineingeschrieben hat. (Gegenprobe: der
+ * allgemeine Skelett-Komponierer @0x80019100-64 legt die WELT-Matrizen nach `+72 + 172*k`
+ * ab; der Schuss-Pfad benutzt die NICHT, er verkettet selbst.) Beim Zielen fuellt den
+ * Pose-Block der Aim-Clip aus der Tabelle @0x80011010 = {0,14,10,0,12} (selbst gelesen,
+ * u16), indiziert mit `srl v0,v0,13` @0x80042D08 aus dem Band +0x154 Bit 15/14/13 —
+ * TIEF=14, EBEN=10, HOCH=12 der AKTIVEN WAFFEN-BANK.
+ *
+ * DASS DIE ZIELPOSE DIE MUENDUNG HEBT, IST GEMESSEN — und zwar in BEIDEN Engines gleich
+ * (zielpose_fk.py / zielpose_frames.py, Vorwaertskinematik mit den Zahlen des Ports):
+ *   RE2  PL00W02  HALTEN EBEN 2504 | HOCH 2805 | TIEF 1921   (Bindpose 1563)
+ *   RE15 PL00W03  HALTEN EBEN 2500 | HOCH 2751 | TIEF 1988   (Bindpose 1666)
+ * Der Abstand betraegt 4 / 54 / 67 Einheiten. RE2s Fenster gegen RE1.5s Pose zu riegeln ist
+ * damit KEIN Engine-Mischmasch — die beiden Posen sind dieselbe Pose.
+ * (Welle 1 hatte das Gegenteil vermutet, weil sie RE2s PL00W03.PLW mass; das ist dort ein
+ *  3436-B-Stummel. Die vollen RE2-Baenke sind W00-W02, W04-W08, W0D, W0F-W12.)
+ *
+ * ⛔ NICHT GEBAUT (Fehlstelle, nicht gebogen): die Waffen-Absenkung um 200.
+ *   80042f48: lbu v0,333(s1)      ; +0x14D
+ *   80042f50: addiu v0,v0,-7
+ *   80042f54: sltiu v0,v0,0x5     ; nur (+0x14D)-7 in [0,4]
+ *   80042f60: lw v0,56(sp) / 80042f68: addiu v0,v0,200 / 80042f6c: sw v0,56(sp)
+ *   80042fac-b8: dieselbe Stelle wieder -200
+ * Die Absenkung selbst ist eindeutig (PSX-Y zeigt nach unten, +200 = 200 Einheiten TIEFER).
+ * Was NICHT aufgeloest ist, ist die Bedeutung von +0x14D: die 40 Leser und 20 Schreiber in
+ * der RE2-EXE sind nicht deckungsgleich mit der Waffen-Id des Ports (ein Schreiber legt dort
+ * `7*x` ab, @0x8003D790-B4). Ohne diese Zuordnung waere jede Portierung der [7,11]-Klammer
+ * geraten. Wirkung auf die HEUTIGEN Urteile: keine — 200 Einheiten aendern bei keinem der
+ * sieben gemessenen Faelle die Seite des Fensters (naechster Abstand 205, Hund stehend).
+ */
 #define RE15_MUZZLE_BONE 11                 /* Kettenende 0->9->10->11, @0x80042E60-94 */
-int re15_player_muzzle_world(int32_t out[3])
+/* Gemeinsamer Kern: Bone 11 in Weltkoordinaten, aus einer WAEHLBAREN Bank+Clip.
+ * Das ist die Kette @0x80042E60-94 (Spieler-MATRIX o Teil 0 o 9 o 10 o 11, Stride 0xAC)
+ * mit t[1] @sp+56 als Ergebnis-Hoehe. `aim != 0` nimmt die Pose, in der Leon TATSAECHLICH
+ * zielt (aktive Waffen-Bank + Clip aus re15_player_aim_clip()); `aim == 0` nimmt die
+ * Basis-Bank mit dem laufenden Clip. rot != NULL liefert zusaetzlich die Weltrotation des
+ * Knochens (Ry(rot_y) o Knochenrotation) - dieselbe Groesse, die der PC-Renderer als
+ * yawed_rot in re15_player_set_hand_rot spiegelt. */
+static int muzzle_bone_world(int aim, int32_t out[3], int32_t rot[9])
 {
     extern const re15_emd_skeleton_t  *re15_player_pl00_skel(void);
     extern const re15_emd_animation_t *re15_player_pl00_anim(void);
+    extern const re15_emd_skeleton_t  *re15_player_w_skel(void);
+    extern const re15_emd_animation_t *re15_player_w_anim(void);
+    extern int re15_player_aim_active(void);
+    extern int re15_player_aim_clip(void);
+    extern int re15_player_victim_state(void);
     const re15_emd_skeleton_t  *sk = re15_player_pl00_skel();
     const re15_emd_animation_t *an = re15_player_pl00_anim();
+    int clip = -1;
+    /* DIESELBE Bedingung wie der Renderer (platform/pc/main.c:7423-7431), nur im
+     * Engine-Teil, damit sie headless UND auf der PSX gilt. Fehlt die W-Bank (Plattform
+     * hat sie nicht gespiegelt), bleibt es bei der Basis-Bank. */
+    if (aim && re15_player_aim_active() && re15_player_victim_state() == 0) {
+        const re15_emd_skeleton_t  *wsk = re15_player_w_skel();
+        const re15_emd_animation_t *wan = re15_player_w_anim();
+        int wc = re15_player_aim_clip();
+        if (wsk && wan && wan->clip_count > 0 && wc >= 0 && wc < wan->clip_count) {
+            sk = wsk; an = wan; clip = wc;
+        }
+    }
     if (!sk || !an || an->clip_count <= 0) return 0;
     if (sk->bone_count <= RE15_MUZZLE_BONE) return 0;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    int kf = re15_compute_actor_kf(an, sk, pl, -1, (uint32_t)pl->anim_frame);
+    int kf = re15_compute_actor_kf(an, sk, pl, clip, (uint32_t)pl->anim_frame);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                       /* QUERY: Crossfade-Blend nicht anfassen */
@@ -1205,7 +1287,46 @@ int re15_player_muzzle_world(int32_t out[3])
     if (rv != 0) return 0;
     re15_skel_bone_to_world(poses[RE15_MUZZLE_BONE].trans, pl->rot_y,
                             pl->x, pl->y, pl->z, out);
+    if (rot) {
+        /* Ry(yaw) * R_bone, Zeilen-major, Q12 - die Gier dreht X/Z, Y bleibt (dieselbe
+         * Konvention wie re15_skel_bone_to_world oben). */
+        int32_t cs = re15_cos_q12((int)pl->rot_y);
+        int32_t sn = re15_sin_q12((int)pl->rot_y);
+        const int32_t *b = poses[RE15_MUZZLE_BONE].rot;
+        for (int c = 0; c < 3; c++) {
+            rot[0*3+c] = (int32_t)(( (int64_t)cs * b[0*3+c] + (int64_t)sn * b[2*3+c]) >> 12);
+            rot[1*3+c] = b[1*3+c];
+            rot[2*3+c] = (int32_t)((-(int64_t)sn * b[0*3+c] + (int64_t)cs * b[2*3+c]) >> 12);
+        }
+    }
     return 1;
+}
+
+/* DIE ZIELPOSE, als eigener Einstieg: die Muendung, wie sie beim ZIELEN steht.
+ * GEMESSEN (probe_r30b_muendung Teil 0, echter Weg, Waffe 3 / PL00W03):
+ *   HOCH  Clip 10 -> 2751 ueber den Fuessen
+ *   EBEN  Clip  8 -> 2500
+ *   TIEF  Clip 12 -> 1988
+ * Dieselben drei Zahlen liefert die Vorwaertskinematik ausserhalb des Ports
+ * (analysis/befunde_2026-09-27/zielpose_fk.py), und RE2s eigene Bank PL00W02 liegt mit
+ * 2504 / 2805 / 1921 um 4 / 54 / 67 Einheiten daneben. */
+int re15_player_aim_muzzle_world(int32_t out[3])
+{
+    return muzzle_bone_world(1, out, NULL);
+}
+
+int re15_player_muzzle_world(int32_t out[3])
+{
+    /* ⛔ BASIS-BANK, NICHT die Zielpose - und das ist in dieser Runde eine MESSUNG, keine
+     * Bequemlichkeit. Siehe den Block "DIE ZIELPOSE" oben: mit der Zielpose (EBEN 2500)
+     * faellt der STEHENDE Hund aus seinem eigenen Fenster [-100,2100) und wird in 200
+     * Bildern Dauerbeschuss 0 mal getroffen (probe_r30b_muendung Teil 4, gemessen). Das
+     * ist die Runde-13/14-Falle, und sie ist hier durch das ⛔ dieser Runde ausdruecklich
+     * verboten. Solange der fehlende dritte Baustein nicht gefunden ist, bleibt der
+     * Eingang des fuenften Tores der, gegen den es in Runde 30/31 gemessen und vom
+     * Nutzer bestaetigt wurde. Der Zielpose-Wert steht als
+     * re15_player_aim_muzzle_world() daneben und wird gemessen, nicht gegatet. */
+    return muzzle_bone_world(0, out, NULL);
 }
 
 /* Byte-true GUN hit-region — FUN_80012574 (@0x80012574), the predicate the weapon table @0x8006e548
