@@ -137,6 +137,10 @@ void re15_player_push_reset(void);
  * EMR-Keyframes, aus der das Original in FUN_800369f8 Modus 0 den Schiebe-Schritt zieht). */
 void re15_player_set_pl00_banks(const re15_emd_skeleton_t *skel,
                                 const re15_emd_animation_t *anim);
+/* Nur-Lese-Sicht auf Leons eigene Knochen/Clips (NULL, solange die Plattform die Bank
+ * nicht gespiegelt hat). Verbraucher: re15_player_muzzle_world (re15_damage.c). */
+const re15_emd_skeleton_t  *re15_player_pl00_skel(void);
+const re15_emd_animation_t *re15_player_pl00_anim(void);
 /* Frame-Anzahl eines PL00-Clips (0 = Bank fehlt/ausser Bereich) — Gorilla-Wurf-
  * Aufsteher (Hook 0x8011c118 P3-P6: Leons Clips 0x10/0xb, enemy_ai_common.c). */
 int re15_player_pl00_clip_frames(int clip);

@@ -587,6 +587,11 @@ void re15_player_set_pl00_banks(const re15_emd_skeleton_t *sk, const re15_emd_an
  * genau die Komposition, die auch der Renderer fuer den Grab-Override baut. NULL, solange
  * die Plattform die Bank noch nicht gespiegelt hat (dann greift der Rueckfall). */
 const re15_emd_skeleton_t *re15_player_pl00_skel(void) { return s_pl00_skel; }
+/* Dieselbe Nur-Lese-Sicht auf Leons CLIP-Bank. Verbraucher: die MUENDUNGSHOEHE
+ * (re15_player_muzzle_world, re15_damage.c) — das Port-Gegenstueck zu `lw a0,4(s4)`
+ * @0x8004718C, das die verkettete Waffen-Bone-Matrix @0x80042E60-94 braucht und darum
+ * Skelett UND Clips im ENGINE-Teil sehen muss (headless wie auf der PSX). */
+const re15_emd_animation_t *re15_player_pl00_anim(void) { return s_pl00_anim; }
 /* Frame-Anzahl eines PL00-Clips (0 wenn Bank nicht gespiegelt / Clip ausser Bereich) —
  * Verbraucher: der Gorilla-Wurf-Opferhandler (Hook 0x8011c118 P3-P6 spielt Leons
  * EIGENE Clips 0x10/0xb, enemy_ai_common.c). */

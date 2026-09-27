@@ -1140,6 +1140,74 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
     return 1;
 }
 
+/* ======================= DIE MUENDUNGSHOEHE — `lw a0,4(s4)` @0x8004718C ====================
+ * Das fuenfte Gate des RE2-Kandidatenfilters FUN_800470C0 vergleicht die senkrechte Lage des
+ * SCHUSS-URSPRUNGS gegen die Trefferzone des Gegners. `s4` ist das erste Argument von
+ * FUN_800470C0; am Schuss-Pfad @0x80042F94 (Funktion @0x80042C64, Rahmen -104) wird es so
+ * gestellt — selbst disassembliert aus info/re2leon/PSX.EXE:
+ *
+ *   80042e14: addiu s0,s1,36        ; s0 = Spieler-MATRIX (+0x24)
+ *   80042e18: lw    s2,408(s1)      ; s2 = Part-/Posen-Block (+0x198)
+ *   80042e60: addiu s0,sp,32        ; ZIEL-MATRIX auf dem Stack
+ *   80042e64: jal 0x8002ce94   (a0 = Spieler-MATRIX, a1 = s2+24,   a2 = sp+32)
+ *   80042e74: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1572, a2 = sp+32)
+ *   80042e84: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1744, a2 = sp+32)
+ *   80042e94: jal 0x8002ce94   (a0 = sp+32,          a1 = s2+1916, a2 = sp+32)
+ *   80042f8c: addiu a0,sp,52        ; a0 = &MATRIX.t[0]  -> s4 in FUN_800470C0
+ *   80042f94: jal   0x800470c0
+ *
+ * 0x8002ce94 ist das PsyQ-Matrix-Compose (selbst disassembliert @0x8002CE94-CF30): die
+ * ELTERN-Matrix geht ueber `ctc2` in die GTE-Kontrollregister 0..4 (R) und 5..7 (TR)
+ * (`lw 0/4/8/12/16(a0)` @0x8002CE94-CEB0 bzw. `lw 20/24/28(a0)` @0x8002CEBC-CED0), die
+ * Kind-Matrix spaltenweise ueber `mtc2` in IR1..IR3 (`lhu 0/6/12(a1)` @0x8002CED4-CEE8),
+ * dann `MVMVA` @0x8002CEF4 und `mfc2`/`sh` zurueck @0x8002CF00-14 — also
+ * out = Eltern x Kind fuer Rotation UND Translation.
+ *
+ * Die vier Kind-Offsets 24 / 1572 / 1744 / 1916 liegen 172 (0xAC) auseinander
+ * (1572 = 24 + 9*172, 1744 = +172, 1916 = +172) — das ist der Part-Stride 0xAC des
+ * Modell-Pools. Die Kette ist also Bone 0 -> 9 -> 10 -> 11, und der Endpunkt ist BONE 11,
+ * derselbe Knochen, den der Port schon als Waffen-/Handknochen fuehrt (kine +0x7b8 =
+ * 11*0xAC + 0x40 + 0x14, s. re15_player_set_hand_world oben).
+ *
+ * PsyQ-MATRIX = 3x3 short (18 B) + 2 Pad + long t[3]; bei einer Matrix @sp+32 liegt
+ * t[0] @sp+52, t[1] @sp+56, t[2] @sp+60 — genau die Slots, die die Funktion danach als
+ * Vektor weiterreicht (`lw 52/56/60(sp)` @0x80042FCC-EC). `lw a0,4(s4)` @0x8004718C liest
+ * mithin **t[1] = die WELT-Y-KOORDINATE DES WAFFEN-BONE**. Nicht die Fusshoehe des
+ * Spielers, nicht die Kamera, nicht der Zielpunkt.
+ *
+ * ⛔ WARUM DAS HIER STEHT UND NICHT IM RENDERER: re15_player_gunbone_world (oben) liefert
+ * denselben Punkt, aber nur, nachdem die PC-Plattform Bone 11 posiert hat — headless ist er
+ * GEMESSEN 0 von 1200 Bildern gueltig (analysis/befunde_2026-09-27/zielfenster-messung.md
+ * §4), und der PSX-Zweig fuettert ihn gar nicht. Ein Gate auf einem Feld, das nie gefuellt
+ * wird, sperrt dauerhaft — die Falle aus Runde 14. Darum wird die Kette hier im ENGINE-Teil
+ * selbst gestellt: Leons eigene Bank posieren (QUERY, ohne den Crossfade zu veraendern) und
+ * Bone 11 ueber re15_skel_bone_to_world in die Welt drehen — dieselbe Modell->Welt-Rechnung,
+ * die der Renderer je Bone anwendet.
+ *
+ * Rueckgabe 0 = keine Bank/keine Pose; dann bleibt out[] unberuehrt und der AUFRUFER
+ * darf NICHT gaten (sonst waere es wieder ein Tor auf einem leeren Feld). */
+#define RE15_MUZZLE_BONE 11                 /* Kettenende 0->9->10->11, @0x80042E60-94 */
+int re15_player_muzzle_world(int32_t out[3])
+{
+    extern const re15_emd_skeleton_t  *re15_player_pl00_skel(void);
+    extern const re15_emd_animation_t *re15_player_pl00_anim(void);
+    const re15_emd_skeleton_t  *sk = re15_player_pl00_skel();
+    const re15_emd_animation_t *an = re15_player_pl00_anim();
+    if (!sk || !an || an->clip_count <= 0) return 0;
+    if (sk->bone_count <= RE15_MUZZLE_BONE) return 0;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int kf = re15_compute_actor_kf(an, sk, pl, -1, (uint32_t)pl->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                       /* QUERY: Crossfade-Blend nicht anfassen */
+    int rv = re15_skel_compute_pose(sk, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    re15_skel_bone_to_world(poses[RE15_MUZZLE_BONE].trans, pl->rot_y,
+                            pl->x, pl->y, pl->z, out);
+    return 1;
+}
+
 /* Byte-true GUN hit-region — FUN_80012574 (@0x80012574), the predicate the weapon table @0x8006e548
  * dispatches for guns (weapon 0/3-8). It is a forward STRIP that is UNBOUNDED in range: FUN_800126c8
  * (@0x800126c8) tests the target against two semi-infinite triangles sharing apex V5 (the aim
