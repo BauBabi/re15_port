@@ -2,35 +2,55 @@
  * Quelle: alle ROOM*.RDT unter re15_port/shared_assets/PSX (240 RDTs durchsucht).
  * Siehe den Generator-Kopf fuer die Belege. */
 
-/* Die 32-Byte-Fahrt-Signatur (Set/Sleep-Doppelpuls). */
-#define RE15_ELEV_SIG_LEN 32
-static const unsigned char s_re15_elev_sig[RE15_ELEV_SIG_LEN] = {
-    0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x08, 0x00,
-    0x22, 0x01, 0x1c, 0x00, 0x09, 0x0a, 0x5a, 0x00,
-    0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x08, 0x00,
-    0x22, 0x01, 0x1c, 0x00, 0x09, 0x0a, 0x14, 0x00,
+/* Die Fahrt-Gestalten. RE1.5 hat DREI Fahrstuhlkabinen mit ZWEI verschiedenen
+ * Fahrskripten; jede Gestalt traegt den Byte-Offset ihrer beiden Pulse. */
+#define RE15_ELEV_SIG_MAX 32
+#define RE15_ELEV_SIG_COUNT 2
+typedef struct {
+    unsigned char len;        /* Laenge der Signatur in Byte    */
+    unsigned char delta2;     /* Byte-Offset des ZWEITEN Pulses */
+    unsigned char bytes[RE15_ELEV_SIG_MAX];
+} re15_elev_sig_t;
+static const re15_elev_sig_t s_re15_elev_sigs[RE15_ELEV_SIG_COUNT] = {
+    {   /* SIG1 ELEVATOR / A-2 ELEVATOR */
+        32, 0x10, {
+        0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x08, 0x00,
+        0x22, 0x01, 0x1c, 0x00, 0x09, 0x0a, 0x5a, 0x00,
+        0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x08, 0x00,
+        0x22, 0x01, 0x1c, 0x00, 0x09, 0x0a, 0x14, 0x00,
+    } },
+    {   /* SIG2 WAREHOUSE LIFT */
+        28, 0x0C, {
+        0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x3c, 0x00,
+        0x22, 0x01, 0x1c, 0x00, 0x22, 0x01, 0x1d, 0x01,
+        0x09, 0x0a, 0x3c, 0x00, 0x22, 0x01, 0x1d, 0x00,
+        0x22, 0x01, 0x1c, 0x01,
+    } },
 };
 
-/* Signatur-Offset -> RE2-SE-Id (ROOM21B0.RDT @0x2756 / @0x2784). */
-#define RE15_ELEV_SE_FIRST  0x11   /* Puls 1 @sig+0x00  = Fahrt   */
-#define RE15_ELEV_SE_SECOND 0x12   /* Puls 2 @sig+0x10  = Ankunft */
-#define RE15_ELEV_SECOND_DELTA 0x10
+/* Puls -> RE2-SE-Id (ROOM21B0.RDT @0x2756 / @0x2784). */
+#define RE15_ELEV_SE_FIRST  0x11   /* Puls 1 = Fahrt   */
+#define RE15_ELEV_SE_SECOND 0x12   /* Puls 2 = Ankunft */
 
-/* GEMESSENE Fundstellen — nur fuer den Riegel (tests), nicht fuer die Laufzeit:
- * die Laufzeit sucht die Signatur im geladenen RDT-Puffer selbst. */
-#define RE15_ELEV_HIT_COUNT 12
-typedef struct { unsigned short room; unsigned int off; } re15_elev_hit_t;
+/* GEMESSENE Fundstellen - nur fuer den Riegel (tests), nicht fuer die Laufzeit:
+ * die Laufzeit sucht die Signaturen im geladenen RDT-Puffer selbst. */
+#define RE15_ELEV_HIT_COUNT 16
+typedef struct { unsigned short room; unsigned int off; unsigned char sig; } re15_elev_hit_t;
 static const re15_elev_hit_t s_re15_elev_hits[RE15_ELEV_HIT_COUNT] = {
-    { 0x1080, 0x0746 },   /* ROOM1080.RDT */
-    { 0x1080, 0x07D8 },   /* ROOM1080.RDT */
-    { 0x1080, 0x086A },   /* ROOM1080.RDT */
-    { 0x1081, 0x0746 },   /* ROOM1081.RDT */
-    { 0x1081, 0x07D8 },   /* ROOM1081.RDT */
-    { 0x1081, 0x086A },   /* ROOM1081.RDT */
-    { 0x4020, 0x095A },   /* ROOM4020.RDT */
-    { 0x4020, 0x0A00 },   /* ROOM4020.RDT */
-    { 0x4020, 0x0A96 },   /* ROOM4020.RDT */
-    { 0x4021, 0x095A },   /* ROOM4021.RDT */
-    { 0x4021, 0x0A00 },   /* ROOM4021.RDT */
-    { 0x4021, 0x0A96 },   /* ROOM4021.RDT */
+    { 0x1080, 0x0746, 0 },   /* ROOM1080.RDT */
+    { 0x1080, 0x07D8, 0 },   /* ROOM1080.RDT */
+    { 0x1080, 0x086A, 0 },   /* ROOM1080.RDT */
+    { 0x1081, 0x0746, 0 },   /* ROOM1081.RDT */
+    { 0x1081, 0x07D8, 0 },   /* ROOM1081.RDT */
+    { 0x1081, 0x086A, 0 },   /* ROOM1081.RDT */
+    { 0x3080, 0x09FE, 1 },   /* ROOM3080.RDT */
+    { 0x3080, 0x0BDA, 1 },   /* ROOM3080.RDT */
+    { 0x3081, 0x07FE, 1 },   /* ROOM3081.RDT */
+    { 0x3081, 0x0842, 1 },   /* ROOM3081.RDT */
+    { 0x4020, 0x095A, 0 },   /* ROOM4020.RDT */
+    { 0x4020, 0x0A00, 0 },   /* ROOM4020.RDT */
+    { 0x4020, 0x0A96, 0 },   /* ROOM4020.RDT */
+    { 0x4021, 0x095A, 0 },   /* ROOM4021.RDT */
+    { 0x4021, 0x0A00, 0 },   /* ROOM4021.RDT */
+    { 0x4021, 0x0A96, 0 },   /* ROOM4021.RDT */
 };

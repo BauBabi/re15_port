@@ -316,11 +316,28 @@ typedef struct {
      * ⛔ re2_hit_box_set IST DIE RUNDE-14-SICHERUNG: ein Tor auf einem Feld, das niemand
      * fuellt, sperrt DAUERHAFT. b/h = 0/0 ergaebe das Fenster [-100,100) — jeder Gegner waere
      * fuer immer untreffbar. Deshalb gaten NUR Aktoren, deren Overlay-Gegenstueck die Werte
-     * im Port wirklich schreibt. Das ist heute AUSSCHLIESSLICH der HUND 0x20
-     * (re2d_init @0x8010028C-9C + re2d_hitbox @0x80104090-D8). Wer einen weiteren Typ
-     * verdrahtet, MUSS vorher messen, dass er nicht dauerhaft aus dem Fenster faellt —
-     * gemessen sind Kraehe 0x21 (0/240 durch) und Baby 0x26 (0/240 durch) genau so ein Fall,
-     * s. analysis/befunde_2026-09-27/muendungshoehe-und-fuenftes-tor.md. */
+     * im Port wirklich schreibt UND fuer die gemessen ist, dass das Tor nichts zumacht.
+     *
+     * STAND WELLE 2 (2026-09-27, probe_r31_boxen, echter Weg, 900 Bilder Dauerbeschuss je
+     * Typ, dazu je eine KONTROLLE mit kuenstlicher Box 0/0, die auf 0 Treffer fallen MUSS):
+     *   0x10 ZOMBIE  SCHARF  — TOR AUS 45 / TOR SCHARF 45 / KONTROLLE 0 Treffer
+     *   0x20 HUND    SCHARF  — TOR AUS 41 / TOR SCHARF 12 / KONTROLLE 0  (die Absenkung IST
+     *                          der Runde-30-Befund: der liegende Hund ist nicht treffbar)
+     *   0x25 SPINNE  SCHARF  — TOR AUS 82 / TOR SCHARF 82 / KONTROLLE 0; alle fuenf
+     *                          ausgelieferten Spinnenraeume (2030/2050/2060/2070/20A0)
+     *                          tragen Modus 0 mit -1400/1400
+     *   0x21 KRAEHE  UNSCHARF— TOR SCHARF 0 von 900 Treffern = DAUERHAFT untreffbar
+     *   0x26 BABY    UNSCHARF— TOR SCHARF 0 von 900 Treffern = DAUERHAFT untreffbar
+     * Die Boxen der beiden unscharfen Typen werden trotzdem byte-true GEFUEHRT (die Werte
+     * stehen mit Adresse in enemy_ai_re2_crow.c / enemy_ai_re2_spider.c); nur das Urteil
+     * bleibt aus, bis der Port die senkrechte Zielpose fuehrt (RE2-Bone-Kette 0->9->10->11
+     * @0x80042E64/74/84/94). Heute steht die Muendungshoehe unbeweglich bei Hgun 1665..1671,
+     * und das Fenster der Kraehe ist [-280,980) bzw. [-630,630), das des Babys [-100,120).
+     * ⛔ EINE BENANNTE RESTGEFAHR: die DECKEN-/WANDspinne (Spawn-Deskriptor 2/3 bzw. >=4,
+     * @0x8010049C / Tabelle @0x801063E0) traegt +0x98 = 0 und faellt damit rechnerisch aus
+     * dem Fenster. Kein ausgeliefertes RE1.5-Zimmer spawnt eine solche Spinne (5 von 5
+     * geprueft, alle Modus 0); der Versuch, sie im Port zu erzwingen, war ein FEHLLAUF und
+     * ist als solcher protokolliert. Zahlen: analysis/befunde_2026-09-27/trefferboxen-welle2.md. */
     int16_t  re2_hit_b98;       /* +0x98 Unterkante (signed)  */
     uint16_t re2_hit_h9e;       /* +0x9E Halbhoehe  (unsigned) */
     uint8_t  re2_hit_box_set;   /* [PORT-ZUORDNUNG] 1 = b98/h9e werden byte-true gefuehrt,

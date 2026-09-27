@@ -132,17 +132,30 @@ static void teil_b(void)
 {
     printf("B) Anker-Scan aus den Raumdaten\n");
     /* Die GEMESSENE Fundstellen-Tabelle (gen/re15_elev_se.inc). */
-    CHECK(re15_elev_se_hit_count() == 12, "Fundstellen-Tabelle %d statt 12",
+    /* WELLE 2: DREI Kabinen = SECHS RDTs. SIG1 12 Treffer in 4 Dateien,
+     * SIG2 4 Treffer in 2 Dateien (ROOM3080 @0x09FE/@0x0BDA, ROOM3081 @0x07FE/@0x0842). */
+    CHECK(re15_elev_se_hit_count() == 16, "Fundstellen-Tabelle %d statt 16",
           re15_elev_se_hit_count());
-    int n1080 = 0;
+    int n1080 = 0, n3080 = 0, n3081 = 0, nsig2 = 0;
     for (int i = 0; i < re15_elev_se_hit_count(); i++) {
         unsigned room = 0, off = 0;
         re15_elev_se_hit(i, &room, &off);
-        CHECK(room == 0x1080 || room == 0x1081 || room == 0x4020 || room == 0x4021,
+        CHECK(room == 0x1080 || room == 0x1081 || room == 0x3080 || room == 0x3081 ||
+              room == 0x4020 || room == 0x4021,
               "Fundstelle in fremdem Raum 0x%04X", room);
         if (room == 0x1080) n1080++;
+        if (room == 0x3080) n3080++;
+        if (room == 0x3081) n3081++;
+        if (re15_elev_se_hit_sig(i) == 1) {
+            nsig2++;
+            CHECK(room == 0x3080 || room == 0x3081,
+                  "SIG2 in fremdem Raum 0x%04X", room);
+        }
     }
     CHECK(n1080 == 3, "ROOM1080: %d Fundstellen statt 3", n1080);
+    CHECK(n3080 == 2, "ROOM3080 (WAREHOUSE LIFT): %d Fundstellen statt 2", n3080);
+    CHECK(n3081 == 2, "ROOM3081 (WAREHOUSE LIFT): %d Fundstellen statt 2", n3081);
+    CHECK(nsig2 == 4, "SIG2: %d Treffer statt 4", nsig2);
 
     size_t n = 0;
     uint8_t *raw = slurp(RE15_ASSET_PSX_DIR "/STAGE1/ROOM1080.RDT", &n);
@@ -178,6 +191,34 @@ static void teil_b(void)
       CHECK(re15_elev_se_fired(&f) == 0, "Fehlauslesung an fremder Stelle"); }
     scd_register_current_rdt(NULL);
     free(raw);
+
+    /* WELLE 2 — DIE WAREHOUSE LIFT ROOM3080: zwei Fahrten = vier Anker, und die
+     * beiden Pulse liegen 0x0C auseinander (nicht 0x10 wie bei SIG1). Bytes selbst
+     * gelesen: @0x09FE `22 01 1c 01` / @0x0A0A `22 01 1d 01`. */
+    size_t n3 = 0;
+    uint8_t *raw3 = slurp(RE15_ASSET_PSX_DIR "/STAGE3/ROOM3080.RDT", &n3);
+    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt\n"); g_fail++; }
+    else {
+        re15_rdt_t r3;
+        CHECK(re15_rdt_parse(raw3, n3, &r3) >= 0, "re15_rdt_parse ROOM3080");
+        scd_register_current_rdt(&r3);
+        CHECK(g_re15_elev_anchor_n == 4, "ROOM3080: %d Anker statt 4",
+              g_re15_elev_anchor_n);
+        static const unsigned off3080[2] = { 0x09FE, 0x0BDA };
+        for (int k = 0; k < 2; k++) {
+            re15_elev_se_reset_log();
+            g_test_elev_se_count = 0; g_test_elev_se_last = -1;
+            re15_elev_se_pc(raw3 + off3080[k]);
+            re15_elev_se_pc(raw3 + off3080[k] + 0x0C);
+            const unsigned char *f3 = NULL;
+            int c3 = re15_elev_se_fired(&f3);
+            CHECK(c3 == 2 && f3[0] == 0x11 && f3[1] == 0x12,
+                  "ROOM3080 Offset 0x%X: %d Ausloeser %02X/%02X statt 2x 11/12",
+                  off3080[k], c3, c3 > 0 ? f3[0] : 0, c3 > 1 ? f3[1] : 0);
+        }
+        scd_register_current_rdt(NULL);
+        free(raw3);
+    }
 
     /* Nicht-Fahrstuhlraum: kein einziger Anker. */
     size_t n2 = 0;
@@ -234,6 +275,34 @@ static void teil_c(void)
 
     scd_register_current_rdt(NULL);
     free(raw);
+
+    /* WELLE 2 — dieselbe Probe fuer die WAREHOUSE LIFT ROOM3080 @0x09FE:
+     * Set bit28 / Sleep 60 / Set 0 / Set bit29 / Sleep 60 / Set 0 / Set bit28. */
+    size_t n3 = 0;
+    uint8_t *raw3 = slurp(RE15_ASSET_PSX_DIR "/STAGE3/ROOM3080.RDT", &n3);
+    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt\n"); g_fail++; return; }
+    re15_rdt_t rdt3;
+    if (re15_rdt_parse(raw3, n3, &rdt3) < 0) {
+        printf("  FEHLER: parse ROOM3080\n"); g_fail++; free(raw3); return; }
+    scd_vm_init();
+    memset(&g_scd, 0, sizeof g_scd);
+    g_scd.work_slot = -1;
+    g_current_room_id = 0x3080;
+    scd_register_current_rdt(&rdt3);
+    re15_elev_se_reset_log();
+    g_test_elev_se_count = 0;
+    scd_thread_start(0, rdt3.raw + 0x09FE);
+    for (int fr = 0; fr < 200; fr++) scd_vm_tick();
+    const unsigned char *f3 = NULL;
+    int c3 = re15_elev_se_fired(&f3);
+    printf("   ROOM3080 (WAREHOUSE LIFT) ausgeloest: %d (", c3);
+    for (int i = 0; i < c3; i++) printf("%s0x%02X", i ? "," : "", f3[i]);
+    printf(")\n");
+    CHECK(c3 == 2, "ROOM3080: %d Ausloeser statt 2", c3);
+    if (c3 >= 1) CHECK(f3[0] == 0x11, "ROOM3080 erster Ausloeser 0x%02X statt 0x11", f3[0]);
+    if (c3 >= 2) CHECK(f3[1] == 0x12, "ROOM3080 zweiter Ausloeser 0x%02X statt 0x12", f3[1]);
+    scd_register_current_rdt(NULL);
+    free(raw3);
 }
 
 int main(void)

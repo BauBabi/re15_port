@@ -84,13 +84,45 @@
  * `if (g_re15_elev_anchor_n)`. Der ist in 236 von 240 Raeumen 0 — ein
  * Global-Load und ein Sprung, und die Flag-Logik bleibt unberuehrt.
  *
- * 5. OFFEN (Nutzer-Entscheidung, bewusst NICHT entschieden)
- * ----------------------------------------------------------
- * Weil der Anker aus den Daten kommt, toent der Ton AUCH in den drei Fahrten von
- * ROOM4020/4021 (A-2 ELEVATOR) - die Skript-Signatur ist dort bitgleich, und das
- * Original ist dort ebenfalls stumm. Ob das gewollt ist, ist eine Nutzer-Frage.
- * Ein Ausschluss waere ein Raum-Gate im Code, also genau das, was hier vermieden
- * werden sollte; deshalb bleibt es vorerst so.
+ * 5. DER ZWEITE FAHRSTUHLTYP — WELLE 2 (2026-09-27)
+ * --------------------------------------------------
+ * Nutzer-Auftrag woertlich: "fahrstuhl sound muss ueberall bei fahrstuehlen rein.
+ * Der fehlt weil REsident Evil 1.5 eine 40% Beta ist und unvollstaendig."
+ * Damit ist die frueher hier offen gelassene Frage ("toent der Ton auch in
+ * ROOM4020/4021?") ENTSCHIEDEN: ja, ueberall, ausdruecklich gewollt.
+ *
+ * Und es sind DREI Kabinen, nicht zwei. Gesucht wurde deshalb nicht die eine
+ * Bytefolge, sondern die GESTALT einer Fahrt ueber alle 240 RDTs:
+ *   1) ROOM1080/1081  STAGE1 "ELEVATOR"        3 Fahrten je Datei  SIG1
+ *   2) ROOM3080/3081  STAGE3 "WAREHOUSE LIFT"  2 Fahrten je Datei  SIG2  (NEU)
+ *   3) ROOM4020/4021  STAGE4 "A-2 ELEVATOR"    3 Fahrten je Datei  SIG1
+ *
+ * Die WAREHOUSE LIFT faellt durch SIG1, weil sie ein ANDERES Fahrskript hat.
+ * Bytes selbst gelesen (ROOM3080.RDT @0x09FE):
+ *   22 01 1c 01   Set   bank1 bit28 = 1    <- Puls 1 (Fahrt)
+ *   09 0a 3c 00   Sleep 60
+ *   22 01 1c 00   Set   bank1 bit28 = 0
+ *   22 01 1d 01   Set   bank1 bit29 = 1    <- Puls 2 (Ankunft), ZWEITES Bit
+ *   09 0a 3c 00   Sleep 60
+ *   22 01 1d 00   Set   bank1 bit29 = 0
+ *   22 01 1c 01   Set   bank1 bit28 = 1
+ * Schlafzeiten 60/60 statt 8/90/8/20, zwei Bits statt einem.
+ *
+ * EINDEUTIGKEIT GEMESSEN (der Generator bricht ab, wenn eine Signatur ausserhalb
+ * ihrer Dateien trifft): SIG1 12 Treffer / 4 Dateien, SIG2 4 Treffer / 2 Dateien,
+ * 0 Fehltreffer ueber alle 240 RDTs.
+ *
+ * Auch die WAREHOUSE LIFT ist im ORIGINAL stumm: ROOM3080 hat zwar drei Se_on
+ * (`36 02 0a ..` = Bank 2 Id 0x0A) @0x0095C/@0x00970/@0x00984, aber rund 0xA0
+ * Byte VOR der Fahrt, in einem anderen Abschnitt. Wozu sie gehoeren, ist NICHT
+ * bestimmt — nur, dass sie nicht in der Fahrt liegen.
+ *
+ * Nebenbefund zum Anker: bank1 bit0x1C/0x1D ist die Fahrstuhl-BELEUCHTUNG, nicht
+ * "Fahrstuhl faehrt" — ROOM6030 verschraenkt dieselben Pulse mit Cut_chg 4/5
+ * (@0x01214-0x01250) und hat @0x01004 eine Blink-Schleife mit Goto. Die beiden
+ * Signaturen sind also der Flacker-Rhythmus einer Fahrt: gemessen eindeutig,
+ * aber keine Semantik. Keine Fahrstuehle trotz bit0x1C/0x1D: ROOM2040/2041,
+ * ROOM20B0/20B1, ROOM5090/5091, ROOM6030/6031.
  * ==========================================================================*/
 
 #include <string.h>
@@ -99,8 +131,8 @@
 #include "re15_audio.h"
 
 #include "gen/re2_elev_bank.inc"   /* RE2_ELEV_EDT_SIZE / _VBD_OFF / _VBD_SIZE / SE-Ids */
-#include "gen/re15_elev_se.inc"   /* s_re15_elev_sig[32], RE15_ELEV_SE_FIRST/SECOND,
-                                   * RE15_ELEV_SECOND_DELTA, s_re15_elev_hits[] */
+#include "gen/re15_elev_se.inc"   /* s_re15_elev_sigs[], RE15_ELEV_SE_FIRST/SECOND,
+                                   * s_re15_elev_hits[] */
 
 /* 3 Etagen je Kabine * 2 Pulse = 6; 16 ist reichlich Luft. */
 #define RE15_ELEV_ANCHOR_MAX 16
@@ -125,21 +157,25 @@ int re15_elev_se_fired(const unsigned char **out)
 void re15_elev_se_room_scan(const unsigned char *raw, int raw_size)
 {
     g_re15_elev_anchor_n = 0;
-    if (raw == NULL || raw_size < RE15_ELEV_SIG_LEN) return;
+    if (raw == NULL || raw_size <= 0) return;
 
-    for (int i = 0; i + RE15_ELEV_SIG_LEN <= raw_size; i++) {
-        if (raw[i] != s_re15_elev_sig[0]) continue;
-        if (memcmp(raw + i, s_re15_elev_sig, RE15_ELEV_SIG_LEN) != 0) continue;
-        if (g_re15_elev_anchor_n + 2 > RE15_ELEV_ANCHOR_MAX) break;
-        /* Puls 1 @sig+0x00 -> id 0x11 (RE2 ROOM21B0.RDT @0x2756),
-         * Puls 2 @sig+0x10 -> id 0x12 (RE2 ROOM21B0.RDT @0x2784). */
-        s_anchor_pc[g_re15_elev_anchor_n] = raw + i;
-        s_anchor_se[g_re15_elev_anchor_n] = (unsigned char)RE15_ELEV_SE_FIRST;
-        g_re15_elev_anchor_n++;
-        s_anchor_pc[g_re15_elev_anchor_n] = raw + i + RE15_ELEV_SECOND_DELTA;
-        s_anchor_se[g_re15_elev_anchor_n] = (unsigned char)RE15_ELEV_SE_SECOND;
-        g_re15_elev_anchor_n++;
-        i += RE15_ELEV_SIG_LEN - 1;   /* Treffer sind ueberlappungsfrei */
+    for (int g = 0; g < RE15_ELEV_SIG_COUNT; g++) {
+        const re15_elev_sig_t *sg = &s_re15_elev_sigs[g];
+        const int len = (int)sg->len;
+        for (int i = 0; i + len <= raw_size; i++) {
+            if (raw[i] != sg->bytes[0]) continue;
+            if (memcmp(raw + i, sg->bytes, (size_t)len) != 0) continue;
+            if (g_re15_elev_anchor_n + 2 > RE15_ELEV_ANCHOR_MAX) break;
+            /* Puls 1 @sig+0x00    -> id 0x11 (RE2 ROOM21B0.RDT @0x2756),
+             * Puls 2 @sig+delta2  -> id 0x12 (RE2 ROOM21B0.RDT @0x2784). */
+            s_anchor_pc[g_re15_elev_anchor_n] = raw + i;
+            s_anchor_se[g_re15_elev_anchor_n] = (unsigned char)RE15_ELEV_SE_FIRST;
+            g_re15_elev_anchor_n++;
+            s_anchor_pc[g_re15_elev_anchor_n] = raw + i + sg->delta2;
+            s_anchor_se[g_re15_elev_anchor_n] = (unsigned char)RE15_ELEV_SE_SECOND;
+            g_re15_elev_anchor_n++;
+            i += len - 1;             /* Treffer sind ueberlappungsfrei */
+        }
     }
 }
 
@@ -163,6 +199,12 @@ int re15_elev_se_hit(int i, unsigned *out_room, unsigned *out_off)
     if (out_room) *out_room = s_re15_elev_hits[i].room;
     if (out_off)  *out_off  = s_re15_elev_hits[i].off;
     return 0;
+}
+
+int re15_elev_se_hit_sig(int i)
+{
+    if (i < 0 || i >= RE15_ELEV_HIT_COUNT) return -1;
+    return (int)s_re15_elev_hits[i].sig;
 }
 
 /* Satz-TOC der Mini-Bank (gen/re2_elev_bank.inc) — Muster re2_enemse_toc_entry. */

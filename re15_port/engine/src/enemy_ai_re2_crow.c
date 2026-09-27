@@ -1743,9 +1743,25 @@ static void re2c_init(re15_actor_t *e)
      * ist im Record-Layout nicht aufgeloest (OFFEN, doc). */
     e->hit_radius_min = 96; e->hit_radius_max = 96; e->hit_height = 512;
     e->hit_offset_x = 0; e->hit_offset_y = 0; e->hit_offset_z = 0;
-    e->target_z = -350;                                    /* +0x98=−350 @0x801003B8-C4 (Render-
-                                                            * Pitch-Kanal OFFEN, doc) */
-    /* +0x9E=530 (@0x801003C8/DC), +0x1E8=1 (@0x801003CC), +0x94/+0x96=0 (@0x801003D0-D4),
+    /* ⛔ BERICHTIGUNG (Welle 2, 2026-09-27): hier stand `e->target_z = -350` mit dem Kommentar
+     * "Render-Pitch-Kanal OFFEN". Das war eine FALSCHE ZUORDNUNG — und eine schaedliche: der
+     * Port fuehrt target_x/target_y/target_z/lookat_z als die SCD-Ids 0x20..0x25 (RE2
+     * +0x94..+0x9E) fuer Plc_neck; der Store hat also den Look-at-Kanal der Kraehe
+     * ueberschrieben. +0x98 / +0x9E sind in JEDEM Gegner-Overlay die TREFFERBOX (Unterkante
+     * signed / Halbhoehe unsigned) — dieselben Felder, die das fuenfte Gate des
+     * RE2-Kandidatenfilters @0x8004716C-A4 liest. Sie liegen seit Runde 30 als eigene
+     * Actor-Felder vor. */
+    e->re2_hit_b98 = -350;                                 /* addiu v0,zero,-350 @0x801003B8 /
+                                                            * sh v0,152(s1) @0x801003C4 */
+    e->re2_hit_h9e =  530;                                 /* addiu v0,zero,530 @0x801003C8 /
+                                                            * sh v0,158(s1) @0x801003DC */
+    /* re2_hit_box_set BLEIBT 0 — GEMESSEN, nicht aus Vorsicht: das Fenster der Kraehe ist
+     * [-280, 980) (b=-350, h=530) bzw. [-630, 630) im Zweig +0x1F0 >= 900, die Muendungshoehe
+     * des Ports steht bei Hgun 1420..1671. DURCH in 0 von 240 Bildern (probe_r31_boxen /
+     * probe_r30b_muendung). Mit scharfem Tor waere die Kraehe DAUERHAFT untreffbar. Erst wenn
+     * die senkrechte Zielpose (Bone-Kette 0->9->10->11 @0x80042E64/74/84/94) gebaut ist, darf
+     * hier box_set = 1 stehen. */
+    /* +0x1E8=1 (@0x801003CC), +0x94/+0x96=0 (@0x801003D0-D4),
      * +0x1EE=300 (@0x801003F4-FC): Leser offen (Lane K §5) — nicht modelliert (doc). */
     /* Boden-Probe 0x8004FBA0(&pos, 250, 1024, 0) → +0x1C2 (@0x801003E0-414). MAPPING:
      * Spawn-Y als Boden (Welle-C-Hunde-Muster; die EXE-Probe ist nicht portiert). */
@@ -1790,8 +1806,18 @@ int re15_re2crow_tick(int slot)
     if (re15_re2_los_clear(e, pl)) e->re2c_flags22a |= 0x2u;
     else                           e->re2c_flags22a &= (uint16_t)~0x2u;
 
-    /* dist<900 → +0x98=−350 sonst 0 (@0x801001EC-208; Render-Pitch OFFEN, doc): */
-    e->target_z = (int16_t)((e->ai_dist < 0x384u) ? -350 : 0);
+    /* DER NEU-BERECHNER DER TREFFERBOX, JEDES BILD, vor dem Zustands-Verteiler — selbst
+     * disassembliert (EMOVL21_S0.BIN, roh @0x80100000):
+     *   801001ec: lw    v0,496(s0)          ; +0x1F0 (Flughoehen-Band, WORD)
+     *   801001f4: sltiu v0,v0,0x384         ; < 900 ?
+     *   801001f8: beq   v0,zero,0x80100208
+     *   801001fc: addiu v0,zero,-350        ; (Delay-Slot)
+     *   80100204: sh    v0,152(s0)          ; +0x98 = -350
+     *   80100208: sh    zero,152(s0)        ; sonst +0x98 = 0
+     * Danach `lbu v0,4(s0)` @0x80100210 + jalr ueber die Zustandstabelle @0x80104908.
+     * +0x9E = 530 wird NIE wieder geschrieben — beide Zweige sind erreichbar, also ist
+     * keiner eine Sackgasse. (Frueher stand der Wert hier in target_z, s. re2c_init.) */
+    e->re2_hit_b98 = (int16_t)((e->ai_dist < 0x384u) ? -350 : 0);
 
     if (e->state == 1) { e->re2z_prev_sub = e->sub_state_1; e->re2z_prev_hp = e->hp; }
     /* Treffer-Erkennung (Welle-C-Muster): der Port-Damage-Writer schreibt +0x4=2/3 und
