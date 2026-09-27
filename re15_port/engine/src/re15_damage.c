@@ -1531,7 +1531,22 @@ static int re15_gun_wedge_inside(const re15_actor_t *pl, int32_t ex, int32_t ez,
  *              3*Klammer (@0x800413CC-D4 / `sb v1,466` @0x80041A9C).
  * ========================================================================================== */
 #define RE2Z_RAD1EE 500   /* +0x1EE des Zombies: `addiu v1,zero,500` @0x8010096C / `sh v1,494(s2)` @0x80100980 */
+#define RE2D_RAD1EE 600   /* +0x1EE des HUNDES:  `addiu v1,zero,600` @0x80100290 / `sh v1,494(s0)` @0x801002C4
+                           * (EMD0G_MOD0.BIN, INIT). Der Zuschlag geht NUR auf die Tiefe der
+                           * NAH-Sub-Box: `lhu v0,494(s2)` / `sll 16` / `sra 18` / `addu` /
+                           * `sh v1,8(s3)` @0x8010133C-50 — im Port die Zeile depth4 += >>2. */
 
+/* ============================================================================================
+ * ⛔ DER SCHADENSRECORD IST PRO GEGNERTYP, NICHT GLOBAL — `lbu v1,8(s2)` (Entity-Typ) /
+ * `sll v1,v1,2` / `lw v1,27272(at)` = PTR_DAT_800A6A88 + Typ*4 @0x80041380-98, danach
+ * `+ 20*(a1>>16)` (die RE2-Waffen-Id) @0x800413A4-BC. Selbst gedumpt (48 Worte ab 0x800A6A88):
+ *     Typ 0x10..0x14, 0x18..0x1F, 0x2C -> 0x800A412C   (Zombie-Familie, s_re2z_fen)
+ *     Typ 0x15..0x17                  -> 0x800A42A8
+ *     Typ 0x20  HUND                  -> 0x800A4424    (s_re2d_fen, NEU Runde 34)
+ *     Typ 0x21  KRAEHE                -> 0x800A45A0
+ *     Typ 0x25/0x26 SPINNE/BABY       -> 0x800A4B90    (im Port als SFEN, Band-Zweig)
+ * Bis Runde 33 kannte der Port nur die Zombie-Zeile, weil nur die Zombie-Familie durch den
+ * Applier lief. Der Hund braucht seine eigene. ==========================================*/
 /* dy-Fenster je RE2-Id: UPlo,UPhi, LVlo,LVhi, DNlo,DNhi (@0x800A412C + (id-1)*20 + 8/12/16). */
 static const int16_t s_re2z_fen[20][6] = {
     [ 1] = {-3000, -500,-1900,1000, -300,2500},
@@ -1553,6 +1568,44 @@ static const int16_t s_re2z_fen[20][6] = {
     [17] = {-3000,-2000,-2000,-1000,-1000,3000},
     [18] = {-5000,  500,-3000,2000, -500,3000},
     [19] = {-5000,-2000,-3000,2000, -500,3000},
+};
+/* dy-Fenster des HUNDES 0x20, @0x800A4424 + (id-1)*20 + 8/12/16 (selbst gedumpt, 20 Zeilen
+ * x 10 shorts). Fuer die Pistolen-Familie (RE2-Id 2/3/4/13/19) ist LEVEL [-3000,+2000]:
+ * third = (-3000-2000)/3 = -1666, also Zeile 0 ab dy >= 334, Zeile 3 ab dy >= -1332,
+ * sonst Zeile 6 — ein Hund auf der Spielerebene (dy = 0) landet in ZEILE 3. */
+static const int16_t s_re2d_fen[20][6] = {
+    [ 1] = {-3000, -500,-1900,1000, -300,2500},   /* w0 0x0000000A */
+    [ 2] = {-4000,-2000,-3000,2000, -500,3000},   /* w0 0x00F04012 */
+    [ 3] = {-4000,-2000,-3000,2000, -500,3000},
+    [ 4] = {-4000,-2000,-3000,2000, -500,3000},
+    [ 5] = {-4000,-2000,-3000,2000, -500,3000},
+    [ 6] = {-4000,-2000,-3000,2000, -500,3000},
+    [ 7] = {-3000,  500,-3000,2000, -500,3000},
+    [ 8] = {-3000,  500,-3000,2000, -500,3000},
+    [ 9] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [10] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [11] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [12] = {-4000,-2000,-3000,2000, -500,3000},
+    [13] = {-4000,-2000,-3000,2000, -500,3000},
+    [14] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [15] = {-5000,   50,-2000,2000, -500,3000},
+    [16] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [17] = {-3000,-2000,-2000,-1000,-1000,3000},
+    [18] = {-5000,   50,-2000,2000, -500,3000},
+    [19] = {-4000,-2000,-3000,2000, -500,3000},
+};
+/* Record-Wort 0 des HUNDES (Schaden je Klammer): @0x800A4424 + (id-1)*20.
+ * ⛔ GEDUMPT, ABER BEWUSST NICHT VERDRAHTET — und hier stehen die Zahlen dazu:
+ * Pistole (Id 3) 18/16/15 gegen die heutige Port-Zeile re15_enemy_dmg_row(0x20)[3]; der
+ * Schadens-Ersatz unten haengt ausdruecklich an `dmg_row == s_re2_wpn_dmg_zombie(16)`.
+ * Diese Runde stellt den TREFFER-MECHANISMUS um, nicht das Schadensmodell; wer die Zeile
+ * scharf schaltet, verschiebt jede Hunde-HP-Messung und muss das eigens riegeln. */
+static const uint32_t s_re2d_rec_w0[20] = {
+    [ 1] = 0x0000000au, [ 2] = 0x00f04012u, [ 3] = 0x00f04012u, [ 4] = 0x00f04012u,
+    [ 5] = 0x0c8320c8u, [ 6] = 0x12c4b12cu, [ 7] = 0x01e0a03bu, [ 8] = 0x04112d2cu,
+    [ 9] = 0x00a0c92cu, [10] = 0x0050c92cu, [11] = 0x00a0c92cu, [12] = 0x01a0681au,
+    [13] = 0x00f04012u, [14] = 0x04110441u, [15] = 0x00a0280au, [16] = 0x00c0300cu,
+    [17] = 0x12c4b12cu, [18] = 0x01204812u, [19] = 0x00f04012u,
 };
 /* Zombie-Record Wort 0 je RE2-Id (Schaden je Klammer, 10 Bit): @0x800A412C + (id-1)*20 fuer die
  * Typen 0x10/0x11/0x12/0x13/0x18 (PTR_DAT_800A6A88), @0x800A42A8 + (id-1)*20 fuer 0x15/0x16/0x17. */
@@ -1681,7 +1734,39 @@ static int re15_re2_knife_step(void)
     int f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
     return (f >= 6 && f <= 10) ? (f - 6) : 0;
 }
-/* DAT_800A6DB4 (eigener Dump): Satz 1 (Flag ohne 8) row0/row3/row6, Satz 2 (Flag&8) ab +9. */
+/* ============================================================================================
+ * DIE MASKENTABELLE DAT_800A6DB4 — SATZ, ZEILE, SPALTE, UND WAS DIE 0 BEDEUTET
+ * --------------------------------------------------------------------------------------------
+ * Eigener Dump (`read 0x800A6DB4 30 --w 1`), 27 benutzte Bytes:
+ *     +0 .. +8   4,2,1 | 2,1,4 | 1,2,4      (Satz 1)
+ *     +9 ..+17   4,2,0 | 2,0,0 | 1,2,0      (Satz 2)
+ *     +18..+26   0,0,0 | 0,0,0 | 0,0,0      (nie adressierbar, s. u.)
+ *
+ * SATZ  = `s1 = ((Sub-Box-Flag & 8) != 0)`  (`lbu v0,1(s3)` / `andi v0,v0,0x8` /
+ *         `sltu s1,zero,v0` @0x8004141C-28), Versatz 9*s1 (`sll v0,s1,3` / `addu v0,v0,s1`
+ *         @0x80041470-74). s1 ist 0 oder 1 — der dritte Satz ab +18 ist damit TOTES
+ *         Fuellmaterial, kein Fall. Flag 8 ist genau das EBEN-Fenster (FUN_80041B20 case 3
+ *         liest Record +12/+14 = LEVEL), Satz 2 ist also die EBEN-Spalte.
+ * ZEILE = `s0 in {0,3,6}` aus der HOEHE des Kandidaten IM FENSTER (@0x8004142C-54, dy =
+ *         Gegner+0x3C − Spieler+0x3C, third = (lo−hi)/3 aus FUN_80041B20):
+ *             dy >= hi + third      -> 0   (Gegner am TIEFSTEN im Fenster; PSX-Y waechst
+ *                                           nach unten, grosses dy = tiefer als der Spieler)
+ *             dy >= hi + 2*third    -> 3   (Mitte)
+ *             sonst                 -> 6   (am hoechsten)
+ *         `addiu s0,zero,6` @0x8004143C ist der Default, `addiu s0,zero,3` @0x80041440 und
+ *         `addu s0,zero,zero` @0x80041454 die beiden Ueberschreibungen.
+ * SPALTE= die drei PRIORITAETSSTUFEN eines Eintrags, gelesen in der Reihenfolge
+ *         pb[2] (@0x80041488), pb[1] (@0x800414A8), pb[0] (@0x800414C8); jeder Treffer
+ *         ueberschreibt s4, also GEWINNT pb[0]. Spalte 0 ist die staerkste.
+ * WERT  = eine BITMASKE gegen die Haltungsklasse (`and v0,v1,s6` @0x80041490/B0/D0) und
+ *         zugleich der Zonen-Index: `srl s7,v1,1` (@0x8004149C/C0/E4) macht aus 1/2/4 die
+ *         Zone 0/1/2. Bit 0 (=1) = Beine, Bit 1 (=2) = Rumpf, Bit 2 (=4) = Kopf.
+ * WERT 0= LEERE STUFE. `and 0,s6` ist immer 0, der Zweig springt weiter; die Stufe kann
+ *         NIE treffen. In Satz 2 (EBEN) heisst das: Zeile 3 (`2,0,0`) erkennt AUSSCHLIESSLICH
+ *         den Rumpf — eine Klasse ohne Bit 1 faellt durch. Genau darauf beruht der Befund
+ *         "der liegende Hund ist nicht treffbar": FUN_80104088(0) loescht Bit 1
+ *         (`and 0xE7FFFFFF` @0x80104090-B4) und laesst Klasse 1 stehen.
+ * ========================================================================================== */
 static const uint8_t s_re2z_prio[18] = { 4,2,1, 2,1,4, 1,2,4,   4,2,0, 2,0,0, 1,2,0 };
 
 /* FUN_80041B20: Fenster (lo,hi) + Drittel aus dem Sub-Box-Flag. Rueckgabe third = (lo-hi)/3. */
@@ -1750,7 +1835,12 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
      * s_re2z_geo1). Alle uebrigen Ids stehen in jedem treffenden Bild auf Record 0. */
     const re2_georec_t *g  = (rid == 1u) ? &s_re2z_geo1[grp][re15_re2_knife_step()]
                                          : &s_re2z_geo[rid].grp[grp];
-    const int16_t      *fw = s_re2z_fen[rid];
+    /* Die Fenster-Zeile gehoert dem GEGNERTYP (PTR_DAT_800A6A88[Typ] @0x80041380-98), nicht
+     * der Waffe. Zombie-Familie -> @0x800A412C, HUND 0x20 -> @0x800A4424. */
+    const int16_t      *fw = (e->type == 0x20u) ? s_re2d_fen[rid] : s_re2z_fen[rid];
+    /* +0x1EE (Tiefen-Zuschlag der NAH-Box) ist ebenfalls pro Typ: Zombie 500 @0x8010096C,
+     * Hund 600 @0x80100290. */
+    const int32_t       rad1ee = (e->type == 0x20u) ? RE2D_RAD1EE : RE2Z_RAD1EE;
     unsigned mask = (unsigned)e->re2z_parts & 7u;                 /* uVar5 = word0 >> 0x1a & 7 */
     int32_t  dy   = e->y - pl->y;                                 /* puVar9[0xf] - player[+0x3c] */
     int32_t  r9a  = (int32_t)((int16_t)e->re2z_rad9a >> 2);      /* +0x9A >> 2 auf alle Breiten */
@@ -1759,17 +1849,20 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
      * wurde ohne re2z_init aufgesetzt, z.B. Test-Fixtures, die einen Slot umtypen). In RE2 gibt es
      * dieses Fenster nicht — der INIT (@0x80100984-998) laeuft im Spawn-Bild vor jedem Schuss.
      * Deshalb zaehlt hier der INIT-Wert (Beine+Rumpf, Radius 500 @0x8010096C-70); eine echte
-     * Null-Maske erzeugt kein Zombie-Zustand (alle Setzer schreiben 1 oder 3). */
-    if (mask == 0u) { mask = 3u; r9a = 500 >> 2; }
-    /* Das Original-Gate `if (uVar5 != 0)` (FUN_800410CC, `uVar5 = *puVar9 >> 0x1a & 7`) ist nach
-     * der Zeile darueber immer wahr - es steht hier als Zitat, nicht als toter Zweig. */
+     * Null-Maske erzeugt kein Zombie-Zustand (alle Setzer schreiben 1 oder 3).
+     * ⛔ DER HUND IST AUSGENOMMEN: er fuehrt die Klasse seit Runde 33/34 selbst (re2d_init
+     * setzt 3 @0x80100484-90, re2d_hitbox schaltet 1<->3 @0x80104090-D8, der Tod nullt
+     * @0x80103874-A0). Wuerde die Ersatzmaske auch fuer ihn greifen, waere der LIEGENDE Hund
+     * per Hintertuer wieder Klasse 3 = treffbar — genau der Nutzer-Befund aus Runde 26. */
+    if (mask == 0u && e->type != 0x20u) { mask = 3u; r9a = 500 >> 2; }
+    if (mask == 0u) return 0;   /* `beq s6,zero,0x80041774` @0x800413D8 — Kandidat faellt raus */
     for (int b = 0; b < 3; b++) {
         int32_t lo, hi, third;
         if (g->flag[b] == 0u) continue;                           /* `*(char *)(iVar10 + 1+b) != 0` */
         if (g->flag[b] == 0x80u) continue;         /* kein Fall in FUN_80041B20, s. dort */
         third = re15_re2_window(fw, g->flag[b], &lo, &hi);
         if ((uint32_t)(dy - lo) > (uint32_t)(hi - lo)) continue; /* dy im Fenster */
-        int32_t depth4 = g->box[b][2] + ((b == 0) ? (RE2Z_RAD1EE >> 2) : 0);   /* rec+8 += +0x1EE>>2 */
+        int32_t depth4 = g->box[b][2] + ((b == 0) ? (rad1ee >> 2) : 0);        /* rec+8 += +0x1EE>>2 */
         int32_t halfw4 = g->box[b][3] + r9a;                                   /* rec+10/12/1A += +0x9A>>2 */
         if (!re15_re2_box_inside(pl, e, g->box[b], depth4, halfw4)) continue;
         int row = 6;
