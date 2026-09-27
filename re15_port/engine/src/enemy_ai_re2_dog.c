@@ -709,18 +709,46 @@ static void re2d_hitbox(re15_actor_t *e, int restore)
          * Das Bit-Paar ist also der ZWEITE, redundante Traeger derselben Aussage wie
          * +0x21A Bit 0x2 — "dieser Gegner liegt".
          *
-         * ⛔ IM PORT NICHT GEBAUT, und zwar bewusst: der Port fuehrt die Liege-Aussage
-         * bereits ueber re2z_flags21a & 0x2 (re15_damage.c liest sie fuer die
-         * Liege-Klassifikation der RE2-Zombies). Ein zweites, paralleles Bitpaar in word0
-         * waere eine zweite Kopie derselben Regel — genau das, was hier schon einmal
-         * auseinandergedriftet ist. Fuer den HUND gibt es im Port ueberhaupt keinen Leser;
-         * dort waere es ein Store ins Leere. Beides bleibt als Fehlstelle benannt, mit den
-         * Adressen oben. Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und
-         * @0x80107EA8. */
+         * ⛔ BERICHTIGT (Runde 33, selbst nachgelesen): hier stand, der EINZIGE Leser stehe im
+         * Zombie-Overlay EMZ0.BIN und fuer den HUND gebe es "ueberhaupt keinen Leser, dort
+         * waere es ein Store ins Leere". Das war falsch — der Vollscan suchte nach
+         * `lui reg,0x400|0x800|0xc00` + `and` und konnte den allgemeinen Leser deshalb nicht
+         * finden, weil der das Feld per SCHIEBEN liest. Der allgemeine Leser ist der
+         * RE2-TREFFERBOX-APPLIER FUN_800410CC (info/re2leon/PSX.EXE, selbst disassembliert):
+         *   800413c4: lw   v0,0(s2)        ; word0 des KANDIDATEN
+         *   800413cc: srl  v0,v0,26
+         *   800413d4: andi s6,v0,0x7       ; s6 = Haltungsklasse
+         *   800413d8: beq  s6,zero,0x80041774   ; 0 -> Kandidat faellt raus
+         * und weiter die Maskentabelle @0x800A6DB4 (`and v0,v1,s6` @0x80041490/B0/D0). Durch
+         * FUN_800410CC laeuft in RE2 JEDE Schusswaffe (FUN_80043908 -> `jal 0x800410CC`
+         * @0x80043AFC) — also auch jeder Schuss auf DIESEN Hund. Genau dieses Feld fuehrt der
+         * Port schon: `re2z_parts` = (word0 >> 26) & 7 (re15_actor.h, Leser
+         * re15_re2_gun_probe in re15_damage.c).
+         *
+         * DESHALB JETZT GEBAUT, byte-true aus den Instruktionen oben:
+         *   a1 == 0 : `and v0,v0,0xE7FFFFFF` loescht die Feldbits 1|2 (word0-Bits 27/28),
+         *             `or v1=0x04000000` setzt Feldbit 0  ->  parts = 1
+         *   a1 != 0 : `or v1=0x0C000000` OHNE Maskierung setzt Feldbits 0|1 -> parts |= 3
+         * Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und @0x80107EA8.
+         *
+         * ⛔ HEUTE OHNE WIRKUNG IM PORT, und das steht hier als Zahl, nicht als Hoffnung:
+         * re15_re2_gun_probe laeuft nur fuer `re15_re2z_owns_type` (0x10/0x11/0x12/0x13/
+         * 0x16/0x18, enemy_ai_re2_zombie.c:186) — der Hund 0x20 ist NICHT dabei. Das Feld ist
+         * damit der byte-true Eingang fuer den Tag, an dem der Applier den Hund uebernimmt;
+         * es aendert heute kein einziges Trefferurteil (gemessen: probe_r33_aufrufstelle
+         * Teil 3, 900 Bilder je Typ, Trefferzahlen vor/nach identisch). */
+        e->re2z_parts = (uint8_t)((e->re2z_parts & ~0x6u) | 0x1u);
+                                        /* `and v0,v0,0xE7FFFFFF` @0x80104090-94/B4 +
+                                         * `lui v1,0x400` @0x801040AC / `or`+`sw` @0x801040D0-D8 */
     } else {
         e->re2_hit_b98 = -1000;         /* addiu v0,zero,-1000 @0x801040B8 / sh @0x801040BC */
         e->re2_hit_h9e =  1000;         /* addiu v0,zero,1000  @0x801040C0 / sh @0x801040C4 */
         e->re2_hit_box_set = 1;         /* [PORT-ZUORDNUNG] Gueltigkeitsmarke, s. re15_actor.h */
+        e->re2z_parts = (uint8_t)(e->re2z_parts | 0x3u);
+                                        /* `lui v1,0xc00` @0x801040CC OHNE Maskierung +
+                                         * `or v0,v0,v1` / `sw v0,0(a2)` @0x801040D0-D8 —
+                                         * Haltungsklasse (word0>>26)&7, Leser FUN_800410CC
+                                         * @0x800413CC-D4 (Herleitung im Zweig darueber) */
     }
 }
 

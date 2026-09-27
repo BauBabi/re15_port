@@ -1,0 +1,28 @@
+=== TEIL 1: HALTUNGSKLASSE (word0>>26)&7 DES RE2-HUNDES ===
+  Hund 0x20: gestauchte Box in 360 Bildern (Klasse muss 1 sein), volle Box in 40
+             Bildern (Klasse muss 3 tragen) | Abweichungen: 0
+
+=== TEIL 2: TREFFERZENSUS, 900 BILDER DAUERBESCHUSS JE TYP ===
+  [ZOMBIE 0x10 stehend   ] Treffer   82 in  900 Bildern | box_set=1
+  [ZOMBIE 0x10 Kriecherbox] Treffer    0 in  900 Bildern | box_set=1  (Box erzwungen: Kriecher -350/350 @0x80100B14-20)
+  [HUND 0x20             ] Treffer   11 in  900 Bildern | box_set=1
+  [KRAEHE 0x21           ] Treffer   40 in  900 Bildern | box_set=0
+  [SPINNE 0x25           ] Treffer   82 in  900 Bildern | box_set=1
+  [BABY 0x26             ] Treffer   41 in  900 Bildern | box_set=0
+
+=== TEIL 3: KONTROLLE — TREFFERBOX KUENSTLICH GENULLT ===
+  [ZOMBIE 0x10 stehend   ] Treffer    0 in  300 Bildern | box_set=1  (KONTROLLE: Box genullt)
+  [HUND 0x20             ] Treffer    0 in  300 Bildern | box_set=1  (KONTROLLE: Box genullt)
+
+=== URTEIL ===
+  Haltungsklasse Hund: byte-true (liegend 1, stehend 3)
+  ZOMBIE 0x10 stehend                    treffbar
+  ZOMBIE 0x10 Kriecherbox (erzwungen)    ⛔ NIE GETROFFEN
+  HUND 0x20                              treffbar
+  KRAEHE 0x21                            treffbar
+  SPINNE 0x25                            treffbar
+  BABY 0x26                              treffbar
+  (Zeile 2 ist eine WARNUNG, kein Live-Zustand: der Port setzt die Kriecher-Box
+   heute fuer KEINEN Typ. Wer sie setzt, macht den Kriecher ueber das fuenfte Tor
+   dauerhaft untreffbar — 0 Treffer in 900 Bildern, Fenster [-100,800).)
+PROBE-OK
