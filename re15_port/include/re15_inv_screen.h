@@ -154,13 +154,36 @@ enum {
  * CLUT-Cursor 10; `addiu v0,v0,480` @0x80076B08 -> CLUT-Y = 480 + Cursor).
  * ST0/ST1/ST1_.TIM sind in diesen Zeilen bitgleich.
  * Der Riegel unit_karte_besitz liest die Datei erneut und vergleicht. */
-#define RE15_KARTE_BESUCHT   ((uint16_t)0xD902u)  /* ST0.TIM 0x10996 = 1040b0 + STP */
+/* ⛔ BESUCHT = RE1.5s EIGENE FARBE, nicht RE2s. Berichtigung vom 2026-09-27.
+ * Ich hatte dem Nutzer gemeldet, das Gruen der besuchten Raeume sei eine Erfindung des
+ * Ports. DAS WAR FALSCH. RE1.5 fuehrt seine Kartenpalette in DERSELBEN VRAM-Zeile wie
+ * RE2 (TEX.TIM Zeile 21, clut-Id 0x7d50 = GetClut(0x100,0x1f5) @0x80046fdc-fe8), und
+ * ihr Eintrag 1 ist selbst nachgelesen
+ *     re15_port/shared_assets/PSX/DATA/TEX.TIM @Datei 0x0556 = 0x81A4
+ *     -> RGB (32,104,0) mit gesetztem STP = GRUEN, halbtransparent
+ * (Wandlinie daneben 0xb0b0b0). Erfunden war nur die MODULATION (40,144,40), mit der
+ * der Port diesen Wert angenaehert hat — die ist weg.
+ *
+ * WARUM HIER RE1.5 GILT UND NICHT RE2: das Projektziel sagt, wo RE1.5 ein System
+ * VOLLSTAENDIG hat, bleibt RE1.5 massgeblich; RE2 ist nur dort das Ziel, wo RE1.5
+ * unfertig ist. Die Kartenpalette HAT RE1.5 vollstaendig — den BESITZ-Mechanismus
+ * dagegen gar nicht, deshalb ist der nach RE2 gebaut. Gemessen kommt dazu: RE2s Blau
+ * (16,64,176) hebt sich vom blauen RE1.5-Panel messbar schwaecher ab als das Gruen
+ * (Farbabstand 64,5 -> 47,3); in RE2 faellt das nicht auf, weil dort der Kartengrund
+ * schwarz ist — der schwarze Kasten wurde hier am 2026-09-02 auf Nutzerwunsch entfernt.
+ * Abzuege: analysis/karte_2026-09-27/vorher_besucht.png gegen nachher_besucht.png.
+ * RE2s Wert bleibt darunter stehen, falls er doch gewuenscht wird. */
+#define RE15_KARTE_BESUCHT   ((uint16_t)0x81A4u)  /* RE1.5 TEX.TIM 0x0556 = 206800 + STP */
+#define RE15_KARTE_BESUCHT_RE2 ((uint16_t)0xD902u) /* RE2 ST0.TIM 0x10996 = 1040b0 + STP */
 #define RE15_KARTE_AKTUELL   ((uint16_t)0x842Du)  /* ST0.TIM 0x109B6 = 680808 + STP */
 #define RE15_KARTE_UNBESUCHT ((uint16_t)0x0000u)  /* ST0.TIM 0x10936 = durchsichtig  */
 /* Die Datei-Offsets der drei Eintraege, damit der Riegel sie nachlesen kann. */
 #define RE15_KARTE_ST0_OFF_BESUCHT   0x10996
 #define RE15_KARTE_ST0_OFF_AKTUELL   0x109B6
 #define RE15_KARTE_ST0_OFF_UNBESUCHT 0x10936
+/* RE1.5s eigener Eintrag 1 der Kartenzeile (TEX.TIM Zeile 21) — Quelle von
+ * RE15_KARTE_BESUCHT, vom Riegel nachgelesen. */
+#define RE15_KARTE_TEX_OFF_BESUCHT   0x0556
 
 typedef struct {
     uint8_t kind;         /* RE15_INV_OP_* */

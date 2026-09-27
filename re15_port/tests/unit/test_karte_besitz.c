@@ -204,13 +204,12 @@ int main(void)
         if (!f) {
             printf("  UEBERSPRUNGEN: %s nicht lesbar\n", pf);
         } else {
-            struct { long off; unsigned short soll; const char *name; } q[3] = {
-                { RE15_KARTE_ST0_OFF_BESUCHT,   RE15_KARTE_BESUCHT,   "besucht   (CLUT-Y 501)" },
+            struct { long off; unsigned short soll; const char *name; } q[2] = {
                 { RE15_KARTE_ST0_OFF_AKTUELL,   RE15_KARTE_AKTUELL,   "aktuell   (CLUT-Y 502)" },
                 { RE15_KARTE_ST0_OFF_UNBESUCHT, RE15_KARTE_UNBESUCHT, "unbesucht (CLUT-Y 498)" },
             };
             int k;
-            for (k = 0; k < 3; k++) {
+            for (k = 0; k < 2; k++) {
                 unsigned char bb[2] = { 0, 0 };
                 unsigned short ist;
                 char txt[160];
@@ -229,11 +228,45 @@ int main(void)
             fclose(f);
         }
         /* Und die DEKODIERUNG - genau die Stelle, an der ich mich verrechnet habe. */
-        CHECK("0xD902 dekodiert zu (16,64,176) halbtransparent",
-              ((RE15_KARTE_BESUCHT & 31) << 3) == 16 &&
-              (((RE15_KARTE_BESUCHT >> 5) & 31) << 3) == 64 &&
-              (((RE15_KARTE_BESUCHT >> 10) & 31) << 3) == 176 &&
+        /* ⛔ BESUCHT kommt aus RE1.5, nicht aus RE2 (Berichtigung 2026-09-27, volle
+         * Begruendung an RE15_KARTE_BESUCHT in include/re15_inv_screen.h). Der Riegel
+         * liest deshalb RE1.5s EIGENE Palette nach — dieselbe Zeile 21, die auch der
+         * RE1.5-Kartenzeichner waehlt (GetClut(0x100,0x1f5) @0x80046fdc-fe8). */
+        {
+            const char *pf15 = RE15_ASSET_PSX_DIR "/DATA/TEX.TIM";
+            FILE *f15 = fopen(pf15, "rb");
+            if (!f15) {
+                printf("  UEBERSPRUNGEN: %s nicht lesbar\n", pf15);
+            } else {
+                unsigned char bb[2] = { 0, 0 };
+                unsigned short ist = 0;
+                if (fseek(f15, RE15_KARTE_TEX_OFF_BESUCHT, SEEK_SET) == 0 &&
+                    fread(bb, 1, 2, f15) == 2) {
+                    ist = (unsigned short)(bb[0] | (bb[1] << 8));
+                    printf("  [TEX.TIM 0x%05X] besucht (RE1.5 Zeile 21) = 0x%04X (%d,%d,%d) stp%d\n",
+                           (unsigned)RE15_KARTE_TEX_OFF_BESUCHT, ist,
+                           (ist & 31) << 3, ((ist >> 5) & 31) << 3, ((ist >> 10) & 31) << 3,
+                           (ist >> 15) & 1);
+                    CHECK("besucht steht byte-gleich in RE1.5s TEX.TIM",
+                          ist == RE15_KARTE_BESUCHT);
+                } else {
+                    printf("  FAIL: TEX.TIM zu kurz\n"); g_fail = 1;
+                }
+                fclose(f15);
+            }
+        }
+        CHECK("0x81A4 dekodiert zu (32,104,0) halbtransparent",
+              ((RE15_KARTE_BESUCHT & 31) << 3) == 32 &&
+              (((RE15_KARTE_BESUCHT >> 5) & 31) << 3) == 104 &&
+              (((RE15_KARTE_BESUCHT >> 10) & 31) << 3) == 0 &&
               (RE15_KARTE_BESUCHT >> 15) == 1);
+        /* RE2s Wert bleibt als Alternative im Header — auch er wird nachgelesen, damit
+         * ein Zurueckschalten nicht auf eine ungepruefte Zahl faellt. */
+        CHECK("die RE2-Alternative 0xD902 dekodiert zu (16,64,176) halbtransparent",
+              ((RE15_KARTE_BESUCHT_RE2 & 31) << 3) == 16 &&
+              (((RE15_KARTE_BESUCHT_RE2 >> 5) & 31) << 3) == 64 &&
+              (((RE15_KARTE_BESUCHT_RE2 >> 10) & 31) << 3) == 176 &&
+              (RE15_KARTE_BESUCHT_RE2 >> 15) == 1);
         CHECK("0x842D dekodiert zu (104,8,8) halbtransparent",
               ((RE15_KARTE_AKTUELL & 31) << 3) == 104 &&
               (((RE15_KARTE_AKTUELL >> 5) & 31) << 3) == 8 &&

@@ -8,5 +8,6 @@ add_executable(test_karte_besitz test_karte_besitz.c)
 target_link_libraries(test_karte_besitz PRIVATE re15_engine re15_test_support)
 target_include_directories(test_karte_besitz PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_karte_besitz PRIVATE
-    RE15_RE2_ST0_TIM="${CMAKE_SOURCE_DIR}/../info/re2leon/COMMON/DATA/ST0.TIM")
+    RE15_RE2_ST0_TIM="${CMAKE_SOURCE_DIR}/../info/re2leon/COMMON/DATA/ST0.TIM"
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_karte_besitz COMMAND test_karte_besitz)
