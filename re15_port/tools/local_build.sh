@@ -70,8 +70,9 @@
 #                   2026-09-26: +2 (unit_fahrstuhl_1080_etagen, unit_fahrstuhl_4020_etagen)
 #                   -> 249. Gemessener Ist-Stand dieses Laufs: 339/339.
 #                   2026-09-27: +1 (unit_abtastphase_11f0) -> 347.
-#                   2026-09-27: +1 (unit_room1050_sicherung) -> 357. Gemessener
-#                   Ist-Stand dieses Laufs: 358/358.)
+#                   2026-09-27: +1 (unit_room1050_sicherung) -> 358.
+#                   2026-09-27: +1 (integration_pri_masken, Runde 35) -> 359.
+#                   Gemessener Ist-Stand nach beiden Merges: 359/359.)
 #
 # FALLE, die dieses Skript bewusst schliesst
 # ---------------------------------------------------------------------------
