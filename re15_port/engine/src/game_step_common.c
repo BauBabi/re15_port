@@ -30,6 +30,7 @@
 #include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
 #include "re15_math.h"          /* re15_squareroot0 — der Auto-Look-Scan vergleicht die WURZEL */
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
+#include "re15_sicherung.h"
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
@@ -1004,6 +1005,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * sichtbare Wegwerf-Abfrage haette den Todes-Ablauf also eingesperrt. Jetzt oben. */
     if (c->rdt_ok && re15_death_presentation_active())
         re15_gameover_fsm_tick();                 /* @0x8001cdfc, vor @0x8001ce0c */
+
+    /* SICHERUNG im Hebetisch (ROOM1150/1151): steht die Plattform oben, wird hier das
+     * Item-Modal aufgemacht — VOR dem Freeze-Gate darunter, damit der Freeze im selben
+     * Bild greift. Tut in jedem anderen Raum und bei schon genommener Sicherung nichts.
+     * Herleitung: include/re15_sicherung.h. */
+    if (c->rdt_ok) re15_sicherung_tick();
 
     if (re15_item_modal_active()) return;
 

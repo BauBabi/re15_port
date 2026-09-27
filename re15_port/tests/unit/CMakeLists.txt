@@ -898,6 +898,12 @@ add_test(NAME unit_marvin_render_pose COMMAND probe_marvin_render_pose)
 set_tests_properties(unit_marvin_render_pose PROPERTIES TIMEOUT 30)
 
 # --- DIAGNOSE-Probe (kein ctest): ROOM1040 "shutter switch"-Prompt beim Betreten (BUG 3) ---
+# Abnahme der Sicherung im Hebetisch (ROOM1150/1151) — s. include/re15_sicherung.h
+add_executable(probe_sicherung_1150 probe_sicherung_1150.c)
+target_link_libraries(probe_sicherung_1150 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_sicherung_1150 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_sicherung_1150 COMMAND probe_sicherung_1150)
+
 add_executable(probe_room1040_switch probe_room1040_switch.c)
 target_link_libraries(probe_room1040_switch PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_room1040_switch PRIVATE ${CMAKE_SOURCE_DIR}/include)

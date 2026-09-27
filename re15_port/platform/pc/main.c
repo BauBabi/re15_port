@@ -65,6 +65,7 @@ static inline int RNDI(float f) {
 #include "re15_msg.h"
 #include "re15_to_re2.h"
 #include "re15_rdt.h"
+#include "re15_sicherung.h"
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -1306,6 +1307,23 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
          * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
                       re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
+    }
+
+    /* SICHERUNG im Hebetisch von Irons' Buero: ein ZUSAETZLICHES Prop, dessen MD1+TIM
+     * nicht aus der RDT kommen, sondern eingebacken sind (gen/sicherung_prop.inc) — die
+     * ausgelieferten RDTs bleiben byte-true. Herleitung: include/re15_sicherung.h.
+     * Zwei Riegel, damit das nie ein echtes Raum-Prop ueberschreibt: der Raum muss
+     * ROOM1150/1151 sein UND sein nOmodel darf den Slot nicht selbst belegen. */
+    if ((g_current_room_id == 0x1150 || g_current_room_id == 0x1151) &&
+        nprops <= RE15_SICHERUNG_OBJ_ID) {
+        int msz = 0, tsz = 0;
+        const uint8_t *mb = re15_sicherung_md1_bytes(&msz);
+        const uint8_t *tb = re15_sicherung_tim_bytes(&tsz);
+        if (mb && re15_md1_parse(mb, (size_t)msz, &md1[RE15_SICHERUNG_OBJ_ID]) == 0)
+            ok[RE15_SICHERUNG_OBJ_ID] = 1;
+        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
+                      re15_render_pc_upload_tim_slot(
+                          &tt, RE15_TIM_SLOT_PROP(RE15_SICHERUNG_OBJ_ID)); }
     }
 }
 

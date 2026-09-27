@@ -18,6 +18,7 @@
 #include "re15_ai_flavor.h"   /* re15_re2z_rng_reset — Reenter-Clear des 0x800CFBF4-Analogs */
 #include "re15_esp.h"   /* re15_esp_fx_reset — Effekt-Pool beim Raumladen wischen */
 #include "re15_room.h"  /* g_current_room_id — Schlafender-Content-Trigger je Raum */
+#include "re15_sicherung.h" /* Sicherung im Hebetisch von Irons' Buero (ROOM1150/1151) */
 
 extern scd_vm_t g_scd;
 
@@ -403,6 +404,10 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     scd_vm_set_room_init(1);
     scd_vm_tick();                      /* run init+main once (main00 regs; sub00→scenario sub) */
     scd_vm_set_room_init(0);
+    /* Die SICHERUNG in den Hebetisch legen — NACH dem Init-Lauf, weil sich das Prop an
+     * die Elternmatrix der Plattform haengt und die erst durch main00 im Pool steht.
+     * Tut in jedem anderen Raum nichts. Herleitung: include/re15_sicherung.h. */
+    re15_sicherung_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und
