@@ -1,11 +1,35 @@
 # v0.8.15 - 2026-09-27
 
-Diese Version bringt eine einzige Sache sauber zu Ende — warum ein liegender Hund nicht
-getroffen werden kann — und dabei muss ich drei eigene Aussagen zuruecknehmen. Dazu die
-Trefferboxen aller RE2-Gegner, ein dritter Fahrstuhl mit Ton, und ein Raetsel, das ich
-bewusst NICHT gebaut habe. Suite 359/359.
+Zwei Ihrer Befunde sind erledigt: die Charakterwahl fuehrt endlich in Elzas Zweig, und der
+liegende Hund ist untreffbar — letzteres jetzt ueber den Mechanismus, den RE2 wirklich
+benutzt. Dabei muss ich drei eigene Aussagen zuruecknehmen. Dazu die Trefferboxen aller
+RE2-Gegner, ein dritter Fahrstuhl mit Ton, und ein Raetsel, das ich bewusst NICHT gebaut
+habe. Suite 360/360.
 
 ## Was Sie merken
+
+**Elza ist ein eigener Zweig — bis heute war sie es nicht.** Sie hatten gemeldet, dass die
+Wahl am Anfang in Leons Raeume fuehrt. Die Messung war eindeutig: zwischen einem Durchlauf
+mit Leon und einem mit Elza lagen **0 von 691200 Pixeln** Unterschied. Nicht fast gleich —
+bitgleich dasselbe Spiel. Die 40 ungeraden RDT je Stage, Elzas Raeume, waren tote Daten.
+
+Jetzt: Wahl Elza laedt `ROOM1241.RDT` und das Modell PL04, und die Kette laeuft weiter nach
+`room1031` statt nach Leons `room1170` — der Versatz greift also auch beim Tuerwechsel.
+Leon gegen Elza sind es nun 4542033 abweichende Pixel.
+
+Das Original macht es mit **zwei Instruktionen**: es rechnet gar keine Raum-Id aus, sondern
+addiert Elzas Bit auf den CD-Dateiindex (`srl a0,a0,31` @0x800397e4, `addu a0,a0,v0`
+@0x800397ec). Leons und Elzas RDT liegen als Nachbarn im Verzeichnis.
+
+Den Startraum hat eine Messung entschieden, nicht mein Geschmack: `ROOM1240.RDT` und
+`ROOM1241.RDT` unterscheiden sich in **genau einem Byte** — dem Tuerziel bei Datei-Offset
+0x0531, `0x17` (HELIPORT) gegen `0x03` (LOBBY). Das sind Zeichen fuer Zeichen die beiden
+Raumindizes aus dem Original-Einstieg: `ori 0x17` @0x8001d2a8 und `ori 0x3` @0x8001d324,
+die beiden Seiten des `bltz` @0x8001d2a4.
+
+⛔ **Was das NICHT heisst:** Elzas Szenario ist damit nicht durchspielbar. Gefahren ist
+genau EIN Uebergang; 119 der 120 ungeraden Raeume sind ungeprueft. Der Zweig steht, der
+Inhalt dahinter ist die naechste Arbeit.
 
 **Der liegende Hund ist untreffbar, der stehende nicht.** Schiessen Sie einen Hund um,
 liegt er kurz; in dieser Zeit gehen Schuesse durch ihn hindurch. Steht er wieder, trifft
@@ -84,16 +108,10 @@ live gefahrener Durchspielbarkeits-Nachweis — kein Verhaltens-Code.
 
 ## Woran ich als naechstes sitze
 
-**Die Charakterwahl fuehrt nicht in Elzas Zweig.** Sie haben es gemeldet, und es stimmt.
-`re15_gameflow.c:38-39` merkt sich die Wahl und setzt trotzdem unbedingt denselben
-Startraum; `g_gameflow.character` wird im ganzen Port an drei Stellen gelesen, in der
-Raumwahl an keiner. Die 40 ungeraden RDT je Stage — Elzas Raeume — sind damit tote Daten.
-
-Dabei schon belegt: `DAT_800aca5c` traegt **0 fuer Leon und 4 fuer Elza** (Index in die
-CORE-Bank-Tabelle @0x80073a88: Index 0 -> 0xA1 = CORE00, Index 4 -> 0xA9 = CORE04). Der
-Port speichert den durch vier geteilten Wert als 0/1, testet ihn aber weiter mit der
-ungeteilten Maske `& 4` — das ist fuer beide Charaktere null, Elzas Zweig des
-Kriech-Grab-Abwurfs ist unerreichbar. Das ist in Arbeit.
+**Elzas Raumkette weiterfahren** und zaehlen, wo sie haengt — 119 ungeprueft.
+Danach die zwei Cuts ohne Maskenausschnitt (ROOM1000 Cut 3, ROOM11F0 Cut 1) und eine
+Schiene fuer die 20 Cuts, die an der Kapazitaetsgrenze von 105 Masken sitzen, ohne dass
+etwas sie ueberwacht.
 
 ## Was bewusst offen blieb
 
@@ -103,6 +121,11 @@ Kriech-Grab-Abwurfs ist unerreichbar. Das ist in Arbeit.
   stellt den Treffer-Mechanismus um, nicht das Schadensmodell.
 * Die Bolzen-Aufrufstelle (Waffe 12) hat im Port keinen Produzenten — keine der 22
   RE1.5-Waffen bildet auf diese Id ab.
+* Elzas Westen-Variante: Leons R.P.D.-Weste ist PLD-Index 1. Welchen Index Elza dort
+  bekaeme, ist NICHT belegt — also steht dort keine erfundene Zahl.
+* Vier ROOM1170-Sonderfaelle bleiben auf Leons Raum-Id. Sie gehoeren zu seinem
+  Helipad-Vorspann; sie zu oeffnen haette Elza einen Leon-Flag untergeschoben.
+* Das PSX-Target hat keine Charakterwahl — dieser Auftrag war der PC-Zweig.
 * Der Hund bekommt jetzt den byte-true Zonen-Stempel +0x1D2 statt der bisherigen Naeherung.
   Die Suite bleibt gruen, aber die Wirkung auf die Knockdown-Zweige ist nicht eigens
   gemessen.
