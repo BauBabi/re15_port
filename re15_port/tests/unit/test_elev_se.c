@@ -197,8 +197,7 @@ static void teil_b(void)
      * gelesen: @0x09FE `22 01 1c 01` / @0x0A0A `22 01 1d 01`. */
     size_t n3 = 0;
     uint8_t *raw3 = slurp(RE15_ASSET_PSX_DIR "/STAGE3/ROOM3080.RDT", &n3);
-    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt
-"); g_fail++; }
+    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt\n"); g_fail++; }
     else {
         re15_rdt_t r3;
         CHECK(re15_rdt_parse(raw3, n3, &r3) >= 0, "re15_rdt_parse ROOM3080");
@@ -281,12 +280,10 @@ static void teil_c(void)
      * Set bit28 / Sleep 60 / Set 0 / Set bit29 / Sleep 60 / Set 0 / Set bit28. */
     size_t n3 = 0;
     uint8_t *raw3 = slurp(RE15_ASSET_PSX_DIR "/STAGE3/ROOM3080.RDT", &n3);
-    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt
-"); g_fail++; return; }
+    if (!raw3) { printf("  FEHLER: ROOM3080.RDT fehlt\n"); g_fail++; return; }
     re15_rdt_t rdt3;
     if (re15_rdt_parse(raw3, n3, &rdt3) < 0) {
-        printf("  FEHLER: parse ROOM3080
-"); g_fail++; free(raw3); return; }
+        printf("  FEHLER: parse ROOM3080\n"); g_fail++; free(raw3); return; }
     scd_vm_init();
     memset(&g_scd, 0, sizeof g_scd);
     g_scd.work_slot = -1;
@@ -300,8 +297,7 @@ static void teil_c(void)
     int c3 = re15_elev_se_fired(&f3);
     printf("   ROOM3080 (WAREHOUSE LIFT) ausgeloest: %d (", c3);
     for (int i = 0; i < c3; i++) printf("%s0x%02X", i ? "," : "", f3[i]);
-    printf(")
-");
+    printf(")\n");
     CHECK(c3 == 2, "ROOM3080: %d Ausloeser statt 2", c3);
     if (c3 >= 1) CHECK(f3[0] == 0x11, "ROOM3080 erster Ausloeser 0x%02X statt 0x11", f3[0]);
     if (c3 >= 2) CHECK(f3[1] == 0x12, "ROOM3080 zweiter Ausloeser 0x%02X statt 0x12", f3[1]);

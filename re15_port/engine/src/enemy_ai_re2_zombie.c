@@ -930,21 +930,23 @@ static int re2z_clip_done(const re15_actor_t *e)
  *  11  @0x8010899C/A4   -350/350   Todes-Wiederbelebung — im Port OPEN (kein Zwilling), s.
  *                                  re2z_exec_corpse; die Stelle ist dort benannt.
  *
- * ⛔ WARUM box_set HIER NICHT GESETZT WIRD (das ist der Riegel, keine Vorsicht):
- * das fuenfte Gate @0x8004716C-A4 vergleicht die Box gegen die MUENDUNGSHOEHE. Gemessen
- * (probe_r31_boxen, echter Weg): Hgun = eY - MuendungY steht im Port bei 1665..1671 — auch
- * wenn der Spieler nach unten zielt, weil der Port die senkrechte Zielpose (RE2-Bone-Kette
- * 0->9->10->11 @0x80042E64/74/84/94) nicht fuehrt. Das Fenster des KRIECHERS ist
- * [-100, 800) und das des Stehenden [-100, 3100): der stehende Zombie kaeme durch, der
- * KRIECHER waere dauerhaft untreffbar. Die Setz-Stelle steht also byte-true hier, das Tor
- * wertet sie fuer 0x10 aber erst, wenn die Zielpose gebaut ist. Zahlen: siehe
- * analysis/befunde_2026-09-27/trefferboxen-welle2.md. */
+ * ⛔ DAS TOR IST FUER 0x10 SCHARF — GEMESSEN, NICHT ANGENOMMEN (probe_r31_boxen, echter
+ * Weg, 900 Bilder Dauerbeschuss in ROOM1140):
+ *     TOR AUS    45 echte Treffer, 4 Niederschlaege, laengste Luecke 274 Bilder
+ *     TOR SCHARF 45 echte Treffer, 4 Niederschlaege, laengste Luecke 274 Bilder
+ *     KONTROLLE  (Box kuenstlich 0/0, Fenster [-100,100)):  0 Treffer
+ * Die Kontrolle beweist, dass die Sonde das Tor ueberhaupt misst; die beiden ersten Zeilen
+ * beweisen, dass es fuer den Zombie NICHTS zumacht. Und die Kriecher-Box ist keine
+ * Sackgasse: nach dem Niederschlag zieht die Rampe @0x8010366C-94 sie messbar wieder auf
+ * (125 Bilder bis -1500/1500, davon 61 gezaehlte Rampen-Schritte).
+ * Hgun steht im Port bei 1665..1671; Fenster stehend [-100, 3100), Kriecher [-100, 800). */
 static void re2z_hitbox(re15_actor_t *e, int b, int h)
 {
     if (!e) return;
     e->re2_hit_b98 = (int16_t)b;
     e->re2_hit_h9e = (uint16_t)h;
-    /* re2_hit_box_set BLEIBT UNBERUEHRT — s. Kopf. */
+    e->re2_hit_box_set = 1;        /* [PORT-ZUORDNUNG] ab hier fuehrt der Port die Box
+                                    * byte-true -> das fuenfte Gate darf sie lesen */
 }
 
 /* RE2-EDD-Frame-Flag-SE fuer Zustaende, in denen RE2-Retail selbst STUMM ist (Nutzer-Mandat:
