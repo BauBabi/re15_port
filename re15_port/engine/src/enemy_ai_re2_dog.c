@@ -749,6 +749,7 @@ static void re2d_hitbox(re15_actor_t *e, int restore)
                                          * `or v0,v0,v1` / `sw v0,0(a2)` @0x801040D0-D8 —
                                          * Haltungsklasse (word0>>26)&7, Leser FUN_800410CC
                                          * @0x800413CC-D4 (Herleitung im Zweig darueber) */
+    }
 }
 
 /* FUN_8004AA50 mit dem RE2-Zufall (@0x8004aa7c `jal 0x80015fe8`), Knotenzahl aus dem
