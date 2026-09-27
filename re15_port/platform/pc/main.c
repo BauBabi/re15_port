@@ -5815,8 +5815,10 @@ re_title:;
                 gctx.pl00_anim   = &pl00_anim;
                 gctx.w01_anim    = &w01_anim;   /* walk-source = footstep flags */
                 /* AKTIVE Waffen-Bank an die Engine: dieselbe, die der Aim-Render-Override
-                 * unten (~L7423) benutzt. Die Muendungshoehe des fuenften Tores kommt aus
-                 * ihrer Pose (Kette @0x80042E60-94), nicht aus der Bindpose. */
+                 * unten (~L7423) benutzt. Die Zielhoehe des fuenften Tores kommt aus ihrer
+                 * Pose (Kette @0x80042E60-94), nicht aus der Bindpose.
+                 * ⛔ Runde 34: das Tor gehoert dem MESSER (@0x80042F94), nicht dem Schuss —
+                 * Schusswaffen entscheiden ueber die Haltungsklasse @0x800413C4-D8. */
                 gctx.w_skel      = wact_ok ? wact_skel : NULL;
                 gctx.w_anim      = wact_ok ? wact_anim : NULL;
                 gctx.cam_view    = &cam_view;
@@ -6329,6 +6331,85 @@ re_title:;
                                 while (*p2 && *p2 != ',' && *p2 != '@') p2++;
                                 while (*p2 == ',' || *p2 == ' ') p2++;
                             }
+                        }
+                    }
+                    /* MESS-HAKEN RE15_DEBUG_SUB="<sub>[,<sub>...]@<frame>" (Runde 34) —
+                     * startet einen SUB-Thread des geladenen Raums von Hand, genauso wie es
+                     * `Evt_exec` (0x04, sub_id = pc[3], scd_vm.c:1076) im Skript tut. Notwendig
+                     * fuer die Sichtpruefung: ROOM1190 spawnt seine HUNDE in sub 13, und das
+                     * Ereignis, das dieses sub startet, liegt hinter einem Spielabschnitt, den
+                     * ein Raum-Sprung ueberspringt — headless faehrt die Sonde
+                     * probe_r33_aufrufstelle genau dieses sub ebenfalls von Hand hoch
+                     * (s_fire_sub = 13). Reiner Messhaken, env-gegated, kein Spielverhalten:
+                     * ohne die Variable aendert sich keine einzige Instruktion. */
+                    {
+                        static int ds_read = 0, ds_done = 0, ds_frame = 0;
+                        static const char *ds_spec = NULL;
+                        if (!ds_read) {
+                            ds_read = 1;
+                            const char *e = getenv("RE15_DEBUG_SUB");
+                            if (e && *e) {
+                                const char *at = strrchr(e, '@');
+                                if (at) { ds_frame = atoi(at + 1); ds_spec = e; }
+                            }
+                        }
+                        if (ds_spec && !ds_done && rdt_ok &&
+                            (int)g_engine.frame_count >= ds_frame) {
+                            ds_done = 1;
+                            /* Protokoll in eine DATEI, nicht nach stderr: die PC-exe ist ein
+                             * GUI-Subsystem-Programm und verliert stderr (gemessen, run.log
+                             * bleibt leer). */
+                            FILE *dl = fopen("debug_sub.log", "ab");
+                            const char *p3 = ds_spec;
+                            while (*p3 && *p3 != '@') {
+                                int sub = (int)strtol(p3, (char **)&p3, 0);
+                                int slot = -1, rc = -1;
+                                if (sub >= 0 && sub < RE15_RDT_MAX_SUB_SCD &&
+                                    rdt.sub_scd_count > sub && rdt.sub_scd[sub]) {
+                                    /* ersten freien Thread-Slot nehmen (der Raum haelt 0/1 und
+                                     * seine eigenen Ereignis-Threads bereits besetzt) */
+                                    for (int q = 2; q < SCD_THREAD_COUNT; q++)
+                                        if (!g_scd.threads[q].active) { slot = q; break; }
+                                    if (slot >= 0) rc = scd_thread_start(slot, rdt.sub_scd[sub]);
+                                }
+                                if (dl) fprintf(dl, "[debug-sub] Frame %u: sub%02d subs=%d "
+                                                    "ptr=%p Slot %d rc=%d\n",
+                                                g_engine.frame_count, sub, rdt.sub_scd_count,
+                                                (sub >= 0 && sub < RE15_RDT_MAX_SUB_SCD)
+                                                    ? (const void *)rdt.sub_scd[sub] : NULL,
+                                                slot, rc);
+                                while (*p3 && *p3 != ',' && *p3 != '@') p3++;
+                                while (*p3 == ',' || *p3 == ' ') p3++;
+                            }
+                            if (dl) fclose(dl);
+                        }
+                    }
+                    /* MESS-HAKEN RE15_DEBUG_DOGWAKE="<frame>" (Runde 34) — zuendet die
+                     * SCD-Marke, auf die ROOM1190s Skript-Hunde warten. Der Raum setzt sie
+                     * selbst: der Spawn laeuft ueber grid 0x40 (Skript-Pounce, Zustand 4 /
+                     * Sub 0, @0x8010db88-98) und wartet auf grid 0x43 (@0x801113E4-EC); erst
+                     * dann springt der Hund herein. Dieselbe Marke zuendet die Sonde
+                     * probe_dog_attack_live.c:266 ("der echte Weg, wie der Raum die Hunde
+                     * losschickt"). Reiner Messhaken, env-gegated. */
+                    {
+                        static int dw_read = 0, dw_done = 0, dw_frame = -1;
+                        if (!dw_read) { dw_read = 1;
+                            const char *e = getenv("RE15_DEBUG_DOGWAKE");
+                            if (e && *e) dw_frame = atoi(e); }
+                        if (dw_frame >= 0 && !dw_done &&
+                            (int)g_engine.frame_count >= dw_frame) {
+                            int n = 0;
+                            for (int q = 1; q < RE15_ACTOR_MAX; q++) {
+                                re15_actor_t *aq = &g_actors[q];
+                                if (!aq->active || aq->type != 0x20u) continue;
+                                if (aq->state == 4 && aq->sub_state_1 == 0 &&
+                                    aq->grid_id == 0x40) { aq->grid_id = 0x43; n++; }
+                            }
+                            if (n) { dw_done = 1;
+                                FILE *dl2 = fopen("debug_sub.log", "ab");
+                                if (dl2) { fprintf(dl2, "[dogwake] Frame %u: %d Hund(e) auf "
+                                                        "grid 0x43\n", g_engine.frame_count, n);
+                                           fclose(dl2); } }
                         }
                     }
                     /* JUMP-Tabelle einmalig aus DEBUG.BIN laden (RAW-Abbild @0x800c0000 im

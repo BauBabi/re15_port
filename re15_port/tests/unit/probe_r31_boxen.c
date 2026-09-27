@@ -12,11 +12,18 @@
  *   (2) die KRIECHER-Box des Zombies KEINE Sackgasse ist (Gegenstelle = die Rampe
  *       @0x8010366C-94, gemessen in Bildern),
  *   (3) keine der Aenderungen einen Typ zugemacht hat,
- *   (4) und ob das fuenfte Tor @0x8004716C-A4 je Typ SCHARF sein darf. Die Entscheidung
- *       faellt aus drei Laeufen je Typ: TOR AUS / TOR SCHARF / KONTROLLE (Box kuenstlich
- *       0/0). Die Kontrolle MUSS auf 0 Treffer fallen, sonst misst die Sonde das Tor gar
- *       nicht. Ergebnis: scharf fuer 0x10, 0x20 und 0x25 (Trefferzahl unveraendert),
- *       NICHT scharf fuer 0x21 und 0x26 (0 von 900 Treffern = dauerhaft untreffbar).
+ *   (4) welcher MECHANISMUS den Schuss sperrt. ⛔ RUNDE 34 UMGESTELLT: bis Runde 33 stand
+ *       hier "darf das fuenfte Tor @0x8004716C-A4 je Typ scharf sein". Diese Frage ist
+ *       beantwortet und die Antwort lautet NEIN — das Tor liegt nicht im Schuss-Pfad
+ *       (FUN_800470C0 hat auf der Spielerseite nur die Aufrufstellen @0x80042F94 = Messer
+ *       und @0x800467C0 = Bolzen; jede Schusswaffe geht ueber `jal 0x800410CC` @0x80043AFC).
+ *       Teil 2c misst deshalb jetzt die HALTUNGSKLASSE (word0>>26)&7 (@0x800413C4-D8) gegen
+ *       die Maskentabelle @0x800A6DB4, in drei Laeufen je Typ:
+ *       KLASSE FEST 3 / WIE GEBAUT / KONTROLLE K=4. Zusaetzlich zaehlt die Sonde, wie oft
+ *       das fuenfte Tor ueberhaupt noch befragt wird (muss beim Schuss 0 sein) und wie oft
+ *       die Klasse gelesen wird (muss bei Applier-Typen > 0 sein).
+ *       Die Boxen +0x98/+0x9E bleiben gemessen und gepinnt — sie sind weiterhin die Eingabe
+ *       des MESSER-Tors.
  * ============================================================================================ */
 #include "re15_emd.h"
 #include "re15_rdt.h"
@@ -413,19 +420,32 @@ static void pass_zombie_dauer(int budget)
            budget, r->nieder, r->durch, r->bilder, r->sperr_max, r->sperr_max / 30.0);
 }
 
-/* ===== TEIL 2c: DAS TOR SCHARF — ECHTE Treffer statt Tor-Rechnung =======================
- * ⛔ Teil 2b rechnet das Tor nur nach, waehrend die Treffer ungehindert landen. Das ist ein
- * KONTRAFAKTISCHES Mass: mit scharfem Tor faellt der Gegner seltener, also greift die
- * Kriecher-Box auch seltener. Die Entscheidung "darf 0x10 scharf?" braucht darum den echten
- * Lauf — re2_hit_box_set wird je Bild gesetzt (das ist GENAU der Code-Pfad, den ein Einbau
- * haette; kein Env-Schalter im Spielcode), und gezaehlt werden ECHTE HP-Abzuege.
- * Gegenprobe "ALT" = box_set je Bild auf 0 = der Stand von heute. */
-typedef struct { int treffer, bilder, luecke_max, luecke, nieder; } scharf_t;
+/* ===== TEIL 2c: DER SPERR-MECHANISMUS — ECHTE Treffer ===================================
+ * ⛔ RUNDE 34 UMGESTELLT. Bis Runde 33 mass dieser Teil das FUENFTE TOR (+0x98/+0x9E gegen
+ * die Muendungshoehe) und schaltete es ueber re2_hit_box_set scharf/stumpf. Dieses Tor liegt
+ * seit Runde 34 nicht mehr im Schuss-Pfad: FUN_800470C0 wird auf der Spielerseite nur von
+ * Waffe 1 (Messer, @0x80042F94) und Waffe 12 (Bolzen, @0x800467C0) betreten, jede
+ * Schusswaffe geht ueber `jal 0x800410CC` @0x80043AFC. Dort entscheidet die HALTUNGSKLASSE
+ * (word0>>26)&7 (@0x800413C4-D8) gegen die Maskentabelle @0x800A6DB4.
+ * Der Hebel dieses Teils greift deshalb jetzt an der KLASSE an:
+ *   0 = MECHANISMUS AUS  : Klasse jedes Bild = 3 ("volle Box", `lui v1,0xc00` @0x801040CC)
+ *                          -> die Stauchung FUN_80104088(0) ist zurueckgenommen
+ *   1 = MECHANISMUS AN   : so, wie der Port laeuft
+ *   2 = KONTROLLE        : Klasse jedes Bild = 4 (nur Bit 2). Die EBEN-Zeile 3 der
+ *                          Maskentabelle @0x800A6DB4 lautet `2,0,0` und fragt AUSSCHLIESSLICH
+ *                          Bit 1 ab -> die Trefferzahl MUSS auf 0 fallen. Faellt sie nicht,
+ *                          laeuft der Applier an der Messung vorbei.
+ *                          ⛔ WARUM NICHT Klasse 0: fuer die Zombie-Familie faengt die
+ *                          Port-Ersatzmaske "parts==0 -> 3" (re15_damage.c, Fixture-Fall) den
+ *                          Wert ab — gemessen 70 Treffer trotz Klasse 0. Klasse 4 umgeht die
+ *                          Ersatzmaske und prueft dieselbe Sache.
+ * ⛔ Die Kontrolle gilt NUR fuer Typen, die durch den Applier laufen (Zombie-Familie und
+ * seit Runde 34 der Hund 0x20). Kraehe 0x21, Spinne 0x25 und Baby 0x26 gehen weiter ueber
+ * den RE1.5-Streifen; fuer sie ist die Klassen-Kontrolle NICHT anwendbar und wird als Zahl
+ * ausgewiesen statt als Schranke behauptet. */
+typedef struct { int treffer, bilder, luecke_max, luecke, nieder;
+                 uint32_t c_gate5, c_class; } scharf_t;
 static scharf_t s_scharf[5][3];
-
-/* scharf: 0 = box_set aus (Stand heute), 1 = scharf mit den echten Boxen,
- *         2 = KONTROLLE, scharf mit Box 0/0 (Fenster [-100,100)) — muss 0 Treffer geben,
- *             sonst misst die Sonde das Tor gar nicht. */
 static void pass_scharf(int si, int scharf, int budget)
 {
     const boxsoll_t *S = &SOLL[si];
@@ -440,14 +460,15 @@ static void pass_scharf(int si, int scharf, int budget)
     re15_actor_t *e  = &g_actors[slot];
     const int32_t back = (S->weapon < 3) ? 900 : 2000;
     aim_up(slot, back);
+    re15_dmg_mech_reset();
     int war_unten = 0;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
         int16_t vor = e->hp;
         if (e->hp < 60) { e->hp = 400; vor = 400; }
         if (!e->active) break;
-        e->re2_hit_box_set = (uint8_t)(scharf ? 1 : 0);
-        if (scharf == 2) { e->re2_hit_b98 = 0; e->re2_hit_h9e = 0; }
+        if (scharf == 0) e->re2z_parts = 3u;   /* nie gestaucht, s. Blockkopf */
+        if (scharf == 2) e->re2z_parts = 4u;   /* nur Bit 2, s. Blockkopf */
         track(slot, back);
         frame((uint16_t)(RE15_PAD_BIT_R1 | elev_pad_for(e) | RE15_PAD_BIT_SQUARE),
               (uint16_t)(((f % 6) == 0) ? RE15_PAD_BIT_SQUARE : 0u));
@@ -457,11 +478,12 @@ static void pass_scharf(int si, int scharf, int budget)
         if (e->hp < vor) { r->treffer++; r->luecke = 0; }
         else { r->luecke++; if (r->luecke > r->luecke_max) r->luecke_max = r->luecke; }
     }
-    static const char *NAME[3] = { "TOR AUS   ", "TOR SCHARF", "KONTROLLE " };
+    re15_dmg_mech_counts(&r->c_gate5, &r->c_class, NULL);
+    static const char *NAME[3] = { "KLASSE FEST 3", "WIE GEBAUT   ", "KONTROLLE K=4" };
     printf("  [%-11s %s] %4d Bilder | ECHTE Treffer %3d | Niederschlaege %d | "
-           "laengste Strecke OHNE Treffer: %4d Bilder (%.1f s)\n",
+           "laengste Strecke OHNE Treffer: %4d Bilder (%.1f s) | Tor5 %u / Klasse %u\n",
            S->tag, NAME[scharf], r->bilder, r->treffer, r->nieder,
-           r->luecke_max, r->luecke_max / 30.0);
+           r->luecke_max, r->luecke_max / 30.0, r->c_gate5, r->c_class);
 }
 
 /* ===== TEIL 2d: DIE DECKENSPINNE — der Zweig, den ROOM2050 nicht zeigt ==================
@@ -670,33 +692,44 @@ int main(int argc, char **argv)
         printf("  FEHLER: stehender Zombie faellt durch das Tor (%d/%d)\n",
                s_zen[0].durch, s_zen[0].gueltig); fail++;
     }
-    /* ===== DIE ENTSCHEIDENDEN RIEGEL DES SCHARFEN TORES ===================================
-     * (a) Die KONTROLLE muss je Typ auf 0 Treffer fallen — sonst misst die Sonde das Tor
-     *     gar nicht und alle anderen Zahlen sind wertlos (Falle "Sonde luegt").
-     * (b) Fuer jeden SCHARFEN Typ muss TOR SCHARF genauso viele echte Treffer liefern wie
-     *     TOR AUS. Der Hund ist ausgenommen: bei ihm IST die Absenkung der Befund
-     *     (liegender Hund nicht treffbar, Runde 30).
-     * (c) Fuer jeden NICHT scharfen Typ muss TOR SCHARF nachweislich auf 0 fallen — das ist
-     *     die Zahl, mit der die Entscheidung begruendet ist. */
+    /* ===== DIE RIEGEL DES SPERR-MECHANISMUS (Runde 34 umgestellt) =========================
+     * (a) ⛔ MECHANISMUS-PIN: beim SCHUSS darf das fuenfte Tor gar nicht mehr befragt werden.
+     *     Der Zaehler c_gate5 MUSS 0 sein — er zaehlt genau die Urteile @0x8004716C-A4.
+     * (b) Fuer die APPLIER-TYPEN (Zombie-Familie, Hund 0x20) muss die Klasse gelesen werden
+     *     (c_class > 0) und die KONTROLLE mit Klasse 0 auf 0 Treffer fallen.
+     * (c) Fuer die NICHT-Applier-Typen (Kraehe 0x21, Spinne 0x25, Baby 0x26) ist die
+     *     Klassen-Kontrolle NICHT anwendbar — sie laufen ueber den RE1.5-Streifen. Ihre
+     *     Zahlen werden ausgewiesen, nicht behauptet; geriegelt wird nur, dass sie ueberhaupt
+     *     getroffen werden (kein Typ dauerhaft untreffbar).
+     * (d) Beim HUND MUSS "KLASSE FEST 3" mehr Treffer liefern als "WIE GEBAUT" — das ist der
+     *     Nutzer-Befund, jetzt am neuen Mechanismus gemessen. */
     for (int i = 0; i < SOLL_N; i++) {
         const scharf_t *aus = &s_scharf[i][0], *sch = &s_scharf[i][1], *ko = &s_scharf[i][2];
+        int applier = (SOLL[i].type == 0x10 || SOLL[i].type == 0x20);
         if (aus->bilder == 0) { printf("  FEHLER: %s Teil 2c nicht gelaufen\n", SOLL[i].tag);
                                fail++; continue; }
-        if (ko->treffer != 0) {
-            printf("  FEHLER: %s KONTROLLE (Box 0/0) traf %d mal — die Sonde misst das Tor "
-                   "NICHT\n", SOLL[i].tag, ko->treffer); fail++; }
-        if (SOLL[i].type == 0x10 || SOLL[i].type == 0x25) {
-            if (sch->treffer != aus->treffer) {
-                printf("  FEHLER: %s scharfes Tor aendert die Trefferzahl (%d statt %d)\n",
-                       SOLL[i].tag, sch->treffer, aus->treffer); fail++; }
-        } else if (SOLL[i].type == 0x21 || SOLL[i].type == 0x26) {
-            if (sch->treffer != 0) {
-                printf("  FEHLER: %s waere mit scharfem Tor doch treffbar (%d) — dann muss es "
-                       "gebaut werden\n", SOLL[i].tag, sch->treffer); fail++; }
-            if (aus->treffer == 0) {
-                printf("  FEHLER: %s wird schon OHNE Tor nie getroffen — die Messung sagt "
-                       "nichts\n", SOLL[i].tag); fail++; }
+        if (sch->c_gate5 != 0u) {
+            printf("  FEHLER: %s das fuenfte Tor wurde beim SCHUSS %u mal befragt — es "
+                   "gehoert nur noch zum Messer (@0x80042F94)\n",
+                   SOLL[i].tag, sch->c_gate5); fail++; }
+        if (sch->treffer == 0) {
+            printf("  FEHLER: %s wurde in Teil 2c NIE getroffen\n", SOLL[i].tag); fail++; }
+        if (applier) {
+            if (sch->c_class == 0u) {
+                printf("  FEHLER: %s die Haltungsklasse wurde NIE gelesen — der Applier "
+                       "laeuft fuer diesen Typ nicht\n", SOLL[i].tag); fail++; }
+            if (ko->treffer != 0) {
+                printf("  FEHLER: %s KONTROLLE (Klasse 4) traf %d mal — der Applier liegt "
+                       "nicht im gemessenen Pfad\n", SOLL[i].tag, ko->treffer); fail++; }
+        } else {
+            printf("  (Hinweis: %s laeuft NICHT ueber den Applier — Klassen-Kontrolle (K=4) traf "
+                   "%d mal, Klassen-Lesungen %u; das ist erwartet, keine Schranke)\n",
+                   SOLL[i].tag, ko->treffer, sch->c_class);
         }
+        if (SOLL[i].type == 0x20 && aus->treffer <= sch->treffer) {
+            printf("  FEHLER: HUND — mit fester Klasse 3 faellt nicht MEHR Schaden (%d) als "
+                   "wie gebaut (%d); die Stauchung wirkt nicht\n",
+                   aus->treffer, sch->treffer); fail++; }
     }
     /* Alle ausgelieferten Spinnenraeume muessen eine tragende Box haben. */
     if (s_nullbox_raeume != 0) {

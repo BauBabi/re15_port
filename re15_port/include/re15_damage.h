@@ -234,9 +234,12 @@ void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
  * per-type values read from room savestates (type 0x47 STAGE1 zombie = 450/1530;
  * 0x16 = 400/1440; 0x29 = 1100/1080; all circular, offset (0,-height,0)); unknown
  * types get no hitbox. Call at player init / enemy spawn. */
-/* MUENDUNGSHOEHE = Welt-Y des Waffen-Bone (Bone 11), das Port-Gegenstueck zu `lw a0,4(s4)`
+/* ZIELHOEHE = Welt-Y des Waffen-Bone (Bone 11), das Port-Gegenstueck zu `lw a0,4(s4)`
  * @0x8004718C bzw. der verketteten Matrix @0x80042E60-94. Rueckgabe 0 = Bank/Pose fehlt;
- * dann darf kein Aufrufer darauf gaten. Definition + volle Herleitung: re15_damage.c. */
+ * dann darf kein Aufrufer darauf gaten. Definition + volle Herleitung: re15_damage.c.
+ * ⛔ Runde 34: das ist die KLINGENLAGE des Messerschlags, nicht die Muendung einer
+ * Schusswaffe. Einziger Verbraucher im Trefferpfad ist das fuenfte Tor an der Aufrufstelle
+ * @0x80042F94 (Waffe 1). Schuesse entscheiden ueber die Haltungsklasse @0x800413C4-D8. */
 int re15_player_muzzle_world(int32_t out[3]);
 /* DIE ZIELPOSE: derselbe Knochen, aber aus der Pose, in der Leon TATSAECHLICH zielt
  * (aktive Waffen-Bank PL00W<item> + Clip aus dem Band +0x154, Tabelle @0x80011010).
@@ -322,5 +325,16 @@ void    re15_re2_damage_model_set(int on);
  * RE2-Zahlen abschalten will, nimmt RE15_RE2_DMG_MODEL=0. */
 int16_t re15_re2_init_hp(const re15_actor_t *e);
 void    re15_re2_hp_sync(void);
+
+/* MECHANISMUS-ZAEHLER (Runde 34, nur fuer Sonden — sie aendern kein Spielverhalten).
+ * gate5   = wie oft das fuenfte Tor des Kandidatenfilters FUN_800470C0 (@0x8004716C-A4)
+ *           ein Urteil gefaellt hat. Nach der Umstellung gehoert es AUSSCHLIESSLICH zum
+ *           Messer (Aufrufstelle @0x80042F94) — bei einem Schuss MUSS es 0 bleiben.
+ * cls     = wie oft die Haltungsklasse (word0>>26)&7 gelesen wurde (FUN_800410CC
+ *           @0x800413C4-D8). Beim Schuss auf einen Applier-Typ MUSS es > 0 sein.
+ * cls_rej = davon die Faelle, in denen die Klasse 0 war und der Kandidat herausfiel
+ *           (`beq s6,zero,0x80041774` @0x800413D8). */
+void    re15_dmg_mech_reset(void);
+void    re15_dmg_mech_counts(uint32_t *gate5, uint32_t *cls, uint32_t *cls_rej);
 
 #endif /* RE15_DAMAGE_H */

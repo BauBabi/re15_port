@@ -427,11 +427,13 @@ static void re2s_init(re15_actor_t *e)
                                                             * @0x801003E8-F0 (Block @0x801003BC-400) */
     e->re2_hit_h9e =  1400;                                /* Tabelle @0x801063A0+26, sw v0,156(s2)
                                                             * @0x801003FC */
-    /* ⛔ DAS TOR IST FUER 0x25 SCHARF — GEMESSEN (probe_r31_boxen, 900 Bilder ROOM2050):
-     *     TOR AUS 82 echte Treffer / TOR SCHARF 82 / KONTROLLE (Box 0/0) 0.
-     * Und die Box traegt in JEDEM ausgelieferten Spinnenraum: ROOM2030/2050/2060/2070/20A0
-     * tragen alle Modus 0 (BODEN) mit -1400/1400, 0 Raeume mit Unterkante 0. Fenster
-     * [-100, 2900) gegen die gemessene Muendungshoehe Hgun 1665..1671. */
+    /* ⛔ BERICHTIGT (Runde 34): hier stand "DAS TOR IST FUER 0x25 SCHARF". Das fuenfte Tor
+     * @0x8004716C-A4 liegt gar nicht im Schuss-Pfad — FUN_800470C0 wird auf der Spielerseite
+     * nur von Waffe 1 (Messer, @0x80042F94) und Waffe 12 (Bolzen, @0x800467C0) betreten,
+     * jede Schusswaffe geht ueber `jal 0x800410CC` @0x80043AFC. Die Box bleibt trotzdem
+     * byte-true gefuehrt und gueltig markiert: sie ist die Eingabe des MESSER-Tores.
+     * Gemessen (probe_r31_boxen Teil 2c, 900 Bilder ROOM2050): Tor5-Urteile beim Schuss 0,
+     * echte Treffer 82 — unveraendert gegen Runde 33. */
     e->re2_hit_box_set = 1;
 
     /* Spawn-Sprungtabelle @0x80100004, Index (+0x10E & 0xF), Gate `sltiu v0,v1,0xc`
@@ -2662,7 +2664,10 @@ static void re2sb_init(re15_actor_t *e)
     e->re2_hit_b98 = -10;                                  /* @0x80100168-6C */
     e->re2_hit_h9e =  10;                                  /* @0x80100170/78 */
     /* re2_hit_box_set BLEIBT 0 — GEMESSEN: Fenster [-100, 120) gegen Hgun 1665..1671, DURCH in
-     * 0 von 240 Bildern. Ein 20-Einheiten-Wuerfel ist ueber die Muendungshoehe ueberhaupt nicht
+     * 0 von 240 Bildern. ⛔ Runde 34: das betrifft nur noch das MESSER-Tor (@0x80042F94);
+     * SCHUESSE laufen ueber FUN_800410CC und beruehren +0x98/+0x9E nicht (gemessen 41 Treffer
+     * in 900 Bildern, Tor5-Urteile 0).
+     * Ein 20-Einheiten-Wuerfel ist ueber die Zielhoehe ueberhaupt nicht
      * zu treffen; RE2 toetet Baby-Spinnen mutmasslich ueber den RADIALEN Schadenspfad
      * @0x800477CC (nur XZ-Abstand: `lw 0(s5)/lw 56(s0)` @0x80047764-68, `jal 0x8008D2F4`
      * @0x80047794, `sltu v0,v0,a3` @0x800477A4 — kein Y). Wer diesen Pfad ruft, ist NICHT
