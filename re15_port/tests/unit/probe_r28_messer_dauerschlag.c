@@ -82,8 +82,13 @@ static void frame(uint16_t cur, uint16_t edge)
     re15_game_step(&s_ctx);
 }
 
-/* PL00W01 (Messer) EDD: 14 Clips. Nur die Laengen, die die Zielmaschine braucht. */
-static const uint16_t FC_W01[14] = {22,16,52,1,50,30,10,22,1,23,1,23,1,32};
+/* PL00W01 (Messer) EDD, selbst geparst aus shared_assets/PSX/PLD/PL00W01.EDD:
+ * Tabelle ab Datei-Offset 0, 14 Eintraege (u16 frame_count, u16 offset).
+ * Bildzahlen: 22,16,52,1,50,30,10,25,1,20,1,20,1,15 — Schlag-Clips 7/9/11 (EBEN/HOCH/TIEF)
+ * also 25 / 20 / 20 Bilder. Der Dauerschlag TIEF laeuft damit auf 20+1 = 21 Bilder je
+ * Schlag; das ist die CLIP-LAENGE, keine eigene Takt-Konstante (Fire-Gate
+ * @0x80033300-84, Melee-Zwilling sub2 @0x80035314). */
+static const uint16_t FC_W01[14] = {22,16,52,1,50,30,10,25,1,20,1,20,1,15};
 
 static uint8_t *s_ems = NULL; static long s_ems_sz = 0;
 static re15_enemy_bank_t *load_re2_bank(uint8_t type)
@@ -140,7 +145,7 @@ static int32_t dist2d(const re15_actor_t *a, const re15_actor_t *b)
 typedef struct {
     const char *name;
     int bilder, schlaege, bisse, hp_verlust;
-    int32_t dmin, dmax;
+    int32_t dmin, dmax, dmin_frei;   /* dmin_frei: ohne die Griff-Freeze-Bilder */
     int grab_versuche, lunge_versuche, snap_versuche;
     int treffer;                /* Treffer auf den Zombie (HP-Abfall)       */
     int frames_1d3_nz;          /* Bilder mit Zombie +0x1D3 != 0            */
@@ -154,6 +159,7 @@ typedef struct {
 static void lauf(lauf_t *r, const char *name, int modus, int budget, int verbose)
 {
     memset(r, 0, sizeof *r); r->name = name; r->dmin = 0x7fffffff; r->dmax = 0;
+    r->dmin_frei = 0x7fffffff;
 
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     bringup();
@@ -213,6 +219,11 @@ static void lauf(lauf_t *r, const char *name, int modus, int budget, int verbose
 
         int32_t d = dist2d(pl, e);
         if (d < r->dmin) r->dmin = d;
+        /* Der Koerper-Standabstand gilt NUR ausserhalb des Griffs: aec4 ueberspringt das Paar,
+         * wenn BEIDE den Freeze 0x1000 tragen (`and v0,a0,v1; andi 0x1000; bne -> return`
+         * @0x8002af14) — Port-Aequivalent: Zombie in der Griff-/Fress-Maschine +0x5 = 3..6. */
+        if (!(e->state == 1 && e->sub_state_1 >= 3 && e->sub_state_1 <= 6) && d < r->dmin_frei)
+            r->dmin_frei = d;
         if (d > r->dmax) r->dmax = d;
         if (d < 1200) r->frames_dlt1200++;
         if (e->re2z_self1d3 != 0) r->frames_1d3_nz++;
@@ -352,18 +363,19 @@ int main(int argc, char **argv)
      * (3) GEGEN-RIEGEL "nicht ueberkorrigiert": der geschlagene Zombie darf NICHT haeufiger
      *     beissen als der unbehelligte (Bisse A <= Bisse B) — die Zombies duerfen nicht
      *     ploetzlich aggressiver werden als im Original.
-     * (4) GEGEN-RIEGEL "nicht durch den Spieler": im Dauertreffer-Lauf D (kein Griff, also
-     *     keine aec4-Ausnahme) muss der kleinste Abstand >= 850 bleiben — der byte-true
-     *     Koerper-Standabstand Zombie 400 (STAGE1.BIN @file 0x1f778) + Spieler 450
-     *     (PSX.EXE @file 0x64694 = 0x1c2), FUN_8002aec4 radSum @0x8002b164.
+     * (4) GEGEN-RIEGEL "nicht durch den Spieler": ausserhalb der Griff-Freeze-Bilder (aec4
+     *     ueberspringt das Paar, wenn BEIDE 0x1000 tragen, @0x8002af14) muss der kleinste
+     *     Abstand >= 849 bleiben. R = Zombie 400 (STAGE1.BIN @file 0x1f778) + Spieler 450
+     *     (PSX.EXE @file 0x64694 = 0x1c2) = 850 (radSum @0x8002b164); der Schub endet bei
+     *     pen = R - dist < 1, das Gleichgewicht liegt also auf dist = R - 1 = 849.
      * (5) Der Nicht-Schlag-Fall bleibt unveraendert: B muss weiterhin greifen und beissen. */
     int fehler = 0;
     int rw_t = reichweite_sweep(1, 1);        /* RE2-KI, TIEF  */
     int rw_e = reichweite_sweep(0, 1);        /* RE2-KI, EBEN  */
     int rw_5 = reichweite_sweep(1, 0);        /* RE1.5-KI, TIEF — die Sollzahl */
     printf("\nRIEGEL-ZAHLEN: Reichweite RE2/TIEF=%d RE2/EBEN=%d RE1.5/TIEF=%d"
-           " | Bisse A=%d B=%d | Griffe A=%d B=%d | d_min D=%d\n",
-           rw_t, rw_e, rw_5, A.bisse, B.bisse, A.grab_versuche, B.grab_versuche, D.dmin);
+           " | Bisse A=%d B=%d | Griffe A=%d B=%d | d_min(D, ohne Griff)=%d\n",
+           rw_t, rw_e, rw_5, A.bisse, B.bisse, A.grab_versuche, B.grab_versuche, D.dmin_frei);
     if (rw_t > 1500 || rw_e > 1500) {
         printf("RIEGEL-ROT (1): Messer reicht %d/%d statt 1500 — die RE1.5-Kegel-Grenze"
                " (Reichweite 1100 @0x8006E5A0[1] + Radius 400) ist ausgehebelt\n", rw_t, rw_e);
@@ -379,9 +391,9 @@ int main(int argc, char **argv)
                " unbehelligte (B=%d) — Ueberkorrektur\n", A.bisse, B.bisse);
         fehler = 1;
     }
-    if (D.dmin < 850) {
-        printf("GEGEN-RIEGEL-ROT (4): d_min=%d < 850 — der Zombie laeuft in den Spieler"
-               " hinein (Koerper-Standabstand 400+450, FUN_8002aec4 @0x8002b164)\n", D.dmin);
+    if (D.dmin_frei < 849) {
+        printf("GEGEN-RIEGEL-ROT (4): d_min(ohne Griff)=%d < 849 — der Zombie laeuft in den Spieler"
+               " hinein (Koerper-Standabstand 400+450, FUN_8002aec4 @0x8002b164)\n", D.dmin_frei);
         fehler = 1;
     }
     if (B.grab_versuche < 1 || B.bisse < 1) {
@@ -393,6 +405,6 @@ int main(int argc, char **argv)
     free(buf);
     if (fehler) return 1;
     printf("RIEGEL-GRUEN: Messer-Reichweite %d/%d (RE1.5-Soll 1500), Bisse A=%d <= B=%d,"
-           " d_min(D)=%d >= 850\n", rw_t, rw_e, A.bisse, B.bisse, D.dmin);
+           " d_min(D, ohne Griff)=%d >= 849\n", rw_t, rw_e, A.bisse, B.bisse, D.dmin_frei);
     return 0;
 }
