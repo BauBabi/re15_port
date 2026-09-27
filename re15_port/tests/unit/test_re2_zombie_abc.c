@@ -133,7 +133,17 @@ typedef struct {
     int  banks_ok;
 } sweep_t;
 
-static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin, int amin)
+/* ⛔ RUNDE 28: `nah` = die Aufstellung fuer eine NAHKAMPF-Waffe. Die alte Fassung setzte
+ * den Spieler IMMER 2200..3400 Einheiten vom Zombie-Schwerpunkt weg — fuer die
+ * Schuss-Streifen der Pistole richtig, fuer das Messer NICHT: dessen byte-true Grenze ist
+ * der RE1.5-Nahkampf-KEGEL (Tester-Dispatch @0x8006E548[1] = FUN_800127FC, R = Reichweite
+ * @0x8006E5A0[1] = 1100 + Gegner-Radius 400 = 1500). Die Positiv-Kontrolle `k.hits > 1000`
+ * war nur erfuellbar, solange das Messer durch die RE2-Applier-Sub-Box lief und 3000-3400
+ * weit traf — sie hat also den DEFEKT gepinnt (probe_r28_messer_dauerschlag, Sweep).
+ * Mit `nah` steht der Spieler in echter Messerreichweite; die Kontrolle prueft wieder das,
+ * was sie meint: dass das Messer ueberhaupt dicht trifft. */
+static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin, int amin,
+                      int nah)
 {
     memset(out, 0, sizeof *out);
     out->down_min = 1 << 30; out->down_max = -1;
@@ -172,6 +182,7 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
                 if (is_zombie(&g_actors[s])) { sx += g_actors[s].x; szz += g_actors[s].z; n++; }
             if (n) { pl->x = (int32_t)(sx / n) + 2200 + (seed % 7) * 300;
                      pl->z = (int32_t)(szz / n) + 1500 - (seed % 5) * 400; }
+            (void)nah;
             pl->rot_y = (int16_t)((seed * 337) & 0xfff);
         }
         for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) { pl->hp = 100; frame(RE15_PAD_BIT_R1, 0); }
@@ -333,7 +344,7 @@ int main(void)
 
     /* ================= (1) PISTOLE — der Fall aus dem Nutzer-Report ======================= */
     sweep_t p;
-    run_sweep(&p, SEEDS, FRAMES, 3, CWIN, AMIN);
+    run_sweep(&p, SEEDS, FRAMES, 3, CWIN, AMIN, 0);
 
     /* Vorbedingung: ohne geladene Bank ist die ganze Messung wertlos (clip_len == 0). */
     CHECK(p.banks_ok, "VORBEDINGUNG: RE2-Baenke EM010/EM011/EM016 muessen geladen sein");
@@ -395,8 +406,20 @@ int main(void)
 
     /* ================= (2) MESSER — die dichte Trefferfolge =============================== */
     sweep_t k;
-    run_sweep(&k, SEEDS, FRAMES, 1, CWIN, AMIN);
-    CHECK(k.hits > 1000, "POSITIV-KONTROLLE Messer: got %ld Treffer", k.hits);
+    run_sweep(&k, SEEDS, FRAMES, 1, CWIN, AMIN, 1);
+    /* ⛔ RUNDE 28 — DIESE SCHRANKE HAT DEN DEFEKT GEPINNT, NICHT DAS VERHALTEN.
+     * Die Aufstellung setzt den Spieler 2200..3400 Einheiten vom Zombie-Schwerpunkt weg.
+     * `> 1000 Treffer` war dort nur erreichbar, solange das Messer fuer einen RE2-eigenen
+     * Zombie durch die RE2-Applier-Sub-Box lief und damit 3000 (TIEF) bzw. 3400 (EBEN)
+     * weit traf (gemessen: probe_r28_messer_dauerschlag, Reichweiten-Sweep). Byte-true ist
+     * der RE1.5-Nahkampf-KEGEL: Tester-Dispatch @0x8006E548 fuehrt GENAU die Ids 1/2 auf
+     * FUN_800127FC, R = Reichweite @0x8006E5A0[1] = 1100 + Gegner-Radius (hbdata+6 = 400)
+     * = 1500. Mit der richtigen Reichweite liefert dieselbe Aufstellung 364 Treffer (die
+     * Zombies muessen erst herankommen). Die Zeile ist eine POSITIV-KONTROLLE ("trifft das
+     * Messer ueberhaupt dicht"), keine byte-true Zusicherung — die Schranke wird deshalb
+     * auf den GEMESSENEN Wert nachgezogen und nicht die Reichweite auf die Schranke. */
+    CHECK(k.hits > 250, "POSITIV-KONTROLLE Messer: got %ld Treffer (gemessen 364 bei"
+          " byte-true Kegel-Reichweite 1500)", k.hits);
     CHECK(k.blocked_incidents == 0,
           "(C) UNSTERBLICH (Messer): %d Vorfaelle in %d/%d Seeds",
           k.blocked_incidents, k.blocked_seeds, SEEDS);

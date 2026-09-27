@@ -2036,7 +2036,43 @@ retry_after_latch:
                             weapon_id == 21);
         if (s_re2_probe[s].valid) {
             /* RE2-owned Zombie: die XZ-Sub-Box des Appliers (FUN_80041CE4) IST der Streifen —
-             * der RE1.5-Keil gilt fuer diesen Kandidaten nicht mehr (Runde 16). */
+             * der RE1.5-Keil gilt fuer diesen Kandidaten nicht mehr (Runde 16).
+             *
+             * ⛔ RUNDE 28 — AUSNAHME FUER DIE BEIDEN NAHKAMPF-WAFFEN (Messer w1, Rohr w2).
+             * NUTZER 2026-09-26: "wenn ich mit dem Messer die ganze Zeit nach unten schlage,
+             * kommen die Zombies nicht nah genug an mich ran, um mich zu beissen."
+             *
+             * GEMESSEN (probe_r28_messer_dauerschlag, Reichweiten-Sweep, KI angehalten,
+             * Zombie auf festen Abstand, echter Weg game_step + R1/RUNTER/SQUARE):
+             *     RE1.5-KI (RE1.5-Kegel)      : Treffer bis d = 1500
+             *     RE2-KI   (Applier-Sub-Box)  : Treffer bis d = 3000 (TIEF) / 3400 (EBEN)
+             * Das Angriffs-Tor des Zombies gegen einen STEHENDEN Spieler ist der Seiten-Griff
+             * `sltiu 0x4b0` = dist < 1200 @0x801018f4; die beiden Lunge-Bloecke D/E
+             * (@0x8010185c sltiu 0xdac / @0x801018a4 sltiu 0x9c4) verlangen zusaetzlich
+             * 0x800CFBF6 & 0x15 bzw. & 0x17 (@0x8010187c / @0x801018c4) = der Spieler muss
+             * GEHEN oder LAUFEN — beim Zielen ist er festgenagelt. Mit 3000/3400 schlaegt der
+             * Port den Zombie also 1800-2200 Einheiten VOR seinem einzigen erreichbaren
+             * Angriffstor in die Trefferreaktion; gemessen kam er dann nie naeher als 981 und
+             * griff in 1400 Bildern KEIN Mal (Lauf D), waehrend er ohne Schlag 3x griff.
+             *
+             * DIE SOLLSEITE IST HIER RE1.5, nicht RE2: RE1.5 hat das Nahkampf-System
+             * VOLLSTAENDIG. Die Tester-Dispatch-Tabelle @0x8006E548 fuehrt GENAU die Ids 1
+             * und 2 auf FUN_800127FC (den Nahkampf-KEGEL; alle anderen auf 0x80012574 /
+             * 0x800128A0), und FUN_800127FC ist byte-true:
+             *     dist = SquareRoot0(dx*dx + dz*dz) ab dem Klingen-Punkt
+             *     R    = Reichweite @0x8006E5A0[1] = 1100  +  Gegner-Radius (hbdata+6 = 400)
+             *     Treffer nur bei dist < R  (strikt, unsigned)
+             * Der RE2-Applier wurde in Runde 19 ("re-restposten") fuer die TEILE-MASKE und die
+             * Trefferzone des RE2-eigenen Zombies dazugenommen — nicht, um die Reichweite einer
+             * RE1.5-Waffe zu verdoppeln. Beides bleibt jetzt: der Applier entscheidet WELCHES
+             * KOERPERTEIL/welche Klammer getroffen ist, der RE1.5-Kegel entscheidet OB die
+             * Waffe ueberhaupt hinreicht. Fuer die Schusswaffen aendert sich nichts (sie
+             * stehen nicht in der Kegel-Spalte der Tabelle). */
+            if (weapon_id == 1 || weapon_id == 2) {
+                uint32_t Rm = reach + ((uint32_t)e->hit_radius_min & 0xffffu);
+                if (dist >= Rm) continue;                                    /* @0x800127FC: dist < R */
+                if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;  /* Front-Halbraum */
+            }
         } else if (is_gun_strip) {
             if (!re15_gun_wedge_inside(pl, e->x, e->z, (int32_t)reach,
                                        (int32_t)((uint32_t)e->hit_radius_min & 0xffffu))) continue;

@@ -5622,9 +5622,35 @@ int re15_enemy_ai_live_tick(int slot)
      * (0x800cfbdc, Disasm 0x801002c0-0x801004c8) und zieht +0x1D3 davor ab. Ohne diese
      * Zeile fror die Pause fuer uebersprungene Aktoren ein; GEMESSEN erreichbar an einem
      * ROOM1140-Zombie mit grid|0x20, der auf +0x1D3 = 5 stehen blieb. */
-    if (re15_ai_re2_for_type(e->type) && (e->re2z_self1d3 & 0x7fu))
-        e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
-                                  | ((e->re2z_self1d3 & 0x7fu) - 1u));
+    /* ⛔ RUNDE 28 — NUR NOCH, WENN DER RE2-ROOT DIESES BILD GAR NICHT LAEUFT.
+     * Das Original hat GENAU EIN Dekrement je Bild, im Root-Prolog (selbst disassembliert,
+     * info/re2leon/COMMON/BIN/EMZ0.BIN, laedt roh @0x80100000):
+     *   80100484: lbu   v1,467(s0)
+     *   80100488: nop
+     *   8010048c: andi  v0,v1,0x7f
+     *   80100490: beq   v0,zero,0x8010049c
+     *   80100494: addiu v0,v1,-1
+     *   80100498: sb    v0,467(s0)
+     * Der Port zog hier UND im RE2-Root re15_re2z_tick ab = ZWEI je Bild. GEMESSEN
+     * (probe_r28_messer_dauerschlag, ROOM1140, echter Weg): nach einem Messertreffer
+     * +0x1D3 = 15 -> 13 -> 11 -> 9 -> 7 -> 5 -> 3 -> 1 -> 0, die Trefferpause war also
+     * nach 8 statt 15 Bildern vorbei (Stun-Wert 15 fuer Messer/Zombie: Zeile 0x800A412C,
+     * Stun = (Wort1 >> 9) & 0x7F, Stempel @0x80047338-4C; Kandidatenfilter
+     * `lbu v0,467(s0)` / `bne v0,zero` @0x80047138-40).
+     * Der Grund, aus dem Runde 14 diese Zeile eingezogen hat, bleibt erhalten: die drei
+     * Wege, auf denen der RE2-Root NICHT erreicht wird — der Port-Skip +0x9 & 0x20, der
+     * RE1.5-Sitz-/Aufsteh-Import (re2z_re15_pose in +0x5 = 0x12 / 0x0d, siehe unten) und
+     * jeder RE2-Typ, den re15_re2z_owns_type nicht fuehrt — zaehlen weiter hier ab. */
+    {
+        int re2_root_laeuft =
+            re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)
+            && !(e->grid_id & RE15_AI_GRID_SKIP)
+            && !(e->re2z_re15_pose && e->state == 1
+                 && (e->sub_state_1 == 0x12 || e->sub_state_1 == 0x0d));
+        if (re15_ai_re2_for_type(e->type) && !re2_root_laeuft && (e->re2z_self1d3 & 0x7fu))
+            e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u)
+                                      | ((e->re2z_self1d3 & 0x7fu) - 1u));
+    }
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
