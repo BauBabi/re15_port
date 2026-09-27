@@ -1,0 +1,82 @@
+RE(elza): die Charakterwahl fuehrt in Elzas Zweig - Kodierung 0/4, Raumvariante, PL04
+
+Bis jetzt war die Wahl folgenlos: zwei Vollstarts (Leon/Elza) erzeugten bitgleiche
+Bilder, weil g_gameflow.character 0/1 trug und im ganzen Port nur in zwei
+&4-Tests gelesen wurde, die mit 0/1 nie zuschlagen konnten.
+
+DIE KODIERUNG WAR UM ZWEI BIT VERSCHOBEN
+  DAT_800ACA5C ist der PLD-INDEX, nicht ein 0/1-Schalter. TITLE.BIN schreibt ihn
+  an zwei Stellen:
+    801016a4  sll v0,v0,2          ; Auswahl-Cursor << 2  -> 0 / 4
+    801016ac  sb  v0,-13732(at)
+    801024c0  sb  zero,-13732(at)             ; LEON = 0
+    801024cc  ori v0,zero,0x4 / 801024d4 sb   ; ELZA = 4
+  FUN_800314b0 indiziert damit die PLD-Dateitabelle 0x80073f70 (16 u16 = CD-Index
+  60..75): @0x800314d4 lbu, sll v0,v0,1 -> 0 = 60 = PL00.PLD, 4 = 64 = PL04.PLD.
+  Der Diskriminator ist deshalb Bit 2 - @0x80104008 andi v0,v0,0x4 (STAGE1,
+  gleichlautend STAGE2 @0x80103e9c, STAGE3 @0x801040ec, STAGE4 @0x80103fb4,
+  STAGE5 @0x80104134). re15_gameflow_new_game rechnet jetzt (cursor & 3) << 2.
+
+DIE RAUMVARIANTE
+  Das Original rechnet mit CD-Dateiindizes: FUN_800396fc holt den Basisindex aus
+  der Stage-Tabelle (Zeigertabelle 0x8007438c @0x800397cc, lhu @0x800397e0) und
+  addiert das Elza-Bit:
+    800397e4  srl  a0,a0,31        ; DAT_800ACA3C Bit 31
+    800397ec  addu a0,a0,v0
+  Stage-0-Tabelle @0x8007429c laeuft in Schritten von 3 (681, 684, 687, 690, ...)
+  = drei CD-Dateien je Raum; die Elza-RDT ist die Leon-RDT + 1. Im Port ist der
+  Dateiindex die Raum-Id, also ist die Variante deren niedrigste Hex-Ziffer:
+  RE15_ROOM_BASE(id) = id & 0xFFF0, re15_room_for_char(base) = base | Variante.
+  Das Bit selbst wird aus dem Charakter abgeleitet statt als zweites Feld gefuehrt
+  - genau die Beziehung, die TITLE.BIN herstellt (@0x801024c8 and 0x7fffffff /
+  @0x801024e4 or 0x80000000, Store @0x801024ec).
+
+DER STARTRAUM - GEMESSEN, NICHT GEWAEHLT
+  Beide Vorspann-RDT haben denselben Kopf (nCut=9) und je genau EINEN
+  Door_aot_set in main00 @Datei-0x051A. Sie unterscheiden sich in EINEM Byte,
+  dem Zielraum-Index bei +23 = Datei-0x0531:
+    ROOM1240.RDT @0x0531 = 0x17  -> Raum 0x17 = ROOM1170  "HELIPORT"
+    ROOM1241.RDT @0x0531 = 0x03  -> Raum 0x03 = ROOM1031  "LOBBY"
+  Das sind Zeichen fuer Zeichen die Raumindizes des Original-Einstiegs
+  FUN_8001d22c: @0x8001d2a4 bltz auf DAT_800ACA3C, Leon @0x8001d2a8 ori 0x17 +
+  @0x8001d2b0 sh, Elza @0x8001d324 ori 0x3 + @0x8001d32c sh. Raumnamen aus
+  DEBUG.BIN (Basis 0x800c0000) Tabelle 0x800c263c, Index (637*stage+13*raum)*2
+  aus @0x8001d39c-3c8. start_room = re15_room_for_char(0x1240) genuegt also.
+
+SPIELERMODELL UND BAENKE
+  main.c laedt Koerper, Basis-EDD/EMR, W01-/W03-Spur und die 21 Waffen-PLW jetzt
+  aus der Familie des Charakters (PL%02X aus character & 0x0F) statt hart PL00.
+  Neuer Helfer pc_read_pl_part: erst die vorextrahierte Teildatei, sonst der
+  Schnitt aus dem Container ueber re15_pld_part (dieselbe Regel wie beim
+  Westen-Wechsel). Noetig, weil Elzas Satz im entpackten Baum unvollstaendig ist -
+  PL04.EDD, PL04W01.EDD und PL04W01.EMR fehlen als Datei, liegen aber in
+  PL04.PLD bzw. PL04W01.PLW. Gegenprobe: alle 13 vorhandenen Teildateien sind
+  byte-gleich mit dem Containerschnitt (sha256, z.B. PL00.EDD 3160 B
+  26198800428ae2ec, PL00.EMR 57136 B 38ae9ec1f0a7f134, PL04W03.EMR 19448 B
+  c48046ceb8db91f1) - Leon laedt also weiterhin exakt dieselben Bytes.
+  Waffenfamilie: base_table @0x800741e8 = {76,76,76,76,97,97,97,97,...},
+  Index aca5c (lbu @0x80036df8); Container dir[0]=EDD @0x80036be4 /
+  dir[1]=EMR @0x80036c04.
+
+DER ANGEFORDERTE MODELL-INDEX
+  work_vars[0x10] (= DAT_800B0FF0) stand auf 0 und haette Elzas eben geladenes
+  PL04 beim ersten Raumwechsel gegen PL00 getauscht. Das Original fuellt es beim
+  Sitzungsstart aus dem Charakter-Byte (lbu @0x8001d51c -> sh a0,4080(at)
+  @0x8001d558) und vergleicht danach @0x8003976c andi 0xf / @0x80039770 beq /
+  @0x80039788 jal 0x800314b0. Jetzt wird es samt s_player_model_idx und dem
+  Westen-Spiegel auf character & 0x0F gesetzt; re15_savedata laesst Elzas Index
+  beim Laden stehen, statt ihn auf Leons Westen-Variante 1 zu ziehen.
+
+WEITERE CHARAKTERSTELLEN
+  re15_audio_prime_core bekommt den Wert selbst statt "ch ? 4 : 0" (Original
+  lbu a0,aca5c @0x800316dc, jal 0x800440c4 @0x800316e8); Wund-LUT und
+  Equip-Familie testen Bit 2; Montage-Effekt und die Voll-Text-Erzaehlerraeume
+  vergleichen gegen RE15_ROOM_BASE, damit ROOM1241/ROOM1171 dieselbe Darstellung
+  bekommen wie ihre geraden Zwillinge.
+
+BEWUSST NICHT ANGEFASST
+  Der Flag-Vorlauf flag_set(3,193,1) bleibt auf den geraden Ids. Er ist
+  ausdruecklich ROOM1170-spezifisch, und Elzas Kette laeuft nicht ueber ROOM1170 -
+  ROOM1241 sub02 setzt seine eigenen Flags (Set(3,111,1), Set(3,112,1)).
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

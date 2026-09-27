@@ -217,7 +217,15 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
      * damit der Reload-Heiler (re15_vest_hp_on_model_reload) nach dem Load keinen
      * falschen Wechsel sieht und die GESPEICHERTEN HP ueberschreibt. */
     {
-        int16_t vm = re15_game_flag_get(3, 0x75) ? 1 : 0;
+        /* ⛔ Der Modell-Index ist die untere NIBBLE von DAT_800ACA5C (@0x8003976c
+         * `andi v0,a0,0xf`), und die traegt den CHARAKTER — Leon 0, Elza 4
+         * (@0x801024c0 / @0x801024d4). Die Weste ist Leons Variante PL01 (Datei-Id
+         * 0x3C+1, Tabelle 0x80073f70). Fuer Elza gibt es im Port keine ermittelte
+         * Westen-Variante, also bleibt ihr Index unveraendert stehen; ihn hier auf 1
+         * zu setzen wuerde sie in Leons rote Uniform stecken. */
+        int16_t vm = (g_gameflow.character & 4)
+                       ? (int16_t)(g_gameflow.character & 0x0F)
+                       : (re15_game_flag_get(3, 0x75) ? 1 : 0);
         g_scd.work_vars[0x10] = vm;
         re15_vest_model_mark(vm);
     }

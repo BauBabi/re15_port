@@ -31,7 +31,11 @@ int main(void)
     g_actors[0].x = 12345; g_actors[0].y = -3600; g_actors[0].z = 9999;
     g_actors[0].rot_y = 0x0400; g_actors[0].hp = 87; g_actors[0].status_flags = 0x2;
     g_current_room_id = 0x1150;
-    g_gameflow.character = 1;
+    /* ELZA = 4, nicht 1 — DAT_800ACA5C traegt den PLD-Index (@0x801024cc
+     * `ori v0,zero,0x4` + @0x801024d4 `sb`). Der Haken bleibt derselbe
+     * Rundlauf-Pin, prueft ihn aber jetzt mit einem Wert, den das Spiel
+     * wirklich annimmt. */
+    g_gameflow.character = 4;
     memset(&g_inv, 0, sizeof g_inv);
     g_inv.slots[0].id = 0x03; g_inv.slots[0].qty = 15;   /* BROWNING HP */
     g_inv.slots[1].id = 0x21; g_inv.slots[1].qty = 2;    /* MEMORY CARD */
@@ -72,7 +76,7 @@ int main(void)
                 g_actors[0].x, g_actors[0].hp, g_actors[0].rot_y); fail = 1;
     }
     if (room != 0x1150) { fprintf(stderr, "FAIL(room): %04x\n", room); fail = 1; }
-    if (g_gameflow.character != 1) { fprintf(stderr, "FAIL(char)\n"); fail = 1; }
+    if (g_gameflow.character != 4) { fprintf(stderr, "FAIL(char)\n"); fail = 1; }
     if (g_inv.slots[0].id != 0x03 || g_inv.slots[0].qty != 15 ||
         g_inv.slots[1].id != 0x21 || g_inv.slots[1].qty != 2) { fprintf(stderr, "FAIL(inv)\n"); fail = 1; }
     if (!re15_game_flag_get(3, 17) || !re15_game_flag_get(5, 200)) { fprintf(stderr, "FAIL(flags)\n"); fail = 1; }
