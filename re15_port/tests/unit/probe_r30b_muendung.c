@@ -367,7 +367,17 @@ static void pass_befund(befund_t *r, int alt, int budget)
         pl->hp = 100;
         e->hp = 30000;                         /* der Hund soll die ganze Kette ueberleben */
         if (!e->active) break;
-        if (alt) e->re2_hit_box_set = 0;       /* ALT-Lauf: Gate inert = Stand vor Welle 2 */
+        /* ⛔ ALT-HEBEL, RUNDE 34 NACHGEZOGEN (Harnisch, keine Schranke).
+         * Bis Runde 33 sperrte den liegenden Hund das FUENFTE TOR ueber +0x98/+0x9E; ALT
+         * machte es inert, indem es re2_hit_box_set nullte. Seit Runde 34 sperrt ihn die
+         * HALTUNGSKLASSE (word0>>26)&7 im Applier-Zwilling re15_re2_gun_probe — das alte
+         * Nullen wirkt dort nicht mehr, und ALT und NEU lieferten gemessen dieselbe Zeile
+         * (beide 0 Treffer im Liegen). Der Hebel muss also am NEUEN Mechanismus angreifen:
+         * ALT = die Klasse bleibt jedes Bild auf 3 (`lui v1,0xc00` @0x801040CC, der
+         * "volle Box"-Zweig), FUN_80104088(0) mit seinem `and 0xE7FFFFFF` @0x80104090-B4
+         * wird also zurueckgenommen. Das ist exakt der Zustand von VOR der Sperre.
+         * Zusaetzlich bleibt das alte Nullen stehen — damit misst ALT beide Wege inert. */
+        if (alt) { e->re2_hit_box_set = 0; e->re2z_parts = 3u; }
         track(slot, 2000);
         /* Erst ab Bild 10 schiessen, damit die STEHENDE Phase messbar ist (Gegenprobe
          * gegen Ueberkorrektur: der stehende Hund muss weiter getroffen werden). */

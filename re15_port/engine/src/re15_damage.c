@@ -1824,6 +1824,25 @@ static int re15_re2_box_inside(const re15_actor_t *pl, const re15_actor_t *e, co
 /* Ergebnis des Appliers je Kandidaten-Slot fuer den Stempel/Schaden nach der Auswahl. */
 static struct { uint8_t valid, zone, bracket; } s_re2_probe[RE15_ACTOR_MAX];
 
+/* ============================================================================================
+ * MESS-ZAEHLER FUER DEN MECHANISMUS (kein Spielverhalten, nur Instrumentierung)
+ * --------------------------------------------------------------------------------------------
+ * Runde 34 tauscht den MECHANISMUS, nicht das Verhalten: der liegende Hund bleibt untreffbar,
+ * aber ueber die Haltungsklasse statt ueber das senkrechte Zielfenster. Ein Riegel, der nur
+ * das Verhalten misst, waere VOR und NACH dem Wechsel gruen und wuerde den Wechsel gar nicht
+ * pruefen. Diese beiden Zaehler nageln deshalb den WEG fest:
+ *   s_cnt_gate5  wird hochgezaehlt, wenn das fuenfte Tor (@0x8004716C-A4) ein Urteil faellt;
+ *   s_cnt_class  wird hochgezaehlt, wenn die Haltungsklasse (@0x800413C4-D8) gelesen wird.
+ * Erwartung nach dem Wechsel: bei einem SCHUSS gate5 == 0 und class > 0. ================== */
+static uint32_t s_cnt_gate5, s_cnt_class, s_cnt_class_rej;
+void re15_dmg_mech_reset(void) { s_cnt_gate5 = s_cnt_class = s_cnt_class_rej = 0u; }
+void re15_dmg_mech_counts(uint32_t *gate5, uint32_t *cls, uint32_t *cls_rej)
+{
+    if (gate5)   *gate5   = s_cnt_gate5;
+    if (cls)     *cls     = s_cnt_class;
+    if (cls_rej) *cls_rej = s_cnt_class_rej;
+}
+
 /* FUN_800410CC-Kern fuer EINEN Kandidaten. Rueckgabe 1 = Treffer (zone/bracket gesetzt), 0 = kein
  * Treffer (Fenster, XZ-Box oder Teile-Maske verworfen). */
 static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, const re15_actor_t *e,
@@ -1855,7 +1874,10 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
      * @0x80103874-A0). Wuerde die Ersatzmaske auch fuer ihn greifen, waere der LIEGENDE Hund
      * per Hintertuer wieder Klasse 3 = treffbar — genau der Nutzer-Befund aus Runde 26. */
     if (mask == 0u && e->type != 0x20u) { mask = 3u; r9a = 500 >> 2; }
-    if (mask == 0u) return 0;   /* `beq s6,zero,0x80041774` @0x800413D8 — Kandidat faellt raus */
+    s_cnt_class++;                                                /* Mess-Zaehler, s. o. */
+    if (mask == 0u) {          /* `beq s6,zero,0x80041774` @0x800413D8 — Kandidat faellt raus */
+        s_cnt_class_rej++; return 0;
+    }
     for (int b = 0; b < 3; b++) {
         int32_t lo, hi, third;
         if (g->flag[b] == 0u) continue;                           /* `*(char *)(iVar10 + 1+b) != 0` */
@@ -2051,6 +2073,7 @@ retry_after_latch:
                     int32_t b   = (int32_t)e->re2_hit_b98;         /* lh  +0x98 @0x80047170 */
                     int32_t h   = (int32_t)e->re2_hit_h9e;         /* lhu +0x9E @0x80047188 */
                     int32_t ty  = mz[1] + 200;                     /* addiu v0,v0,200 @0x80042F68 */
+                    s_cnt_gate5++;                                 /* Mess-Zaehler, s. o. */
                     uint32_t lhs = (uint32_t)((int32_t)e->y + b + 100 + h - ty);
                     uint32_t rhs = (uint32_t)(2 * (h + 100));      /* addiu/sll @0x80047198-9C */
                     if (!(lhs < rhs)) continue;                    /* sltu/beq @0x800471A0-A4 */

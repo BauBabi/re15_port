@@ -323,4 +323,15 @@ void    re15_re2_damage_model_set(int on);
 int16_t re15_re2_init_hp(const re15_actor_t *e);
 void    re15_re2_hp_sync(void);
 
+/* MECHANISMUS-ZAEHLER (Runde 34, nur fuer Sonden — sie aendern kein Spielverhalten).
+ * gate5   = wie oft das fuenfte Tor des Kandidatenfilters FUN_800470C0 (@0x8004716C-A4)
+ *           ein Urteil gefaellt hat. Nach der Umstellung gehoert es AUSSCHLIESSLICH zum
+ *           Messer (Aufrufstelle @0x80042F94) — bei einem Schuss MUSS es 0 bleiben.
+ * cls     = wie oft die Haltungsklasse (word0>>26)&7 gelesen wurde (FUN_800410CC
+ *           @0x800413C4-D8). Beim Schuss auf einen Applier-Typ MUSS es > 0 sein.
+ * cls_rej = davon die Faelle, in denen die Klasse 0 war und der Kandidat herausfiel
+ *           (`beq s6,zero,0x80041774` @0x800413D8). */
+void    re15_dmg_mech_reset(void);
+void    re15_dmg_mech_counts(uint32_t *gate5, uint32_t *cls, uint32_t *cls_rej);
+
 #endif /* RE15_DAMAGE_H */
