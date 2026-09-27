@@ -660,7 +660,14 @@ static int re2d_landing(re15_actor_t *e)
 }
 
 /* 0x80104088(self, a1): Hitbox-Squash 0↔1 (@0x80104090-D8): a1==0 → +0x98=−500/+0x9E=500,
- * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP. */
+ * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP.
+ * ⛔ RUNDE 30, gemessen: dieser NOP ist die HALBE Antwort auf den Nutzer-Befund
+ * "im Original ist der Hund erst wieder verwundbar, sobald er steht". Die andere Haelfte ist
+ * das fuenfte Gate @0x8004716C-A4, das +0x98/+0x9E gegen die MUENDUNGSHOEHE (s4+4 =
+ * MATRIX.t[1] der Waffen-Bone-Kette, @0x80042E60-94 / @0x80042F8C) prueft. Beides einzeln
+ * einzubauen bringt NICHTS: ohne das Gate liest niemand die Felder, und ohne eine echte
+ * Muendungshoehe steht Hgun im Port auf 0 und das Gate laesst JEDEN durch (gemessen,
+ * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md). */
 static void re2d_hitbox(re15_actor_t *e, int restore) { (void)e; (void)restore; }
 
 /* FUN_8004AA50 mit dem RE2-Zufall (@0x8004aa7c `jal 0x80015fe8`), Knotenzahl aus dem
@@ -2241,9 +2248,16 @@ int re15_re2dog_tick(int slot)
              * einen Rest hat (@0x80047138-40). Fuer den Hund sind das 15 Bilder (0,50 s) -
              * bei fast jeder Waffe; Ausnahmen: w5/w6 = 0, w12 = 3, w19 = 3, w14 = 5
              * (Zeile 0x800A4424, selbst ausgelesen).
-             * Ein Zustands-Gate gibt es in RE2 NICHT: FUN_800470C0 hat vier Gates
-             * (@0x8004712C aktiv, @0x80047138 Trefferpause, @0x80047148 hp<0, @0x80047158)
-             * und prueft die Hurt-Animation nirgends.
+             * Ein Zustands-Gate gibt es in RE2 NICHT: FUN_800470C0 prueft die Hurt-Animation
+             * nirgends. Es hat FUENF Gates — @0x8004712C aktiv, @0x80047138 Trefferpause,
+             * @0x80047148 hp<0, @0x80047158 (+0x10E & 0xC000) und, hier bis 2026-09-27
+             * uebersehen, @0x8004716C-A4 das senkrechte ZIELFENSTER
+             * (lh +0x98 / lw +0x3C / lhu +0x9E / lw 4(s4) / sltu / beq 0x8004740C).
+             * Ueber jenes Tor wirkt die Pose beim Hund dann DOCH — nicht als Zustands-Gate,
+             * sondern weil FUN_80104088(0) @0x80103458/@0x8010352C die Box auf -500/+500
+             * (@0x80104098-A8) staucht und erst @0x801036F0/@0x801037C0 mit 1 wieder auf
+             * -1000/+1000 (@0x801040B8-C4) oeffnet. Messung: analysis/befunde_2026-09-27/
+             * zielfenster-messung.md.
              *
              * DER PORT fuhr hier den RE1.5-Riegel +0x93, den RE2 gar nicht kennt (Voll-Scan
              * Offset 147: 0 Treffer in EMD0G_MOD0.BIN und in info/re2leon/PSX.EXE), und gab
