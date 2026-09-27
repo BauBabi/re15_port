@@ -33,6 +33,11 @@ typedef struct {
     const re15_emd_skeleton_t  *pl00_skel;   /* player skeleton (stair FK pose)       */
     const re15_emd_animation_t *pl00_anim;   /* player animation set                  */
     const re15_emd_animation_t *w01_anim;    /* PL00W01 walk-source anim (footstep flags) */
+    /* AKTIVE Waffen-Bank PL00W<item> (Skelett + Clips). Die Zielpose des Schuss-Pfades
+     * @0x80042E60-94 liest den Teile-Pool, den DIESE Bank fuellt — die Engine braucht sie
+     * darum genauso wie der Renderer. NULL erlaubt (dann Basis-Bank). */
+    const re15_emd_skeleton_t  *w_skel;
+    const re15_emd_animation_t *w_anim;
     re15_camera_view_t         *cam_view;    /* active cut's view (player move basis)  */
     int                         active_cut;  /* active camera cut index (scan + RVD)   */
     uint16_t                    pad_current; /* held pad bits  (g_engine.pad_current) */

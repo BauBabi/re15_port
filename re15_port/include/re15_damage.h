@@ -238,6 +238,10 @@ void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
  * @0x8004718C bzw. der verketteten Matrix @0x80042E60-94. Rueckgabe 0 = Bank/Pose fehlt;
  * dann darf kein Aufrufer darauf gaten. Definition + volle Herleitung: re15_damage.c. */
 int re15_player_muzzle_world(int32_t out[3]);
+/* DIE ZIELPOSE: derselbe Knochen, aber aus der Pose, in der Leon TATSAECHLICH zielt
+ * (aktive Waffen-Bank PL00W<item> + Clip aus dem Band +0x154, Tabelle @0x80011010).
+ * Gemessen HOCH 2751 / EBEN 2500 / TIEF 1988 ueber den Fuessen. 0 = keine Bank. */
+int re15_player_aim_muzzle_world(int32_t out[3]);
 
 void re15_player_apply_hitbox(re15_actor_t *p);
 void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);

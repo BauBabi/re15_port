@@ -5796,6 +5796,11 @@ re_title:;
                 gctx.pl00_skel   = &pl00_skel;
                 gctx.pl00_anim   = &pl00_anim;
                 gctx.w01_anim    = &w01_anim;   /* walk-source = footstep flags */
+                /* AKTIVE Waffen-Bank an die Engine: dieselbe, die der Aim-Render-Override
+                 * unten (~L7423) benutzt. Die Muendungshoehe des fuenften Tores kommt aus
+                 * ihrer Pose (Kette @0x80042E60-94), nicht aus der Bindpose. */
+                gctx.w_skel      = wact_ok ? wact_skel : NULL;
+                gctx.w_anim      = wact_ok ? wact_anim : NULL;
                 gctx.cam_view    = &cam_view;
                 gctx.active_cut  = active_cut_idx;
                 /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */

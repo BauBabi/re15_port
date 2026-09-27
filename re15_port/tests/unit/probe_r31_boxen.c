@@ -478,7 +478,13 @@ static int s_nullbox_raeume = 0;    /* Raeume mit einer AUSGELIEFERTEN Spinne, d
 
 /* Welche Box traegt eine AUSGELIEFERTE Spinne je Raum? Das entscheidet, ob das fuenfte Tor
  * fuer 0x25 gefahrlos scharf darf: der Boden-Spawn traegt -1400/1400 (Tabelle @0x801063A0,
- * Fenster [-100, 2900) -> Hgun 1668 kommt durch), Decke (@0x8010049C) und Wand
+ * Fenster [-100, 2900) -> Hgun 1668 kommt durch).
+ * ⛔ PRAEZISIERT (Runde 32): die 1668 ist die BINDPOSE von PL00 (1804+692-422-408 = 1666),
+ * die re15_player_muzzle_world posiert - NICHT die Zielpose. Die Zielpose misst
+ * HOCH 2751 / EBEN 2500 / TIEF 1988 (probe_r30b_muendung Teil 0) und kaeme bei
+ * -1400/1400 ebenfalls durch (Fenster [-100,2900)), bei 0/1400 aber weiterhin nicht.
+ * Der Satz oben bleibt also richtig, seine Zahl hat nur einen anderen Namen.
+ * Decke (@0x8010049C) und Wand
  * (Tabelle @0x801063E0 @0x801004EC-52C) tragen 0/1400 (Fenster [-1500, 1500) -> gesperrt). */
 static void pass_spinne_raeume(void)
 {
