@@ -1319,8 +1319,26 @@ int main(void)
             if (ops[i].kind != RE15_INV_OP_SPRT) continue;
             if (ops[i].page == RE15_INV_PAGE_MAP4) {
                 nmap++;
-                CHECK(ops[i].clut == RE15_INV_CLUT_TEXROW21,
-                      "(5) MAP-page op clut must be row 21 (0x7d50 @0x800473cc)");
+                /* ⛔ SEIT DEM RE2-KARTENSYSTEM IST "IMMER ZEILE 21" FALSCH.
+                 * RE1.5 kannte nur EINE Kartenpalette (Zeile 21 = VRAM-Y 501 =
+                 * clut 0x7d50, `sh t4` @0x800473cc) - RE2 waehlt je Kachelzustand
+                 * eine ANDERE Zeile: 501 besucht (@0x8006E614), 502 aktueller Raum
+                 * (@0x8006E648), 498 Karte da + unbesucht (@0x8006E71C), Auswahl
+                 * GetClut(256,s5) @0x8006E750. Die drei Zustandszeilen des Ports
+                 * sind aus Zeile 21 abgeleitet (nur Eintrag 1 getauscht,
+                 * karten_cluts_bauen in inv_render_pc.c).
+                 * Die BEIDEN FESTEN Sprites (Titelbild @0x80047204-268, Kompass
+                 * @0x8004726c-2c0) tragen weiterhin Zeile 21 unveraendert - das
+                 * bleibt gepinnt. */
+                CHECK(ops[i].clut == RE15_INV_CLUT_TEXROW21 ||
+                      ops[i].clut == RE15_INV_CLUT_MAP_BESUCHT ||
+                      ops[i].clut == RE15_INV_CLUT_MAP_AKTUELL ||
+                      ops[i].clut == RE15_INV_CLUT_MAP_UNBESUCHT,
+                      "(5) MAP-page op clut = row 21 or one of its three state rows");
+                if ((ops[i].x == 0x1e && ops[i].y == 0x1e) ||
+                    (ops[i].x == 0x10e && ops[i].y == 0x28))
+                    CHECK(ops[i].clut == RE15_INV_CLUT_TEXROW21,
+                          "(5b) the two FIXED map sprites keep row 21 (0x7d50)");
                 if (ops[i].x == 0x1e && ops[i].y == 0x1e && ops[i].w == 0x58 &&
                     ops[i].h == 0x20 && ops[i].u == 0 && ops[i].v == 0) have_s1 = 1;
                 if (ops[i].x == 0x10e && ops[i].y == 0x28 && ops[i].w == 0x20 &&

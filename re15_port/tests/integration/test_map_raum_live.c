@@ -128,8 +128,18 @@ static int ist_rot(const re15_inv_op_t *o)
          * halbtransparenter roter Schleier (FILL abe=1, 200,16,16). Der
          * Schleier IST jetzt die rote Hervorhebung der Kunst-Blaetter. */
         if (o->abe && o->r == 200 && o->g == 16 && o->b == 16) return 1;
+        /* ⛔ SEIT DEM RE2-KARTENSYSTEM: die Fuellung des aktuellen Raums traegt
+         * RE2s gemessenen Wert 680808 = (104,8,8) (ST0.TIM Datei-Offset 0x109B6,
+         * CLUT-Y 502, gewaehlt per `addiu s5,s5,1` @0x8006E648). re2_ton in
+         * re15_inv_screen.c fuehrt genau diesen Wert. */
+        if (o->r == 104 && o->g == 8 && o->b == 8) return 1;
         return o->r == ROT_R && o->g == ROT_G && o->b == ROT_B;
     }
+    /* ⛔ DIE KACHEL WIRD NICHT MEHR GETINTET, SONDERN DURCH EINE ANDERE
+     * CLUT-ZEILE GEBLITTET - das ist RE2s Mechanismus (GetClut(256,s5)
+     * @0x8006E750). Der aktuelle Raum ist jetzt an der Zeile erkennbar, nicht
+     * mehr am Tint (192,24,24); dieser Tint war eine Port-Erfindung. */
+    if (o->clut == RE15_INV_CLUT_MAP_AKTUELL) return 1;
     return o->r == ROT_SPRT_R && o->g == ROT_SPRT_G && o->b == ROT_SPRT_B;
 }
 

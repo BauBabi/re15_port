@@ -132,8 +132,35 @@ enum {
      * census.) */
     RE15_INV_CLUT_TEXROW2 = 14,
     RE15_INV_CLUT_TEXROW4 = 15,
-    RE15_INV_CLUT_TEXROW6 = 16
+    RE15_INV_CLUT_TEXROW6 = 16,
+    /* KARTEN-ZUSTANDSREIHEN (RE2-Kartensystem). RE2 waehlt je Kachelzustand eine
+     * andere CLUT-ZEILE statt zu modulieren — `addiu s5,zero,501` @0x8006E614
+     * (besucht), `addiu s5,s5,1` @0x8006E648 (aktueller Raum = 502),
+     * `addiu s5,zero,498` @0x8006E71C (Karte da, Raum unbesucht), Auswahl
+     * `jal 0x8008f828` = GetClut(256,s5) @0x8006E750.
+     * Die drei Zeilen werden im Renderer aus RE15_INV_CLUT_TEXROW21 abgeleitet;
+     * getauscht wird nur Eintrag 1 = der Raumkoerper (Herleitung + Messung an
+     * karten_cluts_bauen in platform/pc/src/inv_render_pc.c). */
+    RE15_INV_CLUT_MAP_BESUCHT   = 17,
+    RE15_INV_CLUT_MAP_AKTUELL   = 18,
+    RE15_INV_CLUT_MAP_UNBESUCHT = 19
 };
+
+/* DIE DREI ZUSTANDSFARBEN DES RAUMKOERPERS (CLUT-Eintrag 1), aus RE2s Palette
+ * GELESEN, nicht gerechnet — mein erster von Hand umgerechneter Wurf war in
+ * beiden Faellen falsch. Quelle: info/re2leon/COMMON/DATA/ST0.TIM, zweites TIM
+ * @Datei-Offset 0x10820, CLUT-Block x=256 y=480 w=16 h=21, Zeilenindex
+ * k = CLUT-Y - 490 (Slot-Wort `addiu v0,zero,2587` = 0x0A1B @0x80068588 ->
+ * CLUT-Cursor 10; `addiu v0,v0,480` @0x80076B08 -> CLUT-Y = 480 + Cursor).
+ * ST0/ST1/ST1_.TIM sind in diesen Zeilen bitgleich.
+ * Der Riegel unit_karte_besitz liest die Datei erneut und vergleicht. */
+#define RE15_KARTE_BESUCHT   ((uint16_t)0xD902u)  /* ST0.TIM 0x10996 = 1040b0 + STP */
+#define RE15_KARTE_AKTUELL   ((uint16_t)0x842Du)  /* ST0.TIM 0x109B6 = 680808 + STP */
+#define RE15_KARTE_UNBESUCHT ((uint16_t)0x0000u)  /* ST0.TIM 0x10936 = durchsichtig  */
+/* Die Datei-Offsets der drei Eintraege, damit der Riegel sie nachlesen kann. */
+#define RE15_KARTE_ST0_OFF_BESUCHT   0x10996
+#define RE15_KARTE_ST0_OFF_AKTUELL   0x109B6
+#define RE15_KARTE_ST0_OFF_UNBESUCHT 0x10936
 
 typedef struct {
     uint8_t kind;         /* RE15_INV_OP_* */
