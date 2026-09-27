@@ -2009,32 +2009,52 @@ retry_after_latch:
          * das untere Byte von +0x1D0 bei JEDEM Kandidaten, auch bei einem, den es gleich darauf
          * verwirft. Der Port fuehrt +0x1D0 nicht.
          *
-         * ⛔ ZUR ZUORDNUNG — DER PORT SETZT DIESES TOR AN EINER STELLE, AN DER RE2 ES NICHT HAT
-         * (Runde 33, selbst aufgeloest; volle Herleitung im Kopf von muzzle_bone_world):
-         * FUN_800470C0 wird auf der Spielerseite nur von WAFFE 1 (Messer, @0x80042F94, Hitcode
-         * a3 low byte 1) und WAFFE 12 (Bolzen, @0x800467C0, a3 = 12) betreten. Jede Schusswaffe
-         * geht ueber FUN_80043908 -> `jal 0x800410CC` @0x80043AFC, und FUN_800410CC liest
-         * +0x98/+0x9E NIE (Vollscan `lh/lhu rt,152|158(rs)` ueber info/re2leon/PSX.EXE:
-         * im Bereich 0x8004xxxx nur @0x80047170/88 + @0x800472AC/@0x800474D0 in FUN_800470C0
-         * und @0x80047730/44 im AoE-Zwilling FUN_80047664). Dort entscheidet stattdessen die
-         * HALTUNGSKLASSE `(word0>>26)&7` (@0x800413CC-D8) gegen die Maskentabelle @0x800A6DB4 —
-         * genau das Feld, das der Port als `re2z_parts` fuehrt und das der Hund seit Runde 33
-         * byte-true setzt (re2d_hitbox, liegend 1 / stehend 3, @0x80104090-D8).
-         * DAS TOR BLEIBT TROTZDEM HIER STEHEN, und zwar mit Zahl statt Bauchgefuehl:
-         * re15_re2_gun_probe (der Port-Zwilling von FUN_800410CC) laeuft nur fuer
-         * re15_re2z_owns_type (0x10/0x11/0x12/0x13/0x16/0x18) — der HUND 0x20 ist nicht dabei.
-         * Nimmt man dem Hund dieses Tor weg, ohne ihn vorher an den Applier zu haengen, ist er
-         * im Liegen wieder beschiessbar: gemessen 17 Treffer in 389 Bildern (Runde 30 §4.2,
-         * Spalte ALT) gegen den Nutzer-Befund aus Runde 26. Der Wechsel des Mechanismus ist
-         * deshalb als OFFEN benannt (zweite-aufrufstelle.md §6), nicht heimlich halb gemacht. */
-        if (e->re2_hit_box_set) {
-            int32_t mz[3];
-            if (re15_player_muzzle_world(mz)) {
-                int32_t b   = (int32_t)e->re2_hit_b98;             /* lh  +0x98 @0x80047170 */
-                int32_t h   = (int32_t)e->re2_hit_h9e;             /* lhu +0x9E @0x80047188 */
-                uint32_t lhs = (uint32_t)((int32_t)e->y + b + 100 + h - mz[1]);
-                uint32_t rhs = (uint32_t)(2 * (h + 100));          /* addiu/sll @0x80047198-9C */
-                if (!(lhs < rhs)) continue;                        /* sltu/beq @0x800471A0-A4 */
+         * ⛔ ZUR ZUORDNUNG — RUNDE 34: DAS TOR IST AUF SEINE ZWEI ECHTEN AUFRUFSTELLEN
+         * EINGEGRENZT. Bis Runde 33 lief es fuer JEDE Waffe; RE2 faehrt es nur an zwei Stellen:
+         *   (A) @0x80042F94, Waffe 1 = MESSER (Hitcode a3 low byte 1 @0x80042F64-88;
+         *       Schadenszeile @0x800A412C+0*20 beginnt mit 3, jede andere >= 11; Feuer-SE
+         *       @0x800A6F94 ist ein leeres `jr ra`; Keil {-200,0,250,125} @0x8001101C).
+         *   (B) @0x800467C0, Waffe 12 = die BOLZEN-Salve (Zielhoehe = Teil+0x60, die Welt-Y
+         *       des fliegenden Bolzens). DIESE STELLE HAT IM PORT KEINEN PRODUZENTEN:
+         *       re2z_row_from_weapon (enemy_ai_re2_zombie.c:3829) bildet KEINE der 22
+         *       RE1.5-Waffen auf RE2-Id 12 ab (die Zeile fuehrt 1,1,1,3,2,4,4,5,7,9,11,10,
+         *       15,8,16,9,11,10,17,18,13,1) -> nicht gebaut, weil es nichts zu bauen gibt.
+         * Jede SCHUSSWAFFE geht ueber FUN_80043908 -> `jal 0x800410CC` @0x80043AFC, und
+         * FUN_800410CC liest +0x98/+0x9E NIE (Vollscan `lh/lhu rt,152|158(rs)` ueber
+         * info/re2leon/PSX.EXE: im Bereich 0x8004xxxx nur @0x80047170/88 + @0x800472AC/
+         * @0x800474D0 in FUN_800470C0 und @0x80047730/44 im AoE-Zwilling FUN_80047664).
+         * Fuer Schuesse entscheidet stattdessen die HALTUNGSKLASSE `(word0>>26)&7`
+         * (@0x800413CC-D8) gegen die Maskentabelle @0x800A6DB4 — im Port re15_re2_gun_probe,
+         * der seit dieser Runde auch den HUND 0x20 fuehrt (Block im Band-Zweig unten).
+         *
+         * DAS FENSTER DES MESSER-TORS, byte-true (@0x80042F48-58):
+         *   80042f48: lbu   v0,333(s1)     ; +0x14D = BILDNUMMER im Clip
+         *   80042f50: addiu v0,v0,-7
+         *   80042f54: sltiu v0,v0,0x5      ; nur (+0x14D)-7 in [0,4] = die Bilder 7..11
+         *   80042f58: beq   v0,zero,0x80042fbc  ; sonst wird der GANZE Block uebersprungen
+         * und DIE ABSENKUNG, die dazugehoert:
+         *   80042f60: lw    v0,56(sp)      ; MATRIX.t[1] der Klingenkette (Bone 0->9->10->11)
+         *   80042f68: addiu v0,v0,200      ; PSX-Y waechst nach unten => 200 TIEFER
+         *   80042f6c: sw    v0,56(sp)
+         *   80042fac-b8: nach dem Tor wieder -200 (nur fuer den Tor-Aufruf)
+         * PORT-ABBILDUNG des Bildfensters (benannt, nicht geraten): RE2s Messer-Pattern
+         * @0x800A6608/6434/656C ist `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` — sechs Bilder
+         * Ausholen, dann FUENF Bilder mit den Records 0..4. Der Port bildet genau diese fuenf
+         * auf anim_frame 6..10 ab (re15_re2_knife_step oben). Die fuenf Torbilder [7,11] sind
+         * dieselben fuenf -> hier anim_frame 6..10. */
+        if ((weapon_id == 1 || weapon_id == 2) && e->re2_hit_box_set) {
+            extern int re15_player_slash_window(void);
+            int kf = (int)pl->anim_frame;
+            if (re15_player_slash_window() && kf >= 6 && kf <= 10) {
+                int32_t mz[3];
+                if (re15_player_muzzle_world(mz)) {
+                    int32_t b   = (int32_t)e->re2_hit_b98;         /* lh  +0x98 @0x80047170 */
+                    int32_t h   = (int32_t)e->re2_hit_h9e;         /* lhu +0x9E @0x80047188 */
+                    int32_t ty  = mz[1] + 200;                     /* addiu v0,v0,200 @0x80042F68 */
+                    uint32_t lhs = (uint32_t)((int32_t)e->y + b + 100 + h - ty);
+                    uint32_t rhs = (uint32_t)(2 * (h + 100));      /* addiu/sll @0x80047198-9C */
+                    if (!(lhs < rhs)) continue;                    /* sltu/beq @0x800471A0-A4 */
+                }
             }
         }
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
@@ -2277,6 +2297,76 @@ retry_after_latch:
                             }
                         }
                     }
+                } else if (e->type == 0x20u && re15_ai_re2_for_type(e->type)) {
+                    /* ===== HUND 0x20, RE2-GESCHMACK: DER APPLIER, NICHT DAS ZIELFENSTER =====
+                     * ⛔ RUNDE 34 — DER MECHANISMUS-WECHSEL, den Runde 33 als OFFEN benannt hat.
+                     *
+                     * BIS RUNDE 33 lief der Hund hier durch `eband = 0xE0000000` (kein Band)
+                     * und wurde allein vom FUENFTEN TOR des Kandidatenfilters FUN_800470C0
+                     * (@0x8004716C-A4, Muendungshoehe gegen +0x98/+0x9E) im Liegen gesperrt.
+                     * Das Verhalten stimmte, der Mechanismus nicht: FUN_800470C0 hat auf der
+                     * Spielerseite genau ZWEI Aufrufstellen (@0x80042F94 = Waffe 1 MESSER,
+                     * @0x800467C0 = Waffe 12 Bolzen) — KEINE Schusswaffe betritt es. Jede
+                     * Schusswaffe geht ueber FUN_80043908 -> `jal 0x800410CC` @0x80043AFC.
+                     *
+                     * FUN_800410CC entscheidet ueber die HALTUNGSKLASSE:
+                     *   800413c4: lw   v0,0(s2)        ; word0 des Kandidaten
+                     *   800413cc: srl  v0,v0,26
+                     *   800413d4: andi s6,v0,0x7
+                     *   800413d8: beq  s6,zero,0x80041774   ; Klasse 0 -> Kandidat faellt raus
+                     * und dann die Maskentabelle @0x800A6DB4 (`and v0,v1,s6` @0x80041490/B0/D0).
+                     * Die Fenster-Zeile holt es aus PTR_DAT_800A6A88[Typ] (@0x80041380-98) —
+                     * fuer den Hund @0x800A4424, im Port s_re2d_fen.
+                     *
+                     * DIE KLASSE SETZT DER HUND SELBST (EMD0G_MOD0.BIN, alle Stellen gescannt):
+                     *   re2d_init            Klasse |= 3   `lui v1,0xc00` @0x80100488
+                     *   re2d_hitbox(0)       Klasse  = 1   `and 0xE7FFFFFF` @0x80104090-B4 +
+                     *                                      `lui v1,0x400`  @0x801040AC
+                     *   re2d_hitbox(1)       Klasse |= 3   `lui v1,0xc00`  @0x801040CC
+                     * Vollstaendigkeits-BELEG (nicht Hoffnung): in EMD0G_MOD0.BIN gibt es
+                     * 11 Stellen, die word0 des EIGENEN Gegners mit Klassenbits beschreiben —
+                     * @0x80100490, @0x801005FC, @0x801008A8, @0x80100C28, @0x80101348,
+                     * @0x801013C0, @0x80101600, @0x80101774, @0x80101A3C, @0x801038A0,
+                     * @0x801040D8. Ihre Masken (selbst gelesen) sind:
+                     *   0xEFFFFFFF|0x04000000  (@0x801005FC/8A8/13C0/1600/1774, Landungen)
+                     *   0xFBFFFFFF|0x10000000  (@0x80101348)
+                     *   0xEFFFFFFF|0x0C000000  (@0x80100C28)
+                     *   |0x08000000            (@0x80101A3C)
+                     *   0xE3FFFFFF             (@0x801038A0, Spiel-tot-Wurf)
+                     * BIT 1 (0x08000000) wird also von KEINER dieser Stellen geloescht — nur
+                     * von `and 0xE7FFFFFF` in FUN_80104088(0) und vom 0xE3FFFFFF-Wurf. Und die
+                     * EBEN-Zeile 3 der Maskentabelle (`2,0,0`) fragt AUSSCHLIESSLICH Bit 1 ab.
+                     * Damit ist die Treffer-/Nichttreffer-Entscheidung des Hundes beim ebenen
+                     * Zielen mit den drei gebauten Stellen VOLLSTAENDIG; die uebrigen acht
+                     * verschieben nur Bit 0/Bit 2, also die ZONE (die der Port fuer den Hund
+                     * nicht als Schaden liest) und die EBEN-Zeilen 0/6, die dy >= +334 bzw.
+                     * dy <= -1332 verlangen — Hoehenunterschiede, die ein Hund auf der
+                     * Spielerebene nicht erreicht.
+                     * ⛔ NICHT GEBAUT: der 0xE3FFFFFF-Wurf @0x801038A0 (Klasse = 0) im
+                     * HP-Reroll/Spiel-tot-Zweig. Er wird von keiner Stelle des Hundebaums
+                     * zurueckgesetzt; gebaut waere er eine DAUERSPERRE (Runde-13/14-Falle).
+                     * Dieselbe Aussage traegt im Port bereits `+0x1D3 |= 0x80` @0x80103894-A4
+                     * (re2d_hurt_p4_reroll), das der Trefferfilter liest. */
+                    extern unsigned re15_re2z_weapon_id(unsigned w);
+                    unsigned drid = re15_re2z_weapon_id((unsigned)weapon_id);
+                    /* ⛔ NUR DIE HITSCAN-IDS. RE2-Id 1 ist das MESSER, und auf diese Zeile
+                     * bildet re2z_row_from_weapon ausser w1/w2 auch w0 (unbewaffnet) und w21
+                     * (keine Waffe) ab. Das Messer laeuft in RE2 gar nicht durch FUN_800410CC
+                     * (Waffenzeile @0x800A702C -> FUN_80042C64 -> `jal 0x800470C0` @0x80042F94),
+                     * und w0/w21 stehen in der Tester-Dispatch-Tabelle @0x8006E548 auf dem
+                     * SCHUSS-STREIFEN 0x80012574. GEMESSEN (unit_re2_hp_model, erster Versuch
+                     * dieser Runde): mit rid 1 im Applier verfehlten w0 und w21 den Hund
+                     * vollstaendig ("Schuss kam nicht an"), weil die Messer-LEVEL-Box nur bis
+                     * ~2450 reicht. Also wie bei der Zombie-Familie: rid 1 bleibt draussen. */
+                    if (drid != 1u && re15_re2_gun_probe_owns(drid)) {
+                        int zone = 0, bracket = 0;
+                        if (!re15_re2_gun_probe(drid, elev, pl, e, &zone, &bracket)) continue;
+                        s_re2_probe[s].valid   = 1u;
+                        s_re2_probe[s].zone    = (uint8_t)zone;
+                        s_re2_probe[s].bracket = (uint8_t)bracket;
+                    }
+                    eband = 0xE0000000u;      /* RE2 hat fuer den Hund kein Hoehenband; der
+                                               * Applier hat oben bereits entschieden. */
                 } else if (e->type == 0x20 && !re15_ai_re2_for_type(0x20)) {
                     /* HUND (RE1.5-owned): Band aus dem ACTIVE-Tail-Stempel — enemy_ai_common.c
                      * schreibt e->aim_band im state-1-Tail (@0x8010dd00-10 clear, @0x8010dd20-44

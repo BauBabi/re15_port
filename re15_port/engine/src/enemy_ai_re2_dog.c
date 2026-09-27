@@ -2293,6 +2293,24 @@ static void re2d_init(re15_actor_t *e)
      * RE1.5-Produzenten (dokumentiert OPEN). */
     e->sub_state_1 = re2d_spawn_tbl[0];                    /* lbu tbl[+0x10E&0x7F] @0x80100300-328 */
     e->sub_state_2 = 0; e->sub_state_3 = 0;
+    /* ===== DIE HALTUNGSKLASSE BEIM SPAWN (word0>>26)&7 ====================================
+     * Derselbe Spawn-Dispatch auf +0x10E, der oben den Substate waehlt, setzt am Ende die
+     * Klasse — jeder Zweig laeuft in `or v0,v0,v1` / `sw v0,0(s0)` @0x8010048C-90 zusammen,
+     * und v1 kommt aus dem jeweiligen Zweig (alle selbst disassembliert, EMD0G_MOD0.BIN):
+     *     +0x10E = 0/1/2/3/4/5/6/9 und jeder unbekannte Wert -> `lui v1,0xc00` @0x80100488
+     *                                                           => Klasse |= 3 (aufrecht)
+     *     +0x10E = 7 (faellt bei @0x8010043C in den 8er-Zweig) und 8
+     *                                                        -> `lui v1,0x800` @0x80100458
+     *                                                           => Klasse |= 2
+     *     +0x10E = 0x2003                                    -> `lui v1,0x400` @0x801003F4
+     *                                                           => Klasse |= 1
+     * Der Port faehrt fuer RE1.5-Raeume Raw 0 (Zeile darueber), also den 0xC00-Zweig.
+     * ⛔ OHNE DIESE ZEILE WAERE DIE KLASSE 0 UND FUN_800410CC WUERDE DEN HUND VERWERFEN
+     * (`beq s6,zero,0x80041774` @0x800413D8) — ein frisch gespawnter Hund waere unschiessbar.
+     * Die Fenster-/Skript-Varianten 7/8/0x2003 haben im Port keinen Produzenten (OPEN, s. o.),
+     * darum steht hier nur der gemessene Zweig und keine erfundene Fallunterscheidung. */
+    e->re2z_parts = (uint8_t)(e->re2z_parts | 0x3u);       /* `lui v1,0xc00` @0x80100488 /
+                                                            * `or`+`sw` @0x8010048C-90 */
     re2d_clip(e, 1, (int)(re15_re2_rand() & 0x3fu), 0xF, 0x100, 1);   /* 0xF0001|frame @0x801003A8-C8 */
     /* Callback-Install 0x80104ACC → 0x800CE480 (@0x801004A8-B4): Skript-/Event-Hook (Clip-0-
      * Pose gespiegelt + Boden-Pin) — Konsument OFFEN, im Port nicht installiert. */
