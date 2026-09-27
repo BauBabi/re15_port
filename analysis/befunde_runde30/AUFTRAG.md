@@ -105,8 +105,11 @@ ROT = Ablage des Dokuments, BLAU = Ablage des Memory-Card-Items).
 > eingezeichnet.... Außerdem glaube ich, das wenn das spiel Gespeichert und dann geladen
 > wird, Teile der Karte die ich bereits freigeschaltet habe verloren gegangen sind....
 
-(Das `befund.log` mit den drei F9-Marken liegt beim Nutzer neben der exe und wurde noch
-nicht übergeben.)
+**Nachtrag (Nutzer: „lies es doch einfach aus dem Ordner wo die Exe liegt"):** Die drei Marken
+liegen vor — `analysis/befunde_runde30/nutzer_marken/` (README.md mit Pixelmessung, drei
+Abzüge als PNG, Log-Auszug, die Speicherkarte des Nutzers). Kurz: ROOF = untere Kante in
+(16,64,176) statt Wandgrau; 2F = Türmarke frei schwebend bei 320er-Lage (188,180); 1F =
+eine Kachel x 208..221 / y 90..121 in (16,64,176) = RE2s Besucht-Blau 0xD902.
 
 ## G — Elza: Intro-Fehler
 
@@ -123,7 +126,8 @@ nicht übergeben.)
 > Außerdem bekommt man nicht genau diese SIcherung als Item im Anschluss, sondern eine
 > anderen Sicherung. Ergänze mir das.
 
-(„ROOM 1170" = gemeint ist der Hebetisch in Irons' Office ROOM1150/1151, wo
+(Vom Nutzer bestätigt: „ich meine ROOM 1150 mit den Hebetisch." Also der Hebetisch in
+Irons' Office ROOM1150/1151, wo
 `sicherung_1150.c` das Prop obj_id 4 anhängt; ROOM1170 ist der Heliport ohne Hebetisch.)
 
 ## Arbeitsregeln dieser Runde
