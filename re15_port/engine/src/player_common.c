@@ -596,9 +596,15 @@ const re15_emd_animation_t *re15_player_pl00_anim(void) { return s_pl00_anim; }
 /* ===== DIE AKTIVE WAFFEN-BANK, engine-seitig ===============================================
  * Das Original posiert beim Zielen aus dem Teile-Pool `lw 408(s1)` (+0x198), den der
  * Aim-Clip der AKTIVEN Waffen-Bank fuellt (Tabelle @0x80011010 = {0,14,10,0,12}, indiziert
- * `srl v0,v0,13` @0x80042D08 aus dem Band +0x154). Genau diese Kette liest der Schuss-Pfad
+ * `srl v0,v0,13` @0x80042D08 aus dem Band +0x154). Genau diese Kette verkettet FUN_80042C64
  * @0x80042E60-94, und ihr Endpunkt t[1] @sp+56 ist die Zielhoehe des fuenften Tores
  * (`lw a0,4(s4)` @0x8004718C, s4 = a0 @0x800470D0).
+ * ⛔ BERICHTIGT (Runde 34): FUN_80042C64 ist die Waffenzeile @0x800A702C = WAFFE 1, das
+ * MESSER — kein Schuss-Pfad. Die Kette liefert die KLINGENLAGE, und nur der Messer-Aufruf
+ * @0x80042F94 speist sie ins fuenfte Tor (dort zusaetzlich +200 tiefer @0x80042F68 und nur
+ * in den Clip-Bildern 7..11, `sltiu 0x5` @0x80042F54). Schusswaffen laufen ueber
+ * FUN_800410CC (`jal` @0x80043AFC) und entscheiden ueber die Haltungsklasse (word0>>26)&7
+ * @0x800413C4-D8, nicht ueber eine Hoehe.
  * Der Port hatte die Bank bisher NUR im PC-Renderer (platform/pc/main.c:7423-7431) — die
  * Engine sah sie nicht und posierte darum die Bindpose. Hier dieselbe Spiegelung wie fuer
  * PL00, damit re15_player_muzzle_world (re15_damage.c) sie headless und auf der PSX hat. */

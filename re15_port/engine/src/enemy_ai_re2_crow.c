@@ -1756,11 +1756,15 @@ static void re2c_init(re15_actor_t *e)
     e->re2_hit_h9e =  530;                                 /* addiu v0,zero,530 @0x801003C8 /
                                                             * sh v0,158(s1) @0x801003DC */
     /* re2_hit_box_set BLEIBT 0 — GEMESSEN, nicht aus Vorsicht: das Fenster der Kraehe ist
-     * [-280, 980) (b=-350, h=530) bzw. [-630, 630) im Zweig +0x1F0 >= 900, die Muendungshoehe
+     * [-280, 980) (b=-350, h=530) bzw. [-630, 630) im Zweig +0x1F0 >= 900, die Zielhoehe
      * des Ports steht bei Hgun 1420..1671. DURCH in 0 von 240 Bildern (probe_r31_boxen /
-     * probe_r30b_muendung). Mit scharfem Tor waere die Kraehe DAUERHAFT untreffbar. Erst wenn
-     * die senkrechte Zielpose (Bone-Kette 0->9->10->11 @0x80042E64/74/84/94) gebaut ist, darf
-     * hier box_set = 1 stehen. */
+     * probe_r30b_muendung).
+     * ⛔ EINGEGRENZT (Runde 34): das betrifft nur noch den MESSER-Pfad. Das fuenfte Tor liegt
+     * nicht im Schuss-Pfad (FUN_800470C0 nur @0x80042F94 Messer / @0x800467C0 Bolzen; jede
+     * Schusswaffe geht ueber `jal 0x800410CC` @0x80043AFC). Fuer SCHUESSE ist die Kraehe
+     * davon also gar nicht mehr betroffen — gemessen 40 Treffer in 900 Bildern bei
+     * Tor5-Urteilen 0. Bliebe box_set = 1, waere sie nur gegen das MESSER untreffbar; das
+     * waere ein Befund, der erst gemessen werden muesste, also bleibt es bei 0. */
     /* +0x1E8=1 (@0x801003CC), +0x94/+0x96=0 (@0x801003D0-D4),
      * +0x1EE=300 (@0x801003F4-FC): Leser offen (Lane K §5) — nicht modelliert (doc). */
     /* Boden-Probe 0x8004FBA0(&pos, 250, 1024, 0) → +0x1C2 (@0x801003E0-414). MAPPING:

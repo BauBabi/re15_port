@@ -1247,7 +1247,7 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
  * (Welle 1 hatte das Gegenteil vermutet, weil sie RE2s PL00W03.PLW mass; das ist dort ein
  *  3436-B-Stummel. Die vollen RE2-Baenke sind W00-W02, W04-W08, W0D, W0F-W12.)
  *
- * ⛔ NICHT GEBAUT (Fehlstelle, benannt): die Absenkung um 200.
+ * ⛔ GEBAUT IN RUNDE 34 (bis dahin: "NICHT GEBAUT, Fehlstelle benannt"): die Absenkung um 200.
  *   80042f48: lbu v0,333(s1)      ; +0x14D
  *   80042f50: addiu v0,v0,-7
  *   80042f54: sltiu v0,v0,0x5     ; nur (+0x14D)-7 in [0,4]
@@ -1274,10 +1274,16 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
  * `(+0x14D)-7 in [0,4]` heisst also: die Bilder 7..11 des MESSERSCHLAGS. Es ist das aktive
  * Fenster des Schlags, kein Waffenfilter — und es passt zum RE2-Muster des Messers
  * (@0x800A6608/6434/656C `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` = sechs Bilder Ausholen).
- * NICHT portiert, weil die Absenkung zum MESSER-Pfad gehoert, den der Port ueber
- * re15_re2_gun_probe/s_re2z_geo1 fuehrt, nicht ueber dieses Tor. Wirkung auf die heutigen
- * Urteile: keine — 200 Einheiten aendern bei keinem der sieben gemessenen Faelle die Seite
- * des Fensters (naechster Abstand 205, Hund stehend).
+ * SIE STEHT JETZT DORT, WO SIE HINGEHOERT: im Messer-Zweig der Kandidatenschleife
+ * (`weapon_id == 1 || weapon_id == 2`, s. GATE 5 weiter unten), mit `mz[1] + 200` und dem
+ * Bildfenster. PORT-ABBILDUNG des Fensters, benannt: RE2s Messer-Pattern
+ * @0x800A6608/6434/656C ist `ff/6 00/1 01/1 02/1 03/1 04/1 00/255` — sechs Bilder Ausholen,
+ * dann FUENF Bilder mit den Records 0..4; der Port bildet diese fuenf auf anim_frame 6..10
+ * ab (re15_re2_knife_step). Die fuenf Torbilder `(+0x14D)-7 in [0,4]` sind dieselben fuenf.
+ * GEMESSENE WIRKUNG (probe_r33/r31, echter Weg): keine Aenderung an irgendeiner Trefferzahl
+ * — 200 Einheiten drehen keinen der gemessenen Faelle um (naechster Abstand 205, Hund
+ * stehend), und der einzige Verbraucher mit gefuehrter Box ist heute der Hund, den das
+ * Messer ohnehin ueber den RE1.5-Kegel trifft.
  */
 #define RE15_MUZZLE_BONE 11                 /* Kettenende 0->9->10->11, @0x80042E60-94 */
 /* Gemeinsamer Kern: Bone 11 in Weltkoordinaten, aus einer WAEHLBAREN Bank+Clip.

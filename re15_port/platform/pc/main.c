@@ -5797,8 +5797,10 @@ re_title:;
                 gctx.pl00_anim   = &pl00_anim;
                 gctx.w01_anim    = &w01_anim;   /* walk-source = footstep flags */
                 /* AKTIVE Waffen-Bank an die Engine: dieselbe, die der Aim-Render-Override
-                 * unten (~L7423) benutzt. Die Muendungshoehe des fuenften Tores kommt aus
-                 * ihrer Pose (Kette @0x80042E60-94), nicht aus der Bindpose. */
+                 * unten (~L7423) benutzt. Die Zielhoehe des fuenften Tores kommt aus ihrer
+                 * Pose (Kette @0x80042E60-94), nicht aus der Bindpose.
+                 * ⛔ Runde 34: das Tor gehoert dem MESSER (@0x80042F94), nicht dem Schuss —
+                 * Schusswaffen entscheiden ueber die Haltungsklasse @0x800413C4-D8. */
                 gctx.w_skel      = wact_ok ? wact_skel : NULL;
                 gctx.w_anim      = wact_ok ? wact_anim : NULL;
                 gctx.cam_view    = &cam_view;

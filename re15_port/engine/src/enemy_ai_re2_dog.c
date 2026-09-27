@@ -661,17 +661,20 @@ static int re2d_landing(re15_actor_t *e)
 
 /* 0x80104088(self, a1): Hitbox-Squash 0↔1 (@0x80104090-D8): a1==0 → +0x98=−500/+0x9E=500,
  * a1==1 → ±1000. Der Port führt die Gegner-Hitbox über hit_radius/atk-pt — dokumentiert NOP.
- * ⛔ RUNDE 30, gemessen: dieser NOP ist die HALBE Antwort auf den Nutzer-Befund
- * "im Original ist der Hund erst wieder verwundbar, sobald er steht". Die andere Haelfte ist
- * das fuenfte Gate @0x8004716C-A4, das +0x98/+0x9E gegen die MUENDUNGSHOEHE (s4+4 =
- * MATRIX.t[1] der Waffen-Bone-Kette, @0x80042E60-94 / @0x80042F8C) prueft. Beides einzeln
- * einzubauen bringt NICHTS: ohne das Gate liest niemand die Felder, und ohne eine echte
- * Muendungshoehe steht Hgun im Port auf 0 und das Gate laesst JEDEN durch (gemessen,
- * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md).
- * BEIDE HAELFTEN STEHEN SEIT WELLE 2: die Muendungshoehe kommt aus
- * re15_player_muzzle_world (Bone 11 der Kette @0x80042E60-94), das Gate aus
- * re15_damage.c (Kandidatenschleife). Gemessen auf dem echten Weg: stehender Hund
- * DURCH, ab Bild +1 nach dem Treffer SPERRT, ab Bild +71 wieder DURCH. */
+ * ⛔ RUNDE 30 hatte hier stehen: "dieser NOP ist die HALBE Antwort auf den Nutzer-Befund
+ * 'im Original ist der Hund erst wieder verwundbar, sobald er steht'; die andere Haelfte ist
+ * das fuenfte Gate @0x8004716C-A4". BERICHTIGT IN RUNDE 34 — das war der falsche Partner.
+ * FUN_800470C0 wird auf der Spielerseite nur von Waffe 1 (Messer, @0x80042F94) und Waffe 12
+ * (Bolzen, @0x800467C0) betreten; jede SCHUSSWAFFE geht ueber `jal 0x800410CC` @0x80043AFC
+ * und liest +0x98/+0x9E nie. Die echte andere Haelfte ist die HALTUNGSKLASSE (word0>>26)&7,
+ * die dieselbe Funktion nebenher setzt (`and 0xE7FFFFFF` + `lui v1,0x400` @0x80104090-B4/AC
+ * fuer die gestauchte, `lui v1,0xc00` @0x801040CC fuer die volle Box) und die FUN_800410CC
+ * @0x800413C4-D8 gegen die Maskentabelle @0x800A6DB4 prueft. Die EBEN-Zeile dort lautet
+ * `2,0,0` (@0x800A6DB4+9+3) und fragt allein Bit 1 ab — genau das Bit, das die Stauchung
+ * loescht. Der Port faehrt das seit Runde 34 (re15_re2_gun_probe in re15_damage.c).
+ * Gemessen auf dem echten Weg (probe_r33_aufrufstelle Teil 4): stehend getroffen, 78 Bilder
+ * Kette, 0 Treffer in 77 Bildern waehrend er liegt, danach wieder Treffer — bei
+ * Tor5-Urteilen 0 und 13 Klassen-Lesungen. */
 static void re2d_hitbox(re15_actor_t *e, int restore)
 {
     if (!e) return;
@@ -731,12 +734,15 @@ static void re2d_hitbox(re15_actor_t *e, int restore)
          *   a1 != 0 : `or v1=0x0C000000` OHNE Maskierung setzt Feldbits 0|1 -> parts |= 3
          * Dieselben 0x0C000000 setzt der Zombie selbst @0x80103730 und @0x80107EA8.
          *
-         * ⛔ HEUTE OHNE WIRKUNG IM PORT, und das steht hier als Zahl, nicht als Hoffnung:
-         * re15_re2_gun_probe laeuft nur fuer `re15_re2z_owns_type` (0x10/0x11/0x12/0x13/
-         * 0x16/0x18, enemy_ai_re2_zombie.c:186) — der Hund 0x20 ist NICHT dabei. Das Feld ist
-         * damit der byte-true Eingang fuer den Tag, an dem der Applier den Hund uebernimmt;
-         * es aendert heute kein einziges Trefferurteil (gemessen: probe_r33_aufrufstelle
-         * Teil 3, 900 Bilder je Typ, Trefferzahlen vor/nach identisch). */
+         * ⛔ SEIT RUNDE 34 IST DAS FELD DER WIRKSAME MECHANISMUS. In Runde 33 stand hier
+         * "heute ohne Wirkung im Port", weil re15_re2_gun_probe nur fuer
+         * `re15_re2z_owns_type` lief. Runde 34 hat den Hund dort angeschlossen (eigene
+         * Fensterzeile @0x800A4424 ueber PTR_DAT_800A6A88[0x20], +0x1EE = 600). GEMESSEN
+         * (probe_r33_aufrufstelle Teil 3b/4, probe_r31_boxen Teil 2c, echter Weg):
+         *   Klasse kuenstlich 4 (nur Bit 2) -> Hund 0 Treffer in 300 Bildern
+         *   Klasse fest 3 (nie gestaucht)   -> 41 Treffer in 900 Bildern
+         *   wie gebaut                      -> 12 Treffer in 900 Bildern
+         *   Tor5-Urteile beim Schuss        -> 0 */
         e->re2z_parts = (uint8_t)((e->re2z_parts & ~0x6u) | 0x1u);
                                         /* `and v0,v0,0xE7FFFFFF` @0x80104090-94/B4 +
                                          * `lui v1,0x400` @0x801040AC / `or`+`sw` @0x801040D0-D8 */
@@ -2255,14 +2261,17 @@ static void re2d_init(re15_actor_t *e)
         e->hp = (int16_t)(re2d_hp_tbl_def[re15_re2_rand() & 0xfu] + r1);   /* @0x80100210-234 */
     }
     /* Hitbox @0x80100284-C4: +0x94=500, +0x98=−1000, +0x9E=1000, 600er-Familie. +0x98/+0x9E
-     * fuehrt der Port seit Runde 30 als echte Felder (s. re15_actor.h) — die Trefferauswahl
-     * liest sie noch nicht, weil ihr die Muendungshoehe fehlt. Die */
+     * fuehrt der Port seit Runde 30 als echte Felder (s. re15_actor.h); seit Runde 34 liest
+     * sie nur noch das MESSER-Tor (@0x80042F94), weil das fuenfte Tor nicht im Schuss-Pfad
+     * liegt. Die "600er-Familie" ist zugleich +0x1EE = 600 (`addiu v1,zero,600` @0x80100290 /
+     * `sh v1,494(s0)` @0x801002C4) — der Tiefen-Zuschlag der Nah-Sub-Box im Applier
+     * (`lhu v0,494(s2)` / `sra 18` / `sh v1,8(s3)` @0x8010133C-50); im Port RE2D_RAD1EE. */
     e->re2_hit_b98 = -1000;                                /* addiu v0,zero,-1000 @0x8010028C /
                                                             * sh v0,152(s0) @0x80100294 */
     e->re2_hit_h9e =  1000;                                /* addiu v0,zero,1000  @0x80100298 /
                                                             * sh v0,158(s0) @0x8010029C */
     e->re2_hit_box_set = 1;              /* [PORT-ZUORDNUNG] ab hier fuehrt der Port die Box
-                                          * byte-true -> das fuenfte Gate darf sie lesen */
+                                          * byte-true -> das MESSER-Tor darf sie lesen */
     /* (+0x94 = 500 @0x80100284-88 und +0x96 = 0 @0x801002B0 bleiben ungefuehrt.) Die
      * 2-Part-Schleife @0x801002D0-F8 (Parts 2..3: +0x9C=32/+0xA0=384/+0xA2=128 — Lane-D sagte
      * „4 Parts", der Loop läuft a0=2..3, selbst nachgelesen) ist Part-Hitbox-Metadaten. */

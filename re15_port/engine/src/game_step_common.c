@@ -975,8 +975,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
     re15_player_set_pl00_banks(c->pl00_skel, c->pl00_anim);
     /* Und die AKTIVE Waffen-Bank: aus ihr posiert das Original beim Zielen den Teile-Pool
-     * +0x198, dessen Kette @0x80042E60-94 die Muendungshoehe des fuenften Tores liefert
-     * (`lw a0,4(s4)` @0x8004718C). Ohne diesen Spiegel las die Engine die Bindpose. */
+     * +0x198, dessen Kette @0x80042E60-94 die Zielhoehe des fuenften Tores liefert
+     * (`lw a0,4(s4)` @0x8004718C). Ohne diesen Spiegel las die Engine die Bindpose.
+     * ⛔ BERICHTIGT (Runde 34): das ist NICHT die Muendungshoehe eines Schusses. Die Kette
+     * gehoert der Aufrufstelle @0x80042F94 = WAFFE 1 (MESSER); jede Schusswaffe geht ueber
+     * `jal 0x800410CC` @0x80043AFC und liest +0x98/+0x9E nie. Der Endpunkt ist also die
+     * KLINGENLAGE, und das Tor entscheidet nur ueber Nahkampftreffer. */
     re15_player_set_w_banks(c->w_skel, c->w_anim);
 
     /* KARTEN-ZONE je Frame nachfuehren (Nutzer-Report 2026-08-30): ein Raum kann
