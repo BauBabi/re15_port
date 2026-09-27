@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""Eindeutigkeitspruefung der ZWEITEN Fahrt-Gestalt (WAREHOUSE LIFT ROOM3080/3081)
+ueber alle 240 RE1.5-RDTs — und, zum Vergleich, der bekannten 32-Byte-Signatur."""
+import glob, os
+
+SIG2 = bytes([0x22,0x01,0x1c,0x01, 0x09,0x0a,0x3c,0x00,
+              0x22,0x01,0x1c,0x00, 0x22,0x01,0x1d,0x01,
+              0x09,0x0a,0x3c,0x00, 0x22,0x01,0x1d,0x00,
+              0x22,0x01,0x1c,0x01])
+SIG1 = bytes([0x22,0x01,0x1c,0x01, 0x09,0x0a,0x08,0x00,
+              0x22,0x01,0x1c,0x00, 0x09,0x0a,0x5a,0x00,
+              0x22,0x01,0x1c,0x01, 0x09,0x0a,0x08,0x00,
+              0x22,0x01,0x1c,0x00, 0x09,0x0a,0x14,0x00])
+
+def occ(d, p):
+    return [i for i in range(len(d)-len(p)+1) if d[i:i+len(p)] == p]
+
+n = t1 = t2 = 0
+for f in sorted(glob.glob("re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT")):
+    d = open(f, "rb").read(); n += 1
+    a, b = occ(d, SIG1), occ(d, SIG2)
+    t1 += len(a); t2 += len(b)
+    if a or b:
+        print(f"{os.path.basename(f)[:-4]:10s} SIG1 {len(a)} {[hex(x) for x in a]}"
+              f"   SIG2 {len(b)} {[hex(x) for x in b]}")
+print(f"\n{n} RDTs   SIG1 (32 B) Treffer gesamt {t1}   SIG2 (28 B) Treffer gesamt {t2}")
