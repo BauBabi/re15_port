@@ -1721,12 +1721,30 @@ retry_after_latch:
                      * sowie die beiden Init-Vollaustraege @0x8010087c/@0x801049dc loeschen es)
                      * — der laufende Kriecher erreicht keinen davon.
                      *
-                     * Warum die Ausnahme byte-true ist: RE2s EIGENER Kandidatenfilter hat
-                     * ueberhaupt kein Hoehen-Band (eigene Disasm info/re2leon/PSX.EXE,
-                     * FUN_800470C0 — genau vier Gates: @0x8004712c `andi v0,v0,0x1` aktiv,
+                     * Warum die Ausnahme byte-true ist: RE2s eigener Kandidatenfilter kennt
+                     * kein Band aus dem RE1.5-Elevationsstempel (FUN_800470C0, eigene Disasm
+                     * info/re2leon/PSX.EXE: @0x8004712c `andi v0,v0,0x1` aktiv,
                      * @0x80047138 `lbu v0,467(s0)` +0x1D3, @0x80047148 `lh v0,342(s0)` HP,
-                     * @0x80047160 `andi v0,v0,0xc000` +0x10E; @0x8004716c geht es direkt zur
-                     * Trefferpruefung). Ein RE2-Kriecher ist dort IMMER Kandidat.
+                     * @0x80047160 `andi v0,v0,0xc000` +0x10E). Ein RE2-Kriecher ist dort
+                     * nicht ueber ein Band ausgeschlossen.
+                     * ⛔ BERICHTIGUNG (Runde 30, selbst nachgelesen): hier stand bis 2026-09-27
+                     * "RE2s EIGENER Kandidatenfilter hat ueberhaupt kein Hoehen-Band ...
+                     * @0x8004716c geht es direkt zur Trefferpruefung". Das ist FALSCH.
+                     * @0x8004716C-A4 steht ein FUENFTES Gate, ein senkrechtes Zielfenster:
+                     *   8004716c lhu v1,464(s0) / 80047170 lh a0,152(s0)  ; +0x98
+                     *   80047174 lw  v0,60(s0)  / 8004717c addu v0,v0,a0  ; +0x3C
+                     *   80047180 addiu v0,v0,100/ 80047188 lhu v1,158(s0) ; +0x9E
+                     *   8004718c lw  a0,4(s4)   ; Muendungs-Y (MATRIX.t[1], s. u.)
+                     *   80047190 addu / 80047194 subu / 80047198 addiu v1,v1,100
+                     *   8004719c sll v1,v1,1 / 800471a0 sltu / 800471a4 beq 0x8004740c
+                     * = dieselbe Kandidatenschleife wie die vier anderen Gates
+                     * (addiu s2,s2,4 @0x8004740c, bne s2,v0,0x8004711c @0x80047418).
+                     * Der Port hat dieses Gate NICHT, und er kann es heute auch nicht
+                     * fuehren: es braucht die Muendungshoehe (s4 = sp+52 @0x80042F8C =
+                     * MATRIX.t[] der Waffen-Bone-Kette @0x80042E60-94) und die Felder
+                     * +0x98/+0x9E, die der Port beide nicht modelliert.
+                     * Messung + Zahlen: analysis/befunde_2026-09-27/zielfenster-messung.md,
+                     * Sonde re15_port/tests/unit/probe_r30_zielfenster.c.
                      * Der RE1.5-Kriecher bleibt unberuehrt: der laeuft ueber grid_id = 0x81
                      * (@0x801050d0 `ori v0,zero,0x81` / @0x801050d4 `sb v0,9(v1)`), also ueber
                      * den ERSTEN Term.
