@@ -9,7 +9,7 @@ Dieser Skill übersetzt SCD-Bytecode (Script Bytecode) aus RE 1.5 RDT-Dateien in
 Beim Aktivieren dieses Skills lade folgende Quellen als Kontext:
 
 1. **RE15_KNOWLEDGE.md §1.2** — SCD-Formatbeschreibung (Pointer-Tabelle, Opcode-Struktur)
-2. **src/main/java/de/re15/extractors/SCDScriptDisassembler.java** — Vollständige Opcode-Tabelle mit Hex-Codes, Byte-Größen und Beschreibungen (Zeilen 191–333 für `registerOpcode`-Aufrufe)
+2. **src/main/java/de/re15/extractors/SCDScriptDisassembler.java** — Vollständige Opcode-Tabelle mit Hex-Codes, Byte-Größen und Beschreibungen (Zeilen 204–388 für `registerOpcode`-Aufrufe)
 
 ## SCD-Struktur
 
@@ -61,6 +61,29 @@ Ausgabeformat pro Zeile:
 
 ⚠️ **WICHTIG**: RE 1.5 Opcodes unterscheiden sich ab 0x50 von Retail-RE2. Nutze IMMER diese Tabelle, NICHT RE2-Referenzen.
 
+⚠️ **Auch UNTERHALB 0x50 divergieren RE1.5 und RE2.** Belegt am Tür-Modell-Opcode:
+in RE1.5 ist er **0x4F** (Eintrag @0x800745e4 -> LAB_80016f20, 22 B), in RE2-Retail **0x4D** (22 B).
+RE2s `COMMON/DOOR/DOOR0001.scd` beginnt mit `4d 00 00 00 01 00 a0 0a 10 00 d0 07 ce 0e 00 08 ...` =
+zwei 22-B-Sätze, deckungsgleich mit Biofats `Obj_model_move`-Ausgabe. RE1.5s 0x4D ist dagegen ein
+anderer, **10 B** langer Handler (LAB_800408a8). Diese Tabelle auf RE2-Türskripte anzuwenden
+(oder umgekehrt) erzeugt Datenmüll, der zufällig bis zum Dateiende durchkacheln kann.
+
+⛔ **Die Tabelle hat in RE1.5 nur 95 Eintraege: Opcodes 0x00-0x5E.** Dispatch-Tabelle
+`PTR_LAB_800744a8` (Basis @0x8003f0b4 `addiu s4,s4,0x44a8`), letzter Eintrag @0x80074620 ->
+`LAB_80042b04`. Ab @0x80074624 stehen Byte-Paare (`10 00 11 00 12 00 13 01 ...`), danach die
+separate AOT-Typ-Tabelle `PTR_LAB_8007469c`. Der Dispatcher prueft den Opcode **nicht** gegen eine
+Obergrenze (@0x8003f0f4 `lbu v0,0x0(v0)` / @0x8003f0fc `sll v0,v0,0x2` / @0x8003f100
+`addu v0,v0,s4` / @0x8003f10c `jalr v0`) - ein Opcode-Byte >= 0x5F springt in Nicht-Code.
+Die unten gelisteten Zeilen **0x5F-0x8E existieren in RE1.5 also nicht**; sie sind RE2-Opcodes und
+unbelegt. Trifft ein linearer Decode auf ein Byte >= 0x5F, ist der Decode verrutscht oder liest Daten.
+
+⚠️ **PC-Vorschub != Satzbreite.** Beispiel 0x09 `Sleep`: der Handler schiebt den PC nur um 1
+(@0x8003f3e8 `addiu v0,a2,0x1`), liest aber `h@+2` (@0x8003f414) - die Bytes +1..+3 laufen
+anschliessend als 0x0A `Sleeping` (3 B) weiter. Satzbreite 4 ist korrekt.
+
+Stand 2026-09-27: Laengen 0x00-0x5E gegen den PC-Vorschub jedes Handlers gemessen - 73 bestaetigt,
+5 korrigiert (unten mit **Korr.** markiert), 16 nicht linear messbar (bedingte/geteilte Pfade).
+
 | Hex  | Name               | Bytes | Beschreibung |
 |------|--------------------|-------|--------------|
 | 0x00 | Nop                | 1     | No operation |
@@ -94,6 +117,7 @@ Ausgabeformat pro Zeile:
 | 0x1C | Break_point        | 1     | Breakpoint |
 | 0x1D | Work_copy          | 1     | Script padding / work copy stub |
 | 0x1E | Nop                | 1     | NOP (padding) |
+| 0x1F | Nop                | 1     | NOP (padding). **Nachgetragen**: Eintrag @0x80074524 -> LAB_8003f1d8 (gleicher Handler wie 0x1D/0x1E/0x20), PC-Vorschub 1. Fehlte |
 | 0x20 | Nop                | 1     | NOP (padding) |
 | 0x21 | Ck                 | 4     | Check flag |
 | 0x22 | Set                | 4     | Set flag |
@@ -118,12 +142,12 @@ Ausgabeformat pro Zeile:
 | 0x35 | Member_set2        | 3     | Set member (var) |
 | 0x36 | Se_on              | 12    | Play sound effect |
 | 0x37 | Sca_id_set         | 4     | Change camera trigger |
-| 0x38 | Flr_set            | 3     | Update floor flag |
+| 0x38 | Op38               | 12    | **Korr. 12 B, Name Flr_set unbelegt** (war 3) @0x800417f0 `addiu a1,a1,0xc` -> @0x80041810; liest b@+2,b@+3,h@+4,h@+6,h@+8,h@+0xa. Name aus RE2, UNBELEGT |
 | 0x39 | Sca_floor_set      | 4     | SCA floor-byte set |
 | 0x3A | Sce_espr_on        | 16    | Enable sprite animation |
 | 0x3B | Door_aot_set       | 32    | Configure door trigger |
 | 0x3C | Cut_auto           | 2     | Toggle automatic camera switch |
-| 0x3D | Member_copy        | 4     | Copy member to variable |
+| 0x3D | Member_copy        | 3     | **Korr. 3 B** (war 4 -> verschob alle Folge-Opcodes) @0x80041254 `addiu v0,v0,0x3` -> @0x80041258; liest b@+1,b@+2 |
 | 0x3E | Member_cmp         | 6     | Compare entity member |
 | 0x3F | Plc_motion         | 4     | Set motion |
 | 0x40 | Plc_dest           | 8     | Move player |
@@ -139,9 +163,9 @@ Ausgabeformat pro Zeile:
 | 0x4A | Plc_gun            | 2     | Set gun state |
 | 0x4B | Cut_replace        | 3     | Swap camera transition |
 | 0x4C | Sce_espr_kill      | 5     | Kill sprite |
-| 0x4D | Op4D               | 22    | Unknown opcode 4D payload |
-| 0x4E | Item_aot_set       | 22    | Configure item trigger (legacy) |
-| 0x4F | Sce_key_ck         | 4     | Check key state |
+| 0x4D | Op4D               | 10    | **Korr. 10 B** (war 22) @0x80040900 `addiu v1,v1,0xa` -> @0x80040910; waehlt via b@+1 Zeiger aus DAT_800b2368[], schreibt b@+2,b@+3,h@+4,h@+6,h@+8 |
+| 0x4E | Op4E               | 5     | **Korr. 5 B, NICHT Item_aot_set** (das ist 0x50) @0x80041a6c `addiu v1,v1,0x5` -> @0x80041a70 (Tail LAB_80041a4c); LAB_80041980 dispatcht auf b@+3 in 4 Zweige, liest b@+4 |
+| 0x4F | Obj_model_move     | 22    | **Korr. 22 B, NICHT Sce_key_ck** (das ist 0x51) @0x80017020 `addiu v0,a2,0x16` -> @0x80017024. Eintrag @0x800745e4 -> LAB_80016f20 im DOOR-Modul: setzt ein MD1-Mesh der geladenen DO2-Tuer in einen Objekt-Slot DAT_800b23f4[]. b@+1 Slot, b@+5 Mesh-Index (obj+0x8e, in FUN_80017048 `param_2*0x38`), h@+6 Flags (obj+0x8c, Bit 0x8 = Elternmatrix), s16@+8/+0xa/+0xc/+0xe Lage, u16@+0x10/+0x12/+0x14 |
 | 0x50 | Item_aot_set       | 22    | Configure item trigger |
 | 0x51 | Sce_key_ck         | 4     | Check key state |
 | 0x52 | Sce_espr_control   | 4     | Flag-AND condition check (RE1.5 specific) |

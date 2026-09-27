@@ -188,6 +188,24 @@ public class SCDScriptDisassembler {
     private BlockMetadata currentBlockMetadata = BlockMetadata.EMPTY;
 
     static {
+        // RE1.5 SCD-Opcode-Dispatch-Tabelle = PTR_LAB_800744a8 (Basis geladen @0x8003f0b4
+        // addiu s4,s4,0x44a8). 95 Eintraege = Opcodes 0x00-0x5E; letzter Eintrag @0x80074620
+        // -> LAB_80042b04. Ab @0x80074624 folgen Byte-Paare (10 00 11 00 12 00 13 01 ...),
+        // danach die separate AOT-Typ-Tabelle PTR_LAB_8007469c.
+        // Der Dispatcher prueft den Opcode NICHT gegen eine Obergrenze
+        // (@0x8003f0f4 lbu v0,0x0(v0) / @0x8003f0fc sll v0,v0,0x2 / @0x8003f100 addu v0,v0,s4 /
+        // @0x8003f10c jalr v0) - ein Opcode-Byte >= 0x5F springt also in Nicht-Code.
+        // Die Eintraege 0x5F-0x8E weiter unten sind RE2-Opcodes, die RE1.5 NICHT hat; sie sind
+        // unbelegt und nur zur Abwaertskompatibilitaet des Disassemblers stehengeblieben.
+        // Laengen 0x00-0x5E gegen den PC-Vorschub jedes Handlers geprueft (2026-09-27):
+        // 73 bestaetigt, 5 korrigiert (0x38, 0x3D, 0x4D, 0x4E, 0x4F), 16 nicht linear messbar.
+        // Achtung: bei 0x09 Sleep ist der PC-Vorschub 1 (@0x8003f3e8), die Satzbreite aber 4 -
+        // die Bytes +1..+3 laufen als 0x0A Sleeping (3 B) weiter. PC-Vorschub != Satzbreite.
+        // Achtung 2: RE1.5 und RE2 divergieren auch UNTERHALB 0x50. Der Tuer-Modell-Opcode ist
+        // in RE1.5 0x4F (@0x800745e4 -> LAB_80016f20, 22 B), in RE2-Retail 0x4D (22 B);
+        // RE1.5s 0x4D ist ein anderer, 10 B langer Handler (LAB_800408a8). Diese Tabelle gilt
+        // ausschliesslich fuer RE1.5 (Main.DEFAULT_SOURCE = info/Re1.5) - auf RE2-Tuerskripte
+        // angewandt liefert sie Muell, der zufaellig bis zum Dateiende durchkacheln kann.
         registerOpcode(0x00, "nop", 1, "No operation");
         registerOpcode(0x01, "Evt_end", 2, "Exit current function");
         registerOpcode(0x02, "Evt_next", 1, "Wait for player input");
@@ -219,6 +237,7 @@ public class SCDScriptDisassembler {
         registerOpcode(0x1C, "Break_point", 1, "Breakpoint");
         registerOpcode(0x1D, "Work_copy", 1, "Script padding / work copy stub");
         registerOpcode(0x1E, "nop", 1, "NOP (padding)");
+        registerOpcode(0x1F, "nop", 1, "NOP (padding). Nachgetragen 2026-09-27: Eintrag @0x80074524 -> LAB_8003f1d8, derselbe Handler wie 0x1D/0x1E/0x20, PC-Vorschub 1. Fehlte in der Tabelle.");
         registerOpcode(0x20, "nop", 1, "NOP (padding)");
         registerOpcode(0x21, "Ck", 4, "Check flag");
         registerOpcode(0x22, "Set", 4, "Set flag");
@@ -243,12 +262,12 @@ public class SCDScriptDisassembler {
         registerOpcode(0x35, "Member_set2", 3, "Set member (var)");
         registerOpcode(0x36, "Se_on", 12, "Play sound effect");
         registerOpcode(0x37, "Sca_id_set", 4, "Change camera trigger");
-        registerOpcode(0x38, "Flr_set", 3, "Update floor flag");
+        registerOpcode(0x38, "Op38", 12, "RE1.5 len 12: PC-Vorschub @0x800417f0 addiu a1,a1,0xc -> @0x80041810 sw a1,0x1c(a0). Handler LAB_800417ac liest b@+2, b@+3, h@+4, h@+6, h@+8, h@+0xa. War 3 = Fehldecodierung. Name aus RE2 uebernommen, UNBELEGT.");
         registerOpcode(0x39, "Sca_floor_set", 4, "SCA floor-byte set (LAB_80041814: writes value->entry.floor +0xb). Java previously mislabeled this 'Dir_ck'.");
         registerOpcode(0x3A, "Sce_espr_on", 16, "Enable sprite animation");
         registerOpcode(0x3B, "Door_aot_set", 32, "Configure door trigger");
         registerOpcode(0x3C, "Cut_auto", 2, "Toggle automatic camera switch");
-        registerOpcode(0x3D, "Member_copy", 4, "Copy member to variable");
+        registerOpcode(0x3D, "Member_copy", 3, "RE1.5 len 3: PC-Vorschub @0x80041254 addiu v0,v0,0x3 -> @0x80041258 sw v0,0x1c(a0). Handler LAB_80041238 liest b@+1, b@+2. War 4 = ein Byte zu viel und verschob alle Folge-Opcodes.");
         registerOpcode(0x3E, "Member_cmp", 6, "Compare entity member");
         registerOpcode(0x3F, "Plc_motion", 4, "Set motion");
         registerOpcode(0x40, "Plc_dest", 8, "Move player");
@@ -264,9 +283,9 @@ public class SCDScriptDisassembler {
         registerOpcode(0x4A, "Plc_gun", 2, "Set gun state");
         registerOpcode(0x4B, "Cut_replace", 3, "Swap camera transition");
         registerOpcode(0x4C, "Sce_espr_kill", 5, "Kill sprite");
-        registerOpcode(0x4D, "Op4D", 22, "Unknown opcode 4D payload");
-        registerOpcode(0x4E, "Item_aot_set", 22, "Configure item trigger (legacy)");
-        registerOpcode(0x4F, "Sce_key_ck", 4, "Check key state");
+        registerOpcode(0x4D, "Op4D", 10, "RE1.5 len 10: PC-Vorschub @0x80040900 addiu v1,v1,0xa -> @0x80040910 sw v1,0x1c(a0). Handler LAB_800408a8 waehlt via b@+1 einen Zeiger aus DAT_800b2368[] und schreibt b@+2, b@+3, h@+4, h@+6, h@+8 hinein. War 22.");
+        registerOpcode(0x4E, "Op4E", 5, "RE1.5 len 5: PC-Vorschub @0x80041a6c addiu v1,v1,0x5 -> @0x80041a70 sw v1,0x1c(s0) im gemeinsamen Tail LAB_80041a4c. Handler LAB_80041980 dispatcht auf b@+3 in vier Zweige und liest b@+4. NICHT Item_aot_set - das ist 0x50. War Item_aot_set len 22.");
+        registerOpcode(0x4F, "Obj_model_move", 22, "RE1.5 len 22: PC-Vorschub @0x80017020 addiu v0,a2,0x16 -> @0x80017024 sw v0,0x1c(a0). Tabelleneintrag @0x800745e4 -> LAB_80016f20, liegt im DOOR-Modul: setzt ein MD1-Mesh der geladenen DO2-Tuer in einen Tuer-Objekt-Slot (DAT_800b23f4[]) und platziert es. Satz: b@+1 Slot, b@+2/b@+3/b@+4 -> obj+0x08/+0x09/+0x00, b@+5 Mesh-Index (obj+0x8e; in FUN_80017048 als param_2*0x38 = Mesh-Header-Stride), h@+6 Flags (obj+0x8c, Bit 0x8 = Elternmatrix), s16@+8/+0xa/+0xc/+0xe Lage, u16@+0x10/+0x12/+0x14. Nur sinnvoll, solange eine DO2 geladen ist (DAT_800b8554 aus FUN_800161e0). War Sce_key_ck len 4 - das ist 0x51.");
         // ====================================================================
         // ⚠️ RE1.5 vs retail RE2 SCD OPCODE DIVERGENCE (BIO 1.5 → 2.0 format)
         // --------------------------------------------------------------------
@@ -781,10 +800,15 @@ public class SCDScriptDisassembler {
     }
 
     private ScriptCommand parseCommand(byte[] data, int offset, int opcode, int baseOffset) {
+        /* 0x4F gilt NICHT nur in Tuer-Skripten: der Eintrag @0x800745e4 der globalen
+         * Dispatch-Tabelle PTR_LAB_800744a8 zeigt fuer JEDES Skript auf LAB_80016f20
+         * (Satz 22 B, PC-Vorschub @0x80017020). Die frueher hier stehende Bindung an
+         * isDoorScript() liess 0x4F in Raum-Skripten als "Sce_key_ck" mit 4 B durchlaufen -
+         * Sce_key_ck ist 0x51 (@0x800745ec -> LAB_80042920, 4 B). */
+        if (opcode == 0x4F) {
+            return parseDoorObjModelMoveCommand(data, offset, baseOffset);
+        }
         if (currentBlockMetadata.isDoorScript()) {
-            if (opcode == 0x4F) {
-                return parseDoorObjModelMoveCommand(data, offset, baseOffset);
-            }
             if (opcode == 0x56) {
                 return parseMemberCalcCommand(data, offset, baseOffset, opcode);
             }
@@ -1202,9 +1226,15 @@ public class SCDScriptDisassembler {
                 command.parameters.put("value", data[offset + 3] & 0xFF);
                 break;
 
-            case 0x38: // Flr_set
-                command.parameters.put("id", data[offset + 1] & 0xFF);
-                command.parameters.put("flag", data[offset + 2] & 0xFF);
+            case 0x38: // Op38 — 12 B, byte-true LAB_800417ac; Semantik unidentifiziert
+                /* 2026-09-27: Satz ist 12 B (PC-Vorschub @0x800417f0 addiu a1,a1,0xc ->
+                 * @0x80041810 sw a1,0x1c(a0)). Gelesen werden b@+2 (@0x800417b8),
+                 * b@+3 (@0x800417c0), s16@+4 (@0x800417c4 lh), s16@+6 (@0x800417c8 lh),
+                 * u16@+8 (@0x800417cc lhu), u16@+0xa (@0x800417ec lhu) - alle LE, weil
+                 * MIPS lh/lhu. Byte +1 wird NICHT gelesen. Vorher: Laenge 3 und nur
+                 * b@+1/b@+2 als id/flag - Laenge, Felder und der RE2-Name Flr_set alle
+                 * unbelegt. Bis die Semantik belegt ist, als Roh-Nutzlast ausgeben. */
+                command.parameters.put("payload", readByteSequence(data, offset + 1, 11));
                 break;
 
             case 0x39: // Sca_floor_set — [op, region, index, value]; byte-true LAB_80041814
@@ -1264,9 +1294,14 @@ public class SCDScriptDisassembler {
                 command.parameters.put("state", data[offset + 1] & 0xFF);
                 break;
 
-            case 0x3D: // Member_copy
+            case 0x3D: // Member_copy — [op, var, member]; 3 B, byte-true LAB_80041238
+                /* 2026-09-27: Satz ist 3 B (PC-Vorschub @0x80041254 addiu v0,v0,0x3 ->
+                 * @0x80041258 sw v0,0x1c(a0)). Der Handler liest NUR zwei Bytes:
+                 * @0x8004124c lb s0,0x1(v0) und @0x80041250 lb a1,0x2(v0). Vorher stand
+                 * hier ein u16 @+2 bei deklarierter Laenge 4 - das zog das erste Byte des
+                 * Folge-Opcodes in den Parameter und verschob danach den ganzen Decode. */
                 command.parameters.put("var", data[offset + 1] & 0xFF);
-                command.parameters.put("member", readLittleEndianUnsignedShort(data, offset + 2));
+                command.parameters.put("member", data[offset + 2] & 0xFF);
                 break;
 
             case 0x3E: // Member_cmp
@@ -1403,31 +1438,29 @@ public class SCDScriptDisassembler {
                 command.parameters.put("idx", data[offset + 4] & 0xFF);
                 break;
 
-            case 0x4D: // Op4D
-                command.parameters.put("payload", readByteSequence(data, offset + 1, 21));
+            case 0x4D: // Op4D — 10 B, byte-true LAB_800408a8
+                /* 2026-09-27: Satz ist 10 B (PC-Vorschub @0x80040900 addiu v1,v1,0xa ->
+                 * @0x80040910 sw v1,0x1c(a0)), nicht 22. Der Handler waehlt via b@+1
+                 * (@0x800408b0) einen Zeiger aus DAT_800b2368[] und schreibt dort
+                 * b@+2, b@+3, u16@+4, u16@+6, u16@+8 hinein. Nutzlast daher 9 Bytes. */
+                command.parameters.put("payload", readByteSequence(data, offset + 1, 9));
                 break;
 
-            case 0x4E: // Item_aot_set (legacy)
-                command.parameters.put("aot", data[offset + 1] & 0xFF);
-                command.parameters.put("id", data[offset + 2] & 0xFF);
-                command.parameters.put("type", data[offset + 3] & 0xFF);
-                command.parameters.put("floor", data[offset + 4] & 0xFF);
-                command.parameters.put("super", data[offset + 5] & 0xFF);
-                /* AOT rect is LITTLE-ENDIAN (2026-06-04 fix, same as Door_aot_set). */
-                command.parameters.put("x", readLittleEndianSignedShort(data, offset + 6));
-                command.parameters.put("z", readLittleEndianSignedShort(data, offset + 8));
-                command.parameters.put("w", readLittleEndianSignedShort(data, offset + 10));
-                command.parameters.put("h", readLittleEndianSignedShort(data, offset + 12));
-                command.parameters.put("item", readBigEndianUnsignedShort(data, offset + 14));
-                command.parameters.put("amount", readBigEndianUnsignedShort(data, offset + 16));
-                command.parameters.put("flag", readBigEndianUnsignedShort(data, offset + 18));
-                command.parameters.put("model_act", readBigEndianUnsignedShort(data, offset + 20));
+            case 0x4E: // Op4E — 5 B, byte-true LAB_80041980; Semantik unidentifiziert
+                /* 2026-09-27: Satz ist 5 B (PC-Vorschub @0x80041a6c addiu v1,v1,0x5 ->
+                 * @0x80041a70 sw v1,0x1c(s0) im gemeinsamen Tail LAB_80041a4c), nicht 22.
+                 * Der Handler dispatcht auf b@+3 (@0x80041998) in vier Zweige und liest
+                 * b@+4 (@0x800419fc, @0x80041a24); der Tail liest b@+1 (@0x80041a54) und
+                 * b@+2 (@0x80041a58). Das ist NICHT Item_aot_set - das ist 0x50
+                 * (@0x800745e8 -> LAB_80040644). Der alte Fall las bis +0x15, also
+                 * 17 Bytes ueber den Satz hinaus, und verschob jeden Folge-Opcode. */
+                command.parameters.put("payload", readByteSequence(data, offset + 1, 4));
                 break;
 
-            case 0x4F: // Sce_key_ck
-                command.parameters.put("state", data[offset + 1] & 0xFF);
-                command.parameters.put("trigger", readShort(data, offset + 2));
-                break;
+            /* 0x4F wird oben in parseCommand() nach parseDoorObjModelMoveCommand()
+             * geroutet und erreicht diesen Switch nicht mehr. Der frueher hier stehende
+             * Sce_key_ck-Fall (state + BE-readShort @+2) war doppelt falsch: falsche
+             * Semantik (Sce_key_ck ist 0x51) und falsche Laenge (4 statt 22). */
 
             case 0x50: // Item_aot_set
                 command.parameters.put("aot", data[offset + 1] & 0xFF);
@@ -2099,10 +2132,15 @@ public class SCDScriptDisassembler {
                             .append(scaValue).append(");\n");
                     break;
                 }
-                case "Flr_set":
-                    c.append("FlrSet(")
-                            .append(command.parameters.getOrDefault("id", 0)).append(", ")
-                            .append(formatOnOff((Integer) command.parameters.getOrDefault("flag", 0))).append(");\n");
+                case "Op38":
+                    // 12-B-Satz LAB_800417ac, Semantik unidentifiziert -> Roh-Nutzlast.
+                    // War FlrSet(id, on/off) auf einem 3-B-Satz; beides unbelegt.
+                    appendBytePayload(c, "Op38", (List<Integer>) command.parameters.get("payload"));
+                    break;
+                case "Op4E":
+                    // 5-B-Satz LAB_80041980, Semantik unidentifiziert -> Roh-Nutzlast.
+                    // War Item_aot_set auf 22 B; Item_aot_set ist 0x50.
+                    appendBytePayload(c, "Op4E", (List<Integer>) command.parameters.get("payload"));
                     break;
                 case "Sca_floor_set": {
                     // [op, region, index, value] -> writes value to SCA entry's floor
@@ -3005,11 +3043,26 @@ public class SCDScriptDisassembler {
         return readBigEndianShort(data, offset);
     }
 
+    /* 2026-09-27: 0x4F Obj_model_move liest seine acht 16-Bit-Felder LITTLE-ENDIAN.
+     * Belege im Handler LAB_80016f20 - MIPS lh/lhu sind auf dem R3000 LE-Loads:
+     *   @0x80016f7c lhu v1,0x6(a2)  -> obj+0x8c (Flags)
+     *   @0x80016f88 lh  v0,0x8(a2)  -> obj+0x0c
+     *   @0x80016f94 lh  v0,0xa(a2)  -> obj+0x34
+     *   @0x80016fa0 lh  v0,0xc(a2)  -> obj+0x38
+     *   @0x80016fac lh  v0,0xe(a2)  -> obj+0x3c
+     *   @0x80016fb8 lhu v0,0x10(a2) -> obj+0x68
+     *   @0x80016fc4 lhu v0,0x12(a2) -> obj+0x6a
+     *   @0x80016fd0 lhu v0,0x14(a2) -> obj+0x6c
+     * Vorher wurde BE gelesen. Das verdreht nicht nur die Anzeige: das Flag-Wort wird
+     * @0x80016fe4 mit andi a3,v0,0x8 auf die Elternmatrix-Bindung geprueft, und die
+     * liegt bei BE im falschen Byte. Gegenprobe an DOOR00/DOOR0001 (Bytes 0a a0):
+     * LE = 0xa00a, &8 = 8 (gesetzt) - BE = 0x0aa0, &8 = 0. Dieselbe Fehlerklasse wie
+     * die bereits korrigierten Faelle 0x06/0x07/0x09/0x0D/0x14. */
     private int readDoorShort(byte[] data, int offset, boolean unsigned) {
         if (unsigned) {
-            return readBigEndianShort(data, offset);
+            return readLittleEndianUnsignedShort(data, offset);
         }
-        return readBigEndianSignedShort(data, offset);
+        return readLittleEndianSignedShort(data, offset);
     }
 
     private int readBigEndianShort(byte[] data, int offset) {
