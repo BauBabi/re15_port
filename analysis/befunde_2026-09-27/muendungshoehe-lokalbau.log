@@ -1,0 +1,45 @@
+        Start 337: integration_room_transition
+337/355 Test #337: integration_room_transition .......   Passed    0.02 sec
+        Start 338: integration_cross_stage
+338/355 Test #338: integration_cross_stage ...........   Passed    0.02 sec
+        Start 339: integration_headless_run
+339/355 Test #339: integration_headless_run ..........   Passed    1.22 sec
+        Start 340: integration_room_probe_sweep
+340/355 Test #340: integration_room_probe_sweep ......   Passed    0.09 sec
+        Start 341: integration_rvd_coverage
+341/355 Test #341: integration_rvd_coverage ..........   Passed    0.02 sec
+        Start 342: integration_map_uebergang
+342/355 Test #342: integration_map_uebergang .........   Passed    0.55 sec
+        Start 343: integration_map_raum_live
+343/355 Test #343: integration_map_raum_live .........   Passed    3.97 sec
+        Start 344: integration_door_traversal
+344/355 Test #344: integration_door_traversal ........   Passed    0.02 sec
+        Start 345: integration_door_lock
+345/355 Test #345: integration_door_lock .............   Passed    0.01 sec
+        Start 346: integration_flag_census
+346/355 Test #346: integration_flag_census ...........   Passed    0.18 sec
+        Start 347: integration_item_name_census
+347/355 Test #347: integration_item_name_census ......   Passed    0.37 sec
+        Start 348: integration_fx_region_cull
+348/355 Test #348: integration_fx_region_cull ........   Passed    0.36 sec
+        Start 349: integration_keydoor
+349/355 Test #349: integration_keydoor ...............   Passed    0.03 sec
+        Start 350: integration_keypad
+350/355 Test #350: integration_keypad ................   Passed    0.04 sec
+        Start 351: integration_boot_bg_pin
+351/355 Test #351: integration_boot_bg_pin ...........   Passed   17.75 sec
+        Start 352: integration_dark_start_pin
+352/355 Test #352: integration_dark_start_pin ........   Passed   17.69 sec
+        Start 353: integration_relatch_pin
+353/355 Test #353: integration_relatch_pin ...........   Passed   22.20 sec
+        Start 354: integration_save_counter_pin
+354/355 Test #354: integration_save_counter_pin ......   Passed   13.56 sec
+        Start 355: integration_pri_masken
+355/355 Test #355: integration_pri_masken ............   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 355
+
+Total Test time (real) = 160.64 sec
+    test OK — 355/355 bestanden
+
+=== LOCAL-BUILD-OK (all) — Tests 355/355
