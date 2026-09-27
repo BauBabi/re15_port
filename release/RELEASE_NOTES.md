@@ -1,110 +1,95 @@
-# v0.8.13 - 2026-09-26
+# v0.8.14 - 2026-09-27
 
-Ihr Zwoelfer-Batch. Neun Befunde sind behoben, einer ist ausdruecklich nicht gebaut
-worden, und bei einem weiss ich die Ursache noch nicht — das sage ich lieber, als es zu
-verschweigen. Suite 346/346.
+Ihre fuenf Befunde vom Spieltest, das Kartensystem aus RE2, und zwei Stellen, an denen
+ich mich selbst korrigieren muss. Suite 352/352.
 
 ## Was Sie sofort merken
 
-**Der Fahrstuhl faehrt.** Der Knopf war nie das Problem: 2F stempelt die Etage, startet
-das richtige Unterprogramm und meldet den Zielraum an. Im *selben Bild* hat der Port
-zusaetzlich die 1F-Tuer gefeuert und die Anforderung ueberschrieben. Schuld war ein
-Zweig, den der Port erfunden hatte und den das Original nicht kennt: er liess jede
-rechteckslose Tuer ohne Tastendruck losgehen, sobald eine Zwischensequenz lief — und die
-Schleife nahm immer die erste, also 1F. Der Zweig ist raus. Der zweite Fahrstuhl hatte
-denselben Defekt und faehrt jetzt auch.
+**Das Messer.** Sie hatten recht: mit Dauerschlag nach unten kamen die Zombies nie heran.
+Die Ursache ist eine Altlast — seit Runde 19 laufen RE2-eigene Zombies durch RE2s
+Geometriedaten, und die haben die REICHWEITE mitgenommen. Das Messer reichte gegen sie
+3000 bis 3400 Einheiten statt 1500. Das einzige Angriffstor eines Zombies gegen einen
+*stehenden* Spieler liegt aber bei 1200 — Sie haben ihn also zweitausend Einheiten davor
+dauerhaft in die Trefferreaktion geschlagen. Gemessen: im Dauerschlag vorher **null**
+Bisse, jetzt zwei; wer nur zielt, wird unveraendert sechsmal gebissen.
+Nebenbei behoben: die Trefferpause wurde zweimal pro Bild heruntergezaehlt, aus 15 wurden
+effektiv 8.
 
-**Die Beretta M93R laedt wieder nach.** Der Port hatte im Nachlade-Tor eine Bedingung,
-die es im Original nicht gibt: er merkte sich beim Zieleintritt, ob Sie ein Messer in der
-Hand hatten, und diese Merkung blieb haengen. Danach verschluckte er jedes Nachladen
-stumm — die Waffe feuerte 15, 12, 9, 6, 3, 0 und dann passierte gar nichts mehr. Das
-Original merkt sich nichts, es liest die angelegte Waffe jedes Bild neu.
+**Der Cursor am Schalterraetsel.** Der Ton beim Bewegen ist weg — er kam aus zwei Stellen,
+nicht einer. Der Inventar-Cursor toent weiter, das ist eigens abgesichert. Gedrueckte
+Taste heisst genau ein Ton, nicht einer je Bild.
 
-**Die erste Cutscene-Animation wiederholt sich nicht mehr.** Der Port parkte die
-Raum-Eintritts-Pose als Dauerbewegung und spielte sie im Kreis. Das Original setzt sie
-genau einmal und gibt im selben Durchlauf weiter. Sichtbar war es nur bei Cutscenes, weil
-der Spieler dort die Pose nicht selbst ersetzt — deshalb genau Ihre beiden Faelle,
-ROOM1170 nach der Tuer und ROOM1050 beim Eintritt.
+**Ihre Schalterwerte liegen drin.** Ein Riegel zaehlt alle 1024 Kombinationen durch: genau
+eine erreicht 80, und das ist 1+3+5+7+9. Mit den alten Gewichten waren es **252** — die
+Loesung war praktisch beliebig. Huebsch dabei: RE1.5s eigene Loesungspruefung im Raum
+verlangt genau dieselben fuenf Schalter wie Ihre Tabelle.
 
-**Die komischen Bluteffekte in ROOM11D0 sind weg.** Die Kaefig-Freigabe der Hunde
-schreibt einen Zustand, den es in der RE1.5-Tabelle als "aufstehen, dann jagen" gibt — in
-der RE2-Tabelle steht an derselben Stelle aber ein Zustand, der Blut spritzt. Der Port
-faehrt fuer Hunde die RE2-Tabelle und landete deshalb im falschen Eintrag. Betroffen war
-nicht nur der Zwinger, sondern auch zwei Raeume in Stage 3.
+**Der Cursor-Schatten.** Er gehoert dorthin. Er steckt in der Textur, und die echte PSX
+zeichnet ihn genauso — das ist jetzt an einem Savestate nachgemessen. Falsch war, dass
+unser Kreuz daneben **gar nicht hell** gezeichnet wurde. Details unten.
 
-**Munition stapelt beim Aufnehmen**, und beim Ja der Aufnahme kommt der
-Bestaetigungston.
+**Adas Animation** beim Wechsel 1090 -> 1050 wiederholt sich nicht mehr.
 
-**Das Maschinengewehr macht deutlich mehr Blut.** RE2 gibt SMG und Gatling einen eigenen
-Trefferhandler mit zufaelliger Groesse statt der festen der Pistole; der Port hatte dort
-den kleinsten Blutstoss des Spiels.
+**Die Hunde treiben Sie nicht mehr in die Wand.**
 
-**Der Fahrstuhl hat seinen Fahrton** — aus RE2 importiert, weil RE1.5 ihn nachweislich
-nirgends hat. Und das Tastenfeld im Heizungsraum klickt jetzt wie RE2s Schalterraetsel,
-mit rotem Leistungszeiger, der bei richtiger Loesung auf 80 steht.
+**Das Kartensystem aus RE2 ist da.** Im Labor (ROOM5030) haengt ein Plan an der Wand, den
+Sie untersuchen und mitnehmen koennen — das ist eine echte Fundstelle aus RE1.5s eigenem
+Skript, keine erfundene. Ohne Plan sehen Sie nur den Raum, in dem Sie stehen; mit Plan
+erscheint das ganze Labor als schwarze Flaechen mit hellen Wandlinien.
 
-## Wo ich Ihnen widersprechen muss
+## Wo ich mich korrigieren muss
 
-**Der Bestaetigungston ist keine Regel in RE2.** Sie hatten gesagt: wenn RE2 das so macht,
-machen wir das auch — und genau das habe ich nachgezaehlt. Ergebnis: von 128 Ja/Nein-
-Abfragen toenen beim Ja nur **49**. Der Ton haengt nicht an der Abfrage-Routine, sondern
-an einem Byte, das *pro Nachricht im Text* steht. Der Beweis ist huebsch: "A police
-station map. Will you take it?" ist stumm, das wortgleiche "A police B2 map. Will you
-take it?" toent.
+**Der Cursor-Schatten: mein letzter Fix hat es schlimmer gemacht.** In v0.8.13 hatte ich
+die Abtastphase um -0,5 verschoben und das als Verbesserung gemeldet. Diesmal gibt es
+eine echte PSX-Grundwahrheit zum Vergleichen, und die sagt:
 
-Fuer Ihre Stelle ist RE2 aber eindeutig: die Aufnahme-Abfrage toent, also toent sie jetzt
-auch bei uns. Die Wegwerf-Abfrage ist in RE2 stumm und bleibt es. Und die uebrigen 90
-Abfragen im Spiel bekommen nichts — dafuer gibt es kein Vorbild, das waere erfunden.
+    Phase -0,5 (mein Fix)   1335 abweichende Pixel
+    Phase  0,0 (davor)       785
+    Phase +0,375            pixelgleich mit der PSX
 
-**Munition stapelt in RE2 auch nicht.** Ich habe es zweimal unabhaengig nachgezaehlt: es
-gibt genau einen Einfuegepfad, und der nimmt stur den ersten freien Platz — in RE1.5 wie
-in RE2. Sie wollen es trotzdem, das ist voellig in Ordnung, und es ist gebaut. Aber im
-Code steht es als Ihre Entscheidung und nicht als Original, und die Rechnung dahinter
-(Summe, Deckel, Rest auf einen neuen Platz) ist aus RE2s Menue-Zusammenlegung geborgt
-statt erfunden.
+Ich habe die Sache also erst verschlechtert und dann behauptet, sie sei besser. Jetzt
+steht ein gemessener Wert drin, und ein Riegel prueft ihn gegen die echten Texel.
 
-**Die Wegwerf-Zeile "item" gibt es nirgends.** Weder RE1.5 noch RE2 haben eine Variante
-ohne "key". Gebaut ist sie, aber ueber einen Test am ausgelieferten Namen — keine Liste
-von Gegenstandsnummern im Code.
+**Das Grün der besuchten Raeume ist KEINE Erfindung des Ports.** Das hatte ich Ihnen so
+berichtet — es stimmt nicht. RE1.5 fuehrt seine Kartenpalette in derselben VRAM-Zeile wie
+RE2, und ihr Eintrag ist selbst nachgelesen gruen. Erfunden war nur die Annaeherung, mit
+der der Port diesen Wert nachgebildet hat.
 
-## Was ich nicht gebaut habe, und warum
+Deshalb bleibt es gruen: nach Ihrer eigenen Vorgabe ist RE1.5 massgeblich, wo es ein
+System vollstaendig hat, und RE2 nur dort, wo RE1.5 unfertig ist. Die Palette hat RE1.5
+vollstaendig — den Kartenbesitz gar nicht. Also Mechanik nach RE2, Farbe nach RE1.5, und
+zwar jetzt mit dem exakten Wert. Der aktuelle Raum (dunkelrot) und unbesuchte Raeume
+(schwarz) kommen aus RE2, weil RE1.5 fuer beide Zustaende gar keinen Gegenwert hat.
+RE2s Blau steht als geprueft Alternative im Code — ein Wort genuegt.
 
-**Die Hunde bleiben, wie sie sind.** Ihr Befund lautete: erst wieder verwundbar, sobald
-sie stehen. Ich hatte einen Riegel im RE2-Hund gefunden, der genau das tut — und war
-ueberzeugt, dass er Ihren Fall trifft. **Er tut es nicht.** Gemessen: der Hund geht beim
-gewoehnlichen Kugeltreffer sehr wohl zu Boden, traegt dabei aber kein Riegel-Bit; in 240
-Bildern nach einem Pistolentreffer steht es kein einziges Mal. Der Riegel gehoert zum
-Sprung und zu Feuertreffern.
+## Was das Kartensystem wirklich kann
 
-Haette ich ihn trotzdem scharf geschaltet, waere es schlimm geworden: im Zwangstest loest
-er sich nur beim Hund. Bei Kraehe und beiden Spinnen in je 600 Bildern nie — die drei
-waeren dauerhaft unverwundbar geworden. Genau in diese Falle ist dieses Projekt schon
-einmal gelaufen.
+RE2 hat **kein Karten-Item**. Karten sind Ereignisse: man untersucht einen Wandplan, und
+das Raumskript setzt ein Bit. Deshalb gibt es auch keine Weltmodelle zu extrahieren, wie
+Sie es bei den Dokumenten bekommen haben — ein Wandplan ist gemalter Hintergrund plus
+Untersuchen-Punkt, kein Gegenstand. Stattdessen liegen die **20 Kartenbilder selbst** in
+build/extracted/re2_karten/, je dreimal mit den echten Paletten.
 
-Behoben sind stattdessen drei echte Luecken im Hunde-Verhalten gegenueber RE2. Drei
-weitere, die ich einbauen wollte, waren **falsch verortet** — ihr Schreibzugriff geht gar
-nicht auf den Gegner, sondern auf sein Opfer bzw. auf den Spieler. Als Gegner-Code gebaut
-haetten sie die Unverwundbarkeit selbst erzeugt.
+Der Besitz aendert genau zwei Dinge: unbesuchte Raeume werden ueberhaupt erst gezeichnet,
+und es erscheinen Gegenstandsmarken. Nicht davon abhaengig sind Grundriss, Spielerpfeil,
+Etagenumschaltung und Massstab. Und es sind **nicht** eine Karte je Etage: RE2 hat 20
+Bereiche, aber nur 8 Fundstellen, und ein Fund schaltet oft mehrere frei.
 
-**Ihre Beobachtung ist damit nicht erklaert, nur eine falsche Erklaerung ausgeschlossen.**
-Der naechste Verdacht ist die Laenge der Hinfall- und Aufsteh-Animation gegenueber dem
-13-Bilder-Zaehler: ist unsere laenger als RE2s, wird der Hund sichtbar im Liegen wieder
-verwundbar, obwohl der Zaehler stimmt. Das messe ich als Naechstes.
+## Offen, ehrlich benannt
 
-## Zwei Fragen an Sie
-
-1. **Der Fahrstuhl-Ton toent auch im zweiten Fahrstuhl** (A-2 ELEVATOR). Der Ausloeser
-   kommt aus den Daten, nicht aus einer Raumnummer, und die Signatur ist dort bitgleich.
-   Im Original ist er an beiden Stellen stumm. Soll er dort spielen oder nicht?
-2. **Der Zeiger im Heizungsraum** ist eine 2D-Marke, kein 3D-Objekt wie in RE2 — RE1.5
-   hat dort kein passendes Modell, es haette erfunden werden muessen. Die Mechanik (ein
-   Punkt je Bild, Ziel 80) ist 1:1 RE2. Die Gewichtung je Schalter musste ich waehlen,
-   weil RE1.5 die Loesung ganz anders prueft als RE2. Sagen Sie Bescheid, wenn es anders
-   aussehen soll.
-
-## Nebenbefunde, nicht repariert
-
-Drei Integrationstests, die die echte Spiel-exe starten, fallen in Volllaeufen sporadisch
-aus — jedes Mal ein anderer, einzeln laufen sie durch. Sieht nach einem Wettlauf beim
-Fensteraufbau aus. Ausserdem: die Munitions-Halbierung erfasst auch die Memory Card, und
-Ada startet in ROOM1050 ihren Laufzyklus mittendrin neu.
+* **Kein Bildbeleg fuers Messer.** Die Spiel-exe startet in dieser Sitzung zwar, liefert
+  aber keinen Abzug mehr — im Protokoll steht "REMOTEDESKTOP-Sitzung". Der Befund ist
+  ueber den echten Spielweg gemessen, aber nicht bebildert. Ich bin bewusst nicht auf die
+  Ersatzwege ausgewichen, die visuelle Fehler maskieren.
+* **Der Laborplan oeffnet drei Kartenblaetter** — das ist meine Setzung. Es sind die drei
+  Seiten mit Labor-Raeumen, aber RE1.5 fuehrt dafuer keine Tabelle. Dass ein Fund mehrere
+  Bereiche oeffnet, ist immerhin RE2s Muster.
+* **Elf der vierzehn Kartenblaetter haben keine Fundstelle** und verhalten sich wie
+  bisher. Die drei anderen Wandplaene in RE1.5 sind reine Ansichtssachen ohne Wirkung;
+  ihnen ein Bit zu geben waere eine erfundene Fundstelle.
+* **Die Hunde-Beobachtung aus Runde 26** ("erst wieder verwundbar, sobald sie stehen")
+  bleibt ungeklaert. Der Riegel, den ich dafuer gefunden hatte, trifft den Fall
+  nachweislich nicht.
+* **Der Fahrstuhl-Ton toent auch im zweiten Fahrstuhl** (A-2). Der Ausloeser kommt aus
+  den Daten, die Signatur ist dort bitgleich, und im Original ist er an beiden Stellen
+  stumm. Ihre Entscheidung.
