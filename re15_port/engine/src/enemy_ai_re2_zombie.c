@@ -911,10 +911,11 @@ static int re2z_clip_done(const re15_actor_t *e)
 
 /* ============ DIE TREFFERBOX +0x98 / +0x9E DES ZOMBIE-OVERLAYS (EMZ0.BIN, roh @0x80100000) ===
  * Welle 2 (2026-09-27). Vollscan aller `sh rt,152(rs)` / `sh rt,158(rs)` in EMZ0.BIN, selbst
- * gelesen: 26 Stores. Vierzehn davon gehen auf den Gegner SELBST (sieben Paare auf s2/s1/a0),
- * zwoelf nicht — @0x80105EAC/B4 und @0x80105EE8/F0 schreiben ueber `lw v1,408(s4)` (+0x198,
- * Teile-Pool, Stride 172) in ein MODELL-TEIL, wo +0x98 ein WINKEL ist, und werden deshalb
- * ausdruecklich NICHT hierher gebogen.
+ * gelesen: 26 Stores. ZWEIUNDZWANZIG davon (= 11 Paare auf s2/s1/a0) gehen auf den Gegner
+ * SELBST, VIER nicht: @0x80105EAC/B4 und @0x80105EE8/F0 schreiben ueber `lw v1,408(s4)`
+ * (+0x198, Teile-Pool, Stride 172) in ein MODELL-TEIL, wo +0x98 ein WINKEL ist, und werden
+ * deshalb ausdruecklich NICHT hierher gebogen. (Ueber alle fuenf Overlays sind es 48 Stores,
+ * davon 12 auf Teile.)
  *
  * Die elf SELF-Paare, jedes einzeln disassembliert:
  *   1  @0x8010095C/64  -1500/1500  INIT-Joinpunkt (nach `sw 1,488(s2)` @0x80100954)
