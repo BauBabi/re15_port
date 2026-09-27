@@ -1,8 +1,12 @@
 # Runde 30 / Welle 1: das fünfte Tor von `FUN_800470C0` — MESSUNG vor dem Bau
 
-Status: **MESSUNG FERTIG** (2026-09-27). **Kein Verhalten geändert.** Neu sind nur eine Sonde
-(`re15_port/tests/unit/probe_r30_zielfenster.c`, kein ctest) und drei Kommentar-Berichtigungen.
-Lauf-Protokoll: `analysis/befunde_2026-09-27/zielfenster-messung.log`.
+Status: **FERTIG** (2026-09-27). Welle 1 war MESSUNG; danach ist der erste, vollstaendig
+belegbare Schritt GEBAUT (die Hitbox-Stauchung des Hundes, §7.1) — das fuenfte Gate NICHT.
+Neu sind eine Sonde
+(`re15_port/tests/unit/probe_r30_zielfenster.c`), ein Riegel (`r30_hund_hitbox_stauchung`) und
+drei Kommentar-Berichtigungen. `local_build.sh all` = **354/354 grün**
+(`=== LOCAL-BUILD-OK (all) — Tests 354/354`), Schranke `RE15_MIN_TESTS` von 353 auf 354 gehoben.
+Lauf-Protokoll der reinen Messung: `analysis/befunde_2026-09-27/zielfenster-messung.log`.
 
 Auftrag: *„na dann baue ein was fehlt im Port!"* — Nutzer-Befund seit Runde 26: *„Im Original
 Resident Evil 2 sind die Hunde erst dann wieder verwundbar, sobald sie wieder stehen."*
@@ -275,11 +279,27 @@ Das ist wörtlich „wieder treffbar, sobald er wieder steht": gestaucht beim Tr
   Rate-Defekt.
 
 **Baubar, in dieser Reihenfolge:**
-1. **`+0x98`/`+0x9E` als echte Aktor-Felder** (neben dem schon vorhandenen `re2z_rad9a` = +0x9A),
-   je Typ aus den INIT-Werten von §3.1 gesetzt, und `re2d_hitbox` byte-true nach @0x80104090-D8
-   (inkl. der Flagbits 0x04000000 / 0x0C000000 und der Maske 0xE7FFFFFF nur im a1==0-Zweig).
-   Das ist für sich **verhaltensneutral**, solange niemand die Felder liest — also ein sicherer
-   erster Schritt mit eigener Messung.
+
+1. ✅ **GEBAUT in dieser Runde** — `+0x98`/`+0x9E` als echte Aktor-Felder
+   (`re2_hit_b98` / `re2_hit_h9e`, `re15_actor.h` neben dem schon vorhandenen `re2z_rad9a`
+   = +0x9A) und `re2d_hitbox` byte-true nach @0x80104090-D8 statt des bisherigen NOP.
+   Für den **Hund** gesetzt: INIT −1000/1000 (@0x8010028C-9C), Stauchung −500/500
+   (@0x80104098-A8, gerufen @0x80103458 / @0x8010352C), Öffnung −1000/1000
+   (@0x801040B8-C4, gerufen @0x801036F0 / @0x801037C0).
+   **Verhaltensneutral** — niemand liest die Felder; verriegelt durch den neuen ctest
+   `r30_hund_hitbox_stauchung`, gemessen:
+
+   | Zeitpunkt | +0x98 / +0x9E |
+   |---|---|
+   | vor dem Treffer | **−1000 / 1000** |
+   | während der ganzen HURT-Kette (Bild +1 … +70) | **−500 / 500** |
+   | Bild +71, Rückkehr nach ACTIVE | **−1000 / 1000** |
+
+   Nicht mitgebaut und ausdrücklich als Fehlstelle vermerkt: die beiden Flagbits von word0
+   (Maske `0xE7FFFFFF` + `0x04000000` im a1==0-Zweig @0x80104090-B4, `0x0C000000` ohne
+   Maskierung im a1!=0-Zweig @0x801040CC) — der Port führt sie nicht, und ich habe sie
+   **nicht** auf ein fremdes Feld gebogen. Ebenso offen: die Felder der übrigen vier Typen
+   (Werte stehen in §3.1, Setz-Stellen im jeweiligen Overlay sind noch nicht verdrahtet).
 2. **Die Mündungshöhe**: `t[1]` der verketteten Waffen-Bone-Matrix (@0x80042E60-94). Der Port hat
    den Baustein (`re15_player_gunbone_world`, `re15_damage.c:1134`), aber er hängt am
    PC-Renderer und ist **headless nie gültig** (0/1200). Vor dem Gate muss diese Größe

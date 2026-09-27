@@ -668,7 +668,23 @@ static int re2d_landing(re15_actor_t *e)
  * einzubauen bringt NICHTS: ohne das Gate liest niemand die Felder, und ohne eine echte
  * Muendungshoehe steht Hgun im Port auf 0 und das Gate laesst JEDEN durch (gemessen,
  * 5 Typen x 240 Bilder, analysis/befunde_2026-09-27/zielfenster-messung.md). */
-static void re2d_hitbox(re15_actor_t *e, int restore) { (void)e; (void)restore; }
+static void re2d_hitbox(re15_actor_t *e, int restore)
+{
+    if (!e) return;
+    if (restore == 0) {                 /* `bne a1,zero,0x801040b8` @0x80104088 faellt durch */
+        e->re2_hit_b98 = -500;          /* addiu v0,zero,-500 @0x80104098 / sh v0,152(a2) @0x8010409C */
+        e->re2_hit_h9e =  500;          /* addiu v1,zero,500  @0x801040A4 / sh v1,158(a2) @0x801040A8 */
+        /* Das Flagwort +0x0 raeumt im a1==0-Zweig zusaetzlich zwei Bits
+         * (`lui a0,0xe7ff / ori a0,a0,0xffff` @0x80104090-94, `and v0,v0,a0` @0x801040B4)
+         * und setzt dann 0x04000000 (`lui v1,0x400` @0x801040AC, `or`/`sw` @0x801040D0-D8).
+         * Im a1!=0-Zweig wird NICHT maskiert, nur 0x0C000000 geodert (`lui v1,0xc00`
+         * @0x801040CC). Der Port fuehrt diese beiden Bits von word0 (noch) nicht —
+         * ausdruecklich als Fehlstelle vermerkt, NICHT auf ein fremdes Feld gebogen. */
+    } else {
+        e->re2_hit_b98 = -1000;         /* addiu v0,zero,-1000 @0x801040B8 / sh @0x801040BC */
+        e->re2_hit_h9e =  1000;         /* addiu v0,zero,1000  @0x801040C0 / sh @0x801040C4 */
+    }
+}
 
 /* FUN_8004AA50 mit dem RE2-Zufall (@0x8004aa7c `jal 0x80015fe8`), Knotenzahl aus dem
  * RE1.5-Zonengraphen - dieselbe deklarierte Ersetzung wie bei der Kraehe. */
@@ -2172,8 +2188,14 @@ static void re2d_init(re15_actor_t *e)
         uint32_t r1 = re15_re2_rand() & 3u;                /* @0x801001D0-E8 */
         e->hp = (int16_t)(re2d_hp_tbl_def[re15_re2_rand() & 0xfu] + r1);   /* @0x80100210-234 */
     }
-    /* Hitbox @0x80100284-C4: +0x94=500, +0x98=−1000, +0x9E=1000, 600er-Familie — der Port
-     * führt die Trefferhöhe über hit_radius/atk_pt (Damage-System); dokumentiert. Die
+    /* Hitbox @0x80100284-C4: +0x94=500, +0x98=−1000, +0x9E=1000, 600er-Familie. +0x98/+0x9E
+     * fuehrt der Port seit Runde 30 als echte Felder (s. re15_actor.h) — die Trefferauswahl
+     * liest sie noch nicht, weil ihr die Muendungshoehe fehlt. Die */
+    e->re2_hit_b98 = -1000;                                /* addiu v0,zero,-1000 @0x8010028C /
+                                                            * sh v0,152(s0) @0x80100294 */
+    e->re2_hit_h9e =  1000;                                /* addiu v0,zero,1000  @0x80100298 /
+                                                            * sh v0,158(s0) @0x8010029C */
+    /* (+0x94 = 500 @0x80100284-88 und +0x96 = 0 @0x801002B0 bleiben ungefuehrt.) Die
      * 2-Part-Schleife @0x801002D0-F8 (Parts 2..3: +0x9C=32/+0xA0=384/+0xA2=128 — Lane-D sagte
      * „4 Parts", der Loop läuft a0=2..3, selbst nachgelesen) ist Part-Hitbox-Metadaten. */
     e->dog_floor_y = (int16_t)(-(int32_t)e->floor * 1800); /* +0x1C2-Analog. Seed = der RE1.5-

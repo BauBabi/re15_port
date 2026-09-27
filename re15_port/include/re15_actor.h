@@ -297,6 +297,25 @@ typedef struct {
      * Leiche->Kriecher 200 @0x80108984-88. (+0x1EE = 500 hat im Overlay GENAU EINEN Schreiber,
      * INIT @0x80100980 — als Konstante in re15_damage.c gefuehrt, kein Feld noetig.) */
     uint16_t re2z_rad9a;
+    /* +0x98 / +0x9E — die SENKRECHTE Trefferzone, die RE2s fuenftes Kandidaten-Gate liest:
+     *   80047170 lh  a0,152(s0)   ; b = +0x98, SIGNED
+     *   80047188 lhu v1,158(s0)   ; h = +0x9E, UNSIGNED
+     *   8004718c lw  a0,4(s4)     ; Muendungs-Y (MATRIX.t[1] der Waffen-Bone-Kette)
+     *   800471a0 sltu / 800471a4 beq 0x8004740c
+     * Original-Werte je Typ (Vollzaehlung aller `sh rt,152/158(rs)` im jeweiligen Overlay,
+     * analysis/befunde_2026-09-27/zielfenster-messung.md §3.1):
+     *   0x10 Zombie   -1500/1500 @0x8010095C-64 ; Kriecher -350/350 @0x80100B14-20 u.a.
+     *   0x20 Hund     -1000/1000 @0x8010028C-9C ; LIEGEND -500/500 @0x80104098-A8
+     *   0x21 Kraehe    -350/530  @0x801003B8-DC
+     *   0x25 Spinne       0/1400 (Tabelle @0x801063A0+20/24, +0x98=0 @0x8010276C)
+     *   0x26 Baby        -10/10  @0x80100168-78
+     * ⛔ GEFUEHRT, ABER NOCH NICHT GELESEN: das fuenfte Gate ist im Port NICHT gebaut, weil
+     * ihm die dritte Groesse fehlt (die Muendungshoehe; der Port rechnet heute gegen pl->y,
+     * dann ist Hgun = 0 und das Gate laesst gemessen 1200/1200 Bilder durch). Erst die
+     * Muendungshoehe, dann das Gate — sonst ist es ein wirkungsloser Platzhalter.
+     * Gesetzt werden die Felder bisher nur vom HUND (re2d_init + re2d_hitbox). */
+    int16_t  re2_hit_b98;       /* +0x98 Unterkante (signed)  */
+    uint16_t re2_hit_h9e;       /* +0x9E Halbhoehe  (unsigned) */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98);
                                  * im WALK derselbe Offset als PULS-TIMER (Seed (rand&0x1f)+30

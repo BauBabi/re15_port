@@ -330,9 +330,17 @@ static void pass_inv(inv_t *r, const char *tag, uint8_t type, const char *room, 
            r->gun_valid ? "" : " (Renderer hat Bone 11 nie gestellt)", r->lieg);
 }
 
-/* ===== Durchgang 2: HUND-KETTE mit Bank, Tor-Urteil je Bild ============================== */
+/* ===== Durchgang 2: HUND-KETTE mit Bank, Tor-Urteil je Bild ==============================
+ * Nebenher der RIEGEL fuer die Hitbox-Stauchung FUN_80104088 (@0x80104090-D8):
+ *   vor dem Treffer  -1000/1000   (INIT @0x8010028C-9C)
+ *   nach dem Treffer  -500/500    (FUN_80104088(0) @0x80103458 / @0x8010352C)
+ *   nach der Kette   -1000/1000   (FUN_80104088(1) @0x801036F0 / @0x801037C0) */
+typedef struct { int ok, b_vor, h_vor, b_lieg, h_lieg, b_nach, h_nach, kette, pause; } box_t2;
+static box_t2 s_box;
+
 static void pass_dog_chain(int budget)
 {
+    memset(&s_box, 0, sizeof s_box);
     if (!load_room("STAGE1/ROOM1190.RDT", 0x1190, 13)) { printf("  FEHLLAUF: ROOM1190 fehlt\n"); return; }
     int slot = setup_target(0x20, 3, 0);
     if (slot < 0) { printf("  FEHLLAUF: kein Hund 0x20 in 1190 - sagt NICHTS\n"); return; }
@@ -340,6 +348,8 @@ static void pass_dog_chain(int budget)
     re15_actor_t *e  = &g_actors[slot];
     aim_up(slot, 2000);
     e->re2z_self1d3 = 0;
+    s_box.b_vor = e->re2_hit_b98; s_box.h_vor = (int)e->re2_hit_h9e;
+    s_box.b_lieg = 0x7fff; s_box.h_lieg = 0x7fff;
     int getroffen = -1, pause_bis = -1, hurt_bis = -1;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
@@ -357,11 +367,15 @@ static void pass_dog_chain(int budget)
                        e->motion, e->y, pl->y); }
             continue; }
         int k = f - getroffen;
+        if (e->state == 2) {   /* solange HURT laeuft: die gestauchte Box mitschreiben */
+            s_box.b_lieg = e->re2_hit_b98; s_box.h_lieg = (int)e->re2_hit_h9e;
+        }
+        s_box.b_nach = e->re2_hit_b98; s_box.h_nach = (int)e->re2_hit_h9e;
         if (k < 90)
-            printf("      +%-2d 1D3=%2d | st=%d/%u/%u/%u | clip=%2d f=%2d | Hgun=%d | "
+            printf("      +%-2d 1D3=%2d | st=%d/%u/%u/%u | clip=%2d f=%2d | Box %d/%d | "
                    "Tor(liegend)=%s Tor(stehend)=%s%s%s\n",
                    k, low, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
-                   e->motion, e->anim_frame, e->y - pl->y,
+                   e->motion, e->anim_frame, e->re2_hit_b98, (int)e->re2_hit_h9e,
                    tor(e->y, -500, 500, pl->y) ? "DURCH " : "SPERRT",
                    tor(e->y, -1000, 1000, pl->y) ? "DURCH " : "SPERRT",
                    (low == 0 && pause_bis < 0) ? "   <== PAUSE ENDE" : "",
@@ -375,6 +389,9 @@ static void pass_dog_chain(int budget)
     if (pause_bis >= 0 && hurt_bis >= 0 && hurt_bis > pause_bis)
         printf("  => %d Bilder treffbar im Liegen\n", hurt_bis - pause_bis);
     else printf("\n");
+    s_box.kette = hurt_bis; s_box.pause = pause_bis; s_box.ok = (getroffen >= 0);
+    printf("  HITBOX: vor dem Treffer %d/%d | waehrend HURT %d/%d | nach der Kette %d/%d\n",
+           s_box.b_vor, s_box.h_vor, s_box.b_lieg, s_box.h_lieg, s_box.b_nach, s_box.h_nach);
 }
 
 /* ======================================================================================== */
@@ -387,7 +404,7 @@ static const struct { const char *sub; int id; } SPINNE_KAND[] = {
 
 int main(int argc, char **argv)
 {
-    (void)argc; (void)argv;
+    const int riegel = (argc > 1 && strcmp(argv[1], "riegel") == 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
@@ -506,6 +523,31 @@ int main(int argc, char **argv)
     }
     pass_dog_chain(600);
 
-    printf("\nMESSSCHIENE GELAUFEN (Welle 1 — kein Verhalten geaendert, kein Riegel).\n");
-    return 0;
+    if (!riegel) { printf("\nMESSSCHIENE GELAUFEN (kein Riegel angefordert).\n"); return 0; }
+
+    /* ===== RIEGEL: die Hitbox-Stauchung FUN_80104088, byte-true =========================
+     * Der Riegel prueft NUR die Felder +0x98/+0x9E des Hundes. Das fuenfte Gate ist NICHT
+     * gebaut (ihm fehlt die Muendungshoehe) und wird hier bewusst NICHT verriegelt. */
+    int rot = 0;
+    if (!s_box.ok) { printf("RIEGEL: kein Treffer - kein Urteil\n"); rot = 1; }
+    else {
+        struct { const char *w; int b, h, sb, sh; } P[3] = {
+            { "vor dem Treffer (INIT @0x8010028C-9C)", -1000, 1000, s_box.b_vor,  s_box.h_vor  },
+            { "waehrend HURT (F80104088(0) @0x80104098-A8)", -500, 500, s_box.b_lieg, s_box.h_lieg },
+            { "nach der Kette (F80104088(1) @0x801040B8-C4)", -1000, 1000, s_box.b_nach, s_box.h_nach },
+        };
+        for (int i = 0; i < 3; i++) {
+            if (P[i].sb != P[i].b || P[i].sh != P[i].h) {
+                printf("RIEGEL ROT: %s -> %d/%d (SOLL %d/%d)\n",
+                       P[i].w, P[i].sb, P[i].sh, P[i].b, P[i].h); rot = 1;
+            } else printf("RIEGEL GRUEN: %s -> %d/%d\n", P[i].w, P[i].sb, P[i].sh);
+        }
+        /* Gegen-Riegel gegen ein EINGEFROREN-Gestaucht (die Runde-13/14-Falle in ihrer
+         * Hitbox-Variante): die Kette MUSS enden und die Box MUSS wieder aufgehen. */
+        if (s_box.kette < 0) { printf("RIEGEL ROT: die HURT-Kette endete nicht\n"); rot = 1; }
+        else printf("RIEGEL GRUEN: HURT-Kette endete nach %d Bildern (Pause %d)\n",
+                    s_box.kette, s_box.pause);
+    }
+    printf(rot ? "\nRIEGEL: ROT\n" : "\nRIEGEL: GRUEN\n");
+    return rot;
 }
