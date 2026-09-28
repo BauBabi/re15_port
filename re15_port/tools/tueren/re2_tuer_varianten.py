@@ -174,8 +174,9 @@ def seite(x):
     return "mitte"
 
 
-def analysiere(door, variante):
-    vm, summ = tk.analyse_variant(door, variante)
+def analysiere(door, variante, var0e=0):
+    """var0e = Payload+13 & 0x80 (var 14, @0x80013e84 andi v0,v0,0x80 / @0x80013e8c)."""
+    vm, summ = tk.analyse_variant(door, variante, var0e)
     fr = vm.frames
     if not fr or not max(len(s) for s in fr):
         return {"variante": variante, "bilder": len(fr), "objekte": [], "leer": True,
@@ -185,31 +186,32 @@ def analysiere(door, variante):
     meshes = door.meshes
     rollen = {}
     blatt = []
+    ist_blatt = {}
     for s in summ:
         m = meshes[s["mesh"]] if s["mesh"] < len(meshes) else None
         hoch = m["size"][1] if m else 0
         rx, ry, rz = s["rot_extreme"]
         _, ay, az = s["pos_ohne_fahrt_extrem"]
         bewegt = abs(ry) >= 64 or abs(ay) >= 200 or abs(az) >= 200
-        if hoch >= BLATT_HOEHE and bewegt:
-            rollen[s["obj"]] = "Blatt"
-            blatt.append(s)
+        if hoch >= BLATT_HOEHE:
+            ist_blatt[s["obj"]] = True
+            if bewegt:
+                rollen[s["obj"]] = "Blatt"
+                blatt.append(s)
+            else:
+                rollen[s["obj"]] = "Blatt fest"
     for s in summ:
         if s["obj"] in rollen:
             continue
-        m = meshes[s["mesh"]] if s["mesh"] < len(meshes) else None
-        groesse = m["size"] if m else [0, 0, 0]
-        if s["parent"] in rollen and rollen[s["parent"]] == "Blatt" and max(groesse) < 1200:
-            rollen[s["obj"]] = "Griff"
-        elif max(groesse) >= BLATT_HOEHE:
-            rollen[s["obj"]] = "Blatt (fest)" if s["first_move"] is None or (
-                abs(s["rot_extreme"][1]) < 64 and abs(s["pos_ohne_fahrt_extrem"][1]) < 200
-                and abs(s["pos_ohne_fahrt_extrem"][2]) < 200) else "Blatt"
+        if s["parent"] in ist_blatt:
+            rollen[s["obj"]] = "Griff/Beschlag"      # Kind eines Blattes, Mesh niedriger als 3000
+        elif s["parent"] >= 0:
+            rollen[s["obj"]] = "Anbauteil (Kind)"
         else:
-            rollen[s["obj"]] = "Anbauteil"
+            rollen[s["obj"]] = "Anbauteil (Wurzel)"
     # Hauptblatt = das bewegte Blatt mit der kleinsten Objektnummer
     haupt = min(blatt, key=lambda s: s["obj"]) if blatt else None
-    ergebnis = {"variante": variante, "bilder": len(fr), "t0": t0, "t_offen": t1,
+    ergebnis = {"variante": variante, "bit7": 1 if var0e else 0, "bilder": len(fr), "t0": t0, "t_offen": t1,
                 "objekte": [], "toene": vm.sounds, "notizen": sorted(vm.notes),
                 "schliesston": vm.global248,
                 "blende": vm.fades}
@@ -250,11 +252,14 @@ def analysiere(door, variante):
         if a_von is not None and a_bis is not None:
             mitte_t = min((a_von + a_bis) // 2, len(fr) - 1)
         griffe = []
+        blatt_x0 = angel_w0[0]
         for o in ergebnis["objekte"]:
-            if o["rolle"] == "Griff":
+            if o["rolle"] == "Griff/Beschlag" and o["eltern"] == haupt["obj"]:
                 gw0 = welt(door, st0, o["obj"], [0, 0, 0])
-                griffe.append({"obj": o["obj"], "mesh": o["mesh"], "bild_x": round(bild_x(gw0), 1),
-                               "seite": seite(bild_x(gw0)), "lage_im_blatt": o["pos0"],
+                q = tk.project(gw0)
+                griffe.append({"obj": o["obj"], "mesh": o["mesh"], "bild_x": round(q[0], 1), "bild_y": round(q[1], 1),
+                               "seite": seite(q[0]), "lage_im_blatt": o["pos0"], "drehung0": o["rot0"],
+                               "sichtbar": "vorn" if gw0[0] > blatt_x0 else "hinten",
                                "dreht": o["rot_weg"]})
         ergebnis.update({
             "blatt_obj": haupt["obj"], "blatt_mesh": haupt["mesh"], "bewegung": art,
@@ -275,17 +280,36 @@ def zeichne_paar(door, vm, erg, t0, tm, tex):
     if erg.get("angel_bild_x") is not None:
         mk.append((erg["angel_bild_x"], 0, (255, 220, 60), "Angel"))
     for g in erg.get("griffe", []):
-        mk.append((g["bild_x"], 0, (80, 220, 255), "Griff"))
+        if g["sichtbar"] == "vorn":
+            mk.append((g["bild_x"], 0, (80, 220, 255), "Griff"))
     a = rendern(door, fr[t0], tex, mk)
     b = rendern(door, fr[tm], tex)
     im = Image.new("RGB", (W * 2 + 6, H + 16), (50, 50, 60))
     im.paste(a, (0, 16))
     im.paste(b, (W + 6, 16))
     dr = ImageDraw.Draw(im)
-    txt = "%s V%d  Bild %d | Bild %d  %s %s" % (door.name, erg["variante"], t0, tm,
+    txt = "%s V%d%s  Bild %d | Bild %d  %s %s" % (door.name, erg["variante"], " Bit7" if erg.get("bit7") else "", t0, tm,
                                                  erg.get("bewegung", "-"), erg.get("richtung", ""))
     dr.text((4, 2), txt, fill=(255, 255, 255))
     return im
+
+
+def griff_nah(door, vm, erg, t0, tex):
+    """Nahbild je sichtbarem Griff aus Bild t0 (Ausschnitt 64 x 64 um den Anhaengepunkt, 3fach)."""
+    out = []
+    if not erg.get("griffe"):
+        return out
+    im = rendern(door, vm.frames[t0], tex)
+    for g in erg["griffe"]:
+        if g["sichtbar"] != "vorn":
+            continue
+        x, y = int(g["bild_x"]), int(g["bild_y"])
+        c = im.crop((x - 32, y - 32, x + 32, y + 32)).resize((192, 192), Image.NEAREST)
+        dr = ImageDraw.Draw(c)
+        dr.text((3, 2), "%s V%d%s m%d" % (door.name, erg["variante"], "b7" if erg.get("bit7") else "", g["mesh"]),
+                fill=(255, 255, 0))
+        out.append(c)
+    return out
 
 
 def main():
@@ -298,30 +322,44 @@ def main():
     os.makedirs(os.path.join(OUT, "bilder"), exist_ok=True)
     alle = {}
     boegen = []
+    griffbilder = []
     for idx in nur:
         door = tk.Door(idx)
         tex = textur(door)
         rec = {"archiv": door.name, "meshes": [{"mesh": m["index"], "dreiecke": m["n_tris"],
                                                 "groesse": m["size"], "min": m["bbox_min"], "max": m["bbox_max"]}
                                                for m in door.meshes], "varianten": []}
+        # var 14 (Bit 7) wird nur in DOOR01/DOOR05 gelesen (Cmp var0x0e: DOOR01 @Datei 0x06070/0x060f6,
+        # DOOR05 @Datei 0x05052/0x050d4) - dort zusaetzlich mit Bit 7 simulieren.
+        liest_b7 = any(i["op"] == 0x23 and i["f"]["var"] == 0x0E
+                       for k in range(door.n_scripts) for i in tk.disasm_script(door, k)[0])
         for v, tgt in varianten(door):
-            erg, vm, t0, tm = analysiere(door, v)
-            erg["aufbau_skript"] = tgt
-            rec["varianten"].append(erg)
-            if not a.keine_bilder and t0 is not None:
-                im = zeichne_paar(door, vm, erg, t0, tm, tex)
-                p = os.path.join(OUT, "bilder", "%s_v%d.png" % (door.name, v))
-                im.save(p)
-                boegen.append(im)
-            if a.tabelle:
-                print("%s V%d skr=%s bilder=%d %s %s  Angel %s (%.0f)  frei %s  Griffe %s  Se_on@%s  zu-Ton=%d" % (
-                    door.name, v, tgt, erg["bilder"], erg.get("bewegung", "-"), erg.get("richtung", "-"),
-                    erg.get("angel_seite", "-"), erg.get("angel_bild_x", -1) or -1, erg.get("freie_kante_seite", "-"),
-                    [(g["mesh"], g["seite"]) for g in erg.get("griffe", [])], erg.get("erstes_se_on"),
-                    erg.get("schliesston", 0)))
+            for b7 in ((0, 0x80) if liest_b7 else (0,)):
+                erg, vm, t0, tm = analysiere(door, v, b7)
+                erg["aufbau_skript"] = tgt
+                rec["varianten"].append(erg)
+                if not a.keine_bilder and t0 is not None:
+                    im = zeichne_paar(door, vm, erg, t0, tm, tex)
+                    p = os.path.join(OUT, "bilder", "%s_v%d%s.png" % (door.name, v, "_b7" if b7 else ""))
+                    im.save(p)
+                    boegen.append(im)
+                    griffbilder.extend(griff_nah(door, vm, erg, t0, tex))
+                if a.tabelle:
+                    print("%s V%d%s skr=%s bilder=%d %s %s  Angel %s (%.0f)  frei %s  Griffe %s  Se_on@%s  zu-Ton=%d" % (
+                        door.name, v, "b7" if b7 else "", tgt, erg["bilder"], erg.get("bewegung", "-"), erg.get("richtung", "-"),
+                        erg.get("angel_seite", "-"), erg.get("angel_bild_x", -1) or -1, erg.get("freie_kante_seite", "-"),
+                        [(g["mesh"], g["seite"], g["sichtbar"]) for g in erg.get("griffe", [])], erg.get("erstes_se_on"),
+                        erg.get("schliesston", 0)))
         alle[door.name] = rec
     with open(os.path.join(OUT, "varianten.json"), "w") as f:
         json.dump(alle, f, indent=1)
+    if griffbilder:
+        cols = 10
+        rows = (len(griffbilder) + cols - 1) // cols
+        sh = Image.new("RGB", (cols * 194, rows * 194), (30, 30, 36))
+        for i, im in enumerate(griffbilder):
+            sh.paste(im, ((i % cols) * 194, (i // cols) * 194))
+        sh.save(os.path.join(OUT, "bogen_griffe.png"))
     if boegen and not a.nur:
         je = 12
         for k in range(0, len(boegen), je):
