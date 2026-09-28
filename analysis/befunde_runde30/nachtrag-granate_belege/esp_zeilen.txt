@@ -1,0 +1,4 @@
+CORE00.ESP (7092 B): Effekt 4 = Index 4, eff_end @0x18C0, sub 0x0D -> Streams 1
+ Stream 0: 2 Zeilen @Datei 0x1AB8
+  Z00 @0x01AB8 A=30 B=0 wh=4096,4096 acc=(0,10,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
+  Z01 @0x01AE0 A=0 B=0 wh=0,0 acc=(0,0,0) p0e=0 vel=(0,0,0) p16=0 ang=(0,0,0) p1e=0 eul=(0,0,0) gate=0
