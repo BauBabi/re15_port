@@ -20,6 +20,7 @@
 #include "re15_room.h"  /* g_current_room_id — Schlafender-Content-Trigger je Raum */
 #include "re15_sicherung.h" /* Sicherung im Hebetisch von Irons' Buero (ROOM1150/1151) */
 #include "re15_irons_tisch.h" /* Irons Diary + Memory Card auf dem Schreibtisch (ROOM1150/1151) */
+#include "re15_granate.h"     /* Handgranate im Hebetisch von Irons' Buero (ROOM1150/1151) */
 
 extern scd_vm_t g_scd;
 
@@ -414,6 +415,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * stehen die Props aus main00 im Pool (obj 0..3) und sind die Flags des Raums gelesen.
      * Tut in jedem anderen Raum nichts. Herleitung: include/re15_irons_tisch.h. */
     re15_irons_tisch_install((uint16_t)g_current_room_id);
+    /* Die HANDGRANATE neben die Sicherung in den Hebetisch legen (Runde 30, Nachtrag K) —
+     * derselbe Grund, dieselbe Stelle (Plattform obj 0 erst nach dem Init-Lauf im Pool, Flag
+     * (9,56) erst dann gelesen). Tut in jedem anderen Raum nichts. Herleitung:
+     * include/re15_granate.h. */
+    re15_granate_install((uint16_t)g_current_room_id);
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

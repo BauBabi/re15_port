@@ -31,6 +31,7 @@
 #include "re15_math.h"          /* re15_squareroot0 — der Auto-Look-Scan vergleicht die WURZEL */
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 #include "re15_sicherung.h"
+#include "re15_granate.h"   /* Runde 30 Nachtrag K: Granate in derselben Fahrt */
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 #include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
@@ -1039,6 +1040,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Bild greift. Tut in jedem anderen Raum und bei schon genommener Sicherung nichts.
      * Herleitung: include/re15_sicherung.h. */
     if (c->rdt_ok) re15_sicherung_tick();
+    /* GRANATE in derselben Fahrt (Runde 30, Nachtrag K): NACH der Sicherung — sie wartet, bis
+     * deren Modal dieser Fahrt durch ist, und oeffnet ihr eigenes erst danach (Auftrag "erst
+     * Sicherung, dann Granate"). Ebenfalls vor dem Freeze-Gate. Herleitung:
+     * include/re15_granate.h. */
+    if (c->rdt_ok) re15_granate_tick();
 
     if (re15_item_modal_active()) return;
 
