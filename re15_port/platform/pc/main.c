@@ -2778,12 +2778,168 @@ static uint64_t pc_now_us(void)
  *             analysis/befunde_runde30/titel-blinken_tools/r30_pulse_frame_stats.py. */
 extern int re15_render_pc_title_row_probe(int *drawn, int *row, uint32_t *hash, uint32_t *sum);
 
+/* =============================================================================================
+ * KAMERA-PRAESENTATION = der Apply der Present-Routine des Originals (Runde 30, Spur cut-blitz;
+ * Dossier analysis/befunde_runde30/nachschliff-cut-blitz.md).
+ *
+ * BEFUND (gemessen, RE15_CUT_SYNC_LOG): der Apply stand mitten im Zeichenblock, NACH dem
+ * Hintergrund-Blit dieses Bilds. Im Bild des Wechsels ging deshalb der ALTE Hintergrund in den
+ * Framebuffer, die 3D-Projektion lief aber schon mit der NEUEN Kamera — bei JEDEM Wechsel mit 3D
+ * (14 von 14: Zonenwechsel zu Fuss und SCD Cut_chg), z.B. ROOM1150 Telefon F330: Buch und Karte
+ * in Cut-6-Lage auf dem Cut-2-Hintergrund, 11060 Pixel.
+ *
+ * ORIGINAL (PSX.EXE, selbst disassembliert aus ghidra1_V2.txt):
+ *   Hauptschleife main: @0x80020f34 jal FUN_80021a0c (Letterbox) / @0x80020f3c jal FUN_80010000 /
+ *     @0x80020f44 jal FUN_80021880 (Blenden-Takt) / @0x80020f4c jal FUN_8002137c (PRESENT) /
+ *     @0x80020f54 j LAB_80020c10. Die Spiel-Task (FUN_8001c958, geplant ueber FUN_800298b0) laeuft
+ *     VORHER: Zonen-Scan @0x8001ccec, SCD @0x8001cdec, Spieler @0x8001ce0c, AOT @0x8001ce1c, dann
+ *     ZEICHNEN (NPC @0x8001d1b8 jal FUN_80039ca0, Props @0x8001d1c0 jal FUN_8002c18c) in die OT
+ *     des Puffers DAT_800aca34, Ende des Bilds @0x8001d1e0 jal FUN_80029ac8(1).
+ *   Present FUN_8002137c: @0x800214f8 lh DAT_800b0fe4 / @0x80021500 lbu DAT_800afbb5 /
+ *     @0x80021508 beq / @0x80021514 sb 1,DAT_800b5457 (dirty); @0x80021538 beq dirty==0 ->
+ *     Normalpfad; @0x80021558 jal FUN_80021bbc (APPLY) und SOFORT @0x80021560 j LAB_800215fc.
+ *     Uebersprungen werden damit im Apply-Bild: der Hintergrund-LoadImage @0x8002157c
+ *     jal FUN_80043870, die drei DrawOTag @0x800215bc/@0x800215d0/@0x800215e4 und der
+ *     Pufferwechsel @0x800215f4 xori/@0x800215f8 sb DAT_800aca34. Die mit der ALTEN Kamera
+ *     gebaute OT dieses Bilds wird nie gezeichnet.
+ *   Apply FUN_80021bbc schaltet Hintergrund UND Kamera in EINEM Zug: @0x80021bfc sh
+ *     DAT_800b0fe4 (angezeigter Cut); @0x80021d2c jal FUN_80013c50 (BG von CD);
+ *     @0x80021e34 jal FUN_80053a8c (MDEC in den Zeichenpuffer) + @0x80021e44 jal StoreImage
+ *     (Kopie nach 0x80198000, die FUN_80043870 danach jedes Bild zurueckschreibt);
+ *     @0x80021e58 lh DAT_800b0fe4 / @0x80021e68 lhu 2(cut) / @0x80021e70 srl 7 / @0x80021e6c
+ *     jal FUN_80066c30 (gte_ldH = Projektionsabstand); @0x80021e80 lh DAT_800b0fe4 /
+ *     @0x80021e8c jal FUN_80053ca4 (Blickmatrix DAT_800b5288 des Cuts).
+ *   Die Blickmatrix wird im Spiel NUR hier gesetzt (weitere Aufrufer von FUN_80053ca4:
+ *   @0x80015a68 Todeskamera, @0x80016494 Spielstart, @0x80046140 Moduswechsel).
+ *   => Im Original tragen Hintergrund und Projektion in JEDEM gezeigten Bild denselben Cut;
+ *      das erste Bild des neuen Cuts ist das nach dem Apply gezeichnete.
+ *
+ * PORT: der Apply laeuft jetzt hier, am BILDANFANG vor dem Hintergrund-Blit und vor dem
+ * SCD-Takt — das ist die Stelle von FUN_8002137c am Ende des VORIGEN Durchlaufs. Ein Wechsel,
+ * den Zonen-Scan oder SCD in Bild N anfordern, erscheint damit in Bild N+1 mit neuem
+ * Hintergrund UND neuer Projektion; Bild N zeigt noch alles im alten Cut.
+ * Bewusst NICHT nachgebaut (Port-Wahl, keine Original-Adresse): das Original zeigt im
+ * Anforderungsbild das VORIGE Bild noch einmal (@0x80021560 ueberspringt DrawOTag und den
+ * Pufferwechsel), der Port zeigt das mit dem alten Cut gezeichnete Bild N. Beide tragen in
+ * Hintergrund und Projektion denselben Cut; der Unterschied ist die Logik eines Bilds.
+ * Die CD-Wartezeit des Originals (FUN_80013c50) ist Hardware-Zeit und bleibt weg.
+ * ============================================================================================= */
+/* [ENTFERNT 2026-08-08] s_fade_frames/s_intro_faded — die BN-Runden-Heuristik
+ * "15-Frame-Fade-in beim Cut-Wechsel auf 0" hatte KEIN Original-Gegenstück und
+ * erzeugte das gemeldete Phantom-Fade in ROOM1150 (Kamera Mitte->Tür):
+ *   - RVD-Kamerawechsel im Original: FUN_80014230 -> FUN_800142f4 schreibt NUR
+ *     `sb a0,DAT_800afbb5` @0x80014300 (Cut-Index) + `sw v0,DAT_800ac794`
+ *     @0x80014310 (RVD-Gruppenzeiger); kein Zugriff auf die Fade-Kanaele
+ *     (DAT_800b5458 / FUN_800217b0/FUN_800216ec/FUN_80021764).
+ *   - Das echte Intro-/Raum-Fade-in ist der Tuer-FSM-Kick (FUN_8001c958 state 3:
+ *     `li a1,-0x1800` @0x8001cbbc -> FUN_800217b0 @0x8001cc00) — im Port byte-true
+ *     in apply_pending (re15_fade_config/kick unten) fuer JEDEN Raumwechsel inkl.
+ *     1240->1170-Intro.
+ *   - Spielstart/Load bootet OHNE Fade: Game-Init FUN_800161e0 killt Kanal 0
+ *     (`jal FUN_80021764` @0x80016420) und setzt Schwarz-Clear (FUN_80021634(2,0)
+ *     @0x80016424) — der erste Raum erscheint direkt.
+ * Gemessen (RE15_FADE_LOG, Run D): CONTINUE-Load auf Cut!=0 liess den One-Shot
+ * scharf; der naechste RVD-Wechsel 1->0 in 1150 feuerte das 15-Frame-set_fade. */
+static int     s_last_cut_idx = -1;       /* angezeigter Cut der Praesentation (-1 = noch keiner) */
+/* BO-round (Tier-3): active cut's region quad (anchor zone), for the
+ * per-object region cull (PSX FUN_8002c18c → FUN_80014368). Refreshed
+ * on cut change; props/NPCs outside it are not drawn. */
+static int16_t cam_region_xs[4] = {0}, cam_region_zs[4] = {0};
+static int     cam_has_region   = 0;
+
+static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
+{
+    int active_cut_count = rdt_ok ? rdt->cut_count : re15_camera_room1100_cut_count;
+    int active_cut_idx = (s_last_cut_idx < 0) ? 0 : s_last_cut_idx;
+    { const char *fc = getenv("RE15_FORCE_CUT");   /* TEMP: pin the camera to a cut to see the kneel on-camera */
+      if (fc && *fc) { g_scd.cam_id = (uint8_t)atoi(fc); g_scd.cam_change_pending = 1; } }
+    /* MESS-SONDE (env-gegatet, im Normalpfad stumm): pro Bild den Kamera-Zustand.
+     * Zeigt, ob der ANGEZEIGTE Cut (s_last_cut_idx) dem ANGEFORDERTEN (g_scd.cam_id,
+     * == DAT_800afbb5) folgt. Bleiben die beiden auseinander, ist der Apply-Pfad
+     * defekt — genau der Nutzer-Befund "das Bild wechselt nicht".
+     * Seit Runde 30 (cut-blitz) steht die Zeile am BILDANFANG, vor dem SCD-Takt dieses Bilds:
+     * req zeigt also die Anforderung aus dem VORIGEN Bild (Zonen-Scan UND SCD). */
+    static int s_cam_trace = -1;
+    if (s_cam_trace < 0) s_cam_trace = getenv("RE15_CAM_TRACE") ? 1 : 0;
+    if (s_cam_trace) {
+        static int s_ct_last = -12345;
+        int ct_now = ((int)g_scd.cam_id << 20) | ((s_last_cut_idx & 0xFF) << 12)
+                   | ((g_scd.work_vars[0x0A] & 0xFF) << 4)
+                   | (g_scd.cam_change_pending ? 2 : 0) | (g_scd.cut_auto_enabled ? 1 : 0);
+        if (ct_now != s_ct_last || (g_engine.frame_count % 60) == 0) {
+            s_ct_last = ct_now;
+            fprintf(stderr, "[cam-trace] F%u room=%04x req(cam_id)=%u shown(s_last)=%d "
+                    "wv0A=%d pending=%u auto=%u pl=(%ld,%ld) rot=%d\n",
+                    g_engine.frame_count, g_current_room_id, (unsigned)g_scd.cam_id,
+                    s_last_cut_idx, (int)g_scd.work_vars[0x0A],
+                    (unsigned)g_scd.cam_change_pending,
+                    (unsigned)g_scd.cut_auto_enabled,
+                    (long)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                    (long)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                    (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
+        }
+    }
+    /* SELBSTHEILENDER KAMERA-APPLY (byte-true FUN_8002137c @0x800214f4-0x80021514 +
+     * FUN_80021bbc @0x80021bf4/fc) — die gemeinsame Engine-Fassung, damit PC, PSX und
+     * die Mess-Sonden EINE Regel teilen. Sie bewertet in JEDEM Bild neu, ob der
+     * angezeigte Cut (work_vars[0x0A]) noch dem angeforderten (g_scd.cam_id ==
+     * DAT_800afbb5) entspricht, und bewaffnet das Dirty-Flag sonst neu. Hier stand
+     * bis 2026-08-21 nur `if (g_scd.cam_change_pending)`: ein EINMAL-Flag. Ging es
+     * verloren, blieb das Bild DAUERHAFT stehen (Nutzer-Befund "nach dem
+     * Generator-Raetsel wechselt die Kamera nicht mehr").
+     *
+     * Ohne Wartebild: die PSX haelt den alten Cut, waehrend sie den BG der neuen Kamera
+     * von CD liest (FUN_80013c50 @0x80021d2c) — reine HARDWARE-LADEZEIT, keine Spiellogik.
+     * Hintergrund und Kamera schalten aber auch hier im SELBEN Zug (Kopfkommentar). */
+    if (re15_cam_present_tick()) {
+        active_cut_idx = (int)g_scd.cam_id;
+        if (active_cut_idx >= active_cut_count)
+            active_cut_idx = active_cut_count - 1;
+    }
+    if (active_cut_idx != s_last_cut_idx) {
+        { extern int re15_fade_log_on(void);
+          if (re15_fade_log_on())
+              fprintf(stderr, "[fade-log] F%u room=%04x CUT %d -> %d\n",
+                      g_engine.frame_count, g_current_room_id,
+                      s_last_cut_idx, active_cut_idx); }
+        /* KEIN Fade beim Kamerawechsel — byte-true: der RVD-Cut-Apply
+         * FUN_800142f4 schreibt nur den Cut-Index (`sb` @0x80014300) und den
+         * RVD-Gruppenzeiger (`sw` @0x80014310); die Fade-Engine wird auf diesem
+         * Pfad nie beruehrt (siehe Kommentar an s_last_cut_idx oben). */
+        s_last_cut_idx = active_cut_idx;
+        /* BO-round (Tier-3): refresh the active cut's region quad. */
+        cam_has_region = rdt_ok
+            ? re15_rdt_get_region_quad(rdt, active_cut_idx,
+                                       cam_region_xs, cam_region_zs)
+            : 0;
+        /* MONTAGE: vor dem Laden das noch stehende Bild als AUSBLENDENDE Ebene
+         * sichern (RE2 haelt beide Elemente gleichzeitig aktiv, hide_others=0 —
+         * die Ueberlappung der 48-Frame-Rampen IST die Kreuzblende). */
+        if (RE15_ROOM_BASE(g_current_room_id) == 0x1240 && !re15_montage_fx_stock()) {
+            re15_bg_snapshot_prev();
+            re15_montage_fx_on_cut(active_cut_idx, re15_bg_prev_ready());
+        }
+        re15_bg_load_cut(active_cut_idx);
+
+        /* BE-round: switch lighting tint to the new cut. */
+        if (g_re15_room_lights_ok) {
+            re15_light_apply_cut(&g_re15_room_lights, active_cut_idx);
+            fprintf(stderr,
+                    "[light] cut %d tint=(%u,%u,%u)\n",
+                    active_cut_idx,
+                    g_re15_light_tint[0], g_re15_light_tint[1],
+                    g_re15_light_tint[2]);
+        }
+    }
+}
+
 /* MESSSCHIENE RE15_CUT_SYNC_LOG=<datei> (Runde 30, Spur cut-blitz; KEIN Verhalten).
  * Je Spielbild, NACH re15_render_end_frame, eine Zeile:
  *   F<bild> room=<raum> bg=<raum>#<cut> view=<cut> sync=<0|1|-1> req=<cam_id> shown=<wv0A>
  *   fade0=<rgb>/<abr> tris=<n> dc=<todeskamera>
  *   bg    Herkunft des Hintergrunds, der in DIESEM Bild in den Framebuffer ging
- *         (bg_pc.c re15_bg_last_blit_tag; -1 = in diesem Bild kein Blit)
+ *         (bg_pc.c re15_bg_last_blit_tag; -1 = in diesem Bild kein Blit). Im Warp-Bild eines
+ *         Raumwechsels ist das noch der ALTE Raum (sync=0 unter der Tuerblende fade0=255)
  *   view  der Cut, dessen Kameramatrix die 3D-Projektion dieses Bilds trug — nicht aus einer
  *         Variablen abgeschrieben, sondern ZURUECKGERECHNET: die tatsaechlich benutzte
  *         cam_view gegen re15_camera_build_view jedes Cuts des Raums (erster Treffer)
@@ -2806,14 +2962,17 @@ static void pc_cut_sync_log(void)
     static FILE *lf; static int init;
     if (!init) { init = 1; const char *p = getenv("RE15_CUT_SYNC_LOG"); if (p && *p) lf = fopen(p, "w"); }
     if (!lf) { s_cs_view_ok = 0; return; }
-    extern const char *re15_bg_last_blit_tag(uint32_t *frame);
+    extern const char *re15_bg_last_blit_tag(uint32_t *seq);
     extern int re15_render_pc_dbg_textri_count(void);
-    uint32_t bf = 0;
-    const char *tag = re15_bg_last_blit_tag(&bf);
+    static uint32_t s_seen_seq = 0;
+    uint32_t bseq = 0;
+    const char *tag = re15_bg_last_blit_tag(&bseq);
     unsigned broom = 0; int bcut = -1;
-    if (bf != (uint32_t)g_engine.frame_count || sscanf(tag, "room%x#%d", &broom, &bcut) != 2) {
+    /* Nur ein Blit, der SEIT der letzten Zeile lief, gehoert zu diesem Bild. */
+    if (bseq == s_seen_seq || sscanf(tag, "room%x#%d", &broom, &bcut) != 2) {
         broom = 0; bcut = -1;
     }
+    s_seen_seq = bseq;
     int vcut = -1, sync = -1;
     if (s_cs_view_ok && s_cs_cuts) {
         re15_camera_view_t v;
@@ -4965,6 +5124,13 @@ re_title:;
          * ist (FUN_8002178c). Belege vollstaendig in room_common.c. */
         re15_room_transition_tick();
 
+        /* KAMERA-PRAESENTATION VOR DEM HINTERGRUND (Runde 30, Spur cut-blitz): der Apply der
+         * Present-Routine FUN_8002137c (@0x80021558 jal FUN_80021bbc) gehoert ans Ende des
+         * vorigen Durchlaufs = hierher, vor den Blit und vor den SCD-Takt. Dann traegt der
+         * Hintergrund, der gleich in den Framebuffer geht, denselben Cut wie die Projektion
+         * dieses Bilds (Beleg an pc_cam_present_apply). */
+        if (md1_ok) pc_cam_present_apply(&rdt, rdt_ok);
+
         /* Phase 4.5.6.4: paint cached MDEC BG into the software
          * framebuffer (replaces the gradient when an asset loaded).
          * Match PSX flow: BG first, meshes/HUD layer on top. */
@@ -5374,108 +5540,12 @@ re_title:;
              * between cuts was the smoking-gun that proper Member_set /
              * Obj_model_set semantics are wrong somewhere — fixing the
              * camera animator can't compensate for wrong actor positions. */
-            static int s_last_cut_idx = -1;
-            /* [ENTFERNT 2026-08-08] s_fade_frames/s_intro_faded — die BN-Runden-Heuristik
-             * "15-Frame-Fade-in beim Cut-Wechsel auf 0" hatte KEIN Original-Gegenstück und
-             * erzeugte das gemeldete Phantom-Fade in ROOM1150 (Kamera Mitte->Tür):
-             *   - RVD-Kamerawechsel im Original: FUN_80014230 -> FUN_800142f4 schreibt NUR
-             *     `sb a0,DAT_800afbb5` @0x80014300 (Cut-Index) + `sw v0,DAT_800ac794`
-             *     @0x80014310 (RVD-Gruppenzeiger); kein Zugriff auf die Fade-Kanaele
-             *     (DAT_800b5458 / FUN_800217b0/FUN_800216ec/FUN_80021764).
-             *   - Das echte Intro-/Raum-Fade-in ist der Tuer-FSM-Kick (FUN_8001c958 state 3:
-             *     `li a1,-0x1800` @0x8001cbbc -> FUN_800217b0 @0x8001cc00) — im Port byte-true
-             *     in apply_pending (re15_fade_config/kick unten) fuer JEDEN Raumwechsel inkl.
-             *     1240->1170-Intro.
-             *   - Spielstart/Load bootet OHNE Fade: Game-Init FUN_800161e0 killt Kanal 0
-             *     (`jal FUN_80021764` @0x80016420) und setzt Schwarz-Clear (FUN_80021634(2,0)
-             *     @0x80016424) — der erste Raum erscheint direkt.
-             * Gemessen (RE15_FADE_LOG, Run D): CONTINUE-Load auf Cut!=0 liess den One-Shot
-             * scharf; der naechste RVD-Wechsel 1->0 in 1150 feuerte das 15-Frame-set_fade. */
-            /* BO-round (Tier-3): active cut's region quad (anchor zone), for the
-             * per-object region cull (PSX FUN_8002c18c → FUN_80014368). Refreshed
-             * on cut change; props/NPCs outside it are not drawn. */
-            static int16_t cam_region_xs[4] = {0}, cam_region_zs[4] = {0};
-            static int     cam_has_region   = 0;
+            /* Der angezeigte Cut (s_last_cut_idx) und das Regions-Viereck (cam_region_*) stehen
+             * seit Runde 30 (Spur cut-blitz) auf Dateiebene: der Praesentations-Apply laeuft in
+             * pc_cam_present_apply() am BILDANFANG, VOR dem Hintergrund-Blit. Hier wird nur noch
+             * gelesen, was dort angewandt wurde — Hintergrund und Projektion dieses Bilds tragen
+             * damit denselben Cut (Beleg und Messung an pc_cam_present_apply). */
             int active_cut_idx = (s_last_cut_idx < 0) ? 0 : s_last_cut_idx;
-            { const char *fc = getenv("RE15_FORCE_CUT");   /* TEMP: pin the camera to a cut to see the kneel on-camera */
-              if (fc && *fc) { g_scd.cam_id = (uint8_t)atoi(fc); g_scd.cam_change_pending = 1; } }
-            /* MESS-SONDE (env-gegatet, im Normalpfad stumm): pro Bild den Kamera-Zustand.
-             * Zeigt, ob der ANGEZEIGTE Cut (s_last_cut_idx) dem ANGEFORDERTEN (g_scd.cam_id,
-             * == DAT_800afbb5) folgt. Bleiben die beiden auseinander, ist der Apply-Pfad
-             * defekt — genau der Nutzer-Befund "das Bild wechselt nicht". */
-            static int s_cam_trace = -1;
-            if (s_cam_trace < 0) s_cam_trace = getenv("RE15_CAM_TRACE") ? 1 : 0;
-            if (s_cam_trace) {
-                static int s_ct_last = -12345;
-                int ct_now = ((int)g_scd.cam_id << 20) | ((s_last_cut_idx & 0xFF) << 12)
-                           | ((g_scd.work_vars[0x0A] & 0xFF) << 4)
-                           | (g_scd.cam_change_pending ? 2 : 0) | (g_scd.cut_auto_enabled ? 1 : 0);
-                if (ct_now != s_ct_last || (g_engine.frame_count % 60) == 0) {
-                    s_ct_last = ct_now;
-                    fprintf(stderr, "[cam-trace] F%u room=%04x req(cam_id)=%u shown(s_last)=%d "
-                            "wv0A=%d pending=%u auto=%u pl=(%ld,%ld) rot=%d\n",
-                            g_engine.frame_count, g_current_room_id, (unsigned)g_scd.cam_id,
-                            s_last_cut_idx, (int)g_scd.work_vars[0x0A],
-                            (unsigned)g_scd.cam_change_pending,
-                            (unsigned)g_scd.cut_auto_enabled,
-                            (long)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
-                            (long)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
-                            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
-                }
-            }
-            /* SELBSTHEILENDER KAMERA-APPLY (byte-true FUN_8002137c @0x800214f4-0x80021514 +
-             * FUN_80021bbc @0x80021bf4/fc) — die gemeinsame Engine-Fassung, damit PC, PSX und
-             * die Mess-Sonden EINE Regel teilen. Sie bewertet in JEDEM Bild neu, ob der
-             * angezeigte Cut (work_vars[0x0A]) noch dem angeforderten (g_scd.cam_id ==
-             * DAT_800afbb5) entspricht, und bewaffnet das Dirty-Flag sonst neu. Hier stand
-             * bis 2026-08-21 nur `if (g_scd.cam_change_pending)`: ein EINMAL-Flag. Ging es
-             * verloren, blieb das Bild DAUERHAFT stehen (Nutzer-Befund "nach dem
-             * Generator-Raetsel wechselt die Kamera nicht mehr").
-             *
-             * Apply INSTANTLY: die PSX haelt den alten Cut ~6 Bilder, waehrend sie den BG der
-             * neuen Kamera von CD liest (FUN_80013c50) — reine HARDWARE-LADEZEIT, keine
-             * Spiellogik, deshalb darf der PC sofort schalten. */
-            if (re15_cam_present_tick()) {
-                active_cut_idx = (int)g_scd.cam_id;
-                if (active_cut_idx >= active_cut_count)
-                    active_cut_idx = active_cut_count - 1;
-            }
-            if (active_cut_idx != s_last_cut_idx) {
-                { extern int re15_fade_log_on(void);
-                  if (re15_fade_log_on())
-                      fprintf(stderr, "[fade-log] F%u room=%04x CUT %d -> %d\n",
-                              g_engine.frame_count, g_current_room_id,
-                              s_last_cut_idx, active_cut_idx); }
-                /* KEIN Fade beim Kamerawechsel — byte-true: der RVD-Cut-Apply
-                 * FUN_800142f4 schreibt nur den Cut-Index (`sb` @0x80014300) und den
-                 * RVD-Gruppenzeiger (`sw` @0x80014310); die Fade-Engine wird auf diesem
-                 * Pfad nie beruehrt (siehe Kommentar an s_last_cut_idx oben). */
-                s_last_cut_idx = active_cut_idx;
-                /* BO-round (Tier-3): refresh the active cut's region quad. */
-                cam_has_region = rdt_ok
-                    ? re15_rdt_get_region_quad(&rdt, active_cut_idx,
-                                               cam_region_xs, cam_region_zs)
-                    : 0;
-                /* MONTAGE: vor dem Laden das noch stehende Bild als AUSBLENDENDE Ebene
-                 * sichern (RE2 haelt beide Elemente gleichzeitig aktiv, hide_others=0 —
-                 * die Ueberlappung der 48-Frame-Rampen IST die Kreuzblende). */
-                if (RE15_ROOM_BASE(g_current_room_id) == 0x1240 && !re15_montage_fx_stock()) {
-                    re15_bg_snapshot_prev();
-                    re15_montage_fx_on_cut(active_cut_idx, re15_bg_prev_ready());
-                }
-                re15_bg_load_cut(active_cut_idx);
-
-                /* BE-round: switch lighting tint to the new cut. */
-                if (g_re15_room_lights_ok) {
-                    re15_light_apply_cut(&g_re15_room_lights, active_cut_idx);
-                    fprintf(stderr,
-                            "[light] cut %d tint=(%u,%u,%u)\n",
-                            active_cut_idx,
-                            g_re15_light_tint[0], g_re15_light_tint[1],
-                            g_re15_light_tint[2]);
-                }
-
-            }
             /* ⛔ VORDERGRUND-MASKEN HAENGEN AM PAAR (RAUM, CUT) — NICHT am Cut allein.
              *
              * Bis 2026-09-03 stand dieser Block INNERHALB von `active_cut_idx != s_last_cut_idx`.
@@ -10247,7 +10317,12 @@ re_title:;
             (void)active_cut_count;
 
             /* Phase ESP-C: draw the op-0x3a effect particles (after actors, in cam_view scope). */
-            pc_fx_set_camf(rdt_buf, (size_t)rdt_size, (int)g_scd.cam_id);
+            /* Projektionsabstand H des ANGEZEIGTEN Cuts, nicht des angeforderten: im Original
+             * laedt ihn nur der Apply, aus DAT_800b0fe4 (@0x80021e58 lh / @0x80021e68 lhu 2(cut) /
+             * @0x80021e70 srl 7 / @0x80021e6c jal FUN_80066c30 = gte_ldH). Mit g_scd.cam_id
+             * projizierten die Effekte im Anforderungsbild schon mit dem neuen H (Runde 30,
+             * cut-blitz). */
+            pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
             /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
