@@ -624,3 +624,120 @@ Bilder (`build/r30_sicherung/`): `uebersicht_bestand_weg2_weg1.png`,
 `weg2n_icon_40_8x.png`, `weg2z_vorher_nachher.png`, `nebeneinander.png`,
 `vergleich_tuerweg_ladeweg.png`, `viereck_ordnung_im_spiel.png`, `sitz_zeitplan.png`,
 `ab_mit_ohne_zoom.png`.
+
+## UMSETZUNG (Bau, Runde 30)
+
+Zweig `worktree-wf_b4b268f3-d12-2`. Gebaut hat ein Bau-Agent, der am Guthaben-Limit abbrach;
+sein Stand liegt im Commit eb82071d („wip … UNGEPRUEFT“). Die Fortsetzung hat ihn Schritt für
+Schritt gebaut, gefahren und gegen die Soll-Dateien geprüft. Falsches fand sie keins; sie hat
+nur Werkzeuge ergänzt (647b7b44) und die Abnahme gefahren. **Gebaut sind die Schritte 1–4 (Weg 2).**
+Nicht gebaut: Schritt 5 (Weg 1) und das ROOM1050-Ende der Kette (§2.8, §6.8).
+
+### Stand je Plan-Schritt
+
+| Schritt | gebaut | Riegel | Stand |
+|---|---|---|---|
+| 1 Lade-Weg (U1) | `platform/pc/main.c`: `re15_sicherung_install((uint16_t)g_current_room_id)` nach dem Init-Lauf von sub00 und vor dem Kamera-Restore (FE-4), dazu die Logzeile `[sicherung] Boot-Weg: Prop obj_id=4 im Pool` | `integration_r30_sicherung_laden`: Lauf A (CONTINUE ROOM1150) verlangt Pool-Zeile und `[prop-render] pi=4 oid=0x04`; Lauf B (Flag (9,53) im Spielstand) verbietet beide | erledigt |
+| 2 Modell (U3, U4) | `tools/sicherung_engine_export.py`: Face-Record `a,a,b,b,e,e,c,c`, UV `f0,f1,f3,f2`, Normalen gewendet → `gen/sicherung_prop.inc` | `unit_r30_sicherung_modell` | erledigt |
+| 3 Sitz (U2) | `include/re15_sicherung.h`: POS (-280,-1062,1260), `RE15_SICHERUNG_ROT_Y` 1024 als „PORT-WAHL, KEINE ORIGINAL-ADRESSE“ mit Herleitung aus den Punkten @0x121AC..@0x1221C; Kommentar berichtigt (For @0x0FC0 Zähler 15, Deckelweg ±150, Hochpunkt -1215, Stand -1205, Parklage -20224); `sicherung_1150.c` setzt `rot_y` | `unit_r30_sicherung_sitz` (liest den Fachboden aus ROOM1150.RDT **und** ROOM1151.RDT), `unit_sicherung_1150` Prüfung 4 | erledigt |
+| 4 Bild/Icon (H2) | `engine/src/sicherung_itembild.c` + `gen/sicherung_itembild.inc`; Einsetzen im GELADENEN Puffer an allen sechs Ladestellen (main.c ×2, inv_render_pc.c ×2, itps_common.c, item_icon_common.c) | `unit_r30_sicherung_bild` | erledigt |
+
+### Selbst nachgeschlagen, bevor etwas übernommen wurde
+
+* `jal 0x800396fc`, Wortsuche über PSX.EXE (t_addr 0x80010000, t_size 0xaf000): genau
+  **@0x8001d5ac** und **@0x8001d988**; @0x80039a00 `jal 0x8003ef6c`.
+* For-Handler: @0x8003f564 `lh t1,2(t0)` (Blocklänge), @0x8003f568 `lhu a1,4(t0)` (Zähler).
+  ROOM1150.RDT @0x0FC0 `0d 00 18 00 0f 00`, ROOM1151.RDT @0x0F9E dieselben Bytes.
+* ITPS-Lader LAB_8001e404: @0x8001e414 `ori v0,zero,0x3000`, @0x8001e450-58 `sll v0,a0,1` /
+  `addu v0,v0,a0` / `sll v0,v0,1`.
+* FUN_800256b0: @0x800256c0 `ori a3,a3,0x3c`. Die vierte Ecke kommt aus `psVar9[7]` des Face-Records
+  und geht nach `prim+0x2c` (xy3 von POLY_GT4).
+* Obj_model_set 0xC0: @0x80040a34 `ori v0,zero,0xc0` … @0x80040aa0 `sw v0,116(a1)`.
+* DEBUG.BIN-Foto-Lader: @0x800c0260 `jal 0x8006bbbc`, @0x800c0268 `jal 0x8006bbcc`, @0x800c0280 und
+  @0x800c02a0 `jal 0x80068c88`.
+* Fachboden ROOM1150.RDT @0x121AC..@0x1221C: acht Punkte, alle y = -1036, x -485..-74, z 875..1645.
+  Deckelbytes @0x0FCA `2f 02 0a 00` und @0x0FD4 `2f 02 f6 ff`. Die Hubfahrt: @0x0FF2 `2f 01 f6 ff`,
+  @0x0FF6 `0d 00 04 00 5b 00`, @0x100C `2f 01 01 00`, @0x1010 `0d 00 04 00 0a 00`. Sleep 30 steht
+  @0x0FDE und @0x101A (`09 0a 1e 00`), Sleep 10 @0x102E (`09 0a 0a 00`).
+* `shared_assets/PSX/STAGE1/ROOM1150.RDT` und `ROOM1151.RDT` sind bytegleich mit `info/Re1.5/PSX/STAGE1/`.
+
+### Bytevergleich (`sicherung_abnahme/inventar_und_bytes.txt`)
+
+| Was | Soll | Ist |
+|---|---|---|
+| `re15_sicherung_md1` | soll/sicherung_zord_normal.md1, sha256 39badaa31dbc2f4c… | 2532 B, **gleich** (530 Bytes gegenüber master verändert) |
+| `re15_sicherung_tim` | unverändert | 33312 B, **gleich** mit master |
+| `re15_sicherung_itps_block` | soll/weg2n_itps_block_40.bin, sha256 33d01cb1… | 12288 B, **gleich** |
+| `re15_sicherung_icon_tile` | soll/weg2n_icon_tile_40.bin, sha256 d6a3248f… | 1200 B, **gleich** |
+| Einsetzen ITPS.ITP | nur 0xC0000..0xC2FFF | 8904 Bytes, 0xC000E..0xC25B6 |
+| Einsetzen ITEMALL.PIX | nur 0x12C00..0x130AF | 389 Bytes, 0x12C6C..0x13016 |
+
+Beide Generatoren erzeugen ihre `.inc` bytegleich neu.
+
+### Abnahme im Spiel
+
+Gefahren wurde die echte exe mit dem beschleunigten Renderer, ohne `RE15_AUTOSHOT` und ohne
+`RE15_SOFTWARE_RENDER`. Die Bilder kommen aus `RE15_FRAMEDUMP` (960x720). Gezählt sind die
+Punkte, in denen sich die Läufe MIT und OHNE Sicherung unterscheiden, umgerechnet auf 320x240
+(`sichtbar_im_spiel.py`; die Läufe OHNE setzen Flag (9,53) vor dem Raumeintritt). Türweg:
+`lauf.sh … aot` mit `SERIE=90-330/10`, `RE15_EXIT_AT=335#1150`. Lade-Weg: `lauf_laden.sh`
+(Schritt 1 speichert im Spiel in ROOM1150, Schritt 2 lädt mit CONTINUE). VORHER sind die Läufe
+`bestand_*`, die vor dem Bau mit dem master-Stand gefahren wurden. Alle Zahlen stehen in
+`sicherung_abnahme/sichtbar.txt`.
+
+| F | 90 | 100 | 110 | 120 | 130 | 140 | 150 | 160 | 170 | 180 | 190 | 200 | 210 | 220 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Türweg VORHER | 0 | 124 | 89 | 45 | 45 | 45 | 29 | 15 | 12 | 27 | 51 | 76 | 101 | 87 |
+| **Türweg BAU** | 0 | **0** | 211 | 348 | 348 | 348 | 366 | 361 | 381 | 370 | 405 | 415 | 430 | 439 |
+| Lade-Weg VORHER | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **Lade-Weg BAU** | 0 | **0** | 211 | 348 | 348 | 348 | 366 | 361 | 381 | 370 | 405 | 415 | 430 | 439 |
+
+* **Soll erfüllt:** F100 = 0 (Deckel zu), F120–F220 mindestens **348** Punkte (Soll ≥ 200), auf beiden Wegen.
+  Lade-Log: `[save] CONTINUE: resumed in room 1150` → `[sicherung] Boot-Weg: Prop obj_id=4 im
+  Pool (slot 4, Raum 1150)` → `[prop-render] pi=4 oid=0x04 pos=(-20420,-1367,-18720) rot=(0,1024,0)`.
+* Farbe F140: Mittel RGB **(100,107,101)** bei 1737 Farben (Soll (100,107,101)). VORHER, im selben Bild
+  gemessen: (58,62,58).
+* **Bildgleich mit dem Prototyp** `proto_weg2_normal` (Ermittlung): Türweg 25 von 25 Bildern F90–F330,
+  Lade-Weg 25 von 25, das Modal (F230–F330) eingeschlossen.
+* **Keine Nebenwirkung auf die Szene:** Die Läufe OHNE Sicherung sind vorher und nachher bildgleich,
+  auf dem Türweg in 25 von 25 Bildern, auf dem Lade-Weg in 25 von 25.
+* Modal: F240 weicht in 28 741 Punkten vom Bestand ab (bbox x324..732 y106..384, 960x720),
+  F300 in 24 797. Zu sehen ist die Rohr-Sicherung statt des „Fuse Case“.
+* Inventar (`lauf_inventar.sh`, Mess-Variante, Item 0x40 in Platz 0, echte Dateien aus
+  shared_assets): **Raster F50** BAU = Prototyp bildgleich (0 Punkte), gegen den Bestand 6948 Punkte
+  (Equip-Feld und Icon-Zelle). **CHECK F140**: Das Fotofeld (Item-data-Feld x51..629 y171..455,
+  165 015 Punkte) enthält nicht-blaue Punkte: BESTAND **0**, Prototyp 15 732, BAU **15 732**. BAU und
+  Prototyp weichen dort in 0 Punkten voneinander ab.
+* Mutationsprobe: Ohne den Install-Aufruf am Boot-Weg fällt `integration_r30_sicherung_laden`
+  („Lauf A: … liegt die Sicherung NICHT im Prop-Pool“). Mit dem Aufruf ist der Test grün.
+* Suite: **364 von 364** (360 aus master und 4 neue).
+
+Abzüge: `sicherung_abnahme/bau_abnahme_szene.png` (VORHER/BAU, Türweg und Lade-Weg, F100/F140/F200),
+`bau_abnahme_item.png` (Modal, Raster, CHECK) und `bau_zoom_F140.png`. Im Zoom liegt die Sicherung
+im geöffneten Fach, ihre Enden verschwinden hinter den Deckelschalen.
+
+### Abweichungen vom Plan (mit Grund)
+
+1. **Die Einsetz-Funktionen stehen in einer eigenen Datei** `engine/src/sicherung_itembild.c` statt in
+   `sicherung_1150.c`. Die Mess-Variante ersetzt die Symbole aus `sicherung_1150.c`, indem ihr Objekt
+   vor dem Archiv gelinkt wird. Stünden die Einsetz-Funktionen im selben Archivmitglied, gäbe es
+   Doppelsymbole.
+2. **Neuer Testhaken** `RE15_EXIT_AT="<bild>[#<raum>]"` in main.c. Er ist nur über die Umgebung
+   schaltbar und beendet den Prozess nach `end_frame`. So endet der Lade-Pin an einem Bild und nicht
+   an einer Wanduhr. Auf das Spielverhalten wirkt er nicht.
+3. **Neue Lesefunktion** `re15_itemall_tile_raw()` (re15_item_icon.h). Der Bild-Riegel prüft damit den
+   faulen Lader.
+4. **Die Karte des Lade-Pins ist synthetisch** (`probe_r30_sicherung_karte`, ohne add_test). Die
+   Abnahme lief dagegen mit einer Karte, die im Spiel geschrieben wurde.
+5. **Die Zahl 14 166 für das CHECK-Fotofeld (§2.7/§5.4) ließ sich nicht nachrechnen.** Wie gezählt
+   wurde (Feld mit 143 964 Punkten, Farbschranke), ist nirgends festgehalten. Nach der eigenen
+   Zählung oben sind es 0 → 15 732. Weil der Bau im Fotofeld bildgleich mit dem Prototyp ist, gilt
+   jede Zählung des Prototyps unverändert auch für den Bau.
+
+### Offen
+
+* ROOM1050-Ende der Kette (§2.8, §6.8): nicht gebaut. Die Sicherung hat im Spiel weiter keine Verwendung.
+* CHECK-Foto der übrigen 18 Items im RE2-Format (§6.4): bleibt leer, nicht gebaut.
+* PSX-Ziel (§6.5): lädt ITPS.ITP/ITEMALL.PIX nicht über die sechs Stellen. Dort zeigt Item 0x40
+  weiter das ausgelieferte Bild.
+* §6.2 Modal-Schranken -5000/-1100: bleiben Port-Wahl. §6.3 Antwort „No“: nicht gemessen.
