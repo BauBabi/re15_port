@@ -160,3 +160,22 @@ Sitzung ab Logzeile 33473, geladener Stand in ROOM1150):
 
 Der Spieler läuft also mit hp 0 weiter, wechselt Räume, wird erneut gebissen (hp -20) und
 steht wieder bei hp 0. Der Tod wird nie ausgelöst, und jemand setzt hp von -20 auf 0 zurück.
+
+## J — Irons Diary auf Englisch (Nachtrag 2026-09-28, vor dem Paket)
+
+> Ich habe irons diary vergessen zu übersetzen: [englischer Text]
+
+Der englische Text steht WOERTLICH in `analysis/befunde_runde30/irons_diary_en.txt` und
+ersetzt den deutschen Text auf den Seiten FILE25 vollstaendig (Titel bleibt „IRONS DIARY").
+
+## K — Granate im Hebetisch (Nachtrag 2026-09-28)
+
+> Außerdem möchte ich im hochfahrenden model in irons office eine granate mit hochfahren haben.
+
+Neben der Sicherung (Abschnitt H) soll im Hebetisch von ROOM1150/1151 eine Granate liegen,
+die mit hochfaehrt.
+
+## L — Linux-Bau dauert ueber eine Stunde (Nachtrag 2026-09-28)
+
+> Ich will auch das du untersuchst warum der Linux bau über eine Stunde dauert. Das ist doch
+> nicht normal...
