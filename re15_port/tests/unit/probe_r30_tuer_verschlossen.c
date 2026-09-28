@@ -53,6 +53,10 @@ extern int g_test_snd0_se_last, g_test_snd0_se_count;
 extern int g_test_core_se_last, g_test_core_se_count;
 extern int g_test_elev_se_last, g_test_elev_se_count;
 extern int g_test_panel_se_last, g_test_panel_se_count;
+/* Runde 30 Bau: der neue Tuer-Ton (re15_audio_re2_door_se, engine/src/lock_se_common.c).
+ * Wird am ZEILENENDE als eigenes Feld gedruckt, damit der Vorher/Nachher-Vergleich der
+ * uebrigen Spalten ein reines Abschneiden bleibt. */
+extern int g_test_door_se_last, g_test_door_se_count;
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -170,7 +174,7 @@ static int vorwaerts_im_platz(const re15_aot_t *a, int32_t px, int32_t pz, int y
     return dx <= a->half_w && dz <= a->half_h;
 }
 
-static int s_ktl_se1 = 0, s_ktl_rest = 0;   /* Kontrolllauf OHNE Druck: dieselben 150 Bilder */
+static int s_ktl_se1 = 0, s_ktl_rest = 0, s_ktl_tuer = 0;   /* Kontrolllauf OHNE Druck: dieselben 150 Bilder */
 
 static void messen(uint16_t room, int slot, int druck)
 {
@@ -216,6 +220,7 @@ static void messen(uint16_t room, int slot, int druck)
 
     int se1_0 = g_test_room_se_n, sn0_0 = g_test_snd0_se_count, core_0 = g_test_core_se_count;
     int pan_0 = g_test_panel_se_count, elv_0 = g_test_elev_se_count;
+    int tuer_0 = g_test_door_se_count; g_test_door_se_last = -1;
     s_q_se = 0; s_q_txt[0] = 0;
     g_room_change.pending = 0;
 
@@ -241,11 +246,13 @@ static void messen(uint16_t room, int slot, int druck)
     int d_se1 = g_test_room_se_n - se1_0, d_sn0 = g_test_snd0_se_count - sn0_0;
     int d_core = g_test_core_se_count - core_0, d_pan = g_test_panel_se_count - pan_0;
     int d_elv = g_test_elev_se_count - elv_0;
+    int d_tuer = g_test_door_se_count - tuer_0;
     int ton = d_se1 + d_sn0 + d_core + d_pan + d_elv + s_q_se;
 
     if (!druck) {            /* Kontrolllauf: nur die Zaehler merken, keine Zeile */
         s_ktl_se1  = d_se1;
         s_ktl_rest = d_sn0 + d_core + d_pan + d_elv + s_q_se;
+        s_ktl_tuer = d_tuer;
         return;
     }
     s_sum_plaetze++;
@@ -267,8 +274,9 @@ static void messen(uint16_t room, int slot, int druck)
     printf("TON: snd1=%d snd0=%d core=%d re2panel=%d re2elev=%d scd_se_on=%d%s%s",
            d_se1, d_sn0, d_core, d_pan, d_elv, s_q_se, s_q_se ? " " : "", s_q_txt);
     printf(" | KONTROLLE ohne Druck: snd1=%d uebrige=%d", s_ktl_se1, s_ktl_rest);
-    printf(" | stand(%ld,%ld) yaw=%d band_ist=%d einschwingen=%d mode=%d letterbox=%d pause=0x%08x\n",
+    printf(" | stand(%ld,%ld) yaw=%d band_ist=%d einschwingen=%d mode=%d letterbox=%d pause=0x%08x",
            (long)g_x, (long)g_z, g_yaw, pb, z_warm, z_mode, z_lb, (unsigned)z_pause);
+    printf(" | TUERTON=%d satz=%d KONTROLLE=%d\n", d_tuer, d_tuer ? g_test_door_se_last : -1, s_ktl_tuer);
 }
 
 int main(int argc, char **argv)
