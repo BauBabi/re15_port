@@ -188,9 +188,35 @@ RE1.5 hat keinen Zeiger und prueft den Schalterzustand sofort in jedem Bild. Der
 den RE2-Zeiger nachgeruestet, die Abnahme aber auf der RE1.5-Zeitachse gelassen — die zieht
 im Bild der letzten Schalterstellung, waehrend der Zeiger noch 20..30 Punkte unterwegs ist.
 
-## 4. Messung heute
+## 4. Messung heute (echte exe, vor dem Umbau)
 
-(laufend)
+Stand: Zweig `r31/generator` auf 10d0c706 + nur die erweiterte Messschiene (Bildnummer,
+`strom`=4:243, `padsperre`=0x01000000, `msg`, `bestaet`=Zaehler des Bestaetigungstons).
+Lauf: `generator_belege/lauf.sh` (DEBUG_JUMP 11F0, FIRE_AOT Slot 1 = Panel-Untersuchung,
+Eingabeskript Basis Spielbild ab F320: Meldungen 0/1 blaettern, "Ja", dann echte Cursor-Fahrt
+und Tastendruck auf Schalter 7, 9, 3, 1, 5 — Anzeige 0->20->50->40->60->80). Zwei Laeufe
+(`vorher`, `vorher_fd`) liefern bildgleiche Protokolle (deterministisch).
+
+Auszug `generator_belege/vorher_panel_F1180-1203.log`:
+
+```
+F1182 cut=10 aktiv=1 maske=145 ziel=60 wert=60 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0
+F1183 cut=10 aktiv=1 maske=155 ziel=80 wert=61 geloest=0 strom=0 padsperre=0 msg=0 bestaet=0   <- letztes Schalterbit
+F1184 cut=10 aktiv=0 maske=155 ziel=80 wert=62 geloest=1 strom=1 padsperre=1 msg=1 bestaet=1   <- ABNAHME
+F1185 cut=8  aktiv=0 maske=155 ziel=80 wert=63 geloest=1 ...                                   <- Kamera weg
+F1202 cut=8  ...                   wert=80                                                     <- Zeiger erst hier auf 80
+```
+
+**Befund:** Die Loesungskette zieht im Bild NACH dem letzten Schalterbit (F1184) — Meldung
+"Power supply OK." (msg=1), Bestaetigungston (bestaet 0->1), Reservestrom 4:243, Pad-Sperre von
+sub18, und ab F1185 Cut 8. Der Zeiger steht da auf **62**; die 80 erreicht er erst in **F1202**,
+18 Bilder spaeter und unsichtbar (Cut 8). Differenz zum RE2-Soll (§2.2: OK erst 31 Bilder nach
+dem letzten Zeigerschritt): die Abnahme kommt **49 Bilder zu frueh** (Soll: 80 in F1202, OK in
+F1233; Ist: OK in F1184).
+
+Bildbeleg `generator_belege/vorher_streifen.png` (RE15_FRAMEDUMP, Readback vor Present;
+F1182/F1183/F1184/F1185/F1190): In F1184 steht der rote Zeiger bei ~62 (Hoehe der "60") und
+das "P" von "Power supply OK." tippt bereits; F1185 zeigt Cut 8.
 
 ## 5. Bau
 

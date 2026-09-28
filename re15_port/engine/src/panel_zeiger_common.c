@@ -12,6 +12,7 @@
 #include "re15_room.h"       /* g_current_room_id                                */
 #include "re15_light.h"      /* g_re15_active_cut                                */
 #include "re15_audio.h"      /* re15_audio_re2_panel_se + RE15_PANEL_SE_BESTAET  */
+#include "re15_engine.h"     /* g_engine.frame_count (nur Messschiene)            */
 
 /* Der angestrebte Wert (Funktion der zehn Schalterbits) und der ANGEZEIGTE Wert, der ihm
  * mit genau EINEM Punkt je Bild folgt (RE2 sub04+0x0106 @ROOM2130.RDT 0x01216 `02`
@@ -150,10 +151,15 @@ void re15_panel_zeiger_tick(void)
     { static FILE *lf = (FILE *)0; static int init = 0;
       if (!init) { init = 1; const char *e = getenv("RE15_PANEL_LOG");
                    if (e && *e) lf = fopen(e, "w"); }
-      if (lf) { fprintf(lf, "raum=%04X cut=%d aktiv=%d maske=%03X ein=%d roh=%d ziel=%d wert=%d geloest=%d\n",
+      if (lf) { fprintf(lf, "F%u raum=%04X cut=%d aktiv=%d maske=%03X ein=%d roh=%d ziel=%d wert=%d geloest=%d "
+                            "strom=%d padsperre=%d msg=%d bestaet=%u\n",
+                        (unsigned)g_engine.frame_count,
                         g_current_room_id, g_re15_active_cut, s_aktiv,
                         panel_maske(), panel_ein_zaehlen(), s_roh, s_ziel,
-                        s_wert, geloest);
+                        s_wert, geloest,
+                        re15_game_flag_get(4, 243),                        /* sub18 @0x016F6 */
+                        (g_re15_pauseflags & RE15_PAUSE_PAD) ? 1 : 0,
+                        (int)g_scd.message_active, g_re15_panel_bestaet_zaehler);
                 fflush(lf); } }
 }
 
