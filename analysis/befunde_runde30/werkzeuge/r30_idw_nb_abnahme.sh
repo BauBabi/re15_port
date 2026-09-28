@@ -40,6 +40,12 @@ aufheben)
         bash "$LAUF" nb_karte_aufheben 6
     SPIELER=-22664,-18649,2048 SERIE=390-660/10 EXIT="670#1150" SEK=60 \
         bash "$LAUF" nb_karte_null_gleichpos 6 null
+    # Pixelbeleg "Karte weg": in Cut 6 verdeckt der Kopf der Figur an z -18649 die Karte, an
+    # z -18900 nicht (liegt ebenfalls im Karten-Rechteck -19149..-18463)
+    SPIELER=-22664,-18900,2048 PAD_AT=400:A,520:A SERIE=390-660/10 EXIT="670#1150" SEK=60 \
+        bash "$LAUF" nb_karte_aufheben_18900 6
+    SPIELER=-22664,-18900,2048 SERIE=390-660/10 EXIT="670#1150" SEK=60 \
+        bash "$LAUF" nb_karte_null_18900 6 null
     SPIELER=-22664,-18275,2048 PAD_AT=400:A,540:X,660:A,760:S,780:M SERIE=390-820/10 \
         EXIT="830#1150" SEK=70 bash "$LAUF" nb_diary_aufheben 6
     SPIELER=-22664,-18275,2048 SERIE=390-820/10 EXIT="830#1150" SEK=70 \

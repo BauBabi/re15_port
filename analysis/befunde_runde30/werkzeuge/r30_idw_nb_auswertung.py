@@ -105,7 +105,7 @@ def druck():
 
 def aufheben():
     print('== AUFHEBEN (Cut 6 erzwungen)')
-    for lauf in ('nb_karte_aufheben', 'nb_diary_aufheben'):
+    for lauf in ('nb_karte_aufheben', 'nb_karte_aufheben_18900', 'nb_diary_aufheben'):
         print(lauf)
         for x in zeilen(lauf, r'\[irons-tisch\] F|filed|FILE|liste'):
             print('   ' + x)
@@ -115,8 +115,8 @@ def aufheben():
     feld_k = diff(lade('nb_c6_nurkarte', 600), N6)
     feld_d = diff(lade('nb_c6_nurdiary', 600), N6)
     for lauf, null, feld, name, bilder in (
-            ('nb_karte_aufheben', 'nb_karte_null_gleichpos', feld_k, 'Kartenfeld', (390, 650)),
-            ('nb_diary_aufheben', 'nb_diary_null_gleichpos', feld_d, 'Buchfeld', (390, 820))):
+            ('nb_karte_aufheben_18900', 'nb_karte_null_18900', feld_k, 'Kartenfeld', (390, 650)),
+            ('nb_diary_aufheben', 'nb_diary_null_gleichpos', feld_d, 'Buchfeld', (390, 680))):
         for b in bilder:
             try:
                 F, N = lade(lauf, b), lade(null, b)

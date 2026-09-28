@@ -175,7 +175,9 @@
  * Pixeln). Deshalb klemmt der Port NUR diese zwei Props NUR in Cut 2 auf Bucket 87: ihr
  * Sortierschluessel wird hoechstens re15_pri_mask_camera_z(87) - 1 = 5636. Damit sind sie
  * sichtbar, und eine Figur VOR dem Tisch (vz 4328..5852) liegt weiterhin darueber.
- * Cut 6 hat keine Masken (pri_offset 0xBCC -> `ff ff ff ff`). */
+ * Cut 6 hat keine Masken (pri_offset 0xBCC -> `ff ff ff ff`).
+ * RIEGEL auf das SICHTBARE Ergebnis: integration_r30_irons_tisch_bild (vier Framedumps Cut 2;
+ * Klemme weg -> 0 Pixel in beiden Marken -> rot; Klemme auf 0 -> Prop ueber der Figur -> rot). */
 #define RE15_IRONS_KLEMME_CUT        2
 #define RE15_IRONS_KLEMME_TIEFE      87
 

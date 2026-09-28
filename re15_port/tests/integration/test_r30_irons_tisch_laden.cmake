@@ -26,7 +26,9 @@
 # Er DISKRIMINIERT: ohne den Aufruf am Lade-Weg fehlen in A und C die Boot-Weg-Zeilen und
 # das Zeichnen; laeuft das Anlegen vor dem Flag-Restore, traegt B die Props.
 # RE15_SOFTWARE_RENDER=1 dient nur der Robustheit des Testhakens; geprueft wird das LOG.
-# Ob die Props SICHTBAR sind, belegt die Framedump-Abnahme (Dossier, UMSETZUNG).
+# ⛔ Die Zeile "[prop-render] pi=5/6" steht VOR der Tiefen-Klemme: dieser Riegel sagt NICHTS
+# darueber, ob die Props zu SEHEN sind (Gegenpruefer-Mutation: Klemme weg -> 0 Pixel, dieser
+# Riegel gruen). Das SICHTBARE Ergebnis haelt integration_r30_irons_tisch_bild fest.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe> -DWORKDIR=<dir>
 #               -P test_r30_irons_tisch_laden.cmake
