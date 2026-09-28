@@ -30,7 +30,8 @@
  *   Fall A "No, dann Yes":
  *     1  Fahrt 1 oeffnet genau EIN Modal (auch nach "No" nicht ein zweites, obwohl die
  *        Plattform noch ~100 Bilder im Fenster steht)
- *     2  das Modal geht OBEN auf (y im Fenster (-5000,-1100])
+ *     2  das Modal geht in der RUHE OBEN auf (y = -1205; Runde 31, vorher Fenster
+ *        (-5000,-1100] mitten im Hub)
  *     3  nach "No": kein Genommen-Flag, Prop sichtbar, Item 0x40 NICHT im Inventar
  *     4  Fahrt 1 endet in der Parklage y = -20224 (Pos_set @0x109E)
  *     5  Fahrt 2 oeffnet wieder genau EIN Modal            <- der Befund
@@ -205,8 +206,8 @@ static int fall_a(re15_rdt_t *rdt, uint16_t rid)
     fahrt_t f1 = fahrt(ANTWORT_NEIN);
     pruefe(1, "Fahrt 1 oeffnet genau EIN Modal (nach No kein zweites in derselben Fahrt)",
            f1.modale == 1);
-    pruefe(2, "das Modal geht OBEN auf (y im Fenster (-5000,-1100])",
-           f1.bild_modal >= 0 && f1.y_modal > -5000 && f1.y_modal <= -1100);
+    pruefe(2, "das Modal geht in der RUHE OBEN auf (y = -1205, Runde 31)",
+           f1.bild_modal >= 0 && f1.y_modal == -1205);
     printf("   nach No: Flag(9,%d)=%d, Prop sichtbar=%d, Item 0x40 im Inventar=%d\n",
            RE15_SICHERUNG_TAKEN_BIT, re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT),
            sicherung_sichtbar(), anzahl_im_inventar(RE15_SICHERUNG_ITEM));

@@ -9,10 +9,14 @@
  *
  *   1. Der Boden des Kuppelfachs = Vierecke 79/80/81 von Prop 0 (Face-Records @Datei
  *      0x12E40/0x12E50/0x12E60 in ROOM1150.RDT): acht Punkte, alle auf EINER Hoehe.
- *   2. (POS_X, POS_Z) = Mitte dieses Achtecks +-1;  POS_Y = Bodenhoehe - Rohrradius, der
+ *   2. POS_X = Mitte dieses Achtecks +-1;  POS_Y = Bodenhoehe - Rohrradius, der
  *      Rohrradius = groesstes y des Sicherungs-MD1.
- *   3. POS_Z = Naht der beiden Deckelhaelften (Prop 1 / Prop 2 stossen dort aneinander).
- *   4. ROT_Y legt die Laengsachse X des Modells auf die LANGE Seite des Fachs.
+ *   3. POS_Z liegt RECHTS der Naht der beiden Deckelhaelften (Plattform +z = Schirm rechts in
+ *      Cut 4) — Runde 31 (Nutzer: "die Sicherung rechts"), vorher genau auf der Naht.
+ *   4. ROT_Y legt die Laengsachse X des Modells naeher an die LANGE Seite des Fachs (z) als an
+ *      x — Runde 31 schraeg (rot_y 1440), vorher genau auf z (1024). Laengs x passt das Rohr
+ *      nicht unter die geschlossene Kuppel (analysis/befunde_runde31/hebetisch.md §1.1).
+ *      Die genaue Passung (Kuppel zu/offen, Achteck, Granate) haelt unit_r31_hebetisch fest.
  *   5. Die Sicherung passt in das Fach (Laenge <= lange Seite, Dicke <= kurze Seite).
  *   6. Der Deckelweg ist 15 x 10 = 150 (For-Record `0d 00 18 00 0f 00`: Zaehler = drittes
  *      Feld, For-Handler @0x8003f540 `lhu a1,4(t0)` @0x8003f568) — NICHT 240.
@@ -135,8 +139,7 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
            mx2 / 2.0, mz2 / 2.0, lo[1]);
     snprintf(was, sizeof was, "POS_X %d = Mitte des Fachbodens +-1", RE15_SICHERUNG_POS_X);
     pruefe(was, abs(2 * RE15_SICHERUNG_POS_X - mx2) <= 2);
-    snprintf(was, sizeof was, "POS_Z %d = Mitte des Fachbodens +-1", RE15_SICHERUNG_POS_Z);
-    pruefe(was, abs(2 * RE15_SICHERUNG_POS_Z - mz2) <= 2);
+    (void)mz2;   /* Runde 31: POS_Z nicht mehr die Mitte, s. Pruefung 3 */
     snprintf(was, sizeof was, "POS_Y %d = Boden %d - Rohrradius %d", RE15_SICHERUNG_POS_Y, lo[1], radius);
     pruefe(was, RE15_SICHERUNG_POS_Y == lo[1] - radius);
 
@@ -146,7 +149,8 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
     bbox(&d2.meshes[0], l2, h2);
     printf("   Deckel Prop 1 z[%d..%d], Prop 2 z[%d..%d]\n", l1[2], h1[2], l2[2], h2[2]);
     pruefe("die Deckelhaelften stossen aneinander (z min Prop 1 = z max Prop 2)", l1[2] == h2[2]);
-    pruefe("POS_Z liegt auf der Naht", RE15_SICHERUNG_POS_Z == l1[2]);
+    pruefe("POS_Z liegt RECHTS der Naht (Runde 31: Sicherung rechts, Plattform +z = Schirm rechts)",
+           RE15_SICHERUNG_POS_Z > l1[2]);
 
     /* ---- 4./5. Drehung und Passung ---- */
     int ex = hi[0] - lo[0], ez = hi[2] - lo[2];
@@ -157,7 +161,8 @@ static void raum(unsigned room_id, const char *datei, long for_offset)
     printf("   Fach: %d in x, %d in z ; ROT_Y %d -> Modell-X auf (%d, 0, %d) / 4096\n",
            ex, ez, RE15_SICHERUNG_ROT_Y, (int)c, (int)-s);
     pruefe("die lange Seite des Fachs ist z", ez > ex);
-    pruefe("ROT_Y legt die Laengsachse genau auf z", c == 0 && (s == 4096 || s == -4096));
+    pruefe("ROT_Y legt die Laengsachse naeher an z als an x (Runde 31 schraeg, |cos| < |sin|)",
+           abs((int)c) < abs((int)s));
     pruefe("die Sicherung passt der Laenge nach ins Fach", (shi[0] - slo[0]) <= ez);
     pruefe("die Sicherung passt der Dicke nach ins Fach", (shi[2] - slo[2]) <= ex);
 

@@ -8,7 +8,7 @@
 # @0x8001d988 Tuer), die Reihenfolge der Modale im Spiel und das CHECK-Foto.
 #
 # Fuenf Laeufe, jeweils Spielstand aus probe_r30_granate_karte, CONTINUE, Hebetisch per
-# RE15_FIRE_AOT=1@90 ausloesen (Aot slot 1 -> sub04), Ende RE15_EXIT_AT=250:
+# RE15_FIRE_AOT=1@90 ausloesen (Aot slot 1 -> sub04), Ende RE15_EXIT_AT=280:
 #   A  ROOM1150, Sicherung schon genommen (9,53): Granate im Pool, gezeichnet (oid=0x07), und
 #      ihr Modal geht in der Fahrt auf
 #   B  ROOM1150, (9,53) und (9,56): KEINE Granaten-Zeile (NEGATIV-KONTROLLE: Flag vor dem Anlegen)
@@ -72,7 +72,7 @@ function(granate_lauf _name _raum _karte _check _out_hex)
             RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1
             RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
             "RE15_FIRE_AOT=1@90#${_raum}"    # Hebetisch ausloesen: Aot slot 1 -> sub04
-            "RE15_EXIT_AT=250#${_raum}"      # Modal oben ab Bild ~226 (Sicherung gemessen)
+            "RE15_EXIT_AT=280#${_raum}"      # Modal erst in der Ruhe oben, Bild 247 (Runde 31)
             "${RE15_PC_EXE}")
     endif()
     if(NOT EXISTS "${WORKDIR}/debug.log")

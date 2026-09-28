@@ -11,13 +11,17 @@
  *       clut 0x7840 -> 0x7800, page 0x0081 -> 0x0080
  *    3  TIM 128x256 8bpp, CLUT = dir[3]-CLUT (256 Eintraege), dir[3]-Bild 56x32 bei (72,224)
  *  Sitz (je ROOM1150.RDT und ROOM1151.RDT, Plattform-Koordinaten, Kanten in 8 Stuecke geteilt):
- *    4  tiefster Punkt genau 3 unter dem Fachboden y=-1036 (Prop 0) — liegt auf, unten offen
- *    5  Abstand zur Sicherung (Zylinder r=26 um x=-280/y=-1062, z 1057..1463) > 0
+ *    4  tiefster Punkt genau AUF dem Fachboden y=-1036 (Prop 0) — Runde 31: liegt auf (vorher
+ *       3 versenkt, weil sie mittig aufliegend durch die geschlossene Kuppel ragte)
+ *    5  Abstand zur Sicherung (Zylinder r=26 um deren GEDREHTE Laengsachse, +-203) > 0
  *    6  Luft unter der GESCHLOSSENEN Kuppel (Prop 1/2) > 0
- *    7  ganz in der Oeffnung der Kuppel (Deckelweg +-150: z 1110..1410)
+ *    7  Runde 31 "Granate links": ganz links der Sicherungs-Mitte (Plattform-z < POS_Z der
+ *       Sicherung; +z = Schirm rechts in Cut 4), die Granaten-Mitte in der Oeffnung
+ *       (Deckelweg +-150: z 1110..1410). Links/rechts GEMESSEN: Dossier runde31 §1.3
  *  Fahrten (je Raum, Bildschleife in der Reihenfolge des Spiels):
  *    8  Fall A Fahrt 1: genau EIN Sicherungs- und EIN Granaten-Modal, Granate NACH Sicherung,
- *       beide oben (y im Fenster (-5000,-1100]); No/No -> keine Flags, beide Props sichtbar,
+ *       beide in der RUHE OBEN (y = -1205, Runde 31; vorher Fenster (-5000,-1100] mitten im
+ *       Hub); No/No -> keine Flags, beide Props sichtbar,
  *       nichts im Inventar
  *    9  Fall A Fahrt 2: wieder 1+1 in derselben Folge; Yes/Yes -> Flags (9,53)/(9,56), beide
  *       Props weg, Item 0x40 x1 und 0x09 x RE15_GRANATE_MENGE im Inventar
@@ -256,8 +260,15 @@ static void sitz_pruefen(const re15_rdt_t *rdt, uint16_t rid)
                     if (w[1] > tief) tief = w[1];
                     if (w[2] < zmin) zmin = w[2];
                     if (w[2] > zmax) zmax = w[2];
-                    if (w[2] >= 1057 && w[2] <= 1463) {
-                        float d = hypotf(w[0] + 280.0f, w[1] + 1062.0f) - 26.0f;
+                    {   /* Sicherungs-Zylinder um die gedrehte Modell-X-Achse (Runde 31) */
+                        int ss = re15_sin_q12(RE15_SICHERUNG_ROT_Y), sc = re15_cos_q12(RE15_SICHERUNG_ROT_Y);
+                        float ax[3] = { sc / 4096.0f, 0.0f, -ss / 4096.0f };
+                        float d3[3] = { w[0] - RE15_SICHERUNG_POS_X, w[1] - RE15_SICHERUNG_POS_Y,
+                                        w[2] - RE15_SICHERUNG_POS_Z };
+                        float t = d3[0] * ax[0] + d3[1] * ax[1] + d3[2] * ax[2];
+                        float r = sqrtf(fmaxf(0.0f, d3[0] * d3[0] + d3[1] * d3[1] + d3[2] * d3[2] - t * t));
+                        float d = fabsf(t) <= 203.0f ? r - 26.0f
+                                                     : hypotf(fmaxf(0.0f, r - 26.0f), fabsf(t) - 203.0f);
                         if (d < abst) abst = d;
                     }
                     float h = kuppel_hoehe(kd, nk, w[0], w[2]) - (-1036.0f - w[1]);
@@ -269,10 +280,13 @@ static void sitz_pruefen(const re15_rdt_t *rdt, uint16_t rid)
     printf("   Fachboden-Punkte y=-1036: %d, Kuppel-Dreiecke: %d | tiefster Punkt y=%.0f, "
            "Abstand zur Sicherung %.2f, Luft unter der Kuppel %.2f, z %.0f..%.0f\n",
            boden, nk, tief, abst, luft, zmin, zmax);
-    pruefe(4, "tiefster Punkt genau 3 unter dem Fachboden y=-1036", boden >= 8 && (int)lroundf(tief) == -1033);
+    pruefe(4, "tiefster Punkt genau auf dem Fachboden y=-1036 (Runde 31: liegt auf)",
+           boden >= 8 && (int)lroundf(tief) == -1036);
     pruefe(5, "Abstand zur Sicherung > 0 (kein Durchdringen)", abst > 0.0f);
     pruefe(6, "Luft unter der geschlossenen Kuppel > 0 (ragt nicht durch)", nk > 0 && luft > 0.0f);
-    pruefe(7, "ganz in der Kuppel-Oeffnung z 1110..1410", zmin >= 1110.0f && zmax <= 1410.0f);
+    pruefe(7, "LINKS der Sicherung (z max < POS_Z Sicherung), Mitte in der Oeffnung 1110..1410",
+           zmax < (float)RE15_SICHERUNG_POS_Z && RE15_GRANATE_POS_Z > 1110 && RE15_GRANATE_POS_Z < 1410);
+    (void)zmin;
 }
 
 /* ---------------------------------------------------------------- Fahrten -------------- */
@@ -352,7 +366,9 @@ static fahrt_t fahrt_ex(int antwort_si, int antwort_gr, int granate_zuerst)
 
 static fahrt_t fahrt(int a, int b) { return fahrt_ex(a, b, 0); }
 
-static int oben(long y) { return y > -5000 && y <= -1100; }
+/* Runde 31: die Aufnahmen gehen erst in der RUHE OBEN auf (sub04 im Sleep 30 @0x101A, Plattform
+ * auf -1205, include/re15_hebetisch.h) — nicht mehr im Fenster (-5000,-1100] mitten im Hub. */
+static int oben(long y) { return y == -1205; }
 
 static void fahrten_pruefen(re15_rdt_t *rdt, uint16_t rid)
 {

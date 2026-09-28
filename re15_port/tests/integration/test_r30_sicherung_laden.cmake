@@ -19,7 +19,7 @@
 #
 # DER RIEGEL, zwei Laeufe mit der ECHTEN exe:
 #   A  Spielstand in ROOM1150, Sicherung NICHT genommen -> CONTINUE, Hebetisch
-#      ausloesen (RE15_FIRE_AOT=1@90#1150), Ende bei Bild 250 (RE15_EXIT_AT).
+#      ausloesen (RE15_FIRE_AOT=1@90#1150), Ende bei Bild 280 (RE15_EXIT_AT).
 #      Das debug.log MUSS tragen:
 #         CONTINUE: resumed
 #         [sicherung] Boot-Weg: Prop obj_id=4 im Pool
@@ -36,9 +36,11 @@
 #     vor dem Ausloesen (Nutzerkarte: y=-21386, vor [fire-aot]). Ueber die
 #     Hebetisch-Szene sagt sie NICHTS.
 #   * Modal-Zeile: DAS ist die Pruefung IN der Szene. re15_sicherung_tick macht das
-#     Modal nur auf, wenn die Sicherung angelegt ist UND die Plattform im Fenster
-#     (-5000 .. -1100] steht, also die Hubfahrt von sub04 gelaufen ist (gemessen:
-#     Bild 226, Hebetisch y=-1105). Die Zahl 0 sagt, dass das Modal das Rohr-Bild
+#     Modal nur auf, wenn die Sicherung angelegt ist UND die Plattform in der RUHE OBEN
+#     steht (Runde 31: sub04 im Sleep 30 @0x101A, include/re15_hebetisch.h), also die
+#     Hubfahrt von sub04 zu Ende ist (gemessen: Modal auf in Bild 247, zeichnet in Bild 248,
+#     Hebetisch y=-1205; bis Runde 30 Bild 226 bei y=-1105 mitten im Hub). Die Zahl 0 sagt,
+#     dass das Modal das Rohr-Bild
 #     zeichnet (Leser re15_itps_pixel). Ob die Sicherung im Fach SICHTBAR ist, belegt
 #     allein die Framedump-Abnahme (analysis/befunde_runde30/sicherung.md, UMSETZUNG).
 #
@@ -108,7 +110,7 @@ function(sicherung_lauf _name _karten_arg _out_hex)
         RE15_CARD_AUTO=1
         RE15_CARD_SLOT=0
         "RE15_FIRE_AOT=1@90#1150"    # Hebetisch ausloesen: Aot slot 1 -> sub04
-        "RE15_EXIT_AT=250#1150"      # Prozessende am Bild (Modal gemessen in Bild 226)
+        "RE15_EXIT_AT=280#1150"      # Prozessende am Bild (Modal zeichnet ab Bild 248, Runde 31)
         "${RE15_PC_EXE}")
 
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -124,7 +126,7 @@ function(sicherung_lauf _name _karten_arg _out_hex)
     endif()
     string(FIND "${_lh}" "${_hex_exit}" _p)
     if(_p LESS 0)
-        message(FATAL_ERROR "sicherung_laden[${_name}]: Bild 250 in ROOM1150 wurde nicht "
+        message(FATAL_ERROR "sicherung_laden[${_name}]: Bild 280 in ROOM1150 wurde nicht "
                             "erreicht (keine EXIT_AT-Zeile, exit=${_rv}) — der Lauf ist "
                             "vorher abgerissen, ueber die Sicherung sagt er nichts")
     endif()
@@ -151,7 +153,7 @@ string(FIND "${_log_a}" "${_hex_modal}" _pos)
 if(_pos LESS 0)
     message(FATAL_ERROR
         "sicherung_laden[A]: in der Hebetisch-Szene geht das Aufnahme-Modal der Sicherung "
-        "bis Bild 250 NICHT auf (keine Zeile '[sicherung] Modal Item 0x40 zeichnet') - "
+        "bis Bild 280 NICHT auf (keine Zeile '[sicherung] Modal Item 0x40 zeichnet') - "
         "entweder ist die Hubfahrt von sub04 nicht gelaufen oder die Sicherung fehlt.")
 endif()
 # die Zahl muss IN der Modal-Zeile stehen, nicht irgendwo im Log

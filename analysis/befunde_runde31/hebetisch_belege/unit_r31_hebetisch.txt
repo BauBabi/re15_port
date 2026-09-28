@@ -1,0 +1,106 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-20700,-20324,-17460) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-24300,0,-11700) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x45
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-20700,-20324,-17460) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-24300,0,-11700) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x45
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(4)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 1
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-20700,-20324,-17460) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-24300,0,-11700) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x45
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-20700,-20324,-17460) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(0,0,0) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-24300,0,-11700) rot=(0,1024,0)
+[scd] thread start slot=10 first_op=0x2E
+[scd] thread start slot=11 first_op=0x45
+[scd] Plc_motion(entity=0, motion=3, flags=0x00) → slot=1
+[scd F0] Plc_flg(subop=0, mask=0x0004) → slot=1 anim_flags=0x0004
+[scd] thread start slot=10 first_op=0x22
+[scd F0] Cut_chg(4)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x0FF9), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x0FF9), Sperre bis zum Ende dieser Fahrt
+[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 1
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-7124,0,-6976) rot=(0,0,0)
+
+== 1150 Ruhe-Fenster ==
+   Ruhe-Fenster [0x101A, 0x1042)
+   [OK ] 1. Ruhe-Fenster = [Sleep 30, For-Abfahrt), 10 Byte davor der Setzen-For
+
+== 1150 Sitz (Sicherung (-280,-1062,1280) rot_y 1440, Granate (-260,-1091,1140) rot_y 1792) ==
+   Proben S 1720 / G 587, Deckelweg 150 | tiefster Punkt S y=-1036.0 G y=-1036.0 | Luft zu S 6.06 G 5.88 | Luft offen S 46.87 G 34.02 | ausserhalb Achteck 0 | Abstand G->S-Mantel 7.11
+   [OK ] 2. beide liegen AUF dem Fachboden (tiefster Punkt y = -1036)
+   [OK ] 3. Luft unter der GESCHLOSSENEN Kuppel > 0 (beide)
+   [OK ] 4. Luft unter den OFFENEN Deckeln > 0 (beide, Deckelweg 150)
+   [OK ] 5. Grundriss ganz im Achteck des Fachbodens (beide)
+   [OK ] 6. kein Durchdringen Granate <-> Sicherung (Abstand zum Mantel > 0)
+   Cut 4, Plattform y=-305: Schirm-x Granate 191.7 (182..203)  Sicherung 213.9 (184..245)
+   Cut 4, Plattform y=-1205: Schirm-x Granate 197.7 (186..211)  Sicherung 224.0 (188..262)
+   [OK ] 7. Cut 4: Granate LINKS, Sicherung RECHTS (Schwerpunkte >= 15 px, Granate ganz links vom S-Schwerpunkt)
+
+== 1150 Zeitpunkt der Aufnahmen (Yes/Yes) ==
+   MESS Sicherung Bild 156 (y -1205, davor -1205, -1206) PC 0x101B | Granate Bild 228 (y -1205) PC 0x101B | Bilder mit Aufnahme 160, davon y != -1205: 0 | Ruhebilder ohne Aufnahme 40 | Abfahrt Bild 354
+   [OK ] 8. Sicherungs-Aufnahme im ERSTEN Ruhebild (-1206 -> -1205 -> -1205, PC = Sleep 30 + 1)
+   [OK ] 9. Granaten-Aufnahme danach, ebenfalls in der Ruhe (y -1205, PC im Fenster)
+   [OK ] 10. in JEDEM Bild mit offener Aufnahme steht die Plattform auf -1205
+   [OK ] 11. 40 Ruhebilder ohne Aufnahme (Sleep 30 @0x101A + Sleep 10 @0x102E), erst dann die Abfahrt
+   [OK ] 12. Yes/Yes: beide Flags, beide Props weg, beide im Inventar
+
+== 1151 Ruhe-Fenster ==
+   Ruhe-Fenster [0x0FF8, 0x1020)
+   [OK ] 1. Ruhe-Fenster = [Sleep 30, For-Abfahrt), 10 Byte davor der Setzen-For
+
+== 1151 Sitz (Sicherung (-280,-1062,1280) rot_y 1440, Granate (-260,-1091,1140) rot_y 1792) ==
+   Proben S 1720 / G 587, Deckelweg 150 | tiefster Punkt S y=-1036.0 G y=-1036.0 | Luft zu S 6.06 G 5.88 | Luft offen S 46.87 G 34.02 | ausserhalb Achteck 0 | Abstand G->S-Mantel 7.11
+   [OK ] 2. beide liegen AUF dem Fachboden (tiefster Punkt y = -1036)
+   [OK ] 3. Luft unter der GESCHLOSSENEN Kuppel > 0 (beide)
+   [OK ] 4. Luft unter den OFFENEN Deckeln > 0 (beide, Deckelweg 150)
+   [OK ] 5. Grundriss ganz im Achteck des Fachbodens (beide)
+   [OK ] 6. kein Durchdringen Granate <-> Sicherung (Abstand zum Mantel > 0)
+   Cut 4, Plattform y=-305: Schirm-x Granate 191.7 (182..203)  Sicherung 213.9 (184..245)
+   Cut 4, Plattform y=-1205: Schirm-x Granate 197.7 (186..211)  Sicherung 224.0 (188..262)
+   [OK ] 7. Cut 4: Granate LINKS, Sicherung RECHTS (Schwerpunkte >= 15 px, Granate ganz links vom S-Schwerpunkt)
+
+== 1151 Zeitpunkt der Aufnahmen (Yes/Yes) ==
+   MESS Sicherung Bild 156 (y -1205, davor -1205, -1206) PC 0x0FF9 | Granate Bild 228 (y -1205) PC 0x0FF9 | Bilder mit Aufnahme 160, davon y != -1205: 0 | Ruhebilder ohne Aufnahme 40 | Abfahrt Bild 354
+   [OK ] 8. Sicherungs-Aufnahme im ERSTEN Ruhebild (-1206 -> -1205 -> -1205, PC = Sleep 30 + 1)
+   [OK ] 9. Granaten-Aufnahme danach, ebenfalls in der Ruhe (y -1205, PC im Fenster)
+   [OK ] 10. in JEDEM Bild mit offener Aufnahme steht die Plattform auf -1205
+   [OK ] 11. 40 Ruhebilder ohne Aufnahme (Sleep 30 @0x101A + Sleep 10 @0x102E), erst dann die Abfahrt
+   [OK ] 12. Yes/Yes: beide Flags, beide Props weg, beide im Inventar
+
+== 1140 Negativ-Kontrolle: Fenster -1..-1, ruht_oben 0 ==
+   [OK ] 13. ROOM1140: kein Ruhe-Fenster, ruht_oben = 0
+
+ALLES BESTANDEN — 0 Pruefung(en) gerissen
