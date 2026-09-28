@@ -6,12 +6,14 @@
  *   0 ZU_A     ROOM1140 Satz 0x16  EDT 00 00 74 16  Tone @0x01DB0  VAG @0x02870  7184 B  sha1 cf1414572aea7ba1f3364129a5021b8fc8111b4b
  *   1 ZU_B     ROOM1050 Satz 0x16  EDT 00 00 84 16  Tone @0x02384  VAG @0x074A4  3232 B  sha1 60e753ac5e5697bae5b2f3caa4d3eb1dc1308708
  *   2 ZU_E     ROOM2110 Satz 0x16  EDT 00 00 74 00  Tone @0x03864  VAG @0x07054 10272 B  sha1 be2f6ea9caaa6a9996a73c5a3f3fb0baf6b56aa3
+ *   3 ZU_P     ROOM7020 Satz 0x16  EDT 00 00 e3 00  Tone @0x06730  VAG @0x1DD50  6144 B  sha1 ea19d086e3cb1b9dfdb236526324aefbd015c72c
  */
 #define RE2_DOOR_EDT_OFF   0u
 #define RE2_DOOR_EDT_SIZE  3144u
 #define RE2_DOOR_VBD_OFF   3144u
-#define RE2_DOOR_VBD_SIZE  20688u
-#define RE2_DOOR_SE_COUNT  3
+#define RE2_DOOR_VBD_SIZE  26832u
+#define RE2_DOOR_SE_COUNT  4
 #define RE2_DOOR_SE_ZU_A     0   /* RE2 ROOM1140 Satz 0x16, 7184 B */
 #define RE2_DOOR_SE_ZU_B     1   /* RE2 ROOM1050 Satz 0x16, 3232 B */
 #define RE2_DOOR_SE_ZU_E     2   /* RE2 ROOM2110 Satz 0x16, 10272 B */
+#define RE2_DOOR_SE_ZU_P     3   /* RE2 ROOM7020 Satz 0x16, 6144 B */
