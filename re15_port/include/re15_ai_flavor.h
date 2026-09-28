@@ -253,6 +253,11 @@ void re15_re2z_footlock(int slot, re15_actor_t *e);  /* clip-driven walk movemen
 void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behind);
 void re15_re2z_victim_devour(re15_actor_t *zombie, int behind);  /* Kill-Tick-Richtung
                                                    * (dir<<8)|6 @0x80102928-50 — explizit    */
+void re15_re2dog_victim_latch(re15_actor_t *hund, re15_actor_t *pl);  /* RE2-Hund, Kehlbiss:
+                                                   * Spieler-Haken 0x80104ACC (Tabelle
+                                                   * 0x800CE400[0x20], gesetzt @0x801004AC-B4) —
+                                                   * Clip 0 einmal (Clip-Wort 0x001F0000
+                                                   * @0x80104B18-1C), Endpose, nie frei        */
 void re15_re2z_grab_anchor(re15_actor_t *e, re15_actor_t *pl, int clip);
 void re15_re2z_grab_rootmotion(re15_actor_t *e);
 void re15_re2z_move_root(re15_actor_t *e);        /* 0x80015e7c: per-frame clip root delta   */

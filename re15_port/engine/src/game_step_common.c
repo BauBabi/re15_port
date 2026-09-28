@@ -176,6 +176,16 @@ void re15_player_death_cmd3(void)
                                                       * die Praeambel) */
     s_death3_on = 1;
     s_death3_phase = 0;                              /* aca5a := 0 */
+    {   /* N2 (Runde 30, hund-tod.md 4.4/4.7): cmd 3 ERSETZT das Kommando-Register —
+         * `ori v0,zero,0x3` @0x80012EF0, `sb v0,4(s1)` @0x80012EF4, `sb zero,5(s1)`
+         * @0x80012EF8, `sb zero,6(s1)` @0x80012EFC; die Verteilung liest nur dieses Byte
+         * (`lbu v1,-13736(v1)` = 0x800ACA58 @0x80031C8C). Wer beim Tod zielte, zielt danach
+         * nicht mehr. Derselbe Aufruf steht schon bei cmd 2 (re15_player_stagger_cmd2) und
+         * cmd 5 (re15_re2z_victim_begin). GEMESSEN vor dem Bau: 200 von 200 Todesbildern mit
+         * aktiver Zielphase (probe_r30_hund_tod n2), die Figur stand in der Zielpose. */
+        extern void re15_player_aim_interrupt(void);   /* player_common.c */
+        re15_player_aim_interrupt();
+    }
     g_death_pool = 0;                                /* D5: vor cmd 7 gibt es keine Lache */
     re15_player_victim_reset();                      /* D2: cmd 3 ERSETZT cmd 5 -> die Opfer-FSM
                                                       * (und damit der Release-Clip) ist weg */

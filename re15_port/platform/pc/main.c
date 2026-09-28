@@ -8013,8 +8013,14 @@ re_title:;
              * clip (6 raise / 8|10|12 hold / 7|9|11 recoil). */
             {
                 extern int re15_player_aim_active(void);
+                /* N2 (Runde 30, hund-tod.md Schritt 5): ein Toter zielt nicht. cmd 3 ersetzt
+                 * das Kommando-Register (`sb v0,4(s1)` mit v0 = 3 @0x80012EF4, +0x5/+0x6 := 0
+                 * @0x80012EF8-FC); re15_player_death_cmd3 bricht die Zielphase deshalb ab.
+                 * Das hp-Gate hier ist der Guertel zum Hosentraeger: es haelt den Override
+                 * auch dann zu, wenn ein Todespfad den Abbruch nicht ruft. */
                 if (re15_player_aim_active() && wact_ok &&
-                    re15_player_victim_state() == 0) {
+                    re15_player_victim_state() == 0 &&
+                    g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0) {
                     extern int re15_player_aim_clip(void);
                     p_skel = wact_skel;              /* composite: PL00 bones + active W pool */
                     p_anim = wact_anim;

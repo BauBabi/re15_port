@@ -12,6 +12,11 @@
  *       druck 2 = EIN Druck im ersten Bild nach dem Latch
  *   probe_r30_hund_tod riegel            (exit 0/1: die Abnahme des Bau-Agenten)
  *
+ * Umgebung R30_FIGUR=<n> (Bau-Agent, Nachtrag): Charakter-Byte der Spielfigur, der
+ *   Port-Zwilling von DAT_800ACA5C — 0 = Leon (Default), 4 = Elza. Seit dem Bau haengt das
+ *   Zaehler-Fenster von Sub 7 an re15_char_variant() (RE2: lbu v0,8(s3) / andi v0,v0,0x1
+ *   @0x80102010-18 = Figuren-Nummer), also ist die Figur eine Messgroesse.
+ *
  * Bauvorlage: probe_r27_hund_biss.c (Hochfahren wortgleich uebernommen). */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -35,6 +40,7 @@
 #include "re15_esp.h"
 #include "re2_ems.h"
 #include "re15_math.h"
+#include "re15_gameflow.h"   /* g_gameflow.character / re15_char_variant (R30_FIGUR) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -171,8 +177,9 @@ static void lauf(int druck, int hp0, int nframes, int32_t sx, int32_t sz, FILE *
     int neustart_offen = 0;
     int v_hp = pl->hp, v_st = -1, v_vs = -1, v_gr = -1, v_tot = -1, v_pr = -1, v_go = -1;
 
-    fprintf(out, "# druck=%d hp0=%d bilder=%d start=(%d,%d) hunde=%d\n",
-            druck, hp0, nframes, (int)sx, (int)sz, nh);
+    fprintf(out, "# druck=%d hp0=%d bilder=%d start=(%d,%d) hunde=%d figur=%d (ungerade=%d)\n",
+            druck, hp0, nframes, (int)sx, (int)sz, nh, (int)g_gameflow.character,
+            re15_char_variant());
     fprintf(out, "# f hp st s1 mot afr | vs vtyp gr tot praes cmd3 go flyin | pad |"
                  " hund: slot st s1 s2 s3 clip afr bite21e abort21c ctr16a rel220 hp\n");
     for (int f = 0; f < nframes; f++) {
@@ -279,6 +286,10 @@ int main(int argc, char **argv)
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     s_ctx.pl00_skel = &s_pl00_skel; s_ctx.pl00_anim = &s_pl00_anim;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    {   const char *fg = getenv("R30_FIGUR");      /* 0 = Leon (Default), 4 = Elza */
+        g_gameflow.character = (fg && *fg) ? atoi(fg) : 0;
+        printf("FIGUR: character=%d ungerade=%d\n", (int)g_gameflow.character,
+               re15_char_variant()); }
     if (!load_bank_re2(0x20)) {
         printf("FEHLT: EM020-RE2-Bank (shared_assets/RE2/CDEMD0.EMS)\n"); return 77;
     }

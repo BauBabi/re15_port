@@ -2666,6 +2666,46 @@ void re15_re2z_victim_devour(re15_actor_t *zombie, int behind)
         g_actors[RE15_ACTOR_SLOT_PLAYER].re2z_t158 = (int16_t)(behind ? 0 : 0x800);
 }
 
+/* RE2-HUND, KEHLBISS — die Spieler-Seite (Runde 30, analysis/befunde_runde30/hund-tod.md 3.4).
+ * RE1.5 ist hier nicht massgeblich: der Port faehrt fuer Typ 0x20 das RE2-Gehirn
+ * (EMD0G_MOD0.BIN), und dessen Latch hat in der Beta kein Gegenstueck (RE1.5 greift ueber
+ * Sub 9/10 @0x8010F478-7C und fuehrt die Fress-Schleife @0x8010FA64 — eine andere Maschine).
+ * Beide Originale sind sich im Ergebnis einig: nach einem toedlichen Biss steht niemand
+ * wieder auf (RE1.5 ueberspringt die Tastenabfrage bei hp < 0, `bgez v0` @0x8010FA84).
+ *
+ * Spieler-Haken 0x80104ACC (EMD0G_MOD0.BIN, selbst disassembliert 0x80104ACC-0x80104B94):
+ *   eingetragen in 0x800CE400[0x20] = 0x800CE480 durch `addiu v0,v0,19148` @0x801004AC /
+ *   `sw v0,-7040(at)` @0x801004B4; aufgerufen vom Verteiler Spieler-Routine [6] @0x800400D0
+ *   (`lw a2,436(a0)` @0x800400F4, `lbu v0,8(a2)` @0x80040100, `lw v0,-6104(v1)` @0x80040114,
+ *   `jalr v0` @0x8004011C). Die Routine 6 setzt der Hund selbst: `sw v0,-1028(at)` mit
+ *   v0 = 6 @0x80101DBC-C4 (ein Wort-Store: ersetzt +0x4..+0x7, also den ganzen
+ *   Kommando-Zustand einschliesslich Zielen).
+ *   P0 @0x80104B0C: Phase := 1 (`sb v0,5(s0)` @0x80104B10), Clip-Wort 0x001F0000 = CLIP 0
+ *                   (`lui v1,0x1f` @0x80104B18 / `sw v1,332(s0)` @0x80104B1C)
+ *   P1 @0x80104B2C: Platzierung 0x80015CB8 mit Yaw +2048 (@0x80104B34-44, zurueck
+ *                   @0x80104B60-64), Clip EINMAL vorruecken (`addiu a3,zero,128` @0x80104B54,
+ *                   `jal 0x8002959c` @0x80104B68), am Ende Phase := 2 (@0x80104B70-78)
+ *   P2 @0x80104B04: `j 0x80104b7c` = NICHTS. Die Endpose steht; ein Aufsteh-Clip existiert
+ *                   in der Opfer-Bank nicht (1 Clip, 145 Bilder, Kopfhoehe -2426 -> -160).
+ * Port: genau das ist der RE2-Hunde-Zweig des Kollaps-Zustands 2 in
+ * re15_player_victim_tick (Clip 0 einmal, Endpose, am Ende state 7). Vorher startete der
+ * Latch die Opfer-FSM im Zustand 1 (Ringkampf); die fiel ohne Griff-Pin in die FREIGABE
+ * und gab den Toten frei. Der Anker (re2d_grab_anchor) steht beim Aufruf schon. */
+void re15_re2dog_victim_latch(re15_actor_t *hund, re15_actor_t *pl)
+{
+    extern void re15_player_aim_interrupt(void);
+    re15_player_aim_interrupt();      /* Routine 6 ersetzt den Kommando-Zustand @0x80101DBC-C4 */
+    pl->motion = 0;                   /* Clip 0: Clip-Wort 0x001F0000 @0x80104B18-1C */
+    pl->anim_frame = 0;               /* Clip-Start. re15_player_victim_devour setzt fuer den
+                                       * RE2-Hund bewusst NICHT zurueck — hier ist es der Start */
+    re15_player_victim_devour(hund);  /* Zustand 2: einmal spielen, Endpose halten, dann state 7 */
+    /* Der Latch belegt den Spieler: `addiu v1,zero,255` @0x80104F20 / `sb v1,467(s1)`
+     * @0x80104F34 (PL+0x1D3 = 255, Bit 0x80 = belegt). Port-Zwilling wie im bisherigen
+     * Shim re15_re2z_victim_begin: Griff-Pin + +0x93-Riegel gegen einen Zweit-Griff. */
+    pl->hit_react |= 1;
+    s_player_grabbed = 1;
+}
+
 /* Anker-Teilung (byte-true Muster FUN_8001ac38: EIN Anker fuer beide, @0x80102748-64 sync't RE2
  * die Spieler-Anim auf die Zombie-Bank — die Paar-Formation kommt aus den Clip-Root-Offsets). */
 void re15_re2z_grab_anchor(re15_actor_t *e, re15_actor_t *pl, int clip)
