@@ -184,6 +184,7 @@ static uint64_t g_t0;
 static uint64_t g_ton_t[32];  static int g_ton_n;
 static uint64_t g_flip_t[64]; static int g_flip_rot[64]; static int g_flip_n; static int g_rot_vor;
 static int      g_se6, g_se9, g_se9_phase;
+static int      g_core_oeffnen;   /* ALLE CORE-Toene vom Anfordern bis Phase 1 */
 
 static void rec_reset(void)
 {
@@ -247,11 +248,14 @@ static void grundstellung(void)
 /* Oeffnen bis zur laufenden Phase 1; liefert die Zahl der Bilder (-1 = nie offen). */
 static int oeffnen(void)
 {
-    int f;
+    int f, c0 = g_test_core_se_count;
     rec_reset();
     for (f = 0; f < 200; f++) {
         bild(0);
-        if (re15_menu_is_open() && re15_menu_phase() == 1) return f;
+        if (re15_menu_is_open() && re15_menu_phase() == 1) {
+            g_core_oeffnen = g_test_core_se_count - c0;
+            return f;
+        }
     }
     return -1;
 }
@@ -278,6 +282,9 @@ static int riegel_fsm(void)
     CHECK(g_se6 == 0, "kein Oeffnen-Ton Se(4,6) (%d), RE2 @0x80026404 ueberspringt @0x8002652C", g_se6);
     CHECK(g_se9 == 1 && g_se9_phase == 1, "Se(4,9) genau einmal (%d), im Bild des Uebergangs in Phase 1 (%d)",
           g_se9, g_se9_phase);
+    CHECK(g_core_oeffnen == 1 && g_test_core_se_last == 9,
+          "beim Oeffnen genau EIN CORE-Ton, und das ist Satz 9 (%d Toene, zuletzt %d)",
+          g_core_oeffnen, g_test_core_se_last);
 
     /* Blinker laufen lassen, bis 4 s seit dem Beginn des Hinweises vergangen sind. */
     int core_lauf0 = g_test_core_se_count;
