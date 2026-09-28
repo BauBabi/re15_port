@@ -16,3 +16,13 @@ target_compile_definitions(probe_r30_android_r1_toggle PRIVATE
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 add_test(NAME unit_r30_android_r1_toggle COMMAND probe_r30_android_r1_toggle)
 set_tests_properties(unit_r30_android_r1_toggle PROPERTIES TIMEOUT 60)
+
+# --- Nebenbefund N1 (eigener Riegel): das Inventar-Ende setzt das Spieler-Kommandowort zurueck
+#     wie der Zustand-3-Rumpf der Transitions-FSM (sb zero,0x800aca58 @0x8001cbdc). ---
+add_executable(probe_r30_android_n1_inventar_cmd probe_r30_android_n1_inventar_cmd.c)
+target_link_libraries(probe_r30_android_n1_inventar_cmd PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r30_android_n1_inventar_cmd PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r30_android_n1_inventar_cmd PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r30_android_n1_inventar_cmd COMMAND probe_r30_android_n1_inventar_cmd)
+set_tests_properties(unit_r30_android_n1_inventar_cmd PROPERTIES TIMEOUT 60)
