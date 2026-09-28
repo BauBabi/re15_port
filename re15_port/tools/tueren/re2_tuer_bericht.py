@@ -95,9 +95,12 @@ def main():
     t = ["| Archiv | Tonteil B | Ton 0: VAG, Dauer s (Bilder) | Ton 1: VAG, Dauer s | Se_on je Variante (Satz@Bild) | Door_exit spielt Ton 1 | Familie |",
          "|---|---|---|---|---|---|---|"]
     famidx = {}
-    for i, f in enumerate(TON["familien_tonteil"]):
+    nr = 0
+    for f in TON["familien_tonteil"]:
+        if len(f) > 1:
+            nr += 1
         for a in f:
-            famidx[a] = ("F%d" % (i + 1)) if len(f) > 1 else "-"
+            famidx[a] = ("F%d" % nr) if len(f) > 1 else "-"
     for name in V:
         r = ton[name]
         e0, e1 = r["eintraege"][0], r["eintraege"][1]
