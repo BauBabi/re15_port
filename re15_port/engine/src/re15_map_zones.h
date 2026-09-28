@@ -401,8 +401,8 @@ static const re15_map_mark_t s_map_marks[] = {
     {  1,  9,  186,  112, 4,  10, 255, 0 },
     /* ⛔ GESTRICHEN (Runde 30, karten-marken.md §4b / §5 Schritt 3a): EINE MARKE OHNE
      * EIGENE ZONENZEILE HAT KEIN BESUCHT-BIT UND KEINEN TRAEGER - sie kann nur an einem
-     * FREMDEN haengen. Die fuenf Zeilen { 1, 255, 131, 77 / 134, 133 / 138, 133 /
-     * 139, 77 / 144, 80, .., zid 0 } gehoerten den Tueren von ROOM1230
+     * FREMDEN haengen. Die fuenf Zeilen (1, 255, 131, 77 / 134, 133 / 138, 133 /
+     * 139, 77 / 144, 80, .., zid 0) gehoerten den Tueren von ROOM1230
      * (ROOM1230.RDT @0x00AEE / @0x00B34 / @0x00B54 / @0x00B74 / @0x00BC4). ROOM1230
      * fuehrt keine Zonenzeile; der Generator setzte dafuer die Rueckfall-Nummer 0 ein
      * (`zid_of.get((b, zi), 0)`), und 0 ist ROOM1000 Zone 0. Gemessen: nur ROOM1000/z0
@@ -448,8 +448,8 @@ static const re15_map_mark_t s_map_marks[] = {
      * Rect-0-Kunst y=71. */
     {  2,  0,  191,   69, 0,   6, 255, 0 },
     {  2,  4,  186,  152, 3,   4,   6, 1 },
-    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 2, 5, 180, 64, 3, 11 } und
-     * { 2, 5, 222, 75, 1, 11 } - die beiden Tueren von ROOM10B0 (ROOM10B0.RDT
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): (2, 5, 180, 64, 3, 11) und
+     * (2, 5, 222, 75, 1, 11) - die beiden Tueren von ROOM10B0 (ROOM10B0.RDT
      * @0x016D2 / @0x016F2). Ihre Zone 11 fuehrt auf Blatt 2 rect 255 OHNE Schema,
      * wird also gar nicht gezeichnet; das Rechteck 5, an dem sie hingen, gehoert
      * seit Runde 10 ROOM1090 (Zonenzeile oben, zid 22). Die Marken erschienen damit
@@ -482,13 +482,13 @@ static const re15_map_mark_t s_map_marks[] = {
      *   Door_aot_set Slot 1, Band 6, Trigger x -7920 z -21440 w 4200 d 5500
      *   (Mitte (-5820,-18690)), Ankunft (-20900,0,-10336), Ziel Stage 1 Raum 0x10
      *   = ROOM1100, cut 5.
-     * Bisher stand sie als { 3, 255, 188, 180, 3, 0, 255, 0 }: ohne Rechteck, mit der
+     * Bisher stand sie als (3, 255, 188, 180, 3, 0, 255, 0): ohne Rechteck, mit der
      * Rueckfall-Nummer zid 0 (= ROOM1000/z0) - sie erschien frei im Panel, sobald
      * ROOM1000 betreten war (gemessen am Abzug befund_1070_F259_marke1.png:
      * (188,178..182), ringsum nur Panel).
      * FELDER:
      *   Blatt 3, rect 7   Gast-Zeile von ROOM1090 obere Ebene (Zonenzeile oben);
-     *                     Etagenzeile { 0x1090, 0, 6, 3, 7 }, Band 6 = Byte 4 des
+     *                     Etagenzeile (0x1090, 0, 6, 3, 7), Band 6 = Byte 4 des
      *                     Datensatzes.
      *   zid 22 / zid2 16  ROOM1090 / ROOM1100 (Ziel-Byte 0x10 im Datensatz).
      *   y = 114, kind 2   die GEMEINSAME Wand: Suedwand von rect 7 (67+48-1) =
@@ -509,7 +509,7 @@ static const re15_map_mark_t s_map_marks[] = {
     {  3,  9,  156,   83, 1,  15,  13, 1 },
     {  4,  1,  136,  152, 1,   7,  18, 1 },
     {  4,  1,  144,  147, 4,   7, 255, 0 },
-    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 4, 1, 148, 137, 0, 22 } - die Tuer
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): (4, 1, 148, 137, 0, 22) - die Tuer
      * ROOM1160 -> ROOM1180 (ROOM1160.RDT @0x007C6). ROOM1160 fuehrt keine
      * Zonenzeile; die Nummer 22 wurde in Runde 10 an ROOM1090 vergeben, die Marke
      * hing seitdem am Besucht-Bit von ROOM1090 und am Rechteck des Treppenhauses. */
@@ -545,8 +545,8 @@ static const re15_map_mark_t s_map_marks[] = {
     {  6,  3,  107,  140, 3,  45, 255, 0 },
     {  6,  3,  164,  140, 1,  45, 255, 0 },
     {  6,  6,  193,  156, 1,  48, 255, 0 },
-    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 6, 255, 166, 104, 2, 0, 39 } und
-     * { 6, 255, 185, 110, 2, 0 } - die Tueren von ROOM2020 (ROOM2020.RDT @0x00866 /
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): (6, 255, 166, 104, 2, 0, 39) und
+     * (6, 255, 185, 110, 2, 0) - die Tueren von ROOM2020 (ROOM2020.RDT @0x00866 /
      * @0x0082A). ROOM2020 fuehrt keine Zonenzeile, die Marken trugen die
      * Rueckfall-Nummer 0 = ROOM1000/z0 und standen damit im Stand des Nutzers auf
      * Blatt 6, von dessen Raeumen er keinen betreten hatte (seine 20 Besucht-Bits
@@ -658,7 +658,7 @@ static const re15_map_wall_t s_map_walls[] = {
     {  3,  5,  188,  122,  188,  144,  17 },
     {  3,  5,  189,  133,  212,  133,  17 },
     /* ⛔ GESTRICHEN (Runde 30, Nutzer 2026-09-27: "Roof ist irgendwie die Wand unten
-     * blau"): { 5, 1, 148, 155, 182, 155, 23 } war KEINE Innenwand. Alle 35 Punkte
+     * blau"): (5, 1, 148, 155, 182, 155, 23) war KEINE Innenwand. Alle 35 Punkte
      * der Linie liegen auf Kachel-Index 4 - der vom Kuenstler GEMALTEN Suedwand von
      * Blatt 5 rect 1 (Rechteck @0x800764C8 = (148,101) 48x56 uv(0,32); Kachelzeile
      * v=86 in DATA/MAP06.PIX ab @Datei 0x2B00: 35 x Index 4), die Zeile darunter
