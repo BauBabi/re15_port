@@ -1,0 +1,15 @@
+F230:     0 Punkte
+F232:     0 Punkte
+F234:     0 Punkte
+F236:     0 Punkte
+F238:     0 Punkte
+F240:     0 Punkte
+F242:    13 Punkte  bbox x210..212 y162..168
+F244:    70 Punkte  bbox x207..215 y162..172
+F246:   135 Punkte  bbox x203..218 y160..173
+F248:   205 Punkte  bbox x200..228 y160..176
+F250:   309 Punkte  bbox x197..231 y158..177
+F252:   433 Punkte  bbox x193..235 y154..178
+F254:   544 Punkte  bbox x189..239 y154..179
+F256:   596 Punkte  bbox x188..240 y154..180
+F258:   596 Punkte  bbox x188..240 y154..180

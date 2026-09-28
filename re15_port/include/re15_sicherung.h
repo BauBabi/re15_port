@@ -68,40 +68,48 @@
 
 /* SITZ UND DREHUNG — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE.
  * Das Original hat im Hebetisch keinen Gegenstand; fuer Sitz und Drehung gibt es deshalb
- * keine Instruktion, die man zitieren koennte. Jede der vier Zahlen ist aus der
- * AUSGELIEFERTEN GEOMETRIE des Tisches abgeleitet (Runde 30, Dossier
- * analysis/befunde_runde30/sicherung.md §3.6/§5.3), nicht geschaetzt:
+ * keine Instruktion, die man zitieren koennte. Die Zahlen sind aus der AUSGELIEFERTEN
+ * GEOMETRIE des Tisches abgeleitet, nicht geschaetzt.
  *
- * Der Tisch (Prop 0, MD1 @Datei 0x11E40 in ROOM1150.RDT, Punktliste @0x11E84) traegt
- * unter der zweiteiligen Kuppel ein Fach. Sein Boden ist ein Achteck aus den Vierecken
- * 79/80/81 (Face-Records @0x12E40/@0x12E50/@0x12E60), alle acht Punkte auf y = -1036:
+ * Runde 31 (Nutzer, 2026-09-29): "packe mir die Granate links in die hochfahrende Box und die
+ * Sicherung rechts". Dossier analysis/befunde_runde31/hebetisch.md §1, Werkzeuge
+ * analysis/befunde_runde31/hebetisch_werkzeug/ (r31_suche.py, r31_raster.py, r31_wahl2.py,
+ * r31_pruef.py). Geometrie (Plattform-Koordinaten, +Y nach unten), ROOM1150.RDT:
+ *   Fachboden   Prop 0 (MD1 @0x11E40), Vierecke 79/80/81 (Face-Records @0x12E40/@0x12E50/
+ *               @0x12E60), acht Punkte y = -1036:
  *     Punkt 101 @0x121AC ( -74,-1036,1260)     Punkt 109 @0x121EC (-485,-1036,1260)
  *     Punkt 103 @0x121BC (-128,-1036,1562)     Punkt 111 @0x121FC (-432,-1036, 958)
  *     Punkt 105 @0x121CC (-280,-1036,1645)     Punkt 113 @0x1220C (-280,-1036, 875)
  *     Punkt 107 @0x121DC (-432,-1036,1562)     Punkt 115 @0x1221C (-128,-1036, 958)
- * (ROOM1151.RDT: dieselben Werte, Punktliste @0x13EFC, die acht Punkte @0x14224..@0x14294.)
- * Die Deckelhaelften (Prop 1 MD1 @0x138D4 z[1260..1645], Prop 2 MD1 @0x13B88
- * z[875..1260]) stossen bei z = 1260 aneinander.
+ *     (ROOM1151.RDT: dieselben Werte, Punktliste @0x13EFC, die acht Punkte @0x14224..@0x14294.)
+ *   Kuppel      Prop 1 MD1 @0x138D4 / Prop 2 @0x13B88: Grund y -1036, Ring y -1138
+ *               (x -413..-147, z 1011..1510), Scheitel (-280,-1185,1260); Naht z = 1260.
+ *               Offen je 150 in z (For @0x0FC0 Zaehler 15 x Speed_set @0x0FCA +10 / @0x0FD4
+ *               -10) -> Oeffnung z 1110..1410.
+ *   Kamera      Cut 4 (@Datei 0xE0): Plattform-z = Schirm waagrecht, +z = RECHTS.
  *
- *   POS_X = -280   Mitte des Fachbodens: Punkte 105 und 113 tragen x = -280
- *                  (Rand -485 @0x121EC / -74 @0x121AC)
- *   POS_Y = -1062  Fachboden y = -1036 minus Rohrradius 26 (MD1 der Sicherung,
- *                  gen/sicherung_prop.inc, y[-26..26]) — sie liegt AUF dem Boden
- *   POS_Z = 1260   Naht der Deckelhaelften = Mitte des Fachbodens: Punkte 101 und 109
- *                  tragen z = 1260
- *   ROT_Y = 1024   Viertelkreis (4096 = 360 Grad): die Laengsachse X des Modells liegt
- *                  damit entlang Z der Plattform = entlang der LANGEN Seite des Fachs
- *                  (770 in z gegen 411 in x) und quer zur Blickrichtung von Cut 4
+ * WARUM SCHRAEG: das 406 lange Rohr passt nicht quer zur Kamera (laengs x, Plattform-Tiefe) in
+ * die Kuppel — auf Rohrhoehe 52 ist sie in x innen nur ~337 breit, bei rot_y 0 stuende das Rohr an
+ * beiden Enden durch die GESCHLOSSENE Kuppel (Suche: 0 zulaessige Sitze fuer rot_y 0..575). Und
+ * ganz in die rechte Haelfte (z > 1260) passt es in keiner Drehung (rechter Halbraum auf Hoehe 52
+ * diagonal ~366). Es liegt deshalb schraeg: hinten-links neben der Granate (x -393 z 1111) nach
+ * vorne-rechts (x -167 z 1449) unter den rechten Deckel.
  *
- * GEMESSEN im echten Spiel (Framedump, Differenz MIT/OHNE Prop, Punkte bei 320x240):
- * dieser Sitz traegt in den Stichbildern F110..F220 211..439 Punkte und 0 bei F100
- * (Deckel zu); der fruehere Sitz (-628,-927,784) mit Drehung 0 lag AUSSERHALB des Fachs
- * hinter der Kuppel, Laengsachse auf die Kamera gerichtet, und trug 12..124 Punkte.
- * Eingefroren von unit_r30_sicherung_sitz (liest den Fachboden aus beiden RDTs). */
+ *   POS_X = -280   Mitte des Fachbodens in x (Punkte 105/113)
+ *   POS_Y = -1062  Fachboden -1036 minus Rohrradius 26 (gen/sicherung_prop.inc y[-26..26]) —
+ *                  liegt AUF dem Boden (tiefster Punkt genau -1036)
+ *   POS_Z = 1280   } Ergebnis der Suche (Raster 10 in x/z, 32 in rot_y): Luft unter der
+ *   ROT_Y = 1440   } geschlossenen Kuppel 6,01, unter den offenen Deckeln 46,80, ganz ueber dem
+ *                  Achteck, Abstand zur Granate 6,77 (r31_pruef.py, ROOM1150 = ROOM1151);
+ *                  Schirm-Schwerpunkt RECHTS der Granate (gemessen: Dossier §1.3)
+ * Eingefroren von unit_r31_hebetisch (Geometrie aus beiden RDTs) und unit_r30_sicherung_sitz.
+ *
+ * Runde 30 lag sie mittig (-280,-1062,1260) rot_y 1024 quer ueber der ganzen Oeffnung, die
+ * Granate mittig dahinter. */
 #define RE15_SICHERUNG_POS_X  (-280)
 #define RE15_SICHERUNG_POS_Y  (-1062)
-#define RE15_SICHERUNG_POS_Z  (1260)
-#define RE15_SICHERUNG_ROT_Y  (1024)
+#define RE15_SICHERUNG_POS_Z  (1280)
+#define RE15_SICHERUNG_ROT_Y  (1440)
 
 /* Legt das Prop beim Raumstart an — falls der Raum ROOM1150/1151 ist UND die Sicherung
  * noch nicht genommen wurde. Gerufen NACH dem Init-Lauf (erst dann stehen die Props aus
@@ -112,13 +120,15 @@
  * (Tuer), und ruft selbst @0x80039a00 die SCD-Raum-Init FUN_8003ef6c. */
 void re15_sicherung_install(uint16_t room_id);
 
-/* Pro Gameplay-Bild: steht der Hebetisch oben, wird das Item-Modal aufgemacht. Der
- * Hochpunkt der Fahrt ist y = -305 - 910 = -1215, danach steht die Plattform auf -1205
- * (s. Kopf). Das Fenster (-5000 .. -1100] ist eine ⛔ PORT-WAHL OHNE ORIGINAL-ADRESSE
- * (das Original oeffnet hier kein Modal): -1100 wird nur in der Aufwaertsfahrt
- * unterschritten, -5000 haelt die Parklagen -20324/-20224 draussen. Das Modal friert
- * den Rest des Spiels ein (g_pauseflags), sub04 laeuft danach weiter und faehrt die
- * Plattform herunter. Rueckgabe 1 = Modal wurde in diesem Bild aufgemacht.
+/* Pro Gameplay-Bild: RUHT der Hebetisch oben, wird das Item-Modal aufgemacht. Runde 31: "oben"
+ * heisst der Skript-Zustand von sub04 — ein SCD-Thread im Fenster [Sleep 30 @0x101A,
+ * For-Abfahrt @0x1042), nach dem Setzen-For @0x1010, Plattform auf -1205
+ * (re15_hebetisch_ruht_oben, include/re15_hebetisch.h). Bis Runde 30 war es die y-Schranke
+ * -1100 mitten im Hub. ⛔ PORT-WAHL OHNE ORIGINAL-ADRESSE (das Original oeffnet hier kein
+ * Modal). Das Modal friert das Skript ein (FUN_8001db28 @0x8001dbc8 g_pauseflags |=
+ * 0xFF000000, SCD-Laeufer @0x8003f04c; Port main.c Zweig re15_item_modal_active), sub04
+ * laeuft erst danach weiter und faehrt die Plattform herunter. Rueckgabe 1 = Modal wurde in
+ * diesem Bild aufgemacht.
  * SPERRE JE FAHRT (Runde 30, Nachschliff "sicherung-nein"): hoechstens ein Modal je Fahrt;
  * nach "No" bietet die NAECHSTE Fahrt die Sicherung wieder an — wie das Original eine
  * abgelehnte Aufnahme scharf laesst (RE1.5 nur der Ja-Zweig nullt die Zone @0x8001e090,

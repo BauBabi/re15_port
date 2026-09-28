@@ -9,6 +9,7 @@
 
 #include "re15_scd.h"
 #include "re15_item_modal.h"
+#include "re15_hebetisch.h"   /* Runde 31: Ruhe oben von sub04 = Zeitpunkt des Modals */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #include "re15_inventory.h"   /* nur fuer die Logzeile: Inventar-Platz nach "Yes" */
@@ -19,20 +20,19 @@
 /* Der Hebetisch selbst ist Prop obj_id 0 des Raums (main00 @0x0E00). */
 #define PLATTFORM_OBJ_ID   0
 
-/* ⛔ FENSTER, NICHT EINSEITIGE SCHRANKE. Die Plattform muss IM RAUM *und* OBEN sein.
- * Eine blosse Schranke `y <= -1100` reicht NICHT: die Parkposition y=-20324
- * (main00 @0x0E00) unterschreitet sie ebenfalls, und das Modal ginge dann schon beim
- * Betreten des Raums auf, bevor der Tisch ueberhaupt erscheint. Genau das hat die Sonde
- * probe_sicherung_1150 gemessen — "Modal aufgemacht in Bild 0".
- * Gemessene Fahrt (dieselbe Sonde): geparkt -20324; Pos_set @0x0FB4 holt sie auf -305;
- * der Hochpunkt ist -1215 (91 Schritte a -10, For @0x0FF6), danach steht sie auf -1205
- * (10 Schritte a +1, For @0x1010); zurueck auf -305 und Parklage -20224 (Pos_set
- * @0x109E). Das Fenster faengt nur die Aufwaertsfahrt oben.
- * ⛔ Beide Schranken sind PORT-WAHL, KEINE ORIGINAL-ADRESSE — das Original oeffnet im
- * Hebetisch kein Modal. Sie trennen drei gemessene Lagen (Parken <= -20224, Start -305,
- * oben <= -1205), mehr nicht. */
+/* WANN DAS MODAL AUFGEHT — Runde 31 (Nutzer: "erst wenn das Modell wirklich komplett
+ * hochgefahren ist"): in der RUHE OBEN von sub04, d.h. sobald ein SCD-Thread im Fenster
+ * [Sleep 30 @0x101A, For-Abfahrt @0x1042) steht (re15_hebetisch_ruht_oben, Herleitung und
+ * Skript-Records in include/re15_hebetisch.h). Die Plattform ruht dort auf -1205.
+ * ⛔ Bis Runde 30 war es die y-Schranke `y <= -1100` (OBEN_BIS) — gemessen Bild 134 der Fahrt,
+ * y=-1105, MITTEN im Hub (der ging weiter bis -1215, dann Setzen auf -1205). Entfernt.
+ * ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE (das Original oeffnet im Hebetisch kein Modal); belegt
+ * ist der Skript-Zustand, an dem es haengt.
+ *
+ * IM_RAUM_AB bleibt NUR fuer das Wiederscharfmachen je Fahrt (Parklage, s. s_modal_ausgeloest):
+ * geparkt -20324 (main00 @0x0E00) bzw. -20224 (Pos_set @0x109E), die Fahrt bleibt in
+ * [-1215, -301]. ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE — trennt gemessene Lagen, mehr nicht. */
 #define IM_RAUM_AB         (-5000)    /* alles darunter ist die Parkposition   */
-#define OBEN_BIS           (-1100)    /* Hochpunkt -1215, Stand -1205, Start -305 */
 
 static uint8_t s_raum_aktiv;        /* Prop in diesem Raum angelegt?              */
 
@@ -123,8 +123,8 @@ void re15_sicherung_install(uint16_t room_id)
     g_scd.props[i].y = RE15_SICHERUNG_POS_Y;
     g_scd.props[i].z = RE15_SICHERUNG_POS_Z;
     g_scd.props[i].rot_x = 0;         /* liegend ist schon im Modell (Laengsachse X) */
-    /* Viertelkreis: Laengsachse entlang der langen Seite des Kuppelfachs. PORT-WAHL,
-     * keine Original-Adresse — Herleitung aus der Tischgeometrie in re15_sicherung.h. */
+    /* Schraeg im Fach, rechts neben der Granate (Runde 31). PORT-WAHL, keine Original-Adresse —
+     * Herleitung aus der Tischgeometrie in re15_sicherung.h. */
     g_scd.props[i].rot_y = RE15_SICHERUNG_ROT_Y;
     g_scd.props[i].rot_z = 0;
     g_scd.props[i].vel_x = g_scd.props[i].vel_y = g_scd.props[i].vel_z = 0;
@@ -191,8 +191,8 @@ int re15_sicherung_tick(void)
     if (re15_item_modal_active()) return 0;
     if (re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT)) return 0;
     if (!g_scd.props[p].active) return 0;
-    /* Fenster (IM_RAUM_AB, OBEN_BIS]: beide Seiten pruefen (s.o.). */
-    if (py > OBEN_BIS) return 0;
+    /* Runde 31: erst in der RUHE OBEN (sub04-PC in [@0x101A, @0x1042), include/re15_hebetisch.h). */
+    if (!re15_hebetisch_ruht_oben()) return 0;
 
     /* aot_slot -1 = es gibt keine AOT-Zone, die abgeschaltet werden muesste (die
      * Uebergabe kommt aus der Szene, nicht aus einem Aufsammel-Rechteck).
@@ -203,8 +203,8 @@ int re15_sicherung_tick(void)
     s_modal_ausgeloest = 1;
 #ifdef RE15_PLATFORM_PC
     s_modal_offen = 1;
-    fprintf(stderr, "[sicherung] Modal auf (Hebetisch y=%d), Sperre bis zum Ende dieser Fahrt\n",
-            (int)py);
+    fprintf(stderr, "[sicherung] Modal auf (Hebetisch y=%d, Ruhe oben: sub04-PC @0x%04lX), "
+                    "Sperre bis zum Ende dieser Fahrt\n", (int)py, re15_hebetisch_ruhe_pc_off());
 #endif
     return 1;
 }

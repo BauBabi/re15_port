@@ -102,6 +102,48 @@ x -393 z 1111) schraeg nach vorne-rechts (x -167 z 1449) unter den rechten Decke
 Planungsbild: `hebetisch_belege/planung_kandidaten.png` (Zeile 1 = gewaehlt; ID-Puffer, weiss Sicherung, gruen Granate, lila Deckel).
 
 ### 1.3 Messung im Framedump (MIT/OHNE-Differenz, Schwerpunkte)
+
+Echte exe (`re15_port/build/platform/pc/re15_pc.exe` dieses Baums), beschleunigter Renderer,
+`RE15_FRAMEDUMP` (Ruecklesen vor Present), KEIN AUTOSHOT/SOFTWARE_RENDER, `RE15_WINDOW_SCALE=1`
+(320x240). Laeufe `hebetisch_werkzeug/lauf_fahrt.sh` (Tuerweg: Debug-Sprung ROOM1150, Spieler
+(-21000,-18500), Viereck in Tick 30 = F230) und `lauf_laden.sh` (CONTINUE, `RE15_FIRE_AOT=1@90`).
+Kill-Switch wie Runde 30: `RE15_SET_FLAG=9:56` (OHNE Granate), `9:53` (OHNE Sicherung),
+`9:53,9:56` (OHNE beide); am Lade-Weg dieselben Flags in der Karte (`probe_r30_granate_karte`
+`genommen` / `sicherung`). Auswertung `links_rechts.py`: Granate = MIT gegen OHNE-G, Sicherung =
+MIT gegen OHNE-S, je Bild Punkte, Schwerpunkt, bbox.
+
+Tuerweg ROOM1150 (`hebetisch_belege/links_rechts_tuerweg_1150.txt`, Auszug):
+
+| F | Granate Punkte / Schwerpunkt-x | Sicherung Punkte / Schwerpunkt-x | Trennung | G links vom S-Schwerpunkt | S rechts vom G-Schwerpunkt |
+|---|---|---|---|---|---|
+| 236..240 (Kuppel zu) | 0 | 0 | — | — | — |
+| 250 (Deckel gehen auf) | 52 / 199,3 | 257 / 215,6 | +16,3 | 100 % | 100 % |
+| 256..280 (offen, Start) | 231 / 194,4 | 365 / 221,0 | +26,6 | 100 % | 100 % |
+| 310 (Hub) | 233 / 196,4 | 379 / 224,5 | +28,2 | 100 % | 100 % |
+| 352 | 249 / 200,3 | 453 / 230,0 | +29,7 | 100 % | 100 % |
+| 376 (oben) | 269 / 202,2 | 397 / 235,1 | +32,9 | 100 % | 100 % |
+| 382 | 258 / 202,3 | 398 / 234,3 | +32,0 | 100 % | 100 % |
+
+In JEDEM Bild F250..F386 liegt die Granate LINKS und die Sicherung RECHTS: 100 % der
+Granaten-Punkte links vom Sicherungs-Schwerpunkt, 100 % der Sicherungs-Punkte rechts vom
+Granaten-Schwerpunkt, Trennung +16..+33 px (bei 320 Breite; die Oeffnung ist oben ~54 px breit).
+Lade-Weg ROOM1150 und ROOM1151 (`links_rechts_ladeweg_1150.txt`/`_1151.txt`): Zahl fuer Zahl
+dieselben Werte (F110 = 52/257 ... F240 = 266/404, Trennung +32,9).
+Rasterer-Planung vs. Messung: Granate 235 geplant / 231 gemessen (Start), Sicherung 324 / 365.
+
+**Kein Durchstoss bei geschlossener Kuppel:** MIT beide gegen OHNE beide, F230..F240 (Plattform
+schon auf -305, Kuppel zu): **0 Punkte** (`kuppel_zu_start_mit_gegen_ohne.txt`; F242 13 Punkte,
+die Deckel gehen auf). Am Ende einer Fahrt nach "No" (Sicherung bleibt liegen), MIT Bild
+824..908 gegen OHNE (Versatz 283 = Parkbild 909 - 626): 420 Punkte offen, beim Schliessen 400 ->
+13, ab Bild 848 bis zum Parken **0 Punkte** (`kuppel_zu_ende_nein.txt`). Runde 30 hatte bei
+aufliegender Granate 2 Punkte durch die Schale (deshalb 3 tief versenkt) — jetzt 0 bei
+aufliegender Granate.
+
+Bilder (angesehen): `hebetisch_belege/fahrt_lupe_960.png` (Lauf mit `RE15_WINDOW_SCALE=3`,
+F260/F300/F340/F384, Ausschnitt x3: Granate links mit Rautenmuster, Sicherung schraeg nach
+rechts unter den rechten Deckel; die offene Ecke der Granate ist nicht zu sehen),
+`fahrt_bogen_320x2.png` (F250..F400 ganzes Bild).
+
 ## 2. Zeitpunkt: Dialog erst, wenn die Plattform ruht
 
 ### 2.1 Skript-Zustand sub04 (Setzen-For @0x1010, Sleep 30 @0x101A)
@@ -172,7 +214,96 @@ gemessen: -1105 -> -1115 (damals mitten im Hub). Mit dem neuen Zeitpunkt faellt 
 in den Sleep 30 @0x101A — die Plattform bewegt sich nicht.
 
 ### 2.3 Einbau
+
+* `include/re15_hebetisch.h` + `engine/src/hebetisch_1150.c` (neu): `re15_hebetisch_raum_scan()`
+  sucht beim Registrieren des Raum-RDT (`scd_register_current_rdt`, scd_vm.c — laeuft am Tuer-
+  und am Boot/CONTINUE-Weg) die 56 Byte @0x1010..@0x1047; `re15_hebetisch_ruht_oben()` = ein
+  aktiver SCD-Thread mit PC in [Sig+0x0A, Sig+0x32) = [@0x101A, @0x1042). Zensus
+  (`ruhe_signatur.py`, `hebetisch_belege/ruhe_signatur.txt`): 240 RDTs, Treffer NUR ROOM1150
+  @0x1010 (Fenster [0x101A,0x1042)) und ROOM1151 @0x0FEE ([0x0FF8,0x1020)).
+* `sicherung_1150.c` / `granate_1150.c`: `if (py > OBEN_BIS) return 0;` (y-Schranke -1100) ersetzt
+  durch `if (!re15_hebetisch_ruht_oben()) return 0;`. `OBEN_BIS` entfernt. `IM_RAUM_AB` (-5000)
+  bleibt nur fuer das Wiederscharfmachen je Fahrt in der Parklage (Runde-30-Regel, unveraendert).
+  Reihenfolge unveraendert: erst Sicherung, dann Granate (`re15_sicherung_fahrt_offen`).
+  Logzeilen nennen jetzt den sub04-PC: `[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben:
+  sub04-PC @0x101B)`.
+* Mess-Protokoll `RE15_HEBETISCH_LOG=<datei>` (nur PC, kein Verhalten): je Spielbild
+  `F<n> y=<plattform> ruht=<0|1> pc=<datei-offset> modal=<zustand>`, gerufen in
+  `game_step_common.c` nach dem SCD-Tick und vor `re15_sicherung_tick`.
+* Beide Dialoge an der ruhenden Plattform: die Aufnahme haelt das Skript an (2.2). Die Ruhe oben
+  dauert 30 (Sleep @0x101A) + 10 (Sleep @0x102E) SKRIPT-Bilder; zwischen den Dialogen laeuft 1
+  Skriptbild (Port) — gemessen: danach noch 38 Ruhebilder vor der Abfahrt (3.2).
+
 ## 3. Abnahme im echten Spiel
+
+### 3.1 (a) Fahrt: Granate links, Sicherung rechts — s. 1.3
+
+### 3.2 (b) Die letzten Bilder vor dem ersten Dialog (Mess-Protokoll, Tuerweg, Lauf `ja_ja`)
+
+`hebetisch_belege/ruhe_protokoll_ja_ja_F370-392.txt`:
+
+```
+F375 y=-1205  F376 y=-1215 (Hochpunkt)  F377 -1214 ... F385 y=-1206
+F386 y=-1205 ruht=0 pc=-1     modal=0   <- letztes Add_speed des Setzens (For @0x1010)
+F387 y=-1205 ruht=1 pc=0x101B modal=0   <- erstes Ruhebild: Sleep 30 @0x101A; Modal auf in DIESEM Bild
+F388 y=-1205 ruht=1 pc=0x101B modal=2   <- Modal zeichnet ("zeichnet in Bild 388")
+```
+
+`debug.log`: `[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)`. Runde 30:
+Bild 365, y=-1105 (22 Bilder frueher, mitten im Hub). Auswertung aller Laeufe
+(`ruhe_pruef.py`, `hebetisch_belege/ruhe_pruef.txt`):
+
+| Lauf | Fahrt | letzte Bewegung | erstes Ruhebild | Aufnahme offen (Bilder) | davon y != -1205 | Ruhe ohne Aufnahme | Abfahrt ab |
+|---|---|---|---|---|---|---|---|
+| ja_ja (Tuerweg) | 1 | 386 | 387 | 244 | **0** | 40 | 671 |
+| nein_ja | 1 | 386 | 387 | 283 | **0** | 40 | 710 |
+| nein_ja | 2 | 1313 | 1314 | 137 | **0** | 40 | 1491 |
+| laden1150 | 1 | 246 | 247 | (Lauf endet im Dialog) | **0** | — | — |
+| laden1151 | 1 | 246 | 247 | (Lauf endet im Dialog) | **0** | — | — (PC @0x0FF9) |
+
+Zwischen den Dialogen (ja_ja): F506 "Yes" Sicherung, F507 `modal=0` (1 Skriptbild, PC bleibt
+0x101B, der Sleep zaehlt), F508 Granaten-Dialog; nach dem zweiten "Yes" (F632) noch F633..F670
+Ruhe (PC 0x101B -> 0x101E -> 0x102F -> 0x1032), Abfahrt F671 (y -1195). 40 Ruhebilder ohne
+Aufnahme = genau Sleep 30 + Sleep 10: die Dialoge verbrauchen keinen Skript-Takt.
+
+### 3.3 (c) "Yes" bei beiden (Lauf `ja_ja`, `hebetisch_belege/ja_ja_debug_auszug.txt`)
+
+```
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)
+[input-script] Tick 306 -> F506 Tasten 0x8000
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)
+[input-script] Tick 432 -> F632 Tasten 0x8000
+[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 4
+```
+
+Modelle weg: ja_ja F640/F652/F660/F668 gegen OHNE-beide F388/F390 (gleiche Ruhelage): **0
+abweichende Punkte**; gegen den Lauf mit beiden Modellen (mit1 F386): 667 Punkte. Bilder
+`ja_ja_bogen.png` (F400 Sicherungs-Dialog, F504 "Will you take the Fuse?", F512 Granaten-Dialog
+zoomt, F600 "Will you take the Hand Grenade?", F640 Fach leer) und `ja_ja_status.png`
+(F800..F896 Statusschirm: Sicherung und Granate x1 in der Item-Liste).
+
+### 3.4 (d) "No" bei einem (Lauf `nein_ja`, `hebetisch_belege/nein_ja_debug_auszug.txt`)
+
+Fahrt 1: Sicherung "No" (R F506, Viereck F527) -> `[sicherung] No/voll: nicht genommen ...
+(Hebetisch y=-1205)`, Granaten-Dialog an derselben ruhenden Plattform, "Yes" F671 -> Flag
+(9,56). Parklage: `[sicherung] Fahrt zu Ende ... Sperre geloest`. Fahrt 2 (Viereck F1157,
+Cut_chg(4) F1163): `[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)`,
+"Yes" F1451 -> Flag (9,53), Item 0x40 in Platz 4. Kein Granaten-Dialog in Fahrt 2 (genommen).
+
+### 3.5 (e) Lade-Weg (`lauf_laden.sh`)
+
+`laden1150`/`laden1151`: `[save] CONTINUE: resumed in room 1150/1151`, `[sicherung] Boot-Weg:
+Prop obj_id=4 im Pool`, `[granate] Boot-Weg: Prop obj_id=7 im Pool`, `[fire-aot] slot=1 at F90`,
+`[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B / @0x0FF9)`. Links/rechts
+wie am Tuerweg (1.3). Gegenprobe `laden1150_ohne` (Karte mit beiden Flags): weder Pool-Zeile
+noch Dialog.
+
+### 3.6 Messfalle
+
+Der erste Lauf mit `RE15_WINDOW_SCALE=3` endete mit rc=1 und 0 Bildern (debug.log bricht nach
+F150 ab, ohne Fehlermeldung); die Wiederholung lief sauber (41 Bilder bis EXIT_AT 402). Parallel
+lief eine Docker-Bau-Sitzung — als Last-Flattern gewertet, nicht als Befund.
 ## 4. Riegel/Tests nachgezogen
 ## 5. Suite / Commits
 ## 6. Offen

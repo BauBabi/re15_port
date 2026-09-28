@@ -1,0 +1,43 @@
+MIT Bild 824 gegen OHNE Bild 541:  420 Punkte bbox x188..240 y156..180
+MIT Bild 826 gegen OHNE Bild 543:  420 Punkte bbox x188..240 y156..180
+MIT Bild 828 gegen OHNE Bild 545:  420 Punkte bbox x188..240 y156..180
+MIT Bild 830 gegen OHNE Bild 547:  420 Punkte bbox x188..240 y156..180
+MIT Bild 832 gegen OHNE Bild 549:  420 Punkte bbox x188..240 y156..180
+MIT Bild 834 gegen OHNE Bild 551:  400 Punkte bbox x190..239 y156..179
+MIT Bild 836 gegen OHNE Bild 553:  349 Punkte bbox x193..235 y157..178
+MIT Bild 838 gegen OHNE Bild 555:  289 Punkte bbox x197..231 y159..177
+MIT Bild 840 gegen OHNE Bild 557:  205 Punkte bbox x200..228 y160..176
+MIT Bild 842 gegen OHNE Bild 559:  135 Punkte bbox x203..218 y160..173
+MIT Bild 844 gegen OHNE Bild 561:   70 Punkte bbox x207..215 y162..172
+MIT Bild 846 gegen OHNE Bild 563:   13 Punkte bbox x210..212 y162..168
+MIT Bild 848 gegen OHNE Bild 565:    0 Punkte
+MIT Bild 850 gegen OHNE Bild 567:    0 Punkte
+MIT Bild 852 gegen OHNE Bild 569:    0 Punkte
+MIT Bild 854 gegen OHNE Bild 571:    0 Punkte
+MIT Bild 856 gegen OHNE Bild 573:    0 Punkte
+MIT Bild 858 gegen OHNE Bild 575:    0 Punkte
+MIT Bild 860 gegen OHNE Bild 577:    0 Punkte
+MIT Bild 862 gegen OHNE Bild 579:    0 Punkte
+MIT Bild 864 gegen OHNE Bild 581:    0 Punkte
+MIT Bild 866 gegen OHNE Bild 583:    0 Punkte
+MIT Bild 868 gegen OHNE Bild 585:    0 Punkte
+MIT Bild 870 gegen OHNE Bild 587:    0 Punkte
+MIT Bild 872 gegen OHNE Bild 589:    0 Punkte
+MIT Bild 874 gegen OHNE Bild 591:    0 Punkte
+MIT Bild 876 gegen OHNE Bild 593:    0 Punkte
+MIT Bild 878 gegen OHNE Bild 595:    0 Punkte
+MIT Bild 880 gegen OHNE Bild 597:    0 Punkte
+MIT Bild 882 gegen OHNE Bild 599:    0 Punkte
+MIT Bild 884 gegen OHNE Bild 601:    0 Punkte
+MIT Bild 886 gegen OHNE Bild 603:    0 Punkte
+MIT Bild 888 gegen OHNE Bild 605:    0 Punkte
+MIT Bild 890 gegen OHNE Bild 607:    0 Punkte
+MIT Bild 892 gegen OHNE Bild 609:    0 Punkte
+MIT Bild 894 gegen OHNE Bild 611:    0 Punkte
+MIT Bild 896 gegen OHNE Bild 613:    0 Punkte
+MIT Bild 898 gegen OHNE Bild 615:    0 Punkte
+MIT Bild 900 gegen OHNE Bild 617:    0 Punkte
+MIT Bild 902 gegen OHNE Bild 619:    0 Punkte
+MIT Bild 904 gegen OHNE Bild 621:    0 Punkte
+MIT Bild 906 gegen OHNE Bild 623:    0 Punkte
+MIT Bild 908 gegen OHNE Bild 625:    0 Punkte

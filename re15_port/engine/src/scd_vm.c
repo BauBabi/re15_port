@@ -41,6 +41,7 @@
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 #include "re15_elev_se.h"   /* RE2-ERGAENZUNG: Fahrstuhl-Fahrton (engine/src/scd_elev_se.c) */
 #include "re15_map_hint.h"  /* RE2-ERGAENZUNG: Kartenhinweis (engine/src/map_hint_common.c) */
+#include "re15_hebetisch.h" /* Runde 31: Ruhe oben des Hebetischs ROOM1150/1151 (hebetisch_1150.c) */
 #include "re15_lock_se.h"   /* RE2-ERGAENZUNG: "Tuer verschlossen"-Ton (engine/src/lock_se_common.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
@@ -161,6 +162,10 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
      * @0x012E0) wird NUR im Quellraum gesucht — die Folge steht in 8 Raeumen. */
     re15_map_hint_room_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0,
                             g_current_room_id);
+    /* Runde 31 (Hebetisch ROOM1150/1151): das Ruhe-Fenster von sub04 [@0x101A, @0x1042) ueber
+     * seine 56 Byte suchen — Sicherung und Granate oeffnen ihre Aufnahme erst dort
+     * (include/re15_hebetisch.h). 238 von 240 Raeumen -> kein Treffer. */
+    re15_hebetisch_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)

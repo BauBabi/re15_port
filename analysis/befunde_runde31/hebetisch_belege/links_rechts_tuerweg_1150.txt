@@ -1,0 +1,76 @@
+F236: Granate    0 | Sicherung    0
+F238: Granate    0 | Sicherung    0
+F240: Granate    0 | Sicherung    0
+F242: Granate    0 | Sicherung   13 x211.4 y165.2 bbox x210..212 y162..168
+F244: Granate    0 | Sicherung   70 x211.5 y166.6 bbox x207..215 y162..172
+F246: Granate    0 | Sicherung  135 x210.9 y166.5 bbox x203..218 y160..173
+F248: Granate    8 x200.9 y164.5 bbox x200..201 y161..168 | Sicherung  197 x212.5 y167.1 bbox x200..228 y160..176 | Trennung +11.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 99 %
+F250: Granate   52 x199.3 y165.6 bbox x197..201 y158..173 | Sicherung  257 x215.6 y168.0 bbox x199..231 y159..177 | Trennung +16.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F252: Granate  126 x197.1 y165.1 bbox x193..201 y154..174 | Sicherung  307 x218.0 y168.6 bbox x199..235 y159..178 | Trennung +20.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F254: Granate  193 x195.3 y164.8 bbox x189..201 y154..175 | Sicherung  351 x220.2 y169.3 bbox x199..239 y159..179 | Trennung +24.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F256: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F258: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F260: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F262: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F264: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F266: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F268: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F270: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F272: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F274: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F276: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F278: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F280: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F282: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F284: Granate  231 x194.4 y165.0 bbox x188..201 y154..175 | Sicherung  365 x221.0 y169.5 bbox x199..240 y159..180 | Trennung +26.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F286: Granate  238 x194.4 y163.3 bbox x188..201 y152..173 | Sicherung  351 x221.7 y168.4 bbox x201..241 y159..178 | Trennung +27.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F288: Granate  232 x194.5 y160.6 bbox x188..201 y150..170 | Sicherung  366 x221.4 y165.5 bbox x201..241 y156..175 | Trennung +26.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F290: Granate  227 x194.7 y157.9 bbox x188..201 y147..168 | Sicherung  368 x221.6 y162.5 bbox x201..241 y153..173 | Trennung +26.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F292: Granate  238 x195.1 y155.0 bbox x188..202 y144..165 | Sicherung  360 x222.0 y159.5 bbox x201..241 y150..169 | Trennung +26.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F294: Granate  229 x195.3 y151.8 bbox x188..202 y141..162 | Sicherung  363 x222.4 y156.9 bbox x202..242 y148..166 | Trennung +27.2 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F296: Granate  237 x195.3 y149.1 bbox x188..202 y138..159 | Sicherung  351 x222.9 y154.2 bbox x202..242 y145..164 | Trennung +27.5 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F298: Granate  233 x195.4 y146.3 bbox x189..202 y135..156 | Sicherung  352 x222.8 y150.9 bbox x202..242 y142..160 | Trennung +27.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F300: Granate  239 x195.5 y143.1 bbox x189..202 y132..153 | Sicherung  357 x223.1 y148.0 bbox x203..243 y139..157 | Trennung +27.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F302: Granate  241 x195.5 y140.0 bbox x189..202 y129..150 | Sicherung  354 x223.1 y145.3 bbox x203..243 y137..154 | Trennung +27.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F304: Granate  250 x195.9 y137.1 bbox x189..203 y126..147 | Sicherung  349 x223.9 y142.4 bbox x204..243 y134..151 | Trennung +28.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F306: Granate  250 x195.9 y134.1 bbox x189..203 y123..144 | Sicherung  356 x224.2 y139.4 bbox x204..244 y131..148 | Trennung +28.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F308: Granate  241 x196.1 y131.2 bbox x189..203 y120..141 | Sicherung  370 x224.1 y136.1 bbox x204..244 y128..145 | Trennung +28.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F310: Granate  233 x196.4 y128.1 bbox x189..203 y117..138 | Sicherung  379 x224.5 y133.2 bbox x204..245 y125..142 | Trennung +28.2 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F312: Granate  236 x196.6 y125.1 bbox x190..203 y114..135 | Sicherung  389 x224.8 y130.1 bbox x204..245 y122..139 | Trennung +28.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F314: Granate  240 x196.6 y121.8 bbox x190..203 y111..132 | Sicherung  377 x224.6 y126.9 bbox x204..245 y119..135 | Trennung +28.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F316: Granate  241 x197.0 y118.5 bbox x190..204 y108..128 | Sicherung  374 x225.3 y124.1 bbox x205..246 y116..132 | Trennung +28.4 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F318: Granate  241 x197.0 y115.5 bbox x190..204 y105..125 | Sicherung  392 x226.1 y121.0 bbox x205..246 y113..129 | Trennung +29.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F320: Granate  246 x197.2 y112.3 bbox x190..204 y102..122 | Sicherung  390 x226.2 y117.5 bbox x205..246 y110..126 | Trennung +29.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F322: Granate  248 x197.1 y109.1 bbox x190..204 y99..119 | Sicherung  381 x226.0 y114.3 bbox x205..247 y107..122 | Trennung +28.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F324: Granate  230 x197.6 y106.1 bbox x191..204 y96..116 | Sicherung  389 x226.3 y111.3 bbox x205..247 y104..119 | Trennung +28.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F326: Granate  237 x197.7 y102.8 bbox x191..204 y92..113 | Sicherung  401 x226.7 y108.0 bbox x205..248 y101..115 | Trennung +29.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F328: Granate  246 x198.1 y99.3 bbox x191..205 y89..109 | Sicherung  383 x227.1 y104.5 bbox x206..248 y98..112 | Trennung +29.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F330: Granate  245 x198.1 y96.1 bbox x191..205 y86..106 | Sicherung  391 x227.4 y101.6 bbox x205..248 y95..109 | Trennung +29.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F332: Granate  255 x198.2 y92.8 bbox x191..205 y82..103 | Sicherung  401 x227.8 y98.4 bbox x205..249 y92..105 | Trennung +29.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F334: Granate  244 x198.2 y89.3 bbox x191..205 y79..99 | Sicherung  393 x227.8 y94.9 bbox x205..249 y89..102 | Trennung +29.6 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F336: Granate  252 x198.3 y86.0 bbox x191..205 y76..96 | Sicherung  408 x227.4 y91.5 bbox x205..249 y85..98 | Trennung +29.2 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F338: Granate  242 x199.2 y82.4 bbox x192..206 y72..92 | Sicherung  433 x228.2 y88.3 bbox x205..250 y82..95 | Trennung +29.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F340: Granate  250 x199.2 y79.0 bbox x192..206 y69..89 | Sicherung  411 x228.4 y84.8 bbox x205..250 y79..91 | Trennung +29.2 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F342: Granate  244 x199.2 y75.9 bbox x192..206 y66..86 | Sicherung  404 x229.1 y81.2 bbox x205..251 y76..87 | Trennung +29.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F344: Granate  248 x199.4 y72.2 bbox x193..206 y62..82 | Sicherung  415 x228.8 y77.8 bbox x205..251 y72..84 | Trennung +29.4 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F346: Granate  243 x199.3 y69.0 bbox x193..206 y59..79 | Sicherung  431 x229.1 y74.3 bbox x204..251 y69..80 | Trennung +29.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F348: Granate  244 x199.3 y64.9 bbox x193..206 y55..75 | Sicherung  427 x230.0 y70.9 bbox x204..252 y66..77 | Trennung +30.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F350: Granate  264 x199.9 y61.3 bbox x193..207 y52..71 | Sicherung  428 x229.9 y67.3 bbox x205..252 y62..73 | Trennung +30.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F352: Granate  249 x200.3 y57.7 bbox x194..207 y48..68 | Sicherung  453 x230.0 y63.7 bbox x204..253 y58..69 | Trennung +29.7 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F354: Granate  243 x200.4 y54.3 bbox x194..207 y45..64 | Sicherung  417 x230.7 y60.1 bbox x205..253 y55..65 | Trennung +30.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F356: Granate  252 x200.4 y50.6 bbox x194..207 y41..61 | Sicherung  454 x231.1 y56.4 bbox x205..253 y51..62 | Trennung +30.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F358: Granate  256 x200.4 y46.8 bbox x194..207 y37..57 | Sicherung  472 x231.3 y52.6 bbox x205..254 y48..58 | Trennung +30.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F360: Granate  272 x200.9 y42.9 bbox x194..208 y33..53 | Sicherung  481 x231.2 y48.8 bbox x206..254 y44..54 | Trennung +30.3 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F362: Granate  272 x200.9 y38.9 bbox x194..208 y29..49 | Sicherung  458 x231.9 y45.1 bbox x205..255 y40..50 | Trennung +31.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F364: Granate  266 x201.1 y35.6 bbox x194..208 y25..46 | Sicherung  445 x231.8 y41.3 bbox x206..255 y37..46 | Trennung +30.7 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F366: Granate  266 x201.4 y31.4 bbox x195..208 y21..42 | Sicherung  456 x231.9 y37.8 bbox x205..255 y33..42 | Trennung +30.5 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F368: Granate  256 x201.4 y27.8 bbox x195..208 y17..38 | Sicherung  460 x232.2 y33.9 bbox x205..256 y29..38 | Trennung +30.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F370: Granate  269 x201.7 y23.9 bbox x189..209 y13..34 | Sicherung  447 x233.1 y29.7 bbox x205..258 y24..34 | Trennung +31.4 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F372: Granate  274 x202.0 y19.1 bbox x195..209 y9..29 | Sicherung  399 x233.9 y25.4 bbox x207..257 y21..29 | Trennung +31.8 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F374: Granate  277 x202.1 y15.0 bbox x195..209 y5..25 | Sicherung  400 x234.2 y21.4 bbox x207..257 y17..25 | Trennung +32.1 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F376: Granate  269 x202.2 y10.9 bbox x189..209 y1..21 | Sicherung  397 x235.1 y17.2 bbox x207..260 y12..21 | Trennung +32.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F378: Granate  257 x202.3 y11.4 bbox x195..209 y1..21 | Sicherung  386 x234.8 y17.5 bbox x207..257 y13..21 | Trennung +32.4 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F380: Granate  266 x202.3 y11.9 bbox x190..209 y2..22 | Sicherung  404 x235.2 y18.1 bbox x207..260 y13..22 | Trennung +32.9 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F382: Granate  258 x202.3 y12.4 bbox x190..209 y2..22 | Sicherung  398 x234.3 y18.4 bbox x207..257 y14..22 | Trennung +32.0 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F384: Granate  280 x202.0 y13.0 bbox x189..209 y2..23 | Sicherung  406 x235.2 y19.1 bbox x207..260 y13..23 | Trennung +33.2 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %
+F386: Granate  279 x202.0 y13.1 bbox x189..209 y3..23 | Sicherung  388 x234.7 y19.3 bbox x207..260 y14..23 | Trennung +32.7 px, Granate links vom S-Schwerpunkt 100 %, Sicherung rechts vom G-Schwerpunkt 100 %

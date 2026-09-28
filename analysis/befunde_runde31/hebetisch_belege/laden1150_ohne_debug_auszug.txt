@@ -1,0 +1,2 @@
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[fire-aot] slot=1 at F90 (Raum 1150)

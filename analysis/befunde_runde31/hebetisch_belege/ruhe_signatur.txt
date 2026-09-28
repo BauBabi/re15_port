@@ -1,0 +1,4 @@
+Signatur (56 Byte) @0x1010: 0d 00 04 00 0a 00 30 02 0e 00 09 0a 1e 00 2e 03 00 00 36 02 0a 00 03 00 00 00 00 00 00 00 09 0a 0a 00 36 02 0c 00 03 00 00 00 00 00 00 00 2f 01 0a 00 0d 00 04 00 5a 00
+ROOM1150.RDT: ['@0x1010']  Ruhe-Fenster ['[0x101A,0x1042)']
+ROOM1151.RDT: ['@0x0FEE']  Ruhe-Fenster ['[0x0FF8,0x1020)']
+240 RDTs durchsucht

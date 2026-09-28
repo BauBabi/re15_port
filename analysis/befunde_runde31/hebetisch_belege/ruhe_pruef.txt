@@ -1,0 +1,11 @@
+== mit1
+Fahrt 1 (Pos_set -305 in Bild 236): letzte Bewegung vor der Ruhe Bild 386, erstes Ruhebild 387, erstes Bild mit offener Aufnahme 388; Bilder mit offener Aufnahme 73, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 1; Abfahrt ab Bild None; sub04-PC in der Ruhe 0x101B
+== ja_ja
+Fahrt 1 (Pos_set -305 in Bild 236): letzte Bewegung vor der Ruhe Bild 386, erstes Ruhebild 387, erstes Bild mit offener Aufnahme 388; Bilder mit offener Aufnahme 244, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 40; Abfahrt ab Bild 671; sub04-PC in der Ruhe 0x101B, 0x101E, 0x102F, 0x1032
+== nein_ja
+Fahrt 1 (Pos_set -305 in Bild 236): letzte Bewegung vor der Ruhe Bild 386, erstes Ruhebild 387, erstes Bild mit offener Aufnahme 388; Bilder mit offener Aufnahme 283, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 40; Abfahrt ab Bild 710; sub04-PC in der Ruhe 0x101B, 0x101E, 0x102F, 0x1032
+Fahrt 2 (Pos_set -305 in Bild 1163): letzte Bewegung vor der Ruhe Bild 1313, erstes Ruhebild 1314, erstes Bild mit offener Aufnahme 1315; Bilder mit offener Aufnahme 137, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 40; Abfahrt ab Bild 1491; sub04-PC in der Ruhe 0x101B, 0x101E, 0x102F, 0x1032
+== laden1150
+Fahrt 1 (Pos_set -305 in Bild 96): letzte Bewegung vor der Ruhe Bild 246, erstes Ruhebild 247, erstes Bild mit offener Aufnahme 248; Bilder mit offener Aufnahme 53, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 1; Abfahrt ab Bild None; sub04-PC in der Ruhe 0x101B
+== laden1151
+Fahrt 1 (Pos_set -305 in Bild 96): letzte Bewegung vor der Ruhe Bild 246, erstes Ruhebild 247, erstes Bild mit offener Aufnahme 248; Bilder mit offener Aufnahme 53, davon NICHT y=-1205: 0; Ruhebilder ohne Aufnahme 1; Abfahrt ab Bild None; sub04-PC in der Ruhe 0x0FF9
