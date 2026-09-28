@@ -25,6 +25,7 @@
 #include "re15_actor.h"     /* g_actors for Plc_neck head-look */
 #include "re15_math.h"      /* re15_squareroot0 — the BIOS sqrt approx for the neck-pitch horiz dist */
 #include "re15_scd.h"       /* g_re15_pauseflags + RE15_PAUSE_* — Freeze-Gate der Neck-FSM (s.u.) */
+#include "re15_engine.h"    /* g_engine.frame_count fuer die Messzeile RE15_NECK_TRACE */
 
 /* Q12 helpers — int32 intermediates to avoid overflow during multiply.
  *
@@ -579,8 +580,10 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
             }
             { static FILE *nt = NULL; static int nti = 0;
               if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
-              if (nt) { fprintf(nt, "slot=%d fl=%02x tgt=(%d,%d) res=(%d,%d) acc=(%d,%d) kf=(%d,%d) step=(%d,%d)\n",
-                                (int)(a - g_actors), fl, (int)tgt_yaw, (int)tgt_pit, (int)resY, (int)resP,
+              /* F<bild> seit Runde 30 (cut-blitz): der Riegel prueft damit, dass die FSM auch in
+               * einem Bild ohne gezeichnetes 3D (NPC ausserhalb des Regions-Vierecks) taktet. */
+              if (nt) { fprintf(nt, "F%u slot=%d fl=%02x tgt=(%d,%d) res=(%d,%d) acc=(%d,%d) kf=(%d,%d) step=(%d,%d)\n",
+                                (unsigned)g_engine.frame_count, (int)(a - g_actors), fl, (int)tgt_yaw, (int)tgt_pit, (int)resY, (int)resP,
                                 (int)a->neck_yaw, (int)a->neck_pitch, (int)ay, (int)az,
                                 (int)stepY, (int)stepP); fflush(nt); } }
         neck_apply_acc:
