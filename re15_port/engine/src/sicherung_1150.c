@@ -155,8 +155,11 @@ int re15_sicherung_tick(void)
                             "Inventar-Platz %d\n", RE15_SICHERUNG_TAKEN_BIT, RE15_SICHERUNG_ITEM,
                     re15_inv_find_item(RE15_SICHERUNG_ITEM));
         else
-            fprintf(stderr, "[sicherung] No: Sicherung bleibt liegen (Hebetisch y=%d), "
-                            "die naechste Fahrt bietet sie wieder an\n", (int)py);
+            /* derselbe Zweig fuer "No" und "Inventar voll": @0x8001e054 `bltz` /
+             * @0x8001e06c `bne` -> @0x8001e0ec */
+            fprintf(stderr, "[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen "
+                            "(Hebetisch y=%d), die naechste Fahrt bietet sie wieder an\n",
+                    (int)py);
     }
 #endif
 

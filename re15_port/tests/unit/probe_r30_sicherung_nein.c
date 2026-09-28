@@ -39,6 +39,9 @@
  *   Fall B "Yes in Fahrt 1":
  *     8  Fahrt 1 genau EIN Modal, danach Flag, Prop weg, Item im Inventar
  *     9  Fahrt 2 oeffnet KEIN Modal, keine zweite Aufnahme, Prop bleibt weg
+ *   Fall C "Inventar voll" (derselbe Zweig wie "No": @0x8001e054 `bltz` -> @0x8001e0ec):
+ *    10  Fahrt 1: genau EIN Modal ("YOU CAN'T CARRY ANY MORE ITEMS"), nichts genommen
+ *    11  Fahrt 2 (ein Platz frei geraeumt): das Modal geht WIEDER auf, "Yes" nimmt die Sicherung
  *
  * Die Bildschleife folgt der Reihenfolge des Spiels: SCD-Tick nur ohne Modal (main.c, der
  * Freeze @0x8001cdec), dann re15_sicherung_tick (game_step_common.c vor dem Freeze-Gate),
@@ -165,9 +168,12 @@ static fahrt_t fahrt(int antwort)
         if (re15_item_modal_active()) {                       /* main.c nach dem Step */
             uint16_t edge = 0;
             uint8_t typ = 0; int wahl = 0;
-            if (re15_item_modal_prompt_ready() && re15_item_modal_prompt(&typ, &wahl) == 1) {
+            int art = re15_item_modal_prompt(&typ, &wahl);
+            if (re15_item_modal_prompt_ready() && art == 1) {
                 if (antwort == ANTWORT_NEIN && wahl == 0) edge = 0x1000;   /* auf "No" */
                 else                                      edge = 0x4000;   /* bestaetigen */
+            } else if (re15_item_modal_prompt_ready() && art == 2) {
+                edge = 0x4000;                         /* "can't carry": wegdruecken */
             }
             re15_item_modal_tick(edge, edge);
         }
@@ -249,6 +255,33 @@ static int fall_b(re15_rdt_t *rdt, uint16_t rid)
     return 0;
 }
 
+static int fall_c(re15_rdt_t *rdt, uint16_t rid)
+{
+    printf("\n== %04X Fall C: Inventar voll in Fahrt 1, ein Platz frei in Fahrt 2 ==\n", rid);
+    raum_frisch(rdt, rid);
+    if (!sicherung_sichtbar()) { pruefe(10, "Sicherung ist nach dem Raumstart angelegt", 0); return 1; }
+    /* alle Plaetze mit einem Nicht-Waffen-Item belegen (0x41 "Spark Plug"; der Waffenzweig
+     * @0x8001df40 greift nur fuer Ids 0x0e..0x13) */
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) { g_inv.slots[i].id = 0x41; g_inv.slots[i].qty = 1; }
+
+    printf("  -- Fahrt 1 (Inventar voll)\n");
+    fahrt_t f1 = fahrt(ANTWORT_JA);
+    printf("   nach Fahrt 1: Flag(9,%d)=%d, Prop sichtbar=%d, Item 0x40 im Inventar=%d\n",
+           RE15_SICHERUNG_TAKEN_BIT, re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT),
+           sicherung_sichtbar(), anzahl_im_inventar(RE15_SICHERUNG_ITEM));
+    pruefe(10, "Fahrt 1 (voll): genau EIN Modal, nichts genommen, Prop sichtbar",
+           f1.modale == 1 && re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT) == 0
+           && sicherung_sichtbar() && anzahl_im_inventar(RE15_SICHERUNG_ITEM) == 0);
+
+    g_inv.slots[3].id = 0; g_inv.slots[3].qty = 0;
+    printf("  -- Fahrt 2 (Platz 3 frei, Antwort Yes)\n");
+    fahrt_t f2 = fahrt(ANTWORT_JA);
+    pruefe(11, "Fahrt 2: das Modal geht wieder auf, Yes nimmt die Sicherung (Platz 3)",
+           f2.modale == 1 && re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT) == 1
+           && !sicherung_sichtbar() && re15_inv_find_item(RE15_SICHERUNG_ITEM) == 3);
+    return 0;
+}
+
 static int ein_raum(uint16_t rid, const char *datei)
 {
     const char *base = RE15_XSTR(RE15_ASSETS_PATH);
@@ -262,6 +295,7 @@ static int ein_raum(uint16_t rid, const char *datei)
     if (re15_rdt_parse(buf, sz, &rdt) != 0) { fprintf(stderr, "parse fail %s\n", datei); free(buf); return 1; }
     fall_a(&rdt, rid);
     fall_b(&rdt, rid);
+    fall_c(&rdt, rid);
     free(buf);
     return 0;
 }

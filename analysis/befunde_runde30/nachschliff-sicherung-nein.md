@@ -160,6 +160,7 @@ Die Sicherung hat keine Zone: ihr Auslöser ist die **Fahrt** des Hebetischs (su
 | Aktionsdruck in der Zone | eine Fahrt von sub04 |
 | „No" lässt die Zone scharf | „No" lässt die Sicherung liegen, die **nächste Fahrt** bietet sie wieder an |
 | ein Auslösen = höchstens ein Modal (@0x80043334) | eine Fahrt = höchstens ein Modal |
+| „Inventar voll" (@0x8001e054 `bltz` → @0x8001e0ec) lässt die Zone ebenfalls scharf | volle Tasche: die Sicherung bleibt liegen, die nächste Fahrt bietet sie wieder an |
 | „Yes" nullt die Zone (@0x8001e090 / @0x80072298) | „Yes" setzt Flag (9,53) und blendet das Prop aus — keine weitere Aufnahme |
 
 ## 4. Ursache
@@ -185,7 +186,8 @@ Aufnahme scharf.
 2. **Reihenfolge.** Die Parklage wird geprüft, bevor Modal-/Flag-/Aktiv-Prüfungen
    zurückkehren — sonst könnte die Sperre nie fallen.
 3. **Logzeilen (nur PC)** für den Nutzer und die Abnahme:
-   `[sicherung] Modal auf (Hebetisch y=…)`, `[sicherung] No: Sicherung bleibt liegen …`,
+   `[sicherung] Modal auf (Hebetisch y=…)`, `[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen …`
+   (derselbe Zweig für „No" und „Inventar voll", @0x8001e054 / @0x8001e06c → @0x8001e0ec),
    `[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz n`,
    `[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=…: Sperre geloest`.
 
@@ -228,15 +230,22 @@ gerissen`, ROOM1150 und ROOM1151:
 | A | 3 | 0 | Item genau einmal |
 | B | 1 „Yes" | 1 | Flag 1, Prop weg, Item im Inventar |
 | B | 2 | 0 | keine zweite Aufnahme, Prop bleibt weg |
+| C | 1 Inventar voll | 1 („can't carry") | nichts genommen, Prop sichtbar; geparkt Bild 499 |
+| C | 2 Platz 3 frei, „Yes" | **1** | Flag 1, Prop weg, Item 0x40 in Platz 3 |
 
 **Mutationsprobe:** Zeile `if (s_modal_ausgeloest) return 0;` entfernt → Fahrt 1 öffnet
 **9** Modale, Prüfung 1 (und 4, 5) rot. Die Sonde sieht also beide Seiten: „kein zweites
 Modal in derselben Fahrt" und „wieder ein Modal in der nächsten Fahrt" (Stand cac33993 = Prüfung
 5 rot, §2.1).
 
-### 6.2 Echtes Spiel mit Tasten (`lauf.sh nachher`)
+Fall C belegt den zweiten Eingang desselben Original-Zweigs: „Inventar voll" geht in RE1.5
+ebenfalls nach @0x8001e0ec (`bltz` @0x8001e054), die Zone bleibt scharf — die Sicherung ebenso.
+Auf dem Stand cac33993 wäre Prüfung 11 rot (Fahrt 2 ohne Modal, §2.1).
 
-Derselbe Lauf wie §2.2, Bau mit der Änderung. `debug.log`:
+### 6.2 Echtes Spiel mit Tasten (`lauf.sh nachher2`)
+
+Derselbe Lauf wie §2.2, Bau mit der Änderung (Endstand; ein erster Lauf `nachher` mit der
+älteren Logzeile „No:" lieferte bitgleiche Bilder F420/F510/F1330/F1600). `debug.log`:
 
 ```
 [scd F236] Cut_chg(4)                                              Fahrt 1
@@ -244,7 +253,7 @@ Derselbe Lauf wie §2.2, Bau mit der Änderung. `debug.log`:
 [sicherung] Modal Item 0x40 zeichnet in Bild 366 (...): Bild weicht in 0 von 8064 Punkten ab
 [input-script] Tick 276 -> F476 Tasten 0x0020                      Rechts
 [input-script] Tick 297 -> F497 Tasten 0x8000                      Viereck = "No"
-[sicherung] No: Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
 [sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest   (vor F780)
 [input-script] Tick 963 -> F1163 Tasten 0x8000                     Viereck = Fahrt 2
 [scd F1169] Cut_chg(4)
@@ -264,6 +273,14 @@ Kontaktbogen `nachschliff-sicherung-nein_abnahme/nachher_bogen.png`: F420/F480 M
 „Will you take the Fuse? Yes No"**, F1420/F1440 Plattform oben ohne Rohr, **F1560/F1600/F1700
 Statusschirm mit der Sicherung in der Item-Liste** (Platz 3, nach Messer, Pistole, Munition).
 
+### 6.3 Suite
+
+* Stand 84956493 (Änderung + Riegel Fall A/B): `ctest --timeout 240` **395/395 grün**
+  (394 des Integrationsstands + `unit_r30_sicherung_nein`), 425,8 s.
+* Endstand (Fall C, Logzeile „No/voll"): `ctest -R sicherung` 8/8 grün, darunter
+  `integration_r30_sicherung_laden` (verlangt die Modal-Zeile in der Hebetisch-Szene) und
+  `integration_r30_sicherung_bild`; die volle Suite auf dem Endstand steht in §6.4.
+
 ## 7. Was NICHT belegt ist / offen
 
 * **Der Wiederbewaffnungs-Zeitpunkt** ist Port-Wahl (§5), keine Original-Adresse — das
@@ -273,7 +290,8 @@ Statusschirm mit der Sicherung in der Item-Liste** (Platz 3, nach Messer, Pistol
   Beginn Bank 2 Bit 0 (`Set` @0x0F96) und löscht es erst am Ende (@0x10AA); im Spiellauf
   stand der Spieler während der ganzen Fahrt (`[walk] … af=117` F240–F750 in Fahrt 1, `af=106` in Fahrt 2). Würde sub04 mitten
   in der Fahrt neu gestartet (Sprung auf -305 ohne Parklage), bliebe die Sperre bis zum Ende —
-  also höchstens ein Modal, nie ein verlorenes.
+  die neu gestartete Fahrt bekäme kein zweites Modal, die Sicherung würde aber nach der
+  nächsten Parklage wieder angeboten (nie verloren).
 * **PSX-Ziel:** gleicher Engine-Code; die Logzeilen sind `#ifdef RE15_PLATFORM_PC`.
 * **Echte Tasten** = Eingabeskript (`RE15_INPUT_SCRIPT`, dieselben Pad-Bits wie Tastatur/Pad,
   `input_pc.c`), keine Hand am Gerät. Das Skript startet wegen `RE15_INPUT_SCRIPT_BASIS=spiel`
