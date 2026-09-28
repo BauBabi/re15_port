@@ -775,3 +775,150 @@ Sonden (`re15_port/tests/unit/`): `probe_r30_karte-3010.c`, `probe_r30_karte-301
 `probe_r30_karte-3010_ton.c`, `probes/r30_karte-3010.cmake`.
 Ausgaben: `build/r30_karte-3010/` (Disassemblate `re2_*.dis.txt`, Zensus, Sonden-Ausgaben,
 Abzuege, `HINTSE.VBS`, `hint_se_ROOM3010.wav`).
+
+
+---
+
+## 10. UMSETZUNG (Bau-Agent Runde 30, Zweig r30/karte-3010)
+
+Basis: master d98e9639 + Vorgaenger-Spur karten-marken (Zweig worktree-wf_b4b268f3-d12-3,
+1ec7b524, fertig: Abnahme dort wiederholt, Suite 363/363) — zusammengefuehrt als
+Vorspulen, ohne Konflikt.
+
+### 10.1 Pruefung der tragenden Adressen vor dem ersten Edit
+
+Selbst disassembliert (`r30_mips_dis.py`, `info/re2leon/PSX.EXE`): Handler 0x84
+@0x800591C4-0x80059228 (Modus 4 @0x800591DC, Phase @0x800591E8, Bit 0x8000 @0x800591EC,
+Nummer @0x80059210, pc += 2); Init @0x8006F6A8 (Richtung 1 @0x8006F6B4/C4, Zaehler 10
+@0x8006F6DC/F4, Blatt-Tabelle @0x80011D20, Einblenden @0x8006F824-30, Warteschleife
+@0x8006F838-58, Se(4,9) @0x8006F85C/60); Zaehler @0x8006F20C-0x8006F284; Zielraum-CLUT
+@0x8006F4C8-0x8006F514 und @0x8006F5D4-0x8006F608; Schliessen @0x8006F878-0x8006F8A0;
+VSync-Teiler @0x80068A1C, Leser @0x8002B994 -> VSync @0x80085EA0 (a0 = 0 -> Warte-Zweig).
+Alles wie in Abschnitt 3 zitiert.
+
+Ausgangszustand mit der vorhandenen Sonde nachgemessen (`build/r30_karte-3010_bau/
+vorher_probe_messung.txt`, `vorher_probe_ziel.txt` im Arbeitsbaum): alle `[M*]`-Zeilen
+bitgleich zu 2.1 (sub08 endet Bild 1564, kein Statusschirm), Ziel Blatt 3 Rechteck 9
+(156,76) 48x40 uv (208,80), UNVISITED, Blatt 3 nicht erblaetterbar.
+
+**Neu gemessen, gegen das Dossier:** die 14-Byte-Signatur ist in ROOM1150.RDT eindeutig,
+ueber alle 240 RDTs aber NICHT — 11 Treffer in 8 Dateien (ROOM1021 @0x21B0, ROOM1050
+@0x0DF2, ROOM1150 @0x12E0, ROOM3070 @0x35B8, ROOM3071 @0x36A9/@0x37F3, ROOM30E0 @0x0E54,
+ROOM4010 @0x0D84/@0x0F68, ROOM5011 @0x092C/@0x0DFC). Es ist die gewoehnliche Schwanzform
+einer Szene. Der Anker gilt deshalb NUR im Quellraum 0x1150 (Raum-Gatter in
+`re15_map_hint_room_scan`); der Riegel prueft ROOM1050, das die Folge traegt.
+
+### 10.2 Gebaut (S1-S7, S9; S8 = nichts am Spielstand)
+
+| Schritt | Datei(en) | Inhalt |
+|---|---|---|
+| S1 | `shared_assets/RE2/HINTSE.VBS`, `engine/src/gen/re2_hint_bank.inc` | `re2_hint_cut.py --install`: 8280 B, md5 c6e962522b696f8caabf0068abef7024 (nachgerechnet, auch am Commit-Blob) |
+| S2 | `include/re15_audio.h`, `platform/pc/src/audio_pc.c`, `platform/psx/src/audio_psx.c`, `tests/test_support.c` | `re15_audio_re2_hint_se` als Kopie des Fahrstuhl-Slots; PSX-Folge-Stub; Spion `g_test_hint_se_last/_count` |
+| S3 | `engine/src/map_hint_common.c`, `include/re15_map_hint.h` | Anker, Ziel aus der Zonen-Tabelle (Hauptzeile, `etage == 0`), Blinker Befehl fuer Befehl, Wanduhr, Satz-TOC |
+| S4 | `engine/src/scd_vm.c` | `re15_map_hint_room_scan(raw, size, g_current_room_id)` in `scd_register_current_rdt`; `re15_map_hint_pc(t->pc)` im Verteiler hinter dem Fahrstuhl-Haken |
+| S5 | `engine/src/game_step_common.c` | vor dem START-Poll, NICHT an `s_inv_open_allowed`/PAUSE_PAD; verbraucht erst bei Annahme |
+| S6 | `engine/src/menu_common.c`, `include/re15_menu.h` | `re15_menu_request_map_hint`, `hint_open` nach `phase0_init` (kein `map_entry`), Se(4,9) nach der Einblendung, Blinker je Menue-Bild, Schliessen nur START/Abbruch mit Se(4,5) ueber `close_phase`, Abbau in `close_phase` und `re15_menu_toggle` |
+| S7 | `engine/src/re15_inv_screen.c`, `include/re15_inv_screen.h`, `engine/src/re15_map_zones.c`, `include/re15_room.h` | Felder `hint_aktiv/hint_rot/hint_page/hint_rect` am Strukturende; Zielkachel im 1. Durchgang IMMER, CLUT 502/498; kein Spielermarker; "kein aktueller Raum" im Hinweis |
+| S9 | `tests/unit/test_r30_hinweis.c`, `tests/unit/probes/r30_karte-3010.cmake` | fuenf Riegel `unit_r30_hinweis_{anker,fsm,spurlos,zeichner,bank}` |
+
+Wanduhr: `platform/pc/main.c` setzt `re15_host_clock_set_us` je Bild vor `re15_game_step`
+aus `SDL_GetPerformanceCounter` (Android baut dieselbe main.c); `platform/psx/main.c` aus
+`VSync(-1)` (aufgerundet umgerechnet) — **ungebaut** (PSX-Bauluecke).
+
+### 10.3 Abweichungen vom Plan (mit Grund)
+
+1. **Takt ZEIT-basiert statt "2 Zaehlschritte je Menue-Tick"** (Auftrag: unabhaengig von
+   der Bildrate; Fehlerklasse Titelmenue). Ein Zaehlschritt je VBlank (Teiler 0
+   @0x80068A1C), Schritte = floor(Wanduhr_us * 59826 / 10^9) seit dem Hinweis-Beginn —
+   dieselbe Rechnung wie `re15_title_tick_count` der Titel-Spur (dort mit 2 VBlanks je
+   Durchgang, hier 1). Der Titel-Zweig wurde NICHT gemergt. Der Riegel prueft deshalb
+   Wanduhr-Zeiten statt "20 Ticks an / 19 aus": Toene bei Schritt 2 + 78k, Wechsel bei
+   Schritt 2 + 39k, je auf ein Bild genau, bei 30, 60 und 144 Bildern/s gleich.
+   59,826 Hz = psx-spx NTSC nicht interlaced; dass RE2s Statusschirm nicht interlaced
+   laeuft, ist NICHT eigens nachgewiesen (bei 59,94 Hz: 1,2 ms je Phase).
+2. **Stillstand** (Fenster gezogen): hoechstens zwei Perioden werden nachgeholt, hoechstens
+   ein Ton je Bild ausgegeben — **Port-Wahl, keine Original-Adresse** (RE2 verliert bei
+   einem langsamen Durchgang Zeit statt nachzuholen; der Port rechnet auf Wanduhr). Die
+   Periode (78) wird aus den zitierten Konstanten nachgespielt, nicht eingetragen.
+   Riegel: 10 s Stillstand -> 598 Schritte = floor(10 s * 59,826), 1 Ton.
+3. **`s_c3 = 0` statt 0x19**: der Zustand, den `map_mode` case 0 nach seinen 0x19
+   Schritten hinterlaesst (`sb zero,1(s1)` @0x8004c1cc); die Endlage der sieben Register
+   kommt aus derselben (herausgezogenen) Schrittfunktion `map_panel_schritt`, Werte
+   unveraendert.
+4. **"Aktueller Raum wird wie besucht gezeichnet"** nicht an jeder der sechs Abfragestellen
+   einzeln, sondern ueber einen Schalter `re15_map_ohne_aktuell`, den
+   `re15_inv_screen_build` nur fuer Hinweis-Bilder setzt (`re15_map_zone_current` -> NULL,
+   kein Rueckfall ueber `re15_map_zone_at`). Ohne Hinweis ist die Op-Liste unveraendert
+   (Riegel zeichner: normale Karte vor/nach dem Hinweis 183/183 Ops, gleiche Lage/CLUT).
+5. **Risiko R4 eingetreten und behoben** (s. 10.5): die Kino-Balken standen ueber dem
+   ganzen Hinweis-Schirm.
+6. **Messschienen** (kein Spielverhalten): `[hint]`-Zeilen mit Bildnummer und Wanduhr;
+   `RE15_INPUT_SCRIPT_BASIS=spiel` (Skript-Zeitachse = Spielbilder; der Vorspann Titel ->
+   LOAD GAME verbrauchte gemessen > 4496 Skript-Ticks vor dem ersten Spielbild, drei
+   Kalibrierlaeufe); `[input-script] Tick n -> Fm`-Zeile je Skript-Taste.
+
+### 10.4 Riegel und Gegenproben
+
+Alle fuenf `unit_r30_hinweis_*` gruen. Zahlen (Auszug):
+
+| Riegel | gemessen |
+|---|---|
+| anker | Signatur 1 Treffer @0x012E0, Anker @0x012EC; sub08 endet Bild 1564, Anforderung im selben Bild, vorher nie; ROOM1151 / ROOM1050 (1 Signatur-Treffer!) / ROOM1100: 0 Anker |
+| fsm | Periode 78; Phase 1 nach 16 Bildern; Blatt 3, Ziel 3/9; 0 x Se(4,6); genau EIN CORE-Ton beim Oeffnen = Satz 9; Toene t = 66666 / 1366653 / 2666640 / 3966627 us (Soll ab 33431 / 1337212 / 2640993 / 3944774 us, 30 Hz); 7 Wechsel in 4 s; Bestaetigen/HOCH/RUNTER/L1/R1 ohne Wirkung und ohne Ton; START und Abbruch schliessen mit Se(4,5) in 13 Bildern |
+| spurlos | Besucht-Bits 32 B, Etagen-Bits 16 B, `g_game.flags`, Besitz-Bits, 260e/260d, Blatt-3-erblaetterbar bitgleich; danach normaler Aufruf Blatt 4, Blatt 4 Rechteck 2 AKTUELL |
+| zeichner | Ziel Blatt 3 Rechteck 9 (156,76) 48x40 uv (208,80); 60 Bilder: Zielkachel immer, CLUT folgt `hint_rot`, kein Marker, kein fremdes AKTUELL, Schalter danach aus; rot 33 / Umriss 27 Bilder |
+| bank | 8280 B = 3800 + 4480; Welle bitgleich zu ROOM3010.RDT @0x39788; EDT @0x1F824; Programm 1 Ton 2; Pitch 0x0400 = 11025 Hz |
+
+Gegenproben (`tools/r30_karte3010_gegenprobe.sh`): acht Mutationen, jede faellt am
+zustaendigen Riegel (Takt halbiert, Anker-Haken weg, Raum-Gatter weg, Zielkachel weg,
+Marker im Hinweis, `map_entry` statt Zielblatt, zusaetzlicher Se(4,6), L1 schliesst).
+Der Se(4,6)-Fall fiel erst nach einer Verschaerfung: der Spion sieht nur den LETZTEN Ton
+eines Bildes, der Riegel zaehlt jetzt alle CORE-Toene des Oeffnens.
+
+### 10.5 R4 — Letterbox unter dem Hinweis (gemessen, behoben)
+
+Vorher (lauf_a, Abzuege `build/r30_karte-3010_bau/vor_r4/lauf_a_hinweis_*.png` im
+Arbeitsbaum): 24 px schwarze Balken oben und unten ueber dem ganzen Hinweis. Ursache: der
+Port tickte den Balken-Zaehler nur im Spiel-Block von main.c, der unter dem Menue ruht. Im
+Original gehoert `FUN_80021a0c` zum Bild-Abschluss: `jal 0x80021a0c` @0x80020f34 (dahinter
+`jal 0x80010000` @0x80020f3c, `jal 0x80021880` @0x80020f44), einmal je Bild, auch bei
+angehaltener Task 0 (die Menue-Task haelt nur Task 0 an, @0x800460bc); Anfrage-Bit 0x10
+@0x80021a10-24, Rampe -0x10 @0x80021a7c. Jetzt tickt main.c den Zaehler auch im
+Menue-Zweig. Nachher: keine Balken; nach dem Schliessen `letterbox closed` in F2057
+(27 Bilder nach dem Schliessen F2030 — der Spielmodus-Zaehler `letterbox_countdown` ruht
+unter dem Menue weiter, unveraendert). Bestand: das START-Menue oeffnet nie bei laufendem
+Zaehler (`in_cinematic` in game_step_common.c) — die Zeile wirkt nur beim Hinweis.
+Nicht angefasst: die Zweige Item-Modal/Wegwerf-Abfrage (dort tritt der Fall nicht auf).
+
+### 10.6 ABNAHME S10 an der echten exe (Framedump, kein AUTOSHOT, kein SOFTWARE_RENDER)
+
+Lauf: `tools/r30_karte3010_abnahme.sh` — Kopie der Speicherkarte, Titel -> LOAD GAME,
+Debug-JUMP 1150 mit Lage IN der AUTO-Zone Slot 6 (-20500,-22800), **kein**
+`RE15_FORCE_EVENT`: die Szene startet von selbst. Ton ueber den SDL-Dummy-Treiber,
+`RE15_SE_DEBUG=1`. Auswertung `tools/r30_karte3010_abnahme_auswertung.py`.
+
+| Pruefpunkt | Soll | Ist (lauf_a nach R4-Fix) |
+|---|---|---|
+| Karte erscheint nach dem Szenenende | ja, "POLICE STATION 2F" | Hinweis-Beginn F1871 (Szenen-Flags (2,7)/(1,27) nach F1860 abgebaut), Titelkachel "POLICE STATION 2F" in F1878..F2030 (77 Abzuege, ein Hash) — `lauf_a_hinweis_rot_F1912.png`, `lauf_a_hinweis_umriss_F1894.png` |
+| Kachel (156,76) 48x40 wechselt rot/Umriss | ja | Mittelwert der Kachelflaeche rot (49,13,55) / Umriss (4,20,94); in 70 von 70 Abzuegen ausserhalb der Wechselbilder = Log-Phase; an den 5 abgezogenen Wechselbildern zeigt das Bild den Wechsel ein Bild spaeter (Menue wird vor dem Schritt gezeichnet, allgemein, nicht hinweis-spezifisch) |
+| Phase in Wanduhr | 0,652 s | 652,0 ms im Mittel ueber 10 Wechsel (rot 633-664, Umriss 649-672 ms; 27,8 Bilder/s); zweiter Lauf 651,9 ms ueber 18 Wechsel (29,8 Bilder/s) |
+| Ton-Periode | 1,304 s | 1308,2 ms im Mittel (5 Toene, 1296-1327 ms); zweiter Lauf 1305,8 ms (9 Toene) |
+| Ton | se=43, pitch 0x400 | je Ton eine Zeile `[se] Stimme: se=43 ... center=85 vol=80 pitch=0x400 (11025 Hz)` (5 bzw. 9) |
+| Oeffnen/Karte-da-Ton | kein Se(4,6), ein Se(4,9) | kein se=6 zwischen Szenenende und Schliessen; se=9 einmal nach der Einblendung |
+| kein Spielermarker | ja | Riegel zeichner (Op-Liste); im Bild auf Blatt 3 kein Marker |
+| START schliesst | Se(4,5), Ausblenden, Spiel laeuft | Skript-START F2030 -> `se=5`, `[hint] F2030 schliessen (START)`; F2046/F2060 Spielbild ohne Balken (`lauf_a_nach_schliessen_F2060.png`) |
+| danach normale Karte | Blatt 4, Irons' Buero rot, Marker | START F2121, L1 F2167 (se=4): "POLICE STATION 3F", Irons' Buero dunkelrot, Marker darin (`lauf_a_bild_F2230.png`) |
+| nach Speichern/Laden kein Hinweis | ja | Speichern F2420 (`[save] saved (room 1150)`), Lauf B laedt diesen Platz, Debug-JUMP 1150 an DIESELBE Stelle in der Zone: 90 s, 0 `[hint]`-Zeilen, `cine=0` in allen `[cine]`-Zeilen bis F1800. Gegenprobe = Lauf "erkundung" mit der unveraenderten Karte und denselben Schaltern: Szene ab F300, Hinweis F1872 |
+| fuenf Riegel | gruen | gruen |
+
+### 10.7 Nicht gemessen / offen
+
+* Kein gdigrab am Fenster-Handle; Bildbeweis ist `RE15_FRAMEDUMP` (komplett
+  komponierter Frame vor dem Present).
+* Ton nicht hoerbar geprueft (Dummy-Treiber); belegt sind die Abspiel-Aufrufe samt Pitch.
+* 60 Bilder/s an der echten exe nicht gefahren (nur im Riegel: 30/60/144 Hz).
+* PSX- und Android-Bau nicht gefahren; `platform/psx/main.c` (VSync(-1)-Uhr) ungebaut.
+  Paket: `HINTSE.VBS` muss in alle drei Pakete, neue `engine/src/*.c` verlangt beim
+  Android-Bau ein frisches `app/.cxx` (R6).
+* O1 (Elza/ROOM1151 sub03) und O2 (zweites Irons-Gespraech) bewusst ohne Hinweis.
+* R3 (Funkraum-Tuer braucht die Blue Keycard) unveraendert.
