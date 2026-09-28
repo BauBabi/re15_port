@@ -147,7 +147,7 @@ Die Schleife läuft **21 Bilder** (F836–F857).
 - der West-Arm (Generator) ist ein gerader Gang z ∈ [−19725,−16525] (Typ-1-Zellen #56/#59).
 
 **Birkin G1** (Typ 0x30, grid 0x13 nach Member_set) läuft Leon mit 30 je Bild entgegen:
-- Körperzylinder r 1000 (Hurt-Box @0x8011ee64) + Spieler 450 (PSX.EXE Datei 0x64694) = 1450, FUN_8002aec4/FUN_8002b544.
+- Körperzylinder r 1000 + Spieler 450 = 1450, FUN_8002aec4/FUN_8002b544. Selbst nachgelesen: Hurt-Box `{0,-1440,0,1000,1440,1000}` in STAGE3 @0x8011ee64 und STAGE5 @0x8011fe28 (Bytesuche), Spieler `{0,-1530,0,450,1530,450}` in PSX.EXE Datei 0x64694.
 - Mittig im 3200 breiten Gang lässt er Leon nicht vorbei.
 
 Gemessen `lauf1`:
