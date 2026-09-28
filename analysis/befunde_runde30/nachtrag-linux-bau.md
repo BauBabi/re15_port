@@ -200,6 +200,11 @@ die auf `/host/…` zeigen (`-y` löst den Link auf).
 | **gesamt** | **469 s** | **471 s** | **4906 s** |
 | Tests | 403, **401 grün, 2 rot** | 403, **401 grün, 2 rot** | 403, 399 grün, 4 rot |
 
+**Bestätigungslauf `neu4`** mit dem endgültig committeten Stand (e1600adc; nach `neu1`/`neu2`
+kamen nur Kommentare, Hilfetexte und die Ausgabe der Pack-Dauer dazu): 503 s gesamt (packen
+28 s, auspacken 17 s, Configure 13 s, Compile+Link 32 s, ctest 395 s), derselbe
+Fingerabdruck wie `neu1` (403 Tests, dieselben 2 roten).
+
 Der neue Weg ist **10,4-mal schneller**. ctest macht jetzt 83 % der Zeit aus. Die längsten
 Tests sind die Integrationsläufe mit echtem re15_pc: `integration_elza_vollstart` 100 s,
 `integration_r30_cut_blitz` 68 s, `integration_r30_irons_tisch_bild` 35 s.
