@@ -1,5 +1,6 @@
 /* Siehe touch_overlay_pc.h fuer das WARUM, das Layout und die Schalter. */
 #include "touch_overlay_pc.h"
+#include "touch_r1_toggle_pc.h"   /* R1-Umschalter (Runde 30, Thema C) */
 
 #include <math.h>
 #include <stdio.h>
@@ -34,6 +35,22 @@
 static int           s_enabled  = -1;      /* -1 = noch nicht aufgeloest */
 static SDL_Renderer *s_r        = NULL;
 static int           s_marke    = 0;       /* F9-Flanke, wird von take_marke() verbraucht */
+
+/* R1-UMSCHALTER (Runde 30, Thema C; Logik in touch_r1_toggle_pc.h, Dossier
+ * analysis/befunde_runde30/android-r1-toggle.md). Auf dem Touchscreen ist R1 halten + Viereck
+ * tippen ein Fingerknoten (Nutzer, AUFTRAG.md C): im freien Spiel rastet ein R1-Tipp die
+ * Kampfpose ein, der naechste Tipp loest sie. PORT-KOMFORTFUNKTION, nur hier im Overlay -
+ * Tastatur und Gamepad (input_pc.c) bleiben Halte-Tasten.
+ *   s_r1_live   EIN-TICK-Freigabe: main.c ruft re15_touch_pc_r1_phase() unmittelbar vor
+ *               re15_input_tick(), das naechste pad_bits verbraucht sie. Die Front-End-
+ *               Schleifen rufen sie nie -> dort ist R1 automatisch Halte-Taste, die Raste faellt.
+ *   s_r1_inject Messhaken des Eingabeskripts (Buchstabe P, input_pc.c): "Finger auf R1" fuer
+ *               genau einen Tick, ohne Maus/Finger.
+ * Nur Hauptthread: pad_bits und draw laufen dort, der Finger-Watch fasst die Raste nicht an. */
+static re15_r1_toggle_t s_r1t;
+static int              s_r1_live   = 0;
+static int              s_r1_inject = 0;
+static void tp_r1_reset(void) { re15_r1_toggle_reset(&s_r1t); s_r1_live = 0; s_r1_inject = 0; }
 
 #define TP_MAX_FINGERS 10
 /* seen/up_pending = EIN-TICK-LATCH (gemessen 2026-09-19 im Emulator): "adb shell input tap"
@@ -272,8 +289,22 @@ uint16_t re15_touch_pc_pad_bits(void)
     tp_lock();
     uint16_t bits = tp_bits_locked(W, H, 1);
     tp_unlock();
+    /* R1-UMSCHALTER: der Finger (nach dem Ein-Tick-Latch, ein Blitz-Tipp zaehlt also genau
+     * einen Tick) bzw. der Skript-Haken ist der Eingang, das R1-Bit im Pad-Wort folgt im freien
+     * Spiel der RASTE, sonst dem Finger (touch_r1_toggle_pc.h). Freigabe und Haken gelten
+     * genau diesen einen Tick. */
+    {
+        int finger = ((bits & TP_R1) != 0) || s_r1_inject;
+        int r1     = re15_r1_toggle_step(&s_r1t, finger, s_r1_live);
+        bits = (uint16_t)((bits & (uint16_t)~TP_R1) | (r1 ? TP_R1 : 0));
+        s_r1_live = 0; s_r1_inject = 0;
+    }
     return bits;
 }
+
+void re15_touch_pc_r1_phase(int live) { s_r1_live = live ? 1 : 0; }
+int  re15_touch_pc_r1_latched(void)   { return re15_touch_pc_enabled() ? (int)s_r1t.latched : 0; }
+void re15_touch_pc_r1_inject(int down) { if (re15_touch_pc_enabled()) s_r1_inject = down ? 1 : 0; }
 
 int re15_touch_pc_take_marke(void)
 {
@@ -360,10 +391,10 @@ void re15_touch_pc_event(const SDL_Event *e)
     /* Finger-Events kommen ueber den Watch (rohe Koordinaten) — hier nur noch:
      * Fokus weg / App in den Hintergrund -> kein Finger darf "haengen" bleiben. */
     case SDL_APP_WILLENTERBACKGROUND:
-    case SDL_APP_DIDENTERBACKGROUND: tp_lock(); tp_release_all(); tp_unlock(); break;
+    case SDL_APP_DIDENTERBACKGROUND: tp_lock(); tp_release_all(); tp_unlock(); tp_r1_reset(); break;
     case SDL_WINDOWEVENT:
         if (e->window.event == SDL_WINDOWEVENT_FOCUS_LOST ||
-            e->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) { tp_lock(); tp_release_all(); tp_unlock(); }
+            e->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) { tp_lock(); tp_release_all(); tp_unlock(); tp_r1_reset(); }
         break;
     default: break;
     }
@@ -600,9 +631,16 @@ void re15_touch_pc_draw(SDL_Renderer *r)
         case K_RECT:
         case K_MARKE: {
             int down = (b->kind == K_RECT) ? ((held & b->bit) ? 1 : 0) : 0;
+            /* R1 GERASTET (Umschalter): sieht aus wie gedrueckt, weil das Bit gesetzt IST, und
+             * traegt einen zweiten, um 2t nach innen gerueckten Rahmen im Gedrueckt-Stil - keine
+             * neue Farbe, keine neue Zeichenfunktion. */
+            int latched = (b->kind == K_RECT && b->bit == TP_R1 && s_r1t.latched) ? 1 : 0;
+            if (latched) down = 1;
             SDL_Color fill = (b->kind == K_MARKE) ? (SDL_Color){ 255, 200, 60, 60 } : (down ? base_down : base_idle);
             tp_fill_rect(r, b->x, b->y, b->w, b->h, fill);
             tp_rect_outline(r, b->x, b->y, b->w, b->h, t, down ? line_down : line_idle);
+            if (latched)
+                tp_rect_outline(r, b->x + 2 * t, b->y + 2 * t, b->w - 4 * t, b->h - 4 * t, t, line_down);
             if (b->label) {
                 int tw = (int)strlen(b->label) * 6 * fs - fs;
                 re15_touch_pc_text(r, b->cx - tw / 2, b->cy - 7 * fs / 2, fs, b->label,
@@ -697,7 +735,57 @@ static void tp_selftest(void)
             if (good) ok++; else fail++;
         }
     }
-    tp_release_all(); s_marke = 0;
+    /* R1-UMSCHALTER (Runde 30): Freigabe re15_touch_pc_r1_phase(1) vor jedem pad_bits = freies
+     * Spiel; ohne Freigabe = Menue/Front-End. Die Faelle oben laufen OHNE Freigabe, R1 ist dort
+     * also Halte-Taste und liefert unveraendert 0800 nur, solange der Finger aufliegt. */
+    {
+        const btn_t *r1 = NULL, *sq = NULL;
+        for (int i = 0; i < s_btn_n; i++) {
+            if (s_btn[i].kind == K_RECT && s_btn[i].bit == TP_R1)     r1 = &s_btn[i];
+            if (s_btn[i].kind == K_FACE && s_btn[i].bit == TP_SQUARE) sq = &s_btn[i];
+        }
+        if (r1 && sq) {
+            float rx = (float)r1->cx / (float)W, ry = (float)r1->cy / (float)H;
+            float qx = (float)sq->cx / (float)W, qy = (float)sq->cy / (float)H;
+            static const char *const nm[11] = {
+                "TIPP (FREI)", "FINGER WEG (FREI)", "ZWEITER TIPP (FREI)", "FINGER WEG (FREI)",
+                "TIPP (FREI)", "RASTE + VIERECK (FREI)", "OHNE FREIGABE", "FREIGABE ZURUECK",
+                "BLITZ-TIPP (FREI)", "NAECHSTER TICK (FREI)", "HALTEN OHNE FREIGABE" };
+            static const uint16_t want[11] = {
+                TP_R1, TP_R1, 0, 0,
+                TP_R1, TP_R1 | TP_SQUARE, 0, 0,
+                TP_R1, TP_R1, TP_R1 };
+            uint16_t got[11];
+            tp_release_all(); tp_r1_reset();
+            /* 1-4: Tipp rastet, Finger weg haelt, zweiter Tipp loest, Finger weg bleibt unten */
+            tp_finger_down(1, 400, rx, ry); re15_touch_pc_r1_phase(1); got[0] = re15_touch_pc_pad_bits();
+            tp_finger_up(1, 400);           re15_touch_pc_r1_phase(1); got[1] = re15_touch_pc_pad_bits();
+            tp_finger_down(1, 401, rx, ry); re15_touch_pc_r1_phase(1); got[2] = re15_touch_pc_pad_bits();
+            tp_finger_up(1, 401);           re15_touch_pc_r1_phase(1); got[3] = re15_touch_pc_pad_bits();
+            /* 5-6: erneut rasten, dann Viereck-Finger allein -> Zielen + Feuern ohne Fingerknoten */
+            tp_finger_down(1, 402, rx, ry); re15_touch_pc_r1_phase(1); got[4] = re15_touch_pc_pad_bits();
+            tp_finger_up(1, 402);
+            tp_finger_down(1, 403, qx, qy); re15_touch_pc_r1_phase(1); got[5] = re15_touch_pc_pad_bits();
+            tp_finger_up(1, 403);
+            /* 7-8: ein Tick ohne Freigabe (Menue) laesst die Raste fallen; sie kommt nicht wieder */
+            got[6] = re15_touch_pc_pad_bits();
+            re15_touch_pc_r1_phase(1); got[7] = re15_touch_pc_pad_bits();
+            /* 9-10: Blitz-Tipp (DOWN+UP zwischen zwei Ticks, adb input tap) rastet ebenfalls */
+            tp_finger_down(1, 404, rx, ry); tp_finger_up(1, 404);
+            re15_touch_pc_r1_phase(1); got[8] = re15_touch_pc_pad_bits();
+            re15_touch_pc_r1_phase(1); got[9] = re15_touch_pc_pad_bits();
+            /* 11: ohne Freigabe ist R1 Halte-Taste (Finger liegt auf -> Bit, Raste weg) */
+            tp_finger_down(1, 405, rx, ry); got[10] = re15_touch_pc_pad_bits();
+            int latched_end = (int)s_r1t.latched;
+            for (int k = 0; k < 11; k++) {
+                int good = (got[k] == want[k]) && (k != 10 || latched_end == 0);
+                fprintf(stderr, "[touch] selftest R1-RASTE %-22s bits=%04X want=%04X %s\n",
+                        nm[k], got[k], want[k], good ? "ok" : "FAIL");
+                if (good) ok++; else fail++;
+            }
+        }
+    }
+    tp_release_all(); tp_r1_reset(); s_marke = 0;
     fprintf(stderr, "[touch] SELFTEST RESULT ok=%d fail=%d (Ausgabe %dx%d, u=%d)\n", ok, fail, W, H, s_unit);
 }
 
@@ -706,6 +794,7 @@ void re15_touch_pc_init(SDL_Renderer *r)
     s_r = r;
     if (!re15_touch_pc_enabled()) return;
     memset(s_fingers, 0, sizeof s_fingers);
+    tp_r1_reset();
     s_lay_w = s_lay_h = -1;
     {
         int W, H; tp_output_size(&W, &H);

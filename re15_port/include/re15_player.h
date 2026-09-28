@@ -153,4 +153,11 @@ const re15_emd_animation_t *re15_player_w_anim(void);
  * Aufsteher (Hook 0x8011c118 P3-P6: Leons Clips 0x10/0xb, enemy_ai_common.c). */
 int re15_player_pl00_clip_frames(int clip);
 
+/* PHASEN-RIEGEL fuer den R1-Umschalter des Touch-Overlays (Runde 30, Thema C;
+ * engine/src/pad_phase_common.c). 1 = freies Spiel, der Spieler-Dispatcher liest das Pad als
+ * Spielereingabe; 0 = Menue, Kiste, Item-Modal, Text-Freeze, Tuer-/Raumblende, Raumwechsel,
+ * Cutscene oder Tod. Die Plattform gibt den Umschalter nur frei, solange das 1 ist
+ * (platform/pc/main.c vor re15_input_tick); PORT-KOMFORTFUNKTION, kein Original-Verhalten. */
+int re15_player_pad_live(void);
+
 #endif /* RE15_PLAYER_H */

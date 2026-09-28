@@ -4538,6 +4538,22 @@ re_title:;
         }
 
         re15_render_begin_frame();
+        /* R1-UMSCHALTER des Touch-Overlays (Runde 30, Thema C; touch_r1_toggle_pc.h,
+         * Dossier analysis/befunde_runde30/android-r1-toggle.md Schritt 4): EIN-TICK-Freigabe
+         * fuer das gleich folgende re15_input_tick. PORT-KOMFORTFUNKTION, kein Original-Verhalten.
+         *   re15_player_pad_live()   freies Spiel (engine/src/pad_phase_common.c) - in Menue,
+         *                            Kiste, Text, Blende, Cutscene und Tod faellt die Raste
+         *   !re15_debug_menu_open()  das Debug-Menue liest das Pad selbst
+         *   pc_pad_config(R1) == R1  nur in den Belegungen, in denen R1 reines Zielen ist:
+         *                            TYPE A/B bilden R1 auf R1 ab; TYPE C legt Zielen auf R2
+         *                            (k_pad_remap[2][8] = 0x0200) und R1 auf Rechtsdrehen
+         *                            (k_pad_remap[2][1] = 0x0800) -> dort bleibt R1 Halte-Taste.
+         * Die Front-End-Schleifen (Titel, Charakterwahl, Optionen, Speicherkarte, Film) rufen die
+         * Freigabe nicht; dort ist R1 damit automatisch Halte-Taste. Der Header wird hier nicht
+         * eingebunden (er zieht SDL.h und damit die SDL_main-Umbenennung nach sich). */
+        { extern void re15_touch_pc_r1_phase(int live);
+          re15_touch_pc_r1_phase(re15_player_pad_live() && !re15_debug_menu_open() &&
+                                 pc_pad_config(RE15_PAD_BIT_R1) == RE15_PAD_BIT_R1); }
         re15_input_tick();
 
         /* DEBUG: RE15_KILL_AT=<frame> drops the player's HP to 0 at that frame to exercise the

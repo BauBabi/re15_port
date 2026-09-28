@@ -321,6 +321,10 @@ void re15_player_stagger_cmd2(uint8_t clip);
  * `sb zero,0x800aca58` @0x8001cbdc (Karten-Screen-Exit). Vom Raumwechsel UND vom Boot-/Lade-Pfad
  * zu rufen; ohne ihn ueberlebt ein vom Tod unterbrochener Knockdown das Laden. */
 void re15_player_cmd_reset(void);
+/* Nur das Kommandowort ohne den Raum-Teil (Objekt-Zaehler obj[+0x8C]) — der Zustand-3-Rumpf
+ * am INVENTAR-ENDE (sb zero,0x800aca58 @0x8001cbdc, erreicht ueber j 0x8001cbac @0x8001cb70
+ * nach der Status-Task; Runde 30, N1). Aufrufer: menu_common.c. */
+void re15_player_cmd_zero(void);
 
 /* ROOM1030 KRIECHTOR (Dossier analysis/room1030_crawl_mechanism.md Glieder 9/10):
  * re15_enemy_ai_toggle_animate = der Sub-Modus-0x10-TOGGLE (byte-true FUN_80104f80), haengt

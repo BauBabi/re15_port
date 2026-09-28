@@ -19,8 +19,13 @@
  *                  MAUS das Pad (SDL_HINT_MOUSE_TOUCH_EVENTS: jeder Mausklick ist ein Finger),
  *                  damit sich das Overlay ohne Geraet pruefen laesst.
  *   RE15_TOUCH_SELFTEST=1: nach der Initialisierung wird jeder Knopf einmal synthetisch
- *                  gedrueckt und das Pad-Wort gegen den Sollwert geprueft; Ergebnis als
- *                  "[touch] SELFTEST RESULT ok=<n> fail=<m>" nach stderr (= debug.log).
+ *                  gedrueckt und das Pad-Wort gegen den Sollwert geprueft (dazu die Faelle des
+ *                  R1-Umschalters); Ergebnis als "[touch] SELFTEST RESULT ok=<n> fail=<m>" nach
+ *                  stderr (= debug.log).
+ *
+ * R1 = UMSCHALTER (Runde 30): im freien Spiel rastet ein Tipp auf R1 die Kampfpose ein, der
+ *   naechste Tipp loest sie (touch_r1_toggle_pc.h). In Menue, Kiste, Text, Cutscene, Blende,
+ *   Tod und im Front-End ist R1 Halte-Taste wie zuvor, die Raste faellt dort.
  *
  * Ohne Schalter ist das Modul vollstaendig inert (kein Hint, keine Zeichnung, Bits = 0).
  * ============================================================================================= */
@@ -51,8 +56,20 @@ int re15_touch_pc_enabled(void);
 /* Aus der Event-Schleife (re15_render_begin_frame) fuer JEDES Event aufrufen. */
 void re15_touch_pc_event(const SDL_Event *e);
 
-/* PSX-Pad-Bits aus den aktuell aufliegenden Fingern (0 wenn inaktiv). */
+/* PSX-Pad-Bits aus den aktuell aufliegenden Fingern (0 wenn inaktiv). R1 laeuft dabei durch
+ * den Umschalter (touch_r1_toggle_pc.h): mit Freigabe (re15_touch_pc_r1_phase(1) im selben
+ * Tick) rastet ein Tipp, ohne Freigabe ist R1 Halte-Taste. */
 uint16_t re15_touch_pc_pad_bits(void);
+
+/* R1-UMSCHALTER (Runde 30, Thema C - PORT-KOMFORTFUNKTION, kein Original-Verhalten).
+ * re15_touch_pc_r1_phase: EIN-TICK-Freigabe, vom naechsten re15_touch_pc_pad_bits verbraucht;
+ *   main.c ruft sie unmittelbar vor re15_input_tick() mit re15_player_pad_live() (freies Spiel).
+ * re15_touch_pc_r1_latched: 1 = die Kampfpose ist eingerastet (Anzeige, Messung).
+ * re15_touch_pc_r1_inject: Messhaken fuer das Eingabeskript (Buchstabe P): "Finger auf R1"
+ *   fuer genau den naechsten Tick. Wirkungslos, solange das Overlay aus ist. */
+void re15_touch_pc_r1_phase(int live);
+int  re15_touch_pc_r1_latched(void);
+void re15_touch_pc_r1_inject(int down);
 
 /* F9-MARKE: 1 genau einmal je Antippen des Marken-Knopfs (Flanke), sonst 0. */
 int re15_touch_pc_take_marke(void);

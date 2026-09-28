@@ -2291,6 +2291,19 @@ static int op_plc_motion(scd_thread_t *t)
     g_actors[slot].sub_state_2 = 0;            /* +0x6 = 0 (motion phase reset)         @0x80041bb4 */
     if (slot != RE15_ACTOR_SLOT_PLAYER) {
         g_actors[slot].sub_state_1 = entity;   /* +0x5 = pc[1] (sub)                    @0x80041bc4 */
+    } else {
+        /* DIE SZENE BEENDET DAS ZIELEN (Runde 30, Nebenbefund N3; Dossier
+         * analysis/befunde_runde30/android-r1-toggle.md Abschnitt 6). Die Zielaktion ist das
+         * WORT cmd 1 / Substate 7 (sw 0x701,0x800aca58 @0x80032020); dieser Handler
+         * ueberschreibt +0x4 = 4 (@0x80041bb0), +0x5 = pc[1] (@0x80041bc4) und +0x6/+0x7 = 0
+         * (@0x80041bb4/@0x80041bb8) - der Dispatcher laeuft ab jetzt den Plc-Executor
+         * 0x80073f90[4] = 0x80030660 statt der Ziel-FSM, und Plc_ret (@0x80041f90-9c) kehrt
+         * auf cmd 1 / Substate 0 zurueck, nicht in die Zielaktion. Dieselbe Port-Regel wie beim
+         * cmd-2-Treffer und cmd-5-Griff: re15_player_aim_interrupt (Phase NONE, Messer-Latch
+         * bleibt). Gemessen vorher (probe_r30_android_n3_plc_aim): Zielphase 2 nach dem
+         * Befehl, aktiv in 40 von 40 Szenenbildern. */
+        extern void re15_player_aim_interrupt(void);   /* player_common.c */
+        re15_player_aim_interrupt();
     }
     /* AP-round 2026-05-26 (per PSX disasm @0x80041b90): Plc_motion sets
      * state=4 which the FSM at 0x80050cdc translates to state=1 with
@@ -2479,6 +2492,10 @@ static int op_plc_dest(scd_thread_t *t)
                      * Clip 2 @0x800518c8 Loop) — dieselbe Maschine wie der Kraehen-Mode-6-Halt
                      * (crow_victim_anim.md §1.4). Engine-FSM in game_step_common. */
                     extern void re15_player_event_reach_begin(void);
+                    /* cmd 4 + Substate mode (@0x80041c14/@0x80041c18) ersetzt die Zielaktion
+                     * (cmd 1 / Substate 7) - wie bei Plc_motion @0x80041bb0 (Runde 30, N3). */
+                    extern void re15_player_aim_interrupt(void);
+                    re15_player_aim_interrupt();
                     if (mode == 0x06) re15_player_event_reach_begin();
                 }
             }
@@ -2491,7 +2508,11 @@ static int op_plc_dest(scd_thread_t *t)
         }
         if (slot == RE15_ACTOR_SLOT_PLAYER) {         /* Walk-Mode ersetzt einen Mode-6-Halt */
             extern void re15_player_event_reach_end(void);
+            extern void re15_player_aim_interrupt(void);
             re15_player_event_reach_end();
+            /* ...und die Zielaktion: cmd 4 + Substate mode (@0x80041c14/@0x80041c18)
+             * ueberschreiben cmd 1 / Substate 7 (Runde 30, N3; wie Plc_motion @0x80041bb0). */
+            re15_player_aim_interrupt();
             /* ...und setzt genauso das Kommandowort (@0x80041c14 `sb v0(=4),4(a1)` — der
              * Handler kennt keinen Walk/Nicht-Walk-Unterschied, der Port trennt hier nur,
              * weil der Spieler seine EIGENE Walker-FSM hat, Tabelle @0x80073e30). Ohne das

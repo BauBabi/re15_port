@@ -388,7 +388,14 @@ void re15_player_event_reach_end(void)  { s_ev_reach = 0; }
  * +0x05/+0x06 (Idle-Substate/-Phase). Die Port-Statics dieser beiden FSMs muessen denselben
  * Reset erfahren, sonst ueberlebt eine LOWER-Phase die Tuer (Waffe-heben-Pantomime im
  * Zielraum) bzw. die Idle-Phase startet nicht neutral. */
-void re15_player_cmd_reset(void)
+/* NUR DAS KOMMANDOWORT (Runde 30, N1): der Zustand-3-Rumpf der Transitions-FSM laeuft nicht
+ * nur beim Raumwechsel, sondern auch am INVENTAR-ENDE (Task 0 setzt nach dem Menue
+ * @0x8001cb50 fort, j 0x8001cbac @0x8001cb70 -> Zustand 3 -> sb zero,0x800aca58 @0x8001cbdc).
+ * Dort gibt es keinen neuen Raum, die raumgebundenen Objekt-Zaehler obj[+0x8C] und das
+ * Kontakt-Bit aca3c & 0x2000 bleiben also stehen (die Fortsetzung loescht in aca3c nur
+ * 0x40|0x8000, and @0x8001cb68/@0x8001cb6c). re15_player_cmd_reset = diese Funktion + der
+ * Raum-Teil. */
+void re15_player_cmd_zero(void)
 {
     extern void re15_player_aim_interrupt(void);   /* player_common.c — Phase:=NONE, Knife-Latch
                                                     * bleibt (aca54-Bit 0x4000 ueberlebt, s. dort) */
@@ -402,8 +409,13 @@ void re15_player_cmd_reset(void)
     re15_player_aim_interrupt();
     re15_player_idle_reset();
     /* Derselbe Wort-Store `sw 1,0x800aca58` @0x8003192c nullt auch den Schiebe-Substate 8
-     * (+0x05) und seine Phase (+0x06); die Objekt-Zaehler obj[+0x8C] gehoeren dem alten Raum. */
+     * (+0x05) und seine Phase (+0x06). */
     re15_player_push_reset();
+}
+void re15_player_cmd_reset(void)
+{
+    re15_player_cmd_zero();
+    /* Die Objekt-Zaehler obj[+0x8C] gehoeren dem alten Raum. */
     re15_prop_push_reset();
 }
 int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }

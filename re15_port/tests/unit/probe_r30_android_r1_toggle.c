@@ -1,4 +1,10 @@
-/* probe_r30_android_r1_toggle.c - MESSSONDE + RIEGEL-ENTWURF (Runde 30, Thema C).
+/* probe_r30_android_r1_toggle.c - MESSSONDE + RIEGEL (Runde 30, Thema C).
+ *
+ * BAU (Runde 30): die Umschalt-Logik liegt jetzt in platform/pc/src/touch_r1_toggle_pc.h
+ * (dieselbe Datei, die touch_overlay_pc.c einbindet), der Phasen-Riegel ist die Engine-Funktion
+ * re15_player_pad_live() (engine/src/pad_phase_common.c), die main.c vor re15_input_tick
+ * abfragt. Die Sonde prueft damit GENAU den ausgelieferten Code; add_test
+ * unit_r30_android_r1_toggle (tests/unit/probes/r30_android-r1-toggle.cmake).
  *
  * Auftrag (Nutzer): "Beim Android Port ... R1 nicht gedrueckt gehalten werden muss, um die
  * Waffe zu heben, sondern das man einmal kurz R1 andrueckt, dann bleibt die Kampfpose
@@ -46,7 +52,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "touch_r1_toggle.h"      /* analysis/befunde_runde30/android-r1-toggle/ */
+#include "touch_r1_toggle_pc.h"   /* platform/pc/src/ - der ausgelieferte Umschalter */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -91,18 +97,10 @@ static uint8_t *slurp(const char *p, size_t *n)
     fclose(f); if (b) *n = (size_t)sz; return b;
 }
 
-/* DER VORGESCHLAGENE PHASEN-RIEGEL (Zielort im Bau: eine Engine-Funktion, die main.c vor
- * re15_input_tick abfragt). Jede Zeile = eine Phase, in der der Spieler-Dispatcher das Pad
- * NICHT als Spielereingabe liest oder R1 eine andere Bedeutung hat. */
-static int phase_live(void)
-{
-    if (re15_menu_is_open() || re15_menu_gameplay_frozen()) return 0;   /* Status/Karte/Datei/Kiste + Blenden */
-    if (re15_item_modal_active() || re15_discard_active())  return 0;   /* Item-Modal, "Discard it?"          */
-    if (g_re15_pauseflags & (RE15_PAUSE_PLAYER | RE15_PAUSE_PAD)) return 0; /* Text, Tuer-/Raumblende       */
-    if (g_scd.player_mode == 2 || g_scd.letterbox_countdown != 0) return 0; /* Cutscene                      */
-    if (re15_player_is_dead() || re15_death_presentation_active()) return 0; /* Tod                          */
-    return 1;
-}
+/* DER PHASEN-RIEGEL = die Engine-Funktion re15_player_pad_live() (pad_phase_common.c), die
+ * main.c vor re15_input_tick abfragt. Jede Zeile dort = eine Phase, in der der
+ * Spieler-Dispatcher das Pad NICHT als Spielereingabe liest oder R1 eine andere Bedeutung hat. */
+static int phase_live(void) { return re15_player_pad_live(); }
 
 static int phase(void)  { return re15_player_aim_phase_debug() & 0x0f; }
 static int recoil(void) { return (re15_player_aim_phase_debug() & 0x10) ? 1 : 0; }
@@ -194,7 +192,7 @@ static int tipp_bis_bereit(int modus, int max)
 /* ============================================================ TEIL I: reine Logik */
 static void teil1_logik(void)
 {
-    printf("\n===== TEIL I  REINE UMSCHALT-LOGIK (touch_r1_toggle.h) =====\n");
+    printf("\n===== TEIL I  REINE UMSCHALT-LOGIK (touch_r1_toggle_pc.h) =====\n");
     static const struct { const char *name; int n; int finger[12]; int live[12]; int soll[12]; } T[] = {
         { "Tipp rastet, zweiter Tipp loest", 8,
           {1,0,0,0,1,0,0,0}, {1,1,1,1,1,1,1,1}, {1,1,1,1,0,0,0,0} },

@@ -1354,6 +1354,32 @@ static void phase0_init(void)
     re15_fade_kick(0, 0);
 }
 
+/* ZUSTAND-3-RUMPF, Spieler-Kommandowort (Runde 30, Nebenbefund N1; Dossier
+ * analysis/befunde_runde30/android-r1-toggle.md Abschnitt 6). Am Inventar-Ende setzt Task 0
+ * hinter seinem Abgabepunkt fort (jal 0x80029ac8 @0x8001cb48 -> @0x8001cb50) und springt mit
+ * j 0x8001cbac @0x8001cb70 in Zustand 3 (sb 3,0x800b5359 @0x8001cbb4). Dessen Rumpf
+ * @0x8001cbb8-cc28 ist verzweigungsfrei und enthaelt
+ *     8001cbdc  sb zero,-13736(at)     0x800aca58 = Spieler+0x4 = KOMMANDOWORT := 0
+ * Der cmd-0-Handler 0x800318f8 (Tabelle 0x80073f90[0]) stellt daraufhin die Eintritts-Pose
+ * (W-Bank Clip 1 Bild 0, @0x80031c10-c24) und das Wort auf 1 (sw 1,0x800aca58 @0x8003192c) -
+ * eine laufende Zielaktion (sw 0x701,0x800aca58 @0x80032020) ist damit beendet.
+ * Dieselben Port-Schritte wie der Raumwechsel (room_common.c, re15_room_apply_pending), ohne
+ * dessen Raum-Teil: re15_player_cmd_zero laesst die Objekt-Zaehler obj[+0x8C] stehen.
+ * Gemessen vorher (probe_r30_android_n1_inventar_cmd, R1 gehalten): Zielphase 2 nach dem
+ * Schliessen, Messer-Latch klebt an der angelegten Browning. */
+static void menu_stage3_cmd_zero(void)
+{
+    extern void re15_player_room_entry_pose(void);   /* player_common.c */
+    extern void re15_player_cmd_zero(void);          /* game_step_common.c */
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_player_room_entry_pose();   /* cmd-0-Endzustand @0x80031c10-c24 */
+    p->sub_state_1 = 0;
+    p->sub_state_2 = 0;
+    p->sub_state_3 = 0;
+    p->state       = 1;              /* @0x8003192c sw 1,0x800aca58 (Handler laeuft durch) */
+    re15_player_cmd_zero();          /* Aim/Idle/Schieben/Knockdown-Statics, @0x8001cbdc */
+}
+
 static void close_phase(void)
 {
     if (s_close_sub == 0) {
@@ -1417,6 +1443,7 @@ static void close_phase(void)
      * gameplay fade-in arm FUN_800217b0(0x200,-0x1800,7,0)+kick @0x8001cc00-18,
      * then 5359=4 @0x8001cc20-28. */
     s_request = 0; s_latch = 0;
+    menu_stage3_cmd_zero();                /* sb zero,0x800aca58 @0x8001cbdc (Runde 30, N1) */
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
     re15_fade_kick(0, 0);
     s_stage = 4;
@@ -2261,6 +2288,7 @@ void re15_menu_fsm_tick(uint16_t pad_pressed, uint16_t pad_held)
     case 3:
         /* normally executed inline by close_phase (same-round fall-through); kept for
          * completeness if entered externally. */
+        menu_stage3_cmd_zero();            /* sb zero,0x800aca58 @0x8001cbdc (Runde 30, N1) */
         re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
         re15_fade_kick(0, 0);
         s_stage = 4;

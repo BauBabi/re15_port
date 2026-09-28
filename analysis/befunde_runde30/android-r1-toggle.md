@@ -372,3 +372,89 @@ eigenen Prozess.
 * Verhalten bei Rotation / Systemleiste auf Android (`SDL_WINDOWEVENT_SIZE_CHANGED`): der
   Plan loescht dort die Raste; ob das Ereignis auf dem Geraet im Spiel ueberhaupt auftritt,
   ist nicht gemessen.
+
+---
+
+## 8. UMSETZUNG (Bau Runde 30, Zweig r30/android-r1-toggle)
+
+Arbeitsbaum `.claude/worktrees/r30_android`, Basis master d98e9639. Nachweise (unversioniert)
+unter `build/r30_android-r1-toggle/bau/` des Arbeitsbaums.
+
+### 8.1 Vorab nachgeprueft
+
+* Tragende Adressen selbst disassembliert (`re15_disasm.py`, info/Re1.5/PSX.EXE): Pegel-Leser
+  `andi 0x100` @0x80031ffc (s0 = 0x800ac768 @0x80031f40/44) / @0x800331ec, `andi 0x40`
+  @0x80033308; Pause-Gates `bltz a0` @0x80031c78, `andi 0xf000` @0x80030514; Menue-Pfad
+  @0x8001cb40-cb70 -> Zustand 3 -> `sb zero,0x800aca58` @0x8001cbdc (Rumpf @0x8001cbb8-cc28
+  ohne Verzweigung); Task-Suspend der Status-Task FUN_80029bf8(0) @0x800460c4 (`ori 0x40`
+  @0x80029c10); Plc_motion `sb v1(=4),4(v0)` @0x80041bb0, Plc_dest `sb v0(=4),4(a1)`
+  @0x80041c14, Plc_ret `sb 1,4` @0x80041f90. Alle wie im Dossier, keine Abweichung.
+* Ausgangszustand: `probe_r30_android_r1_toggle` im Arbeitsbaum liefert byte-gleich
+  `m2_sonde.txt` (Fall A 10/10/1, C 5 und 10, H 32) — `bau/b0_sonde_ausgangszustand.txt`.
+
+### 8.2 Gebaut (je Plan-Schritt ein Commit)
+
+| Schritt | Datei(en) | Commit |
+|---|---|---|
+| 1 Logik | `platform/pc/src/touch_r1_toggle_pc.h` (= Vorschlag, header-only) | 5edc2010 |
+| 3 Riegel | `engine/src/pad_phase_common.c` `re15_player_pad_live()`, Deklaration `include/re15_player.h` | 5edc2010 |
+| 2, 4, 5, 6 | `touch_overlay_pc.c/.h`, `platform/pc/main.c`, `input_pc.c` | 3f124f62 |
+| 7 Riegel scharf | `tests/unit/probe_r30_android_r1_toggle.c`, `probes/r30_android-r1-toggle.cmake` (`unit_r30_android_r1_toggle`) | 9b8cbbdf |
+| README | `platform/android/README.md` (R1 als Umschalter, TYPE C als Grenze) | 659420fc |
+| N1 | `menu_common.c` `menu_stage3_cmd_zero`, `game_step_common.c` `re15_player_cmd_zero`, `re15_enemy_ai.h`; Riegel `unit_r30_android_n1_inventar_cmd` | a8d37947 |
+| N3 | `scd_vm.c` (op_plc_motion, op_plc_dest); Riegel `unit_r30_android_n3_plc_aim` | d8e4f1ed |
+
+### 8.3 Gemessen
+
+| Pruefung | Soll | Ist |
+|---|---|---|
+| `unit_r30_android_r1_toggle` | RIEGEL-GRUEN, Fall A 10/10/1 HALTEN und RASTE, C 5/10, H 32 | GRUEN; stdout bis auf die Titelzeile byte-gleich `m2_sonde.txt` (`bau/b1_*`); nach N1 aendert sich nur Fall D (Phase 0 direkt nach dem Schliessen, `bau/b2_*`) |
+| Selbsttest `RE15_TOUCH_OVERLAY=1 RE15_TOUCH_SELFTEST=1` | ok=21+neu, fail=0 | **ok=32 fail=0** (11 Raste-Faelle, `bau/b3_selftest_debug.log`) |
+| Echtlauf P (Browning, ROOM1030) | pad=0800 vom ersten bis zum zweiten P, Phasenfolge wie gehalten, Viereck genau ein Schuss | F431..F556: **126 von 126** Bildern mit R1-Bit; Heben ph1 F431-439 (9 geloggte Bilder), bereit F440; Viereck F464-466 -> **1** Rueckstoss-Einsatz (F465), Magazin 15 -> 14 (Inventarbild F800); zweiter P F557: Senken ph4 F557-565 (9), Phase 0 F566. Gehaltenes R1 (Skript M, ohne Overlay): Heben 9 / Senken 9 / 1 Schuss — gleiche Folge (`bau/b4_*`, `b5_ab_b1_neu_waffen.log`) |
+| Raste faellt beim Inventar (Echtlauf) | nach dem Schliessen kein R1-Bit | F850 (erstes Spielbild nach dem Menue): pad=0000, ph=0 |
+| Raste faellt beim Tod (Echtlauf, `RE15_KILL_AT=1100`) | R1 im Ruhestil nach dem Tod | innere Rahmenkante F1099/F1100 Helligkeit 243 (gerastet), F1101-1103 65 (Ruhe) (`bau/b7_*`) |
+| Framedump gerastet | Doppelrahmen gegen Ruhestil | F700/F1000 innere Kante 243, F600/F900 65, F800 (Inventar) 111 ohne Innenrahmen (`bau/b6_r1_knopf_vergleich_*.png`) |
+| Bestand ohne Overlay (master-Exe gegen neu, Skript M) | unveraendert, ausser N1 | b1 (Zielen/Feuern/Senken, 801 Zeilen): **identisch**. b2 (Inventar bei gehaltenem R1, 858 Zeilen): 9 Zeilen F628-636 verschieden = N1 (frisches Heben statt stehender Zielphase), Rest identisch |
+| N1-Riegel | nach dem Schliessen Phase 0, Wort 1, Eintritts-Pose | vorher ROT (7): Phase 2, Wort 0, keine Pose, melee_latch 1 an der Browning; nachher GRUEN: Phase 0, Wort 1, Pose scharf, R1 gehalten -> bereit nach 10, melee_latch 0, 15 -> 14 |
+| N3-Riegel | Plc_motion/Plc_dest beenden die Zielphase | vorher ROT (4): Phase 2, aktiv 40/40; nachher GRUEN: Phase 0, aktiv 0/40, nach Plc_ret bereit nach 10 |
+| Suite | gruen | 363/363 (360 + 3 neue Riegel) |
+
+### 8.4 Abweichungen vom Plan
+
+1. **Selbsttest** mit 11 statt 5 Raste-Faellen (zusaetzlich: Finger weg nach dem zweiten Tipp,
+   Freigabe kehrt zurueck ohne Wiederbeleben, Blitz-Tipp und Folgetick wie `adb input tap`,
+   Halten ohne Freigabe).
+2. **main.c bindet `touch_overlay_pc.h` nicht ein**, sondern deklariert
+   `re15_touch_pc_r1_phase` lokal: der Header zieht `SDL.h` und damit die
+   SDL_main-Umbenennung von `main()` nach sich, die main.c ausserhalb von Android bewusst
+   vermeidet.
+3. **Skriptpuffer 32 Bit**, P = Bit 0x10000 (kein Pad-Bit frei, das kein Buchstabe belegt).
+4. **Echtlauf-Skript** abweichend von `W2,S1,W40,P0.1,W4,P0.1,W3`: der Abstand Eingabe-Tick ->
+   Spielbild haengt vom Front-End-Verlauf ab (Lauf mit `S1` im Vorlauf: START landete in
+   Bild 67; ohne: Tick-Index 524 = Bild 431). Gefahren:
+   `W17.47,P0.1,W1,A0.1,W3,P0.1,W3,P0.1,W2,S0.1,W4,S0.1,W4,P0.1,W2` mit
+   `RE15_GIVE=3:15 RE15_EQUIP=3` (Browning, damit Schuss und Magazin sichtbar sind),
+   `RE15_DEBUG_JUMP=1030@100`, sauberes Ende ueber `RE15_KILL_AT=1100` +
+   `RE15_BOOT_EXIT_AT=2` (eigener Prozess, kein taskkill).
+5. **N1 ohne Raum-Teil:** `re15_player_cmd_reset` ist geteilt in `re15_player_cmd_zero`
+   (Kommandowort-Statics) + `re15_prop_push_reset`. Am Inventar-Ende gibt es keinen neuen Raum;
+   die Fortsetzung loescht in aca3c nur 0x40|0x8000 (`and` @0x8001cb68/@0x8001cb6c), die
+   Objekt-Zaehler obj[+0x8C] und aca3c & 0x2000 bleiben stehen.
+6. **N3 auch fuer Plc_dest:** derselbe cmd-4-Store steht dort @0x80041c14; der Plan nannte nur
+   Plc_motion @0x80041bb0. Der Port ruft `re15_player_aim_interrupt` genau dort, wo er fuer den
+   Spieler `state = 4` schreibt.
+
+### 8.5 Nicht gemessen
+
+* Android-Bau und Emulator (`adb shell input tap 2247 87` / `2000 801`): nicht gefahren — laeuft
+  beim Paketieren. Der Code hat keinen `__ANDROID__`-Sonderfall; `pad_phase_common.c` liegt in
+  `engine/src/` und wird vom GLOB erfasst (`build_android.sh` verwirft `app/.cxx`).
+* Ende-zu-Ende mit echter Maus/echtem Finger: nicht gefahren. Belegt: synthetischer Finger ->
+  Latch -> Umschalter -> Bit (Selbsttest) und Skript-P -> Umschalter -> Spiel (Echtlauf).
+* N3 im Echtlauf (eine Szene, die waehrend des Zielens startet): nur im Riegel mit eigenem
+  Skript-Schnipsel gemessen; die ausgelieferten Szenen der Suite (u.a. ROOM1170-Intro) laufen
+  gruen.
+* Rotation/Systemleiste auf Android (`SDL_WINDOWEVENT_SIZE_CHANGED` loescht die Raste): nicht
+  auf dem Geraet gemessen.
+* N2 (Tod beim Zielen, Zielpose ueberdeckt die Todesanimation) ist nicht Teil dieser Spur
+  (Spur hund-tod).
