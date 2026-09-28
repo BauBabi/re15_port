@@ -162,6 +162,12 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
 {
     if (!out) return;
     memset(out, 0, sizeof(*out));
+    /* Das fremde Feld steht mit Absicht HIER, vor jedem Export: die Spur karten-marken
+     * schreibt ihre Etagen-Bits weiter unten (re15_map_visited_floor_export). Stuende
+     * diese Zeile unten neben re15_files_export, fuegte git beide Zweige OHNE Konflikt
+     * zusammen und diese Zeile nullte die Etagen-Bits NACH dem Export (gemessen per
+     * git merge-tree gegen worktree-wf_b4b268f3-d12-3, Nachbesserung Runde 30). */
+    memset(out->visited_floor, 0, sizeof out->visited_floor); /* R30-VERTRAG: fremdes Feld */
 
     const re15_actor_t *pl = &g_actors[0];
     out->magic         = RE15_SAVE_MAGIC;
@@ -204,7 +210,6 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
 
     re15_map_visited_export(out->visited);   /* v6 RE2-Kartensystem (re15_map_visited.c) */
 
-    memset(out->visited_floor, 0, sizeof out->visited_floor); /* R30-VERTRAG: fremdes Feld */
     /* v9 FILE-Liste: RE2 speichert sie mit (Offset 0x6C4 im Block 0x800D44A4 =
      * 0x800D4B68 - 0x800D44A4; geschrieben 0x800 Byte `addiu v0,zero,2048`
      * @0x801c0c70, MEM_CARD.BIN laedt @0x801BFA18). */
