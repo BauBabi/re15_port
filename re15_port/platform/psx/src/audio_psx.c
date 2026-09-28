@@ -860,6 +860,15 @@ void re15_audio_re2_elevator_se(int se_id)
     (void)se_id;   /* TODO(psx): ELEVSE.VBS in die SPU + se_id spielen */
 }
 
+/* ⛔ RE2-ERGAENZUNG (kein RE1.5-Original): der "Tuer verschlossen"-Ton aus
+ * shared_assets/RE2/TUERSE.VBS, se_id = Satz der Mini-Bank (RE2_DOOR_SE_ZU_A/_B/_E) —
+ * RE2 Tuer-Handler @0x80051610 / @0x800516a4 `jal 0x8005ba28` Se_on(2,0x16), a1 = 0.
+ * PSX-SPU-Pfad = Folge-Stub wie re15_audio_re2_elevator_se; audio_pc.c hat die echte Impl. */
+void re15_audio_re2_door_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): TUERSE.VBS in die SPU + se_id spielen */
+}
+
 /* RE2-Ergaenzung: Panel-Klick-Bank (RE2 ROOM2130 snd0, Belege in re15_audio.h).
  * PSX-SPU-Pfad = Folge-Stub wie bei den uebrigen SE-Baenken. */
 void re15_audio_re2_panel_se(int se_id)
