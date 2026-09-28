@@ -41,6 +41,10 @@ analysis/tor_1170/03/04); `[BILD]` = selbst angesehenes Bild.
 |---|---|---|
 | `re15_port/tools/tueren/re2_tuer_zensus.py` | alle 572 RE2-`Door_aot_set`/`_4p` lesen, Seiten bilden, zu physischen Tueren paaren | `build/r31_tueren/t2/re2_tueren.json` |
 | `re15_port/tools/tueren/re2_tuer_varianten.py` | je Archiv und Variante: Rollen der Objekte, Angel/Griff im Bild, Richtung, Bilder Anfang/Mitte | `build/r31_tueren/t2/varianten.json`, `bilder/DOORxx_vN.png`, `bogen_varianten_NN.png` |
+| `re15_port/tools/tueren/re2_tuer_hintergrund.py` | RE2-Tuerpaare im Hintergrundbild (beste Kamera, Ausschnitt); `--stichprobe` baut den Beleg 2.3 | `build/r31_tueren/t2/hg/`, `tueren_belege/t2_stichprobe_griff.jpg` |
+| `re15_port/tools/tueren/re2_tuer_ton.py` | Tonteil je Archiv, Se_on-Bilder, Door_exit-Ton, Tonfamilien | `build/r31_tueren/t2/ton.json` |
+| `re15_port/tools/tueren/re2_tuer_bericht.py` | Markdown-Tabellen (Anhang A1, 3, 4) aus den JSONs | `build/r31_tueren/t2/bericht_*.md` |
+| `re15_port/tools/tueren/re2_tuer_tabelle.py` | Archiv-Tabelle @0x8009a520 pruefen (55/55), als C-Tabelle ausgeben, Archive mit sha1-Pruefung kopieren (fuer den Bau) | nur auf Aufruf (`--inc`, `--kopiere-nach`) |
 
 Satzformat (selbst gelesen):
 - `0x3B Door_aot_set`: Handler `0x80054be4` (Tabelle `0x800a74c8[59]`), Satzzeiger = pc+2 (`@0x80054c30 addiu v0,v0,2`),
@@ -109,7 +113,7 @@ Skript 2 stellt das Blatt bei z = -1600 mit Drehung y = 2048 auf -> Angel 160 - 
 
 ### 2.1 Zensus und Paarung (`re2_tuer_zensus.py`)
 
-- **572** Saetze (552 x 0x3B, 20 x 0x68) in 237 RDT-Dateien (von 250, die der Walker `re2_scd_walk.all_subs` liefert).
+- **572** Saetze (552 x 0x3B, 20 x 0x68) in 237 der 250 RDT-Dateien unter info/re2leon/PL0/RDT (Walker `re2_scd_walk.all_subs`, 0 Desyncs).
   Varianten-Verteilung 0:253, 1:178, 2:27, 3:22, 4:44, 5:45, 7:1, 8:2, Bit 7 in 14 - identisch mit 03 Abschnitt 4.
 - **Seite** = gleiches Viereck + gleiches Ziel (RE2 setzt dieselbe Seite oft mehrfach, je Szenario-Flag in einem anderen
   Sub): **534** Seiten.
