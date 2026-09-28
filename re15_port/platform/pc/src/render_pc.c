@@ -151,6 +151,11 @@ static int           s_card_show = 0;
 static int           s_card_cur_x = 0, s_card_cur_y = 0, s_card_cur_show = 0;  /* card cursor (▶) */
 static SDL_Texture  *s_tmoji[4][2];    /* FE-1 title-menu sprites [row 0-2 + copyright][0 white,1 blue] */
 static int           s_tmoji_built = 0, s_tmoji_show = 0, s_tmoji_cursor = 0;
+/* Die aktive Zeile je Pulswert: 0x80, 0x82 ... 0xBE = 31 Schritte aufwaerts (Zaehler < 0x1f
+ * @0x801028fc, +2 @0x8010290c) + der Startwert = 32 Stufen. Beim ersten Gebrauch erzeugt. */
+#define TMOJI_PULSE_LEVELS (RE15_TITLE_PULSE_UP_BELOW + 1)
+static SDL_Texture  *s_tmoji_act[3][TMOJI_PULSE_LEVELS];
+static SDL_Texture  *s_tmoji_act_cur = NULL;   /* die Textur der aktiven Zeile fuer DIESES Bild */
 /* Der Helligkeitspuls der aktiven Zeile (FUN_801028ec) liegt seit Runde 30 NICHT mehr hier:
  * sein Schritt hing am Zeichnen und damit an der Bildrate der Anzeige (gemessen 144 Schritte/s
  * statt 29,9). Zustand + Schritt: engine/src/title_pulse.c, Takt: die Titel-Schleife in main.c.
@@ -1308,13 +1313,22 @@ void re15_render_end_frame(void)
         for (int i = 0; i < 4; i++) {
             int active = (i < 3 && i == s_tmoji_cursor);
             SDL_Texture *tex = (i < 3) ? s_tmoji[i][active ? 0 : 1] : s_tmoji[3][0];
+            /* AKTIVE ZEILE: die Textur, in die der Pulswert schon eingerechnet ist
+             * (tmoji_strip, Modulation texel * farbe / 128 mit Saettigung 31). Das Original
+             * schreibt den Pulswert als Farbbyte R=G=B des modulierten Rechtecks
+             * (`lhu t0,0x2944(t0)` @0x80102848, `sb` @0x80102850/54/58; Befehl 0x66808080
+             * @0x80102830-34) — Faktor 1,000 (0x80) ... 1,484 (0xBE).
+             * ⛔ Die bis v0.8.15 hier stehende Abbildung `200 + (wert - 0x80) * 55 / 0x3e`
+             * (Faktor 0,784 ... 1,000) trug KEINE Adresse und war nicht die des Originals:
+             * der Port war im hellsten Zustand so hell wie das Original im dunkelsten.
+             * Gemessen am Fenster: 715 von 724 Bildern wichen in der aktiven Zeile ab (bis
+             * 472 von 4352 Pixeln), die inaktiven Zeilen und das Copyright in keinem.
+             * Eine SDL-Farbmodulation kann nicht ueber 1,0 hinaus — deshalb eine Textur je
+             * Pulswert statt eines Faktors. */
+            if (active && s_tmoji_act_cur) tex = s_tmoji_act_cur;
             if (!tex) continue;
             int h = (i < 3) ? 16 : 20;
-            /* active row: modulate by the pulse (0x80..0xBE -> 200..255; the white CLUT already keeps
-             * it brighter than the blue inactive rows — SDL colour-mod can't exceed 1.0x additive). */
-            int mod = active ? (200 + (re15_title_pulse_value() - 0x80) * 55 / 0x3e) : 255;
-            if (mod > 255) mod = 255;
-            SDL_SetTextureColorMod(tex, (Uint8) mod, (Uint8) mod, (Uint8) mod);
+            SDL_SetTextureColorMod(tex, 255, 255, 255);
             SDL_Rect shadow = { 0x20, ITEM_Y[i] + 1, 256, h };
             SDL_Rect glow   = { 0x20, ITEM_Y[i],     256, h };
             SDL_SetTextureBlendMode(tex, s_shadow_blend);   SDL_RenderCopy(s_renderer, tex, NULL, &shadow); /* abr2 */
@@ -1767,7 +1781,14 @@ void re15_render_pc_pselect_text(const re15_tim_t *atlas, int sel)
  * engine/src/title_pulse.c und wird von der Titel-Schleife getaktet (1 Schritt je 2 VBlanks). */
 static const struct { int v, h; } s_tmoji_src[4] = { {16,16}, {32,16}, {48,16}, {82,20} };
 
-static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base)
+/* `farbe` = das Farbbyte (R=G=B) des MODULIERTEN Rechtecks, Befehl 0x66808080 @0x80102830-34:
+ * 0x80 fuer inaktive Zeilen und das Copyright (Zweig @0x8010283c laesst die 0x80 des Befehls
+ * stehen), der Pulswert 0x80 ... 0xBE fuer die aktive Zeile (@0x80102848-58).
+ * Modulation: kanal5 = min(31, (texel5 * farbe) >> 7) — psx-spx graphicsprocessingunitgpu.md
+ * "Modulation" (texel * farbe / 128, Saettigung 31); an 12 Original-Bildpuffern aus 6
+ * Savestates pixelgenau nachgemessen (Dossier titel-blinken.md §3.6 b, je 0 von 4352 Pixeln).
+ * Mit farbe = 0x80 bleibt der Texel unveraendert. */
+static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base, int farbe)
 {
     const int W = 256;
     uint32_t *rgba = (uint32_t *) malloc((size_t) W * h * 4);
@@ -1782,10 +1803,17 @@ static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base
             if (c == 0x0000) { rgba[y * W + x] = 0; continue; }         /* Farbwert 0 = transparent
                                                                         * (PSX-Texturregel, s.
                                                                         * pselect_text) */
-            uint32_t r = ((c) & 31) << 3, g = ((c >> 5) & 31) << 3, b = ((c >> 10) & 31) << 3;
-            rgba[y * W + x] = 0xFF000000u | (r << 16) | (g << 8) | b;   /* ARGB8888 */
+            uint32_t ch[3] = { (uint32_t) (c & 31), (uint32_t) ((c >> 5) & 31), (uint32_t) ((c >> 10) & 31) };
+            for (int k = 0; k < 3; k++) {
+                ch[k] = (ch[k] * (uint32_t) farbe) >> 7;      /* texel * farbe / 128 */
+                if (ch[k] > 31u) ch[k] = 31u;                 /* Saettigung 31       */
+                ch[k] <<= 3;
+            }
+            rgba[y * W + x] = 0xFF000000u | (ch[0] << 16) | (ch[1] << 8) | ch[2];   /* ARGB8888 */
         }
     }
+    /* ⚠ Je Pulswert eine NEUE Textur, einmal beschrieben, bevor sie das erste Mal gezeichnet
+     * wird — kein SDL_UpdateTexture auf eine schon gezeichnete STATIC-Textur. */
     SDL_Texture *tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, W, h);
     if (tex) { SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND); SDL_UpdateTexture(tex, NULL, rgba, W * 4); }
     free(rgba);
@@ -1794,15 +1822,31 @@ static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base
 
 void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
 {
-    if (!s_tmoji_built && tmoji && tmoji->pixels && tmoji->clut && tmoji->bpp == 8) {
+    int tim_ok = (tmoji && tmoji->pixels && tmoji->clut && tmoji->bpp == 8);
+    if (!s_tmoji_built && tim_ok) {
         s_tmoji_built = 1;
         for (int i = 0; i < 4; i++) {
-            s_tmoji[i][0] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 0);     /* white */
-            s_tmoji[i][1] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 192);   /* blue  */
+            s_tmoji[i][0] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 0,   RE15_TITLE_PULSE_START);   /* white */
+            s_tmoji[i][1] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 192, RE15_TITLE_PULSE_START);   /* blue  */
         }
     }
     s_tmoji_cursor = cursor;
     s_tmoji_show   = 1;
+    /* Die aktive Zeile fuer den Pulswert DIESES Bildes (weisse Unterpalette = Deskriptor +0,
+     * CLUT 0x7fc0). Der Wert steht fest, bevor gezeichnet wird: die Titel-Schleife fuehrt die
+     * faelligen Pulsschritte VOR diesem Aufruf aus, der Bestaetigungs-Fade gar keine. */
+    s_tmoji_act_cur = NULL;
+    if (tim_ok && cursor >= 0 && cursor < 3) {
+        int val = re15_title_pulse_value();
+        int lv  = (val - RE15_TITLE_PULSE_START) / RE15_TITLE_PULSE_DELTA;
+        if (lv >= 0 && lv < TMOJI_PULSE_LEVELS
+            && val == RE15_TITLE_PULSE_START + lv * RE15_TITLE_PULSE_DELTA) {
+            if (!s_tmoji_act[cursor][lv])
+                s_tmoji_act[cursor][lv] = tmoji_strip(tmoji, s_tmoji_src[cursor].v,
+                                                      s_tmoji_src[cursor].h, 0, val);
+            s_tmoji_act_cur = s_tmoji_act[cursor][lv];
+        }
+    }
     /* ⛔ KEIN Pulsschritt mehr hier (Runde 30 / Thema D). Diese Funktion ist der ZEICHNER
      * (Original FUN_801027a0 / Neuzeichner FUN_80102a10) und wird je Bild der Anzeige gerufen —
      * auch aus dem Bestaetigungs-Fade, in dem der Puls im Original ruht (FUN_80102a10
