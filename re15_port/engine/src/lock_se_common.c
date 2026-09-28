@@ -16,6 +16,7 @@
 
 #include "re15_lock_se.h"
 #include "re15_audio.h"
+#include "re15_engine.h"           /* g_engine.frame_count — nur fuer das Datei-Log */
 
 #include "gen/re2_door_bank.inc"   /* RE2_DOOR_EDT_* / RE2_DOOR_VBD_* / RE2_DOOR_SE_ZU_{A,B,E} */
 #include "gen/lock_se_sites.inc"   /* re15_lock_se_sites[], RE15_LOCK_ART_K/_M, *_SITE_COUNT */
@@ -73,7 +74,9 @@ int re15_lock_se_site(int i, unsigned *out_room, int *out_msg, int *out_art, int
 }
 
 /* Messschiene fuer den Echtlauf (die GUI-exe hat kein stderr): RE15_TUERSE_LOG=<pfad>
- * schreibt je Ausloesung eine Zeile. Ohne die Variable passiert nichts. */
+ * schreibt je Ausloesung eine Zeile (Bildnummer, Raum, Nachricht, Art, Weg, Satz). Ohne die
+ * Variable passiert nichts. Die Bildnummer erlaubt, den Ton in einer RE15_AUDIO_CAP_SYNC-
+ * Aufnahme wiederzufinden (Offset = Bild * 1470 Stereo-Frames, audio_pc.c). */
 static void tuerse_log(unsigned room, int msg, int art, int weg, int satz)
 {
     static const char *s_path = NULL; static int s_init = 0;
@@ -81,7 +84,8 @@ static void tuerse_log(unsigned room, int msg, int art, int weg, int satz)
     if (!s_path) return;
     FILE *f = fopen(s_path, "ab");
     if (!f) return;
-    fprintf(f, "raum=%04X nachricht=%d art=%c weg=%s satz=%d(%s) nr=%u\n",
+    fprintf(f, "F%u raum=%04X nachricht=%d art=%c weg=%s satz=%d(%s) nr=%u\n",
+            (unsigned)g_engine.frame_count,
             room, msg, art == RE15_LOCK_SE_ART_K ? 'K' : 'M',
             weg == RE15_LOCK_WEG_AOT ? "AOT" : "SKRIPT", satz,
             satz == RE2_DOOR_SE_ZU_A ? "ZU_A" : satz == RE2_DOOR_SE_ZU_B ? "ZU_B"
