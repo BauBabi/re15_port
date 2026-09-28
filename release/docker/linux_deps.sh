@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# =============================================================================
+# RE1.5 Port — Bau-Abhaengigkeiten des Linux-Release-Baus (Debian 11)
+# =============================================================================
+# EINE Quelle fuer Paketliste, Snapshot-Zeitstempel und cmake-Version. Zwei Nutzer:
+#   1. release/docker/Dockerfile.linux fuehrt diese Datei beim Bau des vorgebauten
+#      Images aus (release/build_linux_deck.sh baut es; Docker haelt die Schicht im
+#      Cache, solange sich diese Datei nicht aendert).
+#   2. release/docker_linux_build.sh laedt sie per "source" — in einem frischen
+#      debian:11 (Aufruf mit --image debian:11) installiert sie wie bisher alles,
+#      im vorgebauten Image und in einer eingerichteten distrobox tut sie nichts.
+# Bis 2026-09-28 stand dieser Block woertlich in docker_linux_build.sh und lief bei
+# JEDEM Container-Lauf neu (gemessen: 81 s bis zur ersten cmake-Zeile, davon apt
+# und der cmake-Tarball von GitHub; Dossier analysis/befunde_runde30/nachtrag-linux-bau.md).
+# Bau-Umgebung, NICHT Spiel-Verhalten: keine Original-Adresse, keine Port-Konstante.
+# =============================================================================
+set -euo pipefail
+
+# SDL2 2.28.5 wird statisch aus Quelle gebaut (FetchContent) und braucht die
+# Entwicklungs-Header der Anzeige-/Audio-Stacks. In einer frischen Container-
+# Basis fehlen sie; in einer bereits eingerichteten distrobox nicht — deshalb
+# nur installieren, wenn wir root sind und der Compiler noch fehlt.
+# (libdecor-0-dev gibt es in Debian 11 NICHT — SDL2 faellt dort auf den
+# eingebauten Wayland-Dekorationspfad zurueck.)
+if [[ "$(id -u)" == "0" ]] && ! command -v gcc >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    # ⛔ SNAPSHOT STATT LEBENDEM SPIEGEL (2026-09-04). Debian 11 ist in Rente; der
+    # normale Spiegel liefert fuer bullseye noch einen INDEX, aber nicht mehr jedes
+    # darin genannte Paket. Fuenfmal reproduziert, immer dieselben zwei Dateien:
+    #     E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
+    #     E: Failed to fetch .../libglx-mesa0_20.3.5-1+deb11u1_amd64.deb    404
+    # snapshot.debian.org haelt JEDEN historischen Stand dauerhaft vor - Index und
+    # Pool passen dort per Konstruktion zusammen. Das macht den Release-Build zugleich
+    # REPRODUZIERBAR: derselbe Zeitstempel liefert in einem Jahr dieselben Pakete.
+    # Der Zeitstempel liegt in der Lebenszeit von bullseye/LTS und enthaelt die oben
+    # genannten Versionen. Check-Valid-Until muss aus, weil die Release-Datei des
+    # Snapshots aus Sicht von heute abgelaufen ist.
+    # Der Zeitstempel muss MINDESTENS so neu sein wie das Basis-Image, sonst
+    # verlangt es Herabstufungen: debian:11 (11.11) traegt libudev1 in deb11u8,
+    # der Snapshot vom 2025-02-01 kennt nur deb11u6 ->
+    #   libudev-dev : Depends: libudev1 (= 247.3-7+deb11u6) but ...u8 is to be installed
+    # Durchprobiert mit der VOLLEN Paketliste: 2025-02-01 und 2026-01-01 fallen an
+    #   libudev-dev : Depends: libudev1 (= ...deb11u6) but ...u8 is to be installed
+    # 2026-06-01 faellt an
+    #   libc6-dev : Depends: libc6 (= 2.31-13+deb11u13) but ...u14 is to be installed
+    # 2026-07-01, -08-01 und -09-01 gehen vollstaendig durch. Genommen: der aelteste
+    # davon, damit der Stand so nah wie moeglich am ausgelieferten Deck-Binary bleibt.
+    SNAP=20260701T000000Z
+    { echo "deb http://snapshot.debian.org/archive/debian/$SNAP/ bullseye main"
+      echo "deb http://snapshot.debian.org/archive/debian-security/$SNAP/ bullseye-security main"
+    } > /etc/apt/sources.list
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
+    echo 'Acquire::Retries "5";' >> /etc/apt/apt.conf.d/99snapshot
+    PKGS="build-essential ninja-build git ca-certificates wget libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols libasound2-dev libpulse-dev libdbus-1-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev"
+    apt-get update -qq
+    if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+        # ⛔ DEBIAN 11 IST INS ARCHIV GEWANDERT (2026-09-04 gemessen). Der normale
+        # Spiegel liefert fuer bullseye noch einen Index, aber nicht mehr jedes darin
+        # genannte Paket:
+        #   E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
+        # Zweimal hintereinander reproduziert, also kein Aussetzer. Das ist ein
+        # Infrastruktur-Fehler, kein Code-Fehler - aber er legt den Release-Build lahm,
+        # und der Linux-Build ist Pflicht (ein Paket nur fuer Windows hat schon einmal
+        # zwoelf Releases lang das Deck-Paket mitgerissen, Memory
+        # reai-v2-paket-plattform-kollateral).
+        # archive.debian.org haelt alle bullseye-Pakete dauerhaft vor; Check-Valid-Until
+        # muss dafuer aus, weil die Release-Datei abgelaufen ist. Eine eigene
+        # Security-Suite fuehrt das Archiv NICHT mehr (gemessen: "does not have
+        # a Release file") - die Updates sind ins Hauptarchiv gefaltet.
+        # ⛔ ERST DEN INDEX WEGWERFEN. Der 404 nennt eine Paketversion, die im Pool
+        # nicht mehr liegt (deb11u8) - das ist das Muster eines VERALTETEN Index im
+        # Basis-Image, den ein blosses "apt-get update" nicht ersetzt. Gemessen
+        # 2026-09-04: zweimal derselbe 404, danach mit geleerter Liste erneut versucht.
+        echo "   apt-Index unvollstaendig - Listen leeren und neu laden"
+        rm -rf /var/lib/apt/lists/*
+        apt-get clean
+        apt-get update -qq
+        if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
+            echo "   apt-Spiegel unvollstaendig - schalte auf archive.debian.org um"
+            # ⛔ NUR DAS HAUPTARCHIV. Eine eigene Security-Suite fuehrt
+            # archive.debian.org fuer bullseye unter KEINEM Namen mehr - beide
+            # geprueft, beide 'does not have a Release file':
+            #     debian-security bullseye-security
+            #     debian-security bullseye/updates
+            echo 'deb http://archive.debian.org/debian bullseye main' > /etc/apt/sources.list
+            echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
+            apt-get update -qq
+            # Das Basis-Image traegt Security-Versionen, die das Archiv nicht kennt;
+            # ohne diese Freigaben endet es in 'held broken packages'. Der Container
+            # ist ein Wegwerf-Container, das Spiel-Binary wird davon nicht beruehrt
+            # (das glibc-Gate prueft es weiterhin einzeln).
+            apt-get install -y -qq --no-install-recommends --allow-downgrades --allow-change-held-packages $PKGS >/dev/null
+        fi
+    fi
+fi
+# cmake: Debian 11 (bullseye) liefert nur 3.18, re15_port verlangt >=3.21, und
+# bullseye-backports ist inzwischen archiviert (kein Release-File). Deshalb das
+# offizielle Kitware-Binary-Tarball (statisch, aendert die glibc-Anforderung
+# des SPIELS nicht — Gate check_glibc prueft weiterhin das Binary).
+if ! cmake --version 2>/dev/null | grep -qE ' 3\.(2[1-9]|[3-9][0-9])| [4-9]\.'; then
+    CMV=3.28.6
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMV}/cmake-${CMV}-linux-x86_64.tar.gz" -O /tmp/cmake.tgz
+    tar -xzf /tmp/cmake.tgz -C /opt
+    export PATH="/opt/cmake-${CMV}-linux-x86_64/bin:$PATH"
+fi
+# Im vorgebauten Image muss cmake ohne das export oben auffindbar sein (ein RUN-Schritt
+# vererbt seine Umgebung nicht). Als root zusaetzlich nach /usr/local/bin verlinken —
+# derselbe Tarball, dieselbe Version; in einer distrobox (kein root) aendert sich nichts.
+if [[ "$(id -u)" == "0" && -n "${CMV:-}" && -d "/opt/cmake-${CMV}-linux-x86_64/bin" ]]; then
+    ln -sf "/opt/cmake-${CMV}-linux-x86_64/bin/"* /usr/local/bin/
+fi

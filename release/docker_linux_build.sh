@@ -11,110 +11,68 @@
 # Deshalb existiert dazu ein Gate in release/make_package.sh (check_glibc).
 #
 # Aufruf (Host): release/build_linux_deck.sh — der waehlt Container/distrobox
-# und ruft dieses Skript hier drinnen auf. Direkt geht auch:
+# und ruft dieses Skript hier drinnen auf. Direkt geht auch (unter Windows LANGSAM,
+# siehe DATEIZUGRIFF):
 #   podman run --rm -v "$PWD:/src" -w /src debian:11 bash release/docker_linux_build.sh
+#
+# ⛔ DATEIZUGRIFF (2026-09-28 gemessen, analysis/befunde_runde30/nachtrag-linux-bau.md).
+# Unter Docker Desktop (WSL2) ist ein Windows-Bindmount ein 9p-Mount (drvfs,
+# msize=65536): 5000x stat 54,4 s statt 3,3 s, 2000 kleine Dateien schreiben 93,6 s
+# statt 1,1 s, 315 MB shared_assets lesen 142 s statt 0,17 s. Der Bau schreibt und
+# liest aber genau das: SDL2-Konfigurations-Pruefungen, Objektdateien, Header, die
+# Test-Assets. build_linux_deck.sh legt deshalb den Quellbaum als KOPIE in das
+# Container-Dateisystem unter /src (gleicher Pfad wie frueher -> gleiche eingebaute
+# Pfade im Binary) und haengt das Repo nur als Rueckfall unter /host ein. Alles, was
+# nicht kopiert wurde, wird hier als Link /src/<pfad> -> /host/<pfad> angelegt: eine
+# Datei, die es im Repo gibt, fehlt im Container NIE (kein stilles SKIP).
 # =============================================================================
 set -euo pipefail
 
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -d /src/re15_port ]]; then
     REPO=/src
 else
-    REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    REPO="$(cd "$HERE/.." && pwd)"
 fi
 
-# SDL2 2.28.5 wird statisch aus Quelle gebaut (FetchContent) und braucht die
-# Entwicklungs-Header der Anzeige-/Audio-Stacks. In einer frischen Container-
-# Basis fehlen sie; in einer bereits eingerichteten distrobox nicht — deshalb
-# nur installieren, wenn wir root sind und der Compiler noch fehlt.
-# (libdecor-0-dev gibt es in Debian 11 NICHT — SDL2 faellt dort auf den
-# eingebauten Wayland-Dekorationspfad zurueck.)
-if [[ "$(id -u)" == "0" ]] && ! command -v gcc >/dev/null 2>&1; then
-    export DEBIAN_FRONTEND=noninteractive
-    # ⛔ SNAPSHOT STATT LEBENDEM SPIEGEL (2026-09-04). Debian 11 ist in Rente; der
-    # normale Spiegel liefert fuer bullseye noch einen INDEX, aber nicht mehr jedes
-    # darin genannte Paket. Fuenfmal reproduziert, immer dieselben zwei Dateien:
-    #     E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
-    #     E: Failed to fetch .../libglx-mesa0_20.3.5-1+deb11u1_amd64.deb    404
-    # snapshot.debian.org haelt JEDEN historischen Stand dauerhaft vor - Index und
-    # Pool passen dort per Konstruktion zusammen. Das macht den Release-Build zugleich
-    # REPRODUZIERBAR: derselbe Zeitstempel liefert in einem Jahr dieselben Pakete.
-    # Der Zeitstempel liegt in der Lebenszeit von bullseye/LTS und enthaelt die oben
-    # genannten Versionen. Check-Valid-Until muss aus, weil die Release-Datei des
-    # Snapshots aus Sicht von heute abgelaufen ist.
-    # Der Zeitstempel muss MINDESTENS so neu sein wie das Basis-Image, sonst
-    # verlangt es Herabstufungen: debian:11 (11.11) traegt libudev1 in deb11u8,
-    # der Snapshot vom 2025-02-01 kennt nur deb11u6 ->
-    #   libudev-dev : Depends: libudev1 (= 247.3-7+deb11u6) but ...u8 is to be installed
-    # Durchprobiert mit der VOLLEN Paketliste: 2025-02-01 und 2026-01-01 fallen an
-    #   libudev-dev : Depends: libudev1 (= ...deb11u6) but ...u8 is to be installed
-    # 2026-06-01 faellt an
-    #   libc6-dev : Depends: libc6 (= 2.31-13+deb11u13) but ...u14 is to be installed
-    # 2026-07-01, -08-01 und -09-01 gehen vollstaendig durch. Genommen: der aelteste
-    # davon, damit der Stand so nah wie moeglich am ausgelieferten Deck-Binary bleibt.
-    SNAP=20260701T000000Z
-    { echo "deb http://snapshot.debian.org/archive/debian/$SNAP/ bullseye main"
-      echo "deb http://snapshot.debian.org/archive/debian-security/$SNAP/ bullseye-security main"
-    } > /etc/apt/sources.list
-    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
-    echo 'Acquire::Retries "5";' >> /etc/apt/apt.conf.d/99snapshot
-    PKGS="build-essential ninja-build git ca-certificates wget libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols libasound2-dev libpulse-dev libdbus-1-dev libudev-dev libgl1-mesa-dev libegl1-mesa-dev"
-    apt-get update -qq
-    if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
-        # ⛔ DEBIAN 11 IST INS ARCHIV GEWANDERT (2026-09-04 gemessen). Der normale
-        # Spiegel liefert fuer bullseye noch einen Index, aber nicht mehr jedes darin
-        # genannte Paket:
-        #   E: Failed to fetch .../libglib2.0-bin_2.66.8-1+deb11u8_amd64.deb  404
-        # Zweimal hintereinander reproduziert, also kein Aussetzer. Das ist ein
-        # Infrastruktur-Fehler, kein Code-Fehler - aber er legt den Release-Build lahm,
-        # und der Linux-Build ist Pflicht (ein Paket nur fuer Windows hat schon einmal
-        # zwoelf Releases lang das Deck-Paket mitgerissen, Memory
-        # reai-v2-paket-plattform-kollateral).
-        # archive.debian.org haelt alle bullseye-Pakete dauerhaft vor; Check-Valid-Until
-        # muss dafuer aus, weil die Release-Datei abgelaufen ist. Eine eigene
-        # Security-Suite fuehrt das Archiv NICHT mehr (gemessen: "does not have
-        # a Release file") - die Updates sind ins Hauptarchiv gefaltet.
-        # ⛔ ERST DEN INDEX WEGWERFEN. Der 404 nennt eine Paketversion, die im Pool
-        # nicht mehr liegt (deb11u8) - das ist das Muster eines VERALTETEN Index im
-        # Basis-Image, den ein blosses "apt-get update" nicht ersetzt. Gemessen
-        # 2026-09-04: zweimal derselbe 404, danach mit geleerter Liste erneut versucht.
-        echo "   apt-Index unvollstaendig - Listen leeren und neu laden"
-        rm -rf /var/lib/apt/lists/*
-        apt-get clean
-        apt-get update -qq
-        if ! apt-get install -y -qq --no-install-recommends $PKGS >/dev/null; then
-            echo "   apt-Spiegel unvollstaendig - schalte auf archive.debian.org um"
-            # ⛔ NUR DAS HAUPTARCHIV. Eine eigene Security-Suite fuehrt
-            # archive.debian.org fuer bullseye unter KEINEM Namen mehr - beide
-            # geprueft, beide 'does not have a Release file':
-            #     debian-security bullseye-security
-            #     debian-security bullseye/updates
-            echo 'deb http://archive.debian.org/debian bullseye main' > /etc/apt/sources.list
-            echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99archive
-            apt-get update -qq
-            # Das Basis-Image traegt Security-Versionen, die das Archiv nicht kennt;
-            # ohne diese Freigaben endet es in 'held broken packages'. Der Container
-            # ist ein Wegwerf-Container, das Spiel-Binary wird davon nicht beruehrt
-            # (das glibc-Gate prueft es weiterhin einzeln).
-            apt-get install -y -qq --no-install-recommends --allow-downgrades --allow-change-held-packages $PKGS >/dev/null
-        fi
-    fi
-fi
-# cmake: Debian 11 (bullseye) liefert nur 3.18, re15_port verlangt >=3.21, und
-# bullseye-backports ist inzwischen archiviert (kein Release-File). Deshalb das
-# offizielle Kitware-Binary-Tarball (statisch, aendert die glibc-Anforderung
-# des SPIELS nicht — Gate check_glibc prueft weiterhin das Binary).
-if ! cmake --version 2>/dev/null | grep -qE ' 3\.(2[1-9]|[3-9][0-9])| [4-9]\.'; then
-    CMV=3.28.6
-    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMV}/cmake-${CMV}-linux-x86_64.tar.gz" -O /tmp/cmake.tgz
-    tar -xzf /tmp/cmake.tgz -C /opt
-    export PATH="/opt/cmake-${CMV}-linux-x86_64/bin:$PATH"
-fi
+# Dauer je Phase (die Frage "warum dauert der Linux-Bau ueber eine Stunde" war ohne
+# diese Zahlen nicht zu beantworten).
+T_START=$(date +%s); T_PHASE=$T_START; PHASEN=""
+phase() {
+    local now; now=$(date +%s)
+    echo "== Phase $1: $(( now - T_PHASE )) s  (gesamt $(( now - T_START )) s)"
+    PHASEN="${PHASEN}$1=$(( now - T_PHASE ))s "
+    T_PHASE=$now
+}
+die() { echo "!!! $*" >&2; exit 1; }
+
+# --- Kopierter Quellbaum: Rueckfall-Links auf das eingehaengte Repo -----------
+# shellcheck source=docker/rueckfall_links.sh
+source "$HERE/docker/rueckfall_links.sh"
+
+# Ein fehlgeschlagener Lauf darf kein altes Binary liegen lassen, das make_package.sh
+# klaglos einpackt (Memory reai-v2-releasebau-pipe-schluckt-fehler: v0.8.15 lag nach
+# einem roten ctest noch das Binary des VORIGEN Release in linux_out).
+OUT="$REPO/release/linux_out"
+mkdir -p "$OUT"
+rm -rf "$OUT/re15_pc" "$OUT/ldd.txt" "$OUT/glibc_max.txt" "$OUT/diag"
+
+# Bau-Abhaengigkeiten (apt aus snapshot.debian.org + cmake 3.28.6). Im vorgebauten
+# Image (release/docker/Dockerfile.linux) und in einer distrobox ist alles schon da.
+# shellcheck source=docker/linux_deps.sh
+source "$HERE/docker/linux_deps.sh"
+phase Pakete
 
 BUILD="$REPO/release/lbuild"
+[[ -L "$BUILD" ]] && die "$BUILD ist ein Link - der Bau muss im Container-Dateisystem laufen"
+mkdir -p "$BUILD"
+echo "   Dateisystem: Quelle $(stat -f -c %T "$REPO/re15_port"), Bau $(stat -f -c %T "$BUILD"), nproc $(nproc)"
 cmake -S "$REPO/re15_port" -B "$BUILD" -G Ninja \
       -DRE15_BUILD_PC=ON -DRE15_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release \
       -DRE15_ASSETS_PATH="$REPO/re15_port/shared_assets/PSX"
+phase Configure
 cmake --build "$BUILD" -j"$(nproc)"
+phase Compile+Link
 
 # ⛔ DIE SUMMENZEILE MUSS DA SEIN - "tail -3" hat sie am 2026-09-05 verschluckt.
 # Ein Container-Lauf meldete nur "The following tests FAILED: 144 - ..." und ich konnte
@@ -123,26 +81,52 @@ cmake --build "$BUILD" -j"$(nproc)"
 # die local_build.sh fuer den lokalen Bau schon abfaengt (CLAUDE.md). Deshalb wird die
 # Ausgabe vollstaendig gesichert, die Summenzeile ausgegeben UND ihr Vorhandensein
 # erzwungen.
-( cd "$BUILD" && ctest --timeout 600 --output-on-failure > ctest_out.txt 2>&1 ) || CT_RC=$?
+CTEST_JOBS="${RE15_CTEST_JOBS:-1}"
+( cd "$BUILD" && ctest --timeout 600 -j"$CTEST_JOBS" --output-on-failure > ctest_out.txt 2>&1 ) || CT_RC=$?
 CT_RC="${CT_RC:-0}"
+phase ctest
+# Diagnose IMMER nach draussen (auch bei Rot): Ausgabe, volles Protokoll, Fingerabdruck.
+DIAG="$OUT/diag"
+mkdir -p "$DIAG"
+cp "$BUILD/ctest_out.txt" "$DIAG/" 2>/dev/null || true
+cp "$BUILD/Testing/Temporary/LastTest.log" "$DIAG/" 2>/dev/null || true
+cp "$BUILD/.ninja_log" "$DIAG/ninja_log.txt" 2>/dev/null || true
+bash "$HERE/docker/ctest_fingerprint.sh" "$BUILD/Testing/Temporary/LastTest.log" "$DIAG/ctest_fingerprint" || true
 grep -aE "tests passed|Total Test time" "$BUILD/ctest_out.txt" || true
 grep -aA20 "The following tests FAILED" "$BUILD/ctest_out.txt" || true
+grep -aA20 "The following tests did not run" "$BUILD/ctest_out.txt" || true
 if ! grep -aqE "[0-9]+% tests passed, [0-9]+ tests failed out of [0-9]+" "$BUILD/ctest_out.txt"; then
     echo "!!! ctest lieferte KEINE Summenzeile - kein Gruen ohne Zaehlung" >&2
     tail -20 "$BUILD/ctest_out.txt" >&2
     exit 1
 fi
 if [[ "$CT_RC" != "0" ]]; then
+    # Das Binary eines roten Laufs kommt NICHT nach linux_out/re15_pc (make_package.sh
+    # liest nur das). Zur Diagnose/zum Vergleich liegt es unter eindeutigem Namen in
+    # diag/ — der Bau-Container ist nach dem Lauf weg, mit ihm das Bauverzeichnis.
+    cp "$BUILD/platform/pc/re15_pc" "$DIAG/re15_pc.UNGEPRUEFT-ctest-rot" 2>/dev/null || true
     echo "!!! ctest fehlgeschlagen (exit=$CT_RC)" >&2
     exit "$CT_RC"
 fi
+# Gelaufen = registriert: eine Suite, die weniger Tests AUSFUEHRT als konfiguriert
+# sind, ist kein Gruen. Untergrenze = die von local_build.sh (EINE Zahl im Repo).
+RAN="$(grep -aoE 'tests failed out of [0-9]+' "$BUILD/ctest_out.txt" | tail -1 | grep -oE '[0-9]+$' || true)"
+REG="$(cd "$BUILD" && ctest -N | grep -aoE 'Total Tests: [0-9]+' | grep -oE '[0-9]+$' || true)"
+[[ -n "$RAN" && -n "$REG" ]] || die "Testzahl nicht lesbar (gelaufen '$RAN', registriert '$REG')"
+[[ "$RAN" == "$REG" ]] || die "ctest lief $RAN Tests, registriert sind $REG"
+MIN="$(grep -oE 'RE15_MIN_TESTS:-[0-9]+' "$REPO/re15_port/tools/local_build.sh" 2>/dev/null | head -1 | grep -oE '[0-9]+$' || true)"
+if [[ -n "$MIN" ]]; then
+    [[ "$RAN" -ge "$MIN" ]] || die "nur $RAN Tests, local_build.sh verlangt >= $MIN - Suite kollabiert?"
+fi
+echo "   Tests: $RAN gelaufen = $REG registriert (Untergrenze ${MIN:-keine})"
 
-mkdir -p "$REPO/release/linux_out"
-cp "$BUILD/platform/pc/re15_pc" "$REPO/release/linux_out/"
-ldd    "$REPO/release/linux_out/re15_pc" > "$REPO/release/linux_out/ldd.txt" 2>&1 || true
-objdump -T "$REPO/release/linux_out/re15_pc" 2>/dev/null \
+cp "$BUILD/platform/pc/re15_pc" "$OUT/"
+ldd    "$OUT/re15_pc" > "$OUT/ldd.txt" 2>&1 || true
+objdump -T "$OUT/re15_pc" 2>/dev/null \
     | grep -oE 'GLIBC_[0-9.]+' | sort -uV | tail -1 \
-    > "$REPO/release/linux_out/glibc_max.txt" || true
+    > "$OUT/glibc_max.txt" || true
 
-echo "hoechste glibc-Anforderung: $(cat "$REPO/release/linux_out/glibc_max.txt" 2>/dev/null)"
+echo "hoechste glibc-Anforderung: $(cat "$OUT/glibc_max.txt" 2>/dev/null)"
+phase Ausgabe
+echo "== Phasen: ${PHASEN}gesamt=$(( $(date +%s) - T_START ))s"
 echo LINUX-BUILD-OK

@@ -9,7 +9,21 @@
 #   1. --distrobox NAME (oder $RE15_BUILD_BOX): vorhandene distrobox nutzen —
 #      das ist der Weg AUF DEM DECK selbst (SteamOS-Wurzel ist read-only, es
 #      gibt dort weder gcc noch cmake).
-#   2. docker/podman mit debian:11 (glibc 2.31 = Steam-Runtime-3.0-Stand).
+#   2. docker/podman mit dem vorgebauten Image re15-linux-build:deb11
+#      (release/docker/Dockerfile.linux = debian:11 + linux_deps.sh; glibc 2.31 =
+#      Steam-Runtime-3.0-Stand). --image NAME nimmt stattdessen NAME unveraendert
+#      (z.B. --image debian:11: dann installiert docker_linux_build.sh wie frueher).
+#
+# QUELLBAUM ALS KOPIE (2026-09-28, analysis/befunde_runde30/nachtrag-linux-bau.md):
+# Der Linux-Bau dauerte ueber eine Stunde, weil unter Docker Desktop JEDER
+# Dateizugriff auf den Windows-Bindmount ueber 9p geht (~10 ms je Operation,
+# gemessen). Standard ist deshalb: Quellbaum auf dem Host per tar packen, in den
+# Container streamen, dort unter /src auspacken (gleicher Pfad wie frueher, damit
+# die eingebauten Pfade im Binary gleich bleiben). Das Repo haengt nur noch als
+# Rueckfall unter /host; alles Nicht-Kopierte wird in docker_linux_build.sh als
+# Link /src/<pfad> -> /host/<pfad> angelegt — es fehlt keine Datei, die es im Repo
+# gibt. release/linux_out wird direkt eingehaengt (dort landet das Binary).
+#   --mount   alter Weg: Repo direkt als /src einhaengen (Vergleichslaeufe, Fehlersuche)
 #
 # Warum nicht einfach auf dem Host bauen: SteamOS 3.7 hat glibc 2.41; das
 # Binary liefe dann NUR auf gleich neuen Systemen. Siehe docker_linux_build.sh.
@@ -19,13 +33,15 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 BOX="${RE15_BUILD_BOX:-}"
-IMAGE="${RE15_BUILD_IMAGE:-debian:11}"
+IMAGE="${RE15_BUILD_IMAGE:-}"
+MODE=kopie
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --distrobox) BOX="$2"; shift 2 ;;
         --image)     IMAGE="$2"; shift 2 ;;
-        -h|--help)   sed -n '2,20p' "${BASH_SOURCE[0]}"; exit 0 ;;
+        --mount)     MODE=mount; shift ;;
+        -h|--help)   sed -n '2,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
         *) echo "unbekannte Option: $1" >&2; exit 2 ;;
     esac
 done
@@ -46,17 +62,45 @@ command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && RUNNER=docke
     exit 1
 }
 
-echo "== Bauen in $RUNNER ($IMAGE) =="
-# ⛔ GIT-BASH SCHREIBT UNIX-PFADE IN ARGUMENTEN UM. Aus `-w /src` wird dort
-# `C:/Program Files/Git/src`, und Docker bricht mit "working directory ... is invalid"
-# ab (gemessen 2026-09-01). MSYS_NO_PATHCONV=1 schaltet das ab; zusaetzlich braucht die
-# Volume-Quelle unter Windows einen Windows-Pfad. Auf Linux/Deck aendert beides nichts.
-MOUNT="$REPO"
-case "$(uname -s 2>/dev/null)" in
-    MINGW*|MSYS*|CYGWIN*)
-        command -v cygpath >/dev/null 2>&1 && MOUNT="$(cygpath -w "$REPO")"
-        export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'
-        ;;
-esac
-exec "$RUNNER" run --rm -v "${MOUNT}:/src" -w /src "$IMAGE" \
-    bash /src/release/docker_linux_build.sh
+# Image, Kopie, Rueckfall-Links, Pfadumschreibung unter Git-Bash: release/docker/kopie_lauf.sh
+# shellcheck source=docker/kopie_lauf.sh
+source "$HERE/docker/kopie_lauf.sh"
+
+if [[ -z "$IMAGE" ]]; then
+    # Das vorgebaute Image ersetzt die apt-/cmake-Installation, die frueher bei JEDEM
+    # Lauf neu lief (gemessen 81 s bis zur ersten cmake-Zeile).
+    IMAGE=re15-linux-build:deb11
+    bild_bauen "$HERE/docker/Dockerfile.linux" "$IMAGE"
+fi
+
+# KOPIERT wird, was Bau und Tests lesen. Grundlage: die Pfade in den Tests
+# (CMAKE_SOURCE_DIR/.. und relative Literale) plus ein Spurlauf mit strace -y, der
+# jedes open ueber einen Rueckfall-Link protokolliert hat (2026-09-28: 149 opens,
+# 128 Dateien, 2,3 MB — pri/STAGE1 und vier Dateien unter analysis/; Dossier
+# nachtrag-linux-bau.md). Alles andere erreicht der Container ueber die
+# Rueckfall-Links — langsam, aber vollstaendig. Ein Eintrag hier aendert also nur
+# die Geschwindigkeit, nie das Ergebnis.
+KOPIE=(
+    re15_port
+    synchro
+    pri
+    info/re2leon/PSX.EXE
+    info/re2leon/PL0/RDT
+    info/re2leon/COMMON/DOOR
+    info/re2leon/COMMON/DATA
+    info/re2leon/COMMON/BIN
+    info/Re1.5/PSX.EXE
+    analysis/kartensymbole/symbolkatalog.csv
+    analysis/befunde_2026-09-21/10f0-quader-silhouette/messung/pfad_10f0_aus_befundlog.txt
+    analysis/befunde_runde30/nutzer_marken/re15_card_nutzer_2026-09-27.mcr
+    analysis/befunde_runde30/sicherung_werkzeug/soll
+    release/docker_linux_build.sh
+    release/docker
+)
+# NIE verlinken: das Bauverzeichnis gehoert ins Container-Dateisystem, linux_out wird
+# eingehaengt.
+NIE=( release/lbuild release/linux_out )
+SKRIPT=release/docker_linux_build.sh
+AUSGABE=release/linux_out
+ENV_WEITER=( RE15_CTEST_JOBS )
+container_lauf
