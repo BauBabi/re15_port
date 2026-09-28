@@ -399,11 +399,16 @@ static const re15_map_mark_t s_map_marks[] = {
     {  1,  9,  177,  101, 0,  10, 255, 0 },
     {  1,  9,  177,  115, 4,  10, 255, 0 },
     {  1,  9,  186,  112, 4,  10, 255, 0 },
-    {  1, 255,  131,   77, 0,   0, 255, 0 },
-    {  1, 255,  134,  133, 2,   0, 255, 0 },
-    {  1, 255,  138,  133, 2,   0, 255, 0 },
-    {  1, 255,  139,   77, 0,   0, 255, 0 },
-    {  1, 255,  144,   80, 1,   0, 255, 0 },
+    /* ⛔ GESTRICHEN (Runde 30, karten-marken.md §4b / §5 Schritt 3a): EINE MARKE OHNE
+     * EIGENE ZONENZEILE HAT KEIN BESUCHT-BIT UND KEINEN TRAEGER - sie kann nur an einem
+     * FREMDEN haengen. Die fuenf Zeilen { 1, 255, 131, 77 / 134, 133 / 138, 133 /
+     * 139, 77 / 144, 80, .., zid 0 } gehoerten den Tueren von ROOM1230
+     * (ROOM1230.RDT @0x00AEE / @0x00B34 / @0x00B54 / @0x00B74 / @0x00BC4). ROOM1230
+     * fuehrt keine Zonenzeile; der Generator setzte dafuer die Rueckfall-Nummer 0 ein
+     * (`zid_of.get((b, zi), 0)`), und 0 ist ROOM1000 Zone 0. Gemessen: nur ROOM1000/z0
+     * betreten -> die Marken erschienen auf Blatt 1; alles AUSSER ROOM1000/z0 betreten
+     * -> unsichtbar. Im Stand des Nutzers vom 2026-09-27 standen drei davon frei im
+     * Panel. Der Riegel unit_map_marke_zid haelt die Regel fest. */
     {  2,  1,  109,   83, 1,   3,   5, 1 },
     {  2,  1,  163,   81, 3,   2,   3, 1 },
     /* Tuer B (1010-Sued <-> 1020): Position bleibt, Bindung wandert an die neue
@@ -443,8 +448,12 @@ static const re15_map_mark_t s_map_marks[] = {
      * Rect-0-Kunst y=71. */
     {  2,  0,  191,   69, 0,   6, 255, 0 },
     {  2,  4,  186,  152, 3,   4,   6, 1 },
-    {  2,  5,  180,   64, 3,  11, 255, 0 },
-    {  2,  5,  222,   75, 1,  11, 255, 0 },
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 2, 5, 180, 64, 3, 11 } und
+     * { 2, 5, 222, 75, 1, 11 } - die beiden Tueren von ROOM10B0 (ROOM10B0.RDT
+     * @0x016D2 / @0x016F2). Ihre Zone 11 fuehrt auf Blatt 2 rect 255 OHNE Schema,
+     * wird also gar nicht gezeichnet; das Rechteck 5, an dem sie hingen, gehoert
+     * seit Runde 10 ROOM1090 (Zonenzeile oben, zid 22). Die Marken erschienen damit
+     * auf der Kachel eines FREMDEN Raums. */
     {  2,  6,  187,  100, 4,  10, 255, 0 },
     {  2,  6,  196,   99, 4,  10, 255, 0 },
     {  2,  6,  197,   92, 1,  10,   6, 1 },  /* 2026-09-12: dieselbe physische
@@ -466,11 +475,44 @@ static const re15_map_mark_t s_map_marks[] = {
     {  3,  5,  188,  128, 3,  17,  17, 1 },
     {  3,  5,  188,  139, 3,  17,  17, 1 },
     {  3,  6,  188,  118, 3,  16,  17, 0 },
+    /* ⛔ NEU GESETZT (Runde 30, Nutzer 2026-09-27: "2F ist jetzt unten eine Tuer
+     * eingezeichnet auf der Karte die es nicht gibt"): die Tuer ROOM1090 (obere
+     * Ebene) -> ROOM1100. Tuer-Datensatz ROOM1090.RDT @0x0213A:
+     *   3b 01 02 31 06 00 | 10 e1 40 ac 68 10 7c 15 | 5c ae 00 00 a0 d7 | 00 04 | 00 10 05
+     *   Door_aot_set Slot 1, Band 6, Trigger x -7920 z -21440 w 4200 d 5500
+     *   (Mitte (-5820,-18690)), Ankunft (-20900,0,-10336), Ziel Stage 1 Raum 0x10
+     *   = ROOM1100, cut 5.
+     * Bisher stand sie als { 3, 255, 188, 180, 3, 0, 255, 0 }: ohne Rechteck, mit der
+     * Rueckfall-Nummer zid 0 (= ROOM1000/z0) - sie erschien frei im Panel, sobald
+     * ROOM1000 betreten war (gemessen am Abzug befund_1070_F259_marke1.png:
+     * (188,178..182), ringsum nur Panel).
+     * FELDER:
+     *   Blatt 3, rect 7   Gast-Zeile von ROOM1090 obere Ebene (Zonenzeile oben);
+     *                     Etagenzeile { 0x1090, 0, 6, 3, 7 }, Band 6 = Byte 4 des
+     *                     Datensatzes.
+     *   zid 22 / zid2 16  ROOM1090 / ROOM1100 (Ziel-Byte 0x10 im Datensatz).
+     *   y = 114, kind 2   die GEMEINSAME Wand: Suedwand von rect 7 (67+48-1) =
+     *                     Nordwand von rect 6 (s_map_rectfix: y 114). In DATA/MAP04.PIX
+     *                     tragen BEIDE Kacheln dort Index 4 auf x 197..221 (gemessen,
+     *                     Sonde probe_r30_karten-marken_rundlauf Abschnitt J).
+     *   auf_partner 1     der Punkt liegt auf gemalter Flaeche von rect 6 (Index 4).
+     *   x = 199           ⛔ PROJEKTION, KEINE ORIGINAL-ZEILE: die Trigger-Mitte
+     *                     (-5820,-18690) durch re15_map_zone_marker auf rect 7 - wie
+     *                     bei JEDER vom Generator erzeugten Marke. ROOM1090
+     *                     (@0x800768F8) und ROOM1100 (@0x80076930) tragen im Original
+     *                     den Massstabs-Stub 00 00 00 00 01 00 01 00, die Abbildung
+     *                     ist deshalb die Bbox-Streckung des Ports. Gegenprobe von der
+     *                     anderen Seite: der Ankunftspunkt in ROOM1100 projiziert auf
+     *                     (203,120) - 4 Punkte daneben; beide x liegen in der
+     *                     Wandspanne 197..221. */
+    {  3,  7,  199,  114, 2,  22,  16, 1 },
     {  3,  9,  156,   83, 1,  15,  13, 1 },
-    {  3, 255,  188,  180, 3,   0, 255, 0 },
     {  4,  1,  136,  152, 1,   7,  18, 1 },
     {  4,  1,  144,  147, 4,   7, 255, 0 },
-    {  4,  1,  148,  137, 0,  22, 255, 0 },
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 4, 1, 148, 137, 0, 22 } - die Tuer
+     * ROOM1160 -> ROOM1180 (ROOM1160.RDT @0x007C6). ROOM1160 fuehrt keine
+     * Zonenzeile; die Nummer 22 wurde in Runde 10 an ROOM1090 vergeben, die Marke
+     * hing seitdem am Besucht-Bit von ROOM1090 und am Rechteck des Treppenhauses. */
     {  4,  3,  159,   99, 4,  24, 255, 0 },
     {  4,  3,  168,  106, 5,  24, 255, 0 },
     {  4,  4,  145,   84, 3,  19,  21, 1 },
@@ -503,8 +545,12 @@ static const re15_map_mark_t s_map_marks[] = {
     {  6,  3,  107,  140, 3,  45, 255, 0 },
     {  6,  3,  164,  140, 1,  45, 255, 0 },
     {  6,  6,  193,  156, 1,  48, 255, 0 },
-    {  6, 255,  166,  104, 2,   0,  39, 0 },
-    {  6, 255,  185,  110, 2,   0, 255, 0 },
+    /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): { 6, 255, 166, 104, 2, 0, 39 } und
+     * { 6, 255, 185, 110, 2, 0 } - die Tueren von ROOM2020 (ROOM2020.RDT @0x00866 /
+     * @0x0082A). ROOM2020 fuehrt keine Zonenzeile, die Marken trugen die
+     * Rueckfall-Nummer 0 = ROOM1000/z0 und standen damit im Stand des Nutzers auf
+     * Blatt 6, von dessen Raeumen er keinen betreten hatte (seine 20 Besucht-Bits
+     * nennen nur Raeume der Blaetter 0..5). */
     {  7,  0,  128,  117, 1,  49,  50, 1 },
     {  7,  1,  121,  192, 3,  50,  64, 0 },
     {  7,  1,  135,  188, 4,  50, 255, 0 },
@@ -611,7 +657,15 @@ typedef struct { unsigned char page, rect; short x0, y0, x1, y1;
 static const re15_map_wall_t s_map_walls[] = {
     {  3,  5,  188,  122,  188,  144,  17 },
     {  3,  5,  189,  133,  212,  133,  17 },
-    {  5,  1,  148,  155,  182,  155,  23 },
+    /* ⛔ GESTRICHEN (Runde 30, Nutzer 2026-09-27: "Roof ist irgendwie die Wand unten
+     * blau"): { 5, 1, 148, 155, 182, 155, 23 } war KEINE Innenwand. Alle 35 Punkte
+     * der Linie liegen auf Kachel-Index 4 - der vom Kuenstler GEMALTEN Suedwand von
+     * Blatt 5 rect 1 (Rechteck @0x800764C8 = (148,101) 48x56 uv(0,32); Kachelzeile
+     * v=86 in DATA/MAP06.PIX ab @Datei 0x2B00: 35 x Index 4), die Zeile darunter
+     * (v=87 ab @0x2B80) traegt Index 0 = dort liegt kein Raum. Der Tabellenkopf
+     * verlangt "nur wo BEIDSEITS Raum liegt". tools/gen_map_zones.py verwirft eine
+     * solche Linie seitdem (Regel "liegt zu 100 % auf Index 4"); der Riegel
+     * unit_map_innenwand prueft es fuer jede Zeile. Dossier karten-marken.md §4a. */
     {  8,  2,  127,   78,  131,   78,  70 },
     {  8,  2,  134,   78,  136,   78,  70 },
     {  9,  7,  213,  107,  221,  107,  84 },

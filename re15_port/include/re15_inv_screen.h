@@ -184,6 +184,14 @@ enum {
 /* RE1.5s eigener Eintrag 1 der Kartenzeile (TEX.TIM Zeile 21) — Quelle von
  * RE15_KARTE_BESUCHT, vom Riegel nachgelesen. */
 #define RE15_KARTE_TEX_OFF_BESUCHT   0x0556
+/* Eintrag 4 derselben Zeile 21 = die WANDLINIE der Kartenkunst, deckend (STP 0).
+ * re15_port/shared_assets/PSX/DATA/TEX.TIM @Datei 0x055C = 0x5AD6 -> RGB (176,176,176).
+ * Zustandsfrei: in RE2 ist Eintrag 4 in allen drei Zustandszeilen bitgleich
+ * (ST0.TIM @0x1093C / @0x1099C / @0x109BC = 0x4631). Quelle der Farbe von
+ * Schema-Rand UND Innenwand (re2_ton_kante in re15_inv_screen.c); der Riegel
+ * unit_karte_besitz liest den Wert aus der Datei nach. Runde 30, karten-marken.md §5. */
+#define RE15_KARTE_WAND          ((uint16_t)0x5AD6u)  /* RE1.5 TEX.TIM 0x055C = b0b0b0, STP 0 */
+#define RE15_KARTE_TEX_OFF_WAND  0x055C
 
 typedef struct {
     uint8_t kind;         /* RE15_INV_OP_* */

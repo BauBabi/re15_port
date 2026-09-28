@@ -81,8 +81,43 @@ int re15_savedata_validate(re15_savedata_t *sd)
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
 
-    if (sd->version >= 7) {
+    if (sd->version >= 9) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
+    }
+    if (sd->version == 7 || sd->version == 8) {
+        /* ---- HEBUNG v7/v8 -> v9 (Runde 30, SPEICHER-VERTRAG) ------------------------
+         * v7 und v8 haben dasselbe Layout wie v9 OHNE die beiden neuen Felder: ihr
+         * Pruefwort sitzt dort, wo jetzt visited_floor beginnt (Offset 900), und deckt
+         * [0, 900). Muster: der v5->v6-Zweig in v6_validate_and_lift oben. Der
+         * uebergebene Puffer ist v9-gross; was ein Alt-Block hinter seinem Pruefwort
+         * traegt, wird ueberschrieben, nie gelesen.
+         * BEIDE Felder werden in DIESEM einen Schritt gehoben. */
+        size_t off = offsetof(re15_savedata_t, visited_floor);
+        uint32_t old_ck, sum = 0;
+        const uint8_t *p = (const uint8_t *)sd;
+        memcpy(&old_ck, p + off, sizeof old_ck);
+        for (size_t i = 0; i < off; i++) sum += p[i];
+        if (sum != old_ck) return -1;
+        if (sd->version == 7) {
+            /* v7: das Besucht-Bit war die laufende Zonen-Nummer des Generators und
+             * bedeutet heute etwas anderes (Kommentar an RE15_SAVE_VERSION und in
+             * re15_savedata_restore). Lieber eine leere Karte als eine falsche. */
+            memset(sd->visited, 0, sizeof sd->visited);
+        }
+        /* visited_floor: aus den Zonen-Bits abgeleitet. Einbaendige Orte exakt
+         * (Etagen-Bit := Zonen-Bit); fuer besuchte MEHRBAENDIGE Orte gilt die
+         * HAUPT-Zeile als begangen — ⛔ PORT-ENTSCHEIDUNG NUR FUER DIESE HEBUNG,
+         * keine Original-Adresse: der Nutzer meldet genau den Verlust bereits
+         * aufgedeckter Raeume (2026-09-27), das Zonen-Bit belegt den Besuch, nur die
+         * Etage ist unbekannt. Neue Staende (v9) sind verlustfrei. Volle Begruendung
+         * an re15_map_visited_floor_heben in re15_map_zones.c. */
+        re15_map_visited_floor_heben(sd->visited, sd->visited_floor);
+        /* files: ein Alt-Stand hat keine FILE-Liste -> alle 24 Plaetze leer (0xFF;
+         * RE2 24 Plaetze, `sltiu v0,a1,0x18` @0x80069308). */
+        memset(sd->files, 0xFF, sizeof sd->files);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
     }
     if (sd->version >= 2 && sd->version <= 6) {
         /* Alt-Stand: im v6-Layout pruefen/heben, dann ins v7-Layout uebernehmen.
@@ -117,7 +152,15 @@ int re15_savedata_validate(re15_savedata_t *sd)
          * Ring-Index) — der Inhalt bleibt damit erhalten; 32..63 sind leer. */
         memcpy(sd->box,     old.box,     sizeof old.box);
         memcpy(sd->wounds,  old.wounds,  sizeof sd->wounds);
-        memcpy(sd->visited, old.visited, sizeof sd->visited);
+        /* ⛔ old.visited WIRD NICHT UEBERNOMMEN (Runde 30, Nebenbefund D3). Bis hier
+         * stand `memcpy(sd->visited, old.visited, ...)`: der Block wurde zugleich auf
+         * die aktuelle Version gestempelt, die Versionsabfrage in restore ("Bits aus
+         * v<8 verwerfen") griff deshalb fuer v2..v6 NIE — nur v7 wurde wirklich
+         * verworfen. Gemessen: ein v6-Stand mit den Bits 15, 16, 18 (alte Bedeutung =
+         * laufende Zonen-Nummer) brachte 3 Bits auf die Karte, Soll 0. sd ist oben
+         * genullt; visited und visited_floor bleiben leer. */
+        /* v9: ein Alt-Stand hat keine FILE-Liste -> 24 x 0xFF (leer). */
+        memset(sd->files, 0xFF, sizeof sd->files);
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
     }
@@ -169,6 +212,13 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
                                           * im Original-Save-memcpy @0x800261c4-d8 enthalten) */
 
     re15_map_visited_export(out->visited);   /* v6 RE2-Kartensystem (re15_map_visited.c) */
+    /* v9: die Etagen-Bits der Karte. Ohne sie verlor jeder Ort mit Etagenzeile nach dem
+     * Laden seine Zeichnung (Nutzer 2026-09-27; gemessen 11 von 102 Orten, 25 Bits).
+     * Grundsatz aus RE2: was der Kartenzeichner liest, steht im gespeicherten Block
+     * (MEM_CARD.BIN @Datei 0x13D0, `addiu a2,zero,1944` @0x801C0DFC). */
+    re15_map_visited_floor_export(out->visited_floor);
+    /* R30-VERTRAG: fremdes Feld */
+    memset(out->files, 0xFF, sizeof out->files);
 
     out->checksum = re15_savedata_checksum(out);
 }
@@ -255,13 +305,17 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
      * Seit v8 haengt das Bit an re15_room_ids[] (2 Bits je Basisraum, 240 von 256), also
      * an der Raumliste des Asset-Baums statt an einer erzeugten Nummer.
      * Lieber eine leere Karte als eine falsche: aeltere Staende starten ohne Besuche. */
-    if (in->version >= 8) {
-        re15_map_visited_import(in->visited);
-    } else {
-        uint8_t leer[32];
-        memset(leer, 0, sizeof leer);
-        re15_map_visited_import(leer);
-    }
+    /* ⛔ SEIT v9 (Runde 30) ENTFAELLT DIE VERSIONSABFRAGE HIER: re15_savedata_validate
+     * oben hat JEDEN Alt-Stand schon auf v9 gehoben und dabei die Bedeutung bereinigt
+     * (v2..v7: visited geleert; v7/v8: visited_floor aus den Zonen-Bits abgeleitet).
+     * Die alte Abfrage `in->version >= 8` griff fuer v2..v6 ohnehin nie, weil validate
+     * diese Staende vorher auf die aktuelle Version stempelte (Nebenbefund D3).
+     * Reihenfolge: re15_map_visited_import loescht die Etagen-Bits des VORIGEN Laufs
+     * (Nebenbefund D2), danach kommen die des geladenen Stands. */
+    re15_map_visited_import(in->visited);
+    re15_map_visited_floor_import(in->visited_floor);
+    /* R30-VERTRAG: fremdes Feld */
+    /* in->files wird hier NICHT gelesen (Thema irons-diary-dokument). */
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

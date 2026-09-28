@@ -100,6 +100,23 @@ static int haengt_an(int page, int mx, int my, const unsigned char px[256][256])
     return 0;
 }
 
+/* Liegt der Punkt (mit 1 Punkt Saum) an einer GEZEICHNETEN Schema-Zeichnung des Blatts?
+ * Gezeichnet wird ein Schema, sobald seine Zone besucht ist (re15_inv_screen.c,
+ * Schema-Durchgang). Traeger fuer Marken ohne Rechteck (rect 255). */
+static int haengt_am_schema(int page, int mx, int my)
+{
+    int zi, nz = re15_map_zone_count();
+    for (zi = 0; zi < nz; zi++) {
+        const re15_map_zone_t *zn = re15_map_zone_by_index(zi);
+        int sx, sy, sw, sh, erste, n;
+        if (!zn || zn->page != page) continue;
+        if (!re15_map_zone_synth(zn, &sx, &sy, &sw, &sh, &erste, &n)) continue;
+        if (!(zn->etage ? re15_map_zone_etage_besucht(zn) : re15_map_zone_visited(zn))) continue;
+        if (mx >= sx - 1 && mx <= sx + sw && my >= sy - 1 && my <= sy + sh) return 1;
+    }
+    return 0;
+}
+
 /* ⛔ DIE HARTE INVARIANTE - und warum sie NICHT "das eigene Rechteck muss
  * gezeichnet sein" lautet.
  *
@@ -124,7 +141,20 @@ static int fremdes_rect(const char *name, const unsigned *raeume, int n,
     for (i = 0; i < re15_map_mark_count(); i++) {
         int p, r, mx, my, kind, zi, nz, eigen = 0;
         if (!re15_map_mark_get(i, &p, &r, &mx, &my, &kind)) continue;
-        if (r == 255) continue;
+        /* ⛔ rect 255 NICHT MEHR UEBERSPRINGEN (Runde 30, Nutzer 2026-09-27: "2F ist
+         * jetzt unten eine Tuer eingezeichnet auf der Karte die es nicht gibt").
+         * Hier stand `if (r == 255) continue;` - und genau durch diese Luecke fiel die
+         * gemeldete Marke: { 3, 255, 188, 180 } hatte KEIN Rechteck und stand frei im
+         * Panel. Eine Marke ohne Rechteck hat nur dann einen Traeger, wenn sie an einer
+         * gezeichneten SCHEMA-Zeichnung ihres Blatts liegt. */
+        if (r == 255) {
+            if (!haengt_am_schema(p, mx, my)) {
+                schlecht++;
+                printf("     Marke %3d Blatt %2d rect 255 (%3d,%3d): kein Rechteck UND an "
+                       "keiner gezeichneten Schema-Zeichnung\n", i, p, mx, my);
+            }
+            continue;
+        }
         if (p >= 0 && p <= 12 && haengt_an(p, mx, my, px[p])) continue;  /* liegt auf Kunst */
         nz = re15_map_zone_count();
         for (zi = 0; zi < nz && !eigen; zi++) {
@@ -152,7 +182,17 @@ static int pruefe(const char *name, const unsigned *raeume, int n)
     for (i = 0; i < re15_map_mark_count(); i++) {
         int p, r, mx, my, kind;
         if (!re15_map_mark_get(i, &p, &r, &mx, &my, &kind)) continue;  /* unsichtbar */
-        if (r == 255) continue;      /* Schema-Zeichnung, kein gemaltes Rechteck */
+        /* rect 255 = kein gemaltes Rechteck: der Traeger ist dann die Schema-Zeichnung
+         * (Runde 30 - frueher wurden diese Marken hier uebersprungen). */
+        if (r == 255) {
+            sichtbar++;
+            if (!haengt_am_schema(p, mx, my)) {
+                frei++;
+                printf("     Marke %3d Blatt %2d rect 255 (%3d,%3d) haengt an nichts\n",
+                       i, p, mx, my);
+            }
+            continue;
+        }
         sichtbar++;
         if (p < 0 || p > 12 || !haengt_an(p, mx, my, g_px[p])) {
             frei++;

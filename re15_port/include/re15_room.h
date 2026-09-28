@@ -28,7 +28,24 @@ void re15_map_visited_reset(void);
 void re15_map_visited_mark(unsigned room_id);
 int  re15_map_visited(unsigned room_id);
 void re15_map_visited_export(uint8_t out[32]);
+/* ⛔ Loescht die Etagen-Bits IMMER mit (Runde 30): wer einen Stand laedt, ruft danach
+ * re15_map_visited_floor_import mit dessen Etagen-Bits. */
 void re15_map_visited_import(const uint8_t in[32]);
+/* ETAGEN-BITS (Save v9, Runde 30): 1 Bit je begangener Etage eines mehrblaettrigen
+ * Ortes, geschluesselt auf (Raum, Zone, Band, Blatt) — Tabelle s_etage_bit in
+ * engine/src/re15_map_zones.c, nur anhaengen. */
+void re15_map_visited_floor_export(uint8_t out[16]);
+void re15_map_visited_floor_import(const uint8_t in[16]);
+/* Hebung eines Alt-Stands (v8 ohne Etagen-Bits): leitet die Etagen-Bits aus den
+ * Zonen-Bits ab. Einbaendige Orte exakt; mehrbaendige: die HAUPT-Zeile gilt als
+ * begangen (Port-Entscheidung NUR fuer die Hebung, s. re15_map_zones.c). */
+void re15_map_visited_floor_heben(const uint8_t visited[32], uint8_t out[16]);
+/* Fuer Riegel: Bit der Zeile j von s_map_floors (-1 = keins), Zeilenzahl der
+ * Bit-Tabelle, Kapazitaet des Feldes, Zeilenzahl von s_map_floors. */
+int  re15_map_floor_bit_test(int floor_zeile);
+int  re15_map_floor_bit_count(void);
+int  re15_map_floor_bit_kapazitaet(void);
+int  re15_map_floor_count(void);
 
 /* Zustand eines Karten-Rects (Seite + Rect-Index der EXE-Rect-Liste @0x80076840):
  * staerkster Zustand aller dem Rect zugeordneten Raeume. */
