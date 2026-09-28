@@ -47,25 +47,8 @@ phase() {
 die() { echo "!!! $*" >&2; exit 1; }
 
 # --- Kopierter Quellbaum: Rueckfall-Links auf das eingehaengte Repo -----------
-# Die Liste schreibt build_linux_deck.sh (NUL-getrennt, Pfade relativ zum Repo):
-# alles auf oberster Ebene, was nicht kopiert wurde, die Geschwister teilweise
-# kopierter Verzeichnisse und alle git-ignorierten Eintraege in kopierten
-# Verzeichnissen.
-STAGE_LIST="$REPO/.re15_stage/host_links.lst"
-if [[ -f "$STAGE_LIST" ]]; then
-    [[ -d /host ]] || die "Kopie-Modus ohne /host-Mount - Rueckfall-Links unmoeglich"
-    n_links=0
-    while IFS= read -r -d '' p; do
-        [[ -n "$p" ]] || continue
-        [[ -e "$REPO/$p" || -L "$REPO/$p" ]] && continue
-        mkdir -p "$REPO/$(dirname -- "$p")"
-        ln -s "/host/$p" "$REPO/$p"
-        n_links=$(( n_links + 1 ))
-    done < "$STAGE_LIST"
-    rm -rf "$REPO/.re15_stage"
-    echo "   Quellbaum: Container-Kopie, $n_links Rueckfall-Links nach /host"
-    phase Rueckfall-Links
-fi
+# shellcheck source=docker/rueckfall_links.sh
+source "$HERE/docker/rueckfall_links.sh"
 
 # Ein fehlgeschlagener Lauf darf kein altes Binary liegen lassen, das make_package.sh
 # klaglos einpackt (Memory reai-v2-releasebau-pipe-schluckt-fehler: v0.8.15 lag nach
