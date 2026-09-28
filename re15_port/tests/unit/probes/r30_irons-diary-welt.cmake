@@ -40,6 +40,11 @@ target_include_directories(probe_r30_irons_tisch_karte PRIVATE ${CMAKE_SOURCE_DI
 
 # AUSWERTER (kein add_test) fuer den Bild-Riegel: vergleicht vier Framedumps.
 add_executable(probe_r30_irons_tisch_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r30_irons_tisch_bild.c)
+# floor/hypot aus <math.h>: unter Linux liegt libm NICHT implizit dabei (mingw schon). Gemessen
+# im Linux-Container-Bau von Runde 30: "undefined reference to floor/hypot" beim Linken.
+if(NOT WIN32)
+    target_link_libraries(probe_r30_irons_tisch_bild PRIVATE m)
+endif()
 
 if(TARGET re15_pc)
     add_test(NAME integration_r30_irons_tisch_laden
