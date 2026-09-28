@@ -124,6 +124,14 @@ int re15_map_zone_etage_besucht(const re15_map_zone_t *zn);
 
 const re15_map_zone_t *re15_map_zone_at(unsigned room, int32_t x, int32_t z);
 const re15_map_zone_t *re15_map_zone_current(void);
+/* KARTENHINWEIS (RE2-ERGAENZUNG, Runde 30): solange an, kennt die Karte KEINEN aktuellen
+ * Raum — re15_map_zone_current liefert NULL, und weder re15_map_rect_state noch die
+ * Teilbereiche melden RE15_MAP_RECT_CURRENT (der Raum des Spielers faellt auf seinen
+ * Besucht-Zustand zurueck). RE2s Hinweis-Zeichner FUN_8006F1C4 hat genau EINEN
+ * Indexvergleich, `bne s4,a2` @0x8006F4E8 gegen den ZIELRAUM; den Vergleich gegen den
+ * aktuellen Raum (`bne s2,a3` @0x8006E640 im normalen Zeichner) hat er nicht. Nur der
+ * Kartenzeichner schaltet ihn, fuer die Dauer eines Hinweis-Bildes. */
+void re15_map_ohne_aktuell(int an);
 void re15_map_zone_update(unsigned room, int32_t x, int32_t z);  /* je Frame */
 int  re15_map_zone_visited(const re15_map_zone_t *zn);
 int  re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,

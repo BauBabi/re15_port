@@ -1225,8 +1225,7 @@ static int load_re2_hint_se_pc(void)
     int sz = 0;
     uint8_t *vbs = re15_pc_read_re2("HINTSE.VBS", &sz);
     if (!vbs) {
-        fprintf(stderr, "[hintse] shared_assets/RE2/HINTSE.VBS fehlt -> Kartenhinweis stumm
-");
+        fprintf(stderr, "[hintse] shared_assets/RE2/HINTSE.VBS fehlt -> Kartenhinweis stumm\n");
         return 0;
     }
     if ((unsigned)sz < rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }

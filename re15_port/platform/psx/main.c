@@ -28,6 +28,8 @@
 #include "re15_collision.h"  /* player vs room SCA collision */
 #include "re15_stair.h"      /* stair traversal (action-triggered band transition) */
 #include "re15_game_step.h"  /* SHARED per-frame interpreter step (PSX+PC) */
+#include "re15_map_hint.h"   /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
+#include <psxgpu.h>          /* VSync(-1) = gezaehlte VBlanks seit Start */
 #include "re15_audio.h"
 #include "re15_emd.h"
 #include "re15_camera.h"
@@ -541,6 +543,14 @@ int main(int argc, const char **argv)
             gctx.active_cut  = cam_active_cut;
             gctx.pad_current = (uint16_t)g_engine.pad_current;
             gctx.pad_pressed = (uint16_t)g_engine.pad_pressed;
+            /* WANDUHR (Kartenhinweis, map_hint_common.c): auf der PSX IST der VBlank die
+             * Uhr — die Zahl der VBlanks wird in Mikrosekunden der NTSC-Rate umgerechnet
+             * (RE15_HINT_VBLANK_MILLIHZ), der Blinker rechnet exakt zurueck.
+             * ⛔ UNGEBAUT (PSX-Bauluecke, kein PSn00bSDK auf dieser Maschine). */
+            /* aufgerundet, damit floor(us * 59826 / 10^9) wieder genau die VBlank-Zahl gibt */
+            re15_host_clock_set_us(((uint64_t)(uint32_t)VSync(-1) * 1000000000ull
+                                    + (uint64_t)RE15_HINT_VBLANK_MILLIHZ - 1u)
+                                   / (uint64_t)RE15_HINT_VBLANK_MILLIHZ);
             re15_game_step(&gctx);
         }
         /* "Discard it?" — an DERSELBEN Stelle wie im PC-Port: NACH re15_game_step, mit den

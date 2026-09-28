@@ -31,6 +31,7 @@
 #include "re15_math.h"          /* re15_squareroot0 — der Auto-Look-Scan vergleicht die WURZEL */
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 #include "re15_sicherung.h"
+#include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
@@ -1174,6 +1175,18 @@ void re15_game_step(const re15_game_ctx_t *c)
      * sobald der Spieler wieder frei ist — genau die Bauart des Originals.
      * in_cinematic ist dieselbe Bedingung, die der AOT-Scan schon benutzt
      * (aot_common.c:821: player_mode == 2 oder laufender Letterbox-Countdown). */
+    /* RE2-ERGAENZUNG KARTENHINWEIS (engine/src/map_hint_common.c, Runde 30 Thema B):
+     * hat das Skript am Evt_end von ROOM1150 sub08 den Hinweis angefordert, geht der
+     * Statusschirm direkt auf die Karte auf. Bewusst VOR dem START-Poll und NICHT an
+     * s_inv_open_allowed / RE15_PAUSE_PAD gehaengt: RE2s Opcode 0x84 setzt die
+     * Anforderungs-Phase selbst (`sb v0,[0x800DF348]` @0x800591E8, v0 = 1), und die
+     * Spielschleife ueberspringt damit den Tasten-Oeffnen-Zweig (`bne v0,zero,0x80026540`
+     * @0x80026404) samt seinem Riegel. Verbraucht wird die Anforderung erst, wenn das
+     * Menue sie angenommen hat (s_stage == 0 && !s_alive); sonst bleibt sie stehen
+     * (RE2: Bit 0x8000 bleibt bis zum Start des Status-Tasks, @0x80025BA8-E0). */
+    if (re15_map_hint_pending() >= 0 &&
+        re15_menu_request_map_hint(re15_map_hint_pending()))
+        re15_map_hint_take();
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD)) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
         s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&

@@ -536,6 +536,10 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
  * besucht schlaegt unbesucht. Mehrere Zonen duerfen sich ein Rechteck teilen. */
 int re15_map_player_band(void);
 
+/* KARTENHINWEIS: "kein aktueller Raum" (Beleg in re15_room.h bei re15_map_ohne_aktuell). */
+static int s_ohne_aktuell = 0;
+void re15_map_ohne_aktuell(int an) { s_ohne_aktuell = an ? 1 : 0; }
+
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
 {
     extern unsigned g_current_room_id;
@@ -549,7 +553,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
      * wurde der Marker gezeichnet, sein Rechteck aber als unbesucht behandelt und
      * gar nicht gemalt: der Marker schwebte im Schwarzen. Jetzt benutzen beide
      * denselben Weg. */
-    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+    if (!cur && !s_ohne_aktuell) cur = re15_map_zone_at(g_current_room_id,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (int i = 0; i < ZONE_COUNT; i++) {
@@ -623,7 +627,7 @@ void re15_map_zone_update(unsigned room, int32_t x, int32_t z)
     s_cur_zone = re15_map_zone_at(room, x, z);
     if (s_cur_zone) re15_map_visited_mark_at(room, x, z);
 }
-const re15_map_zone_t *re15_map_zone_current(void) { return s_cur_zone; }
+const re15_map_zone_t *re15_map_zone_current(void) { return s_ohne_aktuell ? NULL : s_cur_zone; }
 
 /* Alt-Schnittstellen, die noch auf Raum-Ebene fragen (Tests/Save-Restore). */
 void re15_map_visited_mark(unsigned room_id)
@@ -686,7 +690,7 @@ static int teil_zustand(const re15_map_teil_t *t)
     extern unsigned g_current_room_id;
     const re15_map_zone_t *cur = re15_map_zone_current();
     int i, besucht = 0;
-    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+    if (!cur && !s_ohne_aktuell) cur = re15_map_zone_at(g_current_room_id,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (i = 0; i < ZONE_COUNT; i++) {

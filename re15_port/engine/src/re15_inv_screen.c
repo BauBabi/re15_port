@@ -1664,7 +1664,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     return e.n;
 }
 
-int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
+static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
 {
     emit_t e; int i, clut_idx, count; uint32_t tmpl;
     int x, y, w, h, u, v;
@@ -1953,7 +1953,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * (@0x800475f8-61c). Die nicht gesetzten Texel des 8x8-Quads bleiben
      * transparent (CLUT-Index 0), der Marker malt also keinen Kasten ueber die
      * Symbole — nur seine eigenen Pixel. */
-    if (st->substate == 1 && st->item_state == 1) {
+    /* KARTENHINWEIS: kein Spielermarker — RE2s Hinweis-Zeichner liest die Spielerlage
+     * nicht (nur der normale Zeichner @0x8006E1E4/@0x8006E1F8; Dossier 3.5 d). */
+    if (st->substate == 1 && st->item_state == 1 && !st->hint_aktiv) {
         /* marker: POLY_FT4 code 0x2e (@0x80047130-34), 8x8 around the per-frame centre
          * (+-4: builder @0x8004715c-71f0, per-frame rewrite @0x80047554-75c4), uv
          * (224,128)-(232,136) with its own tpage 0x1b = the TEX page (sh 0x1b
@@ -2347,6 +2349,31 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
                 int clut_kachel = RE15_INV_CLUT_TEXROW21;   /* RE2: Zeile = Zustand */
+                /* ---- KARTENHINWEIS: DIE ZIELKACHEL (RE2-ERGAENZUNG, Runde 30) --------
+                 * RE2s Hinweis-Zeichner FUN_8006F1C4 zeichnet den Zielraum IMMER — beide
+                 * Zweige enden im Zeichnen (@0x8006F604/@0x8006F608 GetClut + Sprite),
+                 * ohne Besucht-Bit und ohne Kartenbesitz zu fragen:
+                 *   bne s4,a2,0x8006f518 @0x8006F4E8   nur der Zielraum (Index aus
+                 *                                      FUN_8006EAE8 @0x8006F2C8)
+                 *   Richtung [0x800D5C19] == 0 -> j 0x8006f604 / addiu s2,s2,1
+                 *       @0x8006F510-14: 501 + 1 = CLUT-Y 502 = RE15_INV_CLUT_MAP_AKTUELL
+                 *   Richtung != 0 -> j 0x8006f5d8 @0x8006F508, addiu s2,zero,498
+                 *       @0x8006F5DC = CLUT-Y 498 = RE15_INV_CLUT_MAP_UNBESUCHT
+                 * (die Varianten 503/507 haengen an der Bank 0x800D4920, die der Port
+                 * nicht fuehrt). Im ERSTEN Durchgang, damit kein Nachbar sie ueberdeckt
+                 * (frueher eingetragen = oben). Die normale Regel darunter sieht die
+                 * Kachel dann nicht mehr — RE2 zeichnet sie auch nur ueber diesen Zweig. */
+                if (st->hint_aktiv && st->map_page == st->hint_page && i == st->hint_rect) {
+                    if (durchgang_r != 0) continue;
+                    if (!re15_map_rect_geometry((unsigned)st->map_page, (unsigned)i,
+                                                &rx, &ry, &rw, &rh)) continue;
+                    if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
+                        continue;
+                    sprt(&e, RE15_INV_PAGE_MAP4,
+                         st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                         rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
+                    continue;
+                }
                 /* Ein Rechteck mit TEILBEREICHEN traegt gemischte Zustaende - es
                  * muss deshalb in BEIDEN Durchgaengen drankommen, damit der rote Teil
                  * frueh (= oben) und die gruenen spaeter eingetragen werden. Das Gate
@@ -2812,4 +2839,20 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      col * 40, 12 + row * 40, 40, 40, 0, 213, 128, 128, 128, 1);
     }
     return e.n;
+}
+
+/* KARTENHINWEIS (RE2-ERGAENZUNG, Runde 30 Thema B): fuer die Dauer eines Hinweis-Bildes
+ * kennt die Karte keinen aktuellen Raum (re15_map_ohne_aktuell, Beleg in re15_room.h:
+ * RE2s Hinweis-Zeichner vergleicht nur gegen den Zielraum, bne s4,a2 @0x8006F4E8).
+ * Alle Zustandsabfragen des Zeichners — Kacheln, Teilbereiche, Waende, Marken, Schema —
+ * sehen den Raum des Spielers damit als BESUCHT, nicht als AKTUELL. Ausserhalb des
+ * Hinweises ist die Liste bitgleich zu vorher (hint_aktiv == 0 -> build_status direkt). */
+int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
+{
+    int n;
+    if (!st->hint_aktiv) return build_status(st, ops, max_ops);
+    re15_map_ohne_aktuell(1);
+    n = build_status(st, ops, max_ops);
+    re15_map_ohne_aktuell(0);
+    return n;
 }

@@ -52,6 +52,7 @@
  * re15_title_tick_count): floor(Zeit * 59826 mHz / (VBlanks je Schritt * 10^9)).
  * ==========================================================================*/
 
+#include <stdio.h>
 #include <string.h>
 
 #include "re15_map_hint.h"
@@ -218,6 +219,8 @@ void re15_map_hint_begin(void)
     s_richtung = RE15_HINT_RICHTUNG_START;         /* @0x8006F6B4 / @0x8006F6C4 */
     s_start_us = re15_host_clock_us();
     s_schritte = 0;
+    fprintf(stderr, "[hint] begin t0=%llu us (Zaehler %d, Richtung %d)\n",
+            (unsigned long long)s_start_us, (int)s_zaehler, (int)s_richtung);
 }
 
 void re15_map_hint_tick(void)
@@ -239,8 +242,14 @@ void re15_map_hint_tick(void)
         }
     }
     {
-        int frei = 1;
+        int frei = 1, rot_vorher = (s_richtung == 0);
         while (due--) if (schritt(frei)) frei = 0;
+        /* Messschiene fuer die Abnahme (debug.log): Wanduhr-Zeit jedes Phasenwechsels und
+         * jedes Tons, relativ zum Nullpunkt des Hinweises. */
+        if ((s_richtung == 0) != rot_vorher || !frei)
+            fprintf(stderr, "[hint] t=%llu us schritt=%llu %s%s\n",
+                    (unsigned long long)(now - s_start_us), (unsigned long long)s_schritte,
+                    (s_richtung == 0) ? "rot" : "umriss", frei ? "" : " +Ton Se(2,0x2B)");
     }
 }
 
