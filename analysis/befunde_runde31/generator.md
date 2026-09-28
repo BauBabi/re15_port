@@ -218,9 +218,35 @@ Bildbeleg `generator_belege/vorher_streifen.png` (RE15_FRAMEDUMP, Readback vor P
 F1182/F1183/F1184/F1185/F1190): In F1184 steht der rote Zeiger bei ~62 (Hoehe der "60") und
 das "P" von "Power supply OK." tippt bereits; F1185 zeigt Cut 8.
 
-## 5. Bau
+## 5. Bau (RE2-Angleichung, Beta->Retail)
 
-(laufend)
+Alle Belege stehen zusaetzlich im Kopf von `re15_port/include/re15_panel_zeiger.h`.
+
+| Stelle | Was | Beleg |
+|---|---|---|
+| `panel_zeiger_common.c` Tick | `s_ruhe` = Bilder seit der letzten Zeigerbewegung ODER Schalteraenderung, gesaettigt bei `RE15_PANEL_RUHE_BILDER` = 30 | RE2 sleep @0x0171C `09` / @0x0171D `0a 1e 00` (hinter jedem Schalter auch @0x012A4/@0x012A5); Sleeping @0x80053A24 gibt auch im Null-Bild ab (`addiu v0,zero,2`) -> letzter Schritt Bild k, Pruefung Bild k+31 |
+| `re15_panel_zeiger_abnahme_haelt` <- `op_evt_exec` (scd_vm.c) | Steht die VM auf ROOM11F0/11F1 @0x012E6 (`04 ff 18 12`, dahinter `22 04 ee 01`) und ist der Zeiger nicht 30 Bilder auf 80, gibt der Opcode `SCD_R_IF_FALSE` zurueck: Sprung ans Ende des Ifel_ck-Blocks @0x012B6, weder sub18 noch Set(4,238,1). sub01 prueft im naechsten Bild neu. | RE2 cmp(var5==80) @0x01752 erst nach ewhile @0x01708 + Sleep; sub01 je Bild neu (FUN_8003f038 @0x8003f064-80) |
+| `re15_panel_zeiger_sperrt` -> `game_step_common.c` | Pad-Woerter der VM auf `0xf000` (wie Bit 0x01000000), START-Poll zu — solange Raetsel aktiv (5:0), ungeloest (4:238=0) und: Schaltermaske in diesem Bild geaendert, Zeiger unterwegs, Ruhe < 30, oder Zeiger steht auf 80 (Abnahme faellig) | RE2 Bank 2 Bit 7 @0x01110..@0x01818, Leser @0x800391F8..0x80039224 `andi 0x3c00`; RE1.5 dasselbe Bit @0x800304f8/`andi 0xf000` @0x80030514 |
+| `RE15_PANEL_IST_RAUM` | ROOM11F1 (Elzas Variante) traegt den Zeiger jetzt auch | `cmp ROOM11F0.RDT ROOM11F1.RDT` -> identisch; Varianten-Nibble aot_common.c `dest_id` |
+| Messschiene | `ruhe=`, `panelsperre=` im RE15_PANEL_LOG | — |
+
+Was NICHT geaendert ist: die Wertbildung (Nutzer-Gewichte), die Fahrt (1 Punkt/Bild), die
+RE1.5-Loesungspruefung selbst (dieselben zehn Bits), sub18 (Reihenfolge Cut 8 -> Meldung ->
+Licht-Flackern Cut 0x0D -> Cut 0x0E), der Bestaetigungston (bleibt an der Flanke von 4:238 —
+die kommt jetzt eben erst nach dem Stillstand, zusammen mit der Meldung wie RE2 @0x01758..0x01762).
+
+**Warum der Sperr-Test die Maske LIVE liest:** Die VM laeuft im Bild VOR `re15_game_step`
+(main.c:5343 vor :7319); das Schalterbit, das sub06 @0x01340 im Bild N setzt, sieht der
+Zeiger-Tick erst am Ende von N. Die Pad-Woerter fuer die VM von N+1 entstehen aber am ANFANG
+von `re15_game_step` N. Ohne den Live-Vergleich `panel_maske() != s_maske` rutschte ein
+gehaltener Knopf fuer genau ein Bild durch (gemessen: `panelsperre=1` schon in F1183, dem Bild
+des letzten Schalterbits).
+
+**Warum die Sperre bis zur Abnahme reicht:** In der ersten Fassung fiel sie mit `ruhe=30`
+(F1232) — die Pad-Woerter des Freigabe-Bildes waren dann offen, und ein Tastendruck waere in
+derselben VM-Runde wie Evt_exec(sub18) gelaufen. RE2 gibt Bit 7 erst @0x01818 frei, also nach
+der Pruefung. Jetzt: `panelsperre=1` bis F1232 einschliesslich, ab F1233 uebernimmt sub18s
+eigene Sperre (`22 02 07 01` @0x01736).
 
 ## 6. Abnahme
 
