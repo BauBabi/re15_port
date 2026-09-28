@@ -22,7 +22,7 @@ MAX_CUTS = 3
 
 def cuts_pruefen(raum, kante, band, mitte, bereiche, gr, groesse):
     """Alle Cuts fuer eine Kandidatenkante -> (welt, cuts, ok sortiert)."""
-    welt = B.blatt_welt(kante, band)
+    welt = B.blatt_welt(kante, band, W=L.blattbreite(raum.spiel))
     cuts = []
     for c in range(raum.ncut):
         if not raum.hat_bild(c):
@@ -83,7 +83,8 @@ def kante_waehlen(raum, pts, band, ankunft, mitte=None):
         # Blatt dort im Mittel am frontalsten erscheint (Breite/Hoehe im Bild gegen 1950/3549,
         # hoechstens 1), dann die groesste Flaeche.
         def fr(e):
-            v = [min(1.0, c["px_w"] / max(1.0, c["px_h"]) / (L.BLATT_B / L.BLATT_H)) for c in e["ok"] if c["aktiv"]]
+            v = [min(1.0, c["px_w"] / max(1.0, c["px_h"]) / (L.blattbreite(raum.spiel) / L.BLATT_H))
+                 for c in e["ok"] if c["aktiv"]]
             return (round(float(np.mean(v)), 2) if v else 0.0,
                     max([c["px_h"] * c["px_w"] * c["im_bild"] for c in e["ok"] if c["aktiv"]] or [0.0]))
         wahl = max(mit, key=fr)
@@ -94,7 +95,8 @@ def kante_waehlen(raum, pts, band, ankunft, mitte=None):
         for e in mit:
             c = e["ok"][0]
             cam = raum.kamera(c["cut"])
-            v = B.verfeinern(cam, B.helligkeit(raum.hintergrund(c["cut"])), e["kante"], band)
+            v = B.verfeinern(cam, B.helligkeit(raum.hintergrund(c["cut"])), e["kante"], band,
+                             W0=L.blattbreite(raum.spiel))
             kontrast = v["wert"] / max(1e-6, v["median"])
             e["kontrast"] = kontrast
             if bestw is None or kontrast > bestw:
@@ -120,7 +122,7 @@ def schneide(spiel, raum, pts, band, ankunft, kennung, ausdir, mitte=None, max_c
         cam = raum.kamera(c["cut"])
         rgb = raum.hintergrund(c["cut"])
         lum = B.helligkeit(rgb)
-        v = B.verfeinern(cam, lum, kante, band)
+        v = B.verfeinern(cam, lum, kante, band, W0=L.blattbreite(raum.spiel))
         quad = v["quad"]
         im, box = B.ausschnitt(rgb, quad, f=3)
         if im is None:
@@ -261,9 +263,19 @@ def re2_alle(nur_archive=None):
     return erg
 
 
+def _json(o):
+    import json
+    return json.loads(json.dumps(o, default=lambda x: x.tolist() if hasattr(x, "tolist") else
+                                 (sorted(x) if isinstance(x, set) else str(x))))
+
+
 if __name__ == "__main__":
+    import json
     import zensus_paare as P
     if len(sys.argv) > 1 and sys.argv[1] == "re2":
-        re2_alle()
+        erg = re2_alle()
+        json.dump(_json(erg), open(os.path.join(L.AUS, "re2_seiten.json"), "w"), indent=0)
     else:
-        re15_alle(P.bauen(), nur=set(sys.argv[1:]) or None)
+        erg = re15_alle(P.bauen(), nur=set(sys.argv[1:]) or None)
+        if len(sys.argv) == 1:
+            json.dump(_json(erg), open(os.path.join(L.AUS, "re15_seiten.json"), "w"), indent=0)

@@ -45,6 +45,11 @@ AUS = os.path.join(REPO, "build", "r31_tueren", "t1")
 BAND = 1800                     # Boden y = -Band*1800 (06_massstab §2, bodenzensus 324/326)
 BLATT_H = 3549                  # Blatt im Raum (06_massstab §1: 6602 / 1,86)
 BLATT_B = 1950                  # RE1.5-Blattbreite (06_massstab §1: 1953 +- 167)
+BLATT_B_RE2 = 1640              # RE2-Blattbreite (06_massstab §1: 1640 +- 215, RE2-Tueren schmaler)
+
+
+def blattbreite(spiel):
+    return BLATT_B_RE2 if spiel == "re2" else BLATT_B
 RE2_BLATT = (128, 219)          # Blattbereich der RE2-Tuertextur: v 0..218 (04_tuerkatalog §1.2)
 
 

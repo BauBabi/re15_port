@@ -88,7 +88,7 @@ def pruefe(spiel, raum, cut, rect, mess, bilder=True):
     q0 = np.array(sv["quad"])
     e0 = np.linalg.norm(q0 - mess, axis=1)
     lum = B.helligkeit(r.hintergrund(cut))
-    v = B.verfeinern(cam, lum, kante, satz["band"])
+    v = B.verfeinern(cam, lum, kante, satz["band"], W0=L.blattbreite(spiel))
     q1 = np.array(v["quad"])
     e1 = np.linalg.norm(q1 - mess, axis=1)
     erg = dict(spiel=spiel, raum=raum, cut=cut, satz="0x%05X" % satz["pc"], band=satz["band"],

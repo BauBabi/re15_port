@@ -230,7 +230,7 @@ def kanten_wert(lum, quads, n_ab=16):
 
 
 def verfeinern(cam, lum, kante, band, dn_ber=(-900, 900, 50), dt_ber=(-600, 600, 50),
-               W_ber=(1650, 2250, 100), strafe=1.0):
+               W_ber=None, strafe=1.0, W0=L.BLATT_B):
     """Gitter-Suche ueber (dn, dt, W). Gewertet wird Kantenwert - strafe * Median * (groesste
     Eckverschiebung im Bild gegen die Datenlage / 10 px). Die Strafe verhindert, dass die Suche
     auf eine innere Fuellungslinie oder den Zargen-Aussenrand springt; strafe = 1 ist an den 11
@@ -238,6 +238,8 @@ def verfeinern(cam, lum, kante, band, dn_ber=(-900, 900, 50), dt_ber=(-600, 600,
     Spielwert. -> dict mit bestem Satz, Kantenwert und Wert der Datenlage."""
     dns = np.arange(dn_ber[0], dn_ber[1] + 1, dn_ber[2], dtype=float)
     dts = np.arange(dt_ber[0], dt_ber[1] + 1, dt_ber[2], dtype=float)
+    if W_ber is None:
+        W_ber = (W0 - 300, W0 + 300, 100)
     Ws = np.arange(W_ber[0], W_ber[1] + 1, W_ber[2], dtype=float)
     G = np.array(np.meshgrid(dns, dts, Ws, indexing="ij")).reshape(3, -1).T
     a, b, n, t = kante["a"], kante["b"], kante["n"], kante["t"]
@@ -260,7 +262,7 @@ def verfeinern(cam, lum, kante, band, dn_ber=(-900, 900, 50), dt_ber=(-600, 600,
         q = q[:, [1, 0, 3, 2], :]
     ok = (vz > 300).all(axis=1)
     w = np.where(ok, kanten_wert(lum, q), -1.0)
-    i0 = int(np.argmin(np.abs(G[:, 0]) + np.abs(G[:, 1]) + np.abs(G[:, 2] - L.BLATT_B)))
+    i0 = int(np.argmin(np.abs(G[:, 0]) + np.abs(G[:, 1]) + np.abs(G[:, 2] - W0)))
     med = float(np.median(w[ok])) if ok.any() else 0.0
     dpx = np.abs(q - q[i0]).max(axis=(1, 2))
     wert = np.where(ok, w - strafe * med * dpx / 10.0, -1e9)

@@ -139,16 +139,40 @@ def fahrstuhl_raeume():
 #   etage    die beiden Seiten liegen auf verschiedenen Kartenblaettern (Etagen/Bereiche)
 #            -> Kandidat Treppe/Leiter/Rolltor, per Sicht zu entscheiden (SICHT)
 #   normal   sonst
-# SICHT: nach Ansicht der Kontaktboegen gesetzt: (Raum, Mitte x, Mitte z) -> (Kategorie, Grund).
+# SICHT: nach Ansicht der Kontaktboegen gesetzt (Dossier §7): (Raum, Band, Mitte x, Mitte z) einer
+# Seite der Tuer -> (Kategorie, Grund). Kategorien dort zusaetzlich: leiter, sonstiges.
 # ----------------------------------------------------------------------------
-SICHT = {}
+SICHT = {
+    ("10A", 4, 21250, 26350): ("normal", "Tuer am Treppenabsatz B1 (ROOM10A0 c2, Aufschrift B1); "
+                                         "die Treppe liegt im Raum, Kartenblatt fuer Band 4 fehlt"),
+    ("10B", 5, 14335, -6840): ("leiter", "Wandleiter rechts neben der Flaeche (ROOM10B0 c0), oben "
+                                         "Dachkante am Gelaender (ROOM1170 c3)"),
+    ("11A", 1, 0, 24950): ("leiter", "Leiter zur Deckenluke (ROOM11A0 c0); Gegenseite: Kanaldeckel im "
+                                     "Boden (ROOM3000 c0), Flaeche dort 10 x 10"),
+    ("400", 0, -3580, -4000): ("aufzug", "Lastenaufzug zurueck nach oben: Flaeche 4300 x 3800 am Schacht "
+                                         "(ROOM4000 c1, Schild Level-1); Hinfahrt ROOM3070 -> ROOM3080 "
+                                         "(Fahrt-Signatur SIG2) endet per Skript in ROOM4000"),
+    ("508", 0, -9100, -18050): ("normal", "gewoehnliche Metalltuer (ROOM5080 c0, ROOM6010 c7); "
+                                          "Kartenblatt wechselt nur den Bereich"),
+    ("509", 0, 28150, 5000): ("normal", "Zugtuer mit Fenster (ROOM6030 c10); Kartenblatt wechselt nur "
+                                        "den Bereich"),
+    ("50B", 0, -20000, -5750): ("aufzug", "Hubbuehne mit Warnrand und Treppe (ROOM6000 c0), Bedienpult "
+                                          "im Hangar (ROOM50B0 c3); kein Tuerblatt"),
+    ("10F", 1, -4750, -1750): ("sonstiges", "Lueftungsgitter unter der Decke (ROOM10F0 c7), Band 1, "
+                                            "Ankunft y -9000 in ROOM1090; kein Tuerblatt"),
+    ("125", 0, -6500, -12200): ("sonstiges", "inert (sce 0 in allen Saetzen), am Empfangstresen "
+                                             "(ROOM1250 c2) kein Tuerblatt"),
+    ("125", 0, -4000, -12200): ("sonstiges", "inert (sce 0 in allen Saetzen), am Empfangstresen "
+                                             "(ROOM1250 c2) kein Tuerblatt"),
+    ("125", 0, 9800, 15150): ("sonstiges", "inert (sce 0 in allen Saetzen), in keinem Cut sichtbar"),
+}
 
 
 def kategorie(tuer, by, lifte):
     ss = [by[i] for i in tuer["seiten"]]
     raeume = set(s["basis"] for s in ss) | set(s["ziel_basis"] for s in ss)
     for s in ss:
-        k = (s["basis"], int(round(s["mitte"][0])), int(round(s["mitte"][1])))
+        k = (s["basis"], s["band"], int(round(s["mitte"][0])), int(round(s["mitte"][1])))
         if k in SICHT:
             return SICHT[k][0], "Sicht: " + SICHT[k][1]
     lift = sorted(r for r in raeume if r in lifte)
