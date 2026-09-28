@@ -811,7 +811,7 @@ Nur die fett gesetzten Zellen der Tabelle 3.6 ändern sich:
 
 | Stelle im Port | heute | neu | Beleg |
 |---|---|---|---|
-| Leser öffnet aus der Liste (`:1584`) | `se4(6)` | `se4(6)`, im Folgebild `se4(8)` mit dem Hereinfahren | @0x8006ce9c, @0x8006cf58-70 |
+| Leser öffnet aus der Liste (`:1584`) | `se4(6)` | `se4(6)`, im Folgebild `se4(8)` mit dem Hereinfahren — **in der Nachbesserung ersetzt: `se4(8)` 15 Bilder nach `se4(6)`, RE2s Zustand 11 (10.6)** | @0x8006ce9c, @0x8006cf58-70; Abstand `sltiu v0,v0,0xe` @0x8006cf08 |
 | Leser öffnet beim Aufheben | — | `se4(8)` nach der Aufblende | @0x80071df0-f4 |
 | LINKS aus der Ende-Stellung (`:1647`) | `se4(4)` | stumm | @0x80072940-48 |
 | VIERECK in der Ende-Stellung (`:1641`) | `se4(5)` | `se4(6)` | @0x8007297c-84 |
@@ -1036,10 +1036,10 @@ Offen bleibt:
    Zeilenende) — 9 in Analogie; im Diary folgenlos, das ? steht am Absatzende.
 6. **Umlaute und ß** sind Konstruktionen (6.2). RE2 (US) führt keine; eine deutsche
    RE2-Fassung, an der sie sich messen ließen, liegt nicht im Repo.
-7. **Tonabstand beim Öffnen aus der Liste.** RE2 lässt zwischen Satz 6 und Satz 8 die
-   Tafel-Ausfahrt (14 Bilder) und das Laden von der CD; der Plan setzt Satz 8 ins Folgebild
-   (S4, Port-Entscheidung). Ob sich die beiden Töne im Port hörbar überdecken, ist nicht
-   gemessen.
+7. ~~**Tonabstand beim Öffnen aus der Liste.**~~ **Geschlossen in der Nachbesserung (10.6):**
+   RE2s Zustand 11 selbst disassembliert — Satz 8 fällt frühestens 15 Bilder nach Satz 6
+   (`sltiu v0,v0,0xe` @0x8006cf08 plus Ladeprüfung @0x8006cf14); der Port lädt synchron und
+   hält genau 15 Bilder, im laufenden Spiel gemessen (Satz 6 in F540, Satz 8 in F555).
 
 ---
 
@@ -1150,7 +1150,9 @@ irons-diary-welt dem Prop einen Effekt an, muss der dort mit weg.
    gemessenen 394 (die Sonde von master misst mit `file_reader_page = 1`). Jetzt Seite 1; 394.
 3. **Port-Wahlen** jetzt wörtlich „Port-Wahl, keine Original-Adresse" mit Messung: Bild-Satz 25,
    max_page 17 (am Satz gemessen), Titel 0 auf allen Listenseiten, Platz = Seite·10 + Zeile,
-   EIN Bild zwischen Satz 6 und Satz 8 beim Öffnen aus der Liste.
+   EIN Bild zwischen Satz 6 und Satz 8 beim Öffnen aus der Liste. (Die letzte war NICHT
+   gemessen — die Gegenprüfung hat das zu Recht beanstandet; in der Nachbesserung durch RE2s
+   belegte 15 Bilder ersetzt, 10.6 Punkt 3.)
 4. **Bestehende Wachen mitgezogen** (Grund je Stelle im Test): `test_inv_fsm.c` Welle F (Liste
    mit Irons Diary auf Platz 0, 11 statt 12 Glyphen; Seite 1 leer mit „Files"; der
    '&'-Digraph-Beleg der RE1-Namen ist über die Liste nicht mehr erreichbar; leerer Platz
@@ -1173,7 +1175,7 @@ irons-diary-welt dem Prop einen Effekt an, muss der dort mit weg.
 | Sonde C: Seitenzahl | 18 | 18; p17 da, p18 nicht |
 | Speicherstand: sizeof / visited_floor / files / checksum | 944 / 900 / 916 / 940 | 944 / 900 / 916 / 940 |
 | Rundlauf über .mcr | Platz 0 = Dokument 0 | Platz 0 = 0, 1 belegt |
-| Hebung v8 → v9 an der Speicherkarte des Nutzers (`nutzer_marken/re15_card_nutzer_2026-09-27.mcr`) | alle Plätze v9, 24 × 0xFF | 4 von 4 (roh v8), visited_floor 0, Prüfwort neu |
+| Hebung v8 → v9 an der Speicherkarte des Nutzers (`nutzer_marken/re15_card_nutzer_2026-09-27.mcr`) | alle Plätze v9, 24 × 0xFF | 4 von 4 (roh v8), Prüfwort neu (visited_floor prüft der Riegel seit der Nachbesserung NICHT mehr — fremdes Feld, 10.6 Punkt 1) |
 | Hebung v7 → v9; verfälschter v8-/v9-Block | gehoben / abgewiesen | gehoben (Besucht-Bits verworfen) / abgewiesen |
 | Reihenfolge beim Aufheben (Folgenummer) | anhängen < schließen < Meldung weg < Zone < Flag < Weltmodell | 1, 2, 3, 4, 5, 6; Bild 1 / 42 / 132 / 132 / 132 / 132 |
 | Item-Modal während des ganzen Aufhebens | nie aktiv | nie aktiv |
@@ -1205,3 +1207,148 @@ Vergleichswerkzeug `vergleich.py` mit Ausgabe `vergleich_framedump_gegen_schirm.
 4. **PSX-Ziel und Android** nicht gebaut. Android: `engine/src/re15_files.c` ist neu — `app/.cxx`
    friert die GLOB-Liste ein, vor dem Paket frisch konfigurieren.
 5. **Paket:** `FILE25_*` muss unter `RE2/FILES/` neben der exe liegen.
+6. **Linker RE1.5-Pfeil über der RE2-Textspalte** (offene Abweichung, in der Nachbesserung
+   gemessen, nicht geändert): steht die Wippe auf 0, liegt der Pfeil bei x 20–35
+   (`0x14 - off`, 16 breit, RE1.5 @0x800c7554-70), die RE2-Textseite beginnt bei x 25 und
+   trägt ab x 34 Glyphen. Framedump gegen `FILE25_p01/p02/p04_page_schirm.png`: 8 / 13 / 7
+   abweichende Pixel, alle bei x 34–35, y 112–127; bei Wippe 4 (x 16–31) keine. RE2s eigener
+   Pfeil (x = 12 − 3·Blink, y 110, @0x800726b8-d4) erreicht die Spalte nicht. Nicht
+   umgebaut, weil der Port die Pfeile bewusst aus RE1.5 nimmt (Grundsatz am Leser,
+   `menu_common.c` „was RE1.5 vollständig hat, bleibt RE1.5") und RE2s Pfeil-Grafik aus
+   seinem Status-Schirm nicht im Asset-Baum liegt; eine Mischung „RE1.5-Pfeil an RE2-Lage"
+   wäre eine neue Erfindung.
+
+### 10.6 Nachbesserung nach der Gegenprüfung
+
+Die Gegenprüfung urteilte MÄNGEL (1 erheblich, 4 gering). Stand je Mangel, jeweils mit
+eigenem Commit:
+
+**1. Speicher-Riegel nagelte das FREMDE Feld fest (erheblich) — behoben.**
+`test_r30_irons_diary_ablauf.c` S3 (Hebung an der Nutzer-Karte) und S5 (Erfassung) prüften
+`visited_floor == 0`. Gemessen von der Gegenprüfung: mit der Hebung von karten-marken trägt
+die Nutzer-Karte dort 1/2/4/2 Etagen-Bits in den Plätzen 0/1/2/4 — der Riegel wäre nach dem
+Zusammenführen rot geworden. Jetzt prüft er nur noch Version 9, `files` 24 × 0xFF und das
+Prüfwort; der Kopf des Tests sagt, warum `visited_floor` nirgends geprüft wird. Ist: Hebung
+4 von 4.
+
+Dabei gefunden (eigene Messung, `git merge-tree --write-tree worktree-wf_b4b268f3-d12-3
+HEAD`): `re15_savedata_capture` führt git OHNE Konflikt zusammen, und die Zeile
+`memset(out->visited_floor, 0, …) /* R30-VERTRAG: fremdes Feld */` dieser Spur landete
+HINTER `re15_map_visited_floor_export` von karten-marken — sie hätte die Etagen-Bits nach dem
+Export stillschweigend genullt. Die Zeile steht jetzt direkt nach `memset(out, 0, …)` vor
+jedem Export; der Probelauf zeigt danach die richtige Folge (Null, Export der Etagen-Bits,
+`memset(files, 0xFF)` von karten-marken, `re15_files_export` dieser Spur).
+
+**ZUSAMMENFÜHREN mit karten-marken (d12-3)** — Konflikte laut Probelauf nur in
+`re15_savedata.h` (Kommentar an `RE15_SAVE_VERSION`: eine Seite nehmen) und in
+`re15_savedata.c`, vier Stücke:
+
+1. Hebung v7/v8, Kommentar: eine Seite.
+2. Hebung v7/v8, Rumpf: die Seite von karten-marken nehmen (v7 leert `visited`,
+   `re15_map_visited_floor_heben(sd->visited, sd->visited_floor)`); das nachfolgende
+   `memset(sd->files, 0xFF, …)` steht außerhalb des Konflikts und bleibt.
+3. Hebung v2..v6: die Seite von karten-marken nehmen (kein `memcpy(visited)`, Nebenbefund D3;
+   enthält schon `memset(sd->files, 0xFF, …)`).
+4. `re15_savedata_restore`: BEIDES — von karten-marken `re15_map_visited_import(in->visited)`
+   und `re15_map_visited_floor_import(in->visited_floor)` (ohne die alte Versionsabfrage),
+   von dieser Spur `re15_files_import(in->files)` samt RE2-Beleg-Kommentar.
+
+Danach die Zeilen mit `R30-VERTRAG: fremdes Feld` löschen, auch die beiden `memset` in
+`re15_savedata_capture` (sie schaden in der neuen Reihenfolge nicht mehr, sind aber toter
+Code). Prüfen: `unit_r30_irons_diary_ablauf` (S1–S4) und `test_map_speichern_laden` beide
+grün.
+
+**2. Scan-Weiche ungesichert (gering) — behoben.** Neuer Teil B in
+`test_r30_irons_diary_ablauf.c`: Item-Zone 0x48 über `re15_aot_scan` mit Aktionstaste — der
+Weg des Spielers (RE1.5 Druck-Scan FUN_80042bac, Handler[9] @0x80043328; RE2 FUN_80051884
+@0x800518f0-f8). B1 ohne Taste nichts; B2 Leser angefordert, Item-Modal aus, Zone/Flag/
+Weltmodell unverändert; B3 voller Lauf bis Zone aus, Flag (9,0x34), Weltmodell aus; B4
+zweiter Druck nichts; B5 Gegenprobe Id 0x47 über denselben Scan startet das Item-Modal.
+Negativ-Kontrolle N7 (Scan-Weiche in `aot_common.c` auskommentiert, neu gebaut): vorher
+0 FAIL, jetzt **6 FAIL**; wiederhergestellt 0 FAIL.
+
+**3. Ein Bild zwischen Satz 6 und Satz 8 unbelegt (gering) — an RE2 angeglichen.**
+Selbst disassembliert (`info/re2leon/PSX.EXE`, Schirm mit Sprungtabelle @0x8006c754,
+Zustand 2(s2) = 0x800d5bf2, Zähler 3(s2) = 0x800d5bf3):
+
+```
+Zustand 10 (Zeilenwahl), belegter Platz, Bild N
+  8006ce74  addiu v0,zero,11   / 8006ce80 sb v0,2(s2)     -> Zustand 11
+  8006ce90  jal   0x80031f6c   (a0 = 2, a1 = 0x8006d444)  Seitenlader als Task 2
+  8006ce9c  lui   a0,0x406     / 8006cebc jal 0x8005ba28  Satz 6
+Zustand 11 @0x8006cefc, je Bild
+  8006cefc  lbu   v0,3(s2)
+  8006cf04  addiu v1,v0,1      / 8006cf10 sb v1,3(s2)
+  8006cf08  sltiu v0,v0,0xe                               alter Wert < 14 ->
+  8006cf0c  bne   v0,zero,0x8006cf8c                        Tafeln fahren aus
+  8006cf14  jal   0x80032138   (a0 = 2)                   Task-Status, lhu @0x80032144
+  8006cf1c  beq   v0,zero,0x8006cf2c                      fertig -> weiter
+  8006cf28  sb    v0(=14),3(s2)                           laedt noch -> naechstes Bild
+  8006cf58  lui   a0,0x408                                Satz 8
+  8006cf60  addiu v0,zero,16   / 8006cf64 sb v0,2(s2)     -> Zustand 16 (Leser)
+  8006cf68  addiu v0,zero,312  / 8006cf74 sh v0,92(s2)    Textseite x = 312
+  8006cf6c  sb    zero,3(s2)
+  8006cf70  jal   0x8005ba28                              Satz 8, SELBES Bild
+```
+
+Zustand 10 wird nur mit Zähler 0 betreten (`sb zero,3(s2)` @0x8006cdd4 und @0x8006d000 —
+die einzigen Schreiber von Zustand 10 sind @0x8006cdcc/@0x8006cff8), und weder Zustand 10
+noch seine Callees (FUN_8006d550, 0x80075fd0, 0x80031f6c, 0x800693d0) schreiben 0x800d5bf3
+(alle Schreiber im RE2-Dump `ghidra_re2_Leon.txt` durchgesehen). Also: Satz 8 frühestens
+**15 Bilder** nach Satz 6 (Bilder N+1…N+14 mit altem Wert 0…13, Bild N+15 Ladeprüfung),
+länger nur, solange die CD liest. Der Port lädt synchron (`re15_re2doc_select`), die
+Ladeprüfung fällt sofort in den Fertig-Zweig: genau 15 Bilder. Gebaut in `menu_common.c`
+`file_open_wait_tick` (`FILE_OPEN_WAIT_BILDER 14` @0x8006cf08); Satz 8 und das Öffnen im
+SELBEN Bild (@0x8006cf58-74). Nicht übernommen: die Tafel-Bewegung @0x8006cf8c-cfc4 —
+RE1.5s FILE-Schirm hat keine Tafeln; die Liste steht die 14 Bilder still, Eingaben liest
+Zustand 11 keine. `test_inv_fsm.c` F6/F10 mitgezogen (Klick SE 6 sofort; 14 Wartebilder,
+UNTEN wirkungslos, kein Ton; 15. Bild Leser offen + SE 8; dann 10 Fahrbilder).
+Negativ-Kontrolle N8 (`FILE_OPEN_WAIT_BILDER 0`): **6 FAIL**.
+
+Im laufenden Spiel gemessen (Nutzer-Karte Platz 0 → ROOM1150, `SDL_AUDIODRIVER=dummy
+RE15_SE_DEBUG=1 RE15_DOC_LOG=1`, Aufheben per `RE15_DOC_REQUEST=260`, dann Menü, FILE,
+VIERECK, VIERECK in F540): **Satz 6 in Bild 540, Satz 8 in Bild 555**, erster Fahrschritt
+(x 292) in Bild 556, Zustand 3 ab Bild 567. Die Framedumps F535–F555 sind untereinander
+pixelgleich (die Liste mit „Irons Diary", Zeile 0 hervorgehoben); der Titel nach dem Öffnen
+(F570) gegen `FILE25_title_page_schirm.png`: **7069 von 7069** sichtbaren Pixeln gleich,
+0 fremde Pixel außerhalb Pfeil/Fußzeile.
+
+**4. Pfeil und '&'-Digraph (optional).**
+
+- '&'-Digraph — **wieder unter Riegel**: neue Messschiene `re15_inv_screen_text_probe`
+  (Glyphen-Drucker FUN_80028ec4 an freier Stelle, kein Spielpfad); `test_inv_fsm.c` F4b
+  druckt den Archiv-Namen 0x59 an der alten Stelle y 0xc5: **8 Glyphen** rutschen auf
+  y 0xd5 (@0x800131c0-c4, @0x80028fe8); Gegenprobe 0x58 ohne Digraph: 0.
+- Pfeil — **nicht geändert**, als offene Abweichung in 10.5 Punkt 6 geführt (Messung und
+  Grund dort).
+
+**5. Riegel B der Sonde verglich nur die Fußzeile (gering) — verschärft.** Zusätzlich die
+Bild-Ebene: `re15_inv_file_bild_lage` liefert Satz 25 / Seite −1 (Irons Diary) und Satz 8 /
+Seite −1 (FILE08); die beiden Titel-Textseiten (je 256 × 144) unterscheiden sich in **1156
+von 1396** sichtbaren Pixeln.
+
+**Abnahme der Nachbesserung** (alle Läufe mit dem Bau dieses Zweigs; Abzüge und Protokolle
+im Arbeitsbaum unter `build/r30_irons-diary-dokument/nachbesserung/`):
+
+| Messung | Soll | Ist |
+|---|---|---|
+| Sonde A: Namen bei leerer Liste / nach `re15_files_add(0)` | 0 / 1 | 0 / 1 |
+| Sonde C: deckend gezeichnete 0x0000-Texel (Titel + 18 Seitendateien) | 0 | 0 bei 118 977 sichtbaren |
+| Sonde C: Seitenzahl | 18 | 18 |
+| Speicherstand: Layout / Rundlauf / Hebung Nutzer-Karte / v7 / verfälscht | 944·900·916·940 / Platz 0 = 0 / 4 von 4 / gehoben / abgewiesen | wie Soll |
+| Reihenfolge beim Aufheben (Sofortzündung, Teil A) | 1…6 | 1, 2, 3, 4, 5, 6 |
+| Aufheben über den Scan (Teil B) | Leser statt Item-Modal, danach abgeräumt | B0–B5 grün; N7 → 6 FAIL |
+| Satz 6 → Satz 8 beim Öffnen aus der Liste | ≥ 15 Bilder (RE2), Port synchron 15 | 15 (F540 → F555), Riegel F6; N8 → 6 FAIL |
+| Framedump Leser beim Aufheben (`lauf1_aufheben`, F74/99/124/149/174) gegen `FILE25_*_schirm.png` | alle außer unter dem linken Pfeil | Titel 7069/7069, p01 13377/13385, p02 14427/14440, p03 8833/8833, p04 13791/13798; alle Abweichungen x 34–35, y 112–127 |
+| Framedump Leser aus der Liste (`lauf2_liste_oeffnen`, F570) | Titel gleich | 7069/7069 |
+| FILE-Reiter leer, Nutzer-Karte (`lauf3_liste_leer_nutzerkarte`, F145) | keine vorinstallierten Namen | 10 Unterstrich-Zeilen, Titel „Files", `liste0 = 255` |
+| `r30_diary_satz_pruefung.py` gegen die nach `shared_assets/RE2/FILES` kopierten Dateien | bestanden | ALLE PRÜFUNGEN BESTANDEN, 427 von 427 Wörtern, 8 Daten am Seitenkopf |
+| '&'-Digraph (F4b) | Umbruch vorhanden | 8 Glyphen bei y 0xd5, Gegenprobe 0 |
+| Suite | alle grün | 362 von 362 (Endstand, Commit des Abschlusses) |
+
+Nicht gemessen: der Klang (Hörprobe) — gemessen ist, WELCHER Satz in WELCHEM Bild ausgelöst
+wird; ob sich Satz 6 und Satz 8 im Abstand von 15 Bildern noch berühren, hängt an der Länge
+von Satz 6 und ist nicht vermessen (RE2 hat denselben Mindestabstand). PSX- und Android-Ziel
+nicht gebaut (Android: `re15_files.c` neu → frisch konfigurieren). Der zusammengeführte Stand
+mit karten-marken ist NICHT gebaut; der Probelauf `git merge-tree` liefert nur die
+Konfliktliste oben.
