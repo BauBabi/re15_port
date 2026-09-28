@@ -207,6 +207,8 @@ Regulärer Türweg, danach nur Pad-Eingaben, **kein Messhaken in ROOM5080**:
 - **Vor dem Bau ROT:** B1 2024 Bilder in einer Zelle (erstes Bild 376, Zelle #1 = @0x00320), B2 2024 Bilder im Raum, C hp min 0 bei 1447 Griff-Bildern.
 - **Nach dem Bau GRÜN:** max. Abstand 7848, kleinstes z −5651, 0 Bilder in Zellen, hp 100, 0 Griff-Bilder.
 
+**Suite** (Bau dieses Baums mit Fix, `ctest --test-dir re15_port/build --timeout 240`): **395/395 grün**, 407,6 s. Das sind die 394 Tests des Integrationsstands plus der neue Riegel. Nach der N3-Korrektur (nur ein Kommentar) wurde neu gebaut, und die 7 Birkin-Tests (`-R "unit_r30_n_room5080|birkin"`) sind 7/7 grün.
+
 **N3 korrigiert:** Nur der Kommentar in `enemy_ai_common.c` (Birkin-Tod-Flag) nennt jetzt STAGE5 @0x8011aecc statt @0x8011ae10. Das Verhalten ist unverändert.
 
 **Nicht gebaut:** N1. Die Begründung (Umfang) steht in Abschnitt 7.
@@ -341,6 +343,8 @@ In **STAGE5** steht an 0x8011ae10 ein Sprungtabellen-Zugriff (`lui at,0x8010` / 
 - 50F1 @0x009AC
 
 Die übrigen 9 Spawns (3070/3071/3080/5090/5091 und die 0x10-Spawns in 50E0/50F1) haben y = 0, also band_from_y == pc[4] == 0. Für sie ändert der Fix nichts.
+
+50E0 und 50F1 haben dieselbe Skriptform wie 5080 (`scd_dump_room.py`): Spawn außerhalb bei y = −5600, später Work_set, Pos_set bei y = −5600 im Raum, Speed_set/Add_speed (der Fall) und Member_set(0x0C,0x13). Die Stellen: 50E0 @0x00BD2 / @0x00BEE, 50F1 @0x00A98 / @0x00AB4. Dort lief derselbe Wanddurchgang, und der Fix schließt ihn gleich mit. Gemessen ist das nur für 5080.
 
 **Messung nachher** (Bau mit Fix, derselbe Lauf, `build/r30n5080_nach_birkin_dbg`):
 - Birkin steht in keinem Bild in der Nordwand oder im Rauten-Block. Das kleinste z ist −5651 (F347). Er gleitet an der Wand entlang nach Westen bis (−23350,−5636), genau nördlich über Leon, 2D-Abstand 12540.
