@@ -3014,6 +3014,26 @@ re_title:;
                 if (tblink == 8)  cursor = 1;
                 if (tblink == 16) pp |= RE15_PAD_BIT_CROSS;  /* confirm LOAD GAME -> load screen */
             }
+            /* TESTHAKEN (kein Spielverhalten, nur mit Umgebungsvariable): RE15_TITLE_CONFIRM_MS=<ms>
+             * bestaetigt den Menuepunkt unter dem Cursor EINMAL je Prozess, sobald der Titel seit
+             * seinem ersten Bild <ms> Millisekunden steht. ZEIT statt Bildern (RE15_INPUT_SCRIPT
+             * zaehlt Bilder): ohne VSync laeuft diese Schleife je nach Last und Fenstergroesse mit
+             * 40 ... 980 Bildern/s (gemessen, Dossier titel-blinken §8.4 a), und der Integrationstest
+             * integration_r30_titel_puls (tests/integration/test_r30_titel_puls.cmake) braucht vor
+             * dem Bestaetigen eine feste Zahl Pulsperioden im Titel. Die Zahl ist Testparameter,
+             * keine Original-Konstante. */
+            { static int s_tc_init, s_tc_done; static uint64_t s_tc_ms, s_tc_t0;
+              if (!s_tc_init) {
+                  const char *e = getenv("RE15_TITLE_CONFIRM_MS");
+                  s_tc_init = 1;
+                  s_tc_ms   = (e && *e) ? (uint64_t) strtoull(e, NULL, 10) : 0;
+                  s_tc_done = (s_tc_ms == 0);
+                  s_tc_t0   = pc_now_us();
+              }
+              if (!s_tc_done && pc_now_us() - s_tc_t0 >= s_tc_ms * 1000ull) {
+                  s_tc_done = 1;
+                  pp |= RE15_PAD_BIT_CROSS;
+              } }
             /* TITEL-TICK: so viele Durchgaenge der Original-Hauptschleife, wie seit dem letzten
              * Bild faellig geworden sind (bei Anzeigen ab 30 Hz hoechstens einer). Je Durchgang
              * ein Pulsschritt (@0x80102ba0) und ein Schritt der Einblende (@0x80020f44). Nach

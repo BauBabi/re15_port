@@ -31,3 +31,20 @@ target_compile_definitions(test_r30_titel_blinken PRIVATE
     RE15_R30_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
 add_test(NAME r30_titel_blinken COMMAND test_r30_titel_blinken)
 set_tests_properties(r30_titel_blinken PROPERTIES TIMEOUT 60)
+
+# --- RIEGEL 2 (Nachbesserung Runde 30): das SYMPTOM an der ECHTEN re15_pc.exe.
+#     Misst ueber die Messschiene RE15_TITLE_PULSE_LOG (platform/pc/main.c) die Pulsperiode im
+#     Titel (Soll 60 x 2 VBlanks / 59,826 Hz = 2005817 us, Toleranz = gemessene Bilddauer), die
+#     Pulsaenderungen im Bestaetigungs-Fade (Soll 0: FUN_80102a10 ruft FUN_801028ec nicht) und
+#     die Dauer der Titel-Einblende (32 Durchgaenge, Schritt 0xfc00 @0x80102058). Bestaetigt wird
+#     ueber den Zeit-Testhaken RE15_TITLE_CONFIRM_MS, beendet ueber RE15_PSELECT_AUTO +
+#     RE15_BOOT_EXIT_AT=1. Gegenprobe am Ausgangsstand master d98e9639 (mit nachgeruesteter
+#     Messschiene): ROT — Dossier titel-blinken.md, Abschnitt UMSETZUNG Nachbesserung. ---
+if(TARGET re15_pc)
+    add_test(NAME integration_r30_titel_puls
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r30_titel_puls_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r30_titel_puls.cmake)
+    set_tests_properties(integration_r30_titel_puls PROPERTIES TIMEOUT 240)
+endif()
