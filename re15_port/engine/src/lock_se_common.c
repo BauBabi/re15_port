@@ -18,10 +18,11 @@
 #include "re15_audio.h"
 #include "re15_engine.h"           /* g_engine.frame_count — nur fuer das Datei-Log */
 
-#include "gen/re2_door_bank.inc"   /* RE2_DOOR_EDT_* / RE2_DOOR_VBD_* / RE2_DOOR_SE_ZU_{A,B,E} */
-#include "gen/lock_se_sites.inc"   /* re15_lock_se_sites[], RE15_LOCK_ART_K/_M, *_SITE_COUNT */
+#include "gen/re2_door_bank.inc"   /* RE2_DOOR_EDT_* / RE2_DOOR_VBD_* / RE2_DOOR_SE_ZU_{A,B,E,P} */
+#include "gen/lock_se_sites.inc"   /* re15_lock_se_sites[], RE15_LOCK_ART_K/_M/_S, *_SITE_COUNT */
 
-#if RE15_LOCK_ART_K != RE15_LOCK_SE_ART_K || RE15_LOCK_ART_M != RE15_LOCK_SE_ART_M
+#if RE15_LOCK_ART_K != RE15_LOCK_SE_ART_K || RE15_LOCK_ART_M != RE15_LOCK_SE_ART_M || \
+    RE15_LOCK_ART_S != RE15_LOCK_SE_ART_S
 #error "gen/lock_se_sites.inc und include/re15_lock_se.h nummerieren die Arten verschieden"
 #endif
 
@@ -50,6 +51,19 @@
 #define RE15_LOCK_SE_SATZ_K  RE2_DOOR_SE_ZU_E
 #define RE15_LOCK_SE_SATZ_M  RE2_DOOR_SE_ZU_A
 
+/* Art S (ohne Strom)                          -> ZU_P.  KEINE Port-Wahl, sondern BELEGT:
+ *   RE1.5 ROOM5080/5081 und RE2 ROOM7020 sind derselbe Raum (Generator, dieselben vier Texte).
+ *   RE1.5 legt "The door won't open until the power is restored!" (msg 2 @Datei 0x00996 /
+ *   0x0098E) per Aot_reset sce 1 auf den Tuer-Platz 0 (sub02 @Datei 0x007C2 / 0x007BA
+ *   `46 00 01 31 02 00 ff ff 00 00`; Platz 0 = Door_aot_set main00 @Datei 0x006FA) und ist
+ *   dort stumm wie an jeder Tuer (@0x80043084). RE2 spielt beim woertlich gleichen Text
+ *   (ROOM7020 msg 2 @Datei 0x01F69) in sub06 @Datei 0x01598 Message_on 2 und direkt danach
+ *   @Datei 0x0159E `36 02 16 00 00 00 00 00 00 00 00 00` Se_on(2,0x16). Raumbank-Satz 0x16 von
+ *   ROOM7020: EDT @Datei 0x05CE8 `00 00 e3 00`, Tone @Datei 0x06730, VAG @Datei 0x1DD50
+ *   (6144 B, sha1 ea19d086e3cb) = Satz 3 der Mini-Bank. RE1.5 ist hier nicht massgeblich,
+ *   weil es an Tueren gar keinen Ton hat (Kopf von include/re15_lock_se.h). */
+#define RE15_LOCK_SE_SATZ_S  RE2_DOOR_SE_ZU_P
+
 unsigned g_re15_lock_se_zaehler = 0;
 int      g_re15_lock_se_letzter = -1;
 
@@ -57,6 +71,7 @@ int re15_lock_se_satz_fuer_art(int art)
 {
     if (art == RE15_LOCK_SE_ART_K) return RE15_LOCK_SE_SATZ_K;
     if (art == RE15_LOCK_SE_ART_M) return RE15_LOCK_SE_SATZ_M;
+    if (art == RE15_LOCK_SE_ART_S) return RE15_LOCK_SE_SATZ_S;
     return -1;
 }
 
@@ -86,10 +101,11 @@ static void tuerse_log(unsigned room, int msg, int art, int weg, int satz)
     if (!f) return;
     fprintf(f, "F%u raum=%04X nachricht=%d art=%c weg=%s satz=%d(%s) nr=%u\n",
             (unsigned)g_engine.frame_count,
-            room, msg, art == RE15_LOCK_SE_ART_K ? 'K' : 'M',
+            room, msg, art == RE15_LOCK_SE_ART_K ? 'K' : art == RE15_LOCK_SE_ART_M ? 'M' : 'S',
             weg == RE15_LOCK_WEG_AOT ? "AOT" : "SKRIPT", satz,
             satz == RE2_DOOR_SE_ZU_A ? "ZU_A" : satz == RE2_DOOR_SE_ZU_B ? "ZU_B"
-                                     : satz == RE2_DOOR_SE_ZU_E ? "ZU_E" : "?",
+                                     : satz == RE2_DOOR_SE_ZU_E ? "ZU_E"
+                                     : satz == RE2_DOOR_SE_ZU_P ? "ZU_P" : "?",
             g_re15_lock_se_zaehler);
     fclose(f);
 }
@@ -124,4 +140,5 @@ void re15_door_bank_rec(re15_door_bank_rec_t *out)
     out->se_zu_a  = RE2_DOOR_SE_ZU_A;
     out->se_zu_b  = RE2_DOOR_SE_ZU_B;
     out->se_zu_e  = RE2_DOOR_SE_ZU_E;
+    out->se_zu_p  = RE2_DOOR_SE_ZU_P;
 }

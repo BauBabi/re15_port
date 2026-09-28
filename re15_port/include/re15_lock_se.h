@@ -32,7 +32,7 @@
  * EINHAENGEPUNKT IM PORT: das Oeffnen der Schloss-Nachricht (RE1.5 kennt kein
  * key_id-Feld; das Schloss ist Datenwahl sce=1 Text statt sce=2 Tuer). Die Stellen
  * (Raum, Nachricht) -> Art liefert engine/src/gen/lock_se_sites.inc
- * (tools/gen_lock_se_sites.py, 52 Stellen: 17 x K, 35 x M; jede mit Datei-Offset).
+ * (tools/gen_lock_se_sites.py, 54 Stellen: 17 x K, 35 x M, 2 x S; jede mit Datei-Offset).
  * RE1.5s EIGENER Schloss-Ton ROOM4000 sub02 @Datei 0x0142E Se_on(2,0x0f) bleibt RE1.5:
  * dieser Skript-Weg steht NICHT in der Tabelle (Generator-Bedingung C).
  * ==========================================================================*/
@@ -49,6 +49,8 @@
  * (lock_se_common.c prueft das beim Uebersetzen). */
 #define RE15_LOCK_SE_ART_K 0     /* elektronisch / Kartenleser / Ausweis / Pincode */
 #define RE15_LOCK_SE_ART_M 1     /* mechanisch / von der anderen Seite             */
+#define RE15_LOCK_SE_ART_S 2     /* ohne Strom: RE1.5 ROOM5080/5081 msg 2 = RE2 ROOM7020
+                                  * msg 2 (Nachbesserung Runde 30, Beleg lock_se_common.c) */
 
 /* An der Stelle des tatsaechlichen Oeffnens gerufen. Steht (room_id, msg_id) in der
  * Tabelle und ist `weg` fuer diese Zeile gesetzt, faellt EIN Tuer-Ton (Satz der Art),
@@ -73,7 +75,7 @@ typedef struct {
     unsigned edt_off, edt_size;   /* SE-Map @+0, VH @u32[edt_size-8] */
     unsigned vbd_off, vbd_size;   /* VB-Rumpf                        */
     int      se_count;            /* Saetze in der Mini-Bank         */
-    int      se_zu_a, se_zu_b, se_zu_e;
+    int      se_zu_a, se_zu_b, se_zu_e, se_zu_p;
 } re15_door_bank_rec_t;
 void re15_door_bank_rec(re15_door_bank_rec_t *out);
 

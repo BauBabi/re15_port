@@ -17,7 +17,7 @@ import scd_walk_lib as L
 
 INC = os.path.join(REPO, "re15_port", "engine", "src", "gen", "lock_se_sites.inc")
 tab = {}
-for m in re.finditer(r"\{ 0x([0-9A-F]{4}),\s*(\d+), RE15_LOCK_ART_([KM]), (\d) \}", open(INC).read()):
+for m in re.finditer(r"\{ 0x([0-9A-F]{4}),\s*(\d+), RE15_LOCK_ART_([KMS]), (\d) \}", open(INC).read()):
     tab[(int(m.group(1), 16), int(m.group(2)))] = (m.group(3), int(m.group(4)))
 
 CODE = re.compile(r"digit|\bcode\b|keypanel|key ?pad|password|numerical|number", re.I)

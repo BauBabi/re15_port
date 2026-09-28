@@ -1206,8 +1206,8 @@ void re15_audio_re2_elevator_se(int se_id)
  * Kopie des Fahrstuhl-Slots 5a: shared_assets/RE2/TUERSE.VBS hat dasselbe Satzformat
  * [SE-Map @0 .. vh_off) [VH "pBAV" @vh_off] [Trailer, u32 vh_off @edt_size-8] [VBD]
  * (FUN_8005a09c), die Groessen liefert re15_door_bank_rec() (gen/re2_door_bank.inc,
- * tools/re2_door_se_cut.py). Drei Wellen (ZU_A ROOM1140 / ZU_B ROOM1050 / ZU_E ROOM2110,
- * je Raumbank-Satz 0x16), dekodiert mit demselben VAB-Code wie RE1.5. */
+ * tools/re2_door_se_cut.py). Vier Wellen (ZU_A ROOM1140 / ZU_B ROOM1050 / ZU_E ROOM2110 /
+ * ZU_P ROOM7020, je Raumbank-Satz 0x16), dekodiert mit demselben VAB-Code wie RE1.5. */
 static int        s_door_loaded = 0;
 static int        s_door_failed = 0;
 static re15_vab_t s_door_vab;
@@ -1262,7 +1262,7 @@ static int load_re2_door_se_pc(void)
     return 1;
 }
 
-/* Der Tuer-Ton. se_id = Satz der Mini-Bank (RE2_DOOR_SE_ZU_A/_B/_E). Nicht positional
+/* Der Tuer-Ton. se_id = Satz der Mini-Bank (RE2_DOOR_SE_ZU_A/_B/_E/_P). Nicht positional
  * wie RE2 @0x800516a8 `addu a1,zero,zero`. Gerufen aus engine/src/lock_se_common.c. */
 void re15_audio_re2_door_se(int se_id)
 {

@@ -8,7 +8,8 @@
  * ABDECKUNG DIESES LAUFS:
  *   206 RDTs mit Inhalt gelesen (+34 Platzhalter < 0x100 B)
  *   118 Nachrichten tragen das Wort lock/latched
- *   52 Stellen aufgenommen: 17 x Art K (elektronisch/Karte), 35 x Art M (mechanisch)
+ *   54 Stellen aufgenommen: 17 x Art K (elektronisch/Karte), 35 x Art M (mechanisch),
+ *   2 x Art S (ohne Strom)
  *   66 verworfen (Liste am Dateiende)
  *
  * wege: Bit 0 = Text-AOT (sce=1, re15_scd_show_message), Bit 1 = Skript (Message_on)
@@ -18,6 +19,7 @@ typedef struct { uint16_t room; uint8_t msg; uint8_t art; uint8_t wege; } re15_l
 
 #define RE15_LOCK_ART_K 0   /* elektronisch / Kartenleser -> RE2_DOOR_SE_ZU_E */
 #define RE15_LOCK_ART_M 1   /* mechanisch                 -> RE2_DOOR_SE_ZU_A */
+#define RE15_LOCK_ART_S 2   /* ohne Strom (RE2 ROOM7020)  -> RE2_DOOR_SE_ZU_P */
 
 static const re15_lock_se_site_t re15_lock_se_sites[] = {
     { 0x10D0,  6, RE15_LOCK_ART_K, 1 },   /* msg @0x01F3B "Communication Room"It's electronically locked.There's a card reader on the right." | Zwilling Platz 0 | Aot_set Platz 0 main00 @0x0102A */
@@ -68,12 +70,14 @@ static const re15_lock_se_site_t re15_lock_se_sites[] = {
     { 0x5070,  2, RE15_LOCK_ART_M, 1 },   /* msg @0x00E27 "Shelter 02"The door is tightly locked.It doesn't look like it will open unless there's an " | Zwilling Platz 2 | Aot_reset Platz 2 main00 @0x00A3C */
     { 0x5071,  1, RE15_LOCK_ART_M, 1 },   /* msg @0x00DB8 "Shelter 01"The door is tightly locked.It doesn't look like it will open unless there's an " | Zwilling Platz 1 | Aot_reset Platz 1 main00 @0x00A32 */
     { 0x5071,  2, RE15_LOCK_ART_M, 1 },   /* msg @0x00E27 "Shelter 02"The door is tightly locked.It doesn't look like it will open unless there's an " | Zwilling Platz 2 | Aot_reset Platz 2 main00 @0x00A3C */
+    { 0x5080,  2, RE15_LOCK_ART_S, 1 },   /* msg @0x00996 "The door won't open until the power is restored!" | Zwilling Platz 0 | Aot_reset Platz 0 sub02 @0x007C2 */
+    { 0x5081,  2, RE15_LOCK_ART_S, 1 },   /* msg @0x0098E "The door won't open until the power is restored!" | Zwilling Platz 0 | Aot_reset Platz 0 sub02 @0x007BA */
     { 0x5120,  1, RE15_LOCK_ART_M, 1 },   /* msg @0x0172B "The door is locked because of the fire!" | Text | Aot_set Platz 4 main00 @0x0147A; Aot_set Platz 5 main00 @0x0148E */
     { 0x5121,  1, RE15_LOCK_ART_M, 1 },   /* msg @0x0172B "The door is locked because of the fire!" | Text | Aot_set Platz 4 main00 @0x0147A; Aot_set Platz 5 main00 @0x0148E */
     { 0x6000,  6, RE15_LOCK_ART_M, 1 },   /* msg @0x0138B "It's locked from the other side." | Zwilling Platz 2 | Aot_set Platz 2 main00 @0x00DA0 */
     { 0x6001,  1, RE15_LOCK_ART_M, 1 },   /* msg @0x00FEB "It's locked from the other side." | Zwilling Platz 2 | Aot_set Platz 2 main00 @0x00DA0 */
 };
-#define RE15_LOCK_SE_SITE_COUNT 52
+#define RE15_LOCK_SE_SITE_COUNT 54
 
 /* VERWORFEN (Nachrichten mit lock/latched im Wortlaut, die KEINE Tuer-Schloss-Stelle sind):
  *   ROOM1011 msg 15  A: keine Schloss-Formel (kein Tuer-Schloss im Wortlaut)       "Roy: My friend John should still be in the underground cell block."

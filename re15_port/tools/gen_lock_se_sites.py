@@ -27,6 +27,15 @@ ARTEN
   M  mechanisch verschlossen / von der anderen Seite         -> RE2_DOOR_SE_ZU_A
      (RE2 ROOM1140 Satz 0x16; RE2 nimmt in 9 Revier-Raeumen diese Welle, in 6 die kuerzere
       ZU_B — eine Regel dafuer ist aus den Daten NICHT ableitbar, siehe Dossier §7)
+  S  ohne Strom ("The door won't open until the power is restored!") -> RE2_DOOR_SE_ZU_P
+     Nachbesserung Runde 30 (Gegenpruefer-Mangel 1). KEINE Port-Wahl: der Text steht
+     woertlich in RE2 ROOM7020 (msg 2 @Datei 0x01F69), und RE2 spielt ihn mit Ton:
+     sub06 @Datei 0x01598 Message_on 2 / @Datei 0x0159E Se_on(2,0x16) -> Raumbank-Satz
+     0x16 = Welle ea19d086e3cb (tools/re2_door_se_cut.py Satz 3). RE1.5 ROOM5080/5081 ist
+     derselbe Raum (Generator, dieselben vier Texte); dort legt sub02 @Datei 0x007C2 /
+     0x007BA den Text per Aot_reset sce 1 auf den Tuer-Platz 0 (Door_aot_set main00 @0x006FA).
+     Diese Formel hat KEIN lock/latched im Wortlaut; deshalb fehlte die Stelle vorher
+     auch in der Verworfen-Liste (die zaehlt nur Texte mit diesen Woertern).
 
 Ausgabe (Standard, Ermittlungsstand): build/r30_tuer-verschlossen/lock_se_sites.inc
 Mit --install (Bau-Agent):            re15_port/engine/src/gen/lock_se_sites.inc
@@ -55,6 +64,7 @@ FORMELN = [
     ("M", "fest verschlossen",         re.compile(r"The door is tightly locked\.")),
     ("M", "verschlossen (Feuer)",      re.compile(r"^The door is locked because of ?the fire!$")),
     ("M", "verriegelt, Schluessel fehlt", re.compile(r"^The door is latched shut and won't open\.")),
+    ("S", "ohne Strom (RE2 ROOM7020)",   re.compile(r"^The door won't open until the power is restored!$")),
 ]
 
 
@@ -147,6 +157,7 @@ def main():
 
     nK = sum(1 for s in sites if s["art"] == "K")
     nM = sum(1 for s in sites if s["art"] == "M")
+    nS = sum(1 for s in sites if s["art"] == "S")
     with open(out, "w", newline="\n", encoding="utf-8") as o:
         o.write("/* ERZEUGT von tools/gen_lock_se_sites.py - NICHT von Hand aendern.\n"
                 " *\n"
@@ -158,14 +169,16 @@ def main():
                 " * ABDECKUNG DIESES LAUFS:\n"
                 " *   %d RDTs mit Inhalt gelesen (+%d Platzhalter < 0x100 B)\n"
                 " *   %d Nachrichten tragen das Wort lock/latched\n"
-                " *   %d Stellen aufgenommen: %d x Art K (elektronisch/Karte), %d x Art M (mechanisch)\n"
+                " *   %d Stellen aufgenommen: %d x Art K (elektronisch/Karte), %d x Art M (mechanisch),\n"
+                " *   %d x Art S (ohne Strom)\n"
                 " *   %d verworfen (Liste am Dateiende)\n"
                 " *\n"
                 " * wege: Bit 0 = Text-AOT (sce=1, re15_scd_show_message), Bit 1 = Skript (Message_on)\n"
-                " */\n\n" % (n_rdt, n_stub, n_lockwort, len(sites), nK, nM, len(verworfen)))
+                " */\n\n" % (n_rdt, n_stub, n_lockwort, len(sites), nK, nM, nS, len(verworfen)))
         o.write("typedef struct { uint16_t room; uint8_t msg; uint8_t art; uint8_t wege; } re15_lock_se_site_t;\n\n")
         o.write("#define RE15_LOCK_ART_K 0   /* elektronisch / Kartenleser -> RE2_DOOR_SE_ZU_E */\n")
-        o.write("#define RE15_LOCK_ART_M 1   /* mechanisch                 -> RE2_DOOR_SE_ZU_A */\n\n")
+        o.write("#define RE15_LOCK_ART_M 1   /* mechanisch                 -> RE2_DOOR_SE_ZU_A */\n")
+        o.write("#define RE15_LOCK_ART_S 2   /* ohne Strom (RE2 ROOM7020)  -> RE2_DOOR_SE_ZU_P */\n\n")
         o.write("static const re15_lock_se_site_t re15_lock_se_sites[] = {\n")
         for s in sites:
             wo = []
@@ -183,8 +196,8 @@ def main():
         for (room, mi, t, grund) in verworfen:
             o.write(" *   ROOM%04X msg %2d  %-60s  \"%s\"\n" % (room, mi, grund, t[:80]))
         o.write(" */\n")
-    print("%d RDTs (+%d Platzhalter), %d Nachrichten mit lock/latched, %d aufgenommen (K %d / M %d), %d verworfen"
-          % (n_rdt, n_stub, n_lockwort, len(sites), nK, nM, len(verworfen)))
+    print("%d RDTs (+%d Platzhalter), %d Nachrichten mit lock/latched, %d aufgenommen (K %d / M %d / S %d), %d verworfen"
+          % (n_rdt, n_stub, n_lockwort, len(sites), nK, nM, nS, len(verworfen)))
     print("-> %s" % out)
     return 0
 
