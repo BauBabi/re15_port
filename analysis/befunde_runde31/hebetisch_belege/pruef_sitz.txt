@@ -1,0 +1,8 @@
+ROOM1150.RDT  Sicherung (-280, -1062, 1280) ry 1440: Luft Kuppel zu 6.01, Deckel offen 46.80, ausserhalb Achteck 0, tiefster Punkt +0.0 zum Boden
+ROOM1150.RDT  Granate   (-260, -1091, 1140) ry 1792: Luft Kuppel zu 5.88, Deckel offen 32.70, ausserhalb Achteck 0, tiefster Punkt +0.0 zum Boden
+ROOM1150.RDT  Abstand Granate -> Sicherungs-Mantel 6.77 (Proben 1666/673)
+ROOM1150.RDT  z-Bereich Sicherung 1101..1459, Granate 1075..1205; Oeffnung offen 1110..1410
+ROOM1151.RDT  Sicherung (-280, -1062, 1280) ry 1440: Luft Kuppel zu 6.01, Deckel offen 46.80, ausserhalb Achteck 0, tiefster Punkt +0.0 zum Boden
+ROOM1151.RDT  Granate   (-260, -1091, 1140) ry 1792: Luft Kuppel zu 5.88, Deckel offen 32.70, ausserhalb Achteck 0, tiefster Punkt +0.0 zum Boden
+ROOM1151.RDT  Abstand Granate -> Sicherungs-Mantel 6.77 (Proben 1666/673)
+ROOM1151.RDT  z-Bereich Sicherung 1101..1459, Granate 1075..1205; Oeffnung offen 1110..1410
