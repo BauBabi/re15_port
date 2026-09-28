@@ -3,21 +3,23 @@
 
 Nur LESEND gegenueber allen Originaldaten; schreibt nach build/r31_tueren/t1/.
 
-Verfahren je Tuerseite (Dossier §4):
-  1. Tuerkante: die Kante des Tuer-Rechtecks (Door_aot_set pc+6..13), die vom Ankunftsort
-     der Gegenseite (Ziel x/z der Rueckrichtung, liegt in DIESEM Raum) am weitesten weg
-     liegt; lange Kanten zuerst. Ohne Gegenseite: die Kante, hinter der kein RVD-Bereich
-     des Raums liegt (dort ist kein begehbarer Raum mehr).
-  2. Blatt: senkrechtes Rechteck BLATT_B x BLATT_H (06_massstab: 1953 / 3549), Unterkante auf
-     y = -Band*1800, mittig auf der Kante.
+Verfahren je Tuerseite (Dossier §4.1; die Kantenwahl selbst steht in
+zensus_ausschnitte.kante_waehlen):
+  1. Kandidatenkanten = lange Kanten des Rechtecks/Vierecks (kandidatenkanten).
+     tuerkante() ist nur noch der Rueckfall ohne Frontansicht (Ankunft der Gegenseite bzw. RVD).
+  2. Blatt: senkrechtes Rechteck Breite x BLATT_H (RE1.5 1950, RE2 1640, Hoehe 3549 -
+     06_massstab §1), Unterkante auf y = -Band*1800, mittig auf der Kante.
   3. Je Cut projizieren (Kamera = tor_kamera.Kamera exakt, H = fov>>7, Bildmitte 160/120);
-     Cut zaehlt, wenn alle Ecken vor der Kamera liegen, die Vorderseite zur Kamera zeigt,
-     mindestens 60 % der Blattflaeche im Bild liegt und das Blatt mindestens 24 Pixel hoch ist.
+     Cut zaehlt, wenn alle Ecken vor der Kamera liegen, die Vorderseite zur Kamera zeigt, die
+     Seitenkanten aufrecht (< 45 Grad) stehen, mindestens 60 % der Blattflaeche im Bild liegt und
+     das Blatt mindestens 24 Pixel hoch ist.
   4. Verfeinerung am Bild: Verschiebung quer (dn) und laengs (dt) zur Kante sowie Breite W so,
      dass die Kanten des projizierten Blatts auf Helligkeitsspruengen liegen (Mittel des
-     Gradientenbetrags quer zu linker, rechter, oberer Kante; untere Kante halb gewichtet).
+     Gradientenbetrags quer zu linker, rechter, oberer Kante; untere Kante halb gewichtet),
+     mit Strafe fuer die Entfernung von der Datenlage.
   5. Ausschnitt (Blatt-Huelle + Rand, 3-fach NEAREST) und entzerrtes Blatt (Homographie auf
-     128 x 218 = RE2-Blattbereich v 0..218, bilinear).
+     128 x 218 = RE2-Blattbereich, bilinear).
+Alle Schwellen: Messwerkzeug, PORT-WAHL, keine Original-Adresse.
 """
 import math
 import os

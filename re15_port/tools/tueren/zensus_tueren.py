@@ -3,12 +3,11 @@
 
 Liest alle ausgelieferten RDTs (re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT), jeden
 Door_aot_set (0x3B, 32/40 B; Format in zensus_lib.py mit Adressen), markiert, ob die ENGINE
-ihn beim Betreten aufstellt (re15_port/tools/engine_tueren.txt), fuehrt Leon/Elza-Varianten
-zu TUERSEITEN zusammen, paart Seiten zu PHYSISCHEN TUEREN und ordnet eine Kategorie zu.
+ihn beim Betreten aufstellt (re15_port/tools/engine_tueren.txt), und fuehrt Leon/Elza-Varianten
+zu TUERSEITEN zusammen. Bibliothek: Paarung und Kategorien in zensus_paare.py, der Gesamtlauf
+in zensus_alles.py. Schreibt nichts.
 
-Schreibt build/r31_tueren/t1/zensus_saetze.json (Rohsaetze, Seiten, Tueren).
-
-Aufruf: python re15_port/tools/tueren/zensus_tueren.py [--liste]
+Aufruf (Kurzbericht): python re15_port/tools/tueren/zensus_tueren.py
 """
 import collections
 import json
@@ -152,3 +151,8 @@ def seiten_bilden(saetze, eng):
     return aus
 
 
+if __name__ == "__main__":
+    _s, _stubs = saetze_lesen()
+    _seiten = seiten_bilden(_s, engine_liste())
+    print("Saetze %d (Viereck %d), Stubs %d, Tuerseiten %d" % (
+        len(_s), sum(1 for x in _s if x["form"] == "viereck"), len(_stubs), len(_seiten)))
