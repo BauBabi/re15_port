@@ -12,6 +12,20 @@
 #   debug.log        - [scd]-Zeilen (Plc_dest, Cut_chg, letterbox, thread start)
 #
 # Aufruf: r30_5080_echtlauf.sh <ziel> "<input-skript>" [start] [sekunden] [zusatz-env ...]
+#
+# ZEITBASIS DES SKRIPTS (Nachbesserung Gegenpruefer, Punkt 4): Standard ist hier
+# RE15_INPUT_SCRIPT_BASIS=spiel (Skript-Tick 0 = Spielbild <start>, input_pc.c:70-74/110-111).
+# Ohne diesen Schalter zaehlt der Parser die gerenderten Bilder ab Programmstart; beim
+# Tuerweg (RAUM=6010 + RE15_FIRE_AOT) verschiebt sich das Skript dann um ~123 Bilder
+# (gemessen: "Tick 0 -> F160" mit spiel, "Tick 0 -> F37" ohne), und die Generator-AOT wird
+# nie ausgeloest. BASIS=roh schaltet ihn ab (so lief der Gegenpruefer-Nachlauf "tuerweg").
+#   Tuerweg (Dossier 4.2/4.5):
+#     RAUM=6010 r30_5080_echtlauf.sh <ziel> "<skript>" 160 80 RE15_FIRE_AOT=2@60#6010
+#   Debug-Sprung (Dossier 4.1, Lauf lauf1 lief mit der ROHEN Basis: "Tick 0 -> F77"):
+#     BASIS=roh r30_5080_echtlauf.sh <ziel> "<skript>" 200 80
+#   Birkin vor der Folge (Dossier 8.1, Gegenpruefer-Lauf "tuerweg" = Tuerweg mit ROHER Basis:
+#   das Skript laeuft in ROOM6010 an, Leon bleibt in ROOM5080 bei (-23350,-18200) stehen):
+#     BASIS=roh RAUM=6010 r30_5080_echtlauf.sh <ziel> "<tuerweg-skript>" 160 80 RE15_FIRE_AOT=2@60#6010
 set -uo pipefail
 HIER="$(cd "$(dirname "$0")" && pwd)"
 BAUM="$(cd "$HIER/../../.." && pwd)"
@@ -33,6 +47,8 @@ export RE15_INPUT_SCRIPT="$SKRIPT"
 export RE15_INPUT_SCRIPT_START="$START"
 export RE15_STATE_LOG="$ZIEL/state.log"
 export RE15_DISCARD_LOG="$ZIEL/lage.log"
+if [ "${BASIS:-spiel}" = "roh" ]; then unset RE15_INPUT_SCRIPT_BASIS
+else export RE15_INPUT_SCRIPT_BASIS="${BASIS:-spiel}"; fi
 for kv in "$@"; do export "$kv"; done
 cd "$ZIEL"
 timeout -k 5 "$SEK" "$EXE" > "$ZIEL/stdout.txt" 2> "$ZIEL/stderr.txt" &
