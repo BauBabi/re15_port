@@ -6,18 +6,25 @@
  * Jeder Teil faehrt den ECHTEN Raumstart des Ports (scd_room_reenter mit der ausgelieferten
  * RDT, sub00-Init-Lauf, dann re15_irons_tisch_install) — keine Nachbildung.
  *
- *   P  Props: ROOM1150 UND ROOM1151 tragen obj 5 (-23813,-1533,-18280) rot 2944 und obj 6
+ *   P  Props: ROOM1150 UND ROOM1151 tragen obj 5 (-23813,-1533,-18275) rot 2943 und obj 6
  *      (-23522,-1520,-18568) rot 3072, Typ 0, Band 1, Eltern -1, Flags 0x000B
  *      (0x000A | 1 @0x80040998), Nullbox. ROOM1140 traegt keines von beiden.
- *   Z  Zonen: Slot 7 ITEM x[-24000..-23000] z[-18780..-17780] Item 0x48 Menge 1 Bit 54 obj 5,
- *      Slot 8 ITEM z[-19149..-18149] Item 0x21 Menge 3 Bit 55 obj 6, sat 0x31, floor 0
- *      (x/w = Telefon-Satz ROOM1150.RDT @0x00DA6).
+ *      (Lage B = Mittel der vier Schwellen, r30_idw_klemmbrett.py — Port-Wahl.)
+ *   Z  Zonen: Slot 7 ITEM x[-24000..-23000] z[-18462..-17776] Item 0x48 Menge 1 Bit 54 obj 5,
+ *      Slot 8 ITEM z[-19149..-18463] Item 0x21 Menge 3 Bit 55 obj 6, sat 0x31, floor 0
+ *      (x/w = Telefon-Satz ROOM1150.RDT @0x00DA6; z/d Port-Wahl: 500 um jede Lage, geteilt
+ *      in der Mitte -18462 zwischen Buch -18275 und Kartenmitte -18649).
+ *      Kein Pruefpunkt der Standlinie (x -22664 - 620 = -23284, z -19400..-17600) liegt in
+ *      BEIDEN Zonen.
  *   G  schon genommen: Bit (9,54) bzw. (9,55) VOR dem Raumstart -> genau dieser Gegenstand
  *      fehlt (Prop UND Zone), der andere bleibt.
  *   D  Druck: Spieler an der Tischkante (-22664, z) mit Blick -X (rot 2048), Aktionstaste
  *      ueber re15_aot_scan (Pruefpunkt 620 voraus @0x80042bd0):
  *        z -18900 -> Item-Modal 0x21, bis zum Ende bestaetigt: 3 Stueck im Inventar,
  *                    Bit 55, Zone 8 aus, obj 6 aus (item_modal_common.c Zustand 7);
+ *        z -18649 (Kartenmitte), -18720, -18463 (Grenze) -> ebenfalls die KARTE — der Fall
+ *                    des Gegenpruefers: vorher kam hier das Buch;
+ *        z -18275 (Buchmitte), -18462 (Grenze) -> der Leser;
  *        z -17950 -> KEIN Item-Modal, der Aufnahme-Leser (RE2-Weg, re15_menu_request_doc);
  *                    nach Schliessen + Bestaetigen der Meldung: Zone 7 aus, Bit 54,
  *                    obj 5 aus, FILE-Platz 0 = Dokument 0.
@@ -135,16 +142,27 @@ static int prop_ok(int k, int32_t x, int32_t y, int32_t z, int16_t ry)
            p->box_hz == 0;
 }
 
-static int zone_ok(int s, int32_t x0, int32_t z0, uint8_t item, uint8_t menge, uint8_t bit,
-                   uint8_t oid)
+/* z0..z1 = gedeckter z-Bereich (beide Kanten eingeschlossen, |z - Mitte| <= halbe Tiefe
+ * wie re15_aot_scan). */
+static int zone_ok(int s, int32_t x0, int32_t z0, int32_t z1, uint8_t item, uint8_t menge,
+                   uint8_t bit, uint8_t oid)
 {
     const re15_aot_t *a = &g_aot.slots[s];
     const re15_aot_item_params_t *p = &g_aot.item_params[s];
     return a->active && a->type == RE15_AOT_TYPE_ITEM && a->sce_flags == 0x31 && a->band == 0 &&
            a->x - a->half_w == x0 && a->x + a->half_w == x0 + 1000 &&
-           a->z - a->half_h == z0 && a->z + a->half_h == z0 + 1000 &&
+           a->z - a->half_h == z0 && a->z + a->half_h == z1 &&
            p->item_type == item && p->amount == menge && p->taken_bit == bit &&
            p->taken_prop == oid;
+}
+
+static int in_zone(int s, int32_t x, int32_t z)
+{
+    const re15_aot_t *a = &g_aot.slots[s];
+    int32_t dx = x - a->x, dz = z - a->z;
+    if (dx < 0) dx = -dx;
+    if (dz < 0) dz = -dz;
+    return a->active && dx <= a->half_w && dz <= a->half_h;
 }
 
 /* ------------------------------------------------------------------ P / Z / G */
@@ -155,8 +173,8 @@ static void teil_pzg(void)
     printf("\n[P/Z] Props und Zonen nach dem Raumstart\n");
     for (int i = 0; i < 2; i++) {
         hochfahren(raeume[i].r, raeume[i].id, -19000, -23000, NULL);
-        CHECK(prop_ok(slot_von(5), -23813, -1533, -18280, 2944),
-              "P %s obj 5 (Diary) bei (-23813,-1533,-18280) rot 2944, Flags 0x000B, Nullbox",
+        CHECK(prop_ok(slot_von(5), -23813, -1533, -18275, 2943),
+              "P %s obj 5 (Diary) bei (-23813,-1533,-18275) rot 2943, Flags 0x000B, Nullbox",
               raeume[i].n);
         CHECK(prop_ok(slot_von(6), -23522, -1520, -18568, 3072),
               "P %s obj 6 (Karte) bei (-23522,-1520,-18568) rot 3072, Flags 0x000B, Nullbox",
@@ -164,12 +182,24 @@ static void teil_pzg(void)
         CHECK(slot_von(0) >= 0 && slot_von(4) >= 0 && g_scd.prop_count == 7,
               "P %s Raum-Props 0..3 und Sicherung 4 bleiben, Pool %d Eintraege", raeume[i].n,
               (int)g_scd.prop_count);
-        CHECK(zone_ok(7, -24000, -18780, 0x48, 1, 54, 5),
-              "Z %s Slot 7: ITEM x[-24000..-23000] z[-18780..-17780] Item 0x48 x1 Bit 54 obj 5",
+        CHECK(zone_ok(7, -24000, -18462, -17776, 0x48, 1, 54, 5),
+              "Z %s Slot 7: ITEM x[-24000..-23000] z[-18462..-17776] Item 0x48 x1 Bit 54 obj 5",
               raeume[i].n);
-        CHECK(zone_ok(8, -24000, -19149, 0x21, 3, 55, 6),
-              "Z %s Slot 8: ITEM x[-24000..-23000] z[-19149..-18149] Item 0x21 x3 Bit 55 obj 6",
+        CHECK(zone_ok(8, -24000, -19149, -18463, 0x21, 3, 55, 6),
+              "Z %s Slot 8: ITEM x[-24000..-23000] z[-19149..-18463] Item 0x21 x3 Bit 55 obj 6",
               raeume[i].n);
+        /* Pruefpunkt 620 voraus (@0x80042bd0) eines Spielers an der Tischkante x -22664 mit
+         * Blick -X; Standlinie z -19400..-17600 (anlauf.txt). */
+        int beide = 0, nur7 = 0, nur8 = 0;
+        for (int32_t z = -19400; z <= -17600; z++) {
+            int a7 = in_zone(7, -22664 - 620, z), a8 = in_zone(8, -22664 - 620, z);
+            if (a7 && a8) beide++;
+            else if (a7) nur7++;
+            else if (a8) nur8++;
+        }
+        CHECK(beide == 0 && nur7 == 687 && nur8 == 687,
+              "Z %s Standlinie: %d Pruefpunkte in beiden Zonen (Soll 0), %d nur Buch, %d nur "
+              "Karte (Soll je 687)", raeume[i].n, beide, nur7, nur8);
     }
     hochfahren(&s_r1140, 0x1140, -7000, -7000, NULL);
     CHECK(slot_von(5) < 0 && slot_von(6) < 0 &&
@@ -185,12 +215,12 @@ static void teil_pzg(void)
         hochfahren(raeume[i].r, raeume[i].id, -19000, -23000, nur54);
         CHECK(slot_von(5) < 0 && !g_aot.slots[7].active &&
               prop_ok(slot_von(6), -23522, -1520, -18568, 3072) &&
-              zone_ok(8, -24000, -19149, 0x21, 3, 55, 6),
+              zone_ok(8, -24000, -19149, -18463, 0x21, 3, 55, 6),
               "G %s Bit (9,54) gesetzt: Diary fehlt (Prop + Zone), Karte da", raeume[i].n);
         hochfahren(raeume[i].r, raeume[i].id, -19000, -23000, nur55);
         CHECK(slot_von(6) < 0 && !g_aot.slots[8].active &&
-              prop_ok(slot_von(5), -23813, -1533, -18280, 2944) &&
-              zone_ok(7, -24000, -18780, 0x48, 1, 54, 5),
+              prop_ok(slot_von(5), -23813, -1533, -18275, 2943) &&
+              zone_ok(7, -24000, -18462, -17776, 0x48, 1, 54, 5),
               "G %s Bit (9,55) gesetzt: Karte fehlt (Prop + Zone), Diary da", raeume[i].n);
         hochfahren(raeume[i].r, raeume[i].id, -19000, -23000, beide);
         CHECK(slot_von(5) < 0 && slot_von(6) < 0 && !g_aot.slots[7].active &&
@@ -228,6 +258,28 @@ static void druck(raum_t *r, uint16_t room_id, int32_t x, int32_t z, int16_t rot
     g_aot_action_pressed = 0;
 }
 
+/* Leser -> Schliessen -> Meldung -> Bestaetigen -> Menue zu, ohne Pruefungen (fuer die
+ * zusaetzlichen Druck-Proben; die volle Kette prueft der Diary-Block unten). */
+static void leser_abschliessen(void)
+{
+    int n = 0;
+    while (n++ < 300 && !(re15_menu_phase() == 1 && g_inv_screen.item_state == 3))
+        menue_bild(0, 0);
+    menue_bild(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    uint8_t mid = 0; int rev = -1, total = re15_menu_doc_msg_total();
+    n = 0;
+    while (n++ < 400 && re15_menu_doc_msg(&mid, &rev) && rev < total) menue_bild(0, 0);
+    menue_bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    n = 0;
+    while (n++ < 200 && (re15_menu_is_open() || re15_menu_stage() != 0)) menue_bild(0, 0);
+}
+
+static void modal_abschliessen(void)
+{
+    int w = 0;
+    while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick((uint16_t)PAD_CONFIRM, 0);
+}
+
 static void teil_d(void)
 {
     printf("\n[D] Aufheben mit der Aktionstaste\n");
@@ -253,6 +305,31 @@ static void teil_d(void)
           !g_scd.props[k6].active && g_aot.slots[7].active &&
           g_scd.props[slot_von(5)].active,
           "D Karte: Bit (9,55) gesetzt, Zone 8 aus, obj 6 aus; Diary unberuehrt");
+
+    /* Nachbesserung (Gegenpruefer): direkt VOR der Karte bekam man vorher das Buch. */
+    static const int32_t k_karte_z[3] = { -18649, -18720, -18463 };
+    static const char *k_karte_n[3] = { "Kartenmitte", "Kartenkante", "Grenze Kartenseite" };
+    for (int i = 0; i < 3; i++) {
+        druck(&s_r1150, 0x1150, -22664, k_karte_z[i], 2048);
+        typ = 0; wahl = -1; w = 0;
+        int m = re15_item_modal_active(), d = re15_menu_doc_active();
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800)
+            re15_item_modal_tick(0, 0);
+        re15_item_modal_prompt(&typ, &wahl);
+        CHECK(m && !d && typ == 0x21,
+              "D Karte: Stand (-22664,%d) = %s, Blick -X -> Item-Modal 0x%02X (Soll 0x21), "
+              "kein Leser", (int)k_karte_z[i], k_karte_n[i], typ);
+        modal_abschliessen();
+    }
+    static const int32_t k_buch_z[2] = { -18275, -18462 };
+    static const char *k_buch_n[2] = { "Buchmitte", "Grenze Buchseite" };
+    for (int i = 0; i < 2; i++) {
+        druck(&s_r1150, 0x1150, -22664, k_buch_z[i], 2048);
+        CHECK(!re15_item_modal_active() && re15_menu_doc_active(),
+              "D Diary: Stand (-22664,%d) = %s, Blick -X -> Leser, kein Item-Modal",
+              (int)k_buch_z[i], k_buch_n[i]);
+        leser_abschliessen();
+    }
 
     /* Diary */
     druck(&s_r1150, 0x1150, -22664, -17950, 2048);
@@ -289,10 +366,10 @@ static void teil_d(void)
     CHECK(!re15_item_modal_active() && !re15_menu_doc_active(),
           "D Gegenprobe Stand x -22364 (Pruefpunkt -22984 vor dem Rechteck): nichts");
     /* ROOM1151 (Elza-Variante) hat dieselben Zonen */
-    druck(&s_r1151, 0x1151, -22664, -18900, 2048);
-    CHECK(re15_item_modal_active(), "D ROOM1151 Karte: Item-Modal aktiv");
-    w = 0;
-    while (re15_item_modal_active() && w++ < 1600) re15_item_modal_tick((uint16_t)PAD_CONFIRM, 0);
+    druck(&s_r1151, 0x1151, -22664, -18649, 2048);
+    CHECK(re15_item_modal_active() && !re15_menu_doc_active(),
+          "D ROOM1151 Karte: Stand an der Kartenmitte (-22664,-18649) -> Item-Modal aktiv");
+    modal_abschliessen();
 }
 
 /* ------------------------------------------------------------------ M / K */
@@ -324,7 +401,7 @@ static void teil_mk(void)
     double ad = hypot(dx - 152.5, dy - 126.5), ak = hypot(kx - 140.0, ky - 126.5);
     CHECK(dx >= 146.0 && dx <= 158.0 && dy >= 120.0 && dy <= 132.0 && ad < 2.5,
           "M Buchmitte (%.2f ; %.2f) in der roten Marke x146..158 y120..132, %.2f px neben "
-          "der Mitte (Lage B, gemessen 2,29)", dx, dy, ad);
+          "der Mitte (Lage B = Mittel der vier Schwellen)", dx, dy, ad);
     CHECK(ak < 1.0, "M Kartenmitte (%.2f ; %.2f) %.2f px neben der blauen Marke (140,0;126,5)",
           kx, ky, ak);
 

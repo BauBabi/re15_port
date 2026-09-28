@@ -54,23 +54,27 @@
  * `if (s_taken)`, item_modal_common.c). */
 #define RE15_IRONS_DIARY_TAKEN_BIT   54
 
-/* LAGE — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE (RE1.5 hat hier kein Objekt, RE2 keinen
- * solchen Tisch). Festgelegt im Auftrag der Runde: "LAGE B" = das Buch liegt genau auf
- * dem GEMALTEN Klemmbrett unter der roten Marke. Gemessen, nicht geschaetzt:
- *   x,z  Mitte des gemalten Klemmbretts, auf die Platte zurueckgelegt (Hauptachsen der
- *        hellen Pixel, r30_idw_klemmbrett.py -> klemmbrett.txt: (-23815,-18277);
- *        Einzelmerkmal-Verfahren (-23804,-18294); Lage B nimmt (-23813,-18280)).
+/* LAGE — Port-Wahl, keine Original-Adresse (RE1.5 hat hier kein Objekt, RE2 keinen
+ * solchen Tisch). Festgelegt im Auftrag der Runde: "LAGE B" = das Buch liegt auf dem
+ * GEMALTEN Klemmbrett unter der roten Marke. Die Werte sind das Ergebnis EINER Messung mit
+ * EINER Regel (Nachbesserung: vorher eine Mischung zweier Bestimmungen, -18280 / 2944):
+ *   x,z,rot_y  r30_idw_klemmbrett.py (analysis/befunde_runde30/werkzeuge): jeder helle
+ *        Pixel des gemalten Klemmbretts in Cut 6 (ROOM11506, Feld x 170..224 y 95..149)
+ *        ueber seinen Sehstrahl auf die Platte y = -1520 gelegt, Hauptachsen der Punktwolke
+ *        je Schwelle 110/120/130/140. Regel: Mittel ueber die vier Schwellen (Mitte = Mittel
+ *        der Mitten, Achse = Mittel der langen Achsen, normiert), gerundet. Ausgabezeile:
+ *        "LAGE B = Mittel der vier Schwellen: Mitte (-23813.07, -18275.22) -> (-23813, -18275)
+ *        | lange Achse Welt (-0.9804, -0.1972) -> rot_y = 2942.60 -> 2943".
+ *        Die vier Schwellen allein: x -23816..-23808, z -18278..-18270, rot_y 2930..2957.
  *   y    Tischplatte y = -1520 (zwei Verfahren: Flaechenkorrelation Cut 2 <-> Cut 6,
  *        NCC-Gipfel -1520; Sehstrahlschnitt -1515..-1523) minus 13 = halbe Buchdicke
  *        (MD1 ROOM10E0 @0x002320 um den Mittelpunkt modelliert, bbox y -13..13).
- *   rot_y 2944  Drehung des gemalten Klemmbretts (2930..2957 je nach Schwelle).
- * Zurueckprojiziert mit der Engine-Matrix (Sonde `projekt`): Cut 2 (153,49 ; 124,44),
- * 2,29 px neben der Markenmitte (152,5 ; 126,5), INNERHALB der Marke x 146..158 /
- * y 120..132; Cut 6 (196,51 ; 123,97). */
+ * Die Buchmitte liegt in Cut 2 INNERHALB der roten Marke x 146..158 / y 120..132
+ * (unit_r30_irons_tisch Teil M; Framedump-Riegel integration_r30_irons_tisch_bild). */
 #define RE15_IRONS_DIARY_X           (-23813)
 #define RE15_IRONS_DIARY_Y           (-1533)
-#define RE15_IRONS_DIARY_Z           (-18280)
-#define RE15_IRONS_DIARY_ROT_Y       2944
+#define RE15_IRONS_DIARY_Z           (-18275)
+#define RE15_IRONS_DIARY_ROT_Y       2943
 
 /* AUFHEBE-RECHTECK (Ecke x,z / Groesse w,d, wie Item_aot_set +6/+8/+10/+12).
  * x und w vom Telefon-Satz, den das Original AUF DIESEM TISCH selbst legt:
@@ -80,12 +84,23 @@
  * Ein ums Prop ZENTRIERTES Rechteck waere von Lage B aus nicht erreichbar (Sonde
  * `abdeckung`: 0 Standorte), weil der Spieler an der Tischkante x = -22664 steht und sein
  * Pruefpunkt 620 voraus (@0x80042bd0) bei x = -23284 liegt.
- * z und d: ⛔ PORT-WAHL — 1000 tief (haeufigste Groesse, 71 von 164 Item_aot_set),
- * mittig um die z-Lage des Buchs (-18280 - 500). */
+ * z und d: Port-Wahl, keine Original-Adresse. Zwei Regeln, beide aus Messwerten:
+ *   (1) je Gegenstand 500 zu beiden Seiten seiner z-Lage (1000 tief = haeufigste Groesse,
+ *       71 von 164 ausgelieferten Item_aot_set, Zensus r30_idw_zensus.py);
+ *   (2) wo sich die zwei Bereiche ueberschneiden, teilt die MITTE zwischen den beiden
+ *       z-Lagen: (-18275 + -18649) / 2 = -18462 (Buch -18275 s.o., Kartenmitte -18649 =
+ *       Rueckprojektion der blauen Marke, Dossier 2.4). Nachbesserung nach dem
+ *       Gegenpruefer: mit einem gemeinsamen Streifen z -18780..-18149 bekam, wer direkt vor
+ *       der Karte (z -18649 / -18720) die Aktionstaste drueckte, das Buch (gemessen mit der
+ *       echten exe, F411 menue=1) — die Karte war von ihrem eigenen Platz aus nicht zu
+ *       greifen, solange das Buch lag.
+ * Buch: z -18462 .. -18275 + 500 = -17775 -> Ecke -18462, Tiefe 687. Der Port rechnet wie
+ * op_item_aot_set Mitte = z + d/2, halbe Tiefe = d/2 (ganzzahlig) und deckt damit
+ * z -18462..-17776 (eine Einheit weniger im Norden, wie bei jedem ungeraden Item_aot_set). */
 #define RE15_IRONS_DIARY_RECT_X      (-24000)
-#define RE15_IRONS_DIARY_RECT_Z      (-18780)
+#define RE15_IRONS_DIARY_RECT_Z      (-18462)
 #define RE15_IRONS_DIARY_RECT_W      1000
-#define RE15_IRONS_DIARY_RECT_D      1000
+#define RE15_IRONS_DIARY_RECT_D      687
 
 /* ---- MEMORY CARD (Item 0x21) ------------------------------------------------------- */
 
@@ -104,25 +119,32 @@
 #define RE15_IRONS_KARTE_AOT_SLOT    8     /* frei s.o. */
 #define RE15_IRONS_KARTE_TAKEN_BIT   55    /* freier Block 53..84, s.o. */
 
-/* LAGE — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE. Die Kartenmitte liegt auf der Mitte der
+/* LAGE — Port-Wahl, keine Original-Adresse. Die Kartenmitte liegt auf der Mitte der
  * BLAUEN Marke (140,0 ; 126,5), auf die Platte y = -1520 zurueckgelegt mit der echten
  * Inversen der Engine-Matrix: (-23657, -1520, -18649), vorwaerts projiziert
  * (139,97 ; 126,49) = 0,03 px. Das Keycard-Modell hat seinen Ursprung an einer ECKE
  * (Punkte (0,0,0) (0,0,270) (-161,0,270) (-161,0,0), ROOM1110.RDT @0x0013D8); bei
  * rot_y 3072 ist Modell (x,0,z) -> Welt (-z,0,x), die Kartenmitte (-80,5 ; 0 ; 135) liegt
  * also (-135, 0, -80,5) neben dem Ursprung -> Ursprung (-23522, -1520, -18568).
- * rot_y 3072: die lange Kante zeigt vom Betrachter vor dem Tisch weg (Tischachse = Welt-Z,
- * Standlinie x = -22664 ueber z -19400..-17600), Aufdruck fuer ihn aufrecht. */
+ * rot_y 3072 — Port-Wahl, keine Original-Adresse, keine Instruktion und kein Datensatz
+ * (Dossier 7.1): unter der blauen Marke ist nichts gemalt, woran sich eine Drehung messen
+ * liesse. Gemessen ist nur die Tischachse: die Standlinie vor dem Tisch liegt auf
+ * x = -22664 ueber z -19400..-17600 (Sonde anlauf, anlauf.txt), die Platte ist also
+ * achsparallel zu Welt-Z. 3072 legt die lange Kartenkante (Modell-Z, 270) senkrecht dazu
+ * nach Welt -X, vom Betrachter vor dem Tisch weg — Aufdruck fuer ihn aufrecht. */
 #define RE15_IRONS_KARTE_X           (-23522)
 #define RE15_IRONS_KARTE_Y           (-1520)
 #define RE15_IRONS_KARTE_Z           (-18568)
 #define RE15_IRONS_KARTE_ROT_Y       3072
-/* Rechteck: x/w vom Telefon-Satz @0x00DA6 (s.o.); z/d ⛔ PORT-WAHL: 1000 tief, mittig um
- * die Kartenmitte z = -18649 (-18649 - 500). */
+/* Rechteck: x/w vom Telefon-Satz @0x00DA6 (s.o.); z/d Port-Wahl, keine Original-Adresse,
+ * dieselben zwei Regeln wie beim Buch: Suedkante Kartenmitte - 500 = -18649 - 500 = -19149,
+ * Nordkante eine Einheit vor der Mitte zwischen beiden z-Lagen (-18462) = -18463 ->
+ * Ecke -19149, Tiefe 686 (gerade: der Port deckt genau z -19149..-18463). Buch und Karte
+ * teilen sich damit KEINEN Punkt mehr. */
 #define RE15_IRONS_KARTE_RECT_X      (-24000)
 #define RE15_IRONS_KARTE_RECT_Z      (-19149)
 #define RE15_IRONS_KARTE_RECT_W      1000
-#define RE15_IRONS_KARTE_RECT_D      1000
+#define RE15_IRONS_KARTE_RECT_D      686
 
 /* ---- gemeinsame Felder beider Props / Zonen ----------------------------------------- */
 
