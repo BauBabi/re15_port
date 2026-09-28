@@ -207,6 +207,13 @@ void re15_audio_core_se(int se_id);
 #define RE15_PANEL_SE_BESTAET  0x0C   /* RE2 sub04+0x0652 @ROOM2130.RDT 0x01762 */
 void re15_audio_re2_panel_se(int se_id);
 
+/* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die Toene der RE2-Tuersequenz (Gittertor DOOR2E) fuer das
+ * Tor in ROOM1170. shared_assets/RE2/TORSE.VBS = DOOR2E-Tonteil unveraendert; se 0 = Skript-Se_on
+ * (Bild 100), se 1 = Door_exit. Belege: analysis/tor_1170/08_re_ton.md. PSX: Folge-Stub. */
+int  re15_audio_re2_tor_laden(void);
+void re15_audio_re2_tor_se(int se);
+void re15_audio_se_pumpe(void);   /* nur die SE-Pumpe (Tuerszene, 60 Hz) */
+
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the
  * weapon-select menu on EQUIP so re15_audio_weapon_se then plays the newly-equipped weapon's SEs.

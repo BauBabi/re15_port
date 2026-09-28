@@ -33,6 +33,7 @@
 #include "re15_sicherung.h"
 #include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
+#include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -2060,6 +2061,19 @@ void re15_game_step(const re15_game_ctx_t *c)
             s_last_foot_cur = 0xFFFFFFFFu;   /* reset when not locomoting */
         }
     }
+
+    /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
+     * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende
+     * (Bit 0x2000000, @0x80013cb4..bc gesetzt / Door_exit @0x80014218 geloescht), erst danach
+     * blendet der Raum ein; RE1.5 hat dieselbe Reihenfolge (FUN_8001d600 @0x8001d838/48, Warten
+     * @0x8001dab8..d4). Die Anfrage setzt aot_fire_door fuer Tueren aus der Port-Tabelle
+     * (door_seq_tor1170.c) - im Scan dieses Spielschritts, also ist das Standbild der Sequenz
+     * das zuletzt gezeigte Bild. Ohne Plattform-Laeufer (Tests, PSX) verfaellt sie.
+     * Laeuft danach KEIN Szenario-Wiedereintritt (Elzas ROOM1171, s. aot_common.c), blendet
+     * der Raum hier ein: das Original spielt die State-3-Einblendung bei JEDER Transition
+     * (FUN_8001c958, `sb zero,0x800aca58` @0x8001cbdc; re15_room_transition_present). */
+    if (re15_door_seq_ausfuehren() && g_scd_pending_scenario < 0)
+        re15_room_transition_present();
 
     /* Same-room SCENARIO re-entry: a SELF-room door (dest == current room) queued
      * g_scd_pending_scenario = its target_cut during the scan above. Consume it

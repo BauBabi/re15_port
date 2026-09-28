@@ -219,6 +219,25 @@ def sca_eindeutig(rdt):
 # ----------------------------------------------------------------------------
 # Hintergrund
 # ----------------------------------------------------------------------------
+def _bg_pfad(cut):
+    """extracted/ ist unversioniert (Java-Extraktor) und liegt nur im Hauptbaum. Aus einem
+    Arbeitsbaum heraus dorthin zurueckfallen: git-common-dir/.. = Wurzel des Hauptbaums."""
+    p = BG_MUSTER % cut
+    if os.path.exists(p):
+        return p
+    import subprocess
+    try:
+        common = subprocess.check_output(["git", "-C", WURZEL, "rev-parse", "--git-common-dir"],
+                                         text=True).strip()
+        haupt = os.path.dirname(os.path.abspath(os.path.join(WURZEL, common)))
+        q = os.path.join(haupt, "extracted", "PSX", "STAGE1", "ROOM117", "ROOM117%02d.bmp" % cut)
+        if os.path.exists(q):
+            return q
+    except Exception:
+        pass
+    return p
+
+
 def hintergrund(cut):
     from PIL import Image
-    return np.asarray(Image.open(BG_MUSTER % cut).convert("RGB"), np.uint8)
+    return np.asarray(Image.open(_bg_pfad(cut)).convert("RGB"), np.uint8)

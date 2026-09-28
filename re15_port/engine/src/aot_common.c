@@ -20,6 +20,7 @@
 #include "re15_savepoint.h"  /* latch the gameplay cut at a save-phone examine */
 #include "re15_inventory.h"
 #include "re15_audio.h"      /* audio event kinds for door/pickup SFX */
+#include "re15_door_seq.h"   /* RE2-Tuersequenz: Anfrage an der Selbst-Tuer (Tor ROOM1170) */
 #include "re15_actor.h"      /* Phase 4.5.9-D: player = g_actors[0] */
 #include "re15_skeleton.h"   /* re15_sin_q12/cos_q12 — door forward-reach trigger */
 #include "re15_collision.h"  /* set the floor band at a same-room door (band from spawn Y) — shared (PSX + PC) */
@@ -714,6 +715,26 @@ static int aot_fire_door(int i)
         (0x1000u | ((unsigned)d->dest_room << 4) | (g_current_room_id & 0x000Fu))
             == g_current_room_id)
         g_scd_pending_scenario = (int)d->target_cut;
+    /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ. RE1.5 startet hier die Tuermaschine
+     * (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript
+     * Evt_end ist; RE2 spielt an derselben Stelle die Sequenz (FUN_80026b7c @0x80026bf8/bfc,
+     * Task 1 = Door_main). Welche Tuer eine bekommt, sagt die Port-Tabelle in
+     * door_seq_tor1170.c (RE1.5-Daten tragen keine Wahl). Gespielt wird sie im Spielschritt
+     * (game_step_common.c) VOR dem Wiedereintritt - wie im Original die Sequenz vor dem
+     * Einblenden liegt. Gesetzt fuer JEDE Selbst-Tuer dieses Zweigs, nicht nur fuer die mit
+     * Szenario: die Szenario-Schranke oben ist variantenblind (0x1000|dest<<4 gegen 0x1171
+     * -> falsch), das Tor in Elzas ROOM1171 wuerde sonst nie spielen. */
+    {
+        int var = 0;
+        int archiv = re15_door_seq_zuordnen(g_current_room_id, a->x, a->z, a->half_w, a->half_h,
+                                            d->band, &var);
+        if (archiv != RE15_DOOR_ARCHIV_KEINS) {
+            g_door_seq_anfrage.aktiv    = 1;
+            g_door_seq_anfrage.archiv   = (uint8_t)archiv;
+            g_door_seq_anfrage.variante = (uint8_t)var;
+            g_door_seq_anfrage.tuer_nr  = 0;
+        }
+    }
     /* BO-round 2026-05-29 (hack audit): removed the fabricated door
      * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
      * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc

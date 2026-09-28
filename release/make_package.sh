@@ -186,6 +186,10 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/RE2/$f" ]] \
             || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$f (RE2-AI-Option waere still tot)"
     done
+    # Seit v0.8.16: die Tuersequenz des Tors ROOM1170 spielt den Ton des RE2-Gittertors aus
+    # shared_assets/RE2/TORSE.VBS (audio_pc.c load_re2_tor_se_pc). Fehlt sie, laeuft die
+    # Sequenz stumm - Gate statt Stille.
+    [[ -s "$out/shared_assets/RE2/TORSE.VBS" ]]         || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/TORSE.VBS (Tuersequenz waere stumm)"
     # Voiceover: der Port laedt NICHT aus shared_assets/PSX/VOICE, sondern aus
     # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip).
     # Seit 2026-08-24 ueber die BASIS-Wurzelliste (asset_root_pc.c): synchro/ muss
