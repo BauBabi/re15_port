@@ -11519,6 +11519,12 @@ static void re15_birkin_ai_tick(int slot)
          * @0x124A) oder die Parkposition selbst ist - das sub04-Pos_set beendet
          * ihn SOFORT (SCD laeuft vor der KI: scd_vm_tick main.c:4279 vor
          * re15_enemy_ai_run_all game_step_common.c:1896). */
+        /* ⛔ RUNDE 30 (Frost-Schranke, Dossier nachschliff-room5080.md Abschnitt 9.4): diese
+         * Regel ist seit der Schranke in re15_birkin_root UNERREICHBAR — sie verlangt grid ==
+         * 0x33, und 0x33 & 0x20 laesst die Wurzel vorher aussteigen (@0x80116a88 / @0x80116274).
+         * Schon davor erreichte kein ausgelieferter Raum sie: 0x36 in ROOM5090/5091 laeuft ueber
+         * das G5-Modul (run_all-Zweig davor), und der einzige andere 0x36-Spawn (ROOM3080 @0x007D4)
+         * traegt grid 0x24. Sie bleibt stehen (nicht entfernt), bis das jemand entscheidet. */
         if (e->grid_id == 0x33 &&
             ((e->x == -14700 && e->z == -23350) ||
              (e->x == -32000 && e->z == -32000))) {
@@ -11867,13 +11873,16 @@ static void re15_birkin_ai_tick(int slot)
              * (bit & 0x1f)`, RE_15_Quellcode_V2/FUN_8004ef90.c); die Bank-Tabelle
              * @0x80074664[5] = DAT_800b1028 = Flag-Zone 5. Der Aufruf
              * `func_0x8004ef90(0x800b1028,0x1c)` steht im Birkin-Morph-Tail
-             * @0x8011a6b8 (STAGE3, FUN_8011a5d8.c:26) bzw. @0x8011ae10 (STAGE5,
-             * FUN_8011adec.c:26). Der Port hielt ihn faelschlich fuer einen
+             * @0x8011a6b8 (STAGE3, FUN_8011a5d8.c:26) bzw. @0x8011aecc (STAGE5,
+             * STAGE5_full/FUN_8011adec.c:26, = +0x814; 8011aea8 addiu a0,..,4136 / 8011aeac ori a1,zero,0x1c /
+             * 8011aecc jal 0x8004ef90 - Runde 30 room5080 N3: das fruehere Zitat
+             * @0x8011ae10 ist dort ein Sprungtabellen-Zugriff lui at,0x8010).
+             * Der Port hielt ihn faelschlich fuer einen
              * Gore-Effekt und liess ihn aus - damit blieb z5:0x1C UNGESETZT, und
              * die acht Raeume, die es abfragen (3070/3071, 5080/5081, 5090/5091,
              * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
              * DIESEN einen Produzenten. */
-            re15_game_flag_set(5, 0x1c, 1);            /* @0x8011a6b8 / @0x8011ae10 */
+            re15_game_flag_set(5, 0x1c, 1);            /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */
             break;
         case 3:   /* phase 3 @0x8011a6c0: WAIT for the room-SCD morph trigger (grid&0xf)==2. OPEN: not wired -> HOLD */
@@ -14060,6 +14069,103 @@ void re15_actor_prop_pushout(void)
     }
 }
 
+/* ==== BIRKIN-WURZEL (Typ 0x30/0x36 ausserhalb des G5-Endkampfs) ============================== *
+ * STAGE5 0x80116a44 (Eintrag 0x80072c6c, STAGE5_overlay.c:13134), STAGE3 0x80116230 (Eintraege
+ * 0x80072c6c/0x80072c84 @0x8011cf48/@0x8011cf50). Dossier nachschliff-room5080.md Abschnitt 9.
+ *
+ * FROST-SCHRANKE (Runde 30, Befund des Gegenpruefers, selbst disassembliert):
+ *   STAGE5  80116a4c lw v0,-13760(v0)   ; g_pauseflags 0x800aca40
+ *           80116a50 lui v1,0x2000
+ *           80116a64 and v0,v0,v1
+ *           80116a68 bne v0,zero,0x80116eb8          (Bytes 13 01 40 14)
+ *           80116a7c lbu v0,9(a0)       ; +0x9 grid
+ *           80116a84 andi v0,v0,0x20
+ *           80116a88 bne v0,zero,0x80116eb8          (Bytes 0b 01 40 14)
+ *   STAGE3  80116254 / 80116268 / 80116270 / 80116274 -> 0x801166a4, dieselbe Folge.
+ *   Das Sprungziel 0x80116eb8-ef0 (STAGE3 0x801166a4-6dc) ist NUR `jal 0x8001b064` (@0x80116ecc)
+ *   mit a0 = entity+0xb0, a1 = +0x1ba, dann `jr ra`. Uebersprungen werden damit der Abstand
+ *   (@0x80116ad8), der Zustands-Dispatch ueber @0x8011fe48 (@0x80116c70 jalr), der Bild-Takt
+ *   0x8001b4e4 (@0x80116c78), die Stoesse 0x8002aec4/0x8002b544 (@0x80116cb0/@0x80116cb8) und die
+ *   SCA-Klemme 0x8003b0a4 (@0x80116cd8). FUN_8001b064 zeichnet nur den Bodenschatten (RotMatrixY
+ *   @0x8001b0e4, OT-Link @0x8001b350-360, kein Store aufs Entity); der Port zeichnet ihn fuer jeden
+ *   Aktor auf der Buehne im Renderer (platform/pc/main.c, "RE1.5 character shadow for this NPC"),
+ *   und 0x30/0x36 stehen in re15_type_self_advances_anim — die Pose bleibt also stehen wie im
+ *   Original, wo 0x8001b4e4 nicht laeuft. Im KI-Zweig ist deshalb NICHTS zu tun.
+ *   Das Pausebit 0x20000000 haelt game_step schon am Sammelaufruf von run_all an; hier steht es
+ *   trotzdem, weil der Spawn-Aufruf (re15_enemy_spawn_root) aus dem SCD-Tick kommt.
+ *
+ * ⛔ HIER STAND (Runde 30, Abschnitt 8.1 der ersten Nachbesserung), der ROOM5080-Birkin laufe im
+ * Original ab der Raumladung los und werde an der Nordwand geklemmt. FALSCH: mit grid 0x33 friert
+ * ihn die Schranke oben ein, die Klemme wird gar nicht erreicht. Er steht bis zum Member_set
+ * (0x0C,0x13) @ROOM5080 0x0083E auf (-18100,-5600,200) in Zustand 1 / Sub 9.
+ * Der Port hatte diese Schranke nicht; Birkin lief los, ging (mit dem alten Band) durch die
+ * Aussenwand und biss Leon noch vor der Generator-Folge. */
+static void re15_birkin_root(int s)
+{
+    re15_actor_t *e = &g_actors[s];
+    if (s_ai_paused || (g_re15_pauseflags & RE15_PAUSE_AI)) return;   /* @0x80116a68 / @0x80116254 */
+    if (e->grid_id & 0x20) return;                     /* @0x80116a7c-a88 / @0x80116268-274:
+                                                        * -> nur FUN_8001b064 (Schatten, Renderer) */
+    int32_t bk_ox = e->x, bk_oz = e->z;
+    re15_birkin_ai_tick(s);
+    re15_enemy_body_push_tail(s, e);
+    if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
+        int32_t nx = e->x, nz = e->z;
+        /* BAND = +0x82-ZUSTANDS-BYTE (e->floor), NICHT band_from_y (Runde 30, Nachschliff
+         * room5080, analysis/befunde_runde30/nachschliff-room5080.md Abschnitt 8.1 und 9).
+         * Wurzel-Schwanz STAGE5 @0x80116cc0-cdc (STAGE3 -0x814):
+         *   lw v0,120(v0) / lhu a1,6(v0) / ori a2,zero,0x4 / jal 0x8003b0a4 / addiu a0,a0,52
+         * FUN_8003b0a4 liest das Band SELBST: @0x8003b234 `lbu v1,130(a3)` (+0x82),
+         * @0x8003b23c `bne v1,v0` gegen floor>>4 der Zelle. +0x82 kommt aus dem Spawn-Byte
+         * pc[4] (Sce_em_set @0x800421c8 `lbu v0,2(s2)` / @0x800421d0 `sb v0,130(s0)`, im
+         * Port scd_vm.c a->floor = t->pc[4]). Das Birkin-Modul schreibt +0x82 nie (kein
+         * `sb x,130(y)` in STAGE5 0x80116a44..0x8011bce4 / STAGE3 0x80116230..0x8011b4d0);
+         * der einzige +0x82-Schreiber unter seinen Callees, FUN_8001bd60 @0x8001be54, laeuft
+         * nur bei y == -(+0x82*1800) (@0x8001bde4-bdec). Die Collision-Sperre +0x0&8
+         * (@0x8003b12c-13c) setzt INIT nur fuer grid&0xf==1 (@0x801170e4, STAGE5).
+         * GEMESSEN seit der Frost-Schranke (probe_r30_birkin_frost, alle 13 Spawns): kein
+         * Unterschied mehr zum Band aus der Hoehe. Vor der Freigabe erreicht die Wurzel die
+         * Klemme nicht; danach steht der Birkin am Boden — der Fall in ROOM5080 sub03 ist
+         * Pos_set y=-5600 (@0x00822) + Speed_set(1,400) (@0x0082E `2f 01 90 01`) + For 14
+         * (@0x00832 `0d 00 06 00 0e 00`) x Add_speed = y 0, und band_from_y(0) = 0 = +0x82.
+         * Die Klemme bleibt trotzdem in der Original-Form (Band aus +0x82). */
+        re15_collision_constrain_contact_band(&g_room_rdt, bk_ox, bk_oz, &nx, &nz,
+                                              e->hit_radius_min, (int)e->floor, 4u,
+                                              NULL, NULL);
+        e->x = nx; e->z = nz;
+    }
+}
+
+/* EINMALIGER WURZELAUFRUF BEIM SPAWN — Sce_em_set 0x800420a0 (SCD-Tabelle @0x800744a8 [0x44]),
+ * selbst disassembliert (Dossier Abschnitt 9.1):
+ *   80042564 lbu  v1,9(s0)
+ *   8004256c andi v0,v1,0xdf          ; Bit 0x20 loeschen  (Bytes df 00 62 30)
+ *   80042570 sb   v0,9(s0)                               (09 00 02 a2)
+ *   80042578 sw   s0,-14460(at)       ; g_entity := neues Entity
+ *   8004257c-9c  lbu v0,8(s0) / sll 2 / 0x80072bac[typ] / jalr v0   ; Wurzel EINMAL
+ *   800425a0 andi s4,v1,0x20          ; (Delay-Slot) altes Bit merken   (20 00 74 30)
+ *   800425a4 lh   v0,16(s2)           ; pc[18..19] != 0 -> zweiter Aufruf mit +0x4=4 — alle 13
+ *                                     ; Birkin-Records tragen 00 00 (Dossier 9.3), entfaellt
+ *   80042604 or   v0,v0,s4 / 80042608 sb v0,9(s0)   ; Bit zuruecksetzen (25 10 54 00 09 00 02 a2)
+ * Damit laeuft der INIT (Zustand 1 @0x801166f8; Nibble 3 -> +0x95=0x10 @0x80116880, Sub 9
+ * @0x80116890) schon im Spawn-Bild, und der eingefrorene Birkin steht danach in Sub 9.
+ * UMFANG: nur die Birkin-Wurzel. Der G5 in ROOM5090/5091 laeuft ueber das RE2-Modul
+ * enemy_ai_boss_g5.c, das seinen eigenen Konstruktor hat (Ctor @0x8010076C) und scharf wird, sobald
+ * grid == 0x13 ist — ein Aufruf mit geloeschtem Bit wuerde ihn beim Spawn schaerfen. Fuer die
+ * uebrigen Typen ist der Spawn-Aufruf nicht verdrahtet (OFFEN, Dossier 9). */
+void re15_enemy_spawn_root(int slot)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+    if (!e->active) return;
+    if (e->type != 0x30 && e->type != 0x36) return;
+    if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) return;   /* G5-Modul */
+    uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
+    e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
+    re15_birkin_root(slot);                             /* @0x8004259c jalr 0x80072bac[typ] */
+    e->grid_id = (uint8_t)(e->grid_id | s4);            /* @0x80042604 or / @0x80042608 sb */
+}
+
 void re15_enemy_ai_run_all(int combat_active)
 {
     re15_enemy_ai_set_combat_active(combat_active);
@@ -14285,15 +14391,9 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * STAGE3 registers BOTH 0x30 and 0x36 to the SAME root 0x80116230, which has ZERO
                                  * +0x8 type reads and ZERO 0x36 immediates in [0x80116230..0x8011a800] — the two
                                  * forms run byte-IDENTICAL AI; the type only selects the EMD model (EM030 vs
-                                 * EM036) at spawn. So one brain covers both. Wall-clamp like the rest. */
-            int32_t bk_ox = e->x, bk_oz = e->z;
-            re15_birkin_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, bk_ox, bk_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-            }
+                                 * EM036) at spawn. So one brain covers both. Frost-Schranke, KI, Stoesse und
+                                 * Wandklemme stehen zusammen in re15_birkin_root (dort die Belege). */
+            re15_birkin_root(s);
         }
         else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature.
                                  * Root-Tail 0x80116db8, geradlinig hinter dem State-Dispatch

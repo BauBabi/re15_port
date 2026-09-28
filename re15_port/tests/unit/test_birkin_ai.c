@@ -47,13 +47,33 @@ int main(void)
 
     printf("=== G-BIRKIN BOSS (type 0x30, EM030) byte-true AI ===\n");
 
-    /* (1) INIT 0x801166e0: grid 0x33 (nibble 3) -> sub 9 (emerge); HP 300 UNCONDITIONAL; idle clip 0. */
-    re15_enemy_ai_run_all(0);
+    /* (1) INIT 0x801166e0: grid 0x33 (nibble 3) -> sub 9 (emerge); HP 300 UNCONDITIONAL; idle clip 0.
+     * ⛔ RUNDE 30 (Frost-Schranke, nachschliff-room5080.md Abschnitt 9): grid 0x33 traegt Bit 0x20 —
+     * die Wurzel steigt dann vor dem Dispatch aus (STAGE5 @0x80116a7c/@0x80116a84/@0x80116a88,
+     * STAGE3 @0x80116268/@0x80116270/@0x80116274). Den INIT faehrt der EINMALIGE Wurzelaufruf von
+     * Sce_em_set mit geloeschtem Bit (@0x8004256c-@0x80042608) = re15_enemy_spawn_root. Frueher lief
+     * der INIT hier ueber run_all mit grid 0x33 — das war die fehlende Schranke. */
+    re15_enemy_spawn_root(BS);
     if (e->state != 1)      { fprintf(stderr, "FAIL(1): INIT->BRAIN expected state 1, got %d\n", e->state); fail = 1; }
     if (e->hp != 300)       { fprintf(stderr, "FAIL(1): boss HP must be 300 (hardcoded @0x8011690c), got %d\n", e->hp); fail = 1; }
     if (e->motion != 0)     { fprintf(stderr, "FAIL(1): INIT idle clip must be 0, got %d\n", e->motion); fail = 1; }
     if (e->sub_state_1 != 9){ fprintf(stderr, "FAIL(1): grid 0x33 (nibble 3) -> sub 9, got %d\n", e->sub_state_1); fail = 1; }
-    printf("  (1) INIT: state->1 sub=%d, boss hp=%d, clip=%d\n", e->sub_state_1, e->hp, e->motion);
+    if (e->grid_id != 0x33) { fprintf(stderr, "FAIL(1): Sce_em_set setzt Bit 0x20 zurueck (@0x80042604/08), grid 0x%02x\n", e->grid_id); fail = 1; }
+    printf("  (1) INIT (Spawn-Wurzelaufruf): state->1 sub=%d, boss hp=%d, clip=%d, grid=0x%02x\n",
+           e->sub_state_1, e->hp, e->motion, e->grid_id);
+    /* (1b) FROST: solange grid & 0x20, bewegt run_all nichts (nur der Schatten @0x80116ecc, Renderer). */
+    {
+        int32_t fx = e->x, fz = e->z; uint16_t ff = e->anim_frame;
+        for (int f = 0; f < 120; f++) re15_enemy_ai_run_all(0);
+        if (e->state != 1 || e->sub_state_1 != 9 || e->x != fx || e->z != fz || e->anim_frame != ff || e->motion != 0) {
+            fprintf(stderr, "FAIL(1b): grid 0x33 muss einfrieren (@0x80116a88): st=%d sub=%d pos=(%d,%d) bild=%d clip=%d\n",
+                    e->state, e->sub_state_1, (int)e->x, (int)e->z, (int)e->anim_frame, (int)e->motion);
+            fail = 1;
+        }
+        printf("  (1b) FROST: 120 Ticks mit grid 0x33 -> st=%d sub=%d bild=0x%02x unveraendert\n",
+               e->state, e->sub_state_1, (unsigned)e->anim_frame);
+    }
+    e->grid_id = 0x13;                                  /* Member_set(0x0C,0x13) = die Freigabe (z.B. ROOM5080 @0x0083E) */
 
     /* (2) CHASE: after the emergence set-piece (sub 9 -> lunge -> HUB) the boss walks in and closes.
      * Byte-true emergence is slower than the old single-clip stub, so allow the full sequence to run. */
@@ -123,7 +143,8 @@ int main(void)
      * NEVER becomes an inert state-7 corpse. Simulating the trigger drives the run-off. */
     pl->x = 0; pl->z = 20000;
     e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; e->birkin_flags = 0; e->birkin_grab = 0;
-    e->grid_id = 0x33;                                  /* form-2 (bit 0x10 set) -> no re-mutation, runs the death tail */
+    e->grid_id = 0x13;                                  /* form-2 (bit 0x10 set) -> no re-mutation, runs the death tail
+                                                         * (0x13 statt 0x33: Bit 0x20 = Frost-Schranke @0x80116a88) */
     e->hp = 4; e->hit_react = 0;
     re15_enemy_take_damage(e, 2);                       /* lethal hit -> state 3 */
     int reached_wait = 0;
@@ -153,7 +174,9 @@ int main(void)
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 20000; pl->hp = 100;
     e = &g_actors[BS];
-    e->active = 1; e->type = 0x30; e->state = 0; e->grid_id = 0x21; e->x = 0; e->y = 0; e->z = 0;  /* grid 0x21 = FORM-1 (bit 0x10 clear) */
+    e->active = 1; e->type = 0x30; e->state = 0; e->grid_id = 0x01; e->x = 0; e->y = 0; e->z = 0;  /* grid 0x01 = FORM-1 (bit 0x10 clear);
+                                                        * der ROOM3071-Record traegt 0x21, dessen Bit 0x20 friert
+                                                        * bis Member_set(0x0C,1) @0x03645 — hier gleich freigegeben */
     re15_enemy_apply_hitbox(e, 0x30);
     re15_enemy_ai_run_all(0);                          /* INIT -> BRAIN */
     e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* force HUB */
@@ -189,20 +212,24 @@ int main(void)
                                                   * der Park greift nur auf Spawn- oder
                                                   * Parkposition (birkin-unpark.md) */
     re15_enemy_apply_hitbox(e5, 0x36);
-    /* UMVERANKERT (Runde 4, birkin-bewegung.md Plan 1): der 0x36 PARKT auf dem
+    /* UMVERANKERT (Runde 4, birkin-bewegung.md Plan 1): der 0x36 PARKTE auf dem
      * RDT-Spawn-grid 0x33 (RE2 parkt G5 bei (-32000,0,-32000) bis zum Kampfstart,
      * @0x801011d0-dc) und wird erst durchs sub04-Member_set(0x0c,0x13) frei -
-     * dann laeuft die byte-identische Boss-Wurzel (INIT nib 3 -> sub 9). */
+     * dann laeuft die byte-identische Boss-Wurzel (INIT nib 3 -> sub 9).
+     * ⛔ RUNDE 30 (Frost-Schranke, nachschliff-room5080.md Abschnitt 9.4): grid 0x33 friert die
+     * Wurzel VOR der Parkregel ein (0x33 & 0x20, @0x80116a88 / @0x80116274) — er bleibt auf der
+     * Spawnlage stehen, Zustand 0 (hier ohne Spawn-Wurzelaufruf). Im Spiel erreicht die Parkregel
+     * ohnehin kein Raum: 0x36 in ROOM5090/5091 laeuft ueber das G5-Modul. */
     re15_enemy_ai_run_all(0);
-    if (e5->state != 0)       { fprintf(stderr, "FAIL(4): form-5 grid 0x33 muss PARKEN (state 0), got %d\n", e5->state); fail = 1; }
-    if (e5->x != -32000 || e5->z != -32000) {
-        fprintf(stderr, "FAIL(4): Parkposition (%d,%d) != (-32000,-32000)\n", (int)e5->x, (int)e5->z); fail = 1; }
+    if (e5->state != 0)       { fprintf(stderr, "FAIL(4): form-5 grid 0x33 muss EINFRIEREN (state 0), got %d\n", e5->state); fail = 1; }
+    if (e5->x != -14700 || e5->z != -23350) {
+        fprintf(stderr, "FAIL(4): eingefroren = Spawnlage (%d,%d) != (-14700,-23350)\n", (int)e5->x, (int)e5->z); fail = 1; }
     e5->grid_id = 0x13;                                 /* sub04-Kampfstart @ROOM5090 0x130A */
     re15_enemy_ai_run_all(0);
     if (e5->state != 1)       { fprintf(stderr, "FAIL(4): form-5 INIT->BRAIN expected state 1, got %d\n", e5->state); fail = 1; }
     if (e5->hp != 300)        { fprintf(stderr, "FAIL(4): form-5 must share the boss brain (HP 300), got %d\n", e5->hp); fail = 1; }
     if (e5->sub_state_1 != 9) { fprintf(stderr, "FAIL(4): form-5 grid 0x13 (nib 3) -> sub 9, got %d\n", e5->sub_state_1); fail = 1; }
-    printf("  (4) FORM-5 (0x36): parkt auf 0x33, Kampfstart 0x13 -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
+    printf("  (4) FORM-5 (0x36): friert auf 0x33, Kampfstart 0x13 -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
 
     if (fail) { printf("BIRKIN BOSS: FAIL\n"); return 1; }
     printf("BIRKIN BOSS: all checks passed\n");

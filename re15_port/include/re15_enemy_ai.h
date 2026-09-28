@@ -415,6 +415,12 @@ void     re15_body_push_player(void);
  * This is the single entry game_step calls — the integration point Phase 8.6 wires. */
 void re15_enemy_ai_run_all(int combat_active);
 
+/* Sce_em_set 0x800420a0 @0x8004256c-@0x80042608: der EINMALIGE Wurzelaufruf beim Spawn mit
+ * geloeschtem Bit 0x20 (grid), danach wird das Bit zurueckgesetzt. Verdrahtet fuer die Birkin-
+ * Wurzel (Typ 0x30/0x36 ausserhalb des G5-Moduls in ROOM5090/5091); fuer andere Typen ein No-op.
+ * Aufruf aus op_sce_em_set (scd_vm.c). Belege: enemy_ai_common.c re15_enemy_spawn_root. */
+void re15_enemy_spawn_root(int slot);
+
 /* FUN_8002bd44 @0x8002be0c-4c — der Aktor-Durchgang des Objekt-Ticks: schiebt jeden aktiven
  * Aktor aus den Obj_model_set-Kisten (`jal 0x8002cabc` mit a2 = 0). Muss NACH der
  * Entitaeten-Schleife im selben Bild laufen (@0x8001ce04 -> @0x8001ce14). */
