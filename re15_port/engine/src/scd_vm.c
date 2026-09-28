@@ -43,6 +43,7 @@
 #include "re15_map_hint.h"  /* RE2-ERGAENZUNG: Kartenhinweis (engine/src/map_hint_common.c) */
 #include "re15_lock_se.h"   /* RE2-ERGAENZUNG: "Tuer verschlossen"-Ton (engine/src/lock_se_common.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
+#include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 
 scd_vm_t g_scd;
@@ -1089,6 +1090,21 @@ static int op_evt_exec(scd_thread_t *t)
 {
     uint8_t  cond   = t->pc[1];
     uint8_t  sub_id = t->pc[3];
+    /* ⛔ RE2-ANGLEICHUNG (Runde 31, Nutzer 2026-09-29: "warte erst bis der zeiger final auf
+     * 80 steht, bevor du mit ok das abnimmst, das Licht anschaltest etc.").
+     * ROOM11F0/11F1 sub01 ruft die Abnahme @Datei 0x012E6 `04 ff 18 12` (Evt_exec sub18,
+     * dahinter @0x012EA `22 04 ee 01` Set(4,238,1)) im ERSTEN Bild, in dem die zehn
+     * Schalterbits stimmen — gemessen bei Zeigerwert 62 (generator.md §4). RE2 prueft die 80
+     * erst NACH der Nachfuehrschleife (ewhile @ROOM2130.RDT 0x01708) und 30 Bildern Sleep
+     * (@0x0171C `09` / @0x0171D `0a 1e 00`). Solange der Zeiger nicht so weit ist, zaehlt
+     * der Opcode wie ein falsches Ck im Ifel_ck-Block @0x012B6: der Dispatcher springt ans
+     * Blockende (@0x012EE), sub18 und Set(4,238,1) laufen nicht, und das je Bild neu
+     * gestartete sub01 (FUN_8003f038 @0x8003f064-80) prueft im naechsten Bild erneut.
+     * Belege und Anker: include/re15_panel_zeiger.h. */
+    if (s_current_rdt && re15_panel_zeiger_abnahme_haelt(t->pc, s_current_rdt->raw)) {
+        t->pc += 4;
+        return SCD_R_IF_FALSE;
+    }
     t->pc += 4;                 /* advance BEFORE spawn (byte-true @0x8003f2b8) */
 
     if (!s_current_rdt) return 1;

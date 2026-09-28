@@ -1133,7 +1133,15 @@ void re15_game_step(const re15_game_ctx_t *c)
      *       `Sce_key_ck` (0x51/0x52) seine Tasten liest (op_sce_key_ck), und faelschte
      *       damit die ausgelieferten Raetsel-Eingaben. Den SPIELER-Pad hat er ohnehin
      *       nicht angefasst (der rohe c->pad_current geht direkt an re15_player_tick). */
-    if (g_re15_pauseflags & RE15_PAUSE_PAD) {
+    /* ⛔ RE2-ANGLEICHUNG PANEL-SPERRE (Runde 31, ROOM11F0/11F1 Generator-Raetsel): solange
+     * der Leistungszeiger faehrt bzw. die 30 Stillstands-Bilder danach laufen, wirkt dieselbe
+     * Maske wie Bit 0x01000000. RE2 haelt ueber die ganze Nachfuehrschleife und den Sleep
+     * Bank 2 Bit 7 (ROOM2130.RDT sub04 @0x01110 `22 02 07 01` .. @0x01818 `22 02 07 00`;
+     * Leser @0x800391F8..0x80039224 `andi v0,v0,0x3c00`). Das Pausen-WORT selbst bleibt
+     * unberuehrt (kein Konflikt mit Message_on/sub18, die es ebenfalls setzen).
+     * Belege: include/re15_panel_zeiger.h. */
+    const int panel_sperre = re15_panel_zeiger_sperrt();
+    if ((g_re15_pauseflags & RE15_PAUSE_PAD) || panel_sperre) {
         g_scd_pad_held = (uint16_t)(g_scd_pad_held & 0xf000u);
         g_scd_pad_edge = (uint16_t)(g_scd_pad_edge & 0xf000u);
     }
@@ -1216,7 +1224,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (re15_map_hint_pending() >= 0 &&
         re15_menu_request_map_hint(re15_map_hint_pending()))
         re15_map_hint_take();
-    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD)) {
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD) && !panel_sperre) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
         s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&

@@ -23,6 +23,12 @@ static int s_roh       = 0;   /* ungeklemmte Summe — darf negativ sein (Nutzer
 static int s_aktiv     = 0;
 static int s_geloest_vorframe = 0;
 static int s_eingeschwungen   = 0;   /* erster Tick im Raum: ohne Nachfuehr-Animation */
+/* STILLSTAND vor der Abnahme (Runde 31, Belege im Kopf von re15_panel_zeiger.h):
+ * s_maske = Schaltermaske des letzten Ticks, s_ruhe = Bilder seit der letzten Zeiger-
+ * bewegung bzw. Schalteraenderung, gesaettigt bei RE15_PANEL_RUHE_BILDER
+ * (RE2 ROOM2130.RDT sub04 @0x0171C/@0x0171D sleep 0x1E). */
+static unsigned s_maske = 0;
+static int      s_ruhe  = RE15_PANEL_RUHE_BILDER;
 
 /* Messhaken fuer die Sonde. */
 unsigned g_re15_panel_bestaet_zaehler = 0;
@@ -95,11 +101,12 @@ void re15_panel_zeiger_reset(void)
 {
     s_wert = 0; s_ziel = 0; s_roh = 0; s_aktiv = 0;
     s_geloest_vorframe = 0; s_eingeschwungen = 0;
+    s_maske = 0; s_ruhe = RE15_PANEL_RUHE_BILDER;
 }
 
 void re15_panel_zeiger_tick(void)
 {
-    if (g_current_room_id != RE15_PANEL_RAUM) {
+    if (!RE15_PANEL_IST_RAUM(g_current_room_id)) {
         if (s_aktiv || s_eingeschwungen) re15_panel_zeiger_reset();
         return;
     }
@@ -127,10 +134,24 @@ void re15_panel_zeiger_tick(void)
         s_eingeschwungen = 1;
         s_wert = s_ziel;
         s_geloest_vorframe = re15_game_flag_get(4, 238);
-    } else if (s_wert < s_ziel) {
-        s_wert++;                      /* RE2: genau EIN Punkt je Bild (@0x01216) */
-    } else if (s_wert > s_ziel) {
-        s_wert--;
+        s_maske = panel_maske();
+        s_ruhe  = RE15_PANEL_RUHE_BILDER;   /* beim Raumaufbau steht der Zeiger bereits */
+    } else {
+        int vorher = s_wert;
+        unsigned maske = panel_maske();
+        if (s_wert < s_ziel)      s_wert++;   /* RE2: genau EIN Punkt je Bild (@0x01216) */
+        else if (s_wert > s_ziel) s_wert--;
+        /* STILLSTAND ZAEHLEN (RE2-Angleichung, Belege im Kopf von re15_panel_zeiger.h).
+         * Bewegung in diesem Bild = RE2s letzter Durchlauf der Nachfuehrschleife
+         * (@0x011FC var7 += 9 / @0x01216 evt_next). Eine Schalteraenderung ohne Fahrt
+         * zaehlt ebenso: RE2 schlaeft hinter JEDEM Schalter 30 Bilder, auch wenn var4 = 0
+         * die Schleife gar nicht betritt (@0x012A4/@0x012A5 `09`/`0a 1e 00`).
+         * Bewegt im Bild k -> s_ruhe = 0; nach dem Bild k+30 steht s_ruhe = 30, und die
+         * VM des Bildes k+31 laesst die Abnahme durch — genau RE2s Bild k+31
+         * (Sleeping @0x80053A24 gibt auch im Null-Bild ab, `addiu v0,zero,2`). */
+        if (s_wert != vorher || maske != s_maske) s_ruhe = 0;
+        else if (s_ruhe < RE15_PANEL_RUHE_BILDER) s_ruhe++;
+        s_maske = maske;
     }
 
     /* Die BESTAETIGUNG. RE2 spielt sie unmittelbar hinter dem Geloest-Flag:
@@ -138,7 +159,12 @@ void re15_panel_zeiger_tick(void)
      *   sub04+0x0652 (@ROOM2130.RDT 0x01762)  36 02 0c 01   se_on(Gruppe 2, 0x0C)
      * RE1.5s Gegenstueck zum Geloest-Flag ist Set(4,238,1), ROOM11F0.RDT sub01
      * @Datei 0x012EA `22 04 ee 01` (0xEE = 238), direkt hinter Evt_exec(sub18) @0x012E6.
-     * RE1.5 selbst spielt dort nichts (0 Se_on im ganzen SCD) -> RE2-Ergaenzung. */
+     * RE1.5 selbst spielt dort nichts (0 Se_on im ganzen SCD) -> RE2-Ergaenzung.
+     * Seit Runde 31 kommt die Flanke erst, wenn der Zeiger 80 erreicht und 30 Bilder
+     * gestanden hat (re15_panel_zeiger_abnahme_haelt haelt Set(4,238,1) bis dahin zurueck) —
+     * damit faellt der Ton wie in RE2 mit der Meldung "Power supply OK." zusammen
+     * (RE2 @0x01758 message_on / @0x0175E set / @0x01762 se_on im selben Skriptschritt;
+     * message_on @0x80054A8C kehrt mit `addiu v0,zero,1` = weiter zurueck). */
     int geloest = re15_game_flag_get(4, 238);
     if (geloest && !s_geloest_vorframe) {
         g_re15_panel_bestaet_zaehler++;
@@ -152,20 +178,69 @@ void re15_panel_zeiger_tick(void)
       if (!init) { init = 1; const char *e = getenv("RE15_PANEL_LOG");
                    if (e && *e) lf = fopen(e, "w"); }
       if (lf) { fprintf(lf, "F%u raum=%04X cut=%d aktiv=%d maske=%03X ein=%d roh=%d ziel=%d wert=%d geloest=%d "
-                            "strom=%d padsperre=%d msg=%d bestaet=%u\n",
+                            "strom=%d padsperre=%d msg=%d bestaet=%u ruhe=%d panelsperre=%d\n",
                         (unsigned)g_engine.frame_count,
                         g_current_room_id, g_re15_active_cut, s_aktiv,
                         panel_maske(), panel_ein_zaehlen(), s_roh, s_ziel,
                         s_wert, geloest,
                         re15_game_flag_get(4, 243),                        /* sub18 @0x016F6 */
                         (g_re15_pauseflags & RE15_PAUSE_PAD) ? 1 : 0,
-                        (int)g_scd.message_active, g_re15_panel_bestaet_zaehler);
+                        (int)g_scd.message_active, g_re15_panel_bestaet_zaehler,
+                        s_ruhe, re15_panel_zeiger_sperrt());
                 fflush(lf); } }
 }
 
 int re15_panel_zeiger_wert(void) { return s_wert; }
 int re15_panel_zeiger_ziel(void) { return s_ziel; }
 int re15_panel_zeiger_roh(void)  { return s_roh;  }
+int re15_panel_zeiger_ruhe(void) { return s_ruhe; }
+
+/* Der Zeiger steht auf 80 und hat RE15_PANEL_RUHE_BILDER Bilder gestanden — RE2s Weg vom
+ * Schleifenende @0x01708 ueber sleep 30 @0x0171C zur Pruefung cmp(var5 == 80) @0x01752.
+ * Die Maske wird LIVE gegen den letzten Tick gehalten: steht in diesem Bild schon ein
+ * neues Schalterbit, das der Tick noch nicht gesehen hat, ist nichts frei. */
+int re15_panel_zeiger_abnahme_frei(void)
+{
+    if (!s_eingeschwungen) return 0;
+    if (panel_maske() != s_maske) return 0;
+    return s_wert == RE15_PANEL_ZIEL && s_ziel == RE15_PANEL_ZIEL &&
+           s_ruhe >= RE15_PANEL_RUHE_BILDER;
+}
+
+int re15_panel_zeiger_abnahme_haelt(const uint8_t *pc, const uint8_t *raw)
+{
+    if (!pc || !raw) return 0;
+    if (!RE15_PANEL_IST_RAUM(g_current_room_id)) return 0;
+    if ((size_t)(pc - raw) != (size_t)RE15_PANEL_ABNAHME_OFF) return 0;
+    /* Anker: genau die ausgelieferten Bytes, sonst nichts halten.
+     *   @0x012E6 `04 ff 18 12` Evt_exec(sub18)   @0x012EA `22 04 ee 01` Set(4,238,1) */
+    if (pc[0] != 0x04 || pc[1] != 0xFF || pc[2] != 0x18 || pc[3] != 0x12) return 0;
+    if (pc[4] != 0x22 || pc[5] != 0x04 || pc[6] != 0xEE || pc[7] != 0x01) return 0;
+    return re15_panel_zeiger_abnahme_frei() ? 0 : 1;
+}
+
+int re15_panel_zeiger_sperrt(void)
+{
+    if (!RE15_PANEL_IST_RAUM(g_current_room_id) || !s_eingeschwungen) return 0;
+    if (!re15_game_flag_get(5, 0)) return 0;        /* Raetsel nicht aktiv (sub16 @0x015C2) */
+    if (re15_game_flag_get(4, 238)) return 0;       /* geloest: sub18 sperrt selbst @0x01736 */
+    {
+        unsigned maske = panel_maske();
+        /* LIVE: das Schalterbit, das die VM in DIESEM Bild gesetzt hat (sub06 @0x01340),
+         * sperrt schon die Pad-Woerter, die in diesem Bild fuer die naechste VM entstehen —
+         * sonst rutschte ein gehaltener Knopf fuer ein Bild durch. */
+        if (maske != s_maske) return 1;
+        if (s_wert != re15_panel_zeiger_ziel_aus_maske(maske)) return 1;   /* Fahrt */
+    }
+    if (s_ruhe < RE15_PANEL_RUHE_BILDER) return 1;                        /* Stillstand */
+    /* Steht der Zeiger auf 80, ist die Abnahme faellig: RE2 haelt Bit 7 bis NACH der
+     * Pruefung (@0x01752 cmp, Freigabe erst @0x01818), der Spieler kann also zwischen
+     * Stillstand und "OK" nichts mehr tun. Ohne diese Zeile waeren die Pad-Woerter des
+     * Freigabe-Bildes offen, und ein Tastendruck liefe in derselben VM-Runde wie
+     * Evt_exec(sub18). Die Sperre endet von selbst: sub18 loescht Bank 5 Bit 0 (@0x016FA)
+     * und setzt 4:238 (@0x012EA) — beides beendet diese Funktion oben. */
+    return (s_wert == RE15_PANEL_ZIEL && s_ziel == RE15_PANEL_ZIEL) ? 1 : 0;
+}
 
 int re15_panel_zeiger_sicht(int *sx, int *sy)
 {
@@ -177,7 +252,7 @@ int re15_panel_zeiger_sicht(int *sx, int *sy)
      * @0x061C `29 04` Cut_chg 4 zurueck). RE1.5s Panel-Cut ist die 0x0A aus sub16
      * @Datei 0x015C0 (`29 0a`); sub18 schaltet danach auf 8/0x0D/0x0E weiter, damit
      * verschwindet der Zeiger von selbst. */
-    if (g_current_room_id != RE15_PANEL_RAUM) return 0;
+    if (!RE15_PANEL_IST_RAUM(g_current_room_id)) return 0;
     if (g_re15_active_cut != RE15_PANEL_CUT) return 0;
     if (sx) *sx = RE15_PANEL_SPITZE_X;
     /* y = 177 - wert*1.23, ganzzahlig und kaufmaennisch gerundet (Eichung s. Header (a)). */

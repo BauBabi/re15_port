@@ -45,6 +45,7 @@
 #include "re15_aot.h"
 #include "re15_room.h"
 #include "re15_md1.h"
+#include "re15_panel_zeiger.h"   /* Runde 31: Abnahme erst bei stehendem Zeiger (M6) */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -228,12 +229,34 @@ int main(void)
      * -> Evt_exec sub18 (@0x012E6) + Set(4,0xEE) (@0x012EA); sub18 setzt sofort
      * Set(4,0xF3) (@0x016F6). */
     printf("\n===== M6: Win-Pattern -> sub18 =====\n");
+    /* SEIT RUNDE 31 (RE2-Angleichung, Nutzer 2026-09-29 "warte erst bis der zeiger final
+     * auf 80 steht"): die Abnahme @0x012E6/@0x012EA wird gehalten, bis der Leistungszeiger
+     * (panel_zeiger_common.c) die 80 erreicht und 30 Bilder gestanden hat — RE2
+     * ROOM2130.RDT sub04 ewhile @0x01708 -> sleep 30 @0x0171C -> cmp @0x01752. Diese Sonde
+     * tickt nur die VM; der Zeiger-Tick (sonst Ende von re15_game_step) laeuft hier deshalb
+     * von Hand mit. Vorher (8 VM-Bilder, Abnahme sofort) ist die Erwartung jetzt NICHT
+     * mehr: in den ersten 8 Bildern darf nichts feuern. Der volle Riegel ist r31_generator. */
     {
         static const uint8_t pat[10] = { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
+        re15_panel_zeiger_reset();
+        re15_panel_zeiger_tick();                    /* einschwingen auf Maske 0 = Wert 0 */
         for (int n = 0; n < 10; n++) re15_game_flag_set(5, (uint8_t)(0x0D + n), pat[n]);
-        for (int t = 0; t < 8; t++) scd_vm_tick();
-        printf("   flag(4,0xEE)=%d flag(4,0xF3)=%d (SOLL 1/1)\n",
-               re15_game_flag_get(4, 0xEE), re15_game_flag_get(4, 0xF3));
+        int frueh = 0, bild_80 = -1, bild_ab = -1;
+        for (int t = 0; t < 200; t++) {
+            scd_vm_tick();
+            if (re15_game_flag_get(4, 0xEE) && bild_ab < 0) bild_ab = t;
+            if (t < 8 && re15_game_flag_get(4, 0xEE)) frueh = 1;
+            re15_panel_zeiger_tick();
+            if (re15_panel_zeiger_wert() == RE15_PANEL_ZIEL && bild_80 < 0) bild_80 = t;
+        }
+        printf("   flag(4,0xEE)=%d flag(4,0xF3)=%d (SOLL 1/1), Zeiger 80 im Bild %d, "
+               "Abnahme im Bild %d (SOLL 80+31-1 = %d)\n",
+               re15_game_flag_get(4, 0xEE), re15_game_flag_get(4, 0xF3), bild_80, bild_ab,
+               bild_80 + 1 + 30 /* RE2 sleep @0x0171D `0a 1e 00` */);
+        CHECK(!frueh, "Abnahme in den ersten 8 Bildern — der Zeiger stand noch nicht");
+        CHECK(bild_ab == bild_80 + 1 + 30 /* RE2 sleep @0x0171D `0a 1e 00` */,
+              "Abnahme im Bild %d statt %d (Zeiger 80 + 30 Ruhebilder + 1)", bild_ab,
+              bild_80 + 1 + 30 /* RE2 sleep @0x0171D `0a 1e 00` */);
         CHECK(re15_game_flag_get(4, 0xEE) == 1, "Win nicht gefeuert: flag(4,0xEE)=0");
         CHECK(re15_game_flag_get(4, 0xF3) == 1, "sub18 lief nicht: flag(4,0xF3)=0");
     }
