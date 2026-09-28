@@ -393,6 +393,22 @@ static uint8_t        s_textri_slot [TEXTRI_QUEUE_MAX];  /* TIM slot per tri */
 static uint8_t        s_textri_blend[TEXTRI_QUEUE_MAX];  /* PSX-ABR-Ableitung je Tri (s.u.) */
 static int            s_textri_count = 0;
 
+/* STANDBILD fuer die RE2-Tuersequenz (analysis/tor_1170/08_re_blende.md 6): RE2 dunkelt vor der
+ * Tuerszene das STEHENDE letzte Bild ab - ohne die Welt neu zu zeichnen zieht jeder Durchlauf
+ * (8,8,8) subtraktiv ab (Kanal 0, Pegel 31, @0x8002b3a4..b0 / @0x8002b3c4..3fc), 32 Bilder.
+ * Der Port komponiert jedes Bild neu; darum haelt end_frame eine Kopie des zuletzt gezeigten
+ * Bildes (Hintergrund-Puffer, Dreiecksliste, Schatten), die die Tuerszene erneut abspielt.
+ * Kosten je Bild: ein memcpy des 320x240-Puffers und der benutzten Dreiecke. */
+static uint32_t       s_sb_fb[SCREEN_XRES * SCREEN_YRES];
+static textri_verts_t s_sb_queue[TEXTRI_QUEUE_MAX];
+static float          s_sb_depth[TEXTRI_QUEUE_MAX];
+static uint8_t        s_sb_slot [TEXTRI_QUEUE_MAX];
+static uint8_t        s_sb_blend[TEXTRI_QUEUE_MAX];
+static int            s_sb_count = 0;
+static int            s_sb_gueltig = 0;
+static uint32_t       s_sb_text[SCREEN_XRES * SCREEN_YRES];   /* Untertitel-Ebene */
+static int            s_sb_text_used = 0;
+
 /* Temporary buffer used to emit the sorted-by-depth tri list to SDL.
  * Allocated once at TEXTRI_QUEUE_MAX size; lives in BSS so no per-frame
  * malloc. */
@@ -480,6 +496,25 @@ void re15_render_pc_clear_scene_overlays(void)
     s_textri_count = 0;
     s_shadow_quad_count = 0;
     s_pri_suppress = 1;
+}
+
+/* Das zuletzt gezeigte Bild noch einmal einreihen (nach begin_frame): Hintergrund-Puffer und
+ * Dreiecksliste und Untertitel aus der STANDBILD-Kopie; die Raummasken bleiben. Schatten
+ * fehlen (sie werden in end_frame vor der Kopie verbraucht) - fuer 32 abdunkelnde Bilder ohne
+ * sichtbare Wirkung. Rueckgabe 0, wenn noch kein Bild gezeigt wurde. */
+int re15_render_pc_standbild_wiederholen(void)
+{
+    if (!s_sb_gueltig) return 0;
+    memcpy(s_framebuffer, s_sb_fb, sizeof s_sb_fb);
+    if (s_sb_text_used) { memcpy(s_text_overlay, s_sb_text, sizeof s_sb_text); s_text_overlay_used = s_sb_text_used; }
+    s_textri_count = s_sb_count;
+    if (s_sb_count > 0) {
+        memcpy(s_textri_queue, s_sb_queue, (size_t)s_sb_count * sizeof s_textri_queue[0]);
+        memcpy(s_textri_depth, s_sb_depth, (size_t)s_sb_count * sizeof s_textri_depth[0]);
+        memcpy(s_textri_slot,  s_sb_slot,  (size_t)s_sb_count * sizeof s_textri_slot[0]);
+        memcpy(s_textri_blend, s_sb_blend, (size_t)s_sb_count * sizeof s_textri_blend[0]);
+    }
+    return 1;
 }
 /* Per-tri vertex alpha for SUBSEQUENTLY queued tris (PSX ABE semi-transparency: the effect
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
@@ -758,6 +793,9 @@ void re15_render_end_frame(void)
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
      * FLAT-BLACK BG MODE (YOU-DIED chain, byte-true FUN_80021634(2,0)): the pre-rendered room
      * backdrop is replaced by black — the 3D scene (corpse/zombies) still draws on top. */
+    memcpy(s_sb_fb, s_framebuffer, sizeof s_sb_fb);            /* STANDBILD, s. Deklaration */
+    s_sb_text_used = s_text_overlay_used;
+    if (s_text_overlay_used) memcpy(s_sb_text, s_text_overlay, sizeof s_sb_text);
     SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
@@ -989,6 +1027,15 @@ void re15_render_end_frame(void)
     s_dbg_last_max_sx       = s_dbg_max_sx;
     s_dbg_last_min_sy       = s_dbg_min_sy;
     s_dbg_last_max_sy       = s_dbg_max_sy;
+    /* STANDBILD: Dreiecksliste dieses Bildes aufbewahren (s. Deklaration). */
+    s_sb_count = s_textri_count;
+    if (s_sb_count > 0) {
+        memcpy(s_sb_queue, s_textri_queue, (size_t)s_sb_count * sizeof s_textri_queue[0]);
+        memcpy(s_sb_depth, s_textri_depth, (size_t)s_sb_count * sizeof s_textri_depth[0]);
+        memcpy(s_sb_slot,  s_textri_slot,  (size_t)s_sb_count * sizeof s_textri_slot[0]);
+        memcpy(s_sb_blend, s_textri_blend, (size_t)s_sb_count * sizeof s_textri_blend[0]);
+    }
+    s_sb_gueltig = 1;
     s_textri_count = 0;  /* reset queue for next frame */
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen

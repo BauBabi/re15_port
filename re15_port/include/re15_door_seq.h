@@ -124,6 +124,7 @@ int  re15_door_seq_bild(re15_door_seq_t *s, int ton_geladen);
  * oder -1, wenn der Kanal nichts zeichnet. */
 int  re15_door_seq_blende_takt(re15_door_seq_t *s);
 int  re15_door_seq_blende_fertig(const re15_door_seq_t *s);
+void re15_door_seq_blende_schwarz(re15_door_seq_t *s);   /* Door_exit: Pegel 0x7fff, Schritt 0 */
 void re15_door_seq_ende(re15_door_seq_t *s);   /* Speicher der Skriptkopie freigeben */
 
 /* Mathematik (auch fuer Tests): RE2 libgte RotMatrix @0x8008e1f4 mit rcossin_tbl @0x800adeac. */

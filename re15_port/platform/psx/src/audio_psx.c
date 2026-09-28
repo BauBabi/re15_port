@@ -866,3 +866,8 @@ void re15_audio_re2_panel_se(int se_id)
 {
     (void)se_id;   /* TODO(psx): shared_assets/RE2/PANEL2130.* in den SPU laden */
 }
+
+/* ⛔ RE2-ERGAENZUNG: Toene der Tuersequenz (TORSE.VBS). PSX-SPU-Pfad = Folge-Stub wie die
+ * anderen RE2-Baenke; die Tuerszene selbst laeuft nur auf dem PC (platform/pc/src/door_scene_pc.c). */
+int re15_audio_re2_tor_laden(void) { return 0; }
+void re15_audio_re2_tor_se(int se) { (void)se; }

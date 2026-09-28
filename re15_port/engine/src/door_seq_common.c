@@ -71,21 +71,28 @@ static void kamera(re15_door_mat_t *k)
     k->t[0] = 0; k->t[1] = 0; k->t[2] = RE15_DOOR_KAMERA_X;
 }
 
-/* Verkettung Welt = Eltern * (Drehung, Lage) (04 1.5; FUN_80014234). Ganzzahlig wie
- * MulMatrix0/ApplyMatrix: Summe der Produkte, dann >> 12. */
+/* Verkettung (analysis/tor_1170/08_re_zeichnen.md 1.1, FUN_80014234):
+ *   i: W = P * R per MulMatrix0 = je Spalte MVMVA sf=1 (Wort 4a49e012, @0x80014518/58/9c),
+ *      Ablage aus IR (lm=0: auf -0x8000..0x7fff gesaettigt) als s16 (@0x80014528..30).
+ *   k: T = P * pos + P.t per MVMVA sf=1 cv=TR (Wort 4a480012, @0x800145f8); pos = untere 16 Bit
+ *      von obj+56/60/64 (@0x800145d8/dc lhu, @0x800145ec lwc2); Ablage aus IR (@0x80014600..08),
+ *      also ebenfalls auf +-0x7fff gesaettigt. (TR<<12 + S) >> 12 == TR + (S >> 12). */
+static int32_t ir_sat(int32_t v) { return v < -0x8000 ? -0x8000 : (v > 0x7fff ? 0x7fff : v); }
+
 static void verketten(const re15_door_mat_t *a, const int16_t r[9], const int32_t p[3],
                       re15_door_mat_t *out)
 {
     re15_door_mat_t o;
+    int16_t pv[3] = { (int16_t)p[0], (int16_t)p[1], (int16_t)p[2] };
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             int32_t s = 0;
             for (int k = 0; k < 3; k++) s += (int32_t)a->m[i * 3 + k] * r[k * 3 + j];
-            o.m[i * 3 + j] = (int16_t)(s >> 12);
+            o.m[i * 3 + j] = (int16_t)ir_sat(s >> 12);
         }
         int32_t t = 0;
-        for (int k = 0; k < 3; k++) t += (int32_t)a->m[i * 3 + k] * p[k];
-        o.t[i] = (t >> 12) + a->t[i];
+        for (int k = 0; k < 3; k++) t += (int32_t)a->m[i * 3 + k] * pv[k];
+        o.t[i] = ir_sat((t >> 12) + a->t[i]);
     }
     *out = o;
 }
@@ -423,15 +430,26 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
             if (o->flags & 0x800) s->schliesston = 1;
         }
         return 1; }
-    case 0x53:  /* Sce_fade_set, Handler 0x80057ef0, @0x80057fa8 addiu v0,s2,6 */
+    case 0x53: {/* Sce_fade_set, Handler 0x80057ef0 (analysis/tor_1170/08_re_blende.md 1.1):
+                 * 0x8002c1a0(Kanal|Art<<8, Schritt, Maske, 7) @0x80057f50 -> +2 Schritt @0x8002c1e4,
+                 * +4 Art @0x8002c1e8, Maske je Bit 4/2/1 -> 0xff @0x8002c1dc..22c; danach
+                 * 0x8002c2b0(Kanal, 0, ...) @0x80057f58 -> Pegel 0 (@0x8002c2d4); der Handler selbst:
+                 * Schritt > 0 -> Pegel 0 (@0x80057fa4), Schritt < 0 -> (u16)Schritt + 0x8000
+                 * (@0x80057f94..a0), Schritt 0 -> bleibt 0. PC += 6 @0x80057fa8. Kanal immer 0
+                 * in allen 55 RE2-Archiven (08_re_blende.md 4e); andere Kanaele: nur Vorschub. */
+        int16_t schritt = rs16(b + 4);
         e->pc += 6;
-        s->blende_art = b[2];
-        s->blende_maske = b[3];
-        s->blende_schritt = rs16(b + 4);
-        return 1;
-    case 0x74:  /* Sce_fade_adjust, Handler 0x80057fd8, @0x80058004 addiu s0,s0,4 (NICHT 5) */
+        if (b[1] == 0) {
+            s->blende_art = b[2];
+            s->blende_maske = b[3];
+            s->blende_schritt = schritt;
+            s->blende_pegel = (schritt < 0) ? (uint16_t)((uint16_t)schritt + 0x8000u) : 0;
+        }
+        return 1; }
+    case 0x74:  /* Sce_fade_adjust, Handler 0x80057fd8: 0x8002c2b0(pc[1], (s16)pc[2], 0, NULL)
+                 * @0x80057ff4..ffc -> Pegel = Wert (@0x8002c2d4 sh a1,0(a0)); PC += 4 @0x80058004 (NICHT 5) */
         e->pc += 4;
-        s->blende_pegel = rd16(b + 2);
+        if (b[1] == 0) s->blende_pegel = rd16(b + 2);
         return 1;
     default:
         s->notizen |= RE15_DOOR_NOTIZ_UNBEKANNT;
@@ -495,10 +513,30 @@ int re15_door_seq_bild(re15_door_seq_t *s, int ton_geladen)
     return 1;
 }
 
+/* Blenden-Takt 0x8002c378 (08_re_blende.md 2): einmal je Hauptschleifen-Durchlauf, NACH den
+ * Tasks und VOR dem Bildwechsel. Bit 15 gesetzt -> aus (@0x8002c3b4 bltz); Helligkeit =
+ * Pegel >> 7 (@0x8002c3b8 sra a0,v0,23) & Maske (@0x8002c3cc); DANACH Pegel += Schritt, 16 Bit
+ * ohne Saettigung (@0x8002c408..414) - das Kippen von Bit 15 ist das Ende. Rueckgabe: die
+ * abzuziehende Helligkeit (Mischart 2 = B - F, @0x8002c24c) oder -1, wenn der Kanal nichts
+ * zeichnet. Masken sind in RE2 immer 7 (R,G,B = 0xff), die Rueckgabe ist daher grau. */
 int re15_door_seq_blende_takt(re15_door_seq_t *s)
 {
-    (void)s;
-    return -1;   /* ersetzt durch die belegte RE2-Blende, siehe unten */
+    if (s->blende_pegel & 0x8000u) return -1;
+    int h = (s->blende_pegel >> 7) & 0xff;
+    if (!(s->blende_maske & 7)) h = 0;
+    s->blende_pegel = (uint16_t)(s->blende_pegel + (uint16_t)s->blende_schritt);
+    return h;
+}
+
+/* Door_exit 0x8001417c, sobald der Kanal fertig ist: 0x8002c1a0(0x200, 0, 7, 1) +
+ * 0x8002c2b0(0, 0x7fff, 0xffffff, NULL) (@0x800141a4..c4) -> Schritt 0, Pegel 0x7fff:
+ * Helligkeit 255 in jedem Bild (08_re_blende.md 4c). */
+void re15_door_seq_blende_schwarz(re15_door_seq_t *s)
+{
+    s->blende_art = 2;
+    s->blende_maske = 7;
+    s->blende_schritt = 0;
+    s->blende_pegel = 0x7fff;
 }
 
 int re15_door_seq_blende_fertig(const re15_door_seq_t *s)

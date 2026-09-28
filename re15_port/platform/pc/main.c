@@ -64,6 +64,7 @@ static inline int RNDI(float f) {
 #include "re15_inventory.h"
 #include "re15_msg.h"
 #include "re15_to_re2.h"
+#include "re15_door_seq.h"   /* RE2-Tuersequenz: Pruefhaken RE15_TUER_TEST */
 #include "re15_rdt.h"
 #include "re15_sicherung.h"
 #include "re15_actor.h"
@@ -2780,8 +2781,23 @@ int main(int argc, char *argv[])
 
     re15_render_init();
     re15_input_init();
+    /* ⛔ RE2-ERGAENZUNG: die Tuersequenz (Tor ROOM1170) spielt die PC-Szene
+     * platform/pc/src/door_scene_pc.c; ohne Anmeldung verfaellt jede Anfrage. */
+    { extern void re15_pc_tuerszene_anmelden(void); re15_pc_tuerszene_anmelden(); }
     re15_audio_init();   /* FE-3: open the audio device early so the opening movie has sound
                           * (idempotent — the later call in the game-init path is a no-op). */
+    /* Pruefhaken RE15_TUER_TEST=<Variante>: die Tor-Sequenz einmal direkt spielen und beenden
+     * (Abnahme mit RE15_TUER_SERIE=<Verzeichnis>, s. door_scene_pc.c). */
+    { const char *tt = getenv("RE15_TUER_TEST");
+      if (tt && *tt) {
+          extern re15_door_seq_anfrage_t g_door_seq_anfrage;
+          g_door_seq_anfrage.aktiv = 1;
+          g_door_seq_anfrage.archiv = RE15_DOOR_ARCHIV_TOR1170;
+          g_door_seq_anfrage.variante = (uint8_t)atoi(tt);
+          g_door_seq_anfrage.tuer_nr = 0;
+          re15_door_seq_ausfuehren();
+          return 0;
+      } }
 
     /* FE-0.3 / FE-1.3 — top-level mode machine: immer Boot zum TITLE.
      * Der RE15_START_ROOM-Schnellweg ist entfernt (siehe re15_gameflow_init). */
