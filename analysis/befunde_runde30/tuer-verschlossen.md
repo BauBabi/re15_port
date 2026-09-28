@@ -692,3 +692,141 @@ Die Falscheingabe am Feld („Wrong code, try again.", msg 4) bleibt stumm wie i
 - PSX: nur Stub (wie Fahrstuhl/Panel).
 - Paket (Schritt 8): `lock_se_common.c` ist eine neue Engine-Quelle → der eingefrorene Android-Configure
   unter `app/.cxx` muss verworfen werden; `RE2/TUERSE.VBS` in allen drei Paketen prüfen.
+
+### Nachbesserung nach der Gegenprüfung (2026-09-28)
+
+Der Gegenprüfer meldete drei Mängel (1 erheblich, 2 gering) und vier Konstanten ohne Beleg.
+Jede seiner Byte-Angaben habe ich vor dem ersten Edit selbst nachgelesen.
+
+#### Mangel 1 (erheblich): ROOM5080/5081 msg 2 fehlte — behoben, mit der Welle aus RE2 selbst
+
+| Beleg | Datei | Bytes |
+|---|---|---|
+| RE1.5 legt den Text auf den Tür-Platz | `ROOM5080.RDT` sub02 @Datei 0x007C2 (5081: 0x007BA) | `46 00 01 31 02 00 ff ff 00 00` = Aot_reset Platz 0, sce 1, msg 2 |
+| Platz 0 ist die Tür | `ROOM5080.RDT` main00 @Datei 0x006FA | `3b 00 02 31 …` Door_aot_set |
+| Text | `ROOM5080.RDT` msg 2 @Datei 0x00996 (5081: 0x0098E) | „The door won't open until / the power is restored!" |
+| RE2 hat **denselben Raum** | `ROOM7020.RDT` msg 0–3 | dieselben vier Generator-Texte; msg 2 @Datei 0x01F69 wörtlich gleich |
+| RE2 spielt dazu einen Ton | `ROOM7020.RDT` sub06 @Datei 0x01598 / 0x0159E | `2b 00 02 00 ff ff` Message_on 2, `36 02 16 00 00 00 00 00 00 00 00 00` Se_on(2,0x16) |
+| welche Welle | `ROOM7020.RDT` EDT @0x05CE8, Tone @0x06730, VAG 18 @0x1DD50 | `00 00 e3 00`, vol127 center102 shift57 note72, 6144 B, sha1 ea19d086e3cb (Familie P) |
+
+**Abweichung vom Vorschlag des Gegenprüfers.** Er schlug Art K / ZU_E vor, weil P nicht in der Bank lag.
+Für genau diesen Text gibt es aber einen direkten RE2-Beleg: RE2 spielt in diesem Raum die Welle P.
+ZU_E wäre dagegen eine Port-Wahl gewesen. Deshalb habe ich die Bank um diesen einen Satz erweitert:
+
+- `re2_door_se_cut.py`: Satz 3 **ZU_P** aus ROOM7020 (Selbsttest gegen alle vier Datei-Offsets). `TUERSE.VBS`
+  wächst von 23832 auf **29976 B**, md5 **777e1f43e65f3c68941a635d12886a63**. Die Sätze 0–2 bleiben bytegleich.
+- `gen_lock_se_sites.py`: neue Art **S** (ohne Strom) mit **einer** wörtlichen Formel
+  `^The door won't open until the power is restored!$`. Die Tabelle hat jetzt **54 Zeilen (K 17 / M 35 / S 2)**.
+  Der Diff gegen die alte Tabelle besteht genau aus den zwei neuen Zeilen, beide über den Weg AOT.
+- `lock_se_common.c`: `RE15_LOCK_SE_SATZ_S = RE2_DOOR_SE_ZU_P`, mit dem vollständigen Beleg im Kommentar,
+  ausdrücklich **keine** Port-Wahl.
+
+**Vollständigkeit gemessen**, damit keine weitere Stelle fehlt. Es fanden sich keine weiteren Stellen, die aufzunehmen wären.
+- Suche über alle Tür-Zwilling-Texte ohne Tabellenzeile (Gegenprüfer-Skript `twins.py`): Übrig bleibt nur ROOM4070/4071
+  „The door won't open!". RE2 ist dort stumm: `PTR_800a73c4[4]` = 0x80051948 ruft nur @0x80051968 `jal 0x8002fe38`
+  (selbst disassembliert).
+- Wortsuche über alle 206 RDTs (seal/budge/inside/power/won't open/jam/block/broken/stuck/shut) gegen die
+  17 RE2-Skript-`Se_on(2,0x16)`:
+  - Rolltor „The shutter is tightly sealed in place." (ROOM11B0/11B1): RE2 legt seine Rolltor-Texte auf stumme
+    Text-Plätze (ROOM60B0 sub00 @0x012C0, ROOM60C0 sub02 @0x01084, ROOM6160 sub00 @0x01EFC).
+  - Tür mit kaputtem Knauf ROOM11D0/11D1 msg 1: RE2 hat dazu „The lock is broken and can't be opened.", ebenfalls
+    ein stummer Text-Platz (ROOM2090 sub00 @0x00E7C).
+  - Sonst nur Nicht-Türen: Aufzüge, Schalter, Geräte, Wasser, Kisten, ein Behälter, ein Spind.
+
+**Tonhöhe belegt** (Konstante ohne Beleg Nr. 4). RE2 rechnet mit **demselben** `note2pitch2` wie RE1.5:
+- Se_on 0x8005ba28 legt note = Tone[+6] ab (@0x8005bbec `lbu v0,6(s0)` / @0x8005bbf4 `sh v0,0xa(v1)`), ebenso
+  fine = Tone[+5] (@0x8005bbf8 / @0x8005bc00 `sh v0,0xc(v1)`).
+- Aufrufkette: FUN_8005c5e4 @0x8005c788 `jal 0x8007fdc8`, dann @0x80080110 `jal 0x80083010`
+  (a0 = note @0x800800fc, a1 = fine @0x80080114). Das gilt, solange Tone[+0x16] ≠ 0xff (@0x8007ffa0 / @0x800800f0).
+- 0x80083010 entspricht RE1.5 @0x80056b2c Befehl für Befehl (Diff: nur Adressen, ein `ori`/`addiu`, ein Register).
+  Die 12×16-Tabelle RE2 @0x800aba40 ist **bytegleich** mit RE1.5 @0x80077520 (384 B, md5 6b1d457a486b2a3a5c17e9a040a00c12).
+
+Damit gilt `re15_vab_note2pitch2` für alle vier Sätze. Die pitch-Werte im Riegel tragen diese Adressen.
+
+#### Mangel 3 (gering): Riegel schützte die Lage hinter der Stimmen-Schranke nicht — behoben
+
+Neuer Riegel-Teil **(f) `unit_r30_tuer_stimme`** mit den echten Bytes ROOM3091 @Datei 0x0159A `2b 06 ff ff`
+(Message_on 6, Tabellenzeile Art M, Weg SKRIPT). Die Stimme läuft 40 Bilder lang (`g_re15_voice_laeuft`,
+`g_re15_voice_restbilder` zählt je Bild herunter). Soll: während des Parkens 0 Töne, nach der Freigabe genau 1.
+
+**Negativkontrolle wie beim Gegenprüfer:** Ich habe den Haken an den Anfang von `op_message_on` verschoben.
+Dann parken 40 Bilder mit **40 Tönen**, insgesamt fallen **41**, und (f) ist **ROT**. Mit zurückgesetztem Code ist (f) wieder grün.
+
+Zusätzlich neuer Teil **(e) `unit_r30_tuer_strom`**:
+- Frisch ist Platz 0 in ROOM5080/5081 die Tür (Raumwechsel, 0 Töne).
+- Danach laufen die **echten** zehn Aot_reset-Bytes aus sub02 als Thread. Platz 0 ist dann ein Text-Platz mit msg 2.
+- Ohne Druck fallen 0 Töne, mit Druck geht msg 2 auf und es fällt **genau 1 × ZU_P**.
+
+Negativkontrollen:
+- Ohne die S-Zeilen geht msg 2 auf, aber es fallen **0 Töne**, (e) ist ROT. Das ist der gemeldete Mangel, reproduziert.
+- Mit S = ZU_E fällt Satz 2 statt 3, (e) und (d) sind ROT.
+
+#### Mangel 2 (gering): ROOM1100/1101 „It's electronically locked." (Sprachgerät-Tür) — NICHT geändert, Frage an den Nutzer
+
+Die Angaben des Gegenprüfers habe ich nachgelesen:
+- RE2 1100 sub05 @Datei 0x0304E und 2000 sub09/sub10 @Datei 0x02CAC/0x02CCA sind jeweils `36 02 16 00 …`.
+- Der Raumbank-Satz 0x16 löst in 1100 und 2000 auf **cf1414572aea** auf (Welle A), in 2110 auf **be2f6ea9caaa** (Welle E).
+- RE2s eigene „electronically locked"-Türen **ohne** Kartenleser klingen im Revier also nach **A**.
+
+Der Port folgt der Vorgabe „Art K (Kartenleser/elektronisch) → E". Deshalb bekommt 1100/1101 heute E.
+Die Tür ist weder Kartenleser noch Pincode. Sowohl die Worte des Nutzers als auch die RE2-Bytes sprächen für A.
+Weil das eine Wahl gegen die Vorgabe wäre, habe ich es **nicht** eigenmächtig geändert.
+
+**Frage an den Nutzer beim Anhören:** Soll die Sprachgerät-Tür 1100/1101 E (wie der Kartenleser) oder A
+(wie RE2s elektronisch verriegelte Revier-Türen) bekommen?
+
+Umsetzung von A: eine Formel `^It's electronically locked\.$` → Art M **vor** die K-Formeln in
+`gen_lock_se_sites.py`, dann die Tabelle neu erzeugen und im Riegel die K/M-Zahlen anpassen (K 15, M 37).
+Andere Zeilen trifft das nicht: 4080/4081 tragen den Raumnamen vor dem Text, die Kartenleser-Türen den Zusatz „There's a card reader…".
+
+#### Die übrigen „Konstanten ohne Beleg"
+
+| Konstante | Stand |
+|---|---|
+| `RE15_LOCK_SE_SATZ_K = ZU_E` | unverändert Vorgabe, im Code wörtlich „Port-Wahl, keine Original-Adresse" + Messung (s. Mangel 2) |
+| `RE15_LOCK_SE_SATZ_M = ZU_A` | unverändert, ebenso gekennzeichnet (A 9 Revier-Räume gegen B 6) |
+| `FORMELN` | im Generator-Kopf jetzt wörtlich „Port-Wahl, keine Original-Adresse", dazu die Vollständigkeitsmessung von oben. Belegt ist je Art die **Welle**, bei S zusätzlich der Wortlaut |
+| pitch 0x589/0x400/0x5f3 (+ neu 0x2f9) | **belegt**, RE2-Kette oben |
+
+#### Gemessen — Soll gegen Ist (Nachbesserung)
+
+| Riegel / Messung | Soll | Ist |
+|---|---|---|
+| (a) `unit_r30_tuerse_bank` | 29976 B, 4 Sätze, Satz 3 = `00 00 33 00`, pitch 0x2f9, 10724 Samples, Sätze 4–7 leer | genau so; Satz 3 Stimme −16 prio 3 vol127 center102 shift57 note72, 6144 B, 8193 Hz, **1,309 s**; Sätze 0–2 unverändert (0x589 / 0x400 / 0x5f3) |
+| (b) `unit_r30_tuer_verschlossen` | unverändert 51 Plätze (K 16 / M 35), Art S im Frisch-Zustand 0 | 740 Plätze, 57 ohne Standplatz, **51** (K 16 / M 35 / **S 0**), 46 Stellen, 689 übrige 0 — PASS |
+| (c) `unit_r30_tuer_r4000` | Se_on(2,0x0f) 1 ×, Tür-Ton 0 | 1 × / 0 — PASS |
+| (d) `unit_r30_tuer_tabelle` | 54 Zeilen (17 / 35 / 2), gesetzter Weg 1, sonst 0 | **54** Zeilen, **55** Aufrufe, je Satz der Art; **9** Gegenproben stumm (neu: ROOM4070 msg 0, ROOM11B0 msg 14, ROOM5080 msg 3) — PASS |
+| (e) `unit_r30_tuer_strom` (neu) | frisch Raumwechsel + 0; nach Aot_reset ohne Druck 0, mit Druck msg 2 + 1 × ZU_P | 5080: 1/0 · 0 · msg 2, 1 × Satz 3; 5081 ebenso — PASS |
+| (f) `unit_r30_tuer_stimme` (neu) | geparkt 0, danach genau 1 × ZU_A | 40 Bilder 0 Töne, Text zu; danach **1** Ton, Satz 0, msg 6 offen — PASS |
+| Negativkontrollen | jede muss ROT werden | Haken vorn → (f) 40/41 ROT · ohne S-Zeilen → (e) 0 Töne ROT, (d) ROT · S = ZU_E → (e)+(d) ROT |
+| Bestand | Sonde über die 98 Räume unverändert | `probe_r30_tuer_verschlossen` gegen den Gegenprüfer-Lauf `probe_nachher.txt`: **0 Zeilen** Unterschied (740 Plätze, 81 mit Ton) |
+| Suite | 364 + 2 neue | **366 / 366** grün |
+
+#### Nicht gemessen
+
+- **Echtlauf ROOM5080 msg 2 in der echten `re15_pc.exe`: nicht erreicht.**
+  - Debug-Sprung, Weg zum Generator und dessen Text-Folge klappen: Leon steht bei (−9950,−18200) und läuft nach
+    (−26483,−18200). Zwei Texte sind offen, F247–F499 und F501–F835 (sub02 öffnet msg 0 und msg 1;
+    das Log führt die Nummer nicht).
+  - Danach kam Leon in vier Anläufen nicht zurück an die Tür:
+    - Auf der Linie z ≈ −18150 bleibt er bei x ≈ −25440 hängen. Auf dem Hinweg lief er dort durch.
+    - In zwei Läufen bewegte ihn nach einer Wandberührung der folgende Laufbefehl nicht mehr.
+      In einem Lauf wanderte er ohne Eingabe langsam nach −x.
+  - Das fällt in die Generator-Folge von sub02 (Plc_dest @Datei 0x007F4 Ziel (−18100,−17800), Do/Edwhile
+    @0x007FC auf Bit (5,32), Plc_ret @0x00818). Das ist nicht Teil dieser Spur und nicht untersucht.
+    Skript und Logs: `build/r30_echt_5080_*` (nicht committet).
+  - Für den Weg AOT ist dieselbe Einhängestelle im Echtlauf belegt (ROOM10D0 / ROOM20A0, oben).
+  - Satz 3 läuft über denselben Slot `se_play_layers` wie Satz 2. Ein Hörbefund ist das nicht.
+- Ob der Nutzer mit „ROOM2190" ROOM2110 meinte (RE2 ROOM2190 Satz 0x16 ist leer, §3.6): weiter offen.
+
+#### Paket (Schritt 8, für den Zusammenführer)
+
+- `RE2/TUERSE.VBS` ist jetzt **29976 B**, md5 **777e1f43e65f3c68941a635d12886a63** (nicht mehr 23832 B / 8ff0c00c…).
+  Die Datei in allen drei Paketen prüfen.
+- `lock_se_common.c` ist neu. Deshalb den Android-Cache `app/.cxx` verwerfen.
+- Suite-Zahl: +6 Einträge aus `probes/r30_tuer-verschlossen.cmake` (vorher 4).
+
+#### Zum Anhören (ergänzt)
+
+`welle_P_ZU_P_ohne_strom_re2_7020_16.wav`: RE2 ROOM7020 Satz 0x16, 8193 Hz, 1,309 s. Das ist der Ton an der
+Tür ohne Strom, RE2s eigene Wahl für genau diesen Text.
