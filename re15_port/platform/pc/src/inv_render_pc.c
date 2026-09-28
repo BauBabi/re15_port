@@ -51,6 +51,7 @@
 extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
+#include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -292,6 +293,9 @@ static int inv_assets_init(void)
     /* DATA/ITEMALL.PIX: headerless 72 x 1200B (40x30 8bpp) icon tiles. */
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
     if (!s_itemall) { fprintf(stderr, "[inv] ITEMALL.PIX missing\n"); return s_ready; }
+    /* Icon der Sicherung (Tile 0x40 @0x12C00) einsetzen — derselbe Eingriff an ALLEN
+     * Ladestellen, sonst zeigen Raster und Item-Box zwei Gegenstaende (re15_sicherung.h). */
+    re15_sicherung_icon_einsetzen(s_itemall, s_itemall_size);
 
     /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
      * tiles, pic ids 1-14 (see the s_mixitem note above). */
@@ -304,6 +308,19 @@ static int inv_assets_init(void)
      * FUN_800492b8 mode 1 (w=0x28hw=80px, h=0x1e @0x80049318-6c). Optional: only
      * needed once a wide weapon is carried. */
     s_itps = load_cd("ITEM/ITPS.ITP", &s_itps_size);
+    /* Item-Bild der Sicherung (Block 0x40 @0xC0000) einsetzen. Der eingesetzte Block
+     * traegt die RE1.5-Rechtecke crect (0,489) / prect (832,256), photo_upload_check
+     * unten nimmt ihn deshalb an — das CHECK-Foto der Sicherung war vorher LEER, weil
+     * der ausgelieferte Block 0x40 die RE2-Rechtecke (0,480) / (0,0) traegt. */
+    if (s_itps) re15_sicherung_bild_einsetzen(s_itps, s_itps_size);
+    /* PRUEFZEILE der beiden Ladestellen dieses Schirms (Runde 30, Nachbesserung): 0 = das
+     * Rohr ist in DEN Puffern, aus denen Raster (inv_compose_cells) und CHECK-Foto
+     * (photo_upload_check) lesen. Ohne Einsetzen stuende hier der ausgelieferte Stand
+     * (Tile 389, Block 8904 Bytes). Eingefroren von integration_r30_sicherung_bild. */
+    fprintf(stderr, "[inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in %d von 1200 "
+                    "Bytes ab, Bild-Block 0x40 in %d von 12288 Bytes\n",
+            re15_sicherung_icon_abweichung(s_itemall, s_itemall_size),
+            re15_sicherung_bild_abweichung(s_itps, s_itps_size));
 
     s_ready = 1;
     return s_ready;
@@ -374,6 +391,22 @@ static void photo_upload_check(void)
     if ((b[0] | (b[1] << 8)) != 0x10) return;                 /* TIM magic */
     flags = (uint32_t)b[4] | ((uint32_t)b[5] << 8);
     if (!(flags & 8)) return;                                 /* all blocks ship a CLUT */
+    /* PRUEFZEILE (Runde 30, Nachbesserung): welche Rechtecke der Block des gewaehlten Items
+     * traegt und ob das Foto damit in das Fenster (832,256) 56x72 / CLUT-Zeile (0,489)
+     * gelangt. Der AUSGELIEFERTE Block 0x40 traegt crect (0,480) / prect (0,0) — das Foto
+     * bliebe leer. Einmal je CHECK-Vorgang. Eingefroren von integration_r30_sicherung_bild. */
+    {
+        const uint8_t *pb = b + 8 + ((uint32_t)b[8] | ((uint32_t)b[9] << 8) |
+                                     ((uint32_t)b[10] << 16));
+        int pgx = pb[4] | (pb[5] << 8), pgy = pb[6] | (pb[7] << 8);
+        int pgw = pb[8] | (pb[9] << 8), pgh = pb[10] | (pb[11] << 8);
+        int ccx = b[12] | (b[13] << 8), ccy = b[14] | (b[15] << 8);
+        int foto = (pgx == 832 && pgy == 256 && pgw == 56 && pgh == 72);
+        fprintf(stderr, "[inv] CHECK-Foto Item 0x%02X: crect (%d,%d) prect (%d,%d) %dx%d -> %s\n",
+                (unsigned)g_inv_screen.exam_item, ccx, ccy, pgx, pgy, pgw, pgh,
+                (foto && ccx == 0 && ccy == 489) ? "Foto und CLUT geladen"
+                : foto ? "Foto geladen, CLUT NICHT" : "Foto NICHT geladen");
+    }
     clen = (uint32_t)b[8] | ((uint32_t)b[9] << 8) | ((uint32_t)b[10] << 16);
     cx = b[12] | (b[13] << 8); cy = b[14] | (b[15] << 8);
     if (cx == 0 && cy == 489) {                               /* crect (0,489) 256x1 */
@@ -1157,36 +1190,83 @@ static void fb_dump_bmp(const char *path)
  * Illustration (Zeilen H..255), zusammen eine 256x256-Flaeche.
  *
  * ⛔ PORT-ERWEITERUNG, klar benannt: RE1.5 kennt diese Ebene nicht. Sie zeichnet NUR,
- * wenn ein Dokument gewaehlt ist (re15_re2doc_select); ohne Auswahl bleibt der FILE-Schirm
- * unveraendert der byte-true Textleser. Die Bildlage im Schirm ist eine Port-Entscheidung -
- * RE2s eigene Sprite-Position gehoert zu RE2s Schirm-Layout, nicht zu RE1.5s.
+ * wenn der Leser ein Bild-Dokument zeigt (g_inv_screen.file_bild); sonst bleibt der
+ * FILE-Schirm unveraendert.
+ *
+ * ⛔ RUNDE 30 — LAGE, REIHENFOLGE UND GRUND NACH RE2 (bis dahin lag die Ebene als
+ * Port-Entscheidung bei (32,-8), die Illustration UNTER der Textseite, auf dem blauen
+ * Blatt des RE1.5-Schirms, und wurde UEBER die fertige Anzeigeliste gemalt).
+ * RE1.5 ist hier nicht massgeblich: sein Leser hat keine Bild-Ebene.
+ *   GRUND — schwarzes Rechteck 320x240 hinter allem:
+ *     80071d8c  addiu a0,zero,2
+ *     80071d90  jal   0x8002bda8
+ *     80071d94  addu  a1,zero,zero     ; Farbe 0 = schwarz   (FILE-Schirm: @0x8006cf78-80)
+ *     8002bdc0  lui a2,0xf0 / 8002bdc4 ori a2,a2,0x140      ; h = 0xf0 = 240, w = 0x140 = 320
+ *     8002bdd0  sw a1,140(v1) / 8002bdd4 sw zero,144(v1) / 8002bdd8 sw a2,148(v1)
+ *   LAGE — FUN_80075fd0 (anlegen) und FUN_800724b4 (zeichnen):
+ *     80076170  addiu v0,zero,25 / 80076178 sh v0,23628(at) ; 0x800d5c4c Textseite x = 25
+ *     8007617c  addiu v0,zero,30 / 80076184 sh v0,23630(at) ; 0x800d5c4e Textseite y = 30
+ *     80072538  lhu v0,23628(v0) / 80072540 sh v0,8(s0)     ; Textseite x
+ *     80072548  lhu v0,23630(v0) / 80072554 sh v0,10(s0)    ; Textseite y
+ *     80072550  jal 0x8008f918                              ; AddPrim(Textseite)
+ *     80072584  addiu v0,zero,100 / 80072588 sh v0,8(s0)    ; Illustration x = 100
+ *     8007258c  addiu v0,zero,60  / 80072594 sh v0,10(s0)   ; Illustration y = 60
+ *     80072590  jal 0x8008f918                              ; AddPrim(Illustration)
+ *   REIHENFOLGE — AddPrim haengt VORN an: gezeichnet wird zuerst die Illustration, dann
+ *     die Textseite darueber. Die Illustration steht FEST (kein Zustands-Gatter um
+ *     @0x80072590) und faehrt beim Blaettern nicht mit; nur die Textseite faehrt
+ *     (x aus 0x800d5c4c).
+ *   HELLIGKEIT — r = g = b = 0x80 (`sb s4(=128)` @0x8007605c-64, `sb s1(=128)`
+ *     @0x800760c0-c8) = neutral; die Textseiten aller Dokumente und die Illustration
+ *     von FILE08 tragen kein Texel mit STP-Farbe -> volle Deckung.
+ *   DURCHSICHT — CLUT-Farbe 0x0000 (re2doc_common.c re15_re2doc_pixel).
+ * Die Pfeile und die Fusszeile kommen aus RE1.5s Anzeigeliste und liegen DARUEBER
+ * (re15_inv_screen.c, frueher Ruecksprung fuer Bild-Dokumente).
  *
  * Die Masse kommen aus den TIM-Koepfen, nicht aus einer Tabelle - so kann ein selbst
  * gebautes Dokument eine eigene Seitenhoehe haben, ohne dass hier etwas nachgezogen wird. */
-void re15_inv_render_pc_file_image(int doc, int page, int ox, int oy)
-{
-    if (doc < 0) return;
-    int tw = 0, th = 0;
-    if (!re15_re2doc_size(doc, page, RE15_RE2DOC_PAGE, &tw, &th)) return;
-    const int H = th;
+#define DOC_TEXT_Y    30    /* `addiu v0,zero,30`  @0x8007617c (RE2) */
+#define DOC_ILLU_X   100    /* `addiu v0,zero,100` @0x80072584 (RE2) */
+#define DOC_ILLU_Y    60    /* `addiu v0,zero,60`  @0x8007258c (RE2) */
 
+static int s_doc_under_on = 0, s_doc_under_set = -1, s_doc_under_page = -1,
+           s_doc_under_x = 0;
+
+/* Fuer den NAECHSTEN re15_inv_render_pc_draw: Bild-Satz `doc`, Seite `page` (< 0 =
+ * Titelseite) und die x-Lage der Textseite. Wird von genau einem Zeichenlauf verbraucht. */
+void re15_inv_render_pc_file_underlay(int doc, int page, int text_x)
+{
+    s_doc_under_on   = (doc >= 0);
+    s_doc_under_set  = doc;
+    s_doc_under_page = page;
+    s_doc_under_x    = text_x;
+}
+
+/* Zeichnet in den (gerade genullten = schwarzen) Software-Bildspeicher s_fb5. Die
+ * TIM-Farben sind 15 Bit wie der Bildspeicher, es geht also nichts verloren. */
+static void doc_underlay_draw(void)
+{
+    const int doc = s_doc_under_set, page = s_doc_under_page;
+    int tw = 0, th = 0, pw = 0, ph = 0;
     uint8_t r, g, b;
-    /* Sprite 1: Textseite, Zeilen 0..H-1 */
-    for (int v = 0; v < H; v++)
+    if (doc < 0) return;
+    if (!re15_re2doc_size(doc, page, RE15_RE2DOC_PAGE, &tw, &th)) return;
+    /* (1) Grund: s_fb5 ist genullt = (0,0,0) auf 320x240 (RE2 @0x80071d8c-94). */
+    /* (2) Illustration, abgetastet ab v = H, 128 breit, Hoehe 256 - H
+     *     (`subu v0,zero,s3` @0x800760b8, `sh s1,2(s0)` @0x800760d4, `sh s3,4(s0)`
+     *     @0x800760dc). */
+    if (re15_re2doc_size(doc, -1, RE15_RE2DOC_PAPER, &pw, &ph)) {
+        const int hh = ph - th;
+        for (int v = 0; v < hh; v++)
+            for (int u = 0; u < pw; u++)
+                if (re15_re2doc_pixel(doc, -1, RE15_RE2DOC_PAPER, u, th + v, &r, &g, &b))
+                    px_opaque(DOC_ILLU_X + u, DOC_ILLU_Y + v, r >> 3, g >> 3, b >> 3);
+    }
+    /* (3) Textseite darueber, 256 x H ab (u,v) = (0,0) (@0x80076068-78). */
+    for (int v = 0; v < th; v++)
         for (int u = 0; u < tw; u++)
             if (re15_re2doc_pixel(doc, page, RE15_RE2DOC_PAGE, u, v, &r, &g, &b))
-                re15_pc_put_pixel(ox + u, oy + v,
-                                  ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | 0xFFu);
-
-    /* Sprite 2: Illustration, abgetastet ab Zeile H, 128 breit, Hoehe 256-H */
-    int pw = 0, ph = 0;
-    if (!re15_re2doc_size(doc, page, RE15_RE2DOC_PAPER, &pw, &ph)) return;
-    const int hh = ph - H;                     /* = y_off, `sh s3,4(s0)` @0x800760dc */
-    for (int v = 0; v < hh; v++)
-        for (int u = 0; u < pw; u++)
-            if (re15_re2doc_pixel(doc, page, RE15_RE2DOC_PAPER, u, H + v, &r, &g, &b))
-                re15_pc_put_pixel(ox + u, oy + H + v,
-                                  ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | 0xFFu);
+                px_opaque(s_doc_under_x + u, DOC_TEXT_Y + v, r >> 3, g >> 3, b >> 3);
 }
 
 /* Draw one frame of the status screen into the software framebuffer.
@@ -1235,6 +1315,10 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
     photo_upload_check();             /* wave 4: consume a pending CHECK photo upload */
     map_page_check();                 /* MAP wave: sync the MAP PIX page (0x8004c328) */
     memset(s_fb5, 0, sizeof s_fb5);   /* cleared draw buffer (screen fully covered) */
+    if (s_doc_under_on) {             /* Runde 30: Bild-Dokument UNTER der Liste */
+        doc_underlay_draw();
+        s_doc_under_on = 0;
+    }
     for (i = n - 1; i >= 0; i--) raster_op(&ops[i]);   /* back-to-front */
     {   /* MESSSCHIENE: Abzug auf Zuruf (re15_inv_shot_now). Traegt den Blatt-Durchlauf
          * RE15_MAP_SHOT_SWEEP - alle 13 Kartenblaetter in EINEM Lauf statt in 13 Laeufen

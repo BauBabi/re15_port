@@ -36,4 +36,10 @@ int  re15_item_icon_pixel(uint8_t id, int u, int v, uint8_t *r, uint8_t *g, uint
  * items do; other ids need their palette captured from a menu-open savestate — Phase 8.23.) */
 int  re15_item_icon_available(uint8_t id);
 
+/* Rohbytes eines ITEMALL-Tiles (40x30 Indexbytes, 1200 B) im GELADENEN Puffer, oder NULL
+ * (Tile >= 72 oder Datei nicht ladbar). Fuer Riegel und Werkzeuge: der Puffer traegt seit
+ * Runde 30 bei Tile 0x40 das Icon der Rohr-Sicherung (re15_sicherung_icon_einsetzen), die
+ * Datei auf der Platte bleibt byte-true. */
+const uint8_t *re15_itemall_tile_raw(uint8_t tile);
+
 #endif /* RE15_ITEM_ICON_H */

@@ -1,0 +1,19 @@
+# Inventar (BAU r30b_inv_*, PROTO/BESTAND aus der Ermittlung)
+CHECK F140, Fotofeld x51..629 y171..455 (165015 Punkte, 960x720)
+  BESTAND  nicht blau:      0
+  PROTO    nicht blau:  15732
+  BAU      nicht blau:  15732
+  BAU gegen PROTO im Fotofeld: 0 abweichende Punkte
+RASTER F50: BESTAND gegen PROTO 6948 Punkte, bbox x459..773 y180..254
+  BAU gegen PROTO (ganzes Bild): 0 abweichende Punkte
+  BAU gegen BESTAND (ganzes Bild): 6948 abweichende Punkte
+ERGEBNIS: BESTANDEN
+
+# Bytevergleich
+1. re15_sicherung_md1 gegen soll/sicherung_zord_normal.md1   2532 B  sha256 39badaa31dbc2f4c...  GLEICH
+2. re15_sicherung_tim gegen den Stand vor dem Bau           33312 B  sha256 9c00560b5bca8257...  GLEICH
+   (MD1 vor dem Bau -> jetzt: 530 von 2532 Bytes veraendert)
+3. re15_sicherung_itps_block gegen soll/weg2n_itps_block_40.bin  12288 B  sha256 33d01cb173d9a9ec...  GLEICH
+4. re15_sicherung_icon_tile gegen soll/weg2n_icon_tile_40.bin   1200 B  sha256 d6a3248fe688cef2...  GLEICH
+5. ITPS.ITP      884736 B:  8904 Bytes veraendert, erstes 0xC000E letztes 0xC25B6, Fenster 0xC0000..0xC2FFF -> nur im Fenster
+5. ITEMALL.PIX    86400 B:   389 Bytes veraendert, erstes 0x12C6C letztes 0x13016, Fenster 0x12C00..0x130AF -> nur im Fenster

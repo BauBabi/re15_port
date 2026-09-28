@@ -100,8 +100,11 @@ int  re15_item_is_key(uint8_t id);
  * Mindestmenge 1). Sie ist BEWUSST eine Abweichung vom Original und wird nirgends als
  * byte-true ausgegeben. Der Gueltigkeitsbereich ist eng gezogen:
  *   - NUR Munition im byte-true Id-Fenster 0x15..0x21 (re15_item_is_ammo; `sltiu id,0x15`
- *     @0x80047d54 / `sltiu id,0x22` @0x80049124). Kraeuter (0x22..0x2e), Schluessel/Dokumente
- *     (>= 0x22) und die Startausruestung (re15_inv_load_briefing) bleiben unberuehrt.
+ *     @0x80047d54 / `sltiu id,0x22` @0x80049124), GESCHNITTEN mit "eigener
+ *     Kombinations-Satz" wie bei der Stapelregel (re15_pickup_stapelt_nutzer) — seit
+ *     Runde 30, damit die Memory Card 0x21 (Null-Satz @0x80074C88) nicht halbiert wird.
+ *     Kraeuter (0x22..0x2e), Schluessel/Dokumente (>= 0x22) und die Startausruestung
+ *     (re15_inv_load_briefing) bleiben unberuehrt.
  *   - NUR der WELT-AUFNAHME-Pfad (re15_item_modal_start). Das NACHLADEN aus der Reserve
  *     (re15_ammo_reload_exec, FUN_8004ebdc @0x8004ebdc) laeuft NICHT hier durch — sonst
  *     verschwaende jedes Nachladen die Haelfte des Magazins.

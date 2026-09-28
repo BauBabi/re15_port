@@ -29,9 +29,55 @@
                               * differs, behind the re15_room_apply_pending ctx. */
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
+#include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (RE15_FILES_FIRST_ITEM_ID) */
+#include "re15_menu.h"       /* Runde 30: re15_menu_request_doc — Aufheben oeffnet den Leser */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
+
+/* ⛔ RUNDE 30 — DIE DOKUMENT-WEICHE DER ITEM-ZONE (nach RE2).
+ *
+ * Nutzer-Auftrag Runde 30, Abschnitt E: ein Dokument ("Irons Diary") wird aufgehoben,
+ * gelesen und verschwindet nach dem Zumachen vom Schreibtisch.
+ *
+ * WARUM RE1.5 HIER NICHT MASSGEBLICH IST: RE1.5 hat keinen Dokument-Zweig. Seine
+ * Item-Ids enden bei 0x47 — das einzige `sltiu ...,0x48` der EXE ist die Klemme des
+ * Status-Schirms (`sltiu v0,v0,0x48` @0x8004a350, `ori v0,zero,0x47` @0x8004a358,
+ * `sb v0,0(v1)` @0x8004a35c), im Aufnahme-Pfad (Handler[9] @0x80043328 ->
+ * FUN_8001db28) steht keine solche Abfrage; ueber 240 Raeume und 164 Item_aot_set ist
+ * die hoechste platzierte Id 0x47 (Zensus analysis/befunde_runde30/
+ * r30_diary_item_id_zensus.py). Die Bildquellen des Item-Modals enden ebenfalls bei
+ * 0x47 (ITEM/ITPS.ITP 884736 B / 0x3000 = 72 Bilder, DATA/ITEMALL.PIX 86400 B /
+ * 1200 = 72 Kacheln) — das Modal DARF fuer 0x48 nie starten.
+ *
+ * RE2-VORBILD (info/re2leon/PSX.EXE, selbst disassembliert):
+ *   Handler der Item-Zone FUN_80051884 (Tabelle @0x800a73c4, Eintrag 2 @0x800a73cc)
+ *     80051884  lbu  a1,0(a0)           ; Item-Id aus dem Zonen-Datensatz
+ *     800518a8  sb   a1,16945(at)       ; 0x800d4231 = aufzuhebende Item-Id
+ *     800518b0  sw   v1,-6696(at)       ; 0x800ce5d8 = die ausloesende Zone
+ *     800518f0  addiu v1,zero,2
+ *     800518f8  sb   v1,23552(at)       ; 0x800d5c00 = 2  Status-Schirm-Art "Aufheben"
+ *     80051904  sb   v1,-3256(at)       ; 0x800df348 = 1  Status-Schirm anfordern
+ *   -> kein `jal 0x8002fe38` (Nachrichten-Oeffner): KEINE "Will you take"-Abfrage.
+ *   Aufnahme FUN_80071ba0
+ *     80071bbc  sltiu v0,a3,0x68        ; RE2s erste Dokument-Id
+ *     80071bc0  beq   v0,zero,0x80071d00
+ *     80071d00  jal   0x800692dc        ; an die Liste haengen
+ *     80071d04  addiu a0,a3,-104        ; Dokument-Nr = Id - 0x68
+ * Im Port steht an der Stelle von RE2s 0x68 RE1.5s eigene erste FILE-Id 0x48
+ * (u8 @0x800c7370, DEBUG.BIN Datei 0x07370).
+ *
+ * Rueckgabe 1 = die Zone war ein Dokument, der Leser ist angefordert (das Item-Modal
+ * bleibt aus); 0 = gewoehnliches Item. */
+static int aot_item_dokument(int slot)
+{
+    const re15_aot_item_params_t *p = &g_aot.item_params[slot];
+    if (p->item_type < RE15_FILES_FIRST_ITEM_ID) return 0;   /* sltiu @0x80071bbc (0x48) */
+    re15_menu_request_doc((int)p->item_type - RE15_FILES_FIRST_ITEM_ID, /* @0x80071d04 */
+                          (int)p->taken_bit, slot,
+                          (p->taken_prop == 0xFF) ? -1 : (int)p->taken_prop);
+    return 1;
+}
 
 /* ⛔ NUTZER-ENTSCHEIDUNG (2026-09-20) — KLICK-LAUT AM CURSOR-RAETSEL. Zaehler + Einschwing-
  * Sperre stehen hier, Herleitung bei re15_object_notch_update(). */
@@ -703,6 +749,9 @@ void re15_aot_fire_slot(int slot)
         /* handler[9] @0x80043328 arms the pickup FSM (latch 0x80072d3b, rec →
          * 0x800aca30) = the port's item modal. Forced pickup, no geometry. */
         const re15_aot_item_params_t *p = &g_aot.item_params[slot];
+        /* Runde 30: item_type >= 0x48 ist ein DOKUMENT -> Leser statt Item-Modal
+         * (RE2 `sltiu v0,a3,0x68` @0x80071bbc; Beleg-Block bei aot_item_dokument). */
+        if (aot_item_dokument(slot)) break;
         re15_item_modal_start(p->item_type, p->amount, p->taken_bit, slot, p->taken_prop);
         break;
     }
@@ -1371,6 +1420,9 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  * divergence this closes (U11). The pickup SE is the room's own SCD Se_on (already
                  * SCD-driven), never a fabricated value (door/item hack audit BO-round 2026-05-29). */
                 const re15_aot_item_params_t *p = &g_aot.item_params[i];
+                /* Runde 30: item_type >= 0x48 ist ein DOKUMENT -> Leser statt Item-Modal
+                 * (RE2 `sltiu v0,a3,0x68` @0x80071bbc; Beleg-Block bei aot_item_dokument). */
+                if (aot_item_dokument(i)) break;
                 re15_item_modal_start(p->item_type, p->amount, p->taken_bit, i, p->taken_prop);
                 break;
             }

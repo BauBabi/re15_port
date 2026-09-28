@@ -80,6 +80,13 @@ void re15_gameflow_new_game(int char_index)
             extern void re15_discard_reset(void);
             re15_discard_reset();
         }
+        {   /* FILE-Liste: neues Spiel = 24 leere Plaetze. RE2 fuellt sie beim Spielstart
+             * mit 0xFF (`addiu a1,zero,24` @0x800682dc, `addiu v0,zero,255` @0x800682e0,
+             * `sb v0,19304(at)` @0x800682f0 = 0x800d4b68 + a1). RE1.5 hat keine
+             * beschreibbare Liste (Maske @0x800c6c98 ohne Schreiber), deshalb RE2. */
+            extern void re15_files_reset(void);
+            re15_files_reset();
+        }
     }
 }
 

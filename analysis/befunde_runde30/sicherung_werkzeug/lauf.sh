@@ -24,9 +24,9 @@ JUMP_AB="${JUMP_AB:-240}"
 AUSL_AB="${AUSL_AB:-90}"
 # VARIANTE=1 nimmt die Mess-Variante (probes/r30_sicherung.cmake) statt des Spiels.
 if [ -n "${VARIANTE:-}" ]; then
-  EXE="$ROOT/re15_port/build_r30_sicherung/tests/unit/re15_pc_r30_sicherung.exe"
+  EXE="$ROOT/re15_port/${BAUVERZ:-build_r30_sicherung}/tests/unit/re15_pc_r30_sicherung.exe"
 else
-  EXE="$ROOT/re15_port/build_r30_sicherung/platform/pc/re15_pc.exe"
+  EXE="$ROOT/re15_port/${BAUVERZ:-build_r30_sicherung}/platform/pc/re15_pc.exe"
 fi
 ZIEL="$ROOT/build/r30_sicherung/$MARKE"
 mkdir -p "$ZIEL"

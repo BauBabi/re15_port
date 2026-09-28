@@ -66,6 +66,7 @@ static inline int RNDI(float f) {
 #include "re15_to_re2.h"
 #include "re15_rdt.h"
 #include "re15_sicherung.h"
+#include "re15_irons_tisch.h"   /* Runde 30 E2: Irons Diary + Memory Card (ROOM1150/1151) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -89,6 +90,7 @@ static inline int RNDI(float f) {
  * re15_inv_screen.c (engine) rasterized by inv_render_pc.c; see re15_inv_screen.h.) */
 #include "re15_inv_screen.h"  /* byte-true status-screen display list (wave 1) */
 #include "re15_re2doc.h"      /* FILE-Bildebene: RE2-Dokumentseiten */
+#include "re15_files.h"       /* Runde 30: FILE-Liste + Dokument-Tabelle */
 #include "re15_room.h"
 #include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
@@ -1372,6 +1374,25 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
                       re15_render_pc_upload_tim_slot(
                           &tt, RE15_TIM_SLOT_PROP(RE15_SICHERUNG_OBJ_ID)); }
+    }
+
+    /* IRONS DIARY (obj 5) + MEMORY CARD (obj 6) auf dem Schreibtisch von Irons' Buero:
+     * zwei ZUSAETZLICHE Props mit eingebackenen MD1+TIM (gen/irons_tisch_props.inc) —
+     * die ausgelieferten RDTs bleiben byte-true. Herleitung: include/re15_irons_tisch.h.
+     * Dieselben zwei Riegel wie bei der Sicherung: Raum ROOM1150/1151 UND das nOmodel des
+     * Raums belegt den Slot nicht selbst. TIM-Slots RE15_TIM_SLOT_PROP(5) = 9, (6) = 26. */
+    if (g_current_room_id == 0x1150 || g_current_room_id == 0x1151) {
+        static const int k_irons_obj[2] = { RE15_IRONS_DIARY_OBJ_ID, RE15_IRONS_KARTE_OBJ_ID };
+        for (int k = 0; k < 2; k++) {
+            int oid = k_irons_obj[k];
+            if (nprops > oid) continue;
+            int msz = 0, tsz = 0;
+            const uint8_t *mb = re15_irons_tisch_md1_bytes(oid, &msz);
+            const uint8_t *tb = re15_irons_tisch_tim_bytes(oid, &tsz);
+            if (mb && re15_md1_parse(mb, (size_t)msz, &md1[oid]) == 0) ok[oid] = 1;
+            if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
+                          re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(oid)); }
+        }
     }
 }
 
@@ -3787,6 +3808,9 @@ re_title:;
     {
         int isz = 0;
         uint8_t *ipix = pc_read_shared("DATA/ITEMALL.PIX", &isz);
+        /* Icon der Sicherung (Tile 0x40 @0x12C00) im GELADENEN Puffer einsetzen — die Datei
+         * bleibt byte-true. Herleitung: include/re15_sicherung.h. */
+        if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -3794,7 +3818,21 @@ re_title:;
     {
         int psz = 0;
         uint8_t *ipic = pc_read_shared("ITEM/ITPS.ITP", &psz);
+        /* Item-Bild der Sicherung (Block 0x40 @0xC0000) im GELADENEN Puffer einsetzen. */
+        if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
+    }
+    /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
+     * DIESELBEN Leser, aus denen gezeichnet wird — das Modal ueber re15_itps_pixel, das Icon
+     * ueber re15_itemall_tile_raw. 0 = das Rohr ist eingesetzt. Fehlt einer der beiden
+     * Einsetz-Aufrufe, steht hier die Abweichung des ausgelieferten Stands (Modal-Bild
+     * > 0 Punkte, Icon 389 Bytes). Eingefroren von integration_r30_sicherung_bild
+     * (Herleitung: re15_sicherung.h, "PRUEFUNG AN DEN LADESTELLEN"). */
+    {
+        fprintf(stderr, "[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in %d von %d "
+                        "Punkten ab, Icon-Tile 0x40 in %d von 1200 Bytes\n",
+                re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H,
+                re15_sicherung_icon_leser_abweichung());
     }
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
@@ -4126,6 +4164,53 @@ re_title:;
          * Der Port macht das jetzt in room_common.c beim Raumwechsel. */
     }
 
+    /* ⛔ DIE SICHERUNG AUCH AM BOOT-/LADE-WEG IN DEN HEBETISCH LEGEN (Runde 30, Thema H).
+     *
+     * GEMESSEN (echte exe, Spielstand in ROOM1150, RE15_CONTINUE_TEST + RE15_FIRE_AOT=1@90,
+     * Framedump F90..F330): der Lade-Lauf war ueber alle 25 Bilder PIXELGLEICH mit dem Lauf
+     * OHNE Sicherung, im debug.log standen nach `[save] CONTINUE: resumed in room 1150` nur
+     * `[prop-render] pi=0/1/2` — kein pi=4, kein Modal. Am Tuerweg lag sie da.
+     *
+     * URSACHE: re15_sicherung_install hatte genau EINE Aufrufstelle, scd_room_reenter
+     * (scd_room_setup.c) — und der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter,
+     * er startet die Threads hier direkt. Dieselbe Luecke wie beim Spielermodell weiter oben
+     * (pc_player_model_sync_cb).
+     *
+     * ORIGINAL: es gibt nur EINEN Raumlader. FUN_800396fc hat im ganzen Image genau zwei
+     * Aufrufer,
+     *     8001d5ac: jal 0x800396fc      ; Session-Start / LOAD  (Funktion @0x8001d22c)
+     *     8001d988: jal 0x800396fc      ; Tuer                  (Funktion @0x8001d600)
+     * und ruft selbst die SCD-Raum-Init
+     *     80039a00: jal 0x8003ef6c
+     * Ein Raumzustand, der nur an EINEM der beiden Wege entsteht, kommt dort nicht vor.
+     *
+     * STELLE: nach dem Init-Lauf von main00/sub00 (die Plattform, an deren Elternmatrix sich
+     * das Prop haengt, steht erst durch main00 im Pool) und nach dem Restore der Flags (das
+     * Genommen-Flag (9,53) entscheidet, ob ueberhaupt angelegt wird). Tut in jedem anderen
+     * Raum nichts und legt nichts doppelt an. Eingefroren von integration_r30_sicherung_laden. */
+    re15_sicherung_install((uint16_t)g_current_room_id);
+    if ((g_current_room_id & 0xFFFEu) == 0x1150u)      /* nur Irons' Buero: obj_id 4 ist
+                                                        * in anderen Raeumen ein Raum-Prop */
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == RE15_SICHERUNG_OBJ_ID)
+                fprintf(stderr, "[sicherung] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        RE15_SICHERUNG_OBJ_ID, k, (unsigned)g_current_room_id);
+    /* IRONS DIARY + MEMORY CARD (Runde 30, Thema E2) — derselbe Grund wie die Sicherung
+     * direkt darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter, also fehlten
+     * Buch und Karte nach einem LOAD in ROOM1150/1151 (Original: EIN Raumlader FUN_800396fc,
+     * `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem Restore der Flags:
+     * die Genommen-Bits (9,54)/(9,55) entscheiden, ob angelegt wird. Die Logzeile ist reine
+     * Diagnose fuer den Lade-Riegel. Herleitung: include/re15_irons_tisch.h. */
+    re15_irons_tisch_install((uint16_t)g_current_room_id);
+    if ((g_current_room_id & 0xFFFEu) == 0x1150u)
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == RE15_IRONS_DIARY_OBJ_ID ||
+                g_scd.props[k].obj_id == RE15_IRONS_KARTE_OBJ_ID)
+                fprintf(stderr, "[irons-tisch] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
      * is no door to set the entry cut and the player is teleported (not walked) to the saved
@@ -4384,6 +4469,121 @@ re_title:;
         if (getenv("RE15_INV_FILE_DOC_SHOT") &&
             (g_engine.frame_count == 70 || g_engine.frame_count == 72))
             g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+        /* RUNDE 30 — MESSHAKEN DES DOKUMENT-SYSTEMS. Rein env-gegatet, KEIN Spielverhalten;
+         * ohne die Variablen ist der Block wirkungslos.
+         *   RE15_DOC=<n>          ANSEHHILFE: VIERECK auf einer beliebigen Listenzeile
+         *                         oeffnet den Leser mit dem Bild-Satz n (0..24 = RE2s
+         *                         Dokumente, 25 = Irons Diary), auch bei leerer Liste.
+         *   RE15_DOC_REQUEST="<bild>[:<doc>[:<taken_bit>[:<aot_slot>[:<obj_id>]]]]"
+         *                         loest im genannten Bild re15_menu_request_doc aus —
+         *                         dieselbe Anforderung, die eine Item-Zone mit Id >= 0x48
+         *                         stellt (aot_common.c aot_item_dokument). Damit laesst
+         *                         sich der Aufnahme-Leser messen, bevor das Welt-Prop
+         *                         steht (Thema irons-diary-welt). Vorgaben: doc 0, kein
+         *                         Flag, keine Zone, kein Weltmodell.
+         *   RE15_PAD_AT="<bild>:<tasten>,<bild>:<tasten>,..."
+         *                         bildgenaue Tasten-FLANKEN; Tasten wie RE15_INPUT_SCRIPT
+         *                         (U D L R, X = Kreuz, A = Viereck, M = R1, S = Start).
+         *   RE15_DOC_EXIT_AT=<bild>  beendet die Hauptschleife in diesem Bild. */
+        {
+            static int s_r30_init = 0;
+            static long s_req_frame = -1, s_exit_frame = -1;
+            static int s_req_doc = 0, s_req_tk = 0, s_req_aot = -1, s_req_obj = -1;
+            static const char *s_pad_at = NULL;
+            if (!s_r30_init) {
+                const char *dv = getenv("RE15_DOC");
+                const char *rq = getenv("RE15_DOC_REQUEST");
+                const char *ex = getenv("RE15_DOC_EXIT_AT");
+                s_r30_init = 1;
+                s_pad_at = getenv("RE15_PAD_AT");
+                if (dv && *dv) {
+                    extern int re15_files_bildsatz_max_page(int bildsatz);
+                    int n = atoi(dv);
+                    re15_menu_debug_view_doc(n, re15_files_bildsatz_max_page(n));
+                }
+                if (rq && *rq)
+                    sscanf(rq, "%ld:%d:%d:%d:%d", &s_req_frame, &s_req_doc, &s_req_tk,
+                           &s_req_aot, &s_req_obj);
+                if (ex && *ex) s_exit_frame = atol(ex);
+            }
+            if (s_req_frame >= 0 && (long)g_engine.frame_count == s_req_frame) {
+                fprintf(stderr, "[r30-doc] F%u request_doc(%d,%d,%d,%d)\n",
+                        (unsigned)g_engine.frame_count, s_req_doc, s_req_tk, s_req_aot,
+                        s_req_obj);
+                re15_menu_request_doc(s_req_doc, s_req_tk, s_req_aot, s_req_obj);
+            }
+            if (s_pad_at && *s_pad_at) {
+                const char *p = s_pad_at;
+                while (*p) {
+                    char *e = NULL;
+                    long f = strtol(p, &e, 10);
+                    if (e == p || *e != ':') break;
+                    p = e + 1;
+                    {
+                        uint16_t bits = 0;
+                        for (; *p && *p != ','; p++) {
+                            switch (*p) {
+                            case 'U': bits |= RE15_PAD_BIT_UP;     break;
+                            case 'D': bits |= RE15_PAD_BIT_DOWN;   break;
+                            case 'L': bits |= RE15_PAD_BIT_LEFT;   break;
+                            case 'R': bits |= RE15_PAD_BIT_RIGHT;  break;
+                            case 'X': bits |= RE15_PAD_BIT_CROSS;  break;
+                            case 'A': bits |= RE15_PAD_BIT_SQUARE; break;
+                            case 'M': bits |= RE15_PAD_BIT_R1;     break;
+                            case 'S': bits |= RE15_PAD_BIT_START;  break;
+                            default: break;
+                            }
+                        }
+                        if (f == (long)g_engine.frame_count) {
+                            g_engine.pad_pressed |= bits;
+                            g_engine.pad_current |= bits;
+                        }
+                    }
+                    if (*p == ',') p++;
+                }
+            }
+            if (getenv("RE15_DOC_LOG") && re15_menu_is_open() && g_inv_screen.substate == 2)
+                fprintf(stderr, "[r30-doc] F%u st=%d page=%d/%d tx=%d bild=%d satz=%d "
+                        "liste0=%d\n", (unsigned)g_engine.frame_count,
+                        g_inv_screen.item_state, g_inv_screen.file_reader_page,
+                        g_inv_screen.file_end, g_inv_screen.file_text_x,
+                        g_inv_screen.file_bild, g_inv_screen.file_bildsatz,
+                        re15_files_get(0));
+            if (s_exit_frame >= 0 && (long)g_engine.frame_count >= s_exit_frame) running = 0;
+            /* MESS-HAKEN RE15_IRONS_LOG=1 (Runde 30, Thema E2, reine Diagnose, env-gegatet):
+             * in ROOM1150/1151 eine Zeile nach debug.log, sobald sich am Schreibtisch etwas
+             * aendert — Genommen-Bits (9,54)/(9,55), Aufhebe-Zonen Slot 7/8, Props obj 5/6,
+             * Menge Item 0x21 im Inventar, Platz 0 der FILE-Liste, Item-Modal und Menue.
+             * Die GUI-exe hat sonst keinen Blick auf diesen Zustand; die Abnahme im Spiel
+             * (analysis/befunde_runde30/werkzeuge/r30_idw_bau_lauf.sh) liest ihn hier ab.
+             * Aendert kein Verhalten. Herleitung: include/re15_irons_tisch.h. */
+            { static int s_il = -1; static long s_il_last = -1;
+              if (s_il < 0) s_il = getenv("RE15_IRONS_LOG") ? 1 : 0;
+              if (s_il && (g_current_room_id & 0xFFFEu) == 0x1150u) {
+                  int p5 = -1, p6 = -1;
+                  for (int k = 0; k < (int)g_scd.prop_count; k++) {
+                      if (g_scd.props[k].obj_id == RE15_IRONS_DIARY_OBJ_ID) p5 = g_scd.props[k].active;
+                      if (g_scd.props[k].obj_id == RE15_IRONS_KARTE_OBJ_ID) p6 = g_scd.props[k].active;
+                  }
+                  int ks = re15_inv_find_item(RE15_IRONS_KARTE_ITEM);
+                  int kq = (ks >= 0 && ks < RE15_INV_MAX_SLOTS) ? (int)g_inv.slots[ks].qty : 0;
+                  int f54 = re15_game_flag_get(9, RE15_IRONS_DIARY_TAKEN_BIT);
+                  int f55 = re15_game_flag_get(9, RE15_IRONS_KARTE_TAKEN_BIT);
+                  int z7 = g_aot.slots[RE15_IRONS_DIARY_AOT_SLOT].active;
+                  int z8 = g_aot.slots[RE15_IRONS_KARTE_AOT_SLOT].active;
+                  int l0 = re15_files_get(0), mo = re15_item_modal_active(), me = re15_menu_is_open();
+                  long zst = (long)f54 | ((long)f55 << 1) | ((long)z7 << 2) | ((long)z8 << 3)
+                           | ((long)(p5 + 1) << 4) | ((long)(p6 + 1) << 6) | ((long)(kq & 0xFF) << 8)
+                           | ((long)(l0 & 0xFF) << 16) | ((long)mo << 24) | ((long)me << 25);
+                  if (zst != s_il_last) {
+                      s_il_last = zst;
+                      fprintf(stderr, "[irons-tisch] F%u Raum %04x flag54=%d flag55=%d zone7=%d zone8=%d "
+                              "prop5=%d prop6=%d karte_menge=%d liste0=%d modal=%d menue=%d\n",
+                              (unsigned)g_engine.frame_count, (unsigned)g_current_room_id,
+                              f54, f55, z7, z8, p5, p6, kq, l0, mo, me);
+                  }
+              } }
+        }
         /* RE15_INV_MAP_SHOT=1 (MAP wave): L1 at F31 = the instant MAP launch
          * (@0x8004980c-30: tab=1 + 25c1=1 + entry init/CD-load dispatch). FUN_8004c058:
          * slide-out F32-56 (25 frames @0x8004c0bc), upload+arena F57 (c2=1), interactive
@@ -4835,34 +5035,20 @@ re_title:;
                 static re15_inv_op_t s_inv_ops[RE15_INV_MAX_OPS];
                 extern int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n);
                 int inv_n = re15_inv_screen_build(&g_inv_screen, s_inv_ops, RE15_INV_MAX_OPS);
-                re15_inv_render_pc_draw(s_inv_ops, inv_n);
 
-                /* BILD-EBENE DES FILE-SCHIRMS (Port-Erweiterung, Beleg-Block bei
-                 * re15_inv_render_pc_file_image): zeichnet die zwei RE2-Sprites ueber den
-                 * Leser, sobald ein Dokument gewaehlt ist. Ohne Auswahl passiert nichts und
-                 * der Schirm bleibt der byte-true Textleser von RE1.5.
-                 * RE15_DOC="<nr>" waehlt zum Ansehen ein Dokument (0..24). */
+                /* BILD-EBENE DES FILE-SCHIRMS (Runde 30, nach RE2; Beleg-Block bei
+                 * re15_inv_render_pc_file_underlay): zeigt der Leser ein Bild-Dokument,
+                 * kommen schwarzer Grund, Illustration und Textseite UNTER die
+                 * Anzeigeliste — deshalb wird die Unterlage VOR dem Zeichenlauf
+                 * angemeldet. Welche Seite und welche x-Lage, rechnet die Engine
+                 * (re15_inv_file_bild_lage). */
                 {
-                    extern void re15_inv_render_pc_file_image(int doc, int page, int ox, int oy);
-                    static int s_doc_env = -2;
-                    if (s_doc_env == -2) {
-                        const char *dv = getenv("RE15_DOC");
-                        s_doc_env = (dv && *dv) ? atoi(dv) : -1;
-                        if (s_doc_env >= 0) re15_re2doc_select(s_doc_env);
-                    }
-                    int doc = re15_re2doc_selected();
-                    /* Leser offen = FILE-Welle (substate 2) im Zustand 3 bzw. 4..7 (Seitenwechsel) —
-                     * dieselbe Bedingung, unter der re15_inv_screen.c emit_file_reader ruft
-                     * (@0x800c6f94 / @0x800c6fc8-d0). */
-                    if (doc >= 0 && g_inv_screen.substate == 2 &&
-                        (g_inv_screen.item_state == 3 ||
-                         (g_inv_screen.item_state >= 4 && g_inv_screen.item_state <= 7))) {
-                        /* Seite: der Leser zaehlt ab 0; die Titelseite ist Seite -1. */
-                        int pg = (int)g_inv_screen.file_reader_page - 1;
-                        /* Bildlage: die 256x256-Flaeche mittig im 320x240-Schirm. */
-                        re15_inv_render_pc_file_image(doc, pg, 32, -8);
-                    }
+                    extern void re15_inv_render_pc_file_underlay(int doc, int page, int text_x);
+                    int bset = -1, bpage = -1, btx = 0;
+                    if (re15_inv_file_bild_lage(&g_inv_screen, &bset, &bpage, &btx))
+                        re15_inv_render_pc_file_underlay(bset, bpage, btx);
                 }
+                re15_inv_render_pc_draw(s_inv_ops, inv_n);
             }
 
             /* WAVE 3: the invented "Will you use the X?" Yes/No prompt overlay was REMOVED —
@@ -9605,6 +9791,18 @@ re_title:;
                         memset(&lctx_prop, 0, sizeof(lctx_prop));
                     }
 
+                    /* ⛔ TIEFEN-KLEMME — PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (Runde 30, E2).
+                     * Nur Irons Diary (obj 5) und Memory Card (obj 6) in ROOM1150/1151, nur im
+                     * Cut 2: ueber beiden liegen drei Original-Masken der Tiefe 87 (die
+                     * Tischplatte, ROOM1150.RDT @0x006E8/@0x006F4/@0x00714), die Props liegen
+                     * bei Bucket 92 und waeren unsichtbar (gemessen 0 Pixel). Das Original
+                     * kennt keinen Tiefen-Versatz je Objekt (FUN_8002c18c; otz>>4
+                     * @0x8002565c/@0x800258dc gegen die Maskentiefe @0x80039650-58) — RE1.5
+                     * hat auf diesem Tisch kein Objekt. Der Schluessel wird hoechstens
+                     * re15_pri_mask_camera_z(87) - 1; eine Figur VOR dem Tisch bleibt davor.
+                     * Herleitung + Messung: include/re15_irons_tisch.h. -1 = keine Klemme. */
+                    const int irons_sort_max = re15_irons_tisch_sort_max(
+                        (uint16_t)g_current_room_id, active_cut_idx, oid);
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -9646,6 +9844,8 @@ re_title:;
                             if (!ok) continue;
                             wz_avg /= 3;
                             int wz_for_sort = wz_avg;
+                            if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
+                                wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
                             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop tri. */
@@ -9702,6 +9902,8 @@ re_title:;
                             }
                             if (!ok) continue;
                             wz_avg /= 4;
+                            if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
+                                wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop quad. */
@@ -9793,6 +9995,22 @@ re_title:;
             int mdraw = re15_item_modal_quad(mqx, mqy, &mtype, &mface);
             if (mdraw) re15_render_pc_item_modal(1, mqx, mqy, mtype, mface);
             else       re15_render_pc_item_modal(0, NULL, NULL, 0, 0);
+            /* PRUEFZEILE (Runde 30, Nachbesserung): im ERSTEN Bild, in dem das Modal die
+             * Sicherung zeichnet, steht hier, woraus es zeichnet — Plattformhoehe und die
+             * Abweichung des Modal-Lesers vom Rohr-Bild (0 = Rohr). Einmal je Prozess.
+             * Eingefroren von integration_r30_sicherung_laden Lauf A. */
+            { static int s_sich_modal_log = 0;
+              if (mdraw && mtype == RE15_SICHERUNG_ITEM && !s_sich_modal_log) {
+                  int32_t py = 0;
+                  s_sich_modal_log = 1;
+                  for (int k = 0; k < (int)g_scd.prop_count; k++)   /* Hebetisch = obj_id 0
+                                                                     * (main00 @0x0E00) */
+                      if (g_scd.props[k].obj_id == 0) py = g_scd.props[k].y;
+                  fprintf(stderr, "[sicherung] Modal Item 0x40 zeichnet in Bild %u (Raum %04x, "
+                                  "Hebetisch y=%d): Bild weicht in %d von %d Punkten ab\n",
+                          (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, (int)py,
+                          re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H);
+              } }
             /* RE15_MODAL_LOG: FILE trace of the live modal FSM (stderr goes to the void for the SDL
              * exe) — proves the presentation ticks in the running game with the right progression. */
             {
@@ -9970,6 +10188,19 @@ re_title:;
                     }
                 }
             }
+
+            /* RUNDE 30 — "The <name> has been filed." nach dem Schliessen des
+             * Aufnahme-Lesers (RE1.5-Prompt-Skript [5] @0x800c506f, Port-Schluessel 7;
+             * RE2 Meldung 10, `addiu a2,zero,10` @0x80072844). GLEICHE Lage wie die
+             * beiden Prompts darueber: RE1.5 legt sie in FUN_80027e68 fuer die ganze
+             * Bank 0x100 fest (`ori v0,zero,0x22` @0x80027eec -> 0x800B8534,
+             * `ori v0,zero,0xb4` @0x80027f14 -> 0x800B8536), also (34,180) fuer jeden
+             * Aufrufer. Der Name kommt aus der Dokument-Tabelle (item_prompt_common.c). */
+            {
+                uint8_t fitem = 0; int freveal = 0;
+                if (re15_menu_doc_msg(&fitem, &freveal))
+                    re15_render_item_prompt(34, 180, 7, fitem, freveal);
+            }
         }
 
         /* MESS-HAKEN RE15_FBDUMP="<frame>:<pfad.ppm>" (2026-08-21) — dumpt den SOFTWARE-
@@ -10031,6 +10262,26 @@ re_title:;
               } } }
 
         re15_render_end_frame();
+
+        /* DEBUG-HARNESS: RE15_EXIT_AT="<bild>[#<raum-hex>]" beendet den Prozess am ENDE des
+         * genannten Spielbilds — NACH end_frame, also nachdem Zeichenliste, debug.log-Zeilen
+         * und ein etwaiger RE15_FRAMEDUMP dieses Bilds geschrieben sind. Mit #<raum> zaehlt
+         * nur ein Bild in genau diesem Raum. Damit endet ein Testlauf an einem BILD statt an
+         * einer Wanduhr (ein Zeitlimit reisst unter Last, bevor das Bild erreicht ist).
+         * Reiner Testhaken, env-gegated, kein Spielverhalten. Gebraucht von
+         * integration_r30_sicherung_laden. */
+        { static int s_ea_init = 0; static long s_ea_frame = -1; static unsigned s_ea_room = 0;
+          if (!s_ea_init) { s_ea_init = 1;
+              const char *e = getenv("RE15_EXIT_AT");
+              if (e && *e) { s_ea_frame = atol(e);
+                  const char *hs = strchr(e, 0x23);
+                  if (hs) s_ea_room = (unsigned)strtol(hs + 1, NULL, 16); } }
+          if (s_ea_frame >= 0 && (long)g_engine.frame_count >= s_ea_frame &&
+              (s_ea_room == 0 || (unsigned)g_current_room_id == s_ea_room)) {
+              fprintf(stderr, "[flow] EXIT_AT: Bild %u in Raum %04x erreicht -> exit\n",
+                      (unsigned)g_engine.frame_count, (unsigned)g_current_room_id);
+              fflush(stderr); re15_testhaken_ende();
+          } }
 
         /* RE15_INV_SHOT continuation: capture the presented acceptance frame + exit
          * (re15_render_pc_screenshot writes BMP regardless of the extension; set

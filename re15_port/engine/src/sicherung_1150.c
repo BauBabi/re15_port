@@ -20,10 +20,15 @@
  * (main00 @0x0E00) unterschreitet sie ebenfalls, und das Modal ginge dann schon beim
  * Betreten des Raums auf, bevor der Tisch ueberhaupt erscheint. Genau das hat die Sonde
  * probe_sicherung_1150 gemessen — "Modal aufgemacht in Bild 0".
- * Gemessene Fahrt (dieselbe Sonde): geparkt -20324; Pos_set holt sie auf -305; der
- * Hochpunkt ist -1205; danach zurueck auf -305. Das Fenster faengt nur den Hochpunkt. */
-#define IM_RAUM_AB         (-5000)    /* alles darunter ist die Parkposition */
-#define OBEN_BIS           (-1100)    /* Hochpunkt -1205, Startlage -305     */
+ * Gemessene Fahrt (dieselbe Sonde): geparkt -20324; Pos_set @0x0FB4 holt sie auf -305;
+ * der Hochpunkt ist -1215 (91 Schritte a -10, For @0x0FF6), danach steht sie auf -1205
+ * (10 Schritte a +1, For @0x1010); zurueck auf -305 und Parklage -20224 (Pos_set
+ * @0x109E). Das Fenster faengt nur die Aufwaertsfahrt oben.
+ * ⛔ Beide Schranken sind PORT-WAHL, KEINE ORIGINAL-ADRESSE — das Original oeffnet im
+ * Hebetisch kein Modal. Sie trennen drei gemessene Lagen (Parken <= -20224, Start -305,
+ * oben <= -1205), mehr nicht. */
+#define IM_RAUM_AB         (-5000)    /* alles darunter ist die Parkposition   */
+#define OBEN_BIS           (-1100)    /* Hochpunkt -1215, Stand -1205, Start -305 */
 
 static uint8_t s_raum_aktiv;        /* Prop in diesem Raum angelegt?              */
 static uint8_t s_modal_ausgeloest;  /* in diesem Raumaufenthalt schon aufgemacht? */
@@ -82,7 +87,9 @@ void re15_sicherung_install(uint16_t room_id)
     g_scd.props[i].y = RE15_SICHERUNG_POS_Y;
     g_scd.props[i].z = RE15_SICHERUNG_POS_Z;
     g_scd.props[i].rot_x = 0;         /* liegend ist schon im Modell (Laengsachse X) */
-    g_scd.props[i].rot_y = 0;
+    /* Viertelkreis: Laengsachse entlang der langen Seite des Kuppelfachs. PORT-WAHL,
+     * keine Original-Adresse — Herleitung aus der Tischgeometrie in re15_sicherung.h. */
+    g_scd.props[i].rot_y = RE15_SICHERUNG_ROT_Y;
     g_scd.props[i].rot_z = 0;
     g_scd.props[i].vel_x = g_scd.props[i].vel_y = g_scd.props[i].vel_z = 0;
     g_scd.props[i].vel_ry = 0;

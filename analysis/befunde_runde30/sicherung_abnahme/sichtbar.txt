@@ -1,0 +1,122 @@
+# Tuerweg VORHER (bestand_tuer_mit / bestand_tuer_ohne)
+Lauf MIT = bestand_tuer_mit, Lauf OHNE = bestand_tuer_ohne, 25 gemeinsame Bilder
+Bild    Format     abweichende Px   = in 320x240   Anteil am Bild   bbox (320x240)
+F90     960x720        0              0.0         0.000 %       -
+F100    960x720     1114            123.8         0.161 %       x135.3..144.0 y154.3..177.0
+F110    960x720      800             88.9         0.116 %       x135.3..144.0 y154.3..177.0
+F120    960x720      409             45.4         0.059 %       x136.7..144.0 y154.3..165.0
+F130    960x720      409             45.4         0.059 %       x136.7..144.0 y154.3..165.0
+F140    960x720      409             45.4         0.059 %       x136.7..144.0 y154.3..165.0
+F150    960x720      259             28.8         0.037 %       x137.0..144.0 y148.3..157.0
+F160    960x720      138             15.3         0.020 %       x134.3..143.3 y137.3..158.3
+F170    960x720      109             12.1         0.016 %       x134.3..143.7 y122.3..145.3
+F180    960x720      239             26.6         0.035 %       x133.3..141.7 y126.3..132.0
+F190    960x720      462             51.3         0.067 %       x133.3..142.0 y110.0..118.3
+F200    960x720      683             75.9         0.099 %       x133.3..143.0 y93.0..103.7
+F210    960x720      907            100.8         0.131 %       x132.3..143.0 y74.3..89.3
+F220    960x720      787             87.4         0.114 %       x132.3..143.0 y61.3..74.0
+F230    960x720   603179          67019.9        87.265 %       x0.0..319.7 y0.0..239.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F240    960x720   336119          37346.6        48.628 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F250    960x720   308617          34290.8        44.649 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F260    960x720   318449          35383.2        46.072 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F270    960x720   319889          35543.2        46.280 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F280    960x720   321833          35759.2        46.561 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F290    960x720   280240          31137.8        40.544 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F300    960x720   237582          26398.0        34.372 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F310    960x720   351903          39100.3        50.912 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F320    960x720   395254          43917.1        57.184 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F330    960x720   441705          49078.3        63.904 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+
+# Tuerweg BAU (r30b_tuer_mit / r30b_tuer_ohne)
+Lauf MIT = r30b_tuer_mit, Lauf OHNE = r30b_tuer_ohne, 25 gemeinsame Bilder
+Bild    Format     abweichende Px   = in 320x240   Anteil am Bild   bbox (320x240)
+F90     960x720        0              0.0         0.000 %       -
+F100    960x720        0              0.0         0.000 %       -
+F110    960x720     1898            210.9         0.275 %       x198.0..224.7 y163.3..171.0
+F120    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F130    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F140    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F150    960x720     3291            365.7         0.476 %       x190.0..232.7 y156.3..165.0
+F160    960x720     3252            361.3         0.470 %       x190.3..235.0 y141.3..150.0
+F170    960x720     3429            381.0         0.496 %       x191.3..235.7 y127.3..136.0
+F180    960x720     3333            370.3         0.482 %       x191.3..236.7 y111.3..121.0
+F190    960x720     3648            405.3         0.528 %       x192.7..239.0 y95.3..105.0
+F200    960x720     3733            414.8         0.540 %       x193.7..239.7 y79.3..89.0
+F210    960x720     3869            429.9         0.560 %       x193.7..241.7 y62.3..71.0
+F220    960x720     3953            439.2         0.572 %       x195.0..243.0 y44.3..54.0
+F230    960x720   604989          67221.0        87.527 %       x0.0..319.7 y0.0..239.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F240    960x720   336401          37377.9        48.669 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F250    960x720   308771          34307.9        44.672 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F260    960x720   318670          35407.8        46.104 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F270    960x720   320110          35567.8        46.312 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F280    960x720   322054          35783.8        46.593 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F290    960x720   280255          31139.4        40.546 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F300    960x720   239739          26637.7        34.684 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F310    960x720   352178          39130.9        50.952 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F320    960x720   395378          43930.9        57.202 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F330    960x720   441685          49076.1        63.901 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+
+# Ladeweg VORHER (bestand_laden / bestand_laden_ohne)
+Lauf MIT = bestand_laden, Lauf OHNE = bestand_laden_ohne, 25 gemeinsame Bilder
+Bild    Format     abweichende Px   = in 320x240   Anteil am Bild   bbox (320x240)
+F90     960x720        0              0.0         0.000 %       -
+F100    960x720        0              0.0         0.000 %       -
+F110    960x720        0              0.0         0.000 %       -
+F120    960x720        0              0.0         0.000 %       -
+F130    960x720        0              0.0         0.000 %       -
+F140    960x720        0              0.0         0.000 %       -
+F150    960x720        0              0.0         0.000 %       -
+F160    960x720        0              0.0         0.000 %       -
+F170    960x720        0              0.0         0.000 %       -
+F180    960x720        0              0.0         0.000 %       -
+F190    960x720        0              0.0         0.000 %       -
+F200    960x720        0              0.0         0.000 %       -
+F210    960x720        0              0.0         0.000 %       -
+F220    960x720        0              0.0         0.000 %       -
+F230    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F240    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F250    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F260    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F270    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F280    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F290    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F300    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F310    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F320    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F330    960x720        0              0.0         0.000 %       -   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+
+# Ladeweg BAU (r30b_laden_mit / r30b_laden_ohne)
+Lauf MIT = r30b_laden_mit, Lauf OHNE = r30b_laden_ohne, 25 gemeinsame Bilder
+Bild    Format     abweichende Px   = in 320x240   Anteil am Bild   bbox (320x240)
+F90     960x720        0              0.0         0.000 %       -
+F100    960x720        0              0.0         0.000 %       -
+F110    960x720     1898            210.9         0.275 %       x198.0..224.7 y163.3..171.0
+F120    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F130    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F140    960x720     3128            347.6         0.453 %       x189.0..232.7 y163.3..171.3
+F150    960x720     3291            365.7         0.476 %       x190.0..232.7 y156.3..165.0
+F160    960x720     3252            361.3         0.470 %       x190.3..235.0 y141.3..150.0
+F170    960x720     3429            381.0         0.496 %       x191.3..235.7 y127.3..136.0
+F180    960x720     3333            370.3         0.482 %       x191.3..236.7 y111.3..121.0
+F190    960x720     3648            405.3         0.528 %       x192.7..239.0 y95.3..105.0
+F200    960x720     3733            414.8         0.540 %       x193.7..239.7 y79.3..89.0
+F210    960x720     3869            429.9         0.560 %       x193.7..241.7 y62.3..71.0
+F220    960x720     3953            439.2         0.572 %       x195.0..243.0 y44.3..54.0
+F230    960x720   604989          67221.0        87.527 %       x0.0..319.7 y0.0..239.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F240    960x720   336401          37377.9        48.669 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F250    960x720   308771          34307.9        44.672 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F260    960x720   318670          35407.8        46.104 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F270    960x720   320110          35567.8        46.312 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F280    960x720   322054          35783.8        46.593 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F290    960x720   280255          31139.4        40.546 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F300    960x720   239739          26637.7        34.684 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F310    960x720   352178          39130.9        50.952 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F320    960x720   395378          43930.9        57.202 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+F330    960x720   441685          49076.1        63.901 %       x0.0..319.7 y0.0..215.7   (Modal offen - Bildinhalt = Item-Bild, nicht die Szene)
+
+# Farbe F140
+r30b_tuer_mit F140: 3128 Bildpunkte der Sicherung (960x720)
+  Mittel RGB (100,107,101)  Spanne Helligkeit 13..187  verschiedene Farben 1737
+Textur gen/sicherung_prop.inc 128x256: Mittel RGB (15,19,18), verschiedene Farben 143, Kopf {'flag': 9, 'clut': {'len': 524, 'x': 0, 'y': 480, 'w': 256, 'h': 1}, 'img': {'len': 32780, 'x': 0, 'y': 0, 'w': 64, 'h': 256}}
+bestand_tuer_mit F140: 409 Bildpunkte der Sicherung (960x720)
+  Mittel RGB (58,62,58)  Spanne Helligkeit 1..122  verschiedene Farben 321

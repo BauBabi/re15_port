@@ -34,6 +34,7 @@
 #include "re15_item_modal.h"
 #include "re15_item_prompt.h"
 #include "re15_inv_ui.h"
+#include "re15_files.h"      /* Runde 30: Dokument-Ids ab 0x48 (Ausnahme in B4, Pruefung B5) */
 
 /* Die AUSGELIEFERTEN Prompt-Tabellen als Vergleichsquelle (dieselbe Datei, die die Engine
  * einbindet; erzeugt von tools/gen_item_prompt_data.py aus DEBUG.BIN @0x800c4fc6/@0x800c495c).
@@ -244,14 +245,21 @@ int main(void)
         PRUEFE("B3b und es sind genau die acht erwarteten Ids", falsch == 0);
     }
     /* B4 KEIN KOLLATERAL: alle uebrigen Skripte sind fuer alle 102 Namen unveraendert.
-     * prompt_key -> Skriptindex (item_prompt_common.c prompt_key_to_script). */
+     * prompt_key -> Skriptindex (item_prompt_common.c prompt_key_to_script).
+     * ⛔ AUSNAHME SEIT RUNDE 30 (Thema irons-diary-dokument, mit Beleg): Ids, die die
+     * Dokument-Tabelle des Ports fuehrt (re15_files.c, heute nur 0x48 = Irons Diary),
+     * nehmen ihren Namen zur Laufzeit aus der Tabelle statt aus RE1.5s Namensbank - dort
+     * steht unter 0x48 der vorinstallierte RE1-Name "Chris' Diary" (@0x800c4e04), den der
+     * Nutzer-Auftrag entfernt. Diese Ids prueft B5 gesondert; alle anderen bleiben
+     * bit-gleich zum Auslieferungsstand. */
     {
         static const int key2script[10] = { 0, 0, 1, 0, 4, 2, 3, 5, 6, 7 };
         unsigned char ref[512];
-        int ok = 1, gefahren = 0;
+        int ok = 1, gefahren = 0, dokumente = 0;
         for (int pk = 0; pk <= 9; pk++) {
             if (key2script[pk] == 6) continue;                 /* Skript [6] = B1/B2 */
             for (int id = 0; id < re15_item_prompt_name_count(); id++) {
+                if (re15_files_doc_from_item(id) >= 0) { dokumente++; continue; } /* -> B5 */
                 lauf_t l; int n = lauf_holen(pk, (uint8_t)id, &l);
                 int m = ref_lauf((int)re15_item_prompt_script_off[key2script[pk]],
                                  (uint8_t)id, ref, (int)sizeof ref);
@@ -259,8 +267,46 @@ int main(void)
                 gefahren++;
             }
         }
-        printf("  (B4 Vergleiche gefahren: %d)\n", gefahren);
+        printf("  (B4 Vergleiche gefahren: %d, Dokument-Ids ausgenommen: %d)\n",
+               gefahren, dokumente);
         PRUEFE("B4 kein Kollateral in den uebrigen Skripten", ok && gefahren >= 900);
+        PRUEFE("B4b genau EINE Dokument-Id ausgenommen (0x48), je Schluessel einmal",
+               dokumente == 9);
+    }
+    /* B5 DOKUMENT-NAME (Runde 30): Skript [5] "The <name> has been filed." (@0x800c506f,
+     * Schluessel 7) traegt fuer 0x48 den Namen "Irons Diary" aus der Dokument-Tabelle; der
+     * Rest des Laufs ist bit-gleich zum ausgelieferten Skript. Der Soll-Lauf wird aus den
+     * DATEN gebaut: Skript [5] abspielen und am Namens-Opcode 0x06 den Tabellennamen
+     * einsetzen (dieselben Steuer-Ops wie ref_lauf). */
+    {
+        const re15_file_doc_t *d = re15_files_doc(re15_files_doc_from_item(0x48));
+        unsigned char soll[512];
+        int ns = 0, ok = (d != NULL);
+        for (int i = (int)re15_item_prompt_script_off[5]; ok; i++) {
+            unsigned char c = re15_item_prompt_script_blob[i];
+            if (c == 0x01 || c == 0x03) break;
+            if (c == 0x02) { i += 2; continue; }
+            if (c == 0x05) { i++; continue; }
+            if (c == 0x08) continue;
+            if (c == 0x06) {
+                i++;
+                for (const uint8_t *nm = d->name; *nm != 0x07; nm++) soll[ns++] = *nm;
+                continue;
+            }
+            soll[ns++] = c;
+        }
+        lauf_t l; int n = lauf_holen(7, 0x48, &l);
+        static const uint8_t irons[11] = { 0x25,0x4e,0x4b,0x4a,0x4f,0x00,0x20,0x45,0x3d,0x4e,0x55 };
+        int hat_irons = 0, hat_chris = 0;
+        for (int i = 0; i + 11 <= n; i++) if (memcmp(l.g + i, irons, 11) == 0) hat_irons = 1;
+        for (int i = 0; i + 5 <= n; i++)                        /* "Chris" 1f 44 4e 45 4f */
+            if (l.g[i] == 0x1f && l.g[i+1] == 0x44 && l.g[i+2] == 0x4e && l.g[i+3] == 0x45 &&
+                l.g[i+4] == 0x4f) hat_chris = 1;
+        printf("  (B5 Lauf 0x48 Skript [5]: %d Glyphen, Soll %d)\n", n, ns);
+        PRUEFE("B5a 0x48 in \"has been filed\": Lauf == Skript [5] mit Tabellennamen",
+               ok && n == ns && memcmp(l.g, soll, (size_t)ns) == 0);
+        PRUEFE("B5b der Lauf traegt \"Irons Diary\" und NICHT \"Chris' Diary\"",
+               hat_irons && !hat_chris);
     }
 
     /* =============================== TEIL C =============================== */

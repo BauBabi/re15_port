@@ -747,3 +747,299 @@ Auswertung gegen einen Lauf mit gesetzten Flags (9,54) und (9,55) als Nullbild
 | Messdateien | `build/r30_irons-diary-welt/*.txt` |
 | Mess-Rig (Quellkopie + Binary + Läufe) | `build/r30_irons-diary-welt/rig/`, `rig_build/`, `rig_lauf/` |
 | Bilder und Prototyp zum Dossier | `analysis/befunde_runde30/irons-diary-welt/` |
+
+---
+
+## 9. UMSETZUNG (Bau, Zweig r30/irons-diary-welt)
+
+Stand: aufgesetzt auf master d98e9639, dann die zwei Vorgänger zusammengeführt —
+irons-diary-dokument (`worktree-wf_b4b268f3-d12-4`, e2a3b626) und sicherung
+(`worktree-wf_b4b268f3-d12-2`, f9fee34e), beide konfliktfrei (Merge de5ae65a). Beide
+Vorgänger sind fertig (UMSETZUNG in ihren Dossiers, Suite 362 bzw. 365). Die Suite des
+zusammengeführten Stands VOR dem ersten Edit: **367 von 367**.
+Commits dieser Spur: 3a78756e (S1–S4), f5bce99b (S5), e16a14df (S6), 20fe9420 (S7) und
+dieser Nachtrag.
+
+### 9.1 Vor dem ersten Edit selbst nachgeschlagen (richtige Datei, Sprungziel)
+
+| Behauptung des Plans | nachgeschlagen | Ergebnis |
+|---|---|---|
+| Obj_model_set: Flags = pc[6..7] \| 1 | `info/Re1.5/PSX.EXE` LAB_80040914: @0x80040990 `lhu v0,6(a2)`, @0x80040998 `ori v0,v0,0x1`, @0x800409a4 `sw v0,0(a1)`; Typ @0x8004095c, Band @0x80040974 | bestätigt |
+| Item_aot_set Kurzform: Bit +18, Prop +20, Vorschub 22 | @0x80040680 `lhu a1,18(a2)`, @0x80040684 `lbu s1,20(a2)`, @0x80040688 `addiu v0,a2,22`; Bit gesetzt @0x800406dc `jal 0x8004efe4` → @0x800406f4 `sb zero,0(v0)`, Modell weg @0x800406f8-718 | bestätigt |
+| Masken-OT und Objekt-OT | @0x80039650 `lh a0,2(s3)`, @0x80039658 `sll a0,a0,2`, @0x80039660 `jal 0x8006b538`; @0x80025654 `sra v0,v1,6`, @0x8002565c `sra v1,v1,4`; @0x800258b0 `sra v0,v0,6` | bestätigt |
+| Reichweite 620 | @0x80042bd0 `ori v0,zero,0x26c` | bestätigt |
+| Objekt-Kollision Bit 0x2 | @0x8002cff4 `andi v0,v0,0x2` | bestätigt |
+| Masken Tiefe 87, Cut-2/6-Kamera | `xxd` ROOM1150.RDT UND ROOM1151.RDT: @0x6E8/@0x6F4/@0x714 je `57 00` an +4; @0xA0/@0x120 byte-gleich; Cut 6 @0xBCC `ff ff ff ff` | bestätigt, beide RDTs |
+| Telefon-Satz | ROOM1150.RDT @0x00DA6 und ROOM1151.RDT @0x00DA6: `2c 03 03 31 00 00 40 a2 c0 ae e8 03 e8 03 ff 00 18 06 00 00` → x −24000, w 1000 | bestätigt, beide RDTs |
+| „Memory Card" = 0x21 | DEBUG.BIN @0x499E `c2 01` → @0x4BEA `29 41 49 4b 4e 55 00 1f 3d 4e 40 07`; Eigenschaften @0x80074F34 `fa 00 00 00 88 4c 07 80 01 00 00 00` (0x20: `… 48 4d 07 80 …`) | bestätigt |
+| Quellen der Modelle | md5: ROOM10E0 @0x2320 `cf9f316d…`, @0x15224 `63bd93f2…`; ROOM1110 @0x13D8 `93975479…`, Keycard-TIM @0x2BAC8 `5ce475a4…` | bestätigt |
+| RE2 Menge 3 | RE2 ROOM1060.RDT @0x00C24 `4e 02 02 31 … 1e 00 03 00 …`; ROOM10E0 @0x1D26 Menge 1 | bestätigt |
+| Slot 7/8, obj 5/6 frei | Walk über alle Opcodes von ROOM1150 (317) und ROOM1151 (186): Aot-Opcodes nur Slots 0…6 bzw. 0…5, kein Obj_model_set mit obj 5/6 | bestätigt |
+| Zone-9-Bits 54/55 frei | `git grep` über alle r30-Zweige und master: nur Bit 53 (Sicherung) fest vergeben | bestätigt |
+
+Ausgangszustand mit der vorhandenen Sonde (Bau von de5ae65a): `pool 1150/1151` 5 Einträge
+(obj 0…3, Sicherung obj 4 bei (−280,−1062,1260) rot 1024), `pool 1140` 1 Eintrag; `aots`
+Slot 7/8 leer; `projekt` Lage B Cut 2 (153,49;124,44), Kartenmitte (139,97;126,49).
+
+### 9.2 Gebaut, je Plan-Schritt
+
+| Schritt | gebaut | Datei |
+|---|---|---|
+| S1 Konstanten | alle mit Beleg bzw. als „PORT-WAHL, KEINE ORIGINAL-ADRESSE" mit Messung (Lage, Rechteck-z/d); Menge 3 mit RE2-Adresse und dem Satz, warum RE1.5 nicht maßgeblich ist | `include/re15_irons_tisch.h` |
+| S2 Modelle | Export-Werkzeug prüft alle vier Quellen gegen md5 und erzeugt die Karten-TIM selbst — **md5 885d9161… wie der Prototyp** (6569 Texel belegt) | `tools/irons_tisch_engine_export.py` → `engine/src/gen/irons_tisch_props.inc` |
+| S3 Anlegen | `re15_irons_tisch_install` an beiden Raumstart-Wegen, direkt hinter `re15_sicherung_install` (Tür: `scd_room_reenter`; Lade-Weg: CONTINUE-Boot in `main.c` samt Logzeile `[irons-tisch] Boot-Weg`) | `engine/src/irons_tisch_1150.c`, `scd_room_setup.c`, `platform/pc/main.c` |
+| S4 Laden + Zeichnen | Lader obj 5/6 → TIM-Slot 9/26 (Riegel Raum + nOmodel); Tiefen-Klemme im Prop-Zeichner (Dreiecke und Vierecke) über `re15_irons_tisch_sort_max(raum, active_cut_idx, oid)` — `active_cut_idx` ist der angezeigte Cut, derselbe, der die Masken wählt | `platform/pc/main.c`, `irons_tisch_1150.c` |
+| S5 Aufheben | Karte über das Item-Modal (unverändert), Diary über die Weiche der Dokument-Spur (`aot_item_dokument` → `re15_menu_request_doc(0, 54, 7, 5)`) — kein neuer Code nötig. **Dazu ein Fehler behoben**, s. 9.3 Punkt 3 | `engine/src/inventory_common.c` |
+| S6 Riegel | `unit_r30_irons_tisch` (P/Z/G/D/M/K/B), `integration_r30_irons_tisch_laden` (echte exe, CONTINUE 1150/1151, genommen) | `tests/unit/test_r30_irons_tisch.c`, `tests/unit/probe_r30_irons_tisch_karte.c`, `tests/integration/test_r30_irons_tisch_laden.cmake`, `tests/unit/probes/r30_irons-diary-welt.cmake` |
+| S7 Abnahme | am gebauten Spiel, s. 9.4 | `werkzeuge/r30_idw_bau_*.{sh,py}` |
+
+Messhaken `RE15_IRONS_LOG=1` (`main.c`, env-gegatet, reine Diagnose): eine `debug.log`-Zeile je
+Zustandswechsel am Schreibtisch (Bits 54/55, Zonen 7/8, Props 5/6, Menge 0x21, FILE-Platz 0,
+Modal, Menü). Die GUI-exe hat sonst keinen Blick auf diesen Zustand.
+
+### 9.3 Abweichungen vom Plan (mit Grund)
+
+1. **Lage B statt A** — so im Auftrag der Runde festgelegt: (−23813,−1533,−18280), rot_y 2944,
+   das Buch liegt auf dem gemalten Klemmbrett (Abzug `bau_cut6.png`).
+2. **Rechteck des Diary z = −18780 statt −18791.** Die Regel des Plans ist „z = Prop-z − 500";
+   mit Lage B ist Prop-z −18280. x/w bleiben am Telefon-Satz. Überlappung mit der Karte:
+   z −18780…−18149 (Slot 7 gewinnt, Original-Praxis ROOM5010, Risiko 4 unverändert).
+3. **Halbierung für 0x21 abgeschaltet (nicht im Plan, gemessen).** Erster Lauf im gebauten
+   Spiel: Modal Item 0x21, aber `karte_menge=1` statt 3. Ursache: die Nutzer-Entscheidung
+   „Munition halbieren" (Runde 17, `re15_pickup_menge_nutzer`) nahm das bloße Id-Fenster
+   0x15…0x21 (`sltiu` @0x80047d54 / @0x80049124) — 0x21 ist aber die Memory Card. Die
+   Stapelregel derselben Datei schließt 0x21 schon datengetrieben aus (Eigenschaften
+   @0x80074F34 → Null-Satz @0x80074C88; 0x15…0x20 tragen eigene Kombinations-Sätze, 0x20
+   z. B. 0x80074D48). Die Halbierung nimmt jetzt dieselbe Schranke. Bestand: 0x21 war bis zu
+   dieser Runde unerreichbar (0 Item_aot_set), für 0x15…0x20 ändert sich nichts.
+   `probe_r17_munition` mitgezogen: dort hieß 0x21 „letzte Munition" — jetzt 0x20 halbiert
+   (30 → 15), 0x21 bleibt (3 → 3). Nachher im Spiel: `karte_menge=3`.
+4. **Riegel-Datei `probes/r30_irons-diary-welt.cmake`** statt `r30_irons-tisch.cmake` (Vorgabe
+   des Auftrags: `probes/r30_<thema>.cmake`).
+5. **Marken-Riegel des Diary:** „in der roten Marke und < 2,5 px" statt „< 1 px" — Lage B liegt
+   gemessen 2,29 px neben der Markenmitte (Plan-Wert galt für Lage A).
+6. **Cut-6-Pixel Diary 7977 statt Rig-Wert 6147:** das Rig zählte in einem festen Feld
+   (x 176…212, y 116…159 bei 320), das für Lage A zugeschnitten war und den oberen Teil des
+   Buchs in Lage B abschnitt. Gezählt wird jetzt gegen ein Nullbild über das ganze Bild.
+
+### 9.4 Abnahme — gemessen am gebauten Spiel
+
+Framedump 960×720 (`RE15_FRAMEDUMP`, beschleunigter Renderer, kein AUTOSHOT, kein
+SOFTWARE_RENDER), Nullbild = derselbe Lauf mit den Bits (9,54)/(9,55) vor dem Raumeintritt.
+Einzelne Props über Läufe mit nur einem gesetzten Bit getrennt. Mitte = Mitte der Hülle der
+abweichenden Pixel, in 320er-Pixelmitten. Läufe unter `build/r30_irons-diary-welt/bau/`.
+
+| Messung | Soll | Ist |
+|---|---|---|
+| Cut 2, sichtbare Pixel Diary / Karte | > 0 (Rig 495 / 179) | **495 / 179** (F400, F500, F600 gleich) |
+| Cut 2, Mitte Diary → rote Marke (152,5;126,5) | in der Marke | (152,83;123,83), **2,69 px**, Hülle x 148…158, y 121…127 = in der Marke |
+| Cut 2, Mitte Karte → blaue Marke (140,0;126,5) | ≤ 1 px | (139,33;125,83), **0,94 px** |
+| Cut 6, sichtbare Pixel Diary / Karte | > 0 | **7977 / 3233** |
+| Mittel-RGB Cut 2 Diary / Karte | Licht byte-true | **(46,35,25) / (52,41,37)** |
+| Mittel-RGB Cut 6 Diary / Karte | Licht byte-true | **(17,16,8) / (17,17,10)** (Dossier 2.6: 16 % der Eigenfarbe) |
+| Cut 2, Spieler auf (−22664,−18450) rot 2048 | Figur über den Props | Überschneidung 488 Pixel: **Figur obenauf 488, Prop obenauf 0**; 186 Prop-Pixel außerhalb der Figur sichtbar |
+| Karte aufheben (Tür-Weg, Stand (−22664,−18900), Druck F400) | Modal 0x21, Menge 3, Prop weg | Modal ab F401 (Bild 0x21), F521 `flag55=1 zone8=0 prop6=0 karte_menge=3`; Cut 6: Kartenfeld 3233 → **0** Pixel gegen das Nullbild |
+| Diary aufheben (Stand (−22664,−17950), Druck F400) | Leser sofort, nach Schließen + Meldung weg, FILE-Liste | Menü F411 (Aufblende), Leser F412 (Satz 25, Titel, `liste0=0`), steht F429; KREUZ F540 → Meldung „The Irons Diary has been filed."; Bestätigen F660 → F661 `flag54=1 zone7=0 prop5=0`; Menü zu F668; Cut 6: Buchfeld 7977 → **0**; START+R1 → FILE-Liste „Irons Diary" auf Zeile 0 (`bau_diary_aufheben.png`) |
+| Spielstand in ROOM1150 laden, nichts genommen | Props da, Zonen aktiv | `Boot-Weg obj 5/6`, F0 `zone7=1 zone8=1 prop5=1 prop6=1`, Cut 2 **674** Pixel (gleiche Hülle wie am Tür-Weg) |
+| Spielstand in ROOM1150 laden, beides genommen | Props und Zonen fehlen | F0 `flag54=1 flag55=1 zone7=0 zone8=0 prop5=-1 prop6=-1`, kein Zeichnen |
+| dasselbe in ROOM1151 | wie 1150 | nichts genommen: 674 Pixel, Zonen aktiv; genommen: fehlen |
+| Aufheben nach dem Laden, ROOM1150 und ROOM1151 | wie am Tür-Weg | Karte: F221 `karte_menge=3 prop6=0`; Diary: F361 `flag54=1 zone7=0 prop5=0 liste0=0` — in beiden Räumen |
+| Bestand ROOM1150 (Nullbilder gegen die exe von de5ae65a, vor dem Bau) | 0 | Cut 2 **0**, Cut 6 **0**, Spieler vor dem Tisch **0** Pixel |
+| Bestand andere Räume (Sprung, neue exe gegen de5ae65a) | 0 | ROOM1140 **0**, ROOM1100 **0**, ROOM1110 **0** Pixel (F400, F600) |
+| Mutationsproben | Riegel fallen | Install am Lade-Weg entfernt → `integration_r30_irons_tisch_laden` rot; Halbierung wieder am bloßen Fenster → `unit_r30_irons_tisch` (x1) und `unit_r17_munition_pin` rot |
+
+Abzüge (`analysis/befunde_runde30/irons-diary-welt/`): `bau_cut2_marken.png` (Nutzerbild mit
+Marken neben Bau und Nullbild), `bau_cut6.png`, `bau_spieler_vor_tisch.png`,
+`bau_karte_aufheben.png`, `bau_diary_aufheben.png`.
+
+### 9.5 Nicht gemessen / offen
+
+1. **Helligkeit (Risiko 1) bleibt, wie verlangt, byte-true:** in Cut 6 tragen Buch und Karte
+   Mittel-RGB (17,16,8) / (17,17,10) — beide wirken fast schwarz (`bau_cut6.png`). Ursache ist
+   das ausgelieferte Licht von Cut 6 (ambient 40,40,24), kein Texturfehler.
+2. **Ein Lauf mit echter Tasteneingabe durch die Kamerazonen** wurde nicht gefahren; die Läufe
+   stellen den Spieler per `RE15_PLAYER_POS` bzw. Spielstand hin und erzwingen den Cut
+   (`RE15_FORCE_CUT`). Dass man vor dem Tisch in Cut 2 steht, ist aus Zonen und Kollision
+   abgeleitet (2.11), nicht gemessen.
+3. **Raum verlassen und wieder betreten im Spiel** nicht gefahren; belegt über
+   `unit_r30_irons_tisch` Teil G (derselbe `scd_room_reenter` mit gesetzten Bits) und über den
+   Lade-Weg mit genommenen Bits.
+4. **Die Klemme in `main.c`** deckt kein Unit-Riegel (nur ihr Wert und ihre Schranken über
+   `re15_irons_tisch_sort_max`); ihre Wirkung belegt der Framedump (0 → 495/179 Pixel).
+5. **Erreichbarkeit des Rechtecks mit z −18780** nicht neu über die Sonde `abdeckung` gezählt
+   (11 Einheiten neben dem gemessenen −18791); belegt sind die Drücke von z −17950 (nur
+   Diary) und z −18900 (nur Karte).
+6. **Hörprobe** nicht gemacht (alle Läufe `RE15_NOAUDIO`).
+7. **PSX-Ziel** kennt weder Sicherung noch diese Props (Risiko 7); **Android**:
+   `engine/src/irons_tisch_1150.c` ist neu → vor dem Paket frisch konfigurieren (GLOB-Cache).
+8. **Suite: 369 von 369** (367 des zusammengeführten Stands + `unit_r30_irons_tisch` +
+   `integration_r30_irons_tisch_laden`, ctest -j 4, ohne Wiederholung);
+   `RE15_MIN_TESTS` in `tools/local_build.sh` nicht geändert (Vorgabe).
+9. Hinweis der Dokument-Spur (10.2, RE2 räumt Effekte am Weltmodell ab): dieses Prop trägt
+   keinen Effekt, es gibt nichts abzuräumen.
+
+### 9.6 Nachbesserung nach dem Gegenprüfer
+
+Der Gegenprüfer urteilte MÄNGEL: einer erheblich (kein Riegel auf das sichtbare Ergebnis),
+zwei gering (vor der Memory Card gab es das Buch; Lage B stand in keiner Messdatei).
+Alle drei sind an der Ursache behoben. Commits: c67dc15c (A: Lage B, Rechtecke), 765c0f5c
+(B: Bild-Riegel), 269245cb (C: Abnahme-Werkzeuge, Pixelkonvention), dazu der Abschluss-Commit
+mit diesem Nachtrag.
+
+#### 9.6.1 Mangel 1 (erheblich): ein Riegel auf das SICHTBARE Ergebnis
+
+Befund des Gegenprüfers, nachgestellt: `integration_r30_irons_tisch_laden` sucht die Zeile
+`[prop-render] pi=5/6`, und die steht in `main.c` VOR der Tiefen-Klemme. Teil K von
+`unit_r30_irons_tisch` prüft nur den Rückgabewert von `re15_irons_tisch_sort_max`.
+
+Neu: **`integration_r30_irons_tisch_bild`** (`tests/integration/test_r30_irons_tisch_bild.cmake`,
+Auswerter `tests/unit/probe_r30_irons_tisch_bild.c`, angemeldet in
+`probes/r30_irons-diary-welt.cmake`). Die echte exe läuft viermal am Lade-Weg (CONTINUE,
+ROOM1150, `RE15_FORCE_CUT=2`), je ein Bild über `RE15_FRAMEDUMP=100:bild.ppm` (Readback vor
+`SDL_RenderPresent`, beschleunigter Renderer, weder SOFTWARE_RENDER noch AUTOSHOT):
+P (nichts genommen, Spieler weit weg), P0 (Bits (9,54)/(9,55) im Spielstand), S und S0
+(Spieler vor dem Tisch (−22664, −18450) rot 2048). Der Auswerter verlangt:
+
+* Buch: mehr als 0 Pixel P ≠ P0 in der ROTEN Marke (x 146…158, y 120…132, `marken.txt`),
+* Karte: mehr als 0 Pixel in der BLAUEN Marke (x 135…144, y 121…131),
+* die Hüllenmitte jedes Props IN seiner Marke (Pixel außerhalb beider Marken gehören der
+  näheren Markenmitte),
+* in der Überschneidung Figur/Props (S0 ≠ P0 und P ≠ P0) mehr als 0 Pixel, und dort überall
+  S = S0: die Figur vor dem Tisch liegt oben.
+
+Gemessen (ctest, 960×720): Buch 525 Pixel (521 in der Marke), Mitte (153,83 ; 124,33),
+2,54 px neben der Markenmitte; Karte 179 Pixel, Mitte (139,83 ; 126,33), 0,24 px;
+Überschneidung 482, Figur obenauf 482, Prop obenauf 0. Laufzeit rund 60 s.
+
+**Mutationsproben** (im Arbeitsbaum, `main.c` danach per `git checkout` zurück und neu gebaut):
+
+| Mutation | `integration_r30_irons_tisch_laden` | `integration_r30_irons_tisch_bild` |
+|---|---|---|
+| M1: beide Klemmzeilen entfernt (die des Gegenprüfers) | grün | **rot**: Buch 0 Pixel, Karte 0 Pixel |
+| M2: Klemme auf Schlüssel 0 (Props vor allem) | grün | **rot**: Überschneidung 482, Prop obenauf 482 |
+| M3: nur die Viereck-Klemme entfernt (Buch = 6 Vierecke) | grün | **rot**: Buch 0 Pixel |
+
+Der Wert der Klemme bleibt belegt durch die Masken ROOM1150.RDT/ROOM1151.RDT @0x006E8,
+@0x006F4, @0x00714 (+4 = `57 00`, Tiefe 87). Der Mechanismus bleibt ein gekennzeichneter
+Port-Zusatz ohne Original-Gegenstück. Er ist jetzt aber gegen Wegfall UND gegen Überziehen
+verriegelt.
+
+#### 9.6.2 Mangel 2 (gering): vor der Memory Card gab es das Buch
+
+Ursache: Die zwei Rechtecke überlappten bei z −18780…−18149, Slot 7 (Buch) gewann. Gemessen
+hatte das der Gegenprüfer mit der echten exe: bei z −18649 und −18720 öffnete der Leser.
+Umgesetzt ist sein Vorschlag (2), die Teilung in der Mitte. Die Rechtecke bleiben eine
+**Port-Wahl, keine Original-Adresse**. Sie folgen jetzt zwei Regeln aus Messwerten:
+
+1. je Gegenstand 500 zu beiden Seiten seiner z-Lage (1000 tief = häufigste Größe, 71 von
+   164 Item_aot_set, Zensus `r30_idw_zensus.py`),
+2. wo sich die Bereiche überschneiden, teilt die Mitte zwischen den z-Lagen:
+   (−18275 + −18649) / 2 = −18462.
+
+Buch: Ecke −18462, Tiefe 687. Der Port rechnet wie `op_item_aot_set` Mitte = z + d/2,
+halbe Tiefe = d/2 und deckt damit −18462…−17776. Karte: Ecke −19149, Tiefe 686, deckt
+−19149…−18463. x und w bleiben am Telefon-Satz ROOM1150.RDT @0x00DA6 (x −24000, w 1000).
+Die Prüfung läuft über den Punkt 620 voraus (@0x80042bd0).
+
+* `unit_r30_irons_tisch` Teil Z: auf der Standlinie (Prüfpunkt x −23284, z −19400…−17600)
+  liegen 0 Punkte in beiden Zonen, 687 nur im Buch, 687 nur in der Karte. Teil D drückt
+  zusätzlich an der Kartenmitte −18649, bei −18720 und an der Grenze −18463 (jeweils Karte,
+  Modal 0x21), an der Buchmitte −18275 und an der Grenze −18462 (jeweils Leser), dazu ROOM1151
+  an der Kartenmitte. **Mutationsprobe:** Mit den alten Rechtecken zeigt der Test 14 Fehler,
+  darunter Karte bei −18649 → Modal 0x00 (der Leser) und 632 Prüfpunkte in beiden Zonen.
+* **Echte exe** (`r30_idw_nb_abnahme.sh druck`, Viereck in F400, Stand (−22664, z), Blick −X):
+
+| z | −18900 | −18800 | −18720 | −18649 | −18463 | −18462 | −18275 | −17950 |
+|---|---|---|---|---|---|---|---|---|
+| Ergebnis | Karte, Modal F401 | Karte | Karte | **Karte** (vorher Buch) | Karte | Buch, Leser F411/412 | Buch | Buch |
+
+Abzug: `irons-diary-welt/nb_druck_reihe.png` (Bild 420 je Standort).
+
+#### 9.6.3 Mangel 3 (gering): Lage B stand in keiner Messdatei
+
+Ursache: (−23813, −18280) mit rot_y 2944 mischte zwei Bestimmungen (Hauptachsen ≈ (−23815,
+−18277), Einzelmerkmale (−23804, −18294)), und das ohne Regel. Jetzt gilt EINE Messung mit
+EINER Regel. `r30_idw_klemmbrett.py` gibt zusätzlich das Mittel über die vier Schwellen
+110/120/130/140 aus: Mitte = Mittel der Mitten, Achse = Mittel der langen Achsen, normiert.
+
+    LAGE B = Mittel der vier Schwellen: Mitte (-23813.07, -18275.22) -> (-23813, -18275)
+             | lange Achse Welt (-0.9804, -0.1972) -> rot_y = 2942.60 -> 2943
+
+(Datei `build/r30_irons-diary-welt/klemmbrett_lage_b.txt` im Arbeitsbaum; die Messdaten
+liegen im Hauptbaum, `R30_IDW_AUS` lenkt `r30_idw_geom.py` dorthin um.) **Neue Lage B:
+(−23813, −1533, −18275), rot_y 2943.** Das sind 5 Einheiten und 1 Schritt neben dem alten
+Wert. Die Buchmitte projiziert auf (153,69 ; 124,47), 2,36 px neben der Markenmitte und in
+der Marke (Teil M). Im Framedump liegen 521 von 525 Pixeln in der roten Marke. 4 Pixel fallen
+in die 320er-Spalte 159 direkt neben der Marke, das ist der Rand des Buchs auf dem gemalten
+Klemmbrett. Die Hüllenmitte liegt in der Marke.
+
+Die Yaw der Karte (3072) steht jetzt wörtlich als „Port-Wahl, keine Original-Adresse" im
+Kopf. Unter der blauen Marke ist nichts gemalt, woran sich eine Drehung messen ließe. Gemessen
+ist nur die Tischachse (Standlinie x −22664 über z −19400…−17600).
+
+#### 9.6.4 Messfehler der ersten Abnahme: die Pixelmitten-Konvention
+
+Die Marken (`marken.txt`, rot (152,5 ; 126,5), blau (140,0 ; 126,5)) und die Projektion
+160 + H·vx/vz rechnen in stetigen 320er-Koordinaten: Pixel p deckt [p, p+1). Der Auswerter
+der ersten Abnahme (`r30_idw_bau_auswertung.py`) und `diff.py` des Gegenprüfers rechneten
+ein 960er-Pixel c als (c + 0,5)/3 − 0,5. Das ist ein halbes Pixel Versatz in x UND in y.
+Korrigiert auf (c + 0,5)/3. Die Werte aus 9.4 berichtigt (alte Lage): Buch-Mitte
+(153,33 ; 124,33) = **2,32 px** statt 2,69; Karte (139,83 ; 126,33) = **0,24 px** statt
+0,94. Die Karte liegt also so genau auf der Marke, wie es die Projektion (0,02 px) erwarten
+lässt.
+
+#### 9.6.5 Abnahme erneut, am gebauten Spiel (Stand dieser Nachbesserung)
+
+`r30_idw_nb_abnahme.sh` (Läufe `build/r30_irons-diary-welt/bau/nb_*`), Auswertung
+`r30_idw_nb_auswertung.py` (Ausgaben `build/r30_irons-diary-welt/nb_auswertung_*.txt`).
+Framedump 960×720, beschleunigter Renderer. Das Nullbild ist derselbe Lauf mit
+(9,54)/(9,55).
+
+| Messung | Soll | Ist |
+|---|---|---|
+| Cut 2 Tür-/Sprung-Weg, Pixel Buch / Karte (F400/500/600) | > 0 | **525 / 179** (alle drei Bilder gleich) |
+| Cut 2 Mitte Buch → rote Marke (152,5;126,5) | in der Marke | (153,83 ; 124,33), **2,54 px**, 521 von 525 in der Marke |
+| Cut 2 Mitte Karte → blaue Marke (140,0;126,5) | ≤ 1 px | (139,83 ; 126,33), **0,24 px**, 179 von 179 in der Marke |
+| Mittel-RGB Cut 2 Buch / Karte | Licht byte-true | (46,35,25) / (52,41,37) |
+| Cut 6 Pixel Buch / Karte | > 0 | **7827 / 3233** |
+| Mittel-RGB Cut 6 Buch / Karte | Licht byte-true | **(17,16,8) / (17,17,10)**, s. 9.5 Punkt 1 |
+| Spieler vor dem Tisch (−22664,−18450) rot 2048, Cut 2 | Figur über den Props | F400/500/600: Überschneidung 489/487/489, **Figur obenauf alle, Prop obenauf 0**; 215…217 Prop-Pixel außerhalb der Figur bleiben sichtbar |
+| Karte aufheben an der Kartenmitte (−18649) | Modal 0x21, Menge 3, Prop weg | F401 `modal=1`, Bestätigen F520 → F521 `flag55=1 zone8=0 prop6=0 karte_menge=3` |
+| Karte weg im Bild (Stand −18900, Cut 6) | 0 im Kartenfeld | Kartenfeld (3233 Pixel) F390 3233 abweichend → F650 **0** |
+| Buch aufheben an der Buchmitte (−18275) | Leser sofort, nach Schließen + Meldung weg, FILE-Liste | F411 Menü, F412 Leser (`liste0=0`); KREUZ F540, Bestätigen F660 → F661 `flag54=1 zone7=0 prop5=0`, F668 Menü zu; Buchfeld (7827) F390 7827 → F680 **0**; START+R1 → F820 FILE-Liste „Irons Diary" (`nb_diary_aufheben.png`) |
+| Lade-Weg ROOM1150, nichts genommen | Props da, Zonen aktiv | Boot-Weg obj 5/6, F0 `zone7=1 zone8=1 prop5=1 prop6=1`, Cut 2 **704** Pixel (525/179 wie am Tür-Weg) |
+| Lade-Weg ROOM1150, beides genommen | fehlen | F0 `flag54=1 flag55=1 zone7=0 zone8=0 prop5=-1 prop6=-1` |
+| Lade-Weg ROOM1151 (Elza), nichts / beides genommen | wie 1150 | 704 Pixel, gleiche Hüllen / fehlen |
+| nach dem Laden aufheben, ROOM1150 und ROOM1151 | wie am Tür-Weg | Karte (−18649): F101 Modal, F221 `karte_menge=3 prop6=0`; Buch (−18275): F111/112 Leser, F361 `flag54=1 zone7=0 prop5=0 liste0=0`. Das gilt in beiden Räumen. |
+| Bestand ROOM1150 ohne Props (Nullbilder gegen die exe von de5ae65a) | 0 | Cut 2 **0**, Cut 6 **0**, Spieler vor dem Tisch **0** (F400, F600) |
+| Bestand andere Räume (gegen de5ae65a und gegen den ersten Bau) | 0 | ROOM1140 / 1100 / 1110: **0** Pixel (F400, F600) |
+
+Abzüge (`analysis/befunde_runde30/irons-diary-welt/`): `nb_cut2_marken.png`, `nb_cut6.png`,
+`nb_spieler_vor_tisch.png`, `nb_druck_reihe.png`, `nb_karte_aufheben.png`,
+`nb_diary_aufheben.png`.
+
+#### 9.6.6 Stand der Konstanten ohne Original-Adresse (Liste des Gegenprüfers)
+
+| Konstante | Stand |
+|---|---|
+| `RE15_IRONS_DIARY_X/Z` | (−23813, −18275): Messwert mit Regel (9.6.3), Port-Wahl der Lage |
+| `RE15_IRONS_DIARY_ROT_Y` | 2943, aus derselben Messung (Mittel der langen Achsen) |
+| `RE15_IRONS_KARTE_ROT_Y` | 3072, Port-Wahl. Gemessen ist nur die Tischachse, nicht die Drehung (7.1). Unverändert. |
+| `…_RECT_Z/_D` | Port-Wahl mit zwei Regeln aus Messwerten, keine Überlappung mehr (9.6.2) |
+| Tiefen-Klemme | Wert belegt (@0x6E8/@0x6F4/@0x714), Mechanismus Port-Zusatz. Jetzt verriegelt (9.6.1). |
+| `RE15_IRONS_KARTE_MENGE` 3 | RE2-Vorbild ROOM1060.RDT @0x00C24, mit dem Satz, warum RE1.5 nicht maßgeblich ist. Unverändert. |
+
+#### 9.6.7 Suite und Offenes
+
+* **Suite: 370 von 370** (369 des ersten Baus + der neue Riegel; ctest ohne -j, ohne Wiederholung, Rückgabe 0; Bild-Riegel 60,5 s). `integration_r30_irons_tisch_bild` ist angemeldet über
+  `probes/r30_irons-diary-welt.cmake`. `tests/unit/CMakeLists.txt` und `RE15_MIN_TESTS`
+  sind nicht geändert (Vorgabe).
+* Der neue Bild-Riegel startet die echte exe viermal (etwa 60 s). Wie die anderen GUI-Haken
+  kann er unter Last beim Fensteraufbau abreißen. Er bricht dann mit einer klaren Meldung ab
+  („kein debug.log", „kein Framedump") und nicht mit einem falschen Bildbefund. Rot heißt dann
+  zuerst: einzeln wiederholen.
+* Cut 6 bleibt wie verlangt byte-true dunkel: Mittel-RGB (17,16,8) / (17,17,10). Der Leser
+  zeigt dasselbe Buch hellbeige. Das wird dem Nutzer auffallen (Hinweis des Gegenprüfers,
+  Risiko 1). Eine Änderung hier wäre eine Licht-Entscheidung, keine Nachbesserung.
+* Nicht gemessen: Hörprobe (alle Läufe `RE15_NOAUDIO`), PSX-Ziel, Android-Paket (neue
+  Quelldatei `engine/src/irons_tisch_1150.c` → dort frisch konfigurieren, GLOB-Cache).

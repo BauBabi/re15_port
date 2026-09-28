@@ -65,8 +65,9 @@ void re15_re2doc_set_root(const char *dir);
 /* Groesse eines Teilbilds. page < 0 = Titelseite. Rueckgabe 1 = vorhanden. */
 int re15_re2doc_size(int doc, int page, re15_re2doc_kind_t kind, int *w, int *h);
 
-/* Ein Pixel. Rueckgabe 0 = durchsichtig oder ausserhalb (CLUT-Index 0 zeichnet die GPU
- * nicht), 1 = sichtbar, dann sind r/g/b gesetzt. */
+/* Ein Pixel. Rueckgabe 0 = durchsichtig oder ausserhalb, 1 = sichtbar, dann sind r/g/b
+ * gesetzt. Durchsichtig ist ein Texel, dessen CLUT-FARBE 0x0000 ist (PSX-GPU: "texture
+ * color 0000h is fully-transparent") — der Index spielt dabei keine Rolle. */
 int re15_re2doc_pixel(int doc, int page, re15_re2doc_kind_t kind,
                       int u, int v, uint8_t *r, uint8_t *g, uint8_t *b);
 

@@ -333,6 +333,18 @@ typedef struct {
                              * updates the 60-frame bob @0x800c75ac-e4: counter 0x1e ->
                              * off 4, 0x3c -> reset; reader open zeroes both via the
                              * word store @0x800c7070)                                 */
+    /* ---- BILD-DOKUMENT im Leser (Runde 30, nach RE2 — RE1.5 kennt kein Dokument, sein
+     * Leser adressiert den Blob fest @0x800c7614). Der Leser-AUTOMAT bleibt RE1.5
+     * (Zustaende 3..7, Treiber 0x800c77bc); diese drei Felder sagen ihm nur, WAS er
+     * zeigt. Null-Initialisierung = kein Bild-Dokument = der alte Textleser. */
+    uint8_t file_bild;      /* 1 = der Leser zeigt ein Bild-Dokument (zwei RE2-Sprites,
+                             * FUN_80075fd0 / FUN_800724b4) statt des Zeichenstroms   */
+    uint8_t file_bildsatz;  /* welcher Satz FILE%02d_*.TIM (re15_file_doc_t.bildsatz) */
+    uint8_t file_end;       /* Seitenzahl = max_page + 1. RE2 liest max_page je
+                             * Dokument (`lhu a0,-24252(at)` @0x800727c8 = 0x800aa144
+                             * + doc*4); RE1.5 liest die Zahl aus dem Dokument selbst
+                             * (u16[0x800ccd34] >> 1 @0x800c7124-30). Die Seite darf
+                             * file_end erreichen (= RE1.5s Ende-Stellung @0x800c71e8) */
     /* ---- ITEM BOX (Unterschirm, VOLLSTAENDIG nach RE2 — Nutzer-Auftrag 2026-08-30;
      * Ableitung analysis/itembox_re2/re2-box-transfer.md). Die Felder spiegeln die
      * FSM in re15_itembox.c auf RE2s Register: box_scroll = DAT_800d5c14 (Scroll-
@@ -462,5 +474,25 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
 /* Build one frame's display list from `st` + g_inv. Returns the op count.
  * ops[0] = TOPMOST (original AddPrim order); rasterize in reverse. */
 int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops);
+
+/* Runde 30 — Bild-Dokument im Leser: welcher Bild-Satz, welche Seiten-Datei (-1 =
+ * Titelseite) und welche x-Lage der Textseite. Rueckgabe 0 = der Leser zeigt kein
+ * Bild-Dokument. Belege an der Definition (RE2 Seitenlader 0x8006d444, Ruhelage 25
+ * @0x80076170). */
+int re15_inv_file_bild_lage(const re15_inv_screen_t *st, int *out_set, int *out_page,
+                            int *out_tx);
+
+/* Runde 30 — ARCHIV der RE1.5-Originaltabellen der FILE-Liste (Maske u16[3]
+ * @0x800c6c98, Basis-Ids u8[3] @0x800c7370, Zeilennamen 0x48..0x65). Das Spiel liest
+ * sie nicht mehr (die Liste ist dynamisch); die Zugriffe dienen dem Zensus. */
+int re15_inv_file_archiv_maske(int seite);
+int re15_inv_file_archiv_basis(int seite);
+const uint8_t *re15_inv_file_archiv_name(int id);
+
+/* Runde 30 — MESSSCHIENE (nur Tests): Glyphen-Drucker FUN_80028ec4 an freier Stelle,
+ * damit der '&'-Digraph-Umbruch der Archiv-Namen 0x59-0x5b pruefbar bleibt
+ * (@0x800131c0-c4 / @0x80028fe8). Rueckgabe = Anzahl erzeugter Ops. */
+int re15_inv_screen_text_probe(re15_inv_op_t *ops, int max_ops, int x0, int y0,
+                               const uint8_t *p, int flags);
 
 #endif /* RE15_INV_SCREEN_H */

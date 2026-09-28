@@ -26,7 +26,16 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  8             /* v8: die Besucht-Bits sind auf die
+#define RE15_SAVE_VERSION  9             /* v9 (Runde 30, SPEICHER-VERTRAG zweier Themen):
+                                          * + visited_floor[16] (Etagen-Bits der Karte,
+                                          * Thema karten-marken) und + files[24] (FILE-
+                                          * Liste, Thema irons-diary-dokument), beide
+                                          * unmittelbar vor checksum. sizeof 904 -> 944.
+                                          * v7/v8 tragen ihr Pruefwort bei Offset 900
+                                          * (= offsetof(visited_floor)) ueber [0,900) und
+                                          * werden in EINEM Schritt gehoben:
+                                          * visited_floor = 0, files = 24 x 0xFF.
+                                          * v8: die Besucht-Bits sind auf die
                                           * RAUM-Nummer geschluesselt statt auf die
                                           * laufende Zonen-Nummer des Generators.
                                           * Bits aus v<8 bedeuten etwas anderes und
@@ -132,6 +141,8 @@ typedef struct {
                                 * re15_room_ids[]-Eintrag (240 Bits; Port-Erweiterung,
                                 * re15_map_visited.c). Vor der checksum eingefuegt;
                                 * das v5-Checksum-Wort sitzt bei offsetof(visited). */
+    uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Spur karten-marken) */
+    uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Spur irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 

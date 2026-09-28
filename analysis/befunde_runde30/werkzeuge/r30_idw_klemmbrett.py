@@ -23,6 +23,7 @@ def main():
     A6 = np.array(Image.open(os.path.join(AUS, 'bg', 'ROOM11506.png')).convert('RGB')).astype(float)
     L = A6.sum(axis=2) / 3.0
     box = (170, 225, 95, 150)
+    mitten, achsen = [], []
     for s in (110, 120, 130, 140):
         pts = []
         for y in range(box[2], box[3]):
@@ -40,6 +41,7 @@ def main():
         # Achse von der Kamera weg zeigt (Welt -x)
         if lang[0] > 0:
             lang = -lang
+        mitten.append(m); achsen.append(lang)
         ry = math.atan2(lang[0], lang[1]) / (2 * math.pi) * 4096.0
         if ry < 0:
             ry += 4096.0
@@ -48,6 +50,20 @@ def main():
               % (s, len(P), m[0], m[1], a.max() - a.min(), np.percentile(a, 95) - np.percentile(a, 5),
                  b.max() - b.min(), np.percentile(b, 95) - np.percentile(b, 5),
                  lang[0], lang[1], ry, ry - 3072, (ry - 3072) * 360 / 4096.0))
+
+    # LAGE B (Nachbesserung Runde 30, Gegenpruefer-Mangel 3): EIN Wert mit Regel statt einer
+    # Mischung zweier Bestimmungen. Regel: Mittel ueber die vier Schwellen - Mitte = Mittel der
+    # vier Mitten, Achse = Mittel der vier (auf Welt -x ausgerichteten) langen Achsen,
+    # normiert; gerundet auf ganze Welteinheiten bzw. ganze rot_y-Schritte (4096 = 360 Grad).
+    M = np.mean(np.array(mitten), axis=0)
+    A = np.mean(np.array(achsen), axis=0)
+    A = A / np.linalg.norm(A)
+    ry = math.atan2(A[0], A[1]) / (2 * math.pi) * 4096.0
+    if ry < 0:
+        ry += 4096.0
+    print('LAGE B = Mittel der vier Schwellen: Mitte (%.2f, %.2f) -> (%d, %d) | lange Achse Welt '
+          '(%.4f, %.4f) -> rot_y = %.2f -> %d'
+          % (M[0], M[1], int(round(M[0])), int(round(M[1])), A[0], A[1], ry, int(round(ry))))
 
 
 if __name__ == '__main__':

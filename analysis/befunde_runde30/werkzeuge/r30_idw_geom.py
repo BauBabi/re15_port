@@ -11,7 +11,9 @@ import numpy as np
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HIER, '..', '..', '..'))
-AUS  = os.path.join(REPO, 'build', 'r30_irons-diary-welt')
+# R30_IDW_AUS: Messordner eines anderen Baums (die Messdateien liegen unversioniert im
+# Hauptbaum; aus einem Arbeitsbaum heraus dorthin zeigen).
+AUS  = os.environ.get('R30_IDW_AUS') or os.path.join(REPO, 'build', 'r30_irons-diary-welt')
 
 def lade_kameras(pfad=None):
     pfad = pfad or os.path.join(AUS, 'kamera_1150.txt')

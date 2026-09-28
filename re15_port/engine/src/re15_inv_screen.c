@@ -31,7 +31,31 @@
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
 #include "gen/inv_file_doc.inc"  /* FILE wave: 7-page document @0x800ccd34 + row names
                                   * 0x48-0x65 + masks/bases/titles/underscores (census-
-                                  * asserted; tools/gen_inv_file_doc.py) */
+                                  * asserted; tools/gen_inv_file_doc.py).
+                                  * Seit Runde 30 liest das SPIEL daraus nur noch den
+                                  * Titel 0 "Files" und die Unterstrich-Zeile; Maske,
+                                  * Basis-Ids, die 30 Zeilennamen und der Blob sind
+                                  * ARCHIV der Originalbytes (s. emit_file_list). */
+#include "re15_files.h"          /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
+
+/* Die Archiv-Tabellen bleiben im Uebersetzungslauf REFERENZIERT, damit ihr Wegfall aus
+ * dem Spiel keine "unbenutzt"-Warnung wird und der Zensus sie weiter abgleichen kann
+ * (tests/unit/probe_r30_irons_diary_dokument.c zaehlt die Original-Namen ueber diese
+ * Zugriffe). Kein Spielpfad ruft sie. */
+int re15_inv_file_archiv_maske(int seite)
+{
+    return (seite >= 0 && seite < 3) ? (int)re15_inv_file_mask[seite] : 0;
+}
+int re15_inv_file_archiv_basis(int seite)
+{
+    return (seite >= 0 && seite < 3) ? (int)re15_inv_file_rowbase[seite] : 0;
+}
+const uint8_t *re15_inv_file_archiv_name(int id)
+{
+    if (id < 0x48 || id - 0x48 >= (int)(sizeof re15_inv_file_name_off /
+                                        sizeof re15_inv_file_name_off[0])) return 0;
+    return re15_inv_file_name_blob + re15_inv_file_name_off[id - 0x48];
+}
 
 const uint8_t *re15_inv_desc_entry(int id)
 {
@@ -1191,6 +1215,20 @@ static void emit_text(emit_t *e, int x0, int y0, const uint8_t *p, int flags)
     }
 }
 
+/* MESSSCHIENE (Runde 30, nur Tests, kein Spielpfad): der Glyphen-Drucker FUN_80028ec4
+ * (emit_text oben) an freier Stelle. Seit die FILE-Liste dynamisch ist, erreicht kein
+ * Spielpfad mehr die RE1-Namen mit dem '&'-Digraph (Archiv-Zeilen 0x59-0x5b); der
+ * Umbruch-Quirk (@0x800131c0-c4 / @0x80028fe8) lebt aber im Drucker weiter und wird
+ * ueber diese Schiene in test_inv_fsm.c festgehalten. Rueckgabe = Anzahl Ops. */
+int re15_inv_screen_text_probe(re15_inv_op_t *ops, int max_ops, int x0, int y0,
+                               const uint8_t *p, int flags)
+{
+    emit_t e;
+    e.ops = ops; e.n = 0; e.max = max_ops;
+    emit_text(&e, x0, y0, p, flags);
+    return e.n;
+}
+
 /* Reader footer "page/total" = DEBUG.BIN 0x800c7744: number formatter 0x800c78a8
  * (tens+0xc only when nonzero @0x800c78bc-c8, ones+0xc @0x800c78d0-d4), separator
  * glyph 0x38 (@0x800c775c-60), terminator 7 (@0x800c7778-7c); centered x =
@@ -1217,9 +1255,66 @@ static void emit_file_footer(emit_t *e, int page_clamped, int total)
 static void emit_file_reader(emit_t *e, const re15_inv_screen_t *st, int x)
 {
     int pg = st->file_reader_page;
+    if (st->file_bild) {
+        /* BILD-DOKUMENT (Runde 30, nach RE2): die Seiten sind BILDER, kein Zeichenstrom
+         * — RE2s Leser legt zwei Sprites an (FUN_80075fd0) und druckt keinen Text. Der
+         * Port zeichnet sie plattformseitig UNTER diese Liste (inv_render_pc.c). Aus
+         * RE1.5 bleibt die Fusszeile "Seite+1 / Seitenzahl" (0x800c7744, y = 0xd2),
+         * mit der Klemme der Seite auf Seitenzahl-1 (slt/addiu @0x800c7628-34); die
+         * Seitenzahl ist die des Dokuments (RE2 max_page @0x800727c8, +1). */
+        int end = st->file_end;
+        if (end < 1) end = 1;                    /* Port-Schranke gegen Division/Leerlauf */
+        if (pg >= end) pg = end - 1;             /* @0x800c7628-34 */
+        emit_file_footer(e, pg, end);
+        return;
+    }
     if (pg >= RE15_INV_FILEDOC_PAGES) pg = RE15_INV_FILEDOC_PAGES - 1;
     emit_text(e, x, 0x20, re15_inv_filedoc_blob + re15_inv_filedoc_off[pg], 0);
     emit_file_footer(e, pg, RE15_INV_FILEDOC_PAGES);
+}
+
+/* RUNDE 30 — WELCHES BILD UND WO (fuer die Plattform, die die zwei RE2-Sprites zeichnet).
+ * Rueckgabe 1 = der Leser zeigt ein Bild-Dokument; dann:
+ *   *out_set   der Bild-Satz FILE%02d_*
+ *   *out_page  die Seiten-DATEI: -1 = title_page, p >= 1 = p<p>_page
+ *   *out_tx    die x-Lage der Textseite
+ *
+ * SEITE -> DATEI, RE2-Seitenlader 0x8006d444:
+ *     8006d474  lbu  v1,23557(v1)       ; 0x800d5c05
+ *     8006d480  lbu  a0,-25904(at)      ; 0x800a9ad0[doc] = erster Slot
+ *     8006d484  beq  v1,zero,0x8006d49c ; 5c05 == 0 -> Titel-Slot
+ *     8006d488  addiu v0,a0,1
+ *     8006d490  lbu  v1,23555(v1)       ; Seite
+ *     8006d498  addu a0,v0,v1           ; sonst Slot = erster + 1 + Seite
+ *   Seite 0 zeigt also die Titelseite; Seite p >= 1 den Slot erster+1+p = p<p>. (Beim
+ *   ZURUECKblaettern auf Seite 0 laedt RE2 erster+1 = p00; p00 ist bei allen 25
+ *   RE2-Dokumenten und beim Irons Diary byte-gleich der Titelseite — md5 von
+ *   FILE25_title_page.TIM und FILE25_p00_page.TIM 481b94ab56f274a6bfe2bd0640adeb44 —,
+ *   der Port nimmt deshalb fuer Seite 0 immer die Titelseite.)
+ *   In RE1.5s Ende-Stellung (Seite == Seitenzahl, @0x800c71e8) bleibt die LETZTE Seite
+ *   stehen: Klemme Seite auf Seitenzahl-1 (slt/addiu @0x800c7628-34).
+ *
+ * X-LAGE: RE2s Ruhelage der Textseite ist 25 (`addiu v0,zero,25` @0x80076170, `sh`
+ *   @0x80076178 = 0x800d5c4c). Gefahren wird mit RE1.5s Blaetter-Treiber 0x800c77bc,
+ *   dessen Ruhelage 0x28 ist (`a0 = 0x28` @0x800c6f94): x = 25 + (file_text_x - 0x28).
+ *   Im Lesen (Zustand 3) und unter der Meldung (Zustand 8) steht die Seite in Ruhe. */
+int re15_inv_file_bild_lage(const re15_inv_screen_t *st, int *out_set, int *out_page,
+                            int *out_tx)
+{
+    int pg, end;
+    if (!st || st->substate != 2 || !st->file_bild) return 0;
+    if (st->item_state < 3 || st->item_state > 8) return 0;
+    end = st->file_end;
+    if (end < 1) end = 1;
+    pg = st->file_reader_page;
+    if (pg >= end) pg = end - 1;                     /* @0x800c7628-34 */
+    if (out_set)  *out_set  = st->file_bildsatz;
+    if (out_page) *out_page = (pg == 0) ? -1 : pg;   /* @0x8006d484-98 */
+    if (out_tx)
+        *out_tx = (st->item_state >= 4 && st->item_state <= 7)
+                ? 25 + ((int)st->file_text_x - 0x28) /* @0x80076170 / @0x800c6f94 */
+                : 25;
+    return 1;
 }
 
 /* Corner arrows = DEBUG.BIN 0x800c7528 (draw part) + glyph drawer 0x800c7670:
@@ -1232,7 +1327,9 @@ static void emit_file_reader(emit_t *e, const re15_inv_screen_t *st, int x)
  * all uv(0x70,0x48). off = the bob offset drawn BEFORE the counter update. */
 static void emit_file_arrows(emit_t *e, const re15_inv_screen_t *st)
 {
-    int end = RE15_INV_FILEDOC_PAGES;           /* s0 = u16[0xcd34]>>1 @0x800c7544-50 */
+    int end = st->file_bild ? (int)st->file_end  /* Seitenzahl des Dokuments (RE2 max_page
+                                                 * `lhu a0,-24252(at)` @0x800727c8, +1) */
+                            : RE15_INV_FILEDOC_PAGES; /* s0 = u16[0xcd34]>>1 @0x800c7544-50 */
     int off = (int)st->file_bob_off;
     int pg = st->file_reader_page;
     if (pg != 0)
@@ -1256,25 +1353,41 @@ static void emit_file_arrows(emit_t *e, const re15_inv_screen_t *st)
  * (0x2b, 0x34+row*16) 154x16 (@0x800c749c-c0; sll row,20 = +y). AddPrim order icon ->
  * highlight prepends into the bucket @0x800aa6a8 (getter 0x800c74f0) => highlight
  * drawn FIRST = behind the icon; the text ring draws topmost (wave-2 model). */
+/* ⛔ RUNDE 30 — DIE LISTE IST DYNAMISCH (nach RE2), NICHT MEHR DIE FESTE RE1.5-TABELLE.
+ * Nutzer-Auftrag: "Ausserdem moechte ich das du die Vorinstallierten Texte alle
+ * entfernst". RE1.5 zeichnet die Zeilen aus einer festen Maske (u16[3] @0x800c6c98 =
+ * 0x0001/0xffff/0xffff, EIN Leser @0x800c72f0, KEIN Schreiber) und zeigt damit 21
+ * RE1-Namen, die zu keinem aufhebbaren Dokument gehoeren. RE1.5 ist hier unfertig,
+ * massgeblich ist RE2: eine 24-Platz-Liste @0x800D4B68 in Aufhebe-Reihenfolge, leer
+ * 0xFF (FUN_800692dc @0x800692dc; re15_files.c).
+ * Zeile r der Listenseite p zeigt Platz p*10 + r. Belegt -> der Name des Dokuments,
+ * gedruckt wie RE1.5s Namenszeile (a3 = 0 @0x800c7320-28); leer oder Platz >= 24 -> die
+ * Unterstrich-Zeile (a3 = 0x30 @0x800c7310-1c). Geometrie, Hervorhebung, Reiter-Icon
+ * und die Navigation ueber 3 Seiten bleiben byte-treu RE1.5.
+ * ⛔ PORT-WAHL, keine Original-Adresse: die Aufteilung p*10 + r. RE2 legt die 24
+ * Plaetze als 3 Reihen x 8 Spalten (`srl v1,v0,3` / `andi v0,v0,0x7` @0x80071d10-14);
+ * RE1.5s Schirm hat 3 Seiten x 10 Zeilen (sltiu 0xa @0x800c70b4, sltiu 3 @0x800c6e78).
+ * Der Port fuellt RE1.5s Zeilen fortlaufend; die Plaetze 24..29 (Seite 2, Zeilen 4..9)
+ * gibt es nicht, sie bleiben Unterstriche.
+ * ⛔ PORT-ENTSCHEIDUNG (Auftrag Runde 30; Port-Wahl, keine Original-Adresse fuer die
+ * Zuordnung): alle drei Seiten tragen Titel 0 "Files"
+ * (@0x800c78f0). "S.T.A.R.S. Files" / "Umbrella Files" (@0x800c78f6 / @0x800c7907)
+ * sind Kategorien der vorinstallierten RE1-Inhalte; RE2 kennt keine Kategorien. */
 static void emit_file_list(emit_t *e, const re15_inv_screen_t *st)
 {
     int pg = st->file_page;
-    uint16_t mask;
-    int base, row;
+    int row;
     if (pg > 2) pg = 2;                          /* port safety; original indexes raw */
-    mask = re15_inv_file_mask[pg];
-    base = re15_inv_file_rowbase[pg];
     for (row = 0; row < 10; row++) {
         int y = 0x35 + row * 16;
-        if (mask & (1u << row))
-            emit_text(e, 0x2c, y,
-                      re15_inv_file_name_blob +
-                      re15_inv_file_name_off[base + row - 0x48], 0);
+        const re15_file_doc_t *d = re15_files_doc(re15_files_get(pg * 10 + row));
+        if (d)
+            emit_text(e, 0x2c, y, d->name, 0);
         else
             emit_text(e, 0x2c, y, re15_inv_file_underscores, 0x30);
     }
     emit_text(e, 0x2c, 0x1f,
-              re15_inv_file_title_blob + re15_inv_file_title_off[pg], 0x10);
+              re15_inv_file_title_blob + re15_inv_file_title_off[0], 0x10);
     sprt(e, RE15_INV_PAGE_TEX4, 2 + pg, 0x12, 0x1a, 0x13, 0x13,
          0x72, 0x8e, 128, 128, 128, 0);
     if (e->n < e->max) {
@@ -1662,6 +1775,30 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * slid offscreen by the 25e0/25e6/25d8/25dc/25ea/25f2 deltas. The FILE prims go to
      * the near bucket @0x800aa6a8 (getter 0x800c74f0) / the text ring @0x800b829c —
      * both above the main-chain content (wave-2 topmost-text model). */
+    if (st->substate == 2 && st->file_bild && st->item_state >= 3 && st->item_state <= 8) {
+        /* BILD-DOKUMENT IM LESER (Runde 30, nach RE2): der Schirm zeigt NUR das Dokument.
+         * RE2 stellt im Leser ein schwarzes Rechteck 320x240 hinter die Sprites
+         * (`addiu a0,zero,2` / `jal 0x8002bda8` / `addu a1,zero,zero` @0x80071d8c-94,
+         * im FILE-Schirm @0x8006cf78-80; FUN_8002bda8 schreibt Farbe a1 = 0 und
+         * w = 0x140 / h = 0xf0 @0x8002bdc0-d8) und zeichnet sonst nur Illustration,
+         * Textseite, Pfeile und Ende-Marke (FUN_800724b4). Die Anzeigeliste traegt
+         * deshalb hier nur RE1.5s Pfeile und Fusszeile und kehrt dann zurueck: kein
+         * Rahmen, keine Tafeln, kein Hintergrundblatt. Grund und Sprites zeichnet die
+         * Plattform UNTER diese Liste (inv_render_pc.c).
+         * Zustand 3 = lesen: Fusszeile + Pfeile (RE1.5 @0x800c6f90-a4).
+         * Zustaende 4..7 = blaettern: nur die Fusszeile (RE1.5 @0x800c6fb0-d4, dort
+         *   ohne Pfeile; RE2 zeichnet die Pfeile ebenfalls nur in den Zustaenden 0 und
+         *   1, `sltiu v0,v0,0x2` @0x80072690).
+         * Zustand 8 = die Meldung "has been filed" steht (RE2 Zustand 6): nichts —
+         *   RE2 hat keine Fusszeile, und seine Pfeile fallen unter dasselbe Gatter. */
+        if (st->item_state == 3) {
+            emit_file_reader(&e, st, 0x28);
+            emit_file_arrows(&e, st);
+        } else if (st->item_state <= 7) {
+            emit_file_reader(&e, st, st->file_text_x);
+        }
+        return e.n;
+    }
     if (st->substate == 2) {
         if (st->item_state == 1) {
             emit_file_list(&e, st);

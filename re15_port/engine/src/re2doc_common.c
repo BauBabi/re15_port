@@ -167,10 +167,20 @@ int re15_re2doc_pixel(int doc, int page, re15_re2doc_kind_t kind,
     } else {
         idx = t->buf[t->img_off + (size_t)v * t->stride + (size_t)u];
     }
-    if (idx == 0) return 0;                       /* Index 0 = durchsichtig */
     if ((int)idx >= t->clut_entries) return 0;
     size_t c = t->clut_off + (size_t)idx * 2;
     unsigned col = (unsigned)(t->buf[c] | (t->buf[c + 1] << 8));   /* BGR555 */
+    /* ⛔ DURCHSICHTIG IST DIE FARBE 0x0000, NICHT DER INDEX 0 (Runde 30).
+     * PSX-GPU (info/.../psx-spx, graphicsprocessingunitgpu.md Z. 1129/1168: "Color 0000h
+     * = Fully-transparent", "On the PSX, texture color 0000h is fully-transparent"):
+     * geprueft wird das 16-Bit-Farbwort NACH dem CLUT-Zugriff. Bis Runde 30 stand hier
+     * `if (idx == 0) return 0` — das zeichnete bei FILE08 (Vorlage des Irons Diary)
+     * 7410 Texel deckend schwarz, deren Index ungleich 0 ist und deren CLUT-Farbe
+     * 0x0000 (Hintergrund-Index 195; 62 der 256 Eintraege sind 0x0000) = der schwarze
+     * Kasten um das Buch. Umgekehrt fuehrt genau EINE Datei CLUT[0] != 0
+     * (FILE16_title_paper.TIM, 0x7fff): dort ist Index 0 auf der PSX SICHTBAR.
+     * Gemessen ueber alle 236 Dateien unter shared_assets/RE2/FILES. */
+    if (col == 0x0000) return 0;
     if (r) *r = (uint8_t)((col & 0x1f) << 3);
     if (g) *g = (uint8_t)(((col >> 5) & 0x1f) << 3);
     if (b) *b = (uint8_t)(((col >> 10) & 0x1f) << 3);
