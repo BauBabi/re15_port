@@ -14291,7 +14291,24 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, bk_ox, bk_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+                /* BAND = +0x82-ZUSTANDS-BYTE (e->floor), NICHT band_from_y (Runde 30, Nachschliff
+                 * room5080, analysis/befunde_runde30/nachschliff-room5080.md Abschnitt 8.1).
+                 * Wurzel-Schwanz STAGE5 @0x80116cc0-cdc (STAGE3 -0x814):
+                 *   lw v0,120(v0) / lhu a1,6(v0) / ori a2,zero,0x4 / jal 0x8003b0a4 / addiu a0,a0,52
+                 * FUN_8003b0a4 liest das Band SELBST: @0x8003b234 `lbu v1,130(a3)` (+0x82),
+                 * @0x8003b23c `bne v1,v0` gegen floor>>4 der Zelle. +0x82 kommt aus dem Spawn-Byte
+                 * pc[4] (Sce_em_set @0x800421c8 `lbu v0,2(s2)` / @0x800421d0 `sb v0,130(s0)`, im
+                 * Port scd_vm.c a->floor = t->pc[4]). Das Birkin-Modul schreibt +0x82 nie (kein
+                 * `sb x,130(y)` in STAGE5 0x80116a44..0x8011bce4 / STAGE3 0x80116230..0x8011b4d0);
+                 * der einzige +0x82-Schreiber unter seinen Callees, FUN_8001bd60 @0x8001be54, laeuft
+                 * nur bei y == -(+0x82*1800) (@0x8001bde4-bdec). Die Collision-Sperre +0x0&8
+                 * (@0x8003b12c-13c) setzt INIT nur fuer grid&0xf==1 (@0x801170e4, STAGE5).
+                 * Folge: der ROOM5080/5081/50E0/50F1-Birkin (Spawn y=-5600, pc[4]=0, z.B. ROOM5080
+                 * Datei 0x0074A) klemmt im Original an den Band-0-Waenden; band_from_y(-5600)=3
+                 * traf keine Zelle, er lief durch die Aussenwand (SCA @0x00320) bis in den Raum. */
+                re15_collision_constrain_contact_band(&g_room_rdt, bk_ox, bk_oz, &nx, &nz,
+                                                      e->hit_radius_min, (int)e->floor, 4u,
+                                                      NULL, NULL);
                 e->x = nx; e->z = nz;
             }
         }
