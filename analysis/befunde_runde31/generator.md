@@ -301,7 +301,9 @@ Zeiger-Tick laeuft dort von Hand mit, weil die Sonde nur `scd_vm_tick` faehrt.
 
 ### 6.4 Suite
 
-(folgt nach dem Lauf)
+`bash re15_port/tools/local_build.sh build && ... test` auf bffb34b9 (Baum `r31_generator`):
+`100% tests passed, 0 tests failed out of 406`, `=== LOCAL-BUILD-OK (test) — Tests 406/406`
+(607 s). `RE15_MIN_TESTS` 405 -> 406 (local_build.sh Zeilen 63 und 320/321).
 
 ## 7. Offen
 
