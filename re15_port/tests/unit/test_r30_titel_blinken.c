@@ -3,6 +3,13 @@
  *  Original zu schnell."
  * Dossier: analysis/befunde_runde30/titel-blinken.md
  *
+ * ⛔ REICHWEITE: dieser Riegel bindet NUR re15_engine (engine/src/title_pulse.c). Er prueft die
+ * Rechenbausteine (Pulsfolge, Tick-Rechnung, Uhr, Einblende) gegen das Original — NICHT, ob
+ * platform/pc/main.c sie auch aufruft. Nimmt man die Verdrahtung in main.c zurueck, bleibt er
+ * gruen. Das Symptom selbst (Periode am laufenden Spiel, Puls im Bestaetigungs-Fade) sichert der
+ * Integrationstest integration_r30_titel_puls mit der echten re15_pc.exe
+ * (tests/integration/test_r30_titel_puls.cmake).
+ *
  * Teil A  PULSFOLGE: fuehrt den ORIGINAL-Puls-Handler FUN_801028ec aus den ausgelieferten
  *         Bytes von BIN/TITLE.BIN in einem Mini-R3000 aus (derselbe wie in der Messsonde
  *         probe_r30_titel-blinken_puls.c) und stellt JEDEM der 180 Aufrufe den Port-Schritt
@@ -13,12 +20,16 @@
  * Teil D  UHR: Unabhaengigkeit von der Abtastrate (dieselbe Laufzeit, abgetastet mit
  *         20/30/60/144/1000 Hz, ergibt dieselbe Schrittzahl und denselben Pulswert); neu
  *         aufsetzen nach Fade/Unterbildschirm zaehlt die Zwischenzeit nicht; Stillstand.
- * Teil E  EINBLENDE: re15_title_fadein_level() gegen den nachgebauten Integrator
- *         FUN_80021880 (Pegel 0x7fff, Schritt 0xfc00).
- * Teil F  GEGENPROBE: das ALTE Verhalten (ein Schritt je Schleifendurchgang) faellt an
- *         Teil D — der Riegel ist also nicht von selbst gruen.
+ * Teil E  EINBLENDE gegen die AUSGEFUEHRTEN Original-Bytes: derselbe Mini-R3000 faehrt die
+ *         Titel-Init-Befehle TITLE.BIN 0x80102054-0x8010207c (darin `ori a1,zero,0xfc00`
+ *         @0x80102058 und die Aufrufe FUN_800217b0 / FUN_800216ec aus PSX.EXE) und danach je
+ *         Durchgang FUN_80021880 aus PSX.EXE; verglichen wird die Farbe, die das Original in das
+ *         Rechteck von Kanal 0 schreibt, mit re15_title_fadein_level(Durchgang).
  *
- * Rueckgabe 0 = alles gruen, 1 = Abweichung, 2 = Datei nicht lesbar.
+ * (Ein frueherer Teil F "Gegenprobe" zaehlte nur eine for-Schleife und bewies nichts ueber den
+ *  alten Stand — gestrichen. Die Gegenprobe am alten Stand fuehrt der Integrationstest.)
+ *
+ * Rueckgabe 0 = alles gruen, 1 = Abweichung, 2 = Datei nicht lesbar / Befehl unbekannt.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -30,10 +41,15 @@
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
 #endif
+#ifndef RE15_R30_PSX_EXE
+#define RE15_R30_PSX_EXE "../info/Re1.5/PSX.EXE"
+#endif
 
-#define TITLE_BASE 0x80100000u
+#define TITLE_BASE 0x80100000u   /* TITLE.BIN laedt OHNE Kopf @0x80100000 */
+#define EXE_BASE   0x80010000u   /* PSX.EXE: t_addr 0x80010000, Abbild ab Datei-Offset 0x800 */
+#define STACK_BASE 0x801f0000u   /* Stapel fuer den Mini-R3000 (liegt hinter TITLE.BIN)       */
+#define STACK_SIZE 0x10000u
 
-static uint8_t *s_title; static long s_title_n;
 static int s_fail;
 
 #define CHECK(cond, ...) do { if (!(cond)) { printf("  ROT: "); printf(__VA_ARGS__); printf("\n"); s_fail = 1; } } while (0)
@@ -48,62 +64,166 @@ static uint8_t *slurp(const char *path, long *n)
     fclose(f);
     return d;
 }
-static uint32_t tw(uint32_t a)
+
+/* ---------------------------------------------------------------- Speicher ----------- */
+typedef struct { uint32_t base; uint8_t *d; long n; } seg_t;
+enum { SEG_TITLE, SEG_EXE, SEG_STACK, SEG_N };
+static seg_t s_seg[SEG_N];
+static int   s_memfault;
+
+static uint8_t *mem(uint32_t a, unsigned w)
 {
-    long o = (long) (a - TITLE_BASE);
-    return (uint32_t) s_title[o] | ((uint32_t) s_title[o + 1] << 8) | ((uint32_t) s_title[o + 2] << 16) | ((uint32_t) s_title[o + 3] << 24);
+    for (int i = 0; i < SEG_N; i++) {
+        const seg_t *s = &s_seg[i];
+        if (s->d && a >= s->base && (long) (a - s->base) + (long) w <= s->n) return s->d + (a - s->base);
+    }
+    if (!s_memfault) printf("  Speicherzugriff ausserhalb der geladenen Bereiche: %08x\n", (unsigned) a);
+    s_memfault = 1;
+    return NULL;
+}
+static uint32_t m8(uint32_t a)  { uint8_t *p = mem(a, 1); return p ? p[0] : 0; }
+static uint32_t m16(uint32_t a) { uint8_t *p = mem(a, 2); return p ? (uint32_t) (p[0] | (p[1] << 8)) : 0; }
+static uint32_t m32(uint32_t a)
+{
+    uint8_t *p = mem(a, 4);
+    return p ? ((uint32_t) p[0] | ((uint32_t) p[1] << 8) | ((uint32_t) p[2] << 16) | ((uint32_t) p[3] << 24)) : 0;
+}
+static void w8(uint32_t a, uint32_t v)  { uint8_t *p = mem(a, 1); if (p) p[0] = (uint8_t) v; }
+static void w16(uint32_t a, uint32_t v) { uint8_t *p = mem(a, 2); if (p) { p[0] = (uint8_t) v; p[1] = (uint8_t) (v >> 8); } }
+static void w32(uint32_t a, uint32_t v)
+{
+    uint8_t *p = mem(a, 4);
+    if (p) { p[0] = (uint8_t) v; p[1] = (uint8_t) (v >> 8); p[2] = (uint8_t) (v >> 16); p[3] = (uint8_t) (v >> 24); }
+}
+
+static int load_title(const char *tp)
+{
+    free(s_seg[SEG_TITLE].d);
+    s_seg[SEG_TITLE].d = slurp(tp, &s_seg[SEG_TITLE].n);
+    s_seg[SEG_TITLE].base = TITLE_BASE;
+    if (!s_seg[SEG_TITLE].d) { printf("FEHLER: %s nicht lesbar\n", tp); return 2; }
+    if (s_seg[SEG_TITLE].n < 0x2948) { printf("FEHLER: TITLE.BIN zu kurz (%ld)\n", s_seg[SEG_TITLE].n); return 2; }
+    return 0;
+}
+static int load_exe(const char *ep)
+{
+    long n = 0;
+    uint8_t *d = slurp(ep, &n);
+    if (!d) { printf("FEHLER: %s nicht lesbar\n", ep); return 2; }
+    if (n < 0x800 || memcmp(d, "PS-X EXE", 8) != 0) { printf("FEHLER: %s ist keine PS-X EXE\n", ep); free(d); return 2; }
+    uint32_t t_addr = (uint32_t) d[0x18] | ((uint32_t) d[0x19] << 8) | ((uint32_t) d[0x1a] << 16) | ((uint32_t) d[0x1b] << 24);
+    if (t_addr != EXE_BASE) { printf("FEHLER: t_addr 0x%08x statt 0x80010000\n", (unsigned) t_addr); free(d); return 2; }
+    free(s_seg[SEG_EXE].d);
+    s_seg[SEG_EXE].d = (uint8_t *) malloc((size_t) (n - 0x800));
+    memcpy(s_seg[SEG_EXE].d, d + 0x800, (size_t) (n - 0x800));
+    s_seg[SEG_EXE].n = n - 0x800;
+    s_seg[SEG_EXE].base = EXE_BASE;
+    free(d);
+    return 0;
 }
 
 /* ---------------------------------------------------------------- Mini-R3000 --------- */
+/* Befehlsumfang = das, was FUN_801028ec (TITLE.BIN), die Titel-Init 0x80102054-7c,
+ * FUN_800217b0, FUN_800216ec, FUN_80021880 und AddPrim FUN_8006b538 (PSX.EXE) benutzen.
+ * Die Ladeverzoegerung des R3000 wird nicht nachgebildet: der Compiler hat in allen diesen
+ * Funktionen den Platz hinter jedem Laden mit einem Befehl gefuellt, der das Ziel nicht liest
+ * (nachgesehen fuer jede Ladeoperation). Ein unbekannter Befehl bricht ab (Rueckgabe -1). */
 static uint32_t R[32];
-static uint16_t m16(uint32_t a) { long o = (long) (a - TITLE_BASE); return (uint16_t) (s_title[o] | (s_title[o + 1] << 8)); }
-static void     w16(uint32_t a, uint16_t v) { long o = (long) (a - TITLE_BASE); s_title[o] = (uint8_t) v; s_title[o + 1] = (uint8_t) (v >> 8); }
 
-/* fuehrt eine Funktion bis zum Ruecksprung aus; 0 = ok, -1 = unbekannter Befehl */
-static int run(uint32_t entry)
+/* NICHT ausgefuehrte Aufrufe: FUN_80069858 (SetDrawMode, von FUN_800217b0 zweimal gerufen)
+ * schreibt nur das DR_MODE-Primitiv an a0 = Kanal+44 / Kanal+56 und ruft seinerseits
+ * FUN_80069b54 / FUN_80069d90. FUN_80021880 liest diese Bytes nicht (es liest Kanal+0/+2
+ * Pegel/Schritt, +5/+6/+7 Farbmasken, +8 OT-Ebene) — fuer die Farbe des Rechtecks ohne Belang. */
+static const uint32_t s_stub[] = { 0x80069858u };
+/* BEOBACHTETE Aufrufe (werden ausgefuehrt und mitgeschrieben): AddPrim FUN_8006b538. */
+#define ADDPRIM 0x8006b538u
+static uint32_t s_addprim_a1[64];
+static int      s_addprim_n;
+
+static int is_stub(uint32_t pc)
+{
+    for (unsigned i = 0; i < sizeof s_stub / sizeof s_stub[0]; i++) if (s_stub[i] == pc) return 1;
+    return 0;
+}
+
+/* fuehrt ab `entry` aus bis zum Ruecksprung (bzw. bis pc == stop, falls stop != 0);
+ * 0 = ok, -1 = unbekannter Befehl / Speicherfehler */
+static int run_until(uint32_t entry, uint32_t stop)
 {
     const uint32_t SENT = 0xdead0000u;
     uint32_t pc = entry, npc = entry + 4;
     R[31] = SENT;
-    for (int guard = 0; guard < 4096; guard++) {
-        if (pc == SENT) return 0;
-        if (pc < TITLE_BASE || (long) (pc - TITLE_BASE) + 4 > s_title_n) { printf("PC ausserhalb der Datei: %08x\n", (unsigned) pc); return -1; }
-        uint32_t ins = tw(pc), nn = npc + 4;
+    R[29] = STACK_BASE + STACK_SIZE - 0x100u;
+    for (long guard = 0; guard < 200000; guard++) {
+        if (pc == SENT || (stop && pc == stop)) return 0;
+        if (pc == ADDPRIM && s_addprim_n < (int) (sizeof s_addprim_a1 / sizeof s_addprim_a1[0]))
+            s_addprim_a1[s_addprim_n++] = R[5];
+        if (is_stub(pc)) { R[2] = 0; pc = R[31]; npc = pc + 4; continue; }
+        uint8_t *ip = mem(pc, 4);
+        if (!ip) { printf("PC ausserhalb der geladenen Bereiche: %08x\n", (unsigned) pc); return -1; }
+        uint32_t ins = m32(pc), nn = npc + 4;
         uint32_t op = ins >> 26, rs = (ins >> 21) & 31, rt = (ins >> 16) & 31, rd = (ins >> 11) & 31;
+        uint32_t sa = (ins >> 6) & 31;
         uint32_t imm = ins & 0xffffu; int32_t simm = (int16_t) imm;
+        uint32_t ea = R[rs] + (uint32_t) simm;
         switch (op) {
         case 0x00:
             switch (ins & 0x3f) {
-            case 0x00: R[rd] = R[rt] << ((ins >> 6) & 31); break;          /* sll / nop */
-            case 0x08: nn = R[rs]; break;                                  /* jr        */
+            case 0x00: R[rd] = R[rt] << sa; break;                                      /* sll / nop */
+            case 0x02: R[rd] = R[rt] >> sa; break;                                      /* srl   */
+            case 0x03: R[rd] = (uint32_t) ((int32_t) R[rt] >> sa); break;               /* sra   */
+            case 0x08: nn = R[rs]; break;                                               /* jr    */
+            case 0x21: R[rd] = R[rs] + R[rt]; break;                                    /* addu  */
+            case 0x23: R[rd] = R[rs] - R[rt]; break;                                    /* subu  */
+            case 0x24: R[rd] = R[rs] & R[rt]; break;                                    /* and   */
+            case 0x25: R[rd] = R[rs] | R[rt]; break;                                    /* or    */
+            case 0x2a: R[rd] = ((int32_t) R[rs] < (int32_t) R[rt]) ? 1u : 0u; break;    /* slt   */
+            case 0x2b: R[rd] = (R[rs] < R[rt]) ? 1u : 0u; break;                        /* sltu  */
             default: printf("unbekannter SPECIAL-Befehl %08x @%08x\n", (unsigned) ins, (unsigned) pc); return -1;
             }
             break;
-        case 0x02: nn = (npc & 0xf0000000u) | ((ins & 0x03ffffffu) << 2); break;   /* j     */
-        case 0x04: if (R[rs] == R[rt]) nn = npc + ((uint32_t) simm << 2); break;   /* beq   */
-        case 0x05: if (R[rs] != R[rt]) nn = npc + ((uint32_t) simm << 2); break;   /* bne   */
-        case 0x09: R[rt] = R[rs] + (uint32_t) simm; break;                         /* addiu */
-        case 0x0b: R[rt] = (R[rs] < (uint32_t) simm) ? 1u : 0u; break;             /* sltiu */
-        case 0x0d: R[rt] = R[rs] | imm; break;                                     /* ori   */
-        case 0x0f: R[rt] = imm << 16; break;                                       /* lui   */
-        case 0x25: R[rt] = m16(R[rs] + (uint32_t) simm); break;                    /* lhu   */
-        case 0x29: w16(R[rs] + (uint32_t) simm, (uint16_t) R[rt]); break;          /* sh    */
+        case 0x01:
+            if (rt == 0)      { if ((int32_t) R[rs] <  0) nn = npc + ((uint32_t) simm << 2); }     /* bltz */
+            else if (rt == 1) { if ((int32_t) R[rs] >= 0) nn = npc + ((uint32_t) simm << 2); }     /* bgez */
+            else { printf("unbekannter REGIMM-Befehl %08x @%08x\n", (unsigned) ins, (unsigned) pc); return -1; }
+            break;
+        case 0x02: nn = (npc & 0xf0000000u) | ((ins & 0x03ffffffu) << 2); break;                 /* j     */
+        case 0x03: R[31] = pc + 8; nn = (npc & 0xf0000000u) | ((ins & 0x03ffffffu) << 2); break; /* jal   */
+        case 0x04: if (R[rs] == R[rt]) nn = npc + ((uint32_t) simm << 2); break;                 /* beq   */
+        case 0x05: if (R[rs] != R[rt]) nn = npc + ((uint32_t) simm << 2); break;                 /* bne   */
+        case 0x06: if ((int32_t) R[rs] <= 0) nn = npc + ((uint32_t) simm << 2); break;           /* blez  */
+        case 0x07: if ((int32_t) R[rs] >  0) nn = npc + ((uint32_t) simm << 2); break;           /* bgtz  */
+        case 0x09: R[rt] = R[rs] + (uint32_t) simm; break;                                       /* addiu */
+        case 0x0a: R[rt] = ((int32_t) R[rs] < simm) ? 1u : 0u; break;                            /* slti  */
+        case 0x0b: R[rt] = (R[rs] < (uint32_t) simm) ? 1u : 0u; break;                           /* sltiu */
+        case 0x0c: R[rt] = R[rs] & imm; break;                                                   /* andi  */
+        case 0x0d: R[rt] = R[rs] | imm; break;                                                   /* ori   */
+        case 0x0f: R[rt] = imm << 16; break;                                                     /* lui   */
+        case 0x20: R[rt] = (uint32_t) (int32_t) (int8_t) m8(ea); break;                          /* lb    */
+        case 0x21: R[rt] = (uint32_t) (int32_t) (int16_t) m16(ea); break;                        /* lh    */
+        case 0x23: R[rt] = m32(ea); break;                                                       /* lw    */
+        case 0x24: R[rt] = m8(ea); break;                                                        /* lbu   */
+        case 0x25: R[rt] = m16(ea); break;                                                       /* lhu   */
+        case 0x28: w8(ea, R[rt]); break;                                                         /* sb    */
+        case 0x29: w16(ea, R[rt]); break;                                                        /* sh    */
+        case 0x2b: w32(ea, R[rt]); break;                                                        /* sw    */
         default: printf("unbekannter Befehl %08x @%08x\n", (unsigned) ins, (unsigned) pc); return -1;
         }
         R[0] = 0;
+        if (s_memfault) { printf("  beim Befehl %08x @%08x\n", (unsigned) ins, (unsigned) pc); return -1; }
         pc = npc; npc = nn;
     }
     printf("Laufzeitwaechter: kein Ruecksprung\n");
     return -1;
 }
+static int run(uint32_t entry) { return run_until(entry, 0); }
 
 /* ---------------------------------------------------------------- Teil A ------------- */
 static int part_a(const char *tp)
 {
     printf("[A] Pulsfolge: Port gegen FUN_801028ec aus %s\n", tp);
-    s_title = slurp(tp, &s_title_n);
-    if (!s_title) { printf("FEHLER: %s nicht lesbar\n", tp); return 2; }
-    if (s_title_n < 0x2948) { printf("FEHLER: Datei zu kurz (%ld)\n", s_title_n); return 2; }
+    int rc = load_title(tp);
+    if (rc) return rc;
 
     re15_title_pulse_reset();
     CHECK(re15_title_pulse_value() == (int) m16(0x80102944u),
@@ -130,7 +250,6 @@ static int part_a(const char *tp)
     CHECK(same == 180, "nur %d von 180 Wertepaaren gleich", same);
     CHECK(period == 0x3c, "Periode %d statt 60 (0x3c @0x80102918)", period);
     CHECK(vmin == 0x80 && vmax == 0xbe, "Wertebereich 0x%02x..0x%02x statt 0x80..0xbe", (unsigned) vmin, (unsigned) vmax);
-    free(s_title); s_title = NULL;
     return 0;
 }
 
@@ -297,56 +416,111 @@ static void part_d(void)
 }
 
 /* ---------------------------------------------------------------- Teil E ------------- */
-static void part_e(void)
+/* Einblende gegen die AUSGEFUEHRTEN Bytes. Fade-Kanal 0 liegt @0x800b5458 (Kanal-Tabelle,
+ * 0x44 Byte je Kanal: `addiu v1,v1,0x5458` @0x800216fc, `addiu s0,s0,21592` @0x8002188c,
+ * Schrittweite `addiu s0,s0,68` @0x800219e0). Layout, wie es die drei Funktionen benutzen:
+ *   +0 Pegel (u16)  +2 Schritt (s16, `sh a1,2(s0)` @0x800217e4)  +4 Halbtransparenz-Art
+ *   (`sb a2,4(s0)` @0x800217e8, a2 = a0 >> 8)  +5/+6/+7 Farbmasken R/G/B  +8 OT-Ebene
+ *   +12 + puf*16 Rechteck (Farbe R/G/B bei +16/+17/+18, `sb` @0x800218e8/00/18),
+ *   puf = Doppelpuffer-Index DAT_800aca34 (`lbu v1,0(s2)` @0x800218d4). */
+#define FADE_CH0   0x800b5458u
+#define DBUF_IDX   0x800aca34u
+
+static int part_e(const char *tp, const char *ep)
 {
-    printf("[E] Titel-Einblende gegen den Integrator FUN_80021880\n");
-    /* Nachbau: Pegel u16 @+0, Schritt s16 @+2. Anstoss FUN_800216ec @0x80021710-20: 0x7fff.
-     * Je Durchgang: negativ (Bit 15) -> nichts; sonst Farbe = (s16) Pegel >> 7, dann
-     * Pegel += Schritt (0xfc00 @0x80102058). */
-    uint16_t level = 0x7fff; const uint16_t step = 0xfc00;
-    int same = 0, n = 0, first_zero = -1;
+    printf("[E] Titel-Einblende gegen die ausgefuehrten Bytes (TITLE.BIN 0x80102054-7c, PSX.EXE)\n");
+    int rc = load_title(tp);       /* frisch: Teil A hat die Datenworte 0x2944/46 veraendert */
+    if (rc) return rc;
+    rc = load_exe(ep);
+    if (rc) return rc;
+    static uint8_t stack[STACK_SIZE];
+    memset(stack, 0, sizeof stack);
+    s_seg[SEG_STACK].base = STACK_BASE; s_seg[SEG_STACK].d = stack; s_seg[SEG_STACK].n = STACK_SIZE;
+
+    /* Die Befehlsworte, auf die sich Kommentar und Code stuetzen, genau so in den Dateien? */
+    static const struct { uint32_t a, w; const char *s; } W[] = {
+        { 0x80102054u, 0x34040200u, "ori a0,zero,0x200    (Kanal 0, Art 2 = subtraktiv)" },
+        { 0x80102058u, 0x3405fc00u, "ori a1,zero,0xfc00   (Schritt -0x400)" },
+        { 0x8010205cu, 0x34060007u, "ori a2,zero,0x7      (Masken R|G|B)" },
+        { 0x80102060u, 0x0c0085ecu, "jal 0x800217b0       (Aufbau)" },
+        { 0x80102064u, 0x34070003u, "ori a3,zero,0x3" },
+        { 0x80102078u, 0x0c0085bbu, "jal 0x800216ec       (Anstoss)" },
+        { 0x800217e4u, 0xa6050002u, "sh a1,2(s0)          (Schritt speichern)" },
+        { 0x80021710u, 0x28420001u, "slti v0,v0,1         (Schritt < 1 ?)" },
+        { 0x80021714u, 0x00021023u, "subu v0,zero,v0" },
+        { 0x80021718u, 0x30427fffu, "andi v0,v0,0x7fff    (-> Pegel 0x7fff)" },
+        { 0x80021720u, 0xa4620000u, "sh v0,0(v1)          (Pegel speichern)" },
+        { 0x800218c8u, 0x00021400u, "sll v0,v0,16" },
+        { 0x800218ccu, 0x04400041u, "bltz v0,0x800219d4   (Pegel negativ -> nichts zeichnen)" },
+        { 0x800218d0u, 0x000225c3u, "sra a0,v0,23         (Farbe = Pegel >> 7)" },
+        { 0x80021928u, 0x00431021u, "addu v0,v0,v1        (Pegel += Schritt, NACH der Farbe)" },
+        { 0x80020f44u, 0x0c008620u, "jal 0x80021880       (Hauptschleife: 1 Takt je Durchgang)" },
+    };
+    int words_ok = 0;
+    for (unsigned i = 0; i < sizeof W / sizeof W[0]; i++) {
+        uint32_t got = m32(W[i].a);
+        if (got == W[i].w) words_ok++;
+        else CHECK(0, "@0x%08x = %08x, erwartet %08x (%s)", (unsigned) W[i].a, (unsigned) got, (unsigned) W[i].w, W[i].s);
+    }
+    printf("  %d von %u zitierten Befehlsworten stehen so in TITLE.BIN / PSX.EXE\n", words_ok,
+           (unsigned) (sizeof W / sizeof W[0]));
+
+    /* Titel-Init ausfuehren: 0x80102054 ... bis vor `jal 0x80029ac8` @0x80102080. */
+    memset(R, 0, sizeof R);
+    if (run_until(0x80102054u, 0x80102080u) != 0) return 2;
+    int16_t step0  = (int16_t) m16(FADE_CH0 + 2);
+    uint32_t lvl0  = m16(FADE_CH0);
+    uint32_t mode0 = m8(FADE_CH0 + 4);
+    uint32_t mk_r = m8(FADE_CH0 + 5), mk_g = m8(FADE_CH0 + 6), mk_b = m8(FADE_CH0 + 7);
+    printf("  nach der Titel-Init: Kanal 0 Pegel 0x%04x, Schritt %d, Art %u, Masken %02x/%02x/%02x\n",
+           (unsigned) lvl0, (int) step0, (unsigned) mode0, (unsigned) mk_r, (unsigned) mk_g, (unsigned) mk_b);
+    CHECK(lvl0 == 0x7fffu, "Pegel nach dem Anstoss 0x%04x statt 0x7fff", (unsigned) lvl0);
+    CHECK(step0 == -0x400, "Schritt %d statt -0x400", (int) step0);
+    CHECK(mode0 == 2, "Halbtransparenz-Art %u statt 2 (subtraktiv = re15_render_pc_title_fade_sub)", (unsigned) mode0);
+    CHECK(mk_r == 0xff && mk_g == 0xff && mk_b == 0xff, "Farbmasken nicht 0xff");
+
+    /* Je Durchgang FUN_80021880 ausfuehren und die Farbe des Rechtecks von Kanal 0 lesen. */
+    int same = 0, n = 0, first_zero = -1, rgb_ok = 1;
     for (uint64_t tick = 0; tick < 40; tick++, n++) {
-        int orig;
-        if (level & 0x8000u) orig = 0;
-        else { orig = (int) ((int32_t) ((uint32_t) level << 16) >> 23); level = (uint16_t) (level + step); }
+        memset(R, 0, sizeof R);
+        s_addprim_n = 0;
+        if (run(0x80021880u) != 0) return 2;
+        uint32_t buf  = m8(DBUF_IDX);
+        uint32_t prim = FADE_CH0 + 12u + buf * 16u;          /* AddPrim(ot, a1 = Kanal+12+puf*16) */
+        int drawn = 0;
+        for (int k = 0; k < s_addprim_n; k++) if (s_addprim_a1[k] == prim) drawn = 1;
+        int orig = 0;
+        if (drawn) {
+            uint32_t r = m8(prim + 4), g = m8(prim + 5), b = m8(prim + 6);
+            if (r != b || g != b) rgb_ok = 0;
+            orig = (int) b;
+        }
         int port = re15_title_fadein_level(tick);
         if (orig == port) same++;
-        else printf("  Durchgang %llu: Original %d, Port %d\n", (unsigned long long) tick, orig, port);
+        else printf("  Durchgang %llu: Original %d (%s), Port %d\n", (unsigned long long) tick, orig,
+                    drawn ? "gezeichnet" : "nicht gezeichnet", port);
         if (port == 0 && first_zero < 0) first_zero = (int) tick;
     }
-    printf("  %d von %d Durchgaengen gleich; Einblende fertig ab Durchgang %d = %.1f ms\n", same, n, first_zero,
-           first_zero * 2000.0 * 1000.0 / (double) RE15_TITLE_VBLANK_MILLIHZ);
+    printf("  %d von %d Durchgaengen gleich (Original ausgefuehrt); Einblende fertig ab Durchgang %d = %.1f ms\n",
+           same, n, first_zero, first_zero * 2000.0 * 1000.0 / (double) RE15_TITLE_VBLANK_MILLIHZ);
     CHECK(same == n, "Einblende: %d von %d gleich", same, n);
+    CHECK(rgb_ok, "Original schreibt R, G, B verschieden");
     CHECK(first_zero == 32, "Einblende fertig ab Durchgang %d statt 32", first_zero);
-    CHECK(re15_title_fadein_level(0) == 255 && re15_title_fadein_level(1) == 247 && re15_title_fadein_level(31) == 7,
-          "Einblende-Stufen 0/1/31 = %d/%d/%d statt 255/247/7", re15_title_fadein_level(0),
-          re15_title_fadein_level(1), re15_title_fadein_level(31));
     CHECK(re15_title_fadein_level(1ull << 40) == 0, "Einblende bei grossem Tick nicht 0");
-}
-
-/* ---------------------------------------------------------------- Teil F ------------- */
-static void part_f(void)
-{
-    printf("[F] Gegenprobe: das ALTE Verhalten (1 Schritt je Schleifendurchgang) an Teil D\n");
-    /* alter Stand: render_pc.c zaehlte je Aufruf -> bei 144 Hz 1440 Schritte in 10 s */
-    const uint64_t dauer = 10000000ull, soll = re15_title_tick_count(dauer);
-    uint64_t alt = 0;
-    for (uint64_t t = 0; t <= dauer; t += 6944ull) alt++;
-    printf("  alt bei 144 Hz: %llu Schritte in 10 s, Soll %llu -> der Riegel %s\n", (unsigned long long) alt,
-           (unsigned long long) soll, (alt != soll) ? "FAELLT am alten Stand (gut)" : "ist BLIND");
-    CHECK(alt != soll, "Gegenprobe: der Riegel unterscheidet alt und neu nicht");
+    return 0;
 }
 
 int main(int argc, char **argv)
 {
     const char *tp = (argc > 1) ? argv[1] : RE15_ASSET_PSX_DIR "/BIN/TITLE.BIN";
+    const char *ep = (argc > 2) ? argv[2] : RE15_R30_PSX_EXE;
     int rc = part_a(tp);
     if (rc) return rc;
     part_b();
     part_c();
     part_d();
-    part_e();
-    part_f();
+    rc = part_e(tp, ep);
+    if (rc) return rc;
     printf("\nERGEBNIS: %s\n", s_fail ? "ROT" : "GRUEN");
     return s_fail ? 1 : 0;
 }

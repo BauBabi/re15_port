@@ -8,19 +8,26 @@ target_compile_definitions(probe_r30_titel_blinken_puls PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_R30_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
 
-# --- RIEGEL (Bau Runde 30): Pulsfolge, Tick-Rechnung, Uhr, Einblende.
+# --- RIEGEL 1 (Bau Runde 30): die RECHENBAUSTEINE in engine/src/title_pulse.c.
 #     Teil A fuehrt FUN_801028ec aus den Bytes von BIN/TITLE.BIN aus und stellt jedem der
 #     180 Aufrufe re15_title_pulse_step() gegenueber (Soll 180 von 180 Wertepaaren gleich).
 #     Teil C: T_TICK = 2 VBlanks (DAT_800b5456 := 2 @0x8002130c-14, VSync @0x8002147c-80)
 #     bei 59,826 Hz (psx-spx, NTSC non-interlaced) -> 33431 us = 1 Durchgang,
 #     2005817 us = 60 Durchgaenge = eine Pulsperiode (0x3c @0x80102918).
 #     Teil D: dieselbe Laufzeit, abgetastet mit 20/30/60/144/1000 Hz, ergibt dieselbe
-#     Schrittzahl. Teil E: Titel-Einblende gegen den Integrator FUN_80021880
-#     (Schritt 0xfc00 @0x80102058). Teil F ist die Gegenprobe (alter Stand faellt). ---
+#     Schrittzahl. Teil E: Titel-Einblende gegen die AUSGEFUEHRTEN Bytes — Titel-Init
+#     TITLE.BIN 0x80102054-7c (Schritt `ori a1,zero,0xfc00` @0x80102058) mit FUN_800217b0 /
+#     FUN_800216ec aus PSX.EXE (Pegel 0x7fff @0x80021710-20), dann je Durchgang FUN_80021880
+#     (Farbe = Pegel >> 7 @0x800218c8-d0 vor der Integration @0x80021928).
+#     ⛔ REICHWEITE: bindet nur re15_engine, NICHT platform/pc/main.c / render_pc.c. Nimmt man
+#     die Verdrahtung in main.c zurueck, bleibt dieser Riegel GRUEN — er beweist nicht, dass
+#     das Spiel richtig blinkt. (Eine fruehere Fassung behauptete in einem Teil F "der Riegel
+#     faellt am alten Stand"; Teil F zaehlte aber nur eine for-Schleife. Gestrichen.) ---
 add_executable(test_r30_titel_blinken test_r30_titel_blinken.c)
 target_link_libraries(test_r30_titel_blinken PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r30_titel_blinken PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r30_titel_blinken PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_R30_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
 add_test(NAME r30_titel_blinken COMMAND test_r30_titel_blinken)
 set_tests_properties(r30_titel_blinken PROPERTIES TIMEOUT 60)
