@@ -1,0 +1,530 @@
+INIT 0xe80 ['0x2']
+MAIN 0xea4 ['0xe', '0x7c', '0x80', '0x98', '0x26c', '0x97c', '0x9c6']
+sub04 @0x01110..0x01820 status=ok
+  +0000 @0x01110  22 02 07 01    set
+  +0004 @0x01114  2b 00 0b 00 ff ef    message_on
+  +000A @0x0111A  09    sleep
+  +000B @0x0111B  0a 01 00    sleeping
+  +000E @0x0111E  29 06    cut_chg
+  +0010 @0x01120  2e 01 00    work_set
+  +0013 @0x01123  00    nop
+  +0014 @0x01124  32 00 00 00 30 f8 00 00    pos_set
+  +001C @0x0112C  2e 04 02    work_set
+  +001F @0x0112F  00    nop
+  +0020 @0x01130  32 00 ac 9f 3e f5 c2 d4    pos_set
+  +0028 @0x01138  24 05 00 00    save
+  +002C @0x0113C  24 06 00 00    save
+  +0030 @0x01140  24 07 ac 9f    save
+  +0034 @0x01144  2e 04 03    work_set
+  +0037 @0x01147  00    nop
+  +0038 @0x01148  33 00 00 fc 00 fc 00 04    dir_set
+  +0040 @0x01150  2e 04 04    work_set
+  +0043 @0x01153  00    nop
+  +0044 @0x01154  33 00 00 fc 00 fc 00 04    dir_set
+  +004C @0x0115C  2e 04 05    work_set
+  +004F @0x0115F  00    nop
+  +0050 @0x01160  33 00 00 fc 00 fc 00 04    dir_set
+  +0058 @0x01168  2e 04 06    work_set
+  +005B @0x0116B  00    nop
+  +005C @0x0116C  33 00 00 fc 00 fc 00 04    dir_set
+  +0064 @0x01174  2e 04 07    work_set
+  +0067 @0x01177  00    nop
+  +0068 @0x01178  33 00 00 fc 00 fc 00 04    dir_set
+  +0070 @0x01180  65 01    sce_espr_kill2
+  +0072 @0x01182  65 02    sce_espr_kill2
+  +0074 @0x01184  65 03    sce_espr_kill2
+  +0076 @0x01186  65 04    sce_espr_kill2
+  +0078 @0x01188  65 05    sce_espr_kill2
+  +007A @0x0118A  2b 00 01 00 ff ef    message_on
+  +0080 @0x01190  02    evt_next
+  +0081 @0x01191  00    nop
+  +0082 @0x01192  36 02 0a 01 00 00 9b a0 00 fc f4 d3    se_on
+  +008E @0x0119E  06 00 7c 00    if
+  +0092 @0x011A2  21 0b 1f 00    ck
+  +0096 @0x011A6  2e 04 03    work_set
+  +0099 @0x011A9  00    nop
+  +009A @0x011AA  33 00 00 fc 00 fc 40 06    dir_set
+  +00A2 @0x011B2  25 06 05    copy
+  +00A5 @0x011B5  00    nop
+  +00A6 @0x011B6  25 10 05    copy
+  +00A9 @0x011B9  00    nop
+  +00AA @0x011BA  26 00 00 10 24 00    calc
+  +00B0 @0x011C0  25 05 10    copy
+  +00B3 @0x011C3  00    nop
+  +00B4 @0x011C4  06 00 0c 00    if
+  +00B8 @0x011C8  23 00 05 02 64 00    cmp
+  +00BE @0x011CE  24 05 64 00    save
+  +00C2 @0x011D2  08 00    endif
+  +00C4 @0x011D4  25 10 05    copy
+  +00C7 @0x011D7  00    nop
+  +00C8 @0x011D8  27 01 10 06    calc2
+  +00CC @0x011DC  25 04 10    copy
+  +00CF @0x011DF  00    nop
+  +00D0 @0x011E0  0f 06 36 00    while
+  +00D4 @0x011E4  23 00 04 01 00 00    cmp
+  +00DA @0x011EA  25 10 04    copy
+  +00DD @0x011ED  00    nop
+  +00DE @0x011EE  26 00 01 10 01 00    calc
+  +00E4 @0x011F4  25 04 10    copy
+  +00E7 @0x011F7  00    nop
+  +00E8 @0x011F8  25 10 07    copy
+  +00EB @0x011FB  00    nop
+  +00EC @0x011FC  26 00 00 10 09 00    calc
+  +00F2 @0x01202  25 07 10    copy
+  +00F5 @0x01205  00    nop
+  +00F6 @0x01206  2e 04 02    work_set
+  +00F9 @0x01209  00    nop
+  +00FA @0x0120A  1d 07 02 01    work_copy
+  +00FE @0x0120E  32 00 00 00 3e f5 c2 d4    pos_set
+  +0106 @0x01216  02    evt_next
+  +0107 @0x01217  00    nop
+  +0108 @0x01218  10 00    ewhile
+  +010A @0x0121A  07 00 7a 00    else
+  +010E @0x0121E  2e 04 03    work_set
+  +0111 @0x01221  00    nop
+  +0112 @0x01222  33 00 00 fc 00 fc 03 02    dir_set
+  +011A @0x0122A  25 06 05    copy
+  +011D @0x0122D  00    nop
+  +011E @0x0122E  25 10 05    copy
+  +0121 @0x01231  00    nop
+  +0122 @0x01232  26 00 01 10 0e 00    calc
+  +0128 @0x01238  25 05 10    copy
+  +012B @0x0123B  00    nop
+  +012C @0x0123C  06 00 0c 00    if
+  +0130 @0x01240  23 00 05 04 00 00    cmp
+  +0136 @0x01246  24 05 00 00    save
+  +013A @0x0124A  08 00    endif
+  +013C @0x0124C  25 10 06    copy
+  +013F @0x0124F  00    nop
+  +0140 @0x01250  27 01 10 05    calc2
+  +0144 @0x01254  25 04 10    copy
+  +0147 @0x01257  00    nop
+  +0148 @0x01258  0f 06 36 00    while
+  +014C @0x0125C  23 00 04 01 00 00    cmp
+  +0152 @0x01262  25 10 04    copy
+  +0155 @0x01265  00    nop
+  +0156 @0x01266  26 00 01 10 01 00    calc
+  +015C @0x0126C  25 04 10    copy
+  +015F @0x0126F  00    nop
+  +0160 @0x01270  25 10 07    copy
+  +0163 @0x01273  00    nop
+  +0164 @0x01274  26 00 01 10 09 00    calc
+  +016A @0x0127A  25 07 10    copy
+  +016D @0x0127D  00    nop
+  +016E @0x0127E  2e 04 02    work_set
+  +0171 @0x01281  00    nop
+  +0172 @0x01282  1d 07 02 01    work_copy
+  +0176 @0x01286  32 00 00 00 3e f5 c2 d4    pos_set
+  +017E @0x0128E  02    evt_next
+  +017F @0x0128F  00    nop
+  +0180 @0x01290  10 00    ewhile
+  +0182 @0x01292  00    nop
+  +0183 @0x01293  00    nop
+  +0184 @0x01294  64 01 16 02 00 00 ba 02 c2 a0 ce f5 c2 d4 00 00    sce_espr_on2
+  +0194 @0x012A4  09    sleep
+  +0195 @0x012A5  0a 1e 00    sleeping
+  +0198 @0x012A8  2b 00 02 00 ff ef    message_on
+  +019E @0x012AE  02    evt_next
+  +019F @0x012AF  00    nop
+  +01A0 @0x012B0  36 02 0a 01 00 00 9b a0 00 fc f4 d3    se_on
+  +01AC @0x012BC  06 00 7c 00    if
+  +01B0 @0x012C0  21 0b 1f 00    ck
+  +01B4 @0x012C4  2e 04 04    work_set
+  +01B7 @0x012C7  00    nop
+  +01B8 @0x012C8  33 00 00 fc 00 fc 40 06    dir_set
+  +01C0 @0x012D0  25 06 05    copy
+  +01C3 @0x012D3  00    nop
+  +01C4 @0x012D4  25 10 05    copy
+  +01C7 @0x012D7  00    nop
+  +01C8 @0x012D8  26 00 00 10 24 00    calc
+  +01CE @0x012DE  25 05 10    copy
+  +01D1 @0x012E1  00    nop
+  +01D2 @0x012E2  06 00 0c 00    if
+  +01D6 @0x012E6  23 00 05 02 64 00    cmp
+  +01DC @0x012EC  24 05 64 00    save
+  +01E0 @0x012F0  08 00    endif
+  +01E2 @0x012F2  25 10 05    copy
+  +01E5 @0x012F5  00    nop
+  +01E6 @0x012F6  27 01 10 06    calc2
+  +01EA @0x012FA  25 04 10    copy
+  +01ED @0x012FD  00    nop
+  +01EE @0x012FE  0f 06 36 00    while
+  +01F2 @0x01302  23 00 04 01 00 00    cmp
+  +01F8 @0x01308  25 10 04    copy
+  +01FB @0x0130B  00    nop
+  +01FC @0x0130C  26 00 01 10 01 00    calc
+  +0202 @0x01312  25 04 10    copy
+  +0205 @0x01315  00    nop
+  +0206 @0x01316  25 10 07    copy
+  +0209 @0x01319  00    nop
+  +020A @0x0131A  26 00 00 10 09 00    calc
+  +0210 @0x01320  25 07 10    copy
+  +0213 @0x01323  00    nop
+  +0214 @0x01324  2e 04 02    work_set
+  +0217 @0x01327  00    nop
+  +0218 @0x01328  1d 07 02 01    work_copy
+  +021C @0x0132C  32 00 00 00 3e f5 c2 d4    pos_set
+  +0224 @0x01334  02    evt_next
+  +0225 @0x01335  00    nop
+  +0226 @0x01336  10 00    ewhile
+  +0228 @0x01338  07 00 7a 00    else
+  +022C @0x0133C  2e 04 04    work_set
+  +022F @0x0133F  00    nop
+  +0230 @0x01340  33 00 00 fc 00 fc 03 02    dir_set
+  +0238 @0x01348  25 06 05    copy
+  +023B @0x0134B  00    nop
+  +023C @0x0134C  25 10 05    copy
+  +023F @0x0134F  00    nop
+  +0240 @0x01350  26 00 01 10 0e 00    calc
+  +0246 @0x01356  25 05 10    copy
+  +0249 @0x01359  00    nop
+  +024A @0x0135A  06 00 0c 00    if
+  +024E @0x0135E  23 00 05 04 00 00    cmp
+  +0254 @0x01364  24 05 00 00    save
+  +0258 @0x01368  08 00    endif
+  +025A @0x0136A  25 10 06    copy
+  +025D @0x0136D  00    nop
+  +025E @0x0136E  27 01 10 05    calc2
+  +0262 @0x01372  25 04 10    copy
+  +0265 @0x01375  00    nop
+  +0266 @0x01376  0f 06 36 00    while
+  +026A @0x0137A  23 00 04 01 00 00    cmp
+  +0270 @0x01380  25 10 04    copy
+  +0273 @0x01383  00    nop
+  +0274 @0x01384  26 00 01 10 01 00    calc
+  +027A @0x0138A  25 04 10    copy
+  +027D @0x0138D  00    nop
+  +027E @0x0138E  25 10 07    copy
+  +0281 @0x01391  00    nop
+  +0282 @0x01392  26 00 01 10 09 00    calc
+  +0288 @0x01398  25 07 10    copy
+  +028B @0x0139B  00    nop
+  +028C @0x0139C  2e 04 02    work_set
+  +028F @0x0139F  00    nop
+  +0290 @0x013A0  1d 07 02 01    work_copy
+  +0294 @0x013A4  32 00 00 00 3e f5 c2 d4    pos_set
+  +029C @0x013AC  02    evt_next
+  +029D @0x013AD  00    nop
+  +029E @0x013AE  10 00    ewhile
+  +02A0 @0x013B0  00    nop
+  +02A1 @0x013B1  00    nop
+  +02A2 @0x013B2  64 02 16 02 00 00 ba 02 14 a1 ce f5 c2 d4 00 00    sce_espr_on2
+  +02B2 @0x013C2  09    sleep
+  +02B3 @0x013C3  0a 1e 00    sleeping
+  +02B6 @0x013C6  2b 00 03 00 ff ef    message_on
+  +02BC @0x013CC  02    evt_next
+  +02BD @0x013CD  00    nop
+  +02BE @0x013CE  36 02 0a 01 00 00 9b a0 00 fc f4 d3    se_on
+  +02CA @0x013DA  06 00 7c 00    if
+  +02CE @0x013DE  21 0b 1f 00    ck
+  +02D2 @0x013E2  2e 04 05    work_set
+  +02D5 @0x013E5  00    nop
+  +02D6 @0x013E6  33 00 00 fc 00 fc 40 06    dir_set
+  +02DE @0x013EE  25 06 05    copy
+  +02E1 @0x013F1  00    nop
+  +02E2 @0x013F2  25 10 05    copy
+  +02E5 @0x013F5  00    nop
+  +02E6 @0x013F6  26 00 00 10 24 00    calc
+  +02EC @0x013FC  25 05 10    copy
+  +02EF @0x013FF  00    nop
+  +02F0 @0x01400  06 00 0c 00    if
+  +02F4 @0x01404  23 00 05 02 64 00    cmp
+  +02FA @0x0140A  24 05 64 00    save
+  +02FE @0x0140E  08 00    endif
+  +0300 @0x01410  25 10 05    copy
+  +0303 @0x01413  00    nop
+  +0304 @0x01414  27 01 10 06    calc2
+  +0308 @0x01418  25 04 10    copy
+  +030B @0x0141B  00    nop
+  +030C @0x0141C  0f 06 36 00    while
+  +0310 @0x01420  23 00 04 01 00 00    cmp
+  +0316 @0x01426  25 10 04    copy
+  +0319 @0x01429  00    nop
+  +031A @0x0142A  26 00 01 10 01 00    calc
+  +0320 @0x01430  25 04 10    copy
+  +0323 @0x01433  00    nop
+  +0324 @0x01434  25 10 07    copy
+  +0327 @0x01437  00    nop
+  +0328 @0x01438  26 00 00 10 09 00    calc
+  +032E @0x0143E  25 07 10    copy
+  +0331 @0x01441  00    nop
+  +0332 @0x01442  2e 04 02    work_set
+  +0335 @0x01445  00    nop
+  +0336 @0x01446  1d 07 02 01    work_copy
+  +033A @0x0144A  32 00 00 00 3e f5 c2 d4    pos_set
+  +0342 @0x01452  02    evt_next
+  +0343 @0x01453  00    nop
+  +0344 @0x01454  10 00    ewhile
+  +0346 @0x01456  07 00 7a 00    else
+  +034A @0x0145A  2e 04 05    work_set
+  +034D @0x0145D  00    nop
+  +034E @0x0145E  33 00 00 fc 00 fc 03 02    dir_set
+  +0356 @0x01466  25 06 05    copy
+  +0359 @0x01469  00    nop
+  +035A @0x0146A  25 10 05    copy
+  +035D @0x0146D  00    nop
+  +035E @0x0146E  26 00 01 10 0e 00    calc
+  +0364 @0x01474  25 05 10    copy
+  +0367 @0x01477  00    nop
+  +0368 @0x01478  06 00 0c 00    if
+  +036C @0x0147C  23 00 05 04 00 00    cmp
+  +0372 @0x01482  24 05 00 00    save
+  +0376 @0x01486  08 00    endif
+  +0378 @0x01488  25 10 06    copy
+  +037B @0x0148B  00    nop
+  +037C @0x0148C  27 01 10 05    calc2
+  +0380 @0x01490  25 04 10    copy
+  +0383 @0x01493  00    nop
+  +0384 @0x01494  0f 06 36 00    while
+  +0388 @0x01498  23 00 04 01 00 00    cmp
+  +038E @0x0149E  25 10 04    copy
+  +0391 @0x014A1  00    nop
+  +0392 @0x014A2  26 00 01 10 01 00    calc
+  +0398 @0x014A8  25 04 10    copy
+  +039B @0x014AB  00    nop
+  +039C @0x014AC  25 10 07    copy
+  +039F @0x014AF  00    nop
+  +03A0 @0x014B0  26 00 01 10 09 00    calc
+  +03A6 @0x014B6  25 07 10    copy
+  +03A9 @0x014B9  00    nop
+  +03AA @0x014BA  2e 04 02    work_set
+  +03AD @0x014BD  00    nop
+  +03AE @0x014BE  1d 07 02 01    work_copy
+  +03B2 @0x014C2  32 00 00 00 3e f5 c2 d4    pos_set
+  +03BA @0x014CA  02    evt_next
+  +03BB @0x014CB  00    nop
+  +03BC @0x014CC  10 00    ewhile
+  +03BE @0x014CE  00    nop
+  +03BF @0x014CF  00    nop
+  +03C0 @0x014D0  64 03 16 02 00 00 ba 02 6e a1 ce f5 c2 d4 00 00    sce_espr_on2
+  +03D0 @0x014E0  09    sleep
+  +03D1 @0x014E1  0a 1e 00    sleeping
+  +03D4 @0x014E4  2b 00 04 00 ff ef    message_on
+  +03DA @0x014EA  02    evt_next
+  +03DB @0x014EB  00    nop
+  +03DC @0x014EC  36 02 0a 01 00 00 9b a0 00 fc f4 d3    se_on
+  +03E8 @0x014F8  06 00 7c 00    if
+  +03EC @0x014FC  21 0b 1f 00    ck
+  +03F0 @0x01500  2e 04 06    work_set
+  +03F3 @0x01503  00    nop
+  +03F4 @0x01504  33 00 00 fc 00 fc 40 06    dir_set
+  +03FC @0x0150C  25 06 05    copy
+  +03FF @0x0150F  00    nop
+  +0400 @0x01510  25 10 05    copy
+  +0403 @0x01513  00    nop
+  +0404 @0x01514  26 00 00 10 24 00    calc
+  +040A @0x0151A  25 05 10    copy
+  +040D @0x0151D  00    nop
+  +040E @0x0151E  06 00 0c 00    if
+  +0412 @0x01522  23 00 05 02 64 00    cmp
+  +0418 @0x01528  24 05 64 00    save
+  +041C @0x0152C  08 00    endif
+  +041E @0x0152E  25 10 05    copy
+  +0421 @0x01531  00    nop
+  +0422 @0x01532  27 01 10 06    calc2
+  +0426 @0x01536  25 04 10    copy
+  +0429 @0x01539  00    nop
+  +042A @0x0153A  0f 06 36 00    while
+  +042E @0x0153E  23 00 04 01 00 00    cmp
+  +0434 @0x01544  25 10 04    copy
+  +0437 @0x01547  00    nop
+  +0438 @0x01548  26 00 01 10 01 00    calc
+  +043E @0x0154E  25 04 10    copy
+  +0441 @0x01551  00    nop
+  +0442 @0x01552  25 10 07    copy
+  +0445 @0x01555  00    nop
+  +0446 @0x01556  26 00 00 10 09 00    calc
+  +044C @0x0155C  25 07 10    copy
+  +044F @0x0155F  00    nop
+  +0450 @0x01560  2e 04 02    work_set
+  +0453 @0x01563  00    nop
+  +0454 @0x01564  1d 07 02 01    work_copy
+  +0458 @0x01568  32 00 00 00 3e f5 c2 d4    pos_set
+  +0460 @0x01570  02    evt_next
+  +0461 @0x01571  00    nop
+  +0462 @0x01572  10 00    ewhile
+  +0464 @0x01574  07 00 7a 00    else
+  +0468 @0x01578  2e 04 06    work_set
+  +046B @0x0157B  00    nop
+  +046C @0x0157C  33 00 00 fc 00 fc 03 02    dir_set
+  +0474 @0x01584  25 06 05    copy
+  +0477 @0x01587  00    nop
+  +0478 @0x01588  25 10 05    copy
+  +047B @0x0158B  00    nop
+  +047C @0x0158C  26 00 01 10 0e 00    calc
+  +0482 @0x01592  25 05 10    copy
+  +0485 @0x01595  00    nop
+  +0486 @0x01596  06 00 0c 00    if
+  +048A @0x0159A  23 00 05 04 00 00    cmp
+  +0490 @0x015A0  24 05 00 00    save
+  +0494 @0x015A4  08 00    endif
+  +0496 @0x015A6  25 10 06    copy
+  +0499 @0x015A9  00    nop
+  +049A @0x015AA  27 01 10 05    calc2
+  +049E @0x015AE  25 04 10    copy
+  +04A1 @0x015B1  00    nop
+  +04A2 @0x015B2  0f 06 36 00    while
+  +04A6 @0x015B6  23 00 04 01 00 00    cmp
+  +04AC @0x015BC  25 10 04    copy
+  +04AF @0x015BF  00    nop
+  +04B0 @0x015C0  26 00 01 10 01 00    calc
+  +04B6 @0x015C6  25 04 10    copy
+  +04B9 @0x015C9  00    nop
+  +04BA @0x015CA  25 10 07    copy
+  +04BD @0x015CD  00    nop
+  +04BE @0x015CE  26 00 01 10 09 00    calc
+  +04C4 @0x015D4  25 07 10    copy
+  +04C7 @0x015D7  00    nop
+  +04C8 @0x015D8  2e 04 02    work_set
+  +04CB @0x015DB  00    nop
+  +04CC @0x015DC  1d 07 02 01    work_copy
+  +04D0 @0x015E0  32 00 00 00 3e f5 c2 d4    pos_set
+  +04D8 @0x015E8  02    evt_next
+  +04D9 @0x015E9  00    nop
+  +04DA @0x015EA  10 00    ewhile
+  +04DC @0x015EC  00    nop
+  +04DD @0x015ED  00    nop
+  +04DE @0x015EE  64 04 16 02 00 00 ba 02 c8 a1 ce f5 c2 d4 00 00    sce_espr_on2
+  +04EE @0x015FE  09    sleep
+  +04EF @0x015FF  0a 1e 00    sleeping
+  +04F2 @0x01602  2b 00 05 00 ff ef    message_on
+  +04F8 @0x01608  02    evt_next
+  +04F9 @0x01609  00    nop
+  +04FA @0x0160A  36 02 0a 01 00 00 9b a0 00 fc f4 d3    se_on
+  +0506 @0x01616  06 00 7c 00    if
+  +050A @0x0161A  21 0b 1f 00    ck
+  +050E @0x0161E  2e 04 07    work_set
+  +0511 @0x01621  00    nop
+  +0512 @0x01622  33 00 00 fc 00 fc 40 06    dir_set
+  +051A @0x0162A  25 06 05    copy
+  +051D @0x0162D  00    nop
+  +051E @0x0162E  25 10 05    copy
+  +0521 @0x01631  00    nop
+  +0522 @0x01632  26 00 00 10 24 00    calc
+  +0528 @0x01638  25 05 10    copy
+  +052B @0x0163B  00    nop
+  +052C @0x0163C  06 00 0c 00    if
+  +0530 @0x01640  23 00 05 02 64 00    cmp
+  +0536 @0x01646  24 05 64 00    save
+  +053A @0x0164A  08 00    endif
+  +053C @0x0164C  25 10 05    copy
+  +053F @0x0164F  00    nop
+  +0540 @0x01650  27 01 10 06    calc2
+  +0544 @0x01654  25 04 10    copy
+  +0547 @0x01657  00    nop
+  +0548 @0x01658  0f 06 36 00    while
+  +054C @0x0165C  23 00 04 01 00 00    cmp
+  +0552 @0x01662  25 10 04    copy
+  +0555 @0x01665  00    nop
+  +0556 @0x01666  26 00 01 10 01 00    calc
+  +055C @0x0166C  25 04 10    copy
+  +055F @0x0166F  00    nop
+  +0560 @0x01670  25 10 07    copy
+  +0563 @0x01673  00    nop
+  +0564 @0x01674  26 00 00 10 09 00    calc
+  +056A @0x0167A  25 07 10    copy
+  +056D @0x0167D  00    nop
+  +056E @0x0167E  2e 04 02    work_set
+  +0571 @0x01681  00    nop
+  +0572 @0x01682  1d 07 02 01    work_copy
+  +0576 @0x01686  32 00 00 00 3e f5 c2 d4    pos_set
+  +057E @0x0168E  02    evt_next
+  +057F @0x0168F  00    nop
+  +0580 @0x01690  10 00    ewhile
+  +0582 @0x01692  07 00 7a 00    else
+  +0586 @0x01696  2e 04 07    work_set
+  +0589 @0x01699  00    nop
+  +058A @0x0169A  33 00 00 fc 00 fc 03 02    dir_set
+  +0592 @0x016A2  25 06 05    copy
+  +0595 @0x016A5  00    nop
+  +0596 @0x016A6  25 10 05    copy
+  +0599 @0x016A9  00    nop
+  +059A @0x016AA  26 00 01 10 0e 00    calc
+  +05A0 @0x016B0  25 05 10    copy
+  +05A3 @0x016B3  00    nop
+  +05A4 @0x016B4  06 00 0c 00    if
+  +05A8 @0x016B8  23 00 05 04 00 00    cmp
+  +05AE @0x016BE  24 05 00 00    save
+  +05B2 @0x016C2  08 00    endif
+  +05B4 @0x016C4  25 10 06    copy
+  +05B7 @0x016C7  00    nop
+  +05B8 @0x016C8  27 01 10 05    calc2
+  +05BC @0x016CC  25 04 10    copy
+  +05BF @0x016CF  00    nop
+  +05C0 @0x016D0  0f 06 36 00    while
+  +05C4 @0x016D4  23 00 04 01 00 00    cmp
+  +05CA @0x016DA  25 10 04    copy
+  +05CD @0x016DD  00    nop
+  +05CE @0x016DE  26 00 01 10 01 00    calc
+  +05D4 @0x016E4  25 04 10    copy
+  +05D7 @0x016E7  00    nop
+  +05D8 @0x016E8  25 10 07    copy
+  +05DB @0x016EB  00    nop
+  +05DC @0x016EC  26 00 01 10 09 00    calc
+  +05E2 @0x016F2  25 07 10    copy
+  +05E5 @0x016F5  00    nop
+  +05E6 @0x016F6  2e 04 02    work_set
+  +05E9 @0x016F9  00    nop
+  +05EA @0x016FA  1d 07 02 01    work_copy
+  +05EE @0x016FE  32 00 00 00 3e f5 c2 d4    pos_set
+  +05F6 @0x01706  02    evt_next
+  +05F7 @0x01707  00    nop
+  +05F8 @0x01708  10 00    ewhile
+  +05FA @0x0170A  00    nop
+  +05FB @0x0170B  00    nop
+  +05FC @0x0170C  64 05 16 02 00 00 ba 02 22 a2 ce f5 c2 d4 00 00    sce_espr_on2
+  +060C @0x0171C  09    sleep
+  +060D @0x0171D  0a 1e 00    sleeping
+  +0610 @0x01720  2e 01 00    work_set
+  +0613 @0x01723  00    nop
+  +0614 @0x01724  32 00 5b a0 00 00 ae d3    pos_set
+  +061C @0x0172C  29 04    cut_chg
+  +061E @0x0172E  06 00 1c 00    if
+  +0622 @0x01732  23 00 05 00 64 00    cmp
+  +0628 @0x01738  2b 00 06 00 ff ff    message_on
+  +062E @0x0173E  36 02 0b 01 00 00 9b a0 00 fc f4 d3    se_on
+  +063A @0x0174A  07 00 c6 00    else
+  +063E @0x0174E  06 00 80 00    if
+  +0642 @0x01752  23 00 05 00 50 00    cmp
+  +0648 @0x01758  2b 00 07 00 ff ff    message_on
+  +064E @0x0175E  22 04 3c 01    set
+  +0652 @0x01762  36 02 0c 01 00 00 9b a0 00 fc f4 d3    se_on
+  +065E @0x0176E  09    sleep
+  +065F @0x0176F  0a 14 00    sleeping
+  +0662 @0x01772  29 08    cut_chg
+  +0664 @0x01774  64 0b 16 00 00 00 b4 0b 2c a2 88 f5 96 ce 00 00    sce_espr_on2
+  +0674 @0x01784  64 0c 16 00 00 00 b4 0b 1c a3 88 f5 96 ce 00 00    sce_espr_on2
+  +0684 @0x01794  09    sleep
+  +0685 @0x01795  0a 1e 00    sleeping
+  +0688 @0x01798  36 02 0f 01 00 00 9b a0 00 fc f4 d3    se_on
+  +0694 @0x017A4  65 0b    sce_espr_kill2
+  +0696 @0x017A6  65 0c    sce_espr_kill2
+  +0698 @0x017A8  64 0d 16 10 00 00 b4 0b 2c a2 88 f5 96 ce 00 00    sce_espr_on2
+  +06A8 @0x017B8  64 0e 16 10 00 00 b4 0b 1c a3 88 f5 96 ce 00 00    sce_espr_on2
+  +06B8 @0x017C8  09    sleep
+  +06B9 @0x017C9  0a 1e 00    sleeping
+  +06BC @0x017CC  29 04    cut_chg
+  +06BE @0x017CE  07 00 40 00    else
+  +06C2 @0x017D2  06 00 0e 00    if
+  +06C6 @0x017D6  23 00 05 00 00 00    cmp
+  +06CC @0x017DC  2b 00 09 00 ff ff    message_on
+  +06D2 @0x017E2  08 00    endif
+  +06D4 @0x017E4  06 00 10 00    if
+  +06D8 @0x017E8  23 00 05 01 50 00    cmp
+  +06DE @0x017EE  2b 00 06 00 ff ff    message_on
+  +06E4 @0x017F4  07 00 0c 00    else
+  +06E8 @0x017F8  2b 00 08 00 ff ff    message_on
+  +06EE @0x017FE  00    nop
+  +06EF @0x017FF  00    nop
+  +06F0 @0x01800  36 02 0b 01 00 00 9b a0 00 fc f4 d3    se_on
+  +06FC @0x0180C  00    nop
+  +06FD @0x0180D  00    nop
+  +06FE @0x0180E  00    nop
+  +06FF @0x0180F  00    nop
+  +0700 @0x01810  09    sleep
+  +0701 @0x01811  0a 01 00    sleeping
+  +0704 @0x01814  65 0d    sce_espr_kill2
+  +0706 @0x01816  65 0e    sce_espr_kill2
+  +0708 @0x01818  22 02 07 00    set
+  +070C @0x0181C  3c 01    cut_auto
+  +070E @0x0181E  01 00    evt_end
