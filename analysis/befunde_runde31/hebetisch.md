@@ -165,6 +165,22 @@ sub04 ROOM1150.RDT, linear dekodiert (Laengen aus der 95er-Tabelle, Skill scd-di
 0x1042 For        0d 00 04 00 5a 00   90 x { 0x1048 Add_speed 30 ; ... }   <- Abfahrt
 ```
 
+Selbst disassembliert (`re15_disasm.py`, Opcode-Tabelle @0x800744a8):
+
+```
+[0x2F] Speed_set -> 0x80040f14:  80040f1c lbu v1,1(v0) (Achse) / 80040f20 lhu a1,2(v0) (Wert)
+                                 80040f24 addiu v0,v0,4 (PC+4) / 80040f3c sh a1,344(v1)
+                                 -> NUR Thread+0x158+2*Achse, das Objekt bleibt stehen
+[0x30] Add_speed -> 0x80040f40:  80040f40 lw a1,340(a0) (Arbeits-Objekt) / 80040f44 lh v0,344(a0)
+                                 80040f48 lw v1,52(a1) / 80040f50 addu / 80040f54 sw v0,52(a1) ...
+                                 -> Objekt-Lage += Thread-Geschwindigkeit (x/y/z, dann Drehung)
+[0x09] Sleep     -> 0x8003f3e0:  8003f3e8 addiu v0,a2,1 / 8003f3f8 sw v0,28(a0) (PC+1)
+                                 8003f414 lhu a0,2(a2) (Dauer) / 8003f424 ori v0,zero,0x1
+[0x0A] Sleeping  -> 0x8003f428:  8003f454 addiu v0,v0,-1 (Zaehler-1) / 8003f460 bne -> 0x8003f488
+                                 bei 0: 8003f470 addiu v0,v0,3 (PC+3) ; 8003f48c ori v0,zero,0x2
+                                 -> gibt IMMER 2 zurueck = Yield, auch im letzten Durchlauf
+```
+
 Nur `Add_speed` (0x30) bewegt die Plattform. Zwischen dem letzten Add_speed des Setzens
 (@0x1016, 10. Durchlauf) und dem ersten der Abfahrt (@0x1048) steht keins: solange der
 sub04-Thread seinen PC in [@0x101A, @0x1042) hat, RUHT die Plattform auf -1205.
@@ -305,5 +321,81 @@ Der erste Lauf mit `RE15_WINDOW_SCALE=3` endete mit rc=1 und 0 Bildern (debug.lo
 F150 ab, ohne Fehlermeldung); die Wiederholung lief sauber (41 Bilder bis EXIT_AT 402). Parallel
 lief eine Docker-Bau-Sitzung — als Last-Flattern gewertet, nicht als Befund.
 ## 4. Riegel/Tests nachgezogen
+
+**Neu `unit_r31_hebetisch`** (`tests/unit/probe_r31_hebetisch.c`, `probes/r31_hebetisch.cmake`),
+13 Pruefungen je ROOM1150 und ROOM1151 (Ausgabe `hebetisch_belege/unit_r31_hebetisch.txt`,
+ALLES BESTANDEN):
+
+| # | prueft | gemessen (1150 = 1151) |
+|---|---|---|
+| 1 | Ruhe-Fenster aus den RDT-Bytes, Sleep 30 am Beginn, Setzen-For 10 davor, Abfahrt-For am Ende | [0x101A,0x1042) / [0x0FF8,0x1020) |
+| 2 | beide liegen auf (tiefster Punkt -1036) | S -1036,0 / G -1036,0 |
+| 3 | Luft unter der geschlossenen Kuppel > 0 | S 6,06 / G 5,88 |
+| 4 | Luft unter den offenen Deckeln > 0 (Deckelweg aus den Bytes @0x0FC0 = 150) | S 46,87 / G 34,02 |
+| 5 | Grundriss im Achteck | 0 Proben draussen |
+| 6 | kein Durchdringen | Abstand 7,11 |
+| 7 | Cut 4 (Engine-Kamera): Granate links, Sicherung rechts | Start 191,7 / 213,9; oben 197,7 / 224,0 |
+| 8 | Sicherungs-Aufnahme im ersten Ruhebild | Bild 156, y -1206 -> -1205 -> -1205, PC Sleep+1 |
+| 9 | Granaten-Aufnahme danach in der Ruhe | Bild 228, y -1205 |
+| 10 | jedes Bild mit Aufnahme bei -1205 | 160 von 160 |
+| 11 | 40 Ruhebilder ohne Aufnahme (Sleep 30 + Sleep 10), dann Abfahrt | 40, Abfahrt Bild 354 |
+| 12 | Yes/Yes: Flags, Props weg, Inventar | ja |
+| 13 | Negativ-Kontrolle ROOM1140: kein Fenster | -1 / -1, ruht_oben 0 |
+
+(Die Engine-Rechnung in 7 nimmt alle Proben, nicht nur die sichtbaren; die GEMESSENEN
+Schwerpunkte stehen in 1.3.)
+
+**Mutationsproben** (Quelle geaendert, Ziele gebaut, gefahren, per `git checkout` zurueck):
+
+| Mutation | Ergebnis |
+|---|---|
+| M1: alte y-Schranke `if (py > -1100) return 0;` statt `re15_hebetisch_ruht_oben()` (beide Ticks) | unit_r31_hebetisch 8/9/10/11 ROT (Sicherung Bild 134 y -1105, Granate y -1115, 160 von 160 Aufnahme-Bildern NICHT auf -1205, 0 Ruhebilder); unit_r30_granate 8 ROT; unit_r30_sicherung_nein 2 ROT |
+| M2: Sitze an der Naht gespiegelt (Sicherung z 1240 rot_y 2656, Granate z 1380 rot_y 2304) | NUR unit_r31_hebetisch 7 ROT (Granate 228,1 rechts von Sicherung 206,0 — Geometrie symmetrisch, 2..6 gruen); unit_r30_granate 7 ROT; unit_r30_sicherung_sitz "POS_Z rechts der Naht" ROT |
+
+**Bewusst nachgezogen** (die alten Zahlen beschrieben den Runde-30-Entwurf, nicht das Original):
+
+* `unit_r30_granate`: 4 "3 unter dem Boden" -> "auf dem Boden -1036"; 5 Sicherungs-Zylinder um die
+  gedrehte Achse statt fest bei x=-280/z 1057..1463; 7 "ganz in der Oeffnung" -> "links der
+  Sicherung, Mitte in der Oeffnung" (die Granate liegt mit 35 unter dem linken Deckel);
+  8 `oben()` = y == -1205 statt Fenster (-5000,-1100].
+* `unit_r30_sicherung_sitz`: "POS_Z = Mitte" und "auf der Naht" -> "rechts der Naht"; "Achse genau
+  auf z" -> "naeher an z als an x". POS_X-Mitte, POS_Y = Boden - Radius, Deckelweg 150, "Mitte in
+  der Oeffnung" bleiben.
+* `unit_r30_sicherung_nein` 2: y == -1205 statt Fenster (-5000,-1100].
+* `integration_r30_sicherung_laden` / `integration_r30_granate_laden`: `RE15_EXIT_AT` 250 -> 280;
+  das Modal zeichnet jetzt ab Bild 248 (vorher 226) — mit 250 stand die Pruefzeile nur 2 Bilder
+  vor dem Ende.
+* `RE15_MIN_TESTS` 405 -> 406 (`tools/local_build.sh` Z. 63 und 320/321).
+
 ## 5. Suite / Commits
+
+* 4ada307e wip: Dossier + Planungswerkzeuge
+* 424177f2 wip: Spielcode (Ruhe-Fenster, Sitze) + Messungen
+* a380704a test: unit_r31_hebetisch, r30-Riegel nachgezogen, RE15_MIN_TESTS 406
+
 ## 6. Offen
+
+* **Port friert auch im Aufnahme-Zustand 8 ein, das Original nicht.** Nach "No"/voll schrumpft
+  das Bild 17 Bilder weg (@0x8001e154); im Original laeuft das Skript da schon wieder (Freeze
+  aufgehoben beim Bestaetigen, @0x800285a4, Schnappschuss aus Zustand 5 ohne oberes Halbwort
+  @0x8001df3c). Der Port haelt `scd_vm_tick` an, solange `re15_item_modal_active()` (Zustand != 0).
+  Allgemeine Abweichung fuer JEDE abgelehnte Aufnahme im Spiel — nicht Teil dieses Auftrags, nicht
+  geaendert. Fuer den Hebetisch folgenlos: auch mit 17 laufenden Skriptbildern bliebe die Ruhe
+  oben (40 Skriptbilder) ueber beide Dialoge erhalten.
+* **Mess-Variante** `tests/unit/probe_r30_sicherung_variante.c` (nur mit
+  `-DRE15_R30_SICHERUNG_VARIANTE=ON`, Standard AUS, nicht Teil der Suite) traegt in ihrem eigenen
+  `re15_sicherung_tick` weiter die alte y-Schranke -1100. Linkt weiter (kein neues Symbol in
+  `sicherung_1150.c`), wuerde aber das alte Zeitverhalten messen — vor Gebrauch nachziehen.
+* **Teilweise verdeckt, geometrisch erzwungen:** die Sicherung verschwindet mit gut der Haelfte
+  ihrer Laenge unter dem rechten Deckel (auch in Runde 30 lagen ihre Enden unter beiden Deckeln);
+  von der Granate liegen 35 Einheiten unter dem linken Deckel. Ganz in die Oeffnung passen beide
+  nebeneinander nicht (1.1).
+* **PSX-Ziel:** wie Runde 30 — kein Lader fuer die Zusatz-Props; das Ruhe-Fenster
+  (`hebetisch_1150.c`) ist Engine-Code und gilt dort mit. **Android:** neue Quelldatei
+  `engine/src/hebetisch_1150.c` -> frischer Configure noetig (GLOB-Cache, Memory
+  `android-glob-cache`).
+* **Sitz, Drehung und Zeitpunkt** sind PORT-WAHL ohne Original-Adresse (das Original hat im
+  Hebetisch keine Beute). Belegt sind Geometrie-Bytes, Skript-Zustand und Freeze-Mechanik.
+* **Nicht gemessen:** Elza-Durchlauf am Tuerweg in ROOM1151 (1151 nur ueber CONTINUE und im
+  Engine-Riegel); "Inventar voll" im neuen Zeitpunkt (Engine-Riegel `unit_r30_sicherung_nein`
+  Fall C deckt ihn, gruen).
