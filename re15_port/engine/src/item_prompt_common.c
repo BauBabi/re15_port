@@ -39,6 +39,7 @@
  * (0x10) ist zugleich das Ende der Tabelle selbst = 8 Eintraege.
  */
 #include "re15_item_prompt.h"
+#include "re15_files.h"       /* Runde 30: Dokument-Namen ab Item-Id 0x48 (Dokument-Tabelle) */
 #include "gen/item_prompt_data.inc"
 
 /* Port-Prompt-Schluessel -> BSS-Skriptindex. Die Zuordnung der vier bisher genutzten
@@ -145,6 +146,30 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
         if (b == 0x08) { if (cb && total < max_glyphs) cb(ctx, 0, attr, 1); continue; }  /* newline */
         if (b == 0x06) {                            /* insert the item name (blob until 0x07) */
             i++;                                    /* skip the operand */
+            /* ⛔ RUNDE 30 — DOKUMENT-NAME AUS DER DOKUMENT-TABELLE (Laufzeit-Ersetzung,
+             * die erzeugte Tabelle gen/item_prompt_data.inc bleibt byte-gleich mit
+             * DEBUG.BIN). Ab Id 0x48 fuehrt RE1.5s Namensbank die 30 vorinstallierten
+             * FILE-Zeilen (Basis-Id u8 @0x800c7370 = 0x48); unter 0x48 selbst steht
+             * "Chris' Diary" (@0x800c4e04, `1f 44 4e 45 4f 3a 00 20 45 3d 4e 55 07`).
+             * Diese Namen gehoeren zu keinem aufhebbaren Dokument und sind auf
+             * Nutzer-Auftrag aus dem Spiel. Traegt die Dokument-Tabelle des Ports einen
+             * Eintrag fuer die Id, kommt der Name von dort — so liest die Meldung
+             * "The <name> has been filed." (Skript [5] @0x800c506f) den Namen des
+             * Dokuments, das wirklich aufgehoben wurde. Das ist RE2s Verhalten: dort
+             * ist der Name der Meldung die Item-Id des Dokuments (`sb a1,-30913(at)`
+             * @0x800518a0 = 0x800e873f, Id = Dokument + 104). */
+            {
+                const re15_file_doc_t *d =
+                    re15_files_doc(re15_files_doc_from_item((int)item_id));
+                if (d) {
+                    const unsigned char *nm = d->name;
+                    for (; *nm != 0x07; nm++) {
+                        if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0);
+                        total++;
+                    }
+                    continue;
+                }
+            }
             /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102, s. Kopf),
              * nicht ein gewaehltes Limit. Das Original maskiert nur `andi a0,a0,0xff` und
              * wuerde fuer >= 102 in den Blob hinein indizieren; der Port braucht hier eine

@@ -89,6 +89,7 @@ static inline int RNDI(float f) {
  * re15_inv_screen.c (engine) rasterized by inv_render_pc.c; see re15_inv_screen.h.) */
 #include "re15_inv_screen.h"  /* byte-true status-screen display list (wave 1) */
 #include "re15_re2doc.h"      /* FILE-Bildebene: RE2-Dokumentseiten */
+#include "re15_files.h"       /* Runde 30: FILE-Liste + Dokument-Tabelle */
 #include "re15_room.h"
 #include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
@@ -4384,6 +4385,88 @@ re_title:;
         if (getenv("RE15_INV_FILE_DOC_SHOT") &&
             (g_engine.frame_count == 70 || g_engine.frame_count == 72))
             g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+        /* RUNDE 30 — MESSHAKEN DES DOKUMENT-SYSTEMS. Rein env-gegatet, KEIN Spielverhalten;
+         * ohne die Variablen ist der Block wirkungslos.
+         *   RE15_DOC=<n>          ANSEHHILFE: VIERECK auf einer beliebigen Listenzeile
+         *                         oeffnet den Leser mit dem Bild-Satz n (0..24 = RE2s
+         *                         Dokumente, 25 = Irons Diary), auch bei leerer Liste.
+         *   RE15_DOC_REQUEST="<bild>[:<doc>[:<taken_bit>[:<aot_slot>[:<obj_id>]]]]"
+         *                         loest im genannten Bild re15_menu_request_doc aus —
+         *                         dieselbe Anforderung, die eine Item-Zone mit Id >= 0x48
+         *                         stellt (aot_common.c aot_item_dokument). Damit laesst
+         *                         sich der Aufnahme-Leser messen, bevor das Welt-Prop
+         *                         steht (Thema irons-diary-welt). Vorgaben: doc 0, kein
+         *                         Flag, keine Zone, kein Weltmodell.
+         *   RE15_PAD_AT="<bild>:<tasten>,<bild>:<tasten>,..."
+         *                         bildgenaue Tasten-FLANKEN; Tasten wie RE15_INPUT_SCRIPT
+         *                         (U D L R, X = Kreuz, A = Viereck, M = R1, S = Start).
+         *   RE15_DOC_EXIT_AT=<bild>  beendet die Hauptschleife in diesem Bild. */
+        {
+            static int s_r30_init = 0;
+            static long s_req_frame = -1, s_exit_frame = -1;
+            static int s_req_doc = 0, s_req_tk = 0, s_req_aot = -1, s_req_obj = -1;
+            static const char *s_pad_at = NULL;
+            if (!s_r30_init) {
+                const char *dv = getenv("RE15_DOC");
+                const char *rq = getenv("RE15_DOC_REQUEST");
+                const char *ex = getenv("RE15_DOC_EXIT_AT");
+                s_r30_init = 1;
+                s_pad_at = getenv("RE15_PAD_AT");
+                if (dv && *dv) {
+                    extern int re15_files_bildsatz_max_page(int bildsatz);
+                    int n = atoi(dv);
+                    re15_menu_debug_view_doc(n, re15_files_bildsatz_max_page(n));
+                }
+                if (rq && *rq)
+                    sscanf(rq, "%ld:%d:%d:%d:%d", &s_req_frame, &s_req_doc, &s_req_tk,
+                           &s_req_aot, &s_req_obj);
+                if (ex && *ex) s_exit_frame = atol(ex);
+            }
+            if (s_req_frame >= 0 && (long)g_engine.frame_count == s_req_frame) {
+                fprintf(stderr, "[r30-doc] F%u request_doc(%d,%d,%d,%d)\n",
+                        (unsigned)g_engine.frame_count, s_req_doc, s_req_tk, s_req_aot,
+                        s_req_obj);
+                re15_menu_request_doc(s_req_doc, s_req_tk, s_req_aot, s_req_obj);
+            }
+            if (s_pad_at && *s_pad_at) {
+                const char *p = s_pad_at;
+                while (*p) {
+                    char *e = NULL;
+                    long f = strtol(p, &e, 10);
+                    if (e == p || *e != ':') break;
+                    p = e + 1;
+                    {
+                        uint16_t bits = 0;
+                        for (; *p && *p != ','; p++) {
+                            switch (*p) {
+                            case 'U': bits |= RE15_PAD_BIT_UP;     break;
+                            case 'D': bits |= RE15_PAD_BIT_DOWN;   break;
+                            case 'L': bits |= RE15_PAD_BIT_LEFT;   break;
+                            case 'R': bits |= RE15_PAD_BIT_RIGHT;  break;
+                            case 'X': bits |= RE15_PAD_BIT_CROSS;  break;
+                            case 'A': bits |= RE15_PAD_BIT_SQUARE; break;
+                            case 'M': bits |= RE15_PAD_BIT_R1;     break;
+                            case 'S': bits |= RE15_PAD_BIT_START;  break;
+                            default: break;
+                            }
+                        }
+                        if (f == (long)g_engine.frame_count) {
+                            g_engine.pad_pressed |= bits;
+                            g_engine.pad_current |= bits;
+                        }
+                    }
+                    if (*p == ',') p++;
+                }
+            }
+            if (getenv("RE15_DOC_LOG") && re15_menu_is_open() && g_inv_screen.substate == 2)
+                fprintf(stderr, "[r30-doc] F%u st=%d page=%d/%d tx=%d bild=%d satz=%d "
+                        "liste0=%d\n", (unsigned)g_engine.frame_count,
+                        g_inv_screen.item_state, g_inv_screen.file_reader_page,
+                        g_inv_screen.file_end, g_inv_screen.file_text_x,
+                        g_inv_screen.file_bild, g_inv_screen.file_bildsatz,
+                        re15_files_get(0));
+            if (s_exit_frame >= 0 && (long)g_engine.frame_count >= s_exit_frame) running = 0;
+        }
         /* RE15_INV_MAP_SHOT=1 (MAP wave): L1 at F31 = the instant MAP launch
          * (@0x8004980c-30: tab=1 + 25c1=1 + entry init/CD-load dispatch). FUN_8004c058:
          * slide-out F32-56 (25 frames @0x8004c0bc), upload+arena F57 (c2=1), interactive
@@ -4835,34 +4918,20 @@ re_title:;
                 static re15_inv_op_t s_inv_ops[RE15_INV_MAX_OPS];
                 extern int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n);
                 int inv_n = re15_inv_screen_build(&g_inv_screen, s_inv_ops, RE15_INV_MAX_OPS);
-                re15_inv_render_pc_draw(s_inv_ops, inv_n);
 
-                /* BILD-EBENE DES FILE-SCHIRMS (Port-Erweiterung, Beleg-Block bei
-                 * re15_inv_render_pc_file_image): zeichnet die zwei RE2-Sprites ueber den
-                 * Leser, sobald ein Dokument gewaehlt ist. Ohne Auswahl passiert nichts und
-                 * der Schirm bleibt der byte-true Textleser von RE1.5.
-                 * RE15_DOC="<nr>" waehlt zum Ansehen ein Dokument (0..24). */
+                /* BILD-EBENE DES FILE-SCHIRMS (Runde 30, nach RE2; Beleg-Block bei
+                 * re15_inv_render_pc_file_underlay): zeigt der Leser ein Bild-Dokument,
+                 * kommen schwarzer Grund, Illustration und Textseite UNTER die
+                 * Anzeigeliste — deshalb wird die Unterlage VOR dem Zeichenlauf
+                 * angemeldet. Welche Seite und welche x-Lage, rechnet die Engine
+                 * (re15_inv_file_bild_lage). */
                 {
-                    extern void re15_inv_render_pc_file_image(int doc, int page, int ox, int oy);
-                    static int s_doc_env = -2;
-                    if (s_doc_env == -2) {
-                        const char *dv = getenv("RE15_DOC");
-                        s_doc_env = (dv && *dv) ? atoi(dv) : -1;
-                        if (s_doc_env >= 0) re15_re2doc_select(s_doc_env);
-                    }
-                    int doc = re15_re2doc_selected();
-                    /* Leser offen = FILE-Welle (substate 2) im Zustand 3 bzw. 4..7 (Seitenwechsel) —
-                     * dieselbe Bedingung, unter der re15_inv_screen.c emit_file_reader ruft
-                     * (@0x800c6f94 / @0x800c6fc8-d0). */
-                    if (doc >= 0 && g_inv_screen.substate == 2 &&
-                        (g_inv_screen.item_state == 3 ||
-                         (g_inv_screen.item_state >= 4 && g_inv_screen.item_state <= 7))) {
-                        /* Seite: der Leser zaehlt ab 0; die Titelseite ist Seite -1. */
-                        int pg = (int)g_inv_screen.file_reader_page - 1;
-                        /* Bildlage: die 256x256-Flaeche mittig im 320x240-Schirm. */
-                        re15_inv_render_pc_file_image(doc, pg, 32, -8);
-                    }
+                    extern void re15_inv_render_pc_file_underlay(int doc, int page, int text_x);
+                    int bset = -1, bpage = -1, btx = 0;
+                    if (re15_inv_file_bild_lage(&g_inv_screen, &bset, &bpage, &btx))
+                        re15_inv_render_pc_file_underlay(bset, bpage, btx);
                 }
+                re15_inv_render_pc_draw(s_inv_ops, inv_n);
             }
 
             /* WAVE 3: the invented "Will you use the X?" Yes/No prompt overlay was REMOVED —
@@ -9969,6 +10038,19 @@ re_title:;
                         if (sel.cursor_visible) re15_render_pc_cursor(sel.cursor_x, sel.cursor_y);
                     }
                 }
+            }
+
+            /* RUNDE 30 — "The <name> has been filed." nach dem Schliessen des
+             * Aufnahme-Lesers (RE1.5-Prompt-Skript [5] @0x800c506f, Port-Schluessel 7;
+             * RE2 Meldung 10, `addiu a2,zero,10` @0x80072844). GLEICHE Lage wie die
+             * beiden Prompts darueber: RE1.5 legt sie in FUN_80027e68 fuer die ganze
+             * Bank 0x100 fest (`ori v0,zero,0x22` @0x80027eec -> 0x800B8534,
+             * `ori v0,zero,0xb4` @0x80027f14 -> 0x800B8536), also (34,180) fuer jeden
+             * Aufrufer. Der Name kommt aus der Dokument-Tabelle (item_prompt_common.c). */
+            {
+                uint8_t fitem = 0; int freveal = 0;
+                if (re15_menu_doc_msg(&fitem, &freveal))
+                    re15_render_item_prompt(34, 180, 7, fitem, freveal);
             }
         }
 

@@ -68,6 +68,10 @@
 #include "re15_itembox.h"       /* ITEM BOX subscreen (substate 4 [DESIGN] — entered
                                  * ONLY from the box AOT via re15_menu_request_box,
                                  * never from the START tab select; itembox_spec.md §6) */
+#include "re15_files.h"         /* Runde 30: FILE-Liste + Dokument-Tabelle (RE2 @0x800D4B68) */
+#include "re15_re2doc.h"        /* Runde 30: re15_re2doc_select — Bild-Satz des Lesers */
+#include "re15_item_prompt.h"   /* Runde 30: Glyphenzahl der Meldung "has been filed" */
+#include "re15_aot.h"           /* Runde 30: g_aot — die Aufhebe-Zone nach der Meldung aus */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -93,6 +97,29 @@ static uint8_t s_box_target = 0;   /* ITEM BOX open request [DESIGN]: the task s
                                     * open/close freeze+fade path is the SHARED stage
                                     * FSM (the save-phone precedent: world-side
                                     * trigger, byte-true menu transition mechanics). */
+
+/* ---- RUNDE 30: DOKUMENT AUFHEBEN (nach RE2; Beleg-Block bei re15_menu_request_doc) ---- */
+static uint8_t s_doc_target = 0;   /* 1 = dieser Menue-Lauf ist der Aufnahme-Leser
+                                    * (RE2 Status-Schirm-Art 2, `sb v1,23552(at)`
+                                    * @0x800518f8 = 0x800d5c00) */
+static int     s_doc_nr     = -1;  /* Dokument-Nr (RE2 Id - 104 @0x80071d04)           */
+static int     s_doc_taken  = 0;   /* Aufgenommen-Flag Zone 9, <= 0 = keines           */
+static int     s_doc_aot    = -1;  /* ausloesende Zone (RE2 0x800ce5d8), < 0 = keine   */
+static int     s_doc_prop   = -1;  /* Weltmodell obj_id (RE2 Byte +6 der Platzierung,
+                                    * 255 = keines @0x80072b98-9c), < 0 = keines       */
+static uint8_t s_doc_open_se = 0;  /* 1 = Satz 8 steht noch aus (faellt ins erste Bild
+                                    * des Hereinfahrens)                               */
+/* Schreibmaschine der Meldung "The <name> has been filed." (Zustand 8). */
+static uint8_t s_doc_msg     = 0;  /* 1 = Meldung steht (RE2 0x800e873c Bit 0x80)      */
+static int     s_doc_msg_reveal = 0, s_doc_msg_total = 0, s_doc_msg_timer = 0;
+/* Reihenfolge-Protokoll fuer die Riegel: Bildnummer des Menue-Laufs, in dem das
+ * jeweilige Ereignis fiel (0 = noch nicht). Reine Messschiene, kein Spielverhalten. */
+static uint32_t s_doc_tick = 0;
+static uint32_t s_doc_t_added = 0, s_doc_t_closed = 0, s_doc_t_msg_gone = 0,
+                s_doc_t_flag = 0, s_doc_t_zone = 0, s_doc_t_prop = 0;
+/* ANSEHHILFE (RE15_DOC, nur Debug): zeigt einen beliebigen Bild-Satz im Leser, ohne dass
+ * er in der Liste steht. < 0 = aus. */
+static int s_view_set = -1, s_view_max = 0;
 
 /* D-pad auto-repeat (FUN_80030444 bit31-of-aca38 tick; config FUN_80030640(0xf000,0xf,4)
  * @0x800460cc-d8 = raw-layout d-pad mask + delay 15 + rate 4 -> press edge moves, first
@@ -1358,6 +1385,10 @@ static void close_phase(void)
     g_inv_screen.name_item = -1;
     g_inv_screen.box_mode = 0;             /* ITEM BOX teardown (≙ RE2 close 5c00:=0) */
     s_box_target = 0;
+    /* Runde 30: Aufnahme-Leser abbauen (≙ RE2 close 5c00:=0 wie bei der Box) */
+    s_doc_target = 0; s_doc_msg = 0; s_doc_open_se = 0;
+    g_inv_screen.file_bild = 0;
+    re15_re2doc_select(-1);
     s_alive = 0;
     /* Task-0 resume continuation @0x8001cb50-74: aca3c &= ~(0x40|0x8000); 5359=3;
      * falls THROUGH into stage 3 @0x8001cbb8 in the same round (no unfaded frame):
@@ -1525,7 +1556,188 @@ static int file_anim_step(int state)
     return state;                                /* other: keep (j 0x800c7884)     */
 }
 
-static void file_mode(uint16_t pressed)
+/* ====================================================================================
+ * RUNDE 30 — DER LESER FUER BILD-DOKUMENTE (RE2-Inhalt im RE1.5-Automaten)
+ *
+ * GRUNDSATZ: was RE1.5 vollstaendig hat, bleibt RE1.5 — der Leser-Automat mit seinen
+ * Zustaenden 3..7, dem Blaetter-Treiber 0x800c77bc (28 px je Bild ueber 10 Bilder),
+ * den Pfeilen und der Fusszeile. Was RE1.5 NICHT hat, kommt aus RE2: die Zuordnung
+ * Zeile -> Dokument, die Seitenzahl je Dokument, das Oeffnen mit hereinfahrender
+ * Titelseite, RE2s Ton-Stellen.
+ * RE1.5 ist hier nicht massgeblich, weil sein Leser kein Dokument kennt: er adressiert
+ * den Blob "Operation Report" fest (`lui t1,0x800d` / `addiu t1,t1,-13004` @0x800c7610-14
+ * = 0x800ccd34), die gewaehlte Zeile geht nicht ein.
+ * ==================================================================================== */
+
+/* Leser OEFFNEN. Einstieg ueber RE1.5s Zustand 7 (zweite Haelfte des Vorwaerts-
+ * Blaetterns): Text-x = 0x140 = 320, Phase 0, danach 10 Bilder x -= 28 bis zur
+ * Ruhelage 0x28 und weiter in Zustand 3 (RE1.5 @0x800c7868-78 / @0x800c77fc /
+ * @0x800c787c). Damit faehrt die Titelseite von RECHTS herein wie in RE2, das die
+ * Textseite beim Oeffnen auf x = 312 stellt (`addiu v0,zero,312` @0x8006cf68 /
+ * `sh v0,92(s2)` @0x8006cf74 aus der Liste, @0x80071db0-b4 beim Aufheben) und im
+ * Zustand 3 hereinfaehrt. RE2s eigene Fahrkurve (u8[12] @0x800a9cdc) wird NICHT
+ * uebernommen — RE1.5 hat das Blaettern vollstaendig.
+ * Seite 0, Wipp-Zaehler der Pfeile genullt wie RE1.5s Oeffnen (@0x800c7064-70). */
+static void file_reader_open(int bildsatz, int max_page)
+{
+    g_inv_screen.file_bild     = 1;
+    g_inv_screen.file_bildsatz = (uint8_t)bildsatz;
+    g_inv_screen.file_end      = (uint8_t)(max_page + 1);  /* Seiten 0..max_page, RE2
+                                                            * `sltu v0,v1,a0` @0x80072890 */
+    re15_re2doc_select(bildsatz);
+    g_inv_screen.item_state       = 7;          /* RE1.5 Zustand 7 @0x800c7878 */
+    g_inv_screen.file_text_x      = 320;        /* 0x140 @0x800c7868-70 */
+    g_inv_screen.file_anim_phase  = 0;          /* @0x800c7880 */
+    g_inv_screen.file_reader_page = 0;          /* RE2 `sb zero,23555(at)` @0x80071d30 */
+    s_file_bob_ctr = 0;                         /* sw zero 0x800c75fc @0x800c706c-70 */
+    s_file_bob_off = 0;
+    g_inv_screen.file_bob_off = 0;
+    s_doc_open_se = 1;                          /* Satz 8 folgt mit dem Hereinfahren */
+}
+
+/* Die Meldung "The <name> has been filed." oeffnen (Zustand 8).
+ * TEXT: RE1.5 fuehrt den Satz selbst — Prompt-Skript [5] @0x800c506f (DEBUG.BIN Datei
+ *   0x0506f = `30 44 41 00 05 01 06 00 05 00 08 44 3d 4f 00 3e 41 41 4a 00 42 45 48 41
+ *   40 57 01 00`), aber ohne einen einzigen Aufrufer (alle sechs `jal 0x80027e68` in
+ *   EXE/DEBUG/STAGE1-6 waehlen andere Skripte). RE2 zeigt denselben Satz als Meldung
+ *   10 (`addiu a2,zero,10` @0x80072844 / @0x80072970, `jal 0x8002fe38`). Der Port
+ *   spielt RE1.5s Skript ueber den Schluessel 7 (item_prompt_common.c
+ *   prompt_key_to_script).
+ * SCHREIBMASCHINE: dieselbe VM wie jede Bank-0x100-Meldung von RE1.5 (FUN_80028134;
+ *   Startwert 1 = `1 << s1` @0x800281a0-ac, Nachladewert 2 = `2 << s1` @0x800281b0-c4
+ *   mit s1 = 0), also dieselben Werte wie das Item-Modal (item_modal_common.c Zustand
+ *   5/6, dort hergeleitet). */
+#define DOC_MSG_RELOAD 2                        /* DAT_800b8524 = 2<<s1 @0x800281b0-c4 */
+static void doc_msg_open(void)
+{
+    const re15_file_doc_t *d = re15_files_doc(s_doc_nr);
+    uint8_t id = d ? d->item_id : 0;
+    g_inv_screen.item_state = 8;                /* RE2 Zustand 6 `sb v0,2(s0)` @0x80072834 */
+    s_doc_msg        = 1;
+    s_doc_msg_reveal = 0;
+    s_doc_msg_timer  = 1;                       /* Startwert 1 @0x800281a0-ac */
+    s_doc_msg_total  = re15_item_prompt_walk(7, id, 0, 0, 0);
+    s_doc_t_closed   = s_doc_tick;
+}
+
+/* Leser SCHLIESSEN. `se` = der Ton der ausloesenden Taste (Tabelle bei file_mode).
+ * Aus der FILE-Liste geoeffnet -> zurueck in die Liste (RE1.5 25c2 = 1 @0x800c717c-84).
+ * Beim Aufheben geoeffnet -> die Meldung, danach das Abraeumen (RE2 Zustand 6). */
+static void file_reader_close(int se)
+{
+    se4(se);
+    if (s_doc_target) { doc_msg_open(); return; }
+    g_inv_screen.item_state = 1;                /* 25c2=1 @0x800c717c-84 */
+    g_inv_screen.file_bild  = 0;
+    re15_re2doc_select(-1);
+}
+
+/* Zustand 8: die Meldung steht; ist sie weg, wird abgeraeumt und das Menue schliesst.
+ * RE2 Zustand 6 (Sprungtabelle @0x80011dbc, Eintrag 6 = 0x80072b0c):
+ *   80072b10  lbu  v0,-30916(v0)     ; 0x800e873c Nachrichten-Status
+ *   80072b18  andi v0,v0,0x80
+ *   80072b1c  bne  v0,zero,0x80072c00 ; Meldung steht noch -> warten
+ *   80072b40  sb   zero,0(v1)        ; die ausloesende Zone aus (v1 = [0x800ce5d8])
+ *   80072b8c  jal  0x8007730c        ; Aufgenommen-Flag setzen
+ *   80072b94  lbu  a3,6(s1)          ; Modell-Platz der Platzierung
+ *   80072b9c  beq  a3,v0(=255),...   ; 255 = kein Weltmodell
+ *   80072bb0  sw   zero,16700(v0)    ; Weltmodell weg
+ *   80072bf0  lui  a0,0x405 / 80072bf4 jal 0x8005ba28   ; TON Bank 4 / Satz 5
+ *   80072bfc  sb   zero,1(s0)        ; Modus 0 = zurueck ins Spiel
+ * Reihenfolge der drei Abraeum-Schritte im Port: Flag, Zone, Weltmodell — so, wie das
+ * Item-Modal sie fuehrt (item_modal_common.c Zustand 7: re15_game_flag_set(9,..),
+ * slots[].active = 0, scd_prop_hide_by_obj_id) und wie die Schnittstelle sie zusagt.
+ * RE2 schreibt Zone, Flag, Weltmodell; alle drei fallen in DASSELBE Bild, zwischen
+ * ihnen laeuft kein Beobachter (die Welt steht), der Unterschied ist nicht messbar. */
+static void doc_msg_tick(uint16_t pressed, uint16_t held)
+{
+    uint16_t vp = re15_pad_virtual_word(pressed);
+    uint16_t vh = re15_pad_virtual_word(held);
+    if (s_doc_msg_reveal < s_doc_msg_total) {
+        /* Schreibmaschine + Vorlauf, byte-treu FUN_80028134 Zustand 1
+         * (@0x800281d8-0x80028238, Schleife @0x80028250, Nachladen @0x8002843c): dieselbe
+         * Rechnung wie item_modal_common.c Zustand 6. Vorlauf auf gehaltenem virtuellem
+         * 0x4000 (@0x80028214/18), nur solange der Zaehler nicht auf 0 faellt
+         * (@0x800281fc/200); Bank 0x100 setzt das Freigabe-Byte (@0x80027f28). */
+        int budget = 1;                                   /* s2 = 1  @0x800281d8 */
+        int t0     = s_doc_msg_timer;
+        s_doc_msg_timer = t0 - 1;                         /* @0x800281f0/f8 */
+        if (((s_doc_msg_timer & 0xff) != 0) && (vh & 0x4000)) {
+            s_doc_msg_timer = t0 - 4;                     /* @0x80028228/34 */
+            if (DOC_MSG_RELOAD < 4) budget = 2;           /* sltiu 4 @0x8002822c/38 */
+        }
+        if (s_doc_msg_timer > 0) return;                  /* bgtz @0x8002823c-48 */
+        s_doc_msg_reveal += budget;
+        if (s_doc_msg_reveal > s_doc_msg_total) s_doc_msg_reveal = s_doc_msg_total;
+        s_doc_msg_timer = DOC_MSG_RELOAD;                 /* @0x8002843c/8740 */
+        return;
+    }
+    /* Bestaetigen: virtuelles 0xc000 = Bestaetigen ODER Abbrechen, wie das Skript
+     * "can't carry" derselben Bank (item_modal_common.c Zustand 6; VM Zustand 5
+     * @0x8002868c-86d0). */
+    if (!(vp & 0xc000)) return;
+    s_doc_msg = 0;                                        /* 8520 &= 0x7f @0x800286c4 */
+    s_doc_t_msg_gone = s_doc_tick;
+    /* ---- ABRAEUMEN, erst JETZT (RE2 @0x80072b1c: solange die Meldung steht, nichts) ---- */
+    if (s_doc_taken > 0) {
+        re15_game_flag_set(9, s_doc_taken, 1);            /* RE2 @0x80072b8c */
+        s_doc_t_flag = s_doc_tick;
+    }
+    if (s_doc_aot >= 0 && s_doc_aot < RE15_AOT_MAX) {
+        g_aot.slots[s_doc_aot].active = 0;                /* RE2 `sb zero,0(v1)` @0x80072b40 */
+        s_doc_t_zone = s_doc_tick;
+    }
+    if (s_doc_prop >= 0 && s_doc_prop != 0xFF) {          /* 255 = keines @0x80072b98-9c */
+        scd_prop_hide_by_obj_id((uint8_t)s_doc_prop);     /* RE2 `sw zero,16700(v0)` @0x80072bb0 */
+        s_doc_t_prop = s_doc_tick;
+    }
+    se4(5);                                               /* RE2 Satz 5 @0x80072bf0-f8 */
+    /* file_bild und der gewaehlte Bild-Satz bleiben bis zum Abbau der Schliess-Phase
+     * stehen: waehrend der Abblende zeichnet der Schirm weiter (close_phase), und dort
+     * soll das Dokument stehen, nicht der Status-Schirm. */
+    s_phase = 2;                                          /* RE2 Modus 0 @0x80072bfc ->
+                                                           * gemeinsame Schliess-Phase */
+}
+
+/* Fuer die Plattform: steht die Meldung? Dann Item-Id (fuer den Namen) und der Stand
+ * der Schreibmaschine. Gezeichnet wird sie wie jede Bank-0x100-Meldung bei (0x22,0xb4)
+ * — RE1.5 legt die Lage in FUN_80027e68 fuer die ganze Bank fest (`ori v0,zero,0x22`
+ * @0x80027eec -> 0x800B8534, `ori v0,zero,0xb4` @0x80027f14 -> 0x800B8536). */
+int re15_menu_doc_msg(uint8_t *out_item_id, int *out_reveal)
+{
+    const re15_file_doc_t *d;
+    if (!s_alive || !s_doc_msg) return 0;
+    d = re15_files_doc(s_doc_nr);
+    if (out_item_id) *out_item_id = d ? d->item_id : 0;
+    if (out_reveal)  *out_reveal  = s_doc_msg_reveal;
+    return 1;
+}
+int re15_menu_doc_msg_total(void) { return s_doc_msg_total; }
+
+/* Reihenfolge-Protokoll (nur Riegel). which: 0 angehaengt, 1 Leser geschlossen,
+ * 2 Meldung weg, 3 Flag, 4 Zone, 5 Weltmodell. Wert = Bildnummer des Laufs, 0 = nie. */
+uint32_t re15_menu_doc_trace(int which)
+{
+    switch (which) {
+    case 0: return s_doc_t_added;
+    case 1: return s_doc_t_closed;
+    case 2: return s_doc_t_msg_gone;
+    case 3: return s_doc_t_flag;
+    case 4: return s_doc_t_zone;
+    case 5: return s_doc_t_prop;
+    default: return 0;
+    }
+}
+
+/* ANSEHHILFE (Umgebungsvariable RE15_DOC, nur Debug): VIERECK auf einer beliebigen
+ * Listenzeile oeffnet den Leser mit diesem Bild-Satz. bildsatz < 0 schaltet ab. */
+void re15_menu_debug_view_doc(int bildsatz, int max_page)
+{
+    s_view_set = bildsatz;
+    s_view_max = (max_page < 0) ? 0 : max_page;
+}
+
+static void file_mode(uint16_t pressed, uint16_t held)
 {
     switch (g_inv_screen.item_state) {
     case 0:
@@ -1575,18 +1787,37 @@ static void file_mode(uint16_t pressed)
             }
         } else {
             /* row select 0x800c7010 — priority CROSS > SQUARE > DOWN > UP
-             * (@0x800c7020-3c). The visibility mask is NOT checked: SQUARE on any
-             * row (name or underscores) opens the reader. */
+             * (@0x800c7020-3c). RE1.5 prueft die Zeile NICHT (seine Liste war fest, jede
+             * Zeile oeffnete denselben Blob @0x800c704c-70). */
             if (pressed & RE15_PAD_BIT_CROSS) {           /* raw 0x40 @0x800c7020-24 */
                 se4(5);                                   /* @0x800c707c-84 */
                 g_inv_screen.file_sub = 0;                /* @0x800c7088-8c */
             } else if (pressed & RE15_PAD_BIT_SQUARE) {   /* raw 0x80 @0x800c7028-2c */
-                se4(6);                                   /* @0x800c704c-54 */
-                g_inv_screen.item_state = 3;              /* 25c2=3 @0x800c7058-60 */
-                g_inv_screen.file_reader_page = 0;        /* @0x800c7064-68 */
-                s_file_bob_ctr = 0;                       /* sw zero 0x800c75fc */
-                s_file_bob_off = 0;                       /*   @0x800c706c-70   */
-                g_inv_screen.file_bob_off = 0;
+                /* RUNDE 30, nach RE2: die Zeile bestimmt das Dokument, und ein LEERER
+                 * Platz laesst sich nicht oeffnen — kein Leser, KEIN Ton:
+                 *   8006ce68  lbu   v1,19304(at)     ; Liste[Reihe*8 + Spalte]
+                 *   8006ce6c  addiu v0,zero,255
+                 *   8006ce70  beq   v1,v0,0x8006cea0 ; leer -> ueberspringt Anlegen
+                 *                                    ;         (jal 0x80075fd0 @0x8006ce7c)
+                 *                                    ;         UND Ton (lui 0x406 @0x8006ce9c)
+                 * Belegter Platz: Klick Satz 6 sofort (RE1.5 @0x800c704c-54, RE2
+                 * `lui a0,0x406` @0x8006ce9c), im Folgebild Satz 8 mit dem Hereinfahren
+                 * (RE2 `lui a0,0x408` @0x8006cf58 / `jal 0x8005ba28` @0x8006cf70).
+                 * ⛔ PORT-WAHL, keine Original-Adresse: der Abstand EIN Bild zwischen
+                 * Satz 6 und Satz 8. RE2 laesst dazwischen die Tafel-Ausfahrt
+                 * (`sltiu v0,v0,0xe` @0x8006cf08, 14 Bilder) und das Laden von der CD;
+                 * RE1.5s FILE-Schirm hat keine Tafeln, die ausfahren, und der Port
+                 * laedt nicht von CD. Gemessen ist der Abstand an keinem laufenden
+                 * RE2 (Dossier irons-diary-dokument.md Abschnitt 8 Punkt 7). */
+                const re15_file_doc_t *d = re15_files_doc(
+                    re15_files_get(g_inv_screen.file_page * 10 + g_inv_screen.file_row));
+                if (s_view_set >= 0) {                    /* Ansehhilfe RE15_DOC (Debug) */
+                    se4(6);
+                    file_reader_open(s_view_set, s_view_max);
+                } else if (d) {
+                    se4(6);                               /* @0x800c704c-54 / RE2 @0x8006ce9c */
+                    file_reader_open(d->bildsatz, d->max_page);
+                }
             } else if (pressed & RE15_PAD_BIT_DOWN) {     /* raw 0x4000 @0x800c7030-34 */
                 se4(4);                                   /* @0x800c7098-a0 */
                 g_inv_screen.file_row++;                  /* sltiu 0xa wrap @0x800c70b4-c4 */
@@ -1628,23 +1859,51 @@ static void file_mode(uint16_t pressed)
         else if (s_file_bob_ctr == 0x3c) { s_file_bob_ctr = 0; s_file_bob_off = 0; }
         else                             s_file_bob_ctr++;
         /* input 0x800c7110 (s0 = end = u16[0x800ccd34]>>1 = 7 @0x800c7124-30) —
-         * priority CROSS > SQUARE > LEFT > RIGHT (@0x800c712c-4c). */
+         * priority CROSS > SQUARE > LEFT > RIGHT (@0x800c712c-4c).
+         *
+         * ⛔ RUNDE 30 — DIE TOENE FOLGEN RE2s AUSLOESE-STELLEN (Nutzer-Auftrag: "die
+         * richtigen Sounds fuer die Textdokumente aus Resident Evil 2 uebernehmen").
+         * Die WELLEN sind schon dieselben: SOUND/CORE00.EDH und CORE00.VB sind zwischen
+         * RE1.5 und RE2 byte-gleich (md5 9b0e0627500b50eaca5f8bc4124635d9 /
+         * cdcb61fb58d9ebfcf3352757674f7a6e in info/Re1.5/PSX/SOUND und
+         * info/re2leon/COMMON/SOUND); es wird nichts importiert. RE2s Tonaufruf
+         * FUN_8005ba28 zerlegt sein Wort wie RE1.5s FUN_80045024: Bank = a0 >> 24
+         * (`srl t1,a0,24` @0x8005ba30), Satz = (a0 >> 16) & 0xff (`srl v0,a0,16` /
+         * `andi s7,v0,0xff` @0x8005ba7c-80). Bank 4 = CORE.
+         *
+         *   Ereignis                        RE1.5 (bisher)        RE2 Aufnahme-Leser
+         *   Abbrechen beim Lesen            Satz 5 @0x800c7170    Satz 5 @0x80072854
+         *   Abbrechen in der Ende-Stellung  Satz 5 @0x800c7170    Satz 6 @0x8007297c
+         *        (`andi v0,v0,0x3000` @0x80072954: Bestaetigen ODER Abbrechen)
+         *   Bestaetigen in der Ende-St.     Satz 5 (-> 0x800c7170) Satz 6 @0x8007297c-84
+         *   LINKS aus der Ende-Stellung     Satz 4 @0x800c722c    STUMM @0x80072940-48
+         *        (`sb zero,2(s0)` / `sb zero,41(s0)` / `sb v0,40(s0)`, kein jal)
+         *   RECHTS auf der letzten Seite    Satz 4 @0x800c71ec    Satz 4 @0x800728b0-b8
+         *   blaettern vor/zurueck           Satz 8 @0x800c71d4/@0x800c7260
+         *                                                         Satz 8 @0x800728ec-f4
+         *   RECHTS in der Ende-Stellung     Satz 5 + schliessen @0x800c71ac — bleibt
+         *        RE1.5; RE2 kennt den Fall nicht (sein Zustand 1 liest RECHTS nicht,
+         *        @0x80072918-5c). */
         {
-            int end = 7;   /* s0 = u16 @0x800ccd34 (=0xe) >> 1 (@0x800c7124-30);
+            int end = g_inv_screen.file_bild
+                    ? (int)g_inv_screen.file_end  /* Dokument: max_page + 1 (RE2
+                                                   * `lhu a0,-24252(at)` @0x800727c8) */
+                    : 7;   /* s0 = u16 @0x800ccd34 (=0xe) >> 1 (@0x800c7124-30);
                             * the doc header is static DEBUG.BIN data (gen census) */
             uint8_t *pg = &g_inv_screen.file_reader_page;
             if (pressed & RE15_PAD_BIT_CROSS) {           /* raw 0x40 @0x800c712c-34 */
-                se4(5);                                   /* @0x800c7170-78 */
-                g_inv_screen.item_state = 1;              /* 25c2=1 @0x800c717c-84 */
+                /* Satz 5 beim Lesen (@0x800c7170-78 / RE2 @0x80072854), Satz 6 in der
+                 * Ende-Stellung (RE2 `andi v0,v0,0x3000` @0x80072954 -> @0x8007297c) */
+                file_reader_close(*pg == end ? 6 : 5);
             } else if (pressed & RE15_PAD_BIT_SQUARE) {   /* raw 0x80 @0x800c7138-3c */
                 if (*pg == end) {                         /* bne skip @0x800c7168 */
-                    se4(5);
-                    g_inv_screen.item_state = 1;          /* falls into @0x800c7170 */
+                    file_reader_close(6);                 /* RE2 Satz 6 @0x8007297c-84 */
                 }
             } else if (pressed & RE15_PAD_BIT_LEFT) {     /* raw 0x8000 @0x800c7140-44 */
                 if (*pg == end) {                         /* beq @0x800c7210 */
                     (*pg)--;                              /* @0x800c7228 */
-                    se4(4);                               /* @0x800c722c-34 */
+                    /* STUMM nach RE2 (@0x80072940-48, kein jal 0x8005ba28); RE1.5
+                     * spielte hier Satz 4 (@0x800c722c-34) */
                 } else if (*pg == 0) {
                     *pg = 0;                              /* sb zero @0x800c7224 (no SE) */
                 } else {
@@ -1659,8 +1918,7 @@ static void file_mode(uint16_t pressed)
                     se4(4);                               /* @0x800c71ec-f4 */
                 } else if (*pg == end) {                  /* t1==end+1 @0x800c71ac -> close
                                                            * check @0x800c715c -> @0x800c7170 */
-                    se4(5);
-                    g_inv_screen.item_state = 1;
+                    file_reader_close(5);                 /* unveraendert RE1.5 */
                 } else {
                     g_inv_screen.item_state = 6;          /* 25c2=6 @0x800c71b4-bc */
                     g_inv_screen.file_anim_phase = 0;     /* sh zero 78a4 @0x800c71cc */
@@ -1673,9 +1931,20 @@ static void file_mode(uint16_t pressed)
     }
 
     case 4: case 5: case 6: case 7:
+        /* Runde 30: der Ton "Dokument oeffnet sich" faellt in das ERSTE Bild des
+         * Hereinfahrens — Bank 4 / Satz 8. RE2 beim Aufheben: erst die Blende, dann
+         * der Ton, dann faehrt die Seite (`beq v0,zero,0x80071dd4` @0x80071dec,
+         * `lui a0,0x408` @0x80071df0, `jal 0x8005ba28` @0x80071df4); aus der Liste
+         * @0x8006cf58-70. */
+        if (s_doc_open_se) { s_doc_open_se = 0; se4(8); }
         /* @0x800c6fb0-c4: 25c2 := driver(25c2); the text is drawn at the driver's
          * s16 @0x800c78a6 (build-side, lh @0x800c6fc8-d0). */
         g_inv_screen.item_state = (uint8_t)file_anim_step(g_inv_screen.item_state);
+        return;
+
+    case 8:
+        /* Runde 30: Meldung "has been filed", dann abraeumen (RE2 Zustand 6). */
+        doc_msg_tick(pressed, held);
         return;
 
     default:
@@ -1697,6 +1966,32 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
              * equip snapshot (25ce — RE2's close-time weapon-model-reload driver,
              * quirk 14). */
             if (s_box_target) { s_substate = 4; re15_itembox_screen_open(); }
+            /* RUNDE 30 — DOKUMENT AUFHEBEN: der Lauf beginnt IM LESER, nicht in der
+             * Reiterwahl. RE2 FUN_80071ba0, Dokument-Zweig:
+             *   80071d00  jal   0x800692dc      ; an die Liste haengen, v0 = Platz
+             *   80071d04  addiu a0,a3,-104      ; Dokument-Nr
+             *   80071d10  srl   v1,v0,3         ; Platz -> Reihe  (0x800d5c01)
+             *   80071d14  andi  v0,v0,0x7       ; Platz -> Spalte (0x800d5c02)
+             *   80071d30  sb    zero,23555(at)  ; Seite = 0
+             *   80071db0  addiu v0,zero,312     ; Textseite startet rechts
+             *   80071dc0  addiu v0,zero,4 / 80071dc4 sb v0,1(s1)   ; Modus 4 = Leser
+             *   80071dc8  addiu v0,zero,3 / 80071dd0 sb v0,2(s1)   ; Zustand 3 = herein
+             *   80071dcc  jal   0x8002c1a0      ; Aufblende
+             * Das Anhaengen geschieht also VOR dem Lesen. Reihe/Spalte werden im Port
+             * zu Listenseite/Zeile (Platz/10, Platz%10 — RE1.5s Schirm hat 3 x 10
+             * Zeilen, s. emit_file_list), damit der Leser wie in RE2 ueber den
+             * Listenplatz zu seinem Dokument kommt. */
+            if (s_doc_target) {
+                const re15_file_doc_t *d = re15_files_doc(s_doc_nr);
+                int platz = re15_files_add(s_doc_nr);            /* @0x80071d00 */
+                s_doc_t_added = s_doc_tick;
+                s_substate = 2;                                  /* FILE-Welle */
+                g_inv_screen.tab = 3;
+                g_inv_screen.file_sub  = 1;
+                g_inv_screen.file_page = (uint8_t)(platz / 10);  /* ≙ @0x80071d10/28 */
+                g_inv_screen.file_row  = (uint8_t)(platz % 10);  /* ≙ @0x80071d14/1c */
+                if (d) file_reader_open(d->bildsatz, d->max_page);
+            }
         }
         /* fade-in loop @0x8004970c-2c: draw + vsync until FUN_8002178c(0)!=0 — input
          * is NOT processed while fading in. */
@@ -1709,7 +2004,7 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
         switch (s_substate) {
         case 0: tab_select(pressed); break;
         case 1: map_mode(pressed); break;       /* jal 0x8004c058 @0x80049a1c */
-        case 2: file_mode(pressed); break;      /* DEBUG.BIN FUN_800c6ca0 (FILE wave) */
+        case 2: file_mode(pressed, held); break; /* DEBUG.BIN FUN_800c6ca0 (FILE wave) */
         case 3: item_mode(pressed, held); break;
         case 4:                                 /* ITEM BOX [DESIGN §6] — RE2 FSM
                                                  * shape (re15_itembox.c); returns
@@ -1737,6 +2032,8 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
     g_inv_screen.name_item = -1;
     /* the pad-refresh auto-repeat tick runs EVERY frame (FUN_80030444) */
     repeat_update(pressed, held);
+    if (s_doc_target) s_doc_tick++;     /* Runde 30: Bildzaehler des Aufnahme-Laufs
+                                         * (nur das Reihenfolge-Protokoll liest ihn) */
     menu_task_dispatch(pressed, held);
     /* MAP wave: the draw-side gate mirror + per-frame marker. The draw chain runs
      * AFTER the run sub-state in the same frame (jal 0x80049a5c @0x80049a44), so the
@@ -1840,6 +2137,50 @@ void re15_menu_request_box(void)
     s_stage = 1;
 }
 
+/* ---------------------------------------------------------------------------------- */
+/* RUNDE 30 — DOKUMENT AUFHEBEN: Anforderung aus der Welt (Item-Zone mit Id >= 0x48).  */
+/*                                                                                    */
+/* SCHNITTSTELLE (auch fuer das Schwester-Thema irons-diary-welt):                     */
+/*   doc        Dokument-Nr der Tabelle re15_files.c (0 = Irons Diary = Item-Id 0x48)  */
+/*   taken_bit  Aufgenommen-Flag in Zone 9; <= 0 = keines (wie das Item-Modal,         */
+/*              item_modal_common.c `if (s_taken)`)                                   */
+/*   aot_slot   die ausloesende Zone in g_aot.slots[]; < 0 = keine                     */
+/*   obj_id     obj_id des Weltmodells (scd_prop_hide_by_obj_id); < 0 oder 0xFF = keins */
+/* ABLAUF: gemeinsame Oeffnen-Blende -> Leser auf der Titelseite (das Dokument haengt  */
+/* dann schon an der Liste) -> lesen -> schliessen -> Meldung "The <name> has been     */
+/* filed." -> ERST nach dem Bestaetigen: Flag (9,taken_bit) setzen, Zone inaktiv,      */
+/* Weltmodell ausblenden, Ton Satz 5 -> gemeinsame Schliessen-Blende.                  */
+/*                                                                                    */
+/* RE1.5 IST HIER NICHT MASSGEBLICH: es hat kein Dokument-Aufheben (kein Dokument-     */
+/* Zweig im Aufnahme-Pfad; der Satz "has been filed." @0x800c506f hat keinen          */
+/* Aufrufer). RE2-VORBILD, Item-Zone FUN_80051884:                                     */
+/*   800518f0  addiu v1,zero,2 / 800518f8 sb v1,23552(at)  ; 0x800d5c00 = 2 "Aufheben" */
+/*   800518fc  addiu v1,zero,1 / 80051904 sb v1,-3256(at)  ; 0x800df348 = 1 anfordern  */
+/*   80051908  ori   a0,a0,0x8000 / 80051918 sw a0,-1064(at) ; 0x800cfbd8 |= 0x8000    */
+/* -> die Zone fordert den Status-Schirm in der Art "Aufheben" an; eine Abfrage gibt   */
+/* es nicht (kein `jal 0x8002fe38` in FUN_80051884 und keiner zwischen @0x80071d00     */
+/* und @0x80071df8). Der Port geht denselben Weg wie die Item-Box: die gemeinsame      */
+/* byte-treue Oeffnen-Strecke des Menues (Stufe 1 Abblende @0x8001ca64-88, Stufe 2     */
+/* Schwarz + Task-Start @0x8001ca98-cb4c), Ziel ist der Leser statt der Reiterwahl.    */
+/* ---------------------------------------------------------------------------------- */
+void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id)
+{
+    if (s_alive || s_stage != 0) return;
+    if (!re15_files_doc(doc)) return;       /* kein Eintrag -> nichts (Port-Schranke) */
+    s_doc_target = 1;
+    s_doc_nr     = doc;
+    s_doc_taken  = taken_bit;
+    s_doc_aot    = aot_slot;
+    s_doc_prop   = obj_id;
+    s_doc_msg    = 0;
+    s_doc_tick   = 0;
+    s_doc_t_added = s_doc_t_closed = s_doc_t_msg_gone = 0;
+    s_doc_t_flag = s_doc_t_zone = s_doc_t_prop = 0;
+    s_latch = 1;                            /* wie re15_menu_request_box */
+    s_stage = 1;
+}
+int re15_menu_doc_active(void) { return s_doc_target; }
+
 /* Bridge for the box transfer reject (re15_itembox.c): open desc-bank entry 0
  * ("You can't use it here.") at (0x18,0xa8) — the RE1.5 cant-use message infra
  * (FUN_80027e68(0x00a80018,0x8400,0,0) @0x8004b2d8), standing in for RE2's box
@@ -1892,6 +2233,9 @@ void re15_menu_toggle(void)
         s_c3 = 0; s_c4 = 0;
         s_box_target = 0;
         g_inv_screen.box_mode = 0;
+        s_doc_target = 0; s_doc_msg = 0; s_doc_open_se = 0;   /* Runde 30 */
+        g_inv_screen.file_bild = 0;
+        re15_re2doc_select(-1);
         s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;

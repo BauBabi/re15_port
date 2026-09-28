@@ -11,6 +11,7 @@
 #include "re15_damage.h"      /* re15_player_equipped_weapon / _set_equipped_weapon (DAT_800aca5d) */
 #include "re15_savepoint.h"   /* re15_savepoint_loc — Ortsnamen-Index (Patch-Analog 0x800B0FBF) */
 #include "re15_scd.h"         /* Weste: Flag(3,0x75) -> work_vars[0x10]-Rekonstruktion */
+#include "re15_files.h"       /* v9: FILE-Liste (RE2 @0x800D4B68, 24 Plaetze) */
 #include <string.h>
 #include <stddef.h>
 
@@ -81,8 +82,38 @@ int re15_savedata_validate(re15_savedata_t *sd)
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
 
-    if (sd->version >= 7) {
+    if (sd->version >= 9) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
+    }
+    if (sd->version == 7 || sd->version == 8) {
+        /* HEBUNG v7/v8 -> v9 (Runde 30, SPEICHER-VERTRAG): v7 und v8 haben dasselbe
+         * Layout und enden mit dem Pruefwort dort, wo in v9 visited_floor[] beginnt
+         * (Offset 900, gemessen: offsetof(visited_floor) == 900, sizeof 944). Das
+         * Pruefwort deckt [0,900). Beide neuen Felder entstehen in EINEM Schritt.
+         * Der uebergebene Puffer ist v9-gross (re15_memcard.c liest sizeof(tmp) ab
+         * Block+0x100; der Block wird beim Schreiben genullt), das Lesen bei 900 ist
+         * also gedeckt. Muster: der v5->v6-Zweig oben. */
+        size_t off = offsetof(re15_savedata_t, visited_floor);
+        uint32_t old_ck, sum = 0;
+        const uint8_t *p = (const uint8_t *)sd;
+        memcpy(&old_ck, p + off, sizeof old_ck);
+        for (size_t i = 0; i < off; i++) sum += p[i];
+        if (sum != old_ck) return -1;
+        /* v7: die Besucht-Bits bedeuten etwas anderes (laufende Zonen-Nummer statt
+         * Raum-Nummer) und wurden bisher in re15_savedata_restore ueber
+         * `in->version >= 8` verworfen. Weil der Stand hier auf v9 gestempelt wird,
+         * muss das Verwerfen HIER geschehen — sonst wuerde ein v7-Stand seine alten
+         * Bits ploetzlich importieren. */
+        if (sd->version == 7)
+            memset(sd->visited, 0, sizeof sd->visited);
+        memset(sd->visited_floor, 0, sizeof sd->visited_floor); /* R30-VERTRAG: fremdes Feld */
+        /* files: leer = 0xFF (RE2 `addiu v0,zero,255` @0x800682e0, 24 Plaetze
+         * `addiu a1,zero,24` @0x800682dc) — ein Stand von vor Runde 30 hat kein
+         * Dokument aufgehoben. */
+        memset(sd->files, 0xFF, sizeof sd->files);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
     }
     if (sd->version >= 2 && sd->version <= 6) {
         /* Alt-Stand: im v6-Layout pruefen/heben, dann ins v7-Layout uebernehmen.
@@ -118,6 +149,9 @@ int re15_savedata_validate(re15_savedata_t *sd)
         memcpy(sd->box,     old.box,     sizeof old.box);
         memcpy(sd->wounds,  old.wounds,  sizeof sd->wounds);
         memcpy(sd->visited, old.visited, sizeof sd->visited);
+        /* v9: die beiden neuen Felder. visited_floor bleibt vom memset oben 0. */
+        memset(sd->visited_floor, 0, sizeof sd->visited_floor); /* R30-VERTRAG: fremdes Feld */
+        memset(sd->files, 0xFF, sizeof sd->files);   /* leer = 0xFF, RE2 @0x800682e0 */
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
     }
@@ -169,6 +203,12 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
                                           * im Original-Save-memcpy @0x800261c4-d8 enthalten) */
 
     re15_map_visited_export(out->visited);   /* v6 RE2-Kartensystem (re15_map_visited.c) */
+
+    memset(out->visited_floor, 0, sizeof out->visited_floor); /* R30-VERTRAG: fremdes Feld */
+    /* v9 FILE-Liste: RE2 speichert sie mit (Offset 0x6C4 im Block 0x800D44A4 =
+     * 0x800D4B68 - 0x800D44A4; geschrieben 0x800 Byte `addiu v0,zero,2048`
+     * @0x801c0c70, MEM_CARD.BIN laedt @0x801BFA18). */
+    re15_files_export(out->files);
 
     out->checksum = re15_savedata_checksum(out);
 }
@@ -262,6 +302,11 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
         memset(leer, 0, sizeof leer);
         re15_map_visited_import(leer);
     }
+    /* in->visited_floor wird hier NICHT gelesen. */ /* R30-VERTRAG: fremdes Feld */
+    /* v9 FILE-Liste zurueckholen (RE2 laedt sie mit: 0x798 Byte ab 0x800D44A4,
+     * `addiu a2,zero,1944` @0x801c0dfc; die Liste endet bei 0x6C4 + 0x18 = 0x6DC).
+     * Aeltere Staende tragen nach der Hebung 24 x 0xFF = leere Liste. */
+    re15_files_import(in->files);
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

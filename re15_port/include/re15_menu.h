@@ -59,6 +59,38 @@ void re15_menu_request_box(void);
 /* DEBUG/harness: instant box-screen open (fades skipped; RE15_BOX_SHOT/tests). */
 void re15_menu_toggle_box(void);
 
+/* ---- RUNDE 30: DOKUMENT AUFHEBEN (nach RE2, Item-Zone FUN_80051884 @0x800518f0-0x80051918
+ * und Aufnahme FUN_80071ba0 @0x80071d00-0x80071df8; Beleg-Block in menu_common.c) ----
+ *
+ * Fordert den Leser fuer Dokument `doc` an (Nummer der Dokument-Tabelle re15_files.h;
+ * 0 = Irons Diary = Item-Id 0x48). Es gibt KEINE "Will you take"-Abfrage: der Leser
+ * oeffnet sofort auf der Titelseite, das Dokument haengt dann schon an der FILE-Liste.
+ * Nach dem Schliessen steht die Meldung "The <name> has been filed."; ERST wenn sie
+ * bestaetigt ist, wird abgeraeumt:
+ *     Flag (9, taken_bit) setzen      taken_bit <= 0 = kein Flag
+ *     AOT-Slot aot_slot inaktiv       aot_slot  <  0 = keine Zone
+ *     Prop obj_id ausblenden          obj_id < 0 oder 0xFF = kein Weltmodell
+ * Wirkungslos, solange das Menue offen ist oder eine Menue-Blende laeuft, und fuer ein
+ * Dokument, das die Tabelle nicht fuehrt.
+ * Die Item-Zone ruft das selbst: aot_common.c zweigt in BEIDEN Item-Zweigen bei
+ * item_type >= 0x48 hierher ab, VOR re15_item_modal_start. */
+void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id);
+/* 1, solange der laufende Menue-Lauf der Aufnahme-Leser ist. */
+int  re15_menu_doc_active(void);
+/* Steht die Meldung "has been filed"? Dann 1, *out_item_id = Item-Id des Dokuments
+ * (fuer den Namen im Prompt-Skript, Schluessel 7) und *out_reveal = Stand der
+ * Schreibmaschine in Glyphen. Die Plattform zeichnet sie bei (0x22,0xb4). */
+int  re15_menu_doc_msg(uint8_t *out_item_id, int *out_reveal);
+int  re15_menu_doc_msg_total(void);
+/* Reihenfolge-Protokoll fuer die Riegel: Bildnummer des Aufnahme-Laufs, in der das
+ * Ereignis fiel (0 = nie). which: 0 an die Liste gehaengt, 1 Leser geschlossen,
+ * 2 Meldung bestaetigt, 3 Flag gesetzt, 4 Zone inaktiv, 5 Weltmodell ausgeblendet. */
+uint32_t re15_menu_doc_trace(int which);
+/* ANSEHHILFE (Umgebungsvariable RE15_DOC, nur Debug): VIERECK auf einer beliebigen
+ * Listenzeile oeffnet den Leser mit diesem Bild-Satz und dieser letzten Seite.
+ * bildsatz < 0 schaltet die Hilfe ab. Kein Spielpfad setzt sie. */
+void re15_menu_debug_view_doc(int bildsatz, int max_page);
+
 /* Introspection (tests / state log). */
 int  re15_menu_stage(void);      /* DAT_800b5359 mirror (0 = normal gameplay)      */
 int  re15_menu_phase(void);      /* DAT_800b25bf (0 init / 1 run / 2 close)        */
