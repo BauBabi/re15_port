@@ -137,19 +137,63 @@ mit der neuen Kamera neu.
     80021e8c 29 4f 01 0c  jal FUN_80053ca4        Blickmatrix DAT_800b5288 aus Cut-Satz (+0x24, x0x20)
     80021e98 57 54 20 a0  sb  zero,DAT_800b5457
 
-`FUN_80053ca4` hat sonst nur drei Aufrufer: @0x80015a68 (Todeskamera FUN_80015850),
-@0x80016494 (Spielstart), @0x80046140 (Moduswechsel FUN_800460b8). Im Spiel setzt also allein
-der Apply die Blickmatrix — Hintergrund, Projektionsabstand und Blickmatrix wechseln immer
-gemeinsam.
+`FUN_80053ca4` hat in der EXE sonst nur drei Aufrufstellen: @0x80015a68 (Todeskamera
+FUN_80015850), @0x80016494 (Spielstart/Raumladen), @0x80046140 (Moduswechsel FUN_800460b8).
+Dynamisch (3.4) kommen Aufrufe aus Overlay-Code dazu (Rücksprung 0x801015ac 41-mal,
+0x80101bdc einmal), alle VOR dem ersten Spielbild (Vorspann/Titel). Im Spiel setzt allein der
+Apply die Blickmatrix — Hintergrund, Projektionsabstand und Blickmatrix wechseln gemeinsam.
 
 **Zeigt das Original selbst ein Bild Versatz?** Nein. Jedes gezeigte Bild trägt in Hintergrund
 und Projektion denselben Cut. Das Bild des Anforderungsdurchlaufs (alte Kamera, neue Logik)
 wird verworfen, stattdessen steht das vorige Bild ein weiteres Mal (plus die CD-Ladezeit von
 FUN_80013c50); das erste Bild des neuen Cuts ist das im nächsten Durchlauf gezeichnete.
 
-Dynamisch nicht gemessen (Abschnitt 7): der Kontrollfluss ist bedingungslos
-(`jal FUN_80021bbc` und direkt dahinter `j LAB_800215fc`), die Aussage hängt an keinem
-Laufzeitwert.
+### 3.4 Dynamischer Beleg im Original (PCSX-Redux)
+
+`nachschliff-cut-blitz_tools/r30_cb_present_trace.lua`, gestartet über `pcsx_drive.py` des
+Skills re15-pcsx-watchpoint (`-interpreter -debugger`, MZD-Disc; deren Bytes an
+@0x80021558 `ef 86 00 0c 00 00 00 00 7f 85 00 08` und @0x80021e6c `0c 9b 01 0c c2 21 04 00`
+sind gleich der `info/Re1.5/PSX.EXE` @0x11d58 / @0x1266c). Exec-Haltepunkte (Rückruf immer
+`true`) auf Present-Eintritt 0x8002137c, Apply-Aufruf 0x80021558, BG-LoadImage 0x8002157c,
+erstes DrawOTag 0x800215bc, Pufferwechsel 0x800215f8, CD-BG 0x80021d2c, Blickmatrix
+0x80021e8c und den Eintritt 0x80053ca4 (Rücksprungadresse gezählt). New Game, ROOM1240-Montage,
+ROOM1170-Hubschrauberszene; Lauf bis Present 7603.
+
+| | Presents | DrawOTag | Pufferwechsel | BG-LoadImage | CD-BG | Blickmatrix | Puffer davor = danach |
+|---|---|---|---|---|---|---|---|
+| mit Apply | **22** | **0** | **0** | **0** | 22 | 22 | 22 von 22 |
+| ohne Apply | 7581 | 7581 | 7581 | — | — | — | — |
+
+`FUN_80053ca4`-Rücksprünge: 0x80021e94 (= Apply @0x80021e8c) 22-mal, 0x8001649c (@0x80016494)
+3-mal (Raumladungen), Overlay 0x801015ac 41-mal und 0x80101bdc einmal — die beiden letzten
+alle vor dem ersten Apply (Vorspann).
+
+Die 22 Applies in Reihenfolge (angezeigter Cut beim Eintritt → nach dem Apply):
+Montage 0,0,1,2,3,4,5,6,7,8; ROOM1170 7, 0, 2, 1, 2, 0, **0→1, 1→2, 2→3** (Zonenwechsel:
+nur der Apply ändert DAT_800b0fe4), 6, 4, 3. Zonenwechsel und SCD `Cut_chg` laufen durch
+denselben Apply, und in KEINEM Apply-Bild wird gezeichnet oder der Puffer gewechselt.
+
+**Zeitvergleich ROOM1170** (Abstände zwischen den Applies, Original in Presents, Port in
+Bildern der `[fade-log] CUT`-Zeilen):
+
+| Wechsel | Original | Port vorher | Port nachher |
+|---|---|---|---|
+| 7→0 → 0→2 | 34 | 34 | 34 |
+| 0→2 → 2→1 | 503 | 503 | 503 |
+| 2→1 → 1→2 | 61 | 61 | 61 |
+| 1→2 → 2→0 | 187 | 187 | 187 |
+| 2→0 (SCD) → 0→1 (Zone) | **94** | 95 | **94** |
+| 0→1 → 1→2 (Zone) | 36 | 36 | 36 |
+| 1→2 → 2→3 (Zone) | 32 | 32 | 32 |
+| 2→3 (Zone) → 3→6 (SCD) | 19 | 20 | 21 |
+| 3→6 → 6→4 | 135 | 135 | 135 |
+| 6→4 → 4→3 | 220 | 220 | 220 |
+
+Vorher wandte der Port SCD-Anforderungen im selben Bild, Zonen-Anforderungen ein Bild später
+an; jetzt beide ein Bild nach der Anforderung wie der Present des Originals — die Zeile
+SCD→Zone stimmt damit (94). Die Zeile Zone 2→3 → `Cut_chg(6)` weicht in der LOGIK um zwei
+Bilder ab (Anforderung Port 1392 / 1413, also 21, gegen 19 im Original); das liegt vor dem
+Apply (Laufweg oder Skripttakt der Szene) und ist hier nicht behandelt (Abschnitt 7).
 
 ## 4. Ursache im Port
 
@@ -240,7 +284,13 @@ Vorher gegen nachher: F444–F447, F478, F480–F482 je **0**; nur F479 (139758)
 Warp-Bild F0: 0 nicht-schwarze Pixel in beiden Fassungen; F0, F1, F2, F5, F8 vorher gegen
 nachher je **0** Pixel.
 
-### 6.5 Riegel `integration_r30_cut_blitz`
+### 6.5 Vorspann-Zensus nachher (`n_intro`, New Game bis ROOM1170 Bild ~2400)
+
+3931 Bilder, ein einziges `sync=0`: F0 in ROOM1170 = Warp-Bild aus ROOM1240 (bg 1240#8,
+fade0 255, tris 0). Alle elf Wechsel in ROOM1170 (F446, F480, F983, F1044, F1231, F1325,
+F1361, F1393, F1414, F1549, F1769) in `sync=1`. Vorher: elf `sync=0` (Abschnitt 2.3).
+
+### 6.6 Riegel `integration_r30_cut_blitz`
 
 `tests/integration/test_r30_cut_blitz.cmake`, angemeldet in `tests/unit/probes/r30_cut-blitz.cmake`.
 Zwei Läufe der echten exe mit `RE15_CUT_SYNC_LOG`; verlangt in jedem Bild mit 3D `sync=1`
@@ -251,3 +301,24 @@ Wechsel F446 und F480; grün in 42 s.
 **Mutationsprobe:** Aufruf von `pc_cam_present_apply` hinter den Hintergrund-Blit verschoben
 → **rot**, gemeldet werden genau F143 (bg 1150#0, view 1) und F239 (bg 1150#1, view 2).
 Danach `git checkout` der Datei und Neubau.
+
+### 6.7 Suite
+
+`ctest --test-dir re15_port/build --timeout 240`: **395/395 grün** (394 Bestand + der neue
+Riegel).
+
+## 7. Offen / nicht gemessen
+
+* **Bildwiederholung im Anforderungsbild** (Original @0x80021560: kein DrawOTag, kein
+  Pufferwechsel, dynamisch 22/22) ist nicht nachgebaut — Port-Wahl, keine Original-Adresse
+  (Abschnitt 5). Der Port zeigt dort das mit dem alten Cut gezeichnete, in sich stimmige Bild.
+* **Logik-Versatz ROOM1170** Zone 2→3 → `Cut_chg(6)`: 21 Bilder im Port gegen 19 Presents im
+  Original (3.4). Unabhängig vom Apply; nicht untersucht.
+* **Tür-Warp-Bild**: im Port weiter Hintergrund des alten Raums + 3D des neuen, vollständig
+  unter der Türblende (0 nicht-schwarze Pixel, 6.4). Nicht umgebaut, weil unsichtbar; der
+  Riegel lässt `sync=0` nur unter fade0=255 zu.
+* **PSX-Fassung des Ports** (`platform/psx/main.c`) nicht angefasst: sie blittet den
+  Hintergrund in `end_frame` und lässt im Wechselbild das 3D weg (`skip_3d_frame`), hat den
+  Mischfehler also nicht. Nicht gebaut/gemessen (PSX-Ziel baut derzeit nicht).
+* **gdigrab** am Fenster nicht gemacht; die Bildabnahme läuft über RE15_FRAMEDUMP
+  (Readback vor SDL_RenderPresent, beschleunigter Renderer).
