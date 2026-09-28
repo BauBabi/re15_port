@@ -489,4 +489,10 @@ int re15_inv_file_archiv_maske(int seite);
 int re15_inv_file_archiv_basis(int seite);
 const uint8_t *re15_inv_file_archiv_name(int id);
 
+/* Runde 30 — MESSSCHIENE (nur Tests): Glyphen-Drucker FUN_80028ec4 an freier Stelle,
+ * damit der '&'-Digraph-Umbruch der Archiv-Namen 0x59-0x5b pruefbar bleibt
+ * (@0x800131c0-c4 / @0x80028fe8). Rueckgabe = Anzahl erzeugter Ops. */
+int re15_inv_screen_text_probe(re15_inv_op_t *ops, int max_ops, int x0, int y0,
+                               const uint8_t *p, int flags);
+
 #endif /* RE15_INV_SCREEN_H */

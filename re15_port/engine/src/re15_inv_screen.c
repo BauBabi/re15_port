@@ -1215,6 +1215,20 @@ static void emit_text(emit_t *e, int x0, int y0, const uint8_t *p, int flags)
     }
 }
 
+/* MESSSCHIENE (Runde 30, nur Tests, kein Spielpfad): der Glyphen-Drucker FUN_80028ec4
+ * (emit_text oben) an freier Stelle. Seit die FILE-Liste dynamisch ist, erreicht kein
+ * Spielpfad mehr die RE1-Namen mit dem '&'-Digraph (Archiv-Zeilen 0x59-0x5b); der
+ * Umbruch-Quirk (@0x800131c0-c4 / @0x80028fe8) lebt aber im Drucker weiter und wird
+ * ueber diese Schiene in test_inv_fsm.c festgehalten. Rueckgabe = Anzahl Ops. */
+int re15_inv_screen_text_probe(re15_inv_op_t *ops, int max_ops, int x0, int y0,
+                               const uint8_t *p, int flags)
+{
+    emit_t e;
+    e.ops = ops; e.n = 0; e.max = max_ops;
+    emit_text(&e, x0, y0, p, flags);
+    return e.n;
+}
+
 /* Reader footer "page/total" = DEBUG.BIN 0x800c7744: number formatter 0x800c78a8
  * (tens+0xc only when nonzero @0x800c78bc-c8, ones+0xc @0x800c78d0-d4), separator
  * glyph 0x38 (@0x800c775c-60), terminator 7 (@0x800c7778-7c); centered x =

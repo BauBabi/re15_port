@@ -961,6 +961,30 @@ static void file_wave_tests(void)
               n_title);
     }
     fframe(RE15_PAD_BIT_LEFT);                  /* back to page 0 */
+    /* (F4b) der '&'-Digraph-Umbruch, jetzt ueber die Messschiene des Glyphen-Druckers
+     * (Nachbesserung Runde 30: der Beleg fiel mit den RE1-Namen aus der Liste, der
+     * Quirk lebt im Drucker weiter). Archiv-Name 0x59 traegt den Digraph 0x64 ->
+     * SIGNED pair-table read @0x800c4440 = codes {9,8} -> FUN_80028ec4 laeuft CENTER
+     * (frisst 2 Rohbytes) + NEWLINE, der Rest der Zeile rutscht 16 px tiefer
+     * (@0x800131c0-c4 + @0x80028fe8). Wie frueher in Zeile 7 von Seite 1:
+     * y = 0x35 + 7*16 = 0xc5, der Schwanz liegt bei y = 0xd5. Gegenprobe 0x58 (ohne
+     * Digraph): kein Schwanz. */
+    {
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        const uint8_t *amp = re15_inv_file_archiv_name(0x59);
+        const uint8_t *ohne = re15_inv_file_archiv_name(0x58);
+        int bleed = 0, bleed_ohne = 0, n;
+        n = amp ? re15_inv_screen_text_probe(ops, RE15_INV_MAX_OPS, 0x2c, 0xc5, amp, 0) : 0;
+        for (i = 0; i < n; i++)
+            if (ops[i].kind == RE15_INV_OP_SPRT && ops[i].clut == RE15_INV_CLUT_TEXROW0 &&
+                ops[i].y == 0xc5 + 0x10) bleed++;
+        n = ohne ? re15_inv_screen_text_probe(ops, RE15_INV_MAX_OPS, 0x2c, 0xc5, ohne, 0) : 0;
+        for (i = 0; i < n; i++)
+            if (ops[i].kind == RE15_INV_OP_SPRT && ops[i].y == 0xc5 + 0x10) bleed_ohne++;
+        CHECK(bleed > 0 && bleed_ohne == 0,
+              "(F4b) '&' digraph newline-bleed at y=0xd5 (Archiv 0x59: %d Glyphen), "
+              "Gegenprobe 0x58 ohne Digraph: %d", bleed, bleed_ohne);
+    }
 
     /* (F5) row select @0x800c7010: SQUARE enters (SE(4,6) + sub=1 + row=0
      * @0x800c6ea0-bc); DOWN/UP wrap 10 (@0x800c7098-70fc) with SE(4,4); CROSS backs
