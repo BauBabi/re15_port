@@ -1358,3 +1358,13 @@ von Satz 6 und ist nicht vermessen (RE2 hat denselben Mindestabstand). PSX- und 
 nicht gebaut (Android: `re15_files.c` neu → frisch konfigurieren). Der zusammengeführte Stand
 mit karten-marken ist NICHT gebaut; der Probelauf `git merge-tree` liefert nur die
 Konfliktliste oben.
+
+---
+
+## 11. Nachtrag J — englischer Text (Spur diary-en)
+
+Der deutsche Satz dieses Dossiers (§6.4: 17 Textseiten, 427 Wörter, `max_page` 17) ist
+ERSETZT: das Irons Diary trägt seit Nachtrag J den englischen Text des Nutzers
+(`irons_diary_en.txt`) auf 15 Textseiten, `max_page` 15, 408 Wörter, 0 konstruierte Glyphen;
+`FILE25_p16/p17` sind entfernt. Titel, p00 und Illustration sind unverändert.
+Einzelheiten, Riegel und Abnahme: `nachtrag-diary-en.md`.
