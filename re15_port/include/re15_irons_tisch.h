@@ -181,6 +181,40 @@
 #define RE15_IRONS_KLEMME_CUT        2
 #define RE15_IRONS_KLEMME_TIEFE      87
 
+/* LICHTSATZ DER ZWEI PROPS — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE (Runde 30 Nachschliff,
+ * Spur tischlicht; Dossier irons-diary-welt.md Abschnitt 10).
+ * Das Original leuchtet jedes Objekt mit dem Lichtsatz des AKTIVEN Cuts (FUN_8002c18c ->
+ * FUN_80053fc0 am Objektort, RDT @0x2C = lightStart, 40 Byte je Cut). Fuer alle Objekte des
+ * Spiels bleibt das so. NUR Buch (obj 5) und Karte (obj 6) in ROOM1150/1151 - die das
+ * Original auf diesem Tisch nicht hat - nehmen IMMER den Lichtsatz von Cut 2:
+ *   ROOM1150.RDT und ROOM1151.RDT @0x003E8 (byte-gleich, Lichtblock @0x398..0x500)
+ *   `01 00 00 00 91 91 6e ff 87 6e 80 80 80 6e 5a 54 b1 97 30 f8 b3 a0 b8 8e 30 f8 20 b8
+ *    d0 07 d0 07 d0 07 20 4e c0 5d 20 4e` -> ambient (110,90,84), Licht 1 (145,145,110) bei
+ *   (-26703,-2000,-24397), Licht 2 (255,135,110) bei (-29000,-2000,-18400).
+ * Bisher in Cut 6: @0x00488 ambient (40,40,24), nur Licht 0 -> das Buch behielt 16 % seiner
+ * Eigenfarbe, Mittel-RGB (17,16,8) / Karte (17,17,10) auf hellem gemaltem Tisch.
+ * Die Props sind NUR in Cut 2 und Cut 6 zu sehen (Framedump-Zensus Cut 0..8, Ausgangs-exe
+ * cac33993: 704 / 11060 Pixel, alle anderen 0) - in Cut 2 aendert sich also nichts.
+ * MESSTABELLE (echter Renderer, Framedump 960x720, r30_tl_licht_auswertung.py): Helligkeit
+ * Y = 0.299R+0.587G+0.114B des Mittel-RGB je Prop, jeder VORHANDENE Lichtsatz des Raums;
+ * Zielmass = gemalte Umgebung im Nullbild desselben Cuts, Spanne [Y Buch .. Y Klemmbrett]:
+ * Cut 2 47.4 .. 134.7, Cut 6 40.5 .. 120.1 (Masken 10 % geschrumpft; wie abgelesen
+ * 47.2 .. 124.2 / 37.8 .. 105.0).
+ *   Satz  Datei-Offset  ambient        Cut 2 Buch / Karte   Cut 6 Buch / Karte   Summe |dY|
+ *   L0    @0x00398      (70,50,44)     20.0 / 23.0          21.8 / 23.1          88.0
+ *   L1    @0x003C0      (90,70,64)     26.6 / 30.8          28.7 / 30.8          59.0
+ *   L2    @0x003E8      (110,90,84)    37.3 / 44.0          39.4 / 44.0          14.7  <- Wahl
+ *   L3    @0x00410      (90,70,64)     28.5 / 33.3          30.8 / 33.4          50.0
+ *   L4    @0x00438      (110,90,84)    36.5 / 42.7          38.5 / 42.7          17.7
+ *   L5    @0x00460      (40,40,24)     15.9 / 18.6          17.6 / 18.6         105.3
+ *   L6    @0x00488      (40,40,24)     14.1 / 16.5          15.6 / 16.5         113.3  (bisher Cut 6)
+ *   L7    @0x004B0      (40,40,24)     15.9 / 18.6          17.6 / 18.6         105.3
+ *   L8    @0x004D8      (83,78,78)     26.6 / 30.8          27.7 / 30.8          59.9
+ * Rang in ALLEN sechs Varianten (RGB-Abstand und Helligkeit, Masken 0/10/25 %):
+ * L2 L4 L3 L1 L8 L0 L5 L7 L6. Kein neuer Lichtwert - nur ein vorhandener Satz.
+ * RIEGEL: integration_r30_irons_tisch_licht (probes/r30_irons-tisch-licht.cmake). */
+#define RE15_IRONS_LICHT_CUT         2
+
 /* Legt beide Props + Zonen beim Raumstart an — in ROOM1150/1151, je Gegenstand nur, wenn
  * sein Zone-9-Bit nicht gesetzt ist. Gerufen an BEIDEN Raumstart-Wegen des Ports, jeweils
  * direkt hinter re15_sicherung_install: Tuer (scd_room_setup.c scd_room_reenter) und
@@ -193,6 +227,11 @@ void re15_irons_tisch_install(uint16_t room_id);
  * Liefert (int)re15_pri_mask_camera_z(87) - 1 nur fuer obj_id 5/6 in ROOM1150/1151 im
  * Cut 2 (s. TIEFEN-KLEMME). */
 int re15_irons_tisch_sort_max(uint16_t room_id, int cut, int obj_id);
+
+/* Lichtsatz-Index (Cut) fuer ein Prop — oder -1 = der des aktiven Cuts (byte-true, jedes
+ * andere Objekt). Liefert RE15_IRONS_LICHT_CUT nur fuer obj_id 5/6 in ROOM1150/1151
+ * (s. LICHTSATZ DER ZWEI PROPS). */
+int re15_irons_tisch_licht_cut(uint16_t room_id, int obj_id);
 
 /* Eingebackene Engine-Bytes (gen/irons_tisch_props.inc) fuer den Plattform-Lader:
  * obj_id 5 = Dokument (RE2-Buch), 6 = Memory Card. NULL fuer jede andere obj_id. */

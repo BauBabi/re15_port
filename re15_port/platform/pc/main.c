@@ -10002,8 +10002,18 @@ re_title:;
                         g_re15_active_cut >= 0 &&
                         g_re15_active_cut < g_re15_room_lights.cut_count) {
                         int32_t prop_pos_w[3] = { prop_x, prop_y, prop_z };
+                        /* Lichtsatz des AKTIVEN Cuts (byte-true, FUN_8002c18c) — AUSSER fuer
+                         * Irons Diary / Memory Card in ROOM1150/1151: ⛔ PORT-WAHL, KEINE
+                         * ORIGINAL-ADRESSE, dort immer der Satz von Cut 2 (RDT @0x003E8;
+                         * Cut 6 @0x00488 liess sie fast schwarz). Messtabelle + Offsets:
+                         * include/re15_irons_tisch.h (LICHTSATZ DER ZWEI PROPS). */
+                        int licht_cut = g_re15_active_cut;
+                        { const int irons_licht = re15_irons_tisch_licht_cut(
+                              (uint16_t)g_current_room_id, oid);
+                          if (irons_licht >= 0 && irons_licht < g_re15_room_lights.cut_count)
+                              licht_cut = irons_licht; }
                         re15_light_setup_actor(
-                            &g_re15_room_lights.cuts[g_re15_active_cut],
+                            &g_re15_room_lights.cuts[licht_cut],
                             prop_pos_w, NULL, &lctx_prop_world);
                         re15_light_ctx_rotate_for_bone(&lctx_prop_world, prot_q12,
                                                        &lctx_prop);
