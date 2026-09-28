@@ -1,0 +1,620 @@
+F191     R1170 C0  hp=100  pos=(  3940, -7200, 14167) rot=1024  vz=12146/11841/11535 scr=(178,112) kasten=x168..188,y80..115 masken=0 | keine Maske am Koerper
+# RE1.5 Port — BEFUND-LOG (Sep 27 2026 21:35:52)
+# Eine Zeile je 15 Bilder, dazu jede F9-MARKE.
+# Spalten:
+#   F<n>        Bildnummer
+#   R<xxxx> C<n> Raum und Kamerawinkel
+#   pos=(x,y,z) Weltlage der Figur, rot = Blickrichtung (0..4095)
+#   vz=a/b/c    Kamera-Tiefe von FUSS / HUEFTE / KOPF
+#   scr=(x,y)   Fusspunkt im 320x240-Bild
+#   kasten=...  geschaetzter Bildkasten der Figur (Messgroesse)
+#   masken=n    geladene Vordergrund-Masken dieses Winkels
+#   [i:(x,y)wxh t=T z=Z DECKT|frei]  jede Maske, die den Kasten beruehrt.
+#       Der Zeichner verdeckt, sobald die Figur-Tiefe >= z ist
+#       (z = (T+1)*65536/1023, Original-Regel depth < (1023*vz)>>16, strikt).
+#       'frei' heisst: die Figur steht VOR dieser Maske.
+# ---------------------------------------------------------------
+F0       R1150 C2  hp=100  pos=(-22689,     0,-19693) rot=1864  vz= 5647/ 5383/ 5119 scr=( 98,190) kasten=x79..117,y125..193 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F15      R1150 C2  hp=100  pos=(-22689,     0,-19693) rot=1864  vz= 5647/ 5383/ 5119 scr=( 98,190) kasten=x79..117,y125..193 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F30      R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=1864  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F45      R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=424   vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F60      R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=40    vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F75      R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=-824  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F90      R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=-152  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F105     R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=1288  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F120     R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=1864  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F135     R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=3112  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F150     R1150 C2  hp=100  pos=(-22488,     0,-19636) rot=3784  vz= 5454/ 5190/ 4926 scr=( 97,195) kasten=x77..117,y128..198 masken=54 | [0:(78,105)24x24 t=107 z=6918 frei] [1:(102,105)24x24 t=87 z=56
+F6       R11F0 C0  hp=100  pos=(   250,     0,   250) rot=3976  vz= 7608/ 7427/ 7247 scr=(153,140) kasten=x138..168,y91..143 masken=105 | keine Maske am Koerper
+F21      R11F0 C0  hp=100  pos=(   250,     0,   250) rot=4264  vz= 7608/ 7427/ 7247 scr=(153,140) kasten=x138..168,y91..143 masken=105 | keine Maske am Koerper
+F36      R11F0 C0  hp=100  pos=(    42,     0, -1128) rot=5248  vz= 6261/ 6080/ 5899 scr=(155,155) kasten=x138..172,y96..158 masken=105 | keine Maske am Koerper
+F51      R11F0 C1  hp=100  pos=(  -239,     0, -4070) rot=4960  vz= 8750/ 8676/ 8601 scr=(128,143) kasten=x115..141,y100..146 masken=0 | keine Maske am Koerper
+F66      R11F0 C1  hp=100  pos=(   332,     0, -6965) rot=4960  vz= 6139/ 6065/ 5990 scr=(160,162) kasten=x142..178,y102..165 masken=0 | keine Maske am Koerper
+F81      R11F0 C2  hp=100  pos=(   332,     0, -9860) rot=4960  vz=12915/12841/12768 scr=(178,130) kasten=x168..188,y100..133 masken=0 | keine Maske am Koerper
+F96      R11F0 C2  hp=100  pos=(  1004,     0,-12755) rot=4960  vz=11209/11135/11061 scr=(136,135) kasten=x125..147,y101..138 masken=0 | keine Maske am Koerper
+F111     R11F0 C8  hp=100  pos=(   359,     0,-15411) rot=5752  vz= 5389/ 5184/ 4979 scr=(128,202) kasten=x108..148,y134..205 masken=0 | keine Maske am Koerper
+F126     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F141     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F156     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F171     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F186     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F201     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F216     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F231     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F246     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F261     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F276     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F291     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F306     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F321     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F336     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F351     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F366     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F381     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F396     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F411     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F426     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F441     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F456     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F471     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F486     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F501     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F516     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F531     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F546     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F561     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F576     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F591     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F606     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F621     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F636     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F651     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F666     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F681     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F696     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F711     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F726     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F741     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F756     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F771     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F786     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F801     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F816     R11F0 C10 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=17493/16741/15989 scr=(376,577) kasten=x368..384,y554..580 masken=0 | keine Maske am Koerper
+F831     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F846     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F861     R11F0 C13 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=10927/10917/10907 scr=(-388,151) kasten=x-399..-377,y116..154 masken=0 | keine Maske am Koerper
+F876     R11F0 C14 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=10927/10917/10907 scr=(-388,151) kasten=x-399..-377,y116..154 masken=0 | keine Maske am Koerper
+F891     R11F0 C14 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=10927/10917/10907 scr=(-388,151) kasten=x-399..-377,y116..154 masken=0 | keine Maske am Koerper
+F906     R11F0 C14 hp=100  pos=( -1432,     0,-15733) rot=6112  vz=10927/10917/10907 scr=(-388,151) kasten=x-399..-377,y116..154 masken=0 | keine Maske am Koerper
+F921     R11F0 C8  hp=100  pos=( -1432,     0,-15733) rot=6112  vz= 7095/ 6890/ 6685 scr=(124,168) kasten=x108..140,y116..171 masken=0 | keine Maske am Koerper
+F936     R11F0 C8  hp=100  pos=( -1432,     0,-14903) rot=6760  vz= 7135/ 6930/ 6725 scr=(148,167) kasten=x132..164,y115..170 masken=0 | keine Maske am Koerper
+F951     R11F0 C2  hp=100  pos=( -1632,     0,-12210) rot=7048  vz=13843/13769/13696 scr=(134,128) kasten=x125..143,y100..131 masken=0 | keine Maske am Koerper
+F966     R11F0 C2  hp=100  pos=( -1632,     0, -9308) rot=7048  vz=14933/14859/14785 scr=(172,126) kasten=x163..181,y100..129 masken=0 | keine Maske am Koerper
+F981     R11F0 C1  hp=100  pos=( -1632,     0, -6397) rot=7048  vz= 6138/ 6064/ 5990 scr=( 90,163) kasten=x72..108,y103..166 masken=0 | keine Maske am Koerper
+F996     R11F0 C1  hp=100  pos=( -1320,     0, -3440) rot=7264  vz= 9053/ 8979/ 8905 scr=(101,142) kasten=x88..114,y100..145 masken=0 | keine Maske am Koerper
+F1011    R11F0 C0  hp=100  pos=(  -885,     0,  -485) rot=7264  vz= 6649/ 6469/ 6288 scr=(122,150) kasten=x105..139,y94..153 masken=105 | keine Maske am Koerper
+F12      R11E0 C12 hp=100  pos=(-24221,     0, -8350) rot=-4848 vz= 7524/ 7202/ 6880 scr=(152,148) kasten=x137..167,y99..151 masken=0 | keine Maske am Koerper
+F27      R11E0 C12 hp=100  pos=(-23852,     0, -5828) rot=-4704 vz= 5223/ 4901/ 4579 scr=(152,204) kasten=x132..172,y134..207 masken=0 | keine Maske am Koerper
+F42      R11E0 C11 hp=100  pos=(-23374,     0, -3188) rot=-4776 vz= 8439/ 8249/ 8060 scr=(249,152) kasten=x235..263,y108..155 masken=20 | keine Maske am Koerper
+F57      R11E0 C11 hp=100  pos=(-20675,     0, -3188) rot=-4200 vz= 6057/ 5868/ 5679 scr=(245,185) kasten=x227..263,y124..188 masken=20 | keine Maske am Koerper
+F72      R11E0 C4  hp=100  pos=(-17716,     0, -3191) rot=-4056 vz=13497/13322/13146 scr=(258,123) kasten=x249..267,y94..126 masken=26 | keine Maske am Koerper
+F87      R11E0 C4  hp=100  pos=(-14936,     0, -4268) rot=-3840 vz=11587/11411/11235 scr=(233,132) kasten=x222..244,y99..135 masken=26 | [24:(220,55)8x56 t=269 z=17296 frei] [25:(228,55)8x48 t=344 z=2
+F102     R11E0 C4  hp=100  pos=(-12028,     0, -3821) rot=-4200 vz= 8873/ 8698/ 8522 scr=(233,151) kasten=x220..246,y109..154 masken=26 | [24:(220,55)8x56 t=269 z=17296 frei]
+F117     R11E0 C4  hp=100  pos=( -9043,     0, -3686) rot=-4128 vz= 6235/ 6059/ 5884 scr=(222,185) kasten=x204..240,y126..188 masken=26 | keine Maske am Koerper
+F132     R11E0 C3  hp=100  pos=( -6058,     0, -3551) rot=-4128 vz= 6768/ 6586/ 6404 scr=(135,165) kasten=x119..151,y110..168 masken=5 | keine Maske am Koerper
+F147     R11E0 C3  hp=100  pos=( -3099,     0, -3672) rot=-3912 vz= 9593/ 9411/ 9229 scr=(131,137) kasten=x119..143,y98..140 masken=5 | keine Maske am Koerper
+F162     R11E0 C3  hp=100  pos=(  -234,     0, -4497) rot=-3912 vz=12479/12297/12114 scr=(141,121) kasten=x131..151,y90..124 masken=5 | keine Maske am Koerper
+F177     R11E0 C3  hp=100  pos=(  2631,     0, -5322) rot=-3912 vz=15365/15183/15001 scr=(147,112) kasten=x138..156,y86..115 masken=5 | keine Maske am Koerper
+F192     R11E0 C2  hp=100  pos=(  5445,     0, -5348) rot=-3696 vz= 6549/ 6348/ 6147 scr=(176,174) kasten=x159..193,y118..177 masken=13 | keine Maske am Koerper
+F207     R11E0 C2  hp=100  pos=(  5639,     0, -5348) rot=-2616 vz= 6733/ 6531/ 6330 scr=(174,171) kasten=x158..190,y116..174 masken=13 | keine Maske am Koerper
+F10      R10A0 C8  hp=100  pos=( 21200, -1800, 25500) rot=1024  vz= 5507/ 5201/ 4895 scr=( 97,181) kasten=x78..116,y114..184 masken=87 | keine Maske am Koerper
+F25      R10A0 C8  hp=100  pos=( 21391, -1800, 25445) rot=184   vz= 5531/ 5225/ 4919 scr=(105,180) kasten=x86..124,y114..183 masken=87 | keine Maske am Koerper
+F40      R10A0 C7  hp=100  pos=( 24325, -1800, 25198) rot=328   vz= 6079/ 5682/ 5286 scr=(157,174) kasten=x139..175,y113..177 masken=92 | keine Maske am Koerper
+F55      R10A0 C7  hp=100  pos=( 24991, -1761, 24383) rot=1024  vz= 5227/ 4830/ 4433 scr=(165,206) kasten=x145..185,y136..209 masken=92 | keine Maske am Koerper
+F70      R10A0 C7  hp=100  pos=( 24982, -2584, 23220) rot=1024  vz= 3909/ 3512/ 3115 scr=(140,227) kasten=x114..166,y134..230 masken=92 | [36:(112,128)5x11 t=80 z=5189 frei] [44:(112,129)8x17 t=82 z=5
+F85      R10A0 C6  hp=100  pos=( 24988, -3562, 22274) rot=1024  vz= 4254/ 4228/ 4203 scr=(165,181) kasten=x140..190,y95..184 masken=0 | keine Maske am Koerper
+F100     R10A0 C6  hp=100  pos=( 24979, -4385, 21111) rot=1024  vz= 5367/ 5341/ 5315 scr=(156,135) kasten=x136..176,y67..138 masken=0 | keine Maske am Koerper
+F115     R10A0 C5  hp=100  pos=( 24536, -5400, 18693) rot=1456  vz= 6203/ 5785/ 5368 scr=(189,155) kasten=x171..207,y95..158 masken=96 | keine Maske am Koerper
+F130     R10A0 C4  hp=100  pos=( 21876, -5400, 18633) rot=2536  vz= 5366/ 4964/ 4562 scr=( 97,186) kasten=x77..117,y118..189 masken=0 | keine Maske am Koerper
+F145     R10A0 C4  hp=100  pos=( 21553, -5399, 19379) rot=3072  vz= 5905/ 5504/ 5102 scr=(120,168) kasten=x102..138,y106..171 masken=0 | keine Maske am Koerper
+F160     R10A0 C4  hp=100  pos=( 21544, -6070, 20447) rot=3072  vz= 5980/ 5578/ 5176 scr=(153,138) kasten=x135..171,y76..141 masken=0 | keine Maske am Koerper
+F175     R10A0 C3  hp=100  pos=( 21556, -7200, 22068) rot=3072  vz= 6556/ 6061/ 5567 scr=(148,175) kasten=x131..165,y119..178 masken=0 | keine Maske am Koerper
+F190     R10A0 C2  hp=100  pos=( 21556, -7200, 25068) rot=3072  vz= 8252/ 7644/ 7036 scr=( 91,115) kasten=x77..105,y70..118 masken=97 | [34:(100,115)6x7 t=68 z=4420 DECKT] [35:(80,115)20x33 t=68 z=442
+F7       R1230 C2  hp=100  pos=(  -358,     0, -6336) rot=3072  vz= 7127/ 7002/ 6877 scr=(161,161) kasten=x145..177,y109..164 masken=49 | [47:(143,113)3x33 t=132 z=8520 frei] [48:(145,138)1x6 t=133 z=
+F22      R1230 C2  hp=100  pos=(   223,     0, -4665) rot=3576  vz= 6161/ 6036/ 5911 scr=(211,173) kasten=x193..229,y113..176 masken=49 | keine Maske am Koerper
+F37      R1230 C3  hp=100  pos=(  3082,     0, -4587) rot=4008  vz= 9296/ 9130/ 8965 scr=(158,156) kasten=x145..171,y115..159 masken=54 | keine Maske am Koerper
+F52      R1230 C3  hp=100  pos=(  4740,     0, -2490) rot=3072  vz= 6926/ 6761/ 6596 scr=(123,184) kasten=x107..139,y130..187 masken=54 | keine Maske am Koerper
+F67      R1230 C4  hp=100  pos=(  4740,     0,   510) rot=3072  vz=15392/15254/15116 scr=(129,119) kasten=x120..138,y94..122 masken=0 | keine Maske am Koerper
+F82      R1230 C4  hp=100  pos=(  4740,     0,  3510) rot=3072  vz=12486/12349/12211 scr=(130,127) kasten=x120..140,y96..130 masken=0 | keine Maske am Koerper
+F97      R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2784  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F112     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2976  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F127     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2699  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F142     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2699  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F157     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2939  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F172     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2939  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F187     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2939  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F202     R1230 C4  hp=100  pos=(  4496,     0,  5539) rot=2939  vz=10562/10425/10287 scr=(136,135) kasten=x125..147,y99..138 masken=0 | keine Maske am Koerper
+F217     R1230 C4  hp=100  pos=(  4016,     0,  7879) rot=2939  vz= 8377/ 8239/ 8101 scr=(151,149) kasten=x137..165,y104..152 masken=0 | keine Maske am Koerper
+F232     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2867  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F247     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2455  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F262     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2503  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F277     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=3127  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F292     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=3559  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F307     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2911  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F322     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2911  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F337     R1230 C4  hp=100  pos=(  4110,     0, 10842) rot=2911  vz= 5492/ 5354/ 5216 scr=(161,185) kasten=x141..181,y118..188 masken=0 | keine Maske am Koerper
+F352     R1230 C4  hp=100  pos=(  4246,     0, 10306) rot=2911  vz= 5988/ 5850/ 5712 scr=(154,177) kasten=x136..172,y115..180 masken=0 | keine Maske am Koerper
+F367     R1230 C4  hp=100  pos=(  4501,     0,  9301) rot=2911  vz= 6918/ 6780/ 6642 scr=(142,164) kasten=x126..158,y110..167 masken=0 | keine Maske am Koerper
+F382     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F397     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F412     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F427     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F442     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F457     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F472     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F487     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F502     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F517     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F532     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F547     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F562     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F577     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F592     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F607     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F622     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F637     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F652     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F667     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F682     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F697     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F712     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F727     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F742     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F757     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F772     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F787     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F802     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F817     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2787  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F832     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F847     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2883  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F862     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2979  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F877     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2931  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F892     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2931  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F907     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2931  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F922     R1230 C4  hp=100  pos=(  4654,     0,  8698) rot=2931  vz= 7476/ 7338/ 7201 scr=(136,158) kasten=x121..151,y108..161 masken=0 | keine Maske am Koerper
+F937     R1230 C4  hp=100  pos=(  4066,     0, 11428) rot=2931  vz= 4931/ 4794/ 4656 scr=(167,197) kasten=x146..188,y123..200 masken=0 | keine Maske am Koerper
+F952     R1230 C5  hp=100  pos=(  2901,     0, 14065) rot=2427  vz= 5987/ 6001/ 6016 scr=(132,181) kasten=x114..150,y119..184 masken=23 | keine Maske am Koerper
+F967     R1230 C6  hp=100  pos=(    81,     0, 13642) rot=1779  vz= 5406/ 5396/ 5386 scr=(163,186) kasten=x143..183,y118..189 masken=105 | [90:(143,63)1x93 t=142 z=9160 frei] [91:(144,43)1x112 t=145 z
+F982     R1230 C6  hp=100  pos=( -1770,     0, 12779) rot=1347  vz= 7357/ 7348/ 7338 scr=(146,168) kasten=x131..161,y117..171 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F997     R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1012    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1027    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1042    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1057    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1072    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1087    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1102    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1117    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1132    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1147    R1230 C6  hp=100  pos=( -1915,     0, 12779) rot=771   vz= 7500/ 7491/ 7481 scr=(147,167) kasten=x132..162,y117..170 masken=105 | [71:(132,24)1x141 t=114 z=7367 DECKT] [72:(133,25)1x139 t=116
+F1162    R1230 C6  hp=100  pos=( -2563,     0, 12779) rot=1587  vz= 8142/ 8133/ 8123 scr=(150,163) kasten=x136..164,y117..166 masken=105 | [77:(136,30)1x132 t=123 z=7943 DECKT] [78:(137,32)1x128 t=125
+F1177    R1230 C6  hp=100  pos=( -5470,     0, 12774) rot=2019  vz=11023/11013/11003 scr=(160,151) kasten=x149..171,y116..154 masken=105 | [100:(149,51)1x95 t=163 z=10506 DECKT] [101:(149,146)1x5 t=16
+F1192    R1230 C7  hp=100  pos=( -8089,     0, 11809) rot=1371  vz= 5295/ 5071/ 4847 scr=(171,187) kasten=x151..191,y118..190 masken=0 | keine Maske am Koerper
+F1       R1190 C0  hp=100  pos=(  3174,     0,-11182) rot=1024  vz= 9109/ 8777/ 8444 scr=(188,141) kasten=x175..201,y100..144 masken=22 | keine Maske am Koerper
+F16      R1190 C1  hp=100  pos=(  3174,     0,-13182) rot=1024  vz=11057/10806/10556 scr=(210,114) kasten=x199..221,y80..117 masken=41 | keine Maske am Koerper
+F31      R1190 C1  hp=100  pos=(  2117,     0,-15856) rot=1456  vz= 9052/ 8802/ 8551 scr=(177,127) kasten=x164..190,y85..130 masken=41 | keine Maske am Koerper
+F46      R1190 C1  hp=100  pos=(   855,     0,-18491) rot=1600  vz= 7151/ 6900/ 6649 scr=(120,149) kasten=x104..136,y97..152 masken=41 | [31:(90,87)24x16 t=216 z=13901 frei] [32:(114,87)16x16 t=216 z=
+F61      R1190 C1  hp=100  pos=( -1754,     0,-17968) rot=2680  vz= 8487/ 8237/ 7986 scr=( 71,133) kasten=x57..85,y89..136 masken=41 | [19:(49,77)24x16 t=160 z=10314 frei] [20:(73,77)24x16 t=160 z=103
+F76      R1190 C6  hp=100  pos=( -3334,     0,-16925) rot=2104  vz= 5472/ 5334/ 5197 scr=(105,203) kasten=x85..125,y136..206 masken=79 | keine Maske am Koerper
+F91      R1190 C6  hp=100  pos=( -3334,     0,-16925) rot=2104  vz= 5472/ 5334/ 5197 scr=(105,203) kasten=x85..125,y136..206 masken=79 | keine Maske am Koerper
+F106     R1190 C6  hp=100  pos=( -3334,     0,-16925) rot=1624  vz= 5472/ 5334/ 5197 scr=(105,203) kasten=x85..125,y136..206 masken=79 | keine Maske am Koerper
+F121     R1190 C1  hp=100  pos=( -2461,     0,-17660) rot=352   vz= 8996/ 8746/ 8495 scr=( 64,128) kasten=x51..77,y86..131 masken=41 | [19:(49,77)24x16 t=160 z=10314 frei] [20:(73,77)24x16 t=160 z=103
+F136     R1190 C1  hp=100  pos=(  -213,     0,-19163) rot=856   vz= 6916/ 6665/ 6415 scr=( 82,153) kasten=x66..98,y99..156 masken=41 | [21:(49,93)24x16 t=160 z=10314 frei] [22:(73,93)24x16 t=160 z=103
+F151     R1190 C2  hp=100  pos=(  -107,     0,-22146) rot=1072  vz= 9960/ 9692/ 9425 scr=(178,120) kasten=x166..190,y82..123 masken=46 | keine Maske am Koerper
+F166     R1190 C2  hp=100  pos=( -1838,     0,-23995) rot=1792  vz=12197/11930/11663 scr=(189,106) kasten=x179..199,y75..109 masken=46 | [32:(193,69)24x16 t=256 z=16464 frei] [33:(193,85)24x8 t=256 z=
+F181     R1190 C7  hp=100  pos=( -3602,     0,-24932) rot=1792  vz= 5735/ 5598/ 5460 scr=( 79,197) kasten=x60..98,y133..200 masken=79 | [14:(48,154)16x16 t=112 z=7239 frei] [17:(48,170)16x16 t=112 z=7
+F196     R1190 C7  hp=100  pos=( -3602,     0,-24932) rot=1792  vz= 5735/ 5598/ 5460 scr=( 79,197) kasten=x60..98,y133..200 masken=79 | [14:(48,154)16x16 t=112 z=7239 frei] [17:(48,170)16x16 t=112 z=7
+F211     R1190 C7  hp=100  pos=( -3602,     0,-24932) rot=1792  vz= 5735/ 5598/ 5460 scr=( 79,197) kasten=x60..98,y133..200 masken=79 | [14:(48,154)16x16 t=112 z=7239 frei] [17:(48,170)16x16 t=112 z=7
+F226     R1190 C7  hp=100  pos=( -3602,     0,-24932) rot=928   vz= 5735/ 5598/ 5460 scr=( 79,197) kasten=x60..98,y133..200 masken=79 | [14:(48,154)16x16 t=112 z=7239 frei] [17:(48,170)16x16 t=112 z=7
+F241     R1190 C2  hp=100  pos=( -1457,     0,-24794) rot=-224  vz=12738/12471/12204 scr=(176,103) kasten=x166..186,y73..106 masken=46 | keine Maske am Koerper
+F256     R1190 C2  hp=100  pos=(  1363,     0,-23789) rot=-224  vz=10813/10545/10278 scr=(138,114) kasten=x127..149,y79..117 masken=46 | keine Maske am Koerper
+F271     R1190 C8  hp=100  pos=(  3897,     0,-24645) rot=712   vz= 5004/ 4731/ 4458 scr=(120,209) kasten=x99..141,y136..212 masken=8 | keine Maske am Koerper
+F286     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F301     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F316     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F331     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F346     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F361     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F376     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F391     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F406     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F421     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F436     R1190 C8  hp=100  pos=(  4026,     0,-24982) rot=1072  vz= 5273/ 5000/ 4727 scr=(113,200) kasten=x93..133,y130..203 masken=8 | keine Maske am Koerper
+F451     R1190 C11 hp=100  pos=(  4026,     0,-24982) rot=1072  vz=-1056/ -682/ -308 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F466     R1190 C11 hp=100  pos=(  4026,     0,-24982) rot=1072  vz=-1056/ -682/ -308 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F481     R1190 C11 hp=100  pos=(  4026,     0,-24982) rot=1072  vz=-1056/ -682/ -308 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F496     R1190 C11 hp=100  pos=(  4026,     0,-24982) rot=1072  vz=-1056/ -682/ -308 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F511     R1190 C11 hp=100  pos=(  4026,     0,-24982) rot=1072  vz=-1056/ -682/ -308 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F526     R1190 C11 hp=80   pos=(  3987,     0,-24982) rot=1072  vz=-1041/ -667/ -294 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F541     R1190 C11 hp=80   pos=(  3987,     0,-24982) rot=1072  vz=-1041/ -667/ -294 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F556     R1190 C2  hp=80   pos=(  2351,     0,-21494) rot=232   vz= 8473/ 8206/ 7939 scr=(133,133) kasten=x119..147,y89..136 masken=46 | keine Maske am Koerper
+F571     R1190 C2  hp=80   pos=(  4156,     0,-23571) rot=952   vz= 9572/ 9304/ 9037 scr=( 82,122) kasten=x70..94,y83..125 masken=46 | keine Maske am Koerper
+F586     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=1024  vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F601     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=736   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F616     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=592   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F631     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=592   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F646     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=592   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F661     R1190 C8  hp=80   pos=(  3518,     0,-25490) rot=592   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F676     R1190 C8  hp=60   pos=(  3518,     0,-25490) rot=208   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F691     R1190 C8  hp=60   pos=(  3518,     0,-25490) rot=208   vz= 5863/ 5590/ 5317 scr=(130,184) kasten=x112..148,y121..187 masken=8 | keine Maske am Koerper
+F706     R1190 C2  hp=60   pos=(  4156,     0,-24012) rot=-872  vz= 9950/ 9682/ 9415 scr=( 81,120) kasten=x69..93,y82..123 masken=46 | keine Maske am Koerper
+F721     R1190 C2  hp=40   pos=(  4038,     0,-24108) rot=-872  vz=10076/ 9809/ 9542 scr=( 83,119) kasten=x71..95,y81..122 masken=46 | keine Maske am Koerper
+F736     R1190 C2  hp=40   pos=(  3859,     0,-22946) rot=-1304 vz= 9148/ 8881/ 8614 scr=( 90,126) kasten=x77..103,y85..129 masken=46 | keine Maske am Koerper
+F751     R1190 C2  hp=40   pos=(  2780,     0,-20290) rot=-944  vz= 7279/ 7012/ 6745 scr=(131,148) kasten=x116..146,y97..151 masken=46 | keine Maske am Koerper
+F766     R1190 C1  hp=40   pos=(  1292,     0,-17940) rot=-1520 vz= 7490/ 7240/ 6989 scr=(139,144) kasten=x124..154,y94..147 masken=41 | [32:(114,87)16x16 t=216 z=13901 frei]
+F781     R1190 C1  hp=40   pos=(  1392,     0,-15672) rot=-872  vz= 9458/ 9207/ 8956 scr=(162,124) kasten=x150..174,y84..127 masken=41 | keine Maske am Koerper
+F796     R1190 C1  hp=40   pos=(  2841,     0,-13140) rot=-728  vz=11206/10955/10704 scr=(204,113) kasten=x193..215,y79..116 masken=41 | keine Maske am Koerper
+F1       R1230 C7  hp=40   pos=( -8133,     0, 10226) rot=3072  vz= 6789/ 6565/ 6341 scr=(161,158) kasten=x145..177,y103..161 masken=0 | keine Maske am Koerper
+F16      R1230 C7  hp=40   pos=( -8133,     0, 10901) rot=3072  vz= 6155/ 5931/ 5707 scr=(165,168) kasten=x147..183,y108..171 masken=0 | keine Maske am Koerper
+F31      R1230 C7  hp=40   pos=( -8133,     0, 10901) rot=3072  vz= 6155/ 5931/ 5707 scr=(165,168) kasten=x147..183,y108..171 masken=0 | keine Maske am Koerper
+F46      R1230 C7  hp=40   pos=( -8133,     0, 10901) rot=3072  vz= 6155/ 5931/ 5707 scr=(165,168) kasten=x147..183,y108..171 masken=0 | keine Maske am Koerper
+F61      R1230 C7  hp=40   pos=( -8133,     0, 10901) rot=3072  vz= 6155/ 5931/ 5707 scr=(165,168) kasten=x147..183,y108..171 masken=0 | keine Maske am Koerper
+F76      R1230 C7  hp=40   pos=( -7814,     0, 11833) rot=3432  vz= 5225/ 5001/ 4777 scr=(160,188) kasten=x140..180,y118..191 masken=0 | keine Maske am Koerper
+F91      R1230 C6  hp=40   pos=( -5518,     0, 13345) rot=3792  vz=10993/10983/10973 scr=(170,151) kasten=x159..181,y116..154 masken=105 | keine Maske am Koerper
+F106     R1230 C6  hp=40   pos=( -2752,     0, 13521) rot=4512  vz= 8228/ 8218/ 8208 scr=(168,162) kasten=x154..182,y117..165 masken=105 | keine Maske am Koerper
+F121     R1230 C6  hp=40   pos=( -2110,     0, 12779) rot=4968  vz= 7694/ 7684/ 7674 scr=(148,165) kasten=x133..163,y117..168 masken=105 | [72:(133,25)1x139 t=116 z=7495 DECKT] [73:(134,27)1x111 t=118
+F136     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F151     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F166     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F181     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F196     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F211     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F226     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F241     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F256     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F271     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F286     R1230 C6  hp=40   pos=( -1815,     0, 12779) rot=4584  vz= 7401/ 7392/ 7382 scr=(146,167) kasten=x131..161,y117..170 masken=105 | [70:(131,22)1x144 t=112 z=7239 DECKT] [71:(132,24)1x141 t=114
+F301     R1230 C9  hp=40   pos=( -1815,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(371,-308) kasten=x363..379,y-331..-305 masken=0 | keine Maske am Koerper
+F316     R1230 C9  hp=40   pos=( -1815,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(371,-308) kasten=x363..379,y-331..-305 masken=0 | keine Maske am Koerper
+F331     R1230 C9  hp=40   pos=( -1815,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(371,-308) kasten=x363..379,y-331..-305 masken=0 | keine Maske am Koerper
+F346     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F361     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F376     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F391     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F406     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F421     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F436     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F451     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F466     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F481     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F496     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F511     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F526     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F541     R1230 C9  hp=40   pos=( -1599,     0, 12779) rot=4584  vz=17493/16741/15989 scr=(374,-308) kasten=x366..382,y-331..-305 masken=0 | keine Maske am Koerper
+F556     R1230 C6  hp=40   pos=( -1599,     0, 12779) rot=4584  vz= 7188/ 7179/ 7169 scr=(145,169) kasten=x129..161,y117..172 masken=105 | [67:(129,19)1x108 t=108 z=6982 DECKT] [68:(129,127)1x40 t=109
+F571     R1230 C6  hp=40   pos=( -1599,     0, 12779) rot=4584  vz= 7188/ 7179/ 7169 scr=(145,169) kasten=x129..161,y117..172 masken=105 | [67:(129,19)1x108 t=108 z=6982 DECKT] [68:(129,127)1x40 t=109
+F586     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=4920  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F601     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F616     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F631     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F646     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F661     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F676     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F691     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F706     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F721     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F736     R1230 C6  hp=40   pos=( -1387,     0, 12779) rot=5400  vz= 6978/ 6968/ 6959 scr=(143,170) kasten=x127..159,y117..173 masken=105 | [64:(127,16)1x153 t=105 z=6790 DECKT] [66:(128,63)1x105 t=107
+F751     R1230 C9  hp=40   pos=( -1387,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F766     R1230 C9  hp=40   pos=( -1387,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F781     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F796     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F811     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F826     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F841     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F856     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F871     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F886     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F901     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F916     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F931     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F946     R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F961     R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F976     R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F991     R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1006    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1021    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1036    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1051    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1066    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1081    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1096    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1111    R1230 C6  hp=40   pos=( -1418,     0, 12779) rot=5400  vz= 7009/ 6999/ 6989 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1126    R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F1141    R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F1156    R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F1171    R1230 C9  hp=40   pos=( -1418,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(376,-308) kasten=x368..384,y-331..-305 masken=0 | keine Maske am Koerper
+F1186    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1201    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1216    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1231    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1246    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1261    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1276    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1291    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1306    R1230 C9  hp=40   pos=( -1480,     0, 12779) rot=5400  vz=17493/16741/15989 scr=(375,-308) kasten=x367..383,y-331..-305 masken=0 | keine Maske am Koerper
+F1321    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1336    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1351    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1366    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1381    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1396    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1411    R1230 C6  hp=40   pos=( -1480,     0, 12779) rot=5400  vz= 7071/ 7061/ 7051 scr=(144,170) kasten=x128..160,y117..173 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F1426    R1230 C6  hp=40   pos=( -1514,     0, 12779) rot=5232  vz= 7104/ 7094/ 7084 scr=(144,169) kasten=x128..160,y117..172 masken=105 | [66:(128,63)1x105 t=107 z=6918 DECKT] [67:(129,19)1x108 t=108
+F7       R1190 C12 hp=40   pos=( 19515,     0,-12309) rot=1024  vz=12316/12095/11873 scr=(227,123) kasten=x217..237,y92..126 masken=35 | keine Maske am Koerper
+F22      R1190 C12 hp=40   pos=( 19515,     0,-12784) rot=1024  vz=11881/11659/11438 scr=(227,126) kasten=x217..237,y94..129 masken=35 | keine Maske am Koerper
+F37      R1190 C12 hp=40   pos=( 19515,     0,-15784) rot=1024  vz= 9130/ 8908/ 8687 scr=(227,147) kasten=x214..240,y106..150 masken=35 | keine Maske am Koerper
+F52      R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F67      R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F82      R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F97      R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F112     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F127     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F142     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F157     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F172     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F187     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F202     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F217     R1190 C12 hp=40   pos=( 19740,     0,-18286) rot=592   vz= 6772/ 6550/ 6329 scr=(235,179) kasten=x219..251,y124..182 masken=35 | [4:(242,106)24x24 t=145 z=9353 frei] [6:(242,130)24x24 t=149 z
+F232     R1190 C12 hp=40   pos=( 19740,     0,-19071) rot=592   vz= 6052/ 5830/ 5609 scr=(236,193) kasten=x218..254,y132..196 masken=35 | [6:(242,130)24x24 t=149 z=9609 frei] [8:(242,154)24x32 t=107 z
+F247     R1190 C13 hp=40   pos=( 19740,     0,-21426) rot=592   vz= 8018/ 7800/ 7582 scr=( 95,161) kasten=x81..109,y114..164 masken=30 | [18:(71,108)16x24 t=142 z=9160 frei] [19:(55,132)32x24 t=127 z=
+F262     R1190 C13 hp=40   pos=( 19740,     0,-23971) rot=1024  vz=10380/10163/ 9945 scr=( 96,137) kasten=x84..108,y100..140 masken=30 | [18:(71,108)16x24 t=142 z=9160 DECKT] [19:(55,132)32x24 t=127 z
+F277     R1190 C13 hp=40   pos=( 18191,     0,-25004) rot=1456  vz=11721/11503/11285 scr=(126,128) kasten=x116..136,y95..131 masken=30 | keine Maske am Koerper
+F292     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=1456  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F307     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=1456  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F322     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=1456  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F337     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=1456  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F352     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2512  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F367     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F382     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F397     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F412     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F427     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F442     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F457     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F472     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F487     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F502     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F517     R1190 C14 hp=40   pos=( 16961,     0,-25004) rot=2896  vz= 5734/ 5164/ 4594 scr=(150,184) kasten=x125..175,y96..187 masken=28 | keine Maske am Koerper
+F532     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=3328  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F547     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=3328  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F562     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=3328  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F577     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=3328  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F592     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=3520  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F607     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=4480  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F622     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=5248  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F637     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=4288  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F652     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=4672  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F667     R1190 C13 hp=40   pos=( 17352,     0,-22579) rot=4672  vz= 9676/ 9459/ 9241 scr=(149,143) kasten=x137..161,y104..146 masken=30 | keine Maske am Koerper
+F8       R11D0 C0  hp=40   pos=(  -300,     0,-17400) rot=4672  vz= 6667/ 6318/ 5969 scr=(142,137) kasten=x125..159,y81..140 masken=0 | keine Maske am Koerper
+F23      R11D0 C0  hp=40   pos=(  -300,     0,-17400) rot=3904  vz= 6667/ 6318/ 5969 scr=(142,137) kasten=x125..159,y81..140 masken=0 | keine Maske am Koerper
+F38      R11D0 C2  hp=40   pos=(  1419,     0,-18364) rot=4624  vz= 4126/ 3871/ 3615 scr=(205,222) kasten=x180..230,y134..225 masken=0 | keine Maske am Koerper
+F53      R11D0 C0  hp=40   pos=(  1142,     0,-18382) rot=5560  vz= 6235/ 5886/ 5537 scr=(196,145) kasten=x178..214,y86..148 masken=0 | keine Maske am Koerper
+F68      R11D0 C3  hp=40   pos=(  -606,     0,-20157) rot=5344  vz= 6987/ 6729/ 6472 scr=(144,147) kasten=x128..160,y94..150 masken=103 | [76:(123,96)6x18 t=162 z=10442 frei] [77:(125,98)4x13 t=163 z=
+F83      R11D0 C3  hp=40   pos=( -1547,     0,-22582) rot=5704  vz= 5633/ 5376/ 5118 scr=(219,172) kasten=x200..238,y107..175 masken=103 | keine Maske am Koerper
+F98      R11D0 C4  hp=40   pos=( -4199,     0,-21745) rot=6640  vz= 6433/ 6182/ 5931 scr=(157,189) kasten=x138..176,y125..192 masken=0 | keine Maske am Koerper
+F113     R11D0 C4  hp=40   pos=( -6812,     0,-20640) rot=6136  vz= 8696/ 8445/ 8194 scr=(198,150) kasten=x184..212,y102..153 masken=0 | keine Maske am Koerper
+F128     R11D0 C13 hp=40   pos=( -8020,     0,-18806) rot=7144  vz= 6216/ 6301/ 6386 scr=(221,191) kasten=x203..239,y132..194 masken=0 | keine Maske am Koerper
+F143     R11D0 C13 hp=40   pos=( -6340,     0,-16456) rot=7576  vz= 4103/ 4188/ 4273 scr=(154,216) kasten=x129..179,y127..219 masken=0 | keine Maske am Koerper
+F158     R11D0 C14 hp=40   pos=( -7002,     0,-13864) rot=6568  vz= 4699/ 4737/ 4775 scr=(152,213) kasten=x130..174,y135..216 masken=0 | keine Maske am Koerper
+F173     R11D0 C14 hp=40   pos=( -8032,     0,-12615) rot=6064  vz= 5850/ 5888/ 5927 scr=(113,196) kasten=x94..132,y133..199 masken=0 | keine Maske am Koerper
+F188     R11D0 C14 hp=40   pos=( -8032,     0,-13632) rot=5704  vz= 4835/ 4874/ 4912 scr=(107,210) kasten=x85..129,y134..213 masken=0 | keine Maske am Koerper
+F203     R11D0 C14 hp=40   pos=( -8032,     0,-12750) rot=6784  vz= 5715/ 5754/ 5792 scr=(112,198) kasten=x93..131,y134..201 masken=0 | keine Maske am Koerper
+F218     R11D0 C14 hp=40   pos=( -8032,     0,-11918) rot=6352  vz= 6545/ 6584/ 6622 scr=(116,189) kasten=x99..133,y132..192 masken=0 | keine Maske am Koerper
+F233     R11D0 C8  hp=40   pos=( -9471,     0,-12506) rot=5704  vz= 6146/ 5402/ 4657 scr=(161,119) kasten=x142..180,y53..122 masken=0 | keine Maske am Koerper
+F248     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=6472  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F263     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=6664  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F278     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F293     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F308     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F323     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F338     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F353     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F368     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F383     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F398     R11D0 C13 hp=40   pos=(-10736,     0,-12056) rot=5800  vz= -794/ -709/ -624 scr=(160,120) kasten=x148..172,y123..123 masken=0 | keine Maske am Koerper
+F413     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=5800  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F428     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=1504  vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F443     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F458     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F473     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F488     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F503     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F518     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F533     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F548     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F563     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F578     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F593     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F608     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F623     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F638     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F653     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F668     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F683     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F698     R11D0 C8  hp=40   pos=(-10736,     0,-12056) rot=51    vz= 6010/ 5265/ 4521 scr=(124,153) kasten=x104..144,y85..156 masken=0 | keine Maske am Koerper
+F713     R11D0 C8  hp=40   pos=(-10785,     0,-12060) rot=51    vz= 6003/ 5259/ 4514 scr=(123,155) kasten=x103..143,y87..158 masken=0 | keine Maske am Koerper
+F728     R11D0 C8  hp=20   pos=(-10982,     0,-12045) rot=51    vz= 5978/ 5234/ 4489 scr=(119,161) kasten=x99..139,y93..164 masken=0 | keine Maske am Koerper
+F743     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=51    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F758     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=47    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F773     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F788     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F803     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F818     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F833     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F848     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F863     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F878     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F893     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F908     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F923     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F938     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F953     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F968     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F983     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F998     R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F1013    R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F1028    R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F1043    R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F1058    R11D0 C8  hp=20   pos=(-10982,     0,-12021) rot=33    vz= 5979/ 5235/ 4491 scr=(118,161) kasten=x98..138,y93..164 masken=0 | keine Maske am Koerper
+F1073    R11D0 C8  hp=20   pos=(-10094,     0,-12057) rot=33    vz= 6095/ 5350/ 4606 scr=(136,131) kasten=x116..156,y64..134 masken=0 | keine Maske am Koerper
+F1088    R11D0 C8  hp=20   pos=( -9394,     0,-12102) rot=33    vz= 6184/ 5440/ 4696 scr=(150,110) kasten=x131..169,y44..113 masken=0 | keine Maske am Koerper
+F1103    R11D0 C14 hp=20   pos=( -8284,     0,-12147) rot=33    vz= 6294/ 6332/ 6371 scr=(107,192) kasten=x90..124,y133..195 masken=0 | keine Maske am Koerper
+F1118    R11D0 C14 hp=20   pos=( -8136,     0,-12153) rot=73    vz= 6301/ 6340/ 6378 scr=(112,192) kasten=x95..129,y133..195 masken=0 | keine Maske am Koerper
+F1133    R11D0 C14 hp=20   pos=( -8136,     0,-12153) rot=73    vz= 6301/ 6340/ 6378 scr=(112,192) kasten=x95..129,y133..195 masken=0 | keine Maske am Koerper
+F1148    R11D0 C14 hp=20   pos=( -7840,     0,-12185) rot=73    vz= 6297/ 6335/ 6373 scr=(121,192) kasten=x104..138,y133..195 masken=0 | keine Maske am Koerper
+F1163    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=77    vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1178    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=437   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1193    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=77    vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1208    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=77    vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1223    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=749   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1238    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1253    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1268    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1283    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1298    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1313    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1328    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1343    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1358    R11D0 C14 hp=20   pos=( -7470,     0,-12225) rot=845   vz= 6291/ 6329/ 6368 scr=(134,192) kasten=x117..151,y133..195 masken=0 | keine Maske am Koerper
+F1373    R11D0 C14 hp=20   pos=( -7417,     0,-12417) rot=845   vz= 6104/ 6142/ 6181 scr=(135,194) kasten=x117..153,y134..197 masken=0 | keine Maske am Koerper
+F1388    R11D0 C14 hp=20   pos=( -7264,     0,-15321) rot=1205  vz= 3221/ 3260/ 3298 scr=(140,250) kasten=x108..172,y138..253 masken=0 | keine Maske am Koerper
+F1403    R11D0 C13 hp=20   pos=( -7626,     0,-16892) rot=1293  vz= 4373/ 4458/ 4544 scr=(217,211) kasten=x193..241,y128..214 masken=0 | keine Maske am Koerper
+F1418    R11D0 C13 hp=20   pos=( -7626,     0,-16892) rot=1653  vz= 4373/ 4458/ 4544 scr=(217,211) kasten=x193..241,y128..214 masken=0 | keine Maske am Koerper
+F1433    R11D0 C13 hp=20   pos=( -7626,     0,-16892) rot=1581  vz= 4373/ 4458/ 4544 scr=(217,211) kasten=x193..241,y128..214 masken=0 | keine Maske am Koerper
+F1448    R11D0 C13 hp=20   pos=( -7626,     0,-16892) rot=861   vz= 4373/ 4458/ 4544 scr=(217,211) kasten=x193..241,y128..214 masken=0 | keine Maske am Koerper
+F1463    R11D0 C13 hp=20   pos=( -7217,     0,-19804) rot=1221  vz= 7302/ 7387/ 7473 scr=(193,184) kasten=x178..208,y133..187 masken=0 | keine Maske am Koerper
+F1478    R11D0 C4  hp=20   pos=( -8032,     0,-20282) rot=1653  vz= 9778/ 9526/ 9275 scr=(207,137) kasten=x194..220,y94..140 masken=0 | keine Maske am Koerper
+F1493    R11D0 C4  hp=20   pos=( -8032,     0,-20282) rot=1653  vz= 9778/ 9526/ 9275 scr=(207,137) kasten=x194..220,y94..140 masken=0 | keine Maske am Koerper
+F1508    R11D0 C13 hp=20   pos=( -8032,     0,-19147) rot=2877  vz= 6551/ 6636/ 6722 scr=(219,189) kasten=x202..236,y133..192 masken=0 | keine Maske am Koerper
+F1523    R11D0 C13 hp=0    pos=( -7878,     0,-17384) rot=2853  vz= 4828/ 4913/ 4999 scr=(225,205) kasten=x203..247,y129..208 masken=0 | keine Maske am Koerper
+F1538    R11D0 C13 hp=0    pos=( -7716,     0,-17854) rot=2853  vz= 5313/ 5398/ 5483 scr=(215,199) kasten=x195..235,y130..202 masken=0 | keine Maske am Koerper
+F1553    R11D0 C13 hp=0    pos=( -7717,     0,-17852) rot=1309  vz= 5311/ 5396/ 5481 scr=(215,199) kasten=x195..235,y130..202 masken=0 | keine Maske am Koerper
+F1568    R11D0 C13 hp=0    pos=( -7643,     0,-17621) rot=1571  vz= 5091/ 5177/ 5262 scr=(213,202) kasten=x192..234,y130..205 masken=0 | keine Maske am Koerper
+F1583    R11D0 C13 hp=-20  pos=( -8032,     0,-19693) rot=1216  vz= 7091/ 7176/ 7261 scr=(217,185) kasten=x201..233,y133..188 masken=0 | keine Maske am Koerper
+F1598    R11D0 C13 hp=-20  pos=( -7663,     0,-17433) rot=1216  vz= 4903/ 4989/ 5074 scr=(215,204) kasten=x193..237,y129..207 masken=0 | keine Maske am Koerper
+F1613    R11D0 C13 hp=-20  pos=( -7870,     0,-18115) rot=1216  vz= 5551/ 5637/ 5722 scr=(219,197) kasten=x200..238,y131..200 masken=0 | keine Maske am Koerper
+F1628    R11D0 C13 hp=-20  pos=( -7815,     0,-18534) rot=1216  vz= 5972/ 6058/ 6143 scr=(215,193) kasten=x197..233,y131..196 masken=0 | keine Maske am Koerper
+F1643    R11D0 C13 hp=-20  pos=( -7810,     0,-18613) rot=1216  vz= 6051/ 6136/ 6222 scr=(215,192) kasten=x197..233,y131..195 masken=0 | keine Maske am Koerper
+F1658    R11D0 C13 hp=-20  pos=( -7805,     0,-18620) rot=1216  vz= 6059/ 6144/ 6229 scr=(214,192) kasten=x196..232,y131..195 masken=0 | keine Maske am Koerper
+F1673    R11D0 C13 hp=-20  pos=( -7803,     0,-18611) rot=1216  vz= 6050/ 6135/ 6221 scr=(214,192) kasten=x196..232,y131..195 masken=0 | keine Maske am Koerper
+F1688    R11D0 C13 hp=-20  pos=( -7801,     0,-18606) rot=1216  vz= 6045/ 6131/ 6216 scr=(214,192) kasten=x196..232,y131..195 masken=0 | keine Maske am Koerper
+F1703    R11D0 C13 hp=-20  pos=( -7801,     0,-18606) rot=1216  vz= 6045/ 6131/ 6216 scr=(214,192) kasten=x196..232,y131..195 masken=0 | keine Maske am Koerper
+F1718    R11D0 C13 hp=-20  pos=( -7801,     0,-18606) rot=1216  vz= 6045/ 6131/ 6216 scr=(214,192) kasten=x196..232,y131..195 masken=0 | keine Maske am Koerper
+F1733    R11D0 C13 hp=0    pos=( -7738,     0,-18421) rot=3264  vz= 5870/ 5956/ 6041 scr=(213,194) kasten=x195..231,y131..197 masken=0 | keine Maske am Koerper
+F1748    R11D0 C13 hp=0    pos=( -7738,     0,-18421) rot=3264  vz= 5870/ 5956/ 6041 scr=(213,194) kasten=x195..231,y131..197 masken=0 | keine Maske am Koerper
+F1763    R11D0 C13 hp=0    pos=( -7050,     0,-18387) rot=4176  vz= 5922/ 6008/ 6093 scr=(188,193) kasten=x170..206,y131..196 masken=0 | keine Maske am Koerper
+F1778    R11D0 C4  hp=0    pos=( -5368,     0,-19984) rot=4896  vz= 7243/ 6992/ 6741 scr=(218,172) kasten=x201..235,y115..175 masken=0 | keine Maske am Koerper
+F1793    R11D0 C4  hp=0    pos=( -5346,     0,-22582) rot=5112  vz= 7637/ 7386/ 7135 scr=(139,165) kasten=x123..155,y111..168 masken=0 | keine Maske am Koerper
+F1808    R11D0 C4  hp=0    pos=( -5346,     0,-22582) rot=2673  vz= 7637/ 7386/ 7135 scr=(139,165) kasten=x123..155,y111..168 masken=0 | keine Maske am Koerper
+F1823    R11D0 C4  hp=0    pos=( -5346,     0,-22582) rot=2673  vz= 7637/ 7386/ 7135 scr=(139,165) kasten=x123..155,y111..168 masken=0 | keine Maske am Koerper
+F1838    R11D0 C4  hp=0    pos=( -5346,     0,-22582) rot=2673  vz= 7637/ 7386/ 7135 scr=(139,165) kasten=x123..155,y111..168 masken=0 | keine Maske am Koerper
+F1853    R11D0 C4  hp=0    pos=( -5574,     0,-22256) rot=2673  vz= 7798/ 7547/ 7296 scr=(150,162) kasten=x134..166,y109..165 masken=0 | keine Maske am Koerper
+F1868    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=3249  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1883    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1898    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1913    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1928    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1943    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1958    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1973    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F1988    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F2003    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F2018    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F2033    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F2048    R11D0 C13 hp=0    pos=( -6265,     0,-19714) rot=2445  vz= 7332/ 7417/ 7503 scr=(165,184) kasten=x150..180,y133..187 masken=0 | keine Maske am Koerper
+F2063    R11D0 C13 hp=0    pos=( -7091,     0,-18860) rot=2781  vz= 6385/ 6470/ 6555 scr=(189,190) kasten=x172..206,y132..193 masken=0 | keine Maske am Koerper
+F2078    R11D0 C13 hp=0    pos=( -7486,     0,-15904) rot=2997  vz= 3414/ 3500/ 3585 scr=(217,230) kasten=x187..247,y124..233 masken=0 | keine Maske am Koerper
+F2093    R11D0 C14 hp=0    pos=( -7064,     0,-13084) rot=3573  vz= 5471/ 5509/ 5548 scr=(148,201) kasten=x128..168,y134..204 masken=0 | keine Maske am Koerper
+F2108    R11D0 C14 hp=0    pos=( -4931,     0,-13182) rot=4653  vz= 5569/ 5607/ 5646 scr=(227,200) kasten=x208..246,y134..203 masken=0 | keine Maske am Koerper
+F2123    R11D0 C9  hp=0    pos=( -4830,     0,-13182) rot=5229  vz= 6296/ 5552/ 4809 scr=(148, 83) kasten=x129..167,y18..86 masken=0 | keine Maske am Koerper
+F2138    R11D0 C14 hp=0    pos=( -6011,     0,-13845) rot=5805  vz= 4809/ 4847/ 4885 scr=(194,211) kasten=x172..216,y135..214 masken=0 | keine Maske am Koerper
+F2153    R11D0 C13 hp=0    pos=( -7297,     0,-16207) rot=5013  vz= 3737/ 3823/ 3908 scr=(204,223) kasten=x176..232,y126..226 masken=0 | keine Maske am Koerper
+F2168    R11D0 C13 hp=0    pos=( -6817,     0,-19162) rot=5013  vz= 6717/ 6803/ 6888 scr=(181,187) kasten=x165..197,y132..190 masken=0 | keine Maske am Koerper
+F2183    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2198    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2213    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2228    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2243    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2258    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2273    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2288    R11D0 C13 hp=0    pos=( -6761,     0,-19505) rot=5013  vz= 7063/ 7149/ 7234 scr=(179,185) kasten=x163..195,y132..188 masken=0 | keine Maske am Koerper
+F2303    R11D0 C4  hp=0    pos=( -6621,     0,-20366) rot=5013  vz= 8474/ 8223/ 7972 scr=(205,152) kasten=x190..220,y103..155 masken=0 | keine Maske am Koerper
+F2318    R11D0 C4  hp=0    pos=( -5302,     0,-22582) rot=4365  vz= 7596/ 7345/ 7094 scr=(138,166) kasten=x122..154,y112..169 masken=0 | keine Maske am Koerper
+F2333    R11D0 C3  hp=0    pos=( -2516,     0,-21727) rot=3789  vz= 4914/ 4656/ 4399 scr=(183,190) kasten=x161..205,y116..193 masken=103 | keine Maske am Koerper
+F2348    R11D0 C3  hp=0    pos=(    80,     0,-20268) rot=3573  vz= 7596/ 7338/ 7081 scr=(152,139) kasten=x137..167,y90..142 masken=103 | keine Maske am Koerper
+F2363    R11D0 C0  hp=0    pos=(    61,     0,-17457) rot=2853  vz= 6719/ 6369/ 6020 scr=(153,136) kasten=x137..169,y81..139 masken=0 | keine Maske am Koerper
+F11      R1230 C0  hp=0    pos=( -4729,     0,-15916) rot=3072  vz= 7160/ 6738/ 6316 scr=(178,133) kasten=x162..194,y81..136 masken=0 | keine Maske am Koerper
+F26      R1230 C0  hp=0    pos=( -4729,     0,-15041) rot=3072  vz= 6442/ 6020/ 5598 scr=(184,151) kasten=x167..201,y94..154 masken=0 | keine Maske am Koerper
+F41      R1230 C0  hp=0    pos=( -4729,     0,-13241) rot=3648  vz= 4965/ 4543/ 4121 scr=(201,202) kasten=x180..222,y128..205 masken=0 | keine Maske am Koerper
+F56      R1230 C0  hp=0    pos=( -3471,     0,-14413) rot=4872  vz= 5800/ 5378/ 4956 scr=(146,170) kasten=x127..165,y107..173 masken=0 | keine Maske am Koerper
+F4       R11D0 C0  hp=0    pos=(  -300,     0,-17400) rot=1024  vz= 6667/ 6318/ 5969 scr=(142,137) kasten=x125..159,y81..140 masken=0 | keine Maske am Koerper
+F19      R11D0 C0  hp=0    pos=( -1020,     0,-19773) rot=1528  vz= 4460/ 4111/ 3762 scr=(135,199) kasten=x112..158,y117..202 masken=0 | keine Maske am Koerper
+F34      R11D0 C3  hp=0    pos=( -1298,     0,-22583) rot=1096  vz= 5862/ 5605/ 5347 scr=(218,167) kasten=x200..236,y104..170 masken=103 | keine Maske am Koerper
+F49      R11D0 C3  hp=0    pos=( -3528,     0,-22530) rot=2176  vz= 3821/ 3563/ 3306 scr=(221,232) kasten=x194..248,y137..235 masken=103 | keine Maske am Koerper
+F64      R11D0 C4  hp=0    pos=( -5224,     0,-20418) rot=2824  vz= 7178/ 6927/ 6676 scr=(204,173) kasten=x187..221,y116..176 masken=0 | keine Maske am Koerper
+F79      R11D0 C4  hp=0    pos=( -6274,     0,-20439) rot=2752  vz= 8161/ 7910/ 7659 scr=(203,157) kasten=x188..218,y106..160 masken=0 | keine Maske am Koerper
+F94      R11D0 C13 hp=0    pos=( -7960,     0,-19576) rot=1336  vz= 6984/ 7069/ 7155 scr=(215,186) kasten=x199..231,y133..189 masken=0 | keine Maske am Koerper
+F109     R11D0 C13 hp=0    pos=( -7960,     0,-19576) rot=297   vz= 6984/ 7069/ 7155 scr=(215,186) kasten=x199..231,y133..189 masken=0 | keine Maske am Koerper
+F124     R11D0 C13 hp=0    pos=( -7960,     0,-19576) rot=297   vz= 6984/ 7069/ 7155 scr=(215,186) kasten=x199..231,y133..189 masken=0 | keine Maske am Koerper
+F139     R11D0 C13 hp=0    pos=( -7960,     0,-19576) rot=9     vz= 6984/ 7069/ 7155 scr=(215,186) kasten=x199..231,y133..189 masken=0 | keine Maske am Koerper
+F154     R11D0 C13 hp=0    pos=( -7960,     0,-19576) rot=9     vz= 6984/ 7069/ 7155 scr=(215,186) kasten=x199..231,y133..189 masken=0 | keine Maske am Koerper
+F169     R11D0 C13 hp=0    pos=( -6960,     0,-19586) rot=9     vz= 7119/ 7204/ 7289 scr=(185,185) kasten=x169..201,y133..188 masken=0 | keine Maske am Koerper
+F184     R11D0 C13 hp=0    pos=( -5368,     0,-19733) rot=-279  vz= 7463/ 7548/ 7633 scr=(141,183) kasten=x126..156,y133..186 masken=0 | keine Maske am Koerper
+F199     R11D0 C13 hp=0    pos=( -5369,     0,-19415) rot=3287  vz= 7148/ 7233/ 7319 scr=(140,185) kasten=x124..156,y133..188 masken=0 | keine Maske am Koerper
+F214     R11D0 C13 hp=0    pos=( -5369,     0,-19415) rot=3571  vz= 7148/ 7233/ 7319 scr=(140,185) kasten=x124..156,y133..188 masken=0 | keine Maske am Koerper
+F229     R11D0 C13 hp=0    pos=( -5369,     0,-19415) rot=3571  vz= 7148/ 7233/ 7319 scr=(140,185) kasten=x124..156,y133..188 masken=0 | keine Maske am Koerper
+F244     R11D0 C13 hp=0    pos=( -5393,     0,-18241) rot=3019  vz= 5985/ 6070/ 6156 scr=(131,193) kasten=x113..149,y131..196 masken=0 | keine Maske am Koerper
+F259     R11D0 C13 hp=0    pos=( -5368,     0,-16197) rot=4027  vz= 3968/ 4053/ 4139 scr=(102,218) kasten=x76..128,y126..221 masken=0 | keine Maske am Koerper
+F274     R11D0 C13 hp=0    pos=( -5368,     0,-17445) rot=4747  vz= 5201/ 5287/ 5372 scr=(122,200) kasten=x102..142,y130..203 masken=0 | keine Maske am Koerper
+F289     R11D0 C4  hp=0    pos=( -5368,     0,-20144) rot=4531  vz= 7268/ 7017/ 6766 scr=(213,172) kasten=x196..230,y115..175 masken=0 | keine Maske am Koerper
+F304     R11D0 C4  hp=0    pos=( -4741,     0,-22582) rot=5251  vz= 7072/ 6821/ 6570 scr=(133,175) kasten=x116..150,y117..178 masken=0 | keine Maske am Koerper
+F319     R11D0 C3  hp=0    pos=( -3538,     0,-22582) rot=4315  vz= 3801/ 3544/ 3286 scr=(224,233) kasten=x197..251,y137..236 masken=103 | keine Maske am Koerper
+F334     R11D0 C3  hp=0    pos=(  -663,     0,-21890) rot=3883  vz= 6586/ 6328/ 6071 scr=(195,153) kasten=x178..212,y97..156 masken=103 | keine Maske am Koerper
+F349     R11D0 C3  hp=0    pos=(    93,     0,-21638) rot=2165  vz= 7332/ 7075/ 6817 scr=(189,142) kasten=x174..204,y91..145 masken=103 | keine Maske am Koerper
+F364     R11D0 C3  hp=0    pos=(    93,     0,-21638) rot=2021  vz= 7332/ 7075/ 6817 scr=(189,142) kasten=x174..204,y91..145 masken=103 | keine Maske am Koerper
+F379     R11D0 C3  hp=0    pos=(    93,     0,-21638) rot=2021  vz= 7332/ 7075/ 6817 scr=(189,142) kasten=x174..204,y91..145 masken=103 | keine Maske am Koerper
+F394     R11D0 C3  hp=0    pos=(    93,     0,-21638) rot=2021  vz= 7332/ 7075/ 6817 scr=(189,142) kasten=x174..204,y91..145 masken=103 | keine Maske am Koerper
+F409     R11D0 C4  hp=-20  pos=(   -64,     0,-21588) rot=1983  vz= 2547/ 2296/ 2045 scr=(103,420) kasten=x60..146,y263..423 masken=0 | keine Maske am Koerper
+F424     R11D0 C4  hp=-20  pos=( -1292,     0,-21709) rot=1983  vz= 3713/ 3462/ 3211 scr=(126,300) kasten=x96..156,y192..303 masken=0 | keine Maske am Koerper
+F439     R11D0 C4  hp=-20  pos=( -1389,     0,-21752) rot=1983  vz= 3810/ 3559/ 3308 scr=(126,293) kasten=x96..156,y187..296 masken=0 | keine Maske am Koerper
+F454     R11D0 C4  hp=-20  pos=( -1387,     0,-21757) rot=1983  vz= 3809/ 3558/ 3307 scr=(125,293) kasten=x95..155,y187..296 masken=0 | keine Maske am Koerper
+F469     R11D0 C4  hp=-20  pos=( -1366,     0,-21754) rot=1983  vz= 3789/ 3538/ 3287 scr=(125,294) kasten=x95..155,y188..297 masken=0 | keine Maske am Koerper
+F484     R11D0 C4  hp=-20  pos=( -1361,     0,-21754) rot=1983  vz= 3785/ 3534/ 3282 scr=(125,295) kasten=x95..155,y189..298 masken=0 | keine Maske am Koerper
+F499     R11D0 C4  hp=-20  pos=( -1349,     0,-21753) rot=1983  vz= 3773/ 3522/ 3271 scr=(125,296) kasten=x95..155,y189..299 masken=0 | keine Maske am Koerper
+F514     R11D0 C4  hp=-20  pos=( -1349,     0,-21753) rot=1983  vz= 3773/ 3522/ 3271 scr=(125,296) kasten=x95..155,y189..299 masken=0 | keine Maske am Koerper
+F529     R11D0 C4  hp=-20  pos=( -1349,     0,-21753) rot=1983  vz= 3773/ 3522/ 3271 scr=(125,296) kasten=x95..155,y189..299 masken=0 | keine Maske am Koerper
+F544     R11D0 C4  hp=-20  pos=( -1349,     0,-21753) rot=1983  vz= 3773/ 3522/ 3271 scr=(125,296) kasten=x95..155,y189..299 masken=0 | keine Maske am Koerper
+F559     R11D0 C4  hp=0    pos=(   358,     0,-21651) rot=4247  vz= 2163/ 1912/ 1661 scr=( 78,487) kasten=x27..129,y303..490 masken=0 | keine Maske am Koerper
+F574     R11D0 C4  hp=0    pos=(   537,     0,-21794) rot=4463  vz= 2019/ 1768/ 1517 scr=( 53,519) kasten=x-1..107,y322..522 masken=0 | keine Maske am Koerper
+F589     R11D0 C4  hp=0    pos=(   530,     0,-21798) rot=4463  vz= 2026/ 1775/ 1524 scr=( 53,518) kasten=x-1..107,y322..521 masken=0 | keine Maske am Koerper
+F604     R11D0 C4  hp=0    pos=(   530,     0,-21798) rot=4463  vz= 2026/ 1775/ 1524 scr=( 53,518) kasten=x-1..107,y322..521 masken=0 | keine Maske am Koerper
+F619     R11D0 C4  hp=0    pos=(   448,     0,-21843) rot=4895  vz= 2110/ 1859/ 1608 scr=( 54,499) kasten=x2..106,y310..502 masken=0 | keine Maske am Koerper
+F634     R11D0 C4  hp=0    pos=( -1355,     0,-22582) rot=5975  vz= 3911/ 3660/ 3409 scr=( 78,286) kasten=x49..107,y183..289 masken=0 | keine Maske am Koerper
+F649     R11D0 C3  hp=0    pos=( -3906,     0,-21270) rot=6551  vz= 3726/ 3469/ 3212 scr=(150,237) kasten=x122..178,y140..240 masken=103 | keine Maske am Koerper
+F664     R11D0 C4  hp=0    pos=( -5438,     0,-21073) rot=879   vz= 7482/ 7231/ 6980 scr=(184,168) kasten=x168..200,y113..171 masken=0 | keine Maske am Koerper
+F679     R11D0 C4  hp=0    pos=( -5438,     0,-21073) rot=79    vz= 7482/ 7231/ 6980 scr=(184,168) kasten=x168..200,y113..171 masken=0 | keine Maske am Koerper
+F694     R11D0 C4  hp=0    pos=( -5438,     0,-21073) rot=79    vz= 7482/ 7231/ 6980 scr=(184,168) kasten=x168..200,y113..171 masken=0 | keine Maske am Koerper
+F709     R11D0 C4  hp=0    pos=( -4250,     0,-21217) rot=79    vz= 6396/ 6145/ 5894 scr=(175,190) kasten=x156..194,y126..193 masken=0 | keine Maske am Koerper
+F724     R11D0 C3  hp=0    pos=( -1478,     0,-21553) rot=79    vz= 5904/ 5646/ 5389 scr=(181,166) kasten=x163..199,y104..169 masken=103 | keine Maske am Koerper
+F739     R11D0 C3  hp=0    pos=( -1256,     0,-21394) rot=-425  vz= 6140/ 5882/ 5625 scr=(177,161) kasten=x159..195,y101..164 masken=103 | keine Maske am Koerper
+F754     R11D0 C0  hp=0    pos=(    95,     0,-18769) rot=-929  vz= 5618/ 5269/ 4920 scr=(167,160) kasten=x148..186,y95..163 masken=0 | keine Maske am Koerper
+F4       R1230 C0  hp=0    pos=( -4729,     0,-16018) rot=3072  vz= 7244/ 6822/ 6400 scr=(178,132) kasten=x163..193,y81..135 masken=0 | keine Maske am Koerper
+F19      R1230 C0  hp=0    pos=( -4729,     0,-14841) rot=3072  vz= 6278/ 5856/ 5434 scr=(186,155) kasten=x169..203,y96..158 masken=0 | keine Maske am Koerper
+F34      R1230 C1  hp=0    pos=( -4729,     0,-11841) rot=3072  vz= 8578/ 8442/ 8305 scr=(166,149) kasten=x153..179,y105..152 masken=0 | keine Maske am Koerper
+F49      R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F64      R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F79      R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F94      R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F109     R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F124     R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper
+F139     R1230 C1  hp=0    pos=( -4729,     0,-11241) rot=3072  vz= 7991/ 7855/ 7719 scr=(168,154) kasten=x154..182,y107..157 masken=0 | keine Maske am Koerper

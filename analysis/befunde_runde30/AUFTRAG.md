@@ -139,3 +139,24 @@ Irons' Office ROOM1150/1151, wo
   `re2_disasm.py`).
 - Dossiers: `analysis/befunde_runde30/<thema>.md`; Sonden: `tests/unit/probes/r30_<thema>.cmake`.
 - Am Ende: Paket (Windows + Linux + Android), Archiv, Tag, Push — ohne Rückfrage.
+
+## I — Hund: der Spieler stirbt nicht (Nachtrag 2026-09-28)
+
+> Also I found a bug. I cannot die from a dog. He bites my neck, and i am standing again.
+
+Beleg aus dem Log des Nutzers (`analysis/befunde_runde30/nutzer_marken/befund_hund_2026-09-28.log`,
+Sitzung ab Logzeile 33473, geladener Stand in ROOM1150):
+
+| Logzeile | Bild | Raum | hp | Lage |
+|---|---|---|---|---|
+| 33917 | F728  | R11D0 C8  | 20  | (-10982,0,-12045) |
+| 33970 | F1523 | R11D0 C13 | 0   | (-7878,0,-17384) |
+| 33974 | F1583 | R11D0 C13 | -20 | (-8032,0,-19693) |
+| 33984 | F1733 | R11D0 C13 | 0   | (-7738,0,-18421) |
+| 34027 | F11   | R1230 C0  | 0   | (-4729,0,-15916) |
+| 34031 | F4    | R11D0 C0  | 0   | (-300,0,-17400) |
+| 34058 | F409  | R11D0 C4  | -20 | (-64,0,-21588) |
+| 34068 | F559  | R11D0 C4  | 0   | (358,0,-21651) |
+
+Der Spieler läuft also mit hp 0 weiter, wechselt Räume, wird erneut gebissen (hp -20) und
+steht wieder bei hp 0. Der Tod wird nie ausgelöst, und jemand setzt hp von -20 auf 0 zurück.
