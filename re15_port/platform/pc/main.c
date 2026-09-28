@@ -7185,6 +7185,9 @@ re_title:;
                                 (int)g_scd.message_active, (int)g_scd.message_fsm_active,
                                 (int)g_scd.message_id, (int)g_scd.message_query,
                                 (unsigned)g_re15_pauseflags, (int)g_scd.player_mode);
+                        /* Runde 30 (N1-Messung, nachschliff-room5080.md 9.6): der Griff-Kanal des Ports
+                         * (s_player_grabbed), damit Halte-Laeufe im Echtlauf direkt zaehlbar sind. */
+                        fprintf(s_state_log, " gr=%d", re15_player_is_grabbed());
                     }
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
