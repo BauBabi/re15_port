@@ -361,7 +361,7 @@ Angesehen (Read auf die PNG), mit Befund:
 | ROOM11A0 | 3 Tueren + 1 Leiter | ja ausser S090 (31 px, dunkel, unklar) | S088 zeigt die Leiter |
 | ROOM3000 / ROOM3010 / ROOM3060 | alle | ja | Fabriktueren mit Warnstreifen; ROOM3060 S192 Doppeltuer |
 | ROOM4000 | 4/4 | ja | S218 = Lastenaufzug, S215 Aufzugtuer |
-| ROOM4030 (nur Vollbilder S224..S226, nicht der Bogen) | 3/3 (nach Frontalitaetsregel) | ja | Viereck-Tueren auf den Schraegwaenden getroffen |
+| ROOM4030 | 2/3 | S224/S225 ja | S225 = Viereck-Tuer auf der Schraegwand getroffen; **S226 (Viereck -> ROOM4080) daneben**: Umriss als Streifen am rechten Bildrand von c0; die Gegenseite ROOM4080 c7 zeigt die Tuer |
 | ROOM3070 | 2/2 | ja | Lastenaufzug-Gitter |
 | ROOM5080, ROOM5090, ROOM50B0, ROOM6000 | ja | ja; ROOM5090 S280/S282/S283 steil und dunkel; 50B0/6000 Hubbuehne ohne Blatt | Zugtueren = Doppelschiebetueren mit Fenstern |
 | ROOM1090 | S030 neben der Doppeltuer | teilweise | Kante 4700: Doppeltuer, Blatt 1950 deckt nur einen Fluegel |
@@ -369,8 +369,9 @@ Angesehen (Read auf die PNG), mit Befund:
 | ROOM1110 | 5/5 | ja, sehr gut | Selbst-Tueren = Stahltueren der Kammern |
 | ROOM1250 | - | - | inert, kein Tuerblatt |
 
-Taugen sie? Ja fuer die Zuordnung per Bild: in 19 angesehenen Boegen trifft der rote Umriss die Tuer
-in allen Faellen mit echtem Tuerblatt; wo er daneben liegt (Leiter, Luke, Hubbuehne, Lueftung), zeigt
+Taugen sie? Ja fuer die Zuordnung per Bild: in 20 angesehenen Boegen trifft der rote Umriss die Tuer
+in allen Faellen mit echtem Tuerblatt ausser ROOM4030 S226 (Viereck-Tuer) und ROOM1090 S030
+(Doppeltuer, Umriss neben dem Fluegel); wo er sonst daneben liegt (Leiter, Luke, Hubbuehne, Lueftung), zeigt
 das Vollbild den tatsaechlichen Uebergang. Grenzen: Doppeltueren (Blatt 1950 deckt einen Fluegel),
 steile Ansichten (Entzerrtes unscharf), Tueren im Dunkeln. Die Top-5 sind nur ein Hinweis (§6).
 
@@ -422,7 +423,7 @@ python .claude/skills/re15-psx-disasm/scripts/re15_disasm.py dis 0x80014368 40
    74 begehbare Seiten mit sce != 0 stellt die Engine beim Betreten NICHT auf (Skript-Tueren oder nur
    in xxx1) - im JSON als `engine: false/null`.
 3. **Kategorien per Sicht** nur fuer die 10 "etage"-Kandidaten und 1 Lueftung gesetzt; die 114
-   "normal" sind nicht alle angesehen (19 Boegen gesehen). Rolltor/Schott wurde nicht gefunden, kann
+   "normal" sind nicht alle angesehen (20 Boegen gesehen). Rolltor/Schott wurde nicht gefunden, kann
    aber unter "normal" stecken (z.B. breite Kanten >= 3000: 68 Seiten).
 4. **Doppeltueren**: das Blattmodell ist einfluegelig; bei breiten Kanten deckt der Umriss nur einen
    Fluegel (ROOM1090 S030).
