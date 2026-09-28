@@ -102,6 +102,15 @@ int re15_irons_tisch_sort_max(uint16_t room_id, int cut, int obj_id)
     return (int)re15_pri_mask_camera_z(RE15_IRONS_KLEMME_TIEFE) - 1;
 }
 
+/* Port-Wahl, keine Original-Adresse: Lichtsatz @0x003E8 (Cut 2) fuer Buch und Karte in
+ * jedem Cut. Messtabelle und Datei-Offsets: include/re15_irons_tisch.h. */
+int re15_irons_tisch_licht_cut(uint16_t room_id, int obj_id)
+{
+    if (!ist_irons_buero(room_id)) return -1;
+    if (obj_id != RE15_IRONS_DIARY_OBJ_ID && obj_id != RE15_IRONS_KARTE_OBJ_ID) return -1;
+    return RE15_IRONS_LICHT_CUT;
+}
+
 const uint8_t *re15_irons_tisch_md1_bytes(int obj_id, int *out_size)
 {
     if (obj_id == RE15_IRONS_DIARY_OBJ_ID) {

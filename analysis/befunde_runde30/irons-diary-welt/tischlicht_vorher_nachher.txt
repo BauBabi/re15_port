@@ -1,0 +1,61 @@
+== Spieler weit weg, alle Cuts: VORHER (basis) gegen NACHHER (n)
+Cut 0 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 0 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 0 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 1 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 1 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 1 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 2 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 2 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 2 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 3 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 3 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 3 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 4 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 4 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 4 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 5 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 5 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 5 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 6 F400: 11060 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 6 F500: 11060 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 6 F600: 11060 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 7 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 7 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 7 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 8 F400: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 8 F500: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Cut 8 F600: 0 Pixel verschieden, davon ausserhalb der Prop-Pixel 0
+Nullbild Cut 2 F400 vorher/nachher: 0 Pixel verschieden
+Nullbild Cut 2 F500 vorher/nachher: 0 Pixel verschieden
+Nullbild Cut 2 F600 vorher/nachher: 0 Pixel verschieden
+Nullbild Cut 6 F400 vorher/nachher: 0 Pixel verschieden
+Nullbild Cut 6 F500 vorher/nachher: 0 Pixel verschieden
+Nullbild Cut 6 F600 vorher/nachher: 0 Pixel verschieden
+== Spieler im Bild (Cut 2 / 4 / 6)
+Cut 2 F400: Figur 28448 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 215 nachher 215
+Cut 2 F500: Figur 27650 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 217 nachher 217
+Cut 2 F600: Figur 28525 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 215 nachher 215
+Cut 4 F400: Figur 0 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 0 nachher 0
+Cut 4 F500: Figur 0 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 0 nachher 0
+Cut 4 F600: Figur 0 Pixel, davon verschieden 0 | ganzes Bild verschieden 0, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 0 nachher 0
+Cut 6 F400: Figur 121777 Pixel, davon verschieden 0 | ganzes Bild verschieden 8748, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 8748 nachher 8748
+Cut 6 F500: Figur 143496 Pixel, davon verschieden 0 | ganzes Bild verschieden 9037, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 9037 nachher 9037
+Cut 6 F600: Figur 122804 Pixel, davon verschieden 0 | ganzes Bild verschieden 8585, ausserhalb der Prop-Pixel 0 | Nullbild mit Figur vorher/nachher 0 | Prop-Pixel vorher 8585 nachher 8585
+== Mittel-RGB der Props nachher (Spieler weit weg), gegen den Kandidaten L2 der Mess-exe
+Cut 2 Buch  n_c2_nurdiary          F500:   525 Pixel Mittel-RGB (46.0,35.2,24.8) Y 37.3
+Cut 2 Buch  mess_c2_nurdiary       F450:   525 Pixel Mittel-RGB (46.0,35.2,24.8) Y 37.3
+Cut 2 Buch  mess_c2_nurdiary       F530:   525 Pixel Mittel-RGB (15.3,14.9,6.9) Y 14.1
+   neue exe F500 gegen Mess-exe Lichtsatz 2 (F450): 0 Pixel verschieden
+Cut 2 Karte n_c2_nurkarte          F500:   179 Pixel Mittel-RGB (51.8,41.4,37.4) Y 44.0
+Cut 2 Karte mess_c2_nurkarte       F450:   179 Pixel Mittel-RGB (51.8,41.4,37.4) Y 44.0
+Cut 2 Karte mess_c2_nurkarte       F530:   179 Pixel Mittel-RGB (17.3,17.3,10.3) Y 16.5
+   neue exe F500 gegen Mess-exe Lichtsatz 2 (F450): 0 Pixel verschieden
+Cut 6 Buch  n_c6_nurdiary          F500:  7827 Pixel Mittel-RGB (48.8,37.2,26.1) Y 39.4
+Cut 6 Buch  mess_c6_nurdiary       F450:  7827 Pixel Mittel-RGB (48.8,37.2,26.1) Y 39.4
+Cut 6 Buch  mess_c6_nurdiary       F530:  7827 Pixel Mittel-RGB (17.0,16.5,7.7) Y 15.6
+   neue exe F500 gegen Mess-exe Lichtsatz 2 (F450): 0 Pixel verschieden
+Cut 6 Karte n_c6_nurkarte          F500:  3233 Pixel Mittel-RGB (51.7,41.4,37.3) Y 44.0
+Cut 6 Karte mess_c6_nurkarte       F450:  3233 Pixel Mittel-RGB (51.7,41.4,37.3) Y 44.0
+Cut 6 Karte mess_c6_nurkarte       F530:  3233 Pixel Mittel-RGB (17.3,17.3,10.3) Y 16.5
+   neue exe F500 gegen Mess-exe Lichtsatz 2 (F450): 0 Pixel verschieden

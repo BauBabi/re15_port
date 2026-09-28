@@ -1043,3 +1043,160 @@ Abzüge (`analysis/befunde_runde30/irons-diary-welt/`): `nb_cut2_marken.png`, `n
   Risiko 1). Eine Änderung hier wäre eine Licht-Entscheidung, keine Nachbesserung.
 * Nicht gemessen: Hörprobe (alle Läufe `RE15_NOAUDIO`), PSX-Ziel, Android-Paket (neue
   Quelldatei `engine/src/irons_tisch_1150.c` → dort frisch konfigurieren, GLOB-Cache).
+
+---
+
+## 10. NACHSCHLIFF „tischlicht“ (Runde 30, Zweig r30/n-tischlicht)
+
+Stand: aufgesetzt auf den Integrationsstand cac33993 (Suite 394/394). Auftrag: Buch (obj 5)
+und Memory Card (obj 6) waren in der Nahaufnahme Cut 6 fast schwarz (9.5 Punkt 1). Aus der
+Messung einen VORHANDENEN Lichtsatz des Raums wählen, keine neuen Lichtwerte.
+Commits: c5c78a66 (Messung), 23be209a (Wahl + Bau), bda023c2 (Riegel) und dieser Nachtrag.
+Werkzeuge: `analysis/befunde_runde30/werkzeuge/r30_tl_*`; Messausgaben
+`irons-diary-welt/tischlicht_*.txt`; Läufe (unversioniert) `build/r30_tischlicht/laeufe/`.
+
+### 10.1 MESSUNG
+
+**Lichtsätze aus der RDT** (`r30_tl_lichtsaetze.py`). Kopf @0x2C = `98 03 00 00` →
+Lichtblock @0x398, 40 Byte je Cut, nCut = 9. ROOM1150.RDT und ROOM1151.RDT sind im
+Lichtblock @0x398..0x500 **byte-gleich**.
+
+| Satz | Datei-Offset | ambient | Licht 0 / 1 / 2 (Farbe @ Position, Typ 0 = Punkt) |
+|---|---|---|---|
+| L0 | @0x00398 | (70,50,44) | (145,145,110) @ (−16303,−2000,−13297); 1/2 Füllwert (128) @ (2000,2000,2000) |
+| L1 | @0x003C0 | (90,70,64) | wie L0 |
+| L2 | @0x003E8 | (110,90,84) | (145,145,110) @ (−26703,−2000,−24397); (255,135,110) @ (−29000,−2000,−18400), Helligkeit 24000 |
+| L3 | @0x00410 | (90,70,64) | (145,145,110) @ (−26703,…); (145,145,110) @ (−16500,−2000,−24300) |
+| L4 | @0x00438 | (110,90,84) | (128,128,128) an den Positionen von L2 |
+| L5 | @0x00460 | (40,40,24) | wie L3 |
+| L6 | @0x00488 | (40,40,24) | wie L0 — **bisher in Cut 6** |
+| L7 | @0x004B0 | (40,40,24) | wie L3 |
+| L8 | @0x004D8 | (83,78,78) | scale 2, alle Farben 0 (Cut 8 = Item-Box-Schirm, keine Raumkamera) |
+
+**In welchen Cuts sind die Props zu sehen?** (`r30_tl_zensus.py`, Ausgangs-exe cac33993,
+`RE15_FORCE_CUT` 0..8, Props gegen Nullbild, Bild 400/500/600): **nur Cut 2 (704 Pixel) und
+Cut 6 (11060 Pixel)**, alle anderen 0/0/0. Die Projektion sagt dasselbe (Cut 1: x −14/−25,
+Cut 3: x 350/331, also außerhalb des Bilds; Cut 0/4/7/8 hinter der Kamera).
+
+**Zielmaß: die gemalte Umgebung.** Referenz sind das gemalte Klemmbrett (K, Brett samt Papier)
+und das gemalte Buch (B, Deckel des Stapels) im Nullbild desselben Cuts. Masken: EIN Satz
+Polygone, die Ecken in Cut 6 abgelesen und über die Tischplatte y = −1520 mit der
+Engine-Matrix nach Cut 2 projiziert (`r30_tl_licht_auswertung.py polygone()`). Abzüge:
+`tischlicht_referenzmasken_c6.png`, `tischlicht_referenzmasken_c2.png`. In Cut 2 liegen die
+projizierten Masken etwa 1,5 px rechts der Malerei und nehmen etwas Holz mit (10.6 Punkt 3).
+
+| Cut | Klemmbrett (Maske wie abgelesen) | Buch | Spanne der Helligkeit Y |
+|---|---|---|---|
+| 2 | 820 Px, RGB (131.7,123.1,110.2), Y 124.2 | 759 Px, (59.3,43.6,34.4), Y 47.2 | 47.2 .. 124.2 |
+| 6 | 14640 Px, (109.7,103.5,100.3), Y 105.0 | 13775 Px, (53.8,32.9,21.2), Y 37.8 | 37.8 .. 105.0 |
+
+Y = 0,299 R + 0,587 G + 0,114 B des Mittel-RGB (Auftrag: „mittlere Helligkeit … als Zielmaß“).
+
+**Kandidaten im echten Renderer.** Mess-exe = Ausgangsstand + Messhaken
+`r30_tl_messhaken.patch` (NICHT im Code): ab Bild 400 nehmen obj 5/6 den Lichtsatz
+((Bild − 400)/20) mod 9, Framedump Bild 410 + 20·L. Buch und Karte in getrennten Läufen
+(Bit 55 bzw. 54 gesetzt). Ohne die Variable ist die Mess-exe pixelgleich zur Ausgangs-exe
+(Cut 6, 0/0/0 Pixel). Helligkeit Y der Props, Masken 10 % geschrumpft (Spanne Cut 2 47.4..134.7,
+Cut 6 40.5..120.1):
+
+| Satz | Cut 2 Buch / Karte | Cut 6 Buch / Karte | Summe \|dY\| |
+|---|---|---|---|
+| L0 | 20.0 / 23.0 | 21.8 / 23.1 | 88.0 |
+| L1 | 26.6 / 30.8 | 28.7 / 30.8 | 59.0 |
+| **L2** | **37.3 / 44.0** | **39.4 / 44.0** | **14.7** |
+| L3 | 28.5 / 33.3 | 30.8 / 33.4 | 50.0 |
+| L4 | 36.5 / 42.7 | 38.5 / 42.7 | 17.7 |
+| L5 | 15.9 / 18.6 | 17.6 / 18.6 | 105.3 |
+| L6 (bisher Cut 6) | 14.1 / 16.5 | 15.6 / 16.5 | 113.3 |
+| L7 | 15.9 / 18.6 | 17.6 / 18.6 | 105.3 |
+| L8 | 26.6 / 30.8 | 27.7 / 30.8 | 59.9 |
+
+Zweites Maß (euklidischer RGB-Abstand zur Spanne je Kanal, Summe über 2 Props × 2 Cuts):
+L2 40.2, L4 51.6, L3 97.3, L1 110.9, L8 122.4, L0 155.5, L5/L7 195.6, L6 208.1.
+**Rang in allen sechs Varianten (2 Maße × Masken 0 / 10 / 25 % geschrumpft):
+L2 L4 L3 L1 L8 L0 L5 L7 L6** (`tischlicht_auswertung.txt`).
+
+### 10.2 ENTSCHEIDUNG
+
+**Lichtsatz L2 (Cut 2, @0x003E8) für beide Props in jedem Cut.** Das ist der Vorschlag aus
+2.6 / 9.6.7. Jetzt ist er gegen alle neun vorhandenen Sätze gemessen. In Cut 2 ändert sich
+dadurch nichts, weil das schon der eigene Satz ist. In Cut 6 steigt das Buch von Y 15.6 auf
+39.4 und die Karte von 16.5 auf 44.0. Der nächstbeste Satz, L4, liegt 3 Punkte dahinter.
+L4 hat dasselbe ambient wie L2, aber graue statt warmer Lichter.
+
+### 10.3 BAU
+
+| Datei | Änderung |
+|---|---|
+| `include/re15_irons_tisch.h` | `RE15_IRONS_LICHT_CUT 2`, Block „LICHTSATZ DER ZWEI PROPS — PORT-WAHL, KEINE ORIGINAL-ADRESSE“ mit den 40 Bytes @0x003E8, dem bisherigen Satz @0x00488 und der Messtabelle; Prototyp `re15_irons_tisch_licht_cut` |
+| `engine/src/irons_tisch_1150.c` | `re15_irons_tisch_licht_cut(raum, obj)`: 2 nur für obj 5/6 in 0x1150/0x1151, sonst −1 |
+| `platform/pc/main.c` | Prop-Zeichner: `licht_cut` = Satz des aktiven Cuts (byte-true, FUN_8002c18c), außer die Funktion liefert einen gültigen Index |
+
+Für jedes andere Objekt bleibt der Weg unverändert. Spieler und NPCs haben eigene
+`re15_light_setup_actor`-Aufrufe in `main.c`, die nicht berührt sind.
+
+### 10.4 VORHER / NACHHER (Framedump 960×720, `r30_tl_vorher_nachher.py`, `tischlicht_vorher_nachher.txt`)
+
+| Messung | Ergebnis |
+|---|---|
+| Cut 0, 1, 2, 3, 4, 5, 7, 8 (Spieler weit weg), F400/500/600 | **0** Pixel verschieden |
+| Cut 6 (Spieler weit weg) | 11060 Pixel verschieden, **0 außerhalb** der Prop-Pixel |
+| Nullbilder Cut 2 / Cut 6 | **0** |
+| Cut 2, Spieler vor dem Tisch (−22664,−18450) | Figur 27650…28525 Pixel, **0** verschieden; ganzes Bild 0 |
+| Cut 6, Spieler an der Tischkante (−22664,−18649) | Figur 121777…143496 Pixel, **0** verschieden; Änderungen nur in den Prop-Pixeln (8585…9037) |
+| Cut 4, ganzes Bild | **0** (in keiner begehbaren Lage ist dort eine Figur zu sehen: vor dem Modell schiebt die Kollision den Spieler nach x −22250 hinter die Kamera, dahinter verdecken ihn die Modell-Masken) |
+| neue exe gegen Mess-exe mit L2 (Buch/Karte, Cut 2 und 6) | **0** — der Bau ist genau der gemessene Kandidat |
+| Mittel-RGB Cut 6 Buch | (17.0,16.5,7.7) → **(48.8,37.2,26.1)** |
+| Mittel-RGB Cut 6 Karte | (17.3,17.3,10.3) → **(51.7,41.4,37.3)** |
+| Mittel-RGB Cut 2 Buch / Karte | unverändert (46.0,35.2,24.8) / (51.8,41.4,37.4) |
+
+Abzüge: `tischlicht_cut6_vorher_nachher.png`, `tischlicht_cut2_vorher_nachher.png` (je vorher |
+nachher | Nullbild), `tischlicht_uebersicht.png` (ganze Bilder).
+
+### 10.5 RIEGEL (`probes/r30_irons-tisch-licht.cmake`)
+
+* `unit_r30_irons_tisch_licht`: Die Wahl gilt nur für obj 5/6 in 1150/1151. Geprüft sind
+  408 Fälle (12 Räume × obj −1…32). Der Satz ist vorhanden: beide RDTs haben den Kopf @0x2C =
+  0x398 und nCut 9, @0x3E8 stehen genau die 40 zitierten Bytes, und der Lichtblock ist in
+  beiden Dateien byte-gleich. L2 hat ambient (110,90,84), L6 hat (40,40,24).
+* `integration_r30_irons_tisch_licht`: echte exe, Lade-Weg (CONTINUE ROOM1150), vier
+  Framedumps: Cut 6 und Cut 2, jeweils mit und ohne Props. Auswerter
+  `probe_r30_irons_tisch_licht` mit denselben Masken (Schrumpf 0) und denselben Zahlen wie das
+  Python-Werkzeug (14640 / 13775 / 820 / 759 Maskenpixel). Er verlangt zwei Dinge: (1) in
+  Cut 6 liegt die Helligkeit von Buch und Karte in der gemalten Spanne; (2) je Prop gilt
+  dY(Cut 6) ≥ dY(Cut 2), Cut 6 ist also gegen seine Malerei nicht dunkler als Cut 2 unter
+  seinem Original-Licht. Gemessen: Buch Y 39.4 und Karte 44.0 in [37.8 .. 105.0]; Quervergleich
+  +0.0 / −10.0 bzw. +0.0 / −3.2 → **OK**, Laufzeit rund 39 s.
+* **Negativ-Kontrolle:** derselbe Riegel mit der Ausgangs-exe cac33993 → **rot**, mit vier
+  Gründen: Buch Y 15.6 und Karte 16.5 liegen außerhalb von 37.8..105.0, und dY −22.2 < −10.0
+  bzw. −21.3 < −3.2.
+
+**Suite: 396 von 396** (394 des Integrationsstands + die zwei neuen Riegel; ctest ohne -j,
+ohne Wiederholung, Rückgabe 0, 462.05 s). `RE15_MIN_TESTS` nicht geändert.
+
+### 10.6 Offen / Einschränkungen (gemessen, nicht geschönt)
+
+1. **Der Rand ist knapp.** Mit der Maske wie abgelesen liegt das Buch 1.6 über der
+   Untergrenze, die Karte 6.2. Das gemalte Buch misst je nach Maske Y 37.8 (0 %), 40.5 (10 %)
+   oder 45.2 (25 %). Bei 10 % Schrumpf liegt das Buch 1.2 unter der Spanne, bei 25 % liegen
+   Buch und Karte 5.8 bzw. 1.1 darunter. Nach dem strengen Maß je Kanal erreicht KEIN
+   vorhandener Satz die Spanne. L2 fehlt in Cut 6 um 7.9 (Buch) bzw. 4.9 (Karte), und zwar im
+   Rotkanal: das gemalte Buch ist rotbraun, das RE2-Buch olivgrau. Die Wahl hängt davon nicht
+   ab (Rang überall gleich). Der Riegel prüft die Helligkeit mit der Maske wie abgelesen.
+2. **Auch Cut 2 selbst ist unter seinem Original-Licht dunkler als die Malerei**: Buch dY −10.0,
+   Karte −3.2. Die gemalten Hintergründe sind heller, als das Echtzeitlicht diese zwei
+   portseitig ergänzten Modelle macht. Mit vorhandenen Sätzen lässt sich das nicht schließen.
+   L2 ist der hellste Satz des Raums.
+3. In Cut 2 liegen die projizierten Referenzmasken etwa 1,5 px rechts der gemalten Objekte.
+   Cut 2 ändert sich nicht, und die Wahl ist davon unabhängig. Für Riegel-Teil (2) wirkt
+   das wie ein etwas hellerer Cut-2-Bezug.
+4. **Hebetisch** (Prop 0): Er steht in allen gemessenen Bildern geparkt (y −20324) und ist
+   nicht zu sehen. Belegt sind nur die Pixelgleichheit der ganzen Bilder in Cut 2/4/6 und
+   die Code-Schranke (nur obj 5/6, Unit-Teil A). Den gehobenen Zustand (Ereignis) habe ich
+   nicht gefahren.
+5. PSX-Ziel unberührt (kennt diese Props nicht, Risiko 7). Keine neue Quelldatei.
+6. Der Messhaken lebt nur als Patch-Datei `r30_tl_messhaken.patch`, erstellt gegen cac33993.
+   Auf den neuen Stand passt er nicht mehr, weil dieselbe Zeile jetzt `licht_cut` heißt. Zum
+   Nachmessen: Stand cac33993 auschecken, `git apply`, `re15_pc` bauen, exe nach
+   `build/r30_tischlicht/exe_mess/` kopieren und die Läufe aus `r30_tl_lauf.sh` mit
+   `LICHT_MESS=400/20` fahren.
