@@ -2986,11 +2986,16 @@ static void pc_cut_sync_log(void)
         else if (bcut >= 0)
             sync = 0;   /* Hintergrund aus einem anderen Raum */
     }
-    fprintf(lf, "F%u room=%04x bg=%04x#%d view=%d sync=%d req=%u shown=%d fade0=%u/%u tris=%d dc=%d\n",
+    /* mfx = Montage-Ebenen (re15_montage_fx_level_new/_prev) nach dem Takt dieses Bilds, -1/-1 =
+     * Montage aus. Nachbesserung Runde 30: macht den Montage-Schalter vor dem Apply pruefbar
+     * (ohne ihn blieb die neue Ebene im ersten Montagebild auf 0). */
+    int mfx_on = re15_montage_fx_active();
+    fprintf(lf, "F%u room=%04x bg=%04x#%d view=%d sync=%d req=%u shown=%d fade0=%u/%u tris=%d dc=%d mfx=%d/%d\n",
             (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, broom, bcut, vcut, sync,
             (unsigned)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
             g_fade_ch[0].drawn ? (unsigned)g_fade_ch[0].out_r : 0u, (unsigned)g_fade_ch[0].abr,
-            re15_render_pc_dbg_textri_count(), g_death_cam ? 1 : 0);
+            re15_render_pc_dbg_textri_count(), g_death_cam ? 1 : 0,
+            mfx_on ? re15_montage_fx_level_new() : -1, mfx_on ? re15_montage_fx_level_prev() : -1);
     fflush(lf);
     s_cs_view_ok = 0;
 }
@@ -5129,6 +5134,35 @@ re_title:;
          * vorigen Durchlaufs = hierher, vor den Blit und vor den SCD-Takt. Dann traegt der
          * Hintergrund, der gleich in den Framebuffer geht, denselben Cut wie die Projektion
          * dieses Bilds (Beleg an pc_cam_present_apply). */
+        /* MONTAGE-SCHALTER VOR DEM APPLY (Runde 30 cut-blitz, Nachbesserung): der Apply ruft beim
+         * Cut-Wechsel re15_montage_fx_on_cut(), das bei inaktiver Montage sofort zurueckkehrt
+         * (re15_montage_fx.c `if (!re15_montage_fx_active()) return;`). Stand der Schalter wie bis
+         * cac33993 erst im Blit-Block, lief er seit dem Vorziehen des Apply NACH ihm: im ersten
+         * Bild von ROOM1240 verpuffte on_cut(0), das erste Montagebild blendete nie ein
+         * (Gegenpruefer: F48-F161 je 552960 Pixel (0,0,0) statt (1,1,1)). Deshalb steht er jetzt
+         * hier, mit derselben Bedingung (Hintergrund geladen) und an derselben Stelle der
+         * Bildfolge wie in cac33993 - vor dem Apply. Kein Original-Mechanismus: die Montage ist
+         * die RE2-Praesentation (Nutzer-Auftrag 2026-08-30), Belege in re15_montage_fx.c.
+         * Die Vorspann-Montage gibt es in BEIDEN Varianten (ROOM1240 = Leon, ROOM1241 = Elza;
+         * die beiden RDT unterscheiden sich in genau einem Byte, dem Tuerziel @0x0531 = 0x17
+         * bzw. 0x03). Die Variante ist die niedrigste Hex-Ziffer, also gegen die BASIS
+         * vergleichen.
+         * AKTIVIERUNGSBILD: TAKT VOR DEM ERSTEN on_cut - Port-Wahl, keine Original-Adresse (die
+         * Montage ist RE2-Praesentation). Bis cac33993 lief im Bild, in dem die Montage anging,
+         * der Takt VOR dem ersten on_cut (der Apply stand hinter dem Blit): ein Takt ohne Ebene,
+         * der nur die globalen Puls-Zaehler pan_ctr/zoom_ctr weiterschaltet; die Rampe der ersten
+         * Ebene begann im Folgebild. Genau diese Reihenfolge gilt hier fuer das Aktivierungsbild,
+         * danach wie gehabt Apply -> Takt -> Blit. Gemessen (New Game, F0-F1415 gegen 4273b3f6):
+         *   Takt nach dem Apply:        1 Bild ab (F47, Rampe erreicht 0x60 ein Bild frueher)
+         *   Takt ganz weggelassen:    118 Bilder ab (Pan-/Zoom-Pulse um ein Bild verschoben)
+         *   Takt vor dem Apply (so):    0 Bilder ab. */
+        int mfx_frisch = 0;
+        if (re15_bg_is_loaded()) {
+            int mfx_vorher = re15_montage_fx_active();
+            re15_montage_fx_set_active(RE15_ROOM_BASE(g_current_room_id) == 0x1240);
+            mfx_frisch = !mfx_vorher && re15_montage_fx_active();
+        }
+        if (mfx_frisch) re15_montage_fx_tick();   /* leerer Takt des Aktivierungsbilds */
         if (md1_ok) pc_cam_present_apply(&rdt, rdt_ok);
 
         /* Phase 4.5.6.4: paint cached MDEC BG into the software
@@ -5141,13 +5175,9 @@ re_title:;
              * TPAGE-ABR=1 @0x801c1b94-c24) waehrend das vorige ausblendet, mit vertikalem
              * Wandern bzw. zentriertem Zoom je Bild (re15_montage_fx.c). RE15_MONTAGE_STOCK=1
              * = byte-true Hartschnitt. Der Erzaehler-Raum 1170 bleibt unberuehrt. */
-            /* Die Vorspann-Montage gibt es in BEIDEN Varianten (ROOM1240 = Leon,
-             * ROOM1241 = Elza; die beiden RDT unterscheiden sich in genau einem Byte,
-             * dem Tuerziel @0x0531 = 0x17 bzw. 0x03). Die Variante ist die niedrigste
-             * Hex-Ziffer, also gegen die BASIS vergleichen. */
-            re15_montage_fx_set_active(RE15_ROOM_BASE(g_current_room_id) == 0x1240);
+            /* Montage-Schalter: steht seit der Nachbesserung VOR pc_cam_present_apply (s. dort). */
             if (re15_montage_fx_active()) {
-                re15_montage_fx_tick();
+                if (!mfx_frisch) re15_montage_fx_tick();   /* Aktivierungsbild: Takt lief schon (s. oben) */
                 re15_bg_blit_montage(re15_montage_fx_level_new(),
                                      re15_montage_fx_level_prev(),
                                      re15_montage_fx_pan_y(),
@@ -9003,7 +9033,28 @@ re_title:;
                  * BH-round |x|<25000 teleport-hide proxy: Elliot at the off-stage
                  * (-31000,…) hide corner is outside every cut-0..6 quad → not
                  * drawn (nor lit), exactly as PSX. On-stage NPCs are inside →
-                 * drawn. Falls back to nothing-culled if the cut has no region. */
+                 * drawn. Falls back to nothing-culled if the cut has no region.
+                 *
+                 * GECULLT = NICHT ZEICHNEN, ABER POSIEREN (Runde 30 cut-blitz, Nachbesserung). Das
+                 * Original trennt Takt und Zeichnen (PSX.EXE / STAGE1.BIN, selbst disassembliert):
+                 *   TAKT  @0x8001ce04 jal FUN_8001a50c -> @0x80072bac[entity+8]; Typ 0x47 (Elliot)
+                 *         = 0x8011d6d4 (Eintrag @0x8011e940-4c `sw v0,0x2cc8(at)`). FUN_8011d6d4
+                 *         gatet nur auf g_pauseflags&0x20000000 (@0x8011d6e8-f4) und +0x9&0x20
+                 *         (@0x8011d708-14) und ruft den Nacken @0x8011d80c jal FUN_80037358 - ohne
+                 *         DAT_800ac790 oder DAT_800b0fe4 zu lesen.
+                 *   ZEICHNEN @0x8001d108 jal FUN_8001e8c8 je Entity: @0x8001e970 lw DAT_800ac790 /
+                 *         @0x8001e974 jal FUN_80014368; innen je Part @0x8001e990 FUN_8001e9ec
+                 *         (zusammensetzen + zeichnen), aussen je Part @0x8001e9b4 FUN_8001ef54 (nur
+                 *         zusammensetzen, @0x8001ef80 jal FUN_80022da0, kein Zeichnen).
+                 * Der Port rechnet Nacken-FSM, Ueberblend-Schnappschuss und Kopf-Weltlage in
+                 * re15_skel_compute_pose, also im Zeichenpfad. Ein gecullter NPC wird deshalb
+                 * weiter posiert und erst NACH der Pose verworfen (unten `npc_region_culled`),
+                 * wie der aussen-Zweig des Originals. DAT_800ac790 schreibt in der ganzen EXE nur
+                 * der Apply (@0x80021c0c; STAGE1-6: kein Schreiber) - im Anforderungsbild cullt das
+                 * Original also mit dem ALTEN Viereck und taktet den Nacken trotzdem.
+                 * Gemessen (1170@240, RE15_NECK_TRACE): ohne das fehlte Elliot in F445 (Cut 7,
+                 * ausserhalb des Vierecks) ein Nacken-Schritt, F448-F453 wichen 8..1020 Pixel ab. */
+                int npc_region_culled = 0;
                 if (cam_has_region &&
                     !re15_aot_point_in_quad(npc->x, npc->z,
                                             cam_region_xs, cam_region_zs)) {
@@ -9022,7 +9073,7 @@ re_title:;
                         int32_t fz_ = npc->z - (int32_t)(((int64_t)fs_ * 4494) >> 12);
                         g5_front_in = re15_aot_point_in_quad(fx_, fz_, cam_region_xs, cam_region_zs);
                     }
-                    if (!g5_front_in) continue;
+                    if (!g5_front_in) npc_region_culled = 1;   /* posieren, nicht zeichnen (s.o.) */
                 }
 
                 /* RE2-ZELLENARM (Runde 16 / Phase 2): solange das Entity-Bit 2 gesetzt ist
@@ -9036,8 +9087,8 @@ re_title:;
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
-                 * (same corrected scheme as the player). */
-                {
+                 * (same corrected scheme as the player). Gecullt: kein Schatten (wie bisher). */
+                if (!npc_region_culled) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
@@ -9390,8 +9441,9 @@ re_title:;
 
                 /* Bind the NPC's TIM: a generic enemy bank's own slot (av.pc_tex_slot,
                  * which now covers the crows too), else Elliot (1) / Leon (0). */
-                re15_render_pc_bind_tim_slot(av.pc_tex_slot >= 0 ? av.pc_tex_slot
-                                             : (is_elliot ? 1 : 0));
+                if (!npc_region_culled)
+                    re15_render_pc_bind_tim_slot(av.pc_tex_slot >= 0 ? av.pc_tex_slot
+                                                 : (is_elliot ? 1 : 0));
 
                 if (npc_anim->clip_count <= 0 || npc_skel->keyframe_count <= 0) continue;
                 /* Platform fps policy: 30fps target = raw anim_frame; 60fps halves. */
@@ -9403,6 +9455,9 @@ re_title:;
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
                 if (re15_skel_compute_pose(npc_skel, npc_kf, npc_poses) != 0) continue;
+                /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
+                 * gezeichnet wird nichts. */
+                if (npc_region_culled) continue;
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
                 {
