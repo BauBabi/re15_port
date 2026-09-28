@@ -26,10 +26,15 @@ Gemessene Regeln (Bericht: atlas_bericht.txt):
 
 Aufruf:
   python re15_port/tools/re2_doc_satz.py atlas --out build/r30_irons-diary-dokument
-  python re15_port/tools/re2_doc_satz.py satz  --out build/r30_irons-diary-dokument \
-         --font build/r30_irons-diary-dokument/re2_doc_font.json \
-         --text build/r30_irons-diary-dokument/nutzertext.txt \
+  python re15_port/tools/re2_doc_satz.py satz  --out build/r30_n_diary_en \
+         --font build/r30_n_diary_en/re2_doc_font.json \
+         --text analysis/befunde_runde30/irons_diary_en.txt \
          --titel "IRONS DIARY" --doc 25 --vorlage 8
+
+  Vor dem Satz prueft `satz` jedes Zeichen von Text und Titel gegen den Atlas (Bericht
+  <out>/zeichen_pruefung.txt): fehlt eine Glyphe -> Abbruch; ist sie eine KONSTRUKTION
+  (Umlaute, Eszett) -> Abbruch, ausser mit --konstruktion-erlaubt (die deutsche Fassung
+  der Runde 30 E brauchte das; die englische J braucht es nicht).
 """
 import argparse, glob, json, os, re, struct, sys
 from collections import Counter, defaultdict
@@ -330,6 +335,8 @@ def atlas_bauen(out_dir):
     kz = Counter()
     clutvar = Counter()
     for f in sorted(glob.glob(os.path.join(FILES, "FILE*_page.TIM"))):
+        if int(os.path.basename(f)[4:6]) >= 25:
+            continue                   # nur RE2s Saetze 0..24; FILE25 ist die EIGENE Ausgabe
         t = tim_lesen(f)
         W, H, px = t["W"], t["H"], t["px"]
         clutvar[tuple(t["clut"][:9])] += 1
@@ -620,7 +627,11 @@ def umbrechen(font, absatz, rand, x_max):
     return zeilen
 
 
-DATUM = re.compile(r"^\d{1,2}\. [A-Z][a-z]+( \d{4})?:?$")
+# SATZREGEL (keine Messung): eine Zeile, die nur aus einem Datum besteht, beginnt einen Eintrag.
+# Deutsch "18. September 1998" / "19. September"; englisch (Runde 30 J) "September 18, 1998" /
+# "September 19" - so schreiben auch RE2s Tagebuecher ("September 26th", FILE-Transkription).
+DATUM = re.compile(r"^(\d{1,2}\. [A-Z][a-z]+( \d{4})?"
+                   r"|[A-Z][a-z]+ \d{1,2}(, \d{4})?):?$")
 
 
 def eintraege(text):
@@ -646,6 +657,69 @@ def eintraege(text):
     return out
 
 
+def zeichen_pruefen(font, text, titel, out_dir, konstruktion_erlaubt):
+    """VOR dem Satz: hat jedes Zeichen von Text und Titel eine GEMESSENE Glyphe?
+
+    Abbruch bei (a) Zeichen ohne Glyphe, (b) Zeichen, deren Glyphe eine KONSTRUKTION ist
+    (Umlaute/Eszett, Abschnitt 6.2 des Dossiers), solange --konstruktion-erlaubt fehlt.
+    Zeichen mit NICHT gesicherter Metrik (Atlas: weniger als 3 Belege oder unter 60 %) werden
+    mit ihren Stellen gemeldet: ob ihr Vorschub im Text wirkt (ein Zeichen folgt in derselben
+    Zeile ohne Leerzeichen) und ob ihre Linkslage wirkt (sie folgt einem Zeichen ohne
+    Leerzeichen oder beginnt eine Zeile)."""
+    from collections import Counter as _C
+    zaehl = _C(c for c in text + titel if c not in " \n\r")
+    fehlt = sorted(c for c in zaehl if c not in font["glyphen"])
+    konstr = sorted(c for c in zaehl if c in font["glyphen"]
+                    and font["glyphen"][c]["quelle"].startswith("KONSTRUKTION"))
+    L = ["Zeichenpruefung vor dem Satz (re2_doc_satz.py satz)",
+         "Text %d Zeichen, Titel %r; verschiedene Zeichen ausser Leerraum: %d"
+         % (len(text), titel, len(zaehl)), ""]
+    L.append("%-5s %6s %7s %8s %6s %6s %9s  %s" % ("Zeich", "Text", "Orig-n", "Vorschub",
+                                                   "links", "breit", "gesichert", "Quelle"))
+    for c in sorted(zaehl):
+        g = font["glyphen"].get(c)
+        if g is None:
+            L.append("%-5r %6d  FEHLT" % (c, zaehl[c]))
+            continue
+        L.append("%-5r %6d %7d %8d %6d %6d %9s  %s" % (c, zaehl[c], g["n"], g["vorschub"],
+                                                       g["links"], g["breite"],
+                                                       "ja" if g.get("gesichert") else "NEIN",
+                                                       g["quelle"]))
+    L.append("")
+    L.append("Nicht gesicherte Metrik - wirkt sie im Text?")
+    zeilen = [z for z in (text + "\n" + titel).replace("\r", "").split("\n")]
+    for c in sorted(zaehl):
+        g = font["glyphen"].get(c)
+        if g is None or g.get("gesichert"):
+            continue
+        vor = links = 0
+        stellen = []
+        for z in zeilen:
+            for i, ch in enumerate(z):
+                if ch != c:
+                    continue
+                folgt = i + 1 < len(z) and z[i + 1] != " "
+                vor += folgt
+                links += 1                  # Linkslage wirkt IMMER (Stift + links = Kern-x)
+                stellen.append(z[max(0, i - 12):i + 4])
+        L.append("  %r: %d Stellen; Vorschub wirkt an %d (%s); Linkslage %d aus %s; %s"
+                 % (c, len(stellen), vor, "folgenlos" if vor == 0 else "WIRKT",
+                    g["links"], g["beleg_links"], stellen))
+    L.append("")
+    L.append("FEHLENDE Glyphen: %d %r" % (len(fehlt), fehlt))
+    L.append("KONSTRUKTIONEN im Text: %d %r%s" % (len(konstr), konstr,
+             " (erlaubt per --konstruktion-erlaubt)" if konstr and konstruktion_erlaubt else ""))
+    open(os.path.join(out_dir, "zeichen_pruefung.txt"), "w", encoding="utf-8").write(
+        "\n".join(L) + "\n")
+    if fehlt:
+        raise SystemExit("Zeichen ohne Glyphe: %r (Bericht %s)"
+                         % (fehlt, os.path.join(out_dir, "zeichen_pruefung.txt")))
+    if konstr and not konstruktion_erlaubt:
+        raise SystemExit("Zeichen mit KONSTRUIERTER Glyphe: %r - nur mit --konstruktion-erlaubt"
+                         % konstr)
+    return zaehl
+
+
 def satz(args):
     font = json.load(open(args.font, encoding="utf-8"))
     vor_seite = tim_lesen(os.path.join(FILES, "FILE%02d_p01_page.TIM" % args.vorlage))
@@ -654,10 +728,10 @@ def satz(args):
     W, H = vor_seite["W"], vor_seite["H"]
     nz = H // ZEILE
     text = open(args.text, encoding="utf-8").read()
-    fehlt = sorted(set(c for c in text + args.titel
-                       if c not in " \n\r" and c not in font["glyphen"]))
-    if fehlt:
-        raise SystemExit("Zeichen ohne Glyphe: %r" % fehlt)
+    os.makedirs(args.out, exist_ok=True)
+    zeichen_pruefen(font, text, args.titel, args.out, args.konstruktion_erlaubt)
+    open(os.path.join(args.out, "satz_eingabe.txt"), "w", encoding="utf-8",
+         newline="").write(text)                  # woertliche Kopie der Eingabe (Abnahme [1])
 
     seiten = []                                   # je Seite eine Liste von hoechstens nz Zeilen
     for kopf, absaetze in eintraege(text):
@@ -772,6 +846,8 @@ def main():
     s.add_argument("--vorlage", type=int, default=8)
     s.add_argument("--rand", type=int, default=10,
                    help="Stiftlage am Zeilenanfang; FILE08 p02/p03 gemessen 10, p01 12")
+    s.add_argument("--konstruktion-erlaubt", action="store_true",
+                   help="konstruierte Glyphen (Umlaute, Eszett) zulassen; sonst Abbruch")
     s.add_argument("--xmax", type=int, default=249,
                    help="groesstes erlaubtes Kernpixel-x; FILE08 gemessen 243/246/249")
     args = ap.parse_args()
