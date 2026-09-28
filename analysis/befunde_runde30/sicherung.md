@@ -827,6 +827,8 @@ Sicherung im Fach SICHTBAR ist, zeigt weiter nur der Framedump (s. u.).
 **Mangel 3 (gering) — `RE15_MIN_TESTS` in local_build.sh.** Laut Auftrag nicht in dieser Spur
 geändert; das zieht der Zusammenführer nach. Die Suite hat jetzt **365** Tests (360 master + 5).
 
+**Suite nach der Nachbesserung: 365 von 365 grün** (ctest im Arbeitsbaum, 201 s, ohne Wiederholung).
+
 **Konstanten.** Neu sind nur Format-Offsets mit Quelle (TIM +0x14/+0x220, wie itps_common.c)
 und Messwerte in den Riegeln (8904, 389, 2212, Bild 226). Die fünf Konstanten, die der
 Gegenprüfer als belegfrei aufgezählt hat, sind alle als Port-Wahl gekennzeichnet:
