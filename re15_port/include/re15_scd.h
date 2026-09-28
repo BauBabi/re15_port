@@ -554,6 +554,12 @@ void scd_prop_hide_by_obj_id(uint8_t obj_id);
  * Einmal PRO BILD aufrufen, NACH scd_vm_tick + re15_aot_scan (die Stelle der Present-Routine
  * FUN_8002137c im Original-Hauptloop). Rueckgabe 1 = dieses Bild muss der Aufrufer den Cut
  * anwenden (Ansicht bauen, BG/Licht/sprite.pri des Cuts laden); 0 = nichts zu tun.
+ * ⛔ Der Apply gehoert VOR Hintergrund UND Projektion des naechsten gezeigten Bilds: das
+ * Original schaltet beide in EINEM Zug (FUN_80021bbc: BG @0x80021d2c/@0x80021e34, H
+ * @0x80021e6c, Blickmatrix @0x80021e8c) und zeichnet die mit der alten Kamera gebaute OT des
+ * Anforderungsbilds nie (@0x80021560 j LAB_800215fc ueberspringt DrawOTag + Pufferwechsel).
+ * Der PC ruft sie deshalb am BILDANFANG vor dem Hintergrund-Blit und vor dem SCD-Takt
+ * (main.c pc_cam_present_apply = Ende des vorigen Durchlaufs; Runde 30, Spur cut-blitz).
  *
  * BYTE-TRUE (PSX.EXE, alle Adressen selbst disassembliert aus ghidra1_V2.txt):
  *
