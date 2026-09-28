@@ -19,21 +19,35 @@
 #
 # DER RIEGEL, zwei Laeufe mit der ECHTEN exe:
 #   A  Spielstand in ROOM1150, Sicherung NICHT genommen -> CONTINUE, Hebetisch
-#      ausloesen (RE15_FIRE_AOT=1@90#1150), Ende bei Bild 125 (RE15_EXIT_AT).
+#      ausloesen (RE15_FIRE_AOT=1@90#1150), Ende bei Bild 250 (RE15_EXIT_AT).
 #      Das debug.log MUSS tragen:
 #         CONTINUE: resumed
 #         [sicherung] Boot-Weg: Prop obj_id=4 im Pool
 #         [prop-render] pi=4 oid=0x04
+#         [sicherung] Modal Item 0x40 zeichnet ... Bild weicht in 0 von 8064 Punkten ab
 #   B  derselbe Lauf mit GENOMMENER Sicherung (Flag (9,53) im Spielstand).
-#      Das debug.log darf KEINE der beiden Sicherungs-Zeilen tragen — das Flag
+#      Das debug.log darf KEINE der drei Sicherungs-Zeilen tragen — das Flag
 #      wird vor dem Anlegen zurueckgeladen.
 #
-# Er DISKRIMINIERT: ohne den Aufruf am Lade-Weg fehlen in Lauf A beide Zeilen —
-# genau der gemessene Vorher-Stand.
+# WAS DIE ZEILEN BELEGEN — und was NICHT (Gegenpruefer, Runde 30):
+#   * Pool-Zeile: re15_sicherung_install lief am Lade-Weg.
+#   * [prop-render] pi=4: das Prop wird dem Zeichenweg uebergeben. Die Zeile steht
+#     EINMAL je Prozess, beim ERSTEN Zeichnen — je nach Kamera schon an der Parklage
+#     vor dem Ausloesen (Nutzerkarte: y=-21386, vor [fire-aot]). Ueber die
+#     Hebetisch-Szene sagt sie NICHTS.
+#   * Modal-Zeile: DAS ist die Pruefung IN der Szene. re15_sicherung_tick macht das
+#     Modal nur auf, wenn die Sicherung angelegt ist UND die Plattform im Fenster
+#     (-5000 .. -1100] steht, also die Hubfahrt von sub04 gelaufen ist (gemessen:
+#     Bild 226, Hebetisch y=-1105). Die Zahl 0 sagt, dass das Modal das Rohr-Bild
+#     zeichnet (Leser re15_itps_pixel). Ob die Sicherung im Fach SICHTBAR ist, belegt
+#     allein die Framedump-Abnahme (analysis/befunde_runde30/sicherung.md, UMSETZUNG).
+#
+# Er DISKRIMINIERT: ohne den Aufruf am Lade-Weg fehlen in Lauf A alle drei Zeilen —
+# genau der gemessene Vorher-Stand; ohne das Einsetzen des Bildes in main.c meldet
+# die Modal-Zeile statt 0 die Abweichung des ausgelieferten Blocks (2212 Punkte).
 #
 # RE15_SOFTWARE_RENDER=1 dient hier nur der Robustheit des Testhakens; geprueft
-# wird das LOG, kein Bild. Die Sichtabnahme laeuft ueber RE15_FRAMEDUMP mit dem
-# beschleunigten Renderer (analysis/befunde_runde30/sicherung.md, UMSETZUNG).
+# wird das LOG, kein Bild.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe> -DWORKDIR=<dir>
 #               -P test_r30_sicherung_laden.cmake
@@ -63,6 +77,11 @@ set(_hex_continue "434f4e54494e55453a20726573756d6564")
 set(_hex_boot     "5b736963686572756e675d20426f6f742d5765673a2050726f70")
 set(_hex_render   "5b70726f702d72656e6465725d2070693d34206f69643d30783034")
 set(_hex_exit     "455849545f41543a2042696c64")
+# "[sicherung] Modal Item 0x40 zeichnet" und " Bild weicht in 0 von 8064 Punkten ab"
+string(HEX "[sicherung] Modal Item 0x40 zeichnet" _hex_modal)
+string(HEX "Bild weicht in 0 von 8064 Punkten ab" _hex_modal_rohr)
+string(TOLOWER "${_hex_modal}" _hex_modal)
+string(TOLOWER "${_hex_modal_rohr}" _hex_modal_rohr)
 
 function(sicherung_lauf _name _karten_arg _out_hex)
     set(WORKDIR "${_basis}_${_name}")
@@ -89,7 +108,7 @@ function(sicherung_lauf _name _karten_arg _out_hex)
         RE15_CARD_AUTO=1
         RE15_CARD_SLOT=0
         "RE15_FIRE_AOT=1@90#1150"    # Hebetisch ausloesen: Aot slot 1 -> sub04
-        "RE15_EXIT_AT=125#1150"      # Prozessende am Bild, nicht an der Wanduhr
+        "RE15_EXIT_AT=250#1150"      # Prozessende am Bild (Modal gemessen in Bild 226)
         "${RE15_PC_EXE}")
 
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -105,7 +124,7 @@ function(sicherung_lauf _name _karten_arg _out_hex)
     endif()
     string(FIND "${_lh}" "${_hex_exit}" _p)
     if(_p LESS 0)
-        message(FATAL_ERROR "sicherung_laden[${_name}]: Bild 125 in ROOM1150 wurde nicht "
+        message(FATAL_ERROR "sicherung_laden[${_name}]: Bild 250 in ROOM1150 wurde nicht "
                             "erreicht (keine EXIT_AT-Zeile, exit=${_rv}) — der Lauf ist "
                             "vorher abgerissen, ueber die Sicherung sagt er nichts")
     endif()
@@ -124,8 +143,24 @@ endif()
 string(FIND "${_log_a}" "${_hex_render}" _pos)
 if(_pos LESS 0)
     message(FATAL_ERROR
-        "sicherung_laden[A]: die Sicherung liegt im Pool, wird in der Hebetisch-Szene "
-        "aber NICHT gezeichnet (keine Zeile '[prop-render] pi=4 oid=0x04').")
+        "sicherung_laden[A]: die Sicherung liegt im Pool, wird dem Zeichenweg aber nie "
+        "uebergeben (keine Zeile '[prop-render] pi=4 oid=0x04' = kein erstes Zeichnen im "
+        "ganzen Lauf).")
+endif()
+string(FIND "${_log_a}" "${_hex_modal}" _pos)
+if(_pos LESS 0)
+    message(FATAL_ERROR
+        "sicherung_laden[A]: in der Hebetisch-Szene geht das Aufnahme-Modal der Sicherung "
+        "bis Bild 250 NICHT auf (keine Zeile '[sicherung] Modal Item 0x40 zeichnet') - "
+        "entweder ist die Hubfahrt von sub04 nicht gelaufen oder die Sicherung fehlt.")
+endif()
+# die Zahl muss IN der Modal-Zeile stehen, nicht irgendwo im Log
+string(SUBSTRING "${_log_a}" ${_pos} 400 _modal_zeile)
+string(FIND "${_modal_zeile}" "${_hex_modal_rohr}" _p2)
+if(_p2 LESS 0)
+    message(FATAL_ERROR
+        "sicherung_laden[A]: das Aufnahme-Modal zeichnet NICHT das Rohr-Bild (die Modal-Zeile "
+        "meldet eine Abweichung vom eingesetzten Block) - main.c setzt das Bild nicht ein.")
 endif()
 
 # --- Lauf B: Sicherung schon genommen -----------------------------------------
@@ -141,6 +176,12 @@ if(NOT _pos LESS 0)
     message(FATAL_ERROR
         "sicherung_laden[B]: die genommene Sicherung wird nach dem Laden gezeichnet.")
 endif()
+string(FIND "${_log_b}" "${_hex_modal}" _pos)
+if(NOT _pos LESS 0)
+    message(FATAL_ERROR
+        "sicherung_laden[B]: fuer die genommene Sicherung geht das Aufnahme-Modal noch einmal auf.")
+endif()
 
-message(STATUS "sicherung_laden: OK — am Lade-Weg liegt die Sicherung im Hebetisch und wird "
-               "gezeichnet; eine genommene Sicherung bleibt weg")
+message(STATUS "sicherung_laden: OK — am Lade-Weg liegt die Sicherung im Pool, geht an den "
+               "Zeichenweg, und in der Hebetisch-Szene oeffnet das Modal mit dem Rohr-Bild; "
+               "eine genommene Sicherung bleibt weg")

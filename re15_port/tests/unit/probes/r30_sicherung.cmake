@@ -72,7 +72,11 @@ endif()
 #   unit_r30_sicherung_bild     Item-Bild/Icon: bytegleich mit soll/weg2n_*; Einsetzen
 #                               veraendert nur 0xC0000..0xC2FFF bzw. 0x12C00..0x130AF
 #   integration_r30_sicherung_laden   echte exe, CONTINUE in ROOM1150: die Sicherung liegt
-#                               im Pool und wird gezeichnet ([prop-render] pi=4 oid=0x04)
+#                               im Pool, geht an den Zeichenweg, und in der Hebetisch-Szene
+#                               oeffnet das Modal mit dem Rohr-Bild (Bild 226)
+#   integration_r30_sicherung_bild    echte exe, CONTINUE mit der Sicherung in Platz 0 und
+#                               CHECK: alle VIER PC-Ladestellen (main.c x2, inv_render_pc.c
+#                               x2) haben Bild/Icon eingesetzt, das CHECK-Foto wird geladen
 # =============================================================================
 add_executable(probe_r30_sicherung_modell
     ${CMAKE_CURRENT_LIST_DIR}/../probe_r30_sicherung_modell.c)
@@ -112,4 +116,14 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r30_sicherung_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r30_sicherung_laden.cmake)
     set_tests_properties(integration_r30_sicherung_laden PROPERTIES TIMEOUT 240)
+
+    # Nachbesserung (Gegenpruefer, Mutationsprobe M2): die vier Einsetz-Aufrufe im
+    # PC-Plattformcode waren durch keinen Test gedeckt.
+    add_test(NAME integration_r30_sicherung_bild
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r30_sicherung_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r30_sicherung_bild_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r30_sicherung_bild.cmake)
+    set_tests_properties(integration_r30_sicherung_bild PROPERTIES TIMEOUT 240)
 endif()
