@@ -123,6 +123,16 @@ void re15_sicherung_install(uint16_t room_id)
             i, sx, sy, sz, rx, ry, rz);
 }
 
+/* Runde 30, Nachtrag K: dasselbe Symbol wie engine/src/sicherung_1150.c, damit die Variante
+ * das Archivmitglied weiterhin NICHT zieht (sonst Doppelsymbole). */
+int re15_sicherung_fahrt_offen(void)
+{
+    if (!s_raum_aktiv || s_modal_ausgeloest) return 0;
+    if (re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT)) return 0;
+    int p = slot_von_obj_id(RE15_SICHERUNG_OBJ_ID);
+    return p >= 0 && g_scd.props[p].active;
+}
+
 int re15_sicherung_tick(void)
 {
     static int s_init = 0, s_ohne = 0, s_oben_bis = OBEN_BIS;

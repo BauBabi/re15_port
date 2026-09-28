@@ -69,6 +69,7 @@ static inline int RNDI(float f) {
 #include "re15_rdt.h"
 #include "re15_sicherung.h"
 #include "re15_irons_tisch.h"   /* Runde 30 E2: Irons Diary + Memory Card (ROOM1150/1151) */
+#include "re15_granate.h"       /* Runde 30 Nachtrag K: Handgranate im Hebetisch (ROOM1150/1151) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -1396,6 +1397,23 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
             if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
                           re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(oid)); }
         }
+    }
+
+    /* HANDGRANATE (obj 7) im Hebetisch von Irons' Buero (Runde 30, Nachtrag K): ein
+     * ZUSAETZLICHES Prop mit eingebackenem MD1+TIM (gen/granate_prop.inc, die Waffen-Flaechen
+     * aus PLD/PL00W09.PLW) — die ausgelieferten RDTs bleiben byte-true. Dieselben zwei Riegel
+     * wie bei der Sicherung: Raum ROOM1150/1151 UND das nOmodel des Raums belegt den Slot nicht
+     * selbst. TIM-Slot RE15_TIM_SLOT_PROP(7) = 27. Herleitung: include/re15_granate.h. */
+    if ((g_current_room_id == 0x1150 || g_current_room_id == 0x1151) &&
+        nprops <= RE15_GRANATE_OBJ_ID) {
+        int msz = 0, tsz = 0;
+        const uint8_t *mb = re15_granate_md1_bytes(&msz);
+        const uint8_t *tb = re15_granate_tim_bytes(&tsz);
+        if (mb && re15_md1_parse(mb, (size_t)msz, &md1[RE15_GRANATE_OBJ_ID]) == 0)
+            ok[RE15_GRANATE_OBJ_ID] = 1;
+        if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
+                      re15_render_pc_upload_tim_slot(
+                          &tt, RE15_TIM_SLOT_PROP(RE15_GRANATE_OBJ_ID)); }
     }
 }
 
@@ -4622,6 +4640,18 @@ re_title:;
                 fprintf(stderr, "[irons-tisch] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
+    /* HANDGRANATE (Runde 30, Nachtrag K) — derselbe Grund wie Sicherung und Schreibtisch direkt
+     * darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter (Original: EIN Raumlader
+     * FUN_800396fc, `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem Restore
+     * der Flags: das Genommen-Bit (9,56) entscheidet. Die Logzeile ist reine Diagnose fuer den
+     * Lade-Riegel. Herleitung: include/re15_granate.h. */
+    re15_granate_install((uint16_t)g_current_room_id);
+    if ((g_current_room_id & 0xFFFEu) == 0x1150u)
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == RE15_GRANATE_OBJ_ID)
+                fprintf(stderr, "[granate] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        RE15_GRANATE_OBJ_ID, k, (unsigned)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there

@@ -1,0 +1,28 @@
+RDTs: 206, Item_aot_set gesamt: 164
+
+(1) Item_aot_set mit Granaten-/Werfer-Ids:
+  0x09 Hand Grenade           Platzierungen: 0
+  0x0A Acid Grenade           Platzierungen: 0
+  0x0B Incendiary Grenade     Platzierungen: 0
+  0x0F Grenade Launcher       Platzierungen: 0
+  0x10 Grenade Launcher       Platzierungen: 0
+  0x11 Grenade Launcher       Platzierungen: 0
+  0x19 Explosive Rounds       Platzierungen: 0
+  0x1A Acid Rounds            Platzierungen: 0
+  0x1B Incendiary Rounds      Platzierungen: 0
+  0x1D Empty Grenade Shells   Platzierungen: 0
+  0x1E Nitro Capsule          Platzierungen: 0
+  0x1F Acid Capsule           Platzierungen: 0
+  0x20 Incendiary Capsule     Platzierungen: 0
+
+(2) Welt-Modelle dieser Platzierungen:
+
+(3) Zone-9-Bits (RDT) belegt: 85 von 256
+   Bit 53: FREI in allen RDTs
+   Bit 54: FREI in allen RDTs
+   Bit 55: FREI in allen RDTs
+   Bit 56: FREI in allen RDTs
+   Bit 57: FREI in allen RDTs
+   Bit 58: FREI in allen RDTs
+
+(4) Sce_key_ck / Keep_Item_ck mit diesen Ids: 0

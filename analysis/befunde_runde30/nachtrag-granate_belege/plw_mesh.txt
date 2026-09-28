@@ -1,0 +1,37 @@
+PL00W09.PLW: 26792 B, Verzeichnis @0x6898 n=4: 0x8 0x4EC 0x5544 0x5F78
+   MD1 @0x5544..0x5F78 (2612 B): nobj=2
+   Mesh 0: 46 Dreieckspunkte / 9 Dreiecke, 46 Viereckspunkte / 31 Vierecke
+      (clut,page): (0x7840,0x0081) x40
+      Teilnetz tri   1 Flaechen  3 Punkte  x(38, 77) y(218, 245) z(59, 87)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(38, 77) y(218, 245) z(-23, 4)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(-77, -38) y(218, 245) z(-23, 4)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(-77, -38) y(135, 163) z(59, 87)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(-77, -38) y(218, 245) z(59, 87)
+      Teilnetz tri   3 Flaechen  5 Punkte  x(53, 85) y(22, 172) z(0, 133)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(-78, 71) y(161, 236) z(-59, -58)
+      Teilnetz quad 14 Flaechen 24 Punkte  x(-77, 77) y(135, 245) z(-23, 87)
+      Teilnetz quad 17 Flaechen 22 Punkte  x(-78, 85) y(15, 298) z(-59, 133)
+   TIM @0x5F78: flag=9 CLUT (256,480) 256x1  Bild (512,0) 28hw x 32 = 56x32 px
+PL04W09.PLW: 28132 B, Verzeichnis @0x6DD4 n=4: 0x8 0x608 0x5A70 0x64B4
+   MD1 @0x5A70..0x64B4 (2628 B): nobj=2
+   Mesh 0: 47 Dreieckspunkte / 73 Dreiecke, 47 Viereckspunkte / 0 Vierecke
+      (clut,page): (0x7840,0x0081) x73
+      Teilnetz tri  40 Flaechen 23 Punkte  x(-64, 86) y(0, 305) z(-58, 57)
+      Teilnetz tri  33 Flaechen 24 Punkte  x(-76, 77) y(135, 245) z(-22, 87)
+   TIM @0x64B4: flag=9 CLUT (256,480) 256x1  Bild (512,0) 28hw x 32 = 56x32 px
+PL00W03.PLW: 25876 B, Verzeichnis @0x6504 n=4: 0x8 0x4C0 0x5248 0x5BE4
+   MD1 @0x5248..0x5BE4 (2460 B): nobj=2
+   Mesh 0: 35 Dreieckspunkte / 8 Dreiecke, 35 Viereckspunkte / 27 Vierecke
+      (clut,page): (0x7840,0x0081) x35
+      Teilnetz tri   3 Flaechen  6 Punkte  x(-69, 70) y(170, 290) z(-70, 56)
+      Teilnetz tri   3 Flaechen  6 Punkte  x(-91, 17) y(18, 296) z(-74, 63)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(100, 170) y(176, 197) z(-30, -22)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(100, 170) y(176, 197) z(22, 30)
+      Teilnetz quad 14 Flaechen 19 Punkte  x(-91, 70) y(18, 385) z(-74, 101)
+      Teilnetz quad 13 Flaechen 16 Punkte  x(69, 170) y(176, 581) z(-30, 30)
+   TIM @0x5BE4: flag=9 CLUT (256,480) 256x1  Bild (512,0) 28hw x 32 = 56x32 px
+PL00.MD1 Mesh 11 (rechte Hand): 22/4 Dreiecke, 22/17 Vierecke
+      Teilnetz tri   1 Flaechen  3 Punkte  x(59, 128) y(23, 169) z(42, 85)
+      Teilnetz tri   2 Flaechen  5 Punkte  x(-85, 128) y(14, 243) z(-65, 33)
+      Teilnetz tri   1 Flaechen  3 Punkte  x(-85, 68) y(162, 230) z(-10, -5)
+      Teilnetz quad 17 Flaechen 22 Punkte  x(-85, 128) y(14, 345) z(-65, 85)

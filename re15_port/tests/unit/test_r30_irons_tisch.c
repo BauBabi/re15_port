@@ -48,6 +48,7 @@
 #include <math.h>
 
 #include "re15_irons_tisch.h"
+#include "re15_granate.h"    /* Runde 30 Nachtrag K: obj 7 liegt jetzt mit im Pool */
 #include "re15_rdt.h"
 #include "re15_camera.h"
 #include "re15_scd.h"
@@ -179,9 +180,12 @@ static void teil_pzg(void)
         CHECK(prop_ok(slot_von(6), -23522, -1520, -18568, 3072),
               "P %s obj 6 (Karte) bei (-23522,-1520,-18568) rot 3072, Flags 0x000B, Nullbox",
               raeume[i].n);
-        CHECK(slot_von(0) >= 0 && slot_von(4) >= 0 && g_scd.prop_count == 7,
-              "P %s Raum-Props 0..3 und Sicherung 4 bleiben, Pool %d Eintraege", raeume[i].n,
-              (int)g_scd.prop_count);
+        /* Pool: Raum 0..3, Sicherung 4, Diary 5, Karte 6 und seit Runde 30 Nachtrag K die
+         * Handgranate obj 7 im Hebetisch (include/re15_granate.h) = 8 Eintraege. */
+        CHECK(slot_von(0) >= 0 && slot_von(4) >= 0 && slot_von(RE15_GRANATE_OBJ_ID) >= 0 &&
+              g_scd.prop_count == 8,
+              "P %s Raum-Props 0..3, Sicherung 4 und Granate 7 bleiben, Pool %d Eintraege",
+              raeume[i].n, (int)g_scd.prop_count);
         CHECK(zone_ok(7, -24000, -18462, -17776, 0x48, 1, 54, 5),
               "Z %s Slot 7: ITEM x[-24000..-23000] z[-18462..-17776] Item 0x48 x1 Bit 54 obj 5",
               raeume[i].n);
@@ -224,8 +228,10 @@ static void teil_pzg(void)
               "G %s Bit (9,55) gesetzt: Karte fehlt (Prop + Zone), Diary da", raeume[i].n);
         hochfahren(raeume[i].r, raeume[i].id, -19000, -23000, beide);
         CHECK(slot_von(5) < 0 && slot_von(6) < 0 && !g_aot.slots[7].active &&
-              !g_aot.slots[8].active && g_scd.prop_count == 5,
-              "G %s beide genommen: keines da, Pool %d", raeume[i].n, (int)g_scd.prop_count);
+              !g_aot.slots[8].active && slot_von(RE15_GRANATE_OBJ_ID) >= 0 &&
+              g_scd.prop_count == 6,
+              "G %s beide genommen: keines da (Granate 7 liegt weiter), Pool %d", raeume[i].n,
+              (int)g_scd.prop_count);
     }
 }
 

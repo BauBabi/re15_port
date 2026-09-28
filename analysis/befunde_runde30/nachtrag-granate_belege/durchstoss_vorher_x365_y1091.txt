@@ -1,0 +1,7 @@
+F236:     0 Punkte
+F237:     2 Punkte  bbox x211..212 y148..148
+F238:     2 Punkte  bbox x211..212 y148..148
+F239:     2 Punkte  bbox x211..212 y148..148
+F240:     2 Punkte  bbox x211..212 y148..148
+F241:    20 Punkte  bbox x208..212 y148..158
+F242:    54 Punkte  bbox x206..212 y148..160

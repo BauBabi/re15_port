@@ -127,6 +127,11 @@ void re15_sicherung_install(uint16_t room_id);
  * Messung und Herleitung bei s_modal_ausgeloest in sicherung_1150.c. */
 int  re15_sicherung_tick(void);
 
+/* Runde 30, Nachtrag K: 1 = die Sicherung kann in DIESER Fahrt noch ein Modal aufmachen
+ * (angelegt, sichtbar, nicht genommen, Sperre dieser Fahrt noch frei). Die Granate derselben
+ * Fahrt (re15_granate_tick) wartet so lange. ⛔ Port-Wahl, keine Original-Adresse. */
+int  re15_sicherung_fahrt_offen(void);
+
 /* Die eingebackenen Engine-Bytes (gen/sicherung_prop.inc) fuer den Plattform-Lader,
  * der sie in den Prop-Slot RE15_SICHERUNG_OBJ_ID haengt. */
 const uint8_t *re15_sicherung_md1_bytes(int *out_size);

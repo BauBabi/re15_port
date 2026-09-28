@@ -1,0 +1,102 @@
+
+== Modell: gen/granate_prop.inc gegen PLD/PL00W09.PLW ==
+   dir[2] @0x5544: 46 Punkte, 9 Dreiecke, 31 Vierecke | Granate: 24 Punkte, 5 Dreiecke, 14 Vierecke
+   [OK ] 1. MD1: ein Mesh, 24 Punkte, 5 Dreiecke, 14 Vierecke
+   [OK ] 2. jede Flaeche = Waffen-Flaeche aus dir[2] (gedreht, UV gleich, clut/page umgesetzt)
+   [OK ] 3. TIM 128x256 8bpp, CLUT = dir[3]-CLUT, dir[3]-Bild bei (72,224)
+
+== 1150 Sitz im Kuppelfach ==
+   Fachboden-Punkte y=-1036: 8, Kuppel-Dreiecke: 32 | tiefster Punkt y=-1033, Abstand zur Sicherung 1.07, Luft unter der Kuppel 0.67, z 1183..1337
+   [OK ] 4. tiefster Punkt genau 3 unter dem Fachboden y=-1036
+   [OK ] 5. Abstand zur Sicherung > 0 (kein Durchdringen)
+   [OK ] 6. Luft unter der geschlossenen Kuppel > 0 (ragt nicht durch)
+   [OK ] 7. ganz in der Kuppel-Oeffnung z 1110..1410
+
+== 1150 Fall A: No/No, dann Yes/Yes ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 224: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 224 y=-1115), geparkt 1
+   [OK ] 8. Fahrt 1: 1 Sicherungs- + 1 Granaten-Modal, Granate danach, beide oben; No/No laesst alles liegen
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   nach Fahrt 2: Flag(9,53)=1 Flag(9,56)=1, Item 0x40 x1, Item 0x09 x1
+   [OK ] 9. Fahrt 2: wieder 1+1 in derselben Folge; Yes/Yes -> beide Flags, Props weg, beide im Inventar
+   MESS Fahrt: Sicherungs-Modale 0 (Bild -1 y=0), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 10. Fahrt 3: kein Modal, nichts doppelt
+
+== 1150 Fall B: Sicherung Yes, Granate No ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   MESS Bild 134: Granaten-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 0 (Bild -1 y=0), Granaten-Modale 1 (Bild 134 y=-1105), geparkt 1
+   [OK ] 11. nur (9,53) nach Fahrt 1, Granate liegt; Fahrt 2 NUR das Granaten-Modal, dann genommen
+
+== 1150 Fall C: Sicherung No, Granate Yes ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 224: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 224 y=-1115), geparkt 1
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 12. nur (9,56) nach Fahrt 1, Granate weg; Fahrt 2 NUR das Sicherungs-Modal
+
+== 1150 Fall D: Granate vor dem Raumstart genommen (Negativ-Kontrolle) ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 13. kein Granaten-Prop im Pool, die Fahrt oeffnet nur das Sicherungs-Modal
+
+== 1150 Fall E: Tick-Reihenfolge vertauscht (Granate zuerst) ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   [OK ] 14. die Sicherung kommt trotzdem zuerst (re15_sicherung_fahrt_offen haelt die Granate)
+
+== 1151 Sitz im Kuppelfach ==
+   Fachboden-Punkte y=-1036: 8, Kuppel-Dreiecke: 32 | tiefster Punkt y=-1033, Abstand zur Sicherung 1.07, Luft unter der Kuppel 0.67, z 1183..1337
+   [OK ] 4. tiefster Punkt genau 3 unter dem Fachboden y=-1036
+   [OK ] 5. Abstand zur Sicherung > 0 (kein Durchdringen)
+   [OK ] 6. Luft unter der geschlossenen Kuppel > 0 (ragt nicht durch)
+   [OK ] 7. ganz in der Kuppel-Oeffnung z 1110..1410
+
+== 1151 Fall A: No/No, dann Yes/Yes ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 224: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 224 y=-1115), geparkt 1
+   [OK ] 8. Fahrt 1: 1 Sicherungs- + 1 Granaten-Modal, Granate danach, beide oben; No/No laesst alles liegen
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   nach Fahrt 2: Flag(9,53)=1 Flag(9,56)=1, Item 0x40 x1, Item 0x09 x1
+   [OK ] 9. Fahrt 2: wieder 1+1 in derselben Folge; Yes/Yes -> beide Flags, Props weg, beide im Inventar
+   MESS Fahrt: Sicherungs-Modale 0 (Bild -1 y=0), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 10. Fahrt 3: kein Modal, nichts doppelt
+
+== 1151 Fall B: Sicherung Yes, Granate No ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   MESS Bild 134: Granaten-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 0 (Bild -1 y=0), Granaten-Modale 1 (Bild 134 y=-1105), geparkt 1
+   [OK ] 11. nur (9,53) nach Fahrt 1, Granate liegt; Fahrt 2 NUR das Granaten-Modal, dann genommen
+
+== 1151 Fall C: Sicherung No, Granate Yes ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 224: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 224 y=-1115), geparkt 1
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 12. nur (9,56) nach Fahrt 1, Granate weg; Fahrt 2 NUR das Sicherungs-Modal
+
+== 1151 Fall D: Granate vor dem Raumstart genommen (Negativ-Kontrolle) ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 0 (Bild -1 y=0), geparkt 1
+   [OK ] 13. kein Granaten-Prop im Pool, die Fahrt oeffnet nur das Sicherungs-Modal
+
+== 1151 Fall E: Tick-Reihenfolge vertauscht (Granate zuerst) ==
+   MESS Bild 134: Sicherungs-Modal auf, y=-1105
+   MESS Bild 206: Granaten-Modal auf, y=-1115
+   MESS Fahrt: Sicherungs-Modale 1 (Bild 134 y=-1105), Granaten-Modale 1 (Bild 206 y=-1115), geparkt 1
+   [OK ] 14. die Sicherung kommt trotzdem zuerst (re15_sicherung_fahrt_offen haelt die Granate)
+
+ALLES BESTANDEN — 0 Pruefung(en) gerissen

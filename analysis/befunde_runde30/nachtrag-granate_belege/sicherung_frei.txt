@@ -1,0 +1,13 @@
+F240: Sicherung    0 Punkte, davon von der Granate veraendert   0 | Granate    0 Punkte
+F250: Sicherung  213 Punkte, davon von der Granate veraendert   0 | Granate  219 Punkte
+F260: Sicherung  351 Punkte, davon von der Granate veraendert   0 | Granate  226 Punkte
+F270: Sicherung  351 Punkte, davon von der Granate veraendert   0 | Granate  226 Punkte
+F280: Sicherung  351 Punkte, davon von der Granate veraendert   0 | Granate  226 Punkte
+F290: Sicherung  381 Punkte, davon von der Granate veraendert   0 | Granate  237 Punkte
+F300: Sicherung  363 Punkte, davon von der Granate veraendert   0 | Granate  265 Punkte
+F310: Sicherung  393 Punkte, davon von der Granate veraendert   0 | Granate  272 Punkte
+F320: Sicherung  371 Punkte, davon von der Granate veraendert   0 | Granate  277 Punkte
+F330: Sicherung  418 Punkte, davon von der Granate veraendert   0 | Granate  284 Punkte
+F340: Sicherung  416 Punkte, davon von der Granate veraendert   0 | Granate  256 Punkte
+F350: Sicherung  431 Punkte, davon von der Granate veraendert   0 | Granate  239 Punkte
+F360: Sicherung  443 Punkte, davon von der Granate veraendert   0 | Granate  231 Punkte
