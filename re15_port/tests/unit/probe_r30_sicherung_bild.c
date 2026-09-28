@@ -23,6 +23,14 @@
  *      ein: re15_itps_pixel(0x40,0,0) = (224,224,224) (Rahmenwort 0x739C),
  *      re15_itps_pixel(0x40,4,4) = (0,0,56) (Hintergrundwort 0x1C00), und das rohe Tile
  *      0x40 ist das eingebackene Icon.
+ *   7. Die PRUEF-FUNKTIONEN der Ladestellen (re15_sicherung.h, "PRUEFUNG AN DEN
+ *      LADESTELLEN") unterscheiden: der ausgelieferte Stand weicht ab (Block 8904 Bytes,
+ *      Tile 389 Bytes, Modal-Leser > 0 Punkte), der eingesetzte Stand in 0. Der Fall
+ *      "Ladestelle ohne Einsetzen" wird nachgestellt, indem die UNVERAENDERTEN Dateibytes
+ *      ueber re15_itps_set_data / re15_itemall_set_pix uebergeben werden — genau das, was
+ *      main.c tut, wenn der Einsetz-Aufruf fehlt (Mutationsprobe M2 des Gegenpruefers).
+ *      ⛔ Dieser Riegel prueft die FUNKTIONEN. Dass die vier PC-Ladestellen sie benutzen
+ *      und 0 melden, prueft integration_r30_sicherung_bild mit der echten exe.
  *
  * Rueckgabe 0 = alles bestanden.
  */
@@ -176,6 +184,52 @@ int main(void)
     pruefe("NULL und negative Groesse: kein Absturz, Puffer unberuehrt",
            memcmp(itps2, itps, (size_t)isz) == 0);
 
+    /* ---- 7. Pruef-Funktionen der Ladestellen ---- */
+    printf("\n== 7. Pruefung an den Ladestellen ==\n");
+    {
+        /* Modal-/Icon-Leser nach den faulen Ladern aus Abschnitt 6 */
+        int m_faul = re15_sicherung_modal_bild_abweichung();
+        int i_faul = re15_sicherung_icon_leser_abweichung();
+
+        memcpy(itps2, itps, (size_t)isz);
+        memcpy(pix2, pix, (size_t)psz);
+        int b_roh = re15_sicherung_bild_abweichung(itps2, isz);
+        int t_roh = re15_sicherung_icon_abweichung(pix2, psz);
+        re15_sicherung_bild_einsetzen(itps2, isz);
+        re15_sicherung_icon_einsetzen(pix2, psz);
+        int b_bau = re15_sicherung_bild_abweichung(itps2, isz);
+        int t_bau = re15_sicherung_icon_abweichung(pix2, psz);
+        printf("   Puffer: Block ausgeliefert %d / eingesetzt %d Bytes ; Tile ausgeliefert %d / "
+               "eingesetzt %d Bytes\n", b_roh, b_bau, t_roh, t_bau);
+        pruefe("Block 0x40 ausgeliefert: 8904 Bytes Abweichung", b_roh == 8904);
+        pruefe("Tile 0x40 ausgeliefert: 389 Bytes Abweichung", t_roh == 389);
+        pruefe("eingesetzt: Block 0 und Tile 0", b_bau == 0 && t_bau == 0);
+        pruefe("zu kurz / NULL: -1",
+               re15_sicherung_bild_abweichung(itps2, ITPS_AB + BLOCK - 1) == -1 &&
+               re15_sicherung_icon_abweichung(pix2, PIX_AB + TILE - 1) == -1 &&
+               re15_sicherung_bild_abweichung(NULL, isz) == -1 &&
+               re15_sicherung_icon_abweichung(NULL, psz) == -1);
+
+        /* Ladestelle OHNE Einsetzen: die unveraenderten Dateibytes gehen an die Leser */
+        re15_itps_set_data(itps, isz);
+        re15_itemall_set_pix(pix, psz);
+        int m_roh = re15_sicherung_modal_bild_abweichung();
+        int i_roh = re15_sicherung_icon_leser_abweichung();
+        /* Ladestelle MIT Einsetzen */
+        re15_itps_set_data(itps2, isz);
+        re15_itemall_set_pix(pix2, psz);
+        int m_bau = re15_sicherung_modal_bild_abweichung();
+        int i_bau = re15_sicherung_icon_leser_abweichung();
+        printf("   Leser: faul %d/%d, ohne Einsetzen %d/%d, mit Einsetzen %d/%d "
+               "(Modal-Punkte von %d / Icon-Bytes von 1200)\n",
+               m_faul, i_faul, m_roh, i_roh, m_bau, i_bau, RE15_ITPS_W * RE15_ITPS_H);
+        pruefe("faule Lader: Modal-Leser 0, Icon-Leser 0", m_faul == 0 && i_faul == 0);
+        pruefe("Ladestelle ohne Einsetzen: Modal-Leser > 0 Punkte", m_roh > 0);
+        pruefe("Ladestelle ohne Einsetzen: Icon-Leser 389 Bytes", i_roh == 389);
+        pruefe("Ladestelle mit Einsetzen: Modal-Leser 0, Icon-Leser 0", m_bau == 0 && i_bau == 0);
+    }
+
+    /* ⛔ Die Leser zeigen jetzt auf itps2/pix2 — danach wird nichts mehr gelesen. */
     free(itps2); free(pix2); free(itps); free(pix);
     printf("\n%s - %d Pruefung(en) gerissen\n", fehler ? "FEHLGESCHLAGEN" : "ALLES BESTANDEN", fehler);
     return fehler ? 1 : 0;

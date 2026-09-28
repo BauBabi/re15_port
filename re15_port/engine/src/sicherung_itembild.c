@@ -22,6 +22,8 @@
  *   engine/src/itps_common.c      fauler Lader re15_itps_load
  */
 #include "re15_sicherung.h"
+#include "re15_itps.h"        /* re15_itps_pixel, RE15_ITPS_W/H — der Leser des Modals */
+#include "re15_item_icon.h"   /* re15_itemall_tile_raw — der Leser des ITEMALL-Puffers */
 
 #include <stddef.h>
 #include <string.h>
@@ -74,4 +76,63 @@ void re15_sicherung_icon_einsetzen(uint8_t *itemall, int size)
     if (!itemall || size < 0) return;
     if ((size_t)size < ab + SICHERUNG_ICON_TILE) return;    /* zu kurz: nichts anfassen */
     memcpy(itemall + ab, re15_sicherung_icon_tile, SICHERUNG_ICON_TILE);
+}
+
+/* ---- Pruefung an den Ladestellen (Herleitung: re15_sicherung.h) ---- */
+
+static int bytes_ungleich(const uint8_t *a, const uint8_t *b, size_t n)
+{
+    int k = 0;
+    for (size_t i = 0; i < n; i++) if (a[i] != b[i]) k++;
+    return k;
+}
+
+int re15_sicherung_bild_abweichung(const uint8_t *itps, int size)
+{
+    size_t ab = (size_t)RE15_SICHERUNG_ITEM * SICHERUNG_ITPS_BLOCK;     /* 0xC0000 */
+    if (!itps || size < 0 || (size_t)size < ab + SICHERUNG_ITPS_BLOCK) return -1;
+    return bytes_ungleich(itps + ab, re15_sicherung_itps_block, SICHERUNG_ITPS_BLOCK);
+}
+
+int re15_sicherung_icon_abweichung(const uint8_t *itemall, int size)
+{
+    size_t ab = (size_t)RE15_SICHERUNG_ITEM * SICHERUNG_ICON_TILE;      /* 0x12C00 */
+    if (!itemall || size < 0 || (size_t)size < ab + SICHERUNG_ICON_TILE) return -1;
+    return bytes_ungleich(itemall + ab, re15_sicherung_icon_tile, SICHERUNG_ICON_TILE);
+}
+
+/* Lage im TIM-Block — DIESELBEN Offsets, mit denen der Modal-Leser dekodiert
+ * (itps_common.c ITPS_CLUT_OFF / ITPS_IMG_OFF; TIM-Aufbau RE15_KNOWLEDGE.md §1.6):
+ * CLUT-Daten nach magic(4)+flag(4)+clut_len(4)+rect(8) = +0x14, Bilddaten nach
+ * CLUT(0x200)+Bildkopf(0xC) = +0x220. */
+#define SICHERUNG_TIM_CLUT   0x14
+#define SICHERUNG_TIM_BILD   0x220
+
+int re15_sicherung_modal_bild_abweichung(void)
+{
+    const uint8_t *blk = re15_sicherung_itps_block;
+    int k = 0;
+    if (!re15_itps_available(RE15_SICHERUNG_ITEM)) return -1;
+    for (int v = 0; v < RE15_ITPS_H; v++)
+        for (int u = 0; u < RE15_ITPS_W; u++) {
+            uint8_t r = 0, g = 0, b = 0;
+            int ist = re15_itps_pixel(RE15_SICHERUNG_ITEM, u, v, &r, &g, &b);
+            uint8_t idx = blk[SICHERUNG_TIM_BILD + v * RE15_ITPS_W + u];
+            uint16_t c = (uint16_t)(blk[SICHERUNG_TIM_CLUT + idx * 2] |
+                                    (blk[SICHERUNG_TIM_CLUT + idx * 2 + 1] << 8));
+            int soll = (c != 0);                      /* Wort 0 = durchsichtig (Leser) */
+            if (ist != soll) { k++; continue; }
+            if (soll && (r != (uint8_t)((c & 0x1f) << 3) ||
+                         g != (uint8_t)(((c >> 5) & 0x1f) << 3) ||
+                         b != (uint8_t)(((c >> 10) & 0x1f) << 3)))
+                k++;
+        }
+    return k;
+}
+
+int re15_sicherung_icon_leser_abweichung(void)
+{
+    const uint8_t *tr = re15_itemall_tile_raw(RE15_SICHERUNG_ITEM);
+    if (!tr) return -1;
+    return bytes_ungleich(tr, re15_sicherung_icon_tile, SICHERUNG_ICON_TILE);
 }

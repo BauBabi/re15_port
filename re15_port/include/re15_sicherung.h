@@ -155,4 +155,30 @@ void re15_sicherung_icon_einsetzen(uint8_t *itemall, int size);
 const uint8_t *re15_sicherung_itps_block_bytes(int *out_size);
 const uint8_t *re15_sicherung_icon_tile_bytes(int *out_size);
 
+/* PRUEFUNG AN DEN LADESTELLEN (Runde 30, Nachbesserung nach dem Gegenpruefer).
+ *
+ * ⛔ WARUM: Das PC-Spiel liest Bild und Icon NIE ueber die faulen Lader der Engine, sondern
+ * ueber vier Stellen im Plattformcode (main.c zweimal vor re15_itemall_set_pix /
+ * re15_itps_set_data, inv_render_pc.c zweimal in den eigenen Puffern des Statusschirms).
+ * Ohne den Einsetz-Aufruf an diesen vier Stellen blieben die Riegel gruen, obwohl das
+ * Aufnahme-Modal wieder den "Fuse Case" zeigte (Mutationsprobe M2 des Gegenpruefers:
+ * Modal F240 24583 Punkte vom Bau verschieden, 4158 vom Bestand).
+ *
+ * Die drei Funktionen zaehlen, wie weit das, was GEZEICHNET wird, vom eingebackenen Rohr
+ * abweicht:
+ *   _bild_abweichung(puffer)  Bytes in Block 0x40 (0xC0000..0xC2FFF) ungleich dem Rohr-Block
+ *   _icon_abweichung(puffer)  Bytes in Tile 0x40 (0x12C00..0x130AF) ungleich dem Rohr-Icon
+ *   _modal_bild_abweichung()  Bildpunkte, in denen der Modal-Leser re15_itps_pixel(0x40,u,v)
+ *                             etwas anderes liefert als das Rohr-Bild (112 x 72 = 8064)
+ *   _icon_leser_abweichung()  Bytes, in denen re15_itemall_tile_raw(0x40) vom Rohr-Icon
+ *                             abweicht (der Puffer aus re15_itemall_set_pix)
+ * 0 = eingesetzt. Der AUSGELIEFERTE Stand weicht ab (Block 8904 Bytes, Tile 389 Bytes —
+ * gemessen, unit_r30_sicherung_bild Abschnitt 7). -1 = kein Puffer / zu kurz / kein Leser.
+ * Die PC-Ladestellen schreiben das Ergebnis ins debug.log, integration_r30_sicherung_bild
+ * verlangt dort die Null. */
+int re15_sicherung_bild_abweichung(const uint8_t *itps, int size);
+int re15_sicherung_icon_abweichung(const uint8_t *itemall, int size);
+int re15_sicherung_modal_bild_abweichung(void);
+int re15_sicherung_icon_leser_abweichung(void);
+
 #endif /* RE15_SICHERUNG_H */

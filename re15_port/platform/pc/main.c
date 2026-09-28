@@ -3801,6 +3801,18 @@ re_title:;
         if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
     }
+    /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
+     * DIESELBEN Leser, aus denen gezeichnet wird — das Modal ueber re15_itps_pixel, das Icon
+     * ueber re15_itemall_tile_raw. 0 = das Rohr ist eingesetzt. Fehlt einer der beiden
+     * Einsetz-Aufrufe, steht hier die Abweichung des ausgelieferten Stands (Modal-Bild
+     * > 0 Punkte, Icon 389 Bytes). Eingefroren von integration_r30_sicherung_bild
+     * (Herleitung: re15_sicherung.h, "PRUEFUNG AN DEN LADESTELLEN"). */
+    {
+        fprintf(stderr, "[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in %d von %d "
+                        "Punkten ab, Icon-Tile 0x40 in %d von 1200 Bytes\n",
+                re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H,
+                re15_sicherung_icon_leser_abweichung());
+    }
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
     /* AW-round 2026-05-28: pre-parse ROOM1170 .msg files for canonical
@@ -9831,6 +9843,22 @@ re_title:;
             int mdraw = re15_item_modal_quad(mqx, mqy, &mtype, &mface);
             if (mdraw) re15_render_pc_item_modal(1, mqx, mqy, mtype, mface);
             else       re15_render_pc_item_modal(0, NULL, NULL, 0, 0);
+            /* PRUEFZEILE (Runde 30, Nachbesserung): im ERSTEN Bild, in dem das Modal die
+             * Sicherung zeichnet, steht hier, woraus es zeichnet — Plattformhoehe und die
+             * Abweichung des Modal-Lesers vom Rohr-Bild (0 = Rohr). Einmal je Prozess.
+             * Eingefroren von integration_r30_sicherung_laden Lauf A. */
+            { static int s_sich_modal_log = 0;
+              if (mdraw && mtype == RE15_SICHERUNG_ITEM && !s_sich_modal_log) {
+                  int32_t py = 0;
+                  s_sich_modal_log = 1;
+                  for (int k = 0; k < (int)g_scd.prop_count; k++)   /* Hebetisch = obj_id 0
+                                                                     * (main00 @0x0E00) */
+                      if (g_scd.props[k].obj_id == 0) py = g_scd.props[k].y;
+                  fprintf(stderr, "[sicherung] Modal Item 0x40 zeichnet in Bild %u (Raum %04x, "
+                                  "Hebetisch y=%d): Bild weicht in %d von %d Punkten ab\n",
+                          (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, (int)py,
+                          re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H);
+              } }
             /* RE15_MODAL_LOG: FILE trace of the live modal FSM (stderr goes to the void for the SDL
              * exe) — proves the presentation ticks in the running game with the right progression. */
             {
