@@ -24,6 +24,7 @@
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
 #include "re15_abtastphase.h"   /* Abtastphase der texturierten Dreiecke (PSX-geeicht) */
+#include "re15_title_pulse.h"   /* Titelmenue: Pulswert der aktiven Zeile (FUN_801028ec) — nur lesen */
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
@@ -150,7 +151,10 @@ static int           s_card_show = 0;
 static int           s_card_cur_x = 0, s_card_cur_y = 0, s_card_cur_show = 0;  /* card cursor (▶) */
 static SDL_Texture  *s_tmoji[4][2];    /* FE-1 title-menu sprites [row 0-2 + copyright][0 white,1 blue] */
 static int           s_tmoji_built = 0, s_tmoji_show = 0, s_tmoji_cursor = 0;
-static int           s_tmoji_pulse_ctr = 0, s_tmoji_pulse_val = 0x80;   /* highlight pulse (FUN_801028ec) */
+/* Der Helligkeitspuls der aktiven Zeile (FUN_801028ec) liegt seit Runde 30 NICHT mehr hier:
+ * sein Schritt hing am Zeichnen und damit an der Bildrate der Anzeige (gemessen 144 Schritte/s
+ * statt 29,9). Zustand + Schritt: engine/src/title_pulse.c, Takt: die Titel-Schleife in main.c.
+ * Hier wird der Wert nur noch GELESEN. */
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -1308,7 +1312,7 @@ void re15_render_end_frame(void)
             int h = (i < 3) ? 16 : 20;
             /* active row: modulate by the pulse (0x80..0xBE -> 200..255; the white CLUT already keeps
              * it brighter than the blue inactive rows — SDL colour-mod can't exceed 1.0x additive). */
-            int mod = active ? (200 + (s_tmoji_pulse_val - 0x80) * 55 / 0x3e) : 255;
+            int mod = active ? (200 + (re15_title_pulse_value() - 0x80) * 55 / 0x3e) : 255;
             if (mod > 255) mod = 255;
             SDL_SetTextureColorMod(tex, (Uint8) mod, (Uint8) mod, (Uint8) mod);
             SDL_Rect shadow = { 0x20, ITEM_Y[i] + 1, 256, h };
@@ -1757,9 +1761,10 @@ void re15_render_pc_pselect_text(const re15_tim_t *atlas, int sel)
  * v=16 "NEW GAME", v=32 "LOAD GAME", v=48 "OPTION"; the copyright is 256x20 at v=82. The ACTIVE
  * row is sampled through the WHITE sub-palette (CLUT base 0, orig clut 0x7fc0); the others through
  * BLUE (CLUT base 192, orig clut 0x7fcc) — the exact CLUT-swap the original does. Screen positions
- * from the draw code: x=0x20, y=0x85/0x99/0xad; copyright (0x20,0xc8). (The original's semi-
- * transparent double-exposure glow + the 60-frame highlight pulse are not yet reproduced — the
- * strips are drawn opaque; a follow-up.) */
+ * from the draw code: x=0x20, y=0x85/0x99/0xad; copyright (0x20,0xc8).
+ * Die Doppelbelichtung (subtraktiv bei y+1, additiv bei y) zeichnet re15_render_end_frame; der
+ * Helligkeitspuls der aktiven Zeile (60 Aufrufe je Periode, 0x3c @0x80102918) kommt aus
+ * engine/src/title_pulse.c und wird von der Titel-Schleife getaktet (1 Schritt je 2 VBlanks). */
 static const struct { int v, h; } s_tmoji_src[4] = { {16,16}, {32,16}, {48,16}, {82,20} };
 
 static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base)
@@ -1798,10 +1803,12 @@ void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
     }
     s_tmoji_cursor = cursor;
     s_tmoji_show   = 1;
-    /* advance the active-row brightness pulse — byte-true triangle wave (FUN_801028ec @0x80102944):
-     * base 0x80, +2 for the first 0x1f frames then -2, reset to 0x80 every 0x3c (60) frames. */
-    if (s_tmoji_pulse_ctr < 0x1f) s_tmoji_pulse_val += 2; else s_tmoji_pulse_val -= 2;
-    if (++s_tmoji_pulse_ctr >= 0x3c) { s_tmoji_pulse_ctr = 0; s_tmoji_pulse_val = 0x80; }
+    /* ⛔ KEIN Pulsschritt mehr hier (Runde 30 / Thema D). Diese Funktion ist der ZEICHNER
+     * (Original FUN_801027a0 / Neuzeichner FUN_80102a10) und wird je Bild der Anzeige gerufen —
+     * auch aus dem Bestaetigungs-Fade, in dem der Puls im Original ruht (FUN_80102a10
+     * @0x80102a10-0x80102a88 enthaelt kein `jal 0x801028ec`). Den Schritt fuehrt allein die
+     * Titel-Schleife aus, einmal je Durchgang der Original-Hauptschleife = 2 VBlanks
+     * (`jal 0x801028ec` @0x80102ba0; DAT_800b5456 := 2 @0x8002130c-14). */
 }
 void re15_render_pc_hide_title_menu(void) { s_tmoji_show = 0; }
 

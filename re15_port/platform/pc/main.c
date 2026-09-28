@@ -35,6 +35,7 @@ extern void re15_android_bootstrap_assets(void);
 #include "re15_scd.h"
 #include "re15_fade.h"      /* fade channels + the letterbox counter (FUN_80021a0c) */
 #include "re15_md1.h"
+#include "re15_title_pulse.h"   /* Titelmenue: Puls (FUN_801028ec) + Titel-Tick (2 VBlanks) */
 
 re15_engine_state_t g_engine;
 
@@ -2724,6 +2725,34 @@ static void re15_testhaken_ende(void)
 #endif
 }
 
+/* ---- Titel-Tick (Runde 30 / Thema D "Titelmenue blinkt zu schnell") -----------------------
+ * Zeitquelle der Titel-Schleife in Mikrosekunden. Getrennt dividiert, damit das Produkt auch
+ * nach Wochen Laufzeit des Rechners nicht ueberlaeuft (Zaehler x 10^6 in einem Stueck laeuft bei
+ * 10 MHz nach 21 Tagen ueber). */
+static uint64_t pc_now_us(void)
+{
+    uint64_t c = (uint64_t) SDL_GetPerformanceCounter();
+    uint64_t f = (uint64_t) SDL_GetPerformanceFrequency();
+    if (f == 0) return (uint64_t) SDL_GetTicks() * 1000ull;
+    return (c / f) * 1000000ull + ((c % f) * 1000000ull) / f;
+}
+
+/* MESSSCHIENE (kein Verhalten): RE15_TITLE_PULSE_LOG=<datei> schreibt je Bild des Titelmenues
+ * eine Zeile
+ *   "<zeit_us> <zaehler> <pulswert> <faellige_durchgaenge> <phase> <einblende_tick> <einblende_B>"
+ * phase 0 = Titel-Schleife, 1 = Bestaetigungs-Fade (dort Einblende-Spalten = 0).
+ * Auswertung: analysis/befunde_runde30/titel-blinken_tools/r30_pulse_frame_stats.py. */
+static void pc_title_pulse_log(uint64_t now_us, uint64_t due, int phase, uint64_t fade_tick)
+{
+    static FILE *lf; static int init;
+    if (!init) { init = 1; const char *p = getenv("RE15_TITLE_PULSE_LOG"); if (p && *p) lf = fopen(p, "w"); }
+    if (!lf) return;
+    fprintf(lf, "%llu %d %d %llu %d %llu %d\n", (unsigned long long) now_us, re15_title_pulse_counter(),
+            re15_title_pulse_value(), (unsigned long long) due, phase, (unsigned long long) fade_tick,
+            phase ? 0 : re15_title_fadein_level(fade_tick));
+    fflush(lf);
+}
+
 int main(int argc, char *argv[])
 {
 #if defined(__ANDROID__)
@@ -2898,8 +2927,26 @@ re_title:;
         { int msz = 0; uint8_t *mb = pc_read_shared("DATA/TMOJI.TIM", &msz);   /* the menu-text sprite sheet */
           if (mb) re15_tim_parse(mb, msz, &s_tmoji); }
         const char *t_shot = getenv("RE15_TITLE_SHOT");   /* debug: dump the title/menu frame + auto-advance */
-        unsigned tblink = 0;
+        unsigned tblink = 0;   /* Zaehler der SCHLEIFENDURCHGAENGE (Bilder der Anzeige) — an ihm haengen
+                                * RE15_TITLE_SHOT_AF / RE15_CONTINUE_TEST und die Integrations-Pins.
+                                * ⛔ KEIN Zeitmass: bei 144 Hz laeuft er 4,8-mal so schnell wie der
+                                * Original-Durchgang. Alles, was im Original je Durchgang geschieht
+                                * (Puls, Einblende), haengt am Titel-Tick unten. */
         int cursor = 0;   /* 0=NEW GAME 1=LOAD GAME 2=OPTION — byte-true 3-item menu (TITLE.BIN FUN_80102b00) */
+        /* TITEL-TICK (Runde 30 / Thema D, Nutzer: "blinkt ... im Vergleich zum Original zu
+         * schnell"). Gemessen vorher: 1 Pulsschritt je Bild der Anzeige (144,1 Hz) -> Periode
+         * 416 ms; Original 60 Schritte x 2 VBlanks = 2006 ms.
+         * Ein Durchgang der Original-Hauptschleife = VSync(2): DAT_800b5456 := 2
+         * (`ori v0,zero,2` @0x8002130c, `sb` @0x80021314), gelesen @0x8002147c, VSync
+         * @0x80021480; je Durchgang 1 Pulsschritt (`jal 0x801028ec` @0x80102ba0) und 1 Schritt
+         * der Fade-Engine (`jal 0x80021880` @0x80020f44). Die Uhr zaehlt ZEIT, nicht
+         * Schleifendurchgaenge (re15_title_pulse.h). */
+        re15_title_clock_t tclock = {0};
+        uint64_t tfade_tick = 0;      /* Durchgaenge seit Beginn der Titel-Einblende */
+        /* Jeder Eintritt in den Titel laedt TITLE.BIN neu (FUN_80029a28(0) @0x80021318 /
+         * @0x8001d208 -> `jal 0x80013b60` @0x80029a64) — Pulswert/Zaehler stehen dann wieder
+         * auf den Datenworten der Datei (0x2944 = 0x0080, 0x2946 = 0x0000). */
+        re15_title_pulse_reset();
         /* Title-Init laedt die CORE-SE-Bank 0x11 (FUN_800440c4(0x11) @0x80102704-08 in TITLE.BIN):
          * CORE11.EDH/.VB (Datei-ids 195/196) traegt den "Biohazard 2!"-Announcer als SE 0
          * (Stereo-Paar VAG5 L / VAG6 R, 44100 Hz) + den Cursor-Blip SE 4 (VAG2, 22050 Hz).
@@ -2956,6 +3003,7 @@ re_title:;
          * white CLUT sub-palette, the others blue. Shown immediately (init skips "press any button").
          * (My earlier "LOAD DATA"/"CONFIG" was wrong — those ASCII strings @0x80 are the vestigial dev
          * menu; the real sprite labels read LOAD GAME / OPTION.) */
+        int tpass0 = 1;   /* das naechste Bild beginnt einen Durchgang 0 (Eintritt / Rueckkehr) */
         while (re15_gameflow_mode() == RE15_MODE_TITLE) {
             re15_render_begin_frame();
             re15_input_tick();                       /* SDL_QUIT -> exit(0) inside; refreshes pad */
@@ -2966,6 +3014,32 @@ re_title:;
                 if (tblink == 8)  cursor = 1;
                 if (tblink == 16) pp |= RE15_PAD_BIT_CROSS;  /* confirm LOAD GAME -> load screen */
             }
+            /* TITEL-TICK: so viele Durchgaenge der Original-Hauptschleife, wie seit dem letzten
+             * Bild faellig geworden sind (bei Anzeigen ab 30 Hz hoechstens einer). Je Durchgang
+             * ein Pulsschritt (@0x80102ba0) und ein Schritt der Einblende (@0x80020f44). Nach
+             * einem Stillstand (Fenster gezogen) faltet re15_title_pulse_advance ueber die
+             * Periode 0x3c (@0x80102918) — der Puls bleibt eine Funktion der Zeit, die Arbeit
+             * je Bild unter 60 Schritten.
+             * DURCHGANG 0 laeuft mit dem ersten Bild — beim Eintritt in den Titel UND bei der
+             * Rueckkehr aus Bestaetigungs-Fade/Unterbildschirm: der Menue-Handler ruft den Puls
+             * in JEDEM seiner Durchgaenge und VOR dem Zeichnen der drei Zeilen
+             * (`jal 0x801028ec` @0x80102ba0, Zeilen @0x80102bc0/dc/f8) — das erste gezeigte Bild
+             * traegt nach dem Eintritt also 0x82, nicht den Dateiwert 0x80. Die Uhr startet erst
+             * HIER (nicht vor der Schleife), damit die Einrichtung des ersten Bildes
+             * (Textur-Aufbau, gemessen ~5 ms) nicht als Laufzeit zaehlt. */
+            { uint64_t t_now = pc_now_us();
+              uint64_t due;
+              if (tpass0) {
+                  tpass0 = 0;
+                  re15_title_clock_start(&tclock, t_now);
+                  re15_title_pulse_step();                 /* Durchgang 0 */
+                  due = 1;
+              } else {
+                  due = re15_title_clock_poll(&tclock, t_now);
+                  re15_title_pulse_advance(due);
+                  tfade_tick += due;
+              }
+              pc_title_pulse_log(t_now, due, 0, tfade_tick); }
             /* Draw the byte-true NEW GAME / LOAD GAME / OPTION + copyright sprites from TMOJI.TIM
              * (active row white, others blue) at x=0x20, y=0x85/0x99/0xad. */
             re15_render_pc_title_menu(&s_tmoji, cursor);
@@ -2993,8 +3067,10 @@ re_title:;
                 /* BLOCKING-Fade @0x80102ccc — fuer ALLE drei Menuepunkte (Call @0x80102c48 VOR dem
                  * Item-Dispatch @0x80102c60). Drei Phasen der EXE-Fade-Engine (Integrator-Semantik
                  * FUN_80021880: Prim-B = level>>7 VOR der Integration, level += step, fertig am
-                 * Vorzeichen-Bit; Engine-Tick = 2 Vsyncs im 480i-Title — DuckStation-gemessen,
-                 * jede Stufe exakt 2 Capture-Frames):
+                 * Vorzeichen-Bit; Engine-Tick = 2 Vsyncs — DuckStation-gemessen, jede Stufe exakt
+                 * 2 Capture-Frames. ⚠ Berichtigt Runde 30: die 2 kommen NICHT aus "480i"
+                 * (DISPENV.isinter @0x800b5438 = 0 im Titel), sondern aus VSync(2):
+                 * DAT_800b5456 := 2 @0x8002130c-14, gelesen @0x8002147c, VSync @0x80021480):
                  *   A @0x80102cd4-e4: (0x100,-0x800,7,0) ADDITIV-Weiss, kick step<0 -> level=0x7fff
                  *     => B 255->15, -16/Tick, 16 Ticks (Weiss-BLITZ);
                  *   B @0x80102d28-4c: (0x200,+0xe0,7,1) SUBTRAKTIV, kick step>0 -> level=0
@@ -3002,6 +3078,12 @@ re_title:;
                  *   C @0x80102d78-9c: (0x200,0,7,1) + kick(0x7fff) => B=255 FEST (Schwarz halten;
                  *     im Original CD-Latenz, im Port latenzfrei). Der alte 32x(+8)-Alpha-Loop war
                  *     ein unbelegter Rate-Defekt (0.53 s statt ~5.45 s). */
+                /* ⛔ DER PULS RUHT ab hier (Runde 30): der Fade zeichnet das Menue ueber FUN_80102a10
+                 * neu (`jal 0x80102a10` @0x80102d10 / @0x80102d60), und FUN_80102a10
+                 * (0x80102a10-0x80102a88) ruft FUN_801028ec NICHT. Auch in den Unterbildschirmen
+                 * schreibt niemand die beiden Worte. Die Titel-Uhr wird deshalb bis zur Rueckkehr
+                 * in die Titel-Schleife nicht abgefragt und dort neu aufgesetzt (tpass0);
+                 * gemessen vorher: 330 Pulsaenderungen im Fade. */
                 {
                     extern void re15_render_pc_title_fade_add(int b);
                     extern void re15_render_pc_title_fade_sub(int b);
@@ -3017,7 +3099,8 @@ re_title:;
                                 re15_input_tick();
                                 re15_render_background_gradient(8, 8, 16, 0, 0, 0);
                                 if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
-                                re15_render_pc_title_menu(&s_tmoji, cursor);   /* Redraw @0x80102d10 */
+                                re15_render_pc_title_menu(&s_tmoji, cursor);   /* Redraw @0x80102d10 — OHNE Pulsschritt */
+                                pc_title_pulse_log(pc_now_us(), 0, 1, 0);
                                 if (subph) re15_render_pc_title_fade_sub(B);
                                 else       re15_render_pc_title_fade_add(B);
                                 re15_render_end_frame();
@@ -3072,6 +3155,8 @@ re_title:;
                     } else {
                         tblink = 0;   /* zurueck zum Titel: Fade-in erneut (Sub-Screen-Exit +0x400
                                        * @0x801024f0-500 laeuft im Original im Sub-Screen selbst) */
+                        tfade_tick = 0;   /* Nullpunkt der Einblende — NICHT der Puls (der zaehlt
+                                           * nach dem Unterbildschirm weiter, wo er stand) */
                     }
                 }
                 else if (cursor == 2) {                       /* OPTION -> controller-CONFIG screen */
@@ -3079,12 +3164,22 @@ re_title:;
                     pc_run_config();                          /* byte-true EXE task @0x8002dde4 (foundation) */
                     if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);   /* restore title art */
                     tblink = 0;                               /* Titel-Fade-in erneut */
+                    tfade_tick = 0;                           /* Nullpunkt der Einblende, nicht der Puls */
                 }
+                /* Zurueck in der Titel-Schleife (oder auf dem Weg hinaus): das naechste Bild
+                 * beginnt einen neuen Durchgang 0. Die Zeit im Fade und im Unterbildschirm zaehlt
+                 * nicht; der Puls setzt auf dem Stand fort, auf dem er beim Bestaetigen stand. */
+                tpass0 = 1;
             }
             /* Title-FADE-IN nach Boot/FMV: dieselbe Fade-Engine, `FUN_800217b0(0x200,-0x400,7,3)`
              * @0x80102054-64 = SUBTRAKTIV, B = 255 -> 0 mit -8/Tick, 32 Ticks (Tick = 2 Vsyncs).
-             * Bei 60-fps-Frames: Tick = tblink>>1. (Der alte `255 - tblink*13` ueber 20 Frames
-             * war eine geratene Rate.) */
+             * (Der alte `255 - tblink*13` ueber 20 Frames war eine geratene Rate.)
+             * ⚠ Runde 30: der Tick kam bis v0.8.15 aus `tblink >> 1`, also aus der Zahl der
+             * SCHLEIFENDURCHGAENGE — das setzte 60 Bilder/s voraus, die nichts erzwang. An einer
+             * 144-Hz-Anzeige war die Einblende nach 64 Bildern = 0,44 s fertig statt nach
+             * 32 Durchgaengen x 2 VBlanks = 1,07 s. Jetzt zaehlt tfade_tick die Durchgaenge der
+             * Titel-Uhr (Schritt -0x400 je Durchgang: `ori a1,zero,0xfc00` @0x80102058,
+             * `jal 0x800217b0` @0x80102060; FUN_80021880 einmal je Durchgang @0x80020f44). */
             /* ⛔ NUR SOLANGE DIE TITEL-SCHLEIFE AUCH WEITERLAEUFT. Der Block lief bisher
              * bedingungslos — auch in genau der Iteration, in der oben bestaetigt wurde und
              * `mode` schon auf INGAME steht. Dann verliess die Schleife den Titel mit
@@ -3098,13 +3193,13 @@ re_title:;
              * fruehem Druck (tblink klein, B gross) pechschwarz; ab 64 Titel-Frames
              * (B = 0) sauber. Das Zeitfenster ist ~0,44 s bei 144 Hz / ~1,07 s bei 60 Hz,
              * weil die Titel-Schleife mit Vsync laeuft — daher "stiess ich schon oefter
-             * darauf", aber nicht immer.
+             * darauf", aber nicht immer. (Stand 2026-08-31; seit Runde 30 haengt B an der
+             * Titel-Uhr, das Fenster ist an jeder Anzeige 32 Durchgaenge = 1,07 s.)
              * Ausgeloest von JEDEM Confirm-Knopf (Maske CROSS|SQUARE|TRIANGLE|CIRCLE|START
              * @main.c oben, Original 0x8f0 @0x800bc762), nicht nur Enter. */
             if (re15_gameflow_mode() == RE15_MODE_TITLE)
             { extern void re15_render_pc_title_fade_sub(int b);
-              int tk = (int)(tblink >> 1); int B = 255 - tk * 8; if (B < 0) B = 0;
-              re15_render_pc_title_fade_sub(B); }
+              re15_render_pc_title_fade_sub(re15_title_fadein_level(tfade_tick)); }
             re15_render_end_frame();
             re15_audio_tick();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
