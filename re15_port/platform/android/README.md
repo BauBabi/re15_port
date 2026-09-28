@@ -122,12 +122,26 @@ Streifen. Layout in Fensterkoordinaten, u = Bildhoehe/12:
 | [] (links, rosa) | Viereck | Aktion / Bestaetigen / Schuss beim Zielen |
 | O (rechts, rot) | Kreis | Abbrechen |
 | /\ (oben, gruen) | Dreieck | Abbrechen |
-| L1 / R1 | L1 / R1 | R1 = Zielen (halten) |
+| L1 / R1 | L1 / R1 | R1 = Zielen als **Umschalter**: antippen hebt die Waffe, die Kampfpose bleibt stehen; erneut antippen senkt sie |
 | START | Start | Inventar / Menue |
 | SELECT | Select | Debug-Menue (wie am PC) |
 | F9 | — | setzt eine **Marke** in `befund.log` (wie die Taste F9) |
 
-Mehrere Finger gleichzeitig sind vorgesehen (z.B. Richtung + X = Rennen, R1 + [] = Schuss).
+Mehrere Finger gleichzeitig sind vorgesehen (z.B. Richtung + X = Rennen).
+
+**R1 rastet ein (Runde 30).** R1 halten und dazu [] tippen war auf dem Touchscreen ein
+Fingerknoten. Im Spiel genuegt deshalb ein kurzer Tipp auf R1: die Waffe geht hoch und bleibt
+oben, [] feuert, ein zweiter Tipp auf R1 senkt sie wieder. Solange die Pose eingerastet ist,
+zeigt der R1-Knopf den Gedrueckt-Stil mit einem zweiten, inneren Rahmen. Wie beim gehaltenen
+R1 im Original sind dabei Tueren und Untersuchen gesperrt, bis R1 wieder angetippt wird.
+Die Raste **faellt** von selbst, sobald das Spiel die Steuerung abgibt: beim Oeffnen des
+Inventars (START), in der Item-Kiste, bei Texten, Cutscenes, Tuer- und Raumblenden und beim Tod.
+Danach ist die Waffe unten, ein neuer Tipp hebt sie frisch. Ein Treffer laesst die Raste
+stehen — die Waffe kommt danach von selbst wieder hoch. In allen Menues (Inventar, Karte,
+Dateien, Kiste) sowie im Titel und in den Optionen ist R1 unveraendert eine normale Taste
+(z.B. R1 im Statusschirm = Sprung auf FILE, R1 in der Kiste = weiterblaettern).
+Nur das On-Screen-Pad rastet: ein angeschlossener Controller (auch Bluetooth am Geraet) und die
+Tastatur am PC behalten R1 als Halte-Taste.
 Der Finger darf auf dem D-Pad gleiten; die Richtung folgt dem Winkel zum Zentrum
 (Totzone in der Mitte). Ein Blitz-Tipp (Finger kommt und geht zwischen zwei
 Eingabe-Ticks, z.B. `adb shell input tap`) wird genau einen Tick lang gemeldet.
@@ -148,8 +162,10 @@ Zurueck-Taste: wird abgefangen (beendet das Spiel nicht — Beenden ueber die Ap
 Das Overlay ist auch im Windows-/Linux-Bau enthalten, dort aber aus. Mit
 `RE15_TOUCH_OVERLAY=1` erscheint es, und die **Maus** wirkt als ein Finger
 (SDL-Hint `SDL_MOUSE_TOUCH_EVENTS`). `RE15_TOUCH_SELFTEST=1` drueckt zusaetzlich jeden Knopf
-synthetisch (9 Knoepfe, 8 D-Pad-Richtungen, Totzone, zwei Finger, Loslassen, Blitz-Tipp)
-und schreibt `[touch] SELFTEST RESULT ok=21 fail=0` ins `debug.log`;
+synthetisch (9 Knoepfe, 8 D-Pad-Richtungen, Totzone, zwei Finger, Loslassen, Blitz-Tipp,
+dazu 11 Faelle der R1-Raste) und schreibt `[touch] SELFTEST RESULT ok=32 fail=0` ins
+`debug.log`; im Eingabeskript (`RE15_INPUT_SCRIPT`) steht der Buchstabe `P` fuer einen Finger
+auf dem Overlay-R1 (`P0.1` = ein Tipp);
 `RE15_FRAMEDUMP=<frame>:<datei.ppm>` liefert ein Bild mit Overlay. Beispiel (PowerShell):
 
 ```powershell
@@ -179,6 +195,9 @@ einmal "Got it" antippen.
 * Nur Landscape. Kein Speichern der Fensterlage o.ae. — es gibt kein Fenster.
 * Kein Vibrations-/Sensor-Einsatz; das Overlay hat keine Einstellungen (Groesse/Lage fest,
   relativ zur Bildhoehe).
+* Controller-Belegung TYPE C (OPTIONS): dort liegt Zielen auf R2 und R1 dreht nach rechts. Das
+  Overlay hat weder L2 noch R2, Zielen ist mit TYPE C auf dem Touchscreen also nicht erreichbar;
+  R1 bleibt dort Halte-Taste (keine Raste). TYPE A und B rasten wie oben beschrieben.
 * Ohne angeschlossenen Controller gibt es keine analogen Eingaben — das Spiel ist ohnehin
   digital (PSX-Pad).
 * Der Emulator (x86_64) ist nur zum Testen gedacht; die Leistung dort haengt an der
