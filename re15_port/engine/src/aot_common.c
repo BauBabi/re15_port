@@ -641,9 +641,32 @@ static int aot_fire_door(int i)
      *   door 0 (target_cut 11) → sub00 case 11 → sub14 (courtyard dialog);
      *   door 6 (target_cut 0, courtyard→helipad return) → sub00 case 0 → sub15,
      *     whose ELSE branch ((4,242) cleared by sub02, (3,125) still set) spawns
-     *     the 7 type-0x21 crows on the now-empty helipad. */
+     *     the 7 type-0x21 crows on the now-empty helipad.
+     *
+     * ⛔ RUNDE 30 (Thema G, analysis/befunde_runde30/elza-intro.md §3.5/§4.3/§5.3): der
+     * Vergleich traegt jetzt die SPIELERVARIANTE (untere Nibble der Raum-Id) mit. Das
+     * Tuer-Record kennt nur Stage/Raum (+8/+9); die Datei waehlt der Raumlader FUN_800396fc
+     * aus Basis-Index + Elza-Bit (PSX.EXE, selbst gelesen):
+     *     800397b8  lw   a0,-13764(a0)     ; DAT_800aca3c
+     *     800397e0  lhu  v0,0(v1)          ; Basis-Dateiindex [Stage][Raum]
+     *     800397e4  srl  a0,a0,31          ; Elza-Bit
+     *     800397ec  addu a0,a0,v0          ; Index = Basis + Elza
+     * und der Warp FUN_8001d600 laedt JEDES Tuerziel neu, auch den eigenen Raum:
+     *     8001d968  beq  v1,v0,0x8001d988  ; verglichen wird NUR die Stage
+     *     8001d988  jal  0x800396fc        ; Raumlader, unbedingt
+     *     80039a00  jal  0x8003ef6c        ; darin: SCD-Raum-Init (main00 + sub00 neu)
+     * Ohne die Variante ergab ROOM1031 (Elza) 0x1030 != 0x1031: Door_aot_set Slot 19
+     * @0x02082 (Raum 0x03, Cut 6, Aot_on @0x02A9E) stieg nicht neu ein, main00 lief nicht
+     * zum dritten Mal, Ck(3,207,1) @0x020AE -> Evt_exec sub13 @0x020B2 (Elzas Lobby-Szene)
+     * startete nie. Wirkung: 10 Selbst-Tueren in Variante-1-Raeumen kommen dazu (ROOM1031
+     * Slot 19, ROOM1111 Slots 1-4, ROOM1171 Slots 0/5, ROOM1191 Slot 15, ROOM11A1 Slots
+     * 2/3); Leons 11 (Variante 0: g_current_room_id & 0xF == 0) bleiben unveraendert.
+     * BEWUSST NICHT verallgemeinert: Stage >= 2 und Raum 0 (46 weitere Selbst-Tueren, 24
+     * davon in Leons Raeumen) — byte-true waere es (@0x8001d988 unbedingt), aber es aendert
+     * Leons Verhalten und gehoert in eine eigene Runde mit eigener Messung. */
     if (d->dest_room != 0 &&
-        (0x1000u | ((unsigned)d->dest_room << 4)) == g_current_room_id)
+        (0x1000u | ((unsigned)d->dest_room << 4) | (g_current_room_id & 0x000Fu))
+            == g_current_room_id)
         g_scd_pending_scenario = (int)d->target_cut;
     /* BO-round 2026-05-29 (hack audit): removed the fabricated door
      * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
