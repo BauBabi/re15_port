@@ -11,10 +11,16 @@
  *   S3  Hebung v8 -> v9 an der SPEICHERKARTE DES NUTZERS (analysis/befunde_runde30/
  *       nutzer_marken/re15_card_nutzer_2026-09-27.mcr, geschrieben vom Port v0.8.15):
  *       jeder belegte Platz traegt roh Version 8, laedt als Version 9 mit 24 x 0xFF
- *       (RE2 leer = 0xFF, `addiu v0,zero,255` @0x800682e0) und visited_floor = 0.
+ *       (RE2 leer = 0xFF, `addiu v0,zero,255` @0x800682e0) und neuem Pruefwort.
  *   S4  Hebung v7 -> v9 (die Besucht-Bits werden verworfen) und ein verfaelschter v8-Block
  *       wird abgewiesen.
- *   S5  Vertrag: capture schreibt das FREMDE Feld visited_floor als Leerwert 0.
+ *   ⛔ Das FREMDE Feld visited_floor (Spur karten-marken, SPEICHER-VERTRAG v9) prueft
+ *       dieser Riegel NIRGENDS. In diesem Zweig ist es beim Erfassen und Heben 0, im
+ *       Zweig karten-marken traegt es echte Etagen-Bits: gemessen hebt die Nutzer-Karte
+ *       dort mit 1/2/4/2 Bits in den Plaetzen 0/1/2/4 (Gegenpruefung Runde 30,
+ *       merge_probe/km_hebung.exe gegen die Engine von d12-3). Ein Riegel auf 0 wuerde
+ *       nach dem Zusammenfuehren rot - er gehoert der Spur karten-marken
+ *       (test_map_speichern_laden.c).
  *
  * TEIL A  AUFHEBEN (RE2: Item-Zone FUN_80051884 @0x800518f0-0x80051918, Aufnahme
  *         FUN_80071ba0 @0x80071d00-0x80071df8, Schliessen Zustand 6 @0x80072b0c-0x80072bfc)
@@ -29,6 +35,24 @@
  *   A4  Bestaetigen -> im SELBEN Bild: Flag (9,taken_bit) gesetzt (@0x80072b8c), Zone
  *       inaktiv (@0x80072b40), Weltmodell aus (@0x80072bb0), Satz 5 (@0x80072bf0-f8);
  *       dann schliesst das Menue (Modus 0 @0x80072bfc).
+ *
+ * TEIL B  AUFHEBEN UEBER DEN SCAN - der Weg des Spielers: Zone betreten, Aktionstaste.
+ *         (Gegenpruefung Runde 30: TEIL A zuendet nur re15_aot_fire_slot; die Weiche im
+ *         Scan-Zweig aot_common.c `if (aot_item_dokument(i)) break;` war ungesichert -
+ *         Zeile entfernt blieb alles gruen.) RE2: die Item-Zone ruft beim Druck der
+ *         Aktionstaste FUN_80051884, das @0x800518f0-f8 den Status-Schirm Art 2 anfordert;
+ *         RE1.5s Item-Zonen tragen Bit 0x10 (Aktion) und zuenden aus dem Druck-Scan
+ *         FUN_80042bac (Handler[9] @0x80043328).
+ *   B1  in der Zone OHNE Aktionstaste: nichts (kein Leser, kein Item-Modal).
+ *   B2  in der Zone MIT Aktionstaste (re15_aot_scan): Leser angefordert, Item-Modal aus,
+ *       Zone/Flag/Weltmodell unveraendert.
+ *   B3  derselbe Lauf wie TEIL A: Leser auf der Titelseite, Liste Platz 0 = Dokument 0;
+ *       KREUZ, Meldung, Bestaetigen -> Zone aus, Flag gesetzt, Weltmodell aus.
+ *   B4  die abgeraeumte Zone zuendet beim naechsten Druck nicht mehr.
+ *   B5  GEGENPROBE: dieselbe Zone mit Item-Id 0x47 (letzte RE1.5-Item-Id, ITEM/ITPS.ITP
+ *       72 Bilder) startet ueber denselben Scan das Item-Modal und KEINEN Leser - der
+ *       Scan erreicht den Item-Zweig, die Weiche trennt allein ueber die Id (0x48 =
+ *       RE1.5s erste FILE-Id, u8 @0x800c7370; RE2 `sltiu v0,a3,0x68` @0x80071bbc).
  */
 #include <stdio.h>
 #include <string.h>
@@ -106,9 +130,7 @@ static void teil_s(void)
         re15_files_reset();
         re15_files_add(0);
         re15_savedata_capture(&sd, 100, 1);
-        int leer_fremd = 1;
-        for (int i = 0; i < 16; i++) if (sd.visited_floor[i] != 0) leer_fremd = 0;
-        CHECK(leer_fremd, "S5 capture schreibt visited_floor (fremdes Feld) als 16 x 0");
+        /* sd.visited_floor = fremdes Feld (karten-marken), hier bewusst NICHT geprueft */
         CHECK(sd.files[0] == 0 && sd.files[1] == 0xFF && sd.files[23] == 0xFF,
               "capture: files = %02x %02x .. %02x (Soll 00 ff .. ff)",
               sd.files[0], sd.files[1], sd.files[23]);
@@ -141,17 +163,18 @@ static void teil_s(void)
             if (ver == 8) roh_v8++;
             re15_savedata_t ld;
             if (re15_memcard_load(R30_NUTZER_KARTE, slot, &ld) != 0) continue;
-            int alle_ff = 1, alle_0 = 1;
+            int alle_ff = 1;
             for (int i = 0; i < 24; i++) if (ld.files[i] != 0xFF) alle_ff = 0;
-            for (int i = 0; i < 16; i++) if (ld.visited_floor[i] != 0) alle_0 = 0;
-            if (ld.version == 9 && alle_ff && alle_0 &&
+            /* ld.visited_floor = fremdes Feld (karten-marken hebt es mit echten Bits),
+             * hier bewusst NICHT geprueft - s. Kopf */
+            if (ld.version == 9 && alle_ff &&
                 ld.checksum == re15_savedata_checksum(&ld)) gehoben++;
         }
         printf("  Nutzer-Karte: %d belegte Plaetze, roh v8: %d, gehoben v9 mit leerer Liste: %d\n",
                gefahren, roh_v8, gehoben);
         CHECK(gefahren > 0 && roh_v8 == gefahren && gehoben == gefahren,
-              "Hebung v8 -> v9 an der Nutzer-Karte: %d von %d Plaetzen (files 24 x 0xFF, "
-              "visited_floor 0, Pruefwort neu)", gehoben, gefahren);
+              "Hebung v8 -> v9 an der Nutzer-Karte: %d von %d Plaetzen (Version 9, "
+              "files 24 x 0xFF, Pruefwort neu)", gehoben, gefahren);
     }
 
     /* S4 v7 -> v9 und ein verfaelschter v8-Block */
@@ -311,11 +334,105 @@ static void teil_a(void)
     CHECK(re15_files_count() == 1, "die Liste behaelt das Dokument (%d)", re15_files_count());
 }
 
+/* ------------------------------------------------------------------ TEIL B */
+static void teil_b(void)
+{
+    enum { SLOT = 9, TAKEN = 0x34, OBJ = 8, SLOT_ITEM = 10 };
+    const int32_t zx = 1000, zz = 2000;          /* Zonenmitte, Spieler steht darin */
+    printf("\n[B] Aufheben ueber den Scan (Zone betreten + Aktionstaste)\n");
+
+    /* TEIL A endet mit geschlossenem Menue, aber noch in der Rueckblende (Stufe 4/5,
+     * @0x8001cc34-94); erst Stufe 0 ist Spiel - vorher weist re15_menu_request_doc ab. */
+    int ruhe = 0;
+    while (ruhe < 200 && (re15_menu_is_open() || re15_menu_stage() != 0)) { frame(0, 0); ruhe++; }
+    CHECK(!re15_menu_is_open() && re15_menu_stage() == 0,
+          "B0 Spiel laeuft wieder (Stufe 0 nach %d Bildern)", ruhe);
+    re15_aot_init();
+    re15_files_reset();
+    g_scd.player_mode = 0;                       /* kein Skript-Spieler, keine Letterbox */
+    g_scd.letterbox_countdown = 0;
+    g_scd.message_query = 0;
+    g_scd.message_display_frames = 0;
+    g_scd.prop_count = 1;
+    g_scd.props[0].obj_id = OBJ;
+    g_scd.props[0].active = 1;
+    re15_game_flag_set(9, TAKEN, 0);
+    re15_aot_set_item_tk_prop(SLOT, zx, zz, 300, 300, 0x48, 1, TAKEN, OBJ);
+    CHECK(g_aot.slots[SLOT].type == RE15_AOT_TYPE_ITEM && g_aot.slots[SLOT].active &&
+          g_aot.slots[SLOT].cam_from_filter == 0xFF,
+          "B0 Item-Zone 0x48 in Slot %d angelegt", SLOT);
+
+    /* B1 ohne Aktionstaste */
+    g_aot_action_pressed = 0;
+    re15_aot_scan(zx, zz, 0xFF);
+    CHECK(!re15_menu_doc_active() && re15_menu_stage() == 0 && !re15_item_modal_active(),
+          "B1 in der Zone ohne Aktionstaste: kein Leser, kein Item-Modal");
+
+    /* B2 mit Aktionstaste */
+    g_aot_action_pressed = 1;
+    re15_aot_scan(zx, zz, 0xFF);
+    g_aot_action_pressed = 0;
+    CHECK(!re15_item_modal_active(),
+          "B2 Scan + Aktionstaste auf Zone 0x48: das Item-Modal startet NICHT");
+    CHECK(re15_menu_doc_active() && re15_menu_stage() != 0,
+          "B2 Scan + Aktionstaste: der Aufnahme-Leser ist angefordert (Stufe %d)",
+          re15_menu_stage());
+    CHECK(!re15_game_flag_get(9, TAKEN) && g_aot.slots[SLOT].active == 1 &&
+          g_scd.props[0].active == 1,
+          "B2 beim Anfordern: Flag, Zone und Weltmodell unveraendert");
+
+    /* B3 derselbe Lauf wie TEIL A */
+    int bild = 0;
+    while (bild < 200 && !(re15_menu_phase() == 1 && g_inv_screen.item_state == 3)) {
+        frame(0, 0);
+        bild++;
+    }
+    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_bild == 1 &&
+          g_inv_screen.file_bildsatz == 25 && g_inv_screen.file_reader_page == 0 &&
+          re15_files_get(0) == 0 && re15_files_count() == 1,
+          "B3 Leser liest nach %d Bildern: Satz 25, Titelseite, Liste Platz 0 = Dokument 0",
+          bild);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    uint8_t mid = 0; int rev = -1;
+    int total = re15_menu_doc_msg_total(), n = 0;
+    while (n < 400 && re15_menu_doc_msg(&mid, &rev) && rev < total) { frame(0, 0); n++; }
+    CHECK(re15_menu_doc_msg(&mid, &rev) == 1 && mid == 0x48 && rev == total &&
+          !re15_game_flag_get(9, TAKEN) && g_aot.slots[SLOT].active == 1,
+          "B3 Meldung steht (Namens-Id 0x%02x), noch nichts abgeraeumt", mid);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    CHECK(re15_game_flag_get(9, TAKEN) && g_aot.slots[SLOT].active == 0 &&
+          g_scd.props[0].active == 0,
+          "B3 Bestaetigen: Zone %d aus, Flag (9,0x%02x) gesetzt, Weltmodell %d aus",
+          SLOT, TAKEN, OBJ);
+    int zu = 0;
+    while (zu < 200 && (re15_menu_is_open() || re15_menu_stage() != 0)) { frame(0, 0); zu++; }
+    CHECK(!re15_menu_is_open() && !re15_menu_doc_active() && re15_menu_stage() == 0,
+          "B3 Menue geschlossen, Spiel laeuft nach %d Bildern", zu);
+
+    /* B4 die abgeraeumte Zone zuendet nicht mehr */
+    g_aot_action_pressed = 1;
+    re15_aot_scan(zx, zz, 0xFF);
+    g_aot_action_pressed = 0;
+    CHECK(!re15_menu_doc_active() && re15_menu_stage() == 0 && !re15_item_modal_active() &&
+          re15_files_count() == 1,
+          "B4 zweiter Druck in der abgeraeumten Zone: nichts, Liste bleibt bei %d",
+          re15_files_count());
+
+    /* B5 Gegenprobe 0x47 ueber denselben Scan (zuletzt: das Modal bleibt stehen) */
+    re15_aot_set_item_tk_prop(SLOT_ITEM, zx, zz, 300, 300, 0x47, 1, 0, 0xFF);
+    g_aot_action_pressed = 1;
+    re15_aot_scan(zx, zz, 0xFF);
+    g_aot_action_pressed = 0;
+    CHECK(re15_item_modal_active() && !re15_menu_doc_active() && re15_menu_stage() == 0,
+          "B5 Gegenprobe Item-Id 0x47 ueber den Scan: Item-Modal aktiv, kein Leser");
+}
+
 int main(void)
 {
     printf("=== r30 irons-diary-dokument: Speicherstand + Aufheben ===\n");
     teil_s();
     teil_a();
+    teil_b();
     if (fails) { printf("\nR30 IRONS DIARY ABLAUF: FAIL (%d)\n", fails); return 1; }
     printf("\nR30 IRONS DIARY ABLAUF: alle Riegel halten\n");
     return 0;
