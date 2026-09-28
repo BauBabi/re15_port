@@ -1094,3 +1094,8 @@ Werkzeuge (versioniert, `kartenabzug_tools/`): `r30_bau_abnahme.sh <arbeitsbaum>
 fasst die sechs Laeufe von 9.5 zusammen (dieselben Schalter wie die gefahrenen Laeufe);
 `r30_bau_diff_klassen.py` ordnet abweichende Punkte benannten Kaesten zu (so entstanden
 die Tabellen in 9.5 a und c).
+
+Wiederholung auf dem Endstand (7263d156, Suite 363/363 in 164 s) mit genau diesem Skript:
+1F 1932 / 2F 5 / ROOF 574 Punkte gegen die Nutzer-Abzuege, die drei Abzuege bitgleich zum
+ersten Lauf (`cmp`); Blau 0 auf 3 + 13 Abzuegen, frei schwebend 2 (Klasse C); 2F vor/nach
+Speichern 13 Punkte, alle im Spielermarker; Karte des Nutzers nach jedem Lauf bytegleich.
