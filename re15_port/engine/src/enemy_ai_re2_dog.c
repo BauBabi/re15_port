@@ -64,6 +64,7 @@
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
 #include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
+#include "re15_gameflow.h"   /* re15_char_variant — Port-Zwilling von PL+0x8 & 1 (@0x80102010-18) */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -151,7 +152,7 @@ static void re2d_se(int id)
 
 /* ---- room-scoped globals (0x800CFBF4-Analog) --------------------------------------------
  * Bits the dog module reads/writes: 0x20 noise/lunge claim (set @0x8010135C, clear only in the
- * floor-lost helper @0x80105260), 0x40 pack-help signal (set at mash-release @0x8010205C),
+ * floor-lost helper @0x80105260), 0x40 pack-help signal (set in the Sub-7 release block @0x8010205C — kein Tastensignal, s. re2d_sub7_latch),
  * 0x80 howl claim (set @0x80101950). The ONLY EXE writer is the room-init clear FUN_80052f3c
  * (@0x80052f3c, self-read decompile: DAT_800cfbf4 = 0) → room-scoped, reset here on room load.
  * WELLE D: BIT 0 DESSELBEN Worts ist der Kraehen-Flock-Mutex (Claim @0x801042C4-CC, Frei-Gate
@@ -556,9 +557,13 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
     e->re2z_flags21a = 0;                                  /* sh zero,2(s3) @0x80104EB4 (Fatigue-Reset) */
     int r = re15_re2_player_damage(pl, 20);                /* FUN_800401D4(20,0) @0x80104EB8-C0 */
     if (r == 2                                             /* bne v1,2 @0x80104EE0-E4 */
-        && !re15_ai_facing_aligned(e, pl)                  /* 0x80015910==0 @0x80104EEC-F8 (MAPPING) */
-        && pl->state != 15) {                              /* PL+0x8==15 → kein Latch @0x80104F10-18
-                                                            * (Port: kein Zustand 15 → Gate offen) */
+        && !re15_ai_facing_aligned(e, pl)) {               /* 0x80015910==0 @0x80104EEC-F8 (MAPPING) */
+        /* KEIN drittes Gate im Port (Runde 30, hund-tod.md 3.2/Schritt 4): das Original prueft
+         * hier `lbu v1,8(s1)` @0x80104F10 / `addiu v0,zero,15` @0x80104F14 / `beq v1,v0`
+         * @0x80104F18 — s1 = Spielerblock, +0x8 = die FIGUREN-NUMMER (RE2-EXE: 0x800CFC00 wird
+         * aus 0x800D482C gesetzt, `sb v0,8(s2)` @0x80049FD4), NICHT der Zustand. Figur 15
+         * bekommt keinen Latch. Der Port kennt nur Leon/Elza (re15_char_variant 0/1), eine
+         * Figur 15 gibt es nicht; die alte Zeile `pl->state != 15` verglich den falschen Wert. */
         /* LATCH @0x80104F20-74 */
         e->re2d_bite21e = 2;                               /* sb 2,6(s3) @0x80104F24 */
         e->speed_h = 0;                                    /* sh zero,324 @0x80104F28 */
@@ -577,13 +582,19 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
          * self+0x1D3 |= 0x80 (@0x80104F64-74) — KEIN Spieler-Kommando, KEIN Anker. Der
          * Spieler-Kommando-Wert 0x800CFBFC = 6 faellt erst in Sub 7 P0 (`sw v0,-1028(at)`
          * @0x80104F.. bzw. @0x80101DC4), und GENAU DORT steht auch der Anker-Aufruf
-         * (`jal 0x80015b94` @0x80101DA0). Weil der Port die Opfer-FSM (Port-Shim, der
-         * EXE-seitige Greif-Art-6-Handler ist nicht RE'd) schon hier startet, muss er den Anker
-         * derselben Stelle mitliefern — dieselbe Rechnung, dieselbe Quelle, nur frueher. */
+         * (`jal 0x80015b94` @0x80101DA0). Weil der Port die Opfer-Animation schon hier
+         * startet, muss er den Anker derselben Stelle mitliefern — dieselbe Rechnung,
+         * dieselbe Quelle, nur frueher.
+         * (Der Greif-Art-6-Handler ist seit Runde 30 gelesen: Spieler-Routine [6] @0x800400D0
+         * verteilt ueber 0x800CE400[Typ], Eintrag 0x20 = 0x80104ACC — s. re15_re2dog_victim_latch.) */
         re2d_grab_anchor(e, pl);                           /* Anker-Paar wie @0x80101DA0 */
-        re15_re2z_victim_begin(e, pl, 0);                  /* PL+0x1D3=255/Flags|=0xA → Port-Victim-
-                                                            * Pin (Welle-B-Shim); Richtung frontal
-                                                            * (Yaw=Hund+2048 erzwingt sie) */
+        /* RUNDE 30 (hund-tod.md 4.2/Schritt 3): vorher re15_re2z_victim_begin = Opfer-FSM
+         * Zustand 1 (Ringkampf). Der Hund bestellt den Griff-Pin im Flug nicht, die FSM fiel
+         * ein Bild spaeter in die FREIGABE und gab den Toten am Clip-Ende frei (gemessen:
+         * 12 von 12 Laeufen mit 1..2 Steh-Bildern bei hp < 0). Der Kehlbiss entsteht NUR auf
+         * Rueckgabe 2 (`bne v1,v0` @0x80104EE4) = der Spieler ist tot; der Spieler-Haken
+         * 0x80104ACC kennt genau EINEN Clip und keinen Rueckweg. */
+        re15_re2dog_victim_latch(e, pl);
         return 2;
     }
     /* Boden-Biss @0x80104F7C-88 */
@@ -595,8 +606,14 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
          * Port-Hit-Chain (hit_react), der Claim über den Grab-Pin unterbleibt (kein Latch). */
         pl->hit_react |= 0x1;
     } else {
-        e->anim_flags |= 0;                                /* 0x80105204: PL+0x4=3 — Port-Spieler-
-                                                            * Todespfad läuft über player_common */
+        /* Toedlicher Boden-Biss: `bltz v0,0x80104fb4` @0x80104F90 -> `jal 0x80105204`
+         * @0x80104FB4; das Sprungziel (selbst disassembliert) schreibt `sb v0,4(v1)` mit
+         * v0 = 3 @0x80105220 (Kommando 3 = TOD) und nullt +0x5/+0x6/+0x7 @0x80105224-30.
+         * Port-Zwilling des Kommando-3-Stores = re15_player_death_cmd3(). Vorher stand hier ein
+         * Platzhalter, und der Abfall-Erkenner in game_step_common.c fing den Tod ein Bild
+         * spaeter auf (gemessen tot@144, cmd3@145).
+         * NICHT modelliert: self-Wort0 |= 0x2 @0x80104FBC-C8 (der Port fuehrt dieses Bit nicht). */
+        re15_player_death_cmd3();
     }
     return 1;
 }
@@ -1207,7 +1224,7 @@ static void re2d_sub6_retreat(re15_actor_t *e, re15_actor_t *pl)
         re15_ai_set_state_word(e, 0x201);                  /* sw 513,4 @0x80101CAC-B0 */
 }
 
-/* sub 7 BISS-LATCH @0x80101CDC: +0x6==0 → 0x80101D1C (Clip 23 + Mash), sonst 0x80102124
+/* sub 7 BISS-LATCH @0x80101CDC: +0x6==0 → 0x80101D1C (Clip 23 + Figuren-Zaehler), sonst 0x80102124
  * (Clip 24 Hang → Clip 25 → Sub 12). */
 static const uint8_t re2d_latch_parts[4] = { 8, 0, 9, 12 };   /* @0x80105508 (self-read) */
 static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
@@ -1217,7 +1234,7 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
             e->sub_state_3 = 1;                            /* sb 1,7 @0x80101D6C */
             e->re2d_rel220 = 0;                            /* sb zero,544 @0x80101D74 */
             e->speed_h = 0;                                /* sh zero,324 @0x80101D78 */
-            e->re2z_dir16a = 12;                           /* MASH-Zähler 12 @0x80101D70/7C */
+            e->re2z_dir16a = 12;                           /* Zaehler 12 @0x80101D70/7C   */
             re2d_clip(e, 23, 0, 0x1F, 0x80, 0);            /* 0x1F0017 @0x80101D5C-84 */
             e->re2d_budget21f = 0;                         /* sb zero,543 @0x80101D94 */
             /* Latch-Globals @0x80101D98-E14: 0x800CFDAC=self, 0x800CFBFC=6 (Grab-Art HUND),
@@ -1242,22 +1259,18 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
                 e->sub_state_2 = 1; e->sub_state_3 = 0;    /* sh 1,6 @0x80101F20 */
                 re15_re2z_move_root(e);                    /* 0x80015E7C @0x80101F24 */
                 e->re2d_budget21f = 0;                     /* @0x80101F44 */
-                /* SPIELER-SCHICKSAL am Biss-Ende (PORT-MAPPING, dokumentiert OPEN): der Latch
-                 * entsteht NUR auf dem 800401d4-Rückgabe-2-Pfad (HP<−14 nach dem 20er-Biss,
-                 * @0x80104EE0-E4) — der Spieler STIRBT, außer das Break-Free-Signal
-                 * 0x800CFB74|=0x4000100 (@0x8010204C-60) kam. Dessen EXE-seitiger Spieler-
-                 * Handler (Grab-Art 6) ist nicht RE'd → Port: Mash im 12er-Fenster = One-Save
-                 * (HP=0, Throw-off-Choreo), sonst Devour-Kollaps (Zombie-Kill-Muster). */
-                if (pl->hp < 0) {
-                    if (e->re2d_abort21c) {                /* Mash-Escape (Port-Marker, s.u.) */
-                        pl->hp = 0;
-                        re15_player_victim_throwoff();
-                    } else {
-                        pl->state = 7;
-                        re15_re2z_victim_devour(e, 0);
-                    }
-                }
-                e->re2d_abort21c = 0;
+                /* ⛔ KEIN SCHREIBZUGRIFF AUF DEN SPIELER (Runde 30, hund-tod.md 4.1). Das
+                 * Clip-Ende von P1 schreibt im Original nur die Hunde-Seite: Clip-Wort 0x1F0018
+                 * @0x80101F04-28, `sh v0,6(s2)` (v0 = 1) @0x80101F20, `jal 0x80015e7c`
+                 * @0x80101F24, `jal 0x8002959c` @0x80101F38, `sb zero,543(s2)` @0x80101F44.
+                 * Hier stand eine PORT-ERFINDUNG: mit Tastendruck `pl->hp = 0` + Throw-off =
+                 * der Tote stand wieder auf (Nutzer: "He bites my neck, and i am standing
+                 * again"; gemessen 15 von 15 Latch-Laeufen mit Taste, gdb-Watch: dritter
+                 * hp-Schreiber). Der Latch entsteht NUR auf Rueckgabe 2 des Schadenseintritts
+                 * (`bne v1,v0,0x80104f7c` @0x80104EE4) = der Spieler ist bereits tot, und der
+                 * Spieler-Haken 0x80104ACC hat keinen Rueckweg (P2 @0x80104B04 = nichts).
+                 * Auch +0x21C wird in Sub 7 nicht angefasst (Abdreh-Flag des Laufs, Set
+                 * @0x80100DD0-D4, Verbrauch @0x80100E14-28). */
                 return;
             }
             /* Frame-Events Clip 23 @0x80101F48-FF8: Frame 98 → Budget 18 + Part 4 Blend
@@ -1266,22 +1279,37 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
              * nicht modelliert (OPEN); das BUDGET ist verhaltensrelevant und byte-true: */
             if (re2d_frame_slot(e) == 98)  e->re2d_budget21f = 18;   /* sb 18,543 @0x80101F64-68 */
             if (re2d_frame_slot(e) == 102) { /* Part-Blend {8,0,9,12} @0x80101FA8-FF8 (Render-OPEN) */ }
-            /* Mash-Fenster @0x80102000-C4 (Review-Fix #4, selbst nachdisassembliert):
+            /* Zaehler-Fenster @0x80102000-C4 (Review-Fix #4, selbst nachdisassembliert; in
+             * Runde 30 BERICHTIGT, hund-tod.md 3.3):
              *   `lb v0,362; beq v0,zero,0x80102024` — ctr==0 geht OHNE Dekrement in den
-             *   Release-Block (der ab Tick 12 JEDEN Tick laeuft: Gravity + Boden-Klemme);
+             *   Freigabe-Block (der ab Tick 12 JEDEN Tick laeuft: Gravity + Boden-Klemme);
              *   Dekrement NUR auf den Pfaden ctr!=0 (Delay-Slot @0x80102020, Store @0x801020C4)
-             *   oder Mash-Bit (@0x801020A4-C4) — der Zaehler SATURIERT bei 0 ohne Mash.
-             *   Bit0 (Spieler-Struggle-Signal, EXE-seitig — Port-MAPPING: re15_mash_pressed)
-             *   schaltet zusaetzlich den Release-Block frueher. */
+             *   oder Bit 0 (@0x801020A4-C4) — der Zaehler SATURIERT bei 0 fuer die gerade Figur.
+             * ⛔ Bit 0 ist KEIN Tastensignal. `lbu v0,8(s3)` @0x80102010 / `andi v0,v0,0x1`
+             *   @0x80102018 (und dasselbe Paar @0x801020A4-AC) liest s3+8 mit
+             *   s3 = 0x800CFBF8 (`lui s3,0x800d` / `addiu s3,s3,-1032` @0x80101D3C-40) =
+             *   Spielerblock+0x8 = die FIGUREN-NUMMER. Belege im RE2-EXE: 0x800CFC00 wird aus
+             *   der gespeicherten Figur 0x800D482C gesetzt (`sb v0,8(s2)` @0x80049FD4,
+             *   FUN_80049E48), und FUN_8001B934 waehlt mit demselben `& 1` den Stimmen-Satz
+             *   0x1D6 der weiblichen Figur. Das Hunde-Modul ruft die Tastenabfrage 0x8001598C
+             *   NIE (0 jal im ganzen Modul) und liest das Pad 0x800CE300..1F nie.
+             *   ZUORDNUNG RE2-Figur -> RE1.5-Figur: ungerade (Claire-Seite) = Elza =
+             *   re15_char_variant() 1, gerade (Leon) = 0. Vorher lag hier re15_re2z_mash():
+             *   jede Richtungs-/Aktionstaste (Maske 0xF0F0) im Griff zaehlte als "Bit 0". */
             {
-                int mash = re15_re2z_mash();               /* PL+0x8-Bit0-MAPPING */
-                if (mash) e->re2d_abort21c = 1;            /* Break-free-Marker (0x4000100-MAPPING) */
+                int ungerade = re15_char_variant();        /* PL+0x8 & 1 @0x80102010-18 */
                 int8_t ctr = (int8_t)e->re2z_dir16a;
-                if (ctr == 0 || mash) {
+                if (ctr == 0 || ungerade) {
                     if (e->re2d_rel220 == 0) {             /* Einmal-Latch @0x80102024-30 */
                         e->re2d_rel220 = 1;                /* sb 1,8(s4) @0x80102048 */
-                        /* 0x800CFB74|=0x4000100 (@0x8010204C-60) = Spieler-Break-Free-Signal;
-                         * 0xFBF4|=0x40 = Rudel-Signal @0x80102054-68 */
+                        /* 0x800CFB74 |= 0x04000100 (@0x80102034-60) = TODESBIT 0x04000000 (die
+                         * Hauptschleife startet darauf die Game-Over-Aufgabe, @0x800266C8-
+                         * 0x8002671C) + FINISHER-Bit 0x100 (DIEDEMO Zustand 0 @0x8019015C) —
+                         * NICHT ein Freikaempf-Signal. Der Port startet die Todes-Praesentation
+                         * am Ende des Opfer-Clips (benannte Port-Zuordnung; der Original-
+                         * Zeitpunkt haengt an Bit 0x800, dessen Setzer nicht belegt ist —
+                         * hund-tod.md F1), deshalb faellt hier nur das Rudel-Signal:
+                         * 0x800CFBF4 |= 0x40 @0x80102054-68 */
                         s_re2d_gflags |= 0x40u;
                     }
                     /* Gravity @0x80102070-A0 — laeuft ab ctr==0 dauerhaft: der Hund kommt
@@ -1291,7 +1319,7 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
                     if (e->y >= (int32_t)e->dog_floor_y)
                         { e->y = (int32_t)e->dog_floor_y; e->re2d_vy146 = 0; e->re2d_air219 = 0; }
                 }
-                if (ctr != 0 || mash)                      /* Saturierung bei 0 (s.o.) */
+                if (ctr != 0 || ungerade)                  /* Saturierung bei 0 (s.o.) */
                     e->re2z_dir16a = (uint8_t)(ctr - 1);   /* @0x80102020 / @0x801020B8-C4 */
                 re15_re2z_player_pin();                    /* Victim-Pin hält (Port-Seite) */
             }
@@ -1319,9 +1347,10 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
         if (re2d_advance(e, 0x80)) {                       /* @0x801021F0-F8 */
             if (--e->re2z_t158 == 0) {                     /* @0x80102200-14 */
                 e->sub_state_1 = 12; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* sb 12,5 @0x8010221C-20 */
-                /* der Spieler ist frei (Throw-off), sofern er lebt */
-                if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0)
-                    re15_player_victim_throwoff();
+                /* Das Original schreibt hier NUR `sb v0,5(s1)` (v0 = 12) @0x8010221C und
+                 * `sh zero,6(s1)` @0x80102220 — kein Spieler-Zugriff. Der fruehere
+                 * Throw-off "sofern er lebt" war Teil der Port-Wiederbelebung (Runde 30,
+                 * hund-tod.md Schritt 1): im Latch lebt der Spieler nie. */
             }
         }
     }
