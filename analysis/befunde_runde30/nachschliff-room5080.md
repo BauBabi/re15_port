@@ -1,6 +1,6 @@
 # Nachschliff Runde 30 — ROOM5080: „Leon bewegt sich nach der Generator-Folge nicht mehr"
 
-Spur `room5080`, Zweig `r30/n-room5080`, Basis `cac33993`. Ermittlung. Nach der Nachbesserung gibt es einen Engine-Eingriff (N2, Abschnitt 6).
+Spur `room5080`, Zweig `r30/n-room5080`, Basis `cac33993`. Ermittlung. Nach der Nachbesserung gibt es einen Engine-Eingriff (N2, Abschnitt 6), nach der zweiten Nachbesserung (Spur birkin-frost) einen weiteren (N4, Abschnitt 9).
 
 ## Kurzfassung
 
@@ -9,12 +9,13 @@ Spur `room5080`, Zweig `r30/n-room5080`, Basis `cac33993`. Ermittlung. Nach der 
 | „sub02 hängt in der Warteschleife hinter Plc_dest" | **widerlegt.** Die Schleife endet nach 21 Bildern. Die Folge gibt den Spieler frei: Pad-Sperre weg, Kommando 1. Gemessen im Debug-Sprung **und** auf dem regulären Türweg aus ROOM6010 (Abschnitt 4.1/4.2). |
 | „Leon bewegt sich danach nicht mehr" | **echt, Ursache belegt: N1.** Birkin G1 (Typ 0x30) greift an, sobald sub03 ihn freischaltet. Trifft er, hält der Port Leon über `s_player_grabbed` fest, statt die Opfer-FSM des Originals zu fahren. Der Port hält ihn **308 Bilder** am Stück, danach in Zyklen von 263 Bildern. Das Original gibt ihn nach der Halte-Phase frei, die ohne Tasteneingabe **19 Bilder** dauert (Zähler 75, −4 je Bild), dazu kommen die Clip-Phasen davor und danach. Die Lücke steht schon als HONEST-OPEN im Port (enemy_ai_common.c:11435-11436). **Nicht gebaut, und das ist eine Umfangsentscheidung** (Abschnitt 7, N1). |
 | „Tür ohne Strom (Art S) nur über RE15_FIRE_AOT erreichbar, nicht zu Fuß" | **widerlegt.** Echtlauf über den regulären Türweg: Leon lockt den Stoß aus 3200 Einheiten an und läuft unten um Birkin herum. Mit hp 100 erreicht er die Tür. msg 2 geht auf, dazu **1 × ZU_P** (tuerse.log `F1090 raum=5080 nachricht=2 art=S weg=AOT satz=3(ZU_P) nr=1`). Danach schließt der Text, und Leon läuft wieder (Abschnitt 4.5). |
-| (Gegenprüfer, Nachbesserung) Birkin geht **vor** der Folge durch die Außenwand und beißt Leon | **bestätigt, Ursache belegt, gebaut: N2.** Die Birkin-Wandklemme des Ports nahm das Band aus der Höhe: `band_from_y(-5600)` = 3, und in Band 3 liegt keine Zelle. Das Original nimmt das Zustands-Byte +0x82, das der Spawn auf 0 setzt, und klemmt ihn an der Nordwand. Vor dem Bau stand er im Echtlauf ab Bild 471 im Rauten-Block und biss Leon von hp 100 auf 10. Die Sonde fand ihn in 2024 von 2400 Bildern in einer Wandzelle, hp fiel bis 0. Nach dem Bau steht er in 0 Bildern in einer Zelle und bleibt bei z −5636 vor der Nordwand. Leon behält hp 100 (Abschnitt 8.1). |
+| (Gegenprüfer, Nachbesserung) Birkin geht **vor** der Folge durch die Außenwand und beißt Leon | **bestätigt. Ursache (zweite Nachbesserung): N4, die fehlende Frost-Schranke — gebaut (Abschnitt 9).** Im Original läuft Birkin vor der Folge gar nicht: bei grid & 0x20 steigt seine Wurzel vor Dispatch und Klemme aus (STAGE5 @0x80116a88). ⛔ Die folgende erste Erklärung (N2) war **falsch**: Die Birkin-Wandklemme des Ports nahm das Band aus der Höhe: `band_from_y(-5600)` = 3, und in Band 3 liegt keine Zelle. ~~Das Original nimmt das Zustands-Byte +0x82, das der Spawn auf 0 setzt, und klemmt ihn an der Nordwand.~~ (Das Band aus +0x82 ist richtig, aber das Original erreicht die Klemme vor der Freigabe nie.) Vor dem Bau stand er im Echtlauf ab Bild 471 im Rauten-Block und biss Leon von hp 100 auf 10. Die Sonde fand ihn in 2024 von 2400 Bildern in einer Wandzelle, hp fiel bis 0. Nach N2 stand er in 0 Bildern in einer Zelle und glitt bei z −5636 an der Nordwand entlang (kein Original-Verhalten). **Nach N4 steht er bis zur Freigabe auf (−18100,−5600,200) in Sub 9**, gemessen im Echtlauf über 2175 Bilder, Leon behält hp 100 (Abschnitt 9.5). |
 
 Befunde, einheitlich nummeriert (Abschnitt 7):
 - **N1** Pin statt Opfer-FSM des Spielers. Belegte Ursache des Nutzer-Symptoms, nicht gebaut (Umfangsentscheidung). Die Lücke ist schon als HONEST-OPEN benannt.
-- **N2** Birkin-Wandklemme mit falschem Band. Belegt und **gebaut**, mit Riegel `unit_r30_n_room5080_birkin_wand`.
+- **N2** Birkin-Wandklemme mit falschem Band. Belegt und **gebaut**, mit Riegel `unit_r30_n_room5080_birkin_wand`. ⛔ Als Ursache des Symptoms vor der Folge falsch, die richtige ist N4.
 - **N3** Falsche STAGE5-Adresse im Port-Kommentar zum Birkin-Tod-Flag. Nur der Kommentar war falsch, er ist **korrigiert**.
+- **N4** (zweite Nachbesserung) Fehlende Frost-Schranke der Birkin-Wurzel und fehlender Wurzelaufruf beim Spawn. Belegt und **gebaut**, mit Riegel `unit_r30_birkin_frost` (alle 13 Birkin-Spawns). N2 ist seitdem ohne messbare Wirkung (9.2); der Code bleibt in der Original-Form.
 
 ---
 
@@ -189,10 +190,12 @@ Regulärer Türweg, danach nur Pad-Eingaben, **kein Messhaken in ROOM5080**:
   - Port: 308 Bilder am Stück gepinnt (F1060–F1367, Lauf `ausweich1b`), danach Zyklen von 263 Bildern gepinnt zu 14 Bildern frei. Leon steht dabei trotz Eingabe fest, zum Beispiel F1062–F1146 bei (−23326,−19254) mit pad 4010.
   - Original: Die Halte-Phase endet ohne Tasteneingabe nach 19 Bildern (Zähler 75 @0x8011b288, −4 je Bild @0x8011b308, STAGE5). Danach folgen Aufstehen und Freigabe (Kommando 1 @0x8011b3c0). Die Belege stehen in Abschnitt 7, N1.
   - Das x ≈ −25440 aus der Übergabe ist der Körperkontakt (Abschnitt 4.4). Das „wanderte ohne Eingabe nach −x" ist Birkins REPOSITION, die den gepinnten Leon mitschiebt.
-- **Vor der Folge: belegte Ursache N2.** Die Wandklemme hatte das falsche Band (Abschnitt 8.1). Birkin kam dadurch schon vor dem Generator durch die Außenwand. Blieb der Spieler im Westgang stehen, stand Birkin ab F471 (≈ 16 s nach Raumeintritt) im Rauten-Block. Ab F819 (≈ 27 s) biss er, und N1 hielt Leon fest. Dieser Teil des Symptoms ist mit dem Bau weg.
+- **Vor der Folge: belegte Ursache N4 (die fehlende Frost-Schranke, Abschnitt 9).** ⛔ Die erste Nachbesserung nannte hier N2; das war falsch. Ohne Schranke lief Birkin los, und die Wandklemme hatte zusätzlich das falsche Band (Abschnitt 8.1). Birkin kam dadurch schon vor dem Generator durch die Außenwand. Blieb der Spieler im Westgang stehen, stand Birkin ab F471 (≈ 16 s nach Raumeintritt) im Rauten-Block. Ab F819 (≈ 27 s) biss er, und N1 hielt Leon fest. Dieser Teil des Symptoms ist mit N4 weg: Birkin steht bis zur Freigabe still (9.5).
 - Die Tür ohne Strom ist zu Fuß erreichbar (4.5), vor und nach dem Bau.
 
 ## 6 Änderung
+
+> Nachbesserung 2: Der eigentliche Eingriff gegen „Birkin vor der Folge" ist **N4** (Frost-Schranke + Wurzelaufruf beim Spawn, Abschnitt 9.2). N2 unten bleibt im Code, hat seit N4 aber keine messbare Wirkung. Die Riegel-Beschreibung unten ist die der ersten Fassung; den Umbau (A2/A3 umgekehrt, Teil E) beschreibt 9.8.
 
 **N2 gebaut** (Commit `fix(r30/room5080): Birkin-Wandklemme nimmt das Band aus +0x82 …`):
 - `re15_port/engine/src/enemy_ai_common.c`, 0x30/0x36-Zweig von `re15_enemy_ai_run_all`: `re15_collision_constrain_enemy(…, e->y, 4u)` wird zu `re15_collision_constrain_contact_band(…, (int)e->floor, 4u, NULL, NULL)`. Das ist dieselbe Klemme mit dem Band aus +0x82, wie sie der Gorilla-Zweig schon benutzt. Es gibt keine neue Konstante. Die Belege stehen im Code-Kommentar und in Abschnitt 8.1.
@@ -220,6 +223,8 @@ Regulärer Türweg, danach nur Pad-Eingaben, **kein Messhaken in ROOM5080**:
 - `birkin_vor_folge.py` (Birkin-Weg, Wandkontakte und Spieler-hp aus einer state.log)
 
 ## 7 Befunde N1–N3 — nächster Weg
+
+> N4 (gebaut), N5 (Softlock ROOM3071, schon vor N4) und N6 (grid-4-Szenenmodus ROOM3080) stehen in Abschnitt 9. N1 ist dort mit dem neuen Ablauf neu gemessen (9.6).
 
 ### N1 (erheblich, Port-Lücke, NICHT gebaut): Leon-seitige Opfer-FSM für Typ 0x30 fehlt
 
@@ -299,6 +304,8 @@ In **STAGE5** steht an 0x8011ae10 ein Sprungtabellen-Zugriff (`lui at,0x8010` / 
 
 ### 8.1 Birkin vor der Generator-Folge (N2) — KORREKTUR der ersten Fassung
 
+> ⛔ **Nachbesserung 2: Auch diese Korrektur lag im Kern falsch.** Die Messungen „vorher" unten stimmen (so verhielt sich der **Port**). Falsch war der Original-Mechanismus: Die Birkin-Wurzel erreicht die Klemme FUN_8003b0a4 vor der Freigabe gar nicht, weil sie bei grid & 0x20 vorher aussteigt (STAGE5 @0x80116a7c/@0x80116a84/@0x80116a88 → 0x80116eb8, Abschnitt 9.1). Birkin läuft im Original vor der Folge nicht los und wird nicht geklemmt, er steht eingefroren. Die durchgestrichenen Sätze unten sind die Falschaussagen.
+
 **Die erste Fassung war falsch.** Dort stand, Birkin bleibe „außerhalb der Raumwände bei (−19107,−3529)". Das war nur eine Momentaufnahme, der weitere Weg war nicht gemessen. Der Gegenprüfer hat es mit dem Lauf `build/r30_pruef_n_room5080/tuerweg` gezeigt: regulärer Türweg, aber mit roher Zeitbasis (siehe 4.0). Das Skript läuft dabei schon in ROOM6010 an, Leon bleibt in ROOM5080 bei (−23350,−18200) stehen, und die Generator-AOT fällt nie.
 
 **Messung vorher** (eigener Nachlauf `build/r30n5080_vor_birkin_dbg`, Bau vor dem Fix, `BASIS=roh`, zusätzlich `RE15_BIRKIN_DBG=1`). Über 2317 gemeinsame Zeilen ist `state.log` bitgleich zum Lauf des Gegenprüfers. Auswertung mit `birkin_vor_folge.py`, Bildzählung ab Raumeintritt:
@@ -334,7 +341,7 @@ In **STAGE5** steht an 0x8011ae10 ein Sprungtabellen-Zugriff (`lui at,0x8010` / 
   - Von den 7 EXE-Stellen, die +0x82 schreiben (0x8001be54, 0x8002c6c4, 0x80040974, 0x80041228, 0x800421d0, 0x8005276c, 0x80052dd0), liegt nur eine in einem Callee des Moduls: FUN_8001bd60 @0x8001be54. Sie läuft nur bei y == −(+0x82 × 1800) (8001bde4 `lw v0,56(a0)` / 8001bdec `bne v0,v1`). Bei y = −5600 und +0x82 = 0 springt sie vorbei.
   - Member_set Index 18 (+0x82, Sprungtabelle @0x80010c8c [18] = 0x80041224) kommt in ROOM5080 nicht vor. Das einzige Member_set ist @0x0083E Index 0x0C = +0x9 (0x800411f4 `sb a2,9(a0)`).
 - Keine Kollisionssperre: FUN_8003b0a4 bricht bei +0x0 & 8 ab (8003b12c `lw v0,0(v1)` / 8003b134 `andi v0,v0,0x8` / 8003b138-140 → return 0). Birkins INIT setzt Bit 8 nur für grid&0xf == 1 (STAGE5 801170b4-801170e8: `andi v0,v0,0xf` / `bne v0,v1(=1)` / **801170e4 `ori v0,v0,0x8`**). grid 0x33 hat Nibble 3 (→ +0x95 = 0x10, Sub 9 @0x80117094-a4).
-- **Folge im Original:** Birkin läuft auch dort ab der Raumladung los (derselbe INIT → EMERGENCE → WALK). FUN_8003b0a4 klemmt ihn aber in Band 0 an der Nordwand. Die Parkregel aus ROOM5090 ist dafür **nicht** das Vorbild: Sie ist eine Port-Wahl nach RE2 (G5 bei (−32000,−32000), RE2 @0x801011d0-dc, enemy_ai_common.c:11500-11530) und gilt nur für Typ 0x36. RE1.5 parkt den 5080-Birkin nicht, es klemmt ihn.
+- ~~**Folge im Original:** Birkin läuft auch dort ab der Raumladung los (derselbe INIT → EMERGENCE → WALK). FUN_8003b0a4 klemmt ihn aber in Band 0 an der Nordwand.~~ **Richtig (9.1):** Der INIT läuft einmal beim Spawn (Sce_em_set @0x8004259c mit gelöschtem Bit), danach friert die Schranke @0x80116a88 die Wurzel ein, bis Member_set(0x0C,0x13) @0x0083E das Bit löscht. Die Parkregel aus ROOM5090 ist dafür **nicht** das Vorbild: Sie ist eine Port-Wahl nach RE2 (G5 bei (−32000,−32000), RE2 @0x801011d0-dc, enemy_ai_common.c:11500-11530) und gilt nur für Typ 0x36. ~~RE1.5 parkt den 5080-Birkin nicht, es klemmt ihn.~~ **Richtig:** RE1.5 parkt ihn nicht und klemmt ihn nicht, es friert ihn ein.
 
 **Zensus** (`birkin_band_zensus.py`, alle 13 Birkin-Spawns): Das Port-Band weicht nur bei den vier Spawns mit y = −5600 ab, alle grid 0x33 und pc[4] = 0:
 - ROOM5080 @0x00746
@@ -355,7 +362,7 @@ Die übrigen 9 Spawns (3070/3071/3080/5090/5091 und die 0x10-Spawns in 50E0/50F1
 
 ### 8.2 Nicht gemessen / offen
 
-- **Das Original nicht dynamisch.** Das Klemmen an der Nordwand ist statisch belegt (Wurzel-Aufruf, Bandvergleich, Spawn-Byte, keine Schreiber, keine Sperre). Ein DuckStation-Savestate aus ROOM5080 nach etwa 25 s ohne Folge fehlt, es gibt keinen in `stage_saves/`. Der nächste Weg: `re15-room-capture` (Debug-Menü Stage 5 / Raum 08), 30 s warten, Savestate. Dann Birkin +0x34/+0x3c/+0x82 lesen, erwartet sind z ≈ −5650 und +0x82 = 0.
+- **Das Original nicht dynamisch.** ~~Das Klemmen an der Nordwand ist statisch belegt (Wurzel-Aufruf, Bandvergleich, Spawn-Byte, keine Schreiber, keine Sperre).~~ ⛔ Falsch, siehe 9.1: statisch belegt ist das **Einfrieren** (Schranke @0x80116a88). Ein DuckStation-Savestate aus ROOM5080 nach etwa 25 s ohne Folge fehlt, es gibt keinen in `stage_saves/`. Der nächste Weg: `re15-room-capture` (Debug-Menü Stage 5 / Raum 08), 30 s warten, Savestate. Dann Birkin +0x34/+0x3c/+0x82 lesen. ~~Erwartet sind z ≈ −5650 und +0x82 = 0.~~ Erwartet (9.1) sind x/z = (−18100, 200), +0x9 = 0x33, +0x4 = 1, +0x5 = 9, +0x95 = 0x10.
 - **Nav-Steer 0x80039e7c** (Wurzel @0x80116bb8) ist im Port nicht portiert (HONEST-OPEN). Wie der Original-Birkin an der Wand entlanggleitet, ist deshalb nicht bildgenau.
 - **Grid 0x13 trägt Bit 0x10.** Der Port liest das als Form-2 (Stoß/Biss starten bei Bild 0x14, @0x80117600/@0x80117ae8). Damit kommt das Trefferfenster 16 Bilder nach Stoßbeginn. Das folgt den Skript-Bytes. Einen Laufzeitvergleich mit dem Original gibt es nicht.
 - **Bildgenaue Parität der Drehung** (Ankunft F856 oder F857) gegen das Original: nicht gemessen, für die Frage ohne Belang.
@@ -364,7 +371,7 @@ Die übrigen 9 Spawns (3070/3071/3080/5090/5091 und die 0x10-Spawns in 50E0/50F1
 
 ## 9 Nachbesserung 2: die Frost-Schranke (Befund des Gegenpruefers, selbst nachgeprueft)
 
-**Der Gegenpruefer hat recht, und Abschnitt 8.1 lag in seiner Kernaussage falsch.** Der Birkin in ROOM5080 laeuft im Original vor der Generator-Folge gar nicht los. Er wird auch nicht an der Nordwand geklemmt, denn die Wurzel erreicht die Klemme gar nicht. Bis zur Freigabe steht er auf seiner Spawnlage, mit grid 0x33, Zustand 1 und Sub 9. Der Port hatte diese Schranke im 0x30/0x36-Zweig nicht. N2 (Band aus +0x82) bleibt richtig, greift aber erst **nach** der Freigabe.
+**Der Gegenpruefer hat recht, und Abschnitt 8.1 lag in seiner Kernaussage falsch.** Der Birkin in ROOM5080 laeuft im Original vor der Generator-Folge gar nicht los. Er wird auch nicht an der Nordwand geklemmt, denn die Wurzel erreicht die Klemme gar nicht. Bis zur Freigabe steht er auf seiner Spawnlage, mit grid 0x33, Zustand 1 und Sub 9. Der Port hatte diese Schranke im 0x30/0x36-Zweig nicht. N2 (Band aus +0x82) ist die Original-Form der Klemme und bleibt im Code. Seit N4 hat es aber keine messbare Wirkung mehr, weil Birkin nach dem Fall am Boden steht (9.2).
 
 ### 9.1 Belegblock (selbst disassembliert, `re15_disasm.py`, STAGE*.BIN roh ab 0x80100000, ohne Header)
 
@@ -418,3 +425,119 @@ Danach steht der Birkin eingefroren in Zustand 1 / Sub 9 (bzw. Sub 10 bei grid 0
 **Vorbild im Port:** Der Gorilla (0x27) hat die Schranke. Original STAGE1 @0x80116dec `lbu v0,9(v1)` / @0x80116df4 `andi v0,v0,0x20` / @0x80116df8 `bne v0,zero,0x80116e88`, im Port `re15_maggot_ai_tick` erste Zeile `if (e->grid_id & 0x20) return;`. Weitere Roots mit derselben Schranke im Port: der Zombie-Root `re15_enemy_ai_live_tick` (@0x80100450-5c) und die Zombie-Girl-Wurzel (@0x8010a8f4-900).
 
 **Pausebit 0x20000000 im Port:** `game_step_common.c` ruft `re15_enemy_ai_run_all` nur bei `!(g_re15_pauseflags & RE15_PAUSE_AI)` auf (Beleg-Kommentar dort, Zombie-Root @0x8010042c-3c). Fuer alle Roots zusammen ist die Pause-Haelfte der Schranke damit schon verdrahtet. Der Birkin-Zweig prueft zusaetzlich `s_ai_paused`, wie die anderen Roots.
+
+### 9.2 Bau (N4)
+
+`re15_port/engine/src/enemy_ai_common.c`:
+- **`re15_birkin_root`** ist der bisherige 0x30/0x36-Zweig von `re15_enemy_ai_run_all` (KI-Tick, b544-Stöße, Wandklemme). Davor steht jetzt die Schranke:
+  - `s_ai_paused || (g_re15_pauseflags & RE15_PAUSE_AI)` für @0x80116a68 / @0x80116254;
+  - `grid_id & 0x20` für @0x80116a7c-a88 / @0x80116268-274.
+  - Steigt die Wurzel dort aus, tut der KI-Zweig nichts. Das Gegenstück von FUN_8001b064 ist der Schatten im Renderer, der für jeden Aktor gezeichnet wird (9.1). Die Pose bleibt stehen, weil 0x30/0x36 ihr Bild selbst takten.
+- **`re15_enemy_spawn_root`** bildet Sce_em_set @0x8004256c-@0x80042608 nach: Bit 0x20 löschen, Wurzel einmal rufen, altes Bit zurücksetzen.
+  - Aufgerufen wird es aus `op_sce_em_set` (scd_vm.c) nach dem Aufsetzen des Aktors.
+  - Ausgenommen ist der G5 in ROOM5090/5091 (Typ 0x36, RE2-Modul `enemy_ai_boss_g5.c`), weil dieses Modul bei grid == 0x13 scharf wird.
+  - Andere Gegnertypen bekommen den Spawn-Aufruf nicht (OFFEN).
+- Die 5090-Parkregel ist **nicht entfernt**, nur als unerreichbar kommentiert (9.4).
+
+**N2 nach N4, gemessen:** Ich habe N2 testweise zurückgedreht (Band aus `e->y`, nicht committet) und `probe_r30_birkin_frost` über alle 13 Spawns gefahren. Die Ausgabe ist **byte-gleich** zu der mit N2. Der Grund: Vor der Freigabe erreicht die Wurzel die Klemme nicht. Danach steht Birkin am Boden, denn der Fall ist Pos_set y −5600 (ROOM5080 @0x00822) + Speed_set(1,400) (@0x0082E `2f 01 90 01`) × For 14 (@0x00832 `0d 00 06 00 0e 00`) = y 0, gemessen y 0 im Freigabe-Bild. `band_from_y(0)` = 0 = +0x82. N2 bleibt als Original-Form im Code, der Kommentar sagt das jetzt.
+
+### 9.3 Messung je Birkin-Spawn (alle 13, Zensus `birkin_band_zensus.py`)
+
+Sonde `probe_r30_birkin_frost` (ctest `unit_r30_birkin_frost`, Rahmen wie `probe_r30_n_room5080`):
+- Raum laden, SCD hochfahren, Spieler auf das Türziel des Raums setzen (Door_aot_set der Nachbarräume: ROOM4000 @0x01104 → 3070, ROOM3070 @0x03302 → 3080, ROOM6010 @0x00FCE → 5080, ROOM50D0 @0x0121A/@0x011FA → 50E0/50F0, ROOM5090 @0x0108E).
+- 300 Bilder warten.
+- Dann auslösen:
+  - Event-AOT über `re15_aot_fire_slot`, mit dem Spieler in der Mitte des AOT-Rechtecks;
+  - 3080 startet die Folge selbst (sub00 @0x007E8 Evt_exec sub02);
+  - 5090/5091: nach Westen laufen bis Kamera 12 (sub01 @0x1290 Cmp work[0x0A]==12).
+- Texte werden mit Quadrat bestätigt.
+- (b) ist per Thread-PC-Klammer vor/nach dem SCD-Tick gemessen: Der Thread, der das grid kippt, hat im selben Tick den Datei-Offset der Tabelle überschritten.
+- „Bild" zählt ab Raumladung.
+- „vorher" ist der Engine-Stand `48531e99` (N2 ohne N4, per Stash zurückgesetzt) mit derselben Sonde. „nachher" ist mit N4 (`122d6580`).
+
+| Raum / Spawn | Typ, grid | Freigabe (Opcode @Datei) | vorher (a) / (b) / (c) | nachher (a) / (b) / (c) |
+|---|---|---|---|---|
+| 3070 @0x033CE | 0x30, 0x33 | Member_set(0x0C,0x13) @0x0358E (sub02 ← AOT Platz 2 @0x033E2) | (a) **299/300 Bilder verletzt**: ab Bild 2 EMERGENCE auf (30000,30000), dann WALK / (b) Bild 613 @0x0358E / (c) kein EMERGENCE mehr, sofort WALK, Treffer Bild 1019; Folge endet Bild 776 | (a) 0/300 / (b) Bild 613 @0x0358E / (c) EMERGENCE 613 → WALK 739 → Treffer 1159; Folge endet 776 |
+| 3070 @0x0340C | 0x30, 0x10 (Flag (4,215)=1) | — (kein Bit 0x20) | INIT erst im ersten KI-Tick (Spawn-Bild st 0); WALK 2, Treffer 59 | INIT im Spawn-Bild (st 1 / Sub 0); WALK 2, Treffer 58 |
+| 3071 @0x03434 | 0x30, 0x21 | Member_set(0x0C,0x01) @0x03645 (sub02 ← AOT Platz 2 @0x0344C) | (a) **299/300**: ab Bild 2 Sub 10 (Ansturm) / (b) Bild 802 @0x03645 / (c) trifft den gesperrten Spieler ab Bild 802 (hp 80); **Folge endet nie** | (a) 0/300 / (b) Bild 802 @0x03645 / (c) Sub 10 → 3 → 1, WALK 997, bleibt bei (−28058,−11154) hängen, kein Treffer; **Folge endet nie** (9.7, N5) |
+| 3071 @0x0347A | 0x30, 0x10 (Flag (4,75)=1) | — | INIT im KI-Tick; Treffer 59 | INIT im Spawn-Bild; Treffer 58 |
+| 3080 @0x007D4 | 0x36, 0x24 | Member_set(0x0C,0x04) @0x00934 (sub02 ← sub00 @0x007E8) | (a) **299/300**: ab Bild 2 Sub 4/1 / (b) Bild 367 @0x00934 / (c) Sub 4/1 im Wechsel, kein Treffer; Folge endet (Tür) Bild 907 | (a) 0/300 / (b) Bild 367 @0x00934 / (c) wie vorher (Szenenmodus grid 4 nicht portiert, 9.7 N6); Folge endet 907 |
+| 5080 @0x00746 | 0x30, 0x33 | Member_set(0x0C,0x13) @0x0083E (sub03 ← sub02 @0x007EC ← AOT Platz 1 @0x0072E) | (a) **299/300** / (b) Bild 775 @0x0083E / (c) kein EMERGENCE, WALK 775, Treffer 1096; Folge endet 802 | (a) 0/300 / (b) Bild 775 @0x0083E / (c) EMERGENCE 775 → WALK 901 → Treffer 1220; Folge endet 802 |
+| 5081 @0x00742 | 0x30, 0x33 | Member_set(0x0C,0x13) @0x00836 (sub03 ← sub02 @0x007E4) | wie 5080 (Freigabe @0x00836) | wie 5080 (Freigabe @0x00836) |
+| 5090 @0x0124A | 0x30 → Port 0x36 (G5), 0x33 | Member_set(0x0C,0x13) @0x0130A (sub04 ← sub01 @0x1296) | (a) 0/300 (G5 unscharf) / (b) Bild 454 @0x0130A / (c) scharf (x −9000) 454, Treffer 1962; Folge endet 495 | **byte-gleich** zu vorher |
+| 5091 @0x01232 | 0x30 → Port 0x36 (G5), 0x33 | Member_set(0x0C,0x13) @0x012EE (sub04) | wie 5090 (@0x012EE) | **byte-gleich** zu vorher |
+| 50E0 @0x00ACE | 0x30, 0x33 | Member_set(0x0C,0x13) @0x00BEE (sub04 ← sub02 @0x00B8E ← AOT Platz 1 @0x00ABA) | (a) **299/300** / (b) Bild 501 @0x00BEE / (c) kein EMERGENCE, WALK 547, Treffer 790; Folge endet 528 | (a) 0/300 / (b) Bild 501 @0x00BEE / (c) EMERGENCE 501 → WALK 627 → Treffer 870; Folge endet 528 |
+| 50E0 @0x00AEE | 0x30, 0x10 (Flag (3,61)=1) | — | INIT im KI-Tick; WALK 2, kein Treffer in 5000 Bildern | INIT im Spawn-Bild; sonst gleich (Nav-Steer fehlt, 9.7) |
+| 50F1 @0x009AC | 0x30, 0x33 | Member_set(0x0C,0x13) @0x00AB4 (sub04 ← sub02 @0x00A54 ← AOT Platz 1 @0x00994) | (a) **299/300** / (b) Bild 368 @0x00AB4 / (c) kein EMERGENCE, WALK 368, Treffer 662; Folge endet 383 | (a) 0/300 / (b) Bild 368 @0x00AB4 / (c) EMERGENCE 368 → WALK 494 → Treffer 804; Folge endet 383 |
+| 50F1 @0x009D4 | 0x30, 0x10 (Flag (3,61)=1) | — | INIT im KI-Tick; WALK 2, kein Treffer | INIT im Spawn-Bild; sonst gleich |
+
+Befunde aus der Tabelle:
+- **Die Freigabe wird in allen 9 eingefrorenen Spawns im Port erreicht**, jeweils durch genau den Member_set am Datei-Offset der Tabelle. Keiner der Räume steht also für immer vor der Freigabe. Die Freigabe-Bilder sind vorher und nachher gleich: Die Schranke ändert das Skript-Timing nicht.
+- Nach der Freigabe läuft in 3070/5080/5081/50E0/50F1 **zuerst EMERGENCE** (Clip 0x10), dann WALK, dann der Angriff. Vorher war EMERGENCE schon vor der Folge verbraucht.
+- **Softlock gefunden, aber nicht durch N4: ROOM3071** (9.7, N5). Die Folge endet dort nie, vorher wie nachher.
+
+### 9.4 Die 5090-Parkregel und der Endkampf
+
+- Die Parkregel (`re15_birkin_ai_tick`, Typ 0x36, grid == 0x33, Lage Spawn oder (−32000,−32000)) war **schon vor N4 von keinem ausgelieferten Raum erreichbar**:
+  - 0x36 in ROOM5090/5091 läuft über den G5-Zweig, der in `run_all` vor dem 0x30/0x36-Zweig steht.
+  - Der einzige andere 0x36-Spawn (ROOM3080 @0x007D4) trägt grid 0x24.
+- Mit N4 ist sie doppelt unerreichbar, denn 0x33 & 0x20 steigt vorher aus. Sie kollidiert nicht mit der Schranke. Sie ist **nicht entfernt**, nur kommentiert.
+- `test_birkin_ai` (4) hatte sie synthetisch gepinnt (Raum-Id 0). Der Fall pinnt jetzt das Einfrieren: Zustand 0, Spawnlage unverändert, nach grid 0x13 INIT → Sub 9.
+- **Der Endkampf ist unberührt:**
+  - Der G5-Zweig und `enemy_ai_boss_g5.c` sind nicht geändert, und der Spawn-Aufruf steigt für 0x36 in 5090/5091 aus.
+  - Gemessen: 13 G5-/Birkin-/5090-Sonden liefern vor und nach N4 **byte-gleiche Ausgaben**: probe_5090_birkin, probe_5090_birkin_verify, probe_5090_lang, probe_g5_boss, probe_g5_tentakel, probe_p2_birkin_g5, probe_p3_birkin_rest, probe_r16_birkin_g5, probe_r16_sk_birkin_g5, probe_r17_birkin_1zu1, probe_r18_birkin_rest, probe_r20_birkin_push, probe_r21_tentakel_schub.
+  - `probe_g5_boss` deckt Auftritt, Zug, Biss und Tod ab: „Intro: u −9000 → 10612 … Tod: Clip10=1, Absink-y max=2952 (Soll GENAU 2952)".
+  - Der Abspann-Pfad ist nicht eigens gefahren. Kein Code dorthin ist geändert.
+
+### 9.5 Echtlauf (echte re15_pc.exe, Bau `5bc08f83`)
+
+Treiber `r30_5080_echtlauf.sh`, Auswertung `birkin_frost_echtlauf.py`. Die State-Log trägt jetzt `gr=` (Griff-Kanal des Ports).
+
+| Lauf | vorher (ohne N4) | nachher (N4) |
+|---|---|---|
+| Türweg mit Folge (`RAUM=6010`, `BASIS=spiel`, `tuerweg_skript.txt`, `RE15_FIRE_AOT=2@60#6010`) | `r30n5080_tuerweg` (Bau vor N2 und N4): 874/875 Bilder vor der Freigabe nicht eingefroren (Spawn-Bild st 0, danach läuft er); Freigabe F876; kein EMERGENCE danach, WALK F876; erster Treffer F1183, hp min 10 | `echt_tuerweg`: **875/875 Bilder eingefroren** (ab F861 auf der sub03-Lage (−18100,−17800), weiter grid 0x33 / Sub 9 / Clip 0 / +0x95 0x10); Freigabe F876 (grid 0x33 → 0x13); **EMERGENCE F876 → WALK F1002 → erster Treffer F1322**; hp min 40 |
+| Gegenprüfer-Lauf, Folge nie (`BASIS=roh`) | vor N2: ab F471 im Rauten-Block, Biss ab F819, hp 10. Mit N2: gleitet an der Nordwand bis (−23350,−5636) | `echt_gegenpruefer`: **2175/2175 Bilder eingefroren auf (−18100,200)**, grid 0x33, Sub 9; Leon hp 100; nie in einer Wandzelle |
+
+### 9.6 N1 mit dem neuen Ablauf neu gemessen (nicht gebaut)
+
+| Messung | Erster Treffer | Griff-Läufe |
+|---|---|---|
+| Sonde `probe_r30_n_room5080` Teil 2, Spieler ohne Eingabe, **nach N4** | 918 Bilder nach dem Auslösen | **142 Bilder gegriffen, 14 frei**, im Zyklus (8 von 13 Läufen aufgelistet, alle gleich) |
+| dieselbe Sonde **vor N4** | 784 | 142 : 14, gleich |
+| Echtlauf `echt_tuerweg` nach N4 (keine Eingabe nach dem Skript) | F1322 | 5 volle Läufe **142 : 14** + einer läuft am Ende |
+| alte Zahl (Abschnitt 5/7, `ausweich1b`, mit Pad-Eingabe) | F1060 | 308 am Stück, dann 263 : 14 |
+| Original (statisch, STAGE5) | — | Halte-Phase **19 Bilder** ohne Eingabe (Zähler 75 @0x8011b288, −4 je Bild @0x8011b308), dazu die Clip-Phasen [0]–[5] und [9]–[12] (Summe nicht gemessen) |
+
+- N4 ändert an N1 nichts außer dem Zeitpunkt des ersten Treffers. Birkin muss jetzt erst EMERGENCE spielen und aus der Raummitte (−18100,−17800) anlaufen.
+- Der Pin selbst ist unverändert: Ohne Eingabe hält der Port Leon 142 Bilder, das Original 19 Bilder plus Clip-Phasen.
+- N1 bleibt die belegte Ursache für „Leon bewegt sich nach der Folge nicht mehr" und ist weiter nicht gebaut (Abschnitt 7).
+
+### 9.7 Nebenbefunde der Messung (nicht gebaut, Umfang)
+
+- **N5 SOFTLOCK ROOM3071 (schon vor N4, durch N4 nicht verursacht).**
+  - Nach der Freigabe @0x03645 wartet sub02 in `While Ck(5,31)==0` (@0x0364D-0x03657) und danach in `While Ck(5,30)==0` (@0x03665).
+  - Setzer von (5,0x1f)/(5,0x1e) gibt es in STAGE3 nur im Birkin-CHARGE-COMBO 0x80119524 (Sub 10): @0x80119658 `jal 0x8004ef90` mit a0 = 0x800b1028 (Bank 5) / a1 = 0x1f, gesetzt bei Zähler +0x9c == 0x46 (@0x80119640-648), und @0x801197b4 mit a1 = 0x1e. In STAGE5 liegen sie bei @0x80119e6c / @0x80119fc8. Das ist ein Byte-Scan über beide Overlays nach `jal 0x8004ef90` mit `ori a1,zero,0x1e/0x1f`.
+  - Der Port-Sub 10 ist kompakt: Er setzt die Flags nie und hat auch die Kollisionssperre +0x0 | 8 nicht (INIT @0x801168d0).
+  - Folge: (1,27)/(2,7) bleiben gesetzt, und Leon ist für immer gesperrt, vorher wie nachher gemessen.
+  - Vor N4 stürmte Birkin ab Bild 2 auf den gesperrten Spieler los. Nach N4 bleibt er nach Sub 10 → 3 → 1 bei (−28058,−11154) an der Kulisse hängen.
+  - **Nächster Weg:** CHARGE-COMBO 0x80119524 mit allen 14 Phasen portieren (Sprungtabelle @0x80100434, STAGE3), mit Flag-Setzern und Sperre.
+- **N6 ROOM3080: der grid-4-Szenenmodus fehlt.**
+  - Die BRAIN wählt die Modus-Tabelle über das grid-Nibble: @0x80116d90 `lbu v0,9(v0)` / `andi 0xf` / @0x80116da4 `addiu at,at,-4444` (0x8011eea4) / @0x80116db4 `jalr`.
+  - [0..3] = 0x80116dcc (die DECIDE/ACT-Tabellen @0x8011eeb8/@0x8011eef0). **[4] = 0x80116e48** mit den Tabellen @0x8011ef28 / @0x8011ef2c: DECIDE[0] = 0x80118cf8 (`jr ra`), ACT[0] = 0x80118d00, eine 15-Phasen-Choreografie (Sprungtabelle @0x801003dc, SE 3/6/8). Das ist kein Angriff.
+  - Der Port fährt für grid 4 die normale HUB. Mit dem 0x36-Masse-Vorlauf beißt Birkin in der Schnittfolge ins Leere (Sub 4/1 im Wechsel, kein Treffer). Vorher wie nachher, die Folge endet über die Tür.
+- **grid-0x10-Spawns in 50E0/50F1** (Wiederbetreten nach dem Kampf): Birkin läuft, erreicht den Spieler am Türziel aber in 5000 Bildern nicht, weil Nav-Steer 0x80039e7c fehlt (HONEST-OPEN). Das ist kein Frost-Thema, vorher wie nachher gleich.
+- **Gorilla-Schranke im Port nur halb** (Beobachtung):
+  - Das Original springt @0x80116df8 nach 0x80116e88, also hinter die Klemme @0x80116e70.
+  - Der Port steigt nur aus `re15_maggot_ai_tick` aus. `run_all` fährt für einen eingefrorenen Gorilla trotzdem `re15_enemy_body_push_tail` und `re15_enemy_sca_clamp_band`. Nicht geändert.
+
+### 9.8 Riegel, Suite
+
+- `unit_r30_birkin_frost` (neu, `probes/r30_birkin_frost.cmake`): 13 Spawns, (a)/(b)/(c) wie 9.3. **Vor N4 ROT (29 Riegel verletzt), nach N4 GRÜN.** Den Angriff verlangt der Riegel nur, wo das Original ihn hat und der Port ihn leisten kann. Für 3071 (N5), 3080 (N6) und die grid-0x10-Spawns in 50E0/50F1 ist er mit Begründung ausgenommen und wird ausgegeben.
+- `unit_r30_n_room5080_birkin_wand` (umgebaut):
+  - A2/A3 sind umgekehrt: In jedem der 2400 Bilder ohne Folge ist Birkin eingefroren, er bewegt sich nicht.
+  - Neuer Teil E: Freigabe durch @0x0083E, zuerst EMERGENCE (Bild 473 nach dem Auslösen), dann WALK (599), y 0 nach dem Fall, nie in einer Wandzelle. Dazu die N1-Messung.
+  - **Vor N4 ROT** (A2 2399 Bilder verletzt, A3 Abstand 7848, E2 kein EMERGENCE), **nach N4 GRÜN**.
+- `unit_birkin_ai`: INIT über `re15_enemy_spawn_root`, neuer Frost-Fall (1b). Fälle, die frei laufen sollen, haben grid 0x13 statt 0x33 bzw. 0x01 statt 0x21. (4) friert statt zu parken.
+- **Suite 396/396 grün** (394 Integrationsstand + die 2 Riegel dieses Zweigs: `unit_r30_n_room5080_birkin_wand`, `unit_r30_birkin_frost`), 440 s, `ctest --test-dir re15_port/build --timeout 240`, Bau `122d6580`.
+
+**Werkzeuge** (`nachschliff-room5080_tools/`): `birkin_frost_echtlauf.py` (Echtlauf-Auswertung), `birkin_sonden_lauf.sh` (baut und fährt die 15 Birkin-/G5-Sonden, eine Ausgabe je Datei, für den Vorher/Nachher-Vergleich).
