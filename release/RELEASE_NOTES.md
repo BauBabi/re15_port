@@ -1,10 +1,137 @@
 # v0.8.16 - 2026-09-28
 
-Das Gelaendertor am Hubschrauberlandeplatz (ROOM1170) oeffnet sich jetzt wie eine Tuer in
-Resident Evil 2: mit eigener Tuerszene, Bewegung und dem Ton des RE2-Gittertors. Grundlage
-ist das Tuermodell, das ich Ihnen aus Ihren drei Ausschnitten gebaut habe. Suite 362/362.
+Alle neun Befunde Ihrer letzten Runde sind gebaut, dazu vier Fehler, die erst beim Bauen
+aufgefallen sind. Jede Aenderung wurde von einem zweiten, unabhaengigen Agenten gegengeprueft,
+der gezielt versucht hat, sie zu widerlegen. Dazu kommt aus einer zweiten, parallelen
+Arbeitssitzung die Tuersequenz des Tors am Landeplatz (eigener Abschnitt unten). Suite 360 -> 403/403.
 
 ## Was Sie merken
+
+**Sie sterben wieder am Hund.** Der Kehlbiss hat Sie wiederbelebt, sobald waehrend des
+Bisses IRGENDEINE Richtungs- oder Aktionstaste fiel — deshalb standen Sie bei 0 Lebenspunkten
+wieder auf. In ROOM11D0 mit 20 Lebenspunkten gemessen: vorher 15 von 15 Kehlbissen mit
+Tastendruck auferstanden, jetzt 0 von 48, Game Over 48 von 48. Der Port hatte im Original
+ein Tastensignal gelesen, das in Wahrheit die Figuren-Nummer des Spielers ist
+(`lbu v0,8(s3)` / `andi 0x1` @0x80102010). RE2 entscheidet allein im Schadenseintritt, ob
+Sie ueberleben. Kein neuer Fehler: der Code stammt vom ersten Hunde-Port am 16. August; seit
+v0.8.14 treffen die Hunde nur zuverlaessiger, deshalb kamen Sie oefter in den Kehlbiss.
+Dabei mitbehoben: wer beim Tod gerade zielt, bleibt nicht mehr aufrecht in der Zielpose
+stehen (cmd 3 @0x80012ef0).
+
+**Die Karte.** Alle vier Befunde hatten eine eigene Ursache:
+* *ROOF, Wand unten blau* und *ROOM1000 blau* — eine fest eingetragene Farbe (16,64,176),
+  RE2s Besucht-Blau, war beim Zurueckstellen auf RE1.5-Gruen stehen geblieben. Sie kommt
+  jetzt aus der Palette (TEX.TIM @0x0556 / @0x055C). Blau-Zensus ueber alle 13 Blaetter:
+  vorher 914 Punkte, jetzt 0. Die Dach-Wandzeile lag zudem auf der gemalten Suedwand und ist
+  gestrichen.
+* *2F, Tuer die es nicht gibt* — die Marke gehoerte zur Tuer ROOM1090 -> ROOM1100
+  (ROOM1090.RDT @0x0213A) und trug eine falsche Rueckfallnummer. Sie sitzt jetzt an der Wand
+  zwischen beiden Raeumen; neun weitere Marken ohne Traeger sind gestrichen.
+* *Verlust beim Laden* — die Etagen-Angaben wurden nie gespeichert. Bei Ihnen fehlten dadurch
+  ROOM1060, ROOM1090, ROOM10A0 und die obere Haelfte von ROOM1170. Rundlauf Speichern/Laden:
+  vorher 91 von 102 Orten verlustfrei, jetzt 102 von 102. Ihre vorhandenen Spielstaende
+  werden beim Laden gehoben; besuchte Raeume erscheinen dabei auf ihrer Haupt-Etage
+  (Port-Entscheidung, weil der alte Stand die Etage nicht kennt). Mit Ihrer Karte vom 27.09.
+  nachgeprueft: alle vier Raeume sind wieder da.
+
+**Die Karte oeffnet sich nach Irons.** Wie in RE2 ROOM3010 (Opcode 0x84 @0x800591C4): nach
+der Szene blendet die Karte "POLICE STATION 2F" auf, der COMMUNIC. ROOM (ROOM10F0 — nicht
+ROOM10D0, das ist der Flur davor) blinkt rot/Umriss alle 0,65 s, mit RE2s Hinweiston alle
+1,30 s (gemessen 652 ms / 1306 ms). START schliesst. **RE2 merkt sich danach nichts** — kein
+Flag, keine Marke, nichts im Spielstand (0 Bit-Schreiber im ganzen Hinweis-Code); die normale
+Karte zeigt den Raum danach nach ihrer gewoehnlichen Regel. So ist es jetzt auch hier. Der Raum
+selbst ist zunaechst verschlossen und braucht die Blue Keycard.
+
+**Irons Diary liegt auf seinem Tisch** — an Ihrer roten Marke, genau auf dem gemalten
+Klemmbrett. Das Weltmodell ist RE2s Buch (room10E0), die Seiten stehen auf FILE08-Papier:
+Titel "IRONS DIARY" und 17 Textseiten, jedes Datum beginnt eine neue Seite, Ihr Text Wort fuer
+Wort (427 von 427 Woertern zurueckgelesen). Aufheben oeffnet wie in RE2 sofort den Leser,
+blaettern geht wie in RE2, nach dem Schliessen kommt "The Irons Diary has been filed." und
+das Buch verschwindet vom Tisch. Die Toene sind RE2s (Bank 4, Saetze 4/5/6/8; CORE00 ist in
+beiden Spielen bytegleich).
+* Die 21 vorinstallierten FILE-Eintraege ("Albert Wesker", "Umbrella File 9" ...) sind weg.
+  Die Liste beginnt leer und wird im Spielstand mitgespeichert.
+* ⛔ Umlaute und ß gibt es im englischen RE2-Satz nicht; sie sind aus den Grundzeichen
+  konstruiert.
+* Die Blaetterpfeile stehen jetzt an RE2s Stelle und in RE2s Gruen — vorher hat der linke
+  Pfeil auf 12 von 17 Seiten den ersten Buchstaben einer Zeile verdeckt.
+
+**Die Memory Card liegt daneben** (Ihre blaue Marke). Es ist Item 0x21 — nicht 0x20, das ist
+die Incendiary Capsule. RE1.5 hat dafuer Bild und Icon, aber nie eine Platzierung und kein
+Weltmodell; das Modell ist die Keycard des Spiels mit einer Textur aus dem Item-Bild. Menge 3,
+wie RE2s Farbband (21 von 21 Platzierungen).
+* In der Nahaufnahme (Cut 6) waren beide fast schwarz, weil dort ein sehr dunkles Licht gilt.
+  Sie nehmen jetzt den Lichtsatz von Cut 2 (ROOM1150.RDT @0x003E8) — der hellste der neun
+  vorhandenen, messbar der beste; Port-Wahl.
+
+**Tueren klingen verschlossen.** RE2 hat genau EINEN Verschlossen-Satz (Se_on Bank 2 /
+Satz 0x16, @0x80051610), dessen Welle je Raum wechselt; RE1.5 ist an verschlossenen Tueren
+stumm. Eingebaut an 54 Stellen: Kartenleser, Pincode und elektronisch verschlossen klingen
+nach RE2s Kartenleser-Tuer, mechanisch verschlossen nach RE2s Revier-Tuer, die Tuer ohne
+Strom in ROOM5080 nach RE2s Gegenstueck in ROOM7020.
+* ⛔ **ROOM2190** hat in RE2 (Leon) weder Kartenleser noch Pincode-Tuer und keinen
+  Verschlossen-Ton. Die Kartenleser-Tuer liegt in ROOM2110 — deren Ton ist es geworden.
+* Stumm bleiben, wie in RE2: falscher Code am Ziffernfeld, Lesegeraet ohne Karte, reine
+  "The door won't open!"-Stellen.
+* Zum Vergleichen liegen die Wellen in `analysis/befunde_runde30/tuer-verschlossen_wav/`.
+  Die Zuordnung steht an EINER Stelle im Code und laesst sich tauschen.
+
+**Das Titelmenue pulst im Original-Takt.** Die Pulsfolge war richtig, der Takt nicht: der Port
+schaltete je Bild IHRES MONITORS weiter, das Original je zwei Bildwechsel der Konsole. An einem
+144-Hz-Monitor gemessen: vorher 416 ms, jetzt 2006 ms je Periode, wie das Original (120
+VBlanks). Unabhaengig von der Bildrate des Monitors. Die Einblende des Titels dauert jetzt
+ebenfalls die Original-Zeit (1,07 s statt 0,46 s), und die Helligkeit der gewaehlten Zeile ist
+pixelgleich mit dem Original-Bildpuffer.
+
+**Android: R1 rastet ein.** Einmal tippen hebt die Waffe, sie bleibt oben, Viereck feuert,
+nochmal tippen senkt. Der R1-Knopf zeigt den eingerasteten Zustand mit einem zweiten Rahmen.
+In Menue, Kiste, Text, Zwischensequenz, Raumwechsel und Tod faellt die Raste von selbst. Nur
+auf dem Touch-Overlay — Gamepad und Tastatur bleiben Halte-Tasten.
+
+**Elza.** Alle drei Befunde hatten eine eigene Ursache im Port, keine in den Daten:
+* Das kurze Lobby-Bild im Intro und das Wiederholen nach dem Abbruch: ROOM1031 hielt sich
+  fuer unbesucht, weil das Vorspann-Flag (3,193) nur fuer Leon gesetzt wurde. Es ist die
+  gemeinsame Weiche beider Startraeume (ROOM1031 main00 @0x0204E).
+* Leon statt Elza in der Lobby: der Modell-Index wurde beim Start von der SCD-Initialisierung
+  wieder genullt; der erste Raumwechsel lud PL00.
+* Ihre Szene spielte nicht: die Selbst-Tuer-Pruefung kannte die Elza-Variante der Raum-Id
+  nicht (0x1030 != 0x1031). Das Original laedt bei JEDER Tuer neu (@0x8001d988).
+Leon ist bitgleich geblieben (15 Bilder, 0 abweichende Pixel).
+
+**Die Sicherung im Hebetisch ist sichtbar — und es ist dieselbe.**
+* Nach dem Laden eines Spielstands wurde sie gar nicht angelegt; sie lag ausserhalb des
+  Fachs, ein Viertel jeder Modellflaeche blieb offen, und das Licht fiel von innen. Jetzt
+  liegt sie im Fach: 348 bis 439 Punkte in jedem Bild der Fahrt, vorher 12 bis 124 bzw. 0.
+* Das Item-Bild gehoerte zu einem ANDEREN Gegenstand — bytegleich RE2s "Fuse Case". Bild und
+  Icon kommen jetzt aus dem Modell, und das CHECK-Foto, das bisher leer war, zeigt die
+  Sicherung.
+* Sagen Sie "No", bietet die naechste Fahrt des Tisches sie wieder an (wie im Original, das
+  eine abgelehnte Aufnahme scharf laesst, @0x8001e068-0x8001e0ec).
+
+**Kein Ein-Bild-Blitz mehr beim Kamerawechsel.** Am Telefon in Irons' Office erschienen Buch
+und Karte fuer ein Bild gross und dunkel; derselbe Fehler liess vorher das Spielermodell an
+manchen Kamerawechseln ein Bild lang falsch stehen. Projektion und Hintergrund wechseln jetzt
+im selben Bild.
+
+**Birkin wartet wieder, bis das Skript ihn freigibt.** Beim Bauen der Tuer-Toene blieb Leon
+in ROOM5080 nach der Generator-Folge haengen. Die Ursache war nicht die Folge: Birkin lief ab
+dem Betreten des Raums los, ging durch die Nordwand und biss den stehenden Leon. Im Original
+ist Birkin bis zur Freigabe EINGEFROREN — seine Wurzel ueberspringt bei gesetztem Bit 0x20 die
+ganze KI (STAGE5 @0x80116a88, STAGE3 @0x80116274), und beim Erscheinen laeuft sie genau einmal,
+damit er in seiner Ausgangspose steht (@0x8004256c-0x80042608). Das fehlte im Port. Betroffen
+waren 9 von 13 Birkin-Auftritten (ROOM3070, 3071, 3080, 5080, 5081, 50E0, 50F1 und die
+Endkampf-Raeume). Je Raum gemessen: vorher lief er in 299 von 300 Bildern vor der Freigabe,
+jetzt in 0; die Freigabe wird in allen neun Raeumen auf dem Weg eines Spielers erreicht, und
+danach kommt sein Auftritt (EMERGENCE) wieder, der vorher uebersprungen wurde. Der Endkampf in
+ROOM5090 ist byte-gleich zu vorher (13 Birkin-/G5-Sonden unveraendert).
+
+## Das Tor am Landeplatz (ROOM1170) - Tuersequenz nach RE2
+
+Das Gelaendertor am Hubschrauberlandeplatz (ROOM1170) oeffnet sich jetzt wie eine Tuer in
+Resident Evil 2: mit eigener Tuerszene, Bewegung und dem Ton des RE2-Gittertors. Grundlage
+ist das Tuermodell, das ich Ihnen aus Ihren drei Ausschnitten gebaut habe.
+
+### Was Sie merken
 
 **Das Tor hat eine Tuersequenz.** Gehen Sie am Landeplatz an das Tor und druecken Sie die
 Aktionstaste: das Bild dunkelt ab, das Tor erscheint vor Schwarz, oeffnet sich, die Kamera
@@ -21,7 +148,7 @@ jedem Tuerwechsel, aber das einzige Skript im Tuerarchiv ist "Ende" (`01 00` in 
 Die Sequenz war nie bespielt - ein unfertiges System, also gilt RE2. Die Einblendung des
 Raums nach der Tuer bleibt RE1.5: die ist fertig.
 
-## Wie es gebaut ist
+### Wie es gebaut ist
 
 - **Das Modell** kommt aus den Hintergrundbildern: jeder Texel ist ein Pixel aus Cut 12,
   die Masse aus den Raumkameras. Rohrrahmen mit runden Ecken, Warnschild, Laschen, Fuesse,
@@ -40,13 +167,48 @@ Raums nach der Tuer bleibt RE1.5: die ist fertig.
 - **Licht, Blende und Takt** sind die aus RE2 (feste Tuerbeleuchtung, subtraktive Blende,
   59,826 Bilder/s). Die Szene ist deshalb eher dunkel - wie die Tuerszenen in RE2.
 
-## Was bewusst offen blieb
+### Was bewusst offen blieb
 
 - **Nur dieses Tor** hat eine Sequenz. Die RE1.5-Raumdaten sagen fuer keine Tuer, welches
   Modell sie haette; jede weitere Tuer braucht ein eigenes Modell oder ein passendes
   RE2-Archiv und einen Eintrag in der Zuordnung.
 - **PSX-Stand:** die Szene laeuft auf PC, Steam Deck und Android; der PSX-Build geht ohne
   Sequenz durch das Tor wie bisher.
+
+## Wo ich mich korrigieren muss
+
+**1. Die Sicherung aus v0.8.15 war schlechter gebaut, als ich gemeldet hatte.** Viereck-
+Reihenfolge und Normalen waren falsch, der Sitz lag hinter der Kuppel, und am Lade-Weg fehlte
+sie ganz. Gemeldet hatte ich "Suite gruen" — geprueft hatte ich das Bild nicht.
+
+**2. Meine Vorgaben an die Ermittlung enthielten drei falsche Annahmen:** die Memory Card sei
+Item 0x20 (es ist 0x21), der Communication Room sei ROOM10D0 (es ist ROOM10F0), und das Blau
+der Karte komme aus den Palettenindizes 12/13/14 (widerlegt: 0 Texel in allen Raum-Rechtecken).
+Die Agenten haben alle drei an den Daten widerlegt.
+
+## Was bewusst offen blieb
+
+* ⛔ **ROOM3071 ist fuer Elza ein Softlock** — gefunden bei der Birkin-Messung, schon vor
+  dieser Runde vorhanden. Nach der Freigabe wartet das Skript auf zwei Flags (Ck(5,31) @0x0364D,
+  danach Ck(5,30)), die nur Birkins Sturmangriff setzt (@0x80119658 / @0x801197b4). Der Port
+  hat diesen Angriff ohne die Flag-Setzer gebaut; Leon bzw. Elza bleibt gesperrt. Leons
+  ROOM3070 ist nicht betroffen. Das ist der erste Punkt der naechsten Runde.
+* Birkins Griff haelt Sie zu lange fest: ohne Eingabe 142 Bilder, im Original 19 plus die
+  Clip-Phasen (Opfer-FSM @0x8011afd8). Schon vorher so, jetzt gemessen.
+* In ROOM3080 fehlt Birkins Szenenmodus (grid 4); die Folge endet trotzdem ueber die Tuer.
+* Das CHECK-Foto bleibt bei 18 weiteren Gegenstaenden leer, deren Bild im RE2-Format vorliegt
+  (u.a. alle Kraeuter-Mischungen 0x24-0x2E). Behoben ist es in dieser Runde nur fuer die
+  Sicherung.
+* Elzas Lobby-Szene: der Erzaehler tippt sich dort als Schreibmaschine auf, bei Leon steht er
+  als Volltext; die Zombies hinter dem Gitter wirken orange. Beides nicht belegt, nicht angefasst.
+* Die Bildwiederholung des Originals im Bild eines Kamerawechsels (@0x80021560) ist nicht
+  nachgebaut; es bleibt ein Bild Figurbewegung (Port-Wahl).
+* Die PSX-Plattform kennt die neuen Toene, das Diary und die Tisch-Gegenstaende nicht.
+
+## Woran ich als naechstes sitze
+
+**ROOM3071** (Elzas Birkin-Kampf) spielbar machen, dann Birkins Griff (Opfer-FSM) und danach
+Elzas Raumkette weiter nachfahren.
 
 # v0.8.15 - 2026-09-27
 
