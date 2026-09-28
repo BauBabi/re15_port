@@ -47,6 +47,7 @@
  * -> re15_audio_core_se(id). The tab-select FSM itself is SILENT (EXE-wide jal scan:
  * zero SE sites in 0x8004974c-0x80049a58 / FUN_80046540 — spec fact).
  */
+#include <stdio.h>
 #include <string.h>
 #include "re15_menu.h"
 #include "re15_inv_screen.h"    /* g_inv_screen — the original's 25xx screen registers */
@@ -1435,6 +1436,8 @@ static void map_mode(uint16_t pressed)
             if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000)) {
                 se4(5);
                 s_phase = 2;
+                fprintf(stderr, "[hint] F%u schliessen (%s)\n", (unsigned)g_engine.frame_count,
+                        (pressed & RE15_PAD_BIT_START) ? "START" : "Abbruch");
             }
             return;
         }

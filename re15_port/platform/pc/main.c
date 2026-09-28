@@ -4634,6 +4634,19 @@ re_title:;
              * VM / walker steps / esp fx below must NOT tick (the port's old "SCD keeps
              * running under the menu" model was the spec-flagged divergence). The menu FSM
              * itself ticks inside re15_game_step (re15_menu_fsm_tick). */
+            /* LETTERBOX-ZAEHLER AUCH UNTER DEM MENUE (Runde 30, Kartenhinweis, Risiko R4 des
+             * Dossiers karte-3010.md — GEMESSEN: ohne diese Zeile standen die Balken 24 px
+             * oben/unten ueber dem ganzen Hinweis-Schirm, Abzug lauf_a F1896/F1912). Im
+             * Original gehoert FUN_80021a0c NICHT zur Spiel-Task, sondern zum Bild-Abschluss
+             * FUN_80020bb0: `jal 0x80021a0c` @0x80020f34, direkt vor der Nachrichten-Kette
+             * @0x80020f3c und dem Blenden-Takt @0x80020f44 — einmal je Bild, auch wenn die
+             * Menue-Task die Spiel-Task angehalten hat (@0x800460bc haelt NUR Task 0 an). Der
+             * Zaehler laeuft also unter dem Statusschirm weiter aus (Anfrage-Bit 0x10
+             * @0x80021a10-24 ist nach dem Szenenende 0 -> -0x10 je Bild @0x80021a7c).
+             * Bestand: das START-Menue oeffnet nie bei laufendem Balken-Zaehler (in_cinematic
+             * in game_step_common.c), dort ist die Zeile wirkungslos; sie wirkt nur beim
+             * Hinweis, der direkt am Szenenende aufgeht. */
+            re15_letterbox_tick(re15_game_flag_get(1, 27));
         } else if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
             /* RE15_ITEM_MODAL_TEST: debug — force-start the item-get pickup MODAL once (frame 40) to
