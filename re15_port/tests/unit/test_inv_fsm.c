@@ -1007,20 +1007,39 @@ static void file_wave_tests(void)
           "(F6) SQUARE auf leerem Platz 3: kein Leser, kein Ton (RE2 @0x8006ce68-70)");
     fframe(RE15_PAD_BIT_UP); fframe(RE15_PAD_BIT_UP); fframe(RE15_PAD_BIT_UP);
     CHECK(g_inv_screen.file_row == 0, "(F6) zurueck auf Zeile 0");
+    /* ⛔ RUNDE 30 NACHBESSERUNG, mit Grund mitgezogen: zwischen Klick (SE 4,6) und Leser
+     * (SE 4,8) wartet RE2 in Zustand 11 (`sb v0,2(s2)` mit 11 @0x8006ce74-80): alter
+     * Zaehler 0..13 -> Tafeln (`sltiu v0,v0,0xe` @0x8006cf08), bei 14 Ladepruefung
+     * (jal 0x80032138 @0x8006cf14, im Port synchron fertig), dann im SELBEN Bild Satz 8
+     * (`lui a0,0x408` @0x8006cf58, jal @0x8006cf70), Zustand 16 und x = 312
+     * (@0x8006cf60-74). Zaehler beim Eintritt 0 (`sb zero,3(s2)` @0x8006cdd4/@0x8006d000).
+     * Vorher stand hier EIN Bild Abstand (Port-Wahl ohne Messung, Toene ueberlagert). */
     se0 = g_test_core_se_count;
     fframe(RE15_PAD_BIT_SQUARE);                 /* row 0 = Platz 0 = Irons Diary */
+    CHECK(g_inv_screen.item_state == 1 && g_inv_screen.file_sub == 1 &&
+          g_inv_screen.file_bild == 0 &&
+          g_test_core_se_last == 6 && g_test_core_se_count == se0 + 1,
+          "(F6) Klick: SE(4,6) sofort (@0x800c704c-54 / RE2 @0x8006ce9c), Leser noch zu "
+          "(RE2 Zustand 11)");
+    idle(7);
+    fframe(RE15_PAD_BIT_DOWN);                   /* Zustand 11 liest keine Taste */
+    idle(6);                                     /* = 14 Wartebilder */
+    CHECK(g_inv_screen.item_state == 1 && g_inv_screen.file_row == 0 &&
+          g_inv_screen.file_bild == 0 && g_test_core_se_count == se0 + 1,
+          "(F6) 14 Wartebilder (sltiu v0,v0,0xe @0x8006cf08): Liste steht, kein Ton, "
+          "UNTEN wirkungslos");
+    fframe(0);                                   /* 15. Bild nach dem Klick */
     CHECK(g_inv_screen.item_state == 7 && g_inv_screen.file_reader_page == 0 &&
           g_inv_screen.file_text_x == 0x140 && g_inv_screen.file_anim_phase == 0 &&
-          g_test_core_se_last == 6 && g_test_core_se_count == se0 + 1,
-          "(F6) reader open: 25c2=7, x=0x140, page 0 + SE(4,6) (@0x800c7868-70, "
-          "@0x800c704c-54)");
+          g_test_core_se_last == 8 && g_test_core_se_count == se0 + 2,
+          "(F6) 15. Bild: reader open 25c2=7, x=0x140, page 0 (@0x800c7868-70) + SE(4,8) "
+          "im selben Bild (RE2 @0x8006cf58-74)");
     CHECK(g_inv_screen.file_bild == 1 && g_inv_screen.file_bildsatz == 25 &&
           g_inv_screen.file_end == 18,
           "(F6) Bild-Dokument: Satz 25, Seitenzahl 18 = max_page 17 + 1 (RE2 @0x800727c8)");
     fframe(0);                                   /* erstes Fahrbild */
-    CHECK(g_test_core_se_last == 8 && g_test_core_se_count == se0 + 2 &&
-          g_inv_screen.file_text_x == 0x140 - 28,
-          "(F6) erstes Fahrbild: SE(4,8) (RE2 @0x8006cf58-70) + x -= 28 (@0x800c77fc)");
+    CHECK(g_test_core_se_count == se0 + 2 && g_inv_screen.file_text_x == 0x140 - 28,
+          "(F6) erstes Fahrbild: x -= 28 (@0x800c77fc), kein weiterer Ton");
     idle(9);
     CHECK(g_inv_screen.item_state == 7 && g_inv_screen.file_text_x == 40,
           "(F6) nach 10 Fahrbildern x = 40 = Ruhelage 0x28");
@@ -1179,7 +1198,7 @@ static void file_wave_tests(void)
           "(F10) SQUARE at END -> close + SE(4,6) (@0x800c715c-84; RE2 @0x8007297c-84)");
     /* SQUARE elsewhere is dead: reopen, SQUARE on page 0 -> still reading */
     fframe(RE15_PAD_BIT_SQUARE);                 /* reader opens (rows still active) */
-    idle(11);                                    /* 10 Fahrbilder + Rueckkehrbild */
+    idle(26);                /* 14 Wartebilder + Oeffnen + 10 Fahrbilder + Rueckkehrbild */
     CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_reader_page == 0,
           "(F10) reopened, reading page 0");
     se0 = g_test_core_se_count;
@@ -1191,7 +1210,7 @@ static void file_wave_tests(void)
           "(F10) CROSS while reading closes the reader + SE(4,5) (@0x800c7170-84; "
           "RE2 @0x80072854)");
     /* CROSS in der Ende-Stellung: Satz 6 (RE2 @0x80072954 -> @0x8007297c) */
-    fframe(RE15_PAD_BIT_SQUARE);  idle(11);      /* reopen, settle */
+    fframe(RE15_PAD_BIT_SQUARE);  idle(26);      /* reopen (14 + 1 + 10 + 1), settle */
     for (i = 0; i < 17; i++) {
         fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
     }

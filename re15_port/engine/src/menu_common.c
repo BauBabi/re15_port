@@ -109,6 +109,12 @@ static int     s_doc_prop   = -1;  /* Weltmodell obj_id (RE2 Byte +6 der Platzie
                                     * 255 = keines @0x80072b98-9c), < 0 = keines       */
 static uint8_t s_doc_open_se = 0;  /* 1 = Satz 8 steht noch aus (faellt ins erste Bild
                                     * des Hereinfahrens)                               */
+/* Oeffnen aus der FILE-Liste: RE2s Zustand 11 zwischen Satz 6 und Satz 8 (Beleg-Block
+ * bei file_open_wait_tick). s_file_open_wait = 1, solange der Leser noch nicht offen
+ * ist; s_file_open_ctr = RE2s Zaehler 3(s2) = 0x800d5bf3; Satz/Seiten gemerkt. */
+static uint8_t s_file_open_wait = 0;
+static uint8_t s_file_open_ctr  = 0;
+static int     s_file_open_satz = 0, s_file_open_max = 0;
 /* Schreibmaschine der Meldung "The <name> has been filed." (Zustand 8). */
 static uint8_t s_doc_msg     = 0;  /* 1 = Meldung steht (RE2 0x800e873c Bit 0x80)      */
 static int     s_doc_msg_reveal = 0, s_doc_msg_total = 0, s_doc_msg_timer = 0;
@@ -1390,6 +1396,7 @@ static void close_phase(void)
     s_box_target = 0;
     /* Runde 30: Aufnahme-Leser abbauen (≙ RE2 close 5c00:=0 wie bei der Box) */
     s_doc_target = 0; s_doc_msg = 0; s_doc_open_se = 0;
+    s_file_open_wait = 0; s_file_open_ctr = 0;
     g_inv_screen.file_bild = 0;
     re15_re2doc_select(-1);
     s_alive = 0;
@@ -1598,6 +1605,56 @@ static void file_reader_open(int bildsatz, int max_page)
     s_doc_open_se = 1;                          /* Satz 8 folgt mit dem Hereinfahren */
 }
 
+/* OEFFNEN AUS DER FILE-LISTE — RE2s Zustand 11 zwischen Klick (Satz 6) und Leser
+ * (Satz 8). Selbst disassembliert (info/re2leon/PSX.EXE, Schirm-Funktion mit der
+ * Sprungtabelle @0x8006c754, Zustand = 2(s2) = 0x800d5bf2, Zaehler = 3(s2) = 0x800d5bf3):
+ *   Zustand 10 (Zeilenwahl), belegter Platz, Bild N:
+ *     8006ce74  addiu v0,zero,11 / 8006ce80 sb v0,2(s2)   ; -> Zustand 11
+ *     8006ce7c  jal   0x80075fd0                          ; Leser-Sprites anlegen
+ *     8006ce90  jal   0x80031f6c (a0 = 2, a1 = 0x8006d444) ; Seitenlader als Task 2
+ *                                                         ; (Status 2 = laeuft @0x80031f88)
+ *     8006ce9c  lui   a0,0x406 / 8006cebc jal 0x8005ba28   ; Satz 6
+ *   Zustand 11 @0x8006cefc, je Bild:
+ *     8006cefc  lbu   v0,3(s2)
+ *     8006cf04  addiu v1,v0,1 / 8006cf10 sb v1,3(s2)       ; Zaehler++
+ *     8006cf08  sltiu v0,v0,0xe                           ; alter Wert < 14 ->
+ *     8006cf0c  bne   v0,zero,0x8006cf8c                  ;   Tafeln fahren aus
+ *     8006cf14  jal   0x80032138 (a0 = 2)                 ; Task-2-Status (lhu @0x80032144)
+ *     8006cf1c  beq   v0,zero,0x8006cf2c                  ; fertig -> weiter
+ *     8006cf28  sb    v0(=14),3(s2)                       ; laedt noch -> naechstes Bild
+ *     8006cf58  lui   a0,0x408                            ; Satz 8
+ *     8006cf60  addiu v0,zero,16 / 8006cf64 sb v0,2(s2)   ; -> Zustand 16 (Leser faehrt)
+ *     8006cf68  addiu v0,zero,312 / 8006cf74 sh v0,92(s2) ; Textseite x = 312
+ *     8006cf6c  sb    zero,3(s2)
+ *     8006cf70  jal   0x8005ba28                          ; Satz 8 im SELBEN Bild
+ *   Zustand 10 wird nur mit Zaehler 0 betreten (`sb zero,3(s2)` @0x8006cdd4 und
+ *   @0x8006d000, die beiden einzigen Schreiber von Zustand 10 @0x8006cdcc/@0x8006cff8),
+ *   und Zustand 10 selbst schreibt 3(s2) nicht.
+ * => Satz 8 faellt FRUEHESTENS 15 Bilder nach Satz 6 (Bilder N+1..N+14: alter Wert 0..13,
+ *    Bild N+15: alter Wert 14, Ladepruefung), mehr nur, solange die CD noch liest.
+ * Im Port laedt re15_re2doc_select synchron, die Ladepruefung faellt also sofort in den
+ * Fertig-Zweig: genau 15 Bilder. Die Tafel-Bewegung (@0x8006cf8c-cfc4) wird NICHT
+ * uebernommen - RE1.5s FILE-Schirm hat keine Tafeln, die ausfahren koennten; die Liste
+ * steht in diesen 14 Bildern still, Eingaben liest Zustand 11 keine.
+ * RE1.5 ist fuer diesen Abstand nicht massgeblich: es oeffnete seinen einen Blob ohne
+ * Satz 8 sofort in Zustand 3 (@0x800c704c-70); Satz 8 beim Oeffnen und das
+ * Hereinfahren sind RE2s (Nutzer-Auftrag: die Toene der Textdokumente aus RE2).
+ * Rueckgabe 1 = dieses Bild gehoert dem Warten/Oeffnen (keine Listen-Eingabe). */
+#define FILE_OPEN_WAIT_BILDER 14                /* sltiu v0,v0,0xe @0x8006cf08 */
+static int file_open_wait_tick(void)
+{
+    if (!s_file_open_wait) return 0;
+    int alt = s_file_open_ctr++;                /* lbu/addiu/sb 3(s2) @0x8006cefc-f10 */
+    if (alt < FILE_OPEN_WAIT_BILDER) return 1;  /* bne -> Tafeln @0x8006cf0c */
+    /* Ladepruefung jal 0x80032138(2) @0x8006cf14: Port synchron -> Fertig-Zweig */
+    s_file_open_wait = 0;
+    s_file_open_ctr  = 0;                       /* sb zero,3(s2) @0x8006cf6c */
+    file_reader_open(s_file_open_satz, s_file_open_max);
+    s_doc_open_se = 0;                          /* Satz 8 NICHT erst im Fahrbild: */
+    se4(8);                                     /* lui a0,0x408 @0x8006cf58, jal @0x8006cf70 */
+    return 1;
+}
+
 /* Die Meldung "The <name> has been filed." oeffnen (Zustand 8).
  * TEXT: RE1.5 fuehrt den Satz selbst — Prompt-Skript [5] @0x800c506f (DEBUG.BIN Datei
  *   0x0506f = `30 44 41 00 05 01 06 00 05 00 08 44 3d 4f 00 3e 41 41 4a 00 42 45 48 41
@@ -1776,6 +1833,9 @@ static void file_mode(uint16_t pressed, uint16_t held)
         return;
 
     case 1:
+        /* Runde 30: zwischen Klick und Leser wartet RE2 in Zustand 11 (s.
+         * file_open_wait_tick) - in diesen Bildern keine Listen-Eingabe. */
+        if (file_open_wait_tick()) return;
         /* list: rows/title/highlight drawn build-side (jals @0x800c6d70-8c); inner
          * dispatch @0x800c6d94-b8 on [0x800c6c94]. */
         if (g_inv_screen.file_sub == 0) {
@@ -1814,22 +1874,26 @@ static void file_mode(uint16_t pressed, uint16_t held)
                  *                                    ;         (jal 0x80075fd0 @0x8006ce7c)
                  *                                    ;         UND Ton (lui 0x406 @0x8006ce9c)
                  * Belegter Platz: Klick Satz 6 sofort (RE1.5 @0x800c704c-54, RE2
-                 * `lui a0,0x406` @0x8006ce9c), im Folgebild Satz 8 mit dem Hereinfahren
-                 * (RE2 `lui a0,0x408` @0x8006cf58 / `jal 0x8005ba28` @0x8006cf70).
-                 * ⛔ PORT-WAHL, keine Original-Adresse: der Abstand EIN Bild zwischen
-                 * Satz 6 und Satz 8. RE2 laesst dazwischen die Tafel-Ausfahrt
-                 * (`sltiu v0,v0,0xe` @0x8006cf08, 14 Bilder) und das Laden von der CD;
-                 * RE1.5s FILE-Schirm hat keine Tafeln, die ausfahren, und der Port
-                 * laedt nicht von CD. Gemessen ist der Abstand an keinem laufenden
-                 * RE2 (Dossier irons-diary-dokument.md Abschnitt 8 Punkt 7). */
+                 * `lui a0,0x406` @0x8006ce9c), dann RE2s Zustand 11 (`sb v0,2(s2)` mit
+                 * 11 @0x8006ce74-80): 14 Wartebilder (`sltiu v0,v0,0xe` @0x8006cf08),
+                 * im 15. Bild Satz 8 und der Leser (`lui a0,0x408` @0x8006cf58,
+                 * `jal 0x8005ba28` @0x8006cf70) - Herleitung bei file_open_wait_tick.
+                 * (Bis zur Nachbesserung stand hier EIN Bild Abstand als Port-Wahl ohne
+                 * Messung; Satz 6 und Satz 8 ueberlagerten sich hoerbar.) */
                 const re15_file_doc_t *d = re15_files_doc(
                     re15_files_get(g_inv_screen.file_page * 10 + g_inv_screen.file_row));
-                if (s_view_set >= 0) {                    /* Ansehhilfe RE15_DOC (Debug) */
-                    se4(6);
-                    file_reader_open(s_view_set, s_view_max);
-                } else if (d) {
+                if (s_view_set >= 0 || d) {
                     se4(6);                               /* @0x800c704c-54 / RE2 @0x8006ce9c */
-                    file_reader_open(d->bildsatz, d->max_page);
+                    if (s_view_set >= 0) {                /* Ansehhilfe RE15_DOC (Debug) */
+                        s_file_open_satz = s_view_set;
+                        s_file_open_max  = s_view_max;
+                    } else {
+                        s_file_open_satz = d->bildsatz;
+                        s_file_open_max  = d->max_page;
+                    }
+                    s_file_open_wait = 1;                 /* -> Zustand 11 @0x8006ce80 */
+                    s_file_open_ctr  = 0;                 /* 3(s2) = 0 beim Eintritt in
+                                                           * Zustand 10 @0x8006cdd4/d000 */
                 }
             } else if (pressed & RE15_PAD_BIT_DOWN) {     /* raw 0x4000 @0x800c7030-34 */
                 se4(4);                                   /* @0x800c7098-a0 */
@@ -1947,8 +2011,9 @@ static void file_mode(uint16_t pressed, uint16_t held)
         /* Runde 30: der Ton "Dokument oeffnet sich" faellt in das ERSTE Bild des
          * Hereinfahrens — Bank 4 / Satz 8. RE2 beim Aufheben: erst die Blende, dann
          * der Ton, dann faehrt die Seite (`beq v0,zero,0x80071dd4` @0x80071dec,
-         * `lui a0,0x408` @0x80071df0, `jal 0x8005ba28` @0x80071df4); aus der Liste
-         * @0x8006cf58-70. */
+         * `lui a0,0x408` @0x80071df0, `jal 0x8005ba28` @0x80071df4). Aus der Liste
+         * spielt file_open_wait_tick Satz 8 selbst (@0x8006cf58-70, im Bild des
+         * Oeffnens) und loescht s_doc_open_se. */
         if (s_doc_open_se) { s_doc_open_se = 0; se4(8); }
         /* @0x800c6fb0-c4: 25c2 := driver(25c2); the text is drawn at the driver's
          * s16 @0x800c78a6 (build-side, lh @0x800c6fc8-d0). */
@@ -2248,6 +2313,7 @@ void re15_menu_toggle(void)
         s_box_target = 0;
         g_inv_screen.box_mode = 0;
         s_doc_target = 0; s_doc_msg = 0; s_doc_open_se = 0;   /* Runde 30 */
+        s_file_open_wait = 0; s_file_open_ctr = 0;
         g_inv_screen.file_bild = 0;
         re15_re2doc_select(-1);
         s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
