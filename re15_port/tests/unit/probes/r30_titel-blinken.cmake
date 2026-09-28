@@ -7,3 +7,52 @@ add_executable(probe_r30_titel_blinken_puls "probe_r30_titel-blinken_puls.c")
 target_compile_definitions(probe_r30_titel_blinken_puls PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_R30_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
+
+# --- RIEGEL 1 (Bau Runde 30): die RECHENBAUSTEINE in engine/src/title_pulse.c.
+#     Teil A fuehrt FUN_801028ec aus den Bytes von BIN/TITLE.BIN aus und stellt jedem der
+#     180 Aufrufe re15_title_pulse_step() gegenueber (Soll 180 von 180 Wertepaaren gleich).
+#     Teil C: T_TICK = 2 VBlanks (DAT_800b5456 := 2 @0x8002130c-14, VSync @0x8002147c-80)
+#     bei 59,826 Hz (psx-spx, NTSC non-interlaced) -> 33431 us = 1 Durchgang,
+#     2005817 us = 60 Durchgaenge = eine Pulsperiode (0x3c @0x80102918).
+#     Teil D: dieselbe Laufzeit, abgetastet mit 20/30/60/144/1000 Hz, ergibt dieselbe
+#     Schrittzahl. Teil E: Titel-Einblende gegen die AUSGEFUEHRTEN Bytes — Titel-Init
+#     TITLE.BIN 0x80102054-7c (Schritt `ori a1,zero,0xfc00` @0x80102058) mit FUN_800217b0 /
+#     FUN_800216ec aus PSX.EXE (Pegel 0x7fff @0x80021710-20), dann je Durchgang FUN_80021880
+#     (Farbe = Pegel >> 7 @0x800218c8-d0 vor der Integration @0x80021928).
+#     ⛔ REICHWEITE: bindet nur re15_engine, NICHT platform/pc/main.c / render_pc.c. Nimmt man
+#     die Verdrahtung in main.c zurueck, bleibt dieser Riegel GRUEN — er beweist nicht, dass
+#     das Spiel richtig blinkt. (Eine fruehere Fassung behauptete in einem Teil F "der Riegel
+#     faellt am alten Stand"; Teil F zaehlte aber nur eine for-Schleife. Gestrichen.) ---
+add_executable(test_r30_titel_blinken test_r30_titel_blinken.c)
+target_link_libraries(test_r30_titel_blinken PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r30_titel_blinken PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r30_titel_blinken PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_R30_PSX_EXE="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
+add_test(NAME r30_titel_blinken COMMAND test_r30_titel_blinken)
+set_tests_properties(r30_titel_blinken PROPERTIES TIMEOUT 60)
+
+# --- RIEGEL 2 (Nachbesserung Runde 30, zweite Nachbesserung): die ECHTE re15_pc.exe
+#     (beschleunigter Renderer, RE15_WINDOW_SCALE=1). Die Messschiene RE15_TITLE_PULSE_LOG
+#     schreibt je Bild den Zustand der ENGINE (main.c / title_pulse.c) UND, aus dem ZEICHNER
+#     (render_pc.c re15_render_pc_title_row_probe), das Farbbyte der tatsaechlich gezeichneten
+#     Textur der aktiven Zeile sowie FNV-1a / Summe der ZURUECKGELESENEN Pixel dieser Zeile.
+#     Geprueft: (A) gezeichnet = Engine; (B) ein Zeilenbild je Pulswert; (C) 11 Pulswerte
+#     pixelgleich mit den Original-Bildpuffern aus sechs Savestates (Modulation 0x66808080
+#     @0x80102830-34, Pulswert als Farbbyte @0x80102848-58); (D) Pulsperiode aus den
+#     BEOBACHTETEN Bildabfaellen, Soll 60 x 2 VBlanks / 59,826 Hz = 2005817 us, Toleranz =
+#     gemessene Bilddauer, 60 Engine-Schritte aus Zaehleraenderungen; (E) im Bestaetigungs-Fade
+#     0 Aenderungen von Engine und Zeilenbild (FUN_80102a10 ruft FUN_801028ec nicht);
+#     (F) Titel-Einblende 32 Durchgaenge (0xfc00 @0x80102058).
+#     GEGENPROBEN (Dossier titel-blinken.md §10): render_pc.c auf d98e9639 (+ Ruecklese) ROT,
+#     eigener Pulsschritt im Zeichner ROT, alte Modulation in tmoji_strip ROT, main.c mit einem
+#     Pulsschritt je Bild ROT. Die Fassung vor dieser Nachbesserung schrieb nur den
+#     Engine-Zustand und blieb bei zurueckgesetztem render_pc.c GRUEN (Gegenpruefer M1). ---
+if(TARGET re15_pc)
+    add_test(NAME integration_r30_titel_puls
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r30_titel_puls_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r30_titel_puls.cmake)
+    set_tests_properties(integration_r30_titel_puls PROPERTIES TIMEOUT 240)
+endif()

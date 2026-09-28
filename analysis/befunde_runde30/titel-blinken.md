@@ -667,3 +667,628 @@ Für den Port v0.8.15 meldet es erwartungsgemäß ABWEICHUNG (`frame_check_port.
    Aufnahme lief mit ~83 Bildern/s gegen 144 Schritte/s; ob das Bild den Scheitel
    verfehlt hat oder SDLs 8-Bit-Modulation anders rundet, habe ich nicht getrennt.
    Für den Plan ohne Belang (Schritt 3 ersetzt die Modulation).
+
+---
+
+## 8. UMSETZUNG (Bau-Agent, 2026-09-28)
+
+Zweig `worktree-wf_287d588a-8ce-1`, Basis master 437905cb. Zwei Code-Commits:
+
+| Commit | Inhalt |
+|---|---|
+| `08467a56` | Schritt 1a/1b/1c + 2: Puls aus dem Zeichnen gelöst, Titel-Tick über die Zeit, Einblende auf demselben Tick, Puls ruht im Fade |
+| `815ff1ec` | Schritt 3: Helligkeit der aktiven Zeile = Original-Modulation |
+
+Bauverzeichnis `re15_port/build/` im Arbeitsbaum; Messausgaben (unversioniert)
+`build/r30_titel-blinken/bau/` im Arbeitsbaum.
+
+### 8.1 Vor dem ersten Edit selbst nachgeprüft
+
+Der Skeptiker-Lauf des Dossiers war ausgefallen. Selbst disassembliert
+(`analysis/befunde_runde30/r30_mips_dis.py`, jeweils das SPRUNGZIEL, nicht nur die
+Aufrufstelle):
+
+| Stelle | Befund |
+|---|---|
+| FUN_801028ec (0x801028ec-0x80102940) | wie §3.1, Wort für Wort |
+| Menü FUN_80102b00 | `jal 0x801028ec` @0x80102ba0 genau einmal, vor den Zeilen @0x80102bc0/dc/f8 |
+| Titel-Task 0x80101f7c | `jalr v0` @0x80101fb4, `jal 0x80029ac8` @0x80101fbc mit `ori a0,zero,1` @0x80101fc0 |
+| Boot-Task | `ori v0,zero,2` @0x8002130c, `sb v0,0x5456(at)` @0x80021314, `jal 0x80029a28` @0x80021318 |
+| Flip FUN_8002137c | `lbu a0,0(s0)` @0x8002147c, `jal 0x80061fc0` @0x80021480 |
+| VSync FUN_80061fc0 | Ziel = letzter − 1 + n @0x80062028-38, danach Vcount + 1 @0x8006206c-78 |
+| Zeichner FUN_801027a0 | Befehl 0x66808080 @0x80102830-34, Pulswert als R/G/B @0x80102848-58, Texpage 0x20 / 0x40 @0x80102824 / @0x8010281c |
+| Neuzeichner FUN_80102a10 | dreimal `jal 0x801027a0`, einmal `jal 0x80102948`, **kein** `jal 0x801028ec` |
+| Fade-Engine | FUN_800217b0 schreibt Schritt (`sh a1,2(s0)` @0x800217e4); FUN_800216ec stößt an (`slti v0,v0,1` @0x80021710, `andi v0,v0,0x7fff` @0x80021718, `sh` @0x80021720); FUN_80021880 Farbe = Pegel >> 7 vor der Integration (@0x800218c8-d0, @0x80021928), `jal 0x80021880` @0x80020f44 |
+
+Die Sonde `probe_r30_titel_blinken_puls` meldet im Arbeitsbaum 47 mal BELEGT, 0 Abweichungen.
+
+**Neu gegenüber dem Dossier — schließt §7 Punkt 3 (Neustart des Pulses beim Wiedereintritt):**
+FUN_80029a28 hat in PSX.EXE und allen `BIN/*.BIN` genau zwei Aufrufer, beide mit
+`addu a0,zero,zero` im Verzögerungsplatz: @0x80021318 (Boot-Task) und @0x8001d208 (Ende der
+Spiel-Task, nach der Spielschleife). FUN_80029a28 lädt die Datei **unbedingt**:
+
+```
+80029a5c  lw   a0,0(at)             ; Datei-Id aus Tabelle @0x80073bdc[n]   (n = 0 -> 6 = TITLE.BIN)
+80029a60  lw   a1,0(v0)             ; Ladeadresse
+80029a64  jal  0x80013b60           ; Datei lesen (FUN_80013b60: Tabelle @0x8006f43c, LBA + Größe)
+80029a7c  jal  0x80029ba4           ; Task ersetzen, Einsprung aus @0x80073be0[n]
+```
+
+Jeder Eintritt in den Titel bringt die Datenworte 0x2944 / 0x2946 also frisch von der CD:
+der Puls beginnt bei 0x80 / 0. Der Port ruft deshalb `re15_title_pulse_reset()` bei jedem
+Durchlauf von `re_title:`.
+
+### 8.2 Ausgangszustand nachgemessen (master 437905cb, instrumentierte Kopie)
+
+`r30_bau_instr_vorher.py` (wie `r30_build_instr.sh`, ohne feste Pfade), Lauf 16 s,
+beschleunigter Renderer, Anzeige 144 Hz:
+
+```
+Aufrufrate (Mittel)   : 144.10 Hz
+PULSPERIODE           : Median 416.6 ms   Mittel 416.4 ms   min 409.8   max 417.6   (n=31)
+Aufrufe je Periode    : [60]
+Titel-Einblende       : Bild 0 -> Bild 64 (erstes Bild mit B = 0): 457.0 ms
+```
+
+Deckt sich mit §2.1 (416,5 ms). Die Dauer der Einblende, im Dossier nur gerechnet (§4.4,
+§7 Punkt 2), ist damit gemessen: **457,0 ms** statt 1069,8 ms.
+Suite am Ausgangsstand: **360/360**, 159 s.
+
+### 8.3 Was gebaut ist
+
+| Datei | Änderung |
+|---|---|
+| `re15_port/include/re15_title_pulse.h`, `re15_port/engine/src/title_pulse.c` (neu) | `re15_title_pulse_reset/step/advance/value/counter`; `re15_title_tick_count(us)`; Uhr `re15_title_clock_start/poll`; `re15_title_fadein_level(tick)`. Kein SDL. |
+| `re15_port/platform/pc/src/render_pc.c` | der Zeichner liest den Pulswert nur noch (kein Schritt); Schritt 3: `tmoji_strip` rechnet das Farbbyte in die Textur ein, aktive Zeile je Pulswert eine eigene Textur |
+| `re15_port/platform/pc/main.c` | Titel-Schleife: Uhr je Bild abfragen, fällige Durchgänge ausführen; Einblende aus `tfade_tick`; `pc_now_us()`; Messschiene `RE15_TITLE_PULSE_LOG`; Kommentar „480i" berichtigt |
+| `re15_port/tests/unit/test_r30_titel_blinken.c` + `probes/r30_titel-blinken.cmake` | Riegel `r30_titel_blinken` |
+| `analysis/befunde_runde30/titel-blinken_tools/` | `r30_pulse_frame_stats.py`, `r30_port_capture_hwnd.py`, `r30_port_frames_check.py`, `r30_bau_run.py`, `r30_bau_instr_vorher.py`, `r30_bau_alt_fade_stats.py`, `r30_bau_wiedereintritt.py`, `r30_bau_ingame_cmp.py` |
+
+Ablauf in der Titel-Schleife:
+
+```
+Eintritt (re_title):        re15_title_pulse_reset()            ; Datei 0x2944 / 0x2946
+erstes Bild / Rückkehr:     Uhr := jetzt; 1 Pulsschritt          ; Durchgang 0
+jedes weitere Bild:         fällig = Uhr.poll(jetzt)             ; floor(us * 59826 / 2e9) - schon ausgeführt
+                            re15_title_pulse_advance(fällig)     ; je Durchgang 1 Schritt @0x80102ba0
+                            tfade_tick += fällig                 ; je Durchgang 1 Schritt @0x80020f44
+                            B = re15_title_fadein_level(tfade_tick)
+Bestätigen -> Fade/Unterbildschirm: Uhr wird nicht abgefragt, kein Pulsschritt
+Rückkehr:                   tfade_tick := 0 (wo bisher tblink := 0), Puls bleibt stehen wie er war
+```
+
+`tblink` ist unverändert der Zähler der Schleifendurchgänge.
+
+### 8.4 Abnahme — Soll / Ist
+
+Messschiene `RE15_TITLE_PULSE_LOG` der **unveränderten** `re15_pc.exe` (eine Zeile je
+Bild, Zeitstempel aus `SDL_GetPerformanceCounter`), Auswertung `r30_pulse_frame_stats.py`.
+Soll: 60 Schritte = 2 · 60 / 59,826 s = **2005,8 ms ± 1 Bild**. „1 Bild" ist je Periode die
+Dauer des längeren der beiden Bilder, in denen die begrenzenden Rücksetzungen ausgeführt
+wurden (der Schritt wird am Bildanfang ausgeführt, fällig war er irgendwann im Bild davor).
+
+**(a) Periode, mit und ohne VSync** (Stand `815ff1ec`, je 22 s, n = 9 Perioden):
+
+| Lauf | Bilder/s | Periode Median | min … max | Bilddauer an den Grenzen | Schritte je Periode | mittlere Periode aus der Schrittrate |
+|---|---|---|---|---|---|---|
+| vorher, VSync | 144,10 | **416,6 ms** | 409,8 … 417,6 | 6,94 | 60 | — |
+| nachher, VSync (beschleunigt) | 143,94 | **2006,1 ms** | 2002,0 … 2008,2 | 6,86 … 8,82 | 60 | 2006,07 ms (626 Schritte) |
+| nachher, ohne VSync, Maßstab 1 | 979,71 | **2005,6 ms** | 2005,3 … 2006,6 | 0,85 … 2,55 | 60 | 2005,88 ms (637 Schritte) |
+| nachher, ohne VSync, Maßstab 4 | 132,38 | **2006,3 ms** | 2002,7 … 2009,0 | 6,64 … 8,78 | 60 | 2005,90 ms (637 Schritte) |
+| nachher, ohne VSync, Maßstab 6 | 40,52 | **2008,6 ms** | 1991,9 … 2019,4 | 22,90 … 34,75 | 60 | 2007,15 ms (633 Schritte) |
+
+In allen Läufen 0 Perioden außerhalb der Toleranz, Pulswerte 0x80 … 0xBE (32 verschiedene),
+höchstens 1 Schritt je Bild (bei 40 Bildern/s: höchstens 2). „Ohne VSync" ist
+`RE15_SOFTWARE_RENDER=1` — **nur** für die Zeitmessung benutzt, nie für ein Bild. (Der Lauf
+bei Maßstab 4 stammt vom Stand `08467a56`; Schritt 3 ändert an der Taktung nichts.)
+
+**(b) Periode am echten Fenster** (gdigrab über das Fenster-Handle der eigenen PID,
+beschleunigter Renderer, Maßstab 2, 21 s, 1730 Bilder, Bildabstand der Aufnahme 12,1 ms;
+Pulswert je Bild aus der pixelgenauen Deckung mit dem Modell):
+
+```
+PULSPERIODE (Fenster)  : Median 2004.0 ms   Mittel 2004.3 ms   min 1996.0   max 2014.0   (n=10)
+PERIODE aus Helligkeit : Median 2003.0 ms   Mittel 2005.8 ms   min 1997.0   max 2018.0   (n=9)
+inaktive Zeile         : Spanne 0.000
+```
+
+Die Aufnahme hat mit 12,1 ms eine gröbere Zeitauflösung als die Anzeige; die ±1-Bild-Aussage
+trägt deshalb die Zeitstempel-Messung (a), die Fenster-Messung bestätigt sie unabhängig.
+
+**(c) Puls im Bestätigungs-Fade** (`RE15_INPUT_SCRIPT`, OPTION bestätigen, im
+Unterbildschirm EXIT):
+
+```
+Fade 0                 : 326 Bilder, Dauer 5.40 s, Bildabstand Median 16.60 ms
+Pulswert im Fade       : 0 Aenderungen (Original: 0)   Werte ['0xb6']
+Stand beim Bestaetigen : Titel (35, 0xb6) -> Fade (35, 0xb6)  gleich
+Rueckkehr Abschnitt 1  : vorher (35, 0xb6), danach (36, 0xb4), faellig 1, Pause 4.74 s   -> Puls setzt fort
+```
+
+Derselbe Weg über LOAD GAME, im Speicherkarten-Bildschirm abgebrochen
+(`RE15_INPUT_SCRIPT="W2,D0.04,W0.2,A0.04,W14,X0.04,W60"`):
+
+```
+Fade 0                 : 326 Bilder, Dauer 5.36 s, Bildabstand Median 16.56 ms
+Pulswert im Fade       : 0 Aenderungen (Original: 0)   Werte ['0xba']
+Rueckkehr Abschnitt 1  : vorher (33, 0xba), danach (34, 0xb8), faellig 1, Pause 0.67 s   -> Puls setzt fort
+EINBLENDE Abschnitt 1  : 1075.9 ms bis B = 0 (Soll 32 Durchgaenge = 1069.8 ms +/- 1 Bild 6.97 ms)   -> IM SOLL
+PULSPERIODE            : Median 2006.5 ms   Mittel 2005.7 ms   min 1999.9   max 2006.8   (n=8)
+```
+
+Vorher, selbst nachgemessen (instrumentierte Kopie des Ausgangsstands,
+`RE15_INPUT_SCRIPT="W20,A1,W60"`, `r30_bau_alt_fade_stats.py`):
+
+```
+Titel-Schleife : 692 Aufrufe, Abstand Median 6.95 ms
+Fade-Schleife  : 325 Aufrufe, Abstand Median 16.65 ms, Dauer 5.39 s
+Pulswert aendert sich WAEHREND des Fades: 325 mal (Original: 0)
+Pulsperiode waehrend des Fades: Median 998.8 ms (n=4)
+```
+
+(Das Dossier nennt in §2.4 für denselben Lauf 330 Aufrufe / 330 Änderungen; die
+Commit-Message von `08467a56` zitiert diese Zahl.)
+
+**(d) Titel-Einblende** (Soll 32 Durchgänge = 1069,8 ms ± 1 Bild):
+
+| Lauf | Dauer bis B = 0 | Stufen |
+|---|---|---|
+| vorher, VSync 144 Hz | **457,0 ms** | — |
+| nachher, VSync | **1074,4 ms** (Bild 6,78 ms) | 32 Stufen 255 … 7, Schritt 8 |
+| nachher, ohne VSync 980 Bilder/s | **1072,1 ms** (Bild 2,40 ms) | 32, Schritt 8 |
+| nachher, ohne VSync 40 Bilder/s | **1082,7 ms** (Bild 35,19 ms) | 29 Stufen, 3 übersprungen (2 Durchgänge in einem Bild) |
+| nachher, zweite Einblende nach Rückkehr aus OPTION | **1075,9 ms** (Bild 6,72 ms) | 32, Schritt 8 |
+
+**(e) Helligkeit (Schritt 3)** — `r30_port_capture_hwnd.py` + `r30_port_frames_check.py`
+(Modell unverändert aus `r30_port_frame_check.py`), **jedes** aufgenommene Bild geprüft:
+
+| Lauf | Bilder deckungsgleich in allen vier Regionen | aktive Zeile, größte Abweichung | Helligkeit aktive Zeile |
+|---|---|---|---|
+| vorher (Stand `08467a56`), Cursor NEW GAME | 9 von 724 | 472 von 4352 Pixeln | 37,554 … 39,856 |
+| nachher, Cursor NEW GAME, Maßstab 1 | **724 von 724** | 0 | 39,856 … 43,737 |
+| nachher, Cursor LOAD GAME, Maßstab 1 | **723 von 723** | 0 | 30,555 … 35,035 |
+| nachher, Cursor OPTION, Maßstab 1 | **727 von 727** | 0 | 19,481 … 22,467 |
+| nachher, Cursor NEW GAME, Maßstab 2 | **1730 von 1730** | 0 | 39,856 … 43,737 |
+
+Inaktive Zeilen und Copyright: in allen Läufen, vorher wie nachher, 0 abweichende Pixel.
+Original (§2.3): 39,86 … 43,74. Am Bild unterscheidbar sind 30 Stufen — 0x80, 0x82 und 0x84
+ergeben dasselbe Bild, weil `(texel5 · wert) >> 7` sich für Texel ≤ 31 erst ab 0x86 ändert;
+alle 30 wurden gesehen.
+
+Das klärt §7 Punkt 7: im alten Stand deckten sich genau die Bilder am Scheitel (Faktor 1,0)
+mit dem Original-Modell bei 0x80 — 9 von 724. Die Aufnahme des Ermittlers hatte den Scheitel
+verfehlt; SDLs Modulation rundet dort nicht anders.
+
+**(f) Riegel** `r30_titel_blinken` (`tests/unit/test_r30_titel_blinken.c`):
+
+```
+[A] Wertepaare gleich: 180 von 180   Periode 60 Aufrufe   Pulswert 0x80 ... 0xbe
+[B] 117 Faelle gleich                                   (advance(n) gegen n Einzelschritte)
+[C] 33430 us -> 0   33431 us -> 1   2005816 us -> 59   2005817 us -> 60   1000 s -> 29913
+[D] 20 / 30 / 60 / 144 / 1000 Hz Abtastung: je 299 Pulsschritte in 10 s, Zustand (59, 0x86)
+[E] 40 von 40 Durchgaengen gleich; Einblende fertig ab Durchgang 32 = 1069.8 ms
+```
+
+> ⚠ **Berichtigt (Nachbesserung, §9):** Hier stand eine Zeile
+> „[F] alt bei 144 Hz: 1441 Schritte in 10 s, Soll 299 → der Riegel FAELLT am alten Stand".
+> Das war **falsch**. Teil F zählte nur eine for-Schleife (`for (t = 0; t <= 10 s; t += 6944 µs)`)
+> und berührte weder den alten noch den neuen Code. Der Riegel bindet nur `re15_engine`, nicht
+> `main.c` / `render_pc.c` — am alten Stand, und bei zurückgenommener Verdrahtung im neuen Stand,
+> bleibt er **grün** (gemessen, §9.3). Teil F ist gestrichen; Teil E fährt jetzt die
+> Original-Bytes (§9.2); das Symptom sichert der Integrationstest `integration_r30_titel_puls`.
+
+**(g) Wiedereintritt in den Titel nach dem Tod** (`goto re_title`; Lauf wie
+`integration_relatch_pin`: `RE15_TITLE_SHOT`, `RE15_TITLE_SHOT_AF=100`, `RE15_KILL_AT=60`,
+`RE15_BOOT_EXIT_AT=3`; Auswertung `r30_bau_wiedereintritt.py`):
+
+```
+Titel-Eintritte: 3
+  Eintritt 0:  101 Bilder, 0.69 s; erstes Bild (Zaehler 1, Wert 0x82, Tick 0, B 255), letztes Bild (Zaehler 21, Wert 0xaa)   beginnt neu
+  Eintritt 1:  101 Bilder, 0.68 s; erstes Bild (Zaehler 1, Wert 0x82, Tick 0, B 255), letztes Bild (Zaehler 21, Wert 0xaa)   beginnt neu
+  Eintritt 2:  101 Bilder, 0.68 s; erstes Bild (Zaehler 1, Wert 0x82, Tick 0, B 255), letztes Bild (Zaehler 21, Wert 0xaa)   beginnt neu
+```
+
+(0,68 s = 20 Durchgänge + Durchgang 0 → Zähler 21.) Vor dem Umbau waren die beiden Werte
+prozesslange `static` in render_pc.c ohne Rücksetzung — das ist gelesen, nicht gemessen.
+
+**(h) Bestand außerhalb des Titels** — gemessen, nicht behauptet:
+
+- Suite vorher 360/360, nachher **361/361** (+1 = der neue Riegel), nach Schritt 1/2 und
+  erneut nach Schritt 3 gefahren (155 s / 145 s). Kein GUI-Haken fiel.
+- 15 komponierte Spielbilder (`RE15_FRAMEDUMP`, Spiel-Bild 30 … 450 in 30er-Schritten,
+  Start über `RE15_TITLE_SHOT` / `RE15_TITLE_SHOT_AF=4`), Ausgangs-exe gegen neue exe:
+  **15 von 15 byte-gleich** (SHA-256), darunter 8 verschiedene Bilder
+  (`r30_bau_ingame_cmp.py`).
+
+### 8.5 Abweichungen vom Plan — und warum
+
+1. **Probe „2 005 800 µs → 60 Ticks" (§5 Riegel 3) gilt nicht.** Sie setzt eine auf 33 430 µs
+   gerundete Tickdauer voraus. Gerechnet wird ungerundet: floor(µs · 59826 / 2·10⁹),
+   T_TICK = 33 430,28 µs. 2 005 800 µs sind 59 Durchgänge, der 60. ist nach 2 005 817 µs
+   erreicht. Die beiden anderen Proben (33 429 → 0, 33 431 → 1) gelten unverändert.
+2. **Keine Aufhol-Grenze nach einem Stillstand.** Der Plan nennt sie selbst
+   „Port-Infrastruktur ohne Original-Gegenstück" — also eine Zahl ohne Beleg. Stattdessen
+   faltet `re15_title_pulse_advance(n)` über die Periode (n mod 0x3c, @0x80102918): der
+   Zustand nach n Schritten ist derselbe wie nach n mod 60, die Arbeit je Bild bleibt unter
+   60 Schritten, und der Puls bleibt eine reine Funktion der Zeit. Riegel Teil D: 100 s
+   Stillstand → 2991 fällige Durchgänge, Zustand gleich dem aus 2991 Einzelschritten.
+3. **Durchgang 0.** Der Plan rechnet `tick_soll = Zeit / T_TICK` ab null. Im Original ruft der
+   Menü-Handler den Puls aber **vor** dem Zeichnen (@0x80102ba0 vor @0x80102bc0) — das erste
+   gezeigte Bild trägt 0x82, nie 0x80. Der Port führt deshalb mit dem ersten Bild (und mit
+   dem ersten Bild nach der Rückkehr aus einem Unterbildschirm) einen Schritt sofort aus;
+   alle weiteren kommen aus der Uhr. Das war auch der Stand vor dem Umbau.
+4. **Die Uhr setzt bei der Rückkehr neu auf statt weiterzulaufen.** Erste Fassung: Uhr im Fade
+   anhalten und danach fortsetzen. Gemessen: die zweite Einblende dauerte dann 1055,6 ms statt
+   1069,8 ms (außerhalb ±1 Bild), weil der Bruchteil des angebrochenen Durchgangs mitlief und
+   der erste Durchgang nach der Rückkehr zu früh fällig wurde. Mit dem Neuaufsetzen: 1075,9 ms.
+   Der Pulszustand bleibt dabei erhalten.
+5. **Die Uhr startet im ersten Schleifendurchlauf**, nicht vor der Schleife: die Einrichtung
+   des ersten Bildes (Textur-Aufbau) kostete gemessen rund 5 ms, die sonst als Laufzeit
+   gezählt hätten (Einblende ohne VSync 1064,5 ms statt 1069,8 ± 2,0).
+6. **Messweg.** Statt der instrumentierten Kopie misst die ausgelieferte exe selbst
+   (`RE15_TITLE_PULSE_LOG`, nur Protokoll). Die instrumentierte Kopie wurde nur für den
+   Ausgangszustand gebraucht.
+
+### 8.6 Nicht gemessen
+
+- **Eine Anzeige mit 60, 90 oder 120 Hz.** Verfügbar war nur 144 Hz. Die Unabhängigkeit von
+  der Bildrate ist über Läufe ohne VSync bei 40 / 132 / 980 Bildern/s gemessen und im Riegel
+  für 20 … 1000 Hz gerechnet — nicht an einer zweiten Anzeige.
+- **Android, Linux/Deck, PSX-Ziel.** Nicht gebaut, nicht gefahren. `title_pulse.c` ist eine
+  neue Datei unter `engine/src/`: der Android-Bau friert die GLOB-Liste in `app/.cxx` ein
+  (Memory `reai-v2-android-glob-cache`) — ohne Neukonfiguration fehlt die Datei; das fiele
+  hier laut auf (main.c verweist auf `re15_title_pulse_*`, der Linker bricht ab).
+- **Bildrate echter Hardware** (59,826 gegen 59,8173 Hz, §7 Punkt 5) bleibt offen.
+
+### 8.7 Beim Bauen gesehen, nicht angefasst
+
+1. **Der Cursor des Titelmenüs läuft im Port um, im Original nicht.** Original:
+   abwärts nur solange Cursor < 2 (`andi v0,v0,0x4000` @0x80102b10, `sltiu v0,v0,2`
+   @0x80102b38, `addiu v0,v0,1` @0x80102b4c), aufwärts nur solange Cursor ≠ 0
+   (`andi v0,v0,0x1000` @0x80102b60, `beq v0,zero` @0x80102b88, `addiu v0,v0,-1`
+   @0x80102b98). Port: `(cursor + 1) % 3` / `(cursor + 2) % 3` (main.c). Nicht Teil des
+   Auftrags; nicht gemessen, nur gelesen.
+2. **Die Schleife des Bestätigungs-Fades zählt weiter Bilder** (2 je Durchgang, Untergrenze
+   16 ms), nicht den Titel-Tick. Gemessen 5,40 s für 163 Durchgänge (16 + 147); 163 × 33,43 ms
+   wären 5,449 s. An einer Anzeige unter 60 Hz würde der Fade entsprechend länger. Der Plan
+   verlangt hier nur, dass der Puls ruht.
+
+
+---
+
+## 9. UMSETZUNG — Nachbesserung (Bau-Agent, 2026-09-28)
+
+Zweig `worktree-wf_287d588a-8ce-1`, master d98e9639 hineingemischt (`de94703b`).
+
+Anlass (Gegenprüfer): der Code ist symptombehebend bestätigt (am echten Fenster 2006 ms statt
+423 ms, Bild pixelgleich mit dem Original-Bildpuffer, Suite 361/361). Mangel **[erheblich]**:
+der Riegel `r30_titel_blinken` sichert das Symptom NICHT — er bindet nur `re15_engine`, nicht
+`main.c` / `render_pc.c`, und bleibt bei zurückgenommener Verdrahtung grün; Teil F war eine
+Tautologie; §8.4 (f) behauptete das Gegenteil.
+
+| Commit | Inhalt |
+|---|---|
+| `1848206a` | Teil F gestrichen; Teil E fährt die Original-Bytes der Fade-Engine; Kommentare berichtigt |
+| `9003aec5` | Integrationstest `integration_r30_titel_puls` (echte exe) + Zeit-Testhaken `RE15_TITLE_CONFIRM_MS` |
+| `4b13074f` | Gegenprobe-Werkzeuge `r30_nb_alt_schiene.py`, `r30_nb_mut_verdrahtung.py` |
+
+### 9.1 Ausgangszustand (dieser Zweig vor der Nachbesserung) nachgemessen
+
+Messschiene `RE15_TITLE_PULSE_LOG` der exe des Zweigs, `RE15_SOFTWARE_RENDER=1`, 20 s,
+`r30_pulse_frame_stats.py`: 94,71 Bilder/s (Bilddauer 6,2 … 44,7 ms), Pulsperiode Median
+2005,6 ms (2000,7 … 2012,4, n = 8), 60 Schritte je Periode, Einblende 1073,7 ms,
+„IM SOLL". Mit Bestätigen: Fade 326 Bilder, 0 Pulsänderungen. Sonde
+`probe_r30_titel_blinken_puls`: „alle zitierten Stellen BELEGT". Riegel: grün.
+
+Selbst nachdisassembliert (`r30_mips_dis.py`, jeweils das Sprungziel, richtige Datei):
+FUN_800216ec (PSX.EXE 0x800216ec-0x80021760), FUN_800217b0 (0x800217b0-0x8002187c),
+FUN_80021880 (0x80021880-0x80021a08), AddPrim FUN_8006b538, SetDrawMode FUN_80069858,
+Aufrufstelle `jal 0x80021880` @0x80020f44, TITLE.BIN 0x80102040-0x801020fc. Kanal-Tabelle
+@0x800b5458, 0x44 Byte je Kanal, vier Kanäle (`ori s3,zero,4` @0x80021894,
+`addiu s0,s0,68` @0x800219e0); Doppelpuffer-Index DAT_800aca34.
+
+### 9.2 Riegel 1 `r30_titel_blinken` (Unit, bindet nur re15_engine)
+
+- **Teil F gestrichen.** Er zählte eine for-Schleife.
+- **Teil E gegen die AUSGEFÜHRTEN Bytes**, wie Teil A: der Mini-R3000 hat jetzt einen
+  Speicher aus TITLE.BIN @0x80100000, dem PSX.EXE-Abbild @0x80010000 (Datei ab 0x800,
+  `t_addr` geprüft) und einem Stapel. Ausgeführt werden die Titel-Init-Befehle
+  0x80102054-0x8010207c aus TITLE.BIN — darin `ori a1,zero,0xfc00` @0x80102058 und die Aufrufe
+  `jal 0x800217b0` @0x80102060 / `jal 0x800216ec` @0x80102078, die in PSX.EXE weiterlaufen —,
+  danach je Durchgang FUN_80021880. AddPrim FUN_8006b538 wird mit ausgeführt und
+  mitgeschrieben (daran erkennt der Test „Kanal 0 gezeichnet"); SetDrawMode FUN_80069858 wird
+  NICHT ausgeführt — es schreibt nur das DR_MODE-Primitiv bei Kanal+44 / +56, das FUN_80021880
+  nicht liest.
+  Verglichen: die Farbe, die das Original in das Rechteck von Kanal 0 schreibt
+  (Kanal+12+puf·16, R/G/B bei +4/+5/+6), gegen `re15_title_fadein_level(Durchgang)`.
+
+```
+[E] 16 von 16 zitierten Befehlsworten stehen so in TITLE.BIN / PSX.EXE
+    (@0x80102054/58/5c/60/64/78, @0x800217e4, @0x80021710/14/18/20, @0x800218c8/cc/d0,
+     @0x80021928, @0x80020f44)
+    nach der Titel-Init: Kanal 0 Pegel 0x7fff, Schritt -1024, Art 2, Masken ff/ff/ff
+    40 von 40 Durchgaengen gleich (Original ausgefuehrt); Einblende fertig ab Durchgang 32 = 1069.8 ms
+```
+
+  Mutationsprobe (nicht committet): `title_pulse.c` mit `tick >= 31` statt `tick > 31` →
+  Teil E **ROT** („Durchgang 31: Original 7 (gezeichnet), Port 0").
+- Reichweite ausdrücklich im Testkopf und in `probes/r30_titel-blinken.cmake`: der Riegel
+  beweist nicht, dass das Spiel richtig blinkt.
+
+### 9.3 Riegel 2 `integration_r30_titel_puls` (echte re15_pc.exe)
+
+> ⚠ **Berichtigt (zweite Nachbesserung, §10):** Die hier beschriebene Fassung las nur den
+> Zustand der ENGINE (`re15_title_pulse_value()`), nicht den Wert, mit dem `render_pc.c`
+> zeichnet. Der Gegenprüfer setzte render_pc.c auf d98e9639 zurück (eigener Pulsschritt je
+> Zeichenaufruf, am Bildschirm 419 ms) — der Test blieb **grün**. Die Aussage „misst, was das
+> Spiel TUT“ galt also nur für main.c. Seit §10 liest die Messschiene das gezeichnete
+> Farbbyte und die Pixel der Zeile zurück; die Gegenproben in §10.4 sind ROT.
+
+Datei `re15_port/tests/integration/test_r30_titel_puls.cmake`, angemeldet in
+`probes/r30_titel-blinken.cmake` (unter `if(TARGET re15_pc)`, TIMEOUT 240).
+
+Ablauf: `RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_TITLE_PULSE_LOG=puls.txt
+RE15_TITLE_CONFIRM_MS=8500 RE15_PSELECT_AUTO=1 RE15_BOOT_EXIT_AT=1`. `RE15_SOFTWARE_RENDER`
+(kein VSync) nur für diese ZEITmessung. Neuer Testhaken `RE15_TITLE_CONFIRM_MS` in `main.c`:
+bestätigt einmal je Prozess nach der angegebenen ZEIT seit dem ersten Titelbild —
+`RE15_INPUT_SCRIPT` zählt Bilder, und ohne VSync lief die Schleife hier mit 85 … 980 Bildern/s.
+Die 8500 ms sind Testparameter (drei volle Perioden), keine Original-Konstante; ohne die
+Variable ist der Haken aus.
+
+Geprüft aus dem Protokoll:
+
+| Teil | Soll | Beleg |
+|---|---|---|
+| (1) Periode | \|P − 2 005 817 µs\| ≤ max(Bilddauer an beiden Grenzen) + 1 µs, 60 Schritte, ≥ 2 Perioden | 0x3c @0x80102918; 2 VBlanks @0x8002130c-14 / @0x8002147c-80; 59,826 Hz psx-spx |
+| (2) Fade | 0 Änderungen von (Zähler, Pulswert) ab dem Bestätigen | FUN_80102a10 (jal @0x80102d10 / @0x80102d60) ruft FUN_801028ec nicht |
+| (3) Einblende | 1 069 769 µs ≤ Dauer bis B = 0 ≤ 1 069 769 µs + Bilddauer | 0xfc00 @0x80102058, 0x7fff @0x80021718, >> 7 @0x800218d0 |
+
+Die Toleranz ist die gemessene Bilddauer, keine feste Zahl: der fällige Schritt wird am
+Anfang des nächsten Bildes ausgeführt, also 0 … 1 Bild später; die Zeitstempel der Schiene
+sind genau die Zeiten, mit denen die Uhr abgefragt wurde.
+
+**Soll / Ist:**
+
+| Lauf | (1) Perioden [µs] (Toleranz) | (2) Fade-Änderungen | (3) Einblende [µs] | Urteil |
+|---|---|---|---|---|
+| **dieser Stand** (990 Titelbilder, Bilddauer 5 787 … 18 507 µs) | 2 004 852 (9 443), 2 003 794 (9 443), 2 007 243 (13 937); je 60 Schritte | **0** (326 Fade-Bilder) | **1 077 920** (Soll 1 069 769 … 1 079 354) | **GRÜN**, exit 0, 23,5 s |
+| master d98e9639 **rein** | — | — | — | **ROT**: kein Pulsprotokoll (die Schiene gibt es dort nicht); Prozess lief in die Zeitgrenze 180 s |
+| master d98e9639 **+ Schiene** (`r30_nb_alt_schiene.py`, ~85 Bilder/s) | 11 von 11 außerhalb: 441 379 … 831 668 (Toleranz 10 174 … 12 940); je 60 Schritte | **326** | **869 790** | **ROT** in allen drei Teilen, exit 0 |
+| dieser Stand, **nur Verdrahtung in main.c zurückgenommen** (`r30_nb_mut_verdrahtung.py`) | 10 von 10 außerhalb: 664 014 … 711 506 | **326** | **1 110 234** | **ROT**; `r30_titel_blinken` im selben Bau **GRÜN** (der Mangel) |
+
+Referenz ohne Test: dieselbe Gegenproben-exe mit VSync (Anzeige 144 Hz), 22 s,
+`r30_pulse_frame_stats.py`: Periode Median **416,6 ms** (416,3 … 416,8, n = 31) — deckt sich
+mit den 416 … 423 ms des Gegenprüfers.
+
+`r30_nb_alt_schiene.py` rüstet NUR die Messschiene (gleiches Zeilenformat, am alten
+Pulszustand) und denselben Zeit-Haken nach; das alte Verhalten bleibt unberührt. Der
+Gegenproben-Baum `.claude/worktrees/r30_titel_alt` wurde danach wieder entfernt.
+
+### 9.4 64-Bit-Division in `title_pulse.c`
+
+`re15_title_tick_count` teilt `uint64_t` (`elapsed_us * 59826 / 2·10⁹`), `re15_title_pulse_advance`
+rechnet `n % 60` auf `uint64_t`. Übersetzt mit NDK 27.2 clang (`-O2 -c`), undefinierte Symbole
+(`llvm-nm -u`):
+
+| Ziel | undefinierte Symbole | Folge |
+|---|---|---|
+| aarch64-linux-android21 (Android arm64-v8a) | keine | Division nativ |
+| x86_64-linux-android21 (Android x86_64, Emulator) | keine | nativ |
+| x86_64-unknown-linux-gnu (Linux / Steam Deck) | keine | nativ |
+| aarch64-unknown-linux-gnu | keine | nativ |
+| armv7a-linux-androideabi21 (nicht in `abiFilters`) | `__aeabi_uldivmod` | käme aus der Laufzeitbibliothek des NDK |
+| i686-unknown-linux-gnu (nicht gebaut) | `__udivdi3` | käme aus libgcc |
+
+Die ausgelieferten Ziele (Android `abiFilters "arm64-v8a", "x86_64"`, build.gradle:158;
+Linux x86_64; Windows x86_64) brauchen keine Hilfsroutine. **PSX (mipsel, 32 Bit): OFFEN** —
+kein MIPS-Ziel in diesem clang, PSn00bSDK nicht installiert. Nach dem i686-Befund bräuchte ein
+32-Bit-Ziel `__udivdi3` / `__umoddi3`; ob die PSX-Verknüpfung libgcc zieht, ist nicht geprüft.
+
+### 9.5 Bewusst NICHT gebaut — offen
+
+1. **Phasenversatz Einblende / Puls (2 Durchgänge).** Vom Gegenprüfer gemeldet, von mir am Code
+   gelesen, **nicht gemessen**: nach dem Anstoß der Einblende (`jal 0x800216ec` @0x80102078)
+   gibt die Titel-Init einmal ab (`jal 0x80029ac8`, `ori a0,zero,1` @0x80102080-84), setzt dann
+   Sub-State 1 (@0x801020c4-cc) und State 2 (@0x801020e8-ec) und kehrt zurück; die Task-Schleife
+   gibt noch einmal ab (@0x80101fbc). FUN_80021880 läuft in jedem dieser Durchgänge
+   (@0x80020f44). Der erste Pulsschritt (@0x80102ba0) fällt damit in den Durchgang, in dem die
+   Einblende schon bei Tick 2 steht (B = 239); im Port fallen Pulsschritt 1 und Tick 0 (B = 255)
+   in dasselbe Bild. Praktisch unsichtbar (2 × 33 ms am Anfang einer 1,07-s-Blende).
+2. **Bestätigungs-Fade auf den Titel-Tick.** Die Fade-Schleife zählt weiter Bilder (2 je
+   Durchgang, Untergrenze 16 ms, §8.7 Punkt 2). Gemessen 326 Bilder / 5,36 … 5,40 s; Original
+   163 Durchgänge × 33,43 ms = 5,449 s. Unverändert.
+3. Der Cursor läuft im Port um (§8.7 Punkt 1) — unverändert.
+
+### 9.6 Suite
+
+Nach allen drei Commits, Arbeitsbaum-Bau `re15_port/build`: **362/362**, 199 s (360 master + `r30_titel_blinken` + `integration_r30_titel_puls`; letzterer lief in der Suite unter Last in 27,8 s grün). Kein GUI-Haken fiel.
+
+Hinweis Messfalle: ein erster Suite-Lauf aus einem Hintergrund-Bash scheiterte schon beim BAU ("Cannot create temporary file in C:\WINDOWS\" — dort fehlten TEMP/TMP); mit gesetztem TEMP/TMP wiederholt.
+
+
+---
+
+## 10. UMSETZUNG — zweite Nachbesserung (Bau-Agent, 2026-09-28)
+
+Zweig `worktree-wf_287d588a-8ce-1`.
+
+Anlass (Gegenprüfer, Mängel zu §9):
+
+1. **[erheblich]** `integration_r30_titel_puls` sicherte `render_pc.c` nicht. Die Messschiene
+   schrieb `re15_title_pulse_value()`, also den Zustand der ENGINE, nicht den Wert, mit dem der
+   Zeichner zeichnet. Mutation M1 (render_pc.c = d98e9639, eigener Pulsschritt je
+   Zeichenaufruf): am Bildschirm 419 ms, Test **grün**.
+2. [gering] Die Helligkeitsabbildung der aktiven Zeile (`tmoji_strip`) sicherte kein Test.
+3. [gering] Teil (1) zählte die Pulsschritte aus der Spalte `due` statt aus beobachteten
+   Änderungen; Mutation M2 (ein Schritt je Bild) wurde rot, aber mit Perioden „13 / 30 / 58
+   Schritte“ ohne Aussagekraft.
+4. [gering] PSX: 64-Bit-Division in `title_pulse.c` ungeprüft.
+
+| Commit | Inhalt |
+|---|---|
+| `ebae0933` | Messschiene im Zeichner (Rücklese der Zeile), Log nach `re15_render_end_frame`, Integrationstest neu (A–F) |
+| `d028a37c` | Gegenproben-Werkzeuge `r30_nb2_mutation.py`, `r30_nb2_gegenprobe.sh`, Bildschirm-Abgleich `r30_nb2_dda_zeile.py` |
+| (dieser) | Dossier §10, Berichtigung in §9.3 |
+
+### 10.1 Was gebaut ist
+
+**render_pc.c (Messschiene, nur mit `RE15_TITLE_PULSE_LOG`, kein Verhalten):**
+
+- `s_tmoji_act_val` = das Farbbyte, mit dem `tmoji_strip` die Textur der aktiven Zeile gebaut hat.
+- In `re15_render_end_frame`, genau dort, wo die Textur der aktiven Zeile gewählt wird:
+  `s_trow_drawn` = Farbbyte der Textur, die TATSÄCHLICH gezeichnet wird (0x80 für die
+  unmodulierte weiße Zeile).
+- `title_row_readback`: nach dem Menü, vor den Blenden (`s_title_fade`, `s_tfade_add`,
+  `s_tfade_sub`) `SDL_RenderReadPixels` über die Zeilenregion 256 × 17 (x 0x20 … 0x11f,
+  y ITEM_Y … ITEM_Y+16 — Rechteck bei y und subtraktiver Schatten bei y+1, FUN_801027a0
+  @0x80102810-14); FNV-1a-32 und Summe über (r>>3, g>>3, b>>3). Bei Einblende B = 0 zeichnen
+  die Blenden nichts (`if (s_tfade_sub > 0)`), dann ist das genau das gezeigte Bild.
+- Getter `re15_render_pc_title_row_probe` (ein Wert je Bild, setzt die Marke zurück).
+
+**main.c:** `pc_title_pulse_log` schreibt die Zeile erst NACH `re15_render_end_frame`,
+12 Spalten: die bisherigen 7 (Engine) + `gezeigt gezeichnet zeile hash summe`. Das Bild, in
+dem bestätigt wird, zeigt niemand (der Fade beginnt ein neues Bild) — es trägt `gezeigt = 0`.
+
+**test_r30_titel_puls.cmake** — geprüft wird am BILD:
+
+| Teil | Soll | Beleg |
+|---|---|---|
+| (A) Zeichner = Engine | 0 Bilder mit gezeichnetem Farbbyte ≠ Pulswert | Pulswert als R=G=B des Rechtecks: `lhu t0,0x2944(t0)` @0x80102848, `sb` @0x80102850/54/58 |
+| (B) ein Zeilenbild je Pulswert | 0 Pulswerte mit mehr als einem Bild | derselbe Zeichner, kein zweiter Zustand |
+| (C) gleich dem Original | 11 Pulswerte pixelgleich (5 Bit) mit den Original-Bildpuffern, alle 11 gesehen | Befehl 0x66808080 @0x80102830-34, §3.6 b; Tabelle §10.2 |
+| (D) Periode am Bild | Abfall auf das dunkelste Zeilenbild (0x86 → 0x80, @0x80102928) einmal je Periode; \|P − 2 005 817 µs\| ≤ max(Bilddauer an beiden Abfällen) + 1 µs; Engine-Schritte je Periode aus **beobachteten** Zähleränderungen ((z − z_davor) mod 60) = 60; ≥ 2 Perioden | 0x3c @0x80102918; 2 VBlanks @0x8002130c-14 / @0x8002147c-80; 59,826 Hz psx-spx |
+| (E) Fade | 0 Änderungen von (Zähler, Pulswert) und 0 Änderungen des Zeilenbilds | FUN_80102a10 (jal @0x80102d10 / @0x80102d60) ruft FUN_801028ec nicht |
+| (F) Einblende | 1 069 769 µs ≤ Dauer bis B = 0 ≤ + Bilddauer | 0xfc00 @0x80102058, 0x7fff @0x80021718, >> 7 @0x800218d0 |
+
+Keine neue Verhaltenskonstante. Die Testparameter (8 500 ms bis zum Bestätigen, mindestens
+2 Perioden) sind unverändert aus §9.3.
+
+**Renderer: beschleunigt statt `RE15_SOFTWARE_RENDER`, Maßstab 1.** Gemessen
+(`build/nb2_run_sw`, derselbe Stand, `RE15_SOFTWARE_RENDER=1`): jeder der 32 Pulswerte ergab
+**zwei** verschiedene Zeilenbilder, **0 von 11** Original-Stufen stimmten, eine Periode
+1 938 676 µs. SDLs Software-Renderer kennt die eigene subtraktive Mischart
+(`SDL_ComposeCustomBlendMode`, `s_shadow_blend`) nicht; der Schatten kommt mit der zuletzt
+gesetzten Mischart heraus. Mit dem beschleunigten Renderer: 1 Bild je Pulswert, 11 von 11
+gleich. `RE15_WINDOW_SCALE=1` macht die Ausgabe 320 × 240 (logische Pixel 1:1).
+
+### 10.2 Soll-Werte aus dem Original
+
+Werkzeug `r30_nb2_orig_zeilen_hash.py` (Ausgabe `build/nb2_orig_hash.txt`). Der Hash ist aus
+dem ORIGINAL-VRAM gerechnet (Zeilen 133 … 149 bzw. 373 … 389, Spalten 32 … 287). Welchen
+Pulswert ein Puffer zeigt, entscheidet der Nachbau des Zeichners aus §3.6 b: für genau einen
+der 32 Werte weichen 0 von 4 352 Pixeln ab. Alle sechs Savestates laufen auf der
+Auslieferungs-EXE (@0x80026e4c nicht `24 c2 01 08`), Cursor 0.
+
+| Pulswert | FNV-1a-32 | Summe | Savestate / Puffer |
+|---|---|---|---|
+| 0x88 | 452e4901 | 66 958 | boot_48 / y 0 |
+| 0x8a | c2713d44 | 67 059 | boot_48 / y 240 |
+| 0x9c | 74c7e050 | 69 027 | boot_40 / y 0 |
+| 0x9e | 5018e0cb | 69 432 | boot_40 / y 240 |
+| 0xa2 | b7245ff0 | 69 713 | mzd_title / y 240 |
+| 0xa4 | 0b2c163f | 70 168 | mzd_title / y 0 |
+| 0xac | 1a2d63c7 | 70 902 | boot_44 / y 0 |
+| 0xae | 0ee16d0d | 70 980 | boot_44 / y 240 |
+| 0xba | cb4d35aa | 72 397 | boot_52 / y 240 |
+| 0xbc | 7841f327 | 72 586 | boot_52 / y 0 **und** nav_down1 / y 0 (zwei Savestates, gleicher Hash) |
+| 0xbe | 409b0bdb | 72 666 | nav_down1 / y 240 |
+
+### 10.3 Abnahme — Soll / Ist
+
+**Integrationstest, dieser Stand** (`re15_port/build`, ctest einzeln, dreimal hintereinander,
+`build/nb2_ctest_r30_v.log`):
+
+| Lauf | Bilder (Titel / Fade) | (A) | (B) | (C) gleich / abw. | (D) Perioden [µs] (Toleranz), je 60 Schritte | (E) | (F) [µs] |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 138 / 326 | 0 | 0 (32 Werte) | 716 / 0 | 2 006 513 (6 898), 2 008 594 (15 709), 2 005 929 (15 709) | 0 / 0 | 1 070 569 |
+| 2 | 816 / 326 | 0 | 0 | 597 / 0 | 1 993 254 (23 664), 1 999 265 (11 064), 2 006 689 (7 066) | 0 / 0 | 1 086 637 (Bild 24 517) |
+| 3 | 1 219 / 326 | 0 | 0 | 744 / 0 | 1 999 771 (7 030), 2 006 525 (7 030), 2 006 587 (7 010) | 0 / 0 | 1 076 307 |
+
+**Bildschirm gegen Messschiene** (`r30_nb2_dda_zeile.py`: ddagrab 144 fps über den
+Client-Bereich des Fensters der eigenen PID, 320 × 240, 12 s; `build/nb2_dda_neu`):
+
+```
+Protokoll: 2210 gezeigte Bilder, 30 Zeilenbilder
+Bildschirm: 1694 Bilder aufgenommen, davon 1694 nach der Einblende; Zeilenbild im Protokoll: 1694 von 1694
+  davon einem Pulswert zugeordnet: 1615; gesehene Pulsstufen: 30
+Abfaelle auf das Zeilenbild 0x80: Bildschirm 6, Protokoll 7
+  Periode am Bildschirm: 2006.0 / 2007.0 / 2007.0 / 2007.0 / 2000.0 ms
+```
+
+Jedes aufgenommene Bildschirmbild zeigt ein Zeilenbild, das die Rücklese protokolliert hat
+(die 79 nicht eindeutigen sind 0x80/0x82/0x84, die dasselbe Bild ergeben). Der Versatz
+Bildschirm gegen Protokoll je Abfall lag bei 715,8 … 722,7 ms: das ist der Nullpunkt der
+ffmpeg-Zeitstempel, keine Latenz; seine Streuung (6,9 ms) ist ein Bild bei 144 Hz.
+
+**Suite** (Arbeitsbaum-Bau `re15_port/build`, `build/nb2_ctest.log`): **362/362**, 169 s,
+`integration_r30_titel_puls` in der Suite 23,86 s grün. Kein GUI-Haken fiel.
+
+### 10.4 Gegenproben
+
+Wegwerf-Baum `.claude/worktrees/r30_titel_mut` (sparse-checkout `re15_port`, eigenes
+`build_mut`, danach entfernt); je Mutation `r30_nb2_mutation.py` + Bau von `re15_pc` +
+`test_r30_titel_puls.cmake` des Arbeitsbaums. Protokolle `build/nb2_gegenprobe/<mutation>/`.
+
+| Mutation | Ergebnis |
+|---|---|
+| `basis` (Zweig-Stand) | **GRÜN**; Perioden 2 016 878 / 1 992 054 / 2 009 899 µs (Toleranz 27 368 / 19 249 / 11 795), 584 Bilder gleich dem Original |
+| `render_alt` — render_pc.c = d98e9639, sonst nichts (M1 des Gegenprüfers wörtlich) | **Bau scheitert**: `undefined reference to re15_render_pc_title_row_probe`. Kein grüner Lauf möglich. |
+| `render_alt_schiene` — d98e9639 + nur die Rücklese nachgerüstet, „gezeichnet“ = `s_tmoji_pulse_val` (der Wert der alten Farbmodulation) | **ROT** in A, B, C, D, E: 1 297 Bilder gezeichnet ≠ Engine, 1 253 Bildkonflikte, 0 von 684 gleich dem Original, 12 von 12 Perioden 475 342 … 541 556 µs bei 14 … 16 Engine-Schritten, 325 Bildwechsel im Fade |
+| `zeichner_eigener_schritt` — neuer Stand, aber `re15_render_pc_title_menu` schreitet den Pulswert je Aufruf selbst fort | **ROT** in A, B, C, D, E: 1 263 Bilder gezeichnet ≠ Engine, Perioden 491 229 … 604 092 µs, 315 Bildwechsel im Fade |
+| `modulation_alt` — aktive Zeile mit der alten Abbildung 200 + (wert − 0x80) · 55 / 0x3e | **ROT nur in C**: 0 von 618 gleich dem Original; A, B, D, E, F grün |
+| `main_je_bild` — main.c `re15_title_pulse_step()` je Bild (M2 des Gegenprüfers) | **ROT nur in D**: 16 von 16 Perioden 416 235 … 506 531 µs, **je 60 Engine-Schritte** — die Diagnose sagt jetzt, was los ist |
+
+Damit fällt der Riegel an jeder der drei Stellen, die das Symptom tragen: am Takt (main.c),
+am Zeichner (render_pc.c) und an der Helligkeitsabbildung (tmoji_strip).
+
+### 10.5 64-Bit-Division (`title_pulse.c`) — PSX weiter OFFEN
+
+Nachgemessen, 32-Bit-Stellvertreter: NDK 27.2 clang `--target=armv7a-linux-androideabi21 -O2 -c`
+über alle `engine/src/*.c` (78 übersetzt, `aot_common.c` ohne die Android-Defines nicht),
+`llvm-nm -u`:
+
+| Datei | 64-Bit-Hilfsroutine |
+|---|---|
+| actor_locomotion, camera_common, enemy_ai_boss_g5, enemy_ai_boss_gator, re15_collision, rotor_common | `__aeabi_ldivmod` (vorzeichenbehaftet) |
+| title_pulse | `__aeabi_uldivmod` (vorzeichenlos) |
+
+Die Engine braucht auf einem 32-Bit-Ziel also schon heute in sechs Dateien die
+64-Bit-Division aus der Laufzeitbibliothek. `title_pulse.c` fügt die vorzeichenlose Schwester
+hinzu (auf MIPS `__udivdi3` / `__umoddi3` neben `__divdi3` / `__moddi3`, alle in libgcc).
+Gelesen, nicht gemessen: `cmake/psx_toolchain.cmake` setzt kein `-nostdlib`, der
+`mipsel-none-elf-gcc`-Treiber hängt dann libgcc von selbst an; PSn00bSDKs eigene Einrichtung
+verlangt es ausdrücklich (`link_libraries(-lgcc)`, `libpsn00b/cmake/internal_setup.cmake:41`).
+Einen MIPS-Compiler gibt es auf dieser Maschine nicht — der PSX-Bau bleibt **offen**.
+
+### 10.6 Abweichungen vom Vorschlag des Gegenprüfers — und warum
+
+1. **(a) gezeichneter Wert:** gebaut, und zusätzlich die zurückgelesenen PIXEL der Zeile.
+   Ein Getter allein wäre wieder ein innerer Zustand gewesen (diesmal des Zeichners); die
+   Rücklese misst, was im Bildpuffer steht, und fängt so auch eine Regression, die an der
+   Wertübergabe vorbeigeht (z. B. `modulation_alt`, bei der „gezeichnet = Engine“ stimmt).
+2. **(c) „render_pc.c auf d98e9639 zurücksetzen“:** wörtlich scheitert jetzt der Bau, weil
+   main.c den Getter braucht. Das ist nicht grün, aber auch keine gemessene Aussage. Deshalb
+   zusätzlich `render_alt_schiene` (d98e9639 + nur die Rücklese, wie §9.3 es für main.c tat)
+   und `zeichner_eigener_schritt` (der Fehler im neuen Stand) — beide ROT.
+3. **(d) Testköpfe zurücknehmen:** nicht zurückgenommen, sondern neu geschrieben — der Test
+   prüft jetzt das Bild; der Kopf sagt, welche Spalte aus der Engine und welche aus dem
+   Zeichner kommt.
+4. **(e) Modulation:** statt eines Tests gegen die Formel (das wäre die Formel gegen sich
+   selbst) Teil (C) gegen die Original-Bildpuffer.
+5. **`RE15_SOFTWARE_RENDER` entfällt im Test** (§10.1, gemessen).
+
+### 10.7 Nicht gemessen / Grenzen
+
+- **PSX-Bau** (§10.5).
+- **Andere Menüzeilen:** alle sechs Original-Savestates stehen auf NEW GAME (Cursor 0). Für
+  LOAD GAME / OPTION gibt es keinen Original-Hash; (A), (B), (D) gälten dort genauso, der Test
+  fährt nur NEW GAME.
+- **Stillstand am Abfall:** fallen in EIN Bild vier oder mehr Pulsschritte genau um die
+  Rücksetzung (≈ 134 ms Stillstand), zeigt das Bild die dunkelste Stufe nie, der Abfall fehlt
+  und (D) meldet eine Doppelperiode. In 3 Einzelläufen, dem Suite-Lauf und 6 Gegenproben-Läufen
+  nicht aufgetreten (längstes Bild 36,9 ms).
+- **Rücklese vor den Blenden:** während Einblende und Bestätigungs-Fade liegt über dem
+  gelesenen Bild noch die Blende. (C) vergleicht dort die Zeile, nicht das ganze Bild; für
+  B = 0 ist beides dasselbe (Bildschirm-Abgleich 1694 von 1694).
+- Weiter offen aus §9.5: Phasenversatz Einblende/Puls (2 Durchgänge), Bestätigungs-Fade auf
+  den Titel-Tick, Cursor läuft um.
