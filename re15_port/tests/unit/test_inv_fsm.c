@@ -1072,9 +1072,14 @@ static void file_wave_tests(void)
           "(F6) Rueckkehrbild -> Zustand 3 (@0x800c787c-80), kein weiterer Ton");
     /* one reader frame: Bild-Dokument -> die Anzeigeliste traegt KEINEN Zeichenstrom
      * (RE2s Seiten sind Bilder, FUN_80075fd0), nur die Fusszeile '1/18' (4 glyphs clut
-     * row 4, RE1.5 @0x800c7744) und den rechten Pfeil (page 0: no left @0x800c7554) at
-     * (0x11c, 0x70) uv(0x70,0x48) clut UI7 (type 1 @0x800c7594). Kein Rahmen, keine
-     * Tafeln: RE2 stellt nur einen schwarzen Grund hinter die Sprites (@0x80071d8c-94).
+     * row 4, RE1.5 @0x800c7744) und den rechten Pfeil (Seite 0: kein linker). Kein
+     * Rahmen, keine Tafeln: RE2 stellt nur einen schwarzen Grund hinter die Sprites
+     * (@0x80071d8c-94).
+     * ⛔ RUNDE 30 NACHSCHLIFF pfeil, mit Grund mitgezogen: der Pfeil ist RE2s, nicht mehr
+     * RE1.5s (0x11c,0x70) 16x16 TEX4 - RE1.5s linker Pfeil lag auf der RE2-Textspalte
+     * (x 34-35, Gegenpruefung Runde 30). RE2: Pfeil rechts (282 + 3*b, 110) 12x13
+     * uv (42,12) CLUT (256,492) (@0x80072628-70, FUN_80075fd0 @0x80076104-44); im ersten
+     * Lesebild b = 0 (Start @0x8006d290-9c). Voller Riegel: test_r30_pfeil.c.
      * Vor Runde 30 prueften diese Zeilen die zentrierte Titelzeile "Operation Report"
      * des RE1.5-Blobs (16 Glyphen, CENTER @0x80028fe8-9010) - der Blob ist auf
      * Nutzer-Auftrag aus dem Spiel. */
@@ -1089,14 +1094,15 @@ static void file_wave_tests(void)
                 if (ops[i].clut == RE15_INV_CLUT_TEXROW0) n_txt++;
                 else if (ops[i].clut == RE15_INV_CLUT_TEXROW4) n_foot++;
                 else n_other++;
-            } else if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 &&
-                       ops[i].h == 16) {
-                if (ops[i].u == 0x70 && ops[i].v == 0x38) n_arrow_l++;
-                if (ops[i].u == 0x70 && ops[i].v == 0x48) {
+            } else if (ops[i].page == RE15_INV_PAGE_RE2ST0) {
+                if (ops[i].u == 28) n_arrow_l++;
+                if (ops[i].u == 42) {
                     n_arrow_r++;
-                    CHECK(ops[i].x == 0x11c && ops[i].y == 0x70 && ops[i].clut == 7,
-                          "(F6) right arrow (0x11c,0x70) clut UI7=0x7bd0 (type 1 "
-                          "@0x800c7594/@0x800c7734)");
+                    CHECK(ops[i].x == 282 && ops[i].y == 110 && ops[i].w == 12 &&
+                          ops[i].h == 13 && ops[i].v == 12 &&
+                          ops[i].clut == RE15_INV_CLUT_RE2ST0_Z2,
+                          "(F6) right arrow RE2 (282,110) 12x13 uv(42,12) CLUT (256,492) "
+                          "(@0x80072628-70)");
                 }
             } else n_other++;
         }
@@ -1104,7 +1110,7 @@ static void file_wave_tests(void)
         CHECK(n_foot == 4, "(F6) footer '1/18' = 4 glyphs clut row 4 (@0x800c7744), is %d",
               n_foot);
         CHECK(n_arrow_l == 0 && n_arrow_r == 1,
-              "(F6) page 0: right arrow only (@0x800c7554 gate)");
+              "(F6) page 0: right arrow only (RE2 Seite != 0 @0x800726e8-f0)");
         CHECK(n_other == 0, "(F6) sonst keine Op (kein Rahmen/Tafel/Blatt), is %d", n_other);
     }
 
@@ -1189,20 +1195,31 @@ static void file_wave_tests(void)
           g_test_core_se_last == 4 && g_test_core_se_count == se0 + 1,
           "(F10) Right on page 17 -> END position 18 + SE(4,4), no anim (@0x800c71e8-f4, "
           "RE2 @0x800728b0-b8)");
-    {   /* end-position display: page clamped to 17, arrow type 2 */
+    {   /* end-position display: page clamped to 17.
+         * ⛔ RUNDE 30 NACHSCHLIFF pfeil, mit Grund mitgezogen: vorher RE1.5s rechter
+         * Pfeil type 2 (clut UI5 @0x800c7580-84) und der linke Pfeil. Jetzt RE2: die
+         * Ende-Stellung ist RE2s Zustand 1 - im rechten Platz die Ende-Marke "EXIT"
+         * (280,110) 42x14 uv (56,12) CLUT (256,490) mit Helligkeit 128 (`beq v1,v0` auf
+         * Zustand 1 @0x80072618 -> @0x80072678), KEIN linker Pfeil (nur Zustand 0
+         * @0x800726d8-e0). */
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        int ok2 = 0, okl = 0;
+        int ok2 = 0, okl = 0, re15 = 0;
         for (i = 0; i < n; i++) {
             if (ops[i].kind != RE15_INV_OP_SPRT) continue;
-            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16) {
-                if (ops[i].u == 0x70 && ops[i].v == 0x48 && ops[i].clut == 5) ok2 = 1;
-                if (ops[i].u == 0x70 && ops[i].v == 0x38) okl = 1;
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16)
+                re15++;
+            if (ops[i].page == RE15_INV_PAGE_RE2ST0) {
+                if (ops[i].u == 56 && ops[i].x == 280 && ops[i].y == 110 &&
+                    ops[i].w == 42 && ops[i].h == 14 &&
+                    ops[i].clut == RE15_INV_CLUT_RE2ST0_Z0 && ops[i].r == 128) ok2 = 1;
+                if (ops[i].u == 28) okl = 1;
             }
         }
-        CHECK(ok2, "(F10) end-position right arrow clut UI5=0x7b50 (type 2 "
-              "@0x800c7580-84/@0x800c7734)");
-        CHECK(okl, "(F10) left arrow present (page != 0 @0x800c7554)");
+        CHECK(ok2, "(F10) end-position: RE2 Ende-Marke EXIT (280,110) 42x14 CLUT (256,490) "
+              "Helligkeit 128 (@0x800725c4-604, @0x80072618/78)");
+        CHECK(!okl && re15 == 0, "(F10) end-position: kein linker Pfeil (RE2 Zustand 1, "
+              "@0x800726d8-e0), keine RE1.5-Pfeile");
     }
     /* ⛔ RUNDE 30, Toene nach RE2s Aufnahme-Leser (Dossier Tabelle 3.6, mit Grund
      * mitgezogen): LINKS aus der Ende-Stellung ist STUMM (@0x80072940-48, kein jal;

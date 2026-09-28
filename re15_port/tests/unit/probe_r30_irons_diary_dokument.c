@@ -254,15 +254,18 @@ int main(void)
                 o->clut == RE15_INV_CLUT_TEXROW0) text++;
             else if (o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_FONT4 &&
                      o->clut == RE15_INV_CLUT_TEXROW4) fuss++;
-            else if (o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_TEX4 &&
-                     o->w == 16 && o->h == 16) pfeil++;
+            else if (o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_RE2ST0 &&
+                     o->u == 42 && o->x == 282 && o->y == 110) pfeil++;
+                     /* Nachschliff pfeil: RE2s rechter Pfeil (@0x80072628-70) statt
+                      * RE1.5s TEX4 16x16 - Riegel test_r30_pfeil.c */
             else sonst++;
         }
         printf("  Irons Diary Seite 0: %d Textglyphen, %d Fusszeilen-Glyphen, %d Pfeile, "
                "%d sonstige Ops\n", text, fuss, pfeil, sonst);
         CHECK(text == 0, "Bild-Dokument: KEIN Zeichenstrom (%d Textglyphen, Soll 0)", text);
         CHECK(fuss == 4, "Fusszeile \"1/18\" = %d Glyphen (Soll 4; RE1.5 0x800c7744)", fuss);
-        CHECK(pfeil == 1, "Seite 0: nur der rechte Pfeil (%d, Soll 1; @0x800c7554)", pfeil);
+        CHECK(pfeil == 1, "Seite 0: nur der rechte Pfeil (%d, Soll 1; RE2 @0x800726e8-f0)",
+              pfeil);
         CHECK(sonst == 0,
               "sonst NICHTS auf dem Schirm: %d weitere Ops (Soll 0 - kein Rahmen, keine "
               "Tafeln, kein Hintergrundblatt; RE2 Grund schwarz @0x80071d8c-94)", sonst);
@@ -284,7 +287,9 @@ int main(void)
         na = re15_inv_screen_build(&a, s_ops, RE15_INV_MAX_OPS);
         pfeil = 0;
         for (int i = 0; i < na; i++)
-            if (s_ops[i].kind == RE15_INV_OP_SPRT && s_ops[i].page == RE15_INV_PAGE_TEX4) pfeil++;
+            if (s_ops[i].kind == RE15_INV_OP_SPRT &&
+                (s_ops[i].page == RE15_INV_PAGE_TEX4 || s_ops[i].page == RE15_INV_PAGE_RE2ST0))
+                pfeil++;
         CHECK(na == 4 && pfeil == 0,
               "Blaettern: %d Ops, davon %d Pfeile (Soll 4 / 0)", na, pfeil);
     }
