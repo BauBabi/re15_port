@@ -150,7 +150,13 @@ int re15_sicherung_tick(void)
                 (int)s_raum_aktiv);
     }
     if (s_ohne) return 0;
-    if (!s_raum_aktiv || s_modal_ausgeloest) return 0;
+    if (!s_raum_aktiv) return 0;
+    /* Folgt dem Spiel (sicherung_1150.c, Runde 30 Nachschliff "sicherung-nein"): Sperre je
+     * FAHRT, wieder scharf in der Parklage (Pos_set @0x109E y = -20224). ⛔ Port-Wahl, keine
+     * Original-Adresse — Herleitung bei s_modal_ausgeloest in sicherung_1150.c. */
+    { int p0 = slot_von_obj_id(PLATTFORM_OBJ_ID);
+      if (p0 >= 0 && g_scd.props[p0].y <= IM_RAUM_AB) s_modal_ausgeloest = 0; }
+    if (s_modal_ausgeloest) return 0;
     if (re15_item_modal_active()) return 0;
     if (re15_game_flag_get(9, RE15_SICHERUNG_TAKEN_BIT)) return 0;
     int p = slot_von_obj_id(PLATTFORM_OBJ_ID);

@@ -173,3 +173,108 @@ Die Sicherung hat keine Zone: ihr Auslöser ist die **Fahrt** des Hebetischs (su
 Die Sperre galt je **Raumaufenthalt**. Das ist die richtige Sperre für „nach Yes" (dort greift
 ohnehin das Flag, `:109`), aber die falsche für „nach No": das Original lässt eine abgelehnte
 Aufnahme scharf.
+
+## 5. Änderung
+
+`re15_port/engine/src/sicherung_1150.c`, `re15_sicherung_tick`:
+
+1. **Sperre je Fahrt.** `s_modal_ausgeloest` wird wieder gelöst, sobald die Plattform in der
+   Parklage liegt (`y <= IM_RAUM_AB`). Danach bietet die nächste Fahrt eine abgelehnte
+   Sicherung wieder an; innerhalb einer Fahrt bleibt es bei höchstens einem Modal (das
+   Gegenstück zu @0x80043334). Nach „Yes" greift wie bisher das Flag (9,53).
+2. **Reihenfolge.** Die Parklage wird geprüft, bevor Modal-/Flag-/Aktiv-Prüfungen
+   zurückkehren — sonst könnte die Sperre nie fallen.
+3. **Logzeilen (nur PC)** für den Nutzer und die Abnahme:
+   `[sicherung] Modal auf (Hebetisch y=…)`, `[sicherung] No: Sicherung bleibt liegen …`,
+   `[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz n`,
+   `[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=…: Sperre geloest`.
+
+Kopfkommentar von `re15_sicherung_tick` in `include/re15_sicherung.h` nachgezogen; die
+Mess-Variante `tests/unit/probe_r30_sicherung_variante.c` (nur mit
+`-DRE15_R30_SICHERUNG_VARIANTE=ON`) folgt derselben Regel (nur Syntaxprüfung, nicht gebaut).
+
+### Der Wiederbewaffnungs-Zeitpunkt — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE
+
+Das Original hat im Hebetisch kein Modal; der Zeitpunkt ist aus der gemessenen Fahrt
+abgeleitet (Sonde, ROOM1150 = ROOM1151):
+
+| Abschnitt | Record (ROOM1150.RDT) | y |
+|---|---|---|
+| vor der ersten Fahrt | main00 `Obj_model_set` @0x0E00 | -20324 (Parklage) |
+| Start | `Pos_set` @0x0FB4 `32 00 24 af cf fe cc bb` | -305 |
+| hoch | `For` @0x0FF6 91 × `Speed_set` @0x0FF2 -10 | -1215 |
+| zurück | `For` @0x1010 10 × +1 | -1205 |
+| runter | `For` @0x1042 90 × +10, @0x105C 2 × +2, @0x106A 2 × -2 | -305 (Zwischenwert -301) |
+| Ende | `Pos_set` @0x109E `32 00 24 af 00 b1 cc bb` | **-20224 (Parklage)** |
+
+Gemessen: jede Fahrt bleibt im Raum in [-1215, -301]; geparkt wird in Bild 395 (ohne Modal),
+466 („Yes") bzw. 484 („No") nach dem Auslösen. Die Schranke `IM_RAUM_AB = -5000` ist die
+bestehende Port-Wahl aus `sicherung.md` (trennt Parklage von Raum); eine Fahrt unterschreitet
+sie nie, die Parklage immer — die Sperre fällt also genau einmal je Fahrt, nach deren Ende.
+Alternativ wäre der Start der nächsten Fahrt (@0x0FB4) gleichwertig; die Parklage wurde
+gewählt, weil `Pos_set` @0x109E der letzte Lage-Schreiber von sub04 ist.
+
+## 6. Messung nachher
+
+### 6.1 Sonde (Riegel `unit_r30_sicherung_nein`)
+
+`nachschliff-sicherung-nein_abnahme/sonde_nachher.txt`: `ALLES BESTANDEN — 0 Pruefung(en)
+gerissen`, ROOM1150 und ROOM1151:
+
+| Fall | Fahrt | Modale | Ergebnis |
+|---|---|---|---|
+| A | 1 „No" | 1 (Bild 134, y -1105) | Flag 0, Prop sichtbar, kein Item; geparkt Bild 484 y -20224 |
+| A | 2 „Yes" | **1** (Bild 134, y -1105) | Flag 1, Prop weg, Item 0x40 in Platz 0 |
+| A | 3 | 0 | Item genau einmal |
+| B | 1 „Yes" | 1 | Flag 1, Prop weg, Item im Inventar |
+| B | 2 | 0 | keine zweite Aufnahme, Prop bleibt weg |
+
+**Mutationsprobe:** Zeile `if (s_modal_ausgeloest) return 0;` entfernt → Fahrt 1 öffnet
+**9** Modale, Prüfung 1 (und 4, 5) rot. Die Sonde sieht also beide Seiten: „kein zweites
+Modal in derselben Fahrt" und „wieder ein Modal in der nächsten Fahrt" (Stand cac33993 = Prüfung
+5 rot, §2.1).
+
+### 6.2 Echtes Spiel mit Tasten (`lauf.sh nachher`)
+
+Derselbe Lauf wie §2.2, Bau mit der Änderung. `debug.log`:
+
+```
+[scd F236] Cut_chg(4)                                              Fahrt 1
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Modal Item 0x40 zeichnet in Bild 366 (...): Bild weicht in 0 von 8064 Punkten ab
+[input-script] Tick 276 -> F476 Tasten 0x0020                      Rechts
+[input-script] Tick 297 -> F497 Tasten 0x8000                      Viereck = "No"
+[sicherung] No: Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest   (vor F780)
+[input-script] Tick 963 -> F1163 Tasten 0x8000                     Viereck = Fahrt 2
+[scd F1169] Cut_chg(4)
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 1209 -> F1409 Tasten 0x8000                    Viereck = "Yes"
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[input-script] Tick 1335 -> F1535 Tasten 0x0008                    Start
+[inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in 0 von 1200 Bytes ab, ...
+```
+
+Modal-FSM (`RE15_MODAL_LOG`): Modal 1 Zustand 2 F365–381, 3 F382, 4 F383–391, 6 F392–496,
+**8 F497–513** (Wegschrumpfen = „No"); Modal 2 Zustand 2 F1298–1314, 3 F1315, 4 F1316–1324,
+6 F1325–1408, danach Zustand 0 ohne 8 (= „Yes").
+
+Kontaktbogen `nachschliff-sicherung-nein_abnahme/nachher_bogen.png`: F420/F480 Modal 1
+(„Yes ▸No"), F510 Wegschrumpfen, F780 Cut 0 nach der Fahrt, **F1310/F1330/F1400 Modal 2
+„Will you take the Fuse? Yes No"**, F1420/F1440 Plattform oben ohne Rohr, **F1560/F1600/F1700
+Statusschirm mit der Sicherung in der Item-Liste** (Platz 3, nach Messer, Pistole, Munition).
+
+## 7. Was NICHT belegt ist / offen
+
+* **Der Wiederbewaffnungs-Zeitpunkt** ist Port-Wahl (§5), keine Original-Adresse — das
+  Original hat im Hebetisch weder Gegenstand noch Modal. Belegt ist nur die Regel, die er
+  überträgt (RE1.5 @0x8001e090/@0x8001e0ec, RE2 @0x800720cc/@0x80072298).
+* **Mehrfaches Auslösen während einer laufenden Fahrt** ist nicht gemessen. sub04 setzt zu
+  Beginn Bank 2 Bit 0 (`Set` @0x0F96) und löscht es erst am Ende (@0x10AA); im Spiellauf
+  stand der Spieler während der ganzen Fahrt (`[walk] … af=117` F240–F750 in Fahrt 1, `af=106` in Fahrt 2). Würde sub04 mitten
+  in der Fahrt neu gestartet (Sprung auf -305 ohne Parklage), bliebe die Sperre bis zum Ende —
+  also höchstens ein Modal, nie ein verlorenes.
+* **PSX-Ziel:** gleicher Engine-Code; die Logzeilen sind `#ifdef RE15_PLATFORM_PC`.
+* **Echte Tasten** = Eingabeskript (`RE15_INPUT_SCRIPT`, dieselben Pad-Bits wie Tastatur/Pad,
+  `input_pc.c`), keine Hand am Gerät. Das Skript startet wegen `RE15_INPUT_SCRIPT_BASIS=spiel`
+  auch im Boot-Raum einmal (Tick 30 → F230 in ROOM1240, wirkungslos).
