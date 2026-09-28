@@ -254,6 +254,10 @@ Auswertung: `nachschliff-pfeil/framedump_lauf_nachher.txt`,
 
 ![vorher / nachher](nachschliff-pfeil/vorher_nachher_pfeile.png)
 
+**Suite** (Bau dieses Zweigs, `ctest --timeout 240`, 395 Tests = 394 + `unit_r30_pfeil`):
+394 von 395 im Gesamtlauf; rot war nur `integration_elza_vollstart` (GUI-Haken mit echter
+exe, 40,9 s unter Last). Einzeln wiederholt ist er grün (100,2 s), also **395 von 395**.
+
 ## 7. Nicht gemessen / offen
 
 1. **Bildrate des Status-Schirms.** Beide Originale stellen VSync-Modus 0 ein (3.3). Damit
