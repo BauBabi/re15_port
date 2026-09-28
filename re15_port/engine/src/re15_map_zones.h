@@ -496,7 +496,7 @@ static const re15_map_mark_t s_map_marks[] = {
      *                     tragen BEIDE Kacheln dort Index 4 auf x 197..221 (gemessen,
      *                     Sonde probe_r30_karten-marken_rundlauf Abschnitt J).
      *   auf_partner 1     der Punkt liegt auf gemalter Flaeche von rect 6 (Index 4).
-     *   x = 199           ⛔ PROJEKTION, KEINE ORIGINAL-ZEILE: die Trigger-Mitte
+     *   x = 199           ⛔ Port-Wahl, keine Original-Adresse - PROJEKTION der Trigger-Mitte
      *                     (-5820,-18690) durch re15_map_zone_marker auf rect 7 - wie
      *                     bei JEDER vom Generator erzeugten Marke. ROOM1090
      *                     (@0x800768F8) und ROOM1100 (@0x80076930) tragen im Original
