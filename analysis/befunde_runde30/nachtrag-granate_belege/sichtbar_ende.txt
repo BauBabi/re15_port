@@ -1,0 +1,21 @@
+F861:   226 Punkte  bbox x195..219 y149..162
+F865:   219 Punkte  bbox x196..219 y149..162
+F869:   176 Punkte  bbox x201..219 y149..162
+F873:    52 Punkte  bbox x206..212 y149..160
+F877:     0 Punkte
+F881:     0 Punkte
+F885:     0 Punkte
+F889:     0 Punkte
+F893:     0 Punkte
+F897:     0 Punkte
+F901:     0 Punkte
+F905:     0 Punkte
+F909:     0 Punkte
+F913:     0 Punkte
+F917:     0 Punkte
+F921:     0 Punkte
+F925:     0 Punkte
+F929:     0 Punkte
+F933:     0 Punkte
+F937:     0 Punkte
+F941:     0 Punkte

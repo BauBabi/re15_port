@@ -1,0 +1,32 @@
+beste 12 (Wert = min(Abstand Sicherung, Luft Kuppel)):
+  xc -360 zc 1260 gier +0: Abstand zur Sicherung -0.98  Luft unter der Kuppel -1.63
+  xc -360 zc 1265 gier +16: Abstand zur Sicherung -1.90  Luft unter der Kuppel -1.70
+  xc -360 zc 1260 gier -16: Abstand zur Sicherung -1.90  Luft unter der Kuppel -1.89
+  xc -360 zc 1255 gier -16: Abstand zur Sicherung -1.90  Luft unter der Kuppel -1.71
+  xc -360 zc 1260 gier +16: Abstand zur Sicherung -1.90  Luft unter der Kuppel -1.90
+  xc -359 zc 1265 gier +0: Abstand zur Sicherung -1.98  Luft unter der Kuppel -1.63
+  xc -359 zc 1260 gier +0: Abstand zur Sicherung -1.98  Luft unter der Kuppel -1.27
+  xc -359 zc 1255 gier +0: Abstand zur Sicherung -1.98  Luft unter der Kuppel -1.64
+  xc -361 zc 1260 gier +0: Abstand zur Sicherung 0.02  Luft unter der Kuppel -1.98
+  xc -360 zc 1265 gier +0: Abstand zur Sicherung -0.98  Luft unter der Kuppel -1.98
+  xc -359 zc 1270 gier +0: Abstand zur Sicherung -1.98  Luft unter der Kuppel -2.00
+  xc -360 zc 1255 gier +0: Abstand zur Sicherung -0.98  Luft unter der Kuppel -2.00
+  Referenz xc -361 zc 1260 gier +0: Abstand 0.02 Luft -1.98
+  Referenz xc -365 zc 1260 gier +0: Abstand 4.02 Luft -3.39
+gerollt, beste 10:
+  rot_x +0  xc -360  yc -1091.0: Abstand zur Sicherung -0.98  Luft unter der Kuppel -1.63
+  rot_x +160  xc -357  yc -1095.9: Abstand zur Sicherung -1.19  Luft unter der Kuppel -1.71
+  rot_x +144  xc -357  yc -1095.6: Abstand zur Sicherung -1.63  Luft unter der Kuppel -1.92
+  rot_x +0  xc -359  yc -1091.0: Abstand zur Sicherung -1.98  Luft unter der Kuppel -1.27
+  rot_x +0  xc -361  yc -1091.0: Abstand zur Sicherung 0.02  Luft unter der Kuppel -1.98
+  rot_x +160  xc -358  yc -1095.9: Abstand zur Sicherung -0.31  Luft unter der Kuppel -2.06
+  rot_x +160  xc -356  yc -1095.9: Abstand zur Sicherung -2.06  Luft unter der Kuppel -1.35
+  rot_x +16  xc -360  yc -1091.6: Abstand zur Sicherung -1.49  Luft unter der Kuppel -2.07
+  rot_x -16  xc -359  yc -1091.7: Abstand zur Sicherung -1.29  Luft unter der Kuppel -2.11
+  rot_x +128  xc -357  yc -1095.2: Abstand zur Sicherung -2.20  Luft unter der Kuppel -2.06
+ROOM1150.RDT Sitz (-365,-1091,1260): Abstand zur Sicherung 4.02  Luft unter der Kuppel -3.39  unter dem Fachboden 0 (tiefster Punkt y=-1036)
+ROOM1151.RDT Sitz (-365,-1091,1260): Abstand zur Sicherung 4.02  Luft unter der Kuppel -3.39  unter dem Fachboden 0 (tiefster Punkt y=-1036)
+ROOM1150.RDT Sitz (-361,-1091,1260): Abstand zur Sicherung 0.02  Luft unter der Kuppel -1.98  unter dem Fachboden 0 (tiefster Punkt y=-1036)
+ROOM1151.RDT Sitz (-361,-1091,1260): Abstand zur Sicherung 0.02  Luft unter der Kuppel -1.98  unter dem Fachboden 0 (tiefster Punkt y=-1036)
+ROOM1150.RDT Sitz (-362,-1088,1260): Abstand zur Sicherung 1.07  Luft unter der Kuppel 0.67  unter dem Fachboden 3 (tiefster Punkt y=-1033)
+ROOM1151.RDT Sitz (-362,-1088,1260): Abstand zur Sicherung 1.07  Luft unter der Kuppel 0.67  unter dem Fachboden 3 (tiefster Punkt y=-1033)

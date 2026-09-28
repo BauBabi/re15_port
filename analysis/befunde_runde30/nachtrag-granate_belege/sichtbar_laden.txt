@@ -1,0 +1,25 @@
+F90:     0 Punkte
+F100:     0 Punkte
+F110:   219 Punkte  bbox x196..219 y149..162
+F120:   226 Punkte  bbox x195..219 y149..162
+F130:   226 Punkte  bbox x195..219 y149..162
+F140:   226 Punkte  bbox x195..219 y149..162
+F150:   240 Punkte  bbox x196..219 y142..156
+F160:   270 Punkte  bbox x196..220 y128..143
+F170:   288 Punkte  bbox x197..221 y114..129
+F180:   303 Punkte  bbox x197..222 y99..114
+F190:   349 Punkte  bbox x198..224 y84..99
+F200:   372 Punkte  bbox x199..225 y68..84
+F210:   375 Punkte  bbox x199..226 y52..69
+F220:   404 Punkte  bbox x200..227 y34..52
+F230: 68413 Punkte  bbox x0..319 y0..239
+F240: 49520 Punkte  bbox x0..319 y0..215
+F250: 47751 Punkte  bbox x0..319 y0..215
+F260: 48099 Punkte  bbox x0..319 y0..215
+F270: 48099 Punkte  bbox x0..319 y0..215
+F280: 48099 Punkte  bbox x0..319 y0..215
+F290: 44708 Punkte  bbox x0..319 y0..215
+F300: 27904 Punkte  bbox x0..319 y0..215
+F310: 50961 Punkte  bbox x0..319 y0..215
+F320: 54192 Punkte  bbox x0..319 y0..215
+F330: 57503 Punkte  bbox x0..319 y0..215

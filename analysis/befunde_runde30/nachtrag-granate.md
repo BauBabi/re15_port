@@ -194,23 +194,184 @@ eigene RE1.5-Kunst. **Nichts einzusetzen**, anders als bei der Sicherung.
   z 1011..1510), Scheitel (−280, −1185, 1260). Geschlossen ist sie über dem Fach höchstens 149 hoch.
 * Sicherung: (−280, −1062, 1260), rot_y 1024, Rohr 406 × Ø 52 → x −306..−254, z 1057..1463
 
-Die Granate liegt flach auf dem Boden, Mitte y = −1036 − 55 = **−1091**, Längsachse entlang z wie
+Erster Ansatz (sitz.py, Hüllen-Rechnung): die Granate liegt flach auf dem Boden, Mitte y = −1036 − 55 = −1091, Längsachse entlang z wie
 die Sicherung, Mitte z = **1260** (dort ist die Kuppel am höchsten). Gerechnet für x-Mitten
 −400..−340 und beide Drehungen, in ROOM1150 und ROOM1151 gleich:
 
-| x-Mitte | Spalt zur Sicherung | Luft unter der GESCHLOSSENEN Kuppel |
+| x-Mitte | Spalt zur Sicherung (Hüllen) | Luft unter der GESCHLOSSENEN Kuppel |
 |---|---|---|
 | −370 | 9 | −8,3 |
-| **−365** | **4** | **−3,4** |
+| −365 | 4 | −3,4 |
 | −360 | −1 (durchdringt) | −1,6 |
 | −355 | −6 (durchdringt) | +0,1 |
 
-Beide Bedingungen zugleich erfüllt keine Lage: ohne Durchdringen der Sicherung ragt die Granate
-bei geschlossener Kuppel mindestens 3,4 Einheiten durch die Schale. Die Kuppel ist nur
-geschlossen, solange die Plattform am Schreibtisch steht (Szene F96–F101 und F411–F486,
+Beide Bedingungen zugleich erfüllt keine aufliegende Lage. Ohne Durchdringen der Sicherung ragt die
+Granate bei geschlossener Kuppel mindestens 1,98 Einheiten durch die Schale. Die feinere Suche
+steht in `sitz_suche.py` (Ausgabe `sitz_suche.txt`). Sie prüft Punkt für Punkt gegen den
+Sicherungs-Zylinder r 26, teilt jede Kante der Granate in 8 Stücke und fährt x-Mitte −368..−353,
+z-Mitte 1250..1270, Gierwinkel ±48 und Rollen um die Längsachse ±160 ab. Das beste Paar ohne
+Durchdringen ist x −361 mit Abstand 0,02 und Luft −1,98. Rollen hilft nicht. Geschlossen ist die
+Kuppel nur, solange die Plattform am Schreibtisch steht (Szene F96–F101 und F411–F486,
 `sicherung.md` §2.2). Offen gibt sie z 1110..1410 frei, und die Granate liegt mit z 1183..1337
 ganz in dieser Öffnung.
 
-**Gewählt: (−365, −1091, 1260)**, 4 Einheiten neben der Sicherung. Der Auftrag verlangt „dürfen sich
-nicht durchdringen", das hat Vorrang. Ob die 3,4 Einheiten im Bild bei geschlossener Kuppel zu
-sehen sind, entscheidet die Messung (§7).
+**Erster Sitz (−365, −1091, 1260), gemessen (§7.1):** Bei geschlossener Kuppel stehen in F237–F240
+je **2 Punkte** der Granate durch die Schale (x211..212 y148 bei 320×240,
+`durchstoss_vorher_x365_y1091.txt`). Das ist sichtbar, also verworfen.
+
+**Gewählt: (−362, −1088, 1260), rot_y 1024.** Die Granate liegt **3 Einheiten tief im Fachboden**.
+Das geht ohne sichtbaren Eingriff, weil sie unten offen ist: Die Handflächen-Seite, die in der Hand
+verdeckt war, hat keine Flächen, im Boden steckt also nur ihr Rand. Abstand zur Sicherung 1,07,
+Luft unter der geschlossenen Kuppel +0,67, tiefster Punkt y −1033. ROOM1150 und ROOM1151 sind
+gleich. Das alles ist **Port-Wahl, keine Original-Adresse** und steht so in
+`include/re15_granate.h`; der Riegel ist `unit_r30_granate` Prüfungen 4–7.
+
+Blickrichtung: Die Granate liegt von Cut 4 aus HINTER der Sicherung. Die in der Hand offene Stirnseite
+(fehlender Übergang am +x-Ende, §4) zeigt dadurch zur Kuppelwand, weg von der Kamera. Die Granate
+deckt keinen einzigen Punkt der Sicherung ab (§7.1).
+
+## 6. UMSETZUNG
+
+| Teil | Datei | Inhalt |
+|---|---|---|
+| Konstanten + Herleitung | `include/re15_granate.h` | Item 0x09, Menge 1, Bit 56, obj_id 7, Sitz; alles mit Adresse oder als Port-Wahl markiert |
+| Logik | `engine/src/granate_1150.c` | install (Prop an der Elternmatrix der Plattform, Nullbox), tick (Fenster (−5000,−1100], Sperre je Fahrt, erst Sicherung) |
+| Reihenfolge | `engine/src/sicherung_1150.c` `re15_sicherung_fahrt_offen()` (auch in `probe_r30_sicherung_variante.c`, damit die Mess-Variante weiter ohne Doppelsymbol linkt) | Solange die Sicherung in dieser Fahrt noch ein Modal aufmachen kann, wartet die Granate |
+| Modell | `tools/granate_engine_export.py` → `engine/src/gen/granate_prop.inc` | MD1 1396 B (24 Punkte, 71 Normalen, 5+14 Flächen), TIM 33312 B |
+| Aufrufe | `game_step_common.c` (tick nach der Sicherung, vor dem Freeze-Gate), `scd_room_setup.c` (Türweg), `platform/pc/main.c` (Loader MD1/TIM in Slot 27, Boot-/CONTINUE-Weg + Logzeile) | |
+| Riegel | `tests/unit/probes/r30_granate.cmake` | `unit_r30_granate`, `integration_r30_granate_laden` (+2 Tests) |
+
+**Farben byte-true:** FUN_80036b68 lädt aus dir[3] nur 16 CLUT-Einträge an VRAM-x 224 der Zeile
+481+acad5 (`ori v0,zero,0xe0` @0x80036c88, `addiu v0,v0,481` @0x80036c9c, Breite `ori v0,zero,0x10`
+@0x80036ca8, LoadImage `jal 0x80068c88` @0x80036cb8). Das Bild @prect (acad4·64−924, 480, 28×32)
+(@0x80036c30-68) nutzt die Indizes 224..227. dir[3] trägt dieselben 16 Farben an 0..15 UND
+224..239 (gemessen). Die volle dir[3]-CLUT im Prop liefert also dieselben Farben wie die Konsole.
+
+**Nicht nötig:** Item-Bild und Icon einzusetzen (§4). Anders als bei der Sicherung sind die
+ausgelieferten Bytes für Id 0x09 schon RE1.5-Kunst im RE1.5-Format.
+
+## 7. ABNAHME
+
+Alle Bilder stammen aus der echten exe mit dem beschleunigten Renderer, Framedump 320×240, ohne
+AUTOSHOT und ohne SOFTWARE_RENDER. MIT/OHNE heißt: Der OHNE-Lauf setzt `RE15_SET_FLAG=9:56` vor dem
+Raumeintritt, das Prop wird dann nicht angelegt. Jeder abweichende Punkt gehört zur Granate.
+Werkzeuge: `lauf_fahrt.sh` (Türweg mit Tasten), `lauf_laden.sh` (CONTINUE bzw. Inventar),
+`differenz.py`, `versatz.py`, `sicherung_frei.py`.
+
+### 7.1 Sichtbar im Fach, fährt mit hoch (`sichtbar_start.txt`, Türweg ROOM1150)
+
+| F | 230 | 240 | 250 | 260 | 280 | 290 | 300 | 310 | 320 | 330 | 340 | 350 | 360 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Punkte der Granate | 0 | **0** | 219 | 226 | 226 | 237 | 265 | 272 | 277 | 284 | 256 | 239 | 231 |
+| bbox y | – | – | 149..162 | 149..162 | 149..162 | 142..155 | 128..141 | 114..126 | 99..111 | 84..95 | 68..78 | 52..61 | 34..43 |
+
+* Die bbox wandert von y 149 nach y 34: Die Granate **fährt mit hoch**.
+* **Kuppel zu, Anfang:** F228–F240 zeigen **0** Punkte (`durchstoss_nachher_x362_y1088.txt`). Beim
+  ersten Sitz waren es 2 Punkte in F237–F240.
+* **Kuppel zu, Ende:** Das Modal verschiebt die Szene um 161 Bilder (`versatz.py`). Mit Versatz 161
+  gegen den OHNE-Lauf zeigt F875–F999 durchgehend **0** Punkte, beim Schließen F861–F873 fällt die
+  Zahl 226 → 52 (`sichtbar_ende.txt`).
+* **Die Sicherung bleibt ganz frei:** Von 213–443 Sicherungs-Punkten je Bild (F250–F360)
+  verändert die Granate **0** (`sicherung_frei.txt`, Maske Sicherung = OHNE-Lauf gegen einen Lauf
+  ohne beide).
+* **ROOM1151** (über CONTINUE, der Debug-Sprung kennt nur 1150): F110–F220 zeigen 219..284 Punkte,
+  Zahl für Zahl gleich mit dem Türweg in 1150 (`sichtbar_1151.txt`).
+* Bilder: `abnahme_lupe_mit_ohne.png` (oben MIT, unten OHNE, F240/F260/F300) und
+  `abnahme_fahrt_ja.png`.
+
+### 7.2 Beide Modale nacheinander (`fahrt_ja2`, `abnahme_fahrt_ja.png`)
+
+```
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 276 -> F476 Tasten 0x8000
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[granate] Modal auf (Hebetisch y=-1115), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 372 -> F572 Tasten 0x8000
+[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 4
+```
+
+Im Bild: F400 zeigt das Sicherungs-Modal (Rohr). In F500 liegt die Granate noch im Fach. F560
+zeigt „Will you take the Hand Grenade?" mit dem Granatenbild. In F580 ist das Fach leer. F720
+ist der Statusschirm mit Granaten-Icon und Menge **1**.
+
+### 7.3 Zweite Fahrt nach „No" (`nein_ja`, `abnahme_nein_dann_ja.png`)
+
+Fahrt 1: Sicherung „No", Granate „No". Beide bleiben liegen, und nach dem Parken wird die Sperre
+gelöst (`[granate] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest`).
+Fahrt 2 (F995): Beide Modale kommen wieder, in derselben Folge. „Yes/Yes" legt Flag (9,53) und
+(9,56); der Statusschirm F1530 zeigt Sicherung und Granate.
+
+### 7.4 Lade-Weg (`lauf_laden.sh`, `sichtbar_laden.txt`)
+
+CONTINUE in ROOM1150, Sicherung genommen:
+`[granate] Boot-Weg: Prop obj_id=7 im Pool (slot 6, Raum 1150)`,
+`[prop-render] pi=6 oid=0x07 pos=(-20338,-1393,-18720) rot=(0,1024,0)`, dann in der Fahrt
+`[granate] Modal auf (Hebetisch y=-1105)`. MIT gegen OHNE (Flag 56 in der Karte): F90/F100 0,
+F110–F220 219..404 Punkte. Die Zahl ist höher als am Türweg, weil die Sicherung hier fehlt und
+nicht verdeckt. In F230 geht das Granaten-Modal auf.
+
+### 7.5 Inventar (`abnahme_raster_F50.png`, `abnahme_check_F140.png`)
+
+Die Granate liegt in Platz 0 (Karte `fach0`). Das Raster zeigt das Icon (Tile 0x09) mit der Menge 1.
+Beim CHECK wird das Foto geladen,
+`[inv] CHECK-Foto Item 0x09: crect (0,489) prect (832,256) 56x72 -> Foto und CLUT geladen`. Zu
+sehen sind die olivgrüne Handgranate im Fotofeld und darunter der Text „Hand grenade desi…" (die
+Beschreibung läuft noch ein).
+
+### 7.6 Riegel und Negativ-Kontrollen
+
+`unit_r30_granate` besteht 14 von 14 Prüfungen je Raum (`unit_r30_granate.txt`).
+`integration_r30_granate_laden` ist grün (66 s, Läufe A–E). Mutationsproben, jeweils Quelle
+geändert, gebaut, gefahren und zurückgesetzt:
+
+| Mutation | Ergebnis |
+|---|---|
+| ohne `re15_sicherung_fahrt_offen()`-Gate | unit rot, rc=14 (Fall E: Granate vor Sicherung) |
+| ohne Anlegen am Türweg (`scd_room_setup.c`) | unit rot, rc=8 (12 Prüfungen) |
+| Sitz x −358 | unit rot, rc=5 (durchdringt die Sicherung) |
+| Sitz y −1091 (aufliegend) | unit rot, rc=4 (4 und 6: ragt durch die Kuppel) |
+| ohne Sperre je Fahrt | unit rot, rc=8 (6 Prüfungen) |
+| ohne Anlegen am Boot-Weg (`main.c`) | integration rot: `granate_laden[A]: nach CONTINUE in ROOM1150 fehlt '[granate] Boot-Weg…'` |
+
+Negativ-Kontrollen im Bestand: `unit_r30_granate` Prüfung 13 (Flag vor dem Raumstart → kein
+Prop, kein Modal) und `integration_r30_granate_laden` Lauf B (Flag in der Karte → keine der drei
+Zeilen).
+
+### 7.7 Suite
+
+**405 von 405 grün** (ctest im Arbeitsbaum, 644 s, ohne Wiederholung). Die Zahl setzt sich aus
+403 aus 80d579a5 und den 2 neuen Tests zusammen. `RE15_MIN_TESTS` ist wie im Auftrag nicht geändert.
+
+* Der erste volle Lauf meldete **unit_r30_irons_tisch** rot. Der Riegel verlangte in ROOM1150/1151
+  genau 7 Pool-Einträge (5 mit beiden Schreibtisch-Bits). Mit der Granate obj 7 sind es gemessen
+  8 bzw. 6. Die Prüfungen verlangen jetzt 8/6 und die Granate im Pool (Commit 8c645557).
+* **integration_r30_irons_tisch_licht** war im selben Lauf rot mit „Bildgroessen 320x240,
+  erwartet 960x720". Das kommt aus der Umgebung, nicht vom Code. `render_pc.c` wählt die
+  Fenster-Skalierung nach der nutzbaren Desktopfläche (`SDL_GetDisplayUsableBounds`, höchstens
+  90 %). Auf dieser Maschine ergab das zum Messzeitpunkt Skalierung 1: Auch alle Framedumps
+  dieses Nachtrags sind 320×240. Mit `RE15_WINDOW_SCALE=3` (der sonst übliche Wert) läuft der
+  Test mit demselben Bau grün (60 s). Die volle Suite oben lief deshalb mit
+  `RE15_WINDOW_SCALE=3`. `integration_r30_titel_puls` setzt seine Skalierung 1 selbst und bleibt
+  davon unberührt.
+
+### 7.8 Wurf (Stand, NICHT gebaut)
+
+`wurf5_bogen.png` / `wurf5_zustand.txt` (ROOM1140, Abstand ~1300 zum Zombie): Der Zombie reagiert
+schon in F47 auf den Abzug, die Granate verlässt die Hand erst in F69 (Spawn Effekt 4 sub 0x0D),
+danach fliegt nichts und nichts explodiert. Die Flammen am Zombie sind die Todesreaktion auf die
+Port-Brücke (Treffer der Waffe 9), keine Explosion. Einzelheiten und Umfang: §2.
+
+## 8. Was NICHT belegt ist / offen
+
+* **Der Wurf fehlt** (§2.3). Die Granate lässt sich aufnehmen, ausrüsten und „werfen". Die
+  Wirkung ist aber die Sofort-Brücke beim Abzug; es gibt keinen Flug, keinen Abprall und keine
+  Explosion. Fürs Nachbauen: Routinen 30/29/31 der Row-VM (@0x8001843c / @0x80018320 /
+  @0x8001854c), Kind-Effekte 0x03195000/0x030B5400/0x030B5800, SEs 0x010A0001/0x04080001,
+  Flächenschaden `jal 0x80012d60` @0x800185b8 (Radius 500, Typ 2; trifft laut Katalog auch den
+  Spieler) und `ENT[9].resolve` auf 0.
+* **Sitz, Menge, Modal-Reihenfolge** sind Port-Wahl (das Original hat im Hebetisch nichts).
+  Die 3 Einheiten Bodentiefe sind aus der Geometrie erzwungen (§5), nicht geschätzt.
+* **PSX-Ziel:** Wie bei der Sicherung hat der PSX-Bau keinen Loader für das Zusatz-Prop. Der
+  Android-Bau braucht einen frischen Configure (neue Datei `engine/src/granate_1150.c`, GLOB-Cache).
+* Gemessen ist nur Leon. Die Waffenbank für Elza (PL04W09) ist dieselbe Form in Dreiecken; das
+  Welt-Prop ist für beide dasselbe.

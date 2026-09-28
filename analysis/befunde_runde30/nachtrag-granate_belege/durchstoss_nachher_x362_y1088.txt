@@ -1,0 +1,15 @@
+F228:     0 Punkte
+F229:     0 Punkte
+F230:     0 Punkte
+F231:     0 Punkte
+F232:     0 Punkte
+F233:     0 Punkte
+F234:     0 Punkte
+F235:     0 Punkte
+F236:     0 Punkte
+F237:     0 Punkte
+F238:     0 Punkte
+F239:     0 Punkte
+F240:     0 Punkte
+F241:    18 Punkte  bbox x208..211 y149..158
+F242:    52 Punkte  bbox x206..212 y149..160
