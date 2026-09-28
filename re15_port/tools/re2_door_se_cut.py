@@ -26,10 +26,29 @@ RE2-VORBILD (alles selbst disassembliert / aus den Bytes gelesen):
   0  ZU_A    ROOM1140 Satz 0x16    cf1414572aea    7184   Polizeirevier, 9 Raeume
   1  ZU_B    ROOM1050 Satz 0x16    60e753ac5e56    3232   Polizeirevier, 6 Raeume
   2  ZU_E    ROOM2110 Satz 0x16    be2f6ea9caaa   10272   Kartenleser-Tuer + Kanal/Fabrik/Labor
+  3  ZU_P    ROOM7020 Satz 0x16    ea19d086e3cb    6144   "The door won't open until the power is
+                                                          restored!" (Nachbesserung Runde 30)
+
+  Satz 3 ist KEINE Port-Wahl: RE2 ROOM7020 ist derselbe Raum wie RE1.5 ROOM5080/5081
+  (gleicher Generator, gleiche vier Texte). RE1.5 legt den Text als Text-Platz auf die Tuer
+  (ROOM5080 sub02 @Datei 0x007C2 `46 00 01 31 02 00 ff ff 00 00`, Platz 0 = Door_aot_set
+  main00 @0x006FA) und spielt nichts; RE2 spielt beim WOERTLICH gleichen Text (ROOM7020
+  msg 2 @Datei 0x01F69) in sub06 @Datei 0x01598 Message_on 2 und @Datei 0x0159E
+  `36 02 16 00 00 00 00 00 00 00 00 00` Se_on(2,0x16) -> Raumbank-Satz 0x16 = diese Welle.
 
 Mit --mit-aufschliessen kommen zwei weitere Saetze dazu (NICHT beauftragt, nur vorbereitet):
-  3  AUF_KEY ROOM1140 Satz 0x25    e12a441e5282    5264   @0x80051658 Schluessel benutzt
-  4  AUF_HIER ROOM20A0 Satz 0x26   d1d99d659a37    7568   @0x800515f8 von dieser Seite entriegelt
+  4  AUF_KEY ROOM1140 Satz 0x25    e12a441e5282    5264   @0x80051658 Schluessel benutzt
+  5  AUF_HIER ROOM20A0 Satz 0x26   d1d99d659a37    7568   @0x800515f8 von dieser Seite entriegelt
+
+TONHOEHE (fuer den Riegel, der pitch je Satz pinnt): RE2 rechnet sie mit demselben
+note2pitch2 wie RE1.5. Se_on 0x8005ba28 legt je Stimme note = Tone[+6] (@0x8005bbec lbu
+v0,6(s0) / @0x8005bbf4 sh v0,0xa(v1)) und fine = Tone[+5] (@0x8005bbf8 / @0x8005bc00 sh
+v0,0xc(v1)) ab; FUN_8005c5e4 @0x8005c788 `jal 0x8007fdc8` uebergibt beide (a3 = +0xa,
+Stapel +0x10 = +0xc); dort @0x80080110 `jal 0x80083010` (note2pitch2) mit a0 = note
+(@0x800800fc), a1 = fine (@0x80080114), sofern Tone[+0x16] != 0xff (@0x8007ffa0/@0x800800f0).
+note2pitch2 @0x80083010 ist Befehl fuer Befehl RE1.5s @0x80056b2c (nur Adressen/Register
+verschieden), die 12x16-Tabelle RE2 @0x800aba40 ist bytegleich zu RE1.5 @0x80077520
+(384 B, md5 6b1d457a486b2a3a5c17e9a040a00c12). re15_vab_note2pitch2 gilt also auch hier.
 
 EINZIGE Daten-Aenderungen beim Schnitt, und warum:
   (1) Tone-Byte +0x16 (VAG-Index, 1-basiert) wird auf die Lage in der Mini-Bank umgesetzt.
@@ -62,6 +81,8 @@ SAETZE = [
      "60e753ac5e5697bae5b2f3caa4d3eb1dc1308708"),
     ("ZU_E", "2110", 0x16, "00007400", 0x02EFC, 0x03864, 0x07054, 10272,
      "be2f6ea9caaa6a9996a73c5a3f3fb0baf6b56aa3"),
+    ("ZU_P", "7020", 0x16, "0000e300", 0x05CE8, 0x06730, 0x1DD50, 6144,
+     "ea19d086e3cb1b9dfdb236526324aefbd015c72c"),
 ]
 ZUSATZ = [
     ("AUF_KEY", "1140", 0x25, "00008416", 0x01484, 0x01DD0, 0x04480, 5264,

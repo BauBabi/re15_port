@@ -256,5 +256,17 @@ void re15_audio_re2_elevator_se(int se_id);
  * shared_assets/RE2/HINTSE.VBS (tools/re2_hint_cut.py). se_id ist RE2_HINT_SE (0x2B).
  * Gerufen aus engine/src/map_hint_common.c. PSX: Folge-Stub wie die anderen SE-Baenke. */
 void re15_audio_re2_hint_se(int se_id);
+/* ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL: der "Tuer verschlossen"-Ton.
+ * RE1.5 ist an verschlossenen Tueren stumm (Text-Handler @0x80043084 ruft nur
+ * @0x800430a0 `jal 0x80027e68`; Tuer-Handler @0x800430bc ohne Schloss-Test). RE2 spielt
+ * im Tuer-Handler 0x80051514 @0x80051610 / @0x800516a4 `jal 0x8005ba28` mit
+ * a0 = 0x02160000 (Bank 2 = Raumbank, Satz 0x16) und a1 = 0 (@0x80051614 / @0x800516a8,
+ * nicht positional), dann @0x800516b8 den Text; Raumskripte denselben Satz
+ * (ROOM2110.RDT sub09 @Datei 0x01BBC). Die vier Wellen (ZU_A ROOM1140, ZU_B ROOM1050,
+ * ZU_E ROOM2110, ZU_P ROOM7020, je Satz 0x16) liegen als Mini-Bank in shared_assets/RE2/TUERSE.VBS
+ * (tools/re2_door_se_cut.py, Satz-TOC re15_door_bank_rec in include/re15_lock_se.h).
+ * se_id = Satz der Mini-Bank (RE2_DOOR_SE_ZU_*). Gerufen aus engine/src/lock_se_common.c.
+ * PSX: Folge-Stub wie die anderen SE-Baenke. */
+void re15_audio_re2_door_se(int se_id);
 
 #endif /* RE15_AUDIO_H */

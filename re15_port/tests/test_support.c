@@ -72,6 +72,11 @@ void re15_audio_re2_elevator_se(int se_id) { g_test_elev_se_last = se_id; g_test
 int g_test_hint_se_last = -1;
 int g_test_hint_se_count = 0;
 void re15_audio_re2_hint_se(int se_id) { g_test_hint_se_last = se_id; g_test_hint_se_count++; }
+/* RE2-ERGAENZUNG "Tuer verschlossen" (engine/src/lock_se_common.c) — Spion fuer den Riegel.
+ * last = Satz der Mini-Bank TUERSE.VBS (RE2_DOOR_SE_ZU_A/_B/_E). */
+int g_test_door_se_last = -1;
+int g_test_door_se_count = 0;
+void re15_audio_re2_door_se(int se_id) { g_test_door_se_last = se_id; g_test_door_se_count++; }
 /* RE2-Ergaenzung: die Panel-Klick-Bank (RE2 ROOM2130 snd0, Gruppe 2 / 0x0A + 0x0C).
  * Belege in include/re15_audio.h; hier nur der Spion, damit die Sonden die Aufrufstellen
  * pruefen koennen. */

@@ -16,3 +16,29 @@ target_compile_definitions(probe_r30_tuer_verschlossen PRIVATE
 add_executable(probe_r30_tuerse_bank probe_r30_tuerse_bank.c)
 target_link_libraries(probe_r30_tuerse_bank PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_r30_tuerse_bank PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ---- BAU (Runde 30): RIEGEL fuer den "Tuer verschlossen"-Ton (RE2-ERGAENZUNG) ----
+# Ein Programm, sechs Teile (Dossier §5 Schritt 6 + Nachbesserung): (a) Bank-Bytes/pitch, (b) 98 Raeume im
+# Frisch-Zustand (51 Plaetze je 1 Ton mit dem Satz der Art, sonst 0, fuenf Pflichtfaelle),
+# (c) ROOM4000 sub02 behaelt RE1.5s eigenes Se_on(2,0x0f), (d) Tabellen-Volllauf 54 Zeilen,
+# (e) ROOM5080/5081 ohne Strom, (f) Stimmen-Schranke.
+add_executable(test_r30_tuer ${CMAKE_CURRENT_SOURCE_DIR}/test_r30_tuer.c)
+target_link_libraries(test_r30_tuer PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r30_tuer PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/engine/src)
+target_compile_definitions(test_r30_tuer PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_r30_tuerse_bank        COMMAND test_r30_tuer bank)
+add_test(NAME unit_r30_tuer_tabelle       COMMAND test_r30_tuer tabelle)
+add_test(NAME unit_r30_tuer_r4000         COMMAND test_r30_tuer r4000)
+add_test(NAME unit_r30_tuer_verschlossen  COMMAND test_r30_tuer raeume)
+# Nachbesserung (Gegenpruefer): (e) ROOM5080/5081 msg 2 ohne Strom nach sub02s Aot_reset,
+# (f) Skript-Haken hinter der Stimmen-Warte-Schranke von op_message_on.
+add_test(NAME unit_r30_tuer_strom         COMMAND test_r30_tuer strom)
+add_test(NAME unit_r30_tuer_stimme        COMMAND test_r30_tuer stimme)
+set_tests_properties(unit_r30_tuerse_bank unit_r30_tuer_tabelle unit_r30_tuer_r4000
+    unit_r30_tuer_strom unit_r30_tuer_stimme
+    PROPERTIES TIMEOUT 60)
+set_tests_properties(unit_r30_tuer_verschlossen PROPERTIES TIMEOUT 240)

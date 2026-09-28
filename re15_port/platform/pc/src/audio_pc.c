@@ -33,6 +33,7 @@
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
 #include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
+#include "re15_lock_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Tuer-Mini-Bank TUERSE.VBS */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -1267,6 +1268,80 @@ void re15_audio_re2_hint_se(int se_id)
     if (!g_audio.initialized) return;
     if (!load_re2_hint_se_pc()) return;
     se_play_layers(s_hint_edt, &s_hint_vab, s_hint_decoded, s_hint_decoded_len, se_id);
+}
+
+/* ===== 5c. Bank-Slot: RE2-"TUER VERSCHLOSSEN" (TUERSE.VBS) ==================
+ * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL. Belege im Kopf von include/re15_lock_se.h:
+ * RE1.5 ist an verschlossenen Tueren stumm (@0x80043084 / @0x800430bc); RE2 spielt im
+ * Tuer-Handler @0x80051610 / @0x800516a4 `jal 0x8005ba28` Se_on(Bank 2, Satz 0x16) mit
+ * a1 = 0 (nicht positional), Raumskripte denselben Satz (ROOM2110 sub09 @Datei 0x01BBC).
+ *
+ * Kopie des Fahrstuhl-Slots 5a: shared_assets/RE2/TUERSE.VBS hat dasselbe Satzformat
+ * [SE-Map @0 .. vh_off) [VH "pBAV" @vh_off] [Trailer, u32 vh_off @edt_size-8] [VBD]
+ * (FUN_8005a09c), die Groessen liefert re15_door_bank_rec() (gen/re2_door_bank.inc,
+ * tools/re2_door_se_cut.py). Vier Wellen (ZU_A ROOM1140 / ZU_B ROOM1050 / ZU_E ROOM2110 /
+ * ZU_P ROOM7020, je Raumbank-Satz 0x16), dekodiert mit demselben VAB-Code wie RE1.5. */
+static int        s_door_loaded = 0;
+static int        s_door_failed = 0;
+static re15_vab_t s_door_vab;
+static uint8_t   *s_door_edt = NULL;
+static int16_t   *s_door_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_door_decoded_len[RE15_VAB_MAX_SAMPLES];
+
+static int load_re2_door_se_pc(void)
+{
+    if (s_door_loaded) return 1;
+    if (s_door_failed) return 0;
+    s_door_failed = 1;                      /* nur EIN Versuch, danach still stumm */
+
+    re15_door_bank_rec_t rec;
+    re15_door_bank_rec(&rec);
+
+    int sz = 0;
+    uint8_t *vbs = re15_pc_read_re2("TUERSE.VBS", &sz);
+    if (!vbs) {
+        fprintf(stderr, "[tuerse] shared_assets/RE2/TUERSE.VBS fehlt -> Tuer-Ton stumm\n");
+        return 0;
+    }
+    if ((unsigned)sz < rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }
+
+    uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
+    if (!edt) { free(vbs); return 0; }
+    memcpy(edt, vbs + rec.edt_off, rec.edt_size);
+
+    /* VH-Offset = Trailer-u32 @[edt_size-8] (FUN_8005a09c, s. Slot 5a). */
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]         | ((uint32_t)edt[rec.edt_size-7] << 8)
+                    | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
+    if (vh_off + 0x20u > rec.edt_size ||
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_door_vab) != 0) {
+        free(edt); free(vbs); return 0;
+    }
+
+    const uint8_t *vb = vbs + rec.vbd_off;
+    for (int i = 0; i < s_door_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_door_vab.samples[i].offset, vsz = s_door_vab.samples[i].size;
+        if (off + vsz > rec.vbd_size) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+        s_door_decoded[i]     = pcm;
+        s_door_decoded_len[i] = n;
+    }
+    free(vbs);
+    s_door_edt    = edt;
+    s_door_loaded = 1;
+    s_door_failed = 0;
+    return 1;
+}
+
+/* Der Tuer-Ton. se_id = Satz der Mini-Bank (RE2_DOOR_SE_ZU_A/_B/_E/_P). Nicht positional
+ * wie RE2 @0x800516a8 `addu a1,zero,zero`. Gerufen aus engine/src/lock_se_common.c. */
+void re15_audio_re2_door_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (!load_re2_door_se_pc()) return;
+    se_play_layers(s_door_edt, &s_door_vab, s_door_decoded, s_door_decoded_len, se_id);
 }
 
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
