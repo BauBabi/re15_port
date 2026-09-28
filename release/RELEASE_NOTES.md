@@ -138,6 +138,24 @@ jetzt in 0; die Freigabe wird in allen neun Raeumen auf dem Weg eines Spielers e
 danach kommt sein Auftritt (EMERGENCE) wieder, der vorher uebersprungen wurde. Der Endkampf in
 ROOM5090 ist byte-gleich zu vorher (13 Birkin-/G5-Sonden unveraendert).
 
+## Warum der Linux-Bau ueber eine Stunde dauerte
+
+Sie hatten Recht, das war nicht normal. Der Container las jede Datei ueber die
+Windows-Freigabe (WSL2, 9p-Mount), und dort kostet JEDE Dateioperation rund 10 ms: 5000-mal
+stat 54 s statt 3 s, die Spieldaten lesen 142 s statt 0,17 s. Configure, Uebersetzen und die
+Tests bestehen fast nur aus solchen Zugriffen. Jetzt wird der Quellbaum zu Beginn in den
+Container kopiert und dort gebaut; das Repo haengt nur noch als Rueckfall darunter, sodass
+kein Test still eine Datei verliert (eigener Test-Fingerabdruck als Gate). Die Bau-Werkzeuge
+liegen in einem vorgebauten Image, statt bei jedem Lauf neu installiert zu werden.
+
+| | vorher | jetzt |
+|---|---|---|
+| Linux/Steam-Deck-Bau mit voller Testsuite | 82 min | gut 9 min |
+| Windows-Bau | 4,4 min | 1,3-2 min |
+
+Die Programme sind bis auf Bau-Kennung und Zeitstempel byte-gleich. Dieses Paket ist bereits
+auf dem neuen Weg gebaut, die Linux-Suite im Container: 405 von 405.
+
 ## Das Tor am Landeplatz (ROOM1170) - Tuersequenz nach RE2
 
 Das Gelaendertor am Hubschrauberlandeplatz (ROOM1170) oeffnet sich jetzt wie eine Tuer in
