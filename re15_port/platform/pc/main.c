@@ -4732,13 +4732,16 @@ re_title:;
                     if (*p == ',') p++;
                 }
             }
+            /* wippe = RE2s Pfeil-Stellung (0x800d5c19, Nachschliff pfeil), bob = RE1.5s
+             * Pfeil-Versatz (0x800c75fe) - beide wie zuletzt gezeichnet. */
             if (getenv("RE15_DOC_LOG") && re15_menu_is_open() && g_inv_screen.substate == 2)
                 fprintf(stderr, "[r30-doc] F%u st=%d page=%d/%d tx=%d bild=%d satz=%d "
-                        "liste0=%d\n", (unsigned)g_engine.frame_count,
+                        "liste0=%d wippe=%d bob=%d\n", (unsigned)g_engine.frame_count,
                         g_inv_screen.item_state, g_inv_screen.file_reader_page,
                         g_inv_screen.file_end, g_inv_screen.file_text_x,
                         g_inv_screen.file_bild, g_inv_screen.file_bildsatz,
-                        re15_files_get(0));
+                        re15_files_get(0), g_inv_screen.file_re2_wippe,
+                        g_inv_screen.file_bob_off);
             if (s_exit_frame >= 0 && (long)g_engine.frame_count >= s_exit_frame) running = 0;
             /* MESS-HAKEN RE15_IRONS_LOG=1 (Runde 30, Thema E2, reine Diagnose, env-gegatet):
              * in ROOM1150/1151 eine Zeile nach debug.log, sobald sich am Schreibtisch etwas

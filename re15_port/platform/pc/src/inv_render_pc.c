@@ -70,7 +70,7 @@ static uint8_t  s_map4[256][256];   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,2
                                      * 256 rows, upload rect @0x8004c1a0-b0; loaded
                                      * synchronously off g_inv_screen.map_page)       */
 static int      s_map_loaded = -1;  /* CD file id resident in s_map4 (-1 = none)      */
-static uint16_t s_clut[20][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+static uint16_t s_clut[22][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
                                      * [17..19] = die drei KARTEN-ZUSTANDSREIHEN,
                                      * aus [13] abgeleitet (s. karten_cluts_bauen);
                                      * [10]=TEX.TIM CLUT row 0 (256,480) id 0x7810 —
@@ -89,7 +89,14 @@ static uint16_t s_clut[20][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=S
                                      * 486) ids 0x7890/0x7910/0x7990 — the FUN_80028ec4
                                      * text palettes (clut = 0x7810|(a3&0x30)<<3
                                      * @0x80028f5c-64: title 0x10 / footer 0x20 /
-                                     * dimmed underscores 0x30; FILE wave) */
+                                     * dimmed underscores 0x30; FILE wave);
+                                     * [20]/[21] = RE2 ST0.TIM-Blatt 2, Datei-Zeile 0
+                                     * (Ende-Marke) / 2 (Blaetter-Pfeile) - geladen von
+                                     * re2st0_laden (Runde 30, Nachschliff pfeil) */
+/* RUNDE 30 (Nachschliff pfeil): RE2s Status-Blatt 2 fuer die Pfeile des Dokument-Lesers
+ * (RE15_INV_PAGE_RE2ST0). 4bpp 256x72 Texel; 0 = nicht versucht, 1 = da, -1 = fehlt. */
+static uint8_t  s_re2st0[72][256];
+static int      s_re2st0_state = 0;
 /* wave 4: the photo VRAM window = halfwords (832..887, 256..327) as 8bpp 112x72 —
  * texpage 0x9d of the photo prim @0x800c6944-84. Initial content = the TEX.TIM data
  * that the menu-open upload put there (byte cols 256..367 of each row); the CHECK
@@ -918,6 +925,68 @@ static int mod5(int t5, int m)
     if (v > 255) v = 255;
     return v >> 3;
 }
+/* RE2s ST0.TIM, zweites TIM = das Blatt mit den Blaetter-Pfeilen und der Ende-Marke des
+ * Dokument-Lesers. Datei: shared_assets/RE2/ST0.TIM = info/re2leon/COMMON/DATA/ST0.TIM
+ * (byte-gleich, 77536 Byte). Das erste TIM (8bpp-Icons, @0) wird uebersprungen; seine
+ * Laenge ergibt die Lage des zweiten (@0x10820 - RE2 laedt es von 0x80198000 + 0x10820 =
+ * `lui a0,0x801a` / `ori a0,a0,0x8820` @0x80068580-84).
+ * CLUT: der Lader legt Datei-Zeile k nach VRAM-Zeile 490 + k (Wort 0x0a1b
+ * `addiu v0,zero,2587` @0x80068588; `lbu v0,-1039(v0)` / `addiu v0,v0,480`
+ * @0x80076b00-08). Der Leser liest (256,490) = Zeile 0 fuer die Ende-Marke
+ * (@0x800725d0) und (256,492) = Zeile 2 fuer die Pfeile (@0x8007262c / @0x8007611c).
+ * Bild: nach (704,256) (`sll v0,v1,6` / `addiu v0,v0,-1024` @0x80076a6c-80), dieselbe
+ * Lage wie die Texturseite 27 der Pfeil-Sprites (@0x800687c8) -> u/v zaehlen ab dem
+ * Bildanfang. Fehlt die Datei, bleiben Pfeile und Marke ungezeichnet (Meldung einmal). */
+static uint32_t le32_at(const uint8_t *b, int o)
+{
+    return (uint32_t)b[o] | (uint32_t)b[o + 1] << 8 | (uint32_t)b[o + 2] << 16 |
+           (uint32_t)b[o + 3] << 24;
+}
+
+static int re2st0_laden(void)
+{
+    int sz = 0, off, y, u;
+    uint8_t *buf;
+    re15_tim_t tim;
+    if (s_re2st0_state) return s_re2st0_state;
+    s_re2st0_state = -1;
+    buf = re15_pc_read_re2("ST0.TIM", &sz);
+    if (!buf) {
+        fprintf(stderr, "[inv] RE2/ST0.TIM fehlt - Leser-Pfeile ungezeichnet\n");
+        return -1;
+    }
+    /* erstes TIM ueberspringen: Kopf 8 Byte, CLUT-Block (flags & 8), Bild-Block */
+    off = 8;
+    if (sz >= 12 && (buf[4] & 8)) off += (int)le32_at(buf, 8);
+    if (off + 4 <= sz) off += (int)le32_at(buf, off);
+    if (off <= 8 || off + 20 > sz || re15_tim_parse(buf + off, sz - off, &tim) != 0 ||
+        tim.bpp != 4 || !tim.has_clut) {
+        fprintf(stderr, "[inv] RE2/ST0.TIM: zweites TIM @0x%x unlesbar\n", off);
+        free(buf);
+        return -1;
+    }
+    {
+        const int cw = buf[off + 16] | buf[off + 17] << 8;     /* CLUT-Breite (16) */
+        const uint8_t *px = (const uint8_t *)tim.pixels;
+        const int pitch = tim.width / 2;
+        memset(s_re2st0, 0, sizeof s_re2st0);
+        for (y = 0; y < 72 && y < tim.height; y++)
+            for (u = 0; u < 256 && u < tim.width; u++) {
+                uint8_t bb = px[y * pitch + (u >> 1)];
+                s_re2st0[y][u] = (u & 1) ? (bb >> 4) : (bb & 0xF);
+            }
+        memset(s_clut[RE15_INV_CLUT_RE2ST0_Z0], 0, sizeof s_clut[0]);
+        memset(s_clut[RE15_INV_CLUT_RE2ST0_Z2], 0, sizeof s_clut[0]);
+        if (cw >= 16 && tim.clut_entries >= 3 * cw) {
+            memcpy(s_clut[RE15_INV_CLUT_RE2ST0_Z0], tim.clut + 0 * cw, 16 * sizeof(uint16_t));
+            memcpy(s_clut[RE15_INV_CLUT_RE2ST0_Z2], tim.clut + 2 * cw, 16 * sizeof(uint16_t));
+            s_re2st0_state = 1;
+        }
+    }
+    free(buf);
+    return s_re2st0_state;
+}
+
 static int blend_ch(int d5, int f8)  /* abr0 with replicated dst expansion */
 {
     int v = (((d5 << 3) | (d5 >> 2)) + f8) >> 4;
@@ -1093,6 +1162,7 @@ static void raster_op(const re15_inv_op_t *o)
     } else if (o->kind == RE15_INV_OP_SPRT) {
         const uint16_t *clut = s_clut[o->clut];
         int py, pxx;
+        if (o->page == RE15_INV_PAGE_RE2ST0 && re2st0_laden() != 1) return;
         for (py = 0; py < o->h; py++) {
             int v = (o->v + py) & 255;
             for (pxx = 0; pxx < o->w; pxx++) {
@@ -1103,6 +1173,8 @@ static void raster_op(const re15_inv_op_t *o)
                           : (o->page == RE15_INV_PAGE_MAP4)   ? s_map4[v][u]
                           : (o->page == RE15_INV_PAGE_PHOTO8) ?
                                 ((v < 72 && u < 112) ? s_photo_px[v][u] : 0)
+                          : (o->page == RE15_INV_PAGE_RE2ST0) ?
+                                ((v < 72) ? s_re2st0[v][u] : 0)
                           :                                     s_icon8[v][u];
                 uint16_t c = clut[t];
                 int t5r, t5g, t5b;
@@ -1220,8 +1292,10 @@ static void fb_dump_bmp(const char *path)
  *     @0x800760c0-c8) = neutral; die Textseiten aller Dokumente und die Illustration
  *     von FILE08 tragen kein Texel mit STP-Farbe -> volle Deckung.
  *   DURCHSICHT — CLUT-Farbe 0x0000 (re2doc_common.c re15_re2doc_pixel).
- * Die Pfeile und die Fusszeile kommen aus RE1.5s Anzeigeliste und liegen DARUEBER
- * (re15_inv_screen.c, frueher Ruecksprung fuer Bild-Dokumente).
+ * Die Pfeile samt Ende-Marke (RE2s, Nachschliff pfeil) und die Fusszeile (RE1.5s)
+ * kommen aus der Anzeigeliste (re15_inv_screen.c, frueher Ruecksprung fuer
+ * Bild-Dokumente); die Pfeile zeichnet re15_inv_render_pc_draw VOR dieser Bild-Ebene
+ * (RE2s OT-Reihenfolge), die Fusszeile danach.
  *
  * Die Masse kommen aus den TIM-Koepfen, nicht aus einer Tabelle - so kann ein selbst
  * gebautes Dokument eine eigene Seitenhoehe haben, ohne dass hier etwas nachgezogen wird. */
@@ -1316,10 +1390,23 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
     map_page_check();                 /* MAP wave: sync the MAP PIX page (0x8004c328) */
     memset(s_fb5, 0, sizeof s_fb5);   /* cleared draw buffer (screen fully covered) */
     if (s_doc_under_on) {             /* Runde 30: Bild-Dokument UNTER der Liste */
+        /* Nachschliff pfeil: RE2s Pfeile und Ende-Marke liegen UNTER Illustration und
+         * Textseite. RE2 haengt sie nach beiden an dieselbe OT-Stelle (AddPrim
+         * Textseite @0x80072550, Illustration @0x80072590, rechts/Marke @0x8007269c,
+         * links @0x800726f8; FUN_800761b8 gleich), AddPrim haengt VORN an -> die
+         * zuletzt angehaengten zeichnet die GPU zuerst. Deshalb: erst die Ops der Seite
+         * RE15_INV_PAGE_RE2ST0, dann die Bild-Ebene, dann der Rest der Liste. */
+        for (i = n - 1; i >= 0; i--)
+            if (ops[i].kind == RE15_INV_OP_SPRT && ops[i].page == RE15_INV_PAGE_RE2ST0)
+                raster_op(&ops[i]);
         doc_underlay_draw();
         s_doc_under_on = 0;
+        for (i = n - 1; i >= 0; i--)
+            if (!(ops[i].kind == RE15_INV_OP_SPRT && ops[i].page == RE15_INV_PAGE_RE2ST0))
+                raster_op(&ops[i]);
+    } else {
+        for (i = n - 1; i >= 0; i--) raster_op(&ops[i]);   /* back-to-front */
     }
-    for (i = n - 1; i >= 0; i--) raster_op(&ops[i]);   /* back-to-front */
     {   /* MESSSCHIENE: Abzug auf Zuruf (re15_inv_shot_now). Traegt den Blatt-Durchlauf
          * RE15_MAP_SHOT_SWEEP - alle 13 Kartenblaetter in EINEM Lauf statt in 13 Laeufen
          * a vier Minuten. Reine Debug-Schiene, kein Spielverhalten. */

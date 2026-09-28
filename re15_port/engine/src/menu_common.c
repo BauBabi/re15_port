@@ -1591,6 +1591,71 @@ static void map_mode(uint16_t pressed)
 static uint16_t s_file_bob_ctr = 0;   /* u16 @0x800c75fc (bob counter)                 */
 static uint16_t s_file_bob_off = 0;   /* u16 @0x800c75fe (bob offset)                  */
 
+/* ====================================================================================
+ * RUNDE 30 (Nachschliff pfeil) — RE2s WIPP-TAKT DER BLAETTER-PFEILE (nur Bild-Dokumente)
+ *
+ * RE1.5s Pfeile (0x800c7528, 16x16 bei x = 0x14 - off) sind fuer RE1.5s Textspalte
+ * gebaut; RE2s Textseite beginnt bei x = 25 (@0x80076170), und RE1.5s linker Pfeil
+ * lag dort mit off = 0 auf den Glyphen (x 34-35). Fuer Bild-Dokumente gelten deshalb
+ * RE2s Pfeile samt RE2s Takt. Selbst disassembliert (info/re2leon/PSX.EXE), beide Leser
+ * fuehren dasselbe Paar Bytes: Zaehler c = 0x800d5c18 = 40(s0), Stellung b = 0x800d5c19
+ * = 41(s0), s0 = 0x800d5bf0.
+ *   Aufnahme-Leser, Zustand 0 (Sprungtabelle @0x80011dbc[0] = 0x8007279c):
+ *     800727b8  lbu   v1,41(s0)            ; b
+ *     800727cc  beq   v1,zero,0x800727f8
+ *     800727d4  lbu   v0,40(s0)            ; b != 0:
+ *     800727dc  sltiu v0,v0,0xa            ;   c < 10 -> b = 0
+ *     800727e8  sb    zero,41(s0)
+ *     800727f0  j     0x8007281c / 800727f4 addiu v0,v0,-2   ; c -= 2
+ *     800727f8  lbu   v0,40(s0)            ; b == 0:
+ *     80072800  sltiu v0,v0,0x51           ;   c >= 81 -> b = 1
+ *     8007280c  sb    v0(=1),41(s0)
+ *     80072818  addiu v0,v0,2              ;   c += 2
+ *     8007281c  sb    v0,40(s0)
+ *   FILE-Schirm-Leser, Zustand 13 (Sprungtabelle @0x80011c30[13] = 0x8006d07c): derselbe
+ *     Code @0x8006d0a0-104, aber `sltiu v0,v0,0x33` @0x8006d0e8 — Schwelle 51 statt 81.
+ *   Start: nach JEDER Ankunft der Seite (Oeffnen, Blaettern) und nach LINKS aus der
+ *     Ende-Stellung b = 0, c = 2 (Aufnahme @0x80072aa0-b0 / @0x80072940-48, FILE-Schirm
+ *     @0x8006d290-9c, erreicht aus @0x8006d2fc/@0x8006d3b0 und @0x8006d288).
+ *   In der Ende-Stellung (Aufnahme Zustand 1 @0x80072918, FILE-Schirm Zustand 14
+ *     @0x8006d20c) zaehlt nichts.
+ *   Gezeichnet wird NACH der Zaehlung im selben Bild (`jal 0x800724b4` @0x80072afc am
+ *     Ende der Zustaende 0..5; FILE-Schirm `jal 0x800761b8` @0x8006d400).
+ * Ergebnis (Rechnung r30_pfeil_ueberdeckung.py): Aufnahme-Leser 40 Bilder b = 0 nach der
+ * Ankunft, dann 39/39; FILE-Schirm-Leser 25, dann 24/24.
+ * BILDBASIS: beide Status-Schirme laufen mit VSync-Modus 0 (RE1.5 `sb zero,21590(at)`
+ * @0x800460e0 in FUN_800460b8; RE2 `sb zero,-998(at)` @0x80068a1c, gelesen vom Flip
+ * @0x8002b994 -> VSync @0x8002b998) — RE2-Bilder sind also RE1.5-Bilder; der Port tickt
+ * beide gleich (dieselbe Umrechnung wie RE1.5s Wippe 0x800c75ac-e4 oben).
+ * Schwelle je Leser: s_doc_target = 1 ist der Aufnahme-Leser (RE2 Status-Modus 4,
+ * Tabelle 0x800a9c9c[4] = 0x8007274c), sonst der Leser aus der FILE-Liste. */
+#define RE2_WIPP_START       2     /* `addiu v0,zero,2` @0x80072aa0 / @0x8006d290 */
+#define RE2_WIPP_UNTEN      10     /* `sltiu v0,v0,0xa` @0x800727dc / @0x8006d0c4 */
+#define RE2_WIPP_OBEN_AUFN  0x51   /* `sltiu v0,v0,0x51` @0x80072800 (Aufnahme-Leser) */
+#define RE2_WIPP_OBEN_FILE  0x33   /* `sltiu v0,v0,0x33` @0x8006d0e8 (FILE-Schirm)    */
+static uint8_t s_re2_wipp_ctr = RE2_WIPP_START;   /* 0x800d5c18 */
+static uint8_t s_re2_wippe    = 0;                /* 0x800d5c19 */
+
+static void re2_wippe_start(void)
+{
+    s_re2_wippe    = 0;                /* sb zero,41(s0) @0x80072aa8 / @0x8006d294 */
+    s_re2_wipp_ctr = RE2_WIPP_START;   /* sb v0(=2),40(s0) @0x80072ab0 / @0x8006d29c */
+    g_inv_screen.file_re2_wippe = 0;
+}
+
+static void re2_wippe_zaehlen(void)
+{
+    const int oben = s_doc_target ? RE2_WIPP_OBEN_AUFN : RE2_WIPP_OBEN_FILE;
+    if (s_re2_wippe) {
+        if (s_re2_wipp_ctr < RE2_WIPP_UNTEN) s_re2_wippe = 0;      /* @0x800727dc-e8 */
+        s_re2_wipp_ctr = (uint8_t)(s_re2_wipp_ctr - 2);            /* @0x800727f4 */
+    } else {
+        if (s_re2_wipp_ctr >= oben) s_re2_wippe = 1;               /* @0x80072800-0c */
+        s_re2_wipp_ctr = (uint8_t)(s_re2_wipp_ctr + 2);            /* @0x80072818 */
+    }
+    g_inv_screen.file_re2_wippe = s_re2_wippe;
+}
+
 /* Page-turn driver 0x800c77bc: a0 = 25c2 (4..7), returns the next 25c2; mutates the
  * reader page [0x800c6c97], phase u16 @0x800c78a4 and text x s16 @0x800c78a6.
  * Phase < 10 (sltiu 0xa @0x800c77d4): states 4/5 x += 28 (@0x800c77f0), states 6/7
@@ -1663,6 +1728,8 @@ static void file_reader_open(int bildsatz, int max_page)
     s_file_bob_ctr = 0;                         /* sw zero 0x800c75fc @0x800c706c-70 */
     s_file_bob_off = 0;
     g_inv_screen.file_bob_off = 0;
+    re2_wippe_start();                          /* RE2-Pfeile: b = 0, c = 2; gezaehlt wird
+                                                 * erst nach dem Hereinfahren (s. case 4..7) */
     s_doc_open_se = 1;                          /* Satz 8 folgt mit dem Hereinfahren */
 }
 
@@ -1996,6 +2063,14 @@ static void file_mode(uint16_t pressed, uint16_t held)
         if (s_file_bob_ctr == 0x1e)      { s_file_bob_off = 4; s_file_bob_ctr++; }
         else if (s_file_bob_ctr == 0x3c) { s_file_bob_ctr = 0; s_file_bob_off = 0; }
         else                             s_file_bob_ctr++;
+        /* RUNDE 30 (Nachschliff pfeil): Bild-Dokumente wippen nach RE2 — gezaehlt am
+         * ANFANG des Lese-Zustands, VOR der Eingabe (Aufnahme @0x800727b8-81c vor
+         * @0x80072820, FILE-Schirm @0x8006d0a0-104 vor @0x8006d108), und nur ausserhalb
+         * der Ende-Stellung (RE2 Zustand 1 / 14 zaehlt nicht). Gezeichnet wird der Wert
+         * nach der Zaehlung (@0x80072afc / @0x8006d400). */
+        if (g_inv_screen.file_bild &&
+            g_inv_screen.file_reader_page != g_inv_screen.file_end)
+            re2_wippe_zaehlen();
         /* input 0x800c7110 (s0 = end = u16[0x800ccd34]>>1 = 7 @0x800c7124-30) —
          * priority CROSS > SQUARE > LEFT > RIGHT (@0x800c712c-4c).
          *
@@ -2042,6 +2117,9 @@ static void file_mode(uint16_t pressed, uint16_t held)
                     (*pg)--;                              /* @0x800c7228 */
                     /* STUMM nach RE2 (@0x80072940-48, kein jal 0x8005ba28); RE1.5
                      * spielte hier Satz 4 (@0x800c722c-34) */
+                    /* RE2 setzt dabei die Pfeil-Wippe zurueck: `sb zero,41(s0)` /
+                     * `sb v0(=2),40(s0)` @0x80072944-48 (FILE-Schirm @0x8006d294-9c) */
+                    if (g_inv_screen.file_bild) re2_wippe_start();
                 } else if (*pg == 0) {
                     *pg = 0;                              /* sb zero @0x800c7224 (no SE) */
                 } else {
@@ -2079,6 +2157,11 @@ static void file_mode(uint16_t pressed, uint16_t held)
         /* @0x800c6fb0-c4: 25c2 := driver(25c2); the text is drawn at the driver's
          * s16 @0x800c78a6 (build-side, lh @0x800c6fc8-d0). */
         g_inv_screen.item_state = (uint8_t)file_anim_step(g_inv_screen.item_state);
+        /* RUNDE 30 (Nachschliff pfeil): die Seite ist angekommen -> RE2 startet die
+         * Pfeil-Wippe neu, b = 0 / c = 2, und zeichnet im selben Bild schon Zustand 0
+         * (Aufnahme @0x80072a9c-b0 -> j 0x80072afc; FILE-Schirm @0x8006d2f4-fc ->
+         * @0x8006d294-9c -> @0x8006d400). */
+        if (g_inv_screen.item_state == 3 && g_inv_screen.file_bild) re2_wippe_start();
         return;
 
     case 8:

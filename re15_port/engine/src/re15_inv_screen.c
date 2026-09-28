@@ -1356,6 +1356,73 @@ int re15_inv_file_bild_lage(const re15_inv_screen_t *st, int *out_set, int *out_
     return 1;
 }
 
+/* RUNDE 30 (Nachschliff pfeil) — DIE PFEILE DES LESERS FUER BILD-DOKUMENTE = RE2s.
+ * Anlass (Gegenpruefung): RE1.5s linker Pfeil (x = 0x14 - off, 16 breit, @0x800c7554-70)
+ * steht mit off = 0 auf x 20..35 und damit auf der ersten Glyphen-Spalte der RE2-Textseite,
+ * die bei x = 25 beginnt (`addiu v0,zero,25` @0x80076170) — 12 der 17 Textseiten des Irons
+ * Diary plus die Ende-Stellung, 6..16 Glyphen-Pixel je Seite (r30_pfeil_ueberdeckung.py).
+ * RE2 zeichnet seine Pfeile selbst; selbst disassembliert (info/re2leon/PSX.EXE):
+ *   ANLEGEN FUN_80075fd0, Sprite 2 (rechts) und 3 (links), je zwei Puffer:
+ *     80076104  addiu s3,zero,56 / 80076108 addiu s3,s3,-14   ; u = 42 (rechts)
+ *     80076164  bne s2,.. / 80076168 addiu s3,s3,-14          ; u = 28 (links)
+ *     8007611c  addiu a1,zero,492                             ; GetClut(256,492)
+ *     80076120  addiu v0,zero,102                             ; Code 0x66
+ *     80076128  addiu v0,zero,13 / 8007614c sh v0,4(s0)      ; h = 13
+ *     80076100  addiu s6,zero,12 / 80076140 sb s6,-1(s0)     ; v = 12
+ *                                  80076144 sh s6,2(s0)      ; w = 12
+ *     800760fc  addiu s5,zero,128 / 80076130-38 sb s5        ; r = g = b = 128
+ *   ZEICHNEN FUN_800724b4 (Aufnahme-Leser; FUN_800761b8 im FILE-Schirm gleich):
+ *     800725bc  lbu v0,23555(v0)   ; Seite (0x800d5c03)
+ *     800725c4  bne v0,s4,0x80072628 ; s4 = max_page (@0x80072520)
+ *       Seite == max -> ENDE-MARKE "EXIT":
+ *       800725cc/d0  a0 = 256, a1 = 490    ; GetClut(256,490)
+ *       800725d4-e0  w = 42, h = 14       ; 800725e4-f0 u = 56, v = 12
+ *       800725f4 x = 280 ; 800725fc y = 110
+ *       80072618 beq v1(Zustand),1 -> 128 ; sonst 80072624 sb 48 (Helligkeit)
+ *                (FILE-Schirm: Zustand 14 -> 128 @0x80076318-28)
+ *       sonst PFEIL RECHTS:
+ *       80072628/2c  GetClut(256,492) ; 80072630-4c w 12 h 13 u 42 v 12
+ *       80072654  lbu v1,23577(v1)    ; Stellung b (0x800d5c19)
+ *       80072658  y = 110 ; 80072660-68 x = 3*b + 282
+ *       80072678  Helligkeit 128
+ *     80072688-9c  AddPrim nur in Zustand < 2 (sltiu 0x2) = Lesen oder Ende-Stellung
+ *   PFEIL LINKS:
+ *     800726a8-b4  Helligkeit 128
+ *     800726b8  lbu a0,41(s3)         ; b
+ *     800726bc/c0  y = 110 ; 800726c4-d4 x = 12 - 3*b
+ *     800726d8-f8  AddPrim nur in Zustand 0 (nicht Ende-Stellung) UND Seite != 0
+ *                  (FILE-Schirm: nur Zustand 13 @0x80076424-44)
+ *   AUSSEHEN: CLUT (256,492) = Datei-Zeile 2 von ST0.TIM-Blatt 2 (Lader-Wort 0x0a1b
+ *     @0x80068588) = gruen (0x1386 / 0x09c3 / 0x0060); Ende-Marke (256,490) = Datei-Zeile 0,
+ *     grau. Kein Texel traegt STP -> Code 0x66 mischt nichts.
+ * ZUORDNUNG im RE1.5-Automaten des Ports: Lesen (Zustand 3, Seite < file_end) = RE2
+ * Zustand 0 / 13; die Ende-Stellung (Seite == file_end) = RE2 Zustand 1 / 14 (dieselbe
+ * Zuordnung wie bei den Toenen, menu_common.c Zustand 3). RE2s "Seite == max" ist im Port
+ * die letzte Seite (file_end - 1) UND die Ende-Stellung (dort steht noch die letzte Seite,
+ * @0x800c7628-34).
+ * REIHENFOLGE: RE2 haengt Pfeile und Marke NACH Textseite und Illustration an dieselbe
+ * OT-Stelle (AddPrim @0x80072550 / @0x80072590 / @0x8007269c / @0x800726f8) — sie werden
+ * ZUERST gezeichnet, also UNTER der Textseite. Das setzt die Plattform um
+ * (inv_render_pc.c: Ops der Seite RE15_INV_PAGE_RE2ST0 vor der Bild-Ebene). */
+static void emit_file_arrows_re2(emit_t *e, const re15_inv_screen_t *st)
+{
+    const int end   = (int)st->file_end;
+    const int pg    = st->file_reader_page;
+    const int b     = st->file_re2_wippe ? 1 : 0;
+    const int ende_stellung = (pg == end);          /* RE2 Zustand 1 / 14 */
+    if (pg >= end - 1) {                            /* Seite == max @0x800725c4 */
+        const int hell = ende_stellung ? 128 : 48;  /* @0x80072618-24 / @0x80072678 */
+        sprt(e, RE15_INV_PAGE_RE2ST0, RE15_INV_CLUT_RE2ST0_Z0, 280, 110, 42, 14,
+             56, 12, hell, hell, hell, 1);
+    } else {
+        sprt(e, RE15_INV_PAGE_RE2ST0, RE15_INV_CLUT_RE2ST0_Z2, 282 + 3 * b, 110, 12, 13,
+             42, 12, 128, 128, 128, 1);
+    }
+    if (!ende_stellung && pg != 0)                  /* @0x800726d8-f8 */
+        sprt(e, RE15_INV_PAGE_RE2ST0, RE15_INV_CLUT_RE2ST0_Z2, 12 - 3 * b, 110, 12, 13,
+             28, 12, 128, 128, 128, 1);
+}
+
 /* Corner arrows = DEBUG.BIN 0x800c7528 (draw part) + glyph drawer 0x800c7670:
  * 16x16 SPRTs, DR_MODE 0xe100001b = the 4bpp TEX page (@0x800c76b0-b8), prim
  * 0x64808080 (@0x800c76bc-c4), uv+clut from the type table @0x800c7734 =
@@ -1366,11 +1433,10 @@ int re15_inv_file_bild_lage(const re15_inv_screen_t *st, int *out_set, int *out_
  * all uv(0x70,0x48). off = the bob offset drawn BEFORE the counter update. */
 static void emit_file_arrows(emit_t *e, const re15_inv_screen_t *st)
 {
-    int end = st->file_bild ? (int)st->file_end  /* Seitenzahl des Dokuments (RE2 max_page
-                                                 * `lhu a0,-24252(at)` @0x800727c8, +1) */
-                            : RE15_INV_FILEDOC_PAGES; /* s0 = u16[0xcd34]>>1 @0x800c7544-50 */
+    int end = RE15_INV_FILEDOC_PAGES;           /* s0 = u16[0xcd34]>>1 @0x800c7544-50 */
     int off = (int)st->file_bob_off;
     int pg = st->file_reader_page;
+    if (st->file_bild) { emit_file_arrows_re2(e, st); return; }
     if (pg != 0)
         sprt(e, RE15_INV_PAGE_TEX4, 7, 0x14 - off, 0x70, 16, 16,
              0x70, 0x38, 128, 128, 128, 0);
@@ -1821,9 +1887,10 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
          * im FILE-Schirm @0x8006cf78-80; FUN_8002bda8 schreibt Farbe a1 = 0 und
          * w = 0x140 / h = 0xf0 @0x8002bdc0-d8) und zeichnet sonst nur Illustration,
          * Textseite, Pfeile und Ende-Marke (FUN_800724b4). Die Anzeigeliste traegt
-         * deshalb hier nur RE1.5s Pfeile und Fusszeile und kehrt dann zurueck: kein
-         * Rahmen, keine Tafeln, kein Hintergrundblatt. Grund und Sprites zeichnet die
-         * Plattform UNTER diese Liste (inv_render_pc.c).
+         * deshalb hier nur RE2s Pfeile/Ende-Marke (emit_file_arrows_re2, Nachschliff
+         * pfeil) und RE1.5s Fusszeile und kehrt dann zurueck: kein Rahmen, keine
+         * Tafeln, kein Hintergrundblatt. Grund und Sprites zeichnet die Plattform
+         * (inv_render_pc.c): Pfeile -> Illustration -> Textseite -> Fusszeile.
          * Zustand 3 = lesen: Fusszeile + Pfeile (RE1.5 @0x800c6f90-a4).
          * Zustaende 4..7 = blaettern: nur die Fusszeile (RE1.5 @0x800c6fb0-d4, dort
          *   ohne Pfeile; RE2 zeichnet die Pfeile ebenfalls nur in den Zustaenden 0 und

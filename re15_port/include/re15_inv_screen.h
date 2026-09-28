@@ -85,7 +85,7 @@ enum {
                                * FUN_800460b8 @0x8004631c-38 (new-GPU path; GetGraphType
                                * @0x80068948 in {1,2} would select the old encoding 0x27),
                                * AddPrim'd at the draw gate @0x80049bf4.               */
-    RE15_INV_PAGE_ITEMTILE = 6 /* ITEM BOX [DESIGN, non-canonical mechanism]: direct
+    RE15_INV_PAGE_ITEMTILE = 6,/* ITEM BOX [DESIGN, non-canonical mechanism]: direct
                                * item-tile sampling for BOX cells — `v` = the tile id,
                                * `u` = 0; w<=40 samples ITEMALL.PIX tile[v] (the SAME
                                * byte-true 40x30 art the identity icon cache uses,
@@ -95,6 +95,15 @@ enum {
                                * ST_00 row 0, like every icon cell. The box cells
                                * bypass the 10-cell VRAM cache because the original
                                * has no box VRAM region (itembox_verdict.md).        */
+    RE15_INV_PAGE_RE2ST0 = 7  /* RUNDE 30 (Nachschliff pfeil): RE2s Status-Blatt 2 =
+                               * info/re2leon/COMMON/DATA/ST0.TIM, zweites TIM @Datei
+                               * 0x10820 (4bpp, 256x72 Texel), im Port als
+                               * shared_assets/RE2/ST0.TIM. RE2 laedt es mit dem Wort
+                               * 0x0a1b (`addiu v0,zero,2587` @0x80068588) nach
+                               * (704,256) und zeichnet die Blaetter-Pfeile und die
+                               * Ende-Marke "EXIT" des Dokument-Lesers daraus
+                               * (DR_MODE tpage 27 = 4bpp (704,256) @0x800687bc-e8).
+                               * Nur der Leser fuer Bild-Dokumente benutzt die Seite.   */
 };
 
 /* clut selector: 0..7 = DAT_800b2610[0..7] = ids 0x7a10..0x7bd0 = TEX.TIM CLUT rows
@@ -143,7 +152,16 @@ enum {
      * karten_cluts_bauen in platform/pc/src/inv_render_pc.c). */
     RE15_INV_CLUT_MAP_BESUCHT   = 17,
     RE15_INV_CLUT_MAP_AKTUELL   = 18,
-    RE15_INV_CLUT_MAP_UNBESUCHT = 19
+    RE15_INV_CLUT_MAP_UNBESUCHT = 19,
+    /* RUNDE 30 (Nachschliff pfeil): die zwei CLUT-Zeilen von RE2s ST0.TIM-Blatt 2, die der
+     * Dokument-Leser benutzt. Der Lader legt Datei-Zeile k nach VRAM-Zeile 490 + k
+     * (Wort 0x0a1b @0x80068588: CLUT-Zeile 0x0a; `addiu v0,v0,480` @0x80076b08):
+     *   20 = GetClut(256,490) = Datei-Zeile 0 -> Ende-Marke "EXIT"
+     *        (`addiu a1,zero,490` @0x800725d0 / @0x800762d4)
+     *   21 = GetClut(256,492) = Datei-Zeile 2 -> Blaetter-Pfeile
+     *        (`addiu a1,zero,492` @0x8007611c / @0x8007262c / @0x80076330) */
+    RE15_INV_CLUT_RE2ST0_Z0 = 20,
+    RE15_INV_CLUT_RE2ST0_Z2 = 21
 };
 
 /* DIE DREI ZUSTANDSFARBEN DES RAUMKOERPERS (CLUT-Eintrag 1), aus RE2s Palette
@@ -353,6 +371,11 @@ typedef struct {
                              * + doc*4); RE1.5 liest die Zahl aus dem Dokument selbst
                              * (u16[0x800ccd34] >> 1 @0x800c7124-30). Die Seite darf
                              * file_end erreichen (= RE1.5s Ende-Stellung @0x800c71e8) */
+    uint8_t file_re2_wippe; /* RUNDE 30 (Nachschliff pfeil): RE2s Wipp-Stellung der
+                             * Blaetter-Pfeile, WIE GEZEICHNET (0/1) = Byte 0x800d5c19
+                             * (lbu @0x80072654 / @0x800726b8; FILE-Schirm @0x80076358 /
+                             * @0x80076404). Nur fuer Bild-Dokumente; menu_common.c
+                             * zaehlt sie nach RE2 (Zaehler 0x800d5c18).              */
     /* ---- ITEM BOX (Unterschirm, VOLLSTAENDIG nach RE2 — Nutzer-Auftrag 2026-08-30;
      * Ableitung analysis/itembox_re2/re2-box-transfer.md). Die Felder spiegeln die
      * FSM in re15_itembox.c auf RE2s Register: box_scroll = DAT_800d5c14 (Scroll-
