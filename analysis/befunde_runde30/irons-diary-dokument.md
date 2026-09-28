@@ -1217,6 +1217,12 @@ Vergleichswerkzeug `vergleich.py` mit Ausgabe `vergleich_framedump_gegen_schirm.
    `menu_common.c` „was RE1.5 vollständig hat, bleibt RE1.5") und RE2s Pfeil-Grafik aus
    seinem Status-Schirm nicht im Asset-Baum liegt; eine Mischung „RE1.5-Pfeil an RE2-Lage"
    wäre eine neue Erfindung.
+   **Erledigt im Nachschliff (Spur pfeil, `nachschliff-pfeil.md`):** Der Bild-Leser zeichnet
+   jetzt RE2s Pfeile und die Ende-Marke aus `shared_assets/RE2/ST0.TIM` (byte-gleich
+   RE2s `COMMON/DATA/ST0.TIM`), mit RE2s Lage, Wipp-Takt (Schwelle 0x51 im Aufnahme-Leser
+   @0x80072800, 0x33 im Listen-Leser @0x8006d0e8) und Reihenfolge (unter der Textseite).
+   Vorher waren es nachgemessen 12 der 17 Textseiten plus die Ende-Stellung, jetzt sind es
+   0 verdeckte Glyphen-Pixel auf allen 18 Seiten in beiden Wipp-Stellungen.
 
 ### 10.6 Nachbesserung nach der Gegenprüfung
 
