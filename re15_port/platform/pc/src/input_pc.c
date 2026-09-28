@@ -52,10 +52,17 @@
  * (identical string to the DuckStation --path). Letters (may combine, e.g. "XU2" = run fwd):
  *   U=UP(fwd) D=DOWN(back) L=LEFT(rotate) R=RIGHT(rotate) X=CROSS(run) A=SQUARE(action)
  *   M=R1(aim) W=wait(no bits). seconds*fps frames (fps = RE15_FPS or 30 = the PSX 30Hz cadence).
+ *   P = FINGER AUF DEM OVERLAY-R1 (Runde 30, Thema C): kein Pad-Bit, sondern der Eingang des
+ *       R1-Umschalters im Touch-Overlay (re15_touch_pc_r1_inject). Wirkt nur mit
+ *       RE15_TOUCH_OVERLAY=1; "P0.1" = ein Tipp von 3 Bildern, im freien Spiel rastet er die
+ *       Kampfpose ein, der naechste P-Tipp loest sie. Das R1-Bit, das das Overlay daraus macht,
+ *       wird nach der Skript-Ersetzung wieder einge-ODERt; ohne P und ohne Finger ist es 0,
+ *       bestehende Skripte bleiben also bitgleich.
  * RE15_INPUT_SCRIPT_START = lead-in frames before the script begins (default 90 = 3s room
  *   settle/fade-in). After the timeline ends the pad returns to 0 (player idle). */
 #define RE15_SCRIPT_MAX_TICKS 8192
-static uint16_t s_script[RE15_SCRIPT_MAX_TICKS];
+#define RE15_SCRIPT_P        0x10000u   /* Buchstabe P: Overlay-R1-Finger (kein Pad-Bit) */
+static uint32_t s_script[RE15_SCRIPT_MAX_TICKS];
 static int      s_script_len   = 0;      /* number of scripted ticks, -1 = none */
 static int      s_script_start = 90;
 static int      s_script_init  = 0;
@@ -105,8 +112,11 @@ static void script_parse_once(void)
         int mash = 0;   /* 'B<secs>' = BUTTON-MASH: CROSS press-EDGE every other tick (the grab
                          * mash-escape probe; a constant hold is one edge and never re-triggers
                          * the FUN_80037024 press-edge test) */
+        uint32_t touch_r1 = 0;   /* 'P' = Finger auf dem Overlay-R1 (s. Kopf) */
         while (*p && ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z'))) {
-            if (*p == 'B' || *p == 'b') mash = 1; else bits |= script_bit_for(*p);
+            if (*p == 'B' || *p == 'b') mash = 1;
+            else if (*p == 'P' || *p == 'p') touch_r1 = RE15_SCRIPT_P;
+            else bits |= script_bit_for(*p);
             p++;
         }
         char *end = NULL;
@@ -115,7 +125,7 @@ static void script_parse_once(void)
         p = end;
         int n = (int)(secs * fps + 0.5);
         for (int i = 0; i < n && ticks < RE15_SCRIPT_MAX_TICKS; i++)
-            s_script[ticks++] = mash ? (((i & 1) ? 0 : RE15_PAD_CROSS) | bits) : bits;
+            s_script[ticks++] = (uint32_t)(mash ? (((i & 1) ? 0 : RE15_PAD_CROSS) | bits) : bits) | touch_r1;
     }
     s_script_len = ticks;
     fprintf(stderr, "[input-script] RE15_INPUT_SCRIPT=\"%s\" -> %d ticks @ %d fps, start frame %d\n",
@@ -368,9 +378,23 @@ void re15_input_tick(void)
      * scripted override, exactly like the keyboard) so a controller drives every screen. */
     bits |= pad_read_bits();
 
+    /* Skript-Tick VOR dem Overlay bestimmen: der Buchstabe P ist der Eingang des R1-Umschalters
+     * im Overlay und muss in dessen pad_bits-Aufruf dieses Ticks ankommen (Runde 30, Thema C).
+     * Derselbe Zaehler wie bisher (s_input_ticks, einmal je gerendertem Bild in JEDEM Modus). */
+    if (!s_script_init) script_parse_once();
+    s_input_ticks++;
+    uint32_t sw = 0;
+    if (s_script_len > 0) {
+        int t = s_input_ticks - 1 - s_script_start;
+        sw = (t >= 0 && t < s_script_len) ? s_script[t] : 0;
+        if (sw & RE15_SCRIPT_P) re15_touch_pc_r1_inject(1);
+    }
+
     /* TOUCH-OVERLAY (Android / RE15_TOUCH_OVERLAY=1): Finger auf dem On-Screen-Pad liefern
-     * dieselben Bits; der F9-Knopf setzt die befund.log-MARKE ueber den Debug-Kanal (Flanke). */
-    bits |= re15_touch_pc_pad_bits();
+     * dieselben Bits; der F9-Knopf setzt die befund.log-MARKE ueber den Debug-Kanal (Flanke).
+     * R1 kommt dabei aus dem Umschalter (touch_r1_toggle_pc.h): im freien Spiel die RASTE. */
+    uint16_t touch = re15_touch_pc_pad_bits();
+    bits |= touch;
     if (re15_touch_pc_take_marke()) s_dbg_pressed |= (uint16_t)(1u << 8);   /* F9 = Bit 8 */
 
     /* SELECT+START held together = toggle fullscreen (the controller equivalent of F11); consume the
@@ -399,11 +423,11 @@ void re15_input_tick(void)
      * intro rooms exactly like a player (and like the DuckStation --path capture it mirrors).
      * RE15_START_ROOM ist inzwischen ENTFERNT (2026-08-01); dieses Skript ist zusammen mit dem
      * Debug-Menue (Token E = SELECT, T = Dreieck, A = Quadrat) der einzige Weg in einen Raum. */
-    if (!s_script_init) script_parse_once();
-    s_input_ticks++;
     if (s_script_len > 0) {
-        int t = s_input_ticks - 1 - s_script_start;
-        bits = (t >= 0 && t < s_script_len) ? s_script[t] : 0;
+        bits = (uint16_t)(sw & 0xFFFFu);
+        /* ...nur das R1 des Overlays ueberlebt die Ersetzung: ohne P und ohne Finger ist es 0
+         * (bestehende Skripte unveraendert), mit P ist es der Ausgang des Umschalters. */
+        bits |= (uint16_t)(touch & RE15_PAD_R1);
     }
 
     g_engine.pad_current = bits;
