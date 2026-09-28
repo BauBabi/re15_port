@@ -1,0 +1,49 @@
+RE2 ST0.TIM zweites TIM @0x10820, Bild 256x72 Texel
+  Pfeil links  sichtbare Texel 94, Spalten 0..11
+  Pfeil rechts sichtbare Texel 94, Spalten 0..11
+  Ende-Marke   sichtbare Texel 259, Spalten 0..26
+
+Seite | Stellung | RE2: links rechts/Ende | RE1.5 (vorher): links rechts
+t     | 0 |    0    0 |    0    0 
+t     | 1 |    0    0 |    0    0 
+p01   | 0 |    0    0 |    8    0 x 34-35 y 116-120
+p01   | 1 |    0    0 |    0    0 
+p02   | 0 |    0    0 |   13    0 x 34-35 y 113-122
+p02   | 1 |    0    0 |    0    0 
+p03   | 0 |    0    0 |    0    0 
+p03   | 1 |    0    0 |    0    0 
+p04   | 0 |    0    0 |    7    0 x 35-35 y 116-122
+p04   | 1 |    0    0 |    0    0 
+p05   | 0 |    0    0 |    0    0 
+p05   | 1 |    0    0 |    0    0 
+p06   | 0 |    0    0 |   16    0 x 34-35 y 113-122
+p06   | 1 |    0    0 |    0    0 
+p07   | 0 |    0    0 |    0    0 
+p07   | 1 |    0    0 |    0    0 
+p08   | 0 |    0    0 |   15    0 x 34-35 y 114-122
+p08   | 1 |    0    0 |    0    0 
+p09   | 0 |    0    0 |   13    0 x 34-35 y 116-122
+p09   | 1 |    0    0 |    0    0 
+p10   | 0 |    0    0 |    7    0 x 35-35 y 116-124
+p10   | 1 |    0    0 |    0    0 
+p11   | 0 |    0    0 |    0    0 
+p11   | 1 |    0    0 |    0    0 
+p12   | 0 |    0    0 |    7    0 x 35-35 y 116-122
+p12   | 1 |    0    0 |    0    0 
+p13   | 0 |    0    0 |    7    0 x 35-35 y 116-122
+p13   | 1 |    0    0 |    0    0 
+p14   | 0 |    0    0 |    0    0 
+p14   | 1 |    0    0 |    0    0 
+p15   | 0 |    0    0 |   13    0 x 34-35 y 116-122
+p15   | 1 |    0    0 |    0    0 
+p16   | 0 |    0    0 |    6    0 x 35-35 y 113-122
+p16   | 1 |    0    0 |    0    0 
+p17   | 0 |    0    0 |    7    0 x 35-35 y 116-122
+p17   | 1 |    0    0 |    0    0 
+Ende  | 0 |    0    0 |    7    0 x 35-35 y 116-122
+Ende  | 1 |    0    0 |    0    0 
+
+SUMME Pfeil-Pixel auf Textseiten-Pixeln: RE2-Lage 0, RE1.5-Lage (vorher) 126
+
+Aufnahme-Leser (Schwelle 81): gezeichnete Stellung je Bild nach der Ankunft, Wechsel bei Bild [40, 79, 118, 157, 196]; Laeufe [39, 39, 39, 39]
+FILE-Schirm-Leser (Schwelle 51): gezeichnete Stellung je Bild nach der Ankunft, Wechsel bei Bild [25, 49, 73, 97, 121, 145]; Laeufe [24, 24, 24, 24, 24]

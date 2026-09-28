@@ -1,0 +1,34 @@
+=== r30 Nachschliff pfeil: RE2-Pfeile im Leser fuer Bild-Dokumente ===
+  PASS: shared_assets/RE2/ST0.TIM da, 77536 Byte (Soll 77536 = info/re2leon/COMMON/DATA/ST0.TIM)
+  PASS: zweites TIM @0x10820 (Soll 0x10820; RE2 laedt 0x80198000 + 0x10820 @0x80068580-84)
+  PASS: Blatt 2: 256x72 Texel, 336 CLUT-Eintraege (Soll 256x72, 16x21)
+  PASS: Pfeil-CLUT (256,492) = Datei-Zeile 2: 5 1386 6 09c3 7 0060 (Soll 1386 09c3 0060 = gruen; Lader-Wort 0x0a1b @0x80068588)
+
+[A/B] Anzeigeliste und Ueberdeckung, 19 Stellungen x 2 Wipp-Stellungen
+  PASS: A  RE2-Sprites in allen 38 von 38 Stellungen (Lage, uv, Groesse, CLUT, Helligkeit)
+  PASS: A  keine RE1.5-Pfeile (TEX4 16x16) mehr im Bild-Leser: 0
+  PASS: B  gezeichnete Pfeil-/Marken-Pixel gesamt 7428 (> 0, sonst waere der Riegel leer)
+  PASS: B  Pfeil-Pixel auf Glyphen-Pixeln der Textseite: 0 (Soll 0)
+  NEGATIV-KONTROLLE (RE1.5-Pfeile an RE1.5-Lage): 126 Pixel auf Glyphen, auf 13 Stellungen; p01 8, p02 13, Ende 7
+  PASS: B  Negativ-Kontrolle: die alte Lage ueberdeckt 126 Glyphen-Pixel auf 13 Stellungen (Soll 126 auf 13: 12 Textseiten + Ende-Stellung; p01 8, p02 13, Ende 7 wie am Framedump von cac33993)
+
+[C] Wipp-Takt im Automaten
+  PASS: C1 Aufnahme-Leser liest nach 28 Bildern, Ankunftsbild Wippe 0
+  Aufnahme-Leser: Laeufe 41 / 39 / 39 / 39
+  PASS: C1 Aufnahme-Leser: 41 Bilder b = 0 (Ankunft + 40), dann 39 / 39 / 39 (Schwelle 0x51 @0x80072800, Umkehr c < 10 @0x800727dc, Start c = 2 @0x80072aa0)
+  PASS: C1b Blaettern bei b = 1: Ankunft mit b = 0, dann 41 Bilder b = 0 (Soll 0 / 41; Neustart @0x80072aa0-b0)
+  PASS: C1 am Automaten: links x 12 / 9, rechts x 282 / 285 (Soll 12/9, 282/285; @0x800726c4-d4, @0x80072660-68)
+  PASS: C2 letzte Seite 17 erreicht (17)
+  PASS: C2 Ende-Stellung: 120 Bilder ohne Zaehlung, Wippe bleibt 1 (RE2 Zustand 1 @0x80072918 zaehlt nicht)
+FAIL: C2 LINKS aus der Ende-Stellung: Seite 17, Wippe 0 (@0x80072944-48)
+FAIL: C2 danach wieder 41 / 39 (34 / 39) - Zaehler auf 2 gesetzt
+  PASS: C  Aufnahme-Leser geschlossen, Irons Diary auf Platz 0
+  PASS: C3 Leser aus der Liste liest nach 26 Bildern, Ankunftsbild Wippe 0
+  Listen-Leser: Laeufe 26 / 24 / 24 / 24
+  PASS: C3 Listen-Leser: 26 Bilder b = 0 (Ankunft + 25), dann 24 / 24 / 24 (Schwelle 0x33 @0x8006d0e8, Start @0x8006d290-9c)
+  PASS: C3 KREUZ: zurueck in der Liste
+
+[D] RE1.5-Textleser unveraendert
+  PASS: D  Textleser Seite 1: RE1.5-Pfeile links (0x14-off,0x70) / rechts (0x11c+off,0x70) clut UI7, off 0/4 (@0x800c7554-a8), keine RE2-Sprites
+
+R30 PFEIL: FAIL (2)
