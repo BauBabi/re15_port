@@ -751,7 +751,7 @@ mit P1+P2+P3 (`exe_nachher`).
 | Spielermodell in ROOM1031 | PL04, keine `[pld] Spielermodell -> PLD/PL00`-Zeile | `[pld] Spielermodell -> PLD/PL00.PLD` (Zeile 479) | keine `[pld]`-Zeile; einzige Modellzeile `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`; Bild F480/F960/F1440 zeigt Elza (rot-weisser Anzug, blond) |
 | ROOM1031 nach dem Abbruch | sub15 -> Tuer 19 -> sub13 -> Spielfreigabe | sub12 F363 -> Tuer 18 -> ROOM1241 | `Evt_exec sub=15` F363, `Cut_chg(13)`; `DOOR FIRE slot=19` F445; `sub=11` + `sub=13` F445; `Cut_chg(4)` F445, `(6)` F521, `(0)` F840; `letterbox closed -> gameplay` F1013 |
 | Leon vorher gegen nachher, Serie `200-1600/200` | 15 Bilder, 0 abweichende Pixel | — | 15 Bilder, 0 von je 691200 Pixeln abweichend (`leon_vorher_gegen_nachher.txt`); Ereignisfolge (`[evt]`, `DOOR FIRE`, Raumladen) beider Laeufe zeilengleich |
-| Suite (ctest, `--timeout 240`) | alles gruen | 360 (master) | LAEUFT (Nachtrag folgt) |
+| Suite (ctest, `--timeout 240`) | alles gruen | 360 (master) | **362/362 gruen**, RC=0, 308 s (`ctest --test-dir re15_port/build --timeout 240`, Rueckgabewert ohne Pipe gelesen); darin `integration_elza_vollstart` Passed 108.3 s, `unit_r30_elza_selbsttuer` Passed, `unit_elza_zweig` Passed — kein GUI-Haken musste wiederholt werden |
 
 Abzuege (`build/r30_elza-bau/abzuege/`): `01_vorher_1031_f5_lobby.png` (Lobby Cut 0 im
 Vorspann), `02_nachher_1031_f5_schwarz.png`, `03_nachher_1031_f12_erzaehler.png`,

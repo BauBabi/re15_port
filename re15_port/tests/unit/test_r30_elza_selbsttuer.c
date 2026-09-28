@@ -64,7 +64,6 @@
 #endif
 
 extern scd_vm_t         g_scd;
-extern re15_aot_state_t g_aot;
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
