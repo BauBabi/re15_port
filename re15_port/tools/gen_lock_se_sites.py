@@ -52,6 +52,22 @@ import scd_walk_lib as L
 
 # Woertliche Formeln. Der Text wird vorher normalisiert: Seitenumbruch " / " und
 # Mehrfach-Leerzeichen zu EINEM Leerzeichen.
+#
+# ⛔ Die AUSWAHL ueber den Wortlaut ist eine Port-Wahl, keine Original-Adresse: RE1.5 hat
+# kein Schloss-Feld (das Schloss ist Datenwahl sce=1 Text statt sce=2 Tuer), RE2 hat eines
+# (key_id @0x800515a8), aber keinen Satz fuer Texte. Belegt ist je Art nur die WELLE
+# (lock_se_common.c). Die Art S dagegen ist woertlich RE2s eigener Ton-Text (ROOM7020 msg 2).
+# Vollstaendigkeit gemessen (Nachbesserung Runde 30):
+#   - alle Tuer-Zwilling-Texte ohne Tabellenzeile: nur ROOM4070/4071 "The door won't open!"
+#     (RE2 stumm: Text-Handler PTR_800a73c4[4] = 0x80051948 ruft nur @0x80051968
+#     jal 0x8002fe38) und ROOM5080/5081 msg 2 (jetzt Art S);
+#   - Wortsuche seal/budge/inside/power/won't open/jam/block/broken/stuck/shut ueber alle
+#     206 RDTs: sonst Rolltore ("The shutter is tightly sealed in place.", ROOM11B0/11B1 -
+#     RE2s Rolltor-Texte liegen auf stummen Text-Plaetzen: ROOM60B0 sub00 @0x012C0,
+#     ROOM60C0 sub02 @0x01084, ROOM6160 sub00 @0x01EFC), die Tuer mit kaputtem Knauf
+#     (ROOM11D0/11D1 msg 1 - RE2s "The lock is broken and can't be opened." ist ebenfalls ein
+#     stummer Text-Platz, ROOM2090 sub00 @0x00E7C), versperrte Wege (Wasser 2050, Kisten 3040),
+#     ein Behaelter (40B0 msg 3), ein Spind (5060), Aufzuege, Schalter und Geraete.
 FORMELN = [
     ("K", "elektronisch verriegelt",   re.compile(r"It's electronically ?locked\.")),
     ("K", "Ausweis noetig",            re.compile(r"An ID card is ?required to (open|unlock) it\.")),

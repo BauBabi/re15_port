@@ -510,8 +510,8 @@ static void teil_raeume(void)
         }
     }
     printf("   %d Plaetze, %d ohne Standplatz, %d mit schon offenem Text (beide nicht gemessen),"
-           " %d mit Tabellen-Nachricht (K %d / M %d, %d Stellen), %d uebrige\n",
-           plaetze, ohne, offen, tab, tabK, tabM, n_stellen, still);
+           " %d mit Tabellen-Nachricht (K %d / M %d / S %d, %d Stellen), %d uebrige\n",
+           plaetze, ohne, offen, tab, tabK, tabM, tabS, n_stellen, still);
     /* Art S (ROOM5080/5081 msg 2) liegt im Frisch-Zustand NICHT auf einem Platz: erst sub02
      * (Generator) setzt ihn per Aot_reset. Den Weg prueft Teil (e). */
     CHECK(tab == 51 && tabK == 16 && tabM == 35 && tabS == 0 && n_stellen == 46,
