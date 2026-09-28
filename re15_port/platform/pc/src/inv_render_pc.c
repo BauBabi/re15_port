@@ -51,6 +51,7 @@
 extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
+#include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -292,6 +293,9 @@ static int inv_assets_init(void)
     /* DATA/ITEMALL.PIX: headerless 72 x 1200B (40x30 8bpp) icon tiles. */
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
     if (!s_itemall) { fprintf(stderr, "[inv] ITEMALL.PIX missing\n"); return s_ready; }
+    /* Icon der Sicherung (Tile 0x40 @0x12C00) einsetzen — derselbe Eingriff an ALLEN
+     * Ladestellen, sonst zeigen Raster und Item-Box zwei Gegenstaende (re15_sicherung.h). */
+    re15_sicherung_icon_einsetzen(s_itemall, s_itemall_size);
 
     /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
      * tiles, pic ids 1-14 (see the s_mixitem note above). */
@@ -304,6 +308,11 @@ static int inv_assets_init(void)
      * FUN_800492b8 mode 1 (w=0x28hw=80px, h=0x1e @0x80049318-6c). Optional: only
      * needed once a wide weapon is carried. */
     s_itps = load_cd("ITEM/ITPS.ITP", &s_itps_size);
+    /* Item-Bild der Sicherung (Block 0x40 @0xC0000) einsetzen. Der eingesetzte Block
+     * traegt die RE1.5-Rechtecke crect (0,489) / prect (832,256), photo_upload_check
+     * unten nimmt ihn deshalb an — das CHECK-Foto der Sicherung war vorher LEER, weil
+     * der ausgelieferte Block 0x40 die RE2-Rechtecke (0,480) / (0,0) traegt. */
+    if (s_itps) re15_sicherung_bild_einsetzen(s_itps, s_itps_size);
 
     s_ready = 1;
     return s_ready;

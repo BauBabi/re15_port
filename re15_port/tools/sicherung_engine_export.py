@@ -93,7 +93,10 @@ def md1_bauen():
     # zu loesen waere schwer kontrollierbar (Rotationsreihenfolge + Ursprung am Fuss);
     # liegend exportiert ist die Prop-Position schlicht die MITTE des Gegenstands.
     #   Laengsachse -> X (zentriert), Querschnitt -> (Y, Z).
-    halb = (L_KAPPE_U + L_KOERPER + L_KAPPE_O) / 2.0
+    # (Runde 30: der SITZ liegt inzwischen im Kuppelfach und das Prop traegt rot_y 1024 —
+    # include/re15_sicherung.h. Am Modell aendert das nichts: liegend + zentriert bleibt,
+    # die Prop-Position ist weiter die Mitte des Gegenstands.)
+    halb =(L_KAPPE_U + L_KOERPER + L_KAPPE_O) / 2.0
     verts = [(int(round(p[1] - halb)), int(round(p[0])), int(round(p[2]))) for p in v]
 
     # Vertex-Normalen aus den anliegenden Flaechen, auf 4096 normiert (Q12).
@@ -108,11 +111,19 @@ def md1_bauen():
         n /= ln
         for i in ids:
             acc[i] += n
+    # ⛔ NORMALEN NACH AUSSEN (Runde 30, Thema H, Dossier sicherung.md §3.4).
+    # Der Achsentausch samt Y-Spiegelung oben (verts) dreht die Haendigkeit; das
+    # Kreuzprodukt aus der OBJ-Umlaufrichtung zeigt danach nach INNEN. Gemessen am Bestand
+    # (normalen_pruefen.py): 160 von 160 Eck-Normalen nach innen — z.B. Punkt 0
+    # (-203,11,26) mit Normale (3009,-1064,-2568). Die ausgelieferten Modelle tragen sie
+    # aussen: ROOM1150 Prop 1/2 (Deckelhaelften, MD1 @Datei 0x138D4 / 0x13B88) 24 von 24,
+    # RE2 ROOM60D0 Prop 1 (Fuse Case) 80 von 80. Folge im Spiel: verkehrte Beleuchtung,
+    # Mittel RGB (65,65,60) statt (100,107,101). Deshalb wird jede Normale GEWENDET.
     norms = []
     for n in acc:
         ln = np.linalg.norm(n)
         n = (n / ln) if ln > 1e-6 else np.array([0.0, -1.0, 0.0])
-        norms.append(tuple(int(round(c * 4096)) for c in n))
+        norms.append(tuple(-int(round(c * 4096)) for c in n))
 
     def uv(ti):
         u, vv = vt[ti - 1]
@@ -147,11 +158,25 @@ def md1_bauen():
         (u0, v0), (u1, v1), (u2, v2) = (uv(f[0][1]), uv(f[1][1]), uv(f[2][1]))
         struct.pack_into("<BBHBBHBBH", d, base + off_tuv + i * 12,
                          u0, v0, CLUT_WORT, u1, v1, PAGE_WORT, u2, v2, 0)
+    # ⛔ VIERECKE IN Z-ORDNUNG, NICHT IM UMLAUF (Runde 30, Thema H, Dossier §3.3).
+    # Der Viereck-Zeichner der Raum-Objekte FUN_800256b0 reicht die vier MD1-Ecken
+    # UNVERAENDERT in die vier Ecken des GPU-Primitivs 0x3C (POLY_GT4):
+    #     gte_ldv3(v0,v1,v2); gte_rtpt();   -> gte_stsxy3_gt3(prim)   = x0y0, x1y1, x2y2
+    #     gte_ldv0(v3);       gte_rtps();   -> gte_stsxy(prim + 0x2c) = x3y3
+    #     param_3->cd = param_4 << 1 | 0x3c
+    # und die GPU teilt ein Viereck in (1,2,3) + (2,3,4) (psx-spx
+    # graphicsprocessingunitgpu.md). Ecke 0-1 ist eine Kante, Ecke 2-3 die
+    # GEGENUEBERLIEGENDE: 0-1-2-3 ist ein Z. Der Port teilt passend dazu (0,1,3) + (0,3,2)
+    # (platform/pc/main.c, Prop-Zweig). Gemessen (md1_zordnung.py): 482 von 484 Vierecken
+    # der ausgelieferten Props stehen in Z-Ordnung, 0 im Umlauf; die 40 der Sicherung
+    # standen alle im Umlauf — Deckung 0,748, ein Viertel jeder Flaeche blieb offen.
+    # modell_bauen() liefert die Flaeche im Umlauf a-b-c-e; geschrieben wird a-b-e-c,
+    # die UV-Saetze in derselben Folge.
     for i, f in enumerate(quads):
         a, b, c, e = [x[0] - 1 for x in f]
-        struct.pack_into("<8H", d, base + off_qf + i * 16, a, a, b, b, c, c, e, e)
+        struct.pack_into("<8H", d, base + off_qf + i * 16, a, a, b, b, e, e, c, c)
         (u0, v0), (u1, v1), (u2, v2), (u3, v3) = (uv(f[0][1]), uv(f[1][1]),
-                                                  uv(f[2][1]), uv(f[3][1]))
+                                                  uv(f[3][1]), uv(f[2][1]))
         struct.pack_into("<BBHBBHBBHBBH", d, base + off_quv + i * 16,
                          u0, v0, CLUT_WORT, u1, v1, PAGE_WORT, u2, v2, 0, u3, v3, 0)
     return bytes(d), len(verts), len(tris), len(quads)
@@ -177,7 +202,8 @@ def main():
                 " * Abnahme stehen in sicherung_modell.py / sicherung_abnahme.py.\n"
                 " *\n"
                 " * Format 1:1 wie die vier Original-Props desselben Raums: MD1-Kopf 65/0/2, ein\n"
-                " * Mesh mit geteilten V/N-Listen, Normalen auf 4096 (Q12); TIM 8bpp+CLUT,\n"
+                " * Mesh mit geteilten V/N-Listen, Normalen auf 4096 (Q12) und nach AUSSEN,\n"
+                " * Vierecke in Z-Ordnung (FUN_800256b0, Primitiv 0x3C); TIM 8bpp+CLUT,\n"
                 " * Bild 128x256 @VRAM(0,0), CLUT @VRAM(0,480), UV-clut 0x7800 / page 0x80.\n"
                 " * Texturhelligkeit x%.2f = Eigenfarbe (der Port beleuchtet Props selbst).\n"
                 " * CLUT-Index 0 bleibt frei (PSX-Farbschluessel).\n"

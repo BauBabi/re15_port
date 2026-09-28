@@ -8,6 +8,7 @@
  * icon (item_icon_common.c) — a different file / bit-depth / code path.
  */
 #include "re15_itps.h"
+#include "re15_sicherung.h"   /* re15_sicherung_bild_einsetzen (Runde 30, Thema H) */
 #include <stddef.h>
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -45,6 +46,10 @@ int re15_itps_load(void)
         data = re15_asset_read_file(path, &sz);
     }
     if (!data || (size_t)sz < ITPS_SIZE) return -1;
+    /* Item-Bild der Sicherung (Block 0x40 @0xC0000) im GELADENEN Puffer einsetzen — die
+     * Datei bleibt byte-true. Dieselbe Zeile steht an allen Ladestellen von ITPS.ITP
+     * (platform/pc/main.c, inv_render_pc.c). Herleitung: include/re15_sicherung.h. */
+    re15_sicherung_bild_einsetzen(data, sz);
     s_itps  = data;
     s_loaded = 1;
     return 0;

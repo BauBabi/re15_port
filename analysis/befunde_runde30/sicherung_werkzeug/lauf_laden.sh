@@ -9,7 +9,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd -W 2>/dev/null || pwd)"
 MARKE="${1:?Marke fehlt}"
-EXE="$ROOT/re15_port/build_r30_sicherung/platform/pc/re15_pc.exe"
+EXE="$ROOT/re15_port/${BAUVERZ:-build_r30_sicherung}/platform/pc/re15_pc.exe"
 ZIEL="$ROOT/build/r30_sicherung/$MARKE"
 mkdir -p "$ZIEL"
 cd "$ZIEL" || exit 2

@@ -6,6 +6,7 @@
  * The tile↔id map + the CLUTs are framebuffer-derived (mzd_inv_open.sav), byte-identical to the game.
  */
 #include "re15_item_icon.h"
+#include "re15_sicherung.h"   /* re15_sicherung_icon_einsetzen (Runde 30, Thema H) */
 #include <stddef.h>
 
 /* Platform asset reader (re15_asset_read_file lives in the PC/PSX backend; test_support stubs it). */
@@ -74,9 +75,20 @@ int re15_itemall_load(void)
         pix = re15_asset_read_file(path, &sz);
     }
     if (!pix || sz < ITEMALL_SIZE) return -1;
+    /* Icon der Sicherung (Tile 0x40 @0x12C00) im GELADENEN Puffer einsetzen — die Datei
+     * bleibt byte-true. Dieselbe Zeile steht an allen Ladestellen von ITEMALL.PIX
+     * (platform/pc/main.c, inv_render_pc.c). Herleitung: include/re15_sicherung.h. */
+    re15_sicherung_icon_einsetzen(pix, sz);
     s_pix = pix;
     s_loaded = 1;
     return 0;
+}
+
+const uint8_t *re15_itemall_tile_raw(uint8_t tile)
+{
+    if (tile >= ITEMALL_TILES) return NULL;
+    if (!s_loaded && re15_itemall_load() != 0) return NULL;
+    return s_pix + (size_t)tile * ITEMALL_TILE_BYTES;
 }
 
 int re15_item_icon_available(uint8_t id)
