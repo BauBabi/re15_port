@@ -40,6 +40,7 @@
 #include "re15_item_discard.h" /* "You don't need this key any more. Discard it?" (@0x800C508B) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 #include "re15_elev_se.h"   /* RE2-ERGAENZUNG: Fahrstuhl-Fahrton (engine/src/scd_elev_se.c) */
+#include "re15_lock_se.h"   /* RE2-ERGAENZUNG: "Tuer verschlossen"-Ton (engine/src/lock_se_common.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 
@@ -1484,6 +1485,13 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
      * meldete 511): ALLE 524 ausgelieferten sce-1-Records (436 Aot_set-Installs + 88
      * Aot_reset-Retypes) tragen 0xffff -> 0xffff0000, also friert JEDER Examine-Text
      * Spieler+AI+Anim+Skript ein, bis der Text weg ist. */
+    /* ⛔ RE2-ERGAENZUNG "Tuer verschlossen" (include/re15_lock_se.h): steht (Raum, Nachricht)
+     * als Text-Platz-Stelle in gen/lock_se_sites.inc, faellt hier EIN Ton — HINTER den
+     * Abfangungen Save-Telefon/Item-Box (die oeffnen gar keine Nachricht), unmittelbar vor
+     * dem Oeffnen. RE2 @0x800516a4 `jal 0x8005ba28` (Se_on 0x02160000, a1 = 0) und
+     * @0x800516b8 `jal 0x8002fe38` (Text) liegen im selben Bild. RE1.5s LAB_80043084 hat an
+     * dieser Stelle keinen Ton (@0x800430a0 einziger Aufruf = 0x80027e68). */
+    re15_lock_se_notice(g_current_room_id, index, RE15_LOCK_WEG_AOT);
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
@@ -1748,6 +1756,15 @@ static int op_message_on(scd_thread_t *t)
      * besteht deshalb nur aus "nichts einhaengen" (RE2 @0x800516C0 `j LAB_800516f8`).
      * Herleitung: include/re15_item_discard.h. */
     re15_discard_besitz_vor_nachricht(g_current_room_id, t->pc[1]);
+
+    /* ⛔ RE2-ERGAENZUNG "Tuer verschlossen" (include/re15_lock_se.h), Skript-Weg: RE2
+     * ROOM2110.RDT sub09 spielt @Datei 0x01BBC Se_on(2,0x16) direkt hinter Message_on 6
+     * @Datei 0x01BB6 — Ton und Text im selben Bild. HIER und nicht am Funktionsanfang: die
+     * Stimmen-Warte-Schranke darueber parkt den Opcode mit `return 2` und betritt ihn je Bild
+     * neu; weiter oben fiele der Ton also je Bild. Ab hier laeuft der Opcode genau einmal
+     * durch (t->pc += 4 am Ende). Skript-Wege mit EIGENEM RE1.5-Se_on (ROOM4000 sub02
+     * @Datei 0x0142E Se_on(2,0x0f)) stehen nicht in der Tabelle und bleiben RE1.5. */
+    re15_lock_se_notice(g_current_room_id, t->pc[1], RE15_LOCK_WEG_SKRIPT);
 
     if (re15_room_full_text(g_current_room_id)) {
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
