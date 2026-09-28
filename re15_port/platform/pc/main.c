@@ -2777,6 +2777,64 @@ static uint64_t pc_now_us(void)
  * Auswertung: tests/integration/test_r30_titel_puls.cmake;
  *             analysis/befunde_runde30/titel-blinken_tools/r30_pulse_frame_stats.py. */
 extern int re15_render_pc_title_row_probe(int *drawn, int *row, uint32_t *hash, uint32_t *sum);
+
+/* MESSSCHIENE RE15_CUT_SYNC_LOG=<datei> (Runde 30, Spur cut-blitz; KEIN Verhalten).
+ * Je Spielbild, NACH re15_render_end_frame, eine Zeile:
+ *   F<bild> room=<raum> bg=<raum>#<cut> view=<cut> sync=<0|1|-1> req=<cam_id> shown=<wv0A>
+ *   fade0=<rgb>/<abr> tris=<n> dc=<todeskamera>
+ *   bg    Herkunft des Hintergrunds, der in DIESEM Bild in den Framebuffer ging
+ *         (bg_pc.c re15_bg_last_blit_tag; -1 = in diesem Bild kein Blit)
+ *   view  der Cut, dessen Kameramatrix die 3D-Projektion dieses Bilds trug — nicht aus einer
+ *         Variablen abgeschrieben, sondern ZURUECKGERECHNET: die tatsaechlich benutzte
+ *         cam_view gegen re15_camera_build_view jedes Cuts des Raums (erster Treffer)
+ *   sync  1 = cam_view == Ansicht des Hintergrund-Cuts, 0 = verschieden (Blitz-Bild),
+ *         -1 = kein 3D-Pass in diesem Bild
+ *   fade0 Ueberblendkanal 0 (g_fade_ch[0].out_r, 0 wenn nicht gezeichnet) — ein Blitz unter
+ *         vollem Schwarz (255/2) ist unsichtbar
+ *   tris  Zahl der gezeichneten texturierten Dreiecke (render_pc.c) — 0 = kein 3D sichtbar */
+static re15_camera_view_t       s_cs_view;
+static int                      s_cs_view_ok = 0;
+static const re15_camera_cut_t *s_cs_cuts    = NULL;
+static int                      s_cs_ncuts   = 0;
+static int pc_cs_same_view(const re15_camera_view_t *a, const re15_camera_view_t *b)
+{
+    return !memcmp(a->rot, b->rot, sizeof a->rot) && !memcmp(a->trans, b->trans, sizeof a->trans)
+        && a->fov_screen_dist == b->fov_screen_dist;
+}
+static void pc_cut_sync_log(void)
+{
+    static FILE *lf; static int init;
+    if (!init) { init = 1; const char *p = getenv("RE15_CUT_SYNC_LOG"); if (p && *p) lf = fopen(p, "w"); }
+    if (!lf) { s_cs_view_ok = 0; return; }
+    extern const char *re15_bg_last_blit_tag(uint32_t *frame);
+    extern int re15_render_pc_dbg_textri_count(void);
+    uint32_t bf = 0;
+    const char *tag = re15_bg_last_blit_tag(&bf);
+    unsigned broom = 0; int bcut = -1;
+    if (bf != (uint32_t)g_engine.frame_count || sscanf(tag, "room%x#%d", &broom, &bcut) != 2) {
+        broom = 0; bcut = -1;
+    }
+    int vcut = -1, sync = -1;
+    if (s_cs_view_ok && s_cs_cuts) {
+        re15_camera_view_t v;
+        for (int k = 0; k < s_cs_ncuts; k++)
+            if (re15_camera_build_view(&s_cs_cuts[k], &v) == 0 && pc_cs_same_view(&v, &s_cs_view)) {
+                vcut = k; break;
+            }
+        if (bcut >= 0 && broom == (unsigned)g_current_room_id && bcut < s_cs_ncuts)
+            sync = (re15_camera_build_view(&s_cs_cuts[bcut], &v) == 0
+                    && pc_cs_same_view(&v, &s_cs_view)) ? 1 : 0;
+        else if (bcut >= 0)
+            sync = 0;   /* Hintergrund aus einem anderen Raum */
+    }
+    fprintf(lf, "F%u room=%04x bg=%04x#%d view=%d sync=%d req=%u shown=%d fade0=%u/%u tris=%d dc=%d\n",
+            (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, broom, bcut, vcut, sync,
+            (unsigned)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
+            g_fade_ch[0].drawn ? (unsigned)g_fade_ch[0].out_r : 0u, (unsigned)g_fade_ch[0].abr,
+            re15_render_pc_dbg_textri_count(), g_death_cam ? 1 : 0);
+    fflush(lf);
+    s_cs_view_ok = 0;
+}
 static void pc_title_pulse_log(uint64_t now_us, uint64_t due, int phase, uint64_t fade_tick, int shown)
 {
     static FILE *lf; static int init;
@@ -10192,6 +10250,9 @@ re_title:;
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, (int)g_scd.cam_id);
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
+            /* Messschiene RE15_CUT_SYNC_LOG: die Ansicht, mit der dieses Bild projiziert wurde. */
+            s_cs_view = cam_view; s_cs_view_ok = 1;
+            s_cs_cuts = active_cuts; s_cs_ncuts = active_cut_count;
         }
 
         /* INVENTORY on top (Phase 8.26 / wave 1): the screen is drawn into the framebuffer, but
@@ -10482,6 +10543,7 @@ re_title:;
               } } }
 
         re15_render_end_frame();
+        pc_cut_sync_log();   /* Messschiene RE15_CUT_SYNC_LOG (env-gegatet, kein Verhalten) */
 
         /* DEBUG-HARNESS: RE15_EXIT_AT="<bild>[#<raum-hex>]" beendet den Prozess am ENDE des
          * genannten Spielbilds — NACH end_frame, also nachdem Zeichenliste, debug.log-Zeilen

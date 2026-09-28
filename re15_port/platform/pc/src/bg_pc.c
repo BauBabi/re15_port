@@ -236,6 +236,17 @@ static int      s_bg_loaded = 0;
 extern int re15_fade_log_on(void);   /* fade_common.c */
 static char s_bg_tag[24] = "(none)";
 
+/* MESSSCHIENE RE15_CUT_SYNC_LOG (Runde 30, Spur cut-blitz; KEIN Verhalten): Herkunft des
+ * Bildes, das zuletzt in den Framebuffer ging, und die Bildnummer dieses Blits. main.c
+ * vergleicht damit je Bild den Hintergrund-Cut mit dem Cut der 3D-Projektion. */
+static char     s_bg_blit_tag[24] = "(none)";
+static uint32_t s_bg_blit_frame   = 0xFFFFFFFFu;
+const char *re15_bg_last_blit_tag(uint32_t *frame)
+{
+    if (frame) *frame = s_bg_blit_frame;
+    return s_bg_blit_tag;
+}
+
 void re15_bg_init(void)
 {
     /* Nothing to do — software decode has no per-process setup. */
@@ -460,6 +471,8 @@ int re15_bg_load_cut(int cut_idx)
 void re15_bg_blit(int dst_x, int dst_y)
 {
     if (!s_bg_loaded) return;
+    memcpy(s_bg_blit_tag, s_bg_tag, sizeof s_bg_blit_tag);    /* Messschiene, s. oben */
+    s_bg_blit_frame = (uint32_t)g_engine.frame_count;
     if (re15_fade_log_on())
         fprintf(stderr, "[bg-log] F%u blit %s (room=%04x)\n",
                 g_engine.frame_count, s_bg_tag, g_current_room_id);
@@ -574,6 +587,8 @@ void re15_bg_blit_montage(int level_new, int level_prev, int pan_y, int zoom,
                           int prev_pan_y, int prev_zoom)
 {
     if (!s_bg_loaded) return;
+    memcpy(s_bg_blit_tag, s_bg_tag, sizeof s_bg_blit_tag);    /* Messschiene RE15_CUT_SYNC_LOG */
+    s_bg_blit_frame = (uint32_t)g_engine.frame_count;
     /* DIESELBE Instrumentierung wie re15_bg_blit — der Montage-Pfad ist ein zweiter
      * Blit-Weg, und die Boot-Pins (tests/integration/test_boot_bg_pin.cmake) lesen
      * genau diese Zeile, um zu belegen, WELCHES Bild wirklich auf den Schirm geht. */
