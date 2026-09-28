@@ -97,7 +97,8 @@ int  re15_map_hint_ziel(int nr, int *page, int *rect);
 /* Init: Zaehler 10, Richtung 1, Nullpunkt der Uhr = jetzt (RE2 @0x8006F6B4-0x8006F6F4). */
 void re15_map_hint_begin(void);
 /* Je Menue-Bild: alle seit dem Nullpunkt faelligen Zaehlschritte nachholen (je VBlank
- * einer). Mehr als ein Ton je Aufruf wird nicht ausgegeben. */
+ * einer). Mehr als ein Ton je Aufruf wird nicht ausgegeben (Port-Wahl, keine Original-
+ * Adresse; Begruendung und Messung in map_hint_common.c). */
 void re15_map_hint_tick(void);
 /* EIN Zaehlschritt, Befehl fuer Befehl nach @0x8006F20C-0x8006F284 (samt Ton). */
 void re15_map_hint_step(void);

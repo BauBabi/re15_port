@@ -234,7 +234,11 @@ void re15_map_hint_tick(void)
     /* Nach einem Stillstand (Fenster gezogen, Haltepunkt) nicht Tausende Schritte
      * nachholen: die Folge ist periodisch, der Zustand nach n Schritten ist der nach
      * n - k*Periode. Bis zu zwei Perioden bleiben stehen, damit ein Ton nicht verloren
-     * geht; mehr als einer je Bild wird ohnehin nicht gespielt. */
+     * geht; mehr als einer je Bild wird ohnehin nicht gespielt.
+     * Port-Wahl, keine Original-Adresse: RE2 holt nichts nach (ein Zaehlschritt je
+     * Durchgang, ein langsamer Durchgang verliert Zeit); "zwei Perioden" und "ein Ton je
+     * Bild" gelten nur fuer Stillstaende. Messung: unit_r30_hinweis_fsm, 10 s Stillstand
+     * -> 598 Schritte = floor(10 s * 59,826), 1 Ton. */
     {
         const uint64_t p = (uint64_t)re15_map_hint_periode();
         if (p > 0 && due > 2 * p) {
