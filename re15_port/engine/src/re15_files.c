@@ -12,17 +12,20 @@
 #include "gen/re2_files_toc.inc"   /* RE2s Dokument-Records @0x800AA144 (nur Ansehhilfe) */
 
 /* ---- Dokument-Tabelle ------------------------------------------------------------
- * Eintrag 0 = "Irons Diary" (Nutzer-Auftrag Runde 30, Abschnitt E).
+ * Eintrag 0 = "Irons Diary" (Nutzer-Auftrag Runde 30, Abschnitt E; Text seit Nachtrag J
+ * ENGLISCH, analysis/befunde_runde30/irons_diary_en.txt).
  *
  *   Item-Id 0x48   erste Dokument-Id von RE1.5 (u8 @0x800c7370), Dokument-Nr 0.
  *   Bild-Satz 25   Port-Wahl, keine Original-Adresse: der erste freie Satz hinter RE2s 25
  *                  Dokumenten (RE2_FILES_DOC_COUNT 25, gen/re2_files_toc.inc, Tabelle
  *                  @0x800A9AD0 fuehrt die Saetze 0..24). Die Dateien FILE25_*.TIM erzeugt
  *                  re15_port/tools/re2_doc_satz.py aus dem Nutzertext.
- *   max_page 17    Port-Wahl, keine Original-Adresse - gemessen am Satz: letzte Seite des
- *                  gesetzten Nutzertexts (9 Zeilen je Seite bei H 144, FILE25_satz.txt;
- *                  FILE25_p17_page.TIM ist vorhanden,
- *                  FILE25_p18 nicht; Riegel probe_r30_irons_diary_dokument Teil C).
+ *   max_page 15    Port-Wahl, keine Original-Adresse - gemessen am Satz: letzte Seite des
+ *                  gesetzten ENGLISCHEN Nutzertexts (Nachtrag J; 9 Zeilen je Seite bei
+ *                  H 144, re2_doc_satz.py -> FILE25_satz.txt "max_page ... = 15";
+ *                  FILE25_p15_page.TIM ist vorhanden, FILE25_p16 nicht; Riegel
+ *                  probe_r30_irons_diary_dokument Teil C). Die deutsche Fassung (Abschnitt E)
+ *                  hatte 17.
  *                  Gegenstueck zu RE2s u16 @0x800AA144 + doc*4, gelesen
  *                  `lhu a0,-24252(at)` @0x800727c8. max_page steht AUSDRUECKLICH hier
  *                  und wird nicht aus der Zahl der Dateien gezaehlt: bei RE2s Dokumenten
@@ -43,7 +46,7 @@ static const uint8_t s_name_irons_diary[] = {
 };
 
 static const re15_file_doc_t s_docs[] = {
-    { RE15_FILES_FIRST_ITEM_ID + 0, 25, 17, 144, s_name_irons_diary },
+    { RE15_FILES_FIRST_ITEM_ID + 0, 25, 15, 144, s_name_irons_diary },
 };
 #define DOC_COUNT ((int)(sizeof s_docs / sizeof s_docs[0]))
 

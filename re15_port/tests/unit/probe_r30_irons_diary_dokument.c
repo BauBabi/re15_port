@@ -17,7 +17,8 @@
  *      Bild-Dokument druckt KEINEN Zeichenstrom (RE1.5 adressierte den Blob fest,
  *      `addiu t1,t1,-13004` @0x800c7614 = 0x800ccd34).
  *   C  Bild-Ebene: 0 deckend gezeichnete Texel der CLUT-Farbe 0x0000 (psx-spx "Color
- *      0000h = Fully-transparent"); Seitenzahl = max_page + 1 = 18; p17 da, p18 nicht.
+ *      0000h = Fully-transparent"); Seitenzahl = max_page + 1 = 16; p15 da, p16 nicht
+ *      (Nachtrag J, englischer Satz; die deutsche Fassung hatte 18 / p17).
  *   D  die nach shared_assets/RE2/FILES KOPIERTEN Dateien FILE25_*: Masse, Titel == p00
  *      (RE2-Konvention, Lader @0x8006d484-98), Farben nur aus FILE08, Papier byte-gleich.
  *   E  Seite -> Datei und x-Lage der Textseite (re15_inv_file_bild_lage; RE2 Seitenlader
@@ -193,10 +194,10 @@ int main(void)
     printf("\n[B] Leser (item_state 3): zwei Dokumente, zwei Anzeigelisten\n");
     {
         const re15_file_doc_t *d = re15_files_doc(0);
-        CHECK(d && d->item_id == 0x48 && d->bildsatz == 25 && d->max_page == 17 &&
+        CHECK(d && d->item_id == 0x48 && d->bildsatz == 25 && d->max_page == 15 &&
               d->page_h == 144,
               "Dokument-Tabelle Eintrag 0: Item-Id 0x%02x, Bild-Satz %d, max_page %d, H %d "
-              "(Soll 0x48 / 25 / 17 / 144)", d ? d->item_id : 0, d ? d->bildsatz : -1,
+              "(Soll 0x48 / 25 / 15 / 144)", d ? d->item_id : 0, d ? d->bildsatz : -1,
               d ? d->max_page : -1, d ? d->page_h : -1);
         CHECK(re15_files_doc_from_item(0x48) == 0 && re15_files_doc_from_item(0x47) == -1 &&
               re15_files_doc_from_item(0x49) == -1,
@@ -206,7 +207,7 @@ int main(void)
         a.substate = b.substate = t.substate = 2;
         a.item_state = b.item_state = t.item_state = 3;
         a.file_reader_page = b.file_reader_page = t.file_reader_page = 0;
-        a.file_bild = 1; a.file_bildsatz = 25; a.file_end = 18;       /* Irons Diary */
+        a.file_bild = 1; a.file_bildsatz = 25; a.file_end = 16;       /* Irons Diary */
         b.file_bild = 1; b.file_bildsatz = 8;                          /* RE2 FILE08  */
         b.file_end = (uint8_t)(re2_files_doc[8].max_page + 1);
         t.file_bild = 0;                                               /* alter Textleser */
@@ -214,7 +215,7 @@ int main(void)
         int nb = re15_inv_screen_build(&b, s_ops2, RE15_INV_MAX_OPS);
         int gleich = (na == nb) && memcmp(s_ops, s_ops2, (size_t)na * sizeof s_ops[0]) == 0;
         printf("  Irons Diary: %d Ops   FILE08: %d Ops\n", na, nb);
-        CHECK(!gleich, "Irons Diary (18 Seiten) und FILE08 (%d Seiten) ergeben VERSCHIEDENE "
+        CHECK(!gleich, "Irons Diary (16 Seiten) und FILE08 (%d Seiten) ergeben VERSCHIEDENE "
               "Anzeigelisten (vor dem Bau: bitgleich, der Leser kannte die Zeile nicht)",
               b.file_end);
         /* Nachbesserung (Gegenpruefung Runde 30): die Anzeigeliste unterscheidet sich nur
@@ -263,7 +264,7 @@ int main(void)
         printf("  Irons Diary Seite 0: %d Textglyphen, %d Fusszeilen-Glyphen, %d Pfeile, "
                "%d sonstige Ops\n", text, fuss, pfeil, sonst);
         CHECK(text == 0, "Bild-Dokument: KEIN Zeichenstrom (%d Textglyphen, Soll 0)", text);
-        CHECK(fuss == 4, "Fusszeile \"1/18\" = %d Glyphen (Soll 4; RE1.5 0x800c7744)", fuss);
+        CHECK(fuss == 4, "Fusszeile \"1/16\" = %d Glyphen (Soll 4; RE1.5 0x800c7744)", fuss);
         CHECK(pfeil == 1, "Seite 0: nur der rechte Pfeil (%d, Soll 1; RE2 @0x800726e8-f0)",
               pfeil);
         CHECK(sonst == 0,
@@ -340,7 +341,7 @@ int main(void)
         }
         /* Textseiten des Irons Diary: kein Texel mit Farbe 0x0000 wird gezeichnet */
         long schwarz = 0, sicht = 0;
-        for (int pg = -1; pg <= 17; pg++) {
+        for (int pg = -1; pg <= 15; pg++) {
             char pfad[512];
             long n = 0;
             if (pg < 0) snprintf(pfad, sizeof pfad, RE15_ASSET_RE2_DIR "/FILES/FILE25_title_page.TIM");
@@ -362,15 +363,15 @@ int main(void)
             free(tim);
         }
         CHECK(schwarz == 0 && sicht > 10000,
-              "Irons Diary, Titel + 18 Seitendateien: %ld deckende 0x0000-Texel (Soll 0) "
+              "Irons Diary, Titel + 16 Seitendateien: %ld deckende 0x0000-Texel (Soll 0) "
               "bei %ld sichtbaren", schwarz, sicht);
 
         const re15_file_doc_t *d = re15_files_doc(0);
         int seiten = d ? d->max_page + 1 : -1;
-        CHECK(seiten == 18, "Seitenzahl Irons Diary = max_page + 1 = %d (Soll 18)", seiten);
-        CHECK(re15_re2doc_size(25, 17, RE15_RE2DOC_PAGE, NULL, NULL) == 1 &&
-              re15_re2doc_size(25, 18, RE15_RE2DOC_PAGE, NULL, NULL) == 0,
-              "FILE25_p17_page.TIM ist da, FILE25_p18 nicht - max_page 17 deckt sich mit "
+        CHECK(seiten == 16, "Seitenzahl Irons Diary = max_page + 1 = %d (Soll 16)", seiten);
+        CHECK(re15_re2doc_size(25, 15, RE15_RE2DOC_PAGE, NULL, NULL) == 1 &&
+              re15_re2doc_size(25, 16, RE15_RE2DOC_PAGE, NULL, NULL) == 0,
+              "FILE25_p15_page.TIM ist da, FILE25_p16 nicht - max_page 15 deckt sich mit "
               "den Dateien");
         CHECK(re15_files_bildsatz_max_page(8) == (int)re2_files_doc[8].max_page &&
               re2_files_doc[8].max_page == 4,
@@ -388,7 +389,7 @@ int main(void)
         CHECK(w == 256 && h == 144 && pw == 128 && ph == 256,
               "Titelseite %dx%d, Papier %dx%d (Soll 256x144 / 128x256)", w, h, pw, ph);
         int dateien = re15_re2doc_page_count(25);
-        CHECK(dateien == 19, "Seitendateien: %d (Soll 19 = Titel + p00..p17)", dateien);
+        CHECK(dateien == 17, "Seitendateien: %d (Soll 17 = Titel + p00..p15)", dateien);
 
         int ungleich = 0;
         for (int v = 0; v < h; v++)
@@ -412,7 +413,7 @@ int main(void)
                 erl[i][1] = (uint8_t)(((c >> 5) & 31) << 3);
                 erl[i][2] = (uint8_t)(((c >> 10) & 31) << 3);
             }
-            for (int pg = -1; pg <= 17; pg++) {
+            for (int pg = -1; pg <= 15; pg++) {
                 int hh = re15_re2doc_page_height(25, pg);
                 for (int v = 0; v < hh; v++)
                     for (int u = 0; u < w; u++) {
@@ -451,7 +452,7 @@ int main(void)
         re15_inv_screen_t st = g_inv_screen;
         int set = -9, pg = -9, tx = -9;
         st.substate = 2; st.item_state = 3;
-        st.file_bild = 1; st.file_bildsatz = 25; st.file_end = 18;
+        st.file_bild = 1; st.file_bildsatz = 25; st.file_end = 16;
         st.file_reader_page = 0;
         int r0 = re15_inv_file_bild_lage(&st, &set, &pg, &tx);
         CHECK(r0 == 1 && set == 25 && pg == -1 && tx == 25,
@@ -460,12 +461,12 @@ int main(void)
         st.file_reader_page = 5;
         re15_inv_file_bild_lage(&st, &set, &pg, &tx);
         CHECK(pg == 5, "Seite 5 -> p05 (Datei %d; RE2 Slot erster+1+Seite @0x8006d498)", pg);
-        st.file_reader_page = 17;
+        st.file_reader_page = 15;
         re15_inv_file_bild_lage(&st, &set, &pg, &tx);
-        CHECK(pg == 17, "Seite 17 -> p17 (Datei %d)", pg);
-        st.file_reader_page = 18;                       /* Ende-Stellung */
+        CHECK(pg == 15, "Seite 15 -> p15 (Datei %d)", pg);
+        st.file_reader_page = 16;                       /* Ende-Stellung */
         re15_inv_file_bild_lage(&st, &set, &pg, &tx);
-        CHECK(pg == 17, "Ende-Stellung (Seite 18) zeigt weiter die letzte Seite p17 "
+        CHECK(pg == 15, "Ende-Stellung (Seite 16) zeigt weiter die letzte Seite p15 "
               "(Datei %d; Klemme @0x800c7628-34)", pg);
         st.item_state = 7; st.file_text_x = 320; st.file_reader_page = 0;
         re15_inv_file_bild_lage(&st, &set, &pg, &tx);

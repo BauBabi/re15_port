@@ -119,7 +119,7 @@ int main(void)
     /* RUNDE 30 (Thema irons-diary-dokument, mit Grund mitgezogen): hinter RE2s 25 Saetzen
      * liegt der Satz 25 = Irons Diary (re15_port/tools/re2_doc_satz.py, Vorlage FILE08).
      * Er folgt derselben Geometrie, und seine Seitenhoehe aus dem TIM stimmt mit der
-     * Dokument-Tabelle des Ports (re15_files.c: H 144, max_page 17) - die zweite Quelle
+     * Dokument-Tabelle des Ports (re15_files.c: H 144, max_page 15) - die zweite Quelle
      * ist hier die Port-Tabelle statt RE2s EXE-Tabelle @0x800AA144. Dazu: die Durchsicht
      * fragt seit Runde 30 die CLUT-FARBE 0x0000 ab (psx-spx "Color 0000h =
      * Fully-transparent"), nicht den Index 0 - der Satz muss trotzdem sichtbare Pixel

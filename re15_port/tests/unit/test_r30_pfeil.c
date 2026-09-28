@@ -8,7 +8,12 @@
  * Integrationsstands cac33993 12 der 17 Textseiten plus die Ende-Stellung, 6..16
  * Glyphen-Pixel je Seite.
  *
- * TEIL A  ANZEIGELISTE je Seite (Titel, p01..p17, Ende-Stellung) und Wipp-Stellung 0/1:
+ * NACHTRAG J (englischer Satz): das Diary hat jetzt max_page 15 = Titel + p01..p15, Ende-
+ *         Stellung Seite 16 (re15_files.c, gemessen am Satz). Die Seitenzahl kommt unten aus
+ *         DIARY_LETZTE / DIARY_ENDE; Teil A prueft sie gegen die Dokument-Tabelle. Die Zahlen
+ *         der Negativ-Kontrolle haengen am TEXT der Seiten und sind neu gemessen (s. B).
+ *
+ * TEIL A  ANZEIGELISTE je Seite (Titel, p01..p15, Ende-Stellung) und Wipp-Stellung 0/1:
  *         genau RE2s Sprites (info/re2leon/PSX.EXE FUN_80075fd0 / FUN_800724b4):
  *           Seite < letzte: Pfeil rechts (282 + 3*b, 110) 12x13 uv (42,12) CLUT (256,492)
  *                           (@0x80072628-70, u/w/h/v @0x80076104-44)
@@ -20,11 +25,13 @@
  *         alle Code 0x66 (abe 1, @0x80076120), keine RE1.5-Pfeile (TEX4 16x16) mehr.
  * TEIL B  UEBERDECKUNG (der eigentliche Riegel): jedes gezeichnete Pfeil-Pixel (CLUT-Farbe
  *         != 0 aus RE2s ST0.TIM) gegen jedes sichtbare Pixel der Textseite bei (25,30):
- *         Soll 0 auf allen 19 Stellungen x 2 Wipp-Stellungen.
+ *         Soll 0 auf allen 17 Stellungen x 2 Wipp-Stellungen.
  *         NEGATIV-KONTROLLE: dieselbe Rechnung mit den Pfeilen, die der Port VORHER fuer
- *         Bild-Dokumente zeichnete (RE1.5-Emitter, off 0/4, TEX.TIM): Soll 126 Pixel
- *         (r30_pfeil_ueberdeckung.py; p01 8, p02 13, ... - dieselben Zahlen wie am
- *         Framedump des Integrationsstands).
+ *         Bild-Dokumente zeichnete (RE1.5-Emitter, off 0/4, TEX.TIM): Soll 79 Pixel auf
+ *         10 Stellungen (englischer Satz, r30_pfeil_ueberdeckung.py gegen die kopierten
+ *         FILE25: p01 13, p02 7, p03 7, p05 3, p07 6, p09 7, p11 14, p12 6, p13 13, p14 3,
+ *         Ende 0 - p15 traegt nur Zeile 0). Deutsche Fassung vorher: 126 auf 13, p01 8,
+ *         p02 13, Ende 7 (wie am Framedump des Integrationsstands cac33993).
  * TEIL C  WIPP-TAKT im laufenden Automaten (menu_common.c):
  *         C1 Aufnahme-Leser (re15_menu_request_doc): nach der Ankunft 41 Bilder b = 0
  *            (Ankunftsbild + 40), dann 39 / 39 (Schwelle 0x51 @0x80072800, Start c = 2
@@ -62,6 +69,12 @@ static int fails = 0;
                            else { printf("  PASS: " __VA_ARGS__); printf("\n"); } } while (0)
 
 static re15_inv_op_t s_ops[RE15_INV_MAX_OPS];
+
+/* Irons Diary, englischer Satz (Nachtrag J): letzte Seite = max_page 15 (re15_files.c,
+ * Port-Wahl, keine Original-Adresse - gemessen am Satz FILE25_satz.txt), Ende-Stellung =
+ * max_page + 1 (RE2 `lhu a0,-24252(at)` @0x800727c8, +1). */
+#define DIARY_LETZTE 15
+#define DIARY_ENDE   (DIARY_LETZTE + 1)
 
 /* ------------------------------------------------------------ Texel der Quellen */
 static uint8_t  st0_tex[72][256];      /* RE2 ST0.TIM zweites TIM, 4bpp-Indizes */
@@ -171,12 +184,19 @@ static void teil_ab(void)
     re15_inv_screen_t t;
     int seiten_ok = 0, falsch = 0, re15_rest = 0, sum_ueber = 0, sum_pixel = 0;
     int neg_sum = 0, neg_seiten = 0, neg_p01 = -1, neg_p02 = -1, neg_ende = -1;
-    printf("\n[A/B] Anzeigeliste und Ueberdeckung, 19 Stellungen x 2 Wipp-Stellungen\n");
+    printf("\n[A/B] Anzeigeliste und Ueberdeckung, %d Stellungen x 2 Wipp-Stellungen\n",
+           DIARY_ENDE + 1);
+    {
+        const re15_file_doc_t *d = re15_files_doc(0);
+        CHECK(d && d->max_page == DIARY_LETZTE,
+              "A  Dokument-Tabelle: Irons Diary max_page %d (Soll %d, englischer Satz)",
+              d ? d->max_page : -1, DIARY_LETZTE);
+    }
     memset(&t, 0, sizeof t);
     t.substate = 2;
     t.item_state = 3;
-    t.file_bild = 1; t.file_bildsatz = 25; t.file_end = 18;     /* Irons Diary */
-    for (int pg = 0; pg <= 18; pg++) {
+    t.file_bild = 1; t.file_bildsatz = 25; t.file_end = DIARY_ENDE;     /* Irons Diary */
+    for (int pg = 0; pg <= DIARY_ENDE; pg++) {
         int seite_neg = 0;
         for (int b = 0; b <= 1; b++) {
             int satz = -1, dseite = -9, tx = 0, n, ok = 1, rechts = 0, links = 0, marke = 0;
@@ -198,19 +218,19 @@ static void teil_ab(void)
                 if (o->abe != 1 || o->y != 110) ok = 0;
                 if (o->u == 42) {
                     rechts++;
-                    if (!(pg < 17 && o->x == 282 + 3 * b && o->w == 12 && o->h == 13 &&
+                    if (!(pg < DIARY_LETZTE && o->x == 282 + 3 * b && o->w == 12 && o->h == 13 &&
                           o->v == 12 && o->clut == RE15_INV_CLUT_RE2ST0_Z2 &&
                           o->r == 128 && o->g == 128 && o->b == 128)) ok = 0;
                 } else if (o->u == 28) {
                     links++;
-                    if (!(pg != 0 && pg != 18 && o->x == 12 - 3 * b && o->w == 12 &&
+                    if (!(pg != 0 && pg != DIARY_ENDE && o->x == 12 - 3 * b && o->w == 12 &&
                           o->h == 13 && o->v == 12 && o->clut == RE15_INV_CLUT_RE2ST0_Z2 &&
                           o->r == 128)) ok = 0;
                 } else if (o->u == 56) {
                     marke++;
-                    if (!(pg >= 17 && o->x == 280 && o->w == 42 && o->h == 14 && o->v == 12 &&
-                          o->clut == RE15_INV_CLUT_RE2ST0_Z0 &&
-                          o->r == (pg == 18 ? 128 : 48) && o->g == o->r && o->b == o->r))
+                    if (!(pg >= DIARY_LETZTE && o->x == 280 && o->w == 42 && o->h == 14 &&
+                          o->v == 12 && o->clut == RE15_INV_CLUT_RE2ST0_Z0 &&
+                          o->r == (pg == DIARY_ENDE ? 128 : 48) && o->g == o->r && o->b == o->r))
                         ok = 0;
                 } else ok = 0;
                 {
@@ -219,7 +239,8 @@ static void teil_ab(void)
                     sum_ueber += auf;
                 }
             }
-            if (rechts != (pg < 17) || marke != (pg >= 17) || links != (pg != 0 && pg != 18))
+            if (rechts != (pg < DIARY_LETZTE) || marke != (pg >= DIARY_LETZTE) ||
+                links != (pg != 0 && pg != DIARY_ENDE))
                 ok = 0;
             if (ok) seiten_ok++; else {
                 falsch++;
@@ -242,15 +263,16 @@ static void teil_ab(void)
                         seite_neg += auf;
                         if (b == 0 && pg == 1)  neg_p01 = (neg_p01 < 0 ? 0 : neg_p01) + auf;
                         if (b == 0 && pg == 2)  neg_p02 = (neg_p02 < 0 ? 0 : neg_p02) + auf;
-                        if (b == 0 && pg == 18) neg_ende = (neg_ende < 0 ? 0 : neg_ende) + auf;
+                        if (b == 0 && pg == DIARY_ENDE)
+                            neg_ende = (neg_ende < 0 ? 0 : neg_ende) + auf;
                     }
             }
         }
         if (seite_neg) neg_seiten++;
     }
-    CHECK(falsch == 0 && seiten_ok == 38,
-          "A  RE2-Sprites in allen %d von 38 Stellungen (Lage, uv, Groesse, CLUT, Helligkeit)",
-          seiten_ok);
+    CHECK(falsch == 0 && seiten_ok == 2 * (DIARY_ENDE + 1),
+          "A  RE2-Sprites in allen %d von %d Stellungen (Lage, uv, Groesse, CLUT, Helligkeit)",
+          seiten_ok, 2 * (DIARY_ENDE + 1));
     CHECK(re15_rest == 0, "A  keine RE1.5-Pfeile (TEX4 16x16) mehr im Bild-Leser: %d", re15_rest);
     CHECK(sum_pixel > 0, "B  gezeichnete Pfeil-/Marken-Pixel gesamt %d (> 0, sonst waere der "
           "Riegel leer)", sum_pixel);
@@ -259,10 +281,13 @@ static void teil_ab(void)
     printf("  NEGATIV-KONTROLLE (RE1.5-Pfeile an RE1.5-Lage): %d Pixel auf Glyphen, auf %d "
            "Stellungen; p01 %d, p02 %d, Ende %d\n", neg_sum, neg_seiten, neg_p01, neg_p02,
            neg_ende);
-    CHECK(neg_sum == 126 && neg_seiten == 13 && neg_p01 == 8 && neg_p02 == 13 && neg_ende == 7,
+    /* Ende 0: die Ende-Stellung zeigt p15, und p15 traegt nur Zeile 0 (y 30..45) - der
+     * linke RE1.5-Pfeil liegt bei y 0x70..0x7f; neg_ende wird trotzdem GEMESSEN (>= 0), d. h.
+     * der Pfeil wurde gezeichnet und traf nichts. */
+    CHECK(neg_sum == 79 && neg_seiten == 10 && neg_p01 == 13 && neg_p02 == 7 && neg_ende == 0,
           "B  Negativ-Kontrolle: die alte Lage ueberdeckt %d Glyphen-Pixel auf %d Stellungen "
-          "(Soll 126 auf 13: 12 Textseiten + Ende-Stellung; p01 8, p02 13, Ende 7 wie am "
-          "Framedump von cac33993)", neg_sum, neg_seiten);
+          "(Soll 79 auf 10 Textseiten; p01 13, p02 7, Ende 0 - englischer Satz, "
+          "r30_pfeil_ueberdeckung.py)", neg_sum, neg_seiten);
 }
 
 /* ------------------------------------------------------------------ TEIL C */
@@ -345,9 +370,9 @@ static void teil_c(void)
     }
 
     /* C2 Ende-Stellung zaehlt nicht; LINKS daraus startet neu */
-    for (int p = 1; p < 17; p++) { fframe(RE15_PAD_BIT_RIGHT); bis_zustand3(); }
-    CHECK(g_inv_screen.file_reader_page == 17, "C2 letzte Seite 17 erreicht (%d)",
-          g_inv_screen.file_reader_page);
+    for (int p = 1; p < DIARY_LETZTE; p++) { fframe(RE15_PAD_BIT_RIGHT); bis_zustand3(); }
+    CHECK(g_inv_screen.file_reader_page == DIARY_LETZTE, "C2 letzte Seite %d erreicht (%d)",
+          DIARY_LETZTE, g_inv_screen.file_reader_page);
     for (int i = 0; i < 45; i++) frame(0, 0);      /* Wippe steht jetzt auf 1 */
     {
         int b0 = g_inv_screen.file_re2_wippe, gleich = 1;
@@ -356,12 +381,13 @@ static void teil_c(void)
             frame(0, 0);
             if (g_inv_screen.file_re2_wippe != b0) gleich = 0;
         }
-        CHECK(g_inv_screen.file_reader_page == 18 && b0 == 1 && gleich,
+        CHECK(g_inv_screen.file_reader_page == DIARY_ENDE && b0 == 1 && gleich,
               "C2 Ende-Stellung: 120 Bilder ohne Zaehlung, Wippe bleibt %d (RE2 Zustand 1 "
               "@0x80072918 zaehlt nicht)", b0);
         fframe(RE15_PAD_BIT_LEFT);
-        CHECK(g_inv_screen.file_reader_page == 17 && g_inv_screen.file_re2_wippe == 0,
-              "C2 LINKS aus der Ende-Stellung: Seite 17, Wippe 0 (@0x80072944-48)");
+        CHECK(g_inv_screen.file_reader_page == DIARY_LETZTE && g_inv_screen.file_re2_wippe == 0,
+              "C2 LINKS aus der Ende-Stellung: Seite %d, Wippe 0 (@0x80072944-48)",
+              DIARY_LETZTE);
         laeufe(120, l);
         CHECK(l[0] == 41 && l[1] == 39,
               "C2 danach wieder 41 / 39 (%d / %d) - Zaehler auf 2 gesetzt", l[0], l[1]);

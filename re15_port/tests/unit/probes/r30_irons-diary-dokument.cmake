@@ -8,7 +8,8 @@
 #          @0x800c6c98) bleiben als ARCHIV zaehlbar, das Spiel zeigt sie nicht,
 #       B  Leser: Bild-Dokument ohne Zeichenstrom, verschiedene Dokumente ergeben
 #          verschiedene Anzeigelisten (vorher fest @0x800c7614),
-#       C  Durchsicht = CLUT-FARBE 0x0000 (0 deckende Texel statt 7410), Seitenzahl 18,
+#       C  Durchsicht = CLUT-FARBE 0x0000 (0 deckende Texel statt 7410), Seitenzahl 16
+#          (englischer Satz, Nachtrag J; deutsch vorher 18),
 #       D  die nach shared_assets/RE2/FILES kopierten FILE25_*,
 #       E  Seite -> Datei (RE2 Seitenlader 0x8006d444), x-Lage (RE2 25 @0x80076170).
 # unit_r30_irons_diary_ablauf = RIEGEL: Speicherstand v9 (Rundlauf, Hebung an der

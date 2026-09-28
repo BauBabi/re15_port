@@ -6,7 +6,7 @@ Rechnet OHNE das Spiel aus den Original-Dateien:
   (1) welche Pixel der Blaetter-Pfeile auf sichtbaren Texeln der Textseite liegen, fuer
       a) RE2s Pfeile und Ende-Marke an RE2s Lage (FUN_800724b4 / FUN_800761b8),
       b) RE1.5s Pfeile an RE1.5s Lage (Negativ-Kontrolle = der Stand vor dem Umbau),
-      je Seite (Titel + p01..p17) und je Wipp-Stellung;
+      je Seite (Titel + p01..pN, N = letzte vorhandene Datei) und je Wipp-Stellung;
   (2) RE2s Wipp-Takt (Zaehler 0x800d5c18, Stellung 0x800d5c19) fuer beide Leser.
 
 Belege (info/re2leon/PSX.EXE, selbst disassembliert):
@@ -109,8 +109,14 @@ def main():
     # RE1.5 Selektor s -> TEX.TIM CLUT-Zeile 8 + s (re15_inv_screen.h, clut selector 0..7)
     re15_clut = {s: tzeile(8 + s) for s in range(8)}
 
-    seiten = ["FILE25_title_page.TIM"] + ["FILE25_p%02d_page.TIM" % p for p in range(1, 18)]
-    end = len(seiten)                          # Seitenzahl 18 = max_page 17 + 1
+    # Seiten aus dem DATEIBESTAND (Nachtrag J: englischer Satz, max_page 15; vorher deutsch 17)
+    letzte = 1
+    while os.path.exists(os.path.join(FILES, "FILE25_p%02d_page.TIM" % (letzte + 1))):
+        letzte += 1
+    seiten = ["FILE25_title_page.TIM"] + ["FILE25_p%02d_page.TIM" % p for p in range(1, letzte + 1)]
+    end = len(seiten)                          # Seitenzahl = max_page + 1
+    aus.append("FILE25: Titel + p01..p%02d, Seitenzahl %d, Ende-Stellung = Seite %d"
+               % (letzte, end, end))
     aus.append("RE2 ST0.TIM zweites TIM @0x%x, Bild %dx%d Texel" % (st0[1][0], img2[2] * 4, img2[3]))
     for name, u0, cz in (("Pfeil links", 28, re2_pfeil_clut), ("Pfeil rechts", 42, re2_pfeil_clut)):
         px = sprite_pixel(img2, cz, 0, 0, u0, 12, 12, 13)
@@ -123,7 +129,7 @@ def main():
     gesamt_re2 = gesamt_re15 = 0
     aus.append("")
     aus.append("Seite | Stellung | RE2: links rechts/Ende | RE1.5 (vorher): links rechts")
-    for pg in range(end + 1):                  # 0..17 Seiten, 18 = Ende-Stellung
+    for pg in range(end + 1):                  # 0..end-1 Seiten, end = Ende-Stellung
         name = seiten[min(pg, end - 1)]
         vis, H = seite_sichtbar(name)
         for b in (0, 1):

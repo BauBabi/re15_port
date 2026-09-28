@@ -825,7 +825,8 @@ static void file_wave_tests(void)
     /* ⛔ RUNDE 30 (Thema irons-diary-dokument): die FILE-Liste ist nicht mehr RE1.5s
      * feste Tabelle (Maske @0x800c6c98, 21 RE1-Namen), sondern RE2s 24-Platz-Liste
      * @0x800D4B68 (re15_files.c). Diese Welle faehrt mit EINEM aufgehobenen Dokument
-     * auf Platz 0 (Irons Diary, Item-Id 0x48, Bild-Satz 25, max_page 17) - so bleiben
+     * auf Platz 0 (Irons Diary, Item-Id 0x48, Bild-Satz 25, max_page 15 - englischer Satz,
+     * Nachtrag J; vorher deutsch 17) - so bleiben
      * die RE1.5-Mechaniken (Rutsche, Seiten-/Zeilen-Navigation, Blaetter-Treiber,
      * Wippe, Ende-Stellung) weiter unter Riegel, jetzt am Bild-Dokument. */
     re15_files_reset();
@@ -1059,8 +1060,8 @@ static void file_wave_tests(void)
           "(F6) 15. Bild: reader open 25c2=7, x=0x140, page 0 (@0x800c7868-70) + SE(4,8) "
           "im selben Bild (RE2 @0x8006cf58-74)");
     CHECK(g_inv_screen.file_bild == 1 && g_inv_screen.file_bildsatz == 25 &&
-          g_inv_screen.file_end == 18,
-          "(F6) Bild-Dokument: Satz 25, Seitenzahl 18 = max_page 17 + 1 (RE2 @0x800727c8)");
+          g_inv_screen.file_end == 16,
+          "(F6) Bild-Dokument: Satz 25, Seitenzahl 16 = max_page 15 + 1 (RE2 @0x800727c8)");
     fframe(0);                                   /* erstes Fahrbild */
     CHECK(g_test_core_se_count == se0 + 2 && g_inv_screen.file_text_x == 0x140 - 28,
           "(F6) erstes Fahrbild: x -= 28 (@0x800c77fc), kein weiterer Ton");
@@ -1071,7 +1072,7 @@ static void file_wave_tests(void)
     CHECK(g_inv_screen.item_state == 3 && g_test_core_se_count == se0 + 2,
           "(F6) Rueckkehrbild -> Zustand 3 (@0x800c787c-80), kein weiterer Ton");
     /* one reader frame: Bild-Dokument -> die Anzeigeliste traegt KEINEN Zeichenstrom
-     * (RE2s Seiten sind Bilder, FUN_80075fd0), nur die Fusszeile '1/18' (4 glyphs clut
+     * (RE2s Seiten sind Bilder, FUN_80075fd0), nur die Fusszeile '1/16' (4 glyphs clut
      * row 4, RE1.5 @0x800c7744) und den rechten Pfeil (Seite 0: kein linker). Kein
      * Rahmen, keine Tafeln: RE2 stellt nur einen schwarzen Grund hinter die Sprites
      * (@0x80071d8c-94).
@@ -1107,7 +1108,7 @@ static void file_wave_tests(void)
             } else n_other++;
         }
         CHECK(n_txt == 0, "(F6) Bild-Dokument: 0 text glyphs, is %d", n_txt);
-        CHECK(n_foot == 4, "(F6) footer '1/18' = 4 glyphs clut row 4 (@0x800c7744), is %d",
+        CHECK(n_foot == 4, "(F6) footer '1/16' = 4 glyphs clut row 4 (@0x800c7744), is %d",
               n_foot);
         CHECK(n_arrow_l == 0 && n_arrow_r == 1,
               "(F6) page 0: right arrow only (RE2 Seite != 0 @0x800726e8-f0)");
@@ -1179,23 +1180,23 @@ static void file_wave_tests(void)
     /* (F10) END position: page can reach end = one-past-last (@0x800c71a4/71e8); the
      * drawer clamps to end-1 (@0x800c7628-34); right arrow type 2 (clut 0x7b50=UI5
      * @0x800c7580-84). SQUARE closes ONLY there (@0x800c715c-68); RIGHT there closes too
-     * (t1==end+1 @0x800c71ac). Runde 30: end = 18 (Irons Diary, max_page 17 + 1, RE2
+     * (t1==end+1 @0x800c71ac). Runde 30: end = 16 (Irons Diary englisch, max_page 15 + 1, RE2
      * `lhu a0,-24252(at)` @0x800727c8) statt RE1.5s 7 (u16[0x800ccd34]>>1). */
-    for (i = 0; i < 16; i++) {                   /* pages 1..16 via 16 fwd turns */
+    for (i = 0; i < 14; i++) {                   /* pages 1..14 via 14 fwd turns */
         fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
     }
-    CHECK(g_inv_screen.file_reader_page == 16, "(F10) on page 16 after 16 fwd turns, is %d",
+    CHECK(g_inv_screen.file_reader_page == 14, "(F10) on page 14 after 14 fwd turns, is %d",
           g_inv_screen.file_reader_page);
     fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
-    CHECK(g_inv_screen.file_reader_page == 17 && g_inv_screen.item_state == 3,
-          "(F10) page 17 (last page)");
+    CHECK(g_inv_screen.file_reader_page == 15 && g_inv_screen.item_state == 3,
+          "(F10) page 15 (last page)");
     se0 = g_test_core_se_count;
-    fframe(RE15_PAD_BIT_RIGHT);                  /* 17+1 == end -> page=18, SE(4,4), NO anim */
-    CHECK(g_inv_screen.file_reader_page == 18 && g_inv_screen.item_state == 3 &&
+    fframe(RE15_PAD_BIT_RIGHT);                  /* 15+1 == end -> page=16, SE(4,4), NO anim */
+    CHECK(g_inv_screen.file_reader_page == 16 && g_inv_screen.item_state == 3 &&
           g_test_core_se_last == 4 && g_test_core_se_count == se0 + 1,
-          "(F10) Right on page 17 -> END position 18 + SE(4,4), no anim (@0x800c71e8-f4, "
+          "(F10) Right on page 15 -> END position 16 + SE(4,4), no anim (@0x800c71e8-f4, "
           "RE2 @0x800728b0-b8)");
-    {   /* end-position display: page clamped to 17.
+    {   /* end-position display: page clamped to 15.
          * ⛔ RUNDE 30 NACHSCHLIFF pfeil, mit Grund mitgezogen: vorher RE1.5s rechter
          * Pfeil type 2 (clut UI5 @0x800c7580-84) und der linke Pfeil. Jetzt RE2: die
          * Ende-Stellung ist RE2s Zustand 1 - im rechten Platz die Ende-Marke "EXIT"
@@ -1228,9 +1229,9 @@ static void file_wave_tests(void)
      * RE1.5 Satz 5 @0x800c7170). */
     se0 = g_test_core_se_count;
     fframe(RE15_PAD_BIT_LEFT);                   /* end -> page-- , STUMM, no anim */
-    CHECK(g_inv_screen.file_reader_page == 17 && g_inv_screen.item_state == 3 &&
+    CHECK(g_inv_screen.file_reader_page == 15 && g_inv_screen.item_state == 3 &&
           g_test_core_se_count == se0,
-          "(F10) Left at END -> page 17 direct (@0x800c7228), stumm (RE2 @0x80072940-48)");
+          "(F10) Left at END -> page 15 direct (@0x800c7228), stumm (RE2 @0x80072940-48)");
     fframe(RE15_PAD_BIT_RIGHT);                  /* back to END */
     se0 = g_test_core_se_count;
     fframe(RE15_PAD_BIT_SQUARE);                 /* SQUARE at END closes */
@@ -1252,11 +1253,11 @@ static void file_wave_tests(void)
           "RE2 @0x80072854)");
     /* CROSS in der Ende-Stellung: Satz 6 (RE2 @0x80072954 -> @0x8007297c) */
     fframe(RE15_PAD_BIT_SQUARE);  idle(26);      /* reopen (14 + 1 + 10 + 1), settle */
-    for (i = 0; i < 17; i++) {
+    for (i = 0; i < 15; i++) {
         fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
     }
     fframe(RE15_PAD_BIT_RIGHT);                  /* END */
-    CHECK(g_inv_screen.file_reader_page == 18, "(F10) wieder in der Ende-Stellung, is %d",
+    CHECK(g_inv_screen.file_reader_page == 16, "(F10) wieder in der Ende-Stellung, is %d",
           g_inv_screen.file_reader_page);
     fframe(RE15_PAD_BIT_CROSS);
     CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 6,

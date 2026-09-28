@@ -256,8 +256,8 @@ static void teil_a(void)
            g_test_core_se_count - se0);
     CHECK(re15_menu_substate() == 2 && g_inv_screen.item_state == 3 &&
           g_inv_screen.file_bild == 1 && g_inv_screen.file_bildsatz == 25 &&
-          g_inv_screen.file_end == 18 && g_inv_screen.file_reader_page == 0,
-          "A2 FILE-Welle, Leser Zustand 3, Satz 25, 18 Seiten, Seite 0 (Titel)");
+          g_inv_screen.file_end == 16 && g_inv_screen.file_reader_page == 0,
+          "A2 FILE-Welle, Leser Zustand 3, Satz 25, 16 Seiten, Seite 0 (Titel)");
     CHECK(re15_files_get(0) == 0 && re15_files_count() == 1 && re15_menu_doc_trace(0) > 0,
           "A2 die Liste traegt Platz 0 = Dokument 0 schon beim Lesen (RE2 @0x80071d00)");
     CHECK(!re15_game_flag_get(9, TAKEN) && g_aot.slots[SLOT].active == 1 &&
