@@ -265,6 +265,9 @@ F387 y=-1205 ruht=1 pc=0x101B modal=0   <- erstes Ruhebild: Sleep 30 @0x101A; Mo
 F388 y=-1205 ruht=1 pc=0x101B modal=2   <- Modal zeichnet ("zeichnet in Bild 388")
 ```
 
+Bild `hebetisch_belege/ruhe_erstes_bild_lupe.png` (Lauf mit1, obere Bildhaelfte x3): F380/F384/F386
+Tisch oben, Granate links, Sicherung rechts; F388 das Aufnahme-Bild beginnt gross (Zustand 2,
+Zoom 17/(f+1)) und schrumpft F390/F392.
 `debug.log`: `[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)`. Runde 30:
 Bild 365, y=-1105 (22 Bilder frueher, mitten im Hub). Auswertung aller Laeufe
 (`ruhe_pruef.py`, `hebetisch_belege/ruhe_pruef.txt`):
