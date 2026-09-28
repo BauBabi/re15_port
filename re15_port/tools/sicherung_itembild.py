@@ -63,7 +63,11 @@ IW, IH = 40, 30              # item_icon_common.c:14 (1200 B je Tile)
 
 # gemessen am ausgelieferten Bild 0x40 mit der VOLLSTAENDIGEN Maske (alles, was nicht
 # Hintergrundwort 0x1C00 / Hintergrundindex 0xE3,0xE4,0xE6 ist; Werkzeug
-# analysis/befunde_runde30/sicherung_werkzeug/achse_altes_bild.py):
+# analysis/befunde_runde30/sicherung_werkzeug/achse_altes_bild.py). Quelle sind die
+# Datei-Bytes ITEM/ITPS.ITP @0xC0000..0xC2FFF (Block 0x40) und DATA/ITEMALL.PIX
+# @0x12C00..0x130AF (Tile 0x40) des Auslieferungsstands. Dass das neue Bild Achse und
+# Laenge des alten uebernimmt, ist Port-Wahl, keine Original-Adresse (das Original hat
+# von der Rohr-Sicherung kein Item-Bild) — die drei Zahlen selbst sind Messwerte:
 #   Item-Bild: 1972 px, Achse 147.4 Grad, Laenge 1.-99. Perzentil 83.9 px (Spanne 92.0)
 #   Icon:       368 px, Achse 147.4 Grad, Laenge 1.-99. Perzentil 36.4 px (Spanne 38.7)
 # (die erste Fassung mass mit einer Maske ohne die dunklen Flaechen: 150 Grad / 83.6 / 36.5)

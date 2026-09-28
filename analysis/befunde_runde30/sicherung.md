@@ -637,10 +637,10 @@ Nicht gebaut: Schritt 5 (Weg 1) und das ROOM1050-Ende der Kette (§2.8, §6.8).
 
 | Schritt | gebaut | Riegel | Stand |
 |---|---|---|---|
-| 1 Lade-Weg (U1) | `platform/pc/main.c`: `re15_sicherung_install((uint16_t)g_current_room_id)` nach dem Init-Lauf von sub00 und vor dem Kamera-Restore (FE-4), dazu die Logzeile `[sicherung] Boot-Weg: Prop obj_id=4 im Pool` | `integration_r30_sicherung_laden`: Lauf A (CONTINUE ROOM1150) verlangt Pool-Zeile und `[prop-render] pi=4 oid=0x04`; Lauf B (Flag (9,53) im Spielstand) verbietet beide | erledigt |
+| 1 Lade-Weg (U1) | `platform/pc/main.c`: `re15_sicherung_install((uint16_t)g_current_room_id)` nach dem Init-Lauf von sub00 und vor dem Kamera-Restore (FE-4), dazu die Logzeile `[sicherung] Boot-Weg: Prop obj_id=4 im Pool` | `integration_r30_sicherung_laden`: Lauf A (CONTINUE ROOM1150) verlangt Pool-Zeile, `[prop-render] pi=4 oid=0x04` (erstes Zeichnen) und — seit der Nachbesserung — die Modal-Zeile aus der Hebetisch-Szene; Lauf B (Flag (9,53) im Spielstand) verbietet alle drei | erledigt |
 | 2 Modell (U3, U4) | `tools/sicherung_engine_export.py`: Face-Record `a,a,b,b,e,e,c,c`, UV `f0,f1,f3,f2`, Normalen gewendet → `gen/sicherung_prop.inc` | `unit_r30_sicherung_modell` | erledigt |
 | 3 Sitz (U2) | `include/re15_sicherung.h`: POS (-280,-1062,1260), `RE15_SICHERUNG_ROT_Y` 1024 als „PORT-WAHL, KEINE ORIGINAL-ADRESSE“ mit Herleitung aus den Punkten @0x121AC..@0x1221C; Kommentar berichtigt (For @0x0FC0 Zähler 15, Deckelweg ±150, Hochpunkt -1215, Stand -1205, Parklage -20224); `sicherung_1150.c` setzt `rot_y` | `unit_r30_sicherung_sitz` (liest den Fachboden aus ROOM1150.RDT **und** ROOM1151.RDT), `unit_sicherung_1150` Prüfung 4 | erledigt |
-| 4 Bild/Icon (H2) | `engine/src/sicherung_itembild.c` + `gen/sicherung_itembild.inc`; Einsetzen im GELADENEN Puffer an allen sechs Ladestellen (main.c ×2, inv_render_pc.c ×2, itps_common.c, item_icon_common.c) | `unit_r30_sicherung_bild` | erledigt |
+| 4 Bild/Icon (H2) | `engine/src/sicherung_itembild.c` + `gen/sicherung_itembild.inc`; Einsetzen im GELADENEN Puffer an allen sechs Ladestellen (main.c ×2, inv_render_pc.c ×2, itps_common.c, item_icon_common.c) | `unit_r30_sicherung_bild` (Engine, faule Lader, Prüf-Funktionen); seit der Nachbesserung `integration_r30_sicherung_bild` (die vier PC-Ladestellen, echte exe) | erledigt |
 
 ### Selbst nachgeschlagen, bevor etwas übernommen wurde
 
@@ -710,7 +710,7 @@ Punkte, in denen sich die Läufe MIT und OHNE Sicherung unterscheiden, umgerechn
   Prototyp weichen dort in 0 Punkten voneinander ab.
 * Mutationsprobe: Ohne den Install-Aufruf am Boot-Weg fällt `integration_r30_sicherung_laden`
   („Lauf A: … liegt die Sicherung NICHT im Prop-Pool“). Mit dem Aufruf ist der Test grün.
-* Suite: **364 von 364** (360 aus master und 4 neue).
+* Suite: **364 von 364** (360 aus master und 4 neue). Nach der Nachbesserung 365 (s. u.).
 
 Abzüge: `sicherung_abnahme/bau_abnahme_szene.png` (VORHER/BAU, Türweg und Lade-Weg, F100/F140/F200),
 `bau_abnahme_item.png` (Modal, Raster, CHECK) und `bau_zoom_F140.png`. Im Zoom liegt die Sicherung
@@ -741,3 +741,115 @@ im geöffneten Fach, ihre Enden verschwinden hinter den Deckelschalen.
 * PSX-Ziel (§6.5): lädt ITPS.ITP/ITEMALL.PIX nicht über die sechs Stellen. Dort zeigt Item 0x40
   weiter das ausgelieferte Bild.
 * §6.2 Modal-Schranken -5000/-1100: bleiben Port-Wahl. §6.3 Antwort „No“: nicht gemessen.
+
+### Nachbesserung nach dem Gegenprüfer (Runde 30)
+
+Der Gegenprüfer urteilte MÄNGEL: die Funktion stimmt, aber zwei Riegel prüften nicht, was
+sie versprachen. Jede zitierte Adresse hatte er selbst nachdisassembliert, alle stimmten.
+
+**Mangel 1 (erheblich) — die vier PC-Ladestellen waren ungedeckt. Behoben.**
+Befund (seine Mutationsprobe M2, von mir nachgefahren): Das PC-Spiel liest ITPS.ITP und
+ITEMALL.PIX über vier Stellen im Plattformcode (main.c vor `re15_itemall_set_pix` und
+`re15_itps_set_data`, inv_render_pc.c für `s_itemall` und `s_itps`). Die faulen Lader der Engine,
+die `unit_r30_sicherung_bild` Abschnitt 6 prüft, erreicht das PC-Spiel nie, weil main.c die
+Puffer vorher setzt (`s_loaded` = 1). Ohne die vier Aufrufe blieben beide Riegel grün.
+
+Ursache: Kein Test fuhr den Plattformcode mit Blick auf das Bild. Gebaut:
+
+* Prüf-Funktionen in `engine/src/sicherung_itembild.c` (deklariert in `re15_sicherung.h`):
+  `re15_sicherung_bild_abweichung(puffer)` zählt die Bytes in 0xC0000..0xC2FFF, die vom
+  Rohr-Block abweichen. `_icon_abweichung(puffer)` tut dasselbe für 0x12C00..0x130AF.
+  `_modal_bild_abweichung()` zählt die Bildpunkte, in denen der Leser des Modals
+  `re15_itps_pixel(0x40,u,v)` etwas anderes liefert als das Rohr-Bild (112 × 72 = 8064).
+  `_icon_leser_abweichung()` prüft `re15_itemall_tile_raw(0x40)`. Die TIM-Offsets +0x14
+  (CLUT) und +0x220 (Bild) sind dieselben, mit denen der Leser dekodiert (itps_common.c
+  `ITPS_CLUT_OFF`/`ITPS_IMG_OFF`).
+* Prüfzeilen im debug.log. Sie sind reine Diagnose und ändern kein Verhalten:
+  - main.c nach beiden Ladestellen: `[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in N von 8064 Punkten ab, Icon-Tile 0x40 in M von 1200 Bytes`
+  - main.c im ersten Bild, in dem das Modal Item 0x40 zeichnet: `[sicherung] Modal Item 0x40 zeichnet in Bild F (Raum, Hebetisch y=…): Bild weicht in N von 8064 Punkten ab`
+  - inv_render_pc.c nach dem Laden: `[inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in N von 1200 Bytes ab, Bild-Block 0x40 in M von 12288 Bytes`
+  - inv_render_pc.c `photo_upload_check`, einmal je CHECK-Vorgang:
+    `[inv] CHECK-Foto Item 0xII: crect (x,y) prect (x,y) wxh -> Foto und CLUT geladen | Foto NICHT geladen`.
+    Die Rechtecke sind die, an die der Foto-Lader DEBUG.BIN @0x800c0258 lädt (LoadImage
+    @0x800c0280 / @0x800c02a0).
+* Neuer Riegel `integration_r30_sicherung_bild` (Anmeldung in `probes/r30_sicherung.cmake`,
+  Skript `tests/integration/test_r30_sicherung_bild.cmake`). Er fährt die echte exe mit einem
+  Spielstand in ROOM1150, in dem die Sicherung in Inventarplatz 0 liegt
+  (`probe_r30_sicherung_karte … fach0`, neues Argument). Dann folgen CONTINUE und
+  `RE15_INV_CHECK_SHOT` (Ende F140). Verlangt werden die Nullen in den beiden Ladestellen-Zeilen
+  und `CHECK-Foto Item 0x40: crect (0,489) prect (832,256) 56x72 -> Foto und CLUT geladen`.
+* `unit_r30_sicherung_bild` Abschnitt 7 prüft die Funktionen selbst. Gemessen: Der
+  ausgelieferte Block weicht in 8904 Bytes ab, das Tile in 389, eingesetzt jeweils 0. Um eine
+  Ladestelle ohne Einsetzen nachzustellen, gehen die unveränderten Dateibytes über
+  `re15_itps_set_data`. Dann liefert der Modal-Leser **2212 von 8064** Punkten anders, mit
+  Einsetzen 0.
+
+Mutationsproben mit der echten exe. Die Quellen lagen als Kopie unter
+`build/r30_nachbesserung/mut/`, dazu ein eigenes Bauverzeichnis. Der Stand ohne Mutation war in
+der Kopie grün:
+
+| Mutation (Aufruf entfernt) | `integration_r30_sicherung_bild` | `integration_r30_sicherung_laden` | Log |
+|---|---|---|---|
+| M2: alle vier | **rot** | **rot** (Modal-Zeile 2212) | main.c 2212 / 389; Schirm 389 / 8904; CHECK `crect (0,480) prect (0,0) -> Foto NICHT geladen` |
+| nur main.c ITPS | **rot** | **rot** | Modal 2212 |
+| nur main.c ITEMALL | **rot** | grün (betrifft das Modal nicht) | Icon 389 |
+| nur inv_render_pc.c ITEMALL | **rot** | grün | Schirm-Tile 389 |
+| nur inv_render_pc.c ITPS | **rot** | grün | Schirm-Block 8904, Foto NICHT geladen |
+
+`unit_r30_sicherung_bild` bleibt in allen fünf Mutationen grün. Das ist so gewollt, denn er
+prüft die Engine. Die vier Plattform-Stellen deckt jetzt der neue Riegel.
+
+Gegenprobe im BILD, echte exe, beschleunigter Renderer, Framedump 960x720, BAU gegen M2
+(`sicherung_abnahme/nachbesserung_bau_gegen_m2.png`):
+
+| Was | BAU | M2 |
+|---|---|---|
+| CHECK F140, Fotofeld x51..629 y171..455, nicht-blaue Punkte | **15 732** | **0** |
+| CHECK F140, ganzes Bild BAU gegen M2 | — | 76 023 Punkte verschieden |
+| Raster F50, BAU gegen M2 | — | 6 948 Punkte verschieden (bbox x459..773 y180..254) |
+| Modal F240 (Lade-Weg), BAU gegen M2 | — | 24 583 Punkte verschieden (bbox x324..659 y258..384) |
+
+Die Zahl 24 583 ist dieselbe, die der Gegenprüfer gemessen hat. Das CHECK-Fotofeld des BAU ist
+mit der echten exe und einer Karte gemessen. Es ist punktgleich mit dem Vorgänger-Lauf aus der
+Mess-Variante (0 abweichende Punkte im Feld, ebenfalls 15 732).
+
+**Mangel 2 (gering) — die zweite Prüfung im Lade-Pin. Behoben.**
+`[prop-render] pi=4` steht einmal je Prozess, beim ersten Zeichnen. Mit der Karte des Nutzers
+lag dieses erste Zeichnen an der Parklage vor dem Auslösen (y=-21386, vor `[fire-aot]`), mit der
+synthetischen Karte des Pins nach dem Auslösen (y=-1367). Über die Szene sagt die Zeile also
+nichts. Die Prüfung heißt jetzt, was sie prüft: Das Prop wird dem Zeichenweg übergeben. Dazu
+kommt als Prüfung IN der Szene die Modal-Zeile. `re15_sicherung_tick` öffnet das Modal nur, wenn
+die Sicherung angelegt ist und die Plattform im Fenster (-5000 .. -1100] steht, also nur nach der
+Hubfahrt von sub04. Gemessen: Bild **226**, Hebetisch y=**-1105**, Bild weicht in **0** Punkten
+ab. Lauf A endet deshalb bei Bild 250 statt 125. Lauf B verbietet auch die Modal-Zeile. Ob die
+Sicherung im Fach SICHTBAR ist, zeigt weiter nur der Framedump (s. u.).
+
+**Mangel 3 (gering) — `RE15_MIN_TESTS` in local_build.sh.** Laut Auftrag nicht in dieser Spur
+geändert; das zieht der Zusammenführer nach. Die Suite hat jetzt **365** Tests (360 master + 5).
+
+**Konstanten.** Neu sind nur Format-Offsets mit Quelle (TIM +0x14/+0x220, wie itps_common.c)
+und Messwerte in den Riegeln (8904, 389, 2212, Bild 226). Die fünf Konstanten, die der
+Gegenprüfer als belegfrei aufgezählt hat, sind alle als Port-Wahl gekennzeichnet:
+Sitz/Drehung, Modal-Fenster, Blickneigung/Licht. Für ACHSE_GRAD/LAENGE_ITPS/LAENGE_ICON nennt
+der Kommentar in `tools/sicherung_itembild.py` jetzt auch die Datei-Offsets, an denen gemessen
+wurde: ITPS.ITP @0xC0000..0xC2FFF, ITEMALL.PIX @0x12C00..0x130AF. Dass das neue Bild Achse und
+Länge des alten übernimmt, ist als Port-Wahl markiert. Die Änderung betrifft nur den Kommentar;
+der Generator erzeugt `gen/sicherung_itembild.inc` weiterhin bytegleich
+(sha256 c5a91358216…).
+
+**Abnahme erneut gefahren** (Nachbesserungs-Bau, echte exe, Framedump, Punkte bei 320x240):
+
+| F | 90 | 100 | 110 | 120 | 130 | 140 | 150 | 160 | 170 | 180 | 190 | 200 | 210 | 220 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Türweg | 0 | **0** | 211 | 348 | 348 | 348 | 366 | 361 | 381 | 370 | 405 | 415 | 430 | 439 |
+| Lade-Weg | 0 | **0** | 211 | 348 | 348 | 348 | 366 | 361 | 381 | 370 | 405 | 415 | 430 | 439 |
+
+Alle 100 Bilder der vier Läufe (Türweg/Lade-Weg, jeweils MIT/OHNE) sind **bildgleich** mit den
+Läufen vor der Nachbesserung (`r30b_*` gegen `r30n_*`, jeweils 25 von 25). Die Prüfzeilen
+ändern also nichts am Bild.
+
+**Nicht gemessen:** Elza am Türweg in ROOM1151 (den Sitz dort prüft nur
+`unit_r30_sicherung_sitz`). Ebenfalls nicht gemessen sind der PSX-Bau, der ITPS/ITEMALL nicht
+über diese Stellen lädt, und der Android-Bau. Beim Android-Bau muss der Configure frisch laufen,
+weil `engine/src/sicherung_itembild.c` neu ist und der GLOB-Cache die Datei sonst nicht sieht.
+Offen sind außerdem die Antwort „No“ im Modal und das ROOM1050-Ende der Kette.
