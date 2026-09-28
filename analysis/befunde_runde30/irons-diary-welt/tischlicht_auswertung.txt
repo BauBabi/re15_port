@@ -1,0 +1,93 @@
+== Referenz (Nullbild, Schrumpf 0.10)
+Cut 2 Klemmbrett   665 Pixel  Mittel-RGB (136.8,135.7,124.4)  Y 134.7  Polygon (147.2,122.4) (158.6,122.0) (160.6,128.2) (148.6,128.6)
+Cut 2 Buch         614 Pixel  Mittel-RGB ( 59.9, 43.6, 34.7)  Y  47.4  Polygon (171.6,121.0) (183.8,122.8) (180.0,127.9) (167.9,125.9)
+Cut 2 Spanne R 59.9..136.8  G 43.6..135.7  B 34.7..124.4   Y 47.4..134.7
+Cut 6 Klemmbrett 11856 Pixel  Mittel-RGB (124.6,118.3,117.5)  Y 120.1  Polygon (178.4,108.0) (209.9,107.5) (217.5,147.5) (183.3,148.0)
+Cut 6 Buch       11157 Pixel  Mittel-RGB ( 56.7, 35.5, 24.2)  Y  40.5  Polygon (246.2,103.8) (281.8,117.3) (273.5,149.4) (237.5,134.1)
+Cut 6 Spanne R 56.7..124.6  G 35.5..118.3  B 24.2..117.5   Y 40.5..120.1
+== Kandidaten: Mittel-RGB der Props je Lichtsatz L (Bild 410+20L), d = Abstand zur Spanne (0 = innerhalb)
+L0: Summe d 155.5 | Summe Mitte 437.9 | C2 Buch ( 26, 18, 12) Y 20 n=525 d=47.7 | C2 Karte ( 29, 21, 18) Y 23 n=179 d=41.8 | C6 Buch ( 28, 20, 13) Y 22 n=7827 d=34.1 | C6 Karte ( 29, 21, 18) Y 23 n=3233 d=31.9
+L1: Summe d 110.9 | Summe Mitte 388.9 | C2 Buch ( 33, 25, 18) Y 27 n=525 d=36.9 | C2 Karte ( 36, 29, 26) Y 31 n=179 d=29.1 | C6 Buch ( 35, 27, 19) Y 29 n=7827 d=23.6 | C6 Karte ( 36, 29, 26) Y 31 n=3233 d=21.4
+L2: Summe d 40.2 | Summe Mitte 307.9 | C2 Buch ( 46, 35, 25) Y 37 n=525 d=19.0 | C2 Karte ( 52, 41, 37) Y 44 n=179 d=8.4 | C6 Buch ( 49, 37, 26) Y 39 n=7827 d=7.9 | C6 Karte ( 52, 41, 37) Y 44 n=3233 d=4.9
+L3: Summe d 97.3 | Summe Mitte 374.2 | C2 Buch ( 35, 27, 18) Y 28 n=525 d=34.0 | C2 Karte ( 39, 31, 28) Y 33 n=179 d=24.9 | C6 Buch ( 38, 29, 20) Y 31 n=7827 d=20.5 | C6 Karte ( 39, 31, 28) Y 33 n=3233 d=17.9
+L4: Summe d 51.6 | Summe Mitte 314.4 | C2 Buch ( 43, 35, 26) Y 37 n=525 d=20.7 | C2 Karte ( 49, 40, 38) Y 43 n=179 d=11.7 | C6 Buch ( 46, 37, 27) Y 39 n=7827 d=11.1 | C6 Karte ( 49, 40, 38) Y 43 n=3233 d=8.1
+L5: Summe d 195.6 | Summe Mitte 475.6 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=57.2 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=52.2 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=44.0 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=42.3
+L6: Summe d 208.1 | Summe Mitte 488.6 | C2 Buch ( 15, 15,  7) Y 14 n=525 d=59.8 | C2 Karte ( 17, 17, 10) Y 16 n=179 d=55.7 | C6 Buch ( 17, 16,  8) Y 16 n=7827 d=47.0 | C6 Karte ( 17, 17, 10) Y 16 n=3233 d=45.6
+L7: Summe d 195.6 | Summe Mitte 475.6 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=57.2 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=52.2 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=44.0 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=42.3
+L8: Summe d 122.4 | Summe Mitte 390.0 | C2 Buch ( 29, 27, 21) Y 27 n=525 d=38.0 | C2 Karte ( 32, 30, 30) Y 31 n=179 d=31.3 | C6 Buch ( 30, 28, 21) Y 28 n=7827 d=27.7 | C6 Karte ( 32, 30, 30) Y 31 n=3233 d=25.4
+RANG (Summe d, dann Summe Mitte): L2 L4 L3 L1 L8 L0 L5 L7 L6
+== Helligkeit Y: Props je Lichtsatz, dY = vorzeichenbehafteter Abstand zur Spanne
+Cut 2 Spanne Y 47.4 (Buch) .. 134.7 (Klemmbrett)
+Cut 6 Spanne Y 40.5 (Buch) .. 120.1 (Klemmbrett)
+L0: Summe |dY| 88.0 | C2 Buch Y 20.0 dY -27.4 | C2 Karte Y 23.0 dY -24.4 | C6 Buch Y 21.8 dY -18.7 | C6 Karte Y 23.1 dY -17.5
+L1: Summe |dY| 59.0 | C2 Buch Y 26.6 dY -20.8 | C2 Karte Y 30.8 dY -16.6 | C6 Buch Y 28.7 dY -11.9 | C6 Karte Y 30.8 dY -9.7
+L2: Summe |dY| 14.7 | C2 Buch Y 37.3 dY -10.2 | C2 Karte Y 44.0 dY -3.4 | C6 Buch Y 39.4 dY -1.2 | C6 Karte Y 44.0 dY +0.0
+L3: Summe |dY| 50.0 | C2 Buch Y 28.5 dY -19.0 | C2 Karte Y 33.3 dY -14.1 | C6 Buch Y 30.8 dY -9.8 | C6 Karte Y 33.4 dY -7.2
+L4: Summe |dY| 17.7 | C2 Buch Y 36.5 dY -10.9 | C2 Karte Y 42.7 dY -4.8 | C6 Buch Y 38.5 dY -2.0 | C6 Karte Y 42.7 dY +0.0
+L5: Summe |dY| 105.3 | C2 Buch Y 15.9 dY -31.6 | C2 Karte Y 18.6 dY -28.8 | C6 Buch Y 17.6 dY -23.0 | C6 Karte Y 18.6 dY -21.9
+L6: Summe |dY| 113.3 | C2 Buch Y 14.1 dY -33.3 | C2 Karte Y 16.5 dY -31.0 | C6 Buch Y 15.6 dY -24.9 | C6 Karte Y 16.5 dY -24.1
+L7: Summe |dY| 105.3 | C2 Buch Y 15.9 dY -31.6 | C2 Karte Y 18.6 dY -28.8 | C6 Buch Y 17.6 dY -23.0 | C6 Karte Y 18.6 dY -21.9
+L8: Summe |dY| 59.9 | C2 Buch Y 26.6 dY -20.8 | C2 Karte Y 30.8 dY -16.6 | C6 Buch Y 27.7 dY -12.8 | C6 Karte Y 30.8 dY -9.7
+RANG Helligkeit (Summe |dY|): L2 L4 L3 L1 L8 L0 L5 L7 L6
+== Referenz (Nullbild, Schrumpf 0.00)
+Cut 2 Klemmbrett   820 Pixel  Mittel-RGB (131.7,123.1,110.2)  Y 124.2  Polygon (146.5,122.0) (159.1,121.6) (161.4,128.5) (148.0,129.0)
+Cut 2 Buch         759 Pixel  Mittel-RGB ( 59.3, 43.6, 34.4)  Y  47.2  Polygon (171.2,120.6) (184.7,122.6) (180.4,128.3) (167.0,126.1)
+Cut 2 Spanne R 59.3..131.7  G 43.6..123.1  B 34.4..110.2   Y 47.2..124.2
+Cut 6 Klemmbrett 14640 Pixel  Mittel-RGB (109.7,103.5,100.3)  Y 105.0  Polygon (176.3,105.8) (211.3,105.3) (219.7,149.7) (181.7,150.3)
+Cut 6 Buch       13775 Pixel  Mittel-RGB ( 53.8, 32.9, 21.2)  Y  37.8  Polygon (244.7,101.3) (284.2,116.3) (275.0,152.0) (235.0,135.0)
+Cut 6 Spanne R 53.8..109.7  G 32.9..103.5  B 21.2..100.3   Y 37.8..105.0
+== Kandidaten: Mittel-RGB der Props je Lichtsatz L (Bild 410+20L), d = Abstand zur Spanne (0 = innerhalb)
+L0: Summe d 145.7 | Summe Mitte 387.4 | C2 Buch ( 26, 18, 12) Y 20 n=525 d=47.2 | C2 Karte ( 29, 21, 18) Y 23 n=179 d=41.2 | C6 Buch ( 28, 20, 13) Y 22 n=7827 d=29.6 | C6 Karte ( 29, 21, 18) Y 23 n=3233 d=27.7
+L1: Summe d 102.2 | Summe Mitte 338.5 | C2 Buch ( 33, 25, 18) Y 27 n=525 d=36.3 | C2 Karte ( 36, 29, 26) Y 31 n=179 d=28.5 | C6 Buch ( 35, 27, 19) Y 29 n=7827 d=19.5 | C6 Karte ( 36, 29, 26) Y 31 n=3233 d=17.9
+L2: Summe d 33.2 | Summe Mitte 257.2 | C2 Buch ( 46, 35, 25) Y 37 n=525 d=18.4 | C2 Karte ( 52, 41, 37) Y 44 n=179 d=7.9 | C6 Buch ( 49, 37, 26) Y 39 n=7827 d=5.0 | C6 Karte ( 52, 41, 37) Y 44 n=3233 d=2.0
+L3: Summe d 89.0 | Summe Mitte 323.8 | C2 Buch ( 35, 27, 18) Y 28 n=525 d=33.4 | C2 Karte ( 39, 31, 28) Y 33 n=179 d=24.3 | C6 Buch ( 38, 29, 20) Y 31 n=7827 d=16.6 | C6 Karte ( 39, 31, 28) Y 33 n=3233 d=14.6
+L4: Summe d 44.6 | Summe Mitte 264.1 | C2 Buch ( 43, 35, 26) Y 37 n=525 d=20.1 | C2 Karte ( 49, 40, 38) Y 43 n=179 d=11.1 | C6 Buch ( 46, 37, 27) Y 39 n=7827 d=8.2 | C6 Karte ( 49, 40, 38) Y 43 n=3233 d=5.1
+L5: Summe d 185.6 | Summe Mitte 425.5 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=56.6 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=51.6 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=39.5 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=37.9
+L6: Summe d 198.0 | Summe Mitte 438.5 | C2 Buch ( 15, 15,  7) Y 14 n=525 d=59.3 | C2 Karte ( 17, 17, 10) Y 16 n=179 d=55.1 | C6 Buch ( 17, 16,  8) Y 16 n=7827 d=42.5 | C6 Karte ( 17, 17, 10) Y 16 n=3233 d=41.2
+L7: Summe d 185.6 | Summe Mitte 425.5 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=56.6 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=51.6 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=39.5 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=37.9
+L8: Summe d 114.4 | Summe Mitte 340.4 | C2 Buch ( 29, 27, 21) Y 27 n=525 d=37.4 | C2 Karte ( 32, 30, 30) Y 31 n=179 d=30.7 | C6 Buch ( 30, 28, 21) Y 28 n=7827 d=24.1 | C6 Karte ( 32, 30, 30) Y 31 n=3233 d=22.1
+RANG (Summe d, dann Summe Mitte): L2 L4 L3 L1 L8 L0 L5 L7 L6
+== Helligkeit Y: Props je Lichtsatz, dY = vorzeichenbehafteter Abstand zur Spanne
+Cut 2 Spanne Y 47.2 (Buch) .. 124.2 (Klemmbrett)
+Cut 6 Spanne Y 37.8 (Buch) .. 105.0 (Klemmbrett)
+L0: Summe |dY| 82.1 | C2 Buch Y 20.0 dY -27.2 | C2 Karte Y 23.0 dY -24.2 | C6 Buch Y 21.8 dY -16.0 | C6 Karte Y 23.1 dY -14.7
+L1: Summe |dY| 53.1 | C2 Buch Y 26.6 dY -20.6 | C2 Karte Y 30.8 dY -16.4 | C6 Buch Y 28.7 dY -9.1 | C6 Karte Y 30.8 dY -7.0
+L2: Summe |dY| 13.2 | C2 Buch Y 37.3 dY -10.0 | C2 Karte Y 44.0 dY -3.2 | C6 Buch Y 39.4 dY +0.0 | C6 Karte Y 44.0 dY +0.0
+L3: Summe |dY| 44.1 | C2 Buch Y 28.5 dY -18.8 | C2 Karte Y 33.3 dY -13.9 | C6 Buch Y 30.8 dY -7.0 | C6 Karte Y 33.4 dY -4.4
+L4: Summe |dY| 15.3 | C2 Buch Y 36.5 dY -10.7 | C2 Karte Y 42.7 dY -4.6 | C6 Buch Y 38.5 dY +0.0 | C6 Karte Y 42.7 dY +0.0
+L5: Summe |dY| 99.4 | C2 Buch Y 15.9 dY -31.4 | C2 Karte Y 18.6 dY -28.6 | C6 Buch Y 17.6 dY -20.2 | C6 Karte Y 18.6 dY -19.2
+L6: Summe |dY| 107.4 | C2 Buch Y 14.1 dY -33.1 | C2 Karte Y 16.5 dY -30.8 | C6 Buch Y 15.6 dY -22.2 | C6 Karte Y 16.5 dY -21.3
+L7: Summe |dY| 99.4 | C2 Buch Y 15.9 dY -31.4 | C2 Karte Y 18.6 dY -28.6 | C6 Buch Y 17.6 dY -20.2 | C6 Karte Y 18.6 dY -19.2
+L8: Summe |dY| 54.1 | C2 Buch Y 26.6 dY -20.6 | C2 Karte Y 30.8 dY -16.4 | C6 Buch Y 27.7 dY -10.0 | C6 Karte Y 30.8 dY -7.0
+RANG Helligkeit (Summe |dY|): L2 L4 L3 L1 L8 L0 L5 L7 L6
+== Referenz (Nullbild, Schrumpf 0.25)
+Cut 2 Klemmbrett   463 Pixel  Mittel-RGB (147.3,155.7,145.4)  Y 152.0  Polygon (148.3,122.8) (157.8,122.5) (159.5,127.7) (149.5,128.1)
+Cut 2 Buch         426 Pixel  Mittel-RGB ( 60.4, 41.3, 33.0)  Y  46.1  Polygon (172.3,121.5) (182.5,123.1) (179.3,127.3) (169.2,125.7)
+Cut 2 Spanne R 60.4..147.3  G 41.3..155.7  B 33.0..145.4   Y 46.1..152.0
+Cut 6 Klemmbrett  8236 Pixel  Mittel-RGB (134.7,129.1,130.3)  Y 130.9  Polygon (181.5,111.3) (207.8,110.9) (214.1,144.2) (185.6,144.7)
+Cut 6 Buch        7747 Pixel  Mittel-RGB ( 61.7, 39.8, 29.3)  Y  45.2  Polygon (248.5,107.5) (278.1,118.8) (271.2,145.5) (241.2,132.8)
+Cut 6 Spanne R 61.7..134.7  G 39.8..129.1  B 29.3..130.3   Y 45.2..130.9
+== Kandidaten: Mittel-RGB der Props je Lichtsatz L (Bild 410+20L), d = Abstand zur Spanne (0 = innerhalb)
+L0: Summe d 167.9 | Summe Mitte 493.2 | C2 Buch ( 26, 18, 12) Y 20 n=525 d=46.1 | C2 Karte ( 29, 21, 18) Y 23 n=179 d=40.3 | C6 Buch ( 28, 20, 13) Y 22 n=7827 d=42.0 | C6 Karte ( 29, 21, 18) Y 23 n=3233 d=39.4
+L1: Summe d 122.3 | Summe Mitte 444.2 | C2 Buch ( 33, 25, 18) Y 27 n=525 d=35.4 | C2 Karte ( 36, 29, 26) Y 31 n=179 d=28.0 | C6 Buch ( 35, 27, 19) Y 29 n=7827 d=31.1 | C6 Karte ( 36, 29, 26) Y 31 n=3233 d=27.8
+L2: Summe d 49.8 | Summe Mitte 363.4 | C2 Buch ( 46, 35, 25) Y 37 n=525 d=17.6 | C2 Karte ( 52, 41, 37) Y 44 n=179 d=8.6 | C6 Buch ( 49, 37, 26) Y 39 n=7827 d=13.6 | C6 Karte ( 52, 41, 37) Y 44 n=3233 d=10.0
+L3: Summe d 108.4 | Summe Mitte 429.5 | C2 Buch ( 35, 27, 18) Y 28 n=525 d=32.5 | C2 Karte ( 39, 31, 28) Y 33 n=179 d=23.9 | C6 Buch ( 38, 29, 20) Y 31 n=7827 d=27.9 | C6 Karte ( 39, 31, 28) Y 33 n=3233 d=24.0
+L4: Summe d 61.0 | Summe Mitte 369.6 | C2 Buch ( 43, 35, 26) Y 37 n=525 d=19.6 | C2 Karte ( 49, 40, 38) Y 43 n=179 d=11.8 | C6 Buch ( 46, 37, 27) Y 39 n=7827 d=16.5 | C6 Karte ( 49, 40, 38) Y 43 n=3233 d=13.1
+L5: Summe d 208.3 | Summe Mitte 530.6 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=55.7 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=50.8 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=51.9 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=49.9
+L6: Summe d 220.9 | Summe Mitte 543.6 | C2 Buch ( 15, 15,  7) Y 14 n=525 d=58.4 | C2 Karte ( 17, 17, 10) Y 16 n=179 d=54.3 | C6 Buch ( 17, 16,  8) Y 16 n=7827 d=54.9 | C6 Karte ( 17, 17, 10) Y 16 n=3233 d=53.3
+L7: Summe d 208.3 | Summe Mitte 530.6 | C2 Buch ( 17, 17,  8) Y 16 n=525 d=55.7 | C2 Karte ( 19, 19, 12) Y 19 n=179 d=50.8 | C6 Buch ( 19, 19,  9) Y 18 n=7827 d=51.9 | C6 Karte ( 19, 19, 12) Y 19 n=3233 d=49.9
+L8: Summe d 133.6 | Summe Mitte 444.6 | C2 Buch ( 29, 27, 21) Y 27 n=525 d=36.8 | C2 Karte ( 32, 30, 30) Y 31 n=179 d=30.7 | C6 Buch ( 30, 28, 21) Y 28 n=7827 d=34.7 | C6 Karte ( 32, 30, 30) Y 31 n=3233 d=31.3
+RANG (Summe d, dann Summe Mitte): L2 L4 L3 L1 L8 L0 L5 L7 L6
+== Helligkeit Y: Props je Lichtsatz, dY = vorzeichenbehafteter Abstand zur Spanne
+Cut 2 Spanne Y 46.1 (Buch) .. 152.0 (Klemmbrett)
+Cut 6 Spanne Y 45.2 (Buch) .. 130.9 (Klemmbrett)
+L0: Summe |dY| 94.5 | C2 Buch Y 20.0 dY -26.0 | C2 Karte Y 23.0 dY -23.0 | C6 Buch Y 21.8 dY -23.4 | C6 Karte Y 23.1 dY -22.1
+L1: Summe |dY| 65.5 | C2 Buch Y 26.6 dY -19.4 | C2 Karte Y 30.8 dY -15.3 | C6 Buch Y 28.7 dY -16.5 | C6 Karte Y 30.8 dY -14.3
+L2: Summe |dY| 17.8 | C2 Buch Y 37.3 dY -8.8 | C2 Karte Y 44.0 dY -2.1 | C6 Buch Y 39.4 dY -5.8 | C6 Karte Y 44.0 dY -1.1
+L3: Summe |dY| 56.5 | C2 Buch Y 28.5 dY -17.6 | C2 Karte Y 33.3 dY -12.7 | C6 Buch Y 30.8 dY -14.4 | C6 Karte Y 33.4 dY -11.8
+L4: Summe |dY| 22.1 | C2 Buch Y 36.5 dY -9.6 | C2 Karte Y 42.7 dY -3.4 | C6 Buch Y 38.5 dY -6.6 | C6 Karte Y 42.7 dY -2.5
+L5: Summe |dY| 111.8 | C2 Buch Y 15.9 dY -30.2 | C2 Karte Y 18.6 dY -27.5 | C6 Buch Y 17.6 dY -27.6 | C6 Karte Y 18.6 dY -26.6
+L6: Summe |dY| 119.8 | C2 Buch Y 14.1 dY -32.0 | C2 Karte Y 16.5 dY -29.6 | C6 Buch Y 15.6 dY -29.5 | C6 Karte Y 16.5 dY -28.7
+L7: Summe |dY| 111.8 | C2 Buch Y 15.9 dY -30.2 | C2 Karte Y 18.6 dY -27.5 | C6 Buch Y 17.6 dY -27.6 | C6 Karte Y 18.6 dY -26.6
+L8: Summe |dY| 66.5 | C2 Buch Y 26.6 dY -19.4 | C2 Karte Y 30.8 dY -15.3 | C6 Buch Y 27.7 dY -17.4 | C6 Karte Y 30.8 dY -14.3
+RANG Helligkeit (Summe |dY|): L2 L4 L3 L1 L8 L0 L5 L7 L6

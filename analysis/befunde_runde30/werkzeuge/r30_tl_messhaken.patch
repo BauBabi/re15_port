@@ -1,0 +1,38 @@
+diff --git a/re15_port/platform/pc/main.c b/re15_port/platform/pc/main.c
+index 12fe5a3b..bb85abd8 100644
+--- a/re15_port/platform/pc/main.c
++++ b/re15_port/platform/pc/main.c
+@@ -10002,8 +10002,32 @@ re_title:;
+                         g_re15_active_cut >= 0 &&
+                         g_re15_active_cut < g_re15_room_lights.cut_count) {
+                         int32_t prop_pos_w[3] = { prop_x, prop_y, prop_z };
++                        /* MESSHAKEN tischlicht (NUR Mess-exe, nie committet; Patch-Datei
++                         * analysis/befunde_runde30/werkzeuge/r30_tl_messhaken.patch):
++                         * RE15_IRONS_LICHT_MESS="<start>/<schritt>" -> ab Bild <start> nehmen
++                         * obj 5/6 in 1150/1151 den Lichtsatz ((bild-start)/schritt) % nCut. */
++                        int tl_licht = g_re15_active_cut;
++                        { static long s_tl_start = -2, s_tl_step = 1;
++                          if (s_tl_start == -2) {
++                              const char *e = getenv("RE15_IRONS_LICHT_MESS");
++                              s_tl_start = -1;
++                              if (e && *e) { s_tl_start = atol(e);
++                                  const char *sl = strchr(e, '/');
++                                  if (sl) s_tl_step = atol(sl + 1);
++                                  if (s_tl_step <= 0) s_tl_step = 1; } }
++                          if (s_tl_start >= 0 && (oid == 5 || oid == 6) &&
++                              (g_current_room_id == 0x1150 || g_current_room_id == 0x1151) &&
++                              (long)g_engine.frame_count >= s_tl_start) {
++                              tl_licht = (int)((((long)g_engine.frame_count - s_tl_start) / s_tl_step)
++                                               % g_re15_room_lights.cut_count);
++                              static int s_tl_last[2] = { -1, -1 };
++                              if (s_tl_last[oid - 5] != tl_licht) {
++                                  s_tl_last[oid - 5] = tl_licht;
++                                  fprintf(stderr, "[tl-mess] F%u oid=%d cut=%d licht=%d\n",
++                                          (unsigned)g_engine.frame_count, oid,
++                                          g_re15_active_cut, tl_licht); } } }
+                         re15_light_setup_actor(
+-                            &g_re15_room_lights.cuts[g_re15_active_cut],
++                            &g_re15_room_lights.cuts[tl_licht],
+                             prop_pos_w, NULL, &lctx_prop_world);
+                         re15_light_ctx_rotate_for_bone(&lctx_prop_world, prot_q12,
+                                                        &lctx_prop);
