@@ -207,6 +207,12 @@ void re15_audio_core_se(int se_id);
 #define RE15_PANEL_SE_BESTAET  0x0C   /* RE2 sub04+0x0652 @ROOM2130.RDT 0x01762 */
 void re15_audio_re2_panel_se(int se_id);
 
+/* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die Toene der RE2-Tuersequenz (Gittertor DOOR2E) fuer das
+ * Tor in ROOM1170. shared_assets/RE2/TORSE.VBS = DOOR2E-Tonteil unveraendert; se 0 = Skript-Se_on
+ * (Bild 100), se 1 = Door_exit. Belege: analysis/tor_1170/08_re_ton.md. PSX: Folge-Stub. */
+int  re15_audio_re2_tor_laden(void);
+void re15_audio_re2_tor_se(int se);
+
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the
  * weapon-select menu on EQUIP so re15_audio_weapon_se then plays the newly-equipped weapon's SEs.
@@ -244,12 +250,5 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000);
  * shared_assets/RE2/ELEVSE.VBS (tools/re2_elevator_cut.py).
  * Gerufen aus engine/src/scd_elev_se.c. PSX: Folge-Stub wie die anderen SE-Baenke. */
 void re15_audio_re2_elevator_se(int se_id);
-
-
-/* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die Toene der RE2-Tuersequenz (Gittertor DOOR2E) fuer das
- * Tor in ROOM1170. shared_assets/RE2/TORSE.VBS = DOOR2E-Tonteil unveraendert; se 0 = Skript-Se_on
- * (Bild 100), se 1 = Door_exit. Belege: analysis/tor_1170/08_re_ton.md. PSX: Folge-Stub. */
-int  re15_audio_re2_tor_laden(void);
-void re15_audio_re2_tor_se(int se);
 
 #endif /* RE15_AUDIO_H */

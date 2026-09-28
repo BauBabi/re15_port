@@ -1211,80 +1211,6 @@ void re15_audio_re2_elevator_se(int se_id)
     se_play_layers(s_elev_edt, &s_elev_vab, s_elev_decoded, s_elev_decoded_len, se_id);
 }
 
-/* ===== Bank-Slot: RE2-TUERSEQUENZ DOOR2E (TORSE.VBS) ================================
- * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL (Beta -> Retail; RE1.5s Tuersequenz ist unbespielt,
- * DOOR00.DO2 @0x9A6 `01 00` = Evt_end). shared_assets/RE2/TORSE.VBS = der Tonteil von RE2
- * DOOR2E.DO2[0x0000..0x4AE8) UNVERAENDERT (EXE-Tabelle @0x8009a748: `e8 4a ...` = 0x4AE8 B;
- * tools/tor/tor_sequenz_bauen.py). Aufbau fest (Tonlader FUN_80014cd0): Tonkopf 16 B @0 (die
- * SE-Map), VH @0x10, Nachspann u32 VH-Versatz @0xC30 (@0x80014e48 addiu a3,s0,3120), VB @0xC38
- * (@0x80014f84 ori s1,s1,0x1c38). Das ist das Satzformat der Mini-Baenke (Map | VH | Trailer |
- * VBD); die Tonkopf-Eintraege liest dieselbe RE2-Funktion 0x8005ba28 wie die Raum-SE-Maps
- * (analysis/tor_1170/08_re_ton.md 3.3). Zwei Toene: 0 = Skript-Se_on (Bild 100), 1 = Door_exit.
- * Beide nicht positional (Lagebyte 0, 08_re_ton.md 2.4). */
-#define TORSE_EDT_SIZE 0xC38u   /* bis zum VB, s.o. */
-static int        s_tor_loaded = 0;
-static int        s_tor_failed = 0;
-static re15_vab_t s_tor_vab;
-static uint8_t   *s_tor_edt = NULL;
-static int16_t   *s_tor_decoded[RE15_VAB_MAX_SAMPLES];
-static int        s_tor_decoded_len[RE15_VAB_MAX_SAMPLES];
-
-static int load_re2_tor_se_pc(void)
-{
-    if (s_tor_loaded) return 1;
-    if (s_tor_failed) return 0;
-    s_tor_failed = 1;                      /* nur EIN Versuch, danach still stumm */
-    int sz = 0;
-    uint8_t *vbs = re15_pc_read_re2("TORSE.VBS", &sz);
-    if (!vbs) {
-        fprintf(stderr, "[torse] shared_assets/RE2/TORSE.VBS fehlt -> Tuersequenz stumm\n");
-        return 0;
-    }
-    if ((unsigned)sz <= TORSE_EDT_SIZE) { free(vbs); return 0; }
-    uint32_t vbd_size = (uint32_t)sz - TORSE_EDT_SIZE;
-    uint8_t *edt = (uint8_t *)malloc(TORSE_EDT_SIZE);
-    if (!edt) { free(vbs); return 0; }
-    memcpy(edt, vbs, TORSE_EDT_SIZE);
-    uint32_t vh_off = (uint32_t)edt[TORSE_EDT_SIZE-8]         | ((uint32_t)edt[TORSE_EDT_SIZE-7] << 8)
-                    | ((uint32_t)edt[TORSE_EDT_SIZE-6] << 16) | ((uint32_t)edt[TORSE_EDT_SIZE-5] << 24);
-    if (vh_off + 0x20u > TORSE_EDT_SIZE ||
-        re15_vab_parse(edt + vh_off, (size_t)TORSE_EDT_SIZE - vh_off, &s_tor_vab) != 0) {
-        free(edt); free(vbs); return 0;
-    }
-    const uint8_t *vb = vbs + TORSE_EDT_SIZE;
-    for (int i = 0; i < s_tor_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
-        uint32_t off = s_tor_vab.samples[i].offset, vsz = s_tor_vab.samples[i].size;
-        if (off + vsz > vbd_size) continue;
-        size_t cap = (vsz / 16) * 28;
-        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
-        if (!pcm) continue;
-        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
-        s_tor_decoded[i]     = pcm;
-        s_tor_decoded_len[i] = n;
-    }
-    free(vbs);
-    s_tor_edt    = edt;
-    s_tor_loaded = 1;
-    s_tor_failed = 0;
-    return 1;
-}
-
-int re15_audio_re2_tor_laden(void)
-{
-    if (!g_audio.initialized) return 0;
-    return load_re2_tor_se_pc();
-}
-
-/* Ton der Tuersequenz. se = Tonkopf-Eintrag (0 Skript, 1 Door_exit). RE2-Pegelgesetz. */
-void re15_audio_re2_tor_se(int se)
-{
-    if (!g_audio.initialized) return;
-    if (!load_re2_tor_se_pc()) return;
-    s_se_pegel_re2 = 1;
-    se_play_layers(s_tor_edt, &s_tor_vab, s_tor_decoded, s_tor_decoded_len, se);
-    s_se_pegel_re2 = 0;
-}
-
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
 static uint8_t *read_re2_enemse_vbs(int *out_sz)
 {
@@ -3519,4 +3445,78 @@ void re15_audio_shutdown(void)
     if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     g_audio.backend_active = 0;
+}
+
+/* ===== Bank-Slot: RE2-TUERSEQUENZ DOOR2E (TORSE.VBS) ================================
+ * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL (Beta -> Retail; RE1.5s Tuersequenz ist unbespielt,
+ * DOOR00.DO2 @0x9A6 `01 00` = Evt_end). shared_assets/RE2/TORSE.VBS = der Tonteil von RE2
+ * DOOR2E.DO2[0x0000..0x4AE8) UNVERAENDERT (EXE-Tabelle @0x8009a748: `e8 4a ...` = 0x4AE8 B;
+ * tools/tor/tor_sequenz_bauen.py). Aufbau fest (Tonlader FUN_80014cd0): Tonkopf 16 B @0 (die
+ * SE-Map), VH @0x10, Nachspann u32 VH-Versatz @0xC30 (@0x80014e48 addiu a3,s0,3120), VB @0xC38
+ * (@0x80014f84 ori s1,s1,0x1c38). Das ist das Satzformat der Mini-Baenke (Map | VH | Trailer |
+ * VBD); die Tonkopf-Eintraege liest dieselbe RE2-Funktion 0x8005ba28 wie die Raum-SE-Maps
+ * (analysis/tor_1170/08_re_ton.md 3.3). Zwei Toene: 0 = Skript-Se_on (Bild 100), 1 = Door_exit.
+ * Beide nicht positional (Lagebyte 0, 08_re_ton.md 2.4). */
+#define TORSE_EDT_SIZE 0xC38u   /* bis zum VB, s.o. */
+static int        s_tor_loaded = 0;
+static int        s_tor_failed = 0;
+static re15_vab_t s_tor_vab;
+static uint8_t   *s_tor_edt = NULL;
+static int16_t   *s_tor_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_tor_decoded_len[RE15_VAB_MAX_SAMPLES];
+
+static int load_re2_tor_se_pc(void)
+{
+    if (s_tor_loaded) return 1;
+    if (s_tor_failed) return 0;
+    s_tor_failed = 1;                      /* nur EIN Versuch, danach still stumm */
+    int sz = 0;
+    uint8_t *vbs = re15_pc_read_re2("TORSE.VBS", &sz);
+    if (!vbs) {
+        fprintf(stderr, "[torse] shared_assets/RE2/TORSE.VBS fehlt -> Tuersequenz stumm\n");
+        return 0;
+    }
+    if ((unsigned)sz <= TORSE_EDT_SIZE) { free(vbs); return 0; }
+    uint32_t vbd_size = (uint32_t)sz - TORSE_EDT_SIZE;
+    uint8_t *edt = (uint8_t *)malloc(TORSE_EDT_SIZE);
+    if (!edt) { free(vbs); return 0; }
+    memcpy(edt, vbs, TORSE_EDT_SIZE);
+    uint32_t vh_off = (uint32_t)edt[TORSE_EDT_SIZE-8]         | ((uint32_t)edt[TORSE_EDT_SIZE-7] << 8)
+                    | ((uint32_t)edt[TORSE_EDT_SIZE-6] << 16) | ((uint32_t)edt[TORSE_EDT_SIZE-5] << 24);
+    if (vh_off + 0x20u > TORSE_EDT_SIZE ||
+        re15_vab_parse(edt + vh_off, (size_t)TORSE_EDT_SIZE - vh_off, &s_tor_vab) != 0) {
+        free(edt); free(vbs); return 0;
+    }
+    const uint8_t *vb = vbs + TORSE_EDT_SIZE;
+    for (int i = 0; i < s_tor_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_tor_vab.samples[i].offset, vsz = s_tor_vab.samples[i].size;
+        if (off + vsz > vbd_size) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+        s_tor_decoded[i]     = pcm;
+        s_tor_decoded_len[i] = n;
+    }
+    free(vbs);
+    s_tor_edt    = edt;
+    s_tor_loaded = 1;
+    s_tor_failed = 0;
+    return 1;
+}
+
+int re15_audio_re2_tor_laden(void)
+{
+    if (!g_audio.initialized) return 0;
+    return load_re2_tor_se_pc();
+}
+
+/* Ton der Tuersequenz. se = Tonkopf-Eintrag (0 Skript, 1 Door_exit). RE2-Pegelgesetz. */
+void re15_audio_re2_tor_se(int se)
+{
+    if (!g_audio.initialized) return;
+    if (!load_re2_tor_se_pc()) return;
+    s_se_pegel_re2 = 1;
+    se_play_layers(s_tor_edt, &s_tor_vab, s_tor_decoded, s_tor_decoded_len, se);
+    s_se_pegel_re2 = 0;
 }

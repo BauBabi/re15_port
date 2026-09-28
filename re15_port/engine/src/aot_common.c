@@ -20,6 +20,7 @@
 #include "re15_savepoint.h"  /* latch the gameplay cut at a save-phone examine */
 #include "re15_inventory.h"
 #include "re15_audio.h"      /* audio event kinds for door/pickup SFX */
+#include "re15_door_seq.h"   /* RE2-Tuersequenz: Anfrage an der Selbst-Tuer (Tor ROOM1170) */
 #include "re15_actor.h"      /* Phase 4.5.9-D: player = g_actors[0] */
 #include "re15_skeleton.h"   /* re15_sin_q12/cos_q12 — door forward-reach trigger */
 #include "re15_collision.h"  /* set the floor band at a same-room door (band from spawn Y) — shared (PSX + PC) */
@@ -29,7 +30,6 @@
                               * differs, behind the re15_room_apply_pending ctx. */
 #include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
-#include "re15_door_seq.h"   /* RE2-Tuersequenz: Anfrage an der Selbst-Tuer (Tor ROOM1170) */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
