@@ -279,7 +279,10 @@ Statusschirm mit der Sicherung in der Item-Liste** (Platz 3, nach Messer, Pistol
   (394 des Integrationsstands + `unit_r30_sicherung_nein`), 425,8 s.
 * Endstand (Fall C, Logzeile „No/voll"): `ctest -R sicherung` 8/8 grün, darunter
   `integration_r30_sicherung_laden` (verlangt die Modal-Zeile in der Hebetisch-Szene) und
-  `integration_r30_sicherung_bild`; die volle Suite auf dem Endstand steht in §6.4.
+  `integration_r30_sicherung_bild`.
+* Endstand aeabd4de, volle Suite (`cmake --build` + `ctest --timeout 240`, Bauverzeichnis
+  re15_port/build des Arbeitsbaums): **395/395 grün**, 435,6 s. `RE15_MIN_TESTS` in
+  `tools/local_build.sh` nicht angefasst.
 
 ## 7. Was NICHT belegt ist / offen
 
