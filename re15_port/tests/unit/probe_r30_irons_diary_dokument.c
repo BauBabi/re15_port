@@ -217,6 +217,36 @@ int main(void)
         CHECK(!gleich, "Irons Diary (18 Seiten) und FILE08 (%d Seiten) ergeben VERSCHIEDENE "
               "Anzeigelisten (vor dem Bau: bitgleich, der Leser kannte die Zeile nicht)",
               b.file_end);
+        /* Nachbesserung (Gegenpruefung Runde 30): die Anzeigeliste unterscheidet sich nur
+         * in der Fusszeile - WELCHES Bild gezeigt wird, entscheidet die Bild-Ebene. Also
+         * auch dort pruefen: Bild-Satz/Seite je Dokument (re15_inv_file_bild_lage, RE2
+         * Seitenlader 0x8006d444, Titel = Seite -1 @0x8006d484-98) und die gezeigten
+         * Pixel der Titel-Textseite beider Saetze. */
+        {
+            int sa = -1, pa = -9, sb = -1, pb = -9, ta = 0, tb = 0;
+            int ra = re15_inv_file_bild_lage(&a, &sa, &pa, &ta);
+            int rb = re15_inv_file_bild_lage(&b, &sb, &pb, &tb);
+            CHECK(ra == 1 && rb == 1 && sa == 25 && sb == 8 && pa == -1 && pb == -1,
+                  "Bild-Ebene: Irons Diary zeigt Satz %d Seite %d, FILE08 Satz %d Seite %d "
+                  "(Soll 25/-1 und 8/-1 = je die Titelseite)", sa, pa, sb, pb);
+            int wa = 0, ha = 0, wb = 0, hb = 0, diff = 0, beide = 0;
+            re15_re2doc_size(sa, pa, RE15_RE2DOC_PAGE, &wa, &ha);
+            re15_re2doc_size(sb, pb, RE15_RE2DOC_PAGE, &wb, &hb);
+            int w = wa < wb ? wa : wb, h = ha < hb ? ha : hb;
+            for (int v = 0; v < h; v++)
+                for (int u = 0; u < w; u++) {
+                    uint8_t r1, g1, b1, r2, g2, b2;
+                    int v1 = re15_re2doc_pixel(sa, pa, RE15_RE2DOC_PAGE, u, v, &r1, &g1, &b1);
+                    int v2 = re15_re2doc_pixel(sb, pb, RE15_RE2DOC_PAGE, u, v, &r2, &g2, &b2);
+                    if (v1 || v2) beide++;
+                    if (v1 != v2 || (v1 && (r1 != r2 || g1 != g2 || b1 != b2))) diff++;
+                }
+            printf("  Titel-Textseite: Satz %d %dx%d, Satz %d %dx%d, verschiedene Pixel %d "
+                   "von %d sichtbaren\n", sa, wa, ha, sb, wb, hb, diff, beide);
+            CHECK(w > 0 && h > 0 && diff > 0,
+                  "Irons Diary und FILE08 zeigen VERSCHIEDENE Titelseiten: %d Pixel "
+                  "verschieden (Soll > 0)", diff);
+        }
         int text = 0, fuss = 0, pfeil = 0, sonst = 0;
         for (int i = 0; i < na; i++) {
             const re15_inv_op_t *o = &s_ops[i];
