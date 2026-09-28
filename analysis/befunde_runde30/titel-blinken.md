@@ -1017,6 +1017,13 @@ Aufrufstelle `jal 0x80021880` @0x80020f44, TITLE.BIN 0x80102040-0x801020fc. Kana
 
 ### 9.3 Riegel 2 `integration_r30_titel_puls` (echte re15_pc.exe)
 
+> ⚠ **Berichtigt (zweite Nachbesserung, §10):** Die hier beschriebene Fassung las nur den
+> Zustand der ENGINE (`re15_title_pulse_value()`), nicht den Wert, mit dem `render_pc.c`
+> zeichnet. Der Gegenprüfer setzte render_pc.c auf d98e9639 zurück (eigener Pulsschritt je
+> Zeichenaufruf, am Bildschirm 419 ms) — der Test blieb **grün**. Die Aussage „misst, was das
+> Spiel TUT“ galt also nur für main.c. Seit §10 liest die Messschiene das gezeichnete
+> Farbbyte und die Pixel der Zeile zurück; die Gegenproben in §10.4 sind ROT.
+
 Datei `re15_port/tests/integration/test_r30_titel_puls.cmake`, angemeldet in
 `probes/r30_titel-blinken.cmake` (unter `if(TARGET re15_pc)`, TIMEOUT 240).
 
@@ -1098,3 +1105,190 @@ Nach allen drei Commits, Arbeitsbaum-Bau `re15_port/build`: **362/362**, 199 s (
 
 Hinweis Messfalle: ein erster Suite-Lauf aus einem Hintergrund-Bash scheiterte schon beim BAU ("Cannot create temporary file in C:\WINDOWS\" — dort fehlten TEMP/TMP); mit gesetztem TEMP/TMP wiederholt.
 
+
+---
+
+## 10. UMSETZUNG — zweite Nachbesserung (Bau-Agent, 2026-09-28)
+
+Zweig `worktree-wf_287d588a-8ce-1`.
+
+Anlass (Gegenprüfer, Mängel zu §9):
+
+1. **[erheblich]** `integration_r30_titel_puls` sicherte `render_pc.c` nicht. Die Messschiene
+   schrieb `re15_title_pulse_value()`, also den Zustand der ENGINE, nicht den Wert, mit dem der
+   Zeichner zeichnet. Mutation M1 (render_pc.c = d98e9639, eigener Pulsschritt je
+   Zeichenaufruf): am Bildschirm 419 ms, Test **grün**.
+2. [gering] Die Helligkeitsabbildung der aktiven Zeile (`tmoji_strip`) sicherte kein Test.
+3. [gering] Teil (1) zählte die Pulsschritte aus der Spalte `due` statt aus beobachteten
+   Änderungen; Mutation M2 (ein Schritt je Bild) wurde rot, aber mit Perioden „13 / 30 / 58
+   Schritte“ ohne Aussagekraft.
+4. [gering] PSX: 64-Bit-Division in `title_pulse.c` ungeprüft.
+
+| Commit | Inhalt |
+|---|---|
+| `ebae0933` | Messschiene im Zeichner (Rücklese der Zeile), Log nach `re15_render_end_frame`, Integrationstest neu (A–F) |
+| `d028a37c` | Gegenproben-Werkzeuge `r30_nb2_mutation.py`, `r30_nb2_gegenprobe.sh`, Bildschirm-Abgleich `r30_nb2_dda_zeile.py` |
+| (dieser) | Dossier §10, Berichtigung in §9.3 |
+
+### 10.1 Was gebaut ist
+
+**render_pc.c (Messschiene, nur mit `RE15_TITLE_PULSE_LOG`, kein Verhalten):**
+
+- `s_tmoji_act_val` = das Farbbyte, mit dem `tmoji_strip` die Textur der aktiven Zeile gebaut hat.
+- In `re15_render_end_frame`, genau dort, wo die Textur der aktiven Zeile gewählt wird:
+  `s_trow_drawn` = Farbbyte der Textur, die TATSÄCHLICH gezeichnet wird (0x80 für die
+  unmodulierte weiße Zeile).
+- `title_row_readback`: nach dem Menü, vor den Blenden (`s_title_fade`, `s_tfade_add`,
+  `s_tfade_sub`) `SDL_RenderReadPixels` über die Zeilenregion 256 × 17 (x 0x20 … 0x11f,
+  y ITEM_Y … ITEM_Y+16 — Rechteck bei y und subtraktiver Schatten bei y+1, FUN_801027a0
+  @0x80102810-14); FNV-1a-32 und Summe über (r>>3, g>>3, b>>3). Bei Einblende B = 0 zeichnen
+  die Blenden nichts (`if (s_tfade_sub > 0)`), dann ist das genau das gezeigte Bild.
+- Getter `re15_render_pc_title_row_probe` (ein Wert je Bild, setzt die Marke zurück).
+
+**main.c:** `pc_title_pulse_log` schreibt die Zeile erst NACH `re15_render_end_frame`,
+12 Spalten: die bisherigen 7 (Engine) + `gezeigt gezeichnet zeile hash summe`. Das Bild, in
+dem bestätigt wird, zeigt niemand (der Fade beginnt ein neues Bild) — es trägt `gezeigt = 0`.
+
+**test_r30_titel_puls.cmake** — geprüft wird am BILD:
+
+| Teil | Soll | Beleg |
+|---|---|---|
+| (A) Zeichner = Engine | 0 Bilder mit gezeichnetem Farbbyte ≠ Pulswert | Pulswert als R=G=B des Rechtecks: `lhu t0,0x2944(t0)` @0x80102848, `sb` @0x80102850/54/58 |
+| (B) ein Zeilenbild je Pulswert | 0 Pulswerte mit mehr als einem Bild | derselbe Zeichner, kein zweiter Zustand |
+| (C) gleich dem Original | 11 Pulswerte pixelgleich (5 Bit) mit den Original-Bildpuffern, alle 11 gesehen | Befehl 0x66808080 @0x80102830-34, §3.6 b; Tabelle §10.2 |
+| (D) Periode am Bild | Abfall auf das dunkelste Zeilenbild (0x86 → 0x80, @0x80102928) einmal je Periode; \|P − 2 005 817 µs\| ≤ max(Bilddauer an beiden Abfällen) + 1 µs; Engine-Schritte je Periode aus **beobachteten** Zähleränderungen ((z − z_davor) mod 60) = 60; ≥ 2 Perioden | 0x3c @0x80102918; 2 VBlanks @0x8002130c-14 / @0x8002147c-80; 59,826 Hz psx-spx |
+| (E) Fade | 0 Änderungen von (Zähler, Pulswert) und 0 Änderungen des Zeilenbilds | FUN_80102a10 (jal @0x80102d10 / @0x80102d60) ruft FUN_801028ec nicht |
+| (F) Einblende | 1 069 769 µs ≤ Dauer bis B = 0 ≤ + Bilddauer | 0xfc00 @0x80102058, 0x7fff @0x80021718, >> 7 @0x800218d0 |
+
+Keine neue Verhaltenskonstante. Die Testparameter (8 500 ms bis zum Bestätigen, mindestens
+2 Perioden) sind unverändert aus §9.3.
+
+**Renderer: beschleunigt statt `RE15_SOFTWARE_RENDER`, Maßstab 1.** Gemessen
+(`build/nb2_run_sw`, derselbe Stand, `RE15_SOFTWARE_RENDER=1`): jeder der 32 Pulswerte ergab
+**zwei** verschiedene Zeilenbilder, **0 von 11** Original-Stufen stimmten, eine Periode
+1 938 676 µs. SDLs Software-Renderer kennt die eigene subtraktive Mischart
+(`SDL_ComposeCustomBlendMode`, `s_shadow_blend`) nicht; der Schatten kommt mit der zuletzt
+gesetzten Mischart heraus. Mit dem beschleunigten Renderer: 1 Bild je Pulswert, 11 von 11
+gleich. `RE15_WINDOW_SCALE=1` macht die Ausgabe 320 × 240 (logische Pixel 1:1).
+
+### 10.2 Soll-Werte aus dem Original
+
+Werkzeug `r30_nb2_orig_zeilen_hash.py` (Ausgabe `build/nb2_orig_hash.txt`). Der Hash ist aus
+dem ORIGINAL-VRAM gerechnet (Zeilen 133 … 149 bzw. 373 … 389, Spalten 32 … 287). Welchen
+Pulswert ein Puffer zeigt, entscheidet der Nachbau des Zeichners aus §3.6 b: für genau einen
+der 32 Werte weichen 0 von 4 352 Pixeln ab. Alle sechs Savestates laufen auf der
+Auslieferungs-EXE (@0x80026e4c nicht `24 c2 01 08`), Cursor 0.
+
+| Pulswert | FNV-1a-32 | Summe | Savestate / Puffer |
+|---|---|---|---|
+| 0x88 | 452e4901 | 66 958 | boot_48 / y 0 |
+| 0x8a | c2713d44 | 67 059 | boot_48 / y 240 |
+| 0x9c | 74c7e050 | 69 027 | boot_40 / y 0 |
+| 0x9e | 5018e0cb | 69 432 | boot_40 / y 240 |
+| 0xa2 | b7245ff0 | 69 713 | mzd_title / y 240 |
+| 0xa4 | 0b2c163f | 70 168 | mzd_title / y 0 |
+| 0xac | 1a2d63c7 | 70 902 | boot_44 / y 0 |
+| 0xae | 0ee16d0d | 70 980 | boot_44 / y 240 |
+| 0xba | cb4d35aa | 72 397 | boot_52 / y 240 |
+| 0xbc | 7841f327 | 72 586 | boot_52 / y 0 **und** nav_down1 / y 0 (zwei Savestates, gleicher Hash) |
+| 0xbe | 409b0bdb | 72 666 | nav_down1 / y 240 |
+
+### 10.3 Abnahme — Soll / Ist
+
+**Integrationstest, dieser Stand** (`re15_port/build`, ctest einzeln, dreimal hintereinander,
+`build/nb2_ctest_r30_v.log`):
+
+| Lauf | Bilder (Titel / Fade) | (A) | (B) | (C) gleich / abw. | (D) Perioden [µs] (Toleranz), je 60 Schritte | (E) | (F) [µs] |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 138 / 326 | 0 | 0 (32 Werte) | 716 / 0 | 2 006 513 (6 898), 2 008 594 (15 709), 2 005 929 (15 709) | 0 / 0 | 1 070 569 |
+| 2 | 816 / 326 | 0 | 0 | 597 / 0 | 1 993 254 (23 664), 1 999 265 (11 064), 2 006 689 (7 066) | 0 / 0 | 1 086 637 (Bild 24 517) |
+| 3 | 1 219 / 326 | 0 | 0 | 744 / 0 | 1 999 771 (7 030), 2 006 525 (7 030), 2 006 587 (7 010) | 0 / 0 | 1 076 307 |
+
+**Bildschirm gegen Messschiene** (`r30_nb2_dda_zeile.py`: ddagrab 144 fps über den
+Client-Bereich des Fensters der eigenen PID, 320 × 240, 12 s; `build/nb2_dda_neu`):
+
+```
+Protokoll: 2210 gezeigte Bilder, 30 Zeilenbilder
+Bildschirm: 1694 Bilder aufgenommen, davon 1694 nach der Einblende; Zeilenbild im Protokoll: 1694 von 1694
+  davon einem Pulswert zugeordnet: 1615; gesehene Pulsstufen: 30
+Abfaelle auf das Zeilenbild 0x80: Bildschirm 6, Protokoll 7
+  Periode am Bildschirm: 2006.0 / 2007.0 / 2007.0 / 2007.0 / 2000.0 ms
+```
+
+Jedes aufgenommene Bildschirmbild zeigt ein Zeilenbild, das die Rücklese protokolliert hat
+(die 79 nicht eindeutigen sind 0x80/0x82/0x84, die dasselbe Bild ergeben). Der Versatz
+Bildschirm gegen Protokoll je Abfall lag bei 715,8 … 722,7 ms: das ist der Nullpunkt der
+ffmpeg-Zeitstempel, keine Latenz; seine Streuung (6,9 ms) ist ein Bild bei 144 Hz.
+
+**Suite** (Arbeitsbaum-Bau `re15_port/build`, `build/nb2_ctest.log`): **362/362**, 169 s,
+`integration_r30_titel_puls` in der Suite 23,86 s grün. Kein GUI-Haken fiel.
+
+### 10.4 Gegenproben
+
+Wegwerf-Baum `.claude/worktrees/r30_titel_mut` (sparse-checkout `re15_port`, eigenes
+`build_mut`, danach entfernt); je Mutation `r30_nb2_mutation.py` + Bau von `re15_pc` +
+`test_r30_titel_puls.cmake` des Arbeitsbaums. Protokolle `build/nb2_gegenprobe/<mutation>/`.
+
+| Mutation | Ergebnis |
+|---|---|
+| `basis` (Zweig-Stand) | **GRÜN**; Perioden 2 016 878 / 1 992 054 / 2 009 899 µs (Toleranz 27 368 / 19 249 / 11 795), 584 Bilder gleich dem Original |
+| `render_alt` — render_pc.c = d98e9639, sonst nichts (M1 des Gegenprüfers wörtlich) | **Bau scheitert**: `undefined reference to re15_render_pc_title_row_probe`. Kein grüner Lauf möglich. |
+| `render_alt_schiene` — d98e9639 + nur die Rücklese nachgerüstet, „gezeichnet“ = `s_tmoji_pulse_val` (der Wert der alten Farbmodulation) | **ROT** in A, B, C, D, E: 1 297 Bilder gezeichnet ≠ Engine, 1 253 Bildkonflikte, 0 von 684 gleich dem Original, 12 von 12 Perioden 475 342 … 541 556 µs bei 14 … 16 Engine-Schritten, 325 Bildwechsel im Fade |
+| `zeichner_eigener_schritt` — neuer Stand, aber `re15_render_pc_title_menu` schreitet den Pulswert je Aufruf selbst fort | **ROT** in A, B, C, D, E: 1 263 Bilder gezeichnet ≠ Engine, Perioden 491 229 … 604 092 µs, 315 Bildwechsel im Fade |
+| `modulation_alt` — aktive Zeile mit der alten Abbildung 200 + (wert − 0x80) · 55 / 0x3e | **ROT nur in C**: 0 von 618 gleich dem Original; A, B, D, E, F grün |
+| `main_je_bild` — main.c `re15_title_pulse_step()` je Bild (M2 des Gegenprüfers) | **ROT nur in D**: 16 von 16 Perioden 416 235 … 506 531 µs, **je 60 Engine-Schritte** — die Diagnose sagt jetzt, was los ist |
+
+Damit fällt der Riegel an jeder der drei Stellen, die das Symptom tragen: am Takt (main.c),
+am Zeichner (render_pc.c) und an der Helligkeitsabbildung (tmoji_strip).
+
+### 10.5 64-Bit-Division (`title_pulse.c`) — PSX weiter OFFEN
+
+Nachgemessen, 32-Bit-Stellvertreter: NDK 27.2 clang `--target=armv7a-linux-androideabi21 -O2 -c`
+über alle `engine/src/*.c` (78 übersetzt, `aot_common.c` ohne die Android-Defines nicht),
+`llvm-nm -u`:
+
+| Datei | 64-Bit-Hilfsroutine |
+|---|---|
+| actor_locomotion, camera_common, enemy_ai_boss_g5, enemy_ai_boss_gator, re15_collision, rotor_common | `__aeabi_ldivmod` (vorzeichenbehaftet) |
+| title_pulse | `__aeabi_uldivmod` (vorzeichenlos) |
+
+Die Engine braucht auf einem 32-Bit-Ziel also schon heute in sechs Dateien die
+64-Bit-Division aus der Laufzeitbibliothek. `title_pulse.c` fügt die vorzeichenlose Schwester
+hinzu (auf MIPS `__udivdi3` / `__umoddi3` neben `__divdi3` / `__moddi3`, alle in libgcc).
+Gelesen, nicht gemessen: `cmake/psx_toolchain.cmake` setzt kein `-nostdlib`, der
+`mipsel-none-elf-gcc`-Treiber hängt dann libgcc von selbst an; PSn00bSDKs eigene Einrichtung
+verlangt es ausdrücklich (`link_libraries(-lgcc)`, `libpsn00b/cmake/internal_setup.cmake:41`).
+Einen MIPS-Compiler gibt es auf dieser Maschine nicht — der PSX-Bau bleibt **offen**.
+
+### 10.6 Abweichungen vom Vorschlag des Gegenprüfers — und warum
+
+1. **(a) gezeichneter Wert:** gebaut, und zusätzlich die zurückgelesenen PIXEL der Zeile.
+   Ein Getter allein wäre wieder ein innerer Zustand gewesen (diesmal des Zeichners); die
+   Rücklese misst, was im Bildpuffer steht, und fängt so auch eine Regression, die an der
+   Wertübergabe vorbeigeht (z. B. `modulation_alt`, bei der „gezeichnet = Engine“ stimmt).
+2. **(c) „render_pc.c auf d98e9639 zurücksetzen“:** wörtlich scheitert jetzt der Bau, weil
+   main.c den Getter braucht. Das ist nicht grün, aber auch keine gemessene Aussage. Deshalb
+   zusätzlich `render_alt_schiene` (d98e9639 + nur die Rücklese, wie §9.3 es für main.c tat)
+   und `zeichner_eigener_schritt` (der Fehler im neuen Stand) — beide ROT.
+3. **(d) Testköpfe zurücknehmen:** nicht zurückgenommen, sondern neu geschrieben — der Test
+   prüft jetzt das Bild; der Kopf sagt, welche Spalte aus der Engine und welche aus dem
+   Zeichner kommt.
+4. **(e) Modulation:** statt eines Tests gegen die Formel (das wäre die Formel gegen sich
+   selbst) Teil (C) gegen die Original-Bildpuffer.
+5. **`RE15_SOFTWARE_RENDER` entfällt im Test** (§10.1, gemessen).
+
+### 10.7 Nicht gemessen / Grenzen
+
+- **PSX-Bau** (§10.5).
+- **Andere Menüzeilen:** alle sechs Original-Savestates stehen auf NEW GAME (Cursor 0). Für
+  LOAD GAME / OPTION gibt es keinen Original-Hash; (A), (B), (D) gälten dort genauso, der Test
+  fährt nur NEW GAME.
+- **Stillstand am Abfall:** fallen in EIN Bild vier oder mehr Pulsschritte genau um die
+  Rücksetzung (≈ 134 ms Stillstand), zeigt das Bild die dunkelste Stufe nie, der Abfall fehlt
+  und (D) meldet eine Doppelperiode. In 3 Einzelläufen, dem Suite-Lauf und 6 Gegenproben-Läufen
+  nicht aufgetreten (längstes Bild 36,9 ms).
+- **Rücklese vor den Blenden:** während Einblende und Bestätigungs-Fade liegt über dem
+  gelesenen Bild noch die Blende. (C) vergleicht dort die Zeile, nicht das ganze Bild; für
+  B = 0 ist beides dasselbe (Bildschirm-Abgleich 1694 von 1694).
+- Weiter offen aus §9.5: Phasenversatz Einblende/Puls (2 Durchgänge), Bestätigungs-Fade auf
+  den Titel-Tick, Cursor läuft um.
