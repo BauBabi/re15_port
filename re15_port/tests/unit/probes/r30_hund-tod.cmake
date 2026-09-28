@@ -31,3 +31,16 @@ set_tests_properties(unit_r30_hund_tod PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 7
 # Vor dem Bau: 200 von 200 Todesbildern mit aktiver Zielphase.
 add_test(NAME unit_r30_hund_tod_n2 COMMAND probe_r30_hund_tod n2)
 set_tests_properties(unit_r30_hund_tod_n2 PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# RIEGEL 3 — dieselbe Abnahme wie Riegel 1, mit ELZA als Spielfigur (R30_FIGUR=4 ->
+# g_gameflow.character = 4 -> re15_char_variant() = 1). Seit dem Bau haengt das Zaehler-Fenster
+# von Sub 7 an der Figur statt an einer Taste: lbu v0,8(s3) / andi v0,v0,0x1 @0x80102010-18 und
+# @0x801020A4-AC, s3 = 0x800CFBF8 (@0x80101D3C-40) = Spielerblock+0x8 = Figuren-Nummer. Fuer die
+# ungerade Figur laeuft der Freigabe-Block (@0x80102024-A0) ab dem ersten Bild von P1, fuer Leon
+# nach 12 Bildern (Zaehler 12 @0x80101D70/7C). Gemessen beim Bau (probe lauf 1 20 900, yaw 0):
+# Elza +0x220 = 1 ab Bild 107 (Zaehler 11, danach negativ), Leon ab Bild 119 (Zaehler 0,
+# saettigt). Auch fuer die ungerade Figur steht niemand wieder auf: RIEGEL GRUEN (0), 12 von 12
+# mit Latch; suche 20 1500 -7878 -17384 3: AUFERSTANDEN 0, Game Over 48 von 48.
+add_test(NAME unit_r30_hund_tod_elza COMMAND probe_r30_hund_tod riegel)
+set_tests_properties(unit_r30_hund_tod_elza PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77
+    ENVIRONMENT "R30_FIGUR=4")
