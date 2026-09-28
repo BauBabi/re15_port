@@ -4,7 +4,31 @@ Auftrag: analysis/befunde_runde31/AUFTRAG.md (Nutzer woertlich). Teil T2: zu ein
 zugeordnetem RE2-Archiv die RICHTIGE Variante, den RICHTIGEN Griff, den RICHTIGEN Ton — auch fuer
 Tueren zwischen zwei Raeumen. Kein Spielcode; Werkzeuge unter re15_port/tools/tueren/re2_*.py.
 
-Stand: IN ARBEIT (laufend nachgefuehrt, nach jedem Abschnitt committet).
+Stand: 2026-09-29, Abschnitte 0-7 + Anhang fertig (Kurzfassung ganz oben).
+
+## Kurzfassung
+
+1. **Variante <-> Griff (Abschnitt 1).** In der Standardgruppe (26 einfluegelige Drehtueren: 00 01 02 03 04 05 06 07 08 09
+   0A 0B 0D 13 15 17 18 1A 1C 1D 22 23 24 29 2E 2F) zeigt **V0 Angel rechts / Griff links / Blatt geht weg** (aufdruecken),
+   **V1 Angel links / Griff rechts / Blatt kommt hin** (aufziehen) - beides von der Raumseite, vor der Tuer stehend.
+   Doppeltueren V2/V3 (ein Fluegel) bzw. hin/weg (beide Fluegel), Schott 26/31 V0..V3, Treppe/Leiter **V4 hinauf,
+   V5 hinab**. Tabelle aller 152 Varianten in Anhang A1, Bilder `tueren_belege/t2_varianten_anfang_mitte.jpg`.
+2. **Paar-Regel (Abschnitt 2).** 572 Saetze -> 534 Seiten -> 238 physische Tueren; beide Seiten haben immer dasselbe
+   Archiv; Varianten 0/1 in 151, 4/5 in 33, **0/0 in 33** (25/26/27/2B/31), 2/3 in 18, 2/2 in 3. Stichprobe im RE2-Hintergrund:
+   **24 von 25** eindeutig gesehenen Seiten haben den gemalten Griff dort, wo die Variante ihn zeigt (12 Archive). ->
+   **Regel fuer RE1.5: jede Seite bekommt ihre Variante aus IHREM gemalten Griff (links -> V0, rechts -> V1), ohne
+   Komplementaer-Pflicht.** RE2 spiegelt nie.
+3. **Griffe (Abschnitt 3).** 5 Formfamilien sind zwischen Archiven bytegleich (Knauf A, Knauf B, Druecker, Stange,
+   Druecker flach); Anhaengepunkt immer x = +-130 am Standardblatt. Griff-Form falsch -> Griff-Mesh tauschen; RE2 tut
+   das selbst per **Bit 7** in DOOR01/DOOR05 (gleicher Anhaengepunkt, gleiche Textur); archivuebergreifend muss der
+   Beschlagstreifen v 219..255 des Spenders mit.
+4. **Ton (Abschnitt 4).** Tonkopf in allen 55 Archiven identisch (Satz 0 = Skript-Se_on Stimme 22, Satz 1 = Door_exit
+   Stimme 23); 7 Tonfamilien (35 verschiedene Tonteile); Aufbau = TORSE-Aufbau, direkt ladbar. Treppen: drei
+   Schrittgeraeusche, Leiter: vier Sprossen, kein Schliesston.
+5. **Port (Abschnitt 6).** Maschine nimmt jedes DOORxx.DO2 unveraendert; es fehlen: Archiv aus Datei + Tabelle
+   @0x8009a520, Bit 7 an die Maschine, DOOR28-Seitenkorrektur, Member-/Vibrations-Opcodes, Flags 0x2000/0x4000/0x0100,
+   Anfrage im Kreuz-Raum-Zweig, Einblendung erst nach dem Raumwechsel, Tuertoene ueberleben `re15_audio_load_room_banks`
+   (RE2 @0x800597a4: nur SPU 0x14441..0x3DC4F wird abgeschaltet, Tuerbank 0x3DC50). Schrittfolge 6.2.
 
 ## 0. Quellen und Werkzeuge
 
@@ -377,7 +401,363 @@ RE2-Raum.
 
 
 ## 6. Port-Anschluss-Plan (Datei:Zeile, RE2-Adressen, Schrittfolge fuer den Bau-Agenten)
-(folgt)
+
+Stand der Zeilen: Zweig `r31/tueren` (Basis 7cb74897), per `grep -n` gemessen am 2026-09-29.
+
+### 6.0 Was heute da ist
+
+| Stelle | Datei:Zeile | Stand |
+|---|---|---|
+| Anfrage + Archiv-Kennungen | `include/re15_door_seq.h:137-145` | nur `RE15_DOOR_ARCHIV_KEINS`/`_TOR1170`; Anfrage traegt archiv, variante, tuer_nr - kein Bit 7, keine RE2-Nummer |
+| Zuordnung | `engine/src/door_seq_tor1170.c:37-59` | Tabelle Raum + Rechteck (Mitte/Halbmass) + Band -> Archiv/Variante; 4 Eintraege (Tor 1170/1171) |
+| Ausfuehren | `engine/src/door_seq_tor1170.c:66-74` | verfaellt ohne Laeufer (PSX, Tests) |
+| Archivquelle | `engine/src/door_seq_archiv.c:88-96` | nur das eingebackene Torarchiv |
+| Maschine | `engine/src/door_seq_common.c:114-155` | `re15_door_seq_start` nimmt den Modellteil im RE2-Aufbau (+0 MD1, +4 TIM, +8 SCD) - **jedes DOORxx.DO2 ab Sektor*0x800 passt unveraendert** |
+| Luecken der Maschine | `door_seq_common.c:408-412` | Member_set/Member_set2/Member_copy nur Vorschub (braucht DOOR10: 0x34; DOOR2D: 0x34/0x35/0x3D) |
+| | `door_seq_common.c:460-463` | `default:` schaltet das Ereignis ab -> 0x8A/0x8B/0x8C (DOOR28, 2D, 33) wuerden das Skript toeten |
+| Zeichnen | `platform/pc/src/door_scene_pc.c:107-174` | Flags 0xc0 (OT), 0x1000 (BK) umgesetzt; es fehlen 0x2000 (DOOR10), 0x4000 (DOOR10, 2C), 0x0100 (DOOR28) |
+| | `door_scene_pc.c:166` | `pxo = (page & 0xF) * 128` - falsch fuer DOOR28 (MD1 steht auf page 0x95 / CLUT 0x7fc0) |
+| Laeufer | `door_scene_pc.c:187-270` | `:192` var0e fest 0; `:205` laedt nur TORSE; `:232`/`:263` spielen nur TORSE |
+| Ton | `platform/pc/src/audio_pc.c:3598-3682` | TORSE-Slot (Tonteil DOOR2E unveraendert, TOC 0/0xC38) |
+| Raumbaenke | `audio_pc.c:3563-3587` | `:3567` schaltet ALLE Stimmen ab, `:3573` loescht alle Vormerkungen |
+| Anfrage Selbst-Tuer | `engine/src/aot_common.c:716-737` | `re15_door_seq_zuordnen(g_current_room_id, a->x, a->z, a->half_w, a->half_h, d->band, &var)` |
+| Kreuz-Raum | `aot_common.c:661` | `re15_room_request_change(...)` - **keine** Anfrage |
+| Verbrauch | `engine/src/game_step_common.c:2081-2082` | `if (re15_door_seq_ausfuehren() && g_scd_pending_scenario < 0) re15_room_transition_present();` |
+| Laeufer anmelden | `platform/pc/main.c:3094` | `re15_pc_tuerszene_anmelden()` |
+| Spielschritt / Raumwechsel | `main.c:6486` (re15_game_step) vor `main.c:7664` (`re15_room_apply_pending`), Einblendung `main.c:7715` | Reihenfolge im Bild: Scan + Sequenz, DANN Raum laden, DANN RE1.5-Einblendung |
+| Raumbaenke im Wechsel | `engine/src/room_common.c:423` | `re15_audio_load_room_banks()` in `re15_room_apply_pending` |
+| PSX | `platform/psx/main.c:600`, `platform/psx/src/audio_psx.c:889-890` | kein Laeufer, Ton-Stubs |
+| Paket | `release/make_package.sh:190-192` | prueft TORSE.VBS |
+
+### 6.1 RE2-Belege fuer den Ablauf (selbst gelesen)
+
+- **Reihenfolge bei der Tuer mit Raumwechsel** `FUN_80026b7c`: `@0x80026bec jal 0x8002bda8` (a0=2: Bild schwarz),
+  `@0x80026bf8 addiu a1,a1,15300` + `@0x80026bfc jal 0x80031f6c` (a0=1: Task 1 = Door_main 0x80013bc4),
+  `@0x80026c0c jal 0x80014cd0` (Tonteil laden), ab `@0x80026c9c` Spielerlage aus der Nutzlast (`lw a1,0x800ce550`),
+  `@0x80026e1c jal 0x80049e48` (Zielraum laden, darin Raumbaenke `FUN_80059e54`), `@0x80026e28..54` warten, solange
+  `0x800cfb74 & 0x2000000` (Tuer-Task laeuft), `@0x80026e60 jal 0x8002bda8` danach.
+- **Tuerbank ueberlebt den Raumwechsel:** `FUN_80059e54 @0x80059e90 jal 0x800597a4`; dort je Stimme 23..0
+  (`@0x800597ac addiu s1,zero,24`, `@0x800597d8 addiu s1,s1,-1`) nur abschalten, wenn die SPU-Startadresse im
+  Raumbereich liegt: `@0x800597bc lui s3,0xfffe / @0x800597c0 ori s3,s3,0xbbbf` (-0x14441), `@0x800597c8 lui s2,0x2 /
+  @0x800597cc ori s2,s2,0x980e`, `@0x80059800 addu v0,v0,s3`, `@0x80059804 sltu v0,s2,v0`, `@0x80059808 bne` (ausserhalb
+  -> weiter), sonst `@0x80059810 jal 0x80079498` mit a0 = 0 (Key-Off). Also nur 0x14441..0x3DC4F. Die Tuerbank liegt
+  bei **0x3DC50**: `@0x80014f08 lui a2,0x3` + `@0x80014f18 ori a2,a2,0xdc50` (a2 von `jal 0x80085368` @0x80014f14,
+  SsVabOpenHeadSticky). -> Tuertoene werden vom Raumwechsel nicht abgeschnitten.
+- **Door_exit-Ton** nach dem Ausblenden, Satz 1: `@0x800141d8 lhu v0,584(v0)`, `@0x800141e0 beq`, `@0x800141f4 lui a0,0x1`,
+  `@0x800141f0 jal 0x8005ba28` (08_re_ton 1).
+- **Archiv laden:** Tabelle `@0x8009a520` (Tonteil, Modellteil, Sektor, Pruefsumme; 55/55 geprueft,
+  `re2_tuer_tabelle.py`), Modellteil nach 0x801a1000 (`@0x80013c7c jal 0x80015064`), Tonteil nach 0x801a1000 -
+  Groesse (`@0x80014da0 subu s0,s0,s4`). **Typ 40 (DOOR28)** ohne MD1-Umsetzung: `@0x80013d78 lbu v1,12(v0)`,
+  `@0x80013d7c addiu v0,zero,40`, `@0x80013d80 beq v1,v0,0x80013d94` -> `@0x80013d94/98` a2 = a3 = 0 statt 21/31
+  (`@0x80013d88/90`) vor `@0x80013d9c jal 0x80076b60`.
+
+### 6.2 Schrittfolge fuer den Bau-Agenten
+
+**Schritt 1 - Daten.**
+1. `python re15_port/tools/tueren/re2_tuer_tabelle.py --inc re15_port/engine/src/gen/re2_tuer_tabelle.inc` (55 Zeilen aus
+   @0x8009a520, jede mit Adresse + Rohbytes im Kommentar).
+2. `python re15_port/tools/tueren/re2_tuer_tabelle.py --kopiere-nach re15_port/shared_assets/RE2/DOOR --nur <Liste>` mit
+   der Liste der Archive, die die Zuordnung (T1/T3) wirklich braucht. Die Dateien bleiben UNVERAENDERT (sha1 wird beim
+   Kopieren geprueft). Groesse: alle 55 zusammen 3 474 940 B, groesstes 81 336 B; Quelle `info/re2leon/COMMON/DOOR/`.
+   Lesen im Port: `re15_pc_read_re2("DOOR/DOORxx.DO2", &n)` (`platform/pc/src/asset_root_pc.c:297`, Unterordner
+   gehen wie bei `FILES/`).
+3. Zuordnungstabelle `engine/src/gen/tuer_zuordnung.inc` aus T1/T3 + Regel 2.4 erzeugen (Generator neu, Muster
+   `door_seq_tor1170.c:37-45`): je RE1.5-Tuerseite {Raum (volle Id inkl. Variante xxx0/xxx1), x, z, hw, hh (Mitte +
+   Halbmass wie `door_seq_tor1170.c:19`), Band (Door_aot_set pc[4]), RE2-Archiv 0..54, Variante, Bit 7}. Jede Zeile
+   kommentiert mit RDT-Datei-Offset des Door_aot_set und der Herkunft der Wahl ("PORT-WAHL, keine Original-Adresse:
+   Griff im Hintergrund links -> V0, Regel 2.4, Beleg <Ausschnitt>"). **Schluessel NICHT der Slot** (05 1.4: ROOM1170
+   Slot 6 = ROOM1171 Slot 5; ROOM1170 Slot 3 hat die Nutzlast des Tors, aber Rechteck 0 und Band 0).
+
+**Schritt 2 - Maschine (engine/src/door_seq_common.c).**
+1. `case 0x34/0x35/0x3D` (`:408`): Feldzugriff ueber die RE2-Tabellen `0x80011228` (Setter, 44 Eintraege) und
+   `0x800112f8` (Getter) - Umsetzung wie `tuerkatalog.member_table` (Befehl am Sprungziel bzw. im Delay-Slot); DOOR10
+   Feld 13 = z (+0x40). Vorschub 4/3/3 (@0x80055c30, @0x80055c90, @0x80055e54).
+2. `case 0x8A/0x8B/0x8C`: nur Vorschub 6/6/8 (@0x80059378 addiu v1,v1,6 / @0x800593c8 / @0x8005941c addiu v1,v1,8);
+   Wirkung (Vibration) optional ueber `re15_rumble`, sonst nichts - aber NICHT in `default:` fallen.
+3. Zeichen-Flags in `door_scene_pc.c`: 0x2000 Ecken-z * var 4 / 256 (@0x80014794..f0; nur DOOR10), 0x4000
+   halbtransparent Code 0x36 (@0x8001473c..48; DOOR10, 2C), 0x0100 pulsierende Farbe (+8 je Bild, @0x80014468; DOOR28).
+
+**Schritt 3 - Laeufer + Ton (platform/pc).**
+1. Anfrage erweitern (`include/re15_door_seq.h:140-145`): `uint8_t re2_nr` (0..54, 0xFF = keins), `uint8_t bit7`.
+   Neue Kennung `RE15_DOOR_ARCHIV_RE2` (Archiv aus Datei).
+2. `tuer_laeufer` (`door_scene_pc.c:187`): fuer RE2 die Datei lesen, Modellteil = Datei + Sektor*0x800 (Laenge
+   Modellteil), Tonteil = Datei[0 .. Tonteil) aus `re2_tuer_tabelle.inc`; `re15_door_seq_start(&s, modell, n, variante,
+   bit7 ? 0x80 : 0, re2_nr)` statt `:192` mit 0 (var 14 = Payload+13 & 0x80 @0x80013e84/8c, var 15 = Payload+12
+   @0x80013e90/98).
+3. DOOR28 (`re2_nr == 0x28`): Seite 0x95 -> 0x80 und CLUT-Zeile 511 -> 480 zurueckrechnen (RE2 laedt das TIM nach
+   (320,256)/CLUT 511 und setzt das MD1 fuer Typ 40 nicht um, 6.1) - an `door_scene_pc.c:166` und beim CLUT-Wort.
+4. `audio_pc.c`: `load_re2_tor_se_pc` (`:3616`) zu `load_re2_tuer_se_pc(const uint8_t *ton, int groesse, int schluessel)`
+   verallgemeinern: Aufbau ist in allen 55 Archiven identisch mit TORSE (Kopf @0, VH @0x10, Nachspann @0xC30, VB @0xC38;
+   `re2_tuer_ton.py` 55/55), also dieselbe TOC; zwischenspeichern je Tonfamilie (35 verschiedene Tonteile). TORSE bleibt
+   fuer das Tor. Abspielen weiter ueber `se_play_layers` mit RE2-Pegelgesetz (`s_se_pegel_re2`, 08_re_ton 2.3).
+5. **Schliesston ueberlebt den Raumwechsel:** in `re15_audio_load_room_banks` (`audio_pc.c:3567/3573`) Stimmen, deren
+   `pcm` in den dekodierten Tuertoenen liegt, NICHT abschalten und ihre `s_se_pend` NICHT loeschen (Gegenstueck zu
+   RE2 @0x800597a4..0x80059818 + Tuerbank 0x3DC50, 6.1). Die dekodierten Tuertoene erst beim naechsten Tuerladen
+   freigeben, nicht im Raumwechsel.
+
+**Schritt 4 - Anbindung (engine).**
+1. `aot_common.c:661` (Kreuz-Raum-Zweig): VOR `re15_room_request_change` dieselbe Zuordnung wie `:729` mit
+   `g_current_room_id`, Rechteck und `d->band` aufrufen und die Anfrage setzen.
+2. `game_step_common.c:2081`: Bedingung um `&& !g_room_change.pending` ergaenzen - bei einer Kreuz-Raum-Tuer gehoert
+   die Einblendung hinter den Raumwechsel (`main.c:7715`), nicht in den alten Raum. Die Sequenz selbst laeuft hier
+   (Spielschritt `main.c:6486` liegt vor `re15_room_apply_pending` `main.c:7664`) - damit ist "Verbrauch vor
+   re15_room_apply_pending" erfuellt, und das Standbild des Abdunkelns (`door_scene_pc.c:212-221`) ist das zuletzt
+   gezeigte Bild des ALTEN Raums.
+3. Sicherung in `main.c` direkt vor `:7664`: steht noch eine Anfrage an (Tuer ausserhalb des Spielschritts gefeuert),
+   `re15_door_seq_ausfuehren()` dort aufrufen.
+4. PSX: nichts anmelden (`platform/psx/main.c:600` bleibt), `audio_psx.c` bekommt Stubs fuer die neuen Tonfunktionen;
+   die Anfrage verfaellt dort wie heute.
+
+**Schritt 5 - Paket.** `release/make_package.sh` bei `:190-192`: fuer jede Datei in `shared_assets/RE2/DOOR/*.DO2` des
+Quellbaums pruefen, dass sie im Paket liegt und nicht leer ist (`die` sonst: "Tuersequenz ohne Modell").
+
+**Schritt 6 - Riegel (Sonde `tests/unit/probes/<thema>.cmake`).**
+1. Maschine gegen den Simulator: fuer mindestens DOOR00 V0/V1, DOOR0E V4, DOOR10 V0 (Member_set + Flag 0x2000),
+   DOOR28 V4 (0x8A..0x8C, Typ 40) den Modellteil aus `shared_assets/RE2/DOOR` starten und Bild fuer Bild Lage/Drehung
+   gegen eine Referenz aus `tuerkatalog.VM` pruefen (Muster `unit_door_seq.c` / `tools/tor/tuerseq_referenz.py`).
+2. Zuordnung: eine Kreuz-Raum-Tuer loest die Anfrage mit richtigem Archiv/Variante/Bit 7 aus; die Intro-Uebergabe
+   (Null-Rechteck) und das Tor bleiben unveraendert.
+3. Ton: nach `re15_audio_re2_tuer_se(1)` + `re15_audio_load_room_banks()` ist die Stimme noch aktiv.
+4. Sichtpruefung mit echter exe + RE15_FRAMEDUMP an einer Kreuz-Raum-Tuer (Abdunkeln alter Raum, Sequenz, Schwarz,
+   Einblendung neuer Raum).
+
+### 6.3 Was NICHT anfassen
+
+| Was | Warum / woran erkennbar |
+|---|---|
+| Tor ROOM1170/1171 | eigenes Archiv `RE15_DOOR_ARCHIV_TOR1170` (`door_seq_tor1170.c:37-45`), eigene Skripte; die neue Tabelle muss diese 4 Eintraege behalten |
+| Verschlossene Tueren | Anfrage entsteht nur in `aot_fire_door`, also erst beim tatsaechlichen Durchgehen; RE1.5 fuehrt Schloesser ueber Raumskripte (Nutzlast +15/+16 = 0 in allen 649 Saetzen, 05 1.4) - nichts am Schloss aendern |
+| Aufzuege mit eigener RE2-Szene | ELEVSE.VBS / `tools/re2_elevator_cut.py`; ROOM1080 Slots 0-2 haben Null-Rechteck -> kein Tabelleneintrag |
+| Intro-Uebergaben mit Null-Rechteck | 27 Null-Rechteck-Kreuz-Raum-Tueren (aot_common.c:640-657), u. a. 1240 -> 1170; Schluessel Rechteck + Band schliesst sie aus |
+| Cutscene-/Skript-Tueren | per `Aot_on` gefeuert mit Rechteck 0; RE2 nimmt dafuer die objektlosen Archive 20/21/32/34/36 - im Port kein Eintrag |
+| RE1.5-Einblendung nach der Tuer | `re15_room_transition_present` (`room_common.c`) bleibt RE1.5 (09 0.) |
+| PSX | bleibt Stub (6.2 Schritt 4.4) |
 
 ## 7. Offen / nicht belegt
-(folgt)
+
+1. **Ladewarten.** Alle Bildnummern `[SIM]` mit 0 Bildern Ladezeit; im Port ist das richtig (Tonteil synchron vor dem
+   ersten Bild, 09 6b), in RE2 verschiebt das CD-Laden die Zeitachse ab dem Warteskript.
+2. **Stichprobe 2.3:** eine Seite (ROOM10D0, DOOR05 V0) widerspricht vermutlich dem Bild; der Blick ist zu flach, um
+   es sicher zu sagen. Zweitbeleg (andere Kamera) gibt es im Raum nicht (nur c0/c2 sehen die Tuer).
+3. **Treppe hinauf/hinab** ist aus Modellbewegung + Bild (Aussentreppe ROOM1070) belegt; die RE2-Stockwerke der
+   Raeume 10C0/2070 ordne ich nicht zu (Hintergrund zu flach).
+4. **Ton nicht abgehoert** (Deutung Oeffnen/Schliessen/Schritt nur aus Zeitpunkt + Huellkurve, wie 08_re_ton).
+5. **Textzeilen** fuer Tuertyp 50/52 (0x32/0x34, Bild 41..259, `@0x80013f90..0x80014004`) nicht gelesen - nur fuer
+   Skript-Uebergaenge relevant, im Port ausgeschlossen.
+6. **Flag 0x0200** (42 Archive) und Feld pc[2] ohne Leser (03 Offen 3) - fuer den Bau ohne Wirkung.
+7. **Wie viele RE1.5-Tueren nicht abgedeckt werden**, haengt an der Zuordnung Tuer -> Archiv (T1/T3). Aus RE2-Sicht
+   deckt jedes der 26 Standard-Archive beide Griffseiten ab; Luecken entstehen nur, wo KEIN Archiv die Tuerform trifft
+   (niedrige Tore, Sondertueren) oder wo die Griff-FORM nicht im Archiv liegt (dann Griff-Tausch 2.5/3).
+8. **Dynamische Gegenprobe** gegen eine RE2-Aufnahme steht aus (wie 03/09).
+
+## Anhang A1 - alle Varianten (aus `re2_tuer_bericht.py`, Spalten wie Abschnitt 1)
+
+Objekte: B = Blatt (bewegt), Bf = Blatt fest, G = Griff/Beschlag (Kind eines Blatts), Ak/Aw = Anbauteil Kind/Wurzel;
+Zahl = Mesh. Se_on-Bild ohne Ladewarten `[SIM]`.
+
+| Archiv | V | Skr | Bilder | Bewegung | Richtung | Angel x (Seite) | freie Kante | Griff: Mesh, x, Seite (vorn) | Objekte (Rolle:Mesh) | Se_on Bild | Schliesston |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| DOOR00 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 111 links | B:0 G:1 | 70 | ja |
+| DOOR00 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 227 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR01 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 109 links | B:0 G:1 | 70 | ja |
+| DOOR01 | 0 b7 | 1 | 301 | dreht | weg | 234 (rechts) | links | m3 109 links | B:0 G:3 | 70 | ja |
+| DOOR01 | 1 | 2 | 301 | dreht | hin | 86 (links) | rechts | m2 211 rechts | B:0 G:2 G:1 | 70 | ja |
+| DOOR01 | 1 b7 | 2 | 301 | dreht | hin | 86 (links) | rechts | m3 211 rechts | B:0 G:3 G:3 | 70 | ja |
+| DOOR01 | 2 | 3 | 281 | dreht | weg | 290 (rechts) | mitte | m1 177 rechts | B:0 G:1 G:1 Bf:0 G:1 | 70 | ja |
+| DOOR01 | 2 b7 | 3 | 281 | dreht | weg | 290 (rechts) | mitte | m1 177 rechts | B:0 G:1 G:1 Bf:0 G:1 | 70 | ja |
+| DOOR01 | 3 | 4 | 281 | dreht | hin | 30 (links) | mitte | m1 143 links | B:0 G:1 Bf:0 G:1 | 70 | ja |
+| DOOR01 | 3 b7 | 4 | 281 | dreht | hin | 30 (links) | mitte | m1 143 links | B:0 G:1 Bf:0 G:1 | 70 | ja |
+| DOOR02 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 111 links | B:0 G:1 | 70 | ja |
+| DOOR02 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 225 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR03 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 109 links | B:0 G:1 G:1 | 70 | ja |
+| DOOR03 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 229 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR04 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 114 links | B:0 G:1 | 120 | ja |
+| DOOR04 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 225 rechts | B:0 G:1 G:1 | 120 | ja |
+| DOOR04 | 2 | 3 | 246 | dreht | weg | 290 (rechts) | mitte | m1 166 mitte | B:0 G:1 Bf:0 G:1 G:1 | 70 | ja |
+| DOOR04 | 3 | 4 | 296 | dreht | hin | 30 (links) | mitte | m1 154 mitte | B:0 G:1 G:1 Bf:0 G:1 | 120 | ja |
+| DOOR05 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 111 links | B:0 G:1 | 70 | ja |
+| DOOR05 | 0 b7 | 1 | 301 | dreht | weg | 234 (rechts) | links | m2 111 links | B:0 G:2 | 70 | ja |
+| DOOR05 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 226 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR05 | 1 b7 | 2 | 301 | dreht | hin | 102 (links) | rechts | m3 226 rechts | B:0 G:2 G:3 | 70 | ja |
+| DOOR06 | 0 | 1 | 311 | dreht | weg | 234 (rechts) | links | m1 111 links | B:0 G:1 | 130 | ja |
+| DOOR06 | 1 | 2 | 311 | dreht | hin | 102 (links) | rechts | m1 224 rechts | B:0 G:1 G:1 | 130 | ja |
+| DOOR06 | 2 | 3 | 291 | dreht | weg | 289 (rechts) | mitte | m1 167 mitte | B:0 Bf:0 G:1 G:1 | 110 | ja |
+| DOOR06 | 3 | 4 | 311 | dreht | hin | 30 (links) | mitte | - | B:0 Bf:0 G:1 G:1 G:1 | 110 | ja |
+| DOOR07 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 110 links | B:0 G:1 | 70 | ja |
+| DOOR07 | 1 | 2 | 301 | dreht | hin | 86 (links) | rechts | m1 210 rechts | B:0 G:1 | 70 | ja |
+| DOOR08 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 112 links | B:0 G:1 G:1 | 70 | ja |
+| DOOR08 | 1 | 3 | 296 | dreht | hin | 102 (links) | rechts | m1 226 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR09 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 111 links | B:0 G:1 | 70 | ja |
+| DOOR09 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 227 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR0A | 0 | 1 | 291 | dreht | weg | 226 (rechts) | links | m1 123 links | B:0 G:1 | 100 | ja |
+| DOOR0A | 1 | 2 | 291 | dreht | hin | 107 (links) | rechts | m1 211 rechts | B:0 G:1 G:1 | 100 | ja |
+| DOOR0B | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 122 links | B:0 G:1 | 120 | ja |
+| DOOR0B | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 220 rechts | B:0 G:1 G:1 | 120 | ja |
+| DOOR0C | 0 | 1 | 307 | dreht | hin | 289 (rechts) | mitte | m1 169 mitte | B:0 B:0 G:1 G:1 G:1 G:1 | 90 | ja |
+| DOOR0C | 1 | 2 | 307 | dreht | weg | 289 (rechts) | mitte | m1 169 mitte | B:0 B:0 G:1 G:1 | 90 | ja |
+| DOOR0D | 0 | 1 | 311 | dreht | weg | 234 (rechts) | links | m1 108 links | B:0 G:1 | 70 | ja |
+| DOOR0D | 1 | 2 | 311 | dreht | hin | 102 (links) | rechts | m1 227 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR0D | 2 | 3 | 327 | dreht | hin | 289 (rechts) | mitte | m1 164 mitte | B:0 G:1 G:1 B:0 G:1 G:1 | 70 | ja |
+| DOOR0D | 3 | 4 | 327 | dreht | weg | 289 (rechts) | mitte | m1 164 mitte | B:0 G:1 B:0 G:1 | 70 | ja |
+| DOOR0E | 4 | 1 | 169 | hebt | runter | 162 (mitte) | rechts | - | B:0 | 65,108,151 | nein |
+| DOOR0E | 5 | 2 | 165 | - | - | - | - | - | Bf:0 | 61,104,147 | nein |
+| DOOR0F | 4 | 1 | 169 | hebt | runter | 162 (mitte) | rechts | - | B:0 | 65,108,151 | nein |
+| DOOR0F | 5 | 2 | 165 | - | - | - | - | - | Bf:0 | 61,104,147 | nein |
+| DOOR10 | 0 | 1 | 301 | schiebt | nach links | 95 (links) | links | - | Bf:1 B:0 B:0 B:0 B:0 B:0 B:0 B:0 B:0 B:0 | 120 | ja |
+| DOOR10 | 1 | 2 | 301 | schiebt | nach links | 238 (rechts) | rechts | - | Bf:1 B:0 B:0 B:0 B:0 B:0 B:0 B:0 B:0 B:0 | 120 | ja |
+| DOOR11 | 0 | 1 | 291 | dreht | weg | 289 (rechts) | mitte | m1 168 mitte | B:0 Bf:0 G:1 G:1 | 100 | ja |
+| DOOR11 | 2 | 1 | 291 | dreht | weg | 289 (rechts) | mitte | m1 168 mitte | B:0 Bf:0 G:1 G:1 | 100 | ja |
+| DOOR11 | 1 | 2 | 311 | dreht | hin | 30 (links) | mitte | m1 150 mitte | B:0 Bf:0 G:1 G:1 G:1 | 100 | ja |
+| DOOR11 | 3 | 2 | 311 | dreht | hin | 30 (links) | mitte | m1 150 mitte | B:0 Bf:0 G:1 G:1 G:1 | 100 | ja |
+| DOOR12 | 4 | 1 | 169 | hebt | runter | 162 (mitte) | rechts | - | B:0 | 65,108,151 | nein |
+| DOOR12 | 5 | 2 | 165 | - | - | - | - | - | Bf:0 | 61,104,147 | nein |
+| DOOR13 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 112 links | B:0 G:1 G:1 | 60 | ja |
+| DOOR13 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m1 224 rechts | B:0 G:1 G:1 | 60 | ja |
+| DOOR14 | 0 | 1 | 301 | schiebt | nach links | 56 (links) | rechts | m1 236 rechts | B:0 G:1 | 110 | ja |
+| DOOR14 | 1 | 2 | 301 | schiebt | nach rechts | 56 (links) | rechts | m1 67 links | B:0 G:1 | 110 | ja |
+| DOOR15 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 120 links | B:0 G:1 G:1 | 60 | ja |
+| DOOR15 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m1 216 rechts | B:0 G:1 G:1 | 60 | ja |
+| DOOR15 | 2 | 3 | 291 | dreht | weg | 289 (rechts) | mitte | m1 178 rechts | B:0 Bf:0 G:1 G:1 | 110 | ja |
+| DOOR15 | 3 | 4 | 311 | dreht | hin | 30 (links) | mitte | m1 141 links | B:0 Bf:0 G:1 G:1 G:1 | 110 | ja |
+| DOOR16 | 4 | 1 | 331 | hebt | runter | 160 (mitte) | rechts | - | B:0 | 110,165,220,275 | nein |
+| DOOR16 | 5 | 2 | 331 | hebt | hoch | 160 (mitte) | links | - | B:0 | 110,165,220,275 | nein |
+| DOOR17 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 123 links | B:0 G:1 Ak:2 | 110 | ja |
+| DOOR17 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m1 214 rechts | B:0 G:1 Ak:2 G:1 Ak:2 | 110 | ja |
+| DOOR18 | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 110 links | B:0 G:1 | 70 | ja |
+| DOOR18 | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 227 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR19 | 0 | 1 | 301 | schiebt | nach rechts | 232 (rechts) | links | m1 101 links | B:0 G:1 Ak:2 | 60 | ja |
+| DOOR19 | 1 | 2 | 301 | schiebt | nach links | 95 (links) | rechts | m3 226 rechts | B:0 G:3 Ak:2 | 60 | ja |
+| DOOR1A | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 119 links | B:0 G:1 | 70 | ja |
+| DOOR1A | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 218 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR1B | 0 | 1 | 307 | dreht | hin | 289 (rechts) | mitte | m1 166 mitte | B:0 B:0 G:1 G:1 G:1 G:1 | 90 | ja |
+| DOOR1B | 2 | 1 | 307 | dreht | hin | 289 (rechts) | mitte | m1 166 mitte | B:0 B:0 G:1 G:1 G:1 G:1 | 90 | ja |
+| DOOR1B | 1 | 2 | 307 | dreht | weg | 289 (rechts) | mitte | m1 166 mitte | B:0 B:0 G:1 G:1 | 90 | ja |
+| DOOR1B | 3 | 2 | 307 | dreht | weg | 289 (rechts) | mitte | m1 166 mitte | B:0 B:0 G:1 G:1 | 90 | ja |
+| DOOR1C | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 120 links | B:0 G:1 | 70 | ja |
+| DOOR1C | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 217 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR1D | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 110 links | B:0 G:1 | 70 | ja |
+| DOOR1D | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 222 rechts | B:0 G:1 G:1 | 70 | ja |
+| DOOR1D | 2 | 3 | 291 | dreht | weg | 289 (rechts) | mitte | m1 166 mitte | B:0 Bf:0 G:1 G:1 | 100 | ja |
+| DOOR1D | 3 | 4 | 311 | dreht | hin | 30 (links) | mitte | m1 152 mitte | B:0 Bf:0 G:1 G:1 G:1 | 100 | ja |
+| DOOR1E | 0 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR1E | 1 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR1E | 6 | 2 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR1E | 7 | 3 | 301 | - | - | - | - | - | Aw:1 | - | nein |
+| DOOR1E | 8 | 7 | 301 | - | - | - | - | - | Aw:1 Ak:1 Ak:1 Ak:1 | - | nein |
+| DOOR1F | 0 | 1 | 301 | hebt | hoch | 58 (links) | rechts | - | B:0 G:1 G:2 G:3 | 60 | ja |
+| DOOR1F | 1 | 2 | 301 | hebt | hoch | 58 (links) | rechts | - | B:0 G:1 G:2 G:3 | 60 | ja |
+| DOOR20 | 0 | None | 271 | - | - | - | - | - |  | 80 | nein |
+| DOOR21 | 0 | None | 271 | - | - | - | - | - |  | 80 | nein |
+| DOOR22 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | - | B:0 | 60 | ja |
+| DOOR22 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | - | B:0 | 60 | ja |
+| DOOR23 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 127 links | B:0 G:1 | 60 | ja |
+| DOOR23 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m1 210 rechts | B:0 G:1 G:1 | 60 | ja |
+| DOOR24 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 112 links | B:0 G:1 | 60 | ja |
+| DOOR24 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m1 225 rechts | B:0 G:1 G:1 | 60 | ja |
+| DOOR25 | 0 | 1 | 286 | hebt | hoch | 234 (rechts) | links | - | B:0 | 110 | ja |
+| DOOR26 | 0 | 3 | 286 | dreht | weg | 51 (links) | mitte | m3 122 links | B:0 Bf:1 G:3 G:4 | 60 | ja |
+| DOOR26 | 1 | 4 | 236 | dreht | hin | 269 (rechts) | mitte | m3 197 rechts | B:0 Bf:2 G:3 G:4 | 60 | ja |
+| DOOR26 | 2 | 2 | 286 | dreht | weg | 106 (links) | rechts | m3 176 rechts | B:0 G:3 | 60 | ja |
+| DOOR26 | 3 | 1 | 286 | dreht | hin | 214 (rechts) | links | m3 144 links | B:0 G:3 | 60 | ja |
+| DOOR27 | 0 | 1 | 271 | schiebt | nach links | 51 (links) | mitte | - | B:0 B:1 | 70 | ja |
+| DOOR27 | 1 | 1 | 271 | schiebt | nach links | 51 (links) | mitte | - | B:0 B:1 | 70 | ja |
+| DOOR27 | 2 | 1 | 271 | schiebt | nach links | 51 (links) | mitte | - | B:0 B:1 | 70 | ja |
+| DOOR27 | 3 | 1 | 271 | schiebt | nach links | 51 (links) | mitte | - | B:0 B:1 | 70 | ja |
+| DOOR28 | 0 | 2 | 281 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR28 | 2 | 2 | 281 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR28 | 4 | 2 | 281 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR28 | 1 | 1 | 301 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR28 | 3 | 1 | 301 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR28 | 5 | 1 | 301 | - | - | - | - | - | Aw:0 Ak:1 Ak:2 | 105 | nein |
+| DOOR29 | 0 | 1 | 286 | dreht | weg | 234 (rechts) | links | m1 119 links | B:0 G:1 | 110 | ja |
+| DOOR29 | 1 | 2 | 286 | dreht | hin | 102 (links) | rechts | m2 216 rechts; m3 140 links | B:0 G:1 G:2 G:3 | 110 | ja |
+| DOOR2A | 0 | 1 | 301 | schiebt | nach rechts | 102 (links) | rechts | - | B:0 | 110 | ja |
+| DOOR2A | 1 | 2 | 301 | schiebt | nach links | 234 (rechts) | links | - | B:0 | 110 | ja |
+| DOOR2A | 2 | 3 | 301 | schiebt | nach rechts | 160 (mitte) | rechts | - | B:0 B:0 | 110 | ja |
+| DOOR2A | 3 | 3 | 301 | schiebt | nach rechts | 160 (mitte) | rechts | - | B:0 B:0 | 110 | ja |
+| DOOR2B | 0 | 1 | 301 | hebt | hoch | 15 (links) | rechts | - | B:0 | 60 | ja |
+| DOOR2C | 0 | 1 | 301 | schiebt | nach rechts | 159 (mitte) | rechts | m2 172 rechts | B:0 B:0 Bf:1 Bf:1 G:2 G:2 | 60,250 | nein |
+| DOOR2C | 1 | 2 | 351 | schiebt | nach rechts | 159 (mitte) | rechts | m2 172 rechts | B:0 B:0 G:2 G:2 | 60,300 | nein |
+| DOOR2C | 2 | 3 | 301 | schiebt | nach rechts | 159 (mitte) | rechts | m2 172 rechts | B:0 B:0 Bf:1 Bf:1 G:2 G:2 | 60 | nein |
+| DOOR2C | 3 | 4 | 351 | schiebt | nach rechts | 159 (mitte) | rechts | m2 172 rechts | B:0 B:0 G:2 G:2 | 60 | nein |
+| DOOR2D | 0 | 1 | 301 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 60,300 | nein |
+| DOOR2D | 2 | 1 | 301 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 60,300 | nein |
+| DOOR2D | 4 | 1 | 301 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 60,300 | nein |
+| DOOR2D | 1 | 2 | 451 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 20,175 | nein |
+| DOOR2D | 3 | 2 | 451 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 20,175 | nein |
+| DOOR2D | 5 | 2 | 451 | - | - | - | - | - | Bf:0 Bf:1 Bf:2 Bf:2 Bf:2 Bf:2 | 20,175 | nein |
+| DOOR2E | 0 | 1 | 291 | dreht | weg | 226 (rechts) | links | m1 120 links | B:0 G:1 | 100 | ja |
+| DOOR2E | 1 | 2 | 291 | dreht | hin | 107 (links) | rechts | m1 214 rechts | B:0 G:1 G:1 | 100 | ja |
+| DOOR2F | 0 | 1 | 301 | dreht | weg | 234 (rechts) | links | m1 110 links | B:0 G:1 | 120 | ja |
+| DOOR2F | 1 | 2 | 301 | dreht | hin | 102 (links) | rechts | m1 226 rechts | B:0 G:1 G:1 | 120 | ja |
+| DOOR30 | 0 | 1 | 301 | dreht | weg | 212 (rechts) | mitte | - | B:0 B:0 | 120 | ja |
+| DOOR30 | 1 | 2 | 301 | dreht | hin | 102 (links) | mitte | - | B:0 B:0 | 120 | ja |
+| DOOR31 | 0 | 3 | 286 | dreht | weg | 51 (links) | mitte | m3 122 links | B:0 Bf:1 G:3 G:4 | 60 | ja |
+| DOOR31 | 1 | 4 | 236 | dreht | hin | 269 (rechts) | mitte | m3 197 rechts | B:0 Bf:2 G:3 G:4 | 60 | ja |
+| DOOR31 | 2 | 2 | 286 | dreht | weg | 106 (links) | rechts | m3 179 rechts | B:0 G:3 | 60 | ja |
+| DOOR31 | 3 | 1 | 286 | dreht | hin | 214 (rechts) | links | m3 139 links | B:0 G:3 | 60 | ja |
+| DOOR32 | 0 | None | 321 | - | - | - | - | - |  | 20 | nein |
+| DOOR33 | 0 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR33 | 1 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR33 | 6 | 2 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR33 | 7 | 3 | 301 | - | - | - | - | - | Aw:1 | - | nein |
+| DOOR33 | 8 | 7 | 301 | - | - | - | - | - | Aw:1 Ak:1 Ak:1 Ak:1 | 70 | nein |
+| DOOR34 | 0 | None | 321 | - | - | - | - | - |  | 20 | nein |
+| DOOR35 | 0 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR35 | 1 | 1 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR35 | 6 | 2 | 301 | - | - | - | - | - | Aw:0 Aw:1 | 70 | ja |
+| DOOR35 | 7 | 3 | 301 | - | - | - | - | - | Aw:1 | 120 | nein |
+| DOOR35 | 8 | 7 | 301 | - | - | - | - | - | Aw:1 Ak:1 Ak:1 Ak:1 | - | nein |
+| DOOR36 | 0 | None | 281 | - | - | - | - | - |  | 80,140 | nein |
+
+## Anhang A2 - Variantenpaare je Archiv (238 RE2-Paare)
+
+| Archiv | Paare je Variantenkombination |
+|---|---|
+| DOOR00 | 0/1: 10 |
+| DOOR01 | 0/1: 2 |
+| DOOR02 | 0/1: 2 |
+| DOOR03 | 0/1: 6 |
+| DOOR04 | 2/3: 2 |
+| DOOR05 | 0/1: 6 |
+| DOOR06 | 0/1: 6, 2/3: 2 |
+| DOOR07 | 0/1: 13 |
+| DOOR08 | 0/1: 19 |
+| DOOR09 | 0/1: 6 |
+| DOOR0A | 0/1: 8 |
+| DOOR0B | 0/1: 2 |
+| DOOR0C | 0/1: 1 |
+| DOOR0D | 0/1: 10, 2/3: 4 |
+| DOOR0E | 4/5: 4 |
+| DOOR0F | 4/5: 2 |
+| DOOR10 | 0/1: 4 |
+| DOOR11 | 2/3: 2 |
+| DOOR12 | 4/5: 2 |
+| DOOR13 | 0/1: 2 |
+| DOOR14 | 0/1: 2 |
+| DOOR15 | 2/3: 2 |
+| DOOR16 | 4/5: 18 |
+| DOOR17 | 0/1: 2 |
+| DOOR18 | 0/1: 4 |
+| DOOR19 | 0/1: 3 |
+| DOOR1A | 0/1: 9 |
+| DOOR1B | 2/3: 2 |
+| DOOR1C | 0/1: 6 |
+| DOOR1D | 0/1: 4, 2/3: 2 |
+| DOOR1F | 0/1: 2 |
+| DOOR22 | 0/1: 2 |
+| DOOR23 | 0/1: 2 |
+| DOOR24 | 0/1: 2 |
+| DOOR25 | 0/0: 15 |
+| DOOR26 | 0/0: 10, 2/3: 2 |
+| DOOR27 | 0/0: 4 |
+| DOOR28 | 4/5: 7 |
+| DOOR29 | 0/1: 8 |
+| DOOR2A | 0/1: 1, 2/2: 1 |
+| DOOR2B | 0/0: 2 |
+| DOOR2C | 2/2: 2 |
+| DOOR2E | 0/1: 1 |
+| DOOR2F | 0/1: 2 |
+| DOOR30 | 0/1: 4 |
+| DOOR31 | 0/0: 2 |
+
