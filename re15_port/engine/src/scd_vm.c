@@ -3805,6 +3805,12 @@ static int op_sce_em_set(scd_thread_t *t)
         a->speed_h = 0;
         if ((uint8_t)(actor_slot + 1) > g_actor_count)
             g_actor_count = (uint8_t)(actor_slot + 1);
+        /* EINMALIGER WURZELAUFRUF (Runde 30, Frost-Schranke): Sce_em_set loescht Bit 0x20
+         * (@0x8004256c/@0x80042570), ruft die Wurzel des Typs einmal (@0x8004259c jalr
+         * 0x80072bac[typ]) und setzt das Bit zurueck (@0x80042604/@0x80042608). Verdrahtet fuer
+         * die Birkin-Wurzel; Belege und Umfang in enemy_ai_common.c re15_enemy_spawn_root. */
+        { extern void re15_enemy_spawn_root(int slot);
+          re15_enemy_spawn_root(actor_slot); }
     }
     t->pc += 20;                   /* byte-true: `addiu v1,v1,20` @0x8004262c
                                     * (Handler 0x800420A0). RE2 hat hier 22 —

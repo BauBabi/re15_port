@@ -1,33 +1,36 @@
-/* probe_r30_n_room5080.c — Runde 30, Nachschliff room5080: der ROOM5080-Birkin VOR der
- * Generator-Folge (Dossier analysis/befunde_runde30/nachschliff-room5080.md, Abschnitt 8.1).
+/* probe_r30_n_room5080.c — Runde 30, Nachschliff room5080: der ROOM5080-Birkin VOR und NACH der
+ * Generator-Folge (Dossier analysis/befunde_runde30/nachschliff-room5080.md, Abschnitte 8.1 und 9).
  *
- * BEFUND (Echtlauf des Gegenpruefers, vom Agenten bitgleich nachgefahren): der Spieler steht im
- * Westgang, die Generator-Folge ist NICHT ausgeloest. Birkin (Typ 0x30, grid 0x33) laeuft ab der
- * Raumladung von seiner Spawnlage (-18100,-5600,200) los, geht durch die Nordwand SCA @0x00320
- * in den Rauten-Block SCA @0x003C8 und beisst den Spieler (hp 100 -> 10).
+ * BEFUND (Echtlauf des Gegenpruefers): der Spieler steht im Westgang, die Generator-Folge ist NICHT
+ * ausgeloest. Im Port lief Birkin (Typ 0x30, grid 0x33) ab der Raumladung von seiner Spawnlage
+ * (-18100,-5600,200) los, ging durch die Nordwand in den Rauten-Block und biss den Spieler.
  *
- * ORIGINAL-MECHANISMUS (selbst disassembliert):
- *   - Birkin-Wurzel STAGE5 @0x80116cc0-cdc: FUN_8003b0a4(entity+0x34, box[+6], Maske 4), jedes Bild.
- *   - FUN_8003b0a4 nimmt das Band aus +0x82: @0x8003b234 `lbu v1,130(a3)`,
- *     @0x8003b23c `bne v1,v0` gegen floor>>4 der Zelle.
- *   - +0x82 = Spawn-Byte pc[4] (Sce_em_set @0x800421c8 `lbu v0,2(s2)`, @0x800421d0
- *     `sb v0,130(s0)`); ROOM5080 Datei 0x0074A = 0x00 -> Band 0. Alle SCA-Zellen des Raums
- *     tragen floor 3 -> Band 0.
- *   - Die Sperre +0x0&8 (@0x8003b12c-13c) setzt Birkins INIT nur fuer grid&0xf==1
- *     (STAGE5 @0x801170e4); grid 0x33 hat Nibble 3.
- *   => Im Original klemmt die Nordwand den Birkin (y bleibt -5600, das Modul schreibt +0x38
- *      und +0x82 nie). Der Port nahm das Band aus der Hoehe: band_from_y(-5600) = 3 -> keine Zelle.
+ * ⛔ KORRIGIERT (Runde 30, Nachbesserung 2): die erste Fassung dieses Riegels verlangte, dass Birkin
+ * vor der Folge LOSLAEUFT (EMERGENCE, >= 5000 Einheiten) und nur an der Nordwand GEKLEMMT wird —
+ * "RE1.5 parkt nicht, sondern klemmt". FALSCH. Die Birkin-Wurzel friert bei grid & 0x20 ein und
+ * erreicht weder den Dispatch noch die Klemme (selbst disassembliert, Dossier 9.1):
+ *   STAGE5 @0x80116a7c lbu v0,9(a0) / @0x80116a84 andi v0,v0,0x20 / @0x80116a88 bne -> 0x80116eb8,
+ *   dort nur jal 0x8001b064 (Schatten) @0x80116ecc und jr ra.
+ * Sce_em_set ruft die Wurzel beim Spawn EINMAL mit geloeschtem Bit (@0x8004256c-@0x80042608):
+ * INIT -> Zustand 1, Sub 9, +0x95 = 0x10 (STAGE3 @0x80116880/@0x80116890, STAGE5 +0x814).
+ * Erst Member_set(0x0C,0x13) @ROOM5080 Datei 0x0083E (sub03) loescht das Bit.
  *
- * RIEGEL (Modus "riegel", Standard): ROOM5080 laden, SCD hochfahren (sub00 spawnt Birkin),
- * Spieler steht bei (-23350,-18200) (die Lage aus dem Echtlauf), 2400 Bilder ohne Eingabe.
- *   A  Abdeckung: Birkin gespawnt (Typ 0x30, grid 0x33, y -5600, floor 0), EMERGENCE gelaufen
- *      (grid 0x30), er hat sich >= 5000 von der Spawnlage entfernt und kam der Wand bis auf
- *      1100 nahe (z <= -5554) — sonst prueft der Riegel nichts.
- *   B  Birkin steht in KEINEM Bild in der Rohflaeche einer Band-0-Zelle und nie im Raum
- *      (z < -6654 = Suedkante der Nordwand @0x00320).
+ * RIEGEL (Standard): ROOM5080 laden, SCD hochfahren (sub00 spawnt Birkin), der Spieler steht bei
+ * (-23350,-18200) (die Lage aus dem Echtlauf).
+ *  Teil 1 — 2400 Bilder OHNE Folge:
+ *   A1 Birkin gespawnt wie der Record (grid 0x33, y -5600, floor 0).
+ *   A2 in JEDEM Bild eingefroren: Lage (-18100,-5600,200), grid 0x33, Zustand 1 / Sub 9, Clip 0,
+ *      +0x95 = 0x10 (der INIT lief schon beim Spawn).
+ *   A3 er bewegt sich nicht (max. Abstand zur Spawnlage 0).
+ *   B  nie in der Rohflaeche einer Band-0-Zelle, nie im Raum (z < -6654).
  *   C  Spieler-hp bleibt 100, kein Griff.
- *   D  Die Folge lief nicht (Bank 5 Bit 32 = Plc_dest-Ankunft bleibt 0, (3,48) bleibt 0).
- * Vor dem Bau: ROT (B und C).
+ *   D  die Folge lief nicht (Bank 5 Bit 32 / (3,48) bleiben 0).
+ *  Teil 2 — die Folge (Generator-AOT Platz 1 @0x0072E, Ja auf msg 0):
+ *   E1 die Freigabe kommt vom Member_set @0x0083E (grid 0x33 -> 0x13).
+ *   E2 danach ZUERST Sub 9 EMERGENCE (Clip 0x10), erst dann WALK (Sub 1).
+ *   E3 nach dem Fall steht er am Boden (y 0: Speed_set(1,400) @0x0082E x For 14 @0x00832).
+ *   E4 auch nach der Freigabe nie in einer Band-0-Zelle.
+ * Negativ-Kontrolle: vor dem Bau der Schranke ROT (A2/A3/B/C).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -63,6 +66,7 @@ static re15_camera_view_t s_cam;
 static re15_game_ctx_t    s_ctx;
 static int                s_shown = 0;
 static int                s_fail = 0;
+static uint16_t           s_pad = 0;
 
 #define PIN(cond, ...) do { if (!(cond)) { s_fail++; printf("  RIEGEL FEHLT: " __VA_ARGS__); printf("\n"); } \
                             else { printf("  RIEGEL ok: " __VA_ARGS__); printf("\n"); } } while (0)
@@ -116,8 +120,8 @@ static void frame(void)
     re15_msg_tick(&raw, &len, &id);
     if (re15_cam_present_tick()) s_shown = (int)g_scd.cam_id;
     s_ctx.active_cut  = s_shown;
-    s_ctx.pad_current = 0;
-    s_ctx.pad_pressed = 0;
+    s_ctx.pad_current = s_pad;
+    s_ctx.pad_pressed = s_pad;
     re15_game_step(&s_ctx);
 }
 
@@ -135,22 +139,26 @@ static int in_zelle_band0(int32_t x, int32_t z, int *zelle)
 
 int main(int argc, char **argv)
 {
-    int nbilder = 2400;
-    for (int i = 1; i < argc; i++)
+    int nbilder = 2400, nfolge = 3000;
+    for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "n=", 2) == 0) nbilder = atoi(argv[i] + 2);
+        else if (strncmp(argv[i], "folge=", 6) == 0) nfolge = atoi(argv[i] + 6);
+    }
 
     size_t rsz = 0;
     uint8_t *raw = slurp(RE15_ASSET_PSX_DIR "/STAGE5/ROOM5080.RDT", &rsz);
     if (!raw) { printf("FEHLT: ROOM5080.RDT\n"); return 77; }
     if (re15_rdt_parse(raw, rsz, &s_rdt) != 0) { printf("FEHLT: RDT-Parse\n"); return 77; }
 
-    printf("=== ROOM5080 — Birkin vor der Generator-Folge (Wandklemme Band +0x82) ===\n");
+    printf("=== ROOM5080 — Birkin vor und nach der Generator-Folge (Frost-Schranke, Band +0x82) ===\n");
     printf("  @0x00746 Sce_em_set:");
     for (int i = 0; i < 14; i++) printf(" %02x", raw[0x746 + i]);
     printf("\n  -> Typ 0x%02x grid 0x%02x pc[4](+0x82)=%u y=%d\n", raw[0x748], raw[0x749], raw[0x74A],
            (int)(int16_t)(raw[0x750] | (raw[0x751] << 8)));
-    if (raw[0x746] != 0x44 || raw[0x748] != 0x30 || raw[0x749] != 0x33 || raw[0x74A] != 0) {
-        printf("FEHLT: Spawn-Record nicht wie erwartet\n"); return 77;
+    printf("  @0x0083E Member_set: %02x %02x %02x %02x\n", raw[0x83E], raw[0x83F], raw[0x840], raw[0x841]);
+    if (raw[0x746] != 0x44 || raw[0x748] != 0x30 || raw[0x749] != 0x33 || raw[0x74A] != 0 ||
+        raw[0x83E] != 0x34 || raw[0x83F] != 0x0c || raw[0x840] != 0x13 || raw[0x841] != 0) {
+        printf("FEHLT: Records nicht wie erwartet\n"); return 77;
     }
 
     memset(&s_cam, 0, sizeof s_cam);
@@ -177,8 +185,9 @@ int main(int argc, char **argv)
     g_scd.cut_auto_enabled = 1;
     s_shown = 4;
 
-    int bslot = -1, spawn_ok = 0, emerg_ok = 0, wand_bilder = 0, raum_bilder = 0, erste_wand = -1;
-    int wand_zelle = -1, hp_min = 100, griff = 0, folge = 0;
+    /* ---- Teil 1: ohne Folge ---- */
+    int bslot = -1, spawn_ok = 0, frost_verletzt = 0, frost_erstes = -1, wand_bilder = 0, raum_bilder = 0;
+    int erste_wand = -1, wand_zelle = -1, hp_min = 100, griff = 0, folge = 0;
     int32_t sx = 0, sz = 0, zmin = 0x7fffffff, dmax = 0;
     for (int f = 0; f < nbilder; f++) {
         frame();
@@ -189,13 +198,16 @@ int main(int argc, char **argv)
                 re15_actor_t *b = &g_actors[bslot];
                 sx = b->x; sz = b->z;
                 spawn_ok = (b->grid_id == 0x33 && b->y == -5600 && b->floor == 0);
-                printf("  Bild %d: Birkin Slot %d grid 0x%02x pos=(%d,%d,%d) floor=%u\n", f, bslot,
-                       (unsigned)b->grid_id, (int)b->x, (int)b->y, (int)b->z, (unsigned)b->floor);
+                printf("  Bild %d: Birkin Slot %d grid 0x%02x pos=(%d,%d,%d) floor=%u st=%d sub=%d +0x95=0x%02x\n",
+                       f, bslot, (unsigned)b->grid_id, (int)b->x, (int)b->y, (int)b->z, (unsigned)b->floor,
+                       b->state, b->sub_state_1, (unsigned)b->anim_frame);
             }
         }
         if (bslot >= 0) {
             re15_actor_t *b = &g_actors[bslot];
-            if (b->grid_id == 0x30) emerg_ok = 1;
+            int eingefroren = (b->x == -18100 && b->y == -5600 && b->z == 200 && b->grid_id == 0x33 &&
+                               b->state == 1 && b->sub_state_1 == 9 && b->motion == 0 && b->anim_frame == 0x10);
+            if (!eingefroren) { if (frost_verletzt++ == 0) frost_erstes = f; }
             int32_t dx = b->x - sx, dz = b->z - sz;
             int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
             if (d > dmax) dmax = d;
@@ -206,29 +218,85 @@ int main(int argc, char **argv)
                 if (erste_wand < 0) { erste_wand = f; wand_zelle = zi; }
             }
             if (b->z < -6654) raum_bilder++;
-            if ((f % 300) == 0 || f == nbilder - 1)
-                printf("  Bild %4d: Birkin pos=(%d,%d,%d) grid 0x%02x sub %d | Spieler (%d,%d) hp %d\n",
-                       f, (int)b->x, (int)b->y, (int)b->z, (unsigned)b->grid_id, b->sub_state_1,
-                       (int)pl->x, (int)pl->z, (int)pl->hp);
+            if ((f % 600) == 0 || f == nbilder - 1)
+                printf("  Bild %4d: Birkin pos=(%d,%d,%d) grid 0x%02x st=%d sub %d clip %d | Spieler (%d,%d) hp %d\n",
+                       f, (int)b->x, (int)b->y, (int)b->z, (unsigned)b->grid_id, b->state, b->sub_state_1,
+                       (int)b->motion, (int)pl->x, (int)pl->z, (int)pl->hp);
         }
         if (pl->hp < hp_min) hp_min = pl->hp;
         if (re15_player_is_grabbed()) griff++;
         if (re15_game_flag_get(5, 32) || re15_game_flag_get(3, 48)) folge = 1;
     }
-    printf("\n  Birkin: max. Abstand zur Spawnlage %d, kleinstes z %d, Bilder in Band-0-Zelle %d "
-           "(erstes %d, Zelle #%d), Bilder im Raum (z < -6654) %d\n",
-           (int)dmax, (int)zmin, wand_bilder, erste_wand, wand_zelle, raum_bilder);
+    printf("\n  Teil 1: Bilder nicht eingefroren %d (erstes %d), max. Abstand zur Spawnlage %d, kleinstes z %d,\n"
+           "          Bilder in Band-0-Zelle %d (erstes %d, Zelle #%d), Bilder im Raum (z < -6654) %d\n",
+           frost_verletzt, frost_erstes, (int)dmax, (int)zmin, wand_bilder, erste_wand, wand_zelle, raum_bilder);
     printf("  Spieler: kleinstes hp %d, Griff-Bilder %d; Folge gelaufen %d\n\n", hp_min, griff, folge);
 
     PIN(bslot >= 0 && spawn_ok, "A1 Birkin gespawnt wie der Record (grid 0x33, y -5600, floor 0)");
-    PIN(emerg_ok, "A2 EMERGENCE gelaufen (grid 0x33 -> 0x30, grid&=0xfc)");
-    PIN(dmax >= 5000 && zmin <= -5554,
-        "A3 Birkin laeuft los und erreicht die Nordwand (Abstand %d >= 5000, z %d <= -5554)",
-        (int)dmax, (int)zmin);
+    PIN(bslot >= 0 && frost_verletzt == 0,
+        "A2 in jedem Bild eingefroren: (-18100,-5600,200), grid 0x33, Zustand 1/Sub 9, +0x95 0x10 (%d Bilder verletzt)",
+        frost_verletzt);
+    PIN(dmax == 0, "A3 er bewegt sich nicht (max. Abstand %d)", (int)dmax);
     PIN(wand_bilder == 0, "B1 nie in der Rohflaeche einer Band-0-Zelle (%d Bilder)", wand_bilder);
     PIN(raum_bilder == 0, "B2 nie im Raum, z < -6654 (%d Bilder)", raum_bilder);
     PIN(hp_min == 100 && griff == 0, "C  Spieler unversehrt (hp min %d, Griff %d)", hp_min, griff);
     PIN(!folge, "D  Generator-Folge nicht gelaufen (Bank 5 Bit 32 / (3,48) = 0)");
+
+    /* ---- Teil 2: die Folge ---- */
+    if (bslot < 0) { printf("\n  ERGEBNIS: ROT (kein Birkin)\n"); return 1; }
+    re15_actor_t *b = &g_actors[bslot];
+    pl->x = -26900; pl->z = -18050;                    /* Mitte des Generator-Rechtecks @0x0072E */
+    re15_aot_fire_slot(1);                             /* Aot_set Platz 1 -> sub02 */
+    int frei_bild = -1, frei_ok = 0, emerg_bild = -1, walk_bild = -1, wand2 = 0;
+    int32_t y_nach = 0x7fffffff;
+    /* N1-Messung (Abschnitt 7/9.6, NICHT gebaut): Griff-Laeufe nach der Freigabe, Spieler ohne Eingabe */
+    int griff_an = 0, griff_start = -1, erste_hp = -1, nlauf = 0;
+    int lauf_start[8], lauf_len[8], frei_len[8];
+    uint8_t grid_vor = b->grid_id;
+    const uint8_t *ziel = raw + 0x83E;
+    for (int f = 0; f < nfolge; f++) {
+        const uint8_t *pc_vor[SCD_THREAD_COUNT]; uint8_t akt_vor[SCD_THREAD_COUNT];
+        for (int i = 0; i < SCD_THREAD_COUNT; i++) { pc_vor[i] = g_scd.threads[i].pc; akt_vor[i] = g_scd.threads[i].active; }
+        s_pad = (g_scd.message_active && ((f & 7) == 0)) ? 0x8000 : 0;   /* Quadrat = Bestaetigen */
+        frame();
+        if (frei_bild < 0 && (grid_vor & 0x20) && !(b->grid_id & 0x20)) {
+            frei_bild = f;
+            for (int i = 0; i < SCD_THREAD_COUNT; i++)
+                if (akt_vor[i] && pc_vor[i] && pc_vor[i] <= ziel &&
+                    (ziel < g_scd.threads[i].pc || !g_scd.threads[i].active) && ziel < pc_vor[i] + 0x100)
+                    frei_ok = (b->grid_id == 0x13);
+            printf("  Folge Bild %d: Freigabe grid 0x%02x -> 0x%02x, Birkin (%d,%d,%d) st=%d sub=%d\n", f,
+                   (unsigned)grid_vor, (unsigned)b->grid_id, (int)b->x, (int)b->y, (int)b->z, b->state, b->sub_state_1);
+        }
+        grid_vor = b->grid_id;
+        if (frei_bild >= 0) {
+            if (emerg_bild < 0 && b->state == 1 && b->sub_state_1 == 9 && b->motion == 0x10) emerg_bild = f;
+            if (walk_bild < 0 && b->state == 1 && b->sub_state_1 == 1) walk_bild = f;
+            if (f == frei_bild + 5) y_nach = b->y;
+            if (in_zelle_band0(b->x, b->z, NULL)) wand2++;
+            if (erste_hp < 0 && pl->hp < 100) erste_hp = f;
+            int g = re15_player_is_grabbed();
+            if (g && !griff_an) {
+                if (nlauf > 0 && nlauf <= 8) frei_len[nlauf - 1] = f - (lauf_start[nlauf - 1] + lauf_len[nlauf - 1]);
+                griff_start = f; griff_an = 1;
+            } else if (!g && griff_an) {
+                if (nlauf < 8) { lauf_start[nlauf] = griff_start; lauf_len[nlauf] = f - griff_start; frei_len[nlauf] = -1; }
+                nlauf++; griff_an = 0;
+            }
+        }
+    }
+    printf("  Folge: Freigabe Bild %d, EMERGENCE Bild %d, WALK Bild %d, y nach dem Fall %d, Band-0-Zellbilder %d\n\n",
+           frei_bild, emerg_bild, walk_bild, (int)y_nach, wand2);
+    printf("  N1-Messung (Spieler ohne Eingabe): erster Treffer Bild %d, Griff-Laeufe %d%s", erste_hp, nlauf,
+           griff_an ? " (letzter Lauf dauert am Ende noch an)" : "");
+    for (int i = 0; i < nlauf && i < 8; i++)
+        printf("%s[Bild %d: %d Bilder gegriffen, danach %d frei]", i ? " " : ": ", lauf_start[i], lauf_len[i], frei_len[i]);
+    printf("\n\n");
+    PIN(frei_bild >= 0 && frei_ok, "E1 Freigabe durch Member_set @0x0083E (grid 0x33 -> 0x13)");
+    PIN(emerg_bild >= 0 && walk_bild > emerg_bild, "E2 zuerst EMERGENCE (Bild %d), dann WALK (Bild %d)",
+        emerg_bild, walk_bild);
+    PIN(y_nach == 0, "E3 nach dem Fall am Boden (y %d)", (int)y_nach);
+    PIN(wand2 == 0, "E4 nach der Freigabe nie in einer Band-0-Zelle (%d Bilder)", wand2);
     printf("\n  ERGEBNIS: %s (%d Riegel verletzt)\n", s_fail ? "ROT" : "GRUEN", s_fail);
     return s_fail ? 1 : 0;
 }
