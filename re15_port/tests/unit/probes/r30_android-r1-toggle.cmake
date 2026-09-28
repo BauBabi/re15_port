@@ -26,3 +26,14 @@ target_compile_definitions(probe_r30_android_n1_inventar_cmd PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r30_android_n1_inventar_cmd COMMAND probe_r30_android_n1_inventar_cmd)
 set_tests_properties(unit_r30_android_n1_inventar_cmd PROPERTIES TIMEOUT 60)
+
+# --- Nebenbefund N3 (eigener Riegel): ein Skript-Befehl an den Spieler (Plc_motion
+#     sb v1(=4),4(v0) @0x80041bb0 / Plc_dest sb v0(=4),4(a1) @0x80041c14) ersetzt die
+#     Zielaktion; nach Plc_ret hebt gehaltenes R1 frisch. ---
+add_executable(probe_r30_android_n3_plc_aim probe_r30_android_n3_plc_aim.c)
+target_link_libraries(probe_r30_android_n3_plc_aim PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r30_android_n3_plc_aim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r30_android_n3_plc_aim PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r30_android_n3_plc_aim COMMAND probe_r30_android_n3_plc_aim)
+set_tests_properties(unit_r30_android_n3_plc_aim PROPERTIES TIMEOUT 60)
