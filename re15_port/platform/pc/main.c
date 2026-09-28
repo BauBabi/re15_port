@@ -66,6 +66,7 @@ static inline int RNDI(float f) {
 #include "re15_to_re2.h"
 #include "re15_rdt.h"
 #include "re15_sicherung.h"
+#include "re15_irons_tisch.h"   /* Runde 30 E2: Irons Diary + Memory Card (ROOM1150/1151) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_pri.h"
@@ -1373,6 +1374,25 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
                       re15_render_pc_upload_tim_slot(
                           &tt, RE15_TIM_SLOT_PROP(RE15_SICHERUNG_OBJ_ID)); }
+    }
+
+    /* IRONS DIARY (obj 5) + MEMORY CARD (obj 6) auf dem Schreibtisch von Irons' Buero:
+     * zwei ZUSAETZLICHE Props mit eingebackenen MD1+TIM (gen/irons_tisch_props.inc) —
+     * die ausgelieferten RDTs bleiben byte-true. Herleitung: include/re15_irons_tisch.h.
+     * Dieselben zwei Riegel wie bei der Sicherung: Raum ROOM1150/1151 UND das nOmodel des
+     * Raums belegt den Slot nicht selbst. TIM-Slots RE15_TIM_SLOT_PROP(5) = 9, (6) = 26. */
+    if (g_current_room_id == 0x1150 || g_current_room_id == 0x1151) {
+        static const int k_irons_obj[2] = { RE15_IRONS_DIARY_OBJ_ID, RE15_IRONS_KARTE_OBJ_ID };
+        for (int k = 0; k < 2; k++) {
+            int oid = k_irons_obj[k];
+            if (nprops > oid) continue;
+            int msz = 0, tsz = 0;
+            const uint8_t *mb = re15_irons_tisch_md1_bytes(oid, &msz);
+            const uint8_t *tb = re15_irons_tisch_tim_bytes(oid, &tsz);
+            if (mb && re15_md1_parse(mb, (size_t)msz, &md1[oid]) == 0) ok[oid] = 1;
+            if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
+                          re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(oid)); }
+        }
     }
 }
 
@@ -4176,6 +4196,20 @@ re_title:;
                 fprintf(stderr, "[sicherung] Boot-Weg: Prop obj_id=%d im Pool "
                                 "(slot %d, Raum %04x)\n",
                         RE15_SICHERUNG_OBJ_ID, k, (unsigned)g_current_room_id);
+    /* IRONS DIARY + MEMORY CARD (Runde 30, Thema E2) — derselbe Grund wie die Sicherung
+     * direkt darueber: der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter, also fehlten
+     * Buch und Karte nach einem LOAD in ROOM1150/1151 (Original: EIN Raumlader FUN_800396fc,
+     * `jal 0x800396fc` @0x8001d5ac LOAD und @0x8001d988 Tuer). Nach dem Restore der Flags:
+     * die Genommen-Bits (9,54)/(9,55) entscheiden, ob angelegt wird. Die Logzeile ist reine
+     * Diagnose fuer den Lade-Riegel. Herleitung: include/re15_irons_tisch.h. */
+    re15_irons_tisch_install((uint16_t)g_current_room_id);
+    if ((g_current_room_id & 0xFFFEu) == 0x1150u)
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == RE15_IRONS_DIARY_OBJ_ID ||
+                g_scd.props[k].obj_id == RE15_IRONS_KARTE_OBJ_ID)
+                fprintf(stderr, "[irons-tisch] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        (int)g_scd.props[k].obj_id, k, (unsigned)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -9724,6 +9758,18 @@ re_title:;
                         memset(&lctx_prop, 0, sizeof(lctx_prop));
                     }
 
+                    /* ⛔ TIEFEN-KLEMME — PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (Runde 30, E2).
+                     * Nur Irons Diary (obj 5) und Memory Card (obj 6) in ROOM1150/1151, nur im
+                     * Cut 2: ueber beiden liegen drei Original-Masken der Tiefe 87 (die
+                     * Tischplatte, ROOM1150.RDT @0x006E8/@0x006F4/@0x00714), die Props liegen
+                     * bei Bucket 92 und waeren unsichtbar (gemessen 0 Pixel). Das Original
+                     * kennt keinen Tiefen-Versatz je Objekt (FUN_8002c18c; otz>>4
+                     * @0x8002565c/@0x800258dc gegen die Maskentiefe @0x80039650-58) — RE1.5
+                     * hat auf diesem Tisch kein Objekt. Der Schluessel wird hoechstens
+                     * re15_pri_mask_camera_z(87) - 1; eine Figur VOR dem Tisch bleibt davor.
+                     * Herleitung + Messung: include/re15_irons_tisch.h. -1 = keine Klemme. */
+                    const int irons_sort_max = re15_irons_tisch_sort_max(
+                        (uint16_t)g_current_room_id, active_cut_idx, oid);
                     for (int hbi = 0; hbi < prop_md1->mesh_count; hbi++) {
                         const re15_md1_mesh_t *hm = &prop_md1->meshes[hbi];
                         int32_t world_trans[3] = { prop_x, prop_y, prop_z };
@@ -9765,6 +9811,8 @@ re_title:;
                             if (!ok) continue;
                             wz_avg /= 3;
                             int wz_for_sort = wz_avg;
+                            if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
+                                wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
                             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop tri. */
@@ -9821,6 +9869,8 @@ re_title:;
                             }
                             if (!ok) continue;
                             wz_avg /= 4;
+                            if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
+                                wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop quad. */
