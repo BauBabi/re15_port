@@ -30,6 +30,7 @@
 #include "re15_actor.h"      /* player hp / status_flags (wave-3 heal) */
 #include "re15_fade.h"
 #include "re15_room.h"       /* g_current_room_id — the MAP entry init reads stage/room */
+#include "re15_files.h"      /* Runde 30: die dynamische FILE-Liste (RE2 @0x800D4B68) */
 
 extern int g_test_core_se_last, g_test_core_se_count;   /* tests/support/test_support.c */
 
@@ -821,6 +822,15 @@ static void file_wave_tests(void)
 {
     int i, se0;
 
+    /* ⛔ RUNDE 30 (Thema irons-diary-dokument): die FILE-Liste ist nicht mehr RE1.5s
+     * feste Tabelle (Maske @0x800c6c98, 21 RE1-Namen), sondern RE2s 24-Platz-Liste
+     * @0x800D4B68 (re15_files.c). Diese Welle faehrt mit EINEM aufgehobenen Dokument
+     * auf Platz 0 (Irons Diary, Item-Id 0x48, Bild-Satz 25, max_page 17) - so bleiben
+     * die RE1.5-Mechaniken (Rutsche, Seiten-/Zeilen-Navigation, Blaetter-Treiber,
+     * Wippe, Ende-Stellung) weiter unter Riegel, jetzt am Bild-Dokument. */
+    re15_files_reset();
+    CHECK(re15_files_add(0) == 0, "(F0) Irons Diary auf Platz 0 (FUN_800692dc @0x800692f8)");
+
     /* (F1) fresh debug-open at tab-select; R1 = the instant FILE launch
      * (@0x80049834-4c: tab=3 + 25c1=2, NO common resets, no SE). */
     re15_inv_set_equipped_slot(0x80);       /* equip regs at the kind-0 defaults */
@@ -880,11 +890,14 @@ static void file_wave_tests(void)
     fframe(RE15_PAD_BIT_RIGHT);                 /* back to page 0 for (F4) */
     CHECK(g_inv_screen.file_page == 0, "(F3) back on page 0");
 
-    /* (F4) list display list, page 0 (mask 0x0001 @0x800c6c98): row 0 = the name
-     * (12 glyphs "Chris' Diary", a3=0 -> clut row 0), rows 1-9 = 21 underscores each
-     * (a3=0x30 -> clut row 6), title "Files" 5 glyphs (a3=0x10 -> clut row 2), the
-     * 19x19 tab icon uv(0x72,0x8e) clut @0x800c7420[0]=0x7a90=UI2, the page-level
-     * highlight TILE (0x11,0x19) 140x26 (@0x800c7480-98). */
+    /* (F4) list display list, page 0. Runde 30: Zeile r der Listenseite p zeigt Platz
+     * p*10 + r der Liste (re15_inv_screen.c emit_file_list). Platz 0 = Irons Diary ->
+     * row 0 = the name (11 glyphs "Irons Diary", a3=0 -> clut row 0 wie @0x800c7320-28;
+     * vor Runde 30 stand hier RE1.5s "Chris' Diary", 12 Glyphen, aus der festen Maske
+     * 0x0001 @0x800c6c98), rows 1-9 = 21 underscores each (a3=0x30 -> clut row 6),
+     * title "Files" 5 glyphs (a3=0x10 -> clut row 2), the 19x19 tab icon uv(0x72,0x8e)
+     * clut @0x800c7420[0]=0x7a90=UI2, the page-level highlight TILE (0x11,0x19) 140x26
+     * (@0x800c7480-98). */
     {
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
@@ -911,7 +924,7 @@ static void file_wave_tests(void)
                       "(F4) tab icon at (18,26) clut UI2=0x7a90 (@0x800c73b8-f0/7420)");
             }
         }
-        CHECK(n_name == 12, "(F4) row 0 'Chris' Diary' = 12 glyphs clut row 0, is %d", n_name);
+        CHECK(n_name == 11, "(F4) row 0 'Irons Diary' = 11 glyphs clut row 0, is %d", n_name);
         CHECK(n_us == 9 * 21, "(F4) 9 hidden rows x 21 underscores clut row 6 "
               "(@0x800c7916, a3=0x30 @0x800c731c), is %d", n_us);
         CHECK(n_title == 5, "(F4) title 'Files' = 5 glyphs clut row 2 (a3=0x10 "
@@ -919,30 +932,40 @@ static void file_wave_tests(void)
         CHECK(n_icon == 1, "(F4) exactly one tab icon");
         CHECK(n_tile == 1, "(F4) exactly one highlight TILE");
     }
-    /* page 1 (mask 0xffff): all 10 rows are names; rows 0x59-0x5b carry the '&'
-     * digraph 0x64 -> SIGNED pair-table read @0x800c4440 = codes {9,8} -> the
-     * FUN_80028ec4 printer runs CENTER (eating 2 raw bytes) + NEWLINE — the row
-     * bleeds one 16px line DOWN (byte-true quirk; @0x800131c0-c4 + @0x80028fe8).
-     * Row 7 (id 0x59) sits at y=0x35+7*16=0xc5 -> its tail lands at y=0xd5. */
+    /* page 1: Plaetze 10..19 sind leer -> 10 Unterstrich-Zeilen, kein Name, Titel wieder
+     * "Files" (Titel 0 @0x800c78f0 auf allen drei Seiten).
+     * ⛔ RUNDE 30, mit Grund mitgezogen: vor dem Bau stand hier RE1.5s feste Seite 1
+     * (Maske 0xffff, "S.T.A.R.S. Files", zehn RE1-Namen) samt dem Beleg des '&'-Digraph-
+     * Umbruchs (Zeile 0x59, SIGNED pair-table read @0x800c4440 -> CENTER + NEWLINE,
+     * @0x800131c0-c4 / @0x80028fe8). Die Namen sind auf Nutzer-Auftrag aus dem Spiel
+     * ("die Vorinstallierten Texte alle entfernen"); die Kategorie-Titel gehoeren zu
+     * ihnen. Der Umbruch-Quirk selbst liegt im Glyphen-Drucker und ist ueber diese Zeile
+     * nicht mehr erreichbar - die Originalbytes bleiben als Archiv in
+     * gen/inv_file_doc.inc (Zensus tools/gen_inv_file_doc.py). */
     fframe(RE15_PAD_BIT_RIGHT);                 /* page 1 */
     {
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        int n_us = 0, bleed = 0;
+        int n_us = 0, n_name = 0, n_title = 0;
         for (i = 0; i < n; i++) {
             if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_FONT4)
                 continue;
             if (ops[i].clut == RE15_INV_CLUT_TEXROW6) n_us++;
-            if (ops[i].clut == RE15_INV_CLUT_TEXROW0 && ops[i].y == 0xc5 + 0x10) bleed++;
+            if (ops[i].clut == RE15_INV_CLUT_TEXROW0) n_name++;
+            if (ops[i].clut == RE15_INV_CLUT_TEXROW2) n_title++;
         }
-        CHECK(n_us == 0, "(F4) page 1 mask 0xffff -> no underscores, is %d", n_us);
-        CHECK(bleed > 0, "(F4) '&' digraph newline-bleed at y=0xd5 present (row 0x59)");
+        CHECK(n_us == 10 * 21, "(F4) page 1 (Plaetze 10..19 leer) -> 10 underscore rows, "
+              "is %d", n_us);
+        CHECK(n_name == 0, "(F4) page 1 zeigt keinen vorinstallierten Namen, is %d", n_name);
+        CHECK(n_title == 5, "(F4) page 1 title 'Files' (Titel 0 @0x800c78f0), is %d",
+              n_title);
     }
     fframe(RE15_PAD_BIT_LEFT);                  /* back to page 0 */
 
     /* (F5) row select @0x800c7010: SQUARE enters (SE(4,6) + sub=1 + row=0
      * @0x800c6ea0-bc); DOWN/UP wrap 10 (@0x800c7098-70fc) with SE(4,4); CROSS backs
-     * out (SE(4,5) + sub=0 @0x800c707c-8c). The mask is NOT checked. */
+     * out (SE(4,5) + sub=0 @0x800c707c-8c). Die Zeilenwahl selbst prueft nichts; erst
+     * das OEFFNEN prueft den Platz (Runde 30, F6). */
     fframe(RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.file_sub == 1 && g_inv_screen.file_row == 0 &&
           g_test_core_se_last == 6,
@@ -968,40 +991,63 @@ static void file_wave_tests(void)
     CHECK(g_inv_screen.file_sub == 0 && g_test_core_se_last == 5,
           "(F5) CROSS -> back to page level + SE(4,5) (@0x800c707c-8c)");
 
-    /* (F6) reader open: SQUARE (rows) + SQUARE (open @0x800c704c-70: SE(4,6), 25c2=3,
-     * reader page 0, bob word zeroed). Selection-INDEPENDENT: any row opens the one
-     * embedded document. */
-    fframe(RE15_PAD_BIT_SQUARE);
-    fframe(RE15_PAD_BIT_SQUARE);
-    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_reader_page == 0 &&
-          g_test_core_se_last == 6,
-          "(F6) reader open: 25c2=3 + page 0 + SE(4,6) (@0x800c704c-70)");
-    /* one reader frame: page-0 display list = 5 newlines then the CENTERED title line
-     * (control 9 op 0x78 @doc: x = 0x28 + 0x78 - width('Operation Report')/2, glyphs
-     * at y = 0x20 + 5*16 = 0xa0), footer '1/7' (3 glyphs clut row 4, y=0xd2, centered
-     * on 0xa0 @0x800c778c-98), right arrow only (page 0: no left @0x800c7554) at
-     * (0x11c, 0x70) uv(0x70,0x48) clut UI7 (type 1 @0x800c7594). */
+    /* (F6) reader open. ⛔ RUNDE 30, mit Grund mitgezogen: RE1.5 oeffnete auf JEDER
+     * Zeile denselben Blob "Operation Report" (@0x800c7614) direkt in Zustand 3. Jetzt
+     * nach RE2: ein LEERER Platz laesst sich nicht oeffnen, kein Ton (`beq v1,v0` mit
+     * v0 = 255 @0x8006ce68-70 ueberspringt Anlegen UND Ton @0x8006ce9c); ein belegter
+     * oeffnet sein Dokument ueber RE1.5s Zustand 7 (x = 0x140 @0x800c7868-70), die
+     * Titelseite faehrt von rechts herein, Klick SE(4,6) (RE1.5 @0x800c704c-54 / RE2
+     * @0x8006ce9c), im ersten Fahrbild SE(4,8) (RE2 @0x8006cf58-70). */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* rows, row 0 */
+    fframe(RE15_PAD_BIT_DOWN); fframe(RE15_PAD_BIT_DOWN); fframe(RE15_PAD_BIT_DOWN);
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_SQUARE);                 /* row 3 = Platz 3 = leer */
+    CHECK(g_inv_screen.item_state == 1 && g_inv_screen.file_sub == 1 &&
+          g_test_core_se_count == se0,
+          "(F6) SQUARE auf leerem Platz 3: kein Leser, kein Ton (RE2 @0x8006ce68-70)");
+    fframe(RE15_PAD_BIT_UP); fframe(RE15_PAD_BIT_UP); fframe(RE15_PAD_BIT_UP);
+    CHECK(g_inv_screen.file_row == 0, "(F6) zurueck auf Zeile 0");
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_SQUARE);                 /* row 0 = Platz 0 = Irons Diary */
+    CHECK(g_inv_screen.item_state == 7 && g_inv_screen.file_reader_page == 0 &&
+          g_inv_screen.file_text_x == 0x140 && g_inv_screen.file_anim_phase == 0 &&
+          g_test_core_se_last == 6 && g_test_core_se_count == se0 + 1,
+          "(F6) reader open: 25c2=7, x=0x140, page 0 + SE(4,6) (@0x800c7868-70, "
+          "@0x800c704c-54)");
+    CHECK(g_inv_screen.file_bild == 1 && g_inv_screen.file_bildsatz == 25 &&
+          g_inv_screen.file_end == 18,
+          "(F6) Bild-Dokument: Satz 25, Seitenzahl 18 = max_page 17 + 1 (RE2 @0x800727c8)");
+    fframe(0);                                   /* erstes Fahrbild */
+    CHECK(g_test_core_se_last == 8 && g_test_core_se_count == se0 + 2 &&
+          g_inv_screen.file_text_x == 0x140 - 28,
+          "(F6) erstes Fahrbild: SE(4,8) (RE2 @0x8006cf58-70) + x -= 28 (@0x800c77fc)");
+    idle(9);
+    CHECK(g_inv_screen.item_state == 7 && g_inv_screen.file_text_x == 40,
+          "(F6) nach 10 Fahrbildern x = 40 = Ruhelage 0x28");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 3 && g_test_core_se_count == se0 + 2,
+          "(F6) Rueckkehrbild -> Zustand 3 (@0x800c787c-80), kein weiterer Ton");
+    /* one reader frame: Bild-Dokument -> die Anzeigeliste traegt KEINEN Zeichenstrom
+     * (RE2s Seiten sind Bilder, FUN_80075fd0), nur die Fusszeile '1/18' (4 glyphs clut
+     * row 4, RE1.5 @0x800c7744) und den rechten Pfeil (page 0: no left @0x800c7554) at
+     * (0x11c, 0x70) uv(0x70,0x48) clut UI7 (type 1 @0x800c7594). Kein Rahmen, keine
+     * Tafeln: RE2 stellt nur einen schwarzen Grund hinter die Sprites (@0x80071d8c-94).
+     * Vor Runde 30 prueften diese Zeilen die zentrierte Titelzeile "Operation Report"
+     * des RE1.5-Blobs (16 Glyphen, CENTER @0x80028fe8-9010) - der Blob ist auf
+     * Nutzer-Auftrag aus dem Spiel. */
     fframe(0);
     {
-        static const uint8_t title_codes[16] = {   /* doc bytes @0x800ccd45-54 */
-            0x2b,0x4c,0x41,0x4e,0x3d,0x50,0x45,0x4b,0x4a,0x00,
-            0x2e,0x41,0x4c,0x4b,0x4e,0x50 };
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        int wsum = 0, x_exp, n_txt = 0, n_foot = 0, n_arrow_l = 0, n_arrow_r = 0;
-        int first_x = -1, first_y = -1;
-        for (i = 0; i < 16; i++) wsum += re15_font_width[title_codes[i]];
-        x_exp = 0x28 + 0x78 - wsum / 2;
+        int n_txt = 0, n_foot = 0, n_arrow_l = 0, n_arrow_r = 0, n_other = 0;
         for (i = 0; i < n; i++) {
-            if (ops[i].kind != RE15_INV_OP_SPRT) continue;
+            if (ops[i].kind != RE15_INV_OP_SPRT) { n_other++; continue; }
             if (ops[i].page == RE15_INV_PAGE_FONT4) {
-                if (ops[i].clut == RE15_INV_CLUT_TEXROW0) {
-                    if (n_txt == 0) { first_x = ops[i].x; first_y = ops[i].y; }
-                    n_txt++;
-                }
-                if (ops[i].clut == RE15_INV_CLUT_TEXROW4) n_foot++;
-            }
-            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16) {
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW0) n_txt++;
+                else if (ops[i].clut == RE15_INV_CLUT_TEXROW4) n_foot++;
+                else n_other++;
+            } else if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 &&
+                       ops[i].h == 16) {
                 if (ops[i].u == 0x70 && ops[i].v == 0x38) n_arrow_l++;
                 if (ops[i].u == 0x70 && ops[i].v == 0x48) {
                     n_arrow_r++;
@@ -1009,17 +1055,14 @@ static void file_wave_tests(void)
                           "(F6) right arrow (0x11c,0x70) clut UI7=0x7bd0 (type 1 "
                           "@0x800c7594/@0x800c7734)");
                 }
-            }
+            } else n_other++;
         }
-        CHECK(n_txt == 16, "(F6) page 0 = 16 title glyphs, is %d", n_txt);
-        CHECK(first_y == 0x70, "(F6) title line y = 0x20+5*16 = 0x70 (controls 08 x5), "
-              "is %d", first_y);
-        CHECK(first_x == x_exp, "(F6) CENTER control x = 0x28+0x78-w/2 = %d "
-              "(@0x80028fe8-9010), is %d", x_exp, first_x);
-        CHECK(n_foot == 3, "(F6) footer '1/7' = 3 glyphs clut row 4 (@0x800c7744), is %d",
+        CHECK(n_txt == 0, "(F6) Bild-Dokument: 0 text glyphs, is %d", n_txt);
+        CHECK(n_foot == 4, "(F6) footer '1/18' = 4 glyphs clut row 4 (@0x800c7744), is %d",
               n_foot);
         CHECK(n_arrow_l == 0 && n_arrow_r == 1,
               "(F6) page 0: right arrow only (@0x800c7554 gate)");
+        CHECK(n_other == 0, "(F6) sonst keine Op (kein Rahmen/Tafel/Blatt), is %d", n_other);
     }
 
     /* (F7) bob cycle @0x800c75ac-e4: offset 0 for the first 31 reader frames (counter
@@ -1084,24 +1127,26 @@ static void file_wave_tests(void)
           g_test_core_se_count == se0,
           "(F9) Left at page 0 = dead write (sb zero @0x800c7224, no SE)");
 
-    /* (F10) END position: page can reach 7 = one-past-last (@0x800c71a4/71e8); the
-     * drawer clamps to 6 (@0x800c7628-34) and the footer shows 7/7; right arrow type 2
-     * (clut 0x7b50=UI5 @0x800c7580-84). SQUARE closes ONLY there (@0x800c715c-68);
-     * RIGHT there closes too (t1==end+1 @0x800c71ac). */
-    for (i = 0; i < 5; i++) {                    /* pages 1..5 via 5 fwd turns */
+    /* (F10) END position: page can reach end = one-past-last (@0x800c71a4/71e8); the
+     * drawer clamps to end-1 (@0x800c7628-34); right arrow type 2 (clut 0x7b50=UI5
+     * @0x800c7580-84). SQUARE closes ONLY there (@0x800c715c-68); RIGHT there closes too
+     * (t1==end+1 @0x800c71ac). Runde 30: end = 18 (Irons Diary, max_page 17 + 1, RE2
+     * `lhu a0,-24252(at)` @0x800727c8) statt RE1.5s 7 (u16[0x800ccd34]>>1). */
+    for (i = 0; i < 16; i++) {                   /* pages 1..16 via 16 fwd turns */
         fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
     }
-    CHECK(g_inv_screen.file_reader_page == 5, "(F10) on page 5 after 5 fwd turns, is %d",
+    CHECK(g_inv_screen.file_reader_page == 16, "(F10) on page 16 after 16 fwd turns, is %d",
           g_inv_screen.file_reader_page);
     fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
-    CHECK(g_inv_screen.file_reader_page == 6 && g_inv_screen.item_state == 3,
-          "(F10) page 6 (last text page)");
+    CHECK(g_inv_screen.file_reader_page == 17 && g_inv_screen.item_state == 3,
+          "(F10) page 17 (last page)");
     se0 = g_test_core_se_count;
-    fframe(RE15_PAD_BIT_RIGHT);                  /* 6+1 == end -> page=7, SE(4,4), NO anim */
-    CHECK(g_inv_screen.file_reader_page == 7 && g_inv_screen.item_state == 3 &&
+    fframe(RE15_PAD_BIT_RIGHT);                  /* 17+1 == end -> page=18, SE(4,4), NO anim */
+    CHECK(g_inv_screen.file_reader_page == 18 && g_inv_screen.item_state == 3 &&
           g_test_core_se_last == 4 && g_test_core_se_count == se0 + 1,
-          "(F10) Right on page 6 -> END position 7 + SE(4,4), no anim (@0x800c71e8-f4)");
-    {   /* end-position display: text clamped to page 6, footer '7/7', arrow type 2 */
+          "(F10) Right on page 17 -> END position 18 + SE(4,4), no anim (@0x800c71e8-f4, "
+          "RE2 @0x800728b0-b8)");
+    {   /* end-position display: page clamped to 17, arrow type 2 */
         static re15_inv_op_t ops[RE15_INV_MAX_OPS];
         int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
         int ok2 = 0, okl = 0;
@@ -1116,24 +1161,46 @@ static void file_wave_tests(void)
               "@0x800c7580-84/@0x800c7734)");
         CHECK(okl, "(F10) left arrow present (page != 0 @0x800c7554)");
     }
-    fframe(RE15_PAD_BIT_LEFT);                   /* end -> page-- + SE(4,4), no anim */
-    CHECK(g_inv_screen.file_reader_page == 6 && g_inv_screen.item_state == 3 &&
-          g_test_core_se_last == 4,
-          "(F10) Left at END -> page 6 direct (@0x800c7228-34)");
+    /* ⛔ RUNDE 30, Toene nach RE2s Aufnahme-Leser (Dossier Tabelle 3.6, mit Grund
+     * mitgezogen): LINKS aus der Ende-Stellung ist STUMM (@0x80072940-48, kein jal;
+     * RE1.5 spielte Satz 4 @0x800c722c-34); VIERECK und KREUZ in der Ende-Stellung
+     * spielen Satz 6 (`andi v0,v0,0x3000` @0x80072954 -> `lui a0,0x406` @0x8007297c;
+     * RE1.5 Satz 5 @0x800c7170). */
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_LEFT);                   /* end -> page-- , STUMM, no anim */
+    CHECK(g_inv_screen.file_reader_page == 17 && g_inv_screen.item_state == 3 &&
+          g_test_core_se_count == se0,
+          "(F10) Left at END -> page 17 direct (@0x800c7228), stumm (RE2 @0x80072940-48)");
     fframe(RE15_PAD_BIT_RIGHT);                  /* back to END */
+    se0 = g_test_core_se_count;
     fframe(RE15_PAD_BIT_SQUARE);                 /* SQUARE at END closes */
-    CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 5,
-          "(F10) SQUARE at END -> close + SE(4,5) (@0x800c715c-84)");
+    CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 6 &&
+          g_test_core_se_count == se0 + 1 && g_inv_screen.file_bild == 0,
+          "(F10) SQUARE at END -> close + SE(4,6) (@0x800c715c-84; RE2 @0x8007297c-84)");
     /* SQUARE elsewhere is dead: reopen, SQUARE on page 0 -> still reading */
-    fframe(RE15_PAD_BIT_SQUARE);                 /* rows */
-    fframe(RE15_PAD_BIT_SQUARE);                 /* reader, page 0 */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* reader opens (rows still active) */
+    idle(11);                                    /* 10 Fahrbilder + Rueckkehrbild */
+    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_reader_page == 0,
+          "(F10) reopened, reading page 0");
     se0 = g_test_core_se_count;
     fframe(RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 3 && g_test_core_se_count == se0,
           "(F10) SQUARE off the END position is dead (bne @0x800c7168)");
     fframe(RE15_PAD_BIT_CROSS);                  /* CROSS closes from anywhere */
     CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 5,
-          "(F10) CROSS closes the reader + SE(4,5) (@0x800c7170-84)");
+          "(F10) CROSS while reading closes the reader + SE(4,5) (@0x800c7170-84; "
+          "RE2 @0x80072854)");
+    /* CROSS in der Ende-Stellung: Satz 6 (RE2 @0x80072954 -> @0x8007297c) */
+    fframe(RE15_PAD_BIT_SQUARE);  idle(11);      /* reopen, settle */
+    for (i = 0; i < 17; i++) {
+        fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
+    }
+    fframe(RE15_PAD_BIT_RIGHT);                  /* END */
+    CHECK(g_inv_screen.file_reader_page == 18, "(F10) wieder in der Ende-Stellung, is %d",
+          g_inv_screen.file_reader_page);
+    fframe(RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 6,
+          "(F10) CROSS at END -> close + SE(4,6) (RE2 `andi v0,v0,0x3000` @0x80072954)");
 
     /* (F11) exit. BYTE-TRUE: the reader close writes ONLY 25c2 (@0x800c7170-84) —
      * [0x800c6c94] stays 1, so the list returns at the ROW-SELECT level; the first
@@ -2103,7 +2170,7 @@ int main(void)
            "wave 5: EXCHANGE pair engine — full 21-pair herb graph + 12 crafts + "
            "reload clamps both directions + self-stack + GLOCK 06->04 quirk + "
            "17-step result anim + 2nd-cursor nav + dormant action 4; "
-           "FILE wave: 30f slides + 3-page list w/ masks + row select + reader open + "
+           "FILE wave: 30f slides + 3-page dynamic list (R30 RE2 24 slots) + row select + empty-slot gate + image-doc reader open + "
            "22f page-turn curve + END-position closes + SE(4,4/5/6/8) sites + exit "
            "contract)\n");
     return 0;

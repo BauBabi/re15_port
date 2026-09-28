@@ -141,8 +141,8 @@ typedef struct {
                                 * re15_room_ids[]-Eintrag (240 Bits; Port-Erweiterung,
                                 * re15_map_visited.c). Vor der checksum eingefuegt;
                                 * das v5-Checksum-Wort sitzt bei offsetof(visited). */
-    uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Thema karten-marken) */
-    uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Thema irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
+    uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Spur karten-marken) */
+    uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Spur irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 

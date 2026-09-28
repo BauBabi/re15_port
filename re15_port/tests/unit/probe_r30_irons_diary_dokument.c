@@ -236,10 +236,14 @@ int main(void)
         CHECK(sonst == 0,
               "sonst NICHTS auf dem Schirm: %d weitere Ops (Soll 0 - kein Rahmen, keine "
               "Tafeln, kein Hintergrundblatt; RE2 Grund schwarz @0x80071d8c-94)", sonst);
-        /* der alte Textleser bleibt als Rueckfall unveraendert */
+        /* der alte Textleser bleibt als Rueckfall unveraendert. Die Vergleichszahl 394
+         * stammt aus der Sonde VOR dem Bau (master d98e9639, [B] Liste 0/Zeile 0) und
+         * wurde dort auf Leserseite 1 gemessen (a.file_reader_page = 1) - deshalb hier
+         * dieselbe Seite; auf Seite 0 (Titelkarte "Operation Report") sind es weniger. */
+        t.file_reader_page = 1;
         int nt = re15_inv_screen_build(&t, s_ops2, RE15_INV_MAX_OPS);
         CHECK(nt == 394, "der Textleser ohne Bild-Dokument ist unveraendert: %d Ops "
-              "(Soll 394, gemessen vor dem Bau)", nt);
+              "(Soll 394 auf Seite 1, gemessen vor dem Bau)", nt);
         /* Zustand 8 (Meldung steht): gar keine Op */
         a.item_state = 8;
         CHECK(re15_inv_screen_build(&a, s_ops, RE15_INV_MAX_OPS) == 0,
