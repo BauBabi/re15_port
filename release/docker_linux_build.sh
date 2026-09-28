@@ -55,7 +55,7 @@ source "$HERE/docker/rueckfall_links.sh"
 # einem roten ctest noch das Binary des VORIGEN Release in linux_out).
 OUT="$REPO/release/linux_out"
 mkdir -p "$OUT"
-rm -f "$OUT/re15_pc" "$OUT/ldd.txt" "$OUT/glibc_max.txt"
+rm -rf "$OUT/re15_pc" "$OUT/ldd.txt" "$OUT/glibc_max.txt" "$OUT/diag"
 
 # Bau-Abhaengigkeiten (apt aus snapshot.debian.org + cmake 3.28.6). Im vorgebauten
 # Image (release/docker/Dockerfile.linux) und in einer distrobox ist alles schon da.
@@ -101,6 +101,10 @@ if ! grep -aqE "[0-9]+% tests passed, [0-9]+ tests failed out of [0-9]+" "$BUILD
     exit 1
 fi
 if [[ "$CT_RC" != "0" ]]; then
+    # Das Binary eines roten Laufs kommt NICHT nach linux_out/re15_pc (make_package.sh
+    # liest nur das). Zur Diagnose/zum Vergleich liegt es unter eindeutigem Namen in
+    # diag/ — der Bau-Container ist nach dem Lauf weg, mit ihm das Bauverzeichnis.
+    cp "$BUILD/platform/pc/re15_pc" "$DIAG/re15_pc.UNGEPRUEFT-ctest-rot" 2>/dev/null || true
     echo "!!! ctest fehlgeschlagen (exit=$CT_RC)" >&2
     exit "$CT_RC"
 fi

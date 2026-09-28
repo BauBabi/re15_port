@@ -73,19 +73,27 @@ if [[ -z "$IMAGE" ]]; then
     bild_bauen "$HERE/docker/Dockerfile.linux" "$IMAGE"
 fi
 
-# KOPIERT wird, was Bau und Tests in Masse lesen (per strace -y aus einem vollen
-# Lauf ermittelt, Dossier nachtrag-linux-bau.md). Alles andere erreicht der Container
-# ueber die Rueckfall-Links — langsam, aber vollstaendig. Ein Eintrag hier aendert
-# also nur die Geschwindigkeit, nie das Ergebnis.
+# KOPIERT wird, was Bau und Tests lesen. Grundlage: die Pfade in den Tests
+# (CMAKE_SOURCE_DIR/.. und relative Literale) plus ein Spurlauf mit strace -y, der
+# jedes open ueber einen Rueckfall-Link protokolliert hat (2026-09-28: 149 opens,
+# 128 Dateien, 2,3 MB — pri/STAGE1 und vier Dateien unter analysis/; Dossier
+# nachtrag-linux-bau.md). Alles andere erreicht der Container ueber die
+# Rueckfall-Links — langsam, aber vollstaendig. Ein Eintrag hier aendert also nur
+# die Geschwindigkeit, nie das Ergebnis.
 KOPIE=(
     re15_port
     synchro
+    pri
     info/re2leon/PSX.EXE
     info/re2leon/PL0/RDT
     info/re2leon/COMMON/DOOR
     info/re2leon/COMMON/DATA
     info/re2leon/COMMON/BIN
     info/Re1.5/PSX.EXE
+    analysis/kartensymbole/symbolkatalog.csv
+    analysis/befunde_2026-09-21/10f0-quader-silhouette/messung/pfad_10f0_aus_befundlog.txt
+    analysis/befunde_runde30/nutzer_marken/re15_card_nutzer_2026-09-27.mcr
+    analysis/befunde_runde30/sicherung_werkzeug/soll
     release/docker_linux_build.sh
     release/docker
 )
