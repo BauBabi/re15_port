@@ -82,6 +82,10 @@ phase Compile+Link
 # Ausgabe vollstaendig gesichert, die Summenzeile ausgegeben UND ihr Vorhandensein
 # erzwungen.
 CTEST_JOBS="${RE15_CTEST_JOBS:-1}"
+# Kein Grafikgeraet im Container (Mesa-Software-GL): Bildpruefungen, die eine echte GPU
+# brauchen, melden sich damit SICHTBAR als uebersprungen (integration_r30_titel_puls);
+# ihre Engine-Pruefungen bleiben Pflicht. Unter Windows (echte GPU) laufen sie voll.
+export RE15_OHNE_GPU=1
 ( cd "$BUILD" && ctest --timeout 600 -j"$CTEST_JOBS" --output-on-failure > ctest_out.txt 2>&1 ) || CT_RC=$?
 CT_RC="${CT_RC:-0}"
 phase ctest
