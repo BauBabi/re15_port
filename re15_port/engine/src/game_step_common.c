@@ -32,6 +32,7 @@
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 #include "re15_sicherung.h"
 #include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
+#include "re15_door_seq.h"      /* RE2-Tuersequenz vor dem Wiedereintritt (Tor ROOM1170) */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -2048,6 +2049,13 @@ void re15_game_step(const re15_game_ctx_t *c)
          * (@0x80031c10-c24). Bisher blieb hier der Vorraum-Clip (Pad-Walk 105) stehen. VOR
          * scd_room_reenter, damit ein Plc_motion des Szenario-main00 gewinnt (SCD @0x8001cdec
          * vor Dispatcher @0x8001ce0c) — gemessen mit unit_elliot_1170_run / probe_1090_cutscene. */
+        /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
+         * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende
+         * (Bit 0x2000000, @0x80013cb4..bc gesetzt / Door_exit @0x80014218 geloescht), erst
+         * danach blendet der Raum ein; RE1.5 hat dieselbe Reihenfolge (FUN_8001d600 @0x8001d838/48,
+         * Warten @0x8001dab8..d4). Die Anfrage setzt aot_fire_door nur fuer Tueren aus der
+         * Port-Tabelle (door_seq_tor1170.c); ohne Plattform-Laeufer verfaellt sie. */
+        re15_door_seq_ausfuehren();
         re15_player_room_entry_pose();
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
         /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).
