@@ -2,7 +2,7 @@
  *
  * Nicht "Build ist gruen": diese Sonde faehrt den Ablauf wirklich und misst.
  *   1. ROOM1150 hochfahren und pruefen, dass das ZUSAETZLICHE Prop angelegt ist
- *      (obj_id 4, parent_obj 0, Sitz auf der Deckflaeche).
+ *      (obj_id 4, parent_obj 0, Sitz im Kuppelfach).
  *   2. sub04 ausloesen (die Hebetisch-Sequenz) und die Fahrt Bild fuer Bild
  *      protokollieren: y der Plattform UND die daraus verkettete Weltlage der
  *      Sicherung — faehrt sie wirklich mit, oder bleibt sie stehen?
@@ -127,7 +127,7 @@ int main(void)
            (long)g_scd.props[pi].z, g_scd.props[pi].rot_y);
     pruefe(3, "haengt an der Elternmatrix der Plattform",
            g_scd.props[si].parent_obj == 0);
-    pruefe(4, "sitzt auf der Deckflaeche (y=-927)",
+    pruefe(4, "sitzt auf dem Boden des Kuppelfachs (y=-1062 = -1036 - 26)",
            g_scd.props[si].y == RE15_SICHERUNG_POS_Y);
     pruefe(5, "ist sichtbar", g_scd.props[si].active == 1);
 

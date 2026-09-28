@@ -9,7 +9,9 @@
  * WOZU: Die Ermittlung (analysis/befunde_runde30/sicherung.md) muss Sitz, Drehung und
  * Modell der Sicherung im ECHTEN Renderer pruefen koennen (Framedump), bevor ein
  * Bau-Agent irgendeine Zahl in den Spielcode schreibt. Alles, was hier variiert wird,
- * kommt aus der Umgebung — ohne Variablen verhaelt sich die Variante exakt wie der
+ * kommt aus der Umgebung — ohne Variablen verhaelt sich die Variante exakt wie das
+ * Spiel (Sitz und Drehung aus include/re15_sicherung.h, eingebackenes Modell, Fenster
+ * -5000..-1100). Stand der ERMITTLUNG war: exakt wie der
  * Bestand (Sitz -628,-927,784, Drehung 0, eingebackenes Modell, Fenster -5000..-1100).
  *
  *   RE15_R30_SITZ="x,y,z[,rx,ry,rz]"   Sitz in PLATTFORM-Koordinaten + Prop-Drehung (0..4095)
@@ -96,7 +98,7 @@ void re15_sicherung_install(uint16_t room_id)
     if (slot_von_obj_id(RE15_SICHERUNG_OBJ_ID) >= 0) return;
 
     int sx = RE15_SICHERUNG_POS_X, sy = RE15_SICHERUNG_POS_Y, sz = RE15_SICHERUNG_POS_Z;
-    int rx = 0, ry = 0, rz = 0;
+    int rx = 0, ry = RE15_SICHERUNG_ROT_Y, rz = 0;   /* folgt dem Spiel (re15_sicherung.h) */
     { const char *e = getenv("RE15_R30_SITZ");
       if (e && *e) sscanf(e, "%d,%d,%d,%d,%d,%d", &sx, &sy, &sz, &rx, &ry, &rz); }
 

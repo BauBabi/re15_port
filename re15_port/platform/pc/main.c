@@ -3788,6 +3788,9 @@ re_title:;
     {
         int isz = 0;
         uint8_t *ipix = pc_read_shared("DATA/ITEMALL.PIX", &isz);
+        /* Icon der Sicherung (Tile 0x40 @0x12C00) im GELADENEN Puffer einsetzen — die Datei
+         * bleibt byte-true. Herleitung: include/re15_sicherung.h. */
+        if (ipix) re15_sicherung_icon_einsetzen(ipix, isz);
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
@@ -3795,7 +3798,21 @@ re_title:;
     {
         int psz = 0;
         uint8_t *ipic = pc_read_shared("ITEM/ITPS.ITP", &psz);
+        /* Item-Bild der Sicherung (Block 0x40 @0xC0000) im GELADENEN Puffer einsetzen. */
+        if (ipic) re15_sicherung_bild_einsetzen(ipic, psz);
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
+    }
+    /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
+     * DIESELBEN Leser, aus denen gezeichnet wird — das Modal ueber re15_itps_pixel, das Icon
+     * ueber re15_itemall_tile_raw. 0 = das Rohr ist eingesetzt. Fehlt einer der beiden
+     * Einsetz-Aufrufe, steht hier die Abweichung des ausgelieferten Stands (Modal-Bild
+     * > 0 Punkte, Icon 389 Bytes). Eingefroren von integration_r30_sicherung_bild
+     * (Herleitung: re15_sicherung.h, "PRUEFUNG AN DEN LADESTELLEN"). */
+    {
+        fprintf(stderr, "[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in %d von %d "
+                        "Punkten ab, Icon-Tile 0x40 in %d von 1200 Bytes\n",
+                re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H,
+                re15_sicherung_icon_leser_abweichung());
     }
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
@@ -4126,6 +4143,39 @@ re_title:;
          * FUN_80044210 (Latch + Laden) — also pro Raum aus der Tabelle, nie hartkodiert.
          * Der Port macht das jetzt in room_common.c beim Raumwechsel. */
     }
+
+    /* ⛔ DIE SICHERUNG AUCH AM BOOT-/LADE-WEG IN DEN HEBETISCH LEGEN (Runde 30, Thema H).
+     *
+     * GEMESSEN (echte exe, Spielstand in ROOM1150, RE15_CONTINUE_TEST + RE15_FIRE_AOT=1@90,
+     * Framedump F90..F330): der Lade-Lauf war ueber alle 25 Bilder PIXELGLEICH mit dem Lauf
+     * OHNE Sicherung, im debug.log standen nach `[save] CONTINUE: resumed in room 1150` nur
+     * `[prop-render] pi=0/1/2` — kein pi=4, kein Modal. Am Tuerweg lag sie da.
+     *
+     * URSACHE: re15_sicherung_install hatte genau EINE Aufrufstelle, scd_room_reenter
+     * (scd_room_setup.c) — und der Boot-/CONTINUE-Weg geht nicht durch scd_room_reenter,
+     * er startet die Threads hier direkt. Dieselbe Luecke wie beim Spielermodell weiter oben
+     * (pc_player_model_sync_cb).
+     *
+     * ORIGINAL: es gibt nur EINEN Raumlader. FUN_800396fc hat im ganzen Image genau zwei
+     * Aufrufer,
+     *     8001d5ac: jal 0x800396fc      ; Session-Start / LOAD  (Funktion @0x8001d22c)
+     *     8001d988: jal 0x800396fc      ; Tuer                  (Funktion @0x8001d600)
+     * und ruft selbst die SCD-Raum-Init
+     *     80039a00: jal 0x8003ef6c
+     * Ein Raumzustand, der nur an EINEM der beiden Wege entsteht, kommt dort nicht vor.
+     *
+     * STELLE: nach dem Init-Lauf von main00/sub00 (die Plattform, an deren Elternmatrix sich
+     * das Prop haengt, steht erst durch main00 im Pool) und nach dem Restore der Flags (das
+     * Genommen-Flag (9,53) entscheidet, ob ueberhaupt angelegt wird). Tut in jedem anderen
+     * Raum nichts und legt nichts doppelt an. Eingefroren von integration_r30_sicherung_laden. */
+    re15_sicherung_install((uint16_t)g_current_room_id);
+    if ((g_current_room_id & 0xFFFEu) == 0x1150u)      /* nur Irons' Buero: obj_id 4 ist
+                                                        * in anderen Raeumen ein Raum-Prop */
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].obj_id == RE15_SICHERUNG_OBJ_ID)
+                fprintf(stderr, "[sicherung] Boot-Weg: Prop obj_id=%d im Pool "
+                                "(slot %d, Raum %04x)\n",
+                        RE15_SICHERUNG_OBJ_ID, k, (unsigned)g_current_room_id);
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
      * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
@@ -9862,6 +9912,22 @@ re_title:;
             int mdraw = re15_item_modal_quad(mqx, mqy, &mtype, &mface);
             if (mdraw) re15_render_pc_item_modal(1, mqx, mqy, mtype, mface);
             else       re15_render_pc_item_modal(0, NULL, NULL, 0, 0);
+            /* PRUEFZEILE (Runde 30, Nachbesserung): im ERSTEN Bild, in dem das Modal die
+             * Sicherung zeichnet, steht hier, woraus es zeichnet — Plattformhoehe und die
+             * Abweichung des Modal-Lesers vom Rohr-Bild (0 = Rohr). Einmal je Prozess.
+             * Eingefroren von integration_r30_sicherung_laden Lauf A. */
+            { static int s_sich_modal_log = 0;
+              if (mdraw && mtype == RE15_SICHERUNG_ITEM && !s_sich_modal_log) {
+                  int32_t py = 0;
+                  s_sich_modal_log = 1;
+                  for (int k = 0; k < (int)g_scd.prop_count; k++)   /* Hebetisch = obj_id 0
+                                                                     * (main00 @0x0E00) */
+                      if (g_scd.props[k].obj_id == 0) py = g_scd.props[k].y;
+                  fprintf(stderr, "[sicherung] Modal Item 0x40 zeichnet in Bild %u (Raum %04x, "
+                                  "Hebetisch y=%d): Bild weicht in %d von %d Punkten ab\n",
+                          (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, (int)py,
+                          re15_sicherung_modal_bild_abweichung(), RE15_ITPS_W * RE15_ITPS_H);
+              } }
             /* RE15_MODAL_LOG: FILE trace of the live modal FSM (stderr goes to the void for the SDL
              * exe) — proves the presentation ticks in the running game with the right progression. */
             {
@@ -10113,6 +10179,26 @@ re_title:;
               } } }
 
         re15_render_end_frame();
+
+        /* DEBUG-HARNESS: RE15_EXIT_AT="<bild>[#<raum-hex>]" beendet den Prozess am ENDE des
+         * genannten Spielbilds — NACH end_frame, also nachdem Zeichenliste, debug.log-Zeilen
+         * und ein etwaiger RE15_FRAMEDUMP dieses Bilds geschrieben sind. Mit #<raum> zaehlt
+         * nur ein Bild in genau diesem Raum. Damit endet ein Testlauf an einem BILD statt an
+         * einer Wanduhr (ein Zeitlimit reisst unter Last, bevor das Bild erreicht ist).
+         * Reiner Testhaken, env-gegated, kein Spielverhalten. Gebraucht von
+         * integration_r30_sicherung_laden. */
+        { static int s_ea_init = 0; static long s_ea_frame = -1; static unsigned s_ea_room = 0;
+          if (!s_ea_init) { s_ea_init = 1;
+              const char *e = getenv("RE15_EXIT_AT");
+              if (e && *e) { s_ea_frame = atol(e);
+                  const char *hs = strchr(e, 0x23);
+                  if (hs) s_ea_room = (unsigned)strtol(hs + 1, NULL, 16); } }
+          if (s_ea_frame >= 0 && (long)g_engine.frame_count >= s_ea_frame &&
+              (s_ea_room == 0 || (unsigned)g_current_room_id == s_ea_room)) {
+              fprintf(stderr, "[flow] EXIT_AT: Bild %u in Raum %04x erreicht -> exit\n",
+                      (unsigned)g_engine.frame_count, (unsigned)g_current_room_id);
+              fflush(stderr); re15_testhaken_ende();
+          } }
 
         /* RE15_INV_SHOT continuation: capture the presented acceptance frame + exit
          * (re15_render_pc_screenshot writes BMP regardless of the extension; set

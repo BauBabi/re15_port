@@ -7,9 +7,14 @@ Gegenstand (dunkler Sechskant mit Messingstift; byte-gleich RE2 "Fuse Case", s. 
 analysis/befunde_runde30/sicherung.md §3.4). Dieses Werkzeug rendert stattdessen GENAU das
 Modell, das im Spiel liegt, in die beiden Bildformate des Inventars.
 
-⛔ PHASE ERMITTLUNG: das Werkzeug schreibt NUR nach --ziel (Standard build/r30_sicherung/).
-Es fasst weder shared_assets/ noch engine/src/gen/ an. Der Bau-Agent ruft es spaeter mit
---inc <pfad> auf, um die C-Einbindung zu erzeugen.
+Ohne --inc schreibt das Werkzeug NUR nach --ziel (Standard build/r30_sicherung/). Mit
+--inc re15_port/engine/src/gen/sicherung_itembild.inc entsteht die C-Einbindung, die
+engine/src/sicherung_itembild.c in den GELADENEN Puffer einsetzt. shared_assets/ fasst
+das Werkzeug nie an (es liest dort nur).
+
+REIHENFOLGE: erst tools/sicherung_engine_export.py (Modell), dann dieses Werkzeug — es
+rendert aus gen/sicherung_prop.inc. Abnahme bytegenau:
+analysis/befunde_runde30/sicherung_werkzeug/bau_bytevergleich.py.
 
 WAS BELEGT IST UND WAS NICHT
   BELEGT   Geometrie + Textur       = die eingebackenen Bytes re15_sicherung_md1/_tim,
@@ -27,8 +32,12 @@ WAS BELEGT IST UND WAS NICHT
            Hintergrund              = Item-Bild: Rahmen 2 px + flaches Wort 0x1C00; Icon: Verlauf
                                       aus den Indizes 0xE3/0xE4/0xE6 (haeufigster je Bildpunkt
                                       ueber alle 72 Tiles)
-  ERFUNDEN Blickwinkel-Neigung (KIPP), Lichtrichtung und -staerke. Ein Item-Bild der
-           Rohr-Sicherung hat es nie gegeben; diese drei Groessen sind Darstellung, kein Beleg.
+  PORT-WAHL, KEINE ORIGINAL-ADRESSE
+           Blickwinkel-Neigung (KIPP_GRAD), Lichtrichtung (LICHT), Umgebung/Streuung
+           (UMGEBUNG/STREU). Ein Item-Bild der Rohr-Sicherung hat es nie gegeben; diese vier
+           Groessen sind reine Darstellung. Hinter ihnen steht KEINE Messung und keine
+           Instruktion — sie sind so gewaehlt, dass das Rohr im Bild wie der alte Gegenstand
+           schraeg liegt und plastisch wirkt.
 
     python re15_port/tools/sicherung_itembild.py [--ziel build/r30_sicherung]
 """
@@ -54,14 +63,19 @@ IW, IH = 40, 30              # item_icon_common.c:14 (1200 B je Tile)
 
 # gemessen am ausgelieferten Bild 0x40 mit der VOLLSTAENDIGEN Maske (alles, was nicht
 # Hintergrundwort 0x1C00 / Hintergrundindex 0xE3,0xE4,0xE6 ist; Werkzeug
-# analysis/befunde_runde30/sicherung_werkzeug/achse_altes_bild.py):
+# analysis/befunde_runde30/sicherung_werkzeug/achse_altes_bild.py). Quelle sind die
+# Datei-Bytes ITEM/ITPS.ITP @0xC0000..0xC2FFF (Block 0x40) und DATA/ITEMALL.PIX
+# @0x12C00..0x130AF (Tile 0x40) des Auslieferungsstands. Dass das neue Bild Achse und
+# Laenge des alten uebernimmt, ist Port-Wahl, keine Original-Adresse (das Original hat
+# von der Rohr-Sicherung kein Item-Bild) — die drei Zahlen selbst sind Messwerte:
 #   Item-Bild: 1972 px, Achse 147.4 Grad, Laenge 1.-99. Perzentil 83.9 px (Spanne 92.0)
 #   Icon:       368 px, Achse 147.4 Grad, Laenge 1.-99. Perzentil 36.4 px (Spanne 38.7)
 # (die erste Fassung mass mit einer Maske ohne die dunklen Flaechen: 150 Grad / 83.6 / 36.5)
 ACHSE_GRAD = 147.4           # Hauptachse des Gegenstands im Bild
 LAENGE_ITPS = 83.9           # px
 LAENGE_ICON = 36.4           # px
-# ERFUNDEN (Darstellung):
+# ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE (reine Darstellung, keine Messung dahinter — das
+# Original hat von der Rohr-Sicherung kein Item-Bild):
 KIPP_GRAD = 25.0             # das rechte obere Ende kommt dem Betrachter entgegen
 LICHT = (-0.45, -0.70, 0.55)  # von links oben vorn
 UMGEBUNG = 0.45
@@ -365,6 +379,15 @@ def main():
                 " * SICHERUNG, gerendert aus dem Welt-Modell. Herleitung: analysis/befunde_runde30/",
                 " * sicherung.md. Der Block traegt die Rechtecke der 53 RE1.5-Bloecke",
                 " * (crect (0,489) 256x1, prect (832,256) 56x72) und bei +0x21A0 das Icon.",
+                " *",
+                " * BELEGT (am ausgelieferten Block 0x40 @Datei 0xC0000 / Tile 0x40 @0x12C00 gemessen):",
+                " *   Rahmen 2 px (0x739C / 0x4210) und Hintergrundwort 0x1C00 (5244 von 7344",
+                " *   Innenpunkten); Icon-Hintergrund Indizes 0xE3/0xE4/0xE6; Lage und Laenge des",
+                " *   Gegenstands: Achse %.1f Grad, %.1f px im Bild, %.1f px im Icon." % (
+                    ACHSE_GRAD, LAENGE_ITPS, LAENGE_ICON),
+                " * PORT-WAHL, KEINE ORIGINAL-ADRESSE (reine Darstellung, keine Messung dahinter):",
+                " *   Blickneigung %.0f Grad, Licht (%.2f,%.2f,%.2f), Umgebung %.2f, Streuung %.2f." % (
+                    KIPP_GRAD, LICHT[0], LICHT[1], LICHT[2], UMGEBUNG, STREU),
                 " */", "", ""]))
             for name, b in (("re15_sicherung_itps_block", bytes(aus)),
                             ("re15_sicherung_icon_tile", icon.tobytes())):

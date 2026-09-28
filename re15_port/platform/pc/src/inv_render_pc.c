@@ -51,6 +51,7 @@
 extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_re2doc.h"   /* die Bild-Ebene des FILE-Schirms */
+#include "re15_sicherung.h" /* Item-Bild + Icon der Sicherung im geladenen Puffer (Runde 30) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -292,6 +293,9 @@ static int inv_assets_init(void)
     /* DATA/ITEMALL.PIX: headerless 72 x 1200B (40x30 8bpp) icon tiles. */
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
     if (!s_itemall) { fprintf(stderr, "[inv] ITEMALL.PIX missing\n"); return s_ready; }
+    /* Icon der Sicherung (Tile 0x40 @0x12C00) einsetzen — derselbe Eingriff an ALLEN
+     * Ladestellen, sonst zeigen Raster und Item-Box zwei Gegenstaende (re15_sicherung.h). */
+    re15_sicherung_icon_einsetzen(s_itemall, s_itemall_size);
 
     /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
      * tiles, pic ids 1-14 (see the s_mixitem note above). */
@@ -304,6 +308,19 @@ static int inv_assets_init(void)
      * FUN_800492b8 mode 1 (w=0x28hw=80px, h=0x1e @0x80049318-6c). Optional: only
      * needed once a wide weapon is carried. */
     s_itps = load_cd("ITEM/ITPS.ITP", &s_itps_size);
+    /* Item-Bild der Sicherung (Block 0x40 @0xC0000) einsetzen. Der eingesetzte Block
+     * traegt die RE1.5-Rechtecke crect (0,489) / prect (832,256), photo_upload_check
+     * unten nimmt ihn deshalb an — das CHECK-Foto der Sicherung war vorher LEER, weil
+     * der ausgelieferte Block 0x40 die RE2-Rechtecke (0,480) / (0,0) traegt. */
+    if (s_itps) re15_sicherung_bild_einsetzen(s_itps, s_itps_size);
+    /* PRUEFZEILE der beiden Ladestellen dieses Schirms (Runde 30, Nachbesserung): 0 = das
+     * Rohr ist in DEN Puffern, aus denen Raster (inv_compose_cells) und CHECK-Foto
+     * (photo_upload_check) lesen. Ohne Einsetzen stuende hier der ausgelieferte Stand
+     * (Tile 389, Block 8904 Bytes). Eingefroren von integration_r30_sicherung_bild. */
+    fprintf(stderr, "[inv] Sicherung im Statusschirm: Icon-Tile 0x40 weicht in %d von 1200 "
+                    "Bytes ab, Bild-Block 0x40 in %d von 12288 Bytes\n",
+            re15_sicherung_icon_abweichung(s_itemall, s_itemall_size),
+            re15_sicherung_bild_abweichung(s_itps, s_itps_size));
 
     s_ready = 1;
     return s_ready;
@@ -374,6 +391,22 @@ static void photo_upload_check(void)
     if ((b[0] | (b[1] << 8)) != 0x10) return;                 /* TIM magic */
     flags = (uint32_t)b[4] | ((uint32_t)b[5] << 8);
     if (!(flags & 8)) return;                                 /* all blocks ship a CLUT */
+    /* PRUEFZEILE (Runde 30, Nachbesserung): welche Rechtecke der Block des gewaehlten Items
+     * traegt und ob das Foto damit in das Fenster (832,256) 56x72 / CLUT-Zeile (0,489)
+     * gelangt. Der AUSGELIEFERTE Block 0x40 traegt crect (0,480) / prect (0,0) — das Foto
+     * bliebe leer. Einmal je CHECK-Vorgang. Eingefroren von integration_r30_sicherung_bild. */
+    {
+        const uint8_t *pb = b + 8 + ((uint32_t)b[8] | ((uint32_t)b[9] << 8) |
+                                     ((uint32_t)b[10] << 16));
+        int pgx = pb[4] | (pb[5] << 8), pgy = pb[6] | (pb[7] << 8);
+        int pgw = pb[8] | (pb[9] << 8), pgh = pb[10] | (pb[11] << 8);
+        int ccx = b[12] | (b[13] << 8), ccy = b[14] | (b[15] << 8);
+        int foto = (pgx == 832 && pgy == 256 && pgw == 56 && pgh == 72);
+        fprintf(stderr, "[inv] CHECK-Foto Item 0x%02X: crect (%d,%d) prect (%d,%d) %dx%d -> %s\n",
+                (unsigned)g_inv_screen.exam_item, ccx, ccy, pgx, pgy, pgw, pgh,
+                (foto && ccx == 0 && ccy == 489) ? "Foto und CLUT geladen"
+                : foto ? "Foto geladen, CLUT NICHT" : "Foto NICHT geladen");
+    }
     clen = (uint32_t)b[8] | ((uint32_t)b[9] << 8) | ((uint32_t)b[10] << 16);
     cx = b[12] | (b[13] << 8); cy = b[14] | (b[15] << 8);
     if (cx == 0 && cy == 489) {                               /* crect (0,489) 256x1 */
