@@ -221,7 +221,9 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
             ziel = -1;
             for (int c = 0; c < RE15_DOOR_PLAETZE; c++)
                 if (!s->ev[c].aktiv) { ziel = RE15_DOOR_ERSTER_PLATZ + c; break; }
-            if (ziel < 0) return 1;
+            /* alle belegt: die Suche nimmt Platz 13 (@0x800531d0 beq a0,a2(13) steht VOR dem
+             * Aktiv-Test, @0x800531f0 springt dorthin zurueck) - Platz 13 startet neu */
+            if (ziel < 0) ziel = RE15_DOOR_ERSTER_PLATZ + RE15_DOOR_PLAETZE - 1;
         }
         if (ziel < RE15_DOOR_ERSTER_PLATZ) return 1;
         re15_door_evt_t *n = &s->ev[ziel - RE15_DOOR_ERSTER_PLATZ];
@@ -356,7 +358,10 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
         case 0: r = a == w; break;  case 1: r = a > w; break;   case 2: r = a >= w; break;
         case 3: r = a < w; break;   case 4: r = a <= w; break;  case 5: r = a != w; break;
         case 6: r = (a & w) != 0; break;
-        default: r = 1; break;      /* @0x80054498 sltiu v1,a2,7: sonst Rueckgabe = altes v0 */
+        default:                    /* @0x80054498 sltiu v1,a2,7 / @0x800544a8 beq -> @0x80054514 jr ra:
+                                     * Rueckgabe = altes v0 = Variablennummer << 1 (@0x8005448c/90);
+                                     * der Scheduler wertet 1/2/sonst aus */
+            return (int)b[2] << 1;
         }
         return r ? 1 : 0; }
     case 0x24:  /* Save, Handler 0x8005451c, @0x8005452c addiu v0,v0,4 */
@@ -373,7 +378,8 @@ static int schritt(re15_door_seq_t *s, int platz, re15_door_evt_t *e)
         case 6: r = ua & w; break;          case 7: r = ua ^ w; break;
         case 8: r = ~ua; break;             case 9: r = ua << (w & 31); break;
         case 10: r = (int32_t)((uint32_t)ua >> (w & 31)); break;
-        default: r = a >> (w & 31); break;
+        case 11: r = a >> (w & 31); break;          /* lh + srav @0x80054748/50 */
+        default: return 1;                          /* @0x80054634 sltiu v0,a0,0xc -> @0x80054758 jr ra, kein Store */
         }
         s->var[b[3]] = (int16_t)r;
         return 1; }
@@ -495,7 +501,10 @@ static void matrizen(re15_door_seq_t *s)
         int16_t r[9];
         re15_door_rotmatrix(o->rot, r);
         const re15_door_mat_t *el = &kam;
-        if (o->eltern >= 0 && o->eltern < RE15_DOOR_OBJEKTE && s->obj[o->eltern].on) el = &s->obj[o->eltern].welt;
+        /* Eltern+84 steht fest in obj+128 (Door_model_set @0x80014c64..8c) und wird ohne Test
+         * des Eltern-on gelesen (@0x800144c4) - ein ausgeschaltetes Elternobjekt liefert seine
+         * zuletzt geschriebene Matrix */
+        if (o->eltern >= 0 && o->eltern < RE15_DOOR_OBJEKTE) el = &s->obj[o->eltern].welt;
         o->welt_vor = o->welt;
         verketten(el, r, o->pos, &o->welt);
     }

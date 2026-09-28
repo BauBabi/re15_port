@@ -3511,6 +3511,17 @@ int re15_audio_re2_tor_laden(void)
     return load_re2_tor_se_pc();
 }
 
+/* Nur die SE-Pumpe (Frame-Tick FUN_800458d4, s. se_voice_pump) - fuer die Tuerszene: sie laeuft
+ * mit 59,826 Hz, RE2 keyt vorgemerkte Toene je Bild nach VSync (@0x8002b9a0, 08_re_ton.md 5),
+ * waehrend re15_audio_tick einen 30-Hz-Spielbildtakt voraussetzt (BGM-Ausblendung je Aufruf,
+ * RE15_AUDIO_CAP_SYNC schreibt RATE/30 Frames je Aufruf). */
+void re15_audio_se_pumpe(void)
+{
+    if (!g_audio.initialized) return;
+    se_voice_pump();
+    re2se_voice_pump();
+}
+
 /* Ton der Tuersequenz. se = Tonkopf-Eintrag (0 Skript, 1 Door_exit). RE2-Pegelgesetz. */
 void re15_audio_re2_tor_se(int se)
 {

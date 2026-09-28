@@ -22,7 +22,6 @@
 
 #include <stddef.h>
 
-#include "gen/tor_1170_door.inc"   /* re15_tor1170_door[] */
 
 re15_door_seq_anfrage_t g_door_seq_anfrage;
 static re15_door_seq_laeufer_t s_laeufer;
@@ -57,16 +56,6 @@ int re15_door_seq_zuordnen(unsigned room_id, int32_t x, int32_t z, int32_t half_
         }
     }
     return RE15_DOOR_ARCHIV_KEINS;
-}
-
-const uint8_t *re15_door_seq_archiv(int archiv, int *groesse)
-{
-    if (archiv == RE15_DOOR_ARCHIV_TOR1170) {
-        if (groesse) *groesse = (int)sizeof re15_tor1170_door;
-        return re15_tor1170_door;
-    }
-    if (groesse) *groesse = 0;
-    return NULL;
 }
 
 void re15_door_seq_setze_laeufer(re15_door_seq_laeufer_t f)

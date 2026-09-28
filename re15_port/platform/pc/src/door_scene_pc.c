@@ -196,11 +196,14 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
     const char *serie = getenv("RE15_TUER_SERIE");
     fprintf(stderr, "[tuer] Sequenz Archiv %d Variante %d (%d Skripte)\n", a->archiv, a->variante, s.n_skripte);
     if (s.tim_ok) re15_render_pc_upload_tim_slot(&s.tim, TUER_TIM_SLOT);
-    /* Balken sind waehrend der Tuer gesperrt (0x800cfb74 & 0x4000, @0x8002c588; 08_re_blende 5.3) */
     uint8_t balken = g_letterbox_level;
-    g_letterbox_level = 0;
-    /* Tonteil laden ("DOOR SOUND", FUN_80014cd0) - im Port synchron */
-    int ton = re15_audio_re2_tor_laden();
+    /* Tonteil laden ("DOOR SOUND", FUN_80014cd0) - im Port synchron, also vor dem ersten
+     * Door_move-Durchlauf FERTIG. var 13 heisst in RE2 "Laden laeuft" und faellt, sobald das
+     * Ladebit faellt (@0x80013f54..68) - unabhaengig davon, ob der Ton spielbar ist. Darum wird
+     * der Maschine immer "geladen" gemeldet; ohne Ton (kein Audiogeraet, RE15_NOAUDIO, Datei
+     * fehlt) laeuft die Sequenz stumm statt im Warteskript (Skript 4) haengenzubleiben. */
+    int ton_ok = re15_audio_re2_tor_laden();
+    int takt = 0;   /* re15_audio_tick nur jedes zweite Bild = 30-Hz-Spieltakt, s.u. */
 
     s_frq = SDL_GetPerformanceFrequency();
     s_t0 = SDL_GetPerformanceCounter();
@@ -212,15 +215,21 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
         re15_render_pc_title_fade_sub(k * 8 > 255 ? 255 : k * 8);
         abzug(serie, "a_abdunkeln", k);
         re15_render_end_frame();
-        re15_audio_tick();
+        re15_audio_se_pumpe();
+        if (takt++ & 1) re15_audio_tick();
         vsync0();
     }
+    /* Balken sind waehrend der Tuer gesperrt (0x800cfb74 & 0x4000 sperrt den Takt 0x8002c378,
+     * @0x8002c588; 08_re_blende 5.3). Das Abdunkeln davor zeigt den stehenden Puffer samt
+     * etwaiger Balken - deshalb erst hier auf 0. */
+    g_letterbox_level = 0;
 
     /* 2. Door_move: je Durchlauf Skripte + Objekte, dann Blenden-Takt, dann Bildwechsel */
     int bild = 0;
-    while (re15_door_seq_bild(&s, ton)) {
+    /* Deckel: die laengste RE2-Sequenz hat 451 Bilder (03 K19); 4000 faengt nur Datenfehler */
+    while (bild < 4000 && re15_door_seq_bild(&s, 1)) {
         for (int i = 0; i < s.n_ton; i++)
-            if (s.ton[i].vab == 0) re15_audio_re2_tor_se(s.ton[i].se);   /* Se_on vab 0 = Tuerbank */
+            if (ton_ok && s.ton[i].vab == 0) re15_audio_re2_tor_se(s.ton[i].se);   /* Se_on vab 0 = Tuerbank */
         re15_render_begin_frame();
         re15_render_pc_clear_scene_overlays();       /* keine Raumdreiecke, keine Raummasken */
         re15_render_pc_bind_tim_slot(TUER_TIM_SLOT);
@@ -230,7 +239,8 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
         re15_render_pc_title_fade_sub(h < 0 ? 0 : h);
         abzug(serie, "b_tuer", bild);
         re15_render_end_frame();
-        re15_audio_tick();
+        re15_audio_se_pumpe();
+        if (takt++ & 1) re15_audio_tick();
         vsync0();
         bild++;
     }
@@ -244,13 +254,14 @@ static void tuer_laeufer(const re15_door_seq_anfrage_t *a)
         re15_render_pc_title_fade_sub(h < 0 ? 0 : h);
         abzug(serie, "c_ende", warte);
         re15_render_end_frame();
-        re15_audio_tick();
+        re15_audio_se_pumpe();
+        if (takt++ & 1) re15_audio_tick();
         vsync0();
         warte++;
     }
     re15_door_seq_blende_schwarz(&s);                          /* @0x800141a4..c4: Pegel 0x7fff */
-    if (s.schliesston) re15_audio_re2_tor_se(1);               /* @0x800141d8..f4: Ton 1 */
-    re15_audio_tick();
+    if (s.schliesston && ton_ok) re15_audio_re2_tor_se(1);    /* @0x800141d8..f4: Ton 1 */
+    re15_audio_se_pumpe();
     fprintf(stderr, "[tuer] Sequenz fertig: %d Bilder + %d Warten, Schliesston %d\n", bild, warte, s.schliesston);
 
     re15_render_pc_title_fade_sub(0);

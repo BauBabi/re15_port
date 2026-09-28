@@ -871,3 +871,4 @@ void re15_audio_re2_panel_se(int se_id)
  * anderen RE2-Baenke; die Tuerszene selbst laeuft nur auf dem PC (platform/pc/src/door_scene_pc.c). */
 int re15_audio_re2_tor_laden(void) { return 0; }
 void re15_audio_re2_tor_se(int se) { (void)se; }
+void re15_audio_se_pumpe(void) { }

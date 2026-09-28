@@ -650,14 +650,16 @@ static int aot_fire_door(int i)
      * (FUN_8001d600 @0x8001d838/48), sie laeuft aber nur 1 Bild, weil das einzige Skript
      * Evt_end ist; RE2 spielt an derselben Stelle die Sequenz (FUN_80026b7c @0x80026bf8/bfc,
      * Task 1 = Door_main). Welche Tuer eine bekommt, sagt die Port-Tabelle in
-     * door_seq_tor1170.c (RE1.5-Daten tragen keine Wahl). Gespielt wird sie beim Verbrauch
-     * der Selbst-Tuer im Spielschritt (game_step_common.c), vor dem Wiedereintritt - wie im
-     * Original die Sequenz vor dem Einblenden liegt. */
+     * door_seq_tor1170.c (RE1.5-Daten tragen keine Wahl). Gespielt wird sie im Spielschritt
+     * (game_step_common.c) VOR dem Wiedereintritt - wie im Original die Sequenz vor dem
+     * Einblenden liegt. Gesetzt fuer JEDE Selbst-Tuer dieses Zweigs, nicht nur fuer die mit
+     * Szenario: die Szenario-Schranke oben ist variantenblind (0x1000|dest<<4 gegen 0x1171
+     * -> falsch), das Tor in Elzas ROOM1171 wuerde sonst nie spielen. */
     {
         int var = 0;
         int archiv = re15_door_seq_zuordnen(g_current_room_id, a->x, a->z, a->half_w, a->half_h,
                                             d->band, &var);
-        if (archiv != RE15_DOOR_ARCHIV_KEINS && g_scd_pending_scenario >= 0) {
+        if (archiv != RE15_DOOR_ARCHIV_KEINS) {
             g_door_seq_anfrage.aktiv    = 1;
             g_door_seq_anfrage.archiv   = (uint8_t)archiv;
             g_door_seq_anfrage.variante = (uint8_t)var;

@@ -408,6 +408,8 @@ static int            s_sb_count = 0;
 static int            s_sb_gueltig = 0;
 static uint32_t       s_sb_text[SCREEN_XRES * SCREEN_YRES];   /* Untertitel-Ebene */
 static int            s_sb_text_used = 0;
+static shadow_quad_t  s_sb_shadow[SHADOW_QUAD_MAX];            /* Figurenschatten */
+static int            s_sb_shadow_n = 0;
 
 /* Temporary buffer used to emit the sorted-by-depth tri list to SDL.
  * Allocated once at TEXTRI_QUEUE_MAX size; lives in BSS so no per-frame
@@ -499,14 +501,15 @@ void re15_render_pc_clear_scene_overlays(void)
 }
 
 /* Das zuletzt gezeigte Bild noch einmal einreihen (nach begin_frame): Hintergrund-Puffer und
- * Dreiecksliste und Untertitel aus der STANDBILD-Kopie; die Raummasken bleiben. Schatten
- * fehlen (sie werden in end_frame vor der Kopie verbraucht) - fuer 32 abdunkelnde Bilder ohne
- * sichtbare Wirkung. Rueckgabe 0, wenn noch kein Bild gezeigt wurde. */
+ * Dreiecksliste, Figurenschatten und Untertitel aus der STANDBILD-Kopie; die Raummasken
+ * bleiben, wie sie sind. Rueckgabe 0, wenn noch kein Bild gezeigt wurde. */
 int re15_render_pc_standbild_wiederholen(void)
 {
     if (!s_sb_gueltig) return 0;
     memcpy(s_framebuffer, s_sb_fb, sizeof s_sb_fb);
     if (s_sb_text_used) { memcpy(s_text_overlay, s_sb_text, sizeof s_sb_text); s_text_overlay_used = s_sb_text_used; }
+    s_shadow_quad_count = s_sb_shadow_n;
+    if (s_sb_shadow_n > 0) memcpy(s_shadow_quads, s_sb_shadow, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
     s_textri_count = s_sb_count;
     if (s_sb_count > 0) {
         memcpy(s_textri_queue, s_sb_queue, (size_t)s_sb_count * sizeof s_textri_queue[0]);
@@ -835,6 +838,9 @@ void re15_render_end_frame(void)
             SDL_RenderGeometry(s_renderer, s_shadow_tex,
                                s_shadow_quads[i].v, 6, NULL, 0);
     }
+    /* STANDBILD: Schatten dieses Bildes aufbewahren (s. Deklaration) */
+    s_sb_shadow_n = s_shadow_quad_count;
+    if (s_sb_shadow_n > 0) memcpy(s_sb_shadow, s_shadow_quads, (size_t)s_sb_shadow_n * sizeof s_shadow_quads[0]);
     s_shadow_quad_count = 0;
 
     /* PLAYER-SELECT backdrop (SELECTH.TIM) — drawn as the BACKGROUND here, BEFORE the 3D models

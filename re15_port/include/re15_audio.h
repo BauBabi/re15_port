@@ -212,6 +212,7 @@ void re15_audio_re2_panel_se(int se_id);
  * (Bild 100), se 1 = Door_exit. Belege: analysis/tor_1170/08_re_ton.md. PSX: Folge-Stub. */
 int  re15_audio_re2_tor_laden(void);
 void re15_audio_re2_tor_se(int se);
+void re15_audio_se_pumpe(void);   /* nur die SE-Pumpe (Tuerszene, 60 Hz) */
 
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the

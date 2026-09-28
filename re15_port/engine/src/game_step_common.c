@@ -2027,6 +2027,19 @@ void re15_game_step(const re15_game_ctx_t *c)
         }
     }
 
+    /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
+     * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende
+     * (Bit 0x2000000, @0x80013cb4..bc gesetzt / Door_exit @0x80014218 geloescht), erst danach
+     * blendet der Raum ein; RE1.5 hat dieselbe Reihenfolge (FUN_8001d600 @0x8001d838/48, Warten
+     * @0x8001dab8..d4). Die Anfrage setzt aot_fire_door fuer Tueren aus der Port-Tabelle
+     * (door_seq_tor1170.c) - im Scan dieses Spielschritts, also ist das Standbild der Sequenz
+     * das zuletzt gezeigte Bild. Ohne Plattform-Laeufer (Tests, PSX) verfaellt sie.
+     * Laeuft danach KEIN Szenario-Wiedereintritt (Elzas ROOM1171, s. aot_common.c), blendet
+     * der Raum hier ein: das Original spielt die State-3-Einblendung bei JEDER Transition
+     * (FUN_8001c958, `sb zero,0x800aca58` @0x8001cbdc; re15_room_transition_present). */
+    if (re15_door_seq_ausfuehren() && g_scd_pending_scenario < 0)
+        re15_room_transition_present();
+
     /* Same-room SCENARIO re-entry: a SELF-room door (dest == current room) queued
      * g_scd_pending_scenario = its target_cut during the scan above. Consume it
      * HERE — same frame, immediately after the scan (the canonical PSX order; PC
@@ -2049,13 +2062,6 @@ void re15_game_step(const re15_game_ctx_t *c)
          * (@0x80031c10-c24). Bisher blieb hier der Vorraum-Clip (Pad-Walk 105) stehen. VOR
          * scd_room_reenter, damit ein Plc_motion des Szenario-main00 gewinnt (SCD @0x8001cdec
          * vor Dispatcher @0x8001ce0c) — gemessen mit unit_elliot_1170_run / probe_1090_cutscene. */
-        /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die TUERSEQUENZ vor dem Wiedereintritt. RE2
-         * FUN_80026b7c startet Door_main (@0x80026bf8/bfc) und wartet am Ende auf deren Ende
-         * (Bit 0x2000000, @0x80013cb4..bc gesetzt / Door_exit @0x80014218 geloescht), erst
-         * danach blendet der Raum ein; RE1.5 hat dieselbe Reihenfolge (FUN_8001d600 @0x8001d838/48,
-         * Warten @0x8001dab8..d4). Die Anfrage setzt aot_fire_door nur fuer Tueren aus der
-         * Port-Tabelle (door_seq_tor1170.c); ohne Plattform-Laeufer verfaellt sie. */
-        re15_door_seq_ausfuehren();
         re15_player_room_entry_pose();
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
         /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).

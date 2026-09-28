@@ -17,13 +17,14 @@ Tuer bleibt RE1.5 (re15_room_transition_present): dort ist das System vollstaend
 | Teil | Datei | Inhalt |
 |---|---|---|
 | Maschine | `engine/src/door_seq_common.c`, `include/re15_door_seq.h` | RE2-Skriptmaschine (die 39 Tuer-Opcodes, Handler-Adressen im Quelltext), 10 Objekte, Plaetze 10..13, RotMatrix Befehl fuer Befehl nach @0x8008e1f4 mit rcossin_tbl @0x800adeac, Matrizenkette nach FUN_80014234 (IR-Saettigung, 16-Bit-Lage), Blenden-Kanal nach 0x8002c1a0/0x8002c2b0/0x8002c378 |
-| Zuordnung + Archiv | `engine/src/door_seq_tor1170.c`, `engine/src/gen/tor_1170_door.inc` | Port-Tabelle Tuer -> Sequenz (ROOM1170 Slot 0/6, ROOM1171 Slot 0/5; Schluessel Rechteck + Band, nicht Slot); Torarchiv im RE2-Aufbau (9 Skripte + MD1 + TIM) |
-| Anbindung | `engine/src/aot_common.c`, `engine/src/game_step_common.c` | Anfrage an der Selbst-Tuer; Ablauf vor dem Wiedereintritt (RE2 FUN_80026b7c @0x80026bf8/bfc, RE1.5 @0x8001d838/48) |
+| Zuordnung | `engine/src/door_seq_tor1170.c` | Port-Tabelle Tuer -> Sequenz (ROOM1170 Slot 0/6, ROOM1171 Slot 0/5; Schluessel Rechteck + Band, nicht Slot); Anfrage und Laeufer |
+| Archiv | `engine/src/door_seq_archiv.c`, `engine/src/gen/tor_1170_door.inc` | Torarchiv im RE2-Aufbau (9 Skripte + MD1 + TIM), eigene Uebersetzungseinheit - der PSX-Bau linkt es nicht |
+| Anbindung | `engine/src/aot_common.c`, `engine/src/game_step_common.c` | Anfrage im Selbst-Tuer-Zweig (auch ohne Szenario, also auch ROOM1171); Ablauf im Spielschritt direkt vor dem Szenario-Block (RE2 FUN_80026b7c @0x80026bf8/bfc, RE1.5 @0x8001d838/48); ohne Szenario danach die RE1.5-Einblendung |
 | PC-Szene | `platform/pc/src/door_scene_pc.c` | Abdunkeln des stehenden Bildes (32 Bilder), Door_move-Schleife, Door_exit; Takt 59,826 Hz; Zeichnen nach 08_re_zeichnen 4.2 |
-| Standbild | `platform/pc/src/render_pc.c` | end_frame bewahrt Hintergrund, Dreiecke und Untertitel des letzten Bildes; `re15_render_pc_standbild_wiederholen()` |
+| Standbild | `platform/pc/src/render_pc.c` | end_frame bewahrt Hintergrund, Dreiecke, Schatten und Untertitel des letzten Bildes; `re15_render_pc_standbild_wiederholen()` |
 | Ton | `platform/pc/src/audio_pc.c`, `shared_assets/RE2/TORSE.VBS` | DOOR2E-Tonteil UNVERAENDERT als Mini-Bank; Ton 0 (Skript, Bild 100) und Ton 1 (Door_exit) mit dem RE2-Pegelgesetz (@0x80083760) |
 | Werkzeuge | `tools/tor/tor_sequenz_bauen.py`, `tools/tor/tuerseq_referenz.py` | Skripte aus DOOR2E, Archiv, TORSE.VBS, rcossin-Tabelle; Bild-fuer-Bild-Referenz |
-| Riegel | `tests/unit/unit_door_seq.c`, `tests/unit/probes/tor_1170.cmake` | Maschine gegen den Katalog-Simulator (DOOR2E V0/V1 + Tor V0/V1, je 291 Bilder), RotMatrix, Zuordnung |
+| Riegel | `tests/unit/unit_door_seq.c`, `tests/unit/probe_tor_1170_anfrage.c`, `tests/unit/probes/tor_1170.cmake` | Maschine gegen den Katalog-Simulator (DOOR2E V0/V1 + Tor V0/V1, je 291 Bilder), RotMatrix, Zuordnung; Anfrage an den echten RDT beider Varianten (1170 und Elzas 1171), Intro-Uebergabe nicht, Verfall ohne Laeufer |
 
 ## 1. Die Skripte des Tors (aus DOOR2E)
 
@@ -100,10 +101,29 @@ Im Spiel gemessen (`RE15_SE_DEBUG=1`): `se=0 ... pitch=0x400 (11025 Hz) -> SE-St
   ohne Sequenz.
 - Pruefhaken: `RE15_TUER_TEST=<0|1>` spielt die Sequenz direkt nach dem Start und beendet.
 
+## 6b. Gegenpruefung (zwei Pruefer, 2026-09-28) und was daraufhin geaendert wurde
+
+| Befund | Schwere | Aenderung |
+|---|---|---|
+| Ohne Tonteil (kein Audiogeraet, `RE15_NOAUDIO`, Datei fehlt) blieb var 13 auf 1, das Warteskript (Skript 4) lief endlos, das Spiel hing am Tor | hoch | var 13 heisst in RE2 "Laden laeuft" (@0x80013f54..68) - im Port ist das Laden synchron und vor dem ersten Durchlauf fertig; die Maschine bekommt immer "geladen", gespielt wird nur bei Erfolg. Door_move-Schleife gedeckelt. Nachgemessen: mit `RE15_NOAUDIO=1` 291 Bilder + 1, Spiel laeuft weiter |
+| ROOM1171 (Elza) bekam nie eine Sequenz: die Anfrage hing am variantenblinden Szenario-Vergleich | mittel | Anfrage im Selbst-Tuer-Zweig selbst; Verbrauch vor dem Szenario-Block; ohne Szenario RE1.5-Einblendung. Riegel `probe_tor_1170_anfrage` |
+| `re15_audio_tick` lief mit 60 Hz (BGM-Ausblendung, CAP_SYNC doppelt) | niedrig | SE-Pumpe je Bild (`re15_audio_se_pumpe`), Tick nur jedes zweite Bild |
+| Schatten fehlten im Standbild; Balken schon vor dem Abdunkeln auf 0 | niedrig | Schatten mitkopiert; Balken erst nach dem Abdunkeln gesperrt |
+| Cmp-Art >= 7 (RE2: Rueckgabe Variable<<1), Calc-Art >= 12 (RE2: kein Store), Evt_exec bei vollen Plaetzen (RE2: Platz 13), ausgeschaltetes Elternobjekt (RE2: Matrix trotzdem) | niedrig | nach den genannten Adressen umgesetzt; das Tor nutzt keinen dieser Faelle |
+| 39-KB-Archiv auf der PSX gelinkt | niedrig | eigene Uebersetzungseinheit |
+| `TORSE.VBS` nicht in der Paketpruefung | - | `release/make_package.sh` prueft sie |
+
+Hinweis zur Abnahme mit `RE15_FIRE_AOT`: der Haken feuert NACH dem Spielschritt, das Standbild
+ist dann ein Bild mit schon versetztem Spieler. Beim echten Durchgehen feuert der Scan IM
+Spielschritt, und die Sequenz laeuft im selben Schritt - Standbild = das zuletzt gezeigte Bild.
+
 ## 7. OFFEN
 
-1. PSX: die Szene laeuft nur auf dem PC; `re15_audio_re2_tor_se` ist dort ein Stub, der Laeufer
-   nicht angemeldet (die Anfrage verfaellt, der Tuerwechsel laeuft wie bisher).
+1. PSX: die Szene laeuft nur auf PC, Deck und Android (dieselben Plattformquellen); auf der PSX
+   ist `re15_audio_re2_tor_se` ein Stub, der Laeufer nicht angemeldet (die Anfrage verfaellt,
+   der Tuerwechsel laeuft wie bisher).
+1b. ROOM1171 ist ueber die Sonde belegt, im Spiel nicht gefahren: Elzas Kette fuehrt ueber
+   ROOM1031, und der Debug-Sprung laedt aus einem Leon-Start nur ROOM1170.
 2. Kreuz-Raum-Tueren: die Anfrage wird nur an der Selbst-Tuer gesetzt und verbraucht. Soll eine
    Kreuz-Raum-Tuer eine Sequenz bekommen, braucht der Verbrauch vor `re15_room_apply_pending`
    (main.c) denselben Aufruf; ausserdem muss der Schliesston den Raumwechsel ueberleben
