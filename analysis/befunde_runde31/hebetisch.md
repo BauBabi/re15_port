@@ -5,7 +5,7 @@ Granate links in die hochfahrende Box und die Sicherung rechts. Außerdem starte
 Dialog der items erst wenn das Modell wirklich komplett hochgefahren ist."
 ("room 1170" = Hebetisch in Irons' Buero ROOM1150/1151, Runde 30 vom Nutzer bestaetigt.)
 
-Stand: IN ARBEIT (laufend gefuellt). Arbeitsbaum `.claude/worktrees/r31_hebetisch`, Zweig
+Stand: FERTIG — Suite 406/406 gruen (local_build.sh all, 596,5 s). Arbeitsbaum `.claude/worktrees/r31_hebetisch`, Zweig
 `r31/hebetisch`, Basis 10d0c706. Werkzeuge: `analysis/befunde_runde31/hebetisch_werkzeug/`,
 Belege: `analysis/befunde_runde31/hebetisch_belege/`, grosse Zwischenausgaben
 `build/r31_hebetisch/` (nicht versioniert).
@@ -375,6 +375,11 @@ Schwerpunkte stehen in 1.3.)
 * 4ada307e wip: Dossier + Planungswerkzeuge
 * 424177f2 wip: Spielcode (Ruhe-Fenster, Sitze) + Messungen
 * a380704a test: unit_r31_hebetisch, r30-Riegel nachgezogen, RE15_MIN_TESTS 406
+* 12a30af9 / 9595b574 doc: Dossier Abnahme, Riegel, Mutationsproben, Offenes, Bild erstes Ruhebild
+
+**Suite: `bash re15_port/tools/local_build.sh all` -> `100% tests passed, 0 tests failed out of
+406`, `=== LOCAL-BUILD-OK (all) — Tests 406/406`, 596,5 s** (405 der Basis 10d0c706 +
+unit_r31_hebetisch), ohne Wiederholung, waehrend parallel eine Docker-Bau-Sitzung lief.
 
 ## 6. Offen
 
