@@ -193,7 +193,10 @@ static int fahre_bis_selbsttuer(int max, int hilf_dem_port)
         /* Die Tuer versetzt den Spieler vom Montage-Payload (-26214,0,-3861) auf next_pos
          * (-8200,0,-22500). Gemessen steht er im selben Bild schon auf z=-22303 (die
          * Kollision schiebt ihn 197 Einheiten) — deshalb am X-Wert erkennen, nicht an Z. */
-        if (pl->x == -8200) {
+        /* Bau Runde 30 (P3): steigt der Port im Tuer-Bild neu ein, hat sub13 den Spieler im
+         * selben Bild schon umgesetzt (Member_set @0x02994) — ohne diese Zusatzbedingung meldete
+         * die Sonde nach dem Bau "Selbst-Tuer NICHT erreicht" (gemessen). */
+        if (pl->x == -8200 || g_scd_self_reenter_fired) {
             zeile("[TUER]", f);
             if (hilf_dem_port && !g_scd_self_reenter_fired) {
                 /* GEGENPROBE M3: was die Engine an dieser Stelle tun MUESSTE
