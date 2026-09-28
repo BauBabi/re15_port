@@ -1,3 +1,53 @@
+# v0.8.16 - 2026-09-28
+
+Das Gelaendertor am Hubschrauberlandeplatz (ROOM1170) oeffnet sich jetzt wie eine Tuer in
+Resident Evil 2: mit eigener Tuerszene, Bewegung und dem Ton des RE2-Gittertors. Grundlage
+ist das Tuermodell, das ich Ihnen aus Ihren drei Ausschnitten gebaut habe. Suite 362/362.
+
+## Was Sie merken
+
+**Das Tor hat eine Tuersequenz.** Gehen Sie am Landeplatz an das Tor und druecken Sie die
+Aktionstaste: das Bild dunkelt ab, das Tor erscheint vor Schwarz, oeffnet sich, die Kamera
+geht hindurch, dann blendet die andere Seite ein. Von der Laufsteg-Seite zurueck sehen Sie
+das Tor von hinten, die Angel links, und es wird zu Ihnen hergezogen. Dauer wie in RE2:
+291 Bilder bei 60 Bildern pro Sekunde, also knapp 5 Sekunden, dazu das Abdunkeln davor.
+
+**Der Ton ist der des RE2-Gittertors.** Beim Oeffnen der Anschlag des Gittertors (DOOR2E),
+nach dem Ausblenden der Schliesston - beide unveraendert aus RE2, in RE2-Lautstaerke. Die
+Datei liegt als `shared_assets/RE2/TORSE.VBS` im Paket.
+
+**Warum RE2 und nicht RE1.5.** RE1.5 hat die Tuermaschine vollstaendig und startet sie bei
+jedem Tuerwechsel, aber das einzige Skript im Tuerarchiv ist "Ende" (`01 00` in DOOR00.DO2).
+Die Sequenz war nie bespielt - ein unfertiges System, also gilt RE2. Die Einblendung des
+Raums nach der Tuer bleibt RE1.5: die ist fertig.
+
+## Wie es gebaut ist
+
+- **Das Modell** kommt aus den Hintergrundbildern: jeder Texel ist ein Pixel aus Cut 12,
+  die Masse aus den Raumkameras. Rohrrahmen mit runden Ecken, Warnschild, Laschen, Fuesse,
+  ein Pfosten an der Angel; 180 Dreiecke.
+- **Die Bewegung** ist die von DOOR2E, Byte fuer Byte: Einblenden, Anschlag in Bild 100,
+  Schwenk um 50 Grad in 80 Bildern, Kamerafahrt, Ausblenden. Weggelassen ist nur der Riegel
+  von DOOR2E, den das Tor nicht hat; dazu kommt der Pfosten, der mitfaehrt.
+- **Die Maschine** ist die RE2-Skriptmaschine der Tuersequenz. Ein neuer Test laesst sie
+  Bild fuer Bild gegen einen unabhaengig geprueften Simulator laufen, fuer DOOR2E selbst und
+  fuer das Tor, je in beiden Richtungen: 0 Abweichungen in 4 x 291 Bildern. Eine zweite
+  Sonde prueft an den echten Raumdaten, dass beide Richtungen die Sequenz anfordern - auch in
+  Elzas Variante ROOM1171 - und die Intro-Uebergabe nicht.
+- **Zwei Pruefer** haben den Einbau gegengelesen. Ein harter Fehler kam dabei heraus: ohne
+  Tonausgabe (kein Audiogeraet) waere das Spiel am Tor stehen geblieben. Behoben - die
+  Sequenz laeuft dann stumm durch.
+- **Licht, Blende und Takt** sind die aus RE2 (feste Tuerbeleuchtung, subtraktive Blende,
+  59,826 Bilder/s). Die Szene ist deshalb eher dunkel - wie die Tuerszenen in RE2.
+
+## Was bewusst offen blieb
+
+- **Nur dieses Tor** hat eine Sequenz. Die RE1.5-Raumdaten sagen fuer keine Tuer, welches
+  Modell sie haette; jede weitere Tuer braucht ein eigenes Modell oder ein passendes
+  RE2-Archiv und einen Eintrag in der Zuordnung.
+- **PSX-Stand:** die Szene laeuft auf PC, Steam Deck und Android; der PSX-Build geht ohne
+  Sequenz durch das Tor wie bisher.
+
 # v0.8.15 - 2026-09-27
 
 Zwei Ihrer Befunde sind erledigt: die Charakterwahl fuehrt endlich in Elzas Zweig, und der
