@@ -3499,9 +3499,13 @@ re_title:;
      *     80039788  jal  0x800314b0           ; sonst Spielermodell NEU LADEN
      * Ohne den Gleichstand haette der erste Raumwechsel Elzas eben geladenes PL04 gegen
      * work_vars[0x10] == 0 = PL00 zurueckgetauscht. Der Westen-Spiegel wird mitgezogen,
-     * damit re15_vest_hp_on_model_reload den Start nicht als Modellwechsel liest. */
+     * damit re15_vest_hp_on_model_reload den Start nicht als Modellwechsel liest.
+     * ⛔ RUNDE 30 (Thema G): work_vars[0x10] SELBST wird hier NICHT mehr gesetzt, sondern
+     * erst unmittelbar NACH scd_vm_init() (s. dort) — scd_vm_init nullt g_scd per memset, der
+     * Wert von hier ueberlebte das nicht (Sonde probe_r30_elza_intro M4: vor 4, nach 0), und
+     * der erste Raumwechsel tauschte Elzas PL04 gegen PL00. Die zwei Statics hier bleiben
+     * (vom memset unberuehrt). */
     s_player_model_idx    = g_gameflow.character & 0x0F;
-    g_scd.work_vars[0x10] = (int16_t)(g_gameflow.character & 0x0F);
     re15_vest_model_mark((int16_t)(g_gameflow.character & 0x0F));
     if (md1_ok) {
         fprintf(stderr, "[md1] loaded test.md1: %d meshes\n", md1.mesh_count);
@@ -3893,6 +3897,19 @@ re_title:;
 
     /* Phase 4.4: SCD VM init + start demo thread */
     scd_vm_init();
+    /* ⛔ ANGEFORDERTER PL-INDEX NACH DEM VM-RESET (Runde 30, Thema G, elza-intro.md §4.2/§5.2).
+     * scd_vm_init() hat g_scd genullt (memset) — work_vars[0x10] (= DAT_800b0ff0) muss danach
+     * auf dem Charakter stehen, sonst liest der erste Raumwechsel 0 und laedt PL00 statt PL04.
+     * Original, FUN_8001d22c gemeinsamer Schwanz des Neuen Spiels (PSX.EXE, selbst gelesen):
+     *     8001d51c  lbu  a0,-13732(a0)     ; a0 = DAT_800aca5c (Charakter-Byte)
+     *     8001d558  sh   a0,4080(at)       ; DAT_800b0ff0 = angeforderter PL-Index
+     * Leser im Raumlader FUN_800396fc:
+     *     80039768  lh   v1,4080(v1)       ; DAT_800b0ff0
+     *     8003976c  andi v0,a0,0xf / 80039770 beq v0,v1,0x80039790   ; gleich -> kein Wechsel
+     *     80039788  jal  0x800314b0        ; sonst Spielermodell NEU laden
+     * Leon: character & 0x0F = 0 = was der memset ohnehin liefert -> fuer ihn keine Aenderung.
+     * CONTINUE: re15_savedata_restore setzt den Wert weiter unten aus dem Spielstand neu. */
+    g_scd.work_vars[0x10] = (int16_t)(g_gameflow.character & 0x0F);
     /* Byte-true STAGE1 briefing loadout into g_inv (handgun + 2 stacks; savestate-confirmed).
      * scd_vm_init just cleared it; populate the game-start inventory here. (Per-room persistence
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
@@ -4007,17 +4024,35 @@ re_title:;
         fprintf(stderr, "[light] RDT light block missing — neutral tint\n");
     }
 
-    /* [RL-1] Pre-stage ROOM1170's INTRO story flags — but ONLY on an intro-path boot (direct
-     * 0x1170 debug boot, or the new-game 0x1240 montage that hands into 0x1170). These are
-     * ROOM1170-specific: forcing them for a debug boot of ANY OTHER room is ROOM1170 residue
-     * (z4/195 is also read by ROOM1140 → its SCD would branch as if the intro had run). Gated
-     * so booting room X loads room X's own progression, zero ROOM1170 leak. (CONTINUE overwrites
-     * these with the saved flags below.) */
-    if (boot_room == 0x1170 || boot_room == 0x1240) {
+    /* [RL-1] Pre-stage the INTRO story flag — but ONLY on an intro-path boot (direct 0x1170
+     * debug boot, or the new-game montage 0x1240/0x1241 that hands into 0x1170 resp. 0x1031).
+     * Forcing it for a debug boot of ANY OTHER room would be intro residue. Gated so booting
+     * room X loads room X's own progression. (CONTINUE overwrites these with the saved flags
+     * below.)
+     *
+     * ⛔ RUNDE 30 (Thema G, analysis/befunde_runde30/elza-intro.md §3.3/§4.1/§5.1): der Vorlauf
+     * gilt fuer BEIDE Montage-Varianten, Vergleich deshalb auf RE15_ROOM_BASE(boot_room).
+     * (3,193) ist KEIN "ROOM1170-spezifisches" Flag (so stand es hier bis Runde 30), sondern
+     * die gemeinsame Vorspann-Weiche beider Startraeume — spielweit genau 4 Fundstellen
+     * (Zensus aller 206 begehbaren RDT, r30_elza_flag_zensus.py):
+     *   ROOM1170.RDT main00 @0x01298  21 03 c1 00  Ck(3,193,0)   -> sub03
+     *   ROOM1170.RDT sub03  @0x0160C  22 03 c1 01  Set(3,193,1)  -> Aot_on 2 (Montage, Leon)
+     *   ROOM1031.RDT main00 @0x0204E  21 03 c1 00  Ck(3,193,0)   -> Evt_exec sub12 @0x02072
+     *   ROOM1031.RDT sub12  @0x02976  22 03 c1 01  Set(3,193,1)  -> Sleep 1 / Aot_on(18)
+     *                                               @0x0297E = Door 18 -> Raum 0x24 (Montage, Elza)
+     * Das Original laeuft den Erstbesuchs-Zweig VOR der Montage; alle 5 Auslieferungs-
+     * Savestates, die IN der Montage stehen (Raum 0x24), tragen (3,193)=1 und (3,125)=0
+     * (r30_elza_ss_sweep.py). Der Port startet direkt in der Montage und stellt diesen Zustand
+     * her. Ohne ihn nahm Elza in ROOM1031 den Erstbesuchs-Zweig: 6 Bilder Lobby (Cut 0), dann
+     * zurueck nach ROOM1241 = die Montage lief ein zweites Mal (Nutzer-Befund Runde 30 G).
+     * Leon (0x1240) ist unveraendert: RE15_ROOM_BASE(0x1240) == 0x1240. */
+    if (boot_room == 0x1170 || RE15_ROOM_BASE(boot_room) == 0x1240) {
         /* DATA-DRIVEN intro (keystone parity): set ONLY (3,193,1) — the flag sub03 would set on
          * the PRIOR visit. With (3,193)=1 AND (3,125)=0, room1170 main00 itself fires
          * Evt_exec(0x180B) → sub11 (narrator) through op_evt_exec; sub11 then sets
-         * (3,125)/(4,242)/(2,7) + Cut_chg(7) + its 4 messages from its OWN bytecode. */
+         * (3,125)/(4,242)/(2,7) + Cut_chg(7) + its 4 messages from its OWN bytecode.
+         * Elza: dasselbe in ROOM1031 — Else_ck @0x02076 / Ck(3,125,0) @0x0207E -> Evt_exec
+         * sub15 @0x020A2 (Erzaehler: Set(3,125,1) @0x02A68, Cut_chg 13, Aot_on(19) @0x02A9E). */
         re15_game_flag_set(3, 193, 1);
         /* KEIN Pre-Stage von (4,195): der fruehere `flag_set(4,195,1)` hier beruhte auf einer
          * FEHLLESUNG der 1170-Blockstruktur ("Aussenbereich sonst Dead-End"). Byte-Befund

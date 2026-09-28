@@ -689,3 +689,111 @@ Keine `[pld]`-Zeile, kein zweites `PC loaded room1241`.
 | `build/r30_elza-intro/scd/ROOM{1030,1031,1170,1171,1240,1241}.scd.txt` | SCD-Dumps |
 | `build/r30_elza-intro/{flag_zensus,flagxref_bank3,selbsttuer_zensus,ss_sweep}.txt` | Zensus-Ausgaben |
 | `build/r30_elza-intro/riegel_*.log` | Riegel gegen Auslieferungsstand und Experiment |
+
+---
+
+## 9. UMSETZUNG (Bau-Agent Runde 30, Zweig `r30/elza-intro`, 2026-09-28)
+
+Gebaut im Arbeitsbaum `.claude/worktrees/r30_elza` auf master d98e9639 (Engine/Plattform
+seit 8d83a025 unveraendert — `git diff --stat 8d83a025 d98e9639 -- re15_port` beruehrt nur
+Sonden und `tools/`). Bauverzeichnis `re15_port/build`, Messordner
+`build/r30_elza-bau/` (unversioniert).
+
+### 9.1 Vor dem ersten Edit selbst nachgeprueft
+
+| Beleg | Binaerdatei | Ergebnis |
+|---|---|---|
+| `lbu a0,-13732(a0)` @0x8001d51c, `sh a0,4080(at)` @0x8001d558 | `info/Re1.5/PSX.EXE` (`re15_disasm.py dis 0x8001d518 18`) | wie im Dossier |
+| `lh v1,4080(v1)` @0x80039768, `beq v0,v1` @0x80039770, `jal 0x800314b0` @0x80039788 | PSX.EXE | wie im Dossier |
+| `lw a0,-13764(a0)` (0x800aca3c) @0x800397b8, `lhu v0,0(v1)` @0x800397e0, `srl a0,a0,31` @0x800397e4, `addu a0,a0,v0` @0x800397ec | PSX.EXE | wie im Dossier; die Quelle von a0 (0x800aca3c) zusaetzlich gelesen |
+| `beq v1,v0,0x8001d988` @0x8001d968, `jal 0x800396fc` @0x8001d988 (Sprungziel = Raumlader, nicht nur Aufrufstelle) | PSX.EXE | wie im Dossier |
+| `jal 0x8003ef6c` @0x80039a00 | PSX.EXE | wie im Dossier |
+| ROOM1031.RDT @0x0204E `21 03 c1 00`, @0x02052..0x02069 Door 18 -> `.. 00 24`, @0x02072 `04 ff 18 0c`, @0x02076 `07 00 34 00`, @0x0207E `21 03 7d 00`, @0x02082 `3b 13` .. @0x02098 `00 03 06`, @0x020A2 `04 ff 18 0f`, @0x020AE `21 03 cf 01`, @0x020B2 `04 ff 18 0d`, @0x02976 `22 03 c1 01 09 0a 01 00 47 12`, @0x02982 `22 03 cf 00`, @0x02A4A `22 02 07 00 22 01 1b 00`, @0x02A68 `22 03 7d 01`, @0x02A9E `47 13` | `shared_assets/PSX/STAGE1/ROOM1031.RDT` (byte-gleich mit `info/Re1.5/PSX/STAGE1/ROOM1031.RDT`) | wie im Dossier |
+| ROOM1170.RDT @0x01298 `21 03 c1 00`, @0x0160C `22 03 c1 01` | `shared_assets/PSX/STAGE1/ROOM1170.RDT` | wie im Dossier |
+
+Ausgangszustand mit der vorhandenen Sonde (`build/r30_elza-bau/sonde/vorher.log`): M4 vor 4 /
+nach 0; M1 Wechsel nach 1241 in Bild 1; M2 Selbst-Tuer Bild 440, Neueinstieg=0, Akteure=0,
+flag(3,207)=1, flag(2,7)=1, pmode=2; M3 Szenenende Bild 990. Identisch mit §2.6.
+
+### 9.2 Gebaut
+
+| Schritt | Datei | Commit |
+|---|---|---|
+| P1 | `platform/pc/main.c` Vorlauf: `boot_room == 0x1170 \|\| RE15_ROOM_BASE(boot_room) == 0x1240`; Kommentar "ROOM1170-specific" berichtigt (4 Fundstellen mit Adressen) | ea5e0173 |
+| P2 | `platform/pc/main.c`: `g_scd.work_vars[0x10] = character & 0x0F` unmittelbar nach `scd_vm_init()`; die alte Zeile vor dem memset entfernt, `s_player_model_idx` und `re15_vest_model_mark` bleiben | b39203d0 |
+| P3 | `engine/src/aot_common.c`: Selbst-Tuer-Vergleich `(0x1000 \| raum<<4 \| (g_current_room_id & 0xF)) == g_current_room_id` | ce18f540 |
+| Riegel (ii) | `tests/unit/test_r30_elza_selbsttuer.c`, ctest `unit_r30_elza_selbsttuer` (TIMEOUT 60) | 78cc4412 |
+| Riegel (i) | `tests/integration/test_elza_vollstart.cmake` (aus der Vorlage), ctest `integration_elza_vollstart` (TIMEOUT 240) | 78cc4412 |
+| Sonde | `probe_r30_elza-intro.c`: Tuer-Erkennung nimmt auch den Neueinstieg (s. 9.4) | 78cc4412 |
+
+Beide Riegel sind in `tests/unit/probes/r30_elza-intro.cmake` angemeldet;
+`tests/unit/CMakeLists.txt` und `RE15_MIN_TESTS` sind NICHT angefasst (Auftrag).
+Keine Asset-Datei geaendert. Die Verallgemeinerung von P3 auf Stage >= 2 / Raum 0 ist
+ausdruecklich NICHT gebaut.
+
+### 9.3 Abnahme — Soll/Ist
+
+Alle Laeufe mit der ECHTEN exe, Bilder ueber `RE15_FRAMEDUMP` (voll komponierter Frame,
+960x720) mit dem Waechter `r30_elza_watch.py`, Auswertung `r30_elza_png.py` /
+`r30_elza_cmp.py`. Umgebung wie §2.1; Abbruch ueber `RE15_PRESS` square@352..364.
+"vorher" = exe aus d98e9639 ohne Edit (`build/r30_elza-bau/exe_vorher`), "nachher" = exe
+mit P1+P2+P3 (`exe_nachher`).
+
+| Messung | Soll | vorher | nachher |
+|---|---|---|---|
+| Sonde M4 `work_vars[0x10]` nach `scd_vm_init` (misst die Engine-Funktion, nicht main.c) | — | 0 | 0 (unveraendert richtig: der memset ist korrekt, P2 liegt in main.c) |
+| Sonde M2: Selbst-Tuer / Neueinstieg / Akteure / (3,207) / (2,7) | Neueinstieg 1 | Bild 440 / 0 / 0 / 1 / 1 | Bild 440 / 1 / 6 / 0 / 1 (Szene laeuft) |
+| Riegel (ii) `unit_r30_elza_selbsttuer` | rc 0 | rc 1, `FAIL(H3)` (Gegenprobe: aot_common.c auf den Stand vor P3 zurueckgesetzt, nur dieses Ziel gebaut) | rc 0; Tuer Bild 440, Neueinstieg 1, Szenenende Bild 989 (549 nach der Tuer, Schranke 600) |
+| Riegel (i) auf dem Protokoll des Laufs (`NUR_PRUEFEN=1`) | `elza_vollstart OK` | 6 Fehler, rc 1 (erster BG #00, 1241 1x neu, sub12=1, PL00-Tausch, sub13=0, Szenenende=0) — identisch mit `riegel_stand_m6.log` | OK, rc 0 (erster BG #13, 1241 0x, sub12=0, sub15=1, Tuer19=1, sub13=1, Szenenende=1, kein PL00) |
+| Riegel (i) ueber ctest (`integration_elza_vollstart`, eigener Lauf der exe) | Passed | — | Passed, 112.7 s (`ctest -R`, einzeln): MESSWERTE wie Zeile davor, `elza_vollstart OK` |
+| Bildserie `0-12/1`, Abschnitt nach 1241 -> 1031, nicht-schwarz F0..F12 | 0.000 in allen 13 | F0 0.000, F1 0.000, F2 0.006, F3 0.027, F4 0.271, F5 0.667 — danach nur 6 Bilder, dann wieder ROOM1241 | 0.000 in allen 13 (F6..F12 Mittel 0.8 = Erzaehlertext) |
+| `PC loaded room1241` nach dem Start (Abbruch mit Quadrat) | 0 | 1 | 0 (zwei Laeufe: `n_elza_skip_dicht`, `n_elza_szene`) |
+| Spielermodell in ROOM1031 | PL04, keine `[pld] Spielermodell -> PLD/PL00`-Zeile | `[pld] Spielermodell -> PLD/PL00.PLD` (Zeile 479) | keine `[pld]`-Zeile; einzige Modellzeile `[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)`; Bild F480/F960/F1440 zeigt Elza (rot-weisser Anzug, blond) |
+| ROOM1031 nach dem Abbruch | sub15 -> Tuer 19 -> sub13 -> Spielfreigabe | sub12 F363 -> Tuer 18 -> ROOM1241 | `Evt_exec sub=15` F363, `Cut_chg(13)`; `DOOR FIRE slot=19` F445; `sub=11` + `sub=13` F445; `Cut_chg(4)` F445, `(6)` F521, `(0)` F840; `letterbox closed -> gameplay` F1013 |
+| Leon vorher gegen nachher, Serie `200-1600/200` | 15 Bilder, 0 abweichende Pixel | — | 15 Bilder, 0 von je 691200 Pixeln abweichend (`leon_vorher_gegen_nachher.txt`); Ereignisfolge (`[evt]`, `DOOR FIRE`, Raumladen) beider Laeufe zeilengleich |
+| Suite (ctest, `--timeout 240`) | alles gruen | 360 (master) | **362/362 gruen**, RC=0, 308 s (`ctest --test-dir re15_port/build --timeout 240`, Rueckgabewert ohne Pipe gelesen); darin `integration_elza_vollstart` Passed 108.3 s, `unit_r30_elza_selbsttuer` Passed, `unit_elza_zweig` Passed — kein GUI-Haken musste wiederholt werden |
+
+Abzuege (`build/r30_elza-bau/abzuege/`): `01_vorher_1031_f5_lobby.png` (Lobby Cut 0 im
+Vorspann), `02_nachher_1031_f5_schwarz.png`, `03_nachher_1031_f12_erzaehler.png`,
+`04_nachher_1031_f480_elza_szene_cut4.png`, `05_nachher_1031_f960_elza_szene_cut0.png`,
+`06_nachher_1031_f1440_elza_spielbetrieb.png`.
+
+### 9.4 Abweichungen vom Plan
+
+1. **Sonde nachgezogen.** Nach P3 meldete `probe_r30_elza_intro` M2/M3 "Selbst-Tuer NICHT
+   erreicht": der Port steigt jetzt im Tuer-Bild neu ein, sub13 setzt den Spieler im selben
+   Bild per Member_set (@0x02994) auf X = -13097 — die Erkennung ueber X = -8200 griff nicht
+   mehr. Die Sonde (und der Riegel (ii)) werten deshalb auch `g_scd_self_reenter_fired` als
+   Tuer-Bild. Gemessen nachher: Tuer Bild 440, Neueinstieg 1, Akteure 6.
+2. **Szenenende 549 statt 550 Bilder nach der Tuer.** Die Gegenprobe M3 des Dossiers stellte
+   den Neueinstieg ein Bild SPAETER her (Sonde setzte `g_scd_pending_scenario` nach dem
+   Tuer-Bild); der gebaute Port tut es im Tuer-Bild selbst (Szenenende Bild 989).
+3. **Riegel (ii) prueft zusaetzlich H0 (Belegbytes aus der ausgelieferten ROOM1031.RDT)** und
+   H1 (kein Raumwechsel waehrend des Laufs) — beide aus dem Dossier abgeleitet, keine neuen
+   Konstanten ausser den zitierten Datei-Offsets.
+4. **Die Dossier-Bilder `m8_leon_voll_bilder` sind halbiert gespeichert** (480x360,
+   `r30_elza_png.py --halb`) und taugen nicht als Pixelvergleich. Der Leon-Vergleich laeuft
+   deshalb gegen einen EIGENEN Vorher-Lauf mit der unveraenderten exe desselben Baumes
+   (`build/r30_elza-bau/exe_vorher`, gebaut aus d98e9639 vor dem ersten Edit).
+
+### 9.5 Was ich NICHT gemessen habe
+
+1. **Das Original selbst.** Kein Elza-Savestate, kein Emulatorlauf in diesem Bau (§7 N1/N2
+   gelten unveraendert). Belegt ist der Mechanismus statisch (EXE + RDT, 9.1), gemessen ist
+   nur der Port.
+2. **Die neun weiteren Selbst-Tueren, die P3 in Elza-Raeumen scharf schaltet** (ROOM1111
+   Slots 1-4, ROOM1171 Slots 0/5, ROOM1191 Slot 15, ROOM11A1 Slots 2/3) — keine davon mit
+   Elza gefahren (§6.1). Gemessen ist nur ROOM1031 Slot 19.
+3. **Nutzerlauf ohne Messhaken.** Charakterwahl ueber `RE15_PSELECT_AUTO(_SWITCH)`, Abbruch ueber
+   `RE15_PRESS` (13 Bilder square, deckt das Fenster F361..F363). Ein echtes "Quadrat halten"
+   mit dem Pad ist nicht gefahren (§7 N6).
+4. **Sichtpruefung nur ueber Framedump**, nicht ueber gdigrab am Fensterhandle. Der Framedump
+   ist der voll komponierte Frame (kein `RE15_AUTOSHOT`/`RE15_SOFTWARE_RENDER`).
+5. **Android und PSX** nicht gebaut. Android kompiliert `platform/pc/main.c` mit und bekommt
+   P1/P2; die PSX-`main.c` setzt (3,193) ohnehin unbedingt und hat keine Charakterwahl.
+6. **Offene Punkte des Dossiers, nicht Teil des Plans und nicht angefasst:** Spieler nach der
+   Selbst-Tuer auf z = -22303 statt -22500 (§6.3), 6 statt 20 Akteure (§6.4 — nachher
+   gemessen 6, wie im Experiment), Erzaehler-Text als Schreibmaschine statt Volltext (§6.5),
+   Aussehen der Gegner hinter dem Gitter (§7 N4). Im Spielbetrieb-Bild F1440 steht unten links
+   ein angeschnittenes Objekt nah an der Kamera — dasselbe zeigt das Experiment-Bild
+   `07_exp_spiel_f2400.png` des Dossiers; nicht untersucht.
