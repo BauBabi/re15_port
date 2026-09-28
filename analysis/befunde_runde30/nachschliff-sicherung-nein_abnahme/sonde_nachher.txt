@@ -1,0 +1,125 @@
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+
+== 1150 Fall A: "No" in Fahrt 1, "Yes" in Fahrt 2 ==
+  -- Fahrt 1 (Antwort No)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 484: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 484 y=-20224
+   [OK ] 1. Fahrt 1 oeffnet genau EIN Modal (nach No kein zweites in derselben Fahrt)
+   [OK ] 2. das Modal geht OBEN auf (y im Fenster (-5000,-1100])
+   nach No: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 3. nach No: kein Genommen-Flag, Prop sichtbar, Item nicht im Inventar
+   [OK ] 4. Fahrt 1 endet in der Parklage y=-20224 (Pos_set @0x109E)
+  -- Fahrt 2 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 5. Fahrt 2 oeffnet wieder genau EIN Modal
+   nach Yes: Flag(9,53)=1, Prop sichtbar=0, Item 0x40 im Inventar=1 (Platz 0)
+   [OK ] 6. nach Yes: Flag (9,53), Prop weg, Item 0x40 im Inventar
+  -- Fahrt 3
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 7. Fahrt 3 oeffnet KEIN Modal, Item 0x40 genau einmal im Inventar
+
+== 1150 Fall B: "Yes" in Fahrt 1 ==
+  -- Fahrt 1 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 8. Fahrt 1: genau EIN Modal, danach Flag, Prop weg, Item im Inventar
+  -- Fahrt 2
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 9. Fahrt 2: KEIN Modal, keine zweite Aufnahme, Prop bleibt weg
+
+== 1150 Fall C: Inventar voll in Fahrt 1, ein Platz frei in Fahrt 2 ==
+  -- Fahrt 1 (Inventar voll)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 499: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 499 y=-20224
+   nach Fahrt 1: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 10. Fahrt 1 (voll): genau EIN Modal, nichts genommen, Prop sichtbar
+  -- Fahrt 2 (Platz 3 frei, Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 11. Fahrt 2: das Modal geht wieder auf, Yes nimmt die Sicherung (Platz 3)
+
+== 1151 Fall A: "No" in Fahrt 1, "Yes" in Fahrt 2 ==
+  -- Fahrt 1 (Antwort No)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 484: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 484 y=-20224
+   [OK ] 1. Fahrt 1 oeffnet genau EIN Modal (nach No kein zweites in derselben Fahrt)
+   [OK ] 2. das Modal geht OBEN auf (y im Fenster (-5000,-1100])
+   nach No: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 3. nach No: kein Genommen-Flag, Prop sichtbar, Item nicht im Inventar
+   [OK ] 4. Fahrt 1 endet in der Parklage y=-20224 (Pos_set @0x109E)
+  -- Fahrt 2 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 5. Fahrt 2 oeffnet wieder genau EIN Modal
+   nach Yes: Flag(9,53)=1, Prop sichtbar=0, Item 0x40 im Inventar=1 (Platz 0)
+   [OK ] 6. nach Yes: Flag[scd] thread start slot=10 first_op=0x22
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 0
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] No/voll: nicht genommen, Sicherung bleibt liegen (Hebetisch y=-1115), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[sicherung] Modal auf (Hebetisch y=-1105), Sperre bis zum Ende dieser Fahrt
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+ (9,53), Prop weg, Item 0x40 im Inventar
+  -- Fahrt 3
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 7. Fahrt 3 oeffnet KEIN Modal, Item 0x40 genau einmal im Inventar
+
+== 1151 Fall B: "Yes" in Fahrt 1 ==
+  -- Fahrt 1 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 8. Fahrt 1: genau EIN Modal, danach Flag, Prop weg, Item im Inventar
+  -- Fahrt 2
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 9. Fahrt 2: KEIN Modal, keine zweite Aufnahme, Prop bleibt weg
+
+== 1151 Fall C: Inventar voll in Fahrt 1, ein Platz frei in Fahrt 2 ==
+  -- Fahrt 1 (Inventar voll)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 499: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 499 y=-20224
+   nach Fahrt 1: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 10. Fahrt 1 (voll): genau EIN Modal, nichts genommen, Prop sichtbar
+  -- Fahrt 2 (Platz 3 frei, Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 11. Fahrt 2: das Modal geht wieder auf, Yes nimmt die Sicherung (Platz 3)
+
+ALLES BESTANDEN — 0 Pruefung(en) gerissen

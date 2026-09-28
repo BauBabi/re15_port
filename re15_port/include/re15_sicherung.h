@@ -118,7 +118,13 @@ void re15_sicherung_install(uint16_t room_id);
  * (das Original oeffnet hier kein Modal): -1100 wird nur in der Aufwaertsfahrt
  * unterschritten, -5000 haelt die Parklagen -20324/-20224 draussen. Das Modal friert
  * den Rest des Spiels ein (g_pauseflags), sub04 laeuft danach weiter und faehrt die
- * Plattform herunter. Rueckgabe 1 = Modal wurde in diesem Bild aufgemacht. */
+ * Plattform herunter. Rueckgabe 1 = Modal wurde in diesem Bild aufgemacht.
+ * SPERRE JE FAHRT (Runde 30, Nachschliff "sicherung-nein"): hoechstens ein Modal je Fahrt;
+ * nach "No" bietet die NAECHSTE Fahrt die Sicherung wieder an — wie das Original eine
+ * abgelehnte Aufnahme scharf laesst (RE1.5 nur der Ja-Zweig nullt die Zone @0x8001e090,
+ * "No" @0x8001e0ec laesst sie stehen; RE2 dasselbe @0x800720cc / @0x80072298). Wieder
+ * scharf in der Parklage (Pos_set @0x109E y = -20224) — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE,
+ * Messung und Herleitung bei s_modal_ausgeloest in sicherung_1150.c. */
 int  re15_sicherung_tick(void);
 
 /* Die eingebackenen Engine-Bytes (gen/sicherung_prop.inc) fuer den Plattform-Lader,

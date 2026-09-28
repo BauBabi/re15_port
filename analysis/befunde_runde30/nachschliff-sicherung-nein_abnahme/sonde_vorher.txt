@@ -1,0 +1,66 @@
+
+== 1150 Fall A: "No" in Fahrt 1, "Yes" in Fahrt 2 ==
+  -- Fahrt 1 (Antwort No)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 484: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 484 y=-20224
+   [OK ] 1. Fahrt 1 oeffnet genau EIN Modal (nach No kein zweites in derselben Fahrt)
+   [OK ] 2. das Modal geht OBEN auf (y im Fenster (-5000,-1100])
+   nach No: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 3. nach No: kein Genommen-Flag, Prop sichtbar, Item nicht im Inventar
+   [OK ] 4. Fahrt 1 endet in der Parklage y=-20224 (Pos_set @0x109E)
+  -- Fahrt 2 (Antwort Yes)
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [FEHL] 5. Fahrt 2 oeffnet wieder genau EIN Modal
+   nach Yes: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0 (Platz -1)
+   [FEHL] 6. nach Yes: Flag (9,53), Prop weg, Item 0x40 im Inventar
+  -- Fahrt 3
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [FEHL] 7. Fahrt 3 oeffnet KEIN Modal, Item 0x40 genau einmal im Inventar
+
+== 1150 Fall B: "Yes" in Fahrt 1 ==
+  -- Fahrt 1 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 8. Fahrt 1: genau EIN Modal, danach Flag, Prop weg, Item im Inventar
+  -- Fahrt 2
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 9. Fahrt 2: KEIN Modal, keine zweite Aufnahme, Prop bleibt weg
+
+== 1151 Fall A: "No" in Fahrt 1, "Yes" in Fahrt 2 ==
+  -- Fahrt 1 (Antwort No)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 484: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 484 y=-20224
+   [OK ] 1. Fahrt 1 oeffnet genau EIN Modal (nach No kein zweites in derselben Fahrt)
+   [OK ] 2. das Modal geht OBEN auf (y im Fenster (-5000,-1100])
+   nach No: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0
+   [OK ] 3. nach No: kein Genommen-Flag, Prop sichtbar, Item nicht im Inventar
+   [OK ] 4. Fahrt 1 endet in der Parklage y=-20224 (Pos_set @0x109E)
+  -- Fahrt 2 (Antwort Yes)
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [FEHL] 5. Fahrt 2 oeffnet wieder genau EIN Modal
+   nach Yes: Flag(9,53)=0, Prop sichtbar=1, Item 0x40 im Inventar=0 (Platz -1)
+   [FEHL] 6. nach Yes: Flag (9,53), Prop weg, Item 0x40 im Inventar
+  -- Fahrt 3
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [FEHL] 7. Fahrt 3 oeffnet KEIN Modal, Item 0x40 genau einmal im Inventar
+
+== 1151 Fall B: "Yes" in Fahrt 1 ==
+  -- Fahrt 1 (Antwort Yes)
+   MESS Bild 134: Modal auf, Plattform y=-1105 (Modal Nr. 1 dieser Fahrt)
+   MESS Bild 466: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=1 (erstes Bild 134 y=-1105), geparkt Bild 466 y=-20224
+   [OK ] 8. Fahrt 1: genau EIN Modal, danach Flag, Prop weg, Item im Inventar
+  -- Fahrt 2
+   MESS Bild 395: Plattform wieder in der Parklage y=-20224
+   MESS Fahrt: thread=10, im Raum y von -301 bis -1215, Modale=0 (erstes Bild -1 y=0), geparkt Bild 395 y=-20224
+   [OK ] 9. Fahrt 2: KEIN Modal, keine zweite Aufnahme, Prop bleibt weg
+
+FEHLGESCHLAGEN — 6 Pruefung(en) gerissen
