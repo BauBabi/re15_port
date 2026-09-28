@@ -860,6 +860,14 @@ void re15_audio_re2_elevator_se(int se_id)
     (void)se_id;   /* TODO(psx): ELEVSE.VBS in die SPU + se_id spielen */
 }
 
+/* ⛔ RE2-ERGAENZUNG (kein RE1.5-Original): der Kartenhinweis-Ton aus
+ * shared_assets/RE2/HINTSE.VBS, se_id 0x2B (RE2 FUN_8006F1C4 @0x8006F234-38, Belege in
+ * re15_audio.h). PSX-SPU-Pfad = Folge-Stub wie re15_audio_re2_elevator_se. */
+void re15_audio_re2_hint_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): HINTSE.VBS in die SPU + se_id spielen */
+}
+
 /* RE2-Ergaenzung: Panel-Klick-Bank (RE2 ROOM2130 snd0, Belege in re15_audio.h).
  * PSX-SPU-Pfad = Folge-Stub wie bei den uebrigen SE-Baenken. */
 void re15_audio_re2_panel_se(int se_id)

@@ -32,6 +32,7 @@
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
 #include "re15_elev_se.h"  /* RE2-ERGAENZUNG: Satz-TOC der Fahrstuhl-Mini-Bank ELEVSE.VBS */
+#include "re15_map_hint.h" /* RE2-ERGAENZUNG: Satz-TOC der Kartenhinweis-Mini-Bank HINTSE.VBS */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -1194,6 +1195,79 @@ void re15_audio_re2_elevator_se(int se_id)
     if (!g_audio.initialized) return;
     if (!load_re2_elev_se_pc()) return;
     se_play_layers(s_elev_edt, &s_elev_vab, s_elev_decoded, s_elev_decoded_len, se_id);
+}
+
+/* ===== 5b. Bank-Slot: RE2-KARTENHINWEIS (HINTSE.VBS) =========================
+ * ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL (Runde 30, Thema B). Belege im Kopf von
+ * engine/src/map_hint_common.c und bei re15_audio_re2_hint_se in re15_audio.h. Kurz:
+ * RE2s Hinweis-Zeichner FUN_8006F1C4 spielt Se(Bank 2, Satz 0x2B) (@0x8006F234-38);
+ * die Welle (ROOM3010.RDT VAG 18 @0x39788, 4480 B) liegt in keiner RE1.5-Datei.
+ * Bauart = Kopie des Fahrstuhl-Slots darueber: dasselbe Satzformat
+ * [SE-Map @0 .. vh_off)[VH "pBAV"][Trailer, u32 vh_off @edt_size-8][VBD], dieselben
+ * Decoder (re15_vab_parse / re15_edt_decode / se_play_layers), eigene Groessen aus
+ * re15_map_hint_bank_rec() (engine/src/gen/re2_hint_bank.inc). */
+static int        s_hint_loaded = 0;
+static int        s_hint_failed = 0;
+static re15_vab_t s_hint_vab;
+static uint8_t   *s_hint_edt = NULL;
+static int16_t   *s_hint_decoded[RE15_VAB_MAX_SAMPLES];
+static int        s_hint_decoded_len[RE15_VAB_MAX_SAMPLES];
+
+static int load_re2_hint_se_pc(void)
+{
+    if (s_hint_loaded) return 1;
+    if (s_hint_failed) return 0;
+    s_hint_failed = 1;                      /* nur EIN Versuch, danach still stumm */
+
+    re15_map_hint_bank_rec_t rec;
+    re15_map_hint_bank_rec(&rec);
+
+    int sz = 0;
+    uint8_t *vbs = re15_pc_read_re2("HINTSE.VBS", &sz);
+    if (!vbs) {
+        fprintf(stderr, "[hintse] shared_assets/RE2/HINTSE.VBS fehlt -> Kartenhinweis stumm
+");
+        return 0;
+    }
+    if ((unsigned)sz < rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }
+
+    uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
+    if (!edt) { free(vbs); return 0; }
+    memcpy(edt, vbs + rec.edt_off, rec.edt_size);
+
+    /* VH-Offset = Trailer-u32 @[edt_size-8] (FUN_8005a09c, wie beim Fahrstuhl). */
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]         | ((uint32_t)edt[rec.edt_size-7] << 8)
+                    | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
+    if (vh_off + 0x20u > rec.edt_size ||
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_hint_vab) != 0) {
+        free(edt); free(vbs); return 0;
+    }
+
+    const uint8_t *vb = vbs + rec.vbd_off;
+    for (int i = 0; i < s_hint_vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
+        uint32_t off = s_hint_vab.samples[i].offset, vsz = s_hint_vab.samples[i].size;
+        if (off + vsz > rec.vbd_size) continue;
+        size_t cap = (vsz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        int n = re15_vag_adpcm_decode(vb + off, vsz, pcm, cap);
+        s_hint_decoded[i]     = pcm;
+        s_hint_decoded_len[i] = n;
+    }
+    free(vbs);
+    s_hint_edt    = edt;
+    s_hint_loaded = 1;
+    s_hint_failed = 0;
+    return 1;
+}
+
+/* Der Kartenhinweis-SE. se_id ist RE2_HINT_SE = 0x2B. Gerufen aus
+ * engine/src/map_hint_common.c (je roter Phase einmal). */
+void re15_audio_re2_hint_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (!load_re2_hint_se_pc()) return;
+    se_play_layers(s_hint_edt, &s_hint_vab, s_hint_decoded, s_hint_decoded_len, se_id);
 }
 
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
