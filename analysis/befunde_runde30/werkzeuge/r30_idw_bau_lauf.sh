@@ -10,7 +10,8 @@
 # Umgebung (optional): SPIELER="x,z,rot" (Standard -20500,-24500,0 = weit weg vom Tisch),
 #   SERIE (Framedump-Serie, Standard 400-600/100), SEK (Wanduhr, Standard 40),
 #   PAD_AT (RE15_PAD_AT, Tastenflanken), EXIT (RE15_EXIT_AT), JUMP_AB (Standard 240),
-#   EXE (Pfad der exe), EXTRA_SET_FLAG (weitere Bits fuer RE15_SET_FLAG).
+#   EXE (Pfad der exe), EXTRA_SET_FLAG (weitere Bits fuer RE15_SET_FLAG),
+#   RAUM (Sprungziel, Standard 1150 - fuer die Bestandsprobe in anderen Raeumen).
 #
 # Bilder: RE15_FRAMEDUMP (Readback vor SDL_RenderPresent, beschleunigter Renderer).
 # KEIN RE15_AUTOSHOT, KEIN RE15_SOFTWARE_RENDER. Der Prozess endet ueber timeout am EIGENEN
@@ -32,8 +33,8 @@ export RE15_ASSET_ROOT="$WROOT/re15_port/shared_assets/PSX"
 export RE15_CD_ROOT="$WROOT/re15_port/shared_assets/PSX"
 export RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_IRONS_LOG=1
 export RE15_TITLE_SHOT="title.bmp" RE15_TITLE_SHOT_AF=2
-export RE15_DEBUG_JUMP="1150@${JUMP_AB:-240}"
-export RE15_PLAYER_POS="$SPIELER"
+export RE15_DEBUG_JUMP="${RAUM:-1150}@${JUMP_AB:-240}"
+if [ "$SPIELER" != "keine" ]; then export RE15_PLAYER_POS="$SPIELER"; fi   # "keine" = Tuer-Spawn des Sprungs
 if [ "$CUT" != "auto" ]; then export RE15_FORCE_CUT="$CUT"; fi
 export RE15_FRAMEDUMP="${SERIE:-400-600/100}:f_"
 FLAGS=""
