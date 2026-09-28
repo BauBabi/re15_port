@@ -250,8 +250,72 @@ eigene Sperre (`22 02 07 01` @0x01736).
 
 ## 6. Abnahme
 
-(laufend)
+### 6.1 Echte exe, derselbe Eingabelauf wie §4 (Commit bffb34b9)
+
+`generator_belege/nachher_panel_F1180-1236.log`, Auszug:
+
+```
+F1182 cut=10 aktiv=1 maske=145 wert=60 geloest=0 msg=0 bestaet=0 ruhe=30 panelsperre=0
+F1183 cut=10 aktiv=1 maske=155 wert=61 geloest=0 msg=0 bestaet=0 ruhe=0  panelsperre=1   <- letztes Schalterbit, Sperre sofort
+F1201 cut=10 aktiv=1 maske=155 wert=79 geloest=0 ...             ruhe=0  panelsperre=1
+F1202 cut=10 aktiv=1 maske=155 wert=80 geloest=0 ...             ruhe=0  panelsperre=1   <- letzter Zeigerschritt (k)
+F1203 cut=10 ...                wert=80 geloest=0 ...             ruhe=1  panelsperre=1
+F1232 cut=10 ...                wert=80 geloest=0 ...             ruhe=30 panelsperre=1   <- Stillstand voll, Sperre haelt bis zur Abnahme
+F1233 cut=10 aktiv=0 wert=80 geloest=1 strom=1 padsperre=1 msg=1 bestaet=1               <- ABNAHME = k+31 (RE2-Soll)
+F1234 cut=8  ...    wert=80 geloest=1 ...                                                 <- Kamera weg, Zeiger bleibt 80
+```
+
+Streifen `generator_belege/nachher_streifen.png` (RE15_FRAMEDUMP, Readback vor Present; oben
+das volle Bild, unten die Skala dreifach): F1184 (62, faehrt), F1201 (79), F1202 (80),
+F1232 (80, 30 Bilder Stillstand, keine Meldung), F1233 (80, das "P" von "Power supply OK."
+tippt, Ton), F1234 (Cut 8). Gegenstueck `vorher_streifen.png`: F1184 Meldung bei 62.
+
+### 6.2 Riegel `unit_r31_generator` (re15_port/tests/unit/r31_generator.c)
+
+A Anker (@0x012E6/@0x012EA/@0x012B6 in 11F0 und 11F1, 11F1 byte-identisch) — B Reihenfolge
+(80 im Bild 19, Abnahme/4:243/Ton genau im Bild 50 = 19+31, Zeiger bleibt 80) — C falsche
+Stellungen (60->90 faehrt DURCH die 80 und loest nicht aus; Loesung/weg/Loesung startet die
+30 neu) — D Eingabesperre (49 Bilder HOCH+QUADRAT gehalten: dz=0, 0 Schalterwechsel; davor
+und danach dz=600) — E Wiedereintritt nach dem Loesen (sofort 80, keine Sperre, kein zweiter
+Ton) — F ROOM11F1 wie 11F0. Ergebnis: ALLES GRUEN (0 Fehler).
+
+Der SOLL-Stillstand steht im Riegel als Zahl 30 mit Beleg (@0x0171D), nicht als Port-Makro —
+die erste Fassung benutzte das Makro und lief beim Rueckbau 30 -> 0 GRUEN durch
+(selbstbestaetigende Metrik, Memory `reai-v2-selbstbestaetigende-metrik`); behoben.
+
+**Rueckbau-Nachweis (gefahren, nur das Sondenziel gebaut, danach zurueckgesetzt):**
+
+| Rueckbau | Ergebnis |
+|---|---|
+| op_evt_exec-Haken aus (`if (0 && ...)`) | 7 FAIL (B: Abnahme waehrend der Fahrt, C, F) |
+| `RE15_PANEL_RUHE_BILDER` 30 -> 0 | 13 FAIL (B: Konstante, Stillstand, k+31; C; D; F) |
+| Pad-Maske in game_step_common.c aus | 4 FAIL (D: Cursor bewegt sich, Schalter kippt, Folgefehler) |
+| Original | ALLES GRUEN |
+
+### 6.3 Angepasster Bestands-Riegel
+
+`probe_gen_11f0` (ctest `unit_gen_11f0_switches`) M6 erwartete die Abnahme nach 8 VM-Bildern.
+Das ist genau das Verhalten, das der Nutzer abgestellt haben will; M6 prueft jetzt: nichts in
+den ersten 8 Bildern, Abnahme im Bild (Zeiger 80) + 31, danach 4:238 und 4:243 gesetzt. Der
+Zeiger-Tick laeuft dort von Hand mit, weil die Sonde nur `scd_vm_tick` faehrt.
+
+### 6.4 Suite
+
+(folgt nach dem Lauf)
 
 ## 7. Offen
 
-(laufend)
+- **PSX-Ziel nicht gebaut** (kein PSn00bSDK-Lauf in dieser Runde). Die Aenderung liegt nur in
+  gemeinsamen Engine-Dateien (`panel_zeiger_common.c`, `scd_vm.c`, `game_step_common.c`),
+  keine Plattformdatei.
+- **RE2 dreht die Kamera VOR dem "OK" zurueck** (`29 04` @0x0172C), RE1.5s sub18 schaltet auf
+  Cut 8 und zeigt dann die Meldung (@0x0173A/@0x01742). Beibehalten: die Abnahme-Reihenfolge
+  NACH dem Stillstand ist RE1.5s eigenes sub18. Im Bild der Abnahme (F1233) tippt das erste
+  Zeichen noch ueber Cut 10, weil der Cut-Wechsel erst im Folgebild dargestellt wird — war vorher
+  genauso (F1184).
+- **Meldung 3 "Power supply incorrect."** (RDT @0x1909) wird von keinem Sub benutzt. RE2 meldet
+  Fehlstellungen nur nach dem fuenften Schalter; RE1.5 hat keinen solchen Abschluss-Moment.
+  Nicht Teil des Auftrags, nicht angefasst.
+- **Stillstand auch nach Nicht-Loesungs-Schaltern** (30 Bilder Sperre nach jeder Aenderung) ist
+  die RE2-Reihenfolge (@0x012A4 hinter JEDEM Schalter). Sollte der Nutzer das als zu traege
+  empfinden, ist es genau diese eine Stelle (`s_ruhe`-Rueckstellung bei Maskenwechsel).
