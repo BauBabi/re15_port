@@ -1066,3 +1066,142 @@ Offen bleibt:
 | `build/r30_irons-diary-dokument/vergleich_FILE08_p01_gegen_FILE25_p01.png` | Original gegen Prototyp |
 | `build/r30_irons-diary-dokument/port_heute_*` | Abzüge und Dekodierung des heutigen Stands |
 | `build/r30_irons-diary-dokument/re2_ST0_blatt2_clut49{0,2}.png` | ⛔ überholt (falsche CLUT-Zeilen, s. 3.4) |
+
+---
+
+## 10. UMSETZUNG (Bau, Zweig worktree-wf_b4b268f3-d12-4)
+
+Stand: aufgesetzt auf master d98e9639. Commits: 946c1978 (S7 Seitenbilder), 27857b80 (WIP des
+ersten Bau-Agenten, ungeprüft gesichert), 1c9b8768, 9b1a83b1, 0031e8c9, 4a6d947b und dieser
+Nachtrag (Fortsetzung). Die Fortsetzung hat den WIP gebaut (0 Fehler) und die Suite gefahren,
+BEVOR sie weiterschrieb: 358 von 360 grün, rot nur `unit_inv_fsm` und `unit_r26_inventar` (beide
+hielten den alten Stand fest). Jetzt **362 von 362** (master 360 + `unit_r30_irons_diary_dokument`
++ `unit_r30_irons_diary_ablauf`).
+
+### 10.1 Ausgangszustand — selbst nachgemessen
+
+Eigener Bau von master d98e9639 (Sparse-Arbeitsbaum im Notizverzeichnis), die Sonde von master
+unverändert gefahren (im Arbeitsbaum:
+`build/r30_irons-diary-dokument/umsetzung/sonde_ausgangszustand_master_d98e9639.txt`):
+
+| Größe | master d98e9639 | jetzt |
+|---|---|---|
+| vorinstallierte Namen in der FILE-Liste | 21 (1 + 10 + 10) | 0 bei leerer Liste, 1 nach `re15_files_add(0)` |
+| Leser, Liste 0/Zeile 0 gegen Liste 2/Zeile 7 | 394 Ops, BITGLEICH | Bild-Dokument: 5 Ops (Fußzeile 4 + Pfeil 1), zwei Dokumente verschieden |
+| CLUT-Farbe 0x0000 bei Index ≠ 0, deckend gezeichnet | 7410 von 7410 | 0 von 7410 |
+| Seitenzahl | Port 6 (FILE08), Titel zweimal | Diary 18 = max_page 17 + 1; Seite 0 = Titelseite, p ≥ 1 = p‹p› |
+| `sizeof(re15_savedata_t)` / Prüfwort / Version | 904 / @900 / 8 | 944 / @940 / 9 |
+
+Tragende Adressen vor dem ersten Edit selbst disassembliert (Sprungziel, richtige Datei):
+RE2 `FUN_800692dc` @0x800692dc-0x80069318 (Rückgabe = Platz; voll → 0 aus `sltiu` @0x80069308),
+@0x80071bbc/@0x80071d04, @0x80071d8c-94, @0x80071df0-f4, @0x80072830-54, @0x800728a8-f4,
+@0x80072918-88, @0x80072b0c-bfc, @0x80076170-84, @0x80072584-94, @0x8002bda8-dd8,
+@0x8006ce68-9c, @0x8006cf58-70; RE1.5 DEBUG.BIN Maske/Basis/Titel/Skript 5/„Chris' Diary"/Blob
+(Dateioffsets wie 2.5), @0x800c7610-24, @0x800c7868-80, @0x800c6f94, @0x800c704c-74;
+RE1.5 PSX.EXE `FUN_80027e68` Bank 0x100 → (0x22, 0xb4) @0x80027eec/@0x80027f14, Schreibmaschine
+@0x800281a0-38. Alle Werte wie im Plan.
+
+### 10.2 Gebaut, je Plan-Schritt
+
+| Schritt | Stand | Wo |
+|---|---|---|
+| S0.1 Speicher-Version | erledigt: Vertrag v9 wortgleich (Felder, Namen, Feld-Kommentare, Hebung in EINEM Schritt, fremdes Feld mit `/* R30-VERTRAG: fremdes Feld */` in Erfassung, Hebung, Wiederherstellung) | `include/re15_savedata.h`, `engine/src/re15_savedata.c` |
+| S0.2 Item-Id 0x48 | erledigt: `RE15_FILES_FIRST_ITEM_ID 0x48` | `include/re15_files.h` |
+| S1 Liste + Tabelle | erledigt | `include/re15_files.h`, `engine/src/re15_files.c`; Rücksetzen beim neuen Spiel `re15_gameflow.c` |
+| S2 Speicherstand | erledigt; Hebung v7/v8 → v9 (v7 verwirft wie bisher die Besucht-Bits) | `re15_savedata.c` |
+| S3 Liste dynamisch | erledigt; alle drei Listenseiten „Files"; leerer Platz öffnet nicht, kein Ton | `re15_inv_screen.c` `emit_file_list`, `menu_common.c` `file_mode` |
+| S4 Leser für Bild-Dokumente | erledigt; Unterlage schwarz → Illustration (100,60) → Textseite (25,30) → RE1.5-Pfeile/Fußzeile; Durchsicht = FARBE 0x0000 | `re15_inv_screen.c`, `inv_render_pc.c`, `re2doc_common.c`, `main.c` |
+| S5 Aufheben | erledigt; Weiche in BEIDEN Item-Zweigen VOR `re15_item_modal_start` | `aot_common.c` `aot_item_dokument`, `menu_common.c` |
+| S6 Töne | erledigt (Tabelle 3.6, fett gesetzte Zellen) | `menu_common.c` |
+| S7 Bilddaten | erledigt (946c1978), 20 TIM byte-gleich der Bau-Ausgabe (md5 je Datei) | `shared_assets/RE2/FILES/FILE25_*` |
+| S8 Riegel | erledigt | s. 10.4 |
+
+**SCHNITTSTELLE für die Folgespur irons-diary-welt** (so gebaut):
+
+```c
+void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id);   /* re15_menu.h */
+```
+
+fordert den Leser an (doc = Nummer der Dokument-Tabelle, 0 = Irons Diary = Item-Id 0x48). Der
+Leser öffnet ohne Abfrage auf der Titelseite; das Dokument hängt da schon an der Liste. Nach dem
+Schließen steht „The Irons Diary has been filed." (RE1.5-Skript 5 @0x800c506f, Lage (0x22,0xb4));
+ERST nach dem Bestätigen, im selben Bild und in RE2s Reihenfolge: AOT-Slot `aot_slot` inaktiv
+(@0x80072b40), Flag (9, `taken_bit`) gesetzt (@0x80072b8c), Prop `obj_id` ausgeblendet
+(`scd_prop_hide_by_obj_id`, @0x80072bb0), Ton Satz 5 (@0x80072bf0-f8), dann schließt das Menü.
+`taken_bit <= 0` = kein Flag, `aot_slot < 0` = keine Zone, `obj_id < 0` oder 0xFF = kein Modell.
+Im Aufnahme-Pfad (`aot_common.c`, Sofortzündung `re15_aot_fire_slot` UND Scan `re15_aot_scan`)
+zweigt jede Item-Zone mit `item_type >= 0x48` VOR `re15_item_modal_start` dorthin ab; für eine
+Id ≥ 0x48 ohne Tabelleneintrag geschieht nichts (das Item-Modal startet für ≥ 0x48 nie).
+Messen ohne Welt-Prop: `RE15_DOC_REQUEST="<bild>[:<doc>[:<taken_bit>[:<aot_slot>[:<obj_id>]]]]"`
+(dazu `RE15_PAD_AT`, `RE15_DOC_LOG`, `RE15_DOC_EXIT_AT`; alle nur Messhaken in `main.c`, die
+Ausgabe landet in `debug.log` neben der exe).
+Hinweis an die Folgespur: RE2 räumt bei Bit 0x80 von Platzierungs-Byte 7 zusätzlich an das
+Weltmodell gebundene Effekte ab (`FUN_8001cefc(5, …)` @0x80072bb4-bec, Tabelle 0x800d8cf0,
+0x60 × 0x7c, Löschen @0x8001cf14-4c); die Port-Schnittstelle trägt dieses Byte nicht. Hängt
+irons-diary-welt dem Prop einen Effekt an, muss der dort mit weg.
+
+### 10.3 Abweichungen vom Plan und Berichtigungen des WIP
+
+1. **Abräum-Reihenfolge.** Der WIP setzte Flag, Zone, Weltmodell. Selbst disassembliert ist RE2s
+   Folge Zone (@0x80072b40, Verzögerungsplatz), Flag (`jal 0x8007730c` @0x80072b8c), Weltmodell
+   (@0x80072bb0). Berichtigt (4a6d947b); gemessen über die neue Messschiene
+   `re15_menu_doc_trace_folge`.
+2. **Riegel B der Sonde** verglich den alten Textleser auf Seite 0 mit der auf Seite 1
+   gemessenen 394 (die Sonde von master misst mit `file_reader_page = 1`). Jetzt Seite 1; 394.
+3. **Port-Wahlen** jetzt wörtlich „Port-Wahl, keine Original-Adresse" mit Messung: Bild-Satz 25,
+   max_page 17 (am Satz gemessen), Titel 0 auf allen Listenseiten, Platz = Seite·10 + Zeile,
+   EIN Bild zwischen Satz 6 und Satz 8 beim Öffnen aus der Liste.
+4. **Bestehende Wachen mitgezogen** (Grund je Stelle im Test): `test_inv_fsm.c` Welle F (Liste
+   mit Irons Diary auf Platz 0, 11 statt 12 Glyphen; Seite 1 leer mit „Files"; der
+   '&'-Digraph-Beleg der RE1-Namen ist über die Liste nicht mehr erreichbar; leerer Platz
+   öffnet nicht; Öffnen über Zustand 7 mit SE 6 dann SE 8; Ende-Stellung 18; LINKS aus der
+   Ende-Stellung stumm; VIERECK/KREUZ in der Ende-Stellung SE 6), `probe_r26_inventar.c` B4
+   (Dokument-Id 0x48 ausgenommen, neu B5: Skript 5 mit Tabellennamen), `test_re2doc_bildebene.c`
+   (Satz 25 gegen die Port-Tabelle), `tools/gen_inv_file_doc.py` (nur Modul-Kommentar; Zensus
+   erneut gefahren, `gen/inv_file_doc.inc` byte-gleich).
+5. **Fußzeile im Intro-Raum halb verdeckt.** In ROOM1240 (Startraum der Messläufe, Kinematik)
+   schneidet die Letterbox die Fußzeile „1/18" bei y 216 ab — das tat sie auf master beim
+   Textleser genauso (`port_heute_leser_F84.png`). In ROOM1100 steht sie ganz. Nicht geändert.
+
+### 10.4 Abnahme — gemessen
+
+| Messung | Soll | Ist |
+|---|---|---|
+| Sonde A: Namen bei leerer Liste / nach `re15_files_add(0)` | 0 / 1 | 0 / 1 (Name 11 Glyphen, alle Seiten „Files") |
+| Sonde A: Archiv der Originalmaske | 21 | 21, Basis 48 52 5c, 0x48 = „Chris' Diary" |
+| Sonde C: deckend gezeichnete 0x0000-Texel FILE08 / FILE25 / 19 Diary-Seitendateien | 0 | 0 / 0 / 0 (bei 118 977 sichtbaren) |
+| Sonde C: Seitenzahl | 18 | 18; p17 da, p18 nicht |
+| Speicherstand: sizeof / visited_floor / files / checksum | 944 / 900 / 916 / 940 | 944 / 900 / 916 / 940 |
+| Rundlauf über .mcr | Platz 0 = Dokument 0 | Platz 0 = 0, 1 belegt |
+| Hebung v8 → v9 an der Speicherkarte des Nutzers (`nutzer_marken/re15_card_nutzer_2026-09-27.mcr`) | alle Plätze v9, 24 × 0xFF | 4 von 4 (roh v8), visited_floor 0, Prüfwort neu |
+| Hebung v7 → v9; verfälschter v8-/v9-Block | gehoben / abgewiesen | gehoben (Besucht-Bits verworfen) / abgewiesen |
+| Reihenfolge beim Aufheben (Folgenummer) | anhängen < schließen < Meldung weg < Zone < Flag < Weltmodell | 1, 2, 3, 4, 5, 6; Bild 1 / 42 / 132 / 132 / 132 / 132 |
+| Item-Modal während des ganzen Aufhebens | nie aktiv | nie aktiv |
+| Töne beim Aufheben bis zum Lesen | nur Satz 8, nach der Blende | nur Satz 8, im ersten Fahrbild (Bild 18 nach der Anforderung) |
+| Framedump Leser gegen `FILE25_*_page_schirm.png`, sichtbare Referenzpixel gleich (5 Bit) | alle, außer unter RE1.5s Pfeilen | Titel 7069/7069, p01 13377/13385, p02 14427/14440, p03 8833/8833, p04 13791/13798; alle 28 Abweichungen unter dem linken Pfeil (x 34–35, y 112–127) |
+| Grund außerhalb Pfeilen und Fußzeile | (0,0,0) | 0 nicht-schwarze Pixel in allen fünf Abzügen |
+| Leser aus der Liste geöffnet (ROOM1100, Titel) | wie beim Aufheben | 7069/7069, 0 fremde Pixel außerhalb Pfeil/Fußzeile |
+| `r30_diary_satz_pruefung.py` gegen die KOPIERTEN Dateien | ALLE PRÜFUNGEN BESTANDEN | bestanden: 427 von 427 Wörtern, 8 Daten am Seitenkopf, 0 Kernpixel ohne Glyphe |
+| FILE-Reiter mit leerer Liste (Framedump F74) | keine vorinstallierten Namen | 10 Unterstrich-Zeilen, Titel „Files"; VIERECK auf leerer Zeile 0 (F84): Liste bleibt, Zustand 1 |
+| FILE-Reiter nach dem Aufheben (ROOM1100, F2050) | „Irons Diary" auf Zeile 0 | „Irons Diary", Zeilen 1–9 Unterstriche |
+
+Abzüge (Framedump, beschleunigter Renderer, 960×720) im Arbeitsbaum unter
+`build/r30_irons-diary-dokument/umsetzung/`: `leser_aufheben_titel_F74.png`,
+`leser_aufheben_p01_F99.png` … `leser_aufheben_p04_F174.png`, `meldung_filed_F249.png`,
+`file_liste_leer_F74.png`, `file_liste_leer_viereck_F84.png`,
+`file_liste_nach_aufheben_R1100_F2050.png`, `leser_aus_liste_titel_R1100_F2080.png`,
+Vergleichswerkzeug `vergleich.py` mit Ausgabe `vergleich_framedump_gegen_schirm.txt`,
+`satz_pruefung_kopierte_dateien.txt`.
+
+### 10.5 Nicht gemessen / offen
+
+1. **Kein Bild vom laufenden RE2** (wie Abschnitt 8.1); verglichen wurde gegen die
+   RE2-Schirmvorschau aus Code und Texeln.
+2. **Hörprobe** der Töne: gemessen ist, WELCHER Satz an welcher Stelle ausgelöst wird
+   (`g_test_core_se_last`), nicht der Klang (alle Läufe mit `RE15_NOAUDIO`).
+3. **Welt-Weg** über eine echte Item-Zone im Raum: das Prop auf dem Tresen baut die Folgespur
+   irons-diary-welt; gemessen ist die Zone im Riegel (`re15_aot_fire_slot` mit `item_type 0x48`)
+   und die Anforderung per `RE15_DOC_REQUEST` im laufenden Spiel.
+4. **PSX-Ziel und Android** nicht gebaut. Android: `engine/src/re15_files.c` ist neu — `app/.cxx`
+   friert die GLOB-Liste ein, vor dem Paket frisch konfigurieren.
+5. **Paket:** `FILE25_*` muss unter `RE2/FILES/` neben der exe liegen.
