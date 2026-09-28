@@ -75,6 +75,7 @@ function(licht_lauf _name _cut _genommen _out_ppm)
     re15_start_spiel(_rv 180
         RE15_NO_INTRO=1
         RE15_NOAUDIO=1
+        RE15_WINDOW_SCALE=3
         RE15_CONTINUE_TEST=1
         RE15_CARD_AUTO=1
         RE15_CARD_SLOT=0
