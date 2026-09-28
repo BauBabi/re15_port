@@ -3,7 +3,7 @@
 Alle neun Befunde Ihrer letzten Runde sind gebaut, dazu vier Fehler, die erst beim Bauen
 aufgefallen sind. Jede Aenderung wurde von einem zweiten, unabhaengigen Agenten gegengeprueft,
 der gezielt versucht hat, sie zu widerlegen. Dazu kommt aus einer zweiten, parallelen
-Arbeitssitzung die Tuersequenz des Tors am Landeplatz (eigener Abschnitt unten). Suite 360 -> 403/403.
+Arbeitssitzung die Tuersequenz des Tors am Landeplatz (eigener Abschnitt unten). Suite 360 -> 405/405.
 
 ## Was Sie merken
 
@@ -44,15 +44,17 @@ selbst ist zunaechst verschlossen und braucht die Blue Keycard.
 
 **Irons Diary liegt auf seinem Tisch** — an Ihrer roten Marke, genau auf dem gemalten
 Klemmbrett. Das Weltmodell ist RE2s Buch (room10E0), die Seiten stehen auf FILE08-Papier:
-Titel "IRONS DIARY" und 17 Textseiten, jedes Datum beginnt eine neue Seite, Ihr Text Wort fuer
-Wort (427 von 427 Woertern zurueckgelesen). Aufheben oeffnet wie in RE2 sofort den Leser,
+Titel "IRONS DIARY" und 15 Textseiten mit Ihrem ENGLISCHEN Text, jedes Datum beginnt eine
+neue Seite, Wort fuer Wort (408 von 408 Woertern aus den fertigen Seiten zurueckgelesen). Aufheben oeffnet wie in RE2 sofort den Leser,
 blaettern geht wie in RE2, nach dem Schliessen kommt "The Irons Diary has been filed." und
 das Buch verschwindet vom Tisch. Die Toene sind RE2s (Bank 4, Saetze 4/5/6/8; CORE00 ist in
 beiden Spielen bytegleich).
 * Die 21 vorinstallierten FILE-Eintraege ("Albert Wesker", "Umbrella File 9" ...) sind weg.
   Die Liste beginnt leer und wird im Spielstand mitgespeichert.
-* ⛔ Umlaute und ß gibt es im englischen RE2-Satz nicht; sie sind aus den Grundzeichen
-  konstruiert.
+* Jedes Zeichen stammt aus den Glyphen der RE2-Originalseiten; konstruierte Zeichen gibt es
+  im englischen Text keine mehr.
+* Drei Seiten tragen nur einen Zeilenrest ("earth is going on?", "can.", "hope you make it
+  out alive!") — Folge des RE2-Seitenrasters mit 9 Zeilen, in dem jedes Datum neu beginnt.
 * Die Blaetterpfeile stehen jetzt an RE2s Stelle und in RE2s Gruen — vorher hat der linke
   Pfeil auf 12 von 17 Seiten den ersten Buchstaben einer Zeile verdeckt.
 
@@ -107,6 +109,17 @@ Leon ist bitgleich geblieben (15 Bilder, 0 abweichende Pixel).
   Sicherung.
 * Sagen Sie "No", bietet die naechste Fahrt des Tisches sie wieder an (wie im Original, das
   eine abgelehnte Aufnahme scharf laesst, @0x8001e068-0x8001e0ec).
+
+**Neben der Sicherung liegt eine Handgranate** und faehrt mit hoch (Item 0x09 "Hand Grenade",
+die einzige Granate mit Wurf, @0x8003368c). Nach dem Modal der Sicherung kommt ihres; jede hat
+ihr eigenes Flag, "No" bei der einen laesst die andere unberuehrt, und auch nach dem Laden
+eines Spielstands ist sie da. Ein liegendes Granatenmodell gibt es in RE1.5 nicht — das Modell
+ist die Granate aus Leons Hand-Netz dieser Waffe (PL00W09.PLW), mit den Original-Farben.
+Menge 1 (Port-Wahl: RE1.5 platziert die Granate nirgends).
+* ⛔ **Werfen geht noch nicht richtig:** Ausruesten, Wurfanimation und Abzug laufen, aber Flug,
+  Abprall und Explosion fehlen im Port (drei Effekt-Routinen des Originals, @0x8001843c /
+  @0x80018320 / @0x8001854c, wurden nie nachgebaut); der Schaden faellt bisher schon beim
+  Abziehen. Das ist der erste Punkt der naechsten Runde.
 
 **Kein Ein-Bild-Blitz mehr beim Kamerawechsel.** Am Telefon in Irons' Office erschienen Buch
 und Karte fuer ein Bild gross und dunkel; derselbe Fehler liess vorher das Spielermodell an
@@ -188,6 +201,7 @@ Die Agenten haben alle drei an den Daten widerlegt.
 
 ## Was bewusst offen blieb
 
+* ⛔ **Der Wurf der Handgranate** (Flug, Abprall, Explosion) fehlt, siehe oben.
 * ⛔ **ROOM3071 ist fuer Elza ein Softlock** — gefunden bei der Birkin-Messung, schon vor
   dieser Runde vorhanden. Nach der Freigabe wartet das Skript auf zwei Flags (Ck(5,31) @0x0364D,
   danach Ck(5,30)), die nur Birkins Sturmangriff setzt (@0x80119658 / @0x801197b4). Der Port
@@ -207,7 +221,7 @@ Die Agenten haben alle drei an den Daten widerlegt.
 
 ## Woran ich als naechstes sitze
 
-**ROOM3071** (Elzas Birkin-Kampf) spielbar machen, dann Birkins Griff (Opfer-FSM) und danach
+**Den Granatenwurf** nachbauen und **ROOM3071** (Elzas Birkin-Kampf) spielbar machen, dann Birkins Griff (Opfer-FSM) und danach
 Elzas Raumkette weiter nachfahren.
 
 # v0.8.15 - 2026-09-27
