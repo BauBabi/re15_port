@@ -361,3 +361,60 @@ Die übrigen 9 Spawns (3070/3071/3080/5090/5091 und die 0x10-Spawns in 50E0/50F1
 - **Bildgenaue Parität der Drehung** (Ankunft F856 oder F857) gegen das Original: nicht gemessen, für die Frage ohne Belang.
 - **Die Summe der Opfer-FSM-Clip-Längen** (N1, Phasen [0]–[5] und [9]–[12]) ist nicht gemessen.
 - **Nur Zustandsprotokolle.** Kein Bildbeweis (Framedump/gdigrab) — die Befunde sind Zustands-, keine Bildbefunde.
+
+## 9 Nachbesserung 2: die Frost-Schranke (Befund des Gegenpruefers, selbst nachgeprueft)
+
+**Der Gegenpruefer hat recht, und Abschnitt 8.1 lag in seiner Kernaussage falsch.** Der Birkin in ROOM5080 laeuft im Original vor der Generator-Folge gar nicht los. Er wird auch nicht an der Nordwand geklemmt, denn die Wurzel erreicht die Klemme gar nicht. Bis zur Freigabe steht er auf seiner Spawnlage, mit grid 0x33, Zustand 1 und Sub 9. Der Port hatte diese Schranke im 0x30/0x36-Zweig nicht. N2 (Band aus +0x82) bleibt richtig, greift aber erst **nach** der Freigabe.
+
+### 9.1 Belegblock (selbst disassembliert, `re15_disasm.py`, STAGE*.BIN roh ab 0x80100000, ohne Header)
+
+**Registrierung der Wurzel.**
+- STAGE5 (`STAGE5_overlay.c:13134`): `_DAT_80072c6c = 0x80116a44`. Das ist 0x80072bac + 0x30*4, also Typ 0x30. STAGE5 registriert **kein** 0x36, die Adresse 0x80072c84 bleibt dort unbeschrieben.
+- STAGE3: @0x8011cf40 `addiu v0,v0,25136` (= 0x80116230), dann @0x8011cf48 `sw v0,11372(at)` (0x80072c6c, Typ 0x30) und @0x8011cf50 `sw v0,11396(at)` (0x80072c84, Typ 0x36).
+
+**Die Schranke am Wurzelanfang.**
+
+| | STAGE5 (0x80116a44) | STAGE3 (0x80116230) |
+|---|---|---|
+| Pause | @0x80116a4c `lw v0,-13760(v0)` (g_pauseflags 0x800aca40), @0x80116a50 `lui v1,0x2000`, @0x80116a64 `and`, **@0x80116a68 `bne v0,zero,0x80116eb8`** (Bytes `13 01 40 14`) | @0x80116238 / @0x8011623c / @0x80116250, **@0x80116254 `bne v0,zero,0x801166a4`** (`13 01 40 14`) |
+| Frost | @0x80116a74 `lw a0,-14460(a0)` (g_entity 0x800ac784), **@0x80116a7c `lbu v0,9(a0)`**, **@0x80116a84 `andi v0,v0,0x20`**, **@0x80116a88 `bne v0,zero,0x80116eb8`** (`0b 01 40 14`) | **@0x80116268 `lbu v0,9(a0)`**, **@0x80116270 `andi v0,v0,0x20`**, **@0x80116274 `bne v0,zero,0x801166a4`** (`0b 01 40 14`) |
+| Sprungziel | @0x80116eb8-0x80116ef0: `lh a1,442(v0)` (+0x1ba) / **@0x80116ecc `jal 0x8001b064`** mit @0x80116ed0 `addiu a0,a0,176` (+0xb0), dann nur Register-Restore und `jr ra` @0x80116eec | @0x801166a4-0x801166dc: dasselbe, **@0x801166b8 `jal 0x8001b064`**, `jr ra` @0x801166d8 |
+
+Das Sprungziel ist zugleich der gemeinsame Schwanz des normalen Pfads (STAGE5 @0x80116ea0-eb4 `sw v0,472(v1)`, danach faellt der Pfad nach 0x80116eb8 durch). Die Schranke ueberspringt also alles davor:
+- den Abstand zum Spieler (@0x80116ad8 SquareRoot0) und FUN_8001bd60 (@0x80116af0);
+- die Navigation 0x80039e7c (@0x80116bb8) und die Zaehler +0x1de/+0x1df (@0x80116bcc-c40);
+- den **Zustands-Dispatch** ueber die Tabelle @0x8011fe48 (@0x80116c60 `addiu at,at,-440` / @0x80116c70 `jalr v0`);
+- den Bild-Takt 0x8001b4e4 (@0x80116c78) und die Kontaktloeschung 0x8002b498 (@0x80116ca4);
+- die Koerperstoesse 0x8002aec4 und 0x8002b544 (@0x80116cb0 / @0x80116cb8);
+- die **SCA-Klemme `jal 0x8003b0a4` @0x80116cd8**, den Frame-SE 0x8001b38c (@0x80116ce0) und die Mutationspruefung (@0x80116cf4-e9c).
+
+**Was FUN_8001b064 tut:** Es zeichnet nur den Bodenschatten.
+- @0x8001b0e0 `lh a0,106(v0)` (+0x6a Blickrichtung) / @0x8001b0e4 `jal 0x800659d0` (RotMatrixY);
+- danach `jal 0x80067a28` / `0x80022da0` / `0x80066960` / `0x80068328` / `0x80014368` / `0x80065d10` (Matrix, Projektion, Primitiv);
+- @0x8001b328 `lbu a1,-13772(a1)` (Puffer-Index 0x800aca34) und @0x8001b350-360 `lw`/`and`/`or`/`sw v1,0(a0)` = das Einhaengen in die Ordnungstabelle.
+- Einen Store auf das Entity gibt es nicht (Katalog `RE15_FUN_CATALOG.md:221`: „character floor SHADOW draw").
+
+Im Port zeichnet `platform/pc/main.c` (Block „RE1.5 character shadow for this NPC — FUN_8001b064") den Schatten fuer jeden Aktor auf der Buehne, unabhaengig vom KI-Tick. Das Gegenstueck existiert also schon. Ein eingefrorener Birkin braucht im KI-Zweig **nichts** zu tun, damit er sichtbar in seiner Pose steht. Das Modell zeichnet der Renderer aus motion/anim_frame. Weil 0x30/0x36 in `re15_type_self_advances_anim` stehen (player_common.c), schaltet der globale Bild-Takt sie nicht weiter, genau wie im Original, wo 0x8001b4e4 nicht laeuft.
+
+**Der einmalige Wurzelaufruf beim Spawn** (Sce_em_set 0x800420a0, SCD-Tabelle @0x800744a8 [0x44]):
+- @0x80042564 `lbu v1,9(s0)`, **@0x8004256c `andi v0,v1,0xdf`**, **@0x80042570 `sb v0,9(s0)`** (Bytes `df 00 62 30 09 00 02 a2`): Bit 0x20 wird geloescht.
+- @0x80042578 `sw s0,-14460(at)` (g_entity := das neue Entity).
+- @0x8004257c-0x8004259c `lbu v0,8(s0)` / `sll v0,v0,2` / `addiu at,at,11180` (0x80072bac) / `lw v0,0(at)` / **`jalr v0`**: die Wurzel des Typs laeuft einmal.
+- Im Delay-Slot @0x800425a0 `andi s4,v1,0x20` (`20 00 74 30`) wird das alte Bit gemerkt.
+- @0x800425a4 `lh v0,16(s2)` = pc[18..19]. Nur wenn das ungleich 0 ist, folgt ein zweiter Aufruf mit +0x4 = 4 (@0x800425b8-f4). Alle 13 Birkin-Records tragen pc[18..19] = `00 00` (Zensus 9.3), der zweite Aufruf entfaellt also.
+- **@0x80042604 `or v0,v0,s4`**, **@0x80042608 `sb v0,9(s0)`** (`25 10 54 00 09 00 02 a2`): Das Bit wird zurueckgesetzt.
+
+Beim Spawn laeuft die Wurzel also genau einmal mit geloeschtem Bit durch den INIT (STAGE3 0x801166e0, STAGE5 +0x814):
+- @0x801166f8 `sb v0(=1),4(v1)`: Zustand 1;
+- @0x80116710 / @0x80116728: +0x1bc/+0x1be = Spielerlage;
+- @0x8011683c / @0x8011684c / @0x8011685c: +0x94 / +0x95 / +0x8f = 0;
+- @0x8011686c-78 `lbu v0,9(a0)` / `andi v0,v0,0xf` / `bne v0,v1(=3)`; bei Nibble 3 **@0x80116880 `sb v0(=0x10),149(a0)`** und **@0x80116890 `sb s0(=9),5(v0)`**: Sub 9 mit +0x95 = 0x10;
+- bei Nibble 1 @0x801168b8 `sb v0(=0xa),5(a0)` (Sub 10) und @0x801168d0 `ori v0,v0,0x8`.
+
+Danach steht der Birkin eingefroren in Zustand 1 / Sub 9 (bzw. Sub 10 bei grid 0x21 oder Sub 0 bei grid 0x24), bis das Bit geloescht wird.
+
+**Wer das Bit loescht:** Member_set (SCD 0x34) mit Index 0x0C schreibt +0x9 (Sprungtabelle @0x80010c8c, @0x800411f4 `sb a2,9(a0)`). Die Datei-Offsets je Raum stehen in 9.3.
+
+**Vorbild im Port:** Der Gorilla (0x27) hat die Schranke. Original STAGE1 @0x80116dec `lbu v0,9(v1)` / @0x80116df4 `andi v0,v0,0x20` / @0x80116df8 `bne v0,zero,0x80116e88`, im Port `re15_maggot_ai_tick` erste Zeile `if (e->grid_id & 0x20) return;`. Weitere Roots mit derselben Schranke im Port: der Zombie-Root `re15_enemy_ai_live_tick` (@0x80100450-5c) und die Zombie-Girl-Wurzel (@0x8010a8f4-900).
+
+**Pausebit 0x20000000 im Port:** `game_step_common.c` ruft `re15_enemy_ai_run_all` nur bei `!(g_re15_pauseflags & RE15_PAUSE_AI)` auf (Beleg-Kommentar dort, Zombie-Root @0x8010042c-3c). Fuer alle Roots zusammen ist die Pause-Haelfte der Schranke damit schon verdrahtet. Der Birkin-Zweig prueft zusaetzlich `s_ai_paused`, wie die anderen Roots.
