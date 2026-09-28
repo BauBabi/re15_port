@@ -4550,6 +4550,39 @@ re_title:;
                         g_inv_screen.file_bild, g_inv_screen.file_bildsatz,
                         re15_files_get(0));
             if (s_exit_frame >= 0 && (long)g_engine.frame_count >= s_exit_frame) running = 0;
+            /* MESS-HAKEN RE15_IRONS_LOG=1 (Runde 30, Thema E2, reine Diagnose, env-gegatet):
+             * in ROOM1150/1151 eine Zeile nach debug.log, sobald sich am Schreibtisch etwas
+             * aendert — Genommen-Bits (9,54)/(9,55), Aufhebe-Zonen Slot 7/8, Props obj 5/6,
+             * Menge Item 0x21 im Inventar, Platz 0 der FILE-Liste, Item-Modal und Menue.
+             * Die GUI-exe hat sonst keinen Blick auf diesen Zustand; die Abnahme im Spiel
+             * (analysis/befunde_runde30/werkzeuge/r30_idw_bau_lauf.sh) liest ihn hier ab.
+             * Aendert kein Verhalten. Herleitung: include/re15_irons_tisch.h. */
+            { static int s_il = -1; static long s_il_last = -1;
+              if (s_il < 0) s_il = getenv("RE15_IRONS_LOG") ? 1 : 0;
+              if (s_il && (g_current_room_id & 0xFFFEu) == 0x1150u) {
+                  int p5 = -1, p6 = -1;
+                  for (int k = 0; k < (int)g_scd.prop_count; k++) {
+                      if (g_scd.props[k].obj_id == RE15_IRONS_DIARY_OBJ_ID) p5 = g_scd.props[k].active;
+                      if (g_scd.props[k].obj_id == RE15_IRONS_KARTE_OBJ_ID) p6 = g_scd.props[k].active;
+                  }
+                  int ks = re15_inv_find_item(RE15_IRONS_KARTE_ITEM);
+                  int kq = (ks >= 0 && ks < RE15_INV_MAX_SLOTS) ? (int)g_inv.slots[ks].qty : 0;
+                  int f54 = re15_game_flag_get(9, RE15_IRONS_DIARY_TAKEN_BIT);
+                  int f55 = re15_game_flag_get(9, RE15_IRONS_KARTE_TAKEN_BIT);
+                  int z7 = g_aot.slots[RE15_IRONS_DIARY_AOT_SLOT].active;
+                  int z8 = g_aot.slots[RE15_IRONS_KARTE_AOT_SLOT].active;
+                  int l0 = re15_files_get(0), mo = re15_item_modal_active(), me = re15_menu_is_open();
+                  long zst = (long)f54 | ((long)f55 << 1) | ((long)z7 << 2) | ((long)z8 << 3)
+                           | ((long)(p5 + 1) << 4) | ((long)(p6 + 1) << 6) | ((long)(kq & 0xFF) << 8)
+                           | ((long)(l0 & 0xFF) << 16) | ((long)mo << 24) | ((long)me << 25);
+                  if (zst != s_il_last) {
+                      s_il_last = zst;
+                      fprintf(stderr, "[irons-tisch] F%u Raum %04x flag54=%d flag55=%d zone7=%d zone8=%d "
+                              "prop5=%d prop6=%d karte_menge=%d liste0=%d modal=%d menue=%d\n",
+                              (unsigned)g_engine.frame_count, (unsigned)g_current_room_id,
+                              f54, f55, z7, z8, p5, p6, kq, l0, mo, me);
+                  }
+              } }
         }
         /* RE15_INV_MAP_SHOT=1 (MAP wave): L1 at F31 = the instant MAP launch
          * (@0x8004980c-30: tab=1 + 25c1=1 + entry init/CD-load dispatch). FUN_8004c058:

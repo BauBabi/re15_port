@@ -253,7 +253,17 @@ int re15_item_is_key(uint8_t id)    { return id >= 0x22; }             /* max_st
  * dann spurlos verschwaende. */
 uint8_t re15_pickup_menge_nutzer(uint8_t item_id, uint8_t menge)
 {
-    if (!re15_item_is_ammo(item_id)) return menge;   /* Waffen/Kraeuter/Schluessel unveraendert */
+    /* ⛔ RUNDE 30 (Thema irons-diary-welt): "Munition" heisst hier dasselbe wie bei der
+     * Stapelregel — Id-Fenster 0x15..0x21 GESCHNITTEN mit "eigener Kombinations-Satz"
+     * (Feld +4 der Tabelle @0x80074da8, gelesen vom Original @0x8004e9d8). Vorher reichte
+     * das blosse Fenster, und damit fiel auch Id 0x21 unter die Halbierung — das ist die
+     * MEMORY CARD (DEBUG.BIN @0x499E -> @0x4BEA; Eigenschaften @0x80074F34 zeigen auf den
+     * Null-Satz @0x80074C88), keine Munition. Bis Runde 30 unerreichbar (0 Item_aot_set mit
+     * 0x21 in 240 RDTs); seit die Karte auf Irons' Schreibtisch liegt (Menge 3, RE2 Ink
+     * Ribbon), haette die Aufnahme 1 statt 3 gebracht (gemessen im Spiel: karte_menge=1).
+     * Fuer 0x15..0x20 aendert sich nichts (alle tragen eigene Saetze). */
+    if (!re15_pickup_stapelt_nutzer(item_id)) return menge;   /* Waffen/Kraeuter/Schluessel/
+                                                               * Memory Card unveraendert */
     if (menge <= 1)                  return menge;   /* 0 bleibt 0 (Grant weist es ohnehin ab) */
     uint8_t h = (uint8_t)(menge / 2u);
     return h ? h : (uint8_t)1;

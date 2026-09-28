@@ -78,7 +78,12 @@ int main(int argc, char **argv)
     CHECK("Mindestmenge: Munition x1 bleibt 1", re15_pickup_menge_nutzer(0x15, 1) == 1);
     CHECK("Munition x0 bleibt 0 (Grant weist es ohnehin ab)",
           re15_pickup_menge_nutzer(0x15, 0) == 0);
-    CHECK("Id 0x21 (letzte Munition) wird halbiert", re15_pickup_menge_nutzer(0x21, 30) == 15);
+    /* Runde 30: 0x21 ist die MEMORY CARD (DEBUG.BIN @0x4BEA), keine Munition — ihr
+     * Kombinations-Satz ist der Null-Satz @0x80074C88 (Eigenschaften @0x80074F34). Die
+     * Halbierung folgt jetzt derselben Schranke wie die Stapelregel. Letzte Munition ist
+     * 0x20 (Incendiary Capsule, eigener Satz 0x80074D48). */
+    CHECK("Id 0x20 (letzte Munition) wird halbiert", re15_pickup_menge_nutzer(0x20, 30) == 15);
+    CHECK("Id 0x21 (Memory Card) bleibt", re15_pickup_menge_nutzer(0x21, 3) == 3);
     CHECK("Id 0x22 (erster Schluessel/Heil) bleibt", re15_pickup_menge_nutzer(0x22, 30) == 30);
     CHECK("Id 0x14 (letzte Waffe) bleibt",           re15_pickup_menge_nutzer(0x14, 30) == 30);
     CHECK("Id 0x0c INGRAM M10 x100 (Waffe mit Magazin) bleibt",
