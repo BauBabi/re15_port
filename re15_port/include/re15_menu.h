@@ -94,6 +94,16 @@ uint32_t re15_menu_doc_trace_folge(int which);
  * Listenzeile oeffnet den Leser mit diesem Bild-Satz und dieser letzten Seite.
  * bildsatz < 0 schaltet die Hilfe ab. Kein Spielpfad setzt sie. */
 void re15_menu_debug_view_doc(int bildsatz, int max_page);
+/* RE2-ERGAENZUNG KARTENHINWEIS (Runde 30, Thema B; engine/src/map_hint_common.c):
+ * Gegenstueck zu RE2s Statusschirm-Modus 4 (Opcode 0x84 @0x800591C4 setzt Modus 4
+ * @0x800591DC und die Anforderung @0x800591E8/EC). Laeuft ueber DIESELBE Oeffnen-
+ * Ueberblendung wie START (Muster re15_menu_request_box) und landet direkt in der Karte,
+ * Blatt = das des Zielraums, ohne Tab-Auswahl und ohne Oeffnen-Ton (RE2 ueberspringt
+ * Se(4,6) @0x8002652C, weil die Phase schon steht: bne @0x80026404).
+ * Rueckgabe 1 = angenommen (die Anforderung darf verbraucht werden), 0 = das Menue ist
+ * gerade belegt (Anforderung stehen lassen). */
+int  re15_menu_request_map_hint(int hint_nr);
+int  re15_menu_map_hint_active(void);   /* 1, solange der Hinweis-Schirm lebt */
 
 /* Introspection (tests / state log). */
 int  re15_menu_stage(void);      /* DAT_800b5359 mirror (0 = normal gameplay)      */

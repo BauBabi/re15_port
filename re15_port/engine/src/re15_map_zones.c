@@ -28,6 +28,8 @@
 #include "re15_room.h"
 #include "re15_collision.h"
 #include "re15_actor.h"   /* Spielerposition fuer die Ersatz-Zonenbestimmung */
+#include "re15_map_owned.h"   /* re15_map_owned_page — NUR LESEN: das Marken-Gatter fragt
+                               * dasselbe wie der Zeichner (Runde 30) */
 #include "re15_map_zones.h"
 
 #define ZONE_COUNT ((int)(sizeof s_map_zones / sizeof s_map_zones[0]))
@@ -43,15 +45,131 @@ static uint8_t s_visited[32];    /* 1 Bit je ZONE (Index = Tabellen-Index / 2) *
  * war - links unterhalb von ROOM1130, also genau da, wo der Nutzer sie sah
  * (2026-09-01: "unten links schon ein Rechteck nach dem Flur, obwohl ich noch im
  * Eingangsbereich stehe"). Gemerkt wird deshalb die BEGANGENE Etage. */
-static uint8_t s_visited_floor[16];  /* 1 Bit je Zeile in s_map_floors */
+static uint8_t s_visited_floor[16];  /* 1 Bit je Zeile in s_etage_bit (s.u.) */
 #define FLOOR_COUNT ((int)(sizeof s_map_floors / sizeof s_map_floors[0]))
 
 static int floor_row(unsigned room, int zone, int band);
 
+/* ⛔ DAS ETAGEN-BIT IST AUF (RAUM, ZONE, BAND, BLATT) GESCHLUESSELT — NICHT AUF DEN
+ * ZEILENINDEX VON s_map_floors. (Runde 30, karten-marken.md §4d / §5 Schritt 4.)
+ *
+ * NUTZER-BEFUND 2026-09-27: "wenn das spiel Gespeichert und dann geladen wird, [sind]
+ * Teile der Karte die ich bereits freigeschaltet habe verloren gegangen". GEMESSEN an
+ * seiner Karte (Block 3, 20 Besucht-Bits): nach dem Laden waren 4 von 20 Orten ohne
+ * Zeichnung — ROOM1060, ROOM1090, ROOM10A0, ROOM1170/z1. Die Zonen-Bits kamen
+ * verlustfrei durch (102 von 102 Orten); verloren gingen die ETAGEN-Bits, weil dieses
+ * Feld gar nicht im Spielstand stand (Rundlauf je Ort: 25 Etagen-Bits, 25 Rechtecke,
+ * 16 Marken verloren; im echten Weg Blatt 2F vor/nach dem Laden 2964 Punkte anders).
+ *
+ * VORBILD RE2: alles, was sein Kartenzeichner liest, liegt im gespeicherten Block.
+ * Lade-Kopie in info/re2leon/COMMON/BIN/MEM_CARD.BIN @Datei 0x13D0 (Bytes
+ * `0d 80 10 3c  a4 44 10 26 ... de 41 00 0c  98 07 06 24` nachgelesen; die
+ * Ladeadresse 0x801BFA18 ist aus den jal-Zielen bestimmt, nicht aus dem Lader):
+ *     801c0de8 lui s0,0x800d / 801c0dec addiu s0,s0,17572   ; Ziel 0x800D44A4
+ *     801c0df8 jal 0x80010778 / 801c0dfc addiu a2,zero,1944 ; 0x798 Bytes
+ *     Sprungziel 0x80010778 (PSX.EXE) = Wortkopie lw/sw zu je 16 Bytes.
+ * Block [0x800D44A4, 0x800D4C3C) enthaelt die vier Baenke des Zeichners (0x800D4908,
+ * 0x800D490C, 0x800D4920, 0x800D4924; Tests @0x8006E66C / @0x8006E688).
+ * WARUM RE1.5 HIER NICHT MASSGEBLICH IST: RE1.5 kennt weder Besucht- noch Etagen-Bits
+ * (Rechteck-Schleife @0x800472fc-0x800473dc: einzige Verzweigung ist der Zaehler) und
+ * der Auslieferungsstand kann nicht speichern. Auch RE2 kennt keine ETAGEN-Bits — die
+ * sind eine Port-Ergaenzung (Nutzer-Befunde 2026-09-01 / 2026-09-12). Uebertragen wird
+ * der GRUNDSATZ "was der Zeichner liest, steht im Spielstand", nicht das Feld.
+ *
+ * DER SCHLUESSEL. Bis Runde 30 war das Bit der ZEILENINDEX in s_map_floors. Der
+ * verschiebt sich, sobald eine Etagenzeile dazukommt oder wegfaellt — im Spielstand
+ * zeigte ein alter Stand dann fremde Etagen als begangen (derselbe Fehler, der am
+ * 2026-09-07 bei den Zonen-Bits behoben wurde, s. zone_bit unten). Die Tabelle hier
+ * ist deshalb EXPLIZIT und wird NUR VERLAENGERT: neue Zeilen ANHAENGEN, nie
+ * dazwischenschieben, nie streichen (ein entfallener Ort laesst sein Bit ungenutzt).
+ * Leon- und Elza-Zeile desselben Ortes (0x1060 / 0x1061) teilen ein Bit, wie bei den
+ * Zonen-Bits ("Variante = derselbe Ort").
+ * Inhalt = die 25 geraden Zeilen von s_map_floors, Stand d98e9639; der Riegel
+ * unit_map_speichern_laden prueft, dass JEDE Zeile von s_map_floors hier ein Bit hat. */
+static const struct { unsigned short room; unsigned char zone, band, page; }
+s_etage_bit[] = {
+    { 0x1060, 0,  0,  2 },   /* Bit  0  Treppenhaus 1F                */
+    { 0x1060, 0,  4,  3 },   /* Bit  1  Treppenhaus 2F                */
+    { 0x1060, 0,  8,  4 },   /* Bit  2  Treppenhaus 3F                */
+    { 0x1080, 0,  0,  2 },   /* Bit  3  Fahrstuhl 1F                  */
+    { 0x1080, 0,  0,  3 },   /* Bit  4  Fahrstuhl 2F                  */
+    { 0x1080, 0,  0,  4 },   /* Bit  5  Fahrstuhl 3F                  */
+    { 0x1090, 0,  1,  2 },   /* Bit  6                                */
+    { 0x1090, 0,  6,  3 },   /* Bit  7  obere Ebene                   */
+    { 0x10A0, 0,  1,  1 },   /* Bit  8                                */
+    { 0x10A0, 0,  8,  2 },   /* Bit  9                                */
+    { 0x10F0, 0,  0,  3 },   /* Bit 10                                */
+    { 0x10F0, 0,  1,  2 },   /* Bit 11                                */
+    { 0x1170, 1,  0,  4 },   /* Bit 12  zweiter Bereich, 3F           */
+    { 0x1170, 1,  4,  5 },   /* Bit 13  zweiter Bereich, Dach         */
+    { 0x11A0, 0,  0,  6 },   /* Bit 14                                */
+    { 0x11A0, 0,  3,  0 },   /* Bit 15                                */
+    { 0x3080, 0,  0,  7 },   /* Bit 16                                */
+    { 0x4020, 0,  0,  8 },   /* Bit 17                                */
+    { 0x4020, 0,  0,  9 },   /* Bit 18                                */
+    { 0x4020, 0,  0, 10 },   /* Bit 19                                */
+    { 0x4070, 0,  0, 11 },   /* Bit 20                                */
+    { 0x4070, 0,  8,  9 },   /* Bit 21                                */
+    { 0x4070, 0, 12,  8 },   /* Bit 22                                */
+    { 0x50D0, 0,  0, 11 },   /* Bit 23                                */
+    { 0x50D0, 0,  3, 10 },   /* Bit 24                                */
+    /* NEUE ZEILEN HIER ANHAENGEN. Kapazitaet: 8 * sizeof s_visited_floor = 128. */
+};
+#define ETAGE_BIT_COUNT ((int)(sizeof s_etage_bit / sizeof s_etage_bit[0]))
+
+/* Das Bit der Zeile `j` von s_map_floors, -1 = die Zeile hat keins (dann ist sie nie
+ * "begangen" — der Riegel unit_map_speichern_laden faengt genau diesen Fall). */
+static int etage_bit(int j)
+{
+    unsigned room;
+    int i;
+    if (j < 0 || j >= FLOOR_COUNT) return -1;
+    room = (unsigned)s_map_floors[j].room & ~1u;             /* Variante = derselbe Ort */
+    for (i = 0; i < ETAGE_BIT_COUNT; i++)
+        if (s_etage_bit[i].room == (unsigned short)room &&
+            s_etage_bit[i].zone == s_map_floors[j].zone &&
+            s_etage_bit[i].band == s_map_floors[j].band &&
+            s_etage_bit[i].page == s_map_floors[j].page)
+            return i;
+    return -1;
+}
+
+static int etage_gesetzt(int j)
+{
+    int b = etage_bit(j);
+    return (b >= 0) ? ((s_visited_floor[b >> 3] >> (b & 7)) & 1) : 0;
+}
+
+static void etage_setzen(int j)
+{
+    int b = etage_bit(j);
+    if (b >= 0) s_visited_floor[b >> 3] |= (uint8_t)(1u << (b & 7));
+}
+
+/* Fuer den Riegel: welches Bit traegt die Zeile `j` von s_map_floors, wie viele Zeilen
+ * hat die Bit-Tabelle, und wie viele Bits fasst das Feld? */
+int re15_map_floor_bit_test(int floor_zeile) { return etage_bit(floor_zeile); }
+int re15_map_floor_bit_count(void) { return ETAGE_BIT_COUNT; }
+int re15_map_floor_bit_kapazitaet(void) { return 8 * (int)sizeof s_visited_floor; }
+int re15_map_floor_count(void) { return FLOOR_COUNT; }
+
 void re15_map_visited_reset(void) { memset(s_visited, 0, sizeof s_visited);
                                     memset(s_visited_floor, 0, sizeof s_visited_floor); }
 void re15_map_visited_export(uint8_t out[32]) { memcpy(out, s_visited, 32); }
-void re15_map_visited_import(const uint8_t in[32]) { memcpy(s_visited, in, 32); }
+/* ⛔ DER IMPORT LOESCHT DIE ETAGEN-BITS IMMER ZUERST (Runde 30, Nebenbefund D2).
+ * Der LOAD-GAME-Zweig (platform/pc/main.c) ruft re15_gameflow_new_game nicht, also
+ * auch kein re15_map_visited_reset. Bisher ueberschrieb der Import nur s_visited: in
+ * LAUFENDER Sitzung blieben die Etagen-Bits des vorigen Laufs stehen. Gemessen: 39
+ * Orte begangen, einen aelteren Stand geladen -> 16 Etagen-Bits zu viel, 16 Rechtecke
+ * erschienen, die der geladene Stand nie besucht hatte. Wer die Etagen-Bits eines
+ * Stands hat, laedt sie DANACH mit re15_map_visited_floor_import. */
+void re15_map_visited_import(const uint8_t in[32])
+{
+    memcpy(s_visited, in, 32);
+    memset(s_visited_floor, 0, sizeof s_visited_floor);
+}
+void re15_map_visited_floor_export(uint8_t out[16]) { memcpy(out, s_visited_floor, 16); }
+void re15_map_visited_floor_import(const uint8_t in[16]) { memcpy(s_visited_floor, in, 16); }
 
 /* ⛔ EIN BESUCHT-BIT JE ORT — GESCHLUESSELT AUF DIE RAUM-NUMMER, NICHT AUF DIE
  * ZONEN-NUMMER DES GENERATORS.
@@ -228,7 +346,7 @@ int re15_map_zone_etage_besucht(const re15_map_zone_t *zn)
         if (s_map_floors[j].room != zn->room) continue;
         if ((int)s_map_floors[j].zone != zn->idx) continue;
         if ((unsigned)s_map_floors[j].page != zn->page) continue;
-        if ((s_visited_floor[j >> 3] >> (j & 7)) & 1) return 1;
+        if (etage_gesetzt(j)) return 1;
     }
     return 0;
 }
@@ -243,7 +361,7 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
     s_visited[b >> 3] |= (uint8_t)(1u << (b & 7));
     /* zusaetzlich die Etage, auf der er gerade steht */
     f = floor_row(s_map_zones[i].room, s_map_zones[i].idx, re15_map_player_band());
-    if (f >= 0) s_visited_floor[f >> 3] |= (uint8_t)(1u << (f & 7));
+    if (f >= 0) etage_setzen(f);
     /* ⛔ EIN RAUM, DER AUF MEHREREN BLAETTERN DASSELBE IST, wird ueberall auf einmal
      * bekannt. Die Fahrstuhlkabine ROOM1080 ist auf drei Blaettern gezeichnet, und
      * alle drei Tueren zu ihr tragen Band 0 - ihre Etage steckt im Raum, aus dem man
@@ -263,8 +381,64 @@ void re15_map_visited_mark_at(unsigned room, int32_t x, int32_t z)
             for (j = 0; j < FLOOR_COUNT; j++) {
                 if (s_map_floors[j].room != s_map_zones[i].room) continue;
                 if ((int)s_map_floors[j].zone != s_map_zones[i].idx) continue;
-                s_visited_floor[j >> 3] |= (uint8_t)(1u << (j & 7));
+                etage_setzen(j);
             }
+    }
+}
+
+/* ---- HEBUNG EINES ALT-STANDS (Spielstand v8 -> v9) ---------------------------------
+ * Ein v8-Stand fuehrt die Zonen-Bits, aber KEINE Etagen-Bits (s. s_etage_bit oben).
+ * Aus den Zonen-Bits `visited` werden hier die Etagen-Bits `out` abgeleitet.
+ *
+ * (1) EINBAENDIGE ORTE — EXAKT. Tragen alle Etagenzeilen eines Ortes dasselbe Band
+ *     (Fahrstuhl ROOM1080, ROOM4020, ROOM3080), setzt re15_map_visited_mark_at oben
+ *     ALLE seine Etagen-Bits zusammen mit dem Zonen-Bit. Dort gilt also streng
+ *     Etagen-Bit := Zonen-Bit; nichts ist geraten.
+ *
+ * (2) MEHRBAENDIGE ORTE — ⛔ PORT-ENTSCHEIDUNG, NUR FUER DIE HEBUNG, KEIN
+ *     ORIGINAL-VERHALTEN UND KEINE ORIGINAL-ADRESSE. Welche Etage begangen war, steht
+ *     in KEINEM v8-Block; es ist nicht rekonstruierbar. Festgelegt ist: beim Heben
+ *     gilt fuer einen besuchten mehrbaendigen Ort die HAUPT-Zeile als begangen — die
+ *     Zeile, deren (Blatt, Rechteck) die Zonenzeile OHNE Etagen-Marke fuehrt:
+ *     ROOM1060 -> Blatt 2 (1F), ROOM1090 -> Blatt 2, ROOM10A0 -> Blatt 2,
+ *     ROOM10F0 -> Blatt 3, ROOM1170/z1 -> Blatt 5 (ROOF), ROOM11A0 -> Blatt 0,
+ *     ROOM4070 -> Blatt 8, ROOM50D0 -> Blatt 10.
+ *     BEGRUENDUNG: der Nutzer meldet genau den Verlust bereits aufgedeckter Raeume
+ *     (2026-09-27). Das Zonen-Bit BELEGT den Besuch des Ortes; unbekannt ist nur die
+ *     Etage. Ohne diese Regel blieben die vier betroffenen Orte seiner vorhandenen
+ *     Staende verborgen, bis er sie erneut betritt. GAST-Zeilen (der Ort auf einem
+ *     fremden Etagenblatt) werden NICHT gezeigt — die Befunde vom 2026-09-01 und
+ *     2026-09-12 ("Rechteck, obwohl ich da noch gar nicht drin war") betrafen genau
+ *     Gast-Zeilen und bleiben damit unberuehrt.
+ *     NEUE Staende (ab v9) brauchen diese Regel nicht: sie speichern die Etagen-Bits
+ *     selbst und sind verlustfrei. */
+void re15_map_visited_floor_heben(const uint8_t visited[32], uint8_t out[16])
+{
+    int i;
+    memset(out, 0, 16);
+    for (i = 0; i < ZONE_COUNT; i++) {
+        const re15_map_zone_t *zn = &s_map_zones[i];
+        int j, b, erst = -1, gleich = 1;
+        if (zn->etage) continue;                       /* nur die HAUPT-Zeile des Ortes */
+        b = zone_bit(i);
+        if (b < 0 || !((visited[b >> 3] >> (b & 7)) & 1)) continue;
+        for (j = 0; j < FLOOR_COUNT; j++) {
+            if (s_map_floors[j].room != zn->room) continue;
+            if ((int)s_map_floors[j].zone != zn->idx) continue;
+            if (erst < 0) erst = s_map_floors[j].band;
+            else if (s_map_floors[j].band != erst) { gleich = 0; break; }
+        }
+        if (erst < 0) continue;                        /* Ort ohne Etagenzeile */
+        for (j = 0; j < FLOOR_COUNT; j++) {
+            int e;
+            if (s_map_floors[j].room != zn->room) continue;
+            if ((int)s_map_floors[j].zone != zn->idx) continue;
+            if (!gleich &&                             /* (2) nur die HAUPT-Zeile */
+                ((unsigned)s_map_floors[j].page != zn->page ||
+                 (unsigned)s_map_floors[j].rect != zn->rect)) continue;
+            e = etage_bit(j);
+            if (e >= 0) out[e >> 3] |= (uint8_t)(1u << (e & 7));
+        }
     }
 }
 
@@ -362,6 +536,10 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
  * besucht schlaegt unbesucht. Mehrere Zonen duerfen sich ein Rechteck teilen. */
 int re15_map_player_band(void);
 
+/* KARTENHINWEIS: "kein aktueller Raum" (Beleg in re15_room.h bei re15_map_ohne_aktuell). */
+static int s_ohne_aktuell = 0;
+void re15_map_ohne_aktuell(int an) { s_ohne_aktuell = an ? 1 : 0; }
+
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
 {
     extern unsigned g_current_room_id;
@@ -375,7 +553,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
      * wurde der Marker gezeichnet, sein Rechteck aber als unbesucht behandelt und
      * gar nicht gemalt: der Marker schwebte im Schwarzen. Jetzt benutzen beide
      * denselben Weg. */
-    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+    if (!cur && !s_ohne_aktuell) cur = re15_map_zone_at(g_current_room_id,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (int i = 0; i < ZONE_COUNT; i++) {
@@ -403,7 +581,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
             if ((unsigned)s_map_floors[j].page != page ||
                 (unsigned)s_map_floors[j].rect != rect_idx) continue;
             etage_hier = 1;
-            if ((s_visited_floor[j >> 3] >> (j & 7)) & 1) etage_besucht = 1;
+            if (etage_gesetzt(j)) etage_besucht = 1;
         }
         if (!eigen && !etage_hier) continue;
         if (cur && zn->room == cur->room && zn->idx == cur->idx) {
@@ -449,7 +627,7 @@ void re15_map_zone_update(unsigned room, int32_t x, int32_t z)
     s_cur_zone = re15_map_zone_at(room, x, z);
     if (s_cur_zone) re15_map_visited_mark_at(room, x, z);
 }
-const re15_map_zone_t *re15_map_zone_current(void) { return s_cur_zone; }
+const re15_map_zone_t *re15_map_zone_current(void) { return s_ohne_aktuell ? NULL : s_cur_zone; }
 
 /* Alt-Schnittstellen, die noch auf Raum-Ebene fragen (Tests/Save-Restore). */
 void re15_map_visited_mark(unsigned room_id)
@@ -512,7 +690,7 @@ static int teil_zustand(const re15_map_teil_t *t)
     extern unsigned g_current_room_id;
     const re15_map_zone_t *cur = re15_map_zone_current();
     int i, besucht = 0;
-    if (!cur) cur = re15_map_zone_at(g_current_room_id,
+    if (!cur && !s_ohne_aktuell) cur = re15_map_zone_at(g_current_room_id,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                      g_actors[RE15_ACTOR_SLOT_PLAYER].z);
     for (i = 0; i < ZONE_COUNT; i++) {
@@ -626,7 +804,7 @@ static int floor_row(unsigned room, int zone, int band)
 int re15_map_floor_row_visited(unsigned room, int zone, int band)
 {
     int f = floor_row(room, zone, band);
-    return (f >= 0) ? ((s_visited_floor[f >> 3] >> (f & 7)) & 1) : 0;
+    return (f >= 0) ? etage_gesetzt(f) : 0;
 }
 
 int re15_map_floor_lookup(unsigned room, int zone, int band, int *page, int *rect)
@@ -677,7 +855,7 @@ void re15_map_debug_reveal_page(unsigned page)
     for (i = 0; i < FLOOR_COUNT; i++) {
         int j;
         if ((unsigned)s_map_floors[i].page != page) continue;
-        s_visited_floor[i >> 3] |= (uint8_t)(1u << (i & 7));
+        etage_setzen(i);
         /* Auch das ZONEN-Bit setzen: die Marken haengen daran, und eine Zone, die
          * hier nur als Etagen-Zweitzeichnung liegt, hat ihre eigene Seite woanders
          * (ROOM1170s zweiter Bereich gehoert zu Seite 5). Ohne das blieben ihre
@@ -750,7 +928,7 @@ int re15_map_page_known(unsigned page)
      * Kartenschirm die Etage nicht an, obwohl der Spieler dort stand. */
     for (i = 0; i < FLOOR_COUNT; i++)
         if ((unsigned)s_map_floors[i].page == page &&
-            ((s_visited_floor[i >> 3] >> (i & 7)) & 1))
+            etage_gesetzt(i))
             return 1;
     return 0;
 }
@@ -765,6 +943,33 @@ int re15_map_mark_zonen(int i, int *zid, int *zid2)
     if (zid)  *zid  = s_map_marks[i].zid;
     if (zid2) *zid2 = s_map_marks[i].zid2;
     return 1;
+}
+
+/* Malt der Zeichner dieses Rechteck? DIESELBE Entscheidung wie die Kachel-Schleife in
+ * re15_inv_screen.c (Abschnitt 4b "room rects"): BESUCHT und AKTUELL immer, UNBESUCHT
+ * nur mit dem Plan des Blattes (`re15_map_owned_page`, Port-Gegenstueck zu RE2s
+ * Bank-33-Test `jal 0x80077360` @0x8006E66C), OHNE ZONE (UNMAPPED) nie. */
+static int rect_gezeichnet(unsigned page, unsigned rect)
+{
+    int rs = re15_map_rect_state(page, rect);
+    if (rs == RE15_MAP_RECT_CURRENT || rs == RE15_MAP_RECT_VISITED) return 1;
+    if (rs == RE15_MAP_RECT_UNVISITED) return re15_map_owned_page(page) ? 1 : 0;
+    return 0;
+}
+
+/* Wird fuer die Zone `zid` auf diesem Blatt eine SCHEMA-Zeichnung gemalt? Dieselbe
+ * Regel wie der Schema-Durchgang des Zeichners: die Haupt-Zeile zaehlt ueber ihr
+ * Zonen-Bit, eine Gast-Zeile nur ueber ihr Etagen-Bit. */
+static int schema_gezeichnet(int zid, unsigned page)
+{
+    int i;
+    for (i = 0; i < ZONE_COUNT; i++) {
+        const re15_map_zone_t *zn = &s_map_zones[i];
+        if (zn->zid != zid || zn->page != page || !zn->synth) continue;
+        if (zn->etage ? re15_map_zone_etage_besucht(zn) : re15_map_zone_visited(zn))
+            return 1;
+    }
+    return 0;
 }
 
 int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
@@ -806,28 +1011,41 @@ int re15_map_mark_get(int i, int *page, int *rect, int *mx, int *my, int *kind)
          * (auf_partner: der Generator hat die Bemalung am PARTNER-Rechteck
          * verifiziert) = das eigene Rect reicht als Traeger nicht, also muss
          * ein gezeichnetes Rechteck den Markenpunkt tatsaechlich enthalten. */
-        /* Blockiert NUR der Zustand UNVISITED (= zugeordnet, aber nichts
-         * gezeichnet - der schwarze Fall). UNMAPPED-Rechtecke (RE2-System-
-         * Blaetter ab Seite 5) werden im Stock-Neutralton IMMER gemalt und
-         * tragen eine Marke weiterhin (Pin unit_map_re2_system). */
-        /* Das Rechteck-Gate gilt NUR auf den Etagen-Blaettern 2..4 (POLICE
-         * STATION): nur dort existiert das Etagen-System, das Zonen-Bit und
-         * Rechteck-Zeichnung auseinanderziehen kann. Die RE2-System-Blaetter
-         * (ab Seite 5) fuehren ihre Rechtecke anders (Pin unit_map_re2_system:
-         * Marken erscheinen dort direkt mit dem Besuch). */
-        if (m->page < 2 || m->page > 4)
-            return (zid_besucht(m->zid) ||
-                    (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2))) ? 1 : 0;
-        if (zid_besucht(m->zid) &&
-            re15_map_rect_state((unsigned)m->page, (unsigned)m->rect) != RE15_MAP_RECT_UNVISITED)
+        /* ⛔ RUNDE 30 (Nutzer 2026-09-27, "2F ist jetzt unten eine Tuer eingezeichnet
+         * auf der Karte die es nicht gibt"; karten-marken.md §4b / §5 Schritt 3c):
+         * DAS GATTER FRAGT JETZT GENAU DAS, WAS DER ZEICHNER ENTSCHEIDET.
+         * Bis hier standen drei Abweichungen vom Zeichner:
+         *  (a) Blockiert war NUR der Zustand UNVISITED; UNMAPPED ging durch, mit der
+         *      Begruendung "UNMAPPED-Rechtecke werden IMMER gemalt". Der Zeichner tut
+         *      das Gegenteil: re15_inv_screen.c, Kachel-Schleife,
+         *      `if (rs == RE15_MAP_RECT_UNMAPPED && !re15_map_stock_mode()) continue;`
+         *      — und im Stock-Modus zeichnet er gar keine Marken.
+         *  (b) Das Rechteck-Gatter galt nur auf den Blaettern 2..4 ("nur dort existiert
+         *      das Etagen-System"). s_map_floors fuehrt aber Zeilen fuer die Blaetter
+         *      0, 1, 5, 6, 7, 8, 9, 10 und 11. Im Stand des Nutzers schwebten deshalb
+         *      drei Marken, deren Rechteck nach dem Laden fehlte: (177,115) und
+         *      (186,112) auf Blatt 1, (156,97) auf Blatt 5.
+         *  (c) rect 255 (kein Rechteck) ging immer durch; eine solche Marke hat aber
+         *      nur dann einen Traeger, wenn ihre Zone auf diesem Blatt eine
+         *      SCHEMA-Zeichnung fuehrt und die gezeichnet wird.
+         * Alles Port-Ergaenzung ohne Original-Adresse: RE1.5 zeichnet keine Marken
+         * und kennt keinen Rechteck-Zustand (Schleife @0x800472fc-0x800473dc, einzige
+         * Verzweigung `bne v0,zero,0x800472fc` @0x800473dc = Zaehler). Massstab ist
+         * deshalb der eigene Zeichner — Marke und Traeger duerfen nie auseinanderlaufen. */
+        if (m->rect == 255) {
+            if (zid_besucht(m->zid) && schema_gezeichnet(m->zid, (unsigned)m->page))
+                return 1;
+        } else if (zid_besucht(m->zid) &&
+                   rect_gezeichnet((unsigned)m->page, (unsigned)m->rect)) {
             return 1;
+        }
         if (m->auf_partner && m->zid2 != 255 && zid_besucht(m->zid2)) {
             int ri, rx, ry, rw, rh;
             for (ri = 0; ri < 64; ri++) {
                 if (!re15_map_rect_geometry((unsigned)m->page, (unsigned)ri, &rx, &ry, &rw, &rh))
                     break;
                 if (m->mx >= rx && m->mx < rx + rw && m->my >= ry && m->my < ry + rh &&
-                    re15_map_rect_state((unsigned)m->page, (unsigned)ri) != RE15_MAP_RECT_UNVISITED)
+                    rect_gezeichnet((unsigned)m->page, (unsigned)ri))
                     return 1;
             }
         }

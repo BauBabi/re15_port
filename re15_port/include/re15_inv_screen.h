@@ -184,6 +184,14 @@ enum {
 /* RE1.5s eigener Eintrag 1 der Kartenzeile (TEX.TIM Zeile 21) — Quelle von
  * RE15_KARTE_BESUCHT, vom Riegel nachgelesen. */
 #define RE15_KARTE_TEX_OFF_BESUCHT   0x0556
+/* Eintrag 4 derselben Zeile 21 = die WANDLINIE der Kartenkunst, deckend (STP 0).
+ * re15_port/shared_assets/PSX/DATA/TEX.TIM @Datei 0x055C = 0x5AD6 -> RGB (176,176,176).
+ * Zustandsfrei: in RE2 ist Eintrag 4 in allen drei Zustandszeilen bitgleich
+ * (ST0.TIM @0x1093C / @0x1099C / @0x109BC = 0x4631). Quelle der Farbe von
+ * Schema-Rand UND Innenwand (re2_ton_kante in re15_inv_screen.c); der Riegel
+ * unit_karte_besitz liest den Wert aus der Datei nach. Runde 30, karten-marken.md §5. */
+#define RE15_KARTE_WAND          ((uint16_t)0x5AD6u)  /* RE1.5 TEX.TIM 0x055C = b0b0b0, STP 0 */
+#define RE15_KARTE_TEX_OFF_WAND  0x055C
 
 typedef struct {
     uint8_t kind;         /* RE15_INV_OP_* */
@@ -364,6 +372,15 @@ typedef struct {
                              * b55c; menu-init zeroing @0x8004646c-84). Consumed by the g9
                              * prim build SIGN-EXTENDED (sll 24/sra 24 @0x80047e98-eb8):
                              * prim0 += (s8)d0/(s8)d1, prim1 += (s8)d2/(s8)d3.             */
+    /* ---- KARTENHINWEIS (RE2-ERGAENZUNG, Runde 30 Thema B; menu_common.c hint_open) ----
+     * Gegenstueck zu RE2s Statusschirm-Modus 4 (Zeichner FUN_8006F1C4). NEUE FELDER ANS
+     * ENDE. re15_inv_screen_open loescht sie mit der ganzen Struktur. */
+    uint8_t hint_aktiv;     /* 1 = der Schirm zeigt den Hinweis (Modus 4)                 */
+    uint8_t hint_rot;       /* 1 = rote Phase: Richtung [0x800D5C19] == 0 -> CLUT 501+1
+                             * (@0x8006F514); 0 = Umriss, CLUT 498 (@0x8006F5DC)          */
+    uint8_t hint_page;      /* Blatt des Zielraums (RE2 [0x800D5C0A] @0x8006F738)         */
+    uint8_t hint_rect;      /* Rechteck des Zielraums auf dem Blatt (RE2 FUN_8006EAE8
+                             * @0x8006F2C8: (Blatt, Raum) -> Satzindex)                   */
 } re15_inv_screen_t;
 
 /* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve

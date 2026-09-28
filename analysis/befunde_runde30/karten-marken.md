@@ -919,3 +919,183 @@ Ausgaben: `build/r30_karten-marken/` (Laeufe und Abzuege des ersten Vorgaengers,
 `soll_nach_korrektur.txt`, `tueren_nachbarn.txt`, Entwurf des Vorgaengers),
 `build/r30_karten-marken-abzug/` (zweiter Vorgaenger: `karte_nutzer.txt`,
 `nutzer_messung.txt`, `rects_2_5.txt`, `tuer_1090_1100.txt`, `gen_kopie/`).
+
+---
+
+## 9. UMSETZUNG (Bau-Agent Runde 30, Zweig worktree-wf_b4b268f3-d12-3)
+
+Zwei Bau-Laeufe: der erste brach am Guthaben-Limit ab, sein Stand ist ungeprueft als
+WIP 7f76c6b1 gesichert. Die Fortsetzung hat ihn gebaut, vollstaendig gefahren, gegen das
+Dossier geprueft, berichtigt und abgenommen. Commits: 7f76c6b1 (WIP), 8b657293, 713bf578
+und der Commit mit diesem Abschnitt.
+
+### 9.1 Tragende Adressen, vor der Uebernahme selbst nachgeschlagen
+
+Sprungziel disassembliert, richtige Binaerdatei (`re15_disasm.py` auf `info/Re1.5/PSX.EXE`,
+`re2_disasm.py` auf `info/re2leon/PSX.EXE`, `xxd`):
+
+| Beleg | gelesen |
+|---|---|
+| RE1.5 GetClut(0x100,0x1f5) | `ori a0,zero,0x100` @0x80046fdc, `jal 0x8006b3d8` @0x80046fe4, `ori a1,zero,0x1f5` @0x80046fe8; Ziel 0x8006b3d8 = `sll v0,a1,6 / sra a0,a0,4 / andi a0,a0,0x3f / or v0,v0,a0` |
+| RE1.5 Rechteck-Sprite halbtransparent | `lbu v0,-7(v1)` @0x80047300, `ori v0,v0,0x2` @0x80047314, `sb v0,-7(v1)` @0x80047318 (Code-Byte des SPRT; CLUT `sh t4,0(v1)` @0x8004735c); zweiter Puffer @0x80047380; einzige Verzweigung `bne v0,zero,0x800472fc` @0x800473dc |
+| TEX.TIM Zeile 21 | @0x0556 `a4 81` = 0x81A4, @0x055C `d6 5a` = 0x5AD6 (bytegleich zu `info/Re1.5/PSX/DATA/TEX.TIM`) |
+| RE2 ST0.TIM | @0x109B6 = 0x842D; Eintrag 4 @0x1093C / @0x1099C / @0x109BC = 0x4631 |
+| RE2 Zustandszeile | `addiu s5,zero,501` @0x8006e614, `addiu s5,s5,1` @0x8006e648, `jal 0x8008f828` @0x8006e750 (Ziel = dieselbe GetClut-Rechnung) |
+| RE2 FILE-Liste (fremdes Feld) | `sltiu v0,a1,0x18` @0x80069308 |
+| RE2 Lade-Kopie | MEM_CARD.BIN @Datei 0x13D0: `0d 80 10 3c a4 44 10 26 21 20 00 02 21 28 20 02 de 41 00 0c 98 07 06 24` |
+| Tuer 1090 -> 1100 | ROOM1090.RDT @0x0213A: `3b 01 02 31 06 00 10 e1 40 ac 68 10 7c 15 5c ae 00 00 a0 d7 00 04 00 10 05` |
+| Dach-Suedwand | rect 1 @0x800764C8 = (148,101) 48x56 uv(0,32); MAP06.PIX v=86 @0x2B00 = 35 x Index 4, v=87 @0x2B80 = Index 0 |
+| Massstabs-Stub | @0x800768B0, @0x800768F8, @0x80076930 je `00 00 00 00 01 00 01 00` |
+| Marke 55 neu | Sonde J: Trigger-Mitte (-5820,-18690) -> Blatt 3 rect 7 -> (199,114), Texel r6=4 r7=4; Ankunft ROOM1100 -> (203,120); Index 4 in rect 7 UND rect 6 auf y=114: x 197..221 |
+
+Abweichung zu den Angaben des Dossiers: keine.
+
+### 9.2 Gebaut, je Plan-Schritt
+
+| Schritt | Stand | wo |
+|---|---|---|
+| 1 Farben an die Palette | erledigt (WIP, geprueft) | `re2_ton`/`re2_ton_kante` dekodieren `RE15_KARTE_BESUCHT/AKTUELL/UNBESUCHT/WAND`; `RE15_KARTE_WAND 0x5AD6` + `RE15_KARTE_TEX_OFF_WAND 0x055C` (`include/re15_inv_screen.h`); Innenwand an beiden Stellen `re2_ton_kante`; Schema-Fuellung `abe = 1` |
+| 2 Dach-Wandzeile | erledigt | Zeile gestrichen (`re15_map_zones.h`, Kommentar an der Stelle); Generator: Aussenwand-Regel "100 % der Linienpunkte auf Kachel-Index 4 -> verwerfen" |
+| 3a Marken ohne Traeger | erledigt | 11 Zeilen gestrichen: 20-24 (ROOM1230), 36/37 (ROOM10B0), 55 (alt), 58 (ROOM1160), 91/92 (ROOM2020); Tabelle 186 -> 176 |
+| 3b Marke 55 neu | erledigt | `{ 3, 7, 199, 114, 2, 22, 16, 1 }`; x = 199 im Kommentar als "Port-Wahl, keine Original-Adresse - PROJEKTION der Trigger-Mitte" gekennzeichnet |
+| 3c Gatter = Zeichner | erledigt | `re15_map_mark_get`: Rechteck muss GEZEICHNET sein (`rect_gezeichnet`: BESUCHT/AKTUELL, UNBESUCHT nur mit `re15_map_owned_page`, UNMAPPED nie) auf ALLEN Blaettern; rect 255 nur mit gezeichnetem Schema der eigenen Zone; Generator verwirft Marken ohne Zonen-Nummer statt Rueckfall zid 0 |
+| 4 Etagen-Bits im Spielstand | erledigt | `s_etage_bit[25]` (Nur-Anhaengen-Tabelle, Inhalt wie §5 Schritt 4.1); `re15_map_visited_floor_export/import`; `re15_map_visited_import` loescht die Etagen-Bits (D2); Speicher-Vertrag v9 (s. 9.3); validate hebt v7/v8 in einem Schritt, v2..v6 uebernehmen `old.visited` nicht mehr (D3); restore ohne Versionsabfrage |
+| 4.5 Alt-Staende | erledigt, Weg (b) (festgelegt) | `re15_map_visited_floor_heben`: einbaendige Orte Etagen-Bit := Zonen-Bit, mehrbaendige nur die HAUPT-Zeile; im Kommentar als Port-Entscheidung NUR fuer die Hebung gekennzeichnet |
+| 5 Riegel | erledigt | neu: `unit_map_marke_zid`, `unit_r30_karte_nutzerstand` (Fixture = Karte des Nutzers, bytegleich), `unit_map_speichern_laden`; erweitert: `unit_map_innenwand`, `unit_karte_besitz`, `unit_map_marke_haengt_an` (rect 255 gegen das Schema) |
+| 6 Abnahme am Bild | gefahren (9.5) | |
+
+### 9.3 Speicher-Vertrag v9
+
+`RE15_SAVE_VERSION 9`; unmittelbar vor `checksum`, wortgleich:
+`uint8_t visited_floor[16]; /* v9: Etagen-Bits der Karte (Spur karten-marken) */` und
+`uint8_t files[24]; /* v9: FILE-Liste, leer = 0xFF (Spur irons-diary-dokument; ... @0x80069308) */`.
+Gemessen (`unit_map_speichern_laden`): sizeof 904 -> 944, visited 868, visited_floor 900,
+files 916, checksum 940. Das fremde Feld `files` wird in `re15_savedata_capture` mit
+0xFF gefuellt und in `re15_savedata_restore` nicht gelesen (beide Stellen markiert
+`R30-VERTRAG: fremdes Feld`); die Hebung v7/v8 -> v9 setzt `files` auf 24 x 0xFF.
+Der Kommentarblock, der im WIP-Stand in der Struktur stand, ist nach
+`re15_savedata_capture` verlegt, damit die Struktur-Stelle in beiden Zweigen gleich ist.
+Auf der Karte des echten Speicherlaufs (9.5 e): Block 1 Version 9, Pruefwort ueber
+[0,940) = 0x2754 stimmt, visited_floor 25 Bits, files 24 x 0xFF.
+
+### 9.4 Berichtigungen der Fortsetzung am WIP-Stand
+
+1. **Feldkommentare des Vertrags** trugen "Thema" statt "Spur" -> wortgleich gemacht (8b657293).
+2. **Generator lief nicht mehr.** Die Kommentare im Header zitierten gestrichene Zeilen in
+   geschweiften Klammern; `tools/karte_audit.py` liest den Header per Regex, zaehlte sie als
+   Marken ("178 von 176 Marken-Zeilen erkannt", SystemExit), und `gen_map_zones.py`
+   importiert das Audit ueber `gen_marker_zeilen.py` (rc=1). Zitate jetzt in runden
+   Klammern (713bf578). Danach: Audit gegen master einzige Abweichung D1 "Tueren ohne
+   Symbol" 25 -> 26 = ROOM10B0 z11 (Folge der planmaessigen Streichung 36/37; ROOM10B0
+   steht bereits in B1 "Raeume ohne Zeichnung"). Generator auf eine Kopie gefahren (Header
+   NICHT neu erzeugt): "[Wand] ROOM1170 z0 Blatt 5 rect 1 (148,155)-(182,155): 35 von 35
+   Punkten auf Kachel-Index 4 ... verworfen", 9 Innenwand-Linien (vorher 10), 13
+   Tuermarken ohne Zonen-Nummer verworfen.
+
+### 9.5 Abnahme (echter Weg, eigene exe, CPU-Raster s_fb5 ueber RE15_INV_FB_SHOT / RE15_MAP_SHOT_SWEEP)
+
+Laeufe: Titel -> LOAD GAME -> Platz 2 mit der UNVERAENDERTEN Karte des Nutzers
+(`RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=2 RE15_INV_OPEN_AT="60#1070"`,
+Blattwahl per `RE15_INPUT_SCRIPT` wie §2.1; `[save] CONTINUE: resumed in room 1070 (hp=85)`
+in allen drei Laeufen; die Karte ist nach jedem Lauf bytegleich, `cmp`). Werkzeuge
+`kartenabzug_tools/r30_abzug_vergleich.py`, `r30_blau_zensus.py`.
+
+**a) ROOF gegen `befund_1070_F233_marke1.png`: 574 Punkte anders**, klassifiziert:
+
+| Ort | Punkte | Wandel |
+|---|---|---|
+| y=155, x=148..182 | 35 | (16,64,176) -> (176,176,176), 35 von 35 = SOLL |
+| rect 0 (140,80) 48x24 = ROOM1170/z1 | 539 | Panel -> Raum (Weg b, Hebung) |
+| sonst | 0 | |
+
+Die Treppenmarke (156,97) bleibt stehen: ihr Traeger rect 0 ist nach der Hebung
+gezeichnet. (Die Soll-Zeile "+15 mit Schritt 3c" in §5 Schritt 6 galt fuer Weg (a).)
+
+**b) 2F gegen `befund_1070_F259_marke1.png`: 5 Punkte anders** = (188,178..182)
+(224,168,40) -> (0,16,88) x4 / (0,16,120) x1 = SOLL. Keine Marke mehr bei (188,180).
+
+**c) 1F gegen `befund_1070_F310_marke2.png`: 1932 Punkte anders**, klassifiziert:
+
+| Ort | Punkte | Wandel |
+|---|---|---|
+| Schema-Kasten ROOM1000 x 208..220 / y 90..120 | 403 | (16,64,176) -> (16,56,40) 353 / (16,56,56) 50 = SOLL (exakt die Kachelwerte, §4c) |
+| Spielermarker x 177..181 / y 125..129 | 13 | Puls-Phase (176,168,0) gegen (88,88,0) |
+| rect 5 (180,59) 48x32 = ROOM1090 | 841 | Panel -> Raum + Marken (Weg b) |
+| rect 10 (119,134) 24x24 = ROOM1060 | 363 | dito |
+| rect 6 (180,88) 24x24 = ROOM10A0 | 312 | dito |
+| sonst | 0 | |
+
+**Blau-Zensus** ueber die drei neuen Abzuege: 0 Punkte (16,64,176) (Nutzer-Abzuege: 403 /
+0 / 35), frei schwebende Marken 0 (Nutzer: 1).
+
+**d) 13 Blaetter, alles aufgedeckt, Spieler in ROOM1150** (`RE15_MAP_SHOT_SWEEP`,
+`RE15_NO_INTRO=1 RE15_PSELECT_AUTO=1 RE15_INPUT_SCRIPT_START=30 RE15_GOTO_ROOM=1150`):
+Blau 0 Punkte auf allen 13 Blaettern (master `sweep1150`: 914). Frei schwebend 2 =
+Klasse C (129,151..155) Blatt 6 und (224,173..177) Blatt 7 (master: 8), nicht Teil des Plans.
+Bestand je Blatt gegen den master-Durchlauf: Blatt 0, 7, 10, 11, 12 = 0 Punkte; Blatt 1:
+24 (Marken 20-24); Blatt 2: 764 (Schema-Fuellungen 754 blau -> gruen, Marken 36/37 10);
+Blatt 3: 47 (Innenwaende 37, Marke 55 alt 5 weg / neu 5 bei (199,114)); Blatt 4: 5 (Marke 58);
+Blatt 5: 35 (Dach-Wandzeile); Blatt 6: 10 (Marken 91/92); Blatt 8: 8, Blatt 9: 80
+(Innenwaende blau -> (176,176,176)). Keine Aenderung ausserhalb des Plans.
+
+**e) Speichern/Laden im echten Weg**: alles aufgedeckt, in ROOM10C0 gespeichert
+(`[save] saved (room 10c0) slot n=0`), frischer Prozess, LOAD GAME
+(`[save] CONTINUE: resumed in room 10c0 (hp=100)`): 2F vor dem Speichern gegen nach dem
+Laden **13 Punkte anders, alle im Spielermarker x 117..121 / y 146..150** (Puls-Phase
+(176,168,0) gegen (160,152,0)); ausserhalb des Markers 0 (master: 2964, davon ebenfalls
+13 im Marker).
+
+**f) Karte des Nutzers nach dem Laden** (`unit_r30_karte_nutzerstand` A3): ROOM1060 (2/10),
+ROOM1090 (2/5), ROOM10A0 (2/6), ROOM1170/z1 (5/0) wieder gezeichnet; keine Gast-Zeile
+(3/1, 4/1, 3/7, 1/9, 4/3 bleiben unbesucht); genau 4 Etagen-Bits gehoben.
+
+**g) Suite**: 363/363 (master 360 + 3 neue Riegel), 190 s. Bestehende Pins unveraendert
+gruen bis auf die begruendete Anpassung von `unit_map_re2_system` (Abschnitt 7: auf Band 0
+wird Seite 5 nicht gemalt, also auch keine Marke dort; die Aussage "Tueren und Treppen sind
+eingezeichnet" wird auf Band 4 geprueft; Ausgabe von Abschnitt 8 gegen master
+unveraendert: 8 Paare, Marker #86, erste Marke #88, erstes Rechteck #95).
+
+### 9.6 Abweichungen vom Plan
+
+1. **sizeof 944 statt 920** (Plan 4.3): der Speicher-Vertrag v9 fuehrt zusaetzlich `files[24]`.
+2. **Soll-Werte 1F/ROOF** (§5 Schritt 6) waren fuer Weg (a) gerechnet; festgelegt ist Weg (b).
+   Dadurch zusaetzlich gezeichnet: ROOM1090/1060/10A0 auf 1F (1516 Punkte), ROOM1170/z1 auf
+   ROOF (539 Punkte); die Treppenmarke auf ROOF bleibt (Traeger vorhanden).
+3. **Doppel-Zeichnung des aktuellen Schema-Raums entfernt** (nicht im Plan). Gemessen mit
+   `unit_r30_karte_nutzerstand` C1, Spieler in ROOM1000/z0: Blatt 2 Op 108 UND Op 109, beide
+   FILL (207,89) 15x33 - die Zeichnung hat zwei Zonenzeilen (Leon 0x1000 / Elza 0x1001), nur
+   eine traegt die Raumnummer des Spielers, die andere lief durch den Durchgang "alle
+   uebrigen". Deckend folgenlos; halbtransparent haette die zweite Op ueber (0,16,88)
+   (72,8,24) statt (48,8,48) ergeben. Jetzt je Zeichnung genau eine Rand- und eine
+   Fuellungs-Op (C1: 1 Op, (104,8,8), abe 1).
+4. **Unerreichbarer UNBESUCHT-Zweig von `re2_ton`**: der fruehere Wert (34,34,38) trug keinen
+   Beleg und ist durch `RE15_KARTE_UNBESUCHT` (ST0.TIM @0x10936 = 0x0000) ersetzt; kein
+   Aufrufer erreicht ihn (die Schema-Fuellung ueberspringt UNVISITED vorher).
+5. **Generator** verwirft zusaetzlich die Marke ROOM1000 Tuer #0 (in seiner eigenen
+   Zonennummerierung hat ROOM1000/z0 keine Nummer). Ohne Folge fuer den Header (der wird
+   nicht neu erzeugt; er fuehrt diese Marke nicht).
+
+### 9.7 Nicht gemessen / offen
+
+* Kein gdigrab am Fenster: Bildbeweis ist der CPU-Raster-Abzug des Kartenschirms (s_fb5,
+  dieselbe Quelle wie im Dossier); das Fenster zeigt genau diesen Puffer.
+* Android/PSX nicht gebaut.
+* Klasse C (Marken 72, 75, 112, 155 = jetzt Tabellen-Nr. 64, 67, 102, 145) weiter offen (§6.7).
+* Wand 6 auf Blatt 9 (36 von 45 Punkten auf Index 0) weiter durchgezogen (§6.6).
+* `kartenabzug_tools/r30_karte_lesen.py` kennt nur das v8-Layout (liest das Pruefwort bei
+  +0x384) und meldet v9-Bloecke deshalb als "FALSCH"; die v9-Pruefung oben ist von Hand
+  gerechnet.
+
+Abzuege der Abnahme (Arbeitsbaum, unversioniert): `re15_port/build/r30_km/abnahme/`
+(`r30_karte_{1F,2F,ROOF}_nutzer_jetzt_diff.png`, `r30_karte_2F_vor_speichern_nach_laden.png`,
+`r30_karte_13_blaetter_alles_besucht.png`, Rohdaten und Laufskripte unter `roh/`).
+
+Werkzeuge (versioniert, `kartenabzug_tools/`): `r30_bau_abnahme.sh <arbeitsbaum> <ausgabe>`
+fasst die sechs Laeufe von 9.5 zusammen (dieselben Schalter wie die gefahrenen Laeufe);
+`r30_bau_diff_klassen.py` ordnet abweichende Punkte benannten Kaesten zu (so entstanden
+die Tabellen in 9.5 a und c).
+
+Wiederholung auf dem Endstand (7263d156, Suite 363/363 in 164 s) mit genau diesem Skript:
+1F 1932 / 2F 5 / ROOF 574 Punkte gegen die Nutzer-Abzuege, die drei Abzuege bitgleich zum
+ersten Lauf (`cmp`); Blau 0 auf 3 + 13 Abzuegen, frei schwebend 2 (Klasse C); 2F vor/nach
+Speichern 13 Punkte, alle im Spielermarker; Karte des Nutzers nach jedem Lauf bytegleich.

@@ -73,6 +73,7 @@ static inline int RNDI(float f) {
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
+#include "re15_map_hint.h"    /* re15_host_clock_set_us — Wanduhr fuer den Kartenhinweis */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
@@ -4833,6 +4834,19 @@ re_title:;
              * VM / walker steps / esp fx below must NOT tick (the port's old "SCD keeps
              * running under the menu" model was the spec-flagged divergence). The menu FSM
              * itself ticks inside re15_game_step (re15_menu_fsm_tick). */
+            /* LETTERBOX-ZAEHLER AUCH UNTER DEM MENUE (Runde 30, Kartenhinweis, Risiko R4 des
+             * Dossiers karte-3010.md — GEMESSEN: ohne diese Zeile standen die Balken 24 px
+             * oben/unten ueber dem ganzen Hinweis-Schirm, Abzug lauf_a F1896/F1912). Im
+             * Original gehoert FUN_80021a0c NICHT zur Spiel-Task, sondern zum Bild-Abschluss
+             * FUN_80020bb0: `jal 0x80021a0c` @0x80020f34, direkt vor der Nachrichten-Kette
+             * @0x80020f3c und dem Blenden-Takt @0x80020f44 — einmal je Bild, auch wenn die
+             * Menue-Task die Spiel-Task angehalten hat (@0x800460bc haelt NUR Task 0 an). Der
+             * Zaehler laeuft also unter dem Statusschirm weiter aus (Anfrage-Bit 0x10
+             * @0x80021a10-24 ist nach dem Szenenende 0 -> -0x10 je Bild @0x80021a7c).
+             * Bestand: das START-Menue oeffnet nie bei laufendem Balken-Zaehler (in_cinematic
+             * in game_step_common.c), dort ist die Zeile wirkungslos; sie wirkt nur beim
+             * Hinweis, der direkt am Szenenende aufgeht. */
+            re15_letterbox_tick(re15_game_flag_get(1, 27));
         } else if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
             /* RE15_ITEM_MODAL_TEST: debug — force-start the item-get pickup MODAL once (frame 40) to
@@ -6894,6 +6908,17 @@ re_title:;
                         re15_victim_donor_set(0, 0);
                         _wr_logged = 0;
                     }
+                }
+                /* WANDUHR fuer zeitbasierte Engine-Zaehler (Kartenhinweis-Blinker,
+                 * engine/src/map_hint_common.c): einmal je Bild VOR dem Schritt, aus dem
+                 * hochaufloesenden SDL-Zaehler — unabhaengig von der Bildrate der Anzeige
+                 * und von RE15_FPS. Ganzzahlig ohne Ueberlauf: Sekunden und Rest getrennt. */
+                {
+                    const uint64_t pc_now = SDL_GetPerformanceCounter();
+                    const uint64_t pc_hz  = SDL_GetPerformanceFrequency();
+                    if (pc_hz)
+                        re15_host_clock_set_us((pc_now / pc_hz) * 1000000ull
+                                               + ((pc_now % pc_hz) * 1000000ull) / pc_hz);
                 }
                 re15_game_step(&gctx);
                 /* ITEM-GET-MODAL-FSM — NACH dem Spieler-Step, byte-true zur Frame-Ordnung des

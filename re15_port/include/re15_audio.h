@@ -245,4 +245,16 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000);
  * Gerufen aus engine/src/scd_elev_se.c. PSX: Folge-Stub wie die anderen SE-Baenke. */
 void re15_audio_re2_elevator_se(int se_id);
 
+/* ⛔ RE2-ERGAENZUNG, KEIN RE1.5-ORIGINAL: der KARTENHINWEIS-Ton (Runde 30, Thema B).
+ * RE1.5 hat keinen Kartenhinweis (SCD-Tabelle endet bei 0x5E, RE2s Opcode ist 0x84).
+ * RE2 spielt ihn im Hinweis-Zeichner FUN_8006F1C4 am Anfang jeder roten Phase:
+ * `lui a0,0x22b` @0x8006F234 / `jal 0x8005ba28` @0x8006F238 = Se(Bank 2 = Raumbank,
+ * Satz 0x2B). Quelle ROOM3010.RDT: EDT[0x2B] @0x1F824 = 00 01 23 00 -> Programm 1 Ton 2,
+ * Tone @0x20298 (vol 80, pan 64, center 85, min = max = 61), VAG 18 @0x39788, 4480 B,
+ * sha1 eb386970f9a996369889d101b68314681138ff99 — dieselbe Welle liegt in allen vier
+ * RE2-Hinweis-Raeumen auf Satz 0x2B und in KEINER RE1.5-Datei. Mini-Bank
+ * shared_assets/RE2/HINTSE.VBS (tools/re2_hint_cut.py). se_id ist RE2_HINT_SE (0x2B).
+ * Gerufen aus engine/src/map_hint_common.c. PSX: Folge-Stub wie die anderen SE-Baenke. */
+void re15_audio_re2_hint_se(int se_id);
+
 #endif /* RE15_AUDIO_H */

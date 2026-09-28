@@ -47,6 +47,7 @@
  * -> re15_audio_core_se(id). The tab-select FSM itself is SILENT (EXE-wide jal scan:
  * zero SE sites in 0x8004974c-0x80049a58 / FUN_80046540 — spec fact).
  */
+#include <stdio.h>
 #include <string.h>
 #include "re15_menu.h"
 #include "re15_inv_screen.h"    /* g_inv_screen — the original's 25xx screen registers */
@@ -65,6 +66,7 @@
 #include "re15_room.h"          /* g_current_room_id — the MAP per-stage init reads the
                                  * stage/room registers lh DAT_800b0fe0/0fe2 (@0x8004997c
                                  * / FUN_8004b568 head) */
+#include "re15_map_hint.h"      /* RE2-ERGAENZUNG Kartenhinweis (map_hint_common.c) */
 #include "re15_itembox.h"       /* ITEM BOX subscreen (substate 4 [DESIGN] — entered
                                  * ONLY from the box AOT via re15_menu_request_box,
                                  * never from the START tab select; itembox_spec.md §6) */
@@ -97,6 +99,10 @@ static uint8_t s_box_target = 0;   /* ITEM BOX open request [DESIGN]: the task s
                                     * open/close freeze+fade path is the SHARED stage
                                     * FSM (the save-phone precedent: world-side
                                     * trigger, byte-true menu transition mechanics). */
+static uint8_t s_hint_target = 0;  /* RE2-ERGAENZUNG KARTENHINWEIS: der Task oeffnet
+                                    * direkt die Karte auf dem Zielblatt (RE2
+                                    * Statusschirm-Modus 4, Init @0x8006F6A8). */
+static int     s_hint_nr = -1;     /* Hinweis-Nummer (RE2 [0x800D69F2], @0x80059210) */
 
 /* ---- RUNDE 30: DOKUMENT AUFHEBEN (nach RE2; Beleg-Block bei re15_menu_request_doc) ---- */
 static uint8_t s_doc_target = 0;   /* 1 = dieser Menue-Lauf ist der Aufnahme-Leser
@@ -1399,6 +1405,12 @@ static void close_phase(void)
     s_file_open_wait = 0; s_file_open_ctr = 0;
     g_inv_screen.file_bild = 0;
     re15_re2doc_select(-1);
+    /* KARTENHINWEIS-Abbau: RE2 setzt beim Ende des Status-Tasks den Modus zurueck
+     * (sb zero,[0x800D5C00] @0x80068E30); die Hinweis-Nummer loescht die Grundstellung
+     * (sb zero @0x800687FC). Es bleibt nichts zurueck. */
+    s_hint_target = 0;
+    s_hint_nr = -1;
+    g_inv_screen.hint_aktiv = 0;
     s_alive = 0;
     /* Task-0 resume continuation @0x8001cb50-74: aca3c &= ~(0x40|0x8000); 5359=3;
      * falls THROUGH into stage 3 @0x8001cbb8 in the same round (no unfaded frame):
@@ -1416,18 +1428,27 @@ static void close_phase(void)
 /* (s_c3) — the SAME bytes the ITEM FSM uses (s1 = 0x800b25c2 @0x8004c060-64).        */
 /* States: 0 slide-out / 1 interactive / 2 reverse slide / >=3 no-op (@0x8004c098).   */
 /* ---------------------------------------------------------------------------------- */
+/* Ein Gleitschritt der sieben Panel-Register: dir = +1 wie case 0 (Karte faehrt ein),
+ * dir = -1 wie case 2 (Rueckweg). Herausgezogen, damit der Kartenhinweis die Endlage
+ * nach 0x19 Schritten mit DENSELBEN Schrittweiten herstellen kann — keine neue Zahl. */
+static void map_panel_schritt(int dir)
+{
+    g_inv_screen.list_x     += (int16_t)(15 * dir); /* 25e0 @0x8004c0e0-e8  / @0x8004c240-248 */
+    g_inv_screen.ecg_y      += (int16_t)( 9 * dir); /* 25e6 @0x8004c0f4-fc  / @0x8004c254-25c */
+    g_inv_screen.cond_x     -= (int16_t)( 9 * dir); /* 25e4 @0x8004c108-110 / @0x8004c268-270 */
+    g_inv_screen.equip_y    -= (int16_t)( 7 * dir); /* 25de @0x8004c11c-124 / @0x8004c27c-284 */
+    g_inv_screen.arms_y     -= (int16_t)( 7 * dir); /* 25da @0x8004c130-138 / @0x8004c290-298 */
+    g_inv_screen.idcard_x   -= (int16_t)( 8 * dir); /* 25f0 @0x8004c144-14c / @0x8004c2a4-2ac */
+    g_inv_screen.tab_base_y += (int16_t)( 7 * dir); /* 25ea @0x8004c154 + join @0x8004c2b4-b8
+                                                     * / @0x8004c2b0-2b8 */
+}
+
 static void map_mode(uint16_t pressed)
 {
     switch (g_inv_screen.item_state) {
     case 0:
         if (s_c3 < 0x19) {                      /* sltiu 0x19 @0x8004c0bc — 25 frames */
-            g_inv_screen.list_x     += 15;      /* 25e0 @0x8004c0e0-e8  */
-            g_inv_screen.ecg_y      += 9;       /* 25e6 @0x8004c0f4-fc  */
-            g_inv_screen.cond_x     -= 9;       /* 25e4 @0x8004c108-110 */
-            g_inv_screen.equip_y    -= 7;       /* 25de @0x8004c11c-124 */
-            g_inv_screen.arms_y     -= 7;       /* 25da @0x8004c130-138 */
-            g_inv_screen.idcard_x   -= 8;       /* 25f0 @0x8004c144-14c */
-            g_inv_screen.tab_base_y += 7;       /* 25ea @0x8004c154 + join @0x8004c2b4-b8 */
+            map_panel_schritt(+1);              /* @0x8004c0e0-0x8004c154 */
             s_c3++;                             /* sb a0,1(s1) @0x8004c2c0 */
             return;
         }
@@ -1442,6 +1463,25 @@ static void map_mode(uint16_t pressed)
         s_c3 = 0;                               /* sb zero,1(s1) @0x8004c1cc */
         return;
     case 1:
+        /* RE2-ERGAENZUNG KARTENHINWEIS: RE2s Hinweis-Lauf kennt GENAU EINE Eingabe.
+         * Unterzustand 2 @0x8006F878: lw v0,[0x800CE310] (Tasten-Flanken) @0x8006F87C,
+         * andi v0,v0,0x6000 @0x8006F884 -> Se(4,5) (lui a0,0x405 @0x8006F890 /
+         * jal 0x8005ba28 @0x8006F894) und Unterzustand 0 = Ausblenden (@0x8006F8A0,
+         * @0x80068F08) -> Ende des ganzen Status-Tasks (@0x80068F88 -> 0x80068CD4).
+         * 0x4000 ist die Statustaste (andi v0,v0,0x4000 @0x800264A0 oeffnet mit ihr),
+         * 0x2000 der Abbruch (andi v0,v0,0x2000 @0x8006A928 vor Se(4,5) @0x8006A930).
+         * Im Port: START bzw. die virtuelle Abbruch-Flanke 0x8000 (dieselben Tasten, die
+         * tab_select als Abbruch liest). KEIN Blaettern, KEIN L1, KEIN Bestaetigen; der
+         * GANZE Schirm schliesst ueber close_phase, nicht ueber das Rueck-Gleiten. */
+        if (g_inv_screen.hint_aktiv) {
+            if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000)) {
+                se4(5);
+                s_phase = 2;
+                fprintf(stderr, "[hint] F%u schliessen (%s)\n", (unsigned)g_engine.frame_count,
+                        (pressed & RE15_PAD_BIT_START) ? "START" : "Abbruch");
+            }
+            return;
+        }
         /* interactive: VIRTUAL cancel edge 0x8000 (lw 0x800ac76c @0x8004c1d0-e0)
          * <- RAW CROSS (@0x80073dbc[15], wave-6 finding 4) OR raw L1 edge 0x4
          * (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
@@ -1493,13 +1533,7 @@ static void map_mode(uint16_t pressed)
         return;
     case 2:
         if (s_c3 < 0x19) {                      /* sltiu 0x19 @0x8004c21c */
-            g_inv_screen.list_x     -= 15;      /* 25e0 @0x8004c240-248 */
-            g_inv_screen.ecg_y      -= 9;       /* 25e6 @0x8004c254-25c */
-            g_inv_screen.cond_x     += 9;       /* 25e4 @0x8004c268-270 */
-            g_inv_screen.equip_y    += 7;       /* 25de @0x8004c27c-284 */
-            g_inv_screen.arms_y     += 7;       /* 25da @0x8004c290-298 */
-            g_inv_screen.idcard_x   += 8;       /* 25f0 @0x8004c2a4-2ac */
-            g_inv_screen.tab_base_y -= 7;       /* 25ea @0x8004c2b0-2b8 */
+            map_panel_schritt(-1);              /* @0x8004c240-0x8004c2b8 */
             s_c3++;                             /* sb a0,1(s1) @0x8004c2c0 */
             return;
         }
@@ -2030,6 +2064,38 @@ static void file_mode(uint16_t pressed, uint16_t held)
     }
 }
 
+/* ---------------------------------------------------------------------------------- */
+/* KARTENHINWEIS-INIT (RE2-ERGAENZUNG; RE2 Modus-4-Init @0x8006F6A8)                   */
+/* ---------------------------------------------------------------------------------- */
+/* Laeuft NACH phase0_init (re15_inv_screen_open loescht die Schirm-Struktur per memset —
+ * die Hinweis-Felder sind beim naechsten normalen Oeffnen also von selbst wieder 0).
+ * map_entry() wird NICHT gerufen: es schreibt ueber re15_inv_map_stage_init die
+ * PERSISTENTEN Register DAT_800b260d/260e und hinterliesse eine Spur. RE2 setzt sein
+ * Blatt [0x800D5C0A] im Hinweis-Init selbst (@0x8006F738) und schreibt es nirgends fort;
+ * der Port setzt nur das angezeigte Blatt g_inv_screen.map_page (die Blattgrafik folgt
+ * ihm, map_page_check in inv_render_pc.c). */
+static void hint_open(void)
+{
+    int page = 0, rect = 0, k;
+    (void)re15_map_hint_ziel(s_hint_nr, &page, &rect);   /* in request geprueft */
+    s_substate = 1;                          /* MAP (RE2 Modus 4 = eigene Karte)    */
+    g_inv_screen.tab = 1;
+    g_inv_screen.map_page = (uint8_t)page;   /* RE2 @0x8006F738: Blatt fest je Hinweis */
+    /* Die Karte steht beim Einblenden schon in ihrer Endlage: RE2 blendet den fertigen
+     * Kartenschirm ein (FUN_8002C1A0(0x200,-0x1800,7,1) @0x8006F824-30), ohne die
+     * RE1.5-Panelfahrt. Endlage = 0x19 Schritte (sltiu 0x19 @0x8004c0bc) der Gleit-
+     * Schrittweiten aus map_mode case 0; danach der Zustand, den case 0 hinterlaesst:
+     * item_state 1 (@0x8004c1c4), s_c3 0 (@0x8004c1cc). */
+    for (k = 0; k < 0x19; k++) map_panel_schritt(+1);
+    g_inv_screen.item_state = 1;
+    s_c3 = 0;
+    g_inv_screen.hint_aktiv = 1;
+    g_inv_screen.hint_page  = (uint8_t)page;
+    g_inv_screen.hint_rect  = (uint8_t)rect;
+    re15_map_hint_begin();                   /* Zaehler 10 / Richtung 1 (@0x8006F6DC/B4) */
+    g_inv_screen.hint_rot   = (uint8_t)re15_map_hint_rot();
+}
+
 static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
     switch (s_phase) {
@@ -2070,10 +2136,16 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
                 g_inv_screen.file_row  = (uint8_t)(platz % 10);  /* ≙ @0x80071d14/1c */
                 if (d) file_reader_open(d->bildsatz, d->max_page);
             }
+            if (s_hint_target) hint_open();
         }
         /* fade-in loop @0x8004970c-2c: draw + vsync until FUN_8002178c(0)!=0 — input
          * is NOT processed while fading in. */
         if (!re15_fade_done(0)) return;
+        /* KARTENHINWEIS: "Karte ist da"-Ton, sobald die Einblendung fertig ist — RE2s
+         * Init-Schleife @0x8006F838-58 (warten, Zeichner, bis FUN_8002C350(0) != 0), danach
+         * lui a0,0x409 @0x8006F85C / jal 0x8005ba28 @0x8006F860 = Se(4,9), CORE-Satz 9
+         * (CORE00.EDH/.VB zwischen RE1.5 und RE2 byte-gleich, Dossier 3.8). */
+        if (s_hint_target) se4(9);
         s_phase = 1;                            /* 25bf++ @0x800464d4-e8 */
         return;
     case 1:
@@ -2120,7 +2192,17 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
      * player world X/Z (lw 0x800aca88/0x800aca90 @0x8004741c/0x8004746c) before every
      * AddPrim — modeled by refreshing the marker fields after the FSM step. */
     g_inv_screen.substate = s_substate;
-    if (s_substate == 1 && g_inv_screen.item_state == 1)
+    /* KARTENHINWEIS: der Blinker laeuft JEDES Bild, auch waehrend Ein- und Ausblendung —
+     * RE2 ruft den Zeichner samt Zaehler schon in der Init-Schleife (@0x8006F840) und im
+     * Lauf nach jedem Unterzustand (@0x8006F8E0), also auch beim Ausblenden. */
+    if (s_alive && g_inv_screen.hint_aktiv) {
+        re15_map_hint_tick();
+        g_inv_screen.hint_rot = (uint8_t)re15_map_hint_rot();
+    }
+    /* Spielermarker: im Hinweis nicht — RE2s Hinweis-Zeichner liest die Spielerlage
+     * nicht (Zugriffe auf [0x800CFC30]/[0x800CFC38] nur im normalen Zeichner
+     * @0x8006E1E4/@0x8006E1F8). */
+    if (s_substate == 1 && g_inv_screen.item_state == 1 && !g_inv_screen.hint_aktiv)
         re15_inv_map_marker(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                             g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                             g_inv_screen.map_room,
@@ -2259,6 +2341,23 @@ void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id)
     s_stage = 1;
 }
 int re15_menu_doc_active(void) { return s_doc_target; }
+/* RE2-ERGAENZUNG KARTENHINWEIS — Muster re15_menu_request_box: dieselbe Oeffnen-
+ * Ueberblendung (Stufe 1 @0x8001ca64-88 -> Stufe 2 @0x8001ca98-cb4c), dann Karte statt
+ * Tab-Auswahl. KEIN Oeffnen-Ton: RE2s Handler setzt die Phase selbst (@0x800591E8), die
+ * Spielschleife ueberspringt deshalb den Zweig mit Se(4,6) (bne v0,zero,0x80026540
+ * @0x80026404 ueber @0x8002652C-30). */
+int re15_menu_request_map_hint(int hint_nr)
+{
+    if (s_alive || s_stage != 0) return 0;
+    if (!re15_map_hint_ziel(hint_nr, NULL, NULL)) return 1;   /* kein Ziel: verwerfen */
+    s_hint_target = 1;
+    s_hint_nr = hint_nr;
+    s_latch = 1;
+    s_stage = 1;
+    return 1;
+}
+
+int re15_menu_map_hint_active(void) { return s_hint_target != 0; }
 
 /* Bridge for the box transfer reject (re15_itembox.c): open desc-bank entry 0
  * ("You can't use it here.") at (0x18,0xa8) — the RE1.5 cant-use message infra
@@ -2311,11 +2410,13 @@ void re15_menu_toggle(void)
         s_request = 0; s_latch = 0; s_stage = 0;
         s_c3 = 0; s_c4 = 0;
         s_box_target = 0;
+        s_hint_target = 0; s_hint_nr = -1;
         g_inv_screen.box_mode = 0;
         s_doc_target = 0; s_doc_msg = 0; s_doc_open_se = 0;   /* Runde 30 */
         s_file_open_wait = 0; s_file_open_ctr = 0;
         g_inv_screen.file_bild = 0;
         re15_re2doc_select(-1);
+        g_inv_screen.hint_aktiv = 0;
         s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;

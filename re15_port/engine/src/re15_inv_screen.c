@@ -543,25 +543,64 @@ void re15_inv_map_stage_init(int stage, int room)
  * Die Schema-Fuellung (Port-Ergaenzung fuer Raeume ohne Kachelkunst) traegt
  * deshalb JETZT dieselben Werte und blendet ebenfalls halb — sie passt damit
  * per Konstruktion zur Kachel statt per Nachmessung. */
-static void re2_ton(int rs, int *r, int *g, int *b)
+/* ⛔ BERICHTIGUNG RUNDE 30 (Nutzer 2026-09-27: "ROOM 1000 ist irgendwie jetzt blau
+ * eingezeichnet", "Roof ist irgendwie die Wand unten blau"). DER NACHTRAG OBEN
+ * STIMMTE IN ZWEI PUNKTEN NICHT — gemessen, analysis/befunde_runde30/karten-marken.md:
+ *  (1) Die Werte standen hier als FESTE ZAHLEN, und zwar RE2s Blau (16,64,176).
+ *      37 Minuten nach ihrer Einfuehrung (72d6f7ba) stellte 9a75fccb die KACHELN
+ *      auf RE1.5s Gruen zurueck — geaendert wurde nur RE15_KARTE_BESUCHT im Header,
+ *      diese Funktion blieb stehen. Folge an SEINEN Abzuegen: 403 Punkte
+ *      (16,64,176) im Schema-Kasten von ROOM1000 (Blatt 2, x 208..220 / y 90..120)
+ *      und 35 Punkte auf dem Dach-Blatt (y=155, x 148..182).
+ *  (2) "blendet ebenfalls halb" tat der Code NICHT: die Fuellung wurde mit abe = 0
+ *      eingereiht (deckend).
+ * JETZT: die Farben werden aus DENSELBEN Palettenwoertern dekodiert, die der
+ * Kachel-Blit benutzt (platform/pc/src/inv_render_pc.c, karten_cluts_bauen) —
+ * keine Zahl steht hier ein zweites Mal:
+ *   besucht  RE15_KARTE_BESUCHT = 0x81A4 -> (32,104,0), STP 1
+ *            re15_port/shared_assets/PSX/DATA/TEX.TIM @Datei 0x0556 (CLUT-Zeile 21
+ *            Eintrag 1; die Zeile waehlt RE1.5 selbst: GetClut(0x100,0x1f5)
+ *            `ori a0,zero,0x100` @0x80046fdc / `ori a1,zero,0x1f5` @0x80046fe8)
+ *   aktuell  RE15_KARTE_AKTUELL = 0x842D -> (104,8,8), STP 1
+ *            info/re2leon/COMMON/DATA/ST0.TIM @Datei 0x109B6 (RE2-Zeile CLUT-Y 502,
+ *            `addiu s5,s5,1` @0x8006E648). RE2 statt RE1.5, weil RE1.5 KEINEN
+ *            Zustand "aktueller Raum" kennt: seine Rechteck-Schleife
+ *            @0x800472fc-0x800473dc hat als einzige Verzweigung den Zaehler.
+ *   unbesucht RE15_KARTE_UNBESUCHT = 0x0000 (ST0.TIM @0x10936, durchsichtig).
+ *            Diesen Zweig erreicht KEIN Aufrufer: die Schema-Fuellung ueberspringt
+ *            UNVISITED vorher. Der frueher hier stehende Wert (34,34,38) trug keinen
+ *            Beleg und ist entfallen.
+ * Das STP-Bit (Bit 15) beider Zustandswoerter ist gesetzt = halbtransparent; die
+ * Fuellung wird deshalb mit abe = 1 eingereiht (Stelle unten, "SCHEMA-FUELLUNG"). */
+static void karte_wort_rgb(uint16_t w, int *r, int *g, int *b)
 {
-    if (rs == RE15_MAP_RECT_CURRENT)      { *r = 104; *g =   8; *b =   8; }
-    else if (rs == RE15_MAP_RECT_VISITED) { *r =  16; *g =  64; *b = 176; }
-    else                                  { *r =  34; *g =  34; *b =  38; }
+    /* PSX 15-Bit-Farbe: Bits 0-4 R, 5-9 G, 10-14 B, Bit 15 STP. Auf 8 Bit wie der
+     * Riegel unit_karte_besitz (test_karte_besitz.c) und der Rasterer (>> 3 zurueck). */
+    *r = (int)(w & 31u) << 3;
+    *g = (int)((w >> 5) & 31u) << 3;
+    *b = (int)((w >> 10) & 31u) << 3;
 }
 
-/* Die Kante der Schema-Zeichnung - die hellen Linien derselben Kacheln (s. re2_ton). */
+static void re2_ton(int rs, int *r, int *g, int *b)
+{
+    if (rs == RE15_MAP_RECT_CURRENT)      karte_wort_rgb(RE15_KARTE_AKTUELL,   r, g, b);
+    else if (rs == RE15_MAP_RECT_VISITED) karte_wort_rgb(RE15_KARTE_BESUCHT,   r, g, b);
+    else                                  karte_wort_rgb(RE15_KARTE_UNBESUCHT, r, g, b);
+}
+
+/* Die Kante der Schema-Zeichnung UND die Innenwand - die helle Wandlinie der Kacheln. */
 static void re2_ton_kante(int rs, int *r, int *g, int *b)
 {
     /* ⛔ EINE Wandlinie fuer JEDEN Zustand — das ist RE2s Modell, nicht meins:
      * seine drei Kachelzeilen 498/501/502 unterscheiden sich in GENAU den
      * Eintraegen {1,12,13,14}; Eintrag 4 (die Wandlinie) ist in allen dreien
-     * bitgleich 888888 (ST0.TIM @0x10820, Zeilen k=8/11/12 selbst gelesen).
-     * Die Kachelkunst des Ports ist RE1.5s, deren Wandlinie b0b0b0 heisst
-     * (TEX.TIM CLUT-Zeile 21 Eintrag 4) — die Schema-Zeichnung nimmt diese,
-     * damit sie neben einer echten Kachel nicht auffaellt. */
+     * bitgleich 0x4631 = 888888 (ST0.TIM @0x1093C / @0x1099C / @0x109BC).
+     * Die Kachelkunst des Ports ist RE1.5s, deren Wandlinie RE15_KARTE_WAND =
+     * 0x5AD6 = b0b0b0 heisst (TEX.TIM @Datei 0x055C, CLUT-Zeile 21 Eintrag 4,
+     * STP 0 = deckend) — die Schema-Zeichnung nimmt diese, damit sie neben einer
+     * echten Kachel nicht auffaellt. Dekodiert, nicht abgeschrieben. */
     (void)rs;
-    *r = 0xb0; *g = 0xb0; *b = 0xb0;
+    karte_wort_rgb(RE15_KARTE_WAND, r, g, b);
 }
 
 /* Spielerradius fuer den Kollisions-Klemmer: 450 (DAT_80073e94[6], code-verifiziert,
@@ -1738,7 +1777,7 @@ static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     return e.n;
 }
 
-int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
+static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
 {
     emit_t e; int i, clut_idx, count; uint32_t tmpl;
     int x, y, w, h, u, v;
@@ -2051,7 +2090,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * (@0x800475f8-61c). Die nicht gesetzten Texel des 8x8-Quads bleiben
      * transparent (CLUT-Index 0), der Marker malt also keinen Kasten ueber die
      * Symbole — nur seine eigenen Pixel. */
-    if (st->substate == 1 && st->item_state == 1) {
+    /* KARTENHINWEIS: kein Spielermarker — RE2s Hinweis-Zeichner liest die Spielerlage
+     * nicht (nur der normale Zeichner @0x8006E1E4/@0x8006E1F8; Dossier 3.5 d). */
+    if (st->substate == 1 && st->item_state == 1 && !st->hint_aktiv) {
         /* marker: POLY_FT4 code 0x2e (@0x80047130-34), 8x8 around the per-frame centre
          * (+-4: builder @0x8004715c-71f0, per-frame rewrite @0x80047554-75c4), uv
          * (224,128)-(232,136) with its own tpage 0x1b = the TEX page (sh 0x1b
@@ -2292,13 +2333,23 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                             q->x = (int16_t)lauf0; q->y = (int16_t)fest;
                             q->w = (int16_t)(s - lauf0); q->h = 1;
                         }
-                        /* ⛔ DIE INNENWAND FOLGT DEN NEUEN KACHELTOENEN.
-                         * Hier standen die alten Modulations-Faktoren (192,24,24)/
-                         * (40,144,40) als FILL-Farben. Seit die Kacheln RE2s
-                         * Zustandszeilen tragen (blau 1040b0 / dunkelrot 680808)
-                         * waeren gruene Trennwaende ein Fremdkoerper. re2_ton
-                         * fuehrt dieselben Werte. */
-                        { int wr, wg, wb; re2_ton(vorher, &wr, &wg, &wb);
+                        /* ⛔ DIE INNENWAND TRAEGT DIE WANDFARBE DER KACHEL — ZUSTANDSFREI
+                         * (Runde 30, karten-marken.md §5 Schritt 1).
+                         * Hier stand re2_ton(zustand): die Wand nahm die Farbe des
+                         * RAUMKOERPERS an, im Stand des Nutzers RE2s Blau (16,64,176).
+                         * Der Befund vom 2026-09-07 ("FALSCHE FARBE", Kommentar am
+                         * Kopf dieses Abschnitts) verlangte "die Umrandungsfarbe des
+                         * Rechtecks" — damals wurden die Kacheln MODULIERT und ihre
+                         * Umrandung war mitgetoent. Seit der CLUT-Zeile (cc400b1e) ist
+                         * die Umrandung jeder Kachel in JEDEM Zustand (176,176,176):
+                         * gemessen an den drei Nutzer-Abzuegen vom 2026-09-27 mit
+                         * 1422 / 4635 / 7551 Punkten. Dieselbe Regel ergibt heute also
+                         * die Wandlinie der Palette, RE15_KARTE_WAND = 0x5AD6
+                         * (TEX.TIM @Datei 0x055C, STP 0 -> abe bleibt 0); in RE2 ist
+                         * Eintrag 4 ebenfalls zustandsfrei (0x4631 @0x1093C / @0x1099C
+                         * / @0x109BC). Die Laeufe je Zustand bleiben erhalten — sie
+                         * tragen jetzt dieselbe Farbe. */
+                        { int wr, wg, wb; re2_ton_kante(vorher, &wr, &wg, &wb);
                           q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb; }
                     }
                     vorher = zu; lauf0 = s;
@@ -2348,7 +2399,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                         }
                         _rs = best;
                     }
-                    { int wr, wg, wb; re2_ton(_rs, &wr, &wg, &wb);   /* s.o. */
+                    { int wr, wg, wb; re2_ton_kante(_rs, &wr, &wg, &wb);   /* s.o. */
                       q->r = (uint8_t)wr; q->g = (uint8_t)wg; q->b = (uint8_t)wb; }
                 }
             }
@@ -2435,6 +2486,31 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                        : re15_map_rect_state((unsigned)st->map_page, (unsigned)i);
                 int cr = 128, cg = 128, cb = 128;           /* UNMAPPED: Stock */
                 int clut_kachel = RE15_INV_CLUT_TEXROW21;   /* RE2: Zeile = Zustand */
+                /* ---- KARTENHINWEIS: DIE ZIELKACHEL (RE2-ERGAENZUNG, Runde 30) --------
+                 * RE2s Hinweis-Zeichner FUN_8006F1C4 zeichnet den Zielraum IMMER — beide
+                 * Zweige enden im Zeichnen (@0x8006F604/@0x8006F608 GetClut + Sprite),
+                 * ohne Besucht-Bit und ohne Kartenbesitz zu fragen:
+                 *   bne s4,a2,0x8006f518 @0x8006F4E8   nur der Zielraum (Index aus
+                 *                                      FUN_8006EAE8 @0x8006F2C8)
+                 *   Richtung [0x800D5C19] == 0 -> j 0x8006f604 / addiu s2,s2,1
+                 *       @0x8006F510-14: 501 + 1 = CLUT-Y 502 = RE15_INV_CLUT_MAP_AKTUELL
+                 *   Richtung != 0 -> j 0x8006f5d8 @0x8006F508, addiu s2,zero,498
+                 *       @0x8006F5DC = CLUT-Y 498 = RE15_INV_CLUT_MAP_UNBESUCHT
+                 * (die Varianten 503/507 haengen an der Bank 0x800D4920, die der Port
+                 * nicht fuehrt). Im ERSTEN Durchgang, damit kein Nachbar sie ueberdeckt
+                 * (frueher eingetragen = oben). Die normale Regel darunter sieht die
+                 * Kachel dann nicht mehr — RE2 zeichnet sie auch nur ueber diesen Zweig. */
+                if (st->hint_aktiv && st->map_page == st->hint_page && i == st->hint_rect) {
+                    if (durchgang_r != 0) continue;
+                    if (!re15_map_rect_geometry((unsigned)st->map_page, (unsigned)i,
+                                                &rx, &ry, &rw, &rh)) continue;
+                    if (!re15_map_rect_uv((unsigned)st->map_page, (unsigned)i, &ru, &rv))
+                        continue;
+                    sprt(&e, RE15_INV_PAGE_MAP4,
+                         st->hint_rot ? RE15_INV_CLUT_MAP_AKTUELL : RE15_INV_CLUT_MAP_UNBESUCHT,
+                         rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
+                    continue;
+                }
                 /* Ein Rechteck mit TEILBEREICHEN traegt gemischte Zustaende - es
                  * muss deshalb in BEIDEN Durchgaengen drankommen, damit der rote Teil
                  * frueh (= oben) und die gruenen spaeter eingetragen werden. Das Gate
@@ -2627,6 +2703,10 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              * drin stehe." */
             int durchgang;
             const re15_map_zone_t *akt = re15_map_zone_current();
+            /* [0] = Rand, [1] = Fuellung: schon eingereiht, ueber BEIDE Durchgaenge der
+             * jeweiligen Art (Begruendung an der Abfrage unten). */
+            unsigned char schon[2][256];
+            memset(schon, 0, sizeof schon);
             /* ⛔ VIER DURCHGAENGE: ERST ALLE WANDLINIEN, DANN ALLE FUELLUNGEN.
              * Je Raum erst Linie und dann Fuellung auszugeben genuegt NICHT: die
              * Fuellung des zuerst gezeichneten Raums liegt ueber der LINIE aller
@@ -2689,6 +2769,20 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 if (re15_map_stock_mode()) continue;
                 if (!re15_map_ebene_schema()) continue;      /* Messschiene */
                 if (rs2 == RE15_MAP_RECT_UNVISITED) continue;
+                /* ⛔ JEDE ZEICHNUNG GENAU EINMAL - AUCH UEBER DIE DURCHGAENGE HINWEG
+                 * (Runde 30, GEMESSEN mit unit_r30_karte_nutzerstand, Spieler in
+                 * ROOM1000/z0: Blatt 2 Op 108 UND Op 109, beide FILL (207,89) 15x33).
+                 * `getan` wird je Durchgang geloescht. Eine Zeichnung hat aber ZWEI
+                 * Zonenzeilen - Leon 0x1000 und Elza 0x1001 -, und nur EINE davon traegt
+                 * die Raumnummer des Spielers: die eine lief durch den Durchgang "aktueller
+                 * Raum", die andere durch "alle uebrigen". Die Zeichnung des aktuellen
+                 * Raums stand deshalb ZWEIMAL in der Liste, Rand wie Fuellung.
+                 * Solange die Fuellung deckend war (abe 0), blieb das folgenlos. Mit der
+                 * halbtransparenten Fuellung mischte die zweite Op ein zweites Mal:
+                 * ueber dem Panel (0,16,88) ergaebe 0x842D statt (48,8,48) - dem Wert
+                 * jeder gemalten aktuellen Kachel - (72,8,24). */
+                if (schon[nur_rand ? 0 : 1][zn2->synth]) continue;
+                schon[nur_rand ? 0 : 1][zn2->synth] = 1;
                 /* RE2-STIL: die WANDLINIE ist in jedem Raum gleich hell; nur die
                  * FUELLUNG traegt den Zustand (blau besucht, dunkelrot aktuell).
                  * Vorher trugen beide denselben Ton, wodurch benachbarte Raeume
@@ -2755,7 +2849,27 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      * ENDPUNKT, nicht als Groesse (inv_render_pc.c:547-566) - die
                      * Zellen wurden dadurch zu langen Strichen quer ueber den
                      * Schirm, im Abzug des 2F-Blattes deutlich zu sehen. */
-                    q2->kind = RE15_INV_OP_FILL; q2->page = 0; q2->clut = 0; q2->abe = 0;
+                    /* ⛔ SCHEMA-FUELLUNG HALBTRANSPARENT (abe = 1) — Runde 30,
+                     * karten-marken.md §4c. Bis hier stand abe = 0: die Fuellung lag
+                     * DECKEND auf dem Panel, waehrend jede gemalte Kachel ihren
+                     * Raumkoerper halbtransparent traegt. Gemessen am Abzug des
+                     * Nutzers (befund_1070_F310_marke2.png): Schema-Kasten deckend
+                     * (16,64,176), gemalte Kachelkoerper daneben (16,56,40)/(16,56,56).
+                     * BELEG fuer halbtransparent: (a) das STP-Bit (Bit 15) ist in
+                     * beiden Zustandswoertern gesetzt — 0x81A4 (TEX.TIM @0x0556) und
+                     * 0x842D (ST0.TIM @0x109B6); (b) RE1.5 zeichnet JEDES
+                     * Karten-Rechteck mit gesetztem Halbtransparenz-Bit im
+                     * Prim-Code: `ori v0,v0,0x2` @0x80047314 und @0x80047380
+                     * (beide Puffer). Der Rasterer mischt je Kanal (d5 + f5) >> 1
+                     * (inv_render_pc.c, FILL mit abe) — dieselbe Rechnung wie der
+                     * Kachel-Blit; ueber den Panelfarben (0,16,88)/(0,16,120) ergibt
+                     * 0x81A4 exakt (16,56,40)/(16,56,56), 0x842D (48,8,48)/(48,8,64).
+                     * REIHENFOLGE: Rand und Tuermarken stehen FRUEHER in der Liste
+                     * (= oben) und bleiben deckend; die Fuellung mischt sich nur mit
+                     * dem, was NACH ihr steht (Panel). Unter den drei Kaesten von
+                     * ROOM1000 traegt die Kartenkunst nur Index 0 (gemessen: 165+30 /
+                     * 80 / 75 Texel). */
+                    q2->kind = RE15_INV_OP_FILL; q2->page = 0; q2->clut = 0; q2->abe = 1;
                     q2->u = 0; q2->v = 0;
                     q2->x = (int16_t)cx; q2->y = (int16_t)cy;
                     q2->w = (int16_t)cw; q2->h = (int16_t)ch;
@@ -2862,4 +2976,20 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                      col * 40, 12 + row * 40, 40, 40, 0, 213, 128, 128, 128, 1);
     }
     return e.n;
+}
+
+/* KARTENHINWEIS (RE2-ERGAENZUNG, Runde 30 Thema B): fuer die Dauer eines Hinweis-Bildes
+ * kennt die Karte keinen aktuellen Raum (re15_map_ohne_aktuell, Beleg in re15_room.h:
+ * RE2s Hinweis-Zeichner vergleicht nur gegen den Zielraum, bne s4,a2 @0x8006F4E8).
+ * Alle Zustandsabfragen des Zeichners — Kacheln, Teilbereiche, Waende, Marken, Schema —
+ * sehen den Raum des Spielers damit als BESUCHT, nicht als AKTUELL. Ausserhalb des
+ * Hinweises ist die Liste bitgleich zu vorher (hint_aktiv == 0 -> build_status direkt). */
+int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
+{
+    int n;
+    if (!st->hint_aktiv) return build_status(st, ops, max_ops);
+    re15_map_ohne_aktuell(1);
+    n = build_status(st, ops, max_ops);
+    re15_map_ohne_aktuell(0);
+    return n;
 }

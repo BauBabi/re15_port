@@ -255,6 +255,47 @@ int main(void)
 { int fp2 = -1, fr2 = -1;
           CHECK("der kleine Bereich liegt bei Band 0 auf dem 3F-Blatt",
                 re15_map_floor_lookup(0x1170, 1, 0, &fp2, &fr2) && fp2 == 4); }
+        /* ⛔ ANGEPASST IN RUNDE 30 (Nutzer 2026-09-27, karten-marken.md §2.8 Klasse B /
+         * §6 Punkt 3) - MIT BEGRUENDUNG, NICHT GELOCKERT.
+         * Bis hier zaehlte der Pin die Marken des DACH-Blatts (Seite 5), waehrend der
+         * Spieler auf Band 0 stand. Auf Band 0 ist der kleine Bereich aber auf dem
+         * 3F-Blatt gezeichnet (Zusicherung direkt darueber); auf Seite 5 wird in diesem
+         * Augenblick KEIN Rechteck gemalt: rect 0 (ROOM1170/z1) verlangt das Etagen-Bit
+         * des Bands 4, rect 1 (ROOM1170/z0) ist unbetreten. Die beiden Marken des
+         * Blatts - Treppe (156,97) und Tuer (174,101) - erschienen trotzdem (der Pin
+         * war damit gruen) und standen frei im Panel. Genau das zeigt der ROOF-Abzug
+         * des Nutzers vom 2026-09-27: drei weisse Sprossen bei (156,97) ueber dem
+         * Landeplatz, das kleine Rechteck fehlt.
+         * Eine Marke ohne gezeichneten Traeger ist der Befund, nicht die Anforderung.
+         * Die AUSSAGE des Pins - Tueren und Treppen sind eingezeichnet - wird deshalb
+         * dort geprueft, wo der Bereich auf Seite 5 gezeichnet IST (Band 4), und der
+         * Band-0-Fall bekommt seine eigene Zusicherung. */
+        {
+            int auf5 = 0, auf4 = 0;
+            for (k = 0; k < n; k++) {
+                int pg, r, mx, my, kind;
+                if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
+                if (pg == 5) auf5++;
+                if (pg == 4 && r == 3) auf4++;
+            }
+            printf("  [Marken] Band 0: Seite 5 rect 0 Zustand %d, rect 1 Zustand %d, "
+                   "Marken auf Seite 5: %d, auf Seite 4 rect 3: %d\n",
+                   re15_map_rect_state(5, 0), re15_map_rect_state(5, 1), auf5, auf4);
+            CHECK("Band 0: auf dem Dach-Blatt wird kein Rechteck gemalt",
+                  re15_map_rect_state(5, 0) == RE15_MAP_RECT_UNVISITED &&
+                  re15_map_rect_state(5, 1) == RE15_MAP_RECT_UNVISITED);
+            CHECK("Band 0: deshalb steht dort auch KEINE Marke (sie schwebte frei)",
+                  auf5 == 0);
+            CHECK("Band 0: die Marken des Bereichs stehen auf dem 3F-Blatt, wo er gemalt ist",
+                  re15_map_rect_state(4, 3) == RE15_MAP_RECT_CURRENT && auf4 > 0);
+        }
+        {
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            pl->y = -4 * 0x708; re15_collision_set_band(4);   /* oberer Korridor = Dach-Blatt */
+            re15_map_zone_update(0x1170, -18000, -22000);
+        }
+        CHECK("Band 4: der kleine Bereich ist auf dem Dach-Blatt gemalt (Seite 5 rect 0)",
+              re15_map_rect_state(5, 0) == RE15_MAP_RECT_CURRENT);
         for (k = 0; k < n; k++) {
             int pg, r, mx, my, kind;
             if (!re15_map_mark_get(k, &pg, &r, &mx, &my, &kind)) continue;
@@ -262,6 +303,11 @@ int main(void)
             nachher++;
             /* kind: 0..3 = Tuer mit Wandseite (N/O/S/W), 4/5 = Treppe (Sprossen waag/senk) */
             if (kind >= 4) treppen++; else tueren++;
+        }
+        {   /* zurueck auf Band 0: Abschnitt (8) prueft die Zeichenreihenfolge in genau
+             * dem Stand, in dem er sie bisher geprueft hat. */
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            pl->y = 0; re15_collision_set_band(0);
         }
         CHECK("nach dem Betreten sind Marken sichtbar", nachher > 0);
         CHECK("TUEREN sind eingezeichnet (aus RE1.5s eigenen Tuer-Datensaetzen)",

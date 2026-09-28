@@ -3556,9 +3556,25 @@ def main():
                     # TREPPE: Sprossen quer zur Laufrichtung. map_x = welt_x,
                     # map_y = -welt_z, also X-Treppe -> senkrechte Sprossen.
                     mkind = 5 if m.get('axis') == 12 else 4
+                # ⛔ KEINE MARKE OHNE EIGENE ZONEN-NUMMER (Runde 30, Nutzer 2026-09-27:
+                # "2F ist jetzt unten eine Tuer eingezeichnet auf der Karte die es nicht
+                # gibt"; analysis/befunde_runde30/karten-marken.md §4b).
+                # Hier stand `zid_of.get((b, zi), 0)`. Der Rueckfall 0 ist aber eine
+                # GUELTIGE Nummer - ROOM1000 Zone 0. Jede Marke eines Raums, den die
+                # Zonentabelle nicht fuehrt (ROOM1090 obere Ebene, ROOM1230, ROOM2020),
+                # hing damit am Besucht-Bit von ROOM1000 und erschien, sobald der
+                # Spieler DORT war - auf einem fremden Blatt und ohne Rechteck.
+                # Gemessen: 9 solche Marken im Auslieferungsstand der Tabelle.
+                # Eine Marke ohne eigene Zone hat kein Besucht-Bit und keinen Traeger:
+                # sie wird verworfen, nicht umgehaengt.
+                if (b, zi) not in zid_of:
+                    print("   [Marke] ROOM%04X %s #%d Zone z%d: KEINE ZONEN-NUMMER - "
+                          "verworfen (frueher Rueckfall zid 0 = ROOM1000/z0)"
+                          % (b, 'Tuer' if kind == 0 else 'Treppe', _n, zi))
+                    continue
                 vor.append({'room': b, 'zi': zi, 'idx': _n, 'kind': kind, 'pg': pg, 'r': r,
                             'mx': mx, 'my': my, 'seite': mkind, 'klemm_xy': _klemm_xy,
-                            'zid': zid_of.get((b, zi), 0), 'd': m})
+                            'zid': zid_of[(b, zi)], 'd': m})
                 # ⛔ KEINE ZWEITE MARKE AUF DEM EIGENEN BLATT DES ORTES.
                 # Versucht am 2026-09-03, weil 12 von 244 Tueren beim Davorstehen
                 # kein Symbol zeigten (die Marke liegt auf dem Blatt des BANDES,
@@ -4561,6 +4577,17 @@ def main():
                 _tx, _ty = _u + _i, _v + _j
                 return 0 <= _tx < 256 and 0 <= _ty < 256 and _px[_ty][_tx] != 0
 
+            def _index(_mx, _my, _rx=_rx, _ry=_ry, _rw=_rw, _rh=_rh,
+                       _u=_u, _v=_v, _px=_px):
+                """Palettenindex der Kachel unter dem Kartenpunkt, -1 = ausserhalb."""
+                _i, _j = _mx - _rx, _my - _ry
+                if not (0 <= _i < _rw and 0 <= _j < _rh):
+                    return -1
+                _tx, _ty = _u + _i, _v + _j
+                if not (0 <= _tx < 256 and 0 <= _ty < 256):
+                    return -1
+                return _px[_ty][_tx]
+
             _bd = _band_der_zone(_b, _pg)
             # Die Absetzpunkte der SELBST-Tueren dieses Raums (dest == eigener Raum).
             _spawn = [(_t['nx'], _t['nz']) for _t in (doors_all.get(_b) or ())
@@ -4639,9 +4666,6 @@ def main():
                 _a0 = min(q[0] for q in _sp); _a1 = max(q[0] for q in _sp)
                 _b0 = min(q[1] for q in _sp); _b1 = max(q[1] for q in _sp)
                 _senk = (_a1 - _a0) <= (_b1 - _b0)      # schmale Achse = x?
-                if _aussen:
-                    _stat['aussen'] += 1
-                    continue
                 if _senk:
                     _m = (_a0 + _a1) // 2
                     _lx0, _ly0, _lx1, _ly1 = _m, _b0, _m, _b1
@@ -4650,6 +4674,30 @@ def main():
                     _lx0, _ly0, _lx1, _ly1 = _a0, _m, _a1, _m
                 if _lx0 == _lx1 and _ly0 == _ly1:
                     continue                     # ein Punkt ist keine Wand
+                # ⛔ AUSSENWAND-REGEL WIEDER WIRKSAM (Runde 30, Nutzer 2026-09-27: "Roof
+                # ist irgendwie die Wand unten blau"; karten-marken.md §4a).
+                # Regel (1) im Kopf dieses Abschnitts - "Aussenwaende nicht zeichnen, die
+                # Kachel malt sie schon" - wurde seit dem Selbst-Tuer-Beleg gar nicht mehr
+                # geprueft: _aussen stand an dieser Stelle fest auf False, die Abfrage
+                # darunter konnte nie greifen. Folge: die Linie (148,155)-(182,155) auf
+                # Blatt 5 rect 1 (ROOM1170) lag mit 35 von 35 Punkten auf der vom
+                # Kuenstler GEMALTEN Suedwand und uebermalte sie.
+                # DIE REGEL, ohne gewaehlte Schwelle: liegt JEDER Punkt der Linie auf
+                # Kachel-Index 4, malt die Kachel diese Wand schon. Index 4 ist die
+                # Wandlinie der Kartenpalette (TEX.TIM CLUT-Zeile 21 Eintrag 4 @Datei
+                # 0x055C = 0x5AD6). Von den zehn Linien des Auslieferungsstands trifft
+                # das genau diese eine (35/35); die naechste traegt 2 von 9.
+                _lpt = ([(_lx0, _q) for _q in range(min(_ly0, _ly1), max(_ly0, _ly1) + 1)]
+                        if _lx0 == _lx1 else
+                        [(_q, _ly0) for _q in range(min(_lx0, _lx1), max(_lx0, _lx1) + 1)])
+                if all(_index(_q[0], _q[1]) == 4 for _q in _lpt):
+                    _aussen = True
+                    _stat['aussen'] += 1
+                    print("   [Wand] ROOM%04X z%d Blatt %d rect %d (%d,%d)-(%d,%d): "
+                          "%d von %d Punkten auf Kachel-Index 4 - die Kachel malt diese "
+                          "Wand schon, verworfen"
+                          % (_b, _zi, _pg, _r, _lx0, _ly0, _lx1, _ly1, len(_lpt), len(_lpt)))
+                    continue
                 _zd = zid_von.get((_b, _zi), 255)
                 _sig = (_pg, _r, _lx0, _ly0, _lx1, _ly1)
                 if _sig in _gesehen:

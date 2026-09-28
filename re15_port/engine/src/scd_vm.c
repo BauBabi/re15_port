@@ -40,6 +40,7 @@
 #include "re15_item_discard.h" /* "You don't need this key any more. Discard it?" (@0x800C508B) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 #include "re15_elev_se.h"   /* RE2-ERGAENZUNG: Fahrstuhl-Fahrton (engine/src/scd_elev_se.c) */
+#include "re15_map_hint.h"  /* RE2-ERGAENZUNG: Kartenhinweis (engine/src/map_hint_common.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 
@@ -155,6 +156,10 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     /* RE2-ERGAENZUNG Fahrstuhl-Fahrton: die 32-Byte-Fahrt-Signatur EINMAL je Raum im
      * rohen RDT-Puffer suchen (gen/re15_elev_se.inc). 236 von 240 Raeumen -> 0 Anker. */
     re15_elev_se_room_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0);
+    /* RE2-ERGAENZUNG Kartenhinweis: der Szenen-Schwanz von ROOM1150 sub08 (14 Byte
+     * @0x012E0) wird NUR im Quellraum gesucht — die Folge steht in 8 Raeumen. */
+    re15_map_hint_room_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0,
+                            g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -691,6 +696,11 @@ void scd_vm_tick(void)
              * 0x11 bzw. 0x12. Wachposten ist die Ankerzahl des Raumes (in 236 von 240
              * Raeumen 0) - die Flag-Logik in op_set bleibt unberuehrt. */
             if (g_re15_elev_anchor_n) re15_elev_se_pc(t->pc);
+            /* RE2-ERGAENZUNG Kartenhinweis (engine/src/map_hint_common.c): steht der
+             * Programmzeiger auf dem Evt_end von ROOM1150 sub08 (@0x012EC), fordert er
+             * den Hinweis an — RE2 setzt dort den Opcode 0x84 (ROOM30B0.RDT @0x01A86).
+             * Wachposten = Ankerzahl (in allen anderen Raeumen 0). */
+            if (g_re15_map_hint_anchor_n) re15_map_hint_pc(t->pc);
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */

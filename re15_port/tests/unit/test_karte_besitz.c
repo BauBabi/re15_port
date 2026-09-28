@@ -272,6 +272,70 @@ int main(void)
               (((RE15_KARTE_AKTUELL >> 5) & 31) << 3) == 8 &&
               (((RE15_KARTE_AKTUELL >> 10) & 31) << 3) == 8 &&
               (RE15_KARTE_AKTUELL >> 15) == 1);
+
+        /* ⛔ RUNDE 30: DIE WANDLINIE (Eintrag 4 derselben Zeile 21) - und ob der
+         * ZEICHNER die Werte ueberhaupt benutzt.
+         * Dieser Riegel pruefte bisher nur die Defines gegen die Dateien. Dass
+         * re2_ton in re15_inv_screen.c daneben eine FESTE Zahl fuehrte - RE2s Blau
+         * (16,64,176) -, fiel ihm nicht auf: der Nutzer sah es am 2026-09-27 als
+         * "ROOM 1000 ist blau" und "Roof die Wand unten blau". Die Op-Liste des
+         * Zeichners prueft unit_r30_karte_nutzerstand (Schema-Fuellung und
+         * Innenwand tragen die dekodierten Werte); hier steht der Dateibeleg. */
+        {
+            const char *pf15 = RE15_ASSET_PSX_DIR "/DATA/TEX.TIM";
+            FILE *f15 = fopen(pf15, "rb");
+            if (!f15) {
+                printf("  UEBERSPRUNGEN: %s nicht lesbar\n", pf15);
+            } else {
+                unsigned char bb[2] = { 0, 0 };
+                if (fseek(f15, RE15_KARTE_TEX_OFF_WAND, SEEK_SET) == 0 &&
+                    fread(bb, 1, 2, f15) == 2) {
+                    unsigned short ist = (unsigned short)(bb[0] | (bb[1] << 8));
+                    printf("  [TEX.TIM 0x%05X] wand (RE1.5 Zeile 21 Eintrag 4) = 0x%04X "
+                           "(%d,%d,%d) stp%d\n", (unsigned)RE15_KARTE_TEX_OFF_WAND, ist,
+                           (ist & 31) << 3, ((ist >> 5) & 31) << 3, ((ist >> 10) & 31) << 3,
+                           (ist >> 15) & 1);
+                    CHECK("die Wandlinie steht byte-gleich in RE1.5s TEX.TIM",
+                          ist == RE15_KARTE_WAND);
+                } else {
+                    printf("  FAIL: TEX.TIM zu kurz\n"); g_fail = 1;
+                }
+                fclose(f15);
+            }
+        }
+        CHECK("Eintrag 4 liegt 3 Eintraege hinter Eintrag 1 (dieselbe CLUT-Zeile 21)",
+              RE15_KARTE_TEX_OFF_WAND - RE15_KARTE_TEX_OFF_BESUCHT == 3 * 2);
+        CHECK("0x5AD6 dekodiert zu (176,176,176) DECKEND (STP 0)",
+              ((RE15_KARTE_WAND & 31) << 3) == 176 &&
+              (((RE15_KARTE_WAND >> 5) & 31) << 3) == 176 &&
+              (((RE15_KARTE_WAND >> 10) & 31) << 3) == 176 &&
+              (RE15_KARTE_WAND >> 15) == 0);
+        /* RE2: Eintrag 4 ist in allen drei Zustandszeilen bitgleich - die Wandlinie
+         * traegt dort keinen Zustand. Eintrag 4 = Eintrag 1 + 6 Bytes. */
+        {
+            const char *pf = RE15_RE2_ST0_TIM;
+            FILE *f = fopen(pf, "rb");
+            if (!f) {
+                printf("  UEBERSPRUNGEN: %s nicht lesbar\n", pf);
+            } else {
+                static const long zeile[3] = { RE15_KARTE_ST0_OFF_UNBESUCHT,
+                                               RE15_KARTE_ST0_OFF_BESUCHT,
+                                               RE15_KARTE_ST0_OFF_AKTUELL };
+                unsigned short w4[3] = { 0, 1, 2 };
+                int k, gelesen = 0;
+                for (k = 0; k < 3; k++) {
+                    unsigned char bb[2];
+                    if (fseek(f, zeile[k] + 6, SEEK_SET) == 0 && fread(bb, 1, 2, f) == 2) {
+                        w4[k] = (unsigned short)(bb[0] | (bb[1] << 8));
+                        gelesen++;
+                        printf("  [ST0.TIM 0x%05lX] Eintrag 4 = 0x%04X\n", zeile[k] + 6, w4[k]);
+                    }
+                }
+                fclose(f);
+                CHECK("RE2: Eintrag 4 (Wandlinie) ist in allen drei Zustandszeilen bitgleich",
+                      gelesen == 3 && w4[0] == w4[1] && w4[1] == w4[2] && w4[0] != 0);
+            }
+        }
     }
 
     printf(g_fail ? "=== FAIL ===\n" : "=== OK ===\n");

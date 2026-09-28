@@ -103,6 +103,55 @@ int main(void)
         CHECK("ROOM1110 hat die Trennwand bei y~133 (Nutzer: y=134)", quer);
     }
 
+    /* ⛔ KEINE "INNENWAND" LIEGT AUF EINER WAND, DIE DIE KACHEL SCHON MALT.
+     * NUTZER-BEFUND 2026-09-27 (Runde 30): "Roof ist irgendwie die Wand unten blau".
+     * Die Tabellenzeile { 5, 1, 148, 155, 182, 155 } lag mit 35 von 35 Punkten auf
+     * Kachel-Index 4 - der vom Kuenstler GEMALTEN Suedwand von Blatt 5 rect 1
+     * (DATA/MAP06.PIX, Kachelzeile v=86 ab @Datei 0x2B00); die Zeile darunter traegt
+     * Index 0. Der Tabellenkopf verlangt "nur wo BEIDSEITS Raum liegt"; die
+     * Aussenwand-Regel des Generators war seit dem Selbst-Tuer-Beleg wirkungslos.
+     * Index 4 = Wandlinie der Kartenpalette (TEX.TIM CLUT-Zeile 21 Eintrag 4 @Datei
+     * 0x055C = 0x5AD6).
+     * KEIN SCHWELLWERT: 100 % traf von den zehn Zeilen nur diese eine, die naechste
+     * traegt 2 von 9 Punkten auf Index 4. Dossier karten-marken.md §2.9 / §4a. */
+    {
+        static unsigned char roh[256 * 128];
+        int ganz_auf_wand = 0, geprueft = 0;
+        for (i = 0; i < n; i++) {
+            int pg, r, x0, y0, x1, y1, rx, ry, rw, rh, u, v, x, y, punkte = 0, auf4 = 0;
+            char pfad[700]; FILE *f;
+            if (!re15_map_wall_get(i, &pg, &r, &x0, &y0, &x1, &y1)) continue;
+            if (!re15_map_rect_geometry((unsigned)pg, (unsigned)r, &rx, &ry, &rw, &rh)) continue;
+            if (!re15_map_rect_uv((unsigned)pg, (unsigned)r, &u, &v)) continue;
+            snprintf(pfad, sizeof pfad, "%s/DATA/MAP%02X.PIX", RE15_ASSET_PSX_DIR, pg + 1);
+            f = fopen(pfad, "rb");
+            if (!f) continue;
+            if (fread(roh, 1, sizeof roh, f) != sizeof roh) { fclose(f); continue; }
+            fclose(f);
+            if (x0 > x1) { int h = x0; x0 = x1; x1 = h; }
+            if (y0 > y1) { int h = y0; y0 = y1; y1 = h; }
+            for (y = y0; y <= y1; y++)
+                for (x = x0; x <= x1; x++) {
+                    int tx = (u + (x - rx)) & 255, ty = (v + (y - ry)) & 255, idx;
+                    if (x < rx || x >= rx + rw || y < ry || y >= ry + rh) { punkte++; continue; }
+                    idx = (tx & 1) ? (roh[ty * 128 + (tx >> 1)] >> 4)
+                                   : (roh[ty * 128 + (tx >> 1)] & 15);
+                    punkte++;
+                    if (idx == 4) auf4++;
+                }
+            geprueft++;
+            printf("     Wand %d Blatt %2d Rect %2d: %d von %d Punkten auf Kachel-Index 4\n",
+                   i, pg, r, auf4, punkte);
+            if (punkte > 0 && auf4 == punkte) ganz_auf_wand++;
+        }
+        snprintf(t, sizeof t, "ABDECKUNG: jede Wand gegen ihre Kachel geprueft - %d von %d",
+                 geprueft, n);
+        CHECK(t, geprueft == n && n > 0);
+        snprintf(t, sizeof t, "keine Innenwand liegt zu 100 %% auf Kachel-Index 4 "
+                 "(vorher 1: die Dach-Suedwand) - sind %d", ganz_auf_wand);
+        CHECK(t, ganz_auf_wand == 0);
+    }
+
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");
     return g_fail;
 }

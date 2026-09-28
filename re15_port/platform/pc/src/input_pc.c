@@ -60,6 +60,11 @@ static int      s_script_len   = 0;      /* number of scripted ticks, -1 = none 
 static int      s_script_start = 90;
 static int      s_script_init  = 0;
 static int      s_input_ticks  = 0;   /* rendered frames in ALL modes (front-end included) */
+/* RE15_INPUT_SCRIPT_BASIS=spiel: die Zeitachse des Skripts ist g_engine.frame_count (die
+ * Spielbilder) statt s_input_ticks. Nur fuer Messlaeufe hinter einem Vorspann, dessen
+ * Bildzahl schwankt (Titel -> LOAD GAME mit RE15_CONTINUE_TEST: gemessen > 4496 Ticks vor
+ * dem ersten Spielbild). Standard bleibt s_input_ticks. */
+static int      s_script_spiel = 0;
 
 static uint16_t script_bit_for(char c)
 {
@@ -95,6 +100,8 @@ static void script_parse_once(void)
     if (fenv && *fenv) { int f = atoi(fenv); if (f >= 15 && f <= 240) fps = f; }
     const char *senv = getenv("RE15_INPUT_SCRIPT_START");
     if (senv && *senv) { int s = atoi(senv); if (s >= 0) s_script_start = s; }
+    { const char *b = getenv("RE15_INPUT_SCRIPT_BASIS");
+      s_script_spiel = (b && (b[0] == 's' || b[0] == 'S')) ? 1 : 0; }
 
     int ticks = 0;
     const char *p = env;
@@ -402,8 +409,13 @@ void re15_input_tick(void)
     if (!s_script_init) script_parse_once();
     s_input_ticks++;
     if (s_script_len > 0) {
-        int t = s_input_ticks - 1 - s_script_start;
+        int t = (s_script_spiel ? (int)g_engine.frame_count : s_input_ticks - 1) - s_script_start;
         bits = (t >= 0 && t < s_script_len) ? s_script[t] : 0;
+        /* Messschiene: jede gedrueckte Skript-Taste mit Skript-Tick und Spielbild ins Log —
+         * der Skript-Tick zaehlt auch die Vorspann-/Titelbilder, g_engine.frame_count nicht. */
+        if (bits && t >= 0 && t < s_script_len && (t == 0 || s_script[t - 1] != bits))
+            fprintf(stderr, "[input-script] Tick %d -> F%u Tasten 0x%04X\n",
+                    t, (unsigned)g_engine.frame_count, (unsigned)bits);
     }
 
     g_engine.pad_current = bits;
