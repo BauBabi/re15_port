@@ -476,6 +476,8 @@ gebaut und danach per `git checkout` zurückgesetzt:
 Die Mutation „Apply hinter den Blit“ setzt den Apply vor den SCD-Takt. Deshalb fällt F330 dort
 nicht auf. Die echte alte exe zeigt F330 rot.
 
+Suite nachher (`ctest --test-dir re15_port/build --timeout 240`, Stand b8ce0e96): **395/395 grün**, 489 s.
+
 `RE15_MIN_TESTS` in `tools/local_build.sh` ist unverändert. Der Auftrag behält die Zahl dem
 Integrator vor. Die Suite hat weiter 395 Tests, weil kein neuer Test dazukam, sondern der
 bestehende erweitert wurde.
