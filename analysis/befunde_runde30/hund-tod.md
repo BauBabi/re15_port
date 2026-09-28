@@ -712,3 +712,128 @@ Sonde misst nur Leon (`g_gameflow.character = 0`).
 | Werkzeuge | `analysis/befunde_runde30/hund-tod_tools/` — `r30_hundtod_flagscan.py`, `_bitscan.py`, `_absscan.py`, `_offscan.py`, `_jalscan.py`, `_re2_flag0.py`, `r30_hundtod_watch.gdb` |
 | Messungen | `build/r30_hund-tod/` — `suche_hp20.log`, `suche_hp20_v0813.log`, `lauf_druck{0,1,2}_hp20_yaw0.log`, `watch_hp_druck1.log`, `riegel_vor_dem_bau.log`, `n2_vor_dem_bau.log`, `zensus_einzeln.log`, `zensus_einzeln_re15.log`, `zensus_alle.log`, `victim_pose.log`, `re2_ki.log`, `re2_schadensaufrufe.txt`, `re2_hund_hp_zugriffe.txt` |
 | Bau | `re15_port/build_r30_hund-tod/` |
+
+## UMSETZUNG (Bau-Agent, Runde 30, Zweig worktree-wf_b4b268f3-d12-1)
+
+Gebaut in zwei Anlaeufen. Der erste Bau-Agent brach am Guthaben-Limit ab; sein Stand lag in
+Commits (zuletzt WIP b74a30fc, ohne Bau/Test gesichert). Die Fortsetzung hat ihn gebaut, die
+volle Suite gefahren, die tragenden Adressen selbst nachdisassembliert und die ganze Abnahme
+neu gemessen. Messwerte der Fortsetzung: `build/r30_hund-tod_fort/` im Arbeitsbaum (unversioniert).
+
+### Commits
+
+| Commit | Inhalt | Plan-Schritt |
+|---|---|---|
+| 6f771c7d | Wiederbelebung gestrichen (Clip-Ende P1 + Hang-Ende), Zaehler-Fenster auf `re15_char_variant()`, `re15_re2dog_victim_latch` (Opfer-FSM Zustand 2), Gate `pl->state != 15` gestrichen, toedlicher Boden-Biss ruft `re15_player_death_cmd3()` | 1, 2, 3, 4 |
+| be8d2b95 | N2: `re15_player_death_cmd3()` bricht das Zielen ab; Ziel-Render-Override zusaetzlich auf hp >= 0; Riegel `unit_r30_hund_tod` + `unit_r30_hund_tod_n2` scharf | 5, 6 |
+| b74a30fc | WIP: Sonde kennt `R30_FIGUR` (Charakter-Byte, 4 = Elza) — in der Fortsetzung gebaut und geprueft | R4 |
+| 813fc606 | Riegel `unit_r30_hund_tod_elza` (riegel mit `R30_FIGUR=4`) | R4 |
+
+Stand je Plan-Schritt: 1 bis 6 erledigt; R4 (Elza) gemessen und verriegelt. F1, F2, F3 bewusst
+NICHT gebaut (Abschnitt 6 gilt unveraendert).
+
+### Adressen vor dem Weiterbau selbst geprueft (Sprungziel, richtige Binaerdatei)
+
+`re2_disasm.py dis ... --bin EMD0G_MOD0.BIN` bzw. RE2-`PSX.EXE`, `re15_disasm.py` fuer RE1.5:
+
+- Schadenseintritt-Aufruf `addiu a0,zero,20` / `jal 0x800401d4` / `addu a1,zero,zero`
+  @0x80104EB8-C0, Rueckgabe-Vergleich `addiu v0,zero,2` / `bne v1,v0,0x80104f7c` @0x80104EE0-E4.
+- Latch-Stores `addiu v1,zero,255` @0x80104F20, `sb v0,6(s3)` @0x80104F24, `sb v1,467(s1)`
+  @0x80104F34, `ori v0,v0,0xa` / `sw v0,0(s1)` @0x80104F38-3C, Todesbit zurueck
+  `and v0,v0,a0` / `sw v0,0(v1)` @0x80104F5C-60; Figur-15-Gate `lbu v1,8(s1)` / `beq v1,v0`
+  @0x80104F10-18.
+- Clip-Ende P1 @0x80101F00-44: nur `sw v1,332(s2)` (0x1F0018), `sh v0,6(s2)`, `jal 0x80015e7c`,
+  `jal 0x8002959c`, `sb zero,543(s2)` — s2 = self (`addu s2,a0,zero` @0x80101D24). Kein
+  Spieler-Store.
+- Hang-Ende `sb v0,5(s1)` / `sh zero,6(s1)` @0x8010221C-20 mit s1 = a0 = self
+  (`addu s1,a0,zero` @0x8010212C). Kein Spieler-Store.
+- Zaehler-Fenster @0x80102000-C4 und @0x801020A4-C4 wie in 3.3; s3 = 0x800CFBF8
+  @0x80101D3C-40, s4 = self+0x218 @0x80101D58.
+- Spieler-Haken 0x80104ACC-B90 wie in 3.4; Eintrag `addiu v0,v0,19148` / `sw v0,-7040(at)`
+  @0x801004AC-B4; Verteiler `lw a2,436(a0)` @0x800400F4, `lbu v0,8(a2)` @0x80040100,
+  `lw v0,-6104(v1)` @0x80040114 (v1 = 0x800CFBD8 + 4*Typ -> 0x800CE400[Typ]), `jalr v0` @0x8004011C.
+- Boden-Biss-Tod `bltz v0,0x80104fb4` @0x80104F90, `jal 0x80105204` @0x80104FB4; Ziel
+  `sb v0,4(v1)` (v0 = 3) @0x80105220, `sb zero,5/6/7(v1)` @0x80105224-30 (v1 = 0x800CFBF8, wenn
+  a0 = 0).
+- RE1.5 cmd 3 `ori v0,zero,0x3` / `sb v0,4(s1)` / `sb zero,5(s1)` / `sb zero,6(s1)`
+  @0x80012EF0-EFC (PSX.EXE); RE1.5-Hund `bgez v0,0x8010fa9c` @0x8010FA84 (STAGE1.BIN).
+
+Alle Stellen stimmen mit dem Dossier und den Code-Kommentaren ueberein.
+
+### Abnahme (Schritt 7 (a)-(g)), gemessen in der Fortsetzung
+
+| Messung | Soll | Ist |
+|---|---|---|
+| (a) `probe_r30_hund_tod riegel` | RIEGEL GRUEN, >= 6 Latch-Laeufe | RIEGEL GRUEN (0), 12 von 12 mit Latch |
+| (a') dasselbe mit `R30_FIGUR=4` (Elza) | GRUEN | RIEGEL GRUEN (0), 12 von 12 mit Latch |
+| (b) `probe_r30_hund_tod n2` | N2 GRUEN, Zielbilder vor dem Tod > 0 | N2 GRUEN; Zielbilder 90 von 90, cmd3 ab Bild 90, 0 von 200 Todesbildern mit Zielphase (vorher 200 von 200) |
+| (c) `suche 20 1500 -7878 -17384 3` | AUFERSTANDEN 0, Game Over 48 von 48 | Laeufe 48, toedlich 48, Latch 46, AUFERSTANDEN 0, Game Over 48 (vorher 15 / 33) |
+| (c') dasselbe mit Elza | — | AUFERSTANDEN 0, Game Over 48 von 48 |
+| Plan 5.4 `lauf d 20 900 -7878 -17384 0`, d = 0/1/2 | hp 20 -> 0 -> -20, nie wieder >= 0; vs = 2 vom Latch bis state 7; afr einmal 0 -> 144 | alle drei: Biss @93 (hp 0), Latch @102 (hp -20), 0 Bilder mit hp >= 0 danach, 0 Bilder mit vs != 2, afr 0 -> 144 ohne Ruecklauf, state 7 @247, Game Over @508 |
+| (d) Zensus-Einzellaeufe (10 Gegner x Druck 0/1) | nur die Hunde-Zeilen aendern sich | `diff` gegen `build/r30_hund-tod/zensus_einzeln.log`: genau 2 Zeilen (hund Druck 0: tot 249 -> 247, go 510 -> 508; hund Druck 1: AUFERSTANDEN @251 -> stirbt, Game Over @508). Zombie, Zombie 1140, Kraehe, Gorilla, Arme, Spinne, Alligator, Birkin G5, Birkin Form 1 zeichengleich |
+| (e) gdb-Watch `g_actors[0].hp`, `lauf 0/1 20 400` (Debug-Bau) | nur 2 Schreiber, beide `re2z_player_damage` | Druck 0 und Druck 1: nach dem Sonden-Start genau 2 Schreiber (0, dann -20), beide `re2z_player_damage` enemy_ai_re2_zombie.c:796 <- `re2d_contact` :558 <- `re2d_flight_probe` :626; `re2d_sub7_latch` taucht nicht mehr auf |
+| (f) volle Suite | gruen | 362 von 362 auf dem Stand b74a30fc (184 s); 363 von 363 nach 813fc606 mit dem Elza-Riegel (196 s), darunter unit_re2_dog_ai, unit_re2_dog_grab_anchor, unit_re2_dog_jaw_contact, unit_dog_ai, unit_dog_devour |
+| (g) Echtlauf ROOM11D0, Framedump, Kreuz jedes 2. Bild | Leon bleibt liegen, YOU DIED | siehe unten |
+
+### (g) Echtlauf
+
+Werkzeug `build/r30_hund-tod_bau/echtlauf.sh` (Vorgaenger) bzw. `build/r30_hund-tod_fort/echtlauf2.sh`
+(dasselbe mit waehlbarer exe): `re15_pc.exe` ohne AUTOSHOT/SOFTWARE_RENDER, `RE15_DEBUG_JUMP=11D0@240`,
+`RE15_PLAYER_POS=-7878,-17384,0` (Nutzer-Lage F1523), `RE15_SET_FLAG=3:152`,
+`RE15_INPUT_SCRIPT=B200` ab Bild 420 (Kreuz-Flanke jedes zweite Bild, 200 s), Bilder ueber
+`RE15_FRAMEDUMP` (Readback vor `SDL_RenderPresent`), beendet nur ueber `timeout` auf die eigene PID.
+
+Zustandsprotokoll (`state.log`, Abschnitt ROOM11D0), Vorher-exe (master d98e9639) gegen Zweig:
+
+| | Vorher | Nachher |
+|---|---|---|
+| hp-Folge | 100 / 80 @38 / 60 @53 / 40 @98 / 20 @106 / 0 @182 / -20 @196 / **0 @342** | 100 / 80 @38 / 60 @53 / 40 @98 / 20 @106 / 0 @182 / -20 @196 |
+| Bilder mit hp >= 0 nach dem toedlichen Biss | 1141 | **0** |
+| state 7 | nie | @341 (= Latch + 145) |
+| Bilder Biss bis state 7, davon mit Taste | 1287 / 643 | 145 / 72 |
+| Spieler-Motion nach hp < 0 | 0, 200, 214 (steht, laeuft verletzt) | nur 0 (Opfer-Clip) |
+| Game Over | nie (Lauf endet im Stehen) | Abschnitt endet @602 = 341 + 261, danach Neustart mit hp 100 |
+
+Bild-Messfalle: Der Teleport per `RE15_PLAYER_POS` laesst die Kamera auf Cut 0 stehen (die
+RVD-Zonen des Cuts 0 reichen nicht an die Lage heran), und Cut 0 zeigt Leon nicht. Fuer die
+Abzuege ist die Kamera deshalb mit `RE15_FORCE_CUT=13` auf den Cut gestellt, in dem der Nutzer
+laut seinem Log gebissen wurde (F1523 `R11D0 C13`). Das Spielgeschehen ist dabei gleich
+(hp-Folge und state-7-Bild identisch zum Lauf ohne Kamera-Zwang). Die Bilder F197..F209, in denen
+Leon fehlt, sind der Regionen-Cull dieses erzwungenen Cuts: `RE15_VIS_TRACE=1` meldet dort
+`inrgn=0 vis=0` bei Lage (-9066..-9284, -17756..-17910), ab F210 `inrgn=1 vis=1`. Kein Spielfehler.
+
+Abzuege (Arbeitsbaum, `build/r30_hund-tod_fort/abzuege/`):
+- `r30_hundtod_vorher_nachher_c13.png` — F184/240/336/352/376/440/520 nebeneinander. Vorher steht
+  Leon ab F352 wieder auf und laeuft mit den Hunden weiter; nachher liegt er bis zur Blende,
+  ab F440 YOU DIED.
+- `r30_hundtod_nachher_biss_c13.png`, `r30_hundtod_nachher_tod_c13.png` — Zweig, F176..F600.
+- `r30_hundtod_latch_dicht_vorher.png`, `r30_hundtod_latch_dicht_nachher.png` — F192..F224 in
+  2er-Schritten.
+
+### Abweichungen vom Plan
+
+1. `re15_re2dog_victim_latch` setzt zusaetzlich `pl->hit_react |= 1` und `s_player_grabbed = 1`
+   (nicht im Plan-Code von Schritt 3). Das ist der Port-Zwilling der Belegung durch den Latch
+   (`addiu v1,zero,255` @0x80104F20 / `sb v1,467(s1)` @0x80104F34 = PL+0x1D3 = 255), den vorher
+   `re15_re2z_victim_begin` mitlieferte; ohne ihn koennte ein zweiter Hund den Liegenden neu
+   greifen. Gemessen: vs bleibt in allen Laeufen vom Latch bis state 7 auf 2.
+2. Zusaetzlicher Riegel `unit_r30_hund_tod_elza` (R4 war "NICHT GEMESSEN"). Gemessen:
+   Elza +0x220 = 1 ab Bild 107 (erstes Bild von P1, Zaehler 11, laeuft danach negativ), Leon ab
+   Bild 119 (Zaehler 0, saettigt) — genau das Muster @0x80102000-C4. Ergebnis fuer den Spieler
+   gleich: tot, Game Over.
+3. Keine Tests stellten das alte Freikaempfen fest (R1): `grep abort21c|re2z_mash|throwoff`
+   ueber `tests/` trifft nur die eigene Sonde. Nichts umgestellt.
+
+### Offen, gemessen, NICHT Teil dieses Baus
+
+- **Ein-Bild-Sprung am Latch.** Im Latch-Bild F196 steht Leon auf (-5104, -20719), im Bild davor
+  und danach bei (-9032..-9066, -17668..-17910): 6979 Einheiten weg und zurueck. Vorher-exe:
+  derselbe Sprung, 2 Bilder lang (F196-F197); Zweig: 1 Bild (F196). Sichtbar im Abzug
+  `r30_hundtod_latch_dicht_*.png` F196 (Leon steht hinten links im Gang). Das haengt am
+  Anker-Pfad (`re2d_grab_anchor` + Opfer-Platzierung beim Kontakt im Flug, Risiko R2) und ist
+  nicht RE'd; keine Aenderung ohne Beleg.
+- **Schub F208-F212.** Leon rutscht in 3 bis 4 Bildern rund 1000 Einheiten bis x = -8032 (Vorher
+  F208-F211, Zweig F209-F212, gleiche Strecke). Ursache NICHT untersucht.
+- F1 (Zeitpunkt des Game Over, Bit 0x800), F2 (Birkin Form 1 in ROOM3070 nicht toetbar),
+  F3 (Einmal-Rettung je Raum) unveraendert offen, siehe Abschnitt 6/7.
+- R3: `probe_r27_hund_biss.c` laedt die Bank weiterhin vor `re15_enemy_reset()`.
