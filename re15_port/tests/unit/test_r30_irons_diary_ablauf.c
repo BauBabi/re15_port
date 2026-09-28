@@ -289,6 +289,18 @@ static void teil_a(void)
            "Flag %u, Zone %u, Weltmodell %u\n", t0, t1, t2, t3, t4, t5);
     CHECK(t0 > 0 && t0 < t1 && t1 < t2 && t2 == t3 && t3 == t4 && t4 == t5,
           "A4 Reihenfolge: anhaengen < schliessen < Meldung weg = Flag = Zone = Weltmodell");
+    {   /* innerhalb des Bildes: RE2s Folge Zone (@0x80072b40) -> Flag (@0x80072b8c) ->
+         * Weltmodell (@0x80072bb0), alle NACH "Meldung weg" (@0x80072b1c) */
+        uint32_t f0 = re15_menu_doc_trace_folge(0), f1 = re15_menu_doc_trace_folge(1),
+                 f2 = re15_menu_doc_trace_folge(2), f3 = re15_menu_doc_trace_folge(3),
+                 f4 = re15_menu_doc_trace_folge(4), f5 = re15_menu_doc_trace_folge(5);
+        printf("  Folge: angehaengt %u, geschlossen %u, Meldung weg %u, Zone %u, Flag %u, "
+               "Weltmodell %u\n", f0, f1, f2, f4, f3, f5);
+        CHECK(f0 == 1 && f1 == 2 && f2 == 3 && f4 == 4 && f3 == 5 && f5 == 6,
+              "A4 Folge 1..6: anhaengen, schliessen, Meldung weg, Zone, Flag, Weltmodell "
+              "(RE2 @0x80071d00, @0x80072854, @0x80072b1c, @0x80072b40, @0x80072b8c, "
+              "@0x80072bb0)");
+    }
 
     /* das Menue schliesst */
     int zu = 0;

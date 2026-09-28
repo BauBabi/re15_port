@@ -117,6 +117,9 @@ static int     s_doc_msg_reveal = 0, s_doc_msg_total = 0, s_doc_msg_timer = 0;
 static uint32_t s_doc_tick = 0;
 static uint32_t s_doc_t_added = 0, s_doc_t_closed = 0, s_doc_t_msg_gone = 0,
                 s_doc_t_flag = 0, s_doc_t_zone = 0, s_doc_t_prop = 0;
+/* dieselben Ereignisse als laufende Folgenummer (1, 2, 3 ...) - trennt die drei
+ * Abraeum-Schritte, die in DASSELBE Bild fallen. Reine Messschiene. */
+static uint32_t s_doc_folge = 0, s_doc_f[6];
 /* ANSEHHILFE (RE15_DOC, nur Debug): zeigt einen beliebigen Bild-Satz im Leser, ohne dass
  * er in der Liste steht. < 0 = aus. */
 static int s_view_set = -1, s_view_max = 0;
@@ -1617,7 +1620,7 @@ static void doc_msg_open(void)
     s_doc_msg_reveal = 0;
     s_doc_msg_timer  = 1;                       /* Startwert 1 @0x800281a0-ac */
     s_doc_msg_total  = re15_item_prompt_walk(7, id, 0, 0, 0);
-    s_doc_t_closed   = s_doc_tick;
+    s_doc_t_closed   = s_doc_tick;  s_doc_f[1] = ++s_doc_folge;
 }
 
 /* Leser SCHLIESSEN. `se` = der Ton der ausloesenden Taste (Tabelle bei file_mode).
@@ -1644,11 +1647,16 @@ static void file_reader_close(int se)
  *   80072bb0  sw   zero,16700(v0)    ; Weltmodell weg
  *   80072bf0  lui  a0,0x405 / 80072bf4 jal 0x8005ba28   ; TON Bank 4 / Satz 5
  *   80072bfc  sb   zero,1(s0)        ; Modus 0 = zurueck ins Spiel
- * Reihenfolge der drei Abraeum-Schritte im Port: Flag, Zone, Weltmodell — so, wie das
- * Item-Modal sie fuehrt (item_modal_common.c Zustand 7: re15_game_flag_set(9,..),
- * slots[].active = 0, scd_prop_hide_by_obj_id) und wie die Schnittstelle sie zusagt.
- * RE2 schreibt Zone, Flag, Weltmodell; alle drei fallen in DASSELBE Bild, zwischen
- * ihnen laeuft kein Beobachter (die Welt steht), der Unterschied ist nicht messbar. */
+ * Reihenfolge der drei Abraeum-Schritte = RE2s: Zone (`sb zero,0(v1)` im Verzoegerungs-
+ * platz @0x80072b40), Flag (`jal 0x8007730c` @0x80072b8c, FUN_8007730c setzt Bit
+ * 0x80000000 >> (n & 31) im Wort n >> 5 @0x8007730c-30), Weltmodell (@0x80072bb0), alle
+ * im selben Bild. Die Werkzeuge sind die des Item-Modals (item_modal_common.c Zustand 7).
+ * NICHT uebernommen: RE2 @0x80072bb4-bec ruft bei Bit 0x80 von Platzierungs-Byte 7
+ * zusaetzlich FUN_8001cefc(5, ((b7 & 0x60) >> 2) | 7, Modell) — die Funktion loescht in
+ * der Tabelle 0x800d8cf0 (0x60 Eintraege zu 0x7c Byte) die Eintraege mit Art 5 und
+ * diesem Besitzer (@0x8001cf14-4c), also an das Weltmodell gebundene Effekte. Die
+ * Port-Schnittstelle traegt dieses Byte nicht; das Welt-Prop des Irons Diary (Spur
+ * irons-diary-welt) haengt keinen Effekt an. */
 static void doc_msg_tick(uint16_t pressed, uint16_t held)
 {
     uint16_t vp = re15_pad_virtual_word(pressed);
@@ -1677,19 +1685,19 @@ static void doc_msg_tick(uint16_t pressed, uint16_t held)
      * @0x8002868c-86d0). */
     if (!(vp & 0xc000)) return;
     s_doc_msg = 0;                                        /* 8520 &= 0x7f @0x800286c4 */
-    s_doc_t_msg_gone = s_doc_tick;
+    s_doc_t_msg_gone = s_doc_tick;  s_doc_f[2] = ++s_doc_folge;
     /* ---- ABRAEUMEN, erst JETZT (RE2 @0x80072b1c: solange die Meldung steht, nichts) ---- */
-    if (s_doc_taken > 0) {
-        re15_game_flag_set(9, s_doc_taken, 1);            /* RE2 @0x80072b8c */
-        s_doc_t_flag = s_doc_tick;
-    }
     if (s_doc_aot >= 0 && s_doc_aot < RE15_AOT_MAX) {
         g_aot.slots[s_doc_aot].active = 0;                /* RE2 `sb zero,0(v1)` @0x80072b40 */
-        s_doc_t_zone = s_doc_tick;
+        s_doc_t_zone = s_doc_tick;  s_doc_f[4] = ++s_doc_folge;
+    }
+    if (s_doc_taken > 0) {
+        re15_game_flag_set(9, s_doc_taken, 1);            /* RE2 `jal 0x8007730c` @0x80072b8c */
+        s_doc_t_flag = s_doc_tick;  s_doc_f[3] = ++s_doc_folge;
     }
     if (s_doc_prop >= 0 && s_doc_prop != 0xFF) {          /* 255 = keines @0x80072b98-9c */
         scd_prop_hide_by_obj_id((uint8_t)s_doc_prop);     /* RE2 `sw zero,16700(v0)` @0x80072bb0 */
-        s_doc_t_prop = s_doc_tick;
+        s_doc_t_prop = s_doc_tick;  s_doc_f[5] = ++s_doc_folge;
     }
     se4(5);                                               /* RE2 Satz 5 @0x80072bf0-f8 */
     /* file_bild und der gewaehlte Bild-Satz bleiben bis zum Abbau der Schliess-Phase
@@ -1727,6 +1735,11 @@ uint32_t re15_menu_doc_trace(int which)
     case 5: return s_doc_t_prop;
     default: return 0;
     }
+}
+/* Folgenummer desselben Ereignisses (0 = nie); which wie re15_menu_doc_trace. */
+uint32_t re15_menu_doc_trace_folge(int which)
+{
+    return (which >= 0 && which < 6) ? s_doc_f[which] : 0;
 }
 
 /* ANSEHHILFE (Umgebungsvariable RE15_DOC, nur Debug): VIERECK auf einer beliebigen
@@ -1984,7 +1997,7 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
             if (s_doc_target) {
                 const re15_file_doc_t *d = re15_files_doc(s_doc_nr);
                 int platz = re15_files_add(s_doc_nr);            /* @0x80071d00 */
-                s_doc_t_added = s_doc_tick;
+                s_doc_t_added = s_doc_tick;  s_doc_f[0] = ++s_doc_folge;
                 s_substate = 2;                                  /* FILE-Welle */
                 g_inv_screen.tab = 3;
                 g_inv_screen.file_sub  = 1;
@@ -2148,7 +2161,7 @@ void re15_menu_request_box(void)
 /*   obj_id     obj_id des Weltmodells (scd_prop_hide_by_obj_id); < 0 oder 0xFF = keins */
 /* ABLAUF: gemeinsame Oeffnen-Blende -> Leser auf der Titelseite (das Dokument haengt  */
 /* dann schon an der Liste) -> lesen -> schliessen -> Meldung "The <name> has been     */
-/* filed." -> ERST nach dem Bestaetigen: Flag (9,taken_bit) setzen, Zone inaktiv,      */
+/* filed." -> ERST nach dem Bestaetigen: Zone inaktiv, Flag (9,taken_bit) setzen,      */
 /* Weltmodell ausblenden, Ton Satz 5 -> gemeinsame Schliessen-Blende.                  */
 /*                                                                                    */
 /* RE1.5 IST HIER NICHT MASSGEBLICH: es hat kein Dokument-Aufheben (kein Dokument-     */
@@ -2176,6 +2189,7 @@ void re15_menu_request_doc(int doc, int taken_bit, int aot_slot, int obj_id)
     s_doc_tick   = 0;
     s_doc_t_added = s_doc_t_closed = s_doc_t_msg_gone = 0;
     s_doc_t_flag = s_doc_t_zone = s_doc_t_prop = 0;
+    s_doc_folge = 0; memset(s_doc_f, 0, sizeof s_doc_f);
     s_latch = 1;                            /* wie re15_menu_request_box */
     s_stage = 1;
 }

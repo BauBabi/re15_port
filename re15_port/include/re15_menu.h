@@ -66,9 +66,10 @@ void re15_menu_toggle_box(void);
  * 0 = Irons Diary = Item-Id 0x48). Es gibt KEINE "Will you take"-Abfrage: der Leser
  * oeffnet sofort auf der Titelseite, das Dokument haengt dann schon an der FILE-Liste.
  * Nach dem Schliessen steht die Meldung "The <name> has been filed."; ERST wenn sie
- * bestaetigt ist, wird abgeraeumt:
- *     Flag (9, taken_bit) setzen      taken_bit <= 0 = kein Flag
+ * bestaetigt ist, wird abgeraeumt (im selben Bild, Reihenfolge wie RE2 @0x80072b40/
+ * @0x80072b8c/@0x80072bb0):
  *     AOT-Slot aot_slot inaktiv       aot_slot  <  0 = keine Zone
+ *     Flag (9, taken_bit) setzen      taken_bit <= 0 = kein Flag
  *     Prop obj_id ausblenden          obj_id < 0 oder 0xFF = kein Weltmodell
  * Wirkungslos, solange das Menue offen ist oder eine Menue-Blende laeuft, und fuer ein
  * Dokument, das die Tabelle nicht fuehrt.
@@ -86,6 +87,9 @@ int  re15_menu_doc_msg_total(void);
  * Ereignis fiel (0 = nie). which: 0 an die Liste gehaengt, 1 Leser geschlossen,
  * 2 Meldung bestaetigt, 3 Flag gesetzt, 4 Zone inaktiv, 5 Weltmodell ausgeblendet. */
 uint32_t re15_menu_doc_trace(int which);
+/* Dieselben Ereignisse als laufende Folgenummer (1, 2, 3 ...; 0 = nie) - trennt die
+ * Abraeum-Schritte, die in dasselbe Bild fallen. */
+uint32_t re15_menu_doc_trace_folge(int which);
 /* ANSEHHILFE (Umgebungsvariable RE15_DOC, nur Debug): VIERECK auf einer beliebigen
  * Listenzeile oeffnet den Leser mit diesem Bild-Satz und dieser letzten Seite.
  * bildsatz < 0 schaltet die Hilfe ab. Kein Spielpfad setzt sie. */
