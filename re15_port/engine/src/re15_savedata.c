@@ -214,8 +214,16 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     re15_map_visited_export(out->visited);   /* v6 RE2-Kartensystem (re15_map_visited.c) */
     /* v9: die Etagen-Bits der Karte. Ohne sie verlor jeder Ort mit Etagenzeile nach dem
      * Laden seine Zeichnung (Nutzer 2026-09-27; gemessen 11 von 102 Orten, 25 Bits).
-     * Grundsatz aus RE2: was der Kartenzeichner liest, steht im gespeicherten Block
-     * (MEM_CARD.BIN @Datei 0x13D0, `addiu a2,zero,1944` @0x801C0DFC). */
+     * VORBILD RE2: was der Kartenzeichner liest, steht im gespeicherten Block
+     * [0x800D44A4, +0x798) - Lade-Kopie MEM_CARD.BIN @Datei 0x13D0:
+     * `lui s0,0x800d` / `addiu s0,s0,17572` / `jal 0x80010778` / `addiu a2,zero,1944`
+     * (@0x801C0DE8..@0x801C0DFC). Die Etagen-Bits selbst sind Port-Ergaenzung;
+     * Schluessel und Begruendung an s_etage_bit in re15_map_zones.c.
+     * WARUM RE1.5 HIER NICHT MASSGEBLICH IST: es kennt weder Besucht- noch Etagen-Bits
+     * (Rechteck-Schleife @0x800472fc-0x800473dc, einzige Verzweigung = Zaehler), und
+     * der Auslieferungsstand kann nicht speichern.
+     * Das Feld steht nach dem SPEICHER-VERTRAG v9 unmittelbar vor files[] und
+     * checksum; das Pruefwort von v7/v8 sass bei offsetof(visited_floor) = 900. */
     re15_map_visited_floor_export(out->visited_floor);
     /* R30-VERTRAG: fremdes Feld */
     memset(out->files, 0xFF, sizeof out->files);

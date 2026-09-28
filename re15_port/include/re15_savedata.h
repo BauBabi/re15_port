@@ -140,17 +140,8 @@ typedef struct {
                                 * re15_room_ids[]-Eintrag (240 Bits; Port-Erweiterung,
                                 * re15_map_visited.c). Vor der checksum eingefuegt;
                                 * das v5-Checksum-Wort sitzt bei offsetof(visited). */
-    /* ---- v9, SPEICHER-VERTRAG RUNDE 30 (zwei Themen, EIN Versionsschritt) ----------
-     * Beide Felder stehen unmittelbar VOR checksum, in DIESER Reihenfolge und mit
-     * DIESEN Namen; das Pruefwort von v7/v8 sitzt bei offsetof(visited_floor).
-     * visited_floor: VORBILD-GRUNDSATZ RE2 — alles, was der Kartenzeichner liest,
-     *   liegt im gespeicherten Block [0x800D44A4, +0x798) (Lade-Kopie MEM_CARD.BIN
-     *   @Datei 0x13D0: `jal 0x80010778` / `addiu a2,zero,1944`). Die Etagen-Bits selbst
-     *   sind Port-Ergaenzung; Schluessel und Begruendung an s_etage_bit in
-     *   engine/src/re15_map_zones.c. RE1.5 ist hier nicht massgeblich: es kennt weder
-     *   Besucht-Bits noch kann der Auslieferungsstand speichern. */
-    uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Thema karten-marken) */
-    uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Thema irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
+    uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Spur karten-marken) */
+    uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Spur irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 
