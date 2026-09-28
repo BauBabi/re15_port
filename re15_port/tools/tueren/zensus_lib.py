@@ -201,6 +201,28 @@ class Raum(object):
                 aus[z["von"]] = z["pts"]
         return aus
 
+    def gruppen(self):
+        """{cut: Gruppennummer} - Zusammenhangskomponenten des Umschaltgraphen (alle RVD-Zonen
+        ausser der ersten je 'von', die der Bildbereich ist). Cuts einer Gruppe zeigen
+        denselben zusammenhaengenden Bereich des Raums (z.B. ROOM1000: {0,1,2} Ostraum,
+        {3,4,5} und {6,7,8} die beiden Toiletten)."""
+        eltern = list(range(max(self.ncut, 1)))
+
+        def f(x):
+            while eltern[x] != x:
+                eltern[x] = eltern[eltern[x]]
+                x = eltern[x]
+            return x
+        erst = set()
+        for z in self.zonen():
+            a, b = z["von"], z["nach"]
+            if a not in erst:
+                erst.add(a)
+                continue
+            if a < len(eltern) and b < len(eltern):
+                eltern[f(a)] = f(b)
+        return {c: f(c) for c in range(len(eltern))}
+
 
 def im_viereck(pts, x, z):
     """Punkt in konvexem Viereck (Umlaufsinn egal)."""

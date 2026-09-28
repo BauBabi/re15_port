@@ -58,6 +58,18 @@ def aussen_normale(pts, a, b):
     return n, t
 
 
+def kandidatenkanten(pts):
+    """Lange Kanten (>= 0,8 x laengste) als dict(a, b, n aussen, t)."""
+    ks = kanten(pts)
+    lmax = max(k[2] for k in ks)
+    aus = []
+    for (a, b, l) in ks:
+        if l >= 0.8 * lmax:
+            n, t = aussen_normale(pts, a, b)
+            aus.append(dict(a=a, b=b, n=n, t=t, grund=""))
+    return aus
+
+
 def tuerkante(pts, ankunft, bereiche):
     """-> dict(a, b, n (aussen = in die Wand), t, grund).
     ankunft = [(x,z)] Ankunftsorte der Gegenseite in diesem Raum; bereiche = {cut: Viereck}."""
@@ -158,8 +170,16 @@ def sichtbarkeit(cam, welt, kante):
     im = flaeche(clip_rechteck(qb)) / A if A > 0 else 0.0
     px_h = 0.5 * (np.linalg.norm(qb[3] - qb[0]) + np.linalg.norm(qb[2] - qb[1]))
     px_w = 0.5 * (np.linalg.norm(qb[1] - qb[0]) + np.linalg.norm(qb[2] - qb[3]))
-    ok = vorn and im >= MIN_IM_BILD and px_h >= MIN_PX_H
-    grund = "ok" if ok else ("Rueckseite" if not vorn else ("zu wenig im Bild" if im < MIN_IM_BILD else "zu klein"))
+    # aufrecht: beide Seitenkanten weniger als 45 Grad gegen die Bildsenkrechte, oben ueber unten
+    # (sonst sieht die Kamera steil von oben auf das Blatt - kein vergleichbares Bild)
+    aufrecht = True
+    for (o, u) in ((qb[0], qb[3]), (qb[1], qb[2])):
+        d = u - o
+        if d[1] <= 0 or d[1] < 0.7071 * np.linalg.norm(d):
+            aufrecht = False
+    ok = vorn and aufrecht and im >= MIN_IM_BILD and px_h >= MIN_PX_H
+    grund = "ok" if ok else ("Rueckseite" if not vorn else ("nicht aufrecht" if not aufrecht else (
+        "zu wenig im Bild" if im < MIN_IM_BILD else "zu klein")))
     return dict(ok=ok, grund=grund, im_bild=im, px_h=float(px_h), px_w=float(px_w), vorn=vorn,
                 quad=qb.tolist(), vz=float(vz.mean()))
 

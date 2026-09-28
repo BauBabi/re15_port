@@ -80,9 +80,9 @@ def pruefe(spiel, raum, cut, rect, mess, bilder=True):
     ts = [t for t in (L.re2_tueren(r.d) if spiel == "re2" else L.re15_tueren(r.d)) if t["rect"] and tuple(t["rect"]) == tuple(rect)]
     satz = ts[0]
     ank = ankunft_fuer(spiel, raum, satz, alle_saetze(spiel))
-    kante = B.tuerkante(satz["pts"], ank, r.bereiche())
+    import zensus_ausschnitte as A
+    kante, welt, _, _ = A.kante_waehlen(r, satz["pts"], satz["band"], ank)
     cam = r.kamera(cut)
-    welt = B.blatt_welt(kante, satz["band"])
     sv = B.sichtbarkeit(cam, welt, kante)
     mess = np.array(mess, float)
     q0 = np.array(sv["quad"])
