@@ -2739,17 +2739,34 @@ static uint64_t pc_now_us(void)
 
 /* MESSSCHIENE (kein Verhalten): RE15_TITLE_PULSE_LOG=<datei> schreibt je Bild des Titelmenues
  * eine Zeile
- *   "<zeit_us> <zaehler> <pulswert> <faellige_durchgaenge> <phase> <einblende_tick> <einblende_B>"
+ *   "<zeit_us> <zaehler> <pulswert> <faellige_durchgaenge> <phase> <einblende_tick> <einblende_B>
+ *    <gezeigt> <gezeichnet> <zeile> <zeilen_hash> <zeilen_summe>"
  * phase 0 = Titel-Schleife, 1 = Bestaetigungs-Fade (dort Einblende-Spalten = 0).
- * Auswertung: analysis/befunde_runde30/titel-blinken_tools/r30_pulse_frame_stats.py. */
-static void pc_title_pulse_log(uint64_t now_us, uint64_t due, int phase, uint64_t fade_tick)
+ * Die ersten sieben Spalten sind der Zustand der ENGINE (title_pulse.c) zu Beginn des Bildes.
+ * Die letzten fuenf kommen aus dem ZEICHNER (render_pc.c re15_render_pc_title_row_probe) und
+ * gelten fuer dasselbe Bild, NACHDEM re15_render_end_frame es gezeichnet hat:
+ *   gezeigt      1 = das Bild wurde gezeichnet und die Zeile zurueckgelesen; 0 = nicht (das Bild,
+ *                in dem bestaetigt wird, zeigt niemand: der Fade beginnt ein neues Bild)
+ *   gezeichnet   das Farbbyte der Textur, die fuer die aktive Zeile gezeichnet wurde
+ *   zeile        die aktive Zeile (0 NEW GAME, 1 LOAD GAME, 2 OPTION)
+ *   zeilen_hash  FNV-1a-32 ueber (r>>3, g>>3, b>>3) der zurueckgelesenen 256 x 17 Pixel der Zeile
+ *   zeilen_summe Summe derselben Werte
+ * Deshalb wird die Zeile erst NACH re15_render_end_frame geschrieben.
+ * Auswertung: tests/integration/test_r30_titel_puls.cmake;
+ *             analysis/befunde_runde30/titel-blinken_tools/r30_pulse_frame_stats.py. */
+extern int re15_render_pc_title_row_probe(int *drawn, int *row, uint32_t *hash, uint32_t *sum);
+static void pc_title_pulse_log(uint64_t now_us, uint64_t due, int phase, uint64_t fade_tick, int shown)
 {
     static FILE *lf; static int init;
     if (!init) { init = 1; const char *p = getenv("RE15_TITLE_PULSE_LOG"); if (p && *p) lf = fopen(p, "w"); }
     if (!lf) return;
-    fprintf(lf, "%llu %d %d %llu %d %llu %d\n", (unsigned long long) now_us, re15_title_pulse_counter(),
-            re15_title_pulse_value(), (unsigned long long) due, phase, (unsigned long long) fade_tick,
-            phase ? 0 : re15_title_fadein_level(fade_tick));
+    int drawn = -1, row = -1; uint32_t hash = 0, sum = 0;
+    int ok = re15_render_pc_title_row_probe(&drawn, &row, &hash, &sum);   /* setzt die Marke zurueck */
+    if (!shown) { ok = 0; drawn = -1; row = -1; hash = 0; sum = 0; }
+    fprintf(lf, "%llu %d %d %llu %d %llu %d %d %d %d %08x %u\n", (unsigned long long) now_us,
+            re15_title_pulse_counter(), re15_title_pulse_value(), (unsigned long long) due, phase,
+            (unsigned long long) fade_tick, phase ? 0 : re15_title_fadein_level(fade_tick),
+            ok, drawn, row, (unsigned) hash, (unsigned) sum);
     fflush(lf);
 }
 
@@ -3004,6 +3021,8 @@ re_title:;
          * (My earlier "LOAD DATA"/"CONFIG" was wrong — those ASCII strings @0x80 are the vestigial dev
          * menu; the real sprite labels read LOAD GAME / OPTION.) */
         int tpass0 = 1;   /* das naechste Bild beginnt einen Durchgang 0 (Eintritt / Rueckkehr) */
+        /* Messschiene: Engine-Zustand dieses Bildes, geschrieben nach re15_render_end_frame. */
+        uint64_t lg_t = 0, lg_due = 0, lg_tick = 0; int lg_pending = 0;
         while (re15_gameflow_mode() == RE15_MODE_TITLE) {
             re15_render_begin_frame();
             re15_input_tick();                       /* SDL_QUIT -> exit(0) inside; refreshes pad */
@@ -3059,7 +3078,7 @@ re_title:;
                   re15_title_pulse_advance(due);
                   tfade_tick += due;
               }
-              pc_title_pulse_log(t_now, due, 0, tfade_tick); }
+              lg_t = t_now; lg_due = due; lg_tick = tfade_tick; lg_pending = 1; }
             /* Draw the byte-true NEW GAME / LOAD GAME / OPTION + copyright sprites from TMOJI.TIM
              * (active row white, others blue) at x=0x20, y=0x85/0x99/0xad. */
             re15_render_pc_title_menu(&s_tmoji, cursor);
@@ -3076,6 +3095,8 @@ re_title:;
             uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
                                      RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
             if (confirm) {
+                /* Messschiene: dieses Titelbild zeigt niemand — der Fade beginnt ein neues Bild. */
+                if (lg_pending) { pc_title_pulse_log(lg_t, lg_due, 0, lg_tick, 0); lg_pending = 0; }
                 { extern int re15_fade_log_on(void);
                   if (re15_fade_log_on())
                       fprintf(stderr, "[flow] title confirm tblink=%u cursor=%d\n", tblink, cursor); }
@@ -3120,10 +3141,11 @@ re_title:;
                                 re15_render_background_gradient(8, 8, 16, 0, 0, 0);
                                 if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
                                 re15_render_pc_title_menu(&s_tmoji, cursor);   /* Redraw @0x80102d10 — OHNE Pulsschritt */
-                                pc_title_pulse_log(pc_now_us(), 0, 1, 0);
+                                uint64_t lg_ft = pc_now_us();
                                 if (subph) re15_render_pc_title_fade_sub(B);
                                 else       re15_render_pc_title_fade_add(B);
                                 re15_render_end_frame();
+                                pc_title_pulse_log(lg_ft, 0, 1, 0, 1);
                                 re15_audio_tick();
                                 { uint32_t now = SDL_GetTicks(); uint32_t el = now - tf_last;
                                   if (el < 16) SDL_Delay(16 - el); tf_last = SDL_GetTicks(); }
@@ -3221,6 +3243,7 @@ re_title:;
             { extern void re15_render_pc_title_fade_sub(int b);
               re15_render_pc_title_fade_sub(re15_title_fadein_level(tfade_tick)); }
             re15_render_end_frame();
+            if (lg_pending) { pc_title_pulse_log(lg_t, lg_due, 0, lg_tick, 1); lg_pending = 0; }
             re15_audio_tick();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
             { unsigned t_af = 22; const char *afe = getenv("RE15_TITLE_SHOT_AF"); if (afe) t_af = (unsigned)atoi(afe);

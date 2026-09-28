@@ -32,14 +32,22 @@ target_compile_definitions(test_r30_titel_blinken PRIVATE
 add_test(NAME r30_titel_blinken COMMAND test_r30_titel_blinken)
 set_tests_properties(r30_titel_blinken PROPERTIES TIMEOUT 60)
 
-# --- RIEGEL 2 (Nachbesserung Runde 30): das SYMPTOM an der ECHTEN re15_pc.exe.
-#     Misst ueber die Messschiene RE15_TITLE_PULSE_LOG (platform/pc/main.c) die Pulsperiode im
-#     Titel (Soll 60 x 2 VBlanks / 59,826 Hz = 2005817 us, Toleranz = gemessene Bilddauer), die
-#     Pulsaenderungen im Bestaetigungs-Fade (Soll 0: FUN_80102a10 ruft FUN_801028ec nicht) und
-#     die Dauer der Titel-Einblende (32 Durchgaenge, Schritt 0xfc00 @0x80102058). Bestaetigt wird
-#     ueber den Zeit-Testhaken RE15_TITLE_CONFIRM_MS, beendet ueber RE15_PSELECT_AUTO +
-#     RE15_BOOT_EXIT_AT=1. Gegenprobe am Ausgangsstand master d98e9639 (mit nachgeruesteter
-#     Messschiene): ROT — Dossier titel-blinken.md, Abschnitt UMSETZUNG Nachbesserung. ---
+# --- RIEGEL 2 (Nachbesserung Runde 30, zweite Nachbesserung): die ECHTE re15_pc.exe
+#     (beschleunigter Renderer, RE15_WINDOW_SCALE=1). Die Messschiene RE15_TITLE_PULSE_LOG
+#     schreibt je Bild den Zustand der ENGINE (main.c / title_pulse.c) UND, aus dem ZEICHNER
+#     (render_pc.c re15_render_pc_title_row_probe), das Farbbyte der tatsaechlich gezeichneten
+#     Textur der aktiven Zeile sowie FNV-1a / Summe der ZURUECKGELESENEN Pixel dieser Zeile.
+#     Geprueft: (A) gezeichnet = Engine; (B) ein Zeilenbild je Pulswert; (C) 11 Pulswerte
+#     pixelgleich mit den Original-Bildpuffern aus sechs Savestates (Modulation 0x66808080
+#     @0x80102830-34, Pulswert als Farbbyte @0x80102848-58); (D) Pulsperiode aus den
+#     BEOBACHTETEN Bildabfaellen, Soll 60 x 2 VBlanks / 59,826 Hz = 2005817 us, Toleranz =
+#     gemessene Bilddauer, 60 Engine-Schritte aus Zaehleraenderungen; (E) im Bestaetigungs-Fade
+#     0 Aenderungen von Engine und Zeilenbild (FUN_80102a10 ruft FUN_801028ec nicht);
+#     (F) Titel-Einblende 32 Durchgaenge (0xfc00 @0x80102058).
+#     GEGENPROBEN (Dossier titel-blinken.md §10): render_pc.c auf d98e9639 (+ Ruecklese) ROT,
+#     eigener Pulsschritt im Zeichner ROT, alte Modulation in tmoji_strip ROT, main.c mit einem
+#     Pulsschritt je Bild ROT. Die Fassung vor dieser Nachbesserung schrieb nur den
+#     Engine-Zustand und blieb bei zurueckgesetztem render_pc.c GRUEN (Gegenpruefer M1). ---
 if(TARGET re15_pc)
     add_test(NAME integration_r30_titel_puls
              COMMAND "${CMAKE_COMMAND}"

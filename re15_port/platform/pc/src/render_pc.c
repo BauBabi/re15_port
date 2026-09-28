@@ -156,6 +156,22 @@ static int           s_tmoji_built = 0, s_tmoji_show = 0, s_tmoji_cursor = 0;
 #define TMOJI_PULSE_LEVELS (RE15_TITLE_PULSE_UP_BELOW + 1)
 static SDL_Texture  *s_tmoji_act[3][TMOJI_PULSE_LEVELS];
 static SDL_Texture  *s_tmoji_act_cur = NULL;   /* die Textur der aktiven Zeile fuer DIESES Bild */
+static int           s_tmoji_act_val = -1;     /* ... und das Farbbyte, mit dem tmoji_strip sie gebaut hat */
+/* MESSSCHIENE der aktiven Titelzeile (kein Verhalten; nur mit RE15_TITLE_PULSE_LOG, s. main.c
+ * pc_title_pulse_log). Je gezeichnetem Bild des Titelmenues:
+ *   s_trow_drawn = das Farbbyte der Textur, die re15_render_end_frame fuer die aktive Zeile
+ *                  TATSAECHLICH gezeichnet hat (0x80 = die unmodulierte weisse Zeile);
+ *   s_trow_hash / s_trow_sum = FNV-1a-32 bzw. Summe ueber (r>>3, g>>3, b>>3) der
+ *                  ZURUECKGELESENEN Pixel der Zeilenregion 256 x 17 (x 0x20 .. 0x11f,
+ *                  y ITEM_Y .. ITEM_Y+16: Rechteck bei y + subtraktiver Schatten bei y+1,
+ *                  Zeichner FUN_801027a0 @0x80102810-14). Gelesen wird NACH dem Menue und VOR
+ *                  den Blenden (s_title_fade / s_tfade_add / s_tfade_sub): die Zeile auf dem
+ *                  Titelbild. Bei Einblende B = 0 zeichnen die Blenden nichts (`if (... > 0)`),
+ *                  dann ist das genau das gezeigte Bild.
+ * Dieselbe Rechnung ueber die Original-Bildpuffer: r30_nb2_orig_zeilen_hash.py. */
+static int           s_trow_on = -1;           /* -1 = Umgebung noch nicht gelesen */
+static int           s_trow_valid = 0, s_trow_drawn = -1, s_trow_row = -1;
+static uint32_t      s_trow_hash = 0, s_trow_sum = 0;
 /* Der Helligkeitspuls der aktiven Zeile (FUN_801028ec) liegt seit Runde 30 NICHT mehr hier:
  * sein Schritt hing am Zeichnen und damit an der Bildrate der Anzeige (gemessen 144 Schritte/s
  * statt 29,9). Zustand + Schritt: engine/src/title_pulse.c, Takt: die Titel-Schleife in main.c.
@@ -762,6 +778,60 @@ void re15_render_pc_request_readback(const char *path)
     s_readback_pending = 1;
 }
 
+/* MESSSCHIENE: die Zeilenregion der aktiven Titelzeile zuruecklesen (s. s_trow_*). Nur mit
+ * RE15_TITLE_PULSE_LOG. Logische Koordinaten -> Ausgabepixel ueber Viewport und Massstab des
+ * Renderers; abgetastet wird die Mitte jedes logischen Pixels (bei RE15_WINDOW_SCALE=1 1:1). */
+static void title_row_readback(int row, int y0)
+{
+    if (s_trow_on < 0) { const char *e = getenv("RE15_TITLE_PULSE_LOG"); s_trow_on = (e && *e) ? 1 : 0; }
+    if (!s_trow_on) return;
+    s_trow_valid = 0;
+    float sx = 1.0f, sy = 1.0f;
+    SDL_Rect vp;
+    SDL_RenderGetScale(s_renderer, &sx, &sy);
+    SDL_RenderGetViewport(s_renderer, &vp);                 /* logische Einheiten */
+    if (sx <= 0.0f || sy <= 0.0f) return;
+    const int LW = 256, LH = 17, LX = 0x20;
+    int px0 = (int) ((float) (vp.x + LX) * sx), py0 = (int) ((float) (vp.y + y0) * sy);
+    int px1 = (int) ((float) (vp.x + LX + LW) * sx + 0.999f), py1 = (int) ((float) (vp.y + y0 + LH) * sy + 0.999f);
+    int pw = px1 - px0, ph = py1 - py0;
+    if (pw <= 0 || ph <= 0) return;
+    uint32_t *buf = (uint32_t *) malloc((size_t) pw * ph * 4);
+    if (!buf) return;
+    SDL_Rect r = { px0, py0, pw, ph };
+    if (SDL_RenderReadPixels(s_renderer, &r, SDL_PIXELFORMAT_RGB888, buf, pw * 4) == 0) {
+        uint32_t h = 2166136261u, sum = 0;                  /* FNV-1a-32 */
+        for (int ly = 0; ly < LH; ly++) {
+            for (int lx = 0; lx < LW; lx++) {
+                int px = (int) (((float) (vp.x + LX + lx) + 0.5f) * sx) - px0;
+                int py = (int) (((float) (vp.y + y0 + ly) + 0.5f) * sy) - py0;
+                px = (px < 0) ? 0 : (px >= pw) ? pw - 1 : px;
+                py = (py < 0) ? 0 : (py >= ph) ? ph - 1 : py;
+                uint32_t p = buf[(size_t) py * pw + px];
+                uint8_t c[3] = { (uint8_t) ((p >> 19) & 31), (uint8_t) ((p >> 11) & 31), (uint8_t) ((p >> 3) & 31) };
+                for (int k = 0; k < 3; k++) { h ^= c[k]; h *= 16777619u; sum += c[k]; }
+            }
+        }
+        s_trow_hash = h; s_trow_sum = sum; s_trow_row = row; s_trow_valid = 1;
+    } else {
+        fprintf(stderr, "[titel-zeile] SDL_RenderReadPixels: %s\n", SDL_GetError());
+    }
+    free(buf);
+}
+
+/* Liefert 1 und die Werte des zuletzt GEZEIGTEN Bildes, wenn fuer dieses Bild zurueckgelesen
+ * wurde; setzt die Marke zurueck (ein Wert je Bild). */
+int re15_render_pc_title_row_probe(int *drawn, int *row, uint32_t *hash, uint32_t *sum)
+{
+    int ok = s_trow_valid;
+    if (drawn) *drawn = ok ? s_trow_drawn : -1;
+    if (row)   *row   = ok ? s_trow_row   : -1;
+    if (hash)  *hash  = ok ? s_trow_hash  : 0;
+    if (sum)   *sum   = ok ? s_trow_sum   : 0;
+    s_trow_valid = 0;
+    return ok;
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1326,6 +1396,8 @@ void re15_render_end_frame(void)
              * Eine SDL-Farbmodulation kann nicht ueber 1,0 hinaus — deshalb eine Textur je
              * Pulswert statt eines Faktors. */
             if (active && s_tmoji_act_cur) tex = s_tmoji_act_cur;
+            if (active) s_trow_drawn = (tex && tex == s_tmoji_act_cur) ? s_tmoji_act_val
+                                                                        : RE15_TITLE_PULSE_START;
             if (!tex) continue;
             int h = (i < 3) ? 16 : 20;
             SDL_SetTextureColorMod(tex, 255, 255, 255);
@@ -1334,6 +1406,8 @@ void re15_render_end_frame(void)
             SDL_SetTextureBlendMode(tex, s_shadow_blend);   SDL_RenderCopy(s_renderer, tex, NULL, &shadow); /* abr2 */
             SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD); SDL_RenderCopy(s_renderer, tex, NULL, &glow);   /* abr1 */
         }
+        if (s_tmoji_cursor >= 0 && s_tmoji_cursor < 3)
+            title_row_readback(s_tmoji_cursor, ITEM_Y[s_tmoji_cursor]);
     }
 
     /* front-end fade OVER the title + menu (the CAPCOM intro -> title fade-in). Drawn last so it
@@ -1836,6 +1910,7 @@ void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
      * CLUT 0x7fc0). Der Wert steht fest, bevor gezeichnet wird: die Titel-Schleife fuehrt die
      * faelligen Pulsschritte VOR diesem Aufruf aus, der Bestaetigungs-Fade gar keine. */
     s_tmoji_act_cur = NULL;
+    s_tmoji_act_val = -1;
     if (tim_ok && cursor >= 0 && cursor < 3) {
         int val = re15_title_pulse_value();
         int lv  = (val - RE15_TITLE_PULSE_START) / RE15_TITLE_PULSE_DELTA;
@@ -1845,6 +1920,7 @@ void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
                 s_tmoji_act[cursor][lv] = tmoji_strip(tmoji, s_tmoji_src[cursor].v,
                                                       s_tmoji_src[cursor].h, 0, val);
             s_tmoji_act_cur = s_tmoji_act[cursor][lv];
+            s_tmoji_act_val = val;
         }
     }
     /* ⛔ KEIN Pulsschritt mehr hier (Runde 30 / Thema D). Diese Funktion ist der ZEICHNER
