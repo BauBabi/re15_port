@@ -18,6 +18,17 @@ Vendored tables (all addresses raw-MIPS cited in the FILE-wave session):
   - page title strings, ptr table @0x800c78e4 -> {0x800c78f0 "Files",
     0x800c78f6 "S.T.A.R.S.", 0x800c7907 "Umbrella"} (FUN_800c727c a3=0x10)
 
+RUNDE 30 (Thema irons-diary-dokument): the FILE list of the port is DYNAMIC since then
+(RE2's 24-slot list @0x800D4B68, engine/src/re15_files.c). The game reads from this
+data set only title 0 "Files" (@0x800c78f0, now on all three list pages) and the
+underscore run (@0x800c7916). The masks, row bases, the 30 row names and the 7-page
+"Operation Report" document are kept as an ARCHIVE of the shipped bytes (the user
+asked for the pre-installed RE1 entries to be removed from the game; RE1.5 has no
+writer for its fixed mask, so the system was unfinished). The census below stays
+unchanged: it pins the shipped DEBUG.BIN bytes, which did not change, and
+tests/unit/probe_r30_irons_diary_dokument.c counts the 21 archived names through
+re15_inv_file_archiv_maske / _basis / _name.
+
 Census asserts (this script FAILS if the shipped bytes differ from the RE'd decode):
 masks/bases, title decode, underscore run, the 30 row-name decodes (with the byte-true
 digraph expansion of FUN_80013160: (b+0xa0)&0xff<=0x58 -> pair @0x800c44b8+(b-0xa0)*2,

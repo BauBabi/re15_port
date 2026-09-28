@@ -27,6 +27,7 @@
  * Dazu die Gegenprobe, dass ein nicht vorhandenes Dokument sauber 0 meldet.
  */
 #include "re15_re2doc.h"
+#include "re15_files.h"      /* Runde 30: Dokument-Tabelle (Satz 25 = Irons Diary) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -113,6 +114,34 @@ int main(void)
               "und das Motiv des Papierbildes liegt UNTEN (Zeilen H..255: %d Pixel gegen "
               "%d oberhalb) - genau darauf setzt die Zeichnung auf, die es ab Zeile H "
               "abtastet (`subu v0,zero,s3` @0x800760b8)", paper_bottom, paper_top);
+    }
+
+    /* RUNDE 30 (Thema irons-diary-dokument, mit Grund mitgezogen): hinter RE2s 25 Saetzen
+     * liegt der Satz 25 = Irons Diary (re15_port/tools/re2_doc_satz.py, Vorlage FILE08).
+     * Er folgt derselben Geometrie, und seine Seitenhoehe aus dem TIM stimmt mit der
+     * Dokument-Tabelle des Ports (re15_files.c: H 144, max_page 17) - die zweite Quelle
+     * ist hier die Port-Tabelle statt RE2s EXE-Tabelle @0x800AA144. Dazu: die Durchsicht
+     * fragt seit Runde 30 die CLUT-FARBE 0x0000 ab (psx-spx "Color 0000h =
+     * Fully-transparent"), nicht den Index 0 - der Satz muss trotzdem sichtbare Pixel
+     * liefern. */
+    {
+        const re15_file_doc_t *fd = re15_files_doc(0);
+        int tw = 0, th = 0, pw = 0, ph = 0, px = 0;
+        uint8_t r, g, b;
+        int t = re15_re2doc_size(25, -1, RE15_RE2DOC_PAGE, &tw, &th);
+        int p = re15_re2doc_size(25, -1, RE15_RE2DOC_PAPER, &pw, &ph);
+        for (int v = 0; v < th; v++)
+            for (int u = 0; u < tw; u++)
+                if (re15_re2doc_pixel(25, 1, RE15_RE2DOC_PAGE, u, v, &r, &g, &b)) px++;
+        CHECK(t && p && tw == 256 && pw == 128 && ph == 256 && fd && fd->bildsatz == 25 &&
+              th == (int)fd->page_h,
+              "Satz 25 (Irons Diary): Titelseite %dx%d, Papier %dx%d, H %d == Port-Tabelle %d",
+              tw, th, pw, ph, th, fd ? (int)fd->page_h : -1);
+        CHECK(fd && re15_re2doc_size(25, fd->max_page, RE15_RE2DOC_PAGE, NULL, NULL) == 1 &&
+              re15_re2doc_size(25, fd->max_page + 1, RE15_RE2DOC_PAGE, NULL, NULL) == 0,
+              "Satz 25: p%02d vorhanden, p%02d nicht (max_page der Port-Tabelle)",
+              fd ? fd->max_page : -1, fd ? fd->max_page + 1 : -1);
+        CHECK(px > 500, "Satz 25 Seite p01 hat sichtbare Pixel (%d)", px);
     }
 
     /* GEGENPROBE: ein Dokument, das es nicht gibt, meldet sauber 0. */
