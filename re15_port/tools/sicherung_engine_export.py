@@ -96,7 +96,7 @@ def md1_bauen():
     # (Runde 30: der SITZ liegt inzwischen im Kuppelfach und das Prop traegt rot_y 1024 —
     # include/re15_sicherung.h. Am Modell aendert das nichts: liegend + zentriert bleibt,
     # die Prop-Position ist weiter die Mitte des Gegenstands.)
-    halb =(L_KAPPE_U + L_KOERPER + L_KAPPE_O) / 2.0
+    halb = (L_KAPPE_U + L_KOERPER + L_KAPPE_O) / 2.0
     verts = [(int(round(p[1] - halb)), int(round(p[0])), int(round(p[2]))) for p in v]
 
     # Vertex-Normalen aus den anliegenden Flaechen, auf 4096 normiert (Q12).
