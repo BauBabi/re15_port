@@ -3339,9 +3339,13 @@ re_title:;
      *     80039788  jal  0x800314b0           ; sonst Spielermodell NEU LADEN
      * Ohne den Gleichstand haette der erste Raumwechsel Elzas eben geladenes PL04 gegen
      * work_vars[0x10] == 0 = PL00 zurueckgetauscht. Der Westen-Spiegel wird mitgezogen,
-     * damit re15_vest_hp_on_model_reload den Start nicht als Modellwechsel liest. */
+     * damit re15_vest_hp_on_model_reload den Start nicht als Modellwechsel liest.
+     * ⛔ RUNDE 30 (Thema G): work_vars[0x10] SELBST wird hier NICHT mehr gesetzt, sondern
+     * erst unmittelbar NACH scd_vm_init() (s. dort) — scd_vm_init nullt g_scd per memset, der
+     * Wert von hier ueberlebte das nicht (Sonde probe_r30_elza_intro M4: vor 4, nach 0), und
+     * der erste Raumwechsel tauschte Elzas PL04 gegen PL00. Die zwei Statics hier bleiben
+     * (vom memset unberuehrt). */
     s_player_model_idx    = g_gameflow.character & 0x0F;
-    g_scd.work_vars[0x10] = (int16_t)(g_gameflow.character & 0x0F);
     re15_vest_model_mark((int16_t)(g_gameflow.character & 0x0F));
     if (md1_ok) {
         fprintf(stderr, "[md1] loaded test.md1: %d meshes\n", md1.mesh_count);
@@ -3733,6 +3737,19 @@ re_title:;
 
     /* Phase 4.4: SCD VM init + start demo thread */
     scd_vm_init();
+    /* ⛔ ANGEFORDERTER PL-INDEX NACH DEM VM-RESET (Runde 30, Thema G, elza-intro.md §4.2/§5.2).
+     * scd_vm_init() hat g_scd genullt (memset) — work_vars[0x10] (= DAT_800b0ff0) muss danach
+     * auf dem Charakter stehen, sonst liest der erste Raumwechsel 0 und laedt PL00 statt PL04.
+     * Original, FUN_8001d22c gemeinsamer Schwanz des Neuen Spiels (PSX.EXE, selbst gelesen):
+     *     8001d51c  lbu  a0,-13732(a0)     ; a0 = DAT_800aca5c (Charakter-Byte)
+     *     8001d558  sh   a0,4080(at)       ; DAT_800b0ff0 = angeforderter PL-Index
+     * Leser im Raumlader FUN_800396fc:
+     *     80039768  lh   v1,4080(v1)       ; DAT_800b0ff0
+     *     8003976c  andi v0,a0,0xf / 80039770 beq v0,v1,0x80039790   ; gleich -> kein Wechsel
+     *     80039788  jal  0x800314b0        ; sonst Spielermodell NEU laden
+     * Leon: character & 0x0F = 0 = was der memset ohnehin liefert -> fuer ihn keine Aenderung.
+     * CONTINUE: re15_savedata_restore setzt den Wert weiter unten aus dem Spielstand neu. */
+    g_scd.work_vars[0x10] = (int16_t)(g_gameflow.character & 0x0F);
     /* Byte-true STAGE1 briefing loadout into g_inv (handgun + 2 stacks; savestate-confirmed).
      * scd_vm_init just cleared it; populate the game-start inventory here. (Per-room persistence
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
