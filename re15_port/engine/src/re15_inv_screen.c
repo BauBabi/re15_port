@@ -1355,7 +1355,8 @@ static void emit_file_arrows(emit_t *e, const re15_inv_screen_t *st)
  * RE1.5s Schirm hat 3 Seiten x 10 Zeilen (sltiu 0xa @0x800c70b4, sltiu 3 @0x800c6e78).
  * Der Port fuellt RE1.5s Zeilen fortlaufend; die Plaetze 24..29 (Seite 2, Zeilen 4..9)
  * gibt es nicht, sie bleiben Unterstriche.
- * ⛔ PORT-ENTSCHEIDUNG (Auftrag Runde 30): alle drei Seiten tragen Titel 0 "Files"
+ * ⛔ PORT-ENTSCHEIDUNG (Auftrag Runde 30; Port-Wahl, keine Original-Adresse fuer die
+ * Zuordnung): alle drei Seiten tragen Titel 0 "Files"
  * (@0x800c78f0). "S.T.A.R.S. Files" / "Umbrella Files" (@0x800c78f6 / @0x800c7907)
  * sind Kategorien der vorinstallierten RE1-Inhalte; RE2 kennt keine Kategorien. */
 static void emit_file_list(emit_t *e, const re15_inv_screen_t *st)

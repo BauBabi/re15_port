@@ -15,10 +15,13 @@
  * Eintrag 0 = "Irons Diary" (Nutzer-Auftrag Runde 30, Abschnitt E).
  *
  *   Item-Id 0x48   erste Dokument-Id von RE1.5 (u8 @0x800c7370), Dokument-Nr 0.
- *   Bild-Satz 25   erster freier Satz hinter RE2s 25 Dokumenten (RE2_FILES_DOC_COUNT 25,
- *                  gen/re2_files_toc.inc, Tabelle @0x800A9AD0). Die Dateien FILE25_*.TIM
- *                  erzeugt re15_port/tools/re2_doc_satz.py aus dem Nutzertext.
- *   max_page 17    letzte Seite des gesetzten Texts (FILE25_p17_page.TIM ist vorhanden,
+ *   Bild-Satz 25   Port-Wahl, keine Original-Adresse: der erste freie Satz hinter RE2s 25
+ *                  Dokumenten (RE2_FILES_DOC_COUNT 25, gen/re2_files_toc.inc, Tabelle
+ *                  @0x800A9AD0 fuehrt die Saetze 0..24). Die Dateien FILE25_*.TIM erzeugt
+ *                  re15_port/tools/re2_doc_satz.py aus dem Nutzertext.
+ *   max_page 17    Port-Wahl, keine Original-Adresse - gemessen am Satz: letzte Seite des
+ *                  gesetzten Nutzertexts (9 Zeilen je Seite bei H 144, FILE25_satz.txt;
+ *                  FILE25_p17_page.TIM ist vorhanden,
  *                  FILE25_p18 nicht; Riegel probe_r30_irons_diary_dokument Teil C).
  *                  Gegenstueck zu RE2s u16 @0x800AA144 + doc*4, gelesen
  *                  `lhu a0,-24252(at)` @0x800727c8. max_page steht AUSDRUECKLICH hier
