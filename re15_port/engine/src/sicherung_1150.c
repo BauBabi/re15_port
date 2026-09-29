@@ -123,8 +123,8 @@ void re15_sicherung_install(uint16_t room_id)
     g_scd.props[i].y = RE15_SICHERUNG_POS_Y;
     g_scd.props[i].z = RE15_SICHERUNG_POS_Z;
     g_scd.props[i].rot_x = 0;         /* liegend ist schon im Modell (Laengsachse X) */
-    /* Schraeg im Fach, rechts neben der Granate (Runde 31). PORT-WAHL, keine Original-Adresse —
-     * Herleitung aus der Tischgeometrie in re15_sicherung.h. */
+    /* Quer im RECHTEN unteren Fach (Runde 32; Runde 31 lag sie schraeg oben in der Kuppel).
+     * PORT-WAHL, keine Original-Adresse — Herleitung aus der Tischgeometrie in re15_sicherung.h. */
     g_scd.props[i].rot_y = RE15_SICHERUNG_ROT_Y;
     g_scd.props[i].rot_z = 0;
     g_scd.props[i].vel_x = g_scd.props[i].vel_y = g_scd.props[i].vel_z = 0;

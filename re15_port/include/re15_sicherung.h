@@ -71,45 +71,39 @@
  * keine Instruktion, die man zitieren koennte. Die Zahlen sind aus der AUSGELIEFERTEN
  * GEOMETRIE des Tisches abgeleitet, nicht geschaetzt.
  *
- * Runde 31 (Nutzer, 2026-09-29): "packe mir die Granate links in die hochfahrende Box und die
- * Sicherung rechts". Dossier analysis/befunde_runde31/hebetisch.md §1, Werkzeuge
- * analysis/befunde_runde31/hebetisch_werkzeug/ (r31_suche.py, r31_raster.py, r31_wahl2.py,
- * r31_pruef.py). Geometrie (Plattform-Koordinaten, +Y nach unten), ROOM1150.RDT:
- *   Fachboden   Prop 0 (MD1 @0x11E40), Vierecke 79/80/81 (Face-Records @0x12E40/@0x12E50/
- *               @0x12E60), acht Punkte y = -1036:
- *     Punkt 101 @0x121AC ( -74,-1036,1260)     Punkt 109 @0x121EC (-485,-1036,1260)
- *     Punkt 103 @0x121BC (-128,-1036,1562)     Punkt 111 @0x121FC (-432,-1036, 958)
- *     Punkt 105 @0x121CC (-280,-1036,1645)     Punkt 113 @0x1220C (-280,-1036, 875)
- *     Punkt 107 @0x121DC (-432,-1036,1562)     Punkt 115 @0x1221C (-128,-1036, 958)
- *     (ROOM1151.RDT: dieselben Werte, Punktliste @0x13EFC, die acht Punkte @0x14224..@0x14294.)
- *   Kuppel      Prop 1 MD1 @0x138D4 / Prop 2 @0x13B88: Grund y -1036, Ring y -1138
- *               (x -413..-147, z 1011..1510), Scheitel (-280,-1185,1260); Naht z = 1260.
- *               Offen je 150 in z (For @0x0FC0 Zaehler 15 x Speed_set @0x0FCA +10 / @0x0FD4
- *               -10) -> Oeffnung z 1110..1410.
- *   Kamera      Cut 4 (@Datei 0xE0): Plattform-z = Schirm waagrecht, +z = RECHTS.
+ * Runde 32 (Nutzer, 2026-09-29): "Die Granate und die Sicherung ... liegt aktuell oben drauf.
+ * Aber sie sollen unten, in den hochfahrenden Fach liegen - ein item links ein item rechts."
+ * Dossier analysis/befunde_runde32/hebetisch_faecher.md, Werkzeuge
+ * analysis/befunde_runde32/hebetisch_faecher_werkzeug/ (faecher.py, sitz_fach.py).
+ * Prop 0 (ROOM1150.RDT MD1 @0x11E40) traegt UNTER der Tischplatte (y=-901) zwei durchgehende
+ * Faecher, vorn (x=2) offen, hinten (x=-1258) von einer vollen Tafel geschlossen, Trennwand
+ * z 861..950. Die Sicherung liegt im RECHTEN Fach B (Plattform-Koordinaten, +Y nach unten):
+ *   Boden   y = -91  Viereck 93, Face-Record @0x12F20 `6f00 8e00 6f00 8f00 6f00 8200 6f00 8300`
+ *                    = Punkte 142 @0x122F4 (2,-91,1715), 143 @0x122FC (2,-91,950),
+ *                      130 @0x12294 (-1258,-91,1715), 131 @0x1229C (-1258,-91,950)
+ *   Waende  z = 950  Viereck 90 @0x12EF0,  z = 1715  Viereck 92 @0x12F10
+ *   Decke   y = -811 Viereck 91 @0x12F00;  Rueckwand x = -1258 Viereck 82 @0x12E70
+ *   (ROOM1151.RDT Prop 0 @0x13EB8: dieselben Werte, Boden Viereck 93 @0x14F98.)
+ *   Kamera  Cut 4 (@Datei 0xE0) steht in Plattform-Koordinaten bei x=+1242, z=+918 (vor der
+ *           Trennwand), +z = Schirm RECHTS -> Fach B (z 950..1715) ist das rechte Fach.
  *
- * WARUM SCHRAEG: das 406 lange Rohr passt nicht quer zur Kamera (laengs x, Plattform-Tiefe) in
- * die Kuppel — auf Rohrhoehe 52 ist sie in x innen nur ~337 breit, bei rot_y 0 stuende das Rohr an
- * beiden Enden durch die GESCHLOSSENE Kuppel (Suche: 0 zulaessige Sitze fuer rot_y 0..575). Und
- * ganz in die rechte Haelfte (z > 1260) passt es in keiner Drehung (rechter Halbraum auf Hoehe 52
- * diagonal ~366). Es liegt deshalb schraeg: hinten-links neben der Granate (x -393 z 1111) nach
- * vorne-rechts (x -167 z 1449) unter den rechten Deckel.
+ *   POS_X = -628   Fach-Mitte in x: (vorn 2 + hinten -1258) / 2
+ *   POS_Y = -117   Fachboden -91 minus Rohrradius 26 (gen/sicherung_prop.inc y[-26..26]) —
+ *                  liegt AUF dem Boden (tiefster Punkt genau -91)
+ *   POS_Z = 1332   Fach-Mitte in z: (950 + 1715) / 2 = 1332,5, abgerundet
+ *   ROT_Y = 1024   Laengsachse X des Modells auf Plattform-z = parallel zur Oeffnung, quer im
+ *                  Bild (groesste Ansicht von der Kamera aus)
+ * Ergebnis (sitz_fach.py, ROOM1150 = ROOM1151): Huelle x -654..-602, y -143..-91, z 1129..1535;
+ * Abstand vorn 604, hinten 604, Wand 179 / 180, Decke 668 -> ganz im Fach, kein Durchstoss.
+ * Links/rechts und Sichtbarkeit GEMESSEN im Framedump (Dossier §4).
+ * Eingefroren von unit_r32_hebetisch_faecher, unit_r30_sicherung_sitz.
  *
- *   POS_X = -280   Mitte des Fachbodens in x (Punkte 105/113)
- *   POS_Y = -1062  Fachboden -1036 minus Rohrradius 26 (gen/sicherung_prop.inc y[-26..26]) —
- *                  liegt AUF dem Boden (tiefster Punkt genau -1036)
- *   POS_Z = 1280   } Ergebnis der Suche (Raster 10 in x/z, 32 in rot_y): Luft unter der
- *   ROT_Y = 1440   } geschlossenen Kuppel 6,01, unter den offenen Deckeln 46,80, ganz ueber dem
- *                  Achteck, Abstand zur Granate 6,77 (r31_pruef.py, ROOM1150 = ROOM1151);
- *                  Schirm-Schwerpunkt RECHTS der Granate (gemessen: Dossier §1.3)
- * Eingefroren von unit_r31_hebetisch (Geometrie aus beiden RDTs) und unit_r30_sicherung_sitz.
- *
- * Runde 30 lag sie mittig (-280,-1062,1260) rot_y 1024 quer ueber der ganzen Oeffnung, die
- * Granate mittig dahinter. */
-#define RE15_SICHERUNG_POS_X  (-280)
-#define RE15_SICHERUNG_POS_Y  (-1062)
-#define RE15_SICHERUNG_POS_Z  (1280)
-#define RE15_SICHERUNG_ROT_Y  (1440)
+ * Vorher: Runde 30 mittig in der Kuppel (-280,-1062,1260) rot_y 1024; Runde 31 schraeg in der
+ * Kuppel (-280,-1062,1280) rot_y 1440 — beides "oben drauf" (Kuppelpodest y=-1036). */
+#define RE15_SICHERUNG_POS_X  (-628)
+#define RE15_SICHERUNG_POS_Y  (-117)
+#define RE15_SICHERUNG_POS_Z  (1332)
+#define RE15_SICHERUNG_ROT_Y  (1024)
 
 /* Legt das Prop beim Raumstart an — falls der Raum ROOM1150/1151 ist UND die Sicherung
  * noch nicht genommen wurde. Gerufen NACH dem Init-Lauf (erst dann stehen die Props aus

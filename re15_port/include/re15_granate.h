@@ -44,34 +44,37 @@
 #define RE15_GRANATE_OBJ_ID    7
 
 /* SITZ UND DREHUNG — ⛔ PORT-WAHL, KEINE ORIGINAL-ADRESSE (das Original hat im Hebetisch keinen
- * Gegenstand). Runde 31 (Nutzer, 2026-09-29): "packe mir die Granate links in die hochfahrende
- * Box und die Sicherung rechts". Abgeleitet aus der ausgelieferten Geometrie (Fachboden, Kuppel,
- * Deckelweg, Kamera Cut 4: Kopf von include/re15_sicherung.h), Dossier
- * analysis/befunde_runde31/hebetisch.md §1, Werkzeuge hebetisch_werkzeug/r31_suche.py (zulaessige
- * Sitze), r31_raster.py / r31_wahl2.py (Paar Granate-links / Sicherung-rechts), r31_pruef.py:
- *   Granate     gen/granate_prop.inc, Huelle x -77..77 y -55..55 z -55..55 (Laengsachse X); OFFEN
- *               sind die Unterseite (+y) und am Modell-+x-Ende die -z-Kegelflaeche samt
- *               Eckdreieck (in der Hand verdeckt)
- *   Hoehe       die Granate braucht 110; die Kuppel ist innen 102 am Ring, 149 am Scheitel —
- *               links (z < 1260) passt sie nur bis z-Mitte ~1095..1115
+ * Gegenstand). Runde 32 (Nutzer, 2026-09-29): "sie sollen unten, in den hochfahrenden Fach liegen
+ * - ein item links ein item rechts". Abgeleitet aus der ausgelieferten Geometrie von Prop 0
+ * (Faecher, Kamera: Kopf von include/re15_sicherung.h), Dossier
+ * analysis/befunde_runde32/hebetisch_faecher.md, Werkzeuge hebetisch_faecher_werkzeug/faecher.py,
+ * sitz_fach.py. Die Granate liegt im LINKEN Fach A (Plattform-Koordinaten, +Y nach unten):
+ *   Boden   y = -90  Viereck 89, Face-Record @0x12EE0 `6b00 8a00 6b00 8b00 6b00 7e00 6b00 7f00`
+ *                    = Punkte 138 @0x122D4 (2,-90,861), 139 @0x122DC (2,-90,96),
+ *                      126 @0x12274 (-1258,-90,861), 127 @0x1227C (-1258,-90,96)
+ *   Waende  z = 96   Viereck 86 @0x12EB0,  z = 861  Viereck 88 @0x12ED0
+ *   Decke   y = -810 Viereck 87 @0x12EC0;  Rueckwand x = -1258 Viereck 119 @0x130C0
+ *   (ROOM1151.RDT Prop 0 @0x13EB8: dieselben Werte, Boden Viereck 89 @0x14F58.)
+ *   Granate gen/granate_prop.inc, Huelle x -77..77 y -55..55 z -55..55 (Laengsachse X); OFFEN
+ *           sind die Unterseite (+y) und am Modell-+x-Ende die -z-Kegelflaeche samt Eckdreieck
  *
- *   POS_Y = -1091  Fachboden -1036 minus halbe Hoehe 55: liegt AUF dem Boden (tiefster Punkt
- *                  genau -1036; die 3 Einheiten Versenkung aus Runde 30 entfallen)
- *   POS_X = -260   } Ergebnis der Suche (Raster 10 in x, 5 in z): Luft unter der geschlossenen
- *   POS_Z = 1140   } Kuppel 5,88, unter den offenen Deckeln 32,70, ganz ueber dem Achteck,
- *                  Abstand zum Sicherungs-Mantel 6,77; z 1075..1205 = LINKER Teil der Oeffnung
- *                  (die 35 links von 1110 liegen unter dem linken Deckel)
- *   ROT_Y = 1792   Nur rot_y 1024..2048 zeigt die offene Ecke (Modell +x/-z) von der Kamera weg
- *                  (Kamera bei Plattform-x +1242); 1792 = bestes Paar der Suche
- * ROOM1150 und ROOM1151 gleich (r31_pruef.py). Schirm-Schwerpunkt LINKS der Sicherung
- * (gemessen: Dossier §1.3). Eingefroren von unit_r31_hebetisch und unit_r30_granate.
+ *   POS_X = -628   Fach-Mitte in x: (vorn 2 + hinten -1258) / 2
+ *   POS_Y = -145   Fachboden -90 minus halbe Hoehe 55: liegt AUF dem Boden (tiefster Punkt -90)
+ *   POS_Z = 478    Fach-Mitte in z: (96 + 861) / 2 = 478,5, abgerundet
+ *   ROT_Y = 1024   Laengsachse X auf Plattform-z = parallel zur Oeffnung, quer im Bild; die offene
+ *                  Ecke (Modell +x/-z) geht dabei nach hinten-links (Plattform -x/-z), weg von der
+ *                  Kamera (Cut 4 bei Plattform x=+1242, z=+918); die offene Unterseite liegt auf
+ * Ergebnis (sitz_fach.py, ROOM1150 = ROOM1151): Huelle x -683..-573, y -200..-90, z 401..555;
+ * Abstand vorn 575, hinten 575, Wand 305 / 306, Decke 610 -> ganz im Fach, kein Durchstoss.
+ * Links/rechts und Sichtbarkeit GEMESSEN im Framedump (Dossier §4).
+ * Eingefroren von unit_r32_hebetisch_faecher und unit_r30_granate.
  *
- * Runde 30 lag sie mittig (-362,-1088,1260) rot_y 1024 HINTER der quer liegenden Sicherung,
- * 3 tief im Boden (sonst ragte sie aufliegend 1,98 durch die geschlossene Kuppel). */
-#define RE15_GRANATE_POS_X  (-260)
-#define RE15_GRANATE_POS_Y  (-1091)
-#define RE15_GRANATE_POS_Z  (1140)
-#define RE15_GRANATE_ROT_Y  (1792)
+ * Vorher: Runde 30 mittig hinter der Sicherung (-362,-1088,1260) rot_y 1024, 3 im Kuppelboden
+ * versenkt; Runde 31 links in der Kuppel (-260,-1091,1140) rot_y 1792 — beides "oben drauf". */
+#define RE15_GRANATE_POS_X  (-628)
+#define RE15_GRANATE_POS_Y  (-145)
+#define RE15_GRANATE_POS_Z  (478)
+#define RE15_GRANATE_ROT_Y  (1024)
 
 /* Legt das Prop beim Raumstart an — nur in ROOM1150/1151, nur wenn die Granate noch nicht
  * genommen ist. Gerufen an BEIDEN Raumstart-Wegen des Ports wie die Sicherung (Tuer:

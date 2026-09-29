@@ -1,0 +1,13 @@
+ROOM1150.RDT
+  Granate  (Fach A) Sitz (-628, -145, 478) rot_y 1024: tiefster Punkt +0.00 zum Boden | Abstand vorn 575.0 hinten 575.0 Wand-z0 305.0 Wand-z1 306.0 Decke 610.0 | Huelle x -683.0..-573.0 y -200.0..-90.0 z 401.0..555.0 | IM FACH, LIEGT AUF
+  Sicherung(Fach B) Sitz (-628, -117, 1332) rot_y 1024: tiefster Punkt +0.00 zum Boden | Abstand vorn 604.0 hinten 604.0 Wand-z0 179.0 Wand-z1 180.0 Decke 668.0 | Huelle x -654.0..-602.0 y -143.0..-91.0 z 1129.0..1535.0 | IM FACH, LIEGT AUF
+  Abstand der Huellen in z: 574.0 (Trennwand 861..950 dazwischen)
+ROOM1151.RDT
+  Granate  (Fach A) Sitz (-628, -145, 478) rot_y 1024: tiefster Punkt +0.00 zum Boden | Abstand vorn 575.0 hinten 575.0 Wand-z0 305.0 Wand-z1 306.0 Decke 610.0 | Huelle x -683.0..-573.0 y -200.0..-90.0 z 401.0..555.0 | IM FACH, LIEGT AUF
+  Sicherung(Fach B) Sitz (-628, -117, 1332) rot_y 1024: tiefster Punkt +0.00 zum Boden | Abstand vorn 604.0 hinten 604.0 Wand-z0 179.0 Wand-z1 180.0 Decke 668.0 | Huelle x -654.0..-602.0 y -143.0..-91.0 z 1129.0..1535.0 | IM FACH, LIEGT AUF
+  Abstand der Huellen in z: 574.0 (Trennwand 861..950 dazwischen)
+PLANUNG Plattform y=-1205: Granate 273 Punkte Schwerpunkt-x 101.1 bbox (91, 111, 142, 157) | Sicherung 367 Punkte Schwerpunkt-x 209.7 bbox (184, 236, 149, 155)
+PLANUNG Plattform y=-905: Granate 257 Punkte Schwerpunkt-x 103.6 bbox (94, 113, 176, 190) | Sicherung 328 Punkte Schwerpunkt-x 206.9 bbox (183, 232, 182, 189)
+PLANUNG Plattform y=-705: Granate 256 Punkte Schwerpunkt-x 105.1 bbox (96, 114, 197, 211) | Sicherung 302 Punkte Schwerpunkt-x 207.2 bbox (182, 231, 203, 209)
+PLANUNG Plattform y=-605: Granate 256 Punkte Schwerpunkt-x 105.9 bbox (96, 115, 207, 221) | Sicherung 301 Punkte Schwerpunkt-x 206.3 bbox (182, 230, 213, 219)
+PLANUNG Plattform y=-505: Granate 254 Punkte Schwerpunkt-x 106.4 bbox (97, 116, 217, 231) | Sicherung 332 Punkte Schwerpunkt-x 205.2 bbox (182, 229, 223, 229)
