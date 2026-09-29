@@ -161,7 +161,15 @@ Aufnahme auf in F247, y davor -1207/-1206/-1205, 53 Aufnahme-Bilder alle bei -12
 Bild `p_laden1151.png`: F120/F160 Granate links, Sicherung rechts; F240/F246 oben; F260 Aufnahme.
 (ROOM1151 nur ueber CONTINUE + RE15_FIRE_AOT erreichbar, nicht per Tuerweg-Sprung - s. 4.2.)
 
-### 4.4 Eigener Zensus der Ruhe-Signatur
+### 4.4 Kuppel geschlossen: kein Durchstoss (Start und Ende nach No/No)
+
+`p_kuppel_zu_start.png` (p_ja_nein F240 Kuppel zu: nichts von Granate/Sicherung sichtbar; F244
+Deckel oeffnen, zuerst das Rohr in der Naht; F248/F252 Granate links am Oeffnungsrand).
+`p_kuppel_zu_ende_nein_nein.png` (p_nein_nein nach No/No, beide liegen noch: F856/F868 offen, F876
+schliessend, F884 fast zu, F900/F940 zu - nichts ragt durch die Schale). Deckt die Behauptung des
+Bauers (0 Punkte MIT gegen OHNE) im Bild.
+
+### 4.5 Eigener Zensus der Ruhe-Signatur
 56-Byte-Folge ueber alle 240 RDTs unter re15_port/shared_assets/PSX/STAGE*/: genau
 ROOM1150 @0x1010 (Fenster 0x101A..0x1042) und ROOM1151 @0x0FEE (0x0FF8..0x1020), je 1 Treffer.
 Deckt sich mit `ruhe_signatur.txt` des Bauers.
@@ -181,7 +189,43 @@ Deckt sich mit `ruhe_signatur.txt` des Bauers.
 | Save/Load | CONTINUE-Laeufe | p_laden1151 | ok (Speichern im Hebetisch-Modal nicht moeglich) |
 
 ## 6. Befunde
-(folgt)
+
+Kein Befund gegen den Nutzerauftrag H. Hinweise (alle niedrig):
+
+1. **Sicherung nicht ganz rechts, sondern schraeg von der Mitte nach rechts, gut die Haelfte unter
+   dem rechten Deckel.** Relativ ist die Anordnung erfuellt (Granate links, Sicherung rechts; Bauer
+   MIT/OHNE: 100 % der Granaten-Punkte links vom Sicherungs-Schwerpunkt; Pruefer-Bilder F260/F320/
+   F1248 bestaetigen). Geometrisch erzwungen (Kuppel zu Beginn/Ende geschlossen, Rohr 406 lang);
+   Bauer-Dossier §1.1/§6 legt das offen. Falls der Nutzer "ganz rechts" meint, geht das nur mit
+   Durchstoss durch die geschlossene Kuppel.
+2. **In der Ruhe oben stehen Fach und Gegenstaende an der oberen Bildkante** (Cut 4 ist die
+   Original-Kamera, @Datei 0xE0; F376/F384/F1352). Der Nutzer sieht die Gegenstaende beim Hochfahren
+   gut, beim Dialog-Beginn nur noch am oberen Rand. Nicht Teil des Auftrags, keine Aenderung noetig.
+3. **Tuerweg ROOM1151 nicht gefahren** (weder Bauer noch Pruefer): `RE15_DEBUG_JUMP=1151` waehlt
+   selbst ROOM1150. 1151 ist ueber CONTINUE (Bauer + Pruefer, PC @0x0FF9) und im Engine-Riegel
+   belegt; die Bytes (Fenster [0x0FF8,0x1020)) sind identisch aufgebaut.
+4. **Riegel-Zeitpruefungen 8..11 fahren eine nachgebaute Bildschleife**, nicht main.c. Der echte
+   Takt ist nur ueber die Spiel-Laeufe belegt (alle gruen, 0 Aufnahme-Bilder ausserhalb -1205).
+5. **Android**: neue Quelldatei `engine/src/hebetisch_1150.c` -> frischer Configure noetig
+   (GLOB-Cache); ohne ihn bricht der Link laut (undefined re15_hebetisch_*), nicht still.
+6. **Vorbestand, nicht Teil des Auftrags**: Port friert auch im Aufnahme-Zustand 8 ("No", 17 Bilder)
+   ein, das Original nicht (@0x800285a4 / @0x8001df3c) - vom Bauer dokumentiert, fuer den Hebetisch
+   folgenlos (gemessen: in p_nein_nein bleiben 40 Ruhebilder nach beiden Dialogen).
+7. **Inventar voll** nicht im Spiel gefahren (Engine-Riegel unit_r30_sicherung_nein C, Zweig
+   unveraendert).
 
 ## 7. Urteil
-(folgt)
+
+**haltbar** (fuer Thema H; Thema G "ROOM11F0 Zeiger auf 80" liegt im Zweig r31/generator und ist
+hier nicht geprueft).
+
+* P1 Gegenstaende im Modell, Granate links / Sicherung rechts: im echten Spiel gesehen (Tuerweg
+  1150 Fahrt 1 und 2, Lade-Weg 1151), fahren mit, kein Durchstoss bei geschlossener Kuppel.
+* P2 Aufnahme erst, wenn komplett hochgefahren: in JEDEM gefahrenen Fall (Yes/Yes, Yes/No, No/No,
+  Fahrt 2 mit einem bzw. beiden, Lade-Weg 1151) geht die Aufnahme im ersten Ruhebild auf (y davor
+  -1207/-1206/-1205, sub04-PC = Sleep 30 + 1), 0 von 1049 Aufnahme-Bildern (416 + 580 + 53) ausserhalb y=-1205,
+  danach noch 40 Ruhebilder vor der Abfahrt. Mechanik (Freeze @0x8001dbc8 / @0x8003f04c, Sleep
+  @0x8003f3e8 / Sleeping @0x8003f428) und sub04-Bytes selbst nachgeprueft.
+* P5 Konstanten: Sitze/Drehungen/IM_RAUM_AB als PORT-WAHL mit Herleitung gekennzeichnet, das
+  Fenster aus Datei-Bytes (Signatur, Zensus selbst wiederholt), Commit-Messages tragen die Adressen.
+* P7 Suite 406/406 selbst gebaut.
