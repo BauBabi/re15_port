@@ -27,3 +27,15 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r34_re2fx_knochen COMMAND probe_r34_re2fx_knochen)
 set_tests_properties(unit_r34_re2fx_knochen PROPERTIES TIMEOUT 120)
+
+# O9 / Paket 6: die Aufschlag-Kinder offscreen (VRAM-Modell, PSX-ABR je Texel) -> PPM-Bilder +
+# Quad-/Ausschnitt-Listen fuer den Katalog-Vergleich (tools/re2fx_katalog.py --vergleich <dir>).
+add_executable(probe_r34_re2fx_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r34_re2fx_bild.c)
+target_link_libraries(probe_r34_re2fx_bild PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r34_re2fx_bild PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(probe_r34_re2fx_bild PRIVATE m)
+endif()
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/r34_re2fx_bild)
+add_test(NAME unit_r34_re2fx_bild COMMAND probe_r34_re2fx_bild ${CMAKE_BINARY_DIR}/r34_re2fx_bild)
+set_tests_properties(unit_r34_re2fx_bild PROPERTIES TIMEOUT 120)

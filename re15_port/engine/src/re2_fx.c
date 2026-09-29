@@ -26,7 +26,8 @@
 #include "re15_skeleton.h"    /* re15_sin_q12 / re15_cos_q12 = Tafel 0x800ADEAC (bytegleich RE1.5 0x800794C4) */
 #include "re15_room.h"        /* g_room_rdt / g_room_rdt_ok — O-VB2-Abbildung */
 #include "re15_collision.h"   /* room_coll (FUN_8001c6e8), box_blocked (FUN_8003b558), prop_box_hit */
-#include "re15_aot.h"         /* re15_aot_water_at = FUN_800527b4-Zwilling */
+#include "re15_aot.h"         /* re15_aot_water_at = FUN_800527b4-Zwilling; re15_esp_fx_culled */
+#include "re15_math.h"        /* re15_gte_divide - RTPS-Kehrwert wie pc_draw_effects */
 
 int  (*re2fx_applier)(const int32_t p[3], int16_t gier, const int16_t box[4], uint32_t hitcode) = NULL;
 void (*re2fx_se_hook)(uint32_t code, const int32_t pos[3]) = NULL;
@@ -844,6 +845,76 @@ void re2fx_tick(void)
         if (rd16(cur(), 0x18) & 0x8000u)               /* @0x8001d630-38 */
             schritt(0);                                /* `jal 0x8001d68c` + `addu a0,zero,zero` @0x8001d644-48 */
     }
+}
+
+
+/* ---------------------------------------------------------------------------------------------
+ * Billboards - FUN_80077924 (Schleife) + FUN_80077ed0 (POLY_FT4-Bau), Paketfarbe 0x808080 aus
+ * FUN_800783b4 (`lui a0,0x2c80 / ori a0,a0,0x8080` @0x800783cc-d0; FUN_80077ed0 schreibt nur das
+ * Code-Byte `sb s2,7(t2)` @0x8007808c).
+ * ------------------------------------------------------------------------------------------- */
+int re2fx_quads(const re15_camera_view_t *cam, int cx, int cy, int camf,
+                int has_region, const int16_t rxs[4], const int16_t rzs[4],
+                re2fx_quad_t *out, int max)
+{
+    if (!s_esp || !cam || !out || max <= 0) return 0;
+    int n = 0;
+    for (int i = RE2FX_PLAETZE - 1; i >= 0; i--) {     /* s0 = 0x800DBB70 - 124 abwaerts @0x800779e8 */
+        const uint8_t *b = s_pool[i].b;
+        uint16_t st = rd16(b, 0x18);
+        if ((st & 0xA000u) != 0xA000u) continue;        /* `andi v1,s2,0xa000` @0x80077a18-24 */
+        int32_t wx = rds16(b, 0x34), wy = rds16(b, 0x36), wz = rds16(b, 0x38);   /* @0x800779ec-a00 */
+        if (re15_esp_fx_culled(wx, wz, has_region, rxs, rzs)) continue;         /* `jal 0x8002c820` @0x80077a30 */
+        const uint8_t *e = anim_eintrag(b, b[0x21]);    /* +0x70 + Anim*8 @0x80077a04-14 */
+        unsigned nprim = e[1];                          /* `lbu s3,1(s1)` @0x80077a20 */
+        if (nprim == 0) continue;                       /* @0x80077a40 */
+        uint8_t code = (st & 0x1000u) ? 0x2E : 0x2C;   /* @0x80077a44-50 */
+        if (st & 0x200u) continue;                      /* Alternativpfad @0x80077a54-60 - von keinem
+                                                         * Aufschlag-Skript gesetzt (bau_d.md §4) */
+        unsigned size = e[3], cell = e[0];              /* `lbu s6,3(s1)` / `lbu s7,0(s1)` @0x80077a58-5c */
+        if (size == 0) continue;
+        /* RTPS (byte-true wie pc_draw_effects: view = (rot*world)>>12 + trans). */
+        int32_t vx = (int32_t)(((int64_t)cam->rot[0] * wx + (int64_t)cam->rot[1] * wy + (int64_t)cam->rot[2] * wz) >> 12) + cam->trans[0];
+        int32_t vy = (int32_t)(((int64_t)cam->rot[3] * wx + (int64_t)cam->rot[4] * wy + (int64_t)cam->rot[5] * wz) >> 12) + cam->trans[1];
+        int32_t vz = (int32_t)(((int64_t)cam->rot[6] * wx + (int64_t)cam->rot[7] * wy + (int64_t)cam->rot[8] * wz) >> 12) + cam->trans[2];
+        uint32_t sz3 = (uint32_t)(vz < 0 ? 0 : (vz > 0xFFFF ? 0xFFFF : vz));
+        if ((sz3 >> 9) == 0) continue;                  /* `sra v0,v1,9 / beq` @0x80077f58-5c */
+        int32_t ir1 = vx > 0x7FFF ? 0x7FFF : (vx < -0x8000 ? -0x8000 : vx);
+        int32_t ir2 = vy > 0x7FFF ? 0x7FFF : (vy < -0x8000 ? -0x8000 : vy);
+        uint32_t nrec = re15_gte_divide((uint32_t)cam->fov_screen_dist, sz3);
+        int32_t sx = cx + (int32_t)(((int64_t)ir1 * (int64_t)nrec) >> 16);
+        int32_t sy = cy + (int32_t)(((int64_t)ir2 * (int64_t)nrec) >> 16);
+        int32_t szk = (int32_t)sz3; if (szk > 32767) szk = 32767;   /* `addiu a0,zero,32767 / sltu` @0x80077f64-74 */
+        /* step = size * Skala(+0x3A) * camf / (SZ << 4) (`mult a2,t0` / `mult t0,a0` / `div t1,v0`
+         * @0x80077f14-80077fd8); Breite/Hoehe = step * Aspekt X/Y (+0x04/+0x06, @0x80078004-40);
+         * Texelschritt = Breite / size (`divu` @0x8007801c, @0x8007805c). */
+        int32_t t1 = (int32_t)((uint32_t)size * (uint32_t)rd16(b, 0x3A) * (uint32_t)camf);
+        int32_t step = t1 / (szk << 4);
+        uint32_t w16 = (uint32_t)step * (uint32_t)rd16(b, 0x04);
+        uint32_t h16 = (uint32_t)step * (uint32_t)rd16(b, 0x06);
+        uint32_t sxs = w16 / size, sys = h16 / size;
+        unsigned usz = size, vsz = size;
+        if (sxs > 0x1FFFFu) usz = size - 1;             /* `sltu v0,a0(0x1ffff),t7 / addiu a2,a2,-1` @0x80078070-7c */
+        if (sys > 0x1FFFFu) vsz = size - 1;             /* `addiu t5,t5,-256` @0x80078088 */
+        uint32_t sxy_x = (uint32_t)(uint16_t)sx << 16, sxy_y = (uint32_t)(uint16_t)sy << 16;
+        for (unsigned k = 0; k < nprim && n < max; k++) {
+            const uint8_t *uv = esp_at(rd32(b, 0x74) + (cell + k) * 4u, 4);   /* +0x74 + Zelle*4 @0x80077f2c-34 */
+            uint32_t x0 = sxy_x + (uint32_t)((int32_t)(int8_t)uv[2] * (int32_t)sxs);   /* `lb t1,2(t4) / mult t1,t7` @0x80078090-ac */
+            uint32_t y0 = sxy_y + (uint32_t)((int32_t)(int8_t)uv[3] * (int32_t)sys);   /* `lb t0,3(t4) / mult t0,t6` @0x800780a0-cc */
+            re2fx_quad_t *q = &out[n++];
+            q->platz = i;
+            q->x0 = (int16_t)(x0 >> 16);                 /* `srl a0,a0,16` @0x800780c0 */
+            q->x1 = (int16_t)((x0 + w16) >> 16);         /* `addu t1,a0,t3 / srl t1,t1,16` @0x800780b0-b4 */
+            q->y0 = (int16_t)(y0 >> 16);                 /* `and v0,v0,v1(0xffff0000)` @0x800780dc */
+            q->y1 = (int16_t)((y0 + h16) >> 16);         /* `addu t0,v0,a1 / and` @0x800780d0-d4 */
+            q->u0 = uv[0]; q->v0 = uv[1];               /* `lbu a0,0(t4)` / `lbu v1,1(t4)` @0x80078104/14 */
+            q->u1 = (uint8_t)(uv[0] + usz);              /* `addu t1,a0,a2` @0x8007810c */
+            q->v1 = (uint8_t)(uv[1] + vsz);              /* `addu t0,v1,t5` @0x80078120 */
+            q->clut = rd16(b, 0x32); q->tpage = rd16(b, 0x2A);
+            q->code = code; q->sz = szk; q->vz = vz;
+        }
+    }
+    return n;
 }
 
 /* ---------------------------------------------------------------------------------------------

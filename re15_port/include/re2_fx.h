@@ -115,4 +115,28 @@ unsigned re2fx_op_unbekannt(void);
 /** Diagnose: Zahl der Op-Aufrufe je Op-Nummer seit re2fx_reset (Sonden). */
 unsigned re2fx_op_zaehler(int op);
 
+
+/* ---- Billboards (FUN_80077924 Schleife + FUN_80077ed0 Paketbau) ---------------------------------
+ * Plattformneutral: rechnet je sichtbarem Platz die POLY_FT4-Quads (Bildschirm-Rechteck, UV, CLUT,
+ * TPage, Code) wie das Original; der PC-Zeichner (platform/pc/src/re2fx_pc.c) und die Offscreen-
+ * Sonde setzen sie nur noch um. */
+#include "re15_camera.h"
+typedef struct {
+    int      platz;               /* Pool-Index (Schleife 95 -> 0, @0x800779e8)              */
+    int16_t  x0, y0, x1, y1;      /* Paket-Worte 2/4/6/8 (@0x800780f0-80078100)             */
+    uint8_t  u0, v0, u1, v1;      /* Worte 3/5/7/9 (@0x8007813c-4c)                          */
+    uint16_t clut, tpage;         /* +0x32 / +0x2A (`lhu v0,50` / `lhu v1,42` @0x80077f38-3c) */
+    uint8_t  code;                /* 0x2C, 0x2E bei Status 0x1000 (@0x80077a44-50)            */
+    int32_t  sz;                  /* SZ3 nach Klemme 0x7FFF (@0x80077f64-74)                  */
+    int32_t  vz;                  /* View-Z (Sortierschluessel des Ports wie pc_draw_effects) */
+} re2fx_quad_t;
+
+/** Alle Quads des aktuellen Pools fuer eine Kamera. cam/cx/cy = Projektion wie pc_draw_effects
+ *  (byte-true RTPS), camf = u16 Kamera-Satz +2 >> 7 (RE2: `lhu v0,102(v1) / srl v0,v0,7` @0x800779ac-bc,
+ *  RE1.5-Raum: pc_fx_camf()), Region = FUN_8002c820-Test (@0x80077a30) auf das Viereck des aktiven
+ *  Cuts (has_region 0 = nicht cullen). Rueckgabe = Zahl der Quads (hoechstens max). */
+int re2fx_quads(const re15_camera_view_t *cam, int cx, int cy, int camf,
+                int has_region, const int16_t rxs[4], const int16_t rzs[4],
+                re2fx_quad_t *out, int max);
+
 #endif /* RE2_FX_H */
