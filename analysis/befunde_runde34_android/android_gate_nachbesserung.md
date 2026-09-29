@@ -11,6 +11,13 @@ niedrig wo ohne Risiko; Selbsttest + Positiv-/Negativ-Kontrollen erneut fahren.
 - 21:50 Python-Schnappschuss 0 (`nachbesserung_r1_belege/py_zustand_0_vorher.txt`, 121 Zeilen,
   Werkzeug des Pruefers echtlauf) = dessen Endstand (`diff` leer).
 - 21:50-21:54 alle Pruefer-Behauptungen selbst nachgemessen (Abschnitt 1) - alle bestaetigt.
+- 21:55-22:20 Gate mit rohem ZIP-Leser + Selbsttest (59 Faelle), apk_pruefen.sh, build_android.sh,
+  make_package.sh, python_finden.sh (Abschnitt 2); Selbsttest 59/59, Referenz rc 0, F2-F5 rc 1.
+- 22:15-22:50 +11 Faelle (70), Mutanten-Probe Lauf 1 (76/84) -> +2 Faelle (72) -> Lauf 2 (78/84, 6 begruendet).
+- 22:52-22:57 Gate direkt gegen Referenz + 19 Faelschungen (3.4), volle Kette --gate-only (3.5).
+- 22:57-23:04 echte Android-Baeue: positiv EXIT 0, Gate-Abbruch, Gradle-Abbruch (3.6, 3.7).
+- 23:04-23:11 make_package.sh echt: positiv, 6 Negativfaelle, B5 am alten Skript (3.8).
+- 23:12-23:20 Linux-Docker (3.9), Python-Schnappschuss, Aufraeumen (3.10).
 
 ## 1. Nachpruefung der Befunde (vor jeder Aenderung, Gate-Stand HEAD 568e9b88)
 
@@ -57,21 +64,22 @@ Faelschungen mit dem Rohbyte-Werkzeug des Pruefers (`pruefer_umgehung_r1_belege/
   verify -v --print-certs` (rc 0 UND "Verified using v2|v3 ... true"; Signer-Digest wird ausgegeben),
   Gate-Selbsttest, Gate. apksigner.jar direkt statt apksigner.bat (kein cmd.exe-Quoting).
 
-### 2.3 umgehung B3 (mittel): Selbsttest 28 -> 70 Faelle + systematische Mutanten-Probe
+### 2.3 umgehung B3 (mittel): Selbsttest 28 -> 72 Faelle + systematische Mutanten-Probe
 - **Ursache (bestaetigt):** Fixture <= 5000 B (< BLOCK), keine CRC32-erhaltende Faelschung, kein Geister-/
   Doppelzeilen-Fall; die Mutanten-Probe des Bauers schaltete nur ganze Pruefungen ab.
-- **Aenderung:** neue Faelle 29-70: gute APK mit Datei > 1 MiB (4 Dateien/1060709 B in der PSX-Zeile
+- **Aenderung:** neue Faelle 29-72: gute APK mit Datei > 1 MiB (4 Dateien/1060709 B in der PSX-Zeile
   verlangt), 1 Byte hinter dem 1. MiB, CRC32-erhaltende Aenderung (GF(2)-Ausgleich, `_crc_erhaltend`),
   Geisterzeile, Doppelzeile, `1_800`, Manifest kein UTF-8 / `# Notiz` / nennt sich selbst / ohne Kopf;
   Eintragsname `\` (F2), NUL-Anhang (F3), kein UTF-8, Steuerzeichen, `..`; Local Header CRC (F4),
   Groesse (F5), Name, Signatur; verschluesselt; Methode 99; Daten ragen ins Zentralverzeichnis;
   classes.dex-Byte (nur CRC schuetzt es); Deflate mit Muell dahinter / Blocktyp 3; Verzeichniseintrag;
   abgeschnitten (F7), Bytes hinter dem EOCD, ZIP64, CD-Signatur (F8), CD-Offset, ein Eintrag zu wenig;
-  gute APK mit EOCD-Signatur in Asset-Daten; neun build.gradle-Lesefehler.
+  gute APK mit EOCD-Signatur in Asset-Daten; neun build.gradle-Lesefehler; nach Probe-Lauf 1 zusaetzlich
+  build.gradle-Kommentar `/*` ohne Ende (71) und Stored-Eintrag mit csize > usize (72, Leseschutz).
   Fixture wie AGP: nach dem Schreiben per zipfile bekommt jeder Local Header ein Ausrichtungsfeld 0xD935
   (6-9 B, CD-Extra bleibt 0) - ein Leser, der den Datenoffset aus dem Zentralverzeichnis rechnet, faellt
   schon im guten Fall durch. Faelschungen per eigenem Mini-Parser `_fx_cd` (unabhaengig vom Gate-Leser).
-  Faelle laufen parallel (4 Prozesse): 70 Faelle in 7-12 s.
+  Faelle laufen parallel (4 Prozesse): 72 Faelle in 4-12 s auf ruhiger Maschine (3.1).
 - **Beweis:** `nachbesserung_r1_belege/mutanten_voll.py` erzeugt per `ast` JEDE Abschwaechung des
   Pruefcodes (A: jedes `befund(...)` -> `pass`, B: jedes `raise Bedienfehler/_Lesefehler` -> `pass`,
   C: jede Namensregel, D: 18 Hand-Mutanten inkl. U3/U4, Offset aus dem CD, Namen wie zipfile, EOCD von
@@ -254,3 +262,37 @@ Zeitstempeln 19:34** (`cp -p`, KEIN touch); APK = der frische Bau aus 3.6 (5ec3a
 - Danach: `git restore --source=HEAD` fuer SHA256SUMS.txt + 6 Split-Volumes (`sha256sum -c` 7/7 OK gegen den
   Stand vor den Laeufen), pkg-linux/pkg-win/win_out/linux_out/APK/`release/__pycache__` geloescht,
   `git status --short release/ re15_port/` leer.
+
+### 3.9 Linux (Docker `re15-linux-build:deb11`, Baum nur lesend unter /src) - `linux_lauf_nb.log`
+Debian 11, Python 3.9.2: python_finden -> `/usr/bin/python3 (3.9.2)`; Selbsttest **72/72** (4 s); Gate ref
+rc 0 (54 s - der bekannte 9p-Mount), F2 signiert rc 1, F3 rc 1, F4 rc 1, F5 rc 1, N5 rc 2. Der rohe Leser
+haengt nicht mehr am Betriebssystem (unter Linux haette zipfile F2 ohnehin nicht normalisiert, F3-F5 aber
+genauso durchgelassen).
+
+### 3.10 Python-Installer-Kontrolle + Endstand
+- Schnappschuss nach ALLEN Laeufen (`py_zustand_1_nach_allen_laeufen.txt`, 121 Zeilen) == Schnappschuss 0
+  (`diff` leer): kein neuer Schluessel unter HKCU/HKLM `Software\Python`, kein Startmenue-Eintrag, keine
+  Datei neuer als 21:45 in `%LOCALAPPDATA%\Python`, `...\WindowsApps`, Benutzer-Startmenue; kein
+  python/pymanager/msiexec-Prozess. Kein Lauf hat den WindowsApps-Alias gestartet (python_finden waehlt jetzt
+  C:/Python310; Selbsttests/Faelschungen/Proben mit /c/Python310, /c/Python39, /c/msys64/mingw64/bin/python3
+  ausdruecklich).
+- `git status --short release/ re15_port/`: leer. Geloescht (eigene Laufreste): Gradle-Ausgaben
+  (`platform/android/{app/build,.gradle,build,local.properties}`, 1,5 GB), `build/r34a/nb/{apk,pakete,...}`
+  (Faelschungen ~7 GB; mit `umgehung_werkzeug.py`/`nb_faelschen.py` in Sekunden wiederherstellbar).
+  Liegen gelassen: `build/r34a/ref_v0.8.19.apk` (Bauer, sha256 514bebd5... unveraendert), Logs unter
+  `build/r34a/nb/`.
+
+## 4. Offen / Hinweise
+- **Altlast Registry** (nicht geaendert, ausserhalb des Auftrags): `HKCU\Software\Microsoft\Windows\
+  CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64` ("Python 3.14.7", Ordner existiert nicht). NICHT
+  ueber "Deinstallieren" entfernen (startet den WindowsApps-PythonManager); Vorschlag an den Nutzer:
+  `reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\pymanager-pythoncore-3.14-64" /f`.
+- `.gitignore` (`release/*.apk.ungeprueft`) liegt ausserhalb meines Dateibereichs; die EXIT-Falle macht es
+  unnoetig (3.7). Wer mag, ergaenzt es beim naechsten Release-Commit.
+- Das Gate ist bei gesetztem Verschluesselungsbit STRENGER als das Geraet (libziparchive liest N3); AGP setzt
+  das Bit nie, der Abbruch waere also nur bei einer Fremd-Nachbearbeitung zu erwarten.
+- `check_binary_fresh` misst weiter die Datei-mtime gegen die Commit-Zeit: eine per `cp` (ohne -p) frisch
+  kopierte ALTE APK gilt als frisch - dieselbe Grenze wie bei den PC-Binaries; versionName, Signatur und
+  der Inhaltsabgleich greifen trotzdem.
+- Laufzeit der Kette im Bau: 10,9 s von 161 s (3.6); der Selbsttest (72 Faelle, 4 parallel) braucht auf
+  ruhiger Maschine 4-8 s, unter Last bis ~55 s (gemessen, 3.1).
