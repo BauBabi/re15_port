@@ -23,9 +23,10 @@
 /* 1 if a Message_on of `msg_id` in `room_id` is a phone save-point message. */
 int re15_savepoint_is(unsigned room_id, uint8_t msg_id);
 
-/* Set by the SCD Message_on handler when a save-point phone is examined; the
- * platform polls it to open the save flow (gated on the MEMORY CARD item), then
- * clears it. One-shot request, like the boot-movie gate. */
+/* One-shot request to open the save SCREEN; the platform polls + clears it. Since
+ * Runde 33 it is raised by re15_savepoint_poll() once the Memory-Card question was
+ * answered YES (RE2 @0x80051bd0-dc), not directly by the examine any more — plus by
+ * the RE15_SAVE_TEST debug harness (bypass, no card needed). */
 int  re15_savepoint_pending(void);
 void re15_savepoint_set_pending(int on);
 
@@ -60,5 +61,52 @@ int  re15_savepoint_saved_cut(void);    /* the latched gameplay cut, or -1 */
  * Latch: beim Pending-Set per Registry-Lookup des ausloesenden Raums; reset() wischt auf 0. */
 void    re15_savepoint_latch_loc(unsigned room_id);  /* Registry-Lookup -> Latch */
 uint8_t re15_savepoint_loc(void);                    /* der gelatchte Index (0/1) */
+
+/* ===== Runde 33: SPEICHERN NUR MIT MEMORY CARD — RE2s Farbband-Ablauf ==================
+ * Nutzer 2026-09-29: "eine Message ... wie in Resident Evil 2, wenn man speichern moechte,
+ * aber kein Farbband besitzt. Nur statt Farbband eben Memory Card. Speichern soll nur
+ * moeglich sein, wenn man eine Memory Card besitzt."
+ * Dossier mit allen Belegen: analysis/befunde_runde33/speichern_memory_card.md.
+ *
+ * RE2-Vorbild (info/re2leon/PSX.EXE): AOT-Typ 9 -> Handler 0x80051AB0, Fortsetzung
+ * 0x80051B04 sucht Item 0x1E (Farbband) per FUN_800696CC NUR im Inventar
+ * (@0x80051b34/@0x80051b38), zeigt ohne Farbband Meldung (0x100,0) @0x8009EFCC
+ * ("If I had an Ink Ribbon, I could save my progress..."), mit Farbband Meldung (0x100,1)
+ * @0x8009F01F ("... Will you use the Ink Ribbon?" + Ja/Nein) und fordert bei Ja den
+ * Speicherbildschirm an (@0x80051bd0-dc). Der Port ersetzt das Farbband durch die
+ * Memory Card (Item 0x21). Die Karte wird NICHT verbraucht — PORT-WAHL auf Nutzerwunsch
+ * (RE2 verbraucht in MEM_CARD.BIN @0x801C118C-0x801C11E0). */
+#define RE15_SAVEPOINT_CARD_ITEM 0x21   /* "Memory Card": Namenstabelle @0x800C495C[0x21] ->
+                                         * DEBUG.BIN @0x800C4BEA `29 41 49 4b 4e 55 00 1f 3d 4e 40` */
+#define RE15_SAVEPOINT_MSG_ID    0xFE   /* PORT-Platz in der Nachrichtentabelle fuer den
+                                         * zusammengesetzten Text (die Raeume nutzen 0..45) */
+
+/* Inventarplatz der Memory Card oder -1. NUR das Inventar, nicht die Item-Kiste:
+ * RE2 FUN_800696CC (@0x800696cc-0x80069710, Slots @0x800D4A3C bis Kapazitaet
+ * DAT_800D46AC; Kiste @0x800D4A68 wird nicht gelesen) == RE1.5 FUN_8004DFEC
+ * (@0x8004dfec, Slots DAT_800B10AC bis DAT_800B0FBC) == re15_inv_find_item. */
+int  re15_savepoint_card_slot(void);
+
+/* Setzt den Text der Speicherstelle zusammen (rein, ohne Zustand; Riegel-tauglich).
+ * `orig` = die ausgelieferte RE1.5-Meldung dieser Stelle ("It's a phone. / You can save
+ * your progress with this. / Save is not available in this preview."). Uebernommen wird
+ * ihr Anfang bis einschliesslich des ERSTEN (ohne Karte) bzw. ZWEITEN (mit Karte)
+ * Seitenwechsels `02 00` — genau die Seiten, die RE2s Meldung an derselben Stelle hat
+ * ("It's an old typewriter." / "You can save your progress with this.") — und dahinter
+ * RE2s Schlussseite mit "Memory Card" statt "Ink Ribbon". Rueckgabe = Laenge in `out`. */
+int  re15_savepoint_build_text(const uint8_t *orig, int orig_len, int with_card,
+                               uint8_t *out, int cap);
+
+/* Eintritt beim Untersuchen einer Speicherstelle (ersetzt das fruehere Sofort-Pending der
+ * beiden Intercepts in scd_vm.c). Latcht den Ortsindex, setzt den Text und oeffnet ihn mit
+ * der Pausen-Maske der ausgelieferten Meldung (alle 16 Stellen: 0xffff -> 0xffff0000).
+ * Mit Karte ist danach die Abfrage offen (RE2 Unterzustand 1, DAT_800D424A = 1). */
+void re15_savepoint_examine(unsigned room_id, uint8_t msg_id, uint32_t pause_mask);
+
+/* Je Bild von der Plattform gerufen (vor der Pending-Abfrage). Liefert GENAU EINMAL 1,
+ * wenn die Abfrage mit JA beantwortet wurde (RE2 @0x80051bb4-dc: Antwortbit 0 = 0 ->
+ * Speicherbildschirm), sonst 0. Nein -> 0, Abfrage zu (RE2 @0x80051be8-f4). */
+int  re15_savepoint_poll(void);
+int  re15_savepoint_asking(void);   /* 1 solange die Abfrage offen ist (Riegel/Log) */
 
 #endif /* RE15_SAVEPOINT_H */

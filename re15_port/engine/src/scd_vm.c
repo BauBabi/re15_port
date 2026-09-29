@@ -1477,24 +1477,26 @@ static void msg_show(scd_thread_t *t)
  * msg_show: a plain subtitle that auto-dismisses after its own duration. */
 void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
 {
-    /* FE-4: EXAMINE-AOT direct message path — same save-point check as op_message_on. A
-     * save-point phone opens the save MENU instead of the flavor message: request the menu
-     * and DON'T open a dialog. Opening the typewriter dialog here was the freeze source —
-     * re15_dialog_open arms a wait-for-button FSM (message_fsm_active, msg_common.c:496) that
-     * the modal menu then hides, leaving Leon frozen behind it until dismissed; and the
-     * platform had to force-clear it, which reopened the msg_block re-examine gate → the
-     * menu↔room flicker. Skipping the dialog closes both. (No re-examine cooldown: the AOT
-     * fires on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
-    /* OPEN (dokumentiert, nicht gefixt): die beiden Interceptions unten kehren zurueck, BEVOR
+    /* FE-4: EXAMINE-AOT direct message path — same save-point check as op_message_on.
+     * SEIT RUNDE 33 zeigt eine Speicherstelle statt der ausgelieferten "not available"-Meldung
+     * den RE2-Farbband-Ablauf mit der Memory Card (re15_savepoint_examine): einen Text im
+     * normalen Dialog-FSM (ohne Karte der Hinweis, mit Karte die Ja/Nein-Frage). Das Menue
+     * oeffnet erst NACH dem Schliessen des Textes (re15_savepoint_poll -> pending), so dass
+     * kein wartender Dialog hinter dem modalen Menue haengen bleibt (die alte Freeze-/
+     * Flacker-Quelle, Memory reai-v2-save-load). (No re-examine cooldown: the AOT fires on a
+     * fresh action-button EDGE only.) */
+    /* OPEN (dokumentiert, nicht gefixt): die Item-Box-Interception unten kehrt zurueck, BEVOR
      * ein Dialog geoeffnet wird — der byte-true Freeze aus @0x80043098 (0xffff -> 0xffff0000)
-     * entfaellt damit fuer Save-Telefon und Item-Box. Fachlich deckungsgleich, weil beide
-     * stattdessen einen MODALEN Screen oeffnen, der ueber re15_menu_gameplay_frozen /
-     * re15_itembox_pending denselben Effekt hat (kein Spieler, keine KI, kein Skript). */
+     * entfaellt damit fuer die Item-Box. Fachlich deckungsgleich, weil sie stattdessen einen
+     * MODALEN Screen oeffnet, der ueber re15_menu_gameplay_frozen / re15_itembox_pending
+     * denselben Effekt hat (kein Spieler, keine KI, kein Skript). Die Speicherstelle oeffnet
+     * seit Runde 33 wieder einen Text MIT dieser Maske (re15_savepoint_examine). */
     if (re15_savepoint_is(g_current_room_id, index)) {
-        re15_savepoint_latch_loc(g_current_room_id);  /* Ortsindex (Patch-Analog AOT_TYPE1_HOOK
-                                                       * @0x8007087c: Telefon-Pfad schreibt den
-                                                       * Index VOR dem Kartenmenue) */
-        re15_savepoint_set_pending(1);
+        /* Runde 33: statt sofort das Menue zu verlangen, der RE2-Farbband-Ablauf mit der
+         * Memory Card (re15_savepoint.h): ohne Karte der Hinweis, mit Karte die Ja/Nein-Frage.
+         * Der Ortsindex wird darin wie bisher VOR dem Kartenmenue gelatcht (Patch-Analog
+         * AOT_TYPE1_HOOK @0x8007087c). pause_mask = die Maske der ausgelieferten Meldung. */
+        re15_savepoint_examine(g_current_room_id, index, pause_mask);
         return;
     }
     /* ITEM BOX (RE1.5-hybrid, default-on like the save system): the safe-room box
@@ -1631,23 +1633,22 @@ static int op_message_on(scd_thread_t *t)
     uint32_t pause_mask = ((uint32_t)(t->pc[2] | ((uint32_t)t->pc[3] << 8))) << 16;
 
     /* FE-4: a PHONE save-point message ("You can save your progress with this. Save is not available
-     * in this preview") — the port REPLACES it with the working save MENU, so open the menu and DO
-     * NOT display the message at all. Return here (advancing past the 4-byte Message_on) so the
-     * typewriter dialog below never runs — otherwise this SCD-thread path (GENERIC AOT → sub →
-     * Message_on) shows the dormant "not available" flavor text while the direct MESSAGE-AOT path
-     * (re15_scd_show_message) opens the menu, which is exactly the "sometimes menu, sometimes
-     * message" split the user sees. Placed HERE (the single Message_on entry) because msg_show
-     * only runs for the full-text cinematic rooms {0x1170,0x1240}; the phones take the plain
-     * typewriter path (re15_dialog_open) below. (No re-examine cooldown: the examine AOT fires
-     * on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
+     * in this preview") — the port REPLACES it. Seit Runde 33 mit dem RE2-Farbband-Ablauf (Memory Card)
+     * statt des Sofort-Menues; die ausgelieferte Meldung selbst erscheint nie. Placed HERE (the single
+     * Message_on entry) because msg_show only runs for the full-text cinematic rooms {0x1170,0x1240};
+     * the phones take the plain typewriter path. Both entry paths (this one and re15_scd_show_message)
+     * call the same re15_savepoint_examine, so every save point behaves identically. */
     if (re15_savepoint_is(g_current_room_id, t->pc[1])) {
-        re15_savepoint_latch_loc(g_current_room_id);  /* Ortsindex (Patch-Analog SCD_SAVE_RET
-                                                       * @0x800708c0: Schreibmaschinen-Pfad) */
-        re15_savepoint_set_pending(1);
+        /* Runde 33: RE2-Farbband-Ablauf mit der Memory Card statt Sofort-Menue
+         * (re15_savepoint_examine: Ortsindex-Latch wie bisher, Patch-Analog SCD_SAVE_RET
+         * @0x800708c0). Der Text oeffnet mit der Maske DIESES Message_on (ROOM1150 sub06
+         * `2b 01 ff ff` -> 0xffff0000): die VM steht wie bei der ausgelieferten Meldung, der
+         * Nahaufnahme-Cut aus Cut_chg bleibt waehrend des Textes stehen. */
         if (getenv("RE15_MSG_LOG"))
-            fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (menu, message suppressed)\n",
+            fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (Memory-Card-Ablauf)\n",
                     g_current_room_id, t->pc[1]);
-        t->pc += 4;   /* skip the flavor message — the save menu is its replacement */
+        re15_savepoint_examine(g_current_room_id, t->pc[1], pause_mask);
+        t->pc += 4;   /* die ausgelieferte Meldung selbst entfaellt — ersetzt durch den Port-Text */
         return 1;
     }
     /* ITEM BOX (RE1.5-hybrid, default-on): the box AOT's SCD sub fires Message_on

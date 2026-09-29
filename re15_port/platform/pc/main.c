@@ -4774,19 +4774,27 @@ re_title:;
 
     /* debug: RE15_GIVE_CARD drops a MEMORY CARD in inventory; RE15_SAVE_TEST also fires a
      * save-point this frame (exercise the save flow without navigating to a phone). GIVE_CARD
-     * alone lets a REAL phone examine be tested (walk onto the phone AOT + press SQUARE). */
-    if (getenv("RE15_GIVE_CARD")) {   /* debug: drop a MEMORY CARD so the consume-per-save path is exercised */
+     * alone lets a REAL phone examine be tested (walk onto the phone AOT + press SQUARE).
+     * Laeuft NACH dem CONTINUE-Restore (weiter oben) — die Karte ueberlebt also das Laden. */
+    if (getenv("RE15_GIVE_CARD")) {   /* debug: drop a MEMORY CARD -> RE2-Ablauf "mit Karte" (Runde 33) */
         for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
             if (g_inv.slots[i].id == 0) { g_inv.slots[i].id = 0x21; g_inv.slots[i].qty = 2; break; }
     }
-    if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);   /* fire a save-point this frame (card not required) */
+    if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);   /* Test-Bypass: Speicherbildschirm direkt,
+                                                                    * OHNE Memory-Card-Frage (kein Spielverhalten) */
     if (getenv("RE15_BOX_TEST"))  re15_itembox_set_pending(1);     /* fire a box AOT this frame (exercise the full
                                                                     * request -> stage freeze/fade -> box-screen path) */
 
     while (running) {
-        /* FE-4 phone SAVE (outside the game frame): a save-point phone was examined?
-         * gate on the MEMORY CARD item (0x21, RE1.5's ink-ribbon equivalent) — if held,
-         * open the save screen and consume one card on a successful save. */
+        /* FE-4 phone SAVE (outside the game frame). SEIT RUNDE 33 (Nutzer: "Speichern soll nur
+         * moeglich sein, wenn man eine Memory Card besitzt"): das Untersuchen oeffnet den
+         * RE2-Farbband-Ablauf (re15_savepoint_examine) — ohne Memory Card (Item 0x21) nur den
+         * Hinweis, mit Karte die Frage. re15_savepoint_poll meldet das JA genau einmal
+         * (RE2 @0x80051bb4-dc: Antwortbit 0 = 0 -> Speicherbildschirm), dann oeffnet hier der
+         * Bildschirm. Die Karte wird NICHT verbraucht (PORT-WAHL, Nutzerwunsch; RE2 verbraucht
+         * das Farbband in MEM_CARD.BIN @0x801C118C-0x801C11E0).
+         * Dossier: analysis/befunde_runde33/speichern_memory_card.md. */
+        if (re15_savepoint_poll()) re15_savepoint_set_pending(1);
         /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_AGAIN=<frame> feuert einen ZWEITEN
          * Save-Point im selben Prozess. Der Save-Zaehler ist Sitzungs-Zustand (DAT_800b0fbd),
          * also braucht sein Pin zwei Saves in EINER Sitzung. */
@@ -4797,11 +4805,9 @@ re_title:;
               re15_savepoint_set_pending(1); }
         if (re15_savepoint_pending()) {
             re15_savepoint_set_pending(0);
-            /* Examining a save-point phone ALWAYS opens the save screen (replacing the dormant RE1.5
-             * "you can save your progress with this — save is not available in this preview" flavor
-             * message). The MEMORY CARD (0x21, RE1.5's ink-ribbon equivalent) is consumed per save WHEN
-             * held; but since the accessible RE1.5 content has no card pickup, saving is not hard-gated
-             * on it (otherwise the whole feature is unreachable). */
+            /* Hier kommt nur noch an, wer die Memory-Card-Frage mit JA beantwortet hat (oder der
+             * RE15_SAVE_TEST-Bypass). Der Text ist zu diesem Zeitpunkt schon geschlossen; der Reset
+             * unten ist deshalb nur noch eine Absicherung. */
             /* FULLY dismiss the flavor message (same reset as the msg-FSM DONE state,
              * msg_common.c:467). Clearing ONLY message_active leaves message_display_frames > 0,
              * which msg_block (player_common.c:306) gates the player on — so after the save screen
@@ -4811,9 +4817,7 @@ re_title:;
             g_scd.message_fsm_active     = 0;
             g_scd.message_display_frames = 0;
             g_scd.message_query          = 0;
-            int mc = -1;
-            for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
-                if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
+            int mc = re15_savepoint_card_slot();   /* nur fuer das Protokoll — kein Verbrauch mehr */
             re15_savedata_t sd;
             /* BYTE-TRUE Zaehler-Semantik (analysis/save_counter.md SC-1/SC-3, CONFIRMED):
              * Der Save speichert den LIVE-Zaehler DAT_800b0fbd PRE-Inkrement (GSB-memcpy
@@ -4832,23 +4836,17 @@ re_title:;
              * camera_cut from the live cam_id; override with the latched cut + recompute the checksum. */
             { int gc = re15_savepoint_saved_cut();
               if (gc >= 0) { sd.camera_cut = (uint8_t)gc; sd.checksum = re15_savedata_checksum(&sd); } }
-            /* Byte-true: the card (RE1.5's ink-ribbon) consumed by THIS save is part of the saved
-             * state — reflect the decrement in the CAPTURED block so reloading doesn't hand it back
-             * (the live inventory is decremented on success below). Recompute the checksum. */
-            if (mc >= 0) {
-                if (sd.inv[mc].qty > 0) sd.inv[mc].qty--;
-                if (sd.inv[mc].qty == 0) { sd.inv[mc].id = 0; sd.inv[mc].flags = 0; }
-                sd.checksum = re15_savedata_checksum(&sd);
-            }
+            /* KEIN Kartenverbrauch (Runde 33, PORT-WAHL auf Nutzerwunsch): der gesicherte Block
+             * traegt das Inventar unveraendert, die Memory Card bleibt drin. (Frueher: qty-- im
+             * Block und im Live-Inventar, RE2-Farbband-Analog MEM_CARD.BIN @0x801C11AC.) */
             if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
                 s_save_counter = (uint16_t)(scount + 1);   /* DAT_800b0fbd++ NUR nach Erfolg
                                                             * (@0x80026488-9c, Post-Inkrement) */
-                if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
                 /* n = die GESCHRIEBENE Nummer (Pre-Inkrement, @0x800261c4-d8/@0x80026eac-f0),
                  * next = der Sitzungs-Zaehler danach (Post-Inkrement @0x80026488-9c). */
-                fprintf(stderr, "[save] saved (room %04x) slot n=%d -> next=%u; card=%s\n",
+                fprintf(stderr, "[save] saved (room %04x) slot n=%d -> next=%u; card=%s (slot %d qty %d)\n",
                         g_current_room_id, scount, (unsigned)s_save_counter,
-                        mc >= 0 ? "consumed" : "none");
+                        mc >= 0 ? "kept" : "none", mc, mc >= 0 ? (int)g_inv.slots[mc].qty : 0);
                 /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_EXIT_AFTER=<n> beendet den
                  * Prozess, sobald n Saves geschrieben sind — deterministisches Lauf-Ende fuer
                  * den Zaehler-Pin (die Karte ist hier bereits geschlossen geschrieben). */
