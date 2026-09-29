@@ -1,0 +1,8 @@
+Zeilen 8045, F1..F8045
+Aufnahme auf in F387: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205] | zeichnet ab F388
+Aufnahme auf in F545: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1205, -1205, -1205] | zeichnet ab F546
+Aufnahme auf in F1455: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205] | zeichnet ab F1456
+Aufnahme auf in F1584: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1205, -1205, -1205] | zeichnet ab F1585
+Bilder mit Aufnahme: 580, davon y != -1205: 0
+Ruhe F387..F747 (361 Bilder), davon ohne Aufnahme 40; naechstes Bild F748 y=-1195
+Ruhe F1455..F1753 (299 Bilder), davon ohne Aufnahme 40; naechstes Bild F1754 y=-1195

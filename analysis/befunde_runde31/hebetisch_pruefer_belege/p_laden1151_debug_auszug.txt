@@ -1,0 +1,8 @@
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[save] CONTINUE: resumed in room 1151 (hp=100)
+[sicherung] Boot-Weg: Prop obj_id=4 im Pool (slot 4, Raum 1151)
+[granate] Boot-Weg: Prop obj_id=7 im Pool (slot 7, Raum 1151)
+[scd F96] Cut_chg(4)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x0FF9), Sperre bis zum Ende dieser Fahrt
+[sicherung] Modal Item 0x40 zeichnet in Bild 248 (Raum 1151, Hebetisch y=-1205): Bild weicht in 0 von 8064 Punkten ab
+[flow] EXIT_AT: Bild 300 in Raum 1151 erreicht -> exit

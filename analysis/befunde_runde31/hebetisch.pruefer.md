@@ -100,10 +100,85 @@ Alle vom Bauer zitierten Adressen/Instruktionen stimmen. PC im Sleeping = Sleep+
 * RE15_MIN_TESTS 405 -> 406 an beiden Stellen (Z. 63 und 321) - geprueft im diff.
 
 ## 4. Sichtpruefung echtes Spiel (Framedump)
-(folgt)
+
+Echte exe `re15_port/build/platform/pc/re15_pc.exe` (selbst gebaut, s. §2), beschleunigter
+Renderer, `RE15_FRAMEDUMP` (Ruecklesen vor Present), KEIN AUTOSHOT/SOFTWARE_RENDER, 320x240.
+Lauf-Skript `hebetisch_pruefer_belege/p_lauf.sh` (Tuerweg per RE15_DEBUG_JUMP + RE15_PLAYER_POS
+wie der Bauer, Eingabe per RE15_INPUT_SCRIPT = echte Viereck/Rechts-Tasten, Mess-Protokoll
+RE15_HEBETISCH_LOG). Auswertung `p_ruhe.py`, Bogen `p_bogen.py`. Alle zitierten Bilder angesehen.
+
+Messfalle: erster Versuch ohne `RE15_TITLE_SHOT`/`_AF` hing im Titel (rc=124, 0 Bilder, debug.log
+endet nach der input-script-Zeile) - der Titel laeuft ohne diese Variablen nicht automatisch weiter.
+Mit ihnen (wie lauf_fahrt.sh des Bauers) sauber.
+
+### 4.1 Lauf p_ja_nein (NEU, vom Bauer nicht gefahren): Fahrt 1 Sicherung Yes / Granate NO, Fahrt 2
+
+`p_ja_nein_debug_auszug.txt`, `p_ja_nein_ruhe.txt`:
+```
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)   (Bild 387)
+Tick 306 -> F506 Yes -> [sicherung] Yes: genommen, Flag (9,53)
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)     (Bild 507)
+F632 R, F653 Viereck -> [granate] No/voll: nicht genommen, Granate bleibt liegen
+[... Fahrt zu Ende, Parklage y=-20224: Sperre geloest] (beide)
+F1199 Viereck (Fahrt 2), Cut_chg(4) F1205
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B)     (Bild 1356)
+F1490 Yes -> [granate] Yes: genommen, Flag (9,56), Item 0x09 x1 in Platz 4
+Aufnahme auf in F387:  y=-1205 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205]
+Aufnahme auf in F507:  y=-1205 pc=0x101B | y F-3..F-1 = [-1205, -1205, -1205]
+Aufnahme auf in F1356: y=-1205 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205]
+Bilder mit Aufnahme: 416, davon y != -1205: 0
+Ruhe F387..F708 (322 Bilder), davon ohne Aufnahme 40; naechstes Bild F709 y=-1195
+Ruhe F1356..F1529 (174 Bilder), davon ohne Aufnahme 40
+```
+Bilder `p_ja_nein_fahrt1.png` (F260/F320 Fahrt: Granate links, Sicherung schraeg nach rechts unter
+den rechten Deckel; F376/F384 oben, beide an der oberen Bildkante sichtbar; F388 Aufnahme-Bild
+beginnt; F400 Sicherungs-Aufnahme). `p_ja_nein_fahrt2.png` (F1248/F1300 Fahrt 2: NUR die Granate,
+links im Fach - die genommene Sicherung ist weg; F1352 oben; F1360 Granaten-Aufnahme; F1500 Fach
+leer; F1640 Statusschirm mit Sicherung und Granate x1). Lupe `p_lupe_fach.png` (Ausschnitte x4).
+
+### 4.2 Lauf p_nein_nein (NEU): Fahrt 1 No/No, Fahrt 2 Yes/Yes, ROOM1150
+
+Gedacht als ROOM1151-Tuerweg (`RAUM=1151`), aber `RE15_DEBUG_JUMP=1151` landet in ROOM1150
+(`[debug-menu] AUTO-JUMP -> ROOM1151` / `JUMP -> 115 CHIEF OFFICE (ROOM1150)` / `PC loaded
+room1150.rdt`) - der Sprung waehlt die Raumvariante selbst. Deshalb ist dieser Lauf ein 1150-Lauf
+(EXIT_AT#1151 griff nie -> rc=124 nach 280 s, der Inhalt bis F1900 ist vollstaendig).
+```
+Aufnahme auf in F387:  (Sicherung, Fahrt 1) y=-1205 pc=0x101B | davor -1207,-1206,-1205
+Aufnahme auf in F545:  (Granate, Fahrt 1, nach Sicherung-No + 17 Bilder Zustand 8) y=-1205
+Aufnahme auf in F1455: (Sicherung, Fahrt 2) y=-1205 pc=0x101B | davor -1207,-1206,-1205
+Aufnahme auf in F1584: (Granate, Fahrt 2) y=-1205
+Bilder mit Aufnahme: 580, davon y != -1205: 0
+Ruhe F387..F747, davon ohne Aufnahme 40 / Ruhe F1455..F1753, davon ohne Aufnahme 40
+```
+Nach No/No bietet Fahrt 2 BEIDE wieder an, wieder erst in der Ruhe oben, Reihenfolge Sicherung ->
+Granate; Yes/Yes -> Flags (9,53)/(9,56), Inventar-Platz 3/4.
+
+### 4.3 Lauf p_laden1151 (Lade-Weg ROOM1151, Werkzeug des Bauers lauf_laden.sh, eigene Ausgabe)
+
+`[save] CONTINUE: resumed in room 1151`, Boot-Weg obj 4 und obj 7 im Pool, `[fire-aot] slot=1 at
+F90`, `[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x0FF9)`;
+Aufnahme auf in F247, y davor -1207/-1206/-1205, 53 Aufnahme-Bilder alle bei -1205.
+Bild `p_laden1151.png`: F120/F160 Granate links, Sicherung rechts; F240/F246 oben; F260 Aufnahme.
+(ROOM1151 nur ueber CONTINUE + RE15_FIRE_AOT erreichbar, nicht per Tuerweg-Sprung - s. 4.2.)
+
+### 4.4 Eigener Zensus der Ruhe-Signatur
+56-Byte-Folge ueber alle 240 RDTs unter re15_port/shared_assets/PSX/STAGE*/: genau
+ROOM1150 @0x1010 (Fenster 0x101A..0x1042) und ROOM1151 @0x0FEE (0x0FF8..0x1020), je 1 Treffer.
+Deckt sich mit `ruhe_signatur.txt` des Bauers.
 
 ## 5. Nicht gefahrene Faelle
-(folgt)
+
+| Fall | Bauer | Pruefer | Ergebnis |
+|---|---|---|---|
+| Yes/Yes Fahrt 1 (Tuerweg 1150) | ja_ja | (Bilder des Bauers angesehen) | ok |
+| Sicherung No, Granate Yes, Fahrt 2 | nein_ja | - | ok (Bauer-Beleg) |
+| Sicherung Yes, Granate NO, Fahrt 2 bietet Granate allein | - | p_ja_nein | ok, Ruhe oben, Fach zeigt nur Granate links |
+| No/No, Fahrt 2 Yes/Yes | nur Engine-Riegel unit_r30_granate 8/9 | p_nein_nein | ok |
+| Lade-Weg 1150 / 1151 | laden1150/1151 | p_laden1151 | ok (PC @0x0FF9) |
+| Tuerweg ROOM1151 | nicht gefahren | nicht erreichbar per Sprung | offen (Sprung waehlt 1150); Engine-Riegel + CONTINUE decken die Bytes |
+| Wiedereintritt (Tuer raus/rein) | - | - | nicht gefahren; install laeuft an beiden Raumstart-Wegen (scd_room_setup.c:412/422, main.c:4621/4648), Sperre wird bei install genullt |
+| Inventar voll | Engine-Riegel unit_r30_sicherung_nein C | - | nicht im Spiel gefahren; Zweig unveraendert (gleicher No-Pfad) |
+| Save/Load | CONTINUE-Laeufe | p_laden1151 | ok (Speichern im Hebetisch-Modal nicht moeglich) |
 
 ## 6. Befunde
 (folgt)

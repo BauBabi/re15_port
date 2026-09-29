@@ -1,0 +1,23 @@
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[debug-menu] AUTO-JUMP -> ROOM1150 (Frame 240)
+[room] PC loaded room1150.rdt (194080 bytes)
+[input-script] Tick 30 -> F230 Tasten 0x8000
+[scd F236] Cut_chg(4)
+[sicherung] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[sicherung] Modal Item 0x40 zeichnet in Bild 388 (Raum 1150, Hebetisch y=-1205): Bild weicht in 0 von 8064 Punkten ab
+[input-script] Tick 306 -> F506 Tasten 0x8000
+[sicherung] Yes: genommen, Flag (9,53) gesetzt, Item 0x40 in Inventar-Platz 3
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 432 -> F632 Tasten 0x0020
+[input-script] Tick 453 -> F653 Tasten 0x8000
+[granate] No/voll: nicht genommen, Granate bleibt liegen (Hebetisch y=-1205), die naechste Fahrt bietet sie wieder an
+[sicherung] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[granate] Fahrt zu Ende, Hebetisch in der Parklage y=-20224: Sperre geloest
+[input-script] Tick 999 -> F1199 Tasten 0x8000
+[scd F1205] Cut_chg(4)
+[granate] Modal auf (Hebetisch y=-1205, Ruhe oben: sub04-PC @0x101B), Sperre bis zum Ende dieser Fahrt
+[input-script] Tick 1290 -> F1490 Tasten 0x8000
+[granate] Yes: genommen, Flag (9,56) gesetzt, Item 0x09 x1 in Inventar-Platz 4
+[input-script] Tick 1416 -> F1616 Tasten 0x0008
+[flow] EXIT_AT: Bild 1700 in Raum 1150 erreicht -> exit

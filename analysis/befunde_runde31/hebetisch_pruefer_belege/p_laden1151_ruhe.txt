@@ -1,0 +1,4 @@
+Zeilen 301, F0..F300
+Aufnahme auf in F247: y=-1205 ruht=1 pc=0xFF9 | y F-3..F-1 = [-1207, -1206, -1205] | zeichnet ab F248
+Bilder mit Aufnahme: 53, davon y != -1205: 0
+Ruhe F247..F300 (54 Bilder), davon ohne Aufnahme 1; naechstes Bild F1000000000 y=0

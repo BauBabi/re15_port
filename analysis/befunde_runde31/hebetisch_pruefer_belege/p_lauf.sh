@@ -10,7 +10,7 @@ RAUM="${RAUM:-1150}"
 Z="$WT/build/r31_hebetisch/$1"; mkdir -p "$Z"; cd "$Z" || exit 2
 rm -f debug.log befund.log f_*.ppm modal.log hebetisch.log
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' MSYS2_ENV_CONV_EXCL='*'
-export RE15_NOAUDIO=1 RE15_NO_INTRO=1
+export RE15_NOAUDIO=1 RE15_NO_INTRO=1 RE15_TITLE_SHOT="title.bmp" RE15_TITLE_SHOT_AF=2   # Titel automatisch weiter (wie lauf_fahrt.sh)
 export RE15_WINDOW_SCALE="${SKALA:-1}"
 export RE15_DEBUG_JUMP="${RAUM}@240"
 export RE15_PLAYER_POS="-21000,-18500,0"

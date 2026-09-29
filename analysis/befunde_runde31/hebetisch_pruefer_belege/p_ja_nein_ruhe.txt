@@ -1,0 +1,7 @@
+Zeilen 1700, F1..F1700
+Aufnahme auf in F387: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205] | zeichnet ab F388
+Aufnahme auf in F507: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1205, -1205, -1205] | zeichnet ab F508
+Aufnahme auf in F1356: y=-1205 ruht=1 pc=0x101B | y F-3..F-1 = [-1207, -1206, -1205] | zeichnet ab F1357
+Bilder mit Aufnahme: 416, davon y != -1205: 0
+Ruhe F387..F708 (322 Bilder), davon ohne Aufnahme 40; naechstes Bild F709 y=-1195
+Ruhe F1356..F1529 (174 Bilder), davon ohne Aufnahme 40; naechstes Bild F1530 y=-1195
