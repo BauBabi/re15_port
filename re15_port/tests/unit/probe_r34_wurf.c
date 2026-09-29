@@ -497,6 +497,19 @@ static void abschnitt_rand(void)
     wurf(2, 0x4000, -2474, 0, 130, &w, NULL);
     PRUEF(78, g_actors[0].hp == -900, "Spieler 949 entfernt: hp %d (soll -900)", g_actors[0].hp);
 
+    /* A7: Routine 9 (Muendungsknall, 2. Bild des Muendungsfeuers id 2 sub 0: R8 -> R9) setzt den
+     * Licht-Latch (`sb v0,21336(at)` @0x80017694); vorher (Bild 1, Routine 8) steht er noch 0. */
+    welt_leer();
+    re15_esp_fx_reset();
+    g_re15_licht_latch = 0;
+    re15_esp_fx_spawn_rows(&s_core, 2, 0, 0x0800, 0, -1500, 0, 0, 0);
+    re15_esp_fx_tick(NULL);
+    int latch1 = g_re15_licht_latch;
+    re15_esp_fx_tick(NULL);
+    int latch2 = g_re15_licht_latch;
+    PRUEF(80, latch1 == 0 && latch2 == 1, "Routine 9: Latch nach Bild 1 = %d, nach Bild 2 = %d (soll 0 / 1)", latch1, latch2);
+    g_re15_licht_latch = 0;
+
     /* Sammel-Bodenklemme gilt weiter fuer andere Effekte (Negativ-Kontrolle A6): Huelse id 4 sub 0 */
     welt_leer();
     re15_esp_fx_reset();
