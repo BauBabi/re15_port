@@ -198,5 +198,6 @@ Beides liegt ausserhalb des Auftrags (nur Release-Werkzeuge) und des Gates; das 
 - 00:04-00:17 Batterie (16 Faelle); 00:17 bash -n/grep; 00:18 --gate-only-Randfaelle, python_finden 8.3-Sonde,
   Ketten-Faelle Alias/kein Python (+ WSL-Fehlgriff); 00:20 Ausrichtung; 00:21 Drift; 00:23 Schnappschuss 1;
   00:24 cmp-Negativfaelle; 00:26 M0 (Auftragsbeispiel) gefangen.
-- Endstand: `git status --short -- re15_port synchro release` leer; Schatten/Paket/Sandbox/APK-Kopien geloescht
+- 00:33 Python-Schnappschuss 2 (`py_zustand_2_ende.txt`) == Schnappschuss 0 (121 Zeilen, gleich).
+- Endstand: `git status --short -- re15_port synchro release` leer; Schatten/Paket/Sandbox/APK-Kopien geloescht (7,2 GB -> 1,2 MB)
   (Hardlinks - Originale unberuehrt), Logs unter build/r34a/pruefer_umgehung_r2/logs/ liegen gelassen.
