@@ -233,8 +233,11 @@ Bilder per `RE15_FRAMEDUMP` (kein AUTOSHOT/SOFTWARE_RENDER).
    (@0x80019fc8-0x8001a114); der Port fuehrt keine Anker-Matrix (Waffenknochen) je Platz. Naechster Schritt:
    Knochenmatrix beim Spawn in den Platz kopieren (`re15_player_gunbone_world` liefert R und T), dann den Zweig bauen.
 2. **Liegen-SE-Lage** (Original Stapelrest sp+16, E14) — unveraendert O2 des BAUPLANs.
-3. **Zustands-Schreiber des RNG** `sw a0,0(v0)` @0x8001af48 (0x800ac774) aus Routine 30: der Port hat kein Gegenstueck;
-   ob ein anderer Code 0x800ac774 liest, ist nicht gescannt. Naechster Schritt: Xref-Scan auf 0x800ac774 (lui/addiu-Paare).
+3. ~~Zustands-Schreiber des RNG~~ → **GESCHLOSSEN**: Xref-Scan (`build/r34g_a/xref_imm.py 0x800ac774`, lui-Paare,
+   PSX.EXE + STAGE1..6.BIN) findet genau zwei Stellen: FUN_8001af20 selbst (`addiu v0,v0,-14476` @0x8001af24; das
+   geladene `lhu t1` @0x8001af28 wird nie gelesen) und den Seed `ori v0,zero,0x1c3` / `sw v0,-14476(at)` @0x8003162c-34
+   (Spieler-Init). Kein Overlay-Verweis. Der Schreiber `sw a0,0(v0)` @0x8001af48 aus Routine 30 hat also keinen Leser —
+   ohne beobachtbare Wirkung; der Port muss ihn nicht fuehren.
 4. **Item-Debug-Nebenwirkung**: Datei 0xb (ITEMALL) ueberschreibt 0x801a0000, wo sonst MIXITEM fuer die EXCHANGE-Bilder
    liegt — im selben Menue-Lauf zeigte das Original danach falsche Kombinationsbilder. Nicht nachgebaut. Pad-2-Auffueller
    @0x8004a0dc-130 nicht portiert (kein zweites Pad). Breite Waffen (+2 = 1/2) behalten beim Debug ihre Anzeigeart.

@@ -200,9 +200,19 @@ static int s_kind_x_ok = 0, s_kind_z2_ok = 0, s_kind_frei_ok = 0;
 static int s_dum_vor_x_ok = 1, s_res_vor_x_ok = 1;
 static int s_fb1_weg_bild = -1, s_r1_weg_bild = -1;
 
+static int s_liegen_ok = 0, s_expl_ok = 0;
 static void mitte_je_bild(int k, const wurf_t *w)
 {
     if (g_re15_licht_latch) { s_lat_n++; s_lat_bild = k; g_re15_licht_latch = 0; }  /* Leser C3 */
+    {   /* Liegen (Bild 73): Flags 0x63 (@0x80018368-6c), A 31, B 0, sichtbar (Bit 1);
+         * Explosion (Bild 109): Flags 0x61 (@0x80018580-84) = unsichtbar (Bit 1 fehlt) */
+        const re15_esp_fx_t *g = re15_esp_fx_get(w->slot);
+        if (k == 73 && g && g->flags == 0x63 && ru16(g, 0x00) == 31 && ru16(g, 0x02) == 0 &&
+            re15_esp_fx_visible(g))
+            s_liegen_ok = 1;
+        if (k == 109 && g && g->flags == 0x61 && !re15_esp_fx_visible(g) && ru16(g, 0x1e) == 6)
+            s_expl_ok = 1;
+    }
     /* vor der Explosion: niemand beschaedigt, kein Resolver */
     if (w->X < 0) {
         if (s_dum->hp != 180) s_dum_vor_x_ok = 0;
@@ -258,6 +268,7 @@ static void abschnitt_mitte(void)
     wurf_t w;
     s_lat_bild = -1; s_lat_n = 0; s_fb1 = -1; s_kind_x_ok = s_kind_z2_ok = s_kind_frei_ok = 0;
     s_dum_vor_x_ok = 1; s_res_vor_x_ok = 1; s_fb1_weg_bild = s_r1_weg_bild = -1;
+    s_liegen_ok = s_expl_ok = 0;
 
     /* Bild 0 einzeln pruefen (Routine 30 im Spawnbild) */
     re15_esp_fx_reset(); spione_reset();
@@ -330,6 +341,8 @@ static void abschnitt_mitte(void)
     PRUEF(28, s_kind_frei_ok, "Zuender 0 (Bild 116): Granatenplatz nicht frei bzw. Rauch #2 nicht auf dem Platz");
     PRUEF(29, s_fb1_weg_bild == 109 + 13, "Feuerball #1 lebt bis Bild %d (soll X..X+12, weg in 122)", s_fb1_weg_bild);
     PRUEF(30, s_r1_weg_bild == 114 + 15, "Rauch #1 weg in Bild %d (soll X+5..X+19, weg in 129)", s_r1_weg_bild);
+    PRUEF(81, s_liegen_ok, "Liegen (Bild 73): Flags/A/B nicht 0x63/31/0 oder unsichtbar");
+    PRUEF(82, s_expl_ok, "Explosion (Bild 109): Granate nicht Flags 0x61/unsichtbar/Zuender 6");
 }
 
 /* ================================================================================================
