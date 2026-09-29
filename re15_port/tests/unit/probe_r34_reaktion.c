@@ -489,12 +489,81 @@ static void teil_hund(void)
     }
 }
 
+/* =========================================================================================
+ * TEIL "spinne" — B7: RE2-Spinne 0x25 (EMS25.BIN), Tod Zeile 10 (Brand) / 11 (Saeure).
+ * Arena: ROOM1140-Kontext, alle Raum-Gegner aus, EINE Spinne im Slot 1 (Bank EM025 vor dem INIT,
+ * Aufbau wie test_adult_spider_ai.c:34-37), Spieler 8000 weit weg.
+ * ========================================================================================= */
+static re15_actor_t *spinne_arena(void)
+{
+    if (room_load(0x1140, "STAGE1") != 0) return NULL;
+    bringup(RE15_AI_FLAVOR_RE2);
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+    load_re2_bank(0x25);
+    re15_actor_t *e = &g_actors[1];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x25; e->state = 0;
+    e->x = 0; e->y = 0; e->z = 0; e->rot_y = 0;
+    re15_enemy_apply_hitbox(e, 0x25);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = e->x - 8000; pl->z = e->z; pl->y = 0;
+    for (int f = 0; f < 5; f++) frame();
+    e->re2z_self1d3 = 0; e->hit_react = 0; e->re2z_f10e = 0;
+    return e;
+}
+
+static void teil_spinne(void)
+{
+    printf("== spinne (B7)\n");
+    /* (170) Brand (Art 4 -> Waffe 11 -> Zeile 10): 20 Parts 0x00202F2F (FUN_8010609C @0x80104B44-4C). */
+    {
+        re15_actor_t *e = spinne_arena();
+        if (!e) { CHECK(170, 0, "ROOM1140 fehlt"); return; }
+        e->hp = 50;                                          /* < 130 (Zeile 10 Kl. 0 @0x800A4C44) */
+        explosion_bei(e, 300, 4);
+        const int st = e->state, s1 = e->sub_state_1;
+        frame();
+        CHECK(170, st == 3 && s1 == 11 && tints_gleich(e, 0, 20, 0x00202F2Fu),
+              "Brand-Tod: st=%d +5=%d (11 -> Zeile 10), Parts 0..19 0x00202F2F %d (p0 0x%08X p19 0x%08X)",
+              st, s1, tints_gleich(e, 0, 20, 0x00202F2Fu), e->re2z_part_tint[0], e->re2z_part_tint[19]);
+        CHECK(171, !(e->re2z_part_flags[19] & 0x10u) && e->re2s_dead239 == 0,
+              "Brand: Part 19 fliegt NICHT (Flags 0x%04X), +0x239 %d (0)", e->re2z_part_flags[19], e->re2s_dead239);
+    }
+    /* (172) Saeure (Art 3 -> Waffe 10 -> Zeile 11): 20 Parts 0x00101F3F + Part 19 fliegt + +0x239 = 1. */
+    {
+        re15_actor_t *e = spinne_arena();
+        e->hp = 50;                                          /* < 90 (Zeile 11 Kl. 0 @0x800A4C58) */
+        explosion_bei(e, 300, 3);
+        const int st = e->state, s1 = e->sub_state_1;
+        frame();
+        CHECK(172, st == 3 && s1 == 10 && tints_gleich(e, 0, 20, 0x00101F3Fu),
+              "Saeure-Tod: st=%d +5=%d (10 -> Zeile 11), Parts 0..19 0x00101F3F %d (p0 0x%08X p19 0x%08X)",
+              st, s1, tints_gleich(e, 0, 20, 0x00101F3Fu), e->re2z_part_tint[0], e->re2z_part_tint[19]);
+        CHECK(173, (e->re2z_part_flags[19] & 0x10u) && e->re2z_part_w9e[19] == 90 && e->re2z_part_yaw98[19] == 0 &&
+                   e->re2z_part_w9a[19] == 0 && (uint16_t)e->re2z_part_w9c[19] == 0x6464u && e->re2s_dead239 == 1,
+              "Part 19 (@0x80104bc8-f4): Flags 0x%04X (|0x10), +0x9E %d (90), +0x98 %d, +0x9A %d, +0x9C 0x%04X "
+              "(0x6464 = Bytes 100/100), +0x239 %d (1)", e->re2z_part_flags[19], e->re2z_part_w9e[19],
+              e->re2z_part_yaw98[19], e->re2z_part_w9a[19], (uint16_t)e->re2z_part_w9c[19], e->re2s_dead239);
+    }
+    /* (174) NEGATIV: HE (Art 2 -> Zeile 9) faerbt nicht (@0x8010493C ruft FUN_8010609C nicht). */
+    {
+        re15_actor_t *e = spinne_arena();
+        e->hp = 30;                                          /* < 60 (Zeile 9 Kl. 0 @0x800A4C30) */
+        explosion_bei(e, 300, 2);
+        const int st = e->state, s1 = e->sub_state_1;
+        frame();
+        CHECK(174, st == 3 && s1 == 9 && tints_gleich(e, 0, 20, 0u),
+              "HE-Tod: st=%d +5=%d, keine Part-Farbe %d", st, s1, tints_gleich(e, 0, 20, 0u));
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     int alle = (strcmp(teil, "alle") == 0);
     if (alle || !strcmp(teil, "zombie")) teil_zombie();
     if (alle || !strcmp(teil, "hund")) teil_hund();
+    if (alle || !strcmp(teil, "spinne")) teil_spinne();
     printf("probe_r34_reaktion %s: %d Fehler (erste Pruefung %d)\n", teil, s_fails, s_first_fail);
     return s_first_fail;
 }

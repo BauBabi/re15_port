@@ -2255,6 +2255,19 @@ static void re2s_death_row_special(re15_actor_t *e)
     re2s_word(e, 7u);                                      /* @0x80104644 */
 }
 
+/* RUNDE 34 B7 — FUN_8010609C(self, farbe) @0x8010609C-C4 (selbst disassembliert, EMS25.BIN):
+ *   8010609c  addu a2,zero,zero / addu v1,zero,zero
+ *   801060a4  lw v0,408(a0)          ; Part-Array +0x198
+ *   801060b0  sw a1,112(v0)          ; Part +0x70 := farbe
+ *   801060b4  sltiu v0,a2,0x14       ; 20 Parts
+ *   801060bc  addiu v1,v1,172        ; Stride 0xAC
+ * Die Farbe ist das Part-Farbwort, das der Zeichner als NCCT-Faktor nimmt (Render-Konsum fuer die
+ * Spinne im Port OFFEN: re15_re2z_gore_resolve bedient nur die Zombie-Familie). */
+static void re2s_faerben(re15_actor_t *e, uint32_t farbe)
+{
+    for (int i = 0; i < 20; i++) e->re2z_part_tint[i] = farbe;
+}
+
 /* --- DEATH-Sonderzeile @0x8010493C (Zeile 9) — 3 Gore-Salven, dann die Sonderzeile --- */
 static void re2s_death_row9(re15_actor_t *e)
 {
@@ -2268,7 +2281,7 @@ static void re2s_death_row9(re15_actor_t *e)
     re2s_death_row_special(e);                             /* @0x80104A2C */
 }
 
-/* --- DEATH-Sonderzeile @0x80104A5C (Zeilen 10 und 16) — 4 Gore-Salven + Umfaerben --- */
+/* --- DEATH-Sonderzeile @0x80104A5C (Zeilen 10 und 16) — BRAND: 4 Gore-Salven + Verkohlung --- */
 static void re2s_death_row1016(re15_actor_t *e)
 {
     if (e->sub_state_2 == 0u && e->re2s_done224 == 0u) {   /* @0x80104A8C/@0x80104A9C */
@@ -2277,16 +2290,36 @@ static void re2s_death_row1016(re15_actor_t *e)
             (void)re2s_rand();                             /* @0x80104ACC-D8 */
             re2s_gore(e); re2s_gore(e);                    /* @0x80104B1C / @0x80104B2C */
         }
-        /* FUN_8010609C(self, 0x00202F2F) @0x80104B44-4C — Mesh-Teil-Faerbung, im Port OPEN */
+        re2s_faerben(e, 0x00202F2Fu);                     /* `lui a1,0x20` / `ori a1,a1,0x2f2f` /
+                                                            * `jal 0x8010609c` @0x80104B44-4C */
     }
     re2s_death_row_generic(e);                             /* @0x80104B58 */
 }
 
-/* --- DEATH-Sonderzeile @0x80104B88 (Zeile 11) — verkohlt, setzt +0x239 --- */
+/* --- DEATH-Sonderzeile @0x80104B88 (Zeile 11) — SAEURE: geaetzt, Part 19 fliegt, setzt +0x239 ---
+ * (Runde 34 B7: Zeile 11 ist die Saeure-Zeile — RE2-Id 11 = Saeure-Granate, Aufschlag-Op 49;
+ * der alte Kopf "verkohlt" verwechselte sie mit Zeile 10.) */
 static void re2s_death_row11(re15_actor_t *e)
 {
     if (e->sub_state_2 == 0u && e->re2s_done224 == 0u) {   /* @0x80104BAC/@0x80104BBC */
-        /* FUN_8010609C(self, 0x00101F3F) @0x80104BF0 + Record-19-Block @0x80104BD0-F4 — OPEN */
+        /* PART 19 FLIEGT (selbst disassembliert, Record = +0x198 + 19*172 = +3268):
+         *   80104bcc  addiu v1,zero,90 / 80104bd0 sh v1,3426(v0)   ; +0x9E := 90
+         *   80104bdc  sh zero,3420(v0)                              ; +0x98 := 0
+         *   80104be0  sh zero,3422(v0)                              ; +0x9A := 0
+         *   80104be4  sb a2(=100),3424(v0) / 80104be8 sb a2,3425(v0); +0x9C := 100, +0x9D := 100
+         *   80104bec  ori v1,v1,0x10 / 80104bf4 sw v1,3268(v0)      ; Flags |= 0x10
+         * Das Halbwort +0x9C liest die Drift-Physik FUN_80028DAC als `lhu v0,156(s0)` @0x80028e28
+         * (RE2-PSX.EXE); die zwei Byte-Stores ergeben dort 100 | 100 << 8 = 0x6464. Den Flug
+         * selbst (Zeichner FUN_80027434 -> FUN_80028DAC bei Flags & 0x18) hat der Port fuer die
+         * Spinne nicht (Render OFFEN) — hier steht der Zustand, den er vorfinden wuerde. */
+        e->re2z_part_w9e[19]   = 90;
+        e->re2z_part_yaw98[19] = 0;
+        e->re2z_part_w9a[19]   = 0;
+        e->re2z_part_w9c[19]   = (int16_t)0x6464;
+        e->re2z_part_flags[19] = (uint16_t)(e->re2z_part_flags[19] | 0x10u);
+        re2s_faerben(e, 0x00101F3Fu);                     /* `lui a1,0x10` / `ori a1,a1,0x1f3f`
+                                                            * @0x80104BC0-C4, `jal 0x8010609c`
+                                                            * @0x80104BF0 */
         re2s_gore(e);                                      /* @0x80104C00 */
         re2s_gore(e);                                      /* @0x80104C10 */
         re2s_gore(e);                                      /* @0x80104C20 */
@@ -2300,7 +2333,8 @@ static void re2s_death_row11(re15_actor_t *e)
 static void re2s_death_row14(re15_actor_t *e)
 {
     if (e->re2s_done224 == 0u) {                           /* @0x80104C80 */
-        /* FUN_8010609C(self, 0x003F3F3F) @0x80104C8C — OPEN */
+        re2s_faerben(e, 0x003F3F3Fu);                     /* `lui a1,0x3f` / `ori a1,a1,0x3f3f`
+                                                            * / `jal 0x8010609c` @0x80104C88-90 */
         e->re2s_fx23b = 30;                                /* +0x23B = 30 @0x80104C98 */
         re2s_gore(e);                                      /* @0x80104CA4 */
         re2s_gore(e);                                      /* @0x80104CB4 */

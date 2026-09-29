@@ -314,6 +314,47 @@ Vorher-Defekt (belegt): der Port-Kern lief NACH dem Gore-Block; sein HURT-P0 set
 
 Regression: alle 20 Hund-/Dog-/r34-Tests gruen (`ctest -R "dog|hund|re2doc|r34"`).
 
+---
+
+## B7 — Spinne RE2 (`enemy_ai_re2_spider.c`, EMS25.BIN)
+
+### Selbst disassembliert
+* FUN_8010609C @0x8010609C-C4: 20 Parts (`sltiu v0,a2,0x14` @0x801060b4), Stride 172, `sw a1,112(v0)` = Part +0x70.
+* Zeile 10/16 0x80104A5C: Tor +0x6 == 0 und +0x224 == 0 (@0x80104a84-9c), Farbe 0x00202F2F @0x80104B44-4C.
+* Zeile 11 0x80104B88: Tor wie oben (@0x80104ba4-bc); Part 19 (Record +3268): `sh 90,3426` (+0x9E) @0x80104bd0,
+  `sh zero,3420/3422` (+0x98/+0x9A) @0x80104bdc/e0, `sb 100,3424/3425` (+0x9C/+0x9D) @0x80104be4/e8, Flags `ori 0x10`
+  @0x80104bec / `sw` @0x80104bf4; Farbe 0x00101F3F (`lui a1,0x10` / `ori 0x1f3f` @0x80104bc0-c4, `jal` @0x80104bf0);
+  FX(19,7), FX(0,6), FX(1,6), +0x239 := 1 (@0x80104c2c).
+* Zeile 14 0x80104C5C: Farbe 0x003F3F3F @0x80104C88-90 (im Port unerreichbar, der Vollstaendigkeit halber gesetzt).
+* Leser des Halbworts +0x9C: FUN_80028DAC `lhu v0,156(s0)` @0x80028e28 (RE2-PSX.EXE) -> die zwei Byte-Stores ergeben
+  0x6464. Die Flug-Physik der Spinnen-Parts hat der Port nicht (Render OFFEN).
+
+### Gebaut
+| Datei:Stelle | Inhalt |
+|---|---|
+| `re2s_faerben` (neu) | FUN_8010609C-Zwilling (20 Parts) |
+| `re2s_death_row1016` | Farbe 0x00202F2F statt OPEN-Kommentar; Kopf "BRAND" |
+| `re2s_death_row11` | Part-19-Zustand + Farbe 0x00101F3F; Kopf korrigiert (Zeile 11 = SAEURE, nicht "verkohlt") |
+| `re2s_death_row14` | Farbe 0x003F3F3F |
+
+### Sonde `unit_r34_reaktion` Teil `spinne` (ROOM1140-Kontext, eine Spinne 0x25, Bank EM025 vor dem INIT)
+| Nr | Pruefung | Ergebnis |
+|---|---|---|
+| 170 | Brand-Explosion (Art 4 -> Waffe 11 -> Zeile 10), HP 50: Tod, 20 Parts 0x00202F2F | gruen |
+| 171 | Brand: Part 19 fliegt NICHT, +0x239 bleibt 0 | gruen |
+| 172 | Saeure-Explosion (Art 3 -> Waffe 10 -> Zeile 11): Tod, 20 Parts 0x00101F3F | gruen |
+| 173 | Part 19: Flags \|= 0x10, +0x9E 90, +0x98 0, +0x9A 0, +0x9C 0x6464, +0x239 1 | gruen |
+| 174 | NEGATIV HE (Zeile 9): keine Farbe | gruen |
+
+### Mutationsproben
+| Mutation | erwartet rot | Ergebnis |
+|---|---|---|
+| M33 FUN_8010609C 19 statt 20 Parts | 170/172 | 170/172 rot |
+| M34 Part 19 ohne Flag 0x10 | 173 | 173 rot |
+| M35 Brand-Farbe weg | 170 | 170 rot |
+
+Regression `ctest -R "spider|spinne|r34|gore|re2_hit"`: 16/16 gruen.
+
 ## INTEGRATIONSWUNSCH
 1. **Part-Farben/-Flags des Hundes und der Spinne zeichnen** (Spur C/D, `platform/pc/main.c` ~9717): `re15_re2z_gore_resolve`
    bedient nur die Zombie-Familie (`re15_re2z_owns_type`). Hund (17 Parts) und Spinne (20 Parts) tragen jetzt die
