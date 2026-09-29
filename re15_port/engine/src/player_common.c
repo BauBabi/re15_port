@@ -946,7 +946,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         if (pad_bits & RE15_PAD_BIT_UP)    move_dir  += 1;
         if (pad_bits & RE15_PAD_BIT_DOWN)  move_dir  -= 1;
 
-        if (yaw_delta != 0) {
+        /* Runde 34 A8 (Sonde probe_r34_wurf 6c, gemessen vorher: Drehen im Wurf 72 je Bild):
+         * im ZIELEN (Aktion 7: Ziel-FSM 0x80032e9c statt der Lauf-Modi) dreht NUR die Ziel-FSM —
+         * die Lauf-Drehung darf dann nicht zusaetzlich wirken. Vorher liefen beide: -96 (Stehen,
+         * Rate @0x80073ee4) + 24 (Rueckstoss, falsches Vorzeichen) = -72 je Bild statt -24. */
+        int zielt_schon = ((pad_bits & RE15_PAD_BIT_R1) != 0) || (s_player_aim_phase != RE15_AIM_NONE);
+        if (yaw_delta != 0 && !zielt_schon) {
             p->rot_y = (int16_t)((int)p->rot_y + yaw_delta);
         }
 
@@ -1015,8 +1020,18 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
              * recoiling, 48 in steady HOLD. (Sustained handgun fire keeps Leon in recoil most frames,
              * so this is the common STAGE1 case.) */
             int rate = (s_player_aim_phase == RE15_AIM_READY) ? (s_aim_recoil ? 24 : 48) : 24;
-            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)(((int)p->rot_y + rate) & 0xfff);
-            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - rate) & 0xfff);
+            /* Runde 34 A8 — RICHTUNG und WERTEBEREICH nach der Gun-FSM (selbst disassembliert):
+             *   RAISE  Sub 0 @0x80033000-98: `andi v0,a0,0x8` (virtuell LINKS) -> `subu` Byte0 (24,
+             *          `addiu at,at,16528` @0x80033028); `andi v0,a0,0x2` (RECHTS) -> `addu`
+             *   HOLD   Sub 1 @0x800333a0-38: dieselbe Richtung, Byte1 (48, @0x800333c8)
+             *   ABZUG  Sub 2 @0x8003355c-fc: Byte1 `srl v0,v0,1` = 24 (@0x80033590/@0x800335a4)
+             *   LOWER  Sub 3 @0x80033cd8-d1c / RELOAD Sub 4 @0x80033de8-e2c: `addiu v0,v0,-24` / `+24`
+             * also LINKS = Gier MINUS, RECHTS = PLUS (virtuelle Bits 3/1 = LINKS/RECHTS,
+             * pad_common.c Preset @0x80073dbc), gespeichert mit `sh` auf 0x800acabe OHNE & 0xfff
+             * (16-Bit-Umlauf wie die Lauf-Drehung oben). Das alte "+rate fuer LINKS" glich nur den
+             * doppelt laufenden Lauf-Anteil aus (HOLD: -96 + 48 = -48). */
+            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)((int)p->rot_y - rate);
+            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)((int)p->rot_y + rate);
             /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
              * sub (@0x80034fa0-c0 melee slew 0xC0 / gun sub0 slew 0xC8); the HOLD subs have no
              * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000.

@@ -20,6 +20,18 @@
 #include "re15_actor.h"
 #include "re15_damage.h"
 #include "re15_scd.h"
+#include "re15_rdt.h"
+#include "re15_aot.h"
+#include "re15_room.h"
+#include "re15_enemy_ai.h"
+#include "re15_enemy.h"
+#include "re15_ai_flavor.h"
+#include "re15_player.h"
+#include "re15_camera.h"
+#include "re15_game_step.h"
+#include "re15_collision.h"
+#include "re15_inventory.h"
+#include "re15_msg.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -31,6 +43,12 @@
 #endif
 
 extern void re15_player_acaec_override_for_test(int on, uint16_t w);
+extern void re15_player_aim_reset(void);
+extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+extern int  re15_player_aim_ready(void);
+extern int  re15_player_granate_frame(void);
+extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
+extern void re15_player_set_hand_rot(const int32_t r[9]);
 
 static int s_erste = 0, s_fehler = 0;
 #define PRUEF(nr, cond, ...) do { if (!(cond)) { \
@@ -486,6 +504,209 @@ static void abschnitt_rand(void)
     }
 }
 
+/* ================================================================================================
+ * Abschnitt 6: SPIELSCHRITT (re15_game_step, ROOM1140) — Abzug, Spawn, R1 los, Drehen, 9/10/11
+ * Reihenfolge je Bild wie das Original: Spielschritt (Spieler-FSM @0x8001ce0c) -> ESP-Tick
+ * (@0x8001ce2c); die Sonde ruft den ESP-Tick selbst (E10 — die Plattform-Schleife gehoert Spur C).
+ * ================================================================================================ */
+static re15_rdt_t         s_rdt;
+static re15_camera_view_t s_cam;
+static re15_game_ctx_t    s_ctx;
+static uint8_t           *s_rdt_buf = NULL;
+static int32_t            s_hand[3];     /* Waffenknochen-T (fest, Einheitsrotation) */
+
+static void sp_bild(uint16_t cur, uint16_t edge)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = cur; s_ctx.pad_pressed = edge;
+    re15_game_step(&s_ctx);
+    re15_esp_fx_tick(re15_esp_room_bank());
+    g_re15_licht_latch = 0;
+}
+
+static int sp_bringup(int waffe, int menge)
+{
+    if (!s_rdt_buf) {
+        char pfad[600];
+        snprintf(pfad, sizeof pfad, "%s/STAGE1/ROOM1140.RDT", RE15_ASSET_PSX_DIR);
+        FILE *fp = fopen(pfad, "rb");
+        if (!fp) return -1;
+        fseek(fp, 0, SEEK_END); long n = ftell(fp); fseek(fp, 0, SEEK_SET);
+        s_rdt_buf = (uint8_t *)malloc((size_t)n);
+        if (!s_rdt_buf || fread(s_rdt_buf, 1, (size_t)n, fp) != (size_t)n) { fclose(fp); return -1; }
+        fclose(fp);
+        if (re15_rdt_parse(s_rdt_buf, (size_t)n, &s_rdt) != 0) return -1;
+    }
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    re15_esp_fx_reset();
+    g_current_room_id = 0x1140;
+    g_re15_pauseflags = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0;
+    pl->x = -7600; pl->y = 0; pl->z = -17600; pl->rot_y = 0;
+    re15_player_apply_hitbox(pl);
+    re15_collision_set_band(0);
+    {   /* W09-Baenke: Clip 7/9/11 = 35/40/40 Bilder (PLD/PL00W09.PLW @0x24/0x2c/0x34, K3); die
+         * uebrigen Clips (Heben 6, Halten 8/10/12) als Sonden-Mock 12 wie probe_abzug_takt. */
+        uint16_t fcs[16];
+        for (int i = 0; i < 16; i++) fcs[i] = 12;
+        fcs[7] = 35; fcs[9] = 40; fcs[11] = 40;
+        re15_player_set_aim_clip_lens(fcs, 16);
+    }
+    re15_inv_load_briefing();
+    g_inv.slots[3].id = (uint8_t)waffe; g_inv.slots[3].qty = (uint8_t)menge; g_inv.slots[3].flags = 0;
+    re15_player_set_equipped_weapon(waffe);
+    {   /* Waffenknochen = Einheitsmatrix an (x, y-1500, z) -> Spawnpunkt = Knochen + Versatz */
+        int32_t r[9] = { 4096, 0, 0, 0, 4096, 0, 0, 0, 4096 };
+        re15_player_set_hand_rot(r);
+        s_hand[0] = pl->x; s_hand[1] = pl->y - 1500; s_hand[2] = pl->z;
+        re15_player_set_hand_world(s_hand[0], s_hand[1], s_hand[2]);
+    }
+    return 0;
+}
+
+/* R1 halten bis ZIELBEREIT (Heben Clip 6 laeuft ab). */
+static int sp_zielen(void)
+{
+    int n = 0;
+    for (; n < 80 && !re15_player_aim_ready(); n++) sp_bild(RE15_PAD_BIT_R1, n == 0 ? RE15_PAD_BIT_R1 : 0);
+    return re15_player_aim_ready() ? n : -1;
+}
+
+static int granate_platz(void)
+{
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (f && f->granate_art) return i;
+    }
+    return -1;
+}
+
+static void abschnitt_spielschritt(void)
+{
+    /* 6a — Abzug mit Gegner 1299 vor Leon: KEIN Schaden im Abzugsbild (P1: ENT[9].resolve = 0,
+     * Handler 0x80033B38 nur `jal 0x8004eae4` @0x80033b40); Spawn im Clipbild 22 (MITTE,
+     * `ori v0,zero,0x16` @0x800336a4/@0x800336fc) mit Art 2 und Gier = rot_y. */
+    for (int wi = 0; wi < 3; wi++) {
+        int waffe = 9 + wi;
+        int nr = 91 + 6 * wi;
+        if (sp_bringup(waffe, 5) != 0) { PRUEF(nr, 0, "ROOM1140/Bringup"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        re15_actor_t *e = dummy(1, 0x27, 180, pl->x + 1299, 0, pl->z);   /* rot_y 0 = +x vor Leon */
+        int z = sp_zielen();
+        PRUEF(nr, z > 0, "Waffe %d: nicht zielbereit (%d)", waffe, z);
+        pl->rot_y = 0;
+        int abzug = -1, spawn = -1, spawn_gier = -1, spawn_art = -1, erster_schaden = -1;
+        int32_t spawn_pos[3] = {0, 0, 0};
+        int menge_nach_abzug = -1;
+        for (int b = 0; b < 60; b++) {
+            int vor_rec = re15_player_granate_frame();
+            sp_bild((uint16_t)(RE15_PAD_BIT_R1 | (b == 0 ? RE15_PAD_BIT_SQUARE : 0)),
+                    (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (abzug < 0 && vor_rec < 0 && re15_player_granate_frame() >= 0) {
+                abzug = b; menge_nach_abzug = g_inv.slots[3].qty;
+            }
+            if (erster_schaden < 0 && e->hp != 180) erster_schaden = b;
+            int gp = granate_platz();
+            if (spawn < 0 && gp >= 0) {
+                const re15_esp_fx_t *g = re15_esp_fx_get(gp);
+                spawn = b; spawn_gier = g->param; spawn_art = g->granate_art;
+                spawn_pos[0] = g->x; spawn_pos[1] = g->y; spawn_pos[2] = g->z;
+            }
+        }
+        printf("  Waffe %d: zielbereit nach %d, Abzug Bild %d, Menge %d, Spawn Bild %d (A+%d) art %d gier %d "
+               "anker (%d,%d,%d), erster Schaden %d\n", waffe, z, abzug, menge_nach_abzug, spawn,
+               spawn - abzug, spawn_art, spawn_gier, spawn_pos[0], spawn_pos[1], spawn_pos[2], erster_schaden);
+        PRUEF(nr + 1, abzug == 0 && menge_nach_abzug == 4, "Waffe %d: Abzug Bild %d, Menge %d (soll 0 / 4)",
+              waffe, abzug, menge_nach_abzug);
+        PRUEF(nr + 2, erster_schaden < 0, "Waffe %d: Gegner 1299 vor Leon beschaedigt im Bild %d (Bruecke!)",
+              waffe, erster_schaden);
+        PRUEF(nr + 3, spawn == abzug + 22, "Waffe %d: Spawn im Bild A+%d (soll A+22, Clipbild 0x16)",
+              waffe, spawn - abzug);
+        PRUEF(nr + 4, spawn_art == 2 + wi && spawn_gier == 0,
+              "Waffe %d: Art %d Gier %d (soll %d / 0)", waffe, spawn_art, spawn_gier, 2 + wi);
+        /* Anker = Knochen-R * Versatz + Knochen-T (MITTE {0,0,0x1f4} @0x80033738-44) */
+        PRUEF(nr + 5, spawn_pos[0] == s_hand[0] && spawn_pos[1] == s_hand[1] && spawn_pos[2] == s_hand[2] + 0x1f4,
+              "Waffe %d: Anker (%d,%d,%d) (soll Knochen + {0,0,0x1f4} = (%d,%d,%d))", waffe,
+              spawn_pos[0], spawn_pos[1], spawn_pos[2], s_hand[0], s_hand[1], s_hand[2] + 0x1f4);
+    }
+
+    /* 6b — R1 los nach Clipbild 10 -> kein Spawn, Munition trotzdem -1 (Byte2 0x0a @0x800740ba,
+     * `sltu v0,v0,a0` @0x8003363c, 0x800aca5a := 3 @0x8003364c) */
+    {
+        if (sp_bringup(9, 5) != 0) { PRUEF(109, 0, "Bringup 6b"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        sp_zielen();
+        int spawn = -1;
+        for (int b = 0; b < 60; b++) {
+            uint16_t pad = (b <= 14) ? RE15_PAD_BIT_R1 : 0;           /* R1 los im Bild 15 */
+            if (b == 0) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (spawn < 0 && granate_platz() >= 0) spawn = b;
+        }
+        PRUEF(109, spawn < 0 && g_inv.slots[3].qty == 4, "R1 los: Spawn %d, Menge %d (soll kein Spawn, 4)",
+              spawn, g_inv.slots[3].qty);
+        /* Negativ-Kontrolle: R1 nur in den Clipbildern 3..8 los (<= 10) und danach wieder
+         * gehalten -> KEIN Bruch (Schwelle `sltu v0,v0,a0` = Bild > 10, @0x8003363c), Spawn 22 */
+        if (sp_bringup(9, 5) != 0) return;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        sp_zielen();
+        spawn = -1;
+        for (int b = 0; b < 60; b++) {
+            uint16_t pad = (b >= 3 && b <= 8) ? 0 : RE15_PAD_BIT_R1;
+            if (b == 0) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            if (spawn < 0 && granate_platz() >= 0) spawn = b;
+        }
+        PRUEF(110, spawn == 22, "R1 los in den Clipbildern 3..8: Spawn Bild %d (soll 22 — Bruch erst ab Bild > 10)", spawn);
+    }
+
+    /* 6c — Drehen im Wurf: LINKS (virtuell 0x8) -> Gier -= 24 je Bild, RECHTS (0x2) -> += 24
+     * (@0x8003355c-0x800335fc: `lbu` 0x80074091[(w-1)*5] = 0x30, `srl v0,v0,1`, subu/addu auf
+     * 0x800acabe); die Spawn-Gier ist die gedrehte (@0x800336cc nach dem Drehen). */
+    for (int dir = 0; dir < 2; dir++) {
+        if (sp_bringup(9, 5) != 0) { PRUEF(111, 0, "Bringup 6c"); return; }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) g_actors[s].active = 0;
+        sp_zielen();
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->rot_y = 1000;
+        uint16_t taste = dir ? RE15_PAD_BIT_RIGHT : RE15_PAD_BIT_LEFT;
+        int soll_d = dir ? 24 : -24;
+        int bad = 0, spawn = -1, spawn_gier = -1, gier_im_spawnbild = -1;
+        int deltas[40];
+        for (int b = 0; b < 30; b++) {
+            int vor = pl->rot_y;
+            uint16_t pad = RE15_PAD_BIT_R1 | (b >= 1 ? taste : 0);
+            if (b == 0) pad |= RE15_PAD_BIT_SQUARE;
+            sp_bild(pad, (uint16_t)(b == 0 ? RE15_PAD_BIT_SQUARE : 0));
+            int d = (((int)pl->rot_y - vor + 0x800) & 0xfff) - 0x800;
+            deltas[b] = d;
+            if (b >= 1 && d != soll_d) bad++;
+            if (spawn < 0 && granate_platz() >= 0) {
+                spawn = b; spawn_gier = re15_esp_fx_get(granate_platz())->param; gier_im_spawnbild = pl->rot_y;
+            }
+        }
+        printf("  Drehen %s: Deltas", dir ? "RECHTS" : "LINKS");
+        for (int b = 0; b < 8; b++) printf(" %d", deltas[b]);
+        printf(" ... Spawn Bild %d Gier %d (rot_y %d)\n", spawn, spawn_gier, gier_im_spawnbild);
+        PRUEF(111 + 2 * dir, bad == 0, "Drehen %s: %d Bilder mit Delta != %d (Bild1 %d, Bild2 %d)",
+              dir ? "RECHTS" : "LINKS", bad, soll_d, deltas[1], deltas[2]);
+        PRUEF(112 + 2 * dir, spawn == 22 && spawn_gier == gier_im_spawnbild &&
+                             spawn_gier == 1000 + 22 * soll_d,
+              "Drehen %s: Spawn %d Gier %d (soll Bild 22, Gier %d = 1000 + 22 Bilder x %d)", dir ? "RECHTS" : "LINKS",
+              spawn, spawn_gier, 1000 + 22 * soll_d, soll_d);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *nur = (argc > 1) ? argv[1] : NULL;
@@ -506,6 +727,7 @@ int main(int argc, char **argv)
     if (!nur || !strcmp(nur, "gier"))       { printf("[3] Gier 1024\n");           abschnitt_gier(); }
     if (!nur || !strcmp(nur, "saeure"))     { printf("[4] 0x0A / 0x0B\n");         abschnitt_saeure_brand(); }
     if (!nur || !strcmp(nur, "rand"))       { printf("[5] Rand/Negativ\n");        abschnitt_rand(); }
+    if (!nur || !strcmp(nur, "schritt"))    { printf("[6] Spielschritt\n");        abschnitt_spielschritt(); }
 
     re15_player_acaec_override_for_test(0, 0);
     re15_esp_se_hook = NULL; re15_esp_aufschlag_hook = NULL;
