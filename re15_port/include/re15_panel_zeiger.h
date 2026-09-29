@@ -94,6 +94,40 @@
  * 1,0,1,0,1,0,1,0,1,0 auf Bank 5 / Bits 13..22 — also Schalter 1,3,5,7,9 EIN. Das ist
  * DIESELBE Menge, die die Nutzer-Gewichte auf 80 bringen; beide Seiten decken sich, es
  * gibt hier keinen Konflikt. Der Zeiger zeigt, das SCD entscheidet.
+ *
+ * ================= ABNAHME ERST, WENN DER ZEIGER STEHT (Runde 31, RE2-Angleichung) ====
+ * Nutzer 2026-09-29: "warte erst bis der zeiger final auf 80 steht, bevor du mit ok das
+ * abnimmst, das Licht anschaltest etc."
+ * GEMESSEN (analysis/befunde_runde31/generator.md §4, echte exe): die RE1.5-Kette zog im
+ * Bild nach dem letzten Schalterbit (F1184) bei Zeigerwert 62, Cut 8 ab F1185, die 80 kam
+ * erst in F1202 — unsichtbar. RE1.5 prueft den ZUSTAND jedes Bild (sub01 wird je Bild neu
+ * gestartet, FUN_8003f038 @0x8003f064-80) und hat keinen Zeiger; RE2 prueft den WERT erst,
+ * wenn der Zeiger steht. Die RE2-Reihenfolge, selbst aus ROOM2130.RDT sub04 gelesen:
+ *   @0x011E0 `0f 06 36 00` while (var4 > 0) { ... var7 += 9 ... @0x01216 `02` evt_next }
+ *   @0x01708 `10 00`       ewhile                 -> der Zeiger STEHT
+ *   @0x0170C `64 05 ...`   Lampe
+ *   @0x0171C `09` + @0x0171D `0a 1e 00`   sleep 30 (0x1E)
+ *   @0x0172C `29 04`       Kamera zurueck
+ *   @0x01752 `23 00 05 00 50 00`  cmp(var5 == 80)
+ *   @0x01758 `2b 00 07 00 ff ff`  "Power supply OK." / @0x0175E Flag / @0x01762 Ton 0x0C
+ * Sleep-Semantik aus den RE2-Handlern (Tabelle @0x800a74c8): 0x09 @0x800539DC legt den
+ * Zaehler an und laeuft weiter (`addiu v0,zero,1`), 0x0A @0x80053A24 zaehlt je Bild herunter
+ * und gibt das Bild ab (`addiu v0,zero,2`), auch im Bild, in dem er 0 erreicht. Stand der
+ * letzte Zeigerschritt im Bild k, laufen k+1..k+30 im Sleep und die Pruefung im Bild k+31.
+ * => Der Port haelt die RE1.5-Abnahme (Evt_exec(sub18) @0x012E6 + Set(4,238,1) @0x012EA)
+ *    zurueck, bis der ANGEZEIGTE Wert 80 ist und RE15_PANEL_RUHE_BILDER Bilder stand
+ *    (re15_panel_zeiger_abnahme_haelt, gerufen aus op_evt_exec).
+ * EINGABESPERRE WAEHREND DER FAHRT: RE2 setzt Bank 2 Bit 7 als ersten Befehl von sub04
+ * (@0x01110 `22 02 07 01`) und loescht es erst am Ende (@0x01818 `22 02 07 00`); Bank 2 =
+ * 0x800CFBDC (Bank-Tabelle @0x800A78C8), Bit 7 = 0x01000000, und @0x800391F8..0x80039224
+ * maskiert das logische Pad dann auf 0x3C00 (`andi v0,v0,0x3c00`). Die Nachfuehrschleife
+ * und der Sleep liegen vollstaendig darin. RE1.5 hat dasselbe Bit mit derselben Wirkung
+ * (FUN_80030444 @0x800304f4..0x8003051c: virtuelles Pad `andi 0xf000`) — der Port legt
+ * genau diese Maske auf die SCD-Pad-Woerter, solange der Zeiger faehrt oder steht, aber
+ * die 30 Bilder noch nicht um sind (re15_panel_zeiger_sperrt).
+ * ROOM11F1 ist byte-identisch zu ROOM11F0 (cmp: 152588 B, 0 Abweichungen) und ist der Raum
+ * in Elzas Durchlauf (Varianten-Nibble, aot_common.c dest_id) — dort galt der Zeiger bisher
+ * gar nicht. Beide Raeume tragen ihn jetzt (RE15_PANEL_IST_RAUM).
  */
 #ifndef RE15_PANEL_ZEIGER_H
 #define RE15_PANEL_ZEIGER_H
@@ -104,6 +138,17 @@
  * (Cut_chg 0x0A, ROOM11F0.RDT sub16 @Datei 0x015C0, Bytes `29 0a`). */
 #define RE15_PANEL_RAUM        0x11F0u
 #define RE15_PANEL_CUT         10
+/* ROOM11F1 = Elzas Variante, byte-identisch (cmp ROOM11F0.RDT ROOM11F1.RDT: 0 Abweichungen). */
+#define RE15_PANEL_IST_RAUM(id) ((id) == 0x11F0u || (id) == 0x11F1u)
+
+/* Stillstand vor der Abnahme: RE2 ROOM2130.RDT sub04 @0x0171C `09` + @0x0171D `0a 1e 00`
+ * = sleep 0x1E = 30 Bilder zwischen Schleifenende (@0x01708) und Pruefung (@0x01752);
+ * derselbe Sleep steht hinter jedem Schalter (@0x012A4/@0x012A5 `09`/`0a 1e 00`). */
+#define RE15_PANEL_RUHE_BILDER 30
+
+/* Die RE1.5-Abnahme, die gehalten wird: ROOM11F0.RDT sub01 @Datei 0x012E6 `04 ff 18 12`
+ * (Evt_exec sub18), unmittelbar gefolgt von @0x012EA `22 04 ee 01` (Set(4,238,1)). */
+#define RE15_PANEL_ABNAHME_OFF 0x012E6u
 
 /* Die zehn Gewichte — ⛔ WOERTLICHE NUTZER-VORGABE 2026-09-26, siehe Kopf.
  * Reihenfolge = Schalter 1..10 = Bank 5 / Bits 13..22 (ROOM11F0.RDT @0x012BE..0x012E2,
@@ -176,5 +221,24 @@ int  re15_panel_zeiger_ziel_aus_maske(unsigned maske);
 int  re15_panel_zeiger_wert(void);
 int  re15_panel_zeiger_ziel(void);
 int  re15_panel_zeiger_roh(void);
+/* Messhaken: Bilder Stillstand seit der letzten Zeigerbewegung/Schalteraenderung
+ * (gesaettigt bei RE15_PANEL_RUHE_BILDER). */
+int  re15_panel_zeiger_ruhe(void);
+
+/* 1 = der Zeiger steht auf 80 und hat RE15_PANEL_RUHE_BILDER Bilder gestanden
+ * (RE2 @0x01708 ewhile -> @0x0171C sleep 30 -> @0x01752 cmp == 80). */
+int  re15_panel_zeiger_abnahme_frei(void);
+
+/* Fuer op_evt_exec: 1 = der Opcode an `pc` ist die RE1.5-Abnahme des Panel-Raetsels
+ * (RE15_PANEL_ABNAHME_OFF im laufenden Raum, Bytes `04 ff 18 12` + `22 04 ee 01`) UND der
+ * Zeiger ist noch nicht so weit. Dann behandelt die VM den Opcode wie ein falsches Ck im
+ * selben Ifel_ck-Block (@0x012B6): weder sub18 noch Set(4,238,1) laufen, sub01 prueft im
+ * naechsten Bild neu (es wird je Bild neu gestartet). */
+int  re15_panel_zeiger_abnahme_haelt(const uint8_t *pc, const uint8_t *raw);
+
+/* 1 = Eingabesperre des Panels: Raetsel aktiv (Bank 5 Bit 0, sub16 @0x015C2), noch nicht
+ * geloest, und der Zeiger faehrt oder die RE15_PANEL_RUHE_BILDER nach einer Aenderung sind
+ * noch nicht um. Wirkung wie Bank 2 Bit 7 (RE2 @0x01110..0x01818 / RE1.5 @0x800304f8). */
+int  re15_panel_zeiger_sperrt(void);
 
 #endif /* RE15_PANEL_ZEIGER_H */

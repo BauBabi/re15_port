@@ -1,0 +1,392 @@
+=== sub01  [file 0x108C..0x12F2]  (614 B)
+  0x0108C (+0000) Ifel_ck          06 00 14 00
+  0x01090 (+0004) Ck               21 05 00 01  bank=5 bit=0 val=1
+  0x01094 (+0008) Ifel_ck          06 00 0a 00
+  0x01098 (+000C) Sce_key_ck       51 01 01 00
+  0x0109C (+0010) Evt_exec         04 ff 18 02  cond=0xFF type=0x18 sub=2
+  0x010A0 (+0014) Endif            08 00
+  0x010A2 (+0016) Endif            08 00
+  0x010A4 (+0018) Ifel_ck          06 00 14 00
+  0x010A8 (+001C) Ck               21 05 00 01  bank=5 bit=0 val=1
+  0x010AC (+0020) Ifel_ck          06 00 0a 00
+  0x010B0 (+0024) Sce_key_ck       51 01 04 00
+  0x010B4 (+0028) Evt_exec         04 ff 18 03  cond=0xFF type=0x18 sub=3
+  0x010B8 (+002C) Endif            08 00
+  0x010BA (+002E) Endif            08 00
+  0x010BC (+0030) Ifel_ck          06 00 14 00
+  0x010C0 (+0034) Ck               21 05 00 01  bank=5 bit=0 val=1
+  0x010C4 (+0038) Ifel_ck          06 00 0a 00
+  0x010C8 (+003C) Sce_key_ck       51 01 02 00
+  0x010CC (+0040) Evt_exec         04 ff 18 04  cond=0xFF type=0x18 sub=4
+  0x010D0 (+0044) Endif            08 00
+  0x010D2 (+0046) Endif            08 00
+  0x010D4 (+0048) Ifel_ck          06 00 14 00
+  0x010D8 (+004C) Ck               21 05 00 01  bank=5 bit=0 val=1
+  0x010DC (+0050) Ifel_ck          06 00 0a 00
+  0x010E0 (+0054) Sce_key_ck       51 01 08 00
+  0x010E4 (+0058) Evt_exec         04 ff 18 05  cond=0xFF type=0x18 sub=5
+  0x010E8 (+005C) Endif            08 00
+  0x010EA (+005E) Endif            08 00
+  0x010EC (+0060) Ifel_ck          06 00 24 00
+  0x010F0 (+0064) Ck               21 05 01 01  bank=5 bit=1 val=1
+  0x010F4 (+0068) Work_set         2e 03 00  kind=3 idx=0
+  0x010F7 (+006B) Nop              00
+  0x010F8 (+006C) Ifel_ck          06 00 16 00
+  0x010FC (+0070) Member_cmp       3e 00 0f 00 02 00
+  0x01102 (+0076) Ifel_ck          06 00 0a 00
+  0x01106 (+007A) Sce_key_ck       51 01 40 00
+  0x0110A (+007E) Evt_exec         04 ff 18 06  cond=0xFF type=0x18 sub=6
+  0x0110E (+0082) Endif            08 00
+  0x01110 (+0084) Endif            08 00
+  0x01112 (+0086) Endif            08 00
+  0x01114 (+0088) Ifel_ck          06 00 24 00
+  0x01118 (+008C) Ck               21 05 02 01  bank=5 bit=2 val=1
+  0x0111C (+0090) Work_set         2e 03 00  kind=3 idx=0
+  0x0111F (+0093) Nop              00
+  0x01120 (+0094) Ifel_ck          06 00 16 00
+  0x01124 (+0098) Member_cmp       3e 00 0f 00 03 00
+  0x0112A (+009E) Ifel_ck          06 00 0a 00
+  0x0112E (+00A2) Sce_key_ck       51 01 40 00
+  0x01132 (+00A6) Evt_exec         04 ff 18 07  cond=0xFF type=0x18 sub=7
+  0x01136 (+00AA) Endif            08 00
+  0x01138 (+00AC) Endif            08 00
+  0x0113A (+00AE) Endif            08 00
+  0x0113C (+00B0) Ifel_ck          06 00 24 00
+  0x01140 (+00B4) Ck               21 05 03 01  bank=5 bit=3 val=1
+  0x01144 (+00B8) Work_set         2e 03 00  kind=3 idx=0
+  0x01147 (+00BB) Nop              00
+  0x01148 (+00BC) Ifel_ck          06 00 16 00
+  0x0114C (+00C0) Member_cmp       3e 00 0f 00 04 00
+  0x01152 (+00C6) Ifel_ck          06 00 0a 00
+  0x01156 (+00CA) Sce_key_ck       51 01 40 00
+  0x0115A (+00CE) Evt_exec         04 ff 18 08  cond=0xFF type=0x18 sub=8
+  0x0115E (+00D2) Endif            08 00
+  0x01160 (+00D4) Endif            08 00
+  0x01162 (+00D6) Endif            08 00
+  0x01164 (+00D8) Ifel_ck          06 00 24 00
+  0x01168 (+00DC) Ck               21 05 04 01  bank=5 bit=4 val=1
+  0x0116C (+00E0) Work_set         2e 03 00  kind=3 idx=0
+  0x0116F (+00E3) Nop              00
+  0x01170 (+00E4) Ifel_ck          06 00 16 00
+  0x01174 (+00E8) Member_cmp       3e 00 0f 00 05 00
+  0x0117A (+00EE) Ifel_ck          06 00 0a 00
+  0x0117E (+00F2) Sce_key_ck       51 01 40 00
+  0x01182 (+00F6) Evt_exec         04 ff 18 09  cond=0xFF type=0x18 sub=9
+  0x01186 (+00FA) Endif            08 00
+  0x01188 (+00FC) Endif            08 00
+  0x0118A (+00FE) Endif            08 00
+  0x0118C (+0100) Ifel_ck          06 00 24 00
+  0x01190 (+0104) Ck               21 05 05 01  bank=5 bit=5 val=1
+  0x01194 (+0108) Work_set         2e 03 00  kind=3 idx=0
+  0x01197 (+010B) Nop              00
+  0x01198 (+010C) Ifel_ck          06 00 16 00
+  0x0119C (+0110) Member_cmp       3e 00 0f 00 06 00
+  0x011A2 (+0116) Ifel_ck          06 00 0a 00
+  0x011A6 (+011A) Sce_key_ck       51 01 40 00
+  0x011AA (+011E) Evt_exec         04 ff 18 0a  cond=0xFF type=0x18 sub=10
+  0x011AE (+0122) Endif            08 00
+  0x011B0 (+0124) Endif            08 00
+  0x011B2 (+0126) Endif            08 00
+  0x011B4 (+0128) Ifel_ck          06 00 24 00
+  0x011B8 (+012C) Ck               21 05 06 01  bank=5 bit=6 val=1
+  0x011BC (+0130) Work_set         2e 03 00  kind=3 idx=0
+  0x011BF (+0133) Nop              00
+  0x011C0 (+0134) Ifel_ck          06 00 16 00
+  0x011C4 (+0138) Member_cmp       3e 00 0f 00 07 00
+  0x011CA (+013E) Ifel_ck          06 00 0a 00
+  0x011CE (+0142) Sce_key_ck       51 01 40 00
+  0x011D2 (+0146) Evt_exec         04 ff 18 0b  cond=0xFF type=0x18 sub=11
+  0x011D6 (+014A) Endif            08 00
+  0x011D8 (+014C) Endif            08 00
+  0x011DA (+014E) Endif            08 00
+  0x011DC (+0150) Ifel_ck          06 00 24 00
+  0x011E0 (+0154) Ck               21 05 07 01  bank=5 bit=7 val=1
+  0x011E4 (+0158) Work_set         2e 03 00  kind=3 idx=0
+  0x011E7 (+015B) Nop              00
+  0x011E8 (+015C) Ifel_ck          06 00 16 00
+  0x011EC (+0160) Member_cmp       3e 00 0f 00 08 00
+  0x011F2 (+0166) Ifel_ck          06 00 0a 00
+  0x011F6 (+016A) Sce_key_ck       51 01 40 00
+  0x011FA (+016E) Evt_exec         04 ff 18 0c  cond=0xFF type=0x18 sub=12
+  0x011FE (+0172) Endif            08 00
+  0x01200 (+0174) Endif            08 00
+  0x01202 (+0176) Endif            08 00
+  0x01204 (+0178) Ifel_ck          06 00 24 00
+  0x01208 (+017C) Ck               21 05 08 01  bank=5 bit=8 val=1
+  0x0120C (+0180) Work_set         2e 03 00  kind=3 idx=0
+  0x0120F (+0183) Nop              00
+  0x01210 (+0184) Ifel_ck          06 00 16 00
+  0x01214 (+0188) Member_cmp       3e 00 0f 00 09 00
+  0x0121A (+018E) Ifel_ck          06 00 0a 00
+  0x0121E (+0192) Sce_key_ck       51 01 40 00
+  0x01222 (+0196) Evt_exec         04 ff 18 0d  cond=0xFF type=0x18 sub=13
+  0x01226 (+019A) Endif            08 00
+  0x01228 (+019C) Endif            08 00
+  0x0122A (+019E) Endif            08 00
+  0x0122C (+01A0) Ifel_ck          06 00 24 00
+  0x01230 (+01A4) Ck               21 05 09 01  bank=5 bit=9 val=1
+  0x01234 (+01A8) Work_set         2e 03 00  kind=3 idx=0
+  0x01237 (+01AB) Nop              00
+  0x01238 (+01AC) Ifel_ck          06 00 16 00
+  0x0123C (+01B0) Member_cmp       3e 00 0f 00 0a 00
+  0x01242 (+01B6) Ifel_ck          06 00 0a 00
+  0x01246 (+01BA) Sce_key_ck       51 01 40 00
+  0x0124A (+01BE) Evt_exec         04 ff 18 0e  cond=0xFF type=0x18 sub=14
+  0x0124E (+01C2) Endif            08 00
+  0x01250 (+01C4) Endif            08 00
+  0x01252 (+01C6) Endif            08 00
+  0x01254 (+01C8) Ifel_ck          06 00 24 00
+  0x01258 (+01CC) Ck               21 05 0a 01  bank=5 bit=10 val=1
+  0x0125C (+01D0) Work_set         2e 03 00  kind=3 idx=0
+  0x0125F (+01D3) Nop              00
+  0x01260 (+01D4) Ifel_ck          06 00 16 00
+  0x01264 (+01D8) Member_cmp       3e 00 0f 00 0b 00
+  0x0126A (+01DE) Ifel_ck          06 00 0a 00
+  0x0126E (+01E2) Sce_key_ck       51 01 40 00
+  0x01272 (+01E6) Evt_exec         04 ff 18 0f  cond=0xFF type=0x18 sub=15
+  0x01276 (+01EA) Endif            08 00
+  0x01278 (+01EC) Endif            08 00
+  0x0127A (+01EE) Endif            08 00
+  0x0127C (+01F0) Ifel_ck          06 00 24 00
+  0x01280 (+01F4) Ck               21 05 0b 01  bank=5 bit=11 val=1
+  0x01284 (+01F8) Work_set         2e 03 00  kind=3 idx=0
+  0x01287 (+01FB) Nop              00
+  0x01288 (+01FC) Ifel_ck          06 00 16 00
+  0x0128C (+0200) Member_cmp       3e 00 0f 00 0c 00
+  0x01292 (+0206) Ifel_ck          06 00 0a 00
+  0x01296 (+020A) Sce_key_ck       51 01 40 00
+  0x0129A (+020E) Evt_exec         04 ff 18 11  cond=0xFF type=0x18 sub=17
+  0x0129E (+0212) Endif            08 00
+  0x012A0 (+0214) Endif            08 00
+  0x012A2 (+0216) Endif            08 00
+  0x012A4 (+0218) Ifel_ck          06 00 0e 00
+  0x012A8 (+021C) Ck               21 05 0c 01  bank=5 bit=12 val=1
+  0x012AC (+0220) Set              22 02 00 01  bank=2 bit=0 val=1
+  0x012B0 (+0224) Set              22 02 02 01  bank=2 bit=2 val=1
+  0x012B4 (+0228) Endif            08 00
+  0x012B6 (+022A) Ifel_ck          06 00 36 00
+  0x012BA (+022E) Ck               21 04 ee 00  bank=4 bit=238 val=0
+  0x012BE (+0232) Ck               21 05 0d 01  bank=5 bit=13 val=1
+  0x012C2 (+0236) Ck               21 05 0e 00  bank=5 bit=14 val=0
+  0x012C6 (+023A) Ck               21 05 0f 01  bank=5 bit=15 val=1
+  0x012CA (+023E) Ck               21 05 10 00  bank=5 bit=16 val=0
+  0x012CE (+0242) Ck               21 05 11 01  bank=5 bit=17 val=1
+  0x012D2 (+0246) Ck               21 05 12 00  bank=5 bit=18 val=0
+  0x012D6 (+024A) Ck               21 05 13 01  bank=5 bit=19 val=1
+  0x012DA (+024E) Ck               21 05 14 00  bank=5 bit=20 val=0
+  0x012DE (+0252) Ck               21 05 15 01  bank=5 bit=21 val=1
+  0x012E2 (+0256) Ck               21 05 16 00  bank=5 bit=22 val=0
+  0x012E6 (+025A) Evt_exec         04 ff 18 12  cond=0xFF type=0x18 sub=18
+  0x012EA (+025E) Set              22 04 ee 01  bank=4 bit=238 val=1
+  0x012EE (+0262) Endif            08 00
+  0x012F0 (+0264) Evt_end          01 00
+
+=== sub02  [file 0x12F2..0x12FE]  (12 B)
+=== sub06  [file 0x1322..0x1362]  (64 B)
+  0x01322 (+0000) Set              22 05 01 00  bank=5 bit=1 val=0
+  0x01326 (+0004) Work_set         2e 03 02  kind=3 idx=2
+  0x01329 (+0007) Nop              00
+  0x0132A (+0008) Ifel_ck          06 00 1a 00
+  0x0132E (+000C) Ck               21 05 0d 00  bank=5 bit=13 val=0
+  0x01332 (+0010) Speed_set        2f 05 40 00
+  0x01336 (+0014) For              0d 00 04 00 10 00
+  0x0133C (+001A) Add_speed        30
+  0x0133D (+001B) Evt_next         02
+  0x0133E (+001C) Next             0e 00
+  0x01340 (+001E) Set              22 05 0d 01  bank=5 bit=13 val=1
+  0x01344 (+0022) Else_ck          07 00 18 00
+  0x01348 (+0026) Speed_set        2f 05 c0 ff
+  0x0134C (+002A) For              0d 00 04 00 10 00
+  0x01352 (+0030) Add_speed        30
+  0x01353 (+0031) Evt_next         02
+  0x01354 (+0032) Next             0e 00
+  0x01356 (+0034) Set              22 05 0d 00  bank=5 bit=13 val=0
+  0x0135A (+0038) Nop              00
+  0x0135B (+0039) Nop              00
+  0x0135C (+003A) Set              22 05 01 01  bank=5 bit=1 val=1
+  0x01360 (+003E) Evt_end          01 00
+
+=== sub07  [file 0x1362..0x13A2]  (64 B)
+=== sub16  [file 0x15A2..0x15FA]  (88 B)
+  0x015A2 (+0000) Message_on       2b 00 ff ff
+  0x015A6 (+0004) Evt_next         02
+  0x015A7 (+0005) Nop              00
+  0x015A8 (+0006) Message_on       2b 01 ff ff
+  0x015AC (+000A) Evt_next         02
+  0x015AD (+000B) Nop              00
+  0x015AE (+000C) Ifel_ck          06 00 46 00
+  0x015B2 (+0010) Ck               21 0c 1f 00  bank=12 bit=31 val=0
+  0x015B6 (+0014) Aot_reset        46 01 00 00 00 00 00 00 00 00  slot=1 sce=0 flags=0x00 p=(0,0,0)
+  0x015C0 (+001E) Cut_chg          29 0a
+  0x015C2 (+0020) Set              22 05 00 01  bank=5 bit=0 val=1
+  0x015C6 (+0024) Set              22 05 01 01  bank=5 bit=1 val=1
+  0x015CA (+0028) Set              22 05 02 01  bank=5 bit=2 val=1
+  0x015CE (+002C) Set              22 05 03 01  bank=5 bit=3 val=1
+  0x015D2 (+0030) Set              22 05 04 01  bank=5 bit=4 val=1
+  0x015D6 (+0034) Set              22 05 05 01  bank=5 bit=5 val=1
+  0x015DA (+0038) Set              22 05 06 01  bank=5 bit=6 val=1
+  0x015DE (+003C) Set              22 05 07 01  bank=5 bit=7 val=1
+  0x015E2 (+0040) Set              22 05 08 01  bank=5 bit=8 val=1
+  0x015E6 (+0044) Set              22 05 09 01  bank=5 bit=9 val=1
+  0x015EA (+0048) Set              22 05 0a 01  bank=5 bit=10 val=1
+  0x015EE (+004C) Set              22 05 0b 01  bank=5 bit=11 val=1
+  0x015F2 (+0050) Set              22 05 0c 01  bank=5 bit=12 val=1
+  0x015F6 (+0054) Endif            08 00
+  0x015F8 (+0056) Evt_end          01 00
+
+=== sub17  [file 0x15FA..0x16F6]  (252 B)
+  0x015FA (+0000) Sleep            09 0a 01 00
+  0x015FE (+0004) Work_set         2e 03 00  kind=3 idx=0
+  0x01601 (+0007) Nop              00
+  0x01602 (+0008) Pos_set          32 00 9e b3 00 00 9c 58
+  0x0160A (+0010) Work_set         2e 03 02  kind=3 idx=2
+  0x0160D (+0013) Nop              00
+  0x0160E (+0014) Dir_set          33 00 00 00 00 00 00 02
+  0x01616 (+001C) Work_set         2e 03 03  kind=3 idx=3
+  0x01619 (+001F) Nop              00
+  0x0161A (+0020) Dir_set          33 00 00 00 00 00 00 02
+  0x01622 (+0028) Work_set         2e 03 04  kind=3 idx=4
+  0x01625 (+002B) Nop              00
+  0x01626 (+002C) Dir_set          33 00 00 00 00 00 00 02
+  0x0162E (+0034) Work_set         2e 03 05  kind=3 idx=5
+  0x01631 (+0037) Nop              00
+  0x01632 (+0038) Dir_set          33 00 00 00 00 00 00 02
+  0x0163A (+0040) Work_set         2e 03 06  kind=3 idx=6
+  0x0163D (+0043) Nop              00
+  0x0163E (+0044) Dir_set          33 00 00 00 00 00 00 02
+  0x01646 (+004C) Work_set         2e 03 07  kind=3 idx=7
+  0x01649 (+004F) Nop              00
+  0x0164A (+0050) Dir_set          33 00 00 00 00 00 00 02
+  0x01652 (+0058) Work_set         2e 03 08  kind=3 idx=8
+  0x01655 (+005B) Nop              00
+  0x01656 (+005C) Dir_set          33 00 00 00 00 00 00 02
+  0x0165E (+0064) Work_set         2e 03 09  kind=3 idx=9
+  0x01661 (+0067) Nop              00
+  0x01662 (+0068) Dir_set          33 00 00 00 00 00 00 02
+  0x0166A (+0070) Work_set         2e 03 0a  kind=3 idx=10
+  0x0166D (+0073) Nop              00
+  0x0166E (+0074) Dir_set          33 00 00 00 00 00 00 02
+  0x01676 (+007C) Work_set         2e 03 0b  kind=3 idx=11
+  0x01679 (+007F) Nop              00
+  0x0167A (+0080) Dir_set          33 00 00 00 00 00 00 02
+  0x01682 (+0088) Aot_reset        46 01 03 31 ff 00 18 10 00 00  slot=1 sce=3 flags=0x31 p=(255,4120,0)
+  0x0168C (+0092) Set              22 05 00 00  bank=5 bit=0 val=0
+  0x01690 (+0096) Set              22 05 01 00  bank=5 bit=1 val=0
+  0x01694 (+009A) Set              22 05 02 00  bank=5 bit=2 val=0
+  0x01698 (+009E) Set              22 05 03 00  bank=5 bit=3 val=0
+  0x0169C (+00A2) Set              22 05 04 00  bank=5 bit=4 val=0
+  0x016A0 (+00A6) Set              22 05 05 00  bank=5 bit=5 val=0
+  0x016A4 (+00AA) Set              22 05 06 00  bank=5 bit=6 val=0
+  0x016A8 (+00AE) Set              22 05 07 00  bank=5 bit=7 val=0
+  0x016AC (+00B2) Set              22 05 08 00  bank=5 bit=8 val=0
+  0x016B0 (+00B6) Set              22 05 09 00  bank=5 bit=9 val=0
+  0x016B4 (+00BA) Set              22 05 0a 00  bank=5 bit=10 val=0
+  0x016B8 (+00BE) Set              22 05 0b 00  bank=5 bit=11 val=0
+  0x016BC (+00C2) Set              22 05 0c 00  bank=5 bit=12 val=0
+  0x016C0 (+00C6) Set              22 05 0d 00  bank=5 bit=13 val=0
+  0x016C4 (+00CA) Set              22 05 0e 00  bank=5 bit=14 val=0
+  0x016C8 (+00CE) Set              22 05 0f 00  bank=5 bit=15 val=0
+  0x016CC (+00D2) Set              22 05 10 00  bank=5 bit=16 val=0
+  0x016D0 (+00D6) Set              22 05 11 00  bank=5 bit=17 val=0
+  0x016D4 (+00DA) Set              22 05 12 00  bank=5 bit=18 val=0
+  0x016D8 (+00DE) Set              22 05 13 00  bank=5 bit=19 val=0
+  0x016DC (+00E2) Set              22 05 14 00  bank=5 bit=20 val=0
+  0x016E0 (+00E6) Set              22 05 15 00  bank=5 bit=21 val=0
+  0x016E4 (+00EA) Set              22 05 16 00  bank=5 bit=22 val=0
+  0x016E8 (+00EE) Set              22 02 00 00  bank=2 bit=0 val=0
+  0x016EC (+00F2) Set              22 02 02 00  bank=2 bit=2 val=0
+  0x016F0 (+00F6) Cut_old          2a
+  0x016F1 (+00F7) Nop              00
+  0x016F2 (+00F8) Cut_auto         3c 01
+  0x016F4 (+00FA) Evt_end          01 00
+
+=== sub18  [file 0x16F6..0x17B6]  (192 B)
+  0x016F6 (+0000) Set              22 04 f3 01  bank=4 bit=243 val=1
+  0x016FA (+0004) Set              22 05 00 00  bank=5 bit=0 val=0
+  0x016FE (+0008) Set              22 05 01 00  bank=5 bit=1 val=0
+  0x01702 (+000C) Set              22 05 02 00  bank=5 bit=2 val=0
+  0x01706 (+0010) Set              22 05 03 00  bank=5 bit=3 val=0
+  0x0170A (+0014) Set              22 05 04 00  bank=5 bit=4 val=0
+  0x0170E (+0018) Set              22 05 05 00  bank=5 bit=5 val=0
+  0x01712 (+001C) Set              22 05 06 00  bank=5 bit=6 val=0
+  0x01716 (+0020) Set              22 05 07 00  bank=5 bit=7 val=0
+  0x0171A (+0024) Set              22 05 08 00  bank=5 bit=8 val=0
+  0x0171E (+0028) Set              22 05 09 00  bank=5 bit=9 val=0
+  0x01722 (+002C) Set              22 05 0a 00  bank=5 bit=10 val=0
+  0x01726 (+0030) Set              22 05 0b 00  bank=5 bit=11 val=0
+  0x0172A (+0034) Set              22 05 0c 00  bank=5 bit=12 val=0
+  0x0172E (+0038) Set              22 02 00 00  bank=2 bit=0 val=0
+  0x01732 (+003C) Set              22 02 02 00  bank=2 bit=2 val=0
+  0x01736 (+0040) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x0173A (+0044) Cut_chg          29 08
+  0x0173C (+0046) Sce_bgm_control  54 00 01 00 46 40
+  0x01742 (+004C) Message_on       2b 02 ff ff
+  0x01746 (+0050) Evt_next         02
+  0x01747 (+0051) Nop              00
+  0x01748 (+0052) Cut_chg          29 0d
+  0x0174A (+0054) Member_calc2     56 00 02 07 00 00
+  0x01750 (+005A) Sce_bgmtbl_set   57 00 00 08
+  0x01754 (+005E) Sleep            09 0a 02 00
+  0x01758 (+0062) Sce_bgmtbl_set   57 00 00 00
+  0x0175C (+0066) Sleep            09 0a 03 00
+  0x01760 (+006A) Sce_bgmtbl_set   57 00 00 08
+  0x01764 (+006E) Sleep            09 0a 04 00
+  0x01768 (+0072) Sce_bgmtbl_set   57 00 00 00
+  0x0176C (+0076) Sleep            09 0a 03 00
+  0x01770 (+007A) Cut_chg          29 0e
+  0x01772 (+007C) Sleep            09 0a 28 00
+  0x01776 (+0080) Aot_reset        46 01 01 31 02 00 ff ff 00 00  slot=1 sce=1 flags=0x31 p=(2,65535,0)
+  0x01780 (+008A) Cut_chg          29 08
+  0x01782 (+008C) Cut_auto         3c 01
+  0x01784 (+008E) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x01788 (+0092) Work_set         2e 02 00  kind=2 idx=0
+  0x0178B (+0095) Nop              00
+  0x0178C (+0096) Member_set       34 0c 89 00  member=0x0C val=137
+  0x01790 (+009A) Sleep            09 0a 05 00
+  0x01794 (+009E) Work_set         2e 02 01  kind=2 idx=1
+  0x01797 (+00A1) Nop              00
+  0x01798 (+00A2) Member_set       34 0c 8a 00  member=0x0C val=138
+  0x0179C (+00A6) Sleep            09 0a 05 00
+  0x017A0 (+00AA) Work_set         2e 02 02  kind=2 idx=2
+  0x017A3 (+00AD) Nop              00
+  0x017A4 (+00AE) Member_set       34 0c 89 00  member=0x0C val=137
+  0x017A8 (+00B2) Sleep            09 0a 05 00
+  0x017AC (+00B6) Work_set         2e 02 03  kind=2 idx=3
+  0x017AF (+00B9) Nop              00
+  0x017B0 (+00BA) Member_set       34 0c 8a 00  member=0x0C val=138
+  0x017B4 (+00BE) Evt_end          01 00
+
+=== sub19  [file 0x17B6..0x1810]  (90 B)
+  0x017B6 (+0000) Cut_chg          29 0b
+  0x017B8 (+0002) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x017BC (+0006) Work_set         2e 01 00  kind=1 idx=0
+  0x017BF (+0009) Nop              00
+  0x017C0 (+000A) Member_set       34 01 b8 c0  member=0x01 val=-16200
+  0x017C4 (+000E) Ifel_ck          06 00 0e 00
+  0x017C8 (+0012) Ck               21 09 63 00  bank=9 bit=99 val=0
+  0x017CC (+0016) Work_set         2e 03 01  kind=3 idx=1
+  0x017CF (+0019) Nop              00
+  0x017D0 (+001A) Member_set       34 01 50 fb  member=0x01 val=-1200
+  0x017D4 (+001E) Endif            08 00
+  0x017D6 (+0020) Sleep            09 0a 1e 00
+  0x017DA (+0024) Ifel_ck          06 00 0a 00
+  0x017DE (+0028) Ck               21 09 63 00  bank=9 bit=99 val=0
+  0x017E2 (+002C) Aot_on           47 0e
+  0x017E4 (+002E) Evt_next         02
+  0x017E5 (+002F) Nop              00
+  0x017E6 (+0030) Endif            08 00
+  0x017E8 (+0032) Sleep            09 0a 02 00
+  0x017EC (+0036) Ifel_ck          06 00 0e 00
+  0x017F0 (+003A) Ck               21 09 63 00  bank=9 bit=99 val=0
+  0x017F4 (+003E) Work_set         2e 03 01  kind=3 idx=1
+  0x017F7 (+0041) Nop              00
+  0x017F8 (+0042) Member_set       34 01 b8 c0  member=0x01 val=-16200
+  0x017FC (+0046) Endif            08 00
+  0x017FE (+0048) Work_set         2e 01 00  kind=1 idx=0
+  0x01801 (+004B) Nop              00
+  0x01802 (+004C) Member_set       34 01 00 00  member=0x01 val=0
+  0x01806 (+0050) Cut_old          2a
+  0x01807 (+0051) Nop              00
+  0x01808 (+0052) Cut_auto         3c 01
+  0x0180A (+0054) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x0180E (+0058) Evt_end          01 00
