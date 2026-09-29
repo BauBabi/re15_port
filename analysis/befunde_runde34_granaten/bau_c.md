@@ -339,7 +339,17 @@ TEX.TIM, `rows_wh.py` Zeilen-Bytes, `mutation.sh` / `mutation_ton.sh` Mutationsp
   `integration_r30_irons_tisch_bild` (Lauf P0: exe endet nach `[pad] kein Controller gefunden`, 5 Log-Zeilen, vor der
   Spielschleife). **Einzeln wiederholt: beide gruen** (`Passed 111.42 sec` / `Passed 59.33 sec`) -> Last-Flattern
   (parallel laufen die Bauten/exe-Laeufe der Spuren A, B, D und ein Android-Bau), kein reproduzierbares Rot.
-* **Endlauf 2**: siehe Abschlusszeile im Rueckgabe-Schema bzw. unten.
+* **Endlauf 2** (all, Stand 6b8e6f16): `99% tests passed, 2 tests failed out of 430`, 1033.73 s. Rot diesmal
+  `integration_r30_cut_blitz` (Lauf A: exe endet bei F553 mit exit=1, das Telefon-Bild F330 ... nicht erreicht) und
+  `integration_elza_vollstart` (exe endet nach 61 s mit exit=1, Log bricht bei F445 mitten im Raumaufbau ab; der Test
+  erwartet einen Zeitablauf nach 100 s). **Einzeln wiederholt: beide gruen** (`Passed 107.97 sec` / `Passed 100.19 sec`);
+  die Roten aus Lauf 1 liefen in Lauf 2 gruen (granate_laden 135.84 s, irons_tisch_bild gruen).
+* Befund zum Muster "exit=1, Log bricht ohne Meldung ab": der Port hat ausser den `exit(1)` der Renderer-Initialisierung
+  (render_pc.c:587/622/635/643) keinen Weg zu Code 1 und keinen Absturz-Haken; ein Absturz haette 0xc0000005. Code 1 ohne
+  Logzeile ist das Bild eines von aussen beendeten Prozesses (`taskkill /F` setzt Exit-Code 1) — die Parallel-Sitzungen
+  starten und beenden `re15_pc.exe`-Prozesse (Memory "taskkill-Falle"). Jedes der vier verschiedenen Roten lief einzeln
+  gruen; kein Rot war reproduzierbar.
+* **Endlauf 3**: siehe Rueckgabe (Abschlusszeile).
 
 ---
 
