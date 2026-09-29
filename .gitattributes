@@ -18,3 +18,6 @@ re15_port/platform/android/gradlew text eol=lf
 # core.autocrlf ist hier true; heute retten nur Gits NUL-Heuristik und die TIM-Kopfbytes.
 # Die Text-Beigaben (csv/txt/html/obj) werden bereits mit LF geschrieben, -text haelt sie so.
 extracted_re2_dokumente/** -text
+# Dockerfiles der Release-Baus (release/docker/): RUN-Zeilen mit \ am Zeilenende
+# brechen, wenn autocrlf ein \r dahinter setzt. Immer LF.
+release/docker/Dockerfile* text eol=lf

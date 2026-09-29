@@ -1,0 +1,16 @@
+# =============================================================================
+# RE1.5 Port — vorgebautes Bau-Image fuer den Linux-/Deck-Release-Bau
+# =============================================================================
+# Basis bleibt debian:11 (glibc 2.31, GCC 10) — dieselbe Untergrenze fuer das Spiel
+# (GLIBC_2.29) wie beim Bau im nackten debian:11. Die Pakete kommen aus DERSELBEN
+# Datei linux_deps.sh mit demselben snapshot.debian.org-Zeitstempel; das Image ist
+# damit genau der Zustand, den docker_linux_build.sh frueher bei jedem Lauf neu
+# herstellte. Gebaut von release/build_linux_deck.sh (Docker-Schichtcache: ein
+# erneuter Bau ohne Aenderung an linux_deps.sh dauert Sekunden).
+# Kontext = release/docker/ (klein) — NICHT release/ (dort liegen die Paket-Zips).
+# =============================================================================
+FROM debian:11
+COPY linux_deps.sh /tmp/linux_deps.sh
+RUN bash /tmp/linux_deps.sh \
+ && rm -rf /var/lib/apt/lists/* /tmp/cmake.tgz /tmp/linux_deps.sh \
+ && gcc --version | head -1 && cmake --version | head -1 && ninja --version

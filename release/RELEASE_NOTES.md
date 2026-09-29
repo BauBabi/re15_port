@@ -55,8 +55,8 @@ beiden Spielen bytegleich).
   im englischen Text keine mehr.
 * Drei Seiten tragen nur einen Zeilenrest ("earth is going on?", "can.", "hope you make it
   out alive!") — Folge des RE2-Seitenrasters mit 9 Zeilen, in dem jedes Datum neu beginnt.
-* Die Blaetterpfeile stehen jetzt an RE2s Stelle und in RE2s Gruen — vorher hat der linke
-  Pfeil auf 12 von 17 Seiten den ersten Buchstaben einer Zeile verdeckt.
+* Die Blaetterpfeile stehen an RE2s Stelle und in RE2s Gruen; an RE1.5s Stelle haette der
+  linke Pfeil den ersten Buchstaben mancher Zeilen verdeckt.
 
 **Die Memory Card liegt daneben** (Ihre blaue Marke). Es ist Item 0x21 — nicht 0x20, das ist
 die Incendiary Capsule. RE1.5 hat dafuer Bild und Icon, aber nie eine Platzierung und kein
@@ -137,6 +137,24 @@ Endkampf-Raeume). Je Raum gemessen: vorher lief er in 299 von 300 Bildern vor de
 jetzt in 0; die Freigabe wird in allen neun Raeumen auf dem Weg eines Spielers erreicht, und
 danach kommt sein Auftritt (EMERGENCE) wieder, der vorher uebersprungen wurde. Der Endkampf in
 ROOM5090 ist byte-gleich zu vorher (13 Birkin-/G5-Sonden unveraendert).
+
+## Warum der Linux-Bau ueber eine Stunde dauerte
+
+Sie hatten Recht, das war nicht normal. Der Container las jede Datei ueber die
+Windows-Freigabe (WSL2, 9p-Mount), und dort kostet JEDE Dateioperation rund 10 ms: 5000-mal
+stat 54 s statt 3 s, die Spieldaten lesen 142 s statt 0,17 s. Configure, Uebersetzen und die
+Tests bestehen fast nur aus solchen Zugriffen. Jetzt wird der Quellbaum zu Beginn in den
+Container kopiert und dort gebaut; das Repo haengt nur noch als Rueckfall darunter, sodass
+kein Test still eine Datei verliert (eigener Test-Fingerabdruck als Gate). Die Bau-Werkzeuge
+liegen in einem vorgebauten Image, statt bei jedem Lauf neu installiert zu werden.
+
+| | vorher | jetzt |
+|---|---|---|
+| Linux/Steam-Deck-Bau mit voller Testsuite | 82 min | gut 9 min |
+| Windows-Bau | 4,4 min | 1,3-2 min |
+
+Die Programme sind bis auf Bau-Kennung und Zeitstempel byte-gleich. Dieses Paket ist bereits
+auf dem neuen Weg gebaut, die Linux-Suite im Container: 405 von 405.
 
 ## Das Tor am Landeplatz (ROOM1170) - Tuersequenz nach RE2
 

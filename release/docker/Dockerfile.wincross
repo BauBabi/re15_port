@@ -1,0 +1,12 @@
+# =============================================================================
+# RE1.5 Port — vorgebautes Bau-Image fuer den Windows-Cross-Bau (mingw-w64, GCC 10)
+# =============================================================================
+# debian:11 + release/docker/win_deps.sh (dieselbe Paketliste, derselbe
+# snapshot.debian.org-Zeitstempel wie der Bau im nackten debian:11). Gebaut von
+# release/build_win_cross.sh; Kontext = release/docker/ (klein).
+# =============================================================================
+FROM debian:11
+COPY win_deps.sh /tmp/win_deps.sh
+RUN bash /tmp/win_deps.sh \
+ && rm -rf /var/lib/apt/lists/* /tmp/cmake.tgz /tmp/win_deps.sh \
+ && x86_64-w64-mingw32-gcc-posix --version | head -1 && cmake --version | head -1 && ninja --version
