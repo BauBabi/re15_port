@@ -16,6 +16,10 @@
  * Die RE2-Archivtabelle @0x8009a520 (Tonteil, Modellteil, Sektor) liegt in gen/re2_tuer_tabelle.inc
  * (tools/tueren/re2_tuer_tabelle.py, 55/55 gegen die Dateien geprueft).
  *
+ * Runde 33 (analysis/befunde_runde33/tueren_rest_plan.md): dazu PORT-EIGENE Archive im RE2-Aufbau
+ * (gen/re15_tuer_eigen.inc, tools/tueren/tuer_archiv_bauen.py) mit ihren Seitenzeilen; eine Zeile
+ * mit eigen != 0 spielt das Port-Archiv, re2_nr ist dann dessen Basis-Archiv (var 15, Griff-Tausch).
+ *
  * PSX: die Szene laeuft dort nicht (kein Laeufer, die Anfrage verfiele) - die Tabellen werden dort
  * nicht gelinkt, re15_door_seq_zuordnen_flaeche liefert fuer RE2-Seiten nichts.
  */
@@ -27,21 +31,68 @@
 #ifndef RE15_PLATFORM_PSX
 #include "gen/tuer_zuordnung.inc"   /* re15_tuer_zeilen[], re15_griff_tausche[] */
 #include "gen/re2_tuer_tabelle.inc" /* re2_tuer_arch[55] */
-#define N_ZEILEN ((int)(sizeof re15_tuer_zeilen / sizeof re15_tuer_zeilen[0]))
+#include "gen/re15_tuer_eigen.inc"  /* Runde 33: re15_tuer_eigen[], re15_tuer_zeilen_eigen[] */
+#define N_ZEILEN_RE2 ((int)(sizeof re15_tuer_zeilen / sizeof re15_tuer_zeilen[0]))
+#define N_ZEILEN_EIG ((int)(sizeof re15_tuer_zeilen_eigen / sizeof re15_tuer_zeilen_eigen[0]))
+#define N_ZEILEN (N_ZEILEN_RE2 + N_ZEILEN_EIG)
+#define N_EIGEN  ((int)(sizeof re15_tuer_eigen / sizeof re15_tuer_eigen[0]))
 #define N_TAUSCH ((int)(sizeof re15_griff_tausche / sizeof re15_griff_tausche[0]))
+#define N_TAUSCH_EIG ((int)(sizeof re15_griff_tausche_eigen / sizeof re15_griff_tausche_eigen[0]))
 #define N_ARCH   ((int)(sizeof re2_tuer_arch / sizeof re2_tuer_arch[0]))
 #else
 #define N_ZEILEN 0
+#define N_EIGEN  0
 #endif
 
 int re15_door_seq_zeilen(void) { return N_ZEILEN; }
 
+int re15_door_seq_zeilen_runde31(void)
+{
+#ifndef RE15_PLATFORM_PSX
+    return N_ZEILEN_RE2;
+#else
+    return 0;
+#endif
+}
+
+int re15_door_seq_geplant_anzahl(void)
+{
+#ifndef RE15_PLATFORM_PSX
+    return (int)(sizeof re15_tuer_geplant / sizeof re15_tuer_geplant[0]);
+#else
+    return 0;
+#endif
+}
+
+int re15_door_seq_geplant(int i)
+{
+#ifndef RE15_PLATFORM_PSX
+    if (i >= 0 && i < re15_door_seq_geplant_anzahl()) return re15_tuer_geplant[i];
+#else
+    (void)i;
+#endif
+    return 0;
+}
+
 const re15_tuer_zeile_t *re15_door_seq_zeile(int i)
 {
 #ifndef RE15_PLATFORM_PSX
-    if (i >= 0 && i < N_ZEILEN) return &re15_tuer_zeilen[i];
+    if (i >= 0 && i < N_ZEILEN_RE2) return &re15_tuer_zeilen[i];
+    if (i >= N_ZEILEN_RE2 && i < N_ZEILEN) return &re15_tuer_zeilen_eigen[i - N_ZEILEN_RE2];
 #else
     (void)i;
+#endif
+    return NULL;
+}
+
+int re15_door_seq_eigen_anzahl(void) { return N_EIGEN; }
+
+const re15_tuer_eigen_t *re15_door_seq_eigen(int eigen)
+{
+#ifndef RE15_PLATFORM_PSX
+    if (eigen >= 1 && eigen <= N_EIGEN) return &re15_tuer_eigen[eigen - 1];
+#else
+    (void)eigen;
 #endif
     return NULL;
 }
@@ -59,6 +110,7 @@ static void anfrage_aus_zeile(const re15_tuer_zeile_t *t, re15_door_seq_anfrage_
     out->spender  = t->spender;
     out->seite    = t->seite;
     out->tuer     = t->tuer;
+    out->eigen    = t->eigen;   /* Runde 33: Port-Archiv (0 = RE2-Datei) */
 }
 
 /* RE2-Tabelle (ohne Tor). Rueckgabe RE15_DOOR_ARCHIV_RE2 oder _KEINS. */
@@ -94,12 +146,32 @@ int re15_door_seq_anfrage_fuer_seite(int seite, re15_door_seq_anfrage_t *out, un
     return 0;
 }
 
+const re15_griff_tausch_t *re15_door_seq_griff_tausch_fuer(int archiv, int spender, int eigen)
+{
+#ifndef RE15_PLATFORM_PSX
+    if (eigen) {
+        for (int i = 0; i < N_TAUSCH_EIG; i++)
+            if (re15_griff_tausche_eigen[i].fuer_eigen == eigen && re15_griff_tausche_eigen[i].archiv == archiv
+                && re15_griff_tausche_eigen[i].spender == spender)
+                return &re15_griff_tausche_eigen[i];
+        return NULL;
+    }
+#else
+    (void)eigen;
+#endif
+    return re15_door_seq_griff_tausch(archiv, spender);
+}
+
 const re15_griff_tausch_t *re15_door_seq_griff_tausch(int archiv, int spender)
 {
 #ifndef RE15_PLATFORM_PSX
     for (int i = 0; i < N_TAUSCH; i++)
         if (re15_griff_tausche[i].archiv == archiv && re15_griff_tausche[i].spender == spender)
             return &re15_griff_tausche[i];
+    /* Runde 33: Griff-Tausch der Port-Archive (gen/re15_tuer_eigen.inc) */
+    for (int i = 0; i < N_TAUSCH_EIG; i++)
+        if (re15_griff_tausche_eigen[i].archiv == archiv && re15_griff_tausche_eigen[i].spender == spender)
+            return &re15_griff_tausche_eigen[i];
 #else
     (void)archiv; (void)spender;
 #endif

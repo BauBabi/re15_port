@@ -18,7 +18,7 @@
  *             ihres RDT (Offset in der Zeile, Flaeche/Band so gerechnet wie op_door_aot_set) und
  *             findet ihre Wahl; eine Kreuz-Raum-Tuer mit Griff-Tausch (T033/T034/T027) stellt
  *             im echten Spielschritt die Anfrage (Laeufer-Attrappe) und der Raumwechsel steht danach
- *             noch an; eine nicht abgedeckte Tuer nicht; das Tor bleibt beim Tor-Archiv; die
+ *             noch an; eine nicht abgedeckte Tuer (seit Runde 33 ROOM1050 -> ROOM1090) nicht; das Tor bleibt beim Tor-Archiv; die
  *             Intro-Uebergabe (Null-Rechteck) nicht; Viereck S225 ja, S226 nein.
  */
 #include "re15_rdt.h"
@@ -357,10 +357,16 @@ static int satz_schluessel(const uint8_t *pc, int *form, int32_t *x, int32_t *z,
 static void teil_zuordnung(void)
 {
     /* 1. Tabelle gegen die echten Saetze */
-    int n = re15_door_seq_zeilen(), treffer = 0, seiten = 0, geteilt = 0;
-    PRUEF(n == 368, "Tabelle hat %d Zeilen, erwartet 368 (184 Seiten x 2 Raumdateien)", n);
-    for (int i = 0; i < n; i++) {
+    /* Runde 33: hinter den RE2-Zeilen stehen die Port-Archiv-Zeilen (eigen != 0, probe_r33_tueren) -
+     * hier nur die 368 Zeilen der Runde 31. */
+    /* Stufe 2: auch G12-Zeilen (eigen 0, DOOR36) stehen in der Runde-33-Tabelle -> nur die ersten
+     * re15_door_seq_zeilen_runde31() Zeilen sind die der Runde 31. */
+    int n_alle = re15_door_seq_zeilen_runde31(), n = 0, treffer = 0, seiten = 0, geteilt = 0;
+    for (int i = 0; i < n_alle; i++) n += re15_door_seq_zeile(i)->eigen == 0;
+    PRUEF(n == 368, "Tabelle hat %d RE2-Zeilen, erwartet 368 (184 Seiten x 2 Raumdateien)", n);
+    for (int i = 0; i < n_alle; i++) {
         const re15_tuer_zeile_t *t = re15_door_seq_zeile(i);
+        if (t->eigen) continue;
         char rp[600];
         snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(t->raum >> 12), t->raum);
         size_t sz = 0;
@@ -379,7 +385,7 @@ static void teil_zuordnung(void)
          * Flaeche mit verschiedenen Zielen teilen (Szenario-Saetze, z. B. S117/S118) - die
          * Tabelle hat dann fuer beide dieselbe Wahl (tuer_zuordnung_gen.py prueft das). */
         PRUEF(r == RE15_DOOR_ARCHIV_RE2 && q.re2_nr == t->re2_nr && q.variante == t->variante
-              && q.tuer_nr == t->re2_nr && q.spender == t->spender && q.bit7 == t->bit7,
+              && q.tuer_nr == t->re2_nr && q.spender == t->spender && q.bit7 == t->bit7 && q.eigen == 0,
               "Zeile %d S%03u: findet ihre Wahl nicht", i, t->seite);
         if (q.seite != t->seite) geteilt++;
         int ar = 0, mo = 0, se = 0, gr = 0;
@@ -389,7 +395,8 @@ static void teil_zuordnung(void)
             PRUEF(re15_door_seq_griff_tausch(t->re2_nr, t->spender) != NULL, "S%03u: Griff-Tausch fehlt", t->seite);
         treffer += ok;
         int neu = 1;
-        for (int k = 0; k < i; k++) if (re15_door_seq_zeile(k)->seite == t->seite) { neu = 0; break; }
+        for (int k = 0; k < i; k++)
+            if (re15_door_seq_zeile(k)->seite == t->seite && !re15_door_seq_zeile(k)->eigen) { neu = 0; break; }
         seiten += neu;
     }
     printf("Tabelle: %d Zeilen, %d treffen ihren Satz, %d Tuerseiten, %d Zeilen teilen die Flaeche mit einer "
@@ -408,9 +415,12 @@ static void teil_zuordnung(void)
         const int16_t qx[4] = { -24190, -25170, -26630, -25250 }, qz[4] = { -25490, -26560, -25220, -23930 };
         PRUEF(re15_door_seq_zuordnen_flaeche(0x4030, 1, 0, 0, 0, 0, qx, qz, 0, &q) == RE15_DOOR_ARCHIV_RE2
               && q.re2_nr == 0x25 && q.variante == 0 && q.seite == 225, "Viereck S225 -> DOOR25 V0");
+        /* S226 (Durchgang ohne Blatt): bis Runde 33 Stufe 1 ohne Sequenz, seit Stufe 2 G12 = RE2-Archiv
+         * ohne Objekt DOOR36 V0 (analysis/befunde_runde33/tueren_rest_bau.md) */
         const int16_t px[4] = { -20490, -19400, -20740, -21840 }, pz[4] = { -24080, -25070, -26460, -25240 };
-        PRUEF(re15_door_seq_zuordnen_flaeche(0x4030, 1, 0, 0, 0, 0, px, pz, 0, &q) == RE15_DOOR_ARCHIV_KEINS,
-              "Viereck S226 (keine Tuer, nicht abgedeckt) darf keine Sequenz bekommen");
+        PRUEF(re15_door_seq_zuordnen_flaeche(0x4030, 1, 0, 0, 0, 0, px, pz, 0, &q) == RE15_DOOR_ARCHIV_RE2
+              && q.re2_nr == 0x36 && q.variante == 0 && q.eigen == 0 && q.seite == 226,
+              "Viereck S226 (G12, Stufe 2) -> DOOR36 V0 objektlos");
     }
 
     /* 3. echter Spielschritt: Kreuz-Raum-Tuer mit Anfrage, nicht abgedeckte ohne */
@@ -452,29 +462,35 @@ static void teil_zuordnung(void)
         }
         PRUEF(erledigt, "keine begehbare Kreuz-Raum-Tuer mit Griff-Tausch gefunden");
     }
-    if (room_boot(0x1000) == 0) {
-        /* eine Tuer ROOM1000 -> ROOM1050 (T000..T002, "aehnlich DOOR07"): nicht abgedeckt */
+    if (room_boot(0x1050) == 0) {
+        /* die Tuer ROOM1050 -> ROOM1090 (T014, Doppeltuer): bis Runde 33 Stufe 1 NICHT abgedeckt (hier
+         * gepinnt als "keine Sequenz"), seit Stufe 2 Port-Archiv P1DK. Seit Stufe 2 hat jede begehbare
+         * Tuer eine Sequenz (141 von 144; die drei uebrigen ROOM1250-Saetze sind sce 0, nie scharf) - der
+         * Teil pinnt jetzt, dass genau diese frueher offene Tuer die Anfrage mit P1DK stellt. */
         int slot = -1;
         for (int i = 0; i < RE15_AOT_MAX && slot < 0; i++) {
             const re15_aot_t *a = &g_aot.slots[i];
             const re15_aot_door_params_t *d = &g_aot.door_params[i];
-            if (a->active && a->type == RE15_AOT_TYPE_DOOR && d->dest_room == 0x05 && d->dest_stage == 0
+            if (a->active && a->type == RE15_AOT_TYPE_DOOR && d->dest_room == 0x09 && d->dest_stage == 0
                 && (a->half_w || a->half_h)) {
                 re15_door_seq_anfrage_t q;
-                if (re15_door_seq_zuordnen_flaeche(0x1000, a->has_quad, a->x, a->z, a->half_w, a->half_h,
-                                                   a->xs, a->zs, d->band, &q) == RE15_DOOR_ARCHIV_KEINS)
+                if (re15_door_seq_zuordnen_flaeche(0x1050, a->has_quad, a->x, a->z, a->half_w, a->half_h,
+                                                   a->xs, a->zs, d->band, &q) == RE15_DOOR_ARCHIV_RE2 && q.eigen)
                     slot = i;
             }
         }
-        PRUEF(slot >= 0, "ROOM1000: keine nicht abgedeckte Tuer nach ROOM1050 gefunden");
+        PRUEF(slot >= 0, "ROOM1050: keine Tuer nach ROOM1090 mit Port-Archiv gefunden");
         if (slot >= 0) {
             s_n_gefangen = 0;
             int gefunden = 0;
             int wechsel = durchgehen(slot, &gefunden);
-            printf("ROOM1000 Slot %d (nicht abgedeckt): Standplatz %d, Raumwechsel %d -> ROOM%04X, Laeufer %d x\n",
-                   slot, gefunden, wechsel, g_room_change.room_id, s_n_gefangen);
-            PRUEF(gefunden && wechsel && g_room_change.room_id == 0x1050, "ROOM1000: kein Durchgang nach ROOM1050");
-            PRUEF(s_n_gefangen == 0, "nicht abgedeckte Tuer darf keine Sequenz anfragen");
+            const re15_tuer_eigen_t *e = re15_door_seq_eigen(s_gefangen.eigen);
+            printf("ROOM1050 Slot %d (T014, seit Stufe 2 Port-Archiv): Standplatz %d, Raumwechsel %d -> ROOM%04X, "
+                   "Laeufer %d x (%s)\n", slot, gefunden, wechsel, g_room_change.room_id, s_n_gefangen,
+                   e ? e->kennung : "-");
+            PRUEF(gefunden && wechsel && g_room_change.room_id == 0x1090, "ROOM1050: kein Durchgang nach ROOM1090");
+            PRUEF(s_n_gefangen == 1 && e && !strcmp(e->kennung, "P1DK") && s_gefangen.re2_nr == 0x1D,
+                  "T014 ROOM1050 -> ROOM1090 muss die Anfrage mit P1DK stellen");
             g_room_change.pending = 0;
         }
     }

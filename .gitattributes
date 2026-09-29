@@ -1,5 +1,6 @@
 # Shell-Skripte laufen in Linux-Containern/auf dem Deck — CRLF bricht `set -euo pipefail`
-# (v0.2-Lehre: docker_linux_build.sh starb an "pipefail"). Immer LF ausliefern.
+# (v0.2-Lehre: docker_linux_build.sh starb an "pipefail
+"). Immer LF ausliefern.
 *.sh text eol=lf
 # Referenz-/Originaldaten NIE normalisieren (Windows matcht Attribut-Muster
 # case-insensitiv — sonst wird z.B. PSYQ_SDK/.../CONV.SH umgeschrieben).
@@ -24,3 +25,6 @@ release/docker/Dockerfile* text eol=lf
 # RE2-Tuerarchive (Runde 31): UNVERAENDERTE Kopien von info/re2leon/COMMON/DOOR (sha1-geprueft von
 # re15_port/tools/tueren/re2_tuer_tabelle.py). NIE normalisieren.
 re15_port/shared_assets/RE2/DOOR/** -text
+# Port-eigene Tuerarchive (Runde 33): Binaerdateien im RE2-Aufbau (re15_port/tools/tueren/tuer_archiv_bauen.py,
+# Groesse + FNV-1a in gen/re15_tuer_eigen.inc). NIE normalisieren.
+re15_port/shared_assets/RE15DOOR/** -text

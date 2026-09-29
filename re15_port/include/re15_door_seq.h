@@ -206,6 +206,9 @@ typedef struct {
     uint8_t  spender;    /* Griff-Tausch: Spender-Archiv, RE15_DOOR_KEIN_SPENDER     */
     uint16_t seite;      /* Tuerseite Sxxx (Runde 31, Pruefhaken/Protokoll), 0 = keine */
     uint16_t tuer;       /* Tuer Txxx, 0 = keine                                     */
+    uint8_t  eigen;      /* Runde 33: 0 = RE2-Archiv DOORxx.DO2 (re2_nr); 1..N = PORT-EIGENES
+                          * Archiv re15_tuer_eigen[eigen-1] (shared_assets/RE15DOOR, RE2-Aufbau,
+                          * Basis = re2_nr: Tonteil/SCD/MD1 des Basis-Archivs, eigene TIM)   */
 } re15_door_seq_anfrage_t;
 
 /* Eine Zeile der Port-Tabelle RE1.5-Tuerseite -> RE2-Archiv (engine/src/gen/tuer_zuordnung.inc,
@@ -222,7 +225,24 @@ typedef struct {
     uint8_t  spender;
     uint16_t seite, tuer;
     uint32_t off;         /* RDT-Datei-Offset eines Door_aot_set dieser Seite (Herkunft, Riegel) */
+    uint8_t  eigen;       /* Runde 33: 0 = RE2-Archiv, 1..N = Port-Archiv re15_tuer_eigen[eigen-1]
+                           * (gen/re15_tuer_eigen.inc; die Zeilen der Runde 31 lassen es aus = 0) */
 } re15_tuer_zeile_t;
+
+/* Ein port-eigenes Tuerarchiv (Runde 33, analysis/befunde_runde33/tueren_rest_plan.md 4): Datei
+ * shared_assets/RE15DOOR/<kennung>.DO2 im RE2-Aufbau, erzeugt von tools/tueren/tuer_archiv_bauen.py.
+ * Tonteil, SCD und MD1 sind bytegleich dem RE2-Basis-Archiv, nur die TIM ist neu. Groessen wie
+ * die RE2-Tabelle @0x8009a520 (Tonteil, Modellteil, Sektor); fnv = FNV-1a 32 ueber die Datei.
+ * ⛔ PORT-WAHL (Textur), keine Original-Adresse. */
+typedef struct {
+    char     kennung[8];
+    uint8_t  basis;       /* RE2-Basis-Archiv 0..0x36 (= var 15 der Skripte)          */
+    uint16_t ton, modell;
+    uint32_t sektor, datei;
+    uint32_t fnv;
+    uint8_t  md1_eigen;   /* Stufe 2: 1 = MD1 = Basis-Meshes + ergaenzte Dreiecke (P1EL Lamellenplatte),
+                           * Tonteil + SCD bleiben bytegleich; 0 = MD1 bytegleich dem Basis-Archiv */
+} re15_tuer_eigen_t;
 
 /* Griff-Tausch je Paar Archiv <- Spender (tools/tueren/tuer_zuordnung_gen.py, [SIM]-Werte). */
 typedef struct {
@@ -230,6 +250,22 @@ typedef struct {
     uint8_t  mesh_archiv, mesh_spender;
     uint16_t rot_vorn[3], rot_hinten[3];   /* Grund-Drehung des Spendergriffs            */
     int16_t  aus_archiv, aus_spender;      /* Ausschlag rot x beim Oeffnen               */
+    uint8_t  spender_eigen;                /* Runde 33: Spender-MD1/TIM aus dem Port-Archiv
+                                            * re15_tuer_eigen[spender_eigen-1] (Basis = spender,
+                                            * oder = archiv selbst, wenn dessen Griff-Mesh dem
+                                            * Spender-Mesh bytegleich ist: "Selbst-Tausch" nur der
+                                            * Grund-Drehung, Textur aus dem eigenen Archiv),
+                                            * 0 = aus der RE2-Datei DOORxx.DO2 (Runde 31)   */
+    int16_t  versatz_vorn[3], versatz_hinten[3];
+                                           /* Runde 33: Griff-Lage = Anhaengepunkt des Archivs +
+                                            * Versatz (vorn: x > 0, hinten: x < 0). PORT-WAHL fuer
+                                            * P1B3: Riegelstange am Anhaengepunkt des SPENDERS
+                                            * (DOOR23, passend zur Ausbuchtung seiner Textur).
+                                            * Runde-31-Zeilen: 0 (unveraendert).              */
+    uint8_t  fuer_eigen;                   /* Runde 33: Port-Archiv (Index+1), zu dem dieser Tausch
+                                            * gehoert - mehrere Port-Archive mit derselben Basis
+                                            * (P1DG/P1DK/P1DL: DOOR1D <- DOOR07) haben je EIGENE
+                                            * Spender-Textur. 0 = Runde-31-Tabelle.            */
 } re15_griff_tausch_t;
 
 extern re15_door_seq_anfrage_t g_door_seq_anfrage;
@@ -254,16 +290,30 @@ int  re15_door_seq_zuordnen_re2(unsigned room_id, int viereck, int32_t x, int32_
                                 int32_t half_w, int32_t half_h,
                                 const int16_t qx[4], const int16_t qz[4], int band,
                                 re15_door_seq_anfrage_t *out);
-/* Tabellenzugriff (Pruefhaken, Tests): Anzahl Zeilen, Zeile i. Auf der PSX ist die Tabelle leer. */
+/* Tabellenzugriff (Pruefhaken, Tests): Anzahl Zeilen, Zeile i - erst die RE2-Zeilen der Runde 31
+ * (gen/tuer_zuordnung.inc), dahinter die Port-Archiv-Zeilen der Runde 33 (gen/re15_tuer_eigen.inc,
+ * eigen != 0). Auf der PSX ist die Tabelle leer. */
 int  re15_door_seq_zeilen(void);
 const re15_tuer_zeile_t *re15_door_seq_zeile(int i);
+/* Runde 33: Zahl der Runde-31-Zeilen (Index 0..n-1); dahinter die Zeilen aus gen/re15_tuer_eigen.inc
+ * (Port-Archive eigen != 0 UND die G12-Durchgaenge mit dem objektlosen RE2-Archiv DOOR36, eigen 0). */
+int  re15_door_seq_zeilen_runde31(void);
+/* Runde 33 Stufe 2: geplante Seiten (Sxxx) laut plan.json - der Riegel prueft, dass jede eine Zeile hat. */
+int  re15_door_seq_geplant(int i);
+int  re15_door_seq_geplant_anzahl(void);
 /* Anfrage einer Tuerseite (Sxxx) aus der Tabelle - erste Zeile dieser Seite. 0 = unbekannt. */
 int  re15_door_seq_anfrage_fuer_seite(int seite, re15_door_seq_anfrage_t *out, unsigned *raum);
 /* Griff-Tausch-Satz fuer Archiv <- Spender, NULL = keiner. */
 const re15_griff_tausch_t *re15_door_seq_griff_tausch(int archiv, int spender);
+/* Runde 33: Tausch einer Anfrage - eigen != 0 sucht NUR in der Tabelle der Port-Archive nach dem Satz
+ * mit fuer_eigen == eigen; eigen == 0 wie re15_door_seq_griff_tausch (Runde 31). */
+const re15_griff_tausch_t *re15_door_seq_griff_tausch_fuer(int archiv, int spender, int eigen);
 /* RE2-Archivtabelle @0x8009a520 (engine/src/gen/re2_tuer_tabelle.inc): Tonteil- und
  * Modellteil-Groesse, Sektor. 0 = gut. */
 int  re15_door_seq_re2_archiv(int nr, int *ton, int *modell, int *sektor, int *datei);
+/* Port-eigenes Archiv eigen (1..N), NULL = keins. Auf der PSX leer. */
+const re15_tuer_eigen_t *re15_door_seq_eigen(int eigen);
+int  re15_door_seq_eigen_anzahl(void);
 /* Modellteil eines Archivs (eingebacken). */
 const uint8_t *re15_door_seq_archiv(int archiv, int *groesse);
 
