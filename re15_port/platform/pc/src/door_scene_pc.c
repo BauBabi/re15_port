@@ -37,6 +37,7 @@ extern void re15_render_pc_clear_scene_overlays(void);
 extern void re15_render_pc_title_fade_sub(int b);
 extern int  re15_render_pc_standbild_wiederholen(void);
 extern void re15_render_pc_request_readback(const char *path);
+extern void re15_render_pc_set_tri_blend(int m);
 
 /* TIM-Platz der Tuertextur: 24 ist frei (platform/pc/main.c "RESERVED/unused",
  * analysis/tor_1170/05_port_anschluss.md 2.1). */
@@ -105,6 +106,40 @@ static ecke_t projizieren(const re15_door_mat_t *w, const re15_md1_vertex_t *v)
     return e;
 }
 
+/* ---------------------------------------------------------------------------
+ * Runde 32: Eckfarben UEBER 0x80 (analysis/befunde_runde32/tor_helligkeit.md 3.2).
+ * RE2 zeichnet die Tuerdreiecke als POLY_GT3 mit Modulation (Code 0x34, @0x80014744 ori v0,v0,0x34;
+ * Bit 24 = 0 -> Modulation, psx-spx GPU:140-149). Die GPU rechnet je Kanal Texel * Farbe / 128 und
+ * saettigt auf 1Fh (psx-spx GPU:349-354, 1438-1446): Farben 0x81..0xFF hellen bis knapp 2x auf.
+ * Die SDL-Modulation reicht nur bis 1,0 (render_pc.c psx_prim_to_sdl_vert kappt bei 0xFF).
+ * Deshalb, NUR wenn eine Ecke ueber 0x80 liegt: dasselbe Dreieck ein zweites Mal mit dem
+ * Ueberschuss max(c - 128, 0) je Ecke, Mischart 1 (render_pc.c: SDL_BLENDMODE_ADD), selbes z.
+ * Je Bildpunkt: interp(min(c,128)) + interp(max(c-128,0)) = interp(c), also Texel * c / 128; die
+ * ADD-Mischung saettigt bei 255 wie die GPU bei 1Fh. Selbes z + stabile Sortierung in end_frame
+ * (render_pc.c "Sort tris by depth descending", strikt <): die Zusatzlage folgt unmittelbar auf
+ * ihr Dreieck. Texel mit Wert 0x0000 (Alpha 0) addieren nichts. Die Tuerszene zeichnet sonst nur
+ * Mischart 0 (Flag 0x4000 ist nicht umgesetzt), daher danach wieder 0.
+ * ------------------------------------------------------------------------ */
+static uint8_t ueber_80(uint8_t c) { return c > 0x80 ? (uint8_t)(c - 0x80) : 0; }
+
+static void tri_psx(int x0, int y0, int u0, int v0, int x1, int y1, int u1, int v1,
+                    int x2, int y2, int u2, int v2, int tpage, int clut, int z, const uint8_t c[3][3])
+{
+    re15_render_textured_tri_lit(x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, tpage, clut, z,
+                                 c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2],
+                                 c[2][0], c[2][1], c[2][2]);
+    int ueber = 0;
+    for (int k = 0; k < 3; k++)
+        for (int ch = 0; ch < 3; ch++) if (c[k][ch] > 0x80) ueber = 1;
+    if (!ueber) return;
+    re15_render_pc_set_tri_blend(1);
+    re15_render_textured_tri_lit(x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, tpage, clut, z,
+                                 ueber_80(c[0][0]), ueber_80(c[0][1]), ueber_80(c[0][2]),
+                                 ueber_80(c[1][0]), ueber_80(c[1][1]), ueber_80(c[1][2]),
+                                 ueber_80(c[2][0]), ueber_80(c[2][1]), ueber_80(c[2][2]));
+    re15_render_pc_set_tri_blend(0);
+}
+
 /* Ein Mesh mit Objektmatrix welt (Licht mit welt_vor) zeichnen - FUN_80014234 e/f + FUN_8001468c. */
 static void mesh_zeichnen(const re15_md1_mesh_t *m, const re15_door_mat_t *welt,
                           const re15_door_mat_t *welt_vor, uint16_t flags, int *lfd)
@@ -163,12 +198,10 @@ static void mesh_zeichnen(const re15_md1_mesh_t *m, const re15_door_mat_t *welt,
         int z = platz * 4096 + ((*lfd)++ & 0xfff);
         const re15_md1_tri_uv_t *uv = &m->triangle_uvs[t];
         int pxo = (int)((uv->page & 0x000F) * 128);
-        re15_render_textured_tri_lit(e0.sx, e0.sy, (int)uv->u0 + pxo, (int)uv->v0,
-                                     e1.sx, e1.sy, (int)uv->u1 + pxo, (int)uv->v1,
-                                     e2.sx, e2.sy, (int)uv->u2 + pxo, (int)uv->v2,
-                                     (int)uv->page, (int)uv->clut, z,
-                                     c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2],
-                                     c[2][0], c[2][1], c[2][2]);
+        tri_psx(e0.sx, e0.sy, (int)uv->u0 + pxo, (int)uv->v0,
+                e1.sx, e1.sy, (int)uv->u1 + pxo, (int)uv->v1,
+                e2.sx, e2.sy, (int)uv->u2 + pxo, (int)uv->v2,
+                (int)uv->page, (int)uv->clut, z, (const uint8_t (*)[3])c);
     }
 }
 

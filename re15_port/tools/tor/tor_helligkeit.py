@@ -6,8 +6,9 @@ Dossier: analysis/befunde_runde32/tor_helligkeit.md.
 
 Aufruf
     python re15_port/tools/tor/tor_helligkeit.py licht                 # Lichtrechnung Tor + DOOR2E
-    python re15_port/tools/tor/tor_helligkeit.py bild <ppm> tor <var>   # Serienbild gegen Modell
-    python re15_port/tools/tor/tor_helligkeit.py bild <ppm> 2E <var>    # dito RE2 DOOR2E
+    python re15_port/tools/tor/tor_helligkeit.py bild <ppm> tor <var> [bild [bk]]  # Serienbild gegen Modell
+    python re15_port/tools/tor/tor_helligkeit.py bild <ppm> 2E <var> [bild]        # dito RE2 DOOR2E
+      (bild = Nummer der Door_move-Schleife: Objektstand aus tuerkatalog.VM; ohne = Aufbau-Stand)
     python re15_port/tools/tor/tor_helligkeit.py gemalt                # Schild in Cut 0/11/12
 
 Was gemessen wird
@@ -166,11 +167,13 @@ def projizieren(w, t, v):
     return 160 + ((int(ir[0]) * n) >> 16), 120 + ((int(ir[1]) * n) >> 16), sz
 
 
-def dreiecke(md1, tim_rgb_, satz, bk_override=None):
-    """-> Liste der gezeichneten Dreiecke des Satzes: (xy[3], uv[3], c[3], nclip)."""
+def dreiecke(md1, tim_rgb_, satz, bk_override=None, satz_vor=None):
+    """-> Liste der gezeichneten Dreiecke des Satzes: (xy[3], uv[3], c[3], nclip).
+    satz_vor: Stand des Objekts im VORIGEN Bild (Licht mit W_vorbild, 08 1.3); ohne = statisch."""
     mesh = md1.meshes[satz["mesh"]]
     w, t = welt(satz)
-    llm = mul(L_TUER, w)          # LLM = L * W (statisches Bild: W_vorbild = W)
+    w_vor = welt(satz_vor)[0] if satz_vor is not None else w
+    llm = mul(L_TUER, w_vor)      # LLM = L * W_vorbild (Schritt e liest obj+84 vor Schritt i)
     bk = bk_override if bk_override is not None else (136 if satz["flags"] & 0x1000 else 68)
     aus = []
     for tri, tx in zip(mesh.tris, mesh.tri_tex):
@@ -295,7 +298,26 @@ def licht():
     return out
 
 
-def bild(pfad, name, var, bk_override=None, gemalt_an=True):
+def vm_saetze(name, var, n):
+    """Objektstaende der Bilder n und n-1 aus dem Katalog-Simulator (tuerkatalog.VM, derselbe,
+    gegen den unit_door_seq die Port-Maschine Bild fuer Bild prueft)."""
+    import tuerkatalog as tkat
+    import tuerseq_referenz as tref
+    if name == "tor":
+        txt = open(TOR_INC).read()
+        body = txt[txt.index("re15_tor1170_door["):]
+        teil = bytes(int(x, 16) for x in re.findall(r"0x([0-9a-f]{2})", body))
+        door = tref.TeilTuer(teil, 0)
+    else:
+        door = tkat.Door(int(name, 16))
+    vm = tkat.VM(door, variant=var, sound_ready_tick=0).run()
+    def conv(st):
+        return {o["obj"]: dict(obj=o["obj"], mesh=o["mesh"], flags=o["flags"], parent=o["parent"],
+                               pos=tuple(o["pos"]), rot=tuple(r & 0xFFFF for r in o["rot"])) for o in st}
+    return conv(vm.frames[n]), conv(vm.frames[n - 1])
+
+
+def bild(pfad, name, var, bk_override=None, gemalt_an=True, bildnr=None):
     md1, tim, sk = archiv(name)
     tex, ok = tim_rgb(tim)
     gemalt = None
@@ -306,12 +328,17 @@ def bild(pfad, name, var, bk_override=None, gemalt_an=True):
     F = ppm(pfad)
     alle = []
     bereiche = {}
-    for satz in modell_saetze(sk, var):
+    if bildnr is None:
+        saetze = [(sz, None) for sz in modell_saetze(sk, var)]
+    else:
+        jetzt, vor = vm_saetze(name, var, bildnr)
+        saetze = [(sz, vor.get(k)) for k, sz in sorted(jetzt.items()) if sz["parent"] < 0]
+    for satz, satz_vor in saetze:
         if satz["mesh"] >= len(md1.meshes):
             continue
         if name != "tor" and satz["obj"] != 0:
             continue                                   # RE2: nur das Blatt (Objekt 0)
-        tr = dreiecke(md1, tex, satz, bk_override)
+        tr = dreiecke(md1, tex, satz, bk_override, satz_vor)
         for t in tr:
             t["bereich"] = ("pfosten" if satz["mesh"] == 1 else bereich_tor(t["uv"][0])) if name == "tor" else "blatt"
         alle += tr
@@ -323,6 +350,17 @@ def bild(pfad, name, var, bk_override=None, gemalt_an=True):
     pred_psx = np.minimum(255, R["T"] * (R["c"] / 128.0)[..., None])
     res = dict(bild=os.path.basename(pfad), archiv=name, variante=var, bildpunkte_innen=int(m.sum()))
     res["abweichung_F_gegen_modell_pc_mittel"] = round(float(np.abs(lum(F) - lum(pred_pc))[m].mean()), 2)
+    res["abweichung_F_gegen_modell_psx_mittel"] = round(float(np.abs(lum(F) - lum(pred_psx))[m].mean()), 2)
+    # Bildpunkte mit Eckfarbe ueber 0x80 (dort unterscheiden sich PC-Kappung und PSX, psx-spx GPU:349-354)
+    mu = m & (R["c"] > 128.5) & (lum(R["T"]) >= 8)
+    res["ueber_0x80"] = dict(bildpunkte=int(mu.sum()))
+    if mu.sum():
+        res["ueber_0x80"].update(
+            F_durch_T=round(float(lum(F)[mu].sum() / lum(R["T"])[mu].sum()), 4),
+            modell_pc_durch_T=round(float(lum(pred_pc)[mu].sum() / lum(R["T"])[mu].sum()), 4),
+            modell_psx_durch_T=round(float(lum(pred_psx)[mu].sum() / lum(R["T"])[mu].sum()), 4),
+            abweichung_pc=round(float(np.abs(lum(F) - lum(pred_pc))[mu].mean()), 2),
+            abweichung_psx=round(float(np.abs(lum(F) - lum(pred_psx))[mu].mean()), 2))
     for b in sorted(set(t["bereich"] for t in alle)):
         ids = [k for k, t in enumerate(alle) if t["bereich"] == b]
         mb = m & np.isin(R["id"], ids) & (lum(R["T"]) >= 8)
@@ -385,8 +423,9 @@ def main(argv):
     if not argv or argv[0] == "licht":
         licht()
     elif argv[0] == "bild":
-        bk = int(argv[4]) if len(argv) > 4 else None
-        bild(argv[1], argv[2], int(argv[3]), bk)
+        nr = int(argv[4]) if len(argv) > 4 else None
+        bk = int(argv[5]) if len(argv) > 5 else None
+        bild(argv[1], argv[2], int(argv[3]), bk, bildnr=nr)
     elif argv[0] == "gemalt":
         gemalt_cuts()
     else:
