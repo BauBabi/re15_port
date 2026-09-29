@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include "re15_camera.h"
 
-/** Alle sichtbaren Plaetze der RE2-FX-Maschine zeichnen. C0-Stub: nichts. */
+/** Alle sichtbaren Plaetze der RE2-FX-Maschine zeichnen. (C0-Stub; seit Spur D umgesetzt.) */
 void re2fx_pc_draw(void);
 
 /* ---- ADDITIV (Spur D) ------------------------------------------------------------------------ */

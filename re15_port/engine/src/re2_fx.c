@@ -13,7 +13,8 @@
  *   Pumpe          FUN_8001d300 (Update-Pass, Draw-Pass)          re2fx_tick
  *   Platz-Schritt  FUN_8001d68c (Op A?, Weltlage, Op B, Physik, Anim)   schritt
  *   Weltlage       FUN_8001d894                                   weltlage
- *   Ops            Tabelle 0x8009D868 (`lw v0,-10136(at)` + `jalr` @0x8001d6b8/@0x8001d6f0)
+ *   Ops            Tabelle 0x8009D868 (`lw v0,-10136(at)` + `jalr` @0x8001d6b8/@0x8001d6f0):
+ *                  0/1/2/19/25/27/28/29/30/40/46/48/49/50/58/64
  *   RNG            FUN_80015FE8 = re15_re2_rand() (EIN Strom fuer alle RE2-Overlays, 0..255)
  *
  * Port-Zuordnungen (je im Dossier begruendet): Aufschlag-Platz (re2fx_aufschlag, E8 + O-VB1 §1.4),

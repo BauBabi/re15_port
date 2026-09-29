@@ -5,7 +5,7 @@
  *        Bodenfeuer (Op 48 + Bodenflammen).
  *
  * STAND Spur D (analysis/befunde_runde34_granaten/bau_d.md): Bank-Registrierung, Spawner, Pumpe,
- * RNG-Strom und die Ops 0/1/2/19/25/27/28/29/30/40/46/48/49/50/58 sind in engine/src/re2_fx.c
+ * RNG-Strom und die Ops 0/1/2/19/25/27/28/29/30/40/46/48/49/50/58/64 sind in engine/src/re2_fx.c
  * umgesetzt; der PC-Zeichner liegt in platform/pc/src/re2fx_pc.c. Die Vertrags-Deklarationen
  * unten (C0) stehen woertlich; alles Weitere ist ADDITIV darunter.
  *
@@ -28,22 +28,22 @@
  *  `srl a0,v0,16` / `andi v0,v0,0xffff` / `sll v0,v0,1` / `addu` / `addiu v0,v0,2` / `sll v0,v0,2`
  *  @0x8001bd08-1c). raw/size = shared_assets/RE2/CORE00.ESP (8572 B, Ids `03 05 00 01 02 06 07 04`),
  *  vom Aufrufer gehalten (nicht kopiert). Rueckgabe 0 = registriert, < 0 = Fehler.
- *  C0-Stub: registriert nichts, Rueckgabe -1. */
+ *  (C0-Stub lieferte -1; seit Spur D umgesetzt.) */
 int  re2fx_register_core(const uint8_t *raw, size_t size);
 
-/** Alle Plaetze frei (Raumwechsel / neues Spiel / Tests). C0-Stub: nichts. */
+/** Alle Plaetze frei (Raumwechsel / neues Spiel / Tests). (C0-Stub; seit Spur D umgesetzt.) */
 void re2fx_reset(void);
 
 /** Aufschlag-Einstieg (E8, Port-Zuordnung der Uebergabe Granatenplatz -> RE2-FX-Platz): spawnt den
  *  Platz, dessen Op B 48 (Brand, re2_art 1, @0x80020F3C) bzw. 49 (Saeure, re2_art 2, @0x800215C8)
  *  seine Phase 0 im Aufschlagbild laeuft. re2_art = RE2-Art-Byte +0x1B (Id - 9 @0x8001f1a8-b8;
  *  Aufschlag-Op = 47 + Art); q = Granaten-Weltlage (re15_esp_fx_t.wpos), gier = Granaten-Gier
- *  (slot+0x2e). Gebunden an re15_esp_aufschlag_hook (include/re15_esp.h). C0-Stub: nichts. */
+ *  (slot+0x2e). Gebunden an re15_esp_aufschlag_hook (include/re15_esp.h). (C0-Stub; seit Spur D umgesetzt.) */
 void re2fx_aufschlag(int re2_art, const int32_t q[3], int16_t gier);
 
 /** Ein Spielbild der Pumpe FUN_8001d300 (Update-Pass Op A, Draw-Pass mit 0x4000-Befoerderung,
  *  FUN_8001d68c: Weltlage FUN_8001d894, Op B, Physik, Anim). Im Port direkt hinter dem
- *  RE1.5-ESP-Tick (Spur C1). C0-Stub: nichts. */
+ *  RE1.5-ESP-Tick (Spur C1). (C0-Stub; seit Spur D umgesetzt.) */
 void re2fx_tick(void);
 
 /** Schadens-Applier des Bodenfeuers (Op 40 @0x80020758 -> `jal 0x800470c0` @0x800207bc).
